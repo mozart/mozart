@@ -101,7 +101,7 @@ oz-win::
                    oz/platform/win32-i486/?*.dll \
                    oz/platform/win32-i486/tcldoc \
          ) | tar xf -
-	rm -f oz/demo/rundemo
+	rm -f oz/demo/rundemo oz/lib/ozbatch.ozm
 	mkdir -p $(CACHEDIR)
 	mv oz/lib/?*.ozc $(CACHEDIR)
 	mv $(CACHEDIR)/Init.ozc oz/lib
