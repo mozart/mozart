@@ -78,6 +78,7 @@ void fdp_init(void)
   DiffnPropagator::profile =             "fdp_distinct2";
   SchedCDPropagator::profile =           "fdp_disjoint";
   SchedCDBPropagator::profile =          "fdp_disjointC";
+  SchedCDBPropagator::profile =          "fdp_tasksOverlap";
   DistancePropagatorLeq::profile =       "fdp_distance";
   DistancePropagatorGeq::profile =       "fdp_distance";
   DistancePropagatorEq::profile =        "fdp_distance";

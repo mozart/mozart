@@ -184,7 +184,53 @@ failure:
 
 
 //-----------------------------------------------------------------------------
+
+OZ_C_proc_begin(fdp_tasksOverlap, 5)
+{
+  OZ_EXPECTED_TYPE(OZ_EM_FD "," OZ_EM_INT "," OZ_EM_FD "," OZ_EM_INT "," OZ_EM_FDBOOL);
+
+  PropagatorExpect pe;
+  int dummy;
+
+  OZ_EXPECT(pe, 0, expectIntVarMinMax);
+  OZ_EXPECT(pe, 1, expectInt);
+  OZ_EXPECT(pe, 2, expectIntVarMinMax);
+  OZ_EXPECT(pe, 3, expectInt);
+  OZ_EXPECT_SUSPEND(pe, 4, expectBoolVar, dummy);
+
+  return pe.impose(new TasksOverlapPropagator(OZ_args[0], 
+					      OZ_args[1], 
+					      OZ_args[2], 
+					      OZ_args[3], 
+					      OZ_args[4]));
+}
+OZ_C_proc_end
+
+OZ_Return TasksOverlapPropagator::propagate(void) 
+{
+  OZ_DEBUGPRINTTHIS("in: ");
+
+  int &xd = reg_xd, &yd = reg_yd;
+
+  OZ_FDIntVar x(reg_x), y(reg_y), b(reg_b);
+  PropagatorController_V_V_V P(x, y, b);
+  OZ_FiniteDomain la, lb, lc, ld, l1, l2;
+    
+  int xl = x->getMinElem(), xu = x->getMaxElem();
+  int yl = y->getMinElem(), yu = y->getMaxElem();
+  int lowx, lowy, upx, upy;
+
+  OZ_DEBUGPRINTTHIS("out: ");
+  return P.leave();
+failure:
+  OZ_DEBUGPRINT(("fail"));
+
+  return P.fail();
+}
+
+//-----------------------------------------------------------------------------
 // static member
 
 OZ_PropagatorProfile SchedCDPropagator::profile;
 OZ_PropagatorProfile SchedCDBPropagator::profile;
+OZ_PropagatorProfile TasksOverlapPropagator::profile;
