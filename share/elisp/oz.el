@@ -122,12 +122,6 @@
   "" t)
 (autoload 'oz-breakpoint-at-point "mozart"
   "Set breakpoint at current line." t)
-(autoload 'oz-set-other "mozart"
-  "Set the value of environment variables OZEMULATOR resp. OZ_LOAD." t)
-(autoload 'oz-other "mozart"
-  "Toggle between global and local Oz Emulator resp. Oz functors." t)
-(autoload 'oz-gdb "mozart"
-  "Toggle debugging of the Oz Emulator with gdb." t)
 (autoload 'oz-is-running "mozart" "" nil)
 
 ;;}}}
