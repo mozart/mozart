@@ -1,0 +1,14 @@
+VPATH		= @srcdir@
+SRCDIR		= @srcdir@
+
+WHAT = changes
+MAIN = main.sgml
+
+HTMLEXTRAFILES =
+
+HTMLEXTRASUPPORTFILES = 
+
+OZDOCHTMLFLAGS = --autoindex
+
+include ../Makefile.common
+

@@ -1,0 +1,570 @@
+/* -*- C++ -*-
+ *  Authors:
+ *    Ralf Scheidhauer (Ralf.Scheidhauer@ps.uni-sb.de)
+ * 
+ *  Contributors:
+ *    optional, Contributor's name (Contributor's email address)
+ * 
+ *  Copyright:
+ *    Organization or Person (Year(s))
+ * 
+ *  Last change:
+ *    $Date$ by $Author$
+ *    $Revision$
+ * 
+ *  This file is part of Mozart, an implementation 
+ *  of Oz 3:
+ *     http://www.mozart-oz.org
+ * 
+ *  See the file "LICENSE" or
+ *     http://www.mozart-oz.org/LICENSE.html
+ *  for information on usage and redistribution 
+ *  of this file, and for a DISCLAIMER OF ALL 
+ *  WARRANTIES.
+ *
+ */
+
+changequote([[,]])
+
+#include "am.hh"
+
+define(readArg,$1)
+define(writeArg,$1)
+define(instruction,
+	[[ifelse(numOfRegs($2,$3,$4),1,
+                    case TOUPPER($1)X: 
+		    case TOUPPER($1)Y: 
+		    case TOUPPER($1)G:,
+	 numOfRegs($2,$3,$4),2,
+            case TOUPPER($1)XX:
+            case TOUPPER($1)XY:
+            case TOUPPER($1)XG:
+            case TOUPPER($1)YX:
+            case TOUPPER($1)YY:
+            case TOUPPER($1)YG:
+            case TOUPPER($1)GX:
+            case TOUPPER($1)GY:
+            case TOUPPER($1)GG:,
+         case TOUPPER($1):)
+	   opAction($2)
+	   opAction($3)
+	   opAction($4)
+	   opAction($5)
+	   opAction($6)
+	   opAction($7)
+	   opAction($8)
+	   opAction($9)
+	  break;]])
+
+define(opAction,
+[[ifelse($1,Number,marshalTerm(getTaggedArg(PC++),bs);,
+        $1,Literal,marshalTerm(getTaggedArg(PC++),bs);,
+        $1,Feature,marshalTerm(getTaggedArg(PC++),bs);,
+        $1,Constant,marshalTerm(getTaggedArg(PC++),bs);,
+        $1,Builtinname,marshalBuiltin((Builtin*) getAdressArg(PC++),bs);,
+        $1,Register,marshalNumber(regToInt(getRegArg(PC++)),bs);,
+        $1,XRegisterIndex,marshalNumber(regToInt(getRegArg(PC++)),bs);,
+        $1,YRegisterIndex,marshalNumber(regToInt(getRegArg(PC++)),bs);,
+        $1,Arity,marshalNumber((unsigned int)getPosIntArg(PC++),bs);,
+        $1,Label,marshalLabel(instrstart-start,getLabelArg(PC++),bs);,
+        $1,Count,marshalNumber((unsigned int)getPosIntArg(PC++),bs);,
+        $1,ArityAndIsTail,marshalNumber((unsigned int)getPosIntArg(PC++),bs);,
+        $1,Dummy,marshalNumber((unsigned int)getPosIntArg(PC++),bs);,
+        $1,PredicateRef,marshalPredicateRef((AbstractionEntry*) getAdressArg(PC++),bs);,
+        $1,PredId,marshalPredId((PrTabEntry*)getAdressArg(PC++),bs);,
+        $1,HashTableRef,marshalHashTableRef(instrstart-start,(IHashTable *)getAdressArg(PC++),bs);,
+        $1,RecordArity,marshalRecordArity((SRecordArity) getAdressArg(PC++),bs);,
+        $1,GenCallInfo,marshalGenCallInfo((GenCallInfoClass*)getAdressArg(PC++),bs);,
+        $1,ApplMethInfo,marshalApplMethInfo((ApplMethInfoClass*)getAdressArg(PC++),bs);,
+        $1,GRegRef,marshalGRegRef((AssRegArray*)getAdressArg(PC++),bs);,
+        $1,Location,marshalLocation((OZ_Location*)getAdressArg(PC++),bs);,
+        $1,Cache,PC += CacheSize;)]])
+
+
+inline
+void marshalBuiltin(Builtin *entry,MsgBuffer *bs)
+{
+  marshalTerm(makeTaggedConst(entry),bs);
+}
+
+void marshalGRegRef(AssRegArray *gregs,MsgBuffer *bs) 
+{ 
+  int nGRegs = gregs->getSize();
+  marshalNumber(nGRegs,bs);
+
+  for (int i = 0; i < nGRegs; i++) {
+    int out = ((*gregs)[i].number<<2) | (int)(*gregs)[i].kind;
+    marshalNumber(out,bs);
+  }
+}
+
+void marshalLocation(OZ_Location *loc,MsgBuffer *bs) 
+{ 
+  int inAr = loc->getInArity();
+  int outAr = loc->getOutArity();
+  marshalNumber(inAr,bs);
+  marshalNumber(outAr,bs);
+
+  for (int i = 0; i < inAr+outAr; i++) {
+    int out = loc->get(i);
+    marshalNumber(out,bs);
+  }
+}
+
+void marshalRecordArity(SRecordArity ar,MsgBuffer *bs)
+{
+  if (sraIsTuple(ar)) {
+    marshalNumber(TUPLEWIDTH_PREFIX,bs);
+    marshalNumber(getTupleWidth(ar),bs);
+  } else {
+    marshalNumber(RECORDARITY_PREFIX,bs);
+    marshalTerm(getRecordArity(ar)->getList(),bs);
+  }
+}
+
+
+void marshalPredId(PrTabEntry *p,MsgBuffer *bs) 
+{ 
+  marshalTerm(p->getName(),bs);
+  marshalRecordArity(p->getMethodArity(),bs);
+  marshalTerm(p->getFile(),bs);
+  marshalNumber(p->getLine(),bs);
+  marshalNumber(p->getColumn(),bs);
+  marshalTerm(p->getFlagsList(),bs);
+  marshalNumber(p->getMaxX(),bs);
+}
+
+void marshalGenCallInfo(GenCallInfoClass *gci,MsgBuffer *bs)
+{
+  int compact = (gci->regIndex<<2) | (gci->isMethAppl<<1) | gci->isTailCall;
+  marshalNumber(compact,bs);
+  marshalTerm(gci->mn,bs);
+  marshalRecordArity(gci->arity,bs);
+}
+
+
+inline
+ProgramCounter writeAddress(void *ptr,ProgramCounter PC)
+{
+   return (PC) ? CodeArea::writeAddress(ptr,PC) : PC;
+}
+
+
+
+void marshalPredicateRef(AbstractionEntry *entry,MsgBuffer *bs)
+{
+  Bool copyable = entry && entry->copyable;
+  marshalNumber(copyable,bs);
+  if (copyable) {
+    if (checkCycle(entry,bs)) return;
+    marshalDIF(bs,DIF_ABSTRENTRY);
+    trailCycle(entry,bs);
+  } else {
+    Assert(entry==NULL || entry->getAbstr() != NULL);
+  }
+}
+
+
+ProgramCounter unmarshalPredicateRef(ProgramCounter PC,MsgBuffer *bs, CodeArea *code)
+{
+  AbstractionEntry *entry = 0;
+  Bool copyable = unmarshalNumber(bs);
+  if (copyable) {
+    MarshalTag tag = (MarshalTag) bs->get();
+    if (tag==DIF_REF) {
+      int i = unmarshalNumber(bs);
+      entry = (AbstractionEntry*) ToPointer(refTable->get(i));
+    } else {
+      Assert(tag==DIF_ABSTRENTRY);
+      int refTag = unmarshalRefTag(bs);
+      entry      = new AbstractionEntry(OK);
+      gotRef(ToInt32(entry),refTag);
+    }
+  }
+  return PC ? code->writeAbstractionEntry(entry,PC) : PC;
+}
+
+
+
+void marshalHashTableRef(int start, IHashTable *table,MsgBuffer *bs);
+
+
+void marshalApplMethInfo(ApplMethInfoClass *ami,MsgBuffer *bs)
+{
+  marshalTerm(ami->methName,bs);
+  marshalRecordArity(ami->arity,bs);
+}
+
+
+
+void marshalCode(ProgramCounter start, MsgBuffer *bs)
+{
+  start -= sizeOf(DEFINITION);
+
+  Reg reg;
+  int nxt,line,colum;
+  PrTabEntry *pred;
+  TaggedRef file,predName;
+  CodeArea::getDefinitionArgs(start,reg,nxt,file,line,colum,predName);
+
+  ProgramCounter ende = start+nxt;
+
+  int codesize = (ende-start)*sizeof(ByteCode);
+
+  
+  marshalCodeStart(codesize,bs);
+  
+  ProgramCounter PC = start;
+
+  while (PC<ende) {
+
+    ProgramCounter instrstart = PC;
+    Opcode op = CodeArea::getOpcode(PC++);
+
+    if (op==GENFASTCALL) {
+      op = (getNumberArg(PC+1) & 1)==0 ? FASTCALL : FASTTAILCALL;
+    }
+    /* fastcalls need special handling */
+    if (op==FASTCALL || op==FASTTAILCALL) {
+      AbstractionEntry *entry = (AbstractionEntry *) getAdressArg(PC);
+      if (!entry->copyable) {
+	marshalOpCode(instrstart-start,MARSHALLEDFASTCALL,bs);
+	Abstraction *abstr = entry->getAbstr();
+	marshalTerm(makeTaggedConst(abstr),bs);
+	Bool istailcall = (op==FASTTAILCALL);
+	marshalNumber((entry->getArity()<<1)|istailcall,bs);
+	PC++; // skip (AbstractionEntry *)
+	PC++; // skip unused second arg
+	continue;
+      }
+    }
+
+    marshalOpCode(instrstart-start,op,bs);
+    switch(op) {
+      
+      changequote(`,') dnl '
+      include(EMUDIR/instrDefs.m4)
+      changequote([[,]])
+
+    default: Assert(0); break;
+    }
+  }
+
+  marshalOpCode(PC-start,ENDOFFILE,bs);
+  marshalCodeEnd(bs);
+}
+
+enum { ATOMTAG, NUMBERTAG, RECORDTAG};
+
+void marshalHashTableRef(int start, IHashTable *table,MsgBuffer *bs)
+{
+  int sz = table->size;
+  marshalNumber(sz,bs);
+  marshalLabel(start,table->elseLabel,bs);
+  marshalLabel(start,table->listLabel,bs);
+
+  int entries = table->numentries;
+  marshalNumber(entries,bs);
+
+  if (table->literalTable) {
+    for(int i=0; i<sz; i++) {
+      HTEntry *aux = table->literalTable[i];
+      while(aux) {
+	entries--;
+	marshalNumber(ATOMTAG,bs);
+	marshalLabel(start,aux->getLabel(),bs);
+	marshalTerm(makeTaggedLiteral(aux->getLiteral()),bs);
+	aux = aux->getNext();
+      }
+    }
+  }
+
+  if (table->numberTable) {
+    for(int i=0; i<sz; i++) {
+      HTEntry *aux = table->numberTable[i];
+      while(aux) {
+	entries--;
+	marshalNumber(NUMBERTAG,bs);
+	marshalLabel(start,aux->getLabel(),bs);
+	marshalTerm(aux->getNumber(),bs);
+	aux = aux->getNext();
+      }
+    }
+  }
+
+  if (table->functorTable) {
+    for(int i=0; i<sz; i++) {
+      HTEntry *aux = table->functorTable[i];
+      while(aux) {
+	entries--;
+	marshalNumber(RECORDTAG,bs);
+	marshalLabel(start,aux->getLabel(),bs);
+        SRecordArity sra;
+        Literal *label = aux->getFunctor(sra);
+	marshalTerm(makeTaggedLiteral(label),bs);
+        marshalRecordArity(sra,bs);
+	aux = aux->getNext();
+      }
+    }
+  }
+
+  Assert(entries==0);
+}
+
+
+
+undefine([[opAction]])
+undefine([[marshaling]])
+
+define(opAction,
+[[ifelse($1,Number,PC=unmarshalTagged(PC,bs,code);,
+        $1,Literal,PC=unmarshalTagged(PC,bs,code);,
+        $1,Feature,PC=unmarshalTagged(PC,bs,code);,
+        $1,Constant,PC=unmarshalTagged(PC,bs,code);,
+        $1,Builtinname,PC=unmarshalBuiltin(PC,bs);,
+        $1,Register,PC=unmarshalReg(PC,bs);,
+        $1,XRegisterIndex,PC=unmarshalReg(PC,bs);,
+        $1,YRegisterIndex,PC=unmarshalReg(PC,bs);,
+        $1,Arity,PC=unmarshalNum(PC,bs);,
+        $1,Label,PC=unmarshalLabel(PC,bs);,
+        $1,Count,PC=unmarshalNum(PC,bs);,
+        $1,ArityAndIsTail,PC=unmarshalNum(PC,bs);,
+        $1,Dummy,PC=unmarshalNum(PC,bs);,
+        $1,PredicateRef,PC=unmarshalPredicateRef(PC,bs,code);,
+        $1,PredId,PC=unmarshalPredId(PC,lastPC,bs);,
+        $1,HashTableRef,PC=unmarshalHashTableRef(PC,lastPC-start,bs);,
+        $1,RecordArity,PC=unmarshalRecordArity(PC,bs);,
+        $1,GenCallInfo,PC=unmarshalGenCallInfo(PC,bs);,
+        $1,ApplMethInfo,PC=unmarshalApplMethInfo(PC,bs,code);,
+        $1,GRegRef,PC=unmarshalGRegRef(PC,bs);,
+        $1,Location,PC=unmarshalLocation(PC,bs);,
+        $1,Cache,PC=unmarshalCache(PC,code);)]])
+
+
+inline
+ProgramCounter unmarshalNum(ProgramCounter PC, MsgBuffer *bs)
+{
+  int num = unmarshalNumber(bs);
+  return PC ? CodeArea::writeInt(num,PC) : 0;
+}
+
+inline
+ProgramCounter unmarshalReg(ProgramCounter PC, MsgBuffer *bs)
+{
+  int idx = unmarshalNumber(bs);
+  return PC ? CodeArea::writeRegIndex(idx,PC) : 0;
+}
+
+inline
+ProgramCounter unmarshalTagged(ProgramCounter PC, MsgBuffer *bs, CodeArea *code)
+{
+  TaggedRef ret = unmarshalTerm(bs);
+  return PC ? code->writeTagged(ret,PC) : 0;
+}
+
+
+ProgramCounter unmarshalBuiltin(ProgramCounter PC, MsgBuffer *bs)
+{
+  TaggedRef builtin = unmarshalTerm(bs);
+  Assert(oz_isBuiltin(builtin));
+
+  if (PC==NULL) return 0;
+
+  return writeAddress(tagged2Builtin(builtin),PC);
+}
+
+inline
+ProgramCounter unmarshalLabel(ProgramCounter PC, MsgBuffer *bs)
+{
+  int offset = unmarshalNumber(bs);
+  return PC ? CodeArea::writeLabel(offset,0,PC) : 0;
+}
+
+
+inline
+ProgramCounter unmarshalCache(ProgramCounter PC, CodeArea *code)
+{
+  return PC ? code->writeCache(PC) : 0;
+}
+
+
+
+ProgramCounter unmarshalGRegRef(ProgramCounter PC,MsgBuffer *bs) 
+{ 
+  int nGRegs = unmarshalNumber(bs);
+  AssRegArray *gregs = PC ? new AssRegArray(nGRegs) : 0;
+
+  for (int i = 0; i < nGRegs; i++) {
+    unsigned int reg = unmarshalNumber(bs);
+    if (PC) {
+      (*gregs)[i].number = reg>>2;
+      (*gregs)[i].kind = (KindOfReg) (reg&3);
+    }
+  }
+
+  return writeAddress(gregs,PC);
+}
+
+ProgramCounter unmarshalLocation(ProgramCounter PC,MsgBuffer *bs) 
+{ 
+  int inAr = unmarshalNumber(bs);
+  int outAr = unmarshalNumber(bs);
+  OZ_Location *loc = OZ_Location::newLocation(inAr,outAr);
+
+  for (int i = 0; i < inAr+outAr; i++) {
+    int n = unmarshalNumber(bs);
+    loc->set(i,n);
+  }
+
+  return writeAddress(loc,PC);
+}
+
+SRecordArity unmarshalRecordArity(MsgBuffer *bs) 
+{
+  int prefix = unmarshalNumber(bs);
+  if (prefix == RECORDARITY_PREFIX) {
+    TaggedRef arity = unmarshalTerm(bs);
+    Assert(isSorted(arity));
+    Arity *ari = aritytable.find(arity);
+    Assert(!ari->isTuple());
+    return mkRecordArity(ari);
+  } else {
+    Assert(prefix == TUPLEWIDTH_PREFIX);
+    int width = unmarshalNumber(bs);
+    return mkTupleWidth(width);
+  }
+}
+
+
+ProgramCounter unmarshalRecordArity(ProgramCounter PC,MsgBuffer *bs) 
+{
+  SRecordArity sra = unmarshalRecordArity(bs);
+  return PC ? CodeArea::writeInt(sra,PC) : 0;
+}
+
+ProgramCounter unmarshalPredId(ProgramCounter PC,ProgramCounter lastPC,
+				MsgBuffer *bs) 
+{ 
+  OZ_Term name       = unmarshalTerm(bs);
+  SRecordArity arity = unmarshalRecordArity(bs);
+  OZ_Term file       = unmarshalTerm(bs);
+  int line           = unmarshalNumber(bs);
+  int column         = unmarshalNumber(bs);
+  OZ_Term flags      = unmarshalTerm(bs);
+  int maxX           = unmarshalNumber(bs);
+
+  PrTabEntry *pred = PC ? new PrTabEntry(name,arity,file,line,column,flags,maxX) : 0;
+  return writeAddress(pred,PC);
+}
+
+
+ProgramCounter unmarshalGenCallInfo(ProgramCounter PC,MsgBuffer *bs) 
+{
+  int compact = unmarshalNumber(bs);
+  int ri      = compact>>2;
+  Bool ism    = (compact>>1)&1;
+  Bool ist    = (compact&1);
+  TaggedRef methname    = unmarshalTerm(bs);
+  SRecordArity arity    = unmarshalRecordArity(bs);
+  GenCallInfoClass *gci = PC ? new GenCallInfoClass(ri,ism,methname,ist,arity) : 0;
+  return writeAddress(gci,PC);
+}
+
+
+ProgramCounter unmarshalHashTableRef(ProgramCounter PC, int start, MsgBuffer *bs) 
+{
+  int sz               = unmarshalNumber(bs);
+  int label            = unmarshalNumber(bs); /* the else label */
+  IHashTable *table    = PC ? new IHashTable(sz,label) : 0;
+  
+  int pc = unmarshalNumber(bs);
+  if (PC) {
+    table->addList(pc);
+  }
+  int nEntries = unmarshalNumber(bs);
+  for (int i = 0; i < nEntries; i++) {    
+    int termTag = unmarshalNumber(bs);
+    label = unmarshalNumber(bs);
+    OZ_Term term = unmarshalTerm(bs);
+    switch (termTag) {      
+    case RECORDTAG:
+      {
+	SRecordArity arity = unmarshalRecordArity(bs);
+	if (PC) table->add(tagged2Literal(term),arity,label);
+	break;
+      }
+    case ATOMTAG:
+      if (PC) table->add(tagged2Literal(term),label);
+      break;
+    case NUMBERTAG:
+      if (PC) table->add(term,label);
+      break;
+    default: Assert(0); break;
+    }
+  }
+
+  return PC ? CodeArea::writeIHashTable(table, PC) : 0;
+}
+
+
+ProgramCounter unmarshalApplMethInfo(ProgramCounter PC,MsgBuffer *bs, CodeArea *code) 
+{
+  TaggedRef methname = unmarshalTerm(bs);
+  SRecordArity arity = unmarshalRecordArity(bs);
+  ApplMethInfoClass *ami = PC ? new ApplMethInfoClass(methname,arity,code) : 0;
+  return writeAddress(ami,PC);
+}
+
+
+
+
+ProgramCounter unmarshalCode(MsgBuffer *bs, Bool discard)
+{
+  int codesize = unmarshalNumber(bs);  // this is in Bytes!!!
+  
+  ProgramCounter start, PC, lastPC;
+  CodeArea *code = NULL;
+  if (discard==NO) {
+    code = new CodeArea(codesize/sizeof(ByteCode));
+    start = PC = code->getStart();
+  } else {
+    start = PC = 0;
+  }
+
+  while (OK) {    
+    lastPC = PC;
+    Opcode op = (Opcode) bs->get();
+    if (op == ENDOFFILE)
+      break;
+
+    //    Assert(op!=GENFASTCALL && op!=FASTCALL && op!=FASTTAILCALL);
+    Assert(op!=GENFASTCALL);
+  
+    if (discard==NO) {
+      PC = CodeArea::writeOpcode(op,PC);
+    }
+
+    switch(op) {
+
+      changequote(`,') dnl '
+      include(EMUDIR/instrDefs.m4)
+      changequote([[,]])
+
+    default: Assert(0); break;
+    }
+    if (op==DEBUGENTRY && discard==NO) {
+      TaggedRef file = getTaggedArg(lastPC+1);
+      int line = smallIntValue(getNumberArg(lastPC+2));
+      CodeArea::writeDebugInfo(lastPC,file,line);
+    }
+    //if (!discard) { displayCode(lastPC,1); }
+  }
+  
+  Assert(discard==OK || CodeArea::getOpcode(start)==DEFINITION || 
+	 CodeArea::getOpcode(start)==DEFINITIONCOPY);
+  if (discard)
+    return 0;
+  else
+    return start + sizeOf(DEFINITION);
+}
+

@@ -1,0 +1,37 @@
+dnl -*- sh -*-
+dnl
+dnl  Authors:
+dnl    Denys Duchier (duchier@ps.uni-sb.de)
+dnl 
+dnl  Contributors:
+dnl    optional, Contributor's name (Contributor's email address)
+dnl 
+dnl  Copyright:
+dnl    Denys Duchier (1998)
+dnl 
+dnl  Last change:
+dnl    $Date$ by $Author$
+dnl    $Revision$
+dnl 
+dnl  This file is part of Mozart, an implementation 
+dnl  of Oz 3:
+dnl     http://www.mozart-oz.org
+dnl 
+dnl  See the file "LICENSE" or
+dnl     http://www.mozart-oz.org/LICENSE.html
+dnl  for information on usage and redistribution 
+dnl  of this file, and for a DISCLAIMER OF ALL 
+dnl  WARRANTIES.
+dnl
+
+AC_INIT(gump)
+OZ_INIT
+AC_CHECK_PROGS(RM,rm,rm)
+AC_CONFIG_SUBDIRS(gump)
+AC_OUTPUT(Makefile)
+
+errprint(ifdef([OZ_INIT],
+ [autoconf succeeded.
+],
+ [autoconf failed: use 'autoconf -l ../..' to include ../../aclocal.m4.
+]))

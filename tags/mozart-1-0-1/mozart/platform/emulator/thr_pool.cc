@@ -1,0 +1,148 @@
+/*
+ *  Authors:
+ *    Kostja Popow (popow@ps.uni-sb.de)
+ * 
+ *  Contributors:
+ *    Michael Mehl (mehl@dfki.de)
+ * 
+ *  Copyright:
+ *    Organization or Person (Year(s))
+ * 
+ *  Last change:
+ *    $Date$ by $Author$
+ *    $Revision$
+ * 
+ *  This file is part of Mozart, an implementation 
+ *  of Oz 3:
+ *     http://www.mozart-oz.org
+ * 
+ *  See the file "LICENSE" or
+ *     http://www.mozart-oz.org/LICENSE.html
+ *  for information on usage and redistribution 
+ *  of this file, and for a DISCLAIMER OF ALL 
+ *  WARRANTIES.
+ *
+ */
+
+#if defined(INTERFACE) && !defined(PEANUTS)
+#pragma implementation "thr_pool.hh"
+#endif
+
+#include "thr_pool.hh"
+
+int ThreadsPool::getRunnableNumber()
+{
+  return hiQueue.getRunnableNumber()
+    +midQueue.getRunnableNumber()
+    +lowQueue.getRunnableNumber()
+    +1; // for am.currentThread!
+}
+
+//  Note that this can be called only after 'ozconf.init ()';
+// (so, it's not a constructor of the 'ThreadsPool' class;)
+void ThreadsPool::initThreads ()
+{
+#ifndef LINKED_QUEUES
+  // private;
+  hiQueue.allocate(QUEUEMINSIZE);
+  midQueue.allocate(QUEUEMINSIZE);
+  lowQueue.allocate(QUEUEMINSIZE);
+#endif
+
+  hiCounter = -1;
+  lowCounter = -1;
+
+  // public part;
+  _currentThread = (Thread *) NULL;
+  threadBodyFreeList = NULL;
+}
+
+//
+Bool ThreadsPool::isScheduledSlow(Thread *thr)
+{
+  if (midQueue.isScheduledSlow(thr)) return OK;
+  if (hiQueue.isScheduledSlow(thr)) return OK;
+  return lowQueue.isScheduledSlow(thr);
+}
+
+void ThreadsPool::deleteThread(Thread *th)
+{
+  midQueue.deleteThread(th);
+  hiQueue.deleteThread(th);
+  lowQueue.deleteThread(th);
+}
+
+void ThreadsPool::rescheduleThread(Thread *th)
+{
+  deleteThread(th);
+  scheduleThread(th);
+}
+
+Thread *ThreadsPool::getFirstThreadOutline()
+{
+  Assert(hiCounter>=0 || lowCounter>=0); // otherwise inline version
+  /*
+   * empty hiQueue
+   */
+  if (hiCounter < 0) {
+    Assert(hiQueue.isEmpty());
+    Assert(!lowQueue.isEmpty() || !midQueue.isEmpty());
+
+lowMid:
+    if (lowCounter == 0 || midQueue.isEmpty()) {
+      Assert(!lowQueue.isEmpty());
+      Thread *th = lowQueue.dequeue();
+      lowCounter = lowQueue.isEmpty() ? -1 : ozconf.midLowRatio;
+      return th;
+    }
+    lowCounter--;
+    return midQueue.dequeue();
+  }
+
+  /*
+   * use hiQueue, else mid/low
+   */
+  if (hiCounter > 0 || (lowCounter < 0 && midQueue.isEmpty())) {
+    Thread *th = hiQueue.dequeue();
+    hiCounter = hiQueue.isEmpty() ? -1 :
+      (hiCounter==0 ? ozconf.hiMidRatio : hiCounter-1);
+    return th;
+  }
+  Assert(hiCounter==0);
+  hiCounter=ozconf.hiMidRatio;
+
+  Assert(lowCounter>=0 || !midQueue.isEmpty());
+  goto lowMid;
+}
+
+void ThreadsPool::scheduleThread(Thread *th,int pri)
+{
+  Assert(!isScheduledSlow(th));
+  if (pri < 0) pri = th->getPriority();
+
+  if (pri == MID_PRIORITY) {
+    midQueue.enqueue(th);
+  } else if (pri == HI_PRIORITY) {
+    hiQueue.enqueue(th);
+    if (hiCounter<0) hiCounter=ozconf.hiMidRatio;
+  } else {
+    lowQueue.enqueue(th);
+    if (lowCounter<0) lowCounter=ozconf.midLowRatio;
+  }
+}
+
+Bool ThreadsPool::threadQueuesAreEmptyOutline()
+{
+  if (!midQueue.isEmpty()) return NO;
+  if (hiCounter >= 0) {
+    if (!hiQueue.isEmpty()) return NO;
+  } else {
+    Assert(hiQueue.isEmpty());
+  }
+  if (lowCounter >= 0) {
+    if (!lowQueue.isEmpty()) return NO;
+  } else {
+    Assert(lowQueue.isEmpty());
+  }
+  return OK;
+}

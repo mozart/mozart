@@ -1,0 +1,199 @@
+#
+#  Authors:
+#    Michael Mehl (mehl@dfki.de)
+# 
+#  Contributors:
+#    Denys Duchier (duchier@ps.uni-sb.de)
+#    Christian Schulte <schulte@ps.uni-sb.de>
+# 
+#  Copyright:
+#    Michael Mehl, 1998
+# 
+#  Last change:
+#    $Date$ by $Author$
+#    $Revision$
+# 
+#  This file is part of Mozart, an implementation 
+#  of Oz 3:
+#     http://www.mozart-oz.org
+# 
+#  See the file "LICENSE" or
+#     http://www.mozart-oz.org/LICENSE.html
+#  for information on usage and redistribution 
+#  of this file, and for a DISCLAIMER OF ALL 
+#  WARRANTIES.
+
+# !!! THIS MAKEFILE REQUIRES GNU MAKE !!!!
+
+######################################################################
+# path
+######################################################################
+
+BUILDTOP=	@BUILDTOP@
+SRCTOP=		@SRCTOP@
+SRCDIR=		@srcdir@
+VPATH=		@srcdir@
+PREFIX=		@prefix@
+
+HOMEURL=	@HOMEURL@
+HOMECACHE=      @HOMECACHE@
+
+BINDIR=		$(PREFIX)/bin
+SHAREDIR=	$(PREFIX)/share
+TOOLSDIR=	$(SHAREDIR)/tools
+ELISPDIR=	$(SHAREDIR)/elisp
+IMAGESDIR=	$(SHAREDIR)/images
+CACHEDIR= 	$(PREFIX)/$(HOMECACHE)
+CACHETOOLS= 	$(CACHEDIR)/tools
+CACHEBIN=	$(CACHEDIR)/bin
+SHARECACHE=	$(CACHEDIR)/share
+
+######################################################################
+# programs
+######################################################################
+
+MAKE=		@MAKE@
+INSTALL=	@INSTALL@
+INSTALL_BIN=	$(INSTALL) -m 555
+INSTALL_FILE=	$(INSTALL) -m 444
+INSTALL_DIR=	@INSTALL_DIR@
+
+######################################################################
+# other variables
+######################################################################
+
+OZVERSION=	$(SRCTOP)/OZVERSION
+OZBUILD=        @OZBUILDDATE@
+FILES=		README LICENSE LICENSE.html
+ALLFILES=	$(FILES:%=$(PREFIX)/%)
+
+# sub directories for recursive makes
+SUBDIRS=	@oz_subdirs@
+
+######################################################################
+# common targets
+######################################################################
+
+.PHONY: all bootstrap install clean veryclean distclean check
+
+all:: bootstrap
+
+bootstrap clean veryclean depend distclean check install::
+	dirs="$(SUBDIRS)"; \
+	for i in $$dirs; do \
+	  if (cd $$i && $(MAKE) $@); \
+          then true; \
+          else exit 1; \
+          fi; \
+        done
+
+clean::
+	-rm -f *~
+
+veryclean::
+	$(MAKE) clean SUBDIRS=
+
+distclean::
+	$(MAKE) veryclean SUBDIRS=
+	-rm -f Makefile config.cache config.log config.status
+
+install:: $(PREFIX)
+
+$(PREFIX):
+	$(INSTALL_DIR) $@
+
+all:: Makefile
+
+Makefile: Makefile.in ./config.status
+	./config.status
+
+./config.status: ./configure
+	./config.status --recheck
+
+install:: $(ALLFILES)
+
+$(ALLFILES): $(PREFIX)/% : % $(PREFIX)
+	$(INSTALL_FILE) $< $@
+
+######################################################################
+# other targets
+######################################################################
+
+PLATFORMS=	solaris-sparc aix3-rs600 freebsd-i486 hpux-700 \
+		irix6-mips linux-i486 netbsd-i486 netbsd-m68k netbsd-sparc \
+		osf1-alpha solaris-i486 sunos-sparc win32-i486
+PLATFORMFILES=  README LICENSE LICENSE.html \
+	bin cache contrib examples include share 
+COMPRESS=	gzip -9
+TAR=		tar
+WINCACHEDIR=	oz3/cache/$(HOMECACHE)
+PACKDIR=	/tmp/pack
+
+
+.PHONY: src doc $(PLATFORMS)
+
+src: $(PACKDIR)
+	(cd $(PACKDIR); \
+	 (cd $(SRCTOP)/..; \
+	  $(TAR) -cf - mozart) | $(TAR) -xf - ; \
+	 find mozart -name CVS -type d -exec rm -rf '{}' ';' 2>/dev/null ; \
+	 find mozart -name '.cvsignore' -type f -exec rm -f '{}' ';' ; \
+	 $(TAR) -cf - mozart ) | \
+	 $(COMPRESS) > mozart-`$(OZVERSION)`.$(OZBUILD)-src.tar.gz
+	rm -rf $(PACKDIR)/mozart
+
+doc: $(PACKDIR) $(PACKDIR)/mozart/doc
+	(cd $(PACKDIR); \
+	(cd $(PREFIX)/doc; \
+	 $(TAR) -cf - .) | (cd mozart/doc; $(TAR) -xf -); \
+	 $(TAR) -cf - mozart ) | \
+	 $(COMPRESS) > mozart-`$(OZVERSION)`.$(OZBUILD)-doc.tar.gz
+	rm -rf $(PACKDIR)/mozart
+
+$(PLATFORMS): $(PACKDIR) $(PACKDIR)/mozart
+	(cd $(PACKDIR); \
+	 (cd $(PREFIX); \
+	  $(TAR) -cf - $(PLATFORMFILES) platform/$@ ) | \
+	 (cd mozart; $(TAR) -xf - ); \
+	 find mozart -name '*.so-*' \
+                     -not -name \*.so-$@ -exec rm -f '{}' ';' )
+	(cd $(PACKDIR); $(TAR) -cf - mozart/contrib ) | \
+	 $(COMPRESS) > mozart-`$(OZVERSION)`.$(OZBUILD)-$@-contrib.tar.gz
+	rm -rf $(PACKDIR)/mozart/contrib
+	(cd $(PACKDIR); $(TAR) -cf - mozart ) | \
+	$(COMPRESS) > mozart-`$(OZVERSION)`.$(OZBUILD)-$@.tar.gz
+	rm -rf $(PACKDIR)/mozart
+
+
+$(PACKDIR) $(PACKDIR)/mozart $(PACKDIR)/mozart/doc:
+	$(INSTALL_DIR) $@
+
+oz-win::
+	rm -rf oz3
+	$(INSTALL_DIR) oz3
+	( cd $(PREFIX); \
+	  $(TAR) cf - \
+		   $(FILES) \
+		   include share \
+		   contrib doc\
+		   winbin platform/win32-i486 \
+         ) | (cd oz3; $(TAR) xf -)
+	$(INSTALL_DIR) $(WINCACHEDIR)/share
+	$(INSTALL_DIR) $(WINCACHEDIR)/doc/demo
+	find oz3 -name '*.so-*' -not -name '*.so-win32-i486' -exec rm -f '{}' ';'
+	mv oz3/share/images oz3/share/?*.ozf $(WINCACHEDIR)/share
+	mv oz3/share/*.so-win32-i486 $(WINCACHEDIR)/share || true
+	cp -r oz3/doc/demo/applets $(WINCACHEDIR)/doc/demo
+	(cd oz3/contrib;\
+	 rm -rf text os/io.ozf os/process.ozf os/open.ozf;\
+	 rm -rf LP.ozf Psql.ozf RI.ozf Reflect.ozf DaVinci.ozf)
+	mv oz3/contrib $(WINCACHEDIR)
+	rm -rf oz3/share/doc oz3/platform/win32-i486/oztool.sh
+	mv $(WINCACHEDIR)/share/Init.ozf oz3/share
+	for i in ozc ozd ozl; do \
+	  cat oz3/winbin/ozwrapper.exe \
+	      $(PREFIX)/bin/$$i > oz3/winbin/$$i.exe;\
+        done
+	i386-mingw32-strip oz3/platform/win32-i486/*.exe
+	mv oz3/winbin oz3/bin
+

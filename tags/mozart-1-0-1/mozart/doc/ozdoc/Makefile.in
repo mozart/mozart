@@ -1,0 +1,9 @@
+VPATH		= @srcdir@
+SRCDIR		= @srcdir@
+
+WHAT = ozdoc
+MAIN = ozdoc.sgml
+SGMLSRCS =
+HTMLEXTRAFILES =
+
+include ../Makefile.common

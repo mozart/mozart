@@ -1,0 +1,82 @@
+VPATH		= @srcdir@
+PREFIX		= @prefix@
+BUILDTOP	= @BUILDTOP@
+
+PLATFORM	= @PLATFORM@
+PLATFORMDIR     = $(PREFIX)/platform/$(PLATFORM)
+INSTALL		= @INSTALL@
+INSTALL_BIN	= $(INSTALL) -m 555
+INSTALL_DIR	= @INSTALL_DIR@
+CC		= @CC@
+
+LIBS    	= @LIBS@
+EXTRALDFLAGS   	= @EXTRALDFLAGS@
+CPPFLAGS	= -I. @CPPFLAGS@
+CFLAGS		= @CFLAGS@
+LDFLAGS		= @LDFLAGS@
+LN_S		= @LN_S@
+
+PROVIDETCLLIBS  = @PROVIDETCLLIBS@
+TCLLIBTCLDIR    = @oz_tcl_lib_tcl_dir@
+TKLIBTCLDIR     = @oz_tk_lib_tcl_dir@
+
+WINDLLDIR	= @WINDLLDIR@
+
+OZWISH		= tk.exe
+SRCS		= @SRCS@
+OBJS		= ${SRCS:.c=.o}
+
+.PHONY: $(PROVIDETCLLIBS)
+
+all: $(OZWISH)
+
+bootstrap: all
+
+$(OZWISH): $(OBJS)
+	$(CC) $(LDFLAGS) $(EXTRALDFLAGS) -o $@ $(OBJS) $(LIBS)
+
+clean:
+	-rm -f $(OBJS) *~
+
+veryclean: clean
+	-rm -f $(OZWISH)
+
+distclean: veryclean
+	-rm -f conf.h config.* Makefile
+	-rm -f ozwish80.mk ozwish.mk1 ozwish.lk1 ozwish.imp ozwish.map ozwish.sym
+
+install: $(PLATFORMDIR) $(OZWISH) $(PROVIDETCLLIBS) @INSTALLWINDLLS@
+	$(INSTALL_BIN) $(OZWISH) $(PLATFORMDIR)
+
+installwindlls: $(PLATFORMDIR)
+	$(INSTALL) $(WINDLLDIR)/tcl80.dll $(PLATFORMDIR)
+	$(INSTALL) $(WINDLLDIR)/tk80.dll $(PLATFORMDIR)
+	$(INSTALL) $(WINDLLDIR)/msvcrt.dll $(PLATFORMDIR)
+
+nothing:
+
+$(PLATFORMDIR):
+	$(INSTALL_DIR) $@
+
+provide-link: $(PLATFORMDIR)
+	rm -rf $(PLATFORMDIR)/wish
+	$(INSTALL_DIR) $(PLATFORMDIR)/wish
+	(cd $(PLATFORMDIR)/wish; \
+		$(LN_S) $(TCLLIBTCLDIR) tcl; \
+		$(LN_S) $(TKLIBTCLDIR) tk)
+
+provide-copy: $(PLATFORMDIR)
+	rm -rf $(PLATFORMDIR)/wish
+	$(INSTALL_DIR) $(PLATFORMDIR)/wish/tcl
+	for i in $(TCLLIBTCLDIR)/*; do\
+	  if test -f $$i; then $(INSTALL) $$i $(PLATFORMDIR)/wish/tcl; fi;\
+	done
+	$(INSTALL_DIR) $(PLATFORMDIR)/wish/tk
+	for i in $(TKLIBTCLDIR)/*; do\
+	  if test -f $$i; then $(INSTALL) $$i $(PLATFORMDIR)/wish/tk; fi;\
+	done
+
+
+check:
+
+depend:

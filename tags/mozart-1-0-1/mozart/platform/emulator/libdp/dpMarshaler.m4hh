@@ -1,0 +1,144 @@
+/* -*- C++ -*-
+ *  Authors:
+ *    Per Brand (perbrand@sics.se)
+ * 
+ *  Contributors:
+ *    optional, Contributor's name (Contributor's email address)
+ * 
+ *  Copyright:
+ *    Per Brand, 1998
+ * 
+ *  Last change:
+ *    $Date$ by $Author$
+ *    $Revision$
+ * 
+ *  This file is part of Mozart, an implementation 
+ *  of Oz 3:
+ *     http://www.mozart-oz.org
+ * 
+ *  See the file "LICENSE" or
+ *     http://www.mozart-oz.org/LICENSE.html
+ *  for information on usage and redistribution 
+ *  of this file, and for a DISCLAIMER OF ALL 
+ *  WARRANTIES.
+ *
+ */
+
+#ifndef __MARSHALER_M4HH
+#define __MARSHALER_M4HH
+
+#include "base.hh"
+#include "dpBase.hh"
+#include "msgType.hh"
+#include "msgbuffer.hh"
+#include "perdio.hh"
+#include "table.hh"
+
+#ifdef INTERFACE  
+#pragma interface
+#endif
+
+extern SendRecvCounter mess_counter[];
+
+class ObjectFields{
+public:
+  SRecord *feat;
+  OZ_Term state;
+  OZ_Term lock;
+  OZ_Term clas;
+
+  ObjectFields(){}
+};
+
+void fillInObjectAndClass(ObjectFields *,Object *);
+void fillInObject(ObjectFields *,Object *);
+
+
+define(message,`void marshal_$1(MsgBuffer *,mxzArg($2,$3)mxzArg($3,$4)mxzArg($4,$5)mxzArg($5,$6)mxzArg($6,$7));')
+
+define(mxzArg,`ifelse($1,Index,int,
+	           $1,Index2,int,
+	           $1,Index3,int,
+                   $1,Term,TaggedRef,
+		   $1,String,char*,
+                   $1,Credit,Credit,
+                   $1,Object,Object*,
+                   $1,ObjectAndClass,Object*,
+                   $1,Site,DSite*,
+	           $1,Site2,DSite*)'
+            `ifelse($2,`',`',`,')')
+
+
+include(EMUDIR/msgFormat.m4)
+
+undefine(`mxzArg')
+define(mxzArg,`ifelse($1,Index,int &,
+	           $1,Index2,int &,
+	           $1,Index3,int &,
+                   $1,Term,TaggedRef &,
+		   $1,String,char* &,
+                   $1,Credit,Credit &,
+                   $1,Object,ObjectFields* ,
+                   $1,ObjectAndClass,ObjectFields* ,
+                   $1,Site,DSite* &,
+	           $1,Site2,DSite* &)'
+            `ifelse($2,`',`',`,')')
+
+
+undefine(`message')
+define(message,`void unmarshal_$1(MsgBuffer*, mxzArg($2,$3)mxzArg($3,$4)mxzArg($4,$5)mxzArg($5,$6)mxzArg($6,$7));')
+include(EMUDIR/msgFormat.m4)
+
+undefine(`message')
+define(message,`void unmarshalUnsent_$1(MsgBuffer*, mxzArg($2,$3)mxzArg($3,$4)mxzArg($4,$5)mxzArg($5,$6)mxzArg($6,$7));')
+include(EMUDIR/msgFormat.m4)
+
+void marshalDSite(DSite *, MsgBuffer *);
+void marshalObjectImpl(Object *o, MsgBuffer *bs, GName *gnclass,GenTraverser *);
+void marshalFullObject(Object *o,MsgBuffer* bs);
+void marshalFullObjectAndClass(Object *o,MsgBuffer* bs);
+void marshalFullObjectAndClassRT(Object *o,MsgBuffer* bs);
+void marshalFullObjectRT(Object *o,MsgBuffer* bs);
+
+MessageType unmarshalHeader(MsgBuffer *bs);
+void unmarshalObjectRT(ObjectFields *o, MsgBuffer *bs);
+void unmarshalObjectAndClassRT(ObjectFields *o, MsgBuffer *bs);
+
+inline void marshalCredit(Credit credit,MsgBuffer *bs){  
+  Assert(sizeof(Credit)==sizeof(int));
+  Assert(sizeof(Credit)==sizeof(unsigned int));
+  PD((MARSHAL,"credit c:%d",credit));
+  PD((CREDIT,"marshal:credit c:%d",credit));
+  marshalNumber(credit,bs);}
+
+inline Credit unmarshalCredit(MsgBuffer *bs){
+  Assert(sizeof(Credit)==sizeof(int));
+  Credit c=unmarshalNumber(bs);
+  PD((UNMARSHAL,"credit c:%d",c));
+  PD((CREDIT,"unmarshal:credit c:%d",c));
+  return c;}
+
+void unmarshalUnsentTerm(MsgBuffer *);
+void unmarshalUnsentSRecord(MsgBuffer *);
+int unmarshalUnsentNumber(MsgBuffer *bs);
+void unmarshalUnsentString(MsgBuffer *bs);
+void unmarshalUnsentSRecord(MsgBuffer *);
+void unmarshalUnsentObject(MsgBuffer *bs);
+void unmarshalUnsentObjectAndClass(MsgBuffer *bs);
+
+// var.cc
+OZ_Term unmarshalBorrow(MsgBuffer *bs,OB_Entry *&ob,int &bi);
+void marshalToOwner(int bi,MsgBuffer *bs);
+void marshalBorrowHead(MarshalTag tag, int bi,MsgBuffer *bs);
+void marshalOwnHead(int tag,int i,MsgBuffer *bs);
+
+//
+Bool marshalTertiaryImpl(Tertiary *t, MarshalTag tag, MsgBuffer *bs);
+OZ_Term unmarshalTertiaryImpl(MsgBuffer *bs, MarshalTag tag);
+OZ_Term unmarshalOwnerImpl(MsgBuffer *bs,MarshalTag mt);
+void marshalObjectImpl(ConstTerm* t, MsgBuffer *bs, GenTraverser *);
+void marshalSPPImpl(TaggedRef entity, MsgBuffer *bs, Bool trail);
+
+#endif // __MARSHALER_M4HH
+
+

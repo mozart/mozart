@@ -1,0 +1,12 @@
+SRCTOP		= @SRCTOP@
+SRCDIR		= @srcdir@
+VPATH		= @srcdir@
+
+WHAT	= install
+MAIN	= main.sgml
+SGMLSRCS =  configure.sgml src-get.sgml src-make.sgml \
+	rpm.sgml bin.sgml applets.sgml
+
+HTMLEXTRAFILES = netscape.gif
+
+include ../Makefile.common

@@ -1,0 +1,109 @@
+/*
+ *  Authors:
+ *    Michael Mehl (mehl@dfki.de)
+ * 
+ *  Contributors:
+ *    optional, Contributor's name (Contributor's email address)
+ * 
+ *  Copyright:
+ *    Michael Mehl (1997)
+ * 
+ *  Last change:
+ *    $Date$ by $Author$
+ *    $Revision$
+ * 
+ *  This file is part of Mozart, an implementation 
+ *  of Oz 3:
+ *     http://www.mozart-oz.org
+ * 
+ *  See the file "LICENSE" or
+ *     http://www.mozart-oz.org/LICENSE.html
+ *  for information on usage and redistribution 
+ *  of this file, and for a DISCLAIMER OF ALL 
+ *  WARRANTIES.
+ *
+ */
+
+/* OS and CPU */
+#undef LINUX_I486
+#undef SUNOS_SPARC
+#undef SOLARIS_SPARC
+#undef OSF1_ALPHA
+#undef HPUX_700
+
+#undef WINDOWS
+#undef LINUX
+#undef SOLARIS
+#undef SUNOS
+#undef IRIX6
+#undef NETBSD
+#undef FREEBSD
+#undef IRIX
+#undef OS2
+
+#undef ARCH_I486
+#undef ARCH_SPARC
+#undef ARCH_MIPS
+
+#undef SUNPRO
+
+/*
+ * emulator optimization
+ */
+
+/* define if threaded code (requires GCC) */
+#undef THREADED
+
+/* define if optimized register access (pre-shifted) */
+#undef FASTREGACCESS
+
+/* define if use native register for am registers (requires GCC) */
+#undef REGOPT
+
+/* define if modules are linked statically */
+#undef MODULES_LINK_STATIC
+
+/* debugging */
+#undef DEBUG_EMULATOR
+
+/* profiling */
+#undef PROFILE_EMULATOR
+
+/* RS profiling */
+#undef RS_PROFILE
+
+/* use a debug malloc library */
+#undef DMALLOC
+#undef CCMALLOC
+
+/* Define if you want support for virtual sites */
+#undef VIRTUALSITES
+
+/* Define if you want to include misc builtins */
+#undef MISC_BUILTINS
+
+/* new (non-recursive) marshaler */
+#undef NEWMARSHALER
+
+
+/* Define if you have the sbrk function.  */
+#undef HAVE_SBRK
+
+/* Define if you have the dlopen function.  */
+#undef HAVE_DLOPEN
+
+/* Define if you have <dlfcn.h>.  */
+#undef HAVE_DLFCN_H
+
+/* Define if you have the mmap system call.  */
+#undef HAVE_MMAP
+
+/* do we have setpgid? */
+#undef HAVE_SETPGID
+
+
+/* Define if dlopen needs a leading underscore. */
+#undef DLOPEN_UNDERSCORE
+
+/* for virtual sites */
+#undef key_t

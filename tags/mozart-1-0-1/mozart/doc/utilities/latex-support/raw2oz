@@ -1,0 +1,84 @@
+#!/usr/local/bin/perl
+
+$| = 1; # flush after every write
+
+$mode = shift(@ARGV);
+
+if ($mode eq plain) {
+    $mode = 0;
+} elsif	($mode eq sol) {
+    $mode = 1;
+} else {
+    die "unkown mode";
+}				
+
+$first = 1;
+
+$insol = 0;
+
+while (<>) {
+    if ( /^\\begin{ozdisplay\*?}/o ) {
+	
+	if ($mode == $insol) {
+	    $expanded = 1;
+	    $printed  = 0;
+
+	    print STDERR ".";
+	    
+	    while( ($line = <>) !~ /^\\end{ozdisplay\*?}/o ) {
+		if (eof()) { 
+		    close; 
+		    die "*** EOF before '\\end{ozdisplay}'\n"; 
+		}
+		
+		if ( $line =~ /^\@D\@(.*)$/o ){
+		    print ($1 . "\n");
+		    $printed = 1;
+		} elsif ( $line =~ /^\@I\@(.*)$/o ){
+		    system(("cat " . $1));
+		    $printed = 1;
+		} elsif ( $line =~ /^\@H\@/o ) {
+		    next;
+		} else {
+		    print $line;	
+		    $printed = 1;
+		}	
+	    }		
+	    if ($printed) { print "\n\n\n"; }
+	
+	} else {
+	    next;
+	}		       
+
+    } elsif ( (/^\\chapter{(.*)}/o)) {
+	if (!$first) { 
+	    print "\n\n\n";
+	} else {
+	    $first=0;
+	}
+	print "%%%\n";
+	print "%%% Chapter: ";
+	$header = $1;
+	$header =~ s/(\\label{.*} )//o;
+	print ($header . "\n");
+	print "%%%\n\n";
+    } elsif ( (/^\\section{(.*)}/o)) {
+	print "%%%\n";
+	print "%%% ";
+	$header = $1;
+	$header =~ s/(\\label{.*} )//o;
+	print ($header . "\n");
+	print "%%%\n\n";
+    } elsif ((/^\\begin{solution}/o)) {
+	$insol = 1;
+    } elsif ((/^\\end{solution}/o)) {
+	$insol = 0;
+    }
+    
+} 
+    
+print STDERR "\n" if $expanded;
+
+close;
+
+

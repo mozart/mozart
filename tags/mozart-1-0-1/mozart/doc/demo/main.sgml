@@ -1,0 +1,200 @@
+<!--
+  - Authors:
+  -   Christian Schulte <schulte@ps.uni-sb.de>
+  -
+  - Copyright:
+  -   Christian Schulte, 1998
+  -
+  - Last change:
+  -   $Date$ by $Author$
+  -   $Revision$
+  -
+  - This file is part of Mozart, an implementation
+  - of Oz 3
+  -    http://www.mozart-oz.org
+  -
+  - See the file "LICENSE" or
+  -    http://www.mozart-oz.org/LICENSE.html
+  - for information on usage and redistribution
+  - of this file, and for a DISCLAIMER OF ALL
+  - WARRANTIES.
+  -
+  -->
+
+<!DOCTYPE BOOK SYSTEM "ozdoc.dtd" [
+
+<!-- Extension to the DTD -->
+<!ENTITY % input.local.2 SYSTEM "demo.extra">
+<!ENTITY % p.mix.local "|note.gui|menu">
+<!ENTITY % proglang.values.local "|sh">
+<!ENTITY lambda "LAMBDA">
+<!ENTITY % proglang.values.local "|lambda">
+<!ENTITY % author.class "author|author.extern|comic">
+<!ENTITY % picture.element "picture|picture.extern|picture.choice">
+<!ELEMENT comic - O (%picture.element;)>
+
+<!-- Abbreviations -->
+<!ENTITY amp "&">
+<!ENTITY Oz "Oz">
+
+<!-- Processing Instructions -->
+<!ENTITY emdash PI "emdash">
+<!ENTITY nbsp PI "nbsp">
+<!ENTITY ellipsis PI "ellipsis">
+<!ENTITY slash PI "slash">
+<!ENTITY ie PI "ie">
+<!ENTITY eg PI "eg">
+<!ENTITY etc PI "etc">
+
+
+<!ENTITY chapter.queens         SYSTEM "queens.sgml">
+<!ENTITY chapter.jobshop        SYSTEM "jobshop.sgml">
+<!ENTITY chapter.college        SYSTEM "college.sgml">
+<!ENTITY chapter.cutting        SYSTEM "cutting.sgml">
+
+<!ENTITY chapter.trucks         SYSTEM "trucks.sgml">
+<!ENTITY chapter.bounce         SYSTEM "bounce.sgml">
+<!ENTITY chapter.lift           SYSTEM "lift.sgml">
+<!ENTITY chapter.transportation SYSTEM "transportation.sgml">
+
+<!ENTITY chapter.flowers        SYSTEM "flowers.sgml">
+<!ENTITY chapter.board          SYSTEM "board.sgml">
+<!ENTITY chapter.chat		SYSTEM "chat.sgml">
+<!ENTITY chapter.mim		SYSTEM "mim.sgml">
+
+<!ENTITY chapter.dict-client    SYSTEM "dict-client.sgml">
+]>
+
+
+<BOOK>
+<Title/Mozart Demo Applications/
+    <!-- Splitting the document into different HTML nodes -->
+    <Meta name=latex.package value="pstricks">
+    <Meta name=latex.package value="pifont">
+
+    <Meta name="html.split" arg1="chapter.queens" arg2="queens.html">
+    <Meta name="html.split" value="code.queens">
+
+    <Meta name="html.split" arg1="chapter.jobshop" arg2="jobshop.html">
+    <Meta name="html.split" value="code.jobshop.main">
+    <Meta name="html.split" value="code.jobshop.compiler">
+    <Meta name="html.split" value="code.jobshop.examples">
+    <Meta name="html.split" value="code.jobshop.scheduler">
+    <Meta name="html.split" value="code.jobshop.taskboard">
+    <Meta name="html.split" value="code.jobshop.tools">
+    <Meta name="html.split" value="code.jobshop.configure">
+
+    <Meta name="html.split" arg1="chapter.college" arg2="college.html">
+    <Meta name="html.split" value="code.college.problem">
+    <Meta name="html.split" value="code.college.main">
+    <Meta name="html.split" value="code.college.common">
+    <Meta name="html.split" value="code.college.controller">
+    <Meta name="html.split" value="code.college.scheduler">
+    <Meta name="html.split" value="code.college.graphics">
+    <Meta name="html.split" value="code.college.latex">
+
+    <Meta name="html.split" arg1="chapter.cutting" arg2="cutting.html">
+    <Meta name="html.split" value="code.cutting.compute">
+    <Meta name="html.split" value="code.cutting.configure">
+    <Meta name="html.split" value="code.cutting.edit">
+    <Meta name="html.split" value="code.cutting.main">
+    <Meta name="html.split" value="code.cutting.script">
+
+    <Meta name="html.split" arg1="chapter.flowers" arg2="flowers.html">
+    <Meta name="html.split" value="code.flowers">
+    <Meta name="html.split" value="code.flowers3d">
+
+    <Meta name="html.split" arg1="chapter.trucks" arg2="trucks.html">
+    <Meta name="html.split" value="code.trucks">
+
+    <Meta name="html.split" arg1="chapter.bounce" arg2="bounce.html">
+    <Meta name="html.split" value="code.bounce">
+
+    <Meta name="html.split" arg1="chapter.lift" arg2="lift.html">
+    <Meta name="html.split" value="code.lift">
+
+    <Meta name="html.split" arg1="chapter.transportation" arg2="transportation.html">
+    <Meta name="html.split" value="code.transportation.main">
+    <Meta name="html.split" value="code.transportation.agents">
+    <Meta name="html.split" value="code.transportation.agentabstractions">
+    <Meta name="html.split" value="code.transportation.configure">
+    <Meta name="html.split" value="code.transportation.country">
+    <Meta name="html.split" value="code.transportation.dialogs">
+    <Meta name="html.split" value="code.transportation.germany">
+    <Meta name="html.split" value="code.transportation.plan">
+    <Meta name="html.split" value="code.transportation.randomizer">
+    <Meta name="html.split" value="code.transportation.widgets">
+
+    <Meta name="html.split" arg1="chapter.board" arg2="board.html">
+    <Meta name="html.split" value="code.board">
+
+    <Meta name="html.split" arg1="chapter.chat" arg2="chat.html">
+
+    <Meta name="html.split" arg1="chapter.mim" arg2="mim.html">
+
+    <Meta name="html.split" arg1="chapter.dict-client" arg2="dict-client.html">
+    <Meta name="html.split" value="code.dict-client.main">
+    <Meta name="html.split" value="code.dict-client.netdictionary">
+    <Meta name="html.split" value="code.dict-client.tkdictionary">
+
+    <Meta name="html.split.toc" value="">
+    <Meta name="html.split.bib" value="">
+
+    <Comic>
+      <Picture.Choice>
+	<Picture.Extern to="demo.gif" type=gif>
+      </Picture.Choice>
+    <Abstract>
+      This document offers a number of demo applets that can be run
+      directly from within their documentation. 
+    <p>
+      To run the demo applets you have to have Mozart installed (which
+      is easy and is described in <ptr.extern to="ozdoc:install">) and
+      your Web Browser must be Mozart enabled (which is as easy and is
+      described in <ptr.extern to="ozdoc:install" key="applets">). 
+    </Abstract>
+  
+    <Part id="part.constraints">
+      <Title/Constraint Applications/
+      &chapter.queens;
+      &chapter.jobshop;
+      &chapter.college;
+      &chapter.cutting;
+    </Part>
+
+    <Part id="part.concurrent">
+      <Title/Multi Agent and Concurrent Applications/
+      &chapter.flowers;
+      &chapter.trucks;
+      &chapter.bounce;
+      &chapter.lift;
+      &chapter.transportation;
+    </Part>
+
+    <Part id="part.distributed">
+      <Title/Distributed Applications/
+      &chapter.board;
+      &chapter.chat;
+      &chapter.mim;
+    </Part>
+
+    <Part id="part.miscellaneous">
+      <Title/Miscellaneous Applications/
+      &chapter.dict-client;
+    </Part>
+
+  <Back>
+    <Bib.Extern id="FischerKuhn.93" to="demo.bib" key="FischerKuhn.93"> 
+    <Bib.Extern id="Peek.95"        to="demo.bib" key="Peek.95"> 
+    <Bib.Extern id="Lindenmayer:90" to="demo.bib" key="Lindenmayer:90">
+</BOOK>
+
+<!--
+Local Variables:
+mode: sgml
+mode: auto-fill
+sgml-default-dtd-file: "book.ced"
+sgml-auto-activate-dtd: t
+adaptive-fill-mode: nil
+End:
+-->

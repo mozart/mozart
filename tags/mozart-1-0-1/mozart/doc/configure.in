@@ -1,0 +1,72 @@
+dnl -*- sh -*-
+dnl
+dnl  Authors:
+dnl    Denys Duchier (duchier@ps.uni-sb.de)
+dnl 
+dnl  Copyright:
+dnl    Denys Duchier (1998)
+dnl 
+dnl  Last change:
+dnl    $Date$ by $Author$
+dnl    $Revision$
+dnl 
+dnl  This file is part of Mozart, an implementation 
+dnl  of Oz 3:
+dnl     http://www.mozart-oz.org
+dnl 
+dnl  See the file "LICENSE" or
+dnl     http://www.mozart-oz.org/LICENSE.html
+dnl  for information on usage and redistribution 
+dnl  of this file, and for a DISCLAIMER OF ALL 
+dnl  WARRANTIES.
+dnl
+
+dnl Process this file with autoconf to produce a configure script.
+
+AC_INIT(ozdoc.dtd)
+OZ_INIT
+OZ_PATH_PROG(OZENGINE,ozengine)
+OZ_PATH_PROG(OZDOC,ozdoc,OZDOC=$BUILDTOP/doc/utilities/ozdoc)
+AC_SUBST(OZENGINE)
+AC_SUBST(OZDOC)
+
+AC_MSG_CHECKING(for --with-psgml-dir)
+AC_ARG_WITH(psgml-dir,
+    [--with-psgml-dir=DIR
+    	directory where psgml mode support is located],
+    oz_psgml_dir=${with_psgml_dir})
+: ${oz_psgml_dir=}
+AC_MSG_RESULT($oz_psgml_dir)
+if test -n "${oz_psgml_dir}"
+then
+    PSGML="${oz_psgml_dir}"
+    CED="ozdoc.ced"
+else
+    PSGML=
+    CED=
+fi
+AC_SUBST(PSGML)
+AC_SUBST(CED)
+
+AC_MSG_CHECKING(for --with-documents)
+AC_ARG_WITH(documents,
+  [--with-documents='DIR1 ... DIRN' (or all)      
+       document subdirectories (default=none)],
+  oz_doc_dirs=${with_documents})
+: ${oz_doc_dirs=}
+AC_MSG_RESULT($oz_doc_dirs)
+
+test "${oz_doc_dirs}" = "all" && oz_doc_dirs="apptut base compiler contrib demo foreign gump op opi ozcar profiler ozdoc system tools wp fdt fst cpitut cpiref install tutorial overview panel explorer browser notation dstutorial changes tcltk howtoread faq limitations"
+
+SUBDIRS="utilities ${oz_doc_dirs}"
+AC_SUBST(SUBDIRS)
+
+AC_CONFIG_SUBDIRS(utilities)
+
+AC_OUTPUT(Makefile Makefile.common catalog bootcatalog ced.el ced.sgml base/Makefile foreign/Makefile apptut/Makefile wp/Makefile system/Makefile compiler/Makefile opi/Makefile tools/Makefile ozcar/Makefile profiler/Makefile gump/Makefile ozdoc/Makefile contrib/Makefile demo/Makefile op/Makefile fdt/Makefile fst/Makefile cpitut/Makefile cpiref/Makefile install/Makefile tutorial/Makefile overview/Makefile notation/Makefile browser/Makefile panel/Makefile explorer/Makefile dstutorial/Makefile changes/Makefile tcltk/Makefile howtoread/Makefile faq/Makefile limitations/Makefile)
+
+errprint(ifdef([OZ_INIT],
+ [autoconf succeeded
+],
+ [autoconf failed: use 'autoconf -l ..' to include ../aclocal.m4.
+]))

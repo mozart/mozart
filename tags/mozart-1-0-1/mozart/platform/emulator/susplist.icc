@@ -1,0 +1,116 @@
+/*
+ *  Authors:
+ *    Tobias Mueller (tmueller@ps.uni-sb.de)
+ * 
+ *  Contributors:
+ *    optional, Contributor's name (Contributor's email address)
+ * 
+ *  Copyright:
+ *    Organization or Person (Year(s))
+ * 
+ *  Last change:
+ *    $Date$ by $Author$
+ *    $Revision$
+ * 
+ *  This file is part of Mozart, an implementation 
+ *  of Oz 3:
+ *     http://www.mozart-oz.org
+ * 
+ *  See the file "LICENSE" or
+ *     http://www.mozart-oz.org/LICENSE.html
+ *  for information on usage and redistribution 
+ *  of this file, and for a DISCLAIMER OF ALL 
+ *  WARRANTIES.
+ *
+ */
+
+#ifndef __SUSPLIST_ICC__
+#define __SUSPLIST_ICC__
+
+
+#ifdef INTERFACE
+#ifndef OUTLINE
+#pragma interface
+#endif
+#endif
+
+//-----------------------------------------------------------------------------
+//                           class SuspList
+
+inline
+SuspList * SuspList::appendToAndUnlink(SuspList * &to_list, Bool reset_local)
+{
+  if (this) { 
+    SuspList * aux;
+    
+    if (reset_local) 
+      for (aux = this; aux; aux = aux->getNext())
+      	aux->getElem().unmarkLocalPropagator();
+    
+    if (to_list) {
+      // this != NULL && to_list != NULL
+      
+      // multiple entries of suspensions have to be removed; therefore ...
+      // ... tag this-list and find last entry
+      SuspList * last DebugCode(= NULL);
+      for (aux = this; 1; ) {
+	aux->getElem().markTagged();
+	
+	SuspList * aux_next = aux->getNext(); 
+	
+	if (aux_next) {
+	  aux = aux_next; 
+	} else {
+	  last = aux;
+	  break;
+	}
+      }
+
+      Assert (last);
+      
+      // remove tagged entries from to_list 
+      SuspList ** aux1 = &to_list;
+      while (*aux1) {
+	if ((*aux1)->getElem().isTagged()) {
+	  *aux1 = (*aux1)->getNext();
+	  continue;
+	}
+	aux1 = &(*aux1)->_next;
+      }
+      
+      // untag this-list
+      for (aux = this; aux; aux = aux->getNext())
+      	aux->getElem().unmarkTagged();
+      
+      last->setNext(to_list);
+    } 
+
+    to_list = this;
+  }
+  return NULL;
+}
+
+//-----------------------------------------------------------------------------
+// class OrderedSuspList
+
+inline   
+OrderedSuspList * OrderedSuspList::insert(Propagator * prop)
+{
+#ifdef DEBUG_NONMONOTONIC
+  cout << "OrderedSuspList::insert" << endl << flush;
+#endif
+
+  Assert(prop->isNonMonotonicPropagator());
+
+  OrderedSuspList * r = this, ** p = &r;
+  OZ_NonMonotonic::order_t n_order = prop->getPropagator()->getOrder();
+  while (*p && (n_order > (*p)->_p->getPropagator()->getOrder()))
+    p = &((*p)->_n);
+
+  *p = new OrderedSuspList(prop, *p);
+
+  return r;
+}
+
+#endif
+

@@ -1,0 +1,764 @@
+dnl -*- sh -*-
+dnl
+dnl  Authors:
+dnl    Michael Mehl (mehl@dfki.de)
+dnl    Denys Duchier (duchier@ps.uni-sb.de)
+dnl 
+dnl  Contributors:
+dnl    optional, Contributor's name (Contributor's email address)
+dnl 
+dnl  Copyright:
+dnl    Michael Mehl (1997)
+dnl    Denys Duchier (1998)
+dnl 
+dnl  Last change:
+dnl    $Date$ by $Author$
+dnl    $Revision$
+dnl 
+dnl  This file is part of Mozart, an implementation 
+dnl  of Oz 3:
+dnl     http://www.mozart-oz.org
+dnl 
+dnl  See the file "LICENSE" or
+dnl     http://www.mozart-oz.org/LICENSE.html
+dnl  for information on usage and redistribution 
+dnl  of this file, and for a DISCLAIMER OF ALL 
+dnl  WARRANTIES.
+dnl
+
+dnl Process this file with autoconf to produce a configure script.
+
+dnl mm2: Known Problems and Bugs
+dnl  Windows support
+dnl  pmake support
+dnl  ensure that all needed programs are really found
+dnl  cache M4 -E
+
+dnl *****************************************************************
+dnl INITIALIZE
+dnl *****************************************************************
+
+dnl This will check that we are in the Oz directory and initiate
+AC_INIT(base.hh)
+
+OZ_INIT
+
+dnl *****************************************************************
+dnl additional tests
+dnl *****************************************************************
+
+dnl *****************************************************************
+dnl windows cross compilation
+dnl *****************************************************************
+
+case "$target" in
+   NONE) 
+   ;;
+   i386-mingw32) 
+        AC_MSG_RESULT(cross compiling for windows)
+	oz_malloc_obj=
+
+	# va-start makes problems under mingw32
+	enable_warnings=no
+
+	# -DINTERFACE does not work
+	oz_copt_debug="-g"
+   ;;
+
+   *)
+	AC_MSG_ERROR("can only cross-compile for target i386-mingw32 not for $target")
+    ;;
+esac
+
+
+dnl *****************************************************************
+dnl Checks for programs.
+dnl *****************************************************************
+
+AC_MSG_CHECKING(for --with-sunpro)
+AC_ARG_WITH(sunpro,
+    [--with-sunpro      use sunpro compiler (default: no)],
+	if test "${with_sunpro}" = yes; then
+            AC_MSG_RESULT(yes)
+	    AC_CHECK_PROGS(SUNPRO, CC)
+	    if test -n "${SUNPRO}"
+	    then
+		CXX=$SUNPRO
+		AC_DEFINE(SUNPRO)
+		oz_enable_threaded=no
+	    else
+		AC_MSG_WARN(Ignoring --with-sunpro!)
+	    fi
+	else
+	    AC_MSG_RESULT(no)
+	fi,
+	AC_MSG_RESULT(no))
+
+OZ_CXX_CHOOSE
+AC_LANG_CPLUSPLUS
+OZ_PROG_FLEX
+OZ_PROG_BISON
+AC_PROG_LN_S
+OZ_PROG_MAKE
+AC_PROG_MAKE_SET
+AC_PROG_RANLIB
+
+AC_CHECK_PROGS(M4, gm4 m4, m4)
+OZ_PROG_PERL
+
+AC_CHECK_PROGS(SED, gnused sed, sed)
+if test -z "$AR"; then
+    AC_CHECK_PROGS(AR, gar ar, ar)
+fi
+
+AC_PATH_PROG(DEPEND, makedepend, makedepend)
+
+OZTOOL_SH="sh `pwd`/oztool.sh"
+AC_SUBST(OZTOOL_SH)
+
+
+dnl *****************************************************************
+dnl platform
+dnl *****************************************************************
+
+# PLATFORM is defined by OZ_INIT
+: ${platform=$PLATFORM}
+AC_SUBST(platform)
+
+PLATFORM="`echo $platform|sed -e s/-/_/|tr a-z A-Z`"
+AC_DEFINE_UNQUOTED($PLATFORM)
+AC_SUBST(PLATFORM)
+
+ARCH=ARCH_`echo $PLATFORM|sed -e 's/.*_//'`
+OS=`echo $PLATFORM|sed -e 's/_.*//'`
+AC_DEFINE_UNQUOTED($ARCH)
+AC_DEFINE_UNQUOTED($OS)
+
+dnl *****************************************************************
+dnl Compiler, Linker, and m4 options
+dnl *****************************************************************
+
+: ${oz_copt_default=$CXXFLAGS}
+CXXFLAGS=
+
+if test "${GXX}" = yes; then
+    M4_S="-s"
+    DEPEND="$CXX -MM"
+
+    OZ_CXX_OPTIONS(-fno-exceptions -fno-rtti,oz_a)
+    CXXAVOID=$oz_a
+    CXXFLAGS="$CXXFLAGS $oz_a"
+
+    : ${oz_enable_warnings=no}
+    AC_MSG_CHECKING(for --enable-warnings)
+    AC_ARG_ENABLE(warnings,
+	[--enable-warnings  print c warnings (default=no)],,
+	[enable_warnings=$oz_enable_warnings])
+    AC_MSG_RESULT($enable_warnings)
+    : ${oz_enable_errors=no}
+    AC_MSG_CHECKING(for --enable-errors)
+    AC_ARG_ENABLE(errors,
+	[--enable-errors  c warnings abort make (default=no)],,
+	[enable_errors=$oz_enable_errors])
+    AC_MSG_RESULT($enable_errors)
+
+    if test "${enable_warnings}" != no
+    then
+	oz_warn="-Wall -W -Wpointer-arith -Wbad-function-cast -Wcast-qual \
+	    -Wstrict-prototypes -Wmissing-prototypes -Wmissing-declarations \
+	    -Wnested-externs -Wsynth \
+	    -Wno-unused -Wno-reorder -Wno-uninitialized -Wno-sign-compare"
+        test "$enable_errors" != no && \
+	oz_warn_error="-Werror"
+    fi
+
+    oz_opt="-O3 -pipe -fstrict-aliasing"
+    oz_om=
+    if test "${platform}" = linux-i486
+    then
+	oz_opt="$oz_opt -mpentium"
+#	oz_om="-fomit-frame-pointer"
+    fi
+    : ${oz_copt_optimize="$oz_opt $oz_om"}
+    : ${oz_copt_profile="$oz_opt -pg -fno-inline -fno-default-inline"}
+    : ${oz_copt_debug="-g3 -DINTERFACE"}
+fi
+
+if test -n "${SUNPRO}"
+then
+    : ${oz_copt_optimize=-fast}
+    DEPEND="$CXX -xM"
+fi
+
+: ${LD=$CXX}
+AC_SUBST(LD)
+
+
+case $platform in
+    sunos*)
+        TOOLLDCMD="ld"
+	oz_enable_modules_static=yes
+	;;
+    linux*)
+        TOOLLDCMD="gcc -shared"
+	EMULDFLAGS="-Wl,-export-dynamic"
+	: ${oz_enable_modules_static=no}
+	;;
+    solaris*)
+        TOOLLDCMD="gcc -shared"
+	: ${oz_enable_modules_static=no}
+	;;
+    irix*)
+        TOOLLDCMD="ld -shared"
+	oz_enable_modules_static=yes
+	CPPFLAGS="-DINTERFACE $CPPFLAGS"
+	;;
+    osf1*)
+        TOOLLDCMD="gcc -shared -Wl,-expect_unresolved -Wl,*"
+	dnl dont change LDFLAGS, see machine.hh !!!
+	EMULDFLAGS="-Wl,-D -Wl,0x30000000 -Wl,-T -Wl,0x20000000"
+	: ${oz_enable_modules_static=no}
+	;;
+    hpux*)
+        TOOLLDCMD="ld -b"
+	EMULDFLAGS="-Wl,-E"
+	oz_enable_modules_static=yes
+	;;
+    freebsdelf*)
+	TOOLLDCMD="gcc -shared"
+	EMULDFLAGS="-Wl,-export-dynamic"
+	: ${oz_enable_modules_static=no}
+        ;;
+    freebsd*)
+        TOOLLDCMD="ld -Bshareable"
+	oz_enable_modules_static=yes
+        ;;
+    netbsd*)
+        TOOLLDCMD="ld -Bshareable"
+	oz_enable_modules_static=yes
+        ;;
+    win32*)
+	oz_enable_modules_static=yes
+	AC_DEFINE(WINDOWS)
+	AC_DEFINE(ARCH_I486)
+	OZ_CXX_OPTIONS(-mno-cygwin,oz_a)
+	LDFLAGS="$oz_a $LDFLAGS"
+	CPPFLAGS="-DWINDOWS_EMULATOR $oz_a $CPPFLAGS"
+	if test "$host_os" = cygwin32
+	then LD=gcc # otherwise it allways uses -lm which has reference to _errno
+	fi
+    ;;
+    *)
+	AC_MSG_WARN(Unknown platform "$platform")
+	sleep 3
+	TOOLLDCMD="ld"
+	oz_enable_modules_static=yes
+	;;
+esac
+
+AC_SUBST(TOOLLDCMD)
+AC_SUBST(EMULDFLAGS)
+
+# compiler options
+: ${oz_copt_optimize="-O"}
+: ${oz_copt_profile=-pg}
+: ${oz_copt_debug="-g"}
+
+# compiler options for warnings
+AC_SUBST(oz_warn)
+
+# compiler option which turns warnings into errors
+AC_SUBST(oz_warn_error)
+
+# linker options
+: ${oz_lopt_profile=-pg}
+
+# m4 options
+if test -n "$M4"
+then
+    for oz_opt in -E -B10000; do
+	AC_MSG_CHECKING(whether $M4 understands $oz_opt option)
+	oz_tmp=`$M4 $oz_opt < /dev/null 2>&1`
+	if test -n "$oz_tmp"
+	then
+	    AC_MSG_RESULT(no)
+	else
+	    AC_MSG_RESULT(yes)
+	    M4="$M4 $oz_opt"
+	fi
+    done
+fi
+AC_SUBST(M4_S)
+
+OZ_CXX_OPTIONS($oz_warn,oz_a)
+oz_warn=$oz_a
+
+OZ_CXX_OPTIONS($oz_warn_error,oz_a)
+oz_warn_error=$oz_a
+
+dnl *****************************************************************
+dnl Try to link system libraries statically
+dnl *****************************************************************
+
+OZ_ENABLE(link-static,[ link system libraries statically],no,
+        AC_MSG_RESULT(yes)
+	,
+        AC_MSG_RESULT(no)
+	)
+
+
+dnl *****************************************************************
+dnl Checks for types.
+dnl *****************************************************************
+
+AC_CHECK_TYPE(key_t, unsigned int)
+
+dnl *****************************************************************
+dnl Checks for header files.
+dnl *****************************************************************
+
+dnl AC_HEADER_DIRENT
+dnl AC_HEADER_STDC
+dnl AC_HEADER_SYS_WAIT
+dnl AC_CHECK_HEADERS(fcntl.h limits.h malloc.h strings.h sys/time.h unistd.h)
+
+AC_CHECK_HEADERS(dlfcn.h)
+
+dnl *****************************************************************
+dnl Checks for typedefs, structures, and compiler characteristics.
+dnl *****************************************************************
+
+dnl const test not needed for C++!
+dnl AC_C_CONST
+
+dnl AC_C_INLINE
+dnl AC_TYPE_MODE_T
+dnl AC_TYPE_PID_T
+dnl AC_TYPE_SIZE_T
+dnl AC_HEADER_TIME
+dnl AC_STRUCT_TM
+
+dnl *****************************************************************
+dnl Checks for libraries.
+dnl *****************************************************************
+
+
+case "$platform" in
+win32-i486)
+    AC_CHECK_LIB(kernel32,main)
+    AC_CHECK_LIB(wsock32,main)
+;;
+irix6*)
+    AC_CHECK_LIB(m, fabs)
+    AC_CHECK_LIB(dl, dlopen)
+;;
+*)
+    AC_CHECK_LIB(nsl, gethostbyaddr,,[
+      AC_CHECK_LIB(c, gethostbyaddr)])
+    OZ_NEEDS_FUNC(gethostbyaddr)
+    AC_CHECK_LIB(socket, socket)
+    OZ_NEEDS_FUNC(socket)
+    AC_CHECK_LIB(m, fabs)
+    OZ_NEEDS_FUNC(fabs)
+    AC_CHECK_LIB(dl, dlopen)
+
+esac
+
+dnl *****************************************************************
+dnl Checks for library functions.
+dnl *****************************************************************
+
+dnl AC_FUNC_ALLOCA
+dnl AC_FUNC_MEMCMP
+dnl AC_TYPE_SIGNAL
+dnl AC_FUNC_VPRINTF
+dnl AC_CHECK_FUNCS(getcwd gethostname gettimeofday putenv select socket strdup strerror strstr strtod strtol strtoul uname)
+
+AC_CHECK_FUNC(setpgid,AC_DEFINE(HAVE_SETPGID))
+
+if test -z "${enable_wincross}"; then
+    AC_CHECK_FUNCS(sbrk dlopen mmap)
+fi
+
+dnl *****************************************************************
+dnl MISC
+dnl *****************************************************************
+
+AC_DEFUN(OZ_CHECK_DLOPEN_UNDERSCORE,[
+if test "$ac_cv_lib_dl_dlopen" = yes || \
+   test "$ac_cv_func_dlopen" = yes; then
+  AC_CACHE_CHECK([whether dlopen needs leading underscore],
+    oz_cv_dlopen_underscore,[
+    if test -n "$oz_dlopen_underscore"; then
+      oz_cv_dlopen_underscore=$oz_dlopen_underscore
+    else
+      cat > conftest.$ac_ext <<EOF
+extern "C"
+int foo() { return 1; }
+EOF
+      if AC_TRY_EVAL(ac_compile); then
+        oz_tmp=`(strings -a conftest.o | grep foo) 2>/dev/null`
+        if expr "$oz_tmp" : '_' 1>/dev/null 2>&1; then
+          oz_cv_dlopen_underscore=yes;
+        else
+          oz_cv_dlopen_underscore=no;
+        fi
+      else
+        AC_MSG_ERROR([test bombed])
+      fi
+      rm -rf conftest.$ac_ext conftest.o
+    fi])
+  if test "$oz_cv_dlopen_underscore" = yes; then
+    AC_DEFINE(DLOPEN_UNDERSCORE)
+  fi
+fi])
+
+OZ_CHECK_DLOPEN_UNDERSCORE
+
+# AC_CHECK_SIZEOF(int)
+# AC_C_BIGENDIAN
+
+# check malloc base
+
+dnl *****************************************************************
+dnl *** GMP
+dnl *****************************************************************
+
+: ${oz_inc_path="/usr/local/include"}
+: ${oz_lib_path="/usr/local/lib"}
+
+OZ_LIB_GMP
+
+dnl *****************************************************************
+dnl *** zlib
+dnl *****************************************************************
+
+OZ_LIB_ZLIB
+
+dnl *****************************************************************
+dnl ccmalloc
+dnl *****************************************************************
+
+AC_MSG_CHECKING(for --with-ccmalloc)
+AC_ARG_WITH(ccmalloc,
+    [--with-ccmalloc    use debugging malloc library ccmalloc ])
+
+if test "$with_ccmalloc" = "yes"
+then
+    AC_MSG_RESULT(yes)
+    AC_CHECK_LIB(ccmalloc,main,true,AC_MSG_ERROR(cannot find lib ccmalloc))
+    AC_DEFINE(CCMALLOC)
+    LIBS="$LIBS -lccmalloc"
+    oz_enable_modules_static=yes
+elif test -n "$with_ccmalloc"
+then
+    AC_MSG_ERROR(only yes allowed)
+else
+    AC_MSG_RESULT(no)
+fi
+
+
+dnl *****************************************************************
+dnl *** Features
+dnl *****************************************************************
+
+
+AC_MSG_CHECKING(for --enable-opt)
+AC_ARG_ENABLE(opt,
+    [--enable-opt=<k>   add specialied compile options (default=no)
+                   (o|yes=optimize, d=debug, p=profile, rsp=ralfs profile)])
+case $enable_opt in
+    d*)
+        AC_MSG_RESULT(debug (-DDEBUG_EMULATOR))
+	AC_DEFINE(DEBUG_EMULATOR)
+	OZ_CXX_OPTIONS($oz_copt_debug, COPT)
+	oz_enable_threaded=no
+	oz_enable_fastreg=no
+	oz_enable_regopt=no
+	;;
+    p*)
+	AC_MSG_RESULT(profile (-DPROFILE_EMULATOR))
+	AC_DEFINE(PROFILE_EMULATOR)
+        OZ_CXX_OPTIONS($oz_copt_profile, COPT)
+	EMUFLAGS="$EMULDFLAGS $oz_lopt_profile"
+	;;
+    rsp*)
+        AC_MSG_RESULT(rsprofile (-DRS_PROFILE))
+	AC_DEFINE(RS_PROFILE)
+        OZ_CXX_OPTIONS("-O", COPT)
+	oz_enable_miscbuiltins="yes"
+	oz_enable_threaded="no"
+	;;
+    yes|o*)
+	AC_MSG_RESULT(optimize)
+	OZ_CXX_OPTIONS($oz_copt_optimize, COPT)
+	;;
+    *)
+        AC_MSG_RESULT(default)
+	COPT=$oz_copt_default
+	;;
+esac
+AC_SUBST(COPT)
+
+
+OZ_ENABLE(threaded,[ threaded code emulator],yes,
+	AC_MSG_RESULT(yes (-DTHREADED))
+	AC_DEFINE(THREADED)
+	)
+
+OZ_ENABLE(fastreg,[  fast register access],yes,
+	AC_MSG_RESULT(yes (-DFASTREGACCESS))
+	AC_DEFINE(FASTREGACCESS)
+	)
+
+OZ_ENABLE(regopt,[   register optimization],yes,
+	AC_MSG_RESULT(yes (-DREGOPT))
+	AC_DEFINE(REGOPT)
+	)
+
+OZ_ENABLE(modules-static,[ link modules statically],$oz_enable_modules_static,
+        oz_enable_modules_static=yes
+        AC_MSG_RESULT(yes (-DMODULES_LINK_STATIC))
+	AC_DEFINE(MODULES_LINK_STATIC)
+	STATIC_MODULES="\$(MODULE_NAMES)"
+	DYNAMIC_MODULES=""
+	,
+        oz_enable_modules_static=no
+        AC_MSG_RESULT(no (-UMODULES_LINK_STATIC))
+	STATIC_MODULES=""
+	DYNAMIC_MODULES="\$(MODULE_NAMES)"
+	)
+AC_SUBST(STATIC_MODULES)
+AC_SUBST(DYNAMIC_MODULES)
+
+OZ_CXX_OPTIONS(-fpic -Kpic,OZTOOLDYNOPT)
+if test "$oz_enable_modules_static" != "yes" ; then 
+    CDYNOPT=$OZTOOLDYNOPT
+fi
+AC_SUBST(CDYNOPT)
+AC_SUBST(OZTOOLDYNOPT)
+
+dnl *****************************************************************
+dnl malloc
+dnl *****************************************************************
+
+if test -z "$with_ccmalloc" 
+then
+    AC_MSG_CHECKING(for --with-malloc)
+    AC_ARG_WITH(malloc,
+	[--with-malloc=<obj>      use malloc from object file <obj> (default: NONE)])
+
+    if test -n "$with_malloc"
+    then
+	oz_malloc_obj=$with_malloc
+    fi
+    
+    if test -n "$oz_malloc_obj" && test -r $oz_malloc_obj
+    then
+	LIBS="$LIBS $oz_malloc_obj"
+	AC_MSG_RESULT(yes (\"$oz_malloc_obj\"))
+    else
+	AC_MSG_RESULT(no)
+    fi
+fi
+
+dnl *****************************************************************
+dnl virtual sites
+dnl *****************************************************************
+
+dnl let us start with simple tests...
+AC_CHECKING(whether we can virtual sites...)
+AC_CACHE_VAL(ac_cv_can_vs,
+[can_vs=yes
+ AC_CHECK_HEADER(sys/types.h,, can_vs=no)
+ AC_CHECK_HEADER(unistd.h,, can_vs=no)
+ AC_CHECK_HEADER(sys/ipc.h,, can_vs=no)
+ AC_CHECK_HEADER(sys/shm.h,, can_vs=no)
+ AC_CHECK_FUNCS(shmget,, can_vs=no)
+ AC_CHECK_FUNCS(shmat,, can_vs=no)
+ AC_CHECK_FUNCS(shmdt,, can_vs=no)
+ AC_CHECK_FUNCS(shmctl,, can_vs=no)
+ if test $can_vs = yes; then
+    AC_MSG_CHECKING(shared memory with a test program)
+    AC_TRY_RUN([
+#include <sys/types.h>
+#include <unistd.h>
+#include <sys/ipc.h>
+#include <sys/shm.h>
+#include <errno.h>
+
+#define VS_KEYTYPE_SIZE		4
+#define VS_SEQ_SIZE		12
+#define VS_PID_MASK		0xffff
+#define SEQ_NUM			0x5
+#define VS_MSGBUFFER_KEY	0x1
+#define SHMSIZE			(1024*1024)
+#define	PERMS			0666
+#define SHM_OPT			0
+
+typedef unsigned int Value;
+
+#if defined(sparc)
+
+#define ASM_SWAP(cell, value)					\
+({ 								\
+  Value out;							\
+  __asm__ __volatile__ ("swap %3,%0"				\
+		 : "=r" (out),   "=m" (cell) 	/* output */	\
+		 : "0"  (value), "m"  (cell));	/* input  */	\
+  out;								\
+})
+;
+
+#elif defined(i386)
+
+#define ASM_SWAP(cell, value)					\
+({ 								\
+  Value out;							\
+  __asm__ __volatile__ ("xchgl %3,%0"				\
+			 :"=r" (out), "=m" (cell)		\
+			 :"0" (value), "m" (cell));		\
+  out;								\
+})
+;
+
+#else
+
+DO NOT COMPILE THE CRAP!
+  
+#endif
+ 
+key_t vsTypeToKey(int type)
+{
+  int idOffset = sizeof(key_t)*8 - VS_KEYTYPE_SIZE;
+  int seqOffset = idOffset - VS_SEQ_SIZE;
+  return ((key_t) ((type << idOffset) |
+		    (SEQ_NUM << seqOffset) |
+		    (getpid() & VS_PID_MASK)));
+}
+
+int volatile global;
+
+main()
+{
+  int shmkey;
+  int shmid;
+  void *shm;
+  struct shmid_ds ds;
+
+  shmkey = vsTypeToKey(VS_MSGBUFFER_KEY);
+  if ((shmid = shmget(shmkey, SHMSIZE, (PERMS|IPC_CREAT))) < 0)
+    exit(-1);
+  if ((shm = (void *) shmat(shmid, 0, SHM_OPT)) == (void *) -1)
+    exit(-2);
+  for (char *addr = (char *) shm; addr < ((char *) shm) + SHMSIZE; addr++)
+    *addr = (char) 0;
+  if (shmdt((char *) shm) < 0)
+    exit(-3);
+
+  if ((shm = (void *) shmat(shmid, 0, SHM_OPT)) == (void *) -1)
+    exit(-4);
+  for (char *addr = (char *) shm; addr < ((char *) shm) + SHMSIZE; addr++)
+    if (*addr != (char) 0) 
+      exit(-5);
+  if (shmdt((char *) shm) < 0)
+    exit(-6);
+
+  if ((shm = (void *) shmat(shmid, 0, SHM_OPT)) == (void *) -1)
+    exit(-7);
+  for (char *addr = (char *) shm; addr < ((char *) shm) + SHMSIZE; addr++)
+    *addr = (char) 0x4f;
+  if (shmdt((char *) shm) < 0)
+    exit(-8);
+
+  if ((shm = (void *) shmat(shmid, 0, SHM_OPT)) == (void *) -1)
+    exit(-9);
+  for (char *addr = (char *) shm; addr < ((char *) shm) + SHMSIZE; addr++)
+    if (*addr != (char) 0x4f) 
+      exit(-10);
+  if (shmdt((char *) shm) < 0)
+    exit(-11);
+
+  if (shmctl(shmid, IPC_RMID, (struct shmid_ds *) 0) < 0)
+    exit(-12);
+  if (shmctl(shmid, IPC_RMID, (struct shmid_ds *) 0) == 0)
+    exit(-13);
+  if (errno != EIDRM && errno != EINVAL)
+    exit(-14);
+
+  int local = 0;
+  global = 1;
+  local = ASM_SWAP(global, local);
+
+  if (global != 0 || local != 1) exit(-15);
+
+  exit(0);
+}
+],
+    AC_MSG_RESULT(succeeded),
+    AC_MSG_RESULT(failed)
+    can_vs=no,
+    AC_MSG_RESULT(dunno (no))
+    can_vs=no)
+ fi
+ ac_cv_can_vs=$can_vs])
+
+if test $ac_cv_can_vs = yes; then
+    AC_MSG_RESULT([... yes, we can do virtual sites!])
+else
+    AC_MSG_RESULT([... sorry, we cannot do virtual sites.])
+fi
+
+OZ_ENABLE(virtualsites,[   provide support for virtual sites],
+        $ac_cv_can_vs,
+	AC_DEFINE(VIRTUALSITES)
+        AC_MSG_RESULT(yes)
+	,
+	)
+
+dnl *****************************************************************
+dnl Include misc builtins
+dnl *****************************************************************
+
+OZ_ENABLE(miscbuiltins,[   include misc builtins],no,
+	AC_DEFINE(MISC_BUILTINS)
+        AC_MSG_RESULT(yes)
+	,
+	)
+
+dnl *****************************************************************
+dnl Include new (non-recursive) marshaler
+dnl *****************************************************************
+
+OZ_ENABLE(newmarshaler,[   include new marshaler],no,
+	AC_DEFINE(NEWMARSHALER)
+        AC_MSG_RESULT(yes)
+	,
+	)
+
+dnl ------------------------------------------------------------------
+dnl Configure oztool.sh
+dnl ------------------------------------------------------------------
+
+OZTOOL_CXX="$CXX${CXXAVOID:+ }$CXXAVOID"
+AC_SUBST(OZTOOL_CXX)
+OZ_CC_CHOOSE
+AC_LANG_SAVE
+AC_LANG_C
+OZ_CC_OPTIONS(-fpic -Kpic,OZTOOLDYNOPTCC)
+AC_LANG_RESTORE
+AC_SUBST(OZTOOLDYNOPTCC)
+
+dnl *****************************************************************
+dnl FINALIZE
+dnl *****************************************************************
+
+AC_CONFIG_HEADER(conf.h)
+
+AC_OUTPUT(Makefile.vars Makefile Makefile.rules libdp/Makefile libfd/Makefile libfset/Makefile OZCONF.h:OZCONF.in oztool.sh:oztool.in .gdbinit)
+
+errprint(ifdef([OZ_INIT],
+ [autoconf succeeded
+],
+ [autoconf failed: use 'autoconf -l ../..' to include ../../aclocal.m4.
+]))

@@ -1,0 +1,12 @@
+AC_INIT(XML.oz)
+AC_PROG_MAKE_SET
+OZ_CONTRIB_INIT
+OZ_PATH_PROG(OZTOOL,oztool)
+OZ_PATH_PROG(OZFLEX,ozflex,OZFLEX=)
+AC_OUTPUT(Makefile)
+
+errprint(ifdef([OZ_INIT],
+ [autoconf succeeded.
+],
+ [autoconf failed: use 'autoconf -l ../..' to include ../aclocal.m4.
+]))

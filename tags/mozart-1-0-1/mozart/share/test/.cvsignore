@@ -1,0 +1,8 @@
+oztest
+ozbench
+make-test
+Makefile
+*.ozf
+*~
+dirs
+LambdaScanner.* LambdaParser.*

@@ -1,0 +1,91 @@
+<!--
+  - Authors:
+  -   Nils Franzen (nilsf@sics.se)
+  -   Simon Lindblom (simon@sics.se)
+  -
+  - Copyright:
+  -   Nils Franzen, Simon Lindblom, 1998
+  -
+  - Last change:
+  -   $Date$ by $Author$
+  -   $Revision$
+  -
+  - This file is part of Mozart, an implementation
+  - of Oz 3
+  -    http://www.mozart-oz.org
+  -
+  - See the file "LICENSE" or
+  -    http://www.mozart-oz.org/LICENSE.html
+  - for information on usage and redistribution
+  - of this file, and for a DISCLAIMER OF ALL
+  - WARRANTIES.
+  -
+  -->
+
+<!DOCTYPE Book SYSTEM "ozdoc.dtd" [
+
+
+<!-- Extension to the DTD -->
+<!-- 
+<!ENTITY % p.mix.local "|Em">
+<!ELEMENT Em - - (#PCDATA)>
+-->
+<!ENTITY amp "&">
+<!ENTITY micq "MIM">
+<!ENTITY % proglang.values.local "|lambda">
+<!ENTITY % author.class "author|author.extern|comic">
+<!ENTITY % picture.element "picture|picture.extern|picture.choice">
+<!ELEMENT comic - O (%picture.element;)>
+
+
+<!-- Include Files -->
+<!ENTITY intro		SYSTEM	"introduction.sgml">
+<!ENTITY gettingstarted	SYSTEM	"gettingstarted.sgml">
+<!ENTITY apps		SYSTEM	"apps.sgml">
+
+<!-- Abbreviations -->
+<!ENTITY dot "." -- to distinguish it from periods -->
+
+<!-- Processing Instructions -->
+<!ENTITY eg PI "eg">
+<!ENTITY ie PI "ie">
+<!ENTITY nbsp PI "nbsp">
+<!entity resp PI "resp">
+]>
+
+<BOOK PROGLANG=OZ>
+  <FRONT>
+    <!-- Splitting the document into different HTML nodes -->
+    <Meta name="html.split" value="chapter.intro">
+    <Meta name="html.split" value="chapter.gettingstarted">
+    <Meta name="html.split" value="chapter.apps">
+    <Meta name="html.split.bib" value="">
+
+    <Meta name=ozversion value="3.0">
+    <Meta name=status value=draft>
+
+    <TITLE>Mozart Instant Messenger</TITLE>
+    <Author.Extern to="author.db" key="Nils.Franzen">
+    <Author.Extern to="author.db" key="Simon.Lindblom">
+    <ABSTRACT>
+    The &micq; groupware is designed to support communications and collaborative work over Internet. 
+    One of &micq; main advantages over existing groupware, is the open interface to add custom 
+    (platform-independent) programs written in Mozart. 
+
+    <P CLASS=WARNING>This document is far from finished and is a bit old!
+    </ABSTRACT>
+  <BODY>
+    &intro;
+    &gettingstarted;
+    &apps;
+  </BODY> 
+</BOOK>
+
+
+
+
+
+
+
+
+
