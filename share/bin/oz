@@ -82,6 +82,9 @@ case "$cmd" in
 	exec $OZEMULATOR -u $url -- "$@"
 	;;
 
+   oztool)
+	exec sh $OZHOME/platform/$OZPLATFORM/$cmd "$@"
+	;;
    text2pickle)
 	exec $OZHOME/platform/$OZPLATFORM/$cmd "$@"
 	;;
