@@ -212,6 +212,7 @@ define
 	 OLTypes: (X='1'|'a'|'i'|'A'|'I'|X in X)
 	 % back matter:
 	 MyBibliographyDB: unit
+	 BibNode: unit
       meth init(B SGML Dir)
 	 IsColor <- B
 	 MyFontifier <- {New Fontifier.'class' init()}
@@ -227,7 +228,6 @@ define
 	 Labels <- {NewDictionary}
 	 ToGenerate <- nil
 	 OzDocToHTML, Process(SGML)
-	 OzDocToHTML, EndNode()
 	 OzDocToHTML, GenerateLabels()
 	 {ForAll @ToWrite
 	  proc {$ VS#File}
@@ -333,6 +333,18 @@ define
 		  OzDocToHTML, Process(M.3=back(...))
 	       end
 	       OzDocToHTML, Process(M.2='body'(...))
+	       case {@MyBibliographyDB process($)} of unit then skip
+	       elseof VS then Title Label X in
+		  Title = 'Bibliography'
+		  OzDocToHTML, CheckBibNode(Title ?X)
+		  ToGenerate <- Label|@ToGenerate
+		  TOC <- {Append @TOC [2#Label#@CurrentNode#Title]}
+		  @BibNode = @CurrentNode
+		  Out <- @Out#('<H2><A name='#thread {MakeCDATA Label} end#'>'#
+			       Title#'</A></H2>\n'#VS)
+		  OzDocToHTML, PopNode(X)
+	       end
+	       OzDocToHTML, EndNode()
 	       {@MyFontifier process(if @IsColor then 'html-color'
 				     else 'html-mono'
 				     end)}
@@ -373,12 +385,13 @@ define
 	    [] abstract then
 	       Abstract <- OzDocToHTML, Excursion(M $)
 	    [] back then
-	       MyBibliographyDB <- {New BibliographyDB.'class' init()}
+	       MyBibliographyDB <- {New BibliographyDB.'class'
+				    init(@OutputDirectory)}
+	       BibNode <- _
 	       OzDocToHTML, Batch(M 1)
-	    [] 'bib.extern' then BibEntry in
-	       {@MyBibliographyDB get(M.to M.key ?BibEntry)}
-	       %--** parametrize: this might be called other than bib.html
-	       OzDocToHTML, ID(M.id 'bib.html' '['#BibEntry.key#']')
+	    [] 'bib.extern' then BibKey in
+	       {@MyBibliographyDB get(M.to M.key ?BibKey)}
+	       OzDocToHTML, ID(M.id @BibNode BibKey)
 	    %-----------------------------------------------------------
 	    % Body and Sectioning Elements
 	    %-----------------------------------------------------------
@@ -952,14 +965,27 @@ define
 	    CurrentNode <- 'node'#@NodeCounter#'.html'
 	    OzDocToHTML, StartNode(Title)
 	    TOC <- nil
-	    TOCMode <- false
 	 else
 	    X = unit
 	    if @TOCMode then
 	       Out <- @Out#'<HR>\n'
-	       TOCMode <- false
 	    end
 	 end
+	 TOCMode <- false
+      end
+      meth CheckBibNode(Title ?X)
+	 if {Dictionary.member @Meta 'html.split.bib'} then
+	    X = @CurrentNode#@Out#@TOC#@TOCMode
+	    CurrentNode <- 'bib.html'
+	    OzDocToHTML, StartNode(Title)
+	    TOC <- nil
+	 else
+	    X = unit
+	    if @TOCMode then
+	       Out <- @Out#'<HR>\n'
+	    end
+	 end
+	 TOCMode <- false
       end
       meth PopNode(X)
 	 case X of unit then skip
