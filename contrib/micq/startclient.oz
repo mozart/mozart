@@ -72,7 +72,7 @@ define
          {Tk.batch [grid(L row:N column:0 sticky:e)
                     grid(E row:N column:1 sticky:w)]}
          {E tkBind(event:'<Return>' action:proc{$} GO=unit end)}
-         if N==1 then {Tk.send focus(E)} else skip end
+         if N==2 then {Tk.send focus(E)} else skip end
       end
    in
       V2={NewEntry "URL:" Args.url false}
