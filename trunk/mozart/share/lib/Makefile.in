@@ -330,7 +330,7 @@ tags:
 	$(ALLSRCS)
 
 #---------------------------------------------------------------------
-# Testing Components Locally
+# Bootstrapping and Testing Components Locally
 #---------------------------------------------------------------------
 #    make check   or   make thorough-check
 # Test a new emulator with
@@ -338,13 +338,15 @@ tags:
 
 .PHONY: bootstrap stage1 stage2 stage2b stage3 stage3b check thorough-check
 
+URL=http\\://www.ps.uni-sb.de/ozhome
+
 # use Ozma to create the components
 bootstrap:
 	$(MAKE) all \
 	OZBATCH=$(SRCDIR)/ozbatch.sh \
 	OZINIT=Init.ozc \
 	OZ_LIB=. \
-	OZ_LOAD=root=.:prefix=http\://www.ps.uni-sb.de/ozhome/lib/=./tyc/:prefix=http\://www.ps.uni-sb.de/ozhome/lib/=./:=
+	OZ_LOAD=root=.:prefix=$(URL)/lib/=./tyc/:prefix=$(URL)/lib/=./:=
 
 STAGE1=./stage1
 STAGE2=./stage2
@@ -359,21 +361,21 @@ stage1:
 # stage2: recreate the components and Ozma file using the stage1 components
 stage2:
 	$(MAKE) install-stage PREFIX=$(STAGE2) \
-	OZ_LOAD=prefix=http\://www.ps.uni-sb.de/ozhome/lib/=$(STAGE1)/lib/:.:=\
+	OZ_LOAD=prefix=$(URL)/lib/=$(STAGE1)/lib/:prefix=$(URL)/tools/=$(URL)/tools/:.:=\
 	OZBATCH=$(STAGE1)/bin/ozbatch \
 	OZINIT=$(STAGE1)/lib/Init.ozc
 
 # stage2b: recreate the components and Ozma file using the stage2 components
 stage2b:
 	$(MAKE) install-stage PREFIX=$(STAGE2B) \
-	OZ_LOAD=prefix=http\://www.ps.uni-sb.de/ozhome/lib/=$(STAGE2)/lib/:.:=\
+	OZ_LOAD=prefix=$(URL)/lib/=$(STAGE2)/lib/:prefix=$(URL)/tools/=$(URL)/tools/:.:=\
 	OZBATCH=$(STAGE2)/bin/ozbatch \
 	OZINIT=$(STAGE2)/lib/Init.ozc
 
 # stage3: recreate the components and Ozma file using the stage2 Ozma file
 stage3:
 	$(MAKE) install-stage PREFIX=$(STAGE3) \
-	OZ_LOAD=all=.:all=tyc:= \
+	OZ_LOAD=all=.:all=tyc:prefix=$(URL)/tools/=$(URL)/tools/:= \
 	OZBATCH=$(SRCDIR)/ozbatch.sh \
 	OZINIT=$(STAGE2)/lib/Init.ozc \
 	OZMAFILE=$(STAGE2)/lib/ozbatch.ozm
@@ -381,7 +383,7 @@ stage3:
 # stage3b: recreate the components and Ozma file using the stage3 components
 stage3b:
 	$(MAKE) install-stage PREFIX=$(STAGE3B) \
-	OZ_LOAD=prefix=http\://www.ps.uni-sb.de/ozhome/lib/=$(STAGE3)/lib/:.:=\
+	OZ_LOAD=prefix=$(URL)/lib/=$(STAGE3)/lib/:prefix=$(URL)/tools/=$(URL)/tools/:.:=\
 	OZBATCH=$(STAGE3)/bin/ozbatch \
 	OZINIT=$(STAGE3)/lib/Init.ozc
 
