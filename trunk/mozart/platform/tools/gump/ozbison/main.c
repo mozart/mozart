@@ -22,6 +22,8 @@ the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.  */
 #include <setjmp.h>
 #include "system.h"
 #include "machine.h"	/* for MAXSHORT */
+#include "gram.h"
+#include "new.h"
 
 #include <oz.h>
 
@@ -93,15 +95,26 @@ OZ_BI_define(bison_generate, 2, 1)
   } else
     terse();
 
+  FREE(rprec + 1);
+  FREE(rassoc + 1);
+  FREE(rprecsym + 1);
+  FREE(rprec_used + 1);
+  FREE(sprec);
+  FREE(sprec_used);
+  FREE(sassoc);
+
   /* output the tables and the parser to ftable.  In file output. */
   OZ_RETURN(output());
 }
 OZ_BI_end
 
-OZ_C_proc_interface oz_interface[] = {
-  {"generate",2,1,bison_generate},
-  {0,0,0,0}
-};
+OZ_C_proc_interface *oz_init_module(void) {
+  static OZ_C_proc_interface oz_interface[] = {
+    {"generate",2,1,bison_generate},
+    {0,0,0,0}
+  };
+  return oz_interface;
+}
 
 /* functions to report errors which prevent a parser from being generated */
 

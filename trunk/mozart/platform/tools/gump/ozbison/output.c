@@ -263,36 +263,36 @@ static int convertHex(int c) {
 */
 static int convertAtom(char *s) {
   int r = 0, w = 0;
-  if (s[0] == '\'') {
+  if (s[r] == '\'') {
     r++;
     while (s[r] != '\'')
       if (s[r] == '\\') {
-        r++;
-        switch (s[r++]) {
-        case 'a': s[w++] = '\a'; break;
-        case 'b': s[w++] = '\b'; break;
-        case 'f': s[w++] = '\f'; break;
-        case 'n': s[w++] = '\n'; break;
-        case 'r': s[w++] = '\r'; break;
-        case 't': s[w++] = '\t'; break;
-        case 'v': s[w++] = '\v'; break;
-        case 'x': s[w++] = convertHex(s[r]) * 16 + convertHex(s[r + 1]);
-          r += 2; break;
-        case '0': case '1': case '2': case '3':
-        case '4': case '5': case '6': case '7':
-          s[w++] = (s[r - 1] - '0') * 64 + (s[r] - '0') * 8 + (s[r + 1] - '0');
-          s += 2; break;
-        default:
-          s[w++] = s[r - 1]; break;
-        }
+	r++;
+	switch (s[r++]) {
+	case 'a': s[w++] = '\a'; break;
+	case 'b': s[w++] = '\b'; break;
+	case 'f': s[w++] = '\f'; break;
+	case 'n': s[w++] = '\n'; break;
+	case 'r': s[w++] = '\r'; break;
+	case 't': s[w++] = '\t'; break;
+	case 'v': s[w++] = '\v'; break;
+	case 'x': s[w++] = convertHex(s[r]) * 16 + convertHex(s[r + 1]);
+	  r += 2; break;
+	case '0': case '1': case '2': case '3':
+	case '4': case '5': case '6': case '7':
+	  s[w++] = (s[r - 1] - '0') * 64 + (s[r] - '0') * 8 + (s[r + 1] - '0');
+	  r += 2; break;
+	default:
+	  s[w++] = s[r - 1]; break;
+	}
       } else
-        s[w++] = s[r++];
+	s[w++] = s[r++];
     s[w] = '\0';
     if (w == 1)
       return s[0];
     else
       return 0;
-  } else if (s[0] >= 'a' && s[0] <= 'z')
+  } else if (s[r] >= 'a' && s[r] <= 'z')
     return 0;
   else
     return -1;
@@ -310,12 +310,13 @@ output_token_translations()
     if (j >= 0) {
       propList = OZ_cons(OZ_pair2(OZ_atom(tags[i]), OZ_int(i)), propList);
       if (j > 0)
-        propList = OZ_cons(OZ_pair2(OZ_int(j), OZ_int(i)), propList);
+	propList = OZ_cons(OZ_pair2(OZ_int(j), OZ_int(i)), propList);
     }
   }
 
   toftable("synTranslate", OZ_recordInit(OZ_atom("synTranslate"), propList));
   makeStringRecord("synTokenNames", tags, 0, nsyms - 1);
+  FREE(tags);
 }
 
 
@@ -351,6 +352,7 @@ output_rule_data()
   register int i;
 
   makeRecord("synRulePosition", rline + 1, 1, nrules);
+  FREE(rline + 1);
   toftable("synNTOKENS", OZ_int(ntokens));
   toftable("synNNTS", OZ_int(nvars));
   toftable("synNRULES", OZ_int(nrules));
@@ -434,6 +436,15 @@ token_actions()
 
   FREE(defact);
   FREE(actrow);
+  FREE(consistent);
+  for (i = 0; i < nstates; i++)
+    {
+      if (err_table[i])
+	{
+	  FREE(err_table[i]);
+	}
+    }
+  FREE(err_table);
 }
 
 
@@ -850,7 +861,10 @@ pack_table()
 
   FREE(froms);
   FREE(tos);
+  FREE(tally);
+  FREE(width);
   FREE(pos);
+  FREE(order);
 }
 
 
