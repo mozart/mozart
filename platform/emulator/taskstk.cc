@@ -89,7 +89,10 @@ TaggedRef TaskStack::reflect(TaskStackEntry *from,TaskStackEntry *to,
 
   while (auxtos > to) {
     PopFrame(auxtos,PC,Y,G);
-    out = cons(CodeArea::dbgGetDef(PC),out);
+    TaggedRef tt=CodeArea::dbgGetDef(PC);
+    if (tt!=nil()) { // NOCODE_GLOBALVARNAME
+      out = cons(tt,out);
+    }
   }
 
   out = reverseC(out);
