@@ -85,7 +85,7 @@ public:
 static const int _EnlargeableArray_margin = 10;
 
 template <class T, class M>
-class EnlargeableArray : public M {
+class EnlargeableArrayWithBase : public M {
 private:
   virtual void _gCollect(void) {
     T * new_array = (T *) alloc(_size * sizeof(T));
@@ -126,11 +126,11 @@ protected:
     }
   }
 public:
-  EnlargeableArray(void) : _size(0) {
+  EnlargeableArrayWithBase(void) : _size(0) {
     _array = (T *) NULL;
   }
   //
-  EnlargeableArray(int s) : _size(s) {
+  EnlargeableArrayWithBase(int s) : _size(s) {
     _array = s > 0 ? (T *) alloc(s * sizeof(T)) : (T *) NULL;
   }
   //
@@ -142,7 +142,7 @@ public:
 
 // intial size > 0; increase size by pushing new elements on it
 template <class T, class M>
-class PushArray : public EnlargeableArray<T,M> {
+class PushArray : public EnlargeableArrayWithBase<T,M> {
 protected:
   int _high;
   //
@@ -155,21 +155,17 @@ public:
   }
   //
   PushArray(int s = _EnlargeableArray_margin)
-    : EnlargeableArray<T,M>(s), _high(0) { }
+    : EnlargeableArrayWithBase<T,M>(s), _high(0) { }
   //
   int getHigh(void) { return _high; }
   //
 };
 
-template class EnlargeableArray<int, HeapAlloc>;
-template class PushArray<int, HeapAlloc>;
-typedef PushArray<int, HeapAlloc> IntHeapPushArray;
-
 // initial size == 0; increase size by explicit resizable
 template <class T, class M>
-class ResizeableArray : public EnlargeableArray<T,M> {
+class ResizeableArray : public EnlargeableArrayWithBase<T,M> {
 public:
-  ResizeableArray(void) : EnlargeableArray<T,M>() { }
+  ResizeableArray(void) : EnlargeableArrayWithBase<T,M>() { }
   //
   void resize(int new_size) {
     if (new_size > _size) {
@@ -197,6 +193,8 @@ class PEL_Engine;
 
 //-----------------------------------------------------------------------------
 
+typedef PushArray<int, HeapAlloc> IntHeapPushArray;
+
 class _PEL_EventList : public IntHeapPushArray {
 public:
   int add(int i) { return push(i); }
@@ -214,14 +212,12 @@ typedef enum { pf_failed, pf_entailed, pf_sleep } pf_return_t;
 // has to be power of 2
 #define ALIGN_SIZE sizeof(double)
 
-template class EnlargeableArray<char,HeapAlloc>;
-
-class _PEL_PropagatorHeap : public EnlargeableArray<char,HeapAlloc> {
+class _PEL_PropagatorHeap : public EnlargeableArrayWithBase<char,HeapAlloc> {
 protected:
   int _high;
 public:
   _PEL_PropagatorHeap(int s = 0)
-    : EnlargeableArray<char,HeapAlloc>(s), _high(0) { }
+    : EnlargeableArrayWithBase<char,HeapAlloc>(s), _high(0) { }
   //
   void * allocate(size_t s, int &i) {
     // round up to sizeof(double)
@@ -343,8 +339,6 @@ void _PEL_PropagatorTable::print(PEL_Engine &e) {
 
 //-----------------------------------------------------------------------------
 
-template class EnlargeableArray<int, PropAlloc>;
-template class ResizeableArray<int, PropAlloc>;
 typedef ResizeableArray<int, PropAlloc> IntPropResizeableArray;
 
 static const int _PEL_PropQueue_init_maxsize = 0x10; // must be power of 2

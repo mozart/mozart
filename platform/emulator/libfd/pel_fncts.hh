@@ -101,10 +101,6 @@ void make_PEL_GreaterOffset(ENGINE &engine,
   engine.impose(new PEL_GreaterOffset<ENGINE,FDVAR,PFDVAR>(x, c, y));
 }
 
-template class _OZ_ParamIterator<int>;
-template class _PropagatorController_V_V<int, PEL_FDIntVar, 1, 0, 2>;
-template class _PropagatorController_V_V_V<unsigned int, OZ_FDIntVar, 1, 0, 3>;
-
 template <class FDVAR>
 class PEL_Filter {
 private:
@@ -146,7 +142,5 @@ pf_return_t PEL_LessEqOffset<ENGINE, FDVAR, PFDVAR>::propagate(PEL_Engine &e)
   //
   return filter_lessEqOffset(s, x, y, c)();
 }
-
-template PEL_Filter<PEL_FDIntVar> & filter_lessEqOffset<PEL_Filter<PEL_FDIntVar>, PEL_FDIntVar>(PEL_Filter<PEL_FDIntVar> &, PEL_FDIntVar &, PEL_FDIntVar &, int);
 
 #endif /* __PEL_FNCTS_HH__ */

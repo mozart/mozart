@@ -24,6 +24,7 @@
  *
  */
 
+#include "base.hh"
 #include "card.hh"
 #include "sum.hh"
 #include "auxcomp.hh"

@@ -1456,7 +1456,7 @@ public:  //
       _actions[_nb_actions]._what = _actions_t::_serv_leave;
       _actions[_nb_actions]._action_params._vars_left = vars_left;
       _nb_actions += 1;
-      Assert(_nb_actions <= _max_actions);
+      Assert(_nb_actions <= OZ_Filter_max_actions);
     }
     _closed = 1;
     return *this;
@@ -1466,7 +1466,7 @@ public:  //
     if (!_closed) {
       _actions[_nb_actions]._what = _actions_t::_serv_entailed;
       _nb_actions += 1;
-      Assert(_nb_actions <= _max_actions);
+      Assert(_nb_actions <= OZ_Filter_max_actions);
     }
     _closed = 1;
     return *this;
@@ -1476,7 +1476,7 @@ public:  //
     if (!_closed) {
       _actions[_nb_actions]._what = _actions_t::_serv_failed;
       _nb_actions += 1;
-      Assert(_nb_actions <= _max_actions);
+      Assert(_nb_actions <= OZ_Filter_max_actions);
     }
     _closed = 1;
     return *this;
@@ -1488,7 +1488,7 @@ public:  //
       _actions[_nb_actions]._action_params._equat._x = x;
       _actions[_nb_actions]._action_params._equat._y = y;
       _nb_actions += 1;
-      Assert(_nb_actions <= _max_actions);
+      Assert(_nb_actions <= OZ_Filter_max_actions);
     }
     _closed = 1;
     return *this;

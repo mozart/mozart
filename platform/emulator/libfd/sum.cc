@@ -26,6 +26,7 @@
 
 #include <string.h>
 
+#include "base.hh"
 #include "sum.hh"
 #include "rel.hh"
 #include "auxcomp.hh"

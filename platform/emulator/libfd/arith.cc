@@ -26,6 +26,7 @@
 
 #include <math.h>
 
+#include "base.hh"
 #include "arith.hh"
 #include "rel.hh"
 #include "auxcomp.hh"

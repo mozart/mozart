@@ -49,6 +49,16 @@
   int listtotal;
 #endif
 
+template class list<edge>;
+template class list<node>;
+template class dlink<edge>;
+template class dlink<node>;
+
+template class node_array<edge>;
+template class node_array<int>;
+template class edge_array<int>;
+template class b_queue<node>;
+
 CpiHeapClass memory;
 
 //-----------------------------------------------------------------------------

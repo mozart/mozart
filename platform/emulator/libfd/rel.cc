@@ -24,6 +24,7 @@
  *
  */
 
+#include "base.hh"
 #include "rel.hh"
 #include "auxcomp.hh"
 #include "rel_filter.hh"

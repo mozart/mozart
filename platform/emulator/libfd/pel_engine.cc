@@ -28,6 +28,14 @@
 #include "rel.hh"
 #include "pel_fncts.hh"
 
+template class EnlargeableArrayWithBase<int, HeapAlloc>;
+template class PushArray<int, HeapAlloc>;
+
+template class EnlargeableArrayWithBase<char,HeapAlloc>;
+
+template class EnlargeableArrayWithBase<int, PropAlloc>;
+template class ResizeableArray<int, PropAlloc>;
+
 //-----------------------------------------------------------------------------
 
 void _PEL_EventList::wakeup(_PEL_PropQueue * pq, PEL_Engine * engine) {
