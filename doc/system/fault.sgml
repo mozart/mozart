@@ -36,7 +36,7 @@ is incomplete with respect to the specification
 (called a <EM>limitation</EM>)
 or has a different behavior (called a <EM>modification</EM>).
 
-<section><title/Argument types/
+<section><title/Argument Types/
 
 <P>We summarize the argument types for the operations
 in the <<Fault>> module.
@@ -47,8 +47,10 @@ has distributed fault modes, namely any
 object, cell, lock, port, or logic variable.
 
 <entry/<code/Level//
-<item>One of <<global>>, <<site>>, or <<'thread'(T)>>,
-where <<T>> is a thread reference or the atom <<this>>.
+<item>Either <<site>> or <<'thread'(T)>>,
+where <<T>> is a thread reference or the atom <<this>>.<NOTE
+FOOT>Since <<thread>> is already used as a keyword in the language,
+it has to be quoted to make it an atom.</NOTE>
 
 <entry/<code/FStates//
 <item>A set of fault states, i.e., a list that can contain
@@ -67,7 +69,7 @@ The value of <<OP>> is one of:
 <item><<bind(T)>>, <<wait>>, <<isDet>> (for logic variables).
 <item><<cellExchange(Old New)>>, <<cellAssign(New)>>,
 <<cellAccess(Old)>> (for cells).
-<item><<lock>> (for locks).
+<item><<'lock'>> (for locks).
 <item><<send(Msg)>> (for ports).
 <item><<objectExchange(Attr Old New)>>,
 <<objectAssign(Attr New)>>,
@@ -92,14 +94,14 @@ A watcher is invoked as soon as the site detects a fault.
 
 </list>
 
-<section><title/Fault information/
+<section><title/Fault Information/
 
 <P>When there is a distribution problem,
 then three items of information are made available:
 <list>
-<item><<Entity>>: the entity whose operation does not succeed.
+<item><<Entity>>: the faulty entity.
 <item><<ActualFStates>>: the fault states that are currently active.
-This is a subset of the states that the entity is set up to detect.
+This is always a subset of the states that the entity is set up to detect.
 For objects, cells, and locks,
 the fault states <<tempFail(info:I)>> and <<permFail(info:I)>>
 are possible, where <<I>> is in {<<state>>, <<owner>>}.
@@ -108,8 +110,8 @@ to a lost state pointer (<<state>>)
 or a crashed owner (<<owner>>).
 <item><<OP>>: the operation that is attempted but does not succeed.
 </list>
-<P>The system can be configured (see below) so that this information
-appears in one or more of the following three ways:
+<P>The system can be configured (see below) so that these three items
+appear in one or more of the following three ways:
 <list>
 <item>In an exception with format
 <<system(dp(entity:Entity conditions:FStates op:OP) ...)>>.
@@ -119,32 +121,48 @@ appears in one or more of the following three ways:
 <P>A limitation of the current release is that the <<Entity>>
 argument is undefined for an object operation.
 For handlers and watchers, this limitation can
-be circumvented by letting the handler or watcher
-reference the object.
+be bypassed by giving the handler and watcher procedures
+a reference to the object.
 
 <section><title/Operations/
 
 <P>The <<Fault>> module contains the following operations.
 All operations return a boolean flag <<B>> that is <<true>>
 iff the operation succeeds.
-All <<enable>> and <<install>>
-operations succeed if nothing was enabled or installed
+All <<enable>> and <<install>> operations
+succeed if nothing was enabled or installed
 at that level.
-All <<disable>> and <<deInstall>>
-operations succeed if nothing was disabled or deinstalled
+An entity with a successful <<enable>> or <<install>>
+at a given level
+is said to <EM>have fault detection</EM>
+at that level.
+All <<disable>> and <<deInstall>> operations
+succeed if nothing was disabled or deinstalled
 at that level.
 The system starts up as if
 <<{Fault.defaultEnable [tempFail permFail] _}>>
-was executed successfully.
+was executed.
+
+<P>All the following operations that have
+an <<Entity>> argument will do nothing
+if entity does not have distributed fault modes.
+If a logic variable with fault detection
+is bound to a nonvariable entity, then
+the fault detection is transferred to
+the entity, provided the latter has
+no fault detection at that level.
 
 <list>
 <entry/<code/{Fault.defaultEnable FStates ??{B}}//
-<item>Enable default fault detection at the <<global>> level
-for all entities created after this call.
+<item>Set the default fault detection to <<FStates>> on the current site.
+When an operation is attempted on an entity and
+there is no fault detection on the site or thread level for
+the entity, then the default fault detection is used.
+This always succeeds.
 
 <entry/<code/{Fault.defaultDisable ??{B}}//
-<item>Disable default fault detection for all entities
-created after this call.
+<item>Set the default fault detection to <<nil>> on the current site.
+This always succeeds.
 
 <entry/<code/{Fault.enable Entity Level FStates ??{B}}//
 <item>Enable fault detection on a given entity
@@ -161,8 +179,6 @@ at a given level.
 at a given level for a given set of fault states.
 The handler <<{HandlerProc Entity AFStates OP}>> is called
 if a fault is detected when an operation is attempted on the entity.
-A limitation of the current release is that handlers
-cannot be installed at the <<global>> level.
 A modification of the current release
 with respect to the specification is that
 handlers installed on variables always retry
@@ -182,54 +198,66 @@ in its own thread as soon as the site detects a fault.
 
 <entry/<code/{Fault.deInstallWatcher Entity WatcherProc}//
 <item>Deinstall the given watcher on a given entity.
-This call always succeeds.
+This call succeeds if <<WatcherProc>> was installed
+on the entity.
 If there is more than one instance of <<WatcherProc>>
 installed on the entity, then exactly one is deinstalled.
 
 </list>
 On a given entity at the <<global>> level,
 at most one enable can be done or one handler installed.
-At the <<site>> level, at most one enable or handler
-can be installed per site.
-At the <<'thread'(_)>> level, at most one enable or handler
-can be installed per thread.
-To do another enable or install,
+For a given entity, the <<site>> level
+can have at most one fault detection per site.
+The <<'thread'(T)>> can have at most one fault detection
+per thread.
+To have another fault detection,
 it is necessary to do a disable or deinstall first.
 
-<section><title/Limitations and modifications/
+<section><title/Limitations and Modifications/
 
 <P>The current release has the following limitations
-and modifications with respect to the specification.
+and modifications with respect to the failure model specification.
 A <EM>limitation</EM> is an operation that is specified
 but not possible in the current release.
 A <EM>modification</EM> is an operation that is specified
 but behaves differently in the current release.
-The limitations are:
+
+<P>The limitations and modifications
+listed here will be removed in future releases.
+
+<SECTION><TITLE>Limitations</TITLE>
+
+<P>The limitations are:
 <list>
 <item>The code of functions, procedures, classes, and functors
 (but not objects) is always inserted in messages,
-even this code is already present at the destination.
-In future releases, these entities will be copied
+even if the code is already present at the destination.
+In future releases, the code will be copied
 across the network only
-if they are not present on the destination site.
+if it is not present on the destination site.
 In both current and future releases, at most a single copy
-of these entities can exist per site.
+of the code can exist per site.
+
 <item>The fault state <<tempFail>> is indicated only after
 a long delay.
+In future releases, the delay will be very short and
+based on adaptive observation of actual network behavior.
+
 <item>If an exception is raised or a handler or watcher
 is invoked for an <EM>object</EM>,
 then the <<Entity>> argument is undefined.
 For handlers and watchers, this limitation can
-be circumvented by letting the handler or watcher
-reference the object.
+be bypassed by giving the handler and watcher procedures
+a reference to the object.
+
 <item>If an exception is raised or a handler is invoked
 for an <EM>object</EM>,
 then the attempted object operation cannot be retried.
-<item>A handler cannot be installed at the <<global>> level,
-i.e., the call <<{Fault.install _ global _ _}>> is undefined.
-If an attempt is made to install a <<global>> handler,
-then a <<notImplemented>> exception is given.
+
 </list>
+
+<SECTION><TITLE>Modifications</TITLE>
+
 <P>The modifications are:
 <list>
 <item>A handler installed on a <EM>variable</EM> will retry
@@ -237,8 +265,6 @@ the operation (i.e., bind or wait) after it returns.
 That is, the handler is inserted before the operation
 instead of replacing the operation.
 </list>
-<P>These limitations and modifications
-will be removed in future releases.
 
 
 <!--
