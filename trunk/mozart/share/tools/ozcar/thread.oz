@@ -73,16 +73,11 @@ in
       end
       
       meth readStreamMessage(M)
-	 case {Label M}
+	 
+	 case M
 	    
-	 of step then
-	    T          = M.thr.1
-	    I          = M.thr.2
-	    File       = M.file
-	    Line       = M.line
-	    IsBuiltin  = M.builtin
-	    Time       = M.time
-	    FrameId    = M.frame
+	 of step(thr:T#I file:File line:Line builtin:IsBuiltin
+		 time:Time frame:FrameId ...) then
 	    Name = case {Value.hasFeature M name} then M.name else nil end
 	    Args = case {Value.hasFeature M args} then M.args else nil end
 	 in
@@ -123,10 +118,7 @@ in
 	       {OzcarMessage InvalidThreadID}
 	    end
 
-	 [] exit then
-	    T       = M.thr.1
-	    I       = M.thr.2
-	    Frame   = M.frame
+	 [] exit(thr:T#I frame:Frame) then
 	    Found   = {Member Frame.1 # I @SkippedProcs}
 	 in
 	    {OzcarShow @SkippedProcs # (Frame.1 # I) # Found}
@@ -147,9 +139,7 @@ in
 	       {Stack printTop}
 	    end
 	    
-	 [] thr then
-	    T = M.thr.1
-	    I = M.thr.2
+	 [] thr(thr:T#I ...) then
 	    Q = case {Value.hasFeature M par} then
 		   M.par.2  %% id of parent thread
 		else
@@ -194,9 +184,7 @@ in
 	       end
 	    end
 	    
-	 [] term then
-	    T = M.thr.1  %% just terminated thread
-	    I = M.thr.2  %% ...with it's id
+	 [] term(thr:T#I) then
 	    E = ThreadManager,exists(I $)
 	 in
 	    case E then
@@ -205,16 +193,8 @@ in
 	       {OzcarMessage EarlyTermThread}
 	    end
 	    
-	 [] block then
-	    T    = M.thr.1  %% just blocking thread
-	    I    = M.thr.2  %% ...with it's id
-	    F    = M.file
-	    L    = M.line
-	    N    = M.name
-	    A    = M.args
-	    B    = M.builtin
-	    Time = M.time
-	    E    = ThreadManager,exists(I $)
+	 [] block(thr:T#I file:F line:L name:N args:A builtin:B time:Time) then
+	    E = ThreadManager,exists(I $)
 	 in
 	    case E then
 	       StackObj = {Dget self.ThreadDic I}
@@ -242,9 +222,7 @@ in
 	       {OzcarError UnknownSuspThread}
 	    end
 	    
-	 [] cont then
-	    T = M.thr.1  %% woken thread
-	    I = M.thr.2  %% ...with it's id
+	 [] cont(thr:T#I) then
 	    E = ThreadManager,exists(I $)
 	 in
 	    case E then
@@ -275,11 +253,7 @@ in
 	       {OzcarError UnknownWokenThread}
 	    end
 
-	 [] exception then
-	    T = M.thr.1
-	    I = M.thr.2
-	    X = M.exc
-	 in
+	 [] exception(thr:T#I exc:X) then
 	    case ThreadManager,exists(I $) then
 	       {{Dget self.ThreadDic I} printException(X)}
 	    else

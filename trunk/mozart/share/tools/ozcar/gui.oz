@@ -148,17 +148,21 @@ in
       
 	 %% the buttons
 	 local
-	    %% Tk has some problems printing centered text :-(
-	    Bs = {Map [' step' ' next'  ' cont' ' forget'
-		       ' term' /* ' reset' ' stack' */ ]
-		  fun {$ B}
-		     {New Tk.button tkInit(parent: self.ButtonFrame
-					   text:   B
-					   padx:   PadXButton
-					   pady:   PadYButton
-					   font:   ButtonFont
-					   borderwidth: SmallBorderSize
-					   action: self # action(B))}
+	    Bs = {Map [StepButtonText NextButtonText ContButtonText
+		       ForgetButtonText TermButtonText]
+		  fun {$ S}
+		     B = {New Tk.button
+			  tkInit(parent: self.ButtonFrame
+				 text:   S
+				 padx:   PadXButton
+				 pady:   PadYButton
+				 font:   ButtonFont
+				 borderwidth: SmallBorderSize
+				 action: self # action(S))}
+		  in
+		     {B tkBind(event:  '<3>'
+			       action: self # help(S))}
+		     B
 		  end}
 	    TkSusp TkRunChildren Susp RunChildren
 	 in
@@ -287,17 +291,20 @@ in
       end
       
       meth PrintEnv(frame:I vars:V)
-	 CV = {Not {Cget envSystemVariables}}
-	 CP = {Not {Cget envProcedures}}
+	 CV  = {Not {Cget envSystemVariables}}
+	 CP  = {Not {Cget envProcedures}}
+	 Y#G = case V == nil then
+		  nil # nil
+	       else
+		  {Reverse V.'Y'} # {Reverse V.'G'}
+	       end
       in
 	 Gui,Clear(self.LocalEnvText)
 	 Gui,Clear(self.GlobalEnvText)
       
-	 case V == nil then
-	    skip
-	 else
-	    Gui,DoPrintEnv(self.LocalEnvText  V.'Y' CV CP)
-	    Gui,DoPrintEnv(self.GlobalEnvText V.'G' CV CP)
+	 case V == nil then skip else
+	    Gui,DoPrintEnv(self.LocalEnvText  Y CV CP)
+	    Gui,DoPrintEnv(self.GlobalEnvText G CV CP)
 	 end
       
 	 Gui,Disable(self.LocalEnvText)
