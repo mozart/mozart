@@ -24,10 +24,18 @@ message(M_CELL_ANS_DIDSEND,Index,Site,Index2,Index3)
 message(M_CELL_ANS_DIDGET,Index,Site,Index2,Index3)
 message(M_CELL_CANTPUT,Index,Site,Index2,Term)
 
-message(M_LOCK_GET,Index,Site)
+message(M_LOCK_GET,Index,Index2,Site)
 message(M_LOCK_TOKEN,Site,Index)
 message(M_LOCK_FORWARD,Site,Index,Site2)
 message(M_LOCK_DUMP,Index,Site)
+message(M_LOCK_ACK,Index,Site,Index2)
+message(M_LOCK_DIDSEND,Index,Site,Index2)
+message(M_LOCK_DIDGET,Index,Site,Index2)
+message(M_LOCK_ANS_DIDSEND,Index,Site,Index2,Index3)
+message(M_LOCK_ANS_DIDGET,Index,Site,Index2,Index3)
+message(M_LOCK_CANTPUT,Index,Site,Index2)
+message(M_LOCK_PERMBLOCKED,Index,Site,Index2)
+
 
 
 message(M_GET_OBJECT,Index,Site)
