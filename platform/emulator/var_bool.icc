@@ -54,7 +54,7 @@ inline
 void OzBoolVariable::becomesSmallIntAndPropagate(TaggedRef * trPtr,
                                                   OZ_FiniteDomain & fd)
 {
-  becomesSmallIntAndPropagate(trPtr, fd.getSingleElem());
+  becomesSmallIntAndPropagate(trPtr, CAST_FD_OBJ(fd).getSingleElem());
 }
 
 

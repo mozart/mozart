@@ -32,6 +32,7 @@
 #endif
 
 #include "var_base.hh"
+#include "fdomn.hh"
 
 #ifdef OUTLINE
 #define inline

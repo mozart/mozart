@@ -144,7 +144,7 @@ void OzFDVariable::becomesSmallIntAndPropagate(TaggedRef * trPtr)
 
   Assert(this == tagged2SVarPlus(*trPtr));
 
-  TaggedRef si_val = newSmallInt(finiteDomain.getSingleElem());
+  TaggedRef si_val = newSmallInt(CAST_FD_OBJ(finiteDomain).getSingleElem());
   propagate(fd_prop_singl);
   DoBind(trPtr, si_val);
   dispose();

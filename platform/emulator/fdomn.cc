@@ -280,7 +280,7 @@ int FDIntervals::findPossibleIndexOf(int i) const
 }
 
 inline
-OZ_Boolean FDIntervals::contains(int i) const
+OZ_Boolean FDIntervals::isIn(int i) const
 {
   int index = findPossibleIndexOf(i);
   return (i_arr[index].left <= i && i <= i_arr[index].right);
@@ -655,7 +655,7 @@ FDBitVector * newBitVector(int hi) {
 }
 
 inline
-OZ_Boolean FDBitVector::contains(int i) const {
+OZ_Boolean FDBitVector::isIn(int i) const {
   return i <= currBvMaxElem() ? (b_arr[div32(i)] & (1 << (mod32(i)))) : FALSE;
 }
 
@@ -834,7 +834,7 @@ inline
 int FDBitVector::nextSmallerElem(int v, int min_elem) const
 {
   for (int new_v = v - 1; new_v >= min_elem; new_v -= 1)
-    if (contains(new_v))
+    if (isIn(new_v))
       return new_v;
 
   return -1;
@@ -844,7 +844,7 @@ inline
 int FDBitVector::nextLargerElem(int v, int max_elem) const
 {
   for (int new_v = v + 1; new_v <= max_elem; new_v += 1)
-    if (contains(new_v))
+    if (isIn(new_v))
       return new_v;
 
   return -1;
@@ -858,7 +858,7 @@ int FDBitVector::lowerBound(int v, int min_elem) const
     return v;
   else
     for (int new_v = v - 1; new_v >= min_elem; new_v -= 1)
-      if (! contains(new_v))
+      if (! isIn(new_v))
         return new_v + 1;
 
   return min_elem;
@@ -872,7 +872,7 @@ int FDBitVector::upperBound(int v, int max_elem) const
     return v;
   else
     for (int new_v = v + 1; new_v <= max_elem; new_v += 1)
-      if (! contains(new_v))
+      if (! isIn(new_v))
         return new_v - 1;
 
   return max_elem;
@@ -908,7 +908,7 @@ int FDBitVector::mkRaw(int * list_left, int * list_right) const
 {
   int i, r, l, len, bvms = currBvMaxElem();
   for (i = 0, r = 1, len = 0, l = -1; i < bvms + 2; i += 1)
-    if (contains(i)) {
+    if (isIn(i)) {
       if (r) l = i;
       r = 0;
     } else {
@@ -1033,11 +1033,6 @@ void OZ_FiniteDomainImpl::setType(descr_type t) {
 }
 
 inline
-void OZ_FiniteDomainImpl::setType(descr_type t, void * p) {
-  descr = orPointer(p, t);
-}
-
-inline
 void OZ_FiniteDomainImpl::setType(FDBitVector * p) {
   descr = orPointer(p, bv_descr);
 }
@@ -1055,11 +1050,6 @@ void OZ_FiniteDomainImpl::set_iv(void * p) {
 inline
 void OZ_FiniteDomainImpl::set_bv(void * p) {
   descr = p;
-}
-
-inline
-int OZ_FiniteDomainImpl::findSize(void) const {
-  return max_elem - min_elem + 1;
 }
 
 inline
@@ -1172,7 +1162,7 @@ OZ_Boolean OZ_FiniteDomainImpl::isConsistent(void) const {
 #endif
 
 inline
-OZ_Boolean OZ_FiniteDomainImpl::contains(int i) const
+OZ_Boolean OZ_FiniteDomainImpl::isIn(int i) const
 {
   if (size == 0 || i < min_elem || max_elem  < i) {
     return OZ_FALSE;
@@ -1181,9 +1171,9 @@ OZ_Boolean OZ_FiniteDomainImpl::contains(int i) const
     if (type == fd_descr) {
       return TRUE;
     } else if (type == bv_descr) {
-      return get_bv()->contains(i);
+      return get_bv()->isIn(i);
     } else {
-      return get_iv()->contains(i);
+      return get_iv()->isIn(i);
     }
   }
 }
@@ -1200,30 +1190,10 @@ OZ_FiniteDomainImpl::OZ_FiniteDomainImpl(void) {
   FiniteDomainInit((void *) 0);
 }
 
-
-inline
-OZ_Boolean OZ_FiniteDomainImpl::operator == (const int v) const
-{
-  return (size == 1) && (min_elem == v);
-}
-
 inline
 OZ_Boolean OZ_FiniteDomainImpl::operator != (const int v) const
 {
   return (size != 1) || (min_elem != v);
-}
-
-inline
-OZ_Boolean OZ_FiniteDomainImpl::operator == (const OZ_FDState state) const
-{
-  if (state == fd_singl) {
-    return size == 1;
-  } else if (state == fd_bool) {
-    return size == 2 && min_elem == 0 && max_elem == 1;
-  } else {
-    Assert(state == fd_empty);
-    return size == 0;
-  }
 }
 
 inline
@@ -1285,57 +1255,6 @@ unsigned OZ_FiniteDomainImpl::getDescrSize() {
   case bv_descr: return get_bv()->sizeOf();
   default:       return 0;
   }
-}
-
-inline
-int OZ_FiniteDomainImpl::initBool(void)
-{
-  setType(fd_descr, NULL);
-  min_elem = 0;
-  max_elem = 1;
-  return size = 2;
-}
-
-inline
-int OZ_FiniteDomainImpl::initRange(int l, int r)
-{
-  l = max(l, fd_inf);
-  r = min(r, fd_sup);
-
-  setType(fd_descr, NULL);
-
-  if (l > r) return size = 0;
-
-  min_elem = l;
-  max_elem = r;
-  return size = findSize();
-}
-
-inline
-int OZ_FiniteDomainImpl::initFull(void)
-{
-  setType(fd_descr, NULL);
-  min_elem = fd_inf;
-  max_elem = fd_sup;
-  return size = fd_full_size;
-}
-
-inline
-int OZ_FiniteDomainImpl::initEmpty(void)
-{
-  min_elem = max_elem = -1;
-  setType(fd_descr, NULL);
-  return size = 0;
-}
-
-inline
-int OZ_FiniteDomainImpl::initSingleton(int n)
-{
-  if (n < fd_inf || fd_sup < n)
-    return initEmpty();
-  setType(fd_descr, NULL);
-  min_elem = max_elem = n;
-  return size = 1;
 }
 
 /* gcc-2.6.3 on solaris has problems ...*/
@@ -1580,24 +1499,16 @@ int OZ_FiniteDomainImpl::initDescr(OZ_Term d)
   return -1;
 }
 
-inline
-int OZ_FiniteDomainImpl::singl(void) const
-{
-  if (size != 1)
-    return -1;
-  return min_elem;
-}
-
 // used for unification of fdvar with boolvar
 int OZ_FiniteDomainImpl::intersectWithBool(void)
 {
-  if (contains(0))
-    if (contains(1))
+  if (isIn(0))
+    if (isIn(1))
       return -1; // boolean
     else
       return 0; // 0
   else
-    if (contains(1))
+    if (isIn(1))
       return 1; // 1
     else
       return -2; // empty
@@ -1706,7 +1617,7 @@ int OZ_FiniteDomainImpl::midElem(void) const
 
   int mid = (min_elem + max_elem) / 2;
 
-  if (contains(mid)) {
+  if (isIn(mid)) {
     DEBUG_FD_IR(("%d}\n", mid));
 
     return mid;
@@ -1745,7 +1656,7 @@ inline
 int OZ_FiniteDomainImpl::operator &= (const int i)
 {
   DEBUG_FD_IR(("{FDIR.'operator &=i' %s %d ", this->toString(), i));
-  if (contains(i)) {
+  if (isIn(i)) {
     initSingleton(i);
     AssertFD(isConsistent());
     DEBUG_FD_IR(("%s}\n", this->toString()));
@@ -1827,7 +1738,7 @@ inline
 int OZ_FiniteDomainImpl::operator -= (const int take_out)
 {
   DEBUG_FD_IR(("{FDIR.'operator -=i' %s %d ", this->toString(), take_out));
-  if (contains(take_out)) {
+  if (isIn(take_out)) {
     descr_type type = getType();
     if (type == fd_descr) {
       if (take_out == min_elem) {
@@ -1974,7 +1885,7 @@ int OZ_FiniteDomainImpl::operator += (const int put_in)
   if (size == 0) {
     min_elem = max_elem = put_in;
     size = 1;
-  } else if (!contains(put_in)) {
+  } else if (!isIn(put_in)) {
     descr_type type = getType();
     if (type == fd_descr) {
       if (put_in == min_elem - 1) {
@@ -2344,12 +2255,12 @@ int OZ_FiniteDomain::initBool(void)
 
 int OZ_FiniteDomain::getSingleElem(void) const
 {
-  return CASTCONSTTHIS->singl();
+  return CASTCONSTTHIS->getSingleElem();
 }
 
 OZ_Boolean OZ_FiniteDomain::isIn(int i) const
 {
-  return CASTCONSTTHIS->contains(i);
+  return CASTCONSTTHIS->isIn(i);
 }
 
 OZ_Term OZ_FiniteDomain::getDescr(void) const

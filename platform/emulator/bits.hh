@@ -25,6 +25,23 @@
 
 #define __BITS_HH__
 
-int get_num_of_bits(const int m, const int * ia);
+extern const char bits_in_byte[];
+
+inline
+int get_num_of_bits(const int m, const int * ia) {
+  int s = 0;
+
+  for (int i = m ; i--; ) {
+    unsigned int iai = ia[i];
+    s += (bits_in_byte[(iai             ) >> 24] +
+          bits_in_byte[(iai & 0x00ff0000) >> 16] +
+          bits_in_byte[(iai & 0x0000ff00) >>  8] +
+          bits_in_byte[(iai & 0x000000ff)]);
+  }
+
+  return s;
+}
+
+int get_num_of_bits_outline(const int , const int *);
 
 #endif
