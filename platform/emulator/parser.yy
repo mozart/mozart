@@ -30,10 +30,15 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <unistd.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+
+#ifdef _MSC_VER
+#include <malloc.h>
+#include <io.h>
+#else
 #include <sys/time.h>
+#endif
 
 #include "base.hh"
 
@@ -1456,7 +1461,7 @@ void xyreportError(char *kind, char *msg, OZ_Term coord) {
 
 void xyreportError(char *kind, char *msg, const char *file,
                    int line, int column) {
-  xyreportError(kind,msg,OZ_mkTupleC("pos",3,OZ_atom(file),
+  xyreportError(kind,msg,OZ_mkTupleC("pos",3,OZ_atom((char*)file),
                                      OZ_int(line),OZ_int(column)));
 }
 

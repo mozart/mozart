@@ -31,7 +31,6 @@
 #include "os.hh"
 #include "am.hh"
 #include <sys/stat.h>
-#include <unistd.h>
 #include <errno.h>
 
 // print  name -> builtin       (for unmarshalling)

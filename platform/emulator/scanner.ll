@@ -27,7 +27,7 @@
 #include <string.h>
 #include <sys/stat.h>
 
-#ifndef WINDOWS
+#if !defined(__MINGW32__) && !defined(_MSC_VER)
 #include <pwd.h>
 #endif
 

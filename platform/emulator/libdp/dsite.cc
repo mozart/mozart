@@ -32,10 +32,10 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <time.h>
-#include <unistd.h>
 #include <stdio.h>
 #include <errno.h>
 
+#include "os.hh"
 #include "dsite.hh"
 #include "comm.hh"
 #include "msgbuffer.hh"

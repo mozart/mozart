@@ -34,8 +34,6 @@
 #include "os.hh"
 #include "am.hh"
 
-#include <unistd.h>
-
 #ifdef CS_PROFILE
 Bool across_chunks;
 #endif
@@ -807,6 +805,18 @@ char *getMemFromOS(size_t sz) {
   heapTop -= sz;
   return heapTop;
 }
+
+void * freeListMallocOutline(size_t chunk_size)
+{
+  return freeListMalloc(chunk_size);
+}
+
+void freeListDisposeOutline(void *addr, size_t chunk_size)
+{
+  freeListDispose(addr,chunk_size);
+}
+
+
 
 
 #ifdef OUTLINE
