@@ -24,7 +24,7 @@ LIBS = $(LHOME)/zlib.lib $(LHOME)/gmp.lib
 .SUFFIXES: .obj .cc .hh .s
 
 SRCS= \
-        main.cc board-bi.cc event.cc ct-bi.cc\
+        main.cc board-bi.cc ct-bi.cc\
         version.cc initffuns.cc \
         statisti.cc trace.cc \
         print.cc base.cc ozconfig.cc \
