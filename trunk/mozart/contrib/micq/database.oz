@@ -355,6 +355,8 @@ define
       end
      
       meth storeX(id:ID data:D) {self.xDB store(id:ID data:D)} end
+      meth updateX(id:ID data:D) {self.xDB update(id:ID data:D)} end
+      meth removeX(id:ID) {self.xDB remove(id:ID)} end
       meth entriesX($) {self.xDB entries($)} end
       
       meth toRecord( record: $ )
