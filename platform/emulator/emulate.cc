@@ -405,25 +405,36 @@ void pushContX(TaskStack *stk,
 
 #define INCFPC(N) PC += N
 
-#if !defined(DEBUG_EMULATOR) && !defined(DISABLE_INSTRPROFILE) && defined(__GNUC__)
-#define asmLbl(INSTR) asm(" " #INSTR ":");
-#else
-#define asmLbl(INSTR)
-#endif
-
-#ifdef INLINEOPCODEMAP
-#define INSERTOPCODE(INSTR) \
-        INSTR##FAKE: \
-        asm(OPCODEALIGNINSTR); \
-        asm(OPM_##INSTR); \
-        asm(OPCODEALIGNINSTR);
-#else
-#define INSERTOPCODE(INSTR)
-#endif
-
 #ifdef THREADED
 
-#define Case(INSTR) INSERTOPCODE(INSTR); INSTR##LBL : asmLbl(INSTR); 
+#ifdef AS_CAN_INLINE_OPCODE_MAP
+
+#if    defined(AS_HAS_BYTE_AND_P2ALIGN)
+#define ALIGNED_LABEL(INSTR) asm(".p2align 4," OPM_##INSTR)
+#elif  defined(AS_HAS_BYTE_AND_ALIGN)
+#if    defined(AS_HAS_MULTIPLE_ALIGN)
+#define ALIGNED_LABEL(INSTR) asm(".align 4," OPM_##INSTR)
+#elif  defined(AS_HAS_POWER_ALIGN)
+#define ALIGNED_LABEL(INSTR) asm(".align 2," OPM_##INSTR)
+#else
+#error unknown alignment for .align
+#endif
+#else
+#error neither .p2align nor .align available
+#endif
+
+#define Case(INSTR) \
+FAKE_##INSTR: \
+asm(".byte " OPM_##INSTR); \
+ALIGNED_LABEL(INSTR); \
+asm("TRUE_"#INSTR":");
+
+#else /* AS_CAN_INLINE_OPCODE_MAP */
+
+#define Case(INSTR) \
+TRUE_##INSTR:
+
+#endif
 
 #ifdef DELAY_SLOT
 // let gcc fill in the delay slot of the "jmp" instruction:
@@ -448,7 +459,7 @@ void pushContX(TaskStack *stk,
 
 #else /* THREADED */
 
-#define Case(INSTR)   case INSTR :  INSTR##LBL : asmLbl(INSTR); 
+#define Case(INSTR)   case INSTR :
 #define DISPATCH(INC) INCFPC(INC); goto LBLdispatcher
 
 #endif
@@ -650,14 +661,10 @@ int engine(Bool init)
 // ------------------------------------------------------------------------
 
  LBLemulate:
-  asmLbl(EMULATE);
-
   JUMPABSOLUTE( PC );
 
-  asmLbl(END_EMULATE);
 #ifndef THREADED
 LBLdispatcher:
-  asmLbl(DISPATCH);
 
 #ifdef RECINSTRFETCH
   CodeArea::recordInstr(PC);
@@ -2689,7 +2696,6 @@ LBLdispatcher:
     isTailCall = OK; SETAUX(XPC(1)); /* fall through */
 
  Call:
-  asmLbl(TAILCALL);
   {
      {
        TaggedRef taggedPredicate = auxTaggedA;
