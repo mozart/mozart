@@ -4055,9 +4055,9 @@ int oz_raise(OZ_Term cat, OZ_Term key, const char *label, int arity, ...)
 
 
   OZ_Term ret = OZ_record(cat,
-                          oz_cons(OZ_int(1),
+                          oz_cons(oz_int(1),
                                   oz_cons(AtomDebug,oz_nil())));
-  OZ_putSubtree(ret,OZ_int(1),exc);
+  OZ_putSubtree(ret,oz_int(1),exc);
   OZ_putSubtree(ret,AtomDebug,NameUnit);
 
   am.setException(ret, oz_eq(cat,E_ERROR) ? TRUE : ozconf.errorDebug);

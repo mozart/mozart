@@ -27,6 +27,7 @@
 #undef  S_CLONE
 
 #include "codearea.hh"
+// #include <malloc.h>
 
 /*
  * Entry points for code garbage collection
@@ -490,5 +491,7 @@ void AM::gCollect(int msgLevel) {
 
   varFix.exit();
   cacStack.exit();
+
+  //  malloc_stats();
 
 } // AM::gc

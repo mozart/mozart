@@ -38,6 +38,8 @@ char *TypeOfTermString[1<<tagSize];
 int debugRef=1;
 #endif
 
+#ifdef DEBUG_CHECK
+
 void initTagged()
 {
   void *p = (void *) malloc(100);
@@ -53,7 +55,6 @@ void initTagged()
 
   free(p);
 
-#ifdef DEBUG_CHECK
   char **tts = TypeOfTermString;
 
   tts[REF]      = "REF";       //  0
@@ -72,5 +73,6 @@ void initTagged()
   tts[GCTAG]    = "GCTAG";     // 13
   tts[SRECORD]  = "SRECORD";   // 14
   tts[LITERAL]  = "ATOM";      // 15
-#endif
 }
+
+#endif

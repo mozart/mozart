@@ -1044,12 +1044,16 @@ void oz_printStream(OZ_Term term, ostream &out, int depth, int width)
   ozconf.printWidth=old;
 }
 
+#ifdef DEBUG_CHECK
+
 // for printing from gdb: no default args needed
 void oz_print(OZ_Term term) {
   oz_printStream(term,cerr);
   cerr << endl;
   flush(cerr);
 }
+
+#endif
 
 static
 void term2Buffer(ostream &out, OZ_Term term, int depth)

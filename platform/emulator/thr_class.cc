@@ -33,6 +33,8 @@
 
 #include "thr_class.hh"
 
+#ifdef DEBUG_CHECK
+
 void Thread::printTaskStack(int depth) {
   if (!isDead()) {
     taskStack->printTaskStack(depth);
@@ -41,3 +43,5 @@ void Thread::printTaskStack(int depth) {
     message("\n");
   }
 }
+
+#endif

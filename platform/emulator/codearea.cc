@@ -175,6 +175,8 @@ const char *getBIName(ProgramCounter PC)
 }
 
 
+#ifdef DEBUG_CHECK
+
 ProgramCounter CodeArea::printDef(ProgramCounter PC,FILE *out)
 {
   ProgramCounter definitionPC = definitionStart(PC);
@@ -201,6 +203,8 @@ ProgramCounter CodeArea::printDef(ProgramCounter PC,FILE *out)
   fflush(out);
   return definitionPC;
 }
+
+#endif
 
 TaggedRef CodeArea::dbgGetDef(ProgramCounter PC, ProgramCounter definitionPC,
                               int frameId, RefsArray Y, Abstraction *CAP)

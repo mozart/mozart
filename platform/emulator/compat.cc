@@ -32,12 +32,12 @@ void makeFSetValue(OZ_Term, OZ_Term *);
 //--** define a macro for OZ_declareGName(0, gname, &ret)
 
 static GName *makeGName(OZ_Term tup, OZ_Term *ret) {
-  int ip = OZ_intToC(OZ_subtree(tup, OZ_int(1)));
-  int stamp = OZ_intToC(OZ_subtree(tup, OZ_int(2)));
-  int pid = OZ_intToC(OZ_subtree(tup, OZ_int(3)));
-  int i1 = OZ_intToC(OZ_subtree(tup, OZ_int(4)));
-  int i2 = OZ_intToC(OZ_subtree(tup, OZ_int(5)));
-  int type = OZ_intToC(OZ_subtree(tup, OZ_int(6)));
+  int ip = OZ_intToC(OZ_subtree(tup, oz_int(1)));
+  int stamp = OZ_intToC(OZ_subtree(tup, oz_int(2)));
+  int pid = OZ_intToC(OZ_subtree(tup, oz_int(3)));
+  int i1 = OZ_intToC(OZ_subtree(tup, oz_int(4)));
+  int i2 = OZ_intToC(OZ_subtree(tup, oz_int(5)));
+  int type = OZ_intToC(OZ_subtree(tup, oz_int(6)));
 
   TimeStamp timeStamp(stamp, pid);
   Site tryS(ip, 0, timeStamp);
