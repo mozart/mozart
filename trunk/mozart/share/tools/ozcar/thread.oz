@@ -120,7 +120,7 @@ in
 	       Data   = {CondSelect M data unit}
 	       Ignore = case {Not {IsDet Data}} then false
 			else Data == Ozcar orelse
-			   Data == {{`Builtin` 'getOPICompiler' 1}}
+			   Data == {Compiler.getOPICompiler}
 			end
 	    in
 	       case Ignore then
@@ -557,15 +557,13 @@ in
 	 Value = case {TkV tkReturnInt($)} == 0 then false else true end
       in
 	 {OzcarMessage 'toggleEmacsThreads ' # {V2VS Value}}
-	 case {UsingNewCompiler} then
-	    case Value then
-	       {Compile '\\switch +runwithdebugger'}
-	    else
-	       {Compile '\\switch -runwithdebugger'}
-	    end
+	 case Value then
+	    {Compile '\\switch +runwithdebugger'}
 	 else
-	    {Dbg.emacsThreads Value}
+	    {Compile '\\switch -runwithdebugger'}
 	 end
+	 % If we are using the old compiler:
+	 {Dbg.emacsThreads Value}
       end
 
       meth toggleSubThreads(TkV)
