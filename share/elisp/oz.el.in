@@ -784,7 +784,7 @@ If FORCE is non-nil, kill it immediately."
   "Set the value of environment variables OZEMULATOR or OZ_LOAD.
 If SET-COMPONENTS is non-nil, set the Components search path (can also
 be done via \\[oz-set-components]); if it is nil, set the emulator
-binary (can also be done via \\[oz-set-emulator]."
+binary (can also be done via \\[oz-set-emulator])."
   (interactive "P")
   (if set-components
       (call-interactively 'oz-set-components)
@@ -812,9 +812,9 @@ Can be selected by \\[oz-other-components]."
       (setenv "OZ_LOAD" oz-components-path)))
 
 (defun oz-other (set-components)
-  "Switch between global and local Oz Emulator or Oz Components.
-If SET-COMPONENTS is non-nil, switch the Components search path (via
-\\[oz-other-components]); if it is nil, switch the emulator binary
+  "Toggle between global and local Oz Emulator or Oz Components.
+If SET-COMPONENTS is non-nil, toggle the Components search path (via
+\\[oz-other-components]); if it is nil, toggle the emulator binary
 \(via \\[oz-other-emulator])."
   (interactive "P")
   (if set-components
@@ -822,9 +822,9 @@ If SET-COMPONENTS is non-nil, switch the Components search path (via
     (oz-other-emulator)))
 
 (defun oz-other-emulator ()
-  "Switch between global and local Oz Emulator.
-The local emulator is given by the environment variable OZEMULATOR
-or can be set by \\[oz-set-emulator]."
+  "Toggle between global and local Oz Emulator.
+The local emulator is given by the user option `oz-emulator';
+see \\[oz-set-emulator]."
   (interactive)
   (cond ((getenv "OZEMULATOR")
 	 (setenv "OZEMULATOR" nil)
@@ -834,8 +834,9 @@ or can be set by \\[oz-set-emulator]."
 	 (message "Oz Emulator: %s" oz-emulator))))
 
 (defun oz-other-components ()
-  "Switch between global and local Oz Components search path.
-These can be set by \\[oz-set-components]."
+  "Toggle between global and local Oz Components search path.
+The local components are given by the user option `oz-components-path';
+see \\[oz-set-components]."
   (interactive)
   (cond ((getenv "OZ_LOAD")
 	 (setenv "OZ_LOAD" nil)
