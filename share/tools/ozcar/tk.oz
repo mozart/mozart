@@ -52,6 +52,9 @@ local
       meth tk(...)=M
 	 {self.W M}
       end
+      meth tkBind(...)=M
+	 {self.W M}
+      end
       meth w($)
 	 self.W
       end

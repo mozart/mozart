@@ -160,15 +160,15 @@ in
 				 borderwidth: SmallBorderSize
 				 action: self # action(S))}
 		  in
-		     {B tkBind(event:  '<3>'
+		     {B tkBind(event:  HelpEvent
 			       action: self # help(S))}
 		     B
 		  end}
 	    TkSusp TkRunChildren Susp RunChildren
 	 in
 	    {ForAll
-	     [TkSusp        # Susp        # 'Ignore Queries' # suspend
-	      TkRunChildren # RunChildren # 'Start Threads' # runChildren]
+	     [TkSusp        # Susp        # IgnoreFeeds     # suspend
+	      TkRunChildren # RunChildren # StartNewThreads # runChildren]
 	     proc {$ B}
 		M = B.4
 	     in
@@ -183,6 +183,8 @@ in
 			      pady:      PadYButton
 			      borderwidth: SmallBorderSize
 			      action:    self # M(B.1))}
+		{B.2 tkBind(event:  HelpEvent
+			    action: self # help(B.3))}
 	     end}
 	    % /*
 	    {RunChildren tk(conf state:disabled)}
@@ -211,6 +213,8 @@ in
 			     bd:     NoBorderSize
 			     cursor: TextCursor
 			     font:   StatusFont)}
+	 {self.StatusText tkBind(event:  HelpEvent
+				 action: self # help(StatusHelp))}
 	 {Tk.send pack(self.StatusText side:left padx:2 fill:x expand:yes)}
 
 	 %% create the thread tree object...
@@ -221,6 +225,9 @@ in
 			  relief: sunken
 			  width:  ThreadTreeWidth
 			  bg:     DefaultBackground)}
+	 {self.ThreadTree tkBind(event:  HelpEvent
+				 action: self # help(TreeTitle))}
+
 	 %% ...and the text widgets for stack and environment
 	 {ForAll [self.StackText       # StackTitle      # StackTextWidth
 		  self.LocalEnvText    # LocalEnvTitle   # EnvTextWidth
@@ -235,6 +242,9 @@ in
 						 cursor: TextCursor
 						 font:   DefaultFont
 						 bg:     DefaultBackground)}
+	     {T.1 tkBind(event:  HelpEvent
+			 action: self # help(T.2))}
+
 	  end}
 	 {Tk.batch [grid(self.ThreadTree    row:3 column:0
 			 sticky:nswe rowspan:2)
