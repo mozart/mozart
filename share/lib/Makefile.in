@@ -317,7 +317,7 @@ veryclean: clean
         -rm -f -r $(STAGE3) $(STAGE3A) $(STAGE3B)
 
 distclean: veryclean
-        -echo To really make distclean, please use \"cd ..; make distclean\".
+        @echo To really make distclean, please use \"cd ..\; make distclean\".
 
 #---------------------------------------------------------------------
 # Bootstrapping and Testing Functors Locally
