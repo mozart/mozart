@@ -113,7 +113,7 @@ OZ_Term unmarshalOwnerStub(MsgBuffer *bs,MarshalTag mt)
   return ((OZ_Term) 0);
 }
 //
-OZ_Term unmarshalVarStub(MsgBuffer*)
+OZ_Term unmarshalVarStub(MsgBuffer*,Bool, Bool)
 {
   OZ_error("'unmarshalVar' called without DP library?");
   return ((OZ_Term) 0);
@@ -246,7 +246,7 @@ OZ_Term (*unmarshalTertiary)(MsgBuffer *bs, MarshalTag tag)
 OZ_Term (*unmarshalOwner)(MsgBuffer *bs,MarshalTag mt)
   = unmarshalOwnerStub;
 //
-OZ_Term (*unmarshalVar)(MsgBuffer*)
+OZ_Term (*unmarshalVar)(MsgBuffer*,Bool,Bool)
   = unmarshalVarStub;
 Bool (*marshalVariable)(TaggedRef*, MsgBuffer*)
   = marshalVariableStub;
