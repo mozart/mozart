@@ -120,8 +120,8 @@ OZ_C_proc_begin(BIstoreTagged,2)
   declareCodeBlock(0,code);
   OZ_declareNonvarArg(1,literalOrNumber);
   literalOrNumber = deref(literalOrNumber);
-  Assert(OZ_isLiteral(literalOrNumber)
-	 || OZ_isInt(literalOrNumber) || OZ_isFloat(literalOrNumber));
+  Assert(OZ_isLiteral(literalOrNumber) || OZ_isInt(literalOrNumber) || 
+	 OZ_isFloat(literalOrNumber) || OZ_isProcedure(literalOrNumber));
   code->writeTagged(literalOrNumber);
   return PROCEED;
 }
