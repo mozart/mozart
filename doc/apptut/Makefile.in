@@ -11,7 +11,7 @@ SGMLSRCS = \
         native-counter-obj.sgml chat.sgml \
         conc-cheap.sgml conc-patterns.sgml app.sgml \
         mof.sgml pickle.sgml applets.sgml servlets.sgml
-HTMLEXTRAFILES = pictures/netscape.gif apptut.gif
+HTMLEXTRAFILES = apptut.gif
 CHUNKFILES = \
         chat-server.oz chat-client.oz chat-gui.oz \
         Webget.oz DB.oz Form.oz LMF.oz

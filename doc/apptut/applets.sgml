@@ -22,66 +22,19 @@
   -->
 
 <Chapter id="chapter.applets">
-  <Title/Applets/
+  <title/Applets/
 
-  <Section id="APPLETS">
-    <Title/Applets/
+  <p>
+    Oz applications can be executed by clicking links on web pages.
 
-    <p>
-      Application execution is controlled by MIME types. An Oz
-      application has the MIME type
-      <Kbd>application/x-oz-application</Kbd> and the
-      filename extension <Kbd/oza/.
+  <section id="section.applets.install">
+    <title/Enabling Oz Applets/
 
     <p>
-      To make your Web Browser Mozart Application enabled, it needs to
-      know the following bits of information:
-      <List>
-        <Entry>Mime type
-        <Item> This is <Kbd>application/x-oz-application</Kbd>.
-        <Entry>File extension
-        <Item> This is <Kbd>oza</Kbd>.
-        <Entry>Program location
-        <Item> Where the Oz engine to execute Applications resides. For
-        example, if Mozart has been installed in
-        <Kbd>/usr/local/oz</Kbd>, this is
-        <Kbd>/usr/local/oz/bin/ozengine</Kbd>.
-      </List>
-    </P>
+      In order to start Oz applications by clicking links on web
+      pages, the web browser must be Mozart enabled, which is
+      described in <ptr.extern to="ozdoc:install" key="applets">.
 
-    <p>
-      HTACCESS!
-
-    <P>
-      Additionally, you have to have Mozart installed, which is
-      documented in <ptr.extern to="ozdoc:install">.
-    </P>
-
-   <Section id="section.applets.netscape">
-     <Title/Example: Making Netscape Mozart Enabled/
-
-   <P>
-     <Figure Class=Picture Id="figure.applets.install">
-      <Title/The Netscape application dialog./
-      <Picture.Choice>
-        <Picture.Extern to="netscape.gif" type=gif>
-      </PICTURE.CHOICE>
-    </Figure>
-
-     <P>
-       You have to do the following steps:
-     </P>
-
-     <P>
-       <List>
-         <Item> Open the preferences window.
-         <Item> Choose the Navigator, Applications dialog.
-         <Item> Press the <Em/New/ button.
-         <Item> Enter the information as sketched above, as you see it
-         done in <Ptr to="figure.applets.install">
-       </List>
-     </P>
-   </Section>
-
+  </section>
 
 </Chapter>
