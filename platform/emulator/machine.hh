@@ -13,6 +13,8 @@
 #ifndef __MACHINEHH
 #define __MACHINEHH
 
+#include <stdlib.h>
+
 
 /*
  * This file contains machine specific settings
@@ -21,6 +23,8 @@
 
 /* a 32 bit integer, the same on alpha and other machines */
 #define int32 int
+
+#define intlong long
 
 
 #ifdef MIPS
@@ -51,7 +55,20 @@ inline void* ToPointer(int32 i) {
 #endif
 }
 
+
+inline void *orPointer(void *p, int i)
+{
+  return (void*) ((long)p|(long)i);
+}
+
+
+inline void *andPointer(void *p, int i)
+{
+  return (void*) ((long)p&(long)i);
+}
+
 inline int32 ToInt32(void *p)   { return (int32)(p); } ;
 
+inline int isPointer(void *p) { return (((intlong)p) & mallocBase) != 0;}
 
 #endif
