@@ -2,9 +2,9 @@
 %%% Benjamin Lorenz <lorenz@ps.uni-sb.de>
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% Strings
+%% Text
 %%
-Version                = '0.9 (Dec 96)'
+Version                = '0.98 (Jan 97)'
 TitleName              = 'Oz Debugger Interface'
 IconName               = 'Ozcar'
 
@@ -37,8 +37,39 @@ ID                     = fun {$ I} ' (id ' # I # ')' end
 OzcarMessagePrefix     = 'Ozcar: '
 				     
 /*                       Just for you, you stupid emacs!
-end end end
+end end end end
 */
+
+FileLineSeparator      = ' '
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Types, Names and Atoms
+%%
+ArrayType              = '<array>'
+CellType               = '<cell>'
+ClassType              = '<class>' /* end */
+DictionaryType         = '<dict>'
+FloatType              = '<float>'
+ListType               = '<list>'
+UnitType               = 'unit'
+NameType               = '<name>'
+LockType               = '<lock>' /* end */
+ObjectType             = '<object>'
+PortType               = '<port>'
+ProcedureType          = '<proc>' /* end */
+TupleType              = '<tuple>'
+RecordType             = '<record>'
+ChunkType              = '<chunk>'
+UnknownType            = '<???>'
+UnboundType            = '_'
+UnAllocatedType        = 'unalloc'
+
+NilAtom                = "'nil'"
+ConsAtom               = "'|'"
+HashAtom               = "'#'"
+
+TrueName               = 'true'
+FalseName              = 'false'
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Geometry

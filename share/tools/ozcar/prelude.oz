@@ -50,7 +50,11 @@ in
 end
 
 fun {StripPath File}
-   {Str.rchr {Atom.toString File} &/}.2
+   case File == '' then
+      '???'
+   else
+      {Str.rchr {Atom.toString File} &/}.2
+   end
 end
 
 % transform an argument list
@@ -63,34 +67,33 @@ end
 
 fun {ArgType X}
    case {IsDet X} then
-      case     {IsArray X}      then '<array>'
+      case     {IsArray X}      then ArrayType
       elsecase {IsAtom X}       then case X
-				     of 'nil'         then "'nil'"
-				     [] '|'           then "'|'"
-				     [] '#'           then "'#'"
-				     [] 'unallocated' then 'unalloc'
+				     of 'nil'         then NilAtom
+				     [] '|'           then ConsAtom
+				     [] '#'           then HashAtom
+				     [] 'unallocated' then UnAllocatedType
 				     else                  '\'' # X # '\''
 				     end
-      elsecase {IsBool X}       then case X of true then 'true' else 'false'
-				     end
-      elsecase {IsCell X}       then '<cell>'
-      elsecase {IsClass X}      then '<class>'
-      elsecase {IsDictionary X} then '<dict>'
-      elsecase {IsFloat X}      then '<float>'
+      elsecase {IsBool X}       then case X then TrueName else FalseName end
+      elsecase {IsCell X}       then CellType
+      elsecase {IsClass X}      then ClassType
+      elsecase {IsDictionary X} then DictionaryType
+      elsecase {IsFloat X}      then FloatType
       elsecase {IsInt X}        then X
-      elsecase {IsList X}       then '<list>'
-      elsecase {IsUnit  X}      then 'unit'
-      elsecase {IsName X}       then '<name>'
-      elsecase {IsLock X}       then '<lock>'
-      elsecase {IsObject X}     then '<object>'
-      elsecase {IsPort X}       then '<port>'
-      elsecase {IsProcedure X}  then '<proc>'
-      elsecase {IsTuple X}      then '<tuple>'
-      elsecase {IsRecord X}     then '<record>'
-      elsecase {IsChunk X}      then '<chunk>'
-      else                           '<???>'
+      elsecase {IsList X}       then ListType
+      elsecase {IsUnit  X}      then UnitType
+      elsecase {IsName X}       then NameType
+      elsecase {IsLock X}       then LockType
+      elsecase {IsObject X}     then ObjectType
+      elsecase {IsPort X}       then PortType
+      elsecase {IsProcedure X}  then ProcedureType
+      elsecase {IsTuple X}      then TupleType
+      elsecase {IsRecord X}     then RecordType
+      elsecase {IsChunk X}      then ChunkType
+      else                           UnknownType
       end
-   else                              '_'
+   else                              UnboundType
    end
 end
 

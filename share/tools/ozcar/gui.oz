@@ -55,7 +55,7 @@ class Gui from Menu Dialog
       %% the buttons
       local
 	 %% Tk has some problems printing centered text :-(
-	 Bs = {Map [' step' ' next' ' finish' ' cont' ' forget' /*' stack'*/]
+	 Bs = {Map [' step' ' next' ' finish' ' cont' ' forget' ' stack']
 	       fun {$ B}
 		  {New Tk.button tkInit(parent:      self.ButtonFrame
 					text:        B
@@ -146,7 +146,7 @@ class Gui from Menu Dialog
 	  AT = {ArgType V.2}
        in
 	  case CV orelse {Atom.toString V.1}.1 \= 96 then
-	     case CP orelse AT \= '<procedure>' then
+	     case CP orelse AT \= ProcedureType then
 		T = {TagCounter get($)}
 		Ac = {New Tk.action
 		      tkInit(parent: Widget
@@ -258,7 +258,7 @@ class Gui from Menu Dialog
 		      {PrintF ' ' # I # ' ' # case F.name == ''
 					      then '$' else F.name
 					      end 35} #
-		      {StripPath F.file} # ' ' # F.line # NL T)
+		      {StripPath F.file} # FileLineSeparator # F.line # NL T)
 		      tk(tag bind T '<1>' Ac)
 		      tk(tag conf T font:BoldFont)] W}
 	     case I == 1 andthen (Top orelse SL == 1)
@@ -313,7 +313,7 @@ class Gui from Menu Dialog
       in
 	 Gui,Clear(W)
 	 case F \= undef then
-	    {W tk(insert 'end' ' ' # {StripPath F} # ' ' # L)}
+	    {W tk(insert 'end' ' ' # {StripPath F} # FileLineSeparator # L)}
 	 else skip end
 	 Gui,Disable(W)
       end

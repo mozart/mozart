@@ -19,3 +19,6 @@ Veraenderungen am Quellcode verursachen keinen Reload des Files
 
 Fri Jan 10 18:01:11 MET 1997
 Forget loescht fehlerhaft aus dem Thread-Baum, wenn Knoten kein Blatt ist.
+
+Sat Jan 11 00:00:04 MET 1997
+Dialogboxen oeffnen nicht an Mausposition
