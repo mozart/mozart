@@ -177,6 +177,18 @@ define
 		id:ClientId <= unit
 		expectedServerId:ServerId <= directory(kind:recordMatching)
 		timeOut:TimeOut <= 1000)
+	 fun {NoDuplicates Xs}
+	    case Xs
+	    of X|Xr then
+	       if {List.member X Xr} then
+		  {NoDuplicates Xr}
+	       else
+		  X|{NoDuplicates Xr}
+	       end
+	    else
+	       Xs
+	    end
+	 end
 	 TimeUnit = TimeOut div 4
 	 Found X C 
       in
@@ -187,7 +199,7 @@ define
 	    C = {New Discovery.client init(port:PortNr)}
 	 end
 	 {C getAll(timeOut:3*TimeUnit info:Found)}
-	 X = {Filter Found ServerId TimeUnit}
+	 X = {NoDuplicates {Filter Found ServerId TimeUnit}}
 	 {C close()}
 	 case X
 	 of P|Pr then
@@ -226,34 +238,10 @@ define
 	 end
       end
    end
-   fun {Member Ticket Xs}
-      case Xs
-      of _#T|Xr then
-	 if T == Ticket then
-	    true
-	 else
-	    {Member Ticket Xr}
-	 end
-      [] nil then
-	 false
-      end
-   end	 
-   fun {Union Xs Ys}
-      case Xs
-      of X|Xr then
-	 if {Member X.2 Ys} then
-	    {Union Xr Ys}
-	 else
-	    X|{Union Xr Ys}
-	 end
-      [] nil then
-	 Ys
-      end
-   end
-   fun {ListUnion Ls}
+   fun {Append Ls}
       case Ls
       of L1|L2|Lr then
-	 {ListUnion {Union L1 L2}|Lr}
+	 {Append {List.append L1 L2}|Lr}
       [] [L1] then
 	 L1
       [] nil then
@@ -266,7 +254,7 @@ define
 	       fun {$ P}
 		  {Port.send P lookup(self.id Pattern $)}
 	       end}
-	 Services = {ListUnion Ss} % Keep only one occurrence of each service
+	 Services = {Append Ss} 
       end
    end
 end
