@@ -26,7 +26,7 @@
 <!ENTITY chunks SYSTEM "chunks.sgml">
 <!ENTITY control SYSTEM "control.sgml">
 <!ENTITY infix SYSTEM "infix.sgml">
-<!entity misc system "misc.sgml">
+<!ENTITY misc SYSTEM "misc.sgml">
 
 <!-- Abbreviations -->
 <!ENTITY lt "<">
