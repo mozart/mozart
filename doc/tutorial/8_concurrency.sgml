@@ -372,17 +372,17 @@ well. The reason has to do with the asynchronous message passing. If
 the producer sends messages i.e. create new elements in the stream, in
 a faster rate than the consumer can consume, increasingly more
 buffering will be needed until the system starts to break down<NOTE
-FOOT>Ironically in our current research project PERDIO, developing
-next generation Oz system (an Internet-wide distributed Oz), stream
+FOOT>Ironically in the Mozart system, using the distributed programming
+capabilities, stream
 communication across sites works better because of designed flow
 control mechanism that suspends producers when the network buffers are
 full</NOTE>. There are a number of ways to solve this problem. One is
 to create a bounded buffer between producers and consumers which we
-will be discussed later. Another way is to control experimentally the
+will discuss later. Another way is to control experimentally the
 rate of thread execution so that the consumers get a larger time-slice
 than the producers do.
 
-<P>The modules <<Thread>>, and <<System>>, provide a number of
+<P>The modules <<Thread>>, and <<Property>>, provide a number of
 operations pertinent to threads. Some of these are summarized in 
 <PTR TO="threadTable">.
 
@@ -417,10 +417,10 @@ operations pertinent to threads. Some of these are summarized in
   <TD><<{Thread.setThisPriority +P}>></TD>
   <TD>Sets current thread's priority</TD>
 </TR><TR>
-  <TD><<{System.get priorities +P}>></TD>
-  <TD>Gets system-priority ratios</TD>
+  <TD><<{Property.get priorities priorities(high:?X medium:?Y) }>></TD>
+  <TD>Gets system-priority ratios </TD>
 </TR><TR>
-  <TD><<{System.set priorities(high:+X medium:+Y)}>></TD>
+  <TD><<{Property.set priorities(high:+X medium:+Y)}>></TD>
   <TD>Sets system-priority ratios</TD>
 </TR>
 </TABLE>
@@ -428,14 +428,14 @@ operations pertinent to threads. Some of these are summarized in
 
 <P>Oz has three priority levels. The system procedure 
 
-<<<{System.set priorities(high:X medium:Y)}>>>
+<<<{Property.set priorities(high:X medium:Y)}>>>
 
 <P>sets the processor-time ratio to <<X:1>> between high-priority
 threads and medium-priority thread. It also sets the processor-time
 ratio to <<Y:1>> between medium-priority threads and low-priority
 thread. <<X>> and <<Y>> are integers. So, if we execute
 
-<<<{System.set priorities(high:+10 medium:+10)}>>>
+<<<{Property.set priorities(high:+10 medium:+10)}>>>
 
 <P>for each <<10>> time-slices allocated to runnable high-priority
 threads, the system will allocate one time-slice for medium-priority
@@ -447,7 +447,7 @@ priority, and the consumer high. We also set the priority ratios to
 
 <<<
 local L in
-   {System.set priorities(high:+10 medium:+10)}
+   {Property.set priorities(high:+10 medium:+10)}
    thread
      {Thread.setThisPriority low}
       L = {Producer 5000000}
