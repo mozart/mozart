@@ -17,18 +17,20 @@ local
     [
       nil # ('The Ozcar Help System' #
 	('For most of the widgets in the Ozcar GUI you can ' #
-	'get some help. To display it, you have to click ' #
-	'with the right mouse button on the widget.\n' #
-	'\nFurthermore, there are some interesting help topics available ' #
-	'in the Help menu.'))
+	'get some help.\nJust click ' #
+	'with the right mouse button on the widget.'))
 
       StatusHelp # ('The Status Line' #
 	('Important events like reaching a breakpoint or raising ' #
 	'an exception are reported here.'))
 
       IgnoreFeeds # ('Ignore Emacs Queries' #
-	('When this checkbutton is activated then you can feed and ' #
-	'execute some code from Emacs without Ozcar taking over control.'))
+	('Activate this checkbutton if you want to feed some code ' #
+	'from Emacs without Ozcar taking over control.'))
+
+      IgnoreThreads # ('Ignore Subthreads' #
+	('Activate this checkbutton if you don\'t want Ozcar ' #
+	'to debug any subthreads of your initial query thread.'))
 
       BreakpointStaticHelp # ('Static Breakpoints' #
 	('You can set a Static Breakpoint by inserting ' #
