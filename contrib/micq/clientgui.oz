@@ -52,9 +52,7 @@ import
    ConfigClient(start) at 'configureclient.ozf'
    EditApplicationGUI( start: EditApp) at 'editapplicationgui.ozf'
    DisplayMess(display) at 'messagedisplay.ozf'
-\ifdef SCROLLFRAME
    ScrollFrame
-\endif
 
    %% Images
    Logo_gif(image:LogoI)
@@ -894,19 +892,11 @@ define
       %% Start Graphics
       T={New Tk.toplevel tkInit(title:"Client" delete:Kill)}
 
-\ifdef SCROLLFRAME
       F={New ScrollFrame.scrollFrame tkInit(parent:T relief:sunken bd:2 width:100)}
       Online={New UserBox tkInit(parent:F.frame name:"online" type:online)}
       Offline={New UserBox tkInit(parent:F.frame name:"offline" type:offline)}
       Others={New OthersBox tkInit(parent:F.frame name:"others" type:others)}
       Apps={New AppBox tkInit(parent:F.frame name:"apps")}
-\else
-      F={New Tk.frame tkInit(parent:T relief:sunken bd:2)}
-      Online={New UserBox tkInit(parent:F name:"online" type:online)}
-      Offline={New UserBox tkInit(parent:F name:"offline" type:offline)}
-      Others={New OthersBox tkInit(parent:F name:"others" type:others)}
-      Apps={New AppBox tkInit(parent:F name:"apps")}
-\endif
 
       StatusV={New Tk.variable tkInit('Online')}
 
@@ -930,9 +920,7 @@ define
                  grid(columnconfigure F 0 weight:1)
                  grid(rowconfigure T 0 weight:1)
                  grid(rowconfigure F 0 weight:1)
-\ifdef SCROLLFRAME
                  grid(columnconfigure F.frame 0 weight:1)
-\endif
                  wm(resizable T 1 1)]}
 
       thread
