@@ -142,7 +142,7 @@ for p in mozart_packages:
 all_mozart_versions = all_mozart_versions.keys()
 all_mozart_versions.sort()
 
-def page_releases(action,version):
+def page_releases(action,version,listing=1):
     page_div_begin()
     print "<p><b>Releases:",
     first = True
@@ -153,6 +153,11 @@ def page_releases(action,version):
             print " - ",
         if v==version:
             print v,
+            if listing:
+                if LISTING=='full':
+                    print "[<a href='view.cgi?action="+action+"&version="+v+"'>Most Recent Entries Only</a>]",
+                else:
+                    print "[<a href='view.cgi?action="+action+"&listing=full&version="+v+"'>All Entries</a>]",
         else:
             print "<a href='view.cgi?action="+action+"&version="+v+"'>"+v+"</a>"
     if action=='default':
@@ -327,8 +332,15 @@ def sort_by_os_then_date(entries):
         l = map(by_date_item,l)
         l.sort()
         l.reverse()
+        # now by format
+        t = {}
         for d,e in l:
-            entries.append(e)
+            f = e.table.get('format','')
+        if LISTING=='full':
+            for d,e in l:
+                entries.append(e)
+        else:
+            entries.append(l[0][1])
     return entries
 
 def sort_item_by_os_then_date(item):
@@ -827,6 +839,7 @@ print '<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">'
 
 ACTION  = FORM.getvalue('action','default')
 VERSION = FORM.getvalue('version',mozart_current_version)
+LISTING = FORM.getvalue('listing','last')
 
 if ACTION == 'rpm':
     page_rpm(VERSION)
