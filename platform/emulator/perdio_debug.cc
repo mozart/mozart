@@ -36,12 +36,12 @@ void dvset(int i){
     DV->set(REMOTE);  
     DV->set(MESSAGE);
     DV->set(WEIRD);
-    DV->set(OS);*/
-    DV->set(BUFFER);
+    DV->set(OS);
+    DV->set(BUFFER);*/
     DV->set(READ);
-    /*    DV->set(WRITE);*/
+    /*    DV->set(WRITE);
     DV->set(CONTENTS);
-    /*    DV->set(SPECIAL);*/
+    DV->set(SPECIAL);*/
     return;
     }
   if(i==1){
@@ -122,6 +122,8 @@ void dvset(int i){
     DV->set(WRITE);
     DV->set(CONTENTS);
     DV->set(SPECIAL);
+    return;}
+  if(i==3){
     return;}
   Assert(0);
 }
