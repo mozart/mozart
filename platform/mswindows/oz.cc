@@ -73,8 +73,8 @@ unsigned __stdcall readerThread(void *arg)
 #ifdef OZENGINE
 int main(int argc, char **argv)
 #else
-int PASCAL
-WinMain(HANDLE /*hInstance*/, HANDLE /*hPrevInstance*/,
+int WINAPI
+WinMain(HINSTANCE /*hInstance*/, HINSTANCE /*hPrevInstance*/,
         LPSTR lpszCmdLine, int /*nCmdShow*/)
 #endif
 {
@@ -89,14 +89,12 @@ WinMain(HANDLE /*hInstance*/, HANDLE /*hPrevInstance*/,
     SetEnvironmentVariable("OZPPID",strdup(auxbuf));
   }
 
-
   InitializeCriticalSection(&lock);
 
   char buffer[5000];
 
   GetModuleFileName(NULL, buffer, sizeof(buffer));
-  char *progname = getProgname(buffer);
-  char *ozhome   = getOzHome(buffer,2);
+  char *ozhome = getOzHome(buffer,2);
 
   ozSetenv("OZPLATFORM",ozplatform);
   ozSetenv("OZHOME",ozhome);
@@ -116,10 +114,8 @@ WinMain(HANDLE /*hInstance*/, HANDLE /*hPrevInstance*/,
 
 #ifdef OZSCRIPT
   char *emacshome  = getEmacsHome();
-  if (emacshome==NULL) {
-    OzPanic(1,"Emacs home not found.\nDid you install Emacs?");
-  }
-  sprintf(buffer,"%s/bin/runemacs.exe -L \"%s/share/elisp\" -l oz.elc -f run-oz",
+  sprintf(buffer,
+          "%s/bin/runemacs.exe -L \"%s/share/elisp\" -l oz.elc -f run-oz",
           emacshome,ozhome);
 #endif
 #if defined(OZENGINE) || defined(OZENGINEW)
@@ -129,7 +125,11 @@ WinMain(HANDLE /*hInstance*/, HANDLE /*hPrevInstance*/,
   console = DETACHED_PROCESS;
 #endif
   if (argc < 2) {
-    OzPanic(1,"usage: ozengine url <args>\n");
+    panic(0,"Usage: ozengine"
+#ifdef OZENGINEW
+          "w"
+#endif
+          " url <args>");
   }
   char *ozemulator = getEmulator(ozhome);
   char *url = argv[1];
@@ -153,8 +153,8 @@ WinMain(HANDLE /*hInstance*/, HANDLE /*hPrevInstance*/,
 
 #ifdef OZENGINEW
   HANDLE rh,wh;
-  if (!CreatePipe(&rh,&wh,&sa,0)) {
-    OzPanic(1,"CreatePipe failed");
+  if (CreatePipe(&rh,&wh,&sa,0) == FALSE) {
+    panic(1,"Could not create pipe.\n");
   }
   si.dwFlags |= STARTF_USESTDHANDLES;
   si.hStdOutput = wh;
@@ -165,9 +165,8 @@ WinMain(HANDLE /*hInstance*/, HANDLE /*hPrevInstance*/,
   BOOL ret = CreateProcess(NULL,buffer,&sa,NULL,TRUE,
                            console,NULL,NULL,&si,&pinf);
 
-  if (ret!=TRUE) {
-    OzPanic(1,"Cannot run '%s' Oz.\nError = %d."
-              "Did you run setup?",buffer,errno);
+  if (ret==FALSE) {
+    panic(1,"Cannot run '%s'.",buffer);
   }
 
 #ifdef OZENGINEW
