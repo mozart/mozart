@@ -71,6 +71,7 @@
         <Grammar.Alt/?={naked variable}/
       <Grammar.Rule>?={atom literal}
         <Grammar.Alt/<<fAtom(?={literal} ?={coord})>>/
+      <!--** eliminate naked variable? -->
       <Grammar.Rule>?={naked variable}
         <Grammar.Alt/<<fVar(?={atom} ?={coord})>>/
       <Grammar.Rule>?={variable}
@@ -243,7 +244,7 @@
         <Grammar.Alt/<<fLexicalAbbreviation(?={grammar symbol} ?={regex})>>/
         <Grammar.Alt/<<fLexicalRule(?={regex} ?={phrase})>>/
       <Grammar.Rule>?={regex}
-        <Grammar.Alt/?={atom}/
+        <Grammar.Alt/?={string}/
     <Para class=apropos><Title/Parsers/
       <Grammar.Rule>?={token clause}
         <Grammar.Alt/<<fToken([?={token decl}])>>/
