@@ -80,9 +80,12 @@ public:
 
   Board *popBoard();
   Suspension *popSuspension();
+  void pushTask(Board *n,ProgramCounter pc,
+                       RefsArray y,RefsArray g,RefsArray x=NULL,int i=0);
 
+  Thread(int prio);
 private:
-  Thread(int p);
+  Thread();
   Bool isScheduled();
   void insertFromTail();
   void insertFromHead();

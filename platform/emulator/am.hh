@@ -89,18 +89,14 @@ public:
 // tree move
   InstType installPath(Board *to);
   Bool installScript(ConsList &script);
-  Bool installOne();
-  void reduceTrailFrame(Bool writeScript);
-  void reduceTrailFrame(Bool writeScript, int numbOfCons);
+  Bool install(Board *bb);
   void deinstallPath(Board *top);
-  void deinstallOne(Bool writeScript);
+  void deinstallCurrent();
+  void reduceTrailOnUnitCommit();
+  void reduceTrailOnSuspend();
+  void reduceTrailOnFail();
+  void reduceTrailOnShallow(Suspension *susp,int numbOfCons);
 
-  Bool shallowEntailed(Board *node, ProgramCounter PC,RefsArray Y,
-                       RefsArray G, RefsArray X, int argsToSave);
-
-  void shallowMakeSuspension(Board *node, ProgramCounter PC,RefsArray Y,
-                             RefsArray G, RefsArray X, int argsToSave,
-                             int numbOfCons);
   Bool isToplevel();
 
 // gc

@@ -107,7 +107,7 @@ inline Bool Actor::isAsk()
 
 inline Bool Actor::isLeaf()
 {
-  return (next.getPC() == NOCODE && childCount == 0) ? OK : NO;
+  return childCount == 0 && next.getPC() == NOCODE ? OK : NO;
 }
 
 inline Bool Actor::isWait()
@@ -181,24 +181,60 @@ WaitActor::WaitActor(Board *s,int prio,ProgramCounter p,RefsArray y,
 }
 
 
-void WaitActor::addChildInternal(Board *n)
+void WaitActor::addChildInternal(Board *bb)
 {
-  error("mm2: not impl");
+  if (!childs) {
+    childs=(Board **) freeListMalloc(3*sizeof(Board *));
+    *childs++ = (Board *) 2;
+    childs[0] = bb;
+    childs[1] = NULL;
+    return;
+  }
+  int max=(int) childs[-1];
+  for (int i = 0; i < max; i++) {
+    if (!childs[i]) {
+      childs[i] = bb;
+      return;
+    }
+  }
+  int size = 2*max;
+  Board **cc = (Board **) freeListMalloc((size+1)*sizeof(Board *));
+  *cc++ = (Board *) size;
+  freeListDispose(childs-1,(((int) childs[-1])+1)*sizeof(Board *));
+  childs = cc;
+  childs[max] = bb;
+  for (int j = max+1; j < size; j++) {
+    childs[j] = NULL;
+  }
 }
 
-void WaitActor::failChildInternal(Board *n)
+void WaitActor::failChildInternal(Board *bb)
 {
-  error("mm2: not impl");
+  int max=(int) childs[-1];
+  for (int i = 0; i < max; i++) {
+    if (childs[i] == bb) {
+      childs[i] = NULL;
+      return;
+    }
+  }
+  error("WaitActor::failChildInternal");
 }
 
 Board *WaitActor::getChild()
 {
-  error("mm2: not impl");
+  int max=(int) childs[-1];
+  for (int i = 0; i < max; i++) {
+    if (childs[i]) {
+      return childs[i];
+    }
+  }
+  error("WaitActor::getChild");
 }
 
-Bool WaitActor::isThereOneChild()
+// see also: isLeaf()
+Bool WaitActor::hasOneChild()
 {
-  error("mm2: not impl");
+  return childCount == 1 && next.getPC() == NOCODE ? OK : NO;
 }
 
 WaitActor *CastWaitActor(Actor *a)

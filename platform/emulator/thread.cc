@@ -52,18 +52,18 @@
 // --------------------------------------------------------------------------
 
 
-/* enum T_Flag:
+/* enum ThreadFlags:
    Normal: thread has a taskStack and is scheduled
    Warm: thread has no taskStack, but 'suspension' contains a suspension
    Nervous: thread has no taskStack, but 'board' contains the board to visit
    OneTask: thread has only one Task
    */
 
-enum T_Flag
+enum ThreadFlags
 {
-  T_Normal      = 0,
-  T_Warm        = 1<<0,
-  T_Nervous     = 1<<1,
+  T_Normal,
+  T_Warm,
+  T_Nervous
 };
 
 
@@ -82,7 +82,7 @@ enum T_Flag
      priority: the thread priority
                -MININT ... +MAXINT
                low     ... high priority
-     flags: see above T_Flag
+     flags: see above ThreadFlags
      taskStack: the stack of elaboration tasks
      suspension: a suspension scheduled for execution
      board: a board scheduled for visiting
@@ -115,7 +115,8 @@ void Thread::Init()
   Head = (Thread *) NULL;
   Tail = (Thread *) NULL;
   Current = (Thread *) NULL;
-  Root = new Thread(T_Normal);
+  Root = new Thread;
+  Root->flags = T_Normal;
   Root->priority = SystemPriority;
   Root->taskStack = new TaskStack();
 }
@@ -157,7 +158,8 @@ Bool Thread::isScheduled() {
 
 void Thread::Schedule(Suspension *s)
 {
-  Thread *t=new Thread(T_Warm);
+  Thread *t=new Thread;
+  t->flags = T_Warm;
   t->priority = s->getPriority();
   t->suspension = s;
   s->getNode()->addSuspension();
@@ -178,35 +180,44 @@ void Thread::ScheduleRoot(ProgramCounter PC,RefsArray y)
 // create a new thread after wakeup (nervous)
 void Thread::Schedule(Board *b)
 {
-  Thread *t=new Thread(T_Nervous);
+  Thread *t = new Thread;
+  t->flags = T_Nervous;
   t->priority = b->getActor()->getPriority();
   t->board = b;
   b->setNervous();
   t->schedule();
 }
 
+Thread::Thread(int prio)
+: ConstTerm(Co_Thread)
+{
+  Thread(*this);
+  flags = T_Normal;
+  priority = prio;
+  taskStack = new TaskStack;
+}
 // create a new thread without any value
-Thread::Thread(int f)
-: flags(f) , ConstTerm(Co_Thread)
+Thread::Thread()
+: ConstTerm(Co_Thread)
 {
   prev=next= (Thread *) NULL;
-  DebugCheckT(priority = -1; taskStack = (TaskStack *) -1);
+  DebugCheckT(priority = -1; taskStack = (TaskStack *) -1; flags = -1);
 }
 
 
 Bool Thread::isNormal()
 {
-  return flags==T_Normal ? OK : NO;
+  return flags == T_Normal ? OK : NO;
 }
 
 Bool Thread::isWarm()
 {
-  return flags&T_Warm ? OK : NO;
+  return flags == T_Warm ? OK : NO;
 }
 
 Bool Thread::isNervous()
 {
-  return flags&T_Nervous ? OK : NO;
+  return flags == T_Nervous ? OK : NO;
 }
 
 // free the memory of the thread (there are no references to it anymore)
@@ -400,6 +411,15 @@ void Thread::MakeTaskStack()
 
 }
 
+void Thread::pushTask(Board *bb,ProgramCounter pc,
+                      RefsArray y,RefsArray g,
+                      RefsArray x,int i)
+{
+  DebugCheck(!isNormal(),error("Thread::pushTask"));
+  bb->addSuspension();
+  taskStack->pushCont(bb,pc,y,g,x,i);
+}
+
 void Thread::ScheduleCurrent()
 {
   Current->schedule();
@@ -436,7 +456,8 @@ Suspension *Thread::popSuspension()
 }
 
 void Thread::NewCurrent(int prio) {
-  Current = new Thread(T_Normal);
+  Current = new Thread();
+  Current->flags = T_Normal;
   Current->priority = prio;
   am.currentTaskStack = Current->taskStack = new TaskStack();
 }

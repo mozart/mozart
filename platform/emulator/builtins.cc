@@ -26,7 +26,7 @@ BuiltinTab &getBuiltinTab()
 
 
 
-BuiltinTabEntry *BIadd(char *name,int arity,StateFun fun, Bool replace,
+BuiltinTabEntry *BIadd(char *name,int arity,BIFun fun, Bool replace,
                        InlineFunOrRel infun)
 {
   BuiltinTabEntry *builtin = new BuiltinTabEntry(name,arity,fun,infun);
@@ -51,7 +51,7 @@ BuiltinTabEntry *BIaddSpecial(char *name,int arity,BIType t, Bool replace)
   return(builtin);
 }
 
-BuiltinTabEntry *BIreplace(char *name,int arity,StateFun fun)
+BuiltinTabEntry *BIreplace(char *name,int arity,BIFun fun)
 {
   // remove it whether it is already in or not
   return(BIadd(name,arity,fun,OK));

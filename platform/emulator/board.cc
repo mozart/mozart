@@ -31,6 +31,8 @@
        Installed
      garbage collector
        PathMark
+     disjunction has elab the guard 'WAIT'
+       Waiting
      state
        active: -
        committed: Committed (entailed or unit committed)
@@ -80,6 +82,7 @@ enum BoardFlags {
   Bo_Failed     = 1<<7,
   Bo_Committed  = 1<<8,
   Bo_Discarded  = 1<<9,
+  Bo_Waiting    = 1<<10,
 };
 
 Board *Board::Root;
@@ -93,12 +96,14 @@ void Board::Init() {
 void Board::NewCurrentAsk(Actor *a)
 {
   Board *b=new Board(a,Bo_Ask);
+  b->setInstalled();
   SetCurrent(b,OK);
 }
 
 void Board::NewCurrentWait(Actor *a)
 {
   Board *b=new Board(a,Bo_Wait);
+  b->setInstalled();
   SetCurrent(b,OK);
 }
 
@@ -131,7 +136,8 @@ Board::Board(Actor *a,int type)
 : ConstTerm(Co_Board)
 {
   DebugCheck(!a && type!=Bo_Root,error("Board::Board"));
-
+  DebugCheck(type!=Bo_Root && type!=Bo_Ask && type!=Bo_Wait,
+             error("Board::Board"));
   flags=type;
   if (a) {
     a->addChild(this);
@@ -151,6 +157,7 @@ inline void Board::addSuspension()
 
 inline Actor *Board::getActor()
 {
+  DebugCheck(isCommitted(),error("Board::getActor"));
   return actor;
 }
 
@@ -161,6 +168,7 @@ inline Continuation *Board::getBodyPtr()
 
 inline Board *Board::getParentBoard()
 {
+  DebugCheck(isCommitted(),error("Board::getParentBoard"));
   return actor->getBoard();
 }
 
@@ -203,7 +211,7 @@ inline Bool Board::isAsk()
 
 inline Bool Board::isCommitted()
 {
-  return flags == Bo_Committed ? OK : NO;
+  return flags & Bo_Committed ? OK : NO;
 }
 
 /* are we a sibling of a committed board ?
@@ -214,6 +222,7 @@ inline Bool Board::isDiscarded()
   if (flags & Bo_Discarded) {
     ret = OK;
   } else if (actor && actor->isCommitted()) {
+    DebugCheck(isInstalled(),error("Board: discarded & installed"));
     flags |= Bo_Discarded;
     ret = OK;
   }
@@ -227,32 +236,37 @@ inline Bool Board::isFailed()
 
 inline Bool Board::isInstalled()
 {
-  return flags&Bo_Installed ? OK : NO;
+  return flags & Bo_Installed ? OK : NO;
 }
 
 inline Bool Board::isNervous()
 {
-  return flags&Bo_Nervous ? OK : NO;
+  return flags & Bo_Nervous ? OK : NO;
+}
+
+inline Bool Board::isWaiting()
+{
+  return flags & Bo_Waiting ? OK : NO;
 }
 
 inline Bool Board::isPathMark()
 {
-  return flags&Bo_PathMark ? OK : NO;
+  return flags & Bo_PathMark ? OK : NO;
 }
 
 inline Bool Board::isWaitTop()
 {
-  return flags&Bo_WaitTop ? OK : NO;
+  return flags & Bo_WaitTop ? OK : NO;
 }
 
 inline Bool Board::isWait()
 {
-  return flags&Bo_Wait ? OK : NO;
+  return flags & Bo_Wait ? OK : NO;
 }
 
 inline Bool Board::isRoot()
 {
-  return flags&Bo_Root ? OK : NO;
+  return flags & Bo_Root ? OK : NO;
 }
 
 inline void Board::newScript(int size)
@@ -275,9 +289,16 @@ inline void Board::setBody(ProgramCounter p,RefsArray y,
   body.setX(x,i);
 }
 
-inline void Board::setFailed()
+Actor *Board::FailCurrent()
 {
-  flags |= Bo_Failed;
+  DebugCheck(!Current->isInstalled(),error("Board::FailCurrent"));
+  Actor *ret=Current->getActor();
+  ret->failChild(Current);
+  Current->flags |= Bo_Failed;
+  am.reduceTrailOnFail();
+  Current->unsetInstalled();
+  SetCurrent(ret->getBoard()->getBoardDeref());
+  return ret;
 }
 
 inline void Board::setInstalled()
@@ -288,6 +309,11 @@ inline void Board::setInstalled()
 inline void Board::setNervous()
 {
   flags |= Bo_Nervous;
+}
+
+inline void Board::setWaiting()
+{
+  flags |= Bo_Waiting;
 }
 
 inline void Board::setPathMark()
@@ -303,7 +329,9 @@ inline void Board::setScript(int i,TaggedRef *v,TaggedRef r)
 
 inline void Board::setCommitted(Board *s)
 {
-  flags = Bo_Committed;
+  DebugCheck(isInstalled(),error("setCommitted"));
+  flags |= Bo_Committed;
+  actor->setCommitted();
   board = s;
 }
 

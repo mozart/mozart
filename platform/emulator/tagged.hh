@@ -738,6 +738,7 @@ inline RefsArray allocateRefsArray2(TaggedRef t1, TaggedRef t2)
 {
   RefsArray a = ((RefsArray) heapMalloc(3 * sizeof(TaggedRef)));
   a += 1;
+  // mm2: a[-1] = 2<<2 ???
   a[0] = t1;
   a[1] = t2;
   return a;
@@ -778,8 +779,8 @@ inline RefsArray copyRefsArray(RefsArray a) {
   return r;
 }
 
-inline RefsArray copyRefsArray(RefsArray a,int n) {
-  RefsArray r = allocateRefsArray(n,NO);
+inline RefsArray copyRefsArray(RefsArray a,int n,Bool init=NO) {
+  RefsArray r = allocateRefsArray(n,init);
   for (int i = n-1; i >= 0; i--) {
     CHECK_NONVAR(a[i]);
     r[i] = a[i];

@@ -179,11 +179,11 @@ OZ_C_proc_end
 
 // inits
 BuiltinTabEntry *BIinit();
-BuiltinTabEntry *BIadd(char *name,int arity,StateFun fun,
+BuiltinTabEntry *BIadd(char *name,int arity,BIFun fun,
                        Bool replace = NO, InlineFunOrRel infun=NULL);
 BuiltinTabEntry *BIaddSpecial(char *name,int arity,BIType t,
                               Bool replace = NO);
-BuiltinTabEntry *BIreplace(char *name,int arity,StateFun fun);
+BuiltinTabEntry *BIreplace(char *name,int arity,BIFun fun);
 
 void BIinitSpecial();
 void BIinitWIO();
@@ -210,21 +210,21 @@ BuiltinTab &getBuiltinTab();
 class BuiltinTabEntry : public OrderedData {
   friend class Debugger;
 public:
-  BuiltinTabEntry (Atom *name,int arty,StateFun fn,
+  BuiltinTabEntry (Atom *name,int arty,BIFun fn,
                    InlineFunOrRel infun=NULL)
   : printname(makeTaggedAtom(name)), arity(arty),fun(fn),
     inlineFun(infun), type(BIDefault)
   {
     DebugCheck(!isXAtom(printname),error("BuiltinTabEntry:: no atom"));
   }
-  BuiltinTabEntry (char *s,int arty,StateFun fn,
+  BuiltinTabEntry (char *s,int arty,BIFun fn,
                    InlineFunOrRel infun=NULL)
   : arity(arty),fun(fn), inlineFun(infun), type(BIDefault)
   {
     printname = OZ_stringToTerm(s);
     DebugCheck(!isXAtom(printname),error("BuiltinTabEntry:: no atom"));
   }
-  BuiltinTabEntry (char *s,int arty,StateFun fn,BIType t,
+  BuiltinTabEntry (char *s,int arty,BIFun fn,BIType t,
                    InlineFunOrRel infun=NULL)
     : arity(arty),fun(fn), inlineFun(infun), type(t) {
       printname = OZ_stringToTerm(s);
@@ -273,7 +273,7 @@ public:
   }
 
   OZPRINT;
-  StateFun getFun() { return fun; }
+  BIFun getFun() { return fun; }
   int getArity() { return arity; }
   char *getPrintName() { return tagged2Atom(printname)->getPrintName(); }
   TaggedRef getName() { return printname; }
@@ -284,7 +284,7 @@ private:
 
   TaggedRef printname; //must be atom
   int arity;
-  StateFun fun;
+  BIFun fun;
   InlineFunOrRel inlineFun;
   BIType type;
 };
@@ -314,7 +314,7 @@ public:
   OZPRINTLONG;
 
   int getArity() { return fun->getArity(); }
-  StateFun getFun() { return fun->getFun(); }
+  BIFun getFun() { return fun->getFun(); }
   char *getPrintName() { return fun->getPrintName(); }
   TaggedRef getName() { return fun->getName(); }
   BIType getType() { return fun->getType(); }

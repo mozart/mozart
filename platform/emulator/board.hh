@@ -30,6 +30,7 @@ public:
   static void SetCurrent(Board *c, Bool checkNotGC=OK);
   static void NewCurrentAsk(Actor *a);
   static void NewCurrentWait(Actor *a);
+  static Actor *FailCurrent();
   static void GC();
 
 private:
@@ -50,6 +51,8 @@ public:
   void gcRecurse(void);
   OZPRINT;
   OZPRINTLONG;
+  MPRINT
+  void printTree();
 
   void addSuspension();
   Actor *getActor();
@@ -69,18 +72,19 @@ public:
   Bool isPathMark();
   Bool isWaitTop();
   Bool isWait();
+  Bool isWaiting();
   Bool isRoot();
   void newScript(int size);
   void removeSuspension();
   void setBody(ProgramCounter p,RefsArray y,
                        RefsArray g,RefsArray x,int i);
-  void setFailed();
   void setInstalled();
   void setNervous();
   void setPathMark();
   void setScript(int i,TaggedRef *v,TaggedRef r);
   void setCommitted(Board *s);
   void setWaitTop();
+  void setWaiting();
   void unsetInstalled();
   void unsetNervous();
   void unsetPathMark();
