@@ -142,10 +142,6 @@ in
 		 [C(label:   'Help on Help'
 		    action:  self # help(nil))
 		  separator
-		   C(label:   'Thread Tree'
-		    action:  self # help(TreeTitle))
-		  C(label:   'Stack Control'
-		    action:  self # help(StackTitle))
 		  CC(label:  'Breakpoints'
 		     menu:
 			[C(label:  'static'
