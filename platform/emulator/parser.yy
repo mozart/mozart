@@ -218,6 +218,8 @@ static CTerm decls[DEPTH];
 
 %}
 
+%token_table
+
 %union {
   CTerm t;
   int i;
