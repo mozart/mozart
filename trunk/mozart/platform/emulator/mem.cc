@@ -76,7 +76,7 @@ void initMemoryManagement(void) {
 
 inline
 Bool checkAddress(void *ptr) {
-  void *aux = tagValueOf(makeTaggedVerbatim(ptr));
+  void *aux = tagged2Verbatim(makeTaggedVerbatim(ptr));
   return (aux == ptr);
 }
 
@@ -806,7 +806,7 @@ Bool MemChunks::isInHeap(TaggedRef term)
       if (oz_isBuiltin(term)) return OK;
       // no break
     case TAG_SRECORD:
-      if (!list->inChunkChain(tagValueOf(term))) {
+      if (!list->inChunkChain(tagged2Verbatim(term))) {
 	return NO;
       }
       break;
