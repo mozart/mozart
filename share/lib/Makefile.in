@@ -39,7 +39,7 @@ export OZMAFILE = -init ozc.ozp
 export OZPATH = .:$(SRCDIR)
 export OZ_PI = 1
 export OZ_LIB = $(OZLIB)
-export OZ_LOAD = root=.:prefix=http\://www.ps.uni-sb.de/ozhome/share/=$(OZ_LIB)/
+export OZ_LOAD = root=.:prefix=http\://www.ps.uni-sb.de/ozhome/share/RunTimeLibrary.ozf=RunTimeLibrary.ozf:prefix=http\://www.ps.uni-sb.de/ozhome/share/=$(OZ_LIB)/
 
 SPSRC   = Debug Foreign Error ErrorRegistry Finalize
 OPSRC   = Open
