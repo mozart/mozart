@@ -57,18 +57,32 @@
 fd_set isSocket;
 static long openMax;
 
+#ifdef WINDOWS
+int runnningUnderNT = 0;
+
+inline
+int fileTimeToMS(FILETIME *ft)
+{
+  //  return (ft->dwLowDateTime/10000) + ((ft->dwHighDateTime/10000)<<32)
+  //  return (ft->dwLowDateTime/10000) + ((ft->dwHighDateTime/16*625)<<32)
+  return (ft->dwLowDateTime/10000) + ((ft->dwHighDateTime<<28)/625);
+}
+
+#endif
+
 
 // return current usertime in milliseconds
 unsigned int osUserTime()
 {
 #if defined(WINDOWS)
-  FILETIME ct,et,kt,ut;
-  /* only NT supports this */
-  if (GetProcessTimes(GetCurrentProcess(),&ct,&et,&kt,&ut) == FALSE) {
+  if (!runnningUnderNT) {
     return ((1000*clock())/CLOCKS_PER_SEC);
   }
 
-  return (ut.dwLowDateTime/10000);
+  /* only NT supports this */
+  FILETIME ct,et,kt,ut;
+  GetProcessTimes(GetCurrentProcess(),&ct,&et,&kt,&ut);
+  return fileTimeToMS(&ut);
 
 #else
   struct tms buffer;
@@ -82,7 +96,15 @@ unsigned int osUserTime()
 unsigned int osSystemTime()
 {
 #if defined(WINDOWS)
-  return 0;
+  if (!runnningUnderNT) {
+    return 0;
+  }
+
+  /* only NT supports this */
+  FILETIME ct,et,kt,ut;
+  GetProcessTimes(GetCurrentProcess(),&ct,&et,&kt,&ut);
+  return fileTimeToMS(&kt);
+
 #else
   struct tms buffer;
 
@@ -522,6 +544,12 @@ void osInit()
   FD_ZERO(&globalFDs[SEL_WRITE]);
 
   FD_ZERO(&isSocket);
+#ifdef WINDOWS
+  OSVERSIONINFO vi;
+  vi.dwOSVersionInfoSize = sizeof(vi);
+  BOOL b = GetVersionExW(&vi);
+  runnningUnderNT = (vi.dwPlatformId==VER_PLATFORM_WIN32_NT);
+#endif
 }
 
 #define CheckMode(mode) Assert(mode==SEL_READ || mode==SEL_WRITE)

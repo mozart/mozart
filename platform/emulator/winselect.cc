@@ -177,9 +177,11 @@ int getAvailFDs(int nfds, fd_set *readfds)
 
 int getTime()
 {
-  SYSTEMTIME t;
-  GetSystemTime (&t);
-  return (t.wSecond*1000 + t.wMilliseconds);
+  SYSTEMTIME st;
+  GetSystemTime(&st);
+  FILETIME ft;
+  SystemTimeToFileTime(&st,&ft);
+  return fileTimeToMS(&ft);
 }
 
 static

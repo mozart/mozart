@@ -63,7 +63,22 @@ typedef void *PVOID;
 #define _beginthreadex(security, stack_size,fun,args,initflag,thrdaddr) \
   CreateThread(security,stack_size,(void(*)(void*))(fun),args,initflag,thrdaddr);
 
+typedef struct _OSVERSIONINFOW {
+    DWORD dwOSVersionInfoSize;
+    DWORD dwMajorVersion;
+    DWORD dwMinorVersion;
+    DWORD dwBuildNumber;
+    DWORD dwPlatformId;
+    WCHAR  szCSDVersion[ 128 ];       // Maintenance string for PSS usage
+} OSVERSIONINFO, *POSVERSIONINFO, *LPOSVERSIONINFO;
+
+BOOL WINAPI GetVersionExW(LPOSVERSIONINFO lpVersionInformation);
+#define VER_PLATFORM_WIN32s             0
+#define VER_PLATFORM_WIN32_WINDOWS      1
+#define VER_PLATFORM_WIN32_NT           2
+
 }
+
 
 #endif
 
