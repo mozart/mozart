@@ -216,7 +216,7 @@ ozbatch.ozm: MakeAssembly.oz \
         $(OZMA) -o /tmp/$$$$.ozm MakeAssembly.oz && \
         $(MV) -f /tmp/$$$$.ozm $@
 
-ozbatch.ozc: ozbatch.ozm
+ozbatch.ozc:
         OZMAINIT="" OZMAFILE="-b $(SRCDIR)/ozbatch.ozm" $(SRCDIR)/ozbatch.sh
 
 ozbatch: MakeBatch.oz BatchCompile.oz $(DUMPINTRO) \
