@@ -1,6 +1,6 @@
 CHECKLIST
 
-- make a buckup of the old version
+- make a backup of the old version
 
 - write a news announcing the changes from the old to the current version
 
@@ -9,20 +9,52 @@ CHECKLIST
 - install bin/ozplatform in your PATH
 
 - edit Imake.tmpl:
-    OZHOME : target directory for installation
+    OZVERSION: make a unique version number
+    OZHOME: target directory for installation
 
 - edit Compiler/Imake.tmpl
     SPLIB : sicstus prolog
+
+- edit ozwish/Imakefile
+    OZWISHHOME
 
 - ./ozmkmf
 
 - make Makefiles
 
 - make all
+	include
+	Emulator
+	Compiler/backend
+	Compiler/frontend
+	lib
+		make unixo
 
 - make install
+	make install SUBDIRS=
+	bin
+	elisp
+	ozwish
+	Emulator
+	Compiler/backend
+	Compiler/frontend
+	lib
+		make unixo
+	demo
+	demo/doc
+
+	man -> ozwish/man
 
 - test your installation:
 
    $(OZHOME)/bin/oz
     
+cvs get -l Oz
+cvs get Oz/lib
+cvs get Oz/bin
+cvs get Oz/elisp
+cvs get Oz/include
+cvs get Oz/Emulator
+cvs get Oz/Compiler
+cvs get Oz/demo
+
