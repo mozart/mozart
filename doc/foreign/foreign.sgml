@@ -225,7 +225,7 @@ will be explained in <ptr to=sec.foreignLink>.
 key="chapter.oztool"/<code/oztool// which we recommend you invoke instead
 of calling the C/C++ compiler directly:
 <code display/oztool c++ getenv.cc -o getenv.o/
-<code/oztool/ takes care a many unpleasant details for you; for example,
+<code/oztool/ takes care of many unpleasant details for you; for example,
 it supplies the compiler with the appropriate option for the generation of
 position independent code.
 </section>
@@ -313,8 +313,14 @@ replace it with the suffix appropriate for the current platform.
 </chapter>
 <chapter id=chapter.windll><title>Creating object files under Windows 95/NT</title>
 <p>
-TODO: check this
+<em>
+TODO: the following is by far outdated. oztool does work on Windows
+and Leif is working on turning the emulator into a DLL, thus things
+will get much simpler.
+</em>
 <p>
+<p>
+
 Currently there is no <code/oztool/ available for Windows 95/NT to
 compile and create a DLL (dynamic link library). Consult your C compilers
 documentation on how to create DLLs. When loading a DLL, &Oz; will
@@ -330,13 +336,6 @@ Dynamic linking has been testet using Watcom version 10.6 and MS
 Visual C++ version 4.0. In the following we shortly describe how to
 proceed on each of these compilers to create the DLL named
 <code /getenv.dll/ for the example above.
-<p>
-TODO:
-For some strange reason that I don't know the DLL has to have the
-suffix <code /.so-win32-i486/. So after you've created <code
-/getenv.dll/ as described below, rename it to <code
-/getenv.so-win32-i486/ which then can be loaded into &Oz; as described
-above.
 
 
 
@@ -1250,14 +1249,13 @@ OZ_pair2(OZ_atom(left),OZ_string(right))
   <code >void OZ_makeRunnableThread(OZ_CFun fun, OZ_Term *args, int n) </code>
 <item>Creates a thread with one task to execute the function <code /fun/
     with arguments <code /args[0],&ellipsis;,args[n-1]/.
-
-TODO: check this
+<p>
 
 <entry><<OZ_getLowPrio>>
-<entry><<OZ_getMediumPrio>>
-<entry><<OZ_getHighPrio>>
 <index class=module/OZ_getLowPrio/
+<entry><<OZ_getMediumPrio>>
 <index class=module/OZ_getMediumPrio/
+<entry><<OZ_getHighPrio>>
 <index class=module/OZ_getHighPrio/
 <synopsis>
 
@@ -1383,14 +1381,14 @@ allow concurrent access to file descriptors from within the C level.
 
 <p>
 We first declare an abstact type <code /OZ_IOHandler/ which is a
-function expecting an integer and an arbitry pointer:
+function expecting an integer and an arbitrary pointer:
 <p>
 <code>
    typedef int OZ_IOHandler(int, void *);
 </code>
 <p>
 
-The user can than use the following abstractions:
+The user can then use the following abstractions:
 <list>
 <entry><<OZ_registerReadHandler>>
 <index class=module/OZ_registerReadHandler/
