@@ -48,7 +48,7 @@
         <p>
                <picture.choice>
           <picture.extern to="display.gif" type=gif>
-          <picture.extern to="pictures/text/display.eps" type=ps>
+          <Picture.Extern id="pict.ext.text.display" to="pictures/text/display.eps" type=ps>
                </picture.choice>
 <chunk class=anonymous><title/text display/
 T={New Tk.text tkInit(parent:W width:28 height:5 bg:white)}
@@ -178,7 +178,7 @@ B={New Tk.textTag tkInit(parent:T foreground:brown)}
         <caption/Using tags with text widgets./
                <picture.choice>
         <picture.extern to="text-tags.gif" type=gif>
-        <picture.extern to="pictures/text/text-tags.eps" type=ps>
+        <Picture.Extern id="pict.ext.text.text-tags" to="pictures/text/text-tags.eps" type=ps>
                </picture.choice>
       </figure>
 
@@ -310,7 +310,7 @@ end
       <p>
                <picture.choice>
         <picture.extern to="toy.gif" type=gif>
-        <picture.extern to="pictures/text/toy.eps" type=ps>
+        <Picture.Extern id="pict.ext.text.toy" to="pictures/text/toy.eps" type=ps>
                </picture.choice>
 <chunk class=anonymous><title/ToyBrowse/
 proc {ToyBrowse ToyText Root}

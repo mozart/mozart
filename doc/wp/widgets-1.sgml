@@ -52,7 +52,7 @@
         <P>
                <picture.choice>
           <Picture.Extern to="toplevel-1.gif" type=gif>
-          <Picture.extern to="pictures/widgets-1/toplevel-1.eps" type=ps>
+          <Picture.Extern id="pict.ext.widgets-1.toplevel-1" to="pictures/widgets-1/toplevel-1.eps" type=ps>
                </picture.choice>
 <chunk class=anonymous><title/{Tk.toplevel tkInit}/
 W={New Tk.toplevel tkInit(width:150 height:50)}
@@ -327,7 +327,7 @@ W={New Tk.toplevel tkInit(width:150 height:50)}
           <P>
                <picture.choice>
             <Picture.Extern to="relief-frames.gif" type=gif>
-            <Picture.extern to="pictures/widgets-1/relief-frames.eps" type=ps>
+            <Picture.Extern id="pict.ext.widgets-1.relief-frames" to="pictures/widgets-1/relief-frames.eps" type=ps>
                </picture.choice>
 <index class=tails/<<Tk>><and><<frame>>/
 <index class=tails/<<Tk>><and><<send>>/
@@ -505,7 +505,7 @@ Fs={Map [groove ridge flat sunken raised]
         <P>
                <picture.choice>
           <Picture.Extern to="labels.gif" type=gif>
-          <Picture.extern to="pictures/widgets-1/labels.eps" type=ps>
+          <Picture.Extern id="pict.ext.widgets-1.labels" to="pictures/widgets-1/labels.eps" type=ps>
                </picture.choice>
 <index class=tails/<<Tk>><and><<label>>/
 <chunk class=anonymous><title/Tk.label/
@@ -562,7 +562,7 @@ L2={New Tk.label tkInit(parent:W text:'Labels: bitmaps and text')}
           <p>
                <picture.choice>
           <Picture.Extern to="predefined.gif" type=gif>
-          <Picture.extern to="pictures/widgets-1/predefined.eps" type=ps>
+          <Picture.Extern id="pict.ext.widgets-1.predefined" to="pictures/widgets-1/predefined.eps" type=ps>
                </picture.choice>
 <chunk class=anonymous><title/predefined/
 {List.forAllInd [error     gray75 gray50    gray25   gray12
@@ -613,7 +613,7 @@ L2={New Tk.label tkInit(parent:W text:'Labels: bitmaps and text')}
           <P>
                <picture.choice>
             <Picture.Extern to="fonts.gif" type=gif>
-            <Picture.extern to="pictures/widgets-1/fonts.eps" type=ps>
+            <Picture.Extern id="pict.ext.widgets-1.fonts" to="pictures/widgets-1/fonts.eps" type=ps>
                </picture.choice>
 <chunk class=anonymous><title/Tk.font/
 {ForAll [times helvetica courier]
@@ -665,7 +665,7 @@ L2={New Tk.label tkInit(parent:W text:'Labels: bitmaps and text')}
         <P>
                <picture.choice>
           <Picture.Extern to="images-1.gif" type=gif>
-          <Picture.extern to="pictures/widgets-1/images-1.eps" type=ps>
+          <Picture.Extern id="pict.ext.widgets-1.images-1" to="pictures/widgets-1/images-1.eps" type=ps>
                </picture.choice>
 <index class=tails/<<Tk>><and><<image>>/
 <chunk class=anonymous><title/Tk.image/
@@ -749,7 +749,7 @@ L3={New Tk.label tkInit(parent:W image:I)}
         <P>
                <picture.choice>
           <Picture.Extern to="messages.gif" type=gif>
-          <Picture.extern to="pictures/widgets-1/messages.eps" type=ps>
+          <Picture.Extern id="pict.ext.widgets-1.messages" to="pictures/widgets-1/messages.eps" type=ps>
                </picture.choice>
 <index class=tails/<<Tk>><and><<message>>/
 <chunk class=anonymous><title/Tk.message/
