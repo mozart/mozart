@@ -1,8 +1,6 @@
 #ifndef __MISC_HH__
 #define __MISC_HH__
 
-#include <iostream.h>
-
 #include "std.hh"
 
 //-----------------------------------------------------------------------------
