@@ -33,7 +33,7 @@ import
    Error(registerFormatter)   
    Fault(install installWatcher deInstall deInstallWatcher)
    Property(get)
-   
+
 export
    Offer OfferUnlimited Take Gate TakeWithTimer
    
@@ -90,7 +90,6 @@ define
    %%
    %% Base Process Identifier package
    %%
-   ReqStream = {PID.received}
    
    ThisPid   = {PID.get}
    
@@ -177,7 +176,7 @@ define
    KeyDict   = {Dictionary.new}
    
    thread
-      {ForAll ReqStream
+      {ForAll {PID.received}
        proc {$ T#A}
 	  if
 	     T.time == ThisPid.time andthen
