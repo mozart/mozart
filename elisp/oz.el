@@ -378,6 +378,12 @@ starts the emulator under gdb")
   (oz-insert-file "tools/ozcar/main.oz")
   (oz-send-string "\\sw -optimize +debuginfo"))
 
+(defun oz-debug-devel-start()
+  "Start the development version of Ozcar."
+  (interactive)
+  (oz-insert-file "tools/ozcar-devel/main.oz")
+  (oz-send-string "\\sw -optimize +debuginfo"))
+
 (defun oz-debug-stop()
   "Stop the debugger."
   (interactive)
@@ -1125,7 +1131,9 @@ the GDB commands `cd DIR' and `directory'."
     (define-key map "\C-c\C-b"     'oz-feed-region-browse)
     (define-key map "\M-n"         'oz-next-buffer)
     (define-key map "\M-p"         'oz-previous-buffer)
+
     (define-key map "\C-c\C-d\C-r" 'oz-debug-start)
+    (define-key map "\C-c\C-d\C-d" 'oz-debug-devel-start)
     (define-key map "\C-c\C-d\C-h" 'oz-debug-stop)
     (define-key map "\C-c\C-d\C-s" 'oz-debug-step)
     (define-key map "\C-c\C-d\C-c" 'oz-debug-cont)
