@@ -144,7 +144,7 @@ end
       {Dictionary.removeAll Data}
       {Ctr init(I)}
       {Record.forAllInd D
-       proc {$ K#E}
+       proc {$ K E}
           {Dictionary.put Data K E}
        end}
    end
@@ -158,7 +158,7 @@ end
       When using the persistent data base, it has to be kept in mind
       that it does not offer concurrency control: Simultaneous add and
       remove, as well as load and save operations performed by several
-      threads might leave the data base in a inconsistent state. In
+      threads might leave the data base in an inconsistent state. In
       ??? we will develop the data base in a data base server that
       also allows for concurrency control.
 
