@@ -41,7 +41,7 @@ $(NXMLHANDLER): NXMLOutputHandler.java
 $(TEXTHANDLER): TextOutputHandler.java
         $(COMPILE) $<
 
-MapOutputHandler.class Mozart.class: %.class : %.java
+MapOutputHandler.class Key.class: %.class : %.java
         $(NEWCOMPILE) $<
 
 %.class: %.java
@@ -60,6 +60,6 @@ oz-jar: $(CLASSES)
         $(JAR) xf $(SRCDIR)/xsl.jar
         $(JAR) cf $(SRCDIR)/oz.jar com org $(EXTEND_CLASSES)
 
-oz-new-jar: $(EXTEND_CLASSES) MapOutputHandler.class Mozart.class
+oz-new-jar: MapOutputHandler.class Msg.class Key.class
         $(JAR) xf $(SRCDIR)/xsl-new.jar
         $(JAR) cf $(SRCDIR)/oz-new.jar com org MapOutputHandler*.class Mozart*.class
