@@ -1148,6 +1148,12 @@ GenCVariable * GenCVariable::gc(void) {
 
   Board * bb = home->gcBoard();
 
+  // mm2: assertion disabled: dead value may appear in the wrong space
+#define DEEP_GARBAGE
+#ifdef DEEP_GARBAGE
+  if (!bb) return 0;
+#endif
+
   Assert(bb);
 
   SuspList * sl = suspList->gc();
@@ -1636,7 +1642,15 @@ void gcTagged(TaggedRef & frm, TaggedRef & to,
           } else if (allVarsAreLocal ||
                      isInGc || !(GETBOARD(cv))->isMarkedGlobal()) {
             Assert(isInGc || !(GETBOARD(cv))->isMarkedGlobal());
-            TaggedRef * var_ptr = newTaggedCVar(cv->gc());
+            GenCVariable *new_cv=cv->gc();
+#ifdef DEEP_GARBAGE
+            // mm2: dead value may appear in the wrong space
+            if (!new_cv) {
+              to=0;
+              return;
+            }
+#endif
+            TaggedRef * var_ptr = newTaggedCVar(new_cv);
             isGround = NO;
             to = makeTaggedRef(var_ptr);
             cv->gcMark(isInGc, var_ptr);
