@@ -8,16 +8,14 @@
 #include "genvar.hh"
 #include "ofgenvar.hh"
 
-// Return true iff argument is a power of two
+// Return true iff argument is zero or a power of two
 Bool isPwrTwo(dt_index s) {
-    Assert(s>0);
     return (s & (s-1))==0;
     // while ((s&1)==0) s=(s>>1); return (s==1);
 }
 
-// Return the least power of two greater or equal to s:
+// Return zero or the least power of two greater or equal to s:
 dt_index ceilPwrTwo(dt_index s) {
-    Assert(s>0);
     if (isPwrTwo(s)) return s;
     return ceilPwrTwo((s>>1)|1)<<1;
 }
@@ -28,7 +26,7 @@ dt_index ceilPwrTwo(dt_index s) {
 
 // Create an initially empty dynamictable of size s 
 DynamicTable* DynamicTable::newDynamicTable(dt_index s) {
-    Assert(s==0 || isPwrTwo(s));
+    Assert(isPwrTwo(s));
     size_t memSize = sizeof(DynamicTable) + sizeof(HashElement)*(s-1);
     DynamicTable* ret = (DynamicTable *) heapMalloc(memSize);
     Assert(ret!=NULL);
@@ -38,7 +36,7 @@ DynamicTable* DynamicTable::newDynamicTable(dt_index s) {
 
 // Initialize an elsewhere-allocated dynamictable of size s
 void DynamicTable::init(dt_index s) {
-    Assert(s==0 || isPwrTwo(s));
+    Assert(isPwrTwo(s));
     numelem=0;
     size=s;
     for (dt_index i=0; i<s; i++) {
@@ -61,7 +59,7 @@ void DynamicTable::init(dt_index s) {
 // Test whether the current table has too little room for one new element:
 // ATTENTION: Calls to insert should be preceded by fullTest.
 Bool DynamicTable::fullTest() {
-    Assert(size==0 || isPwrTwo(size));
+    Assert(isPwrTwo(size));
     return (numelem>=fullFunc(size));
 }
 
@@ -76,7 +74,7 @@ DynamicTable* DynamicTable::doubleDynamicTable() {
 // of the current table.  The current table's contents MUST fit in the copy!
 DynamicTable* DynamicTable::copyDynamicTable(dt_index newSize=(dt_index)(-1L)) {
     if (newSize==(dt_index)(-1L)) newSize=size;
-    Assert(size==0 || isPwrTwo(size));
+    Assert(isPwrTwo(size));
     Assert(numelem<=fullFunc(size));
     Assert(numelem<=fullFunc(newSize));
     Assert(size!=(dt_index)(-1L));
@@ -110,7 +108,7 @@ DynamicTable* DynamicTable::copyDynamicTable(dt_index newSize=(dt_index)(-1L)) {
 // This hash routine works for completely full hash tables and hash tables in which
 // elements have been removed by making their value NULL.
 dt_index DynamicTable::fullhash(TaggedRef id, Bool *valid) {
-    Assert(size==0 || isPwrTwo(size));
+    Assert(isPwrTwo(size));
     Assert(isFeature(id));
     // Function 'hash' may eventually return the literal's seqNumber (see value.hh):
     if (size==0) { *valid=FALSE; return (dt_index) 0L; }
@@ -139,7 +137,7 @@ dt_index DynamicTable::fullhash(TaggedRef id, Bool *valid) {
 // Test for and increase size of hash table if it becomes too full
 // ATTENTION: insert must only be done if the table has room for a new element.
 TaggedRef DynamicTable::insert(TaggedRef id, TaggedRef val, Bool *valid) {
-    Assert(size==0 || isPwrTwo(size));
+    Assert(isPwrTwo(size));
     Assert(isFeature(id));
     Assert(!fullTest());
     dt_index i=fullhash(id,valid);
@@ -163,7 +161,7 @@ TaggedRef DynamicTable::insert(TaggedRef id, TaggedRef val, Bool *valid) {
 // Return val if it is found
 // Return NULL if nothing is found
 TaggedRef DynamicTable::lookup(TaggedRef id) {
-    Assert(size==0 || isPwrTwo(size));
+    Assert(isPwrTwo(size));
     Assert(isFeature(id));
     Bool valid;
     dt_index i=fullhash(id,&valid);
@@ -182,7 +180,7 @@ TaggedRef DynamicTable::lookup(TaggedRef id) {
 // Destructively update index id with new value val, if index id already has a value
 // Return TRUE if index id successfully updated, else FALSE
 Bool DynamicTable::update(TaggedRef id, TaggedRef val) {
-    Assert(size==0 || isPwrTwo(size));
+    Assert(isPwrTwo(size));
     Assert(isFeature(id));
     Bool valid;
     dt_index i=fullhash(id,&valid);
@@ -201,7 +199,7 @@ Bool DynamicTable::update(TaggedRef id, TaggedRef val) {
 // Remove index id from table.  Reclaim memory: if the table becomes too sparse then
 // return a smaller table that contains all its entries.  Otherwise, return same table.
 DynamicTable *DynamicTable::remove(TaggedRef id) {
-    Assert(size==0 || isPwrTwo(size));
+    Assert(isPwrTwo(size));
     Assert(isFeature(id));
     Bool valid;
     dt_index i=fullhash(id,&valid);
@@ -224,7 +222,7 @@ DynamicTable *DynamicTable::remove(TaggedRef id) {
 // are not in the current dynamictable
 // This routine is currently not needed
 Bool DynamicTable::extraFeaturesIn(DynamicTable* dt) {
-    Assert(size==0 || isPwrTwo(size));
+    Assert(isPwrTwo(size));
     for (dt_index i=0; i<dt->size; i++) {
         if (dt->table[i].value!=makeTaggedNULL()) {
             Assert(isFeature(dt->table[i].ident));
@@ -240,7 +238,7 @@ Bool DynamicTable::extraFeaturesIn(DynamicTable* dt) {
 // Return a pairlist containing all term pairs with the same feature
 // The external dynamictable is resized if necessary
 void DynamicTable::merge(DynamicTable* &dt, PairList* &pairs) {
-    Assert(size==0 || isPwrTwo(size));
+    Assert(isPwrTwo(size));
     pairs=new PairList();
     Assert(pairs->isempty());
     Bool valid;
@@ -273,7 +271,7 @@ void DynamicTable::merge(DynamicTable* &dt, PairList* &pairs) {
 // If FALSE, pair list contains a well-terminated but meaningless list.
 // Neither the srecord nor the dynamictable is modified.
 Bool DynamicTable::srecordcheck(SRecord &sr, PairList* &pairs) {
-    Assert(size==0 || isPwrTwo(size));
+    Assert(isPwrTwo(size));
     pairs=new PairList();
     Assert(pairs->isempty());
     for (dt_index i=0; i<size; i++) {
@@ -358,6 +356,33 @@ TaggedRef DynamicTable::getArityList(TaggedRef tail) {
     return arity;
 }
 
+// Return TRUE if current table has features that are not in arity argument
+Bool DynamicTable::hasExtraFeatures(int tupleArity) {
+    TaggedRef feat;
+    if (tupleArity==0) return (numelem!=0);
+    for (dt_index i=0; i<size; i++) {
+	if (table[i].value!=makeTaggedNULL()) {
+            feat=table[i].ident;
+            if (!isSmallInt(feat)) return TRUE;
+	    if (smallIntValue(feat)>tupleArity) return TRUE;
+	}
+    }
+    return FALSE;
+}
+
+
+// Return TRUE if current table has features that are not in arity argument
+Bool DynamicTable::hasExtraFeatures(Arity *recordArity) {
+    TaggedRef feat;
+    for (dt_index i=0; i<size; i++) {
+	if (table[i].value!=makeTaggedNULL()) {
+            feat=table[i].ident;
+	    if (recordArity->find(feat)!=(-1)) return TRUE;
+	}
+    }
+    return FALSE;
+}
+
 
 //-------------------------------------------------------------------------
 //                               for class GenOFSVariable
@@ -425,8 +450,8 @@ Bool GenOFSVariable::unifyOFS(TaggedRef *vPtr, TaggedRef var,
                 // Calculate feature or list of features 'flist' that are
                 // in LTUPLE and not in OFS.
                 TaggedRef flist=AtomNil;
-                if (arg2) flist=cons(makeTaggedSmallInt(2),flist);
-                if (arg1) flist=cons(makeTaggedSmallInt(1),flist);
+                if (!arg2) flist=cons(makeTaggedSmallInt(2),flist);
+                if (!arg1) flist=cons(makeTaggedSmallInt(1),flist);
                 // Add the extra features to S_ofs suspensions:
                 am.addFeatOFSSuspensionList(var,suspList,flist,TRUE);
 	    } else {
@@ -721,6 +746,24 @@ Bool GenOFSVariable::unifyOFS(TaggedRef *vPtr, TaggedRef var,
         // error("unexpected case in unifyOFS");
         return FALSE;
     }
+}
+
+
+// Return TRUE if OFS can't be constrained to l+tupleArity
+Bool GenOFSVariable::disentailed(Literal *l, int tupleArity) {
+    TaggedRef tmp=label;
+    DEREF(tmp,_1,_2);
+    if (isLiteral(tmp) && !literalEq(makeTaggedLiteral(l),tmp)) return TRUE;
+    return (dynamictable->hasExtraFeatures(tupleArity));
+}
+
+
+// Return TRUE if OFS can't be constrained to l+recordArity
+Bool GenOFSVariable::disentailed(Literal *l, Arity *recordArity) {
+    TaggedRef tmp=label;
+    DEREF(tmp,_1,_2);
+    if (isLiteral(tmp) && !literalEq(makeTaggedLiteral(l),tmp)) return TRUE;
+    return (dynamictable->hasExtraFeatures(recordArity));
 }
 
 
