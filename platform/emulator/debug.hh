@@ -35,11 +35,11 @@ void enterCall(Board *b, TaggedRef def,int arity, TaggedRef *args);
 void exitCall(OZ_Bool,OzDebug *);
 void exitBuiltin(OZ_Bool, TaggedRef bi, int arity, TaggedRef *args);
 
-OZ_C_proc_proto(BIspy);
-OZ_C_proc_proto(BInospy);
-OZ_C_proc_proto(BItraceOn);
-OZ_C_proc_proto(BItraceOff);
-OZ_C_proc_proto(BIdisplayCode);
+OZ_C_proc_proto(BIspy)
+OZ_C_proc_proto(BInospy)
+OZ_C_proc_proto(BItraceOn)
+OZ_C_proc_proto(BItraceOff)
+OZ_C_proc_proto(BIdisplayCode)
 
 
 Bool trace(char *s,Board *board=NULL,Actor *actor=NULL,
