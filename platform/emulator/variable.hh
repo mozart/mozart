@@ -98,7 +98,7 @@ public:
   }
   Board *getBoardInternal() { return home; }
   SuspList *getSuspList() { return suspList; }
-  int getSuspListLengthS() { return suspList->length()-1; }
+  int getSuspListLengthS() { return suspList->length(); }
 
   void setSuspList(SuspList *inSuspList) { suspList = inSuspList; }
   void unlinkSuspList() { suspList = NULL; }

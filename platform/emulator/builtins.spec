@@ -1646,6 +1646,11 @@ $cmode='stat';
 			     BI  => BIchunkArity,
 			     native => true},
 
+    'Debug.inspect'     => { in  => ['value'],
+                             out => ['+value'],
+			     BI  => BIinspect,
+		             native => true},
+
     ###* Debugger External
 
     'Debug.prepareDumpThreads'	=> { in  => [],
