@@ -570,7 +570,8 @@
           <Grammar.Rule/?={in statement}
             <Grammar.Alt/[ ?={declaration part} <<in>> ] ?={statement}//
           <Grammar.Rule/?={in expression}
-            <Grammar.Alt/[ ?={declaration part} <<in>> ] ?={expression}//
+            <Grammar.Alt/[ ?={declaration part} <<in>> [ ?={statment} ] ]
+              ?={expression}//
           As procedure or method body both a statements and an expression may
           be possible, depending on whether the procedure's or method's head
           contains a nesting marker&nbsp;(<<$>>) or not.
@@ -992,16 +993,42 @@
             <TD/?{SE}/
             <TD/?={statement} or ?={expression}/
           <TR>
+            <TD/?{D}/
+            <TD/?={declaration part}/
+          <TR>
             <TD/?{P}, ?{P1}, &ellipsis;, ?{Pk}, ?{Pn}/
             <TD/?={pattern}/
         </Table>
       <Section>
         <Title/Abbreviations/
         <SubSection class=unnumbered>
-          <Title/Procedure Definition/
+          <Title/Grouping/
           <P>
             <Rewrite>?={statement}
-            <Rewrite.From
+              <Rewrite.From/<<(?{S})>>/
+              <Rewrite.To/?{S}/
+            </Rewrite>
+            <Rewrite>?={expression}
+              <Rewrite.From/<<(?{E})>>/
+              <Rewrite.To/?{E}/
+            </Rewrite>
+        <SubSection class=unnumbered>
+          <Title/Declarations/
+          <P>
+            <Rewrite>?={in statement}
+              <Rewrite.From/<<?{D} in ?{S}>>/
+              <Rewrite.To/<<local ?{D} in ?{S} end>>/
+            </Rewrite>
+            <Rewrite>?={in expression}
+              <Rewrite.From/<<?{D} in >>[ ?{S} ]<< ?{E}>>/
+              <Rewrite.To/<<local ?{D} in >>[ ?{S} ]<< ?{E} end>>/
+            </Rewrite>
+        <SubSection class=unnumbered>
+          <Title/Procedure Definitions/
+          <P>
+            <Rewrite>?={statement}
+              <!--** this is really an unnesting step. -->
+              <Rewrite.From
 /<<proc {?{E} ?{P1} &ellipsis; ?{Pn}}
    ?{SE}
 end>>/
@@ -1054,6 +1081,21 @@ end>>/
               <Rewrite.Condition/if ?{P1} &ellipsis; ?{Pn} are not
                 distinct variables./
             </Rewrite>
+        <SubSection class=unnumbered>
+          <Title/Boolean and Pattern-Matching Conditionals/
+          <P>
+        <SubSection class=unnumbered>
+          <Title/Exception Handling/
+          <P>
+        <SubSection class=unnumbered>
+          <Title/Exception Raising/
+          <P>
+        <SubSection class=unnumbered>
+          <Title/Operators/
+          <P>
+        <SubSection class=unnumbered>
+          <Title/Records/
+          <P>
   <Back>
     <Bib.Extern id="ISO_8859_1" to="notation.bib" key="ISO_8859_1">
 </Book>
