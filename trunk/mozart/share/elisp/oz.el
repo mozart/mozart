@@ -5,7 +5,6 @@
 
 ;; TODO
 ;; - state message: Should we use the mode-line ???
-;; - bug with small/big fonts in gnu19
 
 (require 'comint)
 
@@ -184,8 +183,8 @@ For example
 (defvar oz-large-font      '("-adobe-courier-" . "-*-*-*-140-*-*-*-*-*-*"))
 (defvar oz-very-large-font '("-adobe-courier-" . "-*-*-*-180-*-*-*-*-*-*"))
 
-(copy-face 'bold 'oz-bold)
-(copy-face 'italic 'oz-italic)
+(make-face 'oz-bold)
+(make-face 'oz-italic)
 
 (defun oz-small-font()
   (interactive)
@@ -210,6 +209,8 @@ For example
 	  (modify-frame-parameters
 	   scr
 	   (list (cons 'font  (concat (car font) "medium-r" (cdr font)))))
+          (set-face-font 'oz-bold nil scr)
+	  (set-face-font 'oz-italic nil scr)
 	  (set-face-font 'oz-bold (concat (car font) "bold-r" (cdr font)) scr)
 	  (set-face-font 'oz-italic (concat (car font) "medium-o" (cdr font)) scr)))
     (if oz-lucid
