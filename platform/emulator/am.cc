@@ -89,7 +89,7 @@ void ConfigData::init() {
   taskStackSize		= TASK_STACK_SIZE;
   errorVerbosity        = ERROR_VERBOSITY;
   dumpCore		= 0;
-  cellHack		= 1;
+  cellHack		= 0;
 }
 
 extern "C" int runningUnderEmacs; // mm2
