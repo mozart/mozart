@@ -8,21 +8,11 @@ CFLAGS=-O2
 LEX=flex
 BIN=raw2tex
 C=raw2tex.c
+DESTDIR=/usr/local/bin
 STYDIR=/project/ps/tex/inputs
 STY=ozbook.cls oz2tex.sty
 
-
-#ifdef LINUX
-DESTDIR=/usr/share/gs/bin/linux
-#endif
-#ifdef SUNOS_SPARC
-DESTDIR=/usr/share/gs/bin
-#endif
-#ifdef SOLARIS_SPARC
-DESTDIR=/usr/share/gs/bin/solaris-sparc
-#endif
-
-all:: $(BIN)
+# all:: $(BIN)
 raw2tex: raw2tex.c
 	$(CC) $(CFLAGS) -o raw2tex raw2tex.c
 raw2tex.c: raw2tex.lex
