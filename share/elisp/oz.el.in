@@ -881,7 +881,9 @@ The emulator to use for debugging is set via \\[oz-set-emulator]."
 		    (oz-home) "/platform/" (getenv "OZPLATFORM") ":"
 		    (oz-home) "/demo"))
     (setenv "PATH"
-	    (concat (getenv "PATH") ":" (oz-home) "/bin")))
+	    (concat (oz-home) "/bin" ":"
+		    (oz-home) "/platform/" (getenv "OZPLATFORM") ":"
+		    (getenv "PATH"))))
   (cond (oz-emulator-hook
 	 (setq oz-emulator-hook nil)
 	 (message "gdb disabled"))
