@@ -9,7 +9,7 @@
 \def\docdate {4 August 1999}
 
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesClass{ozbook}[1999/08/04 Mozart Book Class (Denys Duchier)]
+\ProvidesClass{ozdoc}[1999/08/04 Mozart Documentation Class (Denys Duchier)]
 
 % aargh! currrent installation has wrong defaults
 % this appears to fix the pb:
@@ -29,6 +29,7 @@
 \RequirePackage{epsfig}
 \RequirePackage{alltt}
 \RequirePackage{isolatin1}
+\RequirePackage{color}
 
 % layout parameter
 
@@ -417,12 +418,39 @@
   \fontfamily{\familydefault}%
   \fontshape{\shapedefault}\ttfamily\selectfont}
 \newcommand{\@CODEINLINE}[1]{\mozart@code@font#1\egroup}
-\newcommand{\CODEINLINE}{\bgroup\obeyspaces\@CODEINLINE}
+\newcommand{\CODEINLINE}{\bgroup\let\FACETEXT\INLINEFACETEXT
+  \obeyspaces\@CODEINLINE}
 \newcommand{\CODEEXTERN}[1]{%
   \begin{DISPLAY}\mozart@code@font\verbatiminput{#1}\end{DISPLAY}}
 \newenvironment{CODEDISPLAY}
   {\begin{DISPLAY}\mozart@code@font\begin{alltt}}
   {\end{alltt}\end{DISPLAY}}
+
+\definecolor{comment}{rgb}{0.698039,0.133333,0.133333}
+\definecolor{keyword}{rgb}{0.627451,0.125490,0.941176}
+\definecolor{string}{rgb}{0.737255,0.560784,0.560784}
+\definecolor{function}{rgb}{0.000000,0.000000,1.000000}
+\definecolor{type}{rgb}{0.133333,0.545098,0.133333}
+\definecolor{variable}{rgb}{0.721569,0.525490,0.043137}
+\definecolor{reference}{rgb}{0.372549,0.619608,0.627451}
+\definecolor{builtin}{rgb}{0.854902,0.439216,0.839216}
+
+\newcommand{\FACECOMMENT}{\textcolor{comment}}
+\newcommand{\FACEKEYWORD}[1]{\textbf{\color{keyword}#1}}
+\newcommand{\FACESTRING}{\textcolor{string}}
+\newcommand{\FACEVARIABLE}{\textcolor{variable}}
+\newcommand{\FACEFUNCTION}{\textcolor{function}}
+\newcommand{\FACEBUILTIN}{\textcolor{builtin}}
+\newcommand{\FACEREFERENCE}{\textcolor{reference}}
+\newcommand{\FACETYPE}{\textcolor{type}}
+\newcommand{\FACETEXT}{}
+
+\definecolor{chunkborder}{rgb}{1.0,0.647,0}
+\definecolor{chunktitle}{rgb}{0.4196,0.556862745,0.1372549}
+\definecolor{chunkref}{rgb}{0.4156862745,0.352941,0.803921}
+
+\definecolor{inlinecode}{rgb}{0.4,0.2,0.4}
+\newcommand{\INLINEFACETEXT}{\textcolor{inlinecode}}
 
 % variables and annotations
 
@@ -478,13 +506,15 @@
 
 \newenvironment{CHUNK}[1]
   {\begin{list}{}{\leftmargin\mozart@displaymargin}%
-     \item[\mbox{$\langle$#1$\rangle\equiv$}]%
+     \item[\mbox{\bf$\color{chunkborder}\langle$%
+       \textcolor{chunktitle}{#1}$\color{chunkborder}\rangle\equiv$}]%
      \topsep\z@\parskip\z@\partopsep\z@\parsep\z@\itemsep\z@
      \hfill\hbox{}\begin{alltt}}
   {\end{alltt}\end{list}}
 
 \newcommand{\CHUNKREF}[1]{%
-  \mbox{\normalfont\ensuremath{\langle\textrm{#1}\rangle}}}
+  \mbox{\normalfont\bf$\color{chunkborder}\langle$%
+    \textcolor{chunkref}{#1}$\color{chunkborder}\rangle$}}
 
 % (entry,synopsis*)+,item
 
