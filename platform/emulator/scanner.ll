@@ -35,9 +35,9 @@ static int errorFlag;
 // THE INPUT ROUTINE
 //*******************
 
-int xylino;                              // current line number
+int xylino;                             // current line number
 
-char *xylastline;                        // remember where we have put the input
+char *xylastline;                       // remember where we have put the input
 
 static inline int xycharno() {
   int n = xytext - xylastline;
@@ -61,8 +61,6 @@ static void xy_input(char *buf, int &result, const int max_size) {
     c = fgetc(xyin);
   }
   buf[curpos++] = c;
-  if (c == '\n')
-    xylino++;
 
   if (c == EOF) {
     if (curpos == 1)   // did we read other chars than EOF?
@@ -244,7 +242,7 @@ static void push_insert(FILE *filep, char *fileName) {
   xyin = filep;
   BEGIN(INITIAL);
   xy_switch_to_buffer(xy_create_buffer(xyin, YY_BUF_SIZE));
-  xylino = 0;
+  xylino = 1;
   conditional_basep = conditional_p;
 }
 
@@ -411,7 +409,11 @@ static char *scExpndFileName(char *fileName, char *curfile) {
 
 static void stripDot() {
   int i, j;
-  for (i = 0; xytext[i] < '0' || xytext[i] > '9'; i++);
+  for (i = 0; xytext[i] < '0' || xytext[i] > '9'; i++)
+    if (xytext[i] == '\n') {
+      xylino++;
+      xylastline = &xytext[i + 1];
+    }
   for (j = 0; xytext[i] != '\0'; xytext[j++] = xytext[i++]);
   xytext[j] = '\0';
 }
@@ -430,6 +432,10 @@ static void strip(char c) {
 static void stripRegex() {
   int i = 1;
   while (xytext[i] != '\0') {
+    if (xytext[i] == '\n') {
+      xylino++;
+      xylastline = &xytext[i + 1];
+    }
     xytext[i - 1] = xytext[i];
     i++;
   }
@@ -534,7 +540,7 @@ static void trans(char c) {
 
 %}
 
-SPACE        [? \n\t\r\v\f]
+SPACE        [? \t\r\v\f]
 BLANK        [ \r\t]
 
 ADD          "+"|"-"
@@ -594,7 +600,9 @@ REGEXCHAR    "["([^\]\\]|\\.)+"]"|\"[^"]+\"|\\.|[^<>"\[\]\\\n]
                                    BEGIN(commentlastmode);
 			       }
 <COMMENT>[^*/\n]+              ;
-<COMMENT>\n                    ;
+<COMMENT>\n                    { xylino++;
+                                 xylastline = xytext + 1;
+                               }
 <COMMENT>.                     ;
 <COMMENT><<EOF>>               { if (cond()) {
 				   char *file = OZ_atomToC(commentfile);
@@ -643,6 +651,8 @@ REGEXCHAR    "["([^\]\\]|\\.)+"]"|\"[^"]+\"|\\.|[^<>"\[\]\\\n]
   {BLANK}                      ;
   .                            ;
   \n                           { BEGIN(INITIAL);
+                                 xylino++;
+				 xylastline = xytext + 1;
 			       }
   <<EOF>>                      { BEGIN(DIRECTIVE);
 				 if (pop_insert())
@@ -658,6 +668,8 @@ REGEXCHAR    "["([^\]\\]|\\.)+"]"|\"[^"]+\"|\\.|[^<>"\[\]\\\n]
 						 xyFileName,xylino,xycharno());
 				   errorFlag = 0;
 				 }
+				 xylino++;
+				 xylastline = xytext + 1;
                                  BEGIN(INITIAL);
 			       }
   <<EOF>>                      { BEGIN(DIRECTIVE);
@@ -666,7 +678,7 @@ REGEXCHAR    "["([^\]\\]|\\.)+"]"|\"[^"]+\"|\\.|[^<>"\[\]\\\n]
 			       }
 }
 <LINE>{
-  [0-9]+                       { xylino = atol(xytext); }
+  [0-9]+                       { xylino = atol(xytext) - 1; }
   {FILENAME}                   { strip('\'');
 				 char *fullname = scExpndFileName(xytext,xyFileName);
 				 if (fullname != NULL) {
@@ -685,6 +697,8 @@ REGEXCHAR    "["([^\]\\]|\\.)+"]"|\"[^"]+\"|\\.|[^<>"\[\]\\\n]
 						 xyFileName,xylino,xycharno());
 				   errorFlag = 0;
 				 }
+				 xylino++;
+				 xylastline = xytext + 1;
                                  BEGIN(INITIAL);
 			       }
   <<EOF>>                      { xyreportError("directive error",
@@ -707,6 +721,8 @@ REGEXCHAR    "["([^\]\\]|\\.)+"]"|\"[^"]+\"|\\.|[^<>"\[\]\\\n]
 						 xyFileName,xylino,xycharno());
 				   errorFlag = 0;
 				 }
+				 xylino++;
+				 xylastline = xytext + 1;
                                  BEGIN(INITIAL);
 			       }
   <<EOF>>                      { BEGIN(DIRECTIVE);
@@ -736,6 +752,8 @@ REGEXCHAR    "["([^\]\\]|\\.)+"]"|\"[^"]+\"|\\.|[^<>"\[\]\\\n]
 						 xyFileName,xylino,xycharno());
 				   errorFlag = 0;
 				 }
+				 xylino++;
+				 xylastline = xytext + 1;
                                  BEGIN(INITIAL);
 			       }
   <<EOF>>                      { xyreportError("directive error",
@@ -780,6 +798,8 @@ REGEXCHAR    "["([^\]\\]|\\.)+"]"|\"[^"]+\"|\\.|[^<>"\[\]\\\n]
 						 xyFileName,xylino,xycharno());
 				   errorFlag = 0;
 				 }
+				 xylino++;
+				 xylastline = xytext + 1;
                                  BEGIN(INITIAL);
 			       }
   <<EOF>>                      { xyreportError("directive error",
@@ -807,6 +827,8 @@ REGEXCHAR    "["([^\]\\]|\\.)+"]"|\"[^"]+\"|\\.|[^<>"\[\]\\\n]
 						 xyFileName,xylino,xycharno());
 				   errorFlag = 0;
 				 }
+				 xylino++;
+				 xylastline = xytext + 1;
                                  BEGIN(INITIAL);
 			       }
   <<EOF>>                      { xyreportError("directive error",
@@ -832,6 +854,8 @@ REGEXCHAR    "["([^\]\\]|\\.)+"]"|\"[^"]+\"|\\.|[^<>"\[\]\\\n]
 						 xyFileName,xylino,xycharno());
 				   errorFlag = 0;
 				 }
+				 xylino++;
+				 xylastline = xytext + 1;
                                  BEGIN(INITIAL);
 			       }
   <<EOF>>                      { xyreportError("directive error",
@@ -857,6 +881,8 @@ REGEXCHAR    "["([^\]\\]|\\.)+"]"|\"[^"]+\"|\\.|[^<>"\[\]\\\n]
 						 xyFileName,xylino,xycharno());
 				   errorFlag = 0;
 				 }
+				 xylino++;
+				 xylastline = xytext + 1;
                                  BEGIN(INITIAL);
 			       }
   <<EOF>>                      { xyreportError("directive error",
@@ -882,6 +908,8 @@ REGEXCHAR    "["([^\]\\]|\\.)+"]"|\"[^"]+\"|\\.|[^<>"\[\]\\\n]
 						 xyFileName,xylino,xycharno());
 				   errorFlag = 0;
 				 }
+				 xylino++;
+				 xylastline = xytext + 1;
                                  BEGIN(INITIAL);
 			       }
   <<EOF>>                      { xyreportError("directive error",
@@ -911,7 +939,7 @@ REGEXCHAR    "["([^\]\\]|\\.)+"]"|\"[^"]+\"|\\.|[^<>"\[\]\\\n]
 {FDIN}                         { return FDIN; }
 ("="|{COMPARE})":"             { return FDCOMPARE; }
 
-"."{SPACE}*[0-9]+              { // Hack to avoid strange parsing of X.1.1:
+"."({SPACE}|\n)*[0-9]+         { // Hack to avoid strange parsing of X.1.1:
 				 // If "." is followed by integer, then
 				 // a special token is returned.
 				 // If this rule would not be there, the
@@ -1013,6 +1041,9 @@ REGEXCHAR    "["([^\]\\]|\\.)+"]"|\"[^"]+\"|\\.|[^<>"\[\]\\\n]
 			       }
 
 {SPACE}		               ;
+\n                             { xylino++;
+                                 xylastline = xytext + 1;
+                               }
 
 \\[a-zA-Z]+                    { xyreportError("lexical error",
                                                "unknown directive",
@@ -1098,7 +1129,7 @@ int xy_init_from_file(char *file) {
     return 0;
   xy_create_buffer(xyin, YY_BUF_SIZE);
   xy_init();
-  xylino = 0;   // this is incremented when the first line is read
+  xylino = 1;
   strncpy(xyFileName,fullname,99);
   xyFileNameAtom = OZ_atom(xyFileName);
   delete[] fullname;
@@ -1110,7 +1141,7 @@ void xy_init_from_string(char *str) {
   xylastline = YY_CURRENT_BUFFER->yy_ch_buf;
   xy_init();
   xylino = 1;
-  strcpy(xyFileName,"");
+  strcpy(xyFileName,"nofile");
   xyFileNameAtom = OZ_atom(xyFileName);
 }
 
