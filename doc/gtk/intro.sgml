@@ -106,6 +106,9 @@ end>>>
       If you are familiar with GUI programming, you will recognize a few
       things suchs as creating windows, adding children to them, and making
       them react to user input.
+    <Para class=apropos><Title/More Examples/
+      A number of examples can be found in the <File>examples/gtk</File>
+      directory in Mozart's installation folder.
   <Section>
     <Title/Structure of the Manual/
     <P>
