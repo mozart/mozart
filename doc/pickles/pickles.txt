@@ -36,15 +36,17 @@ end with a newline.
 Below is the full grammar. Non-terminals are enclosed into <...>
 everything else are terminals.
 
+MAJORVERSION = 1
+MINORVERSION = 2
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %  grammar for pickles
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 <pickle> ::=  <nonquoted-string>       % header (any sequence of characters
-                                       % terminated by PERDIOVERSION+DIF_PRIMARY,
+                                       % terminated by 2 times PERDIOVERSION,
                                        % see pickle.hh)
-              <tstring>                % version number
+              <tstring>                % version number "MAJOR#MINOR"
               <value>                  % the value contained in the pickle
 
 
@@ -67,7 +69,6 @@ everything else are terminals.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % tagged short, int, string, etc.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-<tshort>       ::= <tbyte> <tbyte>
 <tint>         ::= I:<int>
 <tbyte>        ::= B:<int>
 <tstring>      ::= S:<string>
@@ -142,9 +143,7 @@ everything else are terminals.
                                                    % NAME=0,PROC=1,CODE=2,CHUNK=3,
                                                    % OBJECT=4,CLASS=5,PROMISE=6
 
-<site>         ::= D:PASSIVE
-                   <tint>                          % address
-                   <tshort>                        % port
+<site>         ::= <tint>                          % address
                    <tint>                          % timestamp.start
                    <tint>                          % timestamp.pid
 
