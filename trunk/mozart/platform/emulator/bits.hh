@@ -25,6 +25,6 @@
 
 #define __BITS_HH__
 
-int get_num_of_bits(const int m, int * ia);
+int get_num_of_bits(const int m, const int * ia);
 
 #endif
