@@ -1010,17 +1010,21 @@ inline
 Bool updateVar(TaggedRef var)
 {
   GCPROCMSG("updateVar");
-  Bool toUpdate = OK;
+  Board *home;
   if (opMode == IN_TC) {
     if (isUVar(var)) {
-      toUpdate = isLocalBoard(tagged2VarHome(var));
+      home = tagged2VarHome(var);
+    } else if (isSVar(var)) {
+      home = tagged2SVar(var)->getHome1();
     } else {
-      toUpdate = isLocalBoard((isCVar(var)?tagged2CVar(var):tagged2SVar(var))
-			     ->getHome());
+      home = tagged2CVar(var)->getHome1();
     }
+
+    home = home->gcGetBoardDeref();
+    return (home != NULL && isLocalBoard(home));
   }
 
-  return toUpdate;
+  return OK;
 }
 
 
