@@ -38,17 +38,18 @@ protected:
 public:
   Actor(int typ,Board *bb,int prio);
 
-  ~Actor() { flags=Ac_None; board=(Board *) NULL; }
+  ~Actor() { flags=Ac_None; board=0; }
 
   USEHEAPMEMORY;
-  Actor *gc();
+  Actor *gcActor();
   void gcRecurse(void);
   OZPRINT;
   OZPRINTLONG;
 
   int getPriority() { return (priority); }
-  Board *getBoard() { return (board); }
-  Bool isCommitted() { return ((flags & Ac_Committed) ? OK : NO); }
+  Board *getBoardFast();
+  Board *getBoardAndTest();
+  Bool isCommitted() { return flags & Ac_Committed; }
   Bool isAsk() { return ((flags & Ac_Ask) ? OK : NO); }
   Bool isWait() { return ((flags & Ac_Wait) ? OK : NO); }
   Bool isAskWait () { return ((flags & (Ac_Ask|Ac_Wait)) ? OK : NO); } 
@@ -73,8 +74,8 @@ protected:
   int childCount;
 public:
   AWActor(int type,Board *s,int prio,
-	  ProgramCounter p,RefsArray y,RefsArray g,
-	  RefsArray x,int i);
+	  ProgramCounter p=NOCODE,RefsArray y=0,RefsArray g=0,
+	  RefsArray x=0,int i=0);
   ~AWActor();
 
   USEHEAPMEMORY;
@@ -113,7 +114,9 @@ public:
 class WaitActor : public AWActor {
 public:
   static WaitActor *Cast(Actor *a)
-{ DebugCheck(!a->isWait(),error("WaitActor::Cast")); return (WaitActor *) a; }
+  {
+    Assert(a->isWait()); return (WaitActor *) a;
+  }
 private:
   Board **childs;
 public:
@@ -134,8 +137,11 @@ public:
   /* see also: isLeaf() */
   Bool hasOneChild() { return ((childCount == 1 && !hasNext()) ? OK : NO); }
   Bool hasNoChilds() { return ((childCount == 0 && !hasNext()) ? OK : NO); }
-  void unsetBoard () { board = (Board *) NULL; }
-  void setBoard (Board *bb) {  board = bb; }
+
+  // during copying: unlink the distributed actor
+  void unsetBoard() { board = 0; }
+  Bool hasUnsetBoard() { return board == 0; }
+  void setBoard(Board *bb) {  board = bb; }
 };
 
 // ------------------------------------------------------------------------

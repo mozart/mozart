@@ -29,13 +29,13 @@ void reviveCurrentTaskSusp(void) {
   Assert(FDcurrentTaskSusp != NULL);
   Assert(FDcurrentTaskSusp->isResistant());
   Assert(!FDcurrentTaskSusp->isDead());
-  Assert(am.currentBoard==FDcurrentTaskSusp->getBoard()->getBoardDeref());
+  Assert(am.currentBoard==FDcurrentTaskSusp->getBoardFast());
   FDcurrentTaskSusp->unmarkPropagated();
   FDcurrentTaskSusp->unmarkUnifySusp();
 #ifndef NEWCOUNTER
   am.currentBoard->incSuspCount();
 #endif
-  Assert(am.currentBoard==FDcurrentTaskSusp->getBoard()->getBoardDeref());
+  Assert(am.currentBoard==FDcurrentTaskSusp->getBoardFast());
   FDcurrentTaskSusp->setBoard(am.currentBoard);
   FDcurrentTaskSusp = NULL;
 }
@@ -44,7 +44,7 @@ void reviveCurrentTaskSusp(void) {
 void killPropagatedCurrentTaskSusp() {
   if (FDcurrentTaskSusp == NULL) return;
 
-  Assert(am.currentBoard==FDcurrentTaskSusp->getBoard()->getBoardDeref());
+  Assert(am.currentBoard==FDcurrentTaskSusp->getBoardFast());
   Assert(FDcurrentTaskSusp->isResistant());
   Assert(!FDcurrentTaskSusp->isDead());
 
@@ -65,7 +65,7 @@ void dismissCurrentTaskSusp(void) {
   Assert(FDcurrentTaskSusp != NULL);
   Assert(FDcurrentTaskSusp->isResistant());
   Assert(!FDcurrentTaskSusp->isDead());
-  Assert(am.currentBoard==FDcurrentTaskSusp->getBoard()->getBoardDeref());
+  Assert(am.currentBoard==FDcurrentTaskSusp->getBoardFast());
   FDcurrentTaskSusp->cContToBoard(am.currentBoard); // mm2 opt
   FDcurrentTaskSusp = NULL;
 }
@@ -101,7 +101,7 @@ SuspList * addSuspToList(SuspList * list, SuspList * elem, Board * hoome)
   }
 #endif
   
-  updateExtSuspension (hoome->getBoardDeref(), elem->getSusp());
+  updateExtSuspension (hoome->getBoardFast(), elem->getSusp());
   elem->setNext(list);
   return elem;
 }
@@ -117,7 +117,7 @@ void printBC(ostream &ofile, Board * b)
     Suspension * s = sl->getSusp();
     if (s->isDead())
       continue;
-    if (s->getBoard()->getBoardDeref() == NULL)
+    if (s->getBoardFast() == NULL)
       continue;
     
     if (sl->isCondSusp())

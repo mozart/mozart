@@ -290,6 +290,10 @@ void osWatchReadFD(int fd)
 {
   FD_SET(fd,&globalReadFDs);
 }
+void osClrWatchedReadFD(int fd)
+{
+  FD_CLR(fd,&globalReadFDs);
+}
 
 Bool osIsWatchedReadFD(int fd)
 {

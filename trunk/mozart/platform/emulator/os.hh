@@ -73,6 +73,7 @@ int osOpenMax();
 void osInit();
 void osWatchReadFD(int fd);
 Bool osIsWatchedReadFD(int fd);
+void osClrWatchedReadFD(int fd);
 void osBlockSelect();
 void osClearSocketErrors();
 Bool osTestSelect(int fd);

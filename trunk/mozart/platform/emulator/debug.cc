@@ -511,7 +511,7 @@ Bool trace(char *s,Board *board,Actor *actor,
       am.print();
       break;
     case 'B':
-      Board::Print();
+      am.printBoards();
       break;
     case 'D':
       {

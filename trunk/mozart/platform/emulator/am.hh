@@ -65,6 +65,14 @@ typedef enum {
   DebugMode	= 1 << 6
 } StatusBit;
 
+
+// isBetween returns
+enum BFlag {
+  B_BETWEEN,
+  B_NOT_BETWEEN,
+  B_DEAD
+};
+
 enum JumpReturns {
   NOEXCEPTION = 0,
   SEGVIO = 1,
@@ -125,10 +133,13 @@ public:
 
   void initThreads();
   void printThreads();
+  void printBoards();
 
-  void scheduleSuspCont(SuspContinuation *c, Bool wasExtSusp);
-  void scheduleSuspCCont(CFuncContinuation *c, Bool wasExtSusp,
-			     Suspension *s=0);
+  void scheduleSuspCont(Board *bb, int prio, Continuation *c,
+			Bool wasExtSusp);
+  void scheduleSuspCCont(Board *bb, int prio,
+			 CFuncContinuation *c, Bool wasExtSusp,
+			 Suspension *s=0);
   void scheduleSolve(Board *b);
   void scheduleWakeup(Board *b, Bool wasExtSusp);
 
@@ -139,6 +150,7 @@ public:
   Thread *newThread(int p,Board *h);
   void disposeThread(Thread *th);
   Bool isScheduled(Thread *th);
+  void checkThreadsAssertion();
   void scheduleThread(Thread *th);
   Bool threadQueueIsEmpty();
   Thread *getFirstThread();
@@ -246,7 +258,6 @@ public:
   Bool isLocalSVar(SVariable *var);
   Bool isLocalCVar(TaggedRef var);
   Bool isLocalVariable(TaggedRef var);
-  Bool isInScope (Board *above, Board* node);
 
   void pushCall(Board *b, Chunk *def, int arity, RefsArray args);
   void pushDebug(Board *n, Chunk *def, int arity, RefsArray args);
@@ -266,7 +277,7 @@ public:
   SuspList * checkSuspensionList(SVariable * var, TaggedRef taggedvar,
 				 SuspList * suspList, TaggedRef term,
 				 PropCaller calledBy);
-  Bool isBetween(Board * to, Board * varHome);
+  BFlag isBetween(Board * to, Board * varHome);
   void setExtSuspension (Board *varHome, Suspension *susp);
 private:
   Bool _checkExtSuspension(Suspension * susp);
