@@ -440,7 +440,7 @@ Bool SolveActor::isStable ()
   return (areNoExtSuspensions ()); 
 }
 
-void SolveActor::printDebug(void)
+void SolveActor::printDebugKP(void)
 {
   cout << endl << "solveActor @" << this << endl;
   cout << "solveVar="; taggedPrint(solveVar); cout << endl;
