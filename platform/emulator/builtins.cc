@@ -1641,6 +1641,9 @@ OZ_C_proc_begin(BImergeSpace, 2) {
   TaggedRef root = space->getSolveActor()->merge(CBB);
   space->merge();
 
+  if (root == makeTaggedNULL())
+    return FAILED;
+
   return OZ_unify(root, OZ_getCArg(1));
 } OZ_C_proc_end
 

@@ -59,6 +59,10 @@ TaggedRef SolveActor::merge(Board *bb) {
   solveBoard->setCommitted(bb);
   bb->incSuspCount(solveBoard->getSuspCount());
 
+  if (!am.installScriptOutline(solveBoard->getScriptRef())) {
+    return makeTaggedNULL();
+  }
+
   Assert(bb==am.currentBoard);
 
   // adjoin the list of or-actors to the list in actual solve actor!
