@@ -82,21 +82,20 @@ enum TypeOfTerm {
 #define _tagTypeOf(ref)          ((TypeOfTerm)(ref&tagMask))
 #define TaggedToPointer(t)       ((void*) (mallocBase|t))
 
-#ifdef LARGEADRESSES
 #define lostPtrBits (tagSize-2)
-#define _tagValueOf2(tag,ref)  TaggedToPointer((ref>>lostPtrBits) - ((tag)>>2))
-#define _tagValueOf(ref)         TaggedToPointer(((ref) >> lostPtrBits)&~3)
+#define _tagValueOf2(tag,ref)    TaggedToPointer(((ref)>>lostPtrBits) - ((tag)>>2))
+#define _tagValueOf(ref)         TaggedToPointer(((ref)>>lostPtrBits)&~3)
 #define _tagValueOfVerbatim(ref) ((void*)(((ref) >> lostPtrBits)&~3))
 #define _makeTaggedRef2(tag,i)   ((i << lostPtrBits) | tag)
-#else
-#define lostPtrBits tagSize
-#define _tagValueOf(ref)         TaggedToPointer((ref) >> tagSize)
-#define _tagValueOf2(tag,ref)    tagValueOf(ref)
-#define _tagValueOfVerbatim(ref) ((ref) >> tagSize)
-#define _makeTaggedRef2(tag,i)   ((i << tagSize) | (tag))
-#endif
 
 #define _makeTaggedRef2i(tag,ptr) _makeTaggedRef2(tag,(int32)ToInt32(ptr))
+
+/* small ints are the only TaggedRefs that do not
+ * contain a pointer in the value part */
+#define _makeTaggedSmallInt(s) ((s << tagSize) | SMALLINT)
+
+/* new tagging unused so far */
+#define OLD_TAGGING
 
 #ifdef OLD_TAGGING
 #define _makeTaggedRef(s) ((TaggedRef) ToInt32(s))
@@ -151,9 +150,7 @@ TypeOfTerm tagTypeOf(TaggedRef ref)
 inline
 TaggedRef makeTaggedRef2i(TypeOfTerm tag, int32 i)
 {
-#ifdef LARGEADRESSES
   Assert((i&3) == 0);
-#endif
   return _makeTaggedRef2(tag,i);
 }
 
@@ -166,7 +163,7 @@ TaggedRef makeTaggedRef2p(TypeOfTerm tag, void *ptr)
 #else
 
 #define tagValueOf(ref)         _tagValueOf((TaggedRef)ref)
-#define tagValueOf2(tag,ref)    _tagValueOf2(tag,ref)
+#define tagValueOf2(tag,ref)    _tagValueOf2(tag,(TaggedRef)ref)
 #define tagValueOfVerbatim(ref) _tagValueOfVerbatim((TaggedRef)ref)
 #define tagTypeOf(ref)          _tagTypeOf((TaggedRef)ref)
 #define makeTaggedRef2i(tag,i)  _makeTaggedRef2(tag,i)
@@ -515,18 +512,6 @@ TaggedRef makeTaggedLiteral(Literal *s)
 }
 
 inline
-TaggedRef makeTaggedSmallInt(int32 s)
-{
-#ifdef LARGEADRESSES
-  /* small ints are the only TaggedRefs that do not
-   * contain a pointer in the value part */
-  return (s << tagSize) | SMALLINT;
-#else
-  return makeTaggedRef2p(SMALLINT,(void*)s);
-#endif
-}
-
-inline
 TaggedRef makeTaggedFloat(Float *s)
 {
   CHECK_POINTER_N(s);
@@ -548,6 +533,13 @@ TaggedRef makeTaggedTert(Tertiary *s)
   return makeTaggedRef2p(OZCONST,s);
 }
 
+
+inline
+TaggedRef makeTaggedSmallInt(int32 s)
+{
+  return _makeTaggedSmallInt(s);
+}
+
 #else
 
 #define makeTaggedNULL()       ((TaggedRef) 0)
@@ -558,13 +550,7 @@ TaggedRef makeTaggedTert(Tertiary *s)
 #define makeTaggedFloat(s)     makeTaggedRef2p(OZFLOAT,s)
 #define makeTaggedConst(s)     makeTaggedRef2p(OZCONST,s)
 #define makeTaggedTert(s)      makeTaggedRef2p(OZCONST,s)
-
-#ifdef LARGEADRESSES
-#define makeTaggedSmallInt(s) ((s << tagSize) | SMALLINT)
-#else
-#define makeTaggedSmallInt(s) makeTaggedRef2p(SMALLINT,(void*)s)
-#endif
-
+#define makeTaggedSmallInt(s)  _makeTaggedSmallInt(s) 
 
 #endif
 
