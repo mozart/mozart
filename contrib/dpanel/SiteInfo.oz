@@ -1,7 +1,7 @@
 functor
 import
-   DPPane(siteStatistics) at 'x-oz://boot/DPPane.ozf'
-   DPB at 'x-oz://boot/DPB.ozf'
+   DPPane(siteStatistics) at 'x-oz://boot/DPPane'
+   DPB at 'x-oz://boot/DPB'
 export
    sitesDict:SitesDict
    sites:SiteInfo
