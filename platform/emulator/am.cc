@@ -1082,66 +1082,11 @@ void AM::setCurrent(Board *c, Bool checkNotGC)
 }
 
 
-
-#ifdef FASTSS
-Bool AM::fastUnifyOutline(TaggedRef term1, TaggedRef *term1Ptr, TaggedRef term2)
+Bool AM::fastUnifyOutline(TaggedRef ref1, TaggedRef ref2, Bool prop)
 {
-  SVariable *svar;
-  TaggedRef term;
-  TaggedRef *varPtr;
-
-  if (isSVar(term1) && isLocalVariable(term1)) {
-    svar = tagged2SVar(term1);
-    varPtr = term1Ptr;
-    term = term2;
-  } else {
-    DEREF(term2,term2Ptr,_1);
-    if (isSVar(term2) && isLocalVariable(term2)) {
-      svar = tagged2SVar(term2);
-      varPtr = term2Ptr;
-      term = makeTaggedRef(term1Ptr?term1Ptr:term1);
-    } else {
-      if (term1Ptr)
-        return unify(term1Ptr,term2);
-      else
-        return unify(term1,term2);
-    }
-  }
-
-  for (SuspList* sl = svar->getSuspList(); sl;  sl = sl->dispose()) {
-
-    Suspension* susp = sl->getElem();
-
-    if (susp->isDead()) {
-      continue;
-    }
-
-    if (susp->getNode()->getBoardDeref() == NULL) {
-      susp->markDead();
-      continue;
-    }
-
-    switch (susp->getFlag() & (S_cont|S_cfun)) {
-    case S_null:
-      susp->wakeUpNode(svar);
-      break;
-    case S_cont:
-      {
-        susp->markDead();
-        Thread::ScheduleSuspCont(susp->getCont(), NO);
-        break;
-      }
-    case S_cont|S_cfun:
-      susp->wakeUpCCont(svar);
-      break;
-    }
-  }
-
-  svar->dispose();
-
-  doBind(varPtr,term);
+  return fastUnify(ref1, ref2, prop);
 }
-#endif
+
 
 
 #ifdef OUTLINE
