@@ -133,7 +133,7 @@ local
 
      TermButtonBitmap #
      ('Terminate' #
-      ('Terminate current thread and remove it from the thread tree.'))
+      ('Terminate current thread and detach it.'))
 
     ]
     proc {$ S}
