@@ -408,7 +408,8 @@ YY_MALLOC_DECL
 %-
 #define YY_FATAL_ERROR(msg) yy_fatal_error( msg )
 %+
-#define YY_FATAL_ERROR(msg) LexerError( msg )
+#define YY_FATAL_ERROR(msg) return LexerError( msg )
+#define YY_VERY_FATAL_ERROR(msg) { LexerError( msg ); exit(1); }
 %*
 #endif
 
@@ -905,7 +906,7 @@ int c;
 register char *yy_bp;
 #endif
 %+
-void yyFlexLexer::yyunput( int c, register char* yy_bp )
+int yyFlexLexer::yyunput( int c, register char* yy_bp )
 %*
 	{
 	register char *yy_cp = yy_c_buf_p;
@@ -940,6 +941,7 @@ void yyFlexLexer::yyunput( int c, register char* yy_bp )
 	yytext_ptr = yy_bp;
 	yy_hold_char = *yy_cp;
 	yy_c_buf_p = yy_cp;
+	return 0;
 	}
 %-
 #endif	/* ifndef YY_NO_UNPUT */
@@ -1106,7 +1108,7 @@ YY_BUFFER_STATE yyFlexLexer::yy_create_buffer( FILE* file, int size )
 
 	b = (YY_BUFFER_STATE) yy_flex_alloc( sizeof( struct yy_buffer_state ) );
 	if ( ! b )
-		YY_FATAL_ERROR( "out of dynamic memory in yy_create_buffer()" );
+		YY_VERY_FATAL_ERROR( "out of dynamic memory in yy_create_buffer()" );
 
 	b->yy_buf_size = size;
 
@@ -1115,7 +1117,7 @@ YY_BUFFER_STATE yyFlexLexer::yy_create_buffer( FILE* file, int size )
 	 */
 	b->yy_ch_buf = (char *) yy_flex_alloc( b->yy_buf_size + 2 );
 	if ( ! b->yy_ch_buf )
-		YY_FATAL_ERROR( "out of dynamic memory in yy_create_buffer()" );
+		YY_VERY_FATAL_ERROR( "out of dynamic memory in yy_create_buffer()" );
 
 	b->yy_is_our_buffer = 1;
 
@@ -1243,7 +1245,7 @@ yy_size_t size;
 
 	b = (YY_BUFFER_STATE) yy_flex_alloc( sizeof( struct yy_buffer_state ) );
 	if ( ! b )
-		YY_FATAL_ERROR( "out of dynamic memory in yy_scan_buffer()" );
+		YY_VERY_FATAL_ERROR( "out of dynamic memory in yy_scan_buffer()" );
 
 	b->yy_buf_size = size - 2;	/* "- 2" to take care of EOB's */
 	b->yy_buf_pos = b->yy_ch_buf = base;
@@ -1301,7 +1303,7 @@ int len;
 	n = len + 2;
 	buf = (char *) yy_flex_alloc( n );
 	if ( ! buf )
-		YY_FATAL_ERROR( "out of dynamic memory in yy_scan_bytes()" );
+		YY_VERY_FATAL_ERROR( "out of dynamic memory in yy_scan_bytes()" );
 
 	for ( i = 0; i < len; ++i )
 		buf[i] = bytes[i];
@@ -1310,7 +1312,7 @@ int len;
 
 	b = yy_scan_buffer( buf, n );
 	if ( ! b )
-		YY_FATAL_ERROR( "bad buffer in yy_scan_bytes()" );
+		YY_VERY_FATAL_ERROR( "bad buffer in yy_scan_bytes()" );
 
 	/* It's okay to grow etc. this buffer, and we should throw it
 	 * away when we're done.
@@ -1350,7 +1352,7 @@ void yyFlexLexer::yy_push_state( int new_state )
 					(void *) yy_start_stack, new_size );
 
 		if ( ! yy_start_stack )
-			YY_FATAL_ERROR(
+			YY_VERY_FATAL_ERROR(
 			"out of memory expanding start-condition stack" );
 		}
 
@@ -1369,7 +1371,7 @@ void yyFlexLexer::yy_pop_state()
 %*
 	{
 	if ( --yy_start_stack_ptr < 0 )
-		YY_FATAL_ERROR( "start-condition stack underflow" );
+		YY_VERY_FATAL_ERROR( "start-condition stack underflow" );
 
 	BEGIN(yy_start_stack[yy_start_stack_ptr]);
 	}
@@ -1405,10 +1407,10 @@ char msg[];
 
 %+
 
-void yyFlexLexer::LexerError( yyconst char msg[] )
+int yyFlexLexer::LexerError( yyconst char msg[] )
 	{
-	fprintf( stderr, "%s\n", msg );
-	exit( YY_EXIT_FAILURE );
+	yy_last_error_msg = msg;
+	return -1;
 	}
 %*
 
