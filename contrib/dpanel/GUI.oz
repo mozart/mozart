@@ -6,7 +6,7 @@ import
 export
    Open
    ReOpen
-%   OpenNetInfo
+   OpenNetInfo
    ssites:SSites
    sactivity:SActive
    srtt:SRTT
@@ -188,17 +188,15 @@ define
       {Toplevel tkShow}
    end
 
+   CardF NetInfoF
    proc{Open  RunSync}
       T=Toplevel={New Widgets.toplevel tkInit(title:"Distribution Panel"
 					      delete:proc{$}
 							{T tkHide}
 							{Exchange RunSync unit _}
 						     end)}
-      CardF={New Widgets.cardFrame tkInit(parent:T padx:10 pady:10 width:1000 height:190)}
-      SiteF OwnerF BorrowF NetInfoF
-%      proc{!OpenNetInfo}
-%	 {CardF addCard(id:4 title:" Net Info " frame:NetInfoF)}     
-%      end
+      !CardF={New Widgets.cardFrame tkInit(parent:T padx:10 pady:10 width:1000 height:190)}
+      SiteF OwnerF BorrowF% NetInfoF
    in
       %% Site frame
       SiteF={New Tk.frame tkInit(parent:CardF)}
@@ -301,6 +299,9 @@ define
       {Tk.batch [grid(columnconfigure T 0 weight:1)
 		 grid(rowconfigure T 0 weight:1)
 		 grid(CardF row:0 column:0 sticky:news)]}
+   end
+   proc{OpenNetInfo}
+      {CardF addCard(id:4 title:" Net Info " frame:NetInfoF)}     
    end
 end
 
