@@ -940,7 +940,7 @@ TaggedRef listifyWatcherCond(EntityCond ec){
 
 EntityInfo* gcEntityInfoInternal(EntityInfo *info){
   if(info==NULL) return NULL;
-  EntityInfo *newInfo = (EntityInfo *) gcRealloc(info,sizeof(EntityInfo));  
+  EntityInfo *newInfo = (EntityInfo *) OZ_hrealloc(info,sizeof(EntityInfo));  
   newInfo->gcWatchers();
   return newInfo;}
 
@@ -973,7 +973,7 @@ void EntityInfo::gcWatchers(){
 	w=*base;
 	continue;}
       w->twin->setGCMark();}
-    Watcher* newW=(Watcher*) gcRealloc(w,sizeof(Watcher));
+    Watcher* newW=(Watcher*) OZ_hrealloc(w,sizeof(Watcher));
     *base=newW;
     newW->thread=nth;
     OZ_collectHeapTerm(newW->proc,newW->proc);
@@ -983,7 +983,7 @@ void EntityInfo::gcWatchers(){
 
 void gcGlobalWatcher(){
     if(globalWatcher==NULL) return;
-    Watcher* newW=(Watcher*) gcRealloc(globalWatcher,sizeof(Watcher));
+    Watcher* newW=(Watcher*) OZ_hrealloc(globalWatcher,sizeof(Watcher));
     OZ_collectHeapTerm(globalWatcher->proc,globalWatcher->proc);}
     
 

@@ -1241,13 +1241,13 @@ ConstTerm *gcStatefulSpecImpl(Tertiary *t)
   if(t->getType()==Co_Cell){
     CellFrame *cf=(CellFrame*)t;
     cf->setAccessBit();
-    ret = (ConstTerm *) gcRealloc(t,sizeof(CellFrame));
+    ret = (ConstTerm *) OZ_hrealloc(t,sizeof(CellFrame));
     cf->myStoreForward(ret);}
   else{
     Assert(t->getType()==Co_Lock);
     LockFrame *lf=(LockFrame*)t;
     lf->setAccessBit();
-    ret = (ConstTerm *) gcRealloc(t,sizeof(LockFrame));
+    ret = (ConstTerm *) OZ_hrealloc(t,sizeof(LockFrame));
     lf->myStoreForward(ret);}
   return (ret);
 }
