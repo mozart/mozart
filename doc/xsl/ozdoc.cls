@@ -31,6 +31,7 @@
 \RequirePackage{alltt}
 \RequirePackage{isolatin1}
 \RequirePackage{color}
+\RequirePackage{theorem}
 
 % layout parameter
 
@@ -153,6 +154,12 @@
   {-1em}%
   {\normalfont\mozart@section@font\normalsize}}
 
+\newcommand{\mozart@internal@paragraph}[1]{%
+  \ifvmode\else\par\fi
+  \addpenalty\@secpenalty\addvspace{3.25ex \@plus1ex \@minus.2ex}%
+  \noindent{\normalfont\mozart@section@font\normalsize#1}%
+  \hspace{1em}\ignorespaces}
+
 % \begin{FULLWIDTH}...\end{FULLWIDTH}
 %	an environment that spans the full width of the page
 % including the left margin
@@ -218,6 +225,8 @@
   \renewcommand{\@evenfoot}{}}
 
 \newcommand{\@comic}{}
+\let\@author\@empty
+\let\@title\@empty
 
 \newcommand{\mozart@titlepage}{%
 \bgroup
@@ -229,8 +238,8 @@
       \ifx\@comic\long@empty\else
         \begin{center}\@comic\end{center}\fi
       \begin{flushright}
-        {\mozart@title@font@one\@title\\[1cm]}%
-        {\mozart@title@font@two\@author\\[1cm]}%
+        \ifx\@title\@empty\else{\mozart@title@font@one\@title\\[1cm]}\fi
+        \ifx\@author\@empty\else{\mozart@title@font@two\@author\\[1cm]}\fi
       \end{flushright}%
       \vfill
       \mozart@title@font@three
@@ -470,7 +479,7 @@
 \mozart@defochar{\mozart@other@TILDE}{\~}
 \mozart@defochar{\mozart@other@UNDERSCORE}{\_}
 \mozart@defochar{\mozart@other@CARET}{\^}
-\mozart@defochar{\mozart@other@BACKSLASH}{\\}
+\mozart@defochar{\mozart@other@BSLASH}{\\}
 \mozart@defochar{\mozart@other@LBRACE}{\{}
 \mozart@defochar{\mozart@other@RBRACE}{\}}
 \mozart@defochar{\mozart@other@LT}{\<}
@@ -514,8 +523,12 @@
 \newcommand{\usepi@resp}{resp.\ }
 \newcommand{\usepi@slash}{/}
 \newcommand{\usepi@cdots}{\ensuremath{\cdots}}
+% existing &emdash; should probably be changed to &endash;
+% and \usepi@emdash should expand to ---
 \newcommand{\usepi@emdash}{--}
+\newcommand{\usepi@endash}{--}
 \newcommand{\usepi@EG}{\usepi@eg}
+\newcommand{\usepi@wrt}{wrt.\ }
 
 % sectioning commands
 
@@ -628,14 +641,58 @@
   {\begin{center}\large\bf}
   {\end{center}}
 
-\newcommand{\PICEXT}[1]{{\mozart@specials@other
-  \epsfig{file=#1,width=0.7\linewidth}}}
+\newif\if@mozartExtension
+
+\def\mozart@hasExtension#1#2{%
+  \def\mozart@@hasExtension##1#2\mozart@one##2\mozart@two{%
+    \def\mozart@temp{##2}%
+    \ifx\mozart@temp\@empty
+      \@mozartExtensionfalse
+    \else
+      \def\mozart@basename{##1}%
+      \def\mozart@extension{#2}%
+      \@mozartExtensiontrue
+    \fi}%
+  \mozart@@hasExtension#1\mozart@one#2\mozart@one\mozart@two}
+
+\newcommand{\@PICEXT}[2]{% #1=filename #2=width
+  \@mozartExtensionfalse
+  \if@mozartExtension\else\mozart@hasExtension{#1}{.ps}\fi
+  \if@mozartExtension\else\mozart@hasExtension{#1}{.eps}\fi
+  \if@mozartExtension\else\mozart@hasExtension{#1}{.ps.gz}\fi
+  \if@mozartExtension\else\mozart@hasExtension{#1}{.eps.gz}\fi
+  \if@mozartExtension\else
+    \def\mozart@basename{#1}%
+    \def\mozart@extension{}%
+  \fi
+  \def\mozart@temp{#2}%
+  \ifx\mozart@temp\@empty
+    \def\@@PICEXT{\epsfig{file=\mozart@basename}}%
+  \else
+    \def\@@PICEXT{\epsfig{file=\mozart@basename,width=#2}}%
+  \fi
+  {\mozart@specials@other\@@PICEXT}}
+
+% \PICEXT[width]{file}
+\newcommand{\PICEXT}[2][0.7\linewidth]{\@PICEXT{#2}{#1}}
+
+%\newcommand{\PICEXT}[1]{{\mozart@specials@other
+%  \epsfig{file=#1,width=0.7\linewidth}}}
 \newenvironment{PICEXTDISPLAY}
-  {\begin{center}\begin{minipage}{\linewidth}}
-  {\end{minipage}\end{center}}
-\newcommand{\PICEXTFULL}[1]{{\mozart@specials@other
-  \epsfig{file=#1.ps,width=\linewidth}}}
-\def\PICEXTUNGIF/#1.gif/{\PICEXT{#1.ps}}
+  {\begin{center}\begin{minipage}{\linewidth}\begin{center}\mozart@specials@other}
+  {\end{center}\end{minipage}\end{center}}
+\newcommand{\PICEXTFULL}[2][]{\@PICEXT{#2}{#1}}
+%\newcommand{\PICEXTFULL}[1]{{\mozart@specials@other
+%  \epsfig{file=#1,width=\linewidth}}}
+\newcommand{\NOTEGUIPIC}[1]{\@PICEXT{#1}{8mm}}
+%\newcommand{\NOTEGUIPIC}[1]{{\mozart@specials@other
+%  \epsfig{file=#1,width=8mm}}}
+\newcommand{\NOTEGUI}[2]{%
+  \paragraph[#1]{#1 \NOTEGUIPIC{#2}}}
+%% different from \PICEXT because here we want to add a .ps
+%% extension that doesn't get stripped off
+\newcommand{\PICEXTGIF}[2][0.7\linewidth]{{\mozart@specials@other
+  \epsfig{file=#2.ps,width=#1}}}
 
 % grammar stuff
 
@@ -694,8 +751,11 @@
 \newcommand{\@ITEM}{%
   \let\ENTRY@MBOX\relax\vspace{\parsep}\noindent}
 
-\let\my@item\@item
-\long\def\@item[#1]{\def\foo{#1}\my@item[\foo]}
+%\def\mozart@temp{\long\def\@item[##1]}
+%\expandafter\mozart@temp\expandafter{\the\@item}
+
+\let\latex@item\@item
+\long\def\@item[#1]{\def\mozart@item@arg{#1}\latex@item[\mozart@item@arg]}
 
 \newcommand{\MENU}[3]{%
   \colorbox{menucolor}{%
@@ -704,3 +764,30 @@
     \end{tabular}}}
 
 \newcommand{\MOUSE}[1]{\hbox{\lower3mm\hbox{\epsfig{file=mouse-#1.ps,width=1cm}}}}
+
+% exercises and answers
+
+\theoremheaderfont{\sffamily\bfseries}
+\newtheorem{@EXERCISE}{Exercise}[chapter]
+\newenvironment{EXERCISE}[1]
+  {\begin{@EXERCISE}\label{#1}\let\PARA\mozart@internal@paragraph}
+  {\end{@EXERCISE}}
+% note the `*' in \paragraph*{... \ref{...}}
+% to avoid messing up the \ref{...}.  There is probably
+% a better more general way...
+\newenvironment{ANSWER}[1]
+  {\paragraph*{Answer to exercise \ref{#1}.}}
+  {\par}
+
+% rewrite rules
+
+\newenvironment{REWRITE}
+  {\begin{DISPLAY}\begin{tabular}{|l@{\quad\ensuremath{\rightarrow}\quad}l|}\hline}
+  {\end{tabular}\end{DISPLAY}}
+\newcommand{\REWRITEVAR}[1]{%
+  \multicolumn{2}{|l|}{#1 \GRAMDEF}\\\hline}
+\newcommand{\REWRITEFROM}[1]{#1&}
+\newcommand{\REWRITETO}[1]{#1\\\hline}
+\newcommand{\REWRITECONDITION}[1]{\multicolumn{2}{|@{\qqad}p{0.7\linewidth}|}{#1}\\\hline}
+
+\newcommand{\EOLN}{\\\relax\ignorespaces}
