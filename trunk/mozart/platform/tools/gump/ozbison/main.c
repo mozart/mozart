@@ -25,7 +25,7 @@ the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.  */
 #include "gram.h"
 #include "new.h"
 
-#include <oz.h>
+#include <mozart.h>
 
 int verboseflag;
 
