@@ -74,7 +74,9 @@ EOF
    'guint64'                  => 'GOZ_DECLARE_GUINT64',
 
    'gfloat'                   => 'GOZ_DECLARE_GFLOAT',
-   'gdouble'                  => 'GOZ_DECLARE_GDOUBLE'
+   'gdouble'                  => 'GOZ_DECLARE_GDOUBLE',
+
+   'GtkArg'                   => 'GOZ_DECLARE_GTKARG'
   );
 
 %return_value_translation =

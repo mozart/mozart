@@ -30,6 +30,8 @@
 /* This is for dummy variable identifiers used for casts */
 #define GOZ_(name) name ## _
 
+GtkArg           goz_ozterm_to_gtkarg      (OZ_Term);
+
 /*****************************************************************************
  * Conversions from C to Oz
  *****************************************************************************/
@@ -123,10 +125,10 @@ GList * goz_oz_list_to_g_list(OZ_Term ozlist);
  * Declaration of gtk types
  *****************************************************************************/
 
-#define GOZ_DECLARE_GTKARGINFO2(i, val)          GtkArgInfo ** val = NULL;
+#define GOZ_DECLARE_GTKARG(i, val) \
+OZ_declareTerm(i, GOZ_(val)); \
+GtkArg val = goz_ozterm_to_gtkarg(GOZ_(val))
 #define GOZ_DECLARE_GTKTYPE(i, val)              OZ_declareLong (i, GOZ_(val)); GtkType val = (GtkType) GOZ_(val)
-#define GOZ_DECLARE_GTKTYPE1(i, val)             GtkType * val = NULL;
-
 #define GOZ_DECLARE_GTKCALLBACK(i, val)          GtkCallback val = NULL;
 #define GOZ_DECLARE_GTKCALLBACKMARSHAL(i, val)   GtkCallbackMarshal val = NULL;
 #define GOZ_DECLARE_GTKDESTROYNOTIFY(i, val)     GtkDestroyNotify val = NULL;

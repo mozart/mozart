@@ -25,13 +25,7 @@
 #include <mozart.h>
 /*#include <goz_support.h>*/
 
-OZ_BI_define(ozgtk_get_null,0,1)
-{
-  OZ_RETURN(OZ_makeForeignPointer(NULL));
-}
-OZ_BI_end
-
-#define GOZ_DECLARE_GTKOBJECT(i, val)            OZ_declareForeignType (i, val, GtkObject*)
+#define GOZ_DECLARE_GTKOBJECT(i, val)  OZ_declareForeignType (i, val, GtkObject*)
 
 /*****************************************************************************
  * Signal processing
@@ -153,6 +147,32 @@ OZ_BI_define (ozgtk_signal_connect_sml, 3, 1)
 /*****************************************************************************
  * Convertions
  *****************************************************************************/
+
+/* In Oz a GtkArg is a tuple of the form Name|Value */
+GtkArg
+goz_ozterm_to_gtkarg(OZ_Term term)
+{
+  GtkArg arg;
+  int    len;
+
+  if (! OZ_isTuple (term)) {
+    OZ_typeError (0, "expecting tuple of the form Name|Value");
+  }
+
+  arg.name = OZ_virtualStringToC (OZ_head (term), &len);
+  arg.type = gtk_type_from_name (arg.name);
+
+  {
+    OZ_Term type, value;
+
+    value = OZ_tail (term);
+    type = OZ_termType(value);
+
+    /* TODO */
+  }
+
+  return arg;
+}
 
 GList *
 goz_oz_list_to_g_list(OZ_Term ozlist)
@@ -303,3 +323,13 @@ OZ_BI_define (ozgtk_widget_unset_flags, 2, 0)
 /*    OZ_declareForeignType (0, color_selection_dialog, GtkColorSelectionDialog *); */
 /*    OZ_RETURN (OZ_makeForeignPointer(color_selection_dialog->ok_button)); */
 /*  } OZ_BI_end */
+
+/*****************************************************************************
+ * Misc
+ *****************************************************************************/
+
+OZ_BI_define(ozgtk_get_null,0,1)
+{
+  OZ_RETURN(OZ_makeForeignPointer(NULL));
+}
+OZ_BI_end
