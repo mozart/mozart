@@ -316,9 +316,6 @@ extern OZ_Return _FUNDECL(OZ_raiseC,(char *label,int arity,...));
 extern OZ_Return _FUNDECL(OZ_raiseError,(OZ_Term));
 extern OZ_Return _FUNDECL(OZ_raiseErrorC,(char *label,int arity,...));
 
-/* special! dont use! */
-extern OZ_Return _FUNDECL(OZ_raiseA,(char*, int, int));
-
 /* Suspending builtins */
 
 extern void      _FUNDECL(OZ_makeRunnableThread,(OZ_CFun, OZ_Term *, int));
@@ -351,35 +348,30 @@ extern OZ_Return _FUNDECL(OZ_suspendOnInternal3,(OZ_Term,OZ_Term,OZ_Term));
  * III. macros
  * ------------------------------------------------------------------------ */
 
-/* variable arity is marked as follows: */
-#define OZ_VarArity -1
-#define VarArity OZ_VarArity
-
 #ifdef __cplusplus
 
 #define OZ_C_proc_proto(Name)						      \
-    extern "C" OZ_Return ozcdecl Name(int OZ_arity, OZ_Term OZ_args[]);
+    extern "C" OZ_Return ozcdecl Name(int OZ_arityArg, OZ_Term OZ_args[]);
 
 #define OZ_C_proc_header(Name)						      \
-    OZ_Return ozcdecl Name(int OZ_arity, OZ_Term OZ_args[]) {
+    OZ_Return ozcdecl Name(int OZ_arityArg, OZ_Term OZ_args[]) {
 
 #else
 
 #define OZ_C_proc_proto(Name) 						      \
-  OZ_Return ozcdecl Name(OZ_arity, OZ_args)
+  OZ_Return ozcdecl Name(OZ_arityArg, OZ_args);
 
 #define OZ_C_proc_header(Name)						      \
-  int OZ_arity; OZ_Term OZ_args[]; {
+  OZ_Return ozcdecl Name(OZ_arityArg, OZ_args)
+  int OZ_arityArg; OZ_Term OZ_args[]; {
 
 #endif
 
-#define OZ_C_proc_begin(Name,Arity)				\
-    OZ_C_proc_proto(Name)					\
-    OZ_C_proc_header(Name)					\
-       OZ_CFun OZ_self = Name;					\
-       if (OZ_arity != Arity && Arity != OZ_VarArity) {		\
-	 return OZ_raiseA(OZStringify(Name),OZ_arity,Arity);	\
-       }
+#define OZ_C_proc_begin(Name,arity)		\
+    OZ_C_proc_proto(Name);			\
+    OZ_C_proc_header(Name)			\
+       OZ_CFun OZ_self = Name;			\
+       int OZ_arity = arity;
 
 #define OZ_C_proc_end }
 
