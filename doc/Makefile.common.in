@@ -100,7 +100,7 @@ OZDOC2XML	= $(SRCTOP)/doc/xsl/ozdoc2xml
 CLASSPATH	= $(SRCTOP)/doc/xsl/oz.jar
 
 $(WHAT).xml: $(MAIN) $(SGMLSRCS) $(TEXEXTRAFILES)
-	nsgmls -c../catalog $< | $(OZDOC2XML) > $@
+	( nsgmls -c../catalog $< | $(OZDOC2XML) > $@ ) || { rm -f $@; exit -1 }
 $(WHAT).tex: $(WHAT)-defaced.xml
 	$(JAVA) -cp $(CLASSPATH) com.jclark.xsl.sax.Driver $< $(SRCTOP)/doc/xsl/ozdoc-new.xsl $@ \
 	|| { rm -f $@; exit -1 }
@@ -153,6 +153,7 @@ $(WHAT)-hilite.el: $(WHAT)-annotated.xml
 
 EMACSDO1= "(setq load-path (cons \"$(PREFIX)/share/elisp\" load-path))"
 EMACSDO2= "(setq load-path (cons \"$(SRCDIR)/../xsl\" load-path))"
+EMACSDO2b="(setq load-path (cons \"$(SRCDIR)\" load-path))"
 EMACSDO3= "(setq load-path (cons \"../xsl\" load-path))"
 EMACSDO4= "(setq load-path (cons \"$(BUILDTOP)/share/elisp\" load-path))"
 EMACSDO5= "(load \"ozdoc-fontify\")"
@@ -168,6 +169,7 @@ $(WHAT)-hilite.xml: $(WHAT)-hilite.el
 		--eval $(EMACSDIR3) \
 		--eval $(EMACSDO1) \
 		--eval $(EMACSDO2) \
+		--eval $(EMACSDO2b) \
 		--eval $(EMACSDO3) \
 		--eval $(EMACSDO4) \
 		--eval $(EMACSDO5) \
