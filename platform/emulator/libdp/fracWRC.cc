@@ -1,4 +1,4 @@
-/*
+/*  
  *  Authors:
  *    Erik Klintskog (erikd@sics.se)
  * 
@@ -205,7 +205,7 @@ void WRC::dropReference(DSite* site, int index)
   while(frac != NULL){
     sendReferenceBack(site,index,type,frac->enumerator,frac->denominator);
     EnumDenumPair *tmp=frac;
-      frac = frac->next;
+    frac = frac->next;
       delete tmp;
   }
 }

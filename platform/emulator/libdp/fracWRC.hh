@@ -46,7 +46,7 @@ public:
   RRinstance_WRC(int e, int d, RRinstance *n);
   void marshal_RR(MarshalerBuffer *buf);
   void unmarshal_RR(MarshalerBuffer *buf, int *error);
-
+  virtual ~RRinstance_WRC(){}
 };
 
 
@@ -66,6 +66,7 @@ public:
   void remove();
   void dropReference(DSite* site, int index);
   Bool isRoot();
+  virtual ~WRC(){};
 };
 
 
