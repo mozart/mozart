@@ -541,7 +541,10 @@ ProgramCounter unmarshalCode(MsgBuffer *bs, Bool discard)
     }
 
   next:
-    PERDIO_DEBUG_DO1(UNMARSHAL,displayCode(lastPC,1));
+PD((WEIRD,"Strange case."));
+    // EKS 
+//  Per check this out!!!
+//PERDIO_DEBUG_DO1(UNMARSHAL,displayCode(lastPC,1));
   }
   
   Assert(discard==OK || CodeArea::getOpcode(start)==DEFINITION);

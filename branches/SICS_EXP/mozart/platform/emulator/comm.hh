@@ -221,22 +221,22 @@ public:
 #define MY_SITE		     32
 
 
-/* Sites -11  possibilities 
+/* Sites -13  possibilities 
 
 		    
                     (REMOTE_SITE)              1  (REMOTE_SITE|CONNECTED)               5
                     (VIRTUAL_SITE)             2  (VIRTUAL_SITE|CONNECTED)              6
                     (VIRTUAL_SITE|REMOTE_SITE) 3  (VIRTUAL_SITE|REMOTE_SITE|CONNECTED)  7
 
-		    ()                                               0
-                    (SECONDARY_TABLE_SITE)                          32
+		    ()                                               0  (passive)
                     (PERM_SITE)                                      8  
-		    (PERM_SITE|SECONDARY_TABLE_SITE)                40
+		    (PERM_SITE|SECONDARY_TABLE_SITE)                24
 
 		    (REMOTE_SITE|PERM_SITE|CONNECTED)               13
 		    (VIRTUAL_SITE|PERM_SITE|CONNECTED)              14
 		    (VIRTUAL_SITE|REMOTE_SITE|CONNECTED|PERM_SITE)  15
 		    last 3 transitory
+		    (MY_SITE)                                       32
 
 */
 
@@ -247,7 +247,6 @@ public:
 class SiteExtension{
 friend class Site;
 friend class SiteExtensionManager;
-  int         refCtr;
   VirtualInfo *info;
   unsigned int extension; // RemoteSite* or VirtualSite* or readCtr;
 
@@ -255,7 +254,6 @@ protected:
   SiteExtension(){}
 
   void init(VirtualInfo *vi){
-    refCtr=0;
     info=vi;
     extension= (unsigned int) 0;}
 
@@ -272,9 +270,6 @@ protected:
   RemoteSite* getRemoteSiteSE(){return (RemoteSite*) extension;}
   void putRemoteSiteSE(RemoteSite* vs){extension= (unsigned int) vs;}
   void dumpRemoteSiteSE(int readCtr){extension=(unsigned int)readCtr;}
-  
-  int getRefCtrSE() {return refCtr;}
-  void putRefCtrSE(int i) {refCtr=i;}  
 
   int getReadCtrSE(){return (int) extension;}
   void putReadCtrSE(int i){extension= (unsigned int) i;}
@@ -370,8 +365,8 @@ protected:
     Assert(getType() & VIRTUAL_SITE);
     return getSiteExtension()->getVirtualInfoSE();}
 
-  int getRefCtrS(){return getSiteExtension()->getRefCtrSE();}
-  void putRefCtrS(int i){ getSiteExtension()->putRefCtrSE(i);}
+  int getRefCtrS(){return refCtr;}
+  void putRefCtrS(int i){ refCtr=i;}
 
 public:
 
@@ -464,6 +459,11 @@ public:
     refCtr=0;
     extension=0;
     setType(PERM_SITE);}
+
+  void initPassive(){
+    refCtr=0;
+    extension=0;
+    setType(0);}
 
 // provided to network-comm
   

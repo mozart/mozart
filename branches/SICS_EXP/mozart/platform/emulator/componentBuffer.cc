@@ -23,7 +23,7 @@ public:
 #define BYTESTREAM_CUTOFF 40
 
 class ByteBuffer{
-  friend class ByteBufferManager;
+  friend class CByteBufferManager;
   friend class ByteStream;
   friend class BufferManager;
   
@@ -39,9 +39,9 @@ public:
   void init() {next=NULL;}
 };
 
-class ByteBufferManager: public FreeListManager {
+class CByteBufferManager: public FreeListManager {
 public:
-  ByteBufferManager():FreeListManager(BYTEBUFFER_CUTOFF){}
+  CByteBufferManager():FreeListManager(BYTEBUFFER_CUTOFF){}
   ByteBuffer *newByteBuffer();
   void deleteByteBuffer(ByteBuffer*);
 };
@@ -287,11 +287,11 @@ public:
 class CompBufferManager {
 private:
 public:
-  ByteBufferManager *byteBufM;
+  CByteBufferManager *byteBufM;
   ByteStreamManager *byteStreamM;
 
   CompBufferManager(){
-    byteBufM = new ByteBufferManager();
+    byteBufM = new CByteBufferManager();
     byteStreamM= new ByteStreamManager();}
 
   ByteStream *getByteStream();
@@ -316,14 +316,14 @@ MsgBuffer* getComponentMsgBuffer(){        // interface
 
 /* ByteBufferManger */
 
-inline ByteBuffer* ByteBufferManager::newByteBuffer(){
+inline ByteBuffer* CByteBufferManager::newByteBuffer(){
   FreeListEntry *f=getOne();
   ByteBuffer *bb;
   if(f==NULL) {bb=new ByteBuffer();}
   else{GenCast(f,FreeListEntry*,bb,ByteBuffer*);}
   return bb;}
 
-inline  void ByteBufferManager::deleteByteBuffer(ByteBuffer* bb){
+inline  void CByteBufferManager::deleteByteBuffer(ByteBuffer* bb){
   FreeListEntry *f;
   GenCast(bb,ByteBuffer*,f,FreeListEntry*);
   if(putOne(f)) return;
