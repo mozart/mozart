@@ -1,5 +1,8 @@
 #include "oz.h"
 
+#define OZ_RETURN_BOOL(X) \
+OZ_RETURN((X)?OZ_true():OZ_false())
+
 #define OZ_expectDet(ARG)			\
 {						\
   if (OZ_isVariable(OZ_in(ARG)))		\
