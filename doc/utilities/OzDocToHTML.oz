@@ -951,8 +951,10 @@ define
 		  {@MyPostScriptToGIF
 		   convertPostScript(M.to {CondSelect M info ''} ?To)}
 		  OzDocToHTML, PictureExtern(@OutputDirectory#'/' M To $)
-	       [] 'latex' then FileName in
-		  {@MyLaTeXToGIF convertPicture({ReadFile M.to} ?FileName)}
+	       [] 'latex' then DIR FileName in
+		  DIR = {Property.get 'ozdoc.src.dir'}
+		  {@MyLaTeXToGIF
+		   convertPicture({ReadFile DIR#'/'#M.to} ?FileName)}
 		  OzDocToHTML, PictureExtern("" M FileName $)
 	       [] unit then
 		  %--** the notation should be derived from the file name
