@@ -7,53 +7,6 @@
   Version: $Revision$
   State: $State$
 
-  $Log$
-  Revision 1.362  1996/09/04 09:36:05  mehl
-  new parameter internal(moreInfo:True/False) for execeptions
-
-  Revision 1.361  1996/09/03 22:39:45  lorenz
-  misc debugger stuff
-
-  Revision 1.360  1996/09/03 13:56:08  mehl
-  also failure info in spaces
-
-  Revision 1.359  1996/09/03 12:58:31  mehl
-  catch failure in spaces
-
-  Revision 1.358  1996/09/03 08:58:33  mehl
-  bug fixed: collecting dead threads
-
-  Revision 1.357  1996/09/02 21:54:41  mehl
-  job eliminated and new deep guards
-  bug fixed in new thread scheduling
-
-  Revision 1.356  1996/08/30 11:33:30  mehl
-  new scheduling
-
-  Revision 1.354  1996/08/11 14:53:38  lorenz
-  threads have a name now
-  some work on toplevel vars and global vars
-
-  Revision 1.353  1996/08/08 17:39:55  tmueller
-  removed too nervous assertion
-
-  Revision 1.352  1996/07/31 12:55:34  scheidhr
-  new machine instructions
-
-  Revision 1.349  1996/07/26 14:28:39  schulte
-  bug fix in exception handling of inlined functions
-
-  Revision 1.348  1996/07/19 08:30:28  mehl
-  Every Ask/Wait actor knows its thread.
-   This thread contains a task for the actor.
-  Simplification of failure handling and entailment check.
-  Added the function AM::commit, which does all the necessary things to
-   commit a space.
-  Added macro CTT to emulate.cc: CTT == e->currentThread
-
-  Revision 1.344  1996/07/12 16:19:18  schulte
-  Scaled down default error handler; removed error verbosity
-
   The main engine
   ------------------------------------------------------------------------
 */

@@ -6,18 +6,6 @@
   Last modified: $Date$ from $Author$
   Version: $Revision$
   State: $State$
-  $Log$
-  Revision 1.4  1996/08/06 13:30:39  mehl
-  bug fixes and ports
-
-  Revision 1.3  1996/08/02 16:25:50  scheidhr
-  more Perdio work: send Ports over the net
-
-  Revision 1.2  1996/08/02 11:14:18  mehl
-  perdio uses tcp now
-
-  Revision 1.1  1996/07/26 15:17:44  mehl
-  perdio communication: see ~mehl/perdio.oz
 
   ------------------------------------------------------------------------
 */
