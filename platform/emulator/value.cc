@@ -42,7 +42,8 @@ TaggedRef  AtomNil, AtomCons, AtomPair, AtomVoid,
   AtomStackMaxSize, AtomStopOnToplevelFailure, AtomSystem, AtomThread, 
   AtomTotal,
   AtomThreshold, AtomTolerance, AtomUser, AtomVariables, AtomWidth, AtomHeap,
-  AtomDebugIP, AtomDebugPerdio;
+  AtomDebugIP, AtomDebugPerdio,
+  RecordFailure;
 
 
 // Some often used constants
@@ -152,6 +153,12 @@ void initLiterals()
   
   AtomDebugIP               = makeTaggedAtom("debugIP");
   AtomDebugPerdio           = makeTaggedAtom("debugPerdio");
+
+
+  RecordFailure = OZ_record(OZ_atom("failure"),
+			    OZ_cons(OZ_atom("debug"),OZ_nil()));
+  OZ_putSubtree(RecordFailure,OZ_atom("debug"),NameUnit);
+  OZ_protect(&RecordFailure);
 }
 
 
