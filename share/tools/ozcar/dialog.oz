@@ -61,7 +61,7 @@ local
 	 Env = {Record.adjoinList
 		case {Emacs.getOPI} of false then env
 		elseof OPI then
-		   {{OPI getCompiler($)} enqueue(getEnv($))}
+		   {{OPI getNarrator($)} enqueue(getEnv($))}
 		end
 		{Filter {Append AuxEnv.'G' AuxEnv.'Y'}
 		 fun {$ V#W}
@@ -76,7 +76,7 @@ local
 				    'self':   if {IsFree Self} then unit
 					      else Self
 					      end)
-	 {TkTools.evalDialog, getCompiler($)
+	 {TkTools.evalDialog, getNarrator($)
 	  enqueue([setSwitch(debuginfovarnames true)
 		   setSwitch(debuginfocontrol true)])}
 
