@@ -1,109 +1,71 @@
-$cmode='dyn';
-
 %builtins_all =
 (
-    #* Finite Set Base
-
     'valueToString'     => { in  => ['+fset'],
                              out => ['+string'],
-                             BI  => BIfsValueToString,
-                             module=>fset ,
-                             native => true},
+                             BI  => BIfsValueToString},
 
     'isVarB'            => { in  => ['value'],
                              out => ['+bool'],
-                             BI  => BIfsIsVarB,
-                             module=>fset ,
-                             native => true},
+                             BI  => BIfsIsVarB},
 
     'isValueB'  => { in  => ['+value','bool'],
                              out => [],
-                             bi  => BIfsIsValueB,
-                             module=>fset ,
-                             native => true},
+                             bi  => BIfsIsValueB},
 
     'setValue'  => { in  => ['+value','fset'],
                              out => [],
-                             bi  => BIfsSetValue,
-                             module=>fset ,
-                             native => true},
+                             bi  => BIfsSetValue},
 
     'set'               => { in  => ['+value','+value','fset'],
                              out => [],
-                             bi  => BIfsSet,
-                             module=>fset ,
-                             native => true},
+                             bi  => BIfsSet},
 
     'sup'               => { in  => [],
                              out => ['+int'],
-                             BI  => BIfsSup,
-                             module=>fset ,
-                             native => true},
+                             BI  => BIfsSup},
 
     'getKnownIn'        => { in  => ['fset','value'],
                              out => [],
-                             bi  => BIfsGetKnownIn,
-                             module=>fset ,
-                             native => true},
+                             bi  => BIfsGetKnownIn},
 
     'getKnownNotIn'     => { in  => ['fset','value'],
                              out => [],
-                             bi  => BIfsGetKnownNotIn,
-                             module=>fset ,
-                             native => true},
+                             bi  => BIfsGetKnownNotIn},
 
     'getUnknown'        => { in  => ['fset','value'],
                              out => [],
-                             bi  => BIfsGetUnknown,
-                             module=>fset ,
-                             native => true},
+                             bi  => BIfsGetUnknown},
 
     'getGlb'            => { in  => ['fset','value'],
                              out => [],
-                             bi  => BIfsGetKnownIn,
-                             module=>fset ,
-                             native => true},
+                             bi  => BIfsGetKnownIn},
 
     'getLub'            => { in  => ['fset','value'],
                              out => [],
-                             bi  => BIfsGetLub,
-                             module=>fset ,
-                             native => true},
+                             bi  => BIfsGetLub},
 
     'getCard'           => { in  => ['fset','value'],
                              out => [],
-                             bi  => BIfsGetCard,
-                             module=>fset ,
-                             native => true},
+                             bi  => BIfsGetCard},
 
     'cardRange' => { in  => ['int','int','fset'],
                              out => [],
-                             bi  => BIfsCardRange,
-                             module=>fset ,
-                             native => true},
+                             bi  => BIfsCardRange},
 
     'getNumOfKnownIn'   => { in  => ['fset','int'],
                              out => [],
-                             bi  => BIfsGetNumOfKnownIn,
-                             module=>fset ,
-                             native => true},
+                             bi  => BIfsGetNumOfKnownIn},
 
     'getNumOfKnownNotIn'=> { in  => ['fset','int'],
                                out => [],
-                               bi  => BIfsGetNumOfKnownNotIn,
-                               module=>fset,
-                               native => true},
+                               bi  => BIfsGetNumOfKnownNotIn},
 
     'getNumOfUnknown'   => { in  => ['fset','int'],
                              out => [],
-                             bi  => BIfsGetNumOfUnknown,
-                             module=>fset ,
-                             native => true},
+                             bi  => BIfsGetNumOfUnknown},
 
     'clone'             => { in  => ['fset','fset'],
                              out => [],
-                             bi  => BIfsClone,
-                             module=>fset ,
-                             native => true},
+                             bi  => BIfsClone},
 
 );

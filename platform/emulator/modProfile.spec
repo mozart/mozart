@@ -1,22 +1,16 @@
-$cmode='dyn';
-
 %builtins_all =
 (
- #* Profiling support
 
  'mode'         => { in  => ['+bool'],
                      out => [],
-                     BI  => BIsetProfileMode,
-                     native => true},
+                     BI  => BIsetProfileMode},
 
  'reset'        => { in  => [],
                      out => [],
-                     BI  => BIstatisticsReset,
-                     native => true},
+                     BI  => BIstatisticsReset},
 
  'getInfo'      => { in  => [],
                      out => ['+value'],
-                     BI  => BIstatisticsGetProcs,
-                     native => true},
+                     BI  => BIstatisticsGetProcs},
 
  );

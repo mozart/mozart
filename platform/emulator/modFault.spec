@@ -1,36 +1,27 @@
-$cmode='dyn';
-
 %builtins_all =
 (
     'installHW'         => { in  => ['value','value','value'],
                              out => [],
-                             BI  => BIhwInstall,
-                             native => true},
+                             BI  => BIhwInstall},
 
     'deInstallHW'       =>  { in  => ['value','value','value'],
                              out => [],
-                             BI  => BIhwDeInstall,
-                             native => true},
+                             BI  => BIhwDeInstall},
 
     'setNetBufferSize'  =>  { in  => ['+value'],
                              out => [],
-                             BI  => BIsetNetBufferSize,
-                             native => true},
+                             BI  => BIsetNetBufferSize},
 
     'getNetBufferSize'  =>  { in  => [],
                              out => ['value'],
-                             BI  => BIgetNetBufferSize,
-                             native => true},
+                             BI  => BIgetNetBufferSize},
 
     'getEntityCond'     =>  { in  => ['value'],
                              out => ['value'],
-                             BI  => BIgetEntityCond,
-                             native => true},
+                             BI  => BIgetEntityCond},
 
     'tempSimulate'      => { in  => ['+int'],
                              out => ['+int'],
-                             BI  => BIcloseCon,
-                             module=>'perdio',
-                             native => true},
+                             BI  => BIcloseCon},
 
  );
