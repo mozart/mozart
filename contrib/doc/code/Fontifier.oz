@@ -211,7 +211,7 @@ define
       N Head Tail
    in
       {File read(len:N list:Head tail:Tail)}
-      if N==0 then Tail=nil else
+      if N==0 then {File close} Tail=nil else
          Tail={LazyRead File}
       end
       Head
