@@ -36,7 +36,7 @@ define
       end
       meth get(FileName ?OutFileName)
 	 N <- @N + 1
-	 OutFileName = 'thumbnail'#@N#'.gif'
+	 OutFileName = 'thumbnail'#@N#'.png'
 	 ToProcess <- FileName#OutFileName|@ToProcess
       end
       meth process(Reporter)

@@ -42,6 +42,23 @@ oztool c++ -c foo.cc
 oztool ld -o foo.so-`oztool platform` foo.o
 </code>
 </list>
+<section id=section.oztool-env proglang=sh>
+  <title/Windows Environment Variables/
+  <p>Under Windows, <code/oztool/ supports the use of several compilers
+    as described in <ptr.extern to="ozdoc:foreign" key="chapter.windll">.
+    Furthermore, when using the GNU compiler suite, the exact name of the
+    compilers and linker to invoke can be set by the environment variables
+    shown in the following table with their default values.
+  <table class=dyptic>
+    <tr/<th/Environment Variable/<th/Default Value//
+    <tr/<td/<Var type=env/OZTOOL_CC//<td/<<gcc-2 -mno-cygwin>>//
+    <tr/<td/<Var type=env/OZTOOL_CXX//<td/<<g++-2 -mno-cygwin>>//
+    <tr/<td/<Var type=env/OZTOOL_LD//<td/<<g++-2 -mno-cygwin>>//
+  </table>
+  <p>These values correspond to the compilers used to build Mozart.
+    The above binaries are provided by the Cygwin <<gcc2>> package.  Note
+    that using a different compiler can lead to problems, as described in
+    <ptr.extern to="ozdoc:foreign" key="section.compilerproblems">.
 </chapter>
 <!--
 Local Variables:

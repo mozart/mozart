@@ -26,7 +26,7 @@ import
    Gdbm at 'x-oz://contrib/gdbm'
    File(read: ReadFile write: WriteFile)
 export
-   'class': LaTeXToGIFClass
+   'class': LaTeXToPNGClass
 prepare
 
    local
@@ -45,9 +45,9 @@ prepare
    end
 	 
 define
-   LATEX2GIF = 'latex2gif'
+   LATEX2PNG = 'latex2png'
 
-   class LaTeXToGIFClass
+   class LaTeXToPNGClass
       attr DB: unit Dict: unit Keys: unit DirName: unit N: unit
       meth init(Dir DBName)
 	 DB <- case DBName of unit then unit
@@ -64,12 +64,12 @@ define
 	 N <- 0
       end
       meth convertPicture(VS ?OutFileName)
-	 LaTeXToGIFClass, Enter(VS ?OutFileName)
+	 LaTeXToPNGClass, Enter(VS ?OutFileName)
       end
       meth convertMath(VS Display ?OutFileName)
 	 TVS = {TrimVS VS}
       in
-	 LaTeXToGIFClass, Enter(case Display of inline then
+	 LaTeXToPNGClass, Enter(case Display of inline then
 				   '$'#TVS#'$\n'
 				[] display then
 				   '$$\n'#TVS#'\n$$\n'
@@ -79,7 +79,7 @@ define
 	 A = {VirtualString.toAtom VS}
 	 case {Dictionary.condGet @Dict A unit} of unit then
 	    N <- @N + 1
-	    OutFileName = 'latex'#@N#'.gif'
+	    OutFileName = 'latex'#@N#'.png'
 	    {Dictionary.put @Dict A OutFileName}
 	    case @DB == unit orelse {Gdbm.condGet @DB A true} of true then
 	       Keys <- A#@N|@Keys
@@ -93,7 +93,7 @@ define
       meth process(Packages Inputs Reporter)
 	 case @Keys of nil then skip
 	 else FileName File Outs in
-	    {Reporter startSubPhase('converting LaTeX sections to GIF')}
+	    {Reporter startSubPhase('converting LaTeX sections to PNG')}
 	    FileName = {OS.tmpnam}
 	    File = {New Open.file init(name: FileName
 				       flags: [write create truncate])}
@@ -125,10 +125,10 @@ define
 	    {File write(vs: '\\end{document}\n')}
 	    {File close()}
 	    try
-	       case {OS.system LATEX2GIF#' '#FileName#' '#@DirName#Outs}
+	       case {OS.system LATEX2PNG#' '#FileName#' '#@DirName#Outs}
 	       of 0 then skip
 	       elseof I then
-		  {Exception.raiseError ozDoc(latexToGif I)}
+		  {Exception.raiseError ozDoc(latexToPng I)}
 	       end
 	       if @DB \= unit then
 		  {ForAll @Keys

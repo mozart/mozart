@@ -29,7 +29,7 @@
     <List class=linkmenu>
       <Item><Ref.Extern to="applets/Lift.oza"/Start Applet/
       <Item>
-	<Ref.extern to="ozdoc:install" key="applets"/How to enable Applets/
+	<Ref.extern to="ozdoc:install" key="appendix.applets"/How to enable Applets/
     </List>
   </P>
 
