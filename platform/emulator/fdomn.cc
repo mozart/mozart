@@ -186,10 +186,6 @@ void BitArray::printLong(ostream &ofile, int offset) const
 //-----------------------------------------------------------------------------
 //                         class FiniteDomain
 
-FDState FiniteDomain::leftDom;
-FDState FiniteDomain::rightDom;
-
-
 void FiniteDomain::print(ostream &ofile, int offset) const
 {
   if (isRange()) {
