@@ -207,8 +207,6 @@ OZ_BI_define(BIinitIPConnection,1,1)
 	    );
 } OZ_BI_end
 
-#ifdef MISC_BUILTINS
-
 //
 // Return the list of broadcast addresses available (may be empty if
 // none were found)
@@ -307,8 +305,6 @@ OZ_BI_define(BIsockoptBroadcast,1,0)
 #endif
   return PROCEED;
 } OZ_BI_end
-
-#endif
 
 /*
  * The builtin table
