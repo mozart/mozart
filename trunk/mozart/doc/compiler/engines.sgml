@@ -96,6 +96,9 @@
 	  Restore all switch settings from the topmost element of the
 	  internal switch state stack, provided it is not empty, else do
 	  nothing.
+      </List>
+    <Para class=apropos><Title/Compiler Options/
+      <List>
 	<Entry><<setMaxNumberOfErrors(?+{I})>>
 	<Item>
 	  Set the maximal number of errors to report for any one compilation
@@ -105,6 +108,16 @@
 	<Item>
 	  Return the maximal number of errors to report for any one
 	  compilation before aborting it.
+	<Entry><<setBaseURL(?+{VU})>>
+	<Item>
+	  Set the base URL relative to which the <<require>> clause of
+	  computed functors is resolved.  A value of <<unit>> means to
+	  resolve the imports relative to the location of the file in
+	  which the <<functor>> keyword appeared.
+	<Entry><<getBaseURL(??{AU})>>
+	<Item>
+	  Return the base URL relative to which the <<require>> clause of
+	  computed functors is resolved.
       </List>
     <Para class=apropos><Title/The Environment/
       <List>

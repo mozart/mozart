@@ -51,6 +51,10 @@
 	<Item>
 	  The maximum number of errors after which to abort compilation
 	  has been set to&nbsp;?_{I}.
+	<Entry><<baseURL(?_{AU})>>
+	<Item>
+	  The base URL relative to which the <<require>> clause of computed
+	  functors is resolved has been set to ?_{AU}.
 	<Entry><<env(?_{Env})>>
 	<Item>
 	  The environment has been set to ?_{Env}.
