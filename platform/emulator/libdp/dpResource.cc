@@ -97,7 +97,7 @@ void ResourceHashTable::gcResourceTable()
 
       //
       GenCast(aux->getEntry(), GenHashEntry*, oti, int);
-      oe = OT->getEntry(oti);
+      oe = OT->index2entry(oti);
 
       //
       if (oe && oe->isRef()) {
