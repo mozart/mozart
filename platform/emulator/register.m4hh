@@ -162,18 +162,26 @@ CaseOneRegGImpossible(CREATEVARIABLEMOVE,
 #undef MakeVar
 
   
-  CaseTwoRegs(UNIFY,
-	       ``{
-		 if ( !e->fastUnify(Reg1(getRegArg(PC+1)),
-				    Reg2(getRegArg(PC+2)),
-				    NOFLATGUARD)) {
-		   SHALLOWFAIL;
-		   /* NOTE: macro must be in *one* line */
-		   HF_FAIL(OZ_mkTupleC("instr",3,OZ_CToAtom("unify"),Reg1(getRegArg(PC+1)),Reg2(getRegArg(PC+2))));
-		 }
-	       }''
-	       DISPATCH(3);
-		 )
+  Case(UNIFYXX) ONREG2(Unify,X,X);
+  Case(UNIFYXY) ONREG2(Unify,X,Y);
+  Case(UNIFYXG) ONREG2(Unify,X,G);
+  Case(UNIFYYX) ONREG2(Unify,Y,X);
+  Case(UNIFYYY) ONREG2(Unify,Y,Y);
+  Case(UNIFYYG) ONREG2(Unify,Y,G);
+  Case(UNIFYGX) ONREG2(Unify,G,X);
+  Case(UNIFYGY) ONREG2(Unify,G,Y);
+  Case(UNIFYGG) ONREG2(Unify,G,G);
+  {
+    Unify:
+      TaggedRef A = RegAccess(HelpReg1,getRegArg(PC+1));
+      TaggedRef B = RegAccess(HelpReg2,getRegArg(PC+2));
+      if ( !e->fastUnify(A,B,NOFLATGUARD) ) {
+	SHALLOWFAIL;
+	/* NOTE: macro must be in *one* line */
+	HF_FAIL(OZ_mkTupleC("instr",3,OZ_CToAtom("unify"),A,B));
+      }
+      DISPATCH(3);
+  }
   
   
   Case(PUTRECORDG) IMPOSSIBLE("PUTRECORDG");
