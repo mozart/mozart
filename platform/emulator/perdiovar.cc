@@ -16,50 +16,81 @@
 #include "am.hh"
 #include "genvar.hh"
 
-Bool PerdioVar::unifyPerdioVar(TaggedRef * vptr, TaggedRef * tptr, Bool prop)
+
+// bind and inform sites
+Bool PerdioVar::bindPerdioVar(TaggedRef *lPtr,TaggedRef v,PerdioVar *rVar=0)
 {
-  warning("unifyPerdioVar: only does local unification: no protocol yet");
+  warning("bindPerdioVar: only does local unification: no protocol yet");
 
-  TaggedRef t = *tptr;
-  TaggedRef v = *vptr;
+  if (rVar) relinkSuspListTo(rVar);
+  doBind(lPtr, v);
+  return TRUE;
+}
 
-  Assert(! isNotCVar(t));
+Bool PerdioVar::surrender(TaggedRef *lPtr,TaggedRef v,PerdioVar *rVar)
+{
+  warning("surrender: only does local unification: no protocol yet");
+  return TRUE;
+}
+
+
+Bool PerdioVar::unifyPerdioVar(TaggedRef * lPtr, TaggedRef * rPtr, Bool prop)
+{
+  TaggedRef rVal = *rPtr;
+  TaggedRef lVal = *lPtr;
+
+  Assert(!isNotCVar(rVal));
   
-  if (isCVar(t)) {
-    if (tagged2CVar(t)->getType() != getType()) {
+  PerdioVar *lVar = this;
+  Assert(!lVar->isBound());
+
+  if (isCVar(rVal)) {
+    if (tagged2CVar(rVal)->getType() != getType()) {
       warning("PerdioVAR = other CVAR: not implemented");
       return FALSE;
     }
     if (prop) {
-      am.checkSuspensionList(v,pc_std_unif);
-      am.checkSuspensionList(t,pc_std_unif);
+      am.checkSuspensionList(lVal,pc_std_unif);
+      am.checkSuspensionList(rVal,pc_std_unif);
     }
 
-    PerdioVar *term = tagged2PerdioVar(t);
+    PerdioVar *rVar = tagged2PerdioVar(rVal);
+    Assert(!rVar->isBound());
 
-    Bool v_is_local = (prop && am.isLocalSVar(this));
-    Bool t_is_local = (prop && am.isLocalSVar(term));
-    switch (v_is_local + 2 * t_is_local) {
+    Bool l_is_local = (prop && am.isLocalSVar(lVar));
+    Bool r_is_local = (prop && am.isLocalSVar(rVar));
+    switch (l_is_local + 2 * r_is_local) {
     case TRUE + 2 * TRUE: // v and t are local
-      if (heapNewer(vptr, tptr)) { // bind v to t
-	relinkSuspListTo(term);
-	doBind(vptr, makeTaggedRef(tptr));
-      } else { // bind t to v
-	term->relinkSuspListTo(this);
-	doBind(tptr, makeTaggedRef(vptr));
+      {
+	int cmp = lVar->compare(rVar);
+	Assert(cmp!=0);
+	if (cmp<0) {
+	  if (lVar->isManager()) {
+	    return lVar->bindPerdioVar(lPtr,makeTaggedRef(rPtr),rVar);
+	  } else {
+	    return lVar->surrender(lPtr,makeTaggedRef(rPtr),rVar);
+	  }
+	  return TRUE;
+	}
+	Assert(cmp>0);
+	if (rVar->isManager()) {
+	  return rVar->bindPerdioVar(rPtr,makeTaggedRef(lPtr),lVar);
+	} else {
+	  return rVar->surrender(rPtr,makeTaggedRef(lPtr),lVar);
+	}
       }
       return TRUE;
       
-    case TRUE + 2 * FALSE: // v is local and t is global
-      am.doBindAndTrail(t, tptr,makeTaggedRef(vptr));
+    case TRUE + 2 * FALSE: // r is local and l is global
+      am.doBindAndTrail(rVal, rPtr,makeTaggedRef(lPtr));
       return TRUE;
       
-    case FALSE + 2 * TRUE: // v is global and t is local
-      am.doBindAndTrail(v, vptr,makeTaggedRef(tptr));
+    case FALSE + 2 * TRUE: // r is global and l is local
+      am.doBindAndTrail(lVal, lPtr,makeTaggedRef(rPtr));
       return TRUE;
 
-    case FALSE + 2 * FALSE: // v and t is global
-      am.doBindAndTrail(v, vptr,makeTaggedRef(tptr));
+    case FALSE + 2 * FALSE: // r and l are global
+      am.doBindAndTrail(lVal, lPtr,makeTaggedRef(rPtr));
       return TRUE;
       
     default:
@@ -68,13 +99,12 @@ Bool PerdioVar::unifyPerdioVar(TaggedRef * vptr, TaggedRef * tptr, Bool prop)
       break;
     }
   } else {
-    Assert(!isAnyVar(t));
+    Assert(!isAnyVar(rVal));
     if (prop && am.isLocalSVar(this)) {
-      doBind(vptr,t);
-      return TRUE;
+      return bindPerdioVar(lPtr,rVal);
     } else {
-      if (prop) am.checkSuspensionList(v,pc_std_unif);
-      am.doBindAndTrail(v, vptr,t);
+      if (prop) am.checkSuspensionList(lVal,pc_std_unif);
+      am.doBindAndTrail(lVal, lPtr,rVal);
       return TRUE;
     }
   }

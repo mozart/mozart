@@ -58,19 +58,16 @@ Bool TaskStack::findCatch()
   while (!isEmpty()) {
     PopFrame(tos,PC,Y,G);
 
-    if (PC==C_LOCK_Ptr) { 
-      OzLock *lck = (OzLock *) Y;
-      lck->unlock();
-      break;
-    }
     if (PC==C_CATCH_Ptr) { 
       return TRUE;
     }
 
-    if (PC==C_SET_SELF_Ptr) { 
+    if (PC==C_LOCK_Ptr) { 
+      OzLock *lck = (OzLock *) Y;
+      lck->unlock();
+    } else if (PC==C_SET_SELF_Ptr) { 
       Object *newSelf = (Object*)Y;
       am.setSelf(newSelf);
-      break;
     }
   }
 
