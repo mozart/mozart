@@ -17,7 +17,9 @@
 #endif
 
 #include "oz.h"
-#include "builtins.hh"
+
+#include "am.hh"
+
 #include "fdhook.hh"
 #include "genvar.hh"
 #include "fdprofil.hh"

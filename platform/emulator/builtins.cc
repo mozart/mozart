@@ -96,7 +96,7 @@ extern void BIinitSpecial(void);
 extern void BIinitSystem(void);
 extern void BIinitFD(void);
 extern void BIinitMeta(void);
-
+extern void BIinitObjects();
 
 #ifdef LINKUNIX
 extern void MyinitUnix();
@@ -105,16 +105,18 @@ extern void MyinitUnix();
 
 BuiltinTabEntry *BIinit()
 {
-  BuiltinTabEntry *init = BIadd("builtin",3,BIbuiltin);
+  BuiltinTabEntry *bi = BIadd("builtin",3,BIbuiltin);
 
-  if (!init)
-    return init;
+  if (!bi)
+    return bi;
 
   BIinitCore();
   BIinitSpecial();
   BIinitSystem();
 
   BIinitAssembler();
+
+  BIinitObjects();
 
   BIinitFD();
   BIinitMeta();
@@ -125,5 +127,5 @@ BuiltinTabEntry *BIinit()
 
   BIadd("unixIsLinked",0,BIunixIsLinked);
 
-  return init;
+  return bi;
 }

@@ -17,10 +17,6 @@
 #pragma interface
 #endif
 
-#include "constter.hh"
-#include "suspensi.hh"
-#include "dllstack.hh"
-
 // ------------------------------------------------------------------------
 //  all 'proper' actors; 
 
@@ -143,79 +139,9 @@ public:
 };
 
 // ------------------------------------------------------------------------
-//  'solve' actors; 
-
-class SolveActor : public Actor {
-public:
-  OZPRINT;
-  OZPRINTLONG;
-
-  static SolveActor *Cast(Actor *a)
-  {
-    Assert(a->isSolve());
-    return ((SolveActor *) a);
-  }
-  static void Init();
-//  This is 'de facto' the "solve actor";
-//  If BIsolve is applied, CFuncCont is generated containing request to call
-// this procedure (type OZ_CFun!);
-  static OZ_Bool Waker (int n, TaggedRef *args);
-//  Very special thing: 
-// The procedure that converts the DLLStackEntry to the Actor* (in our case),
-// collects it and returns the DLLStackEntry again (for gc);
-  static DLLStackEntry StackEntryGC (DLLStackEntry entry);
-private:
-  Board *solveBoard;
-  DLLStack orActors;
-  TaggedRef solveVar;
-  TaggedRef result;
-  Board *boardToInstall;
-  SuspList *suspList;
-  int threads;
-public:
-  SolveActor (Board *bb, int prio, TaggedRef resTR);
-  void setSolveBoard(Board *bb);
-  ~SolveActor ();
-
-  void gcRecurse();
-
-  void incThreads (int n=1) {
-    Assert(threads+n >= 0);
-    threads+=n;
-  }
-  void decThreads () { incThreads(-1); }
-  Bool isStable ();  // so simple!
-  void setUnStable() { threads=-1; }
-  void addSuspension (Suspension *susp); 
-  void addSuspension (SuspList *l);
-  Bool areNoExtSuspensions ();
-  TaggedRef* getSolveVarRef () { return (&solveVar); }
-  TaggedRef getSolveVar () { return (solveVar); }
-  TaggedRef getResult () { return (makeTaggedRef (&result)); }
-  void pushWaitActor (WaitActor *a);
-  void pushWaitActorsStackOf (SolveActor *sa);
-  WaitActor *getDisWaitActor ();
-  void unsetBoard () { board = (Board *) NULL; }
-  void setBoard (Board *bb) { board = bb; }
-  void setBoardToInstall (Board *bb) { boardToInstall = bb; }
-  Board* getBoardToInstall () { return (boardToInstall); }
-  TaggedRef genSolved ();
-  TaggedRef genStuck ();
-  TaggedRef genEnumed (Board *newSolveBB);
-  TaggedRef genEnumedFail ();
-  TaggedRef genFailed ();
-  void printDebugKP();
-
-private:
-  WaitActor* getTopWaitActor ();
-  WaitActor* getNextWaitActor ();
-  void unlinkLastWaitActor (); 
-  Bool checkExtSuspList ();
-};
-
-// ------------------------------------------------------------------------
 
 #ifndef OUTLINE
+#include "board.hh"
 #include "actor.icc"
 #endif
 

@@ -15,23 +15,21 @@
 #endif
 
 
+#include "tagged.hh"
+#include "constter.hh"
+#include "board.hh"
+
+#include "suspensi.hh"
+#include "variable.hh"
 #include "genvar.hh"
-#include "am.hh"
 
 GenCVariable::GenCVariable(TypeOfGenCVariable t, Board * n) :
-  SVariable(n == NULL ? am.currentBoard : n)
+SVariable(n == NULL ? am.currentBoard : n)
 {
+  Assert(n!=0);
   setType(t);
 }
 
-
-Bool GenCVariable::isLocalVariable(void)
-{
-  Board * home_board = getHome1();
-
-  return (home_board == am.currentBoard ||
-	  home_board->getBoardDeref() == am.currentBoard);
-}
 
 void GenCVariable::propagate(TaggedRef var, SuspList * &sl, TaggedRef term,
 			     PropCaller unifyVars)

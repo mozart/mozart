@@ -16,9 +16,6 @@
 #pragma interface
 #endif
 
-#include "term.hh"
-#include "bignum.hh"
-
 class HTEntry {
  protected:
   ProgramCounter label;

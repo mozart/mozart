@@ -2,10 +2,11 @@
 #if defined(__GNUC__)
 #pragma implementation "ofgenvar.hh"
 #endif
-  
+
+#include "am.hh"
+
 #include "genvar.hh"
 #include "ofgenvar.hh"
-#include "bignum.hh"
 
 //-------------------------------------------------------------------------
 //                               for class DynamicTable
@@ -268,11 +269,11 @@ Bool GenOFSVariable::unifyOFS(TaggedRef *vPtr, TaggedRef var,
         // At this point, unification is successful
 
         // Get local/global flag:
-        Bool vLoc=(prop && isLocalVariable());
+        Bool vLoc=(prop && am.isLocalSVar(this));
 
         // Bind OFSVar to the Literal:
         if (vLoc) doBind(vPtr, TaggedRef(term));
-        else doBindAndTrail(var, vPtr, TaggedRef(term));
+        else am.doBindAndTrail(var, vPtr, TaggedRef(term));
 
         // Update the OFS suspensions:
         if (vLoc) am.addFeatOFSSuspensionList(var,suspList,makeTaggedNULL(),TRUE);
@@ -310,7 +311,7 @@ Bool GenOFSVariable::unifyOFS(TaggedRef *vPtr, TaggedRef var,
 	// if (!isLiteral(tmp) && !isAnyVar(tmp)) return FALSE;
 
         // Get local/global flag:
-        Bool vLoc=(prop && isLocalVariable());
+        Bool vLoc=(prop && am.isLocalSVar(this));
   
         // Check that all features of the OFSVar exist in the SRecord:
         // (During the check, calculate the list of feature pairs that correspond.)
@@ -333,7 +334,7 @@ Bool GenOFSVariable::unifyOFS(TaggedRef *vPtr, TaggedRef var,
 
         // Bind OFSVar to the SRecord:
         if (vLoc) doBind(vPtr, bindInRecordCaseHack);
-        else doBindAndTrail(var, vPtr, bindInRecordCaseHack);
+        else am.doBindAndTrail(var, vPtr, bindInRecordCaseHack);
 
         // Unify corresponding feature values:
         PairList* p=pairs;
@@ -385,8 +386,8 @@ Bool GenOFSVariable::unifyOFS(TaggedRef *vPtr, TaggedRef var,
 	if (!isLiteral(tmp) && !isAnyVar(tmp)) return FALSE;
   
         // Get local/global flags:
-        Bool vLoc=(prop && isLocalVariable());
-        Bool tLoc=(prop && termVar->isLocalVariable());
+        Bool vLoc=(prop && am.isLocalSVar(this));
+        Bool tLoc=(prop && am.isLocalSVar(termVar));
   
         GenOFSVariable* newVar=NULL;
         GenOFSVariable* otherVar=NULL;
@@ -478,22 +479,22 @@ Bool GenOFSVariable::unifyOFS(TaggedRef *vPtr, TaggedRef var,
         } else if (vLoc && !tLoc) {
             // Global term is constrained if result has more features than term:
             if (mergeWidth>termWidth)
-                doBindAndTrailAndIP(term, tPtr, makeTaggedRef(vPtr),
+                am.doBindAndTrailAndIP(term, tPtr, makeTaggedRef(vPtr),
 				    newVar, otherVar,prop);
             else
                 doBind(vPtr, makeTaggedRef(tPtr));
         } else if (!vLoc && tLoc) {
             // Global var is constrained if result has more features than var:
 	    if (mergeWidth>varWidth)
-                doBindAndTrailAndIP(var, vPtr, makeTaggedRef(tPtr),
+                am.doBindAndTrailAndIP(var, vPtr, makeTaggedRef(tPtr),
 				    newVar, otherVar,prop);
 	    else
 		doBind(tPtr, makeTaggedRef(vPtr));
         } else if (!vLoc && !tLoc) {
             // bind to new term with trailing:
-            doBindAndTrailAndIP(var, vPtr, makeTaggedRef(nvRefPtr),
+            am.doBindAndTrailAndIP(var, vPtr, makeTaggedRef(nvRefPtr),
 				newVar, this, prop);
-            doBindAndTrailAndIP(term, tPtr, makeTaggedRef(nvRefPtr),
+            am.doBindAndTrailAndIP(term, tPtr, makeTaggedRef(nvRefPtr),
 				newVar, termVar, prop);
         } else Assert(FALSE);
 
@@ -622,4 +623,39 @@ GenOFSVariable* tagged2GenOFSVar(TaggedRef term)
         error("ofs variable expected");
 #endif
     return (GenOFSVariable*) tagged2CVar(term);
+}
+
+/*
+ * inplace quicksort using atomcmp
+ */
+
+// Swap TaggedRef array elements:
+inline void inplace_swap(TaggedRef* a, TaggedRef* b) {
+  register TaggedRef aux = *a;
+  *a = *b;
+  *b = aux;
+}
+
+// In-place sort of an array of TaggedRef:
+void inplace_quicksort(TaggedRef* first, TaggedRef* last) {
+  register TaggedRef* i;
+  register TaggedRef* j;
+
+  if (first >= last)
+    return;
+  for (i = first, j = last; ; j--) {
+    while (i != j && atomcmp(*i, *j) <= 0)
+      j--;
+    if (i == j)
+      break;
+    inplace_swap(i, j);
+    do
+      i++;
+    while (i != j && atomcmp(*i, *j) <= 0);
+    if (i == j)
+      break;
+    inplace_swap(i, j);
+  } // for
+  inplace_quicksort(first, i-1);
+  inplace_quicksort(i+1, last);
 }

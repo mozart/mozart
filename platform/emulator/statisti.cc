@@ -15,12 +15,8 @@
 
 #include <stdio.h>
 
-#include "statisti.hh"
 #include "am.hh"
-#include "actor.hh"
 #include "fdomn.hh"
-#include "board.hh"
-#include "builtins.hh"
 
 
 #ifndef OSF1_ALPHA
@@ -76,8 +72,8 @@ void Statistics::print(FILE *fd)
   printMem(fd, ".\n    Hashtable for built-ins is ", builtinTab.memRequired());
   
   fprintf(fd, ".\n\n  Process resources consumed:");
-  printTime(fd,"\n    User time is ", usertime());
-  printTime(fd,".\n    System time is ", systemtime());
+  printTime(fd,"\n    User time is ", osUserTime());
+  printTime(fd,".\n    System time is ", osSystemTime());
   printMem(fd,".\n    Size is ", ToInt32(sbrk(0))-mallocBase);
   fprintf(fd, ".\n\n");
 
@@ -115,7 +111,7 @@ void Statistics::print(FILE *fd)
 Statistics::Statistics()
 {
   reset();
-  timeUtime.total = usertime();
+  timeUtime.total = osUserTime();
   timeUtime.idle();
 }
 
@@ -159,14 +155,14 @@ static void recSetArg(OZ_Term record, char *feat, unsigned int val)
 
 void Statistics::getStatistics(TaggedRef rec, TaggedRef enu)
 {
-  unsigned int timeNow = usertime();
+  unsigned int timeNow = osUserTime();
 
   recSetArg(rec,"r",timeNow-(timeForGC.total+timeForLoading.total+timeForCopy.total));
   recSetArg(rec,"g",timeForGC.total);
   recSetArg(rec,"l",timeForLoading.total);
   recSetArg(rec,"c",timeForCopy.total);
   recSetArg(rec,"h",heapUsed.total+getUsedMemory());
-  recSetArg(rec,"s",systemtime());
+  recSetArg(rec,"s",osSystemTime());
   recSetArg(rec,"u",timeNow);
 
   recSetArg(enu,"d",solveDistributed.total);
@@ -177,7 +173,7 @@ void Statistics::getStatistics(TaggedRef rec, TaggedRef enu)
 
 void Statistics::printIdle(FILE *fd)
 {
-  unsigned int timeNow = usertime();
+  unsigned int timeNow = osUserTime();
   timeUtime.incf(timeNow-timeUtime.sinceIdle);
   int totalHeap = getUsedMemory()+heapUsed.total;
   
@@ -207,14 +203,14 @@ void Statistics::initGcMsg(int level)
     fflush(stdout);
   }
 
-  gcStarttime = usertime();
+  gcStarttime = osUserTime();
   gcStartmem  = getUsedMemory();
   heapUsed.incf(gcStartmem);
 }
 
 void Statistics::printGcMsg(int level)
 {
-  int gc_utime = usertime()-gcStarttime;
+  int gc_utime = osUserTime()-gcStarttime;
   int gc_mem   = gcStartmem-getUsedMemory();
  
   timeForGC.incf(gc_utime);

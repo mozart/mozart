@@ -13,8 +13,6 @@
 #define __DEBUGH
 
 
-#include "term.hh"
-
 class OzDebug {
 public:
   static unsigned long goalCounter;
