@@ -402,11 +402,12 @@ PredicateRef	: UNIT
 		  }
 		;
 
-PredId		: PID '(' Atom INTEGER Atom INTEGER Bool ')'
+PredId		: PID '(' Atom INTEGER Atom INTEGER Bool Bool ')'
 		  {
 		    SRecordArity arity = mkTupleWidth(OZ_intToC($4));
-		    PrTabEntry *pte =
-		      new PrTabEntry($3,arity,$5,OZ_intToC($6),OZ_isTrue($7));
+		    int flags = (OZ_isTrue($7) ? PR_COPYONCE : 0)
+                              + (OZ_isTrue($8) ? PR_NATIVE : 0);
+		    PrTabEntry *pte = new PrTabEntry($3,arity,$5,OZ_intToC($6),flags);
 		    codeArea->writeAddress(pte);
 		  }
 		;

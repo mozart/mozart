@@ -6092,13 +6092,14 @@ Object *newObject(SRecord *feat, SRecord *st, ObjectClass *cla, Board *b)
 }
 
 
-OZ_BI_define(BImakeClass,5,1)
+OZ_BI_define(BImakeClass,6,1)
 {
   OZ_Term fastmeth   = OZ_in(0); { DEREF(fastmeth,_1,_2); }
   OZ_Term features   = OZ_in(1); { DEREF(features,_1,_2); }
   OZ_Term ufeatures  = OZ_in(2); { DEREF(ufeatures,_1,_2); }
   OZ_Term defmethods = OZ_in(3); { DEREF(defmethods,_1,_2); }
   OZ_Term locking    = OZ_in(4); { DEREF(locking,_1,_2); }
+  OZ_Term native     = OZ_in(5); { DEREF(native,_1,_2); }
 
   if (!oz_isDictionary(fastmeth))   { oz_typeError(0,"dictionary"); }
   if (!oz_isRecord(features))       { oz_typeError(1,"record"); }
@@ -6112,6 +6113,7 @@ OZ_BI_define(BImakeClass,5,1)
 				    uf,
 				    tagged2Dictionary(defmethods),
 				    literalEq(locking,NameTrue),
+				    literalEq(native,NameTrue),
 				    am.currentBoard());
 
   OZ_RETURN(makeTaggedConst(cl));

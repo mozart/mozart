@@ -1124,7 +1124,7 @@ $builtins = {
 			     native => false},
 
     'makeClass'		=> { in  => ['+dictionary','+record','+record',
-				     '+dictionary','+bool'],
+				     '+dictionary','+bool','+bool'],
 			     out => ['+class'],
 			     BI  => BImakeClass,
 			     native => false},
@@ -2653,8 +2653,13 @@ $builtins = {
 			     BI  => BIstorePredicateRef,
 			     native => true},
 
+    'predIdFlags'	=> { in  => [],
+			     out => ['+int','+int'],
+			     BI  => BIpredIdFlags,
+			     native => true},
+
     'storePredId'	=> { in  => ['+int','+atom','+value','+atom',
-				     '+int','+bool'],
+				     '+int','+int'],
 			     out => [],
 			     BI  => BIstorePredId,
 			     native => true},
