@@ -530,7 +530,7 @@ end
 
 Srv={NewStat HelloWorld hw(_)} % Requires an initial method
 >>>
-The client calls the server
+<P> The client calls the server
 by doing <<{Srv hw(X)}>>.
 The class <<HelloWorld>> can be replaced by any class.
 The only difference between this and creating
@@ -555,7 +555,7 @@ end
 
 C={NewStat ComputeServer init}
 >>>
-The compute server can be made available through a URL
+<P> The compute server can be made available through a URL
 as shown before.
 Here's how a client uses the compute server:
 <<<
@@ -576,7 +576,7 @@ local F in
    {Browse F}
 end
 >>>
-Any Oz expression <EM>E</EM> can be executed
+<P> Any Oz expression <EM>E</EM> can be executed
 remotely by prefixing it by
 <<{C run(proc {$}>> and suffixing it by <<end)}>>.
 Because Mozart is fully network-transparent,
@@ -586,6 +586,8 @@ in the language: for example,
 inheriting from client classes.
 The only expressions not allowed are
 those using client resources.
+
+<SUBSECTION><TITLE>A dynamically-extensible server</TITLE>
 
 
 </CHAPTER>
