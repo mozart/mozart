@@ -52,7 +52,7 @@ Makefile: Makefile.in config.status
 	./config.status
 
 install:: all $(SHDOCDIR) $(DOCDIR) $(LIBFILES) $(DOCDIR)/.htaccess \
-	$(DOCDIR)/idx.html $(DOCDIR)/idx
+	$(DOCDIR)/idx/index.html $(DOCDIR)/idx
 
 $(SHDOCDIR) $(DOCDIR):
 	$(INSTALL_DIR) $@
