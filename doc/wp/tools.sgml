@@ -307,7 +307,7 @@ A={New Tk.menuentry.command tkInit(parent:B.test.menu
       For example,
 <index class=tails/<<TkTools>><and><<images>>/
 <chunk class=anonymous><title/TkTools.images/
-U='http://www.mozart-oz.org/home/doc/wp/'
+U='http://www.mozart-oz.org/home-1.1.0/doc/wp/'
 I={TkTools.images [U#'wp.gif' 
                    U#'queen.xbm' 
                    U#'truck-left.ppm']}
