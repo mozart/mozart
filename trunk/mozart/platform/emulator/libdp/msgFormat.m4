@@ -31,6 +31,8 @@ message(M_ASK_FOR_CREDIT,3,Index,Site)
 message(M_OWNER_CREDIT,3,Index,Credit)
 message(M_OWNER_SEC_CREDIT,3,Site,Index,Credit) 
 message(M_BORROW_CREDIT,3,Site,Index,Credit)
+message(M_OWNER_FW,3,Index,Index2,Index3)
+message(M_BORROW_FW,3,Site,Index,Index2,Index3)
 
 message(M_REGISTER,3,Index,Site)
 message(M_DEREGISTER,3,Index,Site)
