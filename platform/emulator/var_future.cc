@@ -68,32 +68,36 @@ Bool Future::kick(TaggedRef *ptr)
     Assert(oz_isTuple(function) && literalEq(OZ_label(function),AtomDot));
     OZ_Term fut=oz_arg(function,0);
     OZ_Term fea=oz_arg(function,1);
-    OZ_Term aux=0;
-    OZ_Term save=am.getSuspendVarList();
-    OZ_Return ret=dotInline(fut,fea,aux);
-    if (ret == PROCEED) {
-      oz_bindFuture(ptr,aux);
-      return TRUE;
-    } else {
-      switch (ret) {
-      case SUSPEND:
-        am.emptySuspendVarList();
-        am.putSuspendVarList(save);
-        break;
-      case BI_REPLACEBICALL:
-        am.emptyPreparedCalls();
-        break;
-      default:
-        break;
+    Board *bb = GETBOARD(this);
+    if (oz_currentBoard()==bb) {
+      OZ_Term aux=0;
+      OZ_Term save=am.getSuspendVarList();
+      OZ_Return ret=dotInline(fut,fea,aux);
+      if (ret == PROCEED) {
+        oz_bindFuture(ptr,aux);
+        return TRUE;
+      } else {
+        switch (ret) {
+        case SUSPEND:
+          am.emptySuspendVarList();
+          am.putSuspendVarList(save);
+          break;
+        case BI_REPLACEBICALL:
+          am.emptyPreparedCalls();
+          break;
+        default:
+          break;
+        }
       }
-      Board *bb = GETBOARD(this);
-      OZ_Term newvar = oz_newVar(bb);
-      Thread *thr = oz_newThreadInject(bb);
-      OZ_Term BI_ByNeedAssign=
-        makeTaggedConst(new Builtin("byNeedAssign", 2, 0, BIbyNeedAssign, OK));
-      thr->pushCall(BI_ByNeedAssign,makeTaggedRef(ptr),newvar);
-      thr->pushCall(BI_dot,fut,fea,newvar);
+      // fall through
     }
+
+    OZ_Term newvar = oz_newVar(bb);
+    Thread *thr = oz_newThreadInject(bb);
+    OZ_Term BI_ByNeedAssign=
+      makeTaggedConst(new Builtin("byNeedAssign", 2, 0, BIbyNeedAssign, OK));
+    thr->pushCall(BI_ByNeedAssign,makeTaggedRef(ptr),newvar);
+    thr->pushCall(BI_dot,fut,fea,newvar);
   }
   function=0;
   return FALSE;
