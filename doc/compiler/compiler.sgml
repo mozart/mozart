@@ -43,6 +43,9 @@
     <Meta name="html.split" value="appendix.syntax">
     <Meta name="html.split.bib" value="">
 
+    <Meta name="link.bib" arg1="ozdoc:base" arg2="mozart-base">
+    <Meta name="link.bib" arg1="ozdoc:opi" arg2="mozart-opi">
+
     <Meta name=ozversion value="3.0">
     <Meta name=status value=draft>
     <Title/The Mozart Compiler/
