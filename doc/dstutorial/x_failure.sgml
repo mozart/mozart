@@ -163,7 +163,6 @@ The following failure modes are possible:
 <ITEM> Owner site unreachable and state pointer not present (<<tempBlock>>).
 <ITEM> State pointer lost (owner site up) (<<permBlock>>).
 <ITEM> State pointer unreachable (owner site up) (<<tempBlock>>).
-<ITEM>
 </LIST>
 <P> Objects and cells have one primitive operation,
 namely a state update.
