@@ -872,13 +872,13 @@ int pipeHandler(int, void *arg)
 class URLInfo {
 public:
   char *tmpfile;
-  const char *url;
+  char *url;
   int fd;
   URLInfo(const char *file, const char *u, int f):
     tmpfile(strdup(file)), url(strdup(u)), fd(f) {}
   ~URLInfo() {
     delete tmpfile;
-    delete (char*) url;
+    delete url;
   }
 };
 
