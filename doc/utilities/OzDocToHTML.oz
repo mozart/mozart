@@ -1296,22 +1296,22 @@ define
 			       {CondSelect A lastname unit}]
 		    fun {$ In X|Xr}
 		       case X of unit then In
-		       else In#X#case Xr of nil then "" else ' ' end
+		       else In#X#case Xr of nil then "" else '&nbsp;' end
 		       end
 		    end ""}
 	       H = if {HasFeature A www} then A.www
 		   elseif {HasFeature A email} then 'email:'#A.email
 		   else unit
 		   end
-	       case H of unit then PCDATA(N)
-	       else a(href: H PCDATA(N))
+	       case H of unit then VERBATIM(N)
+	       else a(href: H VERBATIM(N))
 	       end
 	    end
 	 in
 	    {FoldLTail Ar
 	     fun {$ In A|Ar}
 		SEQ([In
-		     PCDATA(case Ar of nil then ' and ' else ', ' end)
+		     VERBATIM(case Ar of nil then ' and&nbsp;' else ', ' end)
 		     {FormatAuthor A}])
 	     end {FormatAuthor A}}
 	 end
