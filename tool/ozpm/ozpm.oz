@@ -9,27 +9,29 @@ import Archive QTk
    Pickle
    Open
    Browser(browse:Browse)
+   FileUtils(expand:Expand)
    
 define
 
    PlatformWindows={Property.get 'platform.os'}==win32
    
-   OZPMINFO="~/.oz/ozpm/ozpm.info"
+   OZPMINFO={Expand "~/.oz/ozpm/ozpm.info"}
    OZPMMANIFEST='OZPM-MANIFEST'
-
+   OZPMPKG={Expand "~/.oz/bin/"}
+   
    fun{ExtractPath P}
       {Reverse
        {List.dropWhile
-	{Reverse P}
+	{Reverse {VirtualString.toString P}}
 	fun{$ C}
-	   (PlatformWindows andthen C=="\\") orelse
-	   (PlatformWindows==false andthen C=="/")
+	   C\=92 andthen C\=47
 	end}}
    end
 
    proc{CreatePath P}
       Stat
    in
+      {ShowInfo P}
       try
 	 Stat={OS.stat P}
       catch system(os(...) ...) then % inexistant directory
@@ -68,32 +70,88 @@ define
 
       meth init skip end
 
-      meth list()
-	 
-	 skip
+      meth list(L)
+	 L={List.map OzpmInfo fun{$ R} R.name end}
       end
 
-      meth install(Package switch:S<=none)
+      meth install(Package switch:Switch<=none result:Result<=_)
 	 A = {New Archive.'class' init(Package)}
-	 TLS={A lsla($)}
-	 Info
+	 PLS={A lsla($)}
+	 PInfo
       in
 	 local
 	    Tmp={OS.tmpnam}
 	 in
 	    {A extract(OZPMMANIFEST Tmp)}
-	    {Pickle.load Tmp Info}
+	    {Pickle.load Tmp PInfo}
 	    {OS.unlink Tmp}
 	 end
 	 %% now we have the information and file names of the package
-
-
-	 
-	 {A close}
+	 %%
+	 %% cross checks with the informations of the local installation is done here
+	 %%
+	 if {HasFeature Switch force} then %% always install, ignore all tests
+	    skip
+	 else
+	    _={List.takeWhile OzpmInfo
+	       fun{$ Entry}
+		  Name
+	       in
+		  if Entry.name==PInfo.name then %% Same package
+		     Result=alreadyinstalled(loc:Entry pkg:PInfo)
+		     false
+		  elseif
+		     {List.some Entry.filelist
+		      fun{$ F}
+			 {List.some PInfo.filelist fun{$ E}
+						     if E==F then Name=E true else false end
+						  end}
+		      end} then
+		     Result=nameclash(name:Name
+				      loc:Entry
+				      pkg:PInfo)
+		     false
+		  else
+		     true
+		  end
+	       end}
+	 end
+	 if {IsFree Result} then
+	    %%
+	    %% getting this far means the package can be installed
+	    %%
+	    {ForAll PInfo.filelist
+	     proc{$ File}
+		{A extract(File OZPMPKG#File)}
+	     end}
+	    %% update ozpminfo
+	    {Pickle.save {Record.adjoinAt PInfo lsla PLS}|
+	     {List.filter OzpmInfo
+	      fun{$ Entry}
+		 Entry.name\=PInfo.name %% forcing an install keeps only one version
+	      end}
+	     OZPMINFO}
+	    Result=success(pkg:PInfo)
+	    {A close}
+	 end
       end
       
-      meth info()
-	 skip
+      meth info(Name Info)
+	 L={List.dropWhile OzpmInfo
+	    fun{$ Entry}
+	       Entry.name\=Name
+	    end}
+      in
+	 Info=if L==nil then notFound else L.1 end
+      end
+
+      meth infoN(Name Info)
+	 L={List.dropWhile OzpmInfo
+	    fun{$ Entry}
+	       Entry.pkg\=Name
+	    end}
+      in
+	 Info=if L==nil then notFound else L.1 end
       end
 
       meth create(Package)
@@ -120,12 +178,12 @@ define
 	 Files={Filter file}
 	 Desc={Get description}
 	 Pkg={Get 'pkg-name'}
-	 Info=r(name:Name
-		version:Version
-		filelist:Files
-		description:Desc
-		pkg:Pkg
-		text:Package)
+	 Info=package(name:Name
+		      version:Version
+		      filelist:Files
+		      description:Desc
+		      pkg:Pkg
+		      text:Package)
       in
 	 {Pickle.save Info OZPMMANIFEST}
 	 {Archive.make Pkg OZPMMANIFEST|Package|Files}
@@ -134,9 +192,8 @@ define
 
       meth view(Package Info LS)
 	 A = {New Archive.'class' init(Package)}
-	 TLS={A lsla($)}
-	 InfoA
       in
+	 LS={A lsla($)}
 	 local
 	    Tmp={OS.tmpnam}
 	 in
@@ -144,12 +201,6 @@ define
 	    {Pickle.load Tmp Info}
 	    {OS.unlink Tmp}
 	 end
-	 InfoA={VirtualString.toAtom Info.text}
-	 LS={List.filter TLS
-	     fun{$ E}
-		E.path\=OZPMMANIFEST andthen
-		E.path\=InfoA
-	     end}
 	 {A close}
       end	 
 
@@ -162,7 +213,60 @@ define
    class InteractiveManager
 
       meth init()
-	 skip
+	 {Wait OzpmInfo}
+	 Look={QTk.newLook}
+	 
+	 MenuDesc=lr(glue:nwe
+		     menubutton(text:"File" glue:w
+				menu:menu(
+					command(text:"Install package...")
+					command(text:"Remove package...")
+					separator
+					command(text:"Exit"
+						action:toplevel#close)))
+		     menubutton(text:"Help" glue:e
+				menu:menu(command(text:"Help...")
+					  separator
+					  command(text:"About..."
+						  action:proc{$}
+							    {{QTk.build td(title:"About this application..."
+									   label(text:"Mozart Package Installer\nBy Denys Duchier and Donatien Grolaux\n(c) 2000\n" glue:nw)
+									   button(text:"Close" glue:s action:toplevel#close))} show(modal:true wait:true)}
+							 end))))
+	 
+	 ToolbarDesc=lr(glue:nwe relief:sunken borderwidth:1
+			tbbutton(text:"Install" glue:w)
+			tbbutton(text:"Remove" glue:w)
+			tdline(glue:nsw)
+			tbbutton(text:"Help" glue:w)
+			tbbutton(text:"Quit" glue:w))
+	 
+	 MainWindowDesc=lrrubberframe(glue:nswe
+				      td(label(text:"Installed package" glue:nw)
+					 listbox(glue:nswe tdscrollbar:true lrscrollbar:true))
+				      td(label(text:"Remaining packages" glue:nw)
+					 listbox(glue:nswe tdscrollbar:true lrscrollbar:true)))
+	 
+	 StatusBar
+	 
+	 StatusBarDesc=placeholder(glue:swe relief:sunken borderwidth:1
+				   handle:StatusBar
+				   label(glue:nswe text:"Mozart Package installer"))
+	 
+	 Desc=td(look:Look
+		 title:"Mozart Package Installer"
+		 action:toplevel#close
+		 MenuDesc
+		 ToolbarDesc
+		 MainWindowDesc
+		 StatusBarDesc)
+
+      in
+
+	 {{QTk.build Desc} show(wait:true)}
+	 
+	 
+	 {Application.exit 0}
       end
 
    end
@@ -170,18 +274,21 @@ define
    Args={Application.getArgs
 	 record('install'(single type:string char:&i)
 		'create'(single type:string char:&c)
-		'view'(single type:string char:&v )
-		'list'(char:&l alias:'action'#list)
+		'view'(single type:string char:&v)
+		'list'(single char:&l)
 		'info'(single type:string)
 		'check'(single type:string)
 		'interactive'(single)
 		'package'(single type:string)
+		'force'(single)
+		'remove'(single type:string)
+		'help'(single char:&h)
 	       )}
 
    Action
    
    local
-      Actions=[list create install info check interactive view]
+      Actions=[list create install info check interactive view remove help]
       fun{HasFeats L}
 	 {List.some L fun{$ F} {HasFeature Args F} end}
       end
@@ -232,7 +339,7 @@ define
 			  end
 		       end
 		       Ret
-		    end
+		    end}
 
    ArchiveManager={New ArchiveManagerClass init}
 
@@ -241,22 +348,12 @@ define
    end
 
    proc{Print VS}
-      {ShowInfo {VirtualString.toString VS}}
+      {ShowInfo if VS==nil then "" else {VirtualString.toString VS} end}
    end
 
-   fun{LAlign VS I}
-      VS#{List.map
-	  {List.make {Max I-{Length {VirtualString.toString VS}} 0}}
-	  fun{$ C} C=32 end}
-   end
-   
-   case Action
-   of list then % list all installed packages
-      skip
-   [] view then % view the contents of a package
-      I L
+   proc{PrintInfo I L}
+      A={VirtualString.toAtom I.text}
    in
-      {ArchiveManager view(Args.'view' I L)}
       {Print "Package name : "#I.name}
       {Print "version      : "#I.version}
       {Print "description  : "#I.description}
@@ -264,23 +361,96 @@ define
       {Print "Contains the following files :"}
       {ForAll L
        proc{$ R}
-	  {Print {LAlign R.size 20}#" "#R.path}
+	  if R.path\=OZPMMANIFEST andthen R.path\=A then 
+	     {Print {LAlign R.size 10}#" "#R.path}
+	  end
        end}
+   end
+   
+   fun{LAlign VS I}
+      {List.map
+       {List.make {Max I-{Length {VirtualString.toString VS}} 0}}
+       fun{$ C} C=32 end}#VS
+   end
+   
+   case Action
+   of list then % list all installed packages
+      {ForAll {ArchiveManager list($)} Print}
+      {Application.exit 0}
+   [] view then % view the contents of a package
+      I L
+   in
+      {ArchiveManager view(Args.'view' I L)}
+      {PrintInfo I L}
       {Application.exit 0}
    [] create then % create a new package
       {ArchiveManager create(Args.'create')}
       {Application.exit 0}
    [] install then % install/update a specified package
-      {ArchiveManager install(Args.'install')}
-      {Application.exit 0}
+      R
+   in
+      {ArchiveManager install(Args.'install' switch:if {HasFeature Args 'force'} then
+						       switch(force:unit)
+						    else
+						       switch()
+						    end result:R)}
+      case {Label R}
+      of success then
+	 {Print "Package "#R.pkg.name#" was successfully installed"}
+	 {Application.exit 0}
+      [] nameclash then
+	 {Print "Unable to install package '"#R.pkg.name#"'"}
+	 {Print "The file '"#R.name#"' is conflicting with the installed package '"#R.loc.name#"'"}
+	 {Application.exit 1}
+      [] alreadyinstalled then
+	 {Print "Unable to install package '"#R.pkg.name#"', version "#R.pkg.version}
+	 {Print "This package is already installed in version "#R.loc.version}
+	 {Application.exit 1}
+      end
    [] info then % displays information about an installed package
-      skip
+      Info
+   in
+      {ArchiveManager info(Args.'info' Info)}
+      if Info==notFound then
+	 Info
+      in
+	 {ArchiveManager infoN(Args.'info' Info)}
+	 if Info==notFound then
+	    {Print "Package '"#Args.'info'#"' is not installed."}
+	    {Application.exit 1}
+	 else
+	    {PrintInfo Info Info.lsla}
+	    {Application.exit 0}
+	 end	    
+      else
+	 {PrintInfo Info Info.lsla}
+	 {Application.exit 0}
+      end
    [] check then % check installed packages integrity and rebuilds if necessary
       skip
+   [] remove then % removes a package
+      skip
+   [] help then % display some help
+      Help=[""
+	    "ozpm is the Oz package manager"
+	    ""
+	    "ozpm                   : starts ozpm in interactive mode"
+	    "ozpm --help|-h|-?      : displays this help"
+	    "ozpm --install|-i file : installs the package File. Install can be forced by --force"
+	    "ozpm --remove pkg      : removes package whose name or package file is pkg"
+	    "ozpm --list            : list all installed packages"
+	    "ozpm --info pkg        : displays informations for package whose name or package file is pkg"
+	    "ozpm --check           : check package system's integrity"
+	    ""
+	    "ozpm --create pkgdesc  : creates the package file described in the text file pkgdesc"
+	    "ozpm --view pkgfile    : displays informations about the package file pkgfile"
+	    ""
+	   ]
+   in
+      {ForAll Help Print}
+      {Application.exit 0}
    [] interactive then % start the application in interactive mode
       _={New InteractiveManager init}
    end
-
-   {Browse Args}
 
 end
