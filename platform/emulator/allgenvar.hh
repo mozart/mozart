@@ -47,7 +47,7 @@ Bool oz_cv_validINLINE(GenCVariable *cv,TaggedRef *ptr,TaggedRef val)
   switch (cv->getType()){
   case OZ_VAR_SIMPLE:   return ((SimpleVar *) cv)->valid(val);
   case OZ_VAR_FUTURE:   return ((Future *) cv)->valid(val);
-  case PerdioVariable:  return ((PerdioVar *) cv)->valid(val);
+  case PerdioVariable:  return ((PerdioVar *) cv)->validV(val);
   case BoolVariable:    return ((GenBoolVariable*) cv)->valid(val);
   case FDVariable:      return ((GenFDVariable*) cv)->valid(val);
   case OFSVariable:     return ((GenOFSVariable*) cv)->valid(val);
@@ -65,7 +65,7 @@ OZ_Return oz_cv_unifyINLINE(GenCVariable *cv,TaggedRef *ptr,TaggedRef val,
   switch (cv->getType()){
   case OZ_VAR_SIMPLE:   return ((SimpleVar *) cv)->unify(ptr,val,scp);
   case OZ_VAR_FUTURE:   return ((Future *) cv)->unify(ptr,val,scp);
-  case PerdioVariable:  return ((PerdioVar *) cv)->unify(ptr,val,scp);
+  case PerdioVariable:  return ((PerdioVar *) cv)->unifyV(ptr,val,scp);
   case BoolVariable:    return ((GenBoolVariable*) cv)->unify(ptr,val,scp);
   case FDVariable:      return ((GenFDVariable*) cv)->unify(ptr,val,scp);
   case OFSVariable:     return ((GenOFSVariable*) cv)->unify(ptr,val,scp);
@@ -105,7 +105,7 @@ void oz_cv_addSuspINLINE(GenCVariable *cv, TaggedRef *v, Suspension susp,
   case OZ_VAR_FUTURE:
     ((Future *) cv)->addSusp(v, susp, unstable); return;
   case PerdioVariable:
-    ((PerdioVar *) cv)->addSusp(v, susp, unstable); return;
+    ((PerdioVar *) cv)->addSuspV(v, susp, unstable); return;
   case OZ_VAR_EXTENTED:
     ((ExtentedVar *) cv)->addSuspV(v, susp, unstable); return;
   default:
