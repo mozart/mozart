@@ -77,3 +77,36 @@ The Message Statistics frame shows the total number of sent and received message
 ///*** picture and describing arrows....
 
 Description of the Message Types
+
+
+
+//** Chapter 2
+
+Case studies of programms
+
+Here we give a couple of examples of how the Distribution Panel can be used. We describe a program with a special property and then we show how it is possible to see that property in the Distribution Panel.
+
+
+// Chapter 2.1
+
+In a client server application where the clients and the servers are involved in heavy comunication even the smallest RTT flucturations can totaly ruin the performance. We monitor the server and observes strange "spikar" in the RTT graph. The "spikar" seems to come with an even interval. An inteligent guess is that garbage collection at the clinents and the server causes inaccessablity and thus raises the RTT.
+
+
+
+//Chapter 2.2
+
+Connection Port
+
+Inspekting the Exported entities frame on a disconnected Mozart emulator shows a port in the scroll window. This is the port that the connection mechanism uses and not a bug. It is allways present to enable the Connection module to run.
+
+//Chapter 2.3
+
+Unexpected Exports
+
+Unintential exportation of Modules is a common bug in Mozart programms. With help from the Exported frame one can see all the entities that are exported.
+
+//Chapter 2.4
+
+Mass importation of Variables
+
+When doing syncrone distributed calls using Variables for passing the answer a lot of temporary variables are created. Binding all the extra variables creates a lot of protocoll action and implies a lot of messages.
