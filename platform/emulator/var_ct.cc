@@ -389,7 +389,7 @@ void GenCtVariable::installPropagators(GenCtVariable * glob_var,
 				       Board * glob_home)
 {
   for (int i = _definition->getNoOfWakeUpLists(); i--; )
-    _susp_lists[i] = am.installPropagators(_susp_lists[i],
+    _susp_lists[i] = oz_installPropagators(_susp_lists[i],
 					  glob_var->_susp_lists[i],
 					  glob_home);
 }

@@ -1124,7 +1124,7 @@ GenCVariable * GenCVariable::gc(void) {
   
   switch (getType()){
   case FDVariable:
-    to = new GenFDVariable(); // mm2: should not initialize anything!
+    to = new GenFDVariable((DummyClass *)0);
     ((GenFDVariable *) to)->gc((GenFDVariable *) this);
     to->u        = u;
     to->suspList = sl;
@@ -1132,7 +1132,7 @@ GenCVariable * GenCVariable::gc(void) {
     return to;
 
   case BoolVariable:
-    to = new GenBoolVariable();
+    to = new GenBoolVariable((DummyClass*)0);
     ((GenBoolVariable *) to)->gc((GenBoolVariable *) this);
     to->u        = u;
     to->suspList = sl;
@@ -1140,7 +1140,7 @@ GenCVariable * GenCVariable::gc(void) {
     return to;
 
   case FSetVariable:
-    to = new GenFSetVariable();
+    to = new GenFSetVariable((DummyClass*)0);
     ((GenFSetVariable *) to)->gc((GenFSetVariable *) this);
     to->u        = u;
     to->suspList = sl;
@@ -1148,9 +1148,11 @@ GenCVariable * GenCVariable::gc(void) {
     return to;
 
   case OFSVariable:
-    to = new GenOFSVariable(*(GenOFSVariable*) this);  break;
+    to = new GenOFSVariable(*(GenOFSVariable*) this);
+    break;
   case MetaVariable:
-    to = new GenMetaVariable(*(GenMetaVariable*) this); break;
+    to = new GenMetaVariable(*(GenMetaVariable*) this);
+    break;
   case PerdioVariable:
     if (((PerdioVar*)this)->isFuture()) {
       to = new Future(*(Future*) this);
@@ -1160,6 +1162,7 @@ GenCVariable * GenCVariable::gc(void) {
     break;
   default:
     to = gcV();
+    break;
   }
 
   // The generic part

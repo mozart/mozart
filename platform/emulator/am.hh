@@ -484,9 +484,6 @@ public:
   INLINE void closeDonePropagatorCD(Propagator *);
   INLINE void closeDonePropagatorThreadCD(Propagator *);
 
-  SuspList *installPropagators(SuspList *local_list, SuspList *glob_list,
-			       Board *glob_home);
-
   Bool onToplevel() { return _currentBoard == _rootBoard; }
 
   void gc(int msgLevel);  // ###

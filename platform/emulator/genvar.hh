@@ -49,25 +49,24 @@
 //-----------------------------------------------------------------------------
 
 
+// NOTE:
+//   this order is used in the case of CVAR=CVAR unification
+//   e.g. SimpleVariable are bound prefered
 enum TypeOfGenCVariable {
+  SimpleVariable,
+  ComplexVariable,
+  LazyVariable,
+  PerdioVariable,
   FDVariable,
   OFSVariable,
   MetaVariable, 
   BoolVariable,
   FSetVariable,
-  PerdioVariable,
-  LazyVariable,
   CtVariable,
-  SimpleVariable,
-  ComplexVariable,
   NonGenCVariable
 };
 
-#define GenVarCheckType(t)				\
-    Assert(t == FDVariable || t == OFSVariable ||	\
-	   t == MetaVariable || t == BoolVariable ||	\
-	   t == PerdioVariable || t == FSetVariable ||	\
-	   t == LazyVariable || t == CtVariable)
+#define GenVarCheckType(t) Assert(t >= SimpleVariable && t < NonGenCVariable)
 
 class GenCVariable: public SVariable {
 
@@ -92,10 +91,7 @@ protected:
 public:
   USEFREELISTMEMORY;
 
-  GenCVariable(); // not needed
-
-  // the constructor creates per default a local variable (wrt curr. node)
-  GenCVariable(TypeOfGenCVariable, Board * = NULL);
+  GenCVariable(); // mm2: fake compiler
 
   TypeOfGenCVariable getType(void){ return u.var_type; }
   void setType(TypeOfGenCVariable t){
@@ -103,25 +99,24 @@ public:
     u.var_type = t;
   }  
 
-#ifdef GENVAR_VIRTUAL_DEFAULTS
-# define GENVAR_VIRTUAL
-#else
-# define GENVAR_VIRTUAL = 0
-#endif
+  // mm2: default for board is not nice
+  // the constructor creates per default a local variable (wrt curr. node)
+  GenCVariable(TypeOfGenCVariable t, DummyClass *) { setType(t); };
+  GenCVariable(TypeOfGenCVariable, Board * = (Board*)0);
 
-  virtual GenCVariable* gcV() GENVAR_VIRTUAL;
-  virtual void          gcRecurseV() GENVAR_VIRTUAL;
+  virtual GenCVariable* gcV() = 0;
+  virtual void          gcRecurseV() = 0;
   virtual OZ_Return     unifyV(TaggedRef *, TaggedRef, TaggedRef *, TaggedRef,
-			       ByteCode *) GENVAR_VIRTUAL;
-  virtual OZ_Return     validV(TaggedRef *, TaggedRef) GENVAR_VIRTUAL;
-  virtual OZ_Return     hasFeatureV(TaggedRef, TaggedRef *) GENVAR_VIRTUAL;
+			       ByteCode *) = 0;
+  virtual OZ_Return     validV(TaggedRef *, TaggedRef) = 0;
+  virtual OZ_Return     hasFeatureV(TaggedRef, TaggedRef *) = 0;
   virtual void          addSuspV(Suspension susp, TaggedRef *vPtr,
-				 int unstable = TRUE) GENVAR_VIRTUAL;
-  virtual void          disposeV() GENVAR_VIRTUAL;
-  virtual int           isKindedV() GENVAR_VIRTUAL;
-  virtual void          printV() GENVAR_VIRTUAL;
-  virtual void          printLongV() GENVAR_VIRTUAL;
-  virtual int           getSuspListLengthV() GENVAR_VIRTUAL;
+				 int unstable = TRUE) = 0;
+  virtual void          disposeV() = 0;
+  virtual int           isKindedV() = 0;
+  virtual void          printV() = 0;
+  virtual void          printLongV() = 0;
+  virtual int           getSuspListLengthV() = 0;
 
   // methods relevant for term copying (gc and solve)  
   GenCVariable * gc(void);

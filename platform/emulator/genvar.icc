@@ -155,7 +155,7 @@ void GenCVariable::installPropagators(GenCVariable * glob_var)
   Board * glob_home = GETBOARD(glob_var);
 
   // any suspension list
-  suspList = am.installPropagators(suspList, glob_var->getSuspList(),
+  suspList = oz_installPropagators(suspList, glob_var->getSuspList(),
 				   glob_home);
 			
   switch (glob_var->getType()) {
@@ -166,13 +166,13 @@ void GenCVariable::installPropagators(GenCVariable * glob_var)
       switch (getType()){
 	
       case FDVariable:
-	((GenFDVariable *)this)->installPropagators((GenFDVariable *) glob_var, 
-						    glob_home);
+	((GenFDVariable *)this)
+	  ->installPropagators((GenFDVariable *) glob_var, glob_home);
 	break;
 	
       case BoolVariable:     
-	((GenBoolVariable *)this)->installPropagators((GenFDVariable *) glob_var,
-						      glob_home);
+	((GenBoolVariable *)this)
+	  ->installPropagators((GenFDVariable *) glob_var, glob_home);
 	break;
 	
 	
@@ -194,16 +194,16 @@ void GenCVariable::installPropagators(GenCVariable * glob_var)
     {
       Assert (getType() == FSetVariable);
       
-      ((GenFSetVariable *)this)->installPropagators((GenFSetVariable *) glob_var,
-						    glob_home);
+      ((GenFSetVariable *)this)
+	->installPropagators((GenFSetVariable *) glob_var, glob_home);
     } // case FSetVariable
   break;
   
   case CtVariable:
     {
       Assert (getType() == CtVariable);
-      ((GenCtVariable *)this)->installPropagators((GenCtVariable *) glob_var,
-						  glob_home);
+      ((GenCtVariable *)this)
+	->installPropagators((GenCtVariable *) glob_var, glob_home);
     } // case CtVariable
   break;
   
