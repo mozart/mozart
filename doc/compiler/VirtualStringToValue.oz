@@ -1,3 +1,3 @@
-fun {VirtualStringToValue VS}
-   {EvalExpression VS env() _}
+fun {Compiler.virtualStringToValue VS}
+   {Compiler.evalExpression VS env() _}
 end

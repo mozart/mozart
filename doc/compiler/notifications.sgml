@@ -1,4 +1,4 @@
-<Section id="section.reference.notifications">
+<Appendix id="appendix.notifications">
   <Title/Sent Notifications/
   <P>
     This section summarizes all notifications currently sent by the
@@ -10,93 +10,93 @@
     (<<''>> meaning there's none available) and <<Line>> and <<Column>>
     are integers.  Line numbering begins at&nbsp;1 and column numbering
     at&nbsp;0; a column number of <<~1>> means that none is known.
-  <SubSection>
+  <Section>
     <Title/Query Queue Notifications/
-      <P>
-        <List>
-          <Entry><<newQuery(?_{Id} ?_{M})>>
-          <Item>
-            A new query ?_{M} with identification number ?_{Id} has been
-            enqueued.
-          <Entry><<runQuery(?_{Id} ?_{M})>>
-          <Item>
-            The query ?_{M} with identification number ?_{Id} is now
-            being executed.
-          <Entry><<removeQuery(?_{Id})>>
-          <Item>
-            The query with identification number ?_{Id} has been removed
-            from the query queue, either because it finished executing
-            or because it was dequeued by a user program.
-        </List>
-  <SubSection>
+    <P>
+      <List>
+        <Entry><<newQuery(?_{Id} ?_{M})>>
+        <Item>
+          A new query ?_{M} with identification number ?_{Id} has been
+          enqueued.
+        <Entry><<runQuery(?_{Id} ?_{M})>>
+        <Item>
+          The query ?_{M} with identification number ?_{Id} is now
+          being executed.
+        <Entry><<removeQuery(?_{Id})>>
+        <Item>
+          The query with identification number ?_{Id} has been removed
+          from the query queue, either because it finished executing
+          or because it was dequeued by a user program.
+      </List>
+  <Section>
     <Title/Compiler Activity Notifications/
-      <P>
-        <List>
-          <Entry><<busy()>>
-          <Item>
-            The compiler is currently busy (&ie;, executing a query).
-          <Entry><<idle()>>
-          <Item>
-            The compiler is currently idle (&ie;, waiting for a query to
-            be enqueued).
-        </List>
-  <SubSection>
+    <P>
+      <List>
+        <Entry><<busy()>>
+        <Item>
+          The compiler is currently busy (&ie;, executing a query).
+        <Entry><<idle()>>
+        <Item>
+          The compiler is currently idle (&ie;, waiting for a query to
+          be enqueued).
+      </List>
+  <Section>
     <Title/Compiler State Change Notifications/
-      <P>
-        <List>
-          <Entry><<switch(?_{SwitchName} ?_{B})>>
-          <Item>
-            The switch named ?_{SwitchName} has been set to ?_{B}.
-          <Entry><<switches(?_{Rec})>>
-          <Item>
-            The settings of all switches is transmitted.
-          <Entry><<maxNumberOfErrors(?_{N})>>
-          <Item>
-            The maximum number of errors after which to abort compilation
-            has been set to ?_{N}.
-          <Entry><<env(?_{Env})>>
-          <Item>
-            The environment has been set to ?_{Env}.
-        </List>
-  <SubSection>
+    <P>
+      <List>
+        <Entry><<switch(?_{SwitchName} ?_{B})>>
+        <Item>
+          The switch named ?_{SwitchName} has been set to ?_{B}.
+        <Entry><<switches(?_{Rec})>>
+        <Item>
+          The settings of all switches is transmitted.
+        <Entry><<maxNumberOfErrors(?_{N})>>
+        <Item>
+          The maximum number of errors after which to abort compilation
+          has been set to ?_{N}.
+        <Entry><<env(?_{Env})>>
+        <Item>
+          The environment has been set to ?_{Env}.
+      </List>
+  <Section>
     <Title/Compiler Output Notificiations/
-      <P>
-        <List>
-          <Entry><<info(?_{VS})>>
-          <Item>
-            An information message ?_{VS} is to be output.
-          <Entry><<info(?_{VS} ?_{Coord})>>
-          <Item>
-            An information message ?_{VS}, related to the source coordinates
-            ?_{Coord}, is to be output.
-          <Entry><<message(?_{Record} ?_{Coord})>>
-          <Item>
-            An error or warning message ?_{Record}, related to the source
-            coordinates ?_{Coord}, is to be output.  ?_{Record} has the
-            standard error message format, described in
-            <File>mozart/share/lib/sp/Error.oz</File>.
-          <Entry><<insert(?_{FilenameVS} ?_{Coord})>>
-          <Item>
-            During parsing, the file named ?_{FilenameVS} has been read.
-            The corresponding <<\insert>> directive (if any) was at source
-            coordinates ?_{Coord}.
-          <Entry><<displaySource(?_{TitleVS} ?_{ExtVS} ?_{VS})>>
-          <Item>
-            A source text ?_{VS} with title ?_{TitleVS} is to be displayed;
-            its format is the one for which the file extension ?_{ExtVS} is
-            typically used (such as <File/oz/ or <File/ozm/).
-          <Entry><<attention()>>
-          <Item>
-            The error output buffer should be raised with the cursor at
-            the current output coordinates (an error message should follow).
-        </List>
-  <SubSection>
+    <P>
+      <List>
+        <Entry><<info(?_{VS})>>
+        <Item>
+          An information message ?_{VS} is to be output.
+        <Entry><<info(?_{VS} ?_{Coord})>>
+        <Item>
+          An information message ?_{VS}, related to the source coordinates
+          ?_{Coord}, is to be output.
+        <Entry><<message(?_{Record} ?_{Coord})>>
+        <Item>
+          An error or warning message ?_{Record}, related to the source
+          coordinates ?_{Coord}, is to be output.  ?_{Record} has the
+          standard error message format, described in
+          <File>mozart/share/lib/sp/Error.oz</File>.
+        <Entry><<insert(?_{FilenameVS} ?_{Coord})>>
+        <Item>
+          During parsing, the file named ?_{FilenameVS} has been read.
+          The corresponding <<\insert>> directive (if any) was at source
+          coordinates ?_{Coord}.
+        <Entry><<displaySource(?_{TitleVS} ?_{ExtVS} ?_{VS})>>
+        <Item>
+          A source text ?_{VS} with title ?_{TitleVS} is to be displayed;
+          its format is the one for which the file extension ?_{ExtVS} is
+          typically used (such as <File/oz/ or <File/ozm/).
+        <Entry><<attention()>>
+        <Item>
+          The error output buffer should be raised with the cursor at
+          the current output coordinates (an error message should follow).
+      </List>
+  <Section>
     <Title/Synchronization Notifications/
-      <P>
-        <List>
-          <Entry><<pong()>>
-          <Item>
-            This is sent in response to a <<ping(_)>> query
-            (see <Ptr to="section.reference.queries">).
-        </List>
-</Section>
+    <P>
+      <List>
+        <Entry><<pong()>>
+        <Item>
+          This is sent in response to a <<ping(_)>> query
+          (see <Ptr to="appendix.queries">).
+      </List>
+</Appendix>
