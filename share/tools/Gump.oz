@@ -23,31 +23,17 @@
 %%% WARRANTIES.
 %%%
 
-functor $
-
+functor prop once
 import
-   Open.{file}
-
-   OS.{system}
-
+   Open.file
+   OS.system
    Property.get
-   
-   System.{valueToVirtualString}
-
-   Error.{formatGeneric
-	  format
-	  dispatch}
-
-   ErrorRegistry.{put}
-   
-   Foreign.{load}
-
+   System.valueToVirtualString
+   Foreign.load
 export
    makeProductionTemplates: MakeProductionTemplates
    transformScanner:        TransformScanner
    transformParser:         TransformParser
-   
 body
    \insert gump/Main.oz
-   \insert gump/Errors.oz
 end
