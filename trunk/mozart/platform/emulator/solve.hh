@@ -93,7 +93,6 @@ public:
   }
 
   void addSuspension(Suspension); 
-  void addSuspension(SuspList *);
   Bool isEmptySuspList() { return suspList==0; }
   void setSuspList(SuspList *sl) { suspList=sl; }
   SuspList *unlinkSuspList() {

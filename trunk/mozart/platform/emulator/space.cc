@@ -374,16 +374,19 @@ Bool extParameters(OZ_Term list, Board * solve_board)
 
       Assert(!isUVar(htag));
 
-      Board  * home = GETBOARD(tagged2SVarPlus(h)); 
-      Board * tmp = solve_board;
+      Board * home = GETBOARD(tagged2SVarPlus(h)); 
+      Board * tmp  = solve_board;
 
       // from solve board go up to root; if you step over home 
       // then the variable is external otherwise it must be a local one
       do {
 	tmp = tmp->getParent();
 
-	Assert (!(tmp->isCommitted()) && !(tmp->isFailed()));
+	if (tmp->isFailed())
+	  return FALSE;
 	
+	tmp = tmp->derefBoard();
+
 	if (tmp == home) { 
 	  found = TRUE;
 	  break;
@@ -407,24 +410,14 @@ void solve_clearSuspList(SolveActor *sa,Suspension killSusp)
   SuspList * tmpSuspList = sa->unlinkSuspList();
 
   while (tmpSuspList) {
+    // Traverse suspension list and copy all valid suspensions
     Suspension susp = tmpSuspList->getSuspension();
 
-    /*
-     *  kost@
-     *  Note that i've preserved here a limitation of stability 
-     * check: no propagators (i.e. former "resistant" suspensions") 
-     * might suspend on global variables; otherwise, no stability 
-     * will be reached (precisely speaking, they must go away - 
-     * then stability can be reached);
-     *  This limitation was introduced with the "resistant" 
-     * suspensions (Hi, Tobias!). 
-     *
-     */
+    tmpSuspList = tmpSuspList->dispose();
 
     if (susp.isDead() ||
 	killSusp == susp ||
 	(susp.isRunnable() && !susp.isPropagator())) {
-      tmpSuspList = tmpSuspList->dispose ();
       continue;
     }
 
@@ -433,39 +426,30 @@ void solve_clearSuspList(SolveActor *sa,Suspension killSusp)
     // find suspensions, which occured in a failed nested search space
     while (1) {
       bb = bb->getSolveBoard();
-      if (bb == sa->getSolveBoard()) break;
-      if (bb == 0) break;
+      if (bb == sa->getSolveBoard()) 
+	break;
+      if (bb == 0) 
+	break;
+
       bb = bb->getParentAndTest();
-      if (bb == 0) break;
+      if (bb == 0) 
+	break;
     }
 
     if (susp.isPropagator()) {
       Propagator * prop = susp.getPropagator();
       
-#ifdef DEBUG_PROP_STABILTY_TEST
-      cout << "SolveActor::clearSuspList : Found propagator." << endl 
-	   << prop->toString() << endl
-	   << "\tbb = " << bb << endl << flush;
-#endif
-
       if (bb) {
+
 	// if propagator suspends on external variable then keep its
 	// thread in the list to avoid stability
-	if (extParameters(prop->getPropagator()->getParameters(), sa->getSolveBoard())) {
-#ifdef DEBUG_PROP_STABILTY_TEST
-	  cout << "\tExt parameter found!" << endl << flush;
-#endif
-	  SuspList * helpList = tmpSuspList;
-	  sa->addSuspension (helpList);
+	if (extParameters(prop->getPropagator()->getParameters(), 
+			  sa->getSolveBoard())) {
+	  sa->addSuspension(susp);
 	} 
-#ifdef DEBUG_PROP_STABILTY_TEST
-	else {
-	  cout << "\tNo ext parameter found!" << endl << flush;
-	}
-#endif
 
       }
-      tmpSuspList = tmpSuspList->getNext ();
+
     } else {
       Assert(susp.isThread());
       
@@ -473,12 +457,10 @@ void solve_clearSuspList(SolveActor *sa,Suspension killSusp)
 
       if (bb == 0) {
 	oz_disposeThread(thr);
-	tmpSuspList = tmpSuspList->dispose ();
       } else {
-	SuspList *helpList = tmpSuspList;
-	tmpSuspList = tmpSuspList->getNext();
-	sa->addSuspension (helpList);
+	sa->addSuspension(susp);
       }
+      
     }
   }
 }
