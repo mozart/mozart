@@ -44,12 +44,12 @@ define
     ""
     "functor $"
     "import"
+    "   System(show)"
     "   GtkNative                             at 'GtkNative.so{native}'"
     "   GtkFieldNative                        at 'GtkFieldNative.so{native}'"
     "   GOZCoreComponent('GOZCore' : GOZCore) at 'GOZCore.ozf'"
     "   GDK                                   at 'GDK.ozf'"
     "export"
-    "   CastPointer"
     "   MakeArg"
     "   GetArg"
     "   FreeArg"
@@ -67,6 +67,7 @@ define
     ""
     "functor $"
     "import"
+    "   System(show)"
     "   GdkNative                             at 'GdkNative.so{native}'"
     "   GdkFieldNative                        at 'GdkFieldNative.so{native}'"
     "   GOZCoreComponent('GOZCore' : GOZCore) at 'GOZCore.ozf'"
@@ -80,6 +81,7 @@ define
     ""
     "functor $"
     "import"
+    "   System(show)"
     "   GtkCanvasNative                       at 'GtkCanvasNative.so{native}'"
     "   GtkCanvasFieldNative                  at 'GtkCanvasFieldNative.so{native}'"
     "   GOZCoreComponent('GOZCore' : GOZCore) at 'GOZCore.ozf'"
@@ -89,7 +91,7 @@ define
 
    GdkInitStub =
    ["define"
-    "   OzBase     = GOZCore.ozBase"
+    "   OzBase     = GOZCore.gdkOzBase"
     "   P2O        = GOZCore.pointerToObject"
     "   O2P        = GOZCore.objectToPointer"
     "   ExportList = GOZCore.exportList"
@@ -108,7 +110,6 @@ define
     "   OzBase      = GOZCore.ozBase"
     "   P2O         = GOZCore.pointerToObject"
     "   O2P         = GOZCore.objectToPointer"
-    "   CastPointer = GOZCore.castPointer"
     "   ExportList  = GOZCore.exportList"
     "   ImportList  = GOZCore.importList"
     "   GdkWindow   = GDK.window"
@@ -371,31 +372,9 @@ define
                  "load"          %% GkdFont
                  "getSystem"     %% GdkColormap
                 ]
-
-      Containers = [%% All Container
-                    "gtkContainerAdd"
-                    %% GtkBox and Childs
-                    "gtkBoxPackStart"
-                    "gtkBoxPackEnd"
-                    "gtkBoxPackStartDefaults"
-                    "gtkBoxPackEndDefaults"
-                    %% GtkPane and Childs
-                    "gtkPanedPack1"
-                    "gtkPanedPack2"
-                    %% GtkNotebook and Childs
-                    "gtkNotebookInsertPage"
-                    "gtkNotebookInsertPageMenu"
-                    "gtkNotebookPrependPage"
-                    "gtkNotebookPrependPageMenu"
-                    "gtkNotebookAppendPage"
-                    "gtkNotebookAppendPageMenu"
-                   ]
    in
       fun {IsConstructor S}
          {Member S Constrs}
-      end
-      fun {IsContainerAdd C}
-         {Member C Containers}
       end
    end
 
@@ -596,6 +575,9 @@ define
                TextFile, putS({Util.indent 1}#ValName#
                               " = {Value.byNeed fun {$} class $"#
                               From#" "#Fields)
+               TextFile, putS({Util.indent 2}#"meth toString($)")
+               TextFile, putS({Util.indent 3}#"\""#ValName#"\"")
+               TextFile, putS({Util.indent 2}#"end")
                GtkClasses, emitMethods({Util.firstLower ClassSN} Methods)
                TextFile, putS({Util.indent 1}#"end end}")
             end
@@ -618,7 +600,6 @@ define
          IsVoid    = case Args of [arg(type("void" "") _)]
                      then true else false end
          IsNew     = {IsConstructor ShortName}
-         IsCont    = {IsContainerAdd Name}
          HasSelf   = {CheckFirstArg Prefix Args}
          IA        = if IsVoid
                      then 0
@@ -655,11 +636,13 @@ define
             TextFile, putS(CallDef)
             TextFile, putS({Util.indent 2}#"in")
          end
+%        TextFile, putS({Util.indent 3}#"{System.show '"#Name#": enter'}")
          TextFile, putS({Util.indent 3}#ResStart#"{"#@module#
                         "."#Name#" "#Self#CallStr#"}"#ResEnd)
+         if IsNew andthen {Not (@stdPrefix == "Gdk")}
+         then TextFile, putS({Util.indent 3}#"{self addToObjectTable}") end
          GtkClasses, handleOutArgs(CallArgs)
-         if IsCont then TextFile, putS({Util.indent 3}#
-                                       "children <- A0|@children") end
+%        TextFile, putS({Util.indent 3}#"{System.show '"#Name#": leave'}")
          TextFile, putS({Util.indent 2}#"end")
       end
       meth prepareArgs(InArgs I OutArgs $)

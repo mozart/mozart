@@ -538,12 +538,20 @@ OZ_BI_define (native_get_arg, 1, 1) {
 } OZ_BI_end
 
 /*
- * Get GtkObject Type
+ * GtkObject Type Functions
  */
+
+
+OZ_BI_define(native_is_object, 1, 1) {
+  GOZ_declareObject(0, obj);
+  OZ_out(0) = (GTK_IS_OBJECT(obj) ? OZ_true() : OZ_false());
+  return OZ_ENTAILED;
+} OZ_BI_end
+
 
 OZ_BI_define(native_get_object_type, 1, 1) {
   GOZ_declareObject(0, obj);
-  OZ_out(0) = OZ_int((int) obj->klass->type);
+  OZ_out(0) = OZ_int((int) GTK_OBJECT_TYPE(obj));
   return OZ_ENTAILED;
 } OZ_BI_end
 
@@ -613,6 +621,7 @@ static OZ_C_proc_interface oz_interface[] = {
   {"pointsPut", 3, 0, native_points_put},
   {"makeArg", 2, 1, native_make_arg},
   {"getArg", 1, 1, native_get_arg},
+  {"isObject", 1, 1, native_is_object},
   {"getObjectType", 1, 1, native_get_object_type},
   {"allocStrArr", 1, 1, native_alloc_str_arr},
   {"getStrArr", 1, 1, native_get_str_arr},

@@ -52,51 +52,81 @@ define
    WrapPointer   = {NewName}
    UnwrapPointer = {NewName}
 
+   %% Obtain Pointer from Oz Object or Pointer (Easy)
+   fun {ObjectToPointer Object}
+      if Object == unit
+      then {GOZSignal.null}
+      elseif {IsObject Object}
+      then {Object UnwrapPointer($)}
+      else Object
+      end
+   end
+
+   %% Create Object from incoming Pointer (Difficult)
    local
-      ObjectTable = {Dictionary.new}
+      Stream ObjectTable
    in
-      %% Obtain Pointer from Oz Object/Pointer
-      fun {ObjectToPointer Object}
-         if Object == unit
-         then {GOZSignal.null}
-         elseif {IsObject Object}
-         then {Object UnwrapPointer($)}
-         else Object
+      ObjectTable = {WeakDictionary.new Stream}
+
+      %% Add freshly created objects to table
+      %% Used by oz-side-called object constructors
+      proc {RegisterObject Pointer Object}
+         %% Increase Reference count by one if GTK/GTKCanvas Object
+         if {Object isManagedObject($)}
+         then {GtkNative.gtkObjectRef Pointer}
          end
+         {WeakDictionary.put ObjectTable {ForeignPointer.toInt Pointer} Object}
       end
 
-      %% Some Helper Functions
-      fun {FU A}
-         S = {VirtualString.toString A}
+      %% Loosing the last Oz reference
+      %% possibly enables Gtk collection
+      thread
+         proc {Finalize Stream}
+            case Stream
+            of (_#Object)|Sr then
+               %% Decrease Reference count by one if applicable
+               if {Object isManagedObject($)}
+               then {GtkNative.gtkObjectUnref {Object UnwrapPointer($)}}
+               end
+               {Finalize Sr}
+            [] nil then skip
+            end
+         end
       in
-         case S
-         of S|Sr then {Char.toUpper S}|Sr
-         [] nil then nil
-         end
-      end
-
-      fun {GetOzClass OzClass}
-         case OzClass
-         of 'Gdk'(Key) then
-            NewKey = if Key == '' then misc else Key end
-         in
-            GDK.NewKey
-         [] 'Gtk'(Key) then GTK.Key
-         [] 'GtkCanvas'(Key) then
-            NewKey = case Key
-                     of ''      then canvas
-                     [] 'group' then canvasGroup
-                     [] 'item'  then canvasItem
-                     end
-         in
-            GTKCANVAS.NewKey
-         end
+         {Finalize Stream}
       end
 
       %% Convert Pointer to Oz Object
       %% Thread is necessary to prevent suspension
       PointerToObject =
       thread
+         %% Translate Key Information to Oz Class
+         fun {GetOzClass OzClass}
+            case OzClass
+            of 'Gdk'(Key) then
+               NewKey = if Key == '' then misc else Key end
+            in
+               GDK.NewKey
+            [] 'Gtk'(Key) then GTK.Key
+            [] 'GtkCanvas'(Key) then
+               NewKey = case Key
+                        of ''      then canvas
+                        [] 'group' then canvasGroup
+                        [] 'item'  then canvasItem
+                        end
+            in
+               GTKCANVAS.NewKey
+            end
+         end
+         %% First Upper
+         fun {FU A}
+            S = {VirtualString.toString A}
+         in
+            case S
+            of S|Sr then {Char.toUpper S}|Sr
+            [] nil then nil
+            end
+         end
          %% Import OzClasses
          ClassList    = {Filter
                          {Pickle.load "x-oz://system/gtk/ClassNames.ozp"}
@@ -121,7 +151,7 @@ define
                                ClassVS = case OzClass
                                          of 'Gtk'(Key) then "Gtk"#{FU Key}
                                          [] 'GtkCanvas'(Key) then
-                                         "GtkCanvas"#{FU Key}
+                                            "GtkCanvas"#{FU Key}
                                          end
                                ClassS = {VirtualString.toString ClassVS}
                             in
@@ -129,50 +159,50 @@ define
                             [] Type then Type
                             end
                          end}
-         %% GktTypeKey -> OzClass
+         %% GtkTypeKey -> OzClass
          ClassDict = {FoldL {List.zip ClassKeys Classes fun {$ X Y} X#Y end}
                       fun {$ D X#Y}
                          {Dictionary.put D X Y} D
                       end {Dictionary.new}}
+         %% Determine necessary Oz Class
          fun {SearchClass Pointer}
             {Dictionary.get ClassDict {GOZSignal.getObjectType Pointer}}
          end
+         %% Create New Wrapper and register it to ObjectTable
          fun {CreateClass Class Pointer}
             Object = {New Class WrapPointer(Pointer)}
+            Key    = {ForeignPointer.toInt Pointer}
          in
-            {Dictionary.put ObjectTable {ForeignPointer.toInt Pointer} Object}
+            %% Increase Reference count by one if applicable
+            if {Object isManagedObject($)}
+            then {GtkNative.gtkObjectRef Pointer}
+            end
+            {WeakDictionary.put ObjectTable Key Object}
             Object
          end
       in
          fun {$ Hint Pointer}
-            case Hint
-            of none  then Pointer
-            [] auto  then {CreateClass {SearchClass Pointer} Pointer}
-            [] Class then {CreateClass Class Pointer}
+            %% Check for already known Pointers
+            Object = {WeakDictionary.condGet ObjectTable
+                      {ForeignPointer.toInt Pointer} nil}
+         in
+            case Object
+            of nil then
+               %% New Pointer occured
+               case Hint
+               of none  then Pointer
+               [] auto  then {CreateClass {SearchClass Pointer} Pointer}
+               [] Class then {CreateClass Class Pointer}
+               end
+            else Object
             end
          end
       end
-      %% Convert Pointer to Oz Object
-      fun {OldPointerToObject Class Pointer}
-         Object = {New Class WrapPointer(Pointer)}
-      in
-         {Dictionary.put ObjectTable {ForeignPointer.toInt Pointer} Object}
-         Object
-      end
-      %% Cast ObjOrPtr to Obj of Class Class
-      fun {CastPointer ObjOrPointer Class}
-         Pointer = {ObjectToPointer ObjOrPointer}
-      in
-         {New Class WrapPointer(Pointer)}
-      end
       %% Pointer Translation (necessary for GDK Events and GLists)
+      %% Tries to map incoming pointer to an existing object
       fun {TranslatePointer Pointer}
-         {Dictionary.condGet ObjectTable
-          {ForeignPointer.toInt Pointer} Pointer}
-      end
-      %% Release Object Ptr (necessary for GC)
-      proc {RemoveObject Pointer}
-         {Dictionary.remove ObjectTable {ForeignPointer.toInt Pointer}}
+         %% TODO: Rationale for this
+         {PointerToObject none Pointer}
       end
       %% GList Import/Export
       fun {ImportList Ls}
@@ -191,7 +221,7 @@ define
       Id = {Dispatcher registerHandler(Handler $)}
    in
       {GOZSignal.signalConnect Object ObjSignal Id} Id
-    end
+   end
    fun {SignalDisconnect Object SignalId}
       {Dispatcher unregisterHandler(SignalId)}
       {GOZSignal.signalConnect Object SignalId}
@@ -247,10 +277,11 @@ define
          X
       end
       fun {RGP X}
+         %% TODO: To be checked
          {TranslatePointer X}
       end
       fun {ITB X}
-          X == 1
+         X == 1
       end
 
       ExposeFs     = [window#RGP send#ITB area#RGP count#Id]
@@ -316,86 +347,77 @@ define
    %% Gtk Oz Base Class (used for Oz Class Wrapper)
    %%
 
-   local
-      CloseObject = {NewName}
-   in
-      class OzBase from BaseObject
-         attr
-            object         %% Native Object Ptr
-            signals  : nil %% Connected Signals List
-            children : nil %% All Children Objects
-         meth new
-            @object = unit
-         end
-         meth signalConnect(Signal ProcOrMeth $)
-            SigHandler = if {IsProcedure ProcOrMeth}
-                         then
-                            fun {$ Event}
-                               {ProcOrMeth Event}
-                               unit
-                            end
-                         else
-                            fun {$ Event}
-                               {self ProcOrMeth(Event)}
-                               unit
-                            end
+   class OzBase from BaseObject
+      attr
+         object        %% Native Object Ptr
+         signals : nil %% Connected Signals List
+      meth new
+         @object = unit
+      end
+      meth signalConnect(Signal ProcOrMeth $)
+         SigHandler = if {IsProcedure ProcOrMeth}
+                      then
+                         fun {$ Event}
+                            {ProcOrMeth Event}
+                            unit
                          end
-            SignalId   = {Dispatcher registerHandler(SigHandler $)}
-         in
-            signals <- SignalId|@signals
-            {GOZSignal.signalConnect @object Signal SignalId}
-            SignalId
-         end
-         meth signalDisconnect(SignalId)
-            signals <- {Filter @signals fun {$ Id}
-                                           SignalId \= Id
-                                        end}
-            {GOZSignal.signalDisconnect @object SignalId}
-            {Dispatcher unregisterHandler(SignalId)}
-         end
-         meth signalBlock(SignalId)
-            {GOZSignal.signalBlock @object SignalId}
-         end
-         meth signalUnblock(SignalId)
-            {GOZSignal.signalUnblock @object SignalId}
-         end
-         meth signalEmit(Signal)
-            {GOZSignal.signalEmit @object Signal}
-         end
-         meth !WrapPointer(Ptr)
-            @object = Ptr
-         end
-         meth !UnwrapPointer($)
-            @object
-         end
-         meth close
-            Children = @children
-         in
-            children <- nil
-            OzBase, CloseObject(1 Children)
-         end
-         meth !CloseObject(I Childs)
-            case Childs
-            of Child|Cr then
-               {Child close}
-               OzBase, CloseObject((I + 1) Cr)
-            [] nil then
-               Object = @object
-            in
-               %% Removal of OZ Handlers is sufficient
-               %% (due to destroy handling below)
-               {ForAll @signals proc {$ SignalId}
-                                   {Dispatcher unregisterHandler(SignalId)}
-                                end}
-               {RemoveObject Object}
-               %% Eliminate Pointer reference
-               %% (allows tracing of programming errors)
-               object <- unit
-            end
-         end
-         meth getType($)
-            unit
-         end
+                      else
+                         fun {$ Event}
+                            {self ProcOrMeth(Event)}
+                            unit
+                         end
+                      end
+         SignalId   = {Dispatcher registerHandler(SigHandler $)}
+      in
+         signals <- SignalId|@signals
+         {GOZSignal.signalConnect @object Signal SignalId}
+         SignalId
+      end
+      meth signalDisconnect(SignalId)
+         signals <- {Filter @signals fun {$ Id}
+                                        SignalId \= Id
+                                     end}
+         {GOZSignal.signalDisconnect @object SignalId}
+         {Dispatcher unregisterHandler(SignalId)}
+      end
+      meth signalBlock(SignalId)
+         {GOZSignal.signalBlock @object SignalId}
+      end
+      meth signalUnblock(SignalId)
+         {GOZSignal.signalUnblock @object SignalId}
+      end
+      meth signalEmit(Signal)
+         {GOZSignal.signalEmit @object Signal}
+      end
+      meth !WrapPointer(Ptr)
+         @object = Ptr
+      end
+      meth !UnwrapPointer($)
+         @object
+      end
+      meth addToObjectTable
+         {RegisterObject @object self}
+      end
+      meth isManagedObject($)
+         true
+      end
+      meth close
+         %% Removal of OZ Handlers is sufficient
+         %% (due to destroy handling below)
+         {ForAll @signals proc {$ SignalId}
+                             {Dispatcher unregisterHandler(SignalId)}
+                          end}
+         %% Nothing to be done here because
+         %% Object will eventually show up on finalisation stream
+      end
+      meth getType($)
+         unit
+      end
+   end
+
+   class GdkOzBase from OzBase
+      meth isManagedObject($)
+         false
       end
    end
 
@@ -441,6 +463,8 @@ define
          fun {EmptyHandler _}
             unit
          end
+         %% Maxium Polling Delay
+         PollDelay = 50
       in
          class DispatcherObject
             attr
@@ -449,19 +473,18 @@ define
                signalPort  %% Signal Port
                threadId    %% Thread Id of "Filler Thread"
             meth create
-               Stream
-               SignalPort = {Port.new Stream}
+               Stream SignalPort
             in
+               SignalPort   = {Port.new Stream}
                @signalId    = 0
                @handlerDict = {Dictionary.new}
                @signalPort  = SignalPort
                %% Tell C side about signal port
                {GOZSignal.initializeSignalPort SignalPort}
                %% Fetch Events
-               %% Initial Polling Interval is 50ms
                thread
                   @threadId = {Thread.this}
-                  DispatcherObject, FillStream(50)
+                  DispatcherObject, FillStream(PollDelay)
                end
                %% Call Event Handlers
                thread
@@ -475,7 +498,7 @@ define
             meth !FillStream(PollInterval)
                NewPollInterval = if {GOZSignal.handlePendingEvents}
                                  then 10 %% Rapid Event testing for reactivity
-                                 else {Min (PollInterval + 5) 50}
+                                 else {Min (PollInterval + 5) PollDelay}
                                  end
             in
                {Time.delay NewPollInterval}
@@ -523,7 +546,6 @@ define
       GOZCore = 'GOZCore'(%% Native Pointer Import/Export
                           pointerToObject      : PointerToObject
                           objectToPointer      : ObjectToPointer
-                          castPointer          : CastPointer
                           %% GList Import/Export
                           importList           : ImportList
                           exportList           : ExportList
@@ -555,8 +577,9 @@ define
                           getGdkEvent          : GetGdkEvent
                           %% GTK Canvas Helper
                           pointsPut            : PointsPut
-                          %% Gtk OzBase Class
+                          %% Gdk/Gtk OzBase Class
                           ozBase               : OzBase
+                          gdkOzBase            : GdkOzBase
                           %% Termination Function
                           exit                 : Exit)
 

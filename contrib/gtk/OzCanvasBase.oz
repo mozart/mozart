@@ -52,7 +52,6 @@ in
       meth newItem(Group Type Args $)
          Item = {New CanvasItem new(Group Type unit {GOZCore.null})}
       in
-         children <- Item|@children
          OzCanvasBase, AssignArgs(Item Args)
          Item
       end
@@ -60,9 +59,6 @@ in
          OzCanvasBase, AssignArgs(Item Args)
       end
       meth closeItem(Item)
-         children <- {Filter @children fun {$ Child}
-                                          Child \= Item
-                                       end}
          {Item close}
       end
    end
