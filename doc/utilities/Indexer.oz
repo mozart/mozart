@@ -120,9 +120,9 @@ define
          C1 = InverseOrderMap.C
          if {Char.isAlpha C1} then {Char.toUpper C1}
          elseif {Char.isDigit C1} then &0
-         else &*
+         else &_
          end
-      [] nil then &*
+      [] nil then &_
       end
    end
 
@@ -161,6 +161,13 @@ define
       end
    end
 
+   fun {GroupName G}
+      PCDATA(case G of &_ then 'Symbols'
+             [] &0 then 'Numbers'
+             else [G]
+             end)
+   end
+
    fun {MakeIndex Entries} Es SortedEs Groups in
       Es = {Map Entries
             fun {$ Ands0#EntryHTML} Ands in
@@ -175,13 +182,15 @@ define
             end}
       SortedEs = {Sort Es fun {$ X Y} {KeyLess X.1 Y.1} end}
       Groups = {Group SortedEs}
-      SEQ({Map Groups
+      SEQ(center(table(border: 1 cellpadding: 2
+                       tr(SEQ({Map Groups
+                               fun {$ G#_}
+                                  td(a(href: [&# &_ G] {GroupName G}))
+                               end}))))|
+          {Map Groups
            fun {$ G#Es}
               'div'(h3('class': [margin]
-                       PCDATA(case G of &* then 'Symbols'
-                              [] &0 then 'Numbers'
-                              else [G]
-                              end))
+                       a(name: [&_ G] {GroupName G}))
                     SEQ({MakeHierarchy Es}))
            end})
    end
