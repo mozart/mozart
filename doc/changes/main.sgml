@@ -146,6 +146,38 @@ particular, it lists the changes from
 	  (returned by <<Value.status>>).</item>
       </list>
 
+    <section id="sec.m130.base">
+      <title/The Oz Base Environment/
+      <p>
+      <list>
+         <item> Added <<Array.exchange>>, <<Dictionary.exchange>>, 
+                and <<Dictionary.condExchange>>.
+      </list>
+
+    <section id="sec.m130.uniform">
+      <title/Uniform State Operators/
+      <p> Mutable operators (Cells, Object Attributes, Dictionary/Array 
+          Entries) can now be updated with the <<:=>> operator and
+          the current value retrieved with the <<@>> operator.
+          More details in <ptr.extern to="ozdoc:base" key="chapter.infix">.
+
+    <section id="sec.m130.gc">
+      <title/Garbage Collection/
+      <p>Entries in thread stacks and closures that are no longer
+         reachable are now garbage collected.
+
+    <section id="sec.m130.windows">
+      <title/Windows/
+      <p>changes and fixes that concern the Windows platform:
+      <list>
+	<item>Mozart is now buildable with <code proglang=sh/gcc/ version
+              3 and upwards. <code proglang=sh/oztool/ now reverts to 
+             <code proglang=sh/gcc/ and <code proglang=sh/g++/ as default 
+           when invoked with the
+	  <code proglang=sh/-gnu/ option.  This can be configured as
+	  described in <ptr.extern to="ozdoc:tools" key="section.oztool-env">.
+        <item>The Windows distribution is now built with <code proglang=sh/gcc 3.x/.
+      </list>
   </chapter>
 
   <chapter id="chapter.m125">
