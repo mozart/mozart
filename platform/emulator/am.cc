@@ -52,7 +52,6 @@ void usage(int /* argc */,char **argv) {
   fprintf(stderr,
           "usage: %s <options>\n",
           argv[0]);
-  fprintf(stderr, " -copyalways  : ignore copy once flag\n");
   fprintf(stderr, " -d           : debugging on\n");
   fprintf(stderr, " -init <file> : load and execute init procedure\n");
   fprintf(stderr, " -u <url>     : start a compute server\n");
@@ -153,8 +152,6 @@ void AM::init(int argc,char **argv)
     ozconf.ozPath = tmp;
   }
 
-  ozconf.copyalways = getenv("OZCOPYALWAYS") ? 1 : 0;
-
   char *url = NULL;
   char *initFile = getenv("OZINIT");
 
@@ -195,10 +192,6 @@ void AM::init(int argc,char **argv)
 #ifdef DEBUG_TRACE
       ozd_tracerOn();
 #endif
-      continue;
-    }
-    if (strcmp(argv[i],"-copyalways")==0) {
-      ozconf.copyalways = 1;
       continue;
     }
 
