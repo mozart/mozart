@@ -629,6 +629,9 @@ exportDecls	: /* empty */
 		  { $$ = nilAtom; }
 		| nakedVariable exportDecls
 		  { $$ = consList(newCTerm("fExportItem",$1),$2); }
+		| featureNoVar ':' nakedVariable exportDecls
+		  { $$ = consList(newCTerm("fExportItem",
+					   newCTerm("fColon",$1,$3)),$4); }
 		;
 
 compare		: COMPARE
