@@ -1105,7 +1105,7 @@ OZ_Return DistHandlerInstall(SRecord *condStruct, TaggedRef proc){
     return installGlobalWatcher(ec,proc,kind);}
   DEREF(entity,vs_ptr,vs_tag);
   if(!isVariableTag(vs_tag)){
-    Tertiary* tert;
+    Tertiary* tert = tagged2Tert(entity);
     return installWatcher(tert,ec,proc,th,kind);}
   return installWatcher(vs_ptr,ec,proc,th,kind);
 }
@@ -1125,7 +1125,7 @@ OZ_Return DistHandlerDeInstall(SRecord *condStruct, TaggedRef proc){
 
   DEREF(entity,vs_ptr,vs_tag);
   if(!isVariableTag(vs_tag)){
-    Tertiary* tert;
+    Tertiary* tert = tagged2Tert(entity);
     return deinstallWatcher(tert,ec,proc,th,kind);}
   return deinstallWatcher(vs_ptr,ec,proc,th,kind);
 }
