@@ -61,7 +61,7 @@ BIMODSPECS = \
         Lock Name Number Object Port Procedure Record \
         String Thread Time Tuple Unit Value VirtualString \
         BitString ByteString Word InterFault \
-        WeakDictionary $(SITE_PROPERTY_SPECS) \
+        WeakDictionary Alice $(SITE_PROPERTY_SPECS) \
         INTERNAL # do not include this at compiler (things will blow up!)
 
 MODSPECS= \
@@ -90,7 +90,7 @@ OTHERSRCS= \
         print.cc base.cc ozconfig.cc \
         foreign.cc dpInterface.cc boot-manager.cc \
         builtins.cc vprops.cc debug.cc interFault.cc \
-        system.cc
+        system.cc alice.cc
 
 SUPPORTSRCS=\
         stack.cc genhashtbl.cc ozostream.cc hashtbl.cc \
