@@ -143,16 +143,26 @@ public:
     freeListDispose(this, sizeof(FdDistributor));
   }
 
-  virtual Distributor * gc(void) {
+  virtual Distributor * gCollect(void) {
     FdDistributor * t = (FdDistributor *) 
       oz_hrealloc(this, sizeof(FdDistributor));
-    OZ_collectHeapTerm(t->sync,t->sync);
-    OZ_collectHeapTerm(t->sel_val,t->sel_val);
-    t->vars = OZ_copyOzTerms(size, t->vars);
+    OZ_gCollectTerm(t->sync);
+    OZ_gCollectTerm(t->sel_val);
+    t->vars = OZ_gCollectAllocBlock(size, t->vars);
+    return t;
+  }
+
+  virtual Distributor * sClone(void) {
+    FdDistributor * t = (FdDistributor *) 
+      oz_hrealloc(this, sizeof(FdDistributor));
+    OZ_sCloneTerm(t->sync);
+    OZ_sCloneTerm(t->sel_val);
+    t->vars = OZ_sCloneAllocBlock(size, t->vars);
     return t;
   }
 
 };
+
 
 
 /*

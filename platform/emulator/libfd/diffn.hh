@@ -27,7 +27,8 @@ public:
   DiffnPropagator(OZ_Term, OZ_Term, OZ_Term, OZ_Term);
   ~DiffnPropagator();
   virtual size_t sizeOf(void) { return sizeof(DiffnPropagator); }
-  virtual void updateHeapRefs(OZ_Boolean);
+  virtual void gCollect(void);
+  virtual void sClone(void);
   virtual OZ_Return propagate(void); 
   virtual OZ_Term getParameters(void) const;
   virtual OZ_PropagatorProfile * getProfile(void) const { return &profile; }

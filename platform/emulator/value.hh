@@ -107,7 +107,8 @@ public:
 
   const char *getPrintName();
 
-  Literal *gc();
+  Literal *gCollect(void);
+  Literal *sClone(void);
 
   inline unsigned int hash();  
 };
@@ -142,10 +143,16 @@ public:
 
   Bool isOnHeap() { return (getFlags()&Lit_isNamedName)==0; }
   Bool hasGName() { return (getFlags()&Lit_hasGName); }
-  Bool gcIsMarked();
 
-  Name *gcName();
-  void gcRecurse();
+  Bool Name::cacIsMarked() { 
+    return GCISMARKED(homeOrGName); 
+  }
+
+  Name * gCollectName(void);
+  void gCollectRecurse(void);
+
+  Name * sCloneName(void);
+  void sCloneRecurse(void);
 
   GName *getGName1() { return (GName*) ToPointer(homeOrGName); }
   GName *globalize();
@@ -368,7 +375,7 @@ public:
   double getValue() { return value; }
   unsigned int hash() { return (unsigned int) value; }
 
-  Float *gc();
+  Float * gCollect(void);
 };
 
 inline
@@ -421,8 +428,11 @@ public:
     args[0] = head; args[1] = tail;
   }
 
-  void gcRecurse();
-  LTuple *gc();
+  void gCollectRecurse(void);
+  LTuple * gCollect(void);
+
+  void sCloneRecurse(void);
+  LTuple * sClone(void);
 
   TaggedRef getHead()          { return tagged2NonVariable(args); }
   TaggedRef getTail()          { return tagged2NonVariable(args+1); }
@@ -515,7 +525,6 @@ int oz_fastlength(OZ_Term l)
  *=================================================================== */
 
 /* when adding a new type update
- *   gc and gcRecurse
  *   print (print.cc and foreign.cc)
  *   OZ_toVirtualString
  *   finalizable
@@ -566,15 +575,18 @@ public:
   ConstTerm() { Assert(0); }
   ConstTerm(TypeOfConst t) { init(t); }
   void init(TypeOfConst t) { tag = t<<1; }
-  Bool gcIsMarked(void)    { return tag&1; }
-  void gcMark(ConstTerm *) { tag |= 1; }
-  void ** gcGetMarkField(void) { return (void **) &tag; }
-  ConstTerm * gcGetFwd(void) {
-    Assert(gcIsMarked());
+  Bool cacIsMarked(void)    { return tag&1; }
+  void cacMark(ConstTerm *) { tag |= 1; }
+  void ** cacGetMarkField(void) { return (void **) &tag; }
+  ConstTerm * cacGetFwd(void) {
+    Assert(cacIsMarked());
     return (ConstTerm *) (tag&~1);
   }
-  ConstTerm *gcConstTerm(void);
-  void gcConstRecurse(void);
+
+  ConstTerm *gCollectConstTerm(void);
+  void gCollectConstRecurse(void);
+  ConstTerm *sCloneConstTerm(void);
+  void sCloneConstRecurse(void);
 
   TypeOfConst getType() { return (TypeOfConst) ((tag & Co_Mask)>>1); }
 
@@ -612,7 +624,9 @@ public:
     return hasGName() ? oz_rootBoardOutline() : (Board*)boardOrGName.getPtr();
   }
 
-  void gcConstTermWithHome();
+  void gCollectConstTermWithHome(void);
+  void sCloneConstTermWithHome(void);
+
   void setGName(GName *gn) { 
     Assert(gn);
     boardOrGName.set(gn,CWH_GName);
@@ -739,7 +753,7 @@ public:
   void getString(char *s) { mpz_get_str(s,10,&value); }
 
   unsigned int hash()              { return 75; } // all BigInt hash to same value
-  BigInt *gc();
+  BigInt * gCollect(void);
 };
 
 
@@ -902,7 +916,7 @@ public:
   ForeignPointer():ConstTerm(Co_Foreign_Pointer),ptr(0){}
   ForeignPointer(void*p):ConstTerm(Co_Foreign_Pointer),ptr(p){}
   void*getPointer(){ return ptr; }
-  ForeignPointer* gc(void);
+  ForeignPointer * cac(void);
 };
 
 /*===================================================================
@@ -1002,7 +1016,7 @@ friend class ArityTable;
 private:
   static Arity *newArity(TaggedRef, Bool);
 
-  void gc();
+  void gCollect(void);
 
   TaggedRef list;
   Arity *next;
@@ -1042,7 +1056,7 @@ friend class Arity;
 public:
   ArityTable ( int );
   Arity *find ( TaggedRef);
-  void gc();
+  void gCollect(void);
   OZPRINT
   void printStat();
 
@@ -1124,7 +1138,8 @@ public:
   OZPRINTLONG
   NO_DEFAULT_CONSTRUCTORS(SRecord)
 
-  SRecord *gcSRecord();
+  SRecord *gCollectSRecord(void);
+  SRecord *sCloneSRecord(void);
   
   Bool isTuple() { return sraIsTuple(recordArity); }
 
@@ -1240,7 +1255,8 @@ public:
   Bool setFeature(TaggedRef feature,TaggedRef value);
   TaggedRef replaceFeature(TaggedRef feature,TaggedRef value);
   
-  void gcRecurse();
+  void gCollectRecurse(void);
+  void sCloneRecurse(void);
 
   Bool compareSortAndArity(TaggedRef lbl, SRecordArity arity) {
     return oz_eq(getLabel(),lbl) &&
@@ -1441,7 +1457,8 @@ OZ_Term oz_checkList(OZ_Term l, OzCheckList check=OZ_CHECK_ANY)
 #define CLASS_SITED   0x2
 
 class ObjectClass: public ConstTermWithHome {
-  friend void ConstTerm::gcConstRecurse(void);
+  friend void ConstTerm::gCollectConstRecurse(void);
+  friend void ConstTerm::sCloneConstRecurse(void);
 private:
   SRecord *features;
   SRecord *unfreeFeatures;
@@ -1493,7 +1510,8 @@ public:
 
   const char *getPrintName();
 
-  ObjectClass *gcClass();
+  ObjectClass *gCollectClass();
+  ObjectClass *sCloneClass();
   
   void import(SRecord *feat,OzDictionary *fm, SRecord *uf,
 	      OzDictionary *dm, int f)
@@ -1540,7 +1558,8 @@ RecOrCell makeRecCell(SRecord *r) { return ToInt32(r); }
 
 
 class Object: public Tertiary {
-  friend void ConstTerm::gcConstRecurse(void);
+  friend void ConstTerm::gCollectConstRecurse(void);
+  friend void ConstTerm::sCloneConstRecurse(void);
 private:
   ObjectClass *cl1;
   RecOrCell state;
@@ -1634,8 +1653,10 @@ public:
   TaggedRef getArityList();
   int getWidth ();
 
-  Object *gcObjectInline();
-  Object *gcObject();
+  Object * gCollectObjectInline();
+  Object * gCollectObject();
+  Object * sCloneObjectInline();
+  Object * sCloneObject();
 
   GName *globalize();
   void localize();
@@ -1686,7 +1707,8 @@ ObjectClass *tagged2ObjectClass(TaggedRef term)
  *=================================================================== */
 
 class SChunk: public ConstTermWithHome {
-friend void ConstTerm::gcConstRecurse(void);
+  friend void ConstTerm::gCollectConstRecurse(void);
+  friend void ConstTerm::sCloneConstRecurse(void);
 private:
   TaggedRef value;
 public:
@@ -1758,7 +1780,8 @@ OZ_Term oz_newChunk(Board *bb, OZ_Term val)
  *=================================================================== */
 
 class OzArray: public ConstTermWithHome {
-  friend void ConstTerm::gcConstRecurse(void);
+  friend void ConstTerm::gCollectConstRecurse(void);
+  friend void ConstTerm::sCloneConstRecurse(void);
 private:
   TaggedRef *args;
   int offset, width; // mm2: put one into ConstTerm tag?
@@ -2007,13 +2030,14 @@ public:
 
   void patchFileAndLine();
 
-  static void gcPrTabEntries();
+  static void gCollectPrTabEntries(void);
 };
 
 
 
 class Abstraction: public ConstTermWithHome {
-  friend void ConstTerm::gcConstRecurse(void);
+  friend void ConstTerm::gCollectConstRecurse(void);
+  friend void ConstTerm::sCloneConstRecurse(void);
 protected:
   PrTabEntry *pred;
   TaggedRef globals[1];
@@ -2078,7 +2102,8 @@ Abstraction *tagged2Abstraction(TaggedRef term)
  *=================================================================== */
 
 class Builtin: public ConstTerm {
-friend void ConstTerm::gcConstRecurse(void);
+  friend void ConstTerm::gCollectConstRecurse(void);
+  friend void ConstTerm::sCloneConstRecurse(void);
 private:
   const char * mod_name;
   const char * bi_name;
@@ -2195,7 +2220,8 @@ int oz_procedureArity(OZ_Term pterm)
 
 
 class CellLocal:public Tertiary{
-friend void ConstTerm::gcConstRecurse(void);
+  friend void ConstTerm::gCollectConstRecurse(void);
+  friend void ConstTerm::sCloneConstRecurse(void);
 private:
   TaggedRef val;
   void *dummy; // mm2
@@ -2254,7 +2280,8 @@ public:
 // obtaining the state from a remote site) is PERDIO business
 // ('CellManager')
 class CellManagerEmul : public Tertiary {
-friend void ConstTerm::gcConstRecurse(void);
+  friend void ConstTerm::gCollectConstRecurse(void);
+  friend void ConstTerm::sCloneConstRecurse(void);
 protected:
   CellSecEmul *sec;
   Chain *chain;
@@ -2267,7 +2294,8 @@ public:
 };
 
 class CellFrameEmul : public Tertiary {
-friend void ConstTerm::gcConstRecurse(void);
+  friend void ConstTerm::gCollectConstRecurse(void);
+  friend void ConstTerm::sCloneConstRecurse(void);
 protected:
   CellSecEmul *sec;
   void *forward;
@@ -2292,14 +2320,16 @@ Bool oz_isCell(TaggedRef term)
  *=================================================================== */
 
 class Port : public Tertiary {
-friend void ConstTerm::gcConstRecurse(void);
+  friend void ConstTerm::gCollectConstRecurse(void);
+  friend void ConstTerm::sCloneConstRecurse(void);
 public:
   NO_DEFAULT_CONSTRUCTORS(Port)
   Port(Board *b, TertType tt) : Tertiary(b,Co_Port,tt){}
 };
 
 class PortWithStream : public Port {
-friend void ConstTerm::gcConstRecurse(void);
+  friend void ConstTerm::gCollectConstRecurse(void);
+  friend void ConstTerm::sCloneConstRecurse(void);
 public:
   TaggedRef strm;
   NO_DEFAULT_CONSTRUCTORS(PortWithStream)
@@ -2320,7 +2350,8 @@ lst word:   Co_Port:board       Co_Port:_         Co_Port:_
 ---------------------------------------------------- */
 
 class PortLocal: public PortWithStream {
-friend void ConstTerm::gcConstRecurse(void);
+  friend void ConstTerm::gCollectConstRecurse(void);
+  friend void ConstTerm::sCloneConstRecurse(void);
 public:
   NO_DEFAULT_CONSTRUCTORS(PortLocal)
   PortLocal(Board *b, TaggedRef s) : PortWithStream(b,s) {};
@@ -2341,7 +2372,8 @@ inline Port *tagged2Port(TaggedRef term)
  *=================================================================== */
 
 class Space: public Tertiary {
-friend void ConstTerm::gcConstRecurse(void);
+  friend void ConstTerm::gCollectConstRecurse(void);
+  friend void ConstTerm::sCloneConstRecurse(void);
 private:
   Board *solve;
   // The solve pointer can be:
@@ -2426,7 +2458,8 @@ public:
 
 Thread* pendThreadResumeFirst(PendThread **pt);
 OZ_Return pendThreadAddToEndEmul(PendThread **pt,Thread *t, Board *home);
-void gcPendThreadEmul(PendThread**);
+void gCollectPendThreadEmul(PendThread**);
+void sClonePendThreadEmul(PendThread**);
 
 /*===================================================================
  * Locks
@@ -2441,7 +2474,8 @@ public:
 };
 
 class LockLocal:public OzLock{
-friend void ConstTerm::gcConstRecurse(void);
+  friend void ConstTerm::gCollectConstRecurse(void);
+  friend void ConstTerm::sCloneConstRecurse(void);
 private:
   PendThread *pending;
   Thread *locker;

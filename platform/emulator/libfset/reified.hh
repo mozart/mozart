@@ -103,10 +103,11 @@ public:
   virtual size_t sizeOf(void) {
     return sizeof(BoundsPropagator);
   }
-  virtual void updateHeapRefs(OZ_Boolean) {
-    OZ_updateHeapTerm(_s);
-    OZ_updateHeapTerm(_d);
-    OZ_updateHeapTerm(_r);
+  virtual void gCollect(void) {
+    OZ_gCollectBlock(&_s,&_s,3);
+  }
+  virtual void sClone(void) {
+    OZ_sCloneBlock(&_s,&_s,3);
   }
   virtual OZ_Term getParameters(void) const {
     return OZ_cons(_s, 
@@ -158,10 +159,24 @@ public:
   virtual size_t sizeOf(void) {
     return sizeof(BoundsNPropagator);
   }
-  virtual void updateHeapRefs(OZ_Boolean) {
-    _d = OZ_copyOzTerms(_size, _d);
-    _s = OZ_copyOzTerms(_size, _s);
-    _r = OZ_copyOzTerms(_size, _r);
+  virtual void gCollect(void) {
+    _d = OZ_gCollectAllocBlock(_size, _d);
+    _s = OZ_gCollectAllocBlock(_size, _s);
+    _r = OZ_gCollectAllocBlock(_size, _r);
+
+    _d_ub = OZ_copyCInts(_size, _d_ub);
+
+    _s_ub_t new_s_ub = { OZ_hallocCInts(_size) };
+    
+    for (int i = _size; i--; )
+      new_s_ub.s_ub_card[i] = _s_ub.s_ub_card[i];
+    
+    _s_ub = new_s_ub;
+  }
+  virtual void sClone(void) {
+    _d = OZ_sCloneAllocBlock(_size, _d);
+    _s = OZ_sCloneAllocBlock(_size, _s);
+    _r = OZ_sCloneAllocBlock(_size, _r);
 
     _d_ub = OZ_copyCInts(_size, _d_ub);
 
@@ -204,7 +219,7 @@ public:
     return &profile;
   }
 
-  virtual void updateHeapRefs(OZ_Boolean) {
+  virtual void gCollect(void) {
     // copy index sets
     _i_sets = _i_sets->copy();
 
@@ -218,7 +233,24 @@ public:
     _vs = new_vs;
 
     // copy bools
-    _vd = OZ_copyOzTerms(_size, _vd);
+    _vd = OZ_gCollectAllocBlock(_size, _vd);
+  
+  }
+  virtual void sClone(void) {
+    // copy index sets
+    _i_sets = _i_sets->copy();
+
+    // copy subsets
+    int vs_chars = _size * sizeof(OZ_FSetValue);
+
+    OZ_FSetValue * new_vs = (OZ_FSetValue *) (void *) OZ_hallocChars(vs_chars);
+    
+    memcpy(new_vs, _vs, vs_chars);
+
+    _vs = new_vs;
+
+    // copy bools
+    _vd = OZ_sCloneAllocBlock(_size, _vd);
   
   }
   virtual OZ_Term getParameters(void) const {
@@ -248,10 +280,18 @@ public:
     return &profile;
   }
 
-  virtual void updateHeapRefs(OZ_Boolean gc) {
-    PartitionReifiedPropagator::updateHeapRefs(gc);
+  virtual void gCollect(void) {
+    PartitionReifiedPropagator::gCollect();
     
-    OZ_updateHeapTerm(_cost);
+    OZ_gCollectTerm(_cost);
+
+    _min_cost_per_elem = OZ_copyCInts(_u_max_elem+1, _min_cost_per_elem);
+  }
+
+  virtual void sClone(void) {
+    PartitionReifiedPropagator::sClone();
+    
+    OZ_sCloneTerm(_cost);
 
     _min_cost_per_elem = OZ_copyCInts(_u_max_elem+1, _min_cost_per_elem);
   }

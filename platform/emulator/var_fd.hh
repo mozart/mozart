@@ -68,8 +68,10 @@ public:
     fdSuspList[fd_prop_singl] = fdSuspList[fd_prop_bounds] = NULL;
   }
 
-  // methods relevant for term copying (gc and solve)
-  void gc(void); 
+  void gCollect(void); 
+  void sClone(void); 
+
+
   inline void dispose(void);
 
   // methods for trailing

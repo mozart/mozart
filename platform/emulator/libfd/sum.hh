@@ -42,8 +42,9 @@ private:
   {
     _l = OZ_hallocCInts(reg_sz);
     _u = OZ_hallocCInts(reg_sz);
+    int m = OZ_getFDSup() + 1;
     for (int i = reg_sz; i--; ) {
-      _l[i] = -1; _u[i] = OZ_getFDSup() + 1;
+      _l[i] = -1; _u[i] = m
     } 
   }
 #endif
@@ -60,21 +61,17 @@ public:
     : Propagator_VI_VD_I(a, x, c, is_lin) { init_l_u(); };
 
   virtual size_t sizeOf(void) { return sizeof(LinEqPropagator); }
-  virtual void updateHeapRefs(OZ_Boolean d)
-  {
-    Propagator_VI_VD_I::updateHeapRefs(d);
-    
-    int * __l = OZ_hallocCInts(reg_sz);
-    int * __u = OZ_hallocCInts(reg_sz);
-    
-    for (int i = reg_sz; i--; ) {
-      __l[i] = _l[i];
-      __u[i] = _u[i];
-    }
-    _l = __l;
-    _u = __u;
+  virtual void gCollect(void) {
+    Propagator_VI_VD_I::gCollect();
+    _l = OZ_copyCInts(reg_sz, _l);
+    _u = OZ_copyCInts(reg_sz, _u);
   }
-  #endif
+  virtual void sClone(void) {
+    Propagator_VI_VD_I::sClone();
+    _l = OZ_copyCInts(reg_sz, _l);
+    _u = OZ_copyCInts(reg_sz, _u);
+  }
+#endif
 
   LinEqPropagator(const Propagator_VI_VD_I_D &o) 
     : Propagator_VI_VD_I(o) {}

@@ -47,12 +47,23 @@ public:
   OZ_Term typeV() { return oz_atom("thread"); }
 
   virtual
-  OZ_Extension *gcV(void) { return new OzThread(*this); }
+  OZ_Extension *gCollectV(void) { return new OzThread(*this); }
+  virtual
+  OZ_Extension *sCloneV(void) { return new OzThread(*this); }
 
   // mm2: possible bug: eqV may fail when dead thread is compared!
   virtual
-  void gcRecurseV(void) {
-    Thread *tmpThread = SuspToThread(thread->gcSuspendable());
+  void gCollectRecurseV(void) {
+    Thread *tmpThread = SuspToThread(thread->gCollectSuspendable());
+    if (!tmpThread) {
+      tmpThread=new Thread(thread->getFlags(),thread->getPriority(),
+			   oz_rootBoard(),thread->getID());
+    }
+    thread=tmpThread;
+  }
+  virtual
+  void sCloneRecurseV(void) {
+    Thread *tmpThread = SuspToThread(thread->sCloneSuspendable());
     if (!tmpThread) {
       tmpThread=new Thread(thread->getFlags(),thread->getPriority(),
 			   oz_rootBoard(),thread->getID());

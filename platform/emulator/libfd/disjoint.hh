@@ -1,12 +1,13 @@
 /*
  *  Authors:
- *    Joerg Wuertz (wuertz@dfki.de)
+ *    Jörg Würtz (wuertz@dfki.de)
  *
  *  Contributors:
- *    optional, Contributor's name (Contributor's email address)
+ *    Christian Schulte <schulte@ps.uni-sb.de>
  *
  *  Copyright:
- *    Organization or Person (Year(s))
+ *    Jörg Würtz, 1997
+ *    Christian Schulte, 1999
  *
  *  Last change:
  *    $Date$ by $Author$
@@ -88,15 +89,26 @@ public:
   //
   virtual OZ_Return propagate(void);
   virtual OZ_PropagatorProfile * getProfile(void) const { return &profile; }
-  virtual void updateHeapRefs(OZ_Boolean duplicate = OZ_FALSE) {
-    Propagator_D_I_D_I_D::updateHeapRefs(duplicate);
+  virtual void gCollect(void) {
+    Propagator_D_I_D_I_D::gCollect();
     //
     // here goes the additional stuff:
-    _prop_fnct_table.gc();
-    _param_table.gc();
+    _prop_fnct_table.gCollect();
+    _param_table.gCollect();
     for (int i = nb_lvars; i--; ) {
       _ld[i].copyExtension();
-      _el[i].gc();
+      _el[i].gCollect();
+    }
+  }
+  virtual void sClone(void) {
+    Propagator_D_I_D_I_D::sClone();
+    //
+    // here goes the additional stuff:
+    _prop_fnct_table.sClone();
+    _param_table.sClone();
+    for (int i = nb_lvars; i--; ) {
+      _ld[i].copyExtension();
+      _el[i].sClone();
     }
   }
   virtual size_t sizeOf(void) { return sizeof(TasksOverlapPropagator); }

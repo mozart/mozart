@@ -13,7 +13,7 @@ OZ_Term WeakDictionary::printV(int depth)
 			   oz_atom(">")));
 }
 
-OZ_Extension* WeakDictionary::gcV()
+OZ_Extension* WeakDictionary::gCollectV()
 {
   // copy to the new heap and enter into linked list
   // WeakDictionary's gcRecurseV does nothing.
@@ -24,7 +24,11 @@ OZ_Extension* WeakDictionary::gcV()
   return d;
 }
 
-void gcWeakDictionaries()
+OZ_Extension* WeakDictionary::sCloneV() {
+  return NULL;
+}
+
+void gCollectWeakDictionaries()
 {
   // This is called after the 1st gc phase has completed.
   // all data reachable outside of weak dictionaries has

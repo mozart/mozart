@@ -145,64 +145,64 @@ void marshalSPPStub(TaggedRef term, MsgBuffer *bs,Bool trail)
 }
 
 // interface for GC;
-void gcProxyRecurseStub(Tertiary *t)
+void gCollectProxyRecurseStub(Tertiary *t)
 {
-  OZ_error("'gcProxyRecurse' called without DP library?");
+  OZ_error("'gCollectProxyRecurse' called without DP library?");
 }
-void gcManagerRecurseStub(Tertiary *t)
+void gCollectManagerRecurseStub(Tertiary *t)
 {
-  OZ_error("'gcManagerRecurse' called without DP library?");
+  OZ_error("'gCollectManagerRecurse' called without DP library?");
 }
-ConstTerm* gcDistResourceStub(ConstTerm*)
+ConstTerm* gCollectDistResourceStub(ConstTerm*)
 {
-  OZ_error("'gcDistResource' called without DP library?");
+  OZ_error("'gCollectDistResource' called without DP library?");
   return ((ConstTerm *) 0);
 }
 
 //
-void gcDistCellRecurseStub(Tertiary *t)
+void gCollectDistCellRecurseStub(Tertiary *t)
 {
-  OZ_error("'gcDistCellRecurse' called without DP library?");
+  OZ_error("'gCollectDistCellRecurse' called without DP library?");
 }
-void gcDistLockRecurseStub(Tertiary *t)
+void gCollectDistLockRecurseStub(Tertiary *t)
 {
-  OZ_error("'gcDistLockRecurse' called without DP library?");
+  OZ_error("'gCollectDistLockRecurse' called without DP library?");
 }
 //
-void gcDistPortRecurseStub(Tertiary *t)
+void gCollectDistPortRecurseStub(Tertiary *t)
 {
-  OZ_error("'gcDistPortRecurse' called without DP library?");
+  OZ_error("'gCollectDistPortRecurse' called without DP library?");
 }
 
 //
-// (Only) gc method - for cells & locks (because we have to know
+// (Only) gCollect method - for cells & locks (because we have to know
 // whether they are accessible locally or not);
-ConstTerm* auxGcDistCellStub(Tertiary *t)
+ConstTerm* auxGCollectDistCellStub(Tertiary *t)
 {
-  OZ_error("'auxGcDistCell' called without DP library?");
+  OZ_error("'auxGCollectDistCell' called without DP library?");
   return ((ConstTerm *) 0);
 }
-ConstTerm* auxGcDistLockStub(Tertiary *t)
+ConstTerm* auxGCollectDistLockStub(Tertiary *t)
 {
-  OZ_error("'auxGcDistLock' called without DP library?");
-  return ((ConstTerm *) 0);
-}
-
-//
-ConstTerm *gcStatefulSpecStub(Tertiary *t)
-{
-  OZ_error("'gcStatefulSpec' called without DP library?");
+  OZ_error("'auxGCollectDistLock' called without DP library?");
   return ((ConstTerm *) 0);
 }
 
 //
-void gcBorrowTableUnusedFramesStub() {}
-void gcFrameToProxyStub() {}
+ConstTerm *gCollectStatefulSpecStub(Tertiary *t)
+{
+  OZ_error("'gCollectStatefulSpec' called without DP library?");
+  return ((ConstTerm *) 0);
+}
 
 //
-void gcPerdioFinalStub() {}
-void gcPerdioRootsStub() {}
-void gcEntityInfoStub(Tertiary *t)
+void gCollectBorrowTableUnusedFramesStub() {}
+void gCollectFrameToProxyStub() {}
+
+//
+void gCollectPerdioFinalStub() {}
+void gCollectPerdioRootsStub() {}
+void gCollectEntityInfoStub(Tertiary *t)
 {
   Assert(t->getInfo() == (EntityInfo *) 0);
 }
@@ -282,34 +282,34 @@ void (*marshalSPP)(TaggedRef term, MsgBuffer *bs,Bool trail)
   = marshalSPPStub;
 
 //
-void (*gcProxyRecurse)(Tertiary *t)
-  = gcProxyRecurseStub;
-void (*gcManagerRecurse)(Tertiary *t)
-  = gcManagerRecurseStub;
-ConstTerm* (*gcDistResource)(ConstTerm*)
-  = gcDistResourceStub;
-void (*gcDistCellRecurse)(Tertiary *t)
-  = gcDistCellRecurseStub;
-void (*gcDistLockRecurse)(Tertiary *t)
-  = gcDistLockRecurseStub;
-void (*gcDistPortRecurse)(Tertiary *t)
-  = gcDistPortRecurseStub;
+void (*gCollectProxyRecurse)(Tertiary *t)
+  = gCollectProxyRecurseStub;
+void (*gCollectManagerRecurse)(Tertiary *t)
+  = gCollectManagerRecurseStub;
+ConstTerm* (*gCollectDistResource)(ConstTerm*)
+  = gCollectDistResourceStub;
+void (*gCollectDistCellRecurse)(Tertiary *t)
+  = gCollectDistCellRecurseStub;
+void (*gCollectDistLockRecurse)(Tertiary *t)
+  = gCollectDistLockRecurseStub;
+void (*gCollectDistPortRecurse)(Tertiary *t)
+  = gCollectDistPortRecurseStub;
 
 //
 //
 //
-void (*gcBorrowTableUnusedFrames)()
-  = gcBorrowTableUnusedFramesStub;
-void (*gcFrameToProxy)()
-  = gcFrameToProxyStub;
+void (*gCollectBorrowTableUnusedFrames)()
+  = gCollectBorrowTableUnusedFramesStub;
+void (*gCollectFrameToProxy)()
+  = gCollectFrameToProxyStub;
 
 //
-void (*gcPerdioFinal)()
-  = gcPerdioFinalStub;
-void (*gcPerdioRoots)()
-  = gcPerdioRootsStub;
-void (*gcEntityInfo)(Tertiary*)
-  = gcEntityInfoStub;
+void (*gCollectPerdioFinal)()
+  = gCollectPerdioFinalStub;
+void (*gCollectPerdioRoots)()
+  = gCollectPerdioRootsStub;
+void (*gCollectEntityInfo)(Tertiary*)
+  = gCollectEntityInfoStub;
 
 // exit hook;
 void (*dpExit)()

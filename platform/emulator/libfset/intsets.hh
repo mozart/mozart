@@ -68,8 +68,11 @@ public:
   virtual size_t sizeOf(void) {
     return sizeof(Propagator_S);
   }
-  virtual void updateHeapRefs(OZ_Boolean) {
-    OZ_updateHeapTerm(_s);
+  virtual void gCollect(void) {
+    OZ_gCollectTerm(_s);
+  }
+  virtual void sClone(void) {
+    OZ_sCloneTerm(_s);
   }
   virtual OZ_Term getParameters(void) const {
     return OZ_cons(_s,OZ_nil());

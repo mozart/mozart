@@ -87,7 +87,7 @@ public:
 
   TaggedRef getFrameVariables();
 
-  OzDebug *gcOzDebug();
+  OzDebug * gCollectOzDebug(void);
 
   void dispose() {
     if (arity > 0)
