@@ -899,9 +899,8 @@ void engine(Bool init)
 
   if (e->isSetSFlag()) {  
 
-    e->deinstallPath(e->rootBoard);
-
     if (e->isSetSFlag(StartGC)) {
+      e->deinstallPath(e->rootBoard);
       e->doGC();
     }
 
@@ -910,11 +909,13 @@ void engine(Bool init)
     }
 
     if (e->isSetSFlag(UserAlarm)) {
+      e->deinstallPath(e->rootBoard);
       osBlockSignals();
       e->handleUser();
       osUnblockSignals();
     }
     if (e->isSetSFlag(IOReady)) {
+      e->deinstallPath(e->rootBoard);
       osBlockSignals();
       e->handleIO();
       osUnblockSignals();
