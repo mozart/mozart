@@ -189,7 +189,6 @@ FunBuiltins.ozf: compiler/Builtins.oz compiler-Builtins.oz $(STANDARD)
 FunSA.ozf: Search.ozf compiler/POTypes.oz compiler/StaticAnalysis.oz $(STANDARD)
         $(COMPILE) -l Search=Search.ozf compiler/FunSA.oz -o $@
 
-
 FunCode.ozf: compiler/CodeStore.oz compiler/CodeEmitter.oz \
         compiler/CodeGen.oz $(STANDARD)
 
@@ -295,7 +294,7 @@ $(OZBIN)/%: %
 clean:
         -rm -f compiler-Version.oz compiler-Builtins.oz
         -rm -f compiler-Opcodes.oz
-        -rm -f envgen compiler-Env.oz
+        -rm -f functor2env compiler-Env.oz
         -rm -f ozc.ozp Standard.ozf $(FUNCTORS) $(FUNFUNCTORS)
         -rm -f $(SYSLETS)
 
