@@ -26,7 +26,7 @@ import
    Application(exit getCmdArgs)
    Explorer(object)
 
-   Tk(frame toplevel send batch addXScrollbar addYScrollbar scrollbar)
+   Tk(frame toplevel batch addXScrollbar addYScrollbar scrollbar)
    TkTools(notebook)
    
    TaskBoard('class')
@@ -61,7 +61,6 @@ define
 	 V  = {New Tk.scrollbar      tkInit(parent:F orient:vertical
 					    width:13)}
       in
-	 {NB add(T)} {NB add(S)}
 	 {Tk.addXScrollbar B H}
 	 {Tk.addYScrollbar B V}
 	 {Tk.batch [grid(columnconfigure F    0 weight:1)
@@ -73,6 +72,7 @@ define
 		    grid(rowconfigure    self 0 weight:1)
 		    grid(F  row:0 column:1 sticky:nsew padx:4 pady:4)
 		    grid(NB row:0 column:0 sticky:n    padx:4 pady:4)]}
+	 {NB add(T)} {NB add(S)}
 	 self.Board = B
 	 self.Sched = S
       end
@@ -86,8 +86,9 @@ define
       
    end
    
-   Top = {New Tk.toplevel tkInit(title:  'Job Shop Scheduler'
-				 delete: Application.exit # 0)}
+   Top = {New Tk.toplevel tkInit(title:    'Job Shop Scheduler'
+				 delete:   Application.exit # 0
+				 withdraw: true)}
    
    JSS = {New Frontend
 	  tkInit(parent: Top
@@ -103,7 +104,11 @@ define
 			label: 'Display Job Shop Schedule')}
    
    
-   {Tk.send pack(JSS side:left)}
+   {Tk.batch [pack(JSS)
+	      update
+	      wm(deiconify Top)
+	      wm(resizable Top false false)]}
+	      
    
 end
 
