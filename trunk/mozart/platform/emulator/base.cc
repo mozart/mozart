@@ -33,6 +33,7 @@
 
 #include "ozconfig.hh"
 #include "os.hh"
+#include "value.hh"
 
 #include <stdarg.h>
 #include <errno.h>
@@ -187,3 +188,5 @@ char *delChar(char *s,char c) {
   *p=*help; /* don't forget the \0 */
   return s;
 }
+
+Atom * DBG_STEP_ATOM, * DBG_NOSTEP_ATOM, * DBG_EXIT_ATOM;

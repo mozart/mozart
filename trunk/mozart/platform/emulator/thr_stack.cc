@@ -91,8 +91,8 @@ TaggedRef TaskStack::frameToRecord(Frame *&frame, Thread *thread, Bool verbose)
 
   if (PC == C_DEBUG_CONT_Ptr) {
     OzDebug *dbg = (OzDebug *) Y;
-    OzDebugDoit dothis = (OzDebugDoit) (int) G;
-    return dbg->toRecord((dothis == DBG_EXIT)?"exit":"entry",thread,frameId);
+    Atom * dothis = (Atom *) (int) G;
+    return dbg->toRecord((dothis == DBG_EXIT_ATOM)?"exit":"entry",thread,frameId);
   }
 
   if (PC == C_CATCH_Ptr) {
@@ -340,16 +340,16 @@ TaggedRef TaskStack::getFrameVariables(int frameId) {
 void TaskStack::unleash(int frameId) {
   Assert(this);
 
-  OzDebugDoit dothislater = DBG_NOSTEP;
+  Atom * dothislater = DBG_NOSTEP_ATOM;
   Frame *auxtos = getTop();
   while (auxtos != NULL) {
     if (getFrameId(auxtos) <= frameId)
-      dothislater = DBG_STEP;
+      dothislater = DBG_STEP_ATOM;
     GetFrame(auxtos,PC,Y,G);
     if (PC == C_DEBUG_CONT_Ptr) {
-      OzDebugDoit dothis = (OzDebugDoit) (int) G;
-      if (dothis != DBG_EXIT)
-	ReplaceFrame(auxtos,PC,Y,makeTaggedSmallInt(dothislater));
+      Atom * dothis = (Atom *) (int) G;
+      if (dothis != DBG_EXIT_ATOM)
+	ReplaceFrame(auxtos,PC,Y,makeTaggedLiteral(dothislater));
     } else if (PC == C_EMPTY_STACK)
       return;
   }
