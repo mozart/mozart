@@ -249,7 +249,7 @@ TaggedRef CodeArea::dbgGetDef(ProgramCounter PC)
   getDefinitionArgs(pc,reg,next,file,line,pred);
 
   return OZ_mkTupleC("proc",4,OZ_atom(pred ? pred->getPrintName() : "???"),
-		     file,OZ_int(line),OZ_int(PC));
+		     file,OZ_int(line),OZ_int((int) PC));
 }
 
 ProgramCounter CodeArea::definitionStart(ProgramCounter from)
