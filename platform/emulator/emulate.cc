@@ -1849,7 +1849,7 @@ void engine() {
         e->setCurrent(aa->getBoard()->getBoardDeref());
 
         Bool ret = e->installScript(waitBoard->getScriptRef());
-        Assert(ret!=NULL);
+        Assert(ret!=NO);
         waitBoard->setCommitted(CBB);
         CBB->incSuspCount(waitBoard->getSuspCount()-1);
         DISPATCH(1);
@@ -1889,7 +1889,7 @@ void engine() {
         e->setCurrent(aa->getBoard()->getBoardDeref());
 
         Bool ret = e->installScript(bb->getScriptRef());
-        Assert(ret != NULL);
+        Assert(ret != NO);
         bb->setCommitted(CBB);
         CBB->incSuspCount(bb->getSuspCount());
         CBB->removeSuspension();
@@ -2303,7 +2303,7 @@ void engine() {
  LBLfailure:
   {
     DebugTrace(trace("fail",CBB));
-    Assert(CBB->isInstalled() != NULL);
+    Assert(CBB->isInstalled() != NO);
     Actor *aa=CBB->getActor();
     if (aa->isAskWait()) {
       (AWActor::Cast(aa))->failChild(CBB);
