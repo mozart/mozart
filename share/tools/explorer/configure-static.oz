@@ -27,20 +27,6 @@ FactorsToCm      =cTo(i: 2.54
 		      m: 10.0
 		      p: 0.035277778)
 
-DefOptions = o(drawing:    o(hide:   true
-			     scale:  false
-			     update: 10)
-	       search:     o(search:      1
-			     information: 5
-			     failed:      true)
-	       postscript: o(color:       case Tk.isColor then color
-					  else mono
-					  end
-			     width:       6.5 * FactorsToCm.i
-			     height:      9.5 * FactorsToCm.i
-			     size:        '6.5ix9i'
-			     orientation: false))
-
 StatusUpdateCnt = 50
 
 TitleName    = 'Oz Explorer'
@@ -110,52 +96,16 @@ ImageCenter         = ImageSize / 2.0
 ImageScale          = 0.6 / FloatScaleBase
 MaxExtent           = 12.0 * FloatScaleBase
 
-NodeBorderWidth      #
-ThickNodeBorderWidth = case Tk.isColor then 1#1 else 1#2 end
-LinkWidth            = 1
-
-%% How big and how far removed should the cursor shade be?
-ShadeWidth          = case Tk.isColor then 4 else 5 end * IntScaleBase
-ShadeScale          = case Tk.isColor then 1.05 else 1.10 end
-
-%% Set up some colors
-ChooseColor          #
-ChooseTermColor      #
-EntailedColor        #
-SuspendedColor       #
-FailedColor          #
-BlockedColor         #
-PartialFailedColor   #
-LineColor            #
-BackColor            #
-CursorColor          #
-PopupBgColor         = case Tk.isColor then
-			  'lightskyblue3'   # % ChooseColor
-			  'LightSlateBlue'  # % ChooseTermColor
-			  'MediumSeaGreen'  # % EntailedColor
-			  'olivedrab1'      # % SuspendedColor
-			  'firebrick2'      # % FailedColor
-			  'orange'          # % BlockedColor
-			  'purple1'         # % PartialFailedColor
-			  black             # % LineColor
-			  white             # % BackColor
-			  gray60            # % CursorColor
-			  ivory               % PopupBgColor
-		       else
-			  white # % ChooseColor
-			  white # % ChooseTermColor
-			  white # % EntailedColor
-			  white # % SuspendedColor
-			  white # % FailedColor
-			  white # % BlockedColor
-			  white # % PartialFailedColor
-			  black # % LineColor
-			  white # % BackColor
-			  black # % CursorColor
-			  white   % PopupBgColor
-		       end
-
 PopUpDelay = 2000
 
+   
+NoLabel       = {NewName}
+ManagerClosed = {NewName}
+
+ActionKinds   = [information compare statistics]
+ActionTypes   = [root space procedure]
+ActionArities = a(information: [2 3]
+		  compare:     [4 5]
+		  statistics:  [2 3])
 
    
