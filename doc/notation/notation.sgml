@@ -29,6 +29,11 @@
     <Meta name="html.split" value="chapter.context-free">
     <Meta name="html.split" value="chapter.core">
     <Meta name="html.split" value="chapter.translation">
+    <Meta name="html.split" value="section.translation.base">
+    <Meta name="html.split" value="section.translation.constraints">
+    <Meta name="html.split" value="section.translation.classes">
+    <Meta name="html.split" value="section.translation.functors">
+    <Meta name="html.split.toc" value="">
     <Meta name="html.split.bib" value="">
 
     <Meta name="proglang.mode" arg1="fundamental" arg2="fundamental-mode">
@@ -1047,7 +1052,7 @@
 	    <TH/Meta Variables/
 	    <TH/Corresponding Terminals and Nonterminals/
 	  <TR>
-	    <TD/?{x}/
+	    <TD/?{x}, ?{x1}, &ellipsis;, ?{xn}/
 	    <TD/?={variable}/
 	  <TR>
 	    <TD/?{D}/
@@ -1093,13 +1098,29 @@
 	When no rule is applicable and the program is not an Oz Core program,
 	we speak of a <Def/syntax error/.  Such a program is not a valid
 	Oz program.
-      <Section>
+      <Section id="section.translation.base">
 	<Title/The Base Language/
 	<SubSection class=unnumbered>
 	  <Title/Declarations/
 	  <P>
-	    <!--** motivate the definition of pattern variables -->
-	    <!--** define pattern positions -->
+	    <Rewrite>?={in statement}
+	      <Rewrite.From/<<?{D} in ?{S}>>/
+	      <Rewrite.To/<<local ?{D} in ?{S} end>>/
+	    </Rewrite>
+	    <Rewrite>?={in expression}
+	      <Rewrite.From/<<?{D} in >>[ ?{S} ]<< ?{E}>>/
+	      <Rewrite.To/<<local ?{D} in >>[ ?{S} ]<< ?{E} end>>/
+	    </Rewrite>
+	  <P>
+	    The following rule makes implicit declarations explicit,
+	    &ie;, declarations only name variables between <<local>> and
+	    <<in>>.  We need an auxiliary definition:  The function ?{PV}
+	    returns the set of <Def/pattern variables/ of a statement
+	    (or expression).  Furthermore, we call a position&nbsp;?{p}
+	    in a given statement&nbsp;?{S} a <Def/pattern position/ iff the
+	    following holds:  If the subterm at position&nbsp;?{p} of&nbsp;?{S}
+	    is replaced by a fresh variable&nbsp;<<X>>, then <<X>> <Math/\in/
+	    ?{PV}(?{S}[<<X>>/?{p}]).
 	    <Table>
 	      <TR>
 		<TH/?{D}/
@@ -1177,14 +1198,6 @@
 		<TD/otherwise/
 		<TD/<Math/\emptyset//
 	    </Table>
-	    <Rewrite>?={in statement}
-	      <Rewrite.From/<<?{D} in ?{S}>>/
-	      <Rewrite.To/<<local ?{D} in ?{S} end>>/
-	    </Rewrite>
-	    <Rewrite>?={in expression}
-	      <Rewrite.From/<<?{D} in >>[ ?{S} ]<< ?{E}>>/
-	      <Rewrite.To/<<local ?{D} in >>[ ?{S} ]<< ?{E} end>>/
-	    </Rewrite>
 	    <Rewrite>?={statement}
 	      <Rewrite.From/<<local ?{D} in ?{S} end>>/
 	      <Rewrite.To/<<local ?{x1} &ellipsis; ?{xn} in ?{D'} ?{S} end>>/
@@ -1507,20 +1520,47 @@ end>>/
 	<SubSection class=unnumbered>
 	  <Title/Operators/
 	  <P>
-	    <!--** missing: table mapping operator names to Core variables -->
 	    <Rewrite>?={expression}
 	      <Rewrite.From/<<?{o} ?{E}>>/
-	      <Rewrite.To/<<{`?{o}` ?{E}}>>/
-	      <Rewrite.Condition/where ?{o} <Math/\in/ {<<!!>>, <<~>>}/
+	      <Rewrite.To/<<{?{x} ?{E}}>>/
+	      <Rewrite.Condition/where ?{o} <Math/\in/ {<<!!>>, <<~>>}
+		and ?{x} = ?{CV}(?{o})./
 	    </Rewrite>
 	    <Rewrite>?={expression}
 	      <Rewrite.From/<<?{E1} ?{o} ?{E2}>>/
-	      <Rewrite.To/<<{`?{o}` ?{E1} ?{E2}}>>/
+	      <Rewrite.To/<<{?{x} ?{E1} ?{E2}}>>/
 	      <Rewrite.Condition>where ?{o} <Math/\in/ {<<.>>, <<^>>,
 		<<*>>, <</>>, <<div>>, <<mod>>, <<+>>, <<->>, <<==>>,
-		<<\=>>, <<&lt;>>, <<=&lt;>>, <<&gt;>>, <<&gt;=>>}
+		<<\=>>, <<&lt;>>, <<=&lt;>>, <<&gt;>>, <<&gt;=>>} and
+		?{x} = ?{CV}(?{o}).
 	      </Rewrite.Condition>
 	    </Rewrite>
+	    ?{CV}(?{o}) denotes the Core variable to which operation&nbsp;?{o}
+	    is bound.  The following table summarizes in which module from
+	    <Ptr.Extern to="ozdoc:base"> each operator is available, &eg;,
+	    <<+>> is available as <<Number.'+'>>, which means that
+	    ?{CV}(?{o}) = <<`Number.'+'`>>.
+	    <Table>
+	      <TR>
+		<TH/Operators/
+		<TH/Located in Module/
+	      <TR>
+		<TD/<<!!>> <<.>> <<==>> <<\=>>
+		  <<&lt;>> <<=&lt;>> <<&gt;>> <<&gt;=>>/
+		<TD/<<Value>>/
+	      <TR>
+		<TD/<<~>> <<*>> <<+>> <<->>/
+		<TD/<<Number>>/
+	      <TR>
+		<TD/<<div>> <<mod>>/
+		<TD/<<Int>>/
+	      <TR>
+		<TD><</>></TD>
+		<TD/<<Float>>/
+	      <TR>
+		<TD/<<^>>/
+		<TD/<<Record>>/
+	    </Table>
 	    <Rewrite>?={expression}
 	      <Rewrite.From/<<?{E1} andthen ?{E2}>>/
 	      <Rewrite.To
@@ -1591,7 +1631,7 @@ end
 	      <Rewrite.From/<<false>>/
 	      <Rewrite.To/<<!`Bool.'false'`>>/
 	    </Rewrite>
-      <Section>
+      <Section id="section.translation.constraints">
 	<Title/Constraint Extensions and Combinators/
 	<SubSection class=unnumbered>
 	  <Title/Operators/
@@ -1676,7 +1716,7 @@ end>>/
 	    Constructive disjunction is currently not specified.
 	    See <Ptr.Extern to="ozdoc:system" key="section.fd.condis">
 	    for some information about constructive disjunction.
-      <Section>
+      <Section id="section.translation.classes">
 	<Title/Class Extensions/
 	<SubSection class=unnumbered>
 	  <Title/Method Names/
@@ -1737,7 +1777,7 @@ end>>/
 	      <Rewrite.From/<<?{E1}, ?{E2}>>/
 	      <Rewrite.To/<<{`Object.','` ?{E1} ?{E2}}>>/
 	    </Rewrite>
-      <Section>
+      <Section id="section.translation.functors">
 	<Title/Functor Extensions/
   <Back>
     <Bib.Extern id="ISO_8859_1" to="notation.bib" key="ISO_8859_1">
