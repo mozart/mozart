@@ -1170,6 +1170,7 @@ BIspec fdSpec[] = {
   {"fdp_minus", 3, fdp_minus},
   {"fdp_times", 3, fdp_times},
   {"fdp_times_rel", 3, fdp_times_rel},
+  {"fdp_power", 3, fdp_power},
   {"fdp_divD", 3, fdp_divD},
   {"fdp_divI", 3, fdp_divI},
   {"fdp_modD", 3, fdp_modD},
