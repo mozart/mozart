@@ -45,7 +45,7 @@ then
   then
      OZPATH=.
   fi
-  OZPATH=${OZPATH}:${OZHOME}/lib:${OZHOME}/tools
+  OZPATH=${OZPATH}:${OZHOME}/share
   export OZPATH
   # increment path
   PATH=${OZHOME}/bin:${OZHOME}/platform/${OZPLATFORM}:${PATH}
@@ -78,7 +78,7 @@ case "$cmd" in
                 exit 1
             fi
         fi
-        exec $OZEMACS -l $OZHOME/lib/elisp/oz.elc -f run-oz "$@"
+        exec $OZEMACS -l $OZHOME/share/elisp/oz.elc -f run-oz "$@"
         ;;
 
    ozengine)  # that is the real thing

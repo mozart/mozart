@@ -51,7 +51,7 @@ case Tk.isColor then
    lightslateblue
 else
    UrlDefaults = \insert '../../url-defaults.oz'
-   BitmapUrl   = UrlDefaults.home # 'tools/images/'
+   BitmapUrl   = UrlDefaults.home # 'images/'
    fun {Bitmap V}
       '@'#{Tk.localize BitmapUrl#V#'.xbm'}
    end
