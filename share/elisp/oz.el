@@ -374,7 +374,7 @@ starts the emulator under gdb")
 ;;------------------------------------------------------------
 
 
-(defvar oz-devel-debugger nil "*Iff true use newest debugger.")
+(defvar oz-devel-debugger nil "*Iff true use devel debugger.")
 
 (defun oz-debug-start()
   "Start the debugger."
@@ -388,7 +388,7 @@ starts the emulator under gdb")
 (defun oz-debug-devel-start()
   (interactive)
   (setq oz-devel-debugger (not oz-devel-debugger))
-  (message "Now using %s debugger" (if oz-devel-debugger "devel" "stable))
+  (message "Now using %s debugger" (if oz-devel-debugger "devel" "stable")))
 
 (defun oz-debug-stop()
   "Stop the debugger."
