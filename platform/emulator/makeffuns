@@ -44,7 +44,7 @@ cat >> $ozc << EOF
 #define _FUNDECL(type,fun,args) fun = funs[i++]
 
 
-int ozcdecl OZ_linkFF(char *version, void** funs)
+ozdeclspec int ozcdecl OZ_linkFF(char *version, void** funs)
 {
   int i=0;
 
