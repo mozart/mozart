@@ -76,7 +76,6 @@ public:
   void setVal(OZ_Term t) { Assert(isProxy()); u.binding=t; }
   ProxyList *getProxies() { Assert(isManager()); return u.proxies; }
 
-  int compare(PerdioVar *r) { return -1; } // mm2: TODO
   void gcPerdioVar(void);
 };
 

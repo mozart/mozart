@@ -19,8 +19,9 @@
 
 // bind and inform sites
 
-extern
+// from perdio.cc
 int bindPerdioVar(PerdioVar *pv,TaggedRef *lPtr,TaggedRef v);
+int compareNetAddress(PerdioVar *lVar,PerdioVar *rVar);
 
 void PerdioVar::primBind(TaggedRef *lPtr,TaggedRef v)
 {
@@ -57,7 +58,7 @@ Bool PerdioVar::unifyPerdioVar(TaggedRef * lPtr, TaggedRef * rPtr, Bool prop)
     if (prop) {
       if (am.isLocalSVar(lVar)) {
         if (am.isLocalSVar(rVar)) {
-          int cmp = lVar->compare(rVar);
+          int cmp = compareNetAddress(lVar,rVar);
           Assert(cmp!=0);
           return cmp<0
             ? bindPerdioVar(lVar,lPtr,makeTaggedRef(rPtr))
