@@ -1484,6 +1484,57 @@ Board *gcGetVarHome(TaggedRef var)
   return GETBOARD(tagged2CVar(var));
 }  
 
+// ===================================================================
+// Finalization
+
+#ifdef FINALIZATION
+
+extern OZ_Term guardian_list;
+extern OZ_Term finalize_list;
+extern OZ_Term finalize_handler;
+
+void gc_finalize()
+{
+  static RefsArray args = allocateStaticRefsArray(1);
+  // go through the old guardian list
+  OZ_Term old_guardian_list = guardian_list;
+  guardian_list = finalize_list = oz_nil();
+  if (old_guardian_list==0) return;
+  while (!isNil(old_guardian_list)) {
+    OZ_Term pair = head(old_guardian_list);
+    old_guardian_list = tail(old_guardian_list);
+    OZ_Term obj = head(pair);
+    if (GCISMARKED(*tagged2Const(obj)->getGCField()))
+      // reachable through live data
+      guardian_list = oz_cons(pair,guardian_list);
+    else
+      // unreachable
+      finalize_list = oz_cons(pair,finalize_list);
+  }
+  // gc both these list normally.
+  // since these lists have been freshly consed in the new half space
+  // this simply means to go through both and gc the pairs
+  // in the head of each cons
+  for(OZ_Term l=guardian_list;!isNil(l);l=tail(l)) {
+    LTuple *t = tagged2LTuple(l);
+    gcTagged(*t->getRefHead(),*t->getRefHead());
+  }
+  for(OZ_Term l=finalize_list;!isNil(l);l=tail(l)) {
+    LTuple *t = tagged2LTuple(l);
+    gcTagged(*t->getRefHead(),*t->getRefHead());
+  }
+  // if the finalize_list is not empty, we must create a new
+  // thread (at top level) to effect the finalization phase
+  if (!isNil(finalize_list)) {
+    Thread* thr = am.mkRunnableThread(DEFAULT_PRIORITY,ozx_rootBoard());
+    args[0] = finalize_list;
+    thr->pushCall(finalize_handler,args,1);
+    am.scheduleThread(thr);
+    finalize_list = oz_nil();
+  }
+}
+#endif
+
 /*
  * If an object has been copied, all slots of type 
  * 'TaggedRef' have to be 
@@ -1655,6 +1706,12 @@ void AM::gc(int msgLevel)
   extRefs = extRefs->gc();
   
   PROFILE_CODE1(FDProfiles.gc());
+
+#ifdef FINALIZATION
+  gcTagged(finalize_handler,finalize_handler);
+  performCopying();
+  gc_finalize();
+#endif
 
   gcOwnerTable();  
   gcBorrowTable1();

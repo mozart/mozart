@@ -7366,6 +7366,164 @@ OZ_C_proc_begin(BIregSet_complementToList,2)
 }
 OZ_C_proc_end
 
+/********************************************************************
+ * Finalization
+ ******************************************************************** */
+#ifdef FINALIZATION
+
+// Copyright © by Denys Duchier, Nov 1997, Universität des Saarlandes
+//
+// {Finalize.register OBJECT HANDLER}
+//
+//	When OBJECT becomes inaccessible {HANDLER OBJECT} is
+//	eventually executed.  Both data must be at the top-level.
+//	In practice, (OBJECT|HANDLER) is simply entered into the
+//	`GUARDIAN' list.  Only OZCONST values can be registered.
+//	Finalization makes no sense for replicable data.
+//
+// !!! For the moment I am ignoring distributed stuff
+//
+// {Finalize.setHandler HANDLER}
+//
+//	HANDLER is a procedure of 1 argument which is a list
+//	of conses (OBJECT|HANDLER).  Its mandate is to execute
+//	each {HANDLER OBJECT} safely (i.e. catching all exceptions)
+//
+// WHAT HAPPENS DURING GC?
+//
+// The GUARDIAN list is a list of conses (OBJECT|HANDLER).  During
+// GC, after all other data has been collected (i.e. towards the end)
+// this list is specially gc'ed as follows:
+//
+// *	each cons where OBJECT has already been copied (i.e. is
+//	otherwise reachable through live data) is entered into the
+//	guardian list in the new half-space.
+//
+// *	each cons where OBJECT has not already been copied (i.e.
+//	is not otherwise reachable through live data) is entered
+//	into the FINALIZE list.
+//
+// Both the new GUARDIAN and the FINALIZE lists are then processed
+// to normally gc the element conses (i.e. OBJECT|HANDLER).
+//
+// If the FINALIZE list is not empty, a top-level thread is created
+// to evaluate {FINALIZE_HANDLER FINALIZE_LIST} where FINALIZE_HANDLER
+// is the handler specified by Finalize.setHandler and FINALIZE_LIST
+// is the FINALIZE list.
+
+OZ_Term guardian_list	= 0;
+OZ_Term finalize_list	= 0;
+OZ_Term finalize_handler= 0;
+
+// returns 0 if non determined
+//         1 if determined and (literal or top-level)
+//	   2 otherwise
+static int finalizable(OZ_Term& x)
+{
+  DEREF(x,xPtr,xTag);
+
+  switch (xTag) {
+  case UVAR:
+  case SVAR:
+  case CVAR:
+    return 0;
+    //  case SMALLINT:
+    //  case FSETVALUE:
+    //  case LITERAL:
+    //  case BIGINT:
+    //  case OZFLOAT:
+    //    return 1;
+  case OZCONST:
+    {
+      ConstTerm* xp = tagged2Const(x);
+      Board*b;
+      switch (xp->getType()) {
+      case Co_UNUSED1:
+      case Co_UNUSED2:
+	return 2;
+	// Tertiary Consts
+      case Co_Thread:
+	b = ((Thread*)xp)->getBoardInternal(); break;
+      case Co_Abstraction:
+	b = ((Abstraction*)xp)->getBoardInternal(); break;
+      case Co_Builtin:
+	return 1;
+      case Co_Cell:
+	b = ((Tertiary*)xp)->getBoardInternal(); break;
+      case Co_Space:
+	b = ((Space*)xp)->getBoardInternal(); break;
+      case Co_Object:
+	b = ((Object*)xp)->getBoardInternal(); break;
+      case Co_Port:
+	b = ((Port*)xp)->getBoardInternal(); break;
+      case Co_Chunk:
+	b = ((SChunk*)xp)->getBoardInternal(); break;
+      case Co_HeapChunk:
+	return 1;
+      case Co_Array:
+	b = ((OzArray*)xp)->getBoardInternal(); break;
+      case Co_Dictionary:
+	b = ((OzDictionary*)xp)->getBoardInternal(); break;
+      case Dummy:
+	return 2;
+      case Co_Lock:
+	b = ((Tertiary*)xp)->getBoardInternal(); break;
+      case Co_Class:
+	b = ((ObjectClass*)xp)->getBoardInternal(); break;
+      }	
+      return am.isRootBoard(b)?1:2;
+    }
+  default:
+    return 2;
+  }
+}
+
+// Builtin {Finalize.register OBJECT HANDLER}
+
+OZ_C_proc_begin(BIfinalize_register,2)
+{
+  OZ_Term obj = OZ_getCArg(0);
+  OZ_Term hdl = OZ_getCArg(1);
+  switch (finalizable(obj)) {
+  case 0: oz_suspendOn(obj);
+  case 1: break;
+  case 2:
+    return oz_raise(E_ERROR,E_KERNEL,"nonGlobal",3,
+		    oz_atom("Finalize.register"),
+		    oz_atom("object"),obj);
+  }
+  switch (finalizable(hdl)) {
+  case 0: oz_suspendOn(hdl);
+  case 1: break;
+  case 2:
+    return oz_raise(E_ERROR,E_KERNEL,"nonGlobal",3,
+		    oz_atom("Finalize.register"),
+		    oz_atom("handler"),hdl);
+  }
+  if (guardian_list==0) guardian_list=oz_nil();
+  guardian_list = oz_cons(oz_cons(obj,hdl),guardian_list);
+  return PROCEED;
+}
+OZ_C_proc_end
+
+OZ_C_proc_begin(BIfinalize_setHandler,1)
+{
+  OZ_Term hdl = OZ_getCArg(0);
+  switch (finalizable(hdl)) {
+  case 0: oz_suspendOn(hdl);
+  case 1: break;
+  case 2: return oz_raise(E_ERROR,E_KERNEL,"nonGlobal",2,
+			  oz_atom("Finalize.setHandler"),
+			  hdl);
+  }
+  if (!(isProcedure(hdl)||isObject(hdl)))
+    oz_typeError(0,"Procedure|Object");
+  finalize_handler = hdl;
+  return PROCEED;
+}
+OZ_C_proc_end
+
+#endif
 
 /********************************************************************
  * Table of builtins
@@ -7776,6 +7934,12 @@ BIspec allSpec[] = {
   {"ozparser_parseFile",         3, ozparser_parseFile},
   {"ozparser_parseVirtualString",3, ozparser_parseVirtualString},
   {"ozparser_fileExists",        2, ozparser_fileExists},
+
+#ifdef FINALIZATION
+  // Finalization
+  {"Finalize.register",		 2, BIfinalize_register,	  0},
+  {"Finalize.setHandler",	 1, BIfinalize_setHandler,	  0},
+#endif
 
   {0,0,0,0}
 };
