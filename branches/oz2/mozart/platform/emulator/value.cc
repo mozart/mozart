@@ -1128,21 +1128,24 @@ char *toC(OZ_Term term)
  *=================================================================== */
 
 
-TaggedRef *OzLock::lock(Thread *t)
+TaggedRef OzLock::lock(Thread *t)
 {
   Assert(t!=locker);
   
   if (locker==NULL) {
     locker = t;
-    return NULL;
+    return makeTaggedNULL();
   }
 
-  TaggedRef *aux = &threads;
-  while(!isNil(*aux)) {
-    aux = tagged2LTuple(*aux)->getRefTail();
+  if (threads==0) {
+    threads = new LockedThreads(t);
+    return threads->var;
   }
 
-  *aux = cons(makeTaggedUVar(am.currentBoard),nil());
-
-  return headRef(*aux);
+  LockedThreads *aux = threads;
+  while(aux->next !=0)
+    aux = aux->next;
+  
+  aux->next = new LockedThreads(t);
+  return aux->next->var;
 }
