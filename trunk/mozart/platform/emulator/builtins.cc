@@ -3778,25 +3778,6 @@ OZ_BI_define(BIconstraints,1,1)
  * System
  * --------------------------------------------------------------------- */
 
-/* print and show are inline,
-   because it prevents the compiler from generating different code
-   */
-OZ_Return printInline(TaggedRef term)
-{
-  //  oz_printStream(term,cout,ozconf.printDepth,ozconf.printWidth);
-  char *s = OZ_toC(term,ozconf.printDepth,ozconf.printWidth);
-  if (ossafewrite(STDOUT_FILENO,s,strlen(s)) < 0)
-    if (isDeadSTDOUT())
-      am.exitOz(1);
-    else
-      return oz_raise(E_ERROR,E_KERNEL,"writeFailed",1,OZ_string(OZ_unixError(ossockerrno())));
-
-  return PROCEED;
-}
-
-OZ_DECLAREBI_USEINLINEREL1(BIprint,printInline)
-
-
 static
 OZ_Return printVS(char*s,int n, int fd, Bool newline)
 {
@@ -3847,11 +3828,23 @@ OZ_BI_define(BItermToVS,3,1)
 } OZ_BI_end
 
 
+/*
+ * print and show are inline,
+ * because it prevents the compiler from generating different code
+ */
+
+OZ_Return printInline(TaggedRef term, Bool newline = NO)
+{
+  char *s = OZ_toC(term,ozconf.printDepth,ozconf.printWidth);
+  return printVS(s,strlen(s),STDOUT_FILENO,newline);
+}
+
+OZ_DECLAREBI_USEINLINEREL1(BIprint,printInline)
+
+
 OZ_Return showInline(TaggedRef term)
 {
-  printInline(term);
-  printf("\n");
-  return (PROCEED);
+  return printInline(term,OK);
 }
 
 OZ_DECLAREBI_USEINLINEREL1(BIshow,showInline)
