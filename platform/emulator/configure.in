@@ -255,21 +255,35 @@ AC_SUBST(LD)
 
 case $platform in
     sunos*)
+        TOOLLDFLAGS=""
         ;;
     linux*)
+        TOOLLDFLAGS="-Wl,-shared"
         LDFLAGS="$LDFLAGS -Wl,-export-dynamic"
         ;;
     solaris*)
+        TOOLLDFLAGS="-Wl,-G"
         ;;
     irix*)
+        TOOLLDFLAGS="-Wl,-shared -Wl,-check_registry -Wl,/dev/null"
         ;;
     osf1*)
+        TOOLLDFLAGS="-Wl,-shared -Wl,-expect_unresolved -Wl,'*'"
         dnl dont change LDFLAGS, see machine.hh !!!
         LDFLAGS="$LDFLAGS -Wl,-D -Wl,0x30000000 -Wl,-T -Wl,0x20000000"
         ;;
     hpux*)
+        TOOLLDFLAGS="-Wl,-b"
+        ;;
+    freebsd*)
+        TOOLLDFLAGS="-Wl,-Bshareable"
+        ;;
+    netbsd*)
+        TOOLLDFLAGS="-Wl,-Bshareable"
         ;;
 esac
+
+AC_SUBST(TOOLLDFLAGS)
 
 # compiler options
 : ${oz_copt_optimize="-O"}
