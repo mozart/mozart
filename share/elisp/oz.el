@@ -1,9 +1,32 @@
-;; Major mode for editing Oz, and for running Oz under Emacs
-;; Copyright (C) 1993-1997 DFKI GmbH and Programming Systems Lab, UdS
-;; Authors: Ralf Scheidhauer, Michael Mehl and Leif Kornstaedt
-;; ({scheidhr,mehl,kornstae}@ps.uni-sb.de)
-;; $Id$
+;;;
+;;; Authors:
+;;;   Ralf Scheidhauer (scheihr@ps.uni-sb.de)
+;;;   Michael Mehl (mehl@ps.uni-sb.de)
+;;;   Leif Kornstaedt (kornstae@ps.uni-sb.de)
+;;;
+;;; Contributors:
+;;;   Benjamin Lorenz (lorenz@ps.uni-sb.de)
+;;;
+;;; Copyright:
+;;;   Ralf Scheidhauer, Michael Mehl and Leif Kornstaedt, 1993-1997
+;;;
+;;; Last change:
+;;;   $Date$ by $Author$
+;;;   $Revision$
+;;;
+;;; This file is part of Mozart, an implementation
+;;; of Oz 3:
+;;;    $MOZARTURL$
+;;;
+;;; See the file "LICENSE" or
+;;;    $LICENSEURL$
+;;; for information on usage and redistribution
+;;; of this file, and for a DISCLAIMER OF ALL
+;;; WARRANTIES.
+;;;
 
+;; Major mode for editing Oz programs, and for running Oz under Emacs
+;;
 ;; BUGS
 ;; - `/*' ... `*/' style comments are ignored for purposes of indentation.
 ;;   (Nesting and line breaks are problematic.)
@@ -23,6 +46,10 @@
 ;;         7
 ;;   The 7 should be underneath the 5.  You can circumvent this problem
 ;;   by using parentheses around the expression.
+;; - f(bla:
+;;        proc {$} ... end
+;;        fasel:
+;;   is indented incorrectly.
 
 (require 'comint)
 (require 'compile)
@@ -101,7 +128,7 @@ Note that this variable is only checked once when oz.el is loaded."
   :type 'boolean
   :group 'oz)
 (put 'oz-pedantic-spaces 'variable-interactive
-     "XNote: This variable has no effect when oz.el has already been loaded: ")
+     "XHighlight ill-spaced whitespace? (t or nil): ")
 
 (defcustom oz-change-title t
   "*If non-nil, change the title of the Emacs frame while Oz is running."
@@ -391,8 +418,8 @@ Zero means the entire text matched by the whole regexp or whole string.
 STRING should be given if the last search was by `string-match' on STRING."
   (if (match-beginning num)
       (if string
-          (substring string (match-beginning num) (match-end num))
-        (buffer-substring (match-beginning num) (match-end num)))))
+	  (substring string (match-beginning num) (match-end num))
+	(buffer-substring (match-beginning num) (match-end num)))))
 
 (defun oz-remove-annoying-spaces ()
   "Remove all ill-placed whitespace from the current buffer.
@@ -1874,8 +1901,9 @@ The first subexpression matches the keyword proper (for fontification).")
 	  "\\([A-Z\300-\326\330-\336]"
 	  "[A-Z\300-\326\330-\336a-z\337-\366\370-\3770-9_.]*\\|`[^`\n]*`\\)")
   "Regular expression matching proc or fun definitions.
-The second subexpression matches the definition's identifier
-\(if it is a variable) and is used for fontification.")
+The second subexpression matches optional flags, the third subexpression
+matches the definition's identifier (if it is a variable) and is used for
+fontification.")
 
 (defconst oz-class-matcher
   (concat "\\<class\\([ \t]+\\|[ \t]*!\\)"
@@ -1897,7 +1925,7 @@ and is used for fontification.")
 (make-face 'oz-space-face)
 (set-face-background 'oz-space-face (if oz-is-color "hotpink" "black"))
 (defvar oz-space-face 'oz-space-face
-  "Face to use for highlighting spaces at the end of a line.")
+  "Face to use for highlighting ill-places spaces.")
 
 (defconst oz-space-matcher-1
   "[ \t]+$"
@@ -1942,16 +1970,17 @@ and is used for fontification.")
 		(list oz-class-matcher
 		      '(2 font-lock-type-face))
 		(list oz-meth-matcher
-		      '(2 font-lock-function-name-face)))
-	  (and oz-pedantic-spaces
-	       (list (cons oz-space-matcher-1 'oz-space-face)
-		     (list oz-space-matcher-2
-			   '(1 oz-space-face))
-		     (list oz-space-matcher-3
-			   '(1 oz-space-face))
-		     (cons oz-space-matcher-4 'oz-space-face)
-		     (list oz-space-matcher-5
-			   '(1 oz-space-face))))
+		      '(2 font-lock-function-name-face))
+		(cons oz-space-matcher-1
+		      '(0 (cond (oz-pedantic-spaces oz-space-face))))
+		(list oz-space-matcher-2
+		      '(1 (cond (oz-pedantic-spaces oz-space-face))))
+		(list oz-space-matcher-3
+		      '(1 (cond (oz-pedantic-spaces oz-space-face))))
+		(cons oz-space-matcher-4
+		      '(0 (cond (oz-pedantic-spaces oz-space-face))))
+		(list oz-space-matcher-5
+		      '(1 (cond (oz-pedantic-spaces oz-space-face)))))
 	  oz-font-lock-keywords-2)
   "Gaudy level highlighting for Oz mode.")
 
