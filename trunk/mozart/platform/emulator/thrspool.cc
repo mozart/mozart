@@ -115,6 +115,7 @@ lowMid:
 
 void ThreadsPool::scheduleThread(Thread *th,int pri)
 {
+  Assert(!isScheduled(th));
   if (pri < 0) pri = th->getPriority();
 
   if (pri == MID_PRIORITY) {
