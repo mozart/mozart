@@ -7,10 +7,17 @@ are currently solvable only by resorting to some form of search and
 <EM/constraint/ propagation. Such problems admit very concise
 solutions, if the programming language abstracts away the details of
 search by providing don't know nondeterminism. In this tutorial, we
-are not going to talk much about constraint solving. The reader may
-look to the companion document by [8]. We will
-only provide the basics needed to understand the logic and constraint
-programming part of Oz.
+are not going to talk about constraint solving.
+form. The reader may
+look to the companion tutorial on constraint programming in Oz
+<a href="../fdt/" class=section name=fdt>The Finite Domain Constraint
+Programming Tutorial</a>.
+We will talk about logic programming and concurrent
+constraint programming where each procedure can be
+interpreted as a relation expressed by a logical statement.
+We will also discuss the relation between Oz and Prolog, and how
+many Prolog programs have a direct translation to Oz programs.
+
 
 
 <SECTION><TITLE/Constraint Store/
