@@ -1782,7 +1782,10 @@ Board* AM::copyTree(Board* bb, Bool *isGround)
 #ifndef COPY_ON_GROUND
   varCopied = NO;
 #endif
-  unsigned int starttime = osUserTime();
+  unsigned int starttime = 0;
+
+  if (ozconf.timeDetailed)
+    starttime = osUserTime();
 
   ptrStack.unlock();
 
@@ -1812,7 +1815,8 @@ Board* AM::copyTree(Board* bb, Bool *isGround)
   fromCopyBoard = NULL;
   gcing = 1;
 
-  ozstat.timeForCopy.incf(osUserTime()-starttime);
+  if (ozconf.timeDetailed)
+    ozstat.timeForCopy.incf(osUserTime()-starttime);
   // Note that parent, right&leftSibling must be set in this subtree -
   // for instance, with "setParent"
 

@@ -6125,6 +6125,7 @@ OZ_C_proc_begin(BISystemGetTime,1) {
   SetIntArg(AtomSystem,    osSystemTime());
   SetIntArg(AtomTotal,     osTotalTime());
   SetIntArg(AtomUser,      timeNow);
+  SetBoolArg(AtomDetailed, ozconf.timeDetailed);
 
   return PROCEED;
 }
@@ -6329,6 +6330,17 @@ OZ_C_proc_end
   }
           
 #define SetIfPos(left,right,scale) if (right >= 0) left = right / scale;
+
+OZ_C_proc_begin(BISystemSetTime,1) {
+  LookRecord(t);
+
+  DoBoolFeature(detailed, t, AtomDetailed);
+
+  ozconf.timeDetailed = detailed;
+
+  return PROCEED;
+}
+OZ_C_proc_end
 
 OZ_C_proc_begin(BISystemSetThreads,1) {
   LookRecord(t);
@@ -7676,6 +7688,7 @@ BIspec allSpec[] = {
   {"SystemGetHome",       1, BISystemGetHome},
   {"SystemGetPlatform",   1, BISystemGetPlatform},
 
+  {"SystemSetTime",       1, BISystemSetTime},
   {"SystemSetThreads",    1, BISystemSetThreads},
   {"SystemSetPriorities", 1, BISystemSetPriorities},
   {"SystemSetPrint",      1, BISystemSetPrint},
