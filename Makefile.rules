@@ -36,7 +36,8 @@ MOGUL_DATABASE	= MOGUL.DB
 MOGUL_DIRECTORY	= /services/mozart/httpd/html/mogul
 MOGUL_ROOT_URL	= http://www.mozart-oz.org/mogul/db
 MOGUL_IGNORE	=
-MOGUL_LIBRARIAN	= $(OZE) $(PKG_URI)/Librarian.exe	\
+MOGUL_URI = /home/mogul/mogul
+MOGUL_LIBRARIAN	= $(OZE) $(MOGUL_URI)/Librarian.exe	\
 	--verbose 					\
 	--mogul-url=$(MOGUL_ROOT_URL)			\
 	--root-url=mogul-root.mogul			\
@@ -44,6 +45,15 @@ MOGUL_LIBRARIAN	= $(OZE) $(PKG_URI)/Librarian.exe	\
 	--mogul-dir=$(MOGUL_DIRECTORY)			\
 	--mogul-top=$(MOGUL_TOP)			\
 	$(MOGUL_IGNORE)
+
+#MOGUL_LIBRARIAN	= $(OZE) $(PKG_URI)/Librarian.exe	\
+#	--verbose 					\
+#	--mogul-url=$(MOGUL_ROOT_URL)			\
+#	--root-url=mogul-root.mogul			\
+#	--open-db=$(MOGUL_DATABASE)			\
+#	--mogul-dir=$(MOGUL_DIRECTORY)			\
+#	--mogul-top=$(MOGUL_TOP)			\
+#	$(MOGUL_IGNORE)
 
 MOGUL_EXPORT_OPTIONS	=	\
 	--export-db=$(MOGUL_DATABASE)-EXPORT
