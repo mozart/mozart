@@ -68,9 +68,9 @@
           For example, the default information action can be defined
           as follows:
 <<<{Explorer.object add(information proc {$ I X}
-                                    {Browser.browse I#X}
+                                    {Inspector.inspect I#X}
                                  end
-                     label: 'Browse')}>>>
+                     label: 'Inspect')}>>>
 
         <Entry><<delete>>
           <Index/<<Explorer>><AND><<object>><AND><<delete>>/
@@ -124,9 +124,9 @@
           For example, the default compare action can be defined as
           follows:
 <<<{Explorer.object add(compare proc {$ I1 X1 I2 X2}
-                                {Browser.browse I1#I2#X1#X2}
+                                {Inspector.inspect I1#I2#X1#X2}
                              end
-                             label: 'Browse')}>>>
+                             label: 'Inspect')}>>>
 
         <Entry><<delete>>
           <Index/<<Explorer>><AND><<object>><AND><<delete>>/
@@ -202,9 +202,9 @@
           follows:
 <<<{Explorer.object add(statistics
                      proc {$ I R}
-                        {Browser.browse I#{Record.subtract R shape}}
+                        {Inspector.inspect I#{Record.subtract R shape}}
                      end
-                     label: 'Browse')>>>
+                     label: 'Inspect')>>>
 
         <Entry><<delete>>
           <Index/<<Explorer>><AND><<object>><AND><<delete>>/
