@@ -96,7 +96,7 @@ yyLAST = ??
 */
 
 #include <stdio.h>
-#include <oz.h>
+#include <mozart.h>
 #include "system.h"
 #include "machine.h"
 #include "new.h"
