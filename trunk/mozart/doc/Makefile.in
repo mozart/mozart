@@ -45,7 +45,7 @@ SUBDIRS		= @SUBDIRS@
 
 .PHONY: all quick bootstrap check install clean veryclean distclean depend
 
-bootstrap all:: $(CED)
+all bootstrap:: $(CED)
 
 Makefile: Makefile.in config.status
 	./config.status
