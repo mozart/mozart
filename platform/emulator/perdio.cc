@@ -6205,9 +6205,56 @@ void getURL(char *url, TaggedRef out, Bool load)
   OZ_registerReadHandler(rfd,pipeHandler,pi);
 }
 
+static OZ_Term OZ_Cache_Path = 0;
+
+OZ_C_proc_begin(BIgetCachePath,1)
+{
+  return OZ_unify(OZ_getCArg(0),(OZ_Cache_Path==0)?OZ_unit():OZ_Cache_Path);
+}
+OZ_C_proc_end
+
+OZ_C_proc_begin(BIsetCachePath,1)
+{
+  OZ_declareNonvarArg(0,cache);
+  if (!OZ_onToplevel())
+    return oz_raise(E_ERROR,E_KERNEL,"globalState",1,oz_atom("setCachePath"));
+  if (!OZ_isTuple(cache))
+    return OZ_typeError(0,"Tuple");
+  for(int i=OZ_width(cache);i>0;i--)
+    if (!OZ_isVirtualString(OZ_getArg(cache,i-1),0))
+      return OZ_typeError(0,"TupleOfVirtualStrings");
+  OZ_Cache_Path = cache;
+  return PROCEED;
+}
+OZ_C_proc_end
+
+static void
+init_cache_path()
+{
+  if (OZ_Cache_Path!=0) return;
+  extern int env_to_tuple(char*,OZ_Term*);
+  if (env_to_tuple("OZ_CACHE_PATH",&OZ_Cache_Path)==0) return;
+#define NAMESIZE 256
+  char buffer[NAMESIZE];
+  strcpy(buffer,ozconf.ozHome);
+  strcpy(buffer+strlen(ozconf.ozHome),"/cache");
+  OZ_Cache_Path = OZ_mkTuple(OZ_atom("cache"),1,OZ_atom(buffer));
+}
 
 int loadURL(char *url, OZ_Term out)
 {
+  if (ozconf.showLoad)
+    message("Loading %s\n",url);
+  // we need to locally copy the url arg because it may point
+  // to the static area used the ...ToC interface.
+
+  char urlbuf[NAMESIZE];
+  if (strlen(url)>=NAMESIZE)
+    return OZ_raiseC("loadURL",2,OZ_atom("bufferOverflow"),
+                     OZ_atom(url));
+  strcpy(urlbuf,url);
+  url = urlbuf;
+
   // perform translation through url_map:
   // note that we leave currentURL untranslated in order to
   // record the original symbolic dependency.  Only url is
@@ -6225,12 +6272,37 @@ int loadURL(char *url, OZ_Term out)
       if (!(notTooMany--))
         return OZ_raiseC("loadURL",1,OZ_atom("tooManyRemaps"));
     }
-    url=OZ_atomToC(oldURL);
+    char *urlin = OZ_atomToC(oldURL);
+    if (strlen(urlin)>=NAMESIZE)
+      return OZ_raiseC("loadURL",2,OZ_atom("bufferOverflow"),oldURL);
+    strcpy(url,urlin);
   }
 
   if (strchr(url,':')==NULL) { // no prefix --> local file name
     //currentURL = oz_atom(url);
     return loadFile(url,out);
+  }
+
+  // check local caches
+  if (OZ_Cache_Path==0) init_cache_path();
+  {
+    char buffer[NAMESIZE];
+    int idx = 0;
+    char *s = url;
+    if (strlen(s)>=NAMESIZE) goto fall_through;
+    while (*s!='\0' && *s!=':') buffer[idx++]=*s++;
+    if (s[0]!=':' || s[1]!='/' || s[2]!='/') goto fall_through;
+    s += 3;
+    buffer[idx++] = '/';
+    strcpy(buffer+idx,s);
+    extern int find_file(OZ_Term,char*,char*);
+    char path[NAMESIZE];
+    if (find_file(OZ_Cache_Path,buffer,path)==0) {
+      if (ozconf.showCacheLoad)
+        message("Loading %s\n*** from cache %s\n",url,path);
+      return loadFile(path,out);
+    }
+  fall_through:;
   }
 
   switch (url[0]) {
@@ -6425,6 +6497,9 @@ BIspec perdioSpec[] = {
   {"getURLMap",1,BIperdioGetURLMap,0},
   {"setURLMap",1,BIperdioSetURLMap,0},
 
+  {"getCachePath",1,BIgetCachePath,0},
+  {"setCachePath",1,BIsetCachePath,0},
+
 #ifdef DEBUG_PERDIO
   {"dvset",    2, BIdvset, 0},
 #endif
@@ -6443,6 +6518,7 @@ void BIinitPerdio()
 
   OZ_protect(&ozport);
   OZ_protect(&url_map);
+  OZ_protect(&OZ_Cache_Path);
 
   refTable = new RefTable();
   refTrail = new RefTrail();
