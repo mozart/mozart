@@ -88,14 +88,14 @@
   "Feed the current line to the Oz Compiler." t)
 (autoload 'oz-show-paragraph "mozart"
   "Feed the current paragraph to the Oz Compiler." t)
-;;(autoload 'oz-inspect-buffer "mozart"
-;;  "Feed the current buffer to the Oz Compiler." t)
-;;(autoload 'oz-inspect-region "mozart"
-;;  "Feed the current region to the Oz Compiler." t)
-;;(autoload 'oz-inspect-line "mozart"
-;;  "Feed the current line to the Oz Compiler." t)
-;;(autoload 'oz-inspect-paragraph "mozart"
-;;  "Feed the current paragraph to the Oz Compiler." t)
+(autoload 'oz-inspect-buffer "mozart"
+  "Feed the current buffer to the Oz Compiler." t)
+(autoload 'oz-inspect-region "mozart"
+  "Feed the current region to the Oz Compiler." t)
+(autoload 'oz-inspect-line "mozart"
+  "Feed the current line to the Oz Compiler." t)
+(autoload 'oz-inspect-paragraph "mozart"
+  "Feed the current paragraph to the Oz Compiler." t)
 (autoload 'oz-open-panel "mozart"
   "Feed `{Panel.open}' to the Oz Compiler." t)
 (autoload 'oz-open-compiler-panel "mozart"
@@ -989,10 +989,10 @@ buffer."
   (oz-define-key `[,@prefix ?b (control ?l)] 'oz-browse-line)
   (oz-define-key `[,@prefix ?b (control ?p)] 'oz-browse-paragraph)
   ;;
-  ;;(oz-define-key `[,@prefix ?i (control ?b)] 'oz-inspect-buffer)
-  ;;(oz-define-key `[,@prefix ?i (control ?r)] 'oz-inspect-region)
-  ;;(oz-define-key `[,@prefix ?i (control ?l)] 'oz-inspect-line)
-  ;;(oz-define-key `[,@prefix ?i (control ?p)] 'oz-inspect-paragraph)
+  (oz-define-key `[,@prefix ?i (control ?b)] 'oz-inspect-buffer)
+  (oz-define-key `[,@prefix ?i (control ?r)] 'oz-inspect-region)
+  (oz-define-key `[,@prefix ?i (control ?l)] 'oz-inspect-line)
+  (oz-define-key `[,@prefix ?i (control ?p)] 'oz-inspect-paragraph)
   ;;
   (oz-define-key `[,@prefix ,@prefix ?s] 'oz-open-panel)
   (oz-define-key `[,@prefix ,@prefix ?n] 'oz-open-distribution-panel)
@@ -1131,11 +1131,11 @@ buffer."
      ("Region"             oz-browse-region (mark t))
      ("Line"               oz-browse-line t)
      ("Paragraph"          oz-browse-paragraph t))
-;;     ("Inspect" nil
-;;      ("Buffer"             oz-inspect-buffer t)
-;;      ("Region"             oz-inspect-region (mark t))
-;;      ("Line"               oz-inspect-line t)
-;;      ("Paragraph"          oz-inspect-paragraph t))
+     ("Inspect" nil
+      ("Buffer"             oz-inspect-buffer t)
+      ("Region"             oz-inspect-region (mark t))
+      ("Line"               oz-inspect-line t)
+      ("Paragraph"          oz-inspect-paragraph t))
     ("Open Panel"          oz-open-panel t)
     ("Open Compiler Panel" oz-open-compiler-panel t)
     ("Open Distribution Panel" oz-open-distribution-panel t)
