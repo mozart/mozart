@@ -30,6 +30,7 @@ SHDOCDIR        = $(PREFIX)/share/doc
 DOCDIR          = $(PREFIX)/doc
 SRCTOP          = @SRCTOP@
 BUILDTOP        = @BUILDTOP@
+PLATFORM        = @PLATFORM@
 
 INSTALL         = @INSTALL@
 INSTALL_FILE    = $(INSTALL) -m 444
