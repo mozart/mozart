@@ -183,8 +183,10 @@
 	<Span class=index/C++/&nbsp;file and the object code produced by the
 	C++&nbsp;compiler) and the last one is the resulting <Span class=index
 	/dynamic library/<Index/native functor/<Index/foreign library/ used by
-	the generated scanner, loaded via <Span class=index/<<Foreign.load>>/.
+	the generated scanner.
 	<!--** generated imports -->
+	<!--** document environment variable OZTOOL -->
+	<!--** include reference to oztool -->
       <Para class=apropos><Title/Implementation Limitation/
 	<Index/limitations<And>of the scanner generator/
 	Note that due to limitations of dynamic linking, a scanner may only
