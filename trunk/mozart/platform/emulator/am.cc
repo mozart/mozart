@@ -50,9 +50,12 @@ public:
   }
 };
 
+static
+IONode *ioNodes = NULL;
+
+static
 IONode *findIONode(int fd)
 {
-  static IONode *ioNodes = NULL;
 
   IONode *aux = ioNodes;
   while(aux) {
@@ -61,6 +64,18 @@ IONode *findIONode(int fd)
   }
   ioNodes = new IONode(fd,ioNodes);
   return ioNodes;
+}
+
+
+static
+int hasPendingSelect()
+{
+  IONode *aux = ioNodes;
+  while(aux) {
+    if (aux->handler[SEL_READ] || aux->handler[SEL_WRITE]) return OK;
+    aux = aux->next;
+  }
+  return NO;
 }
 
 
@@ -1554,6 +1569,10 @@ void AM::suspendEngine()
     }
     Assert(!compStream || compStream->bufEmpty());
 
+    if (!nextUser() && !hasPendingSelect()) {
+      fprintf(stderr,"System is idle: terminating\n");
+      exitOz(-1);
+    }
     int msleft = osBlockSelect(nextUser());
     setSFlag(IOReady);
 
