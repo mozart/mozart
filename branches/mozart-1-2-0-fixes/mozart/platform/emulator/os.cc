@@ -339,10 +339,6 @@ void handlerDefault(int sig)
   am.exitOz(1);
 }
 
-#ifdef WINDOWS
-#define SIGHUP SIGTERM
-#endif
-
 
 #define SIGLAST -1
 
@@ -350,10 +346,12 @@ static SigHandler handlers[] = {
   {SIGINT, "SIGINT", NO,handlerDefault,0},
   {SIGTERM,"SIGTERM",NO,handlerDefault,0},
   {SIGSEGV,"SIGSEGV",NO,handlerDefault,0},
-#ifndef WINDOWS
+#ifdef SIGBUS
   {SIGBUS, "SIGBUS", NO,handlerDefault,0},
 #endif
+#ifdef SIGUSR1
   {SIGUSR1,"SIGUSR1",NO,handlerDefault,0},
+#endif
   {SIGFPE, "SIGFPE", NO,handlerDefault,0},
 
 #ifdef SIGHUP
@@ -876,7 +874,7 @@ static int addOther(fd_set *socks, fd_set *other, fd_set *out)
 
   /* hack: optimized scanning fd_set by using definition of adt "fd_set" */
   for (unsigned i = 0; i < other->fd_count ; i++) {
-    OZ_FD_SET(i,out);
+    OZ_FD_SET(other->fd_array[i],out);
   }
 
   return out->fd_count;

@@ -218,10 +218,6 @@ void osInit();
 void osExit(int status);
 
 
-#ifndef SIGQUIT
-#define SIGQUIT SIGINT
-#endif
-
 int oskill(int pid, int sig);
 
 
@@ -260,7 +256,6 @@ void createReader(SOCKET s,HANDLE h);
 void createWriter(SOCKET s,HANDLE h);
 
 int ossocketpair(int, int type, int, int *sb);
-#define SIGUSR1 SIGINT
 #define O_NONBLOCK 0
 #define O_NOCTTY   0
 #define PathSeparator ';'
