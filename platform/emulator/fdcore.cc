@@ -312,16 +312,36 @@ OZ_C_proc_begin(BIfdPutGe, 2)
 }
 OZ_C_proc_end
 
+extern OZ_Term ** staticSuspendVars;
+extern int staticSuspendVarsNumber;
+
+class ExpectOnly : public OZ_Expect {
+private:
+  OZ_Return spawn(OZ_Propagator *, int , OZ_PropagatorFlags ) {}
+  OZ_Return spawn(OZ_Propagator *, OZ_PropagatorFlags) {}
+  OZ_Return suspend(OZ_Thread) {}
+  OZ_Return fail(void) {}
+public:
+  ExpectOnly(void) : OZ_Expect() {}
+  OZ_Term * getSuspVar(void) {
+    if (staticSuspendVarsNumber == 0) 
+      return NULL;
+    return staticSuspendVars[--staticSuspendVarsNumber];
+  }
+};
+
 OZ_C_proc_begin(BIfdPutList, 2) 
 {
   ExpectedTypes(OZ_EM_FD "," OZ_EM_FDDESCR);
   
-  OZ_Expect pe;
+  ExpectOnly pe;
   OZ_expect_t r = pe.expectDomDescr(OZ_getCArg(1));
   if (pe.isFailing(r)) {
     TypeError(1, "");
   } else if (pe.isSuspending(r)) {
-    return pe.suspend(OZ_makeSuspendedThread(OZ_self, OZ_args, OZ_arity));
+    for (OZ_Term * v = pe.getSuspVar(); v != NULL; v = pe.getSuspVar())
+      am.addSuspendVarList(v);
+    return SUSPEND;
   }
   
   BIfdBodyManager x;
