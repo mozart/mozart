@@ -1739,13 +1739,13 @@ void gcTagged(TaggedRef & frm, TaggedRef & to, Bool isInGc) {
       if (!cv->gcIsMarked()) {
 	if (isInGc || !(GETBOARD(cv))->isMarkedGlobal()) {
 	  isGround = NO;
-	  to = makeTaggedSVar(cv->gc());
+	  to = makeTaggedCVar(cv->gc());
 	} else {
 	  frm = makeTaggedRef(&to);
 	  to  = aux;
 	}
       } else {
-	to = makeTaggedSVar(cv->gcGetFwd());
+	to = makeTaggedCVar(cv->gcGetFwd());
       }
       storeFwdMode(isInGc, &frm, &to);
       return;
