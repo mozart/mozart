@@ -700,18 +700,24 @@ Bool isInTree (Board *b)
 
 /*
  * Literals:
- *   forward in 'printName'
- * NOTE:
  *   3 cases: atom, optimized name, dynamic name
  *   only dynamic names need to be copied
  */
 
 inline
+void dogcGName(GName *gn)
+{
+  if (opMode == IN_GC) {
+    gcGName(gn);
+  }
+}
+
+inline
 Name *Name::gcName()
 {
   CHECKCOLLECTED(homeOrGName, Name *);
-  if (opMode == IN_GC && hasGName()) {
-    gcGName(getGName());
+  if (hasGName()) {
+    dogcGName(getGName());
   }
   if (opMode == IN_GC && isOnHeap() ||
       opMode == IN_TC && isLocalBoard(getBoard())) {
@@ -1985,6 +1991,7 @@ void ConstTerm::gcConstRecurse()
 	ProcProxy *pp = (ProcProxy*) a;
 	gcTagged(pp->suspVar,pp->suspVar);
       }
+
       break;
     }
     
@@ -2070,6 +2077,13 @@ void ConstTerm::gcConstRecurse()
   }
 }
 
+inline
+void PrTabEntry::gcPrTabEntry()
+{
+  dogcGName(gname);
+}
+
+
 #define CheckLocal(CONST) 					\
 {								\
    Board *bb=(CONST)->getBoard();				\
@@ -2093,6 +2107,8 @@ ConstTerm *ConstTerm::gcConstTerm()
       Abstraction *a = (Abstraction *) this;
       CheckLocal(a);
       sz = a->isProxy() ? sizeof(ProcProxy) : sizeof(Abstraction);
+      dogcGName(a->getGName());
+      a->getPred()->gcPrTabEntry();
       COUNT(abstraction);
       break;
     }
