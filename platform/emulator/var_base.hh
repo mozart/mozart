@@ -41,9 +41,9 @@ public:
 
   TaggedRef DBGmakeSuspList();
 
-  // get home node without deref
+  // get home node without deref, for faster isLocal
   Board *getHome1() { return home; }
-  Board *getHome() { return home->getBoardDeref (); }
+  Board *getBoardFast() { return home->getBoardFast (); }
   SuspList *getSuspList() { return suspList; }
   void setSuspList(SuspList *inSuspList) { suspList = inSuspList; }
   void unlinkSuspList() { suspList = NULL; }
@@ -51,7 +51,7 @@ public:
   void addSuspension(Suspension *susp)
   {
     extern void updateExtSuspension(Board *home, Suspension *s);
-    updateExtSuspension (getHome(), susp);
+    updateExtSuspension (getBoardFast(), susp);
 
     suspList = new SuspList(susp,suspList);
   }

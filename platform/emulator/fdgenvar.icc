@@ -30,7 +30,7 @@ void GenFDVariable::propagate(TaggedRef var, FDPropState state,
 			      TaggedRef term, PropCaller prop_eq)
 {
   if (prop_eq == pc_propagator) {
-    home = getHome();
+    home = getBoardFast();
     switch (state) {
     case fd_det:
       if (fdSuspList[fd_det])

@@ -67,23 +67,21 @@ enum BoardFlags {
   Bo_PathMark	= 0x0080,
   Bo_Failed	= 0x0100,
   Bo_Committed	= 0x0200,
-  Bo_Discarded	= 0x0400,
   Bo_Waiting    = 0x0800,
   Bo_Reflected  = 0x1000,	// for debugging of solve combinator;
   Bo_NervousSolve= 0x2000
 };
 
+
 class Board : public ConstTerm {
 friend void engine();
-public:
-  static void Print();
 private:
   int flags;
   int suspCount;
   Continuation body;
   union {
     Actor *actor;
-    Board *board;
+    Board *ref;
   } u;
   Script script;
 public:
@@ -93,6 +91,9 @@ public:
   USEHEAPMEMORY;
   Board *gcBoard();
   void gcRecurse(void);
+  Bool gcIsAlive();
+  Board *gcGetNotificationBoard ();
+
   OZPRINT;
   OZPRINTLONG;
 
@@ -100,13 +101,13 @@ public:
 
   void incSuspCount(int n=1);
   void decSuspCount();
-  Board *gcGetBoardDeref();
-  Board *gcGetNotificationBoard ();
+  Board *getBoardFast();
+  Board *getParentAndTest();
+  Board *getParentFast();
+
   Actor *getActor();
-  Board *getBoard() { return u.board; }
-  Board *getBoardDeref();
+//  Board *getRef() { return u.ref; }
   Continuation *getBodyPtr() { return &body; }
-  Board *getParentBoard();
   Board* getSolveBoard (); 
   Bool underReflected();
   Script &getScriptRef() { return script; }
@@ -114,7 +115,6 @@ public:
   Bool hasSuspension(void);
   Bool isAsk() { return flags & Bo_Ask ? OK : NO; }
   Bool isCommitted() { return flags & Bo_Committed ? OK : NO; }
-  Bool isDiscarded();
   Bool isFailed() { return flags & Bo_Failed ? OK : NO; }
   Bool isInstalled() { return flags & Bo_Installed ? OK : NO; }
   Bool isNervous() { return flags & Bo_Nervous ? OK : NO; }
@@ -132,6 +132,7 @@ public:
 		       RefsArray g,RefsArray x,int i);
   void setInstalled() { flags |= Bo_Installed; }
   void setNervous() { flags |= Bo_Nervous; }
+  void setFailed() { flags |= Bo_Failed; }
   void setNervousSolve() { flags |= Bo_NervousSolve; }
   void setPathMark() { flags |= Bo_PathMark; }
 

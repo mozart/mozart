@@ -85,23 +85,12 @@ WaitActor* SolveActor::getDisWaitActor ()
 {
   WaitActor *wa = getTopWaitActor ();
   while (wa != (WaitActor *) NULL) {
-    if (wa->isCommitted () == OK) {
-      unlinkLastWaitActor ();
-      wa = getNextWaitActor ();
+    if (wa->isCommitted()) {
+      unlinkLastWaitActor();
+      wa = getNextWaitActor();
       continue;
     }
-    Board *bb = (wa->getBoard ())->getBoardDeref ();
-    if (bb == (Board *) NULL) {
-      unlinkLastWaitActor ();
-      wa = getNextWaitActor ();
-      continue;
-    }
-    // NB:
-    //   We don't test completely whether the actor belongs to the cancelled
-    // computation space (since this information is not currently propagated
-    // in the computation tree; thus, a board can be marked as non-discarded,
-    // though it's actually discarded). There are currently no serious reasons
-    // to implement this properly; it can be considered as an optimization. 
+    Board *bb = wa->getBoardFast();
 
     if (bb == solveBoard) {
       unlinkLastWaitActor ();
@@ -225,29 +214,24 @@ Bool SolveActor::checkExtSuspList ()
       continue;
     }
 
-    Board *b = (susp->getBoard ())->getBoardDeref ();
+    Board *bb = susp->getBoardFast();
 
-    if (b == (Board *) NULL) {
-      susp->markDead ();
-      tmpSuspList = tmpSuspList->dispose ();
-      continue;
+    while (1) {
+      bb = bb->getSolveBoard();
+      if (bb == solveBoard) break;
+      if (bb == 0) break;
+      bb = bb->getParentAndTest();
+      if (bb == 0) break;
     }
 
-    Board *sb = b->getSolveBoard ();
-    while (sb != (Board *) NULL && sb != solveBoard)
-      sb = (sb->getParentBoard ())->getSolveBoard ();
-    if (sb == (Board *) NULL) {
-      // note that the board *b could be discarded; therefore
-      // it is needed to try to find its solve board; 
+    if (bb == 0) {
       susp->markDead ();
       tmpSuspList = tmpSuspList->dispose ();
-      continue;
+    } else {
+      SuspList *helpList = tmpSuspList;
+      tmpSuspList = tmpSuspList->getNext ();
+      addSuspension (helpList);
     }
-
-    SuspList *helpList;
-    helpList = tmpSuspList;
-    tmpSuspList = tmpSuspList->getNext ();
-    addSuspension (helpList);
   }
 
   return (suspList == NULL);
