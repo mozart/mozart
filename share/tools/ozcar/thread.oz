@@ -76,13 +76,25 @@ in
 		{Atom.toString Name}.1 \= 96)
 	    in
 	       case Ok then
-		  case {Dmember self.ThreadDic I} then skip else
-		     {OzcarMessage WaitForThread}
-		     {Delay 700} % thread should soon be added
+		  case {Dmember self.ThreadDic I} then
+		     ThreadManager,step(file:File line:Line thr:T id:I
+					name:Name args:Args frame:FrameId
+					builtin:IsBuiltin time:Time)
+		  else
+		     case File == '' andthen
+			(Args.1 == off orelse {Label Args.1} == bpAt) then
+			{OzcarMessage 'message from Emacs detected.'}
+			{Dbg.trace T false}
+			{Dbg.stepmode T false}
+			{Thread.resume T}
+		     else
+			{OzcarMessage WaitForThread}
+			{Delay 700} % thread should soon be added
+			ThreadManager,step(file:File line:Line thr:T id:I
+					   name:Name args:Args frame:FrameId
+					   builtin:IsBuiltin time:Time)
+		     end
 		  end
-		  ThreadManager,step(file:File line:Line thr:T id:I
-				     name:Name args:Args frame:FrameId
-				     builtin:IsBuiltin time:Time)
 	       else
 		  SkippedProcs <- FrameId # I | @SkippedProcs
 		  {OzcarMessage 'Skipping procedure \'' # Name # '\''}
@@ -295,14 +307,7 @@ in
 	    case {UnknownFile F} then
 	       {OzcarMessage NoFileInfo # I}
 	       SourceManager,scrollbar(file:'' line:0 color:undef what:both)
-	       case F == '' andthen A.1 == off then
-	          % should(!) only happen when sending
-                  % Ozcar the 'off' message from within Emacs
-		  {OzcarMessage ByeBye}
-		  ThreadManager,forget(T I)
-	       else
-		  {Thread.resume T}
-	       end
+	       {Thread.resume T}
 	    else Ack in
 	       SourceManager,scrollbar(file:'' line:0 color:undef what:stack)
 	       thread
