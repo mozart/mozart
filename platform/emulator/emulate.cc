@@ -315,7 +315,7 @@ Bool AM::emulateHookOutline(ProgramCounter PC, Abstraction *def,
     time_t feedtime = CodeArea::findTimeStamp(PC);
     dinfo = cons(OZ_int(frameId),cons(OZ_int(feedtime),dinfo));
 
-    if (currentThread->stepMode() /* || def->getPred()->getSpyFlag() */) {
+    if (currentThread->getStep() /* || def->getPred()->getSpyFlag() */) {
       ProgramCounter debugPC = CodeArea::nextDebugInfo(PC);
       if (debugPC != NOCODE) {
 	debugStreamCall(debugPC, def->getPrintName(), def->getArity(),
@@ -479,7 +479,7 @@ void pushContX(TaskStack *stk,
 
 void pushDummyDebug(TaskStack *stk, ProgramCounter PC)
 {
-  if (am.debugmode() && am.currentThread->stepMode()) {
+  if (am.debugmode() && am.currentThread->getStep()) {
     time_t feedtime = CodeArea::findTimeStamp(PC);
     OZ_Term dinfo = cons(OZ_int(0),cons(OZ_int(feedtime),nil()));
     OzDebug *dbg  = new OzDebug(DBG_STEP,dinfo);
@@ -969,8 +969,8 @@ LBLstart:
 
   DebugTrace(trace("runnable thread->running"));
 
-  // Debugger & oz_stop
-  if (CTT->stopped()) {
+  // debugger & oz_stop
+  if (CTT->getStop()) {
     CTT = 0;  // byebye...
     goto LBLstart;
   }
@@ -1314,7 +1314,7 @@ LBLsuspendThread:
 #endif
 
     // Debugger
-    if (e->debugmode() && CTT->isTraced()) {
+    if (e->debugmode() && CTT->getTrace()) {
       Frame *auxtos = CTT->getTaskStackRef()->getTop();
       GetFrame(auxtos,debugPC,Y,G);
 
@@ -2468,7 +2468,7 @@ LBLdispatcher:
 	
        CheckArity(bi->getArity(),makeTaggedConst(bi));
 	   
-       if (e->debugmode() && e->currentThread->stepMode()) {
+       if (e->debugmode() && e->currentThread->getStep()) {
 	 const char *name = builtinTab.getName((void *) bi->getFun());
 	 ProgramCounter debugPC = CodeArea::nextDebugInfo(PC);
 
@@ -3031,14 +3031,14 @@ LBLdispatcher:
 	break;
       }
       case DBG_NEXT : {
-	if (CTT->isTraced() && CTT->stepMode()) {
+	if (CTT->getTrace() && CTT->getStep()) {
 	  debugStreamExit(info);
 	  goto LBLpreemption;
 	}
 	break;
       }
       case DBG_STEP : {
-	if (CTT->isTraced() && !CTT->contFlag()) {
+	if (CTT->getTrace() && !CTT->getCont()) {
 	  debugStreamExit(info);
 	  goto LBLpreemption;  
 	}

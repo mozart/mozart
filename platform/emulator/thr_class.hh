@@ -234,7 +234,7 @@ public:
     state.flags = state.flags | T_runnable;
   }
   void unmarkRunnable() { 
-    Assert((isRunnable () && !isDeadThread ()) || stopped());
+    Assert((isRunnable () && !isDeadThread ()) || getStop());
     state.flags &= ~T_runnable;
   }
 
@@ -281,48 +281,35 @@ public:
   }
   
   // debugger
-  Bool isTraced() {
+  // set/delete some bits...
+  void setTrace(Bool yesno) {
+    state.flags = yesno ? state.flags | T_G_trace : state.flags & ~T_G_trace;
+  }
+  void setStep(Bool yesno) {
+    state.flags = yesno ? state.flags | T_G_step  : state.flags & ~T_G_step;
+  }
+  void setStop(Bool yesno) {
+    state.flags = yesno ? state.flags | T_G_stop  : state.flags & ~T_G_stop;
+  }
+  void setCont(Bool yesno) {
+    state.flags = yesno ? state.flags | T_G_cont  : state.flags & ~T_G_cont;
+  }
+
+  // ...and check them
+  Bool getTrace() {
     return (state.flags & T_G_trace);
   }
-  Bool stepMode() {
+  Bool getStep() {
     return (state.flags & T_G_step);
   }
-  Bool stopped() {
+  Bool getStop() {
     return (state.flags & T_G_stop);
   }
-
-  void traced() {
-    state.flags = state.flags | T_G_trace;
-  }
-
-  void notTraced() {
-    state.flags = state.flags & ~T_G_trace;
-  }
-
-  void startStepMode() {
-    state.flags = state.flags | T_G_step;
-  }
-  void stopStepMode() {
-    state.flags = state.flags & ~T_G_step;
-  }
-  
-  void cont() {
-    state.flags = state.flags & ~T_G_stop;
-  }
-  void stop() {
-    state.flags = state.flags | T_G_stop;
-  }
-
-  void setContFlag() {
-    state.flags = state.flags | T_G_cont;
-  }
-  void deleteContFlag() {
-    state.flags = state.flags & ~T_G_cont;
-  }
-  Bool contFlag() {
+  Bool getCont() {
     return (state.flags & T_G_cont);
   }
 
+  
   int pStop() { return stopCount++; }
   int pCont() { return --stopCount; }
 
