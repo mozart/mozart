@@ -15,7 +15,7 @@ makefile(
 		'QTkDropdownbutton_bitmap.ozf'
 		: ['QTkImageLibBoot.ozf' 'mini-down.xbm']
 		'QTkDropdownlistbox.ozf'
-		: ['QTkBare.ozf' 'QTkImage.ozf' 'QTkDevel.ozf' 'QTkDropdownbutton_bitmap.ozf']
+		: ['QTkDropdownbutton_bitmap.ozf']
 		'QTkNumberentry.ozf'
 		: ['QTkNumberentry_bitmap.ozf']
 		'QTkNumberentry_bitmap.ozf'
