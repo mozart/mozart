@@ -102,6 +102,7 @@ void OwnerEntry::localize(int index)
     else return;}
   else {
     if(isTertiary()){
+      return;
       localizeTertiary(getTertiary());}
   }
   OT->freeOwnerEntry(index);
@@ -129,18 +130,11 @@ void OwnerTable::init(int beg,int end){
 
 void OwnerTable::compactify()
 {
-  return;
-
-  // AND-LOOK this looks strange. Are you sure that the size of OT is larger than DEFAULT_O...
-
   Assert(size>=no_used);
   Assert(size>=DEFAULT_OWNER_TABLE_SIZE);
-  int nou = no_used;
   if(size==DEFAULT_OWNER_TABLE_SIZE) return;
-  if(no_used/size >= TABLE_LOW_LIMIT) return;
   PD((TABLE,"TABLE:owner compactify enter: size:%d no_used:%d",
                size,no_used));
-  printf("TABLE:owner compactify enter: size:%d no_used:%d\n",size,no_used);
   int i=0;
   int used_slot= -1;
   int* base = &nextfree;
@@ -152,23 +146,24 @@ void OwnerTable::compactify()
     else used_slot=i;
     i++;}
   *base=END_FREE;
-  int first_free=used_slot+1;
-  int newsize= first_free-no_used < TABLE_BUFFER ?
-    first_free+TABLE_BUFFER : used_slot+1;
-  if(size - newsize > TABLE_WORTHWHILE_REALLOC){
+  int after_last=used_slot+1;
+
+  if(no_used/size >= TABLE_LOW_LIMIT){
+    PD((TABLE,"TABLE:owner compactify no realloc\n"));
+    return;}
+  int newsize= after_last-no_used < TABLE_BUFFER ?
+    after_last+TABLE_BUFFER : used_slot+1;
+  if(newsize > DEFAULT_OWNER_TABLE_SIZE &&
+     size - newsize > TABLE_WORTHWHILE_REALLOC){
     PD((TABLE,"TABLE:owner compactify free slots: new%d",newsize));
-    printf("TABLE:owner compactify free slots: new%d\n",newsize);
     array = (OwnerEntry*) realloc(array,newsize*sizeof(OwnerEntry));
     size=newsize;
     Assert(size>=no_used);
     Assert(size>=DEFAULT_OWNER_TABLE_SIZE);
-    Assert(nou == no_used);
     return;}
   PD((TABLE,"TABLE:owner compactify no realloc\n"));
-  printf("TABLE:owner compactify no realloc");
   Assert(size>=no_used);
-  Assert(size>=DEFAULT_OWNER_TABLE_SIZE);
-  Assert(nou == no_used);}
+  Assert(size>=DEFAULT_OWNER_TABLE_SIZE);}
 
 void OwnerTable::resize(){
 #ifdef BTRESIZE_CRITICAL
