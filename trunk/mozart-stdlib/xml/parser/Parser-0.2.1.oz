@@ -1,9 +1,13 @@
 %% -*-oz-*-
+%\define TOKENIZER
 functor
 export
    Parse
    NewContext
    NoParent
+\ifdef TOKENIZER
+   NewTokenizer
+\endif
 prepare
    %% ================================================================
    %% the up-links provided by the `parent' features introduce a huge
@@ -409,7 +413,9 @@ prepare
 	    CONTENTS <- L
 	    UserRoot = @PARENT
 	 end
+\ifndef TOKENIZER
 	 Parser,PARSE()
+\endif
       end
 
       %% =============================================================
@@ -1091,6 +1097,8 @@ prepare
 	    Parser,PARSE()
 	 end
       end
+
+      meth getToken($) Parser,GetToken($) end
    end
 import
    Open(file:File)
@@ -1101,4 +1109,11 @@ define
    proc {Parse Init Root}
       {New Parser {Adjoin Init init(root:Root fileopen:FileOpen)} _}
    end
+\ifdef TOKENIZER
+   fun {NewTokenizer Init}
+      O={New Parser {AdjoinAt Init fileopen FileOpen}}
+   in
+      fun {$} {O getToken($)} end
+   end
+\endif
 end
