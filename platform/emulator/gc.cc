@@ -1623,7 +1623,9 @@ inline void AbstractionEntry::gc()
 {
   abstr = (Abstraction *) abstr->gcConstTerm();
   if (!abstr) {
-    DebugCheckT(warning("abstraction entry dead\n")); // mm2;
+#ifdef DEBUG_GC
+    warning("abstraction entry dead\n")); // mm2;
+#endif
     g = 0;
     return;
   }
@@ -1901,7 +1903,7 @@ Thread *Thread::gcThread()
   if (this==0) return 0;
   CHECKCOLLECTED(*getGCField(), Thread *);
 
-#ifdef DEBUG_CHECK
+#ifdef DEBUG_GC
   //mm2
   Board *bb=home?getBoardFast():0;
   if (!bb || !bb->gcIsAlive()) {
