@@ -110,6 +110,7 @@ misc.o: misc.c flexdef.h config.h
 nfa.o: nfa.c flexdef.h config.h
 parse.o: $(PARSEC) flexdef.h config.h
 skel.o: skel.c flexdef.h config.h
+ssort.o: ssort.c flexdef.h config.h
 sym.o: sym.c flexdef.h config.h
 tblcmp.o: tblcmp.c flexdef.h config.h
 
