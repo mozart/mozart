@@ -2,7 +2,7 @@ functor
 export
    SlurpFile
    CompileFile
-   Union
+   Union Diff
    DateParse DateLess DateToString DateCurrentToString
    DateCurrentToAtom DateCurrent DateToAtom DateToUserVS
    IsMogulID
@@ -133,6 +133,11 @@ define
       {Dictionary.keys D}
    end
 
+   fun {Diff L1 L2}
+      for X in L1 collect:Collect do
+	 if {Not {Member X L2}} then {Collect X} end
+      end
+   end
 
    fun {DateCurrent}
       D={OS.localTime}
