@@ -462,19 +462,15 @@ then
 	oz_zlib_inc_dir=$with_zlib
     fi
 
-    usezlib=yes
-
-    OZ_CHECK_HEADER_PATH(zlib.h,,
-	AC_MSG_WARN(zlib include file not found)
-	usezlib=no)
-	    
-    OZ_CHECK_LIB_PATH(z, zlibVersion, ,
-	AC_MSG_WARN(libz not found)
-	usezlib=no)
-
-    if test $usezlib = yes
-    then AC_DEFINE(USE_ZLIB)
-    fi
+    OZ_CHECK_HEADER_PATH(zlib.h,
+	OZ_CHECK_LIB_PATH(z, zlibVersion,
+	    AC_DEFINE(USE_ZLIB)
+	    ,
+	    AC_MSG_WARN(libz not found)
+	    )
+	,
+	AC_MSG_WARN(zlib.h not found)
+	)
 else
     AC_MSG_RESULT(no)
 fi
