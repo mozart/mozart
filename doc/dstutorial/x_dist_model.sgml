@@ -7,12 +7,10 @@ is partitioned among several sites.
 We define a <EM>site</EM>
 as the basic unit of geographic distribution.
 In the current implementation,
-a site is always one running program on one machine.
-In a multitasking system, a site is
-an operating system process.
-Such a system can host several sites.
+a site is always one operating system process on one machine.
+A multitasking system can host several sites.
 An Oz language entity has the same language
-semantics whether it is used on one site only
+semantics whether it is used on only one site
 or on several sites.
 We say that Mozart is <EM>network-transparent</EM>.
 If used on several sites, the language entity
@@ -40,11 +38,13 @@ For objects, the developer can
 specify the desired distributed semantics, e.g.,
 mobile (cached) objects, stationary objects,
 and stationary single-threaded objects.
-We define the distributed semantics for each
-type of language entity and then we explain
+<ptr to="language.entities"> defines the distributed semantics for each
+type of language entity,
+<ptr to="sites"> explains more about what happens at sites,
+and <ptr to="bringing"> outlines
 how to build distributed applications.
 
-<SECTION><TITLE>Language entities</TITLE>
+<SECTION id="language.entities"><TITLE>Language entities</TITLE>
 
 <SUBSECTION><TITLE>Objects</TITLE>
 
@@ -426,7 +426,7 @@ Some commonly-used system modules are
 <<OS>> and <<Property>> (the OS and emulator),
 and so forth.
 
-<SECTION><TITLE>Sites</TITLE>
+<SECTION id="sites"><TITLE>Sites</TITLE>
 
 <SUBSECTION id="section.distmodel.shutdown"><TITLE>Controlled system shutdown</TITLE>
 
@@ -478,7 +478,7 @@ server forget all references to the client.
 This will ensure there are no cross-site
 cycles.
 
-<SECTION><TITLE>Bringing it all together</TITLE>
+<SECTION id="bringing"><TITLE>Bringing it all together</TITLE>
 
 <P>Does the Mozart distribution model
 give programmers a warm, fuzzy feeling when
