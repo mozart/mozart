@@ -71,7 +71,7 @@
        scr
        (list (cons 'name name))))
 
-(defvar oz-title-format "C: %s  M: %s")
+(defvar oz-title-format "Oz Console          C: %s  M: %s")
 
 (defun oz-canon-status-string(s)
   (cond ((string-match "\\<idle\\>" s) s)
