@@ -299,7 +299,7 @@ static TaggedRef ozInterfaceToRecord(OZ_C_proc_interface * I,
     buffer[mod_len+nam_len] = '\0';
     bi = new Builtin(buffer,I->inArity,I->outArity,I->func,isSited);
  
-    l = oz_cons(oz_pairA(I->name,makeTaggedConst(bi)),l);
+    l = oz_cons(oz_pair2(oz_atomNoDup(I->name),makeTaggedConst(bi)),l);
     I++;
   }
 
@@ -361,7 +361,7 @@ void link_base_modules() {
       //cerr << "[Builtin: " << buffer << "]" << endl;
       Builtin* bi = new Builtin(buffer,I->inArity,I->outArity,I->func,NO);
       OZ_Term oz_bi  = makeTaggedConst(bi);
-      list = oz_cons(oz_pairA(I->name,oz_bi),list);
+      list = oz_cons(oz_pair2(oz_atomNoDup(I->name),oz_bi),list);
       tagged2Dictionary(dictionary_of_builtins)
 	->setArg(oz_atom(buffer),oz_bi);
     }
