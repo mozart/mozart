@@ -241,7 +241,9 @@ of all the object's methods.
 If many objects of a given class
 exist on a site, then the class only exists once.
 
-<P> Note that classes are copied eagerly,
+<P> It's important to distinguish the distribution
+behaviors of objects and classes.
+Classes are copied eagerly,
 whereas objects are lazy.
 I.e., if an object is passed to a site,
 then the object's class is not copied to
@@ -321,11 +323,9 @@ Some commonly-used system modules are
 <<OS>> and <<Property>> (access to the OS and emulator),
 and so forth.
 
-<P>
-
 <SUBSECTION><TITLE>Bringing it all together</TITLE>
 
-<P> Does the above classification
+<P> Does the Mozart distribution model
 give programmers a warm, fuzzy feeling when
 writing distributed applications?
 In short, yes it does.
@@ -335,14 +335,13 @@ numbers of Gedankenexperimenten.
 
 <P> Here's how to use the distribution model
 to build applications.
-Typically, the large-scale structure
+The large-scale structure
 of an application consists of a graph
 of threads and objects, which access resources.
 The objects are given distribution behaviors
 to satisfy the geographic constraints
 (placement of resources, dependencies between sites)
-and
-the performance constraints
+and the performance constraints
 (network bandwidth, machine memory and speed).
 Threads are created initially and during
 execution to ensure that each site does
@@ -357,6 +356,20 @@ of the application--they are
 passed between sites when needed.
 Logic variables and locks are
 used to manage the dataflow and the concurrency.
+
+<P> Functors and resources are the key players
+in distributed component-based programming.
+A functor is essentially a component.
+A functor is stateless, so it can be transparently copied
+anywhere across the net and made persistent by pickling on a file.
+A functor is linked on a site by evaluating it there
+with the site resources that it needs.
+The result is a new resource, which can be
+used to link more functors.
+Our goal is for functors to be the core
+technology driving an open community of developers,
+who contribute to a growing global pool
+of useful components.
 
 <SECTION><TITLE>Global naming</TITLE>
 
