@@ -422,10 +422,12 @@ void tcl2buffer(TaggedRef);
 
 inline
 void tuple2buffer(STuple *st, int start = 0) {
-  tcl2buffer(st->getArg(start));
-  for (int i=start+1; i < st->getSize(); i++) {
-    tcl_put(' ');
-    tcl2buffer(st->getArg(i));
+  if (start < st->getSize()) {
+    tcl2buffer(st->getArg(start));
+    for (int i=start+1; i < st->getSize(); i++) {
+      tcl_put(' ');
+      tcl2buffer(st->getArg(i));
+    }
   }
 }
 
