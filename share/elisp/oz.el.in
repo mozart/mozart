@@ -330,7 +330,7 @@ All strings matching this regular expression are removed.")
   "Regex for reading messages from the Oz compiler.")
 
 (defconst oz-bar-pattern
-  "\'oz-bar \\([^ ]*\\) \\([0-9]+\\) \\([0-9]+\\) \\([^ ]*\\)\'"
+  "\'oz-bar \\([^ ]*\\) \\([0-9]+\\) \\([0-9]+\\|~1\\) \\([^ ]*\\)\'"
   "Regex for reading messages from the Oz debugger or profiler.")
 
 (defvar oz-gump-indentation nil
@@ -1377,7 +1377,8 @@ to handle lines like 'attr a:'."
 	    (save-excursion
 	      (forward-line 1)
 	      (setq end1 (point)))
-	    (forward-char column)
+	    (if (> column 0)
+		(forward-char column))
 	    (if (looking-at oz-token-pattern)
 		(setq start2 (match-beginning 0) end2 (match-end 0))
 	      (setq start2 start1 end2 start1))
@@ -2364,7 +2365,10 @@ The ARG is interpreted just as with \\[recenter]."
     (while (string-match oz-bar-pattern string start)
       (let ((file   (oz-match-string 1 string))
 	    (line   (string-to-number (oz-match-string 2 string)))
-	    (column (string-to-number (oz-match-string 3 string)))
+	    (column (let ((c (oz-match-string 3 string)))
+		      (if (string-equal c "~1")
+			  -1
+			(string-to-number c))))
 	    (state  (oz-match-string 4 string)))
 	(setq start (match-beginning 0))
 	(setq string (concat (substring string 0 start)
