@@ -123,7 +123,7 @@ case "$cmd" in
         fi
         url=$1
         shift
-        exec $OZEMULATOR -quiet -u $url -a "$@"
+        exec $OZEMULATOR -u $url -a "$@"
    ;;
 
    ozapplet)  # compute server
@@ -134,7 +134,7 @@ case "$cmd" in
         fi
         url=$1
         shift
-        exec $OZEMULATOR -quiet -browser -u $url -a "$@"
+        exec $OZEMULATOR -browser -u $url -a "$@"
    ;;
 
    *)

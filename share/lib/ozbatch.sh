@@ -12,8 +12,7 @@
 if test -z "$OZEMULATOR"
 then
     for d in /usr/local/oz/platform/$OZPLATFORM \
-        $SRCDIR/../Emulator $SRCDIR/../Emulator/$OZPLATFORM \
-
+        $SRCDIR/../Emulator $SRCDIR/../Emulator/$OZPLATFORM
     do
         if test -x $d/oz.emulator.bin
         then
@@ -23,11 +22,10 @@ then
     done
 fi
 
-: ${OZQUIET=-quiet}
 OZINIT=${OZMAINIT}
 export OZINIT
 
 echo "Using OZEMULATOR: $OZEMULATOR"
 echo "Using OZMAFILE: $OZMAFILE"
 
-exec $OZEMULATOR $OZQUIET -b $OZMAFILE -a "$@"
+exec $OZEMULATOR -b $OZMAFILE -a "$@"
