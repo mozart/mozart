@@ -89,3 +89,12 @@ veryclean: clean
 
 distclean: veryclean
         -rm -f Makefile
+
+OZDOC2XML       = $(SRCTOP)/doc/xsl/ozdoc2xml
+CLASSPATH       = $(shell echo $$CLASSPATH)
+OZCLASSPATH     = $(SRCTOP)/doc/xsl/xt.jar:$(SRCTOP)/doc/xsl/xp.jar:$(SRCTOP)/doc/xsl/sax.jar:../xsl
+
+$(WHAT).xml: $(MAIN) $(SGMLSRCS) $(TEXEXTRAFILES)
+        nsgmls -c../catalog $< | $(OZDOC2XML) > $@
+$(WHAT).tex: $(WHAT).xml
+        java -oss10000000 -classpath $(CLASSPATH):$(OZCLASSPATH)  com.jclark.xsl.sax.Driver $< $(SRCTOP)/doc/xsl/ozdoc.xml $@
