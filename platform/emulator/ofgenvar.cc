@@ -685,13 +685,13 @@ Bool GenOFSVariable::unifyOFS(TaggedRef *vPtr, TaggedRef var,
 
         // Take care of OFS suspensions, part 1/2 (before merging tables):
         Bool vOk=vLoc && am.hasOFSSuspension(suspList);
-        TaggedRef vList;
+        TaggedRef vList = 0;
         if (vOk) {
             // Calculate the extra features in var:
             vList=termVar->dynamictable->extraFeatures(dynamictable);
         }
         Bool tOk=tLoc && am.hasOFSSuspension(termVar->suspList);
-        TaggedRef tList;
+        TaggedRef tList = 0;
         if (tOk) {
             // Calculate the extra features in term:
             tList=dynamictable->extraFeatures(termVar->dynamictable);

@@ -406,7 +406,7 @@ void getMemFromOS(size_t sz) {
 
   DebugCheck(heapTotalSize > ozconf.heapBlockSize/KB,
              message("Increasing heap memory to %d kilo bytes\n",heapTotalSize));
-  return OK;
+  //return OK;
 }
 
 

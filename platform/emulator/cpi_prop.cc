@@ -191,8 +191,8 @@ void OZ_Propagator::spawn(OZ_Propagator * p, int prio)
 
     Assert(isAnyVar(vtag));
 
-    Bool isStorePatched, isReifiedPatched, isBoolPatched;
-    OZ_FiniteDomain * tmp_fd;
+    Bool isStorePatched = 0, isReifiedPatched = 0, isBoolPatched = 0;
+    OZ_FiniteDomain * tmp_fd = NULL;
 
     if (isCVar(vtag)) {
       isStorePatched = testResetStoreFlag(v);

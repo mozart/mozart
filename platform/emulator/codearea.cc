@@ -358,6 +358,9 @@ ProgramCounter CodeArea::nextDebugInfo(ProgramCounter from)
     Opcode op = getOpcode(PC);
     switch (op) {
     case OZERROR:   return NOCODE;
+    case DEFINITION:
+      PC = definitionEnd(PC+sizeOf(op));
+      continue;
     case DEBUGINFO: return PC;
     default: DISPATCH();
     }

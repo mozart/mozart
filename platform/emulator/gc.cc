@@ -2089,7 +2089,7 @@ ConstTerm *ConstTerm::gcConstTerm()
   if (this == NULL) return NULL;
   CHECKCOLLECTED(*getGCField(), ConstTerm *);
 
-  size_t sz;
+  size_t sz = 0;
   switch (getType()) {
   case Co_Board:     return ((Board *) this)->gcBoard();
   case Co_Actor:     return ((Actor *) this)->gcActor();
