@@ -22,6 +22,7 @@
 PREFIX		= @prefix@
 VPATH		= @srcdir@
 BINDIR		= $(PREFIX)/bin
+DOCDIR		= $(PREFIX)/share/doc
 ELISPDIR	= $(PREFIX)/share/elisp
 
 INSTALL		= @INSTALL@
@@ -35,12 +36,13 @@ OZAR		= ozar
 EMACS		= emacs
 
 FUNCTORS = \
-	SGML.ozf AuthorDB.ozf BibliographyDB.ozf Fontifier.ozf \
+	SGML.ozf AuthorDB.ozf BibliographyDB.ozf Fontifier.ozf MathToGIF.ozf \
 	OzDocToHTML.ozf Main.ozf
 SYSLETS = ozdoc
 ELCS = ozdoc.elc
 
-BINFILES = $(SYSLETS:%=$(BINDIR)/%) $(BINDIR)/ozdoc-fontify.sh
+BINFILES = $(SYSLETS:%=$(BINDIR)/%)
+DOCFILES = $(DOCDIR)/fontify $(DOCDIR)/latex2gif
 ELISPFILES = $(ELCS:%=$(ELISPDIR)/%)
 
 .PHONY: bootstrap all clean veryclean distclean
@@ -61,12 +63,15 @@ ozdoc: $(FUNCTORS)
 %.elc: %.el
 	$(EMACS) -q -batch -f batch-byte-compile $<
 
-install: $(BINDIR) $(BINFILES) $(ELISPDIR) $(ELISPFILES)
+install: $(BINDIR) $(BINFILES) $(DOCDIR) $(DOCFILES) $(ELISPDIR) $(ELISPFILES)
 
-$(BINDIR) $(ELISPDIR):
+$(BINDIR) $(DOCDIR) e$(ELISPDIR):
 	$(INSTALL_DIR) $@
 
 $(BINFILES): $(BINDIR)/% : %
+	$(INSTALL_BIN) $< $@
+
+$(DOCFILES): $(DOCDIR)/% : %
 	$(INSTALL_BIN) $< $@
 
 $(ELISPFILES): $(ELISPDIR)/% : %
