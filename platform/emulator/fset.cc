@@ -129,6 +129,7 @@ int mkRaw(int * list_left, int * list_right, const int * bv, int neg = 0)
 
 extern int * fd_bv_left_conv, * fd_bv_right_conv;
 
+static
 inline
 LTuple * mkListEl(LTuple * &h, LTuple * a, OZ_Term el)
 {
