@@ -29,6 +29,39 @@
       <Item><Ref.Extern to="applets/AnimatedQueens.oza"/Start Applet/
       <Item><Ref to="appendix.enable"/How to enable Applets/
     </List>
-  </P>
+
+  <p>
+    This demo shows finite domain constraints and search to solve the
+    <math/n/-Queens problem: how to place <math/n/-Queens on a
+    <math/n\times n/ chess-board such that the queens do not attack
+    each other.
+
+  <p>
+    The problem is solved with finite domain constraints, for a
+    discussion see <ptr.extern to="ozdoc:fdt"
+    key="section.scripts.queens">. The demo visualizes constraint
+    propagation and different distribution heuristics.
+
+  <p>
+    Note that the size of the board as well as the following
+    heuristics to place a queen can be selected:
+    <list enum>
+      <entry><em/Brute Force/
+      <item> Try fields in a top-down, left-right fashion.
+      <entry><em/First Fail/
+      <item> Choose the row with the least remaining possibilities
+       first, and place the queen leftmost in this row.
+      <entry><em/Middle Out/
+      <item>
+      Choose the row as above, where rows near to the center
+      of the board are preferred. Place the queen in the middle of
+      this row.
+      <entry><em/Up First/
+      <item>
+      Choose the row with the least remaining possibilities first,
+      where rows where it is possible to place the queen left most are
+      chosen first. Place the queen left most.
+    </list>
+
 
 </Chapter>
