@@ -26,7 +26,7 @@
   -->
 
 <!DOCTYPE BOOK SYSTEM "ozdoc.dtd" [
-<!ENTITY part.native SYSTEM "native.sgml">
+
 <!entity native.counter.global system "native-counter.sgml">
 <!entity native.counter.object system "native-counter-obj.sgml">
 <!entity native.celloid system "native-celloid.sgml">
@@ -44,6 +44,9 @@
 
 <!entity chapter.distrib.chat system "chat.sgml">
 
+<!entity chapter.concurrency.cheap system "conc-cheap.sgml">
+<!entity chapter.concurrency.patterns system "conc-patterns.sgml">
+
 <!ENTITY % proglang.values.local "|sh|makefile">
 <!ENTITY % p.mix.local "|em">
 <!ELEMENT em - - (#PCDATA)>
@@ -52,51 +55,69 @@
 <!ENTITY ie PI "ie">
 <!ENTITY eg PI "eg">
 <!entity amp "&">
+<!entity etc PI "ellipsis">
 
 <!ENTITY cc.class "<span class=ignore>class </span>">
 ]>
-<BOOK>
-<meta name="html.split" value="part.getting.started">
-<meta name="html.split" value="part.foreign.extensions">
-<meta name="html.split" value="chapter.counter.global">
-<meta name="html.split" value="chapter.counter.object">
-<meta name="html.split" value="chapter.celloid">
-<meta name="html.split" value="part.managing.modules">
-<meta name="proglang.mode" arg1="sh" arg2="shell-script-mode">
-<meta name="html.split" value="part.client.server">
-<meta name="html.split" value="chapter.client.server.intro">
-<meta name="html.split" value="chapter.client.server.db">
-<meta name="html.split" value="chapter.client.server.ozc">
-<meta name="html.split" value="part.distributed.applications">
-<Title/Application Programming/
-<Author.Extern to="author.db" key="Denys.Duchier">
-<Author.Extern to="author.db" key="Leif.Kornstaedt">
-<Author.Extern to="author.db" key="Christian.Schulte">
+<book proglang=oz>
+    <meta name="html.split" value="part.getting.started">
+    <meta name="html.split" value="part.foreign.extensions">
+    <meta name="html.split" value="chapter.counter.global">
+    <meta name="html.split" value="chapter.counter.object">
+    <meta name="html.split" value="chapter.celloid">
+    <meta name="html.split" value="part.managing.modules">
+    <meta name="proglang.mode" arg1="sh" arg2="shell-script-mode">
+    <meta name="html.split" value="part.client.server">
+    <meta name="html.split" value="chapter.client.server.intro">
+    <meta name="html.split" value="chapter.client.server.db">
+    <meta name="html.split" value="chapter.client.server.ozc">
+    <meta name="html.split" value="part.distributed.applications">
+    <meta name="html.split" value="part.concurrency">
+    <meta name="html.split" value="chapter.concurrency.cheap">
+    <meta name="html.split" value="chapter.concurrency.patterns">
+    <title/Application Programming/
+    <author.Extern to="author.db" key="Denys.Duchier">
+    <author.Extern to="author.db" key="Leif.Kornstaedt">
+    <author.Extern to="author.db" key="Christian.Schulte">
 
-<PART id=part.getting.started>
-  <Title/Getting Started/
-  &chapter.hello;
-  &chapter.development;
-  &chapter.deployment;
-</PART>
+    <part id=part.getting.started>
+      <title/Getting Started/
+      &chapter.hello;
+      &chapter.development;
+      &chapter.deployment;
+    </part>
 
-&part.native;
-    <part id=part.client.server proglang=oz>
+    <part id=part.concurrency>
+      <title/Programming With Concurrency/
+      &chapter.concurrency.cheap;
+      &chapter.concurrency.patterns;
+    </part>
+
+    <part id=part.client.server>
       <title>Client/Server Applications</title>
       &chapter.client.server.intro;
       &chapter.client.server.db;
       &chapter.client.server.ozc;
-</part>
-<part id=part.distributed.applications proglang=oz>
+    </part>
+
+    <part id=part.distributed.applications>
       <title/Distributed Applications/
       &chapter.distrib.chat;
-</part>
-<PART id=part.managing.modules>
-  <Title/Managing Modules/
-  &chapter.linking;
-  &chapter.module;
-</PART>
-</BOOK>
+    </part>
+
+    <part id=part.foreign.extensions proglang=cc>
+      <title>Native C/C++ Extensions</title>
+      &native.counter.global;
+      &native.counter.object;
+      &native.celloid;
+    </part>
+
+    <part id=part.managing.modules>
+      <title/Managing Modules/
+      &chapter.linking;
+      &chapter.module;
+    </part>
+</book>
 <!--
 Local Variables:
 mode: sgml
