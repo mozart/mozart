@@ -59,11 +59,6 @@ OZ_Boolean is_recalc_txu_upper(int i, int k, int a[])
 
 //-----------------------------------------------------------------------------
 
-#ifndef INT_MAX
-#define INT_MAX    2147483647 
-#define INT_MIN    (-2147483647-1)
-#endif
-
 inline int truncToIntMax(double d) { return d > INT_MAX ? INT_MAX : int(d); }
 inline int doubleToInt(double d) {
   return (d > INT_MAX) ? INT_MAX : ((d < INT_MIN) ? INT_MIN : int(d));

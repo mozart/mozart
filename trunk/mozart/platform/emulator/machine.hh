@@ -28,6 +28,8 @@
 #ifndef __MACHINEHH
 #define __MACHINEHH
 
+#include <limits.h>
+
 /*
  * This file contains machine specific settings
  */
