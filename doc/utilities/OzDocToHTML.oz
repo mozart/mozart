@@ -709,10 +709,15 @@ define
                   ToWrite <- ''#Node#'abstract.html'|@ToWrite
                end
                'div'(COMMON: @Common
-                     SEQ({Map @TopLinks
-                          fun {$ URL#Text}
-                             p('class': [margin] a(href: URL PCDATA(Text)))
-                          end})
+                     case @TopLinks of URL#Text|Rest then
+                        p('class': [margin]
+                          SEQ(a(href: URL PCDATA(Text))|
+                              {FoldR Rest
+                               fun {$ URL#Text In}
+                                  br()|a(href: URL PCDATA(Text))|In
+                               end nil}))
+                     [] nil then EMPTY
+                     end
                      case @TopTitle of unit then EMPTY
                      elseof T then h1(align: center 'class': [title] T)
                      end
