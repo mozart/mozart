@@ -52,7 +52,6 @@
 #include "fail.hh"
 #include "protocolCredit.hh"
 #include "port.hh"
-#include "protocolVar.hh"
 #include "protocolState.hh"
 #include "protocolFail.hh"
 #include "dpMarshaler.hh"
@@ -83,7 +82,7 @@ MsgBufferManager* msgBufferManager = new MsgBufferManager();
 //
 static inline PerdioVar *getPerdioVar(ProtocolObject *po)
 {
-  return (tagged2PerdioVar(*(po->getPtr())));
+  return (PerdioVar*) oz_getExtVar(*(po->getPtr()));
 }
 
 void SendTo(DSite* toS,MsgBuffer *bs,MessageType mt,DSite* sS,int sI)
@@ -486,7 +485,7 @@ void msgReceived(MsgBuffer* bs)
       PD((MSG_RECEIVED,"REGISTER index:%d site:%s",OTI,rsite->stringrep()));
       OwnerEntry *oe=receiveAtOwner(OTI);
       if (oe->isVar()) {
-	getPerdioVar(oe)->registerSiteV(rsite);
+	((ManagerVar*)getPerdioVar(oe))->registerSite(rsite);
       } else {
 	sendRedirect(rsite,OTI,OT->getOwner(OTI)->getRef());
       }
@@ -518,7 +517,7 @@ void msgReceived(MsgBuffer* bs)
       PD((MSG_RECEIVED,"M_SEND_OBJECT site:%s index:%d",sd->stringrep(),si));
       BorrowEntry *be=receiveAtBorrow(sd,si);
 
-      OldPerdioVar *pv = (OldPerdioVar *) getPerdioVar(be);
+      ObjectVar *pv = (ObjectVar *) getPerdioVar(be);
       Object *o = pv->getObject();
       Assert(o);
       GName *gnobj = o->getGName1();
@@ -549,7 +548,7 @@ void msgReceived(MsgBuffer* bs)
 	  sd->stringrep(),si));
       BorrowEntry *be=receiveAtBorrow(sd,si);
       
-      OldPerdioVar *pv = (OldPerdioVar *) getPerdioVar(be);
+      ObjectVar *pv = (ObjectVar *) getPerdioVar(be);
       Object *o = pv->getObject();
       Assert(o);
       GName *gnobj = o->getGName1();
@@ -579,8 +578,8 @@ void msgReceived(MsgBuffer* bs)
       }
       Assert(be->isVar());
 
-      PerdioVar *pv = getPerdioVar(be);
-      pv->proxyBindV(be->getPtr(),val,be);
+      ProxyVar *pv = (ProxyVar*) getPerdioVar(be);
+      pv->proxyBind(be->getPtr(),val,be);
 
       break;
     }
@@ -597,11 +596,11 @@ void msgReceived(MsgBuffer* bs)
 
       if (oe->isVar()) {
 	PD((PD_VAR,"SURRENDER do it"));
-	PerdioVar *pv = getPerdioVar(oe);
+	ManagerVar *pv = (ManagerVar*)getPerdioVar(oe);
 	// mm2: bug: the new var may no be the correct one wrt.
         //           to variable ordering -> may introduce net cycle.
 	// ??: bug fixed: may be bound to a different perdio var
-	pv->managerBindV(oe->getPtr(),v,oe,rsite,OTI);
+	pv->managerBind(oe->getPtr(),v,oe,rsite);
       } else {
 	PD((PD_VAR,"SURRENDER discard"));
 	PD((WEIRD,"SURRENDER discard"));
@@ -638,8 +637,8 @@ void msgReceived(MsgBuffer* bs)
 
       // mm2: abstraction: pv->proxyAck(varPtr);
       Assert(be->isVar());
-      PerdioVar *pv = getPerdioVar(be);
-      pv->proxyAckV(be->getPtr(), be);
+      ProxyVar *pv = (ProxyVar*) getPerdioVar(be);
+      pv->proxyAck(be->getPtr(), be);
 
       break;
     }

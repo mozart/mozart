@@ -126,10 +126,11 @@ void unmarshalUnsentSRecord(MsgBuffer *);
 void unmarshalUnsentObject(MsgBuffer *bs);
 void unmarshalUnsentObjectAndClass(MsgBuffer *bs);
 
-//
-// These two function are used by 'OldPerdioVar::marshalV()';
-void marshalVar(OldPerdioVar *pvar, MsgBuffer *bs);
-void marshalObjVar(OldPerdioVar *pv, MsgBuffer *bs);
+// var.cc
+OZ_Term unmarshalBorrow(MsgBuffer *bs,OB_Entry *&ob,int &bi);
+void marshalToOwner(int bi,MsgBuffer *bs);
+void marshalBorrowHead(MarshalTag tag, int bi,MsgBuffer *bs);
+void marshalOwnHead(int tag,int i,MsgBuffer *bs);
 
 #endif // __MARSHALER_M4HH
 
