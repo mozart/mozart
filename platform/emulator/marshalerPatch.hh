@@ -71,7 +71,7 @@ private:
   OZ_Term loc;			// where to patch;
   OZ_Term val;			// actual (patched) value - when installed;
   // OzValuePatch"es are either linked with naked pointers (for speed
-  // during installation/deinstallation), or they constitute one singe
+  // during installation/deinstallation), or they constitute one single
   // compound OZ_Term (for GC). A gc link is either a tagged
   // (OzValuePatch) variable - if the patch wasn't installed by
   // 'gcStart()', or a ref to a patched location - if the patch was
@@ -84,7 +84,7 @@ private:
 
   //
 public:
-  OzValuePatch(OZ_Term locIn, OzValuePatch *nIn) 
+  OzValuePatch(OZ_Term locIn, OzValuePatch *nIn)
     : ExtVar(oz_currentBoard()), loc(locIn) {
     next.ovp = nIn;
     Assert(oz_isRef((OZ_Term) locIn));
@@ -198,7 +198,8 @@ void deinstallOVP(OzValuePatch *ovp)
     // to: the patch may update that location to whatever it sees
     // fit;
     *vp = ovp->val;
-    DebugCode(ovp->val = (OZ_Term) 0);
+    // must be reset for 'gcStartOVP()'/'gcFinishOVP()':
+    ovp->val = (OZ_Term) 0;
     DebugCode(ovp->status = OVP_uninstalled;);
     ovp = ovp->next.ovp;
   } while(ovp);
