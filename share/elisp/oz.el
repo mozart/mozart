@@ -14,7 +14,7 @@
 ;; ---------------------------------------------------------------------
 
 (setq completion-ignored-extensions
-      (append '(".load" ".sym")
+      (append '(".ozo" ".ozs")
 	      completion-ignored-extensions))
 
 ;; ---------------------------------------------------------------------
@@ -1149,7 +1149,7 @@ OZ compiler, emulator and error window")
 
 (defun oz-to-coresyntax-region (start end)
    (interactive "r")
-   (oz-directive-on-region start end "\\core" ".i" t))
+   (oz-directive-on-region start end "\\core" ".ozc" t))
 
 
 (defun oz-to-emulatorcode-buffer()
@@ -1163,7 +1163,7 @@ OZ compiler, emulator and error window")
 
 (defun oz-to-emulatorcode-region (start end)
    (interactive "r")
-   (oz-directive-on-region start end "\\machine" ".ham" nil))
+   (oz-directive-on-region start end "\\machine" ".ozm" nil))
 
 
 
