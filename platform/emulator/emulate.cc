@@ -2350,7 +2350,7 @@ Case(GETVOID)
       Object *self = e->getSelf();
 
       if (!oz_onToplevel() && !oz_isCurrentBoard(GETBOARD(self))) {
-	(void) oz_raise(E_ERROR,E_KERNEL,"globalState",1,OZ_atom("object"));
+	(void) oz_raise(E_ERROR,E_KERNEL,"globalState",1,AtomObject);
 	RAISE_THREAD;
      }
 
@@ -2547,9 +2547,9 @@ Case(GETVOID)
     (void) oz_raise(E_ERROR,E_KERNEL,"type",5,
 		    NameUnit,
 		    NameUnit,
-		    OZ_atom("Lock"),
-		    OZ_int(1),
-		    OZ_string(""));
+		    oz_atomNoDup("Lock"),
+		    oz_int(1),
+		    oz_nil());
     RAISE_TYPE1("lock",oz_mklist(aux));
   }
   
@@ -2559,14 +2559,14 @@ Case(GETVOID)
   if(t->isLocal()){
     if(!oz_onToplevel()){
       if (!oz_isCurrentBoard(GETBOARD((LockLocal*)t))) {
-	(void) oz_raise(E_ERROR,E_KERNEL,"globalState",1,OZ_atom("lock"));
+	(void) oz_raise(E_ERROR,E_KERNEL,"globalState",1,AtomLock);
 	RAISE_THREAD;}}
     if(((LockLocal*)t)->hasLock(th)) {goto has_lock;}
     if(((LockLocal*)t)->lockB(th)) {goto got_lock;}
     goto no_lock;}
 
   if(!oz_onToplevel()){
-    (void) oz_raise(E_ERROR,E_KERNEL,"globalState",1,OZ_atom("lock"));
+    (void) oz_raise(E_ERROR,E_KERNEL,"globalState",1,AtomLock);
     RAISE_THREAD;
   }
 
@@ -2992,7 +2992,7 @@ Case(GETVOID)
 	((LockFrameEmul *)lck)->unlock(oz_currentThread());
 	break;
       case Te_Proxy:
-	oz_raise(E_ERROR,E_KERNEL,"globalState",1,OZ_atom("lock"));
+	oz_raise(E_ERROR,E_KERNEL,"globalState",1,AtomLock);
 	RAISE_THREAD_NO_PC;
       case Te_Manager:
 	((LockManagerEmul *)lck)->unlock(oz_currentThread());
