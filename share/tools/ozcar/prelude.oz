@@ -46,7 +46,7 @@ end
 %% send a warning/error message
 proc {OzcarShow X}
    case {Cget verbose} then
-      {Show X}
+      {System.show X}
    else skip end
 end
 proc {OzcarMessage M}

@@ -28,11 +28,13 @@
 functor $
 
 import
-   SP.{Foreign  = 'Foreign'
-       Finalize = 'Finalize'}
+   Foreign.{load}
+   
+   Finalize.{register}
 
 export
    'GumpScanner': GumpScanner
+   'class':       GumpScanner
 
 body
 

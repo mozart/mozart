@@ -28,17 +28,29 @@
 functor $
 
 import
-   SP.{System = 'System'
-       Print  = 'Print'
-       Error  = 'Error'}
+   System.{get
+	   showInfo
+	   valueToVirtualString
+	   print}
 
-   OP.{OS   = 'OS'
-       Open = 'Open'}
+   Error.{formatLine
+	  msg}
 
-   Compiler
+   OS.{getEnv
+       stat
+       uName
+       getHostByName
+       tmpnam}
+
+   Open.{socket
+	 text
+	 file}
+
+   Compiler.{genericInterface}
 
 export
-   'Emacs' : Emacs
+   getOPI:   GetOPI
+   condSend: CondSend
 
 body
 
@@ -69,7 +81,7 @@ fun instantiate {$ IMPORT}
       end
 
       proc {Trace M}
-	 case {Emacs.getOPI} of false then skip
+	 case {GetOPI} of false then skip
 	 elseof OPI then
 	    case {OPI isTrace($)} then
 	       {System.showInfo 'Emacs: ' # M}
@@ -183,7 +195,7 @@ fun instantiate {$ IMPORT}
 \endif
 \endif
 \endif
-	       {Print {VirtualString.toAtom 'oz-socket "'#NodeName#'" '#Port}}
+	       {System.print {VirtualString.toAtom 'oz-socket "'#NodeName#'" '#Port}}
 	    end
 	 end
 	 meth getSocket($)   %--** should be replaced by readQuery
@@ -273,8 +285,23 @@ fun instantiate {$ IMPORT}
    GetOPI = {`Builtin` getOPICompiler 1}
 
 \ifdef LILO
-in
-\endif
+
+   CondSend = condSend(interface:
+			  proc {$ M}
+			     case {GetOPI} of false then skip
+			     elseof OPI then
+				{OPI M}
+			     end
+			  end
+		       compiler:
+			  proc {$ M}
+			     case {GetOPI} of false then skip
+			     elseof OPI then
+				{{OPI getCompiler($)} M}
+			     end
+			  end)
+
+\else
    
    Emacs = emacs(getOPI: GetOPI
 		 condSend: condSend(interface:
@@ -292,6 +319,7 @@ in
 					  end
 				       end)
 		 interface: CompilerInterfaceEmacs)
+\endif
 
 \ifndef LILO
 in
