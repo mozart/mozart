@@ -1384,8 +1384,8 @@ struct min_max_dur_setFL {
 
 static int CompareFirsts(const void *x, const void *y)
 {
-  min_max_dur_setFL *Int1 = (min_max_dur_setFL*) x;
-  min_max_dur_setFL *Int2 = (min_max_dur_setFL*) y;
+  const min_max_dur_setFL *Int1 = (const min_max_dur_setFL*) x;
+  const min_max_dur_setFL *Int2 = (const min_max_dur_setFL*) y;
   int min1 = Int1->min;
   int min2 = Int2->min;
   if (min1 < min2) return -1;
@@ -1399,8 +1399,8 @@ static int CompareFirsts(const void *x, const void *y)
 
 static int CompareLasts(const void *x, const void *y)
 {
-  min_max_dur_setFL *Int1 = (min_max_dur_setFL*) x;
-  min_max_dur_setFL *Int2 = (min_max_dur_setFL*) y;
+  const min_max_dur_setFL *Int1 = (const min_max_dur_setFL*) x;
+  const min_max_dur_setFL *Int2 = (const min_max_dur_setFL*) y;
   int max1 = Int1->max;
   int max2 = Int2->max;
   int dur1 = Int1->dur;

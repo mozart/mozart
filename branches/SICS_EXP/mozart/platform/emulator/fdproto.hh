@@ -120,6 +120,7 @@ OZ_C_proc_proto(fdtest_spawnLess)
 OZ_C_proc_proto(fdtest_plus)
 OZ_C_proc_proto(fdtest_sumac)
 OZ_C_proc_proto(fdtest_alldiff)
+OZ_C_proc_proto(fdtest_inqueens)
 OZ_C_proc_proto(fdtest_gensum)
 
 //*****************************************************************************
@@ -151,5 +152,6 @@ OZ_C_proc_proto(fsp_boundN)
 OZ_C_proc_proto(fsp_disjointN)
 OZ_C_proc_proto(fsp_unionN)
 OZ_C_proc_proto(fsp_partition)
+OZ_C_proc_proto(fsp_partitionReified)
 OZ_C_proc_proto(fsp_boundsN)
 #endif

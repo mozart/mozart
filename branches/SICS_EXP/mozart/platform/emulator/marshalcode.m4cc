@@ -326,7 +326,7 @@ ProgramCounter unmarshalBuiltinTabEntry(ProgramCounter PC, MsgBuffer *bs)
 
   if (PC==NULL) return 0;
 
-  char *biName = tagged2Literal(name)->getPrintName();
+  const char *biName = tagged2Literal(name)->getPrintName();
   BuiltinTabEntry *found = (BuiltinTabEntry *)builtinTab.htFind(biName);
   
   if (found == htEmpty) {

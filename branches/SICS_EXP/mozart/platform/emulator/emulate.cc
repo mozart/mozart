@@ -303,8 +303,8 @@ Bool AM::emulateHookOutline(ProgramCounter PC, Abstraction *def,
 
   if (def && debugmode() && !currentSolveBoard && currentThread != rootThread
                          &&
-      (CodeArea::getOpcode(PC+sizeOf(CodeArea::getOpcode(PC)))==DEBUGINFO ||
-       CodeArea::getOpcode(PC)==DEBUGINFO)) {
+      (CodeArea::getOpcode(PC+sizeOf(CodeArea::getOpcode(PC)))==DEBUGEXIT ||
+       CodeArea::getOpcode(PC)==DEBUGEXIT)) {
 
     OzDebug *dbg;
     int frameId   = ++lastFrameID % MAX_ID;
@@ -2084,14 +2084,8 @@ LBLdispatcher:
       HF_FAIL;
     }
 
-
-  Case(SUCCEED)
+  Case(SKIP)
     DISPATCH(1);
-
-  Case(SAVECONT)
-    /*     PushCont(getLabelArg(PC+1),Y,G); */
-    error("unused");
-    DISPATCH(2);
 
   Case(EXHANDLER)
     PushCont(PC+2,Y,G);
@@ -2264,29 +2258,6 @@ LBLdispatcher:
     SUSP_PC(termPtr,argsToSave,PC);
   }
 
-
-  /* det(X) wait until X will be ground */
-  Case(DETX) ONREG(Det,X);
-  Case(DETY) ONREG(Det,Y);
-  Case(DETG) ONREG(Det,G);
-  Det:
-  {
-    TaggedRef term = RegAccess(HelpReg,getRegArg(PC+1));
-    DEREF(term,termPtr,tag);
-
-    if (!isAnyVar(tag)) {
-      DISPATCH(3);
-    }
-    /* INCFPC(3): dont do it */
-    int argsToSave = getPosIntArg(PC+2);
-    PushContX(PC,Y,G,X,argsToSave);
-    if (isCVar (tag)) {
-      tagged2CVar(term)->addDetSusp(CTT,termPtr);
-    } else {
-      addSusp (termPtr, CTT);
-    }
-    goto LBLsuspendThread;
-  }
 
   Case(TAILSENDMSGX) isTailCall = OK; ONREG(SendMethod,X);
   Case(TAILSENDMSGY) isTailCall = OK; ONREG(SendMethod,Y);
@@ -2475,7 +2446,7 @@ LBLdispatcher:
 	 ProgramCounter debugPC = CodeArea::nextDebugInfo(PC);
 
 	 if (debugPC != NOCODE) {
-//	   debugStreamCall(debugPC, name, predArity, X, 1, 0);
+	   debugStreamCall(debugPC, name, predArity, X, 1, 0);
 	   
 	   if (!isTailCall) PushCont(PC,Y,G);
 	   
@@ -3170,22 +3141,20 @@ LBLdispatcher:
       goto LBLerror;
 
 
-  Case(DEBUGINFO)
+  Case(DEBUGENTRY)
     {
       int line = smallIntValue(getNumberArg(PC+2));
       if (line<0) {
 	execBreakpoint(e->currentThread);
       } 
       DISPATCH(6);
-
-      /*
-	TaggedRef filename = getLiteralArg(PC+1);
-	int absPos         = smallIntValue(getNumberArg(PC+3));
-	TaggedRef comment  = getLiteralArg(PC+4);
-	int noArgs         = smallIntValue(getNumberArg(PC+5));
-       */
     }
-  
+
+    Case(DEBUGEXIT)
+    {
+      DISPATCH(6);
+    }
+
   Case(GENFASTCALL)
     {
       AbstractionEntry *entry = (AbstractionEntry *) getAdressArg(PC+1);
@@ -3296,6 +3265,18 @@ LBLdispatcher:
       error("impossible");
     }
 
+  Case(ENDOFFILE)
+    {
+      error("Emulate: ENDOFFILE command executed");
+      goto LBLerror;
+    }
+
+  Case(ENDDEFINITION)
+    {
+      error("Emulate: ENDDEFINITION command executed");
+      goto LBLerror;
+    }
+
   Case(TESTLABEL1)
   Case(TESTLABEL2)
   Case(TESTLABEL3)
@@ -3305,9 +3286,6 @@ LBLdispatcher:
   Case(TEST2)
   Case(TEST3)
   Case(TEST4)
-
-  Case(ENDOFFILE)
-  Case(ENDDEFINITION)
 
 #ifndef THREADED
   default:

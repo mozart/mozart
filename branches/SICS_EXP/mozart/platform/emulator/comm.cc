@@ -77,6 +77,8 @@ public:
   SiteManager():FreeListManager(SITE_CUTOFF){}
 
   void freeSite(Site *s){ 
+    Assert(!(s->getType() & MY_SITE));
+    Assert(s->refCtr==0);
     deleteSite(s);}
 
   Site* allocSite(Site* s){
@@ -269,7 +271,7 @@ Site* unmarshalSite(MsgBuffer *buf){
     return s;}
 
   case NONE: {
-    PD((SITE,"unmsrahslsite NONE"));break;}
+    PD((SITE,"unmarshalsite NONE"));break;}
     
   case I_AM_YOUNGER:{
     PD((SITE,"unmarshalsite I_AM_YOUNGER"));
@@ -433,11 +435,95 @@ void siteZeroActiveRef(Site *s){
   return;}
 
 Site* initMySite(ip_address a,port_t p,time_t t){
-  //EK adding mySite to the hashtable. So we can recognize
-  // our own site when it is sent to us as a GName...
   Site *s =new Site(a,p,t);
   int hvalue = s->hashPrimary();
   primarySiteTable->insertPrimary(s,hvalue);
+  SiteExtension *se=siteExtensionManager.allocSiteExtension();
+  s->initMySiteR(se);
   return s;}
 
+Site* initMySiteVirtual(ip_address a,port_t p,time_t t,VirtualInfo *vi){
+  Site *s =new Site(a,p,t);
+  int hvalue = s->hashPrimary();
+  primarySiteTable->insertPrimary(s,hvalue);
+  SiteExtension *se=siteExtensionManager.allocSiteExtension();
+  s->initMySiteV(se,vi);
+  return s;}
 
+/* **********************************************************************
+     for components
+********************************************************************** */
+
+class SS: public MsgBuffer{
+private:
+  char xx[100];
+  char* pos;
+public:
+  SS(){}
+  void marshalBegin(){pos=&xx[0];}
+
+  void marshalEnd(){Assert(0);}
+  char* marshalEnd2(){*pos='\0';return &xx[0]; }
+
+  void unmarshalBegin() {Assert(0);}
+  void unmarshalBegin2(char* in) {pos=in;}
+
+  char* unmarshalEnd2() {return pos;}
+  void unmarshalEnd() {Assert(0);}
+
+  void put(BYTE c){*pos++=c;}
+  BYTE get(){return *pos++;}
+
+  char* siteStringrep(){return "gate";}
+  Site* getSite(){Assert(0);return NULL;}
+};
+
+SS* stringMsgBuffer = new SS();
+
+char* Site::toString(){
+  stringMsgBuffer->marshalBegin();
+  if(getType() & VIRTUAL_SITE){
+    stringMsgBuffer->put(VIRTUAL_SITE);
+    marshalBaseSite(stringMsgBuffer);
+    marshalVirtualInfo(getVirtualInfo(),stringMsgBuffer);}
+  stringMsgBuffer->put(REMOTE_SITE);
+  marshalBaseSite(stringMsgBuffer);
+  return stringMsgBuffer->marshalEnd2();}
+
+Site* stringToSite(char *url,char* &out){
+  stringMsgBuffer->unmarshalBegin2(url);
+  Site tryS;
+  Site *s;
+  MarshalTag mt=(MarshalTag) stringMsgBuffer->get();
+  tryS.unmarshalBaseSite(stringMsgBuffer);
+  int hvalue=tryS.hashPrimary();
+  FindType rc=primarySiteTable->findPrimary(&tryS,hvalue,s);    
+  switch(rc){
+  case SAME:
+    if(mt==DIF_VIRTUAL){
+      unmarshalUselessVirtualInfo(stringMsgBuffer);}
+    out=stringMsgBuffer->marshalEnd2();    
+    return s;
+  case NONE:
+    break;
+  case I_AM_YOUNGER: 
+    out="";
+    return NULL;
+  case I_AM_OLDER: 
+    primaryToSecondary(s,hvalue);
+    break;}
+  
+  s=siteManager.allocSite(&tryS);    
+  primarySiteTable->insertPrimary(s,hvalue);
+  SiteExtension *se=siteExtensionManager.allocSiteExtension();
+  if(mt==DIF_VIRTUAL){
+    VirtualInfo * vi=unmarshalVirtualInfo(stringMsgBuffer);
+    out=stringMsgBuffer->unmarshalEnd2();    
+    if(inMyGroup(&tryS,vi)){s->initVirtual(se,vi);}
+    else {s->initVirtualRemote(se,vi);}
+    return s;}
+  out=stringMsgBuffer->unmarshalEnd2();    
+  Assert(mt==DIF_REMOTE);
+  s->initRemote(se);
+  return s;}
+  

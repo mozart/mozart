@@ -221,7 +221,7 @@ public:
 #define MY_SITE		     32
 
 
-/* Sites -13  possibilities 
+/* Sites -14  possibilities 
 
 		    
                     (REMOTE_SITE)              1  (REMOTE_SITE|CONNECTED)               5
@@ -237,6 +237,7 @@ public:
 		    (VIRTUAL_SITE|REMOTE_SITE|CONNECTED|PERM_SITE)  15
 		    last 3 transitory
 		    (MY_SITE)                                       32
+		    (MY_SITE|VIRTUAL_SITE)                          34
 
 */
 
@@ -287,12 +288,11 @@ enum FaultCode{
   };
 
 class Site: public BaseSite{
-  friend class SiteHashTable;
-  friend class RemoteSite;
+friend class SiteHashTable;
+friend class RemoteSite; 
+friend class SiteManager;
 private:
   unsigned int extension;
-
-  unsigned short getType(){ return flags;}
 
   void setType(unsigned int i){flags=i;}
 
@@ -357,9 +357,9 @@ private:
   void incPassiveRefCtr(){
     putPassiveRefCtr(getPassiveRefCtr()+1);}
 
-
-    
 protected:
+
+  unsigned short getType(){ return flags;}
 
   VirtualInfo* getVirtualInfo(){
     Assert(getType() & VIRTUAL_SITE);
@@ -436,6 +436,18 @@ public:
     return;}
 
   Bool isPerm(){return getType() & PERM_SITE;}                   
+
+  void initMySiteR(SiteExtension *se){
+    refCtr=1; // can never be reclaimed
+    se->init(NULL);
+    extension = (unsigned int)se;
+    setType(MY_SITE);}
+
+  void initMySiteV(SiteExtension *se,VirtualInfo *v){
+    refCtr=1; // can never be reclaimed
+    se->init(v);
+    extension = (unsigned int)se;
+    setType(MY_SITE|VIRTUAL_SITE);}
 
   void initVirtual(SiteExtension *se,VirtualInfo *vi){
     refCtr=0;
@@ -638,11 +650,14 @@ public:
 
 
   void msgReceived(MsgBuffer *);
+
+  char* toString();
 };
 
 
 
 Site* initMySite(ip_address,port_t,time_t);
+Site* initMySiteVirtual(ip_address,port_t,time_t,VirtualInfo*);
 
 
 
