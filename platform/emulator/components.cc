@@ -122,7 +122,7 @@ public:
 
 class ByteSink {
 public:
-  virtual OZ_Return putTerm(OZ_Term,char*);
+  virtual OZ_Return putTerm(OZ_Term,char*,Bool text);
   virtual OZ_Return putBytes(BYTE*,int);
   virtual OZ_Return allocateBytes(int);
   virtual OZ_Return maybeSaveHeader(ByteStream*);
@@ -199,12 +199,14 @@ OZ_Return raiseGeneric(char *msg, OZ_Term arg)
 
 
 OZ_Return
-ByteSink::putTerm(OZ_Term in, char *filename)
+ByteSink::putTerm(OZ_Term in, char *filename, Bool textmode)
 {
   ByteStream* bs=bufferManager->getByteStream();
+  if (textmode)
+    bs->setTextmode();
   marshal_M_FILE(bs,PERDIOVERSION,in);
 
-  CheckNogoods(in,bs,"Resources found during save",bufferManager->freeByteStream(bs));
+  CheckNogoods(in,bs,"Resources found during save",bufferManager->dumpByteStream(bs));
 
   bs->beginWrite();
   bs->incPosAfterWrite(tcpHeaderSize);
@@ -218,7 +220,7 @@ ByteSink::putTerm(OZ_Term in, char *filename)
     total -= len;
     OZ_Return result = putBytes(pos,len);
     if (result!=PROCEED) {
-      bufferManager->freeByteStream(bs);
+      bufferManager->dumpByteStream(bs);
       return result;
     }
     bs->sentFirst();
@@ -261,7 +263,8 @@ ByteSinkFD::putBytes(BYTE*pos,int len)
 OZ_Return
 ByteSinkFile::allocateBytes(int n)
 {
-  fd = open(filename,O_WRONLY|O_CREAT|O_TRUNC,0666);
+  fd = strcmp(filename,"-")==0 ? STDOUT_FILENO
+                               : open(filename,O_WRONLY|O_CREAT|O_TRUNC,0666);
   if (fd < 0)
     return raiseGeneric("Open failed during save",
                         oz_mklist(OZ_pairA("File",oz_atom(filename)),
@@ -314,7 +317,7 @@ OZ_Return
 saveDatum(OZ_Term in,OZ_Datum& dat)
 {
   ByteSinkDatum sink;
-  OZ_Return result = sink.putTerm(in,"filename unknown");
+  OZ_Return result = sink.putTerm(in,"filename unknown",NO);
   if (result==PROCEED) {
     dat=sink.dat;
   } else {
@@ -323,17 +326,43 @@ saveDatum(OZ_Term in,OZ_Datum& dat)
   return result;
 }
 
+static
+OZ_Return saveIt(OZ_Term val, char *filename, Bool textmode)
+{
+  ByteSinkFile sink(filename);
+  OZ_Return ret = sink.putTerm(val,filename,textmode);
+  if (ret!=PROCEED)
+    unlink(filename);
+  return ret;
+}
+
 OZ_BI_define(BIsave,2,0)
 {
   OZ_declareIN(0,in);
   OZ_declareVirtualStringIN(1,filename);
-
-  ByteSinkFile sink(filename);
-  OZ_Return ret = sink.putTerm(in,filename);
-  if (ret!=PROCEED)
-    unlink(filename);
-  return ret;
+  return saveIt(in,filename,NO);
 } OZ_BI_end
+
+
+#ifdef PICKLE2TEXTHACK
+OZ_Return loadFD(int fd, OZ_Term out, const char *compname);
+Bool pickle2text()
+{
+  OZ_Term res =   oz_newVariable();
+  OZ_Return aux = loadFD(STDIN_FILENO,res,"-");
+  if (aux==RAISE) {
+    fprintf(stderr,"Exception: %s",OZ_toC(am.getExceptionValue(),10,100));
+    return NO;
+  }
+  aux = saveIt(res,"-",OK);
+  if (aux==RAISE) {
+    fprintf(stderr,"Exception: %s",OZ_toC(am.getExceptionValue(),10,100));
+    return NO;
+  }
+  return OK;
+}
+
+#endif
 
 
 OZ_BI_define(BIexport,1,0)
@@ -394,7 +423,7 @@ ByteSource::getTerm(OZ_Term out, const char *compname)
 
   if(stream->skipHeader() && unmarshal_SPEC(stream,versiongot,val)){
     stream->afterInterpret();
-    bufferManager->freeByteStream(stream);
+    bufferManager->dumpByteStream(stream);
     delete versiongot;
     return oz_unify(val,out);} // mm_u
 

@@ -475,7 +475,7 @@ void Statistics::printInstr()
   for (int i=0; i<PROFILE_INSTR_MAX; i++) {
     sum += instr[i];
     if (instr[i]!=0)
-      fprintf(out,"%010lu x %s\n",instr[i],CodeArea::opToString[i]);
+      fprintf(out,"%010lu x %s\n",instr[i],opcodeToString(i));
   }
   fprintf(out,"----------\n%010lu\n",sum);
   fclose(out);
@@ -495,7 +495,7 @@ void Statistics::printInstrCollapsable()
       if (instrCollapsable[i][j]!=0)
         fprintf(out,"%010lu x %s %s\n",
                 instrCollapsable[i][j],
-                CodeArea::opToString[i],CodeArea::opToString[j]);
+                opcodeToString(i),opcodeToString(j));
     }
   }
   fclose(out);

@@ -158,9 +158,6 @@ public:
   static Opcode getOpcode(ProgramCounter PC) {
     return adressToOpcode(getOP(PC)); }
 
-  static char **opToString;
-  static Opcode stringToOp(const char *s);
-
   static void gc();
 
 #ifdef RECINSTRFETCH
