@@ -123,7 +123,6 @@ in
 	 LastSelectedFrame : 0
 	 EnvSync           : _
 	 StatusSync        : _
-	 MarkNodeSync      : _
 	 MarkStackSync     : _
 	 MarkEnvSync       : _
 
@@ -653,17 +652,6 @@ in
       end
 
       meth markNode(I How)
-	 New in
-	 MarkNodeSync <- New = unit
-	 thread
-	    {WaitOr New {Alarm TimeoutToMark}}
-	    case {IsDet New} then skip else
-	       Gui,DoMarkNode(I How)
-	    end
-	 end
-      end
-
-      meth DoMarkNode(I How)
 	 {self.ThreadTree mark(I How)}
       end
 
