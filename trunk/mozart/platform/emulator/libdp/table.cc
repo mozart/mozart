@@ -214,6 +214,7 @@ void OwnerTable::freeOwnerEntry(int i){
   nextfree=i;
   no_used--;
   PD((TABLE,"owner delete o:%d",i));
+  localizing();
   return;}
 
 #define PO_getValue(po) \
