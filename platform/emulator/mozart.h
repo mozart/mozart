@@ -32,7 +32,7 @@ extern "C" {
  * ------------------------------------------------------------------------ */
 
 typedef unsigned int OZ_Term;
-typedef float OZ_Float;
+typedef double OZ_Float;
 
 typedef enum {
   FAILED,
