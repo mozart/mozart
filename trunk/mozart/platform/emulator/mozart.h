@@ -337,6 +337,7 @@ typedef mur_t (* OZ_UnifyMetaDet) (OZ_Term, OZ_Term, OZ_TermType, OZ_Term *);
 typedef mur_t (* OZ_UnifyMetaMeta) (OZ_Term, OZ_Term, OZ_MetaType, OZ_Term *);
 
 typedef char * (* OZ_PrintMeta) (OZ_Term);
+typedef int (* OZ_IsUnique) (OZ_Term);
 
 
 extern OZ_TermType OZ_typeOf        _PROTOTYPE((OZ_Term t));
@@ -344,12 +345,15 @@ extern OZ_TermType OZ_typeOf        _PROTOTYPE((OZ_Term t));
 extern OZ_MetaType OZ_introMetaVar  _PROTOTYPE((OZ_UnifyMetaDet unify_md,
 						OZ_UnifyMetaMeta unify_mm,
 						OZ_PrintMeta print,
+						OZ_IsUnique unique,
 						char * name));
 
 extern OZ_Term OZ_makeMetaVar       _PROTOTYPE((OZ_MetaType t,
 						OZ_Term d));
 
 extern OZ_MetaType OZ_getMetaVarType _PROTOTYPE((OZ_Term v));
+extern void OZ_putMetaVarType        _PROTOTYPE((OZ_Term v, OZ_MetaType t));
+
 extern OZ_Term OZ_getMetaVarData     _PROTOTYPE((OZ_Term v));
 
 extern OZ_Term OZ_makeHeapChunk      _PROTOTYPE((int s));
@@ -360,14 +364,25 @@ extern void OZ_putHeapChunk          _PROTOTYPE((OZ_Term t,
 extern int OZ_getHeapChunkSize       _PROTOTYPE((OZ_Term t));
 extern int OZ_isHeapChunk            _PROTOTYPE((OZ_Term t));
 extern int OZ_isMetaVar              _PROTOTYPE((OZ_Term t));
-extern void OZ_constrainMetaVar      _PROTOTYPE((int d,
-						 OZ_Term v,
+extern int OZ_isUnique               _PROTOTYPE((OZ_Term t));
+/*
+extern void  OZ_constrainMetaVar     _PROTOTYPE((int d,
+					 	 OZ_Term v,
 						 OZ_Term c));
+
+						 */
+extern OZ_Bool OZ_constrainMetaVar   _PROTOTYPE((OZ_Term v,
+						 OZ_MetaType t,
+						 OZ_Term d));
 
 extern int OZ_areIdentVars           _PROTOTYPE((OZ_Term v1,
 						 OZ_Term v2));
 
 extern char * OZ_printTerm           _PROTOTYPE((OZ_Term t));
+
+extern OZ_Bool OZ_suspendMetaProp    _PROTOTYPE((OZ_CFun, OZ_Term *, int));
+
+#define OZ_MetaPropSuspend OZ_suspendMetaProp(OZ_self, OZ_args, OZ_arity)
 
 #ifdef __cplusplus
 }
