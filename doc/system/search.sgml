@@ -709,7 +709,7 @@ end
     <p>
       Now the list of solutions <<Zs>> in strictly increasing order
       can be computed by
-      <<<Zs={E best('http://www.mozart-oz.org/home/doc/system/MT10.ozf' $)}>>>
+      <<<Zs={E best('http://www.mozart-oz.org/home-1.1.0/doc/system/MT10.ozf' $)}>>>
       The best solution is the last element of the list <<Zs>>. The
       speed up you can expect is almost a factor of six with six
       processes started!

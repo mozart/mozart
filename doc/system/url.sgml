@@ -57,12 +57,12 @@ equivalent to <code/{native=}/, &ie; the info record is
 <p>Here are a few examples of conversions from url vstrings to url
 records. Return values are displayed following the function call.
 <list>
-        <entry><code>{URL.make "http://www.mozart-oz.org/home/share/FD.ozf"}</code></entry>
+        <entry><code>{URL.make "http://www.mozart-oz.org/home-1.1.0/share/FD.ozf"}</code></entry>
 <item><code display>
 url(
    authority:"www.mozart-oz.org"
    path:abs(
-           ["home"#true
+           ["home-1.1.0"#true
             "share"#true
             "FD.ozf"#false])
    scheme:"http")

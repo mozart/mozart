@@ -145,7 +145,7 @@ define
          CSS =
          case Args.'stylesheet' of unit then
             case {OS.getEnv 'OZDOC_STYLESHEET'} of false then
-               'http://www.mozart-oz.org/home/doc/ozdoc.css'
+               'http://www.mozart-oz.org/home-1.1.0/doc/ozdoc.css'
             elseof X then X end
          elseof X then X end
          {Property.put 'ozdoc.stylesheet' CSS}

@@ -1109,8 +1109,8 @@
               The default value of this variable is taken from the
               environment variable <Var type=env/OZ_LOAD/ if it is set,
               else it is set to
-<<<prefix=http\\://www.mozart-oz.org/home/share/=~/mozart/share/lib/:
-prefix=http\\://www.mozart-oz.org/home/share/=~/mozart/share/tools/:
+<<<prefix=http\\://www.mozart-oz.org/home-1.1.0/share/=~/mozart/share/lib/:
+prefix=http\\://www.mozart-oz.org/home-1.1.0/share/=~/mozart/share/tools/:
 cache=~/.oz/cache:cache=$OZHOME/cache>>>
               where <<$OZHOME>> stands for the value of the environment
               variable <Var type=env/OZHOME/.
