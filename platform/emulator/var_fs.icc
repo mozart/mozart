@@ -90,6 +90,7 @@ Bool isGenFSetVar(TaggedRef term, TypeOfTerm tag)
 inline
 void GenFSetVariable::becomesFSetValueAndPropagate(TaggedRef * trPtr)
 {
+  Assert(!isFSetValue(*trPtr));
   if (isFSetValue(*trPtr)) return;
 
   Assert(this == tagged2SuspVar(*trPtr));
@@ -111,6 +112,14 @@ void GenFSetVariable::installPropagators(GenFSetVariable * glob_var,
                                          glob_home);
 }
 
+inline
+void GenFSetVariable::relinkSuspListTo(GenFSetVariable * lv, Bool reset_local)
+{
+  GenCVariable::relinkSuspListTo(lv, reset_local); // any
+  for (int i = 0; i < fs_prop_any; i += 1)
+    fsSuspList[i] =
+      fsSuspList[i]->appendToAndUnlink(lv->fsSuspList[i], reset_local);
+}
 
 inline
 void addSuspFSetVar(OZ_Term v, Thread * el, OZ_FSetPropState list_index)

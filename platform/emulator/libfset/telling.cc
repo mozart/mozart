@@ -105,7 +105,7 @@ OZ_Return FSetCardPropagator::propagate(void)
   FailOnInvalid(s->putCard(d->getMinElem(), d->getMaxElem()));
 
   if (*d == fd_singl) {
-    OZ_DEBUGPRINT("entailed: "<< *this);
+    OZ_DEBUGPRINT("entailed: "<< *d << ' ' << *this);
     return P.vanish();
   }
 

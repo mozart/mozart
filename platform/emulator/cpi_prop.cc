@@ -113,9 +113,11 @@ ostream& operator << (ostream& o, const OZ_Propagator &p)
   char * func_name = builtinTab.getName((void *) p.getHeaderFunc());
   OZ_Term args = p.getParameters();
 
+  /*
 #ifdef DEBUG_CHECK
   o << "cb(" << (void *) am.currentBoard << "), p(" << (void *) &p << ") ";
 #endif
+*/
 
   o << '{' << func_name << ' ';
   outputArgsList(o, args, FALSE);

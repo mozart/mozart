@@ -189,7 +189,7 @@ OZ_Boolean OZ_FSetVar::tell(void)
         tagged2GenFSetVar(var)->propagate(var, fs_prop_lub);
 
       if (card_size > setPtr->getCardSize())
-        tagged2GenFSetVar(var)->propagate(var, fs_prop_bounds);
+        tagged2GenFSetVar(var)->propagate(var, fs_prop_val);
 
       if (isState(glob_e)) {
         GenFSetVariable * locfsvar = new GenFSetVariable(*setPtr);

@@ -1719,6 +1719,10 @@ Board* AM::copyTree(Board* bb, Bool *isGround)
   toCopyBoard = fromCopyBoard->gcBoard();
   Assert(toCopyBoard);
 
+#if defined(DEBUG_FSET) || defined(DEBUG_FD)
+  *cpi_cout << endl << "========== copying tree ==========" << endl << flush;
+#endif
+
   performCopying();
 
   processUpdateStack();

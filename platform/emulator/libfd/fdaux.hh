@@ -23,7 +23,7 @@
 //#define OZ_DEBUG
 #ifdef OZ_DEBUG
 #define OZ_DEBUGCODE(C) C
-#define _OZ_DEBUGPRINT(C) cout << C << endl << flush
+#define _OZ_DEBUGPRINT(C) *cpi_cout << C << endl << flush
 #define OZ_DEBUGPRINT(C) /* _OZ_DEBUGPRINT(C) */
 #define OZ_ASSERT(C)                                            \
   if (! (C)) {                                                  \

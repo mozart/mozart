@@ -62,6 +62,8 @@ public:
     return len;
   }
 
+  void relinkSuspListTo(GenFSetVariable * lv, Bool reset_local = FALSE);
+
   void propagate(OZ_Term var, OZ_FSetPropState state,
                  PropCaller prop_eq = pc_propagator);
 
