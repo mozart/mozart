@@ -36,7 +36,7 @@ VSMailboxManagerOwned::VSMailboxManagerOwned(key_t shmkeyIn)
   shmkey = shmkeyIn;
   if ((int) (shmid = shmget(shmkey, /* size */ 0, S_IRWXU)) < 0)
     error("Virtual Sites: failed to get the shared memory page");
-  if ((int) (mem = shmat(shmid, (char *) 0, 0)) < 0) 
+  if ((int) (mem = shmat(shmid, (char *) 0, 0)) == -1) 
     error("Virtual Sites:: failed to attach the shared-memory page");
 #ifdef TRACE_MAILBOXES
   fprintf(stdout, "*** mailbox obtained 0x%X (pid %d)\n",
@@ -63,7 +63,7 @@ VSMailboxManagerImported::VSMailboxManagerImported(key_t shmkeyIn)
   shmkey = shmkeyIn;
   if ((int) (shmid = shmget(shmkey, /* size */ 0, S_IRWXU)) < 0)
     error("Virtual Sites: failed to get the shared memory page");
-  if ((int) (mem = shmat(shmid, (char *) 0, 0)) < 0) 
+  if ((int) (mem = shmat(shmid, (char *) 0, 0)) == -1) 
     error("Virtual Sites:: failed to attach the shared-memory page");
 #ifdef TRACE_MAILBOXES
   fprintf(stdout, "*** mailbox attached 0x%X (pid %d)\n",
@@ -95,7 +95,7 @@ VSMailboxManagerCreated::VSMailboxManagerCreated(int memSizeIn)
   if ((int) (shmid = shmget(shmkey, memSizeIn, 
 			    (IPC_CREAT | IPC_EXCL | S_IRWXU))) < 0)
     error("Virtual Sites: failed to allocate a shared memory page");
-  if ((int) (mem = shmat(shmid, (char *) 0, 0)) < 0) 
+  if ((int) (mem = shmat(shmid, (char *) 0, 0)) == -1) 
     error("Virtual Sites:: failed to attach a shared-memory page");
 
   //
