@@ -28,7 +28,6 @@
 #define __FDAUX_HH__
 
 #include <stdio.h>
-#include <string.h>
 
 #include "mozart_cpi.hh"
 
@@ -90,11 +89,28 @@ extern "C" void oz_debugprint(char *format ...);
 #define SUM_OP_GEQ ">=:"
 #define SUM_OP_GT  ">:"
 
-#define ERROR_UNEXPECTED_OPERATOR(P)                                    \
-return OZ_typeErrorCPI(expectedType, P,                                         \
+enum sum_ops {
+  sum_ops_eq,
+  sum_ops_neq,
+  sum_ops_leq,
+  sum_ops_geq,
+  sum_ops_lt,
+  sum_ops_gt,
+  sum_ops_unknown
+};
+
+sum_ops getSumOps(OZ_Term);
+
+#define ERROR_UNEXPECTED_OPERATOR(P) \
+return OZ_typeErrorCPI(expectedType, P,                                 \
                     "Expected one of the following: "                   \
                     SUM_OP_EQ " , " SUM_OP_NEQ " , " SUM_OP_LEQ " , "   \
                     SUM_OP_LT " , " SUM_OP_GEQ " or " SUM_OP_GT ".")
+
+#define ERROR_UNEXPECTED_OPERATOR_NOIN(P) \
+return OZ_typeErrorCPI(expectedType, P,                \
+                    "Expected one of the following: "  \
+                    SUM_OP_EQ " or " SUM_OP_NEQ ".")
 
 #define RETURN_LIST1(X) \
 return OZ_cons(X, OZ_nil())

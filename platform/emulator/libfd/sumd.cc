@@ -35,19 +35,17 @@ OZ_BI_define(fdp_dsum, 3, 0)
   PropagatorExpect pe;
 
   OZ_EXPECT(pe, 1, expectLiteral);
-
-  const char *op = OZ_atomToC(OZ_in(1));
-
   OZ_EXPECT(pe, 0, expectVectorIntVarMinMax);
   OZ_EXPECT(pe, 2, expectIntVarMinMax);
 
-  if (!strcmp(SUM_OP_NEQ, op)) {
-    return pe.impose(new isumNEqProp(OZ_in(0), OZ_in(2)));
-  } else if (!strcmp(SUM_OP_EQ, op)) {
+  switch (getSumOps(OZ_in(1))) {
+  case sum_ops_eq:
     return pe.impose(new isumEqProp(OZ_in(0), OZ_in(2)));
+  case sum_ops_neq:
+    return pe.impose(new isumNEqProp(OZ_in(0), OZ_in(2)));
+  default: ;
   }
-
-  ERROR_UNEXPECTED_OPERATOR(1);
+  ERROR_UNEXPECTED_OPERATOR_NOIN(1);
 }
 OZ_BI_end
 
@@ -62,20 +60,18 @@ OZ_BI_define(fdp_dsumC, 4, 0)
 
   OZ_EXPECT(pe, 2, expectLiteral);
   OZ_EXPECT(pe, 0, expectVectorInt);
-  SAMELENGTH_VECTORS(0, 1);
-
-  const char *op = OZ_atomToC(OZ_in(2));
-
   OZ_EXPECT(pe, 1, expectVectorIntVarMinMax);
   OZ_EXPECT(pe, 3, expectIntVarMinMax);
+  SAMELENGTH_VECTORS(0, 1);
 
-  if (!strcmp(SUM_OP_NEQ, op)) {
-    return pe.impose(new isumcNEqProp(OZ_in(0), OZ_in(1), OZ_in(3)));
-  } else if (!strcmp(SUM_OP_EQ, op)) {
+  switch (getSumOps(OZ_in(2))) {
+  case sum_ops_eq:
     return pe.impose(new isumcEqProp(OZ_in(0),OZ_in(1),OZ_in(3)));
+  case sum_ops_neq:
+    return pe.impose(new isumcNEqProp(OZ_in(0), OZ_in(1), OZ_in(3)));
+  default: ;
   }
-
-  ERROR_UNEXPECTED_OPERATOR(2);
+  ERROR_UNEXPECTED_OPERATOR_NOIN(2);
 }
 OZ_BI_end
 
