@@ -11,7 +11,7 @@ SUBDIRS		= ozflex ozbison
 RM		= @RM@ -f
 DYNLD		= @DYNLD@
 CXX		= @CXX@
-CPPFLAGS	= -I. -I$(TOPDIR)/Emulator @CPPFLAGS@
+CPPFLAGS	= -I. -I$(TOPDIR)/platform/emulator @CPPFLAGS@
 CXXFLAGS	= @CXXFLAGS@ $(CFLAGS)
 LDFLAGS		= @LDFLAGS@
 LIBS		= @LIBS@ -lc
@@ -27,6 +27,12 @@ INSTALLFILE	= $(INSTALL) -m 444
 INSTALLSRC	= @INSTALLSRC@
 MKINSTALLDIRS	= @MKINSTALLDIRS@
 
+PACKAGE		= www.ps.uni-sb.de/ozhome/tools/gump
+CACHE_DIR	= $(OZHOME)/platform/@platform@/cache/$(PACKAGE)
+GUMP_FILES	= GumpScanner.dl flex ozbison.dl
+DYNLDIR_FILES	= $(addprefix $(DYNLDIR)/,$(GUMP_FILES))
+CACHE_FILES	= $(addprefix $(CACHE_DIR)/,$(GUMP_FILES))
+
 HEADERS1 = FlexLexer.h lexer.h
 HEADERS = $(HEADERS1:%=$(INCDIR)/%)
 
@@ -35,25 +41,29 @@ all: Makefile subdirs GumpScanner.dl
 subdirs:
 	for i in $(SUBDIRS); do (cd $$i && $(MAKE) all); done
 
-GumpScanner.dl: GumpScanner.C $(TOPDIR)/Emulator/oz.h
+GumpScanner.dl: GumpScanner.C $(TOPDIR)/platform/emulator/oz.h
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $< -o GumpScanner.o && \
 	$(DYNLD) -o $@ GumpScanner.o $(LDFLAGS) $(LIBS)
 
+## here we install shared object libs twice: once in the old
+## location and once in the cache.  eventually we should only
+## install into the cache, I think.
+
 install: all \
-	$(DYNLDIR) $(DYNLDIR)/GumpScanner.dl \
-	$(DYNLDIR)/flex $(DYNLDIR)/ozbison.dl \
+	$(DYNLDIR) $(DYNLDIR_FILE) \
+	$(CACHE_DIR) $(CACHE_FILES) \
 	$(INCDIR) $(HEADERS)
 
-$(DYNLDIR) $(INCDIR):
+$(DYNLDIR) $(INCDIR) $(CACHE_DIR):
 	$(MKINSTALLDIRS) $@
 
-$(DYNLDIR)/GumpScanner.dl: GumpScanner.dl
+$(DYNLDIR)/GumpScanner.dl $(CACHE_DIR)/GumpScanner.dl: GumpScanner.dl
 	$(INSTALLFILE) $< $@
 
-$(DYNLDIR)/flex: ozflex/flex
+$(DYNLDIR)/flex $(CACHE_DIR)/flex: ozflex/flex
 	$(INSTALLPRG) $< $@
 
-$(DYNLDIR)/ozbison.dl: ozbison/ozbison.dl
+$(DYNLDIR)/ozbison.dl $(CACHE_DIR)/ozbison.dl: ozbison/ozbison.dl
 	$(INSTALLFILE) $< $@
 
 $(INCDIR)/%: %
