@@ -54,10 +54,17 @@
   <Front>
     <meta name="proglang.mode" arg1="oz" arg2="oz-mode">
 
+    <Meta name="html.split"       value="chapter.m121">
     <Meta name="html.split"       value="chapter.m120">
     <Meta name="html.split"       value="chapter.m110">
     <Meta name="html.split"       value="chapter.m101">
     <Meta name="html.split"       value="chapter.m100">
+
+    <Meta name="html.split"       value="section.m121.important">
+    <Meta name="html.split"       value="section.m121.changes">
+    <Meta name="html.split"       value="section.m121.fixes">
+    <Meta name="html.split"       value="section.m121.misc">
+    <Meta name="html.split"       value="section.m121.bugs">
 
     <Meta name="html.split"       value="section.m120.changes">
     <Meta name="html.split"       value="section.m120.fixes">
@@ -84,7 +91,111 @@ particular, it lists the changes from
     </Abstract>
   <Body>
 
-    <chapter id="chapter.m120">
+     <chapter id="chapter.m121">
+      <title/Changes between Mozart 1.2.0 and Mozart 1.2.1/
+
+<p>    
+The release of Mozart 1.2.1 is an
+important bug-fix release, with some enhancements, and is fully
+backward compatible with Mozart 1.2.0.  
+</p>
+
+      <section id="section.m121.important">
+        <title/Important Issues/
+
+          <p>
+          <list>
+            <item>
+   A severe bug in record
+    unification that has been introduced in 1.2.0 is fixed.
+            <item>
+   Fixed incorrect variable aliasing detection on Windows (resulted in
+    weaker propagation, therefore in different and larger search
+    trees).
+            <item>
+   Many improvements for Windows, in particular for subprocesses
+    (i.e. OS.system and Open.pipe), as well as oztool and ozmake
+    support.
+            <item>
+ Both domain- and bounds-consistent variants of the alldifferent
+    constraint for finite domains are available.
+</list>
+</p>
+
+      <section id="section.m121.changes">
+        <title/Changes/
+
+<p>
+<list>
+<item>Inspector replaces Browser as default viewer in Explorer and Ozcar
+
+<item>The verbosity of printing variables can be controlled by the
+    property 'print.verbose'
+<item>Mozart uses sorting in many important places (record construction,
+    dictionaries, finite domains, many finite domain propagators). All 
+    uses of sorting now share a single, efficient and robust implementation.
+<item>Documented FD.distinctD (domain-consistent alldifferent) and added 
+    FD.distinctB (bounds-consistent alldifferent, naive quadratic version)
+</list>
+</p>
+      <section id="section.m121.bugs">
+        <title/Known Bugs/
+
+<p>
+   While support for Windows has greatly improved, there are
+    remaining problems: e.g. oztool and ozmake occasionally crash.
+    Sometimes retrying the same command works.  We haven't been able
+    to debug this yet.
+</p>
+
+      <section id="section.m121.fixes">
+        <title/Bug Fixes in Detail/
+
+<p>
+<list>
+<entry>record unification
+<item>
+        an invalid optimization was introduced in 1.2.0 that affected
+        speculative unification of records
+<entry>variable aliasing detection (Windows)
+<item>
+        On Windows, variable aliasing detection was inoperative.  As a
+        result propagation was weaker.  This could be observed with
+        the SEND+MORE=MONEY example which produced a larger search
+        tree
+<entry><code>OS.system</code> and <code>Open.pipe</code> (Windows)
+<item>
+        for the first time ever, subprocesses can now be reliably
+        started on Windows
+<entry><code>oztool</code> (Windows)
+<item>
+        oztool now works on Windows so that native functors can
+        finally be compiled, and it accepts options in any order and
+        was extended to support -I, -l, -L and -s for gcc and msvc.
+<entry>failed futures
+<item>
+        (dis)equality testing now correctly passes up exceptions.
+        <code>Value.byNeedFail</code> is now careful to be non-requesting.
+<entry>IO problems on Win2000 SP2
+<item>system would freeze if ws2_32.dll was not loaded
+<entry>Entailment of propagators
+<item>propagators are now again included in the suspension count
+<entry><code>Combinator.reify</code>
+<item>fixed bug related to merging
+<entry><code>Schedule.cumulative</code>
+<item>	fixed bug relatesd to sorting task intervals
+</list>
+</p>
+
+      <section id="section.m121.misc">
+        <title/Miscellaneous/
+
+<p>Cross-compilation is no longer necessary to build Mozart for
+    Windows.  The entire system can now be natively compiled on
+    Windows under the CYGWIN environment.</p>
+
+
+     <chapter id="chapter.m120">
       <title/Changes between Mozart 1.1.0 and Mozart 1.2.0/
 
       <p>
