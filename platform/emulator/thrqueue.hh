@@ -103,86 +103,18 @@ public:
   void printThreads(void);
 };
 
-//-----------------------------------------------------------------------------
-//#define LOCAL_THREAD_STACK
-
-#ifdef LOCAL_THREAD_STACK
-class ThreadStackImpl {
-private:
-  int tos, size, maxsize;
-  Thread ** stack;
-
-  static int fromBos;
-
-  void resize(void);
-public:
-
-  ThreadStackImpl(void) : tos(0), size(0), maxsize(0), stack(NULL) {}
-  ~ThreadStackImpl(void) {}
-
-  USEFREELISTMEMORY;
-  OZPRINT;
-
-  void allocate(int initsize) {
-    maxsize = initsize;
-    tos = size = 0;
-    // in the Oz heap;
-    stack =
-      (Thread **) heapMalloc ((size_t) (sizeof(Thread *) * initsize));
-  }
-
-  Bool isEmpty () { return (size == 0); }
-  int getSize () { return (size); }
-  Bool isAllocated () { return (maxsize); }
-
-  // push
-  void enqueue (Thread * th) {
-    if (size == maxsize) resize();
-    stack[tos++] = th;
-    size++;
-  }
-
-  // pop
-  Thread * dequeue(void) {
-    Assert(!isEmpty());
-    Thread * th = stack[--tos];
-    size--;
-    return th;
-  }
-
-  Thread * readOutFromBottom(void) {
-    return (fromBos == tos) ? (Thread *) NULL : stack[fromBos++];
-  }
-  void initReadOutFromBottom(void) { fromBos = 0; }
-
-  int suggestNewSize(void) {
-    return max(min(size * 2,(maxsize + size + 1) >> 1), QUEUEMINSIZE);
-  }
-
-  void disposePool () {
-    freeListDispose (stack, (size_t) (maxsize * sizeof (Thread *)));
-  }
-}; // class ThreadStackImpl
-#endif
-
-#ifdef LOCAL_THREAD_STACK
-typedef ThreadStackImpl LocalThreadImpl;
-#else
-typedef ThreadQueueImpl LocalThreadImpl;
-#endif
-
-class LocalThreadQueue : public LocalThreadImpl {
+class LocalThreadQueue : public ThreadQueueImpl {
 private:
   // needed when merging spaces to unpack threads in local thread queue
   Thread * ltq_thr;
 public:
   LocalThreadQueue(Thread * lthr, Thread * thr)
-    : ltq_thr(lthr), LocalThreadImpl()
+    : ltq_thr(lthr), ThreadQueueImpl()
   {
     allocate(QUEUEMINSIZE);
     enqueue(thr);
   }
-  LocalThreadQueue(int sz) : LocalThreadImpl(){
+  LocalThreadQueue(int sz) : ThreadQueueImpl(){
     allocate(sz);
   }
   ~LocalThreadQueue() { error("never destroy LTQ"); }
@@ -190,7 +122,7 @@ public:
   LocalThreadQueue * gc(void);
 
   void dispose () {
-    LocalThreadImpl::disposePool();
+    ThreadQueueImpl::disposePool();
     freeListDispose (this, sizeof(LocalThreadQueue));
   }
 
