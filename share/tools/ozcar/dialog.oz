@@ -36,7 +36,6 @@ in
    
       meth about
          {Wait {New AboutDialog init(master:self.toplevel)}.tkClosed}
-         touch
       end
    end
    

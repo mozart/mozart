@@ -61,7 +61,7 @@ local
    
 in
    
-   class SourceManager from UrObject
+   class SourceManager
       attr
 	 Windows
       

@@ -116,7 +116,7 @@ class Frontend from Dialog
    
    meth newThread(T I)
       {ForAll [add(T I) display] self.ThreadTree}
-      self,switch(T I)
+      {self switch(T I)}
    end
    
    meth removeThread(T P I)

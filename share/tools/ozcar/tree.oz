@@ -3,7 +3,7 @@
 
 %declare
 local
-   class Node from UrObject
+   class Node
       attr
 	 x  : undef
 	 y  : undef
@@ -29,23 +29,16 @@ local
       end
    end
    
-   create WC from UrObject with init
-      attr w
-      meth init
-	 w <- 1
-      end
-      meth inc($)
-	 w <- @w + 1
-	 @w
-      end
-      meth get($)
-	 @w
-      end
-   end
-   
+   WC =
+   {New class
+	   attr w
+	   meth init w <- 1 end
+	   meth inc($) w <- @w + 1 @w end
+	   meth get($) @w end
+	end init}
 in
    
-   class BaseTree from UrObject
+   class BaseTree
       
       attr
 	 nodes
@@ -78,7 +71,7 @@ in
       end
 
       meth DoCalculatePositions(P X)
-	 NG = self,Nodegroup(P $)
+	 NG = {self Nodegroup(P $)}
       in
 	 case NG == nil then
 	    skip
