@@ -2540,7 +2540,8 @@ void BorrowTable::gcBorrowTable3(){
 	  b->removeGCMark(); // marks owner site too
 	  PD((GC,"BT b:%d mark variable found",i));}
 	else{
-	  if(b->getTertiary()->maybeHasInform()){
+	  // WORKAROUND BY RS AND CS
+	  if(0 && b->getTertiary()->maybeHasInform()){
 	    maybeUnask(b);}
 	  PD((GC,"BT b:%d unmarked variable found",i));
 	  borrowTable->maybeFreeBorrowEntry(i);}}

@@ -506,7 +506,7 @@ LBLfailure:
 	 // this should never happen?
 	 Assert(0);
        }
-       saa->dealloc();
+       //       saa->dealloc();
      } else {
        AWActor *aw = AWActor::Cast(aa);
        Thread *tt = aw->getThread();
