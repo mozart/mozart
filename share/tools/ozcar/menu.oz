@@ -4,13 +4,19 @@
 local
    
    TkVerbose             = {New Tk.variable tkInit(ConfigVerbose)}
+   
    TkStepSystemProcedures= {New Tk.variable tkInit(ConfigStepSystemProcedures)}
+   TkStepRecordBuiltin   = {New Tk.variable tkInit(ConfigStepRecordBuiltin)}
+   TkStepDotBuiltin      = {New Tk.variable tkInit(ConfigStepDotBuiltin)}
+   TkStepWidthBuiltin    = {New Tk.variable tkInit(ConfigStepWidthBuiltin)}
+   
    TkEnvSystemVariables  = {New Tk.variable tkInit(ConfigEnvSystemVariables)}
    TkEnvProcedures       = {New Tk.variable tkInit(ConfigEnvProcedures)}
    
    C  = command
    MB = menubutton
    CB = checkbutton
+   CC = cascade
    
 in
    
@@ -31,10 +37,25 @@ in
 	      feature: 'thread')
 	   MB(text: 'Options'
 	      menu:
-		 [CB(label:    'Step on all System Procedures'
+		 [CB(label:    'Step on All System Procedures'
 		     variable: TkStepSystemProcedures
 		     action:   Config # toggle(stepSystemProcedures)
 		     feature:  stepSystemProcedures)
+		  CC(label:    'Step on Builtin...'
+		     menu:
+			[CB(label:    '\'record\''
+			    variable: TkStepRecordBuiltin
+			    action:   Config # toggle(stepRecordBuiltin)
+			    feature:  stepRecordBuiltin)
+			 CB(label:    '\'.\''
+			    variable: TkStepDotBuiltin
+			    action:   Config # toggle(stepDotBuiltin)
+			    feature:  stepDotBuiltin)
+			 CB(label:    '\'width\''
+			    variable: TkStepWidthBuiltin
+			    action:   Config # toggle(stepWidthBuiltin)
+			    feature:  stepWidthBuiltin)]
+		     feature:  stepOnBuiltin)
 		  separator
 		  CB(label:   'Filter System Variables'
 		     variable: TkEnvSystemVariables
@@ -45,7 +66,7 @@ in
 		     action:   Config # toggle(envProcedures)
 		     feature:  envProcedures)
 		  separator
-		  CB(label:   'Messages in Emulator buffer'
+		  CB(label:   'Messages in Emulator Buffer'
 		     variable: TkVerbose
 		     action:   Config # toggle(verbose)
 		     feature:  verbose)]
