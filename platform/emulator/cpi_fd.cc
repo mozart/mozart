@@ -276,7 +276,7 @@ OZ_Boolean OZ_FDIntVar::tell(void)
     goto oz_false;
   } else if(!isTouched()) {
     // no constraints have been imposed by the current propagator run.
-    // note the cases caches integers too.
+    // note the cases catches integers too.
     goto oz_true;
   } else if (isSort(int_e)) {
     //
@@ -296,6 +296,7 @@ OZ_Boolean OZ_FDIntVar::tell(void)
         tagged2GenFDVar(var)->propagate(fd_prop_singl);
         bindGlobalVarToValue(varPtr, newSmallInt(int_val));
       }
+      goto oz_false;
     } else if (*domPtr == fd_bool) {
       //
       // propagation produced boolean domain
@@ -326,7 +327,8 @@ OZ_Boolean OZ_FDIntVar::tell(void)
     }
   } else {
     //
-    // there is a finite domain variable in the store
+    // there is a boolean variable in the store which becomes a singleton
+    // (otherwise it would not been recognized as touched)
     //
     Assert(isSort(bool_e) && *domPtr == fd_singl); // boolean variable
 
@@ -339,11 +341,20 @@ OZ_Boolean OZ_FDIntVar::tell(void)
       int int_val = domPtr->getSingleElem();
       bindGlobalVarToValue(varPtr, newSmallInt(int_val));
     }
+    goto oz_false;
   }
+  //
  oz_false:
+  //
+  // variable is determined
+  //
   DEBUG_CONSTRAIN_CVAR(("FALSE\n"));
   return OZ_FALSE;
+  //
  oz_true:
+  //
+  // variable is still undetermined
+  //
   DEBUG_CONSTRAIN_CVAR(("TRUE\n"));
   return OZ_TRUE;
 }

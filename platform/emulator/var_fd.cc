@@ -153,7 +153,7 @@ OZ_Return OzFDVariable::unify(OZ_Term * left_varptr, OZ_Term * right_varptr)
           dispose();
           right_fdvar->dispose();
         } else if (heapNewer(left_varptr, right_varptr)) {
-          // bind left_var to right_var
+          // bind left variable to right variable
           if (intersection == fd_bool) {
             // intersection has boolean domain
             OzBoolVariable * right_boolvar = right_fdvar->becomesBool();
@@ -172,7 +172,7 @@ OZ_Return OzFDVariable::unify(OZ_Term * left_varptr, OZ_Term * right_varptr)
           // dispose left_var
           dispose();
         } else {
-          // bind right_var to left_var
+          // bind right variable to left variable
           if (intersection == fd_bool) {
             // intersection has boolean domain
             OzBoolVariable * left_boolvar = becomesBool();
@@ -234,6 +234,7 @@ OZ_Return OzFDVariable::unify(OZ_Term * left_varptr, OZ_Term * right_varptr)
         //
         // left variable is global and right variable is local
         //
+        // swap variables to be unified and recurse
         return unify(right_varptr, left_varptr);
       } else {
         DEBUG_CONSTRAIN_CVAR(("global-global"));

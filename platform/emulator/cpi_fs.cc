@@ -257,13 +257,19 @@ OZ_Boolean OZ_FSetVar::tell(void)
     }
   }
   //
-oz_true:
-  DEBUG_CONSTRAIN_CVAR(("TRUE\n"));
-  return OZ_TRUE;
-  //
 oz_false:
+  //
+  // variable is determined
+  //
   DEBUG_CONSTRAIN_CVAR(("FALSE\n"));
   return OZ_FALSE;
+  //
+oz_true:
+  //
+  // variable is still undetermined
+  //
+  DEBUG_CONSTRAIN_CVAR(("TRUE\n"));
+  return OZ_TRUE;
 }
 //-----------------------------------------------------------------------------
 #else

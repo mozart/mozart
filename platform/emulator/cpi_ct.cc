@@ -118,11 +118,22 @@ void OZ_CtVar::read(OZ_Term v)
 
       OZ_Ct * constr = ctvar->getConstraint();
 
+#ifdef CORRECT_UNIFY
+        if (isState(glob_e)) {
+          ctRefConstraint(ctSaveConstraint(constr));
+        } else {
+          if (oz_onToplevel()) {
+            ctSaveConstraint(constr);
+          }
+          ctRefConstraint(constr);
+        }
+#else
       if (isState(glob_e) || oz_onToplevel()) {
         ctSetGlobalConstraint(constr);
       } else {
         ctSetLocalConstraint(constr);
       }
+#endif
 
       ctSetConstraintProfile();
     }
@@ -166,7 +177,7 @@ void OZ_CtVar::readEncap(OZ_Term v)
       ctSetConstraintProfile();
 
     } else {
-    // fs var entered first time
+    // ct var entered first time
 
       OZ_Ct * constr = ctvar->getConstraint();
 
@@ -191,7 +202,83 @@ void OZ_CtVar::readEncap(OZ_Term v)
   }
 }
 
+#ifdef CORRECT_UNIFY
+//-----------------------------------------------------------------------------
+OZ_Boolean OZ_CtVar::tell(void)
+{
+  DEBUG_CONSTRAIN_CVAR(("OZ_CtVar::tell "));
 
+  // someone else has already determined it
+  if (!oz_isVariable(*varPtr)) {
+    return OZ_FALSE;
+  }
+  //
+  if (testReifiedFlag(var)) {
+    unpatchReifiedCt(var);
+  }
+  if (!testResetStoreFlag(var)) {
+    // the constraint has already been told, i.e., there were at least
+    // two OZ_FDIntVar connected to the same store variable
+    goto oz_false;
+  } else if(!isTouched()) {
+    // the constraint has already been told, i.e., there were at least
+    // two OZ_FDIntVar connected to the same store variable
+    goto oz_true;
+  } else {
+    //
+    // there is a generic constraint variable in the store
+    //
+    Assert(isSort(var_e));
+    //
+    OzCtVariable * ctvar = tagged2GenCtVar(var);
+    OZ_Ct * constr       = ctGetConstraint();
+    //
+    if (constr->isValue()) {
+      //
+      // propagation produced a value
+      //
+      if (isState(loc_e)) {
+        // local variable
+        ctvar->propagate(OZ_WAKEUP_ALL, pc_propagator);
+        bindLocalVarToValue(varPtr, constr->toValue());
+      } else {
+        // global variable
+        // wake up
+        ctvar->propagate(OZ_WAKEUP_ALL, pc_propagator);
+        bindGlobalVarToValue(varPtr, constr->toValue());
+      }
+      goto oz_false;
+    } else {
+      //
+      // propagation produced a set constraint
+      //
+      // wake up ...
+      OZ_CtWakeUp wakeup_descr = ctGetWakeUpDescrptor();
+      ctvar->propagate(wakeup_descr, pc_propagator);
+      //
+      if (isState(glob_e)) {
+        constrainGlobalVar(varPtr, constr);
+      }
+      goto oz_true;
+    }
+  }
+  //
+ oz_false:
+  //
+  // variable is determined
+  //
+  DEBUG_CONSTRAIN_CVAR(("FALSE\n"));
+  return OZ_FALSE;
+  //
+ oz_true:
+  //
+  // variable is still undetermined
+  //
+  DEBUG_CONSTRAIN_CVAR(("TRUE\n"));
+  return OZ_TRUE;
+}
+//-----------------------------------------------------------------------------
+#else
 OZ_Boolean OZ_CtVar::tell(void)
 {
   if (!oz_isVariable(*varPtr))
@@ -257,7 +344,7 @@ t:
 f:
   return OZ_FALSE;
 }
-
+#endif /* CORRECT_UNIFY */
 
 void OZ_CtVar::fail(void)
 {

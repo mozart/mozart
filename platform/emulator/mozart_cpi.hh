@@ -727,8 +727,9 @@ protected:
 
   virtual OZ_Ct * ctRefConstraint(OZ_Ct *) = 0;
   virtual OZ_Ct * ctSaveConstraint(OZ_Ct *) = 0;
+#ifndef CORRECT_UNIFY
   virtual void ctRestoreConstraint() = 0;
-
+#endif
   virtual void ctSetConstraintProfile(void) = 0;
   virtual OZ_CtProfile * ctGetConstraintProfile(void) = 0;
 

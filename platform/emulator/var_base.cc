@@ -366,11 +366,15 @@ void constrainGlobalVar(OZ_Term * varptr, OZ_FSetConstraint &fs)
   OzFSVariable * fsvar = (OzFSVariable *) tagged2CVar(*varptr);
   fsvar->setSet(fs);
 }
-/*
-void constrainGlobalVar(OZ_Term *, OZ_Ct *, OZ_CtDefinition *)
+
+void constrainGlobalVar(OZ_Term * varptr, OZ_Ct * ct)
 {
+  DEBUG_CONSTRAIN_CVAR(("constrainGlobalVar(ct)\n"));
+  am.trail.pushVariable(varptr);
+  OzCtVariable * ctvar = (OzCtVariable *) tagged2CVar(*varptr);
+  ctvar->copyConstraint(ct);
 }
-*/
+
 // dealing with local variables
 void bindLocalVarToValue(OZ_Term * varptr, OZ_Term value)
 {
