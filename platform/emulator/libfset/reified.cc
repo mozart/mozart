@@ -370,8 +370,6 @@ OZ_Return PartitionReifiedPropagator::propagate(void)
 {
   OZ_DEBUGPRINTTHIS("in ");
 
-  //_i_sets->print();
- 
   DECL_DYN_ARRAY(OZ_FDIntVar, vd, _size);
   DECL_DYN_ARRAY(int, stack, _u_max_elem+1);
   ItStack ist(_u_max_elem+1, stack);
@@ -423,28 +421,17 @@ OZ_Return PartitionReifiedPropagator::propagate(void)
       }
     }
 
-  //_i_sets->print();
-
   while (!ist.isEmpty()) {
     int k = (*_i_sets)[ist.pop()].smallestElem();
-    //printf("<%d>", k);
     if (! _i_sets->resetAllBut(ist, u, k)) 
       goto failure;
-
-    //_i_sets->print();
   }  
   
-
-  //printf("b\n");
-
   for (i = _u_max_elem+1; i--; ) {
     IndexSet &tmp_i = (*_i_sets)[i];
     if (! tmp_i.isIgnore() && tmp_i.getCard() == 1)
       FailOnEmpty(*vd[tmp_i.smallestElem()] -= 0);
   }
-  //printf("c\n");
-
-  //printf("a\n");
 
   _i_sets->unionAll(u);
   for (i = _size; i--; ) {
@@ -463,8 +450,6 @@ OZ_Return PartitionReifiedPropagator::propagate(void)
   OZ_DEBUGPRINTTHIS("out ");
   {
     OZ_Return r = P.leave();
-    //    if (r == OZ_ENTAILED)
-    //  _i_sets->print();
     return r;
   }
 failure:
@@ -616,24 +601,15 @@ OZ_Return PartitionReified1Propagator::propagate(void)
     
     while (!ist.isEmpty()) {
       int k = (*_i_sets)[ist.pop()].smallestElem();
-      //printf("<%d>", k);
       if (! _i_sets->resetAllBut(ist, u, k)) 
 	goto failure;
-      
-      //_i_sets->print();
     }  
-    
-    
-    //printf("b\n");
     
     for (i = _u_max_elem+1; i--; ) {
       IndexSet &tmp_i = (*_i_sets)[i];
       if (! tmp_i.isIgnore() && tmp_i.getCard() == 1)
 	FailOnEmpty(*vd[tmp_i.smallestElem()] -= 0);
     }
-    //printf("c\n");
-    
-    //printf("a\n");
     
     _i_sets->unionAll(u);
     for (i = _size; i--; ) {
@@ -736,6 +712,129 @@ PartitionReified1Propagator::PartitionReified1Propagator(OZ_Term vs,
     } 
   }
 #endif
+  
+}
+
+//-----------------------------------------------------------------------------
+
+OZ_C_proc_begin(fsp_partitionProbing, 3)
+{
+  OZ_EXPECTED_TYPE(OZ_EM_VECT OZ_EM_FSET "," OZ_EM_FSET "," 
+		   OZ_EM_VECT OZ_EM_FD);
+
+  PropagatorExpect pe;
+
+  OZ_EXPECT(pe, 0, expectVectorFSetValue);
+  OZ_EXPECT(pe, 1, expectFSetValue);
+  OZ_EXPECT(pe, 2, expectVectorIntVarMinMax);
+  
+  return pe.impose(new PartitionProbingPropagator(OZ_args[0],
+						  OZ_args[1],
+						  OZ_args[2]));
+} 
+OZ_C_proc_end
+
+OZ_CFunHeader PartitionProbingPropagator::header = fsp_partitionProbing;
+
+OZ_Return PartitionProbingPropagator::propagate(void)
+{
+  OZ_DEBUGPRINTTHIS("in ");
+
+  DECL_DYN_ARRAY(OZ_FDIntVar, vd, _size);
+  DECL_DYN_ARRAY(int, stack, _u_max_elem+1);
+  ItStack ist(_u_max_elem+1, stack);
+  
+  PropagatorController_VD P(_size, vd);
+  int i;
+
+  int i_high = _i_sets->getHigh();
+  DECL_DYN_ARRAY(int, elems, i_high);
+  IndexSet u(i_high, elems);
+    
+  for (i = 0; i < _size; i += 1) 
+    vd[i].read(_vd[i]);
+  
+  DECL_DYN_ARRAY(char, isetsmem, _i_sets->sizeOfMe());
+
+  int removed = 0;
+
+  for (int ii = 0 ; ii < _size; ii += 1) {
+
+    if (*vd[ii] == fd_singl)
+      continue;
+
+    IndexSets * i_sets_copy = _i_sets->copy(isetsmem);
+    
+    if (! i_sets_copy->resetAllBut(ist, u, ii))
+      goto reset;
+
+    while (!ist.isEmpty()) {
+      int k = (*i_sets_copy)[ist.pop()].smallestElem();
+      if (! i_sets_copy->resetAllBut(ist, u, k)) 
+	goto reset;
+    }  
+    
+    OZ_ASSERT(ist.isEmpty());
+
+    continue;
+  reset:
+    FailOnEmpty(*vd[ii] &= 0);
+    ist.setEmpty();
+    removed += 1;
+  }
+  
+  if (removed)
+    printf("Removed %d sets.\n", removed); fflush(stdout);
+
+  P.leave();
+  return OZ_ENTAILED;
+
+failure:
+  OZ_ASSERT(0);
+  return P.fail();
+}
+
+PartitionProbingPropagator::PartitionProbingPropagator(OZ_Term vs, OZ_Term s, OZ_Term vd) 
+{
+  _first = 1;
+  // init ground set
+  OZ_FSetVar aux(s); // ought to be ask
+  OZ_FSetValue u = aux->getGlbSet(); 
+  _u_max_elem = u.getMaxElem();
+  
+  int i;
+  _size = OZ_vectorSize(vs);
+  
+  // creating subsets
+  DECL_DYN_ARRAY(OZ_Term, vs_terms, _size);
+  OZ_getOzTermVector(vs, vs_terms);
+  
+  // creating bools
+  _vd = OZ_hallocOzTerms(_size);
+  OZ_getOzTermVector(vd, _vd);
+  
+  // create index sets
+  _i_sets = IndexSets::create(_u_max_elem+2, _size);
+  //_i_sets->print();
+  
+  for (i = _u_max_elem+1; i--; ) {
+    if (u.isIn(i)) {
+      for (int j = _size; j--; ) {
+	OZ_FSetVar auxset;
+	auxset.ask(vs_terms[j]);
+	OZ_FDIntVar auxfd;
+	auxfd.ask(_vd[j]);
+	if (auxfd->getMaxElem() > 0 && auxset->isIn(i)) {
+	  (*_i_sets)[i].set(j);
+	}
+      }
+    } else {
+	(*_i_sets)[i].setIgnore();
+    }
+  }
+  //  _i_sets->print();
+  //  printf("here2\n"); fflush(stdout);
+
   
 }
 

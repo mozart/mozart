@@ -31,6 +31,7 @@ public:
   int pop(void);
   int isEmpty();
   int isIn(int e);
+  void setEmpty(void);
 };
 
 inline
@@ -66,6 +67,11 @@ int ItStack::isIn(int e) {
   return 0;
 }
 
+inline
+void ItStack::setEmpty(void) { 
+  _top = 0;
+}
+
 //-----------------------------------------------------------------------------
 
 class IndexSet {
@@ -74,7 +80,22 @@ friend class IndexSets;
 private:
   int _card;
   int _high;
+
+#ifdef OZ_DEBUG
+  struct int_t {
+    int * __els;
+    int &operator [] (int i) /*const*/ {
+      OZ_ASSERT(0 <= i && i < *(((int *)this) - 1)); 
+      // _high must be directly before `_elems'
+      return __els[i];
+    } 
+    int * operator = (int * els) { return __els = els; }
+    operator int * () const { return __els; }
+  } _elems;
+#else
   int * _elems;
+#endif
+  
 
   unsigned char * initNumOfBitsInHalfWord(void);
 
@@ -313,6 +334,8 @@ public:
   IndexSet &operator [](int i);
 
   static int sizeOf(int nb_isets, int max_card_iset);
+
+  int sizeOfMe(void) { return sizeOf(_nb_isets, _max_card_iset); }
   
   int getHigh(void);
 
@@ -321,6 +344,7 @@ public:
   int resetAllBut(ItStack &st, IndexSet &aux, int k);
 
   IndexSets * copy(void);
+  IndexSets * copy(char *);
 
   static IndexSets * create(int nb_isets, int max_card_iset);
 
@@ -399,8 +423,9 @@ int IndexSets::resetAllBut(ItStack &st, IndexSet &aux, int k)
   }
   for (j = high; j--; )
     aux._elems[j] = ~aux._elems[j];
-  //aux.updateCard();
-  aux._card = 0;  // card is irrelevant here
+
+  OZ_DEBUGCODE(aux.updateCard());
+  OZ_NONDEBUGCODE(aux._card = 0);  // card is irrelevant here
   aux.set(k);
   
   for (i = _nb_isets-1; i--; ) {
@@ -419,13 +444,26 @@ int IndexSets::resetAllBut(ItStack &st, IndexSet &aux, int k)
 	
 	if (! tmp_i.updateCard())
 	  return 0;
+
+	if (old_card > 1 && tmp_i.getCard() == 1)
+	  st.push(i);
       }	
-      
-      if (old_card > 1 && tmp_i.getCard() == 1)
-	st.push(i);
     }
   }
   return 1;
+}
+
+inline
+IndexSets * IndexSets::copy(char * mem) 
+{
+  IndexSets * tmp = (IndexSets *) (void *) mem;
+
+  tmp->init(_nb_isets, _max_card_iset);
+  
+  for (int i = _nb_isets; i--; )
+    _isets[i].copy(tmp->_isets[i]);
+  
+  return tmp;
 }
 
 inline

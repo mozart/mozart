@@ -158,6 +158,7 @@ OZ_C_proc_proto(fsp_disjointN)
 OZ_C_proc_proto(fsp_unionN)
 OZ_C_proc_proto(fsp_partition)
 OZ_C_proc_proto(fsp_partitionReified)
+OZ_C_proc_proto(fsp_partitionProbing)
 OZ_C_proc_proto(fsp_partitionReified1)
 OZ_C_proc_proto(fsp_boundsN)
 #endif
