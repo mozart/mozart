@@ -176,7 +176,7 @@ static char* h_strerror(const int err) {
     return "Retry later again.";
   case NO_RECOVERY:
     return "Unexpected non-recoverable server failure.";
-#if defined(SOLARIS_SPARC) || defined(LINUX)
+#if defined(SOLARIS) || defined(LINUX)
   case NO_ADDRESS:
 #endif
 #if defined(SUNOS_SPARC)
@@ -1875,7 +1875,7 @@ OZ_C_proc_end
 OZ_C_proc_begin(unix_random, 1)
 {
   OZ_Term out = OZ_getCArg(0);
-#if defined(SOLARIS_SPARC) || defined(SUNOS_SPARC) || defined(LINUX)
+#if defined(SOLARIS) || defined(SUNOS_SPARC) || defined(LINUX)
   return OZ_unifyInt(out,random());
 #else
   return am.raise(E_SYSTEM,E_SYSTEM,"limitExternal",1,OZ_atom("OS.random"));
@@ -1891,7 +1891,7 @@ OZ_C_proc_begin(unix_srandom, 1)
 
   if (!seed) { seed = time(NULL); }
 
-#if defined(SOLARIS_SPARC) || defined(SUNOS_SPARC) || defined(LINUX)
+#if defined(SOLARIS) || defined(SUNOS_SPARC) || defined(LINUX)
   srandom((unsigned int) seed);
 #else
   return am.raise(E_SYSTEM,E_SYSTEM,"limitExternal",1,OZ_atom("OS.srandom"));
