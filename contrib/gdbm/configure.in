@@ -1,16 +1,42 @@
 AC_INIT(gdbm.cc)
-AC_PREFIX_DEFAULT(/usr/local/oz)
+. ../conf.all
+test "x$prefix" = xNONE && prefix=$oz_prefix
 AC_CANONICAL_HOST
 AC_PROG_CXX
 AC_PROG_CXXCPP
 AC_LANG_CPLUSPLUS
 AC_PROG_INSTALL
-AC_PATH_PROG(DYNLD, ozdynld, ozdynld, ../../bin $prefix/bin $path)
-AC_PATH_PROG(PLATFORM, ozplatform, ozplatform, ../../bin $prefix/bin $path)
-AC_PATH_PROG(OZBATCH, ozbatch, ozbatch, ../../bin ../../lib $prefix/bin $path)
-platform=`$PLATFORM`
-AC_SUBST(DYNLD)
-AC_SUBST(platform)
+AC_PATH_PROG(OZBATCH,ozbatch,ozbatch,../../share/lib $prefix/bin $path)
+AC_PATH_PROG(OZDYNLD,ozdynld,ozdynld,../../share/lib $prefix/bin $path)
+AC_PATH_PROG(OZPLATFORM,ozplatform,ozplatform,../../share/bin $prefix/bin $path)
+AC_PATH_PROG(MKINSTALLDIRS,mkinstalldirs,mkinstalldirs,../.. $path)
+: ${PLATFORM=`$OZPLATFORM`}
+AC_SUBST(OZBATCH)
+AC_SUBST(OZDYNLD)
+AC_SUBST(PLATFORM)
+AC_SUBST(MKINSTALLDIRS)
+dnl
+dnl check for --with-package-name=...
+dnl
+PACKAGE=www.ps.uni-sb.de/ozhome/contrib/gdbm
+AC_MSG_CHECKING(for --with-package-name)
+AC_ARG_WITH(package_name,[--with-package-name=PKG	default $PACKAGE])
+if test -n "${with_package_name}"; then
+  PACKAGE="${with_package_name}"
+fi
+AC_MSG_RESULT($PACKAGE)
+AC_SUBST(PACKAGE)
+dnl
+dnl check for --with-protocol=...
+dnl
+AC_MSG_CHECKING(for --with-protocol)
+PROTOCOL=http
+AC_ARG_WITH(protocol,[--with-protocol=PROTO	default $PROTOCOL])
+if test -n "${with_protocol}"; then
+  PROTOCOL="${with_protocol}"
+fi
+AC_MSG_RESULT($PROTOCOL)
+AC_SUBST(PROTOCOL)
 dnl
 dnl Try to find the gdbm.h header file
 dnl
@@ -63,4 +89,4 @@ AC_TRY_LINK(,[gdbm_open()],
         echo 'if gdbm is not installed on your system you can obtain'
         echo 'it from http://www.gnu.org/']]]
         AC_MSG_ERROR([[[[[gdbm library not found]]]]])))))
-AC_OUTPUT(Makefile)
+AC_OUTPUT(Makefile gdbm.oz:gdbm.in)
