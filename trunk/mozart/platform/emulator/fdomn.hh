@@ -12,6 +12,12 @@
 #ifndef __FDOMN__H__
 #define __FDOMN__H__
 
+#ifdef BETA
+
+#include "fdomn_beta.hh"
+
+#else
+
 #if defined(__GNUC__)
 #pragma interface
 #endif
@@ -45,8 +51,7 @@ const int fdMaxR = USHRT_MAX;
 #endif
 const int fdMinR = 0; 
 
-enum LeGeFull_e {em, le, ge, fu, no, bo, si};
-enum DFlag_e {empty, full, discrete, singleton};
+enum DFlag_e {fd_empty, fd_full, fd_discrete, fd_singleton};
 
 extern unsigned char numOfBitsInByte[];
 extern int toTheLowerEnd[];
@@ -112,7 +117,7 @@ public:
 
 #define RANGEFLAG 1
 
-enum FDState {det=0, bounds, size, eqvar, any};
+enum FDPropState {fd_det=0, fd_bounds, fd_size, fd_eqvar, fd_any};
 
 class FiniteDomain { 
 protected:
@@ -130,10 +135,6 @@ protected:
     return (BitArray*)((int)ba & ~RANGEFLAG);
   }
 
-  int setEmpty(void) {
-    lower = 1; upper = 0; bitArray = setRange(bitArray); return 0;
-  }
-
   void allocateBitArray(void) {
     bitArray = resetRange(bitArray);
     if (bitArray == NULL)
@@ -142,6 +143,10 @@ protected:
   
   BitArray rangeToBitArray(void) const;
   BitArray * rangeToBitArray(BitArray * ba) const;
+
+  int setEmpty(void) {
+    lower = 1; upper = 0; bitArray = setRange(bitArray); return 0;
+  }
 
   int getRangeSize(void) const {
     DebugCheck(!isRange(), error("Range expected."));
@@ -181,7 +186,10 @@ public:
   void init(int len, int intList[]);
   void init(int intList[], int len); // constr for fdNotList
   void init(int from, int to);
-  void init(LeGeFull_e type, int n = -1);
+  void init(DFlag_e type, int n = -1);
+  void initFull(void) {init(fd_full);}
+  void initEmpty(void) {init(fd_empty);}
+  void initSingleton(int i) {init(fd_singleton, i);}
 
   void setFull(void) {
     bitArray = setRange(NULL);
@@ -225,19 +233,19 @@ public:
   Bool operator == (const DFlag_e flag) const
   {
     switch (flag){
-    case empty:
+    case fd_empty:
       return (getSize() == 0);
-    case full:
+    case fd_full:
       if (isRange())
 	return (lower == fdMinR && upper == fdMaxR);
       return (lower == fdMinBA && upper == fdMaxBA &&
 	      bitArray->getSize() == upper - lower + 1);
-    case discrete:
+    case fd_discrete:
       if (isRange())
 	return (lower != fdMinR || upper != fdMaxR);
       return (lower != fdMinBA || upper != fdMaxBA ||
 	      bitArray->getSize() != upper - lower + 1);
-    case singleton:
+    case fd_singleton:
       return (lower == upper);
     default:
       error("Unexpected case at %s:%d.", __FILE__, __LINE__);
@@ -248,19 +256,19 @@ public:
   Bool operator != (const DFlag_e flag) const
   {
     switch (flag){
-    case empty:
+    case fd_empty:
       return (getSize() != 0);
-    case full:
+    case fd_full:
       if (isRange())
 	return (lower != fdMinR || upper != fdMaxR);
       return (lower != fdMinBA || upper != fdMaxBA ||
 	      bitArray->getSize() != upper - lower + 1);
-    case discrete:
+    case fd_discrete:
       if (isRange())
 	return !(lower == fdMinR && upper == fdMaxR);
       return (lower == fdMinBA || upper == fdMaxBA ||
 	      bitArray->getSize() == upper - lower + 1);
-    case singleton:
+    case fd_singleton:
       return (lower != upper);
     default:
       error("Unexpected case at %s:%d.", __FILE__, __LINE__);
@@ -276,7 +284,7 @@ public:
   Bool next(int i, int &n) const;
   int nextBiggerElem(int v) const;
 
-  FDState checkAgainst(FiniteDomain &dom);
+  FDPropState checkAgainst(FiniteDomain &dom);
   
   int singl(void) const {
     DebugCheck(getSize() != 1, error("Domain must be singletons"));
@@ -340,12 +348,10 @@ public:
 };
 
 
-TaggedRef makeRangeTuple(int from, int to);
-
-  
 #if !defined(OUTLINE) && !defined(FDOUTLINE)
 #include "fdomn.icc"
 #endif
 
-     
+#endif
+
 #endif
