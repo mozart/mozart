@@ -98,26 +98,55 @@ GUMPEXAMPLES = \
 	Examples.oz Lambda.in LambdaParser.ozg LambdaScanner.ozg \
 	OzParser.ozg OzScanner.ozg OzFrontend.oz
 
-INSPECTORSRC1 = \
-	InspectorOptions.oz InspectorMain.oz
-INSPECTORSRC2 = \
-	SupportNodes.oz CreateObjects.oz LayoutObjects.oz DrawObjects.oz \
-	TreeNodes.oz StoreListener.oz CycleManager.oz TreeWidget.oz
-INSPECTORSRC = $(INSPECTORSRC1:%=inspector/%) \
-	$(INSPECTORSRC2:%=inspector/TreeWidget/%)
 
+INSPECTORTOPSRC = \
+	InspectorOptions InspectorMain TreeWidget
+INSPECTORTREEWIDGETSRC = \
+	CreateObjects LayoutObjects DrawObjects \
+        TreeNodes StoreListener GraphicSupport \
+	RelationManager Aux
+
+INSPECTORTOPOBJS = \
+	$(INSPECTORTOPSRC:%=%.ozf)
+INSPECTORTREEWIDGETOBJS = \
+	$(INSPECTORTREEWIDGETSRC:%=%.ozf)
 INSPECTOROBJS = \
-	InspectorMain.ozf InspectorOptions.ozf \
-	SupportNodes.ozf CreateObjects.ozf LayoutObjects.ozf DrawObjects.ozf \
-	TreeNodes.ozf StoreListener.ozf CycleManager.ozf TreeWidget.ozf
+	$(INSPECTORTOPOBJS) \
+	$(INSPECTORTREEWIDGETOBJS)
+
+INSPECTORTOPDEPSRC0 = \
+	FrameManager OptionsGUI
+INSPECTORTOPDEPSRC = \
+	$(INSPECTORTOPDEPSRC0:%=inspector/%.oz)
+
+INSPECTORTWCODEPSRC0 = \
+	CreateObjects              \
+	create/SimpleCreateObjects \
+	create/ContCreateObjects
+INSPECTORTWCODEPSRC = \
+	$(INSPECTORTWCODEPSRC0:%=inspector/treewidget/%.oz)
+
+INSPECTORTWLODEPSRC0 = \
+	LayoutObjects               \
+	layout/SimpleLayoutObjects  \
+	layout/ContLayoutObjects
+INSPECTORTWLODEPSRC = \
+	$(INSPECTORTWLODEPSRC0:%=inspector/treewidget/%.oz)
+
+INSPECTORTWDODEPSRC0 = \
+	DrawObjects            \
+	draw/SimpleDrawObjects \
+	draw/ContDrawObjects
+INSPECTORTWDODEPSRC = $(INSPECTORTWDODEPSRC0:%=inspector/treewidget/%.oz)
 
 INSPECTORIMAGESDIR = $(IMAGESDIR)/inspector
 INSPECTORIMAGES1 = \
-	depth.xbm width.xbm
+	depth.xbm width.xbm stop.xbm sep.xbm
 INSPECTORIMAGES = $(INSPECTORIMAGES1:%=$(INSPECTORIMAGESDIR)/%)
 
 TOOLSDIRS1 = gump gump/examples
 TOOLSDIRS = $(TOOLSDIRS1:%=$(OZTOOLS)/%)
+
 
 TOOLSFILES = \
 	$(GUMPEXAMPLES:%=$(OZTOOLS)/gump/examples/%)
@@ -126,8 +155,7 @@ FUNCTORS = \
 	CompilerPanel.ozf Panel.ozf Browser.ozf Explorer.ozf Emacs.ozf \
 	Ozcar.ozf Profiler.ozf Gump.ozf GumpScanner.ozf GumpParser.ozf \
 	ProductionTemplates.ozf OPI.ozf OPIEnv.ozf \
-	EvalDialog.ozf
-#        Inspector.ozf
+	EvalDialog.ozf Inspector.ozf
 
 TOOLSFUNCTORS = $(FUNCTORS:%=$(OZTOOLS)/%)
 
@@ -186,14 +214,18 @@ GumpParser.ozf: $(GUMPPARSERSRC)
 ProductionTemplates.ozf: $(PRODUCTIONTEMPLATESSRC)
 	$(COMPILE) $(BUILDDIR)/ProductionTemplates.oz -o $@
 
-Inspector.ozf: $(INSPECTOROBJS)
-	$(LINK) InspectorMain.ozf -o $@
+CreateObjects.ozf: $(INSPECTORTWCODEPSRC)
+LayoutObjects.ozf: $(INSPECTORTWLODEPSRC)
+DrawObjects.ozf:   $(INSPECTORTWDODEPSRC)
+TreeWidget.ozf:    $(INSPECTORTREEWIDGETOBJS)
+InspectorMain.ozf: $(INSPECTORTOPDEPSRC)
 
+%.ozf: inspector/treewidget/%.oz
+	$(COMPILE) $< -o $@
 %.ozf: inspector/%.oz
 	$(COMPILE) $< -o $@
-
-%.ozf: inspector/TreeWidget/%.oz
-	$(COMPILE) $< -o $@
+Inspector.ozf: $(INSPECTOROBJS)
+	$(LINK) InspectorMain.ozf -o $@
 
 #---------------------------------------------------------------------
 # Syslets
@@ -216,8 +248,8 @@ install-main: all \
 	$(OZBIN) $(BINFILES)
 
 install-images: \
-	$(IMAGESDIR) $(IMAGES) $(OZCARIMAGESDIR) $(OZCARIMAGES)
-#	$(INSPECTORIMAGESDIR) $(INSPECTORIMAGES)
+	$(IMAGESDIR) $(IMAGES) $(OZCARIMAGESDIR) $(OZCARIMAGES) \
+	$(INSPECTORIMAGESDIR) $(INSPECTORIMAGES)
 
 $(OZTOOLS) $(TOOLSDIRS) $(OZBIN):
 	$(INSTALL_DIR) $@
@@ -263,7 +295,7 @@ $(CACHEDIR):
 
 clean:
 	rm -f *~ *.bak ./*/*~ ./*/*/*~ ./*/*.bak ./*/*/*.bak
-	rm -f $(FUNCTORS) # $(INSPECTOROBJS)
+	rm -f $(FUNCTORS) $(INSPECTOROBJS)
 
 veryclean: clean
 	rm -f -r TAGS
