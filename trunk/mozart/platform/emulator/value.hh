@@ -1401,6 +1401,18 @@ Object *tagged2Object(TaggedRef term)
   return (Object *)tagged2Const(term);
 }
 
+inline
+Bool isClass(TaggedRef term)
+{
+  return isObject(term) && tagged2Object(term)->isClass();
+}
+
+inline
+Bool isObjectTrue(TaggedRef term)
+{
+  return isObject(term) && !tagged2Object(term)->isClass();
+}
+
 /*===================================================================
  * SChunk
  *=================================================================== */
@@ -1728,23 +1740,6 @@ Abstraction *tagged2Abstraction(TaggedRef term)
   Assert(isAbstraction(term));
   return (Abstraction *)tagged2Const(term);
 }
-
-
-class ProcProxy: public Abstraction {
-  friend void ConstTerm::gcConstRecurse(void);
-  TaggedRef suspVar;
-public:
-  ProcProxy(ProcProxy&);
-  ProcProxy(int i, TaggedRef name, int arity, GName *gn):  Abstraction(name,arity,gn)
-  {
-    suspVar = makeTaggedNULL();
-    setIndex(i);
-  }
-  
-  TaggedRef getSuspvar();
-
-  void import(RefsArray g, ProgramCounter pc);
-};
 
 
 /*===================================================================
