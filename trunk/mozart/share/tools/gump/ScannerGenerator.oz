@@ -100,8 +100,11 @@ local
 	 prop final
 	 meth getAll($)
 	    case Open.text, getS($) of false then nil
-	    elseof S then
-	       S|TextPipe, getAll($)
+	    elseof S then S2 in
+	       S2 = {Filter S fun {$ C} C \= &\r end}
+	       case S2 of &X|&:|_ then [S2]
+	       else S2|TextPipe, getAll($)
+	       end
 	    end
 	 end
       end
@@ -149,8 +152,8 @@ local
 			     msg: 'invocation of g++ failed')}
 		  stop
 	       elseif {OS.system {OZTOOL}#' ld '#
-		       {MakeFileName T ".o"}#' -o '#
-		       {MakeFileName T ".so"}#'-'#PLATFORM#' -lc'} \= 0
+		       ' -o '#{MakeFileName T ".so"}#'-'#PLATFORM#
+		      {MakeFileName T ".o -lc"}} \= 0
 	       then
 		  {Rep error(kind: 'system error'
 			     msg: 'invocation of oztool failed')}
