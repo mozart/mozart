@@ -207,7 +207,7 @@ void ObjectVar::addEntityCond(EntityCond ec){
   Bool hit=FALSE;
   if(info==NULL) info=new EntityInfo();
   if(!info->addEntityCond(ec)) return;
-  if(isHandlerCondition(ec)){
+  if(isInjectorCondition(ec)){
     wakeAll();
     return;}
   info->dealWithWatchers(oz_makeExtVar(this),ec);
