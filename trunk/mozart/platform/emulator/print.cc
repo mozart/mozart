@@ -23,6 +23,7 @@ exported:
 #include <ctype.h>
 
 #include "actor.hh"
+#include "am.hh"
 #include "builtins.hh"
 #include "bignum.hh"
 #include "board.hh"
@@ -564,14 +565,20 @@ PRINT(ConstTerm)
   }
 }
 
-void Board::Print()
+void AM::print()
 {
-  cout << "class Board" << endl
-       << "  Current: ";
-  Current->print(cout,0,0);
+  cout << "class AM" << endl
+       << "  currentBoard: ";
+  currentBoard->print(cout,0,0);
   cout << endl
-       << "  Root:    ";
-  Root->print(cout,0,0);
+       << "  rootBoard:    ";
+  rootBoard->print(cout,0,0);
+  cout << endl
+       << "  currentThread: ";
+  currentThread->print(cout,0,0);
+  cout << endl
+       << "  rootThread:    ";
+  rootThread->print(cout,0,0);
   cout << endl;
 }
 
@@ -645,12 +652,6 @@ PRINTLONG(Actor)
 void Thread::Print()
 {
   cout << "class Thread" << endl
-       << "  Current: ";
-  Current->print(cout,0,0);
-  cout << endl
-       << "  Root:    ";
-  Root->print(cout,0,0);
-  cout << endl
        << "  Queue:" << endl;
   for (Thread *th=Head; th; th = th->next) {
     th->print(cout,0,4);
@@ -660,10 +661,10 @@ void Thread::Print()
     if (th == Tail) {
       cout << " TAIL";
     }
-    if (th == Root) {
+    if (th == am.rootThread) {
       cout << " ROOT";
     }
-    if (th == Current) {
+    if (th == am.currentThread) {
       cout << " CURRENT";
     }
     cout << endl;
@@ -1009,7 +1010,7 @@ void Board::printTree()
   Board *bb = this;
   Actor *aa;
   int off=0;
-  while (bb!=GetRoot()) {
+  while (bb!=am.rootBoard) {
     bb->print(cout,0,off);
     cout << endl;
     if (bb->isCommitted()) {
