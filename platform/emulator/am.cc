@@ -119,7 +119,6 @@ void AM::init(int argc,char **argv)
   suspendVarList   = makeTaggedNULL();
   aVarUnifyHandler = makeTaggedNULL();
   aVarBindHandler  = makeTaggedNULL();
-  dVarHandler      = makeTaggedNULL();
   methApplHdl      = makeTaggedNULL();
 
   char *compilerName = OzCompiler;
@@ -856,11 +855,6 @@ void AM::reduceTrailOnSuspend()
       // value is always global variable, so add always a thread;
       taggedBecomesSuspVar(refPtr)->addSuspension (thr);
 
-      /* spawn askHandler threads for dvars */
-      if (isDVar(value)) {
-        handleAsk(refPtr,isAnyVar(old_value)?makeTaggedRef(old_value_ptr):old_value);
-      }
-
     } // for
   } // if
   trail.popMark();
@@ -915,11 +909,6 @@ void AM::reduceTrailOnShallow(Thread *thread)
       if (isAnyVar(oldVal)) {
         mkSusp(ptrOldVal,thread);
       }
-    }
-
-    /* spawn askHandler threads for dvars */
-    if (isDVar(value)) {
-      handleAsk(refPtr,isAnyVar(oldVal)?makeTaggedRef(ptrOldVal):makeTaggedNULL());
     }
 
     mkSusp(refPtr,thread);

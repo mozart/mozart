@@ -679,7 +679,7 @@ Bool checkAtom(char *s)
   case 'i':
     return strcmp(t, "if") && strcmp(t, "in")? OK: NO;
   case 'l':
-    return strcmp(t, "local")? OK: NO;
+    return strcmp(t, "local") && strcmp(t, "lock")? OK: NO;
   case 'm':
     return strcmp(t, "meth") && strcmp(t, "mod")? OK: NO;
   case 'n':
@@ -688,12 +688,12 @@ Bool checkAtom(char *s)
     return strcmp(t, "of") && strcmp(t, "or")
         && strcmp(t, "orelse")? OK: NO;
   case 'p':
-    return strcmp(t, "proc")? OK: NO;
+    return strcmp(t, "proc") && strcmp(t, "prop")? OK: NO;
   case 's':
     return strcmp(t, "self") && strcmp(t, "skip")? OK: NO;
   case 't':
     return strcmp(t, "then") && strcmp(t, "thread")
-        && strcmp(t, "touch") && strcmp(t, "true")
+        && strcmp(t, "true")
         && strcmp(t, "try")? OK: NO;
   case 'u':
     return strcmp(t, "unit")? OK: NO;
@@ -958,8 +958,12 @@ void cvar2buffer(ostream &out, char *s, GenCVariable *cv, int depth)
       // TmpBuffer.print_string(((GenMetaVariable *)cv)->toString(0));
       break;
     }
+  case PerdioVariable:
+    {
+      out << s;
+      break;
+    }
   case AVAR:
-  case DVAR:
     {
       out << s;
       break;

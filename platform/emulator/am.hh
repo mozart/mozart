@@ -156,7 +156,6 @@ public:
 
   TaggedRef aVarUnifyHandler;
   TaggedRef aVarBindHandler;
-  TaggedRef dVarHandler;
 
   TaggedRef methApplHdl;
 

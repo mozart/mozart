@@ -7554,7 +7554,7 @@ extern void BIinitFD(void);
 extern void BIinitFSet(void);
 extern void BIinitMeta(void);
 extern void BIinitAVar(void);
-extern void BIinitDVar(void);
+extern void BIinitPerdioVar(void);
 extern void BIinitUnix();
 extern void BIinitAssembler();
 extern void BIinitTclTk();
@@ -7583,7 +7583,7 @@ BuiltinTabEntry *BIinit()
   BIinitMeta();
 
   BIinitAVar();
-  BIinitDVar();
+  BIinitPerdioVar();
   BIinitUnix();
   BIinitTclTk();
 

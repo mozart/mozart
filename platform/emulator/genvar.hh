@@ -35,13 +35,13 @@ enum TypeOfGenCVariable {
   BoolVariable,
   FSetVariable,
   AVAR,
-  DVAR
+  PerdioVariable
 };
 
 #define GenVarCheckType(t)                              \
     Assert(t == FDVariable || t == OFSVariable ||       \
            t == MetaVariable || t == BoolVariable ||    \
-           t==AVAR || t==DVAR || t == FSetVariable )
+           t==AVAR || t==PerdioVariable || t == FSetVariable )
 
 class GenCVariable: public SVariable {
 
@@ -194,7 +194,7 @@ void addSuspCVar(TaggedRef v, Thread * el)
 #include "ofgenvar.hh"
 #include "metavar.hh"
 #include "avar.hh"
-#include "dvar.hh"
+#include "perdiovar.hh"
 
 #ifndef OUTLINE
 #include "genvar.icc"

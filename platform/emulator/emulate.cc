@@ -626,11 +626,6 @@ Bool AM::hookCheckNeeded()
 void addSusp(TaggedRef *varPtr, Thread *thr)
 {
   taggedBecomesSuspVar(varPtr)->addSuspension (thr);
-
-  /* spawn askHandler threads for dvars */
-  if (isDVar(*varPtr)) {
-    handleAsk(varPtr);
-  }
 }
 
 void addSusp(TaggedRef var, Thread *thr)
