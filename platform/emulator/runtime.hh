@@ -32,21 +32,8 @@
 #include "am.hh"
 
 
-/* -----------------------------------------------------------------------
- * Spaces
- * -----------------------------------------------------------------------*/
-
-inline
-int oz_isRootBoard(Board *bb) { return bb==oz_rootBoard(); }
-
-inline
-Board *oz_rootBoard() { return am._rootBoard; }
-
-inline
-Board *oz_currentBoard() { return am._currentBoard; }
-
 #define CheckLocalBoard(Object,Where);					\
-  if (!am.onToplevel() && !am.isCurrentBoard(GETBOARD(Object))) {	\
+  if (!oz_onToplevel() && !oz_isCurrentBoard(GETBOARD(Object))) {	\
     return oz_raise(E_ERROR,E_KERNEL,"globalState",1,oz_atom(Where));	\
   }
 
@@ -78,12 +65,6 @@ void oz_bindToNonvar(OZ_Term *varPtr, OZ_Term var,
 /* -----------------------------------------------------------------------
  * values
  * -----------------------------------------------------------------------*/
-
-#define oz_true() NameTrue
-#define oz_false() NameFalse
-#define oz_unit() NameUnit
-
-#define oz_atom(s) makeTaggedAtom(s)
 
 #define oz_newName() makeTaggedLiteral(Name::newName(oz_currentBoard()))
 
@@ -122,9 +103,6 @@ OZ_Term oz_newChunk(OZ_Term val)
  * # - tuples
  * -----------------------------------------------------------------------*/
 
-#define oz_cons(a,b) cons(a,b)
-#define oz_nil()  nil()
-
 /*
  * list checking
  *   checkChar:
@@ -147,18 +125,18 @@ OZ_Term oz_isList(OZ_Term l, int checkChar=0)
   while (oz_isCons(l)) {
     len++;
     if (checkChar) {
-      OZ_Term h = head(l);
+      OZ_Term h = oz_head(l);
       DerefReturnVar(h);
       if (!oz_isSmallInt(h)) return NameFalse;
       int i=smallIntValue(h);
       if (i<0 || i>255) return NameFalse;
       if (checkChar>1 && i==0) return NameFalse;
     }
-    l = tail(l);
+    l = oz_tail(l);
     DerefReturnVar(l);
     if (l==old) return NameFalse; // cyclic
     if (updateF) {
-      old=oz_deref(tail(old));
+      old=oz_deref(oz_tail(old));
     }
     updateF=1-updateF;
   }
@@ -231,9 +209,6 @@ Arity *oz_makeArity(OZ_Term list)
   if (!list) return 0;
   return aritytable.find(list);
 }
-
-
-OZ_Term oz_list(OZ_Term t, ...);
 
 /* -----------------------------------------------------------------------
  * suspend

@@ -272,7 +272,7 @@ char *mess_names[M_LAST] = {
 void SendTo(Site *toS,MsgBuffer *bs,MessageType mt,Site *sS,int sI)
 {
   OZ_Term nogoods = bs->getNoGoods();
-  if (!literalEq(nil(),nogoods)) {
+  if (!literalEq(oz_nil(),nogoods)) {
     warning("send message '%s' contains nogoods: %s",mess_names[mt],toC(nogoods));
   }
 
@@ -305,7 +305,7 @@ void SiteUnify(TaggedRef val1,TaggedRef val2)
     return;
     }
   
-  Assert(am.onToplevel());
+  Assert(oz_onToplevel());
   Thread *th=am.mkRunnableThread(DEFAULT_PRIORITY,am.currentBoard());
 #ifdef PERDIO_DEBUG
   PD((SITE_OP,"SITE_OP: site unify called %d %d",val1, val2));
@@ -3331,7 +3331,7 @@ inline void sendPrepOwner(int index){
 // kost@ 26.3.98 : 'msgReceived()' is NOT a method of a site object.
 void msgReceived(MsgBuffer* bs)
 {
-  Assert(am.onToplevel());
+  Assert(oz_onToplevel());
   MessageType mt = (MessageType) unmarshalHeader(bs);
   PD((MSG_RECEIVED,"msg type %d",mt));
 
@@ -3901,7 +3901,7 @@ OZ_Return portSend(Tertiary *p, TaggedRef msg)
   marshal_M_PORT_SEND(bs,index,msg);
   
   OZ_Term nogoods = bs->getNoGoods();
-  if (!literalEq(nil(),nogoods)) {
+  if (!literalEq(oz_nil(),nogoods)) {
   /*
     int portIndex;
     OZ_Term t;
@@ -3909,8 +3909,8 @@ OZ_Return portSend(Tertiary *p, TaggedRef msg)
     dumpRemoteMsgBuffer(bs);
     */
     return raiseGeneric("Resources found during send to port",
-			mklist(OZ_pairA("Resources",nogoods),
-			       OZ_pairA("Port",makeTaggedTert(p))));
+			oz_mklist(OZ_pairA("Resources",nogoods),
+				  OZ_pairA("Port",makeTaggedTert(p))));
   }
   
 
@@ -4583,7 +4583,7 @@ OZ_Return cellAtAccess(Tertiary *c, TaggedRef fea, TaggedRef val){
   return cellDoAccess(c,val,fea);}
 
 OZ_Return cellDoAccess(Tertiary *c, TaggedRef val){
-  if(am.onToplevel() && c->handlerExists(am.currentThread()))
+  if(oz_onToplevel() && c->handlerExists(am.currentThread()))
     return cellDoExchange(c,val,val);
   else
     return cellDoAccess(c,val,0);}
@@ -6352,24 +6352,24 @@ Tertiary* getTertiaryFromOTI(int i){
   return OT->getOwner(i)->getTertiary();}
   
 TaggedRef listifyWatcherCond(EntityCond ec){
-  TaggedRef list = nil();
+  TaggedRef list = oz_nil();
   if(ec & PERM_BLOCKED)
-    {list = cons(AtomPerm, list);
+    {list = oz_cons(AtomPerm, list);
     ec = ec & ~(PERM_BLOCKED|TEMP_BLOCKED);}
   if(ec & TEMP_BLOCKED){
-    list = cons(AtomTemp, list);
+    list = oz_cons(AtomTemp, list);
     ec = ec & ~(TEMP_BLOCKED);}
   if(ec & PERM_ME)
-    {list = cons(AtomPermHome, list);
+    {list = oz_cons(AtomPermHome, list);
     ec = ec & ~(PERM_ME|TEMP_ME);}
   if(ec & TEMP_ME){
-    list = cons(AtomTempHome, list);
+    list = oz_cons(AtomTempHome, list);
     ec = ec & ~(TEMP_ME);}
   if(ec & (PERM_ALL| PERM_SOME))
-    {list = cons(AtomPermForeign, list);
+    {list = oz_cons(AtomPermForeign, list);
     ec = ec & ~(TEMP_SOME|PERM_SOME|TEMP_ALL|PERM_ALL);}
   if(ec & (TEMP_ALL|TEMP_SOME)){
-    list = cons(AtomTempForeign, list);
+    list = oz_cons(AtomTempForeign, list);
     ec = ec & ~(TEMP_SOME|PERM_SOME|TEMP_ALL|PERM_ALL);}
   Assert(ec==0);
   return list;
@@ -6810,7 +6810,7 @@ OZ_BI_define(BIgetEntityCond,1,1)
   
   EntityCond ec = tert->getEntityCond();
   if(ec == ENTITY_NORMAL)
-    OZ_RETURN(cons(AtomEntityNormal,nil()));
+    OZ_RETURN(oz_cons(AtomEntityNormal,oz_nil()));
   OZ_RETURN(listifyWatcherCond(ec));
 }OZ_BI_end
 

@@ -89,7 +89,7 @@ CXXSRCS= \
 	vprops.cc promise.cc \
         vs_comm.cc vs_mailbox.cc vs_msgbuffer.cc \
 	ctgenvar.cc simplevar.cc byNeed.cc \
-	ofbi.cc
+	ofbi.cc ioHandler.cc
 
 FDSRCS=\
 	fdbuilti.cc fdomn.cc fdcore.cc \
@@ -105,7 +105,7 @@ FSETSRCS=\
 
 SRCS1=	$(FDSRCS) $(FSETSRCS) $(CPISRCS) $(CXXSRCS) @PEANUTS@ main.cc
 
-SRCS=	$(CREATEDSRCS) $(SRCS1) 
+SRCS=	$(SRCS1) $(CREATEDSRCS)
 
 OBJS = $(SRCS:.cc=.o)
 

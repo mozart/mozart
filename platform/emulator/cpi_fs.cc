@@ -97,7 +97,7 @@ void OZ_FSetVar::read(OZ_Term v)
 
       setSort(var_e);
       
-      if (am.onToplevel())
+      if (oz_onToplevel())
 	set = fsvar->getSet();
       setPtr = &fsvar->getSet();
       
@@ -111,7 +111,7 @@ void OZ_FSetVar::read(OZ_Term v)
       GenFSetVariable * fsvar = tagged2GenFSetVar(v);
       setState(am.isLocalSVar(v) ? loc_e : glob_e);
       
-      if (isState(glob_e) || am.onToplevel())
+      if (isState(glob_e) || oz_onToplevel())
 	set = fsvar->getSet();
       setPtr = &fsvar->getSet();
       known_in = setPtr->getKnownIn();
@@ -243,7 +243,7 @@ void OZ_FSetVar::fail(void)
   // dont't change the order of the calls (side effects!)
   if (testResetStoreFlag(var) && isState(glob_e) && isSort(var_e)) {
     *setPtr = set;
-  } else if (am.onToplevel()) {
+  } else if (oz_onToplevel()) {
     *setPtr = set;
   }
 }

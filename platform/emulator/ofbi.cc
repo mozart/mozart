@@ -145,14 +145,14 @@ void addFeatOFSSuspensionList(TaggedRef var,
       // Add the feature or list to the diff. list in FH and FT:
       if (flist) {
 	if (oz_isFeature(flist))
-	  prop->setFH(cons(flist,prop->getFH()));
+	  prop->setFH(oz_cons(flist,prop->getFH()));
 	else {
 	  // flist must be a list
 	  Assert(oz_isCons(flist));
 	  TaggedRef tmplist=flist;
 	  while (tmplist!=AtomNil) {
-	    prop->setFH(cons(head(tmplist),prop->getFH()));
-	    tmplist=tail(tmplist);
+	    prop->setFH(oz_cons(oz_head(tmplist),prop->getFH()));
+	    tmplist=oz_tail(tmplist);
 	  }
 	}
       }
@@ -795,7 +795,7 @@ OZ_Return genericUparrowInline(TaggedRef term, TaggedRef fea, TaggedRef &out, Bo
 	return PROCEED;
       }
       
-      if (am.isCurrentBoard(GETBOARD(ofsvar))) {
+      if (oz_isCurrentBoard(GETBOARD(ofsvar))) {
 	TaggedRef uvar=oz_newVariable();
 	Bool ok=ofsvar->addFeatureValue(fea,uvar);
 	Assert(ok);
@@ -855,7 +855,7 @@ OZ_Return genericUparrowInline(TaggedRef term, TaggedRef fea, TaggedRef &out, Bo
             // Feature does not yet exist
             // Add feature by (1) creating new ofsvar with one feature,
             // (2) unifying the new ofsvar with the old.
-	  if (am.isCurrentBoard(GETBOARD(ofsvar))) {
+	  if (oz_isCurrentBoard(GETBOARD(ofsvar))) {
                 // Optimization:
                 // If current board is same as ofsvar board then can add feature directly
                 TaggedRef uvar=oz_newVariable();

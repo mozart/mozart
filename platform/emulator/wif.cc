@@ -99,7 +99,7 @@ static OZ_Return raise_toplevel(void) {
  */
 
 #define CHECK_TOPLEVEL \
-{ if (!am.onToplevel()) return raise_toplevel(); }
+{ if (!oz_onToplevel()) return raise_toplevel(); }
 
 
 
@@ -181,7 +181,7 @@ public:
 			     oz_newVariable());
     
     (void) oz_unify(newt,wif_rets); // mm_u
-    wif_rets = tail(newt);
+    wif_rets = oz_tail(newt);
   }
 
   TaggedRef genTopName() {
@@ -241,9 +241,9 @@ public:
     wif_rets      = r;
     wif_dict      = d;
 
-    (void) gcProtect(&wif_lock);
-    (void) gcProtect(&wif_rets);
-    (void) gcProtect(&wif_dict);
+    (void) oz_protect(&wif_lock);
+    (void) oz_protect(&wif_rets);
+    (void) oz_protect(&wif_dict);
   }
 
   ~WIF() {
@@ -371,7 +371,7 @@ public:
 
   OZ_Return put_string_quote(TaggedRef list) {
     while (1) {
-      TaggedRef h = head(list);
+      TaggedRef h = oz_head(list);
       DEREF(h, h_ptr, h_tag);
 
       if (isVariableTag(h_tag)) {
@@ -387,7 +387,7 @@ public:
       put_quote((char) i);
       ensure(0);
 
-      TaggedRef t = tail(list);
+      TaggedRef t = oz_tail(list);
       DEREF(t, t_ptr, t_tag);
 
       if (isVariableTag(t_tag)) {
@@ -409,7 +409,7 @@ public:
 
   OZ_Return put_string(TaggedRef list) {
     while (1) {
-      TaggedRef h = head(list);
+      TaggedRef h = oz_head(list);
       DEREF(h, h_ptr, h_tag);
 
       if (isVariableTag(h_tag)) {
@@ -424,7 +424,7 @@ public:
 	
       put((char) i);
 
-      TaggedRef t = tail(list);
+      TaggedRef t = oz_tail(list);
       DEREF(t, t_ptr, t_tag);
 
       if (isVariableTag(t_tag)) {
@@ -505,7 +505,7 @@ redo:
 wait_select:
   TaggedRef var = oz_newVariable();
   
-  (void) am.select(wif_fd, SEL_WRITE, NameUnit, var);
+  (void) oz_io_select(wif_fd, SEL_WRITE, NameUnit, var);
   DEREF(var, var_ptr, var_tag);
   if (isVariableTag(var_tag)) {
     am.addSuspendVarList(var_ptr);
@@ -545,16 +545,16 @@ OZ_Return WIF::put_tuple(SRecord *st, int start) {
 }
 
 OZ_Return WIF::put_record(SRecord * sr, TaggedRef as) {
-  TaggedRef a = head(as);
+  TaggedRef a = oz_head(as);
   
   StateReturn(put_feature(sr,a));
-  as = tail(as);
+  as = oz_tail(as);
   
   while (oz_isCons(as)) {
-    a = head(as);
+    a = oz_head(as);
     put(' ');
     StateReturn(put_feature(sr,a));
-    as = tail(as);
+    as = oz_tail(as);
   }
   return PROCEED;
 }
@@ -567,12 +567,12 @@ OZ_Return WIF::put_batch(TaggedRef batch, char delim) {
     am.addSuspendVarList(batch_ptr);
     return SUSPEND;
   } else if (isLTupleTag(batch_tag)) {
-    OZ_Return batch_state = put_tcl(head(batch));
+    OZ_Return batch_state = put_tcl(oz_head(batch));
     
     if (batch_state!=PROCEED) 
       return batch_state;
     
-    batch = tail(batch);
+    batch = oz_tail(batch);
   } else if (isLiteralTag(batch_tag) && literalEq(batch,AtomNil)) {
     return PROCEED;
   } else {
@@ -587,12 +587,12 @@ OZ_Return WIF::put_batch(TaggedRef batch, char delim) {
       return SUSPEND;
     } else if (isLTupleTag(batch_tag)) {
       put(delim);
-      OZ_Return batch_state = put_tcl(head(batch));
+      OZ_Return batch_state = put_tcl(oz_head(batch));
       
       if (batch_state!=PROCEED) 
 	return batch_state;
       
-      batch = tail(batch);
+      batch = oz_tail(batch);
     } else if (isLiteralTag(batch_tag) && literalEq(batch,AtomNil)) {
       return PROCEED;
     } else {
@@ -618,21 +618,21 @@ OZ_Return WIF::put_record_or_tuple(TaggedRef tcl, int start = 0) {
     TaggedRef as = st->getArityList();
     
     if (start==1 && oz_isCons(as)) {
-      Assert(smallIntValue(head(as))==1);
-      as=tail(as);
+      Assert(smallIntValue(oz_head(as))==1);
+      as=oz_tail(as);
     }
     if (!oz_isCons(as))
       return PROCEED;
 
-    StateReturn(put_feature(st,head(as)));
+    StateReturn(put_feature(st,oz_head(as)));
     
-    as = tail(as);
+    as = oz_tail(as);
 
     while (oz_isCons(as)) {
-      TaggedRef a = head(as);
+      TaggedRef a = oz_head(as);
       put(' ');
       StateReturn(put_feature(st,a));
-      as = tail(as);
+      as = oz_tail(as);
     }
     return PROCEED;
   }
@@ -891,10 +891,10 @@ OZ_Return WIF::put_tcl(TaggedRef tcl) {
 	return PROCEED;
       } else if (literalEq(l,WifAtomTclPosition)) {
 	put('{'); 
-	StateReturn(put_feature(sr, head(as)));
+	StateReturn(put_feature(sr, oz_head(as)));
 	put('.');
 	if (sr->getWidth() > 1)
-	  StateReturn(put_record(sr, tail(as)));
+	  StateReturn(put_record(sr, oz_tail(as)));
 	put('}');
 	return PROCEED;
       } else {
@@ -932,24 +932,24 @@ OZ_Return WIF::put_tcl_filter(TaggedRef tcl, TaggedRef fs) {
     fs = oz_deref(fs);
 
     while (oz_isCons(as) && oz_isCons(fs)) {
-      TaggedRef a = head(as);
-      TaggedRef f = oz_deref(head(fs));
+      TaggedRef a = oz_head(as);
+      TaggedRef f = oz_deref(oz_head(fs));
 
       if (oz_isName(a))
 	return raise_type_error(tcl);	
 
       switch (featureCmp(a,f)) {
       case 0:
-	fs = oz_deref(tail(fs));
-	as = tail(as);
+	fs = oz_deref(oz_tail(fs));
+	as = oz_tail(as);
 	break;
       case 1:
-	fs = oz_deref(tail(fs));
+	fs = oz_deref(oz_tail(fs));
 	break;
       case -1:
 	StateReturn(put_feature(sr,a));
 	put(' ');
-	as = tail(as);
+	as = oz_tail(as);
 	break;
       }
 
@@ -987,15 +987,15 @@ OZ_Return WIF::put_tcl_return(TaggedRef tcl, TaggedRef * ret) {
 
   } else if (isSRecordTag(tcl_tag)) {
     SRecord * sr = tagged2SRecord(tcl);
-    TaggedRef as = tail(sr->getArityList()); /* arity list is already deref'ed */
+    TaggedRef as = oz_tail(sr->getArityList()); /* arity list is already deref'ed */
 
     while (oz_isCons(as)) {
-      TaggedRef a1  = head(as);
-      TaggedRef ar  = tail(as);
+      TaggedRef a1  = oz_head(as);
+      TaggedRef ar  = oz_tail(as);
 
       if (oz_isSmallInt(a1)) {
 	if (oz_isCons(ar)) {
-	  TaggedRef a2 = head(ar);
+	  TaggedRef a2 = oz_head(ar);
 
 	  if (oz_isSmallInt(a2)) {
 	    put(' ');
@@ -1355,7 +1355,7 @@ OZ_Return WIF::close_hierarchy(Object * o) {
       slaves = oz_deref(slaves);
       
       while (oz_isCons(slaves)) {
-	TaggedRef slave = oz_deref(head(slaves));
+	TaggedRef slave = oz_deref(oz_head(slaves));
 	  
 	if (oz_isSmallInt(slave)) {
 	  // this an entry in the event dictionary
@@ -1370,7 +1370,7 @@ OZ_Return WIF::close_hierarchy(Object * o) {
 	    return s;
 	}
 
-	slaves = oz_deref(tail(slaves));
+	slaves = oz_deref(oz_tail(slaves));
       }
     }
 
@@ -1434,7 +1434,7 @@ OZ_BI_define(BIwif_close,2,0) {
       if (oz_isCons(slave_entry)) {
 	LTuple * l = tagged2LTuple(slave_entry);
 	l->setHead(NameGroupVoid);
-	l->setTail(findAliveEntry(tail(slave_entry)));
+	l->setTail(findAliveEntry(oz_tail(slave_entry)));
       }
     }
 	  

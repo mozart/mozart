@@ -230,8 +230,8 @@ ByteSink::putTerm(OZ_Term in, char *filename)
   //  return oz_unify(resources,bs->resources);
   if (!oz_isNil(res)) {
     return raiseGeneric("Resources found during save",
-			mklist(OZ_pairA("Resources",res),
-			       OZ_pairA("Filename",oz_atom(filename))));
+			oz_mklist(OZ_pairA("Resources",res),
+				  OZ_pairA("Filename",oz_atom(filename))));
   }
 
   return PROCEED;
@@ -249,8 +249,8 @@ ByteSinkFD::putBytes(BYTE*pos,int len)
 {
   if (oswrite(fd,pos,len)<0)
     return raiseGeneric("Write failed during save",
-			cons(OZ_pairA("Error",oz_atom(OZ_unixError(errno))),
-			     nil()));
+			oz_cons(OZ_pairA("Error",oz_atom(OZ_unixError(errno))),
+				oz_nil()));
   return PROCEED;
 }
 
@@ -264,8 +264,8 @@ ByteSinkFile::allocateBytes(int n)
   fd = open(filename,O_WRONLY|O_CREAT|O_TRUNC,0666);
   if (fd < 0)
     return raiseGeneric("Open failed during save",
-			mklist(OZ_pairA("File",oz_atom(filename)),
-			       OZ_pairA("Error",oz_atom(OZ_unixError(errno)))));
+			oz_mklist(OZ_pairA("File",oz_atom(filename)),
+				  OZ_pairA("Error",oz_atom(OZ_unixError(errno)))));
   return PROCEED;
 }
 
@@ -274,8 +274,8 @@ ByteSinkFile::putBytes(BYTE*pos,int len)
 {
   if (oswrite(fd,pos,len)<0)
     return raiseGeneric("Write failed during save",
-			mklist(OZ_pairA("File",oz_atom(filename)),
-			       OZ_pairA("Error",oz_atom(OZ_unixError(errno)))));
+			oz_mklist(OZ_pairA("File",oz_atom(filename)),
+				  OZ_pairA("Error",oz_atom(OZ_unixError(errno)))));
   return PROCEED;
 }
 
@@ -290,8 +290,8 @@ ByteSinkDatum::allocateBytes(int n)
   dat.data = (char*) malloc(n);
   if (dat.data==0)
     return raiseGeneric("Malloc failed during save",
-			cons(OZ_pairA("Error",oz_atom(OZ_unixError(errno))),
-			     nil()));
+			oz_cons(OZ_pairA("Error",oz_atom(OZ_unixError(errno))),
+				oz_nil()));
   return PROCEED;
 }
 
@@ -403,12 +403,12 @@ ByteSource::getTerm(OZ_Term out, const char *compname)
     OZ_Term vergot = oz_atom(versiongot);
     delete versiongot;
     return raiseGeneric("Version mismatch when loading of pickle",
-			mklist(OZ_pairA("File",oz_atom(compname)),
-			       OZ_pairA("Expected",oz_atom(PERDIOVERSION)),
-			       OZ_pairA("Got",vergot)));
+			oz_mklist(OZ_pairA("File",oz_atom(compname)),
+				  OZ_pairA("Expected",oz_atom(PERDIOVERSION)),
+				  OZ_pairA("Got",vergot)));
   } else {
     return raiseGeneric("Trying to load non-pickle",
-			cons(OZ_pairA("File",oz_atom(compname)),nil()));
+			oz_cons(OZ_pairA("File",oz_atom(compname)),oz_nil()));
   }
 }
 
@@ -430,7 +430,7 @@ ByteSource::makeByteStream(ByteStream*& stream)
     pos = stream->beginRead(max);
   }
   if (total==0)
-    return raiseGeneric("Empty byte source",nil());
+    return raiseGeneric("Empty byte source",oz_nil());
 
   return PROCEED;
 }
@@ -456,7 +456,8 @@ loop:
   if (got < 0) {
     if (errno==EINTR) goto loop;
     return raiseGeneric("Read error during load",
-			cons(OZ_pairA("Error",oz_atom(OZ_unixError(errno))),nil()));
+			oz_cons(OZ_pairA("Error",oz_atom(OZ_unixError(errno))),
+				oz_nil()));
   }
   return PROCEED;
 }
@@ -504,8 +505,8 @@ OZ_Return loadFile(char *filename,OZ_Term out)
   int fd = strcmp(filename,"-")==0 ? STDIN_FILENO : open(filename,O_RDONLY);
   if (fd < 0) {
     return raiseGeneric("Open failed during load",
-			mklist(OZ_pairA("File",oz_atom(filename)),
-			       OZ_pairA("Error",oz_atom(OZ_unixError(errno)))));
+			oz_mklist(OZ_pairA("File",oz_atom(filename)),
+				  OZ_pairA("Error",oz_atom(OZ_unixError(errno)))));
   }
   return loadFD(fd,out,filename);
 }
@@ -557,9 +558,9 @@ void doRaise(TaggedRef controlvar, char *msg, const char *url,URLAction act)
 {
   ControlVarRaise(controlvar,
 		  makeGenericExc("Error in URL handler",
-				 mklist(OZ_pairA("Message",oz_atom(msg)),
-					OZ_pairA("Action",oz_atom(ACTION_STRING(act))),
-					OZ_pairA("URL",oz_atom(url)))));
+				 oz_mklist(OZ_pairA("Message",oz_atom(msg)),
+					   OZ_pairA("Action",oz_atom(ACTION_STRING(act))),
+					   OZ_pairA("URL",oz_atom(url)))));
 }
 
 static
@@ -682,7 +683,7 @@ OZ_Return getURL(const char *url, TaggedRef out, URLAction act)
   HANDLE thrd = (HANDLE) _beginthreadex(NULL,0,&fetchThread,ui,0,&tid);
   if (thrd==NULL)
     return raiseGeneric("getURL: start thread failed",
-			cons(OZ_pairA("URL",oz_atom(url)),nil()));
+			oz_cons(OZ_pairA("URL",oz_atom(url)),oz_nil()));
   int pid = 0;
 
 #else
@@ -690,7 +691,7 @@ OZ_Return getURL(const char *url, TaggedRef out, URLAction act)
   int fds[2];
   if (pipe(fds)<0) {
     return raiseGeneric("getURL: system call 'pipe' failed",
-			cons(OZ_pairA("URL",oz_atom(url)),nil()));
+			oz_cons(OZ_pairA("URL",oz_atom(url)),oz_nil()));
   }
 
   pid_t pid = fork();
@@ -704,7 +705,7 @@ OZ_Return getURL(const char *url, TaggedRef out, URLAction act)
     }
   case -1:
     return raiseGeneric("getURL: system call 'fork' failed",
-			cons(OZ_pairA("URL",oz_atom(url)),nil()));
+			oz_cons(OZ_pairA("URL",oz_atom(url)),oz_nil()));
   default:
     break;
   }
@@ -850,7 +851,7 @@ OZ_BI_define(BIGetPID,0,1)
 		      oz_int(mySite->getTimeStamp()->pid)));
   // NOTE: converting time_t to an unsigned long, maybe a [long] double!
 
-  OZ_Term l = cons(host,cons(port,cons(time,nil())));
+  OZ_Term l = oz_cons(host,oz_cons(port,oz_cons(time,oz_nil())));
   OZ_RETURN(OZ_recordInit(OZ_atom("PID"),l));
 } OZ_BI_end
 
