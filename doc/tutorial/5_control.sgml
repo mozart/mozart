@@ -149,7 +149,7 @@ end
 
 <SECTION id=control.anonymous><TITLE>Anonymous Procedures and Variable Initialization</TITLE>
 <P>One could ask why a variable is bound to a procedure in a way that
-is different from the variable being bound to a record:
+is different from it being bound to a record, e.g.
 <<X = ?{f(...)}>>? The answer is that what you see is just a syntactic
 variant of the equivalent form
 
@@ -221,7 +221,9 @@ end
 to suppress the introduction of the inner <<Y>> in the L.H.S. of the
 initializing equality by using an exclamation mark <<!>> as
 follows. An exclamation mark <<!>> is only meaningful in the L.H.S. of
-an initializing equality.
+an initializing equality <NOTE FOOT> In fact the exclamation mark <<!>> can be
+used in other situation where you want to suppress the introduction of
+new variables, for example in pattern matching constructs</NOTE>.
 <<<
 local
    Y = 1
@@ -287,19 +289,9 @@ end
 the locally introduced variables <<K1>>, <<V1>>, <<T1>> and <<T2>>.
 
 <P>Oz provides an explicit pattern-matching case statement, which
-allows implicit introduction of variables in the patterns. Two forms
-exist for the case-statement:
+allows implicit introduction of variables in the patterns.
 
-<SUBSECTION><TITLE/Sequential Case/
-<P><<<
-case E of ?{Pattern_1} then ?{S1}
-elseof ?{Pattern_2} then ?{S2}
-elseof ...
-else ?{S} end
->>>
-
-<SUBSECTION><TITLE/Parallel Case/
-<!-- DENYS: the parallel case is being phased out -->
+<SUBSECTION><TITLE/Case Statement/
 <P><<<
 case E of ?{Pattern_1} then ?{S1}
 [] ?{Pattern_2} then ?{S2}
@@ -309,16 +301,32 @@ else ?{S} end
 
 <P>All variables introduced in ?{Pattern_i} are implicitly
 declared, and have a scope stretching over the corresponding
-?{Si}. In the first case-matching statement, the patterns
-are tested in order. In the second, called <EM>parallel</EM>
-<!-- DENYS: don't say that the order is indeterminate -->
-<!-- DENYS: rather say that all clauses are attempted concurrently -->
-case-matching statement, the order is indeterminate. The <<else>> part
+?{Si}.
+
+<SUBSECTION><TITLE>Semantics</TITLE>
+<P>Let us assume that expression <<E>> is evaluated to <<E'>>.
+Executing the case statement will sequentially try to match <<E'>> against
+the patterns ?{Pattern_1}, ?{Pattern_2}, ...,?{Pattern_n} in this order.
+Matching <<E'>> against <<Pattern_i>> is done in left-to-right depth-first
+manner.
+
+<P><LIST>
+
+ <ITEM>If <<E'>> matches <<Pattern_i>> without binding any variable
+        occuring in <<E'>>, the corresponding ?{Si} statement is executed.
+
+ <ITEM>If <<E'>> matches <<Pattern_i>> but binds some variables
+        occuring in <<E'>>, the thread suspends
+
+ <ITEM>If the matching of <<E'>> and <<Pattern_i>> fails, <<E'>> is
+tried against the next pattern <<Pattern_i+1>>, otherwise the <<else>>
+statement ?{S} is executed.
+</LIST>
+
+<P>The <<else>> part
 may be omitted, in which case an exception is raised if all matches
 fail.
 
-
-<SUBSECTION><TITLE/Semantics/
 <P>Again, in each pattern one may suppress the introduction of new
 local variable by using <<!>>. For example, in the following example:
 
@@ -353,7 +361,7 @@ end
 proc {Insert Key Value TreeIn ?TreeOut}
    case TreeIn
    of nil then TreeOut = tree(Key Value nil nil)
-   elseof tree(K1 V1 T1 T2) then
+   [] tree(K1 V1 T1 T2) then
       if Key == K1 then TreeOut = tree(Key Value T1 T2)
       elseif Key &lt; K1 then T in
         TreeOut = tree(K1 V1 T T2)
@@ -369,23 +377,27 @@ end
 
 <P>The expression ?{E} we may match against, could be any record
 structure, and not just a variable. This allows multiple argument
-matching, as shown in <PTR TO="BinMerge">, which depicts a classical
-nondeterministic stream-merge procedure. Here the use of parallel-case
-statement is essential.
+matching, as shown in <PTR TO="SMerge">, which
+expects to sorted lists <<Xs>> and <<Ys>> and merges them into a
+sorted list <<Zs>>.
 
-<P><FIGURE ID="BinMerge" CLASS="Figure">
-<CAPTION>Binary Merge of two lists</CAPTION>
+
+<P><FIGURE ID="SMerge" CLASS="Figure">
+<CAPTION>Merging two sorted lists</CAPTION>
 <<<
-proc {Merge Xs Ys ?Zs}
+proc {SMerge Xs Ys Zs}
    case Xs#Ys
-   of nil#Ys then Zs = Ys
-   [] Xs#nil then Zs = Xs
-   [] (X|Xr)#Ys then Zr in
-        Zs = X|Zr
-        {Merge Ys Xr Zr}
-   [] Xs#(Y|Yr) then Zr in
-        Zs = Y|Zr
-        {Merge Yr Xs Zr}
+   of nil#Ys then Zs=Ys
+   [] Xs#nil then Zs=Xs
+   [] (X|Xr) # (Y|Yr) then
+      if X=<Y then Zr in
+         Zs = X|Zr
+         {SMerge Xr Ys Zr}
+      else Zr in
+         Zs = Y|Zr
+         {SMerge Xs Yr Zr}
+      end
+   else {Browse Xs#Ys}
    end
 end
 >>>
