@@ -85,15 +85,9 @@ define(mxzArg,`ifelse($1,Index,int &,
                    $1,Site2,DSite* &)'
             `ifelse($2,`',`',`,')')
 
-#ifdef USE_FAST_UNMARSHALER
 undefine(`message')
 define(message,`void unmarshal_$1(MsgBuffer*, mxzArg($2,$3)mxzArg($3,$4)mxzArg($4,$5)mxzArg($5,$6)mxzArg($6,$7));')
 include(EMUDIR/msgFormat.m4)
-#else
-undefine(`message')
-define(message,`void unmarshalRobust_$1(MsgBuffer*, mxzArg($2,$3)mxzArg($3,$4)mxzArg($4,$5)mxzArg($5,$6)mxzArg($6,$7));')
-include(EMUDIR/msgFormat.m4)
-#endif
 
 void marshalDSite(DSite *, MsgBuffer *);
 void marshalVarObject(Object *o, MsgBuffer *bs, GName *gnclass);
