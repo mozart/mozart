@@ -885,18 +885,6 @@ SuspList * SuspList::gc(Bool tcFlag)
   return (ret);
 }
 
-inline
-void GenCVariable::gc(void)
-{
-  Assert(getType()==FDVariable);
-  switch (getType()){
-  case FDVariable:
-  default:
-    ((GenFDVariable*)this)->gc();
-    break;
-  }
-}
-
 
 // This procedure collects the entry points into heap provided by variables,
 // without copying the tagged reference of the variable itself.
@@ -1009,6 +997,44 @@ void GenFDVariable::gc(void)
       fdSuspList[i] = fdSuspList[i]->gc(NO);
 }
 
+void DynamicTable::gc(void)
+{
+    Assert(isPwrTwo(size));
+    // Copy the actual table:
+    HashElement* tableCopy=(HashElement*) gcRealloc(table,size*sizeof(HashElement));
+    // Take care of all TaggedRefs in the table:
+    for (dt_index i=0; i<size; i++) {
+        if (table[i].ident!=NULL) {
+            gcTagged(table[i].ident, tableCopy[i].ident);
+            gcTagged(table[i].value, tableCopy[i].value);
+        }
+    }
+    // Update the pointer in the copied block:
+    table=tableCopy;
+}
+
+
+void GenOFSVariable::gc(void)
+{
+    dynamictable.gc();
+}
+
+
+inline
+void GenCVariable::gc(void)
+{
+  Assert(getType()==FDVariable || getType()==OFSVariable);
+  switch (getType()){
+  case FDVariable:
+    ((GenFDVariable*)this)->gc();
+    break;
+  case OFSVariable:
+    ((GenOFSVariable*)this)->gc();
+    break;
+  default:
+    break;
+  }
+}
 
 inline
 Bool updateVar(TaggedRef var)

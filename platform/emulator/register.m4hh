@@ -308,10 +308,13 @@ define(M4INSTRTWOREGS,``''
                  DEREF(term,termPtr,tag);
 
                  if (isAnyVar(term)) {
-                   SRecord *srecord = new SRecord(ff,label,-1,NO);
+                   SRecord *srecord = new SRecord(ff,label,am.currentUVarPrototype); // fill w/unb. var.
                    if(isCVar(term) == OK){
-                     if(tagged2CVar(term)->unify(termPtr, term, tag, NULL,
-                                                 makeTaggedSRecord(srecord), SRECORD)) {
+                     TaggedRef srecordRef=makeTaggedSRecord(srecord);
+                     if(tagged2CVar(term)->unify(termPtr, term, tag,
+                                                 &srecordRef, srecordRef, SRECORD)) {
+                       sPointer = srecord->getRef();
+                       mode = READ;
                        DISPATCH(4);
                      }
                    } else {

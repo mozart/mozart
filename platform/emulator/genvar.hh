@@ -32,7 +32,8 @@
 
 
 enum TypeOfGenCVariable {
-  FDVariable
+  FDVariable,
+  OFSVariable
 };
 
 class GenCVariable: public SVariable {
@@ -76,6 +77,7 @@ public:
 };
 
 #include "fdgenvar.hh"
+#include "ofsgenvar.hh"
 
 #ifndef OUTLINE
 #include "genvar.icc"

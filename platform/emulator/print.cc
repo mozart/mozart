@@ -176,6 +176,14 @@ PRINT(GenCVariable){
       me->getDom().print(stream, 0);
       break;
     }
+
+  case OFSVariable:
+    {
+      GenOFSVariable * me = (GenOFSVariable *) this;
+      stream << " ofs(" << me->getNumOfFeatures() << ')';
+      break;
+    }
+
   default:
     error("Unexpected type generic variable at %s:%d.",
           __FILE__, __LINE__);
@@ -794,6 +802,8 @@ PRINTLONG(GenCVariable){
   switch(getType()){
   case FDVariable:
     ((GenFDVariable*)this)->getDom().printLong(stream, offset);
+    break;
+  case OFSVariable:
     break;
   default:
     error("Unexpected type generic variable at %s:%d.",
