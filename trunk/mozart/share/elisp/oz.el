@@ -846,7 +846,8 @@ the gdb commands `cd DIR' and `directory'."
 
 (defun oz-feed-line (arg)
   "Feed the current line to the Oz Compiler.
-With ARG, feed that many lines."
+With ARG, feed that many lines.  If ARG is negative, feed that many
+preceding lines as well as the current line."
   (interactive "p")
   (let ((region (oz-line-region arg)))
     (oz-feed-region (car region) (cdr region))))
@@ -857,9 +858,8 @@ If the point is exactly between two paragraphs, feed the preceding
 paragraph.  With ARG, feed that many paragraphs.  If ARG is negative,
 feed that many preceding paragraphs as well as the current paragraph."
   (interactive "p")
-  (save-excursion
-    (let ((region (oz-paragraph-region arg)))
-      (oz-feed-region (car region) (cdr region)))))
+  (let ((region (oz-paragraph-region arg)))
+    (oz-feed-region (car region) (cdr region))))
 
 (defun oz-send-string (string)
   "Feed STRING to the Oz Compiler, restarting it if it died."
@@ -1204,22 +1204,15 @@ and the following line."
   (cond (oz-auto-indent (oz-indent-line))))
 
 (defun oz-indent-buffer ()
-  "Indent each line in the current buffer."
+  "Indent every line in the current buffer."
   (interactive)
-  (goto-char (point-min))
-  (let ((current-line (count-lines 1 (point-min))))
-    (while (< (point) (point-max))
-      (message "Indenting line %s ..." current-line)
-      (oz-indent-line t)
-      (setq current-line (1+ current-line))
-      (forward-line 1)))
-  (message nil))
+  (oz-indent-region (point-min) (point-max)))
 
 (defun oz-indent-region (start end)
-  "Indent each line in the current region."
+  "Indent every line in the current region."
   (interactive "r")
+  (goto-char start)
   (let ((current-line (count-lines 1 start)))
-    (goto-char start)
     (while (< (point) end)
       (message "Indenting line %s ..." current-line)
       (oz-indent-line t)
@@ -1564,8 +1557,6 @@ Negative arg -N means kill N Oz expressions after the cursor."
     (define-key map "\C-c\C-f\C-h" 'oz-profiler-stop))
 
   (define-key map "\M-\C-x"	'oz-feed-paragraph)
-  (define-key map "\M-\C-a"	'oz-beginning-of-defun)
-  (define-key map "\M-\C-e"	'oz-end-of-defun)
 
   (define-key map [(control c) (control h)] 'oz-halt)
   (define-key map "\C-c\C-h"    'oz-halt)
@@ -2248,14 +2239,14 @@ If it is, then remove it."
   "Switch to the next buffer in the buffer list which runs in oz-mode."
   (interactive)
   (bury-buffer)
-  (oz-walk-trough-buffers (buffer-list)))
+  (oz-walk-through-buffers (buffer-list)))
 
 (defun oz-next-buffer ()
   "Switch to the last buffer in the buffer list which runs in oz-mode."
   (interactive)
-  (oz-walk-trough-buffers (reverse (buffer-list))))
+  (oz-walk-through-buffers (reverse (buffer-list))))
 
-(defun oz-walk-trough-buffers (buffers)
+(defun oz-walk-through-buffers (buffers)
   (let ((none-found t) (cur (current-buffer)))
     (while (and buffers none-found)
       (set-buffer (car buffers))
@@ -2301,8 +2292,8 @@ If it is, then remove it."
     (oz-to-coresyntax-region (car region) (cdr region))))
 
 (defun oz-to-coresyntax-region (start end)
-   (interactive "r")
-   (oz-directive-on-region start end "\\core" ".ozc"))
+  (interactive "r")
+  (oz-directive-on-region start end "\\core" ".ozc"))
 
 (defun oz-to-emulatorcode-buffer ()
   (interactive)
@@ -2319,8 +2310,8 @@ If it is, then remove it."
     (oz-to-emulatorcode-region (car region) (cdr region))))
 
 (defun oz-to-emulatorcode-region (start end)
-   (interactive "r")
-   (oz-directive-on-region start end "\\machine" ".ozm"))
+  (interactive "r")
+  (oz-directive-on-region start end "\\machine" ".ozm"))
 
 (defun oz-directive-on-region (start end directive suffix)
   "Applies a directive to the region."
@@ -2361,8 +2352,8 @@ If it is, then remove it."
 Assuming it to contain an expression, it is enclosed by an application
 of the procedure Browse."
   (interactive "r")
-  (let ((contents (buffer-substring start end)))
-    (oz-send-string (concat "{Browse " contents "}"))
+  (let ((contents (oz-get-region start end)))
+    (oz-send-string (concat "{Browse\n" contents "}"))
     (setq oz-last-fed-region-start (copy-marker start))))
 
 (defun oz-feed-line-browse (arg)
@@ -2441,7 +2432,7 @@ of the procedure Browse."
 ;; oz-goto-next-error (C-x ` in compiler, emulator and *.oz buffers)
 ;; Visit next compilation error message and corresponding source code.
 ;; Applies to most recent compilation, started with one of the feed
-;; commands. However, if called in compiler or emulator buffer, it
+;; commands.  However, if called in compiler or emulator buffer, it
 ;; visits the next error message following point (no matter whether
 ;; that came from the latest compilation or not).
 
