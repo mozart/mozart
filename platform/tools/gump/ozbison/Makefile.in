@@ -11,7 +11,7 @@ RM		= @RM@ -f
 DYNLD		= @DYNLD@
 
 CC		= @CC@
-CFLAGS		= @CFLAGS@ -O6
+CFLAGS		= @CFLAGS@
 INCLUDES	= -I$(SRCTOP)/platform/emulator @CPPFLAGS@
 LDFLAGS		= @LDFLAGS@
 LIBS		= @LIBS@ -lc
@@ -20,13 +20,13 @@ OBJS =	LR0.o allocate.o closure.o conflicts.o derives.o gram.o \
 	lalr.o main.o nullable.o output.o print.o reader.o reduce.o \
 	symtab.o warshall.o version.o alloca.o
 
-all: ozbison.so
+all: Bison.so
 
 %.o: %.c
 	$(CC) $(CFLAGS) $(INCLUDES) -c $< -o $*.o
 
-ozbison.so: $(OBJS)
-	$(DYNLD) -o ozbison.so $(OBJS) $(LDFLAGS) $(LIBS)
+Bison.so: $(OBJS)
+	$(DYNLD) -o Bison.so $(OBJS) $(LDFLAGS) $(LIBS)
 
 clean veryclean realclean:
 	$(RM) *~ *.o *.so
