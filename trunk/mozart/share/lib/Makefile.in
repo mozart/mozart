@@ -3,10 +3,10 @@ SRCDIR		= @srcdir@
 export SRCDIR
 TOPDIR		= @TOPDIR@
 
-OZHOME		= @prefix@
+PREFIX=		@prefix@
 
-OZBIN		= $(OZHOME)/bin
-OZLIB		= $(OZHOME)/lib
+OZBIN		= $(PREFIX)/bin
+OZLIB		= $(PREFIX)/lib
 BITMAPDIR	= $(OZLIB)/bitmaps
 
 SHELL		= @SH@
@@ -375,10 +375,10 @@ bootstrap: ${OZMA_LIB}
 
 STAGE1=./stage1
 stage1:
-	make install OZHOME=$(STAGE1)
+	make install PREFIX=$(STAGE1)
 
 stage1-bootstrap:
-	make bootstrap OZHOME=$(STAGE1)
+	make bootstrap PREFIX=$(STAGE1)
 
 stage2:
 	make \
