@@ -179,9 +179,6 @@ import
       <tr/<td/<<Error>>/
           <td/Error handling routines/
           <td/<ptr.extern to="ozdoc:system" key="chapter.error">//
-      <tr/<td/<<ErrorRegistry>>/
-          <td/Registration of error handlers/
-          <td/<ptr.extern to="ozdoc:system" key="chapter.errorregistry">//
       <tr/<td/<<Finalize>>/
           <td/Automatic garbage collection for native entities/
           <td/<ptr.extern to="ozdoc:system" key="chapter.finalize">//
