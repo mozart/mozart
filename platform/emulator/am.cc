@@ -1389,6 +1389,15 @@ void AM::pushToplevel(ProgramCounter pc)
   }
 }
 
+
+// this one should not be inlined
+void AM::pushContX(ProgramCounter PC, RefsArray Y, RefsArray G,
+                   RefsArray X, int I) {
+  int i=I;
+  RefsArray x=i>0?copyRefsArray(X,i):0;
+  cachedStack->pushCont(PC,Y,G,x);
+}
+
 /*
  * in dispose: check if there are more toplevel tasks
  */
