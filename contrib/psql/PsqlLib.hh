@@ -37,6 +37,7 @@
 
 int osGetAlarmTimerInterval();
 void osSetAlarmTimer(int t);
+extern "C" void ozpwarning(const char*);
 
 
 #endif // __PSQLLIB__

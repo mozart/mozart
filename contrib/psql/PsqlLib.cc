@@ -28,6 +28,9 @@
 
 // include stuff for PostgreSQL
 #include "libpq-fe.h"
+#ifdef Assert
+#undef Assert
+#endif
 
 #include "PsqlLib.hh"
 
