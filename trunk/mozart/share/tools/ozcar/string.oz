@@ -29,7 +29,7 @@ local
    %% strchr: {Str.chr "Hallo Benni" & } --> " Benni"
    fun {StrChr S C}
       case S of C0|R then
-	 case C == C0 then S
+	 if C == C0 then S
 	 else {StrChr R C}
 	 end
       [] nil then nil
@@ -39,8 +39,8 @@ local
    %% strrchr: {Str.rchr "/var/spool/mail/benni" &/} --> "/benni"
    local
       fun {DoStrRChr S A C}
-	 case S == nil then nil
-	 elsecase S.1 == C then S.1|A
+	 if S == nil then nil
+	 elseif S.1 == C then S.1|A
 	 else {DoStrRChr S.2 S.1|A C}
 	 end
       end

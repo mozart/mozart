@@ -73,7 +73,7 @@ SmallBoldFont
 DefaultFont
 BoldFont
 
-case Platform == WindowsPlatform then
+if Platform == WindowsPlatform then
    SmallFont           = '-*-courier-medium-r-*-*-12-*-*-*-*-*-*-*'
    SmallBoldFont       = '-*-courier-bold-r-*-*-12-*-*-*-*-*-*-*'
    DefaultFont         = SmallFont
@@ -116,7 +116,7 @@ DefaultForeground
 SelectedBackground
 SelectedForeground
 
-case Tk.isColor andthen Platform \= WindowsPlatform then
+if Tk.isColor andthen Platform \= WindowsPlatform then
    DefaultBackground       = '#f0f0f0'
    DefaultForeground       = black
    SelectedBackground      = '#7070c0'

@@ -36,15 +36,15 @@ local
 	 Right = {FormatFeature L m nil}
 	 Both  = Left \= nil andthen Right \= nil
       in
-	 Left # case Both then LRDelimiter else nil end # Right
+	 Left # if Both then LRDelimiter else nil end # Right
       end
 
       fun {CheckNil A}
-	 case A == nil then nil else A # FDelimiter end
+	 if A == nil then nil else A # FDelimiter end
       end
 
       fun {FormatItems B}
-	 case B == nil then nil else
+	 if B == nil then nil else
 	    {FoldL B
 	     fun {$ A L}
 		case L
@@ -91,10 +91,10 @@ local
 	    line:    {CondSelect Frame line unit}
 	    column:  {CondSelect Frame column unit}
 	    time:    Frame.time
-	    name:    case Kind == 'call' then
-			case {Not {HasFeature Frame data}} then 'unknown'
-			elsecase {IsDet Data} then
-			   case {IsProcedure Data} then
+	    name:    if Kind == 'call' then
+			if {Not {HasFeature Frame data}} then 'unknown'
+			elseif {IsDet Data} then
+			   if {IsProcedure Data} then
 			      {System.printName Data}
 			   else
 			      {Value.toVirtualString Data 0 0}
@@ -165,10 +165,10 @@ in
 
       meth getFrame(Nr $)
 	 S = @Size
-	 N = case     Nr == ~1  then S
-	     elsecase Nr < 1    then 1
-	     elsecase Nr > S    then S
-	     else                    Nr end
+	 N = if     Nr == ~1  then S
+	     elseif Nr < 1    then 1
+	     elseif Nr > S    then S
+	     else                  Nr end
       in
 	 {Dictionary.condGet self.D N unit}
       end
@@ -225,19 +225,19 @@ in
       meth print
 	 State = {CheckState self.T}
       in
-	 case @Rebuild andthen State \= running then
+	 if @Rebuild andthen State \= running then
 	    {OzcarMessage 'stack,print: rebuild flag detected'}
 	    StackManager,ReCalculate
 	 else
 	    Frames = {Dictionary.items self.D}
 	    Depth  = @Size
-	    Last   = case Depth > 0 then {Dictionary.get self.D Depth}
+	    Last   = if Depth > 0 then {Dictionary.get self.D Depth}
 		     else nil
 		     end
 	 in
 	    {Ozcar PrivateSend(printStack(id:self.I frames:Frames
 					  depth:Depth last:Last))}
-	    case State == running then
+	    if State == running then
 	       {Ozcar PrivateSend(markStack(inactive))}
 	    else
 	       {Ozcar PrivateSend(markStack(active))}
@@ -248,13 +248,13 @@ in
       meth getTop($)
 	 S = @Size
       in
-	 case S == 0 then unit else {Dictionary.get self.D S} end
+	 if S == 0 then unit else {Dictionary.get self.D S} end
       end
 
       meth emacsBarToTop
 	 F = StackManager,getTop($)
       in
-	 case F == unit then skip else
+	 if F \= unit then
 	    S = {CheckState self.T}
 	 in
 	    {SendEmacs bar(file:F.file line:F.line column:F.column state:S)}
@@ -262,13 +262,13 @@ in
       end
 
       meth printTop
-	 case @Rebuild then
+	 if @Rebuild then
 	    {OzcarMessage 'stack,printTop: rebuild flag detected'}
 	    StackManager,ReCalculate
 	 else
 	    S = @Size
 	 in
-	    case S == 0 then skip else
+	    if S \= 0 then
 	       TopFrame = {Dictionary.get self.D S}
 	    in
 	       {Ozcar PrivateSend(printStackFrame(frame:TopFrame delete:true))}
@@ -278,7 +278,7 @@ in
 
       meth entry(Frame)
 	 S = @Size
-	 Key = case S == 0 orelse {Dictionary.get self.D S}.dir == entry then
+	 Key = if S == 0 orelse {Dictionary.get self.D S}.dir == entry then
 		  S + 1
 	       else
 		  S
@@ -289,12 +289,12 @@ in
       end
 
       meth CountFramesWithoutDebug(I $)
-	 case I == 0 then
+	 if I == 0 then
 	    0
 	 else
 	    Frame = {Dictionary.get self.D I}
 	 in
-	    case Frame.kind == call andthen Frame.args == unit then
+	    if Frame.kind == call andthen Frame.args == unit then
 	       StackManager, CountFramesWithoutDebug(I - 1 $) + 1
 	    else
 	       0
@@ -305,11 +305,11 @@ in
       meth exit(Frame)
 	 S = @Size
       in
-	 case S == 0 then
+	 if S == 0 then
 	    {OzcarError 'internal stack inconsistency; recalculating stack'}
 	    StackManager, ReCalculate
 	 else
-	    Key = case {Dictionary.get self.D S}.dir == entry then S
+	    Key = if {Dictionary.get self.D S}.dir == entry then S
 		  else N in
 		     StackManager,CountFramesWithoutDebug(S - 1 ?N)
 		     {For 0 N 1
@@ -320,7 +320,7 @@ in
 		  end
 	 in
 	    Size <- Key
-	    case Key > 0 then
+	    if Key > 0 then
 	       {Dictionary.put self.D Key {S2F Key Frame}}
 	    else
 	       {OzcarError 'internal stack inconsistency; resuming thread'}
@@ -340,7 +340,7 @@ in
       end
 
       meth ReCalculate(S<=noStack)
-	 CurrentStack = case S == noStack then StackManager,GetStack($)
+	 CurrentStack = if S == noStack then StackManager,GetStack($)
 			else S end
       in
 	 {OzcarMessage 'recalculating stack of thread ' # self.I}
@@ -369,7 +369,7 @@ in
       meth getPos(file:?F line:?L column:?C)
 	 S = @Size
       in
-	 case S == 0 then
+	 if S == 0 then
 	    F = ''
 	    L = unit
 	    C = unit

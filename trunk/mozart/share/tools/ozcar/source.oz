@@ -32,18 +32,18 @@ in
 
       meth bpAt(File Line YesNo)
 	 Succeeded   = {Debug.breakpointAt File Line YesNo}
-	 P           = case {UnknownFile File} then ""
+	 P           = if {UnknownFile File} then ""
 		       else 'file ' # {StripPath File} # ', '
 		       end # 'line ' # Line
       in
-	 case YesNo then
-	    case Succeeded then
+	 if YesNo then
+	    if Succeeded then
 	       {Ozcar PrivateSend(status('Breakpoint in ' # P))}
 	    else
 	       {Ozcar PrivateSend(status('Failed to set breakpoint in ' # P))}
 	    end
 	 else
-	    case Succeeded then
+	    if Succeeded then
 	       {Ozcar PrivateSend(status('Deleted breakpoint in ' # P))}
 	    else
 	       {Ozcar PrivateSend(status('Failed to delete breakpoint in ' #

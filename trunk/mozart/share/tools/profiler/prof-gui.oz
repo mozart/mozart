@@ -24,7 +24,7 @@ local
    local
       fun {DoWhere Xs Y N}
 	 X|Xr = Xs in
-	 case Y == X then N else
+	 if Y == X then N else
 	    {DoWhere Xr Y N+1}
 	 end
       end
@@ -35,7 +35,7 @@ local
    end
 
    fun {CheckName N}
-      case N == '' then '$' else N end
+      if N == '' then '$' else N end
    end
 
    local
@@ -43,17 +43,17 @@ local
       D =  1024
    in
       fun {FormatSize B}
-	 case     B < C   then B           # 'b'
-	 elsecase B < C*D then B div D     # 'k'
-	 else                  B div (D*D) # 'M'
+	 if     B < C   then B           # 'b'
+	 elseif B < C*D then B div D     # 'k'
+	 else                B div (D*D) # 'M'
 	 end
       end
    end
 
    fun {FormatTime T}
-      case T < 60 then
+      if T < 60 then
 	 T # 's'
-      elsecase T < 3600 then
+      elseif T < 3600 then
 	 T div 60 # 'm' # T mod 60 # 's'
       else H = T mod 3600 in
 	 T div 3600 # 'h' # H div 60 # 'm' # H mod 60 # 's'
@@ -270,7 +270,7 @@ in
       end
 
       meth UpdateBars
-	 case @Stats == nil then
+	 if @Stats == nil then
 	    Gui,DeleteBars(false)
 	    Gui,UpdateSumInfo
 	 else
@@ -278,7 +278,7 @@ in
 					   X.@SortBy >= ConfigThreshold.@SortBy
 					end}
 	    SortedData = {Sort RawData fun {$ X Y} X.@SortBy > Y.@SortBy end}
-	    Max        = case SortedData == nil then 0.1 else
+	    Max        = if SortedData == nil then 0.1 else
 			    {Int.toFloat SortedData.1.@SortBy} + 0.1 end
 	    XStretch   = 207.0
 
@@ -292,7 +292,7 @@ in
 	    try
 	       {List.forAllInd SortedData
 		proc {$ I S}
-		   case I > MaxEntries then
+		   if I > MaxEntries then
 		      raise tooMuchEntries end
 		   else
 		      CTag   = {New Tk.canvasTag tkInit(parent:C)}
@@ -335,12 +335,12 @@ in
       end
 
       meth DeleteBars(RemoveEmacsBar<=true)
-	 case RemoveEmacsBar then
+	 if RemoveEmacsBar then
 	    {self.BarCanvas tk(conf scrollregion: q(7 3 7 3))}
-	    case {Cget emacs} then
+	    if {Cget emacs} then
 	       {Emacs.condSend.interface removeBar}
-	    else skip end
-	 else skip end
+	    end
+	 end
 	 local
 	    C = {self.BarCanvas w($)}
 	 in
@@ -349,15 +349,15 @@ in
 		Gui,Enqueue(o(C delete T))
 	     end}
 	 end
-	 case RemoveEmacsBar then
+	 if RemoveEmacsBar then
 	    Gui,ClearQueue
-	 else skip end
+	 end
 	 TagList    <- nil
 	 StatsCount <- 0
       end
 
       meth Enqueue(Ticklet) NewTl in
-	 case {IsDet @MsgListTl} then
+	 if {IsDet @MsgListTl} then
 	    MsgList <- Ticklet|NewTl
 	 else
 	    @MsgListTl = Ticklet|NewTl
@@ -383,7 +383,7 @@ in
       meth UpdateProcInfo(S)
 	 T = {self.ProcText w($)}
       in
-	 case S == nil then
+	 if S == nil then
 	    {Tk.batch [o(T conf state:normal)
 		       o(T delete '0.0' 'end')
 		       o(T conf state:disabled)]}
@@ -399,17 +399,17 @@ in
 			 ' Smpl: ' # S.samples # '\n' #
 			 ' Heap: ' # {FormatSize S.heap})
 		       o(T conf state:disabled)]}
-	    case {Cget emacs} then
+	    if {Cget emacs} then
 	       {Emacs.condSend.interface
 		bar(file:S.file line:S.line column:S.column state:runnable)}
-	    else skip end
+	    end
 	 end
       end
 
       meth UpdateSumInfo
 	 T = {self.SumText w($)}
       in
-	 case @Stats == nil then
+	 if @Stats == nil then
 	    {Tk.batch [o(T conf state:normal)
 		       o(T delete '0.0' 'end')
 		       o(T insert 'end' ' No info available')
@@ -438,7 +438,7 @@ in
 	 StatusSync <- New = unit
 	 thread
 	    {WaitOr New {Alarm TimeoutToStatus}}
-	    case {IsDet New} then skip else
+	    if {IsDet New} then skip else
 	       Gui,doStatus(S M C)
 	    end
 	 end
@@ -447,7 +447,7 @@ in
       meth doStatus(S M<=clear C<=DefaultForeground)
 	 W = self.StatusText
       in
-	 case M == clear then
+	 if M == clear then
 	    Gui,Clear(W)
 	 else
 	    Gui,Enable(W)

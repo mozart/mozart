@@ -129,7 +129,7 @@ local
 	    Top = {Tk.getTclName self.toplevel}
 	    Cur = {Tk.return focus(displayof:self.toplevel)}
 	 in
-	    case Cur == Top then
+	    if Cur == Top then
 	       {ApplyAndExit}
 	    else
 	       @ReturnSync = unit
