@@ -60,6 +60,10 @@
 
 
     <Meta name="html.split"       value="chapter.browser">
+    <meta name="html.split"	  value="sec.usingthebrowser">
+    <meta name="html.split"	  value="sec.browser.browsercommandsandoptions">
+    <meta name="html.split"	  value="sec.browser.applicationbrowsers">
+    <meta name="html.split"	  value="sec.browser.browsedinformation">
 
     <Meta name="html.split"       value="chapter.panel">
     <Meta name="html.split"       value="section.panel.usage">
