@@ -7079,7 +7079,7 @@ BIspec allSpec2[] = {
   {"halt",0,BIhalt},
   {"traceBack",0,BItraceBack},
 
-  {"taskstack",   2, BItaskStack},
+  {"taskstack",   3, BItaskStack},
   {"location",    2, BIlocation},
   {"getThreadByID",2,BIgetThreadByID},
   {"spy",         1, BIspy},

@@ -115,10 +115,11 @@ void debugStreamCall(ProgramCounter PC, char *name,
 
 // ------------------ explore a thread's taskstack ---------------------------
 
-OZ_C_proc_begin(BItaskStack,2)
+OZ_C_proc_begin(BItaskStack,3)
 {
   OZ_declareNonvarArg(0,in);
-  OZ_declareArg(1,out);
+  OZ_declareIntArg(1,depth);
+  OZ_declareArg(2,out);
 
   in = OZ_deref(in);
   if (!isThread(in)) { oz_typeError(0,"Thread"); }
@@ -135,7 +136,7 @@ OZ_C_proc_begin(BItaskStack,2)
   }
 
   TaskStack *taskstack = thread->getTaskStackRef();
-  return OZ_unify(out, taskstack->dbgGetTaskStack(NOCODE, 10));
+  return OZ_unify(out, taskstack->dbgGetTaskStack(NOCODE, depth));
 }
 OZ_C_proc_end
 
