@@ -100,15 +100,6 @@ public:
   RunnableThreadBody(int sz) : taskStack(sz) { }
 #endif
   RunnableThreadBody *gcRTBody();
-
-  void pushTask(ProgramCounter pc,RefsArray y,RefsArray g,RefsArray x)
-  {
-    taskStack.pushCont(pc,y,g,x);
-  }
-  void pushTask(SolveActor * sa)
-  {
-    taskStack.pushLTQ(sa);
-  }
 };
 
 //
@@ -477,7 +468,6 @@ public:
   void propagatorToRunnable ();
   void updateSolveBoardPropagatorToRunnable ();
 
-  void terminate();
   void propagatorToNormal();
 
   //
@@ -524,9 +514,21 @@ public:
   Bool isBelowFailed (Board *top);
 
   //
-  void pushTask(SolveActor * sa) { item.threadBody->pushTask(sa); }
-  void pushDebug (OzDebug *d);
-  void pushCall (TaggedRef pred, RefsArray  x, int n);
+  void pushLTQ(SolveActor * sa) {
+    item.threadBody->taskStack.pushLTQ(sa);
+  }
+  void pushDebug (OzDebug *d) {
+    item.threadBody->taskStack.pushDebug (d);
+  }
+  void pushCall (TaggedRef pred, RefsArray  x, int n) {
+    item.threadBody->taskStack.pushCall(pred, x, n);
+  }
+  void pushCFun(OZ_CFun f, RefsArray  x, int n, Bool copyF) {
+    item.threadBody->taskStack.pushCFun(f, x, n, copyF);
+  }
+  void pushCont(ProgramCounter pc, RefsArray y, RefsArray g, RefsArray x) {
+    item.threadBody->taskStack.pushCont(pc,y,g,x);
+  }
 
 
   Bool hasCatchFlag() { return (state.flags & T_catch); }
@@ -536,10 +538,6 @@ public:
     item.threadBody->taskStack.pushCatch();
   }
 
-  void pushCFunCont (OZ_CFun f, RefsArray  x, int n, Bool copyF);
-  void pushCont (ProgramCounter pc,
-                 RefsArray y, RefsArray g, RefsArray x);
-  void pushCont (Continuation *cont);
   //
   Bool isEmpty();
 

@@ -37,12 +37,14 @@
 #undef inline
 #endif
 
+
 // --------------------------------------------------------------------------
 
 /*
  *  Threads;
  *
  */
+
 void Thread::setExtThreadOutlined (Board *varHome)
 {
   Board *bb = am.currentBoard;
@@ -115,19 +117,6 @@ Bool Thread::isBelowFailed (Board *top)
     bb=bb->getParent();
   }
   return FALSE;
-}
-
-/*
- * terminate a thread
- *  discard all tasks
- */
-
-void Thread::terminate()
-{
-  Assert(hasStack());
-
-  TaskStack *ts = getTaskStackRef();
-  ts->makeEmpty();
 }
 
 void Thread::propagatorToNormal()
