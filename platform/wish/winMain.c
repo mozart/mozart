@@ -19,6 +19,7 @@
 #include <fcntl.h>
 #include <io.h>
 #include <process.h>
+#include <string.h>
 
 #include "tk.h"
 
@@ -110,7 +111,7 @@ PutsCmd(clientData, inter, argc, argv)
 
 typedef struct {
   char *cmd;
-  HANDLE event;
+  int cmdlen;
   DWORD toplevelThread;
   Tcl_AsyncHandler ash;
 } ReaderInfo;
@@ -153,12 +154,14 @@ void watchParent()
   if (handle==0) {
     WishPanic("OpenProcess(%d) failed",pid);
   } else {
-    CreateThread(0,0,watchEmulatorThread,handle,0,&thrid);
+    CreateThread(0,10000,watchEmulatorThread,handle,0,&thrid);
     //_beginthreadex(0,0,watchEmulatorThread,handle,0,&thrid);
   }
 }
 
 
+
+CRITICAL_SECTION lock;
 
 int APIENTRY
 WinMain(hInstance, hPrevInstance, lpszCmdLine, nCmdShow)
@@ -179,6 +182,8 @@ WinMain(hInstance, hPrevInstance, lpszCmdLine, nCmdShow)
 	      WishPanic("cannot open dbgin/dbgout"));
 
     Tcl_SetPanicProc(WishPanic);
+
+    InitializeCriticalSection(&lock);
 
     TkWinXInit(hInstance);
 
@@ -327,9 +332,9 @@ WinMain(hInstance, hPrevInstance, lpszCmdLine, nCmdShow)
       unsigned long thread;
 
       info->ash            = Tcl_AsyncCreate(asyncHandler,(ClientData)info);
-      info->event          = CreateEvent(NULL, TRUE, FALSE, NULL);
       info->toplevelThread = GetCurrentThreadId();
       info->cmd            = NULL;
+      info->cmdlen         = -1;
 
       thread = (unsigned long) CreateThread(NULL,0,readerThread,info,0,&tid);
       if (thread==0) {
@@ -405,12 +410,13 @@ WishPanic TCL_VARARGS_DEF(char *,arg1)
     ExitProcess(1);
 }
 
+
 void cdecl idleProc(ClientData cd)
 {
   ReaderInfo *ri = (ReaderInfo*) cd;
   int code;
 
-  /*  DebugCode(fprintf(dbgin,"\n#### idleProc(%p) called:\n%s\n", interp,ri->cmd);fflush(dbgin));*/
+  EnterCriticalSection(&lock);
 
   code = Tcl_GlobalEval(interp, ri->cmd);
 
@@ -422,8 +428,10 @@ void cdecl idleProc(ClientData cd)
     fflush(outstream); /* by mm */
   }
 
-  /* force readerThread to read next input */
-  SetEvent(ri->event);
+  free(ri->cmd);
+  ri->cmd    = 0;
+  ri->cmdlen = -1;
+  LeaveCriticalSection(&lock);
 }
 
 
@@ -443,8 +451,6 @@ static unsigned __stdcall readerThread(void *arg)
   int used = 0;
 
   while(1) {
-
-    /* DebugCode(fprintf(dbgin,"\n### before read:\n"); fflush(dbgin));*/
 
     if (used>=bufSize) {
       bufSize *= 2;
@@ -466,27 +472,27 @@ static unsigned __stdcall readerThread(void *arg)
 	used >=2 && buffer[used-2] == '\\')
       continue;
   
-#ifdef DEBUG
-    for (i=0; i<used; i++) {
-      if (buffer[i]==0) {
-	WishPanic("NULL BYTE: %s",buffer+used);
-      }
+    EnterCriticalSection(&lock);
+    if (ri->cmd==NULL) {
+      ri->cmdlen = used+1;
+      ri->cmd = malloc(ri->cmdlen);
+      memcpy(ri->cmd,buffer,used+1);
+      Tcl_AsyncMark(ri->ash);
+    } else {
+      char *oldcmd = ri->cmd;
+      int oldlen   = ri->cmdlen;
+      ri->cmdlen   = oldlen+used;
+      ri->cmd      = malloc(ri->cmdlen);
+      memcpy(ri->cmd,oldcmd,oldlen);
+      free(oldcmd);
+      memcpy(ri->cmd+oldlen-1,buffer,used+1);
     }
-    fprintf(dbgin,buffer);
-    fflush(dbgin);
-#endif
+    LeaveCriticalSection(&lock);
 
-    ri->cmd = buffer;
     used = 0;
-
-    ResetEvent(ri->event);
-    Tcl_AsyncMark(ri->ash);
 
     /* wake up toplevel */
     PostThreadMessage(ri->toplevelThread,WM_NULL,0,0);
-
-    if (WaitForSingleObject(ri->event, INFINITE) != WAIT_OBJECT_0)
-      WishPanic("readerThread: wait failed");
   }
   
   return 0;
