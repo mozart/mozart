@@ -1270,6 +1270,12 @@ PRINT(TaskStack)
 	  stream << endl;
 	}
 	break;
+      case C_MODE:
+	{
+	  stream << "  " << (((int) tb)>>4==SEQMODE?"SEQ":"PAR") << "MODE ";
+	  stream << endl;
+	}
+	break;
       case C_CFUNC_CONT:
 	{
 	  OZ_CFun biFun = (OZ_CFun) pop();
@@ -1350,6 +1356,10 @@ PRINTLONG(TaskStack)
     case C_NERVOUS:
       stream << "NERVOUS\n";
       n->print(stream,depth,offset); stream << endl;
+      break;
+    case C_MODE:
+      stream << "  " << (((int) tb)>>4==SEQMODE?"SEQ":"PAR") << "MODE ";
+      stream << endl;
       break;
     case C_CFUNC_CONT:
       {
