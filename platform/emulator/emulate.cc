@@ -609,15 +609,11 @@ void pushContX(TaskStack *stk,
 
 #define XPC(N) Xreg(getRegArg(PC+N))
 
-#if defined(LINUX_I486) || defined(GNUWIN32) || defined(SOLARIS_I486) || defined(FREEBSD_I486)
-#define OZ_I486
-#endif
-
 /* define REGOPT if you want the into register optimization for GCC */
-#if defined(REGOPT) &&__GNUC__ >= 2 && (defined(OZ_I486) || defined(MIPS) || defined(OSF1_ALPHA) || defined(SPARC)) && !defined(DEBUG_CHECK)
+#if defined(REGOPT) &&__GNUC__ >= 2 && (defined(ARCH_I486) || defined(ARCH_MIPS) || defined(OSF1_ALPHA) || defined(ARCH_SPARC)) && !defined(DEBUG_CHECK)
 #define Into(Reg) asm(#Reg)
 
-#ifdef OZ_I486
+#ifdef ARCH_I486
 #define Reg1 asm("%esi")
 #define Reg2
 #define Reg3
@@ -627,7 +623,7 @@ void pushContX(TaskStack *stk,
 #define Reg7
 #endif
 
-#ifdef SPARC
+#ifdef ARCH_SPARC
 #define Reg1 asm("i0")
 #define Reg2 asm("i1")
 #define Reg3 asm("i2")

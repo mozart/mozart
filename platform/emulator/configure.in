@@ -135,6 +135,7 @@ if test "${enable_wincross}" = yes; then
         oz_warn_error=
         AC_DEFINE(GNUWIN32)
         AC_DEFINE(WINDOWS)
+        AC_DEFINE(ARCH_I486)
     else
         AC_MSG_RESULT(no)
         AC_MSG_ERROR("oz_wincross_dir and oz_wincross_prefix must be set")
@@ -224,11 +225,10 @@ PLATFORM="`echo $platform|sed -e s/-/_/|tr a-z A-Z`"
 AC_DEFINE_UNQUOTED($PLATFORM)
 AC_SUBST(PLATFORM)
 
-OS=`echo $PLATFORM|sed -e 's/.*_//'`
-AC_DEFINE_UNQUOTED($OS)
-
-ARCH=`echo $PLATFORM|sed -e 's/_.*//'`
+ARCH=ARCH_`echo $PLATFORM|sed -e 's/.*_//'`
+OS=`echo $PLATFORM|sed -e 's/_.*//'`
 AC_DEFINE_UNQUOTED($ARCH)
+AC_DEFINE_UNQUOTED($OS)
 
 dnl *****************************************************************
 dnl Compiler, Linker, and m4 options

@@ -42,8 +42,9 @@
 #undef IRIX
 #undef OS2
 
-#undef I486
-#undef SPARC
+#undef ARCH_I486
+#undef ARCH_SPARC
+#undef ARCH_MIPS
 
 #undef SUNPRO
 
