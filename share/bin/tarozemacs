@@ -1,4 +1,15 @@
 #!/bin/sh
+
+tarplat()
+{
+   link=$1
+   plat=$2
+   tarfile=ozemacs-$link.tar.Z
+   echo "Creating $tarfile..."
+   tar -cf - oz/ozemacs/bin/$plat oz/ozemacs/bin/$link | compress > $pwd/$tarfile
+  
+}
+
 OZHOME=/usr/share/gs/oz
 pwd=`pwd`
 
@@ -14,16 +25,10 @@ echo "ozemacs/bin" > $temp
 tar -X $temp -cvf - oz/ozemacs | compress > $pwd/ozemacs-common.tar.Z
 
 
-for plat in sunos-sparc--sparc-sun-sunos4.1.3 \
-	    hpux-700--hppa1.1-hp-hpux9        \
-	    irix5-mips--mips-sgi-irix5.2      \
-	    ultrix-mips--mips-dec-ultrix4.2   \
-	    solaris-sparc--sparc-sun-solaris2.3
-do
-   link=`echo $plat|sed -e 's/--.*//'`
-   platt=`echo $plat|sed -e 's/.*--//'`
-   tarfile=ozemacs-$link.tar.Z
-   echo "Creating $tarfile..."
-   tar -cf - oz/ozemacs/bin/$platt oz/ozemacs/bin/$link | compress > $pwd/$tarfile
-done
+tarplat sunos-sparc   sparc-sun-sunos4.1.3
+tarplat hpux-700      hppa1.1-hp-hpux9
+tarplat irix5-mips    mips-sgi-irix5.2
+tarplat ultrix-mips   mips-dec-ultrix4.2
+tarplat solaris-sparc sparc-sun-solaris2.3
+
 
