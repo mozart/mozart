@@ -916,11 +916,6 @@ RunnableThreadBody *RunnableThreadBody::gcRTBody ()
   GCNEWADDRMSG (ret);
   taskStack.gc(&ret->taskStack);
 
-#ifdef LINKEDTHREADS
-  gcTagged(ret->parentThread,ret->parentThread);
-  gcTagged(ret->childThreads,ret->childThreads);
-#endif
-
   return (ret);
 }
 
@@ -2608,10 +2603,7 @@ void AM::doGC()
 
 OzDebug *OzDebug::gcOzDebug()
 {
-  pred=deref(pred);
-  Assert(!isAnyVar(pred));
-  gcTagged(pred,pred);
-  args = gcRefsArray(args);
+  gcTagged(info,info);
   return this;
 }
 
