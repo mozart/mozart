@@ -25,14 +25,14 @@ local
       ('Important events like reaching a breakpoint or raising ' #
        'an exception are reported here.'))
 
-     IgnoreQueriesBitmap #
-     ('Ignore Emacs Queries' #
-      ('Activate this checkbutton if you want to feed some code ' #
+     AddQueriesBitmap #
+     ('Add Emacs Queries' #
+      ('De-activate this checkbutton if you want to feed some code ' #
        'from Emacs without Ozcar taking over control.'))
 
-     IgnoreSubThreadsBitmap #
-     ('Ignore Subthreads' #
-      ('Activate this checkbutton if you don\'t want Ozcar ' #
+     AddSubThreadsBitmap #
+     ('Add Subthreads' #
+      ('De-activate this checkbutton if you don\'t want Ozcar ' #
        'to debug any subthreads of your initial query thread.'))
 
      BreakpointStaticHelp #
@@ -57,7 +57,7 @@ local
      ('The Thread Tree' #
       ('Threads are added to the tree when they run into a breakpoint ' #
        'or when they are created by Emacs queries and the ' #
-       '\'Ignore Emacs Queries\'' # ' checkbutton is not activated. ' #
+       '\'Add Emacs Queries\'' # ' checkbutton is activated. ' #
        '\n\nYou can select a thread by clicking on it or by walking ' #
        'to it with the `Left\' and `Right\' (cursor) keys.\n' #
        '\nThe different colors correspond to the ' #
