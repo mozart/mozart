@@ -9,6 +9,7 @@ import
    System(show:Show)
    Browser(browse:Browse)
    FileUtils(isExtension:IsExtension)
+   Tree(treeNode:TreeNode)
 define
 
    ArchiveManager
@@ -56,6 +57,127 @@ define
       end
    end
 
+   
+
+   class TreeDataView
+      feat
+	 parent
+	 setTitle
+	 handle
+	 allTag
+      attr
+	 info
+	 title
+	 rootNode
+	 dictNode
+      meth init(Parent ST Desc)
+	 self.parent=Parent
+	 self.setTitle=ST
+	 rootNode<-nil
+	 Desc=canvas(glue:nswe
+		     bg:white
+		     tdscrollbar:true
+		     lrscrollbar:true
+		     handle:self.handle)
+      end
+      meth setScrollbar
+	 {self.handle set(scrollregion:{List.toRecord q
+					{List.mapInd
+					 {self.allTag bbox($)}
+					 fun{$ I V} I#V end}
+				       })}
+      end
+      meth display(Info)
+	 if {IsFree self.allTag} then
+	    self.allTag={self.handle newTag($)}
+	    {self.allTag addtag(withtag all)}
+	 end
+	 info<-Info
+	 {self.setTitle Info.title}
+	 if @rootNode\=nil then
+	    {@rootNode delete(height:_)}
+	 end
+	 rootNode<-{New TreeNode init(canvas:self.handle
+				      font:"Times 12"
+				      height:16
+				      label:"mogul")}
+	 dictNode<-{NewDictionary}
+	 {Dictionary.put @dictNode 'mogul:/' @rootNode}
+	 {@rootNode draw(x:2 y:2 height:_)}
+	 {@rootNode expand}
+	 local
+	    fun{ToKey X}
+	       {VirtualString.toAtom
+		if {List.last {VirtualString.toString X}}\=&/ then
+		   X#"/" else X end}
+	    end
+	    fun{GetParent X}
+	       {VirtualString.toAtom
+		{Reverse
+		 {List.dropWhileInd {Reverse {VirtualString.toString X}}
+		  fun{$ I C} C\=&/ orelse I==1 end}}}
+	    end
+	    fun{GetLabel X}
+	       VS={VirtualString.toString
+		   {Reverse
+		    {List.takeWhileInd {Reverse {VirtualString.toString X}}
+		     fun{$ I C} C\=&/ orelse I==1 end}}}
+	    in
+	       if {List.last VS}\=&/ then
+		  VS
+	       else
+		  {List.take VS {Length VS}-1}
+	       end
+	    end	       
+	    proc{CreateNode I X}
+	       Parent={GetParent X}
+	       ParentNode={Dictionary.condGet @dictNode Parent
+			   {ByNeed fun{$}
+				      {CreateNode 0 Parent}
+				      {Dictionary.get @dictNode Parent}
+				   end}
+			  }
+	       {Wait ParentNode}
+	       Node={New TreeNode init(parent:ParentNode
+				       label:{GetLabel X})}
+	    in
+	       {Dictionary.put @dictNode {ToKey X} Node}
+	       {ParentNode addLeaf(node:Node)}
+	       {Node expand}
+	       if I\=0 then
+		  {Node bind(event:"<1>"
+			     action:{self.parent.toplevel newAction(self#select(I) $)})}
+	       end
+	    end
+	    proc{Loop I L}
+	       case L
+	       of X|Xs then
+		  {CreateNode I X.id}
+		  {Loop I+1 Xs}
+	       else skip end
+	    end
+	 in
+	    {Loop 1 @info.info}
+	 end
+	 %%
+	 %% 
+	 %%
+     end
+      meth get(Info)
+	 Info=@info
+	 skip
+      end
+      meth getClass(C)
+	 C=TreeDataView
+      end
+      meth select(I)
+	 Info={List.nth @info.info I}
+	 D=r(info:Info)
+      in
+	 {self.parent displayInfo(D)}
+      end
+   end
+
    class InfoView
       feat
 	 setTitle
@@ -74,9 +196,9 @@ define
       end
       meth display(Inf)
 	 info<-Inf
+	 {self.handle set(nil)}
 	 if Inf==unit then
 	    {self.setTitle ""}
-	    {self.handle set(nil)}
 	 else
 	    Info=Inf.info
 	 in
@@ -135,6 +257,7 @@ define
 	 infoLabel
 	 installButton
 	 desinstallButton
+	 toplevel
 
       attr
 	 data
@@ -155,7 +278,7 @@ define
 	 info<-{New InfoView init(self
 				  proc{$ Title} {self.infoLabel set(text:Title)} end
 				  InfoMain)}
-	 data<-{New ListDataView init(self
+	 data<-{New TreeDataView init(self
 				      proc{$ Title} {self.dataLabel set(text:Title)} end
 				      DataMain)}
 	 MenuDesc=
@@ -259,6 +382,7 @@ define
 	 Window={QTk.build Desc}
       in
 	 {Window show}
+	 self.toplevel=Window
 	 {Wait Global.localDB}
 	 {Wait Global.mogulDB}
 	 {self displayInstalled}
