@@ -172,34 +172,34 @@ static ProgramCounter switchOnTermOutline(TaggedRef term, IHashTable *table,
 
 #define GET_CURRENT_PRIORITY() e->currentThread->getPriority()
 
-HookValue emulateHookOutline(Abstraction *def, int arity, TaggedRef *args)
+HookValue emulateHookOutline(AM *e, Abstraction *def, int arity, TaggedRef *args)
 {
   // without signal blocking;
-  if (am.isSetSFlag(ThreadSwitch)) {
+  if (e->isSetSFlag(ThreadSwitch)) {
     if (Thread::QueueIsEmpty()
-        || Thread::GetHead()->getPriority() < am.currentThread->getPriority()) {
+        || Thread::GetHead()->getPriority() < e->currentThread->getPriority()) {
       Alarm::RestartProcess();
     } else {
       return HOOK_SCHEDULE;
     }
   }
-  if (am.isSetSFlag(StartGC)) {
+  if (e->isSetSFlag(StartGC)) {
     return HOOK_SCHEDULE;
   }
 
   blockSignals();
   // & with blocking of signals;
-  if (am.isSetSFlag(UserAlarm)) {
+  if (e->isSetSFlag(UserAlarm)) {
     Alarm::HandleUser();
   }
-  if (am.isSetSFlag(IOReady)) {
+  if (e->isSetSFlag(IOReady)) {
     IO::handleIO();
   }
 
   unblockSignals();
 
-  if (def && am.isSetSFlag(DebugMode)) {
-    enterCall(am.currentBoard,def,arity,args);
+  if (def && e->isSetSFlag(DebugMode)) {
+    enterCall(e->currentBoard,def,arity,args);
   }
 
   return HOOK_OK;
@@ -207,17 +207,23 @@ HookValue emulateHookOutline(Abstraction *def, int arity, TaggedRef *args)
 
 
 
-inline HookValue emulateHook(Abstraction *def, int arity, TaggedRef *args)
+inline Bool hookCheckNeeded(AM *e)
 {
 #ifdef DEBUG_DET
   Alarm::Handle(0);   // simulate an alarm
 #endif
 
-  if (am.isSetSFlag()) {
-    return emulateHookOutline(def,arity,args);
-  }
-  return HOOK_OK;
+  return (e->isSetSFlag()) ? OK:NO;
 }
+
+inline HookValue emulateHook(AM *e, Abstraction *def, int arity, TaggedRef *args)
+{
+  if (!hookCheckNeeded(e)) {
+    return HOOK_OK;
+  }
+  return emulateHookOutline(e,def,arity,args);
+}
+
 
 
 
@@ -242,18 +248,17 @@ TaggedRef makeMethod(int arity, Atom *label, TaggedRef *X)
  * in case we have call(x-N) and we have to switch process or do GC
  * we have to save as cont address Pred->getPC() and NOT PC
  */
-#define CallDoChecks(Pred,IsEx,ContAdr,Arity)                         \
-                                                                      \
-     if (! IsEx) {e->pushTask(CBB,ContAdr,Y,G);}                      \
-     G = Pred->getGRegs();                                            \
-                                                                      \
-     switch (emulateHook(Pred,Arity,X)) {                             \
-     case HOOK_SCHEDULE:                                              \
-       e->pushTask(CBB,Pred->getPC(),NULL,G,X,Arity);                 \
-       goto LBLschedule;                                              \
-     case HOOK_FIND:                                                  \
-       e->pushTask(CBB,Pred->getPC(),NULL,G,X,Arity);                 \
-       goto LBLpopTask;                                       \
+#define CallDoChecks(Pred,IsEx,ContAdr,Arity)                                 \
+                                                                              \
+     if (! IsEx) {e->pushTask(CBB,ContAdr,Y,G);}                              \
+     G = Pred->getGRegs();                                                    \
+                                                                              \
+     if (hookCheckNeeded(e)) {                                                \
+       switch (emulateHookOutline(e,Pred,Arity,X)) {                          \
+       case HOOK_SCHEDULE:                                                    \
+         e->pushTaskOutline(CBB,Pred->getPC(),NULL,G,X,Arity);                \
+         goto LBLschedule;                                                    \
+       }                                                                      \
      }
 
 // -----------------------------------------------------------------------
@@ -288,6 +293,7 @@ TaggedRef makeMethod(int arity, Atom *label, TaggedRef *X)
 #   define DODISPATCH goto* *(void **)(((char *)instrTable)+help);
 #endif
 
+#define WANT_INSTRPROFILE
 #if defined(WANT_INSTRPROFILE) && defined(sparc)
 #   define INSTRUCTION(INSTR)   INSTR##LBL: asm(" " #INSTR ":");
 #else
@@ -323,7 +329,7 @@ TaggedRef makeMethod(int arity, Atom *label, TaggedRef *X)
 
 #ifdef FASTREGACCESS
 #define RegAccess(Reg,Index) (*(RefsArray)((char*)Reg + Index))
-#define LessIndex(Index,CodedIndex) (Index <= CodedIndex*sizeof(TaggedRef))
+#define LessIndex(Index,CodedIndex) (Index <= CodedIndex/sizeof(TaggedRef))
 #else
 #define RegAccess(Reg,Index) (Reg[Index])
 #define LessIndex(I1,I2) (I1<=I2)
@@ -385,10 +391,10 @@ void engine() {
   AWActor *CAA = NULL;
   Board *tmpBB = NULL;
   Board *boardForNotification = NULL;
-  Board *&CBB = am.currentBoard;
+
+#define CBB (e->currentBoard)
 
   RefsArray HelpReg1 = NULL, HelpReg2 = NULL;
-
   OZ_CFun biFun = NULL;
 
 // shallow choice pointer
@@ -473,11 +479,9 @@ void engine() {
  LBLfindWork:
 // third: do work
   {
-    switch (emulateHook(NULL,0,NULL)) {
+    switch (emulateHook(e,NULL,0,NULL)) {
     case HOOK_SCHEDULE:
       goto LBLschedule;
-    case HOOK_FIND:
-      goto LBLpopTask;
     }
 
  LBLpopTask:
@@ -487,7 +491,7 @@ void engine() {
     // POPTASK
     if (!e->currentTaskStack) {
       {
-        Thread *c = am.currentThread;
+        Thread *c = e->currentThread;
         if (c->isNervous()) {
           boardForNotification = c->popBoard();
           tmpBB = boardForNotification->getBoardDeref();
@@ -1631,11 +1635,11 @@ void engine() {
 
         case BIDefault:
           {
-            if (am.isSetSFlag(DebugMode)) {
-              enterCall(am.currentBoard,bi,predArity,X);
+            if (e->isSetSFlag(DebugMode)) {
+              enterCall(e->currentBoard,bi,predArity,X);
             }
             OZ_Bool res = bi->getFun()(predArity, X);
-            if (am.isSetSFlag(DebugMode)) {
+            if (e->isSetSFlag(DebugMode)) {
               exitBuiltin(res,bi,predArity,X);
             }
 
@@ -1663,13 +1667,10 @@ void engine() {
               if (isExecute) {
                 goto LBLreduce;
               }
-              switch (emulateHook (NULL,0,NULL)) {
+              switch (emulateHook(e,NULL,0,NULL)) {
               case HOOK_SCHEDULE:
-                e->pushTask(CBB, contAdr,Y,G);
+                e->pushTaskOutline(CBB, contAdr,Y,G);
                 goto LBLschedule;
-              case HOOK_FIND:
-                e->pushTask(CBB, contAdr,Y,G);
-                goto LBLpopTask;
               }
               JUMP(contAdr);
             default:
@@ -1722,7 +1723,7 @@ void engine() {
 
        // put continuation if any;
        if (isExecute == NO)
-         e->pushTask (CBB, contAdr, Y, G);
+         e->pushTaskOutline(CBB, contAdr, Y, G);
 
        // create solve actor(resVarPtr);
        SolveActor *sa = new SolveActor (CBB, GET_CURRENT_PRIORITY(),
@@ -1771,7 +1772,7 @@ void engine() {
                    error ("non-empty script in solve blackboard"));
 
        // adjoin the list of or-actors to the list in actual solve actor!!!
-       Board *currentSolveBB = am.currentSolveBoard;
+       Board *currentSolveBB = e->currentSolveBoard;
        if (currentSolveBB == (Board *) NULL) {
          DebugCheckT (message ("solveCont is applied not inside search problem?\n"));
        } else {
@@ -1795,7 +1796,7 @@ void engine() {
          // get continuation of 'board-to-install' if any;
          if (boardToInstall->isWaitTop () == NO) {
            Continuation *bodyOf = boardToInstall->getBodyPtr ();
-           e->pushTask (CBB, bodyOf->getPC (), bodyOf->getY (),
+           e->pushTaskOutline(CBB, bodyOf->getPC (), bodyOf->getY (),
                         bodyOf->getG (), bodyOf->getX (), bodyOf->getXSize ());
          }
        }
@@ -2060,7 +2061,7 @@ void engine() {
       ProgramCounter contPC = getLabelArg(PC+1);
 
       int prio = GET_CURRENT_PRIORITY();
-      int defPrio = am.conf.defaultPriority;
+      int defPrio = e->conf.defaultPriority;
       if (prio > defPrio) {
         prio = defPrio;
       }
@@ -2144,7 +2145,7 @@ void engine() {
  LBLemulateCheckSwitch:
   if (e->isSetSFlag(ThreadSwitch)) {
     CheckBranch("emulateIf");
-    e->pushTask(CBB,PC,Y,G,X,XSize);
+    e->pushTaskOutline(CBB,PC,Y,G,X,XSize);
     goto LBLschedule;
   }
   goto LBLemulate;
