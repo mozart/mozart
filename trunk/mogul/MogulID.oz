@@ -44,7 +44,11 @@ define
 	       {URL.resolve BaseU ID}
 	    end
 \else
-      IdU = {URL.resolve BaseU ID}
+      IdU = case BaseU.path of "mogul"|_ then
+	       {URL.resolve 'mogul:/' ID}
+	    else
+	       {URL.resolve BaseU ID}
+	    end
 \endif
    in
       %% check the id is valid
