@@ -64,7 +64,11 @@ void ThreadsPool::scheduleThread (Thread *th)
       }
       currentPriority = pri;
       currentQueue = insQueue;
-      //! am.setSFlag (ThreadSwitch); // vital necessary!
+      if (th->isPropagator ()) {
+	am.restartThread ();	// heuristic?
+      } else {
+	am.setSFlag (ThreadSwitch); // the must, in fact;
+      }
     } else {
       // look through the stack (nextPrio) and insert when necessary;
       int ix, jx;

@@ -455,6 +455,53 @@ void BIfdBodyManager::saveDomainOnTopLevel(int i) {
 OZ_Bool BIfdHeadManager::spawnPropagator (FDPropState t, 
 					  OZ_CFun f, int a, OZ_Term * x) 
 {
+#ifndef TM_LP
+  if (localPropStore.isUseIt ()) {
+    Thread *prop;
+
+    //
+    prop = createPropagator (f, a, x);
+    addPropagators (prop, t);
+    localPropStore.push (prop);
+
+    return (PROCEED);
+  } else {
+    AM *e = &am;
+    Thread *savedCT;
+
+    //
+    savedCT = e->currentThread;
+    e->currentThread = createPropagator (f, a, x); // propagated!
+    addPropagators (e->currentThread, t);
+
+    // 
+    switch ((f)(a, x)) {
+    case SLEEP:
+      e->currentThread->unmarkPropagated (); // kost@ TODO!!! temporary;
+      e->currentThread = savedCT;
+      return (PROCEED);
+
+    case PROCEED:
+      e->currentThread->closeDonePropagator ();
+      e->currentThread = savedCT;
+      return (PROCEED);
+
+    case FAILED: 
+      e->currentThread->closeDonePropagator ();
+      e->currentThread = savedCT;
+      return FAILED;
+
+    case RAISE:
+      error ("propagators can't raise exceptions.");
+
+    case SUSPEND:
+      error ("propagators can't return 'SUSPEND'.\n");
+      
+    default:
+      error ("propagator returned an unknown value.\n");
+    }
+  }
+#else
   Thread *prop;
 
   //
@@ -464,49 +511,77 @@ OZ_Bool BIfdHeadManager::spawnPropagator (FDPropState t,
   // normally);
   prop = createPropagator (f, a, x);
   addPropagators (prop, t);
-#ifndef TM_LP
-  if (localPropStore.isUseIt ()) {
-    localPropStore.push (prop);
-  } else {
-    DebugCode (prop->unmarkPropagated ();); // since cContToRunnable...
-    prop->cContToRunnable ();
-    am.scheduleThread (prop);
-  }
-#else
   localPropStore.push (prop);
-#endif
 
   return (PROCEED);
+#endif
 }
 
 OZ_Bool BIfdHeadManager::spawnPropagator (FDPropState t1, FDPropState t2, 
 					  OZ_CFun f, int a, OZ_Term * x) 
 {
+#ifndef TM_LP
+  if (localPropStore.isUseIt ()) {
+    Thread *prop;
+
+    prop = createPropagator (f, a, x);
+    addPropagator (0, prop, t1);
+    addPropagator (1, prop, t2);
+    localPropStore.push (prop);
+
+    return (PROCEED);
+  } else {
+    AM *e = &am;
+    Thread *savedCT;
+
+    //
+    savedCT = e->currentThread;
+    e->currentThread = createPropagator (f, a, x); // propagated!
+    addPropagator (0, e->currentThread, t1);
+    addPropagator (1, e->currentThread, t2);
+
+    // 
+    switch ((f)(a, x)) {
+    case SLEEP:
+      e->currentThread->unmarkPropagated (); // kost@ TODO!!! temporary;
+      e->currentThread = savedCT;
+      return (PROCEED);
+
+    case PROCEED:
+      e->currentThread->closeDonePropagator ();
+      e->currentThread = savedCT;
+      return (PROCEED);
+
+    case FAILED: 
+      e->currentThread->closeDonePropagator ();
+      e->currentThread = savedCT;
+      return FAILED;
+
+    case RAISE:
+      error ("propagators can't raise exceptions.");
+
+    case SUSPEND:
+      error ("propagators can't return 'SUSPEND'.\n");
+      
+    default:
+      error ("propagator returned an unknown value.\n");
+    }
+  }
+#else
   Thread *prop;
 
   prop = createPropagator (f, a, x);
   addPropagator (0, prop, t1);
   addPropagator (1, prop, t2);
-#ifndef TM_LP
-  if (localPropStore.isUseIt ()) {
-    localPropStore.push (prop);
-  } else {
-    DebugCode (prop->unmarkPropagated ();); // since cContToRunnable...
-    prop->cContToRunnable ();
-    am.scheduleThread (prop);
-  }
-#else
   localPropStore.push (prop);
-#endif
 
   return (PROCEED);
+#endif
 }
 
 OZ_Bool BIfdHeadManager::spawnPropagator (FDPropState t, 
 					  OZ_CFun f, int a, OZ_Term t1, ...)
 {
-  Thread *prop;
-
   OZ_Term * x = (OZ_Term *) heapMalloc (a * sizeof (OZ_Term));
 
   x[0] = t1;
@@ -519,29 +594,66 @@ OZ_Bool BIfdHeadManager::spawnPropagator (FDPropState t,
 
   va_end (ap);
 
-  prop = createPropagator (f, a, x);
-  addPropagators (prop, t);
 #ifndef TM_LP
   if (localPropStore.isUseIt ()) {
+    Thread *prop;
+
+    prop = createPropagator (f, a, x);
+    addPropagators (prop, t);
     localPropStore.push (prop);
+
+    return (PROCEED);
   } else {
-    DebugCode (prop->unmarkPropagated ();); // since cContToRunnable...
-    prop->cContToRunnable ();
-    am.scheduleThread (prop);
+    AM *e = &am;
+    Thread *savedCT;
+
+    //
+    savedCT = e->currentThread;
+    e->currentThread = createPropagator (f, a, x); // propagated!
+    addPropagators (e->currentThread, t);
+
+    // 
+    switch ((f)(a, x)) {
+    case SLEEP:
+      e->currentThread->unmarkPropagated (); // kost@ TODO!!! temporary;
+      e->currentThread = savedCT;
+      return (PROCEED);
+
+    case PROCEED:
+      e->currentThread->closeDonePropagator ();
+      e->currentThread = savedCT;
+      return (PROCEED);
+
+    case FAILED: 
+      e->currentThread->closeDonePropagator ();
+      e->currentThread = savedCT;
+      return FAILED;
+
+    case RAISE:
+      error ("propagators can't raise exceptions.");
+
+    case SUSPEND:
+      error ("propagators can't return 'SUSPEND'.\n");
+      
+    default:
+      error ("propagator returned an unknown value.\n");
+    }
   }
 #else
+  Thread *prop;
+
+  prop = createPropagator (f, a, x);
+  addPropagators (prop, t);
   localPropStore.push (prop);
-#endif
 
   return (PROCEED);
+#endif
 }
 
 OZ_Bool BIfdHeadManager::spawnPropagatorStabil(FDPropState t, 
 					       OZ_CFun f, int a, 
 					       OZ_Term t1, ...)
 {
-  Thread *prop;
-
   OZ_Term * x = (OZ_Term *) heapMalloc (a * sizeof (OZ_Term));
 
   x[0] = t1;
@@ -554,28 +666,63 @@ OZ_Bool BIfdHeadManager::spawnPropagatorStabil(FDPropState t,
 
   va_end (ap);
 
+#ifndef TM_LP
+  if (localPropStore.isUseIt ()) {
+    Thread *prop;
+
+    prop = createPropagator (f, a, x);
+    addPropagators (prop, t);
+    prop->markStable ();
+    localPropStore.push (prop);
+
+    return (PROCEED);
+  } else {
+    AM *e = &am;
+    Thread *savedCT;
+
+    //
+    savedCT = e->currentThread;
+    e->currentThread = createPropagator (f, a, x); // propagated!
+    addPropagators (e->currentThread, t);
+
+    // 
+    switch ((f)(a, x)) {
+    case SLEEP:
+      e->currentThread->markStable ();
+      e->currentThread->unmarkPropagated (); // kost@ TODO!!! temporary;
+      e->currentThread = savedCT;
+      return (PROCEED);
+
+    case PROCEED:
+      e->currentThread->closeDonePropagator ();
+      e->currentThread = savedCT;
+      return (PROCEED);
+
+    case FAILED: 
+      e->currentThread->closeDonePropagator ();
+      e->currentThread = savedCT;
+      return FAILED;
+
+    case RAISE:
+      error ("propagators can't raise exceptions.");
+
+    case SUSPEND:
+      error ("propagators can't return 'SUSPEND'.\n");
+      
+    default:
+      error ("propagator returned an unknown value.\n");
+    }
+  }
+#else
+  Thread *prop;
+
   prop = createPropagator (f, a, x);
   addPropagators (prop, t);
   prop->markStable ();
-#ifndef TM_LP
-  if (localPropStore.isUseIt ()) {
-    localPropStore.push (prop);
-  } else {
-    DebugCode (prop->unmarkPropagated ();); // since cContToRunnable...
-
-    //  The following is because otherwise we will not get the 
-    // same propagation behaviour as with the local propagation ...
-    prop->setPriority (OZMAX_PRIORITY - 1);
-
-    //
-    prop->cContToRunnable ();
-    am.scheduleThread (prop);
-  }
-#else
   localPropStore.push (prop);
-#endif
 
   return (PROCEED);
+#endif
 }
 
 #ifdef FDBISTUCK
