@@ -608,7 +608,7 @@ those using client resources.
 
 <SUBSECTION><TITLE>A dynamically-extensible server</TITLE>
 
-Sometimes a server has to be upgraded,
+<P> Sometimes a server has to be upgraded,
 to add extra functionality or to fix a bug.
 We show how to upgrade the server
 without stopping it.
@@ -618,11 +618,12 @@ where a person using the OPI
 can upgrade a server on another site
 while it is running.
 
-Let's first define a generic upgradable server
+<P> Let's first define a generic upgradable server
 on top of stationary objects:
 <<<
 declare
 proc {NewUpgradableStat Class Init ?Cell ?SObj}
   Obj={NewStat Class Init}
+>>>
 
 </CHAPTER>
