@@ -1935,14 +1935,9 @@ void AM::checkDebugOutline(Thread *tt)
 {
   Assert(debugmode());
   if (currentThread() && tt->getThrType() == S_RTHREAD)
-    if (currentThread() == rootThread() && ozconf.addEmacsThreads ||
-	currentThread()->getTrace() && ozconf.addSubThreads) {
-
-      debugStreamThread(tt,currentThread());
-
+    if (currentThread()->getTrace()) {
       tt->setTrace(OK);
       tt->setStep(OK);
-      tt->setStop(OK);
     }
 }
 

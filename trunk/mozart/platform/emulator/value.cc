@@ -876,7 +876,7 @@ Arity *Arity::newArity(TaggedRef entrylist , Bool itf)
   int w = fastlength(entrylist);
 
   if (itf) {
-    Arity *ar=(Arity *) new char[sizeof(Arity)];
+    Arity *ar = (Arity *) (void *) new char[sizeof(Arity)];
     ar->next = NULL;
     ar->list = entrylist;
     ar->hashmask = 0;
@@ -885,7 +885,8 @@ Arity *Arity::newArity(TaggedRef entrylist , Bool itf)
   }
 
   int size  = nextPowerOf2((int)(w*1.5));
-  Arity *ar = (Arity *) new char[sizeof(Arity)+sizeof(KeyAndIndex)*size];
+  Arity *ar = (Arity *) (void *) new char[sizeof(Arity)+
+					 sizeof(KeyAndIndex)*size];
 
   DebugCheckT(ar->numberOfCollisions = 0);
   ar->next = NULL;
