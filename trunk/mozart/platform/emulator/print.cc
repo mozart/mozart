@@ -183,6 +183,9 @@ void ozd_printStream(OZ_Term val, ostream &stream, int depth)
   case SMALLINT:
     stream << "<SmallInt @" << &ref << ": " << toC(ref) << ">";
     break;
+  case EXT:
+    oz_tagged2Extension(ref)->printStreamV(stream,depth);
+    break;
   case OZCONST:
     tagged2Const(ref)->printStream(stream,depth);
     break;
