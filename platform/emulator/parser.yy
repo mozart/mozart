@@ -222,7 +222,7 @@ void xy_setParserExpect() {
 %token REDUCE SEP
 
 %right    '='
-%right    ASSIGN
+%right    OOASSIGN ASSIGN
 %right    orelse
 %right    andthen
 %nonassoc COMPARE FDCOMPARE
@@ -234,7 +234,7 @@ void xy_setParserExpect() {
 %right    ','
 %left     '~'
 %left     '.' '^' DOTINT
-%left     '@'
+%left     '@' DEREF
 
 %type <t>  file
 %type <t>  queries
@@ -431,8 +431,11 @@ sequence	: phrase
 
 phrase		: phrase '=' coord phrase
 		  { $$ = newCTerm("fEq",$1,$4,$3); }
-		| phrase ASSIGN coord phrase
+		| phrase OOASSIGN coord phrase
 		  { $$ = newCTerm("fAssign",$1,$4,$3); }
+		| phrase ASSIGN coord phrase
+		  { $$ = newCTerm("fOpApply",newCTerm(":="),
+				  consList($1,consList($4,nilAtom)),$3); }
 		| phrase orelse coord phrase
 		  { $$ = newCTerm("fOrElse",$1,$4,$3); }
 		| phrase andthen coord phrase
@@ -486,6 +489,9 @@ phrase2		: phrase2 add coord phrase2 %prec ADD
 				  consList($1,consList($4,nilAtom)),$3); }
 		| '@' coord phrase2
 		  { $$ = newCTerm("fAt",$3,$2); }
+		| DEREF coord phrase2
+		  { $$ = newCTerm("fOpApply",newCTerm("!!"),
+				  consList($3,nilAtom),$2); }
 		| '(' inSequence ')'
 		  { $$ = $2; }
 		| atom
