@@ -176,7 +176,7 @@ and that no command will be bound to C-c followed by a letter."
      "XPrepend a \\line directive to all Oz queries? (t or nil): ")
 
 (eval-and-compile
-  (eval '(defcustom oz-default-host "127.0.0.1"
+  (eval '(defcustom oz-default-host "localhost"
 	   "*Default name of host to use for creating socket connections."
 	   :type 'string
 	   :group 'oz)))
