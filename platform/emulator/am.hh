@@ -180,11 +180,11 @@ public:
                    TaggedRef *termPtr, TaggedRef term);
   void bind(TaggedRef *varPtr, TaggedRef var, TaggedRef *termPtr);
   void checkSuspensionList(TaggedRef taggedvar, TaggedRef term,
-                           SVariable *rightVar);
-  SuspList* checkSuspensionList(SVariable* var, TaggedRef taggedvar,
-                                SuspList* suspList,
-                                TaggedRef term, SVariable* rightVar = NULL);
-  Bool isBetween(Board *to, Board *varHome);
+                           SVariable * rightVar, Bool unifyingVar = FALSE);
+  SuspList * checkSuspensionList(SVariable * var, TaggedRef taggedvar,
+                                 SuspList * suspList, TaggedRef term,
+                                 SVariable * rightVar, Bool unifyingVar = FALSE);
+  Bool isBetween(Board * to, Board * varHome);
   void setExtSuspension (Board *varHome, Suspension *susp);
   Bool checkExtSuspension (Suspension *susp);
   void incSolveThreads (Board *bb);
