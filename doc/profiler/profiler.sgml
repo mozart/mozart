@@ -83,7 +83,7 @@ The application can be compiled for profiling as follows:
 tool <code proglang=sh/ozd/ and can be invoked using the <code/-p/
 option.  We can profile <q/The 3 Little Piggies/ as follows:
 <code display proglang=sh/ozd -p piggies -- --size 1000 --times 100/
-Note how the double dash separate <code proglang=sh/ozd/'s arguments
+Note how the double dash separates <code proglang=sh/ozd/'s arguments
 from the application's arguments.  Shortly thereafter, the window
 shown below pops up:
 <picture.choice display>
