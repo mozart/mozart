@@ -288,7 +288,8 @@ Bool installGlobalWatcher(EntityCond,TaggedRef,int);
 
 /**********************   DeferEvents   ******************/
 enum DeferType{
-  DEFER_PROXY_PROBLEM,
+  DEFER_PROXY_VAR_PROBLEM,
+  DEFER_PROXY_TERT_PROBLEM,
   DEFER_MANAGER_PROBLEM,
   DEFER_ENTITY_PROBLEM};
 
@@ -296,6 +297,7 @@ class DeferElement{
 public:
   DeferElement *next;
   Tertiary  *tert;
+  TaggedRef  pvar;
   DSite     *site;
   DeferType  type;
   int        prob;
@@ -310,12 +312,16 @@ public:
   void init(DeferType dt, Tertiary* t){
     site=NULL; type=dt; prob= 0; tert=t;}
 
+  void init(DeferType dt, int pr,TaggedRef v){
+    site=NULL; type=dt; prob= pr; tert=NULL; pvar=v;}
+
 };
 
 extern DeferElement* DeferdEvents;
 extern TaggedRef BI_defer;
 void gcDeferEvents();
-void deferProxyProbeFault(Tertiary*,int);
+void deferProxyTertProbeFault(Tertiary*,int);
+void deferProxyVarProbeFault(TaggedRef,int);
 
 
 void maybeUnask(Tertiary*);

@@ -1187,10 +1187,10 @@ OZ_Term getGatePort(DSite* sd){
     b->makePersistent();
     if(sd->siteStatus()!=SITE_OK){
       if(sd->siteStatus()==SITE_PERM){
-        deferProxyProbeFault(pp,PROBE_PERM);}
+        deferProxyTertProbeFault(pp,PROBE_PERM);}
       else{
         Assert(sd->siteStatus()==SITE_TEMP);
-        deferProxyProbeFault(pp,PROBE_TEMP);}}
+        deferProxyTertProbeFault(pp,PROBE_TEMP);}}
     return b->getValue();}
   Assert(b->isPersistent());
   return b->getValue();}
