@@ -293,11 +293,9 @@ version.cc: version.sed $(filter-out version.cc,$(ALLSRCS))
 	     -e "s/OZPLATFORM/$(PLATFORM)/" \
 	     $(SRCDIR)/version.sed > version.cc
 
-depend:: Makefile.deps
-
-Makefile.deps: version.cc initffuns.cc $(CREATEDSRCS) $(ALLSRCS)
+depend:: version.cc initffuns.cc $(CREATEDSRCS) $(ALLSRCS)
 	$(MAKE) first
-	$(DEPEND) $^ > $@
+	$(DEPEND) $^ > Makefile.deps
 
 tags:	$(CREATEDFILES) version.cc
 	etags \
