@@ -163,7 +163,9 @@ OZ_Return oz_runPropagator(Propagator * p)
     OZ_PropagatorProfile * profile = ozprop->getProfile();
     if (profile) {
       char * pn = profile->getPropagatorName();
-      printf("<%s[%p]", pn, ozprop); fflush(stdout);
+      printf("<%s[%p] %s", pn, ozprop,
+             OZ_toC(ozprop->getParameters(), 10, 10));
+      fflush(stdout);
     } else {
       printf("<CDSuppl"); fflush(stdout);
     }
