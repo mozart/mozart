@@ -167,20 +167,15 @@ $(PLATFORMS): $(DISTDIR)
 oz-win::
 	rm -rf oz oz3 oz-`$(OZVERSION)`
 	( cd $(PREFIX)/..; \
-	  $(TAR) cf - oz/?*.exe oz/demo oz/include oz/share \
-		   oz/tools \
+	  $(TAR) cf - oz/?*.exe oz/?*.ico oz/demo oz/include oz/share \
 		   oz/LICENSE \
-		   oz/bin/opi \
+		   oz/bin/ozc \
                    oz/platform/win32-i486/?*.exe \
                    oz/platform/win32-i486/?*.dll \
                    oz/platform/win32-i486/tcldoc \
          ) | $(TAR) xf -
-	rm -f oz/demo/rundemo oz/share/ozbatch.ozm
 	$(INSTALL_DIR) $(WINCACHEDIR)/share
-	$(INSTALL_DIR) $(WINCACHEDIR)/tools
 	$(INSTALL_DIR) $(WINCACHEDIR)/bin
 	mv oz/share/images oz/share/?*.ozf $(WINCACHEDIR)/share
-	mv oz/tools/images oz/tools/?*.ozf $(WINCACHEDIR)/tools
-	mv oz/bin/opi $(WINCACHEDIR)/bin
 	(cd oz/share/wish; rm -rf tk tcl; mv tcl8.0 tcl; mv tk8.0 tk)
 	mv oz oz3
