@@ -31,9 +31,16 @@ AC_DEFUN(OZ_INIT, [
     #OZ_PATH_PROG(DYNLD,          ozdynld)
     ])
 
+echo $P | sed -e "s/^\.:/$X:/g" | sed -e "s/:\.\$/:$X/g" | sed -e "s/:\.:/:$X:/g" | sed "s/:\.\//:$X\//g"
+
 AC_DEFUN(OZ_PATH_PROG, [
     dummy_PWD=`pwd | sed 's/\//\\\\\//g'`
-    dummy_PATH=`echo $PATH | sed -e "s/:://g" | sed -e "s/\(^\|:\)\.\(\$\|:\|\/\)/\1$dummy_PWD\2/g"`
+    dummy_PATH=`echo $PATH | sed -e 's/:://g'`
+    dummy_PATH=`echo $dummy_PATH | sed -e "s/^\.:/$dummy_PWD:/g"`
+    dummy_PATH=`echo $dummy_PATH | sed -e "s/^\.\//$dummy_PWD\//g"`
+    dummy_PATH=`echo $dummy_PATH | sed -e "s/:\.\$/:$dummy_PWD/g"`
+    dummy_PATH=`echo $dummy_PATH | sed -e "s/:\.:/:$dummy_PWD:/g"`
+    dummy_PATH=`echo $dummy_PATH | sed -e "s/:.\//:$dummy_PWD\//g"`
     AC_PATH_PROG($1,$2,,$dummy_PATH:$SRCTOP/share/bin:$SRCTOP)
     if test ! -n "$$1"
     then
