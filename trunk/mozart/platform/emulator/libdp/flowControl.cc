@@ -88,7 +88,7 @@ void FlowControlElement::wakeUp(){
     (((PortProxy*)tagged2Const(ele))->wakeUp());}
   else{
     Assert(kind==FLOW_VAR);
-    printf("flow Control release\n");
+//      printf("flow Control release\n");
     sendRedirect(site,index,ele);}
   free();}
 
