@@ -2755,6 +2755,7 @@ define
       fun {FP D}
 	 case D
 	 of forFeature(F E) then forFeature(F {EP E})
+	 [] forFrom(X G) then forFrom(X {EP G})
 	 [] forPattern(X G) then
 	    forPattern(
 	       X
