@@ -27,10 +27,10 @@ enum PV_TYPES {
 
 class ProxyList {
 public:
-  int sd;
+  Site* sd;
   ProxyList *next;
 public:
-  ProxyList(int sd,ProxyList *next) :sd(sd),next(next) {}
+  ProxyList(Site* sd,ProxyList *next) :sd(sd),next(next) {}
 };
 
 class PerdioVar: public GenCVariable {
@@ -63,7 +63,7 @@ public:
   
   size_t getSize(void) { return sizeof(PerdioVar); }
 
-  void registerSite(int sd) {
+  void registerSite(Site* sd) {
     Assert(isManager());
     u.proxies = new ProxyList(sd,u.proxies);
   }

@@ -15,7 +15,7 @@
 #pragma interface
 #endif
 
-#define Cast(X,XType,Y,NewType)\
+#define GenCast(X,XType,Y,NewType)\
 { XType tmp=X; Y= (NewType) tmp;}
 
 #define GENHASHNODE_CUTOFF 100
@@ -46,7 +46,6 @@ public:
     if(free==NULL) {return NULL;}
     FreeListEntry *f=free;
     free=free->next;
-    return f;
     no_free--;
     return f;}
 
@@ -124,12 +123,12 @@ public:
     FreeListEntry *f=getOne();
     if(f==NULL){return new GenHashNode();}
     GenHashNode *ghn;
-    Cast(f,FreeListEntry*,ghn,GenHashNode*);
+    GenCast(f,FreeListEntry*,ghn,GenHashNode*);
     return ghn;}
 
   void deleteGenHashNode(GenHashNode* ghn){
     FreeListEntry *f;
-    Cast(ghn,GenHashNode*,f,FreeListEntry*);
+    GenCast(ghn,GenHashNode*,f,FreeListEntry*);
     if(putOne(f)) {return;}
     delete ghn;
     return;}
