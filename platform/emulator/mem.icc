@@ -37,7 +37,7 @@ void * freeListMalloc(size_t size) {
   Assert(((size & 3) == 0) && (size > 0));
 
   if (size < freeListMaxSize) {
-
+    COUNT1(freeListAllocated,size);
     register void ** fl = &(FreeList[size]);
     register void * aux = *fl;
 
@@ -67,6 +67,7 @@ void freeListDisposeNoClean(void * addr, size_t size) {
   register void ** fl;
 
   if (size < freeListMaxSize) {
+    COUNT1(freeListDisposed,size);
     fl = &(FreeList[size]);
 #ifdef DEBUG_MEM
     void * aux = *fl;
