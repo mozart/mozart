@@ -1023,7 +1023,7 @@ define
       meth MakeTitle(PtrText FormatNumber Sep LayoutTitle M Level HTML
                      ?NodeTitle) HTML1 Title TheLabel Res in
          OzDocToHTML, FlushFloats(?HTML1)
-         Title = case {Label M.1} of title then
+         Title = case {Label {CondSelect M 1 unit}} of title then
                     OzDocToHTML, Batch(M.1 1 $)
                  else unit
                  end
