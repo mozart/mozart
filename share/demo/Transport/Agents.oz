@@ -154,12 +154,14 @@ define
 	    N={Length @plan}
 	 in
 	    if N>1 then
-	       act(load:Load ...)|act(load:NewLoad city:Dst ...)|_ = @plan
-	    in
-	       plan <- @plan.2
-	       if N>2 then status <- active
+	       case @plan of
+		  act(load:Load ...)|act(load:NewLoad city:Dst ...)|_
+	       then
+		  plan <- @plan.2
+		  if N>2 then status <- active
+		  end
+		  {self.truck drive(Dst Load NewLoad)}
 	       end
-	       {self.truck drive(Dst Load NewLoad)}
 	    end
 	 [] active then skip
 	 end
@@ -172,13 +174,15 @@ define
 	    History, print('idle.')
 	    load(0)
 	 [] active then
-	    act(load:Load ...)|act(load:NewLoad city:Dst ...)|_ = @plan
-	 in
-	    plan <- @plan.2
-	    if {Length @plan}=<1 then
-	       status <- idle
+	    case @plan of
+	       act(load:Load ...)|act(load:NewLoad city:Dst ...)|_
+	    then
+	       plan <- @plan.2
+	       if {Length @plan}=<1 then
+		  status <- idle
+	       end
+	       drive(Dst Load NewLoad)
 	    end
-	    drive(Dst Load NewLoad)
 	 end
       end
       
