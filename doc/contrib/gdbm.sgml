@@ -112,12 +112,18 @@ database.
     <title/Installation/
     <p>The GDBM library must be available on your system as a shared
 object library.  For Linux systems, this is normally the case.  For
-other systems, it may need to be built and installed.  To make this
-task as simple as possible, we provide a fix for the standard gdbm
-distribution: its purpose is to automate the creation of the shared
-object library.</p>
-    <p>Both the standard gdbm distribution and our fix can be
-downloaded from our ftp server:
+other systems, it may need to be built and installed.  Newer versions of
+GDBM (&EG; 1.8.0) will automatically build a shared object library if that
+is possible on your system.  Thus you should download the most recent version
+of GDBM from <ref.extern
+to="ftp://ftp.gnu.org/gnu/gdbm/"><file>ftp://ftp.gnu.org/gnu/gdbm/</file></ref.extern>
+and install it on your system.</p>
+    <p>If, for some bizarre reason, you must use an older version, the standard
+distribution needs to be patched to compile for <em>position independent code</em>
+and to create a shared object library.  Thus, for the older version 1.7.3, we
+provide a fix for the standard gdbm distribution: its purpose is to automate the
+creation of the shared object library. Both the standard gdbm 1.7.3 distribution and
+our fix can be downloaded from our ftp server:
 <list>
         <item><ref.extern to="ftp://ftp.mozart-oz.org/pub/mozart/extras/gdbm-1.7.3.tar.gz">ftp://ftp.mozart-oz.org/pub/mozart/extras/gdbm-1.7.3.tar.gz</ref.extern>
         <item><ref.extern to="ftp://ftp.mozart-oz.org/pub/mozart/extras/gdbm-1.7.3-fix.tar.gz">ftp://ftp.mozart-oz.org/pub/mozart/extras/gdbm-1.7.3-fix.tar.gz</ref.extern>
