@@ -210,23 +210,6 @@ Bool heapNewer(void * ptr1, void * ptr2)
   return (ptr1 < ptr2);
 }
 
-inline
-Bool reallyHeapNever(void *ptr1, void *ptr2)
-{
-  MemChunks *aux = MemChunks::list;
-  while(aux) {
-    if (aux->isInBlock(ptr1)) {
-      return !aux->isInBlock(ptr2) || heapNewer(ptr1, ptr2);
-    }
-    if (aux->isInBlock(ptr2))
-      return NO;
-    aux = aux->getNext();
-  }
-  Assert(0);
-  return NO;
-}
-
-
 // free list management
 #define freeListMaxSize 64+4
 
