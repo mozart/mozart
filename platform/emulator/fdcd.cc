@@ -438,6 +438,8 @@ OZ_Return cd_wrapper_b(int OZ_arity, OZ_Term OZ_args[],
   return EntailFD;
 }
 
+OZ_C_proc_proto(BIfdTellConstraint);
+
 OZ_C_proc_begin(BIfdTellConstraintCD, 3)
 {
   return cd_wrapper_b(OZ_arity, OZ_args, OZ_self, BIfdTellConstraint);
