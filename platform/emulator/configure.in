@@ -98,7 +98,7 @@ dnl *****************************************************************
 dnl Checks for programs.
 dnl *****************************************************************
 
-PATH=$TOPDIR/bin:$TOPDIR:$PATH
+PATH=$TOPDIRA/bin:$TOPDIRA:$PATH
 
 AC_MSG_CHECKING(for --with-pgcc)
 AC_ARG_WITH(pgcc,

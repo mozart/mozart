@@ -658,7 +658,7 @@ else
 fi
 
 
-PATH=$TOPDIR/bin:$TOPDIR:$PATH
+PATH=$TOPDIRA/bin:$TOPDIRA:$PATH
 
 echo $ac_n "checking for --with-pgcc""... $ac_c" 1>&6
 echo "configure:665: checking for --with-pgcc" >&5
