@@ -1631,12 +1631,12 @@ OZ_C_proc_begin(BIcloneSpace, 2) {
 } OZ_C_proc_end
 
 
-OZ_C_proc_begin(BIchooseSpace, 2) {
+OZ_C_proc_begin(BIcommitSpace, 2) {
   declareSpace();
   oz_declareArg(1,choice);
 
   if (space->isProxy()) {
-    return remoteSend(space,"Space.choose",choice);
+    return remoteSend(space,"Space.commit",choice);
   }
 
   if (space->isMerged())
@@ -1692,11 +1692,11 @@ OZ_C_proc_begin(BIchooseSpace, 2) {
   int r = smallIntValue(right) - 1;
 
   Thread *tt = sa->select(l,r);
-  // printf("Space.choose: "); taggedPrintLong(makeTaggedConst(tt),10,0);
+  
   if (!tt) {
-    return oz_raise(E_ERROR,E_KERNEL,"no thread",0);
-    // todo
+    return oz_raise(E_ERROR,E_KERNEL,"spaceNoChoice",1,tagged_space);
   }
+
   am.suspThreadToRunnable(tt);
   am.scheduleThread(tt);
 
@@ -7879,7 +7879,7 @@ BIspec allSpec[] = {
   {"Space.askVerbose",    2, BIaskVerboseSpace, 0},
   {"Space.merge",         2, BImergeSpace,      0},
   {"Space.clone",         2, BIcloneSpace,      0},
-  {"Space.commit",        2, BIchooseSpace,     0},
+  {"Space.commit",        2, BIcommitSpace,     0},
   {"Space.inject",        2, BIinjectSpace,     0},
 
   {"biExceptionHandler",         1, BIbiExceptionHandler,         0},
