@@ -7,11 +7,12 @@
   State: $State$
   */
 
-#include <ctype.h>
 #include <errno.h>
 #include <string.h>
 #include <stdarg.h>
 #include "ozstrstream.h"
+
+#include "iso-ctype.hh"
 
 #include "oz.h"
 
@@ -381,7 +382,7 @@ OZ_Term OZ_CStringToInt(char *str)
     if (aux[0] == '~') { aux++; sign = -1; }
     int i = 0;
     while(*aux) {
-      if (!isdigit(*aux)) {
+      if (!iso_isdigit((unsigned char) *aux)) {
 	OZ_warning("OZ_CStringToInt: no digit in %s",str);
 	return 0;
       }
@@ -419,7 +420,7 @@ char *OZ_parseFloat(char *s) {
   if (!p || *p++ != '.') {
     return NULL;
   }
-  while (isdigit(*p)) {
+  while (iso_isdigit((unsigned char) *p)) {
     p++;
   }
   switch (*p) {
@@ -442,10 +443,10 @@ char *OZ_parseInt(char *s)
   if (*p == '~') {
     p++;
   }
-  if (!isdigit(*p++)) {
+  if (!iso_isdigit((unsigned char) *p++)) {
     return 0;
   }
-  while (isdigit(*p)) {
+  while (iso_isdigit((unsigned char) *p)) {
     p++;
   }
   return p;
@@ -564,7 +565,7 @@ void float2buffer(ostream &out, OZ_Term term)
     case '+':
       break;
     default:
-      if (!isdigit(c)) hasDot=OK;
+      if (!iso_isdigit((unsigned char) c)) hasDot=OK;
       hasDigits=OK;
       out << c;
       break;
@@ -588,7 +589,7 @@ void atomq2buffer(ostream &out, char *s)
 {
   unsigned char c;
   while ((c = *s)) {
-    if (iscntrl(c)) {
+    if (iso_iscntrl(c)) {
       out << '\\';
       switch (c) {
       case '\'':
@@ -619,7 +620,7 @@ void atomq2buffer(ostream &out, char *s)
 	octOut(out,c);
 	break;
       }
-    } else if (c >= 127) {
+    } else if (!iso_isprint(c)) {
       out << '\\';
       octOut(out,c);
     } else {
@@ -645,12 +646,12 @@ Bool checkAtom(char *s)
 {
   char *t = s;
   unsigned char c = *s++;
-  if (!c || !islower(c)) {
+  if (!c || !iso_islower(c)) {
     return NO;
   }
   c=*s++;
   while (c) {
-    if (!isalnum(c) && c != '_') {
+    if (!iso_isalnum(c) && c != '_') {
       return NO;
     }
     c=*s++;

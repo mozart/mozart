@@ -9,7 +9,7 @@
 
 #include "wsock.hh"
 
-#include <ctype.h>
+#include "iso-ctype.hh"
 #include <string.h>
 #include <time.h>
 #include <errno.h>
@@ -3027,7 +3027,7 @@ OZ_C_proc_end
 
 #define TestChar(TEST)                                            \
   FirstCharArg;                                                   \
-  return OZ_unify(OZ_getCArg(1), TEST (i) ? NameTrue : NameFalse);
+  return OZ_unify(OZ_getCArg(1), TEST((unsigned char) i) ? NameTrue : NameFalse);
 
 OZ_C_proc_begin(BIcharIs,2) {
  OZ_declareNonvarArg(0,c);
@@ -3038,36 +3038,36 @@ OZ_C_proc_begin(BIcharIs,2) {
  return OZ_unify(out,(i >=0 && i <= 255) ? NameTrue : NameFalse);
 } OZ_C_proc_end
 
-OZ_C_proc_begin(BIcharIsAlNum,2) { TestChar(isalnum); } OZ_C_proc_end
+OZ_C_proc_begin(BIcharIsAlNum,2) { TestChar(iso_isalnum); } OZ_C_proc_end
 
-OZ_C_proc_begin(BIcharIsAlpha,2) { TestChar(isalpha); } OZ_C_proc_end
+OZ_C_proc_begin(BIcharIsAlpha,2) { TestChar(iso_isalpha); } OZ_C_proc_end
 
-OZ_C_proc_begin(BIcharIsCntrl,2) { TestChar(iscntrl); } OZ_C_proc_end
+OZ_C_proc_begin(BIcharIsCntrl,2) { TestChar(iso_iscntrl); } OZ_C_proc_end
 
-OZ_C_proc_begin(BIcharIsDigit,2) { TestChar(isdigit); } OZ_C_proc_end
+OZ_C_proc_begin(BIcharIsDigit,2) { TestChar(iso_isdigit); } OZ_C_proc_end
 
-OZ_C_proc_begin(BIcharIsGraph,2) { TestChar(isgraph); } OZ_C_proc_end
+OZ_C_proc_begin(BIcharIsGraph,2) { TestChar(iso_isgraph); } OZ_C_proc_end
 
-OZ_C_proc_begin(BIcharIsLower,2) { TestChar(islower); } OZ_C_proc_end
+OZ_C_proc_begin(BIcharIsLower,2) { TestChar(iso_islower); } OZ_C_proc_end
 
-OZ_C_proc_begin(BIcharIsPrint,2) { TestChar(isprint); } OZ_C_proc_end
+OZ_C_proc_begin(BIcharIsPrint,2) { TestChar(iso_isprint); } OZ_C_proc_end
 
-OZ_C_proc_begin(BIcharIsPunct,2) { TestChar(ispunct); } OZ_C_proc_end
+OZ_C_proc_begin(BIcharIsPunct,2) { TestChar(iso_ispunct); } OZ_C_proc_end
 
-OZ_C_proc_begin(BIcharIsSpace,2) { TestChar(isspace); } OZ_C_proc_end
+OZ_C_proc_begin(BIcharIsSpace,2) { TestChar(iso_isspace); } OZ_C_proc_end
 
-OZ_C_proc_begin(BIcharIsUpper,2) { TestChar(isupper); } OZ_C_proc_end
+OZ_C_proc_begin(BIcharIsUpper,2) { TestChar(iso_isupper); } OZ_C_proc_end
 
-OZ_C_proc_begin(BIcharIsXDigit,2) {TestChar(isxdigit);} OZ_C_proc_end
+OZ_C_proc_begin(BIcharIsXDigit,2) {TestChar(iso_isxdigit);} OZ_C_proc_end
 
 OZ_C_proc_begin(BIcharToLower,2) {
   FirstCharArg;
-  return OZ_unifyInt(OZ_getCArg(1), tolower(i));
+  return OZ_unifyInt(OZ_getCArg(1), iso_tolower(i));
 } OZ_C_proc_end
 
 OZ_C_proc_begin(BIcharToUpper,2) {
   FirstCharArg;
-  return OZ_unifyInt(OZ_getCArg(1), toupper(i));
+  return OZ_unifyInt(OZ_getCArg(1), iso_toupper(i));
 } OZ_C_proc_end
 
 OZ_C_proc_begin(BIcharToAtom,2) {
@@ -3082,11 +3082,11 @@ OZ_C_proc_begin(BIcharToAtom,2) {
 OZ_C_proc_begin(BIcharType,2) {
   FirstCharArg;
   TaggedRef type;
-  if (isupper(i))      type = AtomUpper; 
-  else if (islower(i)) type = AtomLower;
-  else if (isdigit(i)) type = AtomDigit;
-  else if (isspace(i)) type = AtomCharSpace;
-  else if (ispunct(i)) type = AtomPunct;
+  if (iso_isupper(i))      type = AtomUpper; 
+  else if (iso_islower(i)) type = AtomLower;
+  else if (iso_isdigit(i)) type = AtomDigit;
+  else if (iso_isspace(i)) type = AtomCharSpace;
+  else if (iso_ispunct(i)) type = AtomPunct;
   else                 type = AtomOther;
   return OZ_unify(OZ_getCArg(1), type);
 } OZ_C_proc_end
