@@ -229,8 +229,11 @@ OZ_Return LinNotEqPropagator::propagate(void)
 
 //-----------------------------------------------------------------------------
 #define TMUELLER
-
+#define NEW
 #ifdef TMUELLER
+#ifdef NEW
+#include "sum_filter.hh"
+#else
 OZ_Return LinLessEqPropagator::propagate(void)
 {
   OZ_DEBUGPRINTTHIS("in ");
@@ -243,7 +246,7 @@ OZ_Return LinLessEqPropagator::propagate(void)
     return (c <= 0) ? PROCEED: FAILED;
   }
   // if possible reduce to ternary propagator 
-  if (sz == 2 && mayBeEqualVars()) {
+  if (sz == 2) {
     if ((a[0] == 1) && (a[1] == -1)) {
       return replaceBy(new LessEqOffPropagator(reg_x[0], reg_x[1], -c));
     } else if ((a[0] == -1) && (a[1] == 1)) {
@@ -318,6 +321,7 @@ failure:
   OZ_DEBUGPRINT(("fail \n"));
   return P.fail();
 }
+#endif
 #else
 OZ_Return LinLessEqPropagator::propagate(void)
 {
