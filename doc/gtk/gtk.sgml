@@ -38,8 +38,8 @@
 <!ENTITY intro     SYSTEM "intro.sgml">
 <!ENTITY basics    SYSTEM "basics.sgml">
 <!ENTITY mapping   SYSTEM "mapping.sgml">
-<!ENTITY builder   SYSTEM "builder.sgml">
 <!ENTITY reference SYSTEM "reference.sgml">
+<!ENTITY builder   SYSTEM "builder.sgml">
 
 ]>
 
@@ -49,8 +49,8 @@
     <Meta name="html.split" value="chapter.intro">
     <Meta name="html.split" value="chapter.basics">
     <Meta name="html.split" value="chapter.mapping">
-    <Meta name="html.split" value="chapter.builder">
     <Meta name="html.split" value="chapter.reference">
+    <Meta name="html.split" value="chapter.builder">
     <Meta name="html.split.index" value="">
 
     <Meta name=ozversion value="3.0">
@@ -77,7 +77,7 @@
     &intro;
     &basics;
     &mapping;
-    &builder;
     &reference;
+    &builder;
   </Body>
 </Book>

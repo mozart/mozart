@@ -23,44 +23,50 @@
   -->
 
 <Chapter id="chapter.reference">
-  <Title/API Reference/
+  <Title/Oz API Reference/
   <P>
-    This chapter describes functions specific to the binding.
-  <Section><Title/String Arrays/
-  <P>
-  <List>
-    <Entry><<makeStrArr>>
-    <Synopsis>
-      <<{GTK.makeStrArr ?_{Ss}}>>
-    <Item>
-      convertes the virtual string list ?_{Ss} to an string array.
-    <Entry><<getStrArr>>
-    <Synopsis>
-      <<{GTK.getStrArr ?_{A}}>>
-    <Item>
-      convertes the string array ?_{A} to a virtual string list.
-  </List>
-  <Section><Title/GtkArg Handling/
-  <P>
-  <List>
-    <Entry><<makeArg>>
-    <Synopsis>
-      <<{GTK.makeArg ?_{N} ?_{V}}>>
-    <Item>
-      creates a fresh GtkArg structure
-      with the name field set to ?_{N} and the value denoted by ?_{V}.
-      The function recognizes values of type int, float, bool, string
-      and foreign pointer.
-    <Entry><<getArg>>
-    <Synopsis>
-      <<{GTK.getArg ?_{A}}>>
-    <Item>
-      retrieves the stored value from ?_{A}.
-    <Entry><<freeArg>>
-    <Synopsis>
-      <<{GTK.freeArg ?_{A}}>>
-    <Item>
-      deallocates the given ?_{A} GtkArg structure. Note that
-      ?_{A} must have been allocated with <<GTK.makeArg>>.
-  </List>
+    This chapter describes functions specific to the binding, &ie;,
+    those procedures not covered by the mapping described in <Ptr
+    to="chapter.mapping">.
+  <Section>
+    <Title/String Arrays/
+    <P>
+      <List>
+	<Entry><<makeStrArr>>
+	<Synopsis>
+	  <<{GTK.makeStrArr ?+{Vs} ??{ForeignPointer}}>>
+	<Item>
+	  converts the list of virtual strings ?_{Vs} to a string array.
+	<Entry><<getStrArr>>
+	<Synopsis>
+	  <<{GTK.getStrArr ?+{ForeignPointer} ??{Vs}}>>
+	<Item>
+	  converts the string array ?_{ForeignPointer} to a list of virtual
+	  strings.
+	<!--** freeing? -->
+      </List>
+  <Section>
+    <Title/GtkArg Handling/
+    <P>
+      <List>
+	<Entry><<makeArg>>
+	<Synopsis>
+	  <<{GTK.makeArg ?+{V} ?+{X} ??{ForeignPointer}}>>
+	<Item>
+	  creates a <Code proglang=c/GtkArg/ structure with the name&nbsp;?_{V}
+	  and the value&nbsp;?_{X}.  ?_{X} can be of type int, float, bool,
+	  string and foreign pointer.
+	  <!--** virtual strings? -->
+	<Entry><<getArg>>
+	<Synopsis>
+	  <<{GTK.getArg ?+{ForeignPointer} ??{X}}>>
+	<Item>
+	  retrieves the value stored in ?_{ForeignPointer}.
+	<Entry><<freeArg>>
+	<Synopsis>
+	  <<{GTK.freeArg ?+{ForeignPointer}}>>
+	<Item>
+	  deallocates the GtkArg structure, which must have been allocated
+	  with <<GTK.makeArg>>.
+      </List>
 </Chapter>

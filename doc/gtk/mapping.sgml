@@ -25,55 +25,36 @@
 <Chapter id="chapter.mapping">
   <Title/How the C API is mapped to Oz/
   <P>
-    This chapter describes the details on how the C API has been mapped
-    to Oz.
-  <Section><Title/Overview/
-  <P>
-    GTK+ is roughly organized into the following packages
-    <List>
-     <Item>GLib
-     <Item>GDK
-     <Item>GTK
-     <Item>GtkCanvas
-    </List>
-  <P>
-    which are logically structured into
-    namespace/object/(methods|fields) and namespace/constant, respectively.
-    Naming conventions reflect the fact that constants are type specific.
-  <Para class=apropos><Title/Packages considered/
-    With few exceptions, the binding maps the entire
-    GDK, GTK and GtkCanvas Namespaces. The latter has been cut out
-    of the gnome name space for portability reasons.
-  <P>
-    The GLib entities are provided on datastructure
-    level only and limited to the necessary support structures.
-  <Section><Title/Mapping structure/
-  <P>
-     The mapping has been done to reflect the original organisation
-     units:
-     <List>
-       <Item>Each namespace resides in a separate
-         oz module named GDK, GTK, and GTKCANVAS, respectively.
-       <Item>Each widget object (including most GDK objects)
-         is mapped to a Class which
-         provides the appropriate set of methods.
-         The Oz class hierarchy corresponds to the given widget hierarchy.
-       <Item>Each class provides accessors to its widget structure fields.
+    This chapter describes the details on how the C API is mapped to Oz.
+    This knowledge is required when you want to make use of the original
+    reference documentation at <Ref.Extern to="http://www.gtk.org/api/"
+    ><File>http://www.gtk.org/api/</File></Ref.Extern> with the binding.
+  <Section>
+    <Title/Modules/
+    <P>
+      GTK+ is organized into the following modules:
+      <List>
+       <Item><<GDK at 'x-oz://system/gtk/GDK'>>
+       <Item><<GTK at 'x-oz://system/gtk/GTK'>>
+       <Item><<GtkCanvas at 'x-oz://system/gtk/GTKCANVAS'>>
       </List>
-  <P>
-    The only difference is that toplevel functions are also put into the
-    appropriate classes. In practice, therefore, it is necessary to create
-    a dummy object using the <<noop>> constructor before calling any of them.
-  <Section><Title/Name translation/
-  <P>
-    The usage of Modules and classes together with Oz naming
-    conventions made it necessary to map names. The scheme is straight
-    forward and is explained by means of an example.
-  <Para class=apropos><Title/GtkButton Translation/
-    Consider the relevant c code for the GtkButton object
-    which is derived from GtkBin (a container type):
-<Span proglang=c>
-<<<
+      Each module represents a namespace.  The corresponding API constants
+      and functions are mapped to constants and classes and class methods
+      in these namespaces.  The Oz class hierarchy corresponds to the widget
+      hierarchy.
+    <Para class=apropos><Title/Toplevel Functions/
+      Note that toplevel C functions are also mapped to methods of the
+      appropriate classes.  Since Oz has no static methods, it may be
+      necessary in practice to create a dummy object using the <<noop>>
+      constructor to call them.  The <<noop>> constructor does not actually
+      create a widget.
+  <Section>
+    <Title/Name Translation/
+    <P>
+      We will illustrate how C structure fields and C functions are mapped
+      to methods by an example.  Consider the C API for <Code proglang=c
+      /GtkButton/, which is derived from <Code proglang=c/GtkBin/:
+<Code display proglang=c>/* fields */
 struct _GtkButton {
   GtkBin bin;
   GtkWidget *child;
@@ -81,120 +62,142 @@ struct _GtkButton {
   guint button_down : 1;
   guint relief : 2;
 };
+/* constructors */
 GtkWidget *gtk_button_new();
-GtkWidget *gtk_button_new_with_label(const gchar *label);
-void gtk_button_pressed (GtkButton *button);
-void gtk_button_released (GtkButton *button);
-void gtk_button_clicked (GtkButton *button);
-void gtk_button_enter (GtkButton *button);
-void gtk_button_leave (GtkButton *button);
-void gtk_button_set_relief (GtkButton *button, GtkReliefStyle newstyle);
-GtkReliefStyle gtk_button_get_relief (GtkButton *button);
->>>
-</Span>
-This is mapped to the following oz code
-<<<class ButtonFields
-   meth buttonGetFieldBin($) &ellipsis end
-   meth buttonGetFieldChild($) &ellipsis end
-   meth buttonGetFieldInButton($) &ellipsis end
-   meth buttonGetFieldButtonDown($) &ellipsis end
-   meth buttonGetFieldRelief($) &ellipsis end
-end
-
-class Button from GTK.bin ButtonFields
-   meth new() &ellipsis; end
-   meth newWithLabel(Label) &ellipsis; end
-   meth pressed() &ellipsis; end
-   meth released() &ellipsis; end
-   meth clicked() &ellipsis; end
-   meth enter() &ellipsis; end
-   meth leave() &ellipsis; end
-   meth setRelief(NewStyle) &ellipsis; end
-   meth getRelief($) &ellipsis; end
-end
->>>
-  which resides in the GTK module.
-  <Para class=apropos><Title/General Scheme/
-    The general scheme is that all names are tranlated to a
-    camel-casing pattern. Since Classes belong to a module and methods
-    belong to a class, the module and class name prefixes
-    are cut off to increase readability.
-    To prevent public methods from beeing private,
-    the first letter of their name is kept lower case.
-  <Para class=apropos><Title/Field Accessors/
-    The field accessors behave similar in that they are also camel-cased.
-    In contrast to the standard methods, they are built using a
-    [className]GetField[FieldName] pattern. For example, the button_down
-    Field of the GtkButton is read using the <<buttonGetFieldButtonDown>>
-    accessor method of the class <<GTK.button>>.
-  <Section><Title/Types/
-  <P>
-  <!-- Not complete yet -->
-  <Figure id="mapping.types">
-    <Caption/C to OZ Type Translation/
-    <Table>
-      <tr><th>C Type</th><th>Oz Type</th></tr>
-      <tr><td>(g(u)int|g(u)long|g(u)char|bool)</td><td>int</td></tr>
-      <tr><td>(gfloat|gdouble)</td><td>float</td></tr>
-      <tr><td>(enums|flags)</td><td>int constants</td></tr>
-      <tr><td>g(u)char*</td><td>virtual string</td></tr>
-      <tr><td>g(u)char*[]</td><td>(virtual string) list</td></tr>
-      <tr><td>GdkEvent*</td><td>record</td></tr>
-      <tr><td>GList*</td><td>object list</td></tr>
-      <tr><td>double[4]</td><td>float list (with four elements)</td></tr>
-      <tr><td>all other pointers (i.e. GtkWidget*)</td><td>object</td></tr>
-    </Table>
-  </Figure>
-  <P>
-    Figure <Ptr to="mapping.types">
-    shows the translation of the C types into Oz types.
-    Those values are converted back and forth transparently, preserving
-    identity whenever possible.
-  <Para class=apropos><Title/InOut Arguments/
-    Some functions use so-called input/output argument types which are
-    mapped using a pair <<XIn#XOut>> as argument. The result will be
-    bound to <<Xout>>. C types considered to be a inout argument are
-    <<int*>> and <<double*>>.
-  <Para class=apropos><Title/Gdk Event Union/
-    Each member of the GdkEvent union is mapped to a record where the label
-    indictates the member.
-    If those events appear as Callbacks arguments,
-    the appropriate record is built.
-  <Section><Title/Memory Management/
-  <P>
-    GTK and GDK use reference counting garbage collection
-    for most of their datastructures, and the binding safely
-    keeps up this property for those items.
-  <P>
-  <!-- Not complete yet -->
-  <Figure id="mapping.manualgc">
-    <Caption/Manual managed datastructures/
-    <Table class=colortable>
-      <tr><th>Type</th>
-          <th>Constructor</th><th>Accessor</th>
-          <th>Destructor</th></tr>
-      <tr><td>GdkImlibImage*</td>
-          <td>loadImage</td><td>object</td>
-          <td>destroyImage</td></tr>
-      <tr><td>GtkArg*</td>
-          <td>GTK.makeArg</td><td>GTK.getArg</td>
-          <td>GTK.freeArg</td></tr>
-      <tr><td>g(u)char*[]</td>
-          <td>GTK.makeStrArr</td><td>GTK.getStrArr</td>
-          <td>GTK.freeStrArr</td></tr>
-    </Table>
-  </Figure>
-  <P>
-    Some things, however, need manual allocation and deallocation
-    by the user. They are shown in figure <Ptr to="mapping.manualgc">.
-  <P>
-    For details on how to use them, we refer to the api reference.
-  <Section><Title/Limitations/
-  <P>
-    Due to implementation limitations, some functions are not provided
-    with their full functionality.
-    That is, all functions using GtkArgs Arrays and all
-    variable argument version of those functions support only one argument.
-    This usually yields only performance costs since most of those
-    functions can be called iteratively.
+GtkWidget *gtk_button_new_with_label
+           (const gchar *label);
+/* signal emitters */
+void gtk_button_pressed(GtkButton *button);
+void gtk_button_released(GtkButton *button);
+void gtk_button_clicked(GtkButton *button);
+void gtk_button_enter(GtkButton *button);
+void gtk_button_leave(GtkButton *button);
+/* attribute accessors */
+void gtk_button_set_relief
+     (GtkButton *button, GtkReliefStyle newstyle);
+GtkReliefStyle gtk_button_get_relief(GtkButton *button);</Code>
+This is mapped an Oz class as follows:
+<<<class GTK.button from GTK.bin
+   %% fields
+   meth buttonGetFieldBin(?Bin)
+   meth buttonGetFieldChild(?Widget)
+   meth buttonGetFieldInButton(?I)
+   meth buttonGetFieldButtonDown(?I)
+   meth buttonGetFieldRelief(?I)
+   %% constructors
+   meth new()
+   meth newWithLabel(Label)
+   %% signal emitters
+   meth pressed()
+   meth released()
+   meth clicked()
+   meth enter()
+   meth leave()
+   %% attribute accessors
+   meth setRelief(ReliefStyle)
+   meth getRelief(?ReliefStyle)
+end>>>
+    <Para class=apropos><Title/General Scheme/
+      The general scheme is that all underscored identifiers are translated to
+      use camel-casing.  Since classes belong to a module and methods belong
+      to a class, the module and class name prefixes are cut off to increase
+      readability.  The first letter of method labels is downcased to allow
+      to use convenient Oz atom syntax.
+    <Para class=apropos><Title/Field Accessors/
+      Field accessors are also camel-cased, but in contrast to the standard
+      methods, they use the <<?{className}GetField?{FieldName}>> pattern.
+      For example, the <Code proglang=c/button_down/ field above is read
+      using the <<buttonGetFieldButtonDown>> accessor method of the class
+      <<GTK.button>>.  Fields cannot be written to directly.
+    <Para class=apropos><Title/Constants/
+      The members of enumerations and flags are translated to constants
+      exported with all upper case names containing underscores, with the
+      module prefix cut off.
+  <Section>
+    <Title/Types/
+    <P>
+      <!--** still incomplete -->
+      <Ptr to="figure.types"> shows the mapping of the C types onto Oz types.
+      Values are converted back and forth transparently, preserving identity
+      whenever possible.
+      <Figure id="figure.types">
+	<Caption/C to Oz Type Translation/
+	<Table>
+	  <Tr><Th>C Type<Th>Oz Type
+	  <Tr><Td proglang=c><<gint>>, <<guint>>, <<glong>>, <<gulong>><Td>int
+	  <Tr><Td proglang=c><<gboolean>><Td><<0>> and <<1>>
+	  <Tr><Td proglang=c><<gchar>>, <<guchar>><Td>int
+	  <Tr><Td proglang=c><<gfloat>>, <<gdouble>><Td>float
+	  <Tr><Td>enumerations, flags<Td>integer
+	  <Tr><Td proglang=c><<gchar *>>, <<guchar *>><Td>virtual string
+	  <Tr><Td proglang=c><<gchar *[]>>, <<guchar *[]>>
+	    <Td>list of virtual strings
+	  <Tr><Td proglang=c><<GdkEvent *>><Td>record
+	  <Tr><Td proglang=c><<GList *>><Td>list of objects
+	  <Tr><Td proglang=c><<double[4]>><Td>list of four floats
+	  <Tr><Td proglang=c>all other pointers (&ie;, <<GtkWidget *>>)
+	    <Td>object
+	</Table>
+      </Figure>
+    <Para class=apropos><Title/Flags/
+      Flags are translated to integer constants.  In general, several
+      constants can be combined using addition (<<+>>).
+    <Para class=apropos><Title/Inout Arguments/
+      The <<int *>> and <<double *>> types are considered to be <Def/inout/
+      arguments.  They are mapped to pairs <<XIn#XOut>> where <<XIn>> is the
+      value at the time the function is called and <<XOut>> will be bound to
+      the value assigned by the function.
+    <Para class=apropos><Title/Gdk Events/
+      Where a GDK event (a value of the <Code proglang=c/GdkEvent/ union
+      type) appears as argument to a callback, a record is constructed using
+      the label to indicate which member it belongs to.
+      <!--** what are the subtrees? -->
+  <Section>
+    <Title/Memory Management/
+    <P>
+      GTK+ and GDK use reference counting garbage collection for most of
+      their datastructures, and the binding safely keeps up this property
+      for those items.
+    <P>
+      Some data, however, needs manual allocation and deallocation by the
+      user.  These types are shown in <Ptr to="figure.manualgc">.
+      <!--** still incomplete -->
+      <Figure id="figure.manualgc">
+	<Caption/Manually Managed Data Structures/
+	<Table>
+	  <Tr>
+	    <Th>C Type
+	    <Th>Oz Type
+	    <Th>Constructor
+	    <Th>Accessor
+	    <Th>Destructor
+	  <Tr>
+	    <Td proglang=c><<GdkImlibImage *>>
+	    <Td><<GDK.imlib>>
+	    <Td><<loadImage>> method
+	    <Td>object
+	    <Td><<destroyImage>> method
+	  <Tr>
+	    <Td proglang=c><<GtkArg *>>
+	    <Td>foreign pointer
+	    <Td><<GTK.makeArg>>
+	    <Td><<GTK.getArg>>
+	    <Td><<GTK.freeArg>>
+	  <Tr>
+	    <Td proglang=c><<gchar *[]>>, <<guchar *[]>>
+	    <Td>foreign pointer
+	    <Td><<GTK.makeStrArr>>
+	    <Td><<GTK.getStrArr>>
+	    <Td><P.silent><!--** missing -->
+	</Table>
+      </Figure>
+      For details on how to use these, refer to <Ptr to="chapter.reference">.
+  <Section>
+    <Title/Limitations/
+    <P>
+      Due to implementation limitations, not all functions are fully supported:
+      All functions using arrays of <Code proglang=c/GtkArg/s and all variable
+      argument versions of those functions support only a single argument.
+      This usually only results in performance loss (not loss of expressivity)
+      since most of these functions can be called iteratively.
 </Chapter>
