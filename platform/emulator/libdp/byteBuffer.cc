@@ -268,7 +268,7 @@ void ByteBuffer::hasRead(int sizeRead) {
 }
 
 Bool ByteBuffer::putDebug() {
-  return availableSpace()>0;
+  return availableSpace()+1>0; // +1 since put trailer uses this too...
 };
 
 // Glue and fixes during development.
