@@ -170,10 +170,10 @@ OZ_Boolean union3(OZ_FSetConstraint &x,
                   OZ_FSetConstraint &z,
                   OZ_Boolean &touched)
 {
-  _OZ_DEBUGPRINT(("union3 in: x=%s ", x.toString()));
-  _OZ_DEBUGPRINT(("union3 in: y=%s ", y.toString()));
-  _OZ_DEBUGPRINT(("union3 in: z=%s ", z.toString()));
-  _OZ_DEBUGPRINT(("union3 in: t=%d\n", touched));
+  OZ_DEBUGPRINT(("union3 in: x=%s ", x.toString()));
+  OZ_DEBUGPRINT(("union3 in: y=%s ", y.toString()));
+  OZ_DEBUGPRINT(("union3 in: z=%s ", z.toString()));
+  OZ_DEBUGPRINT(("union3 in: t=%d\n", touched));
 
   FSetTouched xt, yt, zt;
 
@@ -185,42 +185,42 @@ OZ_Boolean union3(OZ_FSetConstraint &x,
     xt = x;  yt = y;  zt = z;
 
     FailOnInvalid(x >= (z - y)); // glb
-    _OZ_DEBUGPRINT(("union3: x=%s",x.toString()));
+    OZ_DEBUGPRINT(("union3: x=%s",x.toString()));
 
     FailOnInvalid(y >= (z - x)); // glb
-    _OZ_DEBUGPRINT(("union3: y=%s",y.toString()));
+    OZ_DEBUGPRINT(("union3: y=%s",y.toString()));
 
     FailOnInvalid(z <<= (x | y)); // lub
-    _OZ_DEBUGPRINT(("union3: z=%s",z.toString()));
+    OZ_DEBUGPRINT(("union3: z=%s",z.toString()));
 
     FailOnInvalid(x <= z); // lub
-    _OZ_DEBUGPRINT(("union3: x=%s",x.toString()));
+    OZ_DEBUGPRINT(("union3: x=%s",x.toString()));
 
     FailOnInvalid(y <= z); // lub
-    _OZ_DEBUGPRINT(("union3: y=%s",y.toString()));
+    OZ_DEBUGPRINT(("union3: y=%s",y.toString()));
 
     touched |= (repeat = (xt <= x || yt <= y || zt <= z));
   } while (repeat);
 
-  _OZ_DEBUGPRINT(("union3 out: x=%s ", x.toString()));
-  _OZ_DEBUGPRINT(("union3 out: y=%s ", y.toString()));
-  _OZ_DEBUGPRINT(("union3 out: z=%s ", z.toString()));
-  _OZ_DEBUGPRINT(("union3 out: t=%d\n", touched));
+  OZ_DEBUGPRINT(("union3 out: x=%s ", x.toString()));
+  OZ_DEBUGPRINT(("union3 out: y=%s ", y.toString()));
+  OZ_DEBUGPRINT(("union3 out: z=%s ", z.toString()));
+  OZ_DEBUGPRINT(("union3 out: t=%d\n", touched));
 
   return OZ_TRUE;
 
 failure:
 
-  _OZ_DEBUGPRINT(("union3 failed: x=%s ", x.toString()));
-  _OZ_DEBUGPRINT(("union3 failed: y=%s ", y.toString()));
-  _OZ_DEBUGPRINT(("union3 failed: z=%s\n", z.toString()));
+  OZ_DEBUGPRINT(("union3 failed: x=%s ", x.toString()));
+  OZ_DEBUGPRINT(("union3 failed: y=%s ", y.toString()));
+  OZ_DEBUGPRINT(("union3 failed: z=%s\n", z.toString()));
 
   return OZ_FALSE;
 }
 
 OZ_Return FSetUnionNPropagator::propagate(void)
 {
-  OZ_DEBUGPRINTTHIS("in ");
+  _OZ_DEBUGPRINTTHIS("in ");
 
   DECL_DYN_ARRAY(OZ_FSetVar, vs, _vs_size);
   OZ_FSetVar s(_s);
@@ -259,7 +259,9 @@ OZ_Return FSetUnionNPropagator::propagate(void)
 
     FailOnInvalid(*s <<= aux);
 
-    return P.vanish();
+    P.vanish();
+    _OZ_DEBUGPRINTTHIS("out ");
+    return OZ_ENTAILED;
   }
 
   do {
@@ -294,12 +296,12 @@ OZ_Return FSetUnionNPropagator::propagate(void)
       _vs_size = j;
     }
 
-    OZ_DEBUGPRINTTHIS("out ");
+    _OZ_DEBUGPRINTTHIS("out ");
     return r;
   }
 
 failure:
-  OZ_DEBUGPRINTTHIS("failed");
+  _OZ_DEBUGPRINTTHIS("failed");
   return P.fail();
 }
 
@@ -349,7 +351,7 @@ OZ_Return FSetPartitionPropagator::propagate(void)
       }
       j += 1;
     }
-    _OZ_DEBUGPRINT(("%d:%d", j, _vs_size));
+    OZ_DEBUGPRINT(("%d:%d", j, _vs_size));
 
     _vs_size = j;
   }
@@ -372,13 +374,13 @@ OZ_Return FSetPartitionPropagator::propagate(void)
 #endif
 
   if (_vs_size == 0) {
-    _OZ_DEBUGPRINTTHIS("_vs_size == 0 out");
+    OZ_DEBUGPRINTTHIS("_vs_size == 0 out");
     FailOnInvalid(*s <<= OZ_FSetConstraint(fs_empty));
     return P.vanish();
   } else if (_vs_size == 1) {
     P.vanish();
 
-    _OZ_DEBUGPRINTTHIS("_vs_size == 1 out");
+    OZ_DEBUGPRINTTHIS("_vs_size == 1 out");
 
     return replaceBy(_s, _vs[0]);
   }
@@ -387,16 +389,16 @@ OZ_Return FSetPartitionPropagator::propagate(void)
     OZ_FSetValue u(fs_empty);
 
     for (i = _vs_size; i--; ) {
-      _OZ_DEBUGPRINT(("vs[%d]=%s", i, vs[i]->toString()));
-      _OZ_DEBUGPRINT(("vs[%d]->getGlbSet=%s", i, vs[i]->getGlbSet().toString()));
+      OZ_DEBUGPRINT(("vs[%d]=%s", i, vs[i]->toString()));
+      OZ_DEBUGPRINT(("vs[%d]->getGlbSet=%s", i, vs[i]->getGlbSet().toString()));
       OZ_FSetValue vsi_glb(vs[i]->getGlbSet());
-      _OZ_DEBUGPRINT(("glb(vs[%d])=%s", i, vsi_glb.toString()));
+      OZ_DEBUGPRINT(("glb(vs[%d])=%s", i, vsi_glb.toString()));
       if ((u & vsi_glb).getCard() > 0) {
-        _OZ_DEBUGPRINT(("fuck"));
+        OZ_DEBUGPRINT(("fuck"));
         goto failure;
       }
       u |= vsi_glb;
-      _OZ_DEBUGPRINT(("u=%s",  u.toString()));
+      OZ_DEBUGPRINT(("u=%s",  u.toString()));
     }
 
 
@@ -406,7 +408,7 @@ OZ_Return FSetPartitionPropagator::propagate(void)
     do {
       doagain = OZ_FALSE;
 
-      _OZ_DEBUGPRINT(("0=%d", doagain));
+      OZ_DEBUGPRINT(("0=%d", doagain));
       if (dodisjoint)
         for (i = _vs_size; i--; ) {
           OZ_FSetValue vsi_glb(vs[i]->getGlbSet());
@@ -431,7 +433,7 @@ OZ_Return FSetPartitionPropagator::propagate(void)
 
 
       for (i = start; i < _vs_size - 1; i += 1) {
-        _OZ_DEBUGPRINT(("i=%d", i));
+        OZ_DEBUGPRINT(("i=%d", i));
         if (!union3(aux[i], *vs[i], aux[i+1], doagain))
           goto failure;
         if (first  == -2 && doagain == OZ_TRUE)
@@ -440,17 +442,17 @@ OZ_Return FSetPartitionPropagator::propagate(void)
       if (start > 0 && !doagain) {
         start = 0;
         doagain = OZ_TRUE;
-        _OZ_DEBUGPRINT(("final check"));
+        OZ_DEBUGPRINT(("final check"));
       }
 
       if (!union3(*vs[_vs_size-1], aux[_vs_size-1], *s, doagain))
         goto failure;
 
-      _OZ_DEBUGPRINT(("3=%d", doagain));
+      OZ_DEBUGPRINT(("3=%d", doagain));
       count ++;
-      _OZ_DEBUGPRINT(("%d first(%d)", count, first));
+      OZ_DEBUGPRINT(("%d first(%d)", count, first));
     } while (doagain);
-    _OZ_DEBUGPRINT((" %d:%d", count, _vs_size));
+    OZ_DEBUGPRINT((" %d:%d", count, _vs_size));
   }
   {
     OZ_Return r = P.leave();

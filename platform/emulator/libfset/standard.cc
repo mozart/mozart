@@ -330,9 +330,14 @@ OZ_Return FSetDistinctPropagator::propagate(void)
     int card_glb_y = y->getGlbCard();
     int card_lub_y = y->getLubCard();
 
-    if ((x_val == glb_y) && (card_glb_y + 1 == card_lub_y)) {
-      FailOnInvalid(y->putCard(card_lub_y, card_lub_y));
-      return P.vanish();
+    if ((card_glb_y + 1) == card_lub_y) {
+      if (x_val.getCard() == 1 && card_lub_y == 1) {
+        FailOnInvalid(y->putCard(0, 0));
+        return P.vanish();
+      } else if ((x_val == glb_y) && (card_glb_y + 1 == card_lub_y)) {
+        FailOnInvalid(y->putCard(card_lub_y, card_lub_y));
+        return P.vanish();
+      }
     }
   }
 
@@ -343,9 +348,14 @@ OZ_Return FSetDistinctPropagator::propagate(void)
     int card_glb_x = x->getGlbCard();
     int card_lub_x = x->getLubCard();
 
-    if ((y_val == glb_x) && (card_glb_x + 1 == card_lub_x)) {
-      FailOnInvalid(x->putCard(card_lub_x, card_lub_x));
-      return P.vanish();
+    if ((card_glb_x + 1) == card_lub_x) {
+      if (y_val.getCard() == 1 && card_lub_x == 1) {
+        FailOnInvalid(x->putCard(0, 0));
+        return P.vanish();
+      } else if (y_val == glb_x) {
+        FailOnInvalid(x->putCard(card_lub_x, card_lub_x));
+        return P.vanish();
+      }
     }
   }
 
