@@ -422,6 +422,7 @@ void CodeArea::display (ProgramCounter from, int sz, FILE* ofile)
     case WAITTOP:
     case ASK: 
     case RETURN:
+    case EMPTYCLAUSE:
     case CLAUSE:
     case LASTCLAUSE:
     case DEALLOCATEL:

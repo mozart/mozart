@@ -2416,6 +2416,7 @@ LBLdispatcher:
 // -------------------------------------------------------------------------
 
   Case(WAIT)
+    LBLwait:
     {
       CBB->setWaiting();
       CBB->decSuspCount();
@@ -2538,7 +2539,6 @@ LBLdispatcher:
 
   Case(CLAUSE)
     {
-
       Board *bb = new Board(CAA,CAA->isAsk()?Bo_Ask:Bo_Wait);
       e->setCurrent(bb,OK);
       CBB->incSuspCount();
@@ -2547,6 +2547,18 @@ LBLdispatcher:
       e->trail.pushMark();
       Assert(CAA->getThread()==CTT);
       DISPATCH(1);
+    }
+
+  Case(EMPTYCLAUSE)
+    {
+      Board *bb = new Board(CAA,CAA->isAsk()?Bo_Ask:Bo_Wait);
+      e->setCurrent(bb,OK);
+      CBB->incSuspCount();
+      DebugCode(currentDebugBoard=CBB);
+      CBB->setInstalled();
+      e->trail.pushMark();
+      Assert(CAA->getThread()==CTT);
+      goto LBLwait;
     }
 
   Case(NEXTCLAUSE)
