@@ -80,7 +80,7 @@ cause the distribution exception <<system(dp(F) ...)>>
 to be raised when an operation is attempted on the entity.
 In most cases the fault state contains more
 information than just <<permFail>>, <<tempFail>>,
-<<remoteProblem>>.
+or <<remoteProblem>>.
 This is denoted by making these fault states
 the labels of <EM>records</EM> that give
 the full information, e.g.,
