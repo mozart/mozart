@@ -298,8 +298,22 @@ GcMode opMode;
  * TC: groundness check needs to count the number of
  *    variables, names, cells & abstractions
  */
+
+#define COPY_ON_GROUND
+// #undef COPY_ON_GROUND
+
+#ifdef COPY_ON_GROUND
+
+#define incVarCount
+
+#else
+
 static int varCount;
 
+#define incVarCount \
+ varCount++;
+
+#endif
 
 /*
  * TC: the copy board in from-space and to-space
@@ -677,7 +691,7 @@ Literal *Literal::gc()
     GCMETHMSG("Literal::gc");
     CHECKCOLLECTED(ToInt32(printName), Literal *);
     COUNT(literal);
-    varCount++;
+    incVarCount;
     Literal *aux = (Literal *) gcRealloc (this,sizeof (*this));
     GCNEWADDRMSG (aux);
     ptrStack.push (aux, PTR_NAME);
@@ -1399,7 +1413,7 @@ void gcTagged(TaggedRef &fromTerm, TaggedRef &toTerm)
   case SVAR:
   case UVAR:
   case CVAR:
-    varCount++;
+    incVarCount;
     if (auxTerm == fromTerm) {   // no DEREF needed
 
       DebugGCT(toTerm = fromTerm); // otherwise 'makeTaggedRef' complains
@@ -1610,6 +1624,7 @@ void processUpdateStack(void)
  *   AM::copyTree () routine (for search capabilities of the machine)
  *
  */
+
 Board* AM::copyTree (Board* bb, Bool *isGround)
 {
 #ifdef VERBOSE
@@ -1626,7 +1641,9 @@ Board* AM::copyTree (Board* bb, Bool *isGround)
   }
   opMode = IN_TC;
   gcing = 0;
+#ifndef COPY_ON_GROUND
   varCount = 0;
+#endif
   unsigned int starttime = osUserTime();
 
   Assert(!bb->isCommitted());
@@ -1656,10 +1673,14 @@ Board* AM::copyTree (Board* bb, Bool *isGround)
   // for instance, with "setParent"
 
   if (isGround != (Bool *) NULL) {
+#ifdef COPY_ON_GROUND
+    *isGround = NO;
+#else
     if (varCount == 0)
       *isGround = OK;
     else
       *isGround = NO;
+#endif
   }
 
   PROFILE_CODE1(FDProfiles.setBoard(toCopyBoard);)
@@ -1891,7 +1912,7 @@ Group *Group::gcGroup ()
 
 void ConstTerm::gcConstRecurse()
 {
-  varCount++;
+  incVarCount;
   switch(getType()) {
   case Co_Object:
     {
