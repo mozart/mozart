@@ -35,14 +35,8 @@
  */
 
 
-#ifndef EMULATOR
-#define maxSocket OPEN_MAX
-#define rawread(fd,buf,sz) read(fd,buf,sz)
-#define isSocket(fd) 0
-#define Assert(x)
-#define getTime() 0
-#endif
 
+void printfds(fd_set *fds);
 
 /* under windows FD_SET is not idempotent */
 #define OZ_FD_SET(i,fds) if (!FD_ISSET(i,fds)) { FD_SET(i,fds); }
@@ -224,23 +218,22 @@ static
 int getAvailFDs(fd_set *rfds, fd_set *wfds)
 {
   int nfds = max(maxSocket,maxfd)+1;
-
   int ret=0;
 
-#ifdef EMULATOR
-  fd_set rselectfds;
-  fd_set wselectfds;
+  fd_set rselectfds, wselectfds;
+
   int numsockets = splitFDs(nfds,rfds,&rselectfds);
   numsockets    += splitFDs(nfds,wfds,&wselectfds);
 
   if (numsockets>0) {
     ret += nonBlockSelect(nfds,&rselectfds,&wselectfds);
   }
-#endif
 
   for (int i=0; i<maxfd; i++) {
     if (FD_ISSET(i,rfds)) {
-      if (lookupChannel(i)->status==ST_AVAIL) {
+      IOChannel *c = lookupChannel(i);
+      /* RS: i might be a socket, don't know why */
+      if (c && c->status==ST_AVAIL) {
         ret++;
       } else {
         FD_CLR(i,rfds);
@@ -248,12 +241,10 @@ int getAvailFDs(fd_set *rfds, fd_set *wfds)
     }
   }
 
-#ifdef EMULATOR
   if (numsockets>0) {
     orFDs(nfds,rfds,&rselectfds);
     orFDs(nfds,wfds,&wselectfds);
   }
-#endif
 
   return ret;
 }
@@ -319,7 +310,7 @@ unsigned __stdcall selectThread(void *arg)
 
 
 static
-int win32Select(fd_set *rfds, fd_set *wfds, int *timeout)
+int win32Select(fd_set *rfds, fd_set *wfds, unsigned int *timeout)
 {
   if (timeout == WAIT_NULL)
     return getAvailFDs(rfds,wfds);
@@ -337,7 +328,6 @@ int win32Select(fd_set *rfds, fd_set *wfds, int *timeout)
   HANDLE wait_hnd[OPEN_MAX+1];
   int nh = 0;
 
-#ifdef EMULATOR
   int numsockets = splitFDs(nfds,&copyrfds,&si->rfds);
   numsockets    += splitFDs(nfds,&copywfds,&si->wfds);
 
@@ -349,7 +339,6 @@ int win32Select(fd_set *rfds, fd_set *wfds, int *timeout)
     HANDLE ret = _beginthreadex(NULL,10000,&selectThread,si,0,&tid);
     Assert(ret!=0);
   }
-#endif
 
   int i;
   for (i=0; i < maxfd; i++) {
@@ -392,11 +381,12 @@ int win32Select(fd_set *rfds, fd_set *wfds, int *timeout)
 
 void printfds(fd_set *fds)
 {
-  printf("FDS: ");
+  fprintf(stderr,"FDS: ");
   for(int i=0; i<10000; i++) {
     if (FD_ISSET(i,fds)) {
-      printf("%d,",i);
+      fprintf(stderr,"%d,",i);
     }
   }
-  printf("\n");
+  fprintf(stderr,"\n");
+  fflush(stderr);
 }
