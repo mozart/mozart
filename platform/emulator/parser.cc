@@ -1,5 +1,5 @@
 
-/*  A Bison parser, made from /home/kornstae/mozart/platform/emulator/parser.yy
+/*  A Bison parser, made from /home/scheidhr/mozart/platform/emulator/parser.yy
  by  GNU Bison version 1.25
   */
 
@@ -99,7 +99,6 @@
 #define OTHERMUL        342
 #define DEREFF  343
 
-#line 25 "/home/kornstae/mozart/platform/emulator/parser.yy"
 
 //
 // See Oz/tools/compiler/Doc/TupleSyntax for an description of the
@@ -282,7 +281,6 @@ void xy_setParserExpect() {
 }
 
 
-#line 208 "/home/kornstae/mozart/platform/emulator/parser.yy"
 typedef union {
   OZ_Term t;
   int i;
@@ -1236,7 +1234,7 @@ static const short yycheck[] = {    15,
     -1,   101,   102,   103,    -1,   105,    -1,    -1,   108
 };
 /* -*-C-*-  Note some compilers choke on comments on `#line' lines.  */
-#line 3 "/usr/lib/bison.simple"
+
 
 /* Skeleton output parser for bison,
    Copyright (C) 1984, 1989, 1990 Free Software Foundation, Inc.
@@ -1429,7 +1427,7 @@ __yy_memcpy (char *to, char *from, int count)
 #endif
 #endif
 
-#line 196 "/usr/lib/bison.simple"
+
 
 /* The user can define YYPARSE_PARAM as the name of an argument to be passed
    into yyparse.  The argument should have type void *.
@@ -1734,79 +1732,61 @@ yyreduce:
   switch (yyn) {
 
 case 1:
-#line 368 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyoutput = yyvsp[-1].t; YYACCEPT; ;
     break;}
 case 2:
-#line 370 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyoutput = OZ_atom("parseError"); YYABORT; ;
     break;}
 case 3:
-#line 374 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = consList(yyvsp[-1].t,yyvsp[0].t); ;
     break;}
 case 4:
-#line 376 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = consList(newCTerm("fSynTopLevelProductionTemplates",
                                            yyvsp[-1].t),yyvsp[0].t); ;
     break;}
 case 5:
-#line 379 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = yyvsp[0].t; ;
     break;}
 case 6:
-#line 381 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = consList(newCTerm("fFunctor",newCTerm("fDollar",yyvsp[-2].t),
                                            yyvsp[-1].t,yyvsp[-2].t),yyvsp[0].t); ;
     break;}
 case 7:
-#line 386 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = consList(yyvsp[-1].t,yyvsp[0].t); ;
     break;}
 case 8:
-#line 388 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = consList(newCTerm("fDeclare",yyvsp[-3].t,newCTerm("fSkip",yyvsp[-1].t),
                                            yyvsp[-4].t),yyvsp[0].t); ;
     break;}
 case 9:
-#line 391 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = consList(newCTerm("fDeclare",yyvsp[-3].t,yyvsp[-1].t,yyvsp[-4].t),yyvsp[0].t); ;
     break;}
 case 10:
-#line 393 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = consList(newCTerm("fDeclare",yyvsp[-2].t,
                                            newCTerm("fSkip",yyvsp[-1].t),yyvsp[-3].t),yyvsp[0].t); ;
     break;}
 case 11:
-#line 396 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = nilAtom; ;
     break;}
 case 12:
-#line 400 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = newCTerm("dirSwitch",yyvsp[0].t); ;
     break;}
 case 13:
-#line 402 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = newCTerm("dirLocalSwitches"); ;
     break;}
 case 14:
-#line 404 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = newCTerm("dirPushSwitches"); ;
     break;}
 case 15:
-#line 406 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = newCTerm("dirPopSwitches"); ;
     break;}
 case 16:
-#line 410 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = nilAtom; ;
     break;}
 case 17:
-#line 412 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = consList(yyvsp[-1].t,yyvsp[0].t); ;
     break;}
 case 18:
-#line 416 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { if (!strcmp(xytext,"gump"))
                       xy_gumpSyntax = 1;
                     if (!strcmp(xytext,"allowdeprecated"))
@@ -1815,7 +1795,6 @@ case 18:
                   ;
     break;}
 case 19:
-#line 423 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { if (!strcmp(xytext,"gump"))
                       xy_gumpSyntax = 0;
                     if (!strcmp(xytext,"allowdeprecated"))
@@ -1824,1195 +1803,909 @@ case 19:
                   ;
     break;}
 case 20:
-#line 432 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = yyvsp[0].t; ;
     break;}
 case 21:
-#line 434 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = newCTerm("fAnd",yyvsp[-1].t,yyvsp[0].t); ;
     break;}
 case 22:
-#line 438 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = newCTerm("fEq",yyvsp[-3].t,yyvsp[0].t,yyvsp[-1].t); ;
     break;}
 case 23:
-#line 440 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = newCTerm("fAssign",yyvsp[-3].t,yyvsp[0].t,yyvsp[-1].t); ;
     break;}
 case 24:
-#line 442 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = newCTerm("fOrElse",yyvsp[-3].t,yyvsp[0].t,yyvsp[-1].t); ;
     break;}
 case 25:
-#line 444 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = newCTerm("fAndThen",yyvsp[-3].t,yyvsp[0].t,yyvsp[-1].t); ;
     break;}
 case 26:
-#line 446 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = newCTerm("fOpApply",yyvsp[-2].t,
                                   consList(yyvsp[-3].t,consList(yyvsp[0].t,nilAtom)),yyvsp[-1].t); ;
     break;}
 case 27:
-#line 449 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = newCTerm("fFdCompare",yyvsp[-2].t,yyvsp[-3].t,yyvsp[0].t,yyvsp[-1].t); ;
     break;}
 case 28:
-#line 451 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = newCTerm("fFdIn",yyvsp[-2].t,yyvsp[-3].t,yyvsp[0].t,yyvsp[-1].t); ;
     break;}
 case 29:
-#line 453 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = makeCons(yyvsp[-3].t,yyvsp[0].t,yyvsp[-1].t); ;
     break;}
 case 30:
-#line 455 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = yyvsp[0].t; ;
     break;}
 case 31:
-#line 457 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = newCTerm("fRecord",
                                   newCTerm("fAtom",newCTerm("#"),yyvsp[-1].t),
                                   consList(yyvsp[-3].t,yyvsp[0].t)); ;
     break;}
 case 32:
-#line 463 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = consList(yyvsp[0].t,nilAtom); ;
     break;}
 case 33:
-#line 465 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = consList(yyvsp[-2].t,yyvsp[0].t); ;
     break;}
 case 34:
-#line 469 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = newCTerm("fOpApply",yyvsp[-2].t,
                                   consList(yyvsp[-3].t,consList(yyvsp[0].t,nilAtom)),yyvsp[-1].t); ;
     break;}
 case 35:
-#line 472 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = newCTerm("fOpApply",yyvsp[-2].t,
                                   consList(yyvsp[-3].t,consList(yyvsp[0].t,nilAtom)),yyvsp[-1].t); ;
     break;}
 case 36:
-#line 475 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = newCTerm("fOpApply",yyvsp[-2].t,
                                   consList(yyvsp[-3].t,consList(yyvsp[0].t,nilAtom)),yyvsp[-1].t); ;
     break;}
 case 37:
-#line 478 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = newCTerm("fObjApply",yyvsp[-3].t,yyvsp[0].t,yyvsp[-1].t); ;
     break;}
 case 38:
-#line 480 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = newCTerm("fOpApply",newCTerm("~"),
                                   consList(yyvsp[0].t,nilAtom),yyvsp[-1].t); ;
     break;}
 case 39:
-#line 483 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = newCTerm("fOpApply",newCTerm("."),
                                   consList(yyvsp[-3].t,consList(yyvsp[0].t,nilAtom)),yyvsp[-1].t); ;
     break;}
 case 40:
-#line 486 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = newCTerm("fOpApply",newCTerm("."),
                                   consList(yyvsp[-1].t,consList(makeInt(xytext,pos()),
                                                        nilAtom)),pos()); ;
     break;}
 case 41:
-#line 490 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = newCTerm("fOpApply",newCTerm("^"),
                                   consList(yyvsp[-3].t,consList(yyvsp[0].t,nilAtom)),yyvsp[-1].t); ;
     break;}
 case 42:
-#line 493 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = newCTerm("fAt",yyvsp[0].t,yyvsp[-1].t); ;
     break;}
 case 43:
-#line 495 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = newCTerm("fOpApply",newCTerm("!!"),
                                   consList(yyvsp[0].t,nilAtom),yyvsp[-1].t); ;
     break;}
 case 44:
-#line 498 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = yyvsp[-1].t; ;
     break;}
 case 45:
-#line 500 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = yyvsp[0].t; ;
     break;}
 case 46:
-#line 502 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = yyvsp[0].t; ;
     break;}
 case 47:
-#line 504 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = newCTerm("fWildcard",pos()); ;
     break;}
 case 48:
-#line 506 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = newCTerm("fAtom",OZ_unit(),pos()); ;
     break;}
 case 49:
-#line 508 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = newCTerm("fAtom",OZ_true(),pos()); ;
     break;}
 case 50:
-#line 510 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = newCTerm("fAtom",OZ_false(),pos()); ;
     break;}
 case 51:
-#line 512 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = newCTerm("fSelf",pos()); ;
     break;}
 case 52:
-#line 514 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = newCTerm("fDollar",pos()); ;
     break;}
 case 53:
-#line 516 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = yyvsp[0].t; ;
     break;}
 case 54:
-#line 518 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = yyvsp[0].t; ;
     break;}
 case 55:
-#line 520 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = yyvsp[0].t; ;
     break;}
 case 56:
-#line 522 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = yyvsp[0].t; ;
     break;}
 case 57:
-#line 524 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = newCTerm("fRecord",newCTerm("fAtom",newCTerm("|"),
                                                      makeLongPos(yyvsp[-4].t,yyvsp[0].t)),
                                   consList(yyvsp[-3].t,consList(yyvsp[-2].t,nilAtom))); ;
     break;}
 case 58:
-#line 528 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = newCTerm("fApply",yyvsp[-3].t,yyvsp[-2].t,makeLongPos(yyvsp[-4].t,yyvsp[0].t)); ;
     break;}
 case 59:
-#line 531 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = newCTerm("fProc",yyvsp[-5].t,yyvsp[-4].t,yyvsp[-2].t,yyvsp[-7].t,makeLongPos(yyvsp[-8].t,yyvsp[0].t)); ;
     break;}
 case 60:
-#line 534 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = newCTerm("fFun",yyvsp[-5].t,yyvsp[-4].t,yyvsp[-2].t,yyvsp[-7].t,makeLongPos(yyvsp[-8].t,yyvsp[0].t)); ;
     break;}
 case 61:
-#line 536 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = newCTerm("fFunctor",yyvsp[-3].t,yyvsp[-2].t,makeLongPos(yyvsp[-4].t,yyvsp[0].t)); ;
     break;}
 case 62:
-#line 538 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = yyvsp[0].t; ;
     break;}
 case 63:
-#line 540 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = newCTerm("fLocal",yyvsp[-3].t,yyvsp[-1].t,yyvsp[-4].t); ;
     break;}
 case 64:
-#line 542 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = yyvsp[0].t; ;
     break;}
 case 65:
-#line 544 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = yyvsp[0].t; ;
     break;}
 case 66:
-#line 546 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = newCTerm("fLock",yyvsp[-2].t,makeLongPos(yyvsp[-3].t,yyvsp[0].t)); ;
     break;}
 case 67:
-#line 548 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = newCTerm("fLockThen",yyvsp[-4].t,yyvsp[-2].t,makeLongPos(yyvsp[-5].t,yyvsp[0].t)); ;
     break;}
 case 68:
-#line 550 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = newCTerm("fThread",yyvsp[-2].t,makeLongPos(yyvsp[-3].t,yyvsp[0].t)); ;
     break;}
 case 69:
-#line 552 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = newCTerm("fTry",yyvsp[-4].t,yyvsp[-3].t,yyvsp[-2].t,makeLongPos(yyvsp[-5].t,yyvsp[0].t)); ;
     break;}
 case 70:
-#line 554 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = newCTerm("fRaise",yyvsp[-2].t,makeLongPos(yyvsp[-3].t,yyvsp[0].t)); ;
     break;}
 case 71:
-#line 556 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = newCTerm("fSkip",pos()); ;
     break;}
 case 72:
-#line 558 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = newCTerm("fFail",pos()); ;
     break;}
 case 73:
-#line 560 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = newCTerm("fNot",yyvsp[-2].t,makeLongPos(yyvsp[-3].t,yyvsp[0].t)); ;
     break;}
 case 74:
-#line 562 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = yyvsp[0].t; ;
     break;}
 case 75:
-#line 564 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = newCTerm("fOr",yyvsp[-2].t,newCTerm("for"),
                                   makeLongPos(yyvsp[-3].t,yyvsp[0].t)); ;
     break;}
 case 76:
-#line 567 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = newCTerm("fOr",yyvsp[-2].t,newCTerm("fdis"),
                                   makeLongPos(yyvsp[-3].t,yyvsp[0].t)); ;
     break;}
 case 77:
-#line 570 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = newCTerm("fOr",yyvsp[-2].t,newCTerm("fchoice"),
                                   makeLongPos(yyvsp[-3].t,yyvsp[0].t)); ;
     break;}
 case 78:
-#line 573 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = newCTerm("fCondis",yyvsp[-2].t,makeLongPos(yyvsp[-3].t,yyvsp[0].t)); ;
     break;}
 case 79:
-#line 575 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = yyvsp[0].t; ;
     break;}
 case 80:
-#line 577 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = yyvsp[0].t; ;
     break;}
 case 81:
-#line 581 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = nilAtom; ;
     break;}
 case 82:
-#line 583 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = consList(yyvsp[-1].t,yyvsp[0].t); ;
     break;}
 case 83:
-#line 588 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = nilAtom; ;
     break;}
 case 84:
-#line 590 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = yyvsp[0].t; ;
     break;}
 case 85:
-#line 595 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = consList(newCTerm("fRequire",yyvsp[-1].t,yyvsp[-2].t),yyvsp[0].t); ;
     break;}
 case 86:
-#line 597 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = consList(newCTerm("fPrepare",yyvsp[-3].t,yyvsp[-1].t,yyvsp[-4].t),yyvsp[0].t); ;
     break;}
 case 87:
-#line 599 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = consList(newCTerm("fPrepare",yyvsp[-1].t,
                                            newCTerm("fSkip",yyvsp[-2].t),yyvsp[-2].t),yyvsp[0].t); ;
     break;}
 case 88:
-#line 602 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = consList(newCTerm("fImport",yyvsp[-1].t,yyvsp[-2].t),yyvsp[0].t); ;
     break;}
 case 89:
-#line 604 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = consList(newCTerm("fExport",yyvsp[-1].t,yyvsp[-2].t),yyvsp[0].t); ;
     break;}
 case 90:
-#line 606 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = consList(newCTerm("fDefine",yyvsp[-3].t,yyvsp[-1].t,yyvsp[-4].t),yyvsp[0].t); ;
     break;}
 case 91:
-#line 608 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = consList(newCTerm("fDefine",yyvsp[-1].t,
                                            newCTerm("fSkip",yyvsp[-2].t),yyvsp[-2].t),yyvsp[0].t); ;
     break;}
 case 92:
-#line 613 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = nilAtom; ;
     break;}
 case 93:
-#line 615 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = consList(newCTerm("fImportItem",yyvsp[-2].t,nilAtom,yyvsp[-1].t),yyvsp[0].t); ;
     break;}
 case 94:
-#line 617 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = consList(newCTerm("fImportItem",yyvsp[-5].t,yyvsp[-3].t,yyvsp[-1].t),yyvsp[0].t); ;
     break;}
 case 95:
-#line 621 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = newCTerm("fVar",OZ_atom(xytext),yyvsp[0].t); ;
     break;}
 case 96:
-#line 625 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = consList(yyvsp[0].t,nilAtom); ;
     break;}
 case 97:
-#line 627 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = consList(pair(yyvsp[0].t,yyvsp[-2].t),nilAtom); ;
     break;}
 case 98:
-#line 629 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = consList(yyvsp[-1].t,yyvsp[0].t); ;
     break;}
 case 99:
-#line 631 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = consList(pair(yyvsp[-1].t,yyvsp[-3].t),yyvsp[0].t); ;
     break;}
 case 100:
-#line 635 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = newCTerm("fNoImportAt"); ;
     break;}
 case 101:
-#line 637 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = newCTerm("fImportAt",yyvsp[0].t); ;
     break;}
 case 102:
-#line 641 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = nilAtom; ;
     break;}
 case 103:
-#line 643 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = consList(newCTerm("fExportItem",yyvsp[-1].t),yyvsp[0].t); ;
     break;}
 case 104:
-#line 645 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = consList(newCTerm("fExportItem",
                                            newCTerm("fColon",yyvsp[-3].t,yyvsp[-1].t)),yyvsp[0].t); ;
     break;}
 case 105:
-#line 650 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = newCTerm(xytext); ;
     break;}
 case 106:
-#line 654 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = newCTerm(xytext); ;
     break;}
 case 107:
-#line 658 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = newCTerm(xytext); ;
     break;}
 case 108:
-#line 662 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = newCTerm(xytext); ;
     break;}
 case 109:
-#line 666 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = newCTerm(xytext); ;
     break;}
 case 110:
-#line 670 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = newCTerm(xytext); ;
     break;}
 case 111:
-#line 674 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = newCTerm("fLocal",yyvsp[-3].t,yyvsp[0].t,yyvsp[-1].t); ;
     break;}
 case 112:
-#line 676 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = yyvsp[0].t; ;
     break;}
 case 113:
-#line 680 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = nilAtom; ;
     break;}
 case 114:
-#line 682 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = consList(yyvsp[-1].t,yyvsp[0].t); ;
     break;}
 case 115:
-#line 686 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = newCTerm("fAtom",nilAtom,yyvsp[0].t); ;
     break;}
 case 116:
-#line 688 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = newCTerm("fRecord",
                                   newCTerm("fAtom",newCTerm("|"),yyvsp[-2].t),
                                   consList(yyvsp[-1].t,consList(yyvsp[0].t,nilAtom))); ;
     break;}
 case 117:
-#line 694 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = newCTerm("fNoCatch"); ;
     break;}
 case 118:
-#line 696 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = newCTerm("fCatch",yyvsp[0].t,yyvsp[-1].t); ;
     break;}
 case 119:
-#line 700 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = newCTerm("fNoFinally"); ;
     break;}
 case 120:
-#line 702 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = yyvsp[0].t; ;
     break;}
 case 121:
-#line 706 "/home/kornstae/mozart/platform/emulator/parser.yy"
 {
                     yyval.t = newCTerm(OZ_isTrue(yyvsp[-2].t)? "fOpenRecord": "fRecord",
                                   newCTerm("fAtom",yyvsp[-6].t,makeLongPos(yyvsp[-5].t,yyvsp[0].t)),yyvsp[-3].t);
                   ;
     break;}
 case 122:
-#line 711 "/home/kornstae/mozart/platform/emulator/parser.yy"
 {
                     yyval.t = newCTerm(OZ_isTrue(yyvsp[-2].t)? "fOpenRecord": "fRecord",
                                   makeVar(yyvsp[-6].t,makeLongPos(yyvsp[-5].t,yyvsp[0].t)),yyvsp[-3].t);
                   ;
     break;}
 case 123:
-#line 718 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = OZ_atom(xytext); ;
     break;}
 case 124:
-#line 720 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = OZ_unit(); ;
     break;}
 case 125:
-#line 722 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = OZ_true(); ;
     break;}
 case 126:
-#line 724 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = OZ_false(); ;
     break;}
 case 127:
-#line 728 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = OZ_atom(xytext); ;
     break;}
 case 128:
-#line 732 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = nilAtom; ;
     break;}
 case 129:
-#line 734 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = consList(yyvsp[-1].t,yyvsp[0].t); ;
     break;}
 case 130:
-#line 736 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = consList(newCTerm("fColon",yyvsp[-3].t,yyvsp[-1].t),yyvsp[0].t); ;
     break;}
 case 131:
-#line 740 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = OZ_false(); ;
     break;}
 case 132:
-#line 742 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = OZ_true(); ;
     break;}
 case 133:
-#line 746 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = yyvsp[0].t; ;
     break;}
 case 134:
-#line 748 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = yyvsp[0].t; ;
     break;}
 case 135:
-#line 750 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = yyvsp[0].t; ;
     break;}
 case 136:
-#line 752 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = newCTerm("fAtom",OZ_unit(),pos()); ;
     break;}
 case 137:
-#line 754 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = newCTerm("fAtom",OZ_true(),pos()); ;
     break;}
 case 138:
-#line 756 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = newCTerm("fAtom",OZ_false(),pos()); ;
     break;}
 case 139:
-#line 760 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = yyvsp[0].t; ;
     break;}
 case 140:
-#line 762 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = yyvsp[0].t; ;
     break;}
 case 141:
-#line 766 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = newCTerm("fBoolCase",yyvsp[-4].t,yyvsp[-2].t,yyvsp[-1].t,makeLongPos(yyvsp[-5].t,yyvsp[0].t)); ;
     break;}
 case 142:
-#line 770 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = yyvsp[0].t; ;
     break;}
 case 143:
-#line 772 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = yyvsp[0].t; ;
     break;}
 case 144:
-#line 774 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = yyvsp[-1].t; ;
     break;}
 case 145:
-#line 776 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = newCTerm("fSkip",pos()); ;
     break;}
 case 146:
-#line 780 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { checkDeprecation(yyvsp[-3].t);
                     yyval.t = newCTerm("fBoolCase",yyvsp[-5].t,yyvsp[-2].t,yyvsp[-1].t,makeLongPos(yyvsp[-6].t,yyvsp[0].t));
                   ;
     break;}
 case 147:
-#line 784 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = newCTerm("fCase",yyvsp[-4].t,yyvsp[-2].t,yyvsp[-1].t,makeLongPos(yyvsp[-5].t,yyvsp[0].t)); ;
     break;}
 case 148:
-#line 788 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = yyvsp[0].t; ;
     break;}
 case 149:
-#line 790 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = yyvsp[0].t; ;
     break;}
 case 150:
-#line 792 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = yyvsp[-1].t; ;
     break;}
 case 151:
-#line 794 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = newCTerm("fNoElse",pos()); ;
     break;}
 case 152:
-#line 798 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = consList(yyvsp[0].t,nilAtom); ;
     break;}
 case 153:
-#line 800 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = consList(yyvsp[-2].t,yyvsp[0].t); ;
     break;}
 case 154:
-#line 802 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = consList(yyvsp[-2].t,yyvsp[0].t); ;
     break;}
 case 155:
-#line 806 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = consList(yyvsp[0].t,nilAtom); ;
     break;}
 case 156:
-#line 808 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = consList(yyvsp[-2].t,yyvsp[0].t); ;
     break;}
 case 157:
-#line 812 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = newCTerm("fCaseClause",yyvsp[-2].t,yyvsp[0].t); ;
     break;}
 case 158:
-#line 816 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = yyvsp[0].t; ;
     break;}
 case 159:
-#line 818 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = newCTerm("fSideCondition",yyvsp[-3].t,
                                   newCTerm("fSkip",yyvsp[-1].t),yyvsp[0].t,yyvsp[-1].t); ;
     break;}
 case 160:
-#line 821 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = newCTerm("fSideCondition",yyvsp[-5].t,yyvsp[-2].t,yyvsp[0].t,yyvsp[-3].t); ;
     break;}
 case 161:
-#line 825 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = newCTerm("fEq",yyvsp[-3].t,yyvsp[0].t,yyvsp[-1].t); ;
     break;}
 case 162:
-#line 827 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = makeCons(yyvsp[-3].t,yyvsp[0].t,yyvsp[-1].t); ;
     break;}
 case 163:
-#line 829 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = yyvsp[0].t; ;
     break;}
 case 164:
-#line 831 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = newCTerm("fRecord",
                                   newCTerm("fAtom",newCTerm("#"),yyvsp[-1].t),
                                   consList(yyvsp[-3].t,yyvsp[0].t)); ;
     break;}
 case 165:
-#line 838 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = newCTerm("fClass",yyvsp[-4].t,yyvsp[-3].t,yyvsp[-2].t,makeLongPos(yyvsp[-5].t,yyvsp[0].t)); ;
     break;}
 case 166:
-#line 842 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = yyvsp[0].t; ;
     break;}
 case 167:
-#line 844 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = newCTerm("fDollar",yyvsp[0].t); ;
     break;}
 case 168:
-#line 849 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = nilAtom; ;
     break;}
 case 169:
-#line 851 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = consList(yyvsp[-1].t,yyvsp[0].t); ;
     break;}
 case 170:
-#line 855 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = newCTerm("fFrom",consList(yyvsp[-1].t,yyvsp[0].t),yyvsp[-2].t); ;
     break;}
 case 171:
-#line 857 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = newCTerm("fAttr",consList(yyvsp[-1].t,yyvsp[0].t),yyvsp[-2].t); ;
     break;}
 case 172:
-#line 859 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = newCTerm("fFeat",consList(yyvsp[-1].t,yyvsp[0].t),yyvsp[-2].t); ;
     break;}
 case 173:
-#line 861 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = newCTerm("fProp",consList(yyvsp[-1].t,yyvsp[0].t),yyvsp[-2].t); ;
     break;}
 case 174:
-#line 865 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = nilAtom; ;
     break;}
 case 175:
-#line 867 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = consList(yyvsp[-1].t,yyvsp[0].t); ;
     break;}
 case 176:
-#line 871 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = pair(yyvsp[-2].t,yyvsp[0].t); ;
     break;}
 case 177:
-#line 873 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = yyvsp[0].t; ;
     break;}
 case 178:
-#line 877 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = yyvsp[0].t; ;
     break;}
 case 179:
-#line 879 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = yyvsp[0].t; ;
     break;}
 case 180:
-#line 881 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = yyvsp[0].t; ;
     break;}
 case 181:
-#line 883 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = newCTerm("fAtom",OZ_unit(),pos()); ;
     break;}
 case 182:
-#line 885 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = newCTerm("fAtom",OZ_true(),pos()); ;
     break;}
 case 183:
-#line 887 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = newCTerm("fAtom",OZ_false(),pos()); ;
     break;}
 case 184:
-#line 891 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = nilAtom; ;
     break;}
 case 185:
-#line 893 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = consList(yyvsp[-1].t,yyvsp[0].t); ;
     break;}
 case 186:
-#line 897 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = newCTerm("fMeth",yyvsp[-2].t,yyvsp[-1].t,yyvsp[-3].t); ;
     break;}
 case 187:
-#line 901 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = yyvsp[0].t; ;
     break;}
 case 188:
-#line 903 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = newCTerm("fEq",yyvsp[-3].t,yyvsp[0].t,yyvsp[-1].t); ;
     break;}
 case 189:
-#line 907 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = yyvsp[0].t; ;
     break;}
 case 190:
-#line 909 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = yyvsp[0].t; ;
     break;}
 case 191:
-#line 911 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = newCTerm("fAtom",OZ_unit(),pos()); ;
     break;}
 case 192:
-#line 913 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = newCTerm("fAtom",OZ_true(),pos()); ;
     break;}
 case 193:
-#line 915 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = newCTerm("fAtom",OZ_false(),pos()); ;
     break;}
 case 194:
-#line 917 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = newCTerm("fRecord",yyvsp[-3].t,yyvsp[-1].t); ;
     break;}
 case 195:
-#line 919 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = newCTerm("fOpenRecord",yyvsp[-4].t,yyvsp[-2].t); ;
     break;}
 case 196:
-#line 923 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = newCTerm("fAtom",newCTerm(xytext),pos()); ;
     break;}
 case 197:
-#line 925 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = makeVar(xytext); ;
     break;}
 case 198:
-#line 927 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = newCTerm("fEscape",makeVar(xytext),yyvsp[-1].t); ;
     break;}
 case 199:
-#line 929 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = newCTerm("fAtom",OZ_unit(),pos()); ;
     break;}
 case 200:
-#line 931 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = newCTerm("fAtom",OZ_true(),pos()); ;
     break;}
 case 201:
-#line 933 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = newCTerm("fAtom",OZ_false(),pos()); ;
     break;}
 case 202:
-#line 937 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = consList(yyvsp[-1].t,yyvsp[0].t); ;
     break;}
 case 203:
-#line 939 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = nilAtom; ;
     break;}
 case 204:
-#line 943 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = newCTerm("fMethArg",yyvsp[-1].t,yyvsp[0].t); ;
     break;}
 case 205:
-#line 945 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = newCTerm("fMethColonArg",yyvsp[-3].t,yyvsp[-1].t,yyvsp[0].t); ;
     break;}
 case 206:
-#line 949 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = yyvsp[0].t; ;
     break;}
 case 207:
-#line 951 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = newCTerm("fDollar",pos()); ;
     break;}
 case 208:
-#line 953 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = newCTerm("fWildcard",pos()); ;
     break;}
 case 209:
-#line 958 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = newCTerm("fDefault",yyvsp[0].t,yyvsp[-1].t); ;
     break;}
 case 210:
-#line 960 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = newCTerm("fNoDefault"); ;
     break;}
 case 211:
-#line 964 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = newCTerm("fCond",yyvsp[-3].t,yyvsp[-2].t,makeLongPos(yyvsp[-4].t,yyvsp[0].t)); ;
     break;}
 case 212:
-#line 968 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = yyvsp[0].t; ;
     break;}
 case 213:
-#line 970 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = newCTerm("fNoElse",pos()); ;
     break;}
 case 214:
-#line 974 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = consList(yyvsp[0].t,nilAtom); ;
     break;}
 case 215:
-#line 976 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = consList(yyvsp[-2].t,yyvsp[0].t); ;
     break;}
 case 216:
-#line 980 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = newCTerm("fClause",newCTerm("fSkip",yyvsp[-1].t),yyvsp[-3].t,yyvsp[0].t); ;
     break;}
 case 217:
-#line 982 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = newCTerm("fClause",yyvsp[-4].t,yyvsp[-2].t,yyvsp[0].t); ;
     break;}
 case 218:
-#line 986 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = consList(yyvsp[-2].t,consList(yyvsp[0].t,nilAtom)); ;
     break;}
 case 219:
-#line 988 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = consList(yyvsp[-2].t,yyvsp[0].t); ;
     break;}
 case 220:
-#line 992 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = consList(yyvsp[0].t,nilAtom); ;
     break;}
 case 221:
-#line 994 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = consList(yyvsp[-1].t,yyvsp[0].t); ;
     break;}
 case 222:
-#line 998 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = newCTerm("fFdCompare",yyvsp[-2].t,yyvsp[-3].t,yyvsp[0].t,yyvsp[-1].t); ;
     break;}
 case 223:
-#line 1000 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = newCTerm("fFdIn",yyvsp[-2].t,yyvsp[-3].t,yyvsp[0].t,yyvsp[-1].t); ;
     break;}
 case 224:
-#line 1004 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = consList(yyvsp[-2].t,consList(yyvsp[0].t,nilAtom)); ;
     break;}
 case 225:
-#line 1006 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = consList(yyvsp[-2].t,yyvsp[0].t); ;
     break;}
 case 226:
-#line 1010 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = newCTerm("fClause",
                                   newCTerm("fSkip",yyvsp[0].t),
                                   yyvsp[-1].t,newCTerm("fNoThen",yyvsp[0].t)); ;
     break;}
 case 227:
-#line 1014 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = newCTerm("fClause",yyvsp[-3].t,yyvsp[-1].t,newCTerm("fNoThen",yyvsp[0].t)); ;
     break;}
 case 228:
-#line 1016 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = newCTerm("fClause",
                                   newCTerm("fSkip",yyvsp[-2].t),yyvsp[-3].t,yyvsp[0].t); ;
     break;}
 case 229:
-#line 1019 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = newCTerm("fClause",yyvsp[-4].t,yyvsp[-2].t,yyvsp[0].t); ;
     break;}
 case 230:
-#line 1023 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = consList(yyvsp[0].t,nilAtom); ;
     break;}
 case 231:
-#line 1025 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = consList(yyvsp[-2].t,yyvsp[0].t); ;
     break;}
 case 232:
-#line 1029 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = newCTerm("fClause",
                                   newCTerm("fSkip",yyvsp[0].t),
                                   newCTerm("fSkip",yyvsp[0].t),
                                   yyvsp[-1].t); ;
     break;}
 case 233:
-#line 1034 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = newCTerm("fClause",
                                   newCTerm("fSkip",yyvsp[-2].t),
                                   newCTerm("fSkip",yyvsp[-2].t),
                                   newCTerm("fLocal",yyvsp[-3].t,yyvsp[0].t,yyvsp[-2].t)); ;
     break;}
 case 234:
-#line 1039 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = newCTerm("fClause",
                                   newCTerm("fSkip",yyvsp[-2].t),yyvsp[-3].t,yyvsp[0].t); ;
     break;}
 case 235:
-#line 1042 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = newCTerm("fClause",yyvsp[-5].t,yyvsp[-2].t,yyvsp[0].t); ;
     break;}
 case 236:
-#line 1046 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = newCTerm("fAtom",newCTerm(xytext),pos()); ;
     break;}
 case 237:
-#line 1050 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = makeVar(xytext); ;
     break;}
 case 238:
-#line 1054 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = yyvsp[0].t; ;
     break;}
 case 239:
-#line 1056 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = newCTerm("fEscape",yyvsp[0].t,yyvsp[-1].t); ;
     break;}
 case 240:
-#line 1060 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = makeString(xytext,pos()); ;
     break;}
 case 241:
-#line 1064 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = makeInt(xytext,pos()); ;
     break;}
 case 242:
-#line 1066 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = makeInt(xytext[0],pos()); ;
     break;}
 case 243:
-#line 1070 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = newCTerm("fFloat",OZ_CStringToFloat(xytext),pos()); ;
     break;}
 case 244:
-#line 1074 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = pos(); ;
     break;}
 case 245:
-#line 1078 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = pos(); ;
     break;}
 case 246:
-#line 1089 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { OZ_Term prefix =
                       scannerPrefix? scannerPrefix: OZ_atom("zy");
                     yyval.t = newCTerm("fScanner",yyvsp[-5].t,yyvsp[-4].t,yyvsp[-3].t,yyvsp[-2].t,prefix,
                                   makeLongPos(yyvsp[-6].t,yyvsp[0].t)); ;
     break;}
 case 247:
-#line 1096 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = consList(yyvsp[0].t,nilAtom); ;
     break;}
 case 248:
-#line 1098 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = consList(yyvsp[0].t,nilAtom); ;
     break;}
 case 249:
-#line 1100 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = consList(yyvsp[0].t,nilAtom); ;
     break;}
 case 250:
-#line 1102 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = consList(yyvsp[-1].t,yyvsp[0].t); ;
     break;}
 case 251:
-#line 1104 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = consList(yyvsp[-1].t,yyvsp[0].t); ;
     break;}
 case 252:
-#line 1106 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = consList(yyvsp[-1].t,yyvsp[0].t); ;
     break;}
 case 253:
-#line 1110 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = newCTerm("fLexicalAbbreviation",yyvsp[-3].t,yyvsp[-1].t); ;
     break;}
 case 254:
-#line 1112 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = newCTerm("fLexicalAbbreviation",yyvsp[-3].t,yyvsp[-1].t); ;
     break;}
 case 255:
-#line 1116 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = newCTerm("fLexicalRule",yyvsp[-2].t,yyvsp[-1].t); ;
     break;}
 case 256:
-#line 1120 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = OZ_string(xytext); ;
     break;}
 case 257:
-#line 1122 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = OZ_string(xytext); ;
     break;}
 case 258:
-#line 1126 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = newCTerm("fMode",yyvsp[-2].t,yyvsp[-1].t); ;
     break;}
 case 259:
-#line 1130 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = nilAtom; ;
     break;}
 case 260:
-#line 1132 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = consList(yyvsp[-1].t,yyvsp[0].t); ;
     break;}
 case 261:
-#line 1136 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = newCTerm("fInheritedModes",yyvsp[0].t); ;
     break;}
 case 262:
-#line 1138 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = yyvsp[0].t; ;
     break;}
 case 263:
-#line 1140 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = yyvsp[0].t; ;
     break;}
 case 264:
-#line 1148 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { OZ_Term expect = parserExpect? parserExpect: OZ_int(0);
                     yyval.t = newCTerm("fParser",yyvsp[-6].t,yyvsp[-5].t,yyvsp[-4].t,yyvsp[-3].t,yyvsp[-2].t,expect,
                                   makeLongPos(yyvsp[-7].t,yyvsp[0].t)); ;
     break;}
 case 265:
-#line 1154 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = consList(yyvsp[0].t,nilAtom); ;
     break;}
 case 266:
-#line 1156 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = consList(yyvsp[0].t,nilAtom); ;
     break;}
 case 267:
-#line 1158 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = consList(yyvsp[-1].t,yyvsp[0].t); ;
     break;}
 case 268:
-#line 1160 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = consList(yyvsp[-1].t,yyvsp[0].t); ;
     break;}
 case 269:
-#line 1164 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = newCTerm("fToken",nilAtom); ;
     break;}
 case 270:
-#line 1166 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = newCTerm("fToken",yyvsp[0].t); ;
     break;}
 case 271:
-#line 1170 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = consList(yyvsp[0].t,nilAtom); ;
     break;}
 case 272:
-#line 1172 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = consList(yyvsp[-1].t,yyvsp[0].t); ;
     break;}
 case 273:
-#line 1176 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = yyvsp[0].t; ;
     break;}
 case 274:
-#line 1178 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = pair(yyvsp[-2].t,yyvsp[0].t); ;
     break;}
 case 275:
-#line 1182 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = consList(yyvsp[0].t,nilAtom); ;
     break;}
 case 276:
-#line 1184 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = consList(yyvsp[-1].t,yyvsp[0].t); ;
     break;}
 case 277:
-#line 1188 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = consList(yyvsp[0].t,nilAtom); ;
     break;}
 case 278:
-#line 1190 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = consList(yyvsp[-1].t,yyvsp[0].t); ;
     break;}
 case 279:
-#line 1194 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { *prodKey[depth]++ = '='; ;
     break;}
 case 280:
-#line 1196 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = newCTerm("fProductionTemplate",yyvsp[-3].t,yyvsp[-4].t,yyvsp[-2].t,yyvsp[-1].t,yyvsp[-7].t); ;
     break;}
 case 281:
-#line 1197 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = newCTerm("fDollar",pos()); ;
     break;}
 case 282:
-#line 1198 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { *prodKey[depth]++ = '='; ;
     break;}
 case 283:
-#line 1200 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = newCTerm("fProductionTemplate",yyvsp[-3].t,yyvsp[-4].t,yyvsp[-2].t,yyvsp[-1].t,yyvsp[-7].t); ;
     break;}
 case 284:
-#line 1202 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = newCTerm("fProductionTemplate",yyvsp[-3].t,yyvsp[-4].t,yyvsp[-2].t,yyvsp[-1].t,newCTerm("none")); ;
     break;}
 case 285:
-#line 1206 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = consList(yyvsp[-1].t,nilAtom); ;
     break;}
 case 286:
-#line 1208 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = consList(yyvsp[-1].t,nilAtom); ;
     break;}
 case 287:
-#line 1210 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = yyvsp[0].t; ;
     break;}
 case 290:
-#line 1218 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { prodName[depth] = OZ_string(OZ_atomToC(OZ_getArg(yyvsp[-1].t,0))); ;
     break;}
 case 291:
-#line 1221 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { *prodKey[depth]++ = '('; depth++; ;
     break;}
 case 292:
-#line 1222 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { depth--; ;
     break;}
 case 293:
-#line 1222 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = yyvsp[-3].t; ;
     break;}
 case 294:
-#line 1223 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { *prodKey[depth]++ = '['; depth++; ;
     break;}
 case 295:
-#line 1224 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { depth--; ;
     break;}
 case 296:
-#line 1224 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = yyvsp[-3].t; ;
     break;}
 case 297:
-#line 1225 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { *prodKey[depth]++ = '{'; depth++; ;
     break;}
 case 298:
-#line 1226 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { depth--; ;
     break;}
 case 299:
-#line 1226 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = yyvsp[-3].t; ;
     break;}
 case 300:
-#line 1230 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = consList(yyvsp[0].t,nilAtom); ;
     break;}
 case 301:
-#line 1232 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = consList(yyvsp[-2].t,yyvsp[0].t); ;
     break;}
 case 302:
-#line 1235 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = yyvsp[0].t; ;
     break;}
 case 303:
-#line 1236 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = newCTerm("fWildcard",pos()); ;
     break;}
 case 304:
-#line 1240 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { *prodKey[depth - 1]++ = '/'; *prodKey[depth - 1]++ = '/'; ;
     break;}
 case 307:
-#line 1247 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { *prodKey[depth]++ = xytext[0]; ;
     break;}
 case 308:
-#line 1248 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { *prodKey[depth]++ = xytext[0]; ;
     break;}
 case 309:
-#line 1252 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { *prodKey[depth] = '\0';
                     yyval.t = pair(prodName[depth],OZ_string(prodKeyBuffer[depth]));
                     prodName[depth] = newCTerm("none");
@@ -3020,67 +2713,51 @@ case 309:
                   ;
     break;}
 case 310:
-#line 1260 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = nilAtom; ;
     break;}
 case 311:
-#line 1262 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = yyvsp[-1].t; ;
     break;}
 case 312:
-#line 1266 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = consList(yyvsp[0].t,nilAtom); ;
     break;}
 case 313:
-#line 1268 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = consList(yyvsp[-1].t,yyvsp[0].t); ;
     break;}
 case 314:
-#line 1272 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = newCTerm("fSyntaxRule",yyvsp[-2].t,nilAtom,yyvsp[-1].t); ;
     break;}
 case 315:
-#line 1274 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = newCTerm("fSyntaxRule",yyvsp[-2].t,nilAtom,yyvsp[-1].t); ;
     break;}
 case 316:
-#line 1276 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = newCTerm("fSyntaxRule",yyvsp[-5].t,yyvsp[-3].t,yyvsp[-1].t); ;
     break;}
 case 317:
-#line 1280 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = nilAtom; ;
     break;}
 case 318:
-#line 1282 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = consList(yyvsp[-1].t,yyvsp[0].t); ;
     break;}
 case 319:
-#line 1286 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = yyvsp[0].t; ;
     break;}
 case 320:
-#line 1288 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = newCTerm("fDollar",pos()); ;
     break;}
 case 321:
-#line 1290 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = newCTerm("fWildcard",pos()); ;
     break;}
 case 322:
-#line 1294 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = newCTerm("fSynAlternative", yyvsp[0].t); ;
     break;}
 case 323:
-#line 1298 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = consList(yyvsp[0].t,nilAtom); ;
     break;}
 case 324:
-#line 1300 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = consList(yyvsp[-2].t,yyvsp[0].t); ;
     break;}
 case 325:
-#line 1304 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { OZ_Term t = yyvsp[0].t;
                     while (terms[depth]) {
                       t = consList(newCTerm("fSynApplication", terms[depth]->term, nilAtom), t);
@@ -3091,23 +2768,18 @@ case 325:
                   ;
     break;}
 case 326:
-#line 1313 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = newCTerm("fSynSequence", nilAtom, yyvsp[0].t, yyvsp[-1].t); ;
     break;}
 case 327:
-#line 1317 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = nilAtom; ;
     break;}
 case 328:
-#line 1319 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = consList(newCTerm("fSynAction",yyvsp[0].t),nilAtom); ;
     break;}
 case 329:
-#line 1323 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = yyvsp[0].t; ;
     break;}
 case 330:
-#line 1325 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = consList(newCTerm("fSynTemplateInstantiation", yyvsp[0].t,
                                            consList(newCTerm("fSynApplication",
                                                              terms[depth]->term,
@@ -3119,14 +2791,12 @@ case 330:
                   ;
     break;}
 case 331:
-#line 1335 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = consList(newCTerm("fSynAssignment", terms[depth]->term, yyvsp[-1].t),
                                   yyvsp[0].t);
                     TermNode *tmp = terms[depth]; terms[depth] = terms[depth]->next; delete tmp;
                   ;
     break;}
 case 332:
-#line 1340 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { while (terms[depth]) {
                       decls[depth] = consList(terms[depth]->term, decls[depth]);
                       TermNode *tmp = terms[depth]; terms[depth] = terms[depth]->next; delete tmp;
@@ -3135,39 +2805,30 @@ case 332:
                   ;
     break;}
 case 333:
-#line 1347 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = consList(yyvsp[-1].t,yyvsp[0].t); ;
     break;}
 case 334:
-#line 1349 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = yyvsp[0].t; ;
     break;}
 case 335:
-#line 1353 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { terms[depth] = new TermNode(yyvsp[0].t, terms[depth]); ;
     break;}
 case 336:
-#line 1357 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = yyvsp[0].t; ;
     break;}
 case 337:
-#line 1359 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = consList(yyvsp[-1].t,yyvsp[0].t); ;
     break;}
 case 338:
-#line 1363 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = newCTerm("fSynAssignment",yyvsp[-2].t,yyvsp[0].t); ;
     break;}
 case 339:
-#line 1365 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = yyvsp[0].t; ;
     break;}
 case 340:
-#line 1369 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = newCTerm("fSynApplication",yyvsp[0].t,nilAtom); ;
     break;}
 case 341:
-#line 1371 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = newCTerm("fSynTemplateInstantiation",yyvsp[0].t,
                                   consList(newCTerm("fSynApplication",yyvsp[-3].t,
                                                     nilAtom),
@@ -3175,97 +2836,76 @@ case 341:
                   ;
     break;}
 case 342:
-#line 1377 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = yyvsp[0].t; ;
     break;}
 case 343:
-#line 1381 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = newCTerm("fSynAssignment",
                                   newCTerm("fEscape",yyvsp[-2].t,yyvsp[-3].t),yyvsp[0].t); ;
     break;}
 case 344:
-#line 1384 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = yyvsp[0].t; ;
     break;}
 case 345:
-#line 1389 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = yyvsp[0].t; ;
     break;}
 case 346:
-#line 1391 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = newCTerm("fSynTemplateInstantiation",yyvsp[0].t,
                                   consList(yyvsp[-2].t,nilAtom),yyvsp[-3].t);
                   ;
     break;}
 case 347:
-#line 1395 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = newCTerm("fSynTemplateInstantiation",yyvsp[0].t,
                                   consList(yyvsp[-3].t,nilAtom),yyvsp[-1].t);
                   ;
     break;}
 case 348:
-#line 1398 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { *prodKey[depth]++ = '('; depth++; ;
     break;}
 case 349:
-#line 1399 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { depth--; ;
     break;}
 case 350:
-#line 1401 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = newCTerm("fSynTemplateInstantiation",yyvsp[0].t,yyvsp[-4].t,yyvsp[-7].t); ;
     break;}
 case 351:
-#line 1402 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { *prodKey[depth]++ = '['; depth++; ;
     break;}
 case 352:
-#line 1403 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { depth--; ;
     break;}
 case 353:
-#line 1405 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = newCTerm("fSynTemplateInstantiation",yyvsp[0].t,yyvsp[-4].t,yyvsp[-7].t); ;
     break;}
 case 354:
-#line 1406 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { *prodKey[depth]++ = '{'; depth++; ;
     break;}
 case 355:
-#line 1407 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { depth--; ;
     break;}
 case 356:
-#line 1409 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = newCTerm("fSynTemplateInstantiation",yyvsp[0].t,yyvsp[-4].t,yyvsp[-7].t); ;
     break;}
 case 357:
-#line 1413 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = newCTerm("fSynApplication",yyvsp[0].t,nilAtom); ;
     break;}
 case 358:
-#line 1415 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = newCTerm("fSynApplication",yyvsp[-4].t,yyvsp[-1].t); ;
     break;}
 case 359:
-#line 1419 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = newCTerm("fAtom",newCTerm(xytext),pos()); ;
     break;}
 case 360:
-#line 1421 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = makeVar(xytext); ;
     break;}
 case 361:
-#line 1426 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = consList(yyvsp[0].t,nilAtom); ;
     break;}
 case 362:
-#line 1428 "/home/kornstae/mozart/platform/emulator/parser.yy"
 { yyval.t = consList(yyvsp[-2].t,yyvsp[0].t); ;
     break;}
 }
    /* the action file gets copied in in place of this dollarsign */
-#line 498 "/usr/lib/bison.simple"
+
 
   yyvsp -= yylen;
   yyssp -= yylen;
@@ -3461,7 +3101,6 @@ yyerrhandle:
   yystate = yyn;
   goto yynewstate;
 }
-#line 1431 "/home/kornstae/mozart/platform/emulator/parser.yy"
 
 
 void checkDeprecation(OZ_Term coord) {

@@ -337,10 +337,10 @@ clean::
 
 
 new-scanner:
-        $(LEX) $(LFLAGS) -Pxy -o$(SRCDIR)/scanner.cc $(SRCDIR)/scanner.ll
+        $(LEX) $(LFLAGS) -L -Pxy -o$(SRCDIR)/scanner.cc $(SRCDIR)/scanner.ll
 
 new-parser:
-        $(YACC) $(YFLAGS) -p xy $(SRCDIR)/parser.yy
+        $(YACC) $(YFLAGS) -l -p xy $(SRCDIR)/parser.yy
         @mv y.tab.c $(SRCDIR)/parser.cc
         @mv y.tab.h $(SRCDIR)/parser.hh
 
