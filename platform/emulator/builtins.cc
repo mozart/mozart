@@ -2680,10 +2680,13 @@ void threadRaise(Thread *th,OZ_Term E) {
 
   th->pushCFunCont (BIraise, args, 1, OK);
 
-  if (th->isSuspended()) {
+  th->cont();
+
+  if (th->isSuspended())
     th->suspThreadToRunnable();
+
+  if (!am.isScheduled(th))
     am.scheduleThread(th);
-  }
 }
 
 OZ_C_proc_begin(BIthreadRaise,2)
