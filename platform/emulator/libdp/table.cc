@@ -286,19 +286,6 @@ OZ_Term BorrowEntry::extract_info(int index) {
     OZ_recordInit(oz_atom("netAddress"),
       oz_cons(oz_pairA("site", oz_atom(bcreditHandler.netaddr.site->stringrep_notype())),
       oz_cons(oz_pairAI("index",(int)bcreditHandler.netaddr.index), oz_nil())));
-/*
-  OZ_Term na=
-    OZ_recordInit(oz_atom("netAddress"),
-      oz_cons(oz_pairA("site",OZ_recordInit(oz_atom("site"),
-          oz_cons(oz_pairAI("port",(int)netaddr.site->getPort()),
-          oz_cons(oz_pairAI("timeint",(int)netaddr.site->getTimeStamp()->start),
-          oz_cons(oz_pairA("timestr",oz_atom(
-                                  ctime(&netaddr.site->getTimeStamp()->start))),
-          oz_cons(oz_pairAI("ipint",(unsigned int)netaddr.site->getAddress()),
-          oz_cons(oz_pairAI("hval",(int)netaddr.site),
-                oz_nil()))))))),
-        oz_cons(oz_pairAI("index",(int)netaddr.index), oz_nil())));
-*/
   bcreditHandler.extract_info(primCred, secCred);
   return OZ_recordInit(oz_atom("be"),
      oz_cons(oz_pairAI("index", index),
