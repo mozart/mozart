@@ -12,6 +12,7 @@ export
    'class' : Mogul
 prepare
    IsPrefix = List.isPrefix
+   VS2S = VirtualString.toString
    fun {List2VSX Accu X} Accu#X end
    fun {List2VS L} {FoldL L List2VSX nil} end
    fun {NewQueue}
@@ -95,18 +96,33 @@ define
 	    {Q.put 'author:         '#A#'\n'}
 	 end
 	 if {HasFeature R blurb} then
-	    {Q.put 'blurb:          '#R.blurb#'\n'}
+	    case {String.tokens {VS2S R.blurb} &\n}
+	    of nil then skip
+	    [] [nil] then skip
+	    [] H|T then
+	       {Q.put 'blurb:          '#H}
+	       for X in T do {Q.put '\n                '#X} end
+	       {Q.put '\n'}
+	    end
 	 end
 	 for C in {CondSelect R categories nil} do
 	    {Q.put 'category:       '#C#'\n'}
 	 end
-	 {Q.put 'url-pkg:        '#
-	  {Path.resolve {self get_mogulpkgurl($)}
-	   {Utils.mogulToPackagename R.mogul}}#'\n'}
+	 if {CondSelect R tar nil}\=nil then
+	    for EXT in R.tar do
+	       {Q.put  'url-pkg:        '#
+		{Path.resolve {self get_mogulpkgurl($)}
+		 {Utils.mogulToFilename R.mogul}#'.'#EXT}#'\n'}
+	    end
+	 else
+	    {Q.put 'url-pkg:        '#
+	     {Path.resolve {self get_mogulpkgurl($)}
+	      {Utils.mogulToPackagename R.mogul}}#'\n'}
+	 end
 	 case {CondSelect R doc unit} of F|_ then
 	    {Q.put 'url-doc:        '#
 	     {Path.resolve {self get_moguldocurl($)}
-	      {Utils.mogulToPackagename R.mogul}#'/'#F}#'\n'}
+	      {Utils.mogulToFilename R.mogul}#'/'#F}#'\n'}
 	 else skip end
 	 for T in {CondSelect R lib nil} do
 	    {Q.put 'provides:       '#
@@ -193,6 +209,10 @@ define
 	 D.doc := {CondSelect R doc nil}
 	 D.lib := {CondSelect R lib nil}
 	 D.bin := {CondSelect R bin nil}
+	 case {CondSelect R tar unit}
+	 of nil  then skip
+	 [] unit then skip
+	 [] L    then D.tar := L end
 	 case {CondSelect R info_html nil}
 	 of nil  then skip
 	 [] unit then skip
@@ -479,7 +499,25 @@ define
 	    end
 	 end
 	 %% create and install package if necessary
-	 if {self get_bin_targets($)}\=nil orelse
+	 if {self get_tar_targets($)}\=nil then
+	    %% if we count on the tarballs, just check that they exist
+	    Tarballs =
+	    for EXT in {self get_tar_targets($)} collect:COL do
+	       F = {Path.resolve {self get_builddir($)}
+		    {Utils.mogulToFilename {self get_mogul($)}}#'.'#EXT}
+	    in
+	       if {Path.exists F} then {COL F}
+	       else raise ozmake(mogul:tarballnotfound(F)) end end
+	    end
+	    DIR = {self get_mogulpkgdir($)}
+	 in
+	    %% copy tarballs into mogulpkgdir
+	    {self exec_mkdir(DIR)}
+	    for F in Tarballs do
+	       {self exec_cp(F {Path.resolve DIR {Path.basename F}})}
+	    end
+	 elseif
+	    {self get_bin_targets($)}\=nil orelse
 	    {self get_lib_targets($)}\=nil orelse
 	    {self get_doc_targets($)}\=nil
 	 then

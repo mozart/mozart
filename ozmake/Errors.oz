@@ -508,6 +508,19 @@ prepare
 	       msg  : 'ambiguous --config action'
 	       items: [hint(l:'Action' m:S)
 		       hint(l:'Choices' m:list(L ' '))])
+      [] ozmake(makefile:badtarvalue(V)) then
+	 error(kind : TITLE_MAKEFILE
+	       msg  : 'expected virtual string or list of same on feature \'tar\''
+	       items: [hint(l:'Value' m:oz(V))])
+      [] ozmake(makefile:badtarext(V)) then
+	 error(kind : TITLE_MAKEFILE
+	       msg  : 'bad extension on feature \'tar\''
+	       items: [hint(l:'Got' m:V)
+		       hint(l:'Expected one of' m:'\'tgz\' \'tar.Z\' \'tar.gz\'')])
+      [] ozmake(mogul:tarballnotfound(F)) then
+	 error(kind : TITLE_MOGUL
+	       msg  : 'tarball not found'
+	       items: [hint(l:'Filename' m:F)])
       end
    end
 define
