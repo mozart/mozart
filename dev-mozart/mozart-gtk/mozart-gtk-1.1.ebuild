@@ -7,7 +7,7 @@ DEPEND="
   dev-lang/mozart-base
   dev-lang/mozart-gtk-canvas
 "
-S="${WORKDIR}/mozart-gtk-1.0"
+S="${WORKDIR}/mozart-gtk-1.1"
 
 src_compile() {
     PATH="/opt/mozart/bin:$PATH"
