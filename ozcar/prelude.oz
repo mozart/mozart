@@ -40,11 +40,7 @@ Dbg = dbg(on:           proc {$}
 UserActionLock = {NewLock}
 
 proc {EnqueueCompilerQuery M}
-   case {Compiler.getOPI} of false then
-      skip
-   elseof OPI then
-      {{OPI getCompiler($)} enqueue(M)}
-   end
+   {Emacs.condSend.compiler enqueue(M)}
 end
 
 fun {IsSpecialFrameName Name}
@@ -82,7 +78,7 @@ end
 
 proc {SendEmacs M}
    case {Cget useEmacsBar} then
-      {Emacs M}
+      {Emacs.condSend.interface M}
    else skip end
 end
 

@@ -331,8 +331,7 @@ ConfigEnvSystemVariables   = false  %% show system variables in Env Windows?
 ConfigEnvPrintTypes        = true   %% use Ozcar's own type printer?
 ConfigUpdateEnv            = true   %% update env windows after each step?
 
-RunningStandAlone          = {System.get standalone}
-RunningWithOPI             = {Not RunningStandAlone}
+RunningWithOPI             = {Emacs.getOPI} \= false
 ConfigUseEmacsBar          = RunningWithOPI  % use Emacs?
 
 PrintWidth
