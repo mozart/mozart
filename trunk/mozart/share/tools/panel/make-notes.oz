@@ -122,8 +122,21 @@ local
 
    class NumberEntry
       from TkTools.numberentry
+      attr SetMode:true
+      meth tkInit(...) = M
+	 TkTools.numberentry,M
+	 NumberEntry,tkBind(event:  '<FocusIn>'
+			    action: self#setMode(false))
+	 NumberEntry,tkBind(event:  '<FocusOut>'
+			    action: self#setMode(true))
+      end
+      meth setMode(M)
+	 SetMode <- M
+      end
       meth set(V)
-	 TkTools.numberentry,tkSet(V)
+	 case @SetMode then TkTools.numberentry,tkSet(V)
+	 else skip
+	 end
       end
       meth get($)
 	 TkTools.numberentry,tkGet($)
