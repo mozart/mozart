@@ -569,28 +569,25 @@ define
 
       meth !HaltServer(1:Msg<=nil)
          {Gate close}
-         {WriteLog "*** System will halt within 10 seconds..."}
+         {WriteLog "*** System is halting..."}
          {WriteLog "*** Saving database"}
 
          try {DB saveAll(dir:self.dbdir)}
          catch X then {System.show 'haltServer0'#X} end
 
          thread
-            %% If the server failed to shutdown nice within 10 seconds then we kill it anyway!
-            {Delay 10000}
+            %% If the server failed to shutdown nice within 2 minutes then we kill it anyway!
+            {Delay 2*60000}
             {WriteLog "*** Timeout"}
             WaitQuit=unit
          end
 
          {ForAll {DB items($)} proc{$ X}
-                                  thread
-                                     try C={DB getClient(id:X.id client:$)} in
-                                        {WriteLog "*** Send 'logout' to: "#X.id}
-                                        {C serverLogout(Msg) "Failed to logout "#X.id}
-                                     catch networkFailure(...) then skip end
-                                  end
+                                  try C={DB getClient(id:X.id client:$)} in
+                                     {WriteLog "*** Send 'logout' to: "#X.id}
+                                     {C serverLogout(Msg) "Failed to logout "#X.id}
+                                  catch networkFailure(...) then skip end
                                end}
-         {Delay 3000}
          unit=WaitQuit
       end
 
@@ -638,10 +635,12 @@ define
       {WriteLog "Ticket is saved to "#Args.ticketSave}
 
       thread
-         T1={New Tk.toplevel tkInit(title:"Server Interface" delete:proc{$}
-                                                                       {T tkClose}
-                                                                       WaitQuit=unit
-                                                                    end)}
+         D={GetDate}
+         T1={New Tk.toplevel tkInit(title:"Server Interface (started: "#D.year#"-"#D.date#":"#D.time#")"
+                                    delete:proc{$}
+                                              {T tkClose}
+                                              WaitQuit=unit
+                                           end)}
          T={New Tk.frame tkInit(parent:T1)}
          proc{Separator Name F}
             L fun{NS} {New Tk.frame tkInit(parent:F bd:1 relief:sunken height:2 width:10)} end
@@ -798,6 +797,7 @@ define
 
       {Wait WaitQuit}
       {WriteLog "Server is going down immediately...\n-----------------------------------------------------------\n"}
+      {Delay 1000}
       {Logger close}
    end
    OSinfo = {OS.uName}
