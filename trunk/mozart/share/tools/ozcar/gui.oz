@@ -55,7 +55,8 @@ class Gui from Menu Dialog
       %% the buttons
       local
 	 %% Tk has some problems printing centered text :-(
-	 Bs = {Map [' step' ' next' ' finish' ' cont' ' forget' ' stack']
+	 Bs = {Map [' step' ' next' /* ' finish' */ ' cont' ' forget'
+		    /* ' stack' */ ]
 	       fun {$ B}
 		  {New Tk.button tkInit(parent:      self.ButtonFrame
 					text:        B
@@ -392,12 +393,9 @@ class Gui from Menu Dialog
 	    skip
 	    
 	 elseof ' cont' then
-	    /*
 	    {Dbg.stepmode T false}
+	    {Dbg.contflag T true}
 	    {Thread.resume T}
-	    */
-	    {Browse 'not yet implemented'}
-	    skip
 	    
 	 elseof ' forget' then
 	    ThreadManager,forget(T I)
