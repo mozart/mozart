@@ -240,24 +240,30 @@ OZ_BI_end
 done by providing the function <code/oz_init_module()/ which returns a
 table of builtins.  Here, it must also initialize the static member
 <code/Counter::id/.
-<code display>extern "C"
+<code display>
+OZ_C_proc_interface * oz_init_module(void)
 {
-  OZ_C_proc_interface * oz_init_module(void)
-  {
-    static OZ_C_proc_interface table[] = {
-      {"new",0,1,counter_new},
-      {"is",1,1,counter_is},
-      {"get",1,1,counter_get},
-      {"set",2,0,counter_set},
-      {"next",1,1,counter_next},
-      {"free",1,0,counter_free},
-      {0,0,0,0}
-    };
-    Counter::id = OZ_getUniqueId();
-    return table;
-  }
+  static OZ_C_proc_interface table[] = {
+    {"new",0,1,counter_new},
+    {"is",1,1,counter_is},
+    {"get",1,1,counter_get},
+    {"set",2,0,counter_set},
+    {"next",1,1,counter_next},
+    {"free",1,0,counter_free},
+    {0,0,0,0}
+  };
+  Counter::id = OZ_getUniqueId();
+  return table;
 }
-</code></p>
+</code>
+Assuming the code above is put in file
+<ref.extern to="counter-obj.cc"/<file/counter-obj.cc//, we
+first compile and then create a DLL as follows
+<code display proglang=sh>
+oztool c++ -c counter-obj.cc
+oztool ld counter-obj.o -o counter-obj.so-`oztool platform`
+</code>
+</p>
   </section>
 
   <section>
