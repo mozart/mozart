@@ -257,8 +257,10 @@ in
 					  color:ScrollbarStackColor what:stack)
 	       end
 	       thread Gui,loadStatus(F.file Ack) end
-	    else skip end
-	    Gui,SelectStackFrame(FrameNr)
+	       Gui,SelectStackFrame(FrameNr)
+	    else
+	       Gui,SelectStackFrame(0)
+	    end
 	    Gui,printEnv(frame:FrameNr vars:Vars)
 	    /*
 	    case {Cget verbose} then
@@ -279,11 +281,15 @@ in
 		     background: DefaultBackground
 		     foreground: DefaultForeground)}
 	    else skip end
-	    {W tk(tag conf T
-		  relief:raised borderwidth:0
-		  background: SelectedBackground
-		  foreground: SelectedForeground)}
-	    LastSelectedFrame <- T
+	    case T > 0 then
+	       {W tk(tag conf T
+		     relief:raised borderwidth:0
+		     background: SelectedBackground
+		     foreground: SelectedForeground)}
+	       LastSelectedFrame <- T
+	    else
+	       LastSelectedFrame <- undef
+	    end
 	 else skip end
       end
 
