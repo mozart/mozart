@@ -42,6 +42,10 @@
 			     out => [],
 			     BI  => BIaskVerboseSpace},
 
+     'askUnsafe'	=> { in  => ['+space','value'],
+			     out => [],
+			     BI  => BIaskUnsafeSpace},
+
      'merge'	        => { in  => ['+space'],
 			     out => ['+value'],
 			     BI  => BImergeSpace},
