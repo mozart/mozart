@@ -30,171 +30,19 @@
 #define __TIHH
 
 #include "base.hh"
-#include "thr_class.hh"
-#include "board.hh"
-#include "am.hh"
 
-// debugger
-void debugStreamTerm(Thread*);
-void debugStreamReady(Thread*);
+Thread * oz_newThread(int prio=DEFAULT_PRIORITY);
 
-// from space.cc
-int oz_incSolveThreads(Board *bb);
-void oz_removeExtThread(Thread *tt);
+Thread * oz_newThreadToplevel(void);
 
+Thread * oz_newThreadInject(Board *bb);
 
+Thread * oz_newThreadSuspended(int prio=DEFAULT_PRIORITY);
 
-inline
-Thread * _newThread(int prio, Board *bb) {
-  Thread *th = new Thread(S_RTHREAD,prio,bb,oz_newId());
-  th->setBody(am.threadsPool.allocateBody());
-  bb->incSuspCount();
-  oz_checkDebug(th,bb);
-  return th;
-}
+Thread * oz_newThreadPropagate(Board *bb);
 
-inline
-Thread * oz_newThread(int prio=DEFAULT_PRIORITY) {
-  Board *bb  = oz_currentBoard();
-  Thread *tt = _newThread(prio,bb);
+void oz_disposeThread(Thread *tt);
 
-  tt->markRunnable();
-
-  if (!bb->isRoot()) {
-    oz_incSolveThreads(bb);
-  }
-  
-  am.threadsPool.scheduleThread(tt);
-  return tt;
-}
-
-
-inline
-Thread * oz_newThreadToplevel(int prio=DEFAULT_PRIORITY)
-{
-  Board *bb=oz_rootBoard();
-  Thread *tt = _newThread(prio,bb);
-  tt->markRunnable();
-  am.threadsPool.scheduleThread(tt);
-  return tt;
-}
-
-inline
-Thread * oz_newThreadInject(Board *bb,int prio=DEFAULT_PRIORITY)
-{
-  Thread *tt = _newThread(prio,bb);
-  tt->markRunnable();
-
-  oz_incSolveThreads(bb);
-
-  am.threadsPool.scheduleThread(tt);
-  return tt;
-}
-
-
-inline
-Thread * oz_newThreadSuspendedInject(Board *bb, int prio=DEFAULT_PRIORITY)
-{
-  // NOTE: never try to inject a suspended thread, all kinds of invariants
-  //  for the stability test are broken
-  Assert(bb==oz_currentBoard());
-  return _newThread(prio,bb);
-}
-
-inline
-Thread * oz_newThreadSuspended(int prio=DEFAULT_PRIORITY)
-{
-  return oz_newThreadSuspendedInject(oz_currentBoard(),prio);
-}
-
-inline
-Thread * oz_newThreadPropagate(Board *bb) 
-{
-  Thread *th = new Thread(S_WAKEUP,DEFAULT_PRIORITY,bb,oz_newId());
-  bb->incSuspCount();
-  oz_checkDebug(th,bb);
-  return th;
-}
-
-
-//  Dispose a thread.
-inline
-void oz_disposeThread(Thread *tt)
-{
-#ifdef DEBUG_THREADCOUNT
-  if (tt->isRunnable() && tt->isLPQThread())
-    existingLTQs -= 1;
-#endif
-  Assert(!tt->isSuspended() || !GETBOARD(tt)->checkAlive());
-
-  tt->markDeadThread();
-
-  if (am.debugmode() && tt->getTrace())
-    debugStreamTerm(tt);
-  
-  switch (tt->getThrType()) {
-  case S_RTHREAD: 
-    am.threadsPool.freeThreadBody(tt);
-    break;
-    
-  case S_WAKEUP: 
-    break;
-    
-  default: 
-    Assert(0);
-  }
-}
-
-inline
-static
-void _wakeupThread(Thread *tt)
-{
-  Assert(tt->isSuspended());
-
-  tt->markRunnable();
-
-  if (am.debugmode() && tt->getTrace()) {
-    //Thread *t; if ((t = oz_currentThread()) && t->isTraced())
-    //  execBreakpoint(t);
-    debugStreamReady(tt);
-  }
-  am.threadsPool.scheduleThread(tt);
-}
-
-inline 
-void oz_wakeupThreadOPT(Thread *tt)
-{
-  _wakeupThread(tt);
-
-  Assert(oz_isCurrentBoard(GETBOARD(tt)) || tt->isExtThread() ||
-	 oz_isCurrentBoard(GETBOARD(tt)->getParent()));
-
-  if (!(GETBOARD(tt))->isRoot() || tt->isExtThread()) {
-    oz_incSolveThreads(GETBOARD(tt));
-    
-    if (tt->wasExtThread()) {
-      oz_removeExtThread(tt);
-    }
-    
-    tt->clearExtThread();
-    
-  } 
-
-}
-
-inline 
-void oz_wakeupThread(Thread *tt)
-{
-  _wakeupThread(tt);
-  
-  int inSolve = oz_incSolveThreads(GETBOARD(tt));
-  if (inSolve) {
-
-    if (tt->wasExtThread()) {
-      oz_removeExtThread(tt);
-    }
-    tt->clearExtThread();
-  }
-}
+void oz_wakeupThread(Thread *tt);
 
 #endif

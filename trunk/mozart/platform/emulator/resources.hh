@@ -250,7 +250,6 @@ error include resources.hh before mozart.h
 //#define DEBUG_NONMONOTONIC
 //#define DEBUG_LTQ
 //#define DEBUG_INDICES
-//#define DEBUG_THREADCOUNT
 //#define DEBUG_PROPAGATORS
 //#define ALLDIFF
 

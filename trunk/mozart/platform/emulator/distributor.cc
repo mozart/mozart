@@ -3,7 +3,7 @@
  *    Christian Schulte <schulte@ps.uni-sb.de>
  * 
  *  Copyright:
- *    Christian Schulte, 1997
+ *    Christian Schulte, 1999
  * 
  *  Last change:
  *    $Date$ by $Author$
@@ -28,6 +28,8 @@
 #include "distributor.hh"
 #include "tagged.hh"
 #include "thr_int.hh"
+#include "thr_class.hh"
+#include "value.hh"
 
 void Distributor::dispose(void) {
   freeListDispose(this, sizeOf());
