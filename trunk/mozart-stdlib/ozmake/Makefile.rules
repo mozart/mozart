@@ -6,7 +6,7 @@ OZMAKE_FILES = \
 	Main.ozf Utils.ozf Path.ozf Shell.ozf Executor.ozf Attribs.ozf \
 	Builder.ozf Makefile.ozf Manager.ozf Installer.ozf Database.ozf \
 	Cleaner.ozf Creator.ozf Extractor.ozf Lister.ozf Help.ozf \
-	Uninstaller.ozf
+	Uninstaller.ozf Errors.ozf
 
 ozmake: ozmake.ozf
 	$(OZL) $(OZLFLAGS) -x $< -o $@
@@ -19,8 +19,12 @@ Help.ozf: Help.oz HELP.txt Utils.ozf
 clean::
 	-rm -f ozmake
 
-index.html: HELP.xml HELP.xsl
-	java -cp XT.jar com.jclark.xsl.sax.Driver HELP.xml HELP.xsl index.html
+html: HELP.xml HELP.xsl
+	case `java -version 2>&1` in \
+	Kaffe*) JAVACP=-addclasspath;; \
+	*) JAVACP=-classpath;; \
+	esac; \
+	java $$JAVACP XT.jar com.jclark.xsl.sax.Driver HELP.xml HELP.xsl index.html
 
 install-prebuilt:
 	$(INSTALL_FILE) ozmake.ozf $(PKGDIR)/ozmake.ozf
