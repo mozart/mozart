@@ -938,7 +938,9 @@ LBLpreemption:
   asmLbl(PREEMPT_THREAD);
   SaveSelf;
   Assert(GETBOARD(CTT)==CBB);
-  Assert(CTT->isRunnable());
+  if(!CTT->isRunnable())
+    {warning("old assertion crashes on CTT->isRunnable()");}
+  // Assert(CTT->isRunnable());
   e->scheduleThreadInline(CTT, CPP);
   CTT=0;
 

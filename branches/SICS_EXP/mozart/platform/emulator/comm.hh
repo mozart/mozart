@@ -330,14 +330,14 @@ private:
   void zeroActive(){
     if(getType() & CONNECTED){
       if(getType() & REMOTE_SITE){
-	zeroRefsToRemote(getRemoteSite());
+	//	zeroRefsToRemote(getRemoteSite());
 	return;}
       zeroRefsToVirtual(getVirtualSite());
       return;}
     siteZeroActiveRef(this);}
 
-  void zeroPassive(){
-    siteZeroPassiveRef(this);}
+  void zeroPassive(){return;}
+    //    siteZeroPassiveRef(this);}
 
   void makePermConnected(){
       flags |= PERM_SITE;
