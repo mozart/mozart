@@ -74,7 +74,7 @@ Bool oz_wakeup_Propagator(Propagator * prop, Board * home, PropCaller calledBy)
     Assert(!prop->getPropagator()->isMonotonic());
 
     WAKEUP_PROPAGATOR(prop->markRunnable();
-		      SolveActor::Cast(am.currentBoard()->getActor())->addToNonMonoSuspList(prop));
+		      am.currentBoard()->addToNonMonoSuspList(prop));
   }
   
   if (localPropStore.isUseIt()) {

@@ -35,6 +35,7 @@
 #include "base.hh"
 #include "am.hh"
 #include "var_base.hh"
+#include "board.hh"
 
 /* -----------------------------------------------------------------------
  * Locality test for variables

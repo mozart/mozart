@@ -26,6 +26,12 @@
 #endif
 
 #include "distributor.hh"
+#include "tagged.hh"
+#include "thr_int.hh"
+
+void Distributor::dispose(void) {
+  freeListDispose(this, sizeOf());
+}
 
 // PERFORMANCE PROBLEMS
 DistBag * DistBag::clean(void) {
@@ -42,3 +48,38 @@ DistBag * DistBag::clean(void) {
   
 }
 
+inline
+void telleq(Board * bb, const TaggedRef a, const TaggedRef b) {
+  RefsArray args = allocateRefsArray(2, NO);
+  args[0] = a;
+  args[1] = b;
+
+  Thread * t = oz_newThreadInject(bb);
+  t->pushCall(BI_Unify,args,2);
+}
+
+
+BaseDistributor::BaseDistributor(Board * bb, const int n) {
+  offset = 0; 
+  num    = n;
+  var    = oz_newVar(bb);
+}
+
+
+int BaseDistributor::commit(Board * bb, const int l, const int r) {
+  if (l > num+1) {
+    num = 0;
+  } else {
+    offset += l-1;
+    num     = min(num,min(r,num+1)-l+1);
+    
+    if (num == 1) {
+      num = 0;
+      
+      telleq(bb,var,makeTaggedSmallInt(offset + 1));
+      return 1;
+    }
+  }
+  return num;
+}
+  

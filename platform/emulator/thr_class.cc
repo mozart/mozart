@@ -60,13 +60,7 @@ int Thread::getRunnableNumber()
       if (PC!=C_LPQ_Ptr)
 	return 1;
 
-#ifdef COUNT_PROPAGATORS
-      SolveActor *sa = (SolveActor *) Y;
-      LocalPropagatorQueue * lpq = sa->getLocalPropagatorQueue();
-      return lpq->getSize();
-#else
       return 0;
-#endif
     }
   case S_WAKEUP:
     return 0;
