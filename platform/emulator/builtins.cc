@@ -4470,7 +4470,11 @@ OZ_C_proc_begin(BIsendPort,2)
   Port *port = tagged2Port(prt);
   CheckLocalBoard(port,"port");
 
-  OZ_send(prt,msg);
+  if (port->isLocal()) {
+    OZ_send(prt,msg);
+  } else {
+    remoteSend(port,msg);
+  }
 
   return PROCEED;
 }

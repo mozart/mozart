@@ -8,9 +8,12 @@
   State: $State$
 
   $Log$
-  Revision 1.5  1996/08/02 14:20:18  mehl
-  bug fixes
+  Revision 1.6  1996/08/02 16:25:50  scheidhr
+  more Perdio work: send Ports over the net
 
+// Revision 1.5  1996/08/02  14:20:18  mehl
+// bug fixes
+//
 // Revision 1.4  1996/08/02  11:14:17  mehl
 // perdio uses tcp now
 //
@@ -29,20 +32,34 @@
 
 #include "ip.hh"
 #include "perdio.hh"
+#include "perdiotables.hh"
 
 #include "oz.h"
 #include "am.hh"
 
+typedef enum {SMALLINTTAG, BIGINTTAG, FLOATTAG, ATOMTAG,
+              RECORDTAG, TUPLETAG, LISTTAG, REFTAG, PORTTAG} MarshalTag;
 
-OZ_Term unmarshal(char *buf, int len);
+
+void unmarshalSend(char *buf, int len, int *port, OZ_Term *t);
 
 OZ_Term ozport=0;
 void siteReceive(char *msg,int len)
 {
+  OZ_Term recvPort;
+
   switch (msg[0]) {
   case GSEND:
     {
-      OZ_Term t = unmarshal(msg+1,len-1);
+      OZ_Term t;
+      int portIndex;
+      unmarshalSend(msg+1,len-1,&portIndex,&t);
+      if (portIndex==-1) {
+        recvPort = ozport;
+      } else {
+        Port *p = (Port *) ownerTable->get(portIndex)->object;
+        recvPort = makeTaggedConst(p);
+      }
       if (!t) {
         if (ozconf.debugPerdio) {
           printf("siteReceive: message GSEND:");
@@ -54,7 +71,7 @@ void siteReceive(char *msg,int len)
       if (ozconf.debugPerdio) {
         printf("siteReceive: GSEND '%s'\n",OZ_toC(t,10,10));
       }
-      OZ_send(ozport,t);
+      OZ_send(recvPort,t);
       break;
     }
   default:
@@ -68,7 +85,7 @@ void siteReceive(char *msg,int len)
  * Marshal
  */
 
-#define BSEOF -1
+#define BSEOF (unsigned int) -1
 
 class ByteStream {
   char *array;
@@ -189,6 +206,9 @@ public:
 
 RefTrail *refTrail;
 
+BorrowerTable *borrowerTable = NULL;
+OwnerTable *ownerTable = NULL;
+
 /**********************************************************************/
 
 const int intSize = sizeof(int32);
@@ -264,9 +284,52 @@ void marshalString(char *s, ByteStream *bs)
 }
 
 
-#define CheckCycle(rec)                         \
+inline
+void marshalNetAddress(NetAddress *a, ByteStream *bs)
+{
+  char *host;
+  int port, timestamp;
+  getSite(a->site,host,port,timestamp);
+  marshalString(host,bs);
+  marshalNumber(port,bs);
+  marshalNumber(timestamp,bs);
+  marshalNumber(a->index,bs);
+}
+
+
+inline
+ProtocolObject *unmarshalNetAddress(MarshalTag t, ByteStream *bs)
+{
+  char *host = unmarshalString(bs);
+  int port = unmarshalNumber(bs);
+  int timestamp = unmarshalNumber(bs);
+  int sd = lookupSite(host,port,timestamp);
+
+  int index = unmarshalNumber(bs);
+
+  if (sd==localSite) {
+    return ownerTable->get(index)->object;
+  }
+  BorrowerTableEntry *b = borrowerTable->find(sd,index);
+  if (b) {
+    return b->proxy;
+  }
+
+  if (t==PORTTAG) {
+    NetAddress *addr = new NetAddress(sd,index);
+    Port *ret = new Port(addr);
+    borrowerTable = borrowerTable->add(addr,ret);
+    return ret;
+  }
+
+  Assert(0);
+  return NULL;
+}
+
+
+#define CheckCycle(expr)                        \
   {                                             \
-    OZ_Term t = *rec->getRef();                 \
+    OZ_Term t = expr;                           \
     if (!isRef(t) && tagTypeOf(t)==GCTAG) {     \
       bs->put(REFTAG);                          \
       marshalNumber(t>>tagSize,bs);             \
@@ -283,8 +346,6 @@ void trailCycle(OZ_Term *t)
 }
 
 
-typedef enum {SMALLINTTAG, BIGINTTAG, FLOATTAG, ATOMTAG,
-              RECORDTAG, TUPLETAG, LISTTAG, REFTAG} MarshalTag;
 
 
 void marshalTerm(OZ_Term t, ByteStream *bs)
@@ -319,7 +380,7 @@ loop:
   case LTUPLE:
     {
       LTuple *l = tagged2LTuple(t);
-      CheckCycle(l);
+      CheckCycle(*l->getRef());
       bs->put(LISTTAG);
       argno = 2;
       args  = l->getRef();
@@ -329,7 +390,7 @@ loop:
   case SRECORD:
     {
       SRecord *rec = tagged2SRecord(t);
-      CheckCycle(rec);
+      CheckCycle(*rec->getRef());
       if (rec->isTuple()) {
         bs->put(TUPLETAG);
         marshalNumber(rec->getTupleWidth(),bs);
@@ -342,6 +403,24 @@ loop:
       args  = rec->getRef();
       goto processArgs;
     }
+
+  case OZCONST:
+    {
+      if (isPort(t)) {
+        Port *p = tagged2Port(t);
+        CheckCycle(p->getStream());
+        NetAddress *addr = p->export();
+        int credit = addr->getCredit();
+
+        bs->put(PORTTAG);
+        marshalNetAddress(addr,bs);
+        marshalNumber(credit,bs);
+
+        trailCycle(p->getStreamRef());
+        return;
+      }
+    }
+    // no break here
   default:
     if (isAnyVar(t)) {
       warning("Cannot marshal variables");
@@ -437,6 +516,14 @@ loop:
       return;
     }
 
+  case PORTTAG:
+    {
+      Port *p = (Port *) unmarshalNetAddress(PORTTAG,bs);
+      int credit = unmarshalNumber(bs);
+      p->getAddress()->giveCredit(credit);
+      *ret = makeTaggedConst(p);
+      return;
+    }
   default:
     printf("unmarshal: unexpected tag: %d\n",tag);
     *ret = nil();
@@ -451,14 +538,14 @@ processArgs:
   goto loop;
 }
 
-OZ_Term unmarshal(char *buf, int len)
+void unmarshalSend(char *buf, int len, int *port, OZ_Term *t)
 {
   ByteStream *bs = new ByteStream(buf,len);
   OZ_Term ret;
   refCounter = 0;
-  unmarshalTerm(bs,&ret);
+  *port = unmarshalNumber(bs);
+  unmarshalTerm(bs,t);
   delete bs;
-  return ret;
 }
 
 /*
@@ -467,14 +554,43 @@ OZ_Term unmarshal(char *buf, int len)
  * -------------------------------------------------------------------------
  */
 
+void domarshalTerm(OZ_Term t, ByteStream *bs)
+{
+  refCounter = 0;
+  marshalTerm(t,bs);
+  refTrail->unwind();
+}
+
+
+int reliableSend(int sd, ByteStream *bs)
+{
+  return reliableSend(sd,bs->getPtr(),bs->getLen());
+}
+
+
+void remoteSend(Port *p, TaggedRef msg)
+{
+  int site = p->getAddress()->site;
+  int index = p->getAddress()->index;
+
+  ByteStream *bs = new ByteStream();
+  bs->put(GSEND);
+  marshalNumber(index,bs);
+  domarshalTerm(msg,bs);
+
+  int ret = reliableSend(site,bs);
+  Assert(ret == 0);
+  delete bs;
+}
+
+
 ByteStream *gsend(OZ_Term t)
 {
   ByteStream *bs = new ByteStream();
 
   bs->put(GSEND);
-  refCounter = 0;
-  marshalTerm(t,bs);
-  refTrail->unwind();
+  marshalNumber((unsigned int)-1,bs);
+  domarshalTerm(t,bs);
   return bs;
 }
 
@@ -484,8 +600,7 @@ OZ_C_proc_begin(BIreliableSend,2)
   OZ_declareArg(1,value);
 
   ByteStream *bs=gsend(value);
-  int len = bs->getLen();
-  int ret = reliableSend(sd,bs->getPtr(),len);
+  int ret = reliableSend(sd,bs);
   delete bs;
   if (ret == 0) return PROCEED;
 
@@ -554,6 +669,7 @@ void BIinitPerdio()
 
   refTable = new RefTable();
   refTrail = new RefTrail();
+  ownerTable = new OwnerTable(100);
 }
 
 #endif
