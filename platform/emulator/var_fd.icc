@@ -31,7 +31,7 @@ GenBoolVariable * GenFDVariable::becomesBool(void) {
 inline
 void GenFDVariable::dispose(void) {
   finiteDomain.disposeExtension();
-  fdSuspList[fd_det]->disposeList();
+  fdSuspList[fd_singl]->disposeList();
   fdSuspList[fd_bounds]->disposeList();
   suspList->disposeList();
   freeListDispose(this, sizeof(GenFDVariable));
@@ -43,9 +43,9 @@ void GenFDVariable::propagate(TaggedRef var, OZ_FDPropState state,
 {
   if (prop_eq == pc_propagator) {
     switch (state) {
-    case fd_det: // no break
-      if (fdSuspList[fd_det])
-        GenCVariable::propagate(var, fdSuspList[fd_det], prop_eq);
+    case fd_singl: // no break
+      if (fdSuspList[fd_singl])
+        GenCVariable::propagate(var, fdSuspList[fd_singl], prop_eq);
     case fd_bounds: // no break
       if (fdSuspList[fd_bounds])
         GenCVariable::propagate(var, fdSuspList[fd_bounds], prop_eq);
@@ -53,7 +53,7 @@ void GenFDVariable::propagate(TaggedRef var, OZ_FDPropState state,
       break;
     }
   } else {
-    GenCVariable::propagate(var, fdSuspList[fd_det], prop_eq);
+    GenCVariable::propagate(var, fdSuspList[fd_singl], prop_eq);
     GenCVariable::propagate(var, fdSuspList[fd_bounds], prop_eq);
   }
   if (suspList)
@@ -62,7 +62,7 @@ void GenFDVariable::propagate(TaggedRef var, OZ_FDPropState state,
 
 inline
 void GenFDVariable::propagateUnify(TaggedRef var) {
-  propagate(var, fd_det, pc_cv_unif);
+  propagate(var, fd_singl, pc_cv_unif);
 }
 
 inline
@@ -82,7 +82,7 @@ void GenFDVariable::becomesSmallIntAndPropagate(TaggedRef * trPtr)
   Assert(this == tagged2SuspVar(*trPtr));
 
   TaggedRef si_val = OZ_int(finiteDomain.getSingleElem());
-  propagate(*trPtr, fd_det);
+  propagate(*trPtr, fd_singl);
   doBind(trPtr, si_val);
   dispose();
 }
@@ -126,8 +126,8 @@ void addSuspFDVar(TaggedRef v, SuspList * el, OZ_FDPropState list_index)
   GenFDVariable * fv = tagged2GenFDVar(v);
 
   switch (list_index) {
-  case fd_det:
-    fv->fdSuspList[fd_det] = addSuspToList(fv->fdSuspList[fd_det], el,
+  case fd_singl:
+    fv->fdSuspList[fd_singl] = addSuspToList(fv->fdSuspList[fd_singl], el,
                                            fv->home);
     break;
   case fd_bounds:
@@ -149,8 +149,8 @@ void addSuspFDVar(TaggedRef v, Thread * el, OZ_FDPropState list_index)
   GenFDVariable * fv = tagged2GenFDVar(v);
 
   switch (list_index) {
-  case fd_det:
-    fv->fdSuspList[fd_det] = addSuspToList(fv->fdSuspList[fd_det], el,
+  case fd_singl:
+    fv->fdSuspList[fd_singl] = addSuspToList(fv->fdSuspList[fd_singl], el,
                                            fv->home);
     break;
   case fd_bounds:
