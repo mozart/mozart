@@ -573,6 +573,7 @@ define
 	    [] front then HTML in
 	       Authors <- nil
 	       MyAuthorDB <- {New AuthorDB.'class' init(@Reporter)}
+	       {Dictionary.removeAll @Meta}
 	       OzDocToHTML, Batch(M 1 ?HTML)
 	       if @MakeAbstract then
 		  Node = 'div'(hr()
