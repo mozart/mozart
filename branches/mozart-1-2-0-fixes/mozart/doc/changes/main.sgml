@@ -152,6 +152,7 @@ backward compatible with Mozart 1.2.0.
         <title/Bug Fixes in Detail/
 
 <p>
+<list>
 <entry>record unification
 <item>
         an invalid optimization was introduced in 1.2.0 that affected
