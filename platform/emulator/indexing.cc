@@ -132,6 +132,10 @@ Bool IHashTable::disentailed(GenCVariable *cvar, TaggedRef *ptr)
   case OFSVariable:
     {
       GenOFSVariable *ofsvar = (GenOFSVariable*) cvar;
+      if (listLabel != elseLabel
+	  && !ofsvar->disentailed(tagged2Literal(AtomCons),2))
+	return NO;
+
       if (literalTable) {
 	for (int i = 0; i < size; i++) {
 	  for (HTEntry* aux = literalTable[i]; aux!=NULL; aux=aux->getNext()) {
