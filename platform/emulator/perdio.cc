@@ -2114,9 +2114,8 @@ void GNameTable::gcGNameTable()
       continue;
 
     if (gn->getGCMark()) {
-      TaggedRef t = (TaggedRef) ToInt32(aux->getEntry());
+      TaggedRef &t = aux->getEntryAdr();
       gcTagged(t,t);
-      aux->setEntry((GenHashEntry*)ToPointer(t));
       gn->resetGCMark();
     } else {
       if (gn->getGNameType()==GNT_NAME &&
@@ -3728,6 +3727,8 @@ loop:
       ProgramCounter PC = unmarshallCode(bs);
       if (pp) {
         pp->import(globals,PC);
+      } else {
+        // TODO free the code again
       }
       return;
     }
