@@ -45,7 +45,7 @@ validate: opi-html
 	nsgmls -cHTML4.soc -sB opi-html/*.html
 
 install: opi-html $(DOCDIR)
-	cp -p opi-html/* $(DOCDIR)
+	for i in opi-html/*; do $(INSTALL_FILE) $$i $(DOCDIR); done
 
 $(DOCDIR):
 	$(INSTALL_DIR) $@
