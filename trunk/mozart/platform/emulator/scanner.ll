@@ -650,10 +650,7 @@ REGEXCHAR    "["([^\]\\]|\\.)+"]"|\"[^"]+\"|\\.|[^<>"\[\]\\\n]
 				 }
                                  BEGIN(INITIAL);
 			       }
-  <<EOF>>                      { xyreportError("directive error",
-					       "unterminated directive",
-					       xyFileName,xylino,xycharno());
-				 BEGIN(DIRECTIVE);
+  <<EOF>>                      { BEGIN(DIRECTIVE);
 				 if (pop_insert())
 				   return ENDOFFILE;
 			       }
@@ -702,10 +699,7 @@ REGEXCHAR    "["([^\]\\]|\\.)+"]"|\"[^"]+\"|\\.|[^<>"\[\]\\\n]
 				 }
                                  BEGIN(INITIAL);
 			       }
-  <<EOF>>                      { xyreportError("directive error",
-					       "unterminated directive",
-					       xyFileName,xylino,xycharno());
-				 BEGIN(DIRECTIVE);
+  <<EOF>>                      { BEGIN(DIRECTIVE);
 				 if (pop_insert())
 				   return ENDOFFILE;
 			       }
@@ -1104,7 +1098,7 @@ void xy_init_from_string(char *str) {
   xylastline = YY_CURRENT_BUFFER->yy_ch_buf;
   xy_init();
   xylino = 1;
-  strcpy(xyFileName,"/");
+  strcpy(xyFileName,"");
   xyFileNameAtom = OZ_atom(xyFileName);
 }
 
