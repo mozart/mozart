@@ -30,6 +30,10 @@ fun {UsingNewCompiler}
    end
 end
 
+\ifndef NEWCOMPILER
+fun {NewCompiler _ _ _ _ _} class meth otherwise(M) skip end end end
+\endif
+
 %% send a warning/error message
 proc {OzcarShow X}
    case {Cget verbose} then
@@ -44,9 +48,6 @@ end
 proc {OzcarError M}
    {System.showInfo OzcarErrorPrefix # M}
 end
-
-%% a null object which ignores all messages
-NullObject = {New class meth otherwise(M) skip end end ''}
 
 fun {V2VS X}
    P = {System.get errors}
