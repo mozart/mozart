@@ -509,9 +509,11 @@ in
 	    N in
 	    Gui,rawStatus(ResetStatus)
 	    ThreadManager,killAll(N)
-	    Gui,rawStatus(' done (killed ' # N # ' thread' #
-				  case N == 1 then nil else 's' end #
-				  ')' append)
+	    Gui,rawStatus(case N == 1 then
+			     ' (1 thread has been killed)'
+			  else
+			     ' (' # N # ' threads have been killed)'
+			  end append)
 	 else
 	    case T == undef then
 	       Gui,rawStatus('You must select a thread first!')
