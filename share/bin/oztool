@@ -12,3 +12,4 @@
 # invoke a platform specific script
 
 exec "$OZTOOL" "$@"
+
