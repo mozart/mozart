@@ -32,7 +32,13 @@
   </nxml:control>
 </template>
 
-<template match="CHUNK.REF">
+<!-- ignore text, except in mode="ok" -->
+<template match="text()"/>
+<template match="text()" mode="ok">
+  <nxml:data><value-of select="."/></nxml:data>
+</template>
+
+<template match="CHUNK.REF|VAR[@TYPE!='PROG']" mode="ok">
   <nxml:control>(nil . " X ")
 </nxml:control>
 </template>
@@ -42,7 +48,7 @@
     <text>(ozdoc-fontify-alist "</text>
     <value-of select="@PROGLANG"/>
     <text>" '(</text>
-    <apply-templates/>
+    <apply-templates mode="ok"/>
     <text>))
 </text>
   </nxml:control>
@@ -61,7 +67,7 @@
   </nxml:control>
 </template>
 
-<template match="HILITE.ITEM">
+<template match="HILITE.ITEM" mode="ok">
   <nxml:control>(<value-of select="@ID"/> . "</nxml:control>
   <nxml:data><value-of select="."/></nxml:data>
   <nxml:control>")
