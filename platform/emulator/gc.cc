@@ -3056,7 +3056,7 @@ void CodeGCList::collectGClist()
 
 void CodeArea::gcCodeAreaStart()
 {
-  if (++codeGCgeneration >= ozconf.codeGCcycles) {
+  if ((ozconf.codeGCcycles) != 0 && (++codeGCgeneration >= ozconf.codeGCcycles)) {
     // switch code GC on
     codeGCgeneration = 0;
     return;
