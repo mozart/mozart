@@ -146,8 +146,11 @@ src: $(PACKDIR)
         echo "[" $(NOTDIRSRCTOP) "]"
         test -n "$(NOTDIRSRCTOP)" || { echo "bad"; exit 1; }
         (cd $(PACKDIR); \
-         (cd $(SRCTOP)/..; \
-          $(TAR) -cf - $(NOTDIRSRCTOP)) | $(TAR) -xf - ; \
+         mkdir -p $(NOTDIRSRCTOP); \
+         cd $(NOTDIRSRCTOP); \
+         (cd $(SRCTOP); \
+          $(TAR) -cf - .) | $(TAR) -xf - ; \
+         cd ..; \
          tbr=`find $(NOTDIRSRCTOP) -name CVS -type d 2>/dev/null` ; \
          rm -rf $$tbr ; \
          find $(NOTDIRSRCTOP) -name '.cvsignore' -type f -exec rm -f '{}' ';' ; \
@@ -323,7 +326,7 @@ std: $(PACKDIR)
         -rm -rf $(PACKDIR)/mozart-$(shell $(OZVERSION)).$(OZBUILD)-std
         mkdir $(PACKDIR)/mozart-$(shell $(OZVERSION)).$(OZBUILD)-std
         cd $(PACKDIR)/mozart-$(shell $(OZVERSION)).$(OZBUILD)-std && \
-          ((cd $(STDLIB) && tar -cf - .) | tar -xf -)
+          ((cd $(STDLIB) && $(TAR) -cf - .) | tar -xf -)
         (cd $(PACKDIR) && $(TARTAR) -cf - mozart-$(shell $(OZVERSION)).$(OZBUILD)-std) | \
         $(COMPRESS) > mozart-$(shell $(OZVERSION)).$(OZBUILD)-std.tar.gz
         rm -rf $(PACKDIR)/mozart-$(shell $(OZVERSION)).$(OZBUILD)-std
