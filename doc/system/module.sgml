@@ -128,13 +128,15 @@
           <Entry><Span class=index/<<apply>>/
 	    <Index/<<Module>><And><<manager>><And><<apply>>/
           <Synopsis>
+	    <<<apply(?+{Functor} ?_{ModuleR} <= _)>>>
 	    <<<apply(url:?+{UrlV} ?+{Functor} ?_{ModuleR} <= _)>>>
 	    <<<apply(name:?+{NameV} ?+{Functor} ?_{ModuleR} <= _)>>>
           <Item>
             Applies the functor ?_{Functor}, where the url ?_{UrlV} (a
             virtual string) or the module name ?_{NameV} (a virtual
             string) serve as base URL for linking the functor's
-            import.
+            import. If neither a module name nor a URL is given, the 
+            current working directory is taken as base URL.
           <P>
             The argument for the module is optional.
           <P>
@@ -225,6 +227,8 @@ end>>>
       
     </Section>
 
+<!--
+
     <Section id="Section.Modules.Example">
       <Title/An Example/
     </Section>
@@ -237,6 +241,8 @@ end>>>
       </P>
 
     </Section>
+
+-->
 
   </Chapter>
 
