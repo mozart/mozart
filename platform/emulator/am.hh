@@ -304,10 +304,6 @@ public:
   void decSolveThreads (Board *bb);
   DebugCode (Bool isInSolveDebug (Board *bb);)
 
-  // debugging --> see file ../builtins/debug.C
-  int getValue(TaggedRef feature, TaggedRef out);
-  int setValue(TaggedRef feature, TaggedRef value);
-
   void restartThread();
 
   void handleIO();

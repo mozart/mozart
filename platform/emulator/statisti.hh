@@ -78,17 +78,15 @@ public:
 
   Statistics();
 
-  OZ_Term getSpaces();
-  OZ_Term getFD();
-  OZ_Term getTime();
-  OZ_Term getThreads();
-  OZ_Term getMemory();
-
   void print(FILE *fd);
   void printIdle(FILE *fd);
   void printRunning(FILE *fd);
 
   void reset();
+
+  int getAtomMemory();
+  int getNameMemory();
+  int getCodeMemory();
 
   void initGcMsg(int level);
   void printGcMsg(int level);
