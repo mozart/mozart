@@ -133,8 +133,12 @@ OZ_C_proc_begin(ozparser_fileExists, 2)
 {
   OZ_declareVirtualStringArg(0, str);
   OZ_declareArg(1, res);
-  int b = xy_expand_file_name(str) != NULL;
-  return OZ_unify(res, b? OZ_true(): OZ_false());
+  char *fullname = xy_expand_file_name(str);
+  if (fullname != NULL) {
+    delete[] fullname;
+    return OZ_unify(res, OZ_true());
+  } else
+    return OZ_unify(res, OZ_false());
 }
 OZ_C_proc_end
 
@@ -459,7 +463,7 @@ file            : queries ENDOFFILE
                     }
                   }
                 | error
-                  { yyoutput = newCTerm("parseError",OZ_int(yynerrs));
+                  { yyoutput = newCTerm("parseErrors",OZ_int(yynerrs));
                     YYABORT;
                   }
                 ;
@@ -1477,8 +1481,7 @@ static void parserInit() {
     terms[i] = 0;
 }
 
-static CTerm parse()
-{
+static CTerm parse() {
   Assert(initialized);
 
   // in case there was a syntax error during the last parse, delete garbage:
