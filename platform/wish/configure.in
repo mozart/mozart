@@ -111,10 +111,20 @@ dnl *****************************************************************
 
 # intl is required when linking statically
 AC_CHECK_LIB(intl, dgettext)
-AC_CHECK_LIB(nsl, gethostbyaddr)
-AC_CHECK_LIB(socket, socket)
+
+case "$platform" in
+   irix6*)
+        # do not try these otherwise we get lots of errors
+        ;;
+
+   *)
+        AC_CHECK_LIB(nsl, gethostbyaddr)
+        AC_CHECK_LIB(socket, socket)
+        AC_CHECK_LIB(dl, dlopen)
+    ;;
+esac
+
 AC_CHECK_LIB(m, fabs)
-AC_CHECK_LIB(dl, dlopen)
 
 dnl *****************************************************************
 dnl FINALIZE
