@@ -528,16 +528,16 @@ in
 	       frame(text:    'Output'
 		     feature: output
 		     left:
-			[entry(text:    'Maximal Print Width:'
-			       feature: width
-			       action:  proc {$ N}
-					   {System.set print(width: N)}
-					end
-			       top:     self)
-			 entry(text:    'Maximal Print Depth:'
+			[entry(text:    'Maximal Print Depth:'
 			       feature: depth
 			       action:  proc {$ N}
 					   {System.set print(depth: N)}
+					end
+			       top:     self)
+			 entry(text:    'Maximal Print Width:'
+			       feature: width
+			       action:  proc {$ N}
+					   {System.set print(width: N)}
 					end
 			       top:     self)]
 		     right:
