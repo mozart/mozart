@@ -81,7 +81,7 @@ friend class Thread;
 private:
   TaskStack taskStack;
   union {
-    Object *self;              /* the self object pointer     */
+    ChachedOORegs ooregs;
     RunnableThreadBody *next;  /* for linking in the freelist */
   } u;
 #ifdef LINKEDTHREADS
@@ -102,7 +102,7 @@ public:
   RunnableThreadBody(int sz) : taskStack(sz) { }
   RunnableThreadBody *gcRTBody();
 
-  void setSelf(Object *o) { Assert(u.self==NULL); u.self = o; }
+  void saveOORegs(ChachedOORegs regs) { u.ooregs = regs; }
   void makeRunning();
 
   void pushTask(ProgramCounter pc,RefsArray y,RefsArray g,RefsArray x,int i)
@@ -455,7 +455,6 @@ public:
   Board *getBoardFast ();
   Board *getBoardInternal() { return (Board *) getPtr(); }
   void setBoardInternal(Board *bp) { setPtr(bp); }
-  void setSelf(Object *o);
 
   TaggedRef getStreamTail();
   void setStreamTail(TaggedRef v);
@@ -549,12 +548,14 @@ public:
     setCatchFlag();
     item.threadBody->taskStack.pushCatch(pred);
   }
+  void pushSetFinal() { item.threadBody->taskStack.pushSetFinal(); }
+  void pushOORegs(ChachedOORegs);
+  void saveOORegs(ChachedOORegs);
+
   TaggedRef findCatch(TaggedRef &traceback) {
     return item.threadBody->taskStack.findCatch(traceback);
   }
 
-
-  void pushSelf(Object *obj);
   void pushSetModeTop();
   void pushActor(Actor *aa) {
     Assert (hasStack ());

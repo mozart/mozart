@@ -216,6 +216,12 @@ void AM::pushCall(TaggedRef def, int arity, RefsArray args)
 }
 
 inline
+void AM::pushSetFinal()
+{
+  currentThread->pushSetFinal();
+}
+
+inline
 void AM::pushTaskInline(ProgramCounter pc,RefsArray y,RefsArray g,RefsArray x,int i)
 {
   if (i>0) {
@@ -299,7 +305,8 @@ RunnableThreadBody* AM::allocateBody()
   }
 
   body->taskStack.makeEmpty();
-  body->u.self = NULL;
+
+  body->u.ooregs = 0;
 
 #ifdef LINKEDTHREADS
   body->parentThread = nil();
@@ -420,6 +427,24 @@ int AM::commit(Board *bb, Thread *tt=0)
     }
   }
   return 1;
+}
+
+/* ------------------------------------------------------------------------
+ * OO stuff
+ * ------------------------------------------------------------------------ */
+
+inline
+void AM::changeSelf(Object *o)
+{
+  currentThread->pushOORegs(cachedOORegisters);
+  cachedOORegisters = ToInt32(o)|OO_Final;
+}
+
+inline
+void AM::saveSelf()
+{
+  currentThread->saveOORegs(cachedOORegisters);
+  cachedOORegisters = 0;
 }
 
 #endif  // __AM_ICC
