@@ -154,15 +154,19 @@ Tables = {R.spaceReflect S}
 {Browse Tables}
 
 % propagators failed during propagation
+
 declare A B C D in
-[A B C  D] ::: 1#10
+[A B C D] ::: 1#10
 A <: B
 C <: D
 B <: C
+D <: A
+
+{Browse [A B C D]}
 
 {Browse {R.spaceReflect A}}
 
-{InvestigateConstraints A}
+{InvestigateConstraints [A B C D]}
 
 
 declare A B C D in
