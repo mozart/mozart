@@ -946,6 +946,12 @@
 			     native => false},
 
 
+    'Thread.create'	=> { in  => ['+procedure'],
+			     out => [],
+			     BI  => BIthreadCreate,
+			     native => false},
+
+
     ###* Foreign Pointers
 
     'isForeignPointer'	=> { in  => ['+value'],
