@@ -1695,6 +1695,7 @@ void TaskStack::gcRecurse()
   TaskStack *oldstack = (TaskStack *) pop();
 
   gcInit();
+  TaskStackEntry *savedTop=oldstack->getTop();
 
   while (!oldstack->isEmpty()) {
     TaskStackEntry oldEntry=oldstack->pop();
@@ -1764,7 +1765,7 @@ void TaskStack::gcRecurse()
   } // while not task stack is empty
 
   gcEnd();
-
+  oldstack->setTop(savedTop);
 } // TaskStack::gc
 
 
@@ -1950,8 +1951,6 @@ Thread *Thread::gcThread()
 
 void Thread::gcThreadRecurse()
 {
-  Assert(opMode != IN_TC);
-
   GCMETHMSG("Thread::gcRecurse");
 
   Board *newHome = home->gcBoard();
