@@ -175,7 +175,7 @@
 
 /* if defined the builtin print long is available to print detailed
  * informations about values */
-#ifndef DEBUG_PRINT
+#ifdef MISC_BUILTINS
 # define DEBUG_PRINT
 #endif
 

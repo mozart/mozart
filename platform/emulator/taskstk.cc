@@ -293,11 +293,14 @@ Bool TaskStack::findCatch(Thread *thr, ProgramCounter PC,
   return FALSE;
 }
 
+#ifdef DEBUG_PRINT
 // for debugging:
 void ozd_printStack()
 {
   am.currentThread()->printLong();
 }
+
+#endif
 
 void TaskStack::printTaskStack(int depth)
 {
@@ -327,6 +330,7 @@ void TaskStack::printTaskStack(int depth)
   fprintf(stderr,"***\n");
   fflush(stderr);
 }
+
 
 TaggedRef TaskStack::getTaskStack(Thread *tt, Bool verbose, int depth) {
   Assert(this);

@@ -21,14 +21,6 @@
 			     out => ['+bool'],
 			     BI  => BIcheckStopped},
 
-    'print'	=> { in  => ['value','+int'],
-			     out => [],
-			     BI  => BIdebugPrint},
-
-    'printLong'	=> { in  => ['value','+int'],
-			     out => [],
-			     BI  => BIdebugPrintLong},
-
     'prepareDumpThreads'	=> { in  => [],
 				     out => [],
 				     BI  => BIprepareDumpThreads},
@@ -49,18 +41,6 @@
 			     out => [],
 			     BI  => BIbreakpoint},
 
-    'displayDef'	=> { in  => ['+int','+int'],
-			     out => [],
-			     BI  => BIdisplayDef},
-
-    'displayCode'	=> { in  => ['+int','+int'],
-			     out => [],
-			     BI  => BIdisplayCode},
-
-    'procedureCode'=> { in  => ['+procedure'],
-			      out => ['+int'],
-			      BI  => BIprocedureCode},
-    
     'procedureCoord'=> { in  => ['+procedure'],
 			       out => ['+record'],
 			       BI  => BIprocedureCoord},
