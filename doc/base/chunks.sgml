@@ -251,6 +251,156 @@
 	  returns a record&nbsp;?_{R} with label&nbsp;?_{L} whose features
 	  and their fields correspond to the keys and their entries of
 	  ?_{Dictionary}.
+
+        <Entry><<weak>>
+          <Index class=tails/<<Dictionary>><And><<weak>>/
+        <Item>
+          another way to access module <code/WeakDictionary/ (see
+<ptr to=section.chunks.weakdictionaries>).
+      </List>
+
+  <Section id="section.chunks.weakdictionaries">
+    <Title/Weak Dictionaries/
+    <P>
+      The module <Span class=index/<<WeakDictionary>>/ contains procedures
+      operating on weak dictionaries.  A weak dictionary is much like
+an ordinary dictionary and supports the same API.  The main
+difference is that an entry is kept only as long as its item (&ie; the
+value recorded under the key) has not become garbage.  If the item is
+only reachable through one or more weak dictionaries, the
+corresponding entries will automatically be dropped from all weak
+dictionaries at the next garbage collection.
+
+    <para><title/Finalization Stream/
+Each weak dictionary is associated with a <em/finalization stream/.
+When an item ?_{X} (indexed under ?_{Key}) becomes garbage, the entry
+is automatically removed from the
+weak dictionary at the next garbage collection and the pair
+<code/Key#X/ is sent on to the
+finalization stream (as if the weak dictionary were associated with a
+port and the pair was sent to it using <code/Port.send/).  This
+means that the item, which was garbage, becomes again non-garbage
+when it is sent to the finalization stream.  If subsequently, this
+last remaining reference disappears, then the item really becomes
+garbage since it won't be referenced even through a weak dictionary.
+
+    <p>The
+finalization stream is created at the same time as the weak
+dictionary; both are output arguments of <code/NewWeakDictionary/.  If
+you are not interested in the finalization stream, you can explicitly
+close it using <code/WeakDictionary.close/.
+
+    <p>Module <code/WeakDictionary/ can also be accessed as
+<code/Dictionary.weak/.
+      <List>
+	<Entry><Span class=index/<<IsWeakDictionary>>/
+	  <Index class=tails/<<WeakDictionary>><And><<is>>/
+	<Synopsis>
+	  <<{WeakDictionary.is ?+{X} ??{B}}>>
+	<Item>
+	  tests whether ?_{X} is a weak dictionary.
+
+	<Entry><Span class=index/<<NewWeakDictionary>>/
+	  <Index class=tails/<<WeakDictionary>><And><<new>>/
+	<Synopsis>
+	  <<{WeakDictionary.new ??{L} ??{Weak}}>>
+	<Item>
+	  has the same arguments as <ref to=port.new/<code/Port.new//.
+	  Returns a new empty weak dictionary associated with a new
+finalization stream <code/L/.
+
+        <Entry><<close>>
+          <Index class=tails/<<WeakDictionary>><And><<close>>/
+        <Synopsis>
+          <<{WeakDictionary.close ?+{Weak}}>>
+        <Item>
+          drops the finalization stream (if any).  After this, any
+entry that becomes garbage is simply dropped instead of being sent to
+the finalization stream.
+
+	<Entry><<put>>
+	  <Index class=tails/<<WeakDictionary>><And><<put>>/
+	<Synopsis>
+	  <<{WeakDictionary.put ?+{Weak} ?+{LI} ?_{X}}>>
+	<Item>
+	  sets the item in ?_{Weak} under key&nbsp;?_{LI} to&nbsp;?_{X}.
+
+	<Entry><<get>>
+	  <Index class=tails/<<WeakDictionary>><And><<get>>/
+	<Synopsis>
+	  <<{WeakDictionary.get ?+{Weak} ?+{LI} ?_{X}}>>
+	<Item>
+	  returns the item&nbsp;?_{X} of ?_{Weak} under key&nbsp;?_{LI}.
+
+	<Entry><<condGet>>
+	  <Index class=tails/<<WeakDictionary>><And><<condGet>>/
+	<Synopsis>
+	  <<{WeakDictionary.condGet ?+{Weak} ?+{LI} ?_{X} ?_{Y}}>>
+	<Item>
+	  returns the item&nbsp;?_{Y} of ?_{Weak} under key&nbsp;?_{LI},
+	  if ?_{LI} is a valid key of ?_{Weak}.  Otherwise,
+	  returns&nbsp;?_{X}.
+
+	<Entry><<keys>>
+	  <Index class=tails/<<WeakDictionary>><And><<keys>>/
+	<Synopsis>
+	  <<{WeakDictionary.keys ?+{Weak} ??{LIs}}>>
+	<Item>
+	  returns a list of all currently valid keys of ?_{Weak}.
+
+	<Entry><<entries>>
+	  <Index class=tails/<<WeakDictionary>><And><<entries>>/
+	<Synopsis>
+	  <<{WeakDictionary.entries ?+{Weak} ??{Ts}}>>
+	<Item>
+	  returns the list of current entries of ?_{Weak}.  An entry is a
+	  pair <<?_{LI}#?_{X}>>, where ?_{LI} is a valid key of ?_{Weak}
+	  and ?_{X} the corresponding item.
+
+	<Entry><<items>>
+	  <Index class=tails/<<WeakDictionary>><And><<items>>/
+	<Synopsis>
+	  <<{WeakDictionary.items ?+{Weak} ??{Xs}}>>
+	<Item>
+	  returns the list of all items currently in ?_{Weak}.
+
+	<Entry><<isEmpty>>
+	  <Index class=tails/<<WeakDictionary>><And><<isEmpty>>/
+	<Synopsis>
+	  <<{WeakDictionary.isEmpty ?+{Weak} ??{B}}>>
+	<Item>
+	  tests whether ?_{Weak} currently contains an entry.
+
+	<Entry><<remove>>
+	  <Index class=tails/<<WeakDictionary>><And><<remove>>/
+	<Synopsis>
+	  <<{WeakDictionary.remove ?+{Weak} ?+{LI}}>>
+	<Item>
+	  removes the item under key&nbsp;?_{LI} from ?_{Weak} if
+	  ?_{LI} is a valid key.  Otherwise, does nothing.
+
+	<Entry><<removeAll>>
+	  <Index class=tails/<<WeakDictionary>><And><<removeAll>>/
+	<Synopsis>
+	  <<{WeakDictionary.removeAll ?+{Weak}}>>
+	<Item>
+	  removes all entries currently in ?_{Weak}.
+
+	<Entry><<member>>
+	  <Index class=tails/<<WeakDictionary>><And><<member>>/
+	<Synopsis>
+	  <<{WeakDictionary.member ?+{Weak} ?+{LI} ??{B}}>>
+	<Item>
+	  tests whether ?_{LI} is a valid key of ?_{Weak}.
+
+	<Entry><<toRecord>>
+	  <Index class=tails/<<WeakDictionary>><And><<toRecord>>/
+	<Synopsis>
+	  <<{WeakDictionary.toRecord ?+{L} ?+{Weak} ??{R}}>>
+	<Item>
+	  returns a record&nbsp;?_{R} with label&nbsp;?_{L} whose features
+	  and their fields correspond to the keys and their entries of
+	  ?_{Weak}.
       </List>
 
   <Section id="section.chunks.bitarrays">
@@ -360,7 +510,7 @@ negated implication)./
 	<Item>
 	  tests whether ?_{X} is a port.
 
-	<Entry><Span class=index/<<NewPort>>/
+	<Entry id=port.new><Span class=index/<<NewPort>>/
 	  <Index class=tails/<<Port>><And><<new>>/
 	<Synopsis>
 	  <<{Port.new ?_{Xs} ??{Port}}>>

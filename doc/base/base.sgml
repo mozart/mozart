@@ -109,6 +109,7 @@
     <Meta name="html.split" arg1="section.chunks.general" arg2="chunk.html">
     <Meta name="html.split" arg1="section.chunks.arrays" arg2="array.html">
     <Meta name="html.split" arg1="section.chunks.dictionaries" arg2="dictionary.html">
+    <Meta name="html.split" arg1="section.chunks.weakdictionaries" arg2="weakdictionary.html">
     <Meta name="html.split" arg1="section.chunks.bitarrays" arg2="bitarray.html">
     <Meta name="html.split" arg1="section.chunks.ports" arg2="port.html">
     <Meta name="html.split" arg1="section.chunks.locks" arg2="lock.html">
