@@ -43,7 +43,12 @@
 	<Item>
 	  converts the string array ?_{ForeignPointer} to a list of virtual
 	  strings.
-	<!--** freeing? -->
+        <Entry><<freeStrArr>>
+        <Synopsis>
+          <<{GTK.freeStrArr ?+{ForeignPointer}}>>
+        <Item>
+          deallocates the string array ?_{ForeignPointer},
+          which must have been allocated with <<GTK.makeStrArr>>.
       </List>
   <Section>
     <Title/GtkArg Handling/
@@ -69,4 +74,62 @@
 	  deallocates the GtkArg structure, which must have been allocated
 	  with <<GTK.makeArg>>.
       </List>
+   <Section>
+     <Title/Creating Canvas Items/
+     <P>
+       <List>
+         <Entry><<new>>
+         <Synopsis><<{New GTKCANVAS.canvas new(?+{ImageSupport}) ??{Canvas}}>>
+         <Item>
+           creates are new Canvas Object ?_{Canvas}.
+           ?_{ImageSupport} is a boolean value
+           indicating whether the canvas supports ImageItems or not. <<true>>
+           yields the call of <<pushVisual>>. It it is
+           therefore required to call
+          <<popVisual>> after the last image item has been created for that
+          canvas.
+         <P>
+          Trying to create image items without image
+          support being enabled yields a segementation
+          violation of the mozart process.
+          This is due to implementation limitations.
+         <Entry><<newItem>>
+         <Synopsis>
+           <<{?+{Canvas} newItem(?+{Group} ?+{ItemType} ?+{Vs} ??{CanvasItem})}>>
+         <Item>
+           creates a new CanvasItem ?_{CanvasItem} of type
+           ?_{ItemType} which lives in group ?_{Group} and which
+           default properties are overwritten with the values given in ?_{Vs}.
+         <P>
+           ?_{Vs} denotes a list of properties given as a tuple
+           <<?+{NameS}#?+{PropValue}>>. ?_{PropValue} denotes the value
+           to be assigned to the property denoted by string ?_{NameS}.
+         <Entry><<configureItem>>
+         <Synopsis>
+           <<{?+{Canvas} configureItem(?+{CanvasItem} ?+{Vs})}>>
+         <Item>
+           configures the properties of ?_{CanvasItem}
+           to the values given in ?_{Vs}.
+         <Entry><<pushVisual>>
+         <Synopsis>
+           <<{?+{Canvas} pushVisual}>>
+         <Item>
+           Pushes the default visual onto the gtk widget stack.
+           This function should never be used directly
+           since it will be called by the canvas constructor.
+         <Entry><<popVisual>>
+         <Synopsis>
+           <<{?+{Canvas} popVisual}>>
+         <Item>
+           Pops the default visual from the gtk widget stack.
+           This function must be called after the last Image Item has been
+           created in a canvas created with image support.
+         <Entry><<newImageItem>>
+         <Synopsis>
+           <<{?+{Canvas} newImageItem(?+{Group} ?+{Image} ?+{X} ?+{Y} ?+{Width} ?+{Height} ?+{Anchor} ??{Item}}>>
+         <Item>
+          creates a new CanvasItem ?_{Item} of type image which lives in group
+          ?_{Group} and is scaled to fit into the rectangle described by ?_{X},
+          ?_{Y}, ?_{Width} and ?_{Height} in relation to the anchor ?+{Anchor}.
+       </List>
 </Chapter>
