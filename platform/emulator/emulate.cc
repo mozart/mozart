@@ -418,7 +418,7 @@ void pushContX(TaskStack *stk,
 #define INCFPC(N) PC += N
 
 #if !defined(DEBUG_EMULATOR) && !defined(DISABLE_INSTRPROFILE) && defined(__GNUC__)
-#define asmLbl(INSTR) asm volatile(" " #INSTR ":");
+#define asmLbl(INSTR) asm(" " #INSTR ":");
 #else
 #define asmLbl(INSTR)
 #endif
@@ -426,9 +426,9 @@ void pushContX(TaskStack *stk,
 #ifdef INLINEOPCODEMAP
 #define INSERTOPCODE(INSTR) \
         INSTR##FAKE: \
-        asm volatile(OPCODEALIGNINSTR); \
-        asm volatile(OPM_##INSTR); \
-        asm volatile(OPCODEALIGNINSTR);
+        asm(OPCODEALIGNINSTR); \
+        asm(OPM_##INSTR); \
+        asm(OPCODEALIGNINSTR);
 #else
 #define INSERTOPCODE(INSTR)
 #endif
