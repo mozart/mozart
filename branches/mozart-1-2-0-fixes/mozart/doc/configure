@@ -1167,6 +1167,63 @@ echo "$ac_t""$oz_cv_build_date" 1>&6
   OZBUILDDATE=$oz_cv_build_date;
   
   
+  
+  echo $ac_n "checking for OZLOADSEP""... $ac_c" 1>&6
+echo "configure:1173: checking for OZLOADSEP" >&5
+if eval "test \"`echo '$''{'oz_cv_OZLOADSEP'+set}'`\" = set"; then
+  echo $ac_n "(cached) $ac_c" 1>&6
+else
+  
+    case $PLATFORM in
+    win32*) oz_cv_OZLOADSEP=';'
+    ;;
+    *) oz_cv_OZLOADSEP=':'
+    ;;
+    esac
+  
+fi
+
+echo "$ac_t""$oz_cv_OZLOADSEP" 1>&6
+  OZLOADSEP="$oz_cv_OZLOADSEP";
+  
+
+  
+  echo $ac_n "checking for OZLOADWIN""... $ac_c" 1>&6
+echo "configure:1193: checking for OZLOADWIN" >&5
+if eval "test \"`echo '$''{'oz_cv_OZLOADWIN'+set}'`\" = set"; then
+  echo $ac_n "(cached) $ac_c" 1>&6
+else
+  
+
+  case $PLATFORM in
+    win32*)
+	oztmp=`pwd`
+	oztmp=`cygpath -a -w "$tmp"`
+	oztmp=`expr "$oztmp" : "\(.\):"`
+	if test -n "$oztmp"; then
+	  oztmplo=`echo $oztmp | tr '[:upper:]' '[:lower:]'`
+	  oztmphi=`echo $oztmp | tr '[:lower:]' '[:upper:]'`
+	  oz_cv_OZLOADWIN="%prefix=${oztmplo}:/=${oztmplo}:/%prefix=${oztmphi}:/=${oztmphi}:/"
+	fi
+	oztmp=`cygpath -a -w "$srcdir"`
+	oztmp=`expr "$oztmp" : "\(.\):"`
+	if test -n "$oztmp"; then
+	  oztmplo=`echo $oztmp | tr '[:upper:]' '[:lower:]'`
+	  oztmphi=`echo $oztmp | tr '[:lower:]' '[:upper:]'`
+	  oz_cv_OZLOADWIN="${OZLOADWIN}%prefix=${oztmplo}:/=${oztmplo}:/%prefix=${oztmphi}:/=${oztmphi}:/"
+	fi
+	;;
+    *) oz_cv_OZLOADWIN=
+	;;
+  esac
+
+  
+fi
+
+echo "$ac_t""$oz_cv_OZLOADWIN" 1>&6
+  OZLOADWIN="$oz_cv_OZLOADWIN"
+  
+
 
 
     dummy_PWD=`pwd | sed 's/\//\\\\\//g'`
@@ -1180,7 +1237,7 @@ echo "$ac_t""$oz_cv_build_date" 1>&6
     # Extract the first word of "ozengine", so it can be a program name with args.
 set dummy ozengine; ac_word=$2
 echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
-echo "configure:1184: checking for $ac_word" >&5
+echo "configure:1241: checking for $ac_word" >&5
 if eval "test \"`echo '$''{'ac_cv_path_OZENGINE'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -1234,7 +1291,7 @@ fi
     # Extract the first word of "ozdoc", so it can be a program name with args.
 set dummy ozdoc; ac_word=$2
 echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
-echo "configure:1238: checking for $ac_word" >&5
+echo "configure:1295: checking for $ac_word" >&5
 if eval "test \"`echo '$''{'ac_cv_path_OZDOC'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -1280,7 +1337,7 @@ fi
 
 
 echo $ac_n "checking for --with-java-bin""... $ac_c" 1>&6
-echo "configure:1284: checking for --with-java-bin" >&5
+echo "configure:1341: checking for --with-java-bin" >&5
 # Check whether --with-java-bin or --without-java-bin was given.
 if test "${with_java_bin+set}" = set; then
   withval="$with_java_bin"
@@ -1315,7 +1372,7 @@ oz_path_save=$PATH
     # Extract the first word of "java", so it can be a program name with args.
 set dummy java; ac_word=$2
 echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
-echo "configure:1319: checking for $ac_word" >&5
+echo "configure:1376: checking for $ac_word" >&5
 if eval "test \"`echo '$''{'ac_cv_path_JAVA'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -1370,7 +1427,7 @@ if test -n "$JAVA"; then
     # Extract the first word of "javac", so it can be a program name with args.
 set dummy javac; ac_word=$2
 echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
-echo "configure:1374: checking for $ac_word" >&5
+echo "configure:1431: checking for $ac_word" >&5
 if eval "test \"`echo '$''{'ac_cv_path_JAVAC'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -1424,7 +1481,7 @@ fi
     # Extract the first word of "jar", so it can be a program name with args.
 set dummy jar; ac_word=$2
 echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
-echo "configure:1428: checking for $ac_word" >&5
+echo "configure:1485: checking for $ac_word" >&5
 if eval "test \"`echo '$''{'ac_cv_path_JAR'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -1467,14 +1524,14 @@ fi
     fi
     
   echo $ac_n "checking for class path option""... $ac_c" 1>&6
-echo "configure:1471: checking for class path option" >&5
+echo "configure:1528: checking for class path option" >&5
   case `$JAVA -version 2>&1` in
   Kaffe*) JAVACP=-addclasspath;;
   *) JAVACP=-classpath;;
   esac
   echo "$ac_t""$JAVACP" 1>&6
   echo $ac_n "checking for --with-java-threads""... $ac_c" 1>&6
-echo "configure:1478: checking for --with-java-threads" >&5
+echo "configure:1535: checking for --with-java-threads" >&5
   # Check whether --with-java-threads or --without-java-threads was given.
 if test "${with_java_threads+set}" = set; then
   withval="$with_java_threads"
@@ -1493,7 +1550,7 @@ PATH=$oz_path_save
 
 
 echo $ac_n "checking for --with-documents""... $ac_c" 1>&6
-echo "configure:1497: checking for --with-documents" >&5
+echo "configure:1554: checking for --with-documents" >&5
 # Check whether --with-documents or --without-documents was given.
 if test "${with_documents+set}" = set; then
   withval="$with_documents"
@@ -1505,7 +1562,7 @@ echo "$ac_t""$oz_doc_dirs" 1>&6
 
 
     echo $ac_n "checking for --enable-qtk""... $ac_c" 1>&6
-echo "configure:1509: checking for --enable-qtk" >&5
+echo "configure:1566: checking for --enable-qtk" >&5
     # Check whether --enable-qtk or --disable-qtk was given.
 if test "${enable_qtk+set}" = set; then
   enableval="$enable_qtk"
@@ -1536,7 +1593,7 @@ DOC_DIRS=$oz_doc_dirs
 
 
 echo $ac_n "checking for --enable-chm""... $ac_c" 1>&6
-echo "configure:1540: checking for --enable-chm" >&5
+echo "configure:1597: checking for --enable-chm" >&5
 # Check whether --enable-chm or --disable-chm was given.
 if test "${enable_chm+set}" = set; then
   enableval="$enable_chm"
@@ -1725,6 +1782,8 @@ s%@OZPLATFORM@%$OZPLATFORM%g
 s%@OZTOOL@%$OZTOOL%g
 s%@OZBUILDDATE@%$OZBUILDDATE%g
 s%@PLATFORM@%$PLATFORM%g
+s%@OZLOADSEP@%$OZLOADSEP%g
+s%@OZLOADWIN@%$OZLOADWIN%g
 s%@OZENGINE@%$OZENGINE%g
 s%@OZDOC@%$OZDOC%g
 s%@JAVA_BIN@%$JAVA_BIN%g

@@ -4,6 +4,9 @@
 #	use the local emulator and local libraries
 #---------------------------------------------------------------------
 
+OZLOADSEP=@OZLOADSEP@
+OZLOADWIN=@OZLOADWIN@
+
 BUILDSHARE=$(BUILDTOP)/share
 BUILDLIB=$(BUILDSHARE)/lib
 BUILDTOOLS=$(BUILDSHARE)/tools
@@ -93,8 +96,8 @@ boot-%:
 	OZENGINE=$(BOOTENG) \
 	OZC="$(BOOTCOM)" \
 	OZINIT=$(BUILDLIB)/Init.ozf \
-	OZPATH=.:$(BUILDLIB):$(BUILDTOOLS):$(SOURCELIB):$(SOURCETOOLS) \
-	OZ_LOAD=root=.:prefix=/=/:prefix=./=./:prefix=x-oz://system/=$(BUILDLIB)/:prefix=x-oz://system/=$(BUILDTOOLS)/:prefix=x-oz://contrib/=$(BUILDCONTRIB)/:prefix=x-oz://contrib/=$(BUILDGDBM)/:prefix=x-oz://contrib/os/=$(BUILDOS)/:prefix=x-oz://boot/=$(BUILDEMU)/:prefix=x-oz://system/=$(BUILDGUMP)/:prefix=x-oz://system/=$(BUILDBISON)/:= \
+	OZPATH="$(subst %,$(OZLOADSEP),.%$(BUILDLIB)%$(BUILDTOOLS)%$(SOURCELIB)%$(SOURCETOOLS))" \
+	OZ_LOAD=root="$(subst %,$(OZLOADSEP),.%prefix=/=/%prefix=./=./$(OZLOADWIN)%prefix=x-oz://system/=$(BUILDLIB)/%prefix=x-oz://system/=$(BUILDTOOLS)/%prefix=x-oz://contrib/=$(BUILDCONTRIB)/%prefix=x-oz://contrib/=$(BUILDGDBM)/%prefix=x-oz://contrib/os/=$(BUILDOS)/%prefix=x-oz://boot/=$(BUILDEMU)/%prefix=x-oz://system/=$(BUILDGUMP)/%prefix=x-oz://system/=$(BUILDBISON)/:%=)" \
 	OZL="$(BOOTOZL)" \
 	OZDOC_HOME="$(SRCTOP)/doc/utilities" \
 	OZDOC_AUTHOR_PATH="$(SRCDIR):$(SRCTOP)/doc" \

@@ -52,35 +52,6 @@ dnl *****************************************************************
 # PLATFORM is defined by OZ_INIT
 : ${platform=$PLATFORM}
 
-changequote(<,>)
-case $platform in
-    win32*)
-	OZLOADSEP=';'
-	oztmp=`pwd`
-	oztmp=`cygpath -a -w "$tmp"`
-	oztmp=`expr "$oztmp" : "\(.\):"`
-	if test -n "$oztmp"; then
-	  oztmplo=`echo $oztmp | tr '[:upper:]' '[:lower:]'`
-	  oztmphi=`echo $oztmp | tr '[:lower:]' '[:upper:]'`
-	  OZLOADWIN="%prefix=${oztmplo}:/=${oztmplo}:/%prefix=${oztmphi}:/=${oztmphi}:/"
-	fi
-	oztmp=`cygpath -a -w "$srcdir"`
-	oztmp=`expr "$oztmp" : "\(.\):"`
-	if test -n "$oztmp"; then
-	  oztmplo=`echo $oztmp | tr '[:upper:]' '[:lower:]'`
-	  oztmphi=`echo $oztmp | tr '[:lower:]' '[:upper:]'`
-	  OZLOADWIN="${OZLOADWIN}%prefix=${oztmplo}:/=${oztmplo}:/%prefix=${oztmphi}:/=${oztmphi}:/"
-	fi
-	;;
-    *)
-	OZLOADSEP=':'
-	;;
-esac
-changequote([,])
-
-AC_SUBST(OZLOADSEP)
-AC_SUBST(OZLOADWIN)
-
 dnl *****************************************************************
 dnl Checks for programs.
 dnl *****************************************************************
@@ -147,7 +118,7 @@ AC_OUTPUT(lib/Makefile lib/support/DefaultURL.oz \
     demo/Makefile test/Makefile test/dp-bench/Makefile \
     examples/Makefile elisp/Makefile elisp/mozart.el \
     bin/Makefile \
-    Makefile)
+    Makefile Makefile.boot)
 
 
 errprint(ifdef([OZ_INIT],

@@ -23,7 +23,7 @@ $(TARGETS): % : %.ozf run.ozf
 
 install:
 
-include $(SRCTOP)/share/Makefile.boot
+include $(BUILDTOP)/share/Makefile.boot
 
 Makefile: Makefile.in ../../config.status
 	cd ../.. && ./config.status

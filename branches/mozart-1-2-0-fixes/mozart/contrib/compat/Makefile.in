@@ -67,7 +67,7 @@ veryclean: clean
 distclean: clean
 	-rm -f config.* Makefile
 
-include $(SRCTOP)/share/Makefile.boot
+include $(BUILDTOP)/share/Makefile.boot
 
 bootstrap: boot-all
 
