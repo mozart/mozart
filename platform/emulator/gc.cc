@@ -1980,6 +1980,10 @@ void ConstTermWithHome::gcConstTermWithHome()
   }
 }
 
+ObjectClass * ObjectClass::gcClass() {
+  return this ? ((ObjectClass *) gcConstTerm()) : this;
+}
+
 void ConstTerm::gcConstRecurse()
 {
   switch(getType()) {
@@ -2011,7 +2015,7 @@ void ConstTerm::gcConstRecurse()
         if (o->isLocal() && getCell(state)->isLocal()) {
           TaggedRef newstate = ((CellLocal*) getCell(state))->getValue();
           o->setState(tagged2SRecord(oz_deref(newstate))->gcSRecord());
-        } else {
+        } else if (getCell(state)) {
           o->setState((Tertiary*) getCell(state)->gcConstTerm());
         }
       } else {
@@ -2421,15 +2425,6 @@ Board* Board::gcGetNotificationBoard() {
     bb = bb->getParent();
 
   }
-}
-
-Distributor * BaseDistributor::gc(void) {
-  BaseDistributor * t =
-    (BaseDistributor *) oz_hrealloc(this,sizeof(BaseDistributor));
-
-  OZ_collectHeapTerm(var, t->var);
-
-  return (Distributor *) t;
 }
 
 inline
