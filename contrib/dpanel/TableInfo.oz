@@ -3,10 +3,12 @@ import
    Browser(browse)
    DPPane(getTablesInfo) at 'x-oz://boot/DPPane'
    DPB at 'x-oz://boot/DPB'
+   System
 export
    ownerTable:OwnerTable
    borrowTable:BorrowTable
    fetchInfo:FetchInfo
+
 define
    {Wait DPB}
 
@@ -151,6 +153,7 @@ define
 	 Table, resetDictionary(self.diff)
 	 new <- nil
 	 CurrentKeys={Map Data.list proc{$ E K} Table,updateEntity(E K) end}
+	 {System.show curKeys#CurrentKeys}
 	 {self removeObsolete(CurrentKeys)}
       end
       
@@ -166,16 +169,16 @@ define
       end
       
       meth removeObsolete(CurrentKeyList)
-	 RemovedKeys = {Filter CurrentKeyList
-			fun{$ K}
-			   {Not {Dictionary.member self.table K}}
-			end}
+	 TmpTable = {NewDictionary}
+	 {ForAll CurrentKeyList proc{$ E} TmpTable.E:=false end}
+	 RemovedKeys = {Filter {Dictionary.keys self.table} fun{$ K} {CondSelect TmpTable K true} end}
       in
 	 remove <- _
 	 {List.map RemovedKeys proc {$ K I}
 				  I = {Dictionary.get self.table K}.index
 				  {Dictionary.remove self.table K}
 			       end @remove}
+	 {System.show removeObs#@remove}
 	 Table, removeDictObsolete(self.diff)
 	 Table, removeDictObsolete(self.counter)
       end
