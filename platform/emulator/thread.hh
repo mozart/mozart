@@ -30,6 +30,10 @@ private:
   static Thread *Tail;
 
 public:
+#ifdef KP
+  static int Threads_Total;
+  int getThreadsTotal();
+#endif
   static void Init();
   static void GC();
   static void Print();
@@ -67,11 +71,13 @@ public:
   Bool isNormal();
   Bool isWarm();
   Bool isNervous();
+  Bool isSolve ();
   TaskStack *makeTaskStack();
   Board *popBoard();
   Suspension *popSuspension();
   void pushTask(Board *n,ProgramCounter pc,
                        RefsArray y,RefsArray g,RefsArray x=NULL,int i=0);
+  void pushTask (Board *n, BIFun f, RefsArray x=NULL, int i=0);
   void queueCont(Board *bb,ProgramCounter PC,RefsArray y);
   void schedule();
   void setPriority(int prio);

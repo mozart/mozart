@@ -75,6 +75,9 @@ public:
   TaggedRef currentUVarPrototype; // opt: cache
   Board *rootBoard;
 
+  Board *currentSolveBoard;       // current 'solve' board or NULL if none;
+  Bool wasSolveSet;
+
 public:
   AM() {};
   void init(int argc,char **argv);
@@ -126,6 +129,8 @@ public:
   Bool isInScope (Board *above, Board* node);
   inline void pushTask(Board *n,ProgramCounter pc,
                        RefsArray y,RefsArray g,RefsArray x=NULL,int i=0);
+  void pushNervous (Board *n);
+  void pushTask (Board *n, BIFun f, RefsArray x=NULL, int i=0);
   void genericBind(TaggedRef *varPtr, TaggedRef var,
                    TaggedRef *termPtr, TaggedRef term);
   inline void bind(TaggedRef *varPtr, TaggedRef var, TaggedRef *termPtr);

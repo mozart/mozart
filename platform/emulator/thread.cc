@@ -55,16 +55,18 @@
    Normal: thread has a taskStack and is scheduled
    Warm: thread has no taskStack, but 'suspension' contains a suspension
    Nervous: thread has no taskStack, but 'board' contains the board to visit
-   OneTask: thread has only one Task
+   Solve: thread was created inside a search problem;
    */
 
 enum ThreadFlags
 {
-  T_Normal,
-  T_Warm,
-  T_Nervous
+  T_Normal =    1<<0,
+  T_Warm =      1<<1,
+  T_Nervous =   1<<2,
+  T_Solve =     1<<3
 };
 
+static int T_No_State = ~(T_Normal | T_Warm | T_Nervous);
 
 /* class Thread
    static variables
@@ -97,9 +99,6 @@ void Thread::Init()
 {
   Head = (Thread *) NULL;
   Tail = (Thread *) NULL;
-  am.currentThread = (Thread *) NULL;
-  am.rootThread = new Thread(conf.systemPriority);
-  am.currentTaskStack = NULL;
 }
 
 /* for gdb debugging: cannot access static member data */
@@ -170,22 +169,30 @@ Thread::Thread(int prio)
 void Thread::init()
 {
   prev=next= (Thread *) NULL;
+#ifdef KP
+  Threads_Total++;
+#endif
   DebugCheckT(priority = -1; u.taskStack = (TaskStack *) -1; flags = -1);
 }
 
 Bool Thread::isNormal()
 {
-  return flags == T_Normal ? OK : NO;
+  return ((flags & T_Normal) ? OK : NO);
 }
 
 Bool Thread::isWarm()
 {
-  return flags == T_Warm ? OK : NO;
+  return ((flags & T_Warm) ? OK : NO);
 }
 
 Bool Thread::isNervous()
 {
-  return flags == T_Nervous ? OK : NO;
+  return ((flags & T_Nervous) ? OK : NO);
+}
+
+Bool Thread::isSolve ()
+{
+  return ((flags & T_Solve) ? OK : NO);
 }
 
 // mm2: not yet enabled
@@ -366,6 +373,13 @@ void Thread::pushTask(Board *bb,ProgramCounter pc,
   u.taskStack->pushCont(bb,pc,y,g,x,i);
 }
 
+void Thread::pushTask (Board *bb, BIFun f, RefsArray x, int i)
+{
+  DebugCheck (!isNormal(), error ("Thread::pushTask"));
+  bb->addSuspension ();
+  u.taskStack->pushCont (bb, f, (Suspension *) NULL, x, i);
+}
+
 TaskStack *Thread::getTaskStack() {
   DebugCheck(!isNormal(),error("Thread::getTaskStack"));
   return u.taskStack;
@@ -376,7 +390,7 @@ Board *Thread::popBoard()
   DebugCheck(!isNervous(),error("Thread::popBoard"));
   Board *ret = u.board;
   u.board = (Board *) NULL;
-  flags = T_Normal;
+  flags = (T_Normal | (flags & T_No_State));
   return ret;
 }
 
@@ -385,7 +399,7 @@ Suspension *Thread::popSuspension()
   DebugCheck(!isWarm(),error("Thread::popSuspension"));
   Suspension *ret = u.suspension;
   u.suspension = (Suspension *) NULL;
-  flags = T_Normal;
+  flags = (T_Normal | (flags & T_No_State));
   return ret;
 }
 

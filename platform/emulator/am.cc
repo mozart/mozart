@@ -229,7 +229,6 @@ void AM::init(int argc,char **argv)
 
 // ----------------------- unification
 
-
 // unify and manage rebindTrail
 Bool AM::unify(TaggedRef *ref1, TaggedRef *ref2)
 {
@@ -613,7 +612,6 @@ InstType AM::installPath(Board *to)
     return ret;
   }
 
-
   Board::SetCurrent(to);
   to->setInstalled();
 
@@ -622,30 +620,6 @@ InstType AM::installPath(Board *to)
     return INST_FAILED;
   }
   return INST_OK;
-}
-
-
-inline
-void AM::deinstallCurrent()
-{
-  reduceTrailOnSuspend();
-  AM::currentBoard->unsetInstalled();
-  Board::SetCurrent(AM::currentBoard->getParentBoard()->getBoardDeref());
-}
-
-
-void AM::deinstallPath(Board *top)
-{
-  DebugCheck(top->isCommitted(),
-             error("AM::deinstallPath: top already commited");
-             return;);
-
-  while (AM::currentBoard != top) {
-    deinstallCurrent();
-    DebugCheck(AM::currentBoard == AM::rootBoard
-               && top != AM::rootBoard,
-               error("AM::deinstallPath: root node reached"));
-  }
 }
 
 void AM::reduceTrailOnUnitCommit()

@@ -6,7 +6,7 @@
   Version: $Revision$
   State: $State$
 
-  implementation of conditional and disjunctive actors
+  implementation of proper actors
   ------------------------------------------------------------------------
 */
 
@@ -19,31 +19,18 @@
 
 #include "types.hh"
 #include "suspension.hh"
+#include "dllstack.hh"
 
 // ------------------------------------------------------------------------
-
-enum ActorFlags {
-  Ac_None       = 0,
-  Ac_Ask        = 1<<0,
-  Ac_Wait       = 1<<1,
-  Ac_Committed  = 1<<2,
-  Ac_WaitTop    = 1<<3,
-  Ac_DisWait    = 1<<4,
-};
-
-// ------------------------------------------------------------------------
+//  all 'proper' actors;
 
 class Actor : public ConstTerm {
 protected:
   int flags;
-  Continuation next;
   Board *board;
-  int childCount;
   int priority;
 public:
-  Actor(int type,Board *s,int prio,
-               ProgramCounter p,RefsArray y,RefsArray g,
-               RefsArray x,int i);
+  Actor(int type,Board *s,int prio);
   ~Actor();
 
   USEHEAPMEMORY;
@@ -52,27 +39,49 @@ public:
   OZPRINT;
   OZPRINTLONG;
 
-  void addChild(Board *n);
-  void failChild(Board *n);
-  Continuation *getNext() { return &next;}
-  int getPriority() { return priority; }
-  Board *getBoard() { return board; }
-  Bool hasNext() { return next.getPC() == NOCODE ? NO : OK; }
-  Bool isCommitted() { return flags & Ac_Committed ? OK : NO; }
-  Bool isAsk() { return flags & Ac_Ask ? OK : NO; }
-  Bool isLeaf() { return childCount == 0 && next.getPC() == NOCODE ? OK : NO; }
-  Bool isWait() { return flags & Ac_Wait ? OK : NO; }
-  Bool isDisWait() { return flags & Ac_DisWait ? OK : NO; }
-  void lastClause() { next.setPC(NOCODE); }
-  void nextClause(ProgramCounter pc) { next.setPC(pc); }
-  void setCommitted() { flags |= Ac_Committed; }
-  void setDisWait() { flags |= Ac_DisWait; }
-
+  int getPriority();
+  Board *getBoard();
+  Bool isCommitted();
+  Bool isAsk();
+  Bool isWait();
+  Bool isAskWait ();
+  Bool isSolve ();
+  Bool isDisWait();
+  void setCommitted();
+  void setDisWait();
 };
 
 // ------------------------------------------------------------------------
+//  'ask' or 'wait' actors;
 
-class AskActor : public Actor {
+class AWActor : public Actor {
+protected:
+  Continuation next;
+  int childCount;
+public:
+  AWActor(int type,Board *s,int prio,
+          ProgramCounter p,RefsArray y,RefsArray g,
+          RefsArray x,int i);
+  ~AWActor();
+
+  USEHEAPMEMORY;
+  OZPRINT;
+  OZPRINTLONG;
+
+  void addChild(Board *n);
+  void failChild(Board *n);
+  Continuation *getNext();
+  Bool hasNext();
+  Bool isLeaf();
+  void lastClause();
+  void nextClause(ProgramCounter pc);
+};
+
+AWActor *CastAWActor(Actor *a);
+
+// ------------------------------------------------------------------------
+
+class AskActor : public AWActor {
 private:
   ProgramCounter elsePC;
 public:
@@ -81,7 +90,9 @@ public:
            ProgramCounter p, RefsArray y,RefsArray g, RefsArray x, int i);
   ~AskActor();
 
-  ProgramCounter getElsePC() { return elsePC; }
+  void gcRecurse();
+
+  ProgramCounter getElsePC();
 
 };
 
@@ -89,12 +100,14 @@ AskActor *CastAskActor(Actor *a);
 
 // ------------------------------------------------------------------------
 
-class WaitActor : public Actor {
+class WaitActor : public AWActor {
+friend class SolveActor;
 private:
   Board **childs;
 public:
   WaitActor(Board *s,int prio,
             ProgramCounter p,RefsArray y,RefsArray g,RefsArray x,int i);
+  WaitActor (WaitActor *wa);  // without childs;
   ~WaitActor();
 
   void gcRecurse();
@@ -102,10 +115,71 @@ public:
   void addChildInternal(Board *n);
   void failChildInternal(Board *n);
   Board *getChild();
+  // returns the first created child; this child is unlinked from the actor;
+  void decChilds ();    // for search;
   Bool hasOneChild();
+  void unsetBoard ();
+  void setBoard (Board *bb);
 };
 
 WaitActor *CastWaitActor(Actor *a);
+
+// ------------------------------------------------------------------------
+//  'solve' actors;
+
+class SolveActor : public Actor {
+private:
+  Board *solveBoard;
+  DLLStack orActors;
+  TaggedRef solveVar;
+  TaggedRef result;
+  Board *boardToInstall;
+  SuspList *suspList;
+  int threads;
+public:
+  SolveActor (Board *bb, int prio, TaggedRef resTR);
+  ~SolveActor ();
+
+  void gcRecurse();
+
+  void incThreads ();
+  void decThreads ();
+  void addSuspension (SuspList *l);
+  Bool isStable ();  // so simple!
+  TaggedRef* getSolveVarRef ();
+  TaggedRef getSolveVar ();
+  TaggedRef getResult ();
+  void pushWaitActor (WaitActor *a);
+  void pushWaitActorsStackOf (SolveActor *sa);
+  WaitActor *getDisWaitActor ();
+  void unsetBoard ();
+  void setBoardToInstall (Board *bb);
+  Board* getBoardToInstall ();
+  TaggedRef genSolved ();
+  TaggedRef genStuck ();
+  TaggedRef genEnumed (Board *newSolveBB);
+  TaggedRef genFailed ();
+
+private:
+  WaitActor* getTopWaitActor ();
+  WaitActor* getNextWaitActor ();
+  void unlinkLastWaitActor ();
+  Bool areNoExtSuspensions ();
+};
+
+SolveActor *CastSolveActor (Actor *a);
+
+//  Very special thing:
+// The procedure that converts the DLLStackEntry to the Actor* (in our case),
+// collects it and returns the DLLStackEntry again (for gc);
+DLLStackEntry actorStackEntryGC (DLLStackEntry entry);
+
+//  This is 'de facto' the "solve actor";
+//  If BIsolve is applied, CFuncCont is generated containing request to call
+// this procedure (type BIFun!);
+OZ_Bool solveActorWaker (int n, TaggedRef *args);
+
+// ------------------------------------------------------------------------
 
 #ifndef OUTLINE
 #include "actor.icc"

@@ -595,6 +595,8 @@ PRINT(Board)
     stream << "Wait ";
   } else if (isAsk()) {
     stream << "Ask ";
+  } else if (isSolve ()) {
+    stream << "Solve";
   }
 
   stream << indent(offset)
