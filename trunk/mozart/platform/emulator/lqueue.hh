@@ -89,6 +89,10 @@
 
 #include <string.h>
 
+#ifndef LQ_TRACE
+#define LQ_TRACE(X)
+#endif
+
 // the size of a block's array must be a multiple of 2:
 // size = 2 * n		for any n in [1..FreeListSize] = [1..512]
 
@@ -115,15 +119,15 @@ private:
 public:
   // obtain a block with an array of SIZE elements
   static inline LinkedQueueBlock* allocate(int SIZE) {
-    TRACE(cerr << "allocate " << SIZE);
+    LQ_TRACE(cerr << "allocate " << SIZE);
     Assert(SIZE >= 2 && SIZE <= 2*FreeListSize && !(SIZE&1));
     register int i = SIZE>>1;
     LinkedQueueBlock* block = freelist[i];
     if (block) {
-      TRACE(cerr << " from free list" << endl);
+      LQ_TRACE(cerr << " from free list" << endl);
       freelist[i] = block->next;
     } else {
-      TRACE(cerr << " from heap" << endl);
+      LQ_TRACE(cerr << " from heap" << endl);
       block = (LinkedQueueBlock*)
 	// allocate a block with an array of SIZE elements
 	heapMalloc(sizeof(LinkedQueueBlock)+(SIZE-1)*sizeof(void*));
@@ -135,14 +139,14 @@ public:
     return block;
   }
   void dispose() {
-    TRACE(cerr << "dispose " << size << " to free list" << endl);
+    LQ_TRACE(cerr << "dispose " << size << " to free list" << endl);
     // return block to free list
     register int i = size>>1;
     next = freelist[i];
     freelist[i] = this;
   }
   static void initFreeList() {
-    TRACE(cerr << "init free list" << endl);
+    LQ_TRACE(cerr << "init free list" << endl);
     // to be called for system initialization and gc
     memset(freelist,0,FreeListSize*sizeof(LinkedQueueBlock*));
   }
@@ -196,7 +200,7 @@ protected:
   }
 
   void enqueueInternal(void* x,int SIZE) {
-    TRACE(cerr << "enqueue" << endl);
+    LQ_TRACE(cerr << "enqueue" << endl);
     if (head_index==0) grow_head(SIZE);
     head->array[--head_index]=x;
     size++;
@@ -211,7 +215,7 @@ protected:
   }
 
   void* dequeueInternal() {
-    TRACE(cerr << "dequeue" << endl);
+    LQ_TRACE(cerr << "dequeue" << endl);
     Assert(size>0);
     // skips null entries, i.e. holes
     register void* x;
@@ -233,7 +237,7 @@ protected:
       tail  = tail->next;
       block->dispose();
     }
-    zeroAll()
+    zeroAll();
   }
 
   // return the location of a particular element pointer in the
