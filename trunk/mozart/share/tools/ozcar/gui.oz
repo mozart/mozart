@@ -186,13 +186,13 @@ in
 	    {ForAll
 	     [{Cget emacsThreads} #
 	      self.emacsThreadsButton #
-	      IgnoreQueriesBitmap #
+	      AddQueriesBitmap #
 	      toggleEmacsThreads #
 	      ConfigEmacsThreads
 
 	      {Cget subThreads} #
 	      self.subThreadsButton #
-	      IgnoreSubThreadsBitmap #
+	      AddSubThreadsBitmap #
 	      toggleSubThreads #
 	      ConfigSubThreads]
 	     proc {$ B}
