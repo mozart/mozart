@@ -38,8 +38,8 @@ import
    Fontifier('class' noProgLang)
    CrossReferencer('class')
    Thumbnails('class')
-   LaTeXToGIF('class')
-   PostScriptToGIF('class')
+   LaTeXToPNG('class')
+   PostScriptToPNG('class')
    File(read: ReadFile write: WriteFile)
    HTML(empty: EMPTY
 	seq: SEQ
@@ -294,9 +294,9 @@ define
 	 DefaultNodes: unit Labels: unit ToGenerate: unit
 	 % for Math and Math.Choice:
 	 MathDisplay: unit
-	 MyLaTeXToGIF: unit
+	 MyLaTeXToPNG: unit
 	 % for Picture:
-	 MyPostScriptToGIF: unit
+	 MyPostScriptToPNG: unit
 	 PictureDisplay: unit
 	 MyThumbnails: unit
 	 % for Figure:
@@ -362,12 +362,12 @@ define
 	       OutputDirectory <- Args.'out'
 	       {OS.system "mkdir -p "#@OutputDirectory _}   %--** OS.mkDir
 	       MyThumbnails <- {New Thumbnails.'class' init(@OutputDirectory)}
-	       MyLaTeXToGIF <- if Args.'latextogif' then
-				  {New LaTeXToGIF.'class'
+	       MyLaTeXToPNG <- if Args.'latextopng' then
+				  {New LaTeXToPNG.'class'
 				   init(@OutputDirectory Args.'latexdb')}
 			       else unit
 			       end
-	       MyPostScriptToGIF <- {New PostScriptToGIF.'class'
+	       MyPostScriptToPNG <- {New PostScriptToPNG.'class'
 				     init(@OutputDirectory
 					  Args.'keeppictures')}
 	       MyCrossReferencer <- {New CrossReferencer.'class'
@@ -667,7 +667,7 @@ define
 	       if {IsFree @WholeTOC} then
 		  @WholeTOC = SEQ([hr() {FormatTOC @TOC ~1 unit} hr()])
 	       end
-	       case @MyLaTeXToGIF of unit then skip
+	       case @MyLaTeXToPNG of unit then skip
 	       elseof O then
 		  {O process({Dictionary.condGet @Meta 'latex.package' nil}
 			     {Dictionary.condGet @Meta 'latex.input' nil}
@@ -1074,11 +1074,11 @@ define
 			 elseof X then X
 			 end
 	       case M.type of 'LATEX' then FileName in
-		  case @MyLaTeXToGIF of unit then
+		  case @MyLaTeXToPNG of unit then
 		     HTML = code(PCDATA(M.1))
 
 		     %% if the math element contains just a number
-		     %% then we really don't need a gif
+		     %% then we really don't need a png
 		  elseif {All M.1 fun {$ C}
 				     {Char.isDigit C} orelse
 				     {Char.isSpace C} orelse
@@ -1086,7 +1086,7 @@ define
 				  end} then
 		     HTML = PCDATA(M.1)
 		  else
-		     {@MyLaTeXToGIF convertMath(M.1 Display ?FileName)}
+		     {@MyLaTeXToPNG convertMath(M.1 Display ?FileName)}
 		     HTML = img(src: FileName
 				alt: {CondSelect M info M.1})
 		  end
@@ -1119,7 +1119,7 @@ define
 	    [] picture then
 	       case {CondSelect M type unit}
 	       of 'LATEX' then FileName in
-		  case @MyLaTeXToGIF of unit then FileName='/dev/null'
+		  case @MyLaTeXToPNG of unit then FileName='/dev/null'
 		  elseof O then {O convertPicture(M.1 ?FileName)}
 		  end
 		  OzDocToHTML, PictureExtern("" M FileName $)
@@ -1133,14 +1133,16 @@ define
 	       case {CondSelect M type unit}
 	       of 'gif' then
 		  OzDocToHTML, PictureExtern("" M M.to $)
+	       [] 'png' then
+		  OzDocToHTML, PictureExtern("" M M.to $)
 	       [] 'ps' then To DIR = {Property.get 'ozdoc.src.dir'} in
-		  {@MyPostScriptToGIF
+		  {@MyPostScriptToPNG
 		   %% we should really use URL.resolve
 		   convertPostScript(DIR#'/'#M.to {CondSelect M info ''} ?To)}
 		  OzDocToHTML, PictureExtern(@OutputDirectory#'/' M To $)
 	       [] 'latex' then DIR FileName in
 		  DIR = {Property.get 'ozdoc.src.dir'}
-		  case @MyLaTeXToGIF of unit then FileName='/dev/null'
+		  case @MyLaTeXToPNG of unit then FileName='/dev/null'
 		  elseof O then
 		     {O convertPicture({ReadFile DIR#'/'#M.to} ?FileName)}
 		  end
