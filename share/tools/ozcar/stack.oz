@@ -92,6 +92,7 @@ local
 			[] handler then 'exception handler'
 			[] cond then 'conditional'
 			[] exception then 'exception'
+			[] statement then 'statement'
 			end
 		     elseof Name then Name
 		     end
