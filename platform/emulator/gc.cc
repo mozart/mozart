@@ -2060,16 +2060,7 @@ void ConstTerm::gcConstRecurse()
     }
 
   case Co_Thread:
-    {
       break;
-    }
-    
-  case Co_Builtin:
-    {
-      Builtin *bi = (Builtin *) this;
-      gcTagged(bi->suspHandler,bi->suspHandler);
-      break;
-    }
 	
   default:
     Assert(0);
@@ -2185,10 +2176,10 @@ ConstTerm *ConstTerm::gcConstTerm()
       return (ConstTerm *) th;
     }
 
+  /* builtins are allocate dusing malloc */
   case Co_Builtin:
-    sz = sizeof(Builtin);
-    COUNT(builtin);
-    break;
+    return this;
+
   default:
     Assert(0);
     return 0;
