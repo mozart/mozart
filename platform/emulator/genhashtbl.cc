@@ -199,6 +199,7 @@ void GenHashTable::htSub(int bigIndex,GenHashNode *cur){
 
 GenHashNode *GenHashTable::htFindFirst(int bigIndex){
   int index=bigIndex % tableSize;
+  Assert(index>=0);
   if(table[index].isEmpty()) {return NULL;}
   if(table[index].key==bigIndex) {return &table[index];}
   GenHashNode *try0=&table[index];

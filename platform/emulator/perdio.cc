@@ -27,7 +27,9 @@
  *     all
  *   builtin
  *     classify secure/insecure
- *   names true, false, unit and others (o-o)
+ *   names
+ *     true, false, unit and others (o-o)
+ *     don't work at all?
  *   ip
  *     cache testing
  *     fairness for IO
@@ -35,6 +37,7 @@
  *     flow control
  *   port
  *     close: must fail client?
+ *   gen hashtable: if hash value is negative: crash!
  * -----------------------------------------------------------------------*/
 
 #ifdef PERDIO
@@ -107,6 +110,13 @@ enum MessageType {
   M_SURRENDER,          // OTI SITE DIF (implicit 1 credit)
   M_PORTCLOSE,          // OTI (implicit 1 credit)
 };
+
+/*
+ *    NA      :=   SITE OTI
+ *    OTI     :=   index
+ *    SITE    :=   host port timestamp
+ */
+
 
 /*
  * the DIFs
@@ -572,7 +582,7 @@ int GNameTable::hashFunc(GName *gname)
   for(int i=0; i<fatIntDigits; i++) {
     ret += gname->id.number[i];
   }
-  return ret;
+  return ret<0?-ret:ret;
 }
 
 
@@ -1817,7 +1827,7 @@ inline
 char *unmarshallString(ByteStream *bs)
 {
   int i = unmarshallNumber(bs);
-  if(i>100){
+  if(i>100){ // mm2
     int dummy=0;
     dummy=1;}
 
@@ -1835,6 +1845,7 @@ inline
 void marshallString(char *s, ByteStream *bs)
 {
   marshallNumber(strlen(s),bs);
+  // mm2 \/?
   if(strlen(s)>100) {PERDIO_DEBUG1(SPECIAL,"SPECIAL string:%d",strlen(s));}
   PERDIO_DEBUG1(MARSHALL_CT,"MARSHALL_CT String BYTES:%d",strlen(s));
   while(*s) {
@@ -2134,7 +2145,10 @@ loop:
         break;
       }
 
-      Assert(0);
+      bs->put(M_NAME);
+      GName *gname = ((Name*)lit)->globalize();
+      marshallGName(gname,bs);
+      marshallString(lit->getPrintName(),bs);
       break;
     }
 
