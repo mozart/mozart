@@ -232,7 +232,7 @@ if test "${GXX}" = yes; then
       # Darwin/GCC 3.x
       # the settings below were provided by Marc-Antoine Parent and
       # gave the best (well least bad results :-) on his 450MHz G4
-          oz_opt="-O3 -pipe -fstrict-aliasing -fschedule-insns2 "
+          oz_opt="-O3 -pipe -fno-strict-aliasing -fschedule-insns2 "
 	  oz_om=" -fomit-frame-pointer -mtune=7450 "
 	  EMULATE_CXXFLAGS=" -finline-limit=500 "
           ;;
@@ -241,12 +241,7 @@ if test "${GXX}" = yes; then
     *-i486) 
 	case `$CXX -dumpversion` in
 	2.95.3)
-	    # -fstrict-aliasing does not work with prerelease 2.95.3
-	    if $CXX -v 2>&1 | egrep -s prerelease > /dev/null; then
-	      oz_opt="-O3 -pipe -fschedule-insns2 -fregmove"
-	    else
-	      oz_opt="-O3 -pipe -fschedule-insns2 -fregmove -fstrict-aliasing"
-	    fi
+	    oz_opt="-O3 -pipe -fschedule-insns2 -fregmove"
 	    oz_om="-march=pentium -mcpu=pentiumpro -fomit-frame-pointer"
 	    ;;
 	2.95.*)
@@ -254,12 +249,12 @@ if test "${GXX}" = yes; then
 	    oz_om="-march=pentium -mcpu=pentiumpro -fomit-frame-pointer"
 	    ;;
 	3.3.*)
-	    oz_opt="-O3 -pipe -fstrict-aliasing"
+	    oz_opt="-O3 -pipe -fno-strict-aliasing"
 	    oz_om="-march=pentium -mcpu=pentiumpro -fomit-frame-pointer"
 	    EMULATE_CXXFLAGS="-finline-limit=500 -fno-tracer -fno-guess-branch-probability"
 	    ;;
 	*)
-	    oz_opt="-O3 -pipe -fstrict-aliasing"
+	    oz_opt="-O3 -pipe -fno-strict-aliasing"
 	    oz_om="-march=pentium -mcpu=pentiumpro -fomit-frame-pointer"
 	    EMULATE_CXXFLAGS=-finline-limit=500
 	    ;;
@@ -273,7 +268,7 @@ if test "${GXX}" = yes; then
             oz_om="-mcpu=v8 -fdelayed-branch"
 	    ;;
 	*)
-	    oz_opt="-O3 -pipe -fstrict-aliasing"
+	    oz_opt="-O3 -pipe -fno-strict-aliasing"
             oz_om="-mv8 -fdelayed-branch"
 	    ;;
 	esac
@@ -286,7 +281,7 @@ if test "${GXX}" = yes; then
             oz_om=""
             ;;
         *)
-            oz_opt="-O3 -pipe -fstrict-aliasing"
+            oz_opt="-O3 -pipe -fno-strict-aliasing"
             oz_om=""
             ;;
         esac
@@ -295,7 +290,7 @@ if test "${GXX}" = yes; then
     linux-parisc)
 	case `$CXX -dumpversion` in
 	3.*)
-	    oz_opt="-O3 -pipe -fstrict-aliasing"
+	    oz_opt="-O3 -pipe -fno-strict-aliasing"
 	    oz_om="-fomit-frame-pointer"
 	    ;;
 	esac
