@@ -93,7 +93,7 @@ public:
 
   void resetLocalThreadQueue(void) {
     Assert(localThreadQueue);
-    // delete localThreadQueue; // never destroy LTQ;
+    localThreadQueue->dispose ();
     localThreadQueue = NULL;
   }
   LocalThreadQueue * getLocalThreadQueue(void) {
