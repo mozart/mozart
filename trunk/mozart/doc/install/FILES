@@ -228,11 +228,11 @@
 ./platform/win32-i486/emulator.dll
 ./platform/win32-i486/flex.exe
 ./platform/win32-i486/msvcrt.dll
-./platform/win32-i486/tcl83.dll
-./platform/win32-i486/tclpip83.dll
+./platform/win32-i486/tcl84.dll
+./platform/win32-i486/tclpip84.dll
 ./platform/win32-i486/text2pickle.exe
 ./platform/win32-i486/tk.exe
-./platform/win32-i486/tk83.dll
+./platform/win32-i486/tk84.dll
 ./platform/win32-i486/wish/tcl/auto.tcl
 ./platform/win32-i486/wish/tcl/history.tcl
 ./platform/win32-i486/wish/tcl/init.tcl
