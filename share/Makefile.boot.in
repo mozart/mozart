@@ -43,7 +43,7 @@ BOOTENG=$(BUILDTOP)/share/ozengine.sh
 BOOTCOM=$(BOOTENG) $(BUILDTOP)/share/lib/ozc$(EXE_EXT)
 BOOTOZL=$(BOOTENG) $(BUILDTOP)/share/lib/ozl$(EXE_EXT)
 BOOTOZTOOL=@BOOTOZTOOL@
-BOOTOZTOOLINC="-I$(BUILDTOP)/platform/emulator -I$(SRCTOP)/platform/emulator -I$(SRCTOP)/platform/tools/gump"
+BOOTOZTOOLINC="-I$(BUILDTOP)/platform/emulator -I$(SRCTOP)/platform/emulator -I$(SRCTOP)/platform/tools/gump @CPPFLAGS@"
 BOOTOZFLEX=$(CYG_BUILDGUMP)/ozflex/flex.exe
 
 BOOTWINOZTOOLCXXFLAGS=@WINOZTOOLCXXFLAGS@
