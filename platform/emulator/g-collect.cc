@@ -350,10 +350,9 @@ void AM::doGCollect(void) {
 
   /* calc limits for next gc */
   int used   = getUsedMemory();
-  int wanted = ((ozconf.heapFree == 100)
-                ? ozconf.heapMaxSize
-                : max(((long) used) * (100 / (100 - ozconf.heapFree)),
-                      ozconf.heapMinSize));
+  int free   = min(ozconf.heapFree,99);
+  int wanted = max(((long) used) * (100 / (100 - free)),
+                   ozconf.heapMinSize);
 
   /* Try to align as much as possible to end of blocksize */
   int block_size = HEAPBLOCKSIZE / KB;
@@ -364,16 +363,6 @@ void AM::doGCollect(void) {
 
   wanted += min(block_dist,
                 (((long) wanted) * ozconf.heapTolerance / 100));
-
-  if (wanted > ozconf.heapMaxSize) {
-    if (ozconf.runningUnderEmacs) {
-      OZ_warning("\n*** Heap Max Size exceeded: Increasing from %d to %d.\n",
-                 ozconf.heapMaxSize,wanted);
-      prefixError();
-      fflush(stdout);
-    }
-    ozconf.heapMaxSize = wanted;
-  }
 
   ozconf.heapThreshold = wanted;
 

@@ -53,13 +53,11 @@ public:
   int codeGCcycles;           // after that many GCs a code GC will be done
 
   int heapThreshold;
-  int heapMaxSize;
   int heapMinSize;
   int heapFree;
   int heapTolerance;
 
   int stackMinSize;
-  int stackMaxSize;
 
   int timeDetailed;
 

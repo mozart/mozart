@@ -69,27 +69,6 @@ void TaskStack::pushCall(TaggedRef pred, TaggedRef arg0, TaggedRef arg1,
 }
 
 
-void TaskStack::checkMax(int n)
-{
-  int maxSize = getMaxSize();
-
-  if (maxSize >= ozconf.stackMaxSize && ozconf.stackMaxSize!=-1) {
-
-    int newMaxSize = (maxSize*3)/2;
-
-    if (ozconf.runningUnderEmacs) {
-      printf("\n*** Task stack maxsize exceeded. Increasing from %d to %d.\n",
-             ozconf.stackMaxSize,newMaxSize);
-      prefixError();
-      fflush(stdout);
-    }
-
-    ozconf.stackMaxSize = newMaxSize;
-  }
-
-  resize(n);
-}
-
 static Bool isUninterestingTask(ProgramCounter PC) {
   return
     PC == C_XCONT_Ptr ||

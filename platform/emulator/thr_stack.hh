@@ -67,7 +67,7 @@ private:
   StackEntry *ensureFree(int n) {
     StackEntry *ret=tos;
     if (stackEnd <= ret+n) {
-      checkMax(n);
+      resize(n);
       ret=tos;
     }
     return ret;
@@ -109,8 +109,6 @@ public:
   void unleash(int frameId);
 
   Bool isEmpty() { return ::isEmpty(tos); }
-
-  void checkMax(int n);
 
   Frame *getTop()            { return tos; }
   void setTop(Frame *newTos) { tos = newTos; }

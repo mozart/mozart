@@ -682,21 +682,6 @@ void _oz_getNewHeapChunk(const size_t sz) {
   heapTotalSize      += thisBlockSz/KB;
   heapTotalSizeBytes += thisBlockSz;
 
-  if (ozconf.heapMaxSize != -1 &&
-      (heapTotalSize > ((100 + ozconf.heapTolerance) *
-                        (unsigned long) ozconf.heapMaxSize) / 100)) {
-    int newSize = (heapTotalSize * 3) / 2;
-
-    if (ozconf.runningUnderEmacs) {
-      printf("\n*** Heap Max Size exceeded. Increasing from %d to %d.\n",
-             ozconf.heapMaxSize,newSize);
-      prefixError();
-      fflush(stdout);
-    }
-
-    ozconf.heapMaxSize = newSize;
-  }
-
   size_t malloc_size  = thisBlockSz;
   char * malloc_block = (char *) ozMalloc(malloc_size);
 
