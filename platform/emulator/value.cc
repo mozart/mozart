@@ -297,30 +297,9 @@ GName *Object::globalize(){
 }
 
 
-
-Abstraction *ObjectClass::getMethod(TaggedRef label, SRecordArity arity, RefsArray X,
-			       Bool &defaultsUsed)
-{
-  TaggedRef method;
-  if (getfastMethods()->getArg(label,method)!=PROCEED)
-    return NULL;
-  
-  DEREF(method,_1,_2);
-  if (oz_isVariable(method)) return NULL;
-  Assert(oz_isAbstraction(method));
-  
-  Abstraction *abstr = (Abstraction*) tagged2Const(method);
-  defaultsUsed = NO;
-  if (sameSRecordArity(abstr->getMethodArity(),arity))
-    return abstr;
-  defaultsUsed = OK;
-  return lookupDefault(label,arity,X) ? abstr : (Abstraction*) NULL;
-}
-
-
-
 /* X==NULL means: do not reorder X args */
-Bool ObjectClass::lookupDefault(TaggedRef label, SRecordArity arity, RefsArray X)
+inline
+Bool ObjectClass::lookupDefault(TaggedRef label, SRecordArity arity, Bool reorder)
 {
   TaggedRef def;
   if (getDefMethods()->getArg(label,def)!=PROCEED)
@@ -340,12 +319,12 @@ Bool ObjectClass::lookupDefault(TaggedRef label, SRecordArity arity, RefsArray X
 	oz_eq(oz_deref(rec->getArg(widthProvided)),NameOoRequiredArg))
       return NO;
 
-    if (X) {
+    if (reorder) {
       for (int i=widthProvided; i<widthDefault; i++) {
 	if (oz_eq(oz_deref(rec->getArg(i)),NameOoDefaultVar)) {
-	  X[i] = oz_newVariable();
+	  XREGS[i] = oz_newVariable();
 	} else {
-	  X[i] = rec->getArg(i);
+	  XREGS[i] = rec->getArg(i);
 	}
       }
     }
@@ -368,16 +347,16 @@ Bool ObjectClass::lookupDefault(TaggedRef label, SRecordArity arity, RefsArray X
 
     if (!oz_isNil(arityList) && featureEq(oz_head(arityList),feat)) {
       arityList = oz_tail(arityList);
-      if (X)
-	auxX[argno] = X[argnoProvided];
+      if (reorder)
+	auxX[argno] = XREGS[argnoProvided];
       argnoProvided++;
     } else if (oz_eq(value,NameOoDefaultVar)) {
-      if (X)
+      if (reorder)
 	auxX[argno] = oz_newVariable();
     } else if (oz_eq(value,NameOoRequiredArg)) {
       return NO;
     } else {
-      if (X)
+      if (reorder)
 	auxX[argno] = rec->getArg(argno);
     }
   }
@@ -386,15 +365,38 @@ Bool ObjectClass::lookupDefault(TaggedRef label, SRecordArity arity, RefsArray X
   if (!oz_isNil(arityList))
     return NO;
   
-  if (X) {
+  if (reorder) {
     while(argno>0) {
       argno--;
-      X[argno] = auxX[argno];
+      XREGS[argno] = auxX[argno];
     }
   }
 
   return OK;
 }
+
+
+Abstraction *ObjectClass::getMethod(TaggedRef label, SRecordArity arity, 
+				    Bool reorder,
+				    Bool &defaultsUsed)
+{
+  TaggedRef method;
+  if (getfastMethods()->getArg(label,method)!=PROCEED)
+    return NULL;
+  
+  DEREF(method,_1,_2);
+  if (oz_isVariable(method)) return NULL;
+  Assert(oz_isAbstraction(method));
+  
+  Abstraction *abstr = (Abstraction*) tagged2Const(method);
+  defaultsUsed = NO;
+  if (sameSRecordArity(abstr->getMethodArity(),arity))
+    return abstr;
+  defaultsUsed = OK;
+  return lookupDefault(label,arity,reorder) ? abstr : (Abstraction*) NULL;
+}
+
+
 
 TaggedRef ObjectClass::getFallbackNew() {
   TaggedRef fbs = oz_deref(classGetFeature(NameOoFallback));

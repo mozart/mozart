@@ -345,6 +345,10 @@ void checkGC();
 void version();
 
 // see emulate.cc
+
+extern TaggedRef XREGS[];
+extern TaggedRef XREGS_SAVE[];
+
 int engine(Bool);
 void scheduler();
 
