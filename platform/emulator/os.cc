@@ -5,6 +5,7 @@
  * 
  *  Contributors:
  *    Christian Schulte <schulte@ps.uni-sb.de>
+ *    Leif Kornstaedt <kornstae@ps.uni-sb.de>
  * 
  *  Copyright:
  *    Organization or Person (Year(s))
@@ -551,76 +552,42 @@ int oskill(int pid, int sig)
 #endif
 }
 
+
 /* Oz version of system(3)
- * Posix 2 requires this call not to be interuptible by a signal
- * however some OS (like Solaris 2.3) do return EINTR, so we define our
- * own one, stolen from Stevens.0
  */
 
+#ifdef WINDOWS
 
 int osSystem(char *cmd)
 {
-#ifdef WINDOWS
-
-  /*
-    Dragan@, Sameh@: 
-    To Accomplish the system() behavior under WinXX:
-    
-    I- On Windows 9x:
-       We use the int system(char *cmdline);
-        
-    II-On Windows NT/2000
-         The "int system(char *cmdline);" does not work
-         from the OPI. The alternative in v1.1 was to use 
-	 CreateProcess() but this lacked the functionality
-	 of executing shell commands such as cd, dir, etc..
-	 
-	 So the alternative implemented here is as follows:
-       
-	 1- We still use CreateProcess but We must have cmd 
-	 as the image name and the desired commandline is passed
-	 to it as a parameter. 
-	 
-	 2- WE must use the  STARTF_USESTDHANDLES flag to enable
-         the usage of the handles of the parent process.
-
-	 3- We must inherit the handles of the  parent process 
-	 to let the child write the output in the emulator window.
-	 
-	 4- We have to supply to the child process the STDOUT and
-	 STDERR BUT NOT STDIN or else the parent process will block it.
-  */
-
+  // On Windows 95/98/ME, we use the `system' function from MSVCRT.
+  // On Windows NT/2000, we implement the `system' function ourselves
+  // because the `system' function from MSVCRT does not work under NT4
+  // in the OPI (it blocks the parent process, without actually starting
+  // any subprocess).
 
   if (!runningUnderNT())
     return system(cmd);
-  
-  //Get the cmd.exe path
+
+  // Get the cmd.exe path
   char sysdir[MAX_PATH];
   GetSystemDirectory(sysdir, MAX_PATH);
-  
-  //prepare the command to be executed to be passed
-  //as an argument to cmd.exe via the /c switch
-  char* buf = (char*) malloc(strlen(cmd)+6);
+
+  // Prepare the command to be executed to be passed
+  // as an argument to cmd.exe via the /c switch
+  DECL_DYN_ARRAY(char, buf, strlen(cmd)+6);
   sprintf(buf, "/c \"%s\"",cmd);
 
-
-  
   STARTUPINFO si;
   memset(&si,0,sizeof(si));
   si.cb = sizeof(si);
   si.dwFlags = STARTF_FORCEOFFFEEDBACK|STARTF_USESTDHANDLES;
-  SetHandleInformation(GetStdHandle(STD_OUTPUT_HANDLE),
-		       HANDLE_FLAG_INHERIT,HANDLE_FLAG_INHERIT);
-  SetHandleInformation(GetStdHandle(STD_ERROR_HANDLE),
-		       HANDLE_FLAG_INHERIT,HANDLE_FLAG_INHERIT);
 
-  // "If the parent process only wishes to redirect one or two standard
-  // handles, specifying GetStdHandle() for the specific handles causes
-  // the child to create the standard handle as it normally would without
-  // redirection."
-  // Source: http://support.microsoft.com/support/kb/articles/Q190/3/51.ASP
-  //
+  // Dragan@ and Sameh@ claim:
+  // "We have to supply to the child process the STDOUT and
+  // STDERR BUT NOT STDIN or else the parent process will block it."
+#ifndef OS_SYSTEM_INHERITS_STDIN
+  // However, we have to init hStdIn nevertheless:
   // "If you use any of the fields, you should set values in all of them.
   // The child received an invalid handle for any device you leave NULL."
   // Source: http://msdn.microsoft.com/library/default.asp?
@@ -637,21 +604,27 @@ int osSystem(char *cmd)
     CloseHandle(wh);
   }
   si.hStdInput = hChildStdInput;
+#else
+  SetHandleInformation(GetStdHandle(STD_INPUT_HANDLE),
+		       HANDLE_FLAG_INHERIT,HANDLE_FLAG_INHERIT);
+  si.hStdInput = GetStdHandle(STD_INPUT_HANDLE);
+#endif
 
-  //si.hStdInput = GetStdHandle(STD_INPUT_HANDLE);
+  SetHandleInformation(GetStdHandle(STD_OUTPUT_HANDLE),
+		       HANDLE_FLAG_INHERIT,HANDLE_FLAG_INHERIT);
   si.hStdOutput = GetStdHandle(STD_OUTPUT_HANDLE);
+
+  SetHandleInformation(GetStdHandle(STD_ERROR_HANDLE),
+		       HANDLE_FLAG_INHERIT,HANDLE_FLAG_INHERIT);
   si.hStdError = GetStdHandle(STD_ERROR_HANDLE);
 
   PROCESS_INFORMATION pinf;
-
-  //CreateProcess() alone fails to run the cmd internals
-  //such as copy, dir, etc .. 
-  //So, we are providing the %sysdir%\cmd.exe as image name
   BOOL success =
     CreateProcess(strcat(sysdir,"\\cmd.exe"),buf,
 		  NULL,NULL,TRUE,0,NULL,NULL,&si,&pinf);
-  free(buf);
+#ifndef OS_SYSTEM_INHERITS_STDIN
   CloseHandle(hChildStdInput);
+#endif
 
   if (!success)
     return 1;
@@ -665,8 +638,17 @@ int osSystem(char *cmd)
   CloseHandle(pinf.hProcess);
 
   return ret;
+}
 
 #else
+
+/* Posix 2 requires this call not to be interuptible by a signal
+ * however some OS (like Solaris 2.3) do return EINTR, so we define our
+ * own one, stolen from Stevens.0
+ */
+
+int osSystem(char *cmd)
+{
   if (cmd == NULL) {
     return 1;
   }
@@ -687,10 +669,11 @@ int osSystem(char *cmd)
       return -1;
     }
   }
-  
+
   return status;
-#endif
 }
+
+#endif
 
 
 #if !defined(__GNUC__) || defined(CCMALLOC)
