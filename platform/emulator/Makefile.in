@@ -152,11 +152,13 @@ ozlib.lnk: oz.h
         sed -e 's/.*_FUNDECL(\([A-Za-z0-9_]*\).*/export _\1/' > $@
 
 scanner.cc: scanner.ll
-        $(LEX) $(LFLAGS) -Pxy -t $< > scanner.cc
+        $(LEX) $(LFLAGS) -Pxy $<
+        @$(MV) lex.xy.c scanner.cc
 
 parser.cc: parser.hh
+        @echo > /dev/null
 
-parser.cc parser.hh: parser.yy
+parser.hh: parser.yy
         $(YACC) $(YFLAGS) -p xy $<
         @$(MV) y.tab.c parser.cc
         @$(MV) y.tab.h parser.hh
@@ -167,7 +169,8 @@ parser.o: parser.cc
         $(CXX) $(CPPFLAGS) $(CXXFLAGS) -w -c $< -o $@
 
 ozma-s.cc: ozma-s.ll
-        $(LEX) $(LFLAGS) -Pozma -t $< > ozma-s.cc
+        $(LEX) $(LFLAGS) -Pozma $<
+        @$(MV) lex.ozma.c ozma-s.cc
 
 ozma-p.cc ozma.hh: ozma-p.yy
         $(YACC) $(YFLAGS) -p ozma $<
