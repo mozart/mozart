@@ -47,10 +47,10 @@ define
 
    local
       OZVERSION = {Property.get 'oz.version'}
-      DATE      = {Property.get 'oz.date'}
+      OZDATE    = {Property.get 'oz.date'}
    in
       {System.printError
-       'Mozart Engine '#OZVERSION#' of '#DATE#' playing Oz 3\n\n'}
+       'Mozart Engine '#OZVERSION#' ('#OZDATE#') playing Oz 3\n\n'}
    end
 
    {Property.put 'oz.standalone' false}
