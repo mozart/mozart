@@ -20,7 +20,7 @@ define
    
    %% Makes record '#'(...) of list [...]
    fun{MMap Ls F}
-      {List.toRecord '#' {List.mapInd {Map Ls F} fun{$ I X} I#X end}}
+      {List.toRecord '#' {List.mapInd Ls fun{$ I X} I#{F X} end}}
    end
 
    fun{GetAuthorList}
@@ -81,11 +81,10 @@ define
       Dir={Manager get_infodir($)}
       File=Dir#"/byauthor.html"
    in
-%      {Browser.browse Tables.1} 
       try
 	 {WriteHtmlPage Body File}
       catch E then
-	 {Browser.browse E}
+	 {Browser.browse nils(E)}
 	 {Wait _}
       end
    end
