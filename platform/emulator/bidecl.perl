@@ -1729,11 +1729,6 @@ $builtins = {
 			     BI  => BInop,
 			     native => false},
 
-    'setProcNames'	=> { in  => ['value', 'value'],
-			     out => [],
-			     BI  => BIsetProcNames,
-			     native => false},
-
     'onToplevel'	=> { in  => [],
 			     out => ['+bool'],
 			     BI  => BIonToplevel,
@@ -2502,17 +2497,6 @@ $builtins = {
 				  out => ['+bool'],
 				  BI  => BIisCopyablePredicateRef,
 				  native => true},
-
-    'generateCopies' => { in  => ['+[value]'],
-			  out => ['+[value#value]'],
-			  BI  => BIgenerateCopies,
-			  native => true},
-
-    # will expire soon:
-    'generateAbstractionTableID'=> { in  => ['+bool'],
-				     out => ['+foreignPointer'],
-				     BI  => BIgenerateAbstractionTableID,
-				     native => true},
 
     ###* RegSets
     'RegSet.new'	=> { in  => ['+int','+int'],
