@@ -6328,7 +6328,7 @@ OZ_C_proc_begin(BIsetDefaultExceptionHandler,1)
   OZ_declareNonvarArg(0,hdl);
   if (!OZ_isProcedure(hdl)) TypeErrorT(0,"Procedure");
 
-  am.defaultExceptionHandler = hdl;
+  am.defaultExceptionHandler = deref(hdl);
   return PROCEED;
 }
 OZ_C_proc_end
