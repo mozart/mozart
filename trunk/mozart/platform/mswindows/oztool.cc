@@ -311,8 +311,10 @@ int main(int argc, char **argv)
 	dlltoolCmd[index] = NULL;
 	int r = execute(dlltoolCmd,false);
 	if (!r) {
-	  char **dllwrapCmd = new char*[argc+6];
+	  char **dllwrapCmd = new char*[argc+8];
 	  dllwrapCmd[r++] = "dllwrap";
+	  dllwrapCmd[r++] = "--target";
+	  dllwrapCmd[r++] = "i386-mingw32";
 	  dllwrapCmd[r++] = "-s";
 	  dllwrapCmd[r++] = "--def";
 	  dllwrapCmd[r++] = tmpfile_def;
