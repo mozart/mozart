@@ -541,11 +541,17 @@ TaggedRef *newTaggedSVar(SVariable *c)
 }
 
 inline
-TaggedRef *newTaggedUVar(Board *c)
+TaggedRef *newTaggedUVar(TaggedRef proto)
 {
   TaggedRef *ref = (TaggedRef *) heapMalloc(sizeof(TaggedRef));
-  *ref = makeTaggedUVar(c);
+  *ref = proto;
   return ref;
+}
+
+inline
+TaggedRef *newTaggedUVar(Board *c)
+{
+  return newTaggedUVar(makeTaggedUVar(c));
 }
 
 inline
@@ -801,10 +807,24 @@ inline
 Bool initRefsArray(RefsArray a, int size, Bool init)
 {
   setRefsArraySize(a,size);
-  TaggedRef help = makeTaggedNULL();    /* due to stupid gcc */
   if (init) {
-    for(int i = size-1; i >= 0; i--)
-      a[i] = help;
+    switch (size) {
+    case 10: a[9] = makeTaggedNULL();
+    case  9: a[8] = makeTaggedNULL();
+    case  8: a[7] = makeTaggedNULL();
+    case  7: a[6] = makeTaggedNULL();
+    case  6: a[5] = makeTaggedNULL();
+    case  5: a[4] = makeTaggedNULL();
+    case  4: a[3] = makeTaggedNULL();
+    case  3: a[2] = makeTaggedNULL();
+    case  2: a[1] = makeTaggedNULL();
+    case  1: a[0] = makeTaggedNULL();
+      break;
+    default:
+      for(int i = size-1; i >= 0; i--)
+        a[i] = makeTaggedNULL();
+      break;
+    }
   }
 
   return OK;  /* due to stupid CC */
