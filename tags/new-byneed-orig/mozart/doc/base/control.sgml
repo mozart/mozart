@@ -1,0 +1,561 @@
+<!--
+  - Authors:
+  -   Denys Duchier <duchier@ps.uni-sb.de>
+  -   Leif Kornstaedt <kornstae@ps.uni-sb.de>
+  -   Christian Schulte <schulte@ps.uni-sb.de>
+  -
+  - Contributors:
+  -   Daniel Simon <dansim@ps.uni-sb.de> (SGML Translation)
+  -
+  - Copyright:
+  -   Denys Duchier, Leif Kornstaedt, and Christian Schulte, 1998
+  -
+  - Last change:
+  -   $Date$ by $Author$
+  -   $Revision$
+  -
+  - This file is part of Mozart, an implementation of Oz 3:
+  -   http://www.mozart-oz.org
+  -
+  - See the file "LICENSE" or
+  -   http://www.mozart-oz.org/LICENSE.html
+  - for information on usage and redistribution
+  - of this file, and for a DISCLAIMER OF ALL
+  - WARRANTIES.
+  -
+  -->
+
+<Chapter id="chapter.control">
+  <Title/Control/
+  <P>
+    This chapter contains control procedures which allow to block, suspend
+    or terminate threads, and provide functionality dealing with loops,
+    real-time programming and threads.
+  <Section id="section.control.general">
+    <Title/General/
+    <P>
+      The module <Span class=index/<<Value>>/ contains two general control
+      procedures.
+      <List>
+	<Entry><Span class=index/<<Wait>>/
+	  <Index/<<Value>><And><<wait>>/
+	<Synopsis>
+	  <<{Value.wait ?+{X}}>>
+	<Item>
+	  blocks until ?_{X} is determined.  If ?_{X} is a future, it
+	  is requested.  If ?_{X} is or becomes bound to a failed future,
+	  then its encapsulated exception is raised.
+
+	<Entry><Span class=index/<<WaitOr>>/
+	  <Index/<<Value>><And><<waitOr>>/
+	<Synopsis>
+	  <<{Value.waitOr ?_{X} ?_{Y}}>>
+	<Item>
+	  blocks until at least one of ?_{X} or&nbsp;?_{Y} is determined.
+
+	<Entry><Span class=index/<<waitQuiet>>/
+	  <Index/<<Value>><And><<waitQuiet>>/
+	<Synopsis>
+	  <<{Value.waitQuiet ?+{X}}>>
+	<Item>
+	  blocks until ?_{X} is determined or failed.  Contrary to <code/Wait/,
+	  if ?_{X} is a future, <code/Value.waitQuiet/ does not request it.
+	  Also, if ?_{X} is or becomes bound to a failed future, no exception
+	  is raised.
+
+	<Entry><Span class=index/<<!!>>/
+	  <Index/<<Value>><And><<'!!'>>/
+	<Synopsis>
+	  <<{Value.'!!' ?_{X} ?_{Y}}>>
+	<Item>
+	  returns a <Def/future/&nbsp;?_{Y} for&nbsp;?_{X}, &ie;, a read-only
+	  placeholder for&nbsp;?_{X}.
+
+	<Entry><<byNeed>>
+	  <Index class=tails/<<Value>><And><<byNeed>>/
+	<Synopsis>
+	  <<{Value.byNeed ?+{P} ?_{X}}>>
+	<Item>
+	  creates a future&nbsp;?_{X}.  When ?_{X} is <Span class=index
+	  /requested/ (&ie;, some thread blocks on&nbsp;?_{X}), the unary
+	  procedure&nbsp;?_{P} is applied to a fresh variable&nbsp;?_{Y}
+	  in a new thread.  When the application of&nbsp;?_{P} is fully
+	  reduced, the variable associated with&nbsp;?_{X} is bound
+	  to&nbsp;?_{Y}.
+
+        <Entry><<byNeedFail>>
+          <Index class=tails/<<Value>><And><<byNeedFail>>/
+        <Synopsis>
+          <<{Value.byNeedFail ?+{E} ?_{X}}>>
+        <Item>
+          creates a failed future&nbsp;?_{X} encapsulating exception
+          ?_{E}.  Whenever ?_{X} is <Span
+          class=index/requested/ (see above), in particular, whenever
+          a thread synchronizes on ?_{X}, exception term ?_{E} is
+          raised.  This is convenient in concurrent designs: if a
+          concurrent generator encounters a problem while computing a
+          value, it may catch the corresponding exception, package it
+          as a failed future and return the latter instead.  Thus each
+          consumer will be able to synchronously handle the exception
+          when it attempts to use the <q/failed/ future.  For example,
+          the module manager returns failed futures for modules that
+          cannot be found or linked.
+      </List>
+
+  <Section id="section.control.loops">
+    <Title/Loops/
+    <P>
+      The module <Span class=index/<<Loop>>/ contains procedures that
+      represent recursive versions of common iteration schemes with
+      integers.  However, for most common iteration patterns, the
+      <code/for/ loop offers a nicer alternative (see <ptr.extern
+      to="ozdoc:loop">).
+      <List>
+	<Entry><Span class=index/<<For>>/
+	  <Index/<<Loop>><And><<for>>/
+	<Synopsis>
+	  <<{Loop.'for' ?+{I1} ?+{I2} ?+{I3} ?+{P}}>>
+	<Item>
+	  applies the unary procedure&nbsp;?_{P} to integers from ?_{I1}
+	  to&nbsp;?_{I2} proceeding in steps of size&nbsp;?_{I3}.  For example,
+	  <<<{For 1 11 3 Browse}>>>
+	  displays the numbers <<1>>, <<4>>, <<7>>, and&nbsp;<<10>>
+	  in the browser window, whereas
+	  <<<{For 11 1 ~3 Browse}>>>
+	  displays the numbers <<11>>, <<8>>, <<5>>, and&nbsp;<<2>>.
+
+	<Entry><Span class=index/<<ForThread>>/
+	  <Index/<<Loop>><And><<forThread>>/
+	<Synopsis>
+	  <<{Loop.forThread ?+{I1} ?+{I2} ?+{I3} ?+{P} ?_{X} ??{Y}}>>
+	<Item>
+	  applies the ternary procedure&nbsp;?_{P} to integers from ?_{I1}
+	  to&nbsp;?_{I2} proceeding in steps of size&nbsp;?_{I3} while
+	  threading an additional accumulator argument through the iteration.
+	  The procedure&nbsp;?_{P} takes the accumulator argument (initially
+	  set to&nbsp;?_{X}) and the loop index and returns an updated
+	  accumulator.
+	<P>
+	  For example,
+	  <<<{ForThread 1 5 1 fun {$ Is I} I*I|Is end nil}>>>
+	  yields the list <<[25 16 9 4 1]>> as output, whereas
+	  <<<{ForThread 5 1 ~1 fun {$ Is I} I*I|Is end nil}>>>
+	  yields <<[1 4 9 16 25]>> as output.
+	<P>
+	  Note that <<ForThread>> is similar to <<FoldL>>
+	  (see <Ptr to="section.records.lists">).
+
+	<Entry><<multiFor>>
+	  <Index class=tails/<<Loop>><And><<multiFor>>/
+	<Synopsis>
+	  <<{Loop.multiFor ?+{Xs} ?+{P}}>>
+	<Item>
+	  generalizes <<For>> (see above) to the case of multiple nested loops.
+	<P>
+	  ?_{Xs} is a list containing tuples of the form
+	  <<?_{I1}#?_{I2}#?_{I3}>> specifying a loop by its start
+	  value&nbsp;?_{I1}, upper limit&nbsp;?_{I2} and step
+	  size&nbsp;?_{I3}.
+	<P>
+	  For example,
+	  <<<{Loop.multiFor [1#5#1 10#20#2] Browse}>>>
+	  displays the lists <<[1 10]>>, <<[1 12]>>, &ellipsis;, <<[5 20]>>
+	  in the browser.
+
+	<Entry><<multiForThread>>
+	  <Index class=tails/<<Loop>><And><<multiForThread>>/
+	<Synopsis>
+	  <<{Loop.multiForThread ?+{Xs} ?+{P} ?_{X} ??{Y}}>>
+	<Item>
+	  generalizes <<ForThread>> (see above) to the case of multiple nested
+	  loops.
+	<P>
+	  ?_{Xs} is a list containing tuples of the form
+	  <<?_{I1}#?_{I2}#?_{I3}>> specifying a loop by its start
+	  value&nbsp;?_{I1}, upper limit&nbsp;?_{I2} and step
+	  size&nbsp;?_{I3}.
+	<P>
+	  For example,
+<<<{Loop.multiForThread [1#2#1 5#4#~1]
+ fun {$ Is [I J]}
+    I#J|Is
+ end nil}>>>
+	  yields the list <<[2#4 2#5 1#4 1#5]>> as output.
+      </List>
+
+  <Section id="section.control.time">
+    <Title/Time/
+    <P>
+      The module <Span class=index/<<Time>>/ contains procedures for real-time
+      applications.
+      <List>
+	<Entry><Span class=index/<<Alarm>>/
+	  <Index/<<Time>><And><<alarm>>/
+	<Synopsis>
+	  <<{Time.alarm ?+{I} ??{U}}>>
+	<Item>
+	  returns <<unit>> after ?_{I} milliseconds. This is done
+	  asynchronously in that it is evaluated on its own thread.
+
+	<Entry><Span class=index/<<Delay>>/
+	  <Index/<<Time>><And><<delay>>/
+	<Synopsis>
+	  <<{Time.delay ?+{I}}>>
+	<Item>
+	  reduces to <<skip>> after ?_{I} milliseconds.  Whenever
+	  <<?_{I} =&lt; 0>>, <<{Delay ?_{I}}>> reduces immediately.
+
+	<Entry><<time>>
+	  <Index class=tails/<<Time>><And><<time>>/
+	<Synopsis>
+	  <<{Time.time ??{T}}>>
+	<Item>
+	  binds ?_{T} to the number of seconds elapsed since January, 1st of
+	  the current year.
+      </List>
+    <SubSection class=unnumbered>
+      <Title/The Repeater Class/
+      <P>
+	<List>
+	  <Entry><<repeat>>
+	    <Index class=tails/<<Time>><And><<repeat>>/
+	  <Synopsis>
+	    <<Time.repeat>>
+	  <Item>
+	    is a class which allows to
+	    <List>
+	      <Item>
+		repeat an action infinitely often, or a fixed number of times
+		and perform some final action thereafter,
+	      <Item>
+		with a fixed delay between iterations (or, alternatively,
+		a delay specified by a unary procedure),
+	      <Item>
+		stop and resume the iteration.
+	    </List>
+	    There are default values for any of the iteration parameters.
+	    These are set on creation of an object inheriting from
+	    <<Time.repeat>> and can be changed by inheritance.  The
+	    functionality is controlled by the following methods.
+	    <List>
+	      <Entry><<setRepAll>>
+		<Index/<<Time>><And><<repeat>><And><<setRepAll>>/
+	      <Synopsis>
+<<<setRepAll(action:   ?+{ActionPR}  <= dummyRep
+	  final:    ?+{FinalPR}   <= finalRep
+	  delay:    ?+{DelayI}    <= 1000
+	  delayFun: ?+{DelayFunP} <= fun {$} 1000 end
+	  number:   ?+{NumI}      <= ~1)>>>
+	      <Item>
+		initializes the loop with the action ?_{ActionPR} to iterate
+		(default: message <<dummyRep>>), the action ?_{FinalPR} to
+		finalize a finite iteration (default: message <<finalRep>>),
+		the delay ?_{DelayI} between iterations (default: one second),
+		the function ?_{DelayFunP} yielding the delay between
+		iterations (default: constant <<1000>>), and the maximal
+		number ?_{NumI} of iterations (default: infinitely many).
+	      <P>
+		The methods <<dummyRep>> and <<finalRep>> do nothing.  Only
+		one of the <<delay>> and <<delayFun>> parameters can be given.  The default actions ?_{ActionPR} and ?_{FinalPR}
+		can be changed by inheritance.
+	      <P>
+		The loop is started on the calling thread.
+	      <P>
+		For example, try the following:
+<<<local
+   O = {New Time.repeat
+	setRepAll(action: proc {$} {OS.system 'fortune' _} end
+		  number: 10)}
+in
+   {O go()}
+end>>>
+
+	      <Entry><<getRep>>
+		<Index/<<Time>><And><<repeat>><And><<getRep>>/
+	      <Synopsis>
+<<<getRep(action:   ??{ActionPR}  <= _
+       final:    ??{FinalPR}   <= _
+       delay:    ??{DelayI}    <= _
+       delayFun: ??{DelayFunP} <= _
+       number:   ??{LimitI}    <= _
+       actual:   ??{NumI}      <= _)>>>
+	      <Item>
+		returns the current loop parameters: ?_{LimitI} returns the
+		current limit of the iteration, and ?_{NumI} the number of
+		iterations left to be done.  If the delay was specified via
+		?_{DelayFunP} (which need not be constant), then ?_{DelayI}
+		returns the <Em/last/ delay used.  If ?_{DelayI} is requested
+		before the start of the iteration, then <<~1>> is returned.
+		The other values correspond to the fields of the method
+		<<setRepAll>>.
+	      <P>
+		For example try:
+<<<local
+   class Counter from Time.repeat
+      attr a: 0
+      meth inc()      a &lt;- @a + 1 end
+      meth get(?A)    A = @a      end
+      meth finalRep() a &lt;- 0      end
+   end
+   C = {New Counter setRepAll(action: inc number: 1000)}
+in
+   thread {C go()} end
+   {C getRep(final: {Browse}
+	     action: {Browse}
+	     actual: {Browse})}
+   {C get({Browse})}
+end>>>
+		This will show the atoms <<'finalRep'>> and <<'inc'>> in the
+		Browser, as well as a number between <<1>> and&nbsp;<<1000>>.
+		After termination of the loop, the value of <<@a>> will be
+		reset to&nbsp;<<0>>.
+
+	      <Entry><<setRepDelay>>
+		<Index/<<Time>><And><<repeat>><And><<setRepDelay>>/
+	      <Synopsis>
+		<<setRepDelay(?+{DelayI} <= 1000}>>
+	      <Entry><<setRepNum>>
+		<Index/<<Time>><And><<repeat>><And><<setRepNum>>/
+	      <Synopsis>
+		<<setRepNum(?+{NumI} <= ~1)}>>
+	      <Entry><<setRepAction>>
+		<Index/<<Time>><And><<repeat>><And><<setRepAction>>/
+	      <Synopsis>
+		<<setRepAction(?+{ActionPR} <= dummyRep)>>
+	      <Entry><<setRepFinal>>
+		<Index/<<Time>><And><<repeat>><And><<setRepFinal>>/
+	      <Synopsis>
+		<<setRepFinal(?+{FinalPR} <= finalRep)}>>
+	      <Entry><<setRepDelayFun>>
+		<Index/<<Time>><And><<repeat>><And><<setRepDelayFun>>/
+	      <Synopsis>
+		<<setRepDelayFun(?+{DelayFunP} <= fun {$} 1000 end)>>
+	      <Item>
+		allow to set the numeric parameters of the iteration.
+	      <P>
+		?_{DelayI} and ?_{NumI} must be integers.  The iteration limit
+		?_{NumI} is stored and subsequent loop instances (triggered by
+		<<go>>) also obey it, unless the limit is reset to&nbsp;<<~1>>.
+	      <P>
+		?_{ActionPR} and ?_{FinalPR} may be nullary procedures or
+		records.  If they are procedures they are called as is.  If
+		they are records, they are interpreted as messages to be sent
+		to <<self>>.
+	      <P>
+		?_{DelayFunP} must be a unary procedure which returns an
+		integer value on application.
+
+	      <Entry><<go>>
+		<Index/<<Time>><And><<repeat>><And><<go>>/
+	      <Synopsis>
+		<<go()>>
+	      <Item>
+		starts the loop if it is not currently running.
+
+	      <Entry><<stop>>
+		<Index/<<Time>><And><<repeat>><And><<stop>>/
+	      <Synopsis>
+		<<stop()>>
+	      <Item>
+		halts the loop and resets the iteration index.  The loop may
+		be restarted with <<go>>.
+	    </List>
+	</List>
+
+  <Section id="section.control.exceptions">
+    <Title/Exceptions/
+    <P>
+      The module <<Exception>> provides procedures to construct exceptions
+      and raise them.
+    <Para class=apropos><Title/Special Exceptions/
+      <Index/error exception/
+      <Index/system exception/
+      <Index/exception/
+      Any value may be raised as exception, although commonly only records
+      are used.  Some of these serve special purposes:  <Def class=noindex
+      /error exceptions/ are records with label <<error>>.  These are raised
+      when a programming error occurs; it is not recommended to catch these.
+      <Def class=noindex/System exceptions/ are records with label <<system>>.
+      These are raised when an unforeseeable runtime condition occurs; a file
+      operations library might raise system exceptions when a file cannot be
+      opened.  It is recommended to always handle such exceptions.  <Def
+      class=noindex/Failure exceptions/ are records with label <<failure>>;
+      these are raised when a tell operation fails.
+    <Para class=apropos><Title/Dispatch Fields/
+      Both error and system exceptions have a <Def/dispatch field/.  This is
+      the subtree at feature&nbsp;<<1>> of the exception record.  This is
+      usually a record further describing the exact condition that occurred.
+    <Para class=apropos><Title/Debug Information/
+      If an exception is a record and has a feature <<debug>>, then
+      the implementation may replace the corresponding subtree by
+      implementation-dependent debugging information.  This is to be
+      printed out in the case of uncaught exceptions.
+    <P>
+      All procedures in the Base Environment only ever raise special-purpose
+      exceptions as described above.
+      <List>
+	<Entry><<error>>
+	  <Index/<<Exception>><And><<error>>/
+	<Synopsis>
+	  <<{Exception.error ?_{X} ??{Y}}>>
+	<Item>
+	  returns an error exception record with dispatch field&nbsp;?_{X}.
+
+	<Entry><<system>>
+	  <Index/<<Exception>><And><<system>>/
+	<Synopsis>
+	  <<{Exception.system ?_{X} ??{Y}}>>
+	<Item>
+	  returns a system exception record with dispatch field&nbsp;?_{X}.
+
+	<Entry><<failure>>
+	  <Index/<<Exception>><And><<failure>>/
+	<Synopsis>
+	  <<{Exception.failure ?_{X} ??{Y}}>>
+	<Item>
+	  returns a failure exception.  The value&nbsp;?_{X} may give a hint
+	  on why failure occurred; implementations may store this inside
+	  the constructed exception's <<debug>> field.
+
+	<Entry><Span class=index/<<Raise>>/
+	  <Index/<<Exception>><And><<'raise'>>/
+	<Synopsis>
+	  <<{Exception.'raise' ?_{X}}>>
+	<Item>
+	  raises ?_{X} as an exception.
+
+	<Entry><<raiseError>>
+	  <Index/<<Exception>><And><<raiseError>>/
+	<Synopsis>
+	  <<{Exception.raiseError ?_{X}}>>
+	<Item>
+	  wraps ?_{X} into an error exception and raises this.
+	  This procedure can be defined as follows:
+<<<proc {Exception.raiseError X}
+   {Exception.'raise' {Exception.error X}}
+end>>>
+      </List>
+
+  <Section id="section.control.threads">
+    <Title/Threads/
+    <P>
+      The module <<Thread>> provides operations on first class threads.
+    <P>
+      Threads may be in one of three states, namely <Def/runnable/,
+      <Def/blocked/, or <Def/terminated/.  Orthogonally, a thread may be
+      <Def/suspended/.
+    <P>
+      Runnable and non-suspended threads are scheduled according to their
+      priorities, which may be <<low>>, <<medium>>, or <<high>>.  The
+      default priority is <<medium>>.   The priority of a thread may
+      influence its time share for execution, where threads with <<medium>>
+      priority obtain at least as long a time share as threads with <<low>>
+      priority and at most as long as threads with <<high>> priority.
+      Implementations may also choose not to schedule a thread at all
+      if a thread with higher priority is runnable.
+    <P>
+      A newly created thread inherits its priority from its parent if the
+      latter has either <<medium>> or <<low>> priority.  Otherwise, the new
+      thread gets default (&ie;, <<medium>>) priority.
+      <List>
+	<Entry><Span class=index/<<IsThread>>/
+	  <Index/<<Thread>><And><<is>>/
+	<Synopsis>
+	  <<{Thread.is ?+{X} ??{B}}>>
+	<Item>
+	  test whether ?_{X} is a thread.
+
+	<Entry><<this>>
+	  <Index class=tails/<<Thread>><And><<this>>/
+	<Synopsis>
+	  <<{Thread.this ??{Thread}}>>
+	<Item>
+	  returns the current thread.
+
+	<Entry><<state>>
+	  <Index class=tails/<<Thread>><And><<state>>/
+	<Synopsis>
+	  <<{Thread.state ?+{Thread} ??{A}}>>
+	<Item>
+	  returns one of the atoms <<runnable>>, <<blocked>>, <<terminated>>
+	  according to the current state of ?_{Thread}.
+
+	<Entry><<resume>>
+	  <Index class=tails/<<Thread>><And><<resume>>/
+	<Synopsis>
+	  <<{Thread.resume ?+{Thread}}>>
+	<Item>
+	  resumes ?_{Thread}.  Resumption undoes suspension.
+
+	<Entry><<suspend>>
+	  <Index class=tails/<<Thread>><And><<suspend>>/
+	<Synopsis>
+	  <<{Thread.suspend ?+{Thread}}>>
+	<Item>
+	  suspends ?_{Thread} such that it cannot be further reduced.
+
+	<Entry><<isSuspended>>
+	  <Index class=tails/<<Thread>><And><<isSuspended>>/
+	<Synopsis>
+	  <<{Thread.isSuspended ?+{Thread} ??{B}}>>
+	<Item>
+	  tests whether ?_{Thread} is currently suspended.
+
+	<Entry><<injectException>>
+	  <Index class=tails/<<Thread>><And><<injectException>>/
+	<Synopsis>
+	  <<{Thread.injectException ?+{Thread} ?+{X}}>>
+	<Item>
+	  raises ?_{X} as exception on ?_{Thread}.  If ?_{Thread} is
+	  terminated, an error exception is raised in the current thread.
+
+	<Entry><<terminate>>
+	  <Index class=tails/<<Thread>><And><<terminate>>/
+	<Synopsis>
+	  <<{Thread.terminate ?+{Thread}}>>
+	<Item>
+	  raises an exception <<kernel(terminate ...)>> on ?_{Thread}.
+
+	<Entry><<getPriority>>
+	  <Index class=tails/<<Thread>><And><<getPriority>>/
+	<Synopsis>
+	  <<{Thread.getPriority ?+{Thread} ??{A}}>>
+	<Item>
+	  returns one of them atoms <<low>>, <<medium>>, or <<high>>
+	  according to the current priority of ?_{Thread}.
+
+	<Entry><<setPriority>>
+	  <Index class=tails/<<Thread>><And><<setPriority>>/
+	<Synopsis>
+	  <<{Thread.setPriority ?+{Thread} ?+{A}}>>
+	<Item>
+	  sets priority of thread ?_{Thread} to the priority described by
+	  atom&nbsp;?_{A}.  ?_{A} must be one of <<low>>, <<medium>>, or
+	  <<high>>.
+
+	<Entry><<getThisPriority>>
+	  <Index class=tails/<<Thread>><And><<getThisPriority>>/
+	<Synopsis>
+	  <<{Thread.getThisPriority ??{A}}>>
+	<Item>
+	  returns one of them atoms <<low>>, <<medium>>, or <<high>>
+	  according to the priority of the current thread.
+
+	<Entry><<setThisPriority>>
+	  <Index class=tails/<<Thread>><And><<setThisPriority>>/
+	<Synopsis>
+	  <<{Thread.setThisPriority ?+{A}}>>
+	<Item>
+	  sets priority of the current thread to the priority described by
+	  atom&nbsp;?_{A}.  ?_{A} must be one of <<low>>, <<medium>>, or
+	  <<high>>.
+
+	<Entry><<preempt>>
+	  <Index class=tails/<<Thread>><And><<preempt>>/
+	<Synopsis>
+	  <<{Thread.preempt ?+{Thread}}>>
+	<Item>
+	  preempts the current thread, &ie;, immediately schedules another
+	  runnable thread (if there is one).  ?_{Thread} stays runnable.
+      </List>
+</Chapter>

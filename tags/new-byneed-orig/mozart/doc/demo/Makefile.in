@@ -1,0 +1,114 @@
+VPATH		= @srcdir@
+SRCDIR		= @srcdir@
+SRCTOP		= @SRCTOP@
+
+#WHATCLASS=unused
+#PRINTNAME=Demo
+WHAT = demo
+MAIN = main.sgml
+PERL = perl
+
+SGMLSRCS0 = \
+	board.sgml bounce.sgml \
+	jobshop.sgml lift.sgml main.sgml queens.sgml \
+	transportation.sgml trucks.sgml cutting.sgml \
+	college.sgml flowers.sgml dict-client.sgml chat.sgml
+
+ALL_SRC = \
+	AnimatedQueens.oz Bounce.oz Trucks.oz Lift.oz Board.oz
+
+SRC_JOBSHOP = \
+	Examples.oz Main.oz Scheduler.oz Compiler.oz TaskBoard.oz \
+	Tools.oz Configure.oz
+
+SRC_COLLEGE = \
+	Graphics.oz \
+	Latex.oz \
+	Common.oz \
+	KathHochWS9596.ozt \
+	Main.oz \
+	Controller.oz \
+	KathHochWS9596Sol.ozt \
+	Scheduler.oz
+
+SRC_CUTTING = \
+	Compute.oz Configure.oz Edit.oz Main.oz Script.oz
+
+SRC_FLOWERS = \
+	Flowers.oz \
+	Flowers3d.oz \
+
+SRC_TRANSPORT = \
+	AgentAbstractions.oz Agents.oz Configure.oz Country.oz \
+	Dialogs.oz Germany.oz Main.oz Plan.oz \
+	Randomizer.oz Widgets.oz
+
+SRC_DICTCLIENT = \
+	Main.oz NetDictionary.oz TkDictionary.oz
+
+SUBDIRS = \
+	JobShop College Cutting Flowers Transport DictClient
+
+SRCFILES = \
+	$(ALL_SRC) \
+	$(addprefix JobShop/,$(SRC_JOBSHOP)) \
+	$(addprefix College/,$(SRC_COLLEGE)) \
+	$(addprefix Cutting/,$(SRC_CUTTING)) \
+	$(addprefix Flowers/,$(SRC_FLOWERS)) \
+	$(addprefix Transport/,$(SRC_TRANSPORT)) \
+	$(addprefix DictClient/,$(SRC_DICTCLIENT))
+
+SGMLSRCS = $(SGMLSRCS0) $(SUBDIRS) $(SRCFILES)
+
+HTMLEXTRAFILES = \
+	note-gui-l1.gif note-gui-lm1.gif demo.gif
+
+OZDOCHTMLFLAGS = --autoindex
+
+include ../Makefile.common
+
+
+JobShop/%.oz: $(SRCTOP)/share/demo/JobShop/%.oz
+	$(PERL) $(SRCDIR)/offwithhishead $< > $@
+College/%.oz: $(SRCTOP)/share/demo/College/%.oz
+	$(PERL) $(SRCDIR)/offwithhishead $< > $@
+College/%.ozt: $(SRCTOP)/share/demo/College/%.ozt
+	$(PERL) $(SRCDIR)/offwithhishead $< > $@
+Cutting/%.oz: $(SRCTOP)/share/demo/Cutting/%.oz
+	$(PERL) $(SRCDIR)/offwithhishead $< > $@
+Flowers/%.oz: $(SRCTOP)/share/demo/Flowers/%.oz
+	$(PERL) $(SRCDIR)/offwithhishead $< > $@
+Transport/%.oz: $(SRCTOP)/share/demo/Transport/%.oz
+	$(PERL) $(SRCDIR)/offwithhishead $< > $@
+DictClient/%.oz: $(SRCTOP)/share/demo/DictClient/%.oz
+	$(PERL) $(SRCDIR)/offwithhishead $< > $@
+%.oz: $(SRCTOP)/share/demo/%.oz
+	$(PERL) $(SRCDIR)/offwithhishead $< > $@
+$(SUBDIRS):
+	mkdir $@
+
+INSTALLDIRS = $(SUBDIRS:%=$(DOCDIR)/%)
+install::  $(INSTALLDIRS) $(SRCFILES:%=$(DOCDIR)/%)
+
+
+$(INSTALLDIRS):
+	$(INSTALL_DIR) $@
+$(DOCDIR)/%.oz: $(SRCTOP)/share/demo/%.oz
+	$(INSTALL_FILE) $< $@
+$(DOCDIR)/JobShop/%.oz: $(SRCTOP)/share/demo/JobShop/%.oz
+	$(INSTALL_FILE) $< $@
+$(DOCDIR)/College/%.oz: $(SRCTOP)/share/demo/College/%.oz
+	$(INSTALL_FILE) $< $@
+$(DOCDIR)/College/%.ozt: $(SRCTOP)/share/demo/College/%.ozt
+	$(INSTALL_FILE) $< $@
+$(DOCDIR)/Cutting/%.oz: $(SRCTOP)/share/demo/Cutting/%.oz
+	$(INSTALL_FILE) $< $@
+$(DOCDIR)/Flowers/%.oz: $(SRCTOP)/share/demo/Flowers/%.oz
+	$(INSTALL_FILE) $< $@
+$(DOCDIR)/Transport/%.oz: $(SRCTOP)/share/demo/Transport/%.oz
+	$(INSTALL_FILE) $< $@
+$(DOCDIR)/DictClient/%.oz: $(SRCTOP)/share/demo/DictClient/%.oz
+	$(INSTALL_FILE) $< $@
+
+clean::
+	-rm -rf $(SUBDIRS) $(ALL_SRC)

@@ -1,0 +1,57 @@
+<!--
+  - Authors:
+  -   Nils Franzen (nilsf@sics.se)
+  -   Simon Lindblom (simon@sics.se)
+  -
+  - Copyright:
+  -   Nils Franzen, 1998
+  -   Simon Lindblom, 1998
+  -
+  - Last change:
+  -   $Date$ by $Author$
+  -   $Revision$
+  -
+  - This file is part of Mozart, an implementation
+  - of Oz 3
+  -    http://www.mozart-oz.org
+  -
+  - See the file "LICENSE" or
+  -    http://www.mozart-oz.org/LICENSE.html
+  - for information on usage and redistribution
+  - of this file, and for a DISCLAIMER OF ALL
+  - WARRANTIES.
+  -
+  -->
+
+<CHAPTER ID="chapter.mim">
+  <TITLE/Mozart Instant Messenger/
+    <AUTHOR.EXTERN TO="author.db" KEY="Nils.Franzen">
+    <AUTHOR.EXTERN TO="author.db" KEY="Simon.Lindblom">
+
+  <P><LIST CLASS=linkmenu>
+      <ITEM/<REF.EXTERN
+      TO="applets/MIM.oza"/Start Client//
+      <ITEM/<REF.EXTERN
+      TO="http://www.sics.se/mozart/mim/"/More Information//
+      <ITEM><REF.EXTERN TO="ozdoc:install" KEY="appendix.applets"/How to enable Applets/
+    </LIST></P>
+  <SECTION CLASS=unnumbered>
+    <TITLE/Starting a Client/
+    <P>First a window pops up and prompts you for a login name and a
+    password. If this is your first session, click on the "New User"
+    button and fill-in the fields. Use <KEY/TAB/ to move between the
+    fields and press <KEY/RET/ when done. More information about
+    <EM>Mozart Instant messenger</EM> is found <REF.EXTERN
+    TO="http://www.sics.se/mozart/mim/">here</REF.EXTERN>.
+</SECTION>
+</CHAPTER>
+
+<!--
+Local Variables:
+mode: sgml
+mode: auto-fill
+sgml-default-dtd-file: "chapter.ced"
+sgml-auto-activate-dtd: t
+adaptive-fill-mode: nil
+End:
+-->

@@ -1,0 +1,162 @@
+<!--
+  - Author:
+  -   Leif Kornstaedt <kornstae@ps.uni-sb.de>
+  -
+  - Copyright:
+  -   Leif Kornstaedt, 1998
+  -
+  - Last change:
+  -   $Date$ by $Author$
+  -   $Revision$
+  -
+  - This file is part of Mozart, an implementation of Oz 3:
+  -   http://www.mozart-oz.org
+  -
+  - See the file "LICENSE" or
+  -   http://www.mozart-oz.org/LICENSE.html
+  - for information on usage and redistribution
+  - of this file, and for a DISCLAIMER OF ALL
+  - WARRANTIES.
+  -
+  -->
+
+<Section id="section.api.interfaces">
+  <Title/Compiler Interfaces/
+  <P>
+    As said above, compiler engines are narrators.  The term <Q/compiler
+    interface/ simply denotes a standard listener attached to a compiler
+    engine.  This section presents what is required to implement a compiler
+    interface.
+  <P>
+    First the notifications sent by compiler engines are documented.  These
+    include normal compiler output and information about compiler state
+    changes.  Then a specific compiler interface is described that makes
+    many compilation tasks easy to control.
+  <SubSection>
+    <Title/Sent Notifications/
+    <Para class=apropos><Title/Query Queue/
+      <List>
+	<Entry><<newQuery(?_{I} ?_{T})>>
+	<Item>
+	  A new query&nbsp;?_{T} with identification&nbsp;?_{I} has been
+	  enqueued.
+	<Entry><<runQuery(?_{I} ?_{T})>>
+	<Item>
+	  The query&nbsp;?_{T} with identification&nbsp?_{I} is now being
+	  executed.
+	<Entry><<removeQuery(?_{I})>>
+	<Item>
+	  The query with identification&nbsp;?_{I} has been removed from
+	  the query queue, either because it finished executing or because
+	  it was dequeued by a user program.
+      </List>
+    <Para class=apropos><Title/Compiler Activity/
+      <List>
+	<Entry><<busy()>>
+	<Item>
+	  The compiler is currently busy (&ie;, executing a query).
+	<Entry><<idle()>>
+	<Item>
+	  The compiler is currently idle (&ie;, waiting for a query to
+	  be enqueued).
+      </List>
+    <Para class=apropos><Title/State Change/
+      <List>
+	<Entry><<switch(?_{SwitchName} ?_{B})>>
+	<Item>
+	  The given switch has been set to&nbsp;?_{B}.
+	<Entry><<switches(?_{R})>>
+	<Item>
+	  The settings of all switches is transmitted as a record mapping
+	  each switch name to its setting.
+	<Entry><<maxNumberOfErrors(?_{I})>>
+	<Item>
+	  The maximum number of errors after which to abort compilation
+	  has been set to&nbsp;?_{I}.
+	<Entry><<baseURL(?_{AU})>>
+	<Item>
+	  The base URL relative to which the <<require>> clause of computed
+	  functors is resolved has been set to ?_{AU}.
+	<Entry><<env(?_{Env})>>
+	<Item>
+	  The environment has been set to ?_{Env}.
+      </List>
+    <Para class=apropos><Title/Output/
+      <List>
+	<Entry><<info(?_{V})>>
+	<Item>
+	  An information message&nbsp;?_{V} is to be printed out.
+	<Entry><<info(?_{V} ?_{Coord})>>
+	<Item>
+	  An information message&nbsp;?_{V}, related to the source coordinates
+	  ?_{Coord}, is to be printed out.
+	<Entry><<message(?_{R} ?_{Coord})>>
+	<Item>
+	  An error or warning message&nbsp;?_{R}, related to the source
+	  coordinates ?_{Coord}, is to be printed out.  ?_{R}&nbsp;has
+	  the standard error message format, described in <Ptr.Extern
+	  to="ozdoc:system" key="chapter.error">.
+	<Entry><<insert(?_{V} ?_{Coord})>>
+	<Item>
+	  During parsing, the file named&nbsp;?_{V} has been read.
+	  The corresponding <<\insert>> directive (if any) was at source
+	  coordinates ?_{Coord}.
+	<Entry><<displaySource(?_{TitleV} ?_{ExtV} ?_{V})>>
+	<Item>
+	  A source text&nbsp;?_{V} with title&nbsp;?_{TitleV} is to be
+	  displayed; its format is the one for which the file extension
+	  ?_{ExtV} is typically used (such as <File/oz/ or <File/ozm/).
+	<Entry><<attention()>>
+	<Item>
+	  The error output buffer should be raised with the cursor at
+	  the current output coordinates (an error message should follow).
+      </List>
+    <Para class=apropos><Title/Synchronization/
+      <List>
+	<Entry><<pong(?_{X})>>
+	<Item>
+	  This is sent in response to a <<ping(_)>> or <<ping(_ ?_{X})>> query
+	  (see <Ptr to="section.api.engines">).  In the first case, <<unit>>
+	  is returned in&nbsp;?_{X}.
+      </List>
+  <SubSection>
+    <Title/The <<Compiler.interface>> Class/
+    <P>
+      The <<Compiler.interface>> class is a subclass of the error listener
+      class described in <Ptr to="appendix.narrator">.  Its purpose is
+      to provide a standard listener powerful enough to server many
+      purposes, to spare the user of defining an own listener.
+    <Para class=apropos><Title/Methods/
+      In addition to the standard error listener interface, it supports the
+      following methods.
+      <List>
+	<Entry><<init(?+{EngineO} ?+{VerboseL} &lt;= false)>>
+	<Item>
+	  initializes a new compiler interface, attaching it to the
+	  compiler engine ?_{EngineO}.  ?_{VerboseL} can be one of <<true>>,
+	  <<false>>, or <<auto>>:  If <<true>>, all messages, including the
+	  compiler's banner, will be output.  If <<false>>, no messages
+	  will be output.  If <<auto>>, the interface will remain silent
+	  unless an error of warning message arrives, in which case it
+	  will become verbose.
+	<Entry><<sync()>>
+	<Item>
+	  waits until the compiler engine becomes idle.
+	<Entry><<getInsertedFiles(??{Vs})>>
+	<Item>
+	  returns a list of the file names that compilation has caused
+	  the inclusion of so far, in order of appearance.
+	<Entry><<getSource(??{V})>>
+	<Item>
+	  returns the source that has last been displayed by the
+	  compiler (typically some intermediate representation), or
+	  the empty string if none.
+	<Entry><<reset()>>
+	<Item>
+	  clears the internal lists of inserted files and the displayed
+	  source.
+	<Entry><<clear()>>
+	<Item>
+	  is the same as <<reset>>.
+      </List>
+</Section>
