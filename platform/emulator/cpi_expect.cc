@@ -84,11 +84,7 @@ void OZ_Expect::addSuspend(OZ_Term * v)
     staticSuspendVarsNumber++;
 #endif
 
-#ifdef GAGA
     staticSuspendVars.request(staticSuspendVarsNumber);
-#else
-    Assert(staticSuspendVarsNumber < CPIINITSIZE);
-#endif
   }
 }
 
@@ -101,11 +97,7 @@ void OZ_Expect::addSuspend(OZ_FDPropState ps, OZ_Term * v)
     staticSuspendVars[staticSuspendVarsNumber].expected_type = FDVariable;
     staticSuspendVars[staticSuspendVarsNumber++].state.fd = ps;
 
-#ifdef GAGA
     staticSuspendVars.request(staticSuspendVarsNumber);
-#else
-    Assert(staticSuspendVarsNumber < CPIINITSIZE);
-#endif
   }
 }
 
@@ -117,11 +109,7 @@ void OZ_Expect::addSuspend(OZ_FSetPropState ps, OZ_Term * v)
     staticSuspendVars[staticSuspendVarsNumber].expected_type = FSetVariable;
     staticSuspendVars[staticSuspendVarsNumber++].state.fs = ps;
 
-#ifdef GAGA
     staticSuspendVars.request(staticSuspendVarsNumber);
-#else
-    Assert(staticSuspendVarsNumber < CPIINITSIZE);
-#endif
   }
 }
 

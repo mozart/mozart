@@ -15,17 +15,11 @@
 
 #include "cpi.hh"
 
-char * ctHeap, * ctHeapTop = new char[CPIINITSIZE * 100];
+CpiHeapClass CpiHeap;
 
-#ifdef GAGA
 EnlargeableArray<_spawnVars_t> staticSpawnVars(CPIINITSIZE);
 EnlargeableArray<_spawnVars_t> staticSpawnVarsProp(CPIINITSIZE);
 EnlargeableArray<_spawnVars_t> staticSuspendVars(CPIINITSIZE);
-#else
-_spawnVars_t * staticSpawnVars = new _spawnVars_t[CPIINITSIZE];
-_spawnVars_t * staticSpawnVarsProp = new _spawnVars_t[CPIINITSIZE];
-_spawnVars_t * staticSuspendVars = new _spawnVars_t[CPIINITSIZE];
-#endif
 
 int staticSpawnVarsNumber = 0;
 int staticSpawnVarsNumberProp = 0;

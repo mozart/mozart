@@ -19,6 +19,12 @@
 #endif
 
 #include "oz_cpi.hh"
+#include "cpi_heap.hh"
+
+#undef DEBUG_PROPAGATORS
+#ifdef DEBUG_PROPAGATORS
+#include "builtins.hh"
+#endif
 
 //
 //  On Sparc (v8), most efficient flags are (strictly) between 0x0 and
@@ -452,13 +458,20 @@ public:
   OZ_Return runPropagator(void) {
     Assert(isPropagator());
     ozstat.propagatorsInvoked.incf();
-    extern char * ctHeap, * ctHeapTop;
-    ctHeap = ctHeapTop;
+
+    CpiHeap.reset();
+
     if (am.profileMode) {
       OZ_CFunHeader *prop = item.propagator->getHeader();
       ozstat.enterProp(prop);
       int heapNow = getUsedMemoryBytes();
+#ifdef DEBUG_PROPAGATORS
+      printf("<%s", builtinTab.getName((void *)(item.propagator->getHeader()->getHeaderFunc())));
+#endif
       OZ_Return ret = item.propagator->propagate();
+#ifdef DEBUG_PROPAGATORS
+      printf(">\n"); fflush(stdout);
+#endif
       int heapUsed = getUsedMemoryBytes() - heapNow;
       prop->incHeap(heapUsed);
       ozstat.leaveProp();
@@ -466,7 +479,14 @@ public:
         ozstat.currAbstr->heapUsed -= heapUsed;
       return ret;
     } else {
+#ifdef DEBUG_PROPAGATORS
+      printf("<%s", builtinTab.getName((void *)(item.propagator->getHeader()->getHeaderFunc())));
+      OZ_Return ret = item.propagator->propagate();
+      printf(">\n"); fflush(stdout);
+      return ret;
+#else
       return item.propagator->propagate();
+#endif
     }
   }
   OZ_Propagator * getPropagator(void) {

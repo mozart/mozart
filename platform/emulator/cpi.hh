@@ -9,8 +9,6 @@
 #ifndef __CPI__H__
 #define __CPI__H__
 
-#define GAGA // TMUELLER
-
 #if defined(INTERFACE)
 #pragma interface
 #endif
@@ -19,6 +17,7 @@
 #include "oz_cpi.hh"
 #include "runtime.hh"
 #include "genvar.hh"
+#include "cpi_heap.hh"
 
 #if defined(OUTLINE)
 #define inline
@@ -30,21 +29,13 @@ struct _spawnVars_t {
   union {OZ_FDPropState fd; OZ_FSetPropState fs;} state;
 };
 
-#ifdef GAGA
 extern EnlargeableArray<_spawnVars_t> staticSpawnVars;
 extern EnlargeableArray<_spawnVars_t> staticSpawnVarsProp;
 extern EnlargeableArray<_spawnVars_t> staticSuspendVars;
-#else
-extern _spawnVars_t * staticSpawnVars;
-extern _spawnVars_t * staticSpawnVarsProp;
-extern _spawnVars_t * staticSuspendVars;
-#endif
 
 extern int staticSpawnVarsNumber;
 extern int staticSpawnVarsNumberProp;
 extern int staticSuspendVarsNumber;
-
-extern char * ctHeap, * ctHeapTop;
 
 
 class ExpectOnly : public OZ_Expect {
@@ -66,8 +57,6 @@ OZ_Boolean isPosSmallInt(OZ_Term v);
 OZ_Boolean isPosSmallFDInt(OZ_Term v);
 OZ_Boolean isPosSmallSetInt(OZ_Term v);
 
-#define CPIINITSIZE 1000
-
 #define EXPECT_BLOCK(O, P, F)                                           \
 {                                                                       \
   OZ_expect_t r = O.F(OZ_getCArg(P));                                   \
@@ -85,10 +74,6 @@ void staticAddSpawn(OZ_FDPropState ps, OZ_Term * v);
 
 void staticAddSpawnProp(OZ_FSetPropState ps, OZ_Term * v);
 void staticAddSpawn(OZ_FSetPropState ps, OZ_Term * v);
-
-void * heap_new(size_t s);
-
-void heap_delete(void *, size_t);
 
 #if !defined(OUTLINE)
 #include "cpi.icc"

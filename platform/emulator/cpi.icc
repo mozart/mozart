@@ -20,11 +20,7 @@ void staticAddSpawnProp(OZ_FDPropState ps, OZ_Term * v)
   staticSpawnVarsProp[staticSpawnVarsNumberProp].state.fd = ps;
   staticSpawnVarsProp[staticSpawnVarsNumberProp++].var = v;
 
-#ifdef GAGA
   staticSpawnVarsProp.request(staticSpawnVarsNumberProp);
-#else
-  Assert(staticSpawnVarsNumberProp < CPIINITSIZE);
-#endif
 }
 
 inline
@@ -33,11 +29,7 @@ void staticAddSpawn(OZ_FDPropState ps, OZ_Term * v)
   staticSpawnVars[staticSpawnVarsNumber].state.fd = ps;
   staticSpawnVars[staticSpawnVarsNumber++].var = v;
 
-#ifdef GAGA
   staticSpawnVars.request(staticSpawnVarsNumber);
-#else
-  Assert(staticSpawnVarsNumber < CPIINITSIZE);
-#endif
 }
 
 inline
@@ -46,11 +38,7 @@ void staticAddSpawnProp(OZ_FSetPropState ps, OZ_Term * v)
   staticSpawnVarsProp[staticSpawnVarsNumberProp].state.fs = ps;
   staticSpawnVarsProp[staticSpawnVarsNumberProp++].var = v;
 
-#ifdef GAGA
   staticSpawnVarsProp.request(staticSpawnVarsNumberProp);
-#else
-  Assert(staticSpawnVarsNumberProp < CPIINITSIZE);
-#endif
 }
 
 inline
@@ -59,25 +47,7 @@ void staticAddSpawn(OZ_FSetPropState ps, OZ_Term * v)
   staticSpawnVars[staticSpawnVarsNumber].state.fs = ps;
   staticSpawnVars[staticSpawnVarsNumber++].var = v;
 
-#ifdef GAGA
   staticSpawnVars.request(staticSpawnVarsNumber);
-#else
-  Assert(staticSpawnVarsNumber < CPIINITSIZE);
-#endif
-}
-
-inline
-void * heap_new(size_t s)  // aligned to 8
-{
-  char * tmp = ctHeap;
-  ctHeap += (s + (8 - (s & 7)));
-  return tmp;
-}
-
-inline
-void heap_delete(void *, size_t)
-{
-  // reserved for future extensions
 }
 
 inline
