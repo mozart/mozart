@@ -637,7 +637,7 @@ enum CE_RET {
   CE_FAIL
 };
 
-Bool AM::checkEntailment(Continuation *&contAfter, int &prio)
+int AM::checkEntailment(Continuation *&contAfter, int &prio)
 {
 
 loop:
@@ -658,9 +658,7 @@ loop:
       tmpBB->unsetInstalled();
       tmpBB->setCommitted(currentBoard);
 
-#ifndef NEWCOUNTER
       currentBoard->decSuspCount();
-#endif
 
       return CE_CONT;
     }
@@ -1360,33 +1358,80 @@ void engine() {
 
   LBLkillThread:
     {
+      // mm2 Assert(CBB=currentThread->trueHome);
       DebugTrace(trace("kill thread",CBB));
       Thread *tmpThread = e->currentThread;
       if (tmpThread) {  /* may happen if catching SIGSEGV and SIGBUS */
+#ifdef NEWCOUNTER
+	Board *nb=0;
+	if (tmpThread->hasNotificationBoard()) {
+	  nb = tmpThread->notificationBoard->getBoardFast();;
+	  Assert(nb==tmpThread->getBoardFast());
+	}
+	e->currentThread=(Thread *) NULL;
+	Board *bb=tmpThread->getBoardFast();
+	if (bb->isSolve()) {
+	  Assert(!bb->isReflected());
+	  SolveActor *sa = SolveActor::Cast(bb->getActor());
+	  sa->decThreads();
+	  nb=sa->getBoardFast();
+	}
+	if (bb->isFailed()) {
+	  if (nb) e->decSolveThreads(nb);
+	  goto LBLstart;
+	}
+	if (!tmpThread->isDead()) {
+	  bb->decSuspCount1();
+	}
+	e->disposeThread(tmpThread);
+      loop:
+	if (CBB != bb) {
+	  switch (e->installPath(bb)) {
+	  case INST_REJECTED:
+	  case INST_FAILED:
+	    if (nb) e->decSolveThreads(nb);
+	    goto LBLstart;
+	  case INST_OK:
+	    break;
+	  }
+	}
+
+	if (CBB->isRoot()) {
+	  goto LBLstart;
+	}
+
+	Continuation *cont;
+	int prio;
+	switch (e->checkEntailment(cont,prio)) {
+	case CE_FAIL:
+	  if (nb) e->decSolveThreads(nb);
+	  HF_NOMSG;
+	case CE_CONT:
+	  LOADCONT(cont);
+	  e->currentThread = e->newThread(prio,CBB);
+	  CBB->incSuspCount();
+	  if (CBB->isSolve()) {
+	    SolveActor *sa = SolveActor::Cast(CBB->getActor());
+	    sa->incThreads();
+	  }
+	  if (e->currentSolveBoard) {
+	    e->currentThread->setNotificationBoard(CBB);
+	  }
+	  e->restartThread();
+	  goto LBLemulateHook;
+	case CE_NOTHING:
+	  if (nb) {
+	    e->decSolveThreads(nb->getBoardFast()); // nb is maybe committed
+	  }
+	  goto LBLstart;
+	}
+#else
 	if (tmpThread->hasNotificationBoard()) {
 	  Board *nb = tmpThread->notificationBoard->getBoardFast();
-#ifdef NEWCOUNTER
-	  Assert(nb==tmpThread->getBoardFast());
-#endif
 	  e->decSolveThreads(nb);
 	}
 	e->currentThread=(Thread *) NULL;
 	e->disposeThread(tmpThread);
-#ifdef NEWCOUNTER
-	Board *bb=tmpThread->getBoardFast();
-	if (!bb->isFailed()) {
-	  bb->decSuspCount();
-	  if (CBB != bb) {
-	    switch (e->installPath(bb)) {
-	    case INST_REJECTED:
-	    case INST_FAILED:
-	      goto LBLstart;
-	    case INST_OK:
-	      break;
-	    }
-	  }
-	  goto LBLcheckEntailment;
-	}
 #endif
       }
       goto LBLstart;
@@ -2636,9 +2681,7 @@ void engine() {
 	e->setCurrent(CBB->getParentFast());
 	tmpBB->unsetInstalled();
 	tmpBB->setCommitted(CBB);
-#ifndef NEWCOUNTER
 	CBB->decSuspCount();
-#endif
 	DISPATCH(1);
       }
 
@@ -2832,6 +2875,7 @@ void engine() {
    * REDUCE Board
    * ----------------------------------------------------------------------- */
 
+#ifndef NEWCOUNTER
   /*
    * check entailment and stability
    *  after thread is finished or top commit
@@ -2840,11 +2884,7 @@ LBLcheckEntailment:
   {
     /* optimize: builtin called on toplevel mm (29.8.94) */
     if (CBB == e->rootBoard) {
-#ifdef NEWCOUNTER
-      goto LBLstart;
-#else
       goto LBLpopTask;
-#endif
     }
 
     Continuation *cont;
@@ -2854,25 +2894,12 @@ LBLcheckEntailment:
       HF_NOMSG;
     case CE_CONT:
       LOADCONT(cont);
-#ifdef NEWCOUNTER
-      // hack mm2 (priority ??)
-      e->currentThread = e->newThread(prio,CBB);
-      CBB->incSuspCount();
-      if (e->currentSolveBoard != (Board *) NULL) {
-	e->incSolveThreads (e->currentSolveBoard);
-	e->currentThread->setNotificationBoard (e->currentSolveBoard);
-      }
-      e->restartThread();
-#endif
       goto LBLemulateHook;
     case CE_NOTHING:
-#ifdef NEWCOUNTER
-      goto LBLstart;
-#else
       goto LBLpopTask;
-#endif
     }
   }
+#endif
 
 // ----------------- end reduce -------------------------------------------
 
@@ -2904,6 +2931,7 @@ LBLcheckEntailment:
     if (e->currentThread->getBoardFast()==CBB) {
       e->setCurrent(aa->getBoardFast());
       e->currentThread->home=CBB;
+      Assert(CBB);
       e->currentThread->notificationBoard=CBB;
       CBB->incSuspCount();
     } else
