@@ -24,7 +24,6 @@ OZENGINE        = @OZENGINE@
 OZFLAGS		= 
 OZC		= @OZC@
 
-SCOMPILE	= $(OZC) $(OZFLAGS) -c
 COMPILE		= $(OZC) $(OZFLAGS) -l Standard -c
 EXEC		= $(OZC) $(OZFLAGS)
 COMPILESYSLET	= $(OZC) $(OZFLAGS) -l Standard -x
@@ -61,7 +60,8 @@ FUNCTORS = \
 	$(DPSRC:%=%.ozf) \
 	$(WPSRC:%=%.ozf) \
 	$(MISCSRC:%=%.ozf) \
-	Compiler.ozf 
+	Compiler.ozf  \
+	Init.ozf
 
 SYSLETS = ozc ozserver ozvsserver
 
@@ -88,7 +88,7 @@ INITSRC = $(INITSRC1:%=init/%) Init.oz \
 	../url-defaults.oz ../functor-defaults.oz
 
 Init.ozf: $(INITSRC)
-	OZMAINIT="" $(SCOMPILE) Init.oz -o Init.ozf
+	OZMAINIT="" $(COMPILE) Init.oz -o Init.ozf
 
 #---------------------------------------------------------------------
 # Standard
@@ -111,9 +111,7 @@ Standard.ozf: $(STANDARDSRC)
 # Remaining functors
 #---------------------------------------------------------------------
 
-$(FUNCTORS): Standard.ozf Init.ozf
-
-Standard.ozf: Init.ozf
+$(FUNCTORS): Standard.ozf
 
 %.ozf: sp/%.oz Standard.ozf
 	$(COMPILE) $< -o $@
@@ -223,7 +221,7 @@ ozvsserver: Standard.ozf MakeOzVSServer.oz dp/VSServer.oz
 .PHONY: install install-stage install-main install-images install-cache
 
 LIBFUNCTORS = \
-	$(FUNCTORS:%=$(OZLIB)/%) $(OZLIB)/Init.ozf
+	$(FUNCTORS:%=$(OZLIB)/%)
 BINFILES = \
 	$(SYSLETS:%=$(OZBIN)/%)
 STAGEEXTRAFILES = \
@@ -284,7 +282,7 @@ clean:
 	-rm -f compiler-Version.oz compiler-Builtins.oz
 	-rm -f compiler-Opcodes.oz
 	-rm -f envgen compiler-Env.oz
-	-rm -f Init.ozf ozc.ozp Standard.ozf $(FUNCTORS) $(FUNFUNCTORS)
+	-rm -f ozc.ozp Standard.ozf $(FUNCTORS) $(FUNFUNCTORS)
 	-rm -f $(SYSLETS)
 
 veryclean: clean
