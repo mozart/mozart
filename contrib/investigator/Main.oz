@@ -28,7 +28,7 @@ import
 
    System
 
-   Aux(vectorToList: VectorToList varEq: VarEq)
+   Misc(vectorToList: VectorToList varEq: VarEq)
    
    Error
    
