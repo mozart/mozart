@@ -1046,7 +1046,10 @@ void * oz_getForeignPointer(TaggedRef t) {
  *=================================================================== */
 
 inline
-Bool oz_isFeature(TaggedRef lab) { return oz_isLiteral(lab) || oz_isInt(lab); }
+Bool oz_isFeature(TaggedRef f) { 
+  return oz_isToken(f) || oz_isBigInt(f);
+; 
+}
 
 int featureEqOutline(TaggedRef a, TaggedRef b);
 
