@@ -26,6 +26,15 @@
         <Item>
           returns the procedure arity of&nbsp;?_{P}, &ie;, the number of
           arguments which ?_{P} takes.
+
+        <Entry><<apply>>
+          <Index class=tails/<<Procedure>><And><<apply>>/
+        <Synopsis>
+          <<{Procedure.apply ?+{P} ?+{Xs}}>>
+        <Item>
+          applies the procedure&nbsp;?_{P} to the arguments given
+          by the elements of the list&nbsp;?_{Xs}, provided that
+          <<<{Procedure.arity ?_{P}} == {Length ?_{Xs}}>>>
       </List>
 
   <Section>
