@@ -100,13 +100,9 @@
 (defvar oz-indent-chars 3
 "*Indentation of Oz statements with respect to containing block.")
 
-(defvar oz-input-to-oz nil 
-"Defines wheter direkt input to oz is allowed")
-
 (defvar oz-mode-syntax-table nil)
 (defvar oz-mode-abbrev-table nil)
 (defvar oz-mode-map (make-sparse-keymap))
-(defvar oz-input-mode-map nil)
 
 (defvar oz-compiler "oz.compiler"
   "Oz system used by run-oz")
@@ -229,7 +225,10 @@
   (define-key map "\M-l"    'oz-feed-line)
   (define-key map "\C-c\C-e"    'oz-toggle-errors)
   (define-key map "\C-c\C-c"    'oz-toggle-compiler-window)
-  (define-key map "\C-c\C-m"    'oz-toggle-machine-window)
+  (if lucid-emacs
+      ;; do not show it as "C-c C-RET" but as "C-c C-m" in menu bar
+      (define-key map [(control c) (control m)]    'oz-toggle-machine-window)
+      (define-key map "\C-c\C-m"    'oz-toggle-machine-window))
   (define-key map "\C-c\C-n"    'oz-new-buffer)
   (define-key map "\C-c\C-z"    'oz-prettyprint)
   (define-key map "\C-c\C-r"    'run-oz)
@@ -367,10 +366,8 @@ if that value is non-nil."
   (setq major-mode 'oz-mode)
   (setq mode-name "Oz")
   (oz-mode-variables)
-;  (oz-default-font)
   (if lucid-emacs
       (set-menubar oz-menubar))
-;      (set-buffer-menubar oz-menubar))
   (run-hooks 'oz-mode-hook))
 
 (defun run-oz ()
@@ -399,17 +396,15 @@ if that value is non-nil."
 	(oz-set-state 'oz-machine-state "booting...")
 	(make-comint "Oz Machine" oz-machine nil "-S" file)
 
-        (save-excursion
-          (set-buffer "*Oz Compiler*")
-          (oz-input-mode))
         (set-process-filter  (get-process "Oz Compiler") 'oz-compiler-filter)
         (set-process-filter  (get-process "Oz Machine") 'oz-machine-filter)
 
-	;; make sure buffer exists
-	(get-buffer-create "*Oz Compiler*")
+	;; make sure buffers exist
+	(oz-create-buffer "*Oz Compiler*")
+	(oz-create-buffer "*Oz Machine*")
+	(oz-create-buffer "*Oz Errors*")
 	
 	(set-buffer (process-buffer (start-oz-process)))
-	(oz-input-mode)
 	(set-process-filter (get-process "Oz Compiler") 'oz-compiler-filter)
 	(set-process-filter (get-process "Oz Machine")  'oz-machine-filter)
 
@@ -418,6 +413,10 @@ if that value is non-nil."
 	(oz-hide-errors)
 	(get-process "Oz Compiler"))))
 
+(defun oz-create-buffer (buf)
+  (save-excursion
+    (set-buffer (get-buffer-create buf))
+    (use-local-map oz-mode-map)))
 
 (defun oz-doc ()
   (interactive)
@@ -480,7 +479,10 @@ if that value is non-nil."
 (defun oz-hide-errors()
   (interactive)
   (if (get-buffer "*Oz Errors*")
-      (delete-windows-on "*Oz Errors*")))
+      (progn
+	(delete-windows-on "*Oz Errors*")
+	(if oz-prev-win
+	    (oz-show-buffer oz-prev-win)))))
 
 
 
@@ -489,14 +491,16 @@ if that value is non-nil."
   (oz-toggle-window "*Oz Compiler*"))
 
 
-(defun oz-toggle-errors()
-  (interactive)
-  (oz-toggle-window "*Oz Errors*"))
-
-
 (defun oz-toggle-machine-window()
   (interactive)
   (oz-toggle-window "*Oz Machine*"))
+
+
+(defun oz-toggle-errors()
+  (interactive)
+  (if (get-buffer-window "*Oz Errors*")
+      (oz-hide-errors)
+    (oz-toggle-window "*Oz Errors*")))
 
 
 (defun oz-toggle-window(buffername)
@@ -520,18 +524,37 @@ if that value is non-nil."
   (process-send-eof "Oz Compiler"))
 
 
+(defvar oz-prev-win nil "")
+(setq oz-other-buffer-percent 30)
+(defvar oz-other-buffer-percent 35 
+  "
+   How many percent of the actual screen will be occupied by the
+   OZ compiler, machine and error window")
+
 (defun oz-show-buffer (buffer)
-  (let* ((win-to-split (or (get-buffer-window "*Oz Machine*")
-			   (get-buffer-window "*Oz Compiler*")
-			   (get-buffer-window "*Oz Errors*")
-			   (selected-window)))
-	 (old-win (selected-window))
-	 (win (or (get-buffer-window buffer)
-		  (split-window win-to-split))))
+  (if (equal (get-buffer "*Oz Errors*") buffer)
+      (setq oz-prev-win (or (if (get-buffer-window "*Oz Machine*") 
+				(get-buffer "*Oz Machine*"))
+			    (if (get-buffer-window "*Oz Compiler*") 
+				(get-buffer "*Oz Compiler*"))))
+    (setq oz-prev-win nil))
+  (let* ((old-win (selected-window))
+	 (edges (window-edges old-win))
+	 (win (or (get-buffer-window "*Oz Machine*")
+		  (get-buffer-window "*Oz Compiler*")
+		  (get-buffer-window "*Oz Errors*")
+		  (split-window old-win
+				(/ (* (- (nth 3 edges) (nth 1 edges))
+				      (- 100 oz-other-buffer-percent))
+				   100)))))
     (select-window win)
     (set-window-buffer win buffer)
     (goto-char (point-max))
     (select-window old-win))
+
+  (bury-buffer "*Oz Machine*")
+  (bury-buffer "*Oz Compiler*")
+  (bury-buffer "*Oz Errors*")
   (bury-buffer buffer))
 
 (defun oz-scroll-to-end(buf)
@@ -1062,7 +1085,6 @@ if that value is non-nil."
   (let ((buf (get-buffer-create "*Oz Errors*"))
 	old-point)
     (save-excursion
-      (setq buf (get-buffer-create "*Oz Errors*"))
       (set-buffer buf)
       ; if buffer is not visible then clear it out
       (if (not (get-buffer-window buf))
@@ -1081,56 +1103,8 @@ if that value is non-nil."
 
 
 (add-hook 'find-file-hooks 'oz-fontify-buffer)
-;(add-hook 'write-file-hooks 'oz-fontify-buffer)
 
 
-(defun oz-input-mode ()
-  "Major mode for interacting with an inferior Oz process.
-
-The following commands are available:
-\\{oz-input-mode-map}
-
-Commands:
-
-Meta-Return sends current input.
-\\[oz-delchar-or-maybe-eof-or-dynamic-complete] behavs as in \"ile\": either send EOF, delete character or list completions.
-\\[comint-kill-input] and \\[backward-kill-word] are kill commands, imitating normal Unix input editing.
-\\[comint-interrupt-subjob] interrupts the shell or its current subjob if any.
-\\[comint-stop-subjob] stops, likewise. \\[comint-quit-subjob] sends quit signal, likewise."  
-  (interactive)
-  (comint-mode)
-  (setq comint-prompt-regexp "^>+ *")
-  (setq major-mode 'oz-input-mode)
-  (setq mode-name "Oz Input")
-  (cond (t;;(not oz-input-mode-map)
-         (setq oz-input-mode-map (copy-keymap comint-mode-map))
-         (define-key oz-input-mode-map "\C-m" 'newline)
-         (define-key oz-input-mode-map "\C-d" 
-	   'oz-delchar-or-maybe-eof-or-dynamic-complete)
-         (define-key oz-input-mode-map "\M-\C-m" 'oz-send-input)
-         (define-key oz-input-mode-map "\t" 'comint-dynamic-complete)
-         (define-key oz-input-mode-map "\M-?"
-                     'comint-dynamic-list-completions)))
-  (use-local-map oz-input-mode-map)
-  (make-local-variable 'scroll-step)
-  (setq scroll-step 1)
-  (run-hooks 'oz-input-mode-hook))
-
-(defun oz-send-input()
-  (interactive)
-  (comint-send-input)
-  (process-send-eof))
-
-(defun oz-delchar-or-maybe-eof-or-dynamic-complete ()
-  (interactive)
-  (if (eobp)
-      (if (bolp)
-	  (oz-send-input)
-	  (comint-dynamic-list-completions))
-      (delete-char 1)))
-
-
-  
 (defun oz-print-buffer()
   "Print buffer."
   (interactive)
