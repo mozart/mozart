@@ -10,6 +10,7 @@
 */
 
 #undef TURNED_OFF
+#define TURNED_OFF
 
 #include <ctype.h>
 
