@@ -42,9 +42,10 @@ private:
   int hi, mid;
 
 public:
-  ThreadsPool(void);
-  ~ThreadsPool() {};
+  ThreadsPool(void) {};
+  ~ThreadsPool(void) {};
 
+  void init(void);
 
   void gc();
 
