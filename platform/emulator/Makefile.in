@@ -47,7 +47,7 @@ LIBS=		$(STATIC_MODULELIBS) @LIBS@
 
 INCS=		-I. -I$(SRCDIR)
 M4_D=		-DEMUDIR=$(SRCDIR)
-TARGETS=	emulator.exe text2pickle.exe $(DYNAMIC_MODULETARGETS)
+TARGETS=	$(EMULATOR_EXE) text2pickle.exe $(DYNAMIC_MODULETARGETS)
 SUBDIRS=	libdp libfd libfset
 OZVERSION=	$(SRCTOP)/OZVERSION
 
@@ -73,17 +73,17 @@ MODSPECS= \
 
 MODINTERS = $(MODSPECS:%=mod%-if.cc)
 
-CREATEDFILES=						\
-	instrtab.hh opcodes.hh				\
-	newmarshalcode.cc mozart.c	\
-	atoms.hh atoms.cc				\
-	config.h					\
-	version.cc initffuns.cc copycode.cc opcodes.cc	\
+CREATEDFILES=					\
+	instrtab.hh opcodes.hh			\
+	newmarshalcode.cc			\
+	atoms.hh atoms.cc			\
+	config.h				\
+	version.cc copycode.cc opcodes.cc	\
 	$(MODINTERS)
 
 OTHERSRCS= \
 	main.cc \
-	version.cc initffuns.cc \
+	version.cc \
 	statisti.cc trace.cc \
 	print.cc base.cc ozconfig.cc \
 	foreign.cc dpInterface.cc boot-manager.cc \
@@ -206,7 +206,7 @@ ALLSRCS= $(SRCS) \
 ### TARGETS
 ############################################################################
 
-.NOEXPORT: emulate.o emulator.exe
+.NOEXPORT: emulate.o $(EMULATOR_EXE)
 .PHONY:	all first install install-bin install-inc \
 	install-dir depend tags clean cleaner distclean veryclean
 
@@ -347,6 +347,12 @@ first: $(CREATEDFILES)
 emulator.exe: $(PRGDEP)
 	$(LD) $(EMULDFLAGS) $(LDFLAGS) $(LDOPT) -o $@ $(OBJS) $(LIBS)
 
+emulator.dll: $(PRGDEP)
+	$(DLLTOOL) --as $(AS) --output-def emulator.def \
+	--output-lib libemulator.a --dllname $@ $(OBJS) && \
+	$(DLLWRAP) --driver-name $(CXX) --dlltool-name $(DLLTOOL) --as $(AS) \
+	 $(EMULDFLAGS) $(LDFLAGS) -o $@ --def emulator.def $(OBJS) $(LIBS)
+
 text2pickle.exe: $(TEXT2PICKLEOBJS)
 	$(LD) $(EMULDFLAGS) $(LDFLAGS) $(LDOPT) -o $@ $(TEXT2PICKLEOBJS)
 
@@ -360,21 +366,18 @@ install-bin: $(TARGETS) $(BINDIR)
 install-inc: $(INCDIR)
 	$(INSTALL_FILE) $(SRCDIR)/mozart.h $(INCDIR)
 	$(INSTALL_FILE) $(SRCDIR)/extension.hh $(INCDIR)
-	$(INSTALL_FILE) $(BUILDDIR)/mozart.c $(INCDIR)
 	$(INSTALL_FILE) $(SRCDIR)/mozart_cpi.hh $(INCDIR)
+	if [ -r emulator.def ]; then $(INSTALL_FILE) emulator.def $(INCDIR); fi
 
 $(BINDIR) $(INCDIR):
 	$(INSTALL_DIR) $@
-
-initffuns.cc mozart.c: mozart.h $(OZVERSION)
-	$(SHELL) $(SRCDIR)/makeffuns $(SRCDIR) `$(OZVERSION)`
 
 version.cc: version.sed $(filter-out version.cc,$(ALLSRCS))
 	sed -e "s/HEREGOESDATE/@OZBUILDDATE@/" \
 	     -e "s/OZPLATFORM/$(PLATFORM)/" \
 	     $(SRCDIR)/version.sed > version.cc
 
-depend:: version.cc initffuns.cc $(ALLSRCS)
+depend:: version.cc $(ALLSRCS)
 	$(MAKE) first
 	$(DEPEND) $^ > Makefile.deps
 
