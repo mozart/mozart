@@ -115,7 +115,8 @@ LIBFILES = \
 
 COMPONENTS = \
 	Init.ozc SP.ozc OP.ozc AP.ozc CP.ozc WP.ozc DP.ozc \
-	Compiler.ozc Misc.ozc StandardModules.ozc StandardSubModules.ozc
+	Compiler.ozc Misc.ozc StandardModules.ozc StandardSubModules.ozc \
+	Tools.ozc
 
 LIBCOMPONENTS = $(COMPONENTS:%=$(OZLIB)/%)
 
@@ -154,6 +155,9 @@ tyc/%.tyc: tyc/%.typ $(DUMPINTRO) Init.ozc
 %.ozc: %.oz
 	$(COMPILE) $< -o $@
 
+%.ozc: ap/%.oz
+	$(COMPILE) $< -o $@
+
 %.ozc: compiler/%.oz
 	$(COMPILE) $< -o $@
 
@@ -165,12 +169,6 @@ Base.ozc: Standard.ozc
 
 Standard.ozc: $(STANDARDSRC) Base.env Standard.env
 	OZMAINIT="" $(EXEC) DumpInitial.oz
-
-StandardModules.ozc: ap/StandardModules.oz
-	$(COMPILE)  $< -o $@
-
-StandardSubModules.ozc: ap/StandardSubModules.oz
-	$(COMPILE)  $< -o $@
 
 SP.ozc: $(DUMPINTRO) $(SPSRC) SP.env Init.ozc
 
