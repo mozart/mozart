@@ -10,8 +10,8 @@
 #   Leif Kornstaedt, 1998
 #
 # Last change:
-#   $Date: 1998/09/04 15:10:25 $ by $Author: kornstae $
-#   $Revision: 1.4 $
+#   $Date: 1998/09/04 15:17:07 $ by $Author: kornstae $
+#   $Revision: 1.5 $
 #
 # This file is part of Mozart, an implementation of Oz 3:
 #   $MOZARTURL$
@@ -34,46 +34,46 @@ count=$2
 outdir=$3
 
 tmpdir=/tmp/ps2gif.$$
+trap 'rm -rf $tmpdir' 0 1 2 15
 mkdir $tmpdir
+
 cp $infile $tmpdir/x.tex
-
-(cd $tmpdir
-
-latex x 1>&2 || exit 1
-dvips x.dvi -o x.ps 1>&2
-
-mkfifo moo
-
-gs -dTextAlphaBits=4 -dGraphicsAlphaBits=4 -r102 \
--sDEVICE=ppmraw -sOutputFile=latex%d.ppm x.ps < moo |
 (
-    i=0
-    while [ $i -lt $count ]; do
-        exit=no
-        while [ $exit ]; do
-            read line
-            case $line in
-            *showpage*)
-                exit=""
-                ;;
-            *)
-                echo $line 1>&2
-                ;;
-            esac
+    cd $tmpdir
+
+    latex x 1>&2 || exit 1
+    dvips x.dvi -o x.ps 1>&2
+
+    mkfifo moo
+
+    gs -dTextAlphaBits=4 -dGraphicsAlphaBits=4 -r102 \
+    -sDEVICE=ppmraw -sOutputFile=latex%d.ppm x.ps < moo |
+    (
+        i=0
+        while [ $i -lt $count ]; do
+            exit=no
+            while [ $exit ]; do
+                read line
+                case $line in
+                *showpage*)
+                    exit=""
+                    ;;
+                *)
+                    echo $line 1>&2
+                    ;;
+                esac
+            done
+            i=`expr $i + 1`
+            pnmcrop < latex$i.ppm |
+            ppmtogif -interlace -transparent rgbi:1/1/1 > latex$i.gif || exit 1
+            rm latex$i.ppm
+            echo Wrote latex$i.gif 1>&2
+            echo
         done
-        i=`expr $i + 1`
-        pnmcrop < latex$i.ppm |
-        ppmtogif -interlace -transparent rgbi:1/1/1 > latex$i.gif
-        rm latex$i.ppm
-        echo Wrote latex$i.gif 1>&2
-        echo
-    done
-    echo quit
+        echo quit
     ) > moo
-)
+) || exit 1
 
 mv $tmpdir/latex*.gif $outdir
-
-rm -rf $tmpdir
 
 exit 0
