@@ -24,7 +24,7 @@
 
 %builtins_all =
     (
-     'disassemble'      => { in  => ['+procedure/1'],
+     'disassemble'      => { in  => ['+procedure'],
                              out => ['+value'],
                              BI  => BIdisassemble },
      );
