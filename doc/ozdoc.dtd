@@ -160,7 +160,7 @@
         arg1    CDATA   #IMPLIED        -- first argument, if binary prop --
         arg2    CDATA   #IMPLIED        -- second argument, if binary prop --
 >
-<!ELEMENT abstract - O (%p.chars.model;)*>
+<!ELEMENT abstract - O (%p.chars.model;)>
 <!ATTLIST abstract
         %common.attr;
 >
