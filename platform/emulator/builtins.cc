@@ -2239,7 +2239,7 @@ OZ_BI_define(BIadjoinAt,3,1)
   case UVAR:
   case SVAR:
   case CVAR:
-    if (!oz_isFree(rec) || tagged2CVar(rec)->getType()!=OFSVariable) {
+    if (!oz_isFree(rec) && tagged2CVar(rec)->getType()!=OFSVariable) {
       oz_typeError(0,"Record");
     } else if (oz_isFeature(fea) || oz_isFree(fea)) {
       oz_suspendOnPtr(recPtr);
@@ -2326,7 +2326,7 @@ OZ_Return adjoinPropListInline(TaggedRef t0, TaggedRef list, TaggedRef &out,
       }
       goto typeError0;
     case CVAR:
-      if (!oz_isFree(t0) || tagged2CVar(t0)->getType()!=OFSVariable)
+      if (!oz_isFree(t0) && tagged2CVar(t0)->getType()!=OFSVariable)
         goto typeError0;
       if (recordFlag) {
         return SUSPEND;
@@ -2354,7 +2354,7 @@ OZ_Return adjoinPropListInline(TaggedRef t0, TaggedRef list, TaggedRef &out,
       out=makeTaggedRef(t0Ptr);
       return SUSPEND;
     case CVAR:
-      if (!oz_isFree(t0) || tagged2CVar(t0)->getType()!=OFSVariable)
+      if (!oz_isFree(t0) && tagged2CVar(t0)->getType()!=OFSVariable)
         goto typeError0;
       out=makeTaggedRef(t0Ptr);
       return SUSPEND;
@@ -2391,7 +2391,7 @@ OZ_Return adjoinPropListInline(TaggedRef t0, TaggedRef list, TaggedRef &out,
     out=makeTaggedRef(t0Ptr);
     return SUSPEND;
   case CVAR:
-    if (!oz_isFree(t0) || tagged2CVar(t0)->getType()!=OFSVariable)
+    if (!oz_isFree(t0) && tagged2CVar(t0)->getType()!=OFSVariable)
         goto typeError0;
     out=makeTaggedRef(t0Ptr);
     return SUSPEND;
@@ -2455,7 +2455,7 @@ OZ_Return BIarityInline(TaggedRef term, TaggedRef &out)
   if (out) return PROCEED;
   if (oz_isFree(term)) return SUSPEND;
   if (isCVar(tag)) {
-    if (!oz_isFree(term) || tagged2CVar(term)->getType()!=OFSVariable)
+    if (tagged2CVar(term)->getType()!=OFSVariable)
       oz_typeError(0,"Record");
     return SUSPEND;
   }
