@@ -2555,9 +2555,15 @@ LBLkillThread:
 
       int prio = CPP;
       int defPrio = ozconf.defaultPriority;
-      if (prio > defPrio) {
-        prio = defPrio;
-      }
+      //
+      //  kost@ 1.1.96  bug fix(?)
+      // in sequential mode, new threads are created for every deep
+      // guard in a parallel conditional. Actually, they should have
+      // the same priority. I think so, at least --
+      //  Michael, what do you think about this?
+      // if (prio > defPrio) {
+      //   prio = defPrio;
+      // }
 
       Thread *tt = e->createThread(prio,e->currentThread->getCompMode());
 
