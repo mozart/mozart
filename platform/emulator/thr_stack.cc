@@ -111,7 +111,6 @@ int TaskStack::frameSize(ContFlag cFlag)
   switch (cFlag){
   case C_JOB:
   case C_LOCAL:  
-  case C_SET_MODETOP:  
     return 1;
   case C_CONT: 
     return 3;      
