@@ -66,7 +66,7 @@ Bool isInTree(Board *b);
 //// switches for debug macros
 #define CHECKSPACE  // check if object is really copied from heap (1 chunk) 
 // #define INITFROM    // initialise copied object
-// #define VERBOSE     // inform user about current state of gc
+#define VERBOSE     // inform user about current state of gc
 // Note: in VERBOSE modus big external file (verb-out.txt) is produced.
 // It contains very detailed debug (trace) information; 
 
@@ -1010,18 +1010,18 @@ inline
 Bool updateVar(TaggedRef var)
 {
   GCPROCMSG("updateVar");
-  Board *home;
+  Board * varhome;
   if (opMode == IN_TC) {
     if (isUVar(var)) {
-      home = tagged2VarHome(var);
+      varhome = tagged2VarHome(var);
     } else if (isSVar(var)) {
-      home = tagged2SVar(var)->getHome1();
+      varhome = tagged2SVar(var)->getHome1();
     } else {
-      home = tagged2CVar(var)->getHome1();
+      varhome = tagged2CVar(var)->getHome1();
     }
 
-    home = home->gcGetBoardDeref();
-    return (home != NULL && isLocalBoard(home));
+    varhome = varhome->gcGetBoardDeref();
+    return (varhome != NULL && isLocalBoard(varhome));
   }
 
   return OK;
@@ -1204,8 +1204,14 @@ void AM::gc(int msgLevel)
     am.currentTaskStack = (TaskStack *) NULL;
   }
 
-  if (FDcurrentTaskSusp != (Suspension *) NULL)
+  if (FDcurrentTaskSusp != (Suspension *) NULL) {
+    warning("FDcurrentTaskSusp must be NULL!");
     FDcurrentTaskSusp = FDcurrentTaskSusp->gcSuspension (NO);
+  }
+#ifdef DEBUG_STABLE
+  board_constraints = board_constraints->gc(NO);
+#endif
+  
   Thread::GC();
 
   GCPROCMSG("ioNodes");
