@@ -27,10 +27,9 @@ require
 import
    Application(exit:Exit getCgiArgs:GetArgs)
    HTML(out:Out)
-%   System
    Pickle
    Connection
-%   Browser
+   OS
 define
    /*
    [store(data:faq(answer:[79 107 44 32 100 111 32 108 105 107 101 32 116 104 105 115 46 46 46 46 10 10]
@@ -41,49 +40,54 @@ define
    */
 
    proc{SendQuestion _ Body}
-      B Fs1={{Connection.take {Pickle.load URL}} S_getFAQ($)}
-      Fs={Sort Fs1 fun{$ N O} N.id < O.id end}
+      Host=local A={OS.getEnv 'REMOTE_HOST'} in
+              if A==false then "<Unknown Host>" else A end
+           end
+      B Fs1={{Connection.take {Pickle.load URL}} S_getFAQ($ host:Host)}
+      Fs={Sort Fs1 fun{$ N O} N.id > O.id end}
    in
-      B=body(%text:"#000000" bgcolor:"#FFFFFF" link:"#0000EE" vlink:"#551A8B" alink:"#FF0000"
-             p("Posted FAQ's")
-%            {Value.toVirtualString Fs 1000 1000}
-             {List.toRecord p {List.mapInd Fs fun{$ I X}
-                                                 try
-                                                    I#p(table(width:"100%" border:2 %bgcolor:"#ffffff"
-                                                              tr(th(align:left %colspan:2
-%                                                                   "Posted by " X.data.poster " "
-                                                                    X.data.date.date "-"
-                                                                    X.data.date.year ", " X.data.date.time))
-                                                              tr(%bgcolor:"#ffff00"
-                                                                 td("Question:" br X.data.question))
-                                                              tr(%bgcolor:"#ffcc00"
-                                                                 td("Answer:" br X.data.answer))
-                                                             )
-                                                       )
-                                                 catch _ then
-                                                    I#p("Error in Data")
-                                                 end
-                                              end}}
-             hr
-             em("Generated on the fly by Mozart Instant Messenger")
+      B=body("\n" h1('class':title "Posted FAQ's") "\n" hr br
+             {List.toRecord '#' {List.mapInd Fs fun{$ I X}
+                                                   try
+                                                      I#'#'(table(width:"80%"
+                                                                  "\n"
+                                                                  tr(th(align:left
+                                                                        "Posted by " X.data.poster " "
+                                                                        X.data.date.date "-"
+                                                                        X.data.date.year ", " X.data.date.time))
+                                                                  "\n"
+                                                                  tr(td("Question:" br X.data.question))
+                                                                  "\n"
+                                                                  tr(td("Answer:" br X.data.answer))
+                                                                 ) "\n"
+                                                            br hr br
+                                                           )
+                                                   catch _ then
+                                                      I#p("Error in Data" "\n")
+                                                   end
+                                                end}}
+             "\n"
+             em("Generated on the fly by Mozart Instant Messenger") "\n"
             )
-      Body=B
+      Body=html(head("\n" title("Frequently Asked Questions")
+                     '\n<LINK href="http://www.sics.se/mozart/stylesheets/doc.css" rel="stylesheet" type="text/css">\n'
+                    )
+                "\n" B "\n"
+               )
    end
 
    proc {ExecCgi}
-      Args Title Body
+      Args Body
    in
       try
          Args={GetArgs record(login(single type:string default:"all"))}
          {SendQuestion Args Body}
-         Title = "Frequently Asked Questions"
       catch XX then
-         Title = "Error"
          Body = {Value.toVirtualString XX 20 20}
       end
 
       try
-         {HTML.out Title Body}
+         {HTML.out Body}
       catch _ then
          skip
       end
