@@ -6413,6 +6413,13 @@ OZ_C_proc_begin(BIcontThread,1)
 }
 OZ_C_proc_end
 
+OZ_Return waitForArbiterInline(TaggedRef val)
+{ 
+  NONVAR( val, _1);
+  return PROCEED;
+}
+DECLAREBI_USEINLINEREL1(BIwaitForArbiter,waitForArbiterInline)
+
 /* ------- Builtins to handle toplevel variables in the debugger ---------- */
 
 OZ_C_proc_begin(BItopVarInfo,2) // needs work --BL
@@ -7609,7 +7616,7 @@ BIspec allSpec[] = {
   {"Debug.breakpointAt",4,BIbreakpointAt},
   {"Debug.breakpoint",0,BIbreakpoint},
   {"Debug.displayCode", 2, BIdisplayCode},
-  {"waitForArbiter", 1, BIwaitForArbiter},
+  {"waitForArbiter", 1, BIwaitForArbiter, (IFOR) waitForArbiterInline},
 
   {"topVarInfo",2,BItopVarInfo},
   {"topVars",2,BItopVars},
