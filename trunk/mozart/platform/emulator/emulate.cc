@@ -36,7 +36,7 @@
       if (ozconf.errorVerbosity > 1) {                                        \
         message("\n");                                                        \
         {MSG_LONG;}                                                           \
-	e->currentThread->printDebug(PC);		      		      \
+	e->currentThread->printTaskStack(PC);		      		      \
       }                                                                       \
       errorTrailer();                                                         \
     } else {                                                                  \
@@ -442,7 +442,7 @@ void AM::handleToplevelBlocking()
   message("\n");
   message("(Hint: don't forget to use task ... end)\n");
   message("\n");
-  currentThread->printDebug(NOCODE);
+  currentThread->printTaskStack(NOCODE);
   message("******************************************\n");
   rootThread=newThread(currentThread->getPriority(),rootBoard,PARMODE);
   checkToplevel();
@@ -1027,7 +1027,7 @@ void engine()
     LBLinstallLoop:
       switch (e->installPath(bb)) {
       case INST_REJECTED:
-	if (!e->currentThread->taskStack.discardLocalTasks()) {
+	if (!e->currentThread->discardLocalTasks()) {
 	  DebugCheckT(e->currentThread->board=bb);
 	  goto LBLkillDiscardedThread;
 	}
@@ -1035,7 +1035,7 @@ void engine()
 	goto LBLinstallLoop;
       case INST_FAILED:
 	while (bb != CBB) {
-	  if (!e->currentThread->taskStack.discardLocalTasks()) {
+	  if (!e->currentThread->discardLocalTasks()) {
 	    break;
 	  }
 	  bb=bb->getParentFast();
@@ -1063,7 +1063,7 @@ void engine()
 
     DebugCheckT(CAA = NULL);
 
-    TaskStack *taskstack = &e->currentThread->taskStack;
+    TaskStack *taskstack = (TaskStack *) e->currentThread;
     TaskStackEntry *topCache = taskstack->getTop();
     TaskStackEntry topElem=TaskStackPop(topCache-1);
     ContFlag cFlag = getContFlag(ToInt32(topElem));
@@ -2438,7 +2438,7 @@ LBLkillThread:
 
       CBB->decSuspCount();
       {
-	TaskStackEntry topElem = e->currentThread->taskStack.pop();
+	TaskStackEntry topElem = e->currentThread->TaskStack::pop();
 	Assert((ContFlag) (ToInt32(topElem) & 0xf) == C_LOCAL);
       }
       /* unit commit */
@@ -2474,7 +2474,7 @@ LBLkillThread:
       /* top commit */
       CBB->decSuspCount();
       {
-	TaskStackEntry topElem = e->currentThread->taskStack.pop();
+	TaskStackEntry topElem = e->currentThread->TaskStack::pop();
 	Assert((ContFlag) (ToInt32(topElem) & 0xf) == C_LOCAL);
       }
       if ( e->entailment() ) {
@@ -2524,7 +2524,7 @@ LBLkillThread:
 
       CBB->decSuspCount();
       {
-	TaskStackEntry topElem = e->currentThread->taskStack.pop();
+	TaskStackEntry topElem = e->currentThread->TaskStack::pop();
 	Assert((ContFlag) (ToInt32(topElem) & 0xf) == C_LOCAL);
       }
       // entailment ?
@@ -2712,8 +2712,8 @@ LBLkillThread:
      */
     if (e->currentThread==e->rootThread &&
 	e->currentThread->getCompMode() == PARMODE &&
-	e->currentThread->taskStack.isEmpty()) {
-      e->currentThread->taskStack.pushCompMode(ALLSEQMODE);
+	e->currentThread->TaskStack::isEmpty()) {
+      e->currentThread->TaskStack::pushCompMode(ALLSEQMODE);
     }
     DISPATCH(1);
 
