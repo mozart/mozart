@@ -340,7 +340,10 @@ URL=http\\://www.ps.uni-sb.de/ozhome
 
 # use the boot compiler to create the functors
 bootstrap:
-        $(MAKE) boot-unzip boot-init boot-ozc all \
+        $(MAKE) boot-unzip boot-init boot-ozc boot-all
+
+boot-all:
+        $(MAKE) all \
                 OZC=$(SRCDIR)/boot-ozc.sh \
                 OZENGINE=$(SRCDIR)/oze.sh \
                 OZINIT=Init.ozf \
