@@ -26,6 +26,12 @@ define
 			     {HtmlQuote @pid})
 			   $)}
 	       end
+	       if @version==unit then '' else
+		  {self formatHeader(
+			   'version'
+			   {HtmlQuote @version}
+			   $)}
+	       end
 	       if @blurb==unit then '' else
 		  {self formatHeader(
 			   'blurb'
