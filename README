@@ -1,0 +1,127 @@
+Mozart Repository Structure
+---------------------------
+
+>>> UPDATE THIS FILE AFTER YOU HAVE <<<
+>>> MADE ANY CHANGES.               <<<
+
+The Mozart repository structure is as follows:
+
+  mozart/
+    README
+
+    share/ 
+		-- platform independent stuff
+      demo/ 
+		-- demos
+	images/
+	concurrent/
+	constraint/
+	distributed
+	
+      examples/ 
+		-- small example programs
+	fd/
+	grammar/
+	sampler/
+
+      test/
+		-- testfiles
+
+      core/
+		-- Oz library source code needed to boot the system
+	compiler/	
+	init/		(Initial url resolver...)
+	ap/		(Application programming)
+	op/		(Open programming)
+	sp/     	(System programming)
+	cp/		(Constraint programming)
+
+      lib/
+		-- Oz library source code not needed for booting system
+	wp/		(Window programming)
+	dp/		(Distributed programming)
+
+      tools/
+		-- Oz tools which are always shipped with system
+	opi/		(Oz programming interface)
+	gump/		
+	panel/
+          images/
+	compiler-panel/
+          images/
+	browser/
+	  images/	
+	explorer/
+	  images/	
+	ozcar/
+          images/
+	profiler/
+	  images/
+
+      contrib/
+		-- Libraries and tools that can be there or not
+	gdbm/
+	regex/
+
+
+    platform/
+		-- platform dependent stuff
+
+      emulator/
+	libfs/
+	libfd/
+
+      wish/
+
+      tools/
+	gump/
+
+      contrib/
+	gdbm/
+      
+    doc/
+
+
+
+The Mozart installation structure:
+
+  $OZHOME/
+    bin/
+      ozvm (link: ozengine)
+      ozc  (link: ozcompiler)
+      oz   
+      ozs  (link: ozserver)
+      oza  (link: ozapplet)
+    lib/
+    tools/
+      images/
+        explorer/
+        ...
+    contrib/
+    demo/
+      images/
+      concurrent/
+      constraint/
+      distributed/
+    examples/
+    platform/
+	$ARCH/
+	  ozvm
+	  ozwish
+          libma.so	(Machinecode Assembler)
+          libfd.so      
+          libfs.so
+          libsched.so
+          libwish.so
+	$ARCH/tools/
+	  gump/
+	    libbison.so
+	    ozflex
+	$ARCH/contrib/
+          regex.so
+          gdbm.so
+    cache/
+      http/
+        www.ps.uni-sb.de
+	  ????
+      
