@@ -309,10 +309,14 @@ OZ_Bool checkDomDescr(TaggedRef descr,
     return SUSPEND;
   } else if (isSmallInt(descr_tag) && (expect >= 1)) { // (1)
     return PROCEED;
+  } else if (AtomSup == descr && (expect >= 1)) { // (1)
+    return PROCEED;
   } else if (isGenFDVar(descr, descr_tag) && (expect >= 1)) {
     addSuspFDVar(descr, new SuspList(createNonResSusp(cfun, args, arity),
 				     NULL), fd_det);
     return SUSPEND;
+  } else if (AtomBool == descr && (expect >= 2)) { // (1)
+    return PROCEED;
   } else if (isSTuple(descr_tag) && (expect >= 2)) {
     STuple &tuple = *tagged2STuple(descr);
     if (tuple.getSize() != 2) {
