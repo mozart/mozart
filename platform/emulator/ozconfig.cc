@@ -78,6 +78,10 @@ void ConfigData::init() {
 
   hiMidRatio            = DEFAULT_HI_MID_RATIO;
   midLowRatio           = DEFAULT_MID_LOW_RATIO;
+
+  bwlIterationsPerMS    = 0;
+  bwlMSs                = DEFAULT_BWL_MS;
+
 #ifdef DEBUG_CHECK
   dumpCore              = 0;
 #else
