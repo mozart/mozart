@@ -1104,7 +1104,7 @@ compiled using a default set of switches."
 
 (defconst oz-class-between-pattern
   (oz-make-keywords-for-match
-   '("from" "prop" "attr" "feat" "import" "export")))
+   '("from" "prop" "attr" "feat")))
 (defconst oz-gump-class-between-pattern
   (oz-make-keywords-for-match
    '("token")))
@@ -1120,7 +1120,7 @@ compiled using a default set of switches."
 (defconst oz-middle-pattern
   (concat (oz-make-keywords-for-match
 	   '("in" "then" "else" "of" "elseof" "elsecase" "elseif"
-	     "catch" "finally" "with"))
+	     "catch" "finally" "with" "import" "export" "body"))
 	  "\\|" "\\[\\]"))
 (defconst oz-gump-middle-pattern
   "//")
@@ -1136,14 +1136,14 @@ compiled using a default set of switches."
   "[][(){}]")
 
 (defconst oz-any-pattern
-  (concat "\\<\\(attr\\|case\\|catch\\|class\\|choice\\|condis\\|"
+  (concat "\\<\\(attr\\|body\\|case\\|catch\\|class\\|choice\\|condis\\|"
 	  "declare\\|dis\\|else\\|elsecase\\|elseif\\|elseof\\|end\\|export\\|"
 	  "feat\\|finally\\|from\\|fun\\|functor\\|if\\|in\\|import\\|"
 	  "local\\|lock\\|meth\\|not\\|of\\|or\\|proc\\|prop\\|raise\\|"
 	  "then\\|thread\\|try\\|with\\)\\>\\|\\[\\]\\|"
 	  oz-left-or-right-pattern))
 (defconst oz-gump-any-pattern
-  (concat "\\<\\(attr\\|case\\|catch\\|class\\|choice\\|condis\\|"
+  (concat "\\<\\(attr\\|body\\|case\\|catch\\|class\\|choice\\|condis\\|"
 	  "declare\\|dis\\|else\\|elsecase\\|elseif\\|elseof\\|end\\|export\\|"
 	  "feat\\|finally\\|from\\|fun\\|functor\\|if\\|in\\|import\\|"
 	  "lex\\|local\\|lock\\|meth\\|mode\\|not\\|of\\|or\\|"
@@ -1960,7 +1960,7 @@ and initial percent signs."
 
 (defconst oz-keywords
   '("declare" "local" "in" "end"
-    "proc" "fun" "functor" "import" "export"
+    "proc" "fun" "functor" "import" "export" "body"
     "case" "then" "else" "of" "elseof" "elsecase"
     "class" "from" "prop" "attr" "feat" "meth" "self"
     "true" "false" "unit"
