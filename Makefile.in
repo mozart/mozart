@@ -1,15 +1,19 @@
 SRCDIR =        @srcdir@
+TOPDIR =        @srcdir@
 
 INSTALL=        @INSTALL@
 INSTALL_BIN=    $(INSTALL) -m 555
 INSTALL_OTHER=  $(INSTALL) -m 444
-INSTALL_DIR=    @INSTALLDIR@
+INSTALL_DIR=    @MKINSTALLDIRS@
 
-OZPLATFORM=     @OZPLATFORM@
 OZHOME=         @prefix@
-OZVERSION=      @OZVERSION@
+OZVERSION=      $(TOPDIR)/OZVERSION
 
-SUBDIRS=        Emulator lib bin elisp
+# not yet
+# SUBDIRS=      Emulator lib bin elisp
+PLATFORMS=      solaris-sparc aix3-rs600 freebsd-i486 hpux-700\
+                irix5-mips linux-i486 netbsd-i486 netbsd-m68k netbsd-sparc\
+                osf1-alpha solaris-i486 sunos-sparc win32-i486
 
 DISTDIR=        dist
 
@@ -50,7 +54,7 @@ $(ALLFILES):
 $(ALLDIRS) $(DISTDIR):
         $(INSTALLDIR) $@
 
-dist: common $(PLATFORMS)
+pack-all: common $(PLATFORMS)
 
 home: mini-common wish-linux src linuxz
 
@@ -67,20 +71,20 @@ src:
 mini-common: $(DISTDIR)
         (cd $(OZHOME)/..; \
         tar -zvcf - oz/bin oz/include oz/lib) > \
-           $(DISTDIR)/mini-$(OZVERSION).tgz
+           $(DISTDIR)/mini-`$(OZVERSION)`.tgz
 
 common: $(DISTDIR)
         (cd $(OZHOME)/..; \
         tar -cf - $(COMMONFILES)) | \
-        $(ZIP) > $(DISTDIR)/oz-$(OZVERSION)-$@.tar.gz
+        $(ZIP) > $(DISTDIR)/oz-`$(OZVERSION)`-$@.tar.gz
 
 $(PLATFORMS): $(DISTDIR)
         (cd $(OZHOME)/..; \
         tar -cf - oz/platform/$@) | \
-        $(ZIP) > $(DISTDIR)/oz-$(OZVERSION)-$@.tar.gz
+        $(ZIP) > $(DISTDIR)/oz-`$(OZVERSION)`-$@.tar.gz
 
 oz-win::
-        rm -rf oz oz-$(OZVERSION)
+        rm -rf oz oz-`$(OZVERSION)`
         ( cd $(OZHOME)/..; \
           tar cf - oz/?*.exe oz/demo oz/include oz/lib \
                    oz/README* oz/LICENSE oz/BUGS oz/ChangeLog \
