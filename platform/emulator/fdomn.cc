@@ -2011,6 +2011,18 @@ int OZ_FiniteDomainImpl::operator += (const int put_in)
   return size;
 }
 
+// move down here since `OZ_FiniteDomainImpl::operator +=' is used inline
+inline
+int OZ_FiniteDomainImpl::initFSetValue(const OZ_FSetValue &fs)
+{
+  FSetIterator fsi(fs);
+  
+  for (int e = fsi.resetToMin(); e > -1; e = fsi.getNextLarger()) 
+    *this += e;
+
+  return size;
+}
+
 inline
 OZ_FiniteDomainImpl OZ_FiniteDomainImpl::operator | (const OZ_FiniteDomainImpl &y) const
 {
@@ -2197,6 +2209,12 @@ OZ_FiniteDomain::OZ_FiniteDomain(OZ_FDState state)
 OZ_FiniteDomain::OZ_FiniteDomain(const OZ_FiniteDomain &fd)
 {
   CASTTHIS->operator =(CASTREF fd);
+}
+
+OZ_FiniteDomain::OZ_FiniteDomain(const OZ_FSetValue &fs)
+{
+  CASTTHIS->FiniteDomainInit(NULL);
+  CASTTHIS->initFSetValue(fs);
 }
 
 void OZ_FiniteDomain::disposeExtension(void)
