@@ -8,6 +8,9 @@
   State: $State$
 
   $Log$
+  Revision 1.359  1996/09/03 12:58:31  mehl
+  catch failure in spaces
+
   Revision 1.358  1996/09/03 08:58:33  mehl
   bug fixed: collecting dead threads
 
@@ -3054,6 +3057,26 @@ LBLdispatcher:
   Assert(CTT->isRunnable());
   Assert(CBB->isInstalled());
 
+  // check for exception handler
+  if (!CTT->isPropagator() && CTT->hasCatchFlag()) {
+    TaggedRef traceBack = nil();
+    TaggedRef pred = 0;
+    pred = CTT->findCatch(traceBack);
+    if (pred) {
+      traceBack = reverseC(traceBack);
+      if (PC != NOCODE) {
+        traceBack = cons(CodeArea::dbgGetDef(PC),traceBack);
+      }
+
+      if (tagged2Const(pred)->getArity() == 1) {
+        RefsArray argsArray = allocateRefsArray(1,NO);
+        argsArray[0] = OZ_mkTuple(OZ_atom("failure"),3,
+                                  OZ_atom("fail"),e->dbgGetSpaces(),traceBack);
+        CTT->pushCall(pred,argsArray,1);
+        goto LBLpopTask;
+      }
+    }
+  }
   Actor *aa=CBB->getActor();
   Assert(!aa->isCommitted());
 
