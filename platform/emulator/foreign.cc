@@ -463,6 +463,38 @@ char *OZ_toC(OZ_Term term)
   return ozstrdup("unknown term");
 }
 
+char *OZ_toC1(OZ_Term term, int depth)
+{
+  if (term == makeTaggedNULL()) {
+    return "*** NULL TERM ***";
+  }
+
+  DEREF(term,termPtr,tag)
+  switch(tag) {
+  case UVAR:
+  case SVAR:
+  case CVAR:
+  case STUPLE:
+  case SRECORD:
+  case LTUPLE:
+  case CONST:
+    return tagged2String(term, depth);
+  case LITERAL:
+    return OZ_literalToC(term);
+  case FLOAT:
+    return OZ_floatToCString(term);
+  case BIGINT:
+  case SMALLINT:
+    return OZ_intToCString(term);
+
+  default:
+    break;
+  }
+  
+  warning("OZ_toC11: failed");
+  return ozstrdup("unknown term");
+}
+
 /* -----------------------------------------------------------------
  * virtual strings
  * -----------------------------------------------------------------*/
