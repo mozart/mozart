@@ -569,7 +569,7 @@ LBLraise:
     if (foundHdl) {
       if (e->debugmode() && CTT->getTrace())
         debugStreamUpdate(CTT);
-      e->xRegs[0] = e->exception.value;
+      e->xRegs[0] = e->exception.value; // mm2: use pushX
       goto LBLrunThread;  // execute task with no preemption!
     }
 
