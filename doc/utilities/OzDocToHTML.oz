@@ -877,7 +877,7 @@ define
       end
       meth CheckNode(M Title ?X)
 	 if {Member {CondSelect M id unit}
-	     {Dictionary.condGet @Meta 'htmlfile' nil}}
+	     {Dictionary.condGet @Meta 'html.split' nil}}
 	 then
 	    X = @CurrentNode#@Out#@TOC#@TOCMode
 	    NodeCounter <- @NodeCounter + 1
