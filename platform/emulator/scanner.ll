@@ -994,7 +994,7 @@ REGEXCHAR    "["([^\]\\]|\\.)+"]"|\"[^"]+\"|\\.|[^<>"\[\]\\\n]
 "prod"                         { return xy_gumpSyntax? prod: OZATOM; }
 "prod"/\(                      { return xy_gumpSyntax? prod: ATOM_LABEL; }
 "prop"/\(?                     { return prop; }
-"raise"/\(?                    { return raise; }
+"raise"/\(?                    { return ozraise; }
 "scanner"                      { return xy_gumpSyntax? _scanner_: OZATOM; }
 "scanner"/\(                   { return xy_gumpSyntax? _scanner_: ATOM_LABEL; }
 "self"/\(?                     { return self; }

@@ -290,7 +290,7 @@ static CTerm decls[DEPTH];
 %token attr _case_ catch choice _class_ _condis_ declare dis
 %token _else_ elsecase elseif elseof end fail false FALSE_LABEL
 %token feat finally _from_ _fun_ _if_ _in_ local _lock_ _meth_
-%token not of or proc prop raise self skip then
+%token not of or proc prop ozraise self skip then
 %token thread true TRUE_LABEL try unit UNIT_LABEL with
 
 %token ENDOFFILE
@@ -608,9 +608,9 @@ phrase2         : phrase2 add coord phrase2 %prec ADD
                   { $$ = newCTerm("fThread",$3,$2); }
                 | try coord inSequence optCatch optFinally end
                   { $$ = newCTerm("fTry",$3,$4,$5,$2); }
-                | raise coord inSequence end
+                | ozraise coord inSequence end
                   { $$ = newCTerm("fRaise",$3,$2); }
-                | raise coord inSequence with inSequence end
+                | ozraise coord inSequence with inSequence end
                   { $$ = newCTerm("fRaiseWith",$3,$5,$2); }
                 | skip
                   { $$ = newCTerm("fSkip",pos()); }
