@@ -22,6 +22,3 @@ install:: $(ELISPDIR) $(ELCS)
 
 clean::
         rm -f $(ELCS) *~
-
-$(ELISPDIR):
-        install -d -m 775 $@
