@@ -405,7 +405,8 @@ boot-manager.o: $(MODINTERS)
 parser.o: parser.cc
         $(CXX) $(CPPFLAGS) $(CXXFLAGS_NO_ERROR) -c -o $@ $<
 parser.lo: parser.cc
-        $(CXX) $(CPPFLAGS) $(CXXFLAGS_NO_ERROR) $(CDYNOPT) -c -o $@ $<
+        $(CXX) $(CPPFLAGS) $(CXXFLAGS_NO_ERROR) $(CDYNOPT) -c -o $@.o $< && \
+        mv $@.o $@
 
 config.h: config.m4h $(OZVERSION)
         $(M4) $(M4_D) -DOZVERSION=\"`$(OZVERSION)`\" $(SRCDIR)/config.m4h > $@
