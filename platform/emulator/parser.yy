@@ -1416,8 +1416,8 @@ static OZ_Term parse() {
     decls[i] = nilAtom;
   }
   depth = 0;
-  for (int i = 0; i < DEPTH; i++)
-    terms[i] = 0;
+  for (int i1 = 0; i1 < DEPTH; i1++)
+    terms[i1] = 0;
   nerrors = 0;
 
   xy_errorMessages = OZ_nil();
@@ -1426,9 +1426,9 @@ static OZ_Term parse() {
 
   // in case there was a syntax error during the parse, delete garbage:
   xy_exit();
-  for (int i = 0; i < DEPTH; i++)
-    while (terms[i]) {
-      TermNode *tmp = terms[i]; terms[i] = terms[i]->next; delete tmp;
+  for (int i2 = 0; i2 < DEPTH; i2++)
+    while (terms[i2]) {
+      TermNode *tmp = terms[i2]; terms[i2] = terms[i2]->next; delete tmp;
     }
 
   return yyoutput? yyoutput: OZ_atom("parseError");

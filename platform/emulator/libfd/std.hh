@@ -88,7 +88,7 @@ public:
   virtual void updateHeapRefs(OZ_Boolean);
   virtual size_t sizeOf(void) { return sizeof(Propagator_D_D_D_I); }
   virtual OZ_Term getParameters(void) const;
-  virtual OZ_Term getParameters(char *) const;
+  virtual OZ_Term getParametersC(char *) const;
 };
 
 //-----------------------------------------------------------------------------
@@ -119,7 +119,7 @@ public:
   virtual void updateHeapRefs(OZ_Boolean);
   virtual size_t sizeOf(void) { return sizeof(Propagator_D_D_I); }
   virtual OZ_Term getParameters(void) const;
-  virtual OZ_Term getParameters(char *) const;
+  virtual OZ_Term getParametersC(char *) const;
 };
 
 //-----------------------------------------------------------------------------
@@ -176,7 +176,7 @@ public:
 
   virtual void updateHeapRefs(OZ_Boolean = OZ_FALSE);
   virtual size_t sizeOf(void) { return sizeof(Propagator_VI_VD_I); }
-  virtual OZ_Term getParameters(char *) const;
+  virtual OZ_Term getParametersC(char *) const;
   
   void simplify_on_equality(void);
   void simplify(void);
@@ -266,7 +266,7 @@ public:
   
   virtual void updateHeapRefs(OZ_Boolean);
   virtual size_t sizeOf(void) { return sizeof(Propagator_VI_VD_I_D); }
-  virtual OZ_Term getParameters(char *) const;
+  virtual OZ_Term getParametersC(char *) const;
 };
 
 //-----------------------------------------------------------------------------
@@ -351,7 +351,7 @@ public:
 
   virtual void updateHeapRefs(OZ_Boolean);
   virtual size_t sizeOf(void) { return sizeof(Propagator_VI_VVD_I); }
-  virtual OZ_Term getParameters(char *) const;
+  virtual OZ_Term getParametersC(char *) const;
 };
 
 //-----------------------------------------------------------------------------
@@ -426,7 +426,7 @@ public:
   virtual ~Propagator_VI_VD_D(void);
   virtual void updateHeapRefs(OZ_Boolean);
   virtual size_t sizeOf(void) { return sizeof(Propagator_VI_VD_D); }
-  virtual OZ_Term getParameters(char *) const;
+  virtual OZ_Term getParametersC(char *) const;
   OZ_Boolean simplify(void);
 };
 

@@ -139,7 +139,7 @@ enum ConnectionFlags{
   WRITE_CON = 512,      // connection type is WRITE
   MY_INITIATVE = 1024,  //?? 
   TMP_PROBE = 2048,     
-  PRM_PROBE = 4096,
+  PRM_PROBE = 4096
 };
 
 enum ByteStreamType{
@@ -1016,15 +1016,15 @@ public:
   
   Bool addByteToInt(BYTE msg){
     if(!testFlag(ACK_MSG_INCOMMING))
-      return false;
+      return FALSE;
     *bytePtr++ = msg;   
     PD((TCP,"Reading byte: %d diff: %d tot: %d",
 	msg, bytePtr - intBuffer, INT_IN_BYTES_LEN));
     if((bytePtr - intBuffer) == INT_IN_BYTES_LEN){
       clearFlag(ACK_MSG_INCOMMING);
       ackReceived(intifyUnique(intBuffer));
-      return false;}
-    return true; }
+      return FALSE;}
+    return TRUE; }
   
   void prmDwn();
   
@@ -1634,7 +1634,7 @@ private:
 public:
   MessageManager():FreeListManager(MESSAGE_CUTOFF){Msgs = 0;};
 
-  Message * allocMessage(NetMsgBuffer *bs, int msgNum = 0,
+  Message * allocMessage(NetMsgBuffer *bs, int msgNum,
 			 Site *s, MessageType b, int i){
     Message*m = newMessage();
     PD((MESSAGE,"allocate  nr:%d", ++Msgs));
@@ -1752,12 +1752,12 @@ void WriteConnection::tmpDwn(){
 
 Bool WriteConnection::checkAckQueue(){
   Message *m = sentMsg;
-  if (m == NULL ) return false;
+  if (m == NULL ) return FALSE;
   while (m != NULL){
     PD((ACK_QUEUE,"Ack queue ptr: %d nr: %d ctr: %d",
 	m,m->msgNum,sentMsgCtr));
     m=m->next;}
-  return true;
+  return TRUE;
 }
   
 
@@ -2496,10 +2496,10 @@ int tcpConnectionHandler(int fd,void *r0){
   pos = buf;
   switch(*pos){
   case TCP_CONNECTION:{
-    Accepted = true;
+    Accepted = TRUE;
     break;}
   case TCP_NO_CONNECTION:{
-    Accepted = false;
+    Accepted = FALSE;
     break;}
   default:
     NETWORK_ERROR(("connectionHandler received %c",buf[0]));}
@@ -2671,8 +2671,8 @@ Bool tcpAckReader(ReadConnection *r, int ack){
       // It is possible to recognize a failed site here.
       // the Connection could be invoked to handle this. 
       PD((TCP,"Write fail in Acking"));
-      return false;}}
-  return true;}
+      return FALSE;}}
+  return TRUE;}
 
 inline
 int tcpRead(int fd,BYTE *buf,int size,Bool &readAll)
@@ -3063,8 +3063,8 @@ Bool ReadConnection::informSiteAck(int m, int s){
   
   if(!isClosing() && remoteSite->receivedNewMsg(m)){
     receivedNewSize(s);
-    return true;}
-  return false;}
+    return TRUE;}
+  return FALSE;}
 
 void WriteConnection::informSiteResendAckQueue(){
   sentMsgCtr -= remoteSite->resendAckQueue(sentMsg);
@@ -3186,8 +3186,8 @@ Bool RemoteSite::receivedNewMsg(int Nr){
   else if(Nr > recMsgCtr){
     PD((ACK_QUEUE,"Message nr %d too large, old %d", Nr, recMsgCtr));
     readConnection->resend();
-    return false;}
-  return true;}
+    return FALSE;}
+  return TRUE;}
 
 void RemoteSite::receivedNewAck(int a){
   if(writeConnection!= NULL) {

@@ -39,6 +39,9 @@
   int listtotal;
 #endif
 
+#ifdef SUNPRO
+enum bool {false, true};
+#endif
 
 //#undef OZ_DEBUG
 //=============================================================================
@@ -152,13 +155,15 @@ public:
     return memory.alloc(s);
   }
 
+  static void operator delete(void*, size_t) {}
+
+#ifndef SUNPRO
   static void* operator new[](size_t s) {
     return memory.alloc(s);
   }
 
-  static void operator delete(void*, size_t) {}
   static void operator delete[](void*, size_t) {}
-
+#endif
 };
 
 //=============================================================================
@@ -672,7 +677,7 @@ void graph::write() const {
       (e->e)->write();    
 }
 
-inline node graph::new_node(int _val, bool _free =true) {
+inline node graph::new_node(int _val, bool _free) {
   node n = new node_struct(_val, _free);
   n->id = nodecount++;
   N.append(n);
