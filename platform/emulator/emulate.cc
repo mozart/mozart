@@ -8,6 +8,9 @@
   State: $State$
 
   $Log$
+  Revision 1.352  1996/07/31 12:55:34  scheidhr
+  new machine instructions
+
   Revision 1.351  1996/07/29 15:37:40  mehl
   more perdio work
 
@@ -3075,6 +3078,8 @@ LBLdispatcher:
 
   Case(ENDOFFILE)
   Case(ENDDEFINITION)
+  Case(GLOBALVARNAME)
+  Case(LOCALVARNAME)
 
 
 #ifndef THREADED
