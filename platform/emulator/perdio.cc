@@ -5299,24 +5299,13 @@ OZ_C_proc_begin(BInewGate,2)
 OZ_C_proc_end
 
 
-OZ_C_proc_begin(BIsave,2)
+int saveFile(OZ_Term in,char *filename,OZ_Term url)
 {
-  OZ_declareArg(0,in);
-  OZ_declareVirtualStringArg(1,url);
-
-  if (strncmp(url,"file:",5)!=0) {
-    return oz_raise(E_ERROR,OZ_atom("perdio"),"save",2,
-		    oz_atom("onlyFileURL"),
-		    OZ_args[1]);
-  }
-
-  char *filename = url+5;
-
   INIT_IP(0);
 
   ByteStream *bs = bufferManager->getByteStreamMarshal();
 
-  domarshallTerm(OZ_atom(url),in,bs);
+  domarshallTerm(url,in,bs);
 
   bs->marshalEnd();
 
@@ -5354,6 +5343,35 @@ OZ_C_proc_begin(BIsave,2)
   close(fd);
 
   return PROCEED;
+}
+
+
+
+OZ_C_proc_begin(BIsaveOld,2)
+{
+  OZ_declareArg(0,in);
+  OZ_declareVirtualStringArg(1,url);
+
+  if (strncmp(url,"file:",5)!=0) {
+    return oz_raise(E_ERROR,OZ_atom("perdio"),"save",2,
+		    oz_atom("onlyFileURL"),
+		    OZ_args[1]);
+  }
+
+  char *filename = url+5;
+
+  return saveFile(in,filename,OZ_atom(url));
+}
+OZ_C_proc_end
+
+
+OZ_C_proc_begin(BIsave,3)
+{
+  OZ_declareArg(0,in);
+  OZ_declareVirtualStringArg(1,filename);
+  OZ_declareVirtualStringArg(1,url);
+
+  return saveFile(in,filename,OZ_atom(url));
 }
 OZ_C_proc_end
 
@@ -5625,7 +5643,7 @@ BIspec perdioSpec[] = {
   {"startServer",    2, BIstartServer, 0},
   {"startClient",    3, BIstartClient, 0},
 
-  {"save",        2, BIsave, 0},
+  {"save",        3, BIsave, 0},
   {"load",        2, BIload, 0},
   {"loadFile",    3, BIloadFile, 0},
   {"setLoadHook", 1, BIsetLoadHook, 0},
