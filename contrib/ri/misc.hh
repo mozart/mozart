@@ -27,9 +27,32 @@
 #ifndef __AUX_HH__
 #define __AUX_HH__
 
-#include "/home/tmueller/mozart/platform/emulator/mozart_cpi.hh"
+#include "mozart_cpi.hh"
 #include <math.h>
 #include <values.h>
+
+//#define LINUX_IEEE
+
+
+
+#ifdef LINUX_IEEE
+
+#include "ieeefp.h"
+#include "sigfpe.h"
+
+void exception_handler(int i, siginfo_t * info, ucontext_t * fpu_state);
+
+#define TOWARDS_MINUS_INF fpsetround(FP_RM)
+#define TOWARDS_PLUS_INF  fpsetround(FP_RP)
+
+#else
+
+#include <ieeefp.h>
+
+#define TOWARDS_MINUS_INF fpsetround(FP_RM)
+#define TOWARDS_PLUS_INF  fpsetround(FP_RP)
+
+#endif
 
 //-----------------------------------------------------------------------------
 
@@ -54,6 +77,8 @@ fflush(stdout); 				\
 return OZ_FAILED
 
 //-----------------------------------------------------------------------------
+
+//#define DEBUG_CHECK
 
 #ifdef DEBUG_CHECK
 #define RI_DEBUG_PRINT(ARGS) printf ARGS; fflush(stdout);
@@ -94,12 +119,6 @@ typedef float ri_float;
 #define EM_RI    "real interval"
 #define EM_FLOAT "float"
 
-extern 
-OZ_Term atom_row, atom_opt, atom_type, atom_rhs, atom_min, atom_max,
-  atom_optimal, atom_infeasible, atom_unbounded,  atom_failure, atom_le, 
-  atom_ge, atom_eq, atom_oops, atom_solver, atom_mode, atom_avail, atom_config,
-  atom_lpsolve, atom_cplex_primopt, atom_cplex_dualopt, atom_put, atom_get, 
-  atom_quiet, atom_verbose;
 
 //-----------------------------------------------------------------------------
 // common stuff for propagators
