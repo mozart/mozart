@@ -579,6 +579,7 @@ public:
 class OZ_GenConstraint {
 
 public:
+  OZ_GenConstraint(void) {}
   virtual OZ_Boolean isValue(void) = 0;
   virtual OZ_Term toValue(void) = 0;
   virtual OZ_Boolean isValid(void) = 0;
@@ -591,7 +592,7 @@ public:
   virtual char * toString(int) = 0;
   virtual OZ_GenConstraint * copy(void) = 0;
 
-  static void * operator new(size_t);
+  static void * operator new(size_t, int align = sizeof(void *));
   static void operator delete(void *, size_t);
 };
 
