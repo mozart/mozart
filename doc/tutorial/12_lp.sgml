@@ -76,7 +76,7 @@ increase the information already there.
 <SUBSECTION><TITLE/Examples/
 
 <P>Consider the store:
-<MATH/\sigma \equiv X = 1 \weddge \ldots \wedge Y = f(X Y)/
+<MATH/\sigma \equiv X = 1 \wedge \ldots \wedge Y = f(X Y)/
 , the conditions:
 
 <LIST>
@@ -113,7 +113,6 @@ choice</EM> statements.
 guard. A guard has the following form.
 
 <<<?{X1} ... ?{XN} in ?{S}>>>
-<P CLASS=WARNING>How to show &lt;IMG="Image69.gif"&gt;
 
 <P>The first disjunctive statement has the following form:
 
@@ -133,8 +132,8 @@ executing the statement in space ?{SP}.
 
 <ITEM>The thread is blocked.
 
-<ITEM>?{N} spaces are created ?{SP1}, ...,?{SPN} with ?{N} new threads
-executing the guards ?{G1}, ..., ?{GN}.
+<ITEM><MATH/N/ spaces are created <MATH/SP_1, \ldots, SP_N/ with
+<MATH/N/ new threads executing the guards <MATH/G_1, \ldots, G_N/.
 
 <ITEM>Execution of the father thread will remain blocked until at most
 one of the constraint stores of the children spaces is not
@@ -143,16 +142,21 @@ disentailed. We call a space with a disentailed store a failed space.
 <ITEM>If all children spaces are failed, the parent thread raises a
 failure exception.
 
-<ITEM>Otherwise, there is one space that is not failed that corresponds to the disjunct <<?{Gi} then ?{Si}>>. Assume also that ?{Gi} has been reduced to the goal <IMG="Image72.gif"16> and the constraint <IMG="Image73.gif"1014>. In this case, the space is merged with the parent store with <IMG="Image74.gif"1014> added, <IMG="Image75.gif"16> executes in its own thread, and the suspending thread resumes executing the statement <IMG="Image76.gif"1318>.
+<ITEM>Otherwise, there is one space that is not failed that
+corresponds to the disjunct <<?{Gi} then ?{Si}>>. Assume also that
+<MATH/G_i/ has been reduced to the goal <MATH/G'_i/ and the
+constraint <MATH/\theta/. In this case, the space is merged
+with the parent store with <MATH/\theta/ added,
+<MATH/G'_i/ executes in its own thread, and the suspending
+thread resumes executing the statement <MATH/S_i/.
+The rule of execution is called <EM>unit commit</EM> in Oz because
+execution commits to one alternative disjunct.
 
 </LIST>
 
-<P>The rule of execution is called <EM>unit commit</EM> in Oz because
-execution commits to one alternative disjunct.
-
 <SUBSECTION><TITLE/Shorthand Notation/
 
-<<<
+<P><<<
 or
 ...
 [] ?{Gi}
@@ -245,7 +249,7 @@ comparison. These include <<==>> that we have seen earlier as well as
 Boolean functions in an infix notation. The following example
 illustrates the use of a conditional in conjunction with the
 greater-than operator <<&gt;>>. In this example <<Z>> is bound to the
-maximum of <<X>> and <<Y,>> i.e. to <<Y:
+maximum of <<X>> and <<Y,>> i.e. to <<Y>>
 
 <<<
 local X Y F Z in

@@ -102,7 +102,7 @@ above statement will:
 <P><LIST>
 
  <ITEM>create a unique closure which is essentially a
- uniquely named lambda expression &lambda;<<(?{X1} ... ?{Xn}).?{S}>>
+ uniquely named lambda expression <MATH/\lambda(X_1 \ldots X_N).S/
 
  <ITEM>The variable ?{P} is bound to the closure.
 
