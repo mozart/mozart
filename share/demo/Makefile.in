@@ -1,3 +1,4 @@
+BUILDTOP	= @BUILDTOP@
 VPATH		= @srcdir@
 SRCDIR		= @srcdir@
 TOPDIR		= @TOPDIR@
@@ -39,8 +40,7 @@ CONSTRAINTS = \
 CONCURRENT = \
 	bounce trucks transport lift
 
-DISTRIBUTED = \
-	board
+DISTRIBUTED = #board
 
 
 CONSTRAINTWEB  = $(CONSTRAINTS:%=$(OZDEMO)/constraints/%.html)
@@ -85,11 +85,13 @@ OZIMAGES = \
 CONSTRAINTAPPLETS  = $(CONSTRAINTS:%=constraints/%.oza)
 CONCURRENTAPPLETS  = $(CONCURRENT:%=concurrent/%.oza)
 DISTRIBUTEDAPPLETS = $(DISTRIBUTED:%=distributed/%.oza)
-TRAVEL = \
-	distributed/travel/travelserver \
-	distributed/travel/process.cgi \
-	distributed/travel/form.cgi \
-	distributed/travel/tdb.ozc
+TRAVEL =
+#distributed demo is still missing
+#TRAVEL = \
+#	distributed/travel/travelserver \
+#	distributed/travel/process.cgi \
+#	distributed/travel/form.cgi \
+#	distributed/travel/tdb.ozc
 
 LOCALAPPLETS = \
 	$(CONSTRAINTAPPLETS) \
@@ -241,7 +243,4 @@ distclean: veryclean
 	$(RM) config.cache config.status config.log
 	$(RM) Makefile
 
-
-
-
-
+include ../Makefile.boot
