@@ -113,7 +113,7 @@ void marshalGRegRef(AssRegArray *gregs,MsgBuffer *bs)
 void marshalLocation(OZ_Location *loc,MsgBuffer *bs) 
 { 
   int inAr = loc->getInArity();
-  int outAr = loc->getInArity();
+  int outAr = loc->getOutArity();
   marshalNumber(inAr,bs);
   marshalNumber(outAr,bs);
 
