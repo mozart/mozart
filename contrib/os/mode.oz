@@ -86,9 +86,18 @@ in
 	     fun {$ B X} {BitString.disj B Tab.X} end None}
 	 elseif {IsRecord    Spec} andthen mode=={Label Spec} then
 	    {Record.foldLInd Spec
-	     fun {$ B F X}
+	     fun {$ F B X}
 		Tab = Bits.F
-	     in {BitString.disj B Tab.X} end None}
+	     in
+		if {IsAtom X} then
+		   {BitString.disj B Tab.X}
+		else
+		   {FoldL X
+		    fun {$ B Y}
+		       {BitString.disj B Tab.Y}
+		    end B}
+		end
+	     end None}
 	 else raise bad end end
       end
 
