@@ -24,27 +24,29 @@
 
 <CHAPTER ID="chapter.introduction">
   <TITLE>Introduction</TITLE>
-  <P>The current Oz version is referred to as Oz 3. Oz 3 is largely
-  compatible to the previous version Oz 2. Oz 2 is the successor Oz 1.
-  Oz 3 and its programming system Mozart is developed mainly by the
-  research groups of Gert Smolka at Saarland university and DFKI (the German Research Center
-  for Artificial Intelligent),
-  Seif Haridi at SICS (the Swedish Institute
-  of Computer Science),
-  and Peter Van Roy at UCL (the Université catholique de Louvain).
 
-  <P>Oz is in essence a concurrent constraint programming language, see
-  <PTR TO="saraswat94">. A good exposition of the programming model underlying
-  Oz 1 is found in <PTR TO="smolka95">. Underlying all Oz versions is
-  a concurrent
-  constraint programming model, which is extended to support stateful
-  computations, i.e., computations on mutable objects. The original Oz
-  computation model, Oz 1, supports a fine-grained notion of concurrency where
-  each statement can potentially be executed concurrently. This results
-  in a fine-grained concurrent object model similar to the actor
-  model. Our experience using Oz 1 showed that this kind of model, while
+  <P>The Mozart programming system implements
+  the Oz 3 language, which is the successor to Oz 2,
+  which is the successor to Oz 1.
+  Oz 3 and Mozart have been developed principally by the
+  research groups of Gert Smolka at the University of the Saarland and DFKI
+  (the German Research Center for Artificial Intelligence),
+  Seif Haridi at SICS (the Swedish Institute of Computer Science),
+  and Peter Van Roy at UCL (the Université catholique de Louvain).
+  Hereafter, all references to Oz should be read as Oz 3, unless another
+  meaning is clear from the context.
+
+  <P>All Oz languages are based on a concurrent constraint programming model
+  that has been extended to support stateful
+  computations, i.e., computations on mutable objects. 
+  The original model, which underlies Oz 1,
+  supports a fine-grained notion of concurrency where
+  each statement can potentially be executed concurrently.
+  A good exposition of the Oz 1 model is given in <PTR TO="smolka95">. 
+  Oz 1 has a fine-grained concurrent object model similar to the actor
+  model. Our experience with Oz 1 shows that this kind of model, while
   theoretically appealing, makes it very hard for the programmer to
-  control the resources of his/her application. It is also very hard to
+  control the resources of his or her application. It is also very hard to
   debug programs and the object model becomes unnecessarily awkward.
 
   <P>In Oz 2, these problems have been remedied by using instead a
@@ -69,13 +71,14 @@
   and handling.
 
   <SECTION><TITLE>Summary of Oz features</TITLE>
+
   <P>A very good starting point is to ask why Oz. Well, one rough short
   answer is that, compared to other existing languages, it is magic! It
   provides the programmers and system developers with a wide range of
   programming abstractions to enable them to develop complex
   applications quickly and robustly. Oz merges several
-  directions of programming language designs into a single coherent
-  one. Yet, Oz is a simple and coherent design. Most of us know the
+  directions of programming language designs into a single design.
+  Yet, Oz is simple and coherent. Most of us know the
   benefits of the various programming paradigms whether object-oriented,
   functional or constraint logic programming. When we start writing
   programs in any existing language, we quickly find ourselves confined
@@ -108,11 +111,11 @@
   <ITEM>Oz is a concurrent language where users can create dynamically any
   number of sequential threads that can interact with each
   other. However, in contrast to conventional concurrent languages, each
-  Oz thread is a data-flow thread. Executing a statement in Oz proceeds
-  only when all <EM>real</EM> data-flow dependencies on the variables
+  Oz thread is a dataflow thread. Executing a statement in Oz proceeds
+  only when all <EM>real</EM> dataflow dependencies on the variables
   involved are resolved.
 
-  <ITEM>The Mozart platform supports network-transparent distribution of
+  <ITEM>The Mozart system supports network-transparent distribution of
   Oz computations. Multiple Oz sites can connect together and
   automatically behave like a single Oz computation, sharing variables,
   objects, classes and procedures. Sites disconnect automatically when
@@ -131,12 +134,12 @@
   </LIST>
 
   <SECTION><TITLE>The Kernel Language</TITLE>
-  <P>In this section we are going to give a short and terse
-  introduction to the kernel language of Oz. Oz is constructed in two
-  steps. The first is the kernel language and thereafter the full
-  language. The kernel language represents the essential part of the
-  language, whereas the rest may be regarded as syntactic sugar to
+  <P>The full Oz language as seen by programmers is defined in terms
+  of a much simpler language, the Oz kernel language. 
+  The kernel language represents the essential part of the
+  language, whereas the full language may be regarded as syntactic sugar to
   support useful abstractions.
+  This section briefly defines the kernel language.
 
 <P><FIGURE ID="CoreLang" CLASS="Figure">
 <CAPTION>The Oz kernel language</CAPTION>
@@ -180,20 +183,20 @@ S ::= ?{S1} ?{S2}
 
 <P>The Oz execution model consists of dataflow threads observing a
 shared store. Threads contain statement sequences ?{Si} and
-communicate through shared references in the store. A thread is
+communicate through shared references to the store. A thread is
 <EM>dataflow</EM> if it only executes its next statement when all the
 values the statement needs are available. If the statement needs a
 value that is not yet available, then the thread automatically blocks
 until it can access that value. As we shall see, data availability in
-the Oz model is implemented using logic variables. The shared store is
+the Oz model is implemented with logic variables. The shared store is
 not physical memory, rather it is an abstract store which only allows
-operations that are legal for the entities involved, i.e., there is no
+operations that are legal for the entities involved.  There is no
 direct way to inspect the internal representations of entities. The
 store contains unbound and bound logic variables, cells (named mutable
-pointers, i.e., explicit state), and procedures (named lexically
-scoped closures that are first-class entities). Variables can
-reference the names of procedures and cells. Cells point to
-variables. The external reference procedures are variables. When a
+pointers, i.e., explicit state), and procedures
+(named lexically-scoped closures that are first-class entities).
+Variables can reference the names of procedures and cells. Cells point to
+variables. The external references of procedures are variables. When a
 variable is bound, it disappears, that is, all threads that reference
 it will automatically reference the binding instead. Variables can be
 bound to any entity, including other variables. The variable and
@@ -202,7 +205,7 @@ them, not changed or removed.
 
 <P>All Oz execution can be defined in terms of a kernel language
 called the Oz Programming Model (OPM) <PTR TO="smolka95">. <PTR TO="CoreLang">
-defines the abstract syntax of an OPM statement S. We briefly define
+defines the abstract syntax of an OPM statement ?{S}. We briefly define
 each possible statement. Statement sequences are reduced sequentially
 inside a thread. Values (records, numbers, etc.) are introduced
 explicitly and can be equated to variables. All variables are logic
@@ -210,7 +213,7 @@ variables, declared in an explicit scope defined by the <<local>>
 statement. Procedures are defined at run-time with the <<proc>>
 statement and referred to by a variable. Procedure applications block
 until their first argument refers to a procedure. State is created
-explicitly by <EM>NewCell</EM>, which creates a cell, an updateable
+explicitly by <EM>NewCell</EM>, which creates a cell, an updatable
 pointer into the variable store. Cells are updated by
 <EM>Exchange</EM> and read by <EM>Access</EM>. Conditionals use the
 keyword <<if>> and block until the condition variable ?{B} is <<true>>
@@ -231,8 +234,8 @@ document.
 
 <SECTION><TITLE>Classes</TITLE> 
 <P>A class is essentially a record that contains the method table and
-attribute names. A class is defined through multiple inheritance, and
-any conflicts are resolved at definition time when building its method
+the attribute names. A class is defined through multiple inheritance, and
+all conflicts are resolved at definition time when building its method
 table.
 
 <SECTION><TITLE>Objects</TITLE> <P>An object is essentially a special
@@ -249,8 +252,8 @@ cell.  In general it modifies the state of the object.
 <SECTION><TITLE>Reentrant locks</TITLE> 
 <P>A reentrant lock is essentially a one-argument procedure <<{Lck P}>> 
 used for explicit mutual exclusion, e.g., of method bodies in
-objects used concurrently. Reentrant locks use cells and logic
-variables to achieve their behavior. <<P>> is a zero-argument
+objects used concurrently. Reentrant locks can be defined
+with cells and logic variables. <<P>> is a zero-argument
 procedure defining the critical section. Reentrant means that the same
 thread is allowed to reenter the lock. Calls to the lock may therefore
 be nested. The lock is released automatically if the thread in the
