@@ -577,8 +577,11 @@ if that value is non-nil."
 
 
 
+(defvar oz-errors-found nil "")
+
 (defun oz-hide-errors()
   (interactive)
+  (setq oz-errors-found nil)
   (let ((show-machine (or (get-buffer-window "*Oz Machine*")
 			  (get-buffer-window "*Oz Kernel Code*")
 			  (get-buffer-window "*Oz Compiler*")
@@ -1165,8 +1168,6 @@ if that value is non-nil."
   (concat oz-warn-string "\\|" oz-error-string)
   "")
 
-
-(defvar oz-errors-found nil)
 
 (defun oz-filter (proc string state-string)
   (let ((newbuf (process-buffer proc))
