@@ -53,6 +53,7 @@ public:
   FreeListManager(int i):free(NULL),cutoff(i),no_free(0){}
 
   Bool putOne(FreeListEntry *f){
+    Assert(unique(f));
     if(no_free==cutoff){return FALSE;}
     Assert(no_free<cutoff);
     f->next=free;
@@ -67,7 +68,21 @@ public:
     no_free--;
     return f;}
 
+
+  Bool unique(FreeListEntry *f){
+    int len = no_free;
+    FreeListEntry *ff = free;
+    while(ff!=NULL){
+      len --;
+      if(ff == f){
+	return FALSE;}
+      ff = ff->next;}
+    if(len != 0){
+      return FALSE;}
+    return TRUE;}
+  
 #ifdef DEBUG_PERDIO
+
 
   int length(){
     int ct=0;
