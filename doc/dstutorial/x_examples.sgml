@@ -292,7 +292,7 @@ a centralized object is that <<New>> is replaced by <<NewStat>>.
 This specifies the distributed semantics of the object
 independently of the object's class.
 
-<SUBSECTION><TITLE>Making stationary objects</TITLE>
+<SUBSECTION ptr="making.stationary.objects"><TITLE>Making stationary objects</TITLE>
 
 <P>Stationary entities are a very important abstraction.
 Mozart provides two operations to
@@ -305,34 +305,44 @@ Object={NewStat Class Init}
 <P>When executed on a site,
 the procedure <<NewStat>> takes a class and an initial message
 and creates an object that is stationary on that site.
-We define <<NewStat>> as follows:
-<<<
+We define <<NewStat>> as follows.
+
+<chunk><title/Stationary object/
 declare
+<chunk.ref/MakeStat definition/
+
 proc {NewStat Class Init Object}
    Object={MakeStat {New Class Init}}
 end
->>>
-<P><<NewStat>> is defined in terms
-of the second operation,
-namely making an existing object stationary.
+</chunk>
+
+<P>A fault-tolerant version of <<NewStat>> is given in <ptr to="guard.based">.
+<<NewStat>> is defined in terms of <<MakeStat>>.
 The procedure <<MakeStat>> takes an object or a one-argument
 procedure and returns a one-argument procedure that
 obeys exactly the same language semantics and is stationary.
 We define <<{MakeStat PO StatP}>> as follows, where
-<<PO>> is an object or a one-argument procedure
-and <<StatP>> is a one-argument procedure:
+input <<PO>> is an object or a one-argument procedure
+and output <<StatP>> is a one-argument procedure.
+<NOTE FOOT>One-argument procedures are not exactly
+objects, since they do not have features.
+For all practical purposes not requiring features,
+though, one-argument procedures
+and objects are interchangeable.</NOTE>
 
-<<<
+<chunk><title/MakeStat definition/
 declare
 proc {MakeStat PO ?StatP}
    S P={NewPort S}
    N={NewName}
 in
+   % Client side:
    proc {StatP M}
    R in
       {Send P M#R}
       if R==N then skip else raise R end end
    end
+   % Server side:
    thread
       {ForAll S
        proc {$ M#R}
@@ -342,7 +352,7 @@ in
        end}
    end
 end
->>>
+</chunk>
 
 <P><<StatP>> preserves exactly the same language semantics
 as <<PO>>.  That is, it has the same concurrency
@@ -351,13 +361,6 @@ The new name <<N>> is a globally-unique token.
 This ensures that
 there is no conflict with any exceptions
 raised by <<ProcOrObj>>.
-
-
-<NOTE FOOT>One-argument procedures are not exactly
-objects, since they do not have features.
-For all practical purposes not requiring features,
-though, one-argument procedures
-and objects are interchangeable.</NOTE>
 
 
 <SUBSECTION id="compute.server"><TITLE>A compute server</TITLE>
