@@ -23,7 +23,14 @@ declare
 BrowserClass
 Browser
 Browse
+\ifdef SAVE
+NewBrowser
+\endif
 in
+
+\ifdef SAVE
+fun {NewBrowser Search FD Tk TkTools}
+\endif
 
 %%
 \ifdef DEBUG_OPEN
@@ -33,6 +40,8 @@ declare
 local
 \endif
 
+   BrowserClass Browser Browse
+   
    %%
    %% 
    %%  Local initial constants;
@@ -479,11 +488,25 @@ in
    %%
    Browser = {New BrowserClass init}
    Browse = proc {$ X} {Browser browse(X)} end
-
+\ifdef SAVE
+   browser('BrowserClass': BrowserClass
+	   'Browser':      Browser
+	   'Browse':       Browse)
+\endif	   
    %%
    %%
 \ifndef DEBUG_OPEN 
 end 
-\endif 
+\endif
+\ifdef SAVE
+end
+\endif
 
 \insert 'browser/undefs.oz'
+
+\ifdef SAVE
+browser('BrowserClass': BrowserClass
+	'Browser':      Browser
+	'Browse':       Browse)
+= {NewBrowser Search FD Tk TkTools}
+\endif
