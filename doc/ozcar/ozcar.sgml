@@ -33,7 +33,7 @@
     <abstract>
       This manual describes Ozcar, a symbolic debugger which provides
       well known features like single stepping, breakpoints, and
-      environment inspectation.  Moreover, it supports debugging of
+      environment inspection.  Moreover, it supports debugging of
       multiple threads; their concurrent behaviour can be observed and
       manipulated.
       <p>
@@ -433,7 +433,7 @@ end
         defined dynamic breakpoints. You just have to keep them in mind.
         This should be changed in the future.
       <chapter id="chapter.env">
-        <title/Environment Inspectation/
+        <title/Environment Inspection/
         <p>
         In this chapter you learn how to investigate the environment, i.e,
         how to access the values of variables. In fact, we must
@@ -448,7 +448,7 @@ end
         variables, which are referenced inside the procedure, but
         defined outside.
         <p>
-        Environment inspectation is easy with Ozcar. In fact,
+        Environment inspection is easy with Ozcar. In fact,
         it is done automatically for you. Whenever you select a stack
         frame, the variables which are visible inside this frame are
         printed in the variable windows. You can browse the values by
