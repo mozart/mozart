@@ -58,10 +58,10 @@ define
    end
 
    local
-      fun {Union Xs Ys}
+      fun {Difference Xs Ys}
          case Xs of X1|Xr then
-            if {Member X1 Ys} then {Union Xr Ys}
-            else {Union Xr X1|Ys}
+            if {Member X1 Ys} then {Difference Xr Ys}
+            else X1|{Difference Xr Ys}
             end
          [] nil then Ys
          end
@@ -79,7 +79,7 @@ define
          Cs1 = {CondSelect Common 'class' nil}
          Cs2 = {CondSelect N1 'class' nil}
          if Cs1 == nil andthen Cs2 == nil then N1
-         else {AdjoinAt N1 'class' {Union Cs1 Cs2}}
+         else {AdjoinAt N1 'class' {Append Cs2 {Difference Cs2 Cs1}}}
          end
       end
    end
@@ -106,15 +106,16 @@ define
                    fun {$ F In X}
                       if {IsInt F} orelse X == unit orelse F == id then In
                       else
-                         In#' '#F#'='#
-                         {MakeCDATA case F of 'class' then
-                                       case X of X1|Xr then
-                                          {FoldL Xr
-                                           fun {$ In X} In#' '#X end X1}
-                                       [] nil then X
-                                       end
-                                    else X
-                                    end}
+                         case F of 'class' then
+                            case X of X1|Xr then
+                               % The following does not work in all browsers:
+                               % {FoldL Xr fun {$ In X} In#' '#X end X1}
+                               In#' '#F#'='#{MakeCDATA X1}
+                            [] nil then ""
+                            end
+                         else
+                            In#' '#F#'='#{MakeCDATA X}
+                         end
                       end
                    end ""}
          Attrs = case {CondSelect HTML1 id unit} of unit then Attrs1
