@@ -6,6 +6,7 @@
 
 %% some builtins...
 Dbg = dbg( taskstack   : {`Builtin` taskstack 3}
+	   suspend     : {`Builtin` suspendDebug 1}
 	   frameVars   : {`Builtin` frameVariables 3}
 	   stream      : {`Builtin` globalThreadStream 1}
 	   contflag    : {`Builtin` setContFlag 2}
