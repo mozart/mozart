@@ -722,8 +722,8 @@ define(M4INSTRTWOREGS,``''
 
   M4INSTRONEREG(SWITCHONTERM,
     {
-      TaggedRef val    = Reg1(getRegArg(PC+1));
-      IHashTable *table = (IHashTable *) (PC+2);
+      TaggedRef val     = Reg1(getRegArg(PC+1));
+      IHashTable *table = (IHashTable *) getAdressArg(PC+2);
 
       DoSwitchOnTerm(val,table);
     });
