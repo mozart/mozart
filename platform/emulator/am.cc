@@ -17,6 +17,38 @@
 AM am;
 
 /* -------------------------------------------------------------------------
+ * IONodes
+ * -------------------------------------------------------------------------*/
+
+
+class IONode {
+public:
+  int fd;
+  OZ_IOHandler handler[2];
+  void *readwritepair[2];
+  IONode *next;
+  IONode(int f, IONode *nxt): fd(f), next(nxt) {
+    handler[0] = handler[1] = 0;
+    readwritepair[0] = readwritepair[1] = 0;
+  }
+};
+
+IONode *findIONode(int fd)
+{
+  static IONode *ioNodes = NULL;
+
+  IONode *aux = ioNodes;
+  while(aux) {
+    if (aux->fd == fd) return aux;
+    aux = aux->next;
+  }
+  ioNodes = new IONode(fd,ioNodes);
+  return ioNodes;
+}
+
+
+
+/* -------------------------------------------------------------------------
  * Init and exit AM
  * -------------------------------------------------------------------------*/
 
@@ -57,11 +89,6 @@ static
 void printBanner()
 {
   version();
-
-#if defined(DEBUG_DET) && !defined(WINDOWS)
-  // windows dumps if I activate this
-  warning("DEBUG_DET implies eager waking of sleep.");
-#endif
 
 #ifdef NO_LTQ
   warning("LTQ is turned off.");
@@ -316,8 +343,6 @@ void AM::init(int argc,char **argv)
   toplevelVarsCount = 0;
 
   toplevelVars[0] = makeTaggedConst(entry);
-
-  ioNodes = new IONode[osOpenMax()];
 
   if (!isStandalone()) {
     osWatchFD(compStream->csfileno(),SEL_READ);
@@ -1360,13 +1385,13 @@ Bool AM::loadQuery(CompStream *fd)
 
 void AM::select(int fd, int mode, OZ_IOHandler fun, void *val)
 {
-  Assert(fd<osOpenMax());
   if (!onToplevel()) {
     warning("select only on toplevel");
     return;
   }
-  ioNodes[fd].readwritepair[mode]=val;
-  ioNodes[fd].handler[mode]=fun;
+  IONode *ion = findIONode(fd);
+  ion->readwritepair[mode]=val;
+  ion->handler[mode]=fun;
   osWatchFD(fd,mode);
 }
 
@@ -1378,8 +1403,9 @@ void AM::acceptSelect(int fd, OZ_IOHandler fun, void *val)
     return;
   }
 
-  ioNodes[fd].readwritepair[SEL_READ]=val;
-  ioNodes[fd].handler[SEL_READ]=fun;
+  IONode *ion = findIONode(fd);
+  ion->readwritepair[SEL_READ]=val;
+  ion->handler[SEL_READ]=fun;
   osWatchAccept(fd);
 }
 
@@ -1390,10 +1416,11 @@ int AM::select(int fd, int mode,TaggedRef l,TaggedRef r)
     return OK;
   }
   if (osTestSelect(fd,mode)==1) return OZ_unify(l,r);
-  ioNodes[fd].readwritepair[mode]=(void *) cons(l,r);
-  gcProtect((TaggedRef *) &ioNodes[fd].readwritepair[mode]);
+  IONode *ion = findIONode(fd);
+  ion->readwritepair[mode]=(void *) cons(l,r);
+  gcProtect((TaggedRef *) &(ion->readwritepair[mode]));
 
-  ioNodes[fd].handler[mode]=awakeIO;
+  ion->handler[mode]=awakeIO;
   osWatchFD(fd,mode);
   return OK;
 }
@@ -1405,10 +1432,11 @@ void AM::acceptSelect(int fd,TaggedRef l,TaggedRef r)
     return;
   }
 
-  ioNodes[fd].readwritepair[SEL_READ]=(void *) cons(l,r);
-  gcProtect((TaggedRef *) &ioNodes[fd].readwritepair[SEL_READ]);
+  IONode *ion = findIONode(fd);
+  ion->readwritepair[SEL_READ]=(void *) cons(l,r);
+  gcProtect((TaggedRef *) &(ion->readwritepair[SEL_READ]));
 
-  ioNodes[fd].handler[SEL_READ]=awakeIO;
+  ion->handler[SEL_READ]=awakeIO;
   osWatchAccept(fd);
 }
 
@@ -1420,11 +1448,11 @@ void AM::deSelect(int fd)
 
 void AM::deSelect(int fd,int mode)
 {
-  Assert(fd<osOpenMax());
   osClrWatchedFD(fd,mode);
-  ioNodes[fd].readwritepair[mode]  = 0;
-  (void) gcUnprotect((TaggedRef *) &ioNodes[fd].readwritepair[mode]);
-  ioNodes[fd].handler[mode]  = 0;
+  IONode *ion = findIONode(fd);
+  ion->readwritepair[mode]  = 0;
+  (void) gcUnprotect((TaggedRef *) &(ion->readwritepair[mode]));
+  ion->handler[mode]  = 0;
 }
 
 // called if IOReady (signals are blocked)
@@ -1454,11 +1482,12 @@ void AM::handleIO()
 
         //  EKS
         // Assert(ioNodes[index].handler[mode]);
-        if ((ioNodes[index].handler[mode])
-            (index, ioNodes[index].readwritepair[mode])) {
-          ioNodes[index].readwritepair[mode] = 0;
-          (void) gcUnprotect((TaggedRef *)&ioNodes[index].readwritepair[mode]);
-          ioNodes[index].handler[mode] = 0;
+        IONode *ion = findIONode(index);
+        if ((ion->handler[mode])
+            (index, ion->readwritepair[mode])) {
+          ion->readwritepair[mode] = 0;
+          (void) gcUnprotect((TaggedRef *)&(ion->readwritepair[mode]));
+          ion->handler[mode] = 0;
           osClrWatchedFD(index,mode);
         }
       }
@@ -1513,15 +1542,10 @@ void AM::suspendEngine()
     }
     Assert(!compStream || compStream->bufEmpty());
 
-    int ticksleft = osBlockSelect(userCounter);
+    int msleft = osBlockSelect(nextUser());
     setSFlag(IOReady);
 
-    if (userCounter>0 && ticksleft==0) {
-      handleUser();
-      continue;
-    }
-
-    setUserAlarmTimer(ticksleft);
+    wakeUser();
   }
 
   ozstat.printRunning(stdout);
@@ -1720,6 +1744,7 @@ void AM::addToplevel(ProgramCounter pc)
   }
 }
 
+
 /* -------------------------------------------------------------------------
  * Signals
  * -------------------------------------------------------------------------*/
@@ -1813,18 +1838,8 @@ void AM::handleAlarm()
     }
   }
 
-  /* load userCounter into a local variable: under win32 this
-   * code is executed concurrently with other code manipulating
-   * the userCounter
-   */
-  int uc = userCounter;
-  Assert(uc>=0);
-  if (uc > 0) {
-    if (--uc == 0) {
-      setSFlag(UserAlarm);
-    }
-    setUserAlarmTimer(uc);
-  }
+  if (checkUser())
+    setSFlag(UserAlarm);
 
   checkGC();
 
@@ -1838,14 +1853,13 @@ void AM::handleAlarm()
 void AM::handleUser()
 {
   unsetSFlag(UserAlarm);
-  int nextMS = wakeUser();
-  setUserAlarmTimer(nextMS);
+  wakeUser();
 }
 
 class OzSleep {
 public:
   OzSleep *next;
-  int time;    // in clock ticks
+  unsigned int time;    // absolut time in ms, when this guy must be woken up
   TaggedRef node;
 public:
   OzSleep(int t, TaggedRef n,OzSleep *a)
@@ -1854,68 +1868,51 @@ public:
     OZ_protect(&node);
     Assert(t>=0);
   }
-  ~OzSleep() {
-    OZ_unprotect(&node);
-  }
+  ~OzSleep() { OZ_unprotect(&node); }
 };
 
 void AM::insertUser(int ms, TaggedRef node)
 {
-  int t = osMsToClockTick(ms);
-
   osBlockSignals();
 
-  if (sleepQueue) {
-    int rest = getUserAlarmTimer();
-    Assert(isSetSFlag(UserAlarm) || rest > 0);
-
-    if (rest <= t) {
-      setUserAlarmTimer(rest);
-      t = t-rest;
-    } else {
-      setUserAlarmTimer(t);
-      sleepQueue->time = rest - t;
-      t = 0;
-    }
-  } else {
-    setUserAlarmTimer(t);
-    t = 0;
-  }
-
-  osUnblockSignals();
+  unsigned int wakeupAt = osTotalTime() + ms;
 
   OzSleep **prev = &sleepQueue;
-  for (OzSleep *a = *prev; a; prev = &a->next, a=a->next) {
-    if (t <= a->time) {
-      a->time = a->time - t;
-      *prev = new OzSleep(t,node,a);
-      return;
+  for (OzSleep *aux = *prev; aux; prev = &aux->next, aux=aux->next) {
+    if (wakeupAt <= aux->time) {
+      *prev = new OzSleep(wakeupAt,node,aux);
+      goto exit;
     }
   }
-  *prev = new OzSleep(t,node,NULL);
+  *prev = new OzSleep(wakeupAt,node,NULL);
+
+exit:
+  osUnblockSignals();
 }
 
-int AM::wakeUser()
+
+int AM::nextUser()
 {
-  if (!sleepQueue) {
-    OZ_warning("wake: nobody to wake up");
-    return 0;
-  }
-  while (sleepQueue && sleepQueue->time==0) {
-    awakeIOVar(sleepQueue->node);
-    OzSleep *tmp = sleepQueue->next;
-    delete sleepQueue;
-    sleepQueue = tmp;
-  }
-  if (sleepQueue) {
-    int ret = sleepQueue->time;
-    sleepQueue->time = 0;
-    return ret;
-  }
-  return 0;
+  return (sleepQueue==NULL) ? 0 : max(1,sleepQueue->time - osTotalTime());
 }
 
 
+Bool AM::checkUser()
+{
+  return (sleepQueue!=NULL && sleepQueue->time <= osTotalTime());
+}
+
+void AM::wakeUser()
+{
+  unsigned int now = osTotalTime();
+
+  while (sleepQueue && sleepQueue->time<=now) {
+    awakeIOVar(sleepQueue->node);
+    OzSleep *aux = sleepQueue->next;
+    delete sleepQueue;
+    sleepQueue = aux;
+  }
+}
 
 
 

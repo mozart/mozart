@@ -50,12 +50,6 @@ enum InstType {
   INST_REJECTED
 };
 
-class IONode {
-public:
-  OZ_IOHandler handler[2];
-  void *readwritepair[2];
-};
-
 
 
 typedef int32 ChachedOORegs;
@@ -106,8 +100,6 @@ private:
 
   CompStream *compStream;
   Bool isStandaloneF;
-
-  IONode *ioNodes;              // node that must be waked up on io
 
 #ifdef DEBUG_CHECK
   Bool dontPropagate;
@@ -448,10 +440,10 @@ public:
 
   void handleAlarm();
   void handleUser();
-  void setUserAlarmTimer(int ticks) { userCounter=ticks; }
-  int getUserAlarmTimer() { return userCounter; }
   void insertUser(int t,TaggedRef node);
-  int wakeUser();
+  void wakeUser();
+  int  nextUser();
+  Bool checkUser();
 
   Bool isStableSolve(SolveActor *sa);
 };

@@ -101,7 +101,6 @@ int  osFirstSelect();
 Bool osNextSelect(int fd, int mode);
 int  osCheckIO();
 
-int osOpenMax();
 void osInit();
 void osExit(int status);
 
