@@ -24,9 +24,9 @@ OZENGINE        = @OZENGINE@
 OZFLAGS         =
 OZC             = @OZC@
 
-COMPILE         = $(OZC) $(OZFLAGS) -l Standard -c
+COMPILE         = $(OZC) $(OZFLAGS) -l Base -c
 EXEC            = $(OZC) $(OZFLAGS)
-COMPILESYSLET   = $(OZC) $(OZFLAGS) -l Standard -x
+COMPILESYSLET   = $(OZC) $(OZFLAGS) -l Base -x
 
 P2T             = $(SRCDIR)/p2t.sh
 T2P             = $(SRCDIR)/t2p.sh
@@ -96,10 +96,10 @@ Init.ozf: URL.ozf $(INITSRC)
         $(COMPILE) -l URL=URL.ozf Init.oz -o Init.ozf
 
 #---------------------------------------------------------------------
-# Standard
+# Base
 #---------------------------------------------------------------------
 
-STANDARDSRC1 = \
+BASESRC1 = \
         Record.oz Unit.oz Tuple.oz Atom.oz Name.oz Procedure.oz \
         Int.oz Float.oz Number.oz Bool.oz List.oz Chunk.oz \
         Literal.oz Value.oz Cell.oz Lock.oz Char.oz String.oz \
@@ -107,39 +107,39 @@ STANDARDSRC1 = \
         Time.oz Thread.oz Space.oz Array.oz Dictionary.oz \
         Exception.oz Functor.oz BitArray.oz BitString.oz \
         ByteString.oz
-STANDARDSRC = $(STANDARDSRC1:%=standard/%) Standard.oz
+BASESRC = $(BASESRC1:%=standard/%) Base.oz
 
-Standard.ozf: $(STANDARDSRC) StandardBuiltins.ozf
-        $(OZC) $(OZFLAGS) -l StandardBuiltins -c Standard.oz -o $@
+Base.ozf: $(BASESRC) BaseBuiltins.ozf
+        $(OZC) $(OZFLAGS) -l BaseBuiltins -c Base.oz -o $@
 
-StandardBuiltins.ozf: StandardBuiltins.oz
+BaseBuiltins.ozf: BaseBuiltins.oz
         $(OZC) $(OZFLAGS) -c $< -o $@
 
 #---------------------------------------------------------------------
 # Remaining functors
 #---------------------------------------------------------------------
 
-$(FUNCTORS): Standard.ozf
+$(FUNCTORS): Base.ozf
 
-%.ozf: sp/%.oz Standard.ozf
+%.ozf: sp/%.oz Base.ozf
         $(COMPILE) $< -o $@
-%.ozf: op/%.oz Standard.ozf
+%.ozf: op/%.oz Base.ozf
         $(COMPILE) $< -o $@
-%.ozf: ap/%.oz Standard.ozf
+%.ozf: ap/%.oz Base.ozf
         $(COMPILE) $< -o $@
-%.ozf: cp/%.oz Standard.ozf
+%.ozf: cp/%.oz Base.ozf
         $(COMPILE) $< -o $@
-%.ozf: dp/%.oz Standard.ozf
+%.ozf: dp/%.oz Base.ozf
         $(COMPILE) $< -o $@
-%.ozf: wp/%.oz Standard.ozf
+%.ozf: wp/%.oz Base.ozf
         $(COMPILE) $< -o $@
-%.ozf: misc/%.oz Standard.ozf
+%.ozf: misc/%.oz Base.ozf
         $(COMPILE) $< -o $@
-%.ozf: %.oz Standard.ozf
+%.ozf: %.oz Base.ozf
         $(COMPILE) $< -o $@
-%.ozf: compiler/%.oz Standard.ozf
+%.ozf: compiler/%.oz Base.ozf
         $(COMPILE) $< -o $@
-%.ozf: support/%.oz Standard.ozf
+%.ozf: support/%.oz Base.ozf
         $(COMPILE) $< -o $@
 
 # op dependencies
@@ -186,11 +186,11 @@ compiler-Opcodes.oz: compiler/Opcodes.m4oz $(EMUSRCDIR)/instrDefs.m4
         $(M4) -DEMUDIR=$(EMUSRCDIR) < $< > $@ \
         || (rm -f $@; exit 1)
 
-functor2env: $(RUNFUNCTORS) Standard.ozf MakeFunctorToEnv.oz
+functor2env: $(RUNFUNCTORS) Base.ozf MakeFunctorToEnv.oz
         $(COMPILESYSLET) MakeFunctorToEnv.oz -o $@
 
-compiler-Env.oz: $(RUNFUNCTORS) Standard.ozf functor2env
-        $(OZENGINE) functor2env -in=Standard.ozf -out=compiler-Env.oz
+compiler-Env.oz: $(RUNFUNCTORS) Base.ozf functor2env
+        $(OZENGINE) functor2env -in=Base.ozf -out=compiler-Env.oz
 
 FUNFUNCTORS = PrintName.ozf Builtins.ozf Unnester.ozf Core.ozf \
         StaticAnalysis.ozf CodeGen.ozf Assembler.ozf Main.ozf RunTime.ozf
@@ -206,7 +206,7 @@ Core.ozf: compiler/Core.oz compiler/Annotate.oz
 
 StaticAnalysis.ozf: compiler/StaticAnalysis.oz compiler/POTypes.oz \
         Search.ozf FD.ozf FS.ozf
-        $(COMPILE) -l Search=Search.ozf,FD=FD.ozf,FS=FS.ozf\
+        $(COMPILE) -l Search=Search.ozf,FD=FD.ozf,FS=FS.ozf \
         compiler/StaticAnalysis.oz -o $@
 
 CodeGen.ozf: compiler/CodeGen.oz compiler/CodeStore.oz compiler/CodeEmitter.oz
@@ -219,8 +219,8 @@ Main.ozf: compiler/Main.oz compiler-Env.oz compiler/FormatStrings.oz \
         compiler/QuietInterface.oz compiler/Abstractions.oz \
         compiler/Errors.oz compiler-Version.oz
 
-RunTime.ozf: compiler/RunTime.oz Standard.ozf StandardBuiltins.ozf
-        $(OZC) -l Standard,StandardBuiltins -c $< -o $@
+RunTime.ozf: compiler/RunTime.oz Base.ozf BaseBuiltins.ozf
+        $(COMPILE) -l BaseBuiltins $< -o $@
 
 Compiler.ozf: $(FUNFUNCTORS) ozar
         $(OZENGINE) ozar --in=Main.ozf --out=Compiler.ozf
@@ -231,7 +231,7 @@ Compiler.ozf: $(FUNFUNCTORS) ozar
 
 $(SYSLETS): $(RUNFUNCTORS)
 
-ozc: Standard.ozf MakeBatch.oz BatchCompile.oz
+ozc: Base.ozf MakeBatch.oz BatchCompile.oz
         $(COMPILESYSLET) MakeBatch.oz -o $@
 
 ozar: URL.ozf ar/Print.oz ar/Main.oz ar/Archiver.oz ../functor-defaults.oz \
@@ -253,7 +253,7 @@ BOOTINITTXT     = boot-init.ozt
 BOOTOZCTXT      = boot-ozc.ozt
 
 STAGEEXTRAFILES = \
-        $(OZLIB)/Standard.ozf $(OZLIB)/$(BOOTINITTXT) $(OZLIB)/$(BOOTOZCTXT)
+        $(OZLIB)/Base.ozf $(OZLIB)/$(BOOTINITTXT) $(OZLIB)/$(BOOTOZCTXT)
 
 install: install-main install-images install-cache
 
@@ -313,7 +313,7 @@ CLEANFILES = \
         compiler-Version.oz compiler-Builtins.oz \
         compiler-Opcodes.oz \
         functor2env compiler-Env.oz \
-        Standard.ozf StandardBuiltins.ozf \
+        Base.ozf BaseBuiltins.ozf \
         $(FUNCTORS) $(FUNFUNCTORS) \
         $(SYSLETS) $(BOOTINITTXT) $(BOOTOZCTXT) boot-init boot-ozc
 
