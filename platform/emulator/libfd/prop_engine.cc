@@ -29,10 +29,10 @@
 
 //-----------------------------------------------------------------------------
 
-void EventList::wakeup(PropQueue * pq, PropFnctTable * pft) {
+void PEL_EventList::wakeup(PEL_PropQueue * pq, PEL_PropFnctTable * pft) {
   for (int i = _high; i--; ) {
     int idx = operator[](i);
-    PropFnctTableEntry &pft_idx = (*pft)[idx];
+    PEL_PropFnctTableEntry &pft_idx = (*pft)[idx];
     if (! pft_idx.isScheduled()) {
       CDM((" <waking up>"));
       pq->enqueue(idx);
@@ -43,10 +43,12 @@ void EventList::wakeup(PropQueue * pq, PropFnctTable * pft) {
 
 //-----------------------------------------------------------------------------
 
-int PropFnctTable::add(ParamTable &pt, PropQueue &pq, pf_fnct_t fnct, ...)
+int PEL_PropFnctTable::add(PEL_ParamTable &pt,
+                           PEL_PropQueue &pq,
+                           pf_fnct_t fnct, ...)
 {
   int pt_high = pt.getHigh();
-  PropFnctTableEntry fnct_entry(fnct, pt_high);
+  PEL_PropFnctTableEntry fnct_entry(fnct, pt_high);
   int r = push(fnct_entry);
   pq.incAPF();
 
@@ -72,12 +74,12 @@ int PropFnctTable::add(ParamTable &pt, PropQueue &pq, pf_fnct_t fnct, ...)
 
 //-----------------------------------------------------------------------------
 
-pf_return_t PropQueue::apply(PropFnctTable &pft,
-                             ParamTable &pt,
-                             SuspVar * x[])
+pf_return_t PEL_PropQueue::apply(PEL_PropFnctTable &pft,
+                                 PEL_ParamTable &pt,
+                                 PEL_SuspVar * x[])
 {
   int idx = dequeue();
-  PropFnctTableEntry &fnct_entry = pft[idx]; // this must be a reference
+  PEL_PropFnctTableEntry &fnct_entry = pft[idx]; // this must be a reference
 
   pf_fnct_t fnct = fnct_entry.getFnct();
   int paramIdx = fnct_entry.getParamIdx();
