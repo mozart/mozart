@@ -49,7 +49,8 @@ The values <<OZ_FDPropState>> have the following meaning.
 <tr><td/<<fd_prop_bounds>>/ 
     <td/... the bounds of a finite domain are narrowed./ 
 <tr><td/<<fd_prop_any>>/ 
-    <td/... an arbitrary value is removed from a finite domain
+    <td/... an arbitrary value is removed from a finite/
+<tr> <td/<P.silent>/<td/ domain
        or an equality constraint is imposed./ 
 </table>
 
@@ -81,7 +82,8 @@ resumed. The values <<OZ_FSetPropState>> have the following meaning.
 <tr><td/<<fs_prop_bounds>>/ 
     <td/... a value is added to or removed from  a set./
 <tr><td/<<fs_prop_any>>/ 
-    <td/... either the conditions for <<fs_prop_bounds>> apply 
+    <td/... either the conditions for <<fs_prop_bounds>> apply/
+<tr><td/<P.silent><td/ 
         or an equality constraint is imposed./
 </table>
 
@@ -144,8 +146,10 @@ finite domain and finite set constraints.
   <Grammar.Alt type=or>?{level_1}<<#>>?{level_1}</Grammar.Alt>
 
 <Grammar.Rule>?{level_1}
-  <Grammar.Alt type=def><<OZ_getFDInf()>>,...,<<OZ_getFDSup()>> (in case of <<OZ_Expect::expectDomDescr()>>)</Grammar.Alt>
-  <Grammar.Alt type=or><<OZ_getFSetInf()>>,...,<<OZ_getFSetSup()>> (in case of <<OZ_Expect::expectFSetDescr()>>)</Grammar.Alt>
+  <Grammar.Alt type=def><<OZ_getFDInf()>>,...,<<OZ_getFDSup()>> </Grammar.Alt>
+  <Grammar.Alt type=space>(in case of <<OZ_Expect::expectDomDescr()>>)</Grammar.Alt>
+  <Grammar.Alt type=or><<OZ_getFSetInf()>>,...,<<OZ_getFSetSup()>> </Grammar.Alt>
+  <Grammar.Alt type=space>(in case of <<OZ_Expect::expectFSetDescr()>>)</Grammar.Alt>
 
 
 <!-- ********************************************************************** -->
@@ -237,7 +241,9 @@ to="expect.types"> for the values of <<ps>>.
 <Entry class="member function"><<expectGenCtVar>>
 <Index class=proglang><<OZ_expect>><And><<expectGenCtVar>></Index>
 <Synopsis> <<<
-OZ_expect_t expectGenCtVar(OZ_Term t, OZ_CtDefinition * def, OZ_CtWakeUp w);
+OZ_expect_t expectGenCtVar(OZ_Term t, 
+                           OZ_CtDefinition * def, 
+                           OZ_CtWakeUp w);
 >>>
 
 <Item> Expects <<t>> to be a constrained variable &resp; a compatible
@@ -285,7 +291,11 @@ points to an array of literals terminated with <<(OZ_Term) NULL>>.
 
 <Entry class="member function"><<expectVector>>
 <Index class=proglang><<OZ_expect>><And><<expectVector>></Index>
-<Synopsis> <<<OZ_expect_t expectVector(OZ_Term t, OZ_ExpectMeth expect_f);>>>
+<Synopsis> 
+<<<
+OZ_expect_t expectVector(OZ_Term t, 
+                         OZ_ExpectMeth expect_f);
+>>>
 
 <Item> Expects <<t>> to be a vector of terms which are all
 sufficiently constrained with respect to <<expect_f>>. A vector is
@@ -294,7 +304,11 @@ either a tuple, a closed record, or a list.
 
 <Entry class="member function"><<expectProperRecord>>
 <Index class=proglang><<OZ_expect>><And><<expectProperRecord>></Index>
-<Synopsis> <<<OZ_expect_t expectProperRecord(OZ_Term t, OZ_ExpectMeth expect_f);>>>
+<Synopsis> 
+<<<
+OZ_expect_t expectProperRecord(OZ_Term t, 
+                               OZ_ExpectMeth expect_f);
+>>>
 
 <Item> Expects <<t>> to be a proper record where all subtrees are
 sufficiently constrained with respect to <<expect_f>>. A proper record
@@ -303,7 +317,11 @@ expects its subtrees to be indexed by literals.
 
 <Entry class="member function"><<expectProperRecord>>
 <Index class=proglang><<OZ_expect>><And><<expectProperRecord>></Index>
-<Synopsis> <<<OZ_expect_t expectProperRecord(OZ_Term t, OZ_Term * ar);>>>
+<Synopsis> 
+<<<
+OZ_expect_t expectProperRecord(OZ_Term t, 
+                               OZ_Term * ar);
+>>>
 
 <Item> Expects <<t>> to be a proper record with at least subtrees
 under the features in <<ar>> are present where <<ar>> points to an
@@ -312,7 +330,11 @@ array of features terminated with <<(OZ_Term) NULL>>.
 
 <Entry class="member function"><<expectProperTuple>>
 <Index class=proglang><<OZ_expect>><And><<expectProperTuple>></Index>
-<Synopsis> <<<OZ_expect_t expectProperTuple(OZ_Term t, OZ_ExpectMeth expect_f);>>>
+<Synopsis> 
+<<<
+OZ_expect_t expectProperTuple(OZ_Term t, 
+                              OZ_ExpectMeth expect_f);
+>>>
 
 <Item> Expects <<t>> to be a proper tuple where all subtrees are
 sufficiently constrained with respect to <<expect_f>>. A proper tuple
