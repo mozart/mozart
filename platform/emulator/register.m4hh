@@ -539,7 +539,7 @@ Case(CREATEVARIABLEMOVEY)
 		 TaggedRef term = Reg1( getRegArg(PC+2) );
 		 DEREF(term,termPtr,tag);
 
-		 if (isNotCVar(tag)) {
+		 if (isUVar(tag)) {
 		   oz_bindToNonvar(termPtr, term, atm, NOFLATGUARD);
 		   DISPATCH(3);
 		 }
@@ -567,7 +567,7 @@ Case(CREATEVARIABLEMOVEY)
 		 TaggedRef term = Reg1(getRegArg(PC+2));
 		 DEREF(term,termPtr,tag);
 
-		 if (isNotCVar(tag)) {
+		 if (isUVar(tag)) {
 		   oz_bindToNonvar(termPtr, term, i, NOFLATGUARD);
 		   DISPATCH(3);
 		 }
@@ -808,7 +808,7 @@ Case(UNIFYLITERAL)
        sPointer++;
        DEREFPTR(term,termPtr,tag);
 
-       if (isNotCVar(tag)) {
+       if (isUVar(tag)) {
          oz_bindToNonvar(termPtr, term, atm, NOFLATGUARD);
          DISPATCH(2);
        }
@@ -843,7 +843,7 @@ Case(UNIFYLITERAL)
       sPointer++;
       DEREFPTR(term,termPtr,tag);
 
-      if (isNotCVar(tag)) {
+      if (isUVar(tag)) {
         oz_bindToNonvar(termPtr, term, i, NOFLATGUARD);
         DISPATCH(2);
       }

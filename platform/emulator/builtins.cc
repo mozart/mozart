@@ -42,6 +42,7 @@
 #include "threadInterface.hh"
 #include "debug.hh"
 #include "iso-ctype.hh"
+#include "extension.hh"
 #include "genvar.hh"
 #include "ofgenvar.hh"
 #include "fdbuilti.hh"
@@ -829,7 +830,7 @@ OZ_Return labelInline(TaggedRef term, TaggedRef &out)
     out=tagged2SRecord(term)->getLabel();
     return PROCEED;
   case UVAR:
-  case SVAR:
+    // FUT
     return SUSPEND;
   case CVAR:
     switch (tagged2CVar(term)->getType()) {
@@ -871,7 +872,7 @@ OZ_Return hasLabelInline(TaggedRef term, TaggedRef &out)
     out=NameTrue;
     return PROCEED;
   case UVAR:
-  case SVAR:
+    // FUT
     out=NameFalse;
     return PROCEED;
   case CVAR:
@@ -910,7 +911,7 @@ LBLagain:
     switch (termTag) {
     case LTUPLE:
     case SRECORD:
-    case SVAR:
+      // FUT
     case UVAR:
       return SUSPEND;
     case CVAR:
@@ -964,7 +965,7 @@ LBLagain:
     }
     
   case UVAR:
-  case SVAR:
+    // FUT
     if (!oz_isFeature(fea)) {
       oz_typeError(1,"Feature");
     }
@@ -1001,6 +1002,12 @@ LBLagain:
 	break;
       case Co_Class:
 	t = tagged2ObjectClass(term)->classGetFeature(fea);
+	break;
+      case Co_SituatedExtension:
+	t = tagged2SituatedExtension(term)->getFeatureV(fea);
+	break;
+      case Co_ConstExtension:
+	t = tagged2ConstExtension(term)->getFeatureV(fea);
 	break;
       case Co_Array:
       case Co_Dictionary:
@@ -1106,7 +1113,7 @@ OZ_Return widthInline(TaggedRef term, TaggedRef &out)
     out = makeTaggedSmallInt(0);
     return PROCEED;
   case UVAR:
-  case SVAR:
+    // FUT
     return SUSPEND;
   case CVAR:
     switch (tagged2CVar(term)->getType()) {
@@ -1831,7 +1838,7 @@ OZ_BI_define(BIstatus,1,1)
 
   switch (tag) {
   case UVAR: 
-  case SVAR: 
+    // FUT
     OZ_RETURN(AtomFree);
   case CVAR:
     if (oz_isFree(term)) {
@@ -2113,7 +2120,7 @@ OZ_Return BIadjoinInline(TaggedRef t0, TaggedRef t1, TaggedRef &out)
       out = t1;
       return PROCEED;
     case UVAR:
-    case SVAR:
+      // FUT
       return SUSPEND;
     case CVAR:
       switch (tagged2CVar(t1)->getType()) {
@@ -2145,7 +2152,7 @@ OZ_Return BIadjoinInline(TaggedRef t0, TaggedRef t1, TaggedRef &out)
 	  return PROCEED;
 	}
       case UVAR:
-      case SVAR:
+	// FUT
 	return SUSPEND;
       case CVAR:
         switch (tagged2CVar(t1)->getType()) {
@@ -2160,7 +2167,7 @@ OZ_Return BIadjoinInline(TaggedRef t0, TaggedRef t1, TaggedRef &out)
       }
     }
   case UVAR:
-  case SVAR:
+    // FUT
   case CVAR:
     if (tag0==CVAR) {
         switch (tagged2CVar(t0)->getType()) {
@@ -2173,7 +2180,7 @@ OZ_Return BIadjoinInline(TaggedRef t0, TaggedRef t1, TaggedRef &out)
     }
     switch (tag1) {
     case UVAR:
-    case SVAR:
+      // FUT
     case SRECORD:
     case LTUPLE:
     case LITERAL:
@@ -2237,7 +2244,7 @@ OZ_BI_define(BIadjoinAt,3,1)
     }
 
   case UVAR:
-  case SVAR:
+    // FUT
   case CVAR:
     if (!oz_isFree(rec) && tagged2CVar(rec)->getType()!=OFSVariable) {
       oz_typeError(0,"Record");
@@ -2316,7 +2323,7 @@ OZ_Return adjoinPropListInline(TaggedRef t0, TaggedRef list, TaggedRef &out,
     out=arity;
     switch (tag0) {
     case UVAR:
-    case SVAR:
+      // FUT
     case LITERAL:
       return SUSPEND;
     case SRECORD:
@@ -2350,7 +2357,7 @@ OZ_Return adjoinPropListInline(TaggedRef t0, TaggedRef list, TaggedRef &out,
       out = t0;
       return PROCEED;
     case UVAR:
-    case SVAR:
+      // FUT
       out=makeTaggedRef(t0Ptr);
       return SUSPEND;
     case CVAR:
@@ -2387,7 +2394,7 @@ OZ_Return adjoinPropListInline(TaggedRef t0, TaggedRef list, TaggedRef &out,
     }
     goto typeError0;
   case UVAR:
-  case SVAR:
+    // FUT
     out=makeTaggedRef(t0Ptr);
     return SUSPEND;
   case CVAR:
@@ -2721,7 +2728,7 @@ OZ_Return BIuminusInline(TaggedRef A, TaggedRef &out)
     return PROCEED;
 
   case UVAR:
-  case SVAR:
+    // FUT
     return SUSPEND;
 
   case OZCONST:
@@ -4199,8 +4206,6 @@ OZ_BI_define(BIconstraints,1,1)
   int len = 0;
   if (isCVar(inTag)) {
     len=oz_cv_getSuspListLength(tagged2CVar(in));
-  } else if (isSVar(inTag)) {
-    len = tagged2SVar(in)->getSuspList()->length();
   }
   OZ_RETURN_INT(len);
 } OZ_BI_end
@@ -4307,7 +4312,7 @@ OZ_BI_define(BIgetPrintName,1,1)
       }
       break;
     }
-  case UVAR: case SVAR: case CVAR:
+  case UVAR: case CVAR: // FUT
     OZ_RETURN_ATOM(VariableNamer::getName(OZ_in(0)));
   case LITERAL:
     {
@@ -4953,7 +4958,7 @@ static int finalizable(OZ_Term& x)
 
   switch (xTag) {
   case UVAR:
-  case SVAR:
+    // FUT
   case CVAR:
     return 0;
     //  case SMALLINT:
@@ -4999,6 +5004,10 @@ static int finalizable(OZ_Term& x)
 	b = ((Tertiary*)xp)->getBoardInternal(); break;
       case Co_Class:
 	b = ((ObjectClass*)xp)->getBoardInternal(); break;
+      case Co_SituatedExtension:
+	b = ((ConstTermWithHome*)xp)->getBoardInternal(); break;
+      case Co_ConstExtension:
+	return 1;
       case Co_Unused2:
 	Assert(0);
 	return 1;

@@ -230,9 +230,5 @@ int switchOnTermOutline(TaggedRef term, TaggedRef *termPtr,
     return 0;
   }
 
-  if (isSVar(term)) {
-    return 0;
-  }
-
   return offset;
 }

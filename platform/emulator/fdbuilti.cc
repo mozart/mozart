@@ -76,10 +76,11 @@ OZ_Term deref(OZ_Term &tr, OZ_Term * &ptr, pm_term_type &tag)
     switch (tagged2CVar(tr1)->getType()) {
     case FDVariable: tag = pm_fd; break;
     case BoolVariable: tag = pm_bool; break;
-    default: tag = pm_none; break;
+    default: 
+      tag = oz_isFree(tr1) ? pm_svar : pm_none; break;
     }
     break;
-  case SVAR: tag = pm_svar; break;
+  // mm2 FUT
   case UVAR: tag = pm_uvar; break;
   case SRECORD: tag = oz_isSTuple(tr1) ? pm_tuple : pm_none; break;
   case LITERAL: tag = pm_literal; break;
@@ -818,7 +819,7 @@ OZ_Boolean BIfdBodyManager::introduce(OZ_Term v)
       bifdbm_dom[0] = &fdvar->getDom();
       bifdbm_init_dom_size[0] = bifdbm_dom[0]->getSize();
       oz_checkSuspensionList(tagged2SVarPlus(v));
-      fdvar->setSuspList(tagged2SVar(v)->getSuspList());
+      fdvar->setSuspList(tagged2SVarPlus(v)->getSuspList()); // mm2
       doBind(vptr, makeTaggedRef(taggedfdvar));
       bifdbm_var[0] = *(bifdbm_varptr[0] = taggedfdvar);
       bifdbm_vartag[0] = pm_fd;

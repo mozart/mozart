@@ -46,8 +46,8 @@ void PerdioVar::primBind(TaggedRef *lPtr,TaggedRef v)
   oz_checkSuspensionList(this, pc_std_unif);
 
   TaggedRef vv=oz_deref(v);
-  if (isSVar(vv)) {
-    SVariable *sv=tagged2SVar(vv);
+  if (isCVar(vv)) {
+    SVariable *sv=tagged2SVarPlus(vv);
     if (sv==this) return;
     oz_checkSuspensionList(sv, pc_std_unif);
     relinkSuspListTo(sv);

@@ -636,7 +636,9 @@ enum TypeOfConst {
   Co_Array,
   Co_Dictionary,
   Co_Lock,
-  Co_Class
+  Co_Class,
+  Co_SituatedExtension,
+  Co_ConstExtension
 };
 
 #define Co_ChunkStart Co_Object
@@ -656,7 +658,7 @@ private:
 public:
   USEHEAPMEMORY;
   OZPRINTLONG;
-  NO_DEFAULT_CONSTRUCTORS(ConstTerm);
+  ~ConstTerm() {} // needed for ConstExtension class
   ConstTerm(TypeOfConst t) { init(t); }
   void init(TypeOfConst t) { tag = t<<1; }
   Bool gcIsMarked(void)        { return tag&1; }
@@ -698,7 +700,7 @@ private:
     boardOrGName.setType(CWH_Board);
   }
 public:
-  NO_DEFAULT_CONSTRUCTORS(ConstTermWithHome);
+  ~ConstTermWithHome() {} // needed for SituatedExtension class
   ConstTermWithHome(Board *bb, TypeOfConst tt) : ConstTerm(tt) { setBoard(bb);}
 
   void init(Board *bb, TypeOfConst tt) { ConstTerm::init(tt); setBoard(bb); }

@@ -50,6 +50,7 @@
 #include "dictionary.hh"
 #include "os.hh"
 #include "value.hh"
+#include "extension.hh"
 #include "codearea.hh"
 #include "fdgenvar.hh"
 #include "fsgenvar.hh"
@@ -1485,25 +1486,8 @@ void gcTagged(TaggedRef & frm, TaggedRef & to,
       case OZFLOAT:   goto DO_OZFLOAT;
       case OZCONST:   goto DO_OZCONST;
 	// All variables are not direct!
-      case SVAR: 
-	{
-	  SVariable * sv = tagged2SVar(aux);
-	  
-	  if (sv->gcIsMarked()) {
-	    Assert(tagTypeOf(*(sv->gcGetFwd())) == SVAR);
-	    to = makeTaggedRef(sv->gcGetFwd());
-	  } else if (allVarsAreLocal || 
-		     isInGc || !(GETBOARD(sv))->isMarkedGlobal()) {
-	    Assert(isInGc || !(GETBOARD(sv))->isMarkedGlobal());
-	    TaggedRef * var_ptr = newTaggedSVar(sv->gc()); 
-	    isGround = NO;
-	    to = makeTaggedRef(var_ptr);
-	    sv->gcMark(isInGc, var_ptr);
-	  } else {
-	    to = makeTaggedRef(aux_ptr);
-	  }
-	  return;
-	}
+
+      case UNUSED_VAR: // FUT
 
       case UVAR: 
 	{
@@ -1616,32 +1600,7 @@ void gcTagged(TaggedRef & frm, TaggedRef & to,
     to = makeTaggedConst(tagged2Const(aux)->gcConstTerm());
     return;
 
-  case SVAR: 
-    if (hasDirectVars) {
-      SVariable * sv = tagged2SVar(aux);
-
-      if (sv->gcIsMarked()) {
-	Assert(tagTypeOf(*(sv->gcGetFwd())) == SVAR);
-	to = makeTaggedRef(sv->gcGetFwd());
-      } else if (allVarsAreLocal || 
-		 isInGc || !(GETBOARD(sv))->isMarkedGlobal()) {
-	Assert(isInGc || !(GETBOARD(sv))->isMarkedGlobal());
-	isGround = NO;
-	to = makeTaggedSVar(sv->gc());
-	sv->gcMark(isInGc, &to);
-      } else {
-	// We cannot copy the variable, but we have already copied
-	// their taggedref, so we change the original variable to a ref 
-	// of the copy.
-	// After pushing on the update stack the
-	// the original variable is replaced by a reference!
-	Assert(!isInGc);
-	frm = makeTaggedRef(&to);
-	to  = aux;
-	storeFwdMode(NO, (int32*) &frm, &to);
-      }
-    }
-    return;
+  case UNUSED_VAR:  // FUT
     
   case UVAR: 
     if (hasDirectVars) {
@@ -2496,6 +2455,16 @@ ConstTerm *ConstTerm::gcConstTerm() {
 
   case Co_Foreign_Pointer:
     return ((ForeignPointer*)this)->gc();
+
+  case Co_SituatedExtension:
+    CheckLocal((SituatedExtension *) this);
+    ret = ((SituatedExtension *) this)->gcV();
+    break;
+
+  case Co_ConstExtension:
+    if (!isInGc) return this;
+    ret = ((ConstExtension *) this)->gcV();
+    break;
 
   default:
     Assert(0);
