@@ -4954,6 +4954,14 @@ OZ_C_proc_begin(BIstatisticsGetProcs, 1)
 }
 OZ_C_proc_end
 
+OZ_C_proc_begin(BIsetProfileMode, 1)
+{
+  oz_declareArg(0,onoff);
+  am.profileMode = literalEq(deref(onoff),NameTrue);
+  return PROCEED;
+}
+OZ_C_proc_end
+
 /* -----------------------------------------------------------------
    dynamic link objects files
    ----------------------------------------------------------------- */
@@ -7502,6 +7510,7 @@ BIspec allSpec[] = {
   {"statisticsPrint",     0, BIstatisticsPrint},
   {"statisticsPrintProcs",0, BIstatisticsPrintProcs},
   {"statisticsGetProcs",  1, BIstatisticsGetProcs},
+  {"setProfileMode",      1, BIsetProfileMode},
 
   {"traceBack",0,BItraceBack},
 

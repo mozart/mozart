@@ -263,10 +263,29 @@ private:
   static OZ_CFunHeader * _all_headers;
   OZ_CFun _header;
   unsigned _calls, _samples;
+
 public:
   OZ_CFunHeader(OZ_CFun header = NULL)
-    : _calls(0), _samples(0), _header(header), _next(NULL) {}
+    : _calls(0), _samples(0), _header(header)
+  {
+    static int firstCall = 1;
+    if (firstCall) {
+      firstCall = 0;
+      _all_headers = 0;
+    }
+    _next = _all_headers;
+    _all_headers = this;
+  }
   OZ_CFun getHeader(void) { return _header; }
+  void incSamples()       { _samples++; }
+  void incCalls()         { _calls++; }
+  unsigned getSamples()   { return _samples; }
+  unsigned getCalls()     { return _calls; }
+
+  static OZ_CFunHeader *getFirst() { return _all_headers; }
+  OZ_CFunHeader *getNext()         { return _next; }
+
+  static void profileReset();
 };
 
 enum OZ_FDPropState {fd_prop_singl = 0, fd_prop_bounds, fd_prop_any};

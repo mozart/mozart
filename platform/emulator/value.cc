@@ -1279,20 +1279,41 @@ TaggedRef PrTabEntry::getProfileStats()
                                                  cons(closures,nil())))))));
   Arity *arity = aritytable.find(sortlist(list,length(list)));
 
-  PrTabEntry *aux = allPrTabEntries;
-  while(aux) {
-    if (aux->numClosures || aux->numCalled || aux->heapUsed || aux->samples) {
-      SRecord *rec = SRecord::newSRecord(ps,arity);
-      rec->setFeature(samples,oz_int(aux->samples));
-      rec->setFeature(calls,oz_int(aux->numCalled));
-      rec->setFeature(heap,oz_int(aux->heapUsed));
-      rec->setFeature(closures,oz_int(aux->numClosures));
-      rec->setFeature(line,oz_int(aux->lineno));
-      rec->setFeature(name,aux->printname);
-      rec->setFeature(file,aux->fileName);
-      ret = cons(makeTaggedSRecord(rec),ret);
+  {
+    PrTabEntry *aux = allPrTabEntries;
+    while(aux) {
+      if (aux->numClosures || aux->numCalled || aux->heapUsed || aux->samples) {
+        SRecord *rec = SRecord::newSRecord(ps,arity);
+        rec->setFeature(samples,oz_int(aux->samples));
+        rec->setFeature(calls,oz_int(aux->numCalled));
+        rec->setFeature(heap,oz_int(aux->heapUsed));
+        rec->setFeature(closures,oz_int(aux->numClosures));
+        rec->setFeature(line,oz_int(aux->lineno));
+        rec->setFeature(name,aux->printname);
+        rec->setFeature(file,aux->fileName);
+        ret = cons(makeTaggedSRecord(rec),ret);
+      }
+      aux = aux->next;
     }
-    aux = aux->next;
+  }
+
+  {
+    OZ_CFunHeader *aux = OZ_CFunHeader::getFirst();
+    TaggedRef noname = oz_atom("");
+    while(aux) {
+      if (aux->getSamples() || aux->getCalls()) {
+        SRecord *rec = SRecord::newSRecord(ps,arity);
+        rec->setFeature(samples,oz_int(aux->getSamples()));
+        rec->setFeature(calls,oz_int(aux->getCalls()));
+        rec->setFeature(heap,oz_int(0));
+        rec->setFeature(closures,oz_int(0));
+        rec->setFeature(line,oz_int(0));
+        rec->setFeature(name,oz_atom(builtinTab.getName((void *)(aux->getHeader()))));
+        rec->setFeature(file,noname);
+        ret = cons(makeTaggedSRecord(rec),ret);
+      }
+      aux = aux->getNext();
+    }
   }
 
   return ret;
