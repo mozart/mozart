@@ -296,6 +296,9 @@ void AM::init(int argc,char **argv)
     }
     if (strcmp(argv[i],"-B")==0) {
       ozmaLib = getOptArg(i,argc,argv);
+#ifdef OZMA
+      fprintf(stderr,"ozma linked statically. Ignoring -B option\n");
+#endif
       continue;
     }
     if (strcmp(argv[i],"-init")==0) {
@@ -455,6 +458,9 @@ void AM::init(int argc,char **argv)
     }
 
     OZ_Term (*ozmaFunc)(const char *);
+#ifdef OZMA
+    ozmaFunc = ozma_readProc;
+#else
     if (ozmaLib) {
       OZ_Term out;
       int ret = osDlopen(ozmaLib, out);
@@ -469,6 +475,7 @@ void AM::init(int argc,char **argv)
 	osExit(1);
       }
     }
+#endif
     if (assemblyCodeFile) {
       OZ_Term v=(*ozmaFunc)(assemblyCodeFile);
       if (v!=makeTaggedNULL()) tt->pushCall(v, 0, 0);

@@ -323,7 +323,7 @@ Bool ozd_trace(char *s, ProgramCounter PC,RefsArray Y,RefsArray G)
     return OK;
   }
   if (PC != NOCODE) {
-    CodeArea::display(PC, 1);
+    displayCode(PC, 1);
   } else {
     am.currentBoard()->print();
   }
@@ -374,7 +374,7 @@ Bool ozd_trace(char *s, ProgramCounter PC,RefsArray Y,RefsArray G)
       }
     case 'd':
       if (PC != NOCODE) {
-	CodeArea::display(CodeArea::definitionStart(PC),1,stdout);
+	displayDef(PC,0);
       }
       break;
     case 'e':
@@ -404,7 +404,7 @@ Bool ozd_trace(char *s, ProgramCounter PC,RefsArray Y,RefsArray G)
 	sscanf(&command[1],"%p %d",&from,&size);
 	if (size == 0)
 	  size = 10;
-	CodeArea::display(from,size);
+	displayCode(from,size);
       }
       break;
     case 'M':
@@ -461,7 +461,7 @@ Bool ozd_trace(char *s, ProgramCounter PC,RefsArray Y,RefsArray G)
 	  {
 	    int size=0;
 	    sscanf(&command[1],"%d",&size);
-	    CodeArea::display(PC, size ? size : 10);
+	    displayCode(PC, size ? size : 10);
 	  }
 	  break;
 	case 'g':

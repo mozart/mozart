@@ -478,8 +478,12 @@ esac
 AC_SUBST(COPT)
 
 
-OZ_ENABLE_YES(ozma,[     add assembler],
-	AC_MSG_RESULT(yes)
+OZ_ENABLE_YES(ozma,[     include Oz assembler],
+	AC_MSG_RESULT(static (-DOZMA))
+	AC_DEFINE(OZMA)
+	TARGETS="libozma.a $TARGETS"
+	LIBS="-L. -lozma $LIBS",
+	AC_MSG_RESULT(dynamic)
 	TARGETS="$TARGETS ozma.so"
 	)
 

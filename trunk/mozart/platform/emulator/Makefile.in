@@ -216,6 +216,7 @@ distclean::
 # dependencies
 marshaler.hh marshalMsg.cc: msgFormat.m4
 scancode.cc copycode.cc optostr.hh marshalcode.cc opcodes.hh opcodes.cc instrtab.hh: instrDefs.m4
+marshaler.o: marshalcode.cc
 
 # automatic configure
 ${srcdir}/configure: configure.in
@@ -264,6 +265,9 @@ ozma-p.yy: ozma-p.m4yy
 ozma.so: ozma-p.o ozma-s.o
 	$(DYNLD) -o $@ ozma-p.o ozma-s.o -lc
 
+libozma.a: ozma-p.o ozma-s.o
+	$(AR) -rc $@ ozma-p.o ozma-s.o && $(RANLIB) $@
+
 realclean::
 	$(RM) ozma-p.cc ozma-p.yy ozma-s.cc ozma-s.ll ozma.hh
 
@@ -281,7 +285,6 @@ test: $(OZTEST)
 
 test-lib:
 	(OZEMULATOR=`pwd`/oz.emulator.bin; export OZEMULATOR; \
-	 OZMA_LIB="-B `pwd`/ozma.so"; export OZMA_LIB; \
 	 cd $(SRCDIR)/../lib; \
 	 ./configure; \
 	 make realclean stage1 clean stage2 cean stage3)

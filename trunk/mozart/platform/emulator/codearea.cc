@@ -399,13 +399,14 @@ ProgramCounter CodeArea::definitionEnd(ProgramCounter PC)
 
 void displayCode(ProgramCounter from, int ssize)
 {
- CodeArea::display(from,ssize,stderr);
- fflush(stderr);
+  CodeArea::display(from,ssize,stderr);
+  fflush(stderr);
 }
 
 void displayDef(ProgramCounter from, int ssize)
 {
-  displayCode(CodeArea::definitionStart(from),ssize);
+  CodeArea::display(CodeArea::definitionStart(from),ssize,stderr,from);
+  fflush(stderr);
 }
 
 
@@ -432,12 +433,26 @@ void CodeArea::getDefinitionArgs(ProgramCounter PC,
   predName = OZ_atom(pred != NULL? pred->getPrintName() : "");
 }
 
+void printLoc(FILE *ofile,OZ_Location *loc) {
+  fprintf(ofile,"[");
+  for (int i=0; i<loc->getInArity(); i++) {
+    fprintf(ofile," %d",loc->in(i));
+  }
+  fprintf(ofile,"] # [");
+  for (int i=0; i<loc->getOutArity(); i++) {
+    fprintf(ofile," %d",loc->out(i));
+  }
+  fprintf(ofile,"]");
+}
 
-void CodeArea::display (ProgramCounter from, int sz, FILE* ofile)
+void CodeArea::display (ProgramCounter from, int sz, FILE* ofile, ProgramCounter to)
 {
   ProgramCounter PC = from;
   int defCount = 0; // counter for nested defintions
   for (int i = 1; i <= sz || sz <= 0 ; i++) {
+
+    if (sz <=0 && to != NOCODE && PC > to) return;
+
     fprintf(ofile, "%p:\t", PC);
     Opcode op = getOpcode(PC);
     if (op == OZERROR || op == ENDOFFILE) {
@@ -625,6 +640,17 @@ void CodeArea::display (ProgramCounter from, int sz, FILE* ofile)
 	       getPosIntArg(PC+4));
       DISPATCH();
 
+    case TESTLE:
+    case TESTLT:
+      fprintf (ofile,
+	       "(x(%d) x(%d) x(%d) %p %d)\n",
+	       regToInt(getRegArg(PC+1)),
+	       regToInt(getRegArg(PC+2)),
+	       regToInt(getRegArg(PC+3)),
+	       computeLabelArg(PC,PC+4),
+	       getPosIntArg(PC+5));
+      DISPATCH();
+
     case INLINEREL1:
       fprintf (ofile,
 	       "(%s x(%d) %d)\n",
@@ -717,6 +743,18 @@ void CodeArea::display (ProgramCounter from, int sz, FILE* ofile)
 	       "(%s %d)\n",
 	       getBIName(PC+1),
 	       getPosIntArg(PC+2));
+      DISPATCH();
+
+    case CALLBI: // mm2
+      fprintf(ofile, "(%s ", getBIName(PC+1));
+      printLoc(ofile,GetLoc(PC+2));
+      fprintf(ofile, " %d)\n",getPosIntArg(PC+3));
+      DISPATCH();
+
+    case TESTBI: // mm2
+      fprintf(ofile, "(%s ", getBIName(PC+1));
+      printLoc(ofile,GetLoc(PC+2));
+      fprintf(ofile, " %p %d)\n",computeLabelArg(PC,PC+3),getPosIntArg(PC+3));
       DISPATCH();
 
     case GENFASTCALL:
