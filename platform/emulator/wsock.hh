@@ -50,7 +50,7 @@ extern "C" {
 
   inline void _endthreadex( unsigned __retval )
   {
-    /* empty for now */
+    ExitThread(__retval);
   }
 
 #define _beginthreadex(security, stack_size,fun,args,initflag,thrdaddr) \
