@@ -454,9 +454,7 @@ PRINT(Float)
 PRINT(Cell)
 {
   CHECKDEPTH;
-  stream << "C:"
-         << getPrintName()
-         <<"@" << (void*) getId();
+  stream << "C@" << this;
 }
 
 PRINT(Abstraction)
@@ -468,7 +466,7 @@ PRINT(Abstraction)
   }
   stream << "P:"
          << getPrintName() << "/" << getArity();
-//       << "@" << (void*) getId();
+//       << "@" << this;
 }
 
 PRINT(Builtin)
@@ -1143,7 +1141,7 @@ PRINTLONG(Abstraction)
   stream << indent(offset)
          << (getCType() == C_OBJECT ? "Object " : "")
          << "Abstraction @id"
-         << getId() << endl;
+         << this << endl;
   pred->printLong(stream,depth,offset);
   int n = gRegs ? getRefsArraySize(gRegs) : 0;
   if (offset == 0) {
@@ -1196,8 +1194,7 @@ PRINTLONG(Cell)
 {
   CHECKDEPTHLONG;
   stream << indent(offset)
-         << "Cell " << getPrintName()
-         << " @id"  << getId() << endl
+         << "Cell@id" << this << endl
          << indent(offset)
          << " value:"<<endl;
   tagged2StreamLong(val,stream,depth,offset+2);

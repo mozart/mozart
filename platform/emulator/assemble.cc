@@ -88,7 +88,7 @@ OZ_C_proc_begin(BIscheduleCode,3)
 
   PrTabEntry *predd = new PrTabEntry(OZ_nil(),0,size,FALSE);
   predd->PC = pc;
-  Abstraction *p = new Abstraction(predd, gregs, tagged2Literal(OZ_nil()));
+  Abstraction *p = new Abstraction(predd, gregs, NULL);
 
   return OZ_unify(OZ_getCArg(2),makeTaggedConst(p));
 }

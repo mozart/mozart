@@ -1441,23 +1441,17 @@ void engine() {
       int size = list.getSize();
       RefsArray gRegs = (size == 0) ? (RefsArray) NULL : allocateRefsArray(size);
 
-      Abstraction *p = new Abstraction (predd, gRegs,
-                                        new Name(e->currentBoard));
+      Abstraction *p = new Abstraction (predd, gRegs, e->currentBoard);
+
       if (predEntry) {
         predEntry->setPred(p);
       }
 
       for (int i = 0; i < size; i++) {
         switch (list[i].kind) {
-        case XReg:
-          gRegs[i] = X[list[i].number];
-          break;
-        case YReg:
-          gRegs[i] = Y[list[i].number];
-          break;
-        case GReg:
-          gRegs[i] = G[list[i].number];
-          break;
+        case XReg: gRegs[i] = X[list[i].number]; break;
+        case YReg: gRegs[i] = Y[list[i].number]; break;
+        case GReg: gRegs[i] = G[list[i].number]; break;
         }
       }
       Xreg(reg) = makeTaggedConst(p);
