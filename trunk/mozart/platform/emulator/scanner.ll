@@ -242,7 +242,7 @@ static void push_insert(FILE *filep, char *fileName) {
   xyin = filep;
   BEGIN(INITIAL);
   xy_switch_to_buffer(xy_create_buffer(xyin, YY_BUF_SIZE));
-  xylino = 0;
+  xylino = 1;
   conditional_basep = conditional_p;
 }
 
