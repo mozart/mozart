@@ -25,8 +25,7 @@
 
 <!-- Extension to the DTD -->
 <!ENTITY % input.local.2 SYSTEM "demo.extra">
-<!ENTITY % p.mix.local "|Em|note.gui|menu">
-<!ELEMENT Em - - (#PCDATA)>
+<!ENTITY % p.mix.local "|note.gui|menu">
 <!ENTITY % proglang.values.local "|sh">
 <!ENTITY lambda "LAMBDA">
 <!ENTITY % proglang.values.local "|lambda">
