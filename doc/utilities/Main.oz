@@ -48,7 +48,7 @@ prepare
                  'chunk'(multiple type:string)
                  'chunk-sep'(single type:string default:"\t")
                  %% HTML options
-                 'link'(multiple type: string)
+                 'link'(multiple type: string default:nil)
                  'stylesheet'(single type: string default: unit)
                  'latextogif'(rightmost type: bool default: true)
                  'latexdb'(single type: string default: unit)
