@@ -80,10 +80,17 @@ public:
   Bool areNoExtSuspensions();
 
   void inject(int prio, TaggedRef proc);
-  Thread *select(int left, int right);
+  WaitActor * select(int left, int right);
   TaggedRef merge(Board* bb, int isSibling);
   Board *clone(Board *bb);
   void clearResult(Board *bb);
+  void patchChoiceResult(int i) {
+    SRecord *stuple = SRecord::newSRecord(AtomAlt, 1);
+
+    stuple->setArg(0, makeTaggedSmallInt(i));
+
+    result = makeTaggedSRecord(stuple);
+  }
 
   Bool isBlocked();
 

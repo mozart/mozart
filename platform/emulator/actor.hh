@@ -225,7 +225,7 @@ public:
                                  !isChoice() &&
                                  !hasNext(); }
   Bool hasNoChildren() { return ((childCount == 0 && !hasNext()) ? OK : NO); }
-  int selectOrFailChildren(int l, int r);
+  void selectOrFailChildren(int l, int r);
 
   // maybe in some cpbag...
   void disposeWait(void) {

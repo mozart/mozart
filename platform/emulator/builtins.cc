@@ -1698,18 +1698,31 @@ OZ_C_proc_begin(BIcommitSpace, 2) {
   if (!am.isCurrentBoard(space->getSolveBoard()->getParent()))
     return oz_raise(E_ERROR,E_KERNEL,"spaceParent",1,tagged_space);
 
-  SolveActor *sa = space->getSolveActor();
-  sa->unsetGround();
-  sa->clearResult(GETBOARD(space));
-
   int l = smallIntValue(left) - 1;
   int r = smallIntValue(right) - 1;
 
-  Thread *tt = sa->select(l,r);
+  SolveActor *sa = space->getSolveActor();
 
-  if (!tt) {
+  WaitActor *wa = sa->select(l,r);
+
+  if (!wa)
     return oz_raise(E_ERROR,E_KERNEL,"spaceNoChoice",1,tagged_space);
+
+  int n = wa->getChildCount();
+
+  if (n>1) {
+    sa->patchChoiceResult(n);
+
+    return PROCEED;
   }
+
+  if (n==1)
+    sa->removeChoice();
+
+  Thread *tt = wa->getThread();
+
+  sa->unsetGround();
+  sa->clearResult(GETBOARD(space));
 
   am.suspThreadToRunnable(tt);
   am.scheduleThread(tt);
