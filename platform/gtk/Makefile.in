@@ -16,7 +16,7 @@ CPPFLAGS        = -I. -I$(VPATH) @CPPFLAGS@
 CFLAGS          = -I. -I$(VPATH) @CFLAGS@
 LDFLAGS         = @LDFLAGS@ $(LIBS)
 LN_S            = @LN_S@
-PERL            = perl
+PERL            = @PERL@
 GOZWRIGHT       = $(PERL) $(VPATH)/gozwright.pl
 GOZCONST        = $(PERL) $(VPATH)/genconstants.pl
 
@@ -57,10 +57,10 @@ goz.c: $(ALL_HEADERS)
         $(GOZWRIGHT) --c-wrappers $(ALL_HEADERS) > goz.c
 
 constantsdeclarations.oz:
-        ../tools/genconstants.pl
+        $(GOZCONST)
 
 constantsdefinitions.oz:
-        ../tools/genconstants.pl
+        $(GOZCONST)
 
 gozinterface.c: goz.c gozsupport.c
         $(GOZWRIGHT) --interface goz.c gozsupport.c > gozinterface.c

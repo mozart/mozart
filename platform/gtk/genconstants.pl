@@ -13,8 +13,8 @@
 
 @gtk_headers      = </usr/include/glib.h /usr/include/gtk/gtk*.h>;
 
-$declaration_file = "../src/ConstantsDeclarations.oz";
-$definition_file  = "../src/ConstantsDefinitions.oz";
+$declaration_file = "constdeclarations.oz";
+$definition_file  = "constdefinitions.oz";
 
 sub remove_comments {
     s/\/\*[^\/]*\*\///g;
