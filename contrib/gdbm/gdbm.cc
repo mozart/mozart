@@ -67,7 +67,7 @@ void GDBM::release() {
   if (filename!=0) { free(filename); filename=0; }
 }
 
-OZ_Term GDBM::printV(int depth = 10)
+OZ_Term GDBM::printV(int)
 {
   return OZ_mkTupleC("#",6,
                      OZ_atom("<"),
