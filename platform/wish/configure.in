@@ -187,9 +187,10 @@ oz_lib_path="$oz_tcl_lib_dir $oz_lib_path"
 OZ_CHECK_HEADER_PATH(tcl.h,,
         AC_MSG_ERROR(required tcl.h include file not found))
 
-OZ_CHECK_LIB_PATH(tcl80, Tcl_Init, ,
+OZ_CHECK_LIB_PATH(tcl8.0, Tcl_Init, ,
     OZ_CHECK_LIB_PATH(tcl, Tcl_Init, ,
-        AC_MSG_ERROR(required lib "-ltcl80/tcl" not found)))
+        OZ_CHECK_LIB_PATH(tcl80, Tcl_Init, ,
+            AC_MSG_ERROR(required lib "-ltcl80/tcl" not found))))
 
 AC_SUBST(oz_tcl_lib_tcl_dir)
 
@@ -240,9 +241,10 @@ oz_lib_path="$oz_tk_lib_dir $oz_inc_path"
 OZ_CHECK_HEADER_PATH(tk.h,,
         AC_MSG_ERROR(required tk.h include file not found))
 
-OZ_CHECK_LIB_PATH(tk80, Tk_Init, ,
+OZ_CHECK_LIB_PATH(tk8.0, Tk_Init, ,
     OZ_CHECK_LIB_PATH(tk, Tk_Init, ,
-        AC_MSG_ERROR(required lib "-ltk80/tk" not found)))
+        OZ_CHECK_LIB_PATH(tk80, Tk_Init, ,
+            AC_MSG_ERROR(required lib "-ltk80/tk" not found))))
 
 AC_SUBST(oz_tk_lib_tcl_dir)
 
