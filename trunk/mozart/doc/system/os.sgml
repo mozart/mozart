@@ -619,7 +619,7 @@ See <file /send(2)/ and <file /gethostbyname(3)/.
 <Entry> <<receiveFrom>> <Synopsis>
 <<<
 {OS.receiveFrom ?+{SockI} ?+{MaxI} ?+{FlagsAs} ??{MsgS}
-                ?{TailX} ??{HostS} ??{PortI} ??{LenI}}
+                ??{TailX} ??{HostS} ??{PortI} ??{LenI}}
 >>>
 <Index class=module/OS<and>receiveFrom/
 <item>
@@ -674,6 +674,14 @@ See <file /socketpair(2)/, <file /fork(2)/, <file /execvp(2)/, and
 <Index class=module/OS<and>wait/
 <item>
 Implements the <file /wait(2)/ function.
+
+<Entry> <<getPID>> <Synopsis>
+<<<
+{OS.getPID ??{PidI}}
+>>>
+<Index class=module/OS<and>getPID/
+<item>
+Returns the current process identifier as integer. See <file/getpid(2)/.
 
 </list>
 </section>
