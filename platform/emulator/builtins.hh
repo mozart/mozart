@@ -37,13 +37,7 @@ struct BIspec {
 
 
 // add specification to builtin table
-#define BIaddSpec(spec)                                 \
-{                                                       \
-  for (int i=0; spec[i].name; i++) {                    \
-    BIadd(spec[i].name,spec[i].arity,spec[i].fun,       \
-          spec[i].yps,spec[i].ifun);                    \
-  }                                                     \
-}
+void BIaddSpec(BIspec *spec);
 
 #define NONVAR(X,term,tag)                                                    \
 TaggedRef term = X;                                                           \
