@@ -228,21 +228,6 @@ void GenCVariable::print(ostream &stream, int depth, int offset, TaggedRef v)
       break;
    }
 
-#ifdef METAVAR
-  case MetaVariable:
-    {
-      GenMetaVariable* me = (GenMetaVariable *) this;
-      stream << indent(offset) << "<MV." << me->getName() << ": "
-	     << getVarName(v) << " @" << this;
-
-      if (isEffectiveList(suspList))
-	stream << " a" << suspList->length();
-      
-      stream << ' ' << me->toString(DEC(depth)) << '>';
-      break;
-    }
-#endif /* METAVAR */
-
   case AVAR:
     stream << indent(offset) << "<AVAR "
 	     << getVarName(v) << " @" << this << ">";
@@ -1074,19 +1059,6 @@ void GenCVariable::printLong(ostream &stream, int depth, int offset,
       stream << endl;
       break;
     }
-
-#ifdef METAVAR
-  case MetaVariable:
-    {
-      GenMetaVariable* me = (GenMetaVariable *) this;
-      stream << indent(offset)
-	     << "<<MV: '" << me->getName() << "' " << me->toString(DEC(depth))
-	     << endl;
-      tagged2Stream(me->data, stream, DEC(depth), offset + 2);
-      stream << endl << indent(offset) << ">>" << endl;
-      break;
-    }
-#endif /* METAVAR */
 
   case AVAR:
     {

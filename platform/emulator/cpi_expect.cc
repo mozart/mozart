@@ -137,61 +137,6 @@ OZ_expect_t OZ_Expect::expectDomDescr(OZ_Term descr, int level)
 
 }
 
-#ifdef FSETVAR
-
-//-----------------------------------------------------------------------------
-// An OZ term describing a finite set is either:
-// (1) a positive small integer <= FS.sup
-// (2) a 2 tuple of (1) or bool
-// (3) a possibly empty list of (1) and/or (2)
-
-OZ_expect_t OZ_Expect::expectSetDescr(OZ_Term descr, int level)
-{
-  DEREF(descr, descr_ptr, descr_tag);
-  
-  if (level > 3) 
-    level = 3;
-
-  if (isNotCVar(descr_tag)) {
-    addSuspend(descr_ptr);
-    return expectSuspend(1, 0);
-  } else if (isPosSmallSetInt(descr) && (level >= 1)) { // (1)
-    return expectProceed(1, 1);
-  } else if (isGenFDVar(descr, descr_tag) && (level >= 1)) {
-    addSuspend(descr_ptr);
-    return expectSuspend(1, 0);
-  } else if (isSTuple(descr) && (level >= 2)) {
-    SRecord &tuple = *tagged2SRecord(descr);
-    if (tuple.getWidth() != 2) 
-      return expectFail();  
-    for (int i = 0; i < 2; i++) {
-      OZ_expect_t r = expectDomDescr(makeTaggedRef(&tuple[i]), 1);
-      if (isSuspending(r) || isFailing(r))
-	return r;
-    }
-    return expectProceed(1, 1);
-  } else if (isNil(descr) && (level == 3)) {
-    return expectProceed(1, 1);
-  } else if (isLTuple(descr_tag) && (level == 3)) {
-    
-    do {
-      LTuple &list = *tagged2LTuple(descr);
-      OZ_expect_t r = expectDomDescr(makeTaggedRef(list.getRefHead()), 2);
-      if (isSuspending(r) || isFailing(r))
-	return r;
-      descr = makeTaggedRef(list.getRefTail());
-      
-      __DEREF(descr, descr_ptr, descr_tag);
-    } while (isLTuple(descr_tag));
-    
-    if (isNil(descr)) return expectProceed(1, 1);
-    return expectDomDescr(makeTaggedRef(descr_ptr), 0);
-  } 
-  return expectFail();  
-
-}
-#endif /* FSETVAR */
-
 OZ_expect_t OZ_Expect::expectVar(OZ_Term t)
 {
   DEREF(t, tptr, ttag);
