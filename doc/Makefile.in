@@ -52,7 +52,7 @@ all bootstrap:: $(CED)
 Makefile: Makefile.in config.status
         ./config.status
 
-install:: all $(SHDOCDIR) $(DOCDIR) $(DOCDIR)/index.html $(LIBFILES) tkdoc
+install:: all $(SHDOCDIR) $(DOCDIR) $(DOCDIR)/index.html $(DOCDIR)/page.gif $(DOCDIR)/ozdoc.css $(LIBFILES) tkdoc
 
 tkdoc: $(DOCDIR)
         -rm -rf $(DOCDIR)/$(TKDOCBASE) $(DOCDIR)/tcltk
@@ -64,6 +64,10 @@ $(SHDOCDIR) $(DOCDIR):
         $(INSTALL_DIR) $@
 
 $(DOCDIR)/index.html: index.html
+        $(INSTALL_FILE) $< $@
+$(DOCDIR)/ozdoc.css: $(VPATH)/utilities/ozdoc.css
+        $(INSTALL_FILE) $< $@
+$(DOCDIR)/page.gif: $(VPATH)/utilities/page.gif
         $(INSTALL_FILE) $< $@
 
 $(LIBFILES): $(SHDOCDIR)/% : %
