@@ -302,17 +302,15 @@ public:
   // distributors
   //
 private:
-  DistBag * bag;
+  Distributor * dist;
 
 public:
-  DistBag * getDistBag(void) {
-    return bag;
+  Distributor * getDistributor(void) {
+    return dist;
   }
-  void setDistBag(DistBag * db) {
-    bag = db;
+  void setDistributor(Distributor * d) {
+    dist = d;
   }
-  void addToDistBag(Distributor * d);
-  Distributor * getDistributor(void);
   
 
   //
