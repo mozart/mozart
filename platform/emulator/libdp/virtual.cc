@@ -708,7 +708,7 @@ OZ_BI_define(BIVSnewMailbox,0,1)
   //
   mbm->unmap();                 // we don't need that object now anymore;
   Assert(sizeof(key_t) <= sizeof(int));
-  sprintf(keyChars, "0x%x", mbm->getSHMKey());
+  sprintf(keyChars, "0x%x", (int)mbm->getSHMKey());
   delete mbm;
 
   //
@@ -764,7 +764,7 @@ OZ_BI_define(BIVSinitServer,1,0)
 
   //
   Assert(sizeof(key_t) == sizeof(int));
-  if (sscanf(mbKeyChars, "%i", &mbKey) != 1)
+  if (sscanf(mbKeyChars, "%i", (int*)&mbKey) != 1)
     return oz_raise(E_ERROR,E_SYSTEM,"VSinitServer: invalid arg",0);
 
   //
@@ -877,7 +877,7 @@ OZ_BI_define(BIVSremoveMailbox,1,0)
 
   //
   Assert(sizeof(key_t) == sizeof(int));
-  if (sscanf(mbKeyChars, "%i", &mbKey) != 1)
+  if (sscanf(mbKeyChars, "%i", (int*)&mbKey) != 1)
     return oz_raise(E_ERROR,E_SYSTEM,"VSremoveMailbox: invalid arg",0);
   markDestroy(mbKey);
 
