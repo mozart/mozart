@@ -1530,18 +1530,19 @@ OZ_BI_define(ozparser_parseFile, 2, 1)
   OZ_Term defines = init_options(optRec);
   OZ_Return res;
   if (!xy_init_from_file(file, defines))
-    OZ_result(OZ_atom("fileNotFound"));
-  else
+    OZ_RETURN_ATOM("fileNotFound");
+  else {
     OZ_result(parse());
-  OZ_Term x = OZ_subtree(optRec, OZ_atom("errorOutput"));
-  if (x == 0) {
-    if (!OZ_isNil(xy_errorMessages)) {
-      prefixError();
-      fprintf(stderr, "%s", OZ_virtualStringToC(xy_errorMessages));
-    }
-    return PROCEED;
-  } else
-    return OZ_unify(x, xy_errorMessages);
+    OZ_Term x = OZ_subtree(optRec, OZ_atom("errorOutput"));
+    if (x == 0) {
+      if (!OZ_isNil(xy_errorMessages)) {
+        prefixError();
+        fprintf(stderr, "%s", OZ_virtualStringToC(xy_errorMessages));
+      }
+      return PROCEED;
+    } else
+      return OZ_unify(x, xy_errorMessages);
+  }
 }
 OZ_BI_end
 
