@@ -24,6 +24,26 @@
 %%
 
 local
+   local
+      proc {EscapeVariableChar Hd C|Cr Tl}
+	 case Cr of nil then Hd = C|Tl   % terminating quote
+	 elsecase C == &` orelse C == &\\ then Hd = &\\|C|Tl
+	 elsecase C < 10 then Hd = &\\|&x|&0|(&0 + C)|Tl
+	 elsecase C < 16 then Hd = &\\|&x|&0|(&A + C - 10)|Tl
+	 elsecase C < 26 then Hd = &\\|&x|&1|(&0 + C - 16)|Tl
+	 elsecase C < 32 then Hd = &\\|&x|&1|(&A + C - 26)|Tl
+	 else Hd = C|Tl
+	 end
+      end
+   in
+      fun {PrintNameToVirtualString PrintName}
+	 case {Atom.toString PrintName} of &`|Sr then
+	    &`|{FoldLTail Sr EscapeVariableChar $ nil}
+	 else PrintName
+	 end
+      end
+   end
+
    fun {ButLast Xs}
       case Xs of [_] then nil
       elseof X|Xr then X|{ButLast Xr}
@@ -109,11 +129,11 @@ local
       [] fApply(S Ts _) then '{'#PU#{LI {Map S|Ts OutputOz} GL}#PO#'}'
       [] fObjApply(S T _) then {DoOutput {Oz S 1101}#', '#{Oz T 1100} P 1100}
       [] fProc(T Fs E ProcFlags _) then
-	 PU#'proc '#IN#{LI ProcFlags OutputOz}#
+	 PU#'proc '#IN#{LI {Map ProcFlags OutputOz} GL}#EX#
 	 '{'#PU#{LI {Map T|Fs OutputOz} GL}#PO#'}'#NL#
 	 {OzBlock E}#EX#NL#PO#'end'
       [] fFun(T Fs E ProcFlags _) then
-	 PU#'fun '#IN#{LI ProcFlags OutputOz}#
+	 PU#'fun '#IN#{LI {Map ProcFlags OutputOz} GL}#EX#
 	 '{'#PU#{LI {Map T|Fs OutputOz} GL}#PO#'}'#IN#NL#
 	 {OzBlock E}#EX#NL#PO#'end'
       [] fFunctor(T Ds S1 S2 _) then
