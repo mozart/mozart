@@ -9,10 +9,19 @@
   ------------------------------------------------------------------------
 */
 
+#define HOLES
+//#define BOUNDS_OLD
+//#define BOUNDS_NEW
+#define CUM_EDGE_FINDING
+//#define TASK_INTERVALS
+
 #include "scheduling.hh"
 #include "rel.hh"
 #include "auxcomp.hh"
 #include <stdlib.h>
+
+static inline int intMin(int a, int b) { return a < b ? a : b; }
+static inline int intMax(int a, int b) { return a > b ? a : b; }
 
 //-----------------------------------------------------------------------------
 
@@ -398,11 +407,11 @@ cploop:
       }
     }
 
-
+    /*
     //////////  
     // edgepushUp
     //////////  
-	 /*
+
     for (int t1=setSize; t1>=0; t1--) {
       for (int t2=0; t2<ts; t2++) {
 	struct Set *s = &Sets[t1];	
@@ -416,12 +425,7 @@ cploop:
 	  }
 	  if ((tx > kUp - s->dSi) && (MinMax[t2].min < s->mSi)) {
 	    upFlag = 1;
-//	    FailOnEmpty(*x[t2] >= s->mSi);
-//	    MinMax[t2].min = x[t2]->getMinElem();
-  	    constraints[constraintsSize] = t2;
-	    constraints[constraintsSize+1] = 1;
-	    constraints[constraintsSize+2] = s->mSi;
-	    constraintsSize +=3;
+	    FailOnEmpty(*x[t2] >= s->mSi);
 	  }
 	}
       }
@@ -632,12 +636,7 @@ cploop:
 	  }
 	  if ((tx < kDown + s->dSi) && (t2Max+durT2 > s->mSi)) {
 	    downFlag = 1;
-//	    FailOnEmpty(*x[t2] <= s->mSi-durT2);
-//	    MinMax[t2].max = x[t2]->getMaxElem();
-  	    constraints[constraintsSize] = t2;
-	    constraints[constraintsSize+1] = 0;
-	    constraints[constraintsSize+2] = s->mSi-durT2;
-	    constraintsSize +=3;
+	    FailOnEmpty(*x[t2] <= s->mSi-durT2);
 	  }
 	}
       }
@@ -1040,7 +1039,6 @@ struct Set2 {
   int * ext;
 };
 
-
 OZ_Return CPIteratePropagatorCap::propagate(void)
 {
 
@@ -1075,7 +1073,6 @@ OZ_Return CPIteratePropagatorCap::propagate(void)
   int disjFlag = 0;
   int cap_flag = 0;
 
-
   int kUp;
   int kDown;
   int dur0;
@@ -1104,6 +1101,22 @@ OZ_Return CPIteratePropagatorCap::propagate(void)
   
   for (i = ts; i--; )
     Sets[i].ext = (int *) OZ_FDIntVar::operator new(sizeof(int) * ts);
+
+#ifdef TASK_INTERVALS
+
+  struct TISet {
+    int low, up, dur, size, min, max, empty, ect, lst, overlap;
+    // extension for tasks inside task intervals
+  };
+
+  struct TISet ** taskints;
+  taskints = ((TISet **)::new TISet*[ts]);
+  for (i=0; i<ts; i++) {
+    taskints[i] = ::new TISet[ts];
+  }
+  
+  int left,right,tiFlag;
+#endif
 
   // memory is automatically disposed when propagator is left
 
@@ -1144,9 +1157,11 @@ OZ_Return CPIteratePropagatorCap::propagate(void)
       }
     }
 
-/* it is not worth the effort
+  /*
+// it is not worth the effort
 // energy from Baptistes thesis
 for (i=0; i<ts; i++) {
+
   for (j=0; j<ts; j++) {
     int ra = x[i]->getMinElem();
     int sum1 = 0;
@@ -1164,7 +1179,6 @@ for (i=0; i<ts; i++) {
 	FailOnEmpty(*x[i] >= ra + up);
       }
     }
-    
     sum1 = 0;
     val = x[j]->getMaxElem() + dur[j];
     for (int k = 0; k<ts; k++) {
@@ -1181,7 +1195,7 @@ for (i=0; i<ts; i++) {
       }
     }
   }
-  
+
   for (j=0; j<ts; j++) {
     if (i != j) {
       int leftBound = x[i]->getMinElem();
@@ -1202,9 +1216,293 @@ for (i=0; i<ts; i++) {
     }
   }
 }
-
 */
 
+#ifdef TASK_INTERVALS
+tiloop:
+
+
+
+  /////////
+  // Initialize task intervals, cubic complexity
+  ////////
+  for (left = 0; left < ts; left++) 
+    for (right = 0; right < ts; right++) {
+      struct TISet *cset = &taskints[left][right];
+      cset->low        = MinMax[left].min;
+      cset->up         = MinMax[right].max + dur[right];
+      
+      cset->max        = MinMax[left].max + dur[left];
+      cset->min        = MinMax[right].min;
+
+      int cdur = 0;
+      int csize = 0;
+      int empty = 1;
+      int clst = 0;
+      int cect = OZ_getFDSup();
+      int overlap=0;
+      if ( (cset->low <= MinMax[right].min)
+	   && (MinMax[left].max + dur[left] <= cset->up)
+	   ) 
+	{
+	  // otherwise the task interval is trivially empty
+          for (int l=0; l < ts; l++) {
+	    int durL     = dur[l];
+	    int dueL     = MinMax[l].max + durL;
+	    int releaseL = MinMax[l].min;
+	    if ( (cset->low <= releaseL)
+		 && (dueL <= cset->up) ) {
+	      empty = 0;
+	      cdur += durL;
+	      csize += use[l]*durL;
+	      clst = intMax(clst, dueL-durL);
+	      cect = intMin(cect, releaseL+durL);
+
+	      if ( (l!=left) && (l!=right) ) {
+		cset->max = intMax(cset->max, dueL);
+		cset->min = intMin(cset->min, releaseL);
+	      }
+
+	    }
+	    else {
+	      // add the overlapping amount of tasks
+	      int overlapTmp = intMin(intMax(0,releaseL+durL-cset->low),
+				      intMin(intMax(0,cset->up-dueL+durL),
+					     intMin(durL,cset->up-cset->low)));
+	      overlap += overlapTmp*use[l];
+	    }
+	  }
+	}
+      cset->dur   = cdur;
+      cset->size  = csize;
+      cset->empty = empty;
+      cset->ect   = cect;
+      cset->lst   = clst;
+      cset->overlap = overlap;
+
+      if ( (empty == 0) && ( (cset->up - cset->low) * capacity < csize+overlap) ) {
+	goto failure;
+      }
+
+    }
+
+
+  //////////  
+  // Do the edge-finding
+  //////////  
+
+  for (left = 0; left < ts; left++) 
+    for (right = 0; right < ts; right++) {
+      struct TISet *cset = &taskints[left][right];
+      if (cset->empty == 0) {
+	int releaseTI = cset->low;
+	int dueTI     = cset->up;
+	int durTI     = cset->dur;
+	int sizeTI    = cset->size;
+	for (i = 0; i < ts; i++) {
+	  int maxI     = MinMax[i].max;
+	  int durI     = dur[i];
+	  int useI     = use[i];
+	  int releaseI = MinMax[i].min;
+	  int dueI     = maxI + durI;
+	  int sizeAll, tsizeTI, treleaseTI, tdueTI;
+	  int contained = 0;
+	  if ( (releaseI >= releaseTI) && (dueI <= dueTI) ) {
+	    // I is in TI
+	    contained = 1;
+ 	    sizeAll = sizeTI;
+	    tsizeTI = sizeTI - durI*useI; 
+	    if (i==left) {
+	      treleaseTI = cset->min;
+	      tdueTI = dueTI;
+	    }
+	    else {
+	      if (i==right) {
+		tdueTI = cset->max;
+		treleaseTI = releaseTI;
+	      }
+	      else {
+		treleaseTI = releaseTI;
+		tdueTI = dueTI;
+	      }
+	    }
+	  }
+	  else {
+	    // I is not in TI
+	    treleaseTI = releaseTI;
+	    tdueTI     = dueTI;
+	    tsizeTI     = sizeTI;
+	    sizeAll     = durI*useI + sizeTI;
+	  }
+	  /*
+	  if (contained == 0) {
+	    // due to Mats email
+	    if (sizeAll > capacity*(tdueTI - releaseI)) {
+	      int delta = sizeAll - capacity*(tdueTI - releaseI);
+	      DECL_DYN_ARRAY(int, s1, ts);
+	      DECL_DYN_ARRAY(int, s2, ts);
+	      int s1_count=0, s2_count=0;
+	      for (j=0;j<ts;j++) {
+		if (use[j]+useI > capacity) 
+		  s2[s2_count++] = j;
+		else s1[s1_count++] = j;
+	      }
+	      for (j=0;j<s1_count;j++) {
+		delta -= use[s1[j]]*dur[s1[j]];
+	      }
+	      if (delta > 0) {
+		for (j=0;j<s2_count;j++) {
+		  if (MinMax[s2[j]].min + dur[s2[j]] <= releaseI)
+		    delta -= use[s2[j]]*dur[s2[j]];
+		}
+		if (delta > 0 )
+		  printf("habuakakdasd\n");
+	      }
+	    }
+	  }
+	  */
+	  /*
+	    //due to nuijten p.62 -- 65
+	  if ( (releaseI < releaseTI) || (dueI > dueTI) ) {
+	    if ( (treleaseTI < releaseI) && (releaseI < cset->ect) &&
+		 (tsizeTI + (intMin(releaseI+durI,tdueTI) -treleaseTI)*use[i] > (tdueTI - treleaseTI) * capacity) ) {
+	      if (MinMax[i].min < cset->ect){
+		FailOnEmpty(*x[i] >= cset->ect);
+		tiFlag = 1;
+	      }
+	    }
+	    if ( (cset->lst < dueI) && (dueI < tdueTI) &&
+		 (tsizeTI + (dueTI - intMax(dueI-durI,treleaseTI) )*use[i] > (tdueTI - treleaseTI) * capacity) ) {
+	      if (MinMax[i].max > cset->lst - durI) {
+		FailOnEmpty(*x[i] <= cset->lst - durI);
+		tiFlag = 1;
+	      }
+	    }
+	    if ( (releaseI < treleaseTI) && (treleaseTI < releaseI+durI) &&
+		 (tsizeTI + (releaseI+durI- treleaseTI)*use[i] > (tdueTI - treleaseTI) * capacity) ) {
+	      int delta = tsizeTI - (tdueTI - treleaseTI) * (capacity - useI);
+	      if (delta > 0) {
+		int val = treleaseTI + (int) ceil((double) delta / (double) useI);
+		for (int m = 0; m<ts; m++) {
+		  if ((m != i) && (MinMax[m].min >= releaseTI) && 
+		      (MinMax[m].max+dur[m] <= dueTI) ) {
+		    if (use[m]+use[i] > capacity) {
+		    FailOnEmpty(*x[m] <= MinMax[i].max - dur[m]);
+		    FailOnEmpty(*x[i] >= MinMax[m].min + dur[m]);
+		    }
+		  }
+		}
+		if (releaseI < val) {
+		  tiFlag = 1;
+		  FailOnEmpty(*x[i] >= val);
+		}
+	      }
+	    }
+	    if  ( (dueI-durI < tdueTI) && (tdueTI < dueI) &&
+		  (tsizeTI + (tdueTI- (dueI-durI))*use[i] > (tdueTI - treleaseTI) * capacity) ) {
+	      int delta = tsizeTI - (tdueTI - treleaseTI) * (capacity - useI);
+	      if (delta > 0) {
+		int val = tdueTI + (int) floor((double) delta / (double) useI);
+		if (dueI > val) {
+		  tiFlag = 1;
+		  FailOnEmpty(*x[i] <= val - durI);
+		}
+	      }
+	    }
+	  }
+
+
+	  if (contained == 0) {
+	    //  Caseau on cumulative scheduling, ICLP96
+	    int slack = (tdueTI - treleaseTI)*capacity - tsizeTI;
+	    if ( (useI*durI - intMax(0,treleaseTI-releaseI)*useI > slack)
+		 && (useI*(tdueTI - treleaseTI) > slack)
+		 && (releaseI < tdueTI - (int) floor( (double) slack / (double) useI))) {
+	      FailOnEmpty(*x[i] >= tdueTI - (int) floor( (double) slack / (double) useI));
+	      tiFlag = 1;
+	    }
+	    if ( (useI*durI - intMax(0,dueI-tdueTI)*useI > slack)
+		 && (useI*(tdueTI - treleaseTI) > slack)
+		 && (dueI > treleaseTI + (int) ceil( (double) slack / (double) useI) )) {
+	      FailOnEmpty(*x[i] <= treleaseTI + (int) ceil( (double) slack / (double) useI) - durI);
+	      tiFlag = 1;
+	    }
+	  }
+	  */
+
+	  // if task i is contained, this does not work!
+	  int OS = sizeAll;
+	  int OT = tsizeTI;
+	  if (contained == 0) {
+	    int overlap = intMin(intMax(0,releaseI+durI-treleaseTI),
+				 intMin(intMax(0,tdueTI-dueI+durI),
+					intMin(durI,tdueTI-treleaseTI))) * use[i];
+	    sizeAll = sizeAll + cset->overlap - overlap;
+	    tsizeTI = tsizeTI + cset->overlap - overlap;
+	  }
+
+	  if ( ((tdueTI - treleaseTI) * capacity < sizeAll) &&
+	       ((dueI - treleaseTI) * capacity < sizeAll) ) {
+	    int delta = tsizeTI - (tdueTI - treleaseTI) * (capacity - useI);
+	    if (delta > 0) {
+	      // l must be first
+	      int val = tdueTI - (int) ceil((double) delta / (double) useI);
+	      if (dueI > val) {
+		tiFlag = 1;
+		FailOnEmpty(*x[i] <= val - durI);
+	      }
+	    }
+	  }
+
+
+	  sizeAll = OS;
+	  tsizeTI = OT;
+	  
+	  // if task i is contained, this does not work!
+	  if (contained == 0) {
+	   int overlap = intMin(intMax(0,releaseI+durI-treleaseTI),
+			     intMin(intMax(0,tdueTI-dueI+durI),
+				    intMin(durI,tdueTI-treleaseTI))) * use[i];
+	    sizeAll = sizeAll + cset->overlap - overlap;
+	    tsizeTI = tsizeTI + cset->overlap - overlap;
+	  }
+
+	  if ( ((tdueTI - treleaseTI) * capacity < sizeAll) &&
+	       ((tdueTI - releaseI) * capacity < sizeAll) ) {
+	    int delta = tsizeTI - (tdueTI - treleaseTI) * (capacity - useI);
+	    if (delta > 0) {
+	      // l must be last
+	      int val = treleaseTI + (int) ceil((double) delta / (double) useI);
+	      if (releaseI < val) {
+		tiFlag = 1;
+		FailOnEmpty(*x[i] >= val);
+	      }
+	    }
+	  }
+
+
+	}
+      }
+    }
+	  
+
+  for (i=0; i<ts; i++) {
+    MinMax[i].min = x[i]->getMinElem();	
+    MinMax[i].max = x[i]->getMaxElem();	
+  }
+
+
+  if (tiFlag == 1) {
+    tiFlag = 0;
+    goto tiloop;
+  }
+
+
+
+#endif
+
+
+#ifdef CUM_EDGE_FINDING
 
 cploop:
 
@@ -1332,7 +1630,6 @@ cploop:
 	      if (minL < val) {
 		upFlag = 1;
 		FailOnEmpty(*x[l] >= val);
-//		MinMax[l].min = x[l]->getMinElem();
 	      }
 	      lCount++;
 	    }
@@ -1487,7 +1784,6 @@ cploop:
 		if (right < 0)
 		  goto failure;
 		FailOnEmpty(*x[l] <= right);
-//		MinMax[l].max = x[l]->getMaxElem();
 	      }
 	      lCount++;
 	    }
@@ -1510,6 +1806,8 @@ cploop:
     downFlag = 0;
     goto cploop;
   }
+
+#endif
 
 reifiedloop:
 
@@ -1553,7 +1851,6 @@ reifiedloop:
   }
 
 
-
 capLoop:
 
   //////////
@@ -1595,20 +1892,20 @@ capLoop:
     // test whether the capacity is sufficient for all tasks
     if (sum > capacity * (max_right - min_left))
       goto failure;
-    /*
+
     Intervals[interval_nb].left = min_left;
     Intervals[interval_nb].right = max_right;
     Intervals[interval_nb].use = 0;
     interval_nb++;
-    */
+
     
 
     //////////
     // sort the intervals lexicographically
     //////////
     Interval * intervals = Intervals;
-    qsort(intervals, interval_nb, sizeof(Interval), CompareIntervals);
-
+    qsort(intervals, interval_nb, sizeof(Interval), CompareIntervals)
+;
     //////////
     // compute the set of all bounds of intervals
     //////////
@@ -1654,9 +1951,32 @@ capLoop:
 	  cum = cum + (right_val - left_val) * Intervals[i].use;
 	}
       }
+
+      /* 
+      // counting the overlap is not worth the effort for cumulative reasoning
+      int cumOver = 0;
+      //this destroys the cumulative reasoning
+      for (i = 0; i < ts; i++) {
+	if (MinMax[i].max >= MinMax[i].min + dur[i]) {
+	  int overlap = intMin(intMax(0,MinMax[i].min+dur[i]-left_val),
+			       intMin(intMax(0,right_val-MinMax[i].max),
+				      intMin(dur[i],right_val-left_val)));
+	  cumOver = cumOver + overlap * use[i];
+	}
+      }
+      */
+
+
+
       if (cum > (right_val - left_val) * capacity) {
 	goto failure;
       }
+      /* it's not worth the effort
+      if (cum+cumOver > (right_val - left_val) * capacity) {
+	goto failure;
+      }
+      */
+
       if (cum > 0) {
 	ExclusionIntervals[exclusion_nb].left = left_val;
 	ExclusionIntervals[exclusion_nb].right = right_val;
@@ -1667,6 +1987,11 @@ capLoop:
     }
 
     int last = 0;
+    /*
+    int last_left = 0;
+    int last_right = 0;
+    */
+
     //////////
     // exclude from the tasks the intervals, which indicate that 
     // the task connot be scheduled here because of no sufficient place.
@@ -1674,8 +1999,7 @@ capLoop:
     // do not use reg_flag anymore, it is not worth it.
     // the commented region does contain code which avoids the 
     // production of holes in domains
-
-
+#ifdef HOLES
     // perhaps some tests before generalizing domains could improve
     for (i=0; i<ts; i++) {
       int lst = MinMax[i].max;
@@ -1693,19 +2017,30 @@ capLoop:
 	    else {
 	      if (Exclusion.use + span * use_i > span * capacity) {
 		OZ_FiniteDomain la;
+		// The following holds because of construction of 
+		// the exclusion intervals! They describe fulled columns!
 		la.initRange(left-dur_i+1,right-1);
 		FailOnEmpty(*x[i] -= la);
 		
 		// new
 		// for capacity > 1 we must count the used resource. 
-		// But this is too expensive.
+		// But this is too expensive. really???
 		if ((left - last < dur_i) && (capacity == 1)) {
 		  OZ_FiniteDomain la;
 		  la.initRange(last,right-1);
 		  FailOnEmpty(*x[i] -= la);
 		}
 		last = right;
-		
+		/*
+		if ((left - last_right < dur_i)) {
+		  OZ_FiniteDomain la;
+		  la.initRange(last_left-dur_i+1,right-1);
+		  FailOnEmpty(*x[i] -= la);
+		}
+		else 
+		  last_left = left;
+		last_right = right;
+		*/
 	      }
 	    }
 	  }
@@ -1714,81 +2049,133 @@ capLoop:
 	      OZ_FiniteDomain la;
 	      la.initRange(left-dur_i+1,right-1);
 	      FailOnEmpty(*x[i] -= la);
-	      
 	      // new
- 	      // for capacity > 1 we must count the used resource. 
-              // But this is too expensive.
-  	      if ((left - last < dur_i) && (capacity == 1)) {
+	      // for capacity > 1 we must count the used resource. 
+	      // But this is too expensive.
+	      if ((left - last < dur_i) && (capacity == 1)) {
 		OZ_FiniteDomain la;
 		la.initRange(last,right-1);
 		FailOnEmpty(*x[i] -= la);
 	      }
 	      last = right;
-	      
-	    }
+	      /*
+		if ((left - last_right < dur_i)) {
+		  OZ_FiniteDomain la;
+		  la.initRange(last_left-dur_i+1,right-1);
+		  FailOnEmpty(*x[i] -= la);
+		  }
+		  else 
+		  last_left = left;
+		  last = right;
+		  */
+	      }
 	  }
 	}
       }
     }
+#endif
 
-    
+    /* is not useful */
     /*
-    OZ_FiniteDomain la, lb;
-    for (i=0; i<ts; i++) {
-      int lst = MinMax[i].max;
-      int ect = MinMax[i].min + dur[i];
-      int use_i = use[i];
-      int dur_i = dur[i];
-      lb.initFull();
-      for (j=0; j<exclusion_nb; j++) {
-	Interval Exclusion = ExclusionIntervals[j];
-	int span = Exclusion.right - Exclusion.left;
-	if (Exclusion.use + span * use_i > span * capacity) {
-	  int left = Exclusion.left;
-	  int right = Exclusion.right;
-	  if (lst < ect) {
-	    if ( (lst <= left) && (right <= ect) ) continue;
-	    else {
-	      if (Exclusion.use + use_i > capacity) {
-		la.initRange(left-dur_i+1,right-1);
-		FailOnEmpty(lb -= la);
-		
-		// new
- 	        // for capacity > 1 we must count the used resource. 
-                // But this is too expensive.
-		if ((left - last < dur_i) && (capacity == 1)) {
-		  la.initRange(last,right-1);
-		  FailOnEmpty(lb -= la);
-		}
-		last = right;
-		
+    for (i=0; i<ts; i++) 
+      for (int k=0; k<ts; k++) { 
+      int left = MinMax[i].min;
+      int right = MinMax[k].max+dur[k];
+      int span = right-left;
+      if (left <= right) {
+
+	int cumL = 0;
+	for (j = 0; j < ts; j++) {
+	  int durJ = dur[j];
+	  int lb = MinMax[j].min;
+	  int lst = MinMax[j].max;
+	  int ect = lb + durJ;
+	  int rb = lst + durJ;
+	  int add = max(0, min(durJ, 
+			       min(right - left,
+				   min(ect - left, right - lst))));
+	  cumL = cumL + add;
+	}
+	if  (cumL > (right - left) * capacity) {
+	  goto failure;
+	}
+
+	for (j = 0; j < ts; j++) {
+	  int durJ = dur[j];
+	  int lb   = MinMax[j].min;
+	  int lst  = MinMax[j].max;
+	  int ect  = lb + durJ;
+	  int rb   = lst + durJ;
+	  int useJ = use[j];
+	  int add = max(0, min(durJ, 
+			       min(right - left,
+				   min(ect - left, right - lst))));
+	  if (add == 0) {
+	    int mdur = min(durJ, right-left);
+	    if (cumL + useJ * mdur > (right - left) * capacity) {
+	      int delta = (int) floor( (double) ((right - left) * capacity - cumL) / (double) useJ);
+	      OZ_FiniteDomain la;
+	      int lv = left-(durJ-delta)+1;
+	      int rv = right-delta-1;
+	      if ( lv <= rv) {
+		la.initRange(lv, rv);
+		FailOnEmpty(*x[j] -= la);
 	      }
-	    }
-	  }
-	  else {
-	    if (Exclusion.use + span * use_i > span * capacity) {
-	      la.initRange(left-dur_i+1,right-1);
-	      FailOnEmpty(lb -= la);
-	      
-	      // new
-	      // for capacity > 1 we must count the used resource. 
-              // But this is too expensive.
-  	      if ((left - last < dur_i) && (capacity == 1)) {
-		la.initRange(last,right-1);
-		FailOnEmpty(lb -= la);
-	      }
-	      last = right;
-	      
 	    }
 	  }
 	}
       }
-      FailOnEmpty(lb >= x[i]->getMinElem());
-      FailOnEmpty(lb <= x[i]->getMaxElem());
-      FailOnEmpty(*x[i] >= lb.getMinElem());
-      FailOnEmpty(*x[i] <= lb.getMaxElem());
     }
     */
+
+
+#ifdef BOUNDS_NEW
+    /* for bounds reasoning more efficiently */
+    for (i=0; i<ts; i++) { 
+      int durI = dur[i];
+      int useI = use[i];
+      int est = MinMax[i].min;
+      int ect = est + durI;
+      int lst = MinMax[i].max;
+      int lct = lst + durI;
+      // from left to right
+      for (j=0; j<exclusion_nb; j++) {
+	Interval Exclusion = ExclusionIntervals[j];
+	int low = Exclusion.left;
+	int up  = Exclusion.right;
+	if (low > est) 
+	  break;
+	else {
+	  if ( (est >= low) && (est < up) ) {
+	    int span = up - low;
+	    if ( ((lst < ect) && ((lst > low) || (up > ect))) ||
+		 (lst >= ect) )
+	      if (Exclusion.use + span * useI > span * capacity) {	    
+		FailOnEmpty(*x[i] >= up);
+	      }
+	  }
+	}
+      }
+      // from right to left
+      for (j=exclusion_nb-1; j>=0; j--) {
+	Interval Exclusion = ExclusionIntervals[j];
+	int low = Exclusion.left;
+	int up  = Exclusion.right;
+	if (up < lct)
+	  break;
+	else {
+	  if ( (lct > low) && (lct <= up) ) {
+	    int span = up - low;
+	    if ( ((lst < ect) && ((lst > low) || (up > ect))) ||
+		 (lst >= ect) )
+	      if (Exclusion.use + span * useI > span * capacity) {	    
+		FailOnEmpty(*x[i] <= low - durI);
+	      }
+	  }
+	}
+      }
+    }
+#endif
 
     //////////
     // update the min/max values
@@ -1809,7 +2196,7 @@ capLoop:
     if (cap_flag == 1) {
       cap_flag = 0;
       goto capLoop;
-    } 
+    }
 
       
   }
@@ -1817,10 +2204,23 @@ capLoop:
 
 finish:  
 
+#ifdef TASK_INTERVALS
+  for (i=0; i<ts; i++) {
+      :: delete taskints[i];
+    }
+  :: delete [] taskints;
+#endif
   return P.leave();
+
 
 failure:
 
+#ifdef TASK_INTERVALS
+  for (i=0; i<ts; i++) {
+      :: delete taskints[i];
+    }
+  :: delete [] taskints;
+#endif
   return P.fail();
 }
 
@@ -2087,6 +2487,9 @@ return P.leave();
 failure:
   return P.fail();
 }
+
+
+ 
   
 //-----------------------------------------------------------------------------
 // static member
