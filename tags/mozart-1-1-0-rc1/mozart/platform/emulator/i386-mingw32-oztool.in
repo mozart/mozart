@@ -1,0 +1,55 @@
+#!/bin/sh
+
+plat=i386-mingw32
+
+if test $# -eq 0
+then
+  cat <<EOF
+Usage:
+	oztool c++ -c SourceFile
+	oztool cc  -c SourceFile
+	oztool ld  -o TargetLib FileList
+	oztool platform
+EOF
+  exit 2
+fi
+
+cmd=$1
+shift
+
+case "$cmd" in
+  c++)      exec ${plat}-g++ -I@srcdir@ -I@srcdir@/../tools/gump "$@" ;;
+  cc)       exec ${plat}-gcc -I@srcdir@ -I@srcdir@/../tools/gump "$@" ;;
+  platform) echo "win32-i486"; exit 0;;
+
+  ld) ;;  # see below
+
+  *) echo "$0: unknown command $cmd" 1>&2; exit 1 ;;
+esac
+
+
+while [ $# != 0 ]
+do
+    case "$1" in
+    -o)  shift; libname=$1;;
+    -s) ;;  # just ignore it
+    -lc) ;;  # just ignore it
+    -mno-cygwin) ;;  # just ignore it
+    -L*) libdirs="$libdirs $1";;
+    *)   args="$args $1";;
+    esac
+    shift
+done
+
+defname=${libname}.def
+
+${plat}-dlltool --as ${plat}-as --output-def $defname \
+		--dllname $libname $args || exit 1
+
+exec \
+${plat}-dllwrap --dlltool-name ${plat}-dlltool \
+		--driver-name ${plat}-gcc \
+		--as ${plat}-as -s -o $libname --def $defname \
+		--dllname $libname $args \
+		@BUILDTOP@/platform/emulator/libemulator.a \
+		$libdirs

@@ -1,0 +1,83 @@
+This is an interface to the PostgreSQL database.  You
+can connect to local or remote sites.
+
+It has only been tested on Linux so far, but it should work on
+any system where you can build a shared object libpq.so or a
+libpq.a with position independent code.
+
+INSTALLATION GUIDE
+
+1. run configure
+
+you may use --with-psql-inc and --with-psql-lib for finding the
+include file libpq-fe.h and the library.  The library must either
+be a shared object library libpq.so in a standard place (e.g. in
+/usr/lib) or in your LD_LIBRARY_PATH, or an ordinary archive
+libpq.a provided it was compiled with -fpic (or whatever option
+is necessary to create position independent code).
+
+At our site, we have installed the postgresql-* RPMs and we
+configure the package as follows:
+
+	./configure --with-psql-inc=/usr/include/pgsql
+
+2. run make
+
+	make
+
+This should build the necessary components, e.g.:
+	Psql.ozf
+	PsqlLib.so-linux-i486
+
+3. run make install
+
+	make install
+
+For installing in the default location /usr/local/oz/contrib
+
+	make install prefix=/foo
+
+For installing in the non standard location /foo/contrib
+
+4. You may also test that the package works properly.  First
+you build the test program:
+
+	make test
+
+Then you run it:
+
+	./test
+
+This may take a little while since it must connect to a remote
+database in Sweden; but, eventually it should print out a few
+lines, like the following:
+
+age#'27'
+name#'Lars Rasmusson'
+age#'26'
+name#'Erik Klintskog'
+age#'26'
+name#'Nils Franzen'
+
+Actually, here further details contributed by Lars:
+
+To test if it works, you must have the authority to connect
+to an existing PostgreSQL database.  You can try the file
+test.oz or modify it to your local database by setting the 
+"host" and "dbname", and if you must, supply a "user" and "password".
+
+This is how you use it when you have imported the Psql module.
+The query result is returned as a list of records.
+
+   SQL = {Psql.startSQL
+          "host=pets.sics.se dbname=ozstuff "#
+	  "user=ozuser password=mozart"}
+      
+   {ForAll {SQL.query "SELECT * FROM person where age<25"} System.show}
+
+OBS!  Remember that the user must be granted priviliges to
+read from the table, or else an exception is raised.
+
+Lars Rasmusson
+1998-11-30
+Sics

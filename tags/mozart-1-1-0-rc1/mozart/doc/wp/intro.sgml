@@ -1,0 +1,107 @@
+<!--
+  - Authors:
+  -   Christian Schulte <schulte@ps.uni-sb.de>
+  -
+  - Contributors:
+  -   Daniel Simon <dansim@ps.uni-sb.de>
+  -   Andy Walter <anwalt@ps.uni-sb.de>
+  -   
+  - Copyright:
+  -   Christian Schulte, 1998
+  -
+  - Last change:
+  -   $Date$ by $Author$
+  -   $Revision$
+  -
+  - This file is part of Mozart, an implementation
+  - of Oz 3
+  -    http://www.mozart-oz.org
+  -
+  - See the file "LICENSE" or
+  -    http://www.mozart-oz.org/LICENSE.html
+  - for information on usage and redistribution
+  - of this file, and for a DISCLAIMER OF ALL
+  - WARRANTIES.
+  -
+  -->
+
+
+<Chapter id="chapter.introduction">
+  <Title/Introduction/
+
+  <p>
+    This document is an introduction to window programming in
+    Mozart. Window programming means to build graphical and
+    interactive interfaces for applications. 
+
+  <p>
+    In Mozart, the basic building blocks for window programming are
+    <index/widget/widgets: objects that represent graphical entities like labels,
+    buttons, and menus. <index/window/Windows are described compositionally by
+    means of object hierarchies and are subject to dynamic and interactive
+    modification. Other entities we will deal with are for example
+    fonts and images. The appearance of widgets is managed by 
+    geometry managers. Interaction events, such as pressing a mouse
+    button, trigger execution of procedures or methods.
+
+  <p>
+    Mozart uses an object-oriented interface to Tk for window
+    programming. The interface inherits from &Oz; concurrency, objects
+    and first-class procedures. From Tk the interface inherits a set
+    of powerful graphical abstractions. This document introduces both
+    aspects: the basic usage of the graphical abstractions and how to
+    profit from &Oz;'s language features. The interface employs a
+    simple generic mapping to Tk.  People familiar with Tk will get
+    acquainted very soon.
+
+
+  <Section class=unnumbered>
+    <Title/The Examples/
+
+    <p>
+      The documents features a large number of <index/examples/examples which are
+      designed to be tried by the reader. All examples are contained
+      in a <ref.extern to="WindowProgramming.oz"/demo file/ to be used
+      with the <ptr.extern to="ozdoc:opi">.
+
+
+  <Section class=unnumbered>
+    <Title/Further Information/
+
+    <p>
+      One particular advantage of using Tk as graphics engine for
+      Mozart is the wealth of excellent <index/documentation/documentation for Tcl and Tk.
+
+    <p>
+      A must read (or at least see or browse) in this particular
+      respect is the original <Ref to="Ousterhout.94"/book/ of John
+      Ousterhout. A very fascinating account on how to employ the
+      graphical primitives in Tk for developing high-level graphical
+      applications is <Ptr to="HarrisonMcLennan.98">.
+
+    <p>
+      The definitive entry point into the full collection of Tcl/Tk
+      related resources and informations is the web page at
+      <Ref.extern to="http://www.scriptics.com/"/Scriptics/, a company
+      co-founded by John Ousterhout.
+
+    <p>
+      The details of all commands and widgets for Tcl and Tk can be
+      found in the manpages that ship with the Tcl and Tk
+      distributions. For convenience, the Mozart release includes HTML
+      versions of <Ref.extern to="../tcltk/contents.htm"/them/, which
+      carry the following <Ref.extern
+      to="../tcltk/copyright.htm"/copyright/. 
+
+  <Section class=unnumbered>
+    <Title/Acknowledgements/
+
+    <p>
+      I am grateful to Michael Mehl, who co-authored an earlier
+      version of this document. Peter Van Roy contributed the paragraph
+      in <ptr to="section.widgets-2.return"> that explains why <<tkReturn>>
+      is indeed asynchronous.
+      
+</Chapter>
+
+

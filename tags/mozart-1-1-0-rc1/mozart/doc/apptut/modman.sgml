@@ -1,0 +1,415 @@
+<!--
+  - Authors:
+  -   Christian Schulte <schulte@ps.uni-sb.de>
+  -
+  - Copyright:
+  -   Christian Schulte, 1998
+  -
+  - Last change:
+  -   $Date$ by $Author$
+  -   $Revision$
+  -
+  - This file is part of Mozart, an implementation
+  - of Oz 3
+  -    http://www.mozart-oz.org
+  -
+  - See the file "LICENSE" or
+  -    http://www.mozart-oz.org/LICENSE.html
+  - for information on usage and redistribution
+  - of this file, and for a DISCLAIMER OF ALL
+  - WARRANTIES.
+  -
+  -->
+
+<chapter id="chapter.modman">
+  <Title/Module Managers/
+
+  <p>
+    So far we only dicussed how functor definitions can be developed
+    in a modular fashion. This chapter explains how modular
+    applications are executed.
+
+  <p>
+    The chapter is kept informal, a more detailed explanation of
+    module managers and how module managers link applications can be
+    found in <ptr to="modules.98">.
+
+  <section id="section.modman.overview">
+    <title/Overview/
+
+    <p>
+      A module manager maintains a <def/module table/. The module
+      table maps urls (or to be more precise, full module urls) to
+      modules or futures to modules.
+
+    <p>
+      A module manager <def/links/ a module at url ?{U} as follows:
+      <list enum>
+        <item>
+          If ?{U} is already in the module table, the module manager
+          returns the entry in the module table.
+        <item>
+          If ?{U} is not yet in the module table, the module manager
+          creates a new future ?{M} and stores ?{M} under key ?{U} in the
+          module table. As soon as the value of future ?{M} gets
+          requested, the module manager <def/installs/ a module from
+          the url ?{U}.  
+      </list>
+
+    <p>
+      Linking is done lazily: only when the value of the
+      module is requested (usually implicitly, when the application 
+      attempts to access an exported feature), the module gets installed.
+      A module with full
+      module url ?{U} is installed as follows, where the installation
+      procedure returns a module ?{M}:
+      <list enum>
+        <item>
+          The pickled functor stored at ?{U} is loaded.
+        <item>
+          The module manager computes the full module urls for its
+          imports. This step is detailed in <ptr
+          to="section.modman.import"> and <ptr
+          to="section.modman.resolve">.
+        <item>
+          It recursively links all functors with the full module urls
+          computed before. This yields the <def/argument modules/.
+        <item>
+          It applies the functor body to the argument modules, which
+          returns the module ?{M}. 
+      </list>
+
+  <section id="section.modman.lazy">
+    <title/Lazy Linking/
+
+    <p>
+      In the above section we have discussed that modules are subject
+      to lazy linking: Only when a module is requested, the functor to
+      compute that module gets loaded.
+
+    <p>
+      Lazy linking has dramatic effect on the startup time of an
+      application: applications can start small in a fraction of a
+      second and load additional functionality on demand. And all this
+      happens completely transparently.
+    
+    <p>
+      System modules are also subject to dynamic linking. Even though
+      module managers give the impression that the system modules
+      are always there, they are also loaded on demand. An application
+      that takes good advantage of that fact is for example the Oz
+      Programming Interface which starts quickly even though it
+      imports all system modules.
+
+  <section id="section.modman.import">
+    <title/Import Specifications/
+
+    <p>
+     The entire import part of a functor is called the
+      <def/import specification/. Each import specification consists
+      of several <def/import clauses/. Each import clause consists of
+      a mandatory <def/module name/ and an optional <def/module url/
+      that must be preceded by the <<at>> keyword.
+
+    <p>
+      For example, in the import specification
+<<<
+import
+   DB
+   MyForm at 'Form.ozf'
+>>> 
+      the first import clause is <<DB>> which just consists of the
+      module name <<DB>> and does not provide a module url. The second
+      import clause is <<MyForm at 'Form.ozf'>> which consists of the
+      module name <<MyForm>> and the module url <<'Form.ozf'>>.
+
+    <p>
+      The first step in linking a functor is that the module manager
+      computes for each import clause the <def/full module url/. This
+      is done according to the following rules:
+      <list enum>
+        <item>
+          If the import clause features a module url ?{U}, the full
+          module name is ?{U}.
+        <item>
+          If the import clause consists of a module name ?{M} only,
+          where ?{M} is the name of a system module, the full url is
+          <<x-oz://system/?{M}>>, that is the module name prefixed by
+          <<x-oz://system/>>.
+        <item>
+          If the import clause consists of a module name ?{M} only and
+          ?{M} is not the name of system module, the full url is
+          <<?{M}.ozf>>, that is the module name suffixed by <<.ozf>>.
+      </list>
+     
+    <p>
+      All currently defined system modules are listed in <ptr
+      to="table.modman.system">.
+
+  <figure class=table id="table.modman.system">
+    <caption/System modules./
+    <table id="table.sysmods">
+      <tr/<th/Name/ <th/Description/ <th/Documentation//
+      <tr/<th colspan=3/Application Programming//
+      <tr/<td/<<Application>>/
+          <td/Command processing and application termination/
+          <td/<ptr.extern to="ozdoc:system" key="chapter.application">//
+      <tr/<td/<<Module>>/
+          <td/Module managers/
+          <td/<ptr.extern to="ozdoc:system" key="chapter.module">//
+      <tr/<th colspan=3/Constraint Programming//
+      <tr/<td/<<Search>>/
+          <td/Search engines/
+          <td/<ptr.extern to="ozdoc:system" key="chapter.search">//
+      <tr/<td/<<FD>>/
+          <td/Finite domain propagators and distributors/
+          <td/<ptr.extern to="ozdoc:system" key="chapter.fd">//
+      <tr/<td/<<Schedule>>/
+          <td/Scheduling propagators and distributors/
+          <td/<ptr.extern to="ozdoc:system" key="chapter.schedule">//
+      <tr/<td/<<FS>>/
+          <td/Finite set propagators and distributors/
+          <td/<ptr.extern to="ozdoc:system" key="chapter.fs">//
+      <tr/<td/<<RecordC>>/
+          <td/Feature constraints (record constraints with open arities)/
+          <td/<ptr.extern to="ozdoc:system" key="chapter.recordc">//
+      <tr/<td/<<Combinator>>/
+          <td/Deep-guard combinators/
+          <td/<ptr.extern to="ozdoc:system" key="chapter.combinator">//
+      <tr/<td/<<Space>>/
+          <td/First-class computation spaces/
+          <td/<ptr.extern to="ozdoc:system" key="chapter.space">//
+      <tr/<th colspan=3/Distributed Programming//
+      <tr/<td/<<Connection>>/
+          <td/Connecting to running Oz processes/
+          <td/<ptr.extern to="ozdoc:system" key="chapter.connection">//
+      <tr/<td/<<Remote>>/
+          <td/Remote module managers/
+          <td/<ptr.extern to="ozdoc:system" key="chapter.remote">//
+      <tr/<td/<<URL>>/
+          <td/URL parsing and resolution routines/
+          <td/<ptr.extern to="ozdoc:system" key="chapter.urlurl">//
+      <tr/<td/<<Resolve>>/
+          <td/URL resolving/
+          <td/<ptr.extern to="ozdoc:system" key="chapter.resolve">//
+      <tr/<td/<<Fault>>/
+          <td/Handling faults in distributed programs/
+          <td/<ptr.extern to="ozdoc:system" key="chapter.fault">//
+      <tr/<th colspan=3/Open Programming//
+      <tr/<td/<<Open>>/
+          <td/Support for files, sockets, and pipes/
+          <td/<ptr.extern to="ozdoc:system" key="chapter.open">//
+      <tr/<td/<<OS>>/
+          <td/POSIX compliant operating system support/
+          <td/<ptr.extern to="ozdoc:system" key="chapter.os">//
+      <tr/<th colspan=3/System Programming//
+      <tr/<td/<<Pickle>>/
+          <td/Saving and loading of persistant values/
+          <td/<ptr.extern to="ozdoc:system" key="chapter.pickle">//
+      <tr/<td/<<Property>>/
+          <td/Querying and configuring engine properties/
+          <td/<ptr.extern to="ozdoc:system" key="chapter.property">//
+      <tr/<td/<<Error>>/
+          <td/Error handling routines/
+          <td/<ptr.extern to="ozdoc:system" key="chapter.error">//
+      <tr/<td/<<Finalize>>/
+          <td/Automatic garbage collection for native entities/
+          <td/<ptr.extern to="ozdoc:system" key="chapter.finalize">//
+      <tr/<td/<<System>>/
+          <td/Miscellaneous system related procedures (printing)/
+          <td/<ptr.extern to="ozdoc:system" key="chapter.system">//
+      <tr/<th colspan=3/Window Programming//
+      <tr/<td/<<Tk>>/
+          <td/Classes and procedures for window programming/
+          <td/<ptr.extern to="ozdoc:system" key="chapter.tk">//
+      <tr/<td/<<TkTools>>/
+          <td/Predefined abstractions to handle menus, dialogs, and so on/
+          <td/<ptr.extern to="ozdoc:system" key="chapter.tktools">//
+      <tr/<th colspan=3/Graphical Tools//
+      <tr/<td/<<Browser>>/
+          <td/Incremental display of Oz values/
+          <td/<ptr.extern to="ozdoc:browser">//
+      <tr/<td/<<Panel>>/
+          <td/Monitor and configure the running engine/
+          <td/<ptr.extern to="ozdoc:panel">//
+      <tr/<td/<<Explorer>>/
+          <td/Visual constraint programming tool/
+          <td/<ptr.extern to="ozdoc:explorer">//
+      <tr/<td/<<Ozcar>>/
+          <td/Interactive debugger/
+          <td/<ptr.extern to="ozdoc:ozcar">//
+      <tr/<td/<<Profiler>>/
+          <td/Profiling of Oz programs/
+          <td/<ptr.extern to="ozdoc:profiler">//
+      <tr/<th colspan=3/Miscellaneous//
+      <tr/<td/<<ObjectSupport>>/
+          <td/Generic classes for object oriented applications/
+          <td/<ptr.extern to="ozdoc:system" key="chapter.objectsupport">//
+    </table>
+  </figure>
+
+  </section>
+  
+  <section id="section.modman.resolve">
+    <title/Url Resolution/
+
+    <p>
+      Given the full url names for each import clause, the module
+      manager determines the urls from which functors are to be
+      loaded by <def/url resolution/. Url resolution takes two urls
+      (one is called the <def/base url/ and the other is called the
+      <def/local url/) as
+      input and computes a new <def/resolved url/. The process of
+      url resolution you already know from organizing your html-pages:
+      a url for a relative href-link is resolved with respect to the
+      base url of the containing document.
+
+    <p>
+      In this respect, a module manager will behave similarly to a
+      web-browser.  When it
+      installs a module that was loaded from url ?{U}, the latter's
+      full import urls are resolved with respect to ?{U}.
+      <ptr to="figure.modman.resolve"> shows a small example, where the root functor has the absolute filename <file>/home/schulte/A.ozf</file>.
+
+    <figure id="figure.modman.resolve">
+      <caption/Example for resolving urls./
+      
+      <table id="table.url.resolution">
+        <tr/ <th/Name/ <th/Resolved url/ <th/Import specification/
+        <tr>
+           <td/<<A>>/
+           <td>
+              <file>/home/schulte/A.ozf</file>
+           </td>
+           <td>
+<<<import 
+   B at 'down/B.ozf'
+   C at 'http://www.foo.org/C.ozf'>>>
+           </td>
+        </tr>
+        <tr>
+           <td/<<B>>/
+           <td>
+              <file>/home/schulte/down/B.ozf</file>
+           </td>
+           <td>empty</td>
+        </tr>
+        <tr>
+           <td/<<C>>/
+           <td>
+              <file>http://www.foo.org/C.ozf</file>
+           </td>
+           <td>
+<<<import D at 'D.ozf'>>
+           </td>
+        </tr>
+        <tr>
+           <td/<<D>>/
+           <td>
+              <file>http://www.foo.org/D.ozf</file>
+           </td>
+           <td> empty
+           </td>
+        </tr>
+      </table>
+    </figure>
+     
+
+  </section>
+
+  <section id="section.modman.user">
+    <title/User-defined Module Managers/
+
+    <p>
+      When the engine starts it has the root module manager that
+      executes the root functor and subsequently links imported
+      functors. However, in many cases it is desirable that
+      applications can create private module managers that just link
+      particular functors.
+
+    <p>
+      As an example, suppose we want to use more than a single data
+      base as implemented by the functor <file/DB.ozf/ as shown in
+      <ptr to="section.development.db">
+
+    <p>
+      In the Oz Programming Interface, we can link <file/DB.ozf/
+      twice with two new and different module managers as follows:
+<<<
+[DBA]={Module.link ['DB.ozf']}
+[DBB]={Module.link ['DB.ozf']}
+>>>
+      Both <<DBA>> and <<DBB>> refer to two independent data bases.
+
+    <p>
+      You can observe lazy linking easily. Browsing <<DBA>> as
+      follows
+      <<<{Browse DBA}>>>
+      shows <samp/DBA&le;Future&gt;/, which means that <<DBA>> still
+      refers to a future.  Requesting the module by, for example, adding
+      an entry to the data base is also reflected in the Browser:
+      the display of
+      <samp/DBA&le;Future&gt;/ is replaced by a representation of the
+      module's value.
+
+    <p>
+      That both module managers work independently can be verified by
+      browsing <<DBB>>.
+
+    <p>
+      <<Module.link>> takes a list of urls, creates a new module
+      manager and maps each url ?{U} to the module created by
+      linking the functor at ?{U}. Reference documentation can be found
+      in <ptr.extern to="ozdoc:system" key="chapter.module">.
+
+  <section id="section.modman.opi">
+    <title/Functors in the Oz Programming Environment/
+
+    <p>
+      Functors are first class entities in the language that can of
+      course also be created in the Oz Programming Interface. This
+      eases development of functors considerably.
+
+    <p>
+      Suppose the following demo functor definition
+<<<declare
+functor F
+export Pam
+define
+   fun {DoPam Xs P Ys}
+      case Xs of nil then Ys
+      [] X|Xr then {DoPam Xr P {P X}|Ys}
+      end
+   end
+      
+   fun {Pam Xs P}
+      {DoPam Xs P nil}
+   end
+end>>>
+      After feeding the definition, the defined functor can be applied
+      as follows:
+<<<[M]={Module.apply [F]}>>>
+      The module <<M>> can be used in the OPI as usual, that is 
+<<<{Browse {M.pam [1 2 3] fun {$ I} I+1 end}}>>>
+      displays the list <<[4 3 2]>>. 
+
+    <p>
+      <<Module.apply>> takes a list of functors as argument, creates a
+      new module manager, applies each functor element and returns the
+      resulting list of modules. It is also possible to specify the
+      base url used in linking the argument modules of the applied
+      functor. For more information see <ptr.extern to="ozdoc:system"
+      key="chapter.module">.
+     
+
+    <p>
+      Of course, also other situations allow to take advantage of
+      first-class functors and that they can be applied by module
+      managers. In particular they are useful for remote module
+      managers that create new Oz processes on networked
+      computers.  You can learn more on this issue in <ptr.extern
+      to="ozdoc:dstutorial">. 
+    
+
+</Chapter>
+

@@ -1,0 +1,93 @@
+Release of Mozart 1.0
+---------------------
+
+Available at http://www.mozart-oz.org
+
+Systems supported: Many Unix-based platforms, Windows 95/98/NT
+
+The Mozart consortium (DFKI & UdS & SFB 378, SICS, UCL) is pleased to
+announce the release of Mozart 1.0, a major development platform for
+open fault-tolerant distributed applications, constraint programming
+applications, and logic programming applications.  The platform
+implements the Oz language and is the fruit of a decade of research.
+The platform is released with a very liberal license (X11-style) that
+allows both commercial and non-commercial use.  Full source code is
+available.  The platform includes a full-fledged interactive
+development environment with many libraries and tools.  There is
+extensive documentation including tutorials covering all below
+mentioned application areas, a complete set of reference manuals, and
+many demos.  The distribution, constraint, and logic programming
+abilities are the subject of ongoing research.
+
+Mozart provides state-of-the-art support for distributed programming
+that separates the issues of application functionality, distribution
+structure, fault tolerance, and open computing.  The implementation is
+fully network-transparent, i.e., an application obeys exactly the same
+semantics independent of its distribution structure, which is
+specified separately from the application functionality. The platform
+reflects distribution and fault tolerance in the language, providing
+abstractions that allow full control over these issues from within
+the language.   
+
+Mozart provides state-of-the-art support for constraint programming
+and logic programming.  There are four constraint systems, namely
+rational trees (as in modern Prologs), finite domains, finite sets of
+integers, and record constraints.  The platform is robust and able to
+handle big problems.  Its performance is competitive with commercial
+solutions (including ILOG Solver, CHIP, SICStus Prolog, and Prolog IV),
+but it is much more expressive and flexible, providing first-class
+computation spaces, programmable search strategies, a GUI for the
+interactive exploration of search trees, parallel search engines
+that exploit networked computers, and a programming interface to add
+new, efficient constraint systems.
+
+Distribution and constraint programming form a unique combination for
+emerging application areas.  Intelligent multi-agent systems profit
+from having both aspects together.  Furthermore, Mozart provides an
+easy-to-use parallel search engine for constraint programming and
+logic programming.  This makes it easy for ordinary users to vastly
+increase the performance of compute-intensive applications, without
+having to rewrite them.  
+
+The Mozart consortium has developed significant applications with the
+platform.  Here we give a brief overview; a more complete list is at
+http://www.mozart-oz.org/archive.cgi.  DFKI has developed a
+real-time bus scheduler, an intelligent manufacturing systems planner,
+a configuration tool, and an automatic music composition tool.  DFKI
+uses Mozart as the base platform for its multi-agent research.  UdS
+has developed a corpus browser.  UCL has developed TransDraw, a
+state-of-the-art collaborative graphic editor that has high performance
+even over very slow networks.  SICS has developed applications in train
+scheduling and radar configuration, and MIM (Mozart Instant Messager),
+an extended version of ICQ.  
+
+The Mozart platform includes an interactive programming interface based
+on Emacs (both GNU Emacs and XEmacs are supported), an incremental
+compiler, development tools (including browser, interactive constraint
+visualizer, parser-generator, profiler, and debugger), an Internet-wide
+module system with dynamic linking, full Web support (applets,
+servlets, CGI), persistent data structures, an object-oriented graphics
+interface based on Tcl/Tk, powerful interoperability features including
+support for sockets and a C++ interface for dynamically-linked
+libraries, a distributed garbage collector, infinite precision
+arithmetic, and support for stand-alone applications.  Furthermore,
+there are extensive libraries of constraints (including support for
+scheduling) and search engines including parallel engines.  Performance
+is competitive with commercial Prolog and Lisp systems and is better
+than emulated Java.
+
+It is interesting to compare Mozart with JDK 1.2, the current Java
+release.  Mozart distinguishes itself from Java in six ways.  First,
+Mozart provides true network transparency--not a single line of code
+has to be changed when changing the distribution structure of an
+application.  Second, Mozart provides a truly neutral network layer--it
+does not make any irrevocable decisions when there are temporary or
+permanent faults with processes or with the network.  Third, Mozart is
+fully extensible at run-time--one can for example upgrade the interface
+of a remote object interactively while the object is running and
+clients are communicating with it.  Fourth, Mozart provides
+sophisticated constraint programming and logic programming abilities
+and tools.  Fifth, Oz is a data-flow language, i.e., computations
+are driven by availability of data.  Finally, Mozart provides a much
+more efficient implementation of concurrency--it is literally possible
+to create millions of threads within a process.

@@ -1,0 +1,391 @@
+/*
+ *  Authors:
+ *    Kostja Popow (popow@ps.uni-sb.de)
+ *    Christian Schulte <schulte@ps.uni-sb.de>
+ *
+ *  Contributors:
+ *    Michael Mehl (mehl@dfki.de)
+ *
+ *  Copyright:
+ *    Kostja Popow, 1997-1999
+ *    Michael Mehl, 1997-1999
+ *    Christian Schulte, 1997-1999
+ *    Tobias Mueller, 1998-1999
+ *
+ *  Last change:
+ *    $Date$ by $Author$
+ *    $Revision$
+ * 
+ *  This file is part of Mozart, an implementation 
+ *  of Oz 3:
+ *     http://www.mozart-oz.org
+ *
+ *  See the file "LICENSE" or
+ *     http://www.mozart-oz.org/LICENSE.html
+ *  for information on usage and redistribution
+ *  of this file, and for a DISCLAIMER OF ALL
+ *  WARRANTIES.
+ *
+ */
+
+#ifndef __BOARD_ICC_
+#define __BOARD_ICC_
+
+#if !defined(OUTLINE) && defined(INTERFACE)
+#pragma interface
+#endif
+
+#include "am.hh"
+#include "susplist.hh"
+#include "value.hh"
+#include "trail.hh"
+#include "var_base.hh"
+
+#ifdef OUTLINE
+#define inline
+#endif
+
+inline
+void Board::addSuspension(Suspendable * susp) {
+  suspList = new SuspList(susp, suspList);
+}
+
+inline
+void Board::addToNonMono(Propagator * prop) {
+  setNonMono(getNonMono()->insert(prop));
+}
+
+inline
+void Board::addToDistBag(Distributor * d) {
+  setDistBag(getDistBag()->add(d));
+}
+
+
+inline
+TaggedRef Board::genSucceeded(Bool isEntailed) {
+  ozstat.incSolveSolved();
+  SRecord *stuple = SRecord::newSRecord(AtomSucceeded, 1);
+
+  stuple->setArg(0, isEntailed ? AtomEntailed : AtomSuspended);
+
+  return makeTaggedSRecord(stuple);
+}
+
+inline
+TaggedRef Board::genAlt(int noOfClauses) {
+  SRecord *stuple = SRecord::newSRecord(AtomAlt, 1);
+
+  Assert(!isCommitted());
+  stuple->setArg(0, makeTaggedSmallInt(noOfClauses));
+
+  return makeTaggedSRecord(stuple);
+}
+
+inline
+void Board::patchAltStatus(int i) {
+  SRecord *stuple = SRecord::newSRecord(AtomAlt, 1);
+  stuple->setArg(0, makeTaggedSmallInt(i));
+  status = makeTaggedSRecord(stuple);
+}
+
+/*
+ * Non monotonic propagators
+ *
+ */
+
+inline
+void Board::scheduleNonMono(void) {
+  for (OrderedSuspList * p = getNonMono(); p != NULL; p = p->getNext())
+    addToLPQ(p->getPropagator());
+  
+  setNonMono(NULL);
+}
+
+
+/*
+ * Distributors
+ *
+ */
+
+inline
+Distributor * Board::getDistributor(void) {
+  Distributor * d = NULL;
+  setDistBag(getDistBag()->get(&d));
+  return d;
+}
+
+
+
+
+
+/*
+ * increment/decrement the thread counter
+ * in every solve board above
+ * if "stable" generate a new thread "solve waker"
+ * NOTE:
+ *   there may be failed board in between which must be simply ignored
+ *
+ */
+
+inline
+Bool Board::isStable(void) {
+  if (hasRunnableThreads())
+    return NO;
+
+  if (oz_isCurrentBoard(this) && !trail.isEmptyChunk())
+    return NO;
+
+  if (isEmptySuspList())
+    return OK;
+
+  clearSuspList((Thread *) NULL);
+
+  return isEmptySuspList();
+}
+
+inline
+Bool Board::isBlocked(void) {
+  return !hasRunnableThreads();
+}
+
+inline
+void Board::incRunnableThreads(void) {
+  Assert(!isCommitted() && !isRoot());
+
+  Board * bb = this;
+
+  do {
+    Assert(bb->crt >= 0);
+    if ((bb->crt)++ > 0)
+      return;
+    bb = bb->getParent();
+  } while (!bb->isRoot());
+
+}
+
+// from thr_int.hh
+
+Thread * oz_newThreadInject(Board * bb);
+
+inline
+void Board::checkSolveThreads(void) {
+  Assert(!isCommitted());
+
+  Board * bb = this;
+
+  while (!bb->isRoot()) {
+
+    Assert(bb->crt >= 0);
+
+    if (bb->crt > 0)
+      return;
+    
+    if (bb->isStable()) {
+      oz_newThreadInject(bb);
+      return;
+    }
+
+    bb = bb->getParent();
+  }
+
+}
+
+inline
+void Board::decRunnableThreads(void) {
+  Assert(!isCommitted());
+
+  Board * bb = this;
+
+  while (!bb->isRoot()) {
+
+    Assert(bb->crt >= 0);
+
+    if (--(bb->crt) > 0)
+      return;
+    
+    if (bb->isStable())
+      oz_newThreadInject(bb);
+    
+    bb = bb->getParent();
+  }
+
+}
+
+inline
+TaggedRef Board::genFailed() {
+  ozstat.incSolveFailed();
+  return AtomFailed;
+}
+
+inline
+Bool oz_isBelow(Board * below, Board * above) {
+  // Above _MUST_ be deref'd, it does not matter for below
+  Assert(!above->isCommitted());
+  register Board * s = below;
+  register Board * r = oz_rootBoard();
+
+  do {
+    // Just treat committed boards as ordinary boards, they
+    // are not very common!
+    if (s == above)
+      return OK;
+    if (s == r)
+      return NO;
+    s = s->getParentInternal();
+  } while (1);
+
+}
+
+/*
+  This function checks if the current board is between "varHome" and "to"
+  resp. equal to "to".
+  */
+
+inline
+oz_BFlag oz_isBetween(Board * to, Board * varHome) {
+  // varHome _MUST_ be deref'd, it does not matter for to
+
+  Assert(!varHome->isCommitted());
+
+  register Board * s = to;
+  register Board * c = oz_currentBoard();
+
+  do {
+    // Just treat committed boards as ordinary boards, they
+    // are not very common!
+
+    if (s == c) {
+      return B_BETWEEN;
+    } else if (s == varHome) {
+      return B_NOT_BETWEEN;
+    }
+
+    Assert(!s->hasMarkOne() && !s->hasMarkTwo());
+
+    register int t = s->getTag();
+
+    if (t == BoTag_Failed)
+      return B_DEAD;
+
+    Assert(t != BoTag_Root);
+
+    s = s->getParentInternal();
+
+  } while (1);
+
+}
+
+/*
+ * Implementation of space operations
+ */
+
+inline
+void Board::inject(TaggedRef proc, int arity) {
+  // thread creation for {proc root}
+  Thread *it = oz_newThreadInject(this);
+
+  if (arity == 1) {
+    RefsArray args = allocateRefsArray(1, NO);
+    args[0] = getRootVar();
+
+    it->pushCall(proc, args, 1);
+  } else {
+    Assert(arity == 0);
+    it->pushCall(proc, NULL, 0);
+  }
+}
+
+inline
+OZ_Return Board::merge(Board *bb, Bool sibling) {
+  // this is the board that gets merged
+  //   --- it is merged with bb
+
+  // First the things that must done even for merging with root board
+
+  // Mark as merged
+  setCommitted(bb);
+
+  // Must be before script installation
+  bb->incSuspCount(getSuspCount());
+
+  // Merge constraints
+  DEBUG_CONSTRAIN_CVAR(("\n==== Start Merging ===="));
+
+  OZ_Return ret = installScript(OK);
+
+  DEBUG_CONSTRAIN_CVAR(("\n==== Stop Merging ===="));
+
+  // Merge propagators (must be after script installation, since script
+  //                    installation might wake some propagators!!!!)
+  (bb->lpq).merge(lpq);
+  // This might cause to serving threads for the same board!
+
+  Assert(oz_isCurrentBoard(bb));
+
+  if (bb->isRoot()) {
+    scheduleNonMono();
+  } else {
+    // Update counters
+    if (sibling) {
+      if (crt > 0) {
+	bb->crt += crt;
+	(bb->getParent()->crt)--;
+      }
+      Assert(bb->getParent()->isRoot() || bb->getParent()->crt > 0);
+      Assert(bb->crt >= 0);
+    } else {
+      if (crt > 0) {
+	bb->crt += crt-1;
+      }
+      Assert(bb->crt > 0);
+    }
+
+    // Merge distributors
+    bb->setDistBag(bb->getDistBag()->merge(getDistBag()));
+
+    // Merge nonmonotonic propagators
+    bb->setNonMono(bb->getNonMono()->merge(getNonMono()));
+
+  }
+
+  return ret;
+}
+
+inline
+int Board::commit(int left, int right) {
+  ozstat.incSolveAlt();
+
+  return getDistBag()->getFirst()->commit(this,left,right);
+
+}
+
+
+inline
+Bool Board::cacIsAlive() {
+  Board * s = this;
+
+  do {
+    int t = s->getTag();
+
+    if (t & (BoTag_MarkOne | BoTag_MarkTwo))
+      return OK;
+
+    if (t == BoTag_Root) {
+      return OK;
+    } 
+
+    if (t == BoTag_Failed) {
+      return NO;
+    }
+
+    s = s->getParentInternal();
+  } while (1);
+
+}
+
+
+#ifdef OUTLINE
+#undef inline
+#endif
+
+#endif

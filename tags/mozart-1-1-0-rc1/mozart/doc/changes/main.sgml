@@ -1,0 +1,691 @@
+<!--
+  - Authors:
+  -   Christian Schulte <schulte@ps.uni-sb.de>
+  -
+  - Copyright:
+  -   Christian Schulte, 1998
+  -
+  - Last change:
+  -   $Date$ by $Author$
+  -   $Revision$
+  -
+  - This file is part of Mozart, an implementation
+  - of Oz 3
+  -    http://www.mozart-oz.org
+  -
+  - See the file "LICENSE" or
+  -    http://www.mozart-oz.org/LICENSE.html
+  - for information on usage and redistribution
+  - of this file, and for a DISCLAIMER OF ALL
+  - WARRANTIES.
+  -
+  -->
+
+<!DOCTYPE Book SYSTEM "ozdoc.dtd" [
+
+<!-- Extension to the DTD -->
+<!ENTITY % proglang.values.local "|sh|fundamental">
+
+<!ENTITY % author.class "author|author.extern|comic">
+<!ENTITY % picture.element "picture|picture.extern|picture.choice">
+<!ELEMENT comic - O (%picture.element;)>
+
+<!-- Include Files -->
+
+<!-- Abbreviations -->
+<!ENTITY lt "<">
+<!ENTITY gt ">">
+<!ENTITY dot "." -- to distinguish it from periods -->
+<!ENTITY Oz "Oz">
+
+<!-- Processing Instructions -->
+<!ENTITY emdash PI "emdash">
+<!ENTITY endash PI "endash">
+<!ENTITY nbsp PI "nbsp">
+<!ENTITY ellipsis PI "ellipsis">
+<!ENTITY slash PI "slash">
+<!ENTITY ie PI "ie">
+<!ENTITY wrt PI "wrt">
+<!ENTITY eg PI "eg">
+
+]>
+
+<Book proglang=oz>
+  <Front>
+    <meta name="proglang.mode" arg1="oz" arg2="oz-mode">
+
+    <Meta name="html.split"       value="chapter.m110">
+    <Meta name="html.split"       value="chapter.m101">
+    <Meta name="html.split"       value="chapter.m100">
+
+    <Meta name="html.split"       value="section.m110.changes">
+    <Meta name="html.split"       value="section.m110.fixes">
+
+    <Meta name="html.split"       value="section.m100.general">
+    <Meta name="html.split"       value="section.m100.syntax">
+    <Meta name="html.split"       value="section.m100.base">
+    <Meta name="html.split"       value="section.m100.system">
+    <Meta name="html.split"       value="section.m100.tools">
+
+    <Meta name=ozversion value="3.0">
+    <Meta name=status value=revised>
+    <Title/Changes/
+    <Abstract>
+      This documents gives a brief overview of the
+changes between different Mozart versions. In
+particular, it lists the changes from
+      Oz 2.0 (and its implementation DFKI Oz) to Oz 3.0 (and its
+      implementation Mozart).
+    </Abstract>
+  <Body>
+
+    <chapter id="chapter.m110">
+      <title/Changes between Mozart 1.0.1 and Mozart 1.1.0/
+
+      <p>
+        Mozart 1.1.0 is a maintenance
+        release that features a completely new and
+        improved implementation of pickling and a
+        major
+        improvement of the
+        constraint programming primitives.   
+      </p>
+
+      <section id="section.m110.changes">
+        <title/Changes/
+
+
+        <subsection><title/Pickling/
+        
+        <p>
+Due to some redesign of the instruction set and the pickling
+algorithm, the pickle format changed between Mozart 1.0.1 and
+Mozart 1.1.0.  A conversion tool has been made available however,
+see <Ptr.Extern to="ozdoc:tools" key="chapter.convert"> for
+documentation.
+        </p>
+          
+        <subsection>
+          <title/Constraint Programming/
+
+        <p>
+        <list>
+         <entry>General improvements
+         <item>
+One of the main achievements in the 1.1.0 release is a fairly complete
+overhaul of the constraint programming functionality in Mozart. This
+makes the system leaner with respect to both code size and memory
+requirements and several even severe bugs have been fixed. In average,
+the refurbishment buys you a 20% speedup on constraint applications (up
+to 40% in rare cases).
+
+         <entry>Constructive disjunction removed
+         <item>
+            That's basically just for the records:
+            nobody used it. Since it was complicated and a constant
+            source of problems it has been
+            removed. In the rare case that you
+            used constructive disjunction, contact
+            us for help.
+
+         <entry><<FD>> and <<FS>> synchronization behavior corrected
+         <item>
+            All <<FD>> and <<FS>> propagators now
+            conform to their documentation as it
+            comes  to synchronization on their
+            arguments. Mozart 1.0.0 and 1.0.1 were
+            buggy in that execution did not block
+            even though the propagators required
+            their arguments to be finite domain or
+            finite set variables. Watch out! In
+            case your scripts that use finite
+            domain or finite set propagators just
+            block (they show a light (ugly) green
+            color in the Oz Explorer) this is a
+            likely cause! Fixing is easy: just
+            make sure that all variables supplied
+            to propagators are in fact constrained
+            to be finite domains or finite sets.
+
+         <entry><<Space>> and <<RecordC>> are
+                system modules
+         <item>
+            To achieve better factorization of
+            constraint programming support in
+            Mozart all constraint programming
+            modules are system modules rather than
+            modules in the base environment. This
+            results in a much smaller memory
+            footprint of the Mozart engine in case
+            the constraint programming facilities
+            are not needed. 
+         
+        </list>
+
+        <subsection>
+          <title/Distribution/
+
+<p>
+The distribution layer of Mozart has problems with fire-walls. From our
+point of view fire-walls defines all sub nets that restrict their
+traffic in some way. It has been impossible to connect to oz sites
+through any kind of fire-walls up till now. A naive solution is included
+in this release. It will only enable connections through the simplest of
+fire walls, but that is better than nothing.  We are working on a more
+general solution that will enable our sites to work over more complex
+fire-walls.
+</p>
+<p>
+There were problems related to the shortcoming of fire-walls. When a
+Mozart sites needs to communicate it will try to open a connection. If
+it fails to reach the desired site it will time-out and retry unless it
+can deduce that the destination site is dead. The site will continue
+trying to open the connection until it succeeds or finds the site dead.
+This behavior can disturb fire-walls a lot. The time-out is now growing
+with a growth factor. There is now a way to alter the start time-out
+value, the growth factor and the timeout ceiling.
+</p>
+
+
+        <subsection>
+          <title/Documentation/
+
+          <p>
+          <list>
+          <entry>Global Index
+          <item>The online documentation has been provided with a new index
+that encompasses all index entries from the individual
+documents.  It can be reached from the main documentation
+page, either using the link in the margin or the link
+under the Getting Started/Documentation
+          header. Caveat: Not all documents have a
+          useful index yet! 
+
+          <entry>Postscript and PDF
+          <item> Is available now.
+          </list>
+
+	<subsection><title/Support for loops/
+	  <p>
+In order to provide convenient syntax for loops, 2 new keywords have
+been introduced: <code/for/ and <code/do/.  This is an incompatible
+change.  Check your code: you must now quote every occurrence of
+<q/for/ and <q/do/.  Support for loops is still
+preliminary.  The general syntax is:
+<code display>for ?{Iterators} do ... end</code>
+where ?{Iterators} is a sequence of 1 or more iterators.  Supported
+iterators are &eg;
+<code display/X in L/
+for iterating over the elements of a list
+<code display/X in I..J/
+for iterating from integer <code/I/ to <code/J/.  The loop terminates
+as soon as one iterator runs out.
+The complete documentation is available in <ptr.extern
+to="ozdoc:loop"></p>
+
+	<SubSection>
+	  <Title/Compiler Macro Names/
+	  <P>
+	    The Mozart compiler defines macro names to identify the version
+	    of the system that is running (see <Ptr.Extern to="ozdoc:compiler"
+	    key="section.macronames">).  These used to be
+	    <Code display proglang=oz>Oz_1   Oz_1_0   Oz_1_0_1</Code>
+	    for Mozart&nbsp;1.0.1, but to avoid clashes with the macro
+	    names provided by DFKI Oz, they are now
+	    <Code display proglang=oz
+	    >Mozart_1   Mozart_1_1   Mozart_1_1_0</Code>
+
+      </section>
+
+      <section id="section.m110.fixes">
+        <title/Fixes/
+
+        <subsection>
+          <title/All Platforms/
+
+          <p>
+          <list>
+          <item> Return methods for classes in
+                 <<Tk.menuentry>> added.
+          <item>Added <<Class.getAttr>> to
+                 straightforwardly resolve
+                 multiple inheritance conflicts.
+          <item>Fixed printing of '~' for floats in
+                 virtual strings (bug 390).
+          <item>Code garbage collection bug fixed
+                 (bug 389).
+          <item>Bug in <<Record.dropWhile>> fixed,
+                 thanks to Benko Tamas (bug 383).
+          <item>Bug in <<FD.exactly>> fixed,
+                 thanks again to Benko Tamas (bug
+                 378)
+          <item>Bug in documentation of <<Append>>
+                 fixed (bugs 331, 372)
+          <item>Bug fix in <<ByNeed>> returning a
+                 variable (bugs 340, 370)
+          <item>Several bug fixes for networked
+                 file systems (aka interrupted
+                 system calls) (bug 360)
+          <item> Bug fix in handling <<X=X|X>> during
+                 garbage collection (bug 359)
+          <item> Bug fix in <<IsDet>> for distributed
+                 variables (bug 357) 
+          <item> Added <<Pickle.pack>> and
+                 <<Pickle.unpack>> for pickling
+                 and unpickling from/to byte
+                 strings. 
+          <item> Fixed bug for doing large number
+                 of http requests (bug 350)
+          <item> Bug fix for binding faulty distributed
+                 variables (bug 348)
+          <item> Several compiler bug fixes (bugs
+                 304, 305, 306, 344, 339)
+          <item> Bug fix in raising distributed
+                 programming exception (bug 341)
+          <item> Several fixes in unification
+                 (bugs 337)
+          <item> Some quirks in documentation
+                 fixed (bugs 257, 295, 302, 322, 327)
+          </list>
+
+
+        <subsection>
+          <title/Windows/
+
+          <p>
+          <list>
+	  <item> Executable functors are now fully supported under Windows.
+	  <item> More contributions have been made available.  In particular
+		 the native functors for the regex and gdbm modules have now
+		 been built.
+          <item> Subprocesses started from Mozart
+                 do not open new console windows.
+          <item> Mozart is no longer confused by
+                 other programs such as <file/fortify/ by
+                 a complete redesign of the communication
+                 between Mozart and Tk
+                 (bug 338).
+          <item> Temporary files are put under
+                 <file/C:\TEMP/ by default
+                 (instead of <file/C:\/).  
+                 Creating many files directly under <file/C:\/ made
+                 Windows NT freeze.
+          <item> <file/ozd/ now looks in the registry to see
+                 whether it can figure out where Emacs is installed.
+                 Furthermore, <file/ozd/ depended upon <file/bash/ as
+                 command interpreter to start Emacs&emdash;now it also
+                 works with <file/command.com/ and <file/cmd.exe/.
+          </list>
+
+        <subsection>
+          <title/Linux/
+
+          <p>
+          <list>
+          <item> Memory management for Linux 2.2.x
+                 fixed (bugs 391, 403).
+          </list>
+
+
+        <subsection>
+          <title/Other Platforms/
+
+          <p>
+          <list>
+          <item> Initial support for Mac OS X.
+          <item> Compiles under FreeBSD (Bug 393).
+          </list>
+        
+      </section>
+
+       
+    <chapter id="chapter.m101">
+      <title/Changes between Mozart 1.0.0 and Mozart 1.0.1/
+
+      <p>
+        This is a minor improvement release to fix
+        some small bugs and offer some
+        improvements. You can judge yourself
+        whether you should upgrade to 1.0.1 by 
+        reading the list of fixes and
+        improvements. If you have suffered from
+        any of the problems mentioned, you should
+        definitely download the new version.  
+
+      <list>
+         <entry>General fixes
+         <item>
+         <list>
+           <item> Obsolete menu entries in OPI removed (Bug 276) 
+           <item> Argument parsing made even more POSIX compliant (Bug 278) 
+           <item> Error messages pop up right buffer in OPI (Bug 243) 
+           <item> OPI connects correctly to engine during startup 
+           <item> Module managers resolve user
+                  names '~name' in file names (Bug 219) 
+                          Many small fixes 
+         </list>
+
+
+         <entry>Windows fixes 
+         <item>
+         <list>
+            <item> Blanks in URLs work now: Mozart
+                   can now be installed into a directory
+                   whose path has blanks in it
+                   (for example 
+                    <file/C:\Program Files\Mozart/)
+                          (Bug 255) 
+            <item> Default contributions available 
+            <item> Performance improvements for Graphics 
+            <item> Improved installation under
+                   Windows (Increased Mozart awareness for
+                   Microsoft Internet Explorer and Netscape Communicator) 
+         </list>
+         
+         <entry>Unix fixes 
+         <item>
+         <list>
+            <item> OZHOME can be adapted in oz startup script 
+            <item> Linear solver packages excluded by default 
+         </list>
+         
+         <entry>Linux RPM fixes 
+         <item>
+            <list>
+              <item>Version numbering scheme fixed such that upgrades become possible
+             </list>
+
+         <entry>Other platform fixes 
+         <item>
+          <list>
+            <item> Configure problems for FreeBSD
+                   3.0 (freebsd*-i486) fixed 
+            <item>
+                          Ports to Irix (irix6-mips), OSF-Alpha (osf1-alpha), HPUX (hpux-700)
+                          improved 
+         </list>
+
+          <entry>
+          Improvements 
+          <item>
+          <list>
+          <item>          Remote module managers support arbitrary fork methods (in particular
+                          <<ssh>>) 
+          <item>
+                          Parallel search engines
+allow specification of fork methods 
+<item>
+                          Example programs
+included in all distributions (not only rpms) 
+<item>
+                          <<Open.pipe>> allows
+brute force shutdown via close method 
+          </list>
+        </list>
+
+    <chapter id="chapter.m100">
+      <title/Changes between DFKI Oz and Mozart 1.0.0/
+
+      <section id="section.m100.general">
+         <title/General Changes/
+
+      <subsection id="section.m100.general.modules">
+        <title/Functors and Modules/
+
+        <p>
+          Mozart now comes with a powerful internet-based module
+          system that supports lazy loading, native modules and
+          more. For an introduction see <ptr.extern
+          to="ozdoc:apptut">. 
+
+        <p>
+          To make best use of the new module system, the previous Oz
+          Standard Modules have been split into the <em/base
+          environment/ and the <em/system modules/. The compiler
+          always provides the base environment, it contains all
+          operations working on data structures like records, lists,
+          and so on. For more information see <ptr.extern
+          to="ozdoc:base">. 
+
+        <p>
+          All remaining modules (including the constraint programming
+          support) are now provided as system modules that are subject
+          to import in functor definitions. The system modules are
+          described in <ptr.extern to="ozdoc:system">.
+
+        <p>
+          The Oz Programming Environment however still follows the
+          design to ease explorative development. For that reason all
+          system modules are still available in the Oz Programming
+          Environment. The Environment nicely exemplifies the merits
+          of the new module system: while providing all system modules
+          the Environment starts in a fraction of a second by taking
+          advantage of dynamic linking.
+
+      <subsection id="section.m100.general.app">
+        <title/Applications/
+
+        <p>
+          The rudimentary standalone application support available in
+          DFKI Oz has been replaced by powerful abstractions and
+          command line tools (see <ptr.extern to="ozdoc:tools">) to
+          support different aspects of application programming. In
+          fact, a new tutorial (see <ptr.extern to="ozdoc:apptut">)
+          is entirely devoted to application programming with Oz and
+          Mozart. 
+
+    <section id="section.m100.syntax" proglang=oz>
+      <Title/Syntax Improvements/
+      <P>
+	Mozart implements the language Oz&nbsp;3, as opposed to
+	DFKI Oz&nbsp;2, which implemented Oz&nbsp;2.  This chapter
+	summarizes language changes between Oz&nbsp;2 and Oz&nbsp;3,
+	of which most are only of syntactical nature.
+      <subsection>
+	<Title/Conditionals/
+	<P>
+	  The <<case>> keyword used to introduce one of two conditionals:
+	  the boolean or the pattern matching conditional.  To adapt to
+	  common intuitions, the syntax and semantics have been changed.
+	<Para class=apropos><Title/Boolean Conditionals/
+	  The boolean conditional is now written as
+	  <<<if ?{E} then ?{SE1} else ?{SE2} end>>>
+	  If the construct is statement position, the <<else ?{SE2}>> part
+	  is optional and defaults to <<else skip>>.
+	<P>
+	  Since the <<if>> keyword is now used for boolean conditionals,
+	  the former (and seldom used) <<if>> conditional has been renamed
+	  to <<cond>>.  There is no <<elsecond>> to replace <<elseif>>.
+	<Para class=apropos><Title/Pattern-Matching/
+	  The <<case ?{E} of &ellipsis; end>> conditional retains its syntax
+	  but changes its semantics.  Where formerly logic (dis-)entailment
+	  was used to match the value against a pattern, now a series of
+	  sequential tests is performed.  This makes no difference if the
+	  match is entailed.  Disentailment, however, may remain undiscovered
+	  and the thread block, &eg;, in:
+	  <<<case f(a b) of f(X X) then &ellipsis; end>>>
+	<P>
+	  Furthermore, the box <<[]>> separating pattern-matching clauses
+	  now also has sequential semantics, and is thus equivalent to the
+	  now deprecated, though still allowed, <<elseof>>.
+	<P>
+	  <<elseif>> and <<elsecase>> may still be freely intermixed within
+	  <<if>> and <<case>> conditionals.
+      <subsection>
+	<Title/Functors/
+	<P>
+	  To accomodate modular application development, a module system
+	  has been designed.  The language itself supports the definition
+	  of <Em/functors/, from which modules can be obtained via linking.
+      <subsection>
+	<Title/Exceptions/
+	<P>
+	  The construct <<raise ?{E1} with ?{E2} end>> has been removed.
+	  This was an experimental feature that has been found to be
+	  rarely used.
+      <subsection>
+	<Title/Keywords/
+	<Para class=apropos><Title/New Keywords/
+	  Due to syntax changes, Oz&nbsp;3 has the following keywords, which
+	  thus cannot be used as unquoted atoms any more:
+	  <Table>
+	    <TR>
+	      <TD/<<at>>/<TD/<<cond>>/<TD/<<define>>/<TD/<<export>>/
+	    <TR>
+	      <TD/<<functor>>/<TD/<<import>>/<TD/<<prepare>>/<TD/<<require>>/
+	  </Table>
+	<Para class=apropos><Title/Removed Keywords/
+	  The following keywords have been returned atom status and do
+	  not count as keywords any more:
+	  <Table>
+	    <TR>
+	      <TD/<<with>>/
+	  </Table>
+      <subsection>
+	<Title/Core Expansion/
+	<P>
+	  The core expansion of Oz&nbsp;3 as defined in
+	  <Ptr.Extern to="ozdoc:notation"> does not give core variables
+	  (written without backquotes) normal variable status any more,
+	  but considers them variables statically bound within a runtime
+	  library environment.  This means that the used backquote
+	  variables are not part of the Base Environment.
+	<P>
+	  This was necessary because the old design compromised language
+	  security.
+
+    <section id="section.m100.base">
+      <title/Base/
+      <p>
+	This chapter documents the changes that have taken place in the
+	Base Environment (formerly Standard Modules) and base language.
+    
+      <subsection class=unumbered>
+        <title/Classes with Multiple Inheritance/
+
+        <p>
+          Multiple inheritance does not provide for automatic
+          conflict resolution. If a conflicting method definition
+          arises in multiple inheritance, the 
+          conflict <em/must/ be resolved by overriding the
+          method. Otherwise, an exception is raised.
+        <p>
+          A conflicting method definition arises if a method is
+          defined by more than one class. For example,
+<<<class A meth m skip end end
+class B meth m skip end end
+class C from A B end>>>
+          raises an exception (the old model would silently pick the
+          method from <<B>>), since both <<A>> and <<B>> define the
+          method <<m>>. The only way to fix this is by overriding <<m>>
+          when creating class <<C>>: 
+          <<<class C from A B meth m skip end end>>>
+        <p>
+          Features and attributes are handled identically. For a
+          more thorough discussion see <ptr.extern
+          to="ozdoc:tutorial" key="chapter.classes">.
+
+      <subsection class=unumbered>
+        <title/The Modules <<Class>> and <<Object>>/
+
+        <p>
+          The modules <<Class>> and <<Object>> underwent a major
+          redesign and re-implementation. The redesign became
+          necessary because the old modules compromised both system
+          and application security. Programming abstractions that
+          support common patterns of object oriented programming are
+          described in the module <<ObjectSupport>> (see <ptr.extern
+          to="ozdoc:system" key="chapter.objectsupport">).
+
+
+      <subsection id="section.m100.base.chunks">
+        <title/Chunks/
+
+        <p>
+          The procedures <<Chunk.hasFeature>> and <<Chunk.getFeature>>
+          are gone. Just use <<HasFeature>> and <<Value.'.'>> (see
+          <ptr.extern to="ozdoc:base" key="chapter.values">).
+
+    <section id="section.m100.system">
+      <title/System Modules/
+
+      
+      <subsection id="section.m100.system.search">
+        <title/Search Engines renamed/
+
+        <p>
+          The engines that used to be available by <<SearchOne>>,
+          <<SearchAll>>, and <<SearchBest>> are now available under
+          <<Search.base.one>>, <<Search.base.all>>, and
+          <<Search.base.best>> (for more information see <ptr.extern
+          to="ozdoc:system" key="chapter.search">). However in the Oz
+          Programming Interface <<SearchOne>>,
+          <<SearchAll>>, and <<SearchBest>> are still available for
+          convenience. 
+
+      <subsection id="section.m100.system.schedule">
+        <title/Scheduling support moved/
+
+        <p>
+          Scheduling support is now provided by the system module
+          <<Schedule>> rather than <<FD.schedule>>. See also
+          <ptr.extern to="ozdoc:fdt" key="chapter.scheduling">  and
+          <ptr.extern to="ozdoc:system" key="chapter.schedule">.
+
+      <subsection id="section.m100.system.property">
+        <title/<<System.get>> and <<System.set>>/
+
+        <p>
+          <<System.get>> and <<System.set>> have been replaced by more
+          powerful procedures that are available in the module
+          <<Property>>, which is described in 
+          <ptr.extern to="ozdoc:system" key="chapter.property">.
+
+      <subsection id="section.m100.system.vstoval">
+        <title/<<System.valueToVirtualString>> and <<System.virtualStringToValue>>/
+
+        <p>
+          <<System.valueToVirtualString>> and
+          <<System.virtualStringToValue>> are now available as
+<<Value.toVirtualString>> (see
+          <ptr.extern to="ozdoc:base" key="chapter.values">) and
+<<Compiler.virtualStringToValue>> (see
+          <ptr.extern to="ozdoc:compiler"
+          key="section.api.module">). In particular, 
+          <<Compiler.virtualStringToValue>> is a full featured and
+	  stable replacement for the ad-hoc
+          <<System.virtualStringToValue>>. 
+
+    <section id="section.m100.tools">
+      <Title/Tools/
+      <subsection>
+	<Title/New Tools/
+	<P>
+	  Mozart comes with (improved) versions of the tools that
+	  came with DFKI Oz.  Additionally, it has:
+	  <List>
+	    <Item>a profiler, described in <Ptr.Extern to="ozdoc:profiler">,
+	      and
+	    <Item>a source-level debugger called Ozcar, described in
+	      <Ptr.Extern to="ozdoc:ozcar">.
+	  </List>
+      <subsection>
+	<Title/Compiler/
+	<P>
+	  The compiler has been reimplemented in Oz.  This means that an
+	  arbitrary number of compiler objects may be instantiated on the
+	  same VM.  Linguistic reflection is thus fully supported through
+	  an API that offers unrestricted access to the compiler's
+	  functionality, documented in <Ptr.Extern to="ozdoc:compiler">.
+      <subsection>
+	<Title/Gump/
+	<P>
+	  Gump, the frontend generator for Oz, is no longer a stand-alone
+	  tool that must be invoked on a file, but is closely integrated
+	  into the Oz compiler.  It is now sufficient to set a switch:
+	  <<<\switch +gump>>>
+	  and full Gump functionality as described in <Ptr.Extern
+	  to="ozdoc:gump"> is available within the language.  Furthermore,
+	  support for Gump under Windows has been greatly improved.
+
+</Book>

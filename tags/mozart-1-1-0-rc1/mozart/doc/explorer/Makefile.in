@@ -1,0 +1,28 @@
+VPATH		= @srcdir@
+SRCDIR		= @srcdir@
+
+WHAT = explorer
+MAIN = main.sgml
+WHATCLASS=tools
+PRINTNAME=Explorer
+
+SGMLSRCS0 = \
+	actions interface menu status \
+	tree invoke object summary
+
+SGMLSRCS = $(SGMLSRCS0:%=%.sgml)
+
+HTMLEXTRAFILES0 = \
+	note-gui-l1 note-gui-l2 \
+	note-gui-m1 note-gui-m2 \
+	note-gui-r1 note-gui-r2 \
+	explain arrow-r post search draw 
+
+HTMLEXTRAFILES = \
+	$(HTMLEXTRAFILES0:%=pictures/%.gif)
+HTMLEXTRASUPPORTFILES = \
+	danger.gif
+
+OZDOCHTMLFLAGS = --autoindex
+
+include ../Makefile.common

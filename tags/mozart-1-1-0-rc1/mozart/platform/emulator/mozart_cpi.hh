@@ -1,0 +1,995 @@
+/*
+ *  Authors:
+ *    Tobias Mueller (tmueller@ps.uni-sb.de)
+ *
+ *  Contributors:
+ *    Christian Schulte <schulte@ps.uni-sb.de>
+ *
+ *  Copyright:
+ *    Organization or Person (Year(s))
+ *
+ *  Last change:
+ *    $Date$ by $Author$
+ *    $Revision$
+ * 
+ *  This file is part of Mozart, an implementation 
+ *  of Oz 3:
+ *     http://www.mozart-oz.org
+ *
+ *  See the file "LICENSE" or
+ *     http://www.mozart-oz.org/LICENSE.html
+ *  for information on usage and redistribution
+ *  of this file, and for a DISCLAIMER OF ALL
+ *  WARRANTIES.
+ *
+ */
+
+#ifndef __MOZART_CPI_HH__
+#define __MOZART_CPI_HH__
+
+#include <stddef.h>
+#include <stdio.h>
+#include <string.h>
+#include "mozart.h"
+
+#define BIGFSET
+
+// loeckelt:
+// this might not be necessary anymore:
+#ifdef BIGFSET
+#ifdef FSET_HIGH
+#undef FSET_HIGH
+#endif
+#endif
+
+//-----------------------------------------------------------------------------
+// misc macros
+
+
+#define OZ_EXPECTED_TYPE(S) char * expectedType = S
+
+
+#define OZ_EXPECT(O, A, F)                              \
+  {                                                     \
+    OZ_Term     P = OZ_in(A);                           \
+    OZ_expect_t r = O.F(P);                             \
+    if (O.isFailing(r)) {                               \
+      O.fail();                                         \
+      return OZ_typeErrorCPI(expectedType, A, "");      \
+    } else if (O.isSuspending(r) || O.isExceptional(r)) \
+      return O.suspend();                               \
+  }
+
+
+#define OZ_EXPECT_SUSPEND(O, A, F, SC)                  \
+  {                                                     \
+    OZ_Term     P = OZ_in(A);                           \
+    OZ_expect_t r = O.F(P);                             \
+    if (O.isFailing(r)) {                               \
+      O.fail();                                         \
+      return OZ_typeErrorCPI(expectedType, A, "");      \
+    } else if (O.isSuspending(r)) {                     \
+      SC += 1;                                          \
+    } else if (O.isExceptional(r)) {                    \
+      return O.suspend();                               \
+    }                                                   \
+  }
+
+
+#define _OZ_EM_FDINF    "0"
+#define _OZ_EM_FDSUP    "134 217 726"
+#define _OZ_EM_FSETINF  "0"
+// loeckelt: change?
+#define _OZ_EM_FSETSUP  "134 217 726"
+#define _OZ_EM_INTMAX   "134 217 727"
+
+#define OZ_EM_LIT       "literal"
+#define OZ_EM_FLOAT     "float"
+#define OZ_EM_INT       "integer in [~"_OZ_EM_INTMAX"\\,...\\,"_OZ_EM_INTMAX"]"
+#define OZ_EM_FD        "finite domain integer in {"_OZ_EM_FDINF"\\,...\\,"_OZ_EM_FDSUP"}"
+#define OZ_EM_FDBOOL    "boolean finite domain integer in {0,1}"
+#define OZ_EM_FDDESCR   "description of a finite domain integer"
+#define OZ_EM_FSETVAL   "finite set of integers"
+#define OZ_EM_FSET      "finite set of integers constraint"
+#define OZ_EM_FSETDESCR "description of a finite set of integers"
+#define OZ_EM_VECT      "vector of "
+#define OZ_EM_RECORD    "record of "
+#define OZ_EM_TNAME     "truth name"
+#define OZ_EM_STREAM    "stream"
+
+//-----------------------------------------------------------------------------
+// OZ_FiniteDomain
+
+class OZ_FSetValue;
+
+enum OZ_FDState {fd_empty, fd_full, fd_bool, fd_singl};
+
+class ozdeclspec OZ_FiniteDomain {
+protected:
+  int min_elem, max_elem, size;
+  void * descr;
+
+public:
+
+  OZ_FiniteDomain(void);
+  OZ_FiniteDomain(OZ_FDState state);
+  OZ_FiniteDomain(const OZ_FiniteDomain &);
+  OZ_FiniteDomain(OZ_Term);
+  OZ_FiniteDomain(const OZ_FSetValue &);
+
+  int initRange(int, int);
+  int initSingleton(int);
+  int initDescr(OZ_Term);
+  int initFull(void);
+  int initEmpty(void);
+  int initBool(void);
+
+  int getMidElem(void) const;
+  int getNextSmallerElem(int v) const;
+  int getNextLargerElem(int v) const;
+  int getLowerIntervalBd(int v) const;
+  int getUpperIntervalBd(int v) const;
+  int getSize(void) const;
+  int getMinElem(void) const;
+  int getMaxElem(void) const;
+  int getSingleElem(void) const;
+  OZ_Term getDescr(void) const;
+
+  const OZ_FiniteDomain &operator = (const OZ_FiniteDomain &fd);
+  OZ_Boolean operator == (const OZ_FDState) const;
+  OZ_Boolean operator == (const int) const;
+  OZ_Boolean operator != (const OZ_FDState) const;
+  OZ_Boolean operator != (const int) const;
+
+  OZ_FiniteDomain operator & (const OZ_FiniteDomain &) const;
+  OZ_FiniteDomain operator | (const OZ_FiniteDomain &) const;
+  OZ_FiniteDomain operator ~ (void) const;
+
+  int operator &= (const OZ_FiniteDomain &);
+  int operator &= (const int);
+  int operator += (const int);
+  int operator -= (const int);
+  int operator -= (const OZ_FiniteDomain &);
+  int operator <= (const int);
+  int operator >= (const int);
+
+  int constrainBool(void);
+  int intersectWithBool(void);
+  OZ_Boolean isIn(int i) const;
+  void copyExtension(void);
+  void disposeExtension(void);
+
+  static void * operator new(size_t);
+  static void operator delete(void *, size_t);
+
+#ifdef __GNUC__
+  static void * operator new[](size_t);
+  static void operator delete[](void *, size_t);
+#endif
+
+  char * toString(void) const;
+};
+
+inline OZ_FiniteDomain::OZ_FiniteDomain(void) : descr((void *) 0) {}
+inline int OZ_FiniteDomain::getSize(void) const { return size; }
+inline int OZ_FiniteDomain::getMinElem(void) const { return min_elem; }
+inline int OZ_FiniteDomain::getMaxElem(void) const { return max_elem; }
+
+//-----------------------------------------------------------------------------
+// OZ_FSetValue
+
+enum OZ_FSetState {fs_empty, fs_full};
+
+
+#ifdef BIGFSET
+const int fs_sup = 134217726;
+const int fsethigh32 = 134217727;
+const int fset_high = 2;
+#else
+
+const int fset_high = 2;
+const int fs_sup = 32*fset_high - 1;
+//const int fset_high = 220;
+const int fsethigh32 = 32*fset_high;
+#endif
+
+class OZ_FSetConstraint;
+class OZ_FiniteDomainImpl;
+class FSetValue;
+
+class ozdeclspec OZ_FSetValue {
+
+  friend class OZ_FiniteDomainImpl;
+  friend class OZ_FiniteDomain;
+
+protected:
+  int _card;
+#ifdef BIGFSET
+  bool _other;
+  OZ_FiniteDomain _IN;
+  bool _normal;
+#endif
+
+  int _in[fset_high];
+
+public:
+
+  OZ_FSetValue(void);
+  OZ_FSetValue(const OZ_FSetConstraint&);
+  OZ_FSetValue(const OZ_Term);
+  OZ_FSetValue(const OZ_FSetState);
+  OZ_FSetValue(int, int);
+  OZ_FSetValue(const OZ_FiniteDomain &);
+
+  static void * operator new(size_t);
+  static void operator delete(void *, size_t);
+
+#ifdef __GNUC__
+  static void * operator new[](size_t);
+  static void operator delete[](void *, size_t);
+#endif
+
+  void copyExtension(void);
+  void disposeExtension(void);
+
+  int getCard(void) const;
+  int getKnownNotIn(void) const;
+  OZ_Boolean isIn(int) const;
+  OZ_Boolean isNotIn(int) const;
+  int getMinElem(void) const;
+  int getMaxElem(void) const;
+  int getNextLargerElem(int) const;
+  int getNextSmallerElem(int) const;
+  OZ_Term getKnownInList(void) const;
+  OZ_Term getKnownNotInList(void) const;
+  char * toString(void) const;
+
+  // comparison
+  OZ_Boolean operator == (const OZ_FSetValue &) const;
+  OZ_Boolean operator <= (const OZ_FSetValue &) const;
+
+  OZ_FSetValue operator & (const OZ_FSetValue &) const;
+  OZ_FSetValue operator | (const OZ_FSetValue &) const;
+  OZ_FSetValue operator - (const OZ_FSetValue &) const;
+  OZ_FSetValue operator &= (const OZ_FSetValue &);
+  OZ_FSetValue operator |= (const OZ_FSetValue &);
+  OZ_FSetValue operator &= (const int);
+  OZ_FSetValue operator += (const int);
+  OZ_FSetValue operator -= (const int);
+  OZ_FSetValue operator - (void) const;
+};
+
+inline OZ_FSetValue::OZ_FSetValue(void) {}
+inline int OZ_FSetValue::getCard(void) const { return _card; }
+inline int OZ_FSetValue::getKnownNotIn(void) const {
+  return fsethigh32 - _card;
+}
+
+//-----------------------------------------------------------------------------
+// OZ_FSetConstraint
+
+
+enum OZ_FSetPropState {fs_prop_glb = 0, fs_prop_lub, fs_prop_val,
+		       fs_prop_any, fs_prop_bounds};
+
+class ozdeclspec OZ_FSetConstraint {
+protected:
+  int _card_min, _card_max;
+  int _known_in, _known_not_in;
+
+#ifdef BIGFSET
+  bool _normal;
+  bool _otherin;
+  bool _otherout;
+  OZ_FiniteDomain _IN;
+  OZ_FiniteDomain _OUT;
+#endif
+  int _in[fset_high], _not_in[fset_high];
+
+
+public:
+  OZ_FSetConstraint(void);
+  OZ_FSetConstraint(const OZ_FSetValue &);
+  OZ_FSetConstraint(OZ_FSetState);
+
+  OZ_FSetConstraint(const OZ_FSetConstraint &);
+  OZ_FSetConstraint &operator = (const OZ_FSetConstraint &);
+
+  static void * operator new(size_t);
+  static void operator delete(void *, size_t);
+
+#ifdef __GNUC__
+  static void * operator new[](size_t);
+  static void operator delete[](void *, size_t);
+#endif
+
+  void copyExtension(void);
+  void disposeExtension(void);
+
+  int getKnownIn(void) const;
+  int getKnownNotIn(void) const;
+  int getUnknown(void) const;
+
+  OZ_FSetValue getGlbSet(void) const;
+  OZ_FSetValue getLubSet(void) const;
+  OZ_FSetValue getUnknownSet(void) const;
+  OZ_FSetValue getNotInSet(void) const;
+
+  int getGlbCard(void) const;
+  int getLubCard(void) const;
+  int getNotInCard(void) const;
+  int getUnknownCard(void) const;
+
+  int getGlbMinElem(void) const;
+  int getLubMinElem(void) const;
+  int getNotInMinElem(void) const;
+  int getUnknownMinElem(void) const;
+
+  int getGlbMaxElem(void) const;
+  int getLubMaxElem(void) const;
+  int getNotInMaxElem(void) const;
+  int getUnknownMaxElem(void) const;
+
+  int getGlbNextSmallerElem(int) const;
+  int getLubNextSmallerElem(int) const;
+  int getNotInNextSmallerElem(int) const;
+  int getUnknownNextSmallerElem(int) const;
+
+  int getGlbNextLargerElem(int) const;
+  int getLubNextLargerElem(int) const;
+  int getNotInNextLargerElem(int) const;
+  int getUnknownNextLargerElem(int) const;
+
+  int getCardSize(void) const;
+  int getCardMin(void) const;
+  int getCardMax(void) const;
+
+  OZ_Boolean putCard(int, int);
+  OZ_Boolean isValue(void) const;
+
+  void init(void);
+  void init(const OZ_FSetValue &);
+  void init(OZ_FSetState);
+
+  OZ_Boolean isIn(int) const;
+  OZ_Boolean isNotIn(int) const;
+  OZ_Boolean isEmpty(void) const;
+  OZ_Boolean isFull(void) const;
+  OZ_Boolean isSubsumedBy(const OZ_FSetConstraint &) const;
+  OZ_Term getKnownInList(void) const;
+  OZ_Term getKnownNotInList(void) const;
+  OZ_Term getUnknownList(void) const;
+  OZ_Term getLubList(void) const;
+  OZ_Term getCardTuple(void) const;
+  OZ_FSetConstraint operator - (void) const;
+  OZ_Boolean operator += (int);
+  OZ_Boolean operator -= (int);
+  OZ_Boolean operator <<= (const OZ_FSetConstraint &);
+  OZ_Boolean operator % (const OZ_FSetConstraint &);
+  OZ_FSetConstraint operator & (const OZ_FSetConstraint &) const;
+  OZ_FSetConstraint operator | (const OZ_FSetConstraint &) const;
+  OZ_FSetConstraint operator - (const OZ_FSetConstraint &) const;
+  OZ_Boolean operator <= (const OZ_FSetConstraint &);
+  OZ_Boolean operator >= (const OZ_FSetConstraint &);
+  OZ_Boolean operator != (const OZ_FSetConstraint &);
+  OZ_Boolean operator == (const OZ_FSetConstraint &) const;
+  OZ_Boolean operator <= (const int);
+  OZ_Boolean operator >= (const int);
+  char * toString(void) const;
+};
+
+inline OZ_FSetConstraint::OZ_FSetConstraint(void) {}
+inline int OZ_FSetConstraint::getKnownIn(void) const { return _known_in; }
+inline int OZ_FSetConstraint::getKnownNotIn(void) const {
+  return _known_not_in;
+}
+inline int OZ_FSetConstraint::getUnknown(void) const {
+#ifdef BIGFSET
+  return fs_sup - _known_in - _known_not_in + 1;
+#else
+  return fsethigh32 - _known_in - _known_not_in;
+#endif
+}
+inline int OZ_FSetConstraint::getCardSize(void) const {
+  return _card_max - _card_min + 1;
+}
+inline int OZ_FSetConstraint::getCardMin(void) const { return _card_min; }
+inline int OZ_FSetConstraint::getCardMax(void) const { return _card_max; }
+
+//-----------------------------------------------------------------------------
+// class OZ_Propagator
+
+class ozdeclspec OZ_NonMonotonic {
+public:
+  typedef unsigned order_t;
+private:
+  order_t _order;
+  static order_t _next_order;
+public:
+  OZ_NonMonotonic(void);
+  order_t getOrder(void) const;
+};
+
+inline  OZ_NonMonotonic::order_t OZ_NonMonotonic::getOrder(void) const {
+  return _order;
+}
+
+class ozdeclspec OZ_PropagatorProfile {
+private:
+  OZ_PropagatorProfile * _next;
+  static OZ_PropagatorProfile * _all_headers;
+  char * _propagator_name;
+  unsigned _calls, _samples, _heap;
+
+public:
+  OZ_PropagatorProfile(void);
+
+  OZ_PropagatorProfile(char * propagator_name);
+
+  void operator = (char * propagator_name);
+
+  char * getPropagatorName(void);
+  void incSamples(void);
+  void incCalls(void);
+  unsigned getSamples(void);
+  unsigned getCalls(void);
+  void incHeap(unsigned inc);
+  unsigned getHeap(void);
+
+  static OZ_PropagatorProfile * getFirst();
+  OZ_PropagatorProfile * getNext(void);
+
+  static void profileReset(void);
+};
+
+inline OZ_PropagatorProfile::OZ_PropagatorProfile(void) {}
+inline char * OZ_PropagatorProfile::getPropagatorName() {
+  return _propagator_name;
+}
+inline void OZ_PropagatorProfile::incSamples(void)         { _samples++; }
+inline void OZ_PropagatorProfile::incCalls(void)           { _calls++; }
+inline unsigned OZ_PropagatorProfile::getSamples(void)     { return _samples; }
+inline unsigned OZ_PropagatorProfile::getCalls(void)       { return _calls; }
+inline void OZ_PropagatorProfile::incHeap(unsigned inc)    { _heap += inc; }
+inline unsigned OZ_PropagatorProfile::getHeap(void)        { return _heap; }
+
+inline OZ_PropagatorProfile * OZ_PropagatorProfile::getFirst(void) {
+  return OZ_PropagatorProfile::_all_headers;
+}
+inline OZ_PropagatorProfile * OZ_PropagatorProfile::getNext(void) {
+  return _next;
+}
+
+enum OZ_FDPropState {fd_prop_singl = 0, fd_prop_bounds, fd_prop_any};
+
+// virtual base class; never create an object from this class
+class ozdeclspec OZ_Propagator {
+  friend class Propagator;
+public:
+  OZ_Propagator(void);
+  virtual ~OZ_Propagator(void);
+
+  static void * operator new(size_t);
+  static void operator delete(void *, size_t);
+
+  OZ_Boolean mayBeEqualVars(void);
+  OZ_Return replaceBy(OZ_Propagator *);
+  OZ_Return replaceBy(OZ_Term, OZ_Term);
+  OZ_Return replaceByInt(OZ_Term, int);
+  OZ_Return postpone(void);
+  OZ_Boolean imposeOn(OZ_Term);
+  OZ_Boolean addImpose(OZ_FDPropState s, OZ_Term v);
+  OZ_Boolean addImpose(OZ_FSetPropState s, OZ_Term v);
+  void impose(OZ_Propagator *);
+  virtual size_t sizeOf(void) = 0;
+  virtual void sClone(void) = 0;
+  virtual void gCollect(void) = 0;
+  virtual OZ_Return propagate(void) = 0;
+  virtual OZ_Term getParameters(void) const = 0;
+  virtual OZ_PropagatorProfile * getProfile(void) const = 0;
+
+  // support for nonmonotonic propagator
+  virtual OZ_Boolean isMonotonic(void) const;
+  virtual OZ_NonMonotonic::order_t getOrder(void) const;
+
+  char * toString(void) const;
+};
+
+inline OZ_Propagator::OZ_Propagator(void) {}
+
+//-----------------------------------------------------------------------------
+// class OZ_FDIntVar
+
+class ozdeclspec OZ_FDIntVar {
+private:
+  OZ_FiniteDomain dom;
+  OZ_FiniteDomain * domPtr;
+  OZ_Term var;
+  OZ_Term * varPtr;
+  int initial_size, initial_width;
+  enum Sort_e {sgl_e = 1, bool_e = 2, int_e  = 3} sort;
+  enum State_e {loc_e = 1, glob_e = 2, encap_e = 3} state;
+  OZ_Boolean isSort(Sort_e s) const;
+  void setSort(Sort_e s);
+  OZ_Boolean isState(State_e s) const;
+  void setState(State_e s);
+  OZ_Boolean tell(void);
+public:
+  OZ_FDIntVar(void);
+  OZ_FDIntVar(OZ_Term v);
+
+  static void * operator new(size_t);
+  static void operator delete(void *, size_t);
+
+#ifdef __GNUC__
+  // mm2: portability ?
+  static void * operator new[](size_t);
+  static void operator delete[](void *, size_t);
+#endif
+
+  OZ_FiniteDomain &operator * (void);
+  OZ_FiniteDomain * operator -> (void);
+
+  OZ_Boolean isTouched(void) const;
+
+  void ask(OZ_Term);
+  int read(OZ_Term);
+  int readEncap(OZ_Term);
+  OZ_Boolean leave(void);
+  void fail(void);
+};
+
+
+inline
+OZ_Boolean OZ_FDIntVar::isSort(Sort_e s) const {return s == sort;}
+inline
+void OZ_FDIntVar::setSort(Sort_e s) {sort = s;}
+inline
+OZ_Boolean OZ_FDIntVar::isState(State_e s) const {return s == state;}
+inline
+void OZ_FDIntVar::setState(State_e s) {state = s;}
+inline
+OZ_FDIntVar::OZ_FDIntVar(void) {}
+inline
+OZ_FDIntVar::OZ_FDIntVar(OZ_Term v) { read(v); }
+inline
+OZ_FiniteDomain &OZ_FDIntVar::operator * (void) { return *domPtr; }
+inline
+OZ_FiniteDomain * OZ_FDIntVar::operator -> (void) { return domPtr; }
+inline
+OZ_Boolean OZ_FDIntVar::isTouched(void) const {
+  return initial_size > domPtr->getSize();
+}
+inline
+OZ_Boolean OZ_FDIntVar::leave(void) {
+  return isSort(sgl_e) ? OZ_FALSE : tell();
+}
+
+//-----------------------------------------------------------------------------
+// class OZ_FSetVar
+
+class ozdeclspec OZ_FSetVar {
+private:
+  OZ_FSetConstraint set;
+  OZ_FSetConstraint * setPtr;
+  OZ_Term var;
+  OZ_Term * varPtr;
+  int known_in, known_not_in, card_size;
+  enum Sort_e {val_e = 1, var_e = 2} sort;
+  enum State_e {loc_e = 1, glob_e = 2, encap_e = 3} state;
+  OZ_Boolean isSort(Sort_e s) const;
+  void setSort(Sort_e s);
+  OZ_Boolean isState(State_e s) const;
+  void setState(State_e s);
+
+  OZ_Boolean tell(void);
+public:
+  OZ_FSetVar(void);
+  OZ_FSetVar(OZ_Term v);
+
+  static void * operator new(size_t);
+  static void operator delete(void *, size_t);
+
+#ifdef __GNUC__
+  // mm2: portability ?
+  static void * operator new[](size_t);
+  static void operator delete[](void *, size_t);
+#endif
+
+  OZ_FSetConstraint &operator * (void);
+  OZ_FSetConstraint * operator -> (void);
+
+  OZ_Boolean isTouched(void) const;
+
+  void ask(OZ_Term);
+  void read(OZ_Term);
+  void readEncap(OZ_Term);
+  OZ_Boolean leave(void);
+  void fail(void);
+};
+
+inline
+OZ_Boolean OZ_FSetVar::isSort(Sort_e s) const {return s == sort;}
+inline
+void OZ_FSetVar::setSort(Sort_e s) {sort = s;}
+inline
+OZ_Boolean OZ_FSetVar::isState(State_e s) const {return s == state;}
+inline
+void OZ_FSetVar::setState(State_e s) {state = s;}
+inline
+OZ_FSetVar::OZ_FSetVar(void) {}
+inline
+OZ_FSetVar::OZ_FSetVar(OZ_Term v) { read(v); }
+inline
+OZ_FSetConstraint &OZ_FSetVar::operator * (void) {return *setPtr;}
+inline
+OZ_FSetConstraint * OZ_FSetVar::operator -> (void) {return setPtr;}
+inline
+OZ_Boolean OZ_FSetVar::leave(void) { 
+  return isSort(val_e) ? OZ_FALSE : tell(); 
+}
+
+//-----------------------------------------------------------------------------
+// class OZ_Stream
+
+class ozdeclspec OZ_Stream {
+private:
+  OZ_Boolean closed, eostr, valid;
+  OZ_Term tail;
+
+  void setFlags(void);
+public:
+  OZ_Stream(OZ_Term st);
+  OZ_Boolean isEostr(void);
+  OZ_Boolean isClosed(void);
+  OZ_Boolean isValid(void);
+
+  OZ_Term get(void);
+  OZ_Term getTail(void);
+  OZ_Term put(OZ_Term, OZ_Term);
+
+  OZ_Boolean leave(void);
+  void fail(void);
+};
+
+inline
+OZ_Stream::OZ_Stream(OZ_Term st) : tail(st) { setFlags(); }
+inline
+OZ_Boolean OZ_Stream::isEostr(void) { return eostr; }
+inline
+OZ_Boolean OZ_Stream::isClosed(void) { return closed; }
+inline
+OZ_Boolean OZ_Stream::isValid(void) { return valid; }
+inline
+OZ_Term OZ_Stream::getTail(void) { return tail; }
+
+//-----------------------------------------------------------------------------
+// Miscellaneous I
+
+// Allocation
+_FUNDECL(OZ_Term *,OZ_hallocOzTerms,(int));
+_FUNDECL(int *,OZ_hallocCInts,(int));
+_FUNDECL(char *,OZ_hallocChars,(int));
+
+// Copying
+inline 
+int * OZ_copyCInts(int n, int * frm) {
+  if (n>0) {
+    return (int *) memcpy(OZ_hallocCInts(n), frm, n*sizeof(int));
+  } else {
+    return ((int *) 0);
+  }
+}
+
+_FUNDECL(char *,OZ_copyChars,(int, char *));
+
+// Garbage collection
+_FUNDECL(void,OZ_gCollectBlock,(OZ_Term *, OZ_Term *, int));
+inline
+void OZ_gCollectTerm(OZ_Term &t) {
+  OZ_gCollectBlock(&t, &t, 1);
+}
+_FUNDECL(OZ_Term *,OZ_gCollectAllocBlock,(int, OZ_Term *));
+
+// Cloning
+_FUNDECL(void,OZ_sCloneBlock,(OZ_Term *, OZ_Term *, int));
+inline
+void OZ_sCloneTerm(OZ_Term &t) {
+  OZ_sCloneBlock(&t, &t, 1);
+}
+_FUNDECL(OZ_Term *,OZ_sCloneAllocBlock,(int, OZ_Term *));
+
+
+_FUNDECL(OZ_Boolean,OZ_isPosSmallInt,(OZ_Term val));
+
+// Free
+
+_FUNDECL(void,OZ_hfreeOzTerms,(OZ_Term *, int));
+_FUNDECL(void,OZ_hfreeCInts,(int *, int));
+_FUNDECL(void,OZ_hfreeChars,(char *, int));
+
+_FUNDECL(int *,OZ_findEqualVars,(int, OZ_Term *)); // static return value
+_FUNDECL(int *,OZ_findSingletons,(int, OZ_Term *)); // static return value
+
+_FUNDECL(OZ_Boolean,OZ_isEqualVars,(OZ_Term, OZ_Term));
+
+_FUNDECL(OZ_Return,OZ_typeErrorCPI,(char *, int, char *));
+
+_FUNDECL(int,OZ_getFDInf,(void));
+_FUNDECL(int,OZ_getFDSup,(void));
+_FUNDECL(int,OZ_getFSetInf,(void));
+_FUNDECL(int,OZ_getFSetSup,(void));
+
+_FUNDECL(int,OZ_vectorSize,(OZ_Term));
+
+_FUNDECL(OZ_Term *,OZ_getOzTermVector,(OZ_Term, OZ_Term *));
+_FUNDECL(int *,OZ_getCIntVector,(OZ_Term, int *));
+
+_FUNDECL(OZ_Term,OZ_fsetValue,(OZ_FSetValue *));
+_FUNDECL(OZ_FSetValue *,OZ_fsetValueToC,(OZ_Term));
+
+//-----------------------------------------------------------------------------
+// Interface to Generic Constraint Systems
+
+class OZ_Ct;
+
+//-----------------------------------------------------------------------------
+// OZ_CtDefinition
+
+class ozdeclspec OZ_CtDefinition {
+public:
+  virtual int getKind(void) = 0;
+  virtual int getNoOfWakeUpLists(void) = 0;
+  virtual char ** getNamesOfWakeUpLists(void) = 0;
+  virtual char * getName(void) = 0;
+  virtual OZ_Ct * leastConstraint(void) = 0;
+  virtual OZ_Boolean isValidValue(OZ_Term) = 0;
+
+};
+
+//-----------------------------------------------------------------------------
+// OZ_CtWakeUp
+
+// there are not more than 32 wake up lists
+class ozdeclspec OZ_CtWakeUp {
+private:
+  unsigned _wakeUpDescriptor;
+public:
+  // don't define any constructor
+  void init(void);
+  OZ_Boolean isEmpty(void);
+  OZ_Boolean setWakeUp(int i);
+  OZ_Boolean isWakeUp(int i);
+  static OZ_CtWakeUp getWakeUpAll(void);
+};
+
+#define OZ_WAKEUP_ALL OZ_CtWakeUp::getWakeUpAll()
+
+inline
+void OZ_CtWakeUp::init(void) { _wakeUpDescriptor = 0; }
+inline
+OZ_Boolean OZ_CtWakeUp::isEmpty(void) { return (_wakeUpDescriptor == 0); }
+inline
+OZ_Boolean OZ_CtWakeUp::setWakeUp(int i) { return (_wakeUpDescriptor |= (1 << i)); }
+inline
+OZ_Boolean OZ_CtWakeUp::isWakeUp(int i) { return (_wakeUpDescriptor & (1 << i)); }
+inline
+OZ_CtWakeUp OZ_CtWakeUp::getWakeUpAll(void) {
+  OZ_CtWakeUp aux;
+  aux._wakeUpDescriptor = 0xffff;
+  return aux;
+};
+
+//-----------------------------------------------------------------------------
+// OZ_CtProfile
+
+class ozdeclspec OZ_CtProfile {
+public:
+  OZ_CtProfile(void) {}
+  virtual void init(OZ_Ct *) = 0;
+
+};
+
+//-----------------------------------------------------------------------------
+// OZ_Ct
+
+class ozdeclspec OZ_Ct {
+
+public:
+  OZ_Ct(void) {}
+  virtual OZ_Boolean isValue(void) = 0;
+  virtual OZ_Term toValue(void) = 0;
+  virtual OZ_Boolean isValid(void) = 0;
+  virtual OZ_Boolean isWeakerThan(OZ_Ct *) = 0;
+  virtual OZ_Ct * unify(OZ_Ct *) = 0;
+  virtual OZ_Boolean unify(OZ_Term) = 0;
+  virtual size_t sizeOf(void) = 0;
+  virtual OZ_CtProfile * getProfile(void) = 0;
+  virtual OZ_CtWakeUp getWakeUpDescriptor(OZ_CtProfile *) = 0;
+  virtual char * toString(int) = 0;
+  virtual OZ_Ct * copy(void) = 0;
+
+  static void * operator new(size_t, int align = sizeof(void *));
+  static void operator delete(void *, size_t);
+};
+
+//-----------------------------------------------------------------------------
+// OZ_CtVar
+
+class ozdeclspec OZ_CtVar {
+private:
+
+  OZ_CtProfile * _profile; // necessary ?
+  OZ_CtDefinition * _definition;
+
+  OZ_Term var;
+  OZ_Term * varPtr;
+
+  enum State_e {loc_e = 1, glob_e = 2, encap_e = 3} state;
+  OZ_Boolean isState(State_e s) const;
+  void setState(State_e s);
+
+  enum Sort_e {val_e = 1, var_e = 2} sort;
+  OZ_Boolean isSort(Sort_e s) const;
+  void setSort(Sort_e s);
+
+  OZ_Boolean tell(void);
+
+  void ctSetLocalConstraint(OZ_Ct * c);
+  void ctSetGlobalConstraint(OZ_Ct * c);
+  OZ_Ct * ctSetEncapConstraint(OZ_Ct * c);
+  OZ_CtWakeUp ctGetWakeUpDescrptor(void);
+
+protected:
+
+  virtual void ctSetValue(OZ_Term) = 0;
+
+  virtual OZ_Ct * ctRefConstraint(OZ_Ct *) = 0;
+  virtual OZ_Ct * ctSaveConstraint(OZ_Ct *) = 0;
+  virtual void ctRestoreConstraint() = 0;
+  virtual void ctSetConstraintProfile(void) = 0;
+  virtual OZ_CtProfile * ctGetConstraintProfile(void) = 0;
+
+  virtual OZ_Ct * ctGetConstraint(void) = 0;
+
+public:
+
+  OZ_CtVar(void) {}
+
+  static void * operator new(size_t);
+  static void operator delete(void *, size_t);
+
+#ifdef __GNUC__
+  static void * operator new[](size_t);
+  static void operator delete[](void *, size_t);
+#endif
+
+  virtual OZ_Boolean isTouched(void) const = 0;
+
+  void ask(OZ_Term);
+  void read(OZ_Term);
+  void readEncap(OZ_Term);
+  OZ_Boolean leave(void);
+  void fail(void);
+};
+
+
+inline
+OZ_Boolean OZ_CtVar::isState(State_e s) const {return s == state;}
+inline
+void OZ_CtVar::setState(State_e s) {state = s;}
+inline
+OZ_Boolean OZ_CtVar::isSort(Sort_e s) const {return s == sort;}
+inline
+void OZ_CtVar::setSort(Sort_e s) {sort = s;}
+inline
+void OZ_CtVar::ctSetLocalConstraint(OZ_Ct * c) {
+  ctRefConstraint(c);
+}
+inline
+void OZ_CtVar::ctSetGlobalConstraint(OZ_Ct * c) {
+  // copy constraint ...
+  this->ctSaveConstraint(c);
+  // ... but compute on constraint in store
+  this->ctRefConstraint(c);
+}
+inline
+OZ_Ct * OZ_CtVar::ctSetEncapConstraint(OZ_Ct * c) {
+  // copy constraint and compute on the copy
+  return ctRefConstraint(ctSaveConstraint(c));
+}
+inline
+OZ_CtWakeUp OZ_CtVar::ctGetWakeUpDescrptor(void) {
+  return ctGetConstraint()->getWakeUpDescriptor(ctGetConstraintProfile());
+}
+inline
+OZ_Boolean OZ_CtVar::leave(void) { return isSort(val_e) ? OZ_FALSE : tell(); }
+
+//-----------------------------------------------------------------------------
+// Miscellaneous II
+
+_FUNDECL(OZ_Return,OZ_mkOZ_VAR_CT,(OZ_Term, OZ_Ct *, OZ_CtDefinition *));
+
+//-----------------------------------------------------------------------------
+// class OZ_Expect, etc.
+
+class ozdeclspec OZ_expect_t {
+public:
+  int size, accepted;
+  OZ_expect_t(int s, int a) : size(s), accepted(a) {}
+};
+
+class OZ_Expect;
+
+typedef OZ_expect_t (OZ_Expect::*OZ_ExpectMeth) (OZ_Term);
+
+class ozdeclspec OZ_Expect {
+private:
+  OZ_Boolean collect;
+
+  OZ_expect_t _expectFSetDescr(OZ_Term descr, int level);
+
+protected: //tmueller: protected?
+  void addSpawnBool(OZ_Term *);
+  void addSpawn(OZ_FDPropState, OZ_Term *);
+  void addSpawn(OZ_FSetPropState, OZ_Term *);
+  void addSpawn(OZ_CtDefinition *, OZ_CtWakeUp, OZ_Term *);
+
+  void addSuspend(OZ_Term *);
+  void addSuspendBool(OZ_Term *);
+  void addSuspend(OZ_FDPropState, OZ_Term *);
+  void addSuspend(OZ_FSetPropState, OZ_Term *);
+  void addSuspend(OZ_CtDefinition *, OZ_CtWakeUp, OZ_Term *);
+
+public:
+  OZ_Expect(void);
+  ~OZ_Expect(void);
+
+  void collectVarsOn(void);
+  void collectVarsOff(void);
+
+  OZ_expect_t expectDomDescr(OZ_Term descr, int level = 4);
+  OZ_expect_t expectFSetDescr(OZ_Term descr, int level = 4);
+  OZ_expect_t expectVar(OZ_Term t);
+  OZ_expect_t expectRecordVar(OZ_Term);
+  OZ_expect_t expectBoolVar(OZ_Term);
+  OZ_expect_t expectIntVar(OZ_Term, OZ_FDPropState = fd_prop_any);
+  OZ_expect_t expectFSetVar(OZ_Term, OZ_FSetPropState = fs_prop_any);
+  OZ_expect_t expectInt(OZ_Term);
+  OZ_expect_t expectFloat(OZ_Term);
+  OZ_expect_t expectFSetValue(OZ_Term);
+  OZ_expect_t expectLiteral(OZ_Term);
+  OZ_expect_t expectLiteralOutOf(OZ_Term, OZ_Term *);
+  OZ_expect_t expectVector(OZ_Term, OZ_ExpectMeth);
+  OZ_expect_t expectProperRecord(OZ_Term, OZ_ExpectMeth);
+  OZ_expect_t expectProperRecord(OZ_Term, OZ_Term *);
+  OZ_expect_t expectProperTuple(OZ_Term, OZ_ExpectMeth);
+  OZ_expect_t expectList(OZ_Term, OZ_ExpectMeth);
+  OZ_expect_t expectStream(OZ_Term st);
+  OZ_expect_t expectGenCtVar(OZ_Term, OZ_CtDefinition *, OZ_CtWakeUp);
+
+  OZ_Return impose(OZ_Propagator * p);
+  OZ_Return suspend(void);
+  OZ_Return fail(void);
+  OZ_Boolean isSuspending(OZ_expect_t r);
+  OZ_Boolean isFailing(OZ_expect_t r);
+  OZ_Boolean isExceptional(OZ_expect_t r);
+};
+
+inline
+OZ_Boolean OZ_Expect::isSuspending(OZ_expect_t r) {
+  return (r.accepted == 0 || (0 < r.accepted && r.accepted < r.size));
+}
+inline
+OZ_Boolean OZ_Expect::isFailing(OZ_expect_t r) {
+  return (r.accepted == -1);
+}
+inline
+OZ_Boolean OZ_Expect::isExceptional(OZ_expect_t r) {
+  return (r.accepted == -2);
+}
+
+#endif // __MOZART_CPI_HH__
+
+//
+//-----------------------------------------------------------------------------

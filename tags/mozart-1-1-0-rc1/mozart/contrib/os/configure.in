@@ -1,0 +1,12 @@
+AC_INIT(mode.oz)
+OZ_CONTRIB_INIT_CXX
+OZ_CHECK_HEADER_PATH(gmp.h,,
+  [AC_MSG_ERROR(required GNU MP include file not found)])
+OZ_DENYS_EVENTS
+AC_OUTPUT(Makefile)
+
+errprint(ifdef([OZ_INIT],
+ [autoconf succeeded.
+],
+ [autoconf failed: use 'autoconf -l ../..' to include ../aclocal.m4.
+]))

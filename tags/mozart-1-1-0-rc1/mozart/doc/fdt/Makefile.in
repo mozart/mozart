@@ -1,0 +1,44 @@
+VPATH		= @srcdir@
+SRCDIR		= @srcdir@
+
+WHAT = fdt
+MAIN = main.sgml
+WHATCLASS=tutorial
+PRINTNAME=FiniteDomainProgramming
+SGMLSRCS0 = \
+	 bab constraints elimination golden-rules intro main \
+	minimizing packing problem propagators scheduling scripts \
+	traps user-defined reified data
+
+SGMLSRCS = $(SGMLSRCS0:%=%.sgml)
+
+PICTURES = explorer-a explorer-b queen fdt search-tree bridge gantt
+
+HTMLEXTRAFILES = $(PICTURES:%=pictures/%.gif)
+
+OZDOCHTMLFLAGS = --autoindex
+
+include ../Makefile.common
+
+CHUNKFILES = \
+	FiniteDomainTutorial.oz FiniteDomainTutorialSolutions.oz
+
+all:: $(CHUNKFILES)
+quick:: $(CHUNKFILES)
+
+clean:: 
+	-rm -f $(CHUNKFILES)
+
+FiniteDomainTutorial.oz: $(MAIN) $(SGMLSRCS)
+	$(DOCIFY) --in=$< --type=chunk --out=EXAMPLES --include=EXTRA > $@ 
+
+FiniteDomainTutorialSolutions.oz: $(MAIN) $(SGMLSRCS)
+	$(DOCIFY) --in=$< --type=chunk --out=ANSWERS --include=EXTRA > $@ 
+
+
+install:: $(CHUNKFILES:%=$(DOCDIR)/%)
+
+$(DOCDIR)/%.oz: $(DOCDIR)
+
+$(DOCDIR)/%.oz: %.oz
+	$(INSTALL_FILE) $< $@

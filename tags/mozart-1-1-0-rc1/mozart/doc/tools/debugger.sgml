@@ -1,0 +1,51 @@
+<chapter id=chapter.debugger proglang=sh>
+  <title/The Oz Debugger: <code/ozd//
+  <p>The Oz debugger is extensively documented in
+<ptr.extern to="ozdoc:ozcar">.  We describe it here merely in its
+incarnation as a command line application.  Furthermore, we only
+document its options.</p>
+  <p>If you have created an Oz application which you normally start
+from the shell as follows:
+<code display/Foo ?{Args} ... /
+Then you can run it under control of the Oz debugger by using the
+following command instead:
+<code display/ozd Foo -- ?{Args} .../
+Any Oz application can be run in the debugger, but you only get the
+full benefit of the debugging interface when the code being executed
+was compiled with the <code/-g/ option to include debugging
+information.</p>
+  <p>The double dash <code/--/ separates the arguments intended for
+<code/ozd/ from those intended for the application being run under the
+debugger.
+<list>
+      <entry/<code/--help/, <code/-h/, <code/-?//
+      <item/Display information on legal options, then exit/
+
+      <entry/<code/-g/, <code/--debugger/, <code/--mode=debugger//
+      <item/This option is the default: it starts the debugger.  The
+other possibility is <code/-p/ to start the profiler (see
+<ptr to=chapter.profiler>)./
+
+      <entry/<code/-p/, <code/--profiler/, <code/--mode=profiler//
+      <item/This is the other mode of operation: it starts the
+profiler instead (see <ptr to=chapter.profiler>)./
+
+      <entry/<code/-E/, <code/--(no)useemacs//
+      <item/Starts a subordinate Emacs process.  This will be used to
+display the source code currently being debugged.  You will also be
+able to set breakpoints easily on source lines./
+
+      <entry/<code/--emacs=?{FILE}//
+      <item/Specifies the Emacs binary to run for option <code/-E/.
+The default is $<var env/OZEMACS/ if set, else <file/emacs/./
+    </list></p>
+</chapter>
+<!--
+Local Variables:
+mode: sgml
+mode: auto-fill
+sgml-default-dtd-file: "../apptut/chapter.ced"
+sgml-auto-activate-dtd: t
+adaptive-fill-mode: nil
+End:
+-->

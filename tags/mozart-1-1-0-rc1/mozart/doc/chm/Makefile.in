@@ -1,0 +1,52 @@
+PREFIX		= @prefix@
+VPATH		= @srcdir@
+SRCTOP		= @SRCTOP@
+SRCDIR		= @SRCDIR@
+DOCDIR		= $(PREFIX)/doc
+
+INSTALL		= @INSTALL@
+INSTALL_FILE	= $(INSTALL) -m 444
+INSTALL_DIR	= @INSTALL_DIR@
+
+AWK		= @AWK@
+
+DOCFILES0=Mozart.hhp Mozart.hhc
+DOCFILES=$(DOCFILES0:%=$(DOCDIR)/%)
+
+.PHONY: bootstrap bootquick all clean veryclean distclean quick boot-quick install installps
+
+all: Mozart.hhc
+
+Mozart.hhc: Mozart.hhc.in
+	$(AWK) -f $(SRCDIR)/preprocess.awk < $< > $@ || \
+	rm -f $@
+
+quick:
+depend:
+bootquick: boot-all
+boot-quick: boot-all
+
+include $(SRCTOP)/share/Makefile.boot
+
+bootstrap: boot-all
+
+Makefile: Makefile.in config.status
+	./config.status
+
+install: $(DOCDIR) $(DOCFILES)
+
+installps:
+
+$(DOCDIR):
+	$(INSTALL_DIR) $@
+
+$(DOCDIR)/%: %
+	$(INSTALL_FILE) $< $@
+
+clean:
+	rm -rf Mozart.hhc
+
+veryclean: clean
+
+distclean: veryclean
+	rm -f Makefile config.log config.status config.cache
