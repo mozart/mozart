@@ -13,5 +13,10 @@ if test "$VAR_OZE" = "UNDEFINED"; then
     AC_MSG_ERROR([ozengine not found])
 fi
 AC_SUBST(VAR_OZE)
+AC_PATH_PROGS(VAR_OZTOOL,oztool oztool.exe,UNDEFINED,$prefix/bin:$PATH)
+if test "$VAR_OZTOOL" = "UNDEFINED"; then
+    AC_MSG_ERROR([oztool not found])
+fi
+AC_SUBST(VAR_OZTOOL)
 AC_CONFIG_SUBDIRS([ozmake])
 AC_OUTPUT(Makefile)
