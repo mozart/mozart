@@ -210,9 +210,9 @@ in
 	 New in
 	 SyncCalc <- New = unit
 	 thread
-	    lock
-	       {WaitOr New {Alarm TimeoutToCalcTree}}
-	       case {IsDet New} then skip else
+	    {WaitOr New {Alarm TimeoutToCalcTree}}
+	    case {IsDet New} then skip else
+	       lock
 		  BaseTree,calculatePositions
 		  Tree,display
 	       end
