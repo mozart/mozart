@@ -5,7 +5,7 @@ import
       split1	: Split1
       split	: Split
       strip	: Strip
-      ) at 'x-oz://duchier/lib/String.ozf'
+      ) at 'x-ozlib://duchier/lib/String.ozf'
    Open
    URL(toAtom resolve make toBase)
 export
