@@ -117,7 +117,7 @@ public:
     // interfaces to the 'VSMailbox';
     Assert(sizeof(VSMailboxOwned) == sizeof(VSMailbox));
     //
-    pidIn = pid;
+    pid = pidIn;
   }
 
   //
@@ -185,11 +185,15 @@ public:
 	size++;
 
 	//
+	unlock();
+
+	//
+	// The 'USR2' must be sent at least after increasing the size - 
+	// since 'checkVSMessages' does not lock the mailbox;
 	if (pid)
 	  oskill(pid, SIGUSR2);
 
 	//
-	unlock();
 	return (TRUE);
       }
     } else {
