@@ -223,7 +223,7 @@ TaggedRef SolveActor::genSolved ()
   STuple *stuple = STuple::newSTuple (solvedAtom, 1);
 
   // statistic
-  am.stat.solveSolved++;
+  am.stat.incSolveSolved();
 
   contGRegs[0] = makeTaggedConst (solveBoard);
   status[0] = entailedAtom;
@@ -254,7 +254,7 @@ TaggedRef SolveActor::genEnumed (Board *newSolveBB)
   RefsArray contGRegs;
 
   // statistics
-  am.stat.solveDistributed++;
+  am.stat.incSolveDistributed();
 
   // left side:
   status = allocateRefsArray (1);
@@ -288,7 +288,7 @@ TaggedRef SolveActor::genEnumedFail ()
   RefsArray contGRegs;
 
   // statistics
-  am.stat.solveDistributed++;
+  am.stat.incSolveDistributed();
 
   // left side:
   status = allocateRefsArray (1);
@@ -321,7 +321,7 @@ TaggedRef SolveActor::genEnumedFail ()
 TaggedRef SolveActor::genFailed ()
 {
   // for statistic purposes
-  am.stat.solveFailed++;
+  am.stat.incSolveFailed();
   return (failedAtom);
 }
 
