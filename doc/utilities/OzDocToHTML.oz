@@ -329,7 +329,8 @@ define
 			       else unit
 			       end
 	       MyPostScriptToGIF <- {New PostScriptToGIF.'class'
-				     init(@OutputDirectory)}
+				     init(@OutputDirectory
+					  Args.'keeppictures')}
 	       CurrentNode <- 'index.html'
 	       NodeCounter <- 0
 	       ToWrite <- nil
