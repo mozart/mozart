@@ -60,7 +60,7 @@ AC_CHECK_TOOL(DLLWRAP, dllwrap)
 case "$target" in
     NONE)
 	;;
-    i386-mingw32)
+    i386-mingw32|i386-mingw32msvc)
 	AC_MSG_RESULT(cross compiling for windows)
 	oz_malloc_obj=
 
@@ -74,6 +74,7 @@ case "$target" in
 	AC_MSG_ERROR("can only cross-compile for target i386-mingw32 not for $target")
 	;;
 esac
+AC_SUBST(target)
 
 dnl *****************************************************************
 dnl Checks for programs.
@@ -1501,7 +1502,7 @@ dnl *****************************************************************
 
 AC_CONFIG_HEADER(conf-others.h)
 
-AC_OUTPUT(Makefile.vars Makefile Makefile.rules libdp/Makefile libfd/Makefile libfset/Makefile OZCONF.h:OZCONF.in oztool.sh:oztool.in extension.hh:extension.in i386-mingw32-oztool .gdbinit)
+AC_OUTPUT(Makefile.vars Makefile Makefile.rules libdp/Makefile libfd/Makefile libfset/Makefile OZCONF.h:OZCONF.in oztool.sh:oztool.in extension.hh:extension.in $target-oztool:i386-mingw32-oztool.in .gdbinit)
 
 errprint(ifdef([OZ_INIT],
  [autoconf succeeded
