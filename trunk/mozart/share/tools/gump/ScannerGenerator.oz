@@ -126,7 +126,8 @@ local
 			  items: {Map Ss fun {$ S} line(S) end})}
 	       1
 	    end
-	 catch _ then
+	 catch E then
+	    {Error.printException E}
 	    {Rep error(kind: 'scanner generator'
 		       msg: 'invocation of flex.exe failed')}
 	    1
@@ -143,7 +144,7 @@ local
 	    {Rep startSubPhase('generating scanner tables')}
 	    case {InvokeFlex FlexFile Rep} of 0 then
 	       LIBC = if {Property.get 'platform.os'} == win32 then ''
-		      else ' -lc' 
+		      else ' -lc'
 		      end
 	    in
 	       {Rep startSubPhase('compiling scanner')}
