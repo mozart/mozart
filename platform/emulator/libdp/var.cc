@@ -467,23 +467,17 @@ void ProxyVar::marshal(MsgBuffer *bs)
   }
 }
 
-ManagerVar* globalizeFreeVariable(TaggedRef *tPtr,TaggedRef var){
+ManagerVar* globalizeFreeVariable(TaggedRef *tPtr){
   OwnerEntry *oe;
   int i = ownerTable->newOwner(oe);
   PD((GLOBALIZING,"globalize var index:%d",i));
   oe->mkVar(makeTaggedRef(tPtr));
-  ManagerVar *mv = new ManagerVar(oz_getVar(tPtr),i);
-  if (isCVar(var)) {
-    OzVariable *cv=tagged2CVar(var);
-    mv->setSuspList(cv->unlinkSuspList());
-  }
+  OzVariable *cv = oz_getVar(tPtr);
+  ManagerVar *mv = new ManagerVar(cv,i);
+  mv->setSuspList(cv->unlinkSuspList());
   *tPtr=makeTaggedCVar(mv);
   return mv;
 }
-
-// mm3 tPtr comes originally from DEREF(_,_,tPtr)
-ManagerVar* globalizeFreeVariable(TaggedRef *tPtr){
-  return globalizeFreeVariable(tPtr,*tPtr);}
 
 // Returning 'NO' means we are going to proceed with 'marshal bomb';
 Bool marshalVariableImpl(TaggedRef *tPtr, MsgBuffer *bs,GenTraverser * gt) {
@@ -499,9 +493,8 @@ Bool marshalVariableImpl(TaggedRef *tPtr, MsgBuffer *bs,GenTraverser * gt) {
     oz_getObjectVar(var)->marshal(bs,gt);
   } else if (oz_isFree(var) || isFuture(var)) {
     if (!bs->globalize()) return TRUE;
-    globalizeFreeVariable(tPtr,var)->marshal(bs);
+    globalizeFreeVariable(tPtr)->marshal(bs);
   } else {
-    if (!bs->globalize()) return FALSE;
     return FALSE;
   }
   return TRUE;
