@@ -1,0 +1,24 @@
+<section>
+  <title/Configuration/
+  <p>The <code/configure/ script can be parametrized by (1) a
+site configuration file that provides values for certain shell
+variables, (2) by command line options which may override these
+values.  We recommend that you create a site configuration file for
+Mozart since this is much easier than to remember what options to
+supply on the command line.  For example create the file
+<file>~/mozart.config</file> and set the environment variable <var
+env/CONFIG_SITE/ prior to invoking the configure script:
+<code display>
+setenv CONFIG_SITE ~/mozart.config
+</code>
+</p>
+</section>
+<!--
+Local Variables:
+mode: sgml
+mode: auto-fill
+sgml-default-dtd-file: "section.ced"
+sgml-auto-activate-dtd: t
+adaptive-fill-mode: nil
+End:
+-->
