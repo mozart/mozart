@@ -6,7 +6,7 @@ local
    proc {ReadLoop S}
       case S
       of H|T then
-	 {OzcarMessage 'readloop:'}{Show H}
+	 %{OzcarMessage 'readloop:'} {Show H}
 	 {Ozcar readStreamMessage(H)}
 	 {ReadLoop T}
       end
