@@ -1,6 +1,10 @@
 .PHONY: tags clean+ clean realclean veryclean
 
-realclean:: clean
+all install clean realclean depend::
+        dirs="$(SUBDIRS)"; for i in $$dirs; do (cd $$i && $(MAKE) $@); done
+
+realclean::
+        $(MAKE) clean SUBDIRS=
         $(RM) Makefile
 
 clean::
