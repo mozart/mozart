@@ -40,15 +40,17 @@ OZ_C_proc_begin(BIgetFDLimits,2)
 }
 OZ_C_proc_end
 
-OZ_C_proc_begin(BIfdIs, 1) 
+OZ_C_proc_begin(BIfdIs, 2) 
 {
   OZ_getCArgDeref(0, fd, fdptr, fdtag);
 
   if (isNotCVar(fdtag)) 
     return BIfdHeadManager::suspendOnVar(OZ_self, OZ_arity, OZ_args, fdptr);
   
-  return OZ_isPosSmallInt(fd) || isGenFDVar(fd, fdtag) || isGenBoolVar(fd, fdtag)
-    ? PROCEED : FAILED;
+  return OZ_unify(OZ_getCArg(1),
+		  (OZ_isPosSmallInt(fd) || 
+		   isGenFDVar(fd, fdtag) || 
+		   isGenBoolVar(fd, fdtag)) ? NameTrue : NameFalse);
 }
 OZ_C_proc_end
 
