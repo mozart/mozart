@@ -6,12 +6,57 @@
 %%%  Version: $Revision$
 
 local
-   SmallPad     = 2
-   Pad          = 4
-   Border       = 2
-   LabelWidth   = 6
-   TextWidth    = 20
-   ButtonWidth  = 6
+
+   class AboutDialog 
+      from TkTools.dialog
+
+      meth init(master:Master done:Done)
+	 <<TkTools.dialog tkInit(master:  Master
+				 title:   TitleName#': About'
+				 buttons: ['Okay'#close(proc {$}
+							   Done = Unit
+							end)]
+				 focus:   1
+				 default: 1)>>
+	 Title = {New Tk.label tkInit(parent:     self
+				      font:       AboutFont
+				      text:       TitleName
+				      foreground: AboutColor)}
+
+	 Author = {New Tk.label tkInit(parent: self
+				       text: ('Christian Schulte\n' #
+					      '(schulte@dfki.uni-sb.de)\n'))}
+      in
+	 {Tk.send pack(Title Author
+		       side:top expand:1 padx:BigPad pady:BigPad)}
+      end
+
+   end
+
+   class ShutdownDialog 
+      from TkTools.dialog
+
+      meth init(master:Master done:Done)
+	 <<TkTools.dialog tkInit(master:  Master
+				 title:   TitleName#': Shutdown'
+				 buttons: ['Okay'#close(proc {$}
+							   Done = True
+							end)
+					   'Cancel'#close(proc {$}
+							   Done = False
+							end)]
+				 focus:   1
+				 default: 1)>>
+	 Bitmap  = {New Tk.label   tkInit(parent: self
+					  bitmap: question)}
+	 Message = {New Tk.message tkInit(parent: self
+					  text:   'Do you really want to shutdown')}   
+      in
+	 {Tk.send pack(Bitmap Message
+		       side:left expand:1 padx:BigPad pady:BigPad)}
+      end
+
+   end
 
    class UpdatePage
       from Note
@@ -31,15 +76,14 @@ local
 	 OP = O.priorities
 	 OR = O.runtime
 	 T = {System.get threads}
-	 P = a(high:10 middle:10) %{System.get priorities}
+	 P = {System.get priorities}
 	 R = {System.get time}
       in
 	 case What==nosample then true else
-	    {OT.load        display([2.0] Slice)} % set(T.runnable)}
-	    {OR.pie         draw(r:R.user g:R.gc c:R.copy
-				 p:R.propagate l:R.load)}
+	    {OT.load        display([{IntToFloat T.runnable}] Slice)}
 	 end
 	 case What==sample then true else
+	    {OR.pie         display(R)}
 	    {OT.created     set(T.created)}
 	    {OT.runnable    set(T.runnable)}
 	    {OP.high        set(P.high)}
@@ -56,13 +100,14 @@ local
 	 OT = O.threads
 	 OR = O.runtime
       in
-	 <<ThreadPage update(nosample 0)>>
+	 {OR.pie         clear}
 	 {OT.created     clear}
 	 {OR.total       clear}
 	 {OR.gc          clear}
 	 {OR.copy        clear}
 	 {OR.propagation clear}
 	 {OR.load        clear}
+	 <<ThreadPage update(nosample 0)>>
       end
    end
    
@@ -86,14 +131,10 @@ local
 	    {OU.active     set(G.active div KiloByteI)}
 	    {OU.size       set(G.size div KiloByteI)}
 	    {OU.threshold  set(G.threshold div KiloByteI)}
-%	 {OP.minSize    set(G.min)}
-%	 {OP.maxSize    set(G.max)}
-%	 {OP.min        set(G.minFree)}
-%	 {OP.max        set(G.maxFree)}
-	    {OP.minSize    set(G.minimal)}
-	    {OP.maxSize    set(G.maximal)}
-	    {OP.min        set(G.increase)}
-	    {OP.max        set(G.decrease)}
+	    {OP.minSize    set(G.min div MegaByteI)}
+	    {OP.maxSize    set(G.max div MegaByteI)}
+	    {OP.free       set(G.free)}
+	    {OP.tolerance  set(G.tolerance)}
 	    {OG.active     set(G.on)}
 	 end
       end
@@ -112,8 +153,7 @@ local
 	 {OS.cloned    set(S.cloned)}
 	 {OS.chosen    set(S.chosen)}
 	 {OS.failed    set(S.failed)}
-%	 {OS.succeeded set(S.succeeded)}
-	 {OS.succeeded set(S.solved)}
+	 {OS.succeeded set(S.succeeded)}
 	 {OF.propc     set(F.propagators)}
 	 {OF.propi     set(F.invoked)}
 	 {OF.var       set(F.variables)}
@@ -140,7 +180,22 @@ local
       from UpdatePage
 
       meth update
-	 true
+	 O  = self.options
+	 OE = O.errors
+	 OP = O.output
+	 OM = O.messages
+	 E = {System.get errors}
+	 P = {System.get print}
+	 M = {System.get messages}
+      in
+	 {OE.message  set(E.message)}
+	 {OE.'thread' set(E.'thread')}
+	 {OE.location set(E.location)}
+	 {OE.hints    set(E.hints)}
+	 {OP.width    set(P.width)}
+	 {OP.depth    set(P.depth)}
+	 {OM.gc       set(M.gc)}
+	 {OM.time     set(M.idle)}
       end
    end
    
@@ -158,8 +213,12 @@ in
 	 Slice: 2
       
       meth init(manager:Manager)
-	 <<Tk.toplevel tkInit(title:              'Oz Panel'
+	 <<Tk.toplevel tkInit(title:              TitleName
 			      highlightthickness: 0)>>
+	 {Tk.batch [wm(iconname   self TitleName)
+		    wm(iconbitmap self BitMap)
+		    wm(resizable self 0 0)]}
+
 	 VarSample = {New Tk.variable tkInit(1)}
 	 Menu  = {TkTools.menubar self self
 		  [menubutton(text: ' Oz Panel '
@@ -217,16 +276,23 @@ in
 	   frame(text:    'Priorities'
 		 height:  70
 		 left:    [scale(text:    'High relative to Middle:'
+				 state:   {System.get priorities}.high
 				 feature: high
-				 action:  proc {$ _} true end)
+				 action:  proc {$ N}
+					     true
+					  end)
 			   scale(text: 'Middle relative to Low:'
+				 state:   {System.get priorities}.middle
 				 feature: middle
-				 action:  proc {$ _} true end)]
+				 action:  proc {$ N}
+					     true
+					  end)]
 		 right:   [button(text: 'Default'
 				  action: proc {$}
-					     {System.set _ priorities(high:   10
-								    middle: 10)}
-					     {Threads update(nosample)}
+					     {System.set
+					      priorities(high:   10
+							 middle: 10)}
+					     {Threads update(nosample 0)}
 					  end)])
 	   frame(text:    'Runtime'
 		 height:  100
@@ -261,58 +327,71 @@ in
 		 feature: parameter
 		 height:  130
 		 left:    [scale(text:    'Maximal Size:'
-				 range:   4#512
+				 range:   1#512
 				 dim:     'MB'
 				 feature: maxSize
-				 action:  proc {$ _} true end)
+				 state:   {System.get gc}.max div MegaByteI
+				 action:  proc {$ N}
+					     {System.set
+					      gc(max: N * MegaByteI)}
+					  end)
 			   scale(text:    'Minimal Size:'
-				 range:   4#512
+				 range:   1#512
 				 dim:     'MB'
 				 feature: minSize
-				 action:  proc {$ _} true end)
-			   scale(text:    'Maximal Free:'
-				 feature: max
-				 action:  proc {$ _} true end)
-			   scale(text:    'Minimal Free:'
-				 feature: min
-				 action:  proc {$ _} true end)]
+				 state:   {System.get gc}.min div MegaByteI
+				 action:  proc {$ N}
+					     {System.set
+					      gc(min: N * MegaByteI)}
+					  end)
+			   scale(text:    'Free:'
+				 state:   {System.get gc}.free
+				 action:  proc {$ N}
+					     {System.set gc(free: N)}
+					  end
+				 dim:     '%')
+			   scale(text:    'Tolerance:'
+				 dim:     '%'
+				 state:   {System.get gc}.tolerance
+				 action:  proc {$ N}
+					     {System.set
+					      gc(tolerance: N)}
+					  end)]
 		 right:   [button(text:   'Small'
 				  action: proc {$}
-					     {Memory.options.parameter.maxSize
-					      set(8)}
-					     {Memory.options.parameter.minSize
-					      set(1)}
-					     {Memory.options.parameter.max
-					      set(30)}
-					     {Memory.options.parameter.min
-					      set(50)}
+					     {System.set
+					      gc(max:       4 * MegaByteI
+						 min:       2 * MegaByteI
+						 free:      60
+						 tolerance: 20)}
+					     {Memory update(nosample 0)}
 					  end)
 			   button(text:'Middle'
 				  action: proc {$}
-					     {Memory.options.parameter.maxSize
-					      set(32)}
-					     {Memory.options.parameter.minSize
-					      set(4)}
-					     {Memory.options.parameter.max
-					      set(50)}
-					     {Memory.options.parameter.min
-					      set(70)}
+					     {System.set
+					      gc(max:       16 * MegaByteI
+						 min:       4  * MegaByteI
+						 free:      70
+						 tolerance: 15)}
+					     {Memory update(nosample 0)}
 					  end)
 			   button(text:'Large'
 				  action: proc {$}
-					     {Memory.options.parameter.maxSize
-					      set(128)}
-					     {Memory.options.parameter.minSize
-					      set(16)}
-					     {Memory.options.parameter.max
-					      set(70)}
-					     {Memory.options.parameter.min
-					      set(90)}
+					     {System.set
+					      gc(max:       64 * MegaByteI
+						 min:       16 * MegaByteI
+						 free:      80
+						 tolerance: 10)}
+					     {Memory update(nosample 0)}
 					  end)])
 	   frame(text:    'Garbage Collector'
 		 feature: gc
 		 height:  30
-		 left:    [checkbutton(text: 'Active')]
+		 left:    [checkbutton(text:   'Active'
+				       state:  {System.get gc}.on
+				       action: proc {$ OnOff}
+						  {System.set gc(on:OnOff)}
+					       end)]
 		 right:   [button(text: 'Invoke'
 				  action: proc {$}
 					     {System.gcDo}
@@ -345,44 +424,87 @@ in
 	 OPI =
 	 {MakePage OpiPage 'Programming Interface' Book
 	  [frame(text:    'Errors'
-		 feature: error
-		 height:  100
+		 height:  85
 		 left:    [checkbutton(text:    'Show message'
-				       feature: message)
+				       feature: message
+				       state:  {System.get errors}.message
+				       action:  proc {$ B}
+						   {System.set
+						    errors(message:B)}
+						end)
 			   checkbutton(text:    'Show thread'
-				       feature: 'thread')
+				       feature: 'thread'
+				       state:  {System.get errors}.'thread'
+				       action:  proc {$ B}
+						   {System.set
+						    errors('thread':B)}
+						end)
 			   checkbutton(text:    'Show location'
-				       feature: location)
+				       feature: location
+				       state:  {System.get errors}.location
+				       action:  proc {$ B}
+						   {System.set
+						    errors(location:B)}
+						end)
 			   checkbutton(text: 'Show hints'
+				       state:  {System.get errors}.hints
+				       action:  proc {$ B}
+						   {System.set
+						    errors(hints:B)}
+						end
 				       feature: hints)]
 		 right:   [button(text:   'Default'
 				  action: proc {$}
-					     {OPI.errors.message  set(True)}
-					     {OPI.errors.'thread' set(True)}
-					     {OPI.errors.location set(True)}
-					     {OPI.errors.hints    set(True)}
+					     {System.set
+					      errors(message:  True
+						     'thread': True
+					             location: True
+						     hints:    True)}
+					     {OPI update}
 					  end)])
 	   frame(text:    'Output'
 		 height:  50
 		 left:    [entry(text:    'Maximal print width:'
-				 feature: width)
+				 feature: width
+				 action:  proc {$ N}
+					     {System.set print(width: N)}
+					  end
+				 top:     self)
 			   entry(text:    'Maximal print depth:'
-				 feature: height)]
+				 feature: depth
+				 action:  proc {$ N}
+					     {System.set print(depth: N)}
+					  end
+				 top:     self)]
 		 right:   [button(text:  'Default'
 				  action: proc {$}
-					     {OPI.output.width  set(10)}
-					     {OPI.output.height set(10)}
+					     {System.set print(width: 100
+							       depth: 10)}
+					     {OPI update}
 					  end)])
 	   frame(text:    'Status Messages'
-		 feature: status
+		 feature: messages
 		 height:  50
-		 left:    [checkbutton(text:    'Runtime')
+		 left:    [checkbutton(text:    'Idle'
+				       feature: time
+				       state:  {System.get messages}.idle
+				       action: proc {$ B}
+						  {System.set
+						   messages(idle: B)}
+					       end)
 			   checkbutton(text:    'Garbage Collection'
-				       feature: gc)]
+				       feature: gc
+				       state:  {System.get messages}.gc
+				       action: proc {$ B}
+						  {System.set
+						   messages(gc: B)}
+					       end)]
 		 right:   [button(text:  'Default'
 				  action: proc {$}
-					     {OPI.status.runtime set(10)}
-					     {OPI.status.gc      set(10)}
+					     {System.set
+					      messages(idle: False
+						       gc:   True)}
+					     {OPI update}
 					  end)])]}
       in
 	  {Tk.batch [pack(Menu side:top fill:x)
@@ -422,11 +544,27 @@ in
       end
 
       meth shutdown
+	 Done
+      in
 	 {self.menu.panel.shutdown tk(entryconf state:disabled)}
+	 _ = {New ShutdownDialog init(master:self done:Done)}
+	 thread
+	    case Done then {System.shutDown exit}
+	    else true
+	    end
+	    {self.menu.panel.shutdown tk(entryconf state:normal)}
+	 end
       end
 
       meth about
-	 true
+	 Done
+      in
+	 {self.menu.panel.about tk(entryconf state:disabled)}
+	 _ = {New AboutDialog init(master:self done:Done)}
+	 thread
+	    {Wait Done}
+	    {self.menu.panel.about tk(entryconf state:normal)}
+	 end
       end
 
       meth clear
@@ -435,7 +573,6 @@ in
       end
       
       meth sample(S)
-	 {Show sample(S)}
 	 Slice <- S
 	 <<Time.repeat setRepDelay(S * 500)>>
       end
@@ -443,7 +580,6 @@ in
       meth close
 	 <<UrObject    close>>
 	 <<Tk.toplevel close>>
-%	 <<Time.repeat kill>>
 	 {self.manager PanelTopClosed}
       end
       
@@ -451,7 +587,3 @@ in
 
 
 end
-
-
-
-

@@ -5,8 +5,6 @@
 %%%  Last modified: $Date$ by $Author$
 %%%  Version: $Revision$
 
-declare
-
 local
 
    PanelTopClosed = {NewName}
@@ -66,23 +64,7 @@ in
 	    thread {T close} end
 	 end
       end
-
-      meth get($)
-	 @ThisPanelTop
-      end
       
    end
 
 end
-
-   
-   
-/*
-
-declare P={New PanelManager open}
-
-{Debug.dumpThreads}
-
-{P open}
-
-*/
