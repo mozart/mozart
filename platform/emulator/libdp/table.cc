@@ -101,7 +101,6 @@ void OwnerEntry::localize(int index)
     else return;}
   else {
     if(isTertiary()){
-      return;
       localizeTertiary(getTertiary());}
   }
   OT->freeOwnerEntry(index);
@@ -127,9 +126,11 @@ void OwnerTable::init(int beg,int end){
   array[i].makeFree(END_FREE);
   nextfree=beg;}
 
-void OwnerTable::compactify()  /* TODO - not tested */
+void OwnerTable::compactify() 
 {
   return;
+
+  // AND-LOOK this looks strange. Are you sure that the size of OT is larger than DEFAULT_O...
 
   Assert(size>=no_used);
   Assert(size>=DEFAULT_OWNER_TABLE_SIZE);
