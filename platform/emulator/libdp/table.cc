@@ -132,7 +132,7 @@ void OwnerTable::compactify()  /* TODO - not tested */
 
   Assert(size>=DEFAULT_OWNER_TABLE_SIZE);
   if(size==DEFAULT_OWNER_TABLE_SIZE) return;
-  if(no_used/size< TABLE_LOW_LIMIT) return;
+  if(no_used/size >= TABLE_LOW_LIMIT) return;
   PD((TABLE,"TABLE:owner compactify enter: size:%d no_used:%d",
 	       size,no_used));
   int i=0;
@@ -149,19 +149,12 @@ void OwnerTable::compactify()  /* TODO - not tested */
   int first_free=used_slot+1;
   int newsize= first_free-no_used < TABLE_BUFFER ? 
     first_free-no_used+TABLE_BUFFER : used_slot+1;
-  if(first_free < size - TABLE_WORTHWHILE_REALLOC){
+  if(size - newsize > TABLE_WORTHWHILE_REALLOC){
     PD((TABLE,"TABLE:owner compactify free slots: new%d",newsize));
-    OwnerEntry *oldarray=array; 
     array = (OwnerEntry*) realloc(array,newsize*sizeof(OwnerEntry));
-    Assert(array!=NULL);
-    if(array!=NULL){
-      size=newsize;
-      init(first_free,size);
-      return;}
-    array=oldarray;}
-  init(first_free,size);      
-  PD((TABLE,"TABLE:owner compactify no realloc"));
-  return;}
+    size=newsize;
+    return;}
+  PD((TABLE,"TABLE:owner compactify no realloc"));}
 
 void OwnerTable::resize(){
 #ifdef BTRESIZE_CRITICAL
@@ -243,7 +236,7 @@ void OwnerTable::print(){
   printf("********* OWNER TABLE *************************\n");
   printf("***********************************************\n");
   printf("Size:%d No_used:%d \n\n",size,no_used);
-  printf("OI\t OWNER\t Credit\n");
+  printf("OI\t OWNER\t Credit\t Flags\n");
   int i;
   for(i=0;i<size;i++){
     if(!(array[i].isFree())){
@@ -261,10 +254,11 @@ void OwnerTable::print(){
  	printf("\n");}
       else {
  	if(oe->uOB.credit == -1)
- 	  printf("%d>\t %s\t PERSISTENT\n", i, toC(PO_getValue(oe)));
+ 	  printf("%d>\t %s\t PERSISTENT\t %d\n", i, toC(PO_getValue(oe)), 
+		 oe->getFlags());
  	else
- 	  printf("%d>\t %s\t %ld\n", i, toC(PO_getValue(oe)), 
- 		 oe->uOB.credit);}
+ 	  printf("%d>\t %s\t %ld\t %d\n", i, toC(PO_getValue(oe)), 
+ 		 oe->uOB.credit, oe->getFlags());}
     }
   }
   printf("-----------------------------------------------\n");  
@@ -981,9 +975,6 @@ int BorrowTable::newSecBorrow(DSite *creditSite,Credit c,DSite * sd,int off){
   nextfree= array[index].uOB.nextfree;
   BorrowEntry* oe = &(array[index]);
   oe->initSecBorrow(creditSite,c,sd,off);
-  PD((HASH2,"<SPECIAL>:net=%x borrow=%x owner=%x hash=%x",
-		oe->getNetAddress(),array,ownerTable->array,
-		hshtbl->table));
   hshtbl->add(oe->getNetAddress(),index);
   no_used++;
   PD((TABLE,"borrow insert: b:%d",index));
@@ -1004,9 +995,6 @@ int BorrowTable::newBorrow(Credit c,DSite * sd,int off){
   if(c!=PERSISTENT_CRED && c<=BORROW_LOW_THRESHOLD){
     oe->moreCredit();}
   
-  PD((HASH2,"<SPECIAL>:net=%x borrow=%x owner=%x hash=%x",
-		oe->getNetAddress(),array,ownerTable->array,
-		hshtbl->table));
   hshtbl->add(oe->getNetAddress(),index);
   no_used++;
   PD((TABLE,"borrow insert: b:%d",index));
@@ -1086,21 +1074,13 @@ void OwnerTable::gcOwnerTableRoots()
 
 void OwnerTable::gcOwnerTableFinal()
 {
-  /*  PER-LOOK localize replace this
   PD((GC,"owner gc"));
   for(int i=0;i<size;i++) {
     OwnerEntry* o = getOwner(i);
     if(!o->isFree()) {
-      PD((GC,"OT o:%d",i));
-      if(o->hasFullCredit() && !o->isGCMarked()) {
-	 freeOwnerEntry(i);
-      } else {
-	o->gcPO(); // PER-LOOK
-	o->removeGCMark();
-      }
+      o->removeGCMark();
     }
   }
-  */
   compactify();
   return;
 }
@@ -1244,7 +1224,7 @@ void BorrowTable::closeFrameToProxy(unsigned int ms){
 	}
       }
     }
-    if(j>50) {
+    if(j>500) {
       if(ms <= (osTotalTime() - start_time)) 
 	return;
     j=0;
@@ -1259,7 +1239,7 @@ int BorrowTable::closeProxyToFree(unsigned int ms){
   int frames = 0;
   unsigned long start_time = osTotalTime();
   int j=0;
-  // print();
+  //print();
   for(int i=0;i<size;i++){
     be = getBorrow(i);
     if(!be->isFree()) 
@@ -1318,7 +1298,7 @@ int BorrowTable::closeProxyToFree(unsigned int ms){
 	  proxies++;
 	}
       }
-    if(j>50) {
+    if(j>500) {
       if(ms <= (osTotalTime() - start_time)) 
 	return -1;
       j=0;
@@ -1326,6 +1306,7 @@ int BorrowTable::closeProxyToFree(unsigned int ms){
     else j++;    
   }
   //  printf("%d frames and %d proxies left\n", frames, proxies);
+  //  printf("time left:%d\n", ms+start_time-osTotalTime());
   return frames+proxies;
 }
 
