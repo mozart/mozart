@@ -45,6 +45,19 @@ default: break;
 }
 #undef INSTR
 
+/* trick GCC into believing that bytecode may actually contain refs
+   to the FAKE_... labels - therefore, that, not only are the bytecode
+   instruction emulation blocks needed, but that can be reached from
+   any DISPATCH point. */
+#define INSTR(instr) && FAKE_##instr,
+{
+  static void* fakeInstrTable[OZERROR+1] = {
+  include(EMUDIR/instrDefs.m4)
+  0};
+  globalFakeInstrTable = fakeInstrTable;
+}
+#undef INSTR
+
 #if defined(ARCH_I486)
 #define LOAD_LABEL(instr) \
 asm("movl $TRUE_"#instr",%0" : "=m" (*ptr))

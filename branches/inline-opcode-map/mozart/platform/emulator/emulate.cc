@@ -413,6 +413,7 @@ void pushContX(TaskStack *stk,
 // to the FAKE_... labels (see the if (init) { ... } section of engine())
 
 int MaybeJumpHere = -1;
+void ** globalFakeInstrTable;
 
 #define REPEAT_FOR_ALIGNMENT(S) S;S;S;S
 
