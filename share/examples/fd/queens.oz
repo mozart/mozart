@@ -25,7 +25,8 @@
 %% Load graphical plugin for Explorer
 %%
 declare
-[Graphics]={Module.link [{Property.get 'oz.home'}#'/examples/Queens.ozf']}
+[Graphics]={Module.link [({Property.get 'oz.home'}#
+                          '/examples/fd/graphics/Queens.ozf')]}
 {Graphics.add}
 
 
