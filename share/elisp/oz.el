@@ -155,8 +155,8 @@ starts the emulator under gdb")
 (defvar oz-error-intro-pattern "\\(error\\|warning\\) \\*\\*\\*\\*\\*"
   "pattern for error location")
 
-(defvar oz-compiler-buffer-map (make-sparse-keymap))
-(defvar oz-emulator-buffer-map (make-sparse-keymap))
+(defvar oz-compiler-buffer-map nil)
+(defvar oz-emulator-buffer-map nil)
 
 
 
@@ -1409,13 +1409,15 @@ OZ compiler, emulator and error window")
 	   ;; enter oz-mode but no highlighting; use own map, inherit
 	   ;; from oz-mode-map
 	   (kill-all-local-variables)
-	   (setq oz-compiler-buffer-map (cons 'keymap oz-mode-map))
+    (if (null oz-compiler-buffer-map)
+	      (setq oz-compiler-buffer-map (copy-keymap oz-mode-map)))
 	   (use-local-map oz-compiler-buffer-map)
 	   (setq mode-name "Oz-Output")
 	   (setq major-mode 'oz-mode))
 
 	  ((eq which 'emulator)
-	   (setq oz-emulator-buffer-map (cons 'keymap comint-mode-map))
+	   (if (null oz-emulator-buffer-map)
+	       (setq oz-emulator-buffer-map (copy-keymap comint-mode-map)))
 	   (use-local-map oz-emulator-buffer-map)))
 
     (oz-set-mouse-error-key)   ;; set mouse-2 key
