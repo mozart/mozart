@@ -809,6 +809,7 @@ Deselects the current selection, if any.
 <index/buffer/
 <index class=module/clear/
 <index class=menu/Clear/
+<item>
 Removes all browsed information from the Browser window, if any.
 
 <entry><menu key="C-w"/Clear All But Last/
