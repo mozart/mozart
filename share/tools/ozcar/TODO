@@ -32,3 +32,6 @@ Thu Oct 23 11:25:58 MET DST 1997
 {System.get errors}.'thread' sollte nicht die maschinenabhaengige
 Parsetiefe des Threadstacks sein, sondern die Anzahl der erzeugten
 Frames
+
+Thu Oct 23 12:09:18 MET DST 1997
+reset optional auch ohne kill anbieten
