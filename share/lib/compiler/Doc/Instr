@@ -169,7 +169,7 @@ setVoid
    Count            number of arguments to set to `_'
 
 setPredicateRef     used for definitionCopy
-   PredicateRef  
+   PredicateRef
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%
