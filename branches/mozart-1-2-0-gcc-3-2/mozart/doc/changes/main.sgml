@@ -101,7 +101,30 @@ particular, it lists the changes from
 
   <chapter id="chapter.m125">
     <title/Mozart 1.2.5/
-    <p>Mozart 1.2.5 is a bug-fix and maintenance release.
+    <p>Mozart 1.2.5 is a bug-fix and maintenance release, but most importantly
+    it has undergone important modifications to make it compatible with both old C++
+    compilers (&eg; <code proglang=sh/gcc 2.95.x/) and the new breed of C++ 
+    compilers (&eg; <code proglang=sh/gcc 3.x/) implementing the new multi-vendor
+    standard ABI (Application Binary Interface).
+
+    <section id="sec.m125.portability">
+      <title/Portability/
+      <p>
+      <list>
+        <item>Mozart 1.2.5 is now compatible with newer C++ compilers that implement
+	the new multi-vendor standard C++ ABI.  In other words, it can be properly
+	compiled with <code proglang=sh/gcc 3.x/.  The binary layout of C++ classes
+	as implemented &eg; by <code proglang=sh/gcc 3.2/ has changed from what it
+	was in &eg; <code proglang=sh/gcc 2.95.x/ and this had
+	some fundamental and lethal consequences for earlier versions of Mozart.  The
+	design of some datastructures in Mozart was accordingly revised.
+
+	<item>Mozart now runs on <name/hppa/ aka <name/linux-parisc/.  While Mozart
+	1.2.5 still is not ready for full 64 bit architectures, it does well under
+	kernels that provide 32 bit addresses in user-space.
+	
+     </list>
+
     <section id="sec.m125.windows">
       <title/Windows/
       <p>changes and fixes that concern the Windows platform:
