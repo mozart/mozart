@@ -1,3 +1,26 @@
+#  Authors:
+#    Michael Mehl (mehl@dfki.de)
+# 
+#  Contributors:
+#    optional, Contributor's name (Contributor's email address)
+# 
+#  Copyright:
+#    Michael Mehl (mehl@dfki.de)
+# 
+#  Last change:
+#    $Date$ by $Author$
+#    $Revision$
+# 
+#  This file is part of Mozart, an implementation 
+#  of Oz 3:
+#     $MOZARTURL$
+# 
+#  See the file "LICENSE" or
+#     $LICENSEURL$
+#  for information on usage and redistribution 
+#  of this file, and for a DISCLAIMER OF ALL 
+#  WARRANTIES.
+
 PREFIX		= @prefix@
 SRCDIR		= @srcdir@
 PLATFORM	= @PLATFORM@
@@ -5,13 +28,15 @@ BINDIR		= $(PREFIX)/bin
 SHELL		= @SH@
 RM		= @RM@ -f
 INSTALL		= @INSTALL@
-INSTALL_DIR	= $(SRCDIR)/../mkinstalldirs
+INSTALL_DIR	= @MKINSTALLDIRS@
 INSTALL_BIN	= $(INSTALL) -m 555
 INSTALL_OTHER   = $(INSTALL) -m 444
 
 SCRIPTS = oz ozplatform oz.wish ozdynld
 LINKS   = oz- ozc ozsa ozcs ozsac oz.compiler oz.emulator ozdo \
           ozemacs ozdemo oze oznc
+
+.PHONY: all install clean distclean
 
 all:
 
@@ -38,5 +63,5 @@ win-install:: setup.exe oz.exe ozdemo.exe ozsaw.exe ozsa.exe ozsac.exe
 clean:
 	rm -f *.exe *.sym *.map *.mk* *.lk* *.err oz.res setup.res ozdemo.cpp
 
-distclean:
+distclean: clean
 	$(RM) Makefile config.cache config.log config.status

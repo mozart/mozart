@@ -713,7 +713,7 @@ test -n "$ECHO" && break
 done
 
 
-OZPATH=$PATH:$TOPDIRA/bin:$TOPDIR:$prefix/bin
+OZPATH=$PATH:$TOPDIRA/bin:$TOPDIRA:$prefix/bin
 # Extract the first word of "ozinstallsrc", so it can be a program name with args.
 set dummy ozinstallsrc; ac_word=$2
 echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
