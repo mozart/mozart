@@ -31,12 +31,12 @@
  * The builtin table
  */
 
-#ifndef STATIC_PARSER
+#ifndef MODULES_LINK_STATIC
 
-#include "libparser.dcl"
+#include "modParser.dcl"
 
 OZ_C_proc_interface oz_interface[] = {
-#include "libparser.tbl"
+#include "modParser.tbl"
  {0,0,0,0}
 };
 

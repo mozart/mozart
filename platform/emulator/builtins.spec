@@ -1914,7 +1914,7 @@ $cmode='stat';
     'ozma_readProc'	=> { in     => ['+virtualString'],
 			     out    => ['+value'],
 			     BI     => ozma_readProc,
-			     ifdef  => STATIC_LIBOZMA,
+			     ifdef  => MODULES_LINK_STATIC,
 			     native => true},
 
     ##* Virtual Properties
