@@ -235,6 +235,72 @@ OZ_C_proc_begin(BIisTcl, 2) {
 } OZ_C_proc_end
 
 
+OZ_C_proc_begin(BIisTclFilter, 3) {
+  TaggedRef tcl = OZ_getCArg(0);
+  State s = PROCEED;
+
+  DEREF(tcl, tcl_ptr, tcl_tag);
+
+  if (isAnyVar(tcl_tag)) {
+    return OZ_suspendOnVar(makeTaggedRef(tcl_ptr));
+  } else if (isLiteral(tcl_tag)) {
+    s = isTcl(tcl);
+  } else if (isSRecord(tcl_tag)) {
+    SRecord * sr = tagged2SRecord(tcl);
+    TaggedRef as = deref(sr->getArityList());
+    TaggedRef fs = deref(OZ_getCArg(1));
+
+    while (isLTuple(as) && isLTuple(fs)) {
+      TaggedRef a = deref(tagged2LTuple(as)->getHead());
+      TaggedRef f = deref(tagged2LTuple(fs)->getHead());
+
+      if (tagged2Literal(a)->isAtom()) {
+
+	switch (atomcmp(a,f)) {
+	case 0:
+	  fs = deref(tagged2LTuple(fs)->getTail());
+	  goto skip;
+	case 1:
+	  fs = deref(tagged2LTuple(fs)->getTail());
+	case -1:
+	  s = isTcl(sr->getFeature(a));
+	  if (s!=PROCEED)
+	    goto exit;
+	}
+
+      skip:
+	as = deref(tagged2LTuple(as)->getTail());
+
+      }
+    }
+
+    while (isLTuple(as)) {
+      TaggedRef a = deref(tagged2LTuple(as)->getHead());
+
+      if (tagged2Literal(a)->isAtom()) {
+	s = isTcl(sr->getFeature(a));
+	if (s!=PROCEED)
+	  goto exit;
+	as = deref(tagged2LTuple(as)->getTail());
+      }
+    }
+	
+  exit:
+    switch (s) {
+    case FAILED:  
+      return OZ_unify(OZ_getCArg(2), NameFalse);
+    case PROCEED: 
+      return OZ_unify(OZ_getCArg(2), NameTrue);
+    default: 
+      return s;
+    }
+  }
+
+  return FAILED;
+} OZ_C_proc_end
+
+
+
 
 
 inline 
@@ -589,6 +655,25 @@ OZ_C_proc_begin(BItclWrite,3) {
 OZ_C_proc_end
 
 
+OZ_C_proc_begin(BItclWriteBatch,3) {  
+  OZ_declareIntArg("tclWriteBatch", 0, fd);
+  TaggedRef batch = deref(OZ_getCArg(1));
+
+  init_tcl_buffer();
+
+  while (isLTuple(batch)) {
+    tcl2buffer(tagged2LTuple(batch)->getHead());
+    tcl_put(';');
+    batch = deref(tagged2LTuple(batch)->getTail());
+  }
+  tcl_put('\n');
+
+  return tcl_write(fd, tcl_buffer_start, tcl_buffer-tcl_buffer_start, 
+		   OZ_getCArg(2));
+}
+OZ_C_proc_end
+
+
 OZ_C_proc_begin(BItclWriteTuple,4) {  
   OZ_declareIntArg("tclWriteTuple", 0, fd);
 
@@ -602,6 +687,7 @@ OZ_C_proc_begin(BItclWriteTuple,4) {
 		   OZ_getCArg(3));
 }
 OZ_C_proc_end
+
 
 
 OZ_C_proc_begin(BItclWriteTagTuple,5) {  
@@ -624,6 +710,67 @@ OZ_C_proc_begin(BItclWriteTagTuple,5) {
 OZ_C_proc_end
 
 
+OZ_C_proc_begin(BItclWriteFilter,7) {  
+  OZ_declareIntArg("tclWriteFilter", 0, fd);
+
+  init_tcl_buffer();
+  vs2buffer(OZ_getCArg(1));
+  tcl_put(' ');
+  vs2buffer(OZ_getCArg(2));
+  tcl_put(' ');
+  
+  SRecord   * sr = tagged2SRecord(deref(OZ_getCArg(3)));
+  TaggedRef as   = deref(sr->getArityList());
+  TaggedRef fs   = deref(OZ_getCArg(4));
+
+  while (isLTuple(as) && isLTuple(fs)) {
+    TaggedRef a = deref(tagged2LTuple(as)->getHead());
+    TaggedRef f = deref(tagged2LTuple(fs)->getHead());
+
+    if (tagged2Literal(a)->isAtom()) {
+
+      switch (atomcmp(a,f)) {
+      case 0:
+	fs = deref(tagged2LTuple(fs)->getTail());
+	goto skip;
+      case 1:
+	fs = deref(tagged2LTuple(fs)->getTail());
+      case -1:
+	tcl_put('-');
+	atom2buffer(a);
+	tcl_put(' ');
+	tcl2buffer(sr->getFeature(a));
+	tcl_put(' ');
+      }
+
+    skip:
+      as = deref(tagged2LTuple(as)->getTail());
+
+    }
+  }
+
+  while (isLTuple(as)) {
+    TaggedRef a = deref(tagged2LTuple(as)->getHead());
+
+    if (tagged2Literal(a)->isAtom()) {
+      tcl_put('-');
+      atom2buffer(a);
+      tcl_put(' ');
+      tcl2buffer(sr->getFeature(a));
+      tcl_put(' ');
+      as = deref(tagged2LTuple(as)->getTail());
+    }
+  }
+	
+  tcl2buffer(OZ_getCArg(5));
+  tcl_put('\n');
+
+  return tcl_write(fd, tcl_buffer_start, tcl_buffer-tcl_buffer_start, 
+		   OZ_getCArg(6));
+}
+OZ_C_proc_end
+
+
 OZ_C_proc_begin(BItclWriteCont,3) {  
   OZ_declareIntArg("tclWriteCont", 0, fd);
   OZ_declareIntArg("tclWriteCont", 1, written);
@@ -635,6 +782,140 @@ OZ_C_proc_begin(BItclWriteCont,3) {
 OZ_C_proc_end
 
 
+/*
+ * Groups
+ */
+
+
+inline
+TaggedRef findAliveEntry(TaggedRef group) {
+  group = deref(group);
+
+  while (isCons(group)) {
+      TaggedRef head = headDeref(group);
+
+      if (!(isLiteral(head) && sameLiteral(head,NameGroupVoid)))
+	return group;
+      
+      group = tailDeref(group);
+  }
+
+  return group;
+}
+
+
+OZ_C_proc_begin(BIaddFastGroup,3)
+{
+  OZ_nonvarArg(0);
+  TaggedRef group = deref(OZ_getCArg(0)); 
+
+  if (isCons(group)) {
+    TaggedRef member = cons(OZ_getCArg(1),findAliveEntry(tail(group)));
+    tagged2LTuple(group)->setTail(member);
+    return OZ_unify(member,OZ_getCArg(2));
+  }
+  return FAILED;
+} 
+OZ_C_proc_end
+
+
+OZ_C_proc_begin(BIdelFastGroup,1)
+{
+  TaggedRef member = deref(OZ_getCArg(0));
+
+  if (isCons(member)) {
+    tagged2LTuple(member)->setHead(NameGroupVoid);
+    tagged2LTuple(member)->setTail(findAliveEntry(tail(member)));
+  }
+
+  return PROCEED;
+} 
+OZ_C_proc_end
+
+
+OZ_C_proc_begin(BIgetFastGroup,2)
+{
+  OZ_nonvarArg(0);
+  TaggedRef group = OZ_getCArg(0); 
+
+  DEREF(group, _1, _2);
+
+  if (isCons(group)) {
+    TaggedRef out = nil();
+
+    group = tailDeref(group);
+    
+    while (isCons(group)) {
+      TaggedRef head = headDeref(group);
+
+      if (!(isLiteral(head) && sameLiteral(head,NameGroupVoid)))
+	out = cons(head, out);
+      
+      group = tailDeref(group);
+    }
+
+    return isNil(group) ? OZ_unify(out,OZ_getCArg(1)) : FAILED;
+  }
+  
+  return FAILED;
+
+} 
+OZ_C_proc_end
+
+
+// ---------------------------------------------------------------------
+// Counters
+// ---------------------------------------------------------------------
+
+static int top_ctr    = 0;
+static int widget_ctr = 0;
+static int tag_ctr    = 0;
+static int var_ctr    = 0;
+static int image_ctr  = 0;
+
+OZ_C_proc_begin(BIgenTopName,1) {
+  STuple * s = STuple::newSTuple(AtomPair,2);
+  s->setArg(0,AtomDot);
+  s->setArg(1,makeInt(top_ctr++));
+  return OZ_unify(OZ_getCArg(0),makeTaggedSTuple(s));
+} OZ_C_proc_end
+
+OZ_C_proc_begin(BIgenWidgetName,2) {
+  TaggedRef parent = OZ_getCArg(0);
+
+  DEREF(parent, p_ptr, p_tag);
+
+  if (isAnyVar(p_tag))
+    return OZ_suspendOnVar(makeTaggedRef(p_ptr));
+
+  STuple * s = STuple::newSTuple(AtomPair,3);
+  s->setArg(0,parent);
+  s->setArg(1,AtomDot);
+  s->setArg(2,makeInt(widget_ctr++));
+  return OZ_unify(OZ_getCArg(1),makeTaggedSTuple(s));
+} OZ_C_proc_end
+
+OZ_C_proc_begin(BIgenTagName,1) {
+  STuple * s = STuple::newSTuple(AtomPair,2);
+  s->setArg(0,AtomTagPrefix);
+  s->setArg(1,makeInt(tag_ctr++));
+  return OZ_unify(OZ_getCArg(0),makeTaggedSTuple(s));
+} OZ_C_proc_end
+
+OZ_C_proc_begin(BIgenVarName,1) {
+  STuple * s = STuple::newSTuple(AtomPair,2);
+  s->setArg(0,AtomVarPrefix);
+  s->setArg(1,makeInt(var_ctr++));
+  return OZ_unify(OZ_getCArg(0),makeTaggedSTuple(s));
+} OZ_C_proc_end
+
+OZ_C_proc_begin(BIgenImageName,1) {
+  STuple * s = STuple::newSTuple(AtomPair,2);
+  s->setArg(0,AtomImagePrefix);
+  s->setArg(1,makeInt(image_ctr++));
+  return OZ_unify(OZ_getCArg(0),makeTaggedSTuple(s));
+} OZ_C_proc_end
+
 // ---------------------------------------------------------------------
 // Add to Builtin-Table
 // ---------------------------------------------------------------------
@@ -643,10 +924,24 @@ static
 BIspec tclTkSpec[] = {
   {"getTclName",       1, BIgetTclName,       NO, 0},
   {"isTcl",            2, BIisTcl,            NO, 0},
+  {"isTclFilter",      3, BIisTclFilter,      NO, 0},
   {"tclWrite",         3, BItclWrite,         NO, 0},
+  {"tclWriteBatch",    3, BItclWriteBatch,    NO, 0},
   {"tclWriteTuple",    4, BItclWriteTuple,    NO, 0},
   {"tclWriteTagTuple", 5, BItclWriteTagTuple, NO, 0},
+  {"tclWriteFilter",   7, BItclWriteFilter,   NO, 0},
   {"tclWriteCont",     3, BItclWriteCont,     NO, 0},
+
+  {"addFastGroup", 3, BIaddFastGroup,	NO, 0},
+  {"delFastGroup", 1, BIdelFastGroup,	NO, 0},
+  {"getFastGroup", 2, BIgetFastGroup,	NO, 0},
+
+  {"genTopName",    1, BIgenTopName,	NO, 0},
+  {"genWidgetName", 2, BIgenWidgetName,	NO, 0},
+  {"genTagName",    1, BIgenTagName,	NO, 0},
+  {"genVarName",    1, BIgenVarName,	NO, 0},
+  {"genImageName",  1, BIgenImageName,	NO, 0},
+
   {0,0,0,0,0}
 };
 
