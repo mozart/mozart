@@ -259,7 +259,7 @@ define
             {self.stop   tk(configure state:normal)}
             {self.status tk(configure bg:NeutralColor text:'Computing.')}
          end
-         case {Search.one.depth Script 4 ?Stopper}
+         case {Search.one.depth Script 1 ?Stopper}
          of nil then
             {self.stop   tk(configure state:disabled)}
             if @stopper==true then

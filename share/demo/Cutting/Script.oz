@@ -198,9 +198,8 @@ define
                   DimD =: RectRid.2 - RectRid.1
                   %% SQS1 and SQS2 are partition of the squares
                   {FS.union SQS1 SQS2 SQS}
-                  %% The cut must be inside the current dimensions, and
-                  %% of course the squares we consider here have at least size 2!
-                  RectDir.1+2=<:Cut Cut+2=<:RectDir.2
+                  %% The cut must be inside the current dimensions
+                  RectDir.1<:Cut Cut<:RectDir.2
                   %% Find Left and Right, just cardinality matters
                   {Map3 {FS.reflect.upperBoundList SQS}
                    proc {$ I ?IsL ?IsR ?DD}
@@ -338,7 +337,9 @@ declare
 %Spec = spec(x:7 y:7 squares:s(5:1 3:1 2:3))
 %Spec = spec(x:14 y:14 squares:s(5:2 4:4 3:3 2:5 1:35))
 %Spec = spec(x:14 y:14 squares:s(5:2 4:4 3:3 2:10 1:15))
-Spec = spec(x:17 y:20 squares:s(5:2 4:3 3:3 2:5 1:5))
+%Spec = spec(x:17 y:20 squares:s(5:2 4:3 3:3 2:5 1:5))
+Spec = spec(x:10 y:10 squares:s(1:1 2:2 3:2 4:2 5:1))
+%Spec = spec(x:10 y:10 squares:s(1:2 2:2 3:2 4:2 5:1))
 %Spec = spec(x:10 y:12 squares:d(4:2 3:2 2:7 1:2))
 %2*16+3*4+
 {ExploreOne {Compile Spec}}
@@ -383,6 +384,7 @@ end
 
 
 
+declare Compile = {Module.link ['/home/schulte/build/share/demo/Cutting/Script.ozf']}.1.compile
 
 
 
