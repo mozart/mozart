@@ -33,7 +33,7 @@
 
 inline
 int getLimit(const int reg_size) {
-  return (reg_size * reg_size) / BITS_PER_INT + 1;
+  return (((reg_size - 1) * reg_size) / 2) / BITS_PER_INT + 1;
 }
 
 class Min_max {
@@ -172,14 +172,14 @@ OZ_Return DiffnPropagator::propagate(void)
   }
 
   int disjFlag = 0;
-
+  int ro_n     = 0;
 reifiedloop:
 
   for (i=ts; i--; ) {
     for (j=i; j--; ) {
-      int ro_n = i * reg_size + j;
-      int ro_hi = ro_n / BITS_PER_INT;
+      unsigned int ro_hi = ro_n / BITS_PER_INT;
       unsigned int ro_lo = 2 << ((unsigned int) ro_n % BITS_PER_INT);
+      ro_n++;
 
       if (!(reg_ordered[ro_hi] & ro_lo)) {
         // if one is entailed, no action takes place
@@ -263,6 +263,7 @@ reifiedloop:
 
   if (disjFlag == 1) {
     disjFlag = 0;
+    ro_n     = 0;
     goto reifiedloop;
   }
 
