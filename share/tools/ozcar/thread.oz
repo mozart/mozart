@@ -66,7 +66,7 @@ in
 	 {Thread.terminate @ReadLoopThread}
 	 {Compile '\\switch -debuginfo'}
 	 {Emacs removeBar}
-	 {Delay 1500}
+	 {Delay 1000}
 	 {self.toplevel tkClose}
       end
 
@@ -134,12 +134,12 @@ in
 		  end
 
 		  {Dbg.trace T false}
-		  {Dbg.stepmode T false}
+		  {Dbg.step T false}
 		  {Thread.resume T}
 
 	       elsecase {UnknownFile M.file} then
 		  {Dbg.trace T false}
-		  {Dbg.stepmode T false}
+		  {Dbg.step T false}
 		  {Thread.resume T}
 		  Gui,status('Ignoring new thread as there\'s' #
 			     ' no file information available.')
@@ -405,6 +405,7 @@ in
       meth kill(T I Select<=true)
 	 lock
 	    {Dbg.trace T false}
+	    {Dbg.step T false}
 	    {Thread.terminate T}
 	    case Select then
 	       Gui,doStatus('Thread #' # I # ' has been terminated')
@@ -446,7 +447,7 @@ in
       meth forget(T I)
 	 lock
 	    {Dbg.trace T false}      %% thread is not traced anymore
-	    {Dbg.stepmode T false}   %% no step mode, run as you like!
+	    {Dbg.step T false}   %% no step mode, run as you like!
 	    {Thread.resume T}        %% run, run to freedom!! :-)
 	    Gui,doStatus('Thread #' # I # ' is not traced anymore')
 	    ThreadManager,remove(T I kill)
