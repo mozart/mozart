@@ -4,8 +4,14 @@ firstname:	Seif
 www:		http://www.sics.se/~seif
 email:		seif@sics.se
 
-key:		Nils.Franzen
-lastname:	Franzen
-firstname:	Nils
-www:		http://www.sics.se/~nilsf
-email:		nilsf@sics.se
+key:		Peter.VanRoy
+lastname:	Van Roy
+firstname:	Peter
+www:		http://www.sics.se/
+email:		vanroy@sics.se
+
+key:		Per.Brand
+lastname:	Brand
+firstname:	Per
+www:		http://www.sics.se/~perbrand
+email:		perbrand@sics.se
