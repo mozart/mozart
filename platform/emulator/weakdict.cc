@@ -38,9 +38,12 @@ extern int oz_raise(OZ_Term cat, OZ_Term key, const char *label, int arity, ...)
 OZ_Return WeakDictionary::getFeatureV(OZ_Term f,OZ_Term& v)
 {
   if (!OZ_isFeature(f)) { OZ_typeError(1,"feature"); }
-  if (get(f,v)) return PROCEED;
-  else oz_raise(E_ERROR,E_KERNEL,"WeakDictionary.get",2,
-                oz_makeTaggedExtension(this),f);
+  if (get(f,v)) {
+    return PROCEED;
+  } else {
+    return oz_raise(E_ERROR,E_KERNEL,"WeakDictionary.get",2,
+                    oz_makeTaggedExtension(this),f);
+  }
 }
 
 void WeakDictionary::put(OZ_Term key,OZ_Term val)
