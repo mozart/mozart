@@ -87,14 +87,6 @@ extern int PASCAL FAR __WSAFDIsSet(SOCKET, fd_set FAR *);
 
 
 /*
- * Structure used in select() call, taken from the BSD file sys/time.h.
- */
-struct timeval {
-        long    tv_sec;         /* seconds */
-        long    tv_usec;        /* and microseconds */
-};
-
-/*
  * Operations on timevals.
  *
  * NB: timercmp does not work for >= or <=.
