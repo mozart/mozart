@@ -78,15 +78,51 @@
       <Title/Mailing Applets/
 
        <P>
-         Pressing <Em/Send Mail/, generates a new board applet on the
+         Pressing <Em/Mail Applet/, generates a new board applet on the
          fly and sends it by mail. The recipient can execute the
          applet and can by this join into the existing drawing board.
-       </p>
+
+       <p>
+         Mailing applets relies on the program <file/metasend/, which
+         is part of the <file/metamail/ package. A discussion of the
+         software package you can find in <ptr to="Peek.95">. The
+         package is available at
+<table class=dyptic>
+  <tr>
+    <th>North America</th>
+    <td>
+       <ref.extern to="ftp://thumper.bellcore.com/pub/nsb/mm2.7.tar.Z">
+         <file>ftp://thumper.bellcore.com/pub/nsb/mm2.7.tar.Z</file>
+       </ref.extern>
+    </td>
+  </tr>
+  <tr>
+     <th>Europe</th>
+     <td>
+        <ref.extern to="ftp://ftp.funet.fi/pub/unix/mail/metamail/mm2.7.tar">
+          <file>ftp://ftp.funet.fi/pub/unix/mail/metamail/mm2.7.tar</file>
+        </ref.extern>
+     </td>
+  </tr>
+</table>
+
+       <p>
+         Most Linux distributions I am aware of also include the package.
 
        <P>
          The currently participating users are listed by their mail
          address in the <code>Users</code> area.
-       </P>
+
+    </Section>
+
+    <Section class=unnumbered>
+      <Title/Saving Applets/
+
+       <P>
+         Pressing <Em/Save Applet/, generates a new board applet on the
+         fly and saves it to a pickle. Executing the pickled applet joins
+         into the drawing board from which the applet was saved.
+       </p>
 
     </Section>
 
