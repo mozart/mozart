@@ -4802,7 +4802,7 @@ OZ_Return HandlerInstall(Tertiary *entity, SRecord *condStruct,TaggedRef proc){
       if(lock!=NULL){
 	o->getLock()->setMasterTert(entity);
 	if(!lock->installHandler(ec,proc,th,Continue,Persistent)){
-	  cell->deinstallHandler(th);
+	  cell->deinstallHandler(th,proc);
 	  break;}}
       return PROCEED;}
     break;}
@@ -4816,6 +4816,49 @@ OZ_Return HandlerInstall(Tertiary *entity, SRecord *condStruct,TaggedRef proc){
   default:
     return oz_raise(E_ERROR,E_SYSTEM,"handlers on ? not implemented",0);}
   return oz_raise(E_ERROR,E_SYSTEM,"handler already installed",0);
+}
+
+
+OZ_Return HandlerDeInstall(Tertiary *entity, SRecord *condStruct,TaggedRef proc){
+  Thread *th      = am.currentThread();
+  
+  if(condStruct->hasFeature(OZ_atom("basis"))){
+    TaggedRef tht = condStruct->getFeature(OZ_atom("basis"));
+    if(tht == AtomPerThread)
+      th = am.currentThread();
+    else{
+      if(tht == AtomPerSite)
+	th = getDefaultThread();
+      else      
+	return oz_raise(E_ERROR,E_SYSTEM,"invalid handler condition",0);}}
+  
+  Tertiary *lock, *cell;
+  switch(entity->getType()){
+  case Co_Object:{
+    Object *o = (Object *)entity;
+    if(entity->getTertType()==Te_Local && !stateIsCell(o->getState())) 
+      cell = entity;
+    else{
+      cell = getCell(o->getState());
+      cell->setMasterTert(entity);}
+    lock = o->getLock();
+    if(cell->deinstallHandler(th,proc)){
+      if(lock!=NULL){
+	o->getLock()->setMasterTert(entity);
+	if(!lock->deinstallHandler(th,proc))
+	  break;}
+      return PROCEED;}
+    break;}
+  case Co_Port:
+    if(!entity->isProxy()) return PROCEED;
+  case Co_Lock:
+  case Co_Cell: {
+    if(entity->deinstallHandler(th,proc))
+      return PROCEED;
+    break;}  
+  default:
+    return oz_raise(E_ERROR,E_SYSTEM,"handlers on ? not implemented",0);}
+  return oz_raise(E_ERROR,E_SYSTEM,"handler already Not installed",0);
 }
 
 
@@ -4920,6 +4963,45 @@ OZ_Return WatcherInstall(Tertiary *entity, SRecord *condStruct,TaggedRef proc){
     return PROCEED;
 }
 
+
+OZ_Return WatcherDeInstall(Tertiary *entity, SRecord *condStruct,TaggedRef proc){
+  EntityCond ec    = PERM_ME;  
+
+  if(condStruct->hasFeature(OZ_atom("cond"))){
+    TaggedRef cond = condStruct->getFeature(OZ_atom("cond"));
+    if(isCons(cond)){
+      if(!translateWatcherConds(cond,ec,entity->getType()))
+	return oz_raise(E_ERROR,E_SYSTEM,"invalid watcher condition",0);}
+    else{
+      if(!translateWatcherCond(cond,ec,entity->getType()))
+	return oz_raise(E_ERROR,E_SYSTEM,"invalid watcher condition",0);}
+  }
+  
+  switch(entity->getType()){
+  case Co_Object:{
+    Object *o = (Object *)entity;
+    Tertiary *lock, *cell;
+    if(entity->getTertType()==Te_Local)
+      cell = entity;
+    else
+      cell = getCell(o->getState());
+    if(cell->deinstallWatcher(ec,proc)){
+      lock = o->getLock();
+      if(lock!=NULL || lock->deinstallWatcher(ec,proc))
+	return PROCEED;}
+    break;}
+  case Co_Port:
+    if(!entity->isProxy()) return PROCEED;
+  case Co_Cell:
+  case Co_Lock:{
+    if(entity->deinstallWatcher(ec,proc))
+      return PROCEED;}
+  default: return oz_raise(E_ERROR,E_SYSTEM,"watchers on ? not implemented",0);}
+  return oz_raise(E_ERROR,E_SYSTEM,"Watcher Not installed",0);
+}
+
+
+
 OZ_BI_define(BIhwInstall,3,0){
   OZ_Term e0        = OZ_in(0);
   OZ_Term c0        = OZ_in(1);
@@ -4947,21 +5029,45 @@ OZ_BI_define(BIhwInstall,3,0){
   return PROCEED;
 }OZ_BI_end
 
-/*
-OZ_BI_define(BIgetEntityCond,2)
-{
-  OZ_declareArg(1,out);
-  OZ_Term e = OZ_getCArg(0);
+
+OZ_BI_define(BIhwDeInstall,3,0){
+  OZ_Term e0        = OZ_in(0);
+  OZ_Term c0        = OZ_in(1);
+  OZ_Term proc      = OZ_in(2);  
   
+  NONVAR(c0, c);
+  NONVAR(e0, e);
+  TaggedRef label;
+  SRecord  *condStruct;
+  if(isSRecord(c)){
+    condStruct = tagged2SRecord(c);
+    label = condStruct->getLabel();}
+  else
+    oz_raise(E_ERROR,E_SYSTEM,"???? is not a Srecord",0);
+  
+  Tertiary *entity = tagged2Tert(e);
+  TaggedRef type = condStruct->getLabel();
+  if(type == AtomHandler)
+    return HandlerDeInstall(entity,condStruct,proc);
+  if(type == AtomWatcher)
+    return WatcherDeInstall(entity,condStruct,proc);
+  oz_raise(E_ERROR,E_SYSTEM,"label must be either handler or watcher",0);
+  return PROCEED;
+}OZ_BI_end
+
+
+
+OZ_BI_define(BIgetEntityCond,1,1)
+{
+  OZ_Term e = OZ_in(0);
   NONVAR(e, entity);
   Tertiary *tert = tagged2Tert(entity);
   
   EntityCond ec = tert->getEntityCond();
   if(ec == ENTITY_NORMAL)
-    return oz_unify(out,cons(AtomEntityNormal,nil()));
-  return oz_unify(out,listifyWatcherCond(ec));
+    OZ_RETURN(cons(AtomEntityNormal,nil()));
+  OZ_RETURN(listifyWatcherCond(ec));
 }OZ_BI_end
-*/
 
 
 

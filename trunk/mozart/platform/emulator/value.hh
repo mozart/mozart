@@ -79,9 +79,9 @@ extern TaggedRef AtomNil, AtomCons, AtomPair, AtomVoid,
   AtomPerm, AtomTemp,AtomTempHome,AtomTempForeign,
   AtomPermHome,AtomPermForeign,
   AtomContinue, AtomRetry,
-  AtomYes,AtomNo,AtomPerSite,AtomPerThread,
+  AtomYes,AtomNo,AtomPerSite,AtomPerThread,AtomAny,AtomAll,
   AtomHandler,AtomWatcher,
-
+  
 RecordFailure,
   E_ERROR, E_KERNEL, E_OBJECT, E_TK, E_OS, E_SYSTEM,
   BI_portWait,BI_Unify,BI_Show,BI_send,BI_probe,BI_Delay,BI_startTmp,
@@ -995,7 +995,7 @@ public:
   void gcBorrowMark();
 
   Bool installHandler(EntityCond,TaggedRef,Thread*,Bool,Bool);
-  Bool deinstallHandler(Thread*);
+  Bool deinstallHandler(Thread*,TaggedRef);
   void installWatcher(EntityCond,TaggedRef,Bool);
   Bool deinstallWatcher(EntityCond,TaggedRef);
 
