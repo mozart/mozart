@@ -41,7 +41,7 @@
 #endif
 
 #define COUNTIT(WHAT,n) ozstat.WHAT += n
-#define COUNT1(WHAT,n) ProfileCode(if (isCollecting) {COUNTIT(WHAT,n);})
+#define COUNT1(WHAT,n) ProfileCode(if (!isCollecting) {COUNTIT(WHAT,n);})
 #define COUNT(WHAT)    COUNT1(WHAT,1)
 #define CountMax(What,Value) ProfileCode(ozstat.What = max(ozstat.What,Value))
 
@@ -124,7 +124,7 @@ public:
   void leaveProp()                 { currPropagator = 0; }
 
   void initCount();
-  void printCount();
+  void printCount(char *file);
 
 #ifdef PROFILE_INSTR
   unsigned long instr[PROFILE_INSTR_MAX];
@@ -183,7 +183,7 @@ public:
   long lengthDerefs[maxDerefLength+1];
 
   void derefChain(int n);
-  void printDeref();
+  void printDeref(FILE *out);
 #endif
 };
 
