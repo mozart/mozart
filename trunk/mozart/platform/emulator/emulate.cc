@@ -1932,11 +1932,12 @@ LBLdispatcher:
       }
 
       if (isTailCall) {
-	TaggedRef dict = deref(Xreg(reg));
-	if (isDictionary(dict))
-	  predd->PC = copyCode(predd->PC,tagged2Dictionary(dict),predd->copyOnce==NO);
-	else 
-	  warning("DEFINITIONCOPY: dictionary expected: %s\n",toC(dict));
+	TaggedRef alist = deref(Xreg(reg));
+	ProgramCounter preddPC = predd->PC;
+	Bool copyOnce = predd->copyOnce;
+	predd = new PrTabEntry(predd->getName(), predd->getMethodArity(),
+			       predd->getFileName(), predd->getLine(), NO);
+	predd->PC = copyCode(preddPC,alist,copyOnce==NO);
       }
       int size = list->getSize();
       RefsArray gRegs = (size == 0) ? (RefsArray) NULL : allocateRefsArray(size);
