@@ -338,12 +338,13 @@ define
    fun {Mtime      P} {{Make P} mtime($)} end
    fun {Resolve P1 P2} {{{Make P1} resolve(P2 $)} toString($)} end
    fun {Getcwd} {Make {OS.getCWD}} end
-   fun {Mkdir      P} {{Make P} mkdir} end
-   fun {Mkdirs     P} {{Make P} mkdirs} end
+   proc {Mkdir     P} {{Make P} mkdir} end
+   proc {Mkdirs    P} {{Make P} mkdirs} end
    fun {IsRoot     P} {{Make P} isRoot($)} end
    fun {Readdir    P} {{Make P} readdir($)} end
    fun {Extension  P} {{Make P} extension($)} end
    fun {DropExtension P} {{{Make P} dropExtension($)} toString($)} end
    fun {AddExtension P E} {{{Make P} addExtension(E $)} toString($)} end
    fun {MaybeAddPlatform P} {{{Make P} maybeAddPlatform(P $)} toString($)} end
+   proc {Rmdir     P} {{Make P} rmdir} end
 end
