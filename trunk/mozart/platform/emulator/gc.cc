@@ -1279,10 +1279,6 @@ TaggedRef gcVariable(TaggedRef var)
 inline
 void OZ_FiniteDomainImpl::gc(void)
 {
-#if defined(DEBUG_CHECK) && defined(DEBUG_FD)
-  Assert(isConsistent());
-#endif
-
   FDPROFILE_GC(cp_size_fdvar, getDescrSize());
 
   copyExtension();
