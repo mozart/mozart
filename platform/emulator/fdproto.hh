@@ -78,6 +78,7 @@ OZ_C_proc_proto(BIfdCardNestableBIBin)
 
 // fdcore.cc
 OZ_C_proc_proto(BIisFdVar)
+OZ_C_proc_proto(BIisFdVarB)
 OZ_C_proc_proto(BIfdIs)
 OZ_C_proc_proto(BIgetFDLimits)
 OZ_C_proc_proto(BIfdMin)
