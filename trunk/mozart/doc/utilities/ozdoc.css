@@ -1,4 +1,4 @@
-BODY, TH, TD, TR, P, CAPTION, H1, H2, H3, IMG, TABLE {
+BODY, TH, TD, TR, P, CAPTION, H1, H2, H3, H4, IMG, TABLE {
   font-family: sans-serif;
 }
 
@@ -30,7 +30,12 @@ H2 {
 }
 
 H3 {
-  color: #999999;
+  color: #888888;
+  font-size: medium;
+}
+
+H4 {
+  color: #AAAAAA;
   font-size: medium;
 }
 
