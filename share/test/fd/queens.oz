@@ -67,7 +67,8 @@ define
       end
    end
       
-   proc {EnumMid Xs} 
+   proc {EnumMid Xs}
+      {Space.waitStable}
       case {SkipDet Xs}
       of nil then skip
       [] X|Xr then
