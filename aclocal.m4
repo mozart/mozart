@@ -137,7 +137,6 @@ AC_DEFUN(OZ_INIT, [
   AC_SUBST(HOMEURL)
   AC_SUBST(HOMECACHE)
 #OZ_PATH_PROG(PLATFORMSCRIPT, ozplatform)
-#OZ_PATH_PROG(DYNLD,          ozdynld)
 ])
 
 dnl ==================================================================
