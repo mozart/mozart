@@ -538,8 +538,13 @@ phrase2         : phrase2 add coord phrase2 %prec ADD
                   inSequence end coord
                   { $$ = newCTerm("fFun",$5,$6,$8,$3,makeLongPos($2,$10)); }
                 | functor coord phraseOpt functorDescriptorList
-                  body inSequence end coord
-                  { $$ = newCTerm("fFunctor",$3,$4,$6,makeLongPos($2,$8)); }
+                  body sequence end coord
+                  { $$ = newCTerm("fFunctor",$3,$4,$6,newCTerm("fSkip",$8),
+                                  makeLongPos($2,$8)); }
+                | functor coord phraseOpt functorDescriptorList
+                  body sequence _in_ sequence end coord
+                  { $$ = newCTerm("fFunctor",$3,$4,$6,$8,
+                                  makeLongPos($2,$10)); }
                 | class
                   { $$ = $1; }
                 | local coord sequence _in_ sequence end
