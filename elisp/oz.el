@@ -1,3 +1,8 @@
+;; PLEASE USE CVS TO CHANGE THIS FILE:
+;;  cvs get Oz/elisp
+;;  ... edit ...
+;;  make oz
+;;  cvs commit
 ;; --------------------------------------------------------------------------
 ;; OZ-Mode
 ;; credits to mm and rs
@@ -57,7 +62,10 @@
 (defvar oz-machine "oz.machine.csh"
   "Oz machine used by run-oz")
 
-(defvar oz-doc-dir "/usr/share/gs/soft/oz/doc/"
+(defvar oz-dir (concat (or (getenv "OZDIR") "/usr/share/gs/soft/oz") "/")
+  "The directory where oz is installed")
+
+(defvar oz-doc-dir (concat oz-dir "doc/")
   "The default doc directory")
 
 (defvar oz-doc-file "quick.dvi"
@@ -402,14 +410,15 @@ if that value is non-nil."
       (oz-make-keywords-for-match 
 	         '("local" "class" "meth" "create" "or" "if" "pred" "proc"
 		   "global" "handle" "exists" "case" "begin" "process" "not"
-		   "trigger")))
+		   "trigger" "seq")))
 
 (defconst oz-end-pattern
       (oz-make-keywords-for-match '("end" "fi" "ro"))
       )
 
 (defconst oz-middle-pattern 
-      (concat (oz-make-keywords-for-match '("in" "then" "else" "by" "of"))
+      (concat (oz-make-keywords-for-match
+	       '("in" "then" "else" "by" "of" "wait"))
 	      "\\|" "\\[\\]"))
 
 (defconst oz-key-pattern
@@ -736,14 +745,22 @@ if that value is non-nil."
 
 (defun oz-highlight-comments()
   (let ((pmax (point-max)))
-    (while (re-search-forward "%.*$\\|/\\*[\001-\175\n]*\\*/" pmax t)
+    (while (re-search-forward "%\\|/\\*" pmax t)
+      (let ((beg (match-beginning 0))
+	    (end))
+	(if (= (preceding-char) 37)   ; == "%" ?
+	    (re-search-forward "$")
+	  (re-search-forward "\\*/")
+	  )
+	(setq end (or (match-end 0) pmax))
       ;; delete extents within comment
-      (map-extents '(lambda(ext unused)
-		      (delete-extent ext))
-		   nil
-		   (match-beginning 0)
-		   (match-end 0))
-      (change-match-face 'italic))))
+	(map-extents '(lambda(ext unused)
+			(delete-extent ext))
+		     nil
+		     beg
+		     end)
+	(set-extent-face (make-extent beg end)
+			 'italic)))))
 
 
 (defun oz-highlight-buffer()
