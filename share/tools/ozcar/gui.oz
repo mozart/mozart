@@ -116,7 +116,8 @@ in
       attr
 	 LastSelectedFrame : 0
 	 EnvSync           : _
-
+	 ScrollSync        : _
+      
       meth init
 	 %% create the main window, but delay showing it
 	 self.toplevel = {New Tk.toplevel tkInit(title:    TitleName
@@ -277,6 +278,7 @@ in
 	 thread
 	    {WaitOr New {Alarm TimeoutToUpdateEnv}}
 	    case {IsDet New} then skip else
+	       {OzcarMessage 'printing environment of frame #' # I}
 	       Gui,PrintEnv(frame:I vars:V)
 	    end
 	 end
@@ -319,14 +321,14 @@ in
 			       SavedVars
 			    else
 			       {OzcarMessage
-				'requesting variables from Emulator'}
+				'requesting variables for frame id ' # F.id}
 			       {Dbg.frameVars CurThr FrameId}
 			    end
 	 in
 	    {OzcarMessage 'Selecting frame #' # FrameNr}
 	    case Highlight then
-	       SourceManager,scrollbar(file:F.file line:{Abs F.line}
-				       color:ScrollbarStackColor what:stack)
+	       Gui,DelayedScrollbar(file:F.file line:{Abs F.line}
+				    color:ScrollbarStackColor what:stack)
 	       Gui,SelectStackFrame(FrameNr)
 	    else
 	       Gui,SelectStackFrame(0)
@@ -335,6 +337,17 @@ in
 	 end
       end
 
+      meth DelayedScrollbar(file:F line:L color:C what:What)
+	 New in
+	 ScrollSync <- New = unit
+	 thread
+	    {WaitOr New {Alarm TimeoutToUpdateScroll}}
+	    case {IsDet New} then skip else
+	       SourceManager,scrollbar(file:F line:L color:C what:What)
+	    end
+	 end
+      end
+      
       meth neighbourStackFrame(Delta)
 	 Stack = @currentStack
       in
@@ -538,7 +551,7 @@ in
 			  end append)
 	 else
 	    case T == undef then
-	       Gui,rawStatus('You must select a thread first!')
+	       Gui,rawStatus(FirstSelectThread)
 	    else
 	       I = {Thread.id T}
 	       
