@@ -113,6 +113,7 @@ UnboundType            = '_'
 
 ToplevelGeometry       = '510x360'
 ToplevelMinSize        = 459 # 324   %%  10% less than the default
+ToplevelMaxSize        = 765 # 540   %%  50% more...
 
 ThreadTreeWidth        = 120
 ThreadTreeStretchX     = 11

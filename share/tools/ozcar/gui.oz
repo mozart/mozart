@@ -144,6 +144,7 @@ in
 
       meth init
 	 MinX # MinY = ToplevelMinSize
+	 MaxX # MaxY = ToplevelMaxSize
       in
 	 %% create the main window, but delay showing it
 	 self.toplevel = {New Tk.toplevel tkInit(title:    TitleName
@@ -153,6 +154,7 @@ in
 	 {Tk.batch [wm(iconname   self.toplevel IconName)
 		    wm(iconbitmap self.toplevel IconBitMap)
 		    wm(minsize    self.toplevel MinX MinY)
+		    wm(maxsize    self.toplevel MaxX MaxY)
 		    wm(geometry   self.toplevel ToplevelGeometry)]}
 
 	 Menu,init
