@@ -29,7 +29,6 @@ if test -z "${OZPLATFORM}"
 then
   OZPLATFORM=`$OZHOME/bin/ozplatform`
 fi
-export OZPLATFORM
 
 if test -z "${OZEMULATOR}"
 then
@@ -48,7 +47,7 @@ then
   OZPATH=${OZPATH}:${OZHOME}/share
   export OZPATH
   # increment path
-  PATH=${OZHOME}/bin:${OZHOME}/platform/${OZPLATFORM}:${PATH}
+  PATH=${OZHOME}/bin:${PATH}
   export PATH
   OZ_PI=1
   export OZ_PI
