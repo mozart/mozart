@@ -60,8 +60,7 @@
 	<Item>
 	  creates a <Code proglang=c/GtkArg/ structure with the name&nbsp;?_{V}
 	  and the value&nbsp;?_{X}.  ?_{X} can be of type int, float, bool,
-	  string and foreign pointer.
-	  <!--** virtual strings? -->
+	  virtual string and foreign pointer.
 	<Entry><<getArg>>
 	<Synopsis>
 	  <<{GTK.getArg ?+{ForeignPointer} ??{X}}>>
