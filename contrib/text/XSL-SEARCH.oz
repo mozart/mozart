@@ -36,7 +36,7 @@ define
    %% ones is used as the success continuation of the previous one.
    %%
    fun {Seq L}
-      case L of nil then ALWAYS
+      case L of nil then Always
       elseof [S] then S
       elseof S1|T then S2={Seq T} in
 	 fun {$ Node Stack Info Yes No}
