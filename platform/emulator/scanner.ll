@@ -1127,13 +1127,13 @@ static void xy_init(OZ_Term defines) {
   strcpy(version,"Oz_");
   strcat(version+3,OZVERSION);
   int count = 0;
-  for (char *s = version; *s; s++)
+  for (char *s = version+3; *s; s++)
     if (*s == '.') {
       count++;
       *s = '_';
     }
   hashTable->insert(version);
-  while (count > 1) {
+  while (count >= 1) {
     *strrchr(version,'_') = '\0';
     hashTable->insert(version);
     count--;
