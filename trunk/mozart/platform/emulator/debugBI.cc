@@ -199,11 +199,11 @@ OZ_BI_define(BIthreadGetRaiseOnBlock,1,1)
 
 OZ_BI_define(BIthreadTaskStack,3,1)
 {
-  oz_declareThread(0,thread);
+  oz_declareThreadIN(0,thread);
   oz_declareIntIN(1,depth);
   oz_declareNonvarIN(2,verbose);
 
-  if (!thread->hasStack())
+  if (thread->isDeadThread() || !thread->hasStack())
     OZ_RETURN(oz_nil());
 
   Bool doverbose;
