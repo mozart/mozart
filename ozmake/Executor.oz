@@ -404,7 +404,9 @@ define
 
       meth exec_check_for_gnu($)
 	 {self trace('checking for GNU compiler')}
-	 {Utils.haveGNUC {self get_oz_oztool($)}}
+	 {Utils.haveGNUC
+	  fun {$} {self get_tmpnam($)} end
+	  {self get_oz_oztool($)}}
       end
 
       meth exec_write_to_file(Data File)
