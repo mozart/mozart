@@ -74,14 +74,6 @@ int     cs_copy_size  = 0;
 #endif
 
 /*
- * Memory allocation
- */
-
-#define gcMalloc(sz) \
-   freeListMalloc(sz)
-
-
-/*
  * Forward reference
  */
 
@@ -294,7 +286,7 @@ void * gcReallocStatic(void * p, size_t sz) {
 	     error("gcReallocStatic: can only handle word sized blocks"););
 
   register int32 * frm = (int32 *) p;
-  register int32 * to  = (int32 *) gcMalloc(sz);
+  register int32 * to  = (int32 *) freeListMalloc(sz);
 
   register int32 f0, f1, f2;
 
@@ -670,36 +662,6 @@ static Board * fromCopyBoard;
  */
 static Bool isGround;
 
-/*
- * Copying: before copying all spaces but the space to be copied get marked.
- */
-void Board::setGlobalMarks(void) {
-  Assert(!isInGc);
-  Assert(!_isRoot());
-
-  Board * b = this;
-
-  do {
-    b = b->getParent(); b->setGlobalMark();
-  } while (!b->_isRoot());
-  
-}
-
-/*
- * Copying: purge marks after copying
- */
-void Board::unsetGlobalMarks(void) {
-  Assert(!isInGc);
-  Assert(!_isRoot());
-
-  Board * b = this;
-
-  do {
-    b = b->getParent(); b->unsetGlobalMark();
-  } while (!b->_isRoot());
-
-}
-
 
 /*
  * Copying: Check if suspension entry is local to copyBoard.
@@ -1015,7 +977,7 @@ TaggedRef * SVariable::gcGetFwd(void) {
 SVariable * SVariable::gc() {
   Assert(!gcIsMarked()) 
   
-  SVariable * to = (SVariable *) gcMalloc(sizeof(SVariable));
+  SVariable * to = (SVariable *) freeListMalloc(sizeof(SVariable));
   
   to->suspList = suspList->gc();
   to->home     = home->gcBoard();
@@ -1072,7 +1034,7 @@ GenCVariable * GenCVariable::gc(void) {
   
   switch (getType()){
   case FDVariable:
-    to = (GenCVariable *) gcMalloc(sizeof(GenFDVariable));
+    to = (GenCVariable *) freeListMalloc(sizeof(GenFDVariable));
     ((GenFDVariable *) to)->gc((GenFDVariable *) this);
     to->u        = u;
     to->suspList = sl;
@@ -1080,7 +1042,7 @@ GenCVariable * GenCVariable::gc(void) {
     return to;
 
   case BoolVariable:
-    to = (GenCVariable *) gcMalloc(sizeof(GenBoolVariable));
+    to = (GenCVariable *) freeListMalloc(sizeof(GenBoolVariable));
     ((GenBoolVariable *) to)->gc((GenBoolVariable *) this);
     to->u        = u;
     to->suspList = sl;
@@ -1088,7 +1050,7 @@ GenCVariable * GenCVariable::gc(void) {
     return to;
 
   case FSetVariable:
-    to = (GenCVariable *) gcMalloc(sizeof(GenFSetVariable));
+    to = (GenCVariable *) freeListMalloc(sizeof(GenFSetVariable));
     ((GenFSetVariable *) to)->gc((GenFSetVariable *) this);
     to->u        = u;
     to->suspList = sl;
@@ -1147,7 +1109,7 @@ DynamicTable * DynamicTable::gc(void) {
   Assert(isPwrTwo(size));
 
   // Copy the table:
-  DynamicTable * to = (DynamicTable *) gcMalloc((size-1)*sizeof(HashElement)
+  DynamicTable * to = (DynamicTable *) heapMalloc((size-1)*sizeof(HashElement)
 						  + sizeof(DynamicTable));
   to->numelem = numelem;
   to->size    = size;
@@ -1234,7 +1196,7 @@ void Script::gc() {
   if (first){
     int sz = numbOfCons*sizeof(Equation);
     
-    Equation *aux = (Equation*) gcMalloc(sz);
+    Equation *aux = (Equation*) heapMalloc(sz);
 
     for (int i = numbOfCons; i--; ){
 #ifdef DEBUG_CHECK
@@ -1302,7 +1264,7 @@ LTuple * LTuple::gc() {
   if (GCISMARKED(args[0]))
     return (LTuple *) GCUNMARK(args[0]);
   
-  LTuple * to = (LTuple *) gcMalloc(sizeof(LTuple));
+  LTuple * to = (LTuple *) heapMalloc(sizeof(LTuple));
 
   // Save the content
   to->args[0] = args[0];
@@ -1324,7 +1286,7 @@ SRecord *SRecord::gcSRecord() {
   
   int len = (getWidth()-1)*sizeof(TaggedRef)+sizeof(SRecord);
 
-  SRecord *ret = (SRecord*) gcMalloc(len);
+  SRecord *ret = (SRecord*) heapMalloc(len);
   
   ret->label       = label;
   ret->recordArity = recordArity;
@@ -1804,6 +1766,7 @@ void AM::gc(int msgLevel)
   cacheList->cacheListGC();  /* invalidate inline caches */
 
   initCheckSpace();
+
   initMemoryManagement();
 
   for (int j=NumberOfXRegisters; j--; )
@@ -2089,7 +2052,7 @@ void ThreadsPool::doGC () {
 void ThreadQueue::gc() {
   int newsize = suggestNewSize();
   Thread ** newqueue = 
-    (Thread **) gcMalloc ((size_t) (sizeof(Thread *) * newsize));
+    (Thread **) heapMalloc ((size_t) (sizeof(Thread *) * newsize));
   
   int asize   = size;
   int ahead   = head;
@@ -2296,7 +2259,7 @@ void ConstTerm::gcConstRecurse()
       if (aw > 0) {
 
 	TaggedRef *newargs = 
-	  (TaggedRef*) gcMalloc(sizeof(TaggedRef) * aw);
+	  (TaggedRef*) heapMalloc(sizeof(TaggedRef) * aw);
 
 	OZ_collectHeapBlock(a->getArgs(), newargs, aw);
 	
@@ -2780,7 +2743,7 @@ void AWActor::gcRecurse() {
 inline
 void WaitActor::gcRecurse() {
   int32 num = ToInt32(children[-1]);
-  Board **newChildren=(Board **) gcMalloc((num+1)*sizeof(Board *));
+  Board **newChildren=(Board **) heapMalloc((num+1)*sizeof(Board *));
       
   *newChildren++ = (Board *) num;
   for (int i=num; i--; ) {
@@ -2904,7 +2867,7 @@ void LTuple::gcRecurse() {
       return;
     }
 
-    LTuple * next = (LTuple *) gcMalloc(sizeof(LTuple));
+    LTuple * next = (LTuple *) freeListMalloc(sizeof(LTuple));
 
     to->args[1] = makeTaggedLTuple(next);
     to = next;
@@ -3039,7 +3002,7 @@ void * OZ_hrealloc(void * p, size_t sz) {
 	     error("OZ_hrealloc: can only handle word sized blocks"););
 
   int32 * frm = (int32 *) p;
-  int32 * to  = (int32 *) gcMalloc(sz);
+  int32 * to  = (int32 *) heapMalloc(sz);
   int32 * ret = to;
 
   register int32 f0, f1, f2, f3;

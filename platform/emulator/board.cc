@@ -157,6 +157,36 @@ Board::Board(Actor *a,int typ)
 }
 
 
+/*
+ * Before copying all spaces but the space to be copied get marked.
+ */
+void Board::setGlobalMarks(void) {
+  Assert(!_isRoot());
+
+  Board * b = this;
+
+  do {
+    b = b->getParent(); b->setGlobalMark();
+  } while (!b->_isRoot());
+  
+}
+
+/*
+ * Purge marks after copying
+ */
+void Board::unsetGlobalMarks(void) {
+  Assert(!_isRoot());
+
+  Board * b = this;
+
+  do {
+    b = b->getParent(); b->unsetGlobalMark();
+  } while (!b->_isRoot());
+
+}
+
+
+
 #ifdef DEBUG_CHECK
 /*
  * Check if a board is alive.

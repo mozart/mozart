@@ -128,6 +128,7 @@ public:
   ~LocalThreadQueue();
 
   LocalThreadQueue * gc(void);
+  void dealloc(void);
 
   void dispose () {
     ThreadQueueImpl::disposePool();
