@@ -95,6 +95,7 @@
 #include "var_ct.hh"
 #include "var_of.hh"
 #include "var_ext.hh"
+#include "susp_queue.hh"
 
 class Indent {
 public:
@@ -130,7 +131,7 @@ inline Bool isEffectiveSusp(SuspList* sl)
 // returns OK if sl contains at least one alive suspension element
 inline Bool isEffectiveList(SuspList* sl) {
   for (; sl != NULL; sl = sl->getNext())
-    if (isEffectiveSusp(sl) == OK)
+    if (isEffectiveSusp(sl))
       return OK;
   return NO;
 }
@@ -937,53 +938,25 @@ void Equation::printStream(ostream &stream, int depth)
   ozd_printStream(getRight(),stream,depth);
 }
 
-void ThreadsPool::printThreads()
-{
+void ThreadsPool::printThreads() {
   cout << "Threads" << endl;
 
-  if (!hiQueue.isEmpty()) {
+  if (!_q[ HI_PRIORITY]->isEmpty()) {
     cout << "   prio = HI";
-    hiQueue.printThreads();
+    _q[ HI_PRIORITY]->print();
   }
-  if (!midQueue.isEmpty()) {
+
+  if (!_q[MID_PRIORITY]->isEmpty()) {
     cout << "   prio = MID";
-    midQueue.printThreads();
+    _q[MID_PRIORITY]->print();
   }
-  if (!lowQueue.isEmpty()) {
+
+  if (!_q[LOW_PRIORITY]->isEmpty()) {
     cout << "   prio = LOW";
-    lowQueue.printThreads();
+    _q[LOW_PRIORITY]->print();
   }
-}
 
-#ifdef LINKED_QUEUES
-void ThreadQueue::printThreads()
-{
-  cout << " #" << size << " threads" << endl;
-  ThreadQueueIterator iter(this);
-  Thread*ptr;
-  while ((ptr=iter.getNext())) {
-    ptr->printStream(cout,-1);
-    if (ptr==oz_currentThread())
-      cout << " RUNNING";
-    cout << endl;
-  }
 }
-#else
-void ThreadQueue::printThreads()
-{
-  int i = getSize();
-  cout << " #" << i << " threads" << endl;
-
-  for (; i; i--) {
-    Thread *th = dequeue();
-    th->printStream(cout,-1);
-    if (th == oz_currentThread())
-      cout << " RUNNING ";
-    cout << endl;
-    enqueue(th);
-  }
-}
-#endif /* !LINKED_QUEUES */
 
 void ozd_printBoards()
 {
@@ -1273,7 +1246,7 @@ void ThreadQueue::printStream(ostream &stream, int depth)
   }
 }
 #else
-void ThreadQueueImpl::printStream(ostream &stream, int depth)
+void SuspQueue::printStream(ostream &stream, int depth)
 {
   if (isEmpty()) {
     stream << "Thread queue empty.\n";

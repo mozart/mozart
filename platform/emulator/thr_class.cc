@@ -33,10 +33,6 @@
 
 #include "thr_class.hh"
 
-int Thread::getRunnableNumber() {
-  return (taskStack->isEmpty()) ? 0 : 1;
-}
-
 void Thread::printTaskStack(int depth) {
   if (!isDead()) {
     taskStack->printTaskStack(depth);

@@ -269,7 +269,6 @@ class OZ_Propagator;
 
 class Thread;
 class ThreadsPool;
-class ThreadQueue;
 class Group;
 class Toplevel;
 class Board;
@@ -282,7 +281,7 @@ class Trail;
 class TaskStack;
 class CallList;
 
-class LocalPropagatorQueue;
+class SuspQueue;
 
 class ProxyList;
 class MsgBuffer;
@@ -301,7 +300,6 @@ class PrTabEntry;
 //
 class BuiltinTab;
 
-class FastQueue;
 class DLLStack;
 
 class OzSleep;

@@ -540,7 +540,7 @@ ProgramCounter unmarshalCode(MsgBuffer *bs, Bool discard)
     //if (!discard) { displayCode(lastPC,1); }
   }
 
-  Assert(discard==OK || CodeArea::getOpcode(start)==DEFINITION ||
+  Assert(discard || CodeArea::getOpcode(start)==DEFINITION ||
          CodeArea::getOpcode(start)==DEFINITIONCOPY);
   if (discard)
     return 0;

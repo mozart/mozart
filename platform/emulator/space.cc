@@ -59,13 +59,8 @@ Bool oz_installScript(Script &script)
   }
   am.unsetInstallingScript();
 
-  // mm2: why this?
-#ifndef DEBUG_CHECK
   script.dealloc();
-#else
-  if (ret == OK)
-    script.dealloc();
-#endif
+
   return ret;
 }
 

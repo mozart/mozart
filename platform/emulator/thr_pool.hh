@@ -32,39 +32,25 @@
 #endif
 
 #include "base.hh"
-#include "thr_queue.hh"
+#include "susp_queue.hh"
 #include "thr_class.hh"
 
 class ThreadsPool {
 private:
-  ThreadQueue hiQueue;
-  ThreadQueue midQueue;
-  ThreadQueue lowQueue;
+  SuspQueue * _q[HI_PRIORITY+1];
 
-  int hi;
-  int mid;
+  int hi, mid;
 
 public:
-  ThreadsPool() {};
+  ThreadsPool(void);
   ~ThreadsPool() {};
 
-  void initThreads();
 
-  //
-  void doGC ();
+  void gc();
 
   void scheduleThread(Thread *th) {
     Assert(!isScheduledSlow(th));
-
-    switch (th->getPriority()) {
-    case MID_PRIORITY:
-      midQueue.enqueue(th); break;
-    case HI_PRIORITY:
-      hiQueue.enqueue(th);  break;
-    default:
-      lowQueue.enqueue(th);
-    }
-
+    _q[th->getPriority()]->enqueue(th);
   }
 
   void rescheduleThread(Thread *th);
@@ -75,39 +61,33 @@ public:
   int getRunnableNumber();
 
   Bool isEmpty() {
-    return (midQueue.isEmpty() &&
-            hiQueue.isEmpty() &&
-            lowQueue.isEmpty());
+    return (_q[MID_PRIORITY]->isEmpty() &&
+            _q[ HI_PRIORITY]->isEmpty() &&
+            _q[LOW_PRIORITY]->isEmpty());
   }
 
   Thread * getNext() {
 
-    Bool hiIsMt, midIsMt;
-
     do {
-
-      hiIsMt = hiQueue.isEmpty();
-
-      if (!hiIsMt && hi > 0) {
+      if (!_q[HI_PRIORITY]->isEmpty() && hi > 0) {
         hi--;
-        return hiQueue.dequeue();
+        return SuspToThread(_q[HI_PRIORITY]->dequeue());
       }
 
       hi = ozconf.hiMidRatio;
 
-      midIsMt = midQueue.isEmpty();
-
-      if (!midIsMt && mid > 0) {
+      if (!_q[MID_PRIORITY]->isEmpty() && mid > 0) {
         mid--;
-        return midQueue.dequeue();
+        return SuspToThread(_q[MID_PRIORITY]->dequeue());
       }
 
       mid = ozconf.midLowRatio;
 
-      if (!lowQueue.isEmpty())
-        return lowQueue.dequeue();
+      if (!_q[LOW_PRIORITY]->isEmpty())
+        return SuspToThread(_q[LOW_PRIORITY]->dequeue());
 
-    } while (!hiIsMt || !midIsMt);
+    } while (!_q[MID_PRIORITY]->isEmpty() ||
+             !_q[ HI_PRIORITY]->isEmpty());
 
     return (Thread *) NULL;
   }

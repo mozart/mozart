@@ -286,8 +286,6 @@ void AM::init(int argc,char **argv)
 
   propLocation    = NO;
 
-  threadsPool.initThreads();
-
   // builtins
   initLiterals();
 

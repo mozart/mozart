@@ -767,7 +767,6 @@ int engine(Bool init)
   register Abstraction * CAP   Reg6 = NULL;
 
   Bool isTailCall              = NO;                NoReg(isTailCall);
-  DebugCheckT(Board *currentDebugBoard=CBB);
 
   // handling perdio unification
   ProgramCounter lastGetRecord;                     NoReg(lastGetRecord);
@@ -808,7 +807,6 @@ int engine(Bool init)
 
  LBLemulate:
   asmLbl(EMULATE);
-  Assert(CBB==currentDebugBoard);
 
   JUMPABSOLUTE( PC );
 
@@ -2481,7 +2479,6 @@ Case(GETVOID)
         emulateHookPopTask(e);
 
         Assert(!CTT->isSuspended());
-        Assert(CBB==currentDebugBoard);
 
       LBLpopTaskNoPreempt:
         Assert(CTS==CTT->getTaskStackRef());

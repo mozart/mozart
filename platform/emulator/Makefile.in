@@ -116,7 +116,7 @@ RUNSRCS=\
         copycode.cc opcodes.cc controlvar.cc \
         prop_int.cc prop_class.cc \
         thr_stack.cc thr_class.cc thr_pool.cc \
-        thr_queue.cc thr_int.cc suspendable.cc
+        susp_queue.cc thr_int.cc suspendable.cc
 
 SPACESRCS=\
         board.cc distributor.cc space.cc
