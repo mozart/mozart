@@ -1479,6 +1479,7 @@ LBLkillToplevelThread:
   {
     Assert (e->currentThread);
     Assert (e->isToplevel ());
+    asmLbl(killToplevelThread);
 
     CBB->decSuspCount ();
 
@@ -1557,6 +1558,7 @@ LBLkillThread:
     // of a 'currentSolveBoard' instead of 'isInSolve'!
     Assert (tmpThread->isInSolve () || !e->currentSolveBoard); 
     Assert (e->currentSolveBoard || !(tmpThread->isInSolve ()));
+    asmLbl(killThread);
 
     e->currentThread = (Thread *) NULL;
     tmpThread->disposeRunnableThread ();
@@ -1725,6 +1727,7 @@ LBLdiscardThread:
     // BY INSTALLING THE BOARD IN THE EMULATOR!
     //
     Assert (!((tmpThread->getBoardFast ())->checkAlive ()));
+    asmLbl(discardThread);
 
     //
     //  Note that we may not use the 'currentSolveBoard' test here,
@@ -1780,6 +1783,7 @@ LBLsuspendThread:
     //  see the note for the 'LBLkillThread';
     Assert (tmpThread->isInSolve () || !e->currentSolveBoard); 
     Assert (e->currentSolveBoard || !(tmpThread->isInSolve ()));
+    asmLbl(suspendThread);
 
     //
     //  First, set the board, and perform special action for 
