@@ -151,7 +151,7 @@ define(M4INSTRTWOREGS,``''
 		   HANDLE_FAILURE(PC+3,
 				  message("unify: %s = %s",
 					  OZ_toC(Reg1(getRegArg(PC+1))),
-					  OZ_toC(Reg2(getRegArg(PC+2))))
+					  OZ_toC(Reg2(getRegArg(PC+2)))),
 					  );
 		 }
 	       }''
@@ -287,13 +287,13 @@ define(M4INSTRTWOREGS,``''
 		   mode = READ;
 		   DISPATCH(4);
 		 }
-		 HANDLE_FAILURE(PC+4,
+		 HANDLE_FAILUREX(PC+4,
 				STuple *stuple = newSTupleOutline(label,arity);
 				mode = WRITE;
-				sPointer = stuple->getRef();
+				sPointer = stuple->getRef(),
 				message("getstructure %s/%d = %s",
 					OZ_toC(label),arity,
-					OZ_toC(term))
+					OZ_toC(term)),
 				);
 	       }''
 	       );
@@ -334,13 +334,13 @@ define(M4INSTRTWOREGS,``''
 		   DISPATCH(4);
 		 }
 
-		 HANDLE_FAILURE(PC+4,
+		 HANDLE_FAILUREX(PC+4,
 				SRecord *srecord = newSRecordOutline(ff,label);
 				mode = WRITE;
-				sPointer = srecord->getRef();
+				sPointer = srecord->getRef(),
 				message("getrecord %s/%d = %s",
 					OZ_toC(label),ff,
-					OZ_toC(term))
+					OZ_toC(term)),
 				);
 	       }''
 	       );
@@ -417,7 +417,8 @@ define(M4INSTRTWOREGS,``''
 		 HANDLE_FAILURE(PC+3,
 				message("getconstant %s = %s",
 					OZ_toC(atm),
-					OZ_toC(term)));
+					OZ_toC(term)),
+				);
 	       }''
 	       );
 
@@ -449,7 +450,7 @@ define(M4INSTRTWOREGS,``''
 		 HANDLE_FAILURE(PC+3,
 				message("getint %s = %s",
 					OZ_toC(i),
-					OZ_toC(term))
+					OZ_toC(term)),
 				);
 	       }''
 	       );
@@ -490,12 +491,15 @@ define(M4INSTRTWOREGS,``''
 		   }
 		 }
 
-		 HANDLE_FAILURE(PC+4,
-				LTuple *ltuple = new LTuple(Reg1(reg2),
-							    e->currentUVarPrototype);
-				Xreg(reg1) = makeTaggedLTuple(ltuple);
-				Xreg(reg3) = makeTaggedRef(ltuple->getRef()+1);
-				message("getLisValVar %s", OZ_toC(term)););
+		 HANDLE_FAILUREX(PC+4,
+				 LTuple *ltuple
+				 = new LTuple(Reg1(reg2),
+					      e->currentUVarPrototype);
+				 Xreg(reg1) = makeTaggedLTuple(ltuple);
+				 Xreg(reg3) = makeTaggedRef(ltuple
+							    ->getRef()+1),
+				 message("getLisValVar %s", OZ_toC(term)),
+				 );
 	       }''
 	       );
   
@@ -534,13 +538,13 @@ define(M4INSTRTWOREGS,``''
 		 }
 		 
 
-		 HANDLE_FAILURE(PC+2,
-				LTuple *ltuple = new LTuple();
-				mode = WRITE;
-				sPointer = ltuple->getRef();
-				message("getlist = %s",
-					OZ_toC(term)
-					));
+		 HANDLE_FAILUREX(PC+2,
+				 LTuple *ltuple = new LTuple();
+				 mode = WRITE;
+				 sPointer = ltuple->getRef(),
+				 message("getlist = %s",
+					 OZ_toC(term)),
+				 );
 	       }''
 	       );
 
@@ -608,7 +612,7 @@ define(M4INSTRTWOREGS,``''
 		     HANDLE_FAILURE(PC+2,
 				    message("unifyvalue %s = %s",
 					    OZ_toC(*(sPointer-1)),
-					    OZ_toC(Reg1(reg)))
+					    OZ_toC(Reg1(reg))),
 					    );
 		   }
 		   DISPATCH(2);
@@ -635,8 +639,8 @@ define(M4INSTRTWOREGS,``''
 		     HANDLE_FAILURE(PC+3,
 				    message("unifyvalvar %s = %s",
 					    OZ_toC(*sPointer),
-					    OZ_toC(Reg1(reg)))
-					    );
+					    OZ_toC(Reg1(reg))),
+				    );
 		   }
 
 		   Reg2(getRegArg(PC+2)) = tagged2NonVariable(sPointer+1);
@@ -661,8 +665,8 @@ define(M4INSTRTWOREGS,``''
 	  HANDLE_FAILURE(PC+2,
 			 message("unifyconst %s = %s",
 				 OZ_toC(getAtomArg(PC+1)),
-				 OZ_toC(*(sPointer-1)))
-				 );
+				 OZ_toC(*(sPointer-1))),
+			 );
 	}
 	DISPATCH(2);
       }
@@ -681,8 +685,8 @@ define(M4INSTRTWOREGS,``''
 	  HANDLE_FAILURE(PC+2,
 			 message("unifyint %s = %s",
 				 OZ_toC(getNumberArg(PC+1)),
-				 OZ_toC(*(sPointer-1)))
-				 );
+				 OZ_toC(*(sPointer-1))),
+			 );
 	}
 	DISPATCH(2);
       }
