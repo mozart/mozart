@@ -27,6 +27,23 @@ import
    File(read: ReadFile write: WriteFile)
 export
    'class': LaTeXToGIFClass
+prepare
+
+   local
+      fun {Trim Is}
+	 case Is of nil then nil
+	 [] I|Ir then
+	    if {Char.isSpace I} then {Trim Ir} else Is end
+	 end
+      end
+   in
+      fun {TrimVS V}
+	 S = {VirtualString.toString V}
+      in
+	 {Reverse {Trim {Reverse {Trim S}}}}
+      end
+   end
+	 
 define
    LATEX2GIF = 'latex2gif'
 
@@ -50,8 +67,12 @@ define
 	 LaTeXToGIFClass, Enter(VS ?OutFileName)
       end
       meth convertMath(VS Display ?OutFileName)
-	 LaTeXToGIFClass, Enter(case Display of inline then '$'#VS#'$\n'
-				[] display then '$$\n'#VS#'\n$$\n'
+	 TVS = {TrimVS VS}
+      in
+	 LaTeXToGIFClass, Enter(case Display of inline then
+				   '$'#TVS#'$\n'
+				[] display then
+				   '$$\n'#TVS#'\n$$\n'
 				end ?OutFileName)
       end
       meth Enter(VS OutFileName) A in
