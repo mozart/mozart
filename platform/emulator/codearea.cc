@@ -956,7 +956,15 @@ ProgramCounter
 CodeArea::CodeArea(int sz)
 {
   allocateBlock(sz);
-  C_XCONT_Ptr = wPtr;
+}
+
+void CodeArea::init(void **instrTable)
+{
+#ifdef THREADED
+  globalInstrTable = instrTable;
+#endif
+  CodeArea *code = new CodeArea(20);
+  C_XCONT_Ptr = code->getStart();
   C_CFUNC_CONT_Ptr   = writeOpcode(TASKXCONT,C_XCONT_Ptr);
   C_DEBUG_CONT_Ptr   = writeOpcode(TASKCFUNCONT,C_CFUNC_CONT_Ptr);
   C_CALL_CONT_Ptr    = writeOpcode(TASKDEBUGCONT,C_DEBUG_CONT_Ptr);
@@ -969,12 +977,5 @@ CodeArea::CodeArea(int sz)
   ProgramCounter aux =  writeOpcode(TASKEMPTYSTACK,C_EMPTY_STACK);
   /* mark end with GLOBALVARNAME, so definitionEnd works properly */
   (void) writeOpcode(GLOBALVARNAME,aux);
-}
 
-void CodeArea::init(void **instrTable)
-{
-#ifdef THREADED
-  globalInstrTable = instrTable;
-#endif
-  new CodeArea(20);
 }

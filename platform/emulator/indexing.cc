@@ -30,6 +30,7 @@ EntryTable newEntryTable(int sz)
 
 void IHashTable::add(Literal *constant, ProgramCounter label)
 {
+  numentries++;
   int hsh = constant->hash() % size;
 
   if (literalTable == NULL)
@@ -41,6 +42,7 @@ void IHashTable::add(Literal *constant, ProgramCounter label)
 
 void IHashTable::add(Literal *name, SRecordArity arity, ProgramCounter label)
 {
+  numentries++;
   int hsh = name->hash() % size;
 
   if (functorTable == NULL)
@@ -53,8 +55,9 @@ void IHashTable::add(Literal *name, SRecordArity arity, ProgramCounter label)
 
 void IHashTable::add(TaggedRef number, ProgramCounter label)
 {
-  int hsh;
+  numentries++;
 
+  int hsh;
   switch (tagTypeOf(number)) {
 
   case OZFLOAT:  hsh = tagged2Float(number)->hash() % size;  break;

@@ -208,7 +208,7 @@ OZ_C_proc_begin(BIwriteLabel,4)
   OZ_declareIntArg("writeReg",1,start);
   OZ_declareIntArg("writeReg",2,lab);
 
-  RET(CodeArea::writeLabel(lab,(ProgramCounter)start,pc),3);
+  RET(CodeArea::writeLabel(lab,(ProgramCounter)start,pc,OK),3);
 }
 OZ_C_proc_end
 

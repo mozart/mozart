@@ -228,9 +228,19 @@ void Tertiary::setBoard(Board *b)
   if (getTertType() == Te_Local) {
     setPointer(b);
   } else {
-    Assert(b==am.rootBoard);
+    Assert(b==NULL || b==am.rootBoard);
   }
 }
+
+TaggedRef ProcProxy::getSuspvar()
+{
+  if (suspVar==makeTaggedNULL()) {
+    suspVar = makeTaggedRef(newTaggedUVar(am.currentBoard));
+    getCode(this);
+  }
+  return suspVar;
+}
+
 
 /*===================================================================
  * Object

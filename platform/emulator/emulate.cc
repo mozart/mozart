@@ -312,11 +312,7 @@ void genCallInfo(GenCallInfoClass *gci, TaggedRef pred, ProgramCounter PC)
       return;
     }
   } else {
-#if 0
-    if(!isAbstraction(pred) || tagged2Abstraction(pred)->isDistributed())
-#else
-    if(!isAbstraction(pred))
-#endif
+    if(!isAbstraction(pred) || tagged2Abstraction(pred)->isProxy())
       goto bombGenCall;
 
     abstr = tagged2Abstraction(pred);
@@ -2380,6 +2376,10 @@ LBLdispatcher:
              def = (Abstraction *) predicate;
              CheckArity(def->getArity(), makeTaggedConst(def));
              if (!isTailCall) { CallPushCont(PC); }
+           }
+           if (def->isProxy()) {
+             TaggedRef var = ((ProcProxy*)def)->getSuspvar();
+             SUSP_PC(var,def->getArity()+1,PC);
            }
            CallDoChecks(def,def->getGRegs(),def->getArity());
            JUMP(def->getPC());

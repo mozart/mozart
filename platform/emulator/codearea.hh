@@ -101,15 +101,16 @@ class CodeArea {
   static CodeArea *allBlocks;
 
   void allocateBlock(int sz);
-  CodeArea(int sz);
   static void init(void **instrtab);
 
 public:
+  ByteCode *getStart() { return codeBlock; }
   static AbstractionTable abstractionTab;
   static int totalSize; /* total size of code allocated in bytes */
 
   /* read from file and return start in "pc" */
   CodeArea(CompStream *fd, int size, ProgramCounter &pc);
+  CodeArea(int sz);
 
   static void printDef(ProgramCounter PC);
   static TaggedRef dbgGetDef(ProgramCounter PC, RefsArray G=NULL,
@@ -224,11 +225,12 @@ public:
     return writeWord(i,ptr);
   }
 
-  static ProgramCounter writeLabel(int label, ProgramCounter start, ProgramCounter ptr)
+  static ProgramCounter writeLabel(int label, ProgramCounter start, ProgramCounter ptr,
+                                   Bool checkLabel)
   {
     //  label==0 means fail in switchOnTerm and createCond
     //  in this case do not add start
-    return writeWord(label == 0 ? NOCODE : start+label,ptr);
+    return writeWord(checkLabel && label==0 ? NOCODE : start+label,ptr);
   }
 
   static ProgramCounter writeBuiltin(BuiltinTabEntry *bi, ProgramCounter ptr)

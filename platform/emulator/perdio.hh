@@ -27,7 +27,9 @@ enum MessageType {
   PORTSEND,           // send to port
   ASK_FOR_CREDIT,
   OWNER_CREDIT,
-  BORROW_CREDIT
+  BORROW_CREDIT,
+  GET_CODE,
+  SEND_CODE
 };
 
 int remoteSend(PortProxy *p, TaggedRef msg);
@@ -36,6 +38,8 @@ void networkSiteDec(int sd);
 #define tert2PortManager(t)   ((PortManager*) t)
 #define tert2PortLocal(t)     ((PortLocal*) t)
 #define tert2PortProxy(t)     ((PortProxy*) t)
+
+void getCode(ProcProxy *);
 
 
 void gcOwnerTable();

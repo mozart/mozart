@@ -21,11 +21,14 @@
 #include "oz.h"
 #include "am.hh"
 #include "ip.hh"
+#include "codearea.hh"
+#include "indexing.hh"
 
 #include "perdio_debug.hh"
 #include "perdio_debug.cc"
 
 #include "genhashtbl.cc"
+
 
 /**********************************************************************/
 /**********************************************************************/
@@ -136,15 +139,15 @@ class PendEntry {
 public:
   void send();
 
-  void initialize(ByteStream *bs1,int sd){
+  void initialize(ByteStream *bs1,int sd,BorrowEntry *b=NULL)
+  {
     bs=bs1;
     refCount=0;
     back=NULL;
-    site=sd;}
-
-  void initialize(ByteStream *bs1,int sd,BorrowEntry *b){
-    initialize(bs1,sd);
-    back=b;}
+    site=sd;
+    if (b)
+      back=b;
+  }
 
   void inc() {refCount++;}
   void dec() {refCount--;}
@@ -162,11 +165,12 @@ class PendEntryManager: public FreeListManager{
 public:
   PendEntryManager():FreeListManager(PENDENTRY_CUTOFF){}
 
-  PendEntry *newPendEntry(){
+  PendEntry *newPendEntry(ByteStream *bs1,int sd,BorrowEntry *b=NULL) {
     FreeListEntry *f=getOne();
     if(f==NULL) {return new PendEntry();}
     PendEntry *pe;
     Cast(f,FreeListEntry*,pe,PendEntry*);
+    pe->initialize(bs1,sd,b);
     return pe;}
 
   void deletePendEntry(PendEntry* p){
@@ -1217,13 +1221,14 @@ void ProcProxy::localize(RefsArray g, ProgramCounter pc)
 
 
 
-typedef enum {SMALLINTTAG, BIGINTTAG, FLOATTAG, ATOMTAG,
+typedef enum {SMALLINTTAG, BIGINTTAG, FLOATTAG, LITERALTAG,
               RECORDTAG, TUPLETAG, LISTTAG, REFTAG,
               OWNERTAG, BORROWTAG,
               PORTTAG, PROCTAG} MarshallTag;
 
 int unmarshallWithDest(BYTE *buf, int len, OZ_Term *t);
 void unmarshallNoDest(BYTE *buf, int len, OZ_Term *t);
+void domarshallTerm(int sd,OZ_Term t, ByteStream *bs);
 
 /**********************************************************************/
 /*                Help-Classes for Marshalling                        */
@@ -1409,6 +1414,7 @@ void marshallString(char *s, ByteStream *bs)
 /**********************************************************************/
 
 void unmarshallTerm(ByteStream*,OZ_Term*);
+OZ_Term unmarshallTerm(ByteStream *bs);
 
 inline
 void marshallCredit(Credit credit,ByteStream *bs){
@@ -1519,7 +1525,6 @@ int unmarshallOwn(ByteStream *bs,OwnerEntry *&oe){
 
 void unmarshallNoDest(BYTE *buf, int len, OZ_Term *t){
   ByteStream *bs = new ByteStream(buf,len);
-  OZ_Term ret;
   refCounter = 0;
   unmarshallTerm(bs,t);
   bs->endCheck();
@@ -1527,13 +1532,14 @@ void unmarshallNoDest(BYTE *buf, int len, OZ_Term *t){
 
 int unmarshallWithDest(BYTE *buf, int len, OZ_Term *t){
   ByteStream *bs = new ByteStream(buf,len);
-  OZ_Term ret;
   refCounter = 0;
   int dest = unmarshallNumber(bs);
   unmarshallTerm(bs,t);
   bs->endCheck();
   delete bs;
   return dest;}
+
+
 
 /**********************************************************************/
 /*                 MARSHALLING terms                                  */
@@ -1588,9 +1594,8 @@ Tertiary *unmarshallTertiary(ByteStream *bs, int bi,  Bool skip)
     return skip ? (Tertiary*) NULL : new PortProxy(bi);
   case PROCTAG:
     {
-      OZ_Term name;
-      unmarshallTerm(bs,&name);
-      int arity = unmarshallNumber(bs);
+      OZ_Term name = unmarshallTerm(bs);
+      int arity    = unmarshallNumber(bs);
       return skip ? (Tertiary*) NULL : new ProcProxy(bi,name,arity);
     }
   default:
@@ -1599,6 +1604,8 @@ Tertiary *unmarshallTertiary(ByteStream *bs, int bi,  Bool skip)
   }
 
 }
+
+#include "marshallcode.cc"
 
 void marshallTerm(int sd,OZ_Term t, ByteStream *bs, DebtRec *dr)
 {
@@ -1628,7 +1635,7 @@ loop:
     return;
 
   case LITERAL:
-    bs->put(ATOMTAG);
+    bs->put(LITERALTAG);
     marshallString(tagged2Literal(t)->getPrintName(),bs);
     PERDIO_DEBUG(MARSHALL,"MARSHALL:atom");
     return;
@@ -1681,16 +1688,23 @@ loop:
           marshallTertiary(sd,ptr,bs,dr);
         }
 
-        bs->put(BORROWTAG);
         if(ptr->isLocal()){
           PERDIO_DEBUG(MARSHALL,"MARSHALL:proxy local");
           ptr->globalize();
         } else {
           PERDIO_DEBUG(MARSHALL,"MARSHALL:proxy manager");
           CheckCycle(*(ptr->getRef()));}
+
+        /* talking to ourself */
+        if (sd==localSite) {
+          int bi=ptr->getIndex();
+          marshallToOwner(bi,bs,dr);
+        } else {
+          bs->put(BORROWTAG);
+          marshallOwnHead(ptr->getIndex(),bs);
+          marshallTertiary(sd,ptr,bs,dr);
+        }
         trailCycle(ptr->getRef());
-        marshallOwnHead(ptr->getIndex(),bs);
-        marshallTertiary(sd,ptr,bs,dr);
         return;
       }
     }
@@ -1728,6 +1742,13 @@ processArgs:
 /*                 UNMARSHALLING terms                                */
 /**********************************************************************/
 
+OZ_Term unmarshallTerm(ByteStream *bs)
+{
+  OZ_Term ret;
+  unmarshallTerm(bs,&ret);
+  return ret;
+}
+
 void unmarshallTerm(ByteStream *bs, OZ_Term *ret)
 {
   int argno;
@@ -1746,7 +1767,7 @@ loop:
     PERDIO_DEBUG(UNMARSHALL,"UNMARSHALL:float");
     return;
 
-  case ATOMTAG:
+  case LITERALTAG:
     {
       char *aux = unmarshallString(bs);
       *ret = OZ_atom(aux);
@@ -1778,8 +1799,7 @@ loop:
   case TUPLETAG:
     {
       argno = unmarshallNumber(bs);
-      TaggedRef label;
-      unmarshallTerm(bs,&label);
+      TaggedRef label = unmarshallTerm(bs);
       SRecord *rec = SRecord::newSRecord(label,argno);
       *ret = makeTaggedSRecord(rec);
       refTable->set(refCounter++,*ret);
@@ -1790,11 +1810,9 @@ loop:
 
   case RECORDTAG:
     {
-      TaggedRef arity;
-      unmarshallTerm(bs,&arity);
+      TaggedRef arity = unmarshallTerm(bs);
       argno = length(arity);
-      TaggedRef label;
-      unmarshallTerm(bs,&label);
+      TaggedRef label = unmarshallTerm(bs);
       SRecord *rec = SRecord::newSRecord(label,mkArity(arity));
       *ret = makeTaggedSRecord(rec);
       refTable->set(refCounter++,*ret);
@@ -1858,7 +1876,8 @@ SITESEND       term
 PORTSEND       oindex  term             implicit 1 credit
 OWNER_CREDIT   oindex  credit
 BORROW_CREDIT  netaddr credit
-ASK_FOR_CREDIT oindex site              implicit 1 credit
+ASK_FOR_CREDIT oindex  site             implicit 1 credit
+GET_CODE       oindex  site
 
     term :=      ....
                  BORROWTAG netaddr credit d-term
@@ -1969,6 +1988,77 @@ void siteReceive(BYTE *msg,int len)
       b->addAskCredit(c);
       break;
     }
+  case GET_CODE:
+    {
+      PERDIO_DEBUG(MSG_RECEIVED,"MSG_RECEIVED:GET_CODE");
+      ByteStream *bs=new ByteStream(msg+1,len-1);
+      int na_index=unmarshallNumber(bs);
+      int rsite=unmarshallSiteId(bs);
+      Assert(rsite>=0);
+      bs->endCheck();
+      delete bs;
+
+      ProtocolObject *po=ownerTable->getOwner(na_index)->getObject();
+      Assert (isAbstraction(po) && po->isManager());
+      ProcProxy *pp = (ProcProxy*) po;
+
+      ByteStream *bs1=new ByteStream();
+      bs1->put(SEND_CODE);
+      NetAddress na = NetAddress(localSite,na_index);
+      marshallNetAddress(&na,bs1);
+
+      refCounter = 0;
+
+      /* send globals */
+      RefsArray globals = pp->getGRegs();
+      int gs = globals ? pp->getGSize() : 0;
+      marshallNumber(gs,bs1);
+      for (int i=0; i<gs; i++) {
+        marshallTerm(rsite,globals[i],bs1,debtRec);
+      }
+
+      marshallCode(rsite,pp->getPC(),bs1,debtRec);
+
+      refTrail->unwind();
+      if(debtRec->isEmpty()) {
+        reliableSend0(rsite,bs1);
+        delete bs1;
+      } else {
+        PERDIO_DEBUG(DEBT_SEC,"DEBT_SEC:remoteSend");
+        PendEntry * pe = pendEntryManager->newPendEntry(bs1,rsite);
+        debtRec->handler(pe);
+      }
+      break;
+    }
+
+  case SEND_CODE:
+    {
+      ByteStream *bs=new ByteStream(msg+1,len-1);
+      int sd=unmarshallSiteId(bs);
+      Assert(sd>=0);
+      int si=unmarshallNumber(bs);
+      NetAddress na=NetAddress(sd,si);
+      PERDIO_DEBUG(MSG_RECEIVED,"MSG_RECEIVED:SEND_CODE");
+      bs->endCheck();
+      BorrowEntry *b=borrowTable->find(&na);
+      Assert(b!=NULL);
+      ProtocolObject *po = b->getObject();
+      Assert (isAbstraction(po) && po->isProxy());
+      ProcProxy *pp = (ProcProxy*) po;
+
+      int gsize = unmarshallNumber(bs);
+      RefsArray globals = gsize==0 ? 0 : allocateRefsArray(gsize);
+
+      for (int i=0; i<gsize; i++) {
+        globals[i] = unmarshallTerm(bs);
+      }
+
+      ProgramCounter PC = unmarshallCode(bs);
+
+      pp->localize(globals,PC);
+      break;
+    }
+
   default:
     OZ_fail("siteReceive: unknown message %d\n",msg[0]);
     printf("\n--\n%s\n--\n",msg);
@@ -2012,8 +2102,7 @@ int remoteSend(PortProxy *p, TaggedRef msg) {
 
   if(!(b->getOneCredit())){
       PERDIO_DEBUG(DEBT_MAIN,"DEBT_MAIN:remoteSend");
-      pe= pendEntryManager->newPendEntry();
-      pe->initialize(bs,site,b);
+      pe= pendEntryManager->newPendEntry(bs,site,b);
       b->inDebtMain(pe);}
   else pe=NULL;
 
@@ -2026,8 +2115,7 @@ int remoteSend(PortProxy *p, TaggedRef msg) {
       delete bs;
       return ret;}
     PERDIO_DEBUG(DEBT_SEC,"DEBT_SEC:remoteSend");
-    pe=pendEntryManager->newPendEntry();
-    pe->initialize(bs,site);
+    pe=pendEntryManager->newPendEntry(bs,site);
     debtRec->handler(pe);
     return PROCEED;}
   if(debtRec->isEmpty()){
@@ -2046,10 +2134,25 @@ int sitesend(int sd,OZ_Term t){
     return ret;
   }
   PendEntry *pe;
-  pe= pendEntryManager->newPendEntry();
-  pe->initialize(bs,sd);
+  pe= pendEntryManager->newPendEntry(bs,sd);
   debtRec->handler(pe);
   return PROCEED;
+}
+
+void getCode(ProcProxy *pp)
+{
+  ByteStream *bs= new ByteStream();
+  bs->put(GET_CODE);
+  int bi = pp->getIndex();
+  int site  =  borrowTable->getOriginSite(bi);
+  int index =  borrowTable->getOriginIndex(bi);
+  marshallNumber(index,bs);
+  marshallMySite(bs);
+  PERDIO_DEBUG2(MSG_SENT,"MSG_SENT: GET_CODE sd:%d,index:%d",
+                site,index);
+  int ret= reliableSend0(site,bs);
+  Assert(ret==PROCEED); // TODO
+  delete bs;
 }
 
 /* ********************************************************************** */
@@ -2104,8 +2207,7 @@ OZ_C_proc_begin(BIunreliableSend,2)
   }
   PERDIO_DEBUG(DEBT,"DEBT:unreliableSend");
   PendEntry *pe;
-  pe=pendEntryManager->newPendEntry();
-  pe->initialize(bs,sd);
+  pe=pendEntryManager->newPendEntry(bs,sd);
   debtRec->handler(pe);
   return PROCEED;
 }
