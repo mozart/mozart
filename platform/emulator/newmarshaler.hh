@@ -40,9 +40,10 @@
 // Constants needed for to check that no overflow occurs in unmarshalNumber()
 
 // Biggest number dividable with 7 and less then sizeof(int)
-extern unsigned int RobustMarshaler_Max_Shift;
+#define RobustMarshaler_Max_Shift   ((sizeof(int)==4) ? 28 : 16)
 // (sizeof(int)-RobustMarshaler_Max_Shift)^2
-extern unsigned int RobustMarshaler_Max_Hi_Byte;
+#define RobustMarshaler_Max_Hi_Byte ((sizeof(int)==4) ? 63 : 2)
+// for computation see newmarshaller.cc
 
 #ifdef USE_FAST_UNMARSHALER   
 inline int unmarshalRefTag(MsgBuffer *bs)
