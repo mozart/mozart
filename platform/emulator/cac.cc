@@ -57,7 +57,7 @@
 #include "weakdict.hh"
 #include "mozart_cpi.hh"
 
-#ifdef DEBUG_LIVECALC
+#if defined(DEBUG_LIVECALC)
 // Whenever liveness zeroes the contents of a register we actually
 // place a fresh int (maintained by deadMarker) there. This gives some 
 // debugging info when tracking down buggy liveness code ...
@@ -65,6 +65,9 @@ static int deadMarker = 300000;
    #define VOID_GREG(to,i) to->initG(i,makeTaggedSmallInt(deadMarker++))
 #else
    #define VOID_GREG(to,i) to->initG(i,makeTaggedNULL())
+#endif
+#if defined(DEBUG_PRINTLIVECALC)
+static int deadMarker = makeTaggedNULL();
 #endif
 
 #ifdef OUTLINE
@@ -424,7 +427,7 @@ Abstraction * Abstraction::gCollect(int gUsageLen, int * gUsage) {
       for (int i=to->pred->getGSize(); i--;) {
  	// Only gc if this slot was previously void
 	// to avoid nasty cycles.
-#ifdef DEBUG_LIVECALC
+#if defined(DEBUG_LIVECALC)
  	if ( oz_isSmallInt(to->getG(i)) ) 
 #else
 	if ( to->getG(i)==makeTaggedNULL() ) 
@@ -437,7 +440,7 @@ Abstraction * Abstraction::gCollect(int gUsageLen, int * gUsage) {
     }
     else {
       for (int i=to->pred->getGSize(); i--;) {
-#ifdef DEBUG_LIVECALC
+#if defined(DEBUG_LIVECALC)
         if ( oz_isSmallInt(to->getG(i)) ) 
 #else
 	if ( to->getG(i)==makeTaggedNULL() ) 
@@ -472,7 +475,7 @@ Abstraction * Abstraction::gCollect(int gUsageLen, int * gUsage) {
     // *IMPORTANT*: must zero all dead regs before we do *any* gc
     for (int i=gSize; i--; ) {
       if (!(gUsage[i])) {
-#ifdef DEBUG_LIVECALC
+#if defined(DEBUG_LIVECALC) || defined(DEBUG_PRINTLIVECALC)
 	printf("Abstraction <%s> G[%d] => %d\n", to->getPrintName(), i, deadMarker);
 #endif
 	VOID_GREG(to,i);
@@ -1799,7 +1802,13 @@ TaskStack * TaskStack::_cac(void) {
       gCollectCode(pc);
 #endif
       (void) CodeArea::livenessX(pc,*Y);
+#if defined(DEBUG_LIVECALC) || defined(DEBUG_PRINTLIVECALC)
+      printf("Remapped XCONT's X 0x%x --> ", *Y);
+#endif
       *Y = (*Y)->_cac();
+#if defined(DEBUG_LIVECALC) || defined(DEBUG_PRINTLIVECALC)
+      printf("0x%x\n", *Y);
+#endif
     } else if (PC == C_LOCK_Ptr) {
       TaggedRef ct = makeTaggedConst((ConstTerm *) *CAP);
       oz_cacTerm(ct, ct);
@@ -1848,7 +1857,7 @@ TaskStack * TaskStack::_cac(void) {
 	int yLen = (*Y)?(*Y)->getLen():0;
         // If either Y or G registers are in scope then check their liveness
         if (gLen || yLen) {
-#ifdef DEBUG_LIVECALC
+#if defined(DEBUG_LIVECALC) || defined(DEBUG_PRINTLIVECALC)
 	  printf("\nG-Collect pid(%d) abstr(0x%x) -> 0x%x\n", (int) getpid(), *CAP, PC);
 	  //	  CodeArea::display(PC,50,stderr,NOCODE);
 	  //printf("\n");
@@ -1872,7 +1881,13 @@ TaskStack * TaskStack::_cac(void) {
       oz_cacTerm(ct, ct);
       *CAP = tagged2Const(ct);
 #endif
+#if defined(DEBUG_LIVECALC) || defined(DEBUG_PRINTLIVECALC)
+      printf("Remapped continuation's Y 0x%x --> ", *Y);
+#endif
       *Y   = (*Y)->_cac();
+#if defined(DEBUG_LIVECALC) || defined(DEBUG_PRINTLIVECALC)
+      printf("0x%x\n", *Y);
+#endif
     }
   }
 }
