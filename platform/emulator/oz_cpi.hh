@@ -48,17 +48,20 @@
 #define OZ_EM_FDDESCR "finite domain integer description"
 #define OZ_EM_VECT    "vector of "
 #define OZ_EM_TNAME   "truth name"
+#define OZ_EM_STREAM  "stream"
 
 //-----------------------------------------------------------------------------
 // OZ_FiniteDomain 
 
-enum OZ_FDPropState {fd_det = 0, fd_bounds, fd_any};
 enum OZ_FDState {fd_empty, fd_full, fd_bool, fd_singleton};
 
 class OZ_FiniteDomain {
+friend ostream &operator << (ostream &, const OZ_FiniteDomain &);
 protected:
   int min_elem, max_elem, size;
   void * descr;
+
+  ostream &print(ostream &) const;
 public:
 
   OZ_FiniteDomain(void) : descr((void *) 0) {}
@@ -102,9 +105,8 @@ public:
 
   int constrainBool(void);
   OZ_Boolean isIn(int i) const;
-  ostream &print(ostream &) const;
   void copyExtension(void);
-  void dispose(void);
+  void disposeExtension(void);
 };   
 
 
@@ -148,6 +150,8 @@ ostream& operator << (ostream& o, const OZ_Propagator &p);
 //-----------------------------------------------------------------------------
 // class OZ_Expect, etc.
 
+enum OZ_FDPropState {fd_det = 0, fd_bounds, fd_any};
+
 struct OZ_expect_t {
   int size, accepted; 
   OZ_expect_t(int s, int a) : size(s), accepted(a) {}
@@ -172,6 +176,9 @@ public:
   OZ_Expect(void); 
   ~OZ_Expect(void); 
 
+  void collectVarsOn(void); /* undocumented, unimplemented */
+  void collectVarsOff(void); /* undocumented, unimplemented */
+
   OZ_expect_t expectDomDescr(OZ_Term descr, int level = 4);
   OZ_expect_t expectVar(OZ_Term t);
   OZ_expect_t expectRecordVar(OZ_Term);
@@ -180,6 +187,7 @@ public:
   OZ_expect_t expectInt(OZ_Term);
   OZ_expect_t expectLiteral(OZ_Term);
   OZ_expect_t expectVector(OZ_Term, OZ_ExpectMeth);
+  OZ_expect_t expectStream(OZ_Term st); 
 
   OZ_Return spawn(OZ_Propagator * p, int prio = OZ_getPropagatorPrio(),
                   OZ_PropagatorFlags flags=NULL_flag);
@@ -209,6 +217,10 @@ private:
   int initial_size;
   enum Sort_e {sgl_e = 1, bool_e = 2, int_e  = 3} sort;
   enum State_e {loc_e = 1, glob_e = 2, spec_e = 3} state;
+  OZ_Boolean isSort(Sort_e s) const {return s == sort;}
+  void setSort(Sort_e s) {sort = s;}
+  OZ_Boolean isState(State_e s) const {return s == state;}
+  void setState(State_e s) {state = s;}
 
   OZ_Boolean tell(void);
 public:
@@ -228,10 +240,6 @@ public:
   OZ_FiniteDomain * operator -> (void) {return domPtr;}
 
   OZ_Boolean isTouched(void) const {return initial_size > domPtr->getSize();}
-  OZ_Boolean isSort(Sort_e s) const {return s == sort;}
-  void setSort(Sort_e s) {sort = s;}
-  OZ_Boolean isState(State_e s) const {return s == state;}
-  void setState(State_e s) {state = s;}
 
   void ask(OZ_Term);
   void enter(OZ_Term);
@@ -239,6 +247,31 @@ public:
   OZ_Boolean leave(void) { return isSort(sgl_e) ? OZ_FALSE : tell(); }
   void fail(void);
 };
+
+
+//-----------------------------------------------------------------------------
+// class OZ_Stream
+// the whole class is not documented
+
+class OZ_Stream {
+private:
+  OZ_Boolean closed, eostr, valid;
+  OZ_Term tail;
+
+  void setFlags(void);
+public:
+  OZ_Stream(OZ_Term st) : tail(st) { setFlags(); }
+  OZ_Boolean isEostr(void) { return eostr; }
+  OZ_Boolean isClosed(void) { return closed; }
+  OZ_Boolean isValid(void) { return valid; }
+
+  OZ_Term get(void);
+  OZ_Term getTail(void) { return tail; }
+
+  OZ_Boolean leave(void);
+  void fail(void);
+};
+
 
 //-----------------------------------------------------------------------------
 // Miscellaneous
