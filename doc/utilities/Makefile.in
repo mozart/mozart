@@ -53,7 +53,7 @@ Makefile: Makefile.in config.status
 	./config.status
 
 ozdoc: $(FUNCTORS)
-	$(OZAR) --syslet --in=Main.ozf --out=ozdoc -o $@
+	$(OZAR) --syslet --in=Main.ozf --out=$@
 
 %.ozf: %.oz
 	$(OZC) -c $< -o $@
