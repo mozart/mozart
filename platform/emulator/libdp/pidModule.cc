@@ -118,7 +118,7 @@ OZ_BI_define(BITicket2Port,4,1)
   }
     
   ip_address addr = ntohl(inet_addr(host));
-  if (addr == (ip_address)-1L) {
+  if (addr == (ip_address)-1) {
     return oz_raise(E_ERROR,E_SYSTEM,"PID.send",2,
 		    OZ_atom("inet_addr"),OZ_in(0));
   }
