@@ -393,7 +393,7 @@ inline
 FDIntervals * FDIntervals::complement(FDIntervals * x_iv)
 {
   int c_i = 0, i = 0;
-  if (0 < i_arr[i].left) {
+  if (0 < x_iv->i_arr[i].left) {
     i_arr[c_i].left = 0;
     i_arr[c_i].right = x_iv->i_arr[i].left - 1;
     c_i += 1;
@@ -402,7 +402,7 @@ FDIntervals * FDIntervals::complement(FDIntervals * x_iv)
     i_arr[c_i].left = x_iv->i_arr[i].right + 1;
     i_arr[c_i].right = x_iv->i_arr[i + 1].left - 1;
   }
-  if (i_arr[i].right < fd_sup) {
+  if (x_iv->i_arr[i].right < fd_sup) {
     i_arr[c_i].left = x_iv->i_arr[i].right + 1;
     i_arr[c_i].right = fd_sup;
   }
