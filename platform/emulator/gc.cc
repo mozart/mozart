@@ -33,6 +33,7 @@
 #include "fdomn.hh"
 
 #include "dictionary.hh"
+#include "perdio.hh"
 
 #ifdef OUTLINE
 #define inline
