@@ -27,6 +27,8 @@ static unsigned int parseVirtualString(char *str);
 #include "../include/config.h"
 #include "oz.h"
 
+#include "types.hh"
+
 typedef OZ_Term CTerm;
 
 static CTerm nilAtom;
@@ -34,12 +36,15 @@ static CTerm nilAtom;
 extern int xy_showInsert, xy_gumpSyntax, xy_systemVariables;
 extern CTerm xy_errorMessages;
 
+static int initialized = 0;
+
 OZ_C_proc_begin(ozparser_init, 0)
 {
   nilAtom = OZ_nil();
   xy_showInsert = xy_gumpSyntax = 0;
   xy_systemVariables = 1;
   parserInit();
+  initialized = 1;
   return PROCEED;
 }
 OZ_C_proc_end
@@ -1453,7 +1458,10 @@ static void parserInit() {
     terms[i] = 0;
 }
 
-static CTerm parse() {
+static CTerm parse()
+{
+  Assert(initialized);
+
   // in case there was a syntax error during the last parse, delete garbage:
   for (int i = 0; i < DEPTH; i++) {
     prodKey[i] = prodKeyBuffer[i];
