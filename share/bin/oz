@@ -82,18 +82,19 @@ fi
 # where is Emacs?
 if [ \( "$cmd" = "oz" -o "$cmd" = "ozemacs" \) -a "${OZEMACS-0}" = 0 ]; then
 
-  if [ -f ${OZHOME}/ozemacs/bin/$OZPLATFORM/emacs ]; then
+  CHECKEMACS=${OZHOME}/ozemacs/$OZPLATFORM/bin/emacs
+  if [ -f $CHECKEMACS ]; then
 
-    OZEMACS=${OZHOME}/ozemacs/bin/$OZPLATFORM/emacs
     EHOME=$OZHOME/ozemacs
-    EMACSLOADPATH=$EHOME/common/lisp:$EHOME/common/site-lisp
-    EMACSDATA=$EHOME/common/data
+    EMACSLOADPATH=$EHOME/share/emacs/19.29/lisp:$EHOME/share/emacs/site-lisp
+    EMACSDATA=$EHOME/share/emacs/19.29/etc
     EMACSDOC=$EMACSDATA
     INFOPATH=$EHOME/info
-    EMACSLOCKDIR=$EHOME/common/lock
-    EMACSPATH=$EHOME/bin/$OZPLATFORM/etc
+    EMACSLOCKDIR=$EHOME/com/emacs/lock
+    EMACSPATH=$EHOME/platform/$OZPLATFORM/bin
     export EMACSLOADPATH EMACSDATA EMACSDOC
     export INFOPATH EMACSLOCKDIR EMACSPATH
+    OZEMACS=$CHECKEMACS
 
   else
 
