@@ -1465,20 +1465,12 @@ void AM::pushToplevel(ProgramCounter pc)
   Assert(rootThread->isEmpty());
   // kost@ : MOD!!! TODO?
   // rootBoard->incSuspCount();
-  rootThread->pushCont(pc,toplevelVars,NULL,NULL);
+  rootThread->getTaskStackRef()->pushCont(pc,toplevelVars,NULL);
   if (rootThread!=currentThread && !isScheduled(rootThread)) {
     scheduleThread(rootThread);
   }
 }
 
-
-// this one should not be inlined
-void AM::pushContX(ProgramCounter PC, RefsArray Y, RefsArray G,
-		   RefsArray X, int I) {
-  int i=I;
-  RefsArray x=i>0?copyRefsArray(X,i):0;
-  cachedStack->pushCont(PC,Y,G,x);
-}
 
 /*
  * in dispose: check if there are more toplevel tasks
@@ -1736,7 +1728,6 @@ Thread *AM::mkLTQ(Board *bb, int prio, SolveActor * sa)
   return th;
 }
 
-#ifdef PERDIO
 void AM::stopThread(Thread *th) {
   if (th->pStop()==0) {
     if (th==currentThread) {
@@ -1764,7 +1755,6 @@ void AM::resumeThread(Thread *th) {
     }
   }
 }
-#endif
 
 #ifdef OUTLINE
 #define inline

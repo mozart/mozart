@@ -82,8 +82,6 @@
 
  * -----------------------------------------------------------------------*/
 
-#ifdef PERDIO
-
 #ifdef INTERFACE
 #pragma implementation "perdio.hh"
 #endif
@@ -6544,6 +6542,3 @@ void BIinitPerdio()
   Assert(sizeof(PortManager)==sizeof(PortLocal));
 
 }
-
-
-#endif

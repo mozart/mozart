@@ -192,7 +192,6 @@ public:
   void printBoards();
 
   void pushToplevel(ProgramCounter pc);
-  void pushContX(ProgramCounter pc,RefsArray Y,RefsArray G,RefsArray X,int n);
   void checkToplevel();
   void addToplevel(ProgramCounter pc);
 
