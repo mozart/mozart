@@ -124,7 +124,7 @@ void receiveTellError(BorrowEntry* b,EntityCond ec,Bool set){
   if(b->isTertiary()){
     receiveTellErrorTert(b->getTertiary(),ec,set);
     return;}
-  Assert(b->isVar);
+  Assert(b->isVar());
   receiveTellErrorVar(b,ec,set);}
 
 void sendTellError(OwnerEntry *oe,DSite* toS,int mI,EntityCond ec,Bool set){
