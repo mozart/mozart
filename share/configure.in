@@ -87,6 +87,13 @@ AC_MSG_RESULT($oz_picklecompression)
 
 AC_SUBST(oz_picklecompression)
 
+dnl ******************************************************************
+dnl maybe select QTk
+dnl ******************************************************************
+
+OZ_ENABLE(qtk,[QTk GUI builder],no,QTK_ENABLED=yes,QTK_ENABLED=no)
+AC_SUBST(QTK_ENABLED)
+
 dnl *****************************************************************
 dnl FINALIZE
 dnl *****************************************************************

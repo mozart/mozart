@@ -56,7 +56,14 @@ else
 GTK_FLAGS       =
 endif
 
-OZCFLAGS        = $(COMPRESSFLAGS) $(DENYS_FLAGS) $(SITE_PROPERTY_FLAGS) $(GTK_FLAGS)
+QTK_ENABLED     = @QTK_ENABLED@
+ifeq ($(QTK_ENABLED),yes)
+QTK_FLAGS       = -DQTK_ENABLED
+else
+QTK_FLAGS       =
+endif
+
+OZCFLAGS        = $(COMPRESSFLAGS) $(DENYS_FLAGS) $(SITE_PROPERTY_FLAGS) $(GTK_FLAGS) $(QTK_FLAGS)
 OZC             = @OZC@
 
 COMPILENOMODE   = $(OZC) $(OZCFLAGS) -l Base=$(SRCDIR)/Base.ozf -b $(BUILDDIR)/
@@ -90,7 +97,11 @@ CPSRC2  = Schedule ParSearch ParWorker ParLogging
 DPSRC   = Connection Discovery Remote RemoteServer Fault URL DPStatistics DPInit ConnectionFunctor AcceptFunctor ConnectAcceptModule $(DENYS_DPSRCS)
 WPSRC   = Tk TkTools Tix
 GTKSRC  = GTK GDK Glade GnomeCanvas GTKSimpleBuilder
+ifeq ($(QTK_ENABLED),yes)
 QTKSRC  = QTk QTkDevel
+else
+QTKSRC  =
+endif
 SUPPSRC = Type Narrator Listener ErrorListener DefaultURL ObjectSupport
 MACSRC  = Macro BackquoteMacro LoopMacro
 
@@ -292,10 +303,14 @@ QTKDEPS2        = $(QTKDEPS1)   \
 QTKDEPS3        = $(QTKDEPS2)   \
         QTkDropdownlistbox.ozf QTkNumberentry.ozf
 
+ifeq ($(QTK_ENABLED),yes)
 QTKCLEAN        = $(QTKDEPS3) QTkBare.ozf QTkDropdownbutton_bitmap.ozf \
         QTkDropdownbutton_gen_bitmap.ozf QTkImageLibBoot.ozf \
         QTkNumberentry_bitmap.ozf QTkNumberentry_gen_bitmap.ozf \
         mini-dec.xbm mini-down.xbm mini-inc.xbm
+else
+QTKCLEAN        =
+endif
 
 
 QTkBare.ozf:qtk/QTk.oz qtk/Frame.oz qtk/QTkClipboard.oz qtk/QTkFont.oz qtk/QTkDialogbox.oz
