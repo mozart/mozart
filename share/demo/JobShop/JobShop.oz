@@ -39,6 +39,7 @@ require
 
 prepare
    ArgSpec = record(example(single type:atom default:no))
+   {Wait Examples}
 
 define
 
