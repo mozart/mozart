@@ -1186,6 +1186,15 @@ in
 				      variable: DebugInfoControl
 				      action: {MkAction
 					       Switch(debuginfocontrol)})}
+	 DebugInfoStatements = {New Tk.variable tkInit(false)}
+	 DebugInfoStatementsSw = {New Tk.checkbutton
+				  tkInit(parent: DebuggerFrame
+					 text: 'Include statement information'
+					 font: SwitchFont
+					 variable: DebugInfoStatements
+					 action:
+					    {MkAction
+					     Switch(debuginfostatements)})}
 	 DebugInfoVarnames = {New Tk.variable tkInit(false)}
 	 DebugInfoVarnamesSw = {New Tk.checkbutton
 				tkInit(parent: DebuggerFrame
@@ -1272,7 +1281,7 @@ in
 		    pack(EmulatorLabel FeedToEmulatorSw ThreadedQueriesSw
 			 ProfileSw anchor: w)
 		    pack(DebuggerLabel RunWithDebuggerSw DebugInfoControlSw
-			 DebugInfoVarnamesSw anchor: w)
+			 DebugInfoStatementsSw DebugInfoVarnamesSw anchor: w)
 		    %% "Query Queue" note:
 		    grid(self.CurrentQuery row: 1 column: 1 sticky: nsew)
 		    grid(columnconfigure Queue 1 weight: 1)
@@ -1325,6 +1334,7 @@ in
 				   profile: Profile
 				   runwithdebugger: RunWithDebugger
 				   debuginfocontrol: DebugInfoControl
+				   debuginfostatements: DebugInfoStatements
 				   debuginfovarnames: DebugInfoVarnames)
 	 self.ToGray = [Remove Load Save
 			self.MaxNumberOfErrors.inc self.MaxNumberOfErrors.dec
@@ -1336,7 +1346,7 @@ in
 			DebugValueSw DebugTypeSw CodeGenSw OutputCodeSw
 			FeedToEmulatorSw ThreadedQueriesSw ProfileSw
 			RunWithDebuggerSw DebugInfoControlSw
-			DebugInfoVarnamesSw]
+			DebugInfoStatementsSw DebugInfoVarnamesSw]
 	 self.InterruptMenuItem = Menu.compiler.interrupt
 	 ValueDict <- {NewDictionary}
 	 TagDict <- {NewDictionary}
