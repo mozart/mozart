@@ -37,6 +37,7 @@ import
 
    OS.{getEnv
        putEnv
+       stat
        unlink}
 
    URL.{makeResolver}
@@ -1337,5 +1338,11 @@ body
       end
    end
 
+   %%
+   %% Define additional options
+   %%
+
+   \insert 'TkOptions.oz'
+   
 end
 
