@@ -264,7 +264,7 @@ void *ozMalloc(int chunk_size)
 
   if (firstCall == 1) {
     firstCall = 0;
-    free(malloc(1024*1024*2));
+    free(malloc(MB*2));
   }
 
   chunk_size += sizeof(SbrkMemory);
@@ -394,7 +394,7 @@ void getMemFromOS(size_t sz)
   
   DebugCheck(heapTotalSize > heapMaxSize,
 	     message("Increasing heap memory to %d kilo bytes\n", 
-		     heapTotalSize / 1024));
+		     heapTotalSize / KB));
 }
 
 
