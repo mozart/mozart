@@ -108,7 +108,7 @@ TaggedRef formatError(TaggedRef info, TaggedRef val, TaggedRef traceBack) {
   RAISE_TYPE1(fun, appendI(args,oz_mklist(oz_newVariable())));
 
 #define RAISE_TYPE(bi,loc) \
-  RAISE_TYPE1(bi->getPrintName(), loc->getArgs());
+  RAISE_TYPE1(bi->getPrintName(), loc->getArgs(bi));
 
 
 /*
@@ -138,7 +138,7 @@ Bool AM::hf_raise_failure()
 #define HF_EQ(X,Y)     HF_RAISE_FAILURE(OZ_mkTupleC("eq",2,X,Y))
 #define HF_TELL(X,Y)   HF_RAISE_FAILURE(OZ_mkTupleC("tell",2,X,Y))
 #define HF_APPLY(N,A)  HF_RAISE_FAILURE(OZ_mkTupleC("apply",2,N,A))
-#define HF_BI(bi,loc)  HF_APPLY(bi->getName(),loc->getArgs());
+#define HF_BI(bi,loc)  HF_APPLY(bi->getName(),loc->getArgs(bi));
 
 #define CheckArity(arityExp,proc)				   \
 if (predArity != arityExp) {					   \
@@ -349,7 +349,7 @@ void set_exception_info_call(Builtin *bi, OZ_Location * loc) {
 
   am.setExceptionInfo(OZ_mkTupleC("fapply",3,
 				  makeTaggedConst(bi),
-				  loc->getInArgs(),
+				  loc->getInArgs(bi),
 				  oz_int(bi->getOutArity())));
 }
 
@@ -1810,9 +1810,6 @@ Case(GETVOID)
       Builtin* bi = GetBI(PC+1);
       OZ_Location* loc = GetLoc(PC+2);
 
-      Assert(loc->getOutArity()==bi->getOutArity());
-      Assert(loc->getInArity()==bi->getInArity());
-
 #ifdef PROFILE_BI
       bi->incCounter();
 #endif
@@ -1852,19 +1849,17 @@ Case(GETVOID)
       Builtin* bi = GetBI(PC+1);
       OZ_Location* loc = GetLoc(PC+2);
 
-      Assert(loc->getInArity()==bi->getInArity());
       Assert(bi->getOutArity()>=1);
-      Assert(loc->getOutArity()==bi->getOutArity());
 
 #ifdef PROFILE_BI
       bi->incCounter();
 #endif
       int ret = bi->getFun()(loc->getMapping());
       if (ret==PROCEED) {
-	if (oz_isTrue(loc->getOutValue(0))) {
+	if (oz_isTrue(loc->getOutValue(bi,0))) {
 	  DISPATCH(4);
 	} else {
-	  Assert(oz_isFalse(loc->getOutValue(0)));
+	  Assert(oz_isFalse(loc->getOutValue(bi,0)));
 	  JUMPRELATIVE(getLabelArg(PC+3));
 	}
       }
@@ -3265,7 +3260,7 @@ Case(GETVOID)
 	  if (oarity > 0)
 	    if (dbg->arguments[iarity] != NameVoidRegister)
 	      for (int i = oarity; i--; ) {
-		TaggedRef x = loc->getOutValue(i);
+		TaggedRef x = loc->getOutValue(bi,i);
 		if (OZ_unify(dbg->arguments[iarity + i], x) == FAILED)
 		  return T_FAILURE;
 	      }

@@ -47,7 +47,7 @@
   {for (int _j=0;_j<bi->getInArity(); _j++) {                           \
      ISREAD(loc->getInIndex(_j)); }}	                                \
   {for (int _j=0;_j<bi->getOutArity(); _j++) {                          \
-     ISWRITE(loc->getOutIndex(_j));}}	                                \
+     ISWRITE(loc->getOutIndex(bi,_j));}}	                                \
 }
 
 #define BREAK           goto outerLoop;
