@@ -13,7 +13,6 @@
 #define PEANUTS
 #ifdef INTERFACE
 
-#pragma implementation "am.hh"
 #pragma implementation "assemble.hh"
 #pragma implementation "avar.hh"
 #pragma implementation "debug.hh"
