@@ -131,12 +131,9 @@ State isTcl(TaggedRef tcl) {
     return PROCEED;
   } else if (isLiteral(tcl_tag)) {
     return isTclLiteral(tcl);
-  } else if (isProcedure(tcl)) {
-    TaggedRef v = tagged2SRecord(
-                    makeTaggedSRecord(
-                      chunkCast(tcl)->getRecord()))->getFeature(NameTclName);
-
-    if (v) {
+  } else if (isObject(tcl)) {
+    TaggedRef v = tagged2Object(tcl)->getFeature(NameTclName);
+    if (v!=makeTaggedNULL()) {
       DEREF(v, v_ptr, v_tag);
       if (isAnyVar(v_tag)) {
         return OZ_suspendOnVar(makeTaggedRef(v_ptr));
@@ -579,10 +576,8 @@ void tcl2buffer(TaggedRef tcl) {
       tcl_put(' '); tuple2buffer(st);
     }
 
-  } else if (isProcedure(tcl)) {
-    vs2buffer(tagged2SRecord(
-                makeTaggedSRecord(
-                  chunkCast(tcl)->getRecord()))->getFeature(NameTclName));
+  } else if (isObject(tcl)) {
+    vs2buffer( tagged2Object(tcl)->getFeature(NameTclName) );
   } else if (isSRecord(tcl_tag)) {
     SRecord * sr = tagged2SRecord(tcl);
     TaggedRef l  = sr->getLabel();
