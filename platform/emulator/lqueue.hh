@@ -173,6 +173,10 @@ public:
 
   int isEmpty() { return size==0; }
   int getSize() { return size; }
+  void zeroAll() {
+    head=tail=0;
+    head_index=tail_index=size=0;
+  }
 
 protected:
   // this should be inlined
@@ -229,8 +233,7 @@ protected:
       tail  = tail->next;
       block->dispose();
     }
-    tail=head=0;
-    tail_index=head_index=size=0;
+    zeroAll()
   }
 
   // return the location of a particular element pointer in the
@@ -258,8 +261,7 @@ LinkedQueueImpl::mergeUnsafe(LinkedQueueImpl * q)
   head = head->next = q->tail;
   head_index = q->head_index;
   size += q->size;
-  q->head = q->tail = 0;
-  q->size = q->head_index = q->tail_index = 0;
+  q->zeroAll();
   return this;
 }
 
