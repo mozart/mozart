@@ -1282,6 +1282,7 @@ ConstTerm *gcStatefulSpecImpl(Tertiary *t)
 }
 
 void dpExitWithTimer(unsigned int timeUntilClose) {
+  //  printf("Close started at %s\n", myDSite->stringrep());
   //printf("tiden:%d\n", timeUntilClose);
   //printf("tiden:%d\n", ozconf.closetime);
 
@@ -1326,10 +1327,14 @@ void dpExitWithTimer(unsigned int timeUntilClose) {
   }
   //printf("times left %d\n", timeUntilClose);
   //printf("connections left %d\n", connectionsLeft);
+  //printf("Close done at %s\n", myDSite->stringrep());
+  
 }
 
 void dpExitImpl() {
   (*virtualSitesExit)();
-  //  dpExitWithTimer(ozconf.closetime);
+  dpExitWithTimer(ozconf.closetime);
 }
+
+
 

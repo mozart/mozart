@@ -100,6 +100,10 @@ OZ_Return portSendImpl(Tertiary *p, TaggedRef msg)
   Assert(p->getTertType()==Te_Proxy);
   OZ_Return ret;
   if(getEntityCond(p)!= ENTITY_NORMAL){
+    //    printf("PortProblem %d at: %s",getEntityCond(p),myDSite->stringrep());
+    //printf("from: %s\n",
+    //	   BT->getBorrow(p->getIndex())->getNetAddress()->site->stringrep());
+    
     pendThreadAddToEnd(&(((PortProxy*)p)->pending),
 		       msg,msg,NOEX);
     if(getEntityCond(p) & PERM_ME)
@@ -197,6 +201,7 @@ void port_Ok(PortProxy* pp){
   pp->wakeUp();
 }
 void port_Perm(PortProxy* pp){
+  //printf("SettingPerm to port %s\n",BT->getBorrow(pp->getIndex())->getNetAddress()->site->stringrep());
   EntityCond ec = PERM_ME;
   if(pp->pending) ec |=PERM_BLOCKED;
   if(!addEntityCond(pp,ec)) return;
