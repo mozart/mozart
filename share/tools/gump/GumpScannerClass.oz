@@ -31,9 +31,8 @@ local
 
    proc {FromFile FileName ?NewBufferState}
       NewBufferState = {LexBase.createFromFile FileName}
-      case NewBufferState == 0 then
+      if NewBufferState == 0 then
 	 {Exception.raiseError gump(fileNotFound FileName)}
-      else skip
       end
    end
 
@@ -66,8 +65,8 @@ in
 	 (TokenStreamTl <- NewTl) = Token#unit|NewTl
       end
       meth getToken(?Token ?Value)
-	 case {IsFree @TokenStreamHd} then N in
-	    case @BufferList == nil then
+	 if {IsFree @TokenStreamHd} then N in
+	    case @BufferList of nil then
 	       Token = 'EOF'
 	       Value = unit
 	    else
@@ -131,7 +130,7 @@ in
       meth setInteractive(B)
 	 lock
 	    case @BufferList of Buffer|_ then
-	       {LexBase.setInteractive Buffer case B then 1 else 0 end}
+	       {LexBase.setInteractive Buffer if B then 1 else 0 end}
 	    else skip
 	    end
 	 end
@@ -148,7 +147,7 @@ in
       meth setBOL(B)
 	 lock
 	    case @BufferList of Buffer|_ then
-	       {LexBase.setBOL Buffer case B then 1 else 0 end}
+	       {LexBase.setBOL Buffer if B then 1 else 0 end}
 	    else skip
 	    end
 	 end
@@ -167,7 +166,7 @@ in
 	 lock
 	    {ForAll @BufferList proc {$ B} {LexBase.close B} end}
 	    BufferList <- nil
-	    case @LexerAddr == unit then skip
+	    case @LexerAddr of unit then skip
 	    else
 	       {self.lexer.delete @LexerAddr}
 	       LexerAddr <- unit

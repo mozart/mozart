@@ -97,7 +97,7 @@ local
    fun {SymbolSetUnion Xs Ys}
       {FoldL Xs
        fun {$ Zs S}
-	  case {Some Zs fun {$ T} {SymbolEq S T} end} then Zs
+	  if {Some Zs fun {$ T} {SymbolEq S T} end} then Zs
 	  else S|Zs
 	  end
        end Ys}
@@ -141,16 +141,18 @@ local
    % Auxiliary Functions for Code Generation
 
    fun {ValueToAST X}
-      case {IsAtom X} then fAtom(X unit)
-      elsecase {IsInt X} then fInt(X unit)
-      elsecase {IsTuple X} then
+      if {IsAtom X} then fAtom(X unit)
+      elseif {IsInt X} then fInt(X unit)
+      elseif {IsTuple X} then
 	 fRecord({ValueToAST {Label X}}
 		 {Record.foldR X fun {$ V In} {ValueToAST V}|In end nil})
-      elsecase {IsRecord X} then
+      elseif {IsRecord X} then
 	 fRecord({ValueToAST {Label X}}
 		 {Record.foldRInd X
 		  fun {$ F V In} fColon({ValueToAST F} {ValueToAST V})|In end
 		  nil})
+      else
+	 {Exception.raiseError gump(internal valueToAST)} unit
       end
    end
 
@@ -173,12 +175,12 @@ local
 	 @Flags.X
       end
       meth getFlexOptions($) S = @Flags in
-	 case S.caseless then ' caseless' else "" end#
-	 case S.bestfit then ' subset-sort' else "" end#
-	 case S.backup then ' backup' else "" end#
-	 case S.perfreport then ' perf-report' else "" end#
-	 case S.statistics then ' verbose' else "" end#
-	 case S.nowarn then ' nowarn' else "" end
+	 if S.caseless then ' caseless' else "" end#
+	 if S.bestfit then ' subset-sort' else "" end#
+	 if S.backup then ' backup' else "" end#
+	 if S.perfreport then ' perf-report' else "" end#
+	 if S.statistics then ' verbose' else "" end#
+	 if S.nowarn then ' nowarn' else "" end
       end
       meth enterFrom(Fs)
 	 From <- {Append @From Fs}

@@ -29,15 +29,15 @@ local
    L = {NewLock}
 in
    fun {Bison NSymbols Grammar VerboseFile Rep}
-      case Grammar.4 == nil then   % no rules
+      if Grammar.4 == nil then   % no rules
 	 {Rep error(kind: 'bison error' msg: 'empty grammar')}
-      elsecase NSymbols > MAXSHORT then
+      elseif NSymbols > MAXSHORT then
 	 {Rep error(kind: 'bison error'
 		    msg: ('too many symbols (tokens plus nonterminals);'#
 			  'maximum allowed is '#MAXSHORT))}
       else
 	 lock L then
-	    case {IsFree BisonModule} then
+	    if {IsFree BisonModule} then
 	       T = {Thread.this}
 	       RaiseOnBlock = {Debug.getRaiseOnBlock T}
 	    in
@@ -45,7 +45,6 @@ in
 	       BisonModule =
 	       {Foreign.load 'www.ps.uni-sb.de/ozhome/share/gump/ozbison.dl'}
 	       {Debug.setRaiseOnBlock T RaiseOnBlock}
-	    else skip
 	    end
 	 end
 	 {BisonModule.generate Grammar VerboseFile}
