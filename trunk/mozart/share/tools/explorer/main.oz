@@ -224,7 +224,7 @@ in
 		  else true end
 	       elsecase
 		  What==search andthen
-		  {List.sub {Arity OM} [1 information search failed]}
+		  {List.sub {Arity OM} [1 failed information search]}
 	       then O=self.Options.search in
 		  case {HasFeature OM search} then S=OM.search in
 		     case S
