@@ -20,3 +20,6 @@ Thu Oct 23 00:27:38 MET DST 1997
 - action 'step' auf Prozeduren _ohne_ Steppunkte sollte nichtsdestotrotz
   einen Step-Punkt generieren (Proz.-Ein- und -Austritt).
 - renaming Debugger --> Wanzenentnehmer oder Entwanznehmer
+
+Thu Oct 23 01:01:01 MET DST 1997
+optionale alphabetische Sortierung des Environments
