@@ -398,7 +398,7 @@ Some commonly-used system modules are
 <<OS>> and <<Property>> (the OS and emulator),
 and so forth.
 
-<SECTION><TITLE>Controlled system shutdown</TITLE>
+<SECTION id="section.distmodel.shutdown"><TITLE>Controlled system shutdown</TITLE>
 
 <P>A site can be stopped in two ways: normally or abnormally.
 The normal way is a controlled shutdown initiated
