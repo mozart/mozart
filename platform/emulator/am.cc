@@ -290,8 +290,7 @@ void AM::init(int argc,char **argv)
 
   toplevelVars[0] = makeTaggedConst(entry);
 
-  BuiltinTabEntry *biTabEntry = builtinTab.find("biExceptionHandler");
-  defaultExceptionHandler = makeTaggedConst(biTabEntry);
+  defaultExceptionHandler = 0;
 
   ioNodes = new IONode[osOpenMax()];
 
