@@ -1039,7 +1039,7 @@ void AM::gc(int msgLevel)
   CodeArea::gc();
 
   rootBoard=rootBoard->gcBoard();
-  Board::SetCurrent(currentBoard->gcBoard(),NO);
+  setCurrent(currentBoard->gcBoard(),NO);
 
   GCREF(currentThread);
   GCREF(rootThread);
@@ -1546,10 +1546,10 @@ void SolveActor::gcRecurse ()
   gcTagged (solveVar, solveVar);
   gcTagged (result, result);
   suspList = suspList->gc(NO);
-  orActors.gc (actorStackEntryGC);   // higher order :))
+  orActors.gc (SolveActor::StackEntryGC);   // higher order :))
 }
 
-inline DLLStackEntry actorStackEntryGC (DLLStackEntry entry)
+inline DLLStackEntry SolveActor::StackEntryGC (DLLStackEntry entry)
 {
   if (((Actor *) entry)->isCommitted () == OK) {
     return ((DLLStackEntry) NULL);
