@@ -2555,12 +2555,18 @@ LBLdispatcher:
        Bool foundHdl = CTT->findCatch();
        /* topmost entry points to handler now */
 
+       static TaggedRef debugstack = nil();
+
        if (e->exception.debug) {
 	 OZ_Term traceBack = CTT->reflect(lastTop,CTT->getTop(),PC);
 	 OZ_Term loc = e->dbgGetLoc(CBB);
 	 e->formatError(traceBack,loc);
-       }
 
+	 if (e->debugmode())
+	   debugstack =
+	     CTT->getTaskStackRef()->dbgGetTaskStack(PC,100,lastTop);
+       }
+       
        if (foundHdl) {
 	 X[0] = e->exception.value;
 	 goto LBLpopTaskNoPreempt;
@@ -2572,15 +2578,11 @@ LBLdispatcher:
        }
 
        if (e->debugmode()) {
-	 TaggedRef debugstack =
-	   CTT->getTaskStackRef()->dbgGetTaskStack(PC,1000,lastTop);
-	 TaggedRef exv = e->exception.value;
-
 	 execBreakpoint(CTT,NO);
-	 debugStreamRaise(CTT,exv,debugstack);
+	 debugStreamRaise(CTT,e->exception.value,debugstack);
 	 goto LBLpreemption;
        }
-
+       // else
        RefsArray argsArray = allocateRefsArray(1,NO);
        argsArray[0] = e->exception.value;
        CTT->pushCall(e->defaultExceptionHandler,argsArray,1);
