@@ -128,7 +128,7 @@ public:
                        RefsArray y,RefsArray g,RefsArray x=NULL,int i=0);
   void genericBind(TaggedRef *varPtr, TaggedRef var,
                    TaggedRef *termPtr, TaggedRef term);
-  void bind(TaggedRef *varPtr, TaggedRef var, TaggedRef *termPtr);
+  inline void bind(TaggedRef *varPtr, TaggedRef var, TaggedRef *termPtr);
   void checkSuspensionList(TaggedRef taggedvar, TaggedRef term,
                                   SVariable *rightVar = NULL);
   SuspList* checkSuspensionList(SVariable* var, TaggedRef taggedvar,
