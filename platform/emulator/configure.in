@@ -1,11 +1,35 @@
+dnl -*- sh -*-
 dnl Process this file with autoconf to produce a configure script.
-
-dnl This will check that we are in the Oz directory and initiate
+dnl
+dnl  Authors:
+dnl    Michael Mehl (mehl@dfki.de)
+dnl 
+dnl  Contributors:
+dnl    optional, Contributor's name (Contributor's email address)
+dnl 
+dnl  Copyright:
+dnl    Michael Mehl (1997)
+dnl 
+dnl  Last change:
+dnl    $Date$ by $Author$
+dnl    $Revision$
+dnl 
+dnl  This file is part of Mozart, an implementation 
+dnl  of Oz 3:
+dnl     $MOZARTURL$
+dnl 
+dnl  See the file "LICENSE" or
+dnl     $LICENSEURL$
+dnl  for information on usage and redistribution 
+dnl  of this file, and for a DISCLAIMER OF ALL 
+dnl  WARRANTIES.
+dnl
 
 dnl *****************************************************************
 dnl INITIALIZE
 dnl *****************************************************************
 
+dnl This will check that we are in the Oz directory and initiate
 AC_INIT(oz.h)
 
 AC_CANONICAL_HOST
@@ -17,7 +41,6 @@ dnl Checks for programs.
 dnl *****************************************************************
 
 AC_PROG_CXX
-AC_PROG_CC
 AC_PROG_INSTALL
 AC_PROG_LEX
 AC_PROG_YACC
@@ -30,6 +53,22 @@ AC_CHECK_PROGS(SH, sh bash)
 AC_CHECK_PROGS(MV, mv)
 AC_CHECK_PROGS(ECHO, echo true)
 AC_CHECK_PROGS(SED, gnused sed)
+AC_CHECK_PROGS(PGXX, pg++)
+
+O_OPT="-O"
+if test "x$GXX" = xyes; then
+    O_OPT="-O6"
+fi
+
+dnl mm2: test for SunPro
+if test "x$SunPro" = xyes; then
+    O_OPT="-fast"
+fi
+
+G_OPT="-g"
+if test "x$GXX" = xyes; then
+    G_OPT="-g3"
+fi
 
 dnl *****************************************************************
 dnl Checks for libraries.
@@ -143,9 +182,19 @@ dnl *****************************************************************
 dnl *** Features
 dnl *****************************************************************
 
+AC_MSG_CHECKING(for --enable-ozma)
+AC_ARG_ENABLE(ozma,
+    [--enable-ozma      add assembler (default=no)])
+	if test "x$enable_ozma" = xyes; then
+		AC_MSG_RESULT(yes)
+		AC_DEFINE(OZMA)
+	else
+		AC_MSG_RESULT(no)
+	fi
+
 AC_MSG_CHECKING(for --enable-opt)
 AC_ARG_ENABLE(opt,
-  [--enable-opt       optimize [y|n|d|p] (default=yes)])
+    [--enable-opt       optimize [y|n|d[ebug]|p[rofile]] (default=yes)])
 case $enable_opt in
     n*)
         AC_MSG_RESULT(no)
@@ -154,27 +203,25 @@ case $enable_opt in
         AC_MSG_RESULT(debug)
 	AC_DEFINE(DEBUG_EMULATOR)
 	AC_DEFINE(INTERFACE)
-	COPT="-g3"
+	COPT=$G_OPT
     ;;
     p*)
         AC_MSG_RESULT(profile)
 	AC_DEFINE(PROFILE_EMULATOR)
-	COPT="-pg -O3"
+	COPT="-pg $O_OPT"
 	LDFLAGS="-pg $LDFLAGS"
     ;;
     *)
         AC_MSG_RESULT(yes)
+	COPT=$O_OPT
 	case $host_os in
         	linux*)
-			COPT="-O6 -fomit-frame-pointer"
+			COPT="$COPT -fomit-frame-pointer"
 	        ;;
-		*)
-			COPT="-O2"
-		;;
 	esac
 	AC_MSG_CHECKING(for   --enable-threaded)
 	AC_ARG_ENABLE(threaded,
-	  [--enable-threaded       threaded code emulator (default=yes)])
+	  [--enable-threaded  threaded code emulator (default=yes)])
 	if test "x$enable_threaded" != xno; then
 		AC_MSG_RESULT(yes)
 		AC_DEFINE(THREADED)
@@ -184,7 +231,7 @@ case $enable_opt in
 	
 	AC_MSG_CHECKING(for   --enable-fastreg)
 	AC_ARG_ENABLE(fastreg,
-	  [--enable-fastreg	fast register access (default=yes)])
+	  [--enable-fastreg   fast register access (default=yes)])
 	if test "x$enable_fastreg" != xno; then
 		AC_MSG_RESULT(yes)
 		AC_DEFINE(FASTREGACCESS)
@@ -193,7 +240,7 @@ case $enable_opt in
 	fi
 	AC_MSG_CHECKING(for   --enable-regopt)
 	AC_ARG_ENABLE(regopt,
-	  [--enable-regopt	register optimization (default=yes)])
+	  [--enable-regopt    register optimization (default=yes)])
 	if test "x$enable_regopt" != xno; then
 		AC_MSG_RESULT(yes)
 		AC_DEFINE(REGOPT)
@@ -203,17 +250,20 @@ case $enable_opt in
 
 	if test $PLATFORM = LINUX_I486
 	then
-	  AC_MSG_CHECKING(for   --enable-pgcc)
-	  AC_ARG_ENABLE(pgcc,
-	    [--enable-pgcc	use pgcc compiler (default=no)])
-	  if test "x$enable_pgcc" = xyes; then
+	  if test -n "$PGXX"; then
+	    AC_MSG_CHECKING(for   --with-pgcc)
+	    AC_ARG_WITH(pgcc,
+		[--with-pgcc	   use pgcc compiler (if available)])
+	    if test "$with_pgcc" != xno; then
 	        AC_MSG_RESULT(yes)
-		COPT="-O6 -frisc -fno-rtti -Wno-sign-compare -mpentium"
-		CXX="pg++"
-	  else
-	    AC_MSG_RESULT(no)
-	    COPT="-O3 -fomit-frame-pointer -m486"
-	    COPT="$COPT -malign-loops=4 -malign-jumps=4 -malign-functions=4"
+		COPT="$O_OPT -frisc -fno-rtti -Wno-sign-compare -mpentium"
+		CXX=$PGXX
+	    else
+		AC_MSG_RESULT(no)
+		COPT="$COPT -m486"
+		COPT="$COPT -malign-loops=4 -malign-jumps=4"
+		COPT="$COPT -malign-functions=4"
+	    fi
 	  fi
 	fi
     ;;
@@ -222,19 +272,19 @@ esac
 
 AC_MSG_CHECKING(for --enable-linkprop)
 AC_ARG_ENABLE(linkprop,
-  [--enable-linkprop	link propagators statically (default=yes)])
+  [--enable-linkprop  link propagators statically (default=yes)])
 if test "x$enable_linkprop" != xno; then
         AC_MSG_RESULT(yes)
-	AC_DEFINE(FOREIGNFDPROPS)
 	PROPOBJ="\$(PROPOBJ)"
 else
 	PROPOBJ=""
+	AC_DEFINE(FOREIGNFDPROPS)
         AC_MSG_RESULT(no)
 fi
 
 AC_MSG_CHECKING(for --enable-peanuts)
 AC_ARG_ENABLE(peanuts,
-  [--enable-peanuts	use peanuts file (default=yes)])
+  [--enable-peanuts   use peanuts file (default=yes)])
 if test "x$enable_peanuts" != xno; then
         AC_MSG_RESULT(yes)
 	PEANUTS="peanuts.cc"
@@ -248,7 +298,7 @@ dnl Compiler selection
 dnl *****************************************************************
 
 AC_ARG_ENABLE(sun-pro,
-	--enable-sun-pro  use the Sun Pro Compiler,
+	--enable-sun-pro   use the Sun Pro Compiler,
 	AC_DEFINE(FASTREGACCESS)
 	COPT="-fast")
 
