@@ -128,11 +128,11 @@ void Statistics::print(FILE *fd)
 	  runableThreads.total); 
 #endif
 
-  fprintf(fd,"\n  Search:\n");
-  fprintf(fd,"    alternatives: %d\n",   solveAlt.total);
-  fprintf(fd,"    clones:       %d\n",   solveClone.total);
-  fprintf(fd,"    solutions:    %d\n",   solveSolved.total);
-  fprintf(fd,"    failures:     %d\n",   solveFailed.total);
+  fprintf(fd,"\n  Spaces (Search):\n");
+  fprintf(fd,"    alternatives (choose): %d\n",   solveAlt.total);
+  fprintf(fd,"    cloned:                %d\n",   solveClone.total);
+  fprintf(fd,"    succeeded:             %d\n",   solveSolved.total);
+  fprintf(fd,"    failed:                %d\n",   solveFailed.total);
 
 #ifdef HEAP_PROFILE
   printCount();
