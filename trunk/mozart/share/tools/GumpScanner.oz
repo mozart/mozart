@@ -23,19 +23,15 @@
 %%% WARRANTIES.
 %%%
 
-functor $
-
+functor prop once
 import
-   Foreign.{load}
-   
-   Finalize.{register}
-
+   Foreign.load
+   Error.{formatGeneric format dispatch}
+   ErrorRegistry.put
+   Finalize.register
 export
    'GumpScanner': GumpScanner
    'class':       GumpScanner
-
 body
-
    \insert gump/GumpScannerClass
-
 end
