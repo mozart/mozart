@@ -14,19 +14,24 @@ INSTALL_FILE	= $(INSTALL) -m 444
 INSTALL_DIR	= @INSTALL_DIR@
 
 COMPRESSLEVEL   = @oz_picklecompression@
-COMPRESSFLAGS   = --compress=$(COMPRESSLEVEL)
 
-OZCFLAGS        = $(COMPRESSFLAGS) --noallowdeprecated
+OZCFLAGS        = 
 OZC		= @OZC@
 
-COMPILE         = $(OZC) $(OZCFLAGS)
+OZLFLAGS        = 
+OZL		= @OZL@
+
+COMPILE         = $(OZC) $(OZCFLAGS) -c
+ZCOMPILE        = $(OZC) $(OZCFLAGS) -z $(COMPRESSLEVEL) -c
+
+LINK            = $(OZL) $(OZLFLAGS) -z $(COMPRESSLEVEL)
 
 #
 # The list of demos
 #
 
 CONSTRAINTS = \
-	Job-shop Animated-queens
+	JobShop Animated-queens
 
 CONCURRENT = \
 	Bounce Trucks Transport Lift
@@ -59,16 +64,29 @@ APPLETS = \
 all:: $(APPLETS)
 
 %.oza: constraints/%.oz
-	$(COMPILE) -c $< -o $@
+	$(COMPILE) $< -o $@
 %.oza: concurrent/%.oz
-	$(COMPILE) -c $< -o $@
+	$(COMPILE) $< -o $@
 %.oza: distributed/%.oz
-	$(COMPILE) -c $< -o $@
+	$(COMPILE) $< -o $@
 
 JOBSHOP = \
-	compiler configure duration-tool examples job \
-	main resource-tool scheduler task-board task tools
-Job-shop.oza: $(JOBSHOP:%=constraints/job-shop/%.oz)
+        Compiler Tools TaskBoard Scheduler JobShop Examples TaskBoard
+
+JOBSHOPSRC = \
+        $(JOBSHOP:%=constraints/job-shop/%.oz)
+
+%.ozf: constraints/job-shop/%.oz
+	$(COMPILE) -b constraints/job-shop/ $< -o $@
+
+Scheduler.ozf Tools.ozf JobShop.ozf TaskBoard.ozf: Configure.ozf
+
+JobShop.oza: Examples.ozf Scheduler.ozf Configure.ozf Compiler.ozf \
+	TaskBoard.ozf Tools.ozf
+	$(LINK) JobShop.ozf -o $@
+
+
+
 
 TRANSPORT = \
 	agent broker company configure contract \
@@ -150,9 +168,10 @@ $(OZIMG)/trucks/%.gif: images/trucks/%.gif
 .PHONY: check depend bootstrap clean veryclean distclean
 
 clean::
-	-rm -f *~ ./*/*~ ./*/*/*~
+	-rm -f *~ ./*/*~ ./*/*/*~ *.ozf
 
 veryclean:: clean
+	-rm -f *.oza
 
 distclean: veryclean
 	-rm -f Makefile config.cache config.status config.log
