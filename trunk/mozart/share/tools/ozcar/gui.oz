@@ -340,15 +340,11 @@ in
 		end
 	     end}
 	 
-	    {ForAll [tk(insert LineEnd
-			case Frame.builtin then
-			   BraceRight # case Delete then NL else nil end
-			else
-			   BraceRight # '  ' # BracketLeft # FrameFile #
-			   FileLineSeparator # FrameLine #
-			   case UpToDate then nil else '(?)' end #
-			   BracketRight # case Delete then NL else nil end
-			end LineTag)
+	    {ForAll [tk(insert LineEnd BraceRight #
+			case UpToDate then nil else
+			   ' (source has changed)' end #
+			case Delete then NL else nil end
+			LineTag)
 		     tk(tag add  LineTag LineEnd) % extend tag to whole line
 		     tk(tag bind LineTag '<1>' LineAction)] W}
 	    
