@@ -156,6 +156,14 @@ in which they were sent in the thread.
 A port's stream is terminated by a
 <em>future</em> (see <ptr to="single.assignment">).
 
+<P>Sending to a local port is always asynchronous.
+Sending to a remote port is asynchronous except if
+all available memory in the network layer is in use.
+In that case, the send blocks.
+The network layer frees memory after sending data across the network.
+When enough memory is freed, the send is continued.
+This provides an end-to-end flow control.
+
 <P>Oz ports, which are a language concept,
 should not be confused with Unix ports, which
 are an OS concept.
