@@ -104,27 +104,29 @@ OZ_BI_define(BIisRecordCVarB,1,1)
 } OZ_BI_end
 
 
-OZ_BI_define(_getsBound_dummyB, 2,0)
+OZ_BI_define(_getsBound_dummyB, 1,0)
 {
-  return oz_unify(OZ_in(1),oz_true());
+  return oz_unify(OZ_in(0),oz_true());
 } OZ_BI_end
 
 
-OZ_C_proc_begin(BIgetsBoundB, 2)
+OZ_BI_define(BIgetsBoundB, 2, 0)
 {
-  oz_declareDerefArg(0,v);
+  oz_declareDerefIN(0,v);
 
   if (isVariableTag(vTag)){
+    RefsArray args = allocateRefsArray(1, NO);
+    args[0] = OZ_in(1);
+
     Thread *thr =
-      (Thread *) OZ_makeSuspendedThread (_getsBound_dummyB, OZ_args, OZ_arity);
+      (Thread *) OZ_makeSuspendedThread (_getsBound_dummyB, args, 1);
     OZ_Return ret = oz_var_addSusp(vPtr, thr);
     if (ret == PROCEED) oz_wakeupThread(thr);
     if (ret != SUSPEND) return ret;
   }
 
   return PROCEED;               // no result yet;
-}
-OZ_C_proc_end
+} OZ_BI_end
 
 
 OZ_BI_define(BIdeepFeed,2,0)
