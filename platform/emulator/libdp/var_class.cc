@@ -74,7 +74,7 @@ Bool ClassVar::sendRequest(DSite *ds)
 void ClassVar::gCollectRecurseV(void)
 {
   if (index != -1)
-    BT->getBorrow(index)->gcPO();
+    BT->bi2borrow(index)->gcPO();
   Assert(gname);
   gCollectGName(gname);
   setInfo(gcEntityInfoInternal(getInfo()));

@@ -72,9 +72,47 @@ int  globalOSWriteCounter = 0;
 int  globalOSReadCounter = 0;
 int  globalContCounter = 0;
 
+int  btResize = 0;
+int  btCompactify = 0;
+int  otResize = 0;
+int  otCompactify = 0;
+
 OZ_Term defaultConnectionProcedure = 0;
 
 FILE *logfile=stdout;
+
+int   sendJobbCntr = 0;
+SendJobb  *sendJobbFirst = NULL;
+SendJobb  *sendJobbLast = NULL;
+
+
+
+OZ_Return newSendJobb(int id){
+  ControlVarNew(controlvar,oz_rootBoard());
+  if (sendJobbFirst == NULL && sendJobbLast == NULL)
+    {
+      sendJobbFirst = new SendJobb(id, controlvar,NULL);
+      sendJobbLast  = sendJobbFirst; 
+    }
+  else
+    {
+      sendJobbFirst->next = new SendJobb(id, controlvar,NULL);
+      sendJobbFirst = sendJobbFirst->next;
+    }
+  return suspendOnControlVar();
+}
+
+void ResumeSendJobb(int id){
+  SendJobb **tmp = &sendJobbLast;
+  while(*tmp != NULL && (*tmp)->id != id)tmp=&((*tmp)->next);
+  if (*tmp != NULL){
+    ControlVarResume((*tmp)->cntrlVar);
+    SendJobb *d = (*tmp)->next;
+    delete(*tmp);
+    *tmp = d;
+    if(d == NULL) sendJobbFirst = (*tmp);
+  }
+}
 
 /* *********************************************************************/
 /*   init;                                                             */
@@ -106,8 +144,7 @@ static void initGateStream()
     Tertiary *t=(Tertiary*)new PortWithStream(oz_currentBoard(),GateStream);
     globalizeTert(t);
     int ind = t->getIndex();
-    Assert(ind==10000);
-    OwnerEntry* oe=OT->getEntry(ind);
+    OwnerEntry* oe=OT->index2entry(ind);
     oe->makePersistent();
   }
 }
@@ -149,7 +186,6 @@ void initDP()
 
 void send(MsgContainer *msgC)
 {
-  globalSendCounter++;
 
   int ret=msgC->getDestination()->send(msgC);
 
@@ -165,7 +201,7 @@ void send(MsgContainer *msgC)
 }
 
 DSite* getSiteFromTertiaryProxy(Tertiary* t){
-  BorrowEntry *be=BT->getBorrow(t->getIndex());
+  BorrowEntry *be=BT->bi2borrow(t->getIndex());
   Assert(be!=NULL);
   return be->getNetAddress()->site;}
 
@@ -224,7 +260,7 @@ void gcBorrowTableUnusedFramesImpl() {
 
 void gcProxyRecurseImpl(Tertiary *t) {
   int i = t->getIndex();
-  BorrowEntry *be=BT->getBorrow(i);
+  BorrowEntry *be=BT->bi2borrow(i);
   if(be->isGCMarked()){
     PD((GC,"borrow already marked:%d",i));
     return;}
@@ -237,7 +273,7 @@ void gcProxyRecurseImpl(Tertiary *t) {
 void gcManagerRecurseImpl(Tertiary *t) {
   Assert(!t->isFrame());
   int i = t->getIndex();
-  OwnerEntry *oe=OT->getEntry(i);
+  OwnerEntry *oe=OT->index2entry(i);
   if(oe->isGCMarked()){
     PD((GC,"owner already marked:%d",i));
     return;
@@ -289,6 +325,11 @@ void gcPerdioRootsImpl()
     gcGlobalWatcher();
     flowControler->gcEntries();
     gcDeferEvents();
+    SendJobb* tmp=sendJobbLast;
+    while(tmp){
+      oz_gCollectTerm(tmp->cntrlVar,tmp->cntrlVar);
+      tmp = tmp->next;
+    }
     // marshalers are not collected here, but through allocated
     // continuations ('MsgContainer::gcMsgC()');
   }
@@ -446,43 +487,34 @@ Bool localizeTertiary(Tertiary*t){
 /**********************************************************************/
 
 OwnerEntry* maybeReceiveAtOwner(DSite* mS,int OTI){
-  if(mS==myDSite){
-    OwnerEntry *oe=OT->getEntry(OTI);
-    Assert(!oe->isFree());
-    return oe;
-  }
+  if(mS==myDSite)
+    return OT->odi2entry(OTI);
   return NULL;
 }
 
 inline OwnerEntry* receiveAtOwner(int OTI){
-  OwnerEntry *oe=OT->getEntry(OTI);
+  OwnerEntry *oe=OT->odi2entry(OTI);
   return oe;
 }
 
 BorrowEntry* receiveAtBorrow(DSite* mS,int OTI){
-  NetAddress na=NetAddress(mS,OTI);
-  BorrowEntry* be=BT->find(&na);
-  Assert(be!=NULL);
-  return be;
+  return BT->find(OTI,mS);
 }
 
 inline BorrowEntry* maybeReceiveAtBorrow(DSite* mS,int OTI){
-  NetAddress na=NetAddress(mS,OTI);
-  BorrowEntry* be=BT->find(&na);
-
-  return be;
+  if (mS != myDSite)
+    return BT->find(OTI,mS);
+  return NULL;
 }
 
 void msgReceived(MsgContainer* msgC)
 {
   Assert(oz_onToplevel());
 
-  globalRecCounter++;
-
+  
   MessageType mt = msgC->getMessageType();
 
   PD((MSG_RECEIVED,"msg type %d",mt));
-
   switch (mt) {
   case M_PORT_SEND:   
     {
@@ -550,7 +582,7 @@ void msgReceived(MsgContainer* msgC)
 	  if (oe->isVar()) {
 	    (GET_VAR(oe,Manager))->registerSite(rsite);
 	  } else {
-	    sendRedirect(rsite,OTI,OT->getEntry(OTI)->getRef());
+	    sendRedirect(rsite,(int)oe,oe->getRef());
 	  }
 	}
       break;
@@ -569,7 +601,7 @@ void msgReceived(MsgContainer* msgC)
 	    (GET_VAR(oe,Manager))->deregisterSite(rsite);
 	  } else {
 	    if(USE_ALT_VAR_PROTOCOL){
-	      recDeregister(OT->getEntry(OTI)->getRef(),rsite);}
+	      recDeregister(oe->getRef(),rsite);}
 	  }
 	}
       break;
@@ -729,6 +761,7 @@ void msgReceived(MsgContainer* msgC)
 	  // ignore redirect: NOTE: v is handled by the usual garbage collection
 	}
       }
+            
       break;
     }
 
@@ -755,8 +788,7 @@ void msgReceived(MsgContainer* msgC)
       msgC->get_M_SENDSTATUS(site,OTI,status);
       PD((MSG_RECEIVED,"M_SENDSTATUS site:%s index:%d status:%d",
       	  site->stringrep(),OTI,status));
-      NetAddress na=NetAddress(site,OTI);
-      BorrowEntry *be=BT->find(&na);
+      BorrowEntry *be=BT->find(OTI,site);
       if(be==NULL){
 	PD((WEIRD,"receive M_SENDSTATUS after gc"));
 	break;}
@@ -771,9 +803,7 @@ void msgReceived(MsgContainer* msgC)
       int si;
       msgC->get_M_ACKNOWLEDGE(sd,si);
       PD((MSG_RECEIVED,"M_ACKNOWLEDGE site:%s index:%d",sd->stringrep(),si));
-
-      NetAddress na=NetAddress(sd,si);
-      BorrowEntry *be=BT->find(&na);
+      BorrowEntry *be=BT->find(si,sd);
       if (be) {
 	Assert(be->isVar());
 	GET_VAR(be,Proxy)->acknowledge(be->getPtr(), be);
@@ -802,12 +832,11 @@ void msgReceived(MsgContainer* msgC)
       msgC->get_M_CELL_CONTENTS(rsite,OTI,val);
       PD((MSG_RECEIVED,"M_CELL_CONTENTS index:%d site:%s val:%s",
 	  OTI,rsite->stringrep(),toC(val)));
-      // Erik, look at this
+      
       OwnerEntry* oe=maybeReceiveAtOwner(rsite,OTI);
       if(oe!=NULL){
 	cellReceiveContentsManager(oe,val,OTI);
 	break;}
-
       cellReceiveContentsFrame(receiveAtBorrow(rsite,OTI),val,rsite,OTI);
       break;
     }
@@ -1003,6 +1032,41 @@ void msgReceived(MsgContainer* msgC)
       // that is or will be sent is enough.
       break;
     }
+
+  case M_PONG_TERM:
+    {
+      DSite *dest;
+      int ctr,id; 
+      OZ_Term trm;
+      msgC->get_M_PONG_TERM(dest,ctr,id,trm);
+      ctr --; 
+      if (ctr == 0) 
+	ResumeSendJobb(id);
+      else
+	{
+	  MsgContainer *msgC = msgContainerManager->newMsgContainer(dest);
+	  msgC->put_M_PONG_TERM(myDSite,ctr, id,trm);
+	  send(msgC);
+	}
+      break;
+    }
+    
+  case M_PONG_PL:
+    {
+      DSite *dest;
+      int ctr,id; 
+      msgC->get_M_PONG_PL(dest,ctr,id);
+      ctr --;
+      if (ctr == 0) 
+	ResumeSendJobb(id);
+      else
+	{
+	  MsgContainer *msgC = msgContainerManager->newMsgContainer(dest);
+	  msgC->put_M_PONG_PL(myDSite,ctr, id);
+	  send(msgC);
+	}
+      break;
+    }
   default:
     OZ_error("siteReceive: unknown message %d\n",mt);
     break;
@@ -1109,8 +1173,8 @@ void initDPCore()
 
   initNetwork();
 
-  borrowTable      = new BorrowTable(DEFAULT_BORROW_TABLE_SIZE);
-  ownerTable       = new OwnerTable(DEFAULT_OWNER_TABLE_SIZE);
+  borrowTable      = new BorrowTable(ozconf.dpTableDefaultBorrowTableSize);
+  ownerTable       = new NewOwnerTable(ozconf.dpTableDefaultOwnerTableSize);
   resourceTable    = new ResourceHashTable(RESOURCE_HASH_TABLE_DEFAULT_SIZE);
   flowControler    = new FlowControler();
   //  msgBufferManager = new MarshalerBufferManager();
@@ -1165,13 +1229,8 @@ void marshalDSite(MarshalerBuffer *buf, DSite* s)
 }
 
 DSite* getSiteFromBTI(int i){
-  return BT->getBorrow(i)->getNetAddress()->site;}
+  return BT->bi2borrow(i)->getNetAddress()->site;}
 
-OwnerEntry *getOwnerEntryFromOTI(int i){
-  return OT->getEntry(i);}
-
-Tertiary* getTertiaryFromOTI(int i){
-  return OT->getEntry(i)->getTertiary();}
 
 /*
  * The builtin table: no builtins, just a fake
@@ -1216,16 +1275,16 @@ extern "C"
 /**********************************************************************/
 
 OZ_Term getGatePort(DSite* sd){
-  int si=10000; /* Gates are always located at position 0 */
+  int si=0; /* Gates are always located at position 0 */
   if(sd==myDSite){
-    OwnerEntry* oe=OT->getEntry(si);
+    OwnerEntry* oe=OT->odi2entry(si);
     Assert(oe->isPersistent());
     return  oe->getValue();}
   NetAddress na = NetAddress(sd,si); 
   BorrowEntry *b = borrowTable->find(&na);
   if (b==NULL) {
-    int bi=borrowTable->newBorrowPersistent(sd,si);
-    b=borrowTable->getBorrow(bi);
+    int bi=borrowTable->newBorrow(NULL,sd,si);
+    b=borrowTable->bi2borrow(bi);
     PortProxy *pp = new PortProxy(bi);
     b->mkTertiary(pp);
 
