@@ -311,8 +311,13 @@ void exitCheckSpace() {
   *((int32 *) fromPtr) = ToInt32(newValue);
 
 #define STOREFWDMARK(fromPtr, newValue)   \
+  Assert(isDWAligned(newValue));		  \
   CPTRAIL(fromPtr);                       \
   *((int32 *) fromPtr) = makeTaggedGcMark(newValue);
+
+#define STOREPSEUDOFWDMARK(fromPtr, newValue)   \
+  CPTRAIL(fromPtr);                       \
+  *((int32 *) fromPtr) = makeTaggedRef(newValue);
 
 #define STOREFWDFIELD(d,t) \
   CPTRAIL(d->cacGetMarkField()); \
@@ -368,23 +373,26 @@ RefsArray _cacRefsArray(RefsArray r) {
 }
 
 
-/*
- * Boards:
- *
- */
-
-
-// Test whether a board must be copied
+//
 #ifdef G_COLLECT
 
 #define NEEDSCOPYING(bb) (OK)
+
+#define IsToSpaceBoard(b) (b->isEqGCStep(oz_getGCStep()))
 
 #else
 
 #define NEEDSCOPYING(bb) (!(bb)->hasMark())
 
+#define IsToSpaceBoard(b) (b->getCopyStep() == oz_getCopyStep())
+
 #endif
 
+
+/*
+ * Boards:
+ *
+ */
 
 inline
 Board * Board::_cacBoard(void) {
@@ -412,6 +420,11 @@ Board * Board::_cacBoardDo(void) {
   ret->optVar = makeTaggedVar(new OptVar(ret));
 #ifdef G_COLLECT
   DebugCode(optVar = taggedInvalidVar);
+  ret->nextGCStep();
+  // an alive board must be copied at every GC step exactly once:
+  Assert(ret->isEqGCStep(oz_getGCStep()));
+#else
+  ret->setCopyStep(oz_getCopyStep());
 #endif
 
   cacStack.push(ret, PTR_BOARD);
@@ -565,10 +578,7 @@ OzVariable * OzVariable::_cacVarInline(void) {
 
   switch (getType()) {
   case OZ_VAR_OPT:
-    cacReallocStatic(OzVariable, this, to, sizeof(OptVar));
-    Assert(to->suspList == (SuspList *) 0);
-    to->setHome(bb);
-    return (to);
+    Assert(0);
   case OZ_VAR_SIMPLE:
     cacReallocStatic(OzVariable,this,to,sizeof(SimpleVar));
     break;
@@ -814,7 +824,13 @@ Bool isGCMarkedTerm(OZ_Term t)
   case TAG_CONST: 
     return (tagged2Const(t)->cacIsMarked());
   case TAG_VAR: 
-    return tagged2Var(t)->cacIsMarked();
+    {
+      OzVariable *cv = tagged2Var(t);
+      if (cv->getType() == OZ_VAR_OPT)
+	return (IsToSpaceBoard(cv->getBoardInternal()));
+      else
+	return (cv->cacIsMarked());
+    }
 
   case TAG_GCMARK: 
     return OK;
@@ -913,16 +929,29 @@ void VarFix::_cacFix(void)
       Assert(ov->getType() == OZ_VAR_OPT);
       Board *bb = ov->getBoardInternal()->derefBoard()->cacGetFwd();
       to_ptr = newTaggedOptVar(bb->getOptVar());
+
+      // Now, 'to_ptr' is either double-word aligned, or it is not.
+      // Depending on that, either a usual "GC forward" is stored, or
+      // the REF2 is used;
+      if (isDWAligned(to_ptr)) {
+	STOREFWDMARK(aux_ptr, to_ptr);
+      } else {
+	Assert(isSWAligned(to_ptr));
+	STOREPSEUDOFWDMARK(aux_ptr, to_ptr);
+      }
     } else {
-      Assert(tagTypeOf(aux) == TAG_GCMARK);
       // already there (either due to another "var fix" entry, or was
       // reached directly);
-      to_ptr = (TaggedRef *) tagged2GcUnmarked(aux);
+      if (tagTypeOf(aux) == TAG_GCMARK) {
+	to_ptr = (TaggedRef *) tagged2GcUnmarked(aux);
+      } else {
+	Assert(oz_isRef(aux) && isSWAligned(tagged2Ref(aux)));
+	to_ptr = tagged2Ref(aux);
+      }
     }
 
     //
     *to = makeTaggedRef(to_ptr);
-    STOREFWDMARK(aux_ptr, to_ptr);
   } while (!isEmpty());
 }
 
@@ -1897,7 +1926,13 @@ void OZ_cacBlock(OZ_Term * frm, OZ_Term * to, int sz)
        Board *bb = cv->getBoardInternal();
        // 'bb' is the "from space" board;
 
-       if (NEEDSCOPYING(bb)) {
+       // Now, if we've reached a variable through a REF2, that
+       // variable can be already GC"ed:
+       if (isSWAligned(aux_ptr) &&
+	   IsToSpaceBoard(cv->getBoardInternal())) {
+	 GCDBG_INTOSPACE(aux_ptr);
+	 *t = makeTaggedRef(aux_ptr);
+       } else if (NEEDSCOPYING(bb)) {
 	 bb = bb->_cacBoard();
 	 Assert(bb);
 	 vf.defer(aux_ptr, t);
@@ -1934,6 +1969,9 @@ void OZ_cacBlock(OZ_Term * frm, OZ_Term * to, int sz)
        Board *bb = cv->getBoardInternal();
        // 'bb' is the "from space" board;
 
+       // Note that we cannot reach here an already collected
+       // variable: that would mean that we scan some data structure
+       // for a second time;
        if (NEEDSCOPYING(bb)) {
 	 bb = bb->_cacBoard();
 	 // 'bb' can be unscanned yet (not "cacRecurse"d, in our
@@ -1942,11 +1980,21 @@ void OZ_cacBlock(OZ_Term * frm, OZ_Term * to, int sz)
 	 Assert(bb);
 	 *t = bb->getOptVar();
 	 Assert(*t != taggedInvalidVar);
-	 STOREFWDMARK(f, t);
+	 if (isDWAligned(f)) {
+	   STOREFWDMARK(f, t);
+	 } else {
+	   Assert(isSWAligned(f));
+	   STOREPSEUDOFWDMARK(f, t);
+	 }
        } else {
 	 *f = makeTaggedRef(t);
 	 *t = aux;
-	 STOREFWDMARK(f, t);
+	 if (isDWAligned(f)) {
+	   STOREFWDMARK(f, t);
+	 } else {
+	   Assert(isSWAligned(f));
+	   STOREPSEUDOFWDMARK(f, t);
+	 }
        }
 
        continue;

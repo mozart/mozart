@@ -42,14 +42,25 @@
 
 #define GETBOARD(v) ((v)->getBoardInternal()->derefBoard())
 
-
+//
 enum BoardTags {
-  BoTag_Root       = 1,
-  BoTag_Failed     = 2,
-  BoTag_Committed  = 4,
-  BoTag_Mark       = 8,
+  BoTag_Root       = 0x1,
+  BoTag_Failed     = 0x2,
+  BoTag_Committed  = 0x4,
+  BoTag_Mark       = 0x8,
+  // 'BoTag_EvenGC' has to be equal to the GCStep's EvenGCStep;
+  BoTag_EvenGC     = 0x10,
+  BoTag_MAX_UNUSED = 0x20
 };
+#define BoardTagMask	0x1f
+#define BoardTagBits	5
 
+// Remaining bits are used for the numbering of copying steps between
+// GC steps.  I (kost@) consider it pretty safe, since on an X bit
+// machine it is fairly difficult to make 2 power (X-BoardTagBits)
+// copies without a GC step :-)
+
+//
 class Board {
   friend int engine(Bool init);
 public:
@@ -94,7 +105,6 @@ public:
   //
   // Mark needed during cloning
   //
-
   int hasMark(void) {
     return flags & BoTag_Mark;
   }
@@ -105,19 +115,44 @@ public:
     flags &= ~BoTag_Mark;
   }
 
+  //
+  // GC&copying numbering;
+  Bool isEqGCStep(int gct) {
+    return ((flags & BoTag_EvenGC) == gct);
+  }
+  void nextGCStep() {
+    flags ^= BoTag_EvenGC;
+  }
+private:
+  void setGCStep(int gct) {
+    flags |= gct;
+  }
+public:
+  //
+  int getCopyStep() {
+    Assert(BoTag_MAX_UNUSED == 0x1<<BoardTagBits);
+    return (flags >> BoardTagBits);
+  }
+  void resetCopyStep() {
+    flags &= (BoTag_MAX_UNUSED - 1);
+  }
+  void setCopyStep(int cs) {
+    Assert(BoTag_MAX_UNUSED == 0x1<<BoardTagBits);
+    flags = (cs << BoardTagBits) | (flags & BoardTagMask);
+  }
 
   //
   // Parent access
   //
-  Board * getParentInternal(void) {
+  Board* getParentInternal(void) {
     return parent;
   }
-  Board *derefBoard(void) {
+  Board* derefBoard(void) {
     Board *bb;
     for (bb=this; bb->isCommitted(); bb=bb->getParentInternal()) {}
     return bb;
   }
-  Board *getParent(void) {
+  Board* getParent(void) {
     Assert(!isCommitted());
     return getParentInternal()->derefBoard();
   }
