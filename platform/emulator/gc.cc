@@ -2001,8 +2001,6 @@ void TaskStack::gc(TaskStack *newstack)
       newstack->setTop(newstack->array+offset);
       return;
     } else if (PC == C_CATCH_Ptr) {
-    } else if (PC == C_ACTOR_Ptr) {
-      Y = (RefsArray) ((AWActor *) Y)->gcActor();
     } else if (PC == C_XCONT_Ptr) {
       Y = gcRefsArray(Y); // X
     } else if (PC == C_LOCK_Ptr) {

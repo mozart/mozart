@@ -484,7 +484,6 @@ void CodeArea::display (ProgramCounter from, int sz, FILE* ofile)
     case TASKDEBUGCONT:
     case TASKCALLCONT:
     case TASKLOCK:
-    case TASKACTOR:
     case TASKSETSELF:
     case TASKLTQ:
     case TASKCATCH:
@@ -1001,7 +1000,7 @@ ProgramCounter
   C_DEBUG_CONT_Ptr,
   C_CALL_CONT_Ptr,
   C_LOCK_Ptr,
-  C_ACTOR_Ptr,
+  C_COMMIT_Ptr,
   C_SET_SELF_Ptr,
   C_SET_ABSTR_Ptr,
   C_LTQ_Ptr,
@@ -1026,8 +1025,7 @@ void CodeArea::init(void **instrTable)
   C_DEBUG_CONT_Ptr   = writeOpcode(TASKCFUNCONT,C_CFUNC_CONT_Ptr);
   C_CALL_CONT_Ptr    = writeOpcode(TASKDEBUGCONT,C_DEBUG_CONT_Ptr);
   C_LOCK_Ptr         = writeOpcode(TASKCALLCONT,C_CALL_CONT_Ptr);
-  C_ACTOR_Ptr        = writeOpcode(TASKLOCK,C_LOCK_Ptr);
-  C_SET_SELF_Ptr     = writeOpcode(TASKACTOR,C_ACTOR_Ptr);
+  C_SET_SELF_Ptr     = writeOpcode(TASKLOCK,C_LOCK_Ptr);
   C_SET_ABSTR_Ptr    = writeOpcode(TASKSETSELF,C_SET_SELF_Ptr);
   C_LTQ_Ptr          = writeOpcode(TASKPROFILECALL,C_SET_ABSTR_Ptr);
   C_CATCH_Ptr        = writeOpcode(TASKLTQ,C_LTQ_Ptr);

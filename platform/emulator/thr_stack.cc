@@ -81,9 +81,6 @@ Bool TaskStack::findCatch(TaggedRef *out, Bool verbose)
     if (PC==C_CATCH_Ptr) {
       if (out) *out = reverseC(*out);
       return TRUE;
-    } else if (PC==C_ACTOR_Ptr) {
-      AWActor *aw = (AWActor *) Y;
-      aw->setCommitted();
     } else if (PC==C_LOCK_Ptr) { 
       OzLock *lck = (OzLock *) Y;
       switch(lck->getTertType()){

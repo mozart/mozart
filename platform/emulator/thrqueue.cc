@@ -27,7 +27,7 @@
 #include "thrqueue.hh"
 
 
-Bool ThreadQueue::isScheduled (Thread *thr)
+Bool ThreadQueue::isScheduledSlow(Thread *thr)
 {
   int currentSize = size;
   int currentHead = head;

@@ -185,9 +185,10 @@ public:
   Board *getChildRef() { return children[0]; }
   // the same, but a child is not unlinked from the actor; 
   int getChildCount() { return childCount; };
-  Bool hasOneChildNoChoice() { return ((childCount == 1 && 
-					!isChoice() && 
-					!hasNext()) ? OK : NO); }
+  Bool hasOneChildNoChoice() { return
+				 childCount == 1 && 
+				 !isChoice() && 
+				 !hasNext(); }
   Bool hasNoChildren() { return ((childCount == 0 && !hasNext()) ? OK : NO); }
   int selectOrFailChildren(int l, int r);
 

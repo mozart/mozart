@@ -19,6 +19,8 @@
 
 #define PROP_TIME
 
+OZ_C_proc_proto(BIfail);     // builtins.cc
+
 // -----------------------------------------------------------------------
 // Object stuff
 // -----------------------------------------------------------------------
@@ -43,6 +45,29 @@ Abstraction *getApplyMethod(ObjectClass *cl, ApplMethInfoClass *ami,
 // *** EXCEPTION stuff
 // -----------------------------------------------------------------------
 
+
+// check if failure has to be raised as exception on thread
+int canOptimizeFailure(AM *e, Thread *tt)
+{
+  if (tt->hasCatchFlag() || e->isToplevel()) { // catch failure
+    if (tt->isSuspended()) {
+      tt->pushCFun(BIfail,0,0,NO);
+      tt->suspThreadToRunnable();
+      e->scheduleThread(tt);
+    } else {
+      printf("WEIRD: failure detected twice");
+#ifdef DEBUG_CHECK
+      PopFrame(tt->getTaskStackRef(),PC,Y,G);
+      Assert(PC==C_CFUNC_CONT_Ptr);
+      Assert(((OZ_CFun)Y)==BIfail);
+      tt->pushCFun(BIfail,0,0,NO);
+#endif
+    }
+    return NO;
+  } else {
+    return OK;
+  }
+}
 void AM::formatError(OZ_Term traceBack,OZ_Term loc)
 {
   OZ_Term d = OZ_record(OZ_atom("d"),
@@ -413,24 +438,24 @@ void AM::checkStatus()
 //  As said (in thread.hh), lazy allocation of stack can be toggled
 // just by moving the code to the '<something>ToRunnable ()';
 inline
-void Thread::makeRunning ()
+void Thread::makeRunning()
 {
-  Assert (isRunnable ());
+  Assert(isRunnable());
 
   //
   //  Note that this test covers also the case when a runnable thread
   // was suspended in a sequential mode: it had already a stack, 
   // so we don't have to do anything now;
-  switch (getThrType ()) {
+  switch (getThrType()) {
 
   case S_WAKEUP:
     //
     //  Wakeup;
     //  No regions were pre-allocated, - so just make a new one;
-    setHasStack ();
-    item.threadBody = am.allocateBody ();
+    setHasStack();
+    item.threadBody = am.allocateBody();
 
-    GETBOARD(this)->setNervous ();
+    GETBOARD(this)->setNervous();
     // no break here
 
   case S_RTHREAD:
@@ -739,11 +764,8 @@ TaggedRef AM::createNamedVariable(int regIndex, TaggedRef name)
 inline
 Bool AM::entailment()
 {
-  return (!currentBoard->hasSuspension()
-	  // First test: no subtrees;
-	  && trail.isEmptyChunk()
-	  // second test: is this node stable?
-	  );
+  return (!currentBoard->hasSuspension()  // threads?
+	  && trail.isEmptyChunk());       // constraints?
 }
 
 /*
@@ -954,6 +976,7 @@ LBLerror:
 LBLpreemption:
   SaveSelf;
   Assert(GETBOARD(CTT)==CBB);
+  Assert(CTT->isRunnable());
   e->scheduleThreadInline(CTT, CPP);
   CTT=0;
 
@@ -1292,11 +1315,11 @@ LBLsuspendThread:
     Assert(GETBOARD(CTT)==CBB);
     SaveSelf;
 
+#ifdef DEBUG_ROOT_THREAD
     // this can happen if \sw -threadedqueries,
-    // and in \feed prelude if suspend for I/O
-#ifdef DEBUG_CHECK
+    // or in non-threaded \feeds, e.g. suspend for I/O
     if (CTT==e->rootThread) {
-      // printf("root blocked\n");
+      printf("root blocked\n");
     }
 #endif
 
@@ -2564,8 +2587,6 @@ LBLdispatcher:
 
       if ( e->entailment() ) {
 
-	CTS->discardFrame(C_ACTOR_Ptr);
-
 	e->trail.popMark();
 
 	Board *tmpBB = CBB;
@@ -2590,7 +2611,6 @@ LBLdispatcher:
 
       // entailment ?
       if (e->entailment()) {
-	CTS->discardFrame(C_ACTOR_Ptr);
 	e->trail.popMark();
 	Board *tmpBB = CBB;
 	e->setCurrent(CBB->getParent());
@@ -2608,13 +2628,61 @@ LBLdispatcher:
       e->deinstallCurrent();
       DebugCode(currentDebugBoard=CBB);
 
-      // optimization for most usual case
+    LBLcheckFlat2:
+      Assert(!CAA->isCommitted());
+      Assert(CAA->getThread()==CTT);
+
       if (CAA->hasNext()) {
 	LOADCONT(CAA->getNext());
 	goto LBLemulate; // no thread switch allowed here (CAA)
       }
 
-      goto LBLpopTask;
+      if (CAA->isWait()) {
+
+	WaitActor *wa = WaitActor::Cast(CAA);
+	/* test bottom commit */
+	if (wa->hasNoChildren()) {
+	  HF_DIS;
+	}
+
+	/* test unit commit */
+	if (wa->hasOneChildNoChoice()) {
+	  Board *waitBoard = wa->getLastChild();
+
+	  if (!e->commit(waitBoard,CTT)) {
+	    HF_DIS;
+	  }
+
+	  wa->dispose();
+
+	  goto LBLpopTask;
+	}
+
+	// suspend wait actor
+	goto LBLsuspendThread;
+      }
+
+      Assert(CAA->isAsk());
+      {
+	AskActor *aa = AskActor::Cast(CAA);
+
+	//  should we activate the 'else' clause?
+	if (aa->isLeaf()) {
+	  aa->setCommitted();
+	  CBB->decSuspCount();
+
+	  /* rule: if fi --> false */
+	  if (aa->getElsePC() == NOCODE) {
+	    HF_COND;
+	  }
+
+	  LOADCONT(aa->getNext());
+	  PC=aa->getElsePC();
+	  goto LBLemulate;
+	}
+
+	goto LBLsuspendThread;
+      }
     }
 
 
@@ -2627,7 +2695,6 @@ LBLdispatcher:
 			 elsePC ? elsePC : NOCODE,
 			 NOCODE, Y, G, X, argsToSave);
       CBB->incSuspCount(); 
-      CTS->pushActor(CAA);
       DISPATCH(3);
     }
 
@@ -2635,7 +2702,6 @@ LBLdispatcher:
     {
       CAA = new WaitActor(CBB, CTT, NOCODE, Y, G, X, 0, NO);
       CBB->incSuspCount(); 
-      CTS->pushActor(CAA);
 
       DISPATCH(1);
     }
@@ -2646,7 +2712,6 @@ LBLdispatcher:
 
       CAA = new WaitActor(bb, CTT, NOCODE, Y, G, X, 0, NO);
       CBB->incSuspCount(); 
-      CTS->pushActor(CAA);
 
       if (bb->isWait()) {
 	WaitActor::Cast(bb->getActor())->addChoice((WaitActor *) CAA);
@@ -2663,7 +2728,6 @@ LBLdispatcher:
 
       CAA = new WaitActor(bb, CTT, NOCODE, Y, G, X, 0, OK);
       CBB->incSuspCount(); 
-      CTS->pushActor(CAA);
 
       Assert(CAA->isChoice());
 
@@ -2695,6 +2759,7 @@ LBLdispatcher:
       DISPATCH(1);
     }
 
+  // == CLAUSE, WAIT
   Case(EMPTYCLAUSE)
     {
       Assert(CAA->isWait());
@@ -2703,13 +2768,7 @@ LBLdispatcher:
 
       bb->setBody(PC+1, Y, G, NULL,0);
 
-      // optimization for most usual case
-      if (CAA->hasNext()) {
-	LOADCONT(CAA->getNext());
-	goto LBLemulate; // no thread switch allowed here (CAA)
-      }
-
-      goto LBLpopTask;
+      goto LBLcheckFlat2;
     }
 
   Case(NEXTCLAUSE)
@@ -2767,7 +2826,6 @@ LBLdispatcher:
       CTS->pushEmpty();   // mm2?
       goto LBLterminateThread;
     }
-
 
   Case(TASKPROFILECALL)
     {
@@ -2859,7 +2917,7 @@ LBLdispatcher:
 	break;
       }
       case DBG_NEXT : {
-if (CTT->isTraced() && CTT->stepMode()) {
+	if (CTT->isTraced() && CTT->stepMode()) {
 	  debugStreamExit(info);
 	  goto LBLpreemption;
 	}
@@ -2882,7 +2940,7 @@ if (CTT->isTraced() && CTT->stepMode()) {
      {
        // 
        // by kost@ : 'solve actors' are represented via a c-function; 
-       OZ_CFun biFun = (OZ_CFun) (void*) Y;
+       OZ_CFun biFun = (OZ_CFun) Y;
        RefsArray tmpX = G;
        G = Y = NULL;
        if (tmpX != NULL) {
@@ -2991,70 +3049,6 @@ if (CTT->isTraced() && CTT->stepMode()) {
        }
      }
     
-
-  Case(TASKACTOR)
-    {
-      AWActor *aw = (AWActor *) Y;
-      Y = NULL;
-
-      Assert(!aw->isCommitted());
-
-      if (aw->hasNext()) {
-	LOADCONT(aw->getNext());
-	CAA=aw;
-	CTS->pushActor(aw);
-	goto LBLemulate; // no thread switch allowed here (CAA)
-      }
-
-      if (aw->isWait()) {
-
-	WaitActor *wa = WaitActor::Cast(aw);
-	/* test bottom commit */
-	if (wa->hasNoChildren()) {
-	  HF_DIS;
-	}
-
-	/* test unit commit */
-	if (wa->hasOneChildNoChoice()) {
-	  Board *waitBoard = wa->getLastChild();
-
-	  if (!e->commit(waitBoard,CTT)) {
-	    HF_DIS;
-	  }
-
-	  wa->dispose();
-
-	  goto LBLpopTask;
-	}
-
-	// suspend wait actor
-	CTS->pushActor(aw);
-	goto LBLsuspendThread;
-      }
-
-      Assert(aw->isAsk());
-
-      AskActor *aa = AskActor::Cast(aw);
-
-      //  should we activate the 'else' clause?
-      if (aa->isLeaf()) {
-	aa->setCommitted();
-	CBB->decSuspCount();
-
-	/* rule: if fi --> false */
-	if (aa->getElsePC() == NOCODE) {
-	  HF_COND;
-	}
-
-	LOADCONT(aa->getNext());
-	PC=aa->getElsePC();
-	goto LBLemulate;
-      }
-
-      CTS->pushActor(aw);
-      goto LBLsuspendThread;
-    }
-
   Case(OZERROR)
       error("Emulate: OZERROR command executed");
       goto LBLerror;
@@ -3276,26 +3270,58 @@ LBLfailure:
       Assert(0);
     }
 
+  } else if (CTT == AWActor::Cast(aa)->getThread()) {
+    // pseudo flat guard
+    Assert(CAA==aa);
+    goto LBLcheckFlat2;
   } else {
+    AWActor *aw = AWActor::Cast(aa);
+    Thread *tt = aw->getThread();
 
-    AWActor *aw=AWActor::Cast(aa);
-    Thread *tt = aw->getThread ();
+    Assert(CTT != tt && GETBOARD(tt) == CBB);
+    Assert(!aw->isCommitted() && !aw->hasNext());
 
-    Assert (tt);
-
-    if (tt->isSuspended()) {
-
-      Assert(!(e->isScheduled (tt)));
-
-      //  The following must hold because 'tt' can suspend 
-      // only in the board where the actor itself is located;
-      Assert(GETBOARD(tt) == CBB);
-
-      tt->suspThreadToRunnable();
-
-      e->scheduleThread(tt);
+    if (aw->isWait()) {
+      WaitActor *wa = WaitActor::Cast(aw);
+      /* test bottom commit */
+      if (wa->hasNoChildren()) {
+	if (canOptimizeFailure(e,tt)) goto LBLfailure;
+      } else {
+	Assert(!e->isScheduledSlow(tt));
+	/* test unit commit */
+	if (wa->hasOneChildNoChoice()) {
+	  Board *waitBoard = wa->getLastChild();
+	  int succeeded = e->commit(waitBoard);
+	  wa->dispose(); // mm2
+	  if (!succeeded) {
+	    if (canOptimizeFailure(e,tt)) goto LBLfailure;
+	  }
+	}
+      }
     } else {
-      if (tt==CTT) goto LBLpopTask;
+      Assert(!e->isScheduledSlow(tt));
+      Assert(aw->isAsk());
+
+      AskActor *aa = AskActor::Cast(aw);
+
+      //  should we activate the 'else' clause?
+      if (aa->isLeaf()) {
+	aa->setCommitted();
+	CBB->decSuspCount();
+
+	/* rule: if fi --> false */
+	if (aa->getElsePC() == NOCODE) {
+	  if (canOptimizeFailure(e,tt)) goto LBLfailure;
+	} else {
+	  Continuation *tmpCont = aa->getNext();
+	  TaskStack *ts = tt->getTaskStackRef();
+	  ts->pushCont(aa->getElsePC(),
+		       tmpCont->getY(), tmpCont->getG());
+	  if (tmpCont->getX()) ts->pushX(tmpCont->getX());
+	  tt->suspThreadToRunnable();
+	  e->scheduleThread(tt);
+	}
+      }
     }
   }
 
@@ -3315,3 +3341,4 @@ LBLfailure:
 #ifdef OUTLINE
 #undef inline
 #endif
+
