@@ -29,6 +29,7 @@
     <Meta name="html.split" value="chapter.tools">
     <Meta name="html.split" value="appendix.devel">
     <Meta name="html.split" value="appendix.api">
+    <Meta name="html.split" value="appendix.limitations">
     <Meta name="html.split.bib" value="">
     <Meta name="html.split.index" value="">
 
@@ -128,6 +129,9 @@
           of Mozart's &OPI;.  Please address any remarks to him.
     <Chapter id="chapter.start">
       <Title/Invoking the &OPI;/
+      <P>
+        This chapter describes how to invoke the &OPI;, &ie;, how to
+        access its functionality.
       <Section>
         <Title/Invoking the &OPI; in the Unix Environment/
           <P>
@@ -293,6 +297,10 @@
             of the &OPI;.
     <Chapter id="chapter.editing">
       <Title/Editing Oz Code/
+      <P>
+        The commands in this chapter assist in editing Oz code.  To achieve
+        this, many of these are aware of the lexical or syntactical structure
+        of Oz programs.
       <Section>
         <Title/Managing Oz Buffers/
           <P>
@@ -1070,8 +1078,71 @@ cache=~/.oz/cache:cache=$OZHOME/cache>>>
             Move to the next unmatched closing parenthesis.
         </List>
       <P>
-        Please send any interesting commands you formulate using these
+        Please submit interesting commands you formulate using these
         functions to the author.
+    <Appendix id="appendix.limitations">
+      <Title/Limitations/
+      <P>
+        Some features of Oz syntax are not handled correctly for purposes
+        of fontification and indentation.  These will be described in the
+        following so that you can work around these limitations.
+      <Para class=apropos><Title/Fontification/
+        <List>
+          <Item proglang=oz>
+            An ampersand as the last character in a string or before a
+            backslash-escaped double quote in a string prevents this double
+            quote from being recognized as a string delimiter.  Workaround:
+            Write <<[&&]>> or <<"\&">> instead of <<"&">>.
+          <Item proglang=oz>
+            A backslash character token <<&\\>> immediately followed by a
+            lowercase letter is misinterpreted as a directive, &eg;, in
+            <<C == &\\andthen &ellipsis;>>.  Workaround:  Include a space
+            character.
+          <Item>
+            At maximum fontification level, method names are coloured
+            in <<font-lock-funtion-name-face>>.  If one mistakenly
+            uses a keyword as method name, as in <Code proglang=oz
+            /meth lock() &ellipsis; end/, then one is not reminded of
+            the fact that this constitutes a syntax error.
+          <Item>
+            The use of non-escaped double quotes in Gump regular expression
+            tokens written with angle brackets confuses fontification.
+            Workaround:  Express the regular expression by a string.
+        </List>
+      <Para class=apropos><Title/Indentation/
+        <List proglang=oz>
+          <Item>
+            If a keyword is immediately preceded by a number (without space),
+            &eg;, <<10thread>>, the keyword is not recognized as such.  This
+            also concerns fontification.  Workaround:  Write a space.
+          <Item>
+            Indentation does not know about <</* &ellipsis; */>> style
+            comments, that is, their contents is indented like code and
+            taken into account for computing the following indentation
+            level.  Workaround:  Only use such comments to comment out
+            properly nested code.
+          <Item>
+            Indentation does not know about conditional compilation.
+            Workaround:  Only use conditionals around properly nested
+            code.
+          <Item>
+            Line breaks inside strings, quotes or backquote variables
+            are reported as errors when computing the indentation level.
+            Workaround:  Write line breaks as <<"\n">> and&slash;or use
+            virtual strings with <<#>> concatenation for multiline strings.
+          <Item>
+            Indentation is not aware of infix operators, &eg;:
+<<<feat
+   f:
+      5 +
+   7>>>
+            The <<7>> should be underneath the <<5>>.  Workaround:  Enclose
+            the expression in parentheses.
+          <Item>
+            The contents of Gump regular expression tokens in angle bracket
+            notation are not ignored for purposes of indentation.  Workaround:
+            Express the regular expression by a string.
+        </List>
   <Back>
     <Bib.Extern id="mozart-base" to="mozart.bib" key="Mozart-Base">
     <Bib.Extern id="mozart-compiler" to="mozart.bib" key="Mozart-Compiler">
