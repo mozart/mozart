@@ -33,7 +33,7 @@
       TO="applets/MIM.oza"/Start Client//
       <ITEM/<REF.EXTERN
       TO="http://www.sics.se/mozart/mim/"/More Information//
-      <ITEM><REF.EXTERN TO="ozdoc:install" KEY="applets"/How to enable Applets/
+      <ITEM><REF.EXTERN TO="ozdoc:install" KEY="appendix.applets"/How to enable Applets/
     </LIST></P>
   <SECTION CLASS=unnumbered>
     <TITLE/Starting a Client/
