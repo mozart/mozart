@@ -90,7 +90,6 @@ local
 	    file:    {CondSelect Frame file ''}
 	    line:    {CondSelect Frame line unit}
 	    column:  {CondSelect Frame column unit}
-	    time:    Frame.time
 	    name:    if Kind == 'call' then
 			if {Not {HasFeature Frame data}} then 'unknown'
 			elseif {IsDet Data} then
@@ -187,23 +186,21 @@ in
 	 if {IsDet X} andthen {HasFeature X debug}
 	    andthen {IsDet X.debug} andthen {HasFeature X.debug stack} then
 	    Stack = X.debug.stack
-	    (F#L)#C#Time = case Stack of Frame|_ then
-			      case X of error(kernel(noElse F L ...) ...) then
-				 %% use the file name and line number
-				 %% of the missing else itself (not the case)
-				 F#L
-			      else
-				 {CondSelect Frame file ''}#
-				 {CondSelect Frame line unit}
-			      end#
-			      {CondSelect Frame column unit}#
-			      Frame.time
-			   [] nil then (''#unit)#~1#999999999
-			      %% --** Leif meint, das ist Bullshit
-			   end
+	    (F#L)#C = case Stack of Frame|_ then
+			 case X of error(kernel(noElse F L ...) ...) then
+			    %% use the file name and line number
+			    %% of the missing else itself (not the case)
+			    F#L
+			 else
+			    {CondSelect Frame file ''}#
+			    {CondSelect Frame line unit}
+			 end#
+			 {CondSelect Frame column unit}
+		      [] nil then (''#unit)#~1
+			 %% --** Leif meint, das ist Bullshit
+		      end
 	    S = entry(kind: exception thr: self.T
-		      file: F line: L column: C time: Time
-		      args: [X]) | Stack
+		      file: F line: L column: C args: [X]) | Stack
 	 in
 	    Status = {FormatExceptionLine {Error.exceptionToMessage X}}
 	    {Ozcar PrivateSend(status(Status clear ExcThreadColor))}

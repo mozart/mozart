@@ -556,7 +556,6 @@ in
 		       tkInit(parent: W
 			      action: self # FrameClick(frame:Frame))}
 	 LineEnd    = p(FrameNr 'end')
-	 UpToDate   = 1 > 0 %{Emacs isUpToDate(Frame.time $)}
 	 Arrow      = if Frame.dir == entry then ' -> ' else ' <- ' end
       in
 	 if Delete then
@@ -605,8 +604,7 @@ in
 	 {W tk(insert LineEnd
 	       if Frame.kind \= 'call' then
 		  '' else '}'
-	       end # if UpToDate then nil else
-			' (source has changed)' end #
+	       end #
 	       if Delete then '\n' else "" end
 	       q(StackTag LineActTag LineColTag))}
 	 {W tk(tag add  LineActTag LineEnd)} % extend tag to EOL
