@@ -73,14 +73,13 @@ CREATEDFILES= \
         version.cc initffuns.cc \
         $(MODINTERS)
 
-SRCS= \
+OTHERSRCS= \
         main.cc \
         version.cc initffuns.cc \
         fdhook.cc statisti.cc trace.cc \
         print.cc base.cc ozconfig.cc \
         foreign.cc boot-manager.cc \
-        builtins.cc vprops.cc \
-        debug.cc
+        builtins.cc vprops.cc debug.cc
 
 SUPPORTSRCS=\
         stack.cc genhashtbl.cc ozostream.cc hashtbl.cc \
@@ -131,12 +130,26 @@ FSETSRCS=\
 TEXT2PICKLESRCS= text2pickle.cc opcodes.cc
 TEXT2PICKLEOBJS= $(TEXT2PICKLESRCS:.cc=.o)
 
-ALLSRCS= \
+SRCS= \
         $(SUPPORTSRCS) $(OSSRCS) $(STORESRCS) $(RUNSRCS) \
         $(SPACESRCS) $(MEMSRCS) $(PERDIOSRCS) $(OFSRCS) $(FDSRCS) \
         $(FSETSRCS) $(CPISRCS)
 
-OBJS=   $(SRCS:%.cc=%.o) $(ALLSRCS:%.cc=%.o)
+OBJS=   $(OTHERSRCS:%.cc=%.o) $(SRCS:%.cc=%.o)
+
+WIFSRCS=        wif.cc
+COMPILERSUPPORTSRCS=    compiler.cc
+BROWSERSRCS=    browser.cc
+DEBUGSRCS=      debugBI.cc
+
+WIFOBJS=        $(WIFSRCS:%.cc=%.o)
+COMPILERSUPPORTOBJS=    $(COMPILERSUPPORTSRCS:%.cc=%.o)
+BROWSEROBJS=    $(BROWSERSRCS:%.cc=%.o)
+DEBUGOBJS=      $(DEBUGSRCS:%.cc=%.o)
+
+ALLSRCS= $(SRCS) \
+        $(WIFSRCS) $(COMPILERSUPPORTSRCS) $(BROWSERSRCS) \
+        $(DEBUGSRCS) $(TEXT2PICKLESRCS)
 
 ############################################################################
 ### TARGETS
@@ -161,31 +174,31 @@ libFSP.a FSP.so: \
         libfset modFSP-if.cc
         cd libfset; $(MAKE) ../$@
 
-Wif.so: wif.o
-        $(DYNLD) -o $@ wif.o
+Wif.so: $(WIFOBJS)
+        $(DYNLD) -o $@ $(WIFOBJS)
 
-libWif.a: wif.o
-        $(AR) -rc $@ wif.o && $(RANLIB) $@
+libWif.a: $(WIFOBJS)
+        $(AR) -rc $@ $(WIFOBJS) && $(RANLIB) $@
 
-CompilerSupport.so: compiler.o
-        $(DYNLD) -o $@ compiler.o
+CompilerSupport.so: $(COMPILERSUPPORTOBJS)
+        $(DYNLD) -o $@ $(COMPILERSUPPORTOBJS)
 
-libCompilerSupport.a: compiler.o
-        $(AR) -rc $@ compiler.o && $(RANLIB) $@
+libCompilerSupport.a: $(COMPILERSUPPORTOBJS)
+        $(AR) -rc $@ $(COMPILERSUPPORTOBJS) && $(RANLIB) $@
 
 browser.o: modBrowser-if.cc
 
-Browser.so: browser.o
-        $(DYNLD) -o $@ browser.o
+Browser.so: $(BROWSEROBJS)
+        $(DYNLD) -o $@ $(BROWSEROBJS)
 
-libBrowser.a: browser.o
-        $(AR) -rc $@ browser.o && $(RANLIB) $@
+libBrowser.a: $(BROWSEROBJS)
+        $(AR) -rc $@ $(BROWSEROBJS) && $(RANLIB) $@
 
-Debug.so: debug.o
-        $(DYNLD) -o $@ debug.o
+Debug.so: $(DEBUGOBJS)
+        $(DYNLD) -o $@ $(DEBUGOBJS)
 
-libDebug.a: debug.o
-        $(AR) -rc $@ debug.o && $(RANLIB) $@
+libDebug.a: $(DEBUGOBJS)
+        $(AR) -rc $@ $(DEBUGOBJS) && $(RANLIB) $@
 
 libPerdio.a: $(PERDIOSRCS:%.cc=%.o)
         $(AR) -rc $@ $(PERDIOSRCS:%.cc=%.o) && $(RANLIB) $@
@@ -262,15 +275,14 @@ $(BINDIR) $(INCDIR):
 initffuns.cc oz.c: oz.h $(OZVERSION)
         $(SHELL) $(SRCDIR)/makeffuns $(SRCDIR) `$(OZVERSION)`
 
-version.cc: version.sed $(filter-out version.cc,$(SRCS) $(ALLSRCS))
+version.cc: version.sed $(filter-out version.cc,$(ALLSRCS))
         sed -e "s/HEREGOESDATE/`date '+%h %d %Y \(%T\)'`/" \
              -e "s/OZPLATFORM/$(PLATFORM)/" \
              $(SRCDIR)/version.sed > version.cc
 
 depend:: Makefile $(CREATEDFILES) $(ALLSRCS) $(TEXT2PICKLESRCS)
-        $(DEPEND) $(SRCDIR)/main.cc version.cc initffuns.cc \
+        $(DEPEND) version.cc initffuns.cc \
                 $(ALLSRCS:%=$(SRCDIR)/%) $(CREATEDSRCS) \
-                $(TEXT2PICKLESRCS:%=$(SRCDIR)/%) \
                 > Makefile.deps
 
 tags:   $(CREATEDFILES) version.cc
