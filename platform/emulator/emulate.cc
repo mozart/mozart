@@ -1572,7 +1572,7 @@ LBLkillToplevelThread:
         OZ_unify(dbgVar,dbgTuple);
       }
 
-      DebugCheckT(printf("toplevel thread finished\n"));
+      // DebugCheckT(printf("toplevel thread finished\n"));
 
       e->currentThread->disposeRunnableThread ();
       e->currentThread = (Thread *) NULL;
