@@ -208,11 +208,11 @@
 	      <Entry><<setRepAll>>
 		<Index/<<Time>><And><<repeat>><And><<setRepAll>>/
 	      <Synopsis>
-<<setRepAll(action:   ?+{ActionPR}  <= dummyRep
+<<<setRepAll(action:   ?+{ActionPR}  <= dummyRep
 	  final:    ?+{FinalPR}   <= finalRep
 	  delay:    ?+{DelayI}    <= 1000
 	  delayFun: ?+{DelayFunP} <= fun {$} 1000 end
-	  number:   ?+{NumI}      <= ~1)>>
+	  number:   ?+{NumI}      <= ~1)>>>
 	      <Item>
 		initializes the loop with the action ?_{ActionPR} to iterate
 		(default: message <<dummyRep>>), the action ?_{FinalPR} to
@@ -242,12 +242,12 @@ end>>>
 	      <Entry><<getRep>>
 		<Index/<<Time>><And><<repeat>><And><<getRep>>/
 	      <Synopsis>
-<<getRep(action:   ??{ActionPR}  <= _
+<<<getRep(action:   ??{ActionPR}  <= _
        final:    ??{FinalPR}   <= _
        delay:    ??{DelayI}    <= _
        delayFun: ??{DelayFunP} <= _
        number:   ??{LimitI}    <= _
-       actual:   ??{NumI}      <= _)>>
+       actual:   ??{NumI}      <= _)>>>
 	      <Item>
 		returns the current loop parameters: ?_{LimitI} returns the
 		current limit of the iteration, and ?_{NumI} the number of
