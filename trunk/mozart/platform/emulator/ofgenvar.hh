@@ -314,7 +314,8 @@ public:
 
     // Used in conjunction with addFeatureValue to propagate suspensions:
     void propagateFeature(void) {
-        propagate(makeTaggedCVar(this), suspList, makeTaggedCVar(this), pc_propagator);
+      /* third argument must be ignored --> use AtomNil */
+      propagate(makeTaggedCVar(this), suspList, AtomNil, pc_propagator);
     }
 
     int getSuspListLength(void) {
