@@ -4467,6 +4467,8 @@ TaggedRef cloneObjectRecord(TaggedRef record, Bool cloneAll)
   return makeTaggedSRecord(rec);
 }
 
+static TaggedRef dummyRecord = 0;
+
 inline
 OZ_Term makeObject(OZ_Term initState, OZ_Term ffeatures, ObjectClass *clas)
 {
@@ -4474,7 +4476,6 @@ OZ_Term makeObject(OZ_Term initState, OZ_Term ffeatures, ObjectClass *clas)
 
   /* state is _allways_ a record, this makes life somewhat easier */
   if (!oz_isSRecord(initState)) {
-    static TaggedRef dummyRecord = 0;
     if (dummyRecord==0) {
       dummyRecord = OZ_recordInitC("noattributes",
                                    oz_list(OZ_pair2(OZ_newName(),OZ_atom("novalue")),0));
