@@ -425,6 +425,9 @@ end
     <subsection id="section.tk.tkBind">
        <title/Event bindings: <<tkBind>>/
 
+    <subsection id="section.tk.action-values">
+       <title/Action Values/
+
 
   <section id="section.tk.no-action">
     <title/No-Action Widgets/
@@ -1117,21 +1120,113 @@ tkReturnListFloat(... ??{FBs})>>>
   <section id="section.tk.font">
     <title/Fonts/
 
+    <index class=module/Tk<and>font/
+
     <p>
+      The class <<Tk.font>> provides the following methods. An
+      example can be found in <ptr.extern to="ozdoc:wp"
+      key="section.widgets-1.fonts">, for reference documentation see
+      <ref.extern to="&tkcmd;/font.htm"/<file/font//.
+
+    <p>
+     <list>
+       <entry><<tkInit>>
+         <index class=module/Tk<and>font<and>tkInit/
+       <synopsis>
+<<<tkInit(type:    ?+{TypeTcl}
+       url:     ?+{UrlV} <= unit
+       maskurl: ?+{MarkUrlV} <= unit
+       ...)>>>
+       <item>
+         Creates a new font.
+
+       <entry><<tk>>
+         <index class=module/Tk<and>font<and>tk/
+       <synopsis>
+         <<<tk(...)>>>
+       <item>
+         Sends.
+
+       <entry><<tkReturn>>
+         <index class=module/Tk<and>font<and>tkReturn/
+         <index class=module/Tk<and>font<and>tkReturnString/
+         <index class=module/Tk<and>font<and>tkReturnAtom/
+         <index class=module/Tk<and>font<and>tkReturnInt/
+         <index class=module/Tk<and>font<and>tkReturnFloat/
+         <index class=module/Tk<and>font<and>tkReturnList/
+         <index class=module/Tk<and>font<and>tkReturnListString/
+         <index class=module/Tk<and>font<and>tkReturnListAtom/
+         <index class=module/Tk<and>font<and>tkReturnListInt/
+         <index class=module/Tk<and>font<and>tkReturnListFloat/
+       <synopsis>
+         <<<tkReturn(... ??{S})
+tkReturnString(... ??{S})
+tkReturnAtom(... ??{A})
+tkReturnInt(... ??{IB})
+tkReturnFloat(... ??{FB})
+tkReturnList(... ??{Ss})
+tkReturnListString(... ??{Ss})
+tkReturnListAtom(... ??{As})
+tkReturnListInt(... ??{IBs})
+tkReturnListFloat(... ??{FBs})>>>
+       <item>
+         Returns the result of executing the message. See <ptr
+         to="section.tk.objects"> for more details.
+
+       <entry><<tkClose>>
+         <index class=module/Tk<and>font<and>tkClose/
+       <synopsis>
+         <<<tkClose()>>>
+       <item>
+         Destroys the font and closes the font object.
+
+     </list>
+
 
   </section>
 
-
-
-  <section id="section.tk.action">
-    <title/Actions/
-
-    <p>
-
-  </section>
 
   <section id="section.tk.listener">
     <title/Listeners/
+
+    <index class=module/Tk<and>listener/
+
+    <p>
+      The class <<Tk.listener>> is not a tcl object. Is main use is to
+      serve as listener for events, see also <ptr
+      to="section.tk.action-values">. It provides the
+      following methods. For an example see <ptr.extern
+      to="ozdoc:wp" key="section.widgets-2.action">.
+
+    <p>
+     <list>
+       <entry><<tkInit>>
+         <index class=module/Tk<and>listener<and>tkInit/
+       <synopsis>
+         <<<tkInit()>>>
+       <item>
+         Creates a new listener, which consists of a meessage stream
+         and a thread that serves each message on the stream by
+         applying <<self>> to it.
+
+       <entry><<tkServe>>
+         <index class=module/Tk<and>listener<and>tkServe/
+       <synopsis>
+         <<<tkServ(?+{MessageR})>>>
+       <item>
+         Adds the message ?_{MessageR} to the current tail of the
+         message stream.
+
+       <entry><<tkClose>>
+         <index class=module/Tk<and>listener<and>tkClose/
+       <synopsis>
+         <<<tkClose()>>>
+       <item>
+         Decouples the message stream from the serving thread. That
+         is, after all messages that are currently on the stream have
+         been served, the serving thread terminates.
+
+     </list>
 
     <p>
 
