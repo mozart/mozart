@@ -5833,7 +5833,10 @@ OZ_C_proc_end
 OZ_C_proc_begin(BIgetLingRefFd,1)
 {
   oz_declareArg(0,out);
-  return oz_unifyInt(out,am.getCompStream()->getLingRefFd());
+  if (am.getCompStream())
+    return oz_unifyInt(out,am.getCompStream()->getLingRefFd());
+  else
+    return oz_unifyInt(out,-1);
 }
 OZ_C_proc_end
 
@@ -6173,7 +6176,7 @@ OZ_C_proc_begin(BISystemGetArgv,1) {
 OZ_C_proc_end
 
 OZ_C_proc_begin(BISystemGetStandalone,1) {
-  return oz_unify(OZ_getCArg(0),am.isStandalone() ? NameTrue : NameFalse);
+  return oz_unify(OZ_getCArg(0),ozconf.runningUnderEmacs? NameFalse: NameTrue);
 }
 OZ_C_proc_end
 
@@ -7151,13 +7154,6 @@ OZ_C_proc_begin(BIgetOPICompiler,1)
 }
 OZ_C_proc_end
 
-OZ_C_proc_begin(BIrunningUnderEmacs,1)
-{
-  oz_declareArg(0,res);
-  return oz_unify(res,ozconf.runningUnderEmacs? NameTrue: NameFalse);
-}
-OZ_C_proc_end
-
 OZ_C_proc_begin(BIisBuiltin,2)
 {
   oz_declareNonvarArg(0,val);
@@ -7810,7 +7806,6 @@ BIspec allSpec[] = {
   // (OPI and environment handling):
   {"setOPICompiler",             1, BIsetOPICompiler,             0},
   {"getOPICompiler",             1, BIgetOPICompiler,             0},
-  {"runningUnderEmacs",          1, BIrunningUnderEmacs,          0},
   {"isBuiltin",                  2, BIisBuiltin,                  0},
   {"getBuiltinName",             2, BIgetBuiltinName,             0},
   {"nameVariable",               2, BInameVariable,               0},
