@@ -39,7 +39,7 @@
 TaggedRef
   WifAtomTclOption, WifAtomTclList, WifAtomTclPosition,
   WifAtomTclQuote, WifAtomTclString, WifAtomTclVS,
-  WifAtomTclBatch, WifAtomTclColor,
+  WifAtomTclBatch, WifAtomTclColor, WifAtomTclDelete,
   WifAtomDot,
   WifAtomTagPrefix, WifAtomVarPrefix, WifAtomImagePrefix,
 
@@ -51,6 +51,7 @@ TaggedRef
 void wifInitLiterals() {
 
   WifAtomTclOption    = OZ_atom("o");
+  WifAtomTclDelete    = OZ_atom("d");
   WifAtomTclList      = OZ_atom("l");
   WifAtomTclPosition  = OZ_atom("p");
   WifAtomTclQuote     = OZ_atom("q");
@@ -821,6 +822,16 @@ OZ_Return WIF::put_tcl(TaggedRef tcl) {
         return PROCEED;
       } else if (literalEq(l,WifAtomTclOption)) {
         return put_tuple(st);
+      } else if (literalEq(l,WifAtomTclDelete)) {
+        if (st->getWidth() != 1)
+          return raise_type_error(tcl);
+        TaggedRef rt = st->getArg(0);
+        DEREF(rt, rt_ptr, rt_tag);
+        if (oz_isVariable(rt)) {
+          am.addSuspendVarList(rt_ptr);
+          return SUSPEND;
+        }
+        return put_record_or_tuple(rt);
       } else if (literalEq(l,WifAtomTclList)) {
         put('[');
         StateReturn(put_tuple(st));
