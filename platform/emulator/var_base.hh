@@ -80,7 +80,7 @@ void addSuspUVar(TaggedRefPtr v, SuspList * el)
 inline
 void addSuspOnlyToUVar(TaggedRefPtr v, SuspList * el)
 {
-  if (tagTypeOf(*v) != UVAR) return;
+  if (tagTypeOf(*v) != UVAR) { Assert(0); return; }
   addSuspUVar(v, el);
 }
 
