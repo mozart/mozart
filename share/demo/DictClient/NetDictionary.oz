@@ -419,16 +419,18 @@ define
             end
          end
       end
-      meth GetDefinitions($) Rest in
-         case {@socket expect([151 250] $ ?Rest)} of 151 then Body in
-            {@socket getTextual(?Body)}
-            case {Argify Rest} of [Word DB DBName] then
-               definition(word: Word db: DB dbname: DBName body: Body)|
-               NetDictionary, GetDefinitions($)
+      meth GetDefinitions(?Ds) Rest in
+         case {@socket expect([151 250] $ ?Rest)} of 151 then
+            case {Argify Rest} of [Word DB DBName] then Dr Body in
+               Ds = definition(word: Word db: DB dbname: DBName body: Body)|Dr
+               {@socket getTextual(?Body)}
+               NetDictionary, GetDefinitions(?Dr)
             else
-               {Exception.raiseError netdict(malformedDefinition Rest)} unit
+               Ds = nil
+               {Exception.raiseError netdict(malformedDefinition Rest)}
             end
-         [] 250 then nil
+         [] 250 then
+            Ds = nil
          end
       end
       meth match(Word db: DB <= '*' strategy: Strategy <= '.' $)
