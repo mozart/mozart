@@ -29,6 +29,8 @@ OZFLAGS         =
 OZBATCH         = @OZBATCH@
 OZMAINIT        = Init.ozc
 export OZMAINIT
+OZMAFILE        = ozbatch.ozm
+export OZMAFILE
 
 OZ_EMULATOR_DIR = @OZ_EMULATOR_DIR@
 export OZ_EMULATOR_DIR
@@ -184,6 +186,7 @@ COMPONENTS = \
         GumpScanner.ozc GumpParser.ozc Misc.ozc
 
 LIBCOMPONENTS = $(COMPONENTS:%=$(OZLIB)/%)
+LIBOZM = $(OZLIB)/ozbatch.ozm
 
 BINFILES = $(OZBIN)/ozbatch $(OZBIN)/ozserver
 
@@ -229,10 +232,16 @@ Base.ozc: Standard.ozc
 Standard.ozc: $(STANDARDSRC) Base.env Standard.env
         OZMAINIT="" $(EXEC) DumpInitial.oz
 
-install: all \
+install: install-main install-bitmaps
+
+install-main: all \
         $(OZLIB) $(OZLIBDIRS) $(LIBFILES) $(LIBCOMPONENTS) \
-        $(BITMAPDIR) $(BITMAPS) $(OZCARBITMAPDIR) $(OZCARBITMAPS) \
         $(OZBIN) $(BINFILES)
+
+install-main2: install-main $(LIBOZM)
+
+install-bitmaps: \
+        $(BITMAPDIR) $(BITMAPS) $(OZCARBITMAPDIR) $(OZCARBITMAPS)
 
 install-src: $(ALLSRCS:%=$(OZLIB)/%)
 
@@ -259,6 +268,9 @@ $(OZLIB)/%.oz: %.oz
         $(INSTALLSRC) $< $@
 
 $(OZLIB)/%.ozc: %.ozc
+        $(INSTALLFILE) $< $@
+
+$(OZLIB)/%.ozm: %.ozm
         $(INSTALLFILE) $< $@
 
 $(OZLIB)/gump/examples/%: gump/examples/%
@@ -378,21 +390,31 @@ bootstrap: ${OZMA_LIB}
 .PHONY: stage1 stage2
 
 STAGE1=./stage1
+STAGE2=./stage2
+STAGE3=./stage3
+
 stage1:
-        make install PREFIX=$(STAGE1)
+        make install-main PREFIX=$(STAGE1)
 
 stage1-bootstrap:
         make bootstrap PREFIX=$(STAGE1)
 
 stage2:
-        make \
+        make install-main2 PREFIX=$(STAGE2) \
         OZ_LOAD=prefix=http\://www.ps.uni-sb.de/ozhome/lib/=$(STAGE1)/lib/ \
         OZBATCH=$(STAGE1)/bin/ozbatch \
         OZINIT=$(STAGE1)/lib/Init.ozc \
         OZ_TRACE_LOAD=1
 
+stage3:
+        make install-main2 PREFIX=$(STAGE3) \
+        OZ_LOAD=prefix=http\://www.ps.uni-sb.de/ozhome/lib/=$(STAGE2)/lib/ \
+        OZBATCH=$(SRCDIR)/ozbatch.sh \
+        OZINIT=$(STAGE2)/lib/Init.ozc \
+        OZ_TRACE_LOAD=1 OZMAFILE=$(STAGE2)/ozbatch.ozm
+
 check:
         make stage1-bootstrap clean stage2
 
 realclean:
-        $(RM) -r $(STAGE1)
+        $(RM) -r $(STAGE1) $(STAGE2)
