@@ -32,8 +32,6 @@ SUBDIRS         = FDLib FSetLib
 #       -Wmissing-prototypes -Wmissing-declarations -Wredundant-decls \
 #       -Wnested-externs -Winline -Woverloaded-virtual -Wsynth -Werror
 
-xx: config.h
-
 WARNINGS = -Wall -W -Wpointer-arith -Wbad-function-cast -Wcast-qual \
         -Wstrict-prototypes -Wmissing-prototypes -Wmissing-declarations \
         -Wnested-externs -Wsynth -Wno-unused -Wno-reorder -Wno-uninitialized
