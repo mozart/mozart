@@ -1976,6 +1976,11 @@ void handlerBUS()
 
 void handlerPIPE()
 {
+  //
+  // kost@ : let's check for a dead machine;
+  if (isDeadSTDOUT())
+    am.exitOz(1);
+  //
   prefixError();
   message("write on a pipe or other socket with no one to read it ****\n");
 }
