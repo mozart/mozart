@@ -26,17 +26,15 @@
 
 \switch +gump
 
-\insert gump/ProductionTemplates
-
 \gumpscannerprefix lambda
 \insert gump/examples/LambdaScanner.ozg
 
 \switch +gumpparseroutputsimplified +gumpparserverbose
 \gumpparserexpect 0
+\insert gump/ProductionTemplates
 \insert gump/examples/LambdaParser.ozg
 
-declare
-LambdaIn = '/home/ps-home/kornstae/Oz/lib/gump/examples/Lambda.in'
+declare LambdaIn = 'Lambda.in'
 
 %-----------------------------------------------------------------------
 % Testing the Scanner:
