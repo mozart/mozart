@@ -84,6 +84,23 @@ extern "C" char *inet_ntoa(struct in_addr in);
    *(VAR+len) = '\0';                                                 \
  }
 
+#define DeclareAtomListArg(ARG,VAR) \
+OZ_Term VAR = OZ_getCArg(ARG);               \
+{ OZ_Term arg = VAR;                         \
+  while (OZ_isCons(arg)) {                   \
+    TaggedRef a = OZ_head(arg);              \
+    if (OZ_isVariable(a)) OZ_suspendOn(a);   \
+    if (!OZ_isAtom(a))    return FAILED;     \
+    arg = OZ_tail(arg);                      \
+  }                                          \
+  if (OZ_isVariable(arg)) OZ_suspendOn(arg); \
+  if (!OZ_isNil(arg))     return FAILED;     \
+}
+
+#define DeclareNonvarArg(ARG,VAR) \
+  OZ_Term VAR = OZ_getCArg(ARG);    \
+  OZ_nonvarArg(ARG);
+
 #define IsPair(s) (s[0]=='#' && s[1]=='\0')
 
 
@@ -584,19 +601,6 @@ OZ_C_proc_end
 #define O_SYNC     0
 #endif
 
-#define DeclareAtomListArg(ARG,VAR) \
-OZ_Term VAR = OZ_getCArg(ARG);               \
-{ OZ_Term arg = VAR;                         \
-  while (OZ_isCons(arg)) {                   \
-    TaggedRef a = OZ_head(arg);              \
-    if (OZ_isVariable(a)) OZ_suspendOn(a);   \
-    if (!OZ_isAtom(a))    return FAILED;     \
-    arg = OZ_tail(arg);                      \
-  }                                          \
-  if (OZ_isVariable(arg)) OZ_suspendOn(arg); \
-  if (!OZ_isNil(arg))     return FAILED;     \
-}
-
 
 OZ_C_ioproc_begin(unix_open,4)
 {
@@ -730,7 +734,7 @@ OZ_C_proc_end
 OZ_C_ioproc_begin(unix_write, 3)
 {
   OZ_declareIntArg(0, fd);
-  OZ_nonvarArg(1, vs);
+  DeclareNonvarArg(1, vs);
   OZ_declareArg(2, out);
 
   CHECK_WRITE(fd,out,vs);
@@ -1115,7 +1119,7 @@ static OZ_Return get_send_recv_flags(OZ_Term OzFlags, int * flags)
 OZ_C_ioproc_begin(unix_send, 4)
 {
   OZ_declareIntArg(0, sock);
-  OZ_nonvarArg(1, vs);
+  DeclareNonvarArg(1, vs);
   DeclareAtomListArg(2, OzFlags);
   OZ_declareArg(3, out);
 
@@ -1165,7 +1169,7 @@ OZ_C_proc_end
 OZ_C_ioproc_begin(unix_sendToInet, 6)
 {
   OZ_declareIntArg(0, sock);
-  OZ_nonvarArg(1, vs);
+  DeclareNonvarArg(1, vs);
   DeclareAtomListArg(2, OzFlags);
   OZ_declareVsArg(3, host);
   OZ_declareIntArg(4, port);
@@ -1230,7 +1234,7 @@ OZ_C_proc_end
 OZ_C_ioproc_begin(unix_sendToUnix, 5)
 {
   OZ_declareIntArg(0, sock);
-  OZ_nonvarArg(1, vs);
+  DeclareNonvarArg(1, vs);
   DeclareAtomListArg(2, OzFlags);
   OZ_declareVsArg(3, path);
   OZ_declareArg(4, out);
