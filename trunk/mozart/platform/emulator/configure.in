@@ -84,25 +84,28 @@ AC_DEFUN(OZ_ENABLE_NO, [
 
 AC_DEFUN(OZ_CXX_OPTIONS, [
 	ozm_out=
- 	echo 'void f(){}' > oz_conftest.c
- 	for ozm_opt in "$1"
- 	do
-	    AC_MSG_CHECKING(compiler option $ozm_opt)
-	    ozm_ropt=`echo $ozm_opt | sed -e 's/[[^a-zA-Z0-9_]]/_/g'`
-	    AC_CACHE_VAL(oz_cv_gxxopt_$ozm_ropt,
-		if test -z "`${CXX} ${ozm_out} ${ozm_opt} -c oz_conftest.c 2>&1`"; then
-		    eval "oz_cv_gxxopt_$ozm_ropt=yes"
+	if test -n "$1"
+	then
+	    echo 'void f(){}' > oz_conftest.c
+	    for ozm_opt in $1
+	    do
+		AC_MSG_CHECKING(compiler option $ozm_opt)
+		ozm_ropt=`echo $ozm_opt | sed -e 's/[[^a-zA-Z0-9_]]/_/g'`
+		AC_CACHE_VAL(oz_cv_gxxopt_$ozm_ropt,
+		    if test -z "`${CXX} ${ozm_out} ${ozm_opt} -c oz_conftest.c 2>&1`"; then
+			eval "oz_cv_gxxopt_$ozm_ropt=yes"
+		    else
+			eval "oz_cv_gxxopt_$ozm_ropt=no"
+		    fi)
+		if eval "test \"`echo '$''{'oz_cv_gxxopt_$ozm_ropt'}'`\" = yes"; then
+		    ozm_out="$ozm_out $ozm_opt"
+		    AC_MSG_RESULT(yes)
 		else
-		    eval "oz_cv_gxxopt_$ozm_ropt=no"
-		fi)
-	    if eval "test \"`echo '$''{'oz_cv_gxxopt_$ozm_ropt'}'`\" = yes"; then
-		ozm_out="$ozm_out $ozm_opt"
-		AC_MSG_RESULT(yes)
-            else
-		AC_MSG_RESULT(no)
-	    fi
- 	done
- 	rm -f oz_conftest*
+		    AC_MSG_RESULT(no)
+		fi
+	    done
+	    rm -f oz_conftest*
+	fi
 	$2="$ozm_out"
 	])
 
@@ -146,7 +149,7 @@ dnl *****************************************************************
 
 AC_MSG_CHECKING(for --enable-os2)
 AC_ARG_ENABLE(os2,
-  [--enable-os2  OS2 compilation (default=no)])
+  [--enable-os2       OS2 compilation (default=no)])
 if test "${enable_os2}" = yes; then
     AC_MSG_RESULT(yes (-DOS2))
     CXX=gcc
@@ -154,7 +157,7 @@ if test "${enable_os2}" = yes; then
     platform="os2-i486"
     PROGRAMNAME="ozemulator.exe"
     with_sunpro=no
-    oz_check_gmp=no
+    with_gmp=no
     oz_malloc_obj=
     oz_warn_error=
     AC_DEFINE(OS2)
@@ -231,22 +234,36 @@ dnl *****************************************************************
 dnl Compiler, Linker, and m4 options
 dnl *****************************************************************
 
+dnl overwrite defaults when using enable-opt
+if test -n "$enable_opt" -a "$enable_opt" != no
+then
+    CXXFLAGS=
+fi
+
 if test "${GXX}" = yes; then
     M4_S="-s"
     DEPEND="$CXX -MM"
 
     # Note: use $(CC) for linking, not $(CXX): 
-    # g++ creates references to libg++ 
-    if test -z "${LD}"
+    # g++ creates references to libstdc++ 
+    AC_MSG_CHECKING(for --enable-gccld)
+    AC_ARG_ENABLE(gccld,
+	[--enable-gccld  link with gcc (default=no)])
+    if test -z "${LD}" -a "$enable_gccld" = yes
     then
+	AC_MSG_RESULT(yes)
 	LD=gcc
+	OZ_CXX_OPTIONS("-fno-exceptions -fno-rtti",oz_a)
+	CXXFLAGS="$CXXFLAGS $oza"
+    else
+	AC_MSG_RESULT(no)
     fi
 
     AC_MSG_CHECKING(for --enable-warnings)
     AC_ARG_ENABLE(warnings,
-	[--enable-warnings       print c warnings (default=yes)])
+	[--enable-warnings  print c warnings (default=no)])
 
-    if test "${enable_warnings}" != no
+    if test "${enable_warnings}" = yes
     then
 	AC_MSG_RESULT(yes)
 	oz_warn="-Wall -W -Wpointer-arith -Wbad-function-cast -Wcast-qual \
@@ -267,7 +284,6 @@ if test "${GXX}" = yes; then
 	    -malign-loops=4 -malign-jumps=4 -malign-functions=4"
 	oz_om="-fomit-frame-pointer"
     fi
-    : ${oz_copt_disable_extension="-fno-exceptions -fno-rtti"}
     : ${oz_copt_optimize="$oz_opt $oz_em"}
     : ${oz_copt_profile="$oz_opt -pg -fno-inline -fno-default-inline"}
     : ${oz_copt_debug="-g3 -DINTERFACE"}
@@ -329,17 +345,11 @@ then
 fi
 AC_SUBST(M4_S)
 
-OZ_CXX_OPTIONS("$oz_warn",oz_a)
+OZ_CXX_OPTIONS($oz_warn,oz_a)
 oz_warn=$oz_a
 
-OZ_CXX_OPTIONS("$oz_warn_error",oz_a)
+OZ_CXX_OPTIONS($oz_warn_error,oz_a)
 oz_warn_error=$oz_a
-
-OZ_CXX_OPTIONS("$oz_copt_disable_extension",oz_a)
-if test "$ac_test_CXXFLAGS" != set
-then
-    CXXFLAGS=
-fi
 
 CXXFLAGS="$CXXFLAGS $oz_a"
 
@@ -403,40 +413,20 @@ dnl *****************************************************************
 : ${oz_inc_path="/usr/local/include"}
 : ${oz_lib_path="/usr/local/lib"}
 
-: ${oz_check_gmp=yes}
-if test "${oz_check_gmp}" = yes
-then
-    AC_ARG_WITH(gmp,
-	[--with-gmp=<dir>
-	    search gmp library and header in <dir> (default: NONE)])
+AC_MSG_CHECKING(for --with-gmp)
+AC_ARG_WITH(gmp,
+	[--with-gmp=<dir>   search gmp library and header in <dir> (default: yes)])
 	    
-    if test -n "${with_gmp}"
+if test "$with_gmp" != no
+then
+    AC_MSG_RESULT(yes)
+
+    if test "${with_gmp}" != yes
     then
 	oz_gmp_lib_dir=$with_gmp
 	oz_gmp_inc_dir=$with_gmp
     fi
     
-    AC_ARG_WITH(gmp_lib,
-	[--with-gmp-lib=<dir>
-	    search gmp library in <dir> (default: /usr/local/lib)])
-	    
-    if test -n "${with_gmp_lib}"
-    then
-	oz_gmp_lib_dir=$with_gmp_lib
-    fi
-    
-    AC_ARG_WITH(gmp_include,
-	[--with-gmp-include=<dir>
-	    search gmp header in <dir> (default: /usr/local/include)])
-	    
-    if test -n "${with_gmp_include}"
-    then
-	oz_gmp_inc_dir=$with_gmp_include
-    fi
-
-    : ${oz_gmp_lib_dir=/usr/local/lib}
-    : ${oz_gmp_inc_dir=/usr/local/include}
-
     oz_inc_path="$oz_gmp_inc_dir $oz_inc_path"
     oz_lib_path="$oz_gmp_lib_dir $oz_lib_path"
 
@@ -445,6 +435,8 @@ then
 	    
     OZ_CHECK_LIB_PATH(gmp, mpz_init, ,
 	    AC_MSG_ERROR(required GNU MP lib not found))
+else
+    AC_MSG_RESULT(no)
 fi
 
 dnl *****************************************************************
@@ -453,38 +445,31 @@ dnl *****************************************************************
 
 AC_MSG_CHECKING(for --with-zlib)
 AC_ARG_WITH(zlib,
-  	[--with-zlib=<dir>
-	    search zlib library and header in <dir> (default: NONE)])
+  	[--with-zlib=<dir>  search zlib library and header in <dir> (default: yes)])
 	    
 
 if test "$with_zlib" != no
 then
     AC_MSG_RESULT(yes)
-    AC_ARG_WITH(zlib_lib,
-	[--with-zlib-lib=<dir>
-	    search zlib library in <dir> (default: /usr/local/lib)])
 	    
-    AC_ARG_WITH(zlib_include,
-	[--with-zlib-include=<dir>
-	    search zlib header in <dir> (default: /usr/local/include)])
-	    
-    : ${with_zlib_lib:=/usr/local/lib}
-    : ${with_zlib_include:=/usr/local/include}
-    
+    if test "${with_zlib}" != yes
+    then
+	oz_zlib_lib_dir=$with_zlib
+	oz_zlib_inc_dir=$with_zlib
+    fi
+
     usezlib=yes
 
-    OLDCPPFLAGS=$CPPFLAGS
-    CPPFLAGS="-I$with_zlib_include $CPPFLAGS"
-    AC_CHECK_HEADER(zlib.h,,AC_MSG_WARN(zlib include file not found);usezlib=no)
-
-    OLDLDFLAGS=$LDFLAGS
-    LDFLAGS="-L$with_zlib_lib $LDFLAGS"
-    AC_CHECK_LIB(z,zlibVersion,,AC_MSG_WARN(zlib not found);usezlib=no)
+    OZ_CHECK_HEADER_PATH(zlib.h,,
+	AC_MSG_WARN(zlib include file not found)
+	usezlib=no)
+	    
+    OZ_CHECK_LIB_PATH(z, zlibVersion, ,
+	AC_MSG_WARN(libz not found)
+	usezlib=no)
 
     if test $usezlib = yes
     then AC_DEFINE(USE_ZLIB)
-    else CPPFLAGS=$OLDCPPFLAGS
-	 LDFLAGS=$OLDLDFLAGS
     fi
 else
     AC_MSG_RESULT(no)
@@ -496,8 +481,7 @@ dnl *****************************************************************
 
 AC_MSG_CHECKING(for --with-ccmalloc)
 AC_ARG_WITH(ccmalloc,
-    [--with-ccmalloc
-        use debugging malloc library ccmalloc ])
+    [--with-ccmalloc    use debugging malloc library ccmalloc ])
 
 if test "$with_ccmalloc" = "yes"
 then
@@ -520,15 +504,13 @@ dnl *****************************************************************
 
 AC_MSG_CHECKING(for --enable-opt)
 AC_ARG_ENABLE(opt,
-    [--enable-opt       optimize [y|n|d[ebug]|p[rofile]|rsp[rofile]] (default=yes)])
+    [--enable-opt=<k>   add specialied compile options (default=no)
+                   (o|yes=optimize, d=debug, p=profile, rsp=ralfs profile)])
 case $enable_opt in
-    n*)
-        AC_MSG_RESULT(no options)
-	;;
     d*)
         AC_MSG_RESULT(debug (-DDEBUG_EMULATOR))
 	AC_DEFINE(DEBUG_EMULATOR)
-	OZ_CXX_OPTIONS("$oz_copt_debug", COPT)
+	OZ_CXX_OPTIONS($oz_copt_debug, COPT)
 	oz_enable_threaded=no
 	oz_enable_fastreg=no
 	oz_enable_regopt=no
@@ -536,7 +518,7 @@ case $enable_opt in
     p*)
 	AC_MSG_RESULT(profile (-DPROFILE_EMULATOR))
 	AC_DEFINE(PROFILE_EMULATOR)
-        OZ_CXX_OPTIONS("$oz_copt_profile", COPT)
+        OZ_CXX_OPTIONS($oz_copt_profile, COPT)
 	LDFLAGS="$LDFLAGS $oz_lopt_profile"
 	;;
     rsp*)
@@ -544,9 +526,12 @@ case $enable_opt in
 	AC_DEFINE(RS_PROFILE)
         OZ_CXX_OPTIONS("-O", COPT)
 	;;
-    *)
+    yes|o*)
 	AC_MSG_RESULT(optimize)
-	OZ_CXX_OPTIONS("$oz_copt_optimize", COPT)
+	OZ_CXX_OPTIONS($oz_copt_optimize, COPT)
+	;;
+    *)
+        AC_MSG_RESULT(default)
 	;;
 esac
 AC_SUBST(COPT)
@@ -600,8 +585,7 @@ if test -z "$with_ccmalloc"
 then
     AC_MSG_CHECKING(for --with-malloc)
     AC_ARG_WITH(malloc,
-	[--with-malloc=<obj>
-	    use malloc from object file <obj> (default: NONE)])
+	[--with-malloc=<obj>      use malloc from object file <obj> (default: NONE)])
 
     if test -n "$with_malloc"
     then
@@ -623,7 +607,7 @@ dnl *****************************************************************
 
 AC_MSG_CHECKING(for --enable-tmphack)
 AC_ARG_ENABLE(tmphack,
-  [--enable-tmphack=<host>   link and compile in /tmp (default=no)])
+  [--enable-tmphack=<host>  link and compile in /tmp (default=no)])
 if test -n "${enable_tmphack}"
 then
     if test $enable_tmphack = no
@@ -653,8 +637,7 @@ dnl *****************************************************************
 dnl virtual site SUPPORT
 dnl *****************************************************************
 
-OZ_ENABLE_NO(virtualsites,[
-                   provide support for virtual sites],
+OZ_ENABLE_NO(virtualsites,[   provide support for virtual sites],
 	AC_DEFINE(VIRTUALSITES)
         AC_MSG_RESULT(yes)
 	,
@@ -664,7 +647,7 @@ dnl *****************************************************************
 dnl Include misc builtins
 dnl *****************************************************************
 
-OZ_ENABLE_NO(miscbuiltins,[ include misc builtins],
+OZ_ENABLE_NO(miscbuiltins,[   include misc builtins],
 	AC_DEFINE(MISC_BUILTINS)
         AC_MSG_RESULT(yes)
 	,
