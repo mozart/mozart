@@ -39,9 +39,9 @@ OZ_PI           = 1
 export OZ_PI
 OZ_LOAD         = root=.:prefix=http\://www.ps.uni-sb.de/ozhome/lib/=tyc/:prefix=http\://www.ps.uni-sb.de/ozhome/lib/=$(OZLIB)/
 export OZ_LOAD
-COMPILE         = $(OZBATCH) $(OZFLAGS) --include=$(SRCDIR)/DumpIntro.oz -c
+COMPILE         = $(OZBATCH) $(OZFLAGS) --include=DumpIntro.oz -c
 EXEC            = $(OZBATCH) $(OZFLAGS)
-EXECWITHSTD     = $(OZBATCH) $(OZFLAGS) --include=$(SRCDIR)/DumpIntro.oz
+EXECWITHSTD     = $(OZBATCH) $(OZFLAGS) --include=DumpIntro.oz
 OZMA            = $(OZBATCH) $(OZFLAGS) --ozma
 
 OZVERSION       = $(TOPDIR)/OZVERSION
@@ -62,28 +62,28 @@ STANDARDSRC1 = \
         VirtualString.oz Object.oz Class.oz Loop.oz Port.oz \
         Time.oz Thread.oz Match.oz Type.oz Space.oz \
         Array.oz Dictionary.oz Exception.oz Lazy.oz
-STANDARDSRC = $(STANDARDSRC1:%=$(SRCDIR)/Standard/%) $(SRCDIR)/Standard.oz
+STANDARDSRC = $(STANDARDSRC1:%=Standard/%) Standard.oz
 
 INITSRC1 = URL.oz Prop.oz
-INITSRC = $(INITSRC1:%=$(SRCDIR)/Init/%) $(SRCDIR)/Init.oz
+INITSRC = $(INITSRC1:%=Init/%) Init.oz
 
 SPSRC1 = System.oz Debug.oz Foreign.oz Error.oz Finalize.oz
-SPSRC = $(SPSRC1:%=$(SRCDIR)/SP/%) $(SRCDIR)/SP.oz
+SPSRC = $(SPSRC1:%=SP/%) SP.oz
 
 OPSRC1 = OS.oz Open.oz Component.oz
-OPSRC = $(OPSRC1:%.oz=$(SRCDIR)/OP/%.oz) $(SRCDIR)/OP.oz
+OPSRC = $(OPSRC1:%.oz=OP/%.oz) OP.oz
 
 APSRC1 = Application.oz ArgParser.oz
-APSRC = $(APSRC1:%.oz=$(SRCDIR)/AP/%.oz) $(SRCDIR)/AP.oz
+APSRC = $(APSRC1:%.oz=AP/%.oz) AP.oz
 
 CPSRC1 = Search.oz FD.oz FS.oz
-CPSRC = $(CPSRC1:%=$(SRCDIR)/CP/%) $(SRCDIR)/CP.oz
+CPSRC = $(CPSRC1:%=CP/%) CP.oz
 
 DPSRC1 = Site.oz agenda.oz remote.oz server.oz
-DPSRC = $(DPSRC1:%=$(SRCDIR)/DP/%) $(SRCDIR)/DP.oz
+DPSRC = $(DPSRC1:%=DP/%) DP.oz
 
 WPSRC1 = Tk.oz TkOptions.oz TkTools.oz TkInit.oz
-WPSRC = $(WPSRC1:%=$(SRCDIR)/WP/%) $(SRCDIR)/WP.oz
+WPSRC = $(WPSRC1:%=WP/%) WP.oz
 
 COMPILERSRC1 = \
         InsertAll.oz CompilerClass.oz Misc.oz Reporter.oz ParseOz.oz \
@@ -92,26 +92,26 @@ COMPILERSRC1 = \
         CodeEmitter.oz BindingAnalysis.oz TupleSyntax.oz Unnester.oz \
         UnnestFD.oz Assembler.oz Interface.oz \
         GenericInterface.oz QuietInterface.oz
-COMPILERSRCNOVER = $(COMPILERSRC1:%=$(SRCDIR)/compiler/%) compiler-Opcodes.oz \
-        $(SRCDIR)/Compiler.oz
+COMPILERSRCNOVER = $(COMPILERSRC1:%=compiler/%) compiler-Opcodes.oz \
+        Compiler.oz
 COMPILERSRC = $(COMPILERSRCNOVER) compiler-Version.oz
 
 COMPILERPANELSRC1 = CompilerPanelClass.oz
-COMPILERPANELSRC = $(COMPILERPANELSRC1:%=$(SRCDIR)/compiler/%) \
-        $(SRCDIR)/CompilerPanel.oz
+COMPILERPANELSRC = $(COMPILERPANELSRC1:%=compiler/%) \
+        CompilerPanel.oz
 
 PANELSRC1 = \
         configure.oz load.oz make-notes.oz runtime-bar.oz top.oz \
         main.oz dialogs.oz
-PANELSRC = $(PANELSRC1:%=$(SRCDIR)/panel/%) $(SRCDIR)/Panel.oz
+PANELSRC = $(PANELSRC1:%=panel/%) Panel.oz
 
 BROWSERSRC1 = \
         XResources.oz browserObject.oz browserTerm.oz \
-        bufs&streams.oz constants.oz controlObject.oz core.oz \
+        bufsAndStreams.oz constants.oz controlObject.oz core.oz \
         errors.oz managerObject.oz reflect.oz repManager.oz \
         store.oz tcl-interface.oz termObject.oz \
         termsStore.oz undefs.oz windowManager.oz
-BROWSERSRC = $(BROWSERSRC1:%=$(SRCDIR)/browser/%) $(SRCDIR)/Browser.oz
+BROWSERSRC = $(BROWSERSRC1:%=browser/%) Browser.oz
 
 EXPLORERSRC1 = \
         main.oz misc.oz action-nodes.oz hide-nodes.oz \
@@ -120,30 +120,30 @@ EXPLORERSRC1 = \
         configure.oz nodes.oz toplevel-manager.oz \
         default-actions.oz search-nodes.oz stat-nodes.oz \
         dialog-manager.oz shapes-and-images.oz status-manager.oz
-EXPLORERSRC = $(EXPLORERSRC1:%=$(SRCDIR)/explorer/%) $(SRCDIR)/Explorer.oz
+EXPLORERSRC = $(EXPLORERSRC1:%=explorer/%) Explorer.oz
 
-EMACSSRC = $(SRCDIR)/Emacs.oz
+EMACSSRC = Emacs.oz
 
 OZCARSRC1 = \
         prelude.oz string.oz tk.oz config.oz help.oz tree.oz thread.oz \
         stack.oz source.oz menu.oz dialog.oz gui.oz ozcar.oz
-OZCARSRCNOVER = $(OZCARSRC1:%=$(SRCDIR)/ozcar/%) $(SRCDIR)/Ozcar.oz
+OZCARSRCNOVER = $(OZCARSRC1:%=ozcar/%) Ozcar.oz
 OZCARSRC = $(OZCARSRCNOVER) ozcar-version.oz
 
 PROFILERSRC1 = \
         prof-gui.oz prof-prelude.oz prof-tk.oz \
         prof-config.oz prof-help.oz profiler.oz \
         prof-dialog.oz prof-menu.oz prof-string.oz
-PROFILERSRC = $(PROFILERSRC1:%=$(SRCDIR)/profiler/%) $(SRCDIR)/Profiler.oz
+PROFILERSRC = $(PROFILERSRC1:%=profiler/%) Profiler.oz
 
 GUMPSRC1 = Bison.oz Main.oz Output.oz ParserGenerator.oz ScannerGenerator.oz
-GUMPSRC = $(GUMPSRC1:%=$(SRCDIR)/gump/%) $(SRCDIR)/Gump.oz
+GUMPSRC = $(GUMPSRC1:%=gump/%) Gump.oz
 
 GUMPSCANNERSRC1 = GumpScannerClass.oz
-GUMPSCANNERSRC = $(GUMPSCANNERSRC1:%=$(SRCDIR)/gump/%) $(SRCDIR)/GumpScanner.oz
+GUMPSCANNERSRC = $(GUMPSCANNERSRC1:%=gump/%) GumpScanner.oz
 
 GUMPPARSERSRC1 = GumpParserClass.oz
-GUMPPARSERSRC = $(GUMPPARSERSRC1:%=$(SRCDIR)/gump/%) $(SRCDIR)/GumpParser.oz
+GUMPPARSERSRC = $(GUMPPARSERSRC1:%=gump/%) GumpParser.oz
 
 ALLSRCS = \
         $(STANDARDSRC) $(INITSRC) \
@@ -151,23 +151,23 @@ ALLSRCS = \
         $(COMPILERSRC) $(COMPILERPANELSRC) $(PANELSRC) $(BROWSERSRC) \
         $(EXPLORERSRC) $(EMACSSRC) $(OZCARSRC) $(PROFILERSRC) \
         $(GUMPSRC) $(GUMPSCANNERSRC) $(GUMPPARSERSRC) \
-        $(SRCDIR)/gump/ProductionTemplates.oz
+        gump/ProductionTemplates.oz
 
 DUMPINTRO1 = DumpIntro.oz Base.env Standard.env
-DUMPINTRO = $(DUMPINTRO1:%=$(SRCDIR)/%) Base.ozc Standard.ozc
+DUMPINTRO = $(DUMPINTRO1:%=%) Base.ozc Standard.ozc
 
 ENVS1 = \
         SP.env OP.env AP.env CP.env WP.env DP.env \
         Compiler.env CompilerPanel.env Panel.env Browser.env Explorer.env \
         Emacs.env Ozcar.env Profiler.env Gump.env GumpScanner.env \
         GumpParser.env
-ENVS = $(ENVS1:%=$(SRCDIR)/%) $(SRCDIR)/Base.env $(SRCDIR)/Standard.env
+ENVS = $(ENVS1:%=%) Base.env Standard.env
 TYPS = $(ENVS1:%.env=%.typ)
 TYCS = $(TYPS:%.typ=tyc/%.tyc)
 
 LIBFILES = \
-        $(ALLSRCS:$(SRCDIR)/%=$(OZLIB)/%) \
-        $(ENVS1:$(SRCDIR)/%=$(OZLIB)/%) \
+        $(ALLSRCS:%=$(OZLIB)/%) \
+        $(ENVS1:%=$(OZLIB)/%) \
         $(TYCS:tyc/%=$(OZLIB)/%)
 
 HELPCOMPONENTS = Base.ozc Standard.ozc
@@ -202,23 +202,23 @@ OZCARBITMAPS = $(OZCARBITMAPS1:%=$(OZCARBITMAPDIR)/%)
 all: Makefile $(TYPS) $(TYCS) $(COMPONENTS) ozbatch
 
 ozbatch.ozm: MakeAssembly.oz \
-        $(STANDARDSRC) $(SRCDIR)/Base.env $(SRCDIR)/Standard.env \
-        $(SPSRC) $(SRCDIR)/SP.env $(CPSRC) $(SRCDIR)/CP.env \
-        $(OPSRC) $(SRCDIR)/OP.env $(GUMPSRC) $(SRCDIR)/Gump.env \
-        $(COMPILERSRC) $(SRCDIR)/Compiler.env $(SRCDIR)/BatchCompile.oz
-        $(OZMA) -o /tmp/$$$$.ozm $(SRCDIR)/MakeAssembly.oz && \
+        $(STANDARDSRC) Base.env Standard.env \
+        $(SPSRC) SP.env $(CPSRC) CP.env \
+        $(OPSRC) OP.env $(GUMPSRC) Gump.env \
+        $(COMPILERSRC) Compiler.env BatchCompile.oz
+        $(OZMA) -o /tmp/$$$$.ozm MakeAssembly.oz && \
         /bin/mv -f /tmp/$$$$.ozm $@
 
-ozbatch: $(SRCDIR)/MakeBatch.oz $(SRCDIR)/BatchCompile.oz $(DUMPINTRO) \
-        SP.ozc $(SRCDIR)/SP.env OP.ozc $(SRCDIR)/OP.env \
-        AP.ozc $(SRCDIR)/AP.env
-        $(EXECWITHSTD) $(SRCDIR)/MakeBatch.oz
+ozbatch: MakeBatch.oz BatchCompile.oz $(DUMPINTRO) \
+        SP.ozc SP.env OP.ozc OP.env \
+        AP.ozc AP.env
+        $(EXECWITHSTD) MakeBatch.oz
 
 Base.ozc: Standard.ozc
         @$(ECHO) > /dev/null
 
-Standard.ozc: $(STANDARDSRC) $(SRCDIR)/Base.env $(SRCDIR)/Standard.env
-        OZMAINIT="" $(EXEC) $(SRCDIR)/DumpInitial.oz
+Standard.ozc: $(STANDARDSRC) Base.env Standard.env
+        OZMAINIT="" $(EXEC) DumpInitial.oz
 
 install: all \
         $(OZLIB) $(OZLIBDIRS) $(LIBFILES) $(LIBCOMPONENTS) \
@@ -243,19 +243,19 @@ distclean: veryclean
 $(OZLIB) $(OZLIBDIRS) $(BITMAPDIR) $(OZCARBITMAPDIR) $(OZBIN):
         $(INSTALLDIR) $@
 
-$(OZLIB)/%.oz: $(SRCDIR)/%.oz
+$(OZLIB)/%.oz: %.oz
         $(INSTALLSRC) $< $@
 
 $(OZLIB)/%.ozc: %.ozc
         $(INSTALLFILE) $< $@
 
-$(BITMAPDIR)/%: $(SRCDIR)/bitmaps/%
+$(BITMAPDIR)/%: bitmaps/%
         $(INSTALLFILE) $< $@
 
-$(OZCARBITMAPDIR)/%: $(SRCDIR)/ozcar/bitmaps/%
+$(OZCARBITMAPDIR)/%: ozcar/bitmaps/%
         $(INSTALLFILE) $< $@
 
-$(OZLIB)/%.env: $(SRCDIR)/%.env
+$(OZLIB)/%.env: %.env
         $(INSTALLSRC) $< $@
 
 $(OZLIB)/%.tyc: tyc/%.tyc
@@ -264,7 +264,7 @@ $(OZLIB)/%.tyc: tyc/%.tyc
 $(OZBIN)/ozbatch: ozbatch
         $(INSTALLPRG) $< $@
 
-%.typ: $(SRCDIR)/%.env
+%.typ: %.env
         $(ENV2TYPE) $< > $@
 
 tyc/%.tyc: %.typ $(DUMPINTRO) Init.ozc
@@ -277,74 +277,72 @@ tyc/%.tyc: %.typ $(DUMPINTRO) Init.ozc
 Init.ozc: $(DUMPINTRO) $(INITSRC)
         OZMAINIT="" $(COMPILE) Init.oz
 
-OPI.ozc: $(DUMPINTRO) $(SRCDIR)/OPI.oz Init.ozc SP.ozc OP.ozc AP.ozc \
-        $(SRCDIR)/Compiler.env $(TYCS)
+OPI.ozc: $(DUMPINTRO) OPI.oz Init.ozc SP.ozc OP.ozc AP.ozc \
+        Compiler.env $(TYCS)
 
-SP.ozc: $(DUMPINTRO) $(SPSRC) $(SRCDIR)/SP.env Init.ozc
+SP.ozc: $(DUMPINTRO) $(SPSRC) SP.env Init.ozc
 
-OP.ozc: $(DUMPINTRO) $(OPSRC) $(SRCDIR)/SP.env $(SRCDIR)/OP.env Init.ozc
+OP.ozc: $(DUMPINTRO) $(OPSRC) SP.env OP.env Init.ozc
 
-AP.ozc: $(DUMPINTRO) $(APSRC) $(SRCDIR)/SP.env $(SRCDIR)/OP.env \
-        $(SRCDIR)/AP.env Init.ozc
+AP.ozc: $(DUMPINTRO) $(APSRC) SP.env OP.env \
+        AP.env Init.ozc
 
-CP.ozc: $(DUMPINTRO) $(CPSRC) $(SRCDIR)/SP.env $(SRCDIR)/CP.env Init.ozc
+CP.ozc: $(DUMPINTRO) $(CPSRC) SP.env CP.env Init.ozc
 
-WP.ozc: $(DUMPINTRO) $(WPSRC) $(SRCDIR)/SP.env $(SRCDIR)/OP.env \
-        $(SRCDIR)/WP.env Init.ozc
+WP.ozc: $(DUMPINTRO) $(WPSRC) SP.env OP.env \
+        WP.env Init.ozc
 
-DP.ozc: $(DUMPINTRO) $(DPSRC) $(SRCDIR)/SP.env $(SRCDIR)/OP.env \
-        $(SRCDIR)/AP.env $(SRCDIR)/WP.env $(SRCDIR)/DP.env Init.ozc
+DP.ozc: $(DUMPINTRO) $(DPSRC) SP.env OP.env \
+        AP.env WP.env DP.env Init.ozc
 
-Compiler.ozc: $(DUMPINTRO) $(COMPILERSRC) $(SRCDIR)/SP.env \
-        $(SRCDIR)/CP.env $(SRCDIR)/Gump.env $(SRCDIR)/Compiler.env Init.ozc
+Compiler.ozc: $(DUMPINTRO) $(COMPILERSRC) SP.env \
+        CP.env Gump.env Compiler.env Init.ozc
 
 compiler-Version.oz: $(COMPILERSRCNOVER) $(OZVERSION) \
-        $(SRCDIR)/compiler/Opcodes.m4oz
+        compiler/Opcodes.m4oz
         ($(ECHO) 'OZVERSION = '\'`$(OZVERSION)`\'; \
         $(ECHO) 'DATE = '\'`date '+%h %d 19%y (%T)'`\') > $@
 
-compiler-Opcodes.oz: $(SRCDIR)/compiler/Opcodes.m4oz \
-        $(TOPDIR)/Emulator/instrDefs.m4
-        $(M4) -DEMUDIR=$(TOPDIR)/Emulator \
-        < $(SRCDIR)/compiler/Opcodes.m4oz > $@
+compiler-Opcodes.oz: compiler/Opcodes.m4oz $(TOPDIR)/Emulator/instrDefs.m4
+        $(M4) -DEMUDIR=$(TOPDIR)/Emulator < $< > $@
 
-CompilerPanel.ozc: $(DUMPINTRO) $(COMPILERPANELSRC) $(SRCDIR)/SP.env \
-        $(SRCDIR)/OP.env $(SRCDIR)/WP.env $(SRCDIR)/Compiler.env \
-        $(SRCDIR)/Browser.env $(SRCDIR)/CompilerPanel.env Init.ozc
+CompilerPanel.ozc: $(DUMPINTRO) $(COMPILERPANELSRC) SP.env \
+        OP.env WP.env Compiler.env \
+        Browser.env CompilerPanel.env Init.ozc
 
-Panel.ozc: $(DUMPINTRO) $(PANELSRC) $(SRCDIR)/SP.env $(SRCDIR)/OP.env \
-        $(SRCDIR)/WP.env $(SRCDIR)/Panel.env Init.ozc
+Panel.ozc: $(DUMPINTRO) $(PANELSRC) SP.env OP.env \
+        WP.env Panel.env Init.ozc
 
-Browser.ozc: $(DUMPINTRO) $(BROWSERSRC) $(SRCDIR)/SP.env $(SRCDIR)/CP.env \
-        $(SRCDIR)/WP.env $(SRCDIR)/Browser.env Init.ozc
+Browser.ozc: $(DUMPINTRO) $(BROWSERSRC) SP.env CP.env \
+        WP.env Browser.env Init.ozc
 
-Explorer.ozc: $(DUMPINTRO) $(EXPLORERSRC) $(SRCDIR)/SP.env $(SRCDIR)/WP.env \
-        $(SRCDIR)/Browser.env $(SRCDIR)/Explorer.env Init.ozc
+Explorer.ozc: $(DUMPINTRO) $(EXPLORERSRC) SP.env WP.env \
+        Browser.env Explorer.env Init.ozc
 
-Emacs.ozc: $(DUMPINTRO) $(EMACSSRC) $(SRCDIR)/SP.env $(SRCDIR)/OP.env \
-        $(SRCDIR)/Emacs.env Init.ozc
+Emacs.ozc: $(DUMPINTRO) $(EMACSSRC) SP.env OP.env \
+        Emacs.env Init.ozc
 
-Ozcar.ozc: $(DUMPINTRO) $(OZCARSRC) $(SRCDIR)/SP.env $(SRCDIR)/WP.env \
-        $(SRCDIR)/Browser.env $(SRCDIR)/Emacs.env $(SRCDIR)/Compiler.env \
-        $(SRCDIR)/Ozcar.env Init.ozc
+Ozcar.ozc: $(DUMPINTRO) $(OZCARSRC) SP.env WP.env \
+        Browser.env Emacs.env Compiler.env \
+        Ozcar.env Init.ozc
 
 ozcar-version.oz: $(OZCARSRCNOVER)
         echo \'`date '+%b %d'`\' > $@
 
-Profiler.ozc: $(DUMPINTRO) $(PROFILERSRC) $(SRCDIR)/SP.env $(SRCDIR)/OP.env \
-        $(SRCDIR)/WP.env $(SRCDIR)/Browser.env $(SRCDIR)/Emacs.env \
-        $(SRCDIR)/Compiler.env $(SRCDIR)/Profiler.env Init.ozc
+Profiler.ozc: $(DUMPINTRO) $(PROFILERSRC) SP.env OP.env \
+        WP.env Browser.env Emacs.env \
+        Compiler.env Profiler.env Init.ozc
 
-Gump.ozc: $(DUMPINTRO) $(GUMPSRC) $(SRCDIR)/SP.env $(SRCDIR)/OP.env \
-        $(SRCDIR)/Gump.env
+Gump.ozc: $(DUMPINTRO) $(GUMPSRC) SP.env OP.env \
+        Gump.env
 
-GumpScanner.ozc: $(DUMPINTRO) $(GUMPSCANNERSRC) $(SRCDIR)/SP.env \
-        $(SRCDIR)/GumpScanner.env
+GumpScanner.ozc: $(DUMPINTRO) $(GUMPSCANNERSRC) SP.env \
+        GumpScanner.env
 
-GumpParser.ozc: $(DUMPINTRO) $(GUMPPARSERSRC) $(SRCDIR)/SP.env \
-        $(SRCDIR)/GumpParser.env
+GumpParser.ozc: $(DUMPINTRO) $(GUMPPARSERSRC) SP.env \
+        GumpParser.env
 
-Makefile: $(SRCDIR)/Makefile.in config.status
+Makefile: Makefile.in config.status
         ./config.status
 
 config.status: configure
