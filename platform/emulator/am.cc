@@ -1020,14 +1020,10 @@ void AM::handleIO()
 {
   unsetSFlag(IOReady);
   int numbOfFDs=osFirstReadSelect();
-  Bool doCompiler=NO;
 
-  // check input from compiler
-  if (osNextReadSelect(compStream->csfileno())) {
-    doCompiler=OK;
-  }
-
-  if (doCompiler || !compStream->bufEmpty()) {
+  /* check input from compiler */
+  if (osNextReadSelect(compStream->csfileno()) || /* do this FIRST, sideeffect! */
+      !compStream->bufEmpty()) {
     do {
       loadQuery(compStream);
     } while(!compStream->bufEmpty());
