@@ -1364,10 +1364,10 @@ TaggedRef PrTabEntry::getProfileStats()
     while(aux) {
       if (aux->numClosures || aux->numCalled || aux->heapUsed || aux->samples) {
         SRecord *rec = SRecord::newSRecord(ps,arity);
-        rec->setFeature(samples,oz_unsignedint(aux->samples));
-        rec->setFeature(calls,oz_unsignedint(aux->numCalled));
-        rec->setFeature(heap,oz_unsignedint(aux->heapUsed));
-        rec->setFeature(closures,oz_unsignedint(aux->numClosures));
+        rec->setFeature(samples,oz_unsignedInt(aux->samples));
+        rec->setFeature(calls,oz_unsignedInt(aux->numCalled));
+        rec->setFeature(heap,oz_unsignedInt(aux->heapUsed));
+        rec->setFeature(closures,oz_unsignedInt(aux->numClosures));
         rec->setFeature(line,oz_int(aux->lineno));
         rec->setFeature(name,aux->printname);
         rec->setFeature(file,aux->fileName);
@@ -1383,9 +1383,9 @@ TaggedRef PrTabEntry::getProfileStats()
     while(aux) {
       if (aux->getSamples() || aux->getCalls()) {
         SRecord *rec = SRecord::newSRecord(ps,arity);
-        rec->setFeature(samples,oz_unsignedint(aux->getSamples()));
-        rec->setFeature(calls,oz_unsignedint(aux->getCalls()));
-        rec->setFeature(heap,oz_unsignedint(aux->getHeap()));
+        rec->setFeature(samples,oz_unsignedInt(aux->getSamples()));
+        rec->setFeature(calls,oz_unsignedInt(aux->getCalls()));
+        rec->setFeature(heap,oz_unsignedInt(aux->getHeap()));
         rec->setFeature(closures,oz_int(0));
         rec->setFeature(line,oz_int(1));
         rec->setFeature(name,oz_atom(builtinTab.getName((void *)(aux->getHeaderFunc()))));
@@ -1463,4 +1463,14 @@ ForeignPointer*
 openForeignPointer(TaggedRef t)
 {
   return (ForeignPointer*)tagged2Const(deref(t));
+}
+
+TaggedRef oz_long(long i)
+{
+  return (new BigInt(i))->shrink();
+}
+
+TaggedRef oz_unsignedLong(unsigned long i)
+{
+  return (new BigInt(i))->shrink();
 }
