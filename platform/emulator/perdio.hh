@@ -29,7 +29,11 @@ X();  \
 ~X(); \
 (X&);
 
-
+OZ_Return closePort(OZ_Term);
+void remoteSend(PortProxy *p, TaggedRef msg);
+void remoteClose(PortProxy *p);
+void cellDoExchange(Tertiary*,TaggedRef,TaggedRef,Thread*);
+void cellDoAccess(Tertiary*,TaggedRef);
 OZ_Return remoteApplication(char *biName, Tertiary *th, TaggedRef arg);
 OZ_Return remoteApplication(char *biName, Tertiary *th);
 
@@ -40,6 +44,7 @@ void networkSiteDec(int sd);
 #define tert2PortProxy(t)     ((PortProxy*) t)
 
 void gcOwnerTable();
+void gcPostOwnerTable();
 void gcBorrowTable();
 void gcBorrowTableRoots();
 void gcPortProxy(PortProxy* );
@@ -305,6 +310,16 @@ public:
   ByteBuffer* getByteBuffer();
   void freeByteBuffer(ByteBuffer *bb);
   void dumpByteStream(ByteStream *bs);
+};
+
+class PendThread{
+public:
+  PendThread *next;
+  Thread *thread;
+  PendThread(Thread *th,PendThread *pt):thread(th),next(pt){}
+  PendThread(){DebugCode(thread=NULL);}
+  USEFREELISTMEMORY;
+  void dispose(){freeListDispose(this,sizeof(PendThread));}
 };
 
 extern BufferManager *bufferManager;

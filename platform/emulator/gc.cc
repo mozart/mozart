@@ -366,6 +366,7 @@ void *gcRealloc(void *ptr, size_t sz)
   return ret;
 }
 
+
 /*****************************************************************************
  * makeTaggedRef without consitency check
  *****************************************************************************/
@@ -1571,6 +1572,7 @@ void AM::gc(int msgLevel)
 #ifdef PERDIO
   gcOwnerTable();
 #endif
+
   gcTagged(aVarUnifyHandler,aVarUnifyHandler);
   gcTagged(aVarBindHandler,aVarBindHandler);
 
@@ -1609,6 +1611,7 @@ void AM::gc(int msgLevel)
   EXITCHECKSPACE;
 
 #ifdef PERDIO
+  gcPostOwnerTable();
   gcBorrowTable();
   gcGNameTable();
 #endif
@@ -2001,23 +2004,53 @@ void ConstTerm::gcConstRecurse()
 
   case Co_Cell:
     {
-      Cell *c = (Cell *) this;
-      c->home = c->home->gcBoard();
-      gcTagged(c->val,c->val);
+      Tertiary *t=(Tertiary*)this;
+      switch(t->getTertType()){
+      case Te_Local:{
+        CellLocal *cl=(CellLocal*)t;
+        cl->setBoard(cl->getBoard()->gcBoard()); /* ATTENTION */
+        gcTagged(cl->val,cl->val);
+        break;}
+      case Te_Proxy:{
+        t->gcProxy();
+        break;}
+      case Te_Frame:{
+        CellFrame *cf=(CellFrame*)t;
+        CellSec *cs=cf->sec;
+        cf->sec=(CellSec*)gcRealloc(cs,sizeof(CellSec));
+        cf->gcCellFrame();
+        break;}
+      case Te_Manager:{
+        CellManager *cm=(CellManager*)t;
+        CellFrame *cf=(CellFrame*)t;
+        CellSec *cs=cf->sec;
+        cf->sec=(CellSec*)gcRealloc(cs,sizeof(CellSec));
+        cm->gcCellManager();
+        break;}
+      default:{
+        Assert(0);}}
       break;
     }
 
   case Co_Port:
     {
       Port *p = (Port*) this;
-      p->gcTertiary();
-      if (!p->isProxy()) {
+      switch(p->getTertType()){
+      case Te_Local:{
+        p->setBoard(p->getBoard()->gcBoard()); /* ATTENTION */
         PortWithStream *pws = (PortWithStream *) this;
         gcTagged(pws->strm,pws->strm);
-        if (p->isLocal()) {
-          p->setBoard(p->getBoard()->gcBoard());
-        }
-      }
+        break;}
+      case Te_Proxy:{
+        p->gcProxy();
+        break;}
+      case Te_Manager:{
+        p->gcManager();
+        PortWithStream *pws = (PortWithStream *) this;
+        gcTagged(pws->strm,pws->strm);
+        break;}
+      default:{
+        Assert(0);}}
       break;
     }
   case Co_Space:
@@ -2133,44 +2166,59 @@ ConstTerm *ConstTerm::gcConstTerm()
       break;
     }
   case Co_Cell:
-    CheckLocal((Cell *) this);
-    sz = sizeof(Cell);
-    COUNT(cell);
-    break;
+    {
+      COUNT(cell);
+      switch(((Tertiary *)this)->getTertType()) {
+      case Te_Local:{
+        CellLocal *cl=(CellLocal*)this;
+        CheckLocal(cl);
+        sz = sizeof(CellLocal);
+        break;}
+      case Te_Proxy:{
+        sz = sizeof(CellProxy);
+        break;}
+      case Te_Manager:{
+        sz = sizeof(CellManager);
+        break;}
+      case Te_Frame:{
+        CellFrame *cf=(CellFrame *)this;
+        if(cf->isAccessBit()){
+          DebugCode(cf->resetAccessBit());
+          void* forward=cf->getForward();
+          ((CellFrame*)forward)->resetAccessBit();
+          *getGCField()=GCMARK(forward);
+          return (ConstTerm*) forward;}
+        sz = sizeof(CellFrame);
+        break;}
+      default:{
+        Assert(0);
+        break;}}
+      break;
+    }
 
   case Co_Port:  /* TODO: what to count TODO: no need for local check?? */
-
-    switch(((Tertiary *)this)->getTertType()) {
-    case Te_Local:
-      {
-        PortLocal *pl=(PortLocal*)this;
+    {
+      COUNT(port);
+      switch(((Tertiary *)this)->getTertType()) {
+      case Te_Local:{
         CheckLocal((PortLocal *) this);
         sz = sizeof(PortLocal);
-        COUNT(port);
-        break;
-      }
-    case Te_Manager:
-      {
-        PortManager *pm=(PortManager*)this;
-        sz = sizeof(PortManager);
-        COUNT(port);
-        break;
-      }
-    case Te_Proxy:
-      {
-        PortProxy *pp=(PortProxy*)this;
-        sz = sizeof(PortProxy);
-        COUNT(port);
-        break;
-      }
-    default:
-      {
-        Assert(0);
-        break;
-      }
-    }
-    break;
+        break;}
 
+      case Te_Manager:{
+        sz = sizeof(PortManager);
+        break;}
+
+      case Te_Proxy:{
+        sz = sizeof(PortProxy);
+        break;}
+
+      default:{
+        Assert(0);
+        break;}}
+
+      break;
+    }
   case Co_Space:
     CheckLocal((Space *) this);
     sz = sizeof(Space);
@@ -2217,6 +2265,30 @@ ConstTerm *ConstTerm::gcConstTerm()
   GCNEWADDRMSG(ret);
   ptrStack.push(ret,PTR_CONSTTERM);
   storeForward(getGCField(), ret);
+  return ret;
+}
+
+/* the purpose of this procedure is to provide an additional entry
+   into gc so to be able to distinguish between owned perdio-objects that
+   are locally accssible to those that are not - currently this is needed
+   only for cell-frames */
+
+ConstTerm *ConstTerm::gcConstTermSpec()
+{
+  GCMETHMSG("ConstTerm::gcConstTerm");
+  CHECKCOLLECTED(*getGCField(), ConstTerm *);
+  if(getType()!=Co_Cell){return gcConstTerm();}
+  Tertiary *t=(Tertiary*)this;
+  if(t->getTertType()!=Te_Frame){return gcConstTerm();}
+
+  CellFrame *cf=(CellFrame*)t;
+  cf->setAccessBit();
+  COUNT(cell);
+  size_t sz = sizeof(CellFrame);
+  ConstTerm *ret = (ConstTerm *) gcRealloc(this,sz);
+  GCNEWADDRMSG(ret);
+  ptrStack.push(ret,PTR_CONSTTERM);
+  cf->myStoreForward(ret);
   return ret;
 }
 

@@ -414,10 +414,28 @@ PRINT(Float)
   stream << toC(makeTaggedFloat(this));
 }
 
-PRINT(Cell)
+PRINT(CellLocal)
 {
   CHECKDEPTH;
-  stream << "C@" << this;
+  stream << "CellLocal@" << this;
+}
+
+PRINT(CellManager)
+{
+  CHECKDEPTH;
+  stream << "CellManager@" << this;
+}
+
+PRINT(CellProxy)
+{
+  CHECKDEPTH;
+  stream << "CellProxy@" << this;
+}
+
+PRINT(CellFrame)
+{
+  CHECKDEPTH;
+  stream << "CellFrame@" << this;
 }
 
 PRINT(PortLocal)
@@ -693,7 +711,15 @@ PRINTLONG(ConstTerm)
   case Co_HeapChunk:  ((HeapChunk *) this)->printLong(stream, depth, offset); break;
   case Co_Abstraction:((Abstraction *) this)->printLong(stream,depth,offset); break;
   case Co_Object:     ((Object *) this)->printLong(stream,depth,offset);      break;
-  case Co_Cell:       ((Cell *) this)->printLong(stream,depth,offset);        break;
+  case Co_Cell:
+    switch(((Tertiary *)this)->getTertType()){
+    case Te_Local:   ((CellLocal *)   this)->printLong(stream,depth,offset); break;
+    case Te_Frame:   ((CellFrame *)   this)->printLong(stream,depth,offset); break;
+    case Te_Manager: ((PortManager *) this)->printLong(stream,depth,offset); break;
+    case Te_Proxy:   ((PortProxy *)   this)->printLong(stream,depth,offset); break;
+    default:         Assert(NO);
+    }
+    break;
   case Co_Port:
     switch(((Tertiary *)this)->getTertType()){
     case Te_Local:   ((PortLocal *)   this)->printLong(stream,depth,offset); break;
@@ -722,7 +748,7 @@ PRINT(ConstTerm)
   case Co_HeapChunk:   ((HeapChunk *) this)->print(stream, depth, offset); break;
   case Co_Abstraction: ((Abstraction *) this)->print(stream,depth,offset); break;
   case Co_Object:      ((Object *) this)->print(stream,depth,offset);      break;
-  case Co_Cell:        ((Cell *) this)->print(stream,depth,offset);        break;
+  case Co_Cell:        ((CellLocal *) this)->print(stream,depth,offset);        break;
   case Co_Port:        ((Port *) this)->print(stream,depth,offset);        break;
   case Co_Space:       ((Space *) this)->print(stream,depth,offset);       break;
   case Co_Chunk:       ((SChunk *) this)->print(stream,depth,offset);      break;
@@ -1276,14 +1302,35 @@ PRINTLONG(BuiltinTabEntry)
 }
 
 
-PRINTLONG(Cell)
+PRINTLONG(CellLocal)
 {
   CHECKDEPTHLONG;
   stream << indent(offset)
-         << "Cell@id" << this << endl
+         << "CellLocal@id" << this << endl
          << indent(offset)
          << " value:"<<endl;
   tagged2StreamLong(val,stream,depth,offset+2);
+}
+
+PRINTLONG(CellManager)
+{
+  CHECKDEPTHLONG;
+  stream << indent(offset)
+         << "CellManager@id" << this << endl;
+}
+
+PRINTLONG(CellProxy)
+{
+  CHECKDEPTHLONG;
+  stream << indent(offset)
+         << "CellProxy@id" << this << endl;
+}
+
+PRINTLONG(CellFrame)
+{
+  CHECKDEPTHLONG;
+  stream << indent(offset)
+         << "CellFrame@id" << this << endl;
 }
 
 
