@@ -1,3 +1,6 @@
+@SET_MAKE@
+
+BUILDTOP=       @BUILDTOP@
 SRCDIR =        @srcdir@
 TOPDIR =        @srcdir@
 
@@ -9,7 +12,7 @@ PREFIX=         @prefix@
 
 OZVERSION=      $(TOPDIR)/OZVERSION
 
-SUBDIRS=        bin elisp ozwish Emulator lib
+SUBDIRS=        platform share contrib
 
 PLATFORMS=      solaris-sparc aix3-rs600 freebsd-i486 hpux-700\
                 irix5-mips linux-i486 netbsd-i486 netbsd-m68k netbsd-sparc\
@@ -17,7 +20,7 @@ PLATFORMS=      solaris-sparc aix3-rs600 freebsd-i486 hpux-700\
 
 DISTDIR=        dist
 
-FILES=          README* LICENSE
+FILES=          $(wildcard README*) LICENSE
 ALLFILES=       $(FILES:%=$(PREFIX)/%)
 
 DIRS=           bin demo include lib platform tools man
@@ -37,25 +40,26 @@ ZIP      = gzip -9
 
 CACHEDIR=oz/cache/http/www.ps.uni-sb.de/PREFIX/lib
 
-.PHONY: all install clean distclean realclean veryclean World files
+.PHONY: bootstrap all install clean distclean realclean veryclean World files check
 
-all:
+bootstrap::
+all:: bootstrap
 
-all install clean realclean depend distclean:
+clean veryclean realclean distclean::
+        -$(RM) *~
+
+distclean::
+        -$(RM) Makefile config.cache config.log config.status
+
+check bootstrap all install clean veryclean realclean depend distclean::
         dirs="$(SUBDIRS)"; for i in $$dirs; do (cd $$i && $(MAKE) $@); done
 
-veryclean: realclean
-
-install: $(ALLDIRS) $(ALLFILES)
-
-bootstrap:
-        (cd Emulator; make)
-        (cd lib; make bootstrap)
-
+install:: $(ALLFILES)
+$(ALLFILES): $(PREFIX)/% : % $(PREFIX)
 $(ALLFILES):
         $(INSTALL_OTHER) $(FILES) $(PREFIX)
 
-$(ALLDIRS) $(DISTDIR):
+$(PREFIX) $(DISTDIR):
         $(MKINSTALLDIRS) $@
 
 pack-all: common $(PLATFORMS)

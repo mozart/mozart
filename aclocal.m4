@@ -22,6 +22,7 @@ AC_DEFUN(OZ_INIT, [
     fi
     AC_SUBST(TOPDIR)
     oz_topdira=`cd $TOPDIR; pwd`
+    TOPDIR=$oz_topdira
     ])
 
 AC_DEFUN(OZ_PATH_PROG, [
