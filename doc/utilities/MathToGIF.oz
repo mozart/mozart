@@ -21,7 +21,6 @@
 
 functor prop once
 import
-   Property(get)
    OS(tmpnam system unlink)
    Open(file)
 export
