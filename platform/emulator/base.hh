@@ -333,10 +333,6 @@ void version();
 int engine(Bool);
 void scheduler();
 
-#ifdef OZMA
-    extern "C" TaggedRef ozma_readProc(const char *filename);
-#endif
-
 // return code of the emulator
 enum ThreadReturn {
   T_PREEMPT,            // thread is preempted

@@ -88,7 +88,6 @@ public:
   char *ozHome;
   char *osname, *cpu;
   char *ozPath;
-  char *linkPath;
 
   /* command line arguments visible from Oz */
   char **argV;

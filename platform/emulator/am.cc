@@ -97,10 +97,10 @@ void usage(int /* argc */,char **argv) {
           "usage: %s <options>\n",
           argv[0]);
   fprintf(stderr, " -d           : debugging on\n");
+  fprintf(stderr, " -l <lib>     : load native library\n");
   fprintf(stderr, " -init <file> : load and execute init procedure\n");
   fprintf(stderr, " -u <url>     : start a compute server\n");
   fprintf(stderr, " -b <file>    : boot from assembly code\n");
-  fprintf(stderr, " -B <dynlib>  : load ozma\n");
   fprintf(stderr, " -- <args> ...: application arguments\n");
   osExit(1);
 }
@@ -200,18 +200,11 @@ void AM::init(int argc,char **argv)
   char *tmp;
   if ((tmp = getenv("OZPATH"))) {
     ozconf.ozPath = tmp;
-    ozconf.linkPath = tmp;
-  }
-
-  if ((tmp = getenv("OZLINKPATH"))) {
-    ozconf.linkPath = tmp;
   }
 
   char *url = NULL;
   char *initFile = getenv("OZINIT");
   char *assemblyCodeFile = NULL;
-  char *ozmaLib = NULL;
-  int moreThanOne = 0;
 
   /* process command line arguments */
   ozconf.argV = NULL;
@@ -225,28 +218,37 @@ void AM::init(int argc,char **argv)
       continue;
     }
     if (strcmp(argv[i],"-u")==0) {
-      moreThanOne++;
       url = getOptArg(i,argc,argv);
       continue;
     }
     if (strcmp(argv[i],"-b")==0) {
-      moreThanOne++;
       assemblyCodeFile = getOptArg(i,argc,argv);
       continue;
     }
-    if (strcmp(argv[i],"-B")==0) {
-      ozmaLib = getOptArg(i,argc,argv);
-#ifdef OZMA
-      fprintf(stderr,"ozma linked statically. Ignoring -B option\n");
-#endif
+    if (strcmp(argv[i],"-l")==0) {
+      char *libfile = getOptArg(i,argc,argv);
+      OZ_Term out;
+      int ret = osDlopen(libfile, out);
+      if (ret != PROCEED) {
+        fprintf(stderr, "can not open native library %s\n",libfile);
+        osExit(1);
+      }
+      void* handle = OZ_getForeignPointer(out);
+      OZ_C_proc_interface * I;
+      I = (OZ_C_proc_interface *) osDlsym(handle,"oz_interface");
+      if (I==0) {
+        fprintf(stderr,"cannotFindInterface");
+        osExit(1);
+      }
+
+      (void) ozInterfaceToRecord(I);
       continue;
     }
     if (strcmp(argv[i],"-init")==0) {
       initFile = getOptArg(i,argc,argv);
       continue;
     }
-    if (strcmp(argv[i],"-a")==0 ||
-        strcmp(argv[i],"--")==0) {
+    if (strcmp(argv[i],"--")==0) {
       ozconf.argC = argc-i-1;
       ozconf.argV = argv+i+1;
       break;
@@ -256,10 +258,10 @@ void AM::init(int argc,char **argv)
     usage(argc,argv);
   }
 
-  if (moreThanOne > 1) {
-    fprintf(stderr,"Atmost one of '-u', '-b' allowed.\n");
+  if ((!url && !assemblyCodeFile) || (url && assemblyCodeFile)) {
+    fprintf(stderr,"Exactly one of '-u', '-b' required.\n");
     usage(argc,argv);
-   }
+  }
 
 #ifdef DEBUG_CHECK
   ozconf.showIdleMessage=1;
@@ -283,12 +285,6 @@ void AM::init(int argc,char **argv)
       fprintf(stderr,"Init file: %s\n",initFile);
     else
       fprintf(stderr,"No init file\n");
-
-  if (url==0 && assemblyCodeFile==0) {
-    fprintf(stderr,"Exactly one of '-b' or '-u' must be given\n");
-    ossleep(5);
-    osExit(1);
-  }
 
   (void) engine(OK);
 
@@ -318,14 +314,11 @@ void AM::init(int argc,char **argv)
   debugStreamTail = OZ_newVariable();
 
   initThreads();
-  ozstat.createdThreads.incf();
 
   // builtins
   initLiterals();
-  Builtin *entry = BIinit();
-  if (!entry) {
+  if (!BIinit()) {
     error("BIinit failed");
-    osExit(1);
   }
 
   extern void initTagged();
@@ -337,57 +330,40 @@ void AM::init(int argc,char **argv)
   osSetAlarmTimer(CLOCK_TICK/1000);
 
   if (!perdioInit()) {
-    fprintf(stderr,"Perdio initialization failed\n");
+    warning("Perdio initialization failed");
   }
 
-  {
-    Thread *tt = (initFile||url
-                  ||assemblyCodeFile
-                  )?
-      mkRunnableThread(DEFAULT_PRIORITY, _rootBoard):0;
+  Thread *tt = oz_newRunnableThread();
 
-    if (url) {
-      TaggedRef proc = oz_newVariable();
-      tt->pushCall(proc);
-      tt->pushCall(BI_load,oz_atom(url),proc);
-    }
-
-    OZ_Term (*ozmaFunc)(const char *);
-#ifdef OZMA
-    ozmaFunc = ozma_readProc;
-#else
-    if (ozmaLib) {
-      OZ_Term out;
-      int ret = osDlopen(ozmaLib, out);
-      if (ret != PROCEED) {
-        fprintf(stderr, "can not open ozma library %s\n",ozmaLib);
-        osExit(1);
-      }
-      ozmaFunc = (OZ_Term (*)(const char *))
-        osDlsym(OZ_getForeignPointer(out),"ozma_readProc");
-      if (!ozmaFunc) {
-        fprintf(stderr, "can't find ozma_readProc\n");
-        osExit(1);
-      }
-    }
-#endif
-    if (assemblyCodeFile) {
-      OZ_Term v=(*ozmaFunc)(assemblyCodeFile);
-      if (v!=makeTaggedNULL()) tt->pushCall(v, 0, 0);
-    }
-
-    if (initFile) {
-      TaggedRef proc = oz_newVariable();
-      tt->pushCall(proc);
-      tt->pushCall(BI_load,oz_atom(initFile),proc);
-    }
-
-    if (tt) scheduleThread(tt);
+  if (url) {
+    TaggedRef proc = oz_newVariable();
+    tt->pushCall(proc);
+    tt->pushCall(BI_load,oz_atom(url),proc);
   }
 
+  if (assemblyCodeFile) {
+    Builtin *bi = builtinTab.find("ozma_readProc");
+    if (bi==htEmpty) {
+      fprintf(stderr,"builtin ozma_readProc not found");
+      osExit(1);
+    }
+    OZ_CFun f = bi->getFun();
+    OZ_Term args[2] = { oz_atom(assemblyCodeFile),0 };
+    OZ_Return r=(*f)(args,0);
+    if (r!=PROCEED) {
+      fprintf(stderr,"assembling %s failed",assemblyCodeFile);
+      osExit(1);
+    }
+    tt->pushCall(args[1], 0, 0);
+  }
+
+  if (initFile) {
+    TaggedRef proc = oz_newVariable();
+    tt->pushCall(proc);
+    tt->pushCall(BI_load,oz_atom(initFile),proc);
+  }
 
   profileMode = NO;
-
 }
 
 void AM::exitOz(int status)

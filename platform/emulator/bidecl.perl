@@ -3313,6 +3313,12 @@ $builtins = {
                              BI  => BIconstraints,
                              native => true},
 
+    'ozma_readProc'     => { in  => ['+virtualString'],
+                             out => ['+value'],
+                             BI  => ozma_readProc,
+                             ifdef =>OZMA,
+                             native => true},
+
 #    'SystemRegistry'   => { in  => [],
 #                            out => ['+dictionary'],
 #                            BI  => BIsystem_registry,
