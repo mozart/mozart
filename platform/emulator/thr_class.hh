@@ -552,8 +552,12 @@ public:
   void pushOORegs(ChachedOORegs);
   void saveOORegs(ChachedOORegs);
 
-  TaggedRef findCatch(TaggedRef &traceback) {
-    return item.threadBody->taskStack.findCatch(traceback);
+  TaggedRef findCatch() {
+    return item.threadBody->taskStack.findCatch();
+  }
+  TaggedRef reflect(TaskStackEntry *from=0,TaskStackEntry *to=0,
+		    ProgramCounter pc=NOCODE) {
+    return item.threadBody->taskStack.reflect(from,to,pc);
   }
 
   void pushSetModeTop();

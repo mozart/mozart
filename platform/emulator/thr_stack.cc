@@ -86,26 +86,67 @@ loop:
 }
 
 
-TaggedRef TaskStack::findCatch(TaggedRef &out) 
+TaggedRef TaskStack::findCatch() 
 {
-  if (ozconf.moreInfo)
-    out = nil();
-  else
-    out = NameUnit;
-
   Assert(this);
 
   while (!isEmpty()) {
+    TaskStackEntry entry=pop();
+    TaggedPC topElem = ToInt32(entry);
+    ContFlag cFlag = getContFlag(topElem);
+    switch (cFlag){
+    default:
+      tos = tos - frameSize(cFlag) + 1;
+
+   case C_SETFINAL:
+      am.setFinal();
+      break;
+
+    case C_CATCH:
+      {
+        return (TaggedRef) ToInt32(pop());
+      }
+
+    case C_SET_OOREGS:
+      { 
+	Assert(am.isFinal());
+        am.unlockSelf();
+        ChachedOORegs newSelf = ToInt32(pop());
+	am.restoreSelf(newSelf);
+        break;
+      }
+    } // switch
+  } // while
+
+  return 0;
+}
+
+
+TaggedRef TaskStack::reflect(TaskStackEntry *from=0,TaskStackEntry *to=0,
+			     ProgramCounter pc=NOCODE)
+{
+  TaggedRef out = nil();
+
+  Assert(this);
+
+  TaskStackEntry *oldtos = getTop();
+  if (from != 0) setTop(from);
+
+  if (to == 0) { // reflect all
+    to = array+1;
+  }
+
+  while (getTop() > to) {
     TaggedPC topElem = ToInt32(pop());
     ContFlag flag = getContFlag(topElem);
     switch (flag){
+
     case C_CONT:
       {
         ProgramCounter PC = getPC(C_CONT,topElem);
         RefsArray Y = (RefsArray) pop();
         RefsArray G = (RefsArray) pop();
-	if (ozconf.moreInfo)
-	  out = cons(CodeArea::dbgGetDef(PC),out);
+	out = cons(CodeArea::dbgGetDef(PC),out);
       }
       break;
 
@@ -115,34 +156,30 @@ TaggedRef TaskStack::findCatch(TaggedRef &out)
         RefsArray Y = (RefsArray) pop();
         RefsArray G = (RefsArray) pop();
         RefsArray X = (RefsArray) pop();
-	if (ozconf.moreInfo)
-	  out = cons(CodeArea::dbgGetDef(PC),out);
+	out = cons(CodeArea::dbgGetDef(PC),out);
         break;
       }
 
     case C_ACTOR:
       pop();
-      if (ozconf.moreInfo)
-	out = cons(OZ_atom("actor"),out);
+      out = cons(OZ_atom("actor"),out);
       break;
 
     case C_CFUNC_CONT:
       {
         OZ_CFun biFun    = (OZ_CFun) pop();
         RefsArray X      = (RefsArray) pop();
-	if (ozconf.moreInfo)
-	  out = cons(OZ_mkTupleC("builtin",2,
-				 OZ_atom(builtinTab.getName((void *) biFun)),
-				 OZ_toList(getRefsArraySize(X),X)),
-		     out);
+	out = cons(OZ_mkTupleC("builtin",2,
+			       OZ_atom(builtinTab.getName((void *) biFun)),
+			       OZ_toList(getRefsArraySize(X),X)),
+		   out);
         break;
       }
 
     case C_DEBUG_CONT:
       {
         OzDebug *deb = (OzDebug*) pop();
-	if (ozconf.moreInfo)
-	  out = cons(OZ_atom("debug"),out);
+	out = cons(OZ_atom("debug"),out);
         break;
       }
 
@@ -150,39 +187,34 @@ TaggedRef TaskStack::findCatch(TaggedRef &out)
       {
         TaggedRef pred = (TaggedRef) ToInt32(pop());
         RefsArray X = (RefsArray) pop();
-	if (ozconf.moreInfo)
-	  out = cons(OZ_mkTupleC("apply",2,
-				 pred,OZ_toList(getRefsArraySize(X),X)),
-		     out);
+	out = cons(OZ_mkTupleC("apply",2,
+			       pred,OZ_toList(getRefsArraySize(X),X)),
+		   out);
         break;
       }
 
     case C_SETFINAL:
-      am.setFinal();
+      out = cons(OZ_atom("objectFinalLock"),out);
       break;
 
     case C_CATCH:
       {
         TaggedRef pred = (TaggedRef) ToInt32(pop());
-	return pred;
+	out = cons(OZ_mkTupleC("catch",1,pred),out);
+	break;
       }
 
     case C_SET_OOREGS:
       { 
-	Assert(am.isFinal());
-        am.unlockSelf();
         ChachedOORegs newSelf = ToInt32(pop());
-	am.restoreSelf(newSelf);
-	if (ozconf.moreInfo)
-	  out = cons(OZ_atom("setOORegs"),out);
+	out = cons(OZ_atom("setOORegs"),out);
         break;
       }
 
     case C_LTQ:
       {
         ThreadQueueImpl * ltq = (ThreadQueueImpl *) pop();
-	if (ozconf.moreInfo)
-	  out = cons(OZ_atom("ltq"),out);
+	out = cons(OZ_atom("ltq"),out);
         break;
       }
     default:
@@ -190,7 +222,13 @@ TaggedRef TaskStack::findCatch(TaggedRef &out)
     } // switch
   } // while
 
-  return 0;
+  setTop(oldtos);
+
+  out = reverseC(out);
+  if (pc != NOCODE) {
+    out = cons(CodeArea::dbgGetDef(pc),out);
+  }
+  return out;
 }
 
 
