@@ -127,7 +127,7 @@ local
       end
       
       meth hide
-	 TkNodes.choose,deleteTree
+	 {self deleteTree}
 	 Inner,dirtyUp
 	 case @isHidden then
 	    isHidden <- false
@@ -161,7 +161,7 @@ local
 	 isDirty  <- true
 	 case @isHidden then
 	    isHidden <- false
-	    TkNodes.choose,deleteTree
+	    {self deleteTree}
 	 else skip
 	 end
 	 {UnhideTreeKids @kids}
@@ -193,7 +193,7 @@ local
 	 else
 	    isHidden <- true
 	    isDirty  <- true
-	    TkNodes.choose,deleteTree
+	    {self deleteTree}
 	    {HideKids @kids}
 	    true
 	 end
@@ -219,7 +219,7 @@ local
 	    %% Since we know (from the testing routines above) that there is
 	    %% indeed something to unhide we do not have to analyse this node
 	    %% further!
-	    TkNodes.choose,deleteTree
+	    {self deleteTree}
 	    Inner,UnhideButFailedBelowHidden
 	 else
 	    isDirty <- true
