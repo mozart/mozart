@@ -90,7 +90,7 @@
 
 
 /* Define if you have the sbrk function.  */
-#ifdef RHAPSODY
+#ifndef RHAPSODY
 /* will probably work on final Rhapsody release */
 #undef HAVE_SBRK
 #endif
