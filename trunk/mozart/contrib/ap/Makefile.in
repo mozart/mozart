@@ -1,0 +1,21 @@
+@SET_MAKE@
+BUILDTOP	= @BUILDTOP@
+SRCTOP		= @SRCTOP@
+PREFIX		= @prefix@
+SRCDIR		= @srcdir@
+VPATH		= @srcdir@
+LIB_DIR		= $(PREFIX)/contrib/ap
+OZC		= @OZC@
+INSTALL		= @INSTALL@
+INSTALL_DIR	= @INSTALL_DIR@
+INSTALL_LIB	= $(INSTALL) -m 444
+FUNCTORS	= OptionSheet.ozf
+
+all:		$(FUNCTORS)
+%.ozf: %.oz
+	$(OZC) -c $< -o $@
+install:	$(LIB_DIR) $(addprefix $(LIB_DIR)/,$(FUNCTORS))
+$(LIB_DIR):
+	$(INSTALL_DIR) $@
+$(LIB_DIR)/%.ozf: %.ozf
+	$(INSTALL_LIB) $< $@
