@@ -1051,11 +1051,6 @@ void cvar2buffer(ostream &out, char *s, GenCVariable *cv, int depth)
     }
 #endif /* METAVAR */
 
-  case PerdioVariable:
-    {
-      out << s;
-      break;
-    }
   case AVAR:
     {
       out << s;

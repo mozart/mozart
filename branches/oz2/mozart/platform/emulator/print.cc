@@ -249,10 +249,6 @@ void GenCVariable::print(ostream &stream, int depth, int offset, TaggedRef v)
     stream << indent(offset) << "<AVAR "
 	     << getVarName(v) << " @" << this << ">";
       break;
-  case PerdioVariable:
-    stream << indent(offset) << "<PerdioVariable "
-	     << getVarName(v) << " @" << this << ">";
-      break;
 
   default:
     error("Unexpected type of generic variable at %s:%d.",
@@ -399,18 +395,6 @@ PRINT(PortLocal)
 {
   CHECKDEPTH;
   stream << "PortLocal@" << this;
-}
-
-PRINT(PortProxy)
-{
-  CHECKDEPTH;
-  stream << "PortProxy@" << this;
-}
-
-PRINT(PortManager)
-{
-  CHECKDEPTH;
-  stream << "PortManager@" << this;
 }
 
 PRINT(Space)
@@ -655,13 +639,7 @@ PRINTLONG(ConstTerm)
   case Co_Object:     ((Object *) this)->printLong(stream,depth,offset);      break;
   case Co_Cell:	      ((Cell *) this)->printLong(stream,depth,offset);        break;
   case Co_Port:	      
-    switch(((Tertiary *)this)->getTertType()){
-    case Te_Local:   ((PortLocal *)   this)->printLong(stream,depth,offset); break;
-    case Te_Manager: ((PortManager *) this)->printLong(stream,depth,offset); break;
-    case Te_Proxy:   ((PortProxy *)   this)->printLong(stream,depth,offset); break;
-    default:         Assert(NO);
-    }
-    break;
+    ((PortLocal *)   this)->printLong(stream,depth,offset); break;
   case Co_Space:      ((Space *) this)->printLong(stream,depth,offset);       break;
   case Co_Chunk:      ((SChunk *) this)->printLong(stream,depth,offset);      break;
   case Co_Array:      ((OzArray *) this)->printLong(stream,depth,offset);     break;
@@ -1241,23 +1219,6 @@ PRINTLONG(PortLocal)
   tagged2StreamLong(strm,stream,depth,offset+2);  
 }
 
-
-PRINTLONG(PortManager)
-{
-  CHECKDEPTHLONG;
-  stream << indent(offset)
-	 << "PortManager@id" << this << endl
-	 << indent(offset)
-	 << " stream:"<<endl;
-  tagged2StreamLong(strm,stream,depth,offset+2);  
-}
-
-PRINTLONG(PortProxy)
-{
-  CHECKDEPTHLONG;
-  stream << indent(offset)
-	 << "PortProxy@id" << this << endl;  
-}
 
 PRINTLONG(Space)
 {

@@ -43,10 +43,6 @@
 #define inline
 #endif
 
-#ifdef PERDIO
-extern OwnerTable *ownerTable;
-#endif
-
 /****************************************************************************
  * MACROS
  ****************************************************************************/
@@ -556,7 +552,7 @@ Bool needsCollection(Literal *l)
 {
   if (l->isAtom()) return NO;
   Name *nm = (Name*) l;
-  return nm->isOnHeap() || nm->hasGName();
+  return nm->isOnHeap();
 }
 
 
@@ -705,20 +701,9 @@ Bool isInTree (Board *b)
  */
 
 inline
-void dogcGName(GName *gn)
-{
-  if (opMode == IN_GC) {
-    gcGName(gn);
-  }
-}
-
-inline
 Name *Name::gcName()
 {
-  CHECKCOLLECTED(homeOrGName, Name *);
-  if (hasGName()) {
-    dogcGName(getGName());
-  }
+  CHECKCOLLECTED(ToInt32 (home), Name *);
   if (opMode == IN_GC && isOnHeap() ||
       opMode == IN_TC && isLocalBoard(getBoard())) {
     GCMETHMSG("Name::gc");
@@ -727,7 +712,7 @@ Name *Name::gcName()
     Name *aux = (Name*) gcRealloc(this,sizeof(Name));
     GCNEWADDRMSG(aux);
     ptrStack.push(aux, PTR_NAME);
-    storeForward(&homeOrGName, aux);
+    storeForward(&home, aux);
     
     FDPROFILE_GC(cp_size_literal,sizeof(*this));
     return aux;
@@ -750,10 +735,7 @@ inline
 void Name::gcRecurse()
 {
   GCMETHMSG("Name::gcRecurse");
-  if (hasGName())
-    return;
-
-  homeOrGName = ToInt32(((Board*)ToPointer(homeOrGName))->gcBoard());
+  home = home->gcBoard();
 }
 
 inline
@@ -1223,9 +1205,6 @@ void GenCVariable::gc(void)
   case AVAR:
     ((AVar *) this)->gcAVar();
     break;
-  case PerdioVariable:
-    ((PerdioVar *) this)->gcPerdioVar();
-    break;
 #ifdef FSETVAR
   case FSetVariable:
     ((GenFSetVariable *) this)->gc();
@@ -1363,14 +1342,6 @@ void AVar::gcAVar(void)
 { 
   GCMETHMSG("AVar::gc");
   gcTagged(value, value);
-}
-
-void PerdioVar::gcPerdioVar(void)
-{ 
-  GCMETHMSG("PerdioVar::gc");
-  if (isProxy()) {
-    gcTagged(u.binding,u.binding);
-  }
 }
 
 DynamicTable* DynamicTable::gc(void)
@@ -1591,9 +1562,6 @@ void AM::gc(int msgLevel)
   
   suspendVarList=makeTaggedNULL(); /* no valid data */
 
-#ifdef PERDIO
-  gcOwnerTable();  
-#endif
   gcTagged(aVarUnifyHandler,aVarUnifyHandler);
   gcTagged(aVarBindHandler,aVarBindHandler);
 
@@ -1629,11 +1597,6 @@ void AM::gc(int msgLevel)
     error("ptrStack should be empty");
 
   EXITCHECKSPACE;
-
-#ifdef PERDIO
-  gcBorrowTable();
-  gcGNameTable();
-#endif  
 
   oldChain->deleteChunkChain();
 
@@ -1999,11 +1962,7 @@ void ConstTerm::gcConstRecurse()
     {
       Abstraction *a = (Abstraction *) this;
       a->gRegs = gcRefsArray(a->gRegs);
-      a->gcTertiary();
-      if (a->isProxy()) {
-	ProcProxy *pp = (ProcProxy*) a;
-	gcTagged(pp->suspVar,pp->suspVar);
-      }
+      a->setBoard(a->getBoard()->gcBoard());
 
       break;
     }
@@ -2019,11 +1978,7 @@ void ConstTerm::gcConstRecurse()
   case Co_Port:
     {
       Port *p = (Port*) this;
-      p->gcTertiary();
-      if (!p->isProxy()) {
-	PortWithStream *pws = (PortWithStream *) this;
-	gcTagged(pws->strm,pws->strm);
-      }
+      p->setBoard(p->getBoard()->gcBoard());
       break;
     }
   case Co_Space:
@@ -2093,7 +2048,6 @@ void ConstTerm::gcConstRecurse()
 inline
 void PrTabEntry::gcPrTabEntry()
 {
-  dogcGName(gname);
 }
 
 
@@ -2119,8 +2073,7 @@ ConstTerm *ConstTerm::gcConstTerm()
     {
       Abstraction *a = (Abstraction *) this;
       CheckLocal(a);
-      sz = a->isProxy() ? sizeof(ProcProxy) : sizeof(Abstraction);
-      dogcGName(a->getGName());
+      sz = sizeof(Abstraction);
       a->getPred()->gcPrTabEntry();
       COUNT(abstraction);
       break;
@@ -2142,35 +2095,11 @@ ConstTerm *ConstTerm::gcConstTerm()
     break;
 
   case Co_Port:  /* TODO: what to count TODO: no need for local check?? */
-
-    switch(((Tertiary *)this)->getTertType()) {
-    case Te_Local:
-      {
-	PortLocal *pl=(PortLocal*)this;
-	CheckLocal((PortLocal *) this);
-	sz = sizeof(PortLocal);
-	COUNT(port);   
-	break;
-      }
-    case Te_Manager: 
-      {
-	PortManager *pm=(PortManager*)this; 
-	sz = sizeof(PortManager);
-	COUNT(port);   
-	break;
-      }
-    case Te_Proxy:
-      {
-	PortProxy *pp=(PortProxy*)this;
-	sz = sizeof(PortProxy);
-	COUNT(port); 
-	break;
-      }
-    default:
-      {
-	Assert(0);
-	break;
-      }
+    {
+      PortLocal *pl=(PortLocal*)this;
+      CheckLocal((PortLocal *) this);
+      sz = sizeof(PortLocal);
+      COUNT(port);
     }
     break;
 

@@ -246,7 +246,7 @@ void AM::addSuspendVarList(TaggedRef * t)
 inline
 Board *Name::getBoard()
 {
-  return (hasGName()) ? am.rootBoard : ((Board*)ToPointer(homeOrGName))->derefBoard();
+  return home->derefBoard();
 }
 
 inline
@@ -270,9 +270,7 @@ Board *ConstTermWithHome::getBoard() {
 inline
 Board *Tertiary::getBoard()
 {
-  if (getTertType() == Te_Local)
-    return ((Board*)getPointer())->derefBoard();
-  return am.rootBoard;
+  return ((Board*)getPointer())->derefBoard();
 }
 
 

@@ -14,7 +14,6 @@
 #include "board.hh"
 #include "genvar.hh"
 #include "dictionary.hh"
-#include "ip.hh"
 
 /*===================================================================
  * global names and atoms
@@ -42,7 +41,6 @@ TaggedRef  AtomNil, AtomCons, AtomPair, AtomVoid,
   AtomStackMaxSize, AtomStopOnToplevelFailure, AtomSystem, AtomThread, 
   AtomTotal,
   AtomThreshold, AtomTolerance, AtomUser, AtomVariables, AtomWidth, AtomHeap,
-  AtomDebugIP, AtomDebugPerdio,
   RecordFailure,
   E_ERROR, E_KERNEL, E_OBJECT, E_TK, E_OS, E_SYSTEM;
 
@@ -151,10 +149,6 @@ void initLiterals()
   AtomRecord                = makeTaggedAtom("record");
   // AtomInt                   = makeTaggedAtom("int");
   
-  AtomDebugIP               = makeTaggedAtom("debugIP");
-  AtomDebugPerdio           = makeTaggedAtom("debugPerdio");
-
-
   RecordFailure = OZ_record(OZ_atom("failure"),
 			    OZ_cons(OZ_atom("debug"),OZ_nil()));
   OZ_putSubtree(RecordFailure,OZ_atom("debug"),NameUnit);
@@ -200,11 +194,11 @@ Atom *Atom::newAtom(char *str)
   return ret;
 }
 
-Name *Name::newName(Board *home)
+Name *Name::newName(Board *bb)
 {
   Name *ret = (Name*) heapMalloc(sizeof(Name));
   ret->init();
-  ret->homeOrGName = ToInt32(home);
+  ret->home = bb;
   ret->setOthers(NameCurrentNumber++);
   ret->setFlag(Lit_isName);
   return ret;
@@ -215,66 +209,13 @@ NamedName *NamedName::newNamedName(char *pn)
 {
   NamedName *ret = (NamedName*) malloc(sizeof(NamedName));
   ret->init();
-  ret->homeOrGName = ToInt32(am.rootBoard);
+  ret->home = am.rootBoard;
   ret->setOthers(NameCurrentNumber++);
   ret->setFlag(Lit_isName|Lit_isNamedName);
   ret->printName = pn;
   return ret;
 }
 
-
-GName *Name::globalize()
-{
-  if (!hasGName()) {
-    Assert(getBoard()==am.rootBoard);
-    homeOrGName = ToInt32(newGName(makeTaggedLiteral(this)));
-    setFlag(Lit_hasGName);
-  }
-  return getGName();
-}
-
-void Name::import(GName *name)
-{
-  Assert(getBoard()==am.rootBoard);
-  homeOrGName = ToInt32(name);
-  setFlag(Lit_hasGName);
-}
-
-
-GName *Abstraction::globalize()
-{
-  GName *ret = getGName();
-  if (ret==NULL) {
-    ret = newGName(makeTaggedConst(this));
-    setGName(ret);
-  }
-  return ret;
-}
-
-GName *PrTabEntry::globalize()
-{
-  GName *ret = getGName();
-  if (ret==NULL) {
-    ret = newGName(this);
-    setGName(ret);
-  }
-  return ret;
-}
-
-
-Abstraction::Abstraction(TaggedRef name, int arity, GName *gn)
-  : Tertiary(0,Co_Abstraction,Te_Proxy)
-{
-  PrTabEntry *aux = findCodeGName(gn);
-  if (aux==NULL) {
-    aux = new PrTabEntry(name,mkTupleWidth(arity),AtomNil,0);
-    GName *gnret = copyGName(gn);
-    addGName(gnret,aux);
-    aux->setGName(gnret);
-  }
-  pred = aux;
-  gRegs = NULL;
-}
 
 /*===================================================================
  * ConstTerm
@@ -310,21 +251,7 @@ int ConstTerm::getArity()
 
 void Tertiary::setBoard(Board *b)
 {
-  if (getTertType() == Te_Local) {
-    setPointer(b);
-  } else {
-    Assert(b==NULL || b==am.rootBoard);
-  }
-}
-
-TaggedRef ProcProxy::getSuspvar()
-{
-  if (suspVar==makeTaggedNULL()) {
-    suspVar = makeTaggedRef(newTaggedUVar(am.currentBoard));
-    Bool getCode = (getPC()==NOCODE);
-    getClosure(this,getCode);
-  }
-  return suspVar;
+  setPointer(b);
 }
 
 
