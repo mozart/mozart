@@ -30,35 +30,6 @@
 (require 'comint)
 (require 'compile)
 
-;;{{{ Known Bugs
-
-;; - `/*' ... `*/' style comments are ignored for purposes of indentation.
-;;   (Nesting and line breaks are problematic.)
-;; - Line breaks inside strings, quotes or backquote variables
-;;   are not allowed for auto-indent.
-;; - 10thread is not recognized as a keyword as it should be.
-;; - An ampersand as the last character in a string or before a
-;;   backslash-escaped double quote in a string messes up fontification.
-;;   Partial fix: write [&&] instead of "&".
-;; - Writing e.g., C == &\\andthen ... confuses fontification.
-;; - The use of non-escaped double quotes in Oz-Gump regular expression
-;;   tokens confuses fontification.
-;; - Oz-Gump regular expressions are not ignored for indentation.
-;; - Some indentation rules do not work correctly with infix operators, e.g.:
-;;      feat
-;;         f:
-;;            5 +
-;;         7
-;;   The 7 should be underneath the 5.  You can circumvent this problem
-;;   by using parentheses around the expression.
-;; - {Tk.send tk(self.CurrentQuery configure state:
-;;                  disabled)}
-;;   gives questionable indentation on the second line.
-;; - Method name fontification should respect keywords, e. g., in
-;;   `meth lock' the word `lock' should not be font-lock-function-name-face
-;;   but font-lock-keyword-face.
-
-;;}}}
 ;;{{{ Global Effects
 
 (or (member ".ozo" completion-ignored-extensions)
