@@ -184,15 +184,17 @@ if test "${GXX}" = yes; then
     fi
 
     case `$CXX -dumpversion` in
-    2.95.*) oz_opt="-O3 -pipe";;
+    2.95.*) oz_opt="-O3 -pipe -fschedule-insns2";;
     *)      oz_opt="-O3 -pipe -fstrict-aliasing";;
     esac
     oz_om=
-    if test "${platform}" = linux-i486
-    then
+    case ${platform} in
+    *-i486)
         oz_opt="$oz_opt -mpentium"
         oz_om="-fomit-frame-pointer"
-    fi
+        ;;
+    *)  ;;
+    esac
     : ${oz_copt_optimize="$oz_opt $oz_om"}
     : ${oz_copt_profile="$oz_opt -pg"}
     : ${oz_copt_debug="-g3 -DINTERFACE"}
