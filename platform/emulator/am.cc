@@ -146,6 +146,7 @@ void AM::init(int argc,char **argv)
   ozconf.init();
   osInit();
   initffuns();
+  AssRegArray::init();
 
   defaultExceptionHdl = makeTaggedNULL();
 

@@ -551,7 +551,6 @@ void checkLiveness(ProgramCounter PC, TaggedRef *X, int maxX)
   int m=CodeArea::livenessX(PC,X);
   if (m>maxX) {
     printf("liveness(%p)=%d > %d\n",PC,m,maxX);
-    displayDef(PC,0);
   }
 }
 #endif
