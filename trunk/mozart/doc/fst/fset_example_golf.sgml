@@ -3,14 +3,14 @@
 <Chapter id="fset.examples.golf"> <Title/Scheduling a Golf Tournament/
 
 
-<Para><Title/Problem Specification./ There are <Math>32</Math>
+<Para><Title/Problem Specification/ There are <Math>32</Math>
 individually playing golfers who play in groups of <Math>4</Math>,
 so-called <Def/foursomes/. For every week of the golf tournament new
 sets of foursomes are to be compiled. The task is to assign foursomes
 for a given number of weeks such that no player plays with another
 player in a foursome twice.
 
-<Para><Title/Maximal Number of Weeks./ The upper bound for the number
+<Para><Title/Maximal Number of Weeks/ The upper bound for the number
 of weeks is <Math>10</Math> weeks due to the following argument. There
 are <Math>{32 \choose 2}= 496</Math> pairing of players. Each foursome
 takes <Math>6</Math> pairings and every week consists of
@@ -23,7 +23,7 @@ assignment could only be found by solvers using set constraints. Other
 approaches, using linear integer programming, failed for this problem
 size.
 
-<Para><Title/Model./ A foursome is modeled as a set of cardinality
+<Para><Title/Model/ A foursome is modeled as a set of cardinality
 <Math>4</Math>. A week is a collection of foursomes and all foursomes
 of a week are pairwise disjoint and their union is the set of all
 golfers. This leads to a partition constraint. Further, each foursome
@@ -34,7 +34,7 @@ any other foursome of the other weeks has to be either <Math>0</Math>
 or <Math>1</Math>.
 
 
-<Para><Title/Distribution Strategy./ The distribution strategy is
+<Para><Title/Distribution Strategy/ The distribution strategy is
 crucial for this problem.<Note foot/The distribution strategy was
 proposed by Stefano Novello from IC-PARC on the newsgroup
 comp.constraints./ A player is taken and assigned to all possible
@@ -45,7 +45,7 @@ to distribute a foursome completely, fails even for smaller instances
 of the problem.
 
 
-<Para><Title/Solver./ The function <<Golf>> returns a solver to find
+<Para><Title/Solver/ The function <<Golf>> returns a solver to find
 an assignment for <<NbOfFourSomes>> foursomes per week and
 <<NbOfWeeks>> weeks duration. The number of players is computed from
 <<NbOfFourSomes>> and stored in <<NbOfPlayers>>. The auxiliary
@@ -77,7 +77,7 @@ flattened copy of <<Weeks>>, &ie;, a list of all foursomes.
 Invoking the solver by <<{ExploreOne {Golf 9 8}}>> produces the
 following search tree.
 
-<PICTURE.extern display to="golf_explorer.gif" type=GIF>
+<PICTURE.extern display to="golf_explorer.gif" id="golf_explorer.pic" type=GIF>
 
 <P> The search tree has a depth of <Math>200</Math> which makes the
 problem a good candidate for recomputation. Invoking the search engine
