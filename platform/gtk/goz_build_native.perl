@@ -459,6 +459,65 @@ sub gen_c_wrappers {
 
 ###############################################################################
 #
+# gen_gnome_macros
+#
+# Generate the macro definitions to rename gnome_... and Gnome... to gtk_...
+# and Gtk...
+#
+###############################################################################
+sub gen_gnome_macros {
+    my @specs = @_;
+    local %macros = ();
+
+    foreach my $spec (@specs) {
+        require $spec;
+        &gnome_process_spec;
+    }
+
+    my ($key,$val);
+    while (($key,$val) = each %macros) {
+        print "#define $key $val\n";
+    }
+}
+
+sub gnome_save {
+    my $name = shift;
+    if ($name && $name =~ /^([Gg])nome/) {
+        $macros{$name} = (($1 eq 'G')?'Gtk':'gtk') . $';
+    }
+}
+
+sub gnome_clean_type {
+  my ($type_str) = @_;
+  if ($type_str) {
+      $type_str =~ s/^[\%\!\+\=\^]+//s ;
+      $type_str =~ s/const //sg;
+      $type_str =~ s/[*]//g;
+  }
+  return $type_str;
+}
+
+sub gnome_process_map {
+    my $map = shift;
+    my ($key,$val,$typ);
+    while (($key,$val) = each %$map) {
+        gnome_save($key);
+        foreach $typ (@{$val->{'in'}}) {
+            gnome_save(gnome_clean_type($typ));
+        }
+        gnome_save(gnome_clean_type($val->{'out'}));
+    }
+}
+
+sub gnome_process_spec {
+    gnome_save($$class{name});
+    gnome_save($$class{super});
+    gnome_process_map($$class{'inits'});
+    gnome_process_map($$class{'meths'});
+}
+
+###############################################################################
+#
 # usage
 #
 ###############################################################################
@@ -471,6 +530,7 @@ Generate glue code for the GTK+ binding for Oz
   --c-wrappers              generate the C glue code
   --interface               generate the interface definition for
                             Oz C/C++ interface
+  --gnome                   generate macros for gnome/ftk renaming
   --includes                Optional header files to include
 EOF
 
@@ -486,16 +546,19 @@ EOF
 # parse arguments
 my ($opt_cwrappers,
     $opt_interface,
-    $opt_includes) = (0, 0, 0);
+    $opt_gnome,
+    $opt_includes) = (0, 0, 0, 0);
 &GetOptions("c-wrappers"     =>    \$opt_cwrappers,
             "interface"      =>    \$opt_interface,
+            "gnome"          =>    \$opt_gnome,
             "includes:s"     =>    \$opt_includes);
 
 @input    = @ARGV;
 @includes = split /\s/, $opt_includes; # headers to include
 
 usage() unless @input != 0;
-usage() unless $opt_cwrappers | $opt_interface;
+usage() unless $opt_cwrappers | $opt_interface | $opt_gnome;
 
 gen_c_wrappers   (@input) if $opt_cwrappers;
 gen_oz_interface (@input) if $opt_interface;
+gen_gnome_macros (@input) if $opt_gnome;
