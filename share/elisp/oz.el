@@ -1138,7 +1138,7 @@ and initial semicolons."
 	(newbuf (process-buffer proc))
 	(errs-found (and oz-popup-on-error (string-match oz-error-string string))))
     (unwind-protect
-	(let (moving ol-point index)
+	(let (moving old-point index)
 	  (set-buffer newbuf)
 	  (setq moving (= (point) (process-mark proc)))
 	  (save-excursion
