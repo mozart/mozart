@@ -235,7 +235,7 @@ consumer sums all the numbers.
 <CAPTION>Summing the elements in a list</CAPTION>
 <<<
 fun {Generator N}
-   case N &gt; 0 then N|{Generator N-1}
+   if N &gt; 0 then N|{Generator N-1}
    else nil end
 end
 local
@@ -296,22 +296,22 @@ it prints a message on the display of the Browser.
 <CAPTION>Producing volvo's</CAPTION>
 <<<
 fun {Producer N}
-   case N > 0 then
+   if N > 0 then
       volvo|{Producer N-1}
    else then nil end
 end
-proc {Consumer Ls}
+local
    proc {Consumer Ls N}
       case Ls
       of nil then skip
       [] volvo|Lr then
-         case N mod 1000 == 0 then
+         if N mod 1000 == 0 then
            {Browse 'riding a new volvo'}
-         else skip end
+         end
          {Consumer Lr N+1}
       else {Consumer Lr N} end
    end
-in {Consumer Ls 1}
+in proc {Consumer Ls} {Consumer Ls 1} end
 end
 >>>
 </FIGURE>
@@ -353,9 +353,9 @@ in
    thread Ls1 = {Filter Ls IsVolvo} end
    {List.forAllInd Ls1
       proc {$ N X}
-         case N mod 1000 == 0 then
-          {Browse 'riding a new volvo'}
-         else skip end
+         if N mod 1000 == 0 then
+           {Browse 'riding a new volvo'}
+         end
       end}
 end
 >>>
