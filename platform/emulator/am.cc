@@ -711,20 +711,22 @@ void AM::addFeatOFSSuspensionList(SuspList *suspList, TaggedRef flist, Bool dete
         Suspension *susp=suspList->getElem();
 
         if (susp->isDead()) {
-            suspList = suspList->dispose();
+            // suspList = suspList->dispose();
+            suspList = suspList->getNext();
             continue;
         }
 
         // suspension points to an already reduced branch of the computation tree
         if (! susp->getBoard()->getBoardDeref()) {
-            susp->markDead();
-            checkExtSuspension(susp);
-            suspList = suspList->dispose();
+            // susp->markDead();
+            // checkExtSuspension(susp);
+            // suspList = suspList->dispose();
+            suspList = suspList->getNext();
             continue;
         }
 
         if (susp->isOFSSusp()) {
-            // Add the feature or feat. list to the diff. list in xRegs[1] and xRegs[2]
+            // Add the feature or list to the diff. list in xRegs[1] and xRegs[2]
             CFuncContinuation *cont=susp->getCCont();
             RefsArray xRegs=cont->getX();
             if (flist) {
@@ -741,9 +743,22 @@ void AM::addFeatOFSSuspensionList(SuspList *suspList, TaggedRef flist, Bool dete
                 }
             }
             if (determined) {
-                // FS is det.: tail of list must be unified with nil: (always succeeds)
-                Bool ok=am.unify(xRegs[2],AtomNil);
-                Assert(ok);
+                // FS is det.: tail of list must be bound to nil: (always succeeds)
+                // Do *not* use unification to do this binding!
+                TaggedRef tail=xRegs[2];
+                DEREF(tail,tailPtr,tailTag);
+                switch (tailTag) {
+                case LITERAL:
+                    Assert(tail==AtomNil);
+                    break;
+                case UVAR:
+                    doBind(tailPtr, AtomNil);
+                    break;
+                default:
+                    Assert(FALSE);
+                }
+                // Bool ok=am.unify(xRegs[2],AtomNil);
+                // Assert(ok);
             }
         }
         suspList = suspList->getNext();
