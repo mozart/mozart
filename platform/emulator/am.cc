@@ -551,7 +551,7 @@ start:
 
   rebind(termPtr2,term1);
   for (int i = 0; i < argSize-1; i++ ) {
-    if (!performUnify(args1+i,args2+i, prop)) {
+    if ( !performUnify(args1+i,args2+i, prop)) {
       return NO;
     }
   }

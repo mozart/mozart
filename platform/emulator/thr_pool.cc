@@ -30,7 +30,7 @@ void ThreadsPool::initThreads ()
   rootThread = new Thread (ozconf.defaultPriority, am.rootBoard);
 
   //
-  threadBodyFreeList = (ThreadBodyFreeListEl *) NULL;
+  threadBodyFreeList = NULL;
 }
 
 //

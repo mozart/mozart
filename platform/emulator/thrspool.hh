@@ -58,7 +58,7 @@ public:
   Thread *rootThread;
   //
   //  used by thread constructors;
-  ThreadBodyFreeListEl *threadBodyFreeList;
+  RunnableThreadBody *threadBodyFreeList;
 
   ThreadsPool () {};
   ~ThreadsPool () {};
