@@ -736,94 +736,6 @@ TaggedRef AM::createNamedVariable(int regIndex, TaggedRef name)
   return ret;
 }
 
-void AM::defaultExceptionHandler(OZ_Term val, ProgramCounter PC)
-{
-  if (ozconf.errorVerbosity > 0) {
-    errorHeader();
-    if (OZ_isVariable(val) || !OZ_isRecord(val)) {
-      message("Exception '%s' caught\n",toC(val));
-    } else {
-      OZ_Term lab=OZ_label(val);
-      if (literalEq(lab,OZ_atom("noElse"))) {
-        message("ERROR: Conditional without else failed\n");
-        if (ozconf.errorVerbosity > 1) {
-          switch (OZ_width(val)) {
-          case 2:
-            message("Store: %s\n",toC(OZ_getArg(val,1)));
-            // fall through
-          case 1:
-            message("In line: %s\n",toC(OZ_getArg(val,0)));
-          default:
-            break;
-          }
-        }
-      } else if (literalEq(lab,OZ_atom("toplevelBlocked"))) {
-        message("The toplevel is blocked\n");
-      } else if (literalEq(lab,OZ_atom("apply"))) {
-        message("ERROR: Illtyped application\n");
-        if (OZ_width(val) < 2) {
-          message("Ups: %s\n",toC(val));
-        } else {
-          message("In Expression: {%s",toC(OZ_getArg(val,0)));
-          OZ_Term args = OZ_getArg(val,1);
-          while (OZ_isCons(args)) {
-            printf(" %s",toC(OZ_head(args)));
-            args = OZ_tail(args);
-          }
-          printf("}\n");
-        }
-      } else if (literalEq(lab,OZ_atom("eq"))) {
-        message("ERROR: Failure\n");
-        message("Tell:  %s\n",toC(OZ_getArg(val,1)));
-        message("Store: %s\n",toC(OZ_getArg(val,0)));
-      } else if (literalEq(lab,OZ_atom("fail"))) {
-        message("ERROR: Failure\n");
-        if (ozconf.errorVerbosity > 1) {
-          if (OZ_width(val)>0) {
-            for (int i=0; i < OZ_width(val); i++) {
-              message("[ Hint: %s ]\n",toC(OZ_getArg(val,i)));
-            }
-          }
-        }
-      } else if (literalEq(lab,OZ_atom("type")) ||
-                 literalEq(lab,OZ_atom("ftype"))) {
-        message("ERROR: Illtyped application\n");
-        if (OZ_width(val) < 2) {
-          message("Ups: %s\n",toC(val));
-        } else {
-          OZ_Term arg0 = OZ_getArg(val,0);
-          message("In Expression: %s{%s",
-                  literalEq(lab,OZ_atom("ftype")) ? "_ = " : "",
-                  OZ_isAtom(arg0) ?
-                  tagged2Literal(deref(arg0))->getPrintName():toC(arg0));
-          OZ_Term args = OZ_getArg(val,1);
-          while (OZ_isCons(args)) {
-            printf(" %s",toC(OZ_head(args)));
-            args = OZ_tail(args);
-          }
-          printf("}\n");
-
-          if (ozconf.errorVerbosity > 1) {
-            if (!OZ_isNil(args)) message("[ UPS: %s ]\n",toC(args));
-            if (OZ_width(val)>2) {
-              for (int i=2; i < OZ_width(val); i++) {
-                message("[ Hint: %s ]\n",toC(OZ_getArg(val,i)));
-              }
-            }
-          }
-        }
-      } else if (ozconf.errorVerbosity > 1) {
-        message("???: %s\n",toC(val));
-      }
-    }
-    if (currentThread && ozconf.errorVerbosity > 1) {
-      TaskStackEntry *saveTos = currentThread->getTop();
-      currentThread->printTaskStack(PC);
-    }
-    errorTrailer();
-  }
-}
-
 /*
  * Entailment handling for emulator
  *
@@ -2294,10 +2206,9 @@ LBLsuspendThread:
           DISPATCH(6);
         }
       }
-      DORAISE(OZ_mkTupleC("@",3,
-                          rec?makeTaggedSRecord(rec):OZ_atom("noattributes"),
-                          fea,
-                          OZ_newVariable()));
+      RAISE_FTYPE("@",
+                  cons(rec?makeTaggedSRecord(rec):OZ_atom("noattributes"),
+                       cons(fea,nil())));
     }
 
   Case(INLINEASSIGN)
@@ -2314,10 +2225,9 @@ LBLsuspendThread:
         }
       }
 
-      DORAISE(OZ_mkTupleC("<-",3,
-                          rec?makeTaggedSRecord(rec):OZ_atom("noattributes"),
-                          fea,
-                          XPC(2)));
+      RAISE_FTYPE("<-",
+                  cons(rec?makeTaggedSRecord(rec):OZ_atom("noattributes"),
+                       cons(fea,nil())));
     }
 
   Case(INLINEUPARROW)
@@ -2682,9 +2592,7 @@ LBLsuspendThread:
         goto bombSend;
       }
 
-      if (!isTailCall) {
-        CallPushCont(PC+6);
-      }
+      if (!isTailCall) CallPushCont(PC+6);
       SaveSelf(e,obj,OK);
       Assert(obj->getDeepness()==0);
       obj->incDeepness();
@@ -2925,34 +2833,42 @@ LBLsuspendThread:
      {
        DebugCheck(ozconf.stopOnToplevelFailure, tracerOn();trace("raise"));
 
-       TaskStackEntry *oldTos;
-       int spaceCount;
-       TaggedRef pred;
-       if (!e->currentThread) {
-         e->defaultExceptionHandler(X[0],NOCODE);
+       Thread *tt = e->currentThread;
+       if (e->currentThread) {
+         if (PC != NOCODE) e->pushTask(PC,Y,G);
+       } else {
+         tt = new Thread (ozconf.defaultPriority,am.currentBoard);
+         am.scheduleThread(tt);
+       }
+
+       Group *gr = 0;
+       TaggedRef tmpGr = tt->getGroup();
+       if (tmpGr) { gr = tagged2Group(tmpGr); }
+
+       TaggedRef pred = 0;
+       if (gr) {
+         pred = gr->getExceptionHandler();
+       }
+
+       if (!pred) {
+         pred = e->defaultExceptionHandler;
+       }
+
+       /* exception is already in X[0],
+          but should somehow be reflected !!! */
+       RefsArray argsArray = allocateY(2);
+       argsArray[0]=X[0];
+       argsArray[1]=e->dbgGetSpaces();
+       tt->pushCall(deref(pred),argsArray,2);
+
+       if (e->currentThread) {
+         goto LBLpopTask;
+       } else {
          goto LBLstart;
        }
-
-       pred = e->currentThread->getExceptionHandler();
-
-       /* exception is already in X[0], but should somehow be reflected !!! */
-       if (pred) {
-         isTailCall = OK;
-         predicate=tagged2Const(pred);
-         predArity=1;
-         goto LBLcall;
-       }
-
-       e->defaultExceptionHandler(X[0],PC);
-
-       // like preemption but without sheduling
-       e->currentThread->setBoard (CBB);
-       // e->scheduleThread(e->currentThread, e->currentThread->getPriority());
-       e->currentThread=(Thread *) NULL;
-       goto LBLstart;
      }
-
    }
+
 // --------------------------------------------------------------------------
 // --- end call/execute -----------------------------------------------------
 // --------------------------------------------------------------------------

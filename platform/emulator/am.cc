@@ -258,6 +258,12 @@ void AM::init(int argc,char **argv)
   Builtin *bi = new Builtin(entry,makeTaggedNULL());
   toplevelVars[0] = makeTaggedConst(bi);
 
+  BuiltinTabEntry *biTabEntry =
+    (BuiltinTabEntry *) builtinTab.htFind("biExceptionHandler");
+  biExceptionHandler =
+    makeTaggedConst(new Builtin(biTabEntry,0));
+  defaultExceptionHandler = biExceptionHandler;
+
   ioNodes = new IONode[osOpenMax()];
 
   if (!isStandalone()) {
@@ -1479,6 +1485,25 @@ int AM::wakeUser()
   return 0;
 }
 
+
+
+OZ_Term AM::dbgGetSpaces() {
+  OZ_Term out = nil();
+  Board *bb = currentBoard;
+  while (!bb->isRoot()) {
+    if (bb->isSolve()) {
+      out = cons(OZ_atom("space"),out);
+    } else if (bb->isAsk()) {
+      out = cons(OZ_atom("cond"),out);
+    } else if (bb->isWait()) {
+      out = cons(OZ_atom("dis"),out);
+    } else {
+      out = cons(OZ_atom("???"),out);
+    }
+    bb=bb->getParentFast();
+  }
+  return out;
+}
 
 
 #ifdef OUTLINE

@@ -122,6 +122,9 @@ public:
   TaggedRef aVarBindHandler;
   TaggedRef dVarHandler;
 
+  TaggedRef biExceptionHandler;
+  TaggedRef defaultExceptionHandler;
+
   Toplevel *toplevelQueue;
 
   void printBoards();
@@ -188,7 +191,7 @@ public:
 
   void setCurrent(Board *c, Bool checkNotGC=OK);
   InstType installPath(Board *to); // ###
-  inline Bool installScript(Script &script);
+  Bool installScript(Script &script);
   Bool install(Board *bb);
   void deinstallPath(Board *top);
   void deinstallCurrent();
@@ -223,8 +226,6 @@ public:
   Bool isEmptyTrailChunk();
   int checkEntailment(Continuation *&contAfter,Actor *&aa);
   int handleFailure(Continuation *&cont, AWActor *&aa);
-
-  void defaultExceptionHandler(OZ_Term val, ProgramCounter PC);
 
   // Unification
   Bool unify(TaggedRef ref1, TaggedRef ref2, Bool prop = OK);
@@ -298,6 +299,8 @@ public:
   int wakeUser();
 
   Bool isStableSolve(SolveActor *sa);
+
+  OZ_Term dbgGetSpaces();
 };
 
 extern AM am;
