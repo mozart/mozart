@@ -611,6 +611,14 @@ OZ_Return isCellInline(TaggedRef cell)
 DECLAREBI_USEINLINEREL1(BIisCell,isCellInline)
 DECLAREBOOLFUN1(BIisCellB,isCellBInline,isCellInline)
 
+OZ_Return isPortInline(TaggedRef port)
+{
+  NONVAR( port, term, _ );
+  return isPort(term) ? PROCEED : FAILED;
+}
+DECLAREBI_USEINLINEREL1(BIisPort,isPortInline)
+DECLAREBOOLFUN1(BIisPortB,isPortBInline,isPortInline)
+
 /*********************************************************************
  * OFS Records
  *********************************************************************/
@@ -4451,7 +4459,7 @@ OZ_C_proc_begin(BInewPort,2)
   OZ_Term val = OZ_getCArg(0);
   OZ_Term out = OZ_getCArg(1);
 
-  OZ_Term ret = makeTaggedConst(new Port(am.currentBoard, val));
+  OZ_Term ret = OZ_newPort(val);
   return OZ_unify(out,ret);
 }
 OZ_C_proc_end
@@ -4470,11 +4478,16 @@ OZ_C_proc_begin(BIsendPort,2)
   Port *port = tagged2Port(prt);
   CheckLocalBoard(port,"port");
 
-  if (port->isLocal()) {
+  NetAddress *na=port->getAddress();
+  if (na==0) {
     OZ_send(prt,msg);
   } else {
 #ifdef PERDIO
-    remoteSend(port,msg);
+    if (isLocalAddress(na)) {
+      OZ_send(prt,msg);
+    } else {
+      remoteSend(port,msg);
+    }
 #else
     error("no perdio");
 #endif
@@ -6971,8 +6984,8 @@ BIspec allSpec1[] = {
   {"Dictionary.member", 3, BIdictionaryMember, (IFOR) dictionaryMemberInline},
   {"Dictionary.keys",   2, BIdictionaryKeys,    0},
 
-  {"Port.new",	      2,BInewPort,	 0},
-  {"Port.send",	      2,BIsendPort,	 0},
+  {"NewPort",	      2,BInewPort,	 0},
+  {"Send",	      2,BIsendPort,	 0},
 
   {"NewCell",	      2,BInewCell,	 0},
   {"Exchange",        3,BIexchangeCell, (IFOR) BIexchangeCellInline},
@@ -7014,6 +7027,7 @@ BIspec allSpec2[] = {
   {"IsTuple",2,BIisTupleB,        (IFOR) isTupleBInline},
   {"IsLiteral",2,BIisLiteralB,    (IFOR) isLiteralBInline},
   {"IsCell",2,BIisCellB,          (IFOR) isCellBInline},
+  {"IsPort",2,BIisPortB,          (IFOR) isPortBInline},
   {"IsProcedure",2,BIisProcedureB,(IFOR) isProcedureBInline},
   {"IsName",2,BIisNameB,          (IFOR) isNameBInline},
   {"IsAtom",2,BIisAtomB,          (IFOR) isAtomBInline},
@@ -7036,6 +7050,7 @@ BIspec allSpec2[] = {
   {"isTupleRel",1,BIisTuple,         (IFOR) isTupleInline},
   {"isLiteralRel",1,BIisLiteral,     (IFOR) isLiteralInline},
   {"isCellRel",1,BIisCell,           (IFOR) isCellInline},
+  {"isPortRel",1,BIisPort,           (IFOR) isPortInline},
   {"isProcedureRel",1,BIisProcedure, (IFOR) isProcedureInline},
   {"isNameRel",1,BIisName,           (IFOR) isNameInline},
   {"isAtomRel",1,BIisAtom,           (IFOR) isAtomInline},
