@@ -1,0 +1,98 @@
+/*
+ * At the PS Lab: ozmkmf -DPS
+ * elsewhere, if ozmkmf does not do the job, use a -D option, e.g.:
+ *
+ * ozmkmf -DINCS='-I/opt/gnu/include' -DLIBS='/opt/gnu/lib/libgdbm.a -lc'
+ */
+
+#ifdef SOLARIS
+DYNLD = ld -G -lsocket -lnsl -lintl -o
+#endif
+#ifdef SUNOS_SPARC
+DYNLD = ld -o
+#endif
+#ifdef IRIX5_MIPS
+DYNLD = ld -shared -check_registry /dev/null -o
+#endif
+#ifdef OSF1_ALPHA
+DYNLD = ld -shared -expect_unresolved \* -o
+#endif
+#ifdef HPUX_700
+DYNLD = ld -b -o
+#endif
+#ifdef LINUX
+DYNLD = ld -shared -o
+#endif
+#if defined(FREEBSD) || defined(NETBSD)
+DYNLD = ld -Bshareable -o
+#endif
+
+#if defined(PS) && defined(SOLARIS)
+#ifndef INCS
+#define INCS -I/opt/gnu/include
+#endif
+#ifndef LIBS
+#define LIBS /opt/gnu/lib/libgdbm.a -lc
+#endif
+#endif
+
+#ifndef INCS
+#define INCS /usr/include
+#endif
+#ifndef LIBS
+#define LIBS -lgdbm -lc
+#endif
+
+CFLAGS = -O
+
+GDBM_HOME = $(OZHOME)/tools/gdbm
+GDBM_LIBHOME = $(OZHOME)/platform/OzPlatform/tools/gdbm
+
+OZINCLUDES =
+
+INCLUDES  = -I$(OZHOME)/include INCS
+LIBRARIES = LIBS
+
+all:: gdbm.dl gdbm.ozc
+
+install:: $(GDBM_LIBHOME)/gdbm.dl \
+          $(GDBM_HOME)/gdbm.ozc
+
+clean::
+        $(RM) *~ *.bak gdbm.o gdbm.dl ozrc.oz save.oz halt.oz gdbm.ozc
+
+$(GDBM_LIBHOME)/gdbm.dl: gdbm.dl
+        $(INSTALLDIR) $(GDBM_LIBHOME)
+        Install($<,444,$(GDBM_LIBHOME))
+
+$(GDBM_HOME)/gdbm.ozc: gdbm.ozc
+        $(INSTALLDIR) $(GDBM_HOME)
+        Install($<,444,$(GDBM_HOME))
+
+gdbm.o: gdbm.cc
+        $(CC) $(CFLAGS) $(INCLUDES) -c gdbm.cc
+
+gdbm.dl: gdbm.o
+        $(DYNLD) gdbm.dl gdbm.o $(LIBRARIES)
+
+gdbm.ozc: gdbm.oz save.oz halt.oz ozrc.oz
+        OZRC=ozrc.oz; export OZRC; \
+        GLOBALSTKSIZE=8000000; export GLOBALSTKSIZE; \
+        $(OZHOME)/bin/oze
+
+save.oz: Makefile
+        ( echo \{Save NewGdbm \'$$PWD/gdbm.ozc\' ; \
+          echo 'x(url:' \'file\:$(GDBM_HOME)/gdbm.ozc\' ; \
+          echo 'include:nil' ; \
+          echo 'components:[_]' ; \
+          echo 'resources:nil)}' ) > save.oz
+
+halt.oz: Imakefile
+        echo '\halt' > halt.oz
+
+ozrc.oz: Imakefile
+        ( echo '\s -threadedqueries' ; \
+          echo '\feed Load' ; \
+          echo '\feed gdbm.oz' ; \
+          echo '\feed save.oz' ; \
+          echo '\feed halt.oz' ) > ozrc.oz
