@@ -74,15 +74,19 @@ in
       in
 	 lock
 	    {ForAll OldKeys proc {$ K} {Dremove self.D K} end}
-	    {StackForAllInd CurrentStack
-	     proc {$ Ind Debug Proc}
-		case Debug == nil then  % builtin
-		   {Dput self.D 0         {B2F Ind Proc}}
-		else                    % procedure
-		   {Dput self.D Debug.1.1 {P2F Ind Proc Debug}}
-		end
-	     end}
-	    Size <- {Length {Dkeys self.D}}
+	    case CurrentStack \= nil then
+	       {StackForAllInd CurrentStack
+		proc {$ Ind Debug Proc}
+		   case Debug == nil then  % builtin
+		      {Dput self.D 0         {B2F Ind Proc}}
+		   else                    % procedure
+		      {Dput self.D Debug.1.1 {P2F Ind Proc Debug}}
+		   end
+		end}
+	       Size <- {Length {Dkeys self.D}}
+	    else
+	       Size <- 0
+	    end
 	 end
       end
       
