@@ -76,9 +76,13 @@ public:
 };
 
 class LocalThreadQueue : public ThreadQueueImpl {
+private:
+  // needed when merging spaces to unpack threads in local thread queue
+  Thread * ltq_thr;
 public:
-  LocalThreadQueue(void) : ThreadQueueImpl() {}
-  LocalThreadQueue(Thread * thr) : ThreadQueueImpl() {
+  LocalThreadQueue(Thread * lthr, Thread * thr)
+    : ltq_thr(lthr), ThreadQueueImpl()
+  {
     allocate(0x20);
     enqueue(thr);
   }
@@ -86,6 +90,7 @@ public:
     allocate(0x20);
   }
   LocalThreadQueue * gc(void);
+  Thread * getLTQThread(void) { return ltq_thr; }
 };
 
 #endif
