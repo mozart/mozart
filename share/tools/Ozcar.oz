@@ -35,7 +35,7 @@ import
    Browser(browse)
    Debug at 'x-oz://boot/Debug'
    Emacs(getOPI condSend)
-   Error
+   Error(exceptionToMessage extendedVSToVS printException)
    FD
    FS
    Property
