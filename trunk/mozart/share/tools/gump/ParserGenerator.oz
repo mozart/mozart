@@ -529,11 +529,11 @@ local
 	    AttrType = X
 	 elseif AttrType \= X then Items in
 	    Items = case AttrType of inherited then
-		       ['this is an inherited use' P0
-			'this is a synthesized use' P]
+		       [line('this is an inherited use') P0
+			line('this is a synthesized use') P]
 		    [] synthesized then
-		       ['this is a synthesized use' P0
-			'this is an inherited use' P]
+		       [line('this is a synthesized use') P0
+			line('this is an inherited use') P]
 		    end
 	    {Rep error(coord: {CoordinatesOf Parameter}
 		       kind: ParserGeneratorError
