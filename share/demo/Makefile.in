@@ -75,24 +75,19 @@ $(WEBPAGES): ozp2html
 
 OZENGINE=ozengine
 OZP2HTML=$(OZENGINE) ./ozp2html
+
 constraints/%.html: constraints/%-html.ozp
-	@mkdir constraints 2> /dev/null || true
 	$(OZP2HTML) --ozp=$< > $@
 concurrent/%.html: concurrent/%-html.ozp
-	@mkdir concurrent 2> /dev/null || true
 	$(OZP2HTML) --ozp=$< > $@
 distributed/%.html: distributed/%-html.ozp
-	@mkdir distributed 2> /dev/null || true
 	$(OZP2HTML) --ozp=$< > $@
 
 constraints/%-html.ozp: constraints/%-html.oz
-	@mkdir constraints 2> /dev/null || true
 	$(OZCA) -c $< -o $@
 concurrent/%-html.ozp: concurrent/%-html.oz
-	@mkdir concurrent 2> /dev/null || true
 	$(OZCA) -c $< -o $@
 distributed/%-html.ozp: distributed/%-html.oz
-	@mkdir distributed 2> /dev/null || true
 	$(OZCA) -c $< -o $@
 
 clean:: 
