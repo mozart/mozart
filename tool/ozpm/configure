@@ -12,6 +12,8 @@ ac_help=
 ac_default_prefix=/usr/local
 # Any additions from configure.in:
 ac_default_prefix=${OZSKEL_PREFIX:-${HOME}/.oz}
+ac_help="$ac_help
+--with-windlldir=DIR"
 
 # Initialize some variables set by options.
 # The variables have the same names as the options, with
@@ -550,7 +552,7 @@ else { echo "configure: error: can not run $ac_config_sub" 1>&2; exit 1; }
 fi
 
 echo $ac_n "checking host system type""... $ac_c" 1>&6
-echo "configure:554: checking host system type" >&5
+echo "configure:556: checking host system type" >&5
 
 host_alias=$host
 case "$host_alias" in
@@ -571,7 +573,7 @@ host_os=`echo $host | sed 's/^\([^-]*\)-\([^-]*\)-\(.*\)$/\3/'`
 echo "$ac_t""$host" 1>&6
 
   echo $ac_n "checking whether ${MAKE-make} sets \${MAKE}""... $ac_c" 1>&6
-echo "configure:575: checking whether ${MAKE-make} sets \${MAKE}" >&5
+echo "configure:577: checking whether ${MAKE-make} sets \${MAKE}" >&5
 set dummy ${MAKE-make}; ac_make=`echo "$2" | sed 'y%./+-%__p_%'`
 if eval "test \"`echo '$''{'ac_cv_prog_make_${ac_make}_set'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
@@ -609,7 +611,7 @@ fi
     # Extract the first word of "ozinstall", so it can be a program name with args.
 set dummy ozinstall; ac_word=$2
 echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
-echo "configure:613: checking for $ac_word" >&5
+echo "configure:615: checking for $ac_word" >&5
 if eval "test \"`echo '$''{'ac_cv_path_OZSKEL_cv_OZINSTALL'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -647,7 +649,7 @@ fi
     fi
   else
     echo $ac_n "checking for ozinstall""... $ac_c" 1>&6
-echo "configure:651: checking for ozinstall" >&5
+echo "configure:653: checking for ozinstall" >&5
 if eval "test \"`echo '$''{'OZSKEL_cv_OZINSTALL'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -666,7 +668,7 @@ do
 # Extract the first word of "$ac_prog", so it can be a program name with args.
 set dummy $ac_prog; ac_word=$2
 echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
-echo "configure:670: checking for $ac_word" >&5
+echo "configure:672: checking for $ac_word" >&5
 if eval "test \"`echo '$''{'ac_cv_path_OZSKEL_cv_COMPRESS'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -704,7 +706,7 @@ test -n "$OZSKEL_cv_COMPRESS" || OZSKEL_cv_COMPRESS="compress"
 
   else
     echo $ac_n "checking for gzip or compress""... $ac_c" 1>&6
-echo "configure:708: checking for gzip or compress" >&5
+echo "configure:710: checking for gzip or compress" >&5
 if eval "test \"`echo '$''{'OZSKEL_cv_COMPRESS'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -718,6 +720,7 @@ echo "$ac_t""$OZSKEL_cv_COMPRESS" 1>&6
 
   
   
+  
   if test -z "$OZSKEL_cv_VAR_OZTOOL_HOST"; then
     dummy_PWD=`pwd | sed 's/\//\\\\\//g'`
     dummy_PATH=`echo $VAR_PATH | sed -e 's/:://g'`
@@ -727,10 +730,12 @@ echo "$ac_t""$OZSKEL_cv_COMPRESS" 1>&6
     dummy_PATH=`echo $dummy_PATH | sed -e "s/:\.:/:$dummy_PWD:/g"`
     dummy_PATH=`echo $dummy_PATH | sed -e "s/:.\//:$dummy_PWD\//g"`
     OZSKEL_for="$dummy_PATH"
-    # Extract the first word of "oztool", so it can be a program name with args.
-set dummy oztool; ac_word=$2
+    for ac_prog in oztool.exe oztool
+do
+# Extract the first word of "$ac_prog", so it can be a program name with args.
+set dummy $ac_prog; ac_word=$2
 echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
-echo "configure:734: checking for $ac_word" >&5
+echo "configure:739: checking for $ac_word" >&5
 if eval "test \"`echo '$''{'ac_cv_path_VAR_OZTOOL_HOST'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -762,6 +767,9 @@ else
   echo "$ac_t""no" 1>&6
 fi
 
+test -n "$VAR_OZTOOL_HOST" && break
+done
+
     case "$host_os" in
       cygwin32) ;;
       *) VAR_OZTOOL_HOST=`echo $VAR_OZTOOL_HOST | sed -e "s|//|/|g"`;;
@@ -774,7 +782,7 @@ fi
     OZSKEL_cv_VAR_OZTOOL_HOST=$VAR_OZTOOL_HOST
   else
     echo $ac_n "checking for oztool""... $ac_c" 1>&6
-echo "configure:778: checking for oztool" >&5
+echo "configure:786: checking for oztool" >&5
 if eval "test \"`echo '$''{'OZSKEL_cv_VAR_OZTOOL_HOST'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -792,6 +800,15 @@ echo "$ac_t""$OZSKEL_cv_VAR_OZTOOL_HOST" 1>&6
     i386-mingw32)
 	echo "$ac_t""cross compiling for windows" 1>&6
 	VAR_OZTOOL="sh ${target}-oztool"
+	
+  # Check whether --with-windlldir or --without-windlldir was given.
+if test "${with_windlldir+set}" = set; then
+  withval="$with_windlldir"
+  OZSKEL_cv_WINDLLDIR=$with_windlldir
+fi
+
+  : ${VAR_WINDLLDIR:=$OZSKEL_cv_WINDLLDIR}
+
 	;;
     *)
 	{ echo "configure: error: "only known cross-compile target is i386-mingw32"" 1>&2; exit 1; }
@@ -809,10 +826,12 @@ echo "$ac_t""$OZSKEL_cv_VAR_OZTOOL_HOST" 1>&6
     dummy_PATH=`echo $dummy_PATH | sed -e "s/:\.:/:$dummy_PWD:/g"`
     dummy_PATH=`echo $dummy_PATH | sed -e "s/:.\//:$dummy_PWD\//g"`
     OZSKEL_for="$dummy_PATH"
-    # Extract the first word of "ozc", so it can be a program name with args.
-set dummy ozc; ac_word=$2
+    for ac_prog in ozc.exe ozc
+do
+# Extract the first word of "$ac_prog", so it can be a program name with args.
+set dummy $ac_prog; ac_word=$2
 echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
-echo "configure:816: checking for $ac_word" >&5
+echo "configure:835: checking for $ac_word" >&5
 if eval "test \"`echo '$''{'ac_cv_path_VAR_OZC'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -844,6 +863,9 @@ else
   echo "$ac_t""no" 1>&6
 fi
 
+test -n "$VAR_OZC" && break
+done
+
     case "$host_os" in
       cygwin32) ;;
       *) VAR_OZC=`echo $VAR_OZC | sed -e "s|//|/|g"`;;
@@ -856,7 +878,7 @@ fi
     OZSKEL_cv_VAR_OZC=$VAR_OZC
   else
     echo $ac_n "checking for ozc""... $ac_c" 1>&6
-echo "configure:860: checking for ozc" >&5
+echo "configure:882: checking for ozc" >&5
 if eval "test \"`echo '$''{'OZSKEL_cv_VAR_OZC'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -877,10 +899,12 @@ echo "$ac_t""$OZSKEL_cv_VAR_OZC" 1>&6
     dummy_PATH=`echo $dummy_PATH | sed -e "s/:\.:/:$dummy_PWD:/g"`
     dummy_PATH=`echo $dummy_PATH | sed -e "s/:.\//:$dummy_PWD\//g"`
     OZSKEL_for="$dummy_PATH"
-    # Extract the first word of "ozl", so it can be a program name with args.
-set dummy ozl; ac_word=$2
+    for ac_prog in ozl.exe ozl
+do
+# Extract the first word of "$ac_prog", so it can be a program name with args.
+set dummy $ac_prog; ac_word=$2
 echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
-echo "configure:884: checking for $ac_word" >&5
+echo "configure:908: checking for $ac_word" >&5
 if eval "test \"`echo '$''{'ac_cv_path_VAR_OZL'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -912,6 +936,9 @@ else
   echo "$ac_t""no" 1>&6
 fi
 
+test -n "$VAR_OZL" && break
+done
+
     case "$host_os" in
       cygwin32) ;;
       *) VAR_OZL=`echo $VAR_OZL | sed -e "s|//|/|g"`;;
@@ -924,7 +951,7 @@ fi
     OZSKEL_cv_VAR_OZL=$VAR_OZL
   else
     echo $ac_n "checking for ozl""... $ac_c" 1>&6
-echo "configure:928: checking for ozl" >&5
+echo "configure:955: checking for ozl" >&5
 if eval "test \"`echo '$''{'OZSKEL_cv_VAR_OZL'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -945,10 +972,12 @@ echo "$ac_t""$OZSKEL_cv_VAR_OZL" 1>&6
     dummy_PATH=`echo $dummy_PATH | sed -e "s/:\.:/:$dummy_PWD:/g"`
     dummy_PATH=`echo $dummy_PATH | sed -e "s/:.\//:$dummy_PWD\//g"`
     OZSKEL_for="$dummy_PATH"
-    # Extract the first word of "ozengine", so it can be a program name with args.
-set dummy ozengine; ac_word=$2
+    for ac_prog in ozengine.exe ozengine
+do
+# Extract the first word of "$ac_prog", so it can be a program name with args.
+set dummy $ac_prog; ac_word=$2
 echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
-echo "configure:952: checking for $ac_word" >&5
+echo "configure:981: checking for $ac_word" >&5
 if eval "test \"`echo '$''{'ac_cv_path_VAR_OZE'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -980,6 +1009,9 @@ else
   echo "$ac_t""no" 1>&6
 fi
 
+test -n "$VAR_OZE" && break
+done
+
     case "$host_os" in
       cygwin32) ;;
       *) VAR_OZE=`echo $VAR_OZE | sed -e "s|//|/|g"`;;
@@ -992,7 +1024,7 @@ fi
     OZSKEL_cv_VAR_OZE=$VAR_OZE
   else
     echo $ac_n "checking for ozengine""... $ac_c" 1>&6
-echo "configure:996: checking for ozengine" >&5
+echo "configure:1028: checking for ozengine" >&5
 if eval "test \"`echo '$''{'OZSKEL_cv_VAR_OZE'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -1013,10 +1045,12 @@ echo "$ac_t""$OZSKEL_cv_VAR_OZE" 1>&6
     dummy_PATH=`echo $dummy_PATH | sed -e "s/:\.:/:$dummy_PWD:/g"`
     dummy_PATH=`echo $dummy_PATH | sed -e "s/:.\//:$dummy_PWD\//g"`
     OZSKEL_for="$dummy_PATH"
-    # Extract the first word of "ozh", so it can be a program name with args.
-set dummy ozh; ac_word=$2
+    for ac_prog in ozh.exe ozh
+do
+# Extract the first word of "$ac_prog", so it can be a program name with args.
+set dummy $ac_prog; ac_word=$2
 echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
-echo "configure:1020: checking for $ac_word" >&5
+echo "configure:1054: checking for $ac_word" >&5
 if eval "test \"`echo '$''{'ac_cv_path_VAR_OZH'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -1048,6 +1082,9 @@ else
   echo "$ac_t""no" 1>&6
 fi
 
+test -n "$VAR_OZH" && break
+done
+
     case "$host_os" in
       cygwin32) ;;
       *) VAR_OZH=`echo $VAR_OZH | sed -e "s|//|/|g"`;;
@@ -1060,7 +1097,7 @@ fi
     OZSKEL_cv_VAR_OZH=$VAR_OZH
   else
     echo $ac_n "checking for ozh""... $ac_c" 1>&6
-echo "configure:1064: checking for ozh" >&5
+echo "configure:1101: checking for ozh" >&5
 if eval "test \"`echo '$''{'OZSKEL_cv_VAR_OZH'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -1081,10 +1118,12 @@ echo "$ac_t""$OZSKEL_cv_VAR_OZH" 1>&6
     dummy_PATH=`echo $dummy_PATH | sed -e "s/:\.:/:$dummy_PWD:/g"`
     dummy_PATH=`echo $dummy_PATH | sed -e "s/:.\//:$dummy_PWD\//g"`
     OZSKEL_for="$dummy_PATH"
-    # Extract the first word of "zip", so it can be a program name with args.
-set dummy zip; ac_word=$2
+    for ac_prog in zip.exe zip
+do
+# Extract the first word of "$ac_prog", so it can be a program name with args.
+set dummy $ac_prog; ac_word=$2
 echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
-echo "configure:1088: checking for $ac_word" >&5
+echo "configure:1127: checking for $ac_word" >&5
 if eval "test \"`echo '$''{'ac_cv_path_VAR_ZIP'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -1116,6 +1155,9 @@ else
   echo "$ac_t""no" 1>&6
 fi
 
+test -n "$VAR_ZIP" && break
+done
+
     case "$host_os" in
       cygwin32) ;;
       *) VAR_ZIP=`echo $VAR_ZIP | sed -e "s|//|/|g"`;;
@@ -1128,7 +1170,7 @@ fi
     OZSKEL_cv_VAR_ZIP=$VAR_ZIP
   else
     echo $ac_n "checking for zip""... $ac_c" 1>&6
-echo "configure:1132: checking for zip" >&5
+echo "configure:1174: checking for zip" >&5
 if eval "test \"`echo '$''{'OZSKEL_cv_VAR_ZIP'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -1303,6 +1345,7 @@ s%@OZSKEL_cv_OZINSTALL@%$OZSKEL_cv_OZINSTALL%g
 s%@VAR_OZINSTALL@%$VAR_OZINSTALL%g
 s%@OZSKEL_cv_COMPRESS@%$OZSKEL_cv_COMPRESS%g
 s%@VAR_COMPRESS@%$VAR_COMPRESS%g
+s%@VAR_WINDLLDIR@%$VAR_WINDLLDIR%g
 s%@VAR_OZTOOL_HOST@%$VAR_OZTOOL_HOST%g
 s%@VAR_OZTOOL@%$VAR_OZTOOL%g
 s%@VAR_OZC@%$VAR_OZC%g
