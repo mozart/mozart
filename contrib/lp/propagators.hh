@@ -35,11 +35,9 @@
 
 //-----------------------------------------------------------------------------
 
-extern "C" INIT_FUNC(oz_init_module);
-
 class RILPSolve : public OZ_Propagator {
 
-  friend INIT_FUNC(oz_init_module);
+  friend INIT_FUNC_LP;
 
 private:
 

@@ -31,9 +31,11 @@
 
 //-----------------------------------------------------------------------------
 
-#define INIT_FUNC(F_NAME) OZ_C_proc_interface * F_NAME(void)
+#define INIT_FUNC_RI void module_init_ri(void)
+#define INIT_FUNC_LP void module_init_lp(void)
 
-extern "C" INIT_FUNC(oz_init_module);
+INIT_FUNC_RI;
+INIT_FUNC_LP;
 
 OZ_BI_proto(ri_newVar);
 OZ_BI_proto(ri_declVar);
@@ -330,7 +332,8 @@ public:
 
 class RIDefinition : public OZ_CtDefinition {
 
-  friend INIT_FUNC(oz_init_module);
+  friend INIT_FUNC_RI;
+  friend INIT_FUNC_LP;
 
 private:
 

@@ -6,7 +6,6 @@ declare [RI LP] = {Module.link ['x-oz://contrib/RI' 'x-oz://contrib/LP.ozf']}
 
 {Wait RI}
 {Wait LP}
-
 {Show RI}
 {Show LP}
 

@@ -52,16 +52,10 @@ void RIProfile::init(OZ_Ct * c)
 
 //-----------------------------------------------------------------------------
 
-extern "C"
-{
-  OZ_C_proc_interface * oz_init_module(void)
-  {
-    static OZ_C_proc_interface i_table [] = {
-      {"lpsolve",       5, 0, ri_lpsolve},
-      {"lpsolve_conf",  2, 0, ri_lpsolve_conf},
-      {0,0,0,0}
-    };
+char oz_module_name[] = "LP";
 
+void module_init_lp(void)
+{
     atom_row        = OZ_atom("row");
     atom_opt        = OZ_atom("opt");
     atom_type       = OZ_atom("type");
@@ -107,6 +101,19 @@ extern "C"
 #endif
 
     RIDefinition::_kind = OZ_getUniqueId();
+} // module_init_lp(void)
+
+extern "C"
+{
+  OZ_C_proc_interface * oz_init_module(void)
+  {
+    static OZ_C_proc_interface i_table [] = {
+      {"lpsolve",       5, 0, ri_lpsolve},
+      {"lpsolve_conf",  2, 0, ri_lpsolve_conf},
+      {0,0,0,0}
+    };
+
+    module_init_lp();
 
     return i_table;
   }
