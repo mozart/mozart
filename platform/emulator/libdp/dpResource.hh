@@ -69,10 +69,9 @@ public:
 
 
 class ResourceHashTable: public GenHashTable {
-  int hash(TaggedRef entity){
-    int val = abs((int) entity) ;
-    return val;}
-
+  unsigned int hash(TaggedRef entity){
+    return (unsigned int) entity;}
+  
 public:
   ResourceHashTable(int i):GenHashTable(i){}
 
@@ -82,7 +81,7 @@ public:
     Assert((!oz_isRef(entity) && !oz_isVar(entity)) ||
 	   (oz_isRef(entity) && oz_isVar(*tagged2Ref(entity))));
     Assert(find(entity) == RESOURCE_NOT_IN_TABLE);
-    int hvalue;
+    unsigned int hvalue;
     GenHashBaseKey *ghbk;
     GenHashEntry *ghe;
 
@@ -90,7 +89,7 @@ public:
     hvalue = hash(entity);
     GenCast(entity, OZ_Term, ghbk, GenHashBaseKey*);
     GenCast(oti, int, ghe, GenHashEntry*);
-    GenHashTable::htAdd(hvalue, ghbk, ghe);
+    GenHashTable::htAddU(hvalue, ghbk, ghe);
   }
 
   //
@@ -98,12 +97,12 @@ public:
     // kost@ : this is what we can deal with:
     Assert((!oz_isRef(entity) && !oz_isVar(entity)) ||
 	   (oz_isRef(entity) && oz_isVar(*tagged2Ref(entity))));
-    int hvalue = hash(entity);
+    unsigned int hvalue = hash(entity);
     GenHashNode *aux;
 
     //
   repeat:
-    aux = htFindFirst(hvalue);
+    aux = htFindFirstU(hvalue);
     while (aux){
       OZ_Term te;
 
@@ -121,7 +120,7 @@ public:
 
 	//
 	GenCast(aux->getEntry(), GenHashEntry*, oti, int);
-	oe = OT->getEntry(oti);
+	oe = OT->index2entry(oti);
 
 	//
 	if (oe && oe->isRef() && oe->getRef() == entity) {
@@ -129,7 +128,7 @@ public:
 	} else {
 	  // The wrong one: that is, the current entry is outdated
 	  // and should be removed;
-	  (void) htSub(hvalue, aux);
+	  (void) htSubU(hvalue, aux);
 
 	  // must start from scratch since 'htSub()' is NOT compatible
 	  // with 'htFindFirst()' & Co.;
@@ -140,10 +139,10 @@ public:
 	//
       } if (oz_isRef(te) && !oz_isVar(*tagged2Ref(te))) {
 	// bound variables can be (and should be) discarded as well;
-	(void) htSub(hvalue, aux);
+	(void) htSubU(hvalue, aux);
 	goto repeat;
       } else {
-	aux = htFindNext(aux, hvalue);
+	aux = htFindNextU(aux, hvalue);
       }
     }
 
