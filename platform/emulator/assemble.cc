@@ -57,7 +57,7 @@ Bool getBool(TaggedRef t)
 
 OZ_BI_define(BIgetOpcode,1,1)
 {
-  OZ_declareAtomIN(0,opname);
+  oz_declareAtomIN(0,opname);
 
   Opcode oc = CodeArea::stringToOp(opname);
   if (oc == OZERROR) {
@@ -70,7 +70,7 @@ OZ_BI_define(BIgetOpcode,1,1)
 
 OZ_BI_define(BIgetInstructionSize,1,1)
 {
-  OZ_declareAtomIN(0,opname);
+  oz_declareAtomIN(0,opname);
 
   Opcode oc = CodeArea::stringToOp(opname);
   if (oc == OZERROR) {
@@ -83,7 +83,7 @@ OZ_BI_define(BIgetInstructionSize,1,1)
 
 OZ_BI_define(BInewCodeBlock,1,1)
 {
-  OZ_declareIntIN(0,size);
+  oz_declareIntIN(0,size);
 
   CodeArea *code = new CodeArea(size);
   OZ_RETURN_INT(ToInt32(code));
@@ -91,30 +91,26 @@ OZ_BI_define(BInewCodeBlock,1,1)
 
 
 #define declareCodeBlock(num,name)			\
-   OZ_declareIntArg(num,__aux);				\
-   CodeArea *name = (CodeArea*) ToPointer(__aux);
-
-#define NEW_declareCodeBlock(num,name)			\
-   OZ_declareIntIN(num,__aux);				\
+   oz_declareIntIN(num,__aux);				\
    CodeArea *name = (CodeArea*) ToPointer(__aux);
 
 
 OZ_BI_define(BImakeProc,2,1)
 {
-  NEW_declareCodeBlock(0,code);
-  OZ_declareNonvarIN(1,globals);
+  declareCodeBlock(0,code);
+  oz_declareNonvarIN(1,globals);
   globals = oz_deref(globals);
 
   int numGlobals = OZ_length(globals);
-
+  const int maxX=-1; // should never suspend
+  const OZ_Term pos = OZ_mkTupleC("pos",3,nil(),OZ_int(0),OZ_int(0));
   PrTabEntry *pte = new PrTabEntry(OZ_atom("toplevelAbstraction"),
-				   mkTupleWidth(0),nil(),0,NO);
+				   mkTupleWidth(0), pos, nil() ,maxX);
   pte->setGSize(numGlobals);
   pte->PC = code->getStart();
 
   Assert(am.onToplevel());
-  Abstraction *p = Abstraction::newAbstraction(pte,
-					       am.currentBoard());
+  Abstraction *p = Abstraction::newAbstraction(pte,am.currentBoard());
 
   for (int i = 0; i < numGlobals; i++) {
     p->initG(i,head(globals));
@@ -128,9 +124,9 @@ OZ_BI_define(BImakeProc,2,1)
 
 OZ_BI_define(BIaddDebugInfo,3,0)
 {
-  NEW_declareCodeBlock(0,code);
-  OZ_declareNonvarIN(1,file); file = oz_deref(file);
-  OZ_declareIntIN(2,line);
+  declareCodeBlock(0,code);
+  oz_declareNonvarIN(1,file); file = oz_deref(file);
+  oz_declareIntIN(2,line);
   code->writeDebugInfo(file,line);
   return PROCEED;
 } OZ_BI_end
@@ -138,8 +134,8 @@ OZ_BI_define(BIaddDebugInfo,3,0)
 
 OZ_BI_define(BIstoreOpcode,2,0)
 {
-  NEW_declareCodeBlock(0,code);
-  OZ_declareIntIN(1,i);
+  declareCodeBlock(0,code);
+  oz_declareIntIN(1,i);
   Assert(i>=0 && i<(int)OZERROR);
   code->writeOpcode((Opcode)i);
   return PROCEED;
@@ -148,8 +144,8 @@ OZ_BI_define(BIstoreOpcode,2,0)
 
 OZ_BI_define(BIstoreNumber,2,0)
 {
-  NEW_declareCodeBlock(0,code);
-  OZ_declareNonvarIN(1,arg);
+  declareCodeBlock(0,code);
+  oz_declareNonvarIN(1,arg);
   arg = oz_deref(arg);
   Assert(OZ_isNumber(arg));
   code->writeTagged(arg);
@@ -159,8 +155,8 @@ OZ_BI_define(BIstoreNumber,2,0)
 
 OZ_BI_define(BIstoreLiteral,2,0)
 {
-  NEW_declareCodeBlock(0,code);
-  OZ_declareNonvarIN(1,arg);
+  declareCodeBlock(0,code);
+  oz_declareNonvarIN(1,arg);
   arg = oz_deref(arg);
   Assert(OZ_isLiteral(arg));
   code->writeTagged(arg);
@@ -170,8 +166,8 @@ OZ_BI_define(BIstoreLiteral,2,0)
 
 OZ_BI_define(BIstoreFeature,2,0)
 {
-  NEW_declareCodeBlock(0,code);
-  OZ_declareNonvarIN(1,arg);
+  declareCodeBlock(0,code);
+  oz_declareNonvarIN(1,arg);
   arg = oz_deref(arg);
   Assert(OZ_isFeature(arg));
   code->writeTagged(arg);
@@ -181,8 +177,8 @@ OZ_BI_define(BIstoreFeature,2,0)
 
 OZ_BI_define(BIstoreConstant,2,0)
 {
-  NEW_declareCodeBlock(0,code);
-  OZ_declareNonvarIN(1,arg);
+  declareCodeBlock(0,code);
+  oz_declareNonvarIN(1,arg);
   arg = oz_deref(arg);
   code->writeTagged(arg);
   return PROCEED;
@@ -191,8 +187,8 @@ OZ_BI_define(BIstoreConstant,2,0)
 
 OZ_BI_define(BIstoreBuiltinname,2,0)
 {
-  NEW_declareCodeBlock(0,code);
-  OZ_declareNonvarIN(1,builtin);
+  declareCodeBlock(0,code);
+  oz_declareNonvarIN(1,builtin);
   builtin = oz_deref(builtin);
   Assert(oz_isBuiltin(builtin));
   code->writeBuiltin(tagged2Builtin(builtin));
@@ -200,21 +196,10 @@ OZ_BI_define(BIstoreBuiltinname,2,0)
 } OZ_BI_end
 
 
-OZ_BI_define(BIstoreVariablename,2,0)
-{
-  NEW_declareCodeBlock(0,code);
-  OZ_declareNonvarIN(1,arg);
-  arg = oz_deref(arg);
-  Assert(OZ_isAtom(arg));
-  code->writeTagged(arg);
-  return PROCEED;
-} OZ_BI_end
-
-
 OZ_BI_define(BIstoreRegisterIndex,2,0)
 {
-  NEW_declareCodeBlock(0,code);
-  OZ_declareIntIN(1,i);
+  declareCodeBlock(0,code);
+  oz_declareIntIN(1,i);
   Assert(i >= 0);
   code->writeReg(i);
   return PROCEED;
@@ -223,8 +208,8 @@ OZ_BI_define(BIstoreRegisterIndex,2,0)
 
 OZ_BI_define(BIstoreInt,2,0)
 {
-  NEW_declareCodeBlock(0,code);
-  OZ_declareIntIN(1,i);
+  declareCodeBlock(0,code);
+  oz_declareIntIN(1,i);
   code->writeInt(i);
   return PROCEED;
 } OZ_BI_end
@@ -232,8 +217,8 @@ OZ_BI_define(BIstoreInt,2,0)
 
 OZ_BI_define(BIstoreLabel,2,0)
 {
-  NEW_declareCodeBlock(0,code);
-  OZ_declareIntIN(1,label);
+  declareCodeBlock(0,code);
+  oz_declareIntIN(1,label);
   code->writeLabel(label);
   return PROCEED;
 } OZ_BI_end
@@ -241,8 +226,8 @@ OZ_BI_define(BIstoreLabel,2,0)
 
 OZ_BI_define(BIstorePredicateRef,2,0)
 {
-  NEW_declareCodeBlock(0,code);
-  OZ_declareNonvarIN(1,p);
+  declareCodeBlock(0,code);
+  oz_declareNonvarIN(1,p);
   if (OZ_isUnit(p))
     code->writeAddress(NULL);
   else {
@@ -263,24 +248,23 @@ OZ_BI_define(BIpredIdFlags,0,2)
 
 OZ_BI_define(BIstorePredId,6,0)
 {
-  NEW_declareCodeBlock(0,code);
-  OZ_declareNonvarIN(1,name); name = oz_deref(name);
-  OZ_declareNonvarIN(2,arity);
-  OZ_declareNonvarIN(3,file); file = oz_deref(file);
-  OZ_declareIntIN(4,line);
-  OZ_declareIntIN(5,flags);
-  PrTabEntry *pte = new PrTabEntry(name,getArity(arity),file,line,flags);
+  declareCodeBlock(0,code);
+  oz_declareNonvarIN(1,name);
+  oz_declareNonvarIN(2,arity);
+  oz_declareNonvarIN(3,pos);
+  oz_declareNonvarIN(4,flags);
+  oz_declareIntIN(5,maxX);
+  PrTabEntry *pte = new PrTabEntry(name,getArity(arity),pos,flags,maxX);
   code->writeAddress(pte);
   return PROCEED;
 } OZ_BI_end
 
 
-
 OZ_BI_define(BInewHashTable,3,1)
 {
-  NEW_declareCodeBlock(0,code);
-  OZ_declareIntIN(1,size);
-  OZ_declareIntIN(2,elseLabel);
+  declareCodeBlock(0,code);
+  oz_declareIntIN(1,size);
+  oz_declareIntIN(2,elseLabel);
 
   IHashTable *ht = new IHashTable(size,code->computeLabel(elseLabel));
 
@@ -290,20 +274,16 @@ OZ_BI_define(BInewHashTable,3,1)
 
 
 #define declareHTable(num,name)				\
-   OZ_declareIntArg(num,__aux1);			\
-   IHashTable *name = (IHashTable*) ToPointer(__aux1);
-
-#define NEW_declareHTable(num,name)				\
-   OZ_declareIntIN(num,__aux1);			\
+   oz_declareIntIN(num,__aux1);				\
    IHashTable *name = (IHashTable*) ToPointer(__aux1);
 
 
 OZ_BI_define(BIstoreHTScalar,4,0)
 {
-  NEW_declareCodeBlock(0,code);
-  NEW_declareHTable(1,ht);
-  OZ_declareNonvarIN(2,value);
-  OZ_declareIntIN(3,label);
+  declareCodeBlock(0,code);
+  declareHTable(1,ht);
+  oz_declareNonvarIN(2,value);
+  oz_declareIntIN(3,label);
 
   value = oz_deref(value);
   if (oz_isLiteral(value)) {
@@ -319,11 +299,11 @@ OZ_BI_define(BIstoreHTScalar,4,0)
 
 OZ_BI_define(BIstoreHTRecord,5,0)
 {
-  NEW_declareCodeBlock(0,code);
-  NEW_declareHTable(1,ht);
-  OZ_declareNonvarIN(2,reclabel);
-  OZ_declareNonvarIN(3,arity);
-  OZ_declareIntIN(4,label);
+  declareCodeBlock(0,code);
+  declareHTable(1,ht);
+  oz_declareNonvarIN(2,reclabel);
+  oz_declareNonvarIN(3,arity);
+  oz_declareIntIN(4,label);
 
   SRecordArity ar   = getArity(arity);
   reclabel          = oz_deref(reclabel);
@@ -340,8 +320,8 @@ OZ_BI_define(BIstoreHTRecord,5,0)
 
 OZ_BI_define(BIstoreRecordArity,2,0)
 {
-  NEW_declareCodeBlock(0,code);
-  OZ_declareNonvarIN(1,arity);
+  declareCodeBlock(0,code);
+  oz_declareNonvarIN(1,arity);
   code->writeSRecordArity(getArity(arity));
   return PROCEED;
 } OZ_BI_end
@@ -349,12 +329,12 @@ OZ_BI_define(BIstoreRecordArity,2,0)
 
 OZ_BI_define(BIstoreGenCallInfo,6,0)
 {
-  NEW_declareCodeBlock(0,code);
-  OZ_declareIntIN(1,regindex);
-  OZ_declareNonvarIN(2,isMethod);
-  OZ_declareNonvarIN(3,name); name = oz_deref(name);
-  OZ_declareNonvarIN(4,isTail);
-  OZ_declareNonvarIN(5,arity);
+  declareCodeBlock(0,code);
+  oz_declareIntIN(1,regindex);
+  oz_declareNonvarIN(2,isMethod);
+  oz_declareNonvarIN(3,name); name = oz_deref(name);
+  oz_declareNonvarIN(4,isTail);
+  oz_declareNonvarIN(5,arity);
 
   GenCallInfoClass *gci =
     new GenCallInfoClass(regindex,getBool(isMethod),name,
@@ -366,9 +346,9 @@ OZ_BI_define(BIstoreGenCallInfo,6,0)
 
 OZ_BI_define(BIstoreApplMethInfo,3,0)
 {
-  NEW_declareCodeBlock(0,code);
-  OZ_declareNonvarIN(1,name); name = oz_deref(name);
-  OZ_declareNonvarIN(2,arity);
+  declareCodeBlock(0,code);
+  oz_declareNonvarIN(1,name); name = oz_deref(name);
+  oz_declareNonvarIN(2,arity);
 
   ApplMethInfoClass *ami = new ApplMethInfoClass(name,getArity(arity));
   code->writeAddress(ami);
@@ -378,8 +358,8 @@ OZ_BI_define(BIstoreApplMethInfo,3,0)
 
 OZ_BI_define(BIstoreGRegRef,2,0)
 {
-  NEW_declareCodeBlock(0,code);
-  OZ_declareNonvarIN(1,globals);
+  declareCodeBlock(0,code);
+  oz_declareNonvarIN(1,globals);
   globals = oz_deref(globals);
   int numGlobals = OZ_length(globals);
 
@@ -412,8 +392,8 @@ OZ_BI_define(BIstoreGRegRef,2,0)
 
 OZ_BI_define(BIstoreLocation,2,0)
 {
-  NEW_declareCodeBlock(0,code);
-  OZ_declareNonvarIN(1,locs);
+  declareCodeBlock(0,code);
+  oz_declareNonvarIN(1,locs);
   locs=oz_deref(locs);
   OZ_Term inLocs = oz_deref(oz_left(locs));
   OZ_Term outLocs = oz_deref(oz_right(locs));
@@ -445,8 +425,8 @@ OZ_BI_define(BIstoreLocation,2,0)
 
 OZ_BI_define(BIstoreCache,2,0)
 {
-  NEW_declareCodeBlock(0,code);
-  OZ_declareNonvarIN(1,ignored);
+  declareCodeBlock(0,code);
+  oz_declareNonvarIN(1,ignored);
   code->writeCache();
   return PROCEED;
 } OZ_BI_end

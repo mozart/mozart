@@ -250,4 +250,5 @@ undefine(`instruction')
 
 void ozmaerror(const char *message) {
   fprintf(stderr,"Ozma error in line %d: %s\n",ozma_lineno,message);
+  exit(1);
 }

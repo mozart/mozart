@@ -100,18 +100,22 @@ Segment::~Segment()
   writer = 0;
 } 
 
-
+#ifdef LIVENESS_CACHE
 static HashTable livenesscache(HT_INTKEY,100);
-
+#endif
 
 int CodeArea::livenessX(ProgramCounter from, TaggedRef *X,int maxX)
 {
+#ifdef LIVENESS_CACHE
   void *aux = livenesscache.htFind(ToInt32(from));
   if (aux != htEmpty) {
     return ToInt32(aux);
   }
+#endif
   int ret = livenessXInternal(from,X,maxX);
+#ifdef LIVENESS_CACHE
   livenesscache.htAdd(ToInt32(from),ToPointer(ret));
+#endif
   return ret;
 }
 
@@ -370,10 +374,6 @@ outerLoop2:
       case THREAD:
 	CONTINUE(getLabelArg(PC+1));
 
-      case THREADX:
-	ISREAD_TO(getPosIntArg(PC+1));
-	CONTINUE(getLabelArg(PC+2));
-
       case GENCALL:
 	{
 	  GenCallInfoClass *gci = (GenCallInfoClass*)getAdressArg(PC+1);
@@ -412,6 +412,9 @@ outerLoop2:
 	break;
       case GETSELF:
 	ISWRITE(GETREGARG(PC+1));
+	break;
+      case SETSELF:
+	ISREAD(GETREGARG(PC+1));
 	break;
       case CREATEVARIABLEX:
 	ISWRITE(GETREGARG(PC+1));
@@ -465,7 +468,6 @@ outerLoop2:
       case TESTNUMBERY:
       case TESTNUMBERG:
 	PUSH(getLabelArg(PC+3));
-	PUSH(getLabelArg(PC+4));
 	break;
       case TESTRECORDX:
 	ISREAD(GETREGARG(PC+1));
@@ -473,7 +475,6 @@ outerLoop2:
       case TESTRECORDY:
       case TESTRECORDG:
 	PUSH(getLabelArg(PC+4));
-	PUSH(getLabelArg(PC+5));
 	break;
       case TESTLISTX:
 	ISREAD(GETREGARG(PC+1));
@@ -481,7 +482,6 @@ outerLoop2:
       case TESTLISTY:
       case TESTLISTG:
 	PUSH(getLabelArg(PC+2));
-	PUSH(getLabelArg(PC+3));
 	break;
       case GETLITERALX:
       case GETNUMBERX:
@@ -572,13 +572,12 @@ outerLoop2:
 }
 
 #ifdef DEBUG_LIVENESS
-void checkLiveness(ProgramCounter PC, int n, TaggedRef *X, int maxX)
+void checkLiveness(ProgramCounter PC, TaggedRef *X, int maxX)
 {
-  int m=CodeArea::livenessX(PC,X,maxX);
-  if (m!=n) {
-    if (m>n) printf("##########\n");
-    printf("liveness(%p)=%d != %d\n",PC,m,n);
-    displayCode(CodeArea::definitionStart(PC),-1);
+  int m=CodeArea::livenessX(PC,X);
+  if (m>maxX) {
+    printf("liveness(%p)=%d > %d\n",PC,m,maxX);
+    displayDef(PC,0);
   }
 }
 #endif

@@ -64,14 +64,12 @@ define(opAction,
         $1,RelBuiltinname,marshalBuiltin((Builtin*) getAdressArg(PC++),bs);,
         $1,FunBuiltinname,marshalBuiltin((Builtin*) getAdressArg(PC++),bs);,
         $1,Builtinname,marshalBuiltin((Builtin*) getAdressArg(PC++),bs);,
-        $1,Variablename,marshalTerm(getTaggedArg(PC++),bs);,
         $1,Register,marshalNumber(regToInt(getRegArg(PC++)),bs);,
         $1,XRegisterIndex,marshalNumber(regToInt(getRegArg(PC++)),bs);,
         $1,YRegisterIndex,marshalNumber(regToInt(getRegArg(PC++)),bs);,
         $1,Arity,marshalNumber((unsigned int)getPosIntArg(PC++),bs);,
         $1,Label,marshalLabel(getLabelArg(PC++),bs);,
         $1,Count,marshalNumber((unsigned int)getPosIntArg(PC++),bs);,
-        $1,NLiveRegs,marshalNumber((unsigned int)getPosIntArg(PC++),bs);,
         $1,ArityAndIsTail,marshalNumber((unsigned int)getPosIntArg(PC++),bs);,
         $1,Dummy,marshalNumber((unsigned int)getPosIntArg(PC++),bs);,
         $1,PredicateRef,marshalPredicateRef((AbstractionEntry*) getAdressArg(PC++),bs);,
@@ -139,9 +137,9 @@ void marshalPredId(PrTabEntry *p,MsgBuffer *bs)
   PD((MARSHAL,"pred id begin"));
   marshalTerm(p->getName(),bs);
   marshalRecordArity(p->getMethodArity(),bs);
-  marshalTerm(p->getFileName(),bs);
-  marshalNumber(p->getLine(),bs);
-  marshalNumber(p->getFlags(),bs);
+  marshalTerm(p->getPos(),bs);
+  marshalTerm(p->getFlagsList(),bs);
+  marshalNumber(p->getMaxX(),bs);
   PD((MARSHAL,"pred id end"));
 }
 
@@ -215,8 +213,8 @@ void marshalCode(ProgramCounter start, MsgBuffer *bs)
   Reg reg;
   int nxt;
   PrTabEntry *pred;
-  TaggedRef file,line,column,predName;
-  CodeArea::getDefinitionArgs(start,reg,nxt,file,line,column,predName);
+  TaggedRef pos,predName;
+  CodeArea::getDefinitionArgs(start,reg,nxt,pos,predName);
 
   ProgramCounter ende = start+nxt;
 
@@ -335,14 +333,12 @@ define(opAction,
         $1,RelBuiltinname,PC=unmarshalBuiltin(PC,bs);,
         $1,FunBuiltinname,PC=unmarshalBuiltin(PC,bs);,
         $1,Builtinname,PC=unmarshalBuiltin(PC,bs);,
-        $1,Variablename,PC=unmarshalTagged(PC,bs);,
         $1,Register,PC=unmarshalReg(PC,bs);,
         $1,XRegisterIndex,PC=unmarshalReg(PC,bs);,
         $1,YRegisterIndex,PC=unmarshalReg(PC,bs);,
         $1,Arity,PC=unmarshalNum(PC,bs);,
         $1,Label,PC=unmarshalLabel(PC,bs);,
         $1,Count,PC=unmarshalNum(PC,bs);,
-        $1,NLiveRegs,PC=unmarshalNum(PC,bs);,
         $1,ArityAndIsTail,PC=unmarshalNum(PC,bs);,
         $1,Dummy,PC=unmarshalNum(PC,bs);,
         $1,PredicateRef,PC=unmarshalPredicateRef(PC,bs);,
@@ -469,11 +465,11 @@ ProgramCounter unmarshalPredId(ProgramCounter PC,ProgramCounter lastPC,
 { 
   OZ_Term name       = unmarshalTerm(bs);
   SRecordArity arity = unmarshalRecordArity(bs);
-  OZ_Term file       = unmarshalTerm(bs);
-  int line           = unmarshalNumber(bs);
-  int flags          = bs->unmarshallingOld ? NO : unmarshalNumber(bs);
+  OZ_Term pos        = unmarshalTerm(bs);
+  OZ_Term flags      = unmarshalTerm(bs);
+  int maxX           = unmarshalNumber(bs);
 
-  PrTabEntry *pred = PC ? new PrTabEntry(name,arity,file,line,flags) : 0;
+  PrTabEntry *pred = PC ? new PrTabEntry(name,arity,pos,flags,maxX) : 0;
   return writeAddress(pred,PC);
 }
 
