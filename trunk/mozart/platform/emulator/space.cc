@@ -260,17 +260,17 @@ InstType oz_installPath(Board * to) {
     Board * s;
  
     for (s = frm; !s->isRoot(); s=s->getParent()) {
-      Assert(!s->isMarkedAsInstalled());
-      s->markAsInstalled(); 
+      Assert(!s->hasMarkOne());
+      s->setMarkOne(); 
     }
-    Assert(!s->isMarkedAsInstalled());
-    s->markAsInstalled(); 
+    Assert(!s->hasMarkOne());
+    s->setMarkOne(); 
   }
 
   // Step 2: Find ancestor
   Board * ancestor = to;
 
-  while (!ancestor->isMarkedAsInstalled()) 
+  while (!ancestor->hasMarkOne()) 
     ancestor = ancestor->getParent();
 
   // Step 3: Deinstall from "frm" to "ancestor", also purge marks
@@ -278,8 +278,8 @@ InstType oz_installPath(Board * to) {
     Board * s = frm;
 
     while (s != ancestor) {
-      Assert(s->isMarkedAsInstalled());
-      s->unMarkAsInstalled();
+      Assert(s->hasMarkOne());
+      s->unsetMarkOne();
       oz_reduceTrailOnSuspend();
       s=s->getParent();
       am.setCurrent(s);
@@ -289,11 +289,11 @@ InstType oz_installPath(Board * to) {
 
     // Purge remaining marks
     for ( ; !s->isRoot() ; s=s->getParent()) {
-      Assert(s->isMarkedAsInstalled());
-      s->unMarkAsInstalled();
+      Assert(s->hasMarkOne());
+      s->unsetMarkOne();
     }
-    Assert(s->isMarkedAsInstalled());
-    s->unMarkAsInstalled();
+    Assert(s->hasMarkOne());
+    s->unsetMarkOne();
     
   }
 
