@@ -42,7 +42,9 @@ private:
 protected:
   // takes the suspensionlist of var and  appends it to the
   // suspensionlist of leftVar
-  void relinkSuspListTo(GenCVariable * lv, Bool reset_local = FALSE);
+  void relinkSuspListTo(GenCVariable * lv, Bool reset_local = FALSE) {
+    suspList = suspList->appendToAndUnlink(lv->suspList, reset_local);
+  }
   
   void propagate(TaggedRef, SuspList * &, TaggedRef, PropCaller);
 
