@@ -106,8 +106,8 @@ local
       meth init(Toplevel Manager)
 	 Tk.canvas,tkInit(parent:             Toplevel
 			  relief:             sunken
-			  width:              MinSizeX
-			  height:             MinSizeY
+			  width:              StartSizeX
+			  height:             StartSizeY
 			  background:         BackColor
 			  bd:                 Border
 			  highlightthickness: 0)
