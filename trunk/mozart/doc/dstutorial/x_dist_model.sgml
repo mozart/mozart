@@ -212,8 +212,8 @@ Mozart does not need an explicit
 monitor or signal concept--rather,
 logic variables let threads
 wait for data availability,
-which is 90% of the needs of concurrency,
-and 9% more is provided by reentrant locking,
+which is 90% of the needs of concurrency.
+A further 9% is provided by reentrant locking,
 which is implemented by logic variables and cells.
 The remaining 1% are not so simply
 handled by these two cases and must be
@@ -387,6 +387,7 @@ In short, yes it does.
 The distribution model has been designed in tandem
 with many application prototypes and numerous
 Gedankenexperimenten.
+We are confident that it is basically correct.
 
 <P>Here's how to use the distribution model 
 to build applications.
@@ -414,7 +415,7 @@ used to manage dataflow and concurrency.
 
 <P>Functors and resources are the key players
 in distributed component-based programming.
-A functor is essentially a component.
+A functor is essentially a software component.
 A functor is stateless, so it can be transparently copied
 anywhere across the net and made persistent by pickling on a file
 (see the module <<Pickle>>).
