@@ -555,6 +555,8 @@ TaggedRef makeTaggedSmallInt(int32 s)
 #endif
 
 
+#define taggedVoidValue _makeTaggedSmallInt(0)
+
 inline
 TaggedRef makeTaggedMiscp(void *s)
 {
@@ -806,21 +808,21 @@ Bool initRefsArray(RefsArray a, int size, Bool init)
   setRefsArraySize(a,size);
   if (init) {
     switch (size) {
-    case 10: a[9] = makeTaggedNULL();       
-    case  9: a[8] = makeTaggedNULL();       
-    case  8: a[7] = makeTaggedNULL();       
-    case  7: a[6] = makeTaggedNULL();       
-    case  6: a[5] = makeTaggedNULL();       
-    case  5: a[4] = makeTaggedNULL();       
-    case  4: a[3] = makeTaggedNULL();       
-    case  3: a[2] = makeTaggedNULL();       
-    case  2: a[1] = makeTaggedNULL();       
-    case  1: a[0] = makeTaggedNULL();
+    case 10: a[9] = taggedVoidValue;
+    case  9: a[8] = taggedVoidValue;
+    case  8: a[7] = taggedVoidValue;
+    case  7: a[6] = taggedVoidValue;
+    case  6: a[5] = taggedVoidValue;
+    case  5: a[4] = taggedVoidValue;
+    case  4: a[3] = taggedVoidValue;
+    case  3: a[2] = taggedVoidValue;
+    case  2: a[1] = taggedVoidValue;
+    case  1: a[0] = taggedVoidValue;
       break;
     default:
       {
 	for(int i = size-1; i >= 0; i--) 
-	  a[i] = makeTaggedNULL();
+	  a[i] = taggedVoidValue;
       }
       break;
     }
