@@ -526,6 +526,8 @@ define
 	       VERBATIM('-')
 	    [] nbsp then
 	       VERBATIM('&nbsp;')
+	    [] 'PI:NBSP' then
+	       VERBATIM('&nbsp;')
 	    [] ellipsis then
 	       VERBATIM('...')
 	    [] cdots then
