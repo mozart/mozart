@@ -8,6 +8,9 @@
   State: $State$
 
   $Log$
+  Revision 1.347  1996/07/18 16:17:25  wuertz
+  improved edge-finding and prepared for new distribution
+
   Revision 1.346  1996/07/18 15:27:17  scheidhr
   no warnings
 
@@ -454,7 +457,7 @@ Bool AM::hookCheckNeeded()
 
 #define INCFPC(N) PC += N
 
-#define WANT_INSTRPROFILE
+//#define WANT_INSTRPROFILE
 #if defined(WANT_INSTRPROFILE) && defined(__GNUC__)
 #define asmLbl(INSTR) asm(" " #INSTR ":");
 #else
