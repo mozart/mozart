@@ -222,7 +222,7 @@ void CodeArea::printDef(ProgramCounter PC)
 
   getDefinitionArgs(pc,reg,next,file,line,pred);
 
-  message("\tIn procedure %s (File %s, line %d, PC=%ld)\n",
+  message("\tIn procedure '%s' (File %s, line %d, PC=%ld)\n",
           pred ? pred->getPrintName() : "???",
           OZ_toC(file),line,PC);
 }
@@ -766,12 +766,6 @@ void CodeArea::display (ProgramCounter from, int sz, FILE* ofile)
     case GETRECORDX:
     case GETRECORDY:
     case GETRECORDG:
-    case PUTSTRUCTUREX:
-    case PUTSTRUCTUREY:
-    case PUTSTRUCTUREG:
-    case GETSTRUCTUREX:
-    case GETSTRUCTUREY:
-    case GETSTRUCTUREG:
           /* ***type 6:    OP LiteralName Reg */
       {
         TaggedRef literal = getLiteralArg(PC+1);
