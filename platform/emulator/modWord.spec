@@ -90,4 +90,20 @@
                                      out => ['+value'],
                                      BI  => BIwordAsr},
 
+     '<'                        => { in  => ['+value','+value'],
+                                     out => ['+bool'],
+                                     BI  => BIwordLess},
+
+     '=<'                       => { in  => ['+value','+value'],
+                                     out => ['+bool'],
+                                     BI  => BIwordLessEq},
+
+     '>'                        => { in  => ['+value','+value'],
+                                     out => ['+bool'],
+                                     BI  => BIwordGreater},
+
+     '>='                       => { in  => ['+value','+value'],
+                                     out => ['+bool'],
+                                     BI  => BIwordGreaterEq},
+
  );

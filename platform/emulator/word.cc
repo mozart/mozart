@@ -319,3 +319,49 @@ OZ_BI_define(BIwordAsr, 2, 1) {
   signed int v = w->value << (MAXWIDTH - w->size);
   OZ_RETURN_WORD(w->size, v >> (MAXWIDTH - w->size + n->value));
 } OZ_BI_end
+
+// --added less, lessEq, greater, greaterEq
+
+OZ_BI_define(BIwordLess, 2, 1) {
+  OZ_declareWord(0, w1);
+  OZ_declareWord(1, w2);
+  if (w1->size != w2->size) {
+    return OZ_raiseDebug(OZ_makeException(OZ_atom("system"), OZ_atom("kernel"),
+                                          "Word.binop", 2,
+                                          OZ_in(0), OZ_in(1)));
+  }
+  OZ_RETURN_BOOL(w1->value < w2->value);
+} OZ_BI_end
+
+OZ_BI_define(BIwordLessEq, 2, 1) {
+  OZ_declareWord(0, w1);
+  OZ_declareWord(1, w2);
+  if (w1->size != w2->size) {
+    return OZ_raiseDebug(OZ_makeException(OZ_atom("system"), OZ_atom("kernel"),
+                                          "Word.binop", 2,
+                                          OZ_in(0), OZ_in(1)));
+  }
+  OZ_RETURN_BOOL(w1->value <= w2->value);
+} OZ_BI_end
+
+OZ_BI_define(BIwordGreater, 2, 1) {
+  OZ_declareWord(0, w1);
+  OZ_declareWord(1, w2);
+  if (w1->size != w2->size) {
+    return OZ_raiseDebug(OZ_makeException(OZ_atom("system"), OZ_atom("kernel"),
+                                          "Word.binop", 2,
+                                          OZ_in(0), OZ_in(1)));
+  }
+  OZ_RETURN_BOOL(w1->value > w2->value);
+} OZ_BI_end
+
+OZ_BI_define(BIwordGreaterEq, 2, 1) {
+  OZ_declareWord(0, w1);
+  OZ_declareWord(1, w2);
+  if (w1->size != w2->size) {
+    return OZ_raiseDebug(OZ_makeException(OZ_atom("system"), OZ_atom("kernel"),
+                                          "Word.binop", 2,
+                                          OZ_in(0), OZ_in(1)));
+  }
+  OZ_RETURN_BOOL(w1->value >= w2->value);
+} OZ_BI_end
