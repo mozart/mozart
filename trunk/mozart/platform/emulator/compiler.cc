@@ -374,21 +374,19 @@ OZ_BI_define(BIstoreRecordArity,2,0)
 } OZ_BI_end
 
 
-OZ_BI_define(BIstoreGenCallInfo,6,0)
+OZ_BI_define(BIstoreCallMethodInfo,5,0)
 {
   OZ_declareCodeBlockIN(0,code);
   oz_declareIntIN(1,regindex);
-  oz_declareBoolIN(2,isMethod);
-  oz_declareNonvarIN(3,name);
+  oz_declareNonvarIN(2,name);
   if (!oz_isLiteral(name)) {
-    oz_typeError(3,"Literal");
+    oz_typeError(2,"Literal");
   }
-  oz_declareBoolIN(4,isTail);
-  OZ_declareRecordArityIN(5,arity);
+  oz_declareBoolIN(3,isTail);
+  OZ_declareRecordArityIN(4,arity);
 
-  GenCallInfoClass *gci =
-    new GenCallInfoClass(regindex,isMethod,name,isTail,arity);
-  code->writeAddress(gci);
+  CallMethodInfo *cmi = new CallMethodInfo(regindex,name,isTail,arity);
+  code->writeAddress(cmi);
   return PROCEED;
 } OZ_BI_end
 

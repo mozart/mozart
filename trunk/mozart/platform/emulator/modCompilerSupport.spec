@@ -181,11 +181,10 @@
 				     out => [],
 				     BI  => BIstoreRecordArity},
 
-    'storeGenCallInfo'		=> { in  => ['+foreignPointer','+int',
-					     '+bool','+literal',
-					     '+bool','+value'],
+    'storeCallMethodInfo'	=> { in  => ['+foreignPointer','+int',
+					     '+literal', '+bool','+value'],
 				     out => [],
-				     BI  => BIstoreGenCallInfo},
+				     BI  => BIstoreCallMethodInfo},
 
     'storeGRegRef'		=> { in  => ['+foreignPointer','+[tuple]'],
 				     out => [],

@@ -120,8 +120,8 @@ dnl   NOTE: The instructions genCall, call, tailCall, marshalledFastCall,
 dnl   genFastCall, fastCall and fastTailCall must all have the same size
 dnl   due to self-modifying code.
 
-instruction(callMethod,GenCallInfo,Arity)
-instruction(genCall,GenCallInfo,Arity)
+instruction(callMethod,CallMethodInfo,Arity)
+instruction(genCall,Dummy,Dummy)
 instruction(callGlobal,readArg(GRegisterIndex),ArityAndIsTail)
 instruction(call,readArg(Register),Arity)
 instruction(tailCallX,readArg(XRegisterIndex),Arity)

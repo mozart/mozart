@@ -462,24 +462,23 @@ public:
   void invalidate() { key = value = 0; }
 };
 
-class GenCallInfoClass {
+class CallMethodInfo {
 public:
   int regIndex;
-  Bool isMethAppl, isTailCall;
+  Bool isTailCall;
   TaggedRef mn;
   SRecordArity arity;
 
-  GenCallInfoClass(int ri, Bool ism, TaggedRef name, Bool ist, SRecordArity ar) 
+  CallMethodInfo(int ri, TaggedRef name, Bool ist, SRecordArity ar) 
   {
     regIndex   = ri;
-    isMethAppl = ism;
     isTailCall = ist;
     arity = ar;
     mn = name;
     OZ_protect(&mn);
   }
 
-  ~GenCallInfoClass() { OZ_unprotect(&mn); }
+  ~CallMethodInfo() { OZ_unprotect(&mn); }
   void dispose()      { delete this; }
 };
 
