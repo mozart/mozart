@@ -33,9 +33,11 @@
 #define _cacV                    gCollectV
 
 #define _cacMark                 gCollectMark
+#define _cacFix                  gCollectFix
 
 #define _cacConstTerm            gCollectConstTerm
 #define _cacConstTermWithHome    gCollectConstTermWithHome
+#define _cacTertiary             gCollectTertiary
 #define _cacConstRecurse         gCollectConstRecurse
 
 #define _cacBoard                gCollectBoard
@@ -65,10 +67,9 @@
 
 #define _cacPendThreadEmul       gCollectPendThreadEmul
 
-#define _cacFix                  gCollectFix
-
 #define _cacReallocStatic        gCollectReallocStatic
-#define _cacStoreFwd             gCollectStoreFwd
+#define _cacStoreFwdMark         gCollectStoreFwdMark
+#define _cacStoreFwdNoMark       gCollectStoreFwdNoMark
 
 #define _cacRefsArray            gCollectRefsArray
 #define _cacRefsArrayIsMarked    gCollectRefsArrayIsMarked
