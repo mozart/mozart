@@ -144,6 +144,7 @@ class MsgBuffer;
 
 void marshalNumber(unsigned int i, MsgBuffer *bs);
 int unmarshalNumber(MsgBuffer *bs);
+BYTE unmarshalByte(MsgBuffer *bs);
 void marshalCode(ProgramCounter,MsgBuffer*);
 void marshalLabel(ProgramCounter,int,MsgBuffer*);
 void marshalOpCode(int lbl, Opcode op, MsgBuffer *bs, int showLabel = 1);

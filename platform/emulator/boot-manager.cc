@@ -59,7 +59,8 @@ TaggedRef builtinRecord;
 #include "modForeign-if.cc"
 #include "modFault-if.cc"
 #include "modDistribution-if.cc"
-
+#include "modBitString-if.cc"
+#include "modByteString-if.cc"
 
 /*
  * Builtins that are possibly dynamically loaded
@@ -115,6 +116,8 @@ static ModuleEntry module_table[] = {
   {"PID",             mod_int_PID},
   {"FDB",             mod_int_FDB},
   {"FSB",             mod_int_FSB},
+  {"BitString",       mod_int_BitString},
+  {"ByteString",      mod_int_ByteString},
 
 #ifdef MODULES_LINK_STATIC
   {"FSP",             mod_int_FSP},
@@ -145,9 +148,25 @@ static TaggedRef ozInterfaceToRecord(OZ_C_proc_interface * I,
   OZ_Term l = oz_nil();
 
   Builtin *bi;
+  char buffer[256];
+  int mod_len;
+  int nam_len;
+
+  mod_len = (mod_name)?strlen(mod_name):0;
+  if (mod_len>=255) error("module name too long: %s\n",mod_name);
+  if (mod_len > 0) {
+    memcpy((void*)buffer,(const void*)mod_name,mod_len);
+    buffer[mod_len] = '.';
+    mod_len += 1;
+  }
 
   while (I && I->name) {
-    bi = new Builtin(I->name,I->inArity,I->outArity,I->func,isSited);
+    nam_len = strlen(I->name);
+    if ((mod_len+nam_len)>=255)
+      error("builtin name too long: %s.%s\n",mod_name,I->name);
+    memcpy((void*)(buffer+mod_len),(const void*)I->name,nam_len);
+    buffer[mod_len+nam_len] = '\0';
+    bi = new Builtin(buffer,I->inArity,I->outArity,I->func,isSited);
  
     l = oz_cons(oz_pairA(I->name,makeTaggedConst(bi)),l);
     I++;
