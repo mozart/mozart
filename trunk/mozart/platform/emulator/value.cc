@@ -1003,7 +1003,6 @@ TaggedRef oz_adjoin(SRecord *lrec, SRecord* hrecord)
   // optimize case that right record completely overwrites left side.
   if (hrecord->isTuple()) {
     if (newArity->isTuple() && hrecord->getWidth() == newArity->getWidth()) {
-    overwrite:
       return SRecord::newSRecord(hrecord)->normalize();
     }
   } else if (newArity == hrecord->getRecordArity()) {
