@@ -479,11 +479,6 @@ static CpTrail cpTrail;
 /* 
  * set: only used in conjunction with the function setHeapCell ???
  */
-inline int32  GCMARK(void *S)    { return makeTaggedRef2p(GCTAG,S); }
-inline int32  GCMARK(int32 S)    { return makeTaggedRef2i(GCTAG,S); }
-
-inline void *GCUNMARK(int32 S)   { return tagValueOf2(GCTAG,S); }
-inline Bool GCISMARKED(int32 S)  { return GCTAG==tagTypeOf((TaggedRef)S); }
 
 /*
  * Check if object in from-space (elem) is already collected.
@@ -768,6 +763,115 @@ Bool Board::isInTree(void) {
 // This procedure derefences cluster chains and collects only the object at 
 // the end of such a chain.
 
+
+#define RAGCTag (1<<31)
+
+inline Bool refsArrayIsMarked(RefsArray r)
+{
+  return (r[-1]&RAGCTag);
+}
+
+inline void refsArrayMark(RefsArray r, void *ptr)
+{
+  storeFwd((int32*)&r[-1],ToPointer(ToInt32(ptr)|RAGCTag),NO);
+}
+
+inline RefsArray refsArrayUnmark(RefsArray r)
+{
+  return (RefsArray) ToPointer(r[-1]&(~(RAGCTag)|mallocBase));
+}
+
+
+// Structure of type 'RefsArray' (see ./tagged.h)
+// r[0]..r[n-1] data
+// r[-1] gc tag set --> has already been copied
+
+RefsArray gcRefsArray(RefsArray r)
+{
+  GCPROCMSG("gcRefsArray");
+  GCOLDADDRMSG(r);
+  if (r == NULL)
+    return r;
+
+  NOTINTOSPACE(r);
+
+  if (refsArrayIsMarked(r)) {
+    return refsArrayUnmark(r);
+  }
+
+  Assert(!isFreedRefsArray(r));
+  int sz = getRefsArraySize(r);
+  COUNT(refsArray);
+  COUNT1(refsArrayLen,sz);
+
+  RefsArray aux = allocateRefsArray(sz,NO);
+  GCNEWADDRMSG(aux);
+
+  FDPROFILE_GC(cp_size_refsarray, (sz + 1) * sizeof(TaggedRef));
+
+  refsArrayMark(r,aux);
+
+  for (int i = sz; i--; ) {
+    aux[i] = r[i];
+    Assert(!isDirectVar(r[i]));
+    OZ_updateHeapTerm(aux[i]);
+  }
+  
+  return aux;
+}
+
+//
+//  ... Continuation;
+inline
+void Continuation::gcRecurse ()
+{
+  GCMETHMSG ("Continuation::gcRecurse");
+
+  yRegs = gcRefsArray(yRegs);
+  gRegs = gcRefsArray(gRegs);
+  xRegs = gcRefsArray(xRegs);
+}
+
+inline  
+Bool Continuation::gcIsMarked(void) {
+  return GCISMARKED((TaggedRef) pc);
+}
+
+inline
+void Continuation::gcMark(Continuation * fwd) {
+  pc = (ProgramCounter) GCMARK(fwd);
+}
+
+inline
+void ** Continuation::gcGetMarkField(void) {
+  return (void **) &pc;
+}
+
+inline
+Continuation * Continuation::gcGetFwd(void) {
+  Assert(gcIsMarked());
+  return (Continuation *) GCUNMARK((int32) pc);
+}
+
+Continuation *Continuation::gc()
+{
+  GCMETHMSG ("Continuation::gc");
+
+  if (gcIsMarked())
+    return gcGetFwd();
+  
+  COUNT(continuation);
+  Continuation *ret =
+    (Continuation *) gcReallocStatic(this, sizeof(Continuation));
+  GCNEWADDRMSG (ret);
+  gcStack.push (ret, PTR_CONT);
+
+  storeFwdField(ret);
+
+  FDPROFILE_GC(cp_size_cont, sizeof(Continuation));
+
+  return (ret);
+}
 
 inline  
 Bool Board::gcIsMarked(void) {
@@ -1332,61 +1436,6 @@ void Script::gc()
   }
 }
 
-#define RAGCTag (1<<31)
-
-inline Bool refsArrayIsMarked(RefsArray r)
-{
-  return (r[-1]&RAGCTag);
-}
-
-inline void refsArrayMark(RefsArray r, void *ptr)
-{
-  storeFwd((int32*)&r[-1],ToPointer(ToInt32(ptr)|RAGCTag),NO);
-}
-
-inline RefsArray refsArrayUnmark(RefsArray r)
-{
-  return (RefsArray) ToPointer(r[-1]&(~(RAGCTag)|mallocBase));
-}
-
-
-// Structure of type 'RefsArray' (see ./tagged.h)
-// r[0]..r[n-1] data
-// r[-1] gc tag set --> has already been copied
-
-RefsArray gcRefsArray(RefsArray r)
-{
-  GCPROCMSG("gcRefsArray");
-  GCOLDADDRMSG(r);
-  if (r == NULL)
-    return r;
-
-  NOTINTOSPACE(r);
-
-  if (refsArrayIsMarked(r)) {
-    return refsArrayUnmark(r);
-  }
-
-  Assert(!isFreedRefsArray(r));
-  int sz = getRefsArraySize(r);
-  COUNT(refsArray);
-  COUNT1(refsArrayLen,sz);
-
-  RefsArray aux = allocateRefsArray(sz,NO);
-  GCNEWADDRMSG(aux);
-
-  FDPROFILE_GC(cp_size_refsarray, (sz + 1) * sizeof(TaggedRef));
-
-  refsArrayMark(r,aux);
-
-  for (int i = sz; i--; ) {
-    aux[i] = r[i];
-    Assert(!isDirectVar(r[i]));
-    OZ_updateHeapTerm(aux[i]);
-  }
-  
-  return aux;
-}
 
 /*
  *  Thread items methods;
@@ -1427,59 +1476,6 @@ OZ_Propagator * OZ_Propagator::gc(void)
   gcStack.push(p, PTR_PROPAGATOR);
   
   return p;
-}
-
-//
-//  ... Continuation;
-inline
-void Continuation::gcRecurse ()
-{
-  GCMETHMSG ("Continuation::gcRecurse");
-
-  yRegs = gcRefsArray(yRegs);
-  gRegs = gcRefsArray(gRegs);
-  xRegs = gcRefsArray(xRegs);
-}
-
-inline  
-Bool Continuation::gcIsMarked(void) {
-  return GCISMARKED((TaggedRef) pc);
-}
-
-inline
-void Continuation::gcMark(Continuation * fwd) {
-  pc = (ProgramCounter) GCMARK(fwd);
-}
-
-inline
-void ** Continuation::gcGetMarkField(void) {
-  return (void **) &pc;
-}
-
-inline
-Continuation * Continuation::gcGetFwd(void) {
-  Assert(gcIsMarked());
-  return (Continuation *) GCUNMARK((int32) pc);
-}
-
-Continuation *Continuation::gc()
-{
-  GCMETHMSG ("Continuation::gc");
-
-  if (gcIsMarked())
-    return gcGetFwd();
-  
-  COUNT(continuation);
-  Continuation *ret =
-    (Continuation *) gcReallocStatic(this, sizeof(Continuation));
-  GCNEWADDRMSG (ret);
-  gcStack.push (ret, PTR_CONT);
-
-  storeFwdField(ret);
-
-  FDPROFILE_GC(cp_size_cont, sizeof(Continuation));
-
-  return (ret);
 }
 
 /* collect LTuple, SRecord */
@@ -2416,93 +2412,11 @@ OrderedSuspList * OrderedSuspList::gc()
   return (ret);
 }
 
-void TaskStack::gc(TaskStack *newstack)
-{
-  COUNT(taskStack);
-  // mm2 COUNT1(taskStackLen,getMaxSize());
-
-  TaskStack *oldstack = this;
-
-  newstack->allocate(suggestNewSize());
-  Frame *oldtop = oldstack->getTop();
-  int offset    = oldstack->getUsed();
-  Frame *newtop = newstack->array + offset;
-
-  while (1) {
-    GetFrame(oldtop,PC,Y,G);
-
-    if (PC == C_EMPTY_STACK) {
-      *(--newtop) = PC;
-      *(--newtop) = Y;
-      *(--newtop) = G;
-      Assert(newstack->array == newtop);
-      newstack->setTop(newstack->array+offset);
-      return;
-    } else if (PC == C_CATCH_Ptr) {
-    } else if (PC == C_XCONT_Ptr) {
-      ProgramCounter pc   = (ProgramCounter) *(oldtop-1);
-      //      if (isInGc)
-      //	(void)CodeArea::livenessX(pc,Y,getRefsArraySize(Y));
-      Y = gcRefsArray(Y); // X
-    } else if (PC == C_LOCK_Ptr) {
-      Y = (RefsArray) ((OzLock *) Y)->gcConstTerm();
-    } else if (PC == C_LTQ_Ptr) {
-      Y = (RefsArray) ((Actor *) Y)->gcActor();
-    } else if (PC == C_ACTOR_Ptr) {
-      Y = (RefsArray) ((Actor *) Y)->gcActor();
-    } else if (PC == C_SET_SELF_Ptr) {
-      Y = (RefsArray) ((Object*)Y)->gcConstTerm();
-    } else if (PC == C_SET_ABSTR_Ptr) {
-      ((PrTabEntry *)Y)->gcPrTabEntry();
-    } else if (PC == C_DEBUG_CONT_Ptr) {
-      Y = (RefsArray) ((OzDebug *) Y)->gcOzDebug();
-    } else if (PC == C_CALL_CONT_Ptr) {
-      /* tt might be a variable, so use this ugly construction */
-      *(newtop-2) = Y; /* UGLYYYYYYYYYYYY !!!!!!!! */
-      TaggedRef *tt = (TaggedRef*) (newtop-2);
-      OZ_updateHeapTerm(*tt);
-      Y = (RefsArray) ToPointer(*tt);
-      G = gcRefsArray(G);
-    } else if (PC == C_CFUNC_CONT_Ptr) {
-      G = gcRefsArray(G);
-    } else { // usual continuation
-      COUNT(cCont);
-      Y = gcRefsArray(Y);
-      G = gcRefsArray(G);
-    }
-
-    *(--newtop) = PC;
-    *(--newtop) = Y;
-    *(--newtop) = G;
-  } // while not task stack is empty
-}
-
 
 //*********************************************************************
 //                           NODEs
 //*********************************************************************
 
-
-inline  
-Bool ConstTerm::gcIsMarked(void) {
-  return GCISMARKED(ctu.tagged);
-}
-
-inline
-void ConstTerm::gcMark(ConstTerm * fwd) {
-  ctu.tagged = GCMARK(fwd);
-}
-
-inline
-void ** ConstTerm::gcGetMarkField(void) {
-  return (void **) &ctu.tagged;
-}
-
-inline
-ConstTerm * ConstTerm::gcGetFwd(void) {
-  Assert(gcIsMarked());
-  return (ConstTerm *) GCUNMARK((int) ctu.tagged);
-}
 
 void ConstTermWithHome::gcConstTermWithHome()
 {
@@ -2947,6 +2861,67 @@ HeapChunk * HeapChunk::gc(void)
   return ret;
 }
 
+void TaskStack::gc(TaskStack *newstack)
+{
+  COUNT(taskStack);
+  // mm2 COUNT1(taskStackLen,getMaxSize());
+
+  TaskStack *oldstack = this;
+
+  newstack->allocate(suggestNewSize());
+  Frame *oldtop = oldstack->getTop();
+  int offset    = oldstack->getUsed();
+  Frame *newtop = newstack->array + offset;
+
+  while (1) {
+    GetFrame(oldtop,PC,Y,G);
+
+    if (PC == C_EMPTY_STACK) {
+      *(--newtop) = PC;
+      *(--newtop) = Y;
+      *(--newtop) = G;
+      Assert(newstack->array == newtop);
+      newstack->setTop(newstack->array+offset);
+      return;
+    } else if (PC == C_CATCH_Ptr) {
+    } else if (PC == C_XCONT_Ptr) {
+      ProgramCounter pc   = (ProgramCounter) *(oldtop-1);
+      //      if (isInGc)
+      //	(void)CodeArea::livenessX(pc,Y,getRefsArraySize(Y));
+      Y = gcRefsArray(Y); // X
+    } else if (PC == C_LOCK_Ptr) {
+      Y = (RefsArray) ((OzLock *) Y)->gcConstTerm();
+    } else if (PC == C_LTQ_Ptr) {
+      Y = (RefsArray) ((Actor *) Y)->gcActor();
+    } else if (PC == C_ACTOR_Ptr) {
+      Y = (RefsArray) ((Actor *) Y)->gcActor();
+    } else if (PC == C_SET_SELF_Ptr) {
+      Y = (RefsArray) ((Object*)Y)->gcConstTerm();
+    } else if (PC == C_SET_ABSTR_Ptr) {
+      ((PrTabEntry *)Y)->gcPrTabEntry();
+    } else if (PC == C_DEBUG_CONT_Ptr) {
+      Y = (RefsArray) ((OzDebug *) Y)->gcOzDebug();
+    } else if (PC == C_CALL_CONT_Ptr) {
+      /* tt might be a variable, so use this ugly construction */
+      *(newtop-2) = Y; /* UGLYYYYYYYYYYYY !!!!!!!! */
+      TaggedRef *tt = (TaggedRef*) (newtop-2);
+      OZ_updateHeapTerm(*tt);
+      Y = (RefsArray) ToPointer(*tt);
+      G = gcRefsArray(G);
+    } else if (PC == C_CFUNC_CONT_Ptr) {
+      G = gcRefsArray(G);
+    } else { // usual continuation
+      COUNT(cCont);
+      Y = gcRefsArray(Y);
+      G = gcRefsArray(G);
+    }
+
+    *(--newtop) = PC;
+    *(--newtop) = Y;
+    *(--newtop) = G;
+  } // while not task stack is empty
+}
+
 /*
  * notification board == home board of thread
  * Although this may be discarded/failed, the solve actor must be announced.
@@ -3037,27 +3012,6 @@ void Board::gcRecurse()
   script.Script::gc();
 }
 
-
-inline  
-Bool Actor::gcIsMarked(void) {
-  return (gcField != 0);
-}
-
-inline
-void Actor::gcMark(Actor * fwd) {
-  gcField = fwd;
-}
-
-inline
-void ** Actor::gcGetMarkField(void) {
-  return (void **) &gcField;
-}
-
-inline
-Actor * Actor::gcGetFwd(void) {
-  Assert(gcIsMarked());
-  return gcField;
-}
 
 Actor *Actor::gcActor()
 {
