@@ -1913,7 +1913,7 @@ LBLdispatcher:
      default: break;
      }
      Assert(0);
-     error("impossible");
+     OZ_error("impossible");
 
 // ------------------------------------------------------------------------
 // --- Call: Builtin: replaceBICall
