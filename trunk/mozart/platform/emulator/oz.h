@@ -275,6 +275,7 @@ extern OZ_Term  _FUNDECL(OZ_pair2,(OZ_Term t1,OZ_Term t2));
 extern OZ_Arity _FUNDECL(OZ_makeArity,(OZ_Term list));
 extern OZ_Term  _FUNDECL(OZ_record,(OZ_Term, OZ_Term));
 extern OZ_Term  _FUNDECL(OZ_recordInit,(OZ_Term, OZ_Term));
+#define OZ_recordInitC(s,t) OZ_recordInit(OZ_atom(s),t)
 extern void     _FUNDECL(OZ_putSubtree,(OZ_Term, OZ_Term, OZ_Term));
 extern OZ_Term  _FUNDECL(OZ_subtree,(OZ_Term, OZ_Term));
 extern OZ_Term  _FUNDECL(OZ_arityList,(OZ_Term));

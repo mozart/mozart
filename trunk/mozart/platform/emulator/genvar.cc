@@ -48,6 +48,13 @@ void addSuspCVarOutline(TaggedRef *v, Suspension susp, int unstable)
   addSuspCVar(v, susp, unstable);
 }
 
+
+// defaults for some virtual functions
+OZ_Term GenCVariable::inspectV()
+{
+  return OZ_atom("generic");
+}
+
 #ifdef OUTLINE
 #define inline
 #include "genvar.icc"
