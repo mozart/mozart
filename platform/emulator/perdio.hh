@@ -37,7 +37,7 @@
 #include "genhashtbl.hh"
 #include "perdio_debug.hh"
 
-#define PERDIOMINOR      "8"
+#define PERDIOMINOR      "10"
 #define PERDIOMAJOR      OZVERSION
 #define PERDIOVERSION    PERDIOMAJOR "#" PERDIOMINOR
 
@@ -113,6 +113,7 @@ typedef enum {
   DIF_TUPLE,
   DIF_LIST,
   DIF_REF,
+  DIF_REF_DEBUG,
   DIF_OWNER,
   DIF_OWNER_SEC,
   DIF_PORT,

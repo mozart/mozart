@@ -205,38 +205,83 @@ public:
 
 RefTable *refTable;
 
+#ifdef DEBUG_REFCOUNTERS
+#define MagicConst 23
+#endif
+
+
 inline void gotRef(MsgBuffer *bs, TaggedRef val)
 {
-#define XXRS_HACK
-#ifdef RS_HACK
-  int n1 = unmarshalNumber(bs);
-  int n2 = unmarshalNumber(bs);
-  int n = unmarshalNumber(bs);
-  Assert(n1==27);
-#endif
   int counter = refTable->set(val);
   PD((REF_COUNTER,"got: %d",counter));
-#ifdef RS_HACK
-  Assert(n==counter);
+#ifdef DEBUG_REFCOUNTERS
+  int n1 = unmarshalNumber(bs);
+  Assert(n1==MagicConst);
+  int n2 = unmarshalNumber(bs);
+  Assert(n2==counter);
 #endif
 }
+
+
+
+/*
+
+  RefTrail
+  Problem: there is no room in lists to remember, that they have
+  been visited already: first element might be a variable which was bound
+  --> we might have REF cells pointing to the beginning of the list, so we
+  run into problems if the list is _first_ marshalled.
+  Solution: for lists we do not mark the datastructure but remember a
+  pointer to it on the refTrail together with its counter value.
+
+ */
+
+#define RT_LISTTAG 0x1
 
 class RefTrail: public Stack {
   int counter;
 public:
   RefTrail() : Stack(200,Stack_WithMalloc) { counter=0; }
+  void pushInt(int i) { push(ToPointer(i)); }
   int trail(OZ_Term *t)
   {
+    pushInt(*t);
     push(t);
-    push(ToPointer(*t));
     return counter++;
   }
+  int trail(LTuple *l)
+  {
+    Assert(find(l)==-1);
+    pushInt(counter++);
+    pushInt(ToInt32(l)|RT_LISTTAG);
+    return counter-1;
+  }
+
+  int find(LTuple *l)
+  {
+    int ret = -1;
+    StackEntry *savedTop = tos;
+
+    while(!isEmpty()) {
+      unsigned int l1 = ToInt32(pop());
+      int n = ToInt32(pop());
+      if ((l1&RT_LISTTAG) && l1==(ToInt32(l)|RT_LISTTAG)) {
+        ret = n;
+        break;
+      }
+    }
+    tos = savedTop;
+    return ret;
+  }
+
   void unwind()
   {
     while(!isEmpty()) {
-      OZ_Term oldval = ToInt32(pop());
       OZ_Term *loc = (OZ_Term*) pop();
-      *loc = oldval;
+      OZ_Term oldval = ToInt32(pop());
+      if ((ToInt32(loc)&RT_LISTTAG)==0) {
+        *loc = oldval;
+      }
       counter--;
     }
     Assert(counter==0);
@@ -443,25 +488,57 @@ GName *unmarshalGName(TaggedRef *ret, MsgBuffer *bs)
 /*   SECTION 9: term marshaling routines                               */
 /* *********************************************************************/
 
-inline Bool checkCycle(OZ_Term t, MsgBuffer *bs)
+int debugRefs = 0;
+
+void marshalRef(int n, MsgBuffer *bs, TypeOfTerm tag)
 {
-  if (!IsRef(t) && _tagTypeOf(t)==GCTAG) {
-    PD((MARSHAL,"circular: %d",t>>tagSize));
+  PD((MARSHAL,"circular: %d",n));
+
+  if (debugRefs && tag!=REFTAG1) {
+    marshalDIF(bs,DIF_REF_DEBUG);
+    marshalNumber(n,bs);
+    marshalNumber(tag,bs);
+  } else {
     marshalDIF(bs,DIF_REF);
-    marshalNumber(t>>tagSize,bs);
+    marshalNumber(n,bs);
+  }
+}
+
+inline Bool checkCycle(OZ_Term t, MsgBuffer *bs, TypeOfTerm tag)
+{
+  if ((t&tagMask)==GCTAG) {
+    marshalRef(t>>tagSize,bs,tag);
     return OK;
   }
   return NO;
 }
 
-inline void trailCycle(OZ_Term *t, MsgBuffer *bs,int n)
+inline void trailCycle(OZ_Term *t, MsgBuffer *bs)
 {
   int counter = refTrail->trail(t);
   PD((REF_COUNTER,"trail: %d",counter));
   *t = ((counter)<<tagSize)|GCTAG;
-#ifdef RS_HACK
-  marshalNumber(27,bs);
-  marshalNumber(n,bs);
+#ifdef DEBUG_REFCOUNTERS
+  marshalNumber(MagicConst,bs);
+  marshalNumber(counter,bs);
+#endif
+}
+
+inline Bool checkCycle(LTuple *l, MsgBuffer *bs)
+{
+  int n = refTrail->find(l);
+  if (n>=0) {
+    marshalRef(n,bs,LTUPLE);
+    return OK;
+  }
+  return NO;
+}
+
+inline void trailCycle(LTuple *l, MsgBuffer *bs)
+{
+  int counter = refTrail->trail(l);
+#ifdef DEBUG_REFCOUNTERS
+  marshalNumber(MagicConst,bs);
   marshalNumber(counter,bs);
 #endif
 }
@@ -488,7 +565,7 @@ void marshalClass(ObjectClass *cl, MsgBuffer *bs)
 {
   marshalDIF(bs,DIF_CLASS);
   marshalGName(cl->getGName(),bs);
-  trailCycle(cl->getCycleRef(),bs,2);
+  trailCycle(cl->getCycleRef(),bs);
   marshalSRecord(cl->getFeatures(),bs);
 }
 
@@ -505,7 +582,7 @@ void marshalNoGood(TaggedRef term, MsgBuffer *bs)
 void marshalObject(Object *o, MsgBuffer *bs, GName *gnclass)
 {
   if (marshalTertiary(o,DIF_OBJECT,bs)) return;   /* ATTENTION */
-  trailCycle(o->getCycleRef(),bs,111);
+  trailCycle(o->getCycleRef(),bs);
   marshalGName(gnclass,bs);
 }
 
@@ -520,7 +597,7 @@ void marshalConst(ConstTerm *t, MsgBuffer *bs)
     PD((MARSHAL,"bigint"));
     marshalDIF(bs,DIF_BIGINT);
     marshalString(toC(makeTaggedConst(t)),bs);
-    break;
+    return;
 
   case Co_Dictionary:
     {
@@ -534,7 +611,7 @@ void marshalConst(ConstTerm *t, MsgBuffer *bs)
       marshalDIF(bs,DIF_DICT);
       int size = d->getSize();
       marshalNumber(size,bs);
-      trailCycle(d->getCycleRef(),bs,3);
+      trailCycle(d->getCycleRef(),bs);
 
       int i = d->getFirst();
       i = d->getNext(i);
@@ -567,7 +644,7 @@ void marshalConst(ConstTerm *t, MsgBuffer *bs)
       GName *gname=ch->getGName();
       marshalDIF(bs,DIF_CHUNK);
       marshalGName(gname,bs);
-      trailCycle(t->getCycleRef(),bs,4);
+      trailCycle(t->getCycleRef(),bs);
       marshalTerm(ch->getValue(),bs);
       return;
     }
@@ -591,7 +668,7 @@ void marshalConst(ConstTerm *t, MsgBuffer *bs)
       marshalTerm(pp->getName(),bs);
       marshalNumber(pp->getArity(),bs);
       ProgramCounter pc = pp->getPC();
-      trailCycle(t->getCycleRef(),bs,5);
+      trailCycle(t->getCycleRef(),bs);
       marshalClosure(pp,bs);
       PD((MARSHAL,"code begin"));
       marshalCode(pc,bs);
@@ -637,7 +714,7 @@ void marshalConst(ConstTerm *t, MsgBuffer *bs)
     goto bomb;
   }
 
-  trailCycle(t->getCycleRef(),bs,6);
+  trailCycle(t->getCycleRef(),bs);
   return;
 
 bomb:
@@ -652,8 +729,9 @@ loop:
   switch(tTag) {
 
   case GCTAG: {
+    Assert(0);
     PD((MARSHAL,"gctag for cycle"));
-    Bool b = checkCycle(t,bs);
+    Bool b = checkCycle(t,bs,tTag);
     Assert(b);
     break;}
 
@@ -673,7 +751,7 @@ loop:
     {
       PD((MARSHAL,"literal"));
       Literal *lit = tagged2Literal(t);
-      if (checkCycle(*lit->getCycleRef(),bs)) return;
+      if (checkCycle(*lit->getCycleRef(),bs,tTag)) return;
 
       if (lit->isAtom()) {
         marshalDIF(bs,DIF_ATOM);
@@ -695,7 +773,7 @@ loop:
         marshalString(lit->getPrintName(),bs);
         PD((MARSHAL,"name: %s",lit->getPrintName()));
       }
-      trailCycle(lit->getCycleRef(),bs,7);
+      trailCycle(lit->getCycleRef(),bs);
       break;
     }
 
@@ -703,21 +781,14 @@ loop:
     {
       PD((MARSHAL,"ltuple"));
       LTuple *l = tagged2LTuple(t);
-      if (checkCycle(*l->getCycleRef(),bs)) return;
+      if (checkCycle(l,bs)) return;
       marshalDIF(bs,DIF_LIST);
       PD((MARSHAL_CT,"tag DIF_LIST BYTES:1"));
       PD((MARSHAL,"list"));
 
-      TaggedRef *args = l->getCycleRef();
-      if (!oz_isRef(*args) && oz_isVariable(*args)) {
-        PerdioVar *pvar = var2PerdioVar(args);
-        trailCycle(args,bs,8);
-        marshalVariable(pvar,bs);
-      } else {
-        OZ_Term head = l->getHead();
-        trailCycle(args,bs,9);
-        marshalTerm(head,bs);
-      }
+      trailCycle(l,bs);
+      marshalTerm(l->getHead(),bs);
+
       // tail recursion optimization
       t = l->getTail();
       goto loop;
@@ -727,7 +798,7 @@ loop:
     {
       PD((MARSHAL,"srecord"));
       SRecord *rec = tagged2SRecord(t);
-      if (checkCycle(*rec->getCycleAddr(),bs)) return;
+      if (checkCycle(*rec->getCycleAddr(),bs,tTag)) return;
       TaggedRef label = rec->getLabel();
 
       if (rec->isTuple()) {
@@ -740,7 +811,7 @@ loop:
         marshalTerm(rec->getArityList(),bs);
       }
       marshalTerm(label,bs);
-      trailCycle(rec->getCycleAddr(),bs,10);
+      trailCycle(rec->getCycleAddr(),bs);
       int argno = rec->getWidth();
       PD((MARSHAL,"record-tuple no:%d",argno));
 
@@ -755,7 +826,7 @@ loop:
   case OZCONST:
     {
       PD((MARSHAL,"constterm"));
-      if (checkCycle(*(tagged2Const(t)->getCycleRef()),bs))
+      if (checkCycle(*(tagged2Const(t)->getCycleRef()),bs,tTag))
         break;
       marshalConst(tagged2Const(t),bs);
       break;
@@ -1043,6 +1114,17 @@ loop:
       return;
     }
 
+  case DIF_REF_DEBUG:
+    {
+      int i          = unmarshalNumber(bs);
+      TypeOfTerm tag = (TypeOfTerm) unmarshalNumber(bs);
+      PD((UNMARSHAL,"ref: %d",i));
+      *ret = refTable->get(i);
+      Assert(*ret);
+      Assert(tag==tagTypeOf(*ret));
+      return;
+    }
+
   case DIF_OWNER:
   case DIF_OWNER_SEC:
     {
@@ -1214,7 +1296,7 @@ void marshalVariable(PerdioVar *pvar, MsgBuffer *bs)
 
   PD((MARSHAL,"var objectproxy"));
 
-  if (checkCycle(*(pvar->getObject()->getCycleRef()),bs))
+  if (checkCycle(*(pvar->getObject()->getCycleRef()),bs,OZCONST))
     return;
 
   GName *classgn =  pvar->isObjectClassAvail() ?
@@ -1336,10 +1418,12 @@ Bool unmarshal_SPEC(MsgBuffer* buf,char* &vers,OZ_Term &t){
   if (strncmp(PERDIOMAJOR,major,strlen(PERDIOMAJOR))!=0) {
     return NO;}
   int minordiff = atoi(PERDIOMINOR) - atoi(minor);
-  if (minordiff > 1 || /* we only support the last minor */
-      minordiff < 0) { /* emulator older than component */
+  //  if (minordiff > 1 || /* we only support the last minor */
+  //      minordiff < 0) { /* emulator older than component */
+  //    return NO;
+  //  }
+  if (minordiff)
     return NO;
-  }
   buf->unmarshallingOld = (minordiff!=0);
   t=unmarshalTerm(buf);
   if (minordiff) {

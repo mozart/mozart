@@ -553,7 +553,6 @@ public:
   void setHead(TaggedRef term) { args[0] = term;}
   void setTail(TaggedRef term) { args[1] = term;}
   TaggedRef *getRef()          { return args; }
-  TaggedRef *getCycleRef()     { return args; }
   TaggedRef *getRefTail()      { return args+1; }
   TaggedRef *getRefHead()      { return args; }
 };
