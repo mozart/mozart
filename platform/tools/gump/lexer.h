@@ -137,16 +137,6 @@ OZ_BI_define(yy_lexer_input, 1, 1)
 }
 OZ_BI_end
 
-OZ_BI_define(yy_lexer_unput, 2, 0)
-{
-  OZ_declareForeignPointerIN(0, p);
-  OZ_declareIntIN(1, j);
-  char c = j;
-  ((yyFlexLexer *) p)->yyunput(1, &c);
-  return PROCEED;
-}
-OZ_BI_end
-
 extern "C" OZ_C_proc_interface *oz_init_module(void);
 
 OZ_C_proc_interface *oz_init_module(void) {
@@ -161,7 +151,6 @@ OZ_C_proc_interface *oz_init_module(void) {
     {"setMode",2,0,yy_lexer_setMode},
     {"currentMode",1,1,yy_lexer_currentMode},
     {"input",1,1,yy_lexer_input},
-    {"unput",2,0,yy_lexer_unput},
     {0,0,0,0}
   };
   return oz_interface;
