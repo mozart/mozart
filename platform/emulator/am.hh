@@ -283,7 +283,7 @@ public:
   // in emulate.cc
   Bool emulateHookOutline(ProgramCounter PC, Abstraction *def,TaggedRef *arguments);
   Bool hookCheckNeeded();
-  Bool isNotPreemtiveScheduling(void);
+  Bool isNotPreemptiveScheduling(void);
 
   INLINE RunnableThreadBody* allocateBody();
   INLINE Thread *newThreadInternal(int prio, Board *bb);
