@@ -1276,7 +1276,7 @@ void osSetNonBlocking(int fd, Bool onoff) {
   u_long dd = onoff;
   int ret = ioctlsocket(fd,FIONBIO,&dd);
   if (ret<0)
-    message("ioctlsocket(%d,FIONBIO,%d) failed: %d\n",fd,ossockerrno(),onoff);
+    message("ioctlsocket(%d,FIONBIO,%d) failed: %d\n",fd,onoff,ossockerrno());
 }
 #endif
 
