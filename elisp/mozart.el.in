@@ -471,18 +471,18 @@ Used as fallback if the environment variable OZHOME is not set."
   (setenv "OZ_PI" "1")
   (if (and *OZ_PATH* (not (equal *OZ_PATH* "")))
       (setenv "PATH" (concat *OZ_PATH* path-separator (getenv "PATH"))))
-  (when *OZHOME*
+  (when (or *OZHOME* *oz-ignore-env*)
     (setenv "OZHOME" *OZHOME*)
     (setenv "OZ_HOME" *OZHOME*))
-  (when *OZLOAD*
+  (when (or *OZLOAD* *oz-ignore-env*)
     (setenv "OZ_SEARCH_LOAD" *OZLOAD*)
     (setenv "OZ_LOAD" *OZLOAD*)
     (setenv "OZLOAD" *OZLOAD*))
-  (when *OZPATH*
+  (when (or *OZPATH* *oz-ignore-env*)
     (setenv "OZ_SEARCH_PATH" *OZPATH*)
     (setenv "OZ_PATH" *OZPATH*)
     (setenv "OZPATH" *OZPATH*))
-  (when *OZINIT*
+  (when (or *OZINIT* *oz-ignore-env*)
     (setenv "OZINIT" *OZINIT*))
   (setenv "OZ_TRACE_LOAD" *OZ_TRACE_LOAD*)
   (setenv "OZ_TRACE_MODULE" *OZ_TRACE_MODULE*)
@@ -498,7 +498,7 @@ Used as fallback if the environment variable OZHOME is not set."
 	      (if p
 		  (concat *OZ_DYLD_LIBRARY_PATH* path-separator p)
 		*OZ_DYLD_LIBRARY_PATH*))))
-  (when *OZEMULATOR*
+  (when (or *OZEMULATOR* *oz-ignore-env*)
     (setenv "OZEMULATOR"
 	    (and (not (equal *OZEMULATOR* "")) *OZEMULATOR*))))
 
@@ -553,6 +553,8 @@ Used as fallback if the environment variable OZHOME is not set."
   (oz-elisp-snapshot-revert (cadr *oz-snapshot*))
   (setq *oz-snapshot* nil))
 
+(defvar *oz-ignore-env* nil)
+
 (defun oz-profile-install (profile)
   (let* ((name  (car  profile))
 	 (type  (cadr profile))
@@ -567,6 +569,7 @@ Used as fallback if the environment variable OZHOME is not set."
 	 (OZEMULATOR        (cadr (assq 'OZEMULATOR          alist)))
 	 (OZINIT            (cadr (assq 'OZINIT              alist)))
 	 (PATH              (cadr (assq 'PATH                alist)))
+	 (ignore-env              (assq 'ignore-env          alist))
 	 (change-title            (assq 'change-title        alist))
 	 (frame-title             (assq 'frame-title         alist))
 	 (prepend-line            (assq 'prepend-line        alist))
@@ -583,7 +586,9 @@ Used as fallback if the environment variable OZHOME is not set."
 	 (application-command     (assq 'application-command alist))
 	 (engine-program          (assq 'engine-program      alist))
 	 )
-    (cond ((eq type 'default))
+    (cond ((eq type 'default)
+	   (or ignore-env (setq ignore-env '(ignore-env nil)))
+	   )
 	  ((eq type 'installed)
 	   (or OZHOME (error "No OZHOME in profile"))
 	   (or OZLOAD (setq OZLOAD '(user-cache global-cache)))
@@ -591,8 +596,10 @@ Used as fallback if the environment variable OZHOME is not set."
 	   (or LD_LIBRARY_PATH (setq LD_LIBRARY_PATH '(user global)))
 	   (or DYLD_LIBRARY_PATH (setq DYLD_LIBRARY_PATH LD_LIBRARY_PATH))
 	   (or PATH (setq PATH '(user global)))
+	   (or ignore-env (setq ignore-env '(ignore-env t)))
 	   )
 	  ((eq type 'build)
+	   (or ignore-env (setq ignore-env '(ignore-env t)))
 	   (or build-dir (error "No build-dir in profile"))
 	   (or OZLOAD (setq OZLOAD
 			    `((prefix "x-oz://system/"
@@ -643,7 +650,8 @@ Used as fallback if the environment variable OZHOME is not set."
 	   )
 	  (t (error "Unkown profile type: %s" type)))
 
-    (if OZHOME (setq *OZHOME* OZHOME))
+    (setq *oz-ignore-env* (cadr ignore-env))
+    (if (or OZHOME *oz-ignore-env*) (setq *OZHOME* OZHOME))
     (if *OZHOME* (setq *OZHOME* (oz-simple-directory *OZHOME*)))
     (setq *OZINIT*
 	  (or OZINIT
@@ -1336,6 +1344,11 @@ feed that many preceding paragraphs as well as the current paragraph."
   (let ((region (oz-paragraph-region arg)))
     (oz-feed-region (car region) (cdr region))))
 
+(if (memq system-type '(ms-dos windows-nt))
+    (defun oz-encode-string (s)
+      (encode-code-string string buffer-file-coding-system))
+  (defun oz-encode-string (s) s))
+
 (defun oz-send-string (string &optional system)
   "Feed STRING to the Oz Compiler, restarting Mozart if it died.
 If SYSTEM is non-nil, it is a command for the system and is to be
@@ -1360,8 +1373,8 @@ compiled using a default set of switches."
 	   (concat "\\localSwitches\n"
 		   "\\switch +threadedqueries -verbose "
 		   "-expression -runwithdebugger\n"
-		   string))
-	(comint-send-string proc string))
+		   (oz-encode-string string)))
+	(comint-send-string proc (oz-encode-string string)))
       (comint-send-string proc "\n")
       (comint-send-string proc eof))))
 
