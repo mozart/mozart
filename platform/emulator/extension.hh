@@ -45,6 +45,8 @@ int oz_newUniqueId();
 enum OZ_Registered_Extension_Id {
   OZ_E_USER,
   OZ_E_BITARRAY,
+  OZ_E_BITSTRING,
+  OZ_E_BYTESTRING,
   OZ_E_LAST,
 };
 
@@ -101,5 +103,5 @@ public:
 
 typedef OZ_Term (*oz_unmarshalProcType)(MsgBuffer*);
 OZ_Term oz_extension_unmarshal(int type,MsgBuffer*);
-void oz_registerConstExtension(int type, oz_unmarshalProcType f);
+void oz_registerExtension(int type, oz_unmarshalProcType f);
 #endif

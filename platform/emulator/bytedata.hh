@@ -97,36 +97,35 @@ public:
 // BitString
 // -------------------------------------------------------------------
 
-class BitString: public ConstExtension, public BitData {
+class BitString: public Extension, public BitData {
 protected:
-  static int type_id;
   friend Bool oz_isBitString(TaggedRef);
   friend void BitString_init();
 public:
-  static void init();
-  virtual int getTypeV() { return type_id; }
-  virtual Bool equalV(OZ_Term);
-  virtual Bool marshalV(MsgBuffer*);
+  virtual int getIdV() { return OZ_E_BITSTRING; }
+  virtual OZ_Term typeV();
+  virtual OZ_Return eqV(OZ_Term);
+  virtual int marshalV(MsgBuffer*);
   virtual void printStreamV(ostream &out,int depth = 10);
   virtual void printLongStreamV(ostream &out,
                                 int depth=10,int offset=0);
-  virtual ConstExtension* gcV() { return clone(); }
+  virtual Extension* gcV() { return clone(); }
   BitString operator=(const BitString&);
-  BitString() : ConstExtension() {}
-  BitString(int w) : ConstExtension(), BitData(w) {}
+  BitString() : Extension() {}
+  BitString(int w) : Extension(), BitData(w) {}
   BitString *clone();
 };
 
 inline Bool oz_isBitString(TaggedRef term)
 {
-  return oz_isConstExtension(term) &&
-    tagged2ConstExtension(term)->getTypeV()==BitString::type_id;
+  return oz_isExtension(term) &&
+    tagged2Extension(term)->getIdV()==OZ_E_BITSTRING;
 }
 
 inline BitString *tagged2BitString(TaggedRef term)
 {
   Assert(oz_isBitString(term));
-  return (BitString *) tagged2ConstExtension(term);
+  return (BitString *) tagged2Extension(term);
 }
 
 #define oz_declareBitStringIN(ARG,VAR)          \
@@ -179,36 +178,35 @@ public:
 // ByteString
 // -------------------------------------------------------------------
 
-class ByteString: public ConstExtension, public ByteData {
+class ByteString: public Extension, public ByteData {
 protected:
-  static int type_id;
   friend Bool oz_isByteString(TaggedRef);
   friend void ByteString_init();
 public:
-  static void init();
-  virtual int getTypeV() { return type_id; }
-  virtual Bool equalV(OZ_Term);
-  virtual Bool marshalV(MsgBuffer*);
+  virtual int getIdV() { return OZ_E_BYTESTRING; }
+  virtual OZ_Term typeV();
+  virtual OZ_Return eqV(OZ_Term);
+  virtual int marshalV(MsgBuffer*);
   virtual void printStreamV(ostream &out,int depth = 10);
   virtual void printLongStreamV(ostream &out,
                                 int depth=10,int offset=0);
-  virtual ConstExtension* gcV() { return clone(); }
+  virtual Extension* gcV() { return clone(); }
   ByteString operator=(const ByteString&);
-  ByteString() : ConstExtension() {}
-  ByteString(int w) : ConstExtension(), ByteData(w) {}
+  ByteString() : Extension() {}
+  ByteString(int w) : Extension(), ByteData(w) {}
   ByteString *clone();
 };
 
 inline Bool oz_isByteString(TaggedRef term)
 {
-  return oz_isConstExtension(term) &&
-    tagged2ConstExtension(term)->getTypeV()==ByteString::type_id;
+  return oz_isExtension(term) &&
+    tagged2Extension(term)->getIdV()==OZ_E_BYTESTRING;
 }
 
 inline ByteString *tagged2ByteString(TaggedRef term)
 {
   Assert(oz_isByteString(term));
-  return (ByteString *) tagged2ConstExtension(term);
+  return (ByteString *) tagged2Extension(term);
 }
 
 #define oz_declareByteStringIN(ARG,VAR)         \

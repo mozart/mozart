@@ -59,7 +59,8 @@ MODSPECS= \
         PID URL FDB FSB System Finalize CTB \
         CompilerSupport Profile \
         Debug Fault Foreign Browser Misc Distribution \
-        Builtins VirtualSite
+        Builtins VirtualSite \
+        BitString ByteString
 
 MODINTERS = $(MODSPECS:%=mod%-if.cc)
 
@@ -93,7 +94,8 @@ STORESRCS=\
         dictionary.cc extension.cc bitarray.cc\
         variable.cc susplist.cc genvar.cc \
         simplevar.cc future.cc \
-        fdgenvar.cc
+        fdgenvar.cc \
+        bytedata.cc
 
 RUNSRCS=\
         am.cc indexing.cc taskstk.cc codearea.cc lps.cc thread.cc\

@@ -247,6 +247,11 @@ void marshalString(const char *s, MsgBuffer *bs)
 }
 
 #ifndef TEXT2PICKLE
+BYTE unmarshalByte(MsgBuffer *bs)
+{
+  return bs->get();
+}
+
 int unmarshalNumber(MsgBuffer *bs)
 {
   unsigned int ret = 0, shft = 0;
