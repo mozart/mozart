@@ -473,7 +473,15 @@ the GDB commands `cd DIR' and `directory'."
 (defun oz-create-buffer (buf)
   (save-excursion
     (set-buffer (get-buffer-create buf))
-    (oz-mode)
+
+;; enter oz-mode but no highlighting !
+    (kill-all-local-variables)
+    (use-local-map oz-mode-map)
+    (setq mode-name "Oz-View")
+    (setq major-mode 'oz-mode)
+    (if lucid-emacs
+	(set-buffer-menubar (append current-menubar oz-menubar)))
+
     (delete-region (point-min) (point-max))))
 
 (defun oz-doc ()
