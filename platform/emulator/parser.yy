@@ -208,8 +208,7 @@ void xy_setParserExpect() {
   int i;
 }
 
-%token HELP SWITCH SHOWSWITCHES PUSHSWITCHES POPSWITCHES
-%token FEED THREADEDFEED CORE OZMACHINE
+%token SWITCH SHOWSWITCHES SAVESWITCHES PUSHSWITCHES POPSWITCHES
 %token SWITCHNAME FILENAME
 %token OZATOM ATOM_LABEL OZFLOAT OZINT AMPER DOTINT STRING
 %token VARIABLE VARIABLE_LABEL
@@ -398,24 +397,16 @@ queries1        : directive queries
                   { $$ = nilAtom; }
                 ;
 
-directive       : HELP
-                  { $$ = newCTerm("dirHelp"); }
-                | SWITCH switchList
+directive       : SWITCH switchList
                   { $$ = newCTerm("dirSwitch",$2); }
                 | SHOWSWITCHES
                   { $$ = newCTerm("dirShowSwitches"); }
+                | LOCALSWITCHES
+                  { $$ = newCTerm("dirLocalSwitches"); }
                 | PUSHSWITCHES
                   { $$ = newCTerm("dirPushSwitches"); }
                 | POPSWITCHES
                   { $$ = newCTerm("dirPopSwitches"); }
-                | FEED FILENAME
-                  { $$ = newCTerm("dirFeed",newCTerm(xyhelpFileName)); }
-                | THREADEDFEED FILENAME
-                  { $$ = newCTerm("dirThreadedFeed",newCTerm(xyhelpFileName)); }
-                | CORE FILENAME
-                  { $$ = newCTerm("dirCore",newCTerm(xyhelpFileName)); }
-                | OZMACHINE FILENAME
-                  { $$ = newCTerm("dirMachine",newCTerm(xyhelpFileName)); }
                 ;
 
 switchList      : /* empty */
