@@ -74,7 +74,7 @@ define(opAction,
         $1,Count,marshalNumber((unsigned int)getPosIntArg(PC++),bs);,
         $1,ArityAndIsTail,marshalNumber((unsigned int)getPosIntArg(PC++),bs);,
         $1,Dummy,marshalNumber((unsigned int)getPosIntArg(PC++),bs);,
-        $1,PredicateRef,marshalPredicateRef(m,(AbstractionEntry*)getAdressArg(PC++),bs);,
+        $1,ProcedureRef,marshalProcedureRef(m,(AbstractionEntry*)getAdressArg(PC++),bs);,
         $1,PredId,marshalPredId(m,(PrTabEntry*)getAdressArg(PC++),bs);ozValuesCnt--;,
         $1,HashTableRef,marshalHashTableRef(m,instrstart-start,(IHashTable *)getAdressArg(PC++),bs);ozValuesCnt--;,
         $1,RecordArity,marshalRecordArity(m,(SRecordArity) getAdressArg(PC++),bs);ozValuesCnt--;,
@@ -92,7 +92,7 @@ void marshalBuiltin(Marshaler *m, Builtin *entry)
 
 //
 inline static
-void marshalPredicateRef(Marshaler *m,
+void marshalProcedureRef(Marshaler *m,
 			 AbstractionEntry *entry, MsgBuffer *bs)
 {
   Bool copyable = entry && entry->copyable;
@@ -275,7 +275,7 @@ Bool newMarshalCode(GenTraverser *gt, void *arg)
     Opcode op = CodeArea::getOpcode(PC++);
 
     //
-    if (op==GENFASTCALL || op==CALLPROCEDUREREF) {
+    if (op==CALLPROCEDUREREF) {
       op = (getNumberArg(PC+1) & 1)==0 ? FASTCALL : FASTTAILCALL;
     }
 
@@ -349,7 +349,7 @@ define(opAction,
         $1,Count,PC=unmarshalNum(PC,bs);,
         $1,ArityAndIsTail,PC=unmarshalNum(PC,bs);,
         $1,Dummy,PC=unmarshalNum(PC,bs);,
-        $1,PredicateRef,PC=unmarshalPredicateRef(b,PC,bs,code);,
+        $1,ProcedureRef,PC=unmarshalProcedureRef(b,PC,bs,code);,
         $1,PredId,PC=unmarshalPredId(b,PC,lastPC,bs);ozValuesCnt--;,
         $1,HashTableRef,PC=unmarshalHashTableRef(b,PC,bs);ozValuesCnt--;,
         $1,RecordArity,PC=unmarshalRecordArity(b,PC,bs);ozValuesCnt--;,
@@ -944,7 +944,7 @@ ProgramCounter unmarshalHashTableRef(Builder *b, ProgramCounter pc,
 
 //
 static
-ProgramCounter unmarshalPredicateRef(Builder *b, ProgramCounter pc,
+ProgramCounter unmarshalProcedureRef(Builder *b, ProgramCounter pc,
 				     MsgBuffer *bs, CodeArea *code)
 {
   AbstractionEntry *entry = 0;
@@ -983,14 +983,13 @@ Bool unmarshalCode(MsgBuffer *bs, Builder *b,
   while (ozValuesCnt > 0) {
     lastPC = PC;
     Opcode op = (Opcode) bs->get();
-    Assert(op != GENCALL);
     if (op == ENDOFFILE) {
       done = OK;
       break;
     }
 
     //
-    Assert(op != GENFASTCALL);
+    Assert(op != CALLPROCEDUREREF);
     if (PC)
       PC = CodeArea::writeOpcode(op,PC);
 
