@@ -24,9 +24,7 @@
 %%
 
 local
-   BisonModule
    MAXSHORT = 32767
-   L = {NewLock}
 in
    fun {Bison NSymbols Grammar VerboseFile Rep}
       if Grammar.4 == nil then   % no rules
@@ -36,17 +34,12 @@ in
 		    msg: ('too many symbols (tokens plus nonterminals);'#
 			  'maximum allowed is '#MAXSHORT))}
       else
-	 lock L then
-	    if {IsFree BisonModule} then
-	       T = {Thread.this}
-	       RaiseOnBlock = {Debug.getRaiseOnBlock T}
-	    in
-	       {Debug.setRaiseOnBlock T false}
-	       BisonModule =
-	       {Foreign.load 'www.ps.uni-sb.de/ozhome/share/gump/ozbison.dl'}
-	       {Debug.setRaiseOnBlock T RaiseOnBlock}
-	    end
-	 end
+	 T = {Thread.this}
+	 RaiseOnBlock = {Debug.getRaiseOnBlock T}
+      in
+	 {Debug.setRaiseOnBlock T false}
+	 {Wait BisonModule.generate}
+	 {Debug.setRaiseOnBlock T RaiseOnBlock}
 	 {BisonModule.generate Grammar VerboseFile}
       end
    end
