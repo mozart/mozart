@@ -872,6 +872,7 @@ the GDB commands `cd DIR' and `directory'."
     (define-key map "\C-c\C-i"    'oz-feed-file)
     (define-key map "\C-c\C-m"    'oz-toggle-emulator))
 
+  (define-key map "\C-c\C-e"    'oz-toggle-emulator)
   (define-key map "\C-c\C-f"    'oz-feed-file)
   (define-key map "\C-c\C-n"    'oz-new-buffer)
   (define-key map "\C-c\C-l"    'oz-fontify)
