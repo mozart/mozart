@@ -1,10 +1,28 @@
-%%%  Programming Systems Lab, DFKI Saarbruecken,
-%%%  Stuhlsatzenhausweg 3, D-66123 Saarbruecken, Phone (+49) 681 302-5312
-%%%  Author: all
-%%%  Email: wuertz@dfki.uni-sb.de
-%%%  Last modified: $Date$ by $Author$
-%%%  Version: $Revision$
-
+%%%
+%%% Authors:
+%%%   Joerg Wuertz (wuertz@dfki.de)
+%%%
+%%% Contributors:
+%%%   Tobias Mueller (tmueller@ps.uni-sb.de)
+%%%
+%%% Copyright:
+%%%   Joerg Wuertz, 1996
+%%%   Tobias Mueller, 1998
+%%%
+%%% Last change:
+%%%   $Date$ by $Author$
+%%%   $Revision$
+%%%
+%%% This file is part of Mozart, an implementation
+%%% of Oz 3
+%%%    http://mozart.ps.uni-sb.de
+%%%
+%%% See the file "LICENSE" or
+%%%    http://mozart.ps.uni-sb.de/LICENSE.html
+%%% for information on usage and redistribution
+%%% of this file, and for a DISCLAIMER OF ALL
+%%% WARRANTIES.
+%%%
 
 %%%
 %%% Load the application

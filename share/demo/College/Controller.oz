@@ -17,8 +17,6 @@ in
                                                       {Application.exit 0}
                                                    end)}
 
-      %!FSel = {New TkTools.file init(title:'Select file')}
-
       Menu = {New Tk.frame
               tkInit(parent:TopWindow relief:raised borderwidth:2)}
       {Tk.send pack(Menu side:top fill:x)}
