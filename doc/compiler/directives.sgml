@@ -71,12 +71,8 @@
 	  substitutes itself by the contents of the referenced file.
       </List>
     <Para class=apropos><Title/Macro Names/
-      The compiler stores a set of so-called <Def/macro names/, used to
-      control conditional compilation.  Macro names have the same syntax
-      as Oz variables (but that is about all they have in common).
-      Initially, this set consists of macro names describing the Oz
-      version number, &eg;, when running Oz&nbsp;3.0.10, the variables
-      <<Oz_3>>, <<Oz_3_0>>, and <<Oz_3_0_10>> are macro names.
+      Macro names have the same syntax as Oz variables, but note that there
+      is absolutely no other connection between macro names and Oz variables.
       <List>
 	<Entry><<\define>> ?={variable}
 	<Item>
