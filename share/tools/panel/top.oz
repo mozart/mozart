@@ -249,7 +249,8 @@ in
 				 action:  self # about
 				 feature: about)
 			 separator
-			 command(label:   'Clear'
+			 command(label:   'Reset'
+				 key:     ctrl(r)
 				 action:  self # clear)
 			 separator
 			 command(label:   'Shutdown System...'
@@ -257,7 +258,8 @@ in
 				 feature: shutdown)
 			 separator
 			 command(label:   'Close'
-				 action:  self # tkClose)])
+				 action:  self # tkClose
+				 key:     ctrl(x))])
 		      menubutton(text:    ' Options '
 				 feature: options
 				 menu:
