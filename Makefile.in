@@ -264,8 +264,11 @@ endif
 wrapper_files: $(GEN_TARGETS) $(CCMPS)
 
 doc:
-	$(OZDOC) --type=html-color --in $(SRCDIR)/doc/gtk.sgml \
+	$(OZDOC) --type=html-stylesheets --stylesheet=ozdoc.css \
+	--in $(SRCDIR)/doc/gtk.sgml \
 	--out=doc-install
+	cp $(SRCDIR)/doc/ozdoc.css doc-install
+	cp $(SRCDIR)/doc/page.gif doc-install
 
 #---------------------------------------------------------------------
 # Installing
