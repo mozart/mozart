@@ -39,7 +39,7 @@ defaults(lib:
 	    ['Module' 'Resolve' 'OS' 'Property' 'Pickle' 'System']
 
 	 tools:
-	    ['Panel' 'Browser' 'Explorer' 'CompilerPanel'
+	    ['OPI' 'Panel' 'Browser' 'Explorer' 'CompilerPanel'
 	     'Emacs' 'Ozcar' 'Profiler' 'Gump' 'GumpScanner'
 	     'GumpParser' 'ProductionTemplates' 'Inspector']
 	)
