@@ -249,7 +249,7 @@ BYTE unmarshalByte(MsgBuffer *bs)
   return bs->get();
 }
 
-int unmarshalNumber(MsgBuffer *bs)
+unsigned int unmarshalNumber(MsgBuffer *bs)
 {
   unsigned int ret = 0, shft = 0;
   unsigned int c = bs->get();
@@ -259,7 +259,7 @@ int unmarshalNumber(MsgBuffer *bs)
     shft += 7;
   }
   ret |= (c<<shft);
-  return (int) ret;
+  return ret;
 }
 #endif
 

@@ -157,7 +157,7 @@ const struct {MarshalTag tag; char *name;} dif_names[] = {
 class MsgBuffer;
 
 void marshalNumber(unsigned int i, MsgBuffer *bs);
-int unmarshalNumber(MsgBuffer *bs);
+unsigned int unmarshalNumber(MsgBuffer *bs);
 BYTE unmarshalByte(MsgBuffer *bs);
 void marshalCode(ProgramCounter,MsgBuffer*);
 void marshalLabel(ProgramCounter,int,MsgBuffer*);
