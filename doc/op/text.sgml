@@ -49,7 +49,7 @@ provides methods for buffered input and output.
 <index/Expand/
 <figure class=Program id=prog-opprog-expandi>
 <caption/The Incremental <<Expand>> Procedure/
-<<<
+<chunk class=anonymous><title/Expand2/
 local 
    fun {Insert N Is}
       if N>0 then {Insert N-1 & |Is} else Is end
@@ -85,7 +85,7 @@ in
                           flags: [write create truncate])}}
    end
 end
->>>
+</chunk>
 </figure>
 
 The procedure <<Scan>> applies the input file object <<IF>> to the message
@@ -96,5 +96,31 @@ file (without a newline character).
 The expansion of TAB characters is done in the function <<ScanLine>> as
 before. The expanded lines are written with the <<putS>> method.
 </section>
+
+
+<![ %EXTRA; [
+<section><title/NONE/
+<p>
+<chunk><title/EXAMPLES/
+%%%
+%%% Chapter: Input and Output of Text
+%%%
+
+%%
+%% Expanding TAB Characters Revisited
+%%
+
+declare
+<chunk.ref/Expand2/
+
+
+
+
+
+</chunk>
+]]>
+
+
+
 </chapter>
 

@@ -13,3 +13,22 @@ HTMLEXTRASUPPORTFILES = \
 OZDOCHTMLFLAGS = --autoindex
 
 include ../Makefile.common
+
+CHUNKFILES = \
+	OpenProgramming.oz
+
+all:: $(CHUNKFILES)
+quick:: $(CHUNKFILES)
+
+clean:: 
+	-rm -f $(CHUNKFILES)
+
+OpenProgramming.oz: $(MAIN) $(SGMLSRCS)
+	$(DOCIFY) --in=$< --type=chunk --out=EXAMPLES --include=EXTRA > $@ 
+
+install:: $(CHUNKFILES:%=$(DOCDIR)/%)
+
+$(DOCDIR)/%.oz: $(DOCDIR)
+
+$(DOCDIR)/%.oz: %.oz
+	$(INSTALL_FILE) $< $@
