@@ -30,30 +30,7 @@ dnl *****************************************************************
 dnl INITIALIZE
 dnl *****************************************************************
 
-dnl This will check that we are in the Oz directory and initiate
 AC_INIT(unixMain.cc)
-
-
-dnl *****************************************************************
-dnl windows cross compilation
-dnl *****************************************************************
-
-case "$target" in
-   NONE) 
-   ;;
-   i386-mingw32)
-	platform=win32-i486
-   ;;
-
-   *)
-	AC_MSG_ERROR("cannot cross-compile for target $target")
-    ;;
-esac
-
-AC_SUBST(EXTRALDFLAGS)
-AC_SUBST(CPPFLAGS)
-
-dnl ******************************************************************
 OZ_INIT
 
 OZ_CC_CHOOSE
@@ -61,17 +38,11 @@ OZ_CXX_CHOOSE
 
 AC_PROG_LN_S
 
-dnl *****************************************************************
-dnl platform
-dnl *****************************************************************
-
-OZ_PATH_PROG(PLATFORMSCRIPT, ozplatform)
-
-: ${platform=`$PLATFORMSCRIPT`}
-AC_SUBST(platform)
+# PLATFORM is defined by OZ_INIT
+: ${platform=$PLATFORM}
 
 case "$platform" in
-   win32-i486)
+    win32*)
 	OZ_CXX_OPTIONS(-mno-cygwin,oz_a)
 	LDFLAGS="$oz_a $LDFLAGS"
 	CPPFLAGS="$oz_a $CPPFLAGS"
@@ -88,15 +59,17 @@ case "$platform" in
 	  else AC_MSG_ERROR(required DLL $dll not found)
 	  fi
 	done
-   ;;
+    ;;
 
-   *)
+    *)
 	WINDLLDIR=""
 	INSTALLWINDLLS=""
 	SRCS="unixMain.cc"
     ;;
 esac
 
+AC_SUBST(EXTRALDFLAGS)
+AC_SUBST(CPPFLAGS)
 AC_SUBST(SRCS)
 AC_SUBST(WINDLLDIR)
 AC_SUBST(INSTALLWINDLLS)
