@@ -101,7 +101,7 @@ public:
   static int totalSize; /* total size of code allocated in bytes */
 
   /* read from file and return start in "pc" */
-  CodeArea(FILE *fd, int size, ProgramCounter &pc);
+  CodeArea(CompStream *fd, int size, ProgramCounter &pc);
 
   /* with one argument it means that we need the code till the "query"  */
   static void display (ProgramCounter from, int size = 1, FILE* = stderr);
@@ -112,7 +112,7 @@ public:
 
 
   /* load statements from "codeFile" until "ENDOFFILE", acknowledge if ok*/
-  static Bool load(FILE *fd, ProgramCounter &newPC);
+  static Bool load(CompStream *fd, ProgramCounter &newPC);
 
   static unsigned int getShort(ProgramCounter PC) { return (*PC); }
   static unsigned int getWord(ProgramCounter PC)  { return getShort(PC);}
@@ -133,6 +133,8 @@ public:
 
 #ifdef RECINSTRFETCH  
   static void writeInstr(void);
+#else
+  static void writeInstr(void) {};
 #endif
 
 private:
@@ -144,23 +146,23 @@ private:
 #endif
 
 // functions
-  static int scanChar (FILE *fd);
-  static char *scanString (FILE *fd);
-  static int scanUInt (FILE *fd);
-  void scanVariablename (FILE *fd);
-  void scanLiteral(FILE *fd);
-  TaggedRef parseLiteral(FILE *fd);
-  void scanRegister (FILE *fd, int &regAdd);
-  void scanRegisterIndex (FILE *fd);
-  void scanArity (FILE *fd);
-  void scanNumber (FILE *fd);
-  void scanPosint (FILE *fd);
-  void scanPredicateRef(FILE *fd);
-  void scanLabel (FILE *fd, ProgramCounter start);
-  void scanRecordArity (FILE *fd);
-  TaggedRef parseRecordArity (FILE *fd, int length);
-  void scanBuiltinname(FILE *fd);
-  BuiltinTabEntry *scanFun(FILE *fd);
+  static int scanChar (CompStream *fd);
+  static char *scanString (CompStream *fd);
+  static int scanUInt (CompStream *fd);
+  void scanVariablename (CompStream *fd);
+  void scanLiteral(CompStream *fd);
+  TaggedRef parseLiteral(CompStream *fd);
+  void scanRegister (CompStream *fd, int &regAdd);
+  void scanRegisterIndex (CompStream *fd);
+  void scanArity (CompStream *fd);
+  void scanNumber (CompStream *fd);
+  void scanPosint (CompStream *fd);
+  void scanPredicateRef(CompStream *fd);
+  void scanLabel (CompStream *fd, ProgramCounter start);
+  void scanRecordArity (CompStream *fd);
+  TaggedRef parseRecordArity (CompStream *fd, int length);
+  void scanBuiltinname(CompStream *fd);
+  BuiltinTabEntry *scanFun(CompStream *fd);
 
   static ProgramCounter writeWord(ByteCode c, ProgramCounter ptr)  
   { 
