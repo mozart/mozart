@@ -6,6 +6,7 @@ CPPFLAGS	= -I../../Emulator @CPPFLAGS@
 CXXFLAGS	= $(CFLAGS)
 LDFLAGS		= @LDFLAGS@
 LIBS		= @LIBS@
+OZBATCH		= @OZBATCH@
 
 INSTALL		= @INSTALL@
 INSTALL_DIR	= $(INSTALL) -m 775 -d
@@ -34,4 +35,4 @@ gdbm.so: gdbm.o
 	$(DYNLD) -o gdbm.so gdbm.o $(LDFLAGS) $(LIBS)
 
 gdbm.ozc: gdbm.oz
-	ozbatch -c gdbm.oz
+	$(OZBATCH) -c gdbm.oz
