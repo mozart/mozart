@@ -5,6 +5,7 @@
  *
  *  Contributors:
  *    Michael Mehl (mehl@dfki.de)
+ *    Denys Duchier (duchier@ps.uni-sb.de)
  *
  *  Copyright:
  *    Organization or Person (Year(s))
@@ -24,6 +25,10 @@
  *  WARRANTIES.
  *
  */
+
+#ifdef LINKED_QUEUES
+#include "thr_lqueue.cc"
+#else
 
 #if defined(INTERFACE) && !defined(PEANUTS)
 #pragma implementation "thr_queue.hh"
@@ -98,3 +103,5 @@ void ThreadQueueImpl::deleteThread(Thread *th)
     INC(ahead);
   }
 }
+
+#endif /* !LINKED_QUEUES */
