@@ -140,6 +140,13 @@
 	<Item>
 	  Return the base URL relative to which the <<require>> clause of
 	  computed functors is resolved.
+	<Entry><<setGumpDirectory(?+{VU})>>
+	<Item>
+	  Set the directory in which Gump output files are created.
+	  Can be relative.  <<unit>> means the current working directory.
+	<Entry><<getGumpDirectory(??{VU})>>
+	<Item>
+	  Return the directory in which Gump output files are created.
       </List>
     <Para class=apropos><Title/The Environment/
       <List>
