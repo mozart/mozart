@@ -370,11 +370,10 @@ public:
 
   Bool isStableSolve(SolveActor *sa);
 
-  OZ_Term dbgGetLoc();
+  OZ_Term dbgGetLoc(Board*);
 };
 
 extern AM am;
-
 
 #include "cpstack.hh"
 

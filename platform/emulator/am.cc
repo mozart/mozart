@@ -1553,10 +1553,9 @@ int AM::wakeUser()
 
 
 
-OZ_Term AM::dbgGetLoc() {
+OZ_Term AM::dbgGetLoc(Board *bb) {
   if (!ozconf.moreInfo) return NameUnit;
   OZ_Term out = nil();
-  Board *bb = currentBoard;
   while (!bb->isRoot()) {
     if (bb->isSolve()) {
       out = cons(OZ_atom("space"),out);
