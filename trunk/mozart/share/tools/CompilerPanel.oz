@@ -50,7 +50,9 @@ import
    Emacs.{condSend}
 
 export
-   panel: CompilerPanel
+   panel:           CompilerPanel
+   
+   'CompilerPanel': CompilerPanel
 
 body
 
