@@ -42,6 +42,7 @@ AC_DEFUN(OZ_PATH_PROG, [
     dummy_PATH=`echo $dummy_PATH | sed -e "s/:\.:/:$dummy_PWD:/g"`
     dummy_PATH=`echo $dummy_PATH | sed -e "s/:.\//:$dummy_PWD\//g"`
     AC_PATH_PROG($1,$2,,$dummy_PATH:$SRCTOP/share/bin:$SRCTOP)
+    $1=`echo $$1 | sed -e "s|//|/|g"`
     if test ! -n "$$1"
     then
 	$1=undefined
