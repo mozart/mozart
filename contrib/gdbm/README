@@ -20,8 +20,8 @@ ozmkmf -DINCS='-I/opt/gnu/include' -DLIBS='/opt/gnu/lib/libgdbm.a -lc'
 
 			    INSTANTIATION
 
-The GDBM module must be instantiated with Standard.
-declare GDBM = {{Load URL_of_GDBM_component} Standard}
+The GDBM module must be instantiated with Foreign.
+declare GDBM = {{Load URL_of_GDBM_component} Foreign}
 URL_of_GDBM_component might be:
 	file:$(OZHOME)/tool/gdbm/gdbm.ozc
 where $(OZHOME) might be:
