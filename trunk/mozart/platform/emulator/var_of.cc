@@ -138,89 +138,84 @@ OZ_Return OzOFVariable::bind(TaggedRef *vPtr, TaggedRef term)
   //
   TaggedRef bindInRecordCaseHack = term;
   TaggedRef var                  = *vPtr;
-  TypeOfTerm tTag                = tagTypeOf(term);
-  //
-  switch (tTag) {
-  case TAG_LITERAL:
-    {
-      // Literals have no features:
-      if (getWidth()>0) return FALSE;
 
-      // Get local/global flag:
-      Bool vLoc=oz_isLocalVar(this);
-
-      // Bind OFSVar to the Literal:
-      if (vLoc) DoBind(vPtr, term);
-      else DoBindAndTrail(vPtr, term);
-
-      // Unify the labels:
-      if (!oz_unify(term,label)) return FALSE; // mm_u
-
-      // Update the OFS suspensions:
-      if (vLoc) addFeatOFSSuspensionList(var,suspList,makeTaggedNULL(),TRUE);
-
-      // Propagate changes to the suspensions:
-      // (this routine is actually OzVariable::propagate)
-      propagate(suspList, pc_cv_unif);
-
-      // Take care of linking suspensions
-      if (!vLoc) {
-	// Add a suspension to the OZ_VAR_OF if it is global:
-	// Suspension* susp=new Suspension(am.currentBoard);
-	// Assert(susp!=NULL);
-	// addSuspension(susp);
-      }
-      return TRUE;
+  if (oz_isLiteral(term)) {
+    // Literals have no features:
+    if (getWidth()>0) return FALSE;
+    
+    // Get local/global flag:
+    Bool vLoc=oz_isLocalVar(this);
+    
+    // Bind OFSVar to the Literal:
+    if (vLoc) DoBind(vPtr, term);
+    else DoBindAndTrail(vPtr, term);
+    
+    // Unify the labels:
+    if (!oz_unify(term,label)) return FALSE; // mm_u
+    
+    // Update the OFS suspensions:
+    if (vLoc) addFeatOFSSuspensionList(var,suspList,makeTaggedNULL(),TRUE);
+    
+    // Propagate changes to the suspensions:
+    // (this routine is actually OzVariable::propagate)
+    propagate(suspList, pc_cv_unif);
+    
+    // Take care of linking suspensions
+    if (!vLoc) {
+      // Add a suspension to the OZ_VAR_OF if it is global:
+      // Suspension* susp=new Suspension(am.currentBoard);
+      // Assert(susp!=NULL);
+      // addSuspension(susp);
     }
+    return TRUE;
+  }
 
-  case TAG_LTUPLE:
-    {
-      // Get the LTuple corresponding to term:
-      LTuple* termLTup=tagged2LTuple(term);
-
-      // Get local/global flag:
-      Bool vLoc=oz_isLocalVar(this);
-
-      // Check that var features are subset of {1,2}
-      TaggedRef arg1=getFeatureValue(makeTaggedSmallInt(1));
-      TaggedRef arg2=getFeatureValue(makeTaggedSmallInt(2));
-      if ((arg1!=makeTaggedNULL())+(arg2!=makeTaggedNULL()) != getWidth())
-	return FALSE;
-
-      // Take care of OFS suspensions:
-      if (vLoc && hasOFSSuspension(suspList)) {
-	if (getWidth()<2) {
-	  // Calculate feature or list of features 'flist' that are
-	  // in LTUPLE and not in OFS.
-	  TaggedRef flist=AtomNil;
-	  if (!arg2) flist=oz_cons(makeTaggedSmallInt(2),flist);
-	  if (!arg1) flist=oz_cons(makeTaggedSmallInt(1),flist);
-	  // Add the extra features to S_ofs suspensions:
-	  addFeatOFSSuspensionList(var,suspList,flist,TRUE);
-	} else {
-	  addFeatOFSSuspensionList(var,suspList,makeTaggedNULL(),TRUE);
-	}
+  if (oz_isLTuple(term)) {
+    // Get the LTuple corresponding to term:
+    LTuple* termLTup=tagged2LTuple(term);
+    
+    // Get local/global flag:
+    Bool vLoc=oz_isLocalVar(this);
+    
+    // Check that var features are subset of {1,2}
+    TaggedRef arg1=getFeatureValue(makeTaggedSmallInt(1));
+    TaggedRef arg2=getFeatureValue(makeTaggedSmallInt(2));
+    if ((arg1!=makeTaggedNULL())+(arg2!=makeTaggedNULL()) != getWidth())
+      return FALSE;
+    
+    // Take care of OFS suspensions:
+    if (vLoc && hasOFSSuspension(suspList)) {
+      if (getWidth()<2) {
+	// Calculate feature or list of features 'flist' that are
+	// in LTUPLE and not in OFS.
+	TaggedRef flist=AtomNil;
+	if (!arg2) flist=oz_cons(makeTaggedSmallInt(2),flist);
+	if (!arg1) flist=oz_cons(makeTaggedSmallInt(1),flist);
+	// Add the extra features to S_ofs suspensions:
+	addFeatOFSSuspensionList(var,suspList,flist,TRUE);
+      } else {
+	addFeatOFSSuspensionList(var,suspList,makeTaggedNULL(),TRUE);
       }
-
-      // Bind OFSVar to the LTuple:
-      if (vLoc) DoBind(vPtr, bindInRecordCaseHack);
-      else DoBindAndTrail(vPtr, bindInRecordCaseHack);
-
-      // Unify the labels:
-      if (!oz_unify(AtomCons,label)) return FALSE; // mm_u
-
-      // Unify corresponding feature values:
-      if (arg1 && !oz_unify(termLTup->getHead(),arg1)) return FALSE; // mm_u
-      if (arg2 && !oz_unify(termLTup->getTail(),arg2)) return FALSE; // mm_u
-
-      // Propagate changes to the suspensions:
-      // (this routine is actually OzVariable::propagate)
-      propagate(suspList, pc_cv_unif);
-      return TRUE;
     }
+    
+    // Bind OFSVar to the LTuple:
+    if (vLoc) DoBind(vPtr, bindInRecordCaseHack);
+    else DoBindAndTrail(vPtr, bindInRecordCaseHack);
+    
+    // Unify the labels:
+    if (!oz_unify(AtomCons,label)) return FALSE; // mm_u
+    
+    // Unify corresponding feature values:
+    if (arg1 && !oz_unify(termLTup->getHead(),arg1)) return FALSE; // mm_u
+    if (arg2 && !oz_unify(termLTup->getTail(),arg2)) return FALSE; // mm_u
+    
+    // Propagate changes to the suspensions:
+    // (this routine is actually OzVariable::propagate)
+    propagate(suspList, pc_cv_unif);
+    return TRUE;
+  }
 
-  case TAG_SRECORD:
-  {
+  if (oz_isSRecord(term)) {
     // For all features of var, term should contain the feature.
     // Unify the values of corresponding features.
     // If success, bind the var to the SRECORD (with local/global distinction).
@@ -291,9 +286,7 @@ OZ_Return OzOFVariable::bind(TaggedRef *vPtr, TaggedRef term)
     }
     return TRUE;
   }
-  default:
-    return FALSE;
-  }
+  return FALSE;
 }
 
 // (Arguments are dereferenced)

@@ -35,6 +35,7 @@
 #include "base.hh"
 #include "builtins.hh"
 #include "var_base.hh"
+#include "var_of.hh"
 #include "thr_int.hh"
 
 
@@ -56,25 +57,28 @@ OZ_BI_define(BIchunkWidth, 1,1)
 
   DEREF(ch, chPtr);
 
-  switch(tagTypeOf(ch)) {
-  case TAG_VAR:
+  if (oz_isVar(ch)) {
     oz_suspendOn(makeTaggedRef(chPtr));
-
-  case TAG_CONST:
-    if (!oz_isChunk(ch)) oz_typeError(0,"Chunk");
-    //
-    switch (tagged2Const(ch)->getType()) {
-    case Co_Class: OZ_RETURN(makeTaggedSmallInt(tagged2ObjectClass(ch)->getWidth()));
-    case Co_Object:OZ_RETURN(makeTaggedSmallInt(tagged2Object(ch)->getWidth()));
-    case Co_Chunk: OZ_RETURN(makeTaggedSmallInt(tagged2SChunk(ch)->getWidth()));
-    default:
-      // no features
-      OZ_RETURN(makeTaggedSmallInt (0));
-    }
-
-  default:
-    oz_typeError(0,"Chunk");
   }
+  if (oz_isChunk(ch)) {
+    int w;
+    switch (tagged2Const(ch)->getType()) {
+    case Co_Class: 
+      w = tagged2ObjectClass(ch)->getWidth();
+      break;
+    case Co_Object:
+      w = tagged2Object(ch)->getWidth();
+      break;
+    case Co_Chunk: 
+      w = tagged2SChunk(ch)->getWidth();
+      break;
+    default:
+      w = 0;
+      break;
+    }
+    OZ_RETURN(makeTaggedSmallInt(w));
+  }    
+  oz_typeError(0,"Chunk");
 } OZ_BI_end
 
 
@@ -82,19 +86,12 @@ OZ_BI_define(BIisRecordVarB,1,1)
 {
   TaggedRef t = OZ_in(0); 
   DEREF(t, tPtr);
-  switch (tagTypeOf(t)) {
-  case TAG_LTUPLE:
-  case TAG_LITERAL:
-  case TAG_SRECORD:
-    break;
-  case TAG_VAR:
-    if (tagged2Var(t)->getType()!=OZ_VAR_OF)
-      OZ_RETURN(oz_false());
-    break;
-  default:
+  if (oz_isLTuple(t) || oz_isLiteral(t) || oz_isSRecord(t) ||
+      isGenOFSVar(t)) {
+    OZ_RETURN(oz_true());
+  } else {
     OZ_RETURN(oz_false());
   }
-  OZ_RETURN(oz_true());
 } OZ_BI_end
 
 
@@ -137,25 +134,30 @@ OZ_BI_define(BIchunkArityBrowser,1,1)
 
   DEREF(ch, chPtr);
 
-  switch(tagTypeOf(ch)) {
-  case TAG_VAR:
+  if (oz_isVar(ch)) {
     oz_suspendOn(makeTaggedRef(chPtr));
-
-  case TAG_CONST: 
-    if (!oz_isChunk(ch)) oz_typeError(0,"Chunk");
-    //
-    switch (tagged2Const(ch)->getType()) {
-    case Co_Class : OZ_RETURN(tagged2ObjectClass(ch)->getArityList());
-    case Co_Object: OZ_RETURN(tagged2Object(ch)->getArityList());
-    case Co_Chunk : OZ_RETURN(tagged2SChunk(ch)->getArityList());
-    default:
-      // no features
-      OZ_RETURN(oz_nil());
-    }
-
-  default:
-    oz_typeError(0,"Chunk");
   }
+
+  if (oz_isChunk(ch)) {
+    TaggedRef as;
+    switch (tagged2Const(ch)->getType()) {
+    case Co_Class : 
+      as = tagged2ObjectClass(ch)->getArityList();
+      break;
+    case Co_Object: 
+      as = tagged2Object(ch)->getArityList();
+      break;
+    case Co_Chunk : 
+      as = tagged2SChunk(ch)->getArityList();
+      break;
+    default:
+      as = oz_nil();
+      break;
+    }
+    OZ_RETURN(as);
+  }
+
+  oz_typeError(0,"Chunk");
 } OZ_BI_end
 
 
