@@ -218,6 +218,8 @@ public:
   OZ_Boolean operator >= (const OZ_FSetConstraint &);
   OZ_Boolean operator != (const OZ_FSetConstraint &);
   OZ_Boolean operator == (const OZ_FSetConstraint &);
+  OZ_Boolean operator <= (const int);
+  OZ_Boolean operator >= (const int);
   char * toString() const;
 };
 

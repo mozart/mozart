@@ -126,6 +126,19 @@ public:
   }
 };
 
+class FSetSeqPropagator : public Propagator_VS {
+private:
+  static OZ_CFun header;
+
+public:
+  FSetSeqPropagator(OZ_Term s)
+    : Propagator_VS(s) { }
+  virtual OZ_Return propagate(void);
+  virtual OZ_CFun getHeaderFunc(void) const {
+    return header;
+  }
+};
+
 #endif /* __INTSETS_HH__ */
 
 

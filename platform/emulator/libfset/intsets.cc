@@ -524,4 +524,80 @@ OZ_Return FSetMaxNPropagator::propagate(void)
 
 
 //-----------------------------------------------------------------------------
+// seq propagator
+
+OZ_C_proc_begin(fsp_seq, 1)
+{
+  OZ_EXPECTED_TYPE(OZ_EM_VECT OZ_EM_FSET);
+
+  PropagatorExpect pe;
+
+  OZ_EXPECT(pe, 0, expectVectorFSetVarBounds);
+
+  return pe.impose(new FSetSeqPropagator(OZ_args[0]));
+}
+OZ_C_proc_end
+
+OZ_CFun FSetSeqPropagator::header = fsp_seq;
+
+OZ_Return FSetSeqPropagator::propagate(void)
+{
+  _OZ_DEBUGPRINTTHIS("in ");
+
+  DECL_DYN_ARRAY(OZ_FSetVar, vs, _vs_size);
+  PropagatorController_VS P(_vs_size, vs);
+  int i;
+
+  for (i = _vs_size; i--; )
+    vs[i].read(_vs[i]);
+
+  int glb_max = -1;
+  int lub_max = -1;
+
+  for (i = 0; i < _vs_size - 1; i += 1) {
+    int glb_max_tmp = max(vs[i]->getGlbSet().getMaxElem(),
+                          vs[i]->getLubSet().getMinElem());
+    glb_max = (glb_max_tmp == -1 ? glb_max : glb_max_tmp);
+
+    OZ_DEBUGPRINT(("%i", glb_max));
+
+    if (glb_max == -1) // there is no maximum
+      continue;
+
+    FailOnInvalid(*vs[i+1] >= (glb_max + 1));
+
+    OZ_DEBUGPRINT(("%i %s > %i\n", i, vs[i]->toString(),glb_max));
+  }
+
+  _OZ_DEBUGPRINTTHIS("after #1 ");
+
+  for (i = _vs_size - 1; i > 0; i -= 1) {
+    // assumes min/max element of empty set to be sup+1
+    int lm = vs[i]->getLubSet().getMaxElem();
+    int gm = vs[i]->getGlbSet().getMinElem();
+
+    int lub_max_tmp = (lm == -1 && gm == -1 ? -1 :
+                       min(lm == -1 ? OZ_getFSetSup() + 1 : lm,
+                           (gm == -1 ? OZ_getFSetSup() + 1 : gm)));
+    lub_max = (lub_max_tmp == -1 ? lub_max : lub_max_tmp);
+
+    _OZ_DEBUGPRINT(("#2 %i", lub_max));
+
+    if (lub_max == -1) // there is no maximum
+      continue;
+
+    FailOnInvalid(*vs[i-1] <= (lub_max - 1));
+
+    _OZ_DEBUGPRINT(("#2 %i %s < %i\n", i, vs[i]->toString(),lub_max));
+  }
+
+  _OZ_DEBUGPRINTTHIS("out ");
+
+  return P.leave();
+
+failure:
+  return P.fail();
+}
+
+//-----------------------------------------------------------------------------
 // eof

@@ -13,7 +13,6 @@
 
 //-----------------------------------------------------------------------------
 
-
 Propagator_S_VD::Propagator_S_VD(OZ_Term s, OZ_Term vd)
   : _s(s)
 {
@@ -44,6 +43,37 @@ OZ_Term Propagator_S_VD::getParameters(void) const
 {
   TERMVECTOR2LIST(_vd, _vd_size, vd);
   RETURN_LIST2(_s, vd);
+}
+
+//-----------------------------------------------------------------------------
+
+Propagator_VS::Propagator_VS(OZ_Term vs)
+{
+  _vs_size = OZ_vectorSize(vs);
+  _vs = OZ_hallocOzTerms(_vs_size);
+  OZ_getOzTermVector(vs, _vs);
+}
+
+Propagator_VS::~Propagator_VS(void)
+{
+  OZ_hfreeOzTerms(_vs, _vs_size);
+}
+
+void Propagator_VS::updateHeapRefs(OZ_Boolean)
+{
+  OZ_Term * new_vs = OZ_hallocOzTerms(_vs_size);
+
+  for (int i = _vs_size; i--; ) {
+    new_vs[i] = _vs[i];
+    OZ_updateHeapTerm(new_vs[i]);
+  }
+  _vs = new_vs;
+}
+
+OZ_Term Propagator_VS::getParameters(void) const
+{
+  TERMVECTOR2LIST(_vs, _vs_size, vs);
+  RETURN_LIST1(vs);
 }
 
 //-----------------------------------------------------------------------------
