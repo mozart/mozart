@@ -481,14 +481,14 @@ ProgramCounter unmarshalLocation(ProgramCounter PC,MsgBuffer *bs)
 { 
   int inAr = unmarshalNumber(bs);
   int outAr = unmarshalNumber(bs);
-  OZ_Location *loc = OZ_Location::newLocation(inAr+outAr);
-
+  OZ_Location::initLocation();
+  
   for (int i = 0; i < inAr+outAr; i++) {
     int n = unmarshalNumber(bs);
-    loc->set(i,n);
+    OZ_Location::set(i,n);
   }
 
-  return (writeAddress(loc->compress(inAr+outAr), PC));
+  return (writeAddress(OZ_Location::getLocation(inAr+outAr), PC));
 }
 
 //
@@ -1117,16 +1117,17 @@ ProgramCounter unmarshalLocationRobust(ProgramCounter PC,MsgBuffer *bs,
   int e1,e2;
   int inAr = unmarshalNumberRobust(bs, &e1);
   int outAr = unmarshalNumberRobust(bs, &e2);
-  OZ_Location *loc = OZ_Location::newLocation(inAr+outAr);
+
+  OZ_Location::initLocation();
 
   e1 = e1 || e2;
   for (int i = 0; i < inAr+outAr; i++) {
     int n = unmarshalNumberRobust(bs, &e2);
     e1 = e1 || e2;
-    loc->set(i,n);
+    OZ_Location::set(i,n);
   }
   *error = e1;
-  return (writeAddress(loc, PC));
+  return (writeAddress(OZ_Location::getLocation(inAr+outAr), PC));
 }
 
 //
