@@ -673,33 +673,55 @@ end
       <<grizzly>>. We create a parallel search engine that runs on
       these hosts as follows:
 <<<E={New Search.parallel init(godzilla:2 orca:1 grizzly:1)}>>>
-    
-    <p>
-      Search for all solutions is done as follows
-      <<<Xs={E all(Fractions $)}>>>
-5.4
-    <p>
-      Time used is
 
     <p>
-      Single solution
+      A list of all solutions <<Xs>> can now be computed as follows: 
+      <<<Xs={E all(Fractions $)}>>>
+
+    <p>
+      Similarly, a single solution <<Ys>> can be computed by
+      <<<Xs={E one(Fractions $)}>>>
+      Here, ?_{Ys} is either a singleton list containg the solution,
+      or <<nil>> if no solution does exist. Note that the first
+      solution returned is not necessarily the solution found by the
+      non-parallel search engines first.
 
     <p>
       Parallel search engines support a (rudimentary) for of
       tracing. After
       <<<{E trace(true)}>>>
-      A window appears 
+      a window appears as that gives graphical information on how many
+      nodes each Oz engine explored. The graphical information is in a
+      very early beta stage and will improve soon.
+      <<<{E trace(false)}>>>
+      switches tracing off again.
 
     <p>
-      Using urls.
+      Rather than using a functor as an argument for the methods
+      <<one>> and <<all>> a url can be used that refers to a pickled
+      functor stored under that url.
 
     <p>
-      Search for best solution works similar. The functor Best solution 
+      Search for best solution works similar. Let us consider as a
+      more interesting example the really hard scheduling problem MT10
+      (for more information on that problem see <ptr.extern
+      to="ozdoc:fdt" key="section.scheduling.hard">). A functor for
+      best solution search must export both <<script>> and
+      <<order>>. How this is done you can see in the functor
+      definition <ref.extern to="MT10.oz"/<file/MT10.oz// for the MT10
+      problem. 
+
+    <p>
+      Now the list of solutions <<Zs>> in strictly increasing order
+      can be computed by
+      <<<Zs={E best('http://mozart.ps.uni-sb.de/home/doc/system/MT10.ozf' $)}>>>
+      The best solution is the last element of the list <<Zs>>.
 
     <p>
       Parallel search engines only work properly, if your computing
       environment is set up such that the facilities for remote module
-      managers work. What is required for this is described in???.
+      managers work. The requirements are described in <ptr
+      to="chapter.remote">.
 
   <subsection id="section.search.parallel.api">
     <title/The Class <<Search.parallel>>/
