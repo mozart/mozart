@@ -207,6 +207,17 @@ case "$cmd" in
         exec $OZEMULATOR -quiet -u $url -a "$@"
    ;;
 
+   ozapplet)  # compute server
+        if [ $# -lt 1 ]
+        then
+            echo "usage: ozapplet <url> <args>";
+            exit 1;
+        fi
+        url=$1
+        shift
+        exec $OZEMULATOR -quiet -browser -u $url -a "$@"
+   ;;
+
    ozc)
         set -e
         for file in $@; do

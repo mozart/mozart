@@ -34,7 +34,7 @@ INSTALL_OTHER   = $(INSTALL) -m 444
 
 SCRIPTS = oz ozplatform oz.wish ozdynld
 LINKS   = oz- ozc ozsa ozcs ozsac oz.compiler oz.emulator ozdo \
-          ozemacs ozdemo oze oznc
+          ozemacs ozdemo oze oznc ozapplet
 
 .PHONY: all install clean distclean
 
