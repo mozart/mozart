@@ -265,6 +265,9 @@ AC_DEFUN(OZ_PROG_VERSION_CHECK,[
   if oz_tmp_version=`ifelse([$4],[],[$2 --version],[$4]) 2>/dev/null | tr '\012' ' '`; then
 changequote(<,>)
     oz_tmp_version=`expr "$oz_tmp_version" : '.*version \([0-9._]*\)'`
+    if test -z "$oz_tmp_version"; then
+      oz_tmp_version=`expr "$oz_tmp_version" : '.* \([0-9._]*\)$'`
+    fi
 changequote([,])
     if test -n "$oz_tmp_version"; then
       OZ_CHECK_VERSION([$1],$oz_tmp_version,[$3])
