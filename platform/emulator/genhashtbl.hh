@@ -54,12 +54,18 @@ public:
 
   Bool putOne(FreeListEntry *f){
     Assert(unique(f));
+#ifdef _MSC_VER
+    /* MSVC++ put pointer to vritual tabke into first word */
+    return FALSE;
+#else
     if(no_free==cutoff){return FALSE;}
     Assert(no_free<cutoff);
     f->next=free;
     free=f;
     no_free++;
-    return TRUE;}
+    return TRUE;
+#endif
+}
 
   FreeListEntry *getOne(){
     if(free==NULL) {return NULL;}
