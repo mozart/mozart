@@ -56,7 +56,6 @@ define
    {Property.put 'oz.standalone' false}
 
    OPICompiler = {New Compiler.engine init()}
-   {OPICompiler enqueue(setSwitch(warnunused true))}
 
    %% Importing functors
    local
