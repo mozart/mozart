@@ -2241,15 +2241,23 @@ in
 	    case
 	       {Val isRecordConstr($)}
 	    then
-	       Lab = {Val getLabel($)}
+	       Lab={Val getLabel($)} LabNode
 	    in
-	       {Ctrl setErrorMsg('label assertion failed')}
-	       {Ctrl setUnifier(BVO2 Lab)}
-	    
-	       {BVO2 unify(Ctrl Lab)}
+	       case {IsDet Lab} then
 
-	       {Ctrl resetUnifier}
-	       {Ctrl resetErrorMsg}
+		  {Ctrl setErrorMsg('label assertion failed')}
+		  {Ctrl setUnifier(BVO2 Lab)}
+
+		  case {IsAtom Lab} then 
+		     LabNode = {New Core.atomNode init(Lab unit)}
+		  else
+		     LabNode = {New Core.nameToken init(Lab unit)}
+		  end
+		  {BVO2 unify(Ctrl LabNode)}
+
+		  {Ctrl resetUnifier}
+		  {Ctrl resetErrorMsg}
+	       else skip end
 	    else skip end
 	 end
       
@@ -4219,14 +4227,14 @@ in
 	    {System.show unifyT(@value {RHS getValue($)})}
 \endif
 	    case
-	       {UnifyTypesOf self RHS Ctrl @coord}
+	       {UnifyTypesOf self RHS Ctrl unit}
 	    then
 	       RVal = {RHS getValue($)}
 	    in
 	       case
 		  {IsToken RHS} andthen @value==RVal
 	       then skip else
-		  {IssueUnificationFailure Ctrl @coord
+		  {IssueUnificationFailure Ctrl unit
 		   [hint(l:'First value' m:oz(@value))
 		    hint(l:'Second value' m:oz(RVal))]}
 	       end
