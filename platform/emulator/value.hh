@@ -338,7 +338,7 @@ private:
   TaggedRef args[2];
 
 public:
-  USEHEAPMEMORY;
+  USEFREELISTMEMORY;
   OZPRINTLONG
 
   NO_DEFAULT_CONSTRUCTORS2(LTuple)
