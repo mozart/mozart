@@ -32,14 +32,11 @@ void GenFSetVariable::dispose(void) {
 //#define DEBUG_TELLCONSTRAINTS 
 #endif
 
-#ifdef FSET_FILE_PRINT
+#ifdef CPI_FILE_PRINT
 #include <fstream.h>
-#endif
-
-#ifdef FSET_FILE_PRINT
-extern ofstream * fscout;
+extern ofstream * cpi_cout;
 #else
-extern ostream * fscout;
+extern ostream * cpi_cout;
 #endif
 
 Bool GenFSetVariable::unifyFSet(TaggedRef * vptr, TaggedRef var, 
@@ -53,7 +50,7 @@ Bool GenFSetVariable::unifyFSet(TaggedRef * vptr, TaggedRef var,
   case FSETVALUE:
     {
 #ifdef DEBUG_FSUNIFY 
-      (*fscout) << "fsunify: (" << _fset << " = " 
+      (*cpi_cout) << "fsunify: (" << _fset << " = " 
 		<< *((FSetValue *)tagged2FSetValue(term)) << " )";
 #endif
       
@@ -61,7 +58,7 @@ Bool GenFSetVariable::unifyFSet(TaggedRef * vptr, TaggedRef var,
 	goto f;
       
 #ifdef DEBUG_FSUNIFY 
-      (*fscout) << " -> " <<  _fset;
+      (*cpi_cout) << " -> " <<  _fset;
 #endif
       
       Bool isLocalVar = am.isLocalSVar(this);
@@ -90,14 +87,14 @@ Bool GenFSetVariable::unifyFSet(TaggedRef * vptr, TaggedRef var,
 	  OZ_FSetImpl new_fset;
 
 #ifdef DEBUG_FSUNIFY 
-	  (*fscout) << "fsunify: (" << *fset << " = " << *t_fset << " )";
+	  (*cpi_cout) << "fsunify: (" << *fset << " = " << *t_fset << " )";
 #endif
       
 	  if ((new_fset = t_fset->unify(*fset)).getCardMin() == -1)
 	    goto f;
 
 #ifdef DEBUG_FSUNIFY 
-	  (*fscout) << " -> " << new_fset;
+	  (*cpi_cout) << " -> " << new_fset;
 #endif
       
 	  Bool var_is_local = (prop && am.isLocalSVar(this));
@@ -235,13 +232,13 @@ Bool GenFSetVariable::unifyFSet(TaggedRef * vptr, TaggedRef var,
   }
 t:
 #ifdef DEBUG_FSUNIFY 
-  (*fscout) << " true" << endl << flush;
+  (*cpi_cout) << " true" << endl << flush;
 #endif
   return TRUE;
 
 f:
 #ifdef DEBUG_FSUNIFY 
-  (*fscout) << "false" << endl << flush;
+  (*cpi_cout) << "false" << endl << flush;
 #endif
   return FALSE;
 }

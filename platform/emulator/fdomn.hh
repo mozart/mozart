@@ -16,9 +16,22 @@
 #include "tagged.hh"
 #include "value.hh"
 
-#include "fddebug.hh"
-
 #include "oz_cpi.hh"
+
+//-----------------------------------------------------------------------------
+#if defined(DEBUG_CHECK) && defined(DEBUG_FD)
+#  define AssertFD(C) \
+if (!(C)) error("FD assertion '%s' failed at %s:%d.", #C, __FILE__, __LINE__); 
+
+#  define DebugCodeFD(C) C
+
+#else
+
+#  define AssertFD(C)
+#  define DebugCodeFD(C)
+
+#endif
+//-----------------------------------------------------------------------------
 
 const int fd_inf = 0;
 const int fd_sup = OZ_smallIntMax() - 1;
