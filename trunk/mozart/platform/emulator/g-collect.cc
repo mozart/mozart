@@ -60,7 +60,7 @@ void gCollectCode(ProgramCounter PC) {
  *
  */
 
-VarFix   vf;
+VarFixStack   vf;
 CacStack cacStack;
 
 
@@ -671,7 +671,7 @@ void Builder::gCollect()
 	  // first phase: fill the gap;
 	  *spointer = uFillNode;	// in the term;
 	  // second phase: GC it, such that the spointer in the copy
-	  // will get eventually updated (using GC's VarFix business).
+	  // will get eventually updated (using GC's VarFixStack business).
 	  OZ_Term &v = GetBTTaskArg1Ref(frame, OZ_Term);
 	  oz_gCollectTerm(v, v);
 	}
