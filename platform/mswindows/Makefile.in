@@ -29,6 +29,7 @@ VPATH=          @srcdir@
 BINDIR=         $(PREFIX)/platform/winbin
 
 CXX=            @CXX@
+INCS=           -I. -I$(SRCDIR)
 
 INSTALL=        @INSTALL@
 INSTALL_DIR=    @INSTALL_DIR@
@@ -48,7 +49,7 @@ bootstrap: all
 
 install: $(WINEXES)
         $(INSTALL_DIR) $(BINDIR)
-        $(INSTALL_BIN) $(WINEXES) oz.ico setup.ico $(BINDIR)
+        $(INSTALL_BIN) $(WINEXES) $(SRCDIR)/oz.ico $(BINDIR)
 
 
 $(BINDIR):
@@ -76,25 +77,22 @@ depend:
 
 
 .cc.o:
-        $(CXX) -c -o $@ $<
+        $(CXX) $(INCS) -c -o $@ $<
 
 setup.cc oz.cc ozengine.cc: version.h
 
 
 .cc.exe:
-        $(CXX) -s -o $@ $<
+        $(CXX) $(INCS) -s -o $@ $<
 
 oz.exe: oz.o
-        $(CXX) -s -o $@ $< -mwindows
+        $(CXX) $(INCS) -s -o $@ $< -mwindows
 
 ozenginew.exe: ozenginew.o
-        $(CXX) -s -o $@ $< -mwindows
+        $(CXX) $(INCS) -s -o $@ $< -mwindows
 
 ozwrapperw.exe: ozwrapperw.o
-        $(CXX) -s -o $@ $< -mwindows
-
-setup.exe: setup.o
-        $(CXX) -s -o $@ $< -mwindows
+        $(CXX) $(INCS) -s -o $@ $< -mwindows
 
 
 version.h: $(SRCTOP)/OZVERSION
