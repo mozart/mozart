@@ -1642,6 +1642,7 @@ void Thread::gcRecurse ()
       // the body;
       setWakeUpTypeGC ();
       item.threadBody = (RunnableThreadBody *) NULL;
+      return;
     } else {
       setBoard(newBoard);
     }
