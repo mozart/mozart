@@ -32,6 +32,10 @@ import
    Open
    DaVinciScanner
 
+\ifdef DEBUG
+   Browser(browse: Browse)
+\endif
+   
 define
 
    fun {CommandListToVS L}
@@ -105,22 +109,29 @@ define
 	 end
       end
 
+      meth to_pipe(VS)
+\ifdef DEBUG
+	 {Browse VS}
+\endif
+	 {@pipe write(vs: VS)}
+      end
+      
       meth close
-	 {@pipe write(vs: "menu(file(exit))\n")}
+	 DaVinciClass,to_pipe("menu(file(exit))\n")
       end
 
       meth send(C)
 	 VS = {CommandValueToVS C}
       in
-	 {@pipe write(vs: VS#"\n")}
+	 DaVinciClass,to_pipe(VS#"\n")
       end
 
       meth sendVS(VS)
-	 {@pipe write(vs: VS#"\n")}
+	 DaVinciClass,to_pipe(VS#"\n")
       end
 
       meth graph(VS)
-	 {@pipe write(vs: "graph(new("#VS#"))\n")}
+	 DaVinciClass,to_pipe("graph(new("#VS#"))\n")
       end
    end
 
