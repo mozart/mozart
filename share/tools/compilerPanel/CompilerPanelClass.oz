@@ -846,6 +846,7 @@ in
 						action: {MkAction
 							 RedisplayEnv()})
 				    command(label: 'Update environment'
+					    key: ctrl(l)
 					    action: {MkAction
 						     RedisplayEnv()})
 				    command(label: 'Configure colors ...'
