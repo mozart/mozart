@@ -84,7 +84,7 @@ extern "C" char *inet_ntoa(struct in_addr in);
      if (OZ_isVariable(susp)) {						\
        OZ_suspendOn(susp);						\
      } else {								\
-       return am.raise(E_ERROR,E_SYSTEM,"limitInternal",1,		\
+       return am.raise(E_CONDITION,E_SYSTEM,"limitInternal",1,		\
 			OZ_string("virtual string too long"));		\
      }									\
    } else if (status != PROCEED) {					\
@@ -144,7 +144,7 @@ while ((RET = CALL) < 0) {                   \
 // -------------------------------------------------
 
 int raiseUnixError(int n, char * e, char * g) {
-  return am.raise(E_ERROR,E_UNIX, g, 2, OZ_int(n), OZ_string(e)); 
+  return am.raise(E_CONDITION,E_UNIX, g, 2, OZ_int(n), OZ_string(e)); 
 }
 
 // return upon unix-error
@@ -1462,7 +1462,7 @@ OZ_C_ioproc_begin(unix_pipe,4)
   argl=args;
   
   if (argno+2 >= maxArgv) {
-    return am.raise(E_ERROR,E_SYSTEM,"limitInternal",1,
+    return am.raise(E_CONDITION,E_SYSTEM,"limitInternal",1,
 		    OZ_string("too many arguments for pipe"));
   }
   argv[0] = s;
@@ -1482,7 +1482,7 @@ OZ_C_ioproc_begin(unix_pipe,4)
     if (status == SUSPEND) {
       free(vsarg);
       Assert(!OZ_isVariable(susp));
-      return am.raise(E_ERROR,E_SYSTEM,"limitInternal",1,
+      return am.raise(E_CONDITION,E_SYSTEM,"limitInternal",1,
 		   OZ_string("virtual string too long"));
     }
     Assert(status == PROCEED);
@@ -1720,7 +1720,7 @@ OZ_C_ioproc_begin(unix_tempName, 3)
   char *filename; 
 
   if (strlen(prefix) > 5)
-    return am.raise(E_ERROR,E_SYSTEM,"limitExternal",1,
+    return am.raise(E_CONDITION,E_SYSTEM,"limitExternal",1,
 		    OZ_string("Maximal 5 characters for Unix.tempName prefix allowed."));
   
   if (!(filename = tempnam(directory, prefix))) {
@@ -1870,7 +1870,7 @@ OZ_C_proc_end
 #define NotAvail(Name,Arity,Fun)				\
 OZ_C_ioproc_begin(Fun,Arity)					\
 {								\
-  return am.raise(E_ERROR,E_SYSTEM,"limitExternal",1,		\
+  return am.raise(E_CONDITION,E_SYSTEM,"limitExternal",1,	\
 		   OZ_atom(Name));				\
 }								\
 OZ_C_proc_end

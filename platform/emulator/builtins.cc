@@ -5706,7 +5706,7 @@ OZ_C_proc_begin(BIgetTermSize,4) {
   OZ_declareIntArg(2,width);
   OZ_declareArg(3,out);
 
-  return OZ_unify(out, makeTaggedSmallInt(OZ_termGetSize(t, depth, width)));
+  return OZ_unify(out, OZ_int(OZ_termGetSize(t, depth, width)));
 }
 OZ_C_proc_end
 
