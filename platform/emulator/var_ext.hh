@@ -74,7 +74,7 @@ public:
 inline
 int oz_isExtVar(TaggedRef r)
 {
-  return isCVar(r) && tagged2CVar(r)->getType()==OZ_VAR_EXT;
+  return oz_isCVar(r) && tagged2CVar(r)->getType()==OZ_VAR_EXT;
 }
 
 inline

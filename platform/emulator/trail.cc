@@ -75,7 +75,7 @@ void Trail::pushMark(void) {
       goto exit;
     case Te_Variable: {
       TaggedRef * varPtr = (TaggedRef *) *(top-2);
-      Assert(isCVar(*varPtr));
+      Assert(oz_isCVar(*varPtr));
       OzVariable * v = tagged2CVar(*varPtr);
       Assert(v->isTrailed());
       v->unsetTrailed();
@@ -128,7 +128,7 @@ void Trail::popMark(void) {
       return;
     case Te_Variable: {
       TaggedRef * varPtr = (TaggedRef *) *(top-2);
-      Assert(isCVar(*varPtr));
+      Assert(oz_isCVar(*varPtr));
       OzVariable * v = tagged2CVar(*varPtr);
       Assert(!v->isTrailed());
       v->setTrailed();
@@ -207,7 +207,7 @@ TaggedRef Trail::unwind(Board * b) {
 	OzVariable * copy;
 	popVariable(varPtr, copy);
 	
-	Assert(isCVar(*varPtr));
+	Assert(oz_isCVar(*varPtr));
 	
 	oz_var_restoreFromCopy(tagged2CVar(*varPtr), copy);
 	
@@ -259,7 +259,7 @@ void Trail::unwindFailed(void) {
       OzVariable * copy;
       popVariable(varPtr, copy);
 
-      Assert(isCVar(*varPtr));
+      Assert(oz_isCVar(*varPtr));
 
       oz_var_restoreFromCopy(tagged2CVar(*varPtr), copy);
 
@@ -316,7 +316,7 @@ void Trail::unwindEqEq(void) {
       OzVariable * copy;
       popVariable(varPtr, copy);
 
-      Assert(isCVar(*varPtr));
+      Assert(oz_isCVar(*varPtr));
 
       oz_var_restoreFromCopy(tagged2CVar(*varPtr), copy);
 

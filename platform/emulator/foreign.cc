@@ -295,25 +295,25 @@ TaggedRef oz_valueType(OZ_Term term) {
   Assert(!oz_isRef(term));
 
   switch (tagTypeOf(term)) {
-  case UVAR:
+  case TAG_UVAR:
     // FUT
-  case CVAR:
+  case TAG_CVAR:
     return AtomVariable;
-  case SMALLINT:
+  case TAG_SMALLINT:
     return AtomInt;
-  case OZFLOAT:    
+  case TAG_FLOAT:    
     return AtomFloat;
-  case LITERAL:
+  case TAG_LITERAL:
     return tagged2Literal(term)->isAtom() ? AtomAtom : AtomName;
-  case LTUPLE:
+  case TAG_LTUPLE:
     return AtomTuple;
-  case SRECORD:
+  case TAG_SRECORD:
     return tagged2SRecord(term)->isTuple() ? AtomTuple : AtomRecord;
-  case FSETVALUE:
+  case TAG_FSETVALUE:
     return AtomFSet;
-  case EXT:
-    return oz_tagged2Extension(term)->typeV();
-  case OZCONST:
+  case TAG_EXT:
+    return tagged2Extension(term)->typeV();
+  case TAG_CONST:
     switch (tagged2Const(term)->getType()) {
     case Co_BigInt:
       return AtomInt;
@@ -462,7 +462,7 @@ OZ_Term OZ_CStringToInt(char *str)
   if (aux[0] == '0') {
     switch (aux[1]) {
     case '\0':
-      return newSmallInt(0);
+      return makeTaggedSmallInt(0);
     case 'x': case 'X':
       if (aux[2] == '\0' || mpz_set_str(&theInt, &aux[2], 16) == -1) {
 	mpz_clear(&theInt);
@@ -604,7 +604,7 @@ int OZ_featureCmp(OZ_Term term1, OZ_Term term2)
 inline
 void smallInt2buffer(ostream &out, OZ_Term term, const char sign)
 {
-  int i = smallIntValue(term);
+  int i = tagged2SmallInt(term);
   if (i < 0) {
     out << sign << -i;
   } else {
@@ -962,7 +962,7 @@ void record2buffer(ostream &out, SRecord *sr,int depth) {
 
     while (oz_isCons(as) && next <= ozconf.printWidth &&
 	   oz_isSmallInt(oz_head(as)) && 
-	   smallIntValue(oz_head(as)) == next) {
+	   tagged2SmallInt(oz_head(as)) == next) {
       term2Buffer(out, sr->getFeature(oz_head(as)), depth-1);
       out << ' ';
       as = oz_tail(as);
@@ -1076,43 +1076,43 @@ void term2Buffer(ostream &out, OZ_Term term, int depth)
 
   DEREF(term,termPtr,tag);
   switch(tag) {
-  case UVAR:
+  case TAG_UVAR:
     // FUT
-  case CVAR:
+  case TAG_CVAR:
     {
       if (!termPtr) {
 	out << "<Oz_Dereferenced variable>";
 	break;
       }
       const char *s = oz_varGetName(makeTaggedRef(termPtr));
-      if (isCVar(tag)) {
+      if (oz_isCVar(term)) {
 	oz_var_printStream(out, s,tagged2CVar(term),depth);
       } else {
 	out << s;
       }
       break;
     }
-  case FSETVALUE:
+  case TAG_FSETVALUE:
     fset2buffer(out, tagged2FSetValue(term));
     break;
-  case SRECORD:
+  case TAG_SRECORD:
     record2buffer(out,tagged2SRecord(term),depth);
     break;
-  case LTUPLE:
+  case TAG_LTUPLE:
     list2buffer(out,tagged2LTuple(term),depth);
     break;
-  case EXT:
+  case TAG_EXT:
     {
       int n;
-      char * s = OZ_virtualStringToC(oz_tagged2Extension(term)->printV(depth),
+      char * s = OZ_virtualStringToC(tagged2Extension(term)->printV(depth),
 				     &n);
       while (n--) out << *s++;
     }
     break;
-  case OZCONST:
+  case TAG_CONST:
     const2buffer(out,tagged2Const(term),'~');
     break;
-  case LITERAL:
+  case TAG_LITERAL:
     {
       Literal *a = tagged2Literal(term);
       if (a->isAtom()) {
@@ -1122,10 +1122,10 @@ void term2Buffer(ostream &out, OZ_Term term, int depth)
       }
       break;
     }
-  case OZFLOAT:
+  case TAG_FLOAT:
     float2buffer(out,term,'~');
     break;
-  case SMALLINT:
+  case TAG_SMALLINT:
     smallInt2buffer(out,term,'~');
     break;
   default:
@@ -1213,7 +1213,7 @@ static void string2buffer(ostream &out,OZ_Term list,int nulok)
       printf(" in string %s\n",toC(list));
       return;
     }
-    int i = smallIntValue(hh);
+    int i = tagged2SmallInt(hh);
     if (i < 0 || i > 255 || (i==0 && !nulok)) {
       message("no small int %d",i);
       printf(" in string %s\n",toC(list));
@@ -1369,11 +1369,11 @@ OZ_Term OZ_label(OZ_Term term)
   DEREF(term,termPtr,termTag);
 
   switch (termTag) {
-  case LTUPLE:
+  case TAG_LTUPLE:
     return AtomCons;
-  case LITERAL:
+  case TAG_LITERAL:
     return term;
-  case SRECORD:
+  case TAG_SRECORD:
     return tagged2SRecord(term)->getLabel();
   default:
     OZ_warning("OZ_label: no record");
@@ -1386,11 +1386,11 @@ int OZ_width(OZ_Term term)
   DEREF(term,termPtr,termTag);
 
   switch (termTag) {
-  case LTUPLE:
+  case TAG_LTUPLE:
     return 2;
-  case SRECORD:
+  case TAG_SRECORD:
     return tagged2SRecord(term)->getWidth();
-  case LITERAL:
+  case TAG_LITERAL:
     return 0;
   default:
     OZ_warning("OZ_width: no record");
@@ -1528,7 +1528,7 @@ int OZ_length(OZ_Term l)
 {
   OZ_Term ret=oz_checkList(l);
   if (!oz_isSmallInt(ret)) return -1;
-  return smallIntValue(ret);
+  return tagged2SmallInt(ret);
 }
 
 
@@ -1594,7 +1594,7 @@ void OZ_putSubtree(OZ_Term term, OZ_Term feature, OZ_Term value)
 {
   term=oz_deref(term);
   if (oz_isCons(term)) {
-    int i2 = smallIntValue(feature);
+    int i2 = tagged2SmallInt(feature);
 
     switch (i2) {
     case 1:
@@ -1638,11 +1638,11 @@ OZ_Term OZ_subtree(OZ_Term term, OZ_Term fea)
   fea=oz_deref(fea);
 
   switch (termTag) {
-  case LTUPLE:
+  case TAG_LTUPLE:
     {
       if (!oz_isSmallInt(fea)) return 0;
 
-      int i2 = smallIntValue(fea);
+      int i2 = tagged2SmallInt(fea);
 
       switch (i2) {
       case 1:
@@ -1652,15 +1652,15 @@ OZ_Term OZ_subtree(OZ_Term term, OZ_Term fea)
       }
       return 0;
     }
-  case SRECORD:
+  case TAG_SRECORD:
     return tagged2SRecord(term)->getFeature(fea);
 
-  case EXT:
+  case TAG_EXT:
     {
-      return oz_tagged2Extension(term)->getFeatureV(fea);
+      return tagged2Extension(term)->getFeatureV(fea);
     }
 
-  case OZCONST:
+  case TAG_CONST:
     {
       ConstTerm *ct = tagged2Const(term);
       switch (ct->getType()) {
@@ -1935,8 +1935,8 @@ OZ_Return OZ_raiseC(char *label,int arity,...)
 
 OZ_Return OZ_raiseError(OZ_Term exc) {
   OZ_Term ret = OZ_record(AtomError,
-			  oz_mklist(newSmallInt(1),AtomDebug));
-  OZ_putSubtree(ret, newSmallInt(1), exc);
+			  oz_mklist(makeTaggedSmallInt(1),AtomDebug));
+  OZ_putSubtree(ret, makeTaggedSmallInt(1), exc);
   OZ_putSubtree(ret, AtomDebug,      NameUnit);
   
   am.setException(ret,TRUE);
@@ -1976,8 +1976,8 @@ OZ_Term OZ_makeException(OZ_Term cat,OZ_Term key,char*label,int arity,...)
   va_end(ap);
 
 
-  OZ_Term ret = OZ_record(cat,oz_mklist(newSmallInt(1),AtomDebug));
-  OZ_putSubtree(ret, newSmallInt(1), exc);
+  OZ_Term ret = OZ_record(cat,oz_mklist(makeTaggedSmallInt(1),AtomDebug));
+  OZ_putSubtree(ret, makeTaggedSmallInt(1), exc);
   OZ_putSubtree(ret, AtomDebug,      NameUnit);
   return ret;
 }

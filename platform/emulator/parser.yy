@@ -424,9 +424,9 @@ static
 OZ_Term makeLongPos(OZ_Term pos1, OZ_Term pos2) {
   return 
     newCTerm(PA_pos,
-	     OZ_subtree(pos1,newSmallInt(1)),OZ_subtree(pos1,newSmallInt(2)),
-	     OZ_subtree(pos1,newSmallInt(3)),OZ_subtree(pos2,newSmallInt(1)),
-	     OZ_subtree(pos2,newSmallInt(2)),OZ_subtree(pos2,newSmallInt(3)));
+	     OZ_subtree(pos1,makeTaggedSmallInt(1)),OZ_subtree(pos1,makeTaggedSmallInt(2)),
+	     OZ_subtree(pos1,makeTaggedSmallInt(3)),OZ_subtree(pos2,makeTaggedSmallInt(1)),
+	     OZ_subtree(pos2,makeTaggedSmallInt(2)),OZ_subtree(pos2,makeTaggedSmallInt(3)));
 }
 
 static
@@ -476,7 +476,7 @@ OZ_Term makeInt(char * chars, OZ_Term pos) {
 inline
 OZ_Term makeInt(const char c, OZ_Term pos) {
   SRecord * t = SRecord::newSRecord(PA_fInt, 2);
-  t->setArg(0, newSmallInt((unsigned char) c));
+  t->setArg(0, makeTaggedSmallInt((unsigned char) c));
   t->setArg(1, pos);
   return makeTaggedSRecord(t);
 }
@@ -910,7 +910,7 @@ iterator	: nakedVariable T_in coord phrase T_2DOTS phrase optIteratorStep coord
 					  newCTerm(PA_fAtom,oz_atom("by"),NameUnit),
 					  ($7 == 0)?makeInt("1",NameUnit):$7,
 					  0),
-				  makeLongPos(OZ_subtree($1,newSmallInt(2)),$8));
+				  makeLongPos(OZ_subtree($1,makeTaggedSmallInt(2)),$8));
 		  }
 		| nakedVariable T_in coord phrase optIteratorStep coord
                   {
@@ -923,7 +923,7 @@ iterator	: nakedVariable T_in coord phrase T_2DOTS phrase optIteratorStep coord
 					    newCTerm(PA_fAtom,oz_atom("in"),NameUnit),
 					    $4,
 					    0),
-				    makeLongPos(OZ_subtree($1,newSmallInt(2)),$6));
+				    makeLongPos(OZ_subtree($1,makeTaggedSmallInt(2)),$6));
 		    } else {
 		      $$ = newCTerm(PA_fMacro,
 				    oz_list(newCTerm(PA_fAtom,oz_atom("for"),NameUnit),
@@ -931,7 +931,7 @@ iterator	: nakedVariable T_in coord phrase T_2DOTS phrase optIteratorStep coord
 					    newCTerm(PA_fAtom,oz_atom("next"),NameUnit),
 					    $5,
 					    0),
-				    makeLongPos(OZ_subtree($1,newSmallInt(2)),$6));
+				    makeLongPos(OZ_subtree($1,makeTaggedSmallInt(2)),$6));
 		    }
 		  }
 		;
@@ -1474,7 +1474,7 @@ parserSpecification
 		: T_parser coord nakedVariable
 		  classDescriptorList methList
 		  tokenClause parserRules T_end coord
-		  { OZ_Term expect = parserExpect? parserExpect: newSmallInt(0);
+		  { OZ_Term expect = parserExpect? parserExpect: makeTaggedSmallInt(0);
 		    $$ = newCTerm(PA_fParser,$3,$4,$5,$6,$7,expect,
 				  makeLongPos($2,$9)); }
 		;

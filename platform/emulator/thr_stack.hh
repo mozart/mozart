@@ -157,7 +157,6 @@ public:
   }
 
   void pushCont(ProgramCounter pc,RefsArray y,Abstraction *cap) {
-    Assert(!isFreedRefsArray(y));
 #ifdef DEBUG_MEM
     Assert(!y || MemChunks::areRegsInHeap(y,getRefsArraySize(y)));
 #endif

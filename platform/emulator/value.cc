@@ -3,9 +3,6 @@
  *    Michael Mehl (mehl@dfki.de)
  *    Ralf Scheidhauer (Ralf.Scheidhauer@ps.uni-sb.de)
  * 
- *  Contributors:
- *    optional, Contributor's name (Contributor's email address)
- * 
  *  Copyright:
  *    Organization or Person (Year(s))
  * 
@@ -25,7 +22,7 @@
  *
  */
 
-#if defined(INTERFACE) && !defined(VAL_ALL)
+#if defined(INTERFACE)
 #pragma implementation "value.hh"
 #endif
 
@@ -823,7 +820,7 @@ Bool ArityTable::hashvalue( TaggedRef list, int &ret )
   int len = 0;
   while(oz_isCons(list)){
     TaggedRef it=oz_head(list);
-    if (len>=0 && oz_isSmallInt(it) && smallIntValue(it)==len+1) {
+    if (len>=0 && oz_isSmallInt(it) && tagged2SmallInt(it)==len+1) {
       len++;
     } else {
       len = -1;
@@ -1118,7 +1115,7 @@ TaggedRef makeTupleArityList(int i)
   Assert(i>=0);
   TaggedRef out = oz_nil();
   while (i>0) {
-    out=oz_cons(newSmallInt(i),out);
+    out=oz_cons(makeTaggedSmallInt(i),out);
     i--;
   }
   return out;
@@ -1369,10 +1366,10 @@ OZ_Term oz_string(const char * s, const int len, const OZ_Term tail) {
 
     LTuple * lb = (LTuple *) heapMalloc(j * sizeof(LTuple));
 
-    lb[--j].setBoth(newSmallInt((unsigned char) s[--i]),t);
+    lb[--j].setBoth(makeTaggedSmallInt((unsigned char) s[--i]),t);
 
     while (j-- > 0) {
-      lb[j].setBoth(newSmallInt((unsigned char) s[--i]), 
+      lb[j].setBoth(makeTaggedSmallInt((unsigned char) s[--i]), 
 		    makeTaggedLTuple(lb + j + 1));
     }
 

@@ -263,9 +263,9 @@ Bool extParameters(TaggedRef list, Board * solve_board) {
 
     if (oz_isVariable(h)) {
 
-      Assert(!isUVar(htag));
+      Assert(!oz_isUVar(h));
 
-      Board * home = GETBOARD(tagged2SVarPlus(h)); 
+      Board * home = GETBOARD(tagged2CVar(h)); 
       Board * tmp  = solve_board;
 
       // from solve board go up to root; if you step over home 

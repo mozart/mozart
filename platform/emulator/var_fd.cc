@@ -44,7 +44,7 @@ OZ_Return OzFDVariable::bind(OZ_Term * vPtr, OZ_Term term)
     DEBUG_CONSTRAIN_CVAR(("FAILED\n"));
     return FAILED;
   }
-  if (! finiteDomain.isIn(smallIntValue(term))) {
+  if (! finiteDomain.isIn(tagged2SmallInt(term))) {
     DEBUG_CONSTRAIN_CVAR(("FAILED\n"));
     return FAILED;
   }
@@ -115,7 +115,7 @@ OZ_Return OzFDVariable::unify(OZ_Term * left_varptr, OZ_Term * right_varptr)
       if (intersection == fd_singl) {
 	// intersection is singleton
 	OZ_Term int_var = 
-	  newSmallInt(CAST_FD_OBJ(intersection).getSingleElem());
+	  makeTaggedSmallInt(CAST_FD_OBJ(intersection).getSingleElem());
 	// wake up 
 	right_fdvar->propagateUnify();
 	propagateUnify();
@@ -172,7 +172,7 @@ OZ_Return OzFDVariable::unify(OZ_Term * left_varptr, OZ_Term * right_varptr)
       if (intersection == fd_singl) {
 	// intersection is singleton
 	OZ_Term int_var = 
-	  newSmallInt(CAST_FD_OBJ(intersection).getSingleElem());
+	  makeTaggedSmallInt(CAST_FD_OBJ(intersection).getSingleElem());
 	right_fdvar->propagateUnify();
 	propagateUnify();
 	bindLocalVarToValue(left_varptr, int_var);
@@ -216,7 +216,7 @@ OZ_Return OzFDVariable::unify(OZ_Term * left_varptr, OZ_Term * right_varptr)
       if (intersection == fd_singl){
 	// intersection is singleton
 	OZ_Term int_val = 
-	  newSmallInt(CAST_FD_OBJ(intersection).getSingleElem());
+	  makeTaggedSmallInt(CAST_FD_OBJ(intersection).getSingleElem());
 	propagateUnify();
 	right_fdvar->propagateUnify();
 	bindGlobalVarToValue(left_varptr, int_val);
@@ -258,7 +258,7 @@ OZ_Return OzFDVariable::unify(OZ_Term * left_varptr, OZ_Term * right_varptr)
 Bool OzFDVariable::valid(TaggedRef val)
 {
   Assert(!oz_isRef(val));
-  return (oz_isSmallInt(val) && finiteDomain.isIn(smallIntValue(val)));
+  return (oz_isSmallInt(val) && finiteDomain.isIn(tagged2SmallInt(val)));
 }
 
 void OzFDVariable::relinkSuspListTo(OzBoolVariable * lv, Bool reset_local)
@@ -311,13 +311,13 @@ OZ_Return tellBasicConstraint(OZ_Term v, OZ_FiniteDomain * fd)
     // fd is singleton domain and hence v becomes integer. otherwise ..
     if (fd->getSize() == 1) {
       if (oz_isLocalVariable(vptr)) {
-	if (!isUVar(vtag))
+	if (!oz_isUVar(v))
 	  oz_checkSuspensionListProp(tagged2CVar(v));
 	bindLocalVarToValue(vptr, 
-			    newSmallInt(CAST_FD_PTR(fd)->getSingleElem()));
+			    makeTaggedSmallInt(CAST_FD_PTR(fd)->getSingleElem()));
       } else {
 	bindGlobalVarToValue(vptr, 
-			     newSmallInt(CAST_FD_PTR(fd)->getSingleElem()));
+			     makeTaggedSmallInt(CAST_FD_PTR(fd)->getSingleElem()));
       }
       goto proceed;
     }
@@ -334,7 +334,7 @@ OZ_Return tellBasicConstraint(OZ_Term v, OZ_FiniteDomain * fd)
     OZ_Term *  tcv = newTaggedCVar(cv);
 
     if (oz_isLocalVariable(vptr)) {
-      if (!isUVar(vtag)) {
+      if (!oz_isUVar(v)) {
 	oz_checkSuspensionListProp(tagged2CVar(v));
 	cv->setSuspList(tagged2CVar(v)->unlinkSuspList());
       }
@@ -344,7 +344,7 @@ OZ_Return tellBasicConstraint(OZ_Term v, OZ_FiniteDomain * fd)
     }
 
     goto proceed;
-  } else if (isGenFDVar(v, vtag)) {
+  } else if (isGenFDVar(v)) {
     //
     // tell finite domain constraint to a finite domain variable
     //
@@ -371,7 +371,7 @@ OZ_Return tellBasicConstraint(OZ_Term v, OZ_FiniteDomain * fd)
       } else {
 	int singl = CAST_FD_OBJ(dom).getSingleElem();
 	fdvar->propagate(fd_prop_singl);
-	bindGlobalVarToValue(vptr, newSmallInt(singl));
+	bindGlobalVarToValue(vptr, makeTaggedSmallInt(singl));
       }
     } else if (dom == fd_bool) {
       // 
@@ -395,7 +395,7 @@ OZ_Return tellBasicConstraint(OZ_Term v, OZ_FiniteDomain * fd)
       }
     }
     goto proceed;
-  } else if (isGenBoolVar(v, vtag)) {
+  } else if (isGenBoolVar(v)) {
     //
     // tell finite domain constraint to a boolean variable
     //
@@ -411,7 +411,7 @@ OZ_Return tellBasicConstraint(OZ_Term v, OZ_FiniteDomain * fd)
       boolvar->becomesSmallIntAndPropagate(vptr, dom);
     } else {
       boolvar->propagate();
-      bindGlobalVarToValue(vptr, newSmallInt(dom));
+      bindGlobalVarToValue(vptr, makeTaggedSmallInt(dom));
     }
     goto proceed;
   } else if (isSmallIntTag(vtag)) {
@@ -420,7 +420,7 @@ OZ_Return tellBasicConstraint(OZ_Term v, OZ_FiniteDomain * fd)
     //
     if (! fd) goto proceed;
 
-    if (fd->isIn(smallIntValue(v)))
+    if (fd->isIn(tagged2SmallInt(v)))
       goto proceed;
   } else if (oz_isVariable(v)) {
     // 

@@ -168,7 +168,7 @@ public:
   // we don't use 'push' from Stack because we care about
   // space ourselves;
   void put(OZ_Term term) {
-    Assert(tagTypeOf(term) != GCTAG);
+    Assert(tagTypeOf(term) != TAG_GCMARK);
     checkConsistency();
     *tos++ = ToPointer(term);
   }
@@ -376,7 +376,7 @@ protected:
 inline
 int32 getTraverserTaskArg(OZ_Term taggedTraverserTask)
 {
-  Assert(tagTypeOf(taggedTraverserTask) == GCTAG);
+  Assert(tagTypeOf(taggedTraverserTask) == TAG_GCMARK);
   return (getGCTaggedInt(taggedTraverserTask));
 }
 //

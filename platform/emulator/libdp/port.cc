@@ -69,7 +69,7 @@ OZ_Return portSendInternal(Tertiary *p, TaggedRef msg){
     return raiseGeneric("portSend:resources",
 			"Resources found during send to port",
 			oz_mklist(OZ_pairA("Resources",nogoods),
-				  OZ_pairA("Port",makeTaggedTert(p))));
+				  OZ_pairA("Port",makeTaggedConst(p))));
   }
   
   PD((PORT,"sendingTo %s %d",site->stringrep(),index));
@@ -96,7 +96,7 @@ OZ_Return portSendImpl(Tertiary *p, TaggedRef msg)
   if(((PortProxy*)p)->pending!= NULL || !((PortProxy*)p)->canSend()){
     pendThreadAddToEnd(&(((PortProxy*)p)->pending),
 		       msg,msg,NOEX);
-    flowControler->addElement(makeTaggedTert(p));
+    flowControler->addElement(makeTaggedConst(p));
     return SuspendOnControlVarReturnValue;
   }
   Assert(((PortProxy*)p)->pending == NULL);
@@ -143,7 +143,7 @@ void  PortProxy::wakeUp(){
       entityProblem(this);
       return;}
     if(!this->canSend()){
-	flowControler->addElement(makeTaggedTert(this));
+	flowControler->addElement(makeTaggedConst(this));
 	return;}
     
     ret = portSendInternal(this, pending->nw);

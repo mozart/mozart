@@ -57,12 +57,12 @@ OZ_BI_define(BIchunkWidth, 1,1)
   DEREF(ch, chPtr, chTag);
 
   switch(chTag) {
-  case UVAR:
+  case TAG_UVAR:
     // FUT
-  case CVAR:
+  case TAG_CVAR:
     oz_suspendOn(makeTaggedRef(chPtr));
 
-  case OZCONST:
+  case TAG_CONST:
     if (!oz_isChunk(ch)) oz_typeError(0,"Chunk");
     //
     switch (tagged2Const(ch)->getType()) {
@@ -85,16 +85,15 @@ OZ_BI_define(BIisRecordCVarB,1,1)
   TaggedRef t = OZ_in(0); 
   DEREF(t, tPtr, tag);
   switch (tag) {
-  case LTUPLE:
-  case LITERAL:
-  case SRECORD:
+  case TAG_LTUPLE:
+  case TAG_LITERAL:
+  case TAG_SRECORD:
     break;
-  case CVAR:
+  case TAG_CVAR:
     if (tagged2CVar(t)->getType()!=OZ_VAR_OF)
       OZ_RETURN(oz_false());
     break;
-  case UVAR:
-    // SVAR
+  case TAG_UVAR:
     OZ_RETURN(oz_false());
   default:
     OZ_RETURN(oz_false());
@@ -136,30 +135,6 @@ OZ_BI_define(BIgetsBoundB, 2, 0)
 } OZ_BI_end
 
 
-OZ_BI_define(BIdeepFeed,2,0)
-{
-  oz_declareNonvarIN(0,c);
-  oz_declareIN(1,val);
-
-  if (!oz_isCell(c)) {
-    oz_typeError(0,"Cell");
-  }
-
-  CellLocal *cell = (CellLocal*)tagged2Tert(c);
-
-  Board * bb = GETBOARD(cell);
-  TaggedRef newVar = oz_newVar(bb);
-
-  RefsArray args = allocateRefsArray(2, NO);
-  args[0] = cell->exchangeValue(newVar);
-  args[1] = oz_cons(val,newVar);
-  
-  Thread * t = oz_newThreadInject(bb);
-  t->pushCall(BI_Unify,args,2);
-
-  return PROCEED;
-} OZ_BI_end
-
 OZ_BI_define(BIchunkArityBrowser,1,1)
 {
   OZ_Term ch =  OZ_in(0);
@@ -167,12 +142,12 @@ OZ_BI_define(BIchunkArityBrowser,1,1)
   DEREF(ch, chPtr, chTag);
 
   switch(chTag) {
-  case UVAR:
+  case TAG_UVAR:
     // FUT
-  case CVAR:
+  case TAG_CVAR:
     oz_suspendOn(makeTaggedRef(chPtr));
 
-  case OZCONST: 
+  case TAG_CONST: 
     if (!oz_isChunk(ch)) oz_typeError(0,"Chunk");
     //
     switch (tagged2Const(ch)->getType()) {

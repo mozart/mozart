@@ -61,12 +61,10 @@ void OZ_FDIntVar::ask(OZ_Term v)
   varPtr = _vptr;
   //
   if (isSmallIntTag(vtag)) {
-    initial_size = CAST_FD_OBJ(dom).initSingleton(smallIntValue(v));
+    initial_size = CAST_FD_OBJ(dom).initSingleton(tagged2SmallInt(v));
     domPtr = &dom;
     setSort(sgl_e);
   } else {
-    Assert(isCVar(vtag));
-
     OzVariable * cvar = tagged2CVar(v);
 
     if (cvar->getType() == OZ_VAR_BOOL) {
@@ -95,13 +93,13 @@ int OZ_FDIntVar::read(OZ_Term v)
   //
   if (isSmallIntTag(vtag)) {
 
-    initial_size = CAST_FD_OBJ(dom).initSingleton(smallIntValue(v));
+    initial_size = CAST_FD_OBJ(dom).initSingleton(tagged2SmallInt(v));
     initial_width = 0;
     domPtr = &dom;
     setSort(sgl_e);
 
   } else {
-    Assert(isCVar(vtag));
+    Assert(oz_isCVar(v));
 
     if (Propagator::getRunningPropagator()->isLocal()) {
     // local variable per definition
@@ -206,14 +204,12 @@ int OZ_FDIntVar::readEncap(OZ_Term v)
   varPtr= _vptr;
   //
   if (isSmallIntTag(vtag)) {
-    initial_size = CAST_FD_OBJ(dom).initSingleton(smallIntValue(v));
+    initial_size = CAST_FD_OBJ(dom).initSingleton(tagged2SmallInt(v));
     initial_width = 0;
     domPtr = &dom;
     setState(loc_e);
     setSort(sgl_e);
   } else {
-    Assert(isCVar(vtag));
-
     setState(encap_e);
     OzVariable * cvar = tagged2CVar(v);
 
@@ -291,7 +287,7 @@ OZ_Boolean OZ_FDIntVar::tell(void)
 	int int_val = CAST_FD_PTR(domPtr)->getSingleElem();
 	// wake up
 	tagged2GenFDVar(var)->propagate(fd_prop_singl);
-	bindGlobalVarToValue(varPtr, newSmallInt(int_val));
+	bindGlobalVarToValue(varPtr, makeTaggedSmallInt(int_val));
       }
       goto oz_false;
     } else if (*CAST_FD_PTR(domPtr) == fd_bool) {
@@ -337,7 +333,7 @@ OZ_Boolean OZ_FDIntVar::tell(void)
       // global variable
       tagged2GenBoolVar(var)->propagate();
       int int_val = CAST_FD_PTR(domPtr)->getSingleElem();
-      bindGlobalVarToValue(varPtr, newSmallInt(int_val));
+      bindGlobalVarToValue(varPtr, makeTaggedSmallInt(int_val));
     }
     goto oz_false;
   }

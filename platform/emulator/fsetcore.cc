@@ -116,7 +116,7 @@ OZ_BI_define(BIfsClone, 2, 0)
 
   DEREF(OZ_in(0), arg0ptr, arg0tag);
 
-  return arg0tag == FSETVALUE ? OZ_unify(OZ_in(0), OZ_in(1))
+  return isFSetValueTag(arg0tag) ? OZ_unify(OZ_in(0), OZ_in(1))
     : tellBasicConstraint(OZ_in(1),
 			  (FSetConstraint *) &tagged2GenFSetVar(oz_deref(OZ_in(0)))->getSet());
 } OZ_BI_end
@@ -133,7 +133,7 @@ OZ_BI_define(BIfsGetKnownIn, 1, 1)
 
   if (isFSetValueTag(vtag)) {
     OZ_RETURN(tagged2FSetValue(v)->getKnownInList());
-  } else if (isGenFSetVar(v, vtag)) {
+  } else if (isGenFSetVar(v)) {
     OZ_FSetConstraint * fsetconstr = &tagged2GenFSetVar(v)->getSet();
     OZ_RETURN(fsetconstr->getKnownInList());
   } else if (oz_isNonKinded(v)) {
@@ -152,10 +152,10 @@ OZ_BI_define(BIfsGetNumOfKnownIn, 1, 1)
 
   if (isFSetValueTag(vtag)) {
     OZ_FSetValue * fsetval = tagged2FSetValue(v);
-    OZ_RETURN(newSmallInt(fsetval->getCard()));
-  } else if (isGenFSetVar(v, vtag)) {
+    OZ_RETURN(makeTaggedSmallInt(fsetval->getCard()));
+  } else if (isGenFSetVar(v)) {
     OZ_FSetConstraint * fsetconstr = &tagged2GenFSetVar(v)->getSet();
-    OZ_RETURN(newSmallInt(fsetconstr->getKnownIn()));
+    OZ_RETURN(makeTaggedSmallInt(fsetconstr->getKnownIn()));
   } else if (oz_isNonKinded(v)) {
     oz_suspendOnPtr(vptr);
   }
@@ -175,7 +175,7 @@ OZ_BI_define(BIfsGetKnownNotIn, 1, 1)
   if (isFSetValueTag(vtag)) {
     OZ_FSetValue * fsetval = tagged2FSetValue(v);
     OZ_RETURN(fsetval->getKnownNotInList());
-  } else if (isGenFSetVar(v, vtag)) {
+  } else if (isGenFSetVar(v)) {
     OZ_FSetConstraint * fsetconstr = &tagged2GenFSetVar(v)->getSet();
     OZ_RETURN(fsetconstr->getKnownNotInList());
   } else if (oz_isNonKinded(v)) {
@@ -194,10 +194,10 @@ OZ_BI_define(BIfsGetNumOfKnownNotIn, 1, 1)
 
   if (isFSetValueTag(vtag)) {
     OZ_FSetValue * fsetval = tagged2FSetValue(v);
-    OZ_RETURN(newSmallInt(fsetval->getKnownNotIn()));
-  } else if (isGenFSetVar(v, vtag)) {
+    OZ_RETURN(makeTaggedSmallInt(fsetval->getKnownNotIn()));
+  } else if (isGenFSetVar(v)) {
     OZ_FSetConstraint * fsetconstr = &tagged2GenFSetVar(v)->getSet();
-    OZ_RETURN(newSmallInt(fsetconstr->getKnownNotIn()));
+    OZ_RETURN(makeTaggedSmallInt(fsetconstr->getKnownNotIn()));
   } else if (oz_isNonKinded(v)) {
     oz_suspendOnPtr(vptr);
   }
@@ -216,7 +216,7 @@ OZ_BI_define(BIfsGetUnknown, 1, 1)
 
   if (isFSetValueTag(vtag)) {
     OZ_RETURN(oz_nil());
-  } else if (isGenFSetVar(v, vtag)) {
+  } else if (isGenFSetVar(v)) {
     OZ_FSetConstraint * fsetconstr = &tagged2GenFSetVar(v)->getSet();
     OZ_RETURN(fsetconstr->getUnknownList());
   } else if (oz_isNonKinded(v)) {
@@ -234,10 +234,10 @@ OZ_BI_define(BIfsGetNumOfUnknown, 1, 1)
   DEREF(v, vptr, vtag);
 
   if (isFSetValueTag(vtag)) {
-    OZ_RETURN(newSmallInt(0));
-  } else if (isGenFSetVar(v, vtag)) {
+    OZ_RETURN(makeTaggedSmallInt(0));
+  } else if (isGenFSetVar(v)) {
     OZ_FSetConstraint * fsetconstr = &tagged2GenFSetVar(v)->getSet();
-    OZ_RETURN(newSmallInt(fsetconstr->getUnknown()));
+    OZ_RETURN(makeTaggedSmallInt(fsetconstr->getUnknown()));
   } else if (oz_isNonKinded(v)) {
     oz_suspendOnPtr(vptr);
   }
@@ -257,7 +257,7 @@ OZ_BI_define(BIfsGetLub, 1, 1)
   if (isFSetValueTag(vtag)) {
     OZ_FSetValue * fsetval = tagged2FSetValue(v);
     OZ_RETURN(fsetval->getKnownInList());
-  } else if (isGenFSetVar(v, vtag)) {
+  } else if (isGenFSetVar(v)) {
     OZ_FSetConstraint * fsetconstr = &tagged2GenFSetVar(v)->getSet();
     OZ_RETURN(fsetconstr->getLubList());
   } else if (oz_isNonKinded(v)) {
@@ -276,8 +276,8 @@ OZ_BI_define(BIfsGetCard, 1, 1)
 
   if (isFSetValueTag(vtag)) {
     OZ_FSetValue * fsetval = tagged2FSetValue(v);
-    OZ_RETURN(newSmallInt(fsetval->getCard()));
-  } else if (isGenFSetVar(v, vtag)) {
+    OZ_RETURN(makeTaggedSmallInt(fsetval->getCard()));
+  } else if (isGenFSetVar(v)) {
     OZ_FSetConstraint * fsetconstr = &tagged2GenFSetVar(v)->getSet();
     OZ_RETURN(fsetconstr->getCardTuple());
   } else if (oz_isNonKinded(v)) {
@@ -297,7 +297,7 @@ OZ_BI_define(BIfsCardRange, 3, 0)
     DEREF(lt, ltptr, lttag);
 
     if (isSmallIntTag(lttag)) {
-      l = smallIntValue(lt);
+      l = tagged2SmallInt(lt);
     } else if (isVariableTag(lttag)) {
       oz_suspendOnPtr(ltptr);
     } else {
@@ -311,7 +311,7 @@ OZ_BI_define(BIfsCardRange, 3, 0)
     DEREF(ut, utptr, uttag);
 
     if (isSmallIntTag(uttag)) {
-      u = smallIntValue(ut);
+      u = tagged2SmallInt(ut);
     } else if (isVariableTag(uttag)) {
       oz_suspendOnPtr(utptr);
     } else {
@@ -330,7 +330,7 @@ OZ_BI_define(BIfsCardRange, 3, 0)
     if (isFSetValueTag(vtag)) {
       int card = tagged2FSetValue(v)->getCard();
       return ((l <= card) && (card <= u)) ? PROCEED : FAILED;
-    } else if (isGenFSetVar(v, vtag)) {
+    } else if (isGenFSetVar(v)) {
       OZ_FSetConstraint * fsetconstr = &tagged2GenFSetVar(v)->getSet();
       int old_card_size = fsetconstr->getCardSize();
 
