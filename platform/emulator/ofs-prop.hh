@@ -71,11 +71,11 @@ public:
   virtual OZ_PropagatorProfile * getProfile(void) const {return &profile; }
   virtual OZ_Term getParameters(void) const { return OZ_nil(); }
   
-  TaggedRef getX(void) { return X; }
-  TaggedRef getK(void) { return K; }
-  TaggedRef getFH(void) { return FH; }
-  TaggedRef getFT(void) { return FT; }
-  void setFH(TaggedRef FH1) { FH=FH1; }
+  TaggedRef getX(void);
+  TaggedRef getK(void);
+  TaggedRef getFH(void);
+  TaggedRef getFT(void);
+  void setFH(TaggedRef FH1);
 };
 
 #endif
