@@ -221,6 +221,7 @@ define
       in
          {Tk.batch
           grid(columnconfigure self.toplevel 0 weight: 1)|
+          grid(rowconfigure self.toplevel 1 weight: 1)|
           grid(Menu row: 0 column: 0 columnspan: 2 sticky: nsew)|
           grid(self.text row: 1 column: 0 sticky: nsew)|
           grid(Scrollbar row: 1 column: 1 sticky: nsew)|
