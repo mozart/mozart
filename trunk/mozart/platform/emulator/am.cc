@@ -366,15 +366,14 @@ void AM::init(int argc,char **argv)
   osInitSignals();
   osSetAlarmTimer(CLOCK_TICK/1000);
 
+  if (!perdioInit()) {
+    fprintf(stderr,"Perdio initialization failed\n");
+  }
+
   if (!url) {
     // --> make sure that we check for input from compiler
     setSFlag(IOReady);
   } else {
-    if (!perdioInit()) {
-      fprintf(stderr,"Perdio initialization for URL %s failed\n",url);
-      exit(1);
-    }
-
     OZ_Term v=oz_newVariable(); 
     Thread *tt = mkRunnableThread(DEFAULT_PRIORITY, _rootBoard);
     OZ_Return ret = loadURL(url,v,tt);

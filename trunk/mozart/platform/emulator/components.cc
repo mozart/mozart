@@ -318,8 +318,6 @@ saveDatum(OZ_Term in,OZ_Datum& dat,OZ_Term resources)
 
 OZ_C_proc_begin(BIsmartSave,3)
 {
-  if(!perdioInit()) return FAILED;
-
   OZ_declareArg(0,in);
   OZ_declareArg(2,resources);
   OZ_declareVirtualStringArg(1,filename);
@@ -682,14 +680,12 @@ void getURL(char *url, TaggedRef out, Bool load, Thread *th)
 
 OZ_C_proc_begin(BIgetCachePath,1)
 {
-  if(!perdioInit()) return FAILED;
   return OZ_unify(OZ_getCArg(0),(OZ_Cache_Path==0)?OZ_unit():OZ_Cache_Path);
 }
 OZ_C_proc_end
 
 OZ_C_proc_begin(BIsetCachePath,1)
 {
-  if(!perdioInit()) return FAILED;
   OZ_declareNonvarArg(0,cache);
   if (!OZ_onToplevel())
     return oz_raise(E_ERROR,E_KERNEL,"globalState",1,oz_atom("setCachePath"));
@@ -797,7 +793,6 @@ bomb:
 
 OZ_C_proc_begin(BIload,2)
 {
-  if(!perdioInit()) return FAILED;
   OZ_declareVirtualStringArg(0,url);
   OZ_declareArg(1,out);
 
@@ -808,7 +803,6 @@ OZ_C_proc_end
 
 OZ_C_proc_begin(BIWget,2)
 {
-  if(!perdioInit()) return FAILED;
   OZ_declareVirtualStringArg(0,url);
   OZ_declareArg(1,out);
 
