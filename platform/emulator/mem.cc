@@ -4,6 +4,7 @@
  * 
  *  Contributors:
  *    Michael Mehl (mehl@dfki.de)
+ *    Konstantin Popov (kost@sics.se)
  * 
  *  Copyright:
  *    Organization or Person (Year(s))
@@ -65,7 +66,7 @@ void initMemoryManagement(void) {
   heapTotalSizeBytes = heapTotalSize = 0;
   heapTop       = NULL;
    
-  // allocate first chunck of memory;
+  // allocate first chunk of memory;
   MemChunks::list = NULL;
   (void) getMemFromOS(0);
 }
@@ -139,11 +140,25 @@ void freeListChop(void * addr, size_t size) {
 
 //
 // kost@: i have not tested that on anything else than 2.0.*
-// Linux-i486 (2.0.7-based) and Solaris-Sparc. Linux works, Solaris
-// will work. And, don't risk otherwise...
-#if !(defined(LINUX_I486))
+// Linux-i486 (2.0.7-based) and Solaris-Sparc. And don't risk
+// otherwise...
+#if !(defined(LINUX_I486) || defined(SOLARIS_SPARC))
 #undef HAVE_MMAP
 #endif
+
+// This is optional - that's kind'f not clear which evil is the
+// smallest one: rely on "choose a nearest next free address" linux
+// behaviour, or to use the discouraged 'MAP_FIXED' option;
+#if defined(LINUX_I486)
+#define USE_AUTO_PLACEMENT
+#endif
+
+//
+// There is an apparent bug somewhere in the system:
+// heap addresses in the range 0x30000000-0x3fffffff cannot be handled;
+// they cause some strange SIGSEGVs;
+// kost@: TODO
+#define HIGH_ADDRESSES_BUG_WORKAROUND
 
 //
 #if !defined(CCMALLOC) && defined(HAVE_MMAP)
@@ -155,16 +170,149 @@ void freeListChop(void * addr, size_t size) {
 #include <sys/mman.h>
 #include <fcntl.h>
 
+#if !defined(USE_AUTO_PLACEMENT)
+//
+// Entries are double-linked with a "core" element;
+class MappedMemChunkEntry {
+private:
+  caddr_t addr;
+  size_t size;			// bytes;
+  MappedMemChunkEntry *next, *prev;
+
+  //
+public:
+  // Make a "core" entry linked to itself:
+  MappedMemChunkEntry()
+    : addr((caddr_t) 0), size((size_t) 0),
+      next((MappedMemChunkEntry *) this),
+      prev((MappedMemChunkEntry *) this) {}
+  // We require explicit linking:
+  MappedMemChunkEntry(caddr_t addrIn, size_t sizeIn)
+    : addr(addrIn), size(sizeIn) {
+    DebugCode(next = prev = (MappedMemChunkEntry *) -1);
+  }
+  // We require also explicit unlinking:
+  ~MappedMemChunkEntry() {
+    Assert(next == (MappedMemChunkEntry *) -1);
+    Assert(prev == (MappedMemChunkEntry *) -1);
+  }
+
+  //
+  caddr_t getAddr() { return (addr); }
+  size_t getSize() { return (size); }
+  //
+  // only 'getNext()' is given: traverse it as it is sorted;
+  MappedMemChunkEntry* getNext() { return (next); }
+
+  //
+  void linkBefore(MappedMemChunkEntry *before) {
+    Assert(next == (MappedMemChunkEntry *) -1);
+    Assert(prev == (MappedMemChunkEntry *) -1);
+    //
+    next = before;
+    prev = before->prev;
+    before->prev = this;
+    prev->next = this;
+  }
+  void unlink() {
+    next->prev = prev;
+    prev->next = next;
+    DebugCode(next = prev = (MappedMemChunkEntry *) -1);
+  }
+};
+
+//
+class MappedMemChunks : private MappedMemChunkEntry {
+private:
+  // 'top' is the first upper non-valid address;
+  caddr_t top;
+  size_t pagesize;		// cached up;
+
+  //
+public:
+  MappedMemChunks() {
+    pagesize = sysconf(_SC_PAGESIZE);
+    top = (caddr_t) 
+      (((((unsigned int32) -1) >> lostPtrBits) / pagesize) * pagesize);
+#if defined(HIGH_ADDRESSES_BUG_WORKAROUND)
+    top -= (size_t) 0x10000000;
+#endif
+  }
+  ~MappedMemChunks() {}	// only when exit();
+
+  //
+  // Yields&reserves a largest address that would accept a page of
+  // 'reqSize' bytes without interferences with other pages.  The
+  // (double-linked) list of pages is sorted (in the 'getNext()'
+  // direction) in decreasing addresses;
+  caddr_t reservePlace(size_t reqSize) {
+    caddr_t upper = top;
+    MappedMemChunkEntry* entry = MappedMemChunkEntry::getNext();
+
+    //
+    while (entry != this) {
+      //
+      // Is there - between 'upper' and next's page end - enough room
+      // for the page?
+      caddr_t addr = upper - reqSize;
+      if (entry->getAddr() + entry->getSize() <= addr) {
+	MappedMemChunkEntry *newCE = 
+	  new MappedMemChunkEntry(addr, reqSize);
+	newCE->linkBefore(entry);
+	return (addr);
+      } else {
+	// no, go to the next one:
+	upper = entry->getAddr();
+	entry = entry->getNext();
+      }
+    }
+
+    //
+    // None found: make a last one (i.e. prior the core one (itself));
+    caddr_t addr = upper - reqSize;
+    MappedMemChunkEntry *newCE = 
+      new MappedMemChunkEntry(addr, reqSize);
+    newCE->linkBefore(this);
+    return (addr);
+  }    
+
+  //
+  void markFree(caddr_t addr, size_t size) {
+    MappedMemChunkEntry* entry = getNext();
+
+    //
+    while (entry != this) {
+      if (entry->getAddr() == addr) {
+	Assert(size == entry->getSize());
+	entry->unlink();
+	delete entry;
+	return;
+      }
+      entry = entry->getNext();
+    }
+    error("mappedChunks: has not found a page for removal!");
+  }
+};
+
+//
+static MappedMemChunks mappedChunks;
+
+#endif
+
+//
+// Real stuff;
 void ozFree(char *addr, size_t size) 
 {
+#if !defined(USE_AUTO_PLACEMENT)
+  mappedChunks.markFree(addr, size);
+#endif
   munmap(addr, size);
 }
 
 void *ozMalloc(size_t size) 
 {
-  // grhhh... 
-  static size_t pagesize = sysconf(_SC_PAGESIZE);
-#if !defined(xxMAP_ANONYMOUS)
+  static size_t const pagesize = sysconf(_SC_PAGESIZE);
+#if !defined(MAP_ANONYMOUS)
   static int devZeroFD = -1;
 
   //
@@ -176,15 +324,13 @@ void *ozMalloc(size_t size)
 
   //
   size = (size / pagesize) * pagesize;
-  char *nextAddr = (char *)
-    (((((unsigned int32) -1) >> lostPtrBits) / pagesize) * pagesize);
-  nextAddr -= size;
-  // kost@: TODO: here, at least for solaris-sparc version, further
-  // intelligence is needed: keep track of attached pages...
+#if !defined(USE_AUTO_PLACEMENT)
+  char *nextAddr = mappedChunks.reservePlace(size);
+#endif
 
   //
 #if defined(MAP_ANONYMOUS)
-#if defined(LINUX_I486)
+#if defined(USE_AUTO_PLACEMENT)
   void *ret = mmap((char *) 0x1, size, (PROT_READ|PROT_WRITE),
 		   (MAP_PRIVATE|MAP_ANONYMOUS), 
 		   -1, (off_t) 0);
@@ -198,9 +344,21 @@ void *ozMalloc(size_t size)
 		   (MAP_PRIVATE|MAP_FIXED),
 		   devZeroFD, (off_t) 0);
 #endif
-
-  //
   if (ret < 0) { perror("mmap"); }
+#ifdef DEBUG_CHECK
+  //
+  // make test of the created page: write, read, write, read!
+  for (char *addr = (char *) ret; addr < ((char *) ret) + size; addr++)
+    *addr = (char) 0;
+  for (char *addr = (char *) ret; addr < ((char *) ret) + size; addr++)
+    if (*addr != (char) 0) 
+      error ("mmap check: failed to read zeros");
+  for (char *addr = (char *) ret; addr < ((char *) ret) + size; addr++)
+    *addr = (char) 0x4f;
+  for (char *addr = (char *) ret; addr < ((char *) ret) + size; addr++)
+    if (*addr != (char) 0x4f)
+      error ("mmap check: failed to read values");
+#endif
 
   //  
   return (ret);  
