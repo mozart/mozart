@@ -9,6 +9,8 @@ case $system in
    ;;
    RISC\ ULTRIX\ 4.*)  OZARCH=ultrix-mips
    ;;
+   i486\ Linux\ *)     OZARCH=linux-i486
+   ;;
    *)  echo "Cannot determine machine type and OS version" 1>&2 ; exit 1
 esac
 
