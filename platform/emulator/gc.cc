@@ -881,7 +881,7 @@ RunnableThreadBody *RunnableThreadBody::gcRTBody ()
   // ptrStack.push (ret, PTR_RTBODY);
   storeForward ((int *) &taskStack, ret);
 
-  obj = obj->gcObject();
+  ret->obj = ret->obj->gcObject();
 
   return (ret);
 }
