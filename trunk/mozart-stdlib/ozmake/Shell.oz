@@ -24,12 +24,15 @@ export
 import
    Property(get)     at 'x-oz://system/Property.ozf'
    OS(system getEnv) at 'x-oz://system/OS.ozf'
+   Open(pipe)        at 'x-oz://system/Open.ozf'
 define
    %% on Windows we use the shell specified by environment
    %% variable COMSPEC, on other platforms we specify
    %% nothing which means we get `sh'.
+
+   IsWindows=({Property.get 'platform.os'}=='win32')
    
-   SHELL = if {Property.get 'platform.os'}=='win32' then
+   SHELL = if IsWindows then
 	      {OS.getEnv 'COMSPEC'}#' /c '
 	   else nil end
 
@@ -76,7 +79,19 @@ define
       end
    end
    
-   proc {ExecuteProgram CMD} VS={ToProgramVS CMD} in
+   proc {ExecuteProgram CMD}
+      if IsWindows then
+	 PGM={New Open.pipe init(cmd:CMD.1 args:CMD.2)}
+      in
+	 for break:Break do
+	    S={PGM read(list:$)}
+	 in
+	    if S==nil then {Break} else
+	       {System.printError S}
+	    end
+	 end
+	 try {PGM close} catch _ then skip end
+      else VS={ToProgramVS CMD} in
       if {OS.system VS}\=0 then
 	 raise shell(VS) end
       end
