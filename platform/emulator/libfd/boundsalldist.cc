@@ -21,6 +21,17 @@
  *
  */
 
+/*
+ * THIS IS EXPERIMENTAL, IN PARTICULAR THE SORTING AND ALL THAT!
+ * AND USES O(n^2) RATHER THAN O(n log n)
+ *
+ * The algorithm is taken from:
+ *   Jean-François Puget, A fast algorithm for the bound consistency
+ *   of alldiff constraints, Proceedings of the 15th National Conference
+ *   on Artificial Intelligence (AAAI-98), pages 359--366, 1998.
+ *
+ */
+
 #include "boundsalldist.hh"
 
 OZ_BI_define(fdp_distinctB, 1, 0)
