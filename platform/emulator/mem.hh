@@ -94,9 +94,17 @@ inline unsigned int getAllocatedMemory() {
 
 void *heapMallocOutline(size_t chunk_size);
 
+/* align X to word boundaries */
+#define WordAlign(X) 							      \
+  { int _help = (long) X % WordSize;					      \
+    if (_help != 0) { X += WordSize - _help; }				      \
+  }
+
 inline
 void *heapMalloc(size_t chunk_size)
 {
+  WordAlign(chunk_size);
+  
   char *oldTop = heapTop;
   heapTop += chunk_size;
   if (heapTop > heapEnd) {

@@ -86,7 +86,7 @@ unsigned int getMemoryInFreeList()
 //   USESBRK
 //   USEMALLOC
 
-#if defined(SUNOS_SPARC) || defined(SOLARIS_SPARC) || defined(LINUX_I486) || defined(IRIX5_MIPS) 
+#if defined(SUNOS_SPARC) || defined(SOLARIS_SPARC) || defined(LINUX) || defined(IRIX5_MIPS) 
 #define USESBRK
 #else
 #define USEMALLOC
@@ -302,7 +302,7 @@ Bool MemChunks::inChunkChain(void *value)
 Bool MemChunks::isInHeap(TaggedRef term)
 {
   if (isRef (term) && term != makeTaggedNULL() &&
-      !list->inChunkChain((void *)term)) {
+      !list->inChunkChain(tagged2Ref(term))) {
     return NO;
   }
   if (!isRef (term)) {
@@ -313,7 +313,7 @@ Bool MemChunks::isInHeap(TaggedRef term)
     case STUPLE:
     case CONST:
     case SRECORD:
-      if (!list->inChunkChain((void *)tagValueOf (term))) {
+      if (!list->inChunkChain(tagValueOf (term))) {
 	return NO;
       }
       break;
@@ -367,16 +367,18 @@ void getMemFromOS(size_t sz)
 
   heapTop = (char *) ozMalloc(heapBlockSize);
   
-  if (!heapTop) {
+  if (heapTop == NULL) {
     error("heapMalloc: Virtual memory exceeded"); 
   }
 
+  WordAlign(heapTop);
+  
   /* initialize with zeros */
   DebugCheckT(memset(heapTop,0,heapBlockSize));
 
   heapEnd = &heapTop[heapBlockSize];
 
-  //  message("heapEnd: 0x%x\n maxPointer: 0x%x\n",heapEnd,maxPointer+1);
+//  message("heapEnd: 0x%lx\n maxPointer: 0x%lx\n",heapEnd,maxPointer+1);
   if (heapEnd > (char*)maxPointer) {
     error("Oz adress space exhausted");
     IO::exitOz(1);
