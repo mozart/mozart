@@ -5726,34 +5726,6 @@ OZ_BI_define(BIdelAllFastGroup,1,1)
 
 
 /********************************************************************
- * System Registry
- ******************************************************************** */
-
-// Copyright © by Denys Duchier, Jan 1998, Universität des Saarlandes
-//
-// The system registry serves several purposes.  (1) it serves to
-// record properties much like the Java properties.  For example
-// property 'user.home' records the current user's home directory.
-// (2) it also serves to register `plugins' that provide (improved)
-// services.  For example, search path and cache mechanisms for
-// loading etc...  In particular, the emulator itself can take
-// advantage of services implemented in Oz.
-//
-// see value.hh for:
-//	registry_get(OZ_Term)
-//	registry_get(char*)
-//	registry_put(OZ_Term,OZ_Term)
-//	registry_put(char*s,OZ_Term)
-
-// extern OZ_Term system_registry;	// moved to vprops.cc
-// 
-// OZ_BI_define(BIsystem_registry,0,1)
-// {
-//   OZ_RETURN(system_registry);
-// } OZ_BI_end
-
-
-/********************************************************************
  * Inspecting values (EXPERIMENTAL by mm)
  ******************************************************************** */
 
