@@ -119,7 +119,7 @@ $(ALLFILES): $(PREFIX)/% : % $(PREFIX)
 ######################################################################
 
 PLATFORMS=	solaris-sparc aix3-rs600 freebsd-i486 hpux-700\
-		irix5-mips linux-i486 netbsd-i486 netbsd-m68k netbsd-sparc\
+		irix6-mips linux-i486 netbsd-i486 netbsd-m68k netbsd-sparc\
 		osf1-alpha solaris-i486 sunos-sparc win32-i486
 PLATFORMFILES=  LICENSE LICENSE.html bin cache contrib include share
 COMPRESS=	gzip -9
