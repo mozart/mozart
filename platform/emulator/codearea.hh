@@ -1,15 +1,16 @@
-/*
-  Hydra Project, DFKI Saarbruecken,
-  Stuhlsatzenhausweg 3, D-66123 Saarbruecken, Phone (+49) 681 302-5312
-  Author: popow
-  Last modified: $Date$ from $Author$
-  Version: $Revision$
-  State: $State$
-
-  ------------------------------------------------------------------------
-
-  ------------------------------------------------------------------------
-*/
+/*********************************************************************
+ * Authors: {Kostja.Popow,Ralf.Scheidhauer,Michael Mehl}@ps.uni-sb.de
+ * Copyright: authors 1991-1997
+ *
+ * This file is part of the Mozart system:
+ *     http://www.ps.uni-sb.de/mozart/
+ *
+ * See the file "LICENSE for information on usage and redistribution
+ * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
+ *
+ * Last modified: $Date$ from $Author$
+ * Version: $Revision$
+ *********************************************************************/
 
 #ifndef __CODE_AREAH
 #define __CODE_AREAH
@@ -153,6 +154,7 @@ public:
 
 #ifdef THREADED
   static void **globalInstrTable;
+  static HashTable *opcodeTable;
 #endif
 
   static AdressOpcode getOP(ProgramCounter PC) { 
