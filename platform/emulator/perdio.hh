@@ -90,6 +90,7 @@ enum MessageType {
   M_REGISTER_VS,
 
   M_FILE,
+  M_EXPORT,
   M_INIT_VS,
   M_UNASK_ERROR,
   M_SEND_GATE,
@@ -370,9 +371,10 @@ void SendTo(Site *toS,MsgBuffer *bs,MessageType mt,Site *sS,int sI);
 #define NOT_IMPLEMENTED   {warning("not implemented - perdio");Assert(0);}
 
 /* RS: have to GC the byte stream again !!!!!!!!!*/
-#define CheckNogoods(bs,msg)				\
+#define CheckNogoods(bs,msg,Cleanup)			\
   { OZ_Term nogoods = bs->getNoGoods();			\
-    if (!literalEq(nil(),nogoods)) {			\
+    if (!isNil(nogoods)) {				\
+       Cleanup;						\
        return oz_raise(E_ERROR,OZ_atom("dp"),msg,2,	\
 	  	       oz_atom("nogoods"),		\
 		       nogoods);			\
