@@ -70,11 +70,11 @@ extern "C" char *inet_ntoa(struct in_addr in);
 
 #define OZ_declareVsArg(ARG,VAR) \
  vs_buff(VAR); OZ_nonvarArg(ARG);                                     \
- { int len; OZ_Return status; OZ_Term rest, susp;                 \
+ { int len; OZ_Return status; OZ_Term rest, susp;                     \
    status = buffer_vs(OZ_getCArg(ARG), VAR, &len, &rest, &susp);      \
    if (status == SUSPEND) {                                           \
      if (OZ_isVariable(susp)) {                                       \
-       return SUSPEND;                                                \
+       OZ_suspendOn(susp);                                            \
      } else {                                                         \
        return OZ_raise(OZ_mkTupleC("unix",1,OZ_mkTupleC("vs",2,"virtual string too long in arg",ARG+1))); \
      }                                                                \
@@ -584,11 +584,25 @@ OZ_C_proc_end
 #define O_SYNC     0
 #endif
 
+#define DeclareAtomListArg(ARG,VAR) \
+OZ_Term VAR = OZ_getCArg(ARG);               \
+{ OZ_Term arg = VAR;                         \
+  while (OZ_isCons(arg)) {                   \
+    TaggedRef a = OZ_head(arg);              \
+    if (OZ_isVariable(a)) OZ_suspendOn(a);   \
+    if (!OZ_isAtom(a))    return FAILED;     \
+    arg = OZ_tail(arg);                      \
+  }                                          \
+  if (OZ_isVariable(arg)) OZ_suspendOn(arg); \
+  if (!OZ_isNil(arg))     return FAILED;     \
+}
+
+
 OZ_C_ioproc_begin(unix_open,4)
 {
   OZ_declareVsArg(0, filename);
-  OZ_declareArg(1, OzFlags);
-  OZ_declareArg(2, OzMode);
+  DeclareAtomListArg(1, OzFlags);
+  DeclareAtomListArg(2, OzMode);
   OZ_declareArg(3, out);
 
   // Compute flags from their textual representation
@@ -716,7 +730,7 @@ OZ_C_proc_end
 OZ_C_ioproc_begin(unix_write, 3)
 {
   OZ_declareIntArg(0, fd);
-  OZ_declareArg(1, vs);
+  OZ_nonvarArg(1, vs);
   OZ_declareArg(2, out);
 
   CHECK_WRITE(fd,out,vs);
@@ -1101,8 +1115,8 @@ static OZ_Return get_send_recv_flags(OZ_Term OzFlags, int * flags)
 OZ_C_ioproc_begin(unix_send, 4)
 {
   OZ_declareIntArg(0, sock);
-  OZ_declareArg(1, vs);
-  OZ_declareArg(2, OzFlags);
+  OZ_nonvarArg(1, vs);
+  DeclareAtomListArg(2, OzFlags);
   OZ_declareArg(3, out);
 
 
@@ -1151,8 +1165,8 @@ OZ_C_proc_end
 OZ_C_ioproc_begin(unix_sendToInet, 6)
 {
   OZ_declareIntArg(0, sock);
-  OZ_declareArg(1, vs);
-  OZ_declareArg(2, OzFlags);
+  OZ_nonvarArg(1, vs);
+  DeclareAtomListArg(2, OzFlags);
   OZ_declareVsArg(3, host);
   OZ_declareIntArg(4, port);
   OZ_declareArg(5, out);
@@ -1216,8 +1230,8 @@ OZ_C_proc_end
 OZ_C_ioproc_begin(unix_sendToUnix, 5)
 {
   OZ_declareIntArg(0, sock);
-  OZ_declareArg(1, vs);
-  OZ_declareArg(2, OzFlags);
+  OZ_nonvarArg(1, vs);
+  DeclareAtomListArg(2, OzFlags);
   OZ_declareVsArg(3, path);
   OZ_declareArg(4, out);
 
@@ -1286,7 +1300,7 @@ OZ_C_ioproc_begin(unix_receiveFromInet,8)
 {
   OZ_declareIntArg(0,sock);
   OZ_declareIntArg(1,maxx);
-  OZ_declareArg(2, OzFlags);
+  DeclareAtomListArg(2, OzFlags);
   OZ_declareArg(3, hd);
   OZ_declareArg(4, tl);
   OZ_declareArg(5, host);
@@ -1331,7 +1345,7 @@ OZ_C_ioproc_begin(unix_receiveFromUnix,7)
 {
   OZ_declareIntArg(0,sock);
   OZ_declareIntArg(1,maxx);
-  OZ_declareArg(2, OzFlags);
+  DeclareAtomListArg(2, OzFlags);
   OZ_declareArg(3, hd);
   OZ_declareArg(4, tl);
   OZ_declareArg(5, path);
@@ -1783,59 +1797,59 @@ OZ_C_proc_end
 
 
 #ifdef WINDOWS
-NotAvail("bindUnix",3,unix_bindUnix);
-NotAvail("sendToUnix",5,unix_sendToUnix);
-NotAvail("connectUnix",3,unix_connectUnix);
-NotAvail("acceptUnix",3,unix_acceptUnix);
-NotAvail("receiveFromUnix",7,unix_receiveFromUnix);
-NotAvail("wait",2,unix_wait);
-NotAvail("getServByName",3,unix_getServByName);
-NotAvail("uName",1,unix_uName);
+NotAvail("Unix.bind",            3, unix_bindUnix);
+NotAvail("Unix.sendToUnix",      5, unix_sendToUnix);
+NotAvail("Unix.connectUnix",     3, unix_connectUnix);
+NotAvail("Unix.acceptUnix",      3, unix_acceptUnix);
+NotAvail("Unix.receiveFromUnix", 7, unix_receiveFromUnix);
+NotAvail("Unix.wait",            2, unix_wait);
+NotAvail("Unix.getServByName",   3, unix_getServByName);
+NotAvail("Unix.uName",           1, unix_uName);
 #endif
 
 OZ_BIspec spec[] = {
-  {"unix_getDir",2,unix_getDir},
-  {"unix_stat",2,unix_stat},
-  {"unix_getCWD",1,unix_getCWD},
-  {"unix_open",4,unix_open},
-  {"unix_fileDesc",2,unix_fileDesc},
-  {"unix_close",2,unix_close},
-  {"unix_write",3,unix_write},
-  {"unix_read",5,unix_read},
-  {"unix_lSeek",4,unix_lSeek},
-  {"unix_unlink",2,unix_unlink},
-  {"unix_readSelect",2,unix_readSelect},
-  {"unix_writeSelect",2,unix_writeSelect},
-  {"unix_deSelect",1,unix_deSelect},
-  {"unix_system",2,unix_system},
-  {"unix_getEnv",2,unix_getEnv},
-  {"unix_putEnv",2,unix_putEnv},
-  {"unix_gmTime",1,unix_gmTime},
-  {"unix_localTime",1,unix_localTime},
-  {"unix_srand",1,unix_srand},
-  {"unix_rand",1,unix_rand},
-  {"unix_randLimits",2,unix_randLimits},
-  {"unix_socket",4,unix_socket},
-  {"unix_bindInet",3,unix_bindInet},
-  {"unix_listen",3,unix_listen},
-  {"unix_connectInet",4,unix_connectInet},
-  {"unix_acceptInet",4,unix_acceptInet},
-  {"unix_shutDown",3,unix_shutDown},
-  {"unix_send",4,unix_send},
-  {"unix_sendToInet",6,unix_sendToInet},
-  {"unix_receiveFromInet",8,unix_receiveFromInet},
-  {"unix_getSockName",2,unix_getSockName},
-  {"unix_getHostByName",2,unix_getHostByName},
-  {"unix_bindUnix",3,unix_bindUnix},
-  {"unix_sendToUnix",5,unix_sendToUnix},
-  {"unix_connectUnix",3,unix_connectUnix},
-  {"unix_acceptUnix",3,unix_acceptUnix},
-  {"unix_receiveFromUnix",7,unix_receiveFromUnix},
-  {"unix_pipe",4,unix_pipe},
-  {"unix_tempName",3,unix_tempName},
-  {"unix_wait",2,unix_wait},
-  {"unix_getServByName",3,unix_getServByName},
-  {"unix_uName",1,unix_uName},
+  {"Unix.getDir",2,unix_getDir},
+  {"Unix.stat",2,unix_stat},
+  {"Unix.getCWD",1,unix_getCWD},
+  {"Unix.open",4,unix_open},
+  {"Unix.fileDesc",2,unix_fileDesc},
+  {"Unix.close",2,unix_close},
+  {"Unix.write",3,unix_write},
+  {"Unix.read",5,unix_read},
+  {"Unix.lSeek",4,unix_lSeek},
+  {"Unix.unlink",2,unix_unlink},
+  {"Unix.readSelect",2,unix_readSelect},
+  {"Unix.writeSelect",2,unix_writeSelect},
+  {"Unix.deSelect",1,unix_deSelect},
+  {"Unix.system",2,unix_system},
+  {"Unix.getEnv",2,unix_getEnv},
+  {"Unix.putEnv",2,unix_putEnv},
+  {"Unix.gmTime",1,unix_gmTime},
+  {"Unix.localTime",1,unix_localTime},
+  {"Unix.srand",1,unix_srand},
+  {"Unix.rand",1,unix_rand},
+  {"Unix.randLimits",2,unix_randLimits},
+  {"Unix.socket",4,unix_socket},
+  {"Unix.bindInet",3,unix_bindInet},
+  {"Unix.listen",3,unix_listen},
+  {"Unix.connectInet",4,unix_connectInet},
+  {"Unix.acceptInet",4,unix_acceptInet},
+  {"Unix.shutDown",3,unix_shutDown},
+  {"Unix.send",4,unix_send},
+  {"Unix.sendToInet",6,unix_sendToInet},
+  {"Unix.receiveFromInet",8,unix_receiveFromInet},
+  {"Unix.getSockName",2,unix_getSockName},
+  {"Unix.getHostByName",2,unix_getHostByName},
+  {"Unix.bindUnix",3,unix_bindUnix},
+  {"Unix.sendToUnix",5,unix_sendToUnix},
+  {"Unix.connectUnix",3,unix_connectUnix},
+  {"Unix.acceptUnix",3,unix_acceptUnix},
+  {"Unix.receiveFromUnix",7,unix_receiveFromUnix},
+  {"Unix.pipe",4,unix_pipe},
+  {"Unix.tempName",3,unix_tempName},
+  {"Unix.wait",2,unix_wait},
+  {"Unix.getServByName",3,unix_getServByName},
+  {"Unix.uName",1,unix_uName},
   {0,0,0}
 };
 
