@@ -45,7 +45,9 @@ Bool GenBoolVariable::unifyBool(TaggedRef * vPtr, TaggedRef var,
 	doBind(vPtr, term);
 	if (disp) dispose();
       } else {
+#ifndef NEW_SUSP_SCHEME
 	if (prop) addSuspension(new Suspension(am.currentBoard));
+#endif
 	am.doBindAndTrail(var, vPtr, term);
       }
       
@@ -116,11 +118,13 @@ Bool GenBoolVariable::unifyBool(TaggedRef * vPtr, TaggedRef var,
 	      am.doBindAndTrailAndIP(term, tPtr, makeTaggedRef(var_val),
 				     bool_var, termvar, prop);
 	      
+#ifndef NEW_SUSP_SCHEME
 	      if (prop) {
 		Suspension * susp = new Suspension(am.currentBoard);
 		termvar->addSuspension(susp);
 		addSuspension(susp);
 	      }
+#endif
 	      break;
 	    }
 
@@ -174,14 +178,18 @@ Bool GenBoolVariable::unifyBool(TaggedRef * vPtr, TaggedRef var,
 		  TaggedRef int_var = newSmallInt(intsct);
 		  termvar->propagate(term, fd_det, pc_cv_unif);
 		  propagate(var, pc_cv_unif);
+#ifndef NEW_SUSP_SCHEME
 		  termvar->addSuspension(new Suspension(am.currentBoard));
+#endif
 		  doBind(vPtr, int_var);
 		  am.doBindAndTrail(term, tPtr, int_var);
 		  if (disp) dispose();
 		} else {
 		  termvar->propagate(term, fd_bounds, pc_cv_unif);
 		  propagate(var, pc_cv_unif);
+#ifndef NEW_SUSP_SCHEME
 		  termvar->addSuspension(new Suspension(am.currentBoard));
+#endif
 		  am.doBindAndTrailAndIP(term, tPtr, makeTaggedRef(vPtr),
 					 this, termvar, prop);
 		}
@@ -194,7 +202,9 @@ Bool GenBoolVariable::unifyBool(TaggedRef * vPtr, TaggedRef var,
 		  TaggedRef int_term = newSmallInt(intsct);
 		  propagate(var, pc_cv_unif);
 		  termvar->propagate(term, fd_det, pc_cv_unif);
+#ifndef NEW_SUSP_SCHEME
 		  addSuspension(new Suspension(am.currentBoard));
+#endif
 		  doBind(tPtr, int_term);
 		  am.doBindAndTrail(var, vPtr, int_term);
 		  if (disp) termvar->dispose();
@@ -230,11 +240,13 @@ Bool GenBoolVariable::unifyBool(TaggedRef * vPtr, TaggedRef var,
 		  am.doBindAndTrailAndIP(term, tPtr, makeTaggedRef(var_val),
 					 bool_var, termvar, prop);
 		}
+#ifndef NEW_SUSP_SCHEME
 		if (prop) {
 		  Suspension * susp = new Suspension(am.currentBoard);
 		  termvar->addSuspension(susp);
 		  addSuspension(susp);
 		}
+#endif
 		break; 
 	      } 
 	    default:
