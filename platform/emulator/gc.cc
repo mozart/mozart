@@ -363,7 +363,7 @@ static SavedPtrStack savedPtrStack;
 inline int32  GCMARK(void *S)    { return makeTaggedRef(GCTAG,S); }
 inline int32  GCMARK(int32 S)    { return makeTaggedRef(GCTAG,S); }
 
-inline void *GCUNMARK(int32 S)   { return tagValueOf(S); }
+inline void *GCUNMARK(int32 S)   { return tagValueOf(GCTAG,S); }
 inline Bool GCISMARKED(int32 S)  { return GCTAG==tagTypeOf((TaggedRef)S); }
 
 
