@@ -34,7 +34,7 @@ static DWORD __stdcall watchParentThread(void *arg)
   HANDLE handle = (HANDLE) arg;
   DWORD ret = WaitForSingleObject(handle,INFINITE);
   if (ret != WAIT_OBJECT_0) {
-    panic(true,"Watching parent thread failed.");
+    panic(true,"Watching parent thread failed.\n");
   }
   ExitProcess(0);
   return 1;
@@ -56,7 +56,7 @@ static void watchParent()
   int pid = atoi(buf);
   HANDLE handle = OpenProcess(SYNCHRONIZE, 0, pid);
   if (handle == NULL) {
-    panic(true,"Opening the parent process failed.");
+    panic(true,"Opening the parent process failed.\n");
   } else {
     DWORD thrid;
     HANDLE th = CreateThread(0,0,watchParentThread,handle,0,&thrid);
@@ -89,11 +89,11 @@ int main(int argc, char **argv)
 
   HINSTANCE hEmulator = LoadLibrary(new_argv[0]);
   if (hEmulator == NULL) {
-    panic(true,"Could not link %s.",new_argv[0]);
+    panic(true,"Could not link %s.\n",new_argv[0]);
   }
   MAIN OZ_main = (MAIN) GetProcAddress(hEmulator, "OZ_main");
   if (OZ_main == NULL) {
-    panic(true,"Could not find function OZ_main in %s.",new_argv[0]);
+    panic(true,"Could not find function OZ_main in %s.\n",new_argv[0]);
   }
   OZ_main(new_argc, new_argv);
   FreeLibrary(hEmulator);
