@@ -675,7 +675,9 @@ struct  linger {
 #define ETIMEDOUT               WSAETIMEDOUT
 #define ECONNREFUSED            WSAECONNREFUSED
 #define ELOOP                   WSAELOOP
+#ifndef __MINGW32__
 #define ENAMETOOLONG            WSAENAMETOOLONG
+#endif
 #define EHOSTDOWN               WSAEHOSTDOWN
 #define EHOSTUNREACH            WSAEHOSTUNREACH
 #define xxENOTEMPTY               WSAENOTEMPTY
@@ -939,6 +941,7 @@ typedef struct timeval FAR *LPTIMEVAL;
 
 #ifdef __MINGW32__
 
+int PASCAL FAR gethostname (char FAR * name, int namelen);
 struct hostent PASCAL FAR * gethostbyname (const char FAR * name);
 struct protoent PASCAL FAR * FAR getprotobyname(const char FAR * name);
 struct hostent PASCAL FAR * gethostbyaddr (const char FAR * addr,
