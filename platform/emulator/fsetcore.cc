@@ -42,7 +42,7 @@
 
 OZ_BI_define(BIfsValueToString, 1,1)
 {
-  OZ_declareDetTerm(0,in);
+  oz_declareNonvarIN(0,in);
 
   if (oz_isFSetValue(in)) {
     char *s = OZ_toC(in,100,100); // mm2
