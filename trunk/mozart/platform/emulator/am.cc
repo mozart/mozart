@@ -957,7 +957,7 @@ Bool AM::suspendOnVarList(Thread *thr)
     OZ_Term v=oz_head(_suspendVarList);
     Assert(oz_isVariable(*tagged2Ref(v)));
     
-    if (oz_var_addSusp(tagged2Ref(v),thr)) {
+    if (oz_var_addSuspINLINE(tagged2Ref(v),thr)) {
       am.emptySuspendVarList();
       return TRUE;
     }
