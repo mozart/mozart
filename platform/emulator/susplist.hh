@@ -31,45 +31,41 @@ private:
   Thread *thr;
   SuspList *next;
 public:
+  ~SuspList (void); // fake compiler
+
   USEFREELISTMEMORY;
+  SuspList * gc();
+  OZPRINT;
 
-  SuspList(Thread *t, SuspList * n = NULL) : thr(t), next(n) {
-    DebugCheck(ToInt32 (t) == ToInt32 (NULL),
-               error ("suspension elem missing."););
+  SuspList(Thread *t, SuspList * n = NULL)
+    : thr(t), next(n)
+  {
+    Assert(t);
   }
 
-  SuspList * getNext(void) {return next;}
 
-  void setNext(SuspList * n) {next = n;}
+  SuspList * getNext(void)   { return next; }
+  void setNext(SuspList * n) { next = n; }
+  Thread *getElem()          { return thr; }
 
-  Thread *getElem () {
-    return ((Thread *) (ToPointer (ToInt32 (thr))));
-  }
-
-  SuspList * appendTo(SuspList *);
-  SuspList * appendToAndUnlink(SuspList * &);
   SuspList * appendToAndUnlink(SuspList * &, Bool reset_local);
 
-  Bool checkCondition(TaggedRef taggedVar, TaggedRef term);
+  SuspList * dispose(void) {
+    SuspList * ret = next;
+    freeListDispose(this, sizeof(SuspList));
+    return ret;
+  }
 
-  ~SuspList (void) {}
-  SuspList * dispose(void);
-  void disposeList(void);
+  void disposeList(void) {
+    for (SuspList * l = this; l; l = l->dispose());
+  }
+
 
   TaggedRef DBGmakeList(void);
 
   int length(void);
   int lengthProp(void);
 
-  SuspList * gc();
-
-  int isContained(SuspList * e) {
-    for (SuspList *aux = this; aux; aux = aux->getNext())
-      if (aux == e)
-        return 1;
-    return 0;
-  }
-  OZPRINT;
 }; // SuspList
 
 

@@ -35,7 +35,6 @@
 #pragma implementation "variable.hh"
 #pragma implementation "thrqueue.hh"
 #pragma implementation "thrspool.hh"
-#pragma implementation "verbose.hh"
 #pragma implementation "lazyvar.hh"
 
 #endif
@@ -65,5 +64,5 @@
 #include "variable.cc"
 #include "thrqueue.cc"
 #include "thrspool.cc"
-#include "verbose.cc"
 #include "lazyvar.cc"
+#include "print.cc"

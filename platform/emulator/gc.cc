@@ -32,7 +32,6 @@
 #include "fdhook.hh"
 #include "fdprofil.hh"
 
-#include "verbose.hh"
 #include "fdomn.hh"
 
 #include "dictionary.hh"
@@ -88,6 +87,29 @@ static GcMode opMode;
 // #  define WIPEOUTFROM
 #endif
 
+
+#ifdef VERBOSE
+
+#define VERB_OUTPUT   "/tmp/verb-out-%d.txt"
+
+void verbReopen ();
+
+FILE *verbOut = (FILE *) NULL;
+
+void verbReopen ()
+{
+  if (verbOut != (FILE *) NULL)
+    (void) fclose (verbOut);
+
+  char *filename = new char[100];
+  sprintf(filename,VERB_OUTPUT,osgetpid());
+  fprintf(stderr, "verbose output to file %s\n",filename);
+
+  verbOut = fopen (filename, "w");
+  delete [] filename;
+}
+
+#endif // VERBOSE
 
 
 /*

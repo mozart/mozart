@@ -1491,7 +1491,7 @@ void AM::pushToplevel(ProgramCounter pc)
 void AM::checkToplevel()
 {
   if (toplevelQueue) {
-    Verbose((VERB_THREAD,"checkToplevel: pushNext: 0x%x\n",this));
+    // Verbose((VERB_THREAD,"checkToplevel: pushNext: 0x%x\n",this));
     Toplevel **last;
     for (last = &toplevelQueue;
          ((*last)->next) != NULL;
@@ -1505,10 +1505,10 @@ void AM::checkToplevel()
 void AM::addToplevel(ProgramCounter pc)
 {
   if (rootThread->isEmpty()) {
-    Verbose((VERB_THREAD,"addToplevel: push\n"));
+    // Verbose((VERB_THREAD,"addToplevel: push\n"));
     pushToplevel(pc);
   } else {
-    Verbose((VERB_THREAD,"addToplevel: delay\n"));
+    // Verbose((VERB_THREAD,"addToplevel: delay\n"));
     toplevelQueue = new Toplevel(pc,toplevelQueue);
   }
 }

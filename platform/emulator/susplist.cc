@@ -95,6 +95,17 @@ SuspList * installPropagators(SuspList * local_list, SuspList * glob_list,
   return ret_list;
 }
 
+//-----------------------------------------------------------------------------
+
+void OrderedSuspList::print(void)
+{
+  for (OrderedSuspList * p = this; p != NULL; p = p->n) {
+    OZ_Propagator * pr = p->t->getPropagator();
+    cout << "   " << pr->toString()
+         << endl << flush;
+  }
+}
+
 #ifdef OUTLINE
 #define inline
 #include "susplist.icc"
