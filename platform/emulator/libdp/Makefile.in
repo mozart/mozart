@@ -121,7 +121,7 @@ Makefile: Makefile.in
 include ../Makefile.rules
 
 distclean::
-        -rm -f Makefile
+        -rm -f Makefile makefile
 
 veryclean::
         -rm -f *.a *.so Makefile.deps $(CREATEDFILES)

@@ -61,4 +61,4 @@ veryclean::
 include ../Makefile.rules
 
 distclean::
-        -rm -f Makefile
+        -rm -f Makefile makefile
