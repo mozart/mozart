@@ -265,7 +265,7 @@ int lookaheadnum;
          a permanent errs structure for this state, to record them.  */
       i = (char *) errtokens - (char *) errp;
       err_table[state] = (errs *) xmalloc ((unsigned int)i);
-      bcopy (errp, err_table[state], i);
+      memcpy(err_table[state], errp, i);
     }
   else
     err_table[state] = 0;
