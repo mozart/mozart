@@ -116,20 +116,33 @@ local
 	 PU#'fun '#IN#{LI {Map ProcFlags OutputOz} GL}#EX#
 	 '{'#PU#{LI {Map T|Fs OutputOz} GL}#PO#'}'#IN#NL#
 	 {OzBlock E}#EX#NL#PO#'end'
-      [] fFunctor(T Ds S1 S2 _) then
-	 'functor '#{OutputOz T}#NL#{LI {Map Ds OutputOz} NL}#NL#
-	 'body'#IN#NL#{OutputOz S1}#EX#NL#'in'#IN#NL#{OutputOz S2}#EX#NL#'end'
+      [] fFunctor(T Ds _) then
+	 'functor '#{OutputOz T}#NL#
+	 case Ds of _|_ then {LI {Map Ds OutputOz} NL}#NL
+	 [] nil then ""
+	 end#'end'
+      [] fRequire(Rs _) then 'require'#IN#NL#{LI {Map Rs OutputOz} NL}#EX
+      [] fPrepare(S1 S2 _) then
+	 'prepare'#IN#NL#{OutputOz S1}#EX#NL#'in'#IN#NL#{OutputOz S2}#EX
       [] fImport(Is _) then 'import'#IN#NL#{LI {Map Is OutputOz} NL}#EX
-      [] fImportItem(V Fs OptFrom) then
+      [] fImportItem(V Fs OptImportAt) then
 	 {OutputOz V}#
-	 case Fs of _|_ then '.{'#{LI {Map Fs OutputOz} GL}#'}'
+	 case Fs of _|_ then
+	    '('#{LI {Map Fs
+		     fun {$ X}
+			case X of V#F then {OutputOz F}#': '#{OutputOz V}
+			else {OutputOz X}
+			end
+		     end} GL}#')'
 	 [] nil then ""
 	 end#
-	 case OptFrom of fFrom(A) then ' from '#{OutputOz A}
-	 [] fNoFrom() then ""
+	 case OptImportAt of fImportAt(A) then ' at '#{OutputOz A}
+	 [] fNoImportAt then ""
 	 end
       [] fExport(Es _) then 'export'#IN#NL#{LI {Map Es OutputOz} NL}#EX
       [] fExportItem(V) then {OutputOz V}
+      [] fDefine(S1 S2 _) then
+	 'define'#IN#NL#{OutputOz S1}#EX#NL#'in'#IN#NL#{OutputOz S2}#EX
       [] fOpApply(O Ts _) then
 	 case O of '~' then [T] = Ts in
 	    {DoOutput '~'#{Oz T 1201} P 1200}
