@@ -11,6 +11,7 @@
 #endif
 
 #include "am.hh"
+#include "board.hh"
 
 /*===================================================================
  * global names and atoms
@@ -19,9 +20,11 @@
 TaggedRef  AtomNil, AtomCons, AtomPair, AtomVoid,
   AtomLess, AtomGreater, AtomSame, AtomUncomparable,
   AtomInt, AtomFloat, AtomTuple, AtomProcedure, AtomCell,
-  AtomChunk,
+  AtomChunk, AtomSpace,
   AtomRecord, AtomAtom, AtomName, AtomUnknown,
   AtomClosed, AtomVariable,
+  AtomSucceeded, AtomAlt, AtomMerged, AtomFailed,
+  AtomEntailed, AtomSuspended, AtomBlocked,
   NameTrue, NameFalse, AtomBool, AtomSup, AtomCompl;
 
 // Some often used constants
@@ -44,6 +47,7 @@ void initLiterals()
   AtomTuple        = makeTaggedAtom("tuple");
   AtomProcedure    = makeTaggedAtom("procedure");
   AtomCell         = makeTaggedAtom("cell");
+  AtomSpace        = makeTaggedAtom("space");
   AtomChunk        = makeTaggedAtom("chunk");
   AtomRecord       = makeTaggedAtom("record");
   AtomAtom         = makeTaggedAtom("atom");
@@ -51,6 +55,13 @@ void initLiterals()
   AtomUnknown      = makeTaggedAtom("unknown");
   AtomClosed       = makeTaggedAtom("closed");
   AtomVariable     = makeTaggedAtom("variable");
+  AtomSucceeded    = makeTaggedAtom("succeeded");
+  AtomAlt          = makeTaggedAtom("alternatives");
+  AtomEntailed     = makeTaggedAtom("entailed");
+  AtomSuspended    = makeTaggedAtom("suspended");
+  AtomBlocked      = makeTaggedAtom("blocked");
+  AtomMerged       = makeTaggedAtom("merged");
+  AtomFailed       = makeTaggedAtom("failed");
 
   NameTrue         = makeTaggedName(NAMETRUE);
   NameFalse        = makeTaggedName(NAMEFALSE);
@@ -834,7 +845,30 @@ SRecord *makeRecord(TaggedRef t)
   return ret;
 }
   
+
 /*===================================================================
- * 
+ * Space
  *=================================================================== */
+
+SolveActor * Space::getSolveActor() { 
+  return ((SolveActor *) solve->getActor()); 
+}
+
+Bool Space::isFailed() { 
+  if (!solve) return OK;
+  if (solve == (Board *) 1) return NO;
+  return solve->isFailed();
+}
+ 
+Bool Space::isMerged() {
+  if (solve == (Board *) 1) return OK;
+  return NO;
+}
+
+
+
+
+
+
+
 

@@ -1923,6 +1923,17 @@ void ConstTerm::gcConstRecurse()
       break;
     }
     
+  case Co_Space:
+    {
+      Space *s = (Space *) this;
+      if (s->solve != (Board *) 1)
+	s->solve = s->solve->gcBoard();
+      s->home  = s->home->gcBoard();
+      varCount++;
+
+      break;
+    }
+    
   case Co_Chunk:
     {
       SChunk *c = (SChunk *) this;
@@ -1989,6 +2000,12 @@ ConstTerm *ConstTerm::gcConstTerm()
     COUNT(cell);
     break;
 
+  case Co_Space:
+    CheckLocal((Space *) this);
+    sz = sizeof(Space);
+    COUNT(space);
+    break;
+
   case Co_Chunk:
     CheckLocal((SChunk *) this);
     sz = sizeof(SChunk);
@@ -1996,19 +2013,8 @@ ConstTerm *ConstTerm::gcConstTerm()
     break;
 
   case Co_Builtin:
-    switch (((Builtin *) this)->getType()) {
-    case BIsolveCont:
-      sz = sizeof(OneCallBuiltin);
-      COUNT(oneCallBuiltin);
-      break;
-    case BIsolved:
-      sz = sizeof(SolvedBuiltin);
-      COUNT(solvedBuiltin);
-      break;
-    default:
-      sz = sizeof(Builtin);
-      COUNT(builtin);
-    }
+    sz = sizeof(Builtin);
+    COUNT(builtin);
     break;
   default:
     Assert(0);
@@ -2253,12 +2259,11 @@ void SolveActor::gcRecurse ()
   solveBoard = solveBoard->gcBoard();
   Assert(solveBoard);
 
-  gcTagged (solveVar, solveVar);
-  gcTagged (guidance, guidance);
-  gcTagged (result, result);
+  gcTagged(solveVar, solveVar);
+  gcTagged(result, result);
   suspList  = suspList->gc();
   stable_sl = stable_sl->gc();
-  orActors.gc (SolveActor::StackEntryGC);   // higher order :))
+  orActors.gc(SolveActor::StackEntryGC);   // higher order :))
 }
 
 

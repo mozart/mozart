@@ -114,19 +114,6 @@ int WaitActor::selectOrFailChildren(int l, int r) {
   }
 }
 
-int WaitActor::selectOrFailChild(int i) {
-  if (i>=0 && i<childCount) {
-    for (int j = 0;   j < i;    j++) 
-      childs[j]->setFailed();
-    for (int k = i+1; k < childCount; k++) 
-      childs[k]->setFailed();
-    return 1;
-  } else {
-    return 0;
-  }
-
-}
-
 #ifdef OUTLINE
 #define inline
 #include "actor.icc"

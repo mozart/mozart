@@ -827,9 +827,6 @@ loop:
 
   if (currentBoard->isSolve ()) {
     // try to reduce a solve board;
-    DebugCheck ((currentBoard->isReflected() == OK),
-		error ("trying to reduce an already reflected solve actor"));
-
     SolveActor *solveAA = SolveActor::Cast(currentBoard->getActor());
     Board      *solveBB = currentBoard; 
  
@@ -841,12 +838,11 @@ loop:
       if (solveBB->hasSuspension() == NO) {
 	// 'solved';
 	// don't unlink the subtree from the computation tree;
-	trail.popMark ();
+	trail.popMark();
 	currentBoard->unsetInstalled();
-	setCurrent (currentBoard->getParentFast());
-	currentBoard->decSuspCount();
+	setCurrent(currentBoard->getParentFast());
+	// don't decrement counter of parent board!
 
-	DebugCheckT (solveBB->setReflected());
 	// statistic
 	ozstat.incSolveSolved();
 	if (!fastUnifyOutline(solveAA->getResult(), 
@@ -875,9 +871,9 @@ loop:
 	  trail.popMark();
 	  currentBoard->unsetInstalled();
 	  setCurrent (currentBoard->getParentFast());
-	  currentBoard->decSuspCount();
 
-	  DebugCheckT (solveBB->setReflected());
+	  // don't decrement counter of parent board!
+
 	  if ( !fastUnifyOutline(solveAA->getResult(), 
 				 solveAA->genStuck(), OK) ) {
 	    return CE_FAIL;
@@ -894,14 +890,11 @@ loop:
 		      error ("solve board by the enumertaion without suspensions?"));
 
 	  if (wa->getChildCount()==2 && 
-	      wa->getChildRefAt(1)->isFailureInBody()==OK &&
-	      solveAA->isEatWaits()) {
+	      wa->getChildRefAt(1)->isFailureInBody()==OK) {
 
 	    wa->getChildRefAt(1)->setFailed();
 
 	    Board *waitBoard = wa->getChildRef();
-
-	    ozstat.incSolveAlt();
 
 	    waitBoard->setCommitted(solveBB);
 	    Assert(!solveBB->isCommitted());
@@ -920,91 +913,21 @@ loop:
 	    return CE_SOLVE_CONT;
 	  }
 
-	  TaggedRef guide = deref(solveAA->getGuidance());
-	    
-	  if (isCons(guide)) {
-	    // it is asserted that each element is an int or an pair of 
-	    // ints (see above)
-	    
-	    ozstat.incSolveAlt();
+	  // put back wait actor
+	  solveAA->pushWaitActor(wa);
+	  // give back number of clauses
+	  trail.popMark();
+	  currentBoard->unsetInstalled();
+	  setCurrent(currentBoard->getParentFast());
+	  
+	  // don't decrement counter of parent board!
 
-	    TaggedRef guideHead = tagged2LTuple(guide)->getHead();
-	    DEREF(guideHead, _1, guideTag);
-
-	    solveAA->setGuidance(tagged2LTuple(guide)->getTail());
-
-	    int clauseNo, noOfClauses;
-
-	    if (isSmallInt(guideTag)) {
-	      clauseNo    = smallIntValue(guideHead) - 1;
-	      noOfClauses = wa->selectOrFailChild(clauseNo);
-	    } else {
-	      // now we have a pair of integers
-	      clauseNo = 0;
-	      noOfClauses = 
-		wa->selectOrFailChildren(
-		    smallIntValue(deref(
-                      tagged2SRecord(guideHead)->getArg(0)))-1,
-		    smallIntValue(deref(
-                      tagged2SRecord(guideHead)->getArg(1)))-1);
-	    }
-
-	    if (noOfClauses == 0) {
-	      wa->dispose();
-	      trail.popMark();
-	      currentBoard->unsetInstalled();
-	      setCurrent(currentBoard->getParentFast());
-	      currentBoard->decSuspCount();
-	      
-	      if (!fastUnifyOutline(solveAA->getResult(),
-				    solveAA->genFailed(),
-				    OK)) {
-		return CE_FAIL;
-	      }
-	      return CE_NOTHING;
-
-	    } else if (noOfClauses == 1) {
-
-	      Board *waitBoard = wa->getChildRefAt(clauseNo);
-
-	      waitBoard->setCommitted(solveBB);
-	      Assert(!solveBB->isCommitted());
-	      solveBB->incSuspCount(waitBoard->getSuspCount()-1);
-
-	      if (!installScript(waitBoard->getScriptRef())) {
-		return CE_FAIL;
-	      }
-
-	      if (waitBoard->isWaitTop()) {
-		goto loop;
-	      }
-
-	      aa        = wa;
-	      contAfter = waitBoard->getBodyPtr();
-	      return CE_SOLVE_CONT;
-		
-	    } else {
-	      solveAA->pushWaitActor(wa);
-	      goto loop;
-	    }
-	      
-	  } else {
-	    // put back wait actor
-	    solveAA->pushWaitActor(wa);
-	    // give back number of clauses
-	    trail.popMark();
-	    currentBoard->unsetInstalled();
-	    setCurrent(currentBoard->getParentFast());
-	    currentBoard->decSuspCount();
-
-	    DebugCheckT (solveBB->setReflected ());
-	    if (!fastUnifyOutline(solveAA->getResult(),
-				  solveAA->genChoice(wa->getChildCount()),
-				  OK)) {
-	      return CE_FAIL;
-	    }
-	    return CE_NOTHING;
+	  if (!fastUnifyOutline(solveAA->getResult(),
+				solveAA->genChoice(wa->getChildCount()),
+				OK)) {
+	    return CE_FAIL;
 	  }
+	  return CE_NOTHING;
 	}
       }
     } else if (solveAA->isDebug() && solveAA->getThreads() == 0) {
@@ -1076,10 +999,6 @@ void engine()
   /* shallow choice pointer */
   ByteCode *shallowCP = NULL;
 
-  /* which kind of solve combinator to choose */
-  Bool isEatWaits    = NO;
-  Bool isSolveDebug  = NO;
-  
   OZ_CFun biFun = NULL;     NoReg(biFun);
   ConstTerm *predicate;	    NoReg(predicate);
   int predArity;    	    NoReg(predArity);
@@ -1209,13 +1128,6 @@ void engine()
       }
     }
 
-    //  i.e. nothing to do below a reflected solve-board;
-    {
-      DebugCode (Board *fsb);
-      Assert ((fsb = tmpBB->getSolveBoard ()) == 0 || 
-	      !(fsb->isReflected ()));
-    }
-
     CBB->unsetNervous();
 
     LOCAL_PROPAGATION(Assert(localPropStore.isEmpty ()););
@@ -1307,13 +1219,6 @@ void engine()
     RefsArray tmpX = ccont->getX ();
     Assert (tmpX != (RefsArray) NULL);
     predArity = getRefsArraySize (tmpX);
-
-    //  i.e. nothing to do below a reflected solve-board;
-    {
-      DebugCode (Board *fsb);
-      Assert ((fsb = tmpBB->getSolveBoard ()) == 0 || 
-	      !(fsb->isReflected ()));
-    }
 
     CBB->unsetNervous();
 
@@ -1706,9 +1611,6 @@ LBLkillThread:
       if (CBB->isSolve ()) {
 	SolveActor *sa;
 
-	//  It might not be reduced already;
-	Assert (!(CBB->isReflected ()));
-
 	//
 	sa = SolveActor::Cast (CBB->getActor ());
 	//  'nb' points to some board above the current one,
@@ -1934,9 +1836,6 @@ LBLsuspendThread:
     if (e->currentSolveBoard) {
       if (CBB->isSolve ()) {
 	SolveActor *sa;
-
-	//  It might not be reduced already;
-	Assert (!(CBB->isReflected ()));
 
 	//
 	sa = SolveActor::Cast (CBB->getActor ());
@@ -2901,16 +2800,6 @@ LBLsuspendThread:
 	     
 	   case BIraise:
 	     goto LBLraise;
-	   case BIsolve:
-	     { isEatWaits = NO; isSolveDebug = NO; goto LBLBIsolve; }
-	   case BIsolveEatWait:
-	     { isEatWaits = OK; isSolveDebug = NO; goto LBLBIsolve; }
-	   case BIsolveDebug:
-	     { isEatWaits = NO; isSolveDebug = OK; goto LBLBIsolve; }
-	   case BIsolveDebugEatWait:
-	     { isEatWaits = OK; isSolveDebug = OK; goto LBLBIsolve; }
-	   case BIsolveCont:    goto LBLBIsolveCont;
-	   case BIsolved:       goto LBLBIsolved;
 	     
 	   case BIDefault:
 	     {
@@ -3013,204 +2902,7 @@ LBLsuspendThread:
        goto LBLpopTask;
      }
 
-// ------------------------------------------------------------------------
-// --- Call: Builtin: solve
-// ------------------------------------------------------------------------
-
-   LBLBIsolve:
-     {
-       DebugTrace(trace("solve",CBB));
-       TaggedRef x0 = X[0];
-       DEREF (x0, _0, x0Tag);
-
-       if (isAnyVar (x0Tag) == OK) {
-	 predicate = tagged2Const(bi->getSuspHandler());
-	 Assert(predicate);
-	 goto LBLcall;
-       }
-
-       if (!isConst(x0) ||
-	   !(tagged2Const(x0)->getType () == Co_Abstraction ||
-	     tagged2Const(x0)->getType () == Co_Builtin)) {
-	 DORAISE(OZ_mkTupleC("solve",1,OZ_mkTupleC("noProcedure",1,X[0])));
-       }
-
-       TaggedRef x1 = deref(X[1]);
-       TaggedRef guide = x1;
-
-       while (isCons(guide)) {
-	 TaggedRef head = tagged2LTuple(guide)->getHead();
-	 guide = deref(tagged2LTuple(guide)->getTail());
-	 DEREF(head, _h, headTag);
-	   
-	 if (isSmallInt(headTag))
-	   continue;
-	 
-	 if (isSTuple(head) && 
-	     tagged2Literal(AtomPair)
-	     == tagged2SRecord(head)->getLabelLiteral()) {
-	   TaggedRef left  = tagged2SRecord(head)->getArg(0);
-	   TaggedRef right = tagged2SRecord(head)->getArg(1);
-	   DEREF(left, _l, leftTag);
-	   DEREF(right, _r, rightTag);
-	   if (isSmallInt(leftTag) && isSmallInt(rightTag))
-	     continue;
-	 } 
-	 
-	 break;
-
-       }
-
-       if (!isNil(guide)) {
-	 predicate = tagged2Const(bi->getSuspHandler());
-	 Assert(predicate);
-	 goto LBLcall;
-       }
-
-       // put continuation if any;
-       if (isTailCall == NO)
-	 e->pushTask(PC, Y, G);
-
-       // Note: don't perform any derefencing on X[2];
-       SolveActor *sa = new SolveActor (CBB,CPP,
-					X[2], x1);
-
-       if (isEatWaits)    sa->setEatWaits();
-       if (isSolveDebug)  sa->setDebug();
-       
-       Board *sb=new Board(sa, Bo_Solve);
-       sa->setSolveBoard(sb);
-
-       // apply the predicate;
-       predArity = 1;
-       predicate = (Abstraction *) tagValueOf (x0);
-       X[0] = makeTaggedRef (sa->getSolveVarRef ());
-       isTailCall = OK;
-       Thread *tt = new Thread (CPP, sb, OK);
-				 // kost@  TODO!!! piece of junk
-       sb->decSuspCount ();	 // since 'Board::Board' sets it to one;
-       (void) sa->decThreads (); // since 'SolveActor::SolveActor' sets it;
-       tt->pushCall(makeTaggedConst(predicate),X,1);
-       e->scheduleThread(tt);
-       goto LBLpopTask;
-     }
-
-// ------------------------------------------------------------------------
-// --- Call: Builtin: solveCont
-// ------------------------------------------------------------------------
-
-   LBLBIsolveCont:
-     {
-       DebugTrace(trace("solve cont",CBB));
-       if (((OneCallBuiltin *)bi)->isSeen () == OK) {
-	 DORAISE(OZ_mkTupleC("solve",1,OZ_atom("onceOnlyCalledTwice")));
-       }
-
-       Board *solveBB =
-	 (Board *) tagValueOf ((((OneCallBuiltin *) bi)->getGRegs ())[0]);
-       // VERBMSG("solve continuation",((void *) bi),((void *) solveBB));
-       // kost@ 22.12.94: 'hasSeen' has new implementation now;
-       ((OneCallBuiltin *) bi)->hasSeen ();
-       DebugCheck ((solveBB->isSolve () == NO),
-		   error ("no 'solve' blackboard  in solve continuation builtin"));
-       DebugCheck((solveBB->isCommitted () == OK ||
-		   solveBB->isFailed () == OK), 
-		  error ("Solve board in solve continuation builtin is gone"));
-       SolveActor *solveAA = SolveActor::Cast (solveBB->getActor ()); 
-
-       // link and commit the board (actor will be committed too); 
-       solveBB->setCommitted (CBB);
-       CBB->incSuspCount (solveBB->getSuspCount ()); // similar to the 'unit commit'
-       DebugCheck (((solveBB->getScriptRef ()).getSize () != 0),
-		   error ("non-empty script in solve blackboard"));
-
-       // adjoin the list of or-actors to the list in actual solve actor!
-       Board *currentSolveBB = e->currentSolveBoard;
-       if (currentSolveBB == (Board *) NULL) {
-	 DebugCheckT (message ("solveCont is applied not inside of a search problem?\n"));
-       } else {
-	 SolveActor::Cast (currentSolveBB->getActor ())->pushWaitActorsStackOf (solveAA);
-       }
-
-       if ( !e->fastUnifyOutline(solveAA->getSolveVar(), X[0], OK) ) {
-	 HF_FAIL(OZ_atom("solve"));
-       }
-
-       if (isTailCall) {
-	 goto LBLpopTask;
-       }
-       goto LBLemulate;
-     }
-
-// ------------------------------------------------------------------------
-// --- Call: Builtin: solved
-// ------------------------------------------------------------------------
-
-   LBLBIsolved:
-     {
-       DebugTrace(trace("solved",CBB));
-       TaggedRef valueIn = (((SolvedBuiltin *) bi)->getGRegs ())[0]; 
-       Assert(!isRef(valueIn));
-
-       if (isConst(valueIn) && tagged2Const(valueIn)->getType() == Co_Board) {
-	 Board *solveBB =
-	   (Board *) tagValueOf ((((SolvedBuiltin *) bi)->getGRegs ())[0]);
-	 // VERBMSG("solved",((void *) bi),((void *) solveBB));
-	 Assert(solveBB->isSolve());
-	 DebugCheck((solveBB->isCommitted() == OK ||
-		     solveBB->isFailed() == OK), 
-		    error ("Solve board in solve continuation builtin is gone"));
-	 Board *saveBoard 
-	   = SolveActor::Cast(solveBB->getActor())->getBoardFast();
-
-	 SolveActor::Cast(solveBB->getActor())->setBoard(CBB);
-
-	 Bool isGround;
-	 Board *newSolveBB = (Board *) e->copyTree(solveBB, &isGround);
-
-	 SolveActor::Cast(solveBB->getActor())->setBoard(saveBoard);
-
-	 SolveActor *solveAA = SolveActor::Cast (newSolveBB->getActor ());
-
-	 if (isGround == OK) {
-	   TaggedRef solveTRef = solveAA->getSolveVar ();  // copy of; 
-	   DEREF(solveTRef, _0, _1);
-	   (((SolvedBuiltin *) bi)->getGRegs ())[0] = solveTRef; 
-	   goto LBLBIsolved;
-	 }
-
-	 // link and commit the board;
-	 newSolveBB->setCommitted (CBB);
-	 CBB->incSuspCount (newSolveBB->getSuspCount ());
-	 // similar to the 'unit commit'
-	 DebugCheck (((newSolveBB->getScriptRef ()).getSize () != 0),
-		     error ("non-empty script in solve blackboard"));
-
-	 // adjoin the list of or-actors to the list in actual solve actor!
-	 Board *currentSolveBB = e->currentSolveBoard;
-	 if (currentSolveBB == (Board *) NULL) {
-	   DebugCheckT(message("solved is applied not inside of a search problem?\n"));
-	 } else {
-	   SolveActor::Cast(currentSolveBB->getActor())->pushWaitActorsStackOf(solveAA);
-	 }
-	 
-	 if ( !e->fastUnifyOutline(solveAA->getSolveVar(), X[0], OK) ) {
-	   HF_FAIL(OZ_atom("solve"));
-	 }
-       } else {
-	 if ( !e->fastUnifyOutline(valueIn, X[0], OK) ) {
-	   HF_FAIL(OZ_atom("solve"));
-	 }
-       }
-
-       if (isTailCall) {
-	 goto LBLpopTask;
-       }
-       JUMP(PC);
-     }
-
    }
-
 // --------------------------------------------------------------------------
 // --- end call/execute -----------------------------------------------------
 // --------------------------------------------------------------------------
@@ -3882,7 +3574,8 @@ int AM::handleFailure(Continuation *&cont, AWActor *&aaout)
   // the result variable; 
   aa->setCommitted();
   SolveActor *saa=SolveActor::Cast(aa);
-  currentBoard->decSuspCount();
+  // don't decrement parent counter
+
   // for statistic purposes
   ozstat.incSolveFailed();
   if (!fastUnifyOutline(saa->getResult(),saa->genFailed(),OK)) {
