@@ -24,51 +24,63 @@
 
 <CHAPTER ID="chapter.introduction">
   <TITLE>Introduction</TITLE>
-  <P>The current Oz version is referred to as Oz 3. Oz 3 is largely
-  compatible to the previous version Oz 2. Oz 2 is the successor Oz 1.
-  Oz 3 and its programming system Mozart is developed mainly by the
-  research groups of Gert Smolka at Saarland university and DFKI (the German Research Center
-  for Artificial Intelligent),
-  Seif Haridi at SICS (the Swedish Institute
-  of Computer Science),
+  <P>The Mozart system implements Oz 3, the latest in the Oz family
+  of multi-paradigm languages based on the concurrent constraint model.
+  Oz 3 is almost completely upward compatible with its precursor Oz 2.
+  The main additions to Oz 2 are functors (a kind of software component)
+  and futures (for improved dataflow behavior).  Oz 2 is itself a successor
+  to the original Oz 1 language, whose implementation was first released
+  publicly in 1995.
+  Except as otherwise noted, all references to Oz in the Mozart documentation
+  are to Oz 3.
+
+  <P>Oz 3 and the Mozart system have been developed mainly by the
+  research groups of Gert Smolka at the DFKI
+  (the German Research Center for Artificial Intelligence),
+  Seif Haridi at SICS (the Swedish Institute of Computer Science),
   and Peter Van Roy at UCL (the Université catholique de Louvain).
 
-  <P>Oz is in essence a concurrent constraint programming language, see
-  <PTR TO="saraswat94">. A good exposition of the programming model underlying
-  Oz 1 is found in <PTR TO="smolka95">. Underlying all Oz versions is
-  a concurrent
-  constraint programming model, which is extended to support stateful
-  computations, i.e., computations on mutable objects. The original Oz
-  computation model, Oz 1, supports a fine-grained notion of concurrency where
-  each statement can potentially be executed concurrently. This results
-  in a fine-grained concurrent object model similar to the actor
-  model. Our experience using Oz 1 showed that this kind of model, while
+  <P>Underlying all versions of Oz is a concurrent constraint
+  programming model, extended to support stateful
+  computations, i.e., computations on mutable objects. 
+  The theoretical foundation of the concurrent constraint model is
+  given in <PTR TO="saraswat94">.  The original Oz
+  computation model, Oz 1, supports a fine-grained notion of concurrency
+  where each statement can potentially be executed concurrently.
+  This results in a fine-grained model similar to the actor model.
+  A good exposition of the Oz 1 programming model is given
+  in <PTR TO="smolka95">. 
+  Our experience using Oz 1 showed that this kind of model, while
   theoretically appealing, makes it very hard for the programmer to
   control the resources of his/her application. It is also very hard to
   debug programs and the object model becomes unnecessarily awkward.
 
-  <P>In Oz 2, these problems have been remedied by using instead a
+  <P>Oz 2 remedies these problems by using instead a
   thread-based concurrency model, with explicit creation of threads.
   A powerful new object system has been designed and
   traditional exception handling constructs have been added. In
   addition, the constraint solving and search capabilities have been
   greatly enhanced.
 
-  <P>The current Oz version, Oz 3, is almost upward compatible with Oz 2
-  apart from minor syntactic simplifications. Oz 3 is extended with a concept
-  for module specification called <EM>functor</EM> to support
-  incremental construction of programs from components that may be
+  <P>Oz 3 conservatively extends Oz 2 with two concepts,
+  <EM>functors</EM> and <EM>futures</EM>, and also corrects several
+  minor syntactic problems.  A functor is a kind of software component.
+  It specifies a module in terms of the other modules it needs.  This
+  supports incremental construction of programs from components that may be
   addressable over the Internet by URLs, see <PTR TO="duchier98">. 
-  The Mozart implementation of Oz 3 supports distributed and networked
-  applications. It is possible to connect Oz computations located on
-  different sites, resulting in a single network-transparent computation.
-  Mozart
+  A future is a logic variable that can be read but not written.  This
+  allows safe dataflow synchronization over the Internet.
+
+  <P>The Mozart system supports distributed and networked applications.
+  It is possible to connect Oz computations located on different sites,
+  resulting in a single network-transparent computation.  Mozart
   supports automatic transfer of stateless data and code among sites,
   mobile computation (objects), message passing, shared logic
-  variables and orthogonal mechanisms for network/site fault detection
-  and handling.
+  variables and orthogonal mechanisms for fault detection
+  and handling for the network and for sites.
 
   <SECTION><TITLE>Summary of Oz features</TITLE>
+
   <P>A very good starting point is to ask why Oz. Well, one rough short
   answer is that, compared to other existing languages, it is magic! It
   provides the programmers and system developers with a wide range of
