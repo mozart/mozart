@@ -33,11 +33,6 @@
 // -----------------------------------------------------------------------
 
 typedef enum {
-  READ,
-  WRITE
-} AMModus;
-
-typedef enum {
   ThreadSwitch  = 1 << 2, // choose a new process
   IOReady       = 1 << 3, // IO handler has signaled IO ready
   UserAlarm     = 1 << 4, // Alarm handler has signaled User Alarm
