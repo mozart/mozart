@@ -61,17 +61,17 @@ define
             OutFileName = 'latex'#@N#'.gif'
             {Dictionary.put @Dict A OutFileName}
             case @DB == unit orelse {Gdbm.condGet @DB A true} of true then
-               Keys <- A|@Keys
+               Keys <- A#@N|@Keys
             elseof X then
                {WriteFile X @DirName#'/'#OutFileName}
             end
-         else
-            {Dictionary.get @Dict A OutFileName}
+         elseof FileName then
+            OutFileName = FileName
          end
       end
       meth process(Packages Reporter)
          case @Keys of nil then skip
-         else FileName File in
+         else FileName File Outs in
             {Reporter startSubPhase('converting LaTeX sections to GIF')}
             FileName = {OS.tmpnam}
             File = {New Open.file init(name: FileName
@@ -83,21 +83,22 @@ define
              end}
             {File write(vs: ('\\pagestyle{empty}\n'#
                              '\\begin{document}\n'))}
-            {ForAll {Reverse @Keys}
-             proc {$ X}
-                {File write(vs: X#'\n\\clearpage\n')}
-             end}
+            Outs = {FoldR @Keys
+                    fun {$ X#N In}
+                       {File write(vs: X#'\n\\clearpage\n')}
+                       ' '#N#In
+                    end ""}
             {File write(vs: '\\end{document}\n')}
             {File close()}
             try
-               case {OS.system LATEX2GIF#' '#FileName#' '#@N#' '#@DirName}
+               case {OS.system LATEX2GIF#' '#FileName#' '#@DirName#Outs}
                of 0 then skip
                elseof I then
                   {Exception.raiseError ozDoc(latexToGif I)}
                end
                if @DB \= unit then
                   {ForAll @Keys
-                   proc {$ X}
+                   proc {$ X#_}
                       {Gdbm.put @DB X
                        {ReadFile @DirName#'/'#{Dictionary.get @Dict X}}}
                    end}
