@@ -42,6 +42,8 @@ bootstrap: boot-all
 
 bootquick: boot-quick
 
+depend:
+
 Makefile: $(SRCDIR)/Makefile.in ../config.status
         cd .. && ./config.status
 
