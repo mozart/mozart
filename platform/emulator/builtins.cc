@@ -6051,7 +6051,6 @@ OZ_C_proc_begin(BISystemGetGC,1) {
   SetIntArg(AtomMax,       ozconf.heapMaxSize*KB);
   SetIntArg(AtomFree,      ozconf.heapFree);
   SetIntArg(AtomTolerance, ozconf.heapTolerance);
-  SetIntArg(AtomIdleFree,  ozconf.heapIdleMargin);
   SetBoolArg(AtomOn,       ozconf.gcFlag);
   SetIntArg(AtomThreshold, ozconf.heapThreshold*KB);
   SetIntArg(AtomSize,      getUsedMemory()*KB);
@@ -6254,7 +6253,6 @@ OZ_C_proc_begin(BISystemSetGC,1) {
   DoNatFeature(min_size,      t, AtomMin);
   DoPercentFeature(free,      t, AtomFree);
   DoPercentFeature(tolerance, t, AtomTolerance);
-  DoPercentFeature(idle_free, t, AtomIdleFree);
   DoBoolFeature(active,       t, AtomOn);
 
   SetIfPos(ozconf.heapMaxSize,    max_size,  KB);
@@ -6262,7 +6260,6 @@ OZ_C_proc_begin(BISystemSetGC,1) {
 
   SetIfPos(ozconf.heapFree,       free,      1);
   SetIfPos(ozconf.heapTolerance,  tolerance, 1);
-  SetIfPos(ozconf.heapIdleMargin, idle_free, 1);
   SetIfPos(ozconf.gcFlag,         active,    1);
 
   if (ozconf.heapMinSize > ozconf.heapThreshold) 

@@ -2523,25 +2523,6 @@ void AM::doGC()
 }
 
 
-Bool AM::idleGC()
-{
-  Assert(isToplevel());
-
-  if ((int)getUsedMemory() > 
-        (ozconf.heapIdleMargin*ozconf.heapThreshold)/100 && ozconf.gcFlag) {
-    if (ozconf.showIdleMessage) {
-      printf("gc ... ");
-      fflush(stdout);
-    }
-    int save = ozconf.gcVerbosity;
-    ozconf.gcVerbosity = 0;
-    doGC();
-    ozconf.gcVerbosity = save;
-    return OK;
-  }
-  return NO;
-}
-
 OzDebug *OzDebug::gcOzDebug()
 {
   pred=deref(pred);
