@@ -346,6 +346,13 @@ public:
   }
 
 
+  static void writeWordAllocated(ByteCode c, ProgramCounter ptr) {
+    *ptr = c;
+  }
+  static void writeWordAllocated(void *p, ProgramCounter ptr) {
+    writeWordAllocated((ByteCode)ToInt32(p),ptr);
+  }
+
   static ProgramCounter writeAddress(void *p, ProgramCounter ptr)
   {
     return writeWord(p, ptr);
@@ -381,12 +388,6 @@ public:
   static ProgramCounter allocateWord(ProgramCounter ptr) {
     Assert(((unsigned int) ptr) / sizeof(int) * sizeof(int) == (unsigned int) ptr);
     return (ptr+1); 
-  }
-  static void writeWordAllocated(ByteCode c, ProgramCounter ptr) {
-    *ptr = c;
-  }
-  static void writeWordAllocated(void *p, ProgramCounter ptr) {
-    writeWordAllocated((ByteCode)ToInt32(p),ptr);
   }
 };
 

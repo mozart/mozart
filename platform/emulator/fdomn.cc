@@ -124,6 +124,8 @@ void initFDs()
 //-----------------------------------------------------------------------------
 // FDInterval -----------------------------------------------------------------
 
+#ifdef DEBUG_FD_CONSTRREP
+
 OZ_Boolean FDIntervals::isConsistent(void) const {
   if (high < 0) {
     printf("high < 0"); fflush(stdout);
@@ -148,6 +150,8 @@ OZ_Boolean FDIntervals::isConsistent(void) const {
   return OZ_TRUE;
 }
 
+#endif
+
 inline
 FDIntervals * newIntervals(int max_index) {
   return new (max_index) FDIntervals(max_index);
@@ -167,7 +171,7 @@ FDIntervals * FDIntervals::copy(void)
   return new_item;
 }
 
-inline
+// Do not inline!
 int FDIntervals::findSize(void) {
   int s, i;
   for (s = 0, i = high; i--; )
@@ -1147,7 +1151,8 @@ FDIntervals * OZ_FiniteDomainImpl::asIntervals(void) const
   }
 }
 
-inline
+#ifdef DEBUG_FD_CONSTRREP
+
 OZ_Boolean OZ_FiniteDomainImpl::isConsistent(void) const {
   if (size == 0) return OZ_TRUE;
   descr_type type = getType();
@@ -1163,6 +1168,8 @@ OZ_Boolean OZ_FiniteDomainImpl::isConsistent(void) const {
     get_iv()->findMinElem() == min_elem &&
     get_iv()->findMaxElem() == max_elem;
 }
+
+#endif
  
 inline
 OZ_Boolean OZ_FiniteDomainImpl::contains(int i) const

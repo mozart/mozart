@@ -78,7 +78,6 @@ private:
 public:
   USEFREELISTMEMORY;
   NO_DEFAULT_CONSTRUCTORS(TaskStack);
-  TaskStack(int s): Stack(s,Stack_WithFreelist) { pushEmpty(); }
 
   void pushFrame(ProgramCounter pc,void *y, void *g)
   {
@@ -213,6 +212,9 @@ public:
   void pushAbstr(PrTabEntry  *a) { pushFrame(C_SET_ABSTR_Ptr,a,(void *) invoc_counter++); }
 
   int tasks();
+
+  TaskStack(int s): Stack(s,Stack_WithFreelist) { pushEmpty(); }
+
 };
 
 #define GetFrameNoDecl(top,pc,y,cap)		\

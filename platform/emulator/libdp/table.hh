@@ -341,18 +341,7 @@ private:
     uOB.oExt=oce;}
 
   void extend();
-      
-  void requestCredit(Credit req){
-    if(isExtended()){
-      getOwnerCreditExtension()->requestCreditE(req);
-      return;}
-    Credit credit=getCreditOB();
-    if(credit<=req){
-      extend();
-      requestCredit(req);
-      return;}
-    setCreditOB(credit-req);
-    return;}
+  void requestCredit(Credit);
 
   void addCreditExtended(Credit);
 
@@ -366,12 +355,10 @@ private:
 public:
 
   void localize(int index);
-  void returnCreditOwner(Credit c, int index) {
-    addCredit(c);
-    if (hasFullCredit())
-      localize(index);
-  }
 
+  Bool isPersistent(){
+    return (getFlags() & PO_PERSISTENT);}
+  
   Bool hasFullCredit(){ 
     if(isPersistent()) return NO;
     if(isExtended()) return NO;
@@ -380,6 +367,12 @@ public:
     if(c<START_CREDIT_SIZE) return NO;
     return OK;}
     
+  void returnCreditOwner(Credit c, int index) {
+    addCredit(c);
+    if (hasFullCredit())
+      localize(index);
+  }
+
   Credit getSendCredit() { 
 
     requestCredit(OWNER_GIVE_CREDIT_SIZE);
@@ -402,9 +395,6 @@ public:
     creditSiteIn=NULL;}
 
   void removeGCMark(){ removeFlags(PO_GC_MARK); }
-  
-  Bool isPersistent(){
-    return (getFlags() & PO_PERSISTENT);}
   
   void makePersistent(){
     Assert(!isPersistent());
@@ -558,6 +548,10 @@ inline void freeBorrowCreditExtension(BorrowCreditExtension* bce){
 class BorrowEntry: public OB_Entry {
 friend class BorrowTable;
 friend class BorrowCreditExtension;
+public:
+  Bool isPersistent(){
+    return (getFlags() & PO_PERSISTENT);}
+
 private:
   NetAddress netaddr;
 
@@ -746,8 +740,6 @@ public:
     Assert(!isPersistent());
     addFlags(PO_PERSISTENT);}
   
-  Bool isPersistent(){
-    return (getFlags() & PO_PERSISTENT);}
 };
 
 /* ********************************************************************** */
