@@ -205,6 +205,7 @@ define
       end
 
       meth OZC_FAST(DST SRC Options)
+	 {self trace('ozc fast: '#SRC#' -> '#DST)}
 	 %% we need the chDir in order for the .so created by Gump to end up
 	 %% the appropriate directory.  This is fairly aggravating: we should
 	 %% NEVER change or rely on the current directory being one thing or
@@ -254,7 +255,7 @@ define
 	       %% record time of simulated build
 	       Executor,SimulatedTouch(DST)
 	    else
-	       {self exec_fast_ozc(SRCBase DSTBase
+	       {self exec_fast_ozc(SRC DSTBase
 				   defines    : Defines
 				   debug      : ArgDebug
 				   executable : ArgExecutable
