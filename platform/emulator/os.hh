@@ -61,7 +61,7 @@ unsigned int osSystemTime(); // return current systemtime in milliseconds
 unsigned int osUserTime();   // return current usertime in milliseconds
 void osInitSignals();        // initialize signal handler
 int osSetAlarmTimer(int t);  // set alarm timer
-Bool osBlockSignals();       // return OK iff no other signals are blocked
+void osBlockSignals(Bool check=NO); // check: check if no other signals are blocked
 void osUnblockSignals();
 typedef void OsSigFun(void);
 OsSigFun *osSignal(int signo, OsSigFun *fun); /* Oz version of signal(2) */

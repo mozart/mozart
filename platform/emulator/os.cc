@@ -64,21 +64,25 @@ unsigned int osSystemTime()
 }
 
 
-Bool osBlockSignals()
+void osBlockSignals(Bool check)
 {
-//  return sigblock(~0) == 0;
   sigset_t s,sOld;
   sigfillset(&s);
   /* SOME SIGNALS SHOULD NOT BE BLOCKED (RS) */
-//  sigdelset(&s,SIGINT);
+  // sigdelset(&s,SIGINT);
   sigprocmask(SIG_SETMASK,&s,&sOld);
-  sigemptyset(&s);
-  return memcmp(&s,&sOld,sizeof(sigset_t)) == 0;
+#ifdef DEBUG_CHECK
+  if (check) {
+    sigemptyset(&s);
+    if (memcmp(&s,&sOld,sizeof(sigset_t)) != 0) {
+      warning("blockSignals: there are blocked signals");
+    }
+  }
+#endif
 }
 
 void osUnblockSignals()
 {
-//  sigsetmask(0);
   sigset_t s;
   sigemptyset(&s);
   sigprocmask(SIG_SETMASK,&s,NULL);
