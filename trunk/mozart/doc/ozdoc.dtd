@@ -121,6 +121,7 @@
 	| list
 	| figure  | note
 	| table   | grammar.rule   | grammar
+        | chunk
 	%p.mix.local;
 ">
 <!ENTITY % p.mix "%p.mix.noindex; | index">
@@ -515,6 +516,26 @@
 	">>"  code.end
 >
 <!USEMAP code.map code>
+
+<!--==================== LITERATE PROGRAMMING =====================-->
+<!--
+     <CHUNK><TITLE>...</TITLE>...</CHUNK>
+
+     A chunk is named by its title. The rest of the chunk consists of
+     code in the current proglang and CHUNK.REF elements
+
+     <CHUNK.REF>...</CHUNK.REF>
+
+     The body of the the chunk.ref should be the title of some chunk.
+     The chunk.ref refers to the collection of chunks with this title.
+-->
+
+<!ELEMENT chunk - - (title,chunk.silent)>
+<!ELEMENT chunk.silent O O (#PCDATA|chunk.ref)*>
+<!ELEMENT chunk.ref - - (%p.chars.mix;)*>
+<!ATTLIST (chunk|chunk.ref)
+	%common.attr;
+>
 
 <!--==================== CROSS REFERENCES =========================-->
 <!--
