@@ -18,7 +18,7 @@ local
 	 case Ks of nil then skip
 	 [] K|Kr then
 	    case K<2 then skip else
-	       {{Dictionary.get D K}.2 close}
+	       {{Dictionary.get D K}.2 tkClose}
 	       {Dictionary.remove D K}
 	    end
 	    {DeleteAll Kr D}
@@ -64,7 +64,7 @@ local
 	    Entry = {Dictionary.get self.dict Num}.2
 	 in
 	    {Dictionary.remove self.dict Num}
-	    {Entry close}
+	    {Entry tkClose}
 	    case Num==@cur then
 	       cur <- {FindNext Num-1 self.dict}
 	       Actions,tkSet(@cur)
@@ -75,7 +75,7 @@ local
 	    {DeleteAll {Dictionary.keys self.dict} self.dict}
 	    cur <- 1 % The second of the default entries
 	    Actions,tkSet(@cur)
-	    {ForAll @separators proc {$ O} {O close} end}
+	    {ForAll @separators proc {$ O} {O tkClose} end}
 	    separators <- nil
 	 end
 	 

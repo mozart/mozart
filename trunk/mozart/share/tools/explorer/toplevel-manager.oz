@@ -19,11 +19,11 @@ local
 			    withdraw:           true
 			    highlightthickness: 0)
 	 {Tk.send wm(protocol self 'WM_DELETE_WINDOW'
-		     {New Tk.action tkInit(parent:self
-					   action:proc {$}
-						     {self.manager.status kill}
-						     {self.manager close}
-						  end)})}
+		     {New Tk.action tkInit(parent: self
+					   action: proc {$}
+						      {self.manager.status kill}
+						      {self.manager close}
+						   end)})}
 
 	 ScrX  = {New Tk.scrollbar tkInit(parent: self
 					  relief: sunken
@@ -441,7 +441,7 @@ in
       end
       
       meth close
-	 {self.toplevel close}
+	 {self.toplevel tkClose}
       end
       
    end
