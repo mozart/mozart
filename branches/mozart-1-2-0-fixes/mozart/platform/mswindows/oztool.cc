@@ -192,17 +192,15 @@ int execute(char **argv, bool dontQuote)
   if (ret == FALSE) {
     panic(true,"Cannot run '%s'.\n",buffer);
   }
+
+  ret = WaitForSingleObject(pi.hProcess,INFINITE);
+  if (ret == WAIT_FAILED || GetExitCodeProcess(pi.hProcess,&ret) == FALSE)
+    ret = 1;
+
   CloseHandle(pi.hThread);
-  WaitForSingleObject(pi.hProcess,INFINITE);
-
-  DWORD code;
-  ret = GetExitCodeProcess(pi.hProcess,&code);
   CloseHandle(pi.hProcess);
-  if (ret != FALSE)
-    return code;
-  else
-    return 0;
 
+  return ret;
 }
 
 enum system_type {
@@ -375,9 +373,8 @@ int main(int argc, char **argv)
 	  // do not pass to dlltool
 	  k++;
 	} else if (!strcmp(argv[k],"-o")) {
-	  if (argc == k + 1) {
-	    usage("Missing object argument.\n");
-	  }
+	  if (argc == k + 1)
+	    usage("Missing argument to `-o'.\n");
 	  target = argv[k + 1];
 	  k += 2;
 	} else {
@@ -385,22 +382,25 @@ int main(int argc, char **argv)
 	}
       }
       dlltoolCmd[index] = NULL;
+      if (target == NULL)
+	usage("Missing option `-o'.\n");
       int r = execute(dlltoolCmd,false);
       if (!r) {
-	char **dllwrapCmd = new char*[argc+9];
-	dllwrapCmd[r++] = "dllwrap";
-	dllwrapCmd[r++] = "--target";
-	dllwrapCmd[r++] = "i386-mingw32";
-	dllwrapCmd[r++] = "-mno-cygwin";
-	dllwrapCmd[r++] = "--def";
-	dllwrapCmd[r++] = tmpfile_def;
-	dllwrapCmd[r++] = "--dllname";
-	dllwrapCmd[r++] = target;
+	char **dllwrapCmd = new char*[8+argc+3];
+	index = 0;
+	dllwrapCmd[index++] = "dllwrap";
+	dllwrapCmd[index++] = "--target";
+	dllwrapCmd[index++] = "i386-mingw32";
+	dllwrapCmd[index++] = "-mno-cygwin";
+	dllwrapCmd[index++] = "--def";
+	dllwrapCmd[index++] = tmpfile_def;
+	dllwrapCmd[index++] = "--dllname";
+	dllwrapCmd[index++] = target;
 	for (int i = 2; i < argc; i++)
-	  dllwrapCmd[r++] = argv[i];
-	dllwrapCmd[r++] = tmpfile_a;
-	dllwrapCmd[r++] = "-lmsvcrt";
-	dllwrapCmd[r] = NULL;
+	  dllwrapCmd[index++] = argv[i];
+	dllwrapCmd[index++] = tmpfile_a;
+	dllwrapCmd[index++] = "-lmsvcrt";
+	dllwrapCmd[index] = NULL;
 	r = execute(dllwrapCmd,false);
       }
       unlink(tmpfile_a);
@@ -430,7 +430,7 @@ int main(int argc, char **argv)
 	while (i < argc) {
 	  if (!strcmp(argv[i],"-o")) {
 	    if (argc == i + 1) {
-	      usage("Missing target argument.\n");
+	      usage("Missing argument to `-o'.\n");
 	    }
 	    linkCmd[r++] = concat("/out:", argv[i + 1]);
 	    i += 2;
