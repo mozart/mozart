@@ -33,7 +33,7 @@
 #include "builtins.hh"
 #include "value.hh"
 #include "var_base.hh"
-#include "var_future.hh"
+#include "var_readonly.hh"
 #include "os.hh"
 
 /*
@@ -48,7 +48,7 @@ void telleq(Board * bb, const TaggedRef a, const TaggedRef b) {
 
 inline
 void bindfut(Board * bb, const TaggedRef a, const TaggedRef b) {
-  oz_newThreadInject(bb)->pushCall(BI_bindFuture,RefsArray::make(a,b));
+  oz_newThreadInject(bb)->pushCall(BI_bindReadOnly,RefsArray::make(a,b));
 }
 
 

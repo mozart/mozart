@@ -31,8 +31,8 @@ import
    Module(link)
    Narrator('class')
    ErrorListener('class')
-   SGML(namePI parse)
-   XML(namePI parse) at 'XMLOzdoc.ozf'
+   SGML                      % SGML(namePI parse)
+   XML at 'XMLOzdoc.ozf'     % XML(namePI parse)
    OzDocToHTML(translate)
    OS(getEnv putEnv)
    URL

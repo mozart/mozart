@@ -80,7 +80,7 @@ Bool Suspendable::_wakeup(Board * home, PropCaller calledBy) {
 
       case B_NOT_BETWEEN:
 	if (calledBy==pc_all) {
-	  Assert(0);
+	  // raph: this happens only when making a global variable needed
 	  oz_wakeupThread(t);
 	  return OK;
 	}

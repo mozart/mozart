@@ -37,7 +37,7 @@
 #include "builtins.hh"
 #include "value.hh"
 #include "var_base.hh"
-#include "var_future.hh"
+#include "var_readonly.hh"
 #include "var_opt.hh"
 #include "os.hh"
 #include "trail.hh"
@@ -77,7 +77,7 @@ Board::Board(Board * p)
     script(taggedVoidValue), parent(p), flags(0)
 {
   Assert(!p->isCommitted());
-  status  = oz_newFuture(p);
+  status  = oz_newReadOnly(p);
   optVar = makeTaggedVar(new OptVar(this));
   rootVar = makeTaggedRef(newTaggedOptVar(optVar));
   setGCStep(oz_getGCStep());
@@ -99,13 +99,13 @@ void Board::bindStatus(TaggedRef t) {
   TaggedRef s = getStatus();
   DEREF(s, sPtr);
   if (oz_isFuture(s))
-    oz_bindFuture(sPtr, t);
+    oz_bindReadOnly(sPtr, t);
 }
 
 void Board::clearStatus() {
   if (oz_isFuture(oz_deref(getStatus())))
     return;
-  status = oz_newFuture(getParent());
+  status = oz_newReadOnly(getParent());
 }
 
 
@@ -425,7 +425,7 @@ void Board::checkStability(void) {
   
     if (n == 0) {
       // No runnable threads: suspended
-      TaggedRef newVar = oz_newFuture(pb);
+      TaggedRef newVar = oz_newReadOnly(pb);
       
       bindStatus(genSuspended(newVar));
       setStatus(newVar);
