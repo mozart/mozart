@@ -143,7 +143,7 @@
 //#define SLOW_DEBUG_CHECK
 //#define DEBUG_GC
 //#define DEBUG_VERBOSE
-//#define RECINSTRFETCH=500
+//#define RECINSTRFETCH 500
 
 #define DEBUG_FD
 //#define DEBUG_FDCD
