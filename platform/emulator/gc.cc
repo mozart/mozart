@@ -746,15 +746,15 @@ Bool isInTree (Board *b)
   while (b != (Board *)NULL) {
     DebugCheck((b->isCommitted () == OK),
 	       error ("committed board in 'isInTree (Board *)'"));
-    DebugCheck((b == am.rootBoard),
-	       error ("isInTree (Board *): root Board is reached"));
     if (b == fromCopyBoard)
-      return OK;
+      return (OK);
+    if (isLocalBoard (b) == NO)
+      return (NO);
     b = b->getParentBoard();
     if (b != (Board *) NULL) 
       b = b->gcGetBoardDeref();
   }
-  return NO;
+  return (NO);
 }
 
 inline
@@ -769,6 +769,8 @@ Bool isInTree (Actor *a)
   while (b != (Board *) NULL && b != rb) {
     if (b == fromCopyBoard)
       return (OK);
+    if (isLocalBoard (b) == NO)
+      return (NO);
     b = b->getParentBoard ();
     if (b != (Board *) NULL)
       b = b->gcGetBoardDeref ();
@@ -901,7 +903,7 @@ TaggedRef gcVariable(TaggedRef var)
       else
 	new_cv->suspList = new_cv->suspList->gc(NO);
       
-      DebugGC(new_cv->home == newBoard,
+      DebugGC((opMode == IN_GC && new_cv->home == newBoard),
 	      error ("home node of variable is not copied"));
 
       new_cv->home = newBoard;
@@ -936,7 +938,7 @@ TaggedRef gcVariable(TaggedRef var)
 	new_gv->suspList = new_gv->suspList->gc(NO);
       new_gv->gc();
 
-      DebugGC(new_gv->home == newBoard,
+      DebugGC((opMode == IN_GC && new_gv->home == newBoard),
 	      error ("home node of variable is not copied"));
 
       new_gv->home = newBoard;
@@ -1656,7 +1658,10 @@ Board *Board::gcBoard1()
   DebugGC (opMode == IN_TC && !isLocalBoard (this),
 	    error ("non-local board is copied!")); 
   // Kludge: because of allocation of 'y' registers a non-'isInTree' board
-  //         could be reached.
+  //         can be reached.
+  // Moreover: because of allocation of 'x' registers (for instance, a
+  // 'SuspContinuation' may containt in these registers any ***irrelevant***
+  // values) a non-'isInTree' board can be reached;
   if (opMode == IN_TC && isInTree (this) == NO) {
     setHeapCell ((int *) &suspCount, GCMARK(this));
     return (this);
