@@ -247,8 +247,8 @@ This does not affect the continued execution of the server.
 </LIST>
 
 <P>We present two quite different ways of implementing
-this specification, one using guards (<ptr to="guard.based">) and
-the other using exceptions (<ptr to="exception.based">).
+this specification, one based on guards (<ptr to="guard.based">) and
+the other based on exceptions (<ptr to="exception.based">).
 The guard-based technique is the shortest and simplest to understand.
 The exception-based technique is similar to what one would
 do in standard languages such as Java.

@@ -13,31 +13,12 @@ but behaves differently in the current release.
 <P>The limitations and modifications
 listed here will be removed in future releases.
 
-<SECTION><TITLE>Limitations</TITLE>
+<SECTION><TITLE>Performance limitations</TITLE>
 
-<P>The limitations are:
+<P>These limitations reduce performance but do not affect
+language semantics.
+
 <list>
-<item>The <<Remote>> module does not work under Windows.
-Furthermore, on Solaris the number of virtual sites that a machine
-can create is limited by the system-wide limit on the number of
-shared memory pages.  Under Solaris, the default is
-six shared pages per process and 100 system-wide.
-This limit can be changed (this requires rebooting the machine).
-The default value of six results in poor
-performance if there are more than
-three virtual sites connected together.
-
-<item>Threads, dictionaries, arrays, and spaces are sited,
-even though they are in base modules.
-In future releases, they will be made unsited.
-
-<item>When a reference to a constrained variable
-(finite domain, finite set, or free record)
-is passed to another site, then this reference
-is converted to a <em>future</em>.
-The future will be bound when the constrained
-variable becomes determined.
-
 <item>The distributed garbage collection
 algorithm reclaims all unused entities
 except those forming a reference cycle
@@ -68,6 +49,36 @@ technique to recover such entities.
 a long delay.
 In future releases, the delay will be very short and
 based on adaptive observation of actual network behavior.
+</list>
+
+<SECTION><TITLE>Language limitations</TITLE>
+
+<P>These limitations affect what operations are available
+to the programmer.
+
+<list>
+<item>On Windows, the <<Remote>> module does not work.
+
+<item>On Solaris, the <<Remote>> module can only create
+a limited number of virtual sites due to the 
+system-wide limit on the number of shared memory pages.  
+The default is
+six shared pages per process and 100 system-wide.
+This limit can be changed (which requires rebooting the machine).
+The default value of six results in poor
+performance if there are more than
+three virtual sites connected together.
+
+<item>Threads, dictionaries, arrays, and spaces are sited,
+even though they are in base modules.
+In future releases, they will be made unsited.
+
+<item>When a reference to a constrained variable
+(finite domain, finite set, or free record)
+is passed to another site, then this reference
+is converted to a <em>future</em>.
+The future will be bound when the constrained
+variable becomes determined.
 
 <item>If an exception is raised or a handler or watcher
 is invoked for an <EM>object</EM>,
@@ -79,7 +90,6 @@ a reference to the object.
 <item>If an exception is raised or a handler is invoked
 for an <EM>object</EM>,
 then the attempted object operation cannot be retried.
-
 </list>
 
 <SECTION><TITLE>Modifications</TITLE>
