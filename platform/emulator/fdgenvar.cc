@@ -428,6 +428,11 @@ OZ_Return tellBasicConstraint(OZ_Term v, OZ_FiniteDomain * fd)
 
     if (fd->isIn(smallIntValue(v)))
       goto proceed;
+  } else if (oz_isVariable(v)) {
+    TaggedRef newVar = oz_newVariable();
+    OZ_Return ret = tellBasicConstraint(newVar, fd);
+    Assert(ret == PROCEED);
+    return oz_unify(makeTaggedRef(vptr), newVar);
   }
 
 failed:

@@ -342,6 +342,12 @@ OZ_Return tellBasicConstraint(OZ_Term v, OZ_Ct * constr, OZ_CtDefinition * def)
     if (constr->unify(v))
       goto proceed;
     goto failed;
+  } else {
+    Assert(oz_isVariable(v));
+    TaggedRef newVar = oz_newVariable();
+    OZ_Return ret = tellBasicConstraint(newVar, constr, def);
+    Assert(ret == PROCEED);
+    return oz_unify(makeTaggedRef(vptr), newVar);
   }
 
 failed:

@@ -343,6 +343,11 @@ OZ_Return tellBasicConstraint(OZ_Term v, OZ_FSetConstraint * fs)
     if (((FSetConstraint *) fs)->valid(*(FSetValue *) tagged2FSetValue(v)))
       goto proceed;
     goto failed;
+  } else if (oz_isVariable(v)) {
+    TaggedRef newVar = oz_newVariable();
+    OZ_Return ret = tellBasicConstraint(newVar, fs);
+    Assert(ret == PROCEED);
+    return oz_unify(makeTaggedRef(vptr), newVar);
   }
 
 failed:

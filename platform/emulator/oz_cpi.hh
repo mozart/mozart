@@ -36,26 +36,29 @@
 
 #define OZ_EXPECTED_TYPE(S) char * expectedType = S
 
-#define _OZ_EXPECT(O, A, P, F)                                            \
-  {                                                                       \
-    OZ_expect_t r = O.F(P);                                               \
-    if (O.isFailing(r)) {                                                 \
-      O.fail();                                                           \
-      return OZ_typeError(expectedType, A, "");                           \
-    } else if (O.isSuspending(r))                                         \
-      return O.suspend(OZ_makeSuspendedThread(OZ_self,OZ_args,OZ_arity)); \
+#define _OZ_EXPECT(O, A, P, F)                                                  \
+  {                                                                             \
+    OZ_expect_t r = O.F(P);                                                     \
+    if (O.isFailing(r)) {                                                       \
+      O.fail();                                                                 \
+      return OZ_typeError(expectedType, A, "");                                 \
+    } else if (O.isSuspending(r) || O.isExceptional(r))                         \
+      return O.suspend(OZ_makeSuspendedThread(OZ_self,OZ_args,OZ_arity));       \
   }
 
 #define OZ_EXPECT(O, P, F)  _OZ_EXPECT(O, P, OZ_args[P], F)
 
-#define _OZ_EXPECT_SUSPEND(O, A, P, F, SC)      \
-  {                                             \
-    OZ_expect_t r = O.F(P);                     \
-    if (O.isFailing(r)) {                       \
-      O.fail();                                 \
-      return OZ_typeError(expectedType, A, ""); \
-    } else if (O.isSuspending(r))               \
-      SC += 1;                                  \
+#define _OZ_EXPECT_SUSPEND(O, A, P, F, SC)                                      \
+  {                                                                             \
+    OZ_expect_t r = O.F(P);                                                     \
+    if (O.isFailing(r)) {                                                       \
+      O.fail();                                                                 \
+      return OZ_typeError(expectedType, A, "");                                 \
+    } else if (O.isSuspending(r)) {                                             \
+      SC += 1;                                                                  \
+    } else if (O.isExceptional(r)) {                                            \
+      return O.suspend(OZ_makeSuspendedThread(OZ_self,OZ_args,OZ_arity));       \
+    }                                                                           \
   }
 
 #define OZ_EXPECT_SUSPEND(O, P, F, SC)          \
@@ -752,6 +755,9 @@ public:
   }
   OZ_Boolean isFailing(OZ_expect_t r) {
     return (r.accepted == -1);
+  }
+  OZ_Boolean isExceptional(OZ_expect_t r) {
+    return (r.accepted == -2);
   }
 };
 
