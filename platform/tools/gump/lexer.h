@@ -137,8 +137,6 @@ OZ_BI_define(yy_lexer_input, 1, 1)
 }
 OZ_BI_end
 
-extern "C" OZ_C_proc_interface *oz_init_module(void);
-
 OZ_C_proc_interface *oz_init_module(void) {
   static OZ_C_proc_interface oz_interface[] = {
     {"create",0,1,yy_lexer_create},
