@@ -313,6 +313,7 @@ BIspec fdSpec[] = {
   {"fsp_subsume", 2, fsp_subsume},
   {"fsp_disjoint", 2, fsp_disjoint},
   {"fsp_min", 2, fsp_min},
+  {"fsp_monitorIn", 2, fsp_monitorIn},
 #endif /* FOREIGNFDPROPS */
 
   {0,0,0,0}

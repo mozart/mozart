@@ -13,15 +13,15 @@
 
 OZ_C_proc_begin(fsp_tellIsIn, 2)
 {
-  OZ_EXPECTED_TYPE(OZ_EM_FSET "," OZ_EM_INT);
+  OZ_EXPECTED_TYPE(OZ_EM_FD "," OZ_EM_FSET);
 
   PropagatorExpect pe;
 
-  OZ_EXPECT(pe, 0, expectFSetVarBounds);
-  OZ_EXPECT(pe, 1, expectInt);
+  OZ_EXPECT(pe, 0, expectIntVarAny);
+  OZ_EXPECT(pe, 1, expectFSetVarBounds);
 
-  return pe.impose(new TellIsInPropagator(OZ_args[0],
-                                          OZ_args[1]));
+  return pe.impose(new TellIsInPropagator(OZ_args[1],
+                                          OZ_args[0]));
 }
 OZ_C_proc_end
 
@@ -29,15 +29,15 @@ OZ_CFun TellIsInPropagator::spawner = fsp_tellIsIn;
 
 OZ_C_proc_begin(fsp_tellIsNotIn, 2)
 {
-  OZ_EXPECTED_TYPE(OZ_EM_FSET "," OZ_EM_INT);
+  OZ_EXPECTED_TYPE(OZ_EM_FD "," OZ_EM_FSET );
 
   PropagatorExpect pe;
 
-  OZ_EXPECT(pe, 0, expectFSetVarBounds);
-  OZ_EXPECT(pe, 1, expectInt);
+  OZ_EXPECT(pe, 0, expectIntVarAny);
+  OZ_EXPECT(pe, 1, expectFSetVarBounds);
 
-  return pe.impose(new TellIsNotInPropagator(OZ_args[0],
-                                             OZ_args[1]));
+  return pe.impose(new TellIsNotInPropagator(OZ_args[1],
+                                             OZ_args[0]));
 }
 OZ_C_proc_end
 
@@ -69,36 +69,52 @@ OZ_Return TellIsInPropagator::propagate(void)
 {
   OZ_DEBUGPRINT("in: " << *this);
 
-  OZ_FSetVar v(_v);
+  OZ_FSetVar s(_s);
+  OZ_FDIntVar d(_d);
+  PropagatorController_S_D P(s, d);
 
-  FailOnInvalid(*v += _i);
+  FailOnEmpty(*d <= (32 * fset_high - 1));
+
+  if (*d == fd_singl) {
+    FailOnInvalid(*s += d->getSingleElem());
+  } else {
+    for (int i = 32 * fset_high; i --; )
+      if (s->isNotIn(i))
+        FailOnEmpty(*d -= i);
+  }
 
   OZ_DEBUGPRINT("out: "<< *this);
-  v.leave();
-  return ENTAILED;
+
+  return P.leave1();
 
 failure:
   OZ_DEBUGPRINT("fail: "<< *this);
-  v.fail();
-  return FAILED;
+  return P.fail();
 }
 
 OZ_Return TellIsNotInPropagator::propagate(void)
 {
   OZ_DEBUGPRINT("in: " << *this);
 
-  OZ_FSetVar v(_v);
+  OZ_FSetVar s(_s);
+  OZ_FDIntVar d(_d);
+  PropagatorController_S_D P(s, d);
 
-  FailOnInvalid(*v -= _i);
+  if (*d == fd_singl) {
+    FailOnInvalid(*s -= d->getSingleElem());
+  } else {
+    for (int i = 32 * fset_high; i --; )
+      if (s->isIn(i))
+        FailOnEmpty(*d -= i);
+  }
 
   OZ_DEBUGPRINT("out: "<< *this);
-  v.leave();
-  return ENTAILED;
+
+  return P.leave1();
 
 failure:
   OZ_DEBUGPRINT("fail: "<< *this);
-  v.fail();
-  return FAILED;
+  return P.fail();
 }
 
 OZ_Return FSetCardPropagator::propagate(void)

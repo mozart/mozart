@@ -46,17 +46,26 @@ OZ_Term OZ_Stream::get(void)
   return r;
 }
 
+OZ_Term OZ_Stream::put(OZ_Term stream, OZ_Term elem)
+{
+  OZ_Term tail = OZ_newVariable();
+  OZ_Term ret = (OZ_unify(stream, OZ_cons(elem, tail)) == PROCEED) ? tail : 0;
+  setFlags();
+  return ret;
+}
+
 OZ_Boolean OZ_Stream::leave(void)
 {
-  while (!closed && !eostr) {
-    if (!valid)
-      return FALSE;
-    get();
-  }
-  if (closed)
-    return FALSE ;
+  setFlags();
 
-  DEREF(tail, tailptr, tailtag);
+  while (!eostr)
+    get();
+
+  if (closed || !valid)
+    return FALSE;
+
+  OZ_Term t = tail;
+  DEREF(t, tailptr, tailtag);
 
   addSuspAnyVar(tailptr, am.currentThread);
   return TRUE;

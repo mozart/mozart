@@ -14,12 +14,12 @@
 
 #include "fsstd.hh"
 
-class TellIsInPropagator : public Propagator_S_I {
+class TellIsInPropagator : public Propagator_S_D {
 private:
   static OZ_CFun spawner;
 public:
-  TellIsInPropagator(OZ_Term v, OZ_Term i)
-    : Propagator_S_I(v, i) {}
+  TellIsInPropagator(OZ_Term s, OZ_Term d)
+    : Propagator_S_D(s, d) {}
 
   virtual OZ_Return propagate(void);
 
@@ -28,12 +28,12 @@ public:
   }
 };
 
-class TellIsNotInPropagator : public Propagator_S_I {
+class TellIsNotInPropagator : public Propagator_S_D {
 private:
   static OZ_CFun spawner;
 public:
-  TellIsNotInPropagator(OZ_Term v, OZ_Term i)
-    : Propagator_S_I(v, i) {}
+  TellIsNotInPropagator(OZ_Term s, OZ_Term d)
+    : Propagator_S_D(s, d) {}
 
   virtual OZ_Return propagate(void);
 

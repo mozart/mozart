@@ -105,7 +105,7 @@ static void outputArgsList(ostream& o, OZ_Term args, Bool not_top)
 
 problem:
   OZ_warning("Unexpected term found in argument list "
-             "of propagator while printing.");
+             "of propagator while printing %x, %x.", args, tagTypeOf(args));
 }
 
 ostream& operator << (ostream& o, const OZ_Propagator &p)

@@ -449,6 +449,7 @@ public:
 
   OZ_Term get(void);
   OZ_Term getTail(void) { return tail; }
+  OZ_Term put(OZ_Term, OZ_Term);
 
   OZ_Boolean leave(void);
   void fail(void);
