@@ -49,11 +49,19 @@ define
       functor
 	 SecureOS
       import
-	 OS(getEnv:GetEnv time:Time rand:Rand)
+	 OS(getEnv:GetEnv stat:Stat uName:UName
+	    time:Time gmTime:GT localTime:LT
+	    rand:Rand srand:Srand randLimits:RL)
       export
 	 getEnv:GetEnv
+	 stat:Stat
+	 uName:UName
 	 time:Time
+	 gmTime:GT
+	 localTime:LT
 	 rand:Rand
+	 srand:Srand
+	 randLimits:RL
       define
 	 skip
       end
