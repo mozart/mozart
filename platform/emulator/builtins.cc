@@ -1227,54 +1227,6 @@ OZ_Return MonitorArityPropagator::run(void)
 
 
 
-// {TestCB X F ?B}: B is boolean with truth value "X has feature F".
-// X must be undetermined record and F must be feature.
-// Non-monotonic built-in.
-OZ_C_proc_begin(BItestCB, 3)
-{
-    OZ_Term term = OZ_getCArg(0);
-    OZ_Term fea = OZ_getCArg(1);
-    OZ_Term out = OZ_getCArg(2);
-	
-    DEREF(term, termPtr, termTag);
-    DEREF(fea,  feaPtr,  feaTag);
-
-    // Error unless F is a feature:
-    if (!isFeature(feaTag))
-        TypeErrorT(1,"Feature");
-
-    if (isRecord(term)) {
-      if (isSRecord(term)) {
-	TaggedRef t = tagged2SRecord(term)->getFeature(fea);
-	return OZ_unify(out,t?NameTrue:NameFalse);
-      }
-      if (isLTuple(term)) {
-        if (!isSmallInt(fea)) return OZ_unify(out,NameFalse);
-        int feaval=smallIntValue(fea);
-        if (feaval==1 || feaval==2) return OZ_unify(out,NameTrue);
-        return OZ_unify(out,NameFalse);
-      }
-      Assert(isLiteral(term));
-      return OZ_unify(out,NameFalse);
-    }
-
-    // Error unless X is OFS:
-
-    if (termTag!=CVAR || tagged2CVar(term)->getType()!=OFSVariable)
-        TypeErrorT(0,"undetermined record");
-
-    // At this point, X is OFS and F is feature.
-    GenOFSVariable *ofsvar=tagged2GenOFSVar(term);
-    // Test presence of feature F:
-    if (ofsvar->getFeatureValue(fea)!=makeTaggedNULL())
-        return OZ_unify(out,NameTrue);
-    else
-        return OZ_unify(out,NameFalse);
-}
-OZ_C_proc_end
-
-
-
 // {HasFeatureNow X F ?B}: B is boolean with truth value "X has feature F".
 // X must be undetermined record and F must be feature.
 // Non-monotonic built-in.
@@ -7216,10 +7168,6 @@ BIspec allSpec2[] = {
   {"tellRecordSize", 3, BIsystemTellSize, 0},
   {"hasFeatureNow",  3, BIhasFeatureNow,  0},
   {"recordCIsVarB",  2, BIisRecordCVarB,  0},
-
-  // This one is only used for AVar.oz Martin Mueller should check. 
-  // Otherwise it should go away.
-  {"testCB",       3, BItestCB,         0},
 
   {".",            3,BIdot,              (IFOR) dotInline},
   {"^",            3,BIuparrow,        	 (IFOR) uparrowInline},
