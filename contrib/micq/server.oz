@@ -165,21 +165,18 @@ define
       end
 
       %% Methods called from editapplicationgui.oz
-      meth !S_getApplicationInfo(id:Id info:?I ...) %buggy "..." does the trick
+      meth !S_getApplicationInfo(id:Id info:?I)
          try {DB getApplicationInfo(id:Id info:I)}
          catch _ then {WriteLog "Could not return application info about "#Id} end
       end
 
       %% Methods called from clients
-      meth !S_getapplication(id:I application:?A ...) %buggy "..." does the trick
+      meth !S_getapplication(id:I application:?A)
          try {DB getApplication(id:I application:A)}
          catch _ then {WriteLog "Could not return applicaion "#I} end
       end
 
-      meth !S_message(receiver:ID message:M sender:SID reply_to:R mid:Mid date:Date)=M1 D={GetDate} GlobalMID={GetID} in
-%        {System.show buggy(message(receiver:ID message:M sender:SID reply_to:R mid:Mid date:Date))}
-         {ForAll [receiver#ID message#M sender#SID reply_to#R mid#Mid date#Date] proc{$ X} X.2=M1.(X.1) end}
-%        {System.show fix(message(receiver:ID message:M sender:SID reply_to:R mid:Mid date:Date))}
+      meth !S_message(receiver:ID message:M sender:SID reply_to:R mid:Mid date:Date) D={GetDate} GlobalMID={GetID} in
          {WriteLog "Received and stored message "#GlobalMID#" from "#SID}
          {DB storeMessage(receiver:ID id:GlobalMID sender:SID message:M date:D reply_to:R)}
          {ForAll ID proc {$ I}
@@ -223,10 +220,7 @@ define
          end
       end
 
-      meth !S_addFriends(id:ID friends:Fs)=M1 On Off On1 Off1 in
-%        {System.show buggy(addFriends(id:ID friends:Fs))}
-         {ForAll [id#ID friends#Fs] proc{$ X} X.2=M1.(X.1) end}
-%        {System.show fix(addFriends(id:ID friends:Fs))}
+      meth !S_addFriends(id:ID friends:Fs) On Off On1 Off1 in
          try C={DB getClient(id:ID client:$)} in
             {DB addFriends(id:ID friends:Fs)}
             {DB getFriendsStatus(id:ID online:On offline:Off)}
@@ -236,14 +230,10 @@ define
          catch networkFailure(...) then skip end
       end
 
-      meth !S_removeFriend(id:ID friend:F ...) /*buggy "..." does the trick*/ {DB removeFriend(id:ID friend:F)} end
+      meth !S_removeFriend(id:ID friend:F) {DB removeFriend(id:ID friend:F)} end
+      meth !S_getFriends(id:ID friends:$) {DB getFriends(id:ID friends:$)} end
 
-      meth !S_getFriends(id:ID friends:$ ...) /*buggy "..." does the trick*/ {DB getFriends(id:ID friends:$)} end
-
-      meth !S_setStatus(id:ID online:O)=M1
-%        {System.show buggy(setStatus(id:ID online:O))}
-         {ForAll [id#ID online#O] proc{$ X} X.2=M1.(X.1) end}
-%        {System.show fix(setStatus(id:ID online:O))}
+      meth !S_setStatus(id:ID online:O)
          try C={DB getClient(id:ID client:$)} in
             {self Notify(id:ID online:O)}
             {WriteLog ID#" went "#O}
@@ -438,14 +428,9 @@ define
          end
       end
 
-      meth !S_updateSettings(id:Id settings:S ...) %buggy "..." does the trick
-         {DB updateSettings(id:Id settings:S)}
-      end
+      meth !S_updateSettings(id:Id settings:S) {DB updateSettings(id:Id settings:S)} end
 
-      meth !S_addApplication(name:N serverurl:S clienturl:C author:A description:D)=M1 ID in
-%        {System.show buggy(addApplication(name:N serverurl:S clienturl:C author:A description:D))}
-         {ForAll [name#N serverurl#S clienturl#C author#A description#D] proc{$ X} X.2=M1.(X.1) end}
-%        {System.show fix(addApplication(name:N serverurl:S clienturl:C author:A description:D))}
+      meth !S_addApplication(name:N serverurl:S clienturl:C author:A description:D) ID in
          {DB addApplication(id:ID name:N serverurl:S clienturl:C author:A description:D)}
          {WriteLog A#" adds application "#N#" ("#ID#")"}
          thread
@@ -456,10 +441,7 @@ define
          end
       end
 
-      meth !S_editApplication(name:N serverurl:S clienturl:C author:A id:ID description:D)=M1
-%        {System.show buggy(editApplication(name:N serverurl:S clienturl:C id:ID author:A description:D))}
-         {ForAll [name#N serverurl#S clienturl#C author#A id#ID description#D] proc{$ X} X.2=M1.(X.1) end}
-%        {System.show fix(editApplication(name:N serverurl:S clienturl:C author:A id:ID description:D))}
+      meth !S_editApplication(name:N serverurl:S clienturl:C author:A id:ID description:D)
          {DB updateApplication(id:ID name:N serverurl:S clienturl:C author:A description:D)}
          {WriteLog A#" updates application "#N#" ("#ID#")"}
          thread
@@ -470,7 +452,7 @@ define
          end
       end
 
-      meth !S_inviteUser(id:Id sender:S ticket:T client:C name:N aid: Aid ...) %buggy "..." does the trick
+      meth !S_inviteUser(id:Id sender:S ticket:T client:C name:N aid: Aid)
          if {DB isOnline(id:Id online:$)}\=false then Cl={DB getClient(id:Id client:$)} in
             {Cl inviteUser(sender:S ticket:T client:C
                            description: {DB getApplicationInfo( id:Aid info:$ )}.description
@@ -494,7 +476,7 @@ define
          end
       end
 
-      meth !S_removeUser(id:Id ...) %buggy "..." does the trick
+      meth !S_removeUser(id:Id)
          {WriteLog "User '"#Id#"' is being removed!"}
          if {DB isOnline( id:Id online:$ )}\=false then
             try C={DB getClient(id:Id client:$)} in
@@ -544,13 +526,13 @@ define
       end
 
 
-      meth !S_getInfo(id:Id info:I ...) %buggy "..." does the trick
+      meth !S_getInfo(id:Id info:I)
          try
             I = {DB get(id:Id entry:$)}
          catch _ then {WriteLog "Can't return info about "#Id} end
       end
 
-      meth !S_updateUser(firstname:F lastname:L organization:O email:E passwd:P id:U userlevel: UL ...) /*buggy "..." does the trick*/ ON I in
+      meth !S_updateUser(firstname:F lastname:L organization:O email:E passwd:P id:U userlevel:UL) ON I in
          %% Update the databse
          {DB updateUser(id:U firstname:F lastname:L organization:O email:E passwd:P
                         userlevel: UL)}
@@ -577,10 +559,7 @@ define
          {DB saveAll(dir:self.dbdir)}
       end
 
-      meth !S_messageAck(id:Id mid:Mid)=M1 Sender C in
-%        {System.show buggy(messageAck(id:Id mid:Mid))}
-         {ForAll [id#Id mid#Mid] proc{$ X} X.2=M1.(X.1) end}
-%        {System.show fix(messageAck(id:Id mid:Mid))}
+      meth !S_messageAck(id:Id mid:Mid) Sender C in
          {WriteLog "Message ("#Mid#") has been read by "#Id}
          try
             Sender={DB getSender( mid: Mid sender:$)}
@@ -594,10 +573,7 @@ define
          end
       end
 
-      meth !S_removeMessage(mid:Mid)=M1
-%        {System.show buggy(removeMessage(mid:Mid))}
-         {ForAll [mid#Mid] proc{$ X} X.2=M1.(X.1) end}
-%        {System.show fix(removeMessage(mid:Mid))}
+      meth !S_removeMessage(mid:Mid)
          try
             {DB removeMessage(mid:Mid)}
             {WriteLog "Message ("#Mid#") has been removed from server."}
@@ -605,7 +581,7 @@ define
       end
 
       %getUserName
-      meth !S_getUserName(id:ID name:?N ...) %buggy "..." does the trick
+      meth !S_getUserName(id:ID name:?N)
          Es={DB items($)}
          fun{Find Es1}
             case Es1 of A|Bs then
@@ -620,7 +596,7 @@ define
          catch _ then {WriteLog "Could not return username for "#ID} end
       end
 
-      meth !S_removeApplication(aid:Aid id:Id ...) %buggy "..." does the trick
+      meth !S_removeApplication(aid:Aid id:Id)
          try
             {DB removeApplication( id: Aid author: Id)}
             {WriteLog "["#Id#"] removes application ("#Aid#")."}
@@ -678,6 +654,11 @@ define
                            N.id#" from "#ID}
                        catch networkFailure(...) then skip end
                     end}
+      end
+
+      meth otherwise(X) N={Label X} in
+         {Browse N#X}
+         raise noSuchMethodsInServer(X) end
       end
    end
 
