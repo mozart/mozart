@@ -963,7 +963,6 @@ REGEXCHAR    "["([^\]\\]|\\.)+"]"|\"[^"]+\"|\\.|[^<>"\[\]\\\n]
 "<-"                           { return OOASSIGN; }
 "<="                           { return DEFAULT; }
 "=>"                           { return REDUCE; }
-":="                           { return ASSIGN; }
 "!!"                           { return DEREF; }
 "//"                           { return SEP; }
 {ADD}                          { return ADD; }

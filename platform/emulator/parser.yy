@@ -228,7 +228,7 @@ void xy_setParserExpect() {
 %token REDUCE SEP
 
 %right    '='
-%right    OOASSIGN ASSIGN
+%right    OOASSIGN
 %right    orelse
 %right    andthen
 %nonassoc COMPARE FDCOMPARE
@@ -443,9 +443,6 @@ phrase          : phrase '=' coord phrase
                   { $$ = newCTerm("fEq",$1,$4,$3); }
                 | phrase OOASSIGN coord phrase
                   { $$ = newCTerm("fAssign",$1,$4,$3); }
-                | phrase ASSIGN coord phrase
-                  { $$ = newCTerm("fOpApplyStatement",newCTerm(":="),
-                                  consList($1,consList($4,nilAtom)),$3); }
                 | phrase orelse coord phrase
                   { $$ = newCTerm("fOrElse",$1,$4,$3); }
                 | phrase andthen coord phrase
