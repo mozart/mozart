@@ -95,6 +95,8 @@ void ConfigData::init() {
   maxUdpPacket = MAX_UDP_PACKET;
   tcpPacketSize = TCP_PACKET_SIZE;
 
+  perdioSeifHandler = 1;
+  
   closetime = DEFAULT_CLOSE_TIME;
 
   /* set osname and cpu */

@@ -1098,12 +1098,14 @@ void DSite::communicationProblem(MessageType mt, DSite* storeSite,
     
 
 
+
 /**********************************************************************/
 /*   Initialization                                      */
 /**********************************************************************/
 //
 OZ_BI_proto(BIstartTmp);
 OZ_BI_proto(BIdefer);
+OZ_BI_proto(BIseifHandler);
 
 void initDPCore()
 {
@@ -1173,6 +1175,15 @@ void initDPCore()
   BI_startTmp  = makeTaggedConst(new Builtin("startTmp",
 					     2, 0, BIstartTmp, OK));
 
+
+  if(ozconf.perdioSeifHandler)
+    installWatcher(NULL,
+		   PERM_BLOCKED|TEMP_BLOCKED,
+		   makeTaggedConst(new Builtin("seifHandler",
+					       2, 0, BIseifHandler, OK)),
+		   NULL,
+		   PERSISTENT);
+  
   Assert(sizeof(BorrowCreditExtension)==sizeof(Construct_3));
   Assert(sizeof(OwnerCreditExtension)==sizeof(Construct_3));
   Assert(sizeof(Chain)==sizeof(Construct_4));
@@ -1271,8 +1282,8 @@ ConstTerm *gcStatefulSpecImpl(Tertiary *t)
 }
 
 void dpExitWithTimer(unsigned int timeUntilClose) {
-  printf("tiden:%d\n", timeUntilClose);
-  printf("tiden:%d\n", ozconf.closetime);
+  //printf("tiden:%d\n", timeUntilClose);
+  //printf("tiden:%d\n", ozconf.closetime);
 
   if (!isPerdioInitialized())
     return;
@@ -1313,8 +1324,8 @@ void dpExitWithTimer(unsigned int timeUntilClose) {
     timeUntilClose -= (osTotalTime() - idle_start);
     oz_io_handle();
   }
-  printf("times left %d\n", timeUntilClose);
-  printf("connections left %d\n", connectionsLeft);
+  //printf("times left %d\n", timeUntilClose);
+  //printf("connections left %d\n", connectionsLeft);
 }
 
 void dpExitImpl() {
