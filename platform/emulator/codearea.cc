@@ -456,6 +456,20 @@ void CodeArea::display (ProgramCounter from, int sz, FILE* ofile)
 	DISPATCH();
       }
 
+    case TESTBOOLX:
+    case TESTBOOLY:
+    case TESTBOOLG:
+      {
+	fprintf (ofile,
+		 "(%d,0x%x,0x%x,0x%x,%d)\n",
+		 regToInt(getRegArg(PC+1)),
+		 getLabelArg(PC+2),
+		 getLabelArg(PC+3),
+		 getLabelArg(PC+4),
+		 getPosIntArg(PC+5));
+	DISPATCH();
+      }
+
     case SHALLOWTEST2:
       fprintf (ofile,
 	       "(%s,X[%d],X[%d],0x%x,%d)\n",
@@ -753,6 +767,8 @@ void CodeArea::display (ProgramCounter from, int sz, FILE* ofile)
     case BRANCH:
     case NEXTCLAUSE: 
     case THREAD:
+    case JOB:
+    case CONC:
     case SAVECONT:
 	  /* ***type 8:    OP Label */
       fprintf(ofile, "(@ 0x%x)\n", getLabelArg (PC+1));
@@ -795,6 +811,12 @@ void CodeArea::display (ProgramCounter from, int sz, FILE* ofile)
 	fprintf(ofile, "(@ 0x%x, %d)\n", lbl, n);
       }
       DISPATCH();
+
+    case GENCALL:
+      {
+	fprintf(ofile, "(0x%x,%d)\n", getAdressArg(PC+1),getPosIntArg(PC+2));
+	DISPATCH();
+      }
 
     default:
       fflush(ofile);
