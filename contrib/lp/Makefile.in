@@ -32,7 +32,7 @@ USECPLEX =
 #USECPLEX = 1
 
 
-CFLAGS 		=  -O3 $(COPT)
+CFLAGS 		=  -O3 $(COPT) $(CPPFLAGS) $(CXXFLAGS)
 CFLAGS  	+= -I/usr/local/oz/include
 CFLAGS  	+= -I$(VPATH)/../ri
 CFLAGS   	+= -Wall -Wno-unused -Wno-reorder -Wno-uninitialized
