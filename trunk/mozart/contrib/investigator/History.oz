@@ -45,7 +45,11 @@ define
       end
 
       meth get_sol_var(Id VS)
+\ifdef IGNORE_REFERENCE
+	 VS = ''
+\else
 	 VS = if {FS.isIn Id @sol_vars} then '* ' else '' end
+\endif
       end
 
       meth get_sol_var_set(S)
@@ -96,9 +100,13 @@ define
 	 failedProp <- unit
       end
 	 
-      meth get_prop_node_failed(PRef C)
-	 C = if {PropIsFailed PRef} then FailedPropColour
+      meth get_prop_node_failed(PReference C)
+\ifdef IGNORE_REFERENCE
+	 C = PropColour
+\else
+	 C = if {PropIsFailed PReference} then FailedPropColour
 	     else PropColour end
+\endif
       end
       
       meth markup_param(DaVin I)
