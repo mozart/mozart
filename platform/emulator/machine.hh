@@ -62,18 +62,18 @@
 
 
 #if defined(MIPS) && !defined(LARGEADRESSES)
-const intlong mallocBase = 0x10000000;
+#define mallocBase 0x10000000
 #else
 #if defined(AIX3_RS6000) && !defined(LARGEADRESSES)
-const intlong mallocBase = 0x20000000;
+#define mallocBase 0x20000000
 #else
 #if defined(OSF1_ALPHA) && !defined(LARGEADRESSES)
-const intlong mallocBase = 0x30000000;
+#define mallocBase 0x30000000
 #else
 #ifdef HPUX_700
-const intlong mallocBase = 0x40000000;
+#define mallocBase 0x40000000
 #else
-const intlong mallocBase = 0x0;
+#define mallocBase 0x0
 #endif
 #endif
 #endif
@@ -84,7 +84,7 @@ const intlong mallocBase = 0x0;
  * needed for threaded code
  */
 
-const intlong textBase = 0x0;
+#define textBase 0x0
 
 /* convert an int32 to a pointer and vice versa */
 #define _ToPointer(i) ((void*) (i))
