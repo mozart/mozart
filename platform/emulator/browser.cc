@@ -103,10 +103,18 @@ OZ_BI_define(BIisRecordCVarB,1,1)
 } OZ_BI_end
 
 
-OZ_BI_define(_getsBound_dummyB, 1,0)
+OZ_BI_define(_getsBoundDummy, 1,0)
 {
   return oz_unify(OZ_in(0),oz_true());
 } OZ_BI_end
+
+OZ_Term BI_GetsBoundDummy;
+
+void browser_init(void) {
+  BI_GetsBoundDummy = 
+    makeTaggedConst(new Builtin("Browser", "getsBound (dummy)",1,0, 
+				_getsBoundDummy, OK));
+}
 
 
 OZ_BI_define(BIgetsBoundB, 2, 0)
@@ -118,7 +126,7 @@ OZ_BI_define(BIgetsBoundB, 2, 0)
     args[0] = OZ_in(1);
     
     Thread *thr =
-      (Thread *) OZ_makeSuspendedThread (_getsBound_dummyB, args, 1);
+      (Thread *) OZ_makeSuspendedThread (BI_GetsBoundDummy, args, 1);
     OZ_Return ret = oz_var_addSusp(vPtr, thr);
     if (ret == PROCEED) oz_wakeupThread(thr);
     if (ret != SUSPEND) return ret;

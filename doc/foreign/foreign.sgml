@@ -1309,9 +1309,9 @@ OZ_pair2(OZ_atom(left),OZ_string(right))
 <entry><<OZ_makeRunnableThread>>
 <index class=module/OZ_makeRunnableThread/
 <synopsis>
-  <code >void OZ_makeRunnableThread(OZ_CFun fun, OZ_Term *args, int n) </code>
-<item>Creates a thread with one task to execute the function <code /fun/
-    with arguments <code /args[0],&ellipsis;,args[n-1]/.
+  <code >void OZ_makeRunnableThread(OZ_Term proc, OZ_Term *args, int n) </code>
+<item>Creates a thread with one task to execute the application of <code /proc/
+    to arguments <code /args[0],&ellipsis;,args[n-1]/.
 <p>
 
 <entry><<OZ_getLowPrio>>
