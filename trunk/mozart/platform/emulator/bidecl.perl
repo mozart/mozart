@@ -56,6 +56,7 @@
 ###		| atom
 ###		| nilAtom
 ###		| array
+###		| bitArray
 ###		| bool
 ###		| cell
 ###		| char
@@ -1095,7 +1096,7 @@ $builtins = {
     ###* Bit Arrays
 
     'BitArray.new'	=> { in  => ['+int','+int'],
-			     out => ['+chunk'],
+			     out => ['+bitArray'],
 			     BI  => BIbitArray_new,
 			     native => false},
 
@@ -1104,57 +1105,57 @@ $builtins = {
 			     BI  => BIbitArray_is,
 			     native => false},
 
-    'BitArray.set'	=> { in  => ['+chunk','+int'],
+    'BitArray.set'	=> { in  => ['+bitArray','+int'],
 			     out => [],
 			     BI  => BIbitArray_set,
 			     native => false},
 
-    'BitArray.clear'	=> { in  => ['+chunk','+int'],
+    'BitArray.clear'	=> { in  => ['+bitArray','+int'],
 			     out => [],
 			     BI  => BIbitArray_clear,
 			     native => false},
 
-    'BitArray.test'	=> { in  => ['+chunk','+int'],
+    'BitArray.test'	=> { in  => ['+bitArray','+int'],
 			     out => ['+bool'],
 			     BI  => BIbitArray_test,
 			     native => false},
 
-    'BitArray.low'	=> { in  => ['+chunk'],
+    'BitArray.low'	=> { in  => ['+bitArray'],
 			     out => ['+int'],
 			     BI  => BIbitArray_low,
 			     native => false},
 
-    'BitArray.high'	=> { in  => ['+chunk'],
+    'BitArray.high'	=> { in  => ['+bitArray'],
 			     out => ['+int'],
 			     BI  => BIbitArray_high,
 			     native => false},
 
-    'BitArray.clone'	=> { in  => ['+chunk'],
-			     out => ['+chunk'],
+    'BitArray.clone'	=> { in  => ['+bitArray'],
+			     out => ['+bitArray'],
 			     BI  => BIbitArray_clone,
 			     native => false},
 
-    'BitArray.or'	=> { in  => ['+chunk','+chunk'],
+    'BitArray.or'	=> { in  => ['+bitArray','+bitArray'],
 			     out => [],
 			     BI  => BIbitArray_or,
 			     native => false},
 
-    'BitArray.and'	=> { in  => ['+chunk','+chunk'],
+    'BitArray.and'	=> { in  => ['+bitArray','+bitArray'],
 			     out => [],
 			     BI  => BIbitArray_and,
 			     native => false},
 
-    'BitArray.nimpl'	=> { in  => ['+chunk','+chunk'],
+    'BitArray.nimpl'	=> { in  => ['+bitArray','+bitArray'],
 			     out => [],
 			     BI  => BIbitArray_nimpl,
 			     native => false},
 
-    'BitArray.toList'	=> { in  => ['+chunk'],
+    'BitArray.toList'	=> { in  => ['+bitArray'],
 			     out => ['+[int]'],
 			     BI  => BIbitArray_toList,
 			     native => false},
 
-    'BitArray.complementToList'	=> { in  => ['+chunk'],
+    'BitArray.complementToList'	=> { in  => ['+bitArray'],
 				     out => ['+[int]'],
 				     BI  => BIbitArray_complementToList,
 				     native => false},
