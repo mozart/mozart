@@ -78,6 +78,8 @@ enum MessageType {
   M_UNASK_ERROR,
   M_SEND_GATE,
 
+  M_ISDET,              // OTI DIF (implicit 1 credit)
+
   M_LAST
 };
 

@@ -203,6 +203,12 @@ int oz_isFuture(TaggedRef r)
   return isCVar(r) && oz_cv_status(tagged2CVar(r))==OZ_FUTURE;
 }
 
+inline
+int oz_isPerdioVar(TaggedRef r)
+{
+  return isCVar(r) && tagged2CVar(r)->getType()==PerdioVariable;
+}
+
 Bool oz_cv_valid(GenCVariable *,TaggedRef *,TaggedRef);
 OZ_Return oz_cv_unify(GenCVariable *,TaggedRef *,TaggedRef, ByteCode *);
 OZ_Return oz_cv_bind(GenCVariable *,TaggedRef *,TaggedRef, ByteCode *);

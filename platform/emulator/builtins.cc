@@ -167,12 +167,16 @@ OZ_BI_define(BIisFuture, 1,1)
   OZ_RETURN(oz_isFuture(var) ? oz_true() : oz_false());
 } OZ_BI_end
 
-OZ_Return isDetRelInline(TaggedRef term) {
-  DEREF(term, _1, _2);
-  return oz_isVariable(term) ? FAILED : PROCEED;
-}
 
-OZ_DECLAREBOOLFUN1(BIisDet,isDetRelInline)
+OZ_BI_define(BIisDet,1,1)
+{
+  TaggedRef term = OZ_in(0);
+  DEREF(term, _1, _2);
+  if (!oz_isVariable(term)) OZ_RETURN(oz_true());
+  if (oz_isPerdioVar(term)) OZ_RETURN(perdioVarIsDet(tagged2CVar(term)));
+  OZ_RETURN(oz_false());
+} OZ_BI_end
+
 
 
 

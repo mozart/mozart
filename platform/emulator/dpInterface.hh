@@ -78,6 +78,7 @@ GenCVariable* gcCopyPerdioVar(GenCVariable *cv);
 void gcPerdioVarRecurse(GenCVariable *cv);
 void perdioVarPrint(GenCVariable *cv, ostream &out, int depth);
 VariableStatus perdioVarStatus(GenCVariable *cv);
+OZ_Term perdioVarIsDet(GenCVariable *cv);
 
 // interface for GC;
 void gcProxyRecurse(Tertiary *t);
