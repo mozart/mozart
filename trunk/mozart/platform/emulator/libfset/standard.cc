@@ -300,7 +300,7 @@ OZ_Return FSetDistinctPropagator::propagate(void)
   if(! (aux <<= *y)) 
     return P.vanish();
 
-  if (*x == *y)
+  if (x->isValue() && y->isValue() && *x == *y)
     return P.fail();
 
   return P.leave();
