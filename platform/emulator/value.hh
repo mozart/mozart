@@ -99,9 +99,9 @@ public:
     return (dummy & TmpBlocked) == TmpBlocked;} 
   Bool handlerReleasedOnCond(CondCode cc){
     if ((cc==TmpBlocked) && ((dummy & TmpBlocked)!=TmpBlocked))
-      return false;
+      return FALSE;
     else 
-      return true;}
+      return TRUE;}
 };
 
 /*===================================================================
@@ -614,7 +614,7 @@ TaggedRef tail(TaggedRef list)
 }
 
 inline
-int length(OZ_Term l)
+int fastlength(OZ_Term l)
 {
   int len = 0;
   l = deref(l);
@@ -785,11 +785,11 @@ public:
 	 ((NetHandler*)old)->getThread() == th)
 	if(((NetHandler*)old)->
 	   handlerReleasedOnCond(getNetCondition()))
-	  return true;
+	  return TRUE;
 	else
-	  return false;
+	  return FALSE;
       old = old->getNext();}
-    return false;}
+    return FALSE;}
   
   void setIndex(int i) { tagged.setIndex(i); }
   int getIndex() { return tagged.getIndex(); }
@@ -954,9 +954,9 @@ private:
 
   int hashmask;		// size-1, used as mask for hashing and opt marker
   int width;	        // next unused index in RefsArray (for add())
-  DebugCheckT(int numberOfCollisions);
+  DebugCheckT(int numberOfCollisions;)
 
-  KeyAndIndex table[0];
+  KeyAndIndex table[1];
 
   int scndhash(int i) { return ((i&7)<<1)|1; }
   int hashfold(int i) { return i&hashmask; }
@@ -977,8 +977,6 @@ public:
   int getSize()       { return hashmask+1; }
   OZPRINT;
 };
-
-Arity *mkArity(TaggedRef list);
 
 #define ARITYTABLESIZE 8000
 
@@ -1211,6 +1209,7 @@ Bool isSorted(TaggedRef list);
 
 TaggedRef duplist(TaggedRef list, int &len);
 TaggedRef sortlist(TaggedRef list,int len);
+TaggedRef packsort(TaggedRef list);
   
 inline
 Bool isRecord(TaggedRef term) {

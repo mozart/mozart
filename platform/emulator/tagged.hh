@@ -604,19 +604,8 @@ TaggedRef *newTaggedCVar(GenCVariable *c) {
 }
 
 
-//-----------------------------------------------------------------------------
-// --- Useful functions make...
-
-inline
-TaggedRef derefStepBack(TaggedRef *ptr, TaggedRef val)
-{
-  return ptr ? makeTaggedRef(ptr) : val;
-}
-
-
 // ---------------------------------------------------------------------------
 // --- TaggedRef: conversion: tagged2<Type>
-
 
 
 inline
@@ -1119,5 +1108,18 @@ int nextPowerOf2(int n)
   }
 }
 
+#define DerefIfVarDo(v,v1,Block)		\
+ if (isRef(v)) {				\
+   TaggedRef v1;				\
+   while (1) {					\
+     v1 = v;					\
+     v = *tagged2Ref(v);			\
+     if (!isRef(v)) break;			\
+   }						\
+   if (isAnyVar(v)) { Block; }			\
+ }
+
+#define DerefReturnVar(v)     DerefIfVarDo(v,_v,return _v);
+#define DerefReturnSuspend(v) DerefIfVarDo(v,_v, return SUSPEND);
 
 #endif
