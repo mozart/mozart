@@ -65,7 +65,6 @@ void ConfigData::init() {
   showCacheLoad         = 0;
   ozHome		= getenvDefault("OZHOME","unknown");
   ozPath		= OZ_PATH;
-  linkPath		= OZ_PATH;
   printDepth		= PRINT_DEPTH;
   printWidth		= PRINT_WIDTH;
   errorPrintDepth	= ERROR_PRINT_DEPTH;
