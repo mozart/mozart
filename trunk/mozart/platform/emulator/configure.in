@@ -118,8 +118,9 @@ if test "${enable_wincross}" = yes; then
     then
         AC_MSG_RESULT(yes (-DGNUWIN32 -DWINDOWS))
 	CXX=$oz_wincross_dir/$oz_wincross_prefix-gcc
-	LD=$oz_wincross_dir/$oz_wincross_prefix-ld
+	LD=$CXX
 	RANLIB=$oz_wincross_dir/$oz_wincross_prefix-ranlib
+	AR=$oz_wincross_dir/$oz_wincross_prefix-ar
 	#LDFLAGS="$LDFLAGS $oz_wincross_LDFLAGS"
 	platform="win32-i486"
 	PROGRAMNAME="ozemulator.exe"
@@ -208,7 +209,9 @@ AC_PROG_RANLIB
 AC_CHECK_PROGS(M4, gm4 m4, m4)
 
 AC_CHECK_PROGS(SED, gnused sed, sed)
-AC_CHECK_PROGS(AR, gar ar, ar)
+if test -z "$AR"; then
+    AC_CHECK_PROGS(AR, gar ar, ar)
+fi
 
 OZ_PATH_PROG(PLATFORMSCRIPT, ozplatform)
 OZ_PATH_PROG(DYNLD, ozdynld)
@@ -247,7 +250,7 @@ if test "${GXX}" = yes; then
 
     # Note: use $(CC) for linking, not $(CXX): 
     # g++ creates references to libg++ 
-    if test -z "${PGXX}"
+    if test -z "${PGXX}" -a -z "${LD}"
     then
 	LD=gcc
     fi
@@ -688,6 +691,16 @@ OZ_ENABLE_YES(finalization,[
 	,
         AC_MSG_RESULT(no)
 	AC_DEFINE(NOFINALIZATION)
+	)
+
+dnl *****************************************************************
+dnl FINALIZATION SUPPORT
+dnl *****************************************************************
+
+OZ_ENABLE_NO(virtualsites,[
+                   provide support for virtual sites],
+	AC_DEFINE(VIRTUALSITES),
+        AC_MSG_RESULT(yes)
 	)
 
 dnl *****************************************************************
