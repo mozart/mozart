@@ -34,7 +34,7 @@ proc {EnqueueCompilerQuery M}
 end
 
 fun {UnknownFile F}
-   F == nofile orelse F == ''
+   F == ''
 end
 
 fun {StripPath File}
