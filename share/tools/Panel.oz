@@ -48,6 +48,8 @@ export
    'class': PanelClass
    'panel': Panel
 
+   'Panel': Panel
+
 body
    \insert 'panel/main.oz'
 

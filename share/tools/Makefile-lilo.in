@@ -134,7 +134,7 @@ all: Makefile-lilo $(FUNCTORS) $(SYSLETS)
 	$(COMPILE) $< -o $@
 
 opi: MakeOPI.oz $(TYCS)
-	$(EXEC) -l Application $<
+	$(EXEC) -l Application,Component $<
 
 
 
