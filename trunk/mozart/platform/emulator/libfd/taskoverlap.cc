@@ -40,7 +40,7 @@ OZ_Return TasksOverlapPropagator::propagate(void)
 
   OZ_FDIntVar x(reg_x), y(reg_y), o(reg_b);
   PropagatorController_V_V_V P(x, y, o);
-  OZ_Service s(this, &P);
+  OZ_Service<OZ_Propagator> s(this, &P);
   OZ_Return r = tasksoverlap.filter(s, x, xd, y, yd, o)();
   return r;
 }

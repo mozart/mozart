@@ -515,9 +515,9 @@ OZ_BI_define(fsp_intersectionN, 2, 0)
 }
 OZ_BI_end
 
-
-OZ_Service &filter_intersectN(OZ_Service &s,
-			      OZ_FSetVarVector &xs, OZ_FSetVar &z)
+template <class SERVICE>
+SERVICE &filter_intersectN(SERVICE &s,
+			   OZ_FSetVarVector &xs, OZ_FSetVar &z)
 {
   DSP(("filter_intersect\n"));
   //
@@ -601,7 +601,7 @@ OZ_Return FSetIntersectionNPropagator::propagate(void)
   //
   PropagatorController_VS_S P(_vs_size, vs, z);
   //
-  OZ_Service s(this, &P);
+  OZ_Service<FSetIntersectionNPropagator> s(this, &P);
   //
   return filter_intersectN(s, xs, z)();
 }

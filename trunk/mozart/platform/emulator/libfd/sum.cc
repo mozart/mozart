@@ -251,7 +251,7 @@ OZ_Return LinLessEqPropagator::propagate(void)
   for (int i = reg_sz; i--; )
     xs[i].read(reg_x[i]);
   OZ_FDIntVarVector x(reg_sz, xs, &reg_x);
-  OZ_Service s(this, &P);
+  OZ_Service<OZ_Propagator> s(this, &P);
   OZ_Return r = filter_lessEqOffsetN(s, reg_a, x, reg_c)();
   return r;
 }
