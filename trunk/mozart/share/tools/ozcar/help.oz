@@ -23,7 +23,7 @@ local
 
    MessageWidth = 380
    HelpTitle    = 'Ozcar Help'
-   OkButtonText = 'Aha'
+   OkButtonText = 'Ok'
    NoTopic      = 'No Help Available'
    NoHelp       = ('Feel free to ask the author.\n' #
 		   'Send a mail to ' # EmailOfBenni)
@@ -44,14 +44,14 @@ local
        'an exception are reported here.'))
 
      AddQueriesBitmap #
-     ('Add Emacs Queries' #
-      ('De-activate this checkbutton if you want to feed some code ' #
+     ('Attach Queries' #
+      ('Deactivate this checkbutton if you want to feed some code ' #
        'from Emacs without Ozcar taking over control.'))
 
      AddSubThreadsBitmap #
-     ('Add Subthreads' #
-      ('De-activate this checkbutton if you don\'t want Ozcar ' #
-       'to debug any subthreads of your initial query thread.'))
+     ('Attach Subthreads' #
+      ('Deactivate this checkbutton if you don\'t want Ozcar ' #
+       'to attach any subthreads of your initial query thread.'))
 
      BreakpointStaticHelp #
      ('Static Breakpoints' #

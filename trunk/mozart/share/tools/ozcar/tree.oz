@@ -233,6 +233,9 @@ in
 
 	 SyncCalc       : _
 
+	 MsgList        : nil
+	 MsgListTl      : nil
+
       meth tkInit(ozcar:O ...)=M
 	 BaseTree,init(O)
 	 ScrolledTitleCanvas,{Record.subtract M ozcar}
@@ -331,48 +334,50 @@ in
       end
 
       meth display
-	 SFX = ThreadTreeStretchX
-	 SFY = ThreadTreeStretchY
-	 OS  = ThreadTreeOffset
-	 Sel = @Selected
+	 SFX    = ThreadTreeStretchX
+	 SFY    = ThreadTreeStretchY
+	 OS     = ThreadTreeOffset
+	 Sel    = @Selected
+	 Canvas = {self w($)}
       in
-	 {self tk(delete all)}
+	 Tree,Enqueue(o(Canvas delete all))
 	 {ForAll @nodes
 	  proc{$ N}
 	     X Y R S DY I
-	     CT = {New Tk.canvasTag tkInit(parent:{self w($)})}
+	     CT = {New Tk.canvasTag tkInit(parent:Canvas)}
 	  in
 	     node(x:X y:Y r:R s:S dy:DY i:I ...) = {N get($)}
 
 	     %% the horizontal line
-	     {self tk(crea line X*SFX-OS Y*SFY (X-1)*SFX-OS Y*SFY
-		      width:2 capstyle:projecting fill:TrunkColor)}
+	     Tree,Enqueue(o(Canvas crea line X*SFX-OS Y*SFY (X-1)*SFX-OS Y*SFY
+			    width:2 capstyle:projecting fill:TrunkColor))
 	     case R then
 		case Y > 2 andthen DY == 1 then
 		   %% the stippled line to separate thread trees
-		   {self tk(crea line SFX (Y-DY+1)*SFY-7 10*SFX (Y-DY+1)*SFY-7
-			    stipple:LocalBitMapDir#'line.xbm')}
+		   Tree,Enqueue(o(Canvas crea line SFX (Y-DY+1)*SFY-7
+				  10*SFX (Y-DY+1)*SFY-7
+				  stipple:OzcarBitmapDir#'line.xbm'))
 		else skip end
-		{self tk(crea line (X-1)*SFX-OS Y*SFY
-			 (X-1)*SFX-OS (Y-DY+1)*SFY-5
-			 width:2 capstyle:projecting fill:TrunkColor)}
+		Tree,Enqueue(o(Canvas crea line (X-1)*SFX-OS Y*SFY
+			       (X-1)*SFX-OS (Y-DY+1)*SFY-5
+			       width:2 capstyle:projecting fill:TrunkColor))
 
 	     else
-		{self tk(crea line (X-1)*SFX-OS Y*SFY
-			 (X-1)*SFX-OS (Y-DY+1)*SFY-SFY
-			 width:2 capstyle:projecting fill:TrunkColor)}
+		Tree,Enqueue(o(Canvas crea line (X-1)*SFX-OS Y*SFY
+			       (X-1)*SFX-OS (Y-DY+1)*SFY-SFY
+			       width:2 capstyle:projecting fill:TrunkColor))
 	     end
 
 	     local
 		CL = {GetColor S}
 	     in
-		{self tk(crea text X*SFX Y*SFY
-			 text:   I # CL.2
-			 fill:   CL.1
-			 tags:   CT
-			 anchor: w
-			 font:   case N == Sel then ThreadTreeBoldFont
-				 else               ThreadTreeFont end)}
+		Tree,Enqueue(o(Canvas crea text X*SFX Y*SFY
+			       text:   I # CL.2
+			       fill:   CL.1
+			       tags:   CT
+			       anchor: w
+			       font:   case N == Sel then ThreadTreeBoldFont
+				       else               ThreadTreeFont end))
 		{CT tkBind(event:  '<1>'
 			   action: self # SwitchToThread(I))}
 	     end
@@ -381,13 +386,38 @@ in
 	 local
 	    Height = ThreadTreeStretchY * (@width + 3)
 	 in
-	    {self tk(conf scrollregion:q(0 0 ThreadTreeWidth Height))}
+	    Tree,Enqueue(o(Canvas conf
+			   scrollregion:q(0 0 ThreadTreeWidth Height)))
 	 end
+	 Tree,ClearQueue
       end
 
       meth SwitchToThread(I)
 	 {Ozcar PrivateSend(status('New selected thread is #' # I))}
 	 {Ozcar PrivateSend(switch(I))}
       end
+
+      meth Enqueue(Ticklet)
+	 case Ticklet
+	 of nil  then skip
+	 [] T|Tr then
+	    Gui,Enqueue(T)
+	    Gui,Enqueue(Tr)
+	 else NewTl in
+	    case {IsDet @MsgListTl} then
+	       MsgList <- Ticklet|NewTl
+	    else
+	       @MsgListTl = Ticklet|NewTl
+	    end
+	    MsgListTl <- NewTl
+	 end
+      end
+
+      meth ClearQueue
+	 @MsgListTl = nil
+	 {Tk.batch @MsgList}
+	 MsgList <- nil
+      end
+
    end
 end
