@@ -569,10 +569,12 @@ OZ_ENABLE(modules-static,[ link modules statically],$oz_enable_modules_static,
 AC_SUBST(STATIC_MODULES)
 AC_SUBST(DYNAMIC_MODULES)
 
+OZ_CXX_OPTIONS(-fpic,OZTOOLDYNOPT)
 if test "$oz_enable_modules_static" != "yes" ; then 
-    OZ_CXX_OPTIONS(-fpic,CDYNOPT)
+    CDYNOPT=OZTOOLDYNOPT
 fi
 AC_SUBST(CDYNOPT)
+AC_SUBST(OZTOOLDYNOPT)
 
 dnl *****************************************************************
 dnl malloc
