@@ -14,9 +14,11 @@
 <!ENTITY interfaces SYSTEM "interfaces.sgml">
 <!ENTITY switches SYSTEM "switches.sgml">
 <!ENTITY narrator SYSTEM "narrator.sgml">
+<!ENTITY syntax SYSTEM "syntax.sgml">
 
 <!-- Abbreviations -->
 <!ENTITY dot "." -- to distinguish it from periods -->
+<!ENTITY null "">
 
 <!-- Processing Instructions -->
 <!ENTITY slash PI "slash">
@@ -38,6 +40,7 @@
     <Meta name="html.split" value="chapter.api">
     <Meta name="html.split" value="appendix.switches">
     <Meta name="html.split" value="appendix.narrator">
+    <Meta name="html.split" value="appendix.syntax">
     <Meta name="html.split.bib" value="">
 
     <Meta name=ozversion value="3.0">
@@ -59,6 +62,7 @@
     <!-- Appendices -->
     &switches;
     &narrator;
+    &syntax;
   <Back>
     <Bib.Extern id="mozart-opi" to="mozart.bib" key="Mozart-OPI">
     <Bib.Extern id="mozart-base" to="mozart.bib" key="Mozart-Base">
