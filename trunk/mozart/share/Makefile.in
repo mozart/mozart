@@ -12,6 +12,9 @@ all::
 all install clean realclean depend distclean::
 	dirs="$(SUBDIRS)"; for i in $$dirs; do (cd $$i && $(MAKE) $@); done
 
+clean::
+	$(RM) *~
+
 veryclean: realclean
 
 distclean:: 
