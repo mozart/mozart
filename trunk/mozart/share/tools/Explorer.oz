@@ -38,10 +38,6 @@ in
       System(show
 	     printName)
 
-      Error(formatGeneric
-	    format
-	    dispatch)
-
       ErrorRegistry(put)
 
       Tk
