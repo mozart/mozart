@@ -120,23 +120,9 @@ local
 
 in
 
-
-   fun {MakeClasses IsWait IsBAB
-	            KeepSolutions ChoiceDistance
-	Manager Order}
+   fun {MakeClasses IsBAB KeepSolutions ChoiceDistance Manager Order}
       Canvas         = Manager.canvas
       Status         = Manager.status
-      CombFeatures   = case IsWait then
-			  class $
-			     feat
-				solve: Search.combinator.debugNoWait
-			  end
-		       else
-			  class $
-			     feat
-				solve: Search.combinator.debug
-			  end
-		       end
       StrategyNodes  = case IsBAB then BABNodes else DfNodes end
       ChoiceFeatures = case IsBAB then
 			       class $
@@ -250,7 +236,6 @@ in
 		    SolvedNode
 		    TkNodes.entailed
 		    StrategyNodes.solved
-		    CombFeatures
 		 feat
 		    canvas:Canvas
 		 meth init(Mom Depth _)
@@ -293,7 +278,6 @@ in
 		    SolvedNode
 		    TkNodes.stable
 		    StrategyNodes.solved
-		    CombFeatures
 		 feat
 		    canvas:Canvas 
 		 meth init(Mom Depth _)
@@ -311,7 +295,6 @@ in
 	      class $
 		 from
 		    ChoiceNode
-		    CombFeatures
 		    StrategyNodes.choice
 		    ChoiceFeatures
 		 meth init(Mom Depth PrevSol AllocateCopy Info)
@@ -337,7 +320,6 @@ in
 	      class $
 		 from
 		    ChoiceNode
-		    CombFeatures
 		    StrategyNodes.choice
 		    ChoiceFeatures
 		 meth init(Mom Depth AllocateCopy Info)
@@ -370,7 +352,7 @@ in
       create FakedRoot
 	 from Classes.choice
       end
-      Info = {FakedRoot.solve Query nil}
+      Info = {Solve Query nil}
    in
       
       case {Label Info}
