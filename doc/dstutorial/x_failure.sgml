@@ -61,7 +61,8 @@ remote problems are temporary.
 </LIST>
 <P> An entity on a site therefore has four
 basic fault states.
-We now explain how these fault states occur
+In the next sections
+we explain how these fault states occur
 in terms of the possible system failures
 for each language entity.
 Each language entity has a different
@@ -77,6 +78,22 @@ problem is, depending on the type of the entity.
 <P> A fault state <<F>> different from <<ok>> will
 cause the distribution exception <<system(dp(F) ...)>>
 to be raised when an operation is attempted on the entity.
+In most cases the fault state contains more
+information than just <<permFail>>, <<tempFail>>,
+<<remoteProblem>>.
+This is denoted by making these fault states
+the labels of <EM>records</EM> that give
+the full information, e.g.,
+<<permFail(type:cell info:owner)>>
+and
+<<remoteProblem(type:variable permFail:[S1,S2])>>.
+The exception handler can do
+pattern matching on just a part of this
+information using the <<...>> notation, e.g.,
+<<permFail(...)>>
+and
+<<remoteProblem(permFail:_ ...)>>.
+
 
 <SUBSECTION><TITLE>Temporary fault states</TITLE>
 
@@ -281,7 +298,7 @@ continue working even though there is a
 problem with a particular client.
 The client should
 be informed in finite time of a server problem
-by means of a new exception, <<server_error>>.
+by means of a new exception, <<serverError>>.
 
 <P> The system raises exceptions
 when it tries to do operations
@@ -292,11 +309,11 @@ as defined before except <<ok>>.
 
 <P> Assume that we have two new abstractions.
 <<{SafeSend Prt X}>> sends to a port
-and raises the exception <<server_error>>
+and raises the exception <<serverError>>
 if this is permanently impossible.
 <<{SafeWait X T}>> waits until <<X>> is
 instantiated, raises the exception
-<<server_error>> if this is permanently impossible
+<<serverError>> if this is permanently impossible
 or if the time <<T>> is exceeded.
 We first show how to use these abstractions
 before defining them in our failure model.
@@ -340,13 +357,13 @@ declare Srv
 try X in
    try
       Srv={Connection.take {Pickle.load "http://www.sics.se/~pvr/hw"}}
-   catch _ then raise server_error end
+   catch _ then raise serverError end
    end
 
    {Srv X}
    {SafeWait X infinity}
    {Browse X}
-catch server_error then
+catch serverError then
    {Browse 'Server down'}
 end
 >>>
@@ -356,7 +373,7 @@ namely a send (inside <<Srv>>), which is replaced by <<SafeSend>>,
 and a wait, which is replaced by <<SafeWait>>.
 If there is a problem sending the
 message or receiving the reply,
-then the exception <<server_error>> is raised.
+then the exception <<serverError>> is raised.
 Note that we also catch exceptions during the
 <<Connection.take>> and the <<Pickle.load>>.
 
@@ -369,7 +386,7 @@ proc {SafeSend Prt X}
    catch system(dp(C) ...) then
       case C
       of permFail(...) then
-         raise server_error end
+         raise serverError end
       [] tempFail(...) then
          {Delay 100} {SafeSend Prt X}
       else
@@ -379,7 +396,7 @@ proc {SafeSend Prt X}
 end
 >>>
 
-<P> This raises a <<server_error>> if there is
+<P> This raises a <<serverError>> if there is
 a permanent server failure
 and retries indefinitely each 100 ms if there
 is a temporary failure.
@@ -392,13 +409,13 @@ local
    proc {InnerSafeWait X Time}
       try
          {WaitOr X Time}
-         if {IsDet Time} then raise server_error end end
+         if {IsDet Time} then raise serverError end end
       catch system(dp(C) ...) then
          case C
          of permFail(...) then
-            raise server_error end
+            raise serverError end
          [] remoteProblem(permFail:_ ...) then
-            raise server_error end
+            raise serverError end
          [] tempFail(...) then
             {Delay 100} {InnerSafeWait X Time}
          [] remoteProblem(tempFail:_ ...) then
@@ -419,7 +436,7 @@ in
 end
 >>>
 
-<P> This raises a <<server_error>> if there is
+<P> This raises a <<serverError>> if there is
 a permanent server failure
 and retries each 100 ms if there is a
 temporary failure.
@@ -440,21 +457,24 @@ The time-out is an argument to <<SafeWait>>.
 stationary objects must have well-defined behavior when
 there are faults.
 We propose the following specification for the
-stationary object (called the "server")
-and a called (called the "client"):
-:
+stationary object (the "server")
+and a caller (the "client"):
 <LIST>
 <ITEM> The call <<C={NewSafeStat Class Init}>>
-creates a new stationary object <<C>>.
-<ITEM> The call <<{C Msg}>> can raise
-the additional distribution exceptions
-<<permFail>> and <<tempFail>>,
-in addition to the exceptions raised in the object.
-<ITEM> The call <<{C Msg T}>> adds a time-out <<T>> (in ms).
-If there is no result after this time,
-then the distribution exception <<timeOut>> is raised.
-<ITEM> If there
+creates a new server <<C>>.
+<ITEM> If there is no problem in the distributed execution
+then the call <<{C Msg}>> has identical language semantics
+to a centralized execution of the object,
+including raising the same exceptions.
+<ITEM> If there is a problem in the distributed execution preventing
+its successful completion, then the call <<{C Msg}>> will raise
+the exception <<remoteObjectError>>.
+<ITEM> If there is no result after a delay <<T>> (in ms)
+then the call <<{C Msg T}>> aborts
+and the exception <<remoteObjectError>> is raised.
+<ITEM> If there is a problem communicating with the client,
+then the server gives up attempting to communicate with it.
+This does not affect the continued execution of the server.
 </LIST>
-<P>
 
 </CHAPTER>
