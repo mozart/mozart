@@ -350,7 +350,9 @@ static SigHandler handlers[] = {
   {SIGINT, "SIGINT", NO,handlerDefault,0},
   {SIGTERM,"SIGTERM",NO,handlerDefault,0},
   {SIGSEGV,"SIGSEGV",NO,handlerDefault,0},
-  {SIGBUS,"SIGBUS",NO,handlerDefault,0},
+#ifndef WINDOWS
+  {SIGBUS, "SIGBUS", NO,handlerDefault,0},
+#endif
   {SIGUSR1,"SIGUSR1",NO,handlerDefault,0},
   {SIGFPE, "SIGFPE", NO,handlerDefault,0},
 
