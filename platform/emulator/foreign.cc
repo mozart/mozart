@@ -1088,10 +1088,10 @@ void cvar2buffer(ostream &out, const char *s, GenCVariable *cv, int depth)
       }
       break;
     }
-  case PROMISE:
+  case FUTURE:
     {
       out << s;
-      out << "<promise>";
+      out << "<future>";
       break;
     }
   default:
@@ -1163,6 +1163,9 @@ void term2Buffer(ostream &out, OZ_Term term, int depth)
     break;
   case OZCONST:
     const2buffer(out,tagged2Const(term));
+    break;
+  case PROMISE:
+    out << "<promise>";
     break;
   case LITERAL:
     {

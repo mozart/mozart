@@ -38,41 +38,36 @@
 #include "mem.hh"
 #include "thread.hh"
 
-class Promise: public GenCVariable {
+class Future: public GenCVariable {
   TaggedRef requested;
   
 public:
-  NO_DEFAULT_CONSTRUCTORS2(Promise);
-  Promise() : GenCVariable(PROMISE) {
+  NO_DEFAULT_CONSTRUCTORS2(Future);
+  Future() : GenCVariable(FUTURE) {
     requested=oz_false();
   }
   void gcRecurse(void);
-  OZ_Return unifyPromise(TaggedRef*);
+  OZ_Return unifyFuture(TaggedRef*);
   Bool valid(TaggedRef /* val */) { return TRUE; } // mm2
-  void addSuspPromise(TaggedRef*,Thread*,int);
+  void addSuspFuture(TaggedRef*,Thread*,int);
   Bool isKinded() { return false; } // mm2
-  void dispose(void) { freeListDispose(this, sizeof(Promise)); }
+  void dispose(void) { freeListDispose(this, sizeof(Future)); }
   void request();
   OZ_Return waitRequest(OZ_Term *);
 };
 
 
 inline
-Bool isPromise(TaggedRef term)
+Bool isFuture(TaggedRef term)
 {
   GCDEBUG(term);
-  return isCVar(term) && (tagged2CVar(term)->getType() == PROMISE);
+  return isCVar(term) && (tagged2CVar(term)->getType() == FUTURE);
 }
 
 inline
-Promise *tagged2Promise(TaggedRef t) {
-  Assert(isPromise(t));
-  return (Promise *) tagged2CVar(t);
-}
-
-inline
-OZ_Term oz_newPromise() {
-  return  makeTaggedRef(newTaggedCVar(new Promise()));
+Future *tagged2Future(TaggedRef t) {
+  Assert(isFuture(t));
+  return (Future *) tagged2CVar(t);
 }
 
 #endif

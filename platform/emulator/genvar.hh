@@ -57,7 +57,7 @@ enum TypeOfGenCVariable {
   FSetVariable,
   PerdioVariable,
   LazyVariable,
-  PROMISE,
+  FUTURE,
   NonGenCVariable
 };
 
@@ -65,7 +65,7 @@ enum TypeOfGenCVariable {
     Assert(t == FDVariable || t == OFSVariable || 	\
 	   t == MetaVariable || t == BoolVariable || 	\
 	   t==PerdioVariable || t == FSetVariable || \
-	   t ==LazyVariable || t == PROMISE)
+	   t ==LazyVariable || t == FUTURE)
 
 class GenCVariable: public SVariable {
 
