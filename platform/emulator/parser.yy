@@ -1076,7 +1076,7 @@ ifRest		: T_elseif ifMain
 		| T_else inSequence T_end
 		  { $$ = $2; }
 		| T_end
-		  { $$ = newCTerm(PA_fSkip,pos()); }
+		  { $$ = newCTerm(PA_fNoElse,pos()); }
 		;
 
 caseMain	: coord sequence T_then coord inSequence caseRest coord
