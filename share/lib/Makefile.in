@@ -365,12 +365,13 @@ compiler/FunUnnest.ozc: compiler/FunUnnest.oz CP-new.env \
 	$(STANDARD)
 
 compiler/FunAssembler.ozc: compiler/FunAssembler.oz SP-new.env \
-	compiler/Assembler.oz $(STANDARD)
+	compiler/Assembler.oz compiler-Opcodes.oz $(STANDARD)
 
 compiler/FunCompiler.ozc: compiler/FunCompiler.oz SP-new.env \
 	compiler/Misc-new.env compiler/FormatStrings.oz compiler/Reporter.oz \
 	compiler/ParseOz.oz compiler/Interface.oz compiler/CompilerClass.oz \
-	compiler/GenericInterface.oz compiler/QuietInterface.oz $(STANDARD)
+	compiler/GenericInterface.oz compiler/QuietInterface.oz \
+	compiler-Version.oz $(STANDARD)
 
 COMPILER_BIG = @COMPILER_BIG@
 COMPILER_FUN = @COMPILER_FUN@
@@ -378,8 +379,7 @@ COMPILER_FUN = @COMPILER_FUN@
 $(COMPILER_BIG): $(DUMPINTRO) $(COMPILERSRC) SP.env \
 	CP.env Gump.env Compiler.env Init.ozc
 
-$(COMPILER_FUN): $(DUMPINTRO) $(COMPILERSRC) SP.env \
-	CP.env Gump.env Compiler.env Init.ozc \
+$(COMPILER_FUN): $(DUMPINTRO) SP.env CP.env Gump.env Compiler.env Init.ozc \
 	compiler/FunMisc.ozc compiler/FunBuiltins.ozc \
 	compiler/FunSA.ozc compiler/FunCode.ozc compiler/FunCore.ozc \
 	compiler/FunUnnest.ozc compiler/FunAssembler.ozc \
