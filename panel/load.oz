@@ -16,7 +16,7 @@ local
    LeftWidth       = 60
    HalfWidth       = Width div 2
    Border          = 5
-   Height          = 80
+   Height          = 60
 
    FontFamily      = '-*-helvetica-medium-r-normal--*-'
    FontMatch       = '-*-*-*-*-*-*'

@@ -8,7 +8,6 @@
 local
    DarkColor       = '#828282'
    BrightColor     = '#ffffff'
-   BackColor       = '#d9d9d9'
 
    RidgeWidth      = 2
    InnerOffset     = 4
