@@ -263,9 +263,9 @@ OZ_Boolean BIfdHeadManager::expectNonLin(int i, STuple &at, STuple &xt,
     am.addSuspendVarList(last_fdvarptr);
 #else
     {
-      OZ_Thread th = OZ_makeSuspension(f, x, a);
-      OZ_addSuspension(makeTaggedRef(prev_fdvarptr), th);
-      OZ_addSuspension(makeTaggedRef(last_fdvarptr), th);
+      OZ_Thread th = OZ_makeThread(f, x, a);
+      OZ_addThread(makeTaggedRef(prev_fdvarptr), th);
+      OZ_addThread(makeTaggedRef(last_fdvarptr), th);
     }
 #endif
     return OZ_TRUE;
@@ -274,7 +274,7 @@ OZ_Boolean BIfdHeadManager::expectNonLin(int i, STuple &at, STuple &xt,
 #ifdef FDBISTUCK
     am.addSuspendVarList(varptr);
 #else 
-    OZ_addSuspension(makeTaggedRef(varptr), OZ_makeSuspension(f, x, a));
+    OZ_addThread(makeTaggedRef(varptr), OZ_makeThread(f, x, a));
 #endif
     return OZ_TRUE;
   case 4:
@@ -282,7 +282,7 @@ OZ_Boolean BIfdHeadManager::expectNonLin(int i, STuple &at, STuple &xt,
 #ifdef FDBISTUCK
     am.addSuspendVarList(varptr);
 #else 
-    OZ_addSuspension(makeTaggedRef(varptr), OZ_makeSuspension(f, x, a));
+    OZ_addThread(makeTaggedRef(varptr), OZ_makeThread(f, x, a));
 #endif
     return OZ_TRUE;
   case 5:
@@ -293,12 +293,12 @@ OZ_Boolean BIfdHeadManager::expectNonLin(int i, STuple &at, STuple &xt,
   }
 }
 
-void BIfdHeadManager::addResSusps(Suspension * susp, FDPropState target) {
+void BIfdHeadManager::addPropagators (Thread *thr, FDPropState target) {
   for (int i = curr_num_of_items; i--; )
-    addResSusp(i, susp, target);
+    addPropagator (i, thr, target);
   
   if (global_vars == 0)
-    FDcurrentTaskSusp->markLocalSusp();
+    thr->markLocalThread ();
 }
 
 
@@ -345,24 +345,24 @@ Bool BIfdHeadManager::addSuspXorYdet(OZ_CFun, OZ_Term *, int)
 #else
 
 OZ_Bool BIfdHeadManager::addSuspFDish(OZ_CFun f, OZ_Term * x, int a) {
-  OZ_Thread th = OZ_makeSuspension(f, x, a);
+  OZ_Thread th = OZ_makeThread(f, x, a);
 
   for (int i = curr_num_of_items; i--; )
     if (pm_is_noncvar(bifdhm_vartag[i])) {
       AssertFD(isAnyVar(*bifdhm_varptr[i]));
-      OZ_addSuspension(makeTaggedRef(bifdhm_varptr[i]), th);
+      OZ_addThread(makeTaggedRef(bifdhm_varptr[i]), th);
     }
 
   return PROCEED;
 }
 
 OZ_Bool BIfdHeadManager::addSuspSingl(OZ_CFun f, OZ_Term * x, int a) {
-  OZ_Thread th = OZ_makeSuspension(f, x, a);
+  OZ_Thread th = OZ_makeThread(f, x, a);
 
   for (int i = curr_num_of_items; i--; )
     if (pm_is_var(bifdhm_vartag[i])) {
       AssertFD(isAnyVar(*bifdhm_varptr[i]));
-      OZ_addSuspension(makeTaggedRef(bifdhm_varptr[i]), th);
+      OZ_addThread(makeTaggedRef(bifdhm_varptr[i]), th);
     }
 
   return PROCEED;
@@ -371,9 +371,9 @@ OZ_Bool BIfdHeadManager::addSuspSingl(OZ_CFun f, OZ_Term * x, int a) {
 Bool BIfdHeadManager::addSuspXorYdet(OZ_CFun f, OZ_Term * x, int a)
 {
   if (pm_is_var(bifdhm_vartag[0]) && pm_is_var(bifdhm_vartag[1])) {
-    OZ_Thread th = OZ_makeSuspension(f, x, a);
-    OZ_addSuspension(makeTaggedRef(bifdhm_varptr[0]), th);
-    OZ_addSuspension(makeTaggedRef(bifdhm_varptr[1]), th);
+    OZ_Thread th = OZ_makeThread(f, x, a);
+    OZ_addThread(makeTaggedRef(bifdhm_varptr[0]), th);
+    OZ_addThread(makeTaggedRef(bifdhm_varptr[1]), th);
     return OZ_FALSE;
   }
   return OZ_TRUE;
@@ -382,7 +382,7 @@ Bool BIfdHeadManager::addSuspXorYdet(OZ_CFun f, OZ_Term * x, int a)
 #endif
 
 
-void BIfdHeadManager::addResSusp(int i, Suspension * susp, FDPropState target)
+void BIfdHeadManager::addPropagator (int i, Thread *thr, FDPropState target)
 {
   DebugCheck(i < 0 || i >= curr_num_of_items, error("index overflow"));
 
@@ -391,20 +391,20 @@ void BIfdHeadManager::addResSusp(int i, Suspension * susp, FDPropState target)
   if (tag == pm_singl) {
     return;
   } else if (tag == pm_fd) {
-    addSuspFDVar(bifdhm_var[i], new SuspList(susp), target);
+    addSuspFDVar(bifdhm_var[i], new SuspList (thr), target);
     if (! am.isLocalCVar(bifdhm_var[i])) global_vars += 1;
   } else if (tag == pm_bool) {
-    addSuspBoolVar(bifdhm_var[i], new SuspList(susp));
+    addSuspBoolVar(bifdhm_var[i], new SuspList (thr));
     if (! am.isLocalCVar(bifdhm_var[i])) global_vars += 1;
   } else if (tag == pm_uvar) {
     if (bifdhm_var[i] != *bifdhm_varptr[i]) return;
     if (am.isLocalUVar(bifdhm_var[i])) {
       OZ_Term * taggedfdvar = newTaggedCVar(new GenFDVariable());
-      addSuspFDVar(*taggedfdvar, new SuspList(susp), target);
+      addSuspFDVar(*taggedfdvar, new SuspList (thr), target);
       doBind(bifdhm_varptr[i], makeTaggedRef(taggedfdvar));
     } else {
       global_vars += 1;
-      addSuspUVar(bifdhm_varptr[i], new SuspList(susp));
+      addSuspUVar(bifdhm_varptr[i], new SuspList (thr));
     } 
   } else {
     Assert(tag == pm_svar);
@@ -415,11 +415,11 @@ void BIfdHeadManager::addResSusp(int i, Suspension * susp, FDPropState target)
       OZ_Term * taggedfdvar = newTaggedCVar(fdvar);
       am.checkSuspensionList(bifdhm_var[i]);
       fdvar->setSuspList(tagged2SVar(bifdhm_var[i])->getSuspList());
-      addSuspFDVar(*taggedfdvar, new SuspList(susp), target);
+      addSuspFDVar(*taggedfdvar, new SuspList (thr), target);
       doBind(bifdhm_varptr[i], makeTaggedRef(taggedfdvar));
     } else {
       global_vars += 1;
-      addSuspSVar(bifdhm_var[i], new SuspList(susp));
+      addSuspSVar(bifdhm_var[i], new SuspList (thr));
     } 
   } 
 }
@@ -441,8 +441,8 @@ BIfdBodyManager::BIfdBodyManager(int s) {
   DebugCodeFD(backup_count = 0);
   AssertFD(0 <= s && s < MAXFDBIARGS);
   curr_num_of_vars = s;
-  AssertFD(FDcurrentTaskSusp);
-  only_local_vars = FDcurrentTaskSusp->isLocalSusp();
+  AssertFD(am.currentThread);
+  only_local_vars = am.currentThread->isLocalThread ();
 }
 
 void BIfdBodyManager::saveDomainOnTopLevel(int i) {
@@ -452,75 +452,84 @@ void BIfdBodyManager::saveDomainOnTopLevel(int i) {
   }
 }
 
-OZ_Bool BIfdHeadManager::spawnPropagator(FDPropState t, 
-					 OZ_CFun f, int a, OZ_Term * x) 
+OZ_Bool BIfdHeadManager::spawnPropagator (FDPropState t, 
+					  OZ_CFun f, int a, OZ_Term * x) 
 {
-  Suspension * s = createResSusp(f, a, x);
-  addResSusps(s, t);
-  FDcurrentTaskSusp = NULL;
+  Thread *prop;
 
-  localPropStore.push(s->getCCont(), s);
-  return PROCEED;
+  //
+  //  New idea: don't execute the propagator directly, but rather
+  // push it into the local propagation store - and proceed further 
+  // immediately (so, propagator's head should return 'PROCEED' 
+  // normally);
+  prop = createPropagator (f, a, x);
+  addPropagators (prop, t);
+  localPropStore.push (prop);
+
+  return (PROCEED);
 }
 
-OZ_Bool BIfdHeadManager::spawnPropagator(FDPropState t1, FDPropState t2, 
-					 OZ_CFun f, int a, OZ_Term * x) 
+OZ_Bool BIfdHeadManager::spawnPropagator (FDPropState t1, FDPropState t2, 
+					  OZ_CFun f, int a, OZ_Term * x) 
 {
-  Suspension * s = createResSusp(f, a, x);
-  addResSusp(0, s, t1);
-  addResSusp(1, s, t2);
-  FDcurrentTaskSusp = NULL;
+  Thread *prop;
 
-  localPropStore.push(s->getCCont(), s);
-  return PROCEED;
+  prop = createPropagator (f, a, x);
+  addPropagator (0, prop, t1);
+  addPropagator (1, prop, t2);
+  localPropStore.push (prop);
+
+  return (PROCEED);
 }
 
-OZ_Bool BIfdHeadManager::spawnPropagator(FDPropState t, 
-					 OZ_CFun f, int a, OZ_Term t1, ...)
+OZ_Bool BIfdHeadManager::spawnPropagator (FDPropState t, 
+					  OZ_CFun f, int a, OZ_Term t1, ...)
 {
-  OZ_Term * x = (OZ_Term *) heapMalloc(a * sizeof(OZ_Term));
+  Thread *prop;
+
+  OZ_Term * x = (OZ_Term *) heapMalloc (a * sizeof (OZ_Term));
 
   x[0] = t1;
 
   va_list ap;
-  va_start(ap, t1);
+  va_start (ap, t1);
 
   for (int i = 1; i < a; i += 1)
-    x[i] = va_arg(ap, OZ_Term);
+    x[i] = va_arg (ap, OZ_Term);
 
-  va_end(ap);
+  va_end (ap);
 
-  Suspension * s = createResSusp(f, a, x);
-  addResSusps(s, t);
-  FDcurrentTaskSusp = NULL;
+  prop = createPropagator (f, a, x);
+  addPropagators (prop, t);
+  localPropStore.push (prop);
 
-  localPropStore.push(s->getCCont(), s);
-  return PROCEED;
+  return (PROCEED);
 }
 
 OZ_Bool BIfdHeadManager::spawnPropagatorStabil(FDPropState t, 
 					       OZ_CFun f, int a, 
 					       OZ_Term t1, ...)
 {
-  OZ_Term * x = (OZ_Term *) heapMalloc(a * sizeof(OZ_Term));
+  Thread *prop;
+
+  OZ_Term * x = (OZ_Term *) heapMalloc (a * sizeof (OZ_Term));
 
   x[0] = t1;
 
   va_list ap;
-  va_start(ap, t1);
+  va_start (ap, t1);
 
   for (int i = 1; i < a; i += 1)
-    x[i] = va_arg(ap, OZ_Term);
+    x[i] = va_arg (ap, OZ_Term);
 
-  va_end(ap);
+  va_end (ap);
 
-  Suspension * s = createResSusp(f, a, x);
-  addResSusps(s, t);
-  FDcurrentTaskSusp->markStable();
-  FDcurrentTaskSusp = NULL;
+  prop = createPropagator (f, a, x);
+  addPropagators (prop, t);
+  prop->markStable ();
+  localPropStore.push (prop);
 
-  localPropStore.push(s->getCCont(), s);
-  return PROCEED;
+  return (PROCEED);
 }
 
 #ifdef FDBISTUCK
@@ -551,26 +560,26 @@ OZ_Bool BIfdHeadManager::suspendOnVar(OZ_CFun, int, OZ_Term *,
 OZ_Bool BIfdHeadManager::suspendOnVar(OZ_CFun f, int a, OZ_Term * x,
 				      OZ_Term * t)
 {
-  OZ_addSuspension(makeTaggedRef(t), OZ_makeSuspension(f, x, a));
+  OZ_addThread(makeTaggedRef(t), OZ_makeThread(f, x, a));
   return PROCEED;
 }
 
 OZ_Bool BIfdHeadManager::suspendOnVar(OZ_CFun f, int a, OZ_Term * x,
 				      OZ_Term * t1, OZ_Term * t2)
 {
-  OZ_Thread th = OZ_makeSuspension(f, x, a);
-  OZ_addSuspension(makeTaggedRef(t1), th);
-  OZ_addSuspension(makeTaggedRef(t2), th);
+  OZ_Thread th = OZ_makeThread(f, x, a);
+  OZ_addThread(makeTaggedRef(t1), th);
+  OZ_addThread(makeTaggedRef(t2), th);
   return PROCEED;
 }
 
 OZ_Bool BIfdHeadManager::suspendOnVar(OZ_CFun f, int a, OZ_Term * x,
 				      OZ_Term * t1, OZ_Term * t2, OZ_Term * t3)
 {
-  OZ_Thread th = OZ_makeSuspension(f, x, a);
-  OZ_addSuspension(makeTaggedRef(t1), th);
-  OZ_addSuspension(makeTaggedRef(t2), th);
-  OZ_addSuspension(makeTaggedRef(t3), th);
+  OZ_Thread th = OZ_makeThread(f, x, a);
+  OZ_addThread(makeTaggedRef(t1), th);
+  OZ_addThread(makeTaggedRef(t2), th);
+  OZ_addThread(makeTaggedRef(t3), th);
   return PROCEED;
 }
 #endif
@@ -594,8 +603,8 @@ OZ_Bool checkDomDescr(OZ_Term descr,
 #ifdef FDBISTUCK
     am.addSuspendVarList(descr_ptr);
 #else 
-    OZ_addSuspension(makeTaggedRef(descr_ptr), 
-		     OZ_makeSuspension(cfun, args, arity));
+    OZ_addThread(makeTaggedRef(descr_ptr), 
+		     OZ_makeThread(cfun, args, arity));
 #endif
     return SUSPEND; // checkDomDescr
   } else if (isSmallInt(descr_tag) && (expect >= 1)) { // (1)
@@ -606,8 +615,8 @@ OZ_Bool checkDomDescr(OZ_Term descr,
 #ifdef FDBISTUCK
     am.addSuspendVarList(descr_ptr);
 #else 
-    OZ_addSuspension(makeTaggedRef(descr_ptr), 
-		     OZ_makeSuspension(cfun, args, arity));
+    OZ_addThread(makeTaggedRef(descr_ptr), 
+		     OZ_makeThread(cfun, args, arity));
 #endif
     return SUSPEND; // checkDomDescr
   } else if (AtomBool == descr && (expect >= 2)) { // (1)
@@ -690,7 +699,7 @@ void BIfdBodyManager::backup(void)
   backup_curr_num_of_vars1 = curr_num_of_vars;
   backup_vars_left1 = vars_left;
   backup_only_local_vars1 = only_local_vars;
-  backup_FDcurrentTaskSusp1 = FDcurrentTaskSusp;
+  backup_FDcurrentThread = am.currentThread;
   
   bifdbm_var += backup_curr_num_of_vars1;
   bifdbm_varptr += backup_curr_num_of_vars1;
@@ -724,7 +733,7 @@ void BIfdBodyManager::restore(void)
   curr_num_of_vars = backup_curr_num_of_vars1;
   vars_left = backup_vars_left1;
   only_local_vars = backup_only_local_vars1;
-  FDcurrentTaskSusp = backup_FDcurrentTaskSusp1;
+  am.currentThread = backup_FDcurrentThread;
 }
 
 int BIfdBodyManager::initCache(void) {
@@ -791,7 +800,7 @@ OZ_Bool BIfdBodyManager::entailmentClause(int from_b, int to_b,
 OZ_Boolean BIfdBodyManager::areIdentVar(int a, int b) {
   AssertFD(0 <= a && a < curr_num_of_vars || 0 <= b && b < curr_num_of_vars);
 
-  if (! isUnifyCurrentTaskSusp()) return OZ_FALSE;
+  if (! isUnifyCurrentPropagator ()) return OZ_FALSE;
   return bifdbm_varptr[a] == bifdbm_varptr[b] && isAnyVar(bifdbm_var[a]);
 }
 
@@ -804,12 +813,12 @@ void BIfdBodyManager::restoreDomainOnToplevel(void) {
 }
 
 OZ_Boolean BIfdBodyManager::unifiedVars(void) {
-  if (! isUnifyCurrentTaskSusp()) return OZ_FALSE;
+  if (! isUnifyCurrentPropagator ()) return OZ_FALSE;
   return _unifiedVars();
 }
 
 void BIfdBodyManager::propagate_unify_cd(int cl, int vars, STuple &st) {
-  if (isUnifyCurrentTaskSusp())
+  if (isUnifyCurrentPropagator ())
     _propagate_unify_cd(cl, vars, st);
 }
 
@@ -897,7 +906,7 @@ int BIfdBodyManager::simplifyOnUnify(int ts, STuple &a,
 				     OZ_Boolean sign_bits[], 
 				     double coeffs[], STuple &x,
 				     OZ_Term * ct, int &c) {
-  if (isUnifyCurrentTaskSusp()) {
+  if (isUnifyCurrentPropagator ()) {
     AssertFD(curr_num_of_vars >= ts);
     int new_ts = simplifyBody(ts, a, x, sign_bits, coeffs, 
 			      makeTaggedRef(ct), c);
@@ -920,7 +929,7 @@ int BIfdBodyManager::simplifyOnUnify(STuple &a, OZ_Boolean sign_bits[],
 				     double coeffs[], STuple &x,
 				     OZ_Term * ct, int &c) 
 {
-  if (isUnifyCurrentTaskSusp())
+  if (isUnifyCurrentPropagator ())
     curr_num_of_vars = simplifyBody(curr_num_of_vars, a, x, sign_bits, coeffs,
 				    makeTaggedRef(ct), c);
   return curr_num_of_vars;
@@ -1164,8 +1173,6 @@ void BIfdBodyManager::processNonRes(void)
 {
   if (bifdbm_var_state[0] == fdbm_speculative)
     return;
-
-  Suspension * susp = NULL;
 
   pm_term_type vartag = bifdbm_vartag[0];
   
@@ -1447,7 +1454,7 @@ OZ_Bool BIfdBodyManager::replacePropagator(OZ_CFun f, int a, OZ_Term * x)
   for (int i = 0; i < a; i += 1)
     xregs[i] = x[i];
 
-  FDcurrentTaskSusp->getCCont()->setCFuncRegs(f, xregs);
+  am.currentThread->getCCont()->setCFuncRegs(f, xregs);
   return f(a, xregs);
 }
 
@@ -1465,13 +1472,21 @@ OZ_Bool BIfdBodyManager::replacePropagator(OZ_CFun f, int a, OZ_Term t1, ...)
 
   va_end(ap);
 
-  FDcurrentTaskSusp->getCCont()->setCFuncRegs(f, xregs);
+  am.currentThread->getCCont()->setCFuncRegs(f, xregs);
   return f(a, xregs);
 }
 
 OZ_Bool BIfdBodyManager::replacePropagator(OZ_Term a, OZ_Term b)
 {
-  killPropagatedCurrentTaskSusp();
+  //  kost@: 
+  //  'OZ_unify ()' returns only 'PROCEED' or 'FAILED';
+  //  In both cases the propagator will be closed by the 
+  // caller routine;
+  // 
+  // am.currentThread->closeDonePropagator ();
+
+  //
+  //  Tobias: should this method be inlined?    // TODO?
   return OZ_unify(a, b);
 }
 

@@ -81,10 +81,10 @@ void printWhere(ostream &cout,ProgramCounter PC);
 // returns OK if associated suspension is alive
 inline Bool isEffectiveSusp(SuspList* sl)
 {
-  Suspension* s = sl->getSusp();
-  if (s->isDead())
+  Thread *thr = sl->getElem ();
+  if (thr->isDeadThread ())
     return NO;
-  if (!s->getBoardFast())
+  if (!(thr->getBoardFast ()))
     return NO;
   return OK;
 }
@@ -565,8 +565,6 @@ PRINT(ArityTable)
 
 // ---------------------------------------------------
 
-
-
 PRINT(SuspList)
 {
   CHECKDEPTH;
@@ -578,7 +576,7 @@ PRINT(SuspList)
   for (SuspList* sl = this; sl != NULL; sl = sl->getNext()) {
     if (isEffectiveSusp(sl) ) {
       stream << indent(offset);
-      sl->getSusp()->print(stream);
+      (sl->getElem ())->print (stream);
       stream << endl;
     }
   } // for
@@ -591,44 +589,6 @@ PRINT(CFuncContinuation)
 	  << builtinTab.getName((void *)getCFunc())
 	  << '(' << getXSize() << ", "
 	  << (void *) getX() << "[]), ";
-}
-
-
-PRINT(Suspension)
-{
-  CHECKDEPTH;
-  stream << indent(offset) << " [";
-  if (isDead()) stream << 'D';
-  if (isPropagated()) stream << 'P';
-  if (isResistant()) stream << 'R';
-  if (isPropagator()) stream << 'G';
-  if (isExtSusp()) stream << 'E';
-  if (isUnifySusp()) stream << 'U';
-  if (isLocalSusp()) stream << 'L';
-  if (isTagged()) stream << 'T';
-  stream << "] -> ";
-  
-  if (flag & S_thread) {
-    item.thread->print(stream,depth);
-    stream << ", ";
-  } else switch (flag & (S_cont|S_cfun)) {
-  case S_null:
-    stream << "board ";
-    break;
-  case S_cont:
-    stream << "cont ";
-    break;
-  case S_cont|S_cfun:
-    stream  << "ccont = "
-	    << builtinTab.getName((void *)getCCont()->getCFunc())
-	    << '(' << getCCont()->getXSize() << ", "
-	    << (void *) getCCont()->getX() << "[]), ";
-    break;
-  default:
-    Assert(0);
-    break;
-  }
-  getBoardFast()->print(stream, DEC(depth));
 }
 
 
@@ -723,7 +683,6 @@ PRINTLONG(ConstTerm)
   CHECKDEPTHLONG;
   switch (typeOf()) {
   case Co_Board:        ((Board *) this)->printLong(stream, depth, offset);      break;
-  case Co_Thread:       ((Thread *) this)->printLong(stream, depth, offset);     break;
   case Co_Actor:        ((Actor *) this)->printLong(stream, depth, offset);      break;
   case Co_HeapChunk:    ((HeapChunk *) this)->printLong(stream, depth, offset);  break;
   case Co_Class:        ((ObjectClass *) this)->printLong(stream, depth, offset);break;
@@ -740,7 +699,6 @@ PRINT(ConstTerm)
   CHECKDEPTH;
   switch (typeOf()) {
   case Co_Board:       ((Board *) this)->print(stream, depth, offset);       break;
-  case Co_Thread:      ((Thread *) this)->print(stream, depth, offset);      break;
   case Co_Actor:       ((Actor *) this)->print(stream, depth, offset);       break;
   case Co_HeapChunk:   ((HeapChunk *) this)->print(stream, depth, offset);   break;
   case Co_Class:       ((ObjectClass *) this)->print(stream, depth, offset); break;
@@ -1022,15 +980,101 @@ PRINT(Thread)
 {
   CHECKDEPTH;
   if (!this) {
-    stream << indent(offset) << "(NULL Thread)";
+    stream << indent(offset) << "(NULL Thread)" << endl;
     return;
   }
 
-  stream << indent(offset)
-    << "Thread @" << this
-    << " [ prio: " << priority;
-  stream << ", #" << TaskStack::getUsed()-1;
-  stream << " ]";
+  if (isDeadThread ()) {
+    stream << indent(offset) << "(Dead Thread @" << this << ")" << endl;
+    return;
+  }
+
+  if (isSuspended ()) {
+    //  former suspension, now - a suspended thread;
+    stream << indent(offset) << "Suspended Thread @" << this
+	   << endl << indent (offset+2)
+	   << " [prio: " << getPriority () << ", type: ";
+
+    switch (getThrType ()) {
+    case S_WAKEUP: 
+      stream << "'board'";
+      break;
+
+    case S_RTHREAD:
+      stream << "'allseq thread'";
+      stream << ", stack depth #" << item.threadBody->taskStack.getUsed()-1;
+
+    case S_CFUN:
+      stream << "'ccont', fun = " 
+	     << builtinTab.getName(((void *) getCCont ()->getCFunc ()))
+	     << '(' << getCCont()->getXSize() << ", "
+	     << (void *) getCCont()->getX() << "[])";
+      break;
+
+    case S_PR_THR:
+      stream << "'prop', fun = " 
+	     << builtinTab.getName(((void *) getCCont ()->getCFunc ()))
+	     << '(' << getCCont()->getXSize() << ", "
+	     << (void *) getCCont()->getX() << "[])";
+      break;
+
+    case S_NEW_PR_THR:
+      stream << "'new prop'";
+      break;
+
+    default:
+      stream << "(unknown)";
+    }
+  } else {
+    // a runnable thread;
+    stream << indent(offset) << "Runnable Thread @" << this
+	   << endl << indent (offset+2)
+	   << " [prio: " << getPriority ();
+
+    switch (getThrType ()) {
+    case S_RTHREAD:
+      stream << "'seq thread'";
+      stream << ", stack depth #" << item.threadBody->taskStack.getUsed()-1;
+
+    case S_WAKEUP: 
+      stream << "'board'";
+      break;
+
+    case S_CFUN:
+      stream << "'ccont', fun = " 
+	     << builtinTab.getName(((void *) getCCont ()->getCFunc ()))
+	       << '(' << getCCont()->getXSize() << ", "
+	       << (void *) getCCont()->getX() << "[])";
+      break;
+
+    case S_PR_THR:
+      stream << "'prop', fun = " 
+	     << builtinTab.getName(((void *) getCCont ()->getCFunc ()))
+	       << '(' << getCCont()->getXSize() << ", "
+	       << (void *) getCCont()->getX() << "[])";
+      break;
+
+    case S_NEW_PR_THR:
+      stream << "'new prop'";
+      break;
+
+    default:
+      stream << "(unknown)";
+    }
+  }
+
+  stream << ", flags:  <";
+  if ((getFlags ()) & T_T_solve)     stream << 'S';
+  if ((getFlags ()) & T_S_ext)       stream << 'E';
+  if ((getFlags ()) & T_S_loca)      stream << 'L';
+  if ((getFlags ()) & T_S_unif)      stream << 'U';
+  if ((getFlags ()) & T_S_ofs)       stream << 'O';
+  if ((getFlags ()) & T_S_tag)       stream << 'T';
+  if ((getFlags ()) & T_S_stable)    stream << 'W';
+  stream << ">]" << endl;
+  
+  stream << indent(offset+2) << "in board: ";
+  getBoardFast()->print(stream, DEC(depth));
 }
 
 PRINTLONG(Thread)
@@ -1038,7 +1082,8 @@ PRINTLONG(Thread)
   CHECKDEPTHLONG;
   this->print(stream,depth,offset);
   stream << endl;
-  TaskStack::printTaskStack(NOCODE,NO,depth);
+  if (hasStack ()) 
+    item.threadBody->taskStack.printTaskStack (NOCODE,NO,depth);
 }
 
 PRINTLONG(Literal)
@@ -1332,6 +1377,7 @@ void TaskStack::printTaskStack(ProgramCounter pc, Bool verbose, int depth)
     case C_JOB:
       message("\tJOB\n");
       break;
+
     case C_CONT:
       {
 	ProgramCounter PC = getPC(C_CONT,topElem);
@@ -1344,6 +1390,7 @@ void TaskStack::printTaskStack(ProgramCounter pc, Bool verbose, int depth)
 	CodeArea::printDef(PC);
       }
       break;
+
     case C_XCONT:
       {
 	ProgramCounter PC = getPC(C_XCONT,topElem);
@@ -1358,19 +1405,18 @@ void TaskStack::printTaskStack(ProgramCounter pc, Bool verbose, int depth)
 	CodeArea::printDef(PC);
 	break;
       }
-    case C_NERVOUS: 
-      message("\tNERVOUS\n");
-      break;
+
     case C_LOCAL:
       message("\tLOCAL\n");
       break;
+
     case C_SOLVE:
       message("\tSOLVE\n");
       break;
+
     case C_CFUNC_CONT:
       {
 	OZ_CFun biFun    = (OZ_CFun) pop();
-	Suspension* susp = (Suspension*) pop();
 	RefsArray X      = (RefsArray) pop();
 	message("\tBuiltin: {%s", builtinTab.getName((void *) biFun));
 	for(int i=0; i<getRefsArraySize(X); i++) {

@@ -29,15 +29,7 @@
 
    */
 
-#include "tagged.hh"
-#include "constter.hh"
-#include "actor.hh"
-#include "board.hh"
-#include "stack.hh"
-#include "taskstk.hh"
-#include "thread.hh"
-
-#include "suspensi.hh"
+#include "am.hh"
 
 #ifdef OUTLINE
 #define inline
@@ -47,25 +39,78 @@
 
 // --------------------------------------------------------------------------
 
+/*
+ *  Threads;
+ *
+ */
+void Thread::setExtThreadOutlined (Board *varHome)
+{
+  Board *bb = am.currentBoard;
+  Bool wasFound = NO;
+  Assert (!(varHome->isCommitted ()));
 
-/* class Thread
-   static variables
-     Head: pointer to the head of the thread queue
-     Tail: pointer to the tail of the thread queue
-     am.currentThread: pointer to the current thread
-     am.rootThread: pointer to the root thread
-   member data
-     priority: the thread priority
-               -MININT ... +MAXINT
-	       low     ... high priority
-     taskStack: the stack of elaboration tasks
-     */
+  while (bb != varHome) {
+    Assert (!(bb->isRoot ()));
+    Assert (!(bb->isCommitted ()) && !(bb->isFailed ()));
+    if (bb->isSolve ()) {
+      SolveActor *sa = SolveActor::Cast (bb->getActor ());
+      sa->addSuspension (this);
+      wasFound = OK;
+    }
+    bb = bb->getParentFast ();
+  }
+
+  if (wasFound) {
+    setExtThread ();
+
+    //  ... and again to the 'SolveActor::checkExtSuspList':
+    // we should not produce 'external' threads for propagators,
+    // because stability can be achieved only when the last such 
+    // a propagator dissapears;
+    if (isPropagator ()) {
+      warning ("'External' propagator thread: stability check is implemented *partially*!");
+    }
+  }
+}
+
+//
+void Thread::checkExtThreadOutlined ()
+{
+  Assert (wasExtThread ());
+  
+  Board *sb = (getBoardFast ())->getSolveBoard ();
+  AM *e = &am;
+  
+  while (sb) {
+    Assert (sb->isSolve());
+    
+    SolveActor *sa = SolveActor::Cast (sb->getActor ());
+    if (e->isStableSolve (sa)) {
+#ifdef NEWCOUNTER
+      e->scheduleThread (new Thread (sa->getPriority (), sb));
+#else
+      does not work;
+      e->scheduleSolve (sb);
+#endif
+    }
+    sb = (sa->getBoardFast ())->getSolveBoard ();
+  }
+}
+
+//
+void Thread::addStableThreadOutlined ()
+{
+  (SolveActor::Cast (am.currentSolveBoard->getActor ()))
+    ->add_stable_susp (this);
+}
 
 /*
  * check if a thread's board is below a failed board
  */
-Bool Thread::isBelowFailed(Board *top)
+Bool Thread::isBelowFailed (Board *top)
 {
+  Assert (isRunnable ());
+
   Board *bb=getBoardFast();
   while (bb!=top) {
     if (bb->isFailed()) {
@@ -83,12 +128,17 @@ Bool Thread::isBelowFailed(Board *top)
  */
 Bool Thread::discardLocalTasks()
 {
-  TaskStackEntry *tos = TaskStack::getTop();
+  TaskStack *ts;
+  TaskStackEntry *tos;
+  Assert (hasStack ());
+
+  ts = &(item.threadBody->taskStack);
+  tos = ts->getTop ();
   while (TRUE) {
     TaskStackEntry entry=*(--tos);
-    if (TaskStack::isEmpty(entry)) {
-      TaskStack::setTop(tos+1);
-      return NO;
+    if (ts->isEmpty (entry)) {
+      ts->setTop (tos+1);
+      return (NO);
     }
 
     ContFlag cFlag = getContFlag(ToInt32(entry));
@@ -96,31 +146,47 @@ Bool Thread::discardLocalTasks()
     switch (cFlag) {
     case C_LOCAL:
     case C_SOLVE:
-      TaskStack::setTop(tos);
-      return OK;
+      ts->setTop (tos);
+      return (OK);
+
     case C_JOB:
       {
-	DebugCheckT(TaskStack::setTop(tos));
-	Bool hasJobs = TaskStack::getJobFlagFromEntry(entry);
+	DebugCode (ts->setTop (tos));
+	Bool hasJobs = ts->getJobFlagFromEntry(entry);
 	if (!hasJobs) unsetHasJobs();
       }
       break;
+
     default:
-      tos = tos - TaskStack::frameSize(cFlag) + 1;
+      tos = tos - ts->frameSize(cFlag) + 1;
       break;
     }
   }
 }
 
+//
+//
+#ifdef DEBUG_CHECK
+Bool Thread::hasJobDebug ()
+{
+  Assert (hasStack ());
+
+  return (item.threadBody->taskStack.hasJobDebug ());
+}
+#endif
+
+//
 int Thread::findExceptionHandler(Chunk *&chunk, TaskStackEntry *&oldTos)
 {
   int spaceCount=0;
-  TaskStackEntry *tos = TaskStack::getTop();
+  TaskStack *ts = &(item.threadBody->taskStack);
+  TaskStackEntry *tos = ts->getTop ();
+
   oldTos=tos;
   while (1) {
     TaskStackEntry entry=*(tos-1);
-    if (TaskStack::isEmpty(entry)) {
-      TaskStack::setTop(tos);
+    if (ts->isEmpty(entry)) {
+      ts->setTop (tos);
       chunk=0;
       return spaceCount;
     }
@@ -130,7 +196,7 @@ int Thread::findExceptionHandler(Chunk *&chunk, TaskStackEntry *&oldTos)
     switch (cFlag) {
     case C_EXCEPT_HANDLER:
       chunk = (Chunk*) *(tos-2);
-      TaskStack::setTop(tos-2);
+      ts->setTop (tos-2);
       return spaceCount;
     case C_LOCAL:
     case C_SOLVE:
@@ -138,14 +204,14 @@ int Thread::findExceptionHandler(Chunk *&chunk, TaskStackEntry *&oldTos)
       break;
     case C_JOB:
       {
-	DebugCheckT(TaskStack::setTop(tos-1));
-	Bool hasJobs = TaskStack::getJobFlagFromEntry(entry);
+	DebugCode (ts->setTop (tos-1));
+	Bool hasJobs = ts->getJobFlagFromEntry (entry);
 	if (!hasJobs) unsetHasJobs();
       }
       break;
     default:
       break;
     }
-    tos = tos - TaskStack::frameSize(cFlag);
+    tos = tos - ts->frameSize (cFlag);
   }
 }

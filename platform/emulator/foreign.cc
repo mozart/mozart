@@ -965,10 +965,6 @@ int OZ_addBuiltin(char *name, int arity, OZ_CFun fun)
  * Suspending builtins
  * -----------------------------------------------------------------*/
 
-OZ_Thread OZ_makeSuspension(OZ_Bool (*fun)(int,OZ_Term[]),
-			OZ_Term *args,int arity)
-{ return OZ_makeThread(fun,args,arity); }
-
 OZ_Thread OZ_makeThread(OZ_Bool (*fun)(int,OZ_Term[]),
 			OZ_Term *args,int arity)
 {
@@ -986,15 +982,12 @@ OZ_Thread OZ_makeThread(OZ_Bool (*fun)(int,OZ_Term[]),
 #endif
   /* create a CFuncContinuation */
   return (OZ_Thread)
-    new Suspension(am.currentBoard,
-		   ozconf.defaultPriority,
-		   fun, args, arity);
+    new Thread (am.currentBoard,
+		ozconf.defaultPriority,
+		fun, args, arity);
 }
 
-void OZ_addSuspension(OZ_Term var, OZ_Thread susp)
-{ OZ_addThread(var,susp); }
-
-void OZ_addThread(OZ_Term var, OZ_Thread susp)
+void OZ_addThread(OZ_Term var, OZ_Thread thr)
 {
   DEREF(var, varPtr, varTag);
   if (!isAnyVar(varTag)) {
@@ -1004,9 +997,8 @@ void OZ_addThread(OZ_Term var, OZ_Thread susp)
   }
 
   SVariable *svar = taggedBecomesSuspVar(varPtr);
-  Suspension *s = (Suspension *) susp;
 
-  svar->addSuspension(s);
+  svar->addSuspension ((Thread *) thr);
 }
 
 OZ_Bool OZ_suspendOnVar(OZ_Term var)
