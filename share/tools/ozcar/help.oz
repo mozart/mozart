@@ -85,7 +85,7 @@ local
        'on its type information.'))
 
      StepButtonBitmap #
-     ('Step into' #
+     ('Step Into' #
       ('Let the current thread continue to run until ' #
        'it reaches the next steppoint.'))
 
