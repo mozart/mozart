@@ -380,8 +380,13 @@ void entityProblem(Tertiary *t) {
 void Watcher::invokeWatcher(TaggedRef t,EntityCond ec){
 if(!isFired()){
   Assert(!isInjector());
+  TaggedRef lis;
+  if(isWatcherEligible(t)){
+    lis=listifyWatcherCond(ec,tagged2Tert(t));}
+  else{
+    lis=listifyWatcherCond(ec);}
   Thread *tt = oz_newThreadToplevel(DEFAULT_PRIORITY);
-  tt->pushCall(proc, t,listifyWatcherCond(ec));}
+  tt->pushCall(proc,t,lis);}
 }
 
 void Watcher::varInvokeInjector(TaggedRef t,EntityCond ec,TaggedRef Op){
@@ -987,7 +992,7 @@ TaggedRef listifyWatcherCond(EntityCond ec,Bool owner,Bool state){
       aux=mkLWC(AtomPermFail,AtomInfo,AtomOwner);}
     else{
       if(state)
-	aux=mkLWC(AtomPermFail,AtomInfo,AtomOwner);
+	aux=mkLWC(AtomPermFail,AtomInfo,AtomState);
       else
 	aux=AtomPermFail;}
     list = oz_cons(aux, list);
@@ -1344,7 +1349,7 @@ Bool tertiaryFail(Tertiary *t,EntityCond &ec,TaggedRef &proc){
   if((!hit) && (globalWatcher!=NULL) &&
      (globalWatcher->watchcond & getEntityCond(t)))
     entityProblemPerWatcher1(t,globalWatcher,hit,ec,proc);
-  if(!hit) return FALSE;
+  if((!hit) || (ec==0)) return FALSE;
 
   EntityCond newC=getSummaryWatchCond(t);
   if(t->getTertType()!=Te_Manager)
