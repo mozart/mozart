@@ -1221,7 +1221,7 @@ TaggedRef *OzLock::lock(Thread *t)
  * Misc
  *=================================================================== */
 
-ProgramCounter DbgInfoList::find(TaggedRef file, int line)
+ProgramCounter DbgInfoList::find(char *file, int line)
 {
   DbgInfoList    *aux = this;
   ProgramCounter PC   = NOCODE;
@@ -1229,7 +1229,7 @@ ProgramCounter DbgInfoList::find(TaggedRef file, int line)
   while(aux) {
     for(int i=0; i<dbgcount; i++) {
       DbgInfo *info = aux->elems[i];
-      if (info && !atomcmp(file,info->file)) {
+      if (info && !strcmp(file,OZ_atomToC(info->file))) {
         if (line == info->line)
           PC = info->PC;
       }
