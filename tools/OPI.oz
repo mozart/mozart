@@ -68,13 +68,13 @@ in
    functor prop once
 	      
    import
-      Module
-      System.printError
-      Property.{get put}
-      OS.getEnv
-      Open.file
-      Compiler.engine
-      Emacs.interface
+      Module(manager)
+      System(printError)
+      Property(get put)
+      OS(getEnv)
+      Open(file)
+      Compiler(engine)
+      Emacs(interface)
       
    body
       
