@@ -1,0 +1,657 @@
+\documentclass{ozdoc}
+\title{HttpClient Package}
+\author{Valentin Mesaros}
+\begin{document}
+
+
+\mozartCHAPTER{Introduction}\label{CHAPTER.INTRODUCTION}
+
+
+
+  \mozartEMPTY
+The \mozartCODEINLINE{\mozartFACETEXT{HttpClient}} package implements the HTTP 0.9 and HTTP 1.0 protocols, conform RFC 1945\footnote{\mozartDEFAULTREFEXT{http://www.faqs.org/rfcs/rfc1945.html}}, providing a flexible programming interface. Its interface is related with the retrieving of the documents over the network, as well as with accessing their transmission rate.  \mozartEMPTY
+
+
+ \mozartEMPTY
+The \mozartCODEINLINE{\mozartFACETEXT{HttpClient}} package was written in \mozartEM{Oz 3} and compiled with \mozartEM{Mozart Compiler 1.1.0 (19991213) and (20000111)}.  \mozartEMPTY
+ \mozartEMPTY
+
+
+ \mozartEMPTY
+The \mozartCODEINLINE{\mozartFACETEXT{HttpClient}} package consists of the following modules: \mozartEMPTY
+ \mozartEMPTY
+\begin{itemize}
+\item{}\mozartCODEINLINE{\mozartFACETEXT{HttpClient}}: is the main programming interface of the \mozartCODEINLINE{\mozartFACETEXT{HttpClient}} package. It deals with the parse of the input and output parameters, initiate of HTTP 0.9 and HTTP 1.0 compliant communications and transmission rate control. The \mozartCODEINLINE{\mozartFACETEXT{HttpClient}} module is described in Chapter~\mozartREF{CHAPTER.HTTPCLIENT}. \mozartEMPTY
+
+\item{}\mozartCODEINLINE{\mozartFACETEXT{HttpReqRep}}: deals with the HTTP reqests and responses. \mozartEMPTY
+
+\item{}\mozartCODEINLINE{\mozartFACETEXT{HttpHeader}}: stores the HTTP header formats as well as input and output default parameters. \mozartEMPTY
+
+\item{}\mozartCODEINLINE{\mozartFACETEXT{ListUtils}}: consists of some useful List processing tools. \mozartEMPTY
+
+\item{}\mozartCODEINLINE{\mozartFACETEXT{OpenConnection}}: deals with socket connections and files, as well as with transmission rate computation. This module can be used apart of this package in order to implement other transmission protocols (i.e. FTP).  \mozartEMPTY
+
+\end{itemize}
+
+
+Chapter~\mozartREF{CHAPTER.EXAMPLES} describes some basic examples using the classes and functionalities of the \mozartCODEINLINE{\mozartFACETEXT{HttpClient}} module. \mozartEMPTY
+
+
+\mozartCHAPTER{\mozartCODEINLINE{\mozartFACETEXT{HttpClient}} Module}\label{CHAPTER.HTTPCLIENT}
+
+
+
+The \mozartCODEINLINE{\mozartFACETEXT{HttpClient}} module is the main programming interface of the \mozartCODEINLINE{\mozartFACETEXT{HttpClient}} package. It deals with the input and output parameters parsing, HTTP 0.9 and HTTP 1.0 compliant communications initialisation and transmission rate control. In the followings we enumerate and describe the classes this module consists of.
+
+\mozartCODEINLINE{\mozartFACETEXT{Service}} is the base class for all the other classes present in this module. Hence, all the other classes (\mozartCODEINLINE{\mozartFACETEXT{CgiGET}}, \mozartCODEINLINE{\mozartFACETEXT{CgiPOST}}, \mozartCODEINLINE{\mozartFACETEXT{CgiISINDEX}}, \mozartCODEINLINE{\mozartFACETEXT{UrlGET}} and \mozartCODEINLINE{\mozartFACETEXT{UrlHEAD}}) will inherit its public and protected methods. The programmer is advised to use them instead of \mozartCODEINLINE{\mozartFACETEXT{Service}}.
+
+\mozartSECTION{Exceptions}\label{SECTION.EXCEPTIONS}
+
+
+
+The exceptions raised by the methods of the classes present in \mozartCODEINLINE{\mozartFACETEXT{HttpClient}} package are atoms.
+
+\mozartSUBSECTION{General exceptions}\label{SUBSECTION.GENEXCEPTIONS}
+
+
+
+  \mozartEMPTY
+These exceptions are raised by all vulnerable methods. They are as follows: \mozartEMPTY
+\begin{enumerate}
+\item{}\mozartCODEINLINE{\mozartFACETEXT{conPremClosed}} : the socket connection was closed by the peer while still reading it.
+\item{}\mozartCODEINLINE{\mozartFACETEXT{errCloseCon}} : there was a problem when closing the connection.
+\item{}\mozartCODEINLINE{\mozartFACETEXT{errCloseFile}} : there was a problem when closing the file.
+\item{}\mozartCODEINLINE{\mozartFACETEXT{errReadSocket}} : there was a problem when reading the socket.
+\item{}\mozartCODEINLINE{\mozartFACETEXT{errRemFile}} : there was a problem when removing the file.
+\item{}\mozartCODEINLINE{\mozartFACETEXT{errOpenCon}} : there was a problem while trying to open the connection.
+\item{}\mozartCODEINLINE{\mozartFACETEXT{errOpenFile}} : there was a problem while trying to open the file.
+\item{}\mozartCODEINLINE{\mozartFACETEXT{errWriteFile}} : there was a problem when writing the file.
+\item{}\mozartCODEINLINE{\mozartFACETEXT{errWriteSocket}} : there was a problem when writing the socket.
+\end{enumerate}
+
+
+\mozartSUBSECTION{Cgi exceptions}\label{SUBSECTION.CGIEXCEPTIONS}
+
+
+
+  \mozartEMPTY
+These exceptions are raised by the vulnerable methods involved in CGI parameters and \mozartEM{URL} strings parsing. They are as follows: \mozartEMPTY
+\begin{enumerate}
+\item{}\mozartCODEINLINE{\mozartFACETEXT{errCgiPrms}} : there is a problem with the CGI parameters.
+\item{}\mozartCODEINLINE{\mozartFACETEXT{errLargeCgiPrms}} : the length of the CGI parameters is to large.
+\item{}\mozartCODEINLINE{\mozartFACETEXT{errUrlChrs}} : the \mozartEM{URL} contains special chars.
+\end{enumerate}
+
+
+\mozartSECTION{Input \mozartAMPERSAND{} Ouput parameters}\label{SECTION.INOUTPRMS}
+
+
+
+In this section we describe the parameters found in most of the methods presented within this chapter.   \mozartEMPTY
+
+
+\mozartSUBSECTION{Input parameters}\label{SUBSECTION.INPRMS}
+
+
+
+\begin{mozartDESCRIPTION}
+\mozartENTRY{\mozartCODEINLINE{\mozartFACETEXT{InPrms}}}\mozartENTRYHASCODE
+\begin{mozartSYNOPSIS}
+\begin{mozartCODEDISPLAY}\mozartFACETEXT{inPrms(file:\mozartSPACE{}}\mozartMODE{IN}\mozartPROGVAR{\mozartFACETEXT{FileName}}\mozartFACETEXT{\mozartSPACE{}}\mozartFACEKEYWORD{\mozartLT{}=}\mozartFACETEXT{\mozartSPACE{}given\mozartSPACE{}Url\mozartSPACE{}based\mozartNEWLINE
+\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}rTime:\mozartSPACE{}}\mozartMODE{IN}\mozartPROGVAR{\mozartFACETEXT{RTime}}\mozartFACETEXT{\mozartSPACE{}}\mozartFACEKEYWORD{\mozartLT{}=}\mozartFACETEXT{\mozartSPACE{}25\mozartNEWLINE
+\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}smpl:\mozartSPACE{}}\mozartMODE{IN}\mozartPROGVAR{\mozartFACETEXT{Smpl}}\mozartFACETEXT{\mozartSPACE{}}\mozartFACEKEYWORD{\mozartLT{}=}\mozartFACETEXT{\mozartSPACE{}45\mozartNEWLINE
+\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}toFile:\mozartSPACE{}}\mozartMODE{IN}\mozartPROGVAR{\mozartFACETEXT{ToFile}}\mozartFACETEXT{\mozartSPACE{}}\mozartFACEKEYWORD{\mozartLT{}=}\mozartFACETEXT{\mozartSPACE{}}\mozartFACEKEYWORD{true}\mozartFACETEXT{\mozartNEWLINE
+\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}toStrm:\mozartSPACE{}}\mozartMODE{IN}\mozartPROGVAR{\mozartFACETEXT{ToStrm}}\mozartFACETEXT{\mozartSPACE{}}\mozartFACEKEYWORD{\mozartLT{}=}\mozartFACETEXT{\mozartSPACE{}}\mozartFACEKEYWORD{false}\mozartFACETEXT{)}\end{mozartCODEDISPLAY}
+\end{mozartSYNOPSIS}
+\mozartITEM The \mozartCODEINLINE{\mozartFACETEXT{InPrms}} record provides the programmer with a flexible interface. If not bound nor present, its features willbe given default values.
+
+\mozartPROGVAR{\mozartFACETEXT{FileName}} is a string containing the path of the file the document will be put in. The file is written while the document is beeing transfered.
+
+\mozartPROGVAR{\mozartFACETEXT{RTime}} is an integer specifing the instanteous transmission rate checking periodicity.
+
+\mozartPROGVAR{\mozartFACETEXT{Smpl}} is an integer specifing the number of the last instantaneously rates to be considered when computing the transmission rate (i.e. when method \mozartCODEINLINE{\mozartFACETEXT{fetchRate}} is invoked, see Section~\mozartREF{SECTION.HTTPCLIENT.SERVICE}).
+
+\mozartPROGVAR{\mozartFACETEXT{ToFile}} is a boolean specifing if the document should be saved into a file or not.
+
+\mozartPROGVAR{\mozartFACETEXT{ToStrm}} is a boolean specifing if the document should be returned as a byte stream or not.  \mozartEMPTY
+\end{mozartDESCRIPTION}
+
+
+\mozartCODEINLINE{\mozartFACETEXT{Url}} is a string specifing the \mozartEM{URL} location of the document to be retrieved (e.g. \mozartCODEINLINE{\mozartFACESTRING{"http://www.info.ucl.ac.be"}} of \mozartCODEINLINE{\mozartFACESTRING{"www.yahoo.com"}}). \mozartEMPTY
+
+
+\mozartSUBSECTION{Output parameters}\label{SUBSECTION.OUTPRMS}
+
+
+
+\begin{mozartDESCRIPTION}
+\mozartENTRY{\mozartCODEINLINE{\mozartFACETEXT{HttpPrms}}}\mozartENTRYHASCODE
+\begin{mozartSYNOPSIS}
+\begin{mozartCODEDISPLAY}\mozartFACETEXT{httpPrms(server:\mozartSPACE{}}\mozartMODE{OUT}\mozartPROGVAR{\mozartFACETEXT{Server}}\mozartFACETEXT{\mozartSPACE{}\mozartNEWLINE
+\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}date:\mozartSPACE{}}\mozartMODE{OUT}\mozartPROGVAR{\mozartFACETEXT{Date}}\mozartFACETEXT{\mozartSPACE{}\mozartNEWLINE
+\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}last\mozartUNDERSCORE{}modified:\mozartSPACE{}}\mozartMODE{OUT}\mozartPROGVAR{\mozartFACETEXT{Last\mozartUNDERSCORE{}Modified}}\mozartFACETEXT{\mozartSPACE{}\mozartNEWLINE
+\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}location:\mozartSPACE{}}\mozartMODE{OUT}\mozartPROGVAR{\mozartFACETEXT{Location}}\mozartFACETEXT{\mozartSPACE{}\mozartNEWLINE
+\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}content\mozartUNDERSCORE{}length:\mozartSPACE{}}\mozartMODE{OUT}\mozartPROGVAR{\mozartFACETEXT{Content\mozartUNDERSCORE{}Length}}\mozartFACETEXT{\mozartNEWLINE
+\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}content\mozartUNDERSCORE{}type:\mozartSPACE{}}\mozartMODE{OUT}\mozartPROGVAR{\mozartFACETEXT{Content\mozartUNDERSCORE{}Type}}\mozartFACETEXT{\mozartNEWLINE
+\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}content\mozartUNDERSCORE{}encoding:\mozartSPACE{}}\mozartMODE{OUT}\mozartPROGVAR{\mozartFACETEXT{Content\mozartUNDERSCORE{}Encoding}}\mozartFACETEXT{)\mozartSPACE{}}\end{mozartCODEDISPLAY}
+\end{mozartSYNOPSIS}
+\mozartITEM \mozartCODEINLINE{\mozartFACETEXT{HttpPrms}} record contains the HTTP 1.0 compliant headers. Each of its feature coresponds to a header and will be bound if it is provided by the peer, before the document is fetched. All parameters are strings.
+
+\mozartPROGVAR{\mozartFACETEXT{Server}} represents the name of the peer.
+
+\mozartPROGVAR{\mozartFACETEXT{Date}} represents the date and time the document was built by the peer. Its semantics is described in RFC 822\footnote{\mozartDEFAULTREFEXT{http://www.faqs.org/rfcs/rfc822.html}}.
+
+\mozartPROGVAR{\mozartFACETEXT{Last\mozartUNDERSCORE{}Modified}} represents the date and time the document was last modified. Its semantics is described in RFC 822\footnote{\mozartDEFAULTREFEXT{http://www.faqs.org/rfcs/rfc822.html}}.
+
+\mozartPROGVAR{\mozartFACETEXT{Location}} represents the \mozartEM{URL} where the requested document was temporarely or permanentely moved. When it is bound, the document is not sent by the peer.
+
+\mozartPROGVAR{\mozartFACETEXT{Content\mozartUNDERSCORE{}Length}} represents the length of the document to be retrieved.
+
+\mozartPROGVAR{\mozartFACETEXT{Content\mozartUNDERSCORE{}Type}} represents the MIME type of the document to be retrieved.
+
+\mozartPROGVAR{\mozartFACETEXT{Content\mozartUNDERSCORE{}Encoding}} represents the additional content coding that has been applied to the document to be retrieved. \mozartEMPTY
+\mozartENTRY{\mozartCODEINLINE{\mozartFACETEXT{OutPrms}}}\mozartENTRYHASCODE
+\begin{mozartSYNOPSIS}
+\begin{mozartCODEDISPLAY}\mozartFACETEXT{outPrms(file:\mozartSPACE{}}\mozartMODE{OUT}\mozartPROGVAR{\mozartFACETEXT{FileName}}\mozartFACETEXT{\mozartSPACE{}\mozartNEWLINE
+\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}toFile:\mozartSPACE{}}\mozartMODE{OUT}\mozartPROGVAR{\mozartFACETEXT{ToFile}}\mozartFACETEXT{\mozartSPACE{}\mozartNEWLINE
+\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}toStrm:\mozartSPACE{}}\mozartMODE{OUT}\mozartPROGVAR{\mozartFACETEXT{ToStrm}}\mozartFACETEXT{\mozartSPACE{}\mozartNEWLINE
+\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}sOut:\mozartSPACE{}}\mozartMODE{OUT}\mozartPROGVAR{\mozartFACETEXT{SOut}}\mozartFACETEXT{\mozartSPACE{}\mozartNEWLINE
+\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}time:\mozartSPACE{}}\mozartMODE{OUT}\mozartPROGVAR{\mozartFACETEXT{Time}}\mozartFACETEXT{\mozartNEWLINE
+\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}status:\mozartSPACE{}}\mozartMODE{OUT}\mozartPROGVAR{\mozartFACETEXT{Status}}\mozartFACETEXT{\mozartNEWLINE
+\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}sizeRead:\mozartSPACE{}}\mozartMODE{OUT}\mozartPROGVAR{\mozartFACETEXT{SizeRead}}\mozartFACETEXT{)\mozartSPACE{}}\end{mozartCODEDISPLAY}
+\end{mozartSYNOPSIS}
+\mozartITEM Thre are some features within \mozartCODEINLINE{\mozartFACETEXT{OutPrms}} record which can also be found within \mozartCODEINLINE{\mozartFACETEXT{InPrms}} record (see Section~\mozartREF{SUBSECTION.INPRMS}), having the same fields if provided by the user or default ones, otherwise.   \mozartEMPTY
+
+
+\mozartPROGVAR{\mozartFACETEXT{SOut}} is bound with a byte stream representing the retrieved document. If \mozartCODEINLINE{\mozartFACETEXT{toStrm}} feature of the \mozartCODEINLINE{\mozartFACETEXT{InPrms}} record is set \mozartCODEINLINE{\mozartFACEKEYWORD{false}}, or when the requested document has been moved to an other \mozartEM{URL}, or a \mozartEM{HEAD} HTTP request is invoked, then \mozartCODEINLINE{\mozartFACETEXT{SOut}} will not be bound.
+
+\mozartPROGVAR{\mozartFACETEXT{Time}} is an integer and will be bound with the time when the service completes or fails. It is represented in secons since 00:00:00 GMT, Jan. 1, 1970.
+
+\mozartPROGVAR{\mozartFACETEXT{Status}} is a string and represents the HTTP status code given by the peer (i.e. \mozartCODEINLINE{\mozartFACESTRING{"200"}} for \mozartEM{OK} or \mozartCODEINLINE{\mozartFACESTRING{"301"}} for \mozartEM{Moved Permanently}).
+
+\mozartPROGVAR{\mozartFACETEXT{SizeRead}} is an integer which will be bound with the length of the document actually read. \mozartEMPTY
+\end{mozartDESCRIPTION}
+
+
+\mozartSECTION{\mozartCODEINLINE{\mozartFACETEXT{HttpClient}\mozartFACEKEYWORD{.}\mozartFACETEXT{service}} class }\label{SECTION.HTTPCLIENT.SERVICE}
+
+
+
+\mozartCODEINLINE{\mozartFACETEXT{Service}} is the base class for all the other classes present within this module. The reason we present it, is to describe the methods inhereted by the classes which specialise it. \mozartEMPTY
+ \mozartEMPTY
+\begin{mozartDESCRIPTION}
+\mozartENTRY{\mozartCODEINLINE{\mozartFACETEXT{bytesRead}}}\mozartENTRYHASCODE
+\begin{mozartSYNOPSIS}
+\begin{mozartCODEDISPLAY}\mozartFACETEXT{bytesRead(}\mozartMODE{OUT}\mozartPROGVAR{\mozartFACETEXT{N}}\mozartFACETEXT{)}\end{mozartCODEDISPLAY}
+\end{mozartSYNOPSIS}
+\mozartITEM Returns the number \mozartPROGVAR{\mozartFACETEXT{N}} of bytes read of the document being tranfered. \mozartEMPTY
+\mozartENTRY{\mozartCODEINLINE{\mozartFACETEXT{closeAll}}}\mozartENTRYHASCODE
+\begin{mozartSYNOPSIS}
+\begin{mozartCODEDISPLAY}\mozartFACETEXT{closeAll(}\mozartMODE{IN}\mozartPROGVAR{\mozartFACETEXT{Trace}}\mozartFACETEXT{)}\end{mozartCODEDISPLAY}
+\end{mozartSYNOPSIS}
+\mozartITEM This method is used when, before the service completeness, its stop is required.
+
+If \mozartPROGVAR{\mozartFACETEXT{Trace}} is bound to \mozartCODEINLINE{\mozartFACEKEYWORD{false}}, the current communication will be closed and the opened file removed. Else, if \mozartPROGVAR{\mozartFACETEXT{Trace}} is bound to \mozartCODEINLINE{\mozartFACEKEYWORD{true}}, the current communication and the opened file will be closed. It throws \mozartCODEINLINE{\mozartFACETEXT{errCloseCon}}, \mozartCODEINLINE{\mozartFACETEXT{errCloseFile}} or \mozartCODEINLINE{\mozartFACETEXT{errRemFile}} exceptions (see Section~\mozartREF{SUBSECTION.GENEXCEPTIONS}). \mozartEMPTY
+\mozartENTRY{\mozartCODEINLINE{\mozartFACETEXT{fetchRate}}}\mozartENTRYHASCODE
+\begin{mozartSYNOPSIS}
+\begin{mozartCODEDISPLAY}\mozartFACETEXT{fetchRate(}\mozartMODE{OUT}\mozartPROGVAR{\mozartFACETEXT{Rate}}\mozartFACETEXT{)}\end{mozartCODEDISPLAY}
+\end{mozartSYNOPSIS}
+\mozartITEM Returns the current transmission rate \mozartPROGVAR{\mozartFACETEXT{Rate}} computed as the average of the last \mozartPROGVAR{\mozartFACETEXT{Smpl}} (see Section~\mozartREF{SUBSECTION.INPRMS}) instanteous rates. \mozartEMPTY
+\mozartENTRY{\mozartCODEINLINE{\mozartFACETEXT{init}}}\mozartENTRYHASCODE
+\begin{mozartSYNOPSIS}
+\begin{mozartCODEDISPLAY}\mozartFACETEXT{init}\end{mozartCODEDISPLAY}
+\end{mozartSYNOPSIS}
+\mozartITEM Initialise the class. \mozartEMPTY
+ \mozartEMPTY
+\mozartENTRY{\mozartCODEINLINE{\mozartFACETEXT{service}}}\mozartENTRYHASCODE
+\begin{mozartSYNOPSIS}
+\begin{mozartCODEDISPLAY}\mozartFACETEXT{service(}\mozartMODE{IN}\mozartPROGVAR{\mozartFACETEXT{Meth}}\mozartFACETEXT{\mozartSPACE{}}\mozartMODE{IN}\mozartPROGVAR{\mozartFACETEXT{Url}}\mozartFACETEXT{\mozartSPACE{}}\mozartMODE{IN}\mozartPROGVAR{\mozartFACETEXT{InPrms}}\mozartFACETEXT{\mozartSPACE{}}\mozartMODE{IN}\mozartPROGVAR{\mozartFACETEXT{Pairs}}\mozartFACETEXT{\mozartSPACE{}}\mozartMODE{OUT}\mozartPROGVAR{\mozartFACETEXT{OutPrms}}\mozartFACETEXT{\mozartSPACE{}}\mozartMODE{OUT}\mozartPROGVAR{\mozartFACETEXT{HttpPrms}}\mozartFACETEXT{)}\end{mozartCODEDISPLAY}
+\end{mozartSYNOPSIS}
+\mozartITEM Opens an HTTP communication session according to the given method \mozartPROGVAR{\mozartFACETEXT{Meth}} and fetches the document specified by the \mozartPROGVAR{\mozartFACETEXT{Url}}. \mozartPROGVAR{\mozartFACETEXT{Meth}} has to be one of the strings \mozartCODEINLINE{\mozartFACESTRING{"GET"}} or \mozartCODEINLINE{\mozartFACESTRING{"POST"}} for ordinary, gateway \mozartEM{GET} and gateway \mozartEM{ISINDEX} or gateway \mozartEM{POST} HTTP requests, respectively. \mozartPROGVAR{\mozartFACETEXT{Pairs}} has to be a list of \mozartCODEINLINE{\mozartFACESTRING{"name=value"}} strings in the case of gateway \mozartEM{GET} and gateway \mozartEM{POST}, a \mozartCODEINLINE{\mozartFACESTRING{"value"}} string in the case of gateway \mozartEM{ISINDEX} or unbound in the case of ordinary HTTP requests. All the other classes present in this module specialise this method.
+
+As output, it returns two records containing both the content of the fetched document, namely \mozartPROGVAR{\mozartFACETEXT{OutPrms}} and the HTTP headers, namely \mozartPROGVAR{\mozartFACETEXT{HttpPrms}}. It throws all the exceptions described in (see Section~\mozartREF{SECTION.EXCEPTIONS}) but \mozartCODEINLINE{\mozartFACETEXT{errRemFile}}.
+
+For the explanation of all the other method's parameters refer to Section~\mozartREF{SECTION.INOUTPRMS}. \mozartEMPTY
+\mozartENTRY{\mozartCODEINLINE{\mozartFACETEXT{startTemp}}}\mozartENTRYHASCODE
+\begin{mozartSYNOPSIS}
+\begin{mozartCODEDISPLAY}\mozartFACETEXT{startTemp}\end{mozartCODEDISPLAY}
+\end{mozartSYNOPSIS}
+\mozartITEM Continues the current communication session from the point \mozartCODEINLINE{\mozartFACETEXT{stopTemp}} method temporarely stoped it. \mozartEMPTY
+\mozartENTRY{\mozartCODEINLINE{\mozartFACETEXT{stopTemp}}}\mozartENTRYHASCODE
+\begin{mozartSYNOPSIS}
+\begin{mozartCODEDISPLAY}\mozartFACETEXT{stopTemp}\end{mozartCODEDISPLAY}
+\end{mozartSYNOPSIS}
+\mozartITEM Temporarely stops the current communication session it. It can be continued by invoking the \mozartCODEINLINE{\mozartFACETEXT{startTemp}} method. \mozartEMPTY
+\end{mozartDESCRIPTION}
+
+
+\mozartSECTION{\mozartCODEINLINE{\mozartFACETEXT{HttpClient}\mozartFACEKEYWORD{.}\mozartFACETEXT{cgiGET}} class }
+
+
+
+\mozartCODEINLINE{\mozartFACETEXT{HttpClient}\mozartFACEKEYWORD{.}\mozartFACETEXT{cgiGET}} is a specialisation of the \mozartCODEINLINE{\mozartFACETEXT{HttpClient}\mozartFACEKEYWORD{.}\mozartFACETEXT{service}} class. All the public and protected methods described in Section~\mozartREF{SECTION.HTTPCLIENT.SERVICE} corespondes to this class, too.
+
+The \mozartCODEINLINE{\mozartFACETEXT{HttpClient}\mozartFACEKEYWORD{.}\mozartFACETEXT{cgiGET}} class provides the programmer with the possibility of retrieving documents over the network, associating the parameters parsing with the gateway \mozartEM{GET} HTTP requests. \mozartEMPTY
+ \mozartEMPTY
+\begin{mozartDESCRIPTION}
+\mozartENTRY{\mozartCODEINLINE{\mozartFACETEXT{init}}}\mozartENTRYHASCODE
+\begin{mozartSYNOPSIS}
+\begin{mozartCODEDISPLAY}\mozartFACETEXT{init(}\mozartMODE{IN}\mozartPROGVAR{\mozartFACETEXT{InPrms}}\mozartFACETEXT{)}\end{mozartCODEDISPLAY}
+\end{mozartSYNOPSIS}
+\mozartITEM Initialise the class with the given \mozartPROGVAR{\mozartFACETEXT{InPrms}} input parameter.
+
+  \mozartEMPTY
+For the entire explanation of \mozartPROGVAR{\mozartFACETEXT{InPrms}} refer to Section~\mozartREF{SUBSECTION.INPRMS}. \mozartEMPTY
+\mozartENTRY{\mozartCODEINLINE{\mozartFACETEXT{getService}}}\mozartENTRYHASCODE
+\begin{mozartSYNOPSIS}
+\begin{mozartCODEDISPLAY}\mozartFACETEXT{getService(}\mozartMODE{IN}\mozartPROGVAR{\mozartFACETEXT{Url}}\mozartFACETEXT{\mozartSPACE{}}\mozartMODE{IN}\mozartPROGVAR{\mozartFACETEXT{CgiPairs}}\mozartFACETEXT{\mozartSPACE{}}\mozartMODE{OUT}\mozartPROGVAR{\mozartFACETEXT{OutPrms}}\mozartFACETEXT{\mozartSPACE{}}\mozartMODE{OUT}\mozartPROGVAR{\mozartFACETEXT{HttpPrms}}\mozartFACETEXT{)}\end{mozartCODEDISPLAY}
+\end{mozartSYNOPSIS}
+\mozartITEM Opens an HTTP communication session associating \mozartPROGVAR{\mozartFACETEXT{CgiPairs}} parameters parsing with the gateway \mozartEM{GET} HTTP requests and fetches the document specified by the \mozartPROGVAR{\mozartFACETEXT{Url}}. \mozartPROGVAR{\mozartFACETEXT{CgiPairs}} has to be a list of \mozartCODEINLINE{\mozartFACESTRING{"name=value"}} strings (e.g. \mozartCODEINLINE{\mozartFACETEXT{[}\mozartFACESTRING{"Age=35"}\mozartFACETEXT{\mozartSPACE{}}\mozartFACESTRING{"Occupation=research\mozartSPACE{}assistant"}\mozartFACETEXT{]}}).
+
+As output, it returns two records containing both the content of the fetched document, namely \mozartPROGVAR{\mozartFACETEXT{OutPrms}} and the HTTP headers, namely \mozartPROGVAR{\mozartFACETEXT{HttpPrms}}. It throws all the exceptions described in (see Section~\mozartREF{SECTION.EXCEPTIONS}) but \mozartCODEINLINE{\mozartFACETEXT{errRemFile}}.
+
+For the explanation of all the other input and output parameters refer to Section~\mozartREF{SECTION.INOUTPRMS}. \mozartEMPTY
+\end{mozartDESCRIPTION}
+
+
+\mozartSECTION{\mozartCODEINLINE{\mozartFACETEXT{HttpClient}\mozartFACEKEYWORD{.}\mozartFACETEXT{cgiPOST}} class }
+
+
+
+\mozartCODEINLINE{\mozartFACETEXT{HttpClient}\mozartFACEKEYWORD{.}\mozartFACETEXT{cgiPOST}} is a specialisation of the \mozartCODEINLINE{\mozartFACETEXT{HttpClient}\mozartFACEKEYWORD{.}\mozartFACETEXT{service}} class. All the public and protected methods described in Section~\mozartREF{SECTION.HTTPCLIENT.SERVICE} corespondes to this class, too.
+
+The \mozartCODEINLINE{\mozartFACETEXT{HttpClient}\mozartFACEKEYWORD{.}\mozartFACETEXT{cgiPOST}} class provides the programmer with the possibility of retrieving documents over the network, associating the parameters parsing with the gateway \mozartEM{POST} HTTP requests. \mozartEMPTY
+ \mozartEMPTY
+\begin{mozartDESCRIPTION}
+\mozartENTRY{\mozartCODEINLINE{\mozartFACETEXT{init}}}\mozartENTRYHASCODE
+\begin{mozartSYNOPSIS}
+\begin{mozartCODEDISPLAY}\mozartFACETEXT{init(}\mozartMODE{IN}\mozartPROGVAR{\mozartFACETEXT{InPrms}}\mozartFACETEXT{)}\end{mozartCODEDISPLAY}
+\end{mozartSYNOPSIS}
+\mozartITEM Initialise the class with the given \mozartPROGVAR{\mozartFACETEXT{InPrms}} input parameter.
+
+  \mozartEMPTY
+For the entire explanation of \mozartPROGVAR{\mozartFACETEXT{InPrms}} refer to Section~\mozartREF{SUBSECTION.INPRMS}. \mozartEMPTY
+\mozartENTRY{\mozartCODEINLINE{\mozartFACETEXT{getService}}}\mozartENTRYHASCODE
+\begin{mozartSYNOPSIS}
+\begin{mozartCODEDISPLAY}\mozartFACETEXT{getService(}\mozartMODE{IN}\mozartPROGVAR{\mozartFACETEXT{Url}}\mozartFACETEXT{\mozartSPACE{}}\mozartMODE{IN}\mozartPROGVAR{\mozartFACETEXT{CgiPairs}}\mozartFACETEXT{\mozartSPACE{}}\mozartMODE{OUT}\mozartPROGVAR{\mozartFACETEXT{OutPrms}}\mozartFACETEXT{\mozartSPACE{}}\mozartMODE{OUT}\mozartPROGVAR{\mozartFACETEXT{HttpPrms}}\mozartFACETEXT{)}\end{mozartCODEDISPLAY}
+\end{mozartSYNOPSIS}
+\mozartITEM Opens an HTTP communication session associating \mozartPROGVAR{\mozartFACETEXT{CgiPairs}} parameters parsing with the gateway \mozartEM{POST} HTTP requests and fetches the document specified by the \mozartPROGVAR{\mozartFACETEXT{Url}}. \mozartPROGVAR{\mozartFACETEXT{CgiPairs}} has to be a list of \mozartCODEINLINE{\mozartFACESTRING{"name=value"}} strings.
+
+As output, it returns two records containing both the content of the fetched document, namely \mozartPROGVAR{\mozartFACETEXT{OutPrms}} and the HTTP headers, namely \mozartPROGVAR{\mozartFACETEXT{HttpPrms}}. It throws all the exceptions described in (see Section~\mozartREF{SECTION.EXCEPTIONS}) but \mozartCODEINLINE{\mozartFACETEXT{errRemFile}}.
+
+For the explanation of all the other input and output parameters refer to Section~\mozartREF{SECTION.INOUTPRMS}. \mozartEMPTY
+\end{mozartDESCRIPTION}
+
+
+\mozartSECTION{\mozartCODEINLINE{\mozartFACETEXT{HttpClient}\mozartFACEKEYWORD{.}\mozartFACETEXT{cgiISINDEX}} class }
+
+
+
+\mozartCODEINLINE{\mozartFACETEXT{HttpClient}\mozartFACEKEYWORD{.}\mozartFACETEXT{cgiISINDEX}} is a specialisation of the \mozartCODEINLINE{\mozartFACETEXT{HttpClient}\mozartFACEKEYWORD{.}\mozartFACETEXT{service}} class. All the public and protected methods described in Section~\mozartREF{SECTION.HTTPCLIENT.SERVICE} corespondes to this class, too.
+
+The \mozartCODEINLINE{\mozartFACETEXT{HttpClient}\mozartFACEKEYWORD{.}\mozartFACETEXT{cgiISINDEX}} class provides the programmer with the possibility of retrieving documents over the network, associating the parameters parsing with the gateway \mozartEM{ISINDEX} HTTP requests. \mozartEMPTY
+ \mozartEMPTY
+\begin{mozartDESCRIPTION}
+\mozartENTRY{\mozartCODEINLINE{\mozartFACETEXT{init}}}\mozartENTRYHASCODE
+\begin{mozartSYNOPSIS}
+\begin{mozartCODEDISPLAY}\mozartFACETEXT{init(}\mozartMODE{IN}\mozartPROGVAR{\mozartFACETEXT{InPrms}}\mozartFACETEXT{)}\end{mozartCODEDISPLAY}
+\end{mozartSYNOPSIS}
+\mozartITEM Initialise the class with the given \mozartPROGVAR{\mozartFACETEXT{InPrms}} input parameter.
+
+  \mozartEMPTY
+For the entire explanation of \mozartPROGVAR{\mozartFACETEXT{InPrms}} refer to Section~\mozartREF{SUBSECTION.INPRMS}. \mozartEMPTY
+\mozartENTRY{\mozartCODEINLINE{\mozartFACETEXT{getService}}}\mozartENTRYHASCODE
+\begin{mozartSYNOPSIS}
+\begin{mozartCODEDISPLAY}\mozartFACETEXT{getService(}\mozartMODE{IN}\mozartPROGVAR{\mozartFACETEXT{Url}}\mozartFACETEXT{\mozartSPACE{}}\mozartMODE{IN}\mozartPROGVAR{\mozartFACETEXT{IndexPairs}}\mozartFACETEXT{\mozartSPACE{}}\mozartMODE{OUT}\mozartPROGVAR{\mozartFACETEXT{OutPrms}}\mozartFACETEXT{\mozartSPACE{}}\mozartMODE{OUT}\mozartPROGVAR{\mozartFACETEXT{HttpPrms}}\mozartFACETEXT{)}\end{mozartCODEDISPLAY}
+\end{mozartSYNOPSIS}
+\mozartITEM Opens an HTTP communication session associating \mozartPROGVAR{\mozartFACETEXT{IndexPairs}} parameters parsing with the gateway \mozartEM{ISINDEX} HTTP requests and fetches the document specified by the \mozartPROGVAR{\mozartFACETEXT{Url}}. \mozartPROGVAR{\mozartFACETEXT{IndexPairs}} has to be a \mozartCODEINLINE{\mozartFACESTRING{"value"}} string (e.g. \mozartCODEINLINE{\mozartFACESTRING{"research\mozartSPACE{}assistant"}}).
+
+As output, it returns two records containing both the content of the fetched document, namely \mozartPROGVAR{\mozartFACETEXT{OutPrms}} and the HTTP headers, namely \mozartPROGVAR{\mozartFACETEXT{HttpPrms}}. It throws all the exceptions described in (see Section~\mozartREF{SECTION.EXCEPTIONS}) but \mozartCODEINLINE{\mozartFACETEXT{errRemFile}}.
+
+For the explanation of all the other input and output parameters refer to Section~\mozartREF{SECTION.INOUTPRMS}. \mozartEMPTY
+\end{mozartDESCRIPTION}
+
+
+\mozartSECTION{\mozartCODEINLINE{\mozartFACETEXT{HttpClient}\mozartFACEKEYWORD{.}\mozartFACETEXT{urlGET}} class }
+
+
+
+\mozartCODEINLINE{\mozartFACETEXT{HttpClient}\mozartFACEKEYWORD{.}\mozartFACETEXT{urlGET}} is a specialisation of the \mozartCODEINLINE{\mozartFACETEXT{HttpClient}\mozartFACEKEYWORD{.}\mozartFACETEXT{service}} class. All the public and protected methods described in Section~\mozartREF{SECTION.HTTPCLIENT.SERVICE} corespondes to this class, too.
+
+The \mozartCODEINLINE{\mozartFACETEXT{HttpClient}\mozartFACEKEYWORD{.}\mozartFACETEXT{urlGET}} class provides the programmer with the possibility of retrieving documents over the network using ordinary \mozartEM{GET} HTTP requests. \mozartEMPTY
+ \mozartEMPTY
+\begin{mozartDESCRIPTION}
+\mozartENTRY{\mozartCODEINLINE{\mozartFACETEXT{init}}}\mozartENTRYHASCODE
+\begin{mozartSYNOPSIS}
+\begin{mozartCODEDISPLAY}\mozartFACETEXT{init(}\mozartMODE{IN}\mozartPROGVAR{\mozartFACETEXT{InPrms}}\mozartFACETEXT{)}\end{mozartCODEDISPLAY}
+\end{mozartSYNOPSIS}
+\mozartITEM Initialise the class with the given \mozartPROGVAR{\mozartFACETEXT{InPrms}} input parameter.
+
+  \mozartEMPTY
+For the entire explanation of \mozartPROGVAR{\mozartFACETEXT{InPrms}} refer to Section~\mozartREF{SUBSECTION.INPRMS}. \mozartEMPTY
+\mozartENTRY{\mozartCODEINLINE{\mozartFACETEXT{getService}}}\mozartENTRYHASCODE
+\begin{mozartSYNOPSIS}
+\begin{mozartCODEDISPLAY}\mozartFACETEXT{getService(}\mozartMODE{IN}\mozartPROGVAR{\mozartFACETEXT{Url}}\mozartFACETEXT{\mozartSPACE{}}\mozartMODE{OUT}\mozartPROGVAR{\mozartFACETEXT{OutPrms}}\mozartFACETEXT{\mozartSPACE{}}\mozartMODE{OUT}\mozartPROGVAR{\mozartFACETEXT{HttpPrms}}\mozartFACETEXT{)}\end{mozartCODEDISPLAY}
+\end{mozartSYNOPSIS}
+\mozartITEM Opens an HTTP communication session and fetches the document specified by the \mozartPROGVAR{\mozartFACETEXT{Url}}.
+
+As output, it returns two records containing both the content of the fetched document, namely \mozartPROGVAR{\mozartFACETEXT{OutPrms}} and the HTTP headers, namely \mozartPROGVAR{\mozartFACETEXT{HttpPrms}}. It throws all the exceptions described in (see Section~\mozartREF{SUBSECTION.GENEXCEPTIONS}) but \mozartCODEINLINE{\mozartFACETEXT{errRemFile}}.
+
+For the entire explanation of the input and output parameters refer to Section~\mozartREF{SECTION.INOUTPRMS}. \mozartEMPTY
+\end{mozartDESCRIPTION}
+
+
+\mozartSECTION{\mozartCODEINLINE{\mozartFACETEXT{HttpClient}\mozartFACEKEYWORD{.}\mozartFACETEXT{urlHEAD}} class }
+
+
+
+\mozartCODEINLINE{\mozartFACETEXT{HttpClient}\mozartFACEKEYWORD{.}\mozartFACETEXT{urlHEAD}} is a specialisation of the \mozartCODEINLINE{\mozartFACETEXT{HttpClient}\mozartFACEKEYWORD{.}\mozartFACETEXT{service}} class. All the public and protected methods described in Section~\mozartREF{SECTION.HTTPCLIENT.SERVICE} corespondes to this class, too.
+
+The \mozartCODEINLINE{\mozartFACETEXT{HttpClient}\mozartFACEKEYWORD{.}\mozartFACETEXT{urlHEAD}} class provides the programmer with the possibility of retrieving the HTTP headers of the documents over the network using \mozartEM{HEAD} HTTP requests. \mozartEMPTY
+ \mozartEMPTY
+\begin{mozartDESCRIPTION}
+\mozartENTRY{\mozartCODEINLINE{\mozartFACETEXT{init}}}\mozartENTRYHASCODE
+\begin{mozartSYNOPSIS}
+\begin{mozartCODEDISPLAY}\mozartFACETEXT{init(}\mozartMODE{IN}\mozartPROGVAR{\mozartFACETEXT{InPrms}}\mozartFACETEXT{)}\end{mozartCODEDISPLAY}
+\end{mozartSYNOPSIS}
+\mozartITEM Initialise the class with the given \mozartPROGVAR{\mozartFACETEXT{InPrms}} input parameter.
+
+  \mozartEMPTY
+For the entire explanation of \mozartPROGVAR{\mozartFACETEXT{InPrms}} refer to Section~\mozartREF{SUBSECTION.INPRMS}. \mozartEMPTY
+\mozartENTRY{\mozartCODEINLINE{\mozartFACETEXT{getService}}}\mozartENTRYHASCODE
+\begin{mozartSYNOPSIS}
+\begin{mozartCODEDISPLAY}\mozartFACETEXT{getService(}\mozartMODE{IN}\mozartPROGVAR{\mozartFACETEXT{Url}}\mozartFACETEXT{\mozartSPACE{}}\mozartMODE{OUT}\mozartPROGVAR{\mozartFACETEXT{OutPrms}}\mozartFACETEXT{\mozartSPACE{}}\mozartMODE{OUT}\mozartPROGVAR{\mozartFACETEXT{HttpPrms}}\mozartFACETEXT{)}\end{mozartCODEDISPLAY}
+\end{mozartSYNOPSIS}
+\mozartITEM Opens an HTTP communication session and fetches the HTTP headers of the document specified by the \mozartPROGVAR{\mozartFACETEXT{Url}}. Thus, the content of the document is not fetched.
+
+As output, it returns the \mozartPROGVAR{\mozartFACETEXT{OutPrms}} record with its \mozartPROGVAR{\mozartFACETEXT{sOut}} feature's field being unbound, and the \mozartPROGVAR{\mozartFACETEXT{HttpPrms}} record containing the HTTP headers. It throws all the exceptions described in (see Section~\mozartREF{SUBSECTION.GENEXCEPTIONS}) but \mozartCODEINLINE{\mozartFACETEXT{errRemFile}}.
+
+For the entire explanation of the input and output parameters refer to Section~\mozartREF{SECTION.INOUTPRMS}. \mozartEMPTY
+\end{mozartDESCRIPTION}
+
+
+\mozartCHAPTER{Tutorial Examples}\label{CHAPTER.EXAMPLES}
+
+
+
+The examples given in this chapter are functors. As we've stated before, in Chapter~\mozartREF{CHAPTER.HTTPCLIENT}, the main programming interface of the \mozartCODEINLINE{\mozartFACETEXT{HttpClient}} package is provided by the specialised classes found within \mozartCODEINLINE{\mozartFACETEXT{HttpClient}} module, namely \mozartCODEINLINE{\mozartFACETEXT{CgiGET}}, \mozartCODEINLINE{\mozartFACETEXT{CgiPOST}}, \mozartCODEINLINE{\mozartFACETEXT{CgiISINDEX}}, \mozartCODEINLINE{\mozartFACETEXT{UrlGET}} and \mozartCODEINLINE{\mozartFACETEXT{UrlHEAD}}. In order to use them, we have to \mozartCODEINLINE{\mozartFACEKEYWORD{import}} \mozartCODEINLINE{\mozartFACESTRING{'HttpClient.ozf'}} module in our examples.  \mozartEMPTY
+
+
+\mozartSECTION{Download a document}
+
+
+
+This short example shows how a document located at \mozartCODEINLINE{\mozartFACETEXT{Url}} can be downloaded using \mozartCODEINLINE{\mozartFACETEXT{HttpClient}\mozartFACEKEYWORD{.}\mozartFACETEXT{getUrl}} class. The first step is the initialisation of the class, using \mozartCODEINLINE{\mozartFACETEXT{init}} method. Remark that the provided input parameters are unbound. In this case they will be given default values. The second step is calling the \mozartCODEINLINE{\mozartFACETEXT{getService}} method, thus invoking the service. We don't want to reach the output parameters so we unbound them.
+
+The content of the donloaded document will be put into the file having the given \mozartCODEINLINE{\mozartFACETEXT{Url}} based name, \mozartCODEINLINE{\mozartFACESTRING{"index.html"}} in our case. \mozartEMPTY
+ \mozartEMPTY
+
+
+\mozartPARA{Source \mozartEMPTY
+File\protect\footnotemark}
+\footnotetext{\mozartDEFAULTREFEXT{exmpl1.oz}}
+
+ \mozartEMPTY
+\begin{mozartCODEDISPLAY}\mozartFACECOMMENT{\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartNEWLINE
+\mozartPERCENT{}\mozartPERCENT{}\mozartSPACE{}Simple\mozartSPACE{}use\mozartSPACE{}of\mozartSPACE{}HttpClient.urlGET\mozartSPACE{}class\mozartNEWLINE
+\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartNEWLINE
+}\mozartFACEKEYWORD{functor}\mozartFACETEXT{\mozartNEWLINE
+}\mozartFACEKEYWORD{import}\mozartFACETEXT{\mozartSPACE{}\mozartNEWLINE
+\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}System\mozartNEWLINE
+\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}Application\mozartNEWLINE
+\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}HttpClient(urlGET:UrlGET)\mozartSPACE{}}\mozartFACEKEYWORD{at}\mozartFACETEXT{\mozartSPACE{}}\mozartFACESTRING{'HttpClient.ozf'}\mozartFACETEXT{\mozartSPACE{}\mozartNEWLINE
+}\mozartFACEKEYWORD{define}\mozartFACETEXT{\mozartNEWLINE
+\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}Url\mozartSPACE{}=\mozartSPACE{}}\mozartFACESTRING{"http://www.info.ucl.ac.be/index.html"}\mozartFACETEXT{\mozartNEWLINE
+\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}HttpObj\mozartNEWLINE
+\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}ServiceEnd\mozartNEWLINE
+}\mozartFACEKEYWORD{in}\mozartFACETEXT{\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartNEWLINE
+\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}HttpObj=\mozartLBRACE{}New\mozartSPACE{}UrlGET\mozartSPACE{}init(\mozartUNDERSCORE{})\mozartRBRACE{}\mozartNEWLINE
+\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}}\mozartFACEKEYWORD{thread}\mozartFACETEXT{\mozartNEWLINE
+\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}}\mozartFACEKEYWORD{try}\mozartFACETEXT{\mozartNEWLINE
+\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartLBRACE{}HttpObj\mozartSPACE{}getService(Url\mozartSPACE{}\mozartUNDERSCORE{}\mozartSPACE{}\mozartUNDERSCORE{})\mozartRBRACE{}\mozartNEWLINE
+\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}}\mozartFACEKEYWORD{catch}\mozartFACETEXT{\mozartSPACE{}E\mozartSPACE{}}\mozartFACEKEYWORD{then}\mozartFACETEXT{\mozartNEWLINE
+\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartLBRACE{}System}\mozartFACEKEYWORD{.}\mozartFACETEXT{show\mozartSPACE{}E\mozartRBRACE{}\mozartNEWLINE
+\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}}\mozartFACEKEYWORD{finally}\mozartFACETEXT{\mozartSPACE{}\mozartNEWLINE
+\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}ServiceEnd=}\mozartFACEKEYWORD{unit}\mozartFACETEXT{\mozartNEWLINE
+\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}}\mozartFACEKEYWORD{end}\mozartFACETEXT{\mozartNEWLINE
+\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}}\mozartFACEKEYWORD{end}\mozartFACETEXT{\mozartNEWLINE
+\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartLBRACE{}Wait\mozartSPACE{}ServiceEnd\mozartRBRACE{}\mozartNEWLINE
+\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartLBRACE{}Application}\mozartFACEKEYWORD{.}\mozartFACETEXT{exit\mozartSPACE{}0\mozartRBRACE{}\mozartNEWLINE
+}\mozartFACEKEYWORD{end}\mozartFACETEXT{\mozartNEWLINE
+}\end{mozartCODEDISPLAY}
+
+
+\mozartCODEINLINE{\mozartFACETEXT{HttpClient}\mozartFACEKEYWORD{.}\mozartFACETEXT{getHEAD}} class can be used in the same manner. In this case the content of the document will not be fetched, but its HTTP headers will be returned.  \mozartEMPTY
+
+
+\mozartSECTION{Build CGI queries}
+
+
+
+This example shows how \mozartCODEINLINE{\mozartFACETEXT{HttpClient}\mozartFACEKEYWORD{.}\mozartFACETEXT{cgiGET}} class can be used to build CGI queries (i.e. to Yahoo web search engine). The query is given by \mozartCODEINLINE{\mozartFACETEXT{CgiParams}} which is a list of \mozartCODEINLINE{\mozartFACESTRING{"name=value"}} strings. In our very case, we want to retrieve a list of all documents related with the keyword \mozartCODEINLINE{\mozartFACESTRING{"travel"}}. Since the name of the file the retrieved document should be put is provided, it will be used.
+
+The size of bytes of the requested document \mozartCODEINLINE{\mozartFACETEXT{OutPrms}\mozartFACEKEYWORD{.}\mozartFACETEXT{sizeRead}} read from the socket is displayed. Since it is a string, the name of the peer \mozartCODEINLINE{\mozartFACETEXT{HttpPrms}\mozartFACEKEYWORD{.}\mozartFACETEXT{server}} is displayed as an atom, so we can easily see it.  \mozartEMPTY
+ \mozartEMPTY
+
+
+\mozartPARA{Source \mozartEMPTY
+File\protect\footnotemark}
+\footnotetext{\mozartDEFAULTREFEXT{exmpl2.oz}}
+
+ \mozartEMPTY
+\begin{mozartCODEDISPLAY}\mozartFACECOMMENT{\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartNEWLINE
+\mozartPERCENT{}\mozartPERCENT{}\mozartSPACE{}Simple\mozartSPACE{}use\mozartSPACE{}of\mozartSPACE{}HttpClient.cgiGET\mozartSPACE{}class\mozartNEWLINE
+\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartNEWLINE
+}\mozartFACEKEYWORD{functor}\mozartFACETEXT{\mozartNEWLINE
+}\mozartFACEKEYWORD{import}\mozartFACETEXT{\mozartSPACE{}\mozartNEWLINE
+\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}System\mozartNEWLINE
+\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}Application\mozartNEWLINE
+\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}HttpClient(cgiGET:CgiGET)\mozartSPACE{}}\mozartFACEKEYWORD{at}\mozartFACETEXT{\mozartSPACE{}}\mozartFACESTRING{'HttpClient.ozf'}\mozartFACETEXT{\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartNEWLINE
+}\mozartFACEKEYWORD{define}\mozartFACETEXT{\mozartNEWLINE
+\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}Url\mozartSPACE{}=\mozartSPACE{}}\mozartFACESTRING{"search.yahoo.com/bin/search"}\mozartFACETEXT{\mozartNEWLINE
+\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}CgiParams\mozartSPACE{}=\mozartSPACE{}[}\mozartFACESTRING{"p=travel"}\mozartFACETEXT{]\mozartNEWLINE
+\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}OutPrms\mozartNEWLINE
+\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}HttpPrms\mozartNEWLINE
+\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}HttpObj\mozartNEWLINE
+\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}ServiceEnd\mozartNEWLINE
+}\mozartFACEKEYWORD{in}\mozartFACETEXT{\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartNEWLINE
+\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}HttpObj=\mozartLBRACE{}New\mozartSPACE{}CgiGET\mozartSPACE{}init(inPrms(file:}\mozartFACESTRING{"temp"}\mozartFACETEXT{))\mozartRBRACE{}\mozartNEWLINE
+\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}}\mozartFACEKEYWORD{thread}\mozartFACETEXT{\mozartNEWLINE
+\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}}\mozartFACEKEYWORD{try}\mozartFACETEXT{\mozartNEWLINE
+\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartLBRACE{}HttpObj\mozartSPACE{}getService(Url\mozartSPACE{}CgiParams\mozartSPACE{}OutPrms\mozartSPACE{}HttpPrms)\mozartRBRACE{}\mozartNEWLINE
+\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}}\mozartFACEKEYWORD{catch}\mozartFACETEXT{\mozartSPACE{}E\mozartSPACE{}}\mozartFACEKEYWORD{then}\mozartFACETEXT{\mozartNEWLINE
+\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartLBRACE{}System}\mozartFACEKEYWORD{.}\mozartFACETEXT{show\mozartSPACE{}E\mozartRBRACE{}\mozartNEWLINE
+\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}}\mozartFACEKEYWORD{finally}\mozartFACETEXT{\mozartSPACE{}\mozartNEWLINE
+\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}ServiceEnd=}\mozartFACEKEYWORD{unit}\mozartFACETEXT{\mozartNEWLINE
+\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}}\mozartFACEKEYWORD{end}\mozartFACETEXT{\mozartNEWLINE
+\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}}\mozartFACEKEYWORD{end}\mozartFACETEXT{\mozartNEWLINE
+\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartLBRACE{}Wait\mozartSPACE{}ServiceEnd\mozartRBRACE{}\mozartNEWLINE
+\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartLBRACE{}System}\mozartFACEKEYWORD{.}\mozartFACETEXT{show\mozartSPACE{}sizeread}\mozartFACEKEYWORD{\mozartHASH{}}\mozartFACETEXT{OutPrms}\mozartFACEKEYWORD{.}\mozartFACETEXT{sizeRead\mozartRBRACE{}\mozartNEWLINE
+\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartLBRACE{}System}\mozartFACEKEYWORD{.}\mozartFACETEXT{show\mozartSPACE{}http\mozartUNDERSCORE{}server}\mozartFACEKEYWORD{\mozartHASH{}}\mozartFACETEXT{\mozartLBRACE{}VirtualString}\mozartFACEKEYWORD{.}\mozartFACETEXT{toAtom\mozartSPACE{}HttpPrms}\mozartFACEKEYWORD{.}\mozartFACETEXT{server\mozartRBRACE{}\mozartRBRACE{}\mozartNEWLINE
+\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartLBRACE{}Application}\mozartFACEKEYWORD{.}\mozartFACETEXT{exit\mozartSPACE{}0\mozartRBRACE{}\mozartNEWLINE
+}\mozartFACEKEYWORD{end}\mozartFACETEXT{\mozartNEWLINE
+}\end{mozartCODEDISPLAY}
+
+
+
+
+\mozartCODEINLINE{\mozartFACETEXT{HttpClient}\mozartFACEKEYWORD{.}\mozartFACETEXT{cgiPOST}} and \mozartCODEINLINE{\mozartFACETEXT{HttpClient}\mozartFACEKEYWORD{.}\mozartFACETEXT{cgiISINDEX}} classes can be used in the same manner. In the latter case \mozartCODEINLINE{\mozartFACETEXT{CgiParams}} has to be a string. \mozartEMPTY
+
+
+\mozartSECTION{Use of the module functionalities}
+
+
+
+Among the examples presented in this chapter, this one is the most complex and involves the use of the \mozartCODEINLINE{\mozartFACETEXT{fetchRate}}, \mozartCODEINLINE{\mozartFACETEXT{bytesRead}}, \mozartCODEINLINE{\mozartFACETEXT{stopTemp}} and \mozartCODEINLINE{\mozartFACETEXT{startTemp}} methods. It will display the transmission rate each 300 ms and the number of bytes of the document read at that time, by calling \mozartCODEINLINE{\mozartFACETEXT{GetRate}} procedure.
+
+After a period of 850 ms the transmission will be temporarely stoped and continued after other 3000 ms period.
+
+Since \mozartCODEINLINE{\mozartFACETEXT{toStrm}} feature is set \mozartCODEINLINE{\mozartFACEKEYWORD{true}} and \mozartCODEINLINE{\mozartFACETEXT{toFile}} one is \mozartCODEINLINE{\mozartFACEKEYWORD{true}} by default, the document will be both saved into the provided name \mozartCODEINLINE{\mozartFACESTRING{"temp"}} file, and returned as a byte stream to be processed by the \mozartCODEINLINE{\mozartFACETEXT{ProcessStrm}} procedure. \mozartEMPTY
+ \mozartEMPTY
+
+
+\mozartPARA{Source \mozartEMPTY
+File\protect\footnotemark}
+\footnotetext{\mozartDEFAULTREFEXT{exmpl3.oz}}
+
+ \mozartEMPTY
+\begin{mozartCODEDISPLAY}\mozartFACECOMMENT{\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartNEWLINE
+\mozartPERCENT{}\mozartPERCENT{}\mozartSPACE{}Simple\mozartSPACE{}use\mozartSPACE{}of\mozartSPACE{}the\mozartSPACE{}fetchRate,\mozartSPACE{}bytesRead,\mozartSPACE{}stopTemp\mozartNEWLINE
+\mozartPERCENT{}\mozartPERCENT{}\mozartSPACE{}and\mozartSPACE{}startTemp\mozartSPACE{}methods\mozartSPACE{}of\mozartSPACE{}HttpClient.urlGET\mozartSPACE{}class\mozartNEWLINE
+\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartNEWLINE
+}\mozartFACEKEYWORD{functor}\mozartFACETEXT{\mozartNEWLINE
+}\mozartFACEKEYWORD{import}\mozartFACETEXT{\mozartSPACE{}\mozartNEWLINE
+\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}System\mozartNEWLINE
+\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}Application\mozartNEWLINE
+\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}HttpClient(urlGET:UrlGET)\mozartSPACE{}}\mozartFACEKEYWORD{at}\mozartFACETEXT{\mozartSPACE{}}\mozartFACESTRING{'HttpClient.ozf'}\mozartFACETEXT{\mozartSPACE{}\mozartSPACE{}\mozartNEWLINE
+}\mozartFACEKEYWORD{define}\mozartFACETEXT{\mozartNEWLINE
+\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}Url\mozartSPACE{}=\mozartSPACE{}}\mozartFACESTRING{"Address\mozartSPACE{}of\mozartSPACE{}the\mozartSPACE{}document"}\mozartFACETEXT{\mozartNEWLINE
+\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}OutPrms\mozartNEWLINE
+\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}ApplicEnd\mozartNEWLINE
+\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}}\mozartFACEKEYWORD{proc}\mozartFACEVARIABLE{\mozartSPACE{}}\mozartFACETEXT{\mozartLBRACE{}}\mozartFACEFUNCTION{UseIt}\mozartFACETEXT{\mozartRBRACE{}\mozartNEWLINE
+\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}HttpObj\mozartNEWLINE
+\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}ServiceEnd\mozartNEWLINE
+\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}}\mozartFACEKEYWORD{proc}\mozartFACEVARIABLE{\mozartSPACE{}}\mozartFACETEXT{\mozartLBRACE{}}\mozartFACEFUNCTION{GetRate}\mozartFACETEXT{\mozartSPACE{}B\mozartRBRACE{}\mozartNEWLINE
+\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}}\mozartFACEKEYWORD{if}\mozartFACETEXT{\mozartSPACE{}\mozartLBRACE{}IsDet\mozartSPACE{}B\mozartRBRACE{}}\mozartFACEKEYWORD{==false}\mozartFACETEXT{\mozartSPACE{}}\mozartFACEKEYWORD{then}\mozartFACETEXT{\mozartNEWLINE
+\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartLBRACE{}Delay\mozartSPACE{}300\mozartRBRACE{}\mozartNEWLINE
+\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartLBRACE{}System}\mozartFACEKEYWORD{.}\mozartFACETEXT{show\mozartSPACE{}\mozartLBRACE{}HttpObj\mozartSPACE{}fetchRate(\mozartDOLLAR{})\mozartRBRACE{}}\mozartFACEKEYWORD{\mozartHASH{}}\mozartFACETEXT{\mozartLBRACE{}HttpObj\mozartSPACE{}bytesRead(\mozartDOLLAR{})\mozartRBRACE{}\mozartRBRACE{}\mozartNEWLINE
+\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartLBRACE{}GetRate\mozartSPACE{}B\mozartRBRACE{}\mozartNEWLINE
+\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}}\mozartFACEKEYWORD{end}\mozartFACETEXT{\mozartNEWLINE
+\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}}\mozartFACEKEYWORD{end}\mozartFACETEXT{\mozartNEWLINE
+\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}}\mozartFACEKEYWORD{proc}\mozartFACEVARIABLE{\mozartSPACE{}}\mozartFACETEXT{\mozartLBRACE{}}\mozartFACEFUNCTION{ProcessStrm}\mozartFACETEXT{\mozartSPACE{}Stream\mozartRBRACE{}\mozartSPACE{}\mozartNEWLINE
+\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}}\mozartFACECOMMENT{\mozartPERCENT{}\mozartPERCENT{}\mozartSPACE{}Processing\mozartSPACE{}the\mozartSPACE{}Stream\mozartNEWLINE
+}\mozartFACETEXT{\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}}\mozartFACEKEYWORD{...}\mozartFACETEXT{\mozartNEWLINE
+\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}}\mozartFACEKEYWORD{end}\mozartFACETEXT{\mozartNEWLINE
+\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}}\mozartFACEKEYWORD{in}\mozartFACETEXT{\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartNEWLINE
+\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}HttpObj=\mozartLBRACE{}New\mozartSPACE{}UrlGET\mozartSPACE{}init(inPrms(file:}\mozartFACESTRING{"temp"}\mozartFACETEXT{\mozartSPACE{}toStrm:}\mozartFACEKEYWORD{true}\mozartFACETEXT{))\mozartRBRACE{}\mozartNEWLINE
+\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}}\mozartFACEKEYWORD{thread}\mozartFACETEXT{\mozartNEWLINE
+\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}}\mozartFACEKEYWORD{try}\mozartFACETEXT{\mozartNEWLINE
+\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartLBRACE{}HttpObj\mozartSPACE{}getService(Url\mozartSPACE{}OutPrms\mozartSPACE{}\mozartUNDERSCORE{})\mozartRBRACE{}\mozartNEWLINE
+\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}}\mozartFACEKEYWORD{catch}\mozartFACETEXT{\mozartSPACE{}E\mozartSPACE{}}\mozartFACEKEYWORD{then}\mozartFACETEXT{\mozartNEWLINE
+\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartLBRACE{}System}\mozartFACEKEYWORD{.}\mozartFACETEXT{show\mozartSPACE{}E\mozartRBRACE{}\mozartNEWLINE
+\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}}\mozartFACEKEYWORD{finally}\mozartFACETEXT{\mozartSPACE{}\mozartNEWLINE
+\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}ServiceEnd=}\mozartFACEKEYWORD{unit}\mozartFACETEXT{\mozartNEWLINE
+\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}}\mozartFACEKEYWORD{end}\mozartFACETEXT{\mozartNEWLINE
+\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}}\mozartFACEKEYWORD{end}\mozartFACETEXT{\mozartNEWLINE
+\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}}\mozartFACEKEYWORD{thread}\mozartFACETEXT{\mozartSPACE{}\mozartLBRACE{}GetRate\mozartSPACE{}ServiceEnd\mozartRBRACE{}\mozartSPACE{}}\mozartFACEKEYWORD{end}\mozartFACETEXT{\mozartNEWLINE
+\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}}\mozartFACEKEYWORD{thread}\mozartFACETEXT{\mozartSPACE{}\mozartLBRACE{}ProcessStrm\mozartSPACE{}OutPrms}\mozartFACEKEYWORD{.}\mozartFACETEXT{sOut\mozartRBRACE{}\mozartSPACE{}}\mozartFACEKEYWORD{end}\mozartFACETEXT{\mozartNEWLINE
+\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartLBRACE{}Delay\mozartSPACE{}850\mozartRBRACE{}\mozartNEWLINE
+\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}}\mozartFACECOMMENT{\mozartPERCENT{}\mozartPERCENT{}\mozartSPACE{}temporarely\mozartSPACE{}stops\mozartSPACE{}the\mozartSPACE{}transmission\mozartNEWLINE
+}\mozartFACETEXT{\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartLBRACE{}HttpObj\mozartSPACE{}stopTemp\mozartRBRACE{}\mozartNEWLINE
+\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartLBRACE{}Delay\mozartSPACE{}3000\mozartRBRACE{}\mozartNEWLINE
+\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}}\mozartFACECOMMENT{\mozartPERCENT{}\mozartPERCENT{}\mozartSPACE{}continues\mozartSPACE{}the\mozartSPACE{}transmission\mozartNEWLINE
+}\mozartFACETEXT{\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartLBRACE{}HttpObj\mozartSPACE{}startTemp\mozartRBRACE{}\mozartNEWLINE
+\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartLBRACE{}Wait\mozartSPACE{}ServiceEnd\mozartRBRACE{}\mozartNEWLINE
+\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}}\mozartFACEKEYWORD{end}\mozartFACETEXT{\mozartNEWLINE
+}\mozartFACEKEYWORD{in}\mozartFACETEXT{\mozartNEWLINE
+\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}}\mozartFACEKEYWORD{thread}\mozartFACETEXT{\mozartSPACE{}\mozartLBRACE{}UseIt\mozartRBRACE{}\mozartSPACE{}ApplicEnd=}\mozartFACEKEYWORD{unit}\mozartFACETEXT{\mozartSPACE{}}\mozartFACEKEYWORD{end}\mozartFACETEXT{\mozartNEWLINE
+\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartLBRACE{}Wait\mozartSPACE{}ApplicEnd\mozartRBRACE{}\mozartNEWLINE
+\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartLBRACE{}Application}\mozartFACEKEYWORD{.}\mozartFACETEXT{exit\mozartSPACE{}0\mozartRBRACE{}\mozartNEWLINE
+}\mozartFACEKEYWORD{end}\mozartFACETEXT{\mozartNEWLINE
+}\end{mozartCODEDISPLAY}
+
+
+\mozartSECTION{Parallel documents retrieval}
+
+
+
+This small example shows how two services can be started in parallel in order to download the same document having different locations \mozartCODEINLINE{\mozartFACETEXT{Url1}} and \mozartCODEINLINE{\mozartFACETEXT{Url2}}. This will try to fetch the documents while each service runs within its own thread. When one of the services completes or fails, the application exits. \mozartEMPTY
+ \mozartEMPTY
+
+
+\mozartPARA{Source \mozartEMPTY
+File\protect\footnotemark}
+\footnotetext{\mozartDEFAULTREFEXT{exmpl4.oz}}
+
+ \mozartEMPTY
+\begin{mozartCODEDISPLAY}\mozartFACECOMMENT{\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartNEWLINE
+\mozartPERCENT{}\mozartPERCENT{}\mozartSPACE{}Parallel\mozartSPACE{}document\mozartSPACE{}retrieval\mozartSPACE{}\mozartNEWLINE
+\mozartPERCENT{}\mozartPERCENT{}\mozartSPACE{}using\mozartSPACE{}HttpClient.urlGET\mozartSPACE{}class\mozartNEWLINE
+\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartPERCENT{}\mozartNEWLINE
+}\mozartFACEKEYWORD{functor}\mozartFACETEXT{\mozartNEWLINE
+}\mozartFACEKEYWORD{import}\mozartFACETEXT{\mozartSPACE{}\mozartNEWLINE
+\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}System\mozartNEWLINE
+\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}Application\mozartNEWLINE
+\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}HttpClient(urlGET:UrlGET)\mozartSPACE{}}\mozartFACEKEYWORD{at}\mozartFACETEXT{\mozartSPACE{}}\mozartFACESTRING{'HttpClient.ozf'}\mozartFACETEXT{\mozartSPACE{}\mozartNEWLINE
+}\mozartFACEKEYWORD{define}\mozartFACETEXT{\mozartNEWLINE
+\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}Url1\mozartSPACE{}=\mozartSPACE{}}\mozartFACESTRING{"Address\mozartSPACE{}of\mozartSPACE{}the\mozartSPACE{}document\mozartSPACE{}located\mozartSPACE{}in\mozartSPACE{}USA"}\mozartFACETEXT{\mozartNEWLINE
+\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}Url2\mozartSPACE{}=\mozartSPACE{}}\mozartFACESTRING{"Address\mozartSPACE{}of\mozartSPACE{}the\mozartSPACE{}document\mozartSPACE{}located\mozartSPACE{}in\mozartSPACE{}Australia"}\mozartFACETEXT{\mozartNEWLINE
+\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}ApplicEnd\mozartNEWLINE
+\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}}\mozartFACEKEYWORD{proc}\mozartFACEVARIABLE{\mozartSPACE{}}\mozartFACETEXT{\mozartLBRACE{}}\mozartFACEFUNCTION{UseIt}\mozartFACETEXT{\mozartRBRACE{}\mozartNEWLINE
+\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}HttpObj1\mozartNEWLINE
+\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}HttpObj2\mozartNEWLINE
+\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}Out1\mozartSPACE{}Http1\mozartNEWLINE
+\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}Out2\mozartSPACE{}Http2\mozartNEWLINE
+\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}ServiceEnd\mozartNEWLINE
+\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}}\mozartFACEKEYWORD{in}\mozartFACETEXT{\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartNEWLINE
+\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}HttpObj1=\mozartLBRACE{}New\mozartSPACE{}UrlGET\mozartSPACE{}init(inPrms(file:}\mozartFACESTRING{"temp1"}\mozartFACETEXT{))\mozartRBRACE{}\mozartNEWLINE
+\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}HttpObj2=\mozartLBRACE{}New\mozartSPACE{}UrlGET\mozartSPACE{}init(inPrms(file:}\mozartFACESTRING{"temp2"}\mozartFACETEXT{))\mozartRBRACE{}\mozartNEWLINE
+\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}}\mozartFACEKEYWORD{thread}\mozartFACETEXT{\mozartNEWLINE
+\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}}\mozartFACEKEYWORD{try}\mozartFACETEXT{\mozartNEWLINE
+\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartLBRACE{}HttpObj1\mozartSPACE{}getService(Url1\mozartSPACE{}Out1\mozartSPACE{}Http1)\mozartRBRACE{}\mozartNEWLINE
+\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}}\mozartFACEKEYWORD{catch}\mozartFACETEXT{\mozartSPACE{}E\mozartSPACE{}}\mozartFACEKEYWORD{then}\mozartFACETEXT{\mozartNEWLINE
+\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartLBRACE{}System}\mozartFACEKEYWORD{.}\mozartFACETEXT{show\mozartSPACE{}E\mozartRBRACE{}\mozartNEWLINE
+\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}}\mozartFACEKEYWORD{finally}\mozartFACETEXT{\mozartNEWLINE
+\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}ServiceEnd=}\mozartFACEKEYWORD{unit}\mozartFACETEXT{\mozartNEWLINE
+\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}}\mozartFACEKEYWORD{end}\mozartFACETEXT{\mozartNEWLINE
+\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}}\mozartFACEKEYWORD{end}\mozartFACETEXT{\mozartNEWLINE
+\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}}\mozartFACEKEYWORD{thread}\mozartFACETEXT{\mozartNEWLINE
+\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}}\mozartFACEKEYWORD{try}\mozartFACETEXT{\mozartNEWLINE
+\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartLBRACE{}HttpObj2\mozartSPACE{}getService(Url2\mozartSPACE{}Out2\mozartSPACE{}Http2)\mozartRBRACE{}\mozartNEWLINE
+\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}}\mozartFACEKEYWORD{catch}\mozartFACETEXT{\mozartSPACE{}E\mozartSPACE{}}\mozartFACEKEYWORD{then}\mozartFACETEXT{\mozartNEWLINE
+\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartLBRACE{}System}\mozartFACEKEYWORD{.}\mozartFACETEXT{show\mozartSPACE{}E\mozartRBRACE{}\mozartNEWLINE
+\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}}\mozartFACEKEYWORD{finally}\mozartFACETEXT{\mozartNEWLINE
+\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}ServiceEnd=}\mozartFACEKEYWORD{unit}\mozartFACETEXT{\mozartNEWLINE
+\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}}\mozartFACEKEYWORD{end}\mozartFACETEXT{\mozartNEWLINE
+\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}}\mozartFACEKEYWORD{end}\mozartFACETEXT{\mozartNEWLINE
+\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartLBRACE{}Wait\mozartSPACE{}ServiceEnd\mozartRBRACE{}\mozartNEWLINE
+\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}}\mozartFACEKEYWORD{end}\mozartFACETEXT{\mozartNEWLINE
+}\mozartFACEKEYWORD{in}\mozartFACETEXT{\mozartNEWLINE
+\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}}\mozartFACEKEYWORD{thread}\mozartFACETEXT{\mozartSPACE{}\mozartLBRACE{}UseIt\mozartRBRACE{}\mozartSPACE{}ApplicEnd=}\mozartFACEKEYWORD{unit}\mozartFACETEXT{\mozartSPACE{}}\mozartFACEKEYWORD{end}\mozartFACETEXT{\mozartNEWLINE
+\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartLBRACE{}Wait\mozartSPACE{}ApplicEnd\mozartRBRACE{}\mozartNEWLINE
+\mozartSPACE{}\mozartSPACE{}\mozartSPACE{}\mozartLBRACE{}Application}\mozartFACEKEYWORD{.}\mozartFACETEXT{exit\mozartSPACE{}0\mozartRBRACE{}\mozartNEWLINE
+}\mozartFACEKEYWORD{end}\mozartFACETEXT{\mozartNEWLINE
+}\end{mozartCODEDISPLAY}
+
+
+\mozartCHAPTER{Demo Applications}\label{CHAPTER.APPLICATIONS}
+
+
+
+In Chapter~\mozartREF{CHAPTER.EXAMPLES} we described some useful examples of how to use \mozartCODEINLINE{\mozartFACETEXT{HttpClient}} package. In this chapter we'll present some concrete applications which use this package. \mozartEMPTY
+
+
+\mozartSECTION{Web Browser}
+
+
+
+In this section we present a simple application whose main goal is to provide a graphical user interface of \mozartCODEINLINE{\mozartFACETEXT{HttpClient}} package. The flexibility of the package's interface is reflected within the main frame's menu. For example, the package's classes are accessible within \mozartCODEINLINE{\mozartFACETEXT{Services}} menu, and their optional parameters can me set by using \mozartCODEINLINE{\mozartFACETEXT{Options}} menu.  \mozartEMPTY
+
+
+As one can see in Figure~\mozartREF{FIGURE.BWOZGUI}, the fetched document is not interpreted but displayed as it is. Thus, in the case of compressed files (i.e *.gz, *.zip), only displayable characters will be displayed by the Tcl/Tk \mozartCODEINLINE{\mozartFACETEXT{text}} widget.   \mozartEMPTY
+ \mozartEMPTY
+\begin{mozartFIGURENODISPLAY}\caption{\label{FIGURE.BWOZGUI}The GUI of the Web browser}\begin{mozartPICEXTDISPLAY}\mozartPICEXTFULL{bwoz1.gif}\end{mozartPICEXTDISPLAY}\end{mozartFIGURENODISPLAY}
+
+For development of this application, \mozartEM{Mozart Compiler 1.1.0 (20000111) playing Oz 3} was used. However, it works fine with \mozartEM{1.1.0 (19991213)} version, too. \mozartEMPTY
+
+
+The web browser (source in \mozartCODEINLINE{\mozartFACETEXT{bwoz}\mozartFACEKEYWORD{.}\mozartFACETEXT{oz}}\footnote{\mozartDEFAULTREFEXT{bwoz.oz}}) can be compiled as follows: \mozartEMPTY
+\begin{mozartCODEDISPLAY}\mozartFACETEXT{ozc\mozartSPACE{}}\mozartFACEKEYWORD{-}\mozartFACETEXT{x\mozartSPACE{}bwoz}\mozartFACEKEYWORD{.}\mozartFACETEXT{oz}\end{mozartCODEDISPLAY}
+
+
+and simply invoked as follows: \mozartEMPTY
+\begin{mozartCODEDISPLAY}\mozartFACETEXT{bwoz}\end{mozartCODEDISPLAY}
+
+
+\mozartSECTION{Web based Service Combinators}
+
+
+
+This application was inspired from the paper "Service Combinators for Web Computing" written by Luca Cardelli and Rowan Davies. It has as a starting point the questions related with the possibility of developing a script algorithm which should implement the actions a user, sitting in front of (say) a browser, could perform. These actions can be modeled with the use of special desined web based service combinators and basic services for invoking an HTTP server.
+
+The application is being developed by Hadim Mustapha\footnote{\mozartDEFAULTREFEXT{mailto:muh@info.ucl.ac.be}} and consists of two main packages. The first one, deals with the user (programmer) interactions, the service combinators formating and certain decisions regarding the status of these services. The latter one is \mozartCODEINLINE{\mozartFACETEXT{HttpClient}} package.  \mozartEMPTY
+
+
+It will be available in the near future ... \mozartEMPTY
+ \mozartEMPTY
+  \end{document}

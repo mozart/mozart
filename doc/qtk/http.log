@@ -1,0 +1,398 @@
+This is TeX, Version 3.14159 (C version 6.1) (format=latex 98.9.25)  24 JAN 2000 13:54
+**http.tex
+(http.tex
+LaTeX2e <1996/12/01> patch level 1
+Babel <v3.6h> and hyphenation patterns for usenglish, french, dumylang, loaded.
+
+(/pirates/tools/Oz/mozart-source/mozart/doc/xsl/ozdoc.cls
+Document Class: ozdoc 1999/08/04 Mozart Documentation Class (Denys Duchier)
+(/usr/local/TeX/texmf/tex/latex/psnfss/times.sty
+Package: times 1995/08/16 5.2 Times PSNFSS2e package
+)
+(/usr/local/TeX/texmf/tex/latex/psnfss/mathptm.sty
+Package: mathptm 1995/08/16{} Times + math package from fontinst
+LaTeX Font Info:    Redeclaring symbol font `operators' on input line 25.
+LaTeX Font Info:    Overwriting symbol font `operators' in version `normal'
+(Font)                  OT1/cmr/m/n --> OT1/ptmcm/m/n on input line 25.
+LaTeX Font Info:    Overwriting symbol font `operators' in version `bold'
+(Font)                  OT1/cmr/bx/n --> OT1/ptmcm/m/n on input line 25.
+LaTeX Font Info:    Redeclaring symbol font `letters' on input line 26.
+LaTeX Font Info:    Overwriting symbol font `letters' in version `normal'
+(Font)                  OML/cmm/m/it --> OML/ptmcm/m/it on input line 26.
+LaTeX Font Info:    Overwriting symbol font `letters' in version `bold'
+(Font)                  OML/cmm/b/it --> OML/ptmcm/m/it on input line 26.
+LaTeX Font Info:    Redeclaring symbol font `symbols' on input line 27.
+LaTeX Font Info:    Overwriting symbol font `symbols' in version `normal'
+(Font)                  OMS/cmsy/m/n --> OMS/pzccm/m/n on input line 27.
+LaTeX Font Info:    Overwriting symbol font `symbols' in version `bold'
+(Font)                  OMS/cmsy/b/n --> OMS/pzccm/m/n on input line 27.
+LaTeX Font Info:    Redeclaring symbol font `largesymbols' on input line 28.
+LaTeX Font Info:    Overwriting symbol font `largesymbols' in version `normal'
+(Font)                  OMX/cmex/m/n --> OMX/psycm/m/n on input line 28.
+LaTeX Font Info:    Overwriting symbol font `largesymbols' in version `bold'
+(Font)                  OMX/cmex/m/n --> OMX/psycm/m/n on input line 28.
+\symbold=\mathgroup4
+\symitalic=\mathgroup5
+LaTeX Font Info:    Redeclaring math alphabet \mathbf on input line 31.
+LaTeX Font Info:    Overwriting math alphabet `\mathbf' in version `normal'
+(Font)                  OT1/cmr/bx/n --> OT1/ptm/bx/n on input line 31.
+LaTeX Font Info:    Overwriting math alphabet `\mathbf' in version `bold'
+(Font)                  OT1/cmr/bx/n --> OT1/ptm/bx/n on input line 31.
+LaTeX Font Info:    Redeclaring math alphabet \mathit on input line 32.
+LaTeX Font Info:    Overwriting math alphabet `\mathit' in version `normal'
+(Font)                  OT1/cmr/m/it --> OT1/ptm/m/it on input line 32.
+LaTeX Font Info:    Overwriting math alphabet `\mathit' in version `bold'
+(Font)                  OT1/cmr/bx/it --> OT1/ptm/m/it on input line 32.
+)
+(/usr/local/TeX/texmf/tex/latex/base/book.cls
+Document Class: book 1996/10/31 v1.3u Standard LaTeX document class
+(/usr/local/TeX/texmf/tex/latex/base/bk11.clo
+File: bk11.clo 1996/10/31 v1.3u Standard LaTeX file (size option)
+)
+\c@part=\count79
+\c@chapter=\count80
+\c@section=\count81
+\c@subsection=\count82
+\c@subsubsection=\count83
+\c@paragraph=\count84
+\c@subparagraph=\count85
+\c@figure=\count86
+\c@table=\count87
+\abovecaptionskip=\skip41
+\belowcaptionskip=\skip42
+\bibindent=\dimen102
+)
+(/usr/local/TeX/texmf/tex/latex/tools/verbatim.sty
+Package: verbatim 1996/09/25 v1.5j LaTeX2e package for verbatim enhancements
+\every@verbatim=\toks14
+\verbatim@line=\toks15
+\verbatim@in@stream=\read1
+)
+(/usr/local/TeX/texmf/tex/latex/misc/float.sty
+Package: float 1995/03/29 v1.2c Float enhancements (AL)
+\c@float@type=\count88
+\float@box=\box26
+\@floatcapt=\box27
+)
+(/usr/local/TeX/texmf/tex/latex/graphics/graphicx.sty
+Package: graphicx 1996/10/31 v1.0c Enhanced LaTeX Graphics (DPC,SPQR)
+
+(/usr/local/TeX/texmf/tex/latex/graphics/keyval.sty
+Package: keyval 1995/09/21 v1.09 key=value parser (DPC)
+)
+(/usr/local/TeX/texmf/tex/latex/graphics/graphics.sty
+Package: graphics 1996/10/31 v1.0c Standard LaTeX Graphics (DPC,SPQR)
+
+(/usr/local/TeX/texmf/tex/latex/graphics/trig.sty
+Package: trig 1994/10/16 v1.08 sin cos tan (DPC)
+)
+(/usr/local/TeX/texmf/tex/latex/config/graphics.cfg)
+Package graphics Info: Driver file: dvips.def on input line 82.
+
+(/usr/local/TeX/texmf/tex/latex/graphics/dvips.def
+File: dvips.def 1996/12/12 v3.0d Driver-dependant file (DPC,SPQR)
+))
+\Gin@req@height=\dimen103
+\Gin@req@width=\dimen104
+)
+(/usr/local/TeX/texmf/tex/latex/graphics/epsfig.sty
+Package: epsfig 1996/10/04 v1.7 (e)psfig emulation (SPQR)
+\epsfxsize=\dimen105
+\epsfysize=\dimen106
+)
+(/usr/local/TeX/texmf/tex/latex/base/alltt.sty
+Package: alltt 1995/07/24 v2.0f defines alltt environment
+)
+(/usr/local/TeX/texmf/tex/latex/misc/isolatin1.sty
+ISO-latin-1 input coding, version 0.9 of 1-Jun-1992.)
+(/usr/local/TeX/texmf/tex/latex/graphics/color.sty
+Package: color 1997/01/07 v1.0d Standard LaTeX Color (DPC)
+
+(/usr/local/TeX/texmf/tex/latex/config/color.cfg)
+Package color Info: Driver file: dvips.def on input line 128.
+
+(/usr/local/TeX/texmf/tex/latex/graphics/dvipsnam.def
+File: dvipsnam.def 1996/12/12 v3.0d Driver-dependant file (DPC,SPQR)
+))
+(/usr/local/TeX/texmf/tex/latex/tools/theorem.sty
+Package: theorem 1995/11/23 v2.2c Theorem extension package (FMi)
+\theorem@style=\toks16
+\theorem@bodyfont=\toks17
+\theorempreskipamount=\skip43
+\theorempostskipamount=\skip44
+
+(/usr/local/TeX/texmf/tex/latex/tools/thp.sty
+File: thp.sty 1995/11/23 v2.2c Theorem extension package (FMi)
+))
+(/usr/local/TeX/texmf/tex/generic/pstricks/pstricks.sty
+(/usr/local/TeX/texmf/tex/generic/pstricks/pstricks.tex
+`PSTricks' v0.93a  <93/03/12> (tvz)
+\pst@dima=\dimen107
+\pst@dimb=\dimen108
+\pst@dimc=\dimen109
+\pst@dimd=\dimen110
+\pst@dimg=\dimen111
+\pst@dimh=\dimen112
+\pst@hbox=\box28
+\pst@boxg=\box29
+\pst@cnta=\count89
+\pst@cntb=\count90
+\pst@cntc=\count91
+\pst@cntd=\count92
+\pst@cntg=\count93
+\pst@cnth=\count94
+(/usr/local/TeX/texmf/tex/generic/pstricks/pstricks.con)
+\psunit=\dimen113
+\psxunit=\dimen114
+\psyunit=\dimen115
+\pslinewidth=\dimen116
+\pst@customdefs=\toks18
+\pslinearc=\dimen117
+\everypsbox=\toks19
+\psframesep=\dimen118
+\pslabelsep=\dimen119
+\theoverlaybox=\box30
+))
+(/usr/local/TeX/texmf/tex/latex/tools/xspace.sty
+Package: xspace 1996/12/06 v1.05 Space after command names (DPC)
+)
+(/usr/local/TeX/texmf/tex/latex/tools/array.sty
+Package: array 1996/06/14 v2.3i Tabular extension package (FMi)
+\col@sep=\dimen120
+\extrarowheight=\dimen121
+\NC@list=\toks20
+\extratabsurround=\skip45
+\backup@length=\skip46
+) (colortbl.sty
+Package: colortbl 1996/10/12 v0.1g Color table columns (DPC)
+\everycr=\toks21
+\minrowclearance=\skip47
+) (ozdoc-info.sty)
+\mozart@fullwidth=\skip48
+\mozart@leftmarginwidth=\skip49
+\mozart@headrulewidth=\skip50
+\mozart@cnt=\count95
+\mozart@quote@indent=\skip51
+\mozart@len=\skip52
+\c@mozartFIGURE=\count96
+\mozart@displaymargin=\skip53
+\c@mozart@chunk=\count97
+\c@mozart@chunk@subpage=\count98
+\c@@EXERCISE=\count99
+) (http.aux)
+LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 4.
+LaTeX Font Info:    ... okay on input line 4.
+LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 4.
+LaTeX Font Info:    ... okay on input line 4.
+LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 4.
+LaTeX Font Info:    ... okay on input line 4.
+LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 4.
+LaTeX Font Info:    ... okay on input line 4.
+LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 4.
+LaTeX Font Info:    ... okay on input line 4.
+LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 4.
+LaTeX Font Info:    ... okay on input line 4.
+LaTeX Font Info:    Try loading font information for T1+ptm on input line 4.
+ (/usr/local/TeX/texmf/tex/latex/psnfss/t1ptm.fd
+File: T1ptm.fd 1996/01/28 Fontinst v1.504 font definitions for T1/ptm.
+)
+Overfull \hbox (119.71324pt too wide) in paragraph at lines 4--4
+[][]
+ []
+
+LaTeX Font Info:    Try loading font information for T1+phv on input line 4.
+(/usr/local/TeX/texmf/tex/latex/psnfss/t1phv.fd
+File: T1phv.fd 1996/01/28 Fontinst v1.504 font definitions for T1/phv.
+)
+LaTeX Font Info:    Font shape `T1/phv/bx/n' in size <10.95> not available
+(Font)              Font shape `T1/phv/b/n' tried instead on input line 4.
+LaTeX Font Info:    Font shape `T1/phv/bx/n' in size <20.74> not available
+(Font)              Font shape `T1/phv/b/n' tried instead on input line 4.
+LaTeX Font Info:    Font shape `T1/phv/bx/n' in size <14.4> not available
+(Font)              Font shape `T1/phv/b/n' tried instead on input line 4.
+LaTeX Font Info:    Font shape `T1/phv/bx/n' in size <12> not available
+(Font)              Font shape `T1/phv/b/n' tried instead on input line 4.
+LaTeX Font Info:    Try loading font information for OT1+ptmcm on input line 4.
+
+
+(/usr/local/TeX/texmf/tex/latex/psnfss/ot1ptmcm.fd
+File: OT1ptmcm.fd 1995/12/21 Fontinst v1.500 font definitions for OT1/ptmcm.
+)
+LaTeX Font Info:    Try loading font information for OML+ptmcm on input line 4.
+
+
+(/usr/local/TeX/texmf/tex/latex/psnfss/omlptmcm.fd
+File: OMLptmcm.fd 1995/12/21 Fontinst v1.500 font definitions for OML/ptmcm.
+)
+LaTeX Font Info:    Try loading font information for OMS+pzccm on input line 4.
+
+
+(/usr/local/TeX/texmf/tex/latex/psnfss/omspzccm.fd
+File: OMSpzccm.fd 1995/12/21 Fontinst v1.500 font definitions for OMS/pzccm.
+)
+LaTeX Font Info:    Try loading font information for OMX+psycm on input line 4.
+
+
+(/usr/local/TeX/texmf/tex/latex/psnfss/omxpsycm.fd
+File: OMXpsycm.fd 1995/12/21 Fontinst v1.500 font definitions for OMX/psycm.
+)
+LaTeX Font Info:    Try loading font information for OT1+ptm on input line 4.
+
+(/usr/local/TeX/texmf/tex/latex/psnfss/ot1ptm.fd
+File: OT1ptm.fd 1996/01/28 Fontinst v1.504 font definitions for OT1/ptm.
+)
+LaTeX Font Info:    Font shape `OT1/ptm/bx/n' in size <12> not available
+(Font)              Font shape `OT1/ptm/b/n' tried instead on input line 4.
+LaTeX Font Info:    Font shape `OT1/ptm/bx/n' in size <9> not available
+(Font)              Font shape `OT1/ptm/b/n' tried instead on input line 4.
+LaTeX Font Info:    Font shape `OT1/ptm/bx/n' in size <7> not available
+(Font)              Font shape `OT1/ptm/b/n' tried instead on input line 4.
+File: `gunzip -c mozart-color.eps.gz Graphic file (type eps)
+
+<`gunzip -c mozart-color.eps.gz> [1
+
+
+] [2
+
+]
+LaTeX Font Info:    Font shape `T1/phv/bx/n' in size <24.88> not available
+(Font)              Font shape `T1/phv/b/n' tried instead on input line 4.
+ (http.toc
+LaTeX Font Info:    Font shape `T1/ptm/bx/n' in size <10.95> not available
+(Font)              Font shape `T1/ptm/b/n' tried instead on input line 1.
+LaTeX Font Info:    Font shape `T1/code/bx/n' in size <10.95> not available
+(Font)              Font shape `T1/code/b/n' tried instead on input line 2.
+LaTeX Font Info:    Font shape `T1/code/b/n' will be
+(Font)              scaled to size 9.30756pt on input line 2.
+LaTeX Font Info:    Font shape `OT1/ptm/bx/n' in size <10.95> not available
+(Font)              Font shape `OT1/ptm/b/n' tried instead on input line 3.
+LaTeX Font Info:    Font shape `OT1/ptm/bx/n' in size <8> not available
+(Font)              Font shape `OT1/ptm/b/n' tried instead on input line 3.
+LaTeX Font Info:    Font shape `OT1/ptm/bx/n' in size <6> not available
+(Font)              Font shape `OT1/ptm/b/n' tried instead on input line 3.
+LaTeX Font Info:    Font shape `T1/code/m/n' will be
+(Font)              scaled to size 9.30756pt on input line 9.
+)
+\tf@toc=\write3
+ [3
+
+
+]
+Chapter 1.
+LaTeX Font Info:    Font shape `OT1/ptm/bx/n' in size <5> not available
+(Font)              Font shape `OT1/ptm/b/n' tried instead on input line 12.
+LaTeX Font Info:    Try loading font information for T1+pcr on input line 12.
+(/usr/local/TeX/texmf/tex/latex/psnfss/t1pcr.fd
+File: T1pcr.fd 1996/01/28 Fontinst v1.504 font definitions for T1/pcr.
+)
+LaTeX Font Info:    Try loading font information for OMS+ptm on input line 24.
+
+(/usr/local/TeX/texmf/tex/latex/psnfss/omsptm.fd
+File: OMSptm.fd
+)
+LaTeX Font Info:    Font shape `OMS/ptm/m/n' in size <10.95> not available
+(Font)              Font shape `OMS/cmsy/m/n' tried instead on input line 24.
+ [1
+
+
+] [2
+
+]
+Chapter 2.
+LaTeX Font Info:    Font shape `T1/code/bx/n' in size <24.88> not available
+(Font)              Font shape `T1/code/b/n' tried instead on input line 40.
+LaTeX Font Info:    Font shape `T1/code/b/n' will be
+(Font)              scaled to size 21.14815pt on input line 40.
+[3]
+Overfull \hbox (111.27321pt too wide) in paragraph at lines 120--121
+[][]\T1/code/m/n/10.95 Url[] \T1/ptm/m/n/10.95 is a string specif-ing the \T1/p
+tm/m/it/10.95 URL \T1/ptm/m/n/10.95 lo-ca-tion of the doc-u-ment to be re-triev
+ed (e.g. []\T1/code/m/n/10.95 "http://www.info.ucl.ac.be"[]
+ []
+
+[4]
+LaTeX Font Info:    Font shape `T1/code/bx/n' in size <14.4> not available
+(Font)              Font shape `T1/code/b/n' tried instead on input line 176.
+LaTeX Font Info:    Font shape `T1/code/b/n' will be
+(Font)              scaled to size 12.24008pt on input line 176.
+ [5]
+Overfull \hbox (18.58261pt too wide) in paragraph at lines 208--208
+ []\T1/code/m/n/10.95 service($\OT1/ptmcm/m/n/10.95 +$\T1/pcr/m/n/10.95 Meth $\
+OT1/ptmcm/m/n/10.95 +$\T1/pcr/m/n/10.95 Url $\OT1/ptmcm/m/n/10.95 +$\T1/pcr/m/n
+/10.95 InPrms $\OT1/ptmcm/m/n/10.95 +$\T1/pcr/m/n/10.95 Pairs $\OT1/ptmcm/m/n/1
+0.95 ?$\T1/pcr/m/n/10.95 OutPrms $\OT1/ptmcm/m/n/10.95 ?$\T1/pcr/m/n/10.95 Http
+Prms\T1/code/m/n/10.95 )
+ []
+
+[6]
+Overfull \hbox (114.82431pt too wide) in paragraph at lines 249--250
+\T1/pcr/m/n/10.95 CgiPairs \T1/ptm/m/n/10.95 has to be a list of []\T1/code/m/n
+/10.95 "name=value"[] \T1/ptm/m/n/10.95 strings (e.g. []\T1/code/m/n/10.95 [[][
+]"Age=35"[][] [][]"Occupation=research assistant"[][]][]\T1/ptm/m/n/10.95 ).
+ []
+
+[7] [8] [9] [10
+
+]
+Chapter 3.
+
+Overfull \hbox (44.25117pt too wide) in paragraph at lines 377--378
+[]\T1/code/m/n/10.95 CgiISINDEX[]\T1/ptm/m/n/10.95 , []\T1/code/m/n/10.95 UrlGE
+T[] \T1/ptm/m/n/10.95 and []\T1/code/m/n/10.95 UrlHEAD[]\T1/ptm/m/n/10.95 . In
+or-der to use them, we have to []\T1/code/b/n/10.95 import[] []\T1/code/m/n/10.
+95 'HttpClient.ozf'[]
+ []
+
+[11] [12]
+Overfull \hbox (25.54486pt too wide) in paragraph at lines 470--471
+ []   \T1/code/m/n/10.95 {System[]\T1/code/b/n/10.95 .[]\T1/code/m/n/10.95 show
+ http_server[]\T1/code/b/n/10.95 #[]\T1/code/m/n/10.95 {VirtualString[]\T1/code
+/b/n/10.95 .[]\T1/code/m/n/10.95 toAtom HttpPrms[]\T1/code/b/n/10.95 .[]\T1/cod
+e/m/n/10.95 server}}[]
+ []
+
+[13]
+Overfull \hbox (47.883pt too wide) in paragraph at lines 517--519
+ []            \T1/code/m/n/10.95 {System[]\T1/code/b/n/10.95 .[]\T1/code/m/n/1
+0.95 show {HttpObj fetchRate($)}[]\T1/code/b/n/10.95 #[]\T1/code/m/n/10.95 {Htt
+pObj bytesRead($)}}[]
+ []
+
+
+Overfull \hbox (8.79126pt too wide) in paragraph at lines 526--527
+ []      \T1/code/m/n/10.95 HttpObj={New UrlGET init(inPrms(file:[]"temp"[] toS
+trm:[]\T1/code/b/n/10.95 true[]\T1/code/m/n/10.95 ))}[]
+ []
+
+[14] [15] [16]
+Chapter 4.
+
+LaTeX Warning: Reference `FIGURE.BWOZGUI' on page 17 undefined on input line 63
+1.
+
+File: bwoz1.gif.ps Graphic file (type eps)
+<bwoz1.gif.ps>
+Overfull \hbox (105.7321pt too wide) in paragraph at lines 633--633
+ []
+ []
+
+[17
+
+] [18] (http.aux)
+
+LaTeX Warning: There were undefined references.
+
+
+LaTeX Warning: Label(s) may have changed. Rerun to get cross-references right.
+
+ )
+Here is how much of TeX's memory you used:
+ 2592 strings out of 10888
+ 31689 string characters out of 71885
+ 86430 words of memory out of 262141
+ 5349 multiletter control sequences out of 9500
+ 47932 words of font info for 78 fonts, out of 150000 for 255
+ 15 hyphenation exceptions out of 607
+ 38i,9n,23p,986b,716s stack positions out of 300i,40n,60p,3000b,4000s
+
+Output written on http.dvi (21 pages, 66048 bytes).
