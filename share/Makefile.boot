@@ -76,7 +76,8 @@ boot-%:
 	OZDOC_BIB_PATH="$(SRCDIR)" \
 	OZDOC_BST_PATH="$(SRCDIR):$(SRCTOP)/doc/utilities" \
 	OZDOC_ELISP_PATH="$(BUILDDIR):$(BUILDTOP)/doc:$(BUILDTOP)/doc/utilities:$(BUILDTOP)/share/elisp:$(BUILDTOP)/contrib/doc/code" \
-	OZDOC_SBIN_PATH="$(SRCTOP)/doc/utilities"
+	OZDOC_SBIN_PATH="$(SRCTOP)/doc/utilities" \
+	OZDOC_CATALOG="$(BUILDTOP)/doc/bootcatalog"
 
 # stage1-all: create the components using the BUILDTOP/share/lib/stage1
 STAGE1_LIB=$(BUILDLIB)/stage1
