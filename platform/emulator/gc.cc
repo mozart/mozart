@@ -1134,7 +1134,7 @@ TaggedRef gcVariable(TaggedRef var)
   }
 
   Board *bb = gv->home->gcBoard();
-  if (!bb) return nil(); }
+  if (!bb) return nil();
 
   int gv_size = gv->getSize();
 
