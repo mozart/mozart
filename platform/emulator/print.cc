@@ -160,16 +160,30 @@ PRINT(GenCVariable){
 
   switch(type){
   case FDVariable:
-    if (isEffectiveList(((GenFDVariable*)this)->fdSuspList[det]) == OK)
-      stream << " d" << ((GenFDVariable*)this)->fdSuspList[det]->length();
-    if (isEffectiveList(((GenFDVariable*)this)->fdSuspList[bounds]) == OK)
-      stream << " b" << ((GenFDVariable*)this)->fdSuspList[bounds]->length();
-    if (isEffectiveList(((GenFDVariable*)this)->fdSuspList[size]) == OK)
-      stream << " s" << ((GenFDVariable*)this)->fdSuspList[size]->length();
-    if (isEffectiveList(((GenFDVariable*)this)->fdSuspList[eqvar]) == OK)
-      stream << " e" << ((GenFDVariable*)this)->fdSuspList[eqvar]->length();
+    GenFDVariable * me = (GenFDVariable *) this;
+    if (isEffectiveList(me->fdSuspList[det]) == OK)
+      stream << " d("
+             << me->fdSuspList[det]->length()
+             << '/'
+             << me->fdSuspList[det]->lengthProp()
+             << ')';
+    if (isEffectiveList(me->fdSuspList[bounds]) == OK)
+      stream << " b(" << me->fdSuspList[bounds]->length()
+             << '/'
+             << me->fdSuspList[bounds]->lengthProp()
+             << ')';
+    if (isEffectiveList(me->fdSuspList[size]) == OK)
+      stream << " s(" << me->fdSuspList[size]->length()
+             << '/'
+             << me->fdSuspList[size]->lengthProp()
+             << ')';
+    if (isEffectiveList(me->fdSuspList[eqvar]) == OK)
+      stream << " e(" << me->fdSuspList[eqvar]->length()
+             << '/'
+             << me->fdSuspList[eqvar]->lengthProp()
+             << ')';
     stream << ' ';
-    ((GenFDVariable*)this)->getDom().print(stream, 0);
+    me->getDom().print(stream, 0);
     break;
   default:
     error("Unexpected type generic variable at %s:%d.",
@@ -435,11 +449,20 @@ PRINT(SuspList){
     else
       stream << indent(offset) << "true";
 
-    stream << " -> ";
+    stream << " [";
+    if (sl->getSusp()->isDead()) stream << 'D';
+    if (sl->getSusp()->isPropagated()) stream << 'P';
+    if (sl->getSusp()->isResistant()) stream << 'R';
+    if (sl->getSusp()->isExtSusp()) stream << 'E';
+    if (sl->getSusp()->isSurvSusp()) stream << 'S';
+    if (sl->getSusp()->isEqvSusp()) stream << 'V';
+
+    stream << "] -> ";
     if (sl->getSusp()->getCont())
       stream << "cont ";
     else if (sl->getSusp()->getCCont())
-      stream << "ccont ";
+      stream  << "ccont = (*" << (void*) sl->getSusp()->getCCont()->getCFunc()
+              << ")(), ";
     else
       stream << "board ";
     sl->getSusp()->getNode()->print(stream, 0);
