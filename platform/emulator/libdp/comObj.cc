@@ -1006,8 +1006,8 @@ int ComObj::getNOSM() {
 }
 
 int ComObj::getNORM() {
-  int tmp=nosm;
-  nosm=0;
+  int tmp=norm;
+  norm=0;
   return tmp;
 }
 
@@ -1016,12 +1016,21 @@ int ComObj::getLastRTT() {
 }
 
 OZ_Term ComObj::getStateStatistics() {
-  if(state==WORKING)
-    return oz_atom("connected");
-  else
-    return oz_atom("passive");
+  switch(state){
+  case CLOSED: return oz_atom("closed");
+  case CLOSED_WF_HANDOVER: return oz_atom("handover");
+  case CLOSED_WF_REMOTE: return oz_atom("remote");
+  case CLOSED_PROBLEM:return oz_atom("problem");
+  case ANONYMOUS_WF_NEGOTIATE:return oz_atom("anonymous");
+  case OPENING_WF_PRESENT: return oz_atom("presentation");
+  case OPENING_WF_NEGOTIATE_ANS:return oz_atom("negotiate");
+  case WORKING:   return oz_atom("connected");
+  case CLOSING_HARD: return oz_atom("hard close");
+  case CLOSING_WEAK: return oz_atom("weak close");
+  case CLOSING_WF_DISCONNECT:return oz_atom("disconnect");
+  }
+  return oz_atom("passiv");
 }
-
 int ComObj::getQueueStatus() {
   return queues.getQueueStatus();
 }
