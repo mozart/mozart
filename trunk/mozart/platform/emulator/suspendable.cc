@@ -167,11 +167,6 @@ Bool Suspendable::_wakeupLocal(Board * sb, PropCaller calledBy) {
   if (isDead())
     return OK;
 
-#ifdef DEBUG_CHECK
-  // Tobias: this is bullshit!
-  // Assert(am.isMerging() || !am.isInstallingScript());
-#endif
-
   if (calledBy)
     setUnify();
 
