@@ -29,6 +29,8 @@
 #include "genhashtbl.hh"
 #include "prioQueues.hh"
 
+#define NO_MSG_NUM -1
+
 class TransObj;
 class MsgContainer;
 class DSite;
@@ -67,6 +69,9 @@ private:
   int lastSent;
   int lastReceived;
   //  Bool ackQueued;
+
+  int sentLrgMsg;
+  int receivedLrgMsg;
 
   // One timer to be used for opening/closing/acking (one at a time)
   TimerElement *timer;
