@@ -273,7 +273,7 @@ changequote(<,>)
       IFS='
 '
       for oz_tmp_version3 in ${oz_tmp_version1}; do
-        oz_tmp_version=`expr "${oz_tmp_version3}" : '.* \([0-9._-]*\)$'`
+        oz_tmp_version=`expr "${oz_tmp_version3}" : '.* \([0-9._-]*\)[a-z]*$'`
 	# else try to match the entire first line
 	if test -z "$oz_tmp_version"; then
 	  oz_tmp_version=`expr "${oz_tmp_version3}" : '\([0-9._-]*\)$'`
