@@ -1,8 +1,9 @@
 functor
 import
-   Main  at 'x-oz://system/Main.ozf'
+   Main(server:Mserver open:Mopen openNetInfo:MnetInfo)  at 'x-oz://system/DistributionPanelSrc.ozf'
    DPPane(siteStatistics) at 'x-oz://boot/DPPane'
    Connection
+   System
 export
    Open
    OpenNetInfo
@@ -60,13 +61,14 @@ define
    
    proc{Client Tick}
       N O DPC in
+      {System.show client}
       DPC = {New DPclient init(Tick)}
    end
    
    
-   Open=Main.open
-   OpenNetInfo=Main.openNetInfo
-   Server=Main.server
+   Open=Mopen
+   OpenNetInfo=MnetInfo
+   Server=Mserver
 end
 
 
