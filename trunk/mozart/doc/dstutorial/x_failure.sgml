@@ -1,7 +1,7 @@
 <CHAPTER ID="chapter.failure">
   <TITLE>Handling failure</TITLE>
 
-This chapter first introduces the Mozart failure model:
+<P> This chapter first introduces the Mozart failure model:
 what we assume can go wrong with the system
 and how this is reflected in the language entities.
 We then show how to program with this model.
@@ -18,7 +18,7 @@ the fault-tolerant abstractions.
 
 <SECTION><TITLE>Failure model</TITLE>
 
-The failure model is designed to cover the
+<P> The failure model is designed to cover the
 vast majority of failures occurring in distributed systems,
 namely instantaneous and permanent site failures (fail-stop)
 and both temporary and permanent communication failures.
@@ -28,16 +28,28 @@ and to program with language entities in case of failures.
 
 <SUBSECTION><TITLE>Stateless data</TITLE>
 
-In the current release, no special failure handling
-is needed for eager stateless data, since they
-are copied immediately in messages.
-That is, there are no remote references to eager
-stateless data.
-They are always local to a site.
+<P> Eager stateless data are
+copied immediately in messages.
+There are therefore no remote references to eager
+stateless data, which are
+always local to a site.
+Therefore no special failure handling is needed for them.
+
+<P> In future releases, procedures, functions, classes, and functors
+will not send their code immediately in the message,
+but will send only their global name.
+Upon arrival, if the code is not present,
+then it will be immediately requested.
+This will guarantee that code is sent at most
+once to a given site.
+This will introduce additional failure modes
+if the site containing the code fails or
+becomes unreachable.
+
 
 <SUBSECTION><TITLE>Sited entities</TITLE>
 
-Sited entities can be referenced remotely
+<P> Sited entities can be referenced remotely
 but can only be used on their home site.
 Attempting to use one outside of its home
 site immediately raises an exception,
@@ -50,6 +62,7 @@ Therefore no special failure handling is needed for them.
 
 <SUBSECTION><TITLE>Objects and cells</TITLE>
 
+<SECTION><TITLE>Basic fault-tolerant operations</TITLE>
 
 
 </CHAPTER>
