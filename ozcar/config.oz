@@ -189,17 +189,9 @@ AddSubThreadsBitmap    = {VirtualString.toAtom children # '.xbm'}
 %%
 
 TextCursor             = left_ptr
-
-%% the timeout variables have critical values --
-%% you should know what you are doing when changing them...
-TimeoutToSwitch        = 0 % ms
-TimeoutToUpdateEnv     = 0
-TimeoutToMark          = 100
-TimeoutToStatus        = TimeoutToMark
-TimeoutToCalcTree      = 250
-TimeoutToLookNice      = 200
-
 HelpEvent              = '<3>'
+
+TimeoutToUpdate        = 10         %% the TkSmoother will use this value
 
 BigFloat               = {Int.toFloat 10 * 1000}
 BigInt                 = 1000 * 1000 * 1000
@@ -361,8 +353,8 @@ Config =
        useEmacsBar :           ConfigUseEmacsBar
        printWidth:             PrintWidth
        printDepth:             PrintDepth
-       timeoutToSwitch:        TimeoutToSwitch
-       timeoutToUpdateEnv:     TimeoutToUpdateEnv
+       timeoutToSwitch:        0
+       timeoutToUpdateEnv:     0
 
     meth init
        D = {Dictionary.new}
