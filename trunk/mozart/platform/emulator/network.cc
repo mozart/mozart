@@ -1449,7 +1449,7 @@ public:
 	  ((ReadConnection*)c)->closeConnection();}
       else{
 	PD((TCPCACHE,"Not Closing connection %x",c));
-c = c->next;}
+	c = c->next;}
       c = cc;}
     openCon = FALSE;}
   
@@ -1625,6 +1625,7 @@ Bool WriteConnection::shouldSendFromUser(){
     if(isOpening()) {PD((REMOTE,"isOpening")); return FALSE;}
     if(isIncomplete()) {PD((REMOTE,"isIncompleteWrite")); return FALSE;}
     if(isInWriteQueue()) {PD((REMOTE,"isInWriteQueue")); return FALSE;}
+    if(isMyInitiative()) {PD((REMOTE,"isMyInitiative")); return FALSE;}
     Assert(fd!=LOST);
     return TRUE;}
 
