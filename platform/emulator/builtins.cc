@@ -583,55 +583,55 @@ OZ_BI_define(BIhasFeature,2,1)
  */
 
 OZ_BI_define(BImatchDefault,3,1) {
-  OZ_Term aux=0;
-  oz_declareIN(0,rec);
-  oz_declareIN(1,fea);
-  OZ_Return ret = genericDot(rec,fea,aux,FALSE);
-  if (ret==SUSPEND) {
-    oz_suspendOn2(rec,fea);
-  } else if (ret==PROCEED) {
-    OZ_RETURN(aux);
-  } else {
-    oz_declareIN(2,out);
-    OZ_RETURN(out);
+  OZ_Return ret = genericDot(OZ_in(0),OZ_in(1),OZ_out(0),FALSE);
+  switch (ret) {
+  case PROCEED:
+    return PROCEED;
+  case FAILED:
+    OZ_out(0)=OZ_in(2);
+    return PROCEED;
+  case SUSPEND:
+    oz_suspendOn2(OZ_in(0),OZ_in(1));
+  default:
+    return ret;
   }
 } OZ_BI_end
 
-OZ_Return widthInline(TaggedRef term, TaggedRef &out) {
-  DEREF(term,_);
 
-  switch (tagged2ltag(term)) {
+OZ_BI_define(BIwidth,1,1) {
+  TaggedRef t = OZ_in(0);
+ redo:
+  switch (tagged2ltag(t)) {
+  case LTAG_REF00:
+  case LTAG_REF01:
+  case LTAG_REF10:
+  case LTAG_REF11:
+    t = * tagged2Ref(t);
+    goto redo;
   case LTAG_LTUPLE0:
   case LTAG_LTUPLE1:
-    out = makeTaggedSmallInt(2);
-    return PROCEED;
+    OZ_RETURN(makeTaggedSmallInt(2));
   case LTAG_SRECORD0:
   case LTAG_SRECORD1:
-    out = makeTaggedSmallInt(tagged2SRecord(term)->getWidth());
-    return PROCEED;
+    OZ_RETURN(makeTaggedSmallInt(tagged2SRecord(t)->getWidth()));
   case LTAG_LITERAL:
-    out = makeTaggedSmallInt(0);
-    return PROCEED;
+    OZ_RETURN(makeTaggedSmallInt(0));
   case LTAG_VAR0:
   case LTAG_VAR1:
-    switch (tagged2Var(term)->getType()) {
-    case OZ_VAR_OF:
-        return SUSPEND;
+    switch (tagged2Var(t)->getType()) {
     case OZ_VAR_FD:
+    case OZ_VAR_FS:
     case OZ_VAR_BOOL:
-        break;
+      break;
     default:
-        return SUSPEND;
+      oz_suspendOn(OZ_in(0));
     }
-    break;
   default:
     break;
   }
-
   oz_typeError(0,"Record");
-}
+} OZ_BI_end
 
-OZ_DECLAREBI_USEINLINEFUN1(BIwidth,widthInline)
 
 OZ_Return genericSet(TaggedRef term, TaggedRef fea, TaggedRef val) {
   DEREF(fea,  _1);
@@ -745,7 +745,6 @@ OZ_BI_define(BIisBool, 1, 1)
 OZ_BI_define(BInot, 1, 1)
 {
   oz_declareBoolIN(0,b);
-
   OZ_RETURN(oz_bool(!b));
 } OZ_BI_end
 
@@ -1812,23 +1811,27 @@ OZ_BI_define(BIrecordToDictionary,1,1) {
 
 } OZ_BI_end
 
-
-OZ_Return BIarityInline(TaggedRef term, TaggedRef &out)
-{
+inline
+OZ_Return BIarityInlineInline(TaggedRef term, TaggedRef &out) {
   DEREF(term,termPtr);
 
   if (oz_isVar(term)) {
     if (oz_isKinded(term) && !isGenOFSVar(term)) {
-      oz_typeError(0,"Record");
+      goto type_error;
     }
     return SUSPEND;
   }
   out = getArityList(term);
   if (out) return PROCEED;
+ type_error:
   oz_typeError(0,"Record");
 }
 
-OZ_DECLAREBI_USEINLINEFUN1(BIarity,BIarityInline)
+OZ_Return BIarityInline(TaggedRef term, TaggedRef &out) {
+  return BIarityInlineInline(term,out);
+}
+
+OZ_DECLAREBI_USEINLINEFUN1(BIarity,BIarityInlineInline)
 
 
 // Builtins for Record Pattern-Matching
@@ -2040,6 +2043,7 @@ static OZ_Return suspendOnInts(TaggedRef A, TaggedRef B)
    ----------------------------------- */
 
 // Float x Float -> Float
+inline
 OZ_Return BIfdivInline(TaggedRef A, TaggedRef B, TaggedRef &out)
 {
   DEREF(A,_1);
@@ -2076,6 +2080,7 @@ OZ_Return BIfdivInline(TaggedRef A, TaggedRef B, TaggedRef &out)
   }
 
 // Integer x Integer -> Integer
+inline
 OZ_Return BIdivInline(TaggedRef A, TaggedRef B, TaggedRef &out)
 {
   DEREF(A,_1);
@@ -2098,6 +2103,7 @@ OZ_Return BIdivInline(TaggedRef A, TaggedRef B, TaggedRef &out)
 }
 
 // Integer x Integer -> Integer
+inline
 OZ_Return BImodInline(TaggedRef A, TaggedRef B, TaggedRef &out)
 {
   DEREF(A,_1);
@@ -2137,6 +2143,7 @@ int multOverflow(int a, int b)
   return ((b!=0) && (absa >= OzMaxInt / absb));
 }
 
+inline
 OZ_Return BImultInline(TaggedRef A, TaggedRef B, TaggedRef &out)
 {
   DEREF(A,_1);
@@ -2213,6 +2220,7 @@ OZ_Return BIplusInline(TaggedRef A, TaggedRef B, TaggedRef &out)
    ----------------------------------- */
 
 // unary minus: Number -> Number
+inline
 OZ_Return BIuminusInline(TaggedRef A, TaggedRef &out)
 {
   A = oz_deref(A);
@@ -2240,6 +2248,7 @@ OZ_Return BIuminusInline(TaggedRef A, TaggedRef &out)
 
 }
 
+inline
 OZ_Return BIabsInline(TaggedRef A, TaggedRef &out)
 {
   DEREF(A,_1);
@@ -2270,6 +2279,7 @@ OZ_Return BIabsInline(TaggedRef A, TaggedRef &out)
 }
 
 // add1(X) --> X+1
+inline
 OZ_Return BIadd1Inline(TaggedRef A, TaggedRef &out)
 {
   DEREF(A,_1);
@@ -2287,6 +2297,7 @@ OZ_Return BIadd1Inline(TaggedRef A, TaggedRef &out)
 }
 
 // sub1(X) --> X-1
+inline
 OZ_Return BIsub1Inline(TaggedRef A, TaggedRef &out)
 {
   DEREF(A,_1);
@@ -2308,18 +2319,20 @@ OZ_Return BIsub1Inline(TaggedRef A, TaggedRef &out)
    X test Y
    ----------------------------------- */
 
+inline
 OZ_Return bigintLess(BigInt *A, BigInt *B)
 {
   return (A->cmp(B) < 0 ? PROCEED : FAILED);
 }
 
 
+inline
 OZ_Return bigintLe(BigInt *A, BigInt *B)
 {
   return (A->cmp(B) <= 0 ? PROCEED : FAILED);
 }
 
-
+inline
 OZ_Return bigtest(TaggedRef A, TaggedRef B,
                   OZ_Return (*test)(BigInt*, BigInt*))
 {
@@ -2350,7 +2363,7 @@ OZ_Return bigtest(TaggedRef A, TaggedRef B,
 
 
 
-
+inline
 OZ_Return BIminInline(TaggedRef A, TaggedRef B, TaggedRef &out)
 {
   DEREF(A,_1);
@@ -2387,6 +2400,7 @@ OZ_Return BIminInline(TaggedRef A, TaggedRef B, TaggedRef &out)
 
 
 /* code adapted from min */
+inline
 OZ_Return BImaxInline(TaggedRef A, TaggedRef B, TaggedRef &out)
 {
   DEREF(A,_1);
@@ -2421,7 +2435,7 @@ OZ_Return BImaxInline(TaggedRef A, TaggedRef B, TaggedRef &out)
   oz_typeError(-1,"Comparable");
 }
 
-
+inline
 OZ_Return BIlessInline(TaggedRef A, TaggedRef B)
 {
   DEREF(A,_1);
@@ -2445,7 +2459,7 @@ OZ_Return BIlessInline(TaggedRef A, TaggedRef B)
   oz_typeError(-1,"Comparable");
 }
 
-
+inline
 OZ_Return BIlessInlineFun(TaggedRef A, TaggedRef B, TaggedRef &out)
 {
   OZ_Return ret = BIlessInline(A,B);
@@ -2456,17 +2470,19 @@ OZ_Return BIlessInlineFun(TaggedRef A, TaggedRef B, TaggedRef &out)
   }
 }
 
+inline
 OZ_Return BIgreatInline(TaggedRef A, TaggedRef B)
 {
   return BIlessInline(B,A);
 }
 
+inline
 OZ_Return BIgreatInlineFun(TaggedRef A, TaggedRef B, TaggedRef &out)
 {
   return BIlessInlineFun(B,A,out);
 }
 
-
+inline
 OZ_Return BIleInline(TaggedRef A, TaggedRef B)
 {
   DEREF(A,_1);
@@ -2490,7 +2506,7 @@ OZ_Return BIleInline(TaggedRef A, TaggedRef B)
   oz_typeError(-1,"Comparable");
 }
 
-
+inline
 OZ_Return BIleInlineFun(TaggedRef A, TaggedRef B, TaggedRef &out)
 {
   OZ_Return ret = BIleInline(A,B);
@@ -2502,13 +2518,13 @@ OZ_Return BIleInlineFun(TaggedRef A, TaggedRef B, TaggedRef &out)
 }
 
 
-
+inline
 OZ_Return BIgeInlineFun(TaggedRef A, TaggedRef B, TaggedRef &out)
 {
   return BIleInlineFun(B,A,out);
 }
 
-
+inline
 OZ_Return BIgeInline(TaggedRef A, TaggedRef B)
 {
   return BIleInline(B,A);
@@ -2524,7 +2540,7 @@ OZ_Return BILessOrLessEq(Bool callLess, TaggedRef A, TaggedRef B)
    X = conv(Y)
    ----------------------------------- */
 
-
+inline
 OZ_Return BIintToFloatInline(TaggedRef A, TaggedRef &out)
 {
   DEREF(A,_1);
@@ -2565,6 +2581,7 @@ double ozround(double in) {
   return ff;
 }
 
+inline
 OZ_Return BIfloatToIntInline(TaggedRef A, TaggedRef &out) {
   A=oz_deref(A);
 
@@ -2633,6 +2650,7 @@ OZ_BI_define(BIintToString, 1,1)
    type X
    ----------------------------------- */
 
+inline
 OZ_Return BIisFloatInline(TaggedRef num)
 {
   DEREF(num,_);
@@ -2646,6 +2664,7 @@ OZ_Return BIisFloatInline(TaggedRef num)
 
 OZ_DECLAREBOOLFUN1(BIisFloatB,BIisFloatInline)
 
+inline
 OZ_Return BIisIntInline(TaggedRef num)
 {
   DEREF(num,_);
@@ -2660,7 +2679,7 @@ OZ_Return BIisIntInline(TaggedRef num)
 OZ_DECLAREBOOLFUN1(BIisIntB,BIisIntInline)
 
 
-
+inline
 OZ_Return BIisNumberInline(TaggedRef num)
 {
   DEREF(num,_);
@@ -2681,6 +2700,7 @@ OZ_DECLAREBOOLFUN1(BIisNumberB,BIisNumberInline)
 
 
 #define FLOATFUN(Fun,BIName,InlineName)                 \
+inline                                                  \
 OZ_Return InlineName(TaggedRef AA, TaggedRef &out)      \
 {                                                       \
   DEREF(AA,_);                                          \
@@ -2701,14 +2721,17 @@ OZ_DECLAREBI_USEINLINEFUN1(BIName,InlineName)
 // These we had to hack ourselves because they are not provided
 // by Windows libraries:
 
+inline
 double asinh(double x) {
   return log(x + sqrt(x * x + 1.0));
 }
 
+inline
 double acosh(double x) {
   return log(x + sqrt(x * x - 1.0));
 }
 
+inline
 double atanh(double x) {
   if (fabs(x) > 1.0) {
     errno = EDOM;
@@ -2740,6 +2763,7 @@ FLOATFUN(atanh, BIatanh, BIinlineAtanh)
 #undef FLOATFUN
 
 
+inline
 OZ_Return BIfPowInline(TaggedRef A, TaggedRef B, TaggedRef &out)
 {
   DEREF(A,_1);
@@ -2752,6 +2776,7 @@ OZ_Return BIfPowInline(TaggedRef A, TaggedRef B, TaggedRef &out)
   return suspendOnFloats(A,B);
 }
 
+inline
 OZ_Return BIfModInline(TaggedRef A, TaggedRef B, TaggedRef &out)
 {
   DEREF(A,_1);
@@ -2764,6 +2789,7 @@ OZ_Return BIfModInline(TaggedRef A, TaggedRef B, TaggedRef &out)
   return suspendOnFloats(A,B);
 }
 
+inline
 OZ_Return BIatan2Inline(TaggedRef A, TaggedRef B, TaggedRef &out)
 {
   DEREF(A,_1);
@@ -3111,6 +3137,7 @@ OZ_BI_define(BIarrayNew,3,1)
 } OZ_BI_end
 
 
+inline
 OZ_Return isArrayInline(TaggedRef t, TaggedRef &out)
 {
   NONVAR( t, term );
@@ -3120,6 +3147,7 @@ OZ_Return isArrayInline(TaggedRef t, TaggedRef &out)
 
 OZ_DECLAREBI_USEINLINEFUN1(BIisArray,isArrayInline)
 
+inline
 OZ_Return arrayLowInline(TaggedRef t, TaggedRef &out)
 {
   NONVAR( t, term );
@@ -3131,6 +3159,7 @@ OZ_Return arrayLowInline(TaggedRef t, TaggedRef &out)
 }
 OZ_DECLAREBI_USEINLINEFUN1(BIarrayLow,arrayLowInline)
 
+inline
 OZ_Return arrayHighInline(TaggedRef t, TaggedRef &out)
 {
   NONVAR( t, term );
@@ -3143,6 +3172,7 @@ OZ_Return arrayHighInline(TaggedRef t, TaggedRef &out)
 
 OZ_DECLAREBI_USEINLINEFUN1(BIarrayHigh,arrayHighInline)
 
+inline
 OZ_Return arrayGetInline(TaggedRef t, TaggedRef i, TaggedRef &out)
 {
   NONVAR( t, array );
@@ -3163,6 +3193,7 @@ OZ_Return arrayGetInline(TaggedRef t, TaggedRef i, TaggedRef &out)
 }
 OZ_DECLAREBI_USEINLINEFUN2(BIarrayGet,arrayGetInline)
 
+inline
 OZ_Return arrayPutInline(TaggedRef t, TaggedRef i, TaggedRef value)
 {
   NONVAR( t, array );
@@ -3735,6 +3766,7 @@ inline int sizeOf(SRecord *sr)
   return sr ? sr->sizeOf() : 0;
 }
 
+inline
 Object *newObject(SRecord *feat, SRecord *st, ObjectClass *cla, Board *b)
 {
   OzLock *lck=NULL;
@@ -3815,6 +3847,7 @@ OZ_BI_define(BIsend,3,0)
   return BI_REPLACEBICALL;
 } OZ_BI_end
 
+inline
 OZ_Return BIisObjectInline(TaggedRef t)
 {
   DEREF(t,_1);
@@ -3825,6 +3858,7 @@ OZ_Return BIisObjectInline(TaggedRef t)
 OZ_DECLAREBOOLFUN1(BIisObjectB,BIisObjectInline)
 
 
+inline
 OZ_Return getClassInline(TaggedRef t, TaggedRef &out)
 {
   DEREF(t,_);
@@ -3890,6 +3924,7 @@ OZ_Term makeObject(OZ_Term initState, OZ_Term ffeatures, ObjectClass *clas)
 }
 
 
+inline
 OZ_Return newObjectInline(TaggedRef cla, TaggedRef &out)
 {
   { DEREF(cla,_1); }
@@ -3939,6 +3974,7 @@ OZ_BI_define(BINew,3,0)
 } OZ_BI_end
 
 
+inline
 OZ_Return ooGetLockInline(TaggedRef val)
 {
   OzLock *lock = am.getSelf()->getLock();
