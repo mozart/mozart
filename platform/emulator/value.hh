@@ -45,13 +45,64 @@ extern TaggedRef AtomNil, AtomCons, AtomPair, AtomVoid,
        AtomStopOnToplevelFailure, AtomSystem, AtomThread, 
        AtomThreshold, AtomTolerance, AtomUser, AtomVariables, AtomWidth,
   AtomDetailed,
-       AtomHeap, AtomDebugIP, AtomDebugPerdio,
-  RecordFailure,
+  AtomHeap, AtomDebugIP, AtomDebugPerdio,
+  // Atoms for NetError Handlers
+  AtomTempBlocked, AtomPermBlocked,  
+
+RecordFailure,
   E_ERROR, E_KERNEL, E_OBJECT, E_TK, E_OS, E_SYSTEM,
-  BI_Unify,BI_Show,BI_send;
+  BI_Unify,BI_Show,BI_send,BI_restop;
 
 
 extern Board *ozx_rootBoard();
+
+/*===================================================================
+ *  Handlers
+ *=================================================================== */
+#define IS_WATCHER 1
+enum CondCode{
+  PrmBlocked = 0, 
+  NotBlocked = 1,
+  TmpBlocked = 2};
+
+class EntityWHList{
+public:
+  USEHEAPMEMORY;
+  TaggedRef     proc;
+  EntityWHList *next; 
+  int           dummy;
+
+  EntityWHList(TaggedRef val){
+    proc=val;
+    next=NULL;}
+  TaggedRef getProc(){
+    return proc;}
+  Bool isWatcher(){
+    return ((dummy & IS_WATCHER) == IS_WATCHER);}
+  Bool isHandler(){
+    return ((dummy & IS_WATCHER) != IS_WATCHER);}
+  void setNext(EntityWHList *n){
+    next = n;}
+  EntityWHList *getNext(){
+    return next;}
+};
+
+class NetHandler:public EntityWHList{
+public:
+  NetHandler(TaggedRef val, Thread *th, CondCode h):EntityWHList(val){
+    dummy = ((int) th) | h;}
+  
+  Thread *getThread(){
+    return (Thread *) (dummy & ~TmpBlocked);} 
+  Bool isTmp(){
+    OZ_warning("Should NOT BE USED ANY LONGER NetHandler->isTmp()");
+    return (dummy & TmpBlocked) == TmpBlocked;} 
+  Bool handlerReleasedOnCond(CondCode cc){
+    if ((cc==TmpBlocked) && ((dummy & TmpBlocked)!=TmpBlocked))
+      return false;
+    else 
+      return true;}
+};
 
 /*===================================================================
  * Literal
@@ -685,6 +736,7 @@ public:
 
 class Tertiary: public ConstTerm {
   TaggedPtr tagged;
+  TaggedPtr whList;
 public:
 
   TertType getTertType()       { return (TertType) tagged.getType(); }
@@ -692,17 +744,58 @@ public:
 
   Tertiary(Board *b, TypeOfConst s,TertType t) : ConstTerm(s) {
     setTertType(t);
+    setNetCondition(NotBlocked);
     setBoard(b);}
   Tertiary(int i, TypeOfConst s,TertType t) : ConstTerm(s) 
   {
     setTertType(t);
+    setNetCondition(NotBlocked);
     setIndex(i);
   }
 
+  CondCode getNetCondition(){
+    return (CondCode) whList.getType();}
+  void setNetCondition(CondCode c){
+    whList.setType((int)c);}
+  
+  EntityWHList *getwhList() 
+  {return (EntityWHList *) whList.getPtr();}
+  void setwhList(EntityWHList* e)
+  {whList.setPtr((void*)e);}
+  
+  void insertwhElement(EntityWHList *w) {
+    w->setNext(getwhList());
+    whList.setPtr((void*) w);}
+  
+  void removewhElement(EntityWHList *w) {
+    EntityWHList *old = getwhList();
+    if(old == w) {
+      whList.setPtr(old->getNext());
+      return;}
+    EntityWHList *old2 = old->getNext();
+    while(old2!=w){
+      old = old2;
+      old2 = old2->getNext();}
+    old->setNext(old2->getNext());}
+  
+  Bool threadHasHandler(Thread *th){
+    EntityWHList *old = getwhList();
+    while(old != NULL){
+      if(old->isHandler() && 
+	 ((NetHandler*)old)->getThread() == th)
+	if(((NetHandler*)old)->
+	   handlerReleasedOnCond(getNetCondition()))
+	  return true;
+	else
+	  return false;
+      old = old->getNext();}
+    return false;}
+  
   void setIndex(int i) { tagged.setIndex(i); }
   int getIndex() { return tagged.getIndex(); }
   void setPointer (void *p) { tagged.setPtr(p); }
-  void *getPointer()        { return tagged.getPtr(); }
+  void *getPointer()  
+  { return tagged.getPtr(); }
 
   Bool checkTertiary(TypeOfConst s,TertType t){
     return (s==getType() && t==getTertType());}
@@ -1818,6 +1911,8 @@ BuiltinTabEntry *tagged2Builtin(TaggedRef term)
 
 /*===================================================================
  * Cell
+ * Unused third field from tertiary.
+ *
  *=================================================================== */
 
 
@@ -1861,6 +1956,7 @@ private:
   Site* next;
   TaggedRef contents;
   int accessNr;
+  CMList* chain;
 
 public:
   CellSec(TaggedRef val){ // on globalize
@@ -2142,6 +2238,7 @@ public:
 
   void unlockComplex();
   void unlock(){
+    //    Assert(getLocker()==am.currentThread());
     Assert(getLocker()!=NULL);
     if(pending==NULL){
       setLocker(NULL);
@@ -2185,19 +2282,23 @@ private:
   PendThread* pending;
   Site* next;
   Thread *locker;
+  int accessNr;
+  CMList* chain;
 
 public:
   LockSec(Thread *t,PendThread *pt){ // on globalize
     state=Lock_Valid;
     pending=pt;
     locker=t;
-    next=NULL; } // maybe not needed except for debug
+    next=NULL; 
+    accessNr= -1;} // maybe not needed except for debug
 
-  LockSec(){ // on Proxy becoming Frame
+  LockSec(int nr){ // on Proxy becoming Frame
     state=Lock_Invalid;
     locker=NULL;
     pending=NULL;
-    next=NULL;} // maybe not needed except for debug
+    next=NULL;
+    accessNr = nr;} // maybe not needed except for debug
 };
 
 class LockFrame:public OzLock{
@@ -2235,18 +2336,22 @@ public:
   void setPending(PendThread *pt){sec->pending=pt;}
   PendThread* getPending(){return sec->pending;}
   PendThread** getPendBase(){return &sec->pending;}
+  Bool isPending(Thread *th);      
 
   void setNext(Site *s){sec->next=s;}
   Site* getNext(){return sec->next;}
 
   void initFromProxy(){
-    sec=new LockSec();}
+    int nr=(int)sec;
+    sec=new LockSec(nr);}
   void initFromGlobalize(Thread *t,PendThread *pt){
     sec=new LockSec(t,pt);}
     
   void convertToProxy(){
     setTertType(Te_Proxy);
-    DebugCode(sec=NULL);} 
+    int nr = sec->accessNr;
+    DebugCode(sec=NULL);
+    sec = (LockSec*)nr;} 
   
   void gcLockFrame();
   void gcLockFrameSec();
@@ -2268,13 +2373,25 @@ public:
     lockComplex(t);
     return FALSE;}
 
-  void unlock(){
+  void unlock(Thread *t){
+    if (getLocker()!=t){
+      unlockComplexB(t);
+      return;}
     setLocker(NULL);
     if((getState()==Lock_Valid) && (getPending()==NULL)){
       return;}
     unlockComplex();}
     
   void unlockComplex();
+  void unlockComplexB(Thread *);
+
+  int readAccessNr(){
+    return sec->accessNr;}
+  int incAccessNr(){
+    sec->accessNr = sec->accessNr+1;
+    return sec->accessNr;}
+  void probeFault(Site*, int, int);
+  void blocked(CondCode,Bool);
 };
 
 class LockManager:public OzLock{
@@ -2287,21 +2404,13 @@ public:
 
   LockManager() : OzLock((Board*)NULL,Te_Manager){Assert(0);}  
 
-  void setOwnCurrent(){
-    setPtr(NULL);}
-  Bool isOwnCurrent(){
-    if(getPtr()==NULL) return TRUE;
-    return FALSE;}
-
-  void setCurrent(Site *s){
-    setPtr(s);}
-  Site* getCurrent(){
-    return (Site*) getPtr();}
 
   void localize();
   void gcLockManager();
 
   Bool hasLock(Thread *t){if(t==((LockFrame*)this)->getLocker()) return TRUE;return FALSE;}
+
+  void tokenLost(CondCode c, Site* s,int OTI);
 
   void lockComplex(Thread *);
   void lock(Thread *t){
@@ -2323,31 +2432,49 @@ public:
     lockComplex(t);
     return FALSE;}
 
-  void unlock(){
+  void unlock(Thread *t){
     LockFrame *lf=(LockFrame*)this;    
+    if (lf->getLocker()!=t){
+      unlockComplexB(t);
+      return;}
     lf->setLocker(NULL);
     if((lf->getState()==Lock_Valid) && (lf->getPending()==NULL)){
       return;}
     unlockComplex();}
     
   void unlockComplex();
+  void unlockComplexB(Thread *);
+  
+  void setOwnCurrent();
+  Bool isOwnCurrent();
+  void init();
+  void setCurrent(Site *, int);
+  Site* getCurrent();
+  void lockReceived(Site*,int);
+  Site* lockSent(Site*,int, int&);
+  void managerSesSiteCrash(Site*, int);
+  Site* proxySesSiteCrash(Site*,Site*,int);
+  void probeFault(Site*, int, int);
 
 };
 
 class LockProxy:public OzLock{
 friend void ConstTerm::gcConstRecurse(void);
 private:
-  int * dummy;
+  int holder;
 public:
   OZPRINT;
   OZPRINTLONG;       
 
  LockProxy(int manager):OzLock(manager,Te_Proxy){  // on import
+   holder = 0;
    DebugIndexCheck(manager);}
 
   void convertToFrame();
   void lock(Thread *);
   void unlock();
+  void probeFault(Site*, int, int);
+  void blocked(CondCode);
 };
 
 
@@ -2369,3 +2496,7 @@ Bool member(TaggedRef elem,TaggedRef list);
 TaggedRef getUniqueName(const char *s);
 
 #endif
+
+
+
+
