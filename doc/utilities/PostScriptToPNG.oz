@@ -26,7 +26,7 @@ import
    OS(system tmpnam unlink stat)
    File(baseName changeExtension)
 export
-   'class': PostScriptToGIFClass
+   'class': PostScriptToPNGClass
 define
 
    fun {Exists Name}
@@ -68,21 +68,21 @@ define
       end
    end
 
-   proc {PpmToGif PpmName Info GifName} Cmd in
+   proc {PpmToPng PpmName Info PngName} Cmd in
       Cmd  = ('pnmcrop < '#PpmName#' 2> /dev/null | '#
               if Info == '' then ''
               else 'pnmscale '#Info#' | '
               end#
               'ppmquant 256 2> /dev/null | '#
-              'ppmtogif -interlace -transparent rgbi:1/1/1 2> /dev/null | '#
-              'cat > '#GifName)
+              'pnmtopng -interlace -transparent rgbi:1/1/1 2> /dev/null | '#
+              'cat > '#PngName)
       case {OS.system Cmd} of 0 then skip
       elseof I then
-         {Exception.raiseError ozDoc(ppmtogif {VirtualString.toAtom Cmd} I)}
+         {Exception.raiseError ozDoc(ppmtopng {VirtualString.toAtom Cmd} I)}
       end
    end
 
-   class PostScriptToGIFClass
+   class PostScriptToPNGClass
       attr
          DirName: unit
          Keep:    false
@@ -92,7 +92,7 @@ define
       end
       meth convertPostScript(InName Info ?OutName)
          Basename#_ = {FilenameExplode InName}
-         !OutName   = {GetBaseName Basename#'.gif'}
+         !OutName   = {GetBaseName Basename#'.png'}
          FullName   = @DirName#'/'#OutName
       in
          if {Not @Keep andthen {Exists FullName}} then
@@ -100,7 +100,7 @@ define
          in
             try
                {PsToPpm InName PpmName}
-               {PpmToGif PpmName Info @DirName#'/'#OutName}
+               {PpmToPng PpmName Info @DirName#'/'#OutName}
             finally
                try {OS.unlink PpmName} catch _ then skip end
             end

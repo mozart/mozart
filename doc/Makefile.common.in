@@ -26,6 +26,9 @@ JAVAC           = @JAVAC@ @JAVA_THREADS@
 JAR             = @JAR@ @JAVA_THREADS@
 JAVACP          = @JAVACP@
 
+EMACS           = @THEEMACS@
+EMACS_OPTIONS   = @EMACS_OPTIONS@
+
 HTMLSUPPORTFILES0 = \
         ozdoc.css page.gif $(HTMLEXTRASUPPORTFILES)
 HTMLSUPPORTFILES = \
@@ -215,7 +218,7 @@ EMACSDIR2= "(setq ozdoc-file-path (cons \"$(SRCDIR)\" ozdoc-file-path))"
 EMACSDIR3= "(setq ozdoc-file-path (cons \".\" ozdoc-file-path))"
 
 $(WHAT)-hilite.xml: $(WHAT)-hilite.el
-        emacs --batch \
+        $(EMACS) $(EMACS_OPTIONS) --batch \
                 --eval $(EMACSDIR1) \
                 --eval $(EMACSDIR2) \
                 --eval $(EMACSDIR3) \
@@ -273,7 +276,7 @@ clean::
         -rm -f $(FILES_ONE)
 
 $(WHAT)-new-hilite.xml: $(WHAT)-new.el
-        emacs --batch \
+        $(EMACS) $(EMACS_OPTIONS) --batch \
                 --eval $(EMACSDIR1) \
                 --eval $(EMACSDIR2) \
                 --eval $(EMACSDIR3) \

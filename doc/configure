@@ -25,6 +25,8 @@ ac_help="$ac_help
 ac_help="$ac_help
 --with-global-oz allows to use an existing oz installation to build the system (default: no)"
 ac_help="$ac_help
+--with-emacs-options=OPTIONS command-[line] options for emacs subprocess (default: -q --no-site-[file])"
+ac_help="$ac_help
 --with-global-oz allows to use an existing oz installation to build the system (default: no)"
 ac_help="$ac_help
 --with-java-bin='DIR'
@@ -44,6 +46,8 @@ ac_help="$ac_help
 ac_help="$ac_help
 --enable-chm
        construct CHM table of contents files (default=no)"
+ac_help="$ac_help
+--with-ozhome=DIR  real home in case of fake root build"
 
 # Initialize some variables set by options.
 # The variables have the same names as the options, with
@@ -563,7 +567,7 @@ fi
 
 
   echo $ac_n "checking for SRCTOP""... $ac_c" 1>&6
-echo "configure:567: checking for SRCTOP" >&5
+echo "configure:571: checking for SRCTOP" >&5
 if eval "test \"`echo '$''{'oz_cv_path_SRCTOP'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -597,7 +601,7 @@ echo "$ac_t""$oz_cv_path_SRCTOP" 1>&6
 
 
   echo $ac_n "checking for BUILDTOP""... $ac_c" 1>&6
-echo "configure:601: checking for BUILDTOP" >&5
+echo "configure:605: checking for BUILDTOP" >&5
 if eval "test \"`echo '$''{'oz_cv_path_BUILDTOP'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -656,7 +660,7 @@ else { echo "configure: error: can not run $ac_config_sub" 1>&2; exit 1; }
 fi
 
 echo $ac_n "checking host system type""... $ac_c" 1>&6
-echo "configure:660: checking host system type" >&5
+echo "configure:664: checking host system type" >&5
 
 host_alias=$host
 case "$host_alias" in
@@ -684,7 +688,7 @@ do
 # Extract the first word of "$ac_prog", so it can be a program name with args.
 set dummy $ac_prog; ac_word=$2
 echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
-echo "configure:688: checking for $ac_word" >&5
+echo "configure:692: checking for $ac_word" >&5
 if eval "test \"`echo '$''{'ac_cv_prog_MAKE'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -753,13 +757,13 @@ You may find a mirror archive closer to you by consulting:
   else
 
   echo $ac_n "checking for GNU make""... $ac_c" 1>&6
-echo "configure:757: checking for GNU make" >&5
+echo "configure:761: checking for GNU make" >&5
   MAKE=$oz_cv_MAKE
   echo "$ac_t""(cached) $MAKE" 1>&6
   fi
 
   echo $ac_n "checking whether ${MAKE-make} sets \${MAKE}""... $ac_c" 1>&6
-echo "configure:763: checking whether ${MAKE-make} sets \${MAKE}" >&5
+echo "configure:767: checking whether ${MAKE-make} sets \${MAKE}" >&5
 set dummy ${MAKE-make}; ac_make=`echo "$2" | sed 'y%./+-%__p_%'`
 if eval "test \"`echo '$''{'ac_cv_prog_make_${ac_make}_set'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
@@ -788,7 +792,7 @@ fi
 
   if test "${INSTALL+set}" = set; then
     echo $ac_n "checking whether to unset broken INSTALL""... $ac_c" 1>&6
-echo "configure:792: checking whether to unset broken INSTALL" >&5
+echo "configure:796: checking whether to unset broken INSTALL" >&5
 if eval "test \"`echo '$''{'oz_cv_unset_INSTALL'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -819,7 +823,7 @@ echo "$ac_t""$oz_cv_unset_INSTALL" 1>&6
 # SVR4 /usr/ucb/install, which tries to use the nonexistent group "staff"
 # ./install, which can be erroneously created by make from ./install.sh.
 echo $ac_n "checking for a BSD compatible install""... $ac_c" 1>&6
-echo "configure:823: checking for a BSD compatible install" >&5
+echo "configure:827: checking for a BSD compatible install" >&5
 if test -z "$INSTALL"; then
 if eval "test \"`echo '$''{'ac_cv_path_install'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
@@ -878,7 +882,7 @@ test -z "$INSTALL_DATA" && INSTALL_DATA='${INSTALL} -m 644'
     if test -z "$WITH_GLOBAL_OZ"; then
 
   echo $ac_n "checking for --with-global-oz""... $ac_c" 1>&6
-echo "configure:882: checking for --with-global-oz" >&5
+echo "configure:886: checking for --with-global-oz" >&5
   # Check whether --with-global-oz or --without-global-oz was given.
 if test "${with_global_oz+set}" = set; then
   withval="$with_global_oz"
@@ -912,7 +916,7 @@ fi
     # Extract the first word of "mkinstalldirs", so it can be a program name with args.
 set dummy mkinstalldirs; ac_word=$2
 echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
-echo "configure:916: checking for $ac_word" >&5
+echo "configure:920: checking for $ac_word" >&5
 if eval "test \"`echo '$''{'ac_cv_path_INSTALL_DIR'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -956,7 +960,7 @@ fi
 
 
   echo $ac_n "checking for oz version""... $ac_c" 1>&6
-echo "configure:960: checking for oz version" >&5
+echo "configure:964: checking for oz version" >&5
 if eval "test \"`echo '$''{'oz_cv_ozversion'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -1000,7 +1004,7 @@ echo "$ac_t""$oz_cv_ozversion" 1>&6
     if test -z "$WITH_GLOBAL_OZ"; then
 
   echo $ac_n "checking for --with-global-oz""... $ac_c" 1>&6
-echo "configure:1004: checking for --with-global-oz" >&5
+echo "configure:1008: checking for --with-global-oz" >&5
   # Check whether --with-global-oz or --without-global-oz was given.
 if test "${with_global_oz+set}" = set; then
   withval="$with_global_oz"
@@ -1034,7 +1038,7 @@ fi
     # Extract the first word of "ozplatform", so it can be a program name with args.
 set dummy ozplatform; ac_word=$2
 echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
-echo "configure:1038: checking for $ac_word" >&5
+echo "configure:1042: checking for $ac_word" >&5
 if eval "test \"`echo '$''{'ac_cv_path_OZPLATFORM'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -1081,7 +1085,7 @@ fi
     if test -z "$WITH_GLOBAL_OZ"; then
 
   echo $ac_n "checking for --with-global-oz""... $ac_c" 1>&6
-echo "configure:1085: checking for --with-global-oz" >&5
+echo "configure:1089: checking for --with-global-oz" >&5
   # Check whether --with-global-oz or --without-global-oz was given.
 if test "${with_global_oz+set}" = set; then
   withval="$with_global_oz"
@@ -1115,7 +1119,7 @@ fi
     # Extract the first word of "oztool", so it can be a program name with args.
 set dummy oztool; ac_word=$2
 echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
-echo "configure:1119: checking for $ac_word" >&5
+echo "configure:1123: checking for $ac_word" >&5
 if eval "test \"`echo '$''{'ac_cv_path_OZTOOL'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -1161,7 +1165,7 @@ fi
   esac
 
   echo $ac_n "checking for --with-inc-dir""... $ac_c" 1>&6
-echo "configure:1165: checking for --with-inc-dir" >&5
+echo "configure:1169: checking for --with-inc-dir" >&5
   # Check whether --with-inc-dir or --without-inc-dir was given.
 if test "${with_inc_dir+set}" = set; then
   withval="$with_inc_dir"
@@ -1203,7 +1207,7 @@ fi
 
 
   echo $ac_n "checking for --with-lib-dir""... $ac_c" 1>&6
-echo "configure:1207: checking for --with-lib-dir" >&5
+echo "configure:1211: checking for --with-lib-dir" >&5
   # Check whether --with-lib-dir or --without-lib-dir was given.
 if test "${with_lib_dir+set}" = set; then
   withval="$with_lib_dir"
@@ -1247,7 +1251,7 @@ fi
 
 
   echo $ac_n "checking for build date""... $ac_c" 1>&6
-echo "configure:1251: checking for build date" >&5
+echo "configure:1255: checking for build date" >&5
 if eval "test \"`echo '$''{'oz_cv_build_date'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -1261,7 +1265,7 @@ echo "$ac_t""$oz_cv_build_date" 1>&6
 
 
   echo $ac_n "checking for OZLOADSEP""... $ac_c" 1>&6
-echo "configure:1265: checking for OZLOADSEP" >&5
+echo "configure:1269: checking for OZLOADSEP" >&5
 if eval "test \"`echo '$''{'oz_cv_OZLOADSEP'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -1281,7 +1285,7 @@ echo "$ac_t""$oz_cv_OZLOADSEP" 1>&6
 
 
   echo $ac_n "checking for OZLOADWIN""... $ac_c" 1>&6
-echo "configure:1285: checking for OZLOADWIN" >&5
+echo "configure:1289: checking for OZLOADWIN" >&5
 if eval "test \"`echo '$''{'oz_cv_OZLOADWIN'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -1321,7 +1325,7 @@ echo "$ac_t""$oz_cv_OZLOADWIN" 1>&6
     if test -z "$WITH_GLOBAL_OZ"; then
 
   echo $ac_n "checking for --with-global-oz""... $ac_c" 1>&6
-echo "configure:1325: checking for --with-global-oz" >&5
+echo "configure:1329: checking for --with-global-oz" >&5
   # Check whether --with-global-oz or --without-global-oz was given.
 if test "${with_global_oz+set}" = set; then
   withval="$with_global_oz"
@@ -1355,7 +1359,7 @@ fi
     # Extract the first word of "ozengine", so it can be a program name with args.
 set dummy ozengine; ac_word=$2
 echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
-echo "configure:1359: checking for $ac_word" >&5
+echo "configure:1363: checking for $ac_word" >&5
 if eval "test \"`echo '$''{'ac_cv_path_OZENGINE'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -1398,6 +1402,62 @@ fi
     fi
 
 
+  for ac_prog in emacs xemacs
+do
+# Extract the first word of "$ac_prog", so it can be a program name with args.
+set dummy $ac_prog; ac_word=$2
+echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
+echo "configure:1411: checking for $ac_word" >&5
+if eval "test \"`echo '$''{'ac_cv_prog_THEEMACS'+set}'`\" = set"; then
+  echo $ac_n "(cached) $ac_c" 1>&6
+else
+  if test -n "$THEEMACS"; then
+  ac_cv_prog_THEEMACS="$THEEMACS" # Let the user override the test.
+else
+  IFS="${IFS=   }"; ac_save_ifs="$IFS"; IFS=":"
+  ac_dummy="$PATH"
+  for ac_dir in $ac_dummy; do
+    test -z "$ac_dir" && ac_dir=.
+    if test -f $ac_dir/$ac_word; then
+      ac_cv_prog_THEEMACS="$ac_prog"
+      break
+    fi
+  done
+  IFS="$ac_save_ifs"
+fi
+fi
+THEEMACS="$ac_cv_prog_THEEMACS"
+if test -n "$THEEMACS"; then
+  echo "$ac_t""$THEEMACS" 1>&6
+else
+  echo "$ac_t""no" 1>&6
+fi
+
+test -n "$THEEMACS" && break
+done
+test -n "$THEEMACS" || THEEMACS="emacs"
+
+
+
+
+  echo $ac_n "checking for --with-emacs-options""... $ac_c" 1>&6
+echo "configure:1445: checking for --with-emacs-options" >&5
+  # Check whether --with-emacs-options or --without-emacs-options was given.
+if test "${with_emacs_options+set}" = set; then
+  withval="$with_emacs_options"
+  oz_cv_emacs_options="$with_emacs_options"
+else
+   if $THEEMACS --version 2>&1 | egrep XEmacs >/dev/null; then
+        oz_cv_emacs_options="-q -no-site-file"
+      else
+        oz_cv_emacs_options="-q --no-site-file"
+      fi
+fi
+
+  EMACS_OPTIONS="$oz_cv_emacs_options"
+
+  echo "$ac_t""$EMACS_OPTIONS" 1>&6
+
 # PLATFORM is defined by OZ_INIT
 : ${platform=$PLATFORM}
 
@@ -1414,7 +1474,7 @@ esac
     if test -z "$WITH_GLOBAL_OZ"; then
 
   echo $ac_n "checking for --with-global-oz""... $ac_c" 1>&6
-echo "configure:1418: checking for --with-global-oz" >&5
+echo "configure:1478: checking for --with-global-oz" >&5
   # Check whether --with-global-oz or --without-global-oz was given.
 if test "${with_global_oz+set}" = set; then
   withval="$with_global_oz"
@@ -1448,7 +1508,7 @@ fi
     # Extract the first word of "ozdoc", so it can be a program name with args.
 set dummy ozdoc; ac_word=$2
 echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
-echo "configure:1452: checking for $ac_word" >&5
+echo "configure:1512: checking for $ac_word" >&5
 if eval "test \"`echo '$''{'ac_cv_path_OZDOC'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -1495,7 +1555,7 @@ fi
 
 
 echo $ac_n "checking for --with-java-bin""... $ac_c" 1>&6
-echo "configure:1499: checking for --with-java-bin" >&5
+echo "configure:1559: checking for --with-java-bin" >&5
 # Check whether --with-java-bin or --without-java-bin was given.
 if test "${with_java_bin+set}" = set; then
   withval="$with_java_bin"
@@ -1522,7 +1582,7 @@ oz_path_save=$PATH
     if test -z "$WITH_GLOBAL_OZ"; then
 
   echo $ac_n "checking for --with-global-oz""... $ac_c" 1>&6
-echo "configure:1526: checking for --with-global-oz" >&5
+echo "configure:1586: checking for --with-global-oz" >&5
   # Check whether --with-global-oz or --without-global-oz was given.
 if test "${with_global_oz+set}" = set; then
   withval="$with_global_oz"
@@ -1556,7 +1616,7 @@ fi
     # Extract the first word of "java", so it can be a program name with args.
 set dummy java; ac_word=$2
 echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
-echo "configure:1560: checking for $ac_word" >&5
+echo "configure:1620: checking for $ac_word" >&5
 if eval "test \"`echo '$''{'ac_cv_path_JAVA'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -1603,7 +1663,7 @@ if test -n "$JAVA"; then
     if test -z "$WITH_GLOBAL_OZ"; then
 
   echo $ac_n "checking for --with-global-oz""... $ac_c" 1>&6
-echo "configure:1607: checking for --with-global-oz" >&5
+echo "configure:1667: checking for --with-global-oz" >&5
   # Check whether --with-global-oz or --without-global-oz was given.
 if test "${with_global_oz+set}" = set; then
   withval="$with_global_oz"
@@ -1637,7 +1697,7 @@ fi
     # Extract the first word of "javac", so it can be a program name with args.
 set dummy javac; ac_word=$2
 echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
-echo "configure:1641: checking for $ac_word" >&5
+echo "configure:1701: checking for $ac_word" >&5
 if eval "test \"`echo '$''{'ac_cv_path_JAVAC'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -1683,7 +1743,7 @@ fi
     if test -z "$WITH_GLOBAL_OZ"; then
 
   echo $ac_n "checking for --with-global-oz""... $ac_c" 1>&6
-echo "configure:1687: checking for --with-global-oz" >&5
+echo "configure:1747: checking for --with-global-oz" >&5
   # Check whether --with-global-oz or --without-global-oz was given.
 if test "${with_global_oz+set}" = set; then
   withval="$with_global_oz"
@@ -1717,7 +1777,7 @@ fi
     # Extract the first word of "jar", so it can be a program name with args.
 set dummy jar; ac_word=$2
 echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
-echo "configure:1721: checking for $ac_word" >&5
+echo "configure:1781: checking for $ac_word" >&5
 if eval "test \"`echo '$''{'ac_cv_path_JAR'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -1760,14 +1820,14 @@ fi
     fi
 
   echo $ac_n "checking for class path option""... $ac_c" 1>&6
-echo "configure:1764: checking for class path option" >&5
+echo "configure:1824: checking for class path option" >&5
   case `$JAVA -version 2>&1` in
   Kaffe*) JAVACP=-addclasspath;;
   *) JAVACP=-classpath;;
   esac
   echo "$ac_t""$JAVACP" 1>&6
   echo $ac_n "checking for --with-java-threads""... $ac_c" 1>&6
-echo "configure:1771: checking for --with-java-threads" >&5
+echo "configure:1831: checking for --with-java-threads" >&5
   # Check whether --with-java-threads or --without-java-threads was given.
 if test "${with_java_threads+set}" = set; then
   withval="$with_java_threads"
@@ -1786,7 +1846,7 @@ PATH=$oz_path_save
 
 
 echo $ac_n "checking for --with-documents""... $ac_c" 1>&6
-echo "configure:1790: checking for --with-documents" >&5
+echo "configure:1850: checking for --with-documents" >&5
 # Check whether --with-documents or --without-documents was given.
 if test "${with_documents+set}" = set; then
   withval="$with_documents"
@@ -1797,14 +1857,14 @@ fi
 echo "$ac_t""$oz_doc_dirs" 1>&6
 
 if test "${oz_doc_dirs}" = "all"; then
-  oz_doc_dirs="apptut base bugs compiler contrib demo foreign gump op opi ozcar profiler ozdoc system tools wp fdt fst cpitut cpiref install tutorial overview panel explorer inspector browser notation dstutorial changes tcltk howtoread faq limitations macro loop dpanel ds_white_paper gtk releasing"
+  oz_doc_dirs="apptut base bugs compiler contrib demo foreign gump op opi ozcar profiler ozdoc system tools wp fdt fst cpitut cpiref install tutorial overview panel explorer inspector browser notation dstutorial changes tcltk howtoread faq limitations macro loop dpanel ds_white_paper releasing"
 fi
 
 DOC_DIRS=$oz_doc_dirs
 
 
 echo $ac_n "checking for --enable-chm""... $ac_c" 1>&6
-echo "configure:1808: checking for --enable-chm" >&5
+echo "configure:1868: checking for --enable-chm" >&5
 # Check whether --enable-chm or --disable-chm was given.
 if test "${enable_chm+set}" = set; then
   enableval="$enable_chm"
@@ -1822,6 +1882,27 @@ else
    SUBDIRS="utilities ${oz_doc_dirs}"
 fi
 
+
+
+echo $ac_n "checking for --with-ozhome""... $ac_c" 1>&6
+echo "configure:1889: checking for --with-ozhome" >&5
+# Check whether --with-ozhome or --without-ozhome was given.
+if test "${with_ozhome+set}" = set; then
+  withval="$with_ozhome"
+  oz_real_ozhome="$with_ozhome"
+fi
+
+: ${oz_real_ozhome=no}
+echo "$ac_t""$oz_real_ozhome" 1>&6
+if test "${oz_real_ozhome}" = no; then
+    if test "${prefix}" = NONE; then
+        REAL_OZHOME="$ac_default_prefix"
+    else
+        REAL_OZHOME="$prefix"
+    fi
+else
+    REAL_OZHOME="$oz_real_ozhome"
+fi
 
 
 subdirs="utilities chm"
@@ -1940,7 +2021,7 @@ done
 ac_given_srcdir=$srcdir
 ac_given_INSTALL="$INSTALL"
 
-trap 'rm -fr `echo "Makefile Makefile.common Makefile.vars catalog bootcatalog base/Makefile bugs/Makefile foreign/Makefile apptut/Makefile wp/Makefile system/Makefile compiler/Makefile opi/Makefile tools/Makefile ozcar/Makefile profiler/Makefile gump/Makefile ozdoc/Makefile contrib/Makefile demo/Makefile op/Makefile fdt/Makefile fst/Makefile cpitut/Makefile cpiref/Makefile install/Makefile tutorial/Makefile overview/Makefile notation/Makefile browser/Makefile panel/Makefile explorer/Makefile inspector/Makefile dstutorial/Makefile changes/Makefile tcltk/Makefile howtoread/Makefile faq/Makefile limitations/Makefile xsl/Makefile xsl/ozdoc-info.sty:xsl/ozdoc-info.in macro/Makefile loop/Makefile dpanel/Makefile ds_white_paper/Makefile gtk/Makefile releasing/Makefile" | sed "s/:[^ ]*//g"` conftest*; exit 1' 1 2 15
+trap 'rm -fr `echo "Makefile Makefile.common Makefile.vars catalog bootcatalog base/Makefile bugs/Makefile foreign/Makefile apptut/Makefile wp/Makefile system/Makefile compiler/Makefile opi/Makefile tools/Makefile ozcar/Makefile profiler/Makefile gump/Makefile ozdoc/Makefile contrib/Makefile demo/Makefile op/Makefile fdt/Makefile fst/Makefile cpitut/Makefile cpiref/Makefile install/Makefile tutorial/Makefile overview/Makefile notation/Makefile browser/Makefile panel/Makefile explorer/Makefile inspector/Makefile dstutorial/Makefile changes/Makefile tcltk/Makefile howtoread/Makefile faq/Makefile limitations/Makefile xsl/Makefile xsl/ozdoc-info.sty:xsl/ozdoc-info.in macro/Makefile loop/Makefile dpanel/Makefile ds_white_paper/Makefile releasing/Makefile" | sed "s/:[^ ]*//g"` conftest*; exit 1' 1 2 15
 EOF
 cat >> $CONFIG_STATUS <<EOF
 
@@ -1996,6 +2077,8 @@ s%@PLATFORM@%$PLATFORM%g
 s%@OZLOADSEP@%$OZLOADSEP%g
 s%@OZLOADWIN@%$OZLOADWIN%g
 s%@OZENGINE@%$OZENGINE%g
+s%@THEEMACS@%$THEEMACS%g
+s%@EMACS_OPTIONS@%$EMACS_OPTIONS%g
 s%@OZDOC@%$OZDOC%g
 s%@JAVA_BIN@%$JAVA_BIN%g
 s%@JAVA@%$JAVA%g
@@ -2005,6 +2088,7 @@ s%@JAVACP@%$JAVACP%g
 s%@JAVA_THREADS@%$JAVA_THREADS%g
 s%@DOC_DIRS@%$DOC_DIRS%g
 s%@SUBDIRS@%$SUBDIRS%g
+s%@REAL_OZHOME@%$REAL_OZHOME%g
 s%@subdirs@%$subdirs%g
 
 CEOF
@@ -2047,7 +2131,7 @@ EOF
 
 cat >> $CONFIG_STATUS <<EOF
 
-CONFIG_FILES=\${CONFIG_FILES-"Makefile Makefile.common Makefile.vars catalog bootcatalog base/Makefile bugs/Makefile foreign/Makefile apptut/Makefile wp/Makefile system/Makefile compiler/Makefile opi/Makefile tools/Makefile ozcar/Makefile profiler/Makefile gump/Makefile ozdoc/Makefile contrib/Makefile demo/Makefile op/Makefile fdt/Makefile fst/Makefile cpitut/Makefile cpiref/Makefile install/Makefile tutorial/Makefile overview/Makefile notation/Makefile browser/Makefile panel/Makefile explorer/Makefile inspector/Makefile dstutorial/Makefile changes/Makefile tcltk/Makefile howtoread/Makefile faq/Makefile limitations/Makefile xsl/Makefile xsl/ozdoc-info.sty:xsl/ozdoc-info.in macro/Makefile loop/Makefile dpanel/Makefile ds_white_paper/Makefile gtk/Makefile releasing/Makefile"}
+CONFIG_FILES=\${CONFIG_FILES-"Makefile Makefile.common Makefile.vars catalog bootcatalog base/Makefile bugs/Makefile foreign/Makefile apptut/Makefile wp/Makefile system/Makefile compiler/Makefile opi/Makefile tools/Makefile ozcar/Makefile profiler/Makefile gump/Makefile ozdoc/Makefile contrib/Makefile demo/Makefile op/Makefile fdt/Makefile fst/Makefile cpitut/Makefile cpiref/Makefile install/Makefile tutorial/Makefile overview/Makefile notation/Makefile browser/Makefile panel/Makefile explorer/Makefile inspector/Makefile dstutorial/Makefile changes/Makefile tcltk/Makefile howtoread/Makefile faq/Makefile limitations/Makefile xsl/Makefile xsl/ozdoc-info.sty:xsl/ozdoc-info.in macro/Makefile loop/Makefile dpanel/Makefile ds_white_paper/Makefile releasing/Makefile"}
 EOF
 cat >> $CONFIG_STATUS <<\EOF
 for ac_file in .. $CONFIG_FILES; do if test "x$ac_file" != x..; then

@@ -47,12 +47,12 @@ CYGPATH         = $(SRCTOP)/share/lib/cygpath.sh
 
 FUNCTORS = \
         SGML.ozf AuthorDB.ozf BibliographyDB.ozf Indexer.ozf Fontifier.ozf \
-        CrossReferencer.ozf Thumbnails.ozf LaTeXToGIF.ozf PostScriptToGIF.ozf \
+        CrossReferencer.ozf Thumbnails.ozf LaTeXToPNG.ozf PostScriptToPNG.ozf \
         File.ozf HTML.ozf OzDocToHTML.ozf Main.ozf Chunk.ozf \
         XMLTokenizer.ozf XMLParser.ozf XMLOzdoc.ozf
 
 SYSLETS = ozdoc$(EXE_EXT)
-SHELLSCRIPTS = latex2gif gif2thumbnail
+SHELLSCRIPTS = latex2png gif2thumbnail
 
 BINFILES = $(SYSLETS:%=$(BINDIR)/%)
 DOCBINFILES = $(SHELLSCRIPTS:%=$(DOCDIR)/%)

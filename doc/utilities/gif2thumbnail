@@ -29,4 +29,8 @@ fi
 infile=$1
 outfile=$2
 
-giftopnm $infile | pnmscale -ysize 50 | ppmquant 256 | ppmtogif > $outfile
+case "$1" in
+    *.gif) giftopnm $infile | pnmscale -ysize 50 | ppmquant 256 | pnmtopng > $outfile;;
+    *.png) pngtopnm $infile | pnmscale -ysize 50 | ppmquant 256 | pnmtopng > $outfile;;
+    *) echo "unsupported file type" >&2; exit 1;;
+esac

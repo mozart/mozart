@@ -151,7 +151,7 @@
       To run the demo applets you have to have Mozart installed (which
       is easy and is described in <ptr.extern to="ozdoc:install">) and
       your Web Browser must be Mozart enabled (which is as easy and is
-      described in <ptr.extern to="ozdoc:install" key="applets">).
+      described in <ptr.extern to="ozdoc:install" key="appendix.applets">).
     </Abstract>
 
     <Part id="part.constraints">

@@ -33,7 +33,7 @@
     <p>
       In order to start Oz applications by clicking links on web
       pages, the web browser must be Mozart enabled, which is
-      described in <ptr.extern to="ozdoc:install" key="applets">.
+      described in <ptr.extern to="ozdoc:install" key="appendix.applets">.
 
   </section>
 

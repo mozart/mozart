@@ -2,6 +2,10 @@
   - Authors:
   -   Christian Schulte <schulte@ps.uni-sb.de>
   -
+  - Contributors:
+  -   Denys Duchier <duchier@ps.uni-sb.de>
+  -   Leif Kornstaedt <kornstae@ps.uni-sb.de>
+  -
   - Copyright:
   -   Christian Schulte, 1998
   -
@@ -55,6 +59,7 @@
     <meta name="proglang.mode" arg1="oz" arg2="oz-mode">
 
     <meta name="html.split"       value="chapter.m130">
+    <meta name="html.split"       value="chapter.m125">
     <meta name="html.split"       value="chapter.m124">
     <meta name="html.split"       value="chapter.m123">
     <meta name="html.split"       value="chapter.m122">
@@ -105,6 +110,96 @@ feature to debug threads remotely, which can also be used for
 debugging of distributed applications.</item>
     </list>
   </chapter>
+
+  <chapter id="chapter.m125">
+    <title/Mozart 1.2.5/
+    <p>Mozart 1.2.5 is a bug-fix and maintenance release, but most importantly
+    it has undergone important modifications to make it compatible with both old C++
+    compilers (&eg; <code proglang=sh/gcc 2.95.x/) and the new breed of C++
+    compilers (&eg; <code proglang=sh/gcc 3.x/) implementing the new multi-vendor
+    standard C++ ABI (Application Binary Interface).
+
+    <section id="sec.m125.r1">
+      <title/Revision 1/
+      <p>
+      <list>
+        <item/Fixed a garbage collection bug that showed up on Solaris 9./
+        <item/ozdoc now generates PNG graphics rather than GIF./
+      </list>
+    </section>
+
+    <section id="sec.m125.portability">
+      <title/Portability/
+      <p>
+      <list>
+        <item>Mozart 1.2.5 is now compatible with newer C++ compilers that implement
+        the new multi-vendor standard C++ ABI.  In other words, it can be properly
+        compiled with <code proglang=sh/gcc 3.x/.  The binary layout of C++ classes
+        as implemented &eg; by <code proglang=sh/gcc 3.2/ has changed from what it
+        was in &eg; <code proglang=sh/gcc 2.95.x/ and this had
+        some fundamental and lethal consequences for earlier versions of Mozart.  The
+        design of some datastructures in Mozart was accordingly revised.<p>
+
+        <item>Mozart now runs on <name/hppa/ aka <name/linux-parisc/.  While Mozart
+        1.2.5 still is not ready for full 64 bit architectures, it does well under
+        kernels that provide 32 bit addresses in user-space.<p>
+
+        <item>For users of Gentoo Linux, we now provide ebuilds to install and
+        maintain a Mozart installation using the portage system.<p>
+
+        <item>improved Darwin support now also available in CVS.<p>
+
+        <item>additional logic to fix the <file/glibc/ problem with time ticks introduced when
+        the Linux kernel bumped <code proglang=sh/HZ/ up to 1000.<p>
+     </list>
+
+    <section id="sec.m125.graphics">
+      <title/Graphics/
+      <p><list>
+        <item>fixed the Tk interface to work with Tk 8.4.<p>
+        <item>new optional <file/mozart-gtk/ component providing GTK 1.2 bindings (see
+        download page for further information).<p>
+      </list>
+
+    <section id="sec.m125.windows">
+      <title/Windows/
+      <p>changes and fixes that concern the Windows platform:
+      <list>
+        <item><code proglang=sh/oztool/ now uses <code proglang=sh/gcc-2/
+          and <code proglang=sh/g++-2/ as default when invoked with the
+          <code proglang=sh/-gnu/ option.  This can be configured as
+          described in <ptr.extern to="ozdoc:tools" key="section.oztool-env">
+      </list>
+
+    <section id="sec.m125.vm">
+      <title/Virtual Machine/
+      <p>changes and fixes that concern the virtual machine:
+      <list>
+        <item>several fixes in the support for execution of <ref.extern
+          to="http://www.ps.uni-sb.de/alice/"/Alice/ programs
+      </list>
+
+    <section id="sec.m125.cp">
+      <title/Constraint Programming/
+      <p>
+        <list>
+          <item>fixed <code proglang=oz/FD.reified.card/<p>
+          <item>fixed <code proglang=oz/FD.int/ problem with descriptions with
+          more than 1024 items.<p>
+        </list>
+
+    <section id="sec.m125.misc">
+      <title/Miscellaneous/
+      <p>
+        <list>
+          <item>When building from sources, the default is now to ignore an existing
+          mozart installation (this default can be overriden with the new <file/configure/
+          option <code proglang=sh/--with-global-oz/).  Previously, the user had to be
+          very careful to remove from his/her environment all traces of <file/oz/ prior
+          to invoking <file/configure/.<p>
+          <item>fixed an issue related to sharing when sending to a superordinated port.<p>
+        </list>
+
 
   <chapter id="chapter.m124">
     <title/Mozart 1.2.4/

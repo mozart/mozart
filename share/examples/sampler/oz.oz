@@ -376,7 +376,6 @@ T={New Truck init(400)}
 {T go}
 
 
-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Open Programming
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -398,6 +397,3 @@ class InternetController
 end
 IC={New InternetController server(port:{Inspect portNumber($)})}
 {IC getCommand}
-
-
-********************************************

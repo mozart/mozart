@@ -26,6 +26,8 @@ dnl Process this file with autoconf to produce a configure script.
 AC_INIT(ozdoc.dtd)
 OZ_INIT
 OZ_PATH_PROG(OZENGINE,ozengine)
+OZ_EMACS
+OZ_EMACS_OPTIONS
 
 # PLATFORM is defined by OZ_INIT
 : ${platform=$PLATFORM}
@@ -100,7 +102,7 @@ AC_ARG_WITH(documents,
 AC_MSG_RESULT($oz_doc_dirs)
 
 if test "${oz_doc_dirs}" = "all"; then
-  oz_doc_dirs="apptut base bugs compiler contrib demo foreign gump op opi ozcar profiler ozdoc system tools wp fdt fst cpitut cpiref install tutorial overview panel explorer inspector browser notation dstutorial changes tcltk howtoread faq limitations macro loop dpanel ds_white_paper gtk releasing"
+  oz_doc_dirs="apptut base bugs compiler contrib demo foreign gump op opi ozcar profiler ozdoc system tools wp fdt fst cpitut cpiref install tutorial overview panel explorer inspector browser notation dstutorial changes tcltk howtoread faq limitations macro loop dpanel ds_white_paper releasing"
 fi
 
 DOC_DIRS=$oz_doc_dirs
@@ -123,9 +125,26 @@ fi
 
 AC_SUBST(SUBDIRS)
 
+AC_MSG_CHECKING(for --with-ozhome)
+AC_ARG_WITH(ozhome,
+  [--with-ozhome=DIR  real home in case of fake root build],
+  oz_real_ozhome="$with_ozhome")
+: ${oz_real_ozhome=no}
+AC_MSG_RESULT($oz_real_ozhome)
+if test "${oz_real_ozhome}" = no; then
+    if test "${prefix}" = NONE; then
+        REAL_OZHOME="$ac_default_prefix"
+    else
+        REAL_OZHOME="$prefix"
+    fi
+else
+    REAL_OZHOME="$oz_real_ozhome"
+fi
+AC_SUBST(REAL_OZHOME)
+
 AC_CONFIG_SUBDIRS(utilities chm)
 
-AC_OUTPUT(Makefile Makefile.common Makefile.vars catalog bootcatalog base/Makefile bugs/Makefile foreign/Makefile apptut/Makefile wp/Makefile system/Makefile compiler/Makefile opi/Makefile tools/Makefile ozcar/Makefile profiler/Makefile gump/Makefile ozdoc/Makefile contrib/Makefile demo/Makefile op/Makefile fdt/Makefile fst/Makefile cpitut/Makefile cpiref/Makefile install/Makefile tutorial/Makefile overview/Makefile notation/Makefile browser/Makefile panel/Makefile explorer/Makefile inspector/Makefile dstutorial/Makefile changes/Makefile tcltk/Makefile howtoread/Makefile faq/Makefile limitations/Makefile xsl/Makefile xsl/ozdoc-info.sty:xsl/ozdoc-info.in macro/Makefile loop/Makefile dpanel/Makefile ds_white_paper/Makefile gtk/Makefile releasing/Makefile)
+AC_OUTPUT(Makefile Makefile.common Makefile.vars catalog bootcatalog base/Makefile bugs/Makefile foreign/Makefile apptut/Makefile wp/Makefile system/Makefile compiler/Makefile opi/Makefile tools/Makefile ozcar/Makefile profiler/Makefile gump/Makefile ozdoc/Makefile contrib/Makefile demo/Makefile op/Makefile fdt/Makefile fst/Makefile cpitut/Makefile cpiref/Makefile install/Makefile tutorial/Makefile overview/Makefile notation/Makefile browser/Makefile panel/Makefile explorer/Makefile inspector/Makefile dstutorial/Makefile changes/Makefile tcltk/Makefile howtoread/Makefile faq/Makefile limitations/Makefile xsl/Makefile xsl/ozdoc-info.sty:xsl/ozdoc-info.in macro/Makefile loop/Makefile dpanel/Makefile ds_white_paper/Makefile releasing/Makefile)
 
 errprint(ifdef([OZ_INIT],
  [autoconf succeeded

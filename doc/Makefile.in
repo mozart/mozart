@@ -28,6 +28,7 @@ PREFIX          = @prefix@
 VPATH           = @srcdir@
 SHDOCDIR        = $(PREFIX)/share/doc
 DOCDIR          = $(PREFIX)/doc
+ADDONSDIR       = $(PREFIX)/doc/add-ons
 SRCTOP          = @SRCTOP@
 BUILDTOP        = @BUILDTOP@
 PLATFORM        = @PLATFORM@
@@ -61,10 +62,12 @@ CSSFILES = ozdoc.css page.gif
 CSSSRCFILES = $(addprefix $(SRCTOP)/doc/utilities/,$(CSSFILES))
 CSSDSTFILES = $(addprefix $(SHDOCDIR)/,$(CSSFILES))
 
-install:: all $(SHDOCDIR) $(DOCDIR) $(LIBFILES) $(DOCDIR)/.htaccess \
-        $(DOCDIR)/idx $(DOCDIR)/idx/index.html $(CSSDSTFILES)
+install:: all \
+        $(DOCDIR) $(DOCDIR)/.htaccess $(DOCDIR)/idx $(DOCDIR)/idx/index.html \
+        $(SHDOCDIR) $(CSSDSTFILES) $(LIBFILES) \
+        $(ADDONSDIR) $(ADDONSDIR)/README.html
 
-$(SHDOCDIR) $(DOCDIR) $(DOCDIR)/idx:
+$(DOCDIR) $(DOCDIR)/idx $(SHDOCDIR) $(ADDONSDIR):
         $(INSTALL_DIR) $@
 
 $(DOCDIR)/.htaccess: .htaccess
@@ -80,6 +83,9 @@ $(SHDOCDIR)/%.gif: $(SRCTOP)/doc/utilities/%.gif
         $(INSTALL_FILE) $< $@
 
 $(LIBFILES): $(SHDOCDIR)/% : %
+        $(INSTALL_FILE) $< $@
+
+$(ADDONSDIR)/README.html: README.html
         $(INSTALL_FILE) $< $@
 
 all quick check install clean veryclean distclean installps depend clean-xref::
@@ -120,7 +126,7 @@ PSDOCDIRS       = apptut base browser bugs changes compiler \
         contrib cpiref cpitut demo dstutorial explorer fdt \
         foreign fst gump install limitations macro notation op \
         opi ozcar ozdoc panel profiler system tools \
-        tutorial wp loop dpanel ds_white_paper inspector gtk
+        tutorial wp loop dpanel ds_white_paper inspector
 
 idx/index.html:
         mkdir idx 2> /dev/null; \

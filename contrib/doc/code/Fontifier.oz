@@ -51,7 +51,7 @@
 %%%
 %%%     the FILES will be loaded on startup.  One of them should
 %%% provide an implementation for (ozdoc-fontify).  The default is to
-%%% load both oz.elc and Fontifier.elc.
+%%% load both oz.{el,elc} and Fontifier.{el,elc}.
 %%%
 %%% {Fontifier.processVirtualString MODE VS RESULT}
 %%%

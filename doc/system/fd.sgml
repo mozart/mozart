@@ -1098,6 +1098,7 @@ reifies <<{FD.distance D1 D2 A D3}>> into ?_{D4}.
 {FD.reified.card ?*{D1} ?*{Dv} ?*{D2} ?_{D3}}
 >>>
 <item>
+?{Dv} is a vector of Boolean variables. <code/FD.reified.card/
 creates a propagator for
 <p><math>(({\tt D1}\leq{\tt D}_1+\ldots+{\tt D}_n\leq{\tt D2}) \leftrightarrow
 ({\tt D3}=1))\;\wedge\;{\tt D3} \in \{0,1\}.</math><p>
@@ -1574,11 +1575,10 @@ the leftmost variable whose domain is minimal is selected.
 </list>
 <item> ?_{Value}:
 <list>
-        <item> Ternary procedure <<P>>: Selects a value from the domain of
-        the selected variable. The first argument is the domain of the
-        selected variable. The second argument is the vector ?_{Xv}
-        converted to a list and the third argument is a procedure used
-        as continuation.
+        <item> Binary procedure <<P>>: Takes a variable as first argument,
+        and binds its second argument to a domain descriptor <<D>> to serve
+        as the restriction on said variable to be used in a binary distribution
+        step (<<D>> in one branch, <<compl(D)>> in the other).
         <item> <<min>>: Selects the lower bound of the domain.
         <item> <<max>>: Selects the upper bound of the domain.
         <item> <<mid>>: Selects the element, which is closest to the

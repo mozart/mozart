@@ -10,8 +10,8 @@
 #   Leif Kornstaedt, 1998
 #
 # Last change:
-#   $Date: 1998/09/07 15:54:13 $ by $Author: kornstae $
-#   $Revision: 1.8 $
+#   $Date$ by $Author$
+#   $Revision$
 #
 # This file is part of Mozart, an implementation of Oz 3:
 #   $MOZARTURL$
@@ -32,7 +32,7 @@ fi
 infile=$1; shift
 outdir=$1; shift
 
-tmpdir=/tmp/ps2gif.$$
+tmpdir=/tmp/ps2png.$$
 trap 'rm -rf $tmpdir' 0 1 2 15
 mkdir $tmpdir
 
@@ -64,9 +64,9 @@ cp $infile $tmpdir/x.tex
             done
             i=`expr $i + 1`
             pnmcrop < latex$i.ppm 2> /dev/null |
-            ppmtogif -transparent rgbi:1/1/1 2> /dev/null > latex$1.gif  || exit 1
+            pnmtopng -transparent rgbi:1/1/1 2> /dev/null > latex$1.png  || exit 1
             rm latex$i.ppm
-            echo Wrote latex$1.gif 1>&2
+            echo Wrote latex$1.png 1>&2
             echo
             shift
         done
@@ -74,6 +74,6 @@ cp $infile $tmpdir/x.tex
     ) > moo
 ) || exit 1
 
-mv $tmpdir/latex*.gif $outdir
+mv $tmpdir/latex*.png $outdir
 
 exit 0
