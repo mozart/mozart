@@ -53,7 +53,11 @@ local
 
    fun {SymbolToVirtualString S}
       {FormatStringToVirtualString
-       case S of fVar(X _) then pn(X) [] fAtom(X _) then oz(X) end}
+       case S of fVar(X _) then pn(X)
+       [] fAtom(X _) then oz(X)
+       [] fDollar(_) then '$'
+       [] fWildcard(_) then '_'
+       end}
    end
 
    \insert Output
@@ -64,7 +68,7 @@ local
    PU = format(push)
    PO = format(pop)
    GL = format(glue(" "))
-   fun {LI Xs Sep} format(list(Xs Sep)) end
+   fun {LI Xs Sep} list(Xs Sep) end
 
    proc {WriteVSFile VS Name}
       T = {Thread.this}
