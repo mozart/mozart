@@ -97,9 +97,6 @@ void printBanner(char*initFile)
 #ifdef DEBUG_FSET
 	  " DEBUG_FSET"
 #endif
-#ifdef PROFILE_FD
-	  " PROFILE_FD"
-#endif
 #ifdef RECINSTRFETCH
 	  " RECINSTRFETCH=%d", RECINSTRFETCH
 #endif
@@ -122,9 +119,6 @@ void printBanner(char*initFile)
   fprintf(stderr, "Not using threaded code.\n");
 #endif
 
-#ifdef PROFILE_FD
-  fprintf(stderr, "Compiled to support fd-profiling.\n");
-#endif
 }
 
 

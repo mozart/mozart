@@ -3854,15 +3854,6 @@ OZ_Return isDictionaryInline(TaggedRef t, TaggedRef &out)
 OZ_DECLAREBI_USEINLINEFUN1(BIisDictionary,isDictionaryInline)
 
 
-OZ_Return dictionaryIsMtInline(TaggedRef d, TaggedRef &out) {
-  NONVAR(d,dictaux);
-  if (!oz_isDictionary(dictaux)) { oz_typeError(0,"Dictionary"); }
-  out = tagged2Dictionary(dictaux)->isEmpty() ? NameTrue : NameFalse;
-  return PROCEED;
-}
-OZ_DECLAREBI_USEINLINEFUN1(BIdictionaryIsMt,dictionaryIsMtInline)
-
-
 #define GetDictAndKey(d,k,dict,key,checkboard)			\
   NONVAR(d,dictaux);						\
   NONVAR(k,key);						\
@@ -3910,48 +3901,6 @@ OZ_Return dictionaryPutInline(TaggedRef d, TaggedRef k, TaggedRef value)
 }
 
 OZ_DECLAREBI_USEINLINEREL3(BIdictionaryPut,dictionaryPutInline)
-
-
-OZ_Return dictionaryCondPutInline(TaggedRef d, TaggedRef k, TaggedRef value)
-{
-  GetDictAndKey(d,k,dict,key,OK);
-  dict->setCondArg(key,value);
-  return PROCEED;
-}
-
-OZ_DECLAREBI_USEINLINEREL3(BIdictionaryCondPut,dictionaryCondPutInline)
-
-
-OZ_BI_define(BIdictionaryExchange,4,0) {
-  TaggedRef d = OZ_in(0);
-  TaggedRef k = OZ_in(1); 
-  
-  GetDictAndKey(d,k,dict,key,OK);
-
-  TaggedRef ov;
-
-  dict->exchange(key, OZ_in(3), &ov);
-  
-  if (ov == makeTaggedNULL()) {
-    return oz_raise(E_SYSTEM,E_KERNEL,"dict",2,d,k);
-  }
-  return oz_unify(ov,OZ_in(2));
-} OZ_BI_end
-
-OZ_BI_define(BIdictionaryCondExchange,5,0) {
-  TaggedRef d = OZ_in(0);
-  TaggedRef k = OZ_in(1); 
-    
-  GetDictAndKey(d,k,dict,key,OK);
-  
-  TaggedRef ov;
-  
-  dict->exchange(key, OZ_in(3), &ov);
-
-  return oz_unify(OZ_in(2), 
-		  ((ov==makeTaggedNULL()) ? (OZ_in(4)) : ov));
-} OZ_BI_end
-
 
 OZ_Return dictionaryRemoveInline(TaggedRef d, TaggedRef k)
 {
