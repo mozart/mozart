@@ -622,7 +622,15 @@ LBLfailure:
      }
      
      DECSOLVETHREADS(CBB, "e");
-     oz_disposeThread(CTT);
+
+
+     // tmueller: this experimental
+#ifdef NAME_PROPAGATORS
+     if (!e->isPropagatorLocation()) {
+       oz_disposeThread(CTT);
+     }
+#endif
+
      am.threadsPool.unsetCurrentThread();
 
      goto LBLstart;
