@@ -416,25 +416,17 @@ OZ_Bool list2buff(OZ_Term list, char **write_buff, int *len,
 static OZ_Bool vs2buff(OZ_Term vs, char **write_buff, int *len,
                        OZ_Term *rest, OZ_Term *susp)
 {
-  static
-  char *label;
-  int width;
+  if (OZ_isAtom(vs)) {
+    return OZ_isNil(vs) ? PROCEED : atom2buff(vs, write_buff, len, rest, susp);
+  }
 
-  if (OZ_isNil(vs)) {
-    return PROCEED;
-  } else if (OZ_isAtom(vs)) {
-    return atom2buff(vs, write_buff, len, rest, susp);
-  } else if (OZ_isInt(vs)) {
-    return int2buff(vs, write_buff, len, rest, susp);
-  } else if (OZ_isFloat(vs)) {
-    return float2buff(vs, write_buff, len, rest, susp);
-  } else if (OZ_isTuple(vs) && (label = OZ_atomToC(OZ_label(vs)))) {
-    width = OZ_width(vs);
+  char *label;
+  if (OZ_isTuple(vs) && (label = OZ_atomToC(OZ_label(vs)))) {
+    int width = OZ_width(vs);
     if (IsPair(label) && width > 0) {
-      int i,j;
       OZ_Term arg_susp, arg_rest;
 
-      for (i=1; i<=width; i++) {
+      for (int i=1; i<=width; i++) {
 
         OZ_Bool status = vs2buff(OZ_getArg(vs,i), write_buff, len,
                                  &arg_rest, &arg_susp);
@@ -448,7 +440,7 @@ static OZ_Bool vs2buff(OZ_Term vs, char **write_buff, int *len,
 
             OZ_putArg(*rest, 1, arg_rest);
             i++;
-            for (j=2 ; i <= width ; (j++, i++)) {
+            for (int j=2 ; i <= width ; (j++, i++)) {
               OZ_putArg(*rest, j, OZ_getArg(vs, i));
             }
           }
@@ -466,7 +458,17 @@ static OZ_Bool vs2buff(OZ_Term vs, char **write_buff, int *len,
     }
     OZ_warning("skipping illegal virtual string");
     return FAILED;
-  } else if (OZ_isVariable(vs)) {
+  }
+
+  if (OZ_isInt(vs)) {
+    return int2buff(vs, write_buff, len, rest, susp);
+  }
+
+  if (OZ_isFloat(vs)) {
+    return float2buff(vs, write_buff, len, rest, susp);
+  }
+
+  if (OZ_isVariable(vs)) {
     *rest = vs;
     *susp = vs;
     return SUSPEND;
