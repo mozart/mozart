@@ -527,7 +527,7 @@ the GDB commands `cd DIR' and `directory'."
      '(
        "pred" "proc" "fun"
        "local" "declare"
-       "if" "or" "case" "then" "else" "elseif" "of" "elseof" "end" "fi" "ro"
+       "if" "or" "OR" "case" "then" "else" "elseif" "of" "elseof" "end" "fi" "ro" "RO"
        "class" "create" "meth" "extern" "from" "with" "attr" "feat" "self"
        "true" "false"
        "div" "mod"
@@ -544,7 +544,7 @@ the GDB commands `cd DIR' and `directory'."
 	         '(
 		   "pred" "proc" "fun"
 		   "local"
-		   "if" "or" "case"
+		   "if" "or" "OR" "case"
 		   "class" "create" "meth" "extern"
 		   "not" "process"
 		   )))
@@ -553,7 +553,7 @@ the GDB commands `cd DIR' and `directory'."
 (defconst oz-right-pattern "[])}]")
 
 (defconst oz-end-pattern
-      (oz-make-keywords-for-match '("end" "fi" "ro")))
+      (oz-make-keywords-for-match '("end" "fi" "ro" "RO")))
 
 
 (defconst oz-between-pattern 
