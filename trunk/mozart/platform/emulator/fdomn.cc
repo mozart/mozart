@@ -681,11 +681,8 @@ int FDBitVector::mkRaw(int * list_left, int * list_right) const
 int FDBitVector::union_bv(const FDBitVector &x, const int x_upper,
 			  const FDBitVector &y, const int y_upper)
 {
-  int i, s = word32(max(x_upper, y_upper));
-  for (i = s; i--; )
+  for (int i = fd_bv_max_high; i--; )
     b_arr[i] = x.b_arr[i] | y.b_arr[i];
-  for (i = s; i < fd_bv_max_high; i += 1)
-    b_arr[i] = 0;
 
   return findSize();
 }
