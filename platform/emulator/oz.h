@@ -65,26 +65,26 @@ extern OZ_Term OZ_deref    _PROTOTYPE((OZ_Term term));
 
 /* tests */
 extern int OZ_isAtom       _PROTOTYPE((OZ_Term));
+extern int OZ_isBigInt     _PROTOTYPE((OZ_Term));
 extern int OZ_isCell       _PROTOTYPE((OZ_Term));
 extern int OZ_isChunk      _PROTOTYPE((OZ_Term));
+extern int OZ_isCons       _PROTOTYPE((OZ_Term));
+extern int OZ_isFalse      _PROTOTYPE((OZ_Term));
 extern int OZ_isFloat      _PROTOTYPE((OZ_Term));
 extern int OZ_isInt        _PROTOTYPE((OZ_Term));
 extern int OZ_isLiteral    _PROTOTYPE((OZ_Term));
 extern int OZ_isName       _PROTOTYPE((OZ_Term));
+extern int OZ_isNil        _PROTOTYPE((OZ_Term));
+extern int OZ_isObject     _PROTOTYPE((OZ_Term));
+extern int OZ_isPair       _PROTOTYPE((OZ_Term));
+extern int OZ_isPair2      _PROTOTYPE((OZ_Term));
 extern int OZ_isProcedure  _PROTOTYPE((OZ_Term));
 extern int OZ_isRecord     _PROTOTYPE((OZ_Term));
+extern int OZ_isSmallInt   _PROTOTYPE((OZ_Term));
+extern int OZ_isTrue       _PROTOTYPE((OZ_Term));
 extern int OZ_isTuple      _PROTOTYPE((OZ_Term));
 extern int OZ_isValue      _PROTOTYPE((OZ_Term));
 extern int OZ_isVariable   _PROTOTYPE((OZ_Term));
-extern int OZ_isCons       _PROTOTYPE((OZ_Term));
-extern int OZ_isSmallInt   _PROTOTYPE((OZ_Term));
-extern int OZ_isBigInt     _PROTOTYPE((OZ_Term));
-extern int OZ_isTrue       _PROTOTYPE((OZ_Term));
-extern int OZ_isFalse      _PROTOTYPE((OZ_Term));
-extern int OZ_isNil        _PROTOTYPE((OZ_Term));
-extern int OZ_isPair       _PROTOTYPE((OZ_Term));
-extern int OZ_isPair2      _PROTOTYPE((OZ_Term));
-extern int OZ_isObject     _PROTOTYPE((OZ_Term));
 
 extern OZ_Return OZ_isList          _PROTOTYPE((OZ_Term));
 extern OZ_Return OZ_isString        _PROTOTYPE((OZ_Term));
