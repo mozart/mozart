@@ -1,0 +1,211 @@
+%option noyywrap noreject nodefault
+
+%{
+///  Programming Systems Lab, Universitaet des Saarlandes,
+///  Postfach 15 11 50, D-66041 Saarbruecken, Phone (+49) 681 302-5609
+///  Author: Leif Kornstaedt <kornstae@ps.uni-sb.de>
+
+#ifdef OZMA
+
+#include "tagged.hh"
+#include "ozma.hh"
+
+void ozmaerror(const char *message);
+
+static int ozma_lineno = 1;
+
+static void setRegisterIndex() {
+  int i = 0;
+  char *s = ozmatext + 2;
+  while ('0' <= *s && *s <= '9') {
+    i = i * 10 + (*s - '0');
+    s++;
+  }
+  ozmalval.index = i;
+}
+
+changequote(@,~)
+
+static void transBody(char c, char *text, int &i, int &j) {
+  int jstart = j;
+  while (text[j] != c) {
+    if (text[j] == '\\') {
+      j++;
+      switch (text[j]) {
+      case 'a':
+        text[i] = '\a';
+        break;
+      case 'b':
+        text[i] = '\b';
+        break;
+      case 'f':
+        text[i] = '\f';
+        break;
+      case 'n':
+        text[i] = '\n';
+        break;
+      case 'r':
+        text[i] = '\r';
+        break;
+      case 't':
+        text[i] = '\t';
+        break;
+      case 'v':
+        text[i] = '\v';
+        break;
+      case 'x':
+        { char hexstring[3];
+          hexstring[0] = text[++j];
+          hexstring[1] = text[++j];
+          hexstring[2] = '\0';
+          int hexnum = (int) strtol(hexstring, NULL, 16);
+          if (hexnum == 0)
+            ozmaerror("illegal hexadecimal character");
+          text[i] = hexnum;
+        }
+        break;
+      case '\\':
+        text[i] = '\\';
+        break;
+      case '`':
+        text[i] = '`';
+        break;
+      case '\"':
+        text[i] = '\"';
+        break;
+      case '\'':
+        text[i] = '\'';
+        break;
+      default:
+        { char octstring[4];
+          octstring[0] = text[j++];
+          octstring[1] = text[j++];
+          octstring[2] = text[j];
+          octstring[3] = '\0';
+          int octnum = (int) strtol(octstring, NULL, 8);
+          if (octnum == 0 || octnum > 255)
+            ozmaerror("illegal octal character");
+          text[i] = octnum & 0xFF;
+        }
+      }
+    } else
+      text[i] = text[j];
+    i++;
+    j++;
+  }
+}
+
+static void stripTrans(char c) {
+  if (ozmatext[0] == c) {
+    int i = 0;
+    int j = 1;
+    transBody(c, ozmatext, i, j);
+    ozmatext[i] = '\0';
+  }
+}
+
+static void strip(char c) {
+  if (ozmatext[0] == c) {
+    int i = 1;
+    while (ozmatext[i] != '\0') {
+      ozmatext[i - 1] = ozmatext[i];
+      i++;
+    }
+    ozmatext[i - 2] = '\0';
+  }
+}
+
+%}
+
+changequote(<,>)
+
+SPACE        [? \t\r\v\f]
+BLANK        [ \r\t]
+
+LOWER        [a-z\337-\366\370-\377]
+UPPER        [A-Z\300-\326\330-\336]
+DIGIT        [0-9]
+NONZERODIGIT [1-9]
+ALPHANUM     {LOWER}|{UPPER}|{DIGIT}|_
+CHAR         [^\\\x00]
+ATOMCHAR     [^'\\\x00]
+STRINGCHAR   [^\"\\\x00]
+ESCAPE       [abfnrtv\\'\"`]
+BIN          [0-1]
+OCT          [0-7]
+HEX          [0-9a-fA-F]
+PSEUDOCHAR   \\({OCT}{OCT}{OCT}|x{HEX}{HEX}|{ESCAPE})
+
+ANYCHAR      {CHAR}|{PSEUDOCHAR}
+ATOM         ({LOWER}{ALPHANUM}*)|("'"({ATOMCHAR}|{PSEUDOCHAR})*"'")
+
+INT          ~?(0{OCT}*|0(x|X){HEX}+|0(b|B){BIN}+|{NONZERODIGIT}{DIGIT}*)
+
+%%
+
+{INT} {
+  ozmalval.tagged = OZ_CStringToInt(ozmatext);
+  return INTEGER;
+}
+
+~?{DIGIT}+\.{DIGIT}*((e|E)~?{DIGIT}+)? {
+  ozmalval.tagged = OZ_CStringToFloat(ozmatext);
+  return FLOAT;
+}
+
+"true"                         { return TRUE; }
+"false"                        { return FALSE; }
+"unit"                         { return UNIT; }
+"nil"                          { return NIL; }
+
+x\({DIGIT}+\)                  { setRegisterIndex(); return XREGISTER; }
+y\({DIGIT}+\)                  { setRegisterIndex(); return YREGISTER; }
+g\({DIGIT}+\)                  { setRegisterIndex(); return GREGISTER; }
+
+"lbl"                          { return LBL; }
+"pid"                          { return PID; }
+"ht"                           { return HT; }
+"onVar"                        { return ONVAR; }
+"onScalar"                     { return ONSCALAR; }
+"onRecord"                     { return ONRECORD; }
+"gci"                          { return GCI; }
+"ami"                          { return AMI; }
+
+changequote(`,')
+define(instruction,$1 { return `T_$1'; })
+define(instructionsUnneededForNewCompiler,`divert(-1)')
+include(`../include/instrDefs.m4')
+undefine(`instruction')
+
+\<{ATOM}\> {
+  strip('<');
+  stripTrans('\'');
+  ozmalval.tagged = OZ_atom(ozmatext);
+  return NAME;
+}
+
+{ATOM} {
+  stripTrans('\'');
+  ozmalval.tagged = OZ_atom(ozmatext);
+  return ATOM;
+}
+
+"("|")"|"["|"]"                { return ozmatext[0]; }
+
+{SPACE}                        ;
+
+%.*                            ;
+
+\n                             { ozma_lineno++; }
+
+.                              { ozmaerror("ignoring illegal character"); }
+
+<<EOF>>                        { return 0; }
+
+%%
+
+void ozmaerror(const char *message) {
+  fprintf(stderr,"Ozma error in line %d: %s\n",ozma_lineno,message);
+}
+
+#endif

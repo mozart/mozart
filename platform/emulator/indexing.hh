@@ -50,6 +50,7 @@ class HTEntry {
   HTEntry* getNext(void) {return next;}
 
   ProgramCounter getLabel()  {return label;}
+  ProgramCounter *getLabelRef()  {return &label;}
   TaggedRef getNumber()  {return u.number;}
   Literal *getLiteral()  {return u.literal;}
   Literal *getFunctor(SRecordArity &a)
@@ -130,9 +131,10 @@ class IHashTable {
     varLabel  = elseLabel;
   };
 
-  void add(TaggedRef number, ProgramCounter label);
-  void add(Literal *constant, ProgramCounter label);
-  void add(Literal *functor, SRecordArity arity, ProgramCounter label);
+  ProgramCounter *add(TaggedRef number, ProgramCounter label);
+  ProgramCounter *add(Literal *constant, ProgramCounter label);
+  ProgramCounter *add(Literal *functor, SRecordArity arity,
+                      ProgramCounter label);
   void addVar(ProgramCounter label)  { varLabel  = label; }
   void addList(ProgramCounter label) { listLabel = label; }
 

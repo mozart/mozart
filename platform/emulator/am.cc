@@ -31,6 +31,9 @@ void usage(int /* argc */,char **argv) {
   fprintf(stderr, " -c <compiler>: start the compiler\n");
   fprintf(stderr, " -S <fifo>: connect to compiler via FIFO\n");
   fprintf(stderr, " -u <url>: start a compute server\n");
+#ifdef OZMA
+  fprintf(stderr, " -b <file>: boot from assembly code\n");
+#endif
   fprintf(stderr, " -f <file>: execute precompiled file\n");
   fprintf(stderr, " -a <args> ...: application arguments\n");
   osExit(1);
@@ -154,7 +157,10 @@ void AM::init(int argc,char **argv)
 
   char *compilerFIFO = NULL;  // path name where to connect to
   char *precompiledFile = NULL;
-  char *url=0;
+  char *url = NULL;
+#ifdef OZMA
+  char *assemblyCodeFile = NULL;
+#endif
   Bool quiet = FALSE;
   int moreThanOne = 0;
 
@@ -198,6 +204,13 @@ void AM::init(int argc,char **argv)
       url = getOptArg(i,argc,argv);
       continue;
     }
+#ifdef OZMA
+    if (strcmp(argv[i],"-b")==0) {
+      moreThanOne++;
+      assemblyCodeFile = getOptArg(i,argc,argv);
+      continue;
+    }
+#endif
 
     if (strcmp(argv[i],"-a")==0) {
       ozconf.argC = argc-i-1;
@@ -210,7 +223,11 @@ void AM::init(int argc,char **argv)
   }
 
   if (moreThanOne > 1) {
+#ifdef OZMA
+    fprintf(stderr,"Atmost one of '-u', '-f', '-S', '-b' allowed.\n");
+#else
     fprintf(stderr,"Atmost one of '-u', '-f', '-S' allowed.\n");
+#endif
     usage(argc,argv);
    }
 
@@ -227,6 +244,10 @@ void AM::init(int argc,char **argv)
   compStream = 0;
   if (url) {
     isStandaloneF=OK;
+#ifdef OZMA
+  } else if (assemblyCodeFile) {
+    isStandaloneF=OK;
+#endif
   } else {
     if (compilerFIFO) {
       compStream = connectCompiler(compilerFIFO);
@@ -326,6 +347,18 @@ void AM::init(int argc,char **argv)
     tt->pushCall(v, 0, 0);
     scheduleThread(tt);
   }
+
+#ifdef OZMA
+  if (assemblyCodeFile) {
+    extern OZ_Term ozma_readProc(const char *filename);
+    OZ_Term v=ozma_readProc(assemblyCodeFile);
+    if (v!=makeTaggedNULL()) {
+      Thread *tt = mkRunnableThread(DEFAULT_PRIORITY, _rootBoard);
+      tt->pushCall(v, 0, 0);
+      scheduleThread(tt);
+    }
+  }
+#endif
 
 #ifdef DEBUG_CHECK
   dontPropagate = NO;

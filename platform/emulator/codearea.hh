@@ -314,6 +314,7 @@ public:
   void writeDebugInfo(TaggedRef file, int line) {
     CheckWPtr; allDbgInfos = new DbgInfo(wPtr,file,line,allDbgInfos);
   }
+  ProgramCounter getWritePtr(void)       { return wPtr; }
 };
 
 

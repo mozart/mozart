@@ -1,0 +1,517 @@
+%{
+///  Programming Systems Lab, Universitaet des Saarlandes,
+///  Postfach 15 11 50, D-66041 Saarbruecken, Phone (+49) 681 302-5609
+///  Author: Leif Kornstaedt <kornstae@ps.uni-sb.de>
+
+#ifdef OZMA
+
+#undef OZMA_DEBUG
+
+#include "am.hh"
+#include "runtime.hh"
+#include "indexing.hh"
+#include "dictionary.hh"
+
+#define YYERROR_VERBOSE
+
+void ozmaerror(const char *message);
+int ozmalex(void);
+void ozmarestart(FILE *);
+
+static CodeArea *codeArea = NULL;
+static int offset = 0;
+
+static OzDictionary *labelDict = NULL;
+static OzDictionary *abstrEntryDict = NULL;
+static OzDictionary *nameDict = NULL;
+
+static IHashTable *ht = NULL;
+
+static ProgramCounter opcodePC = 0;
+static Opcode *opcodeTable = NULL;
+static int opcodeIndex = 0, opcodeIndexFactor = 0;
+
+static SRecordArity getArity(TaggedRef arity) {
+  arity = deref(arity);
+  if (isSmallInt(arity)) {
+    return mkTupleWidth(smallIntValue(arity));
+  }
+
+  int len = length(arity);
+  arity = sortlist(arity,len);
+  Arity *ari = aritytable.find(arity);
+  return (ari->isTuple())? mkTupleWidth(ari->getWidth()): mkRecordArity(ari);
+}
+
+inline Bool getBool(TaggedRef t) {
+  return literalEq(deref(t),NameTrue);
+}
+
+static void lookupLabel(TaggedRef key, ProgramCounter *location) {
+  TaggedRef backpatchListOrLabel;
+  if (labelDict->getArg(key,backpatchListOrLabel) == PROCEED)
+    if (OZ_isInt(backpatchListOrLabel))
+      *location = codeArea->getStart() + OZ_intToC(backpatchListOrLabel);
+    else
+      labelDict->setArg(key,OZ_cons(OZ_int(location),backpatchListOrLabel));
+  else
+    labelDict->setArg(key,OZ_cons(OZ_int(location),OZ_nil()));
+}
+
+%}
+
+%union {
+  TaggedRef tagged;
+  int index;
+}
+
+%token <tagged> INTEGER FLOAT NIL ATOM TRUE FALSE UNIT NAME
+%token <index> XREGISTER YREGISTER GREGISTER
+%token LBL PID HT ONVAR ONSCALAR ONRECORD GCI AMI
+
+define(instruction,%token `T_$1')
+define(instructionsUnneededForNewCompiler,`divert(-1)')
+include(`../include/instrDefs.m4')
+undefine(`instruction')
+
+%type <tagged> DefLabel
+%type <tagged> ANumber
+%type <tagged> ALiteral
+%type <tagged> Atom
+%type <tagged> Bool
+%type <tagged> Name
+%type <tagged> HashTableEntries
+%type <tagged> HashTableEntry
+%type <tagged> NumOrLit
+%type <tagged> ARecordArity
+%type <tagged> ArityFeatures
+%type <tagged> ArityFeature
+%type <tagged> Registers
+%type <tagged> ARegister
+
+%%
+
+File            : CodeSize Instructions
+                  {
+                    ; //--** warn about undeclared labels
+                  }
+                ;
+
+CodeSize        : INTEGER
+                  {
+                    int size = OZ_intToC($1);
+                    codeArea = new CodeArea(size);
+                    labelDict = new OzDictionary(am.currentBoard());
+                    abstrEntryDict = new OzDictionary(am.currentBoard());
+                    nameDict = new OzDictionary(am.currentBoard());
+                  }
+                ;
+
+Instructions    : Instruction
+                | Instructions Instruction
+                ;
+
+changequote(@,~)
+define(noReg,{
+#ifdef OZMA_DEBUG
+  opcodePC = codeArea->getWritePtr();
+#endif
+  codeArea->writeOpcode((Opcode) $1);
+  offset += sizeOf($1);
+})
+define(oneReg,{ opcodePC = codeArea->getWritePtr();
+  codeArea->writeOpcode((Opcode) OZERROR);
+  offset += sizeOf($1X);
+  static Opcode ops[3] = {@`$1X,$1Y,$1G'~};
+  opcodeTable = ops;
+  opcodeIndex = 0;
+  opcodeIndexFactor = 1;
+})
+define(twoRegs,{ opcodePC = codeArea->getWritePtr();
+  codeArea->writeOpcode((Opcode) OZERROR);
+  offset += sizeOf($1XX);
+  static Opcode ops[9] = {@`$1XX,$1XY,$1XG,'~
+                          @`$1YX,$1YY,$1YG,'~
+                          @`$1GX,$1GY,$1GG'~};
+  opcodeTable = ops;
+  opcodeIndex = 0;
+  opcodeIndexFactor = 3;
+})
+define(instruction,| @T_$1~
+@ifelse(numOfRegs($2,$3,$4),1,oneReg(TOUPPER($1)),
+        numOfRegs($2,$3,$4),2,twoRegs(TOUPPER($1)),
+        noReg(TOUPPER($1)))~
+@ifelse(`$#',1,,'`('' )~dnl
+$2 $3 $4 $5 $6 $7 dnl
+@ifelse(`$#',1,,'`)'' )~
+@ifelse(numOfRegs($2,$3,$4),0,,
+{ codeArea->writeOpcode(opcodeTable[opcodeIndex],opcodePC); }
+)~
+{
+#ifdef OZMA_DEBUG
+  displayCode(opcodePC,1);
+#endif
+}
+)
+changequote(`,')
+
+DefLabel        : Atom
+                  { $$ = $1; }
+                | INTEGER
+                  { $$ = $1; }
+                ;
+
+Instruction     : LBL '(' DefLabel ')'
+                  {
+                    TaggedRef backpatchList;
+                    if (labelDict->getArg($3,backpatchList) == PROCEED) {
+                      if (OZ_isInt(backpatchList))
+                        ozmaerror("label multiply defined");
+                      else
+                        while (!literalEq(backpatchList,AtomNil)) {
+                          ProgramCounter ptr = OZ_intToC(head(backpatchList));
+                          codeArea->writeLabel(offset,codeArea->getStart(),
+                                               ptr,OK);
+                          backpatchList = tail(backpatchList);
+                        }
+                    }
+                    labelDict->setArg($3,OZ_int(offset));
+                  }
+include(`../include/instrDefs.m4')
+undefine(`instruction')
+                ;
+
+ANumber         : INTEGER
+                  { $$ = $1; }
+                | FLOAT
+                  { $$ = $1; }
+                ;
+
+Number          : ANumber
+                  { codeArea->writeTagged($1); }
+                ;
+
+ALiteral        : Atom
+                  { $$ = $1; }
+                | Name
+                  { $$ = $1; }
+                ;
+
+Literal         : ALiteral
+                  { codeArea->writeTagged($1); }
+                ;
+
+Atom            : NIL
+                  { $$ = OZ_nil(); }
+                | ATOM
+                  { $$ = $1; }
+                ;
+
+Bool            : TRUE
+                  { $$ = OZ_true(); }
+                | FALSE
+                  { $$ = OZ_false(); }
+                ;
+
+Name            : Bool
+                  { $$ = $1; }
+                | UNIT
+                  { $$ = OZ_unit(); }
+                | NAME
+                  {
+                    TaggedRef key = $1;
+                    TaggedRef theName;
+                    if (nameDict->getArg(key,theName) != PROCEED) {
+                      theName = OZ_newName();
+                      abstrEntryDict->setArg(key,theName);
+                    }
+                    $$ = theName;
+                  }
+                ;
+
+Feature         : INTEGER
+                  { codeArea->writeTagged($1); }
+                | Literal
+                ;
+
+Constant        : Number
+                | Literal
+                ;
+
+Builtinname     : Atom
+                  {
+                    const char *name = OZ_atomToC($1);
+                    BuiltinTabEntry *found = builtinTab.find(name);
+                    if (found == htEmpty) {
+                      ozmaerror("undefined builtin");
+                      YYERROR;
+                    }
+                    codeArea->writeBuiltin(found);
+                  }
+                ;
+
+RelBuiltinname  : Builtinname
+                ;
+
+FunBuiltinname  : Builtinname
+                ;
+
+Variablename    : Atom
+                  { codeArea->writeTagged($1); }
+                ;
+
+Register        : XREGISTER
+                  {
+                    codeArea->writeReg($1);
+                    opcodeIndexFactor /= 3;
+                   }
+                | YREGISTER
+                  {
+                    codeArea->writeReg($1);
+                    opcodeIndex += opcodeIndexFactor;
+                    opcodeIndexFactor /= 3;
+                   }
+                | GREGISTER
+                  {
+                    codeArea->writeReg($1);
+                    opcodeIndex += 2 * opcodeIndexFactor;
+                    opcodeIndexFactor /= 3;
+                   }
+                ;
+
+XRegisterIndex  : XREGISTER
+                  { codeArea->writeReg($1); }
+                ;
+
+YRegisterIndex  : YREGISTER
+                  { codeArea->writeReg($1); }
+                ;
+
+Label           : DefLabel
+                  {
+                    ProgramCounter location = codeArea->getWritePtr();
+                    // write a dummy to advance the write pointer
+                    codeArea->writeLabel(location - codeArea->getStart());
+                    lookupLabel($1,(ProgramCounter *) location);
+                  }
+                ;
+
+Integer         : INTEGER
+                  { codeArea->writeInt(OZ_intToC($1)); }
+                ;
+
+Arity           : Integer
+                ;
+
+Count           : Integer
+                ;
+
+NLiveRegs       : Integer
+                ;
+
+IsTail          : Integer
+                ;
+
+ArityAndIsTail  : Integer
+                ;
+
+Dummy           : Integer
+                ;
+
+PredicateRef    : INTEGER
+                  {
+                    AbstractionEntry *predId = NULL;
+                    TaggedRef key = $1;
+                    if (OZ_intToC(key) != 0) {
+                      TaggedRef abstrEntry;
+                      if (abstrEntryDict->getArg(key,abstrEntry) == PROCEED) {
+                        int id = OZ_intToC(abstrEntry);
+                        predId = (AbstractionEntry *) ToPointer(id);
+                      } else {
+                        predId = new AbstractionEntry(NO);
+                        abstrEntryDict->setArg(key,OZ_int(ToInt32(predId)));
+                      }
+                    }
+                    codeArea->writeAddress(predId);
+                  }
+                ;
+
+PredId          : PID '(' Atom INTEGER Atom INTEGER ')'
+                  {
+                    SRecordArity arity = mkTupleWidth(OZ_intToC($4));
+                    PrTabEntry *pte =
+                      new PrTabEntry($3,arity,$5,OZ_intToC($6));
+                    codeArea->writeAddress(pte);
+                  }
+                ;
+
+HashTableRef    : HT '(' DefLabel '[' HashTableEntries ']' ')'
+                  {
+                    TaggedRef elseLabel = $3;
+                    TaggedRef entries = $5;
+                    int size = length(entries);
+                    ht = new IHashTable(size,0);
+                    lookupLabel($3,&ht->elseLabel);
+                    for (int i = 0; i < size; i++) {
+                      SRecord *rec = tagged2SRecord(head(entries));
+                      entries = tail(entries);
+                      const char *label =
+                        rec->getLabelLiteral()->getPrintName();
+                      if (!strcmp(label,"onVar"))
+                        lookupLabel(rec->getArg(0),&ht->varLabel);
+                      else if (!strcmp(label,"onScalar")) {
+                        TaggedRef value = rec->getArg(0);
+                        if (isLiteral(value))
+                          lookupLabel(rec->getArg(1),
+                                      ht->add(tagged2Literal(value),0));
+                        else
+                          lookupLabel(rec->getArg(1),
+                                      ht->add(value,0));
+                      } else {
+                        SRecordArity ar = getArity(rec->getArg(1));
+                        TaggedRef reclabel = rec->getArg(0);
+                        if (literalEq(reclabel,AtomCons) && sraIsTuple(ar)
+                            && getTupleWidth(ar)==2)
+                          lookupLabel(rec->getArg(2),&ht->listLabel);
+                        else
+                          lookupLabel(rec->getArg(2),
+                                      ht->add(tagged2Literal(reclabel),ar,0));
+                      }
+                    }
+                    codeArea->writeAddress(ht);
+                  }
+                ;
+
+HashTableEntries: HashTableEntry
+                  { $$ = OZ_cons($1,OZ_nil()); }
+                | HashTableEntry HashTableEntries
+                  { $$ = OZ_cons($1,$2); }
+                ;
+
+HashTableEntry  : ONVAR '(' DefLabel ')'
+                  { $$ = OZ_mkTuple(OZ_atom("onVar"),1,$3); }
+                | ONSCALAR '(' NumOrLit DefLabel ')'
+                  { $$ = OZ_mkTuple(OZ_atom("onScalar"),2,$3,$4); }
+                | ONRECORD '(' ALiteral ARecordArity DefLabel ')'
+                  { $$ = OZ_mkTuple(OZ_atom("onRecord"),3,$3,$4,$5); }
+                ;
+
+NumOrLit        : ANumber
+                  { $$ = $1; }
+                | ALiteral
+                  { $$ = $1; }
+                ;
+
+RecordArity     : ARecordArity
+                  { codeArea->writeSRecordArity(getArity($1)); }
+                ;
+
+ARecordArity    : INTEGER
+                  { $$ = $1; }
+                | '[' ArityFeatures ']'
+                  { $$ = $2; }
+                ;
+
+ArityFeatures   : ArityFeature
+                  { $$ = OZ_cons($1,OZ_nil()); }
+                | ArityFeature ArityFeatures
+                  { $$ = OZ_cons($1,$2); }
+                ;
+
+ArityFeature    : INTEGER
+                  { $$ = $1; }
+                | Atom
+                  { $$ = $1; }
+                | Name
+                  { $$ = $1; }
+                ;
+
+GenCallInfo     : GCI '(' GREGISTER Bool Atom Bool ARecordArity ')'
+                  {
+                    SRecordArity ari = getArity($7);
+                    GenCallInfoClass *gci =
+                      new GenCallInfoClass($3,getBool($4),$5,getBool($6),ari);
+                    codeArea->writeAddress(gci);
+                  }
+                ;
+
+ApplMethInfo    : AMI '(' ALiteral ARecordArity ')'
+                  {
+                    SRecordArity ari = getArity($4);
+                    ApplMethInfoClass *ami = new ApplMethInfoClass($3,ari);
+                    codeArea->writeAddress(ami);
+                  }
+                ;
+
+GRegRef         : '[' Registers ']'
+                  {
+                    TaggedRef globals = $2;
+                    int numglobals = length(globals);
+                    AssRegArray *gregs = new AssRegArray(numglobals);
+                    for (int i = 0; i < numglobals; i++) {
+                      SRecord *rec = tagged2SRecord(deref(head(globals)));
+                      globals = deref(tail(globals));
+                      const char *label =
+                        rec->getLabelLiteral()->getPrintName();
+                      KindOfReg regType;
+                      if (!strcmp(label,"x")) {
+                        regType = XReg;
+                      } else if (!strcmp(label,"y")) {
+                        regType = YReg;
+                      } else {
+                        regType = GReg;
+                      }
+                      (*gregs)[i].kind = regType;
+                      (*gregs)[i].number =
+                        smallIntValue(deref(rec->getArg(0)));
+                    }
+                    codeArea->writeAddress(gregs);
+                  }
+                | NIL
+                  {
+                    AssRegArray *gregs = new AssRegArray(0);
+                    codeArea->writeAddress(gregs);
+                  }
+                ;
+
+Registers       : ARegister
+                  { $$ = OZ_cons($1,OZ_nil()); }
+                | ARegister Registers
+                  { $$ = OZ_cons($1,$2); }
+                ;
+
+ARegister       : XREGISTER
+                  { $$ = OZ_mkTuple(OZ_atom("x"),1,OZ_int($1)); }
+                | YREGISTER
+                  { $$ = OZ_mkTuple(OZ_atom("y"),1,OZ_int($1)); }
+                | GREGISTER
+                  { $$ = OZ_mkTuple(OZ_atom("g"),1,OZ_int($1)); }
+                ;
+
+Cache           : Atom
+                  { codeArea->writeCache(); }
+                ;
+
+%%
+
+TaggedRef ozma_readProc(const char *filename) {
+  FILE *file = fopen(filename,"r");
+  if (file == NULL) {
+    ozmaerror("could not open input file");
+    return makeTaggedNULL();
+  }
+  ozmarestart(file);
+  int res = ozmaparse();
+  fclose(file);
+
+  if (res)
+    return makeTaggedNULL();
+
+  RefsArray gRegs = (RefsArray) NULL;
+  PrTabEntry *pte = new PrTabEntry(OZ_atom("toplevelAbstraction"),
+                                           mkTupleWidth(0),nil(),0);
+  pte->PC = codeArea->getStart();
+  return makeTaggedConst(new Abstraction(pte,gRegs,am.currentBoard()));
+}
+
+#endif

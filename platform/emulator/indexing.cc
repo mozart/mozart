@@ -28,7 +28,7 @@ EntryTable newEntryTable(int sz)
 }
 
 
-void IHashTable::add(Literal *constant, ProgramCounter label)
+ProgramCounter *IHashTable::add(Literal *constant, ProgramCounter label)
 {
   numentries++;
   unsigned int hsh = constant->hash() % size;
@@ -38,9 +38,12 @@ void IHashTable::add(Literal *constant, ProgramCounter label)
 
   /* we do not check, whether it is already in there */
   literalTable[hsh] = new HTEntry(constant,label,literalTable[hsh]);
+
+  return literalTable[hsh]->getLabelRef();
 }
 
-void IHashTable::add(Literal *name, SRecordArity arity, ProgramCounter label)
+ProgramCounter *IHashTable::add(Literal *name, SRecordArity arity,
+                                ProgramCounter label)
 {
   numentries++;
   unsigned int hsh = name->hash() % size;
@@ -50,10 +53,12 @@ void IHashTable::add(Literal *name, SRecordArity arity, ProgramCounter label)
 
   /* we do not check, whether it is already in there */
   functorTable[hsh] = new HTEntry(name, arity, label, functorTable[hsh]);
+
+  return functorTable[hsh]->getLabelRef();
 }
 
 
-void IHashTable::add(TaggedRef number, ProgramCounter label)
+ProgramCounter *IHashTable::add(TaggedRef number, ProgramCounter label)
 {
   numentries++;
 
@@ -63,7 +68,7 @@ void IHashTable::add(TaggedRef number, ProgramCounter label)
   case OZFLOAT:  hsh = tagged2Float(number)->hash() % size;  break;
   case BIGINT:   hsh = tagged2BigInt(number)->hash() % size; break;
   case SMALLINT: hsh = smallIntHash(number) % size;          break;
-  default:       Assert(0);                                  return;
+  default:       { static ProgramCounter x = NOCODE; Assert(0); return &x; }
   }
 
   if (numberTable == NULL)
@@ -71,6 +76,8 @@ void IHashTable::add(TaggedRef number, ProgramCounter label)
 
   /* we do not check, whether it is already in there */
   numberTable[hsh] = new HTEntry(number, label, numberTable[hsh]);
+
+  return numberTable[hsh]->getLabelRef();
 }
 
 
