@@ -43,6 +43,8 @@
 
 #include "bits.hh"
 
+#ifdef DEBUG_FD_CONSTRREP
+
 void print_to_fdfile (const char *format, ...)
 {
   va_list ap;
@@ -51,6 +53,8 @@ void print_to_fdfile (const char *format, ...)
   fflush(_fdomn_file);
   va_end(ap);
 }
+
+#endif
 
 #ifdef TO_FD_FILE
 FILE * _fdomn_file = fopen("/tmp/fdomn_ir_debug__file.oz", "w+");

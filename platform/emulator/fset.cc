@@ -39,6 +39,8 @@
 
 //*****************************************************************************
 
+#ifdef DEBUG_FSET_CONSTRREP
+
 void print_to_fsfile (const char *format, ...)
 {
   va_list ap;
@@ -47,6 +49,8 @@ void print_to_fsfile (const char *format, ...)
   fflush(_fset_file);
   va_end(ap);
 }
+
+#endif
 
 #ifdef TO_FSET_FILE
 FILE * _fset_file = fopen("/tmp/fset_ir_debug_file.oz", "w+");
