@@ -6404,14 +6404,8 @@ OZ_BI_define(BInameVariable,2,0)
 
 OZ_BI_define(BInewNamedName,1,1)
 {
-  static int uniqueID = 1;
   oz_declareAtomIN(0,printName);
-  char *s = new char[strlen(printName) + 12];
-  sprintf(s,"%s %d",printName,uniqueID);
-  uniqueID++;
-  OZ_out(0) = makeTaggedLiteral(addToNameTab(s));
-  delete s;
-  return PROCEED;
+  OZ_RETURN(makeTaggedLiteral(NamedName::newNamedName(printName)));
 } OZ_BI_end
 
 OZ_BI_define(BIisUniqueName,1,1)
@@ -6427,6 +6421,29 @@ OZ_BI_define(BIgenerateAbstractionTableID,1,1)
   oz_declareNonvarIN(0,forComponent);
   AbstractionEntry *entry = new AbstractionEntry(OZ_isTrue(forComponent));
   OZ_RETURN(OZ_makeForeignPointer(entry));
+} OZ_BI_end
+
+OZ_BI_define(BIgenerateCopies,1,1)
+{
+  oz_declareNonvarIN(0,list);
+  TaggedRef alist = OZ_nil();
+  while(OZ_isCons(list)) {
+    TaggedRef key = OZ_head(list);
+    TaggedRef value;
+    if (OZ_isForeignPointer(key)) {
+      AbstractionEntry *entry = new AbstractionEntry(NameFalse);
+      value = OZ_makeForeignPointer(entry);
+    } else {
+      const char *s = tagged2Literal(key)->getPrintName();
+      if (s)
+	value = makeTaggedLiteral(NamedName::newNamedName(s));
+      else
+	value = oz_newName();
+    }
+    alist = cons(OZ_pair2(key, value), alist);
+    list = OZ_tail(list);
+  }
+  OZ_RETURN(alist);
 } OZ_BI_end
 
 OZ_BI_define(BIconcatenateAtomAndInt,2,1)

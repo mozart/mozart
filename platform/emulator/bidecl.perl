@@ -2425,6 +2425,11 @@ $builtins = {
 				     BI  => BIgenerateAbstractionTableID,
 				     native => true},
 
+    'generateCopies'	=> { in  => ['+[value]'],
+			     out => ['+[value#value]'],
+			     BI  => BIgenerateCopies,
+			     native => true},
+
     'concatenateAtomAndInt'	=> { in  => ['+atom','+int'],
 				     out => ['+atom'],
 				     BI  => BIconcatenateAtomAndInt,
