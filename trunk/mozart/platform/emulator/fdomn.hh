@@ -91,7 +91,7 @@ public:
   void init(int l, int r) {i_arr[0].left = l; i_arr[0].right = r;}
   int nextSmallerElem(int v, int upper) const;
   int nextLargerElem(int v, int upper) const;
-  int next(int i) const;
+  int midElem(int i) const;
   OZ_Term getAsList(void) const;
   FDIntervals * copy(void);
   int operator <= (const int);    
@@ -161,7 +161,7 @@ public:
   void initList(int list_len, int * list_left, int * list_right);
   int nextSmallerElem(int v, int upper) const;
   int nextLargerElem(int v, int upper) const;
-  int next(int i) const;
+  int midElem(int i) const;
   OZ_Term getAsList(void) const;
   FDBitVector * copy(void);
   int operator <= (const int);    
@@ -238,7 +238,7 @@ public:
   int singl(void) const;
    
   OZ_Term getAsList(void) const;
-  int next(int i) const; 
+  int midElem(void) const; 
   int nextSmallerElem(int v) const;
   int nextLargerElem(int v) const;
   int intersectWithBool(void);
