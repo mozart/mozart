@@ -1,7 +1,7 @@
 <chapter id="chapter.entities">
 <title/Entities and Protocols - a Background/
 
-<p>Distribution in Mozart is realized by sharing of language entities.
+<p>Distribution in Mozart is realized by sharing language entities.
 How this is done depends on if they are stateless or
 stateful. Stateless entities are replicated between sites whereas
 stateful entities create access structures. The local semantics of
@@ -157,7 +157,7 @@ process all replicated entities and proxies are treated as plain
 Mozart data structures. Managers on the other hand act as roots for
 the local garbage collector.
 
-<p>To ensure that globalized entities are localized when and only when
+<p>To ensure that globalized entities are localized if and only if
 no more remote references exist, the DS has a distributed reference
 consistency algorithm. This is currently implemented by an extended
 version of Weighted Reference Counting<note foot>Presented
