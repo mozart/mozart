@@ -38,23 +38,25 @@ distributors.
 The distributor we program in this section implements a rather naive
 strategy. It has
 a single argument which is a list of finite domain variables. From this
-list the distributor will select the leftmost undetermined variable ?{x} and
-distributes with the constraint <math>x=l</math> where ?{l} is the
-least possible value for ?{x}. The distributor is shown in
+list the distributor will select the leftmost undetermined variable
+<math/x/ and
+distributes with the constraint <math>x=l</math> where <math/l/ is the
+least possible value for <math/x/. The distributor is shown in
 <ptr to=fig.naiveDist>.
 
-<figure class="Figure" id=fig.naiveDist>
-<caption/A distributor for a naive distribution strategy/
+<figure id=fig.naiveDist>
+<caption/A distributor for a naive distribution strategy./
 <<<
-proc {NaiveDistributor Xs}
-   choice
-      Filtered = {Filter Xs fun {$ X} {FD.reflect.size X} > 1 end}
+proc {NaiveDistributor Is}
+   choice skip end
+   local
+      Filtered = {Filter Is fun {$ I} {FD.reflect.size I}>1 end}
    in
-      case Filtered of nil then skip
-      [] F|Fr then
-         Minimum = {FD.reflect.min F} in
-         choice F = Minimum then {NaiveDistributor Fr}
-         [] F \=: Minimum then {NaiveDistributor Filtered}
+      case Filtered
+      of nil then skip
+      [] I|Ir then M={FD.reflect.min I} in
+         choice I=M   then {NaiveDistributor Fr}
+         []     I\=:M then {NaiveDistributor Filtered}
          end
       end
    end
@@ -67,29 +69,34 @@ on stability of a computation space.
 For this purpose Oz provides a so-called choice-statement. If a thread reaches
 the statement <<choice ?{S} end>> the thread is blocked until its hosting
 computation space becomes stable. Then the computation in the blocked
-thread is resumed and the statement ?{S} is executed  (for more details
-see <!--**  <ptr to=ozdoc.tips> -->).
+thread is resumed and the statement ?{S} is executed.
+
 <p>
 Thus, the variable <<Filtered>> in <ptr to=fig.naiveDist> denotes the
 list of  undetermined variables after the space
 has become stable. To detect undetermined variables we use the procedure
 <<FD.reflect.size>> which reflects the current size of a variable's
 domain. If the domain size is one, the variabe is determined.
+
 <p>
 Then the least possible value for the first
-undetermined variable <<F>> is computed by
+undetermined variable <<I>> is computed by
 <<<
-Minimum = {FD.reflect.min F}
+M={FD.reflect.min I}
 >>>
+
 <para><title/binary choice-statements/
 We now have to distribute. To this aim Oz provides a binary
 choice-statement. If a thread reaches the statement
 <<<
 choice ?{S11} then ?{S12}
-[] ?{S21} then ?{S22} end
+[]     ?{S21} then ?{S22}
+end
 >>>
 the thread is blocked until its hosting
 computation space becomes stable.
+
+<p>
 Assume that the execution of the  statements ?{S11} and
 ?{S21} will create propagators for the constraints <math>C_1</math> and <math>C_2</math>,
 respectively. If the space has become stable,  the computation in the
@@ -102,42 +109,47 @@ Note that according to <ptr to=sec.dast/ the constraint <math/C_2/ must
 be equivalent to <math/\neg C_1/ (see <ptr to=sec.serializers/ for a
 generalization). All search engines in this tutorial will explore the
 space first which hosts ?{S11}.
-More details  on choice-statements can be found in <!--  <ptr to=ozdoc.tips> -->.
+
 <p>
 In <ptr to=fig.naiveDist>, we distribute with the constraint that
 the selected variable is determined to the current least possible
 value. The distribution is done if no undetermined variables are left.
+
 </section>
 
 <section><title/A Domain-Splitting Distributor/
+
 <p>
 In this section we program a distributor for the domain-splitting
 strategy (see <ptr to=page.domainsplitting>).
 The program is shown in <ptr to=fig.splitDist>.
 
-<figure class="Figure" id=fig.splitDist>
-<caption/A distributor for a  domain-splitting strategy/
-<<<
-proc {SplitDistributor Xs}
-   choice
-      Filtered = {Filter Xs fun {$ X} {FD.reflect.size X} > 1 end}
+<figure id=fig.splitDist>
+<caption/A distributor for a  domain-splitting strategy./
+<<<<![ RCDATA [
+proc {SplitDistributor Is}
+   choice skip end
+   local
+      Fs={Filter Is fun {$ I} {FD.reflect.size I}>1 end}
    in
-      case Filtered of nil then skip
+      case Fs
+      of nil then skip
       [] F|Fr then
          MinVar#_ = {FoldL Fr fun {$ Var#Size X}
-                                 case {FD.reflect.size X} < Size
-                                 then X#{FD.reflect.size X}
-                                 else Var#Size
+                                 if {FD.reflect.size X}<Size then
+                                    X#{FD.reflect.size X}
+                                 else
+                                    Var#Size
                                  end
                               end F#{FD.reflect.size F}}
          Mid = {FD.reflect.mid MinVar}
       in
-         choice MinVar =<: Mid then {SplitDistributor Filtered}
-         [] MinVar >: Mid then {SplitDistributor Filtered}
+         choice MinVar =<: Mid then {SplitDistributor Fs}
+         []     MinVar >: Mid  then {SplitDistributor Fs}
          end
       end
    end
-end
+end]]>
 >>>
 
 As in the previous section we first discard all determined
@@ -153,277 +165,6 @@ After this is done we distribute with the constraint that <<MinVar>>
 should be smaller than or equal to <<Mid>>.
 </section>
 
-<section id="sec.BAB.align">
-<title/Example: Aligning for a Photo, Revisited/<p>
-
-In <Ptr to="section.reified.photo"> we have searched for a solution of
-the alignment problem which satisfies the maximal number of
-preferences. To this aim we have introduced a variable which counts the
-number of satisfied preferences. By distributing this variable with its
-maximal value first, we have guaranteed that the first solution found
-is indeed the optimal one.<p>
-
-In this section we replace this ad-hoc approach by branch
-and bound. We first restate the script for the problem by ommitting the
-distribution code for the variable summing up the satisfied
-preferences. The resulting script is shown in
-<Ptr to="ProgPhotoRevised">.
-
-<Figure class="Figure maxi" id="ProgPhotoRevised">
-<caption/The revised script for the Photo Puzzle./
-<<<
-proc {RevisedPhoto Root}
-   Persons       = [betty chris donald fred gary mary paul]
-   Preferences   = [betty#gary betty#mary  chris#betty chris#gary
-                    fred#mary  fred#donald paul#fred   paul#donald]
-   NbPersons     = {Length Persons}
-   NbPreferences = {Length Preferences}
-   Alignment     = {FD.record alignment Persons 1#NbPersons}
-   Satisfaction  = {FD.decl}
-   proc {Satisfied P#Q S}
-      {FD.reified.distance Alignment.P Alignment.Q '=:' 1 S}
-   end
-in
-   Root = r(satisfaction: Satisfaction
-            alignment:    Alignment)
-   {FD. distinct Alignment}
-   {FD.sum {Map Preferences Satisfied} '=:' Satisfaction}
-   Alignment.fred <: Alignment.betty     % breaking symmetries
-   {FD.distribute split Alignment}
-end
->>>
-</figure>
-<p>
-Next we define an ordering procedure which states that
-the overall sum of satisfied preferences in an alternative solution must
-be strictly greater than the corresponding sum in a previous solution:
-<<<
-proc {PhotoOrder Old New}
-   Old.satisfaction <: New.satisfaction
-end
->>>
-The optimal solution can be found with the statement
-<<<
-{ExploreBest RevisedPhoto PhotoOrder}
->>>
-We obtain the same solution as in
-<Ptr to="page.reified.photoSol">. But now only 141 choice nodes are
-needed to find the optimal solution whereas 219 choice nodes were needed
-in <Ptr to="section.reified.photo">. Furthermore, branch and bound allows
-us to prove in an efficient way that the last solution found is really
-the optimal one. The full search tree (including the proof of
-optimality) contains 169 choice nodes; still less than for the search
-for the best solution with the ad-hoc method. If we inspect the
-solutions, we observe that the first solution satisfies only a single
-preference. By imposition of the ordering procedure by the search
-engine, the next found solution must satisfy more preferences. Indeed,
-the second solution satisfies two preferences. Following this approach we
-finally arrive at the optimal solution with six satisfied preferences.
-</section>
-
-<section id="sec.BAB.warehouses">
-<title/Example: Locating Warehouses/<p>
-
-This example features branch and bound to compute an optimal solution, a
-non-trivial distribution strategy and symbolic constraints.
-
-<para><title/Problem Specification./
-Assume a company which wants to construct warehouses
-to supply stores with goods. Each warehouse to be constructed would have
-a certain capacity defining the largest number of stores which can be
-supplied by this warehouse.  For the construction of a warehouse we have
-fixed costs. The costs for transportation from a warehouse to a store
-vary depending on the location of the warehouse and the supplied store. The aim
-is to determine which warehouses should be constructed and which stores
-should be supplied by the constructed warehouses such that the overall costs
-are minimized.<p>
-
-We assume the fixed costs of building a warehouse to be 50. We furthermore
-assume 5 warehouses W1 through W5 and 10 stores Store1 through Store10.
-The capacities of the warehouses are shown in <Ptr to="table.BAB.caps">.
-The costs to supply a store by a warehouse are shown in
-<Ptr to="table.BAB.costs">.
-<figure class="Figure maxi" id="table.BAB.caps">
-<caption/Capacities of warehouses/
-<Picture latex>
-\begin{center}
-\begin{tabular}{|r|c|c|c|c|c|}
-\hline
- & $W_1$ & $W_2$ & $W_3$ & $W_4$ & $W_5$\\ \hline \hline
-Capacity & 1 & 4 & 2 & 1 & 3 \\ \hline
-\end{tabular}
-\end{center}
-</picture>
-</figure>
-
-<Figure class="Figure maxi" id="table.BAB.costs">
-<caption/Costs for supplying stores/
-<picture latex>
-\begin{center}
-\begin{tabular}{|r|c|c|c|c|c|}
-\hline
- & $W_1$ & $W_2$ & $W_3$ & $W_4$ & $W_5$\\ \hline \hline
-${\it Store}_1$ & 36 & 42 & 22& 44& 52 \\
-${\it Store}_2$ & 49 & 47 & 134 & 135 & 121 \\
-${\it Store}_3$ & 121 & 158 & 117 & 156 & 115 \\
-${\it Store}_4$ &  8 & 91 & 120 & 113 & 101 \\
-${\it Store}_5$ & 77 & 156 & 98 & 135 & 11 \\
-${\it Store}_6$ & 71 & 39 & 50 & 110 & 98 \\
-${\it Store}_7$ & 6 & 12 & 120 & 98 & 93 \\
-${\it Store}_8$ & 20 & 120 & 25 & 72 & 156 \\
-${\it Store}_9$ & 151 &  60 & 104 & 139 & 77 \\
-${\it Store}_{10}$ &79 & 107 & 91 & 117 & 154 \\ \hline
-\end{tabular}
-\end{center}
-</picture>
-</figure>
-
-<para><title/Model./
-We assume that the costs are given in the matrix <def/CostMatrix/ defined by
-<Ptr to="table.BAB.costs">.
-For the model of this problem we introduce the following variables.
-<p>
-<list>
-<item> <math/{\it Open}_i, 1 \leq i \leq 5/, with domain 0#1 such that
-<math/{\it Open}_i=1/ if warehouse <math/W_i/ does supply at least one
-store.
-<item> <math/{\it Supplier}_i, 1 \leq i \leq 10/, with domain 1#5 such that
-<math/{\it Supplier}_i = j/ if store <math/{\it Store_i}/ is supplied  by
-warehouse <math/W_j/.
-<item> <math/{\it Cost}_i, 1 \leq i \leq 10/, such that the domain of <math/{\it
-Cost}_i/ is defined by the row <math/{\it CostMatrix}_i/. The variable <math/{\it
-Cost}_i/ denotes the costs of supplying store <math/{\it Store}_i/ by
-warehouse <math/W_{{\it Supplier}_i}/, &ie;, <math/{\it Cost}_i = {\it
-CostMatrix}_{i,{\it Supplier}_i}/.
-</list>
-<p>
-We have the additional constraint that the capacity of the warehouses
-must not be exceeded. To this aim we introcude auxiliary variables <math/{\it
-Supplies}_{i,j}/ with the domain 0#1 as follows.
-<math display/\forall i \in \{1,\ldots,5\} \forall  j \in \{1,\ldots, 10\}:\ ({\it Supplies}_{i,j} = 1)
-\leftrightarrow ({\it Supplier_j} = i)/
-The capacity constraints can then be stated with
-<math display/\forall i \in \{1, \ldots, 5\}:\ {\it Cap}_i \geq
-\sum\limits_{j=1}^{10}{\it Supplies}_{i,j}/
-where <math/{\it Cap}_i/ is defined according to <Ptr to="table.BAB.caps">.
-
-<para><title/Distribution Strategy./
-There are several possibilities to define a distribution strategy for
-this problem. <p>
-
-<para><title/least regret/
-We choose to determine the variables <math/{\it Cost}_i/ by
-distribution. Because no entry in a row of the cost matrix occurs twice,
-we immediately know which store is supplied by which warehouse. We
-select the variable <math/{\it Cost}_i/ first for which the difference
-between the smallest possible value and the next higher value is
-maximal. Thus, decisions are made early in the search tree where the
-difference between two costs by different suppliers are maximal. The
-distribution strategy will try the minimal value in the domain of <math/{\it
-Cost}_i/ first.  In Operations Research this strategy is known as the
-principle of <def/least regret/.
-
-<para><title/Script./
-The script in <Ptr to="program.Warehouse"> constrains its root
-variable to a record containing the supplying warehouse for each store,
-the costs for each store to be supplied by the corresponding warehouse
-and the total costs. <p>
-
-The statement
-<<<
-{FD.element Supplier.St CostMatrix.St Cost.St}
->>>
-connects the costs to supply a store with the supplier. Because no
-element in a row of the cost matrix occurs twice, the supplier for a
-store is known if its costs are determined and vice versa. Through this
-statement the constraint <math/{\it Cost}_i = {\it
-CostMatrix}_{i,{\it Supplier}_i}/ is imposed. <p>
-
-A propagator for the constraint that the capacity of a
-warehouse is not exceeded can be created by the statement
-<<<
-{FD.atMost Capacity.S Supplier S}
->>>
-
-The statement
-<<<
-Open.S = {FD.reified.sum {Map Stores fun {$ St}
-          Supplier.St =: S end} '>:' 0}
->>>
-
-guarantees that a variable <math/{\it Open}_i/ in the model is constrained to
-1 if warehouse <math/W_i/ supplies at least one store. <p>
-
-The first solution of the problem can be found with the statement
-<<<
-{ExploreOne WareHouse}
->>>
-
-To compute the solution with minimal costs we define the following
-ordering relation.
-<<<
-proc {Order Old New}
-   Old.totalCost >: New.totalCost
-end
->>>
-
-The optimal solution with total cost 604 can now be computed with
-<<<
-{ExploreBest WareHouse Order}
->>>
 
 
-<figure class="Figure maxi" id="program.Warehouse">
-<caption/A script for the warehouse problem./<p>
-
-<<<
-Capacity   = supplier(3 1 4 1 4)
-CostMatrix = store(supplier(36 42 22 44 52)
-                   supplier(49 47 134 135 121)
-                   supplier(121 158 117 156 115)
-                   supplier(8 91 120 113 101)
-                   supplier(77 156 98 135 11)
-                   supplier(71 39 50 110 98)
-                   supplier(6 12 120 98 93)
-                   supplier(20 120 25 72 156)
-                   supplier(151 60 104 139 77)
-                   supplier(79 107 91 117 154))
-BuildingCost = 50
-
-fun {Regret X}
-   M = {FD.reflect.min X} in {FD.reflect.nextLarger X M} - M
-end
-proc {WareHouse X}
-   NbSuppliers = {Width Capacity}
-   NbStores    = {Width CostMatrix}
-   Stores      = {List.number 1 NbStores 1}
-   Supplier    = {FD.tuple store NbStores 1#NbSuppliers}
-   Open        = {FD.tuple supplier NbSuppliers 0#1}
-   Cost        = {FD.tuple store NbStores 0#FD.sup}
-   SumCost     = {FD.decl} = {FD.sum Cost '=:'}
-   NbOpen      = {FD.decl} = {FD.sum Open '=:'}
-   TotalCost   = {FD.decl}
-in
-   X = plan(supplier:Supplier cost:Cost totalCost:TotalCost)
-   TotalCost =: SumCost + NbOpen*BuildingCost
-   {For 1 NbStores 1
-    proc {$ St}
-       Cost.St :: {Record.toList CostMatrix.St}
-       {FD.element Supplier.St CostMatrix.St Cost.St}
-    end}
-   {For 1 NbSuppliers 1
-    proc {$ S}
-       {FD.atMost Capacity.S Supplier S}
-       Open.S = {FD.reified.sum {Map Stores fun {$ St}
-                                               Supplier.St =: S
-                                            end}
-                 '>:' 0}
-    end}
-   {FD.distribute
-    generic(order: fun {$ X Y} {Regret X} > {Regret Y} end)
-    Cost}
-end
->>>
-</figure>
-</section>
 </chapter>

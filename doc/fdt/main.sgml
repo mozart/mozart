@@ -112,6 +112,8 @@
     <Meta name=latex.package value="pst-node">
     <Meta name=latex.package value="epsfig">
 
+    <Meta name=latex.input   value="fdt.tex">
+
     <Title/Finite Domain Constraints in DFKI &Oz;/
       <Author.Extern to="author.db" key="Gert.Smolka">
       <Author.Extern to="author.db" key="Christian.Schulte">

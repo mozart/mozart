@@ -30,6 +30,7 @@
   -->
 
 <chapter id=chapter.traps><title/Traps and Pitfalls/
+
 <p>
 This section lists traps and pitfalls that
 beginners typically fall into when writing their
@@ -51,6 +52,7 @@ statement creates an addition task that blocks
 until its arguments <<X>> and <<Y>> are known.
 Blocking means that the statements following the
 addition statement will not be executed.
+
 <p>
 This pitfall can be particulary malicious if the
 infix expressions <<(X mod Y)>> or <<(X div Y)>>  are
@@ -76,11 +78,13 @@ The general rule behind this is simple: The infix
 operators <<=:>>, <<\=:>> <<<:>>, <<>:>>, <<=<:>>, and
 <<>=:>>  absorp the arithmetic operators <<+>>,
 <<->>, <<*>>, and <<~>>, and no others.
+
 <p>
 Incidentally, interval and domain propagators for the
 modulo constraint can be created with the procedures
 <<{FD.modI X Y Z}>> and <<{FD.modD X Y Z}>>,
 respectively (see <ptr to=SecFDIntDomProp>).
+
 <p>
 There is an easy way to check whether a statement
 in a script blocks: Just insert as last statement
@@ -96,6 +100,7 @@ been explicitly parallelized with <<thread ... end>>.
 </section>
 
 <section><title/Delay of Propagators/
+
 <p>
 Almost all propagators start their work only after
 all variables occurring in the implemented
@@ -117,6 +122,7 @@ The procedure <<{FD.decl X}>> constrains its argument
 to the largest finite domain possible (&ie;
 <<0#sup>>).
 </section>
+
 <section><title/The Operators <<=:>> and <<::>>
 don't Introduce Pattern Variables/
 <p>
@@ -187,8 +193,8 @@ exploiting coreferences is essential).
 There is an implementation-dependent upper bound
 for the integers that can occur in a finite domain
 stored in the constraint store.  This upper bound
-is available as the value of <<FD.sup>>.  In DFKI
-Oz, <<FD.sup>>  is <math/134\,\,217\,\,726/ on SPARC
+is available as the value of <<FD.sup>>.  In Mozart,
+ <<FD.sup>>  is <math/134\,\,217\,\,726/ on Linux and Sparc
 platforms.
 <p>
 The same restriction applies to constants

@@ -45,7 +45,10 @@ will successively refine the problem specification, the model and the
 distribution strategy in order to solve more and more demanding
 problems.
 
-<para><title>Problem Specification</title>
+<subsection class=unnumbered>
+<title>Problem Specification</title>
+
+<p>
 The task names, their description, duration (in days)
 and the company in charge are given in <ptr to=table.hausbau>. For
 example, ?{B} denotes the task involved with  the carpentry for the
@@ -77,14 +80,19 @@ house as quickly as possible.
 For the first model we do not consider the companies in charge
 for the tasks.
 
-<para><title>Model.</title> The model introduces for each task  a variable
+<subsection class=unnumbered>
+<title>Model.</title>
+
+<p>
+The model introduces for each task  a variable
 which stands for the start time of the task. In the
 sequel we will identify a task and its corresponding variable. The end
 time of each task is its start time plus its duration.  For the
 time origin we assume 0. A trivial upper bound for the time to build the
 house can be obtained by summing up all durations of tasks. Here,  we
 obtain 29.
-<para><title/precedence constraints/
+
+<para class=apropos><title/precedence constraints/
 From the predecessor relation we can
 derive a set of so-called <def/precedence constraints/:
 <p><math>
@@ -97,14 +105,18 @@ I+2 \leq J.
 \end{array}
 \right\}
 </math><p>
-<para><title/makespan/
+
+<para class=apropos><title/makespan/
 For example, the constraint <math>A+7\leq B</math> means that the earliest start
 time of ?{B} is 7 days after ?{A} has been started. We assume an
 additional task ?{PE} modeling the project end for the problem. All
 other tasks precede ?{PE}. The start time of ?{PE} is called
 the <def/makespan/ of the schedule.
 
-<para><title>Distribution Strategy.</title>
+<subsection class=unnumbered>
+<title>Distribution Strategy</title>
+
+<p>
 If all propagators have become stable,
 it is sufficient to determine each variable to the current
 minimal value in its domain  to obtain a solution. This is due
@@ -113,7 +125,10 @@ where ?{c} is an integer. Hence, we do not need a distributor at
 all. Note that this fact remains true if we also consider constraints of the
 form <math>x+c=y</math> (this will be needed later).
 
-<para><title>Script.</title>
+<subsection class=unnumbered>
+<title>Script</title>
+
+<p>
 The problem specification which is a direct
 implementation of <ptr to=table.hausbau> is given in
 <ptr to=fig.data.hausbau>.
@@ -125,7 +140,7 @@ company is in charge). We will ignore the company here.
 The task <<pe>> denotes the additional task representing the
 project end.
 
-<figure class="Figure" id=fig.data.hausbau>
+<figure id=fig.data.hausbau>
 <caption/The specifiation to build a house/
 <<<
 House = house(taskSpec:
@@ -142,7 +157,8 @@ House = house(taskSpec:
                   pe # 0 # [j]   # noResource
                  ])
 >>>
-<para><title/scheduling compiler/
+
+<para class=apropos><title/scheduling compiler/
 In <ptr to=fig.script1.hausbau> a function is shown which returns a
 script for our scheduling problem. Such a function is called a
 <def/scheduling compiler/ because it processes the problem specification
@@ -150,20 +166,22 @@ and returns
 a procedure which can be run by a procedure like <<SearchOne>> or the
 Explorer.  Hence, the scheduling compiler <Q/compiles/ the problem
 specification into an <Q/executable/ for a search engine.
+
 <p>
 The durations and start times of tasks are stored in the records <<Dur>>
 and <<Start>>, respectively. The record <<Start>> is the root variable of
 the script returned by the function <<CompileHouse1>>. First, the
 propagators for the precedence constraints are created. After the space
 has become stable, the start times are determined.
+
 <p>
 The statement
 <<{Explorer script({CompileHouse1 House})}>> will run the script. The
 makespan of the schedule is 19.  By
 construction this solution is the one with the smallest makespan.
 
-<figure class="Figure" id=fig.script1.hausbau>
-<caption/A scheduling compiler to build a script/
+<figure id=fig.script1.hausbau>
+<caption/A scheduling compiler to build a script./
 <<<
 proc {Precedences TaskSpecs Start Dur}
    {ForAll TaskSpecs
@@ -195,22 +213,28 @@ end
 </subsection>
 
 <subsection id=sec.bahCC><title/Building a House: Capacity Constraints/
+
 <p>
 In this section we take the companies into account which are in charge
 for the tasks. We assume that each company cannot handle two tasks
 simultaneously. That is, the execution of two tasks handled by the same
 company must not overlap in time.
 
-<para><title>Model.</title> For each company (which we also call a
+<subsection class=unnumbered>
+<title>Model</title>
+
+<p>
+ For each company (which we also call a
 <def/resource/ because the companies are consumed by a task) we must
  find a <def/serialization/ of the handled
 tasks, &ie; for each task pair
 <math/(A,B)/ we must decide whether ?{A} is finished before ?{B} starts or vice
 versa. Assume two tasks with start times <math>S_1</math> and <math>S_2</math> and the
 durations <math>D_1</math> and <math>D_2</math>, respectively.
-<para><title/capacity constraints/
+
+<para class=apropos><title/capacity constraints/
 Then the constraint
-<p><math>S_1 + D_1 \leq S_2 \quad \vee \quad S_2 + D_2 \leq S_1 </math><p>
+<math display>S_1 + D_1 \leq S_2 \quad \vee \quad S_2 + D_2 \leq S_1 </math>
 states that the corresponding tasks do not overlap in time. Such a
 constraint is also known as a <def/capacity constraint/,
 because the capacity of the resource must not be exceeded.  The capacity constraints
@@ -221,19 +245,26 @@ is not a feasible approach for problems with many tasks. Thus, we will
 use a single propagator in the script providing the same propagation
 as the quadratic number of reified constraints.
 
-<para><title>Distribution Strategy.</title> Because of the capacity constraints
+<subsection class=unnumbered>
+<title>Distribution Strategy</title>
+
+<p>
+Because of the capacity constraints
 we have to provide a distribution strategy. We use the standard
 first-fail strategy.
 
-<para id=page.tasksOnRes><title>Script.</title> We extend the scheduling compiler in
+<subsection class=unnumbered id=page.tasksOnRes>
+<title>Script</title>
+
+<p>
+We extend the scheduling compiler in
 <ptr to=fig.script1.hausbau> to extract the tasks handled by a
 common resource. This can be done as follows.
 <<<
 TasksOnRes
 = {FoldL TaskSpecs
    fun {$ In Task#_#_#Resource}
-      case Resource == noResource
-      then In
+      if Resource==noResource then In
       else TaskOnResource = {CondSelect In Resource
                              nil}
       in
@@ -241,6 +272,7 @@ TasksOnRes
       end
    end tasksOnResources}
 >>>
+
 <p>
 <<TasksOnRes>> is a record where the features are the companies
 given in <ptr to=fig.data.hausbau>. A field under a certain feature
@@ -252,6 +284,7 @@ The script returned by the modified scheduling compiler will use
 This statement creates for each resource a single propagator for the
 capacity constraints as described in the model above  (note that the full
 script can be found in the shipped demo file).
+
 <p>
 \begin{exercise}
 Write a procedure which implements the capacity constraints of the
@@ -276,10 +309,12 @@ proc {CapacityConstraints TasksOnRes Start Dur}
 end
 >>>
 \end{solution}
+
 <p>
 But we are not only interested in the first solution but in the best
 solution. For our problem we are interested in the solution with the
 smallest makespan.
+
 <p>
 For our example we define the order relation
 <<<
@@ -299,19 +334,21 @@ The first solution which is also the optimal one  has a makespan of 21.
 </subsection>
 
 <subsection id=sec.serializers><title/Building a House: Serializers/
+
 <p>
 So far we have used only distribution strategies where  a variable is
 selected first and then the domain is further restricted by a basic constraint.
 Scheduling applications lead to distribution strategies where we
 distribute not only with basic constraints but with propagators.
 
-<para><title/serializers/
+<para class=apropos><title/serializers/
 In the previous section we have seen that it is necessary to
 <def/serialize/ all tasks on a common resource to satisfy all capacity
 constraints. This leads to the idea to use a distributor to serialize
 the tasks. Such a distributor is called a
 <def/serializer/. Thus, we refine the scheduling compiler of
 the previous section by formulating a new distribution strategy.
+
 <p>
 Note that we have to refine the notion of distribution here. In
 <ptr to=sec.dast> we have distributed a finite domain problem ?{P}
@@ -327,7 +364,10 @@ respectively. In the presence of capacity constraints the required
 condition holds by construction, &ie; <math>P \models S_1 + D_1 \leq S_2
 \vee S_2 + D_2 \leq S_1</math>.
 
-<para><title>Distribution Strategy.</title>
+<subsection class=unnumbered>
+<title>Distribution Strategy.</title>
+
+<p>
 We replace the first-fail distribution strategy by a strategy consisting
 of two phases. In the first phase we serialize all tasks on common
 resources and in the second phase we determine the start
@@ -335,7 +375,8 @@ times of the variables.  The serialization is achieved by distributing
 for each pair of tasks <math>T_1</math> and <math>T_2</math> either with the constraint that
 task <math>T_1</math> is finished before <math>T_2</math> starts or that task <math/T_2/ is
 finished before task <math/T_1/ starts.
-<para><title/ordering of tasks/
+
+<para class=apropos><title/ordering of tasks/
 If such a distribution step takes
 place we say that the two concerned tasks are
 <def/ordered/. After the serialization we have only
@@ -343,7 +384,11 @@ constraints of the form <math>x + c \leq y</math>. Thus, it is sufficient for th
 second phase to determine each variable to the smallest value in its
 domain.
 
-<para><title>Script.</title> The script for the third version of our problem
+<subsection class=unnumbered>
+<title>Script</title>
+
+<p>
+The script for the third version of our problem
 refines the one in the previous section by the application
 <<<
 {DistributeRes {Record.toList TasksOnRes} Start Dur}
@@ -406,14 +451,18 @@ schedule the construction of the bridge shown  in
 </picture.choice>
 </figure>
 
-<para><title>Problem Specification.</title>
+<subsection class=unnumbered>
+<title>Problem Specification</title>
+
+<p>
 The problem is specified as shown in
 <ptr to=fig.bridgeTable>. From this table we derive precedence and
 capacity constraints as in the sections before. We also
 assume that a resource cannot handle more than one activity at a
 time. Such a kind of resource is also known as a {\em unary
 resource}.
-<para><title/unary resources/
+
+<para class=apropos><title/unary resources/
 Due to some peculiarities of the problem, we have the following additional
 constraints.
 
@@ -430,21 +479,20 @@ before the end of the last masonry.
 the beginning of the project.
 </list>
 
-<para><title>Model.</title>
+<subsection class=unnumbered>
+  <title>Model</title>
+
+<p>
 A trivial upper bound of the makespan is the sum of all durations of the
 tasks. For the bridge construction problem we have 271 as the upper
 bound. We adopt the model of the house problem including capacity
 constraints. The additional constraints can be modeled with propagators
-for the following constraints over the problem variables (<math/
-\newcommand{\Dur}[0]{dur}
-\Dur{T}/
-denotes the duration of a task ?{T}).
+for the following constraints over the problem variables (<math/\Dur{T}/
+denotes the duration of a task <math/T/).
 <list>
-<item> <math/\newcommand{\Dur}[0]{dur}
+<item> <math/
 (Bi + \Dur{Bi}) - (Si+\Dur{Si}) \leq 4, \quad 1 \leq i \leq 6/
 <item> <picture latex>
-\newcommand{\Dur}[0]{dur}
-
        \parbox[t]{10cm}{
                 $Si - (Ai+\Dur{Ai}) \leq 3,  \quad i \in \{1,2,5,6\}$\\
                 $S3-(P1+\Dur{P1}) \leq 3 \qquad S4-(P2+\Dur{P2}) \leq 3$}
@@ -454,18 +502,23 @@ denotes the duration of a task ?{T}).
 <item> <math/L = \mbox{\sl PA} + 30/
 </list>
 
-<para><title>Distribution Strategy.</title>
+<subsection class=unnumbered>
+<title>Distribution Strategy</title>
+
+<p>
 We first try the distribution strategy of <ptr to=sec.bahCC>, &ie;
 the first-fail strategy. The first solution of the problem is found
 with 97&nbsp;949 choice nodes and has a makespan of 133. After 500&nbsp;000 choice
 nodes no better solution is found. This is very unsatisfactory if we
 know that the optimal makespan is 104.
+
 <p>
 Thus, we try  the distributor described in
 <ptr to=sec.serializers>, &ie; the naive serializer. Now we find
 the first solution with makespan 120 with only 77 choice nodes. With 95
 choice nodes we find a solution with makespan 112. After 500&nbsp;000 choice
 nodes no better solution is found.
+
 <p>
 In order to solve the problem we combine the ideas of first-fail and of
 serializers. The idea behind first-fail is to distribute first with a
@@ -478,7 +531,10 @@ durations of tasks to be scheduled on that resource.
 Hence, we will serialize first the tasks on a resource
 where the sum of durations is maximal.
 
-<para><title>Script.</title>
+<subsection class=unnumbered>
+  <title>Script</title>
+
+<p>
 <ptr to=fig.bridgeCompiler> shows the scheduling
 compiler to compute a script for the bridge problem. Note that we have
 additionally parameterized the scheduling compiler with the procedures
@@ -691,17 +747,14 @@ as the first or last task of ?{S} (and analogously if ?{T} is not in
 ?{S}).
 We introduce the following abbreviations for a task ?{T}.
 <table class=dyptic>
-<tr/ <td/ <math/$\newcommand{\Est}[1]{{\mbox{est}(#1)}}$\Est{T}//
+<tr/ <td/ <math/\Est{T}//
      <td/ least possible start time for for <math/T///
-<tr/ <td/<math/~$~\newcommand{\Lst}[1]{{\mbox{lst}(#1)}}~$~
-\Lst{T}/ /
-     <td/ largest possible start time for ?{T}//
-<tr/ <td/<math/~$\newcommand{\Ect}[1]{{\mbox{ect}(#1)}}~$~
-\Ect{T}/ /
-     <td/ earliest completion time for ?{T}, &ie; <math/\Ect{T} = \Est{T} + \Dur{T}///
-<tr/ <td/<math/~$~ \newcommand{\Lct}[1]{{\mbox{lct}(#1)}} ~$~
-\Lct{T}/ /
-     <td/ latest possible completion time for ?{T}, &ie;, <math/\Lct{T} =\Lst{T} + \Dur{T}///
+<tr/ <td/<math/\Lst{T}/ /
+     <td/ largest possible start time for <math/T///
+<tr/ <td/<math/\Ect{T}/ /
+     <td/ earliest completion time for <math/T/, &ie; <math/\Ect{T} = \Est{T} + \Dur{T}///
+<tr/ <td/<math/\Lct{T}/ /
+     <td/ latest possible completion time for <math/T/, &ie;, <math/\Lct{T} =\Lst{T} + \Dur{T}///
 </table>
 <p>
 For a set ?{S} of tasks we define
@@ -714,7 +767,7 @@ For a set ?{S} of tasks we define
 <p>
 
 If the condition
-<math>
+<math display>
 \Lct{S} - \Est{S} > \Dur{S}
 </math>
 holds, no schedule of the tasks in ?{S} can exist. A strong propagator
@@ -745,7 +798,7 @@ and
 <math>\Lct{S} - \Est{T} <  \Dur{S}+ \Dur{T}</math>
 holds, ?{T} must be last.
 
-<para><title/edge-finding/
+<para class=apropos><title/edge-finding/
 Similar rules can be formulated if ?{T} is contained in ?{S}.  For this
 kind of reasoning,  the term <def/edge-finding/ was coined in
 <ptr to=applegate.91>.  There are several variations of this idea in
@@ -758,6 +811,7 @@ sets ?{S} are considered for edge-finding.
 The resulting propagators do a lot of propagation,
 but are also more expensive than &eg;&fsp;reified constraints. Depending on
 the problem, one has to choose an appropriate propagator.
+
 <p>
 For unary resources Oz provides two propagators employing edge-finding
 to implement capacity constraints. The propagator
@@ -787,7 +841,8 @@ edge-finding. By the statement
 we compute the optimal solution in a full search tree with 508
 choice nodes instead of 1 268 as in the section before.
 
-<para><title/proof of optimality/
+
+<para class=apropos><title/proof of optimality/
 The improvement by strong propagation becomes even more dramatic if we
 constrain the bridge problem further by stating that the makespan must
 be strictly smaller than 104. Since we know that 104 is the optimal
@@ -840,14 +895,14 @@ criterion. Instead we take the changing size of domains during run
 time into account to select a resource which should be serialized. This
 is also the approach chosen for the first-fail distribution strategy.
 
-<para><title/supply/
+<para class=apropos><title/supply/
 We start with a better criterion to select a resource. Let ?{S} be the
 set of tasks on a resource ?{r}.  The available time to schedule all the
 tasks in ?{S} is <math/\Lct{S}-\Est{S}/. This value is called the
 <def/supply/ of ?{r}. The overall time needed to
 schedule the tasks in ?{S} is \Dur{S}.
 
-<para><title/demand, global slack/
+<para class=apropos><title/demand, global slack/
 This value is called the <def/demand/ of ?{r}.
 The difference between supply and
 demand is called <def/global slack/ of ?{r} (<math/{\sl slack}^r_g/)
@@ -872,7 +927,7 @@ now consider the set <math>S'=\{B,C\}</math>. We obtain <math>\Lct{S'} - \Est{S'
 less free place to shift the tasks than it is indicated by the global slack.
 Thus, we refine our criterion as follows.
 
-<para><title/task interval/
+<para class=apropos><title/task interval/
 Let <math/T_1/ and <math/T_2/ be two tasks on the same resource ?{r} and ?{S} the
 set of all tasks running on ?{r}. If <math/\Est{T_1} \leq \Est{T_2}/ and
 <math/\Lct{T_1} \leq \Lct{T_2}/, we call the set
@@ -883,13 +938,14 @@ the <def/task interval/ defined by <math/T_1/ and <math>T_2</math>
 (see also&nbsp;<ptr to=caseau.94a>). Intuitively, a task interval is the set of
 tasks which must be scheduled between <math/\Est{T_1}/ and <math/\Lct{T_2}/. Let <math/I_r/
 be the set of all task intervals on the resource ?{r}.
-<para><title/local slack/
+
+<para class=apropos><title/local slack/
 The <def/local slack/ of ?{r} (<math/{\it slack}^r_l/) is now
 defined as
 <math>\min(\{\Lct{I}-\Est{I}-\Dur{I}|I \in I_r\})
 </math>.
 
-<para><title/critical resource/
+<para class=apropos><title/critical resource/
 If two resources have the same local slack, we use the global slack
 to break this tie. Thus, we select the resource next for serialization
 which is minimal according to the lexicographic order <math/({\it
@@ -964,15 +1020,19 @@ resource. Then the described serializer has a run time complexity of
 <math/O(m \cdot n^3)/ if a resource has to be selected and <math/O(n)/ if only the
 set ?{F} or ?{L} has to be computed.
 
-<para><title/resource-oriented/
+<para class=apropos><title/resource-oriented/
 Because this kind of serializer successively serializes all resources,
 we call it <def/resource-oriented serializer/.
 </section>
 
+
+
 <section><title/Solving Hard Scheduling Problems/
+
 <p>
 In this section we tackle more difficult scheduling problems. To this
 aim we will also develop a new serializer.
+
 <p>
 We consider two problems in this section. Both are used as standard
 benchmark problems for scheduling. The first one is called ABZ6 and was
@@ -980,6 +1040,7 @@ introduced in&nbsp;<ptr to=adams.88>. The second one is the famous MT10 and was
 introduced in&nbsp;<ptr to=muth.63>. MT10 was considered as an especially hard
 problem for several years. It took more than 25 years that the
 optimality of a found makespan was proven <ptr to=carlier.89>.
+
 <p>
 These problems belong to the class of so-called job-shop problems (see
 <ptr to=garey.79> or a good text book on scheduling). We slightly simplify
@@ -993,6 +1054,7 @@ constraints are already known as precedence constraints (see&nbsp;
 <ptr to=sec.precedence>).
 
 <subsection><title/The Problem ABZ6/
+
 <p>
 We will consider problem ABZ6 first. The specification is given in
 &nbsp;<ptr to=fig.problemABZ6>. The problem consists of 10 jobs and 10
@@ -1058,8 +1120,10 @@ abz6(taskSpec: ABZ6.taskSpec
            Start.pe <: 943
         end)
 >>>
+
 <p>
 For the proof of optimality we need 761 choice nodes.
+
 <p>
 Hence, the problem ABZ6 seems to be rather easy to solve and we
 can try our previous bottleneck serializer <<DistributeResSort>>.
@@ -1067,6 +1131,7 @@ To find the optimal solution and to prove its optimality a search
 tree is computed which contains more than 1.2 million choice
 nodes. Therefore, the problem <em/is/ difficult for our simpler
 strategies and the gain by our new serializer is dramatic.
+
 <p>
 But we can do still better. To this aim we introduce a new
 serializer. This serializer will not serialize one resource after the
@@ -1082,10 +1147,12 @@ all resources are serialized. In contrast to the strategy in
 <ptr to=sec.strongSer>, a task pair on a resource may be ordered
 without that the resource which was previously considered needs to be
 serialized.
-<para><title/task-oriented/
+
+<para class=apropos><title/task-oriented/
 Thus, we call such a serializer a
 <def/task-oriented serializer/ The strategy implemented in Oz is very similar to the one
 suggested in <ptr to=caseau.94a>.
+
 <p>
 Since we have to compute local slacks, the serializer has a run time
 complexity of <math/O(m \cdot n^3)/ in each step. Thus, it is more expensive
@@ -1208,19 +1275,6 @@ contains 16&nbsp;786 choice nodes and has depth&nbsp;91.
 <picture.extern to="mt10XWPICK.gif" type=gif>
 </figure>
 
-<para><title/Oz Scheduler/
-To find good or optimal solutions you can also use a demo which is shipped with
-the Oz system. This demo is available if you select in your Oz
-Programming Interface first the menu entry <span class=menu/Find/,
-then the menu
-entry <span class=menu/Stand-alone Demo/ and then the file
-<span class=menu/scheduler.oz/. This demo os called the
-<def/Oz Scheduler/ <ptr to=wuertz.96b>.
-The Oz Scheduler allows you to combine different scheduling
-techniques to solve many different problems (MT10 is included). It also
-employs a special technique (based on iterative improvement) to find
-good solutions for job-shop problems very quickly (see also
-<ptr to=caseau.95>).  This technique uses the serializer
-<<Schedule.taskIntervalsDistO>> presented in the previous section.
 </section>
+
 </chapter>

@@ -43,36 +43,36 @@ the stated constraints can be satisfied.
   <title/Getting Started/
 
 <para><title/reification of a constraint/
-The <Em/reification of a constraint /?{C} &wrt; a
-variable ?{x} is the constraint
+The <Em/reification of a constraint/ <math/C/ &wrt; a
+variable <math/x/ is the constraint
 <Math display>
 (C \leftrightarrow x=1)
 \;\land\;x\in0\#1
 </Math>
-where it is assumed that ?{x} does not occur free
-in ?{C}.
+where it is assumed that <math/x/ does not occur free
+in <math/C/.
 
 <P>
 The operational semantics of a propagator for the
-reification of a constraint ?{C} &wrt; ?{x} is
+reification of a constraint <math/C/ &wrt; <math/x/ is
 given by the following rules:
 <list enum>
 <item>
-If the constraint store entails <<?{x}=1>>, the
+If the constraint store entails <math/x=1/, the
 propagator for the reification reduces to a
-propagator for ?{C}.
+propagator for <math/C/.
 <item>
-If the constraint store entails <<?{x}=0>>, the
+If the constraint store entails <math/x=0/, the
 propagator for the reification reduces to a
-propagator for <Math/\neg/?{C}.
+propagator for <math/\neg C/}.
 <item>
-If a propagator for ?{C} would realize that the
-constraint store entails ?{C}, the propagator for
-the reification tells <<?{x}=1>> and ceases to exist.
+If a propagator for <math/C/ would realize that the
+constraint store entails <math/C/, the propagator for
+the reification tells <math/x=1/ and ceases to exist.
 <item>
-If a propagator for ?{C} would realize that the
-constraint store is inconsistent with ?{C}, the
-propagator for the reification tells <<?{x}=0>> and
+If a propagator for <math/C/ would realize that the
+constraint store is inconsistent with <math/C/, the
+propagator for the reification tells <math/x=0/ and
 ceases to exist.
 </list>
 
@@ -84,7 +84,7 @@ familiar with the definitions in
 <para><Title>0/1-variables</Title>
 A <Em>0/1-variable</Em> is
 a variable that is constrained to the finite
-domain <<0#1>>.  The control variables of reified
+domain <math/0\#1/.  The control variables of reified
 constraints are 0/1-variables.
 
 
@@ -189,7 +189,7 @@ posting equivalences and negations.
 <P>
 Write an analogous procedure <<Dis>> posting a
 disjunction <Math/(X\lor Y)=Z/.  Use the reified form
-of <<<:>> to post the disjunction.
+of <code/<:/ to post the disjunction.
 <P>
 How would you write a procedure posting an
 implication <Math/(X\to Y)=Z/?
@@ -270,12 +270,12 @@ persons, we have <Math/A_p\in 1\#7/ for every person
 <Math/p/.  Moreover, we have <Math/A_p\neq A_q/ for every
 pair <Math/p/,<Math/q/ of distinct persons.
 
-The model has a variable $S_i\in0\#1$ for each of
-the 8 preferences, where $S_i=1$ if and only if
-the $i$th preference is satisfied.  To express
+The model has a variable <math/S_i\in0\#1/ for each of
+the 8 preferences, where <math/S_i=1/ if and only if
+the <math/i/-th preference is satisfied.  To express
 this constraint, we constrain the control
-variable $S$ of a preference ``person $p$ wants
-to stand next to person $q$'' by means of the
+variable <math/S/ of a preference ``person <math/p/ wants
+to stand next to person <math/q/'' by means of the
 reified constraint
 <Math display/
 (|A_p-A_q|=1
@@ -319,7 +319,7 @@ that splits the domain of the selected variable.
   <title/Script./
 
 <P>
-<figure class="Figure" id="ProgPhoto">
+<figure id="ProgPhoto">
   <caption/A script for the Photo Puzzle./
 <<<
 proc {Photo Root}
@@ -439,8 +439,8 @@ The first question whose answer is b is question
 (a)&nbsp;2; (b)&nbsp;3; (c)&nbsp;4; (d)&nbsp;5; (e)&nbsp;6.
 <item>
 The only two consecutive questions with identical
-answers are questions (a) 2 and 3; (b) 3 and 4;
-(c) 4 and 5; (d) 5 and 6; (e) 6 and&nbsp;7.
+answers are questions (a)&nbsp;2 and 3; (b)&nbsp;3 and 4;
+(c)&nbsp;4 and 5; (d)&nbsp;5 and 6; (e)&nbsp;6 and&nbsp;7.
 <item>
 The answer to this question is the same as the answer
 to question (a)&nbsp;1; (b)&nbsp;2; (c)&nbsp;4; (d)&nbsp;7; (e)&nbsp;6.
@@ -453,19 +453,19 @@ answer to question (a)&nbsp;10; (b)&nbsp;9; (c)&nbsp;8; (d)&nbsp;7; (e)&nbsp;6.
 <item>
 The number of questions with answer a equals the
 number of questions with answer (a)&nbsp;b; (b)&nbsp;c;
-(c)&nbsp;d; (d)&nbsp;e; (e) none of the above.
+(c)&nbsp;d; (d)&nbsp;e; (e)&nbsp;none of the above.
 <item>
 Alphabetically, the answer to this question and
-the answer to the following question are (a) 4
-apart; (b) 3 apart; (c) 2 apart; (d) 1 apart;
-(e) the same.
+the answer to the following question are (a)&nbsp;4
+apart; (b)&nbsp;3 apart; (c)&nbsp;2 apart; (d)&nbsp;1 apart;
+(e)&nbsp;the same.
 <item>
 The number of questions whose answers are vowels
 is (a)&nbsp;2; (b)&nbsp;3; (c)&nbsp;4; (d)&nbsp;5; (e)&nbsp;6.
 <item>
 The number of questions whose answer is a
-consonant is (a) a prime; (b) a factorial; (c)
-a square; (d) a cube; (e) divisible by 5.
+consonant is (a)&nbsp;a prime; (b)&nbsp;a factorial; (c)
+a square; (d)&nbsp;a cube; (e)&nbsp;divisible by 5.
 <item>
 The answer to this question is (a)&nbsp;a; (b)&nbsp;b;
 (c)&nbsp;c; (d)&nbsp;d; (e)&nbsp;e.
@@ -707,7 +707,8 @@ end
 
 
 
-<P>
+<para class=apropos><title/elimination of
+common subconstraints/
 The script in <Ptr to=ProgSRAT> implements
 the indexed variables <Math/A_i/, <Math/B_i/, <Math/C_i/, <Math/D_i/,
 <Math/E_i/, and <Math/Q_i/ as tuples with 10 components
@@ -717,17 +718,18 @@ the constraints.  For each sum occurring in the
 questions an auxiliary variable is introduced so
 that the corresponding sumation constraint needs
 to be posted only once.  This elimination of
-common subconstraints\marginpar{elimination of
-common subconstraints} provides for a compact
+common subconstraints provides for a compact
 formulation of the script and also improves its
 performance.
 
-The procedure $\{\?FD.element?\; K\;V\;X\}$ posts
-a propagator for the constraint saying that $X$
-is the $K$th component of the vector $V$.
+<P>
+The procedure <<{FD.element ?{K} ?{V} ?{X}}>> posts
+a propagator for the constraint saying that ?{X}
+is the ?{K}-th component of the vector ?{V}.
 
-Note the use of \?FD.decl? in the definition of
-the procedure \?Sum? and in the representation of
+<p>
+Note the use of <<FD.decl>> in the definition of
+the procedure <<Sum>> and in the representation of
 the seventh question.  Telling an initial domain
 constraint for the respective variables is
 necessary so that the propagators depending on

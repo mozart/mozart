@@ -30,7 +30,8 @@
   -->
 
 <chapter id="chapter.propagators">
-<title/Propagators for Redundant Constraints/<p>
+<title/Propagators for Redundant Constraints/
+<p>
 
 For some problems, the performance of a script
 can be drastically improved by introducing
@@ -46,49 +47,58 @@ of propagation steps needed to reach stability.
 
 <section id="SecFDFractions"><title/Example: Fractions/
 
-<para><title/Problem Specification./
+<subsection class=unnumbered>
+  <title/Problem Specification/
+
+<p>
 The Fractions Puzzle consists in finding distinct
 nonzero digits such that the following equation
 holds:
-<p><math/
+<math display/
 {A\over{BC}} +
 {D\over{EF}} +
 {G\over{HI}}
 =
 1
-/<p>
+/
 
-<para><title/Model./
+<subsection class=unnumbered>
+<title/Model/
+
+<p>
 We have a variable for every letter, similiar as
 in the Send More Money Puzzle.  Since the three
 fractions are symmetric, we can impose the order
-<p><math/
+<math display/
 {A\over{BC}} \ge
 {D\over{EF}} \ge
 {G\over{HI}}
-/<p>
+/
 From the order constraints we obtain the redundant
 constraints
-<p><math/
+<math display/
 3{A\over{BC}}\ge1
 \qquad
 \hbox{and}
 \qquad
 3{G\over{HI}}\le1
-/<p>
+/
 The order constraints together with the redundant
 constraints reduce the size of the search tree by
 one order of magnitude.
 
-<para><title/Distribution Strategy./
+<subsection class=unnumbered>
+<title/Distribution Strategy/
+
+<p>
 We distribute on the list of letters using the
 standard first-fail strategy.
 
-<figure class="Figure" id="ProgFractions">
+<figure id="ProgFractions">
 <caption/A script for the Fractions Puzzle./
 <<<
 proc {Fractions Root}
-   sol(a:A b:B c:C d:D e:E f:F g:G h:H i:I) = !Root
+   sol(a:A b:B c:C d:D e:E f:F g:G h:H i:I) = Root
    BC = {FD.decl}
    EF = {FD.decl}
    HI = {FD.decl}
@@ -99,17 +109,20 @@ in
    EF =: 10*E + F
    HI =: 10*H + I
    A*EF*HI + D*BC*HI + G*BC*EF =: BC*EF*HI
-   % impose canonical order
+   %% impose canonical order
    A*EF >=: D*BC
    D*HI >=: G*EF
-   % redundant constraints
+   %% redundant constraints
    3*A >=: BC
    3*G =<: HI
    {FD.distribute ff Root}
 end>>>
 </figure>
 
-<para><title/Script./
+<subsection class=unnumbered>
+<title/Script/
+
+<p>
 The script in <Ptr to="ProgFractions"> constrains
 its root variable to a record having a field for
 every letter.  Since Oz has no finite domain
@@ -121,16 +134,19 @@ after all variables of the constraint implemented by
 the propagator are constrained to finite domains in
 the constraint store, the script constrains the
 auxiliary variables for the denominators to the
-maximal finite domain using the procedure ?{FD.decl}.
+maximal finite domain using the procedure <<FD.decl>>.
 </section>
 
+
 <section id="SecFDPythagoras"><title/Example: Pythagoras/
+
 <p>
 Not all propagators exploit coreferences in
 products (&eg; <math/x\cdot x + y\cdot y = z\cdot
 z/).  For the example of this section it will be
 essential to exploit such coreferences, and you
 will learn how to do it.
+
 <p>
 The example also illustrates the case where a
 propagator for a redundant constraint improves
@@ -138,23 +154,34 @@ the performace of a script by decreasing the
 number of necessary propagation steps, but
 without significantly changing the search tree.
 
-<para><title/Problem Specification./
-How many triples <math/(A,B,C)/ exist such that\
-<math/A^2+B^2=C^2/ and <math/A\le B\le C\le 1000/
+<subsection class=unnumbered>
+<title/Problem Specification/
 
-<para><title/Model./
-The model has three variables ?{A}, ?{B}, and ?{C}.
+<p>
+How many triples <math/(A,B,C)/ exist such that\
+<math/A^2+B^2=C^2/ and <math/A\le B\le C\le 1000/?
+
+<subsection class=unnumbered>
+<title/Model/
+
+<p>
+The model has three variables <math/A/, <math/B/, and <math/C/.
 Each variable is constrained to the finite
 domain <math/1\#1000/.  The model imposes the
 constraints <math/A^2+B^2=C^2/ and <math/A\le B\le C/.
+
 <p>
 The script will also create a propagator for the
-redundant constraint <math/{2\cdot B^2\ge C^2}/.
+redundant constraint <math/2\cdot B^2\ge C^2/.
 
-<para><title/Distribution Strategy./
-We distribute on the variables ?{A}, ?{B}, ?{C}
+<subsection class=unnumbered>
+<title/Distribution Strategy/
+
+<p>
+We distribute on the variables <math/A/, <math/B/, <math/C/
 using the standard first-fail strategy.
 <p>
+
 <figure id="ProgPythagoras" class="Figure">
 <caption/A script that enumerates Pythagoras triples./
 
@@ -163,7 +190,7 @@ proc {Pythagoras Root}
    proc {Square X S}
       {FD.times X X S}
    end
-   [A B C] = !Root
+   [A B C] = Root
    AA      = {Square A}
    BB      = {Square B}
    CC      = {Square C}
@@ -177,7 +204,10 @@ in
 end>>>
 </figure>
 
-<para><title/Script./
+<subsection class=unnumbered>
+<title/Script/
+
+<p>
 Given the script in <Ptr to="ProgPythagoras">,
 we can compute the number of different triples
 with the statement
@@ -189,18 +219,18 @@ The script introduces a defined constraint
 <<<
 {Square X S}
 >>>
-saying that ?{S} is the square of ?{X}.  This
+saying that <<S>> is the square of <<X>>.  This
 constraint is implemented with a propagator
 provided by
 <<<
 {FD.times X X S}
 >>>
 This propagator will start propagating as soon as
-the store constrains ?{X} to a finite domain.
+the store constrains <<X>> to a finite domain.
 This in contrast to the propagator created by
 <<X*X=:S>>, which will start work only after both
-?{X} and ?{S} are constrained to finite domains
-in the constraint store.  To define ?{Square}
+<<X>> and <<S>> are constrained to finite domains
+in the constraint store.  To define <<Square>>
 with this constraint, we would have to write
 <<<
 proc {Square X S}
@@ -212,12 +242,13 @@ end
 The propagator for the redundant constraint does
 not significantly reduce the size of the search
 tree.  However, it reduces the number of
-propagation steps from about <math/1\,000\,000/ to
-about about <math/500\,000/, which makes computation
+propagation steps from about 1000000 to
+about about 500000, which makes computation
 twice as fast.
-<para><title/statistics/
+<para class=apropos><title/statistics/
 To find out about this, pop
-up the Oz Panel and reset the statistics.  Also
+up the <ref.extern to="ozdoc:tools" key="chapter.panel"/Oz Panel/ and
+reset the statistics.  Also
 switch on the status message feature and pop up
 the emulator buffer.  Now enter the statement
 <<<
@@ -255,13 +286,13 @@ the size of the search tree.  The reason for
 this increase is the fact that the created
 propagator does not realize the coreferences in
 the constraint it implements, that is, it treats
-the two occurrences of ?{A}, say, as if they
+the two occurrences of <<A>>, say, as if they
 were independent variables.
 </section>
 
 <section id="SecFDMagicSquares"><title/Example: Magic Squares/
-<p>
 
+<p>
 This example shows a smart representation of a
 matrix and a concomitant defined constraint of
 higher order.  The model will eliminate
@@ -269,13 +300,16 @@ symmetries by imposing order constraints.
 Propagation will be drastically improved by
 exploiting a redundant constraint.
 
-<para><title/Problem Specification./
+<subsection class=unnumbered>
+<title/Problem Specification/
+
+<p>
 The Magic Square Puzzle consists in finding for
-given ?{N} an <math/N\times N/-matrix such that:
+given <math/N/ an <math/N\times N/-matrix such that:
 <list>
 <item>
 Every field of the matrix is an integer between
-?{1} and <math/N^2/.
+<math/1/ and <math/N^2/.
 <item>
 The fields of the matrix are pairwise distinct.
 <item>
@@ -283,50 +317,58 @@ The sums of the rows, columns, and the two main
 diagonals are all equal.
 </list>
 A magic square for <math/N=3/ looks as follows:
-<p><math/
+<math display/
 \begin{array}{ccc}
 2&7&6\\
 9&5&1\\
 4&3&8
 \end{array}
-/<p><p>
+/
+
+p>
 The Magic Square Puzzle is extremely hard for
-large ?{N}.  Even for <math/{N=5}/, our script will
-have to explore almost ?{8000} nodes to find a
+large <math/N/.  Even for <math/{N=5}/, our script will
+have to explore almost 8000 nodes to find a
 solution.
 
-<para><title/Model./
+<subsection class=unnumbered>
+<title/Model/
+
+<p>
 We model the problem by having a variable
 <math/F_{ij}/ for every field <math/(i,j)/ of the matrix.
-Moreover, we have one additional variable ?{S} and
+Moreover, we have one additional variable <math/S/ and
 require that the sum of every row, column, and
-main diagonal equals ?{S}.
+main diagonal equals <math/S/.
 <p>
 Without loss of generality, we can impose the
 following order constraints eliminating
 symmetries:
-<p><math/
+<math display/
 F_{11}<F_{NN},
 \qquad
 F_{N1}<F_{1N},
 \qquad
 F_{11}<F_{N1}.
-/<p>
+/
 <p>
 Since the sum of the sums of the rows must equal
 the sum of all fields, we have the redundant
 constraint
-<p><math/
+<math display/
 {N^2\over 2}\cdot(N^2+1) = N\cdot S
-/<p>
+/
 To see this, note that sum of all fields equals
-<p><math/
+<math display/
 1+2+\ldots+N^2 = {N^2\over 2}\cdot(N^2+1)
 /<p>
-and that the sum of each of the ?{N} rows must be
-?{S}.
+and that the sum of each of the <math/N/ rows must be
+<math/S/.
 
-<para><title/Distribution Strategy./
+<subsection class=unnumbered>
+<title/Distribution Strategy/
+
+<p>
 We distribute on the variables <math/F_{11},\ldots,
 F_{NN}/ with a first-fail strategy splitting the
 domain of the selected variable and trying the
@@ -352,120 +394,134 @@ in
    in
       {FD.tuple square NN 1#NN Square}
       {FD.distinct Square}
-      % Diagonals
+      %% Diagonals
       {Assert fun {$ I} {Field I I} end}
       {Assert fun {$ I} {Field I N+1-I} end}
-      % Columns
+      %% Columns
       {For 1 N 1
        proc {$ I} {Assert fun {$ J} {Field I J} end} end}
-      % Rows
+      %% Rows
       {For 1 N 1
        proc {$ J} {Assert fun {$ I} {Field I J} end} end}
-      % Eliminate symmetries
+      %% Eliminate symmetries
       {Field 1 1} <: {Field N N}
       {Field N 1} <: {Field 1 N}
       {Field 1 1} <: {Field N 1}
-      % Redundant: sum of all fields = (number rows) * Sum
+      %% Redundant: sum of all fields = (number rows) * Sum
       NN*(NN+1) div 2 =: N*Sum
-      %
+      %%
       {FD.distribute split Square}
    end
 end>>>
 
 </figure>
 
-<para><title/Script./
+<subsection class=unnumbered>
+  <title/Script/
+
+<p>
 <Ptr to="ProgMagicSquare"> shows a script
 realizing the model and distribution strategy just
 discussed.  The actual script is created by a
-procedure ?{MagicSquare} taking ?{N} as parameter.
+procedure <<MagicSquare>> taking <<N>> as parameter.
 <p>
 The script represents the matrix as a tuple with
 <math/N^2/ elements.  The tuple is the value of the
-root variable ?{Square}.  The function
+root variable <<Square>>.  The function
 <<<
 {Field I J}
 >>>
-returns the component of ?{Square} that represents
+returns the component of <<Square>> that represents
 the field at position <<(I,J)>>.  The variable
-?{Sum} takes the sum of the rows, columns, and
+<<Sum>> takes the sum of the rows, columns, and
 main diagonals as value.  The procedure
 <<<
-{Assert F}
+{Assert ?{F}}
 >>>
 takes a function ?{F} and posts the constraint
 <<<
-{F 1} + {F 2} + ... + {F N} = Sum
+{?{F} 1} + {?{F} 2} + ... + {?{F} N} = Sum
 >>>
 Obviously, <<{Assert F}>> is a defined constraint
 of higher order.  With the help of this defined
 constraint it is straightforward to state that
 the sums of the rows, columns, and main diagonals
-are all equal to ?{Sum}.
+are all equal to <<Sum>>.
 <p>
-With the Explorer you can find out that for <math/N=3/
+With the Explorer you can find out that for <<N=3>>
 there is exactly one magic square satisfying the
 ordering constraints of our model.  Without the
-ordering constraints there are ?{8} different
+ordering constraints there are 8 different
 solutions.  Omitting the propagator for the
 redundant constraint will increase the search
 tree by an order of magnitude.
 <p>
 
-\begin{exercise}
-<def/Magic Sequence./\quad
-A magic sequence of length ?{n} is a sequence
-<p><math/
+<section>
+  <title/Exercises/
+
+<exercise id=propagators.ex.a>
+<p.silent//
+<para class=apropos><title/Magic Sequence/
+A magic sequence of length <math/n/ is a sequence
+<math display/
 x_0,\;x_1,\;\ldots\;,\;x_{n-1}
-/<p>
-of integers such that&fsp;for every <math/i=0,\ldots,n-1/
+/
+of integers such that for every <math/i=0,\ldots,n-1/
 <list>
 <item>
-<math/x_i/ is an integer between ?{0} and <math/n-1/.
+<math/x_i/ is an integer between <math/0/ and <math/n-1/.
 <item>
-the number ?{i} occurs exactly <math/x_i/ times in the
+the number <math/i/ occurs exactly <math/x_i/ times in the
 sequence.
 </list>
+
 <p>
-Write a parameterized script that, given ?{n}, can
-enumerate all magic sequences of length ?{n}.  The
-script should use the procedure
+Write a parameterized script that, given <math/n/, can
+enumerate all magic sequences of length <math/n/.
+
+<p>
+The script should use the procedure
 <<<
-{FD.exactly K S I}
+{FD.exactly ?{K} ?{S} ?{I}}
 >>>
 that creates a propagator for the constraint
 saying that exactly ?{K} fields of the record
 ?{S} are equal to the integer ?{I}.
+
 <p>
 You can drastically reduce the search space of
 the script by having propagators for the
 redundant constraints
-<p><math/
+<math display/
 x_0\;+\;\ldots\;+\;x_{n-1}\;=\;n
-/<p>
+/
 and
-<p><math/
+<math display/
 (-1)\cdot x_0\;+\;\ldots\;+\;(n-2)\cdot
 x_{n-1}\;=\;0
-/<p>
+/
 Explain why these constraints are redundant.
-\end{exercise}
-<p>
-\begin{solution}
+</exercise>
+
+
+<answer to="propagators.ex.a">
 The first redundant constraint follows from the
 fact that the total number of occurrences in the
-sequence is ?{n}, and that no numbers but those
-between ?{0} and <math/n-1/ occur in the sequence.
+sequence is <math/n/, and that no numbers but those
+between <math/0/ and <math/n-1/ occur in the sequence.
+
 <p>
 The second redundant constraint follows from the
 fact that
-<p><math/xb
+<math display/
 0\cdot x_0\;+\;\ldots\;+\;
 (n-1)\cdot x_{n-1}
 \;=\;
 x_0\;+\;\ldots\;+\;x_{n-1}
-/<p>
+/
 
+<P>
 Here is a parametrized script for the Magic
 Sequence Puzzle:
 <<<fun {MagicSequence N}
@@ -475,11 +531,15 @@ in
       {FD.tuple sequence N 0#N-1 S}
       {For 0 N-1 1
        proc {$ I} {FD.exactly S.(I+1) S I} end}
-      % redundant constraints
+      %% redundant constraints
       {FD.sum S '=:' N}
       {FD.sumC Cs S '=:' 0}
-      %
+      %%
       {FD.distribute ff S}
    end
 end>>>
-\end{solution}
+</answer>
+
+</section>
+
+</chapter>
