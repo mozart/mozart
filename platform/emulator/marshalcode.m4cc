@@ -172,6 +172,8 @@ void marshalPredicateRef(AbstractionEntry *entry,MsgBuffer *bs)
     if (checkCycle(ToInt32(entry->indexTable),bs)) return;    
     marshalDIF(bs,DIF_ABSTRENTRY);
     trailCycle((OZ_Term *)&entry->indexTable, bs,0);
+  } else {
+    Assert(entry==NULL || entry->getAbstr() != NULL);
   }
 }
 
