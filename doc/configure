@@ -17,7 +17,7 @@ ac_help="$ac_help
 ac_help="$ac_help
 --with-lib-dir=d1,...,dn	add these dirs to LDFLAGS"
 ac_help="$ac_help
---with-emacs-options=OPTIONS command-[line] options for emacs subprocess (default: -q --no-site-init)"
+--with-emacs-options=OPTIONS command-[line] options for emacs subprocess (default: -q --no-site-[file])"
 ac_help="$ac_help
 --with-java-bin='DIR'
        directory where java executables/wrappers reside"
@@ -1324,7 +1324,7 @@ if test "${with_emacs_options+set}" = set; then
   withval="$with_emacs_options"
   oz_cv_emacs_options="$with_emacs_options"
 else
-  oz_cv_emacs_options="-q --no-site-init"
+  oz_cv_emacs_options="-q --no-site-file
 fi
 
   EMACS_OPTIONS="$oz_cv_emacs_options"
