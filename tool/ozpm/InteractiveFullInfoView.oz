@@ -32,7 +32,7 @@ define
 	 end
       end
    end
-   
+
    fun{AuthorsToString L}
       fun{AuthorIDToName ID}
 	 {Global.authorMogulDB condGet({VirtualString.toAtom ID} ID $)}.name
@@ -47,7 +47,7 @@ define
 	 {VirtualString.toString {AuthorIDToName L}}
       end
    end
-   
+
    class InfoView
       feat
 	 setTitle
@@ -113,10 +113,10 @@ define
 			      in
 				 thread
 				    {Wait Html}
-				    {Html parse(""#V)}
+				    {Html parse({VirtualString.toString V})}
 				 end
 				 I#label(text:D look:KeyLook)|
-				 I+1#html(look:KeyLook handle:Html)|
+				 I+1#html(look:ValueLook handle:Html)|
 				 I+2#newline|
 				 {Loop1 Xs I+3}
 			      elseif Vs\="" then
@@ -192,5 +192,4 @@ define
       feat simple:true
       
    end
-
 end

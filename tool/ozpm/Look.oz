@@ -51,6 +51,11 @@ define
 		    anchor:nw
 		    background:Background
 		    justify:left)}
+   {Value.set html(glue:news
+		   bg:Background
+		   borderwidth:1
+		   relief:raised
+		  )}
    NiceTitle={QTk.newLook}
    {NiceTitle.set label(bg:darkorange
 			relief:raised
