@@ -587,7 +587,11 @@
 <!ELEMENT file - - (%data.chars.mix;)*>
 <!ELEMENT (kbd|key|samp|name) - - RCDATA>
 <!ELEMENT (q|span|def) - - (%p.chars.mix;)* -- should be more restricted -- >
-<!ATTLIST (file|kbd|key|samp|q|span|def)
+<!ATTLIST (file|kbd|key|samp|span)
+        %common.attr;
+        %inline.attr;
+>
+<!ATTLIST (q|def)
         %common.attr;
 >
 <!ATTLIST name
