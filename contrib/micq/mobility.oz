@@ -27,12 +27,20 @@
 functor
 import
    Fault
+   System
 export
    stationaryClass:StationaryObject
    newStationary:NewStationaryObject
 define
    class StationaryObject
       feat this
+   end
+
+   DBGS DBGP={NewPort DBGS}
+   thread
+      {ForAll DBGS proc{$ X}
+                      {System.show X}
+                   end}
    end
 
    %% Creates a new instance of Class and encapsulates it in a thread (=stationary)
@@ -49,22 +57,30 @@ define
                try Sync=exception(networkFailure(remoteObjectGone(P))) catch _ then skip end
             end
          in
+
+
             %% Failure handling
-            {Fault.installWatcher P [permFail] Watcher}
+            {Send DBGP installWatcher}
+%           {Fault.installWatcher P [permFail] Watcher _}
+
 
             %% Try to send to remote object
             try
+               {Send DBGP send}
                {Send P M#Sync}
             catch _ then
                skip
             end
 
             %% Wait for outcome
+            {Send DBGP wait}
             {Wait Sync}
 
             %% Unistall watcher
-            {Fault.deInstallWatcher P Watcher}
+            {Send DBGP deInstallWatcher}
+%           {Fault.deInstallWatcher P Watcher _}
 
+            %% Ok or not?
             if {Label Sync}==exception then raise Sync.1 end end
          end
       end
