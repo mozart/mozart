@@ -51,13 +51,6 @@ SITE_PROPERTY_FLAGS	=
 SITE_PROPERTY_SRCS	=
 endif
 
-GTK_ENABLED	= @GTK_ENABLED@
-ifeq ($(GTK_ENABLED),yes)
-GTK_FLAGS	= -DGTK_ENABLED
-else
-GTK_FLAGS	=
-endif
-
 QTK_ENABLED	= @QTK_ENABLED@
 ifeq ($(QTK_ENABLED),yes)
 QTK_FLAGS	= -DQTK_ENABLED
@@ -65,7 +58,7 @@ else
 QTK_FLAGS	=
 endif
 
-OZCFLAGS	= $(COMPRESSFLAGS) $(DENYS_FLAGS) $(SITE_PROPERTY_FLAGS) $(GTK_FLAGS) $(QTK_FLAGS)
+OZCFLAGS	= $(COMPRESSFLAGS) $(DENYS_FLAGS) $(SITE_PROPERTY_FLAGS) $(QTK_FLAGS)
 OZC		= @OZC@
 
 OZLOADSEP	= @OZLOADSEP@
@@ -113,7 +106,6 @@ CPSRC1  = Search FD FS Combinator RecordC
 CPSRC2  = Schedule ParSearch ParWorker ParLogging
 DPSRC   = Connection Discovery Remote RemoteServer Fault URL DPStatistics DPInit ConnectionFunctor AcceptFunctor ConnectAcceptModule $(DENYS_DPSRCS)
 WPSRC   = Tk TkTools Tix
-GTKSRC  = GTK GDK Glade GnomeCanvas GTKSimpleBuilder
 ifeq ($(QTK_ENABLED),yes)
 QTKSRC  = QTk QTkDevel
 else
@@ -134,7 +126,6 @@ FUNCTORS1 = \
 	$(RUNFUNCTORS1) \
 	$(DPSRC:%=%.ozf) \
 	$(WPSRC:%=%.ozf) \
-        $(GTKSRC:%=%.ozf) \
 	$(SUPPSRC:%=%.ozf) \
 	$(CPSRC2:%=%.ozf) \
 	$(QTKSRC:%=%.ozf) \
@@ -248,9 +239,6 @@ ParSearch.ozf: ParSearchTmp.ozf ParProcess.ozf ParManager.ozf ozl$(EXE_EXT)
 %.ozf: wp/%.oz Base.ozf
 	$(COMPILE) $(shell $(CYGPATH) "$<") -o $@
 
-%.ozf: gtk/%.oz Base.ozf
-	$(COMPILE) $(shell $(CYGPATH) "$<") -o $@
-
 %.ozf: qtk/%.oz Base.ozf
 	$(COMPILE) $(shell $(CYGPATH) "$<") -o $@
 
@@ -273,38 +261,6 @@ Open.ozf: op/HtmlTable.oz
 Tk.ozf: wp/Tk.oz wp/TkInit.oz wp/TkOptions.oz
 	$(COMPILE) --norecordhoist $(shell $(CYGPATH) "$<") -o $@
 TkTools.ozf: DefaultURL.ozf
-
-# gtk dependencies and rules
-SPECS_PATH         = $(VPATH)/gtk/specs
-GTK_SPECS          = $(SPECS_PATH)/gtk/*.spec
-GDK_SPECS          = $(SPECS_PATH)/gdk/*.spec
-GNOME_CANVAS_SPECS = $(SPECS_PATH)/gnome-canvas/*.spec
-BUILDER_SRC        = $(VPATH)/gtk/builder.perl
-BUILDER            = $(PERL) $(BUILDER_SRC)
-
-GTK.ozf: gtkclasses.oz gtkexports.oz
-
-gtkclasses.oz: $(GTK_SPECS) $(BUILDER_SRC)
-	$(BUILDER) --oz-classes $(GTK_SPECS) > $@
-
-gtkexports.oz: $(GTK_SPECS) $(BUILDER_SRC)
-	$(BUILDER) --oz-exportlist $(GTK_SPECS) > $@
-
-GDK.ozf: gdkclasses.oz gdkexports.oz
-
-gdkclasses.oz: $(GDK_SPECS) $(BUILDER_SRC)
-	$(BUILDER) --oz-classes $(GDK_SPECS) > $@
-
-gdkexports.oz: $(GDK_SPECS) $(BUILDER_SRC)
-	$(BUILDER) --oz-exportlist $(GDK_SPECS) > $@
-
-GnomeCanvas.ozf: gnome-canvas-classes.oz gnome-canvas-exports.oz
-
-gnome-canvas-classes.oz: $(GNOME_CANVAS_SPECS) $(BUILDER_SRC)
-	$(BUILDER) --oz-classes $(GNOME_CANVAS_SPECS) > $@
-
-gnome-canvas-exports.oz: $(GNOME_CANVAS_SPECS) $(BUILDER_SRC)
-	$(BUILDER) --oz-exportlist $(GNOME_CANVAS_SPECS) > $@
 
 # QTk dependencies
 
@@ -532,7 +488,7 @@ CLEANFILES = \
 	CpSupport.ozf ParWorkerTmp.ozf ParLoggingTmp.ozf ParSearchTmp.ozf \
 	$(FUNCTORS) $(FUNFUNCTORS) $(PARSEARCHFUNCTORS) \
 	$(SYSLETS) $(BOOTINITTXT) $(BOOTOZCTXT) boot-init boot-ozc \
-	gtkclasses.oz gtkexports.oz $(QTKCLEAN)
+	$(QTKCLEAN)
 
 clean:
 	-rm -f $(CLEANFILES)
