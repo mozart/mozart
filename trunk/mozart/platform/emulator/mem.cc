@@ -792,11 +792,11 @@ Bool MemChunks::isInHeap(TaggedRef term)
   }
   if (!oz_isRef(term)) {
     switch (tagTypeOf (term)) {
-    case UVAR:
-      // FUT
+      // kost@ : let's debug variables as well..  I see though no
+      // system here: what is debugged and what is not.
+    case VAR:
     case LTUPLE:
     case OZCONST:
-      // if (oz_isBigInt(term)) return OK; // mm2
       if (oz_isBuiltin(term)) return OK;
       // no break
     case SRECORD:

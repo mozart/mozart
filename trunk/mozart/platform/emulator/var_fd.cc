@@ -36,16 +36,16 @@
 
 OZ_Return OzFDVariable::bind(OZ_Term * vPtr, OZ_Term term)
 {
-  DEBUG_CONSTRAIN_CVAR(("bindFD "));
+  DEBUG_CONSTRAIN_VAR(("bindFD "));
 
   Assert(!oz_isRef(term));
 
   if (!oz_isSmallInt(term)){
-    DEBUG_CONSTRAIN_CVAR(("FAILED\n"));
+    DEBUG_CONSTRAIN_VAR(("FAILED\n"));
     return FAILED;
   }
   if (! finiteDomain.isIn(tagged2SmallInt(term))) {
-    DEBUG_CONSTRAIN_CVAR(("FAILED\n"));
+    DEBUG_CONSTRAIN_VAR(("FAILED\n"));
     return FAILED;
   }
 
@@ -60,7 +60,7 @@ OZ_Return OzFDVariable::bind(OZ_Term * vPtr, OZ_Term term)
     bindGlobalVarToValue(vPtr, term);
   }
 
-  DEBUG_CONSTRAIN_CVAR(("PROCEED\n"));
+  DEBUG_CONSTRAIN_VAR(("PROCEED\n"));
   return PROCEED;
 }
 
@@ -72,21 +72,21 @@ OZ_Return OzFDVariable::bind(OZ_Term * vPtr, OZ_Term term)
 // implicitely relinked.)
 OZ_Return OzFDVariable::unify(OZ_Term * left_varptr, OZ_Term * right_varptr)
 {
-  DEBUG_CONSTRAIN_CVAR(("unifyFD "));
+  DEBUG_CONSTRAIN_VAR(("unifyFD "));
   //
   OZ_Term right_var       = *right_varptr;
-  OzVariable * right_cvar = tagged2CVar(right_var);
+  OzVariable *right_ov = tagged2Var(right_var);
   //
-  if (right_cvar->getType() == OZ_VAR_BOOL) {
-    DEBUG_CONSTRAIN_CVAR(("branch to OzBoolVariable::unify\n"));
-    return ((OzBoolVariable *)right_cvar)->unify(right_varptr, left_varptr);
+  if (right_ov->getType() == OZ_VAR_BOOL) {
+    DEBUG_CONSTRAIN_VAR(("branch to OzBoolVariable::unify\n"));
+    return ((OzBoolVariable *) right_ov)->unify(right_varptr, left_varptr);
   }
-  OzFDVariable * right_fdvar = (OzFDVariable *) right_cvar;
+  OzFDVariable * right_fdvar = (OzFDVariable *) right_ov;
   Bool left_var_is_local     = oz_isLocalVar(this);
   Bool right_var_is_local    = oz_isLocalVar(right_fdvar);
   //
   if (!left_var_is_local && right_var_is_local) {
-    DEBUG_CONSTRAIN_CVAR(("global-local (swapping)"));
+    DEBUG_CONSTRAIN_VAR(("global-local (swapping)"));
     //
     // left variable is global and right variable is local
     //
@@ -94,7 +94,7 @@ OZ_Return OzFDVariable::unify(OZ_Term * left_varptr, OZ_Term * right_varptr)
     return unify(right_varptr, left_varptr);
   }
   //
-  if (right_cvar->getType() != OZ_VAR_FD) {
+  if (right_ov->getType() != OZ_VAR_FD) {
     goto failed;
   }
   //
@@ -108,7 +108,7 @@ OZ_Return OzFDVariable::unify(OZ_Term * left_varptr, OZ_Term * right_varptr)
     }
     // 
     if (left_var_is_local && right_var_is_local) {
-      DEBUG_CONSTRAIN_CVAR(("local-local"));
+      DEBUG_CONSTRAIN_VAR(("local-local"));
       //
       // left and right variable are local
       //
@@ -165,7 +165,7 @@ OZ_Return OzFDVariable::unify(OZ_Term * left_varptr, OZ_Term * right_varptr)
 	right_fdvar->dispose();
       }
     } else if (left_var_is_local && !right_var_is_local) {
-      DEBUG_CONSTRAIN_CVAR(("local-global"));
+      DEBUG_CONSTRAIN_VAR(("local-global"));
       //
       // left variable is local and right variable is global
       //
@@ -184,7 +184,7 @@ OZ_Return OzFDVariable::unify(OZ_Term * left_varptr, OZ_Term * right_varptr)
 	Board * right_fdvar_home = right_fdvar->getBoardInternal();
 	OzBoolVariable * right_boolvar = new OzBoolVariable(right_fdvar_home);
 	OZ_Term * right_varptr_bool =
-	  newTaggedCVar(new OzBoolVariable(right_fdvar_home));
+	  newTaggedVar(new OzBoolVariable(right_fdvar_home));
 	// wake up
 	right_fdvar->propagateUnify();
 	propagateUnify();
@@ -204,7 +204,7 @@ OZ_Return OzFDVariable::unify(OZ_Term * left_varptr, OZ_Term * right_varptr)
 	dispose();
       }
     } else {
-      DEBUG_CONSTRAIN_CVAR(("global-global"));
+      DEBUG_CONSTRAIN_VAR(("global-global"));
       //
       // left and right variable are global
       //
@@ -227,7 +227,7 @@ OZ_Return OzFDVariable::unify(OZ_Term * left_varptr, OZ_Term * right_varptr)
 	OzBoolVariable * right_boolvar =
 	  new OzBoolVariable(right_fdvar_home);
 	OZ_Term * right_varptr_bool =
-	  newTaggedCVar(new OzBoolVariable(right_fdvar_home));
+	  newTaggedVar(new OzBoolVariable(right_fdvar_home));
 	//
 	propagateUnify();
 	right_fdvar->propagateUnify();
@@ -247,11 +247,11 @@ OZ_Return OzFDVariable::unify(OZ_Term * left_varptr, OZ_Term * right_varptr)
 	}
       }
     }
-    DEBUG_CONSTRAIN_CVAR(("SUCCEEDED\n"));
+    DEBUG_CONSTRAIN_VAR(("SUCCEEDED\n"));
     return TRUE;
   }
  failed:
-  DEBUG_CONSTRAIN_CVAR(("FAILED\n"));
+  DEBUG_CONSTRAIN_VAR(("FAILED\n"));
   return FAILED;
 } // OzFDVariable::unify
 
@@ -294,7 +294,7 @@ int OzFDVariable::intersectWithBool(void)
 
 OZ_Return tellBasicConstraint(OZ_Term v, OZ_FiniteDomain * fd)
 {
-  DEBUG_CONSTRAIN_CVAR(("tellBasicConstraintFD "));
+  DEBUG_CONSTRAIN_VAR(("tellBasicConstraintFD "));
 
   DEREF(v, vptr, vtag);
 
@@ -310,9 +310,9 @@ OZ_Return tellBasicConstraint(OZ_Term v, OZ_FiniteDomain * fd)
     }
     // fd is singleton domain and hence v becomes integer. otherwise ..
     if (fd->getSize() == 1) {
-      if (oz_isLocalVariable(vptr)) {
-	if (!oz_isUVar(v))
-	  oz_checkSuspensionListProp(tagged2CVar(v));
+      if (oz_isLocalVariable(v)) {
+	if (!oz_isOptVar(v))
+	  oz_checkSuspensionListProp(tagged2Var(v));
 	bindLocalVarToValue(vptr, 
 			    makeTaggedSmallInt(CAST_FD_PTR(fd)->getSingleElem()));
       } else {
@@ -331,11 +331,11 @@ OZ_Return tellBasicConstraint(OZ_Term v, OZ_FiniteDomain * fd)
 	  : new OzFDVariable(*fd, oz_currentBoard())
 	  )
        : new OzFDVariable(oz_currentBoard()));
-    OZ_Term *  tcv = newTaggedCVar(cv);
+    OZ_Term *  tcv = newTaggedVar(cv);
 
-    if (oz_isLocalVariable(vptr)) {
-      if (!oz_isUVar(v)) {
-	oz_checkSuspensionListProp(tagged2CVar(v));
+    if (oz_isLocalVariable(v)) {
+      if (!oz_isOptVar(v)) {
+	oz_checkSuspensionListProp(tagged2Var(v));
       }
       bindLocalVar(vptr, tcv);
     } else {
@@ -380,7 +380,7 @@ OZ_Return tellBasicConstraint(OZ_Term v, OZ_FiniteDomain * fd)
 	fdvar->becomesBoolVarAndPropagate(vptr);
       } else {
 	fdvar->propagate(fd_prop_bounds);
-	castGlobalVar(vptr, newTaggedCVar(new OzBoolVariable(fdvarhome)));
+	castGlobalVar(vptr, newTaggedVar(new OzBoolVariable(fdvarhome)));
       }
     } else {
       // 
@@ -431,11 +431,11 @@ OZ_Return tellBasicConstraint(OZ_Term v, OZ_FiniteDomain * fd)
   }
 
 failed:
-  DEBUG_CONSTRAIN_CVAR(("FAILED\n"));
+  DEBUG_CONSTRAIN_VAR(("FAILED\n"));
   return FAILED;
 
 proceed:
-  DEBUG_CONSTRAIN_CVAR(("PROCEED\n"));
+  DEBUG_CONSTRAIN_VAR(("PROCEED\n"));
   return PROCEED;
 }
 

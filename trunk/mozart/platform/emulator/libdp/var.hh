@@ -174,11 +174,11 @@ public:
        proxies(0) {
     // This is for garbage collection purpose only!
     Assert(ov);
-    origVar = makeTaggedCVar(ov);
+    origVar = makeTaggedVar(ov);
   }
 
   OzVariable * getOrigVar(void) {
-    return tagged2CVar(origVar);
+    return tagged2Var(origVar);
   }
   ExtVarType getIdV() { return (OZ_EVAR_MANAGER); }
   OZ_Term statusV();

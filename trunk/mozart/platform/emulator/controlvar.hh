@@ -37,7 +37,7 @@
  * -----------------------------------------------------------------------*/
 
 #define ControlVarNew(var,home)			\
-OZ_Term var = oz_newVar(home);			\
+OZ_Term var = oz_newVariable(home);		\
 am.addSuspendVarList(var);
 
 #define _controlVarUnify(var,val) oz_bind_global(var,val)

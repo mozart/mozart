@@ -151,15 +151,9 @@ void Pickler::processResource(OZ_Term term, Tertiary *tert)
 }
 
 //
-void Pickler::processUVar(OZ_Term uv, OZ_Term *uvarTerm)
+void Pickler::processVar(OZ_Term cv, OZ_Term *varTerm)
 {
-  OZ_error("Pickler::processUVar is called!");
-}
-
-//
-void Pickler::processCVar(OZ_Term cv, OZ_Term *cvarTerm)
-{
-  OZ_error("Pickler::processCVar is called!");
+  OZ_error("Pickler::processVar is called!");
 }
 
 //
@@ -386,16 +380,10 @@ void ResourceExcavator::processResource(OZ_Term rTerm, Tertiary *tert)
 }
 
 //
-void ResourceExcavator::processUVar(OZ_Term uv, OZ_Term *uvarTerm)
+void ResourceExcavator::processVar(OZ_Term cv, OZ_Term *varTerm)
 {
-  processCVar(uv, uvarTerm);
-}
-
-//
-void ResourceExcavator::processCVar(OZ_Term cv, OZ_Term *cvarTerm)
-{
-  rememberVarLocation(cvarTerm);
-  addResource(makeTaggedRef(cvarTerm));
+  rememberVarLocation(varTerm);
+  addResource(makeTaggedRef(varTerm));
 }
 
 //

@@ -159,8 +159,8 @@ OZ_Return OZ_checkSituatednessDynamic(Board * s,TaggedRef * x) {
       TaggedRef h = oz_head(f);
       Assert(oz_isRef(h));
       TaggedRef * f_ptr = tagged2Ref(h);
-      Assert(oz_isCVar(*f_ptr));
-      Assert(tagged2CVar(*f_ptr)->getType() == OZ_VAR_FUTURE);
+      Assert(oz_isVar(*f_ptr));
+      Assert(tagged2Var(*f_ptr)->getType() == OZ_VAR_FUTURE);
       am.addSuspendVarList(f_ptr);
       f = oz_tail(f);
     } while (!oz_eq(f,AtomNil));
@@ -322,7 +322,8 @@ void checkSituatedBlock(OZ_Term * tb, int sz) {
       x     = *x_ptr;
       goto again;
       
-    case TAG_UNUSED:
+    case TAG_UNUSED_UVAR:
+    case TAG_UNUSED_SVAR:
     case TAG_GCMARK:
     case TAG_SMALLINT:
     case TAG_FSETVALUE:
@@ -353,17 +354,10 @@ void checkSituatedBlock(OZ_Term * tb, int sz) {
       if (!tagged2Const(x)->checkSituatedness())
 	bads = oz_cons(x,bads);
       continue;
-      
-    case TAG_UVAR: 
-      if (!ISGOOD(tagged2VarHome(x))) {
-	bads = oz_cons(makeTaggedRef(x_ptr),bads);
-	MARKVAR(x_ptr);
-      }
-      continue;
-     
-    case TAG_CVAR: 
+
+    case TAG_VAR: 
       {
-	OzVariable * cv = tagged2CVar(x);
+	OzVariable * cv = tagged2Var(x);
       
 	if (!ISGOOD(cv->getBoardInternal())) {
 	  if (cv->getType() == OZ_VAR_FUTURE)
@@ -375,7 +369,5 @@ void checkSituatedBlock(OZ_Term * tb, int sz) {
       }
       continue;
     }
-      
   }
-  
 }

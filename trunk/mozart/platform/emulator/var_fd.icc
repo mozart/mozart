@@ -82,14 +82,14 @@ inline
 Bool isGenFDVar(TaggedRef term)
 {
   GCDEBUG(term);
-  return oz_isCVar(term) && (tagged2CVar(term)->getType() == OZ_VAR_FD);
+  return oz_isVar(term) && (tagged2Var(term)->getType() == OZ_VAR_FD);
 }
 
 inline
 OzFDVariable * tagged2GenFDVar(TaggedRef term)
 {
   GCDEBUG(term);
-  return (OzFDVariable *) tagged2CVar(term);
+  return (OzFDVariable *) tagged2Var(term);
 }
 
 inline
@@ -134,7 +134,7 @@ void OzFDVariable::becomesSmallIntAndPropagate(TaggedRef * trPtr)
 {
   if (oz_isSmallInt(*trPtr)) return;
 
-  Assert(this == tagged2CVar(*trPtr));
+  Assert(this == tagged2Var(*trPtr));
 
   TaggedRef si_val = makeTaggedSmallInt(CAST_FD_OBJ(finiteDomain).getSingleElem());
   propagate(fd_prop_singl);

@@ -396,21 +396,7 @@ void GenTraverser::doit()
       }
       break;
 
-    case TAG_UVAR:
-      {
-	// e.g. variable excavators are not required to convert uvar"s
-	// to cvar"s, so there can be repetitions for them as well:
-	int ind = findVarLocation(tPtr);
-	if (ind >= 0) {
-	  processRepetition(t, tPtr, ind);
-	  break;
-	} else {
-	  processUVar(t, tPtr);
-	  break;
-	}
-      }
-
-    case TAG_CVAR:
+    case TAG_VAR:
       {
 	// Note: we remember locations of variables, - not the
 	// variables themselves! This works, since values and
@@ -420,7 +406,7 @@ void GenTraverser::doit()
 	  processRepetition(t, tPtr, ind);
 	  break;
 	} else {
-	  processCVar(t, tPtr);
+	  processVar(t, tPtr);
 	  break;
 	}
       }
@@ -797,7 +783,7 @@ repeat:
       if (doMemo) {
 	GetBTTaskArg2(frame, int, memoIndex);
 	OZ_Term *drp = tagged2Ref(get(memoIndex));
-	Assert(oz_isUVar(*drp));
+	Assert(oz_isOptVar(*drp));
 	*drp = chunkTerm;
 	update(chunkTerm, memoIndex);
 	doMemo = NO;
@@ -883,7 +869,7 @@ repeat:
       if (doMemo) {
 	GetBTFrameArg2(frame, int, memoIndex);
 	OZ_Term *drp = tagged2Ref(get(memoIndex));
-	Assert(oz_isUVar(*drp));
+	Assert(oz_isOptVar(*drp));
 	*drp = objTerm;
 	// we do not need to have the indirection over that auxiliary
 	// heap ref anymore:

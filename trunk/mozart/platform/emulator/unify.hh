@@ -43,41 +43,13 @@
  * Locality test for variables
  * -----------------------------------------------------------------------*/
 
-#define ShallowCheckLocal()			\
-   if (am.inEqEq())				\
-      return FALSE;
-
-inline
-Bool oz_isLocalUVar(TaggedRef *varPtr) {
-  // variables are usually bound 
-  // in the node where they are created
-  ShallowCheckLocal();
-
-  if (am.currentUVarPrototypeEq(*varPtr)) 
-    return OK;
-
-  Board * bb = tagged2VarHome(*varPtr);
-
-  if (!bb->isCommitted())
-    return NO;
-
-  Board * c  = oz_currentBoard();
-
-  Assert(bb->isCommitted() && bb != oz_currentBoard());
-
-  while (bb->isCommitted()) {
-    bb = bb->getParentInternal();
-    
-    if (bb==c) 
-      return OK;
-  };
-
-  return NO;
-}
-
+//
+// kost@ : faking non-locality for '==' forces trailing, which is then
+// used for restoring changes back;
 inline
 Bool oz_isLocalVar(OzVariable *var) {
-  ShallowCheckLocal();
+  if (am.inEqEq())
+    return FALSE;
 
   Board * bb = var->getBoardInternal();
 
@@ -96,15 +68,11 @@ Bool oz_isLocalVar(OzVariable *var) {
   return NO;
 }
 
-#undef ShallowCheckLocal
-
 inline
-Bool oz_isLocalVariable(TaggedRef *varPtr)
+Bool oz_isLocalVariable(TaggedRef var)
 {
-  CHECK_ISVAR(*varPtr);
-  return oz_isUVar(*varPtr)
-    ? oz_isLocalUVar(varPtr)
-    : oz_isLocalVar(tagged2CVar(*varPtr));
+  CHECK_ISVAR(var);
+  return (oz_isOptVar(var) ? !am.inEqEq() : oz_isLocalVar(tagged2Var(var)));
 }
 
 /* -------------------------------------------------------------------------
@@ -168,7 +136,7 @@ void oz_bindGlobalVar(OzVariable *ov, TaggedRef *varPtr, TaggedRef term);
 inline
 void oz_bindVar(OzVariable *ov, TaggedRef *varPtr, TaggedRef term)
 {
-  Assert(tagged2CVar(*varPtr)==ov);
+  Assert(tagged2Var(*varPtr)==ov);
   if (oz_isLocalVar(ov)) {
     oz_bindLocalVar(ov,varPtr,term);
   } else {

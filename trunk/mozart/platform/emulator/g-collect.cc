@@ -1032,9 +1032,9 @@ void AM::gCollect(int msgLevel) {
   Assert(_rootBoard);
 
   //
-  uFillNode = am.currentUVarPrototype();
+  uFillNode = am.getCurrentOptVar();
   _rootBoard = _rootBoard->gCollectBoard();   // must go first!
-  setCurrent(_rootBoard);
+  setCurrent(_rootBoard, _rootBoard->getOptVar());
   aritytable.gCollect();
   threadsPool.gCollect();
 

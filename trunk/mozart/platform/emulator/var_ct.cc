@@ -35,7 +35,7 @@
 
 OZ_Return OzCtVariable::bind(OZ_Term * vptr, OZ_Term term)
 {
-  DEBUG_CONSTRAIN_CVAR(("bindCT "));
+  DEBUG_CONSTRAIN_VAR(("bindCT "));
 
   Assert(!oz_isRef(term));
 
@@ -49,7 +49,7 @@ OZ_Return OzCtVariable::bind(OZ_Term * vptr, OZ_Term term)
   *vptr = trail;
 
   if (! result_unify) {
-    DEBUG_CONSTRAIN_CVAR(("FAILED\n"));
+    DEBUG_CONSTRAIN_VAR(("FAILED\n"));
     return FAILED;
   }
   Bool isLocalVar = oz_isLocalVar(this);
@@ -63,7 +63,7 @@ OZ_Return OzCtVariable::bind(OZ_Term * vptr, OZ_Term term)
     bindGlobalVarToValue(vptr, term);
   }
   //
-  DEBUG_CONSTRAIN_CVAR(("PROCEED\n"));
+  DEBUG_CONSTRAIN_VAR(("PROCEED\n"));
   return PROCEED;
 }
 
@@ -71,25 +71,25 @@ OZ_Return OzCtVariable::bind(OZ_Term * vptr, OZ_Term term)
 // kind are compatible with each other.
 OZ_Return OzCtVariable::unify(OZ_Term * left_varptr, OZ_Term * right_varptr)
 {
-  DEBUG_CONSTRAIN_CVAR(("unifyCT "));
+  DEBUG_CONSTRAIN_VAR(("unifyCT "));
 
   OZ_Term right_var       = *right_varptr;
-  OzVariable * right_cvar = tagged2CVar(right_var);
+  OzVariable *right_ov = tagged2Var(right_var);
   //
-  OzCtVariable * right_ctvar = (OzCtVariable *) right_cvar;
+  OzCtVariable * right_ctvar = (OzCtVariable *) right_ov;
   Bool left_var_is_local  = oz_isLocalVar(this);
   Bool right_var_is_local = oz_isLocalVar(right_ctvar);
   //
   if (!left_var_is_local && right_var_is_local) {
-    DEBUG_CONSTRAIN_CVAR(("global-local (swapping)"));
+    DEBUG_CONSTRAIN_VAR(("global-local (swapping)"));
     //
     // left variable is global and right variable is local
     //
     // swap variables to be unified and recurse
     return unify(right_varptr, left_varptr);
   }
-  if (right_cvar->getType() != OZ_VAR_CT) {
-    DEBUG_CONSTRAIN_CVAR(("expected ct-var on right hand-side\n"));
+  if (right_ov->getType() != OZ_VAR_CT) {
+    DEBUG_CONSTRAIN_VAR(("expected ct-var on right hand-side\n"));
     goto failed;
   }
   {
@@ -108,7 +108,7 @@ OZ_Return OzCtVariable::unify(OZ_Term * left_varptr, OZ_Term * right_varptr)
       goto failed;
     }
     if (left_var_is_local && right_var_is_local) {
-      DEBUG_CONSTRAIN_CVAR(("local-local"));
+      DEBUG_CONSTRAIN_VAR(("local-local"));
       //
       // left and right variable are local
       //
@@ -149,7 +149,7 @@ OZ_Return OzCtVariable::unify(OZ_Term * left_varptr, OZ_Term * right_varptr)
 	right_ctvar->dispose();
       }
     } else if (left_var_is_local && !right_var_is_local) {
-	DEBUG_CONSTRAIN_CVAR(("local-global"));
+	DEBUG_CONSTRAIN_VAR(("local-global"));
 	//
 	// left variable is local and right variable is global
 	//
@@ -178,7 +178,7 @@ OZ_Return OzCtVariable::unify(OZ_Term * left_varptr, OZ_Term * right_varptr)
 	  dispose();
 	}
       } else if (!left_var_is_local && !right_var_is_local) {
-	DEBUG_CONSTRAIN_CVAR(("global-global"));
+	DEBUG_CONSTRAIN_VAR(("global-global"));
 	//
 	// left variable and right variable are global
 	//
@@ -205,17 +205,17 @@ OZ_Return OzCtVariable::unify(OZ_Term * left_varptr, OZ_Term * right_varptr)
       }
     }
   //
-  DEBUG_CONSTRAIN_CVAR(("SUCCEEDED\n"));
+  DEBUG_CONSTRAIN_VAR(("SUCCEEDED\n"));
   return TRUE;
   //
  failed:
-  DEBUG_CONSTRAIN_CVAR(("FAILED\n"));
+  DEBUG_CONSTRAIN_VAR(("FAILED\n"));
   return FAILED;
 }
 
 OZ_Return tellBasicConstraint(OZ_Term v, OZ_Ct * constr, OZ_CtDefinition * def)
 {
-  DEBUG_CONSTRAIN_CVAR(("tellBasicConstraintCT "));
+  DEBUG_CONSTRAIN_VAR(("tellBasicConstraintCT "));
   //
   DEREF(v, vptr, vtag);
   //
@@ -232,9 +232,9 @@ OZ_Return tellBasicConstraint(OZ_Term v, OZ_Ct * constr, OZ_CtDefinition * def)
     // constr is a value and hence v becomes a value. otherwise ..
     if (constr->isValue()) {
       //
-      if (oz_isLocalVariable(vptr)) {
-	if (!oz_isUVar(v))
-	  oz_checkSuspensionListProp(tagged2CVar(v));
+      if (oz_isLocalVariable(v)) {
+	if (!oz_isOptVar(v))
+	  oz_checkSuspensionListProp(tagged2Var(v));
 	bindLocalVarToValue(vptr, constr->toValue());
       } else {
 	bindGlobalVarToValue(vptr, constr->toValue());
@@ -248,11 +248,11 @@ OZ_Return tellBasicConstraint(OZ_Term v, OZ_Ct * constr, OZ_CtDefinition * def)
       ? new OzCtVariable(constr, def, oz_currentBoard())
       :  new OzCtVariable(def->fullDomain(), def, oz_currentBoard());
     //
-    OZ_Term *  tctv = newTaggedCVar(ctv);
+    OZ_Term *  tctv = newTaggedVar(ctv);
     //
-    if (oz_isLocalVariable(vptr)) {
-      if (!oz_isUVar(v)) {
-	oz_checkSuspensionListProp(tagged2CVar(v));
+    if (oz_isLocalVariable(v)) {
+      if (!oz_isOptVar(v)) {
+	oz_checkSuspensionListProp(tagged2Var(v));
       }
       bindLocalVar(vptr, tctv);
     } else {

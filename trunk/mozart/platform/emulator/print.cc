@@ -152,16 +152,9 @@ void ozd_printStream(OZ_Term val, ostream &stream, int depth)
   OZ_Term ref=oz_deref(val);
 
   switch(tagTypeOf(ref)) {
-  case TAG_UVAR:
+  case TAG_VAR:
     stream << oz_varGetName(val);
-    stream << "<UV @" << &ref << ">";
-    break;
-
-    //FUT
-
-  case TAG_CVAR:
-    stream << oz_varGetName(val);
-    tagged2CVar(ref)->printStream(stream, depth);
+    tagged2Var(ref)->printStream(stream, depth);
     break;
   case TAG_SRECORD:
     tagged2SRecord(ref)->printStream(stream,depth);
@@ -228,20 +221,9 @@ void ozd_printLongStream(OZ_Term val, ostream &stream, int depth, int offset)
   }
 
   switch(tagTypeOf(ref)) {
-  case TAG_UVAR:
+  case TAG_VAR:
     stream << indent(offset) << oz_varGetName(val);
-    stream << indent(offset) << "<UV @" << &ref << ">" << endl;
-    stream << indent(offset) << "Home: ";
-    tagged2VarHome(ref)->derefBoard()
-      ->printStream(stream,PRINT_DEPTH_DEC(depth));
-    stream << endl;
-    break;
-
-    // FUT
-
-  case TAG_CVAR:
-    stream << indent(offset) << oz_varGetName(val);
-    tagged2CVar(ref)->printLongStream(stream, depth, offset);
+    tagged2Var(ref)->printLongStream(stream, depth, offset);
     break;
   case TAG_SRECORD:
     tagged2SRecord(ref)->printLongStream(stream,depth,offset);
