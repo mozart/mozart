@@ -137,6 +137,14 @@ define(CaseTwoRegs,``''
     )
 
 
+CaseOneRegGImpossible(GETSELF,
+   ``{
+       Reg1(getRegArg(PC+1)) = makeTaggedConst(e->getCurrentObject());
+       DISPATCH(2);
+     }'')
+
+
+
 #define MakeVar makeTaggedRef(newTaggedUVar(e->currentUVarPrototype))
 
 CaseOneRegGImpossible(CREATEVARIABLE,
