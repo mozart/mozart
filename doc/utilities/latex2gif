@@ -10,8 +10,8 @@
 #   Leif Kornstaedt, 1998
 #
 # Last change:
-#   $Date: 1998/09/07 12:36:51 $ by $Author: kornstae $
-#   $Revision: 1.7 $
+#   $Date: 1998/09/07 15:54:13 $ by $Author: kornstae $
+#   $Revision: 1.8 $
 #
 # This file is part of Mozart, an implementation of Oz 3:
 #   $MOZARTURL$
@@ -63,8 +63,8 @@ cp $infile $tmpdir/x.tex
                 esac
             done
             i=`expr $i + 1`
-            pnmcrop < latex$i.ppm |
-            ppmtogif -interlace -transparent rgbi:1/1/1 > latex$1.gif || exit 1
+            pnmcrop < latex$i.ppm 2> /dev/null |
+            ppmtogif -interlace -transparent rgbi:1/1/1 2> /dev/null > latex$1.gif  || exit 1
             rm latex$i.ppm
             echo Wrote latex$1.gif 1>&2
             echo
