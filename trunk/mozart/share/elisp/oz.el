@@ -724,7 +724,7 @@ With ARG, start it instead."
 	    (forward-char column)
 	    (setq start2 (point))
 	    (let ((cs (char-syntax (following-char))))
-	      (if (member cs (string-to-list "w(\"\\$</"))
+	      (if (string-match "[w(\"\\$</]" (char-to-string cs))
 		  (forward-sexp 1)
 		(while (equal (char-syntax (following-char)) cs)
 		  (forward-char)))
