@@ -42,6 +42,7 @@ extern void printSuspension(ProgramCounter pc);
 // TOPLEVEL FAILURE (HF = Handle Failure)
 
 
+
 #define HF_BODY(MSG_SHORT,MSG_LONG)                                           \
   if (allowTopLevelFailureMsg) {                                              \
     if (e->conf.errorVerbosity > 0) {                                         \
@@ -50,6 +51,7 @@ extern void printSuspension(ProgramCounter pc);
       if (e->conf.errorVerbosity > 1) {                                       \
         message("\n");                                                        \
         {MSG_LONG;}                                                           \
+        e->currentThread->taskStack.printDebug(NO,10000);                     \
       }                                                                       \
       errorTrailer();                                                         \
     } else {                                                                  \
@@ -58,9 +60,7 @@ extern void printSuspension(ProgramCounter pc);
   } else {                                                                    \
     allowTopLevelFailureMsg = TRUE;                                           \
   }                                                                           \
-  if (e->conf.stopOnToplevelFailure) {                                        \
-    tracerOn(); trace("toplevel failed");                                     \
-  }
+  DebugCheck(e->conf.stopOnToplevelFailure, tracerOn();trace("toplevel failed"));
 
 
 

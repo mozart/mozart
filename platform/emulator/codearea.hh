@@ -103,6 +103,10 @@ public:
   /* read from file and return start in "pc" */
   CodeArea(CompStream *fd, int size, ProgramCounter &pc);
 
+  static void getDefinitionArgs(ProgramCounter PC,
+                                Reg &reg, ProgramCounter &next, TaggedRef &file,
+                                TaggedRef &line, PrTabEntry *& pred);
+
   /* with one argument it means that we need the code till the "query"  */
   static void display (ProgramCounter from, int size = 1, FILE* = stderr);
 
