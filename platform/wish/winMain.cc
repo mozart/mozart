@@ -185,6 +185,8 @@ void readHandler(ClientData clientData, int mask)
 int APIENTRY
 WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmdLine, int nCmdShow)
 {
+    watchParent();
+
     interp = Tcl_CreateInterp();
 
     int argc;
@@ -245,8 +247,6 @@ WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmdLine, int nCm
       sprintf(buf,"w %s\n.\n", interp->result);
       sendToEngine(buf);
     }
-
-    watchParent();
 
     Tk_MainLoop();
 
