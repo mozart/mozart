@@ -57,6 +57,10 @@ OZ_PATH_PROG(OZPLATFORM, ozplatform)
 OZ_PATH_PROG(OZC, ozc,  OZC=`pwd`/lib/ozc)
 OZ_PATH_PROG(OZL, ozl, OZL=`pwd`/lib/ozl)
 OZ_PATH_PROG(OZENGINE, ozengine, OZENGINE=$srcdira/lib/oze.sh)
+OZ_PATH_PROG(OZTOOL, oztool, OZTOOL="sh $BUILDTOP/platform/emulator/oztool.sh")
+OZ_PATH_PROG(OZPLATFORM,ozplatform,OZPLATFORM=$SRCTOP/share/bin/ozplatform)
+PLATFORM=`$OZPLATFORM`
+AC_SUBST(PLATFORM)
 
 AC_SUBST(OZL)
 

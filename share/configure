@@ -1205,12 +1205,106 @@ fi
     fi
 
 
+    dummy_PWD=`pwd | sed 's/\//\\\\\//g'`
+    dummy_PATH=`echo $PATH | sed -e 's/:://g'`
+    dummy_PATH=`echo $dummy_PATH | sed -e "s/^\.:/$dummy_PWD:/g"`
+    dummy_PATH=`echo $dummy_PATH | sed -e "s/^\.\//$dummy_PWD\//g"`
+    dummy_PATH=`echo $dummy_PATH | sed -e "s/:\.\$/:$dummy_PWD/g"`
+    dummy_PATH=`echo $dummy_PATH | sed -e "s/:\.:/:$dummy_PWD:/g"`
+    dummy_PATH=`echo $dummy_PATH | sed -e "s/:.\//:$dummy_PWD\//g"`
+    # Extract the first word of "oztool", so it can be a program name with args.
+set dummy oztool; ac_word=$2
+echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
+echo "configure:1219: checking for $ac_word" >&5
+if eval "test \"`echo '$''{'ac_cv_path_OZTOOL'+set}'`\" = set"; then
+  echo $ac_n "(cached) $ac_c" 1>&6
+else
+  case "$OZTOOL" in
+  /*)
+  ac_cv_path_OZTOOL="$OZTOOL" # Let the user override the test with a path.
+  ;;
+  *)
+  IFS="${IFS=   }"; ac_save_ifs="$IFS"; IFS="${IFS}:"
+  for ac_dir in $dummy_PATH:$SRCTOP/share/bin:$SRCTOP$ac_dummy; do
+    test -z "$ac_dir" && ac_dir=.
+    if test -f $ac_dir/$ac_word; then
+      ac_cv_path_OZTOOL="$ac_dir/$ac_word"
+      break
+    fi
+  done
+  IFS="$ac_save_ifs"
+  ;;
+esac
+fi
+OZTOOL="$ac_cv_path_OZTOOL"
+if test -n "$OZTOOL"; then
+  echo "$ac_t""$OZTOOL" 1>&6
+else
+  echo "$ac_t""no" 1>&6
+fi
+
+    OZTOOL=`echo $OZTOOL | sed -e "s|//|/|g"`
+    if test ! -n "$OZTOOL"
+    then
+        OZTOOL=undefined
+        OZTOOL="sh $BUILDTOP/platform/emulator/oztool.sh"
+    fi
+
+
+    dummy_PWD=`pwd | sed 's/\//\\\\\//g'`
+    dummy_PATH=`echo $PATH | sed -e 's/:://g'`
+    dummy_PATH=`echo $dummy_PATH | sed -e "s/^\.:/$dummy_PWD:/g"`
+    dummy_PATH=`echo $dummy_PATH | sed -e "s/^\.\//$dummy_PWD\//g"`
+    dummy_PATH=`echo $dummy_PATH | sed -e "s/:\.\$/:$dummy_PWD/g"`
+    dummy_PATH=`echo $dummy_PATH | sed -e "s/:\.:/:$dummy_PWD:/g"`
+    dummy_PATH=`echo $dummy_PATH | sed -e "s/:.\//:$dummy_PWD\//g"`
+    # Extract the first word of "ozplatform", so it can be a program name with args.
+set dummy ozplatform; ac_word=$2
+echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
+echo "configure:1265: checking for $ac_word" >&5
+if eval "test \"`echo '$''{'ac_cv_path_OZPLATFORM'+set}'`\" = set"; then
+  echo $ac_n "(cached) $ac_c" 1>&6
+else
+  case "$OZPLATFORM" in
+  /*)
+  ac_cv_path_OZPLATFORM="$OZPLATFORM" # Let the user override the test with a path.
+  ;;
+  *)
+  IFS="${IFS=   }"; ac_save_ifs="$IFS"; IFS="${IFS}:"
+  for ac_dir in $dummy_PATH:$SRCTOP/share/bin:$SRCTOP$ac_dummy; do
+    test -z "$ac_dir" && ac_dir=.
+    if test -f $ac_dir/$ac_word; then
+      ac_cv_path_OZPLATFORM="$ac_dir/$ac_word"
+      break
+    fi
+  done
+  IFS="$ac_save_ifs"
+  ;;
+esac
+fi
+OZPLATFORM="$ac_cv_path_OZPLATFORM"
+if test -n "$OZPLATFORM"; then
+  echo "$ac_t""$OZPLATFORM" 1>&6
+else
+  echo "$ac_t""no" 1>&6
+fi
+
+    OZPLATFORM=`echo $OZPLATFORM | sed -e "s|//|/|g"`
+    if test ! -n "$OZPLATFORM"
+    then
+        OZPLATFORM=undefined
+        OZPLATFORM=$SRCTOP/share/bin/ozplatform
+    fi
+
+PLATFORM=`$OZPLATFORM`
+
+
 
 
 : ${oz_picklecompression=9}
 
 echo $ac_n "checking for --enable-picklecompression""... $ac_c" 1>&6
-echo "configure:1214: checking for --enable-picklecompression" >&5
+echo "configure:1308: checking for --enable-picklecompression" >&5
 # Check whether --enable-picklecompression or --disable-picklecompression was given.
 if test "${enable_picklecompression+set}" = set; then
   enableval="$enable_picklecompression"
@@ -1400,6 +1494,8 @@ s%@OZPLATFORM@%$OZPLATFORM%g
 s%@OZC@%$OZC%g
 s%@OZL@%$OZL%g
 s%@OZENGINE@%$OZENGINE%g
+s%@OZTOOL@%$OZTOOL%g
+s%@PLATFORM@%$PLATFORM%g
 s%@oz_picklecompression@%$oz_picklecompression%g
 
 CEOF
