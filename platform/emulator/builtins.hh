@@ -189,6 +189,18 @@ State BIifun(TaggedRef val, TaggedRef &out)				      \
 }									      \
 DECLAREBI_USEINLINEFUN1(BIfun,BIifun);
 
+#define DECLAREBOOLFUN2(BIfun,BIifun,BIirel) 				      \
+State BIifun(TaggedRef val1, TaggedRef val2, TaggedRef &out)		      \
+{									      \
+  State state = BIirel(val1,val2);					      \
+  switch(state) {							      \
+  case PROCEED: out = NameTrue;  return PROCEED;			      \
+  case FAILED:  out = NameFalse; return PROCEED;			      \
+  default: return state;						      \
+  }									      \
+}									      \
+DECLAREBI_USEINLINEFUN2(BIfun,BIifun);
+
 BuiltinTabEntry *BIinit();
 BuiltinTabEntry *BIadd(char *name,int arity,OZ_CFun fun,
 		       Bool replace = NO, InlineFunOrRel infun=(InlineFunOrRel) NULL);
