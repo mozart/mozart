@@ -535,7 +535,8 @@ void marshalConst(ConstTerm *t, MsgBuffer *bs)
       PD((MARSHAL,"array"));
       marshalDIF(bs,DIF_ARRAY);
       bs->addRes(makeTaggedConst(t));  
-      warning("mm2: array not impl");
+      // mm2
+      warning("marshal array not impl");
       return;
     }
   case Co_Builtin:
@@ -1073,7 +1074,8 @@ loop:
 	DEREF(*ret,chPtr,_1);
 	PerdioVar *pv;
 	if (!isPerdioVar(*ret)) {
-	  warning("mm2: chunk gname mismatch");
+	  // mm2
+	  warning("chunk gname mismatch");
 	  return;
 	}
 	Assert(am.onToplevel());
@@ -1106,7 +1108,8 @@ loop:
 	DEREF(*ret,chPtr,_1);
 	PerdioVar *pv;
 	if (!isPerdioVar(*ret)) {
-	  warning("mm2: class gname mismatch");
+	  // mm2
+	  warning("class gname mismatch");
 	  return;
 	}
 	cl = newClass(pv->getGName());
@@ -1151,7 +1154,8 @@ loop:
 	DEREF(*ret,chPtr,_1);
 	PerdioVar *pv;
 	if (!isPerdioVar(*ret)) {
-	  warning("mm2: proc gname mismatch");
+	  // mm2
+	  warning("unmarshal proc gname mismatch: %s",toC(makeTaggedRef(chPtr)));
 	  return;
 	}
 	PrTabEntry *pr=new PrTabEntry(name,mkTupleWidth(arity),AtomNil,0);
