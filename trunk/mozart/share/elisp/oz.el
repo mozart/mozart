@@ -353,12 +353,13 @@ starts the emulator under gdb")
   "Start the debugger."
   (interactive)
   (oz-emacs-connect)
+  (oz-send-string "\\sw -optimize +debuginfo")
   (oz-insert-file "tools/ozcar/main.oz"))
 
 (defun oz-debug-stop()
   "Stop the debugger."
   (interactive)
-  (oz-insert-file "tools/ozcar/exit.oz"))
+  (oz-send-string "{Ozcar exit}"))
 
 (defun oz-debug-step()
   "Activate step mode."
