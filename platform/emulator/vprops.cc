@@ -77,7 +77,7 @@ enum EmulatorPropertyIndex {
   PROP_GC_THRESHOLD,
   PROP_GC_SIZE,
   PROP_GC_ACTIVE,
-  PROP_GC_CODE_CYLES,
+  PROP_GC_CODE_CYCLES,
   PROP_GC,
   // PRINT
   PROP_PRINT_DEPTH,
@@ -144,9 +144,11 @@ enum EmulatorPropertyIndex {
   PROP_INTERNAL_SUSPENSION,
   PROP_INTERNAL_STOP,
   PROP_INTERNAL_DEBUG_IP,
-  PROP_INTERNAL_PERDIO_DEBUG,
-  PROP_INTERNAL_PERDIO_DOCOMPATIBLE,
   PROP_INTERNAL,
+
+  PROP_PERDIO_DEBUG,
+  PROP_PERDIO_MINIMAL,
+  PROP_PERDIO,
   // this must remain last
   PROP__LAST
 };
@@ -278,7 +280,7 @@ OZ_Term GetEmulatorProperty(EmulatorPropertyIndex prop) {
     CASE_INT(PROP_GC_MAX,ozconf.heapMaxSize*KB);
     CASE_INT(PROP_GC_FREE,ozconf.heapFree);
     CASE_INT(PROP_GC_TOLERANCE,ozconf.heapTolerance);
-    CASE_INT(PROP_GC_CODE_CYLES,ozconf.codeGCcycles);
+    CASE_INT(PROP_GC_CODE_CYCLES,ozconf.codeGCcycles);
     CASE_BOOL(PROP_GC_ON,ozconf.gcFlag);
     CASE_INT(PROP_GC_THRESHOLD,ozconf.heapThreshold*KB);
     CASE_INT(PROP_GC_SIZE,getUsedMemory()*KB);
@@ -401,8 +403,12 @@ OZ_Term GetEmulatorProperty(EmulatorPropertyIndex prop) {
   CASE_BOOL(PROP_INTERNAL_SUSPENSION,ozconf.showSuspension);
   CASE_BOOL(PROP_INTERNAL_STOP,ozconf.stopOnToplevelFailure);
   CASE_INT(PROP_INTERNAL_DEBUG_IP,ozconf.debugIP);
-  CASE_INT(PROP_INTERNAL_PERDIO_DEBUG,ozconf.debugPerdio);
-  CASE_BOOL(PROP_INTERNAL_PERDIO_DOCOMPATIBLE,ozconf.perdiod0Compatiblity);
+  CASE_INT(PROP_PERDIO_DEBUG,ozconf.debugPerdio);
+  CASE_BOOL(PROP_PERDIO_MINIMAL,ozconf.perdioMinimal);
+  CASE_REC(PROP_PERDIO,"perdio",
+           (2,oz_atom("minimal"),oz_atom("debug")),
+           SET_BOOL(oz_atom("minimal"), ozconf.perdioMinimal);
+           SET_INT(oz_atom("debug"), ozconf.debugPerdio););
   default:
     return 0; // not readable. 0 ok because no OZ_Term==0
   }
@@ -589,7 +595,7 @@ OZ_Return SetEmulatorProperty(EmulatorPropertyIndex prop,OZ_Term val) {
         return BI_PREEMPT;}});
     CASE_PERCENT(PROP_GC_FREE,ozconf.heapFree);
     CASE_PERCENT(PROP_GC_TOLERANCE,ozconf.heapTolerance);
-    CASE_NAT(PROP_GC_CODE_CYLES,ozconf.codeGCcycles);
+    CASE_NAT(PROP_GC_CODE_CYCLES,ozconf.codeGCcycles);
     CASE_BOOL(PROP_GC_ON,ozconf.gcFlag);
     CASE_REC(PROP_GC,
              DO_NAT(AtomMin,ozconf.heapMinSize=INT__/KB);
@@ -652,17 +658,28 @@ OZ_Return SetEmulatorProperty(EmulatorPropertyIndex prop,OZ_Term val) {
     CASE_BOOL(PROP_INTERNAL_SUSPENSION,ozconf.showSuspension);
     CASE_BOOL(PROP_INTERNAL_STOP,ozconf.stopOnToplevelFailure);
     CASE_NAT(PROP_INTERNAL_DEBUG_IP,ozconf.debugIP);
-    CASE_NAT(PROP_INTERNAL_PERDIO_DEBUG,ozconf.debugPerdio);
-    CASE_BOOL(PROP_INTERNAL_PERDIO_DOCOMPATIBLE,ozconf.perdiod0Compatiblity);
     CASE_REC(PROP_INTERNAL,
-             DO_BOOL(AtomDebug,
-                     if (INT__) am.setdebugmode(OK);
-                     else       am.setdebugmode(NO));
+             DO_BOOL(AtomDebug, am.setdebugmode((INT__)?OK:NO));
              SET_BOOL(AtomShowSuspension,ozconf.showSuspension);
              SET_BOOL(AtomStopOnToplevelFailure,ozconf.stopOnToplevelFailure);
-             SET_NAT(AtomDebugIP,ozconf.debugIP);
+             SET_NAT(AtomDebugIP,ozconf.debugIP));
+
+
+    CASE_NAT(PROP_PERDIO_DEBUG,ozconf.debugPerdio);
+
+    CASE_BOOL_DO(PROP_PERDIO_MINIMAL,
+                 if (isPerdioInitialized())
+                   return OZ_raise(OZ_makeException(E_ERROR,OZ_atom("dp"),
+                                                    "modelChoose",0));
+                 ozconf.perdioMinimal=INT__);
+
+    CASE_REC(PROP_PERDIO,
              SET_NAT(AtomDebugPerdio,ozconf.debugPerdio);
-             SET_BOOL(oz_atom("perdiod0Compatiblity"),ozconf.perdiod0Compatiblity));
+             DO_BOOL(oz_atom("minimal"),
+                 if (isPerdioInitialized())
+                   return OZ_raise(OZ_makeException(E_ERROR,OZ_atom("dp"),
+                                                    "modelChoose",0));
+                 ozconf.perdioMinimal=INT__));
     CASE_BOOL_DO(PROP_STANDALONE,ozconf.runningUnderEmacs=!INT__);
   default:
     return PROP__NOT__WRITABLE;
@@ -828,7 +845,7 @@ void initVirtualProperties()
   VirtualProperty::add("gc.free",PROP_GC_FREE);
   VirtualProperty::add("gc.tolerance",PROP_GC_TOLERANCE);
   VirtualProperty::add("gc.on",PROP_GC_ON);
-  VirtualProperty::add("gc.codeCycles",PROP_GC_CODE_CYLES);
+  VirtualProperty::add("gc.codeCycles",PROP_GC_CODE_CYCLES);
   VirtualProperty::add("gc.threshold",PROP_GC_THRESHOLD);
   VirtualProperty::add("gc.size",PROP_GC_SIZE);
   VirtualProperty::add("gc.active",PROP_GC_ACTIVE);
@@ -892,11 +909,12 @@ void initVirtualProperties()
   VirtualProperty::add("distribution.virtualsites",
                        PROP_DISTRIBUTION_VIRTUALSITES);
   // INTERNAL
+  VirtualProperty::add("internal",PROP_INTERNAL);
   VirtualProperty::add("internal.debug",PROP_INTERNAL_DEBUG);
   VirtualProperty::add("internal.suspension",PROP_INTERNAL_SUSPENSION);
   VirtualProperty::add("internal.stop",PROP_INTERNAL_STOP);
   VirtualProperty::add("internal.ip.debug",PROP_INTERNAL_DEBUG_IP);
-  VirtualProperty::add("internal.perdio.debug",PROP_INTERNAL_PERDIO_DEBUG);
-  VirtualProperty::add("perdio.minimal",PROP_INTERNAL_PERDIO_DOCOMPATIBLE);
-  VirtualProperty::add("internal",PROP_INTERNAL);
+  VirtualProperty::add("perdio.debug",PROP_PERDIO_DEBUG);
+  VirtualProperty::add("perdio.minimal",PROP_PERDIO_MINIMAL);
+  VirtualProperty::add("perdio",PROP_PERDIO);
 }
