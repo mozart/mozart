@@ -325,6 +325,13 @@ thread
 end
 </chunk>
 
+<P>There is a minor point related to the system default.
+This example calls <<Fault.enable>> in addition to <<Guard>>
+to guarantee
+that no exceptions are raised on <<R>>.
+This can be changed by using <<Fault.defaultEnable>> at
+startup time for each site.
+
 <SUBSUBSECTION id="guards"><TITLE>Guard definition</TITLE>
 
 <P>The procedure <<Guard>> is defined in terms of a watcher.

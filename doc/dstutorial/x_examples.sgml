@@ -331,7 +331,6 @@ though, one-argument procedures
 and objects are interchangeable.</NOTE>
 
 <chunk><title/MakeStat definition/
-declare
 proc {MakeStat PO ?StatP}
    S P={NewPort S}
    N={NewName}
