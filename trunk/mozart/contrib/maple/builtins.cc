@@ -33,20 +33,6 @@ extern "C" {
 }
 
 //-----------------------------------------------------------------------------
-
-OZ_Term add_list(char c, OZ_Term t = OZ_nil()) {
-  return OZ_cons(OZ_int(c), t);
-}
-
-OZ_Term close_list(OZ_Term rl) {
-  OZ_Term l = OZ_nil();
-  while (!OZ_isNil(rl)) {
-    l = OZ_cons(OZ_head(rl), l);
-    rl = OZ_tail(rl);
-  }
-}
-
-//-----------------------------------------------------------------------------
 OZ_BI_define(maple_call, 2, 1)
 {
   OZ_Return ret_val;
