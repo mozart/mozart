@@ -1916,7 +1916,7 @@ OZ_Return eqeqWrapper(TaggedRef Ain, TaggedRef Bin)
     case Co_BigInt:
       return bigIntEq(A,B) ? PROCEED : FAILED;
     case Co_Extension:
-      return tagged2Extension(A)->unifyV(B);
+      return tagged2Extension(A)->eqV(B);
     default:
       return FAILED;
     }

@@ -669,7 +669,7 @@ cvar:
       break;
     case Co_Extension:
       {
-        int res = tagged2Extension(term1)->unifyV(term2);
+        int res = tagged2Extension(term1)->eqV(term2);
         if (res == PROCEED)
           goto next;
         result = res;
