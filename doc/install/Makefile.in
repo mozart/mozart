@@ -11,6 +11,6 @@ SGMLSRCS = \
         src-get.sgml src-make.sgml cygwin.sgml configure.sgml \
         emacs.sgml applets.sgml
 
-HTMLEXTRAFILES = gdbm-1.8.0-patch.diff regex-0.12-patch.diff FILES netscape.gif
+HTMLEXTRAFILES = gdbm-1.8.3-patch.diff regex-0.12-patch.diff FILES netscape.gif
 
 include ../Makefile.common
