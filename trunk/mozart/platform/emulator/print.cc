@@ -212,7 +212,7 @@ void GenCVariable::print(ostream &stream, int depth, int offset, TaggedRef v)
 	       << me->fdSuspList[fd_bounds]->lengthProp()
 	       << ')';
       stream << ' ';
-      me->getDom().print(stream, -1);
+      me->getDom().print(stream, 0);
   
       stream << ">";
       break;
@@ -586,7 +586,7 @@ PRINT(Suspension)
   } else {
     stream << "board ";
   }
-  getBoardFast()->print(stream, DEC(depth));
+  getBoardFast()->print(stream, 0);
 }
 
 
@@ -624,7 +624,7 @@ static void tagged2StreamLong(TaggedRef ref,ostream &stream = cout,
 	     << endl
 	     << indent(offset)
 	     << "HomeNode: ";
-      tagged2VarHome(ref)->getBoardFast()->print(stream,DEC(depth));
+      tagged2VarHome(ref)->getBoardFast()->print(stream,0);
       stream << endl;
     }
     break;
@@ -789,16 +789,16 @@ void AM::print()
 {
   cout << "class AM" << endl
        << "  currentBoard: ";
-  currentBoard->print(cout,1,0);
+  currentBoard->print(cout,0,0);
   cout << endl
        << "  rootBoard:    ";
-  rootBoard->print(cout,1,0);
+  rootBoard->print(cout,0,0);
   cout << endl
        << "  currentThread: ";
-  currentThread->print(cout,1,0);
+  currentThread->print(cout,0,0);
   cout << endl
        << "  rootThread:    ";
-  rootThread->print(cout,1,0);
+  rootThread->print(cout,0,0);
   cout << endl;
 }
 
@@ -857,10 +857,10 @@ void AM::printBoards()
 {
   cout << "class Board" << endl
        << "  currentBoard: ";
-  currentBoard->print(cout,1,0);
+  currentBoard->print(cout,0,0);
   cout << endl
        << "  rootBoard:    ";
-  rootBoard->print(cout,1,0);
+  rootBoard->print(cout,0,0);
   cout << endl;
 }
 
@@ -960,14 +960,14 @@ void AM::printThreads()
 {
   cout << "Threads" << endl
        << "  running: ";
-  currentThread->print(cout,1,0);
+  currentThread->print(cout,0,0);
   cout << endl
        << "  toplevel:    ";
-  rootThread->print(cout,1,0);
+  rootThread->print(cout,0,0);
   cout << endl
        << "  runnable:" << endl;
   for (Thread *th=threadsHead; th; th = th->next) {
-    th->print(cout,1,4);
+    th->print(cout,0,4);
     if (th == threadsHead) {
       cout << " HEAD";
     }
@@ -1033,11 +1033,11 @@ void SVariable::printLong(ostream &stream, int depth, int offset, TaggedRef v)
 	 << endl
 	 << indent(offset)
 	 << "SuspList:\n"; 
-  suspList->print(stream, -1, offset+3);
+  suspList->print(stream, 0, offset+3);
   
   stream << indent(offset)
 	 << "HomeNode: ";
-  home->getBoardFast()->print(stream,DEC(depth));
+  home->getBoardFast()->print(stream,0);
   stream << endl;
 }
 
@@ -1546,14 +1546,14 @@ void FDIntervals::printLong(ostream &ofile, int idnt) const
 
 void FDIntervals::printDebug(void) const
 {
-  print(cerr, -1);
+  print(cerr, 0);
   cerr << endl;
   cerr.flush();
 }
 
 void FDIntervals::printDebugLong(void) const
 {
-  printLong(cerr, -1);
+  printLong(cerr, 0);
   cerr << endl;
   cerr.flush();
 }
@@ -1590,14 +1590,14 @@ void FDBitVector::printLong(ostream &ofile, int idnt) const
 
 void FDBitVector::printDebug(void) const
 {
-  print(cerr, -1);
+  print(cerr, 0);
   cerr << endl;
   cerr.flush();
 }
 
 void FDBitVector::printDebugLong(void) const
 {
-  printLong(cerr, -1);
+  printLong(cerr, 0);
   cerr << endl;
   cerr.flush();
 }
@@ -1652,14 +1652,14 @@ void FiniteDomain::printLong(ostream &ofile, int idnt) const
 
 void FiniteDomain::printDebug(void) const
 {
-  print(cerr, -1);
+  print(cerr, 0);
   cerr << endl;
   cerr.flush();
 }
 
 void FiniteDomain::printDebugLong(void) const
 {
-  printLong(cerr, -1);
+  printLong(cerr, 0);
   cerr << endl;
   cerr.flush();
 }
