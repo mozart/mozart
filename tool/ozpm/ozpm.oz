@@ -12,7 +12,7 @@ import
    Open
    Browser(browse:Browse)
    FileUtils(expand:Expand withSlash:WithSlash fullName:FullName
-	    dirname:Dirname)
+	     fileTree:FileTree dirname:Dirname)
    Resolve
    Message(parse:Parse slurp:Slurp)
    
@@ -30,7 +30,6 @@ define
    proc{CreatePath P}
       Stat
    in
-      {ShowInfo P}
       try
 	 Stat={OS.stat P}
       catch system(os(...) ...) then % inexistant directory
@@ -87,7 +86,7 @@ define
 	       fun{$ Entry}
 		  Name
 	       in
-		  if Entry.name==PInfo.name then %% Same package
+		  if Entry.id==PInfo.id then %% Same package
 		     Result=alreadyinstalled(loc:Entry pkg:PInfo)
 		     false
 		  elseif
@@ -146,27 +145,22 @@ define
 
       meth create(In Out Inf)
 	 TXT={Slurp Inf}
-	 {Show TXT}
 	 O={Parse TXT}
 	 _={O get(id $)} %% id is mandatory
-	 fun{Loop D}
-	    {Show dir#D}
-	    {List.map {List.filter
-		       {OS.getDir {Expand D}}
-		       fun{$ F} F\="." andthen F\=".." end}
-	     fun{$ F}
-		if {OS.stat {WithSlash D}#F}.type==dir then
-		   {List.map
-		    {Loop {WithSlash D}#F}
-		    fun{$ G}
-		       {VirtualString.toAtom {WithSlash F}#G}
-		    end}
-		else
-		   {VirtualString.toAtom F}
-		end
-	     end}
+	 FT={FileTree if In=="" then "." else In end}
+	 Files
+	 local
+	    L={Length {VirtualString.toString FT.path}}+1
+	    fun{Loop R}
+	       if R.type==dir then
+		  {List.map R.entries Loop}
+	       else
+		  {String.toAtom {List.drop {VirtualString.toString R.path} L}}
+	       end
+	    end
+	 in
+	    Files={List.subtract {List.subtract {List.flatten {Loop FT}} OZPMMANIFEST} OZPMMANIFESTTEXT}
 	 end
-	 Files={List.flatten {Loop In}}
 	 Info={Record.adjoinAt
 	       {Record.map
 		{List.toRecord package {O entries($)}}
@@ -426,8 +420,6 @@ define
       {PrintInfo I L}
       {Application.exit 0}
    [] create then % create a new package
-      {Show Args.'info'}
-      {Show {CondFeat Args 'info' {WithSlash {CondFeat Args 'in' "."}}#"OZPMINFO"}}
       {ArchiveManager create({CondFeat Args 'in' ""}
 			     Args.'out'
 			     {CondFeat Args 'info' {WithSlash {CondFeat Args 'in' "."}}#"OZPMINFO"}
