@@ -319,6 +319,8 @@ Bool isTertiaryPending(Tertiary* t){
   case Co_Port: // ERIK-LOOK
     Assert(t->getTertType()==Te_Proxy);
     return ((PortProxy*)t)->pending != NULL;
+  case Co_Resource:
+    return NO;
   default:
     Assert(0);}
   return NO;
