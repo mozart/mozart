@@ -1327,7 +1327,7 @@ Thread * pendThreadResumeFirst(PendThread **pt){
     tmp->dispose();
     if (!t->isDead())
       return t;
-  } while (pt);
+  } while (*pt);
   return t;
 }
 
@@ -1336,7 +1336,15 @@ void gCollectPendThreadEmul(PendThread **pt)
 {
   PendThread *tmp;
   while (*pt!=NULL) {
-    tmp=new PendThread(SuspToThread((*pt)->thread->gCollectSuspendable()),(*pt)->next);
+    // As the bugfix in Thread::gCollectRecurseV
+    Thread *tmpThread = SuspToThread((*pt)->thread->gCollectSuspendable());
+    if (!tmpThread) {
+      tmpThread=new Thread((*pt)->thread->getFlags(),
+			   (*pt)->thread->getPriority(),
+			   oz_rootBoard(),(*pt)->thread->getID());
+    }
+    tmp=new PendThread(tmpThread,(*pt)->next);
+    Assert((tmp)->thread!=NULL);
     tmp->exKind = (*pt)->exKind;
     oz_gCollectTerm((*pt)->old,tmp->old);
     oz_gCollectTerm((*pt)->nw,tmp->nw);
