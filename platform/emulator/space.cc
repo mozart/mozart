@@ -29,7 +29,10 @@
 #include "thr_int.hh"
 #include "var_base.hh"
 
-OZ_Return oz_installScript(Script & s) {
+OZ_Return oz_installScript(Script & s)
+{
+  DEBUG_CONSTRAIN_CVAR(("\n ===== oz_installScript start\n"));
+
   OZ_Return ret = PROCEED;
 
   am.setInstallingScript();
@@ -59,6 +62,8 @@ OZ_Return oz_installScript(Script & s) {
   am.unsetInstallingScript();
 
   s.dispose();
+
+  DEBUG_CONSTRAIN_CVAR(("========== oz_installScript stop ======\n"));
 
   return ret;
 }

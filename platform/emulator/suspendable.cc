@@ -96,6 +96,10 @@ Bool Suspendable::_wakeup(Board * home, PropCaller calledBy) {
         if (calledBy)
           setUnify();
         setRunnable();
+
+        DEBUG_CONSTRAIN_CVAR(("Suspendable::_wakeup [%p]\n",
+                              SuspToPropagator(this)->getPropagator()));
+
         if (isNMO() && !oz_onToplevel()) {
           Assert(!SuspToPropagator(this)->getPropagator()->isMonotonic());
 
@@ -163,11 +167,18 @@ Bool Suspendable::_wakeupLocal(Board * sb, PropCaller calledBy) {
   if (isDead())
     return OK;
 
+#ifdef DEBUG_CHECK
+  Assert(am.isMerging() || !am.isInstallingScript());
+#endif
+
   if (calledBy)
     setUnify();
 
   if (!isRunnable()) {
     setRunnable();
+
+    DEBUG_CONSTRAIN_CVAR(("Suspendable::_wakeupLocal [%p]\n",
+                          SuspToPropagator(this)->getPropagator()));
 
     if (isNMO() && !oz_onToplevel()) {
       Assert(!SuspToPropagator(this)->getPropagator()->isMonotonic());
@@ -185,9 +196,9 @@ Bool Suspendable::_wakeupLocal(Board * sb, PropCaller calledBy) {
 
 void oz_checkLocalSuspensionList(SuspList ** suspList,
                                  PropCaller calledBy) {
+  // tmueller: what is that?
   if (am.inEqEq())
     return;
-
 
   SuspList ** p = suspList;
 
@@ -197,6 +208,9 @@ void oz_checkLocalSuspensionList(SuspList ** suspList,
     return;
 
   Board * sb = sl->getSuspendable()->getBoardInternal()->derefBoard();
+
+  if (sb != am.currentBoard())
+    return;
 
   do {
 

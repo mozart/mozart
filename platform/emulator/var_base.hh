@@ -34,15 +34,7 @@
 #pragma interface
 #endif
 
-#include "tagged.hh"
-#include "susplist.hh"
-// mm2
-#include "board.hh"
-#include "value.hh"
-#include "pointer-marks.hh"
-
 #ifdef DEBUG_CHECK
-#include "am.hh"
 
 #define DEBUG_CONSTRAIN_CVAR(ARGS) printf ARGS; fflush(stdout)
 
@@ -51,6 +43,14 @@
 #define DEBUG_CONSTRAIN_CVAR(ARGS)
 
 #endif
+
+#include "am.hh"
+
+#include "tagged.hh"
+#include "susplist.hh"
+#include "board.hh"
+#include "value.hh"
+#include "pointer-marks.hh"
 
 //#define DEBUG_TELLCONSTRAINTS
 

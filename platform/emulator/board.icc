@@ -10,6 +10,7 @@
  *    Kostja Popow, 1997-1999
  *    Michael Mehl, 1997-1999
  *    Christian Schulte, 1997-1999
+ *    Tobias Mueller, 1998-1999
  *
  *  Last change:
  *    $Date$ by $Author$
@@ -39,6 +40,7 @@
 #include "susplist.hh"
 #include "value.hh"
 #include "am.hh"
+#include "var_base.hh"
 
 OZ_Return oz_installScript(Script &script);
 
@@ -291,11 +293,6 @@ oz_BFlag oz_isBetween(Board * to, Board * varHome) {
 
 }
 
-
-
-
-
-
 /*
  * Implementation of space operations
  */
@@ -330,7 +327,18 @@ OZ_Return Board::merge(Board *bb, Bool sibling) {
   bb->incSuspCount(getSuspCount());
 
   // Merge constraints
+  DEBUG_CONSTRAIN_CVAR(("========== Merging ======\n"));
+
+#ifdef DEBUG_CHECK
+  am.setMerging();
+#endif
+
   OZ_Return ret = oz_installScript(this->getScript());
+
+#ifdef DEBUG_CHECK
+  am.unsetMerging();
+#endif
+
   if (ret != PROCEED) return FAILED;
 
   // Merge propagators (must be after script installation, since script
@@ -365,6 +373,7 @@ int Board::commit(int left, int right) {
   return getDistBag()->getFirst()->commit(this,left,right);
 
 }
+
 
 inline
 Bool Board::cacIsMarked(void) {

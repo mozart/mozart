@@ -66,6 +66,9 @@ public:
   virtual
   OZ_Extension *gCollectV(void);
   OZ_Extension *sCloneV(void);
+  virtual void sCloneRecurseV(void) {}
+  virtual void gCollectRecurseV(void) {}
+
   BitArray operator=(const BitArray &);  // fake for compiler
   BitArray(int lower, int upper): OZ_Extension() {
     Assert(lower <= upper);

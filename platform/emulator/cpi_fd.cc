@@ -135,7 +135,7 @@ int OZ_FDIntVar::read(OZ_Term v)
           dom = ((OzFDVariable *) cvar)->getDom();
         domPtr = &((OzFDVariable *) cvar)->getDom();
         initial_size = domPtr->getSize();
-        initial_width = ((OZ_FiniteDomainImpl * )domPtr)->getWidth();
+        initial_width = ((OZ_FiniteDomainImpl *) domPtr)->getWidth();
 
         Assert(initial_size > 1 && *domPtr != fd_bool);
       }
@@ -172,9 +172,21 @@ int OZ_FDIntVar::read(OZ_Term v)
       } else {
       global_fd:
 
+#ifdef CORRECT_UNIFY
+        if (isState(glob_e)) {
+          dom = ((OzFDVariable *) cvar)->getDom();
+          domPtr = &dom;
+        } else {
+          if (oz_onToplevel()) {
+            dom = ((OzFDVariable *) cvar)->getDom();
+          }
+          domPtr = &((OzFDVariable *) cvar)->getDom();
+        }
+#else
         if (isState(glob_e) || oz_onToplevel())
           dom = ((OzFDVariable *) cvar)->getDom();
         domPtr = &((OzFDVariable *) cvar)->getDom();
+#endif
         initial_size = domPtr->getSize();
         initial_width = ((OZ_FiniteDomainImpl *)domPtr)->getWidth();
         setSort(int_e);
@@ -280,8 +292,6 @@ OZ_Boolean OZ_FDIntVar::tell(void)
       } else {
         // global variable
         int int_val = domPtr->getSingleElem();
-        // restore the original constraint
-        *domPtr = dom;
         // wake up
         tagged2GenFDVar(var)->propagate(fd_prop_singl);
         bindGlobalVarToValue(varPtr, newSmallInt(int_val));
@@ -295,8 +305,6 @@ OZ_Boolean OZ_FDIntVar::tell(void)
         tagged2GenFDVar(var)->becomesBoolVarAndPropagate(varPtr);
       } else {
         // global variable
-        // restore the original constraint
-        *domPtr = dom;
         // wake up
         tagged2GenFDVar(var)->propagate(CHECK_BOUNDS);
         // cast store variable to boolean varaible
@@ -311,10 +319,8 @@ OZ_Boolean OZ_FDIntVar::tell(void)
       //
       tagged2GenFDVar(var)->propagate(CHECK_BOUNDS);
       if (isState(glob_e)) {
-        // restore the original constraint
-        *domPtr = dom;
         // constrain global variable
-        constrainGlobalVar(varPtr, *domPtr);
+        constrainGlobalVar(varPtr, dom);
       }
       goto oz_true;
     }
