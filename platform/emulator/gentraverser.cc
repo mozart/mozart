@@ -142,7 +142,6 @@ void GenTraverser::gCollect()
     } else {
       // do not GC the dereferenced copy - do the original slot;
       oz_gCollectTerm(t, t);
-      break;
     }      
   }
 }
