@@ -496,13 +496,25 @@ SbrkMemory *SbrkMemory::freeList = NULL;
  * that future malloc's will use this area. In this way the heaps, that are
  * allocated via sbrk, will be rather surely on top of the UNIX process's
  * heap, so we can release this space again!
+ * Note: linux allocates small chunks from a different area than large ones
+ *   so we allocate in many small pieces.
  */
 
 static void fakeMalloc(int sz)
 {
-  void *p = malloc(sz);
+  int chunksz = 1024;
+  void **array = new void*[sz/chunksz + 1];
+  int i=0;
+  while (sz>0) {
+    array[i++]= malloc(chunksz);
+    sz -= chunksz;
+  }
   sbrk(sizeof(long)); /* ensures that following free does not hand back mem to OS */
-  free(p);
+
+  while(--i>=0) {
+    free(array[i]);
+  }
+  delete array;
 }
 
 void *ozMalloc(int chunk_size)
@@ -525,9 +537,8 @@ void *ozMalloc(int chunk_size)
 #endif
     void *old = sbrk(0);
     if (lastBrk && old != lastBrk) {
-      DebugCheckT(message("fakeMallocing 1MB\n"));
-      // message("fakeMallocing 1MB\n");
-      fakeMalloc(1*MB);
+      DebugCheckT(message("fakeMallocing 2MB\n"));
+      fakeMalloc(2*MB);
       old = sbrk(0);
     }
     void *ret_val = sbrk(chunk_size);
@@ -664,8 +675,8 @@ char *getMemFromOS(size_t sz) {
   int thisBlockSz = ozconf.heapBlockSize;
   if ((int)sz > ozconf.heapBlockSize) {
     thisBlockSz = sz;
-    warning("Allocating very large heap block: size = %d kB",sz/KB);
-    //    warning("Memory chunk too big (size=%d)\nTry\n\tsetenv OZHEAPBLOCKSIZE <x>\nwhere <x> is greater than %d.\n",sz,ozconf.heapBlockSize);
+    OZ_warning("Allocating very large heap block: size = %d kB",sz/KB);
+    //    OZ_warning("Memory chunk too big (size=%d)\nTry\n\tsetenv OZHEAPBLOCKSIZE <x>\nwhere <x> is greater than %d.\n",sz,ozconf.heapBlockSize);
     //    am.exitOz(1);
   }
 
@@ -712,7 +723,7 @@ char *getMemFromOS(size_t sz) {
 
   void *aux = tagValueOf(makeTaggedMiscp(heapTop));
   if (aux != heapTop) {
-    warning("Oz address space exhausted: %p != %p\n", aux, heapTop);
+    OZ_warning("Oz address space exhausted: %p != %p\n", aux, heapTop);
     am.exitOz(1);
   }
 

@@ -80,7 +80,7 @@ static
 void printBanner(char*initFile)
 {
 #ifdef NO_LTQ
-  warning("LTQ is turned off.");
+  OZ_warning("LTQ is turned off.");
 #endif
 
 #ifdef DEBUG_CHECK

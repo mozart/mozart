@@ -306,7 +306,7 @@ void Statistics::printCount(char *file) {
 
   FILE *out = (strcmp(file,"-")==0) ? stdout : fopen(file,"w");
   if (out==NULL) {
-    warning("cannot open '%s': %s\n",file,OZ_unixError(errno));
+    OZ_warning("cannot open '%s': %s\n",file,OZ_unixError(errno));
     return;
   }
   fprintf(out,"Heap after last GC:\n\n");
@@ -442,7 +442,7 @@ void Statistics::printDeref(FILE *out)
 void Statistics::derefChain(int n)
 {
   if (n>8)
-    warning("long reference chain (length=%d)",n);
+    OZ_warning("long reference chain (length=%d)",n);
   numDerefs++;
   longestDeref = max(n,longestDeref);
   n = min(n,maxDerefLength);

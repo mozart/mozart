@@ -919,7 +919,7 @@ OZ_Return OZ_Expect::impose(OZ_Propagator * p, int prio,
   case NULL_flag:
     break;
   default:
-    warning("Unrecognized flag found when spawning propagator");
+    OZ_warning("Unrecognized flag found when spawning propagator");
   }
 
   staticSpawnVarsNumber = staticSuspendVarsNumber = 0;

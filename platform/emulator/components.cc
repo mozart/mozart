@@ -768,7 +768,6 @@ static
 OZ_Return getURL(const char *url, TaggedRef out, URLAction act)
 {
   char *tmpfile = newTempFile();
-  //  warning("getURL: %s,%s\n",url,tmpfile);
 
 #ifdef WINDOWS
 

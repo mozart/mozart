@@ -2836,7 +2836,7 @@ LBLdispatcher:
     //  e.g. when X is a future.
     Actor *aa=CBB->getActor();
     if (aa && aa->isAskWait() && CTT == AWActor::Cast(aa)->getThread()) {
-      warning("unifySpecial in pseudo shallow guard not impl. Failing.");
+      OZ_warning("unifySpecial in pseudo shallow guard not impl. Failing.");
       switch (tmpRet) {
       case BI_REPLACEBICALL:
         e->emptyPreparedCalls();

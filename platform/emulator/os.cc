@@ -268,7 +268,7 @@ void osBlockSignals(Bool check)
   if (check) {
     sigemptyset(&s);
     if (memcmp(&s,&sOld,sizeof(sigset_t)) != 0) {
-      warning("blockSignals: there are blocked signals");
+      OZ_warning("blockSignals: there are blocked signals");
     }
   }
 #endif
@@ -742,7 +742,7 @@ char *oslocalhostname()
   char buf[1000];
   int aux = gethostname(buf,sizeof(buf));
   if (aux < 0) {
-    warning("cannot determine hostname\n");
+    OZ_warning("cannot determine hostname\n");
     sprintf(buf,"%s","localhost");
   }
   return strdup(buf);
