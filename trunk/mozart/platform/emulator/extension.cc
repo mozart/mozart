@@ -23,11 +23,15 @@
 
 #include "extension.hh"
 #include "ozostream.hh"
+#include "am.hh"
 
 int oz_newUniqueId() {
   static int counter=0;
   return counter++;
 }
+
+SituatedExtension::SituatedExtension(void)
+  : ConstTermWithHome(oz_currentBoard(), Co_SituatedExtension) {}
 
 void SituatedExtension::printStreamV(ostream &out,int depth)
 {
