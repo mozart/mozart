@@ -64,8 +64,8 @@ local
        'following thread states:\n' #
        'green: runnable, red: blocked, grey: terminated\n' #
        '\nA thread can be removed from the tree either by ' #
-       'killing it (action `terminate\') or by forgetting it ' #
-       '(action `forget\').'))
+       'killing it (action `terminate\') or by detaching it ' #
+       '(action `detach\').'))
 
      StackTitle #
      ('The Stack' #
@@ -106,8 +106,8 @@ local
        'steppoint. Note that blocked threads need to be stopped ' #
        'in order to get updated stack and environment windows.'))
 
-     ForgetButtonBitmap #
-     ('Forget' #
+     DetachButtonBitmap #
+     ('Detach' #
       ('Do not trace the current thread anymore, let it ' #
        'continue to run, and remove it ' #
        'from the thread tree. It will come back when it reaches ' #
