@@ -854,6 +854,16 @@ Object *Object::gcObject() {
   return (Object *) gcConstTerm();
 }
 
+Promise *Promise::gcPromise()
+{
+  CHECKCOLLECTED(future,Promise *);
+  Promise *ret = new Promise(future);
+  OZ_collectHeapTerm(future,ret->future);
+  storeFwd((int32*)&future, ret);
+  return ret;
+}
+
+
 /*
  *  Preserve runnable threads which home board is dead, because 
  * solve counters have to be updated (while, of course, discard 
@@ -1601,21 +1611,8 @@ void gcTagged(TaggedRef & frm, TaggedRef & to,
     }
 
   case PROMISE: DO_PROMISE:
-    { 
-      // mm2: how to handle copy mode???
-      TaggedRef *varPtr = tagged2Promise(aux);
-      TaggedRef var = *varPtr;
-      if (GCISMARKED(var)) {
-	to = makeTaggedPromise((TaggedRef *) GCUNMARK(var));
-	return;
-      } else {
-	TaggedRef *newVarPtr = newTaggedRef(varPtr);
-	to = makeTaggedPromise(newVarPtr);
-	varFix.defer(varPtr,newVarPtr); // mm2
-	gcTagged(*newVarPtr,*newVarPtr,isInGc,NO,NO); // mm2
-	return; 
-      }
-    }
+    to = makeTaggedPromise(tagged2Promise(aux)->gcPromise());
+    return;
     
   case LTUPLE: DO_LTUPLE:
     to = makeTaggedLTuple(tagged2LTuple(aux)->gc()); 

@@ -652,6 +652,9 @@ void marshalConst(ConstTerm *t, MsgBuffer *bs)
     {
       PD((MARSHAL,"class"));
       ObjectClass *cl = (ObjectClass*) t;
+      if (cl->isNative())
+	goto bomb;
+
       cl->globalize();
       marshalClass(cl,bs);
       return;
@@ -660,6 +663,9 @@ void marshalConst(ConstTerm *t, MsgBuffer *bs)
     {
       PD((MARSHAL,"abstraction"));
       Abstraction *pp=(Abstraction *) t;
+      if (pp->getPred()->isNative())
+	goto bomb;
+
       GName *gname=pp->getGName();
 
       marshalDIF(bs,DIF_PROC);
@@ -952,7 +958,7 @@ OZ_Term unmarshalTerm(MsgBuffer *bs)
 inline
 ObjectClass *newClass(GName *gname) {
   Assert(am.onToplevel());
-  ObjectClass *ret = new ObjectClass(NULL,NULL,NULL,NULL,NO,am.currentBoard());
+  ObjectClass *ret = new ObjectClass(NULL,NULL,NULL,NULL,NO,NO,am.currentBoard());
   ret->setGName(gname);
   return ret;
 }

@@ -72,14 +72,14 @@ void Future::addSuspFuture(TaggedRef *vPtr, Thread*th,int unstable)
 
 OZ_BI_define(BIPromiseNew,0,1)
 {
-  TaggedRef *p = newTaggedCVar(new Future());
-  OZ_RETURN(makeTaggedPromise(p));
+  TaggedRef p = makeTaggedRef(newTaggedCVar(new Future()));
+  OZ_RETURN(makeTaggedPromise(new Promise(p)));
 } OZ_BI_end
 
 OZ_Return promiseAssign(OZ_Term p, OZ_Term val)
 {
-  TaggedRef *varPtr = tagged2Promise(p);
-  TaggedRef var=*varPtr;
+  TaggedRef var = tagged2Promise(p)->getFuture();
+  DEREF(var,varPtr,_);
   if (isCVar(var)) {
     GenCVariable *cvar=tagged2CVar(var);
     if (cvar->getType()==FUTURE) {
@@ -113,8 +113,7 @@ OZ_BI_define(BIPromiseAccess,1,1)
   if (!oz_isPromise(p)) {
     oz_typeError(0,"Promise");
   }
-  TaggedRef *varPtr = tagged2Promise(p);
-  OZ_RETURN(makeTaggedRef(varPtr));
+  OZ_RETURN(tagged2Promise(p)->getFuture());
 } OZ_BI_end
 
 OZ_BI_define(BIPromiseWaitRequest,1,0)
@@ -123,8 +122,9 @@ OZ_BI_define(BIPromiseWaitRequest,1,0)
   if (!oz_isPromise(p)) {
     oz_typeError(0,"Promise");
   }
-  TaggedRef *varPtr = tagged2Promise(p);
-  TaggedRef var = *varPtr;
+
+  TaggedRef var = tagged2Promise(p)->getFuture();
+  DEREF(var,varPtr,_);
   if (!isCVar(var)) return PROCEED;
   GenCVariable *cvar=tagged2CVar(var);
   if (cvar->getType() != FUTURE) return PROCEED;
