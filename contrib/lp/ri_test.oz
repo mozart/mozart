@@ -40,16 +40,21 @@ declare [RI LP] = {Module.link ['x-oz://contrib/RI' 'x-oz://contrib/LP']}
 {Wait RI}
 {Wait LP}
 
+%{LP.config put config(solver: cplex_primopt)}
+
+{Show RI#LP}
+
 {Browse
  [
   {LP.config get}
+
   {fun {$} X = {RI.var.bounds 1.4 1.5} Y = {RI.var.bounds 1.5 1.7} R
    in
       R = thread cond X = Y then 1 else 0 end end
       X = Y
       R
    end}
-  
+
   {fun {$} X= {RI.var.bounds 1.5 1.7} R
    in
      R = thread cond X = 1.6 then 1 else 0 end end
@@ -63,7 +68,7 @@ declare [RI LP] = {Module.link ['x-oz://contrib/RI' 'x-oz://contrib/LP']}
      {RI.lessEq 2.5 Y}
      R
   end}
- 
+
  {fun {$} X = {RI.var.bounds 1.5 3.0}  Y = {RI.var.bounds 2.0 4.5} R in
      R = thread cond {RI.lessEq X Y} then 0 else 1 end end
      {RI.greater X 2.5}
@@ -77,7 +82,6 @@ declare [RI LP] = {Module.link ['x-oz://contrib/RI' 'x-oz://contrib/LP']}
      {RI.lessEq 2.5 Y}
      R
   end}
-
 
  {fun {$} X = {RI.var.bounds 1.5 3.0} Y = {RI.var.bounds 2.0 4.5} R in
      R = thread cond {RI.greater X Y} then 1 else 0 end end
@@ -153,6 +157,7 @@ declare [RI LP] = {Module.link ['x-oz://contrib/RI' 'x-oz://contrib/LP']}
      R
   end}
 
+
  {fun {$} R F in 
      R = thread cond F = 2.0 then 1 else 0 end end
      {RI.var.decl F} {RI.var.bounds 1.0 2.0 F} {RI.var.bounds 2.0 3.0 F}
@@ -173,7 +178,7 @@ declare [RI LP] = {Module.link ['x-oz://contrib/RI' 'x-oz://contrib/LP']}
      {RI.var.decl A}
      R
   end}
- 
+
  {fun {$} A B R in
      thread {RI.intBounds A B} end
      R = thread cond {FD.decl B} then 1 else 0 end end
@@ -187,7 +192,10 @@ declare [RI LP] = {Module.link ['x-oz://contrib/RI' 'x-oz://contrib/LP']}
      {FD.decl B}
      R
   end}
-]}
+
+
+ ]}
+
 
 {Browse {SearchOne proc {$ Sol} [A B] = Sol in
                       {ForAll Sol proc {$ V} {RI.var.bounds 1.0 3.0 V} end}

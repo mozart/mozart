@@ -91,7 +91,9 @@ public:
 
   virtual void sCloneRecurseV(void) {
     DEBUGPRINT("sCloneRecursiveV\n");
-    _p = (Propagator *) ((Suspendable *) _p)->sCloneSuspendable();
+    if (_p) {
+      _p = (Propagator *) ((Suspendable *) _p)->sCloneSuspendable();
+    }
   }
 
   virtual OZ_Extension * gCollectV(void) {
@@ -101,7 +103,9 @@ public:
 
   virtual void gCollectRecurseV(void) {
     DEBUGPRINT("gCollectRecursiveV\n");
-    _p = (Propagator *) ((Suspendable *) _p)->gCollectSuspendable();
+    if (_p) {
+      _p = (Propagator *) ((Suspendable *) _p)->gCollectSuspendable();
+    }
   }
 
 
@@ -176,7 +180,7 @@ OZ_BI_proto(BIActivatePropagator);
 
 inline
 OZ_Term propagator2Term(Propagator * p) {
-  return oz_makeTaggedExtension(new PropagatorReference(p));
+  return makeTaggedExtension(new PropagatorReference(p));
 }
 
 OZ_Term prop_name(char * name);
