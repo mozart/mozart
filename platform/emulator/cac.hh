@@ -58,7 +58,7 @@ public:
 
   void defer(TaggedRef * var, TaggedRef * ref) {
     Assert(var);
-    Stack::push((StackEntry) ref, NO);
+    Stack::push((StackEntry) ref);
     *ref = makeTaggedRef(var);
   }
 

@@ -142,8 +142,18 @@ public:
       ? oz_rootBoardOutline() : (Board*)ToPointer(homeOrGName);
   }
 
-  Bool cacIsMarked() {
+  Bool cacIsMarked(void) {
     return GCISMARKED(homeOrGName);
+  }
+  void cacMark(Name * fwd) {
+    homeOrGName = GCMARK(fwd);
+  }
+  int32 ** cacGetMarkField(void) {
+    return (int32**) &homeOrGName;
+  }
+  Name * cacGetFwd(void) {
+    Assert(cacIsMarked());
+    return (Name *) GCUNMARK(homeOrGName);
   }
 
   Name * gCollectName(void);
@@ -418,6 +428,18 @@ public:
     args[0] = head; args[1] = tail;
   }
 
+  int cacIsMarked(void) {
+    return GCISMARKED(args[0]);
+  }
+  void cacMark(LTuple * fwd) {
+    args[0] = GCMARK(fwd);
+  }
+  LTuple * cacGetFwd(void) {
+    return (LTuple *) GCUNMARK(args[0]);
+  }
+  int32 ** cacGetMarkField(void) {
+    return (int32**) &args[0];
+  }
   void gCollectRecurse(void);
   LTuple * gCollect(void);
 
@@ -589,9 +611,15 @@ public:
   ConstTerm() { Assert(0); }
   void init(TypeOfConst t) { tag = t<<1; }
   ConstTerm(TypeOfConst t) { init(t); }
-  Bool cacIsMarked(void)    { return tag&1; }
-  void cacMark(ConstTerm *) { tag |= 1; }
-  void ** cacGetMarkField(void) { return (void **) &tag; }
+  Bool cacIsMarked(void) {
+    return tag&1;
+  }
+  void cacMark(ConstTerm * c) {
+    tag = ToInt32(c) | 1;
+  }
+  int32 ** cacGetMarkField(void) {
+    return (int32 **) &tag;
+  }
   ConstTerm * cacGetFwd(void) {
     Assert(cacIsMarked());
     return (ConstTerm *) (tag&~1);
@@ -1111,44 +1139,49 @@ TaggedRef makeTupleArityList(int i);
  * either an Arity* or an int
  */
 
-// #define TYPECHECK_SRecordArity
-#ifdef TYPECHECK_SRecordArity
-
-class SRA;
-typedef SRA* SRecordArity;
-#define Body(X) ;
-#define inline
-
-#else
-
 typedef int32 SRecordArity; /* do not want to use a pointer on the Alpha! */
-#define Body(X) X
 
-#endif
+inline
+int sraIsTuple(SRecordArity a) {
+  return a&1;
+}
 
-inline Bool sraIsTuple(SRecordArity a)
-     Body({ return a&1; })
+inline
+int sraCacIsMarked(SRecordArity a) {
+  return a&2;
+}
 
-inline SRecordArity mkTupleWidth(int w)
-     Body({ return (SRecordArity) ((w<<1)|1);})
+inline
+SRecordArity mkTupleWidth(int w) {
+  return (SRecordArity) ((w<<2)|1);
+}
 
-inline int getTupleWidth(SRecordArity a)
-     Body({ return a>>1; })
+inline
+int getTupleWidth(SRecordArity a) {
+  return a>>2;
+}
 
-inline SRecordArity mkRecordArity(Arity *a)
-     Body({ Assert(!a->isTuple()); return ToInt32(a); })
+inline
+SRecordArity mkRecordArity(Arity *a) {
+  Assert(!a->isTuple());
+  return ToInt32(a);
+}
 
-inline Arity *getRecordArity(SRecordArity a)
-     Body({ return (Arity*) ToPointer(a); })
+inline
+Arity *getRecordArity(SRecordArity a) {
+  return (Arity*) ToPointer(a);
+}
 
-inline Bool sameSRecordArity(SRecordArity a, SRecordArity b)
-     Body({ return a==b; })
-inline int getWidth(SRecordArity a)
-     Body({
-       return sraIsTuple(a) ? getTupleWidth(a) : getRecordArity(a)->getWidth();
-     })
+inline
+int sameSRecordArity(SRecordArity a, SRecordArity b) {
+  return a==b;
+}
 
-#undef Body
+inline
+int getWidth(SRecordArity a) {
+  return sraIsTuple(a) ? getTupleWidth(a) : getRecordArity(a)->getWidth();
+}
+
 
 inline
 OZ_Term sraGetArityList(SRecordArity arity)
@@ -1160,14 +1193,28 @@ OZ_Term sraGetArityList(SRecordArity arity)
 
 class SRecord {
 private:
-  TaggedRef label;
+  // The order matters, never change it: garbage collection!
   SRecordArity recordArity;
-  TaggedRef args[1];   // really maybe more
+  TaggedRef label, args[1];   // really maybe more
 
 public:
   USEHEAPMEMORY;
   OZPRINTLONG
   NO_DEFAULT_CONSTRUCTORS(SRecord)
+
+  int cacIsMarked(void) {
+    return sraCacIsMarked(recordArity);
+  }
+  SRecord * cacGetFwd(void) {
+    Assert(cacIsMarked());
+    return (SRecord *) ToPointer(ToInt32(recordArity) & ~2);
+  }
+  int32 ** cacGetMarkField(void) {
+    return (int32 **) &recordArity;
+  }
+  void cacMark(SRecord * fwd) {
+    recordArity = (SRecordArity) (ToInt32(fwd) | 2);
+  }
 
   SRecord *gCollectSRecord(void);
   SRecord *sCloneSRecord(void);
