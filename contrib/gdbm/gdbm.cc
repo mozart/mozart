@@ -126,7 +126,7 @@ datum2term(datum dat,OZ_Term& out)
   // dispense with the allocation of a new variable.
   out = OZ_newVariable();
   OZ_Return ret = OZ_datumToValue(d,out);
-  if (d.dat!=0) { free(d.dat); d.dat=0; }
+  if (d.data!=0) { free(d.data); d.data=0; }
   return ret;
 }
 
