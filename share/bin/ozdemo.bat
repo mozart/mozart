@@ -1,0 +1,3 @@
+@rem gnu-win32 cannot understand real dos names starting with C:\...  
+%OZHOME%\platform\win32-i486\ozemulator -f - < %OZHOME%\demo\rundemo
+
