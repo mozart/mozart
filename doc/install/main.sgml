@@ -27,8 +27,6 @@
 
 <!DOCTYPE BOOK SYSTEM "ozdoc.dtd" [
 <!ENTITY % proglang.values.local "|sh|none">
-<!ENTITY % p.mix.local "|em">
-<!ELEMENT em - - (#PCDATA)>
 <!ENTITY nbsp PI "nbsp">
 <!ENTITY ellipsis PI "ellipsis">
 <!ENTITY ie PI "ie">
