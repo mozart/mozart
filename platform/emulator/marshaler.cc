@@ -579,7 +579,7 @@ void marshalConst(ConstTerm *t, MsgBuffer *bs)
       marshalTerm(pp->getName(),bs);
       marshalNumber(pp->getArity(),bs);
       ProgramCounter pc = pp->getPC();
-      int gs            = pp->getPred()->getGSize();
+      int gs = pp->getPred()->getGSize();
       marshalNumber(gs,bs);
       marshalNumber(pp->getPred()->getMaxX(),bs);
       for (int i=0; i<gs; i++) {
@@ -657,6 +657,7 @@ loop:
       if (checkCycle(*lit->getCycleRef(),bs,tTag)) goto exit;
 
       MarshalTag litTag;
+      GName *gname = NULL;
 
       if (lit->isAtom()) {
 	litTag = DIF_ATOM;
@@ -666,14 +667,14 @@ loop:
 	litTag = DIF_COPYABLENAME;
       } else {
 	litTag = DIF_NAME;
+	gname = ((Name*)lit)->globalize();
       }
 
       marshalDIF(bs,litTag);
       const char *name = lit->getPrintName();
       trailCycle(lit->getCycleRef(),bs);
       marshalString(name,bs);
-      if (litTag == DIF_NAME) {
-	GName *gname = ((Name*)lit)->globalize();
+      if (gname) {
 	marshalGName(gname,bs);
       }
       break;
