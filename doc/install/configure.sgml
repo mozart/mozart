@@ -74,6 +74,16 @@ the C++ compiler to print all warnings.</item>
 	<item>By default, the value is <code/no/.  When enabled, every
 warning from the C++ compiler will cause the build process to fail.
 This is only really useful for the developers of the system.</item>
+
+	<entry class=variable/<code/oz_copt_optimize="-O"//
+	<entry class=variable/<code/oz_copt_profile=-pg//
+	<entry class=variable/<code/oz_copt_debug="-g"//
+	<item>Compiler options to use when optimizing, profiling, and
+debugging respectively.</item>
+
+	<entry class=variable/<code/oz_enable_modules_static=no//
+	<item>By default, all boot modules are linked dynamically.
+Setting this variable to <code/yes/ will link them statically.</item>
       </list>
   </subsection>
 </section>
