@@ -191,7 +191,7 @@ void AbstractionEntry::setPred(Abstraction *ab)
 
   // indexing on X[0] optimized !!!
   if (pc != NOCODE &&
-      CodeArea::getOpcode(pc) == SWITCHONTERMX &&
+      CodeArea::getOpcode(pc) == MATCHX &&
       getRegArg(pc+1) == 0) {
     indexTable = (IHashTable *) getAdressArg(pc+2);
   } else {
@@ -436,15 +436,23 @@ void CodeArea::getDefinitionArgs(ProgramCounter PC,
 }
 
 void printLoc(FILE *ofile,OZ_Location *loc) {
-  fprintf(ofile,"[");
-  for (int i=0; i<loc->getInArity(); i++) {
-    fprintf(ofile," %d",loc->in(i));
-  }
-  fprintf(ofile,"] # [");
-  for (int i=0; i<loc->getOutArity(); i++) {
-    fprintf(ofile," %d",loc->out(i));
-  }
-  fprintf(ofile,"]");
+  if (loc->getInArity()) {
+    fprintf(ofile,"[");
+    for (int i=0; i<loc->getInArity(); i++) {
+      fprintf(ofile,"%sx(%d)",i?" ":"",loc->in(i));
+    }
+    fprintf(ofile,"]");
+  } else
+    fprintf(ofile,"nil");
+  fprintf(ofile,"#");
+  if (loc->getOutArity()) {
+    fprintf(ofile,"[");
+    for (int i=0; i<loc->getOutArity(); i++) {
+      fprintf(ofile,"%sx(%d)",i?" ":"",loc->out(i));
+    }
+    fprintf(ofile,"]");
+  } else
+    fprintf(ofile,"nil");
 }
 
 void CodeArea::display (ProgramCounter from, int sz, FILE* ofile, ProgramCounter to)
@@ -567,6 +575,15 @@ void CodeArea::display (ProgramCounter from, int sz, FILE* ofile, ProgramCounter
     case GETLISTVALVARY:
     case GETLISTVALVARG:
       fprintf (ofile, "(x(%d) %d x(%d))\n",
+               regToInt(getRegArg(PC+1)),
+               regToInt(getRegArg(PC+2)),
+               regToInt(getRegArg(PC+3)));
+      DISPATCH();
+
+    case GETLISTVARVARX:
+    case GETLISTVARVARY:
+    case GETLISTVARVARG:
+      fprintf (ofile, "(%d x(%d) x(%d))\n",
                regToInt(getRegArg(PC+1)),
                regToInt(getRegArg(PC+2)),
                regToInt(getRegArg(PC+3)));
@@ -771,6 +788,14 @@ void CodeArea::display (ProgramCounter from, int sz, FILE* ofile, ProgramCounter
         DISPATCH();
       }
 
+    case SETPREDICATEREF:
+      {
+        AbstractionEntry *entry = (AbstractionEntry *) getAdressArg(PC+1);
+        fprintf(ofile,"(%p[pc:%p n:%d])\n",entry,
+                entry->getPC(),entry->getArity());
+        DISPATCH();
+      }
+
     case APPLMETHX:
     case APPLMETHY:
     case APPLMETHG:
@@ -956,6 +981,29 @@ void CodeArea::display (ProgramCounter from, int sz, FILE* ofile, ProgramCounter
         fprintf(ofile, " %d)\n", regToInt(getRegArg(PC+3)));
       }
       DISPATCH();
+    case GETRECORDVARSX:
+    case GETRECORDVARSY:
+    case GETRECORDVARSG:
+      {
+        TaggedRef literal = getLiteralArg(PC+1);
+        fprintf(ofile, "(%s ", toC(literal));
+        SRecordArity sra = (SRecordArity) getAdressArg(PC+2);
+        if (sraIsTuple(sra))
+          fprintf(ofile, "%d", getTupleWidth(sra));
+        else
+          fprintf(ofile, "%s", toC(sraGetArityList(sra)));
+        fprintf(ofile, " %d ", regToInt(getRegArg(PC+3)));
+        XRegisterIndexListClass *xlist = GetXList(PC+4);
+        if (xlist->getLength()) {
+          fprintf(ofile,"[");
+          for (int j=0; j<xlist->getLength(); j++) {
+            fprintf(ofile,"%sx(%d)",j?" ":"",xlist->get(j));
+          }
+          fprintf(ofile,"])\n");
+        } else
+          fprintf(ofile,"nil)\n");
+      }
+      DISPATCH();
 
     case PUTCONSTANTX:
     case PUTCONSTANTY:
@@ -1016,6 +1064,16 @@ void CodeArea::display (ProgramCounter from, int sz, FILE* ofile, ProgramCounter
       {
         Reg reg = regToInt(getRegArg(PC+1));
         fprintf(ofile, "(%d ...)\n", reg);
+      }
+      DISPATCH();
+
+    case MATCHX:
+    case MATCHY:
+    case MATCHG:
+      {
+        Reg reg = regToInt(getRegArg(PC+1));
+        int n = getPosIntArg(PC+3);
+        fprintf(ofile, "(%d ... %d)\n", reg, n);
       }
       DISPATCH();
 

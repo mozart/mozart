@@ -446,6 +446,29 @@ OZ_BI_define(BIstoreLocation,2,0)
 } OZ_BI_end
 
 
+OZ_BI_define(BIstoreXRegisterIndexList,2,0)
+{
+  NEW_declareCodeBlock(0,code);
+  OZ_declareNonvarIN(1,xs);
+  xs=deref(xs);
+  const int n = OZ_length(xs);
+
+  XRegisterIndexListClass *xlist =
+    XRegisterIndexListClass::newXRegisterIndexList(n);
+
+  for (int i = 0; i < n; i++) {
+    OZ_Term reg = deref(head(xs));
+    xlist->set(i, smallIntValue(deref(oz_arg(reg,0))));
+    xs = deref(tail(xs));
+  }
+
+  Assert(isNil(xs));
+
+  code->writeAddress(xlist);
+  return PROCEED;
+} OZ_BI_end
+
+
 OZ_BI_define(BIstoreCache,2,0)
 {
   NEW_declareCodeBlock(0,code);

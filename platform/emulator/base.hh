@@ -257,7 +257,6 @@ class BorrowTable;
 class Site;
 
 class Builtin;
-class OZ_Location;
 
 class FiniteDomain;
 
@@ -317,6 +316,8 @@ class OzDictionary;
 class OzLock;
 
 class InlineCache;
+class OZ_Location;
+class XRegisterIndexListClass;
 
 class NetAddress;
 class GName;
