@@ -17,34 +17,13 @@ class ChainElem{
 friend class Chain;
 protected:
   ChainElem* next;
-  TaggedPtr tagged;
-  int numId;
+  Site *site;
 public:
   ChainElem(){}
 
-  void init(Site *s, int nr){
+  void init(Site *s){
     next = NULL;
-    tagged.init();
-    tagged.setPtr(s);
-    numId = nr;}
-
-  Bool isProbing(){
-    return (tagged.getType() & CHAIN_PROBE);}
-
-  void probeStarted(){
-    Assert(!isProbing());
-    Site *s = getSite();
-    if(s != mySite)
-      s->installProbe(PROBE_TYPE_ALL,0);
-    tagged.setType(CHAIN_PROBE);}
-
-  void probeStop(){
-    Assert(isProbing());
-    tagged.setType(0);
-    getSite()->deinstallProbe(PROBE_TYPE_ALL);}
-
-  Site* getSite(){
-    return (Site *) tagged.getPtr();}
+    site=s;}
 
   void setNext(ChainElem* n){
     next = n;}
@@ -52,8 +31,6 @@ public:
   ChainElem *getNext(){
     return next;}
 
-  int getNum(){
-    return numId;}
 };
 
 class InformElem{
@@ -75,7 +52,7 @@ protected:
 public:
   Chain(){first = NULL;last=NULL;inform=NULL;}
 
-  void init(Site*,int);
+  void init(Site*);
 
   void informHandle(Tertiary*,EntityCond);
 
@@ -83,27 +60,11 @@ public:
 
   Site* getCurrent(){
     Assert(last != NULL);
-    return last->getSite();}
-
-  Site* getFirst(int &a){
-    if(first==NULL)
-      return NULL;
-    a = first->getNum();
-    return first->getSite();}
-
-  Bool siteIsFirst(Site* s,int nr){
-    if(first==NULL) return NO;
-    if(first->getSite()!=s) return NO;
-    if(first->numId!=nr) return NO;
-    return OK;}
+    return last->site;}
 
   Site* getFirstSite(){
     Assert(first!=NULL);
-    return first->getSite();}
-
-  void removeFirstSite(){
-    Assert(first!=NULL);
-    first=first->getNext();}
+    return first->site;}
 
   void hasDumped(){
     first=NULL;
@@ -112,23 +73,29 @@ public:
   Bool hasInform(){
     return inform!=NULL;}
 
-  void informAll(Tertiary*,Site* s);
-  void maybeInform(EntityCond c,Site *s,int);
+  void setCurrent(Site* s);
 
-  void setCurrent(Site* s, int);
+  Bool siteRemove(Site*);
+  Bool siteExists(Site*);
 
-  void siteNrRemove(Site*,int);
-  Bool siteNrExists(Site*,int);
-  Site* tokenSent(Site*,int,int&);
-  void installProbes();
-  Site* removeSiteNext(Site*,Site*);
-  TokenState removeLostSite(Site*);
-  Bool siteListCheck();
+  void installProbeAfterAck(){
+    if(first->site!=mySite){
+      first->site->installProbe(PROBE_TYPE_PERM,0);}}
+
+  void installTwoProbesAfterAck(){
+    installProbeAfterAck();
+    Site *s=first->next->site;
+    if(s!=mySite){s->installProbe(PROBE_TYPE_PERM,0);}}
+
+  Bool afterOneAnother(Site *s1,Site* s2);
+
+  Site* removeSecondElem();
+  void removeFirstElem();
   void gcChainSites();
   void receiveAck(Site*,int);
 
   void managerSeesSiteCrash(Tertiary*,Site* );
-  Site* proxySeesSiteCrash(Tertiary *,Site*,Site*);
+  Site* proxySeesSiteCrash(Tertiary *,Site*);
 };
 
 /* __CHAINHH */
