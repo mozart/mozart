@@ -1726,6 +1726,8 @@ void ConstTerm::_cacConstRecurse()
 #ifdef G_COLLECT
       gCollectCode(a->getPred()->getCodeBlock());
 #endif
+      OZ_cacBlock(a->getGRef(),a->getGRef(),
+		  a->getPred()->getGSize());
       break;
     }
     
@@ -1889,9 +1891,9 @@ ConstTerm *ConstTerm::_cacConstTerm() {
 	dogcGName(gn);
       }
 #endif
-      OZ_cacBlock(a->getGRef(),newA->getGRef(),
-		  a->getPred()->getGSize());
-
+      memcpy((void *) newA->getGRef(), a->getGRef(), 
+	     sizeof(TaggedRef) * a->getPred()->getGSize());
+      
       return newA;
     }
 
