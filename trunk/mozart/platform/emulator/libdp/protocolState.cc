@@ -526,7 +526,9 @@ void maybeChainSendQuestion(ChainElem *ce,Tertiary *t,DSite* deadS){
       ce->setFlagAndCheck(CHAIN_QUESTION_ASKED);
       chainSendQuestion(ce->getSite(),t->getIndex(),deadS);}
     return;}
-  getChainFromTertiary(t)->receiveAnswer(t,myDSite,answerChainQuestion(t),deadS);}
+  Chain *ch=getChainFromTertiary(t);
+  ch->setFlagAndCheck(CHAIN_QUESTION_ASKED);
+  ch->receiveAnswer(t,myDSite,answerChainQuestion(t),deadS);}
 
 /**********************************************************************/
 /*   failure-related                                         */

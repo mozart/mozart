@@ -152,9 +152,8 @@ OZ_Return sendSurrender(BorrowEntry *be,OZ_Term val){
   return PROCEED;
 }
 
-Bool dealWithHandlers(TaggedRef t,EntityInfo *info,EntityCond ec,Thread* th,Bool &hit){
-  Assert(isHandlerCondition(ec));
-  info->meToBlocked();
+Bool dealWithInjectors(TaggedRef t,EntityInfo *info,EntityCond ec,Thread* th,Bool &hit){
+  Assert(isInjectorCondition(ec));
 
   Watcher* w;
   Watcher** base= info->getWatcherBase();
@@ -165,7 +164,7 @@ Bool dealWithHandlers(TaggedRef t,EntityInfo *info,EntityCond ec,Thread* th,Bool
       else{
 	if(th==(*base)->thread) break;}}
     base = &((*base)->next);}
-  (*base)->varInvokeHandler(t,ec,hit);
+  (*base)->varInvokeInjector(t,ec,hit);
   hit=TRUE;
   if(!(*base)->isPersistent()){
     return TRUE;
@@ -173,16 +172,17 @@ Bool dealWithHandlers(TaggedRef t,EntityInfo *info,EntityCond ec,Thread* th,Bool
   return FALSE;
 }
 
-inline EntityCond handlerPart(EntityCond ec){
-  return ec & (PERM_ME|TEMP_ME);}
+inline EntityCond injectorPart(EntityCond ec){
+  return ec & (PERM_BLOCKED|TEMP_BLOCKED);}
 
 Bool varFailurePreemption(TaggedRef t,EntityInfo* info,Bool &hit){
-  EntityCond ec=handlerPart(info->getEntityCond());
+  EntityCond ec=injectorPart(info->getEntityCond());
   if(ec==ENTITY_NORMAL) return FALSE;
-  return dealWithHandlers(t,info,ec,oz_currentThread(),hit);}
+  return dealWithInjectors(t,info,ec,oz_currentThread(),hit);}
 
 Bool ProxyVar::failurePreemption(){
   Assert(info!=NULL);
+  info->meToBlocked();
   Bool hit=FALSE;
   EntityCond oldC=info->getSummaryWatchCond();  
   if(varFailurePreemption(oz_makeExtVar(this),info,hit)){
@@ -620,7 +620,7 @@ void ProxyVar::addEntityCond(EntityCond ec){
   Bool hit=FALSE;
   if(info==NULL) info= new EntityInfo();
   if(!info->addEntityCond(ec)) return;
-  if(isHandlerCondition(ec)) {
+  if(isInjectorCondition(ec)) {
     wakeAll();
     return;}
   info->dealWithWatchers(oz_makeExtVar(this),ec);}
@@ -644,7 +644,7 @@ void ManagerVar::newWatcher(Bool b){
   
 void ManagerVar::addEntityCond(EntityCond ec){
   Assert((ec & (TEMP_SOME|PERM_SOME))==ec);
-  Assert(!isHandlerCondition(ec));
+  Assert(!isInjectorCondition(ec));
   if(info==NULL) info= new EntityInfo();
   if(!info->addEntityCond(ec)) return;
   int i=getIndex();

@@ -1209,12 +1209,10 @@ void initDPCore()
 
 
   if(ozconf.perdioSeifHandler)
-    installWatcher(NULL,
-		   PERM_BLOCKED|TEMP_BLOCKED,
+    installGlobalWatcher(PERM_BLOCKED|TEMP_BLOCKED,
 		   makeTaggedConst(new Builtin("seifHandler",
 					       2, 0, BIseifHandler, OK)),
-		   NULL,
-		   PERSISTENT);
+		   WATCHER_PERSISTENT|WATCHER_SITE_BASED|WATCHER_INJECTOR);
   
   Assert(sizeof(BorrowCreditExtension)==sizeof(Construct_3));
   Assert(sizeof(OwnerCreditExtension)==sizeof(Construct_3));
