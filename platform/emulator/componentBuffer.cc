@@ -38,14 +38,15 @@ PickleBuffer::PickleBuffer()
 {
   DebugCode(pbState = PB_None;);
   DebugCode(pmbState = PMB_None;);
-  DebugCode(first = last = (CByteBuffer *) 0;);
   DebugCode(lastChunkSize = -1;);
-  DebugCode(current = (CByteBuffer *) -1;);
   DebugCode(posMB = endMB = (BYTE *) -1;);
+  DebugCode(current = (CByteBuffer *) -1;);
+  first = last = (CByteBuffer *) 0;
 }
 
 PickleBuffer::~PickleBuffer()
 {
+  Assert(first == (CByteBuffer *) 0);
   DebugCode(pbState = PB_Invalid;);
   DebugCode(pmbState = PMB_Invalid;);
   DebugCode(lastChunkSize = -1;);
@@ -158,9 +159,10 @@ void PickleBuffer::chunkWritten()
   Assert(pmbState == PMB_WritingChunk);
   DebugCode(pmbState = PMB_None;);
   Assert(current != (CByteBuffer *) -1);
+  Assert(current != (CByteBuffer *) 0);
   CByteBuffer *nb = current->getNext();
   delete current;
-  current = nb;
+  current = first = nb;
 }
 
 BYTE* PickleBuffer::accessFirst(int &size)
@@ -203,7 +205,19 @@ void PickleBuffer::chunkDone()
   Assert(pmbState == PMB_AccessingChunk);
   DebugCode(pmbState = PMB_None;);
   Assert(current != (CByteBuffer *) -1);
+  Assert(current != (CByteBuffer *) 0);
   current = current->getNext();
+}
+
+void PickleBuffer::dropBuffers()
+{
+  Assert(first != (CByteBuffer *) -1);
+  while (first) {
+    CByteBuffer *nb = first->getNext();
+    delete first;
+    first = nb;
+  }
+  Assert(first == (CByteBuffer *) 0);
 }
 
 void PickleBuffer::marshalBegin()
@@ -239,6 +253,8 @@ void PickleBuffer::unmarshalBegin()
   Assert(endMB == (BYTE *) -1);
   Assert(first != (CByteBuffer *) 0);
   Assert(last != (CByteBuffer *) 0);
+  Assert(first != (CByteBuffer *) -1);
+  Assert(last != (CByteBuffer *) -1);
   //
   current = first;
   posMB = current->head();
@@ -266,6 +282,8 @@ void PickleBuffer::unmarshalEnd()
 BYTE PickleBuffer::getNext()
 {
   Assert(pbState == PB_Unmarshal);
+  Assert(current != (CByteBuffer *) -1);
+  Assert(current != (CByteBuffer *) 0);
   //
   current = current->getNext();
 #if defined(DEBUG_CHECK)

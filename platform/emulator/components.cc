@@ -605,19 +605,23 @@ OZ_Return
 ByteSource::getTerm(OZ_Term out, const char *compname, Bool wantHeader)
 {
   PickleBuffer * buffer;
-
-  OZ_Return result = loadPickleBuffer(buffer,compname);
-  if (result != PROCEED) return (result);
-
   char *versiongot = 0;
   OZ_Term val;
   LoadTermRet ret;
 
+  OZ_Return result = loadPickleBuffer(buffer, compname);
+  if (result != PROCEED) {
+    buffer->dropBuffers();
+    delete buffer;
+    return (result);
+  }
+
   ret = loadTerm(buffer, versiongot, val);
+  buffer->dropBuffers();
+  delete buffer;
 
   switch (ret) {
   case CLT_OK:
-    delete buffer;
     delete [] versiongot;
     if (wantHeader) {
       OZ_Return ret = oz_unify(out, oz_pair2(OZ_string(getHeader()), val));
@@ -633,13 +637,11 @@ ByteSource::getTerm(OZ_Term out, const char *compname, Bool wantHeader)
     Assert(0);
 
   case CLT_NOPICKLE:
-    delete buffer;
     return raiseGeneric("load:nonpickle", "Trying to load a non-pickle",
                         oz_cons(OZ_pairA("File",oz_atom(compname)),oz_nil()));
     Assert(0);
 
   case CLT_WRONGVERS:
-    delete buffer;
     {
       OZ_Term vergot = oz_atom(versiongot);
       char *vs = mv2ov(versiongot);
@@ -658,7 +660,7 @@ ByteSource::getTerm(OZ_Term out, const char *compname, Bool wantHeader)
     Assert(0);
 
   case CLT_FORMATERR:
-    delete buffer;
+    delete [] versiongot;
     return raiseGeneric("load:formaterr", "Error during unmarshaling",
                         oz_cons(OZ_pairA("File",oz_atom(compname)),oz_nil()));
     Assert(0);

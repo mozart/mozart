@@ -161,7 +161,7 @@ void GenTraverser::doit()
     // a push-pop pair for the topmost entry is saved:
   bypass:
     register TaggedRef *tPtr;
-    DebugCode(tPtr = -1;);
+    DebugCode(tPtr = (TaggedRef *) -1;);
     CrazyDebug(incDebugNODES(););
 
     //
