@@ -140,7 +140,7 @@ int * OZ_findEqualVars(int sz, OZ_Term * ts)
   for (i = 0; i < sz; i += 1) {
     OZ_Term t = ts[i];
     DEREF(t, tptr, ttag);
-    if (isSmallIntTag(ttag) || isLiteralTag(ttag)) {
+    if (isSmallIntTag(ttag) || isLiteralTag(ttag) || isFSetValueTag(ttag)) {
       is[i] = -1;
     } else {
       if (ttag == FDTAG) {
