@@ -149,7 +149,7 @@ extern int OZ_unprotect       _PROTOTYPE((OZ_Term *));
 
 /* Suspending builtins */
 
-OZ_Suspension OZ_makeSuspension(OZ_Bool (*)(int,OZ_Term[]), OZ_Term *, int);
+OZ_Suspension OZ_makeSuspension(OZ_CFun, OZ_Term *, int);
 
 void OZ_addSuspension(OZ_Term, OZ_Suspension);
 
@@ -222,7 +222,8 @@ OZ_C_proc_proto(Name)                                                         \
 
 #define OZ_nonvarArg(ARG)                                                     \
 { if (OZ_isVariable(OZ_getCArg(ARG)))                                         \
-    { return SUSPEND; }                                                       \
+      {   OZ_addSuspension(OZ_getCArg(ARG),OZ_makeSelfSuspension());          \
+        return PROCEED; }                                                     \
 }
 
 #define OZ_declareIntArg(FUN,ARG,VAR)                                         \
