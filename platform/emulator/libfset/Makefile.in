@@ -55,6 +55,9 @@ Makefile: Makefile.in
 
 first:
 
+cleaner::
+	-rm -f *.a *.so
+
 veryclean::
 	-rm -f *.a *.so Makefile.deps
 
