@@ -131,7 +131,7 @@ public:
   DSite* sd;
   ProxyListKind kind; 
   ProxyList *next;
-public: // PER-LOOK
+public: // PER-TODO
   ProxyList(DSite* s,ProxyList *nxt) :sd(s),next(nxt),kind(EXP_REG){}
 
   USEFREELISTMEMORY;

@@ -196,8 +196,7 @@ Bool ProxyVar::failurePreemption(){
   return hit;
 }
 
-OZ_Return ProxyVar::bindV(TaggedRef *lPtr, TaggedRef r)
-{
+OZ_Return ProxyVar::bindV(TaggedRef *lPtr, TaggedRef r){
   PD((PD_VAR,"ProxyVar::doBind by thread: %x",oz_currentThread()));
   PD((PD_VAR,"bind proxy b:%d v:%s",getIndex(),toC(r)));
   Bool isLocal = oz_isLocalVar(this);
@@ -478,9 +477,9 @@ void sendRegister(BorrowEntry *be) {
   SendTo(na->site,bs,M_REGISTER,na->site,na->index);
 }
 
-// PER-LOOK why indirection
-static OZ_Term unmarshalVarAux(MsgBuffer* bs, Bool isFuture,Bool isAuto)
-{
+
+// extern
+OZ_Term unmarshalVarImpl(MsgBuffer* bs, Bool isFuture, Bool isAuto){
   OB_Entry *ob;
   int bi;
   OZ_Term val1 = unmarshalBorrow(bs,ob,bi);
@@ -495,14 +494,8 @@ static OZ_Term unmarshalVarAux(MsgBuffer* bs, Bool isFuture,Bool isAuto)
   TaggedRef val = makeTaggedRef(newTaggedCVar(pvar));
   ob->mkVar(val); 
   if(!isAuto) sendRegister((BorrowEntry *)ob);
-  else Assert(0); // PER-LOOK
+  else Assert(0); // PER-TODO
   return val;
-}
-
-
-// extern
-OZ_Term unmarshalVarImpl(MsgBuffer* bs, Bool isFuture, Bool isAuto){
-  return unmarshalVarAux(bs,isFuture,isAuto);
 }
 
 /* --- IsVar test --- */
@@ -755,13 +748,13 @@ void maybeUnaskVar(BorrowEntry* b){
     varAdjustPOForFailure(GET_VAR(b,Proxy)->getIndex(),
 			  ie->getEntityCond(),ENTITY_NORMAL);
     return;
-  case VAR_OBJECT:
+  case VAR_OBJECT:{
     ie= GET_VAR(b,Object)->getInfo();
     if(ie==NULL) return;
     Assert(0); 
-    //    int i=GET_VAR(b,Object)->getIndex(); PER-LOOK
-    //    varAdjustPOForFailure(i,ie->getEntityCond(),ENTITY_NORMAL);
-    return;
+    int i=GET_VAR(b,Object)->getObject()->getIndex(); 
+    varAdjustPOForFailure(i,ie->getEntityCond(),ENTITY_NORMAL);
+    return;}
   default:
     Assert(0);}
 }
@@ -775,4 +768,11 @@ void ManagerVar::newInform(DSite* s,EntityCond ec){
 void ProxyVar::wakeAll(){
   oz_checkSuspensionList(this,pc_all);
 }
+
+
+
+
+
+
+
 
