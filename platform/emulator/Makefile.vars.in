@@ -60,10 +60,9 @@ OZ_WARN=        @oz_warn@
 OZ_WARN_ERROR=  @oz_warn_error@
 CPPFLAGS=       @CPPFLAGS@ $(DEFS) $(INCS)
 COPT=           @COPT@
-CDYNOPT=        -fPIC
-CXXFLAGS=       @CXXFLAGS@ $(COPT) $(OZ_WARN) $(OZ_WARN_ERROR) \
-                        $(CUSR) $(CDYNOPT)
-CXXFLAGS_NO_ERROR= @CXXFLAGS@ $(COPT) $(OZ_WARN) $(CUSR) $(CDYNOPT)
+CDYNOPT=        @CDYNOPT@
+CXXFLAGS_NO_ERROR= @CXXFLAGS@ $(COPT) $(OZ_WARN) $(CUSR)
+CXXFLAGS=       $(CXXFLAGS_NO_ERROR) $(OZ_WARN_ERROR)
 DEPEND=         @DEPEND@ $(CPPFLAGS)
 
 PLATFORM=       @platform@

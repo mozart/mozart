@@ -37,14 +37,14 @@ REALCORESRCS = dpMarshaler.cc port.cc dpDebug.cc network.cc             \
 CREATEDCOREFILES = marshalMsg.cc dpMarshaler.hh
 CREATEDCORESRCS  = marshalMsg.cc
 CORESRCS = $(REALCORESRCS) $(CREATEDCORESRCS)
-COREOBJS = $(CORESRCS:.cc=.o)
+COREOBJS = $(CORESRCS:.cc=.lo)
 
 REALVSSRCS = virtual.cc vs_comm.cc vs_mailbox.cc vs_msgbuffer.cc
 VSSRCS = $(REALVSSRCS)
-VSOBJS = $(VSSRCS:.cc=.o)
+VSOBJS = $(VSSRCS:.cc=.lo)
 
 MODULESRCS = pidModule.cc faultModule.cc dpMiscModule.cc
-MODULEOBJS = $(MODULESRCS:.cc=.o)
+MODULEOBJS = $(MODULESRCS:.cc=.lo)
 
 REALSRCS = $(REALCORESRCS) $(REALVSSRCS) $(MODULESRCS)
 
@@ -62,31 +62,31 @@ all:
         $(AR) -rc $@ $(COREOBJS) && $(RANLIB) $@
 
 #
-pidModule.o: ../modPID-if.cc
+pidModule.lo: ../modPID-if.cc
 
-../PID.so: pidModule.o
-        $(DYNLD) -o $@ pidModule.o
+../PID.so: pidModule.lo
+        $(DYNLD) -o $@ $<
 
-../libPID.a: pidModule.o
-        $(AR) -rc $@ pidModule.o && $(RANLIB) $@
-
-#
-faultModule.o: ../modFault-if.cc
-
-../Fault.so: faultModule.o
-        $(DYNLD) -o $@ faultModule.o
-
-../libFault.a: faultModule.o
-        $(AR) -rc $@ faultModule.o && $(RANLIB) $@
+../libPID.a: pidModule.lo
+        $(AR) -rc $@ $< && $(RANLIB) $@
 
 #
-dpMiscModule.o: ../modDPMisc-if.cc
+faultModule.lo: ../modFault-if.cc
 
-../DPMisc.so: dpMiscModule.o
-        $(DYNLD) -o $@ dpMiscModule.o
+../Fault.so: faultModule.lo
+        $(DYNLD) -o $@ $<
 
-../libDPMisc.a: dpMiscModule.o
-        $(AR) -rc $@ dpMiscModule.o && $(RANLIB) $@
+../libFault.a: faultModule.lo
+        $(AR) -rc $@ $< && $(RANLIB) $@
+
+#
+dpMiscModule.lo: ../modDPMisc-if.cc
+
+../DPMisc.so: dpMiscModule.lo
+        $(DYNLD) -o $@ $<
+
+../libDPMisc.a: dpMiscModule.lo
+        $(AR) -rc $@ $< && $(RANLIB) $@
 
 #
 ../VirtualSite.so: $(VSOBJS)

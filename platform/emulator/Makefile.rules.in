@@ -21,13 +21,19 @@ distclean::
         $(MAKE) veryclean SUBDIRS=
 
 clean::
-        -rm -f *.o *~  *.bak *.obj *.so *.a
+        -rm -f *.o *.lo *~  *.bak *.obj *.so *.a
 
 ##########################################################################
 # RULES
 ##########################################################################
 
-.SUFFIXES: .cc .m4cc .hh .m4hh .s .i .sed .perl
+.SUFFIXES: .cc .m4cc .hh .m4hh .s .i .sed .perl .lo
+
+.cc.o:
+        $(CXX) $(CPPFLAGS) $(CXXFLAGS) -c -o $@ $<
+
+.cc.lo:
+        $(CXX) $(CPPFLAGS) $(CXXFLAGS) $(CDYNOPT) -c -o $@ $<
 
 .cc.s:
         $(CXX) $(CPPFLAGS) $(CXXFLAGS) -S -o $@ $<
