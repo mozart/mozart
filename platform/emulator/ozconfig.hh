@@ -92,6 +92,10 @@ public:
   int dpTableBuffer;
   int dpTableWorthwhileRealloc;
 
+  int dpLog;
+  int dpConnectLog;
+  int dpMessageLog;
+
   int closetime;
 
   int numToplevelVars;

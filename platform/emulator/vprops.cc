@@ -173,6 +173,11 @@ enum EmulatorPropertyIndex {
   PROP_DPTABLE_BUFFER,
   PROP_DPTABLE_WORTHWHILEREALLOC,
   PROP_DPTABLE,
+  // DPLOG
+  PROP_DPLOG_ON,
+  PROP_DPLOG_CONNECTLOG,
+  PROP_DPLOG_MESSAGELOG,
+  PROP_DPLOG,
 
   PROP_CLOSE_TIME,
 
@@ -508,6 +513,17 @@ OZ_Term GetEmulatorProperty(EmulatorPropertyIndex prop) {
            SET_INT(oz_atomNoDup("worthwhileRealloc"),
                    ozconf.dpTableWorthwhileRealloc);
            );
+  CASE_BOOL(PROP_DPLOG_ON,ozconf.dpLog);
+  CASE_BOOL(PROP_DPLOG_CONNECTLOG,ozconf.dpConnectLog);
+  CASE_BOOL(PROP_DPLOG_MESSAGELOG,ozconf.dpMessageLog);
+  CASE_REC(PROP_DPLOG,"dpLog",
+           (3,oz_atomNoDup("on"),oz_atomNoDup("connectLog"),
+            oz_atomNoDup("messageLog")),
+           SET_BOOL(oz_atomNoDup("on"),ozconf.dpLog);
+           SET_BOOL(oz_atomNoDup("connectLog"),ozconf.dpConnectLog);
+           SET_BOOL(oz_atomNoDup("messageLog"),ozconf.dpMessageLog);
+           );
+
   CASE_INT(PROP_CLOSE_TIME,ozconf.closetime);
   CASE_BOOL(PROP_OZ_STYLE_USE_FUTURES,ozconf.useFutures);
   default:
@@ -811,6 +827,15 @@ OZ_Return SetEmulatorProperty(EmulatorPropertyIndex prop,OZ_Term val) {
                      ozconf.dpTableWorthwhileRealloc);
              );
 
+    CASE_BOOL(PROP_DPLOG_ON,ozconf.dpLog);
+    CASE_BOOL(PROP_DPLOG_CONNECTLOG,ozconf.dpConnectLog);
+    CASE_BOOL(PROP_DPLOG_MESSAGELOG,ozconf.dpMessageLog);
+    CASE_REC(PROP_DPLOG,
+             SET_BOOL(oz_atomNoDup("on"),ozconf.dpLog);
+             SET_BOOL(oz_atomNoDup("connectLog"),ozconf.dpConnectLog);
+             SET_BOOL(oz_atomNoDup("messageLog"),ozconf.dpMessageLog);
+             );
+
     CASE_NAT(PROP_CLOSE_TIME,ozconf.closetime);
     CASE_BOOL_DO(PROP_STANDALONE,ozconf.runningUnderEmacs=!INT__);
     CASE_BOOL(PROP_OZ_STYLE_USE_FUTURES,ozconf.useFutures);
@@ -1073,6 +1098,11 @@ static const struct prop_entry prop_entries[] = {
   {"dpTable.worthwhileRealloc",
                        PROP_DPTABLE_WORTHWHILEREALLOC},
   {"dpTable", PROP_DPTABLE},
+  // DPLOG
+  {"dpLog.on",PROP_DPLOG_ON},
+  {"dpLog.connectLog",PROP_DPLOG_CONNECTLOG},
+  {"dpLog.messageLog",PROP_DPLOG_MESSAGELOG},
+  {"dpLog",PROP_DPLOG},
   //CLOSE
   {"close.time",PROP_CLOSE_TIME},
   {0,PROP__LAST},

@@ -38,6 +38,8 @@
 
 //#define COMOBJ_LOG
 //#define COMOBJ_CONNECT_LOG
+#define DO_CONNECT_LOG ozconf.dpLog && ozconf.dpConnectLog
+#define DO_MESSAGE_LOG ozconf.dpLog && ozconf.dpMessageLog
 
 ComObj::ComObj(DSite *site) {
   init(site);
@@ -74,14 +76,14 @@ void ComObj::init(DSite *site) {
 // Specifying priority -1 means accepting the default as in msgFormat.m4 and
 // should allways be used.
 void ComObj::send(MsgContainer *msgC,int priority) {
-#ifdef COMOBJ_LOG
-  printf("send(%s %d %d %d %d)\n",
-         mess_names[msgC->getMessageType()],
-         myDSite->getTimeStamp()->pid,
-         site!=NULL?site->getTimeStamp()->pid:0,
-         msgC->getMsgNum(),
-         (int) am.getEmulatorClock());
-#endif
+  if(DO_MESSAGE_LOG) {
+    printf("send(%s %d %d %d %d)\n",
+           mess_names[msgC->getMessageType()],
+           myDSite->getTimeStamp()->pid,
+           site!=NULL?site->getTimeStamp()->pid:0,
+           msgC->getMsgNum(),
+           (int) am.getEmulatorClock());
+  }
 
   PD((TCP_INTERFACE,"---send: %s fr %d to %d",
       mess_names[msgC->getMessageType()],myDSite->getTimeStamp()->pid,
@@ -177,12 +179,13 @@ Bool ComObj::reopen() {
 Bool ComObj::handover(TransObj *transObj) {
   PD((TCP_INTERFACE,"Connection handover (from %d to %d (%x))",
       myDSite->getTimeStamp()->pid,site->getTimeStamp()->pid,this));
-#ifdef COMOBJ_CONNECT_LOG
-  printf("handover(%d %d %d)\n",
-         myDSite->getTimeStamp()->pid,
-         site!=NULL?site->getTimeStamp()->pid:0,
-         (int) am.getEmulatorClock());
-#endif
+  if(DO_CONNECT_LOG) {
+    printf("handover(%s ",
+           myDSite->stringrep_notype());
+    printf("%s %d)\n",
+           site!=NULL?site->stringrep_notype():"-",
+           (int) am.getEmulatorClock());
+  }
   if(state!=CLOSED_WF_HANDOVER) {
     return FALSE;
   }
@@ -272,12 +275,14 @@ void ComObj::close(CState statetobe,Bool merging) {
   lastrtt=-1;
 
   if(transObj!=NULL) {
-#ifdef COMOBJ_CONNECT_LOG
-    printf("close(%d %d %d)\n",
-           myDSite->getTimeStamp()->pid,
-           site!=NULL?site->getTimeStamp()->pid:0,
-           (int) am.getEmulatorClock());
-#endif
+    if(DO_CONNECT_LOG) {
+      printf("close(%s ",
+             myDSite->stringrep_notype());
+      printf("%s %d %d %d)\n",
+             site!=NULL?site->stringrep_notype():"-",
+             (int) am.getEmulatorClock(),
+             state,statetobe);
+    }
     handback(this,transObj);
     transObj=NULL;
   }
@@ -432,14 +437,14 @@ inline void ComObj::extractCI(OZ_Term channelinfo,int &bufferSize) {
 
 Bool ComObj::msgReceived(MsgContainer *msgC) {
   mess_counter[msgC->getMessageType()].recv();
-#ifdef COMOBJ_LOG
-  printf("received(%s %d %d %d %d)\n",
-         mess_names[msgC->getMessageType()],
-         myDSite->getTimeStamp()->pid,
-         site!=NULL?site->getTimeStamp()->pid:0,
-         msgC->getMessageType()<C_FIRST?lastReceived+1:0,
-         (int) am.getEmulatorClock());
-#endif
+  if(DO_MESSAGE_LOG) {
+    printf("received(%s %d %d %d %d)\n",
+           mess_names[msgC->getMessageType()],
+           myDSite->getTimeStamp()->pid,
+           site!=NULL?site->getTimeStamp()->pid:0,
+           msgC->getMessageType()<C_FIRST?lastReceived+1:0,
+           (int) am.getEmulatorClock());
+  }
   PD((TCP_INTERFACE,"---msgReceived: %s nr:%d from %d",
       mess_names[msgC->getMessageType()],lastReceived+1,
       site!=NULL?site->getTimeStamp()->pid:-1));
@@ -480,12 +485,14 @@ Bool ComObj::msgReceived(MsgContainer *msgC) {
       msgC->get_C_NEGOTIATE(version,s1,channelinfo);
       site=s1;
       transObj->setSite(site);
-#ifdef COMOBJ_CONNECT_LOG
-      printf("accept(%d %d %d)\n",
-             myDSite->getTimeStamp()->pid,
-             site!=NULL?site->getTimeStamp()->pid:0,
-             (int) am.getEmulatorClock());
-#endif
+
+      if(DO_CONNECT_LOG) {
+        printf("accept(%s ",
+               myDSite->stringrep_notype());
+        printf("%s %d)\n",
+               site!=NULL?site->stringrep_notype():"-",
+               (int) am.getEmulatorClock());
+      }
 
       if(strcmp(version,PERDIOVERSION)!=0) {
         msgContainerManager->deleteMsgContainer(msgC);
@@ -820,15 +827,16 @@ MsgContainer *ComObj::getNextMsgContainer(int &acknum) {
     //    queues.insertUnacked(msgC);
     msgC->setMsgNum(++lastSent);
   }
-#ifdef COMOBJ_LOG
-  if(msgC!=NULL)
-    printf("transmit(%s %d %d %d %d)\n",
-           mess_names[msgC->getMessageType()],
-           myDSite->getTimeStamp()->pid,
-           site!=NULL?site->getTimeStamp()->pid:0,
-           msgC->getMsgNum()==-1?0:msgC->getMsgNum(),
-           (int) am.getEmulatorClock());
-#endif
+  if(DO_MESSAGE_LOG) {
+    if(msgC!=NULL)
+      printf("transmit(%s %d %d %d %d)\n",
+             mess_names[msgC->getMessageType()],
+             myDSite->getTimeStamp()->pid,
+             site!=NULL?site->getTimeStamp()->pid:0,
+             msgC->getMsgNum()==-1?0:msgC->getMsgNum(),
+             (int) am.getEmulatorClock());
+  }
+
   if(probing && msgC!=NULL && msgC->getMessageType()<C_FIRST) {
     msgC->setSendTime(am.getEmulatorClock());
     timers->setTimer(probeIntervalTimer,probeinterval,
