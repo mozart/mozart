@@ -2,21 +2,22 @@
 %%% Benjamin Lorenz <lorenz@ps.uni-sb.de>
 
 local
+
    class Node
       attr
 	 x  : 1                   %% xpos
 	 y  : 1                   %% ypos
-	 c  : ZombieThreadColor   %% color
+	 s  : runnable            %% state
 	 ct : undef               %% canvas tag
 	 dy : 0                   %% distance to upper sibling
 
 	 i  : undef               %% thread id
 	 q  : undef               %% parent id
       
-      meth init(I Q C)
+      meth init(I Q S)
 	 i <- I
 	 q <- Q
-	 c <- C
+	 s <- S
       end
       
       meth setXY(X Y DY)
@@ -25,8 +26,8 @@ local
 	 dy <- DY
       end
 
-      meth setColor(C)
-	 c <- C
+      meth setState(S)
+	 s <- S
       end
 
       meth setTag(CT)
@@ -34,7 +35,7 @@ local
       end
       
       meth get($)
-	 node(x:@x y:@y c:@c ct:@ct dy:@dy i:@i q:@q)
+	 node(x:@x y:@y s:@s ct:@ct dy:@dy i:@i q:@q)
       end
    end
    
@@ -113,7 +114,7 @@ in
       
       meth add(I Q)
 	 %% each new thread is runnable, initially... (hope so?)
-	 nodes <- {New Node init(I Q RunningThreadColor)} | @nodes
+	 nodes <- {New Node init(I Q runnable)} | @nodes
 	 BaseTree,calculatePositions
       end
       
@@ -148,16 +149,11 @@ in
 	 case N == nil then
 	    {OzcarMessage 'Mark unknown node?!'}
 	 else
-	    CT
-	    Color = case How
-		    of         runnable then RunningThreadColor
-		    elseof     blocked  then BlockedThreadColor
-		    elseof     dead     then DeadThreadColor
-		    end
-	 in
-	    node(ct:CT ...) = {N.1 get($)}
+	    %CT
+	 %in
+	    %node(ct:CT ...) = {N.1 get($)}
 	    %ScrolledTitleCanvas,tk(itemconfigure CT outline:Color)
-	    {N.1 setColor(Color)}
+	    {N.1 setState(How)}
 	    Tree,display %% should be avoided, but... f*cking Tk...
 	 end
       end
@@ -171,26 +167,36 @@ in
 	 {self tk(delete all)}
 	 {ForAll @nodes
 	  proc{$ N}
-	     X Y C DY I Q
+	     X Y S DY I Q
 	     CT = {New Tk.canvasTag tkInit(parent:{self w($)})}
 	  in
-	     node(x:X y:Y c:C dy:DY i:I q:Q ...) = {N get($)}
+	     node(x:X y:Y s:S dy:DY i:I q:Q ...) = {N get($)}
              {ForAll [tk(crea line X*SFX-OS Y*SFY (X-1)*SFX-OS Y*SFY
                          width:1 fill:TrunkColor)] self}
              case Q > 0 then
                 {self tk(crea line (X-1)*SFX-OS Y*SFY (X-1)*SFX-OS (Y-DY)*SFY
                          width:1 fill:TrunkColor)}
              else skip end
-	     
-	     case N == Sel then
-		{self tk(crea text X*SFX Y*SFY text:I fill:C tags:CT
-			 anchor:w font:ThreadTreeBoldFont)}
-	     else
-		{self tk(crea text X*SFX Y*SFY text:I fill:C tags:CT
-			 anchor:w font:ThreadTreeFont)}
-		{CT tkBind(event:  '<1>'
+
+	     local
+		CL = case S
+		     of     runnable then RunningThreadColor#RunningThreadText
+		     elseof blocked  then BlockedThreadColor#BlockedThreadText
+		     elseof dead     then DeadThreadColor   #DeadThreadText
+		     end
+	     in
+		case N == Sel then
+		   {self tk(crea text X*SFX Y*SFY text:I#CL.2
+			    fill:CL.1 tags:CT
+			    anchor:w font:ThreadTreeBoldFont)}
+		else
+		   {self tk(crea text X*SFX Y*SFY text:I#CL.2
+			    fill:CL.1 tags:CT
+			    anchor:w font:ThreadTreeFont)}
+		   {CT tkBind(event:  '<1>'
  			   %action: self # select(I CT))}
-			   action: Ozcar # switch(I))}
+			      action: Ozcar # switch(I))}
+		end
 	     end
 	     {N setTag(CT)}
 	  end}
