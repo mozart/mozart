@@ -130,6 +130,60 @@ private:
 class DynamicTable {
 friend class HashElement;
 
+
+private:
+    /**** Utilities ****/
+  /* should stay here, so they can be inlined */
+
+    // Return true iff argument is a power of two:
+    Bool isPwrTwo(dt_index s)
+    {
+        Assert(s>0);
+        while ((s&1)==0) s=(s>>1);
+        return (s==1);
+    }
+
+    // Test for and double size of internal hash table if necessary
+    void overflowTest() {
+        Assert(isPwrTwo(size));
+        if (numelem>=(size>>1)) { // numelem>=(size>>1)+(size>>2)
+	    Assert(isPwrTwo(size<<1));
+            DynamicTable* dt=new DynamicTable(size<<1);
+            for(dt_index i=0; i<size; i++) {
+                if (table[i].ident!=makeTaggedNULL()) {
+		    Assert(isLiteral(table[i].ident));
+                    dt->insert(table[i].ident, table[i].value);
+                }
+            }
+            // Make current table a reference to dt's table:
+            freeListDispose(table, size*sizeof(HashElement));
+            numelem=dt->numelem;
+            size=dt->size;
+	    Assert(numelem<size);
+            table=dt->table;
+	    Assert(table!=NULL);
+        }
+    }
+
+    // Hash and rehash until the element or an empty slot is found
+    // Returns index of slot; the slot is empty or contains the element
+    dt_index fullhash(TaggedRef id) {
+        Assert(isPwrTwo(size));
+        Assert(isLiteral(id));
+        // Function 'hash' may eventually return the literal's seqNumber (see term.hh):
+        dt_index i=(size-1) & ((dt_index) (tagged2Literal(id)->hash()));
+        dt_index s=1;
+        // Rehash if necessary using semi-quadratic probing (quadratic is not covering)
+        while(table[i].ident!=makeTaggedNULL() && table[i].ident!=id) {
+            i+=s;
+            i&=(size-1);
+            s++;
+        }
+        return i;
+    }
+
+
+
 public:
     dt_index numelem;
     dt_index size;
@@ -274,56 +328,6 @@ public:
 	    }
 	}
 	return TRUE;
-    }
-
-private:
-    /**** Utilities ****/
-
-    // Test for and double size of internal hash table if necessary
-    void overflowTest() {
-        Assert(isPwrTwo(size));
-        if (numelem>=(size>>1)) { // numelem>=(size>>1)+(size>>2)
-	    Assert(isPwrTwo(size<<1));
-            DynamicTable* dt=new DynamicTable(size<<1);
-            for(dt_index i=0; i<size; i++) {
-                if (table[i].ident!=makeTaggedNULL()) {
-		    Assert(isLiteral(table[i].ident));
-                    dt->insert(table[i].ident, table[i].value);
-                }
-            }
-            // Make current table a reference to dt's table:
-            freeListDispose(table, size*sizeof(HashElement));
-            numelem=dt->numelem;
-            size=dt->size;
-	    Assert(numelem<size);
-            table=dt->table;
-	    Assert(table!=NULL);
-        }
-    }
-
-    // Hash and rehash until the element or an empty slot is found
-    // Returns index of slot; the slot is empty or contains the element
-    dt_index fullhash(TaggedRef id) {
-        Assert(isPwrTwo(size));
-        Assert(isLiteral(id));
-        // Function 'hash' may eventually return the literal's seqNumber (see term.hh):
-        dt_index i=(size-1) & ((dt_index) (tagged2Literal(id)->hash()));
-        dt_index s=1;
-        // Rehash if necessary using semi-quadratic probing (quadratic is not covering)
-        while(table[i].ident!=makeTaggedNULL() && table[i].ident!=id) {
-            i+=s;
-            i&=(size-1);
-            s++;
-        }
-        return i;
-    }
-
-    // Return true iff argument is a power of two:
-    Bool isPwrTwo(dt_index s)
-    {
-        Assert(s>0);
-        while ((s&1)==0) s=(s>>1);
-        return (s==1);
     }
 };
 
