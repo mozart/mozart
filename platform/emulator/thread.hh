@@ -29,67 +29,47 @@
 // 0x1000. Flags up to 0x1000 and above 0x1000 should not be mixed, 
 // because then three instructions are required (for testing, i mean);
 enum ThreadFlag {
-  T_U_null   = 0x000000, // no flag is set;
   //
-  //  Semantics of abbreviations:
-  //  T_T_*  - runnable&running states (former threads);
-  //  T_S_*  - non-runnable state (former suspensions);
-  //  T_G_*  - general (i.e. in all states);
-  //
+  T_null   = 0x000000, // no flag is set;
 
   //
-  T_G_dead   = 0x000001,   // thte thread is dead;
-
-  //  Temporary: 'real' propagators by Tobias;
-  T_G_new_p_thr = 0x000002,
+  T_dead   = 0x000001,   // the thread is dead;
+  T_prop   = 0x000002,   // "propagated", i.e. the thread is runnable;
 
   //
-  T_G_hasjob = 0x000004,   // has more than one job on the stack;
-  T_T_stack  = 0x000008,   // it has (allocated) stack;
-  T_T_solve  = 0x000010,   // it was created in a search CS 
+  T_p_thr  = 0x000004,   // 'real' propagators by Tobias;
+  T_stack  = 0x000008,   // it has an (allocated) stack;
+
+  //
+  T_hasjob = 0x000010,   // has more than one job on the stack;
+  T_solve  = 0x000020,   // it was created in a search CS 
                            // (former notificationBoard);
 
   //
-  //  Note that at least some 'T_S_' flags should be preserved when a thread 
-  // becomes runnable, because in the case of suspension they might be 
-  // needed again. This is true, for instance, for the 'T_S_ext', and all
-  // FD-specific flags;
-  T_G_prop   = 0x000020,   // "propagated", i.e. the thread is runnable;
-  T_S_ext    = 0x000040,   // an external suspension wrt current search
+  T_ext    = 0x000040,   // an external suspension wrt current search
 			   // problem;
 
-  //  Note that T_G_p_thr is used when a 'proper' runnable thread containing 
-  // a propagator is suspended again (see emulate.cc); 
-  T_G_p_thr  = 0x000080,   // a 'propagator' thread, i.e. a
-                           // non-dead thread remains in a suspension
-                           // list at propagation;
-
-  T_S_cfun   = 0x000100,   // the continuation contains a pointer to
-			   // a c-function;
-  T_S_unif   = 0x000200,   // the thread is due to a (proper) unification 
+  T_unif   = 0x000080,   // the thread is due to a (proper) unification 
                            // of fd variables; 
-  T_S_loca   = 0x000400,   // all variables of this propagator are local;
+  T_loca   = 0x000100,   // all variables of this propagator are local;
 
   //
-  T_S_tag    = 0x000800,   // a special stuff for fd 
+  T_tag    = 0x000200,   // a special stuff for fd 
 			   // (Tobias, please comment?);
-  T_S_ofs    = 0x001000,   // the OFS thread (needed for DynamicArity);
+  T_ofs    = 0x000400,   // the OFS thread (needed for DynamicArity);
 
-  T_S_ltq    = 0x002000,   // designates local thread queue
+  T_ltq    = 0x000800,   // designates local thread queue
   
   //
-  M_max    = 0x800000      // MAXIMAL FLAG;
+  T_max    = 0x800000      // MAXIMAL FLAG;
 };
 
 //  Types of a suspended thread;
 //  ('S_RTHREAD' is a (generically) suspended thread);
-#define  S_TYPE_MASK  (T_T_stack|T_S_cfun|T_G_p_thr|T_G_new_p_thr)
-#define  S_WAKEUP     T_U_null
-#define  S_RTHREAD    T_T_stack
-#define  S_CFUN       (T_S_cfun)
-#define  S_PR_THR     (T_S_cfun|T_G_p_thr)
-//  The last corresponds to the 'old' 'propagator' threads;
-#define  S_NEW_PR_THR T_G_new_p_thr
+#define  S_TYPE_MASK  (T_stack|T_p_thr)
+#define  S_WAKEUP     T_null
+#define  S_RTHREAD    T_stack
+#define  S_PR_THR     T_p_thr
 
 //
 //  Flags & priority of a thread;
@@ -119,7 +99,7 @@ private:
 protected:
   //  Note that other flags are removed;
   void markDeadThread () { 
-    state.flags = state.flags | T_G_dead;
+    state.flags = state.flags | T_dead;
   }
   //
   //  for 'Thread::print ()';
@@ -131,7 +111,7 @@ public:
   //  Note that a thread is made alive and suspended, and with 
   // some undefined priority (needs further initialisation!);
   ThreadState () {
-    state.flags = T_U_null;
+    state.flags = T_null;
   }
   ThreadState (int inFlags) {
     state.flags = inFlags;
@@ -154,110 +134,83 @@ public:
   //
   void setHasJobs() { 
     Assert (isRunnable ());
-    state.flags = state.flags | T_G_hasjob; 
+    state.flags = state.flags | T_hasjob; 
   }
   void unsetHasJobs() {
-    state.flags = state.flags & ~T_G_hasjob;
+    state.flags = state.flags & ~T_hasjob;
   }
-  Bool hasJobs () { return (state.flags & T_G_hasjob); }
+  Bool hasJobs () { return (state.flags & T_hasjob); }
 
   //  
-  Bool isDeadThread () { return (state.flags & T_G_dead); }
+  Bool isDeadThread () { return (state.flags & T_dead); }
 
   //  ... if not dead;
   Bool isSuspended () { 
     Assert (!(isDeadThread ()));
-    return (!(state.flags & T_G_prop));
+    return (!(state.flags & T_prop));
   }
   Bool isPropagated () { 
     Assert (!(isDeadThread ()));
-    return (state.flags & T_G_prop);
+    return (state.flags & T_prop);
   }
   //  'isRunnable' is just an alias for the 'isPropagated'; 
   Bool isRunnable () { 
     Assert (!(isDeadThread ()));
-    return (state.flags & T_G_prop);
-  }
-
-  // kost@ : TODO: Is this really needed?
-  //  special for FDs: if a propagator thread is propagated;
-  Bool isPropagatedRes () { 
-    Assert (!(isDeadThread ()));
-    return (state.flags & (T_G_prop|T_G_p_thr) == (T_G_prop|T_G_p_thr));
+    return (state.flags & T_prop);
   }
 
   //  For reinitialisation; 
   void setRunnable () { 
-    state.flags = (state.flags & ~T_G_dead) | T_G_prop;
+    state.flags = (state.flags & ~T_dead) | T_prop;
   }
 
   Bool isInSolve () { 
     Assert (!(isDeadThread ()));
-    return (state.flags & T_T_solve);
+    return (state.flags & T_solve);
   }
   void setInSolve () { 
     Assert (isRunnable ());
-    state.flags = state.flags | T_T_solve;
+    state.flags = state.flags | T_solve;
   }
 
   //  non-runnable threads;
   void markPropagated () {
     Assert (isSuspended () && !(isDeadThread ()));
-    state.flags = state.flags | T_G_prop;
+    state.flags = state.flags | T_prop;
   }
   void unmarkPropagated () { 
     Assert (isPropagated () && !(isDeadThread ()));
-    state.flags = state.flags & ~T_G_prop;
+    state.flags = state.flags & ~T_prop;
   }
 
   void setExtThread () { 
     Assert (isSuspended () && !(isDeadThread ()));
-    state.flags = state.flags | T_S_ext;
+    state.flags = state.flags | T_ext;
   }
   Bool isExtThread () { 
     Assert (isRunnable ());
-    return (state.flags & T_S_ext);
+    return (state.flags & T_ext);
   }
   Bool wasExtThread () {
     Assert (isDeadThread ());	// already killed!
-    return (state.flags & T_S_ext);
+    return (state.flags & T_ext);
   }
 
   void markPropagatorThread () { 
     Assert (!(isDeadThread ()));
-    state.flags = state.flags | T_G_p_thr;
+    state.flags = state.flags | T_p_thr;
   }
   void unmarkPropagatorThread () { 
     Assert (!(isDeadThread ()));
-    state.flags = state.flags & ~T_G_p_thr;
+    state.flags = state.flags & ~T_p_thr;
   }
   Bool isPropagator () { 
     Assert (!(isDeadThread ()));
-    return (state.flags & T_G_p_thr);
-  }
-
-  void markNewPropagatorThread () { 
-    Assert (!(isDeadThread ()));
-    state.flags = state.flags | T_G_new_p_thr;
-  }
-  void unmarkNewPropagatorThread () { 
-    Assert (!(isDeadThread ()));
-    state.flags = state.flags & ~T_G_new_p_thr;
-  }
-  Bool isNewPropagator () { 
-    Assert (!(isDeadThread ()));
-    return (state.flags & T_G_new_p_thr);
+    return (state.flags & T_p_thr);
   }
   
-  void headInitNewPropagator(void) {
-    state.flags = T_G_new_p_thr | T_G_prop | T_S_unif;
-  }
-
-  void headInit (void) {
-    state.flags = T_G_p_thr | T_G_prop | T_S_unif | S_CFUN;
-  }
-  void anyGlobalInit (void) {
-    state.flags = T_G_p_thr | T_G_prop;
+  void headInitPropagator(void) {
+    state.flags = T_p_thr | T_prop | T_unif;
   }
 
   int getThrType () { return (state.flags & S_TYPE_MASK); }
@@ -272,67 +225,66 @@ public:
   }
 
   void markUnifyThread () { 
-    Assert ((isPropagator () || isNewPropagator ()) && !(isDeadThread ()));
-    state.flags = state.flags | T_S_unif;
+    Assert ((isPropagator ()) && !(isDeadThread ()));
+    state.flags = state.flags | T_unif;
   }
   void unmarkUnifyThread () { 
-    Assert ((isPropagator () || isNewPropagator ()) && !(isDeadThread ()));
-    state.flags = state.flags & ~T_S_unif;
+    Assert ((isPropagator ()) && !(isDeadThread ()));
+    state.flags = state.flags & ~T_unif;
   }
   Bool isUnifyThread () {
-    Assert ((isPropagator () || isNewPropagator ()) && !(isDeadThread ()));
-    return (state.flags & T_S_unif);
+    Assert ((isPropagator ()) && !(isDeadThread ()));
+    return (state.flags & T_unif);
   }
 
   void markLocalThread () {
-    Assert ((isPropagator () || isNewPropagator ()) && !(isDeadThread ()));
-    state.flags = state.flags | T_S_loca;
+    Assert ((isPropagator ()) && !(isDeadThread ()));
+    state.flags = state.flags | T_loca;
   }
   void unmarkLocalThread () {
-    Assert ((isPropagator () || isNewPropagator ()) && !(isDeadThread ()));
-    state.flags = state.flags & ~T_S_loca;
+    Assert ((isPropagator ()) && !(isDeadThread ()));
+    state.flags = state.flags & ~T_loca;
   }
   Bool isLocalThread () {
-    Assert ((isPropagator () || isNewPropagator ()) && !(isDeadThread ()));
-    return (state.flags & T_S_loca);
+    Assert ((isPropagator ()) && !(isDeadThread ()));
+    return (state.flags & T_loca);
   }
 
   void setOFSThread () {
-    Assert ((isPropagator () || isNewPropagator ()) && !(isDeadThread ()));
-    state.flags = state.flags | T_S_ofs;
+    Assert ((isPropagator ()) && !(isDeadThread ()));
+    state.flags = state.flags | T_ofs;
   }
   Bool isOFSThread () {
     Assert (!(isDeadThread ()));
-    return (state.flags & T_S_ofs);
+    return (state.flags & T_ofs);
   }
 
   void markTagged () { 
-    Assert ((isPropagator () || isNewPropagator ()) && !(isDeadThread ()));
-    state.flags = state.flags | T_S_tag;
+    Assert ((isPropagator ()) && !(isDeadThread ()));
+    state.flags = state.flags | T_tag;
   }
   void unmarkTagged () { 
-    Assert ((isPropagator () || isNewPropagator ()) && !(isDeadThread ()));
-    state.flags = state.flags & ~T_S_tag;
+    Assert ((isPropagator ()) && !(isDeadThread ()));
+    state.flags = state.flags & ~T_tag;
   }
   Bool isTagged () { 
-    Assert ((isPropagator () || isNewPropagator ()) && !(isDeadThread ()));
-    return (state.flags & T_S_tag);
+    Assert ((isPropagator ()) && !(isDeadThread ()));
+    return (state.flags & T_tag);
   }
 
   //  stack;
   Bool hasStack () { 
     Assert (!(isDeadThread ()));
-    return (state.flags & T_T_stack);
+    return (state.flags & T_stack);
   }
   Bool hadStack () { 
     Assert (isDeadThread ());
-    return (state.flags & T_T_stack);
+    return (state.flags & T_stack);
   }
   void setHasStack () { 
     Assert (isRunnable ());
     Assert (!(isPropagator ()));
-    Assert (!(isNewPropagator ()));
-    state.flags = (state.flags & ~(S_CFUN)) | T_T_stack; 
+    state.flags = state.flags | T_stack; 
   }
 };
 
@@ -343,21 +295,17 @@ friend class Thread;
 private:
   TaskStack taskStack;
   union {
-    Object *self;              /* the self object pointer */
+    Object *self;              /* the self object pointer     */
     RunnableThreadBody *next;  /* for linking in the freelist */
   } u;
-  TaggedRef debugVar;        /* variable will be instantiated, 
-				if thread is being debugged */
+  TaggedRef debugVar;          /* variable will be instantiated, 
+				  if thread is being debugged */
 public:
   USEHEAPMEMORY;
   // 
   //  Note that 'RunnableThreadBody'"s
   // are allocated in pre-defined regions, and, therefore, 
   // their allocators may not be used.
-  //  The same could be done for 'CFuncContinuation'"s, but these
-  // are treated specially beacuse of the memory efficiency and 
-  // low probability that they become a proper running thread 
-  // (i.e. with a taskstack);
 
   void reInit ();		// for the root thread only;
 
@@ -381,62 +329,13 @@ public:
 };
 
 //
-//  Note that 'CFuncContinuation'"s are allocated in 'USEFREELISTMEMORY'
-// fashion. The idea behind it is that such threads are seldom getting a 
-// runnable thread, i.e. a thread with a stack. 
-// (Hmm, i hope that's true.). And, anyway, 'CFuncContinuation ' can be 
-// padded anytime to the 'threadBodySize' (see beneath), and run 
-// therefore in constant space.
-class CFuncContinuation {
-friend class Thread;
-private:
-  OZ_CFun cFunc;
-  RefsArray xRegs;
-public:
-  USEFREELISTMEMORY;
-  void disposeRegs ();
-  void dispose ();
-  
-  CFuncContinuation (OZ_CFun f, RefsArray x, int i);
-  void init (OZ_CFun /* f */, RefsArray /* x */, int /* i */) { error(""); };
-
-  OZ_CFun getCFunc () { return (cFunc); }
-
-  //  some special FD stuff;
-  void setCFuncRegs(OZ_CFun f, RefsArray x) {
-    cFunc = f;
-    xRegs = x;
-  }
-
-  void setX (RefsArray x, int i);  
-  inline int getXSize ();
-  RefsArray getX () { return (xRegs); }
-  void getX (RefsArray X);
-  OZ_Term &getXReg (int i) {
-    Assert (0 <= i && i < getXSize()); 
-    return (xRegs[i]);
-  }
-
-  //  gc methods;
-  CFuncContinuation *gcCFuncCont ();
-  void gcRecurse ();
-
-  OZPRINT;
-};
-
-//
 //  
 union ThreadBodyItem {
-  CFuncContinuation *ccont;
   OZ_Propagator *propagator;
   RunnableThreadBody *threadBody;
 };  
 
 //
-//  Allocation policy: 
-// RunnableThread stay in their own regions, and 
-// CFuncContinuation is allocated in smaller region (there is 
-// a free list of them). 
 const size_t threadBodySize = sizeof (RunnableThreadBody);
 
 //
@@ -478,8 +377,8 @@ private:
   //
   void disposeThread ();
   
-  Bool wakeUpCCont (Board *home, PropCaller calledBy = pc_propagator);
-  Bool wakeUpNewPropagator (Board *home, PropCaller calledBy = pc_propagator);
+  Bool wakeUpPropagator (Board *home, 
+			 PropCaller calledBy = pc_propagator);
   Bool wakeUpBoard (Board *home);
   Bool wakeUpThread (Board *home);
 
@@ -508,7 +407,6 @@ public:
   Thread (int prio, Board *b, Bool inSolve = NO);
   //  They make a suspended thread;
   Thread (Board *b);
-  Thread (Board *b, int prio, OZ_CFun f, RefsArray x, int i);
   //  an empty suspended sequential thread (with a task stack!);
   Thread (Board *b, int prio);
   //
@@ -526,36 +424,35 @@ public:
   TaggedRef getDebugVar();
   void setDebugVar(TaggedRef v);
 
-  OZ_Propagator * swapNewPropagator(OZ_Propagator * p) {
+  OZ_Propagator * swapPropagator(OZ_Propagator * p) {
     OZ_Propagator * r = item.propagator;
     item.propagator = p;
     return r;
   }
 
-  void setNewPropagator(OZ_Propagator * p) {
-    Assert(isNewPropagator());
+  void setPropagator(OZ_Propagator * p) {
+    Assert(isPropagator());
     delete item.propagator; 
     item.propagator = p;
   }
 
-  OZ_Return runNewPropagator(void) {
-    Assert(isNewPropagator());
+  OZ_Return runPropagator(void) {
+    Assert(isPropagator());
     ozstat.propagatorsInvoked.incf();
     ctHeap = ctHeapTop;
     return item.propagator->run();
   }
-  OZ_Propagator * getNewPropagator(void) {
-    Assert(isNewPropagator());
+  OZ_Propagator * getPropagator(void) {
+    Assert(isPropagator());
     return item.propagator;
   }
   
   //  Third - transactions between states;
   //  These methods are specialised because the type of suspended thread
   // is known statically;
-  void wakeupToRunnable ();
-  void cContToRunnable ();
-  void newPropagatorToRunnable ();
   void suspThreadToRunnable ();
+  void wakeupToRunnable ();
+  void propagatorToRunnable ();
 
   // 
   //  Note that the stack is allocated now in "lazy fashion", i.e. 
@@ -652,13 +549,6 @@ public:
   void pushExceptionHandler (TaggedRef pred);
 
   //
-  CFuncContinuation *getCCont () {
-    Assert (getThrType () == S_CFUN || 
-	    getThrType () == S_PR_THR);
-    return (item.ccont);
-  }
-
-  //
   TaskStack *getTaskStackRef ();
   TaskStackEntry *getTop ();
   void setTop (TaskStackEntry *newTos);
@@ -668,25 +558,10 @@ public:
    *  propagators special;
    *
    */
-  //
-  //  Note that this function *does not* reset the 'propagated' flag; 
-  void replacePropagator (OZ_CFun biFun, RefsArray xRegs, int xSize);
-  //  Just throws away the biFun (for debugging only);
   DebugCode 
   (void removePropagator () { 
     Assert (isPropagator ());
-    item.ccont->cFunc = (OZ_CFun) NULL;
-  })
-
-  DebugCode 
-  (void removeNewPropagator () { 
-    Assert (isNewPropagator ());
-  })
-  //  For debugging only - get a reference to the 'cFunc';
-  DebugCode 
-  (OZ_CFun getPropagator () { 
-    Assert (isPropagator ());
-    return (item.ccont->cFunc);
+    item.propagator = (OZ_Propagator *) NULL;
   })
 
   //  
@@ -695,6 +570,7 @@ public:
   // be done externally - if needed;
   void suspendPropagator ();
   void scheduledPropagator();
+
   //
   //  Terminate a propagator thread which is (still) marked as propagated
   // (was: 'killPropagatedCurrentTaskSusp' with some variations);
@@ -708,18 +584,9 @@ public:
   // When some propagator returns 'PROCEED' and still has the 
   // 'propagated' flag set, then it's done.
   void closeDonePropagator ();
-  
+
   void closeDonePropagatorCD ();
   void closeDonePropagatorThreadCD ();
-
-
-  // 
-  //  Takes a propagator thread and makes out of it a usual 
-  // runnable thread with an empty task stack;
-  //  NOTE: This could be used, but very carefully 'cause there can be 
-  // *other* references to the thread!
-  // .ps  Right now it's not used;
-  // void prop2generic ();
 
   // wake up cconts and board conts
   Bool wakeUp (Board *home, PropCaller calledBy);
