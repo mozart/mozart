@@ -5238,9 +5238,10 @@ OZ_C_proc_begin(BIstatisticsReset, 0)
 OZ_C_proc_end
 
 
-OZ_C_proc_begin(BIstatisticsPrint, 0)
+OZ_C_proc_begin(BIstatisticsPrint, 1)
 {
-  ProfileCode(ozstat.printCount());
+  oz_declareVirtualStringArg(0,file);
+  ProfileCode(ozstat.printCount(file));
   return PROCEED;
 }
 OZ_C_proc_end
@@ -5573,7 +5574,7 @@ OZ_C_proc_begin(BIapply,2)
   }
 
   int len = OZ_length(args);
-  RefsArray argsArray = allocateY(len);
+  RefsArray argsArray = allocateRefsArray(len);
   for (int i=0; i < len; i++) {
     argsArray[i] = OZ_head(args);
     args=OZ_tail(args);
@@ -5585,7 +5586,7 @@ OZ_C_proc_begin(BIapply,2)
   }
   
   am.currentThread()->pushCall(proc,argsArray,len);
-  deallocateY(argsArray);
+  disposeRefsArray(argsArray);
   return BI_REPLACEBICALL;
 }
 OZ_C_proc_end
@@ -7723,7 +7724,7 @@ BIspec allSpec[] = {
 #endif
 
   {"statisticsReset",     0, BIstatisticsReset},
-  {"statisticsPrint",     0, BIstatisticsPrint},
+  {"statisticsPrint",     1, BIstatisticsPrint},
   {"statisticsPrintProcs",0, BIstatisticsPrintProcs},
   {"statisticsGetProcs",  1, BIstatisticsGetProcs},
   {"setProfileMode",      1, BIsetProfileMode},
