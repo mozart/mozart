@@ -2276,8 +2276,9 @@ OZ_Return andInline(TaggedRef A, TaggedRef B, TaggedRef &out) {
   }
 }
 
-DECLAREBI_USEINLINEFUN2(BIand,andInline)
+// gaga
 
+DECLAREBI_USEINLINEFUN2(BIand,andInline)
 
 OZ_Return orInline(TaggedRef A, TaggedRef B, TaggedRef &out) {
   DEREF(A,_1,tagA);
@@ -2309,6 +2310,7 @@ OZ_Return orInline(TaggedRef A, TaggedRef B, TaggedRef &out) {
 }
 
 DECLAREBI_USEINLINEFUN2(BIor,orInline)
+
 
 
 
