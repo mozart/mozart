@@ -96,7 +96,7 @@ bootstrap: all
 
 
 $(OBJECTS): %.o: %.c $(BUILD_SCRIPT)
-	$(OZTOOL) $(CXX) $(CPPFLAGS) -c $(ALL_INCLUDES) $< -o $@
+	$(OZTOOL) c++ $(CPPFLAGS) -c $(ALL_INCLUDES) $< -o $@
 
 ### GTK
 
