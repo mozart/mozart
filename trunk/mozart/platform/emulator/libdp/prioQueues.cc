@@ -85,22 +85,13 @@ inline void u_addFirst(MsgContainer *msgC,Queue *q) {
     q->last=msgC;
 }
 
-inline void u_insertUnacked(MsgContainer *&unackedList,MsgContainer *msgC) {
-  MsgContainer *tmp=unackedList;
-  MsgContainer *prev=NULL;
-  while(tmp!=NULL && msgC->getMsgNum()<tmp->getMsgNum()) {
-    prev=tmp;
-    tmp=tmp->next;
-  }
-
-  if(prev==NULL) {
-    msgC->next=unackedList;
-    unackedList=msgC;
-  }
-  else {
-    prev->next=msgC;
-    msgC->next=tmp;
-  }
+inline void u_insertUnacked(Queue *unackedList,MsgContainer *msgC) {
+  msgC->next=NULL; 
+  if(unackedList->first == NULL)
+    unackedList->last = msgC; 
+  else
+    unackedList->first->next=msgC;
+  unackedList->first = msgC;	  
 }
 
 //
@@ -210,7 +201,8 @@ void PrioQueues::init() {
   for (int i=0;i<5;i++)
     qs[i].first=qs[i].last=NULL;
   curq=NULL;
-  unackedList=recList=NULL;
+  unackedMsgs.first=unackedMsgs.last=NULL;
+  recList=NULL;
   prio_val_4=Q_PRIO_VAL_4;
   prio_val_3=Q_PRIO_VAL_3;
   noMsgs=0;
@@ -269,7 +261,7 @@ MsgContainer *PrioQueues::getNext(Bool working) {
 }
 
 void PrioQueues::insertUnacked(MsgContainer *msgC) {
-  u_insertUnacked(unackedList,msgC);
+  u_insertUnacked(&unackedMsgs,msgC);
 }
 
 void PrioQueues::requeue(MsgContainer *msgC) {
@@ -277,42 +269,40 @@ void PrioQueues::requeue(MsgContainer *msgC) {
   noMsgs++;
   u_addFirst(msgC,curq);
 }
-
 int PrioQueues::msgAcked(int num,Bool resend,Bool calcrtt) {
-  MsgContainer *cur=unackedList;
-  MsgContainer *prev=NULL;
-
-  int ret=-1;
-  while(cur!=NULL && cur->getMsgNum()>num) {
-    prev=cur;
-    if(resend) {
-      DebugCode(printf("resend %d\n",cur->getMsgNum());)
-      unackedList=cur->next;
-      cur->resetMarshaling();
-      u_addFirst(cur,&qs[4-1]);
-      noMsgs++;
-      cur=unackedList;
-    }
-    else
-      cur=cur->next;
-  }
-  if (prev!=NULL && !resend)
-    prev->next=NULL;
-  else
-    unackedList=NULL;
-  if(calcrtt && cur!=NULL) {
-    LongTime *sendtime=cur->getSendTime();
-    LongTime zero;
-    if(*sendtime!=zero) // else probing wasn't on
-      ret=*am.getEmulatorClock() - *sendtime;
-  }
-  while(cur!=NULL) {
-    prev=cur;
+  MsgContainer *tmp, *cur=unackedMsgs.last;
+  int ret = -1;
+  while(cur!=NULL && cur->getMsgNum()<num){
+    tmp = cur;
     cur=cur->next;
-    msgContainerManager->deleteMsgContainer(prev);
+    msgContainerManager->deleteMsgContainer(tmp);}
+  if(cur!=NULL){
+    if(calcrtt){ 
+      LongTime *sendtime=cur->getSendTime();
+      LongTime zero;
+      if(*sendtime!=zero) // else probing wasn't on
+	ret=*am.getEmulatorClock() - *sendtime;
+    }
+    tmp = cur;
+    cur=cur->next;
+    msgContainerManager->deleteMsgContainer(tmp);
+  }
+  unackedMsgs.last = cur;
+  if(cur == NULL)
+    unackedMsgs.first=cur;
+
+  if(resend) {
+    while(cur){
+      DebugCode(printf("resend %d\n",cur->getMsgNum()););
+      tmp=cur->next;
+      cur->resetMarshaling();
+      enqueue(cur,3);
+      cur=tmp;}
+    unackedMsgs.last = unackedMsgs.first = NULL;
   }
   return ret;
 }
+
 
 void PrioQueues::putRec(MsgContainer *msgC) {
     msgC->next=recList;
@@ -376,7 +366,7 @@ Bool PrioQueues::hasNeed() {
 //    	 unackedList!=NULL?mess_names[unackedList->getMessageType()]:"empty",
 //    	 unackedList!=NULL?unackedList->getMsgNum():0-1,
 //  	 unackedList!=NULL?(int) unackedList->next:0);
-  return hasQueued() || unackedList!=NULL;
+  return hasQueued() ||  unackedMsgs.first!=NULL;
 }
 
 int PrioQueues::getQueueStatus() {
@@ -400,7 +390,7 @@ void PrioQueues::clear5() {
 // To be called before deletion, will return unsent messages to perdio
 // Unless we are perm none should be left.
 void PrioQueues::clearAll() {
-  MsgContainer *msgC;
+  MsgContainer *msgC, *tmp;
   for(int i=1;i<5;i++) {
     msgC=qs[i-1].first;
     while(msgC!=NULL) {
@@ -411,12 +401,14 @@ void PrioQueues::clearAll() {
     }
     qs[i-1].last=NULL;
   }
-  msgC=unackedList;
+    msgC=unackedMsgs.last;
   while(msgC!=NULL) {
-    unackedList=msgC->next;
+    tmp=msgC->next;
     msgContainerManager->deleteMsgContainer(msgC,COMM_FAULT_PERM_MAYBE_SENT);
-    msgC=unackedList;
+    msgC=tmp;
   }
+  unackedMsgs.first = NULL;
+  unackedMsgs.last = NULL;
   msgC=recList;
   while(msgC!=NULL) {
     recList=msgC->next;
@@ -430,7 +422,7 @@ void PrioQueues::gcMsgCs()
 {
   for (int i = 1; i<=5; i++)
     u_gcQueue(qs[i-1]);
-  u_gcUnackedList(unackedList);
+  u_gcUnackedList(unackedMsgs.last);
   u_gcRecList(recList);
 }
 
@@ -439,7 +431,7 @@ void PrioQueues::startGCMsgCs()
 {
   for (int i = 1; i<=5; i++)
     u_startGCQueue(qs[i-1]);
-  u_startGCUnackedList(unackedList);
+  u_startGCUnackedList(unackedMsgs.last);
   u_startGCRecList(recList);
 }
 
@@ -448,7 +440,7 @@ void PrioQueues::finishGCMsgCs()
 {
   for(int i=1;i<=5;i++) 
     u_finishGCQueue(qs[i-1]);
-  u_finishGCUnackedList(unackedList);
+  u_finishGCUnackedList(unackedMsgs.last);
   u_finishGCRecList(recList);
 }
 
