@@ -1298,34 +1298,42 @@ LBLsuspendThread:
       Frame *auxtos = CTT->getTaskStackRef()->getTop();
       GetFrame(auxtos,debugPC,Y,G);
 
-      ProgramCounter debuginfoPC;
-      RefsArray _Y,_G;
-      do {
-	GetFrameNoDecl(auxtos,debuginfoPC,_Y,_G);
-      } while (debuginfoPC == C_DEBUG_CONT_Ptr);
-
-      TaggedRef name = OZ_atom("Unknown");
-      TaggedRef args = nil();
-
-      // the following code is basically the same as in 
-      // TaskStack::dbgGetTaskStack (print.cc)
-      // For now, only suspending on builtins gives correct name & args
-
-      if (debugPC==C_CFUNC_CONT_Ptr) {
-	OZ_CFun biFun    = (OZ_CFun) (void*) Y;
-	RefsArray X      = (RefsArray) G;
-	
-	if (X)
-	  for (int i=getRefsArraySize(X)-1; i>=0; i--)
-	    args = cons(X[i],args);
-	else
-	  args = nil();
-	
-	name = OZ_atom(builtinTab.getName((void *) biFun));
-	debugStreamSuspend(debuginfoPC,CTT,name,args,1);
+      if (debugPC==C_ACTOR_Ptr) {
+	// actors save the REAL program counter in G:
+	TaggedRef name = OZ_atom("cond");
+	TaggedRef args = nil();
+	debugStreamSuspend((ProgramCounter) G,CTT,name,args,1);
       }
       else {
-	debugStreamSuspend(debuginfoPC,CTT,name,args,0);
+	// skip all C_DEBUG_CONT_Ptr stack frames:
+	ProgramCounter debuginfoPC;
+	RefsArray _Y,_G;
+	do {
+	  GetFrameNoDecl(auxtos,debuginfoPC,_Y,_G);
+	} while (debuginfoPC == C_DEBUG_CONT_Ptr);
+
+	if (debugPC==C_CFUNC_CONT_Ptr) {
+	  // if this stack frame is a builtin application, we
+	  // provide the debugger with the name and args:
+	  OZ_CFun biFun    = (OZ_CFun) (void*) Y;
+	  RefsArray X      = (RefsArray) G;
+	
+	  TaggedRef name = OZ_atom(builtinTab.getName((void *) biFun));
+	  TaggedRef args;
+	  if (X)
+	    for (int i=getRefsArraySize(X)-1; i>=0; i--)
+	      args = cons(X[i],args);
+	  else
+	    args = nil();
+	
+	  debugStreamSuspend(debuginfoPC,CTT,name,args,1);
+	}
+	else {
+	  // it's not a builtin - we don't know about name and args:
+	  TaggedRef name = OZ_atom("Unknown");
+	  TaggedRef args = nil();
+	  debugStreamSuspend(debuginfoPC,CTT,name,args,0);
+	}
       }
     }
     
