@@ -8,7 +8,7 @@
 local
 
    fun {FailedShape ScaledMyX ScaledMyY Scale}
-      ScaledWidth = Scale * RectangleWidth
+      ScaledWidth = Scale * RectangleWidthF
    in
       o(rectangle
 	ScaledMyX - ScaledWidth	  ScaledMyY - ScaledWidth
@@ -16,9 +16,9 @@ local
    end
 
    fun {HiddenShape ScaledMyX ScaledMyY Scale}
-      ScaledCircleWidth = Scale * CircleWidth
-      ScaledSpace       = Scale * HalfHorSpace
-      BottomY           = ScaledMyY + Scale * VerSpace
+      ScaledCircleWidth = Scale * CircleWidthF
+      ScaledSpace       = Scale * HalfHorSpaceF
+      BottomY           = ScaledMyY + Scale * VerSpaceF
    in
       o(polygon
 	ScaledMyX                 ScaledMyY - ScaledCircleWidth
@@ -27,7 +27,7 @@ local
    end
 
    fun {ChoiceShape ScaledMyX ScaledMyY Scale}
-      ScaledCircleWidth = Scale * CircleWidth
+      ScaledCircleWidth = Scale * CircleWidthF
    in
       o(oval
 	ScaledMyX - ScaledCircleWidth
@@ -38,8 +38,8 @@ local
 
 
    fun {UnstableShape ScaledMyX ScaledMyY Scale}
-      ScaledHalfWidth = Scale * SmallRectangleWidth
-      ScaledFullWidth = Scale * RectangleWidth
+      ScaledHalfWidth = Scale * SmallRectangleWidthF
+      ScaledFullWidth = Scale * RectangleWidthF
       X0          = ScaledMyX - ScaledFullWidth
       X1          = ScaledMyX - ScaledHalfWidth
       X2          = !ScaledMyX
@@ -55,7 +55,7 @@ local
    end
 
    fun {SolvedShape ScaledMyX ScaledMyY Scale}
-      ScaledWidth = Scale * RhombeWidth
+      ScaledWidth = Scale * RhombeWidthF
       X0          = ScaledMyX - ScaledWidth
       X1          = !ScaledMyX
       X2          = ScaledMyX + ScaledWidth

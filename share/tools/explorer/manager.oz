@@ -348,10 +348,10 @@ in
 		    end
       in
 	 case Sol==False then
-	    <<StatusManager stop>>
-	    <<StatusManager update>>
 	    <<Manager hideCursor>>
 	    <<Manager LayoutAfterSearch>>
+	    <<StatusManager stop>>
+	    <<StatusManager update>>
 	    <<Manager setCursor(@curNode)>>
 	    <<MenuManager   disable(search(halt))>>
 	    <<Manager idle>>
