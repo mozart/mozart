@@ -24,6 +24,7 @@
 functor
 import
    Property(get)
+   System(printError)
    Parser at 'x-oz://contrib/doc/sgml/Parser'
 export
    Parse
@@ -32,12 +33,18 @@ export
    IsOfClass
 define
    PI = {NewName}
-   fun {Parse File}
-      {Transform
-       {Parser.object
-	process([File] $
-		catalog:{Property.get 'ozdoc.catalog'}
-		casefold:lower)}.docElem}
+   fun {Parse File} Res Errors in
+      {Parser.object
+       process([File] ?Res
+	       catalog:{Property.get 'ozdoc.catalog'}
+	       casefold:lower
+	       error:Errors)}
+      case Errors of nil then {Transform Res.docElem}
+      else
+	 {List.is Errors _}   % request lazily computed list
+	 {System.printError Errors}
+	 raise error end
+      end
    end
    fun {GetSubtree M L ?Mr}
       if {IsTuple M} then
