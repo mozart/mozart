@@ -30,6 +30,19 @@
     page. In order to start them by clicking, the web browser must
     know about Oz applets (or Oz applications as we also call them).
 
+  <Section id="section.windows.notes">
+    <Title/Enabling Oz Applets under MS Windows/
+    <p>
+    The modifications described below only have to be done by UNIX
+    users. On MS Windows the installtaion process will automatically
+    do the necessary modifications for you. If that fails for some
+    reason, please follow the instructions below, but use
+<code display>
+C:\mozart\bin\ozenginew.exe "%1"
+</code>
+   as application (assuming that you installed Mozart under <Kbd>C:\mozart)</Kbd>.
+
+
   <Section id="section.applets.oz">
     <Title/Oz Applications/
 
