@@ -101,9 +101,7 @@ enum EmulatorPropertyIndex {
   PROP_SPACES,
   // ERRORS
   PROP_ERRORS_HANDLER,
-  PROP_ERRORS_LOCATION,
   PROP_ERRORS_DEBUG,
-  PROP_ERRORS_HINTS,
   PROP_ERRORS_THREAD,
   PROP_ERRORS_DEPTH,
   PROP_ERRORS_WIDTH,
@@ -111,9 +109,6 @@ enum EmulatorPropertyIndex {
   // MESSAGES
   PROP_MESSAGES_GC,
   PROP_MESSAGES_IDLE,
-  PROP_MESSAGES_FEED,
-  PROP_MESSAGES_FOREIGN,
-  PROP_MESSAGES_CACHE,
   PROP_MESSAGES,
   // MEMORY
   PROP_MEMORY_ATOMS,
@@ -122,8 +117,6 @@ enum EmulatorPropertyIndex {
   PROP_MEMORY_CODE,
   PROP_MEMORY_HEAP,
   PROP_MEMORY,
-  // HEAP
-  PROP_HEAP_USED,
   // LIMITS
   PROP_LIMITS_INT_MIN,
   PROP_LIMITS_INT_MAX,
@@ -363,18 +356,14 @@ OZ_Term GetEmulatorProperty(EmulatorPropertyIndex prop) {
     TaggedRef ehdl = am.getDefaultExceptionHdl();
     return ehdl ? ehdl : oz_nil();
   }
-    CASE_BOOL(PROP_ERRORS_LOCATION,ozconf.errorLocation);
     CASE_BOOL(PROP_ERRORS_DEBUG,ozconf.errorDebug);
-    CASE_BOOL(PROP_ERRORS_HINTS,ozconf.errorHints);
     CASE_INT(PROP_ERRORS_THREAD,ozconf.errorThreadDepth);
     CASE_INT(PROP_ERRORS_DEPTH,ozconf.errorPrintDepth);
     CASE_INT(PROP_ERRORS_WIDTH,ozconf.errorPrintWidth);
     CASE_REC(PROP_ERRORS,"errors",
-	     (6,AtomLocation,AtomDebug,AtomHints,AtomThread,
+	     (4,AtomDebug,AtomThread,
 	      AtomDepth,AtomWidth),
-	     SET_BOOL(AtomLocation,ozconf.errorLocation);
 	     SET_BOOL(AtomDebug,ozconf.errorDebug);
-	     SET_BOOL(AtomHints,ozconf.errorHints);
 	     SET_INT(AtomThread,ozconf.errorThreadDepth);
 	     SET_INT(AtomDepth,ozconf.errorPrintDepth);
 	     SET_INT(AtomWidth,ozconf.errorPrintWidth););
@@ -399,8 +388,6 @@ OZ_Term GetEmulatorProperty(EmulatorPropertyIndex prop) {
 	     SET_INT(AtomFreelist,getMemoryInFreeList());
 	     SET_INT(AtomCode,CodeArea::totalSize);
 	     SET_INT(AtomHeap,ozstat.heapUsed.total+getUsedMemory()););
-    // HEAP
-    CASE_INT(PROP_HEAP_USED,getUsedMemory());
     // LIMITS
     CASE_INT(PROP_LIMITS_INT_MIN,OzMinInt);
     CASE_INT(PROP_LIMITS_INT_MAX,OzMaxInt);
@@ -716,15 +703,11 @@ OZ_Return SetEmulatorProperty(EmulatorPropertyIndex prop,OZ_Term val) {
     am.setDefaultExceptionHdl(val);
     return PROCEED;
   }
-    CASE_BOOL(PROP_ERRORS_LOCATION,ozconf.errorLocation);
-    CASE_BOOL(PROP_ERRORS_HINTS,ozconf.errorHints);
     CASE_BOOL(PROP_ERRORS_DEBUG,ozconf.errorDebug);
     CASE_NAT(PROP_ERRORS_THREAD,ozconf.errorThreadDepth);
     CASE_NAT(PROP_ERRORS_WIDTH,ozconf.errorPrintWidth);
     CASE_NAT(PROP_ERRORS_DEPTH,ozconf.errorPrintDepth);
     CASE_REC(PROP_ERRORS,
-	     SET_BOOL(AtomLocation,ozconf.errorLocation);
-	     SET_BOOL(AtomHints,ozconf.errorHints);
 	     SET_BOOL(AtomDebug,ozconf.errorDebug);
 	     SET_NAT(AtomThread,ozconf.errorThreadDepth);
 	     SET_NAT(AtomWidth,ozconf.errorPrintWidth);
@@ -1001,9 +984,7 @@ void initVirtualProperties()
   VirtualProperty::add("spaces",PROP_SPACES);
   // ERRORS
   VirtualProperty::add("errors.handler",PROP_ERRORS_HANDLER);
-  VirtualProperty::add("errors.location",PROP_ERRORS_LOCATION);
   VirtualProperty::add("errors.debug",PROP_ERRORS_DEBUG);
-  VirtualProperty::add("errors.hints",PROP_ERRORS_HINTS);
   VirtualProperty::add("errors.thread",PROP_ERRORS_THREAD);
   VirtualProperty::add("errors.depth",PROP_ERRORS_DEPTH);
   VirtualProperty::add("errors.width",PROP_ERRORS_WIDTH);
@@ -1019,8 +1000,6 @@ void initVirtualProperties()
   VirtualProperty::add("memory.code",PROP_MEMORY_CODE);
   VirtualProperty::add("memory.heap",PROP_MEMORY_HEAP);
   VirtualProperty::add("memory",PROP_MEMORY);
-  // HEAP
-  VirtualProperty::add("heap.used",PROP_HEAP_USED);
   // LIMITS
   VirtualProperty::add("limits.int.min",PROP_LIMITS_INT_MIN);
   VirtualProperty::add("limits.int.max",PROP_LIMITS_INT_MAX);
