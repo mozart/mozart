@@ -160,7 +160,7 @@ void taggedPrintLong(TaggedRef ref, int depth = 10, int offset = 0);
 //    or  switch(tag) { ... }
 
 
-#define IsRef(term) (((term & 3) == 0) ? OK : NO)
+#define IsRef(term) ((term & 3) == 0)
 inline
 Bool isRef(TaggedRef term) {
   GCDEBUG(term);
@@ -179,7 +179,7 @@ Bool isRef(TaggedRef term) {
 
 inline
 Bool isUVar(TypeOfTerm tag) {
-  return (tag == UVAR) ? OK : NO ;
+  return (tag == UVAR) ;
 }
 
 inline
@@ -188,12 +188,12 @@ Bool isUVar(TaggedRef term) {
   DebugCheck(isRef(term),
 	     error("isUVar: illegal Arg: REF");
 	     return NO;);
-  return ((term & 14) == 0) ? OK : NO;   // mask 1110
+  return ((term & 14) == 0);   // mask 1110
 }
 
 inline
 Bool isSVar(TypeOfTerm tag) {
-  return (tag == SVAR) ? OK : NO ;
+  return (tag == SVAR);
 }
 
 inline
@@ -208,7 +208,7 @@ Bool isSVar(TaggedRef term) {
 
 inline
 Bool isCVar(TypeOfTerm tag) {
-  return (tag == CVAR) ? OK : NO;
+  return (tag == CVAR);
 }
 
 inline
@@ -223,7 +223,7 @@ Bool isCVar(TaggedRef term) {
 
 inline
 Bool isNotCVar(TypeOfTerm tag) {
-  return ((tag & 6) == 0) ? OK : NO;
+  return ((tag & 6) == 0);
 }
 
 inline
@@ -232,13 +232,13 @@ Bool isNotCVar(TaggedRef term) {
   DebugCheck(isRef(term),
 	     error("isNotCVar: illegal Arg: REF");
 	     return NO;);
-  return ((term & 6) == 0) ? OK : NO;  // mask = 0110
+  return ((term & 6) == 0);  // mask = 0110
 }
 
 
 inline
 Bool isAnyVar(TypeOfTerm tag) {
-  return ((tag & 2) == 0) ? OK : NO;   // mask = 0010
+  return ((tag & 2) == 0);   // mask = 0010
 }
 
 inline
@@ -247,14 +247,14 @@ Bool isAnyVar(TaggedRef term) {
   DebugCheck(isRef(term),
 	     error("isAnyVar: illegal Arg: REF");
 	     return NO;);
-  return ((term & 2) == 0) ? OK : NO;
+  return ((term & 2) == 0);
 }
 
 
 
 inline
 Bool isLiteral(TypeOfTerm tag) {
-  return tag == ATOM ? OK : NO ;
+  return tag == ATOM;
 }
 
 inline
@@ -265,7 +265,7 @@ Bool isLiteral(TaggedRef term) {
 
 inline
 Bool isSRecord(TypeOfTerm tag) {
-  return tag == SRECORD ? OK : NO ;
+  return tag == SRECORD;
 }
 
 inline
@@ -276,7 +276,7 @@ Bool isSRecord(TaggedRef term) {
 
 inline
 Bool isRecord(TypeOfTerm tag) {
-  return isSRecord(tag) || isLiteral(tag) ? OK : NO ;
+  return isSRecord(tag) || isLiteral(tag);
 }
 
 inline
@@ -287,7 +287,7 @@ Bool isRecord(TaggedRef term) {
 
 inline
 Bool isLTuple(TypeOfTerm tag) {
-  return (tag == LTUPLE) ? OK : NO ;
+  return (tag == LTUPLE);
 }
 
 inline
@@ -296,12 +296,12 @@ Bool isLTuple(TaggedRef term) {
   DebugCheck(isRef(term),
 	     error("isLTuple: illegal Arg: REF");
 	     return NO;);
-  return ((term & 13) == 0) ? OK : NO; // mask = 1101
+  return ((term & 13) == 0); // mask = 1101
 }
 
 inline
 Bool isSTuple(TypeOfTerm tag) {
-  return (tag == STUPLE) ? OK : NO ;
+  return (tag == STUPLE);
 }
 
 inline
@@ -312,7 +312,7 @@ Bool isSTuple(TaggedRef term) {
 
 inline
 Bool isTuple(TypeOfTerm tag) {
-  return isSTuple(tag) || isLTuple(tag) || isLiteral(tag) ? OK : NO ;
+  return isSTuple(tag) || isLTuple(tag) || isLiteral(tag);
 }
 
 inline
@@ -323,7 +323,7 @@ Bool isTuple(TaggedRef term) {
 
 inline
 Bool isNoNumber(TypeOfTerm tag) {
-  return isRecord(tag) || isTuple(tag) ? OK : NO ;
+  return isRecord(tag) || isTuple(tag);
 }
 
 inline
@@ -334,7 +334,7 @@ Bool isNoNumber(TaggedRef term) {
 
 inline
 Bool isFloat(TypeOfTerm tag) {
-  return (tag == FLOAT) ? OK : NO ;
+  return (tag == FLOAT);
 }
 
 inline
@@ -345,7 +345,7 @@ Bool isFloat(TaggedRef term) {
 
 inline
 Bool isSmallInt(TypeOfTerm tag) {
-  return (tag == SMALLINT) ? OK : NO ;
+  return (tag == SMALLINT);
 }
 
 inline
@@ -355,7 +355,7 @@ Bool isSmallInt(TaggedRef term) {
 
 inline
 Bool isBigInt(TypeOfTerm tag) {
-  return (tag == BIGINT) ? OK : NO ;
+  return (tag == BIGINT);
 }
 
 inline
@@ -366,7 +366,7 @@ Bool isBigInt(TaggedRef term) {
 
 inline
 Bool isInt(TypeOfTerm tag) {
-  return (isSmallInt(tag) || isBigInt(tag)) ? OK : NO ;
+  return (isSmallInt(tag) || isBigInt(tag));
 }
 
 inline
@@ -377,7 +377,7 @@ Bool isInt(TaggedRef term) {
 
 inline
 Bool isNumber(TypeOfTerm tag) {
-  return (isFloat(tag) || isInt(tag)) ? OK : NO ;
+  return (isFloat(tag) || isInt(tag));
 }
 
 inline
@@ -388,7 +388,7 @@ Bool isNumber(TaggedRef term) {
 
 inline
 Bool isConst(TypeOfTerm tag) {
-  return (tag == CONST) ? OK : NO ;
+  return (tag == CONST);
 }
 
 inline
@@ -753,7 +753,7 @@ const int RAFreed = 2; // means has been already deallocated
 inline
 Bool isDirtyRefsArray(RefsArray a)
 {
-  return (a[-1]&RADirty) ? OK : NO;
+  return (a[-1]&RADirty);
 }
 
 inline
@@ -766,7 +766,7 @@ void markDirtyRefsArray(RefsArray a)
 inline
 Bool isFreedRefsArray(RefsArray a)
 {
-  return (a && a[-1]&RAFreed) ? OK : NO;
+  return (a && a[-1]&RAFreed);
 }
 
 inline
