@@ -2,7 +2,7 @@ BINDIR  = $(OZHOME)/bin
 SHELL   = /bin/sh
 VCBIN=/MSDEV/BIN
 SCRIPTS = oz oz+ ozplatform oz.wish
-LINKS   = oz- ozc ozsa ozsac oz.compiler oz.emulator ozdo \
+LINKS   = oz- ozc ozsa ozsaw ozsac oz.compiler oz.emulator ozdo \
           ozemacs ozdemo
 
 .SUFFIXES: .cpp .res .rc .obj
@@ -41,9 +41,9 @@ ozdemo.exe: oz.exe
 	cp oz.exe ozdemo.exe
 
 
-win-install:: setup.exe oz.exe ozdemo.exe ozsa.exe ozsac.exe
+win-install:: setup.exe oz.exe ozdemo.exe ozsaw.exe ozsa.exe ozsac.exe
 	cp setup.exe oz.exe ozdemo.exe $(OZHOME)
-	cp ozsa.exe ozsac.exe $(OZHOME)/platform/win32-i486
+	cp ozsaw.exe ozsa.exe ozsac.exe $(OZHOME)/platform/win32-i486
 
 
 clean::
