@@ -57,7 +57,7 @@ void initMemoryManagement(void) {
   heapTotalSizeBytes = heapTotalSize = 0;
   _oz_heap_cur       = NULL;
   _oz_heap_end       = NULL;
-   
+
   // allocate first chunk of memory;
   MemChunks::list = NULL;
   _oz_getNewHeapChunk(0);
@@ -83,7 +83,7 @@ Bool checkAddress(void *ptr) {
 // Linux-i486 (2.0.7-based) and Solaris-Sparc. And don't risk
 // otherwise...
 
-#if !(defined(SOLARIS_SPARC))
+#if !(defined(LINUX_I486) || defined(SOLARIS_SPARC))
 #undef HAVE_MMAP
 #endif
 
@@ -262,6 +262,13 @@ void ozFree(char *addr, size_t size)
   }
 }
 
+//
+#if defined(LINUX_I486) && defined(USE_AUTO_PLACEMENT)
+extern char __bss_start;
+static void *lowNoMap  = &__bss_start;
+static void *highNoMap = &__bss_start + MEM_C_HEAP_SIZE;
+#endif
+
 void *ozMalloc(size_t size) 
 {
   static size_t const pagesize = sysconf(_SC_PAGESIZE);
@@ -293,6 +300,23 @@ void *ozMalloc(size_t size)
   void *ret = mmap((char *) 0x1, size, (PROT_READ|PROT_WRITE),
 		   (MAP_PRIVATE|MAP_ANONYMOUS), 
 		   -1, (off_t) 0);
+
+#if defined(LINUX_I486)
+  // 
+  // kost@ : make sure that there is some place for C heap.
+  // For that, check where __bss_start points to, and skip some
+  // MEM_C_HEAP_SIZE bytes, round it up, and try it again...
+  if (ret >= lowNoMap && ret < highNoMap) { // implies ret != MAP_FAILED
+    if (munmap((char *) ret, size))
+      ozperror("munmap");
+    char *baseAddress = (char *) highNoMap;
+    ret = mmap(baseAddress, size,
+	       (PROT_READ|PROT_WRITE), (MAP_PRIVATE|MAP_ANONYMOUS),
+	       -1, (off_t) 0);
+    if (ret >= lowNoMap && ret < highNoMap)
+      OZ_warning("Using C heap with mmap\"s!\n");
+  }
+#endif
 #else
   void *ret = mmap(nextAddr, size, (PROT_READ|PROT_WRITE),
 		   (MAP_PRIVATE|MAP_ANONYMOUS|MAP_FIXED), 
@@ -303,7 +327,7 @@ void *ozMalloc(size_t size)
 		   (MAP_PRIVATE|MAP_FIXED),
 		   devZeroFD, (off_t) 0);
 #endif
-  if (ret < 0) { ozperror("mmap"); }
+  if (ret == MAP_FAILED) { ozperror("mmap"); }
 #ifdef DEBUG_CHECK
   //
   // make test of the created page: write, read, write, read!
