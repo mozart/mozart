@@ -88,6 +88,7 @@
 #endif
 
 #include <string.h>
+#include "mem.hh"
 
 #ifndef LQ_TRACE
 #define LQ_TRACE(X)
@@ -151,9 +152,6 @@ public:
     memset(freelist,0,FreeListSize*sizeof(LinkedQueueBlock*));
   }
 };
-
-LinkedQueueBlock*
-LinkedQueueBlock::freelist[LinkedQueueBlock::FreeListSize];
 
 class LinkedQueueImpl {
   friend class LinkedQueueIteratorImpl;
@@ -229,6 +227,7 @@ protected:
     return x;
   }
 
+public:
   // return a queue's linked list of blocks to the free list
   void dispose() {
     LinkedQueueBlock * block;
@@ -248,26 +247,6 @@ protected:
   void remove(void*);
 
 };
-
-// merging is realized by taking the linked list of block from q
-// and linking it at the end of the linked list from this.  The
-// dequeued prefix of q must be zeroed to cause these entries to
-// be skipped as holes.
-
-LinkedQueueImpl *
-LinkedQueueImpl::mergeUnsafe(LinkedQueueImpl * q)
-{
-  if (this==0) return q;
-  if (q==0) return this;
-  // zero the dequeued prefix of q
-  memset(q->tail->array+q->tail_index,0,
-	 sizeof(void*)*(q->tail->size - q->tail_index));
-  head = head->next = q->tail;
-  head_index = q->head_index;
-  size += q->size;
-  q->zeroAll();
-  return this;
-}
 
 template <class T,const int SIZE> 
 class LinkedQueue : public LinkedQueueImpl {
@@ -367,19 +346,5 @@ public:
     return (T**) LinkedQueueIteratorImpl::getPointerToNext();
   }
 };
-
-void** LinkedQueueImpl::find(void* x)
-{
-  LinkedQueueIteratorImpl iter(this);
-  void** y;
-  while ((y=iter.getPointerToNext())) if (x==*y) return y;
-  return 0;
-}
-
-void LinkedQueueImpl::remove(void* x)
-{
-  void** y = find(x);
-  if (y) { *y=0; size--; }
-}
 
 #endif /* __LQUEUE_HH */

@@ -27,7 +27,69 @@
  */
 
 #ifdef LINKED_QUEUES
-#include "thr_lqueue.cc"
+#if defined(INTERFACE) && !defined(PEANUTS)
+#pragma implementation "thr_lqueue.hh"
+#endif
+
+#include "thr_lqueue.hh"
+#include "thr_class.hh"
+
+// -- IMPLEMENTATION OF free list for block
+
+LinkedQueueBlock*
+LinkedQueueBlock::freelist[LinkedQueueBlock::FreeListSize];
+
+// -- IMPLEMENTATION OF LinkedQueueImpl
+// -- could be moved to its own file e.g. lqueue.cc
+
+// merging is realized by taking the linked list of block from q
+// and linking it at the end of the linked list from this.  The
+// dequeued prefix of q must be zeroed to cause these entries to
+// be skipped as holes.
+
+LinkedQueueImpl *
+LinkedQueueImpl::mergeUnsafe(LinkedQueueImpl * q)
+{
+  if (this==0) return q;
+  if (q==0) return this;
+  // zero the dequeued prefix of q
+  memset(q->tail->array+q->tail_index,0,
+	 sizeof(void*)*(q->tail->size - q->tail_index));
+  head = head->next = q->tail;
+  head_index = q->head_index;
+  size += q->size;
+  q->zeroAll();
+  return this;
+}
+
+void** LinkedQueueImpl::find(void* x)
+{
+  LinkedQueueIteratorImpl iter(this);
+  void** y;
+  while ((y=iter.getPointerToNext())) if (x==*y) return y;
+  return 0;
+}
+
+void LinkedQueueImpl::remove(void* x)
+{
+  void** y = find(x);
+  if (y) { *y=0; size--; }
+}
+
+// -- IMPLEMENTATION OF ThreadQueue
+
+int ThreadQueue::getRunnableNumber()
+{
+  ThreadQueueIterator iter(this);
+  int ret=0;
+  Thread*ptr;
+  while ((ptr=iter.getNext())) ret+=ptr->getRunnableNumber();
+  return ret;
+}
+
+void initLinkedQueueFreeList() {
+  LinkedQueueBlock::initFreeList();
+}
 #else
 
 #if defined(INTERFACE) && !defined(PEANUTS)
