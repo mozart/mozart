@@ -234,7 +234,7 @@ ProcColor
 BuiltinColor
 DirtyColor
 
-UseColors = {And Tk.isColor Platform \= WindowsPlatform}
+UseColors = Tk.isColor
 
 if UseColors then
    %% main window
