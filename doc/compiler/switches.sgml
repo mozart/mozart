@@ -186,13 +186,18 @@
   <Section class=unnumbered>
     <Title/VI&dot; Debugging/
     <P>
-      <!--** reference to Ozcar manual -->
+      Most of these switches are used by the source level debugger,
+      described in <Ptr.Extern to="ozdoc:ozcar">.
       <List>
 	<Entry><Code><Span class=ignore/\switch +/runwithdebugger</Code>
 	  (default: <<false>>)
 	<Item>
 	  Place a static breakpoint on the first statement of each
 	  compiled query.
+      </List>
+      Note that the following switches severely impact code size and
+      run-time efficiency of the generated code.
+      <List>
 	<Entry><Code><Span class=ignore/\switch +/controlflowinfo</Code>
 	  (default: <<false>>)
 	<Item>
@@ -201,5 +206,11 @@
 	  (default: <<false>>)
 	<Item>
 	  Include environment information in the generated code.
+	<Entry><Code><Span class=ignore/\switch +/dynamicvarnames</Code>
+	  (default: <<false>>)
+	<Item>
+	  All created local variables are annotated with their print name
+	  at run time, such that <<System.printName>> applied to the
+	  variable's value returns this name.
       </List>
 </Appendix>
