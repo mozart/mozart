@@ -26,7 +26,7 @@ public:
   void printCall();
 };
 
-void debugStreamSuspend(Thread*);
+void debugStreamSuspend(ProgramCounter, Thread*);
 void debugStreamCont(Thread*);
 void debugStreamThread(Thread*,Thread* parent=NULL);
 void debugStreamTerm(Thread*);
