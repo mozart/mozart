@@ -784,6 +784,20 @@ RefsArray gcRefsArray(RefsArray r)
   return aux;
 }
 
+Propagator * Propagator::gc(void)
+{
+  board = ((Board *) board)->gcBoard();
+  return gcPropagator();
+}
+
+OZ_Term OZ_gcTerm(OZ_Term i)
+{
+  Assert(isRef(i) || !isAnyVar(i));
+  OZ_Term o = i;
+  gcTagged(o, o);
+  return o;
+}
+
 void CFuncContinuation::gcRecurse(void)
 {
   GCMETHMSG("CFuncContinuation::gcRecurse");
@@ -984,7 +998,7 @@ Suspension *Suspension::gcSuspension(Bool tcFlag)
   if (flag & S_thread) {
     newSusp->item.thread = item.thread->gcThread();
   } else {
-    switch (flag & (S_cont|S_cfun)){
+    switch (flag & (S_cont|S_cfun|S_ppgt)){
     case S_null:
       newSusp->item.board = item.board->gcBoard();
       Assert(newSusp->item.board);
@@ -996,6 +1010,10 @@ Suspension *Suspension::gcSuspension(Bool tcFlag)
     case S_cont|S_cfun:
       newSusp->item.ccont = item.ccont->gcCont();
       Assert(newSusp->item.ccont);
+      break;
+    case S_ppgt:
+      newSusp->item.propagator = item.propagator->gcPropagator();
+      Assert(newSusp->item.propagator);
       break;
     default:
       Assert(0);
@@ -1160,7 +1178,7 @@ TaggedRef gcVariable(TaggedRef var)
 
 
 inline
-void FiniteDomain::gc(void)
+void OZ_FiniteDomain::gc(void)
 {
 #if defined(DEBUG_CHECK) && defined(DEBUG_FD)
   Assert(isConsistent());
@@ -2000,7 +2018,7 @@ Bool Board::gcIsAlive()
 
 // This procedure derefences cluster chains and collects only the object at
 // the end of such a chain.
-Board *Board::gcBoard()
+Board * Board::gcBoard()
 {
   GCMETHMSG("Board::gcBoard");
   if (!this) return 0;

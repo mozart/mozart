@@ -876,7 +876,20 @@ OZ_Term OZ_getRecordArg(OZ_Term term, OZ_Term fea)
       return ret;
     }
   }
-  OZ_warning("OZ_getArg(%s,%%): bad arg",OZ_toC(term),OZ_toC(fea));
+  OZ_warning("OZ_getArg(%s,%s): bad arg",OZ_toC(term),OZ_toC(fea));
+  return 0;
+}
+
+State BIarityInline(TaggedRef, TaggedRef &);
+
+OZ_Term OZ_getRecordArity(OZ_Term term)
+{
+  OZ_Term arity;
+
+  if (BIarityInline(term, arity) == PROCEED)
+    return arity;
+
+  OZ_warning("OZ_getArg(%s): bad arg",OZ_toC(term));
   return 0;
 }
 

@@ -73,14 +73,6 @@ OZ_Term deref(OZ_Term &tr, OZ_Term * &ptr, pm_term_type &tag)
 // Auxiliary stuff
 //-----------------------------------------------------------------------------
 
-OZ_Boolean isPosSmallInt(OZ_Term val)
-{
-  if (isSmallInt(val))
-    return OZ_intToC(val) >= 0;
-
-  return OZ_FALSE;
-}
-
 // return OZ_TRUE if i is not negative
 OZ_Boolean getSign(int i) {
   return i >= 0;
@@ -128,7 +120,7 @@ double static_double_b[MAXFDBIARGS];
 int static_index_offset[MAXFDBIARGS];
 int static_index_size[MAXFDBIARGS];
 
-FiniteDomain __CDVoidFiniteDomain(fd_full);
+OZ_FiniteDomain __CDVoidFiniteDomain(fd_full);
 
 //-----------------------------------------------------------------------------
 // Member functions
@@ -447,15 +439,10 @@ void BIfdHeadManager::printDebug(int i) {
 
 BIfdBodyManager::BIfdBodyManager(int s) {
   DebugCodeFD(backup_count = 0);
-  if (s == -1) {
-    curr_num_of_vars = 0;
-    only_local_vars = OZ_FALSE;
-  } else {
-    AssertFD(0 <= s && s < MAXFDBIARGS);
-    curr_num_of_vars = s;
-    AssertFD(FDcurrentTaskSusp);
-    only_local_vars = FDcurrentTaskSusp->isLocalSusp();
-  }
+  AssertFD(0 <= s && s < MAXFDBIARGS);
+  curr_num_of_vars = s;
+  AssertFD(FDcurrentTaskSusp);
+  only_local_vars = FDcurrentTaskSusp->isLocalSusp();
 }
 
 void BIfdBodyManager::saveDomainOnTopLevel(int i) {
@@ -632,8 +619,8 @@ OZ_Bool checkDomDescr(OZ_Term descr,
 OZ_Term * BIfdBodyManager::bifdbm_var;
 OZ_Term ** BIfdBodyManager::bifdbm_varptr;
 pm_term_type * BIfdBodyManager::bifdbm_vartag;
-FiniteDomainPtr * BIfdBodyManager::bifdbm_dom;
-FiniteDomain * BIfdBodyManager::bifdbm_domain;
+OZ_FiniteDomainPtr * BIfdBodyManager::bifdbm_dom;
+OZ_FiniteDomain * BIfdBodyManager::bifdbm_domain;
 int * BIfdBodyManager::bifdbm_init_dom_size;
 fdbm_var_state * BIfdBodyManager::bifdbm_var_state;
 int * BIfdBodyManager::cache_from;
@@ -652,8 +639,8 @@ void BIfdBodyManager::initStaticData(void) {
   index_offset = static_index_offset;
   index_size = static_index_size;
 
-  bifdbm_dom = new FiniteDomainPtr[MAXFDBIARGS];
-  bifdbm_domain = new FiniteDomain[MAXFDBIARGS];
+  bifdbm_dom = new OZ_FiniteDomainPtr[MAXFDBIARGS];
+  bifdbm_domain = new OZ_FiniteDomain[MAXFDBIARGS];
   bifdbm_init_dom_size = new int[MAXFDBIARGS];
   bifdbm_var_state = new fdbm_var_state[MAXFDBIARGS];
   cache_from = new int[MAXFDBIARGS];
@@ -910,21 +897,14 @@ OZ_Bool BIfdBodyManager::release(int from, int to) {
 
   if (only_local_vars) {
     processLocalFromTo(from, to+1);
-    if (vars_left) reviveCurrentTaskSusp();
+    if (vars_left) return SuspendFD ;
   } else {
     processFromTo(from, to+1);
     if (vars_left)
-      reviveCurrentTaskSusp();
+      return SuspendFD ;
   }
 
-  return vars_left ? SuspendFD : EntailFD;
-}
-
-OZ_Boolean BIfdBodyManager::setCurr_num_of_vars(int i) {
-  if (i < 0 || i > MAXFDBIARGS)
-    return OZ_TRUE;
-  curr_num_of_vars = i;
-  return OZ_FALSE;
+  return EntailFD;
 }
 
 void BIfdBodyManager::introduceDummy(int i) {
@@ -1046,56 +1026,6 @@ void BIfdBodyManager::_introduce(int i, OZ_Term v)
   bifdbm_varptr[i] = vptr;
   bifdbm_vartag[i] = vtag;
 } // BIfdBodyManager::_introduce
-
-// returns FAILED for incompatible values
-// returns SUSPEND for UVAR and SVAR
-OZ_Bool BIfdBodyManager::checkAndIntroduce(int i, OZ_Term v)
-{
-  DebugCheck(i < 0 || i >= curr_num_of_vars, error("index overflow"));
-
-  pm_term_type vtag;
-  OZ_Term *vptr;
-
-  deref(v, vptr, vtag);
-
-  if (vtag == pm_singl) {
-    int i_val = OZ_intToC(v);
-    if (i_val >= 0) {
-      bifdbm_init_dom_size[i] = bifdbm_domain[i].setSingleton(i_val);
-      bifdbm_dom[i] = &bifdbm_domain[i];
-      bifdbm_var_state[i] = fdbm_local;
-    } else {
-      warning("Expected positive small integer.");;
-      return FAILED;
-    }
-  } else if (vtag == pm_bool) {
-    bifdbm_init_dom_size[i] = bifdbm_domain[i].setBool();
-    bifdbm_dom[i] = &bifdbm_domain[i];
-    bifdbm_var_state[i] = (am.isLocalCVar(v) ? fdbm_local : fdbm_global);
-  } else if (vtag == pm_fd) {
-    GenFDVariable * fdvar = tagged2GenFDVar(v);
-    fdbm_var_state var_state = bifdbm_var_state[i] = (am.isLocalCVar(v) ? fdbm_local : fdbm_global);
-    bifdbm_domain[i].FiniteDomainInit(NULL);
-    if (var_state == fdbm_local) {
-      bifdbm_dom[i] = &fdvar->getDom();
-    } else {
-      bifdbm_domain[i] = fdvar->getDom();
-      bifdbm_dom[i] = &bifdbm_domain[i];
-    }
-    bifdbm_init_dom_size[i] = bifdbm_dom[i]->getSize();
-    saveDomainOnTopLevel(i);
-    Assert(bifdbm_init_dom_size[i] > 1 && *bifdbm_dom[i] != fd_bool);
-  } else if (vtag == pm_uvar || vtag == pm_svar) {
-    return SUSPEND; // checkAndIntroduce
-  } else {
-    return FAILED;
-  }
-  bifdbm_var[i] = v;
-  bifdbm_varptr[i] = vptr;
-  bifdbm_vartag[i] = vtag;
-  return PROCEED;
-}
-
 
 void BIfdBodyManager::processFromTo(int from, int to)
 {

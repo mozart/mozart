@@ -38,7 +38,7 @@ OZ_C_proc_begin(BIfdIs, 1)
   if (isNotCVar(fdtag))
     return BIfdHeadManager::suspendOnVar(OZ_self, OZ_arity, OZ_args, fdptr);
 
-  return isPosSmallInt(fd) || isGenFDVar(fd, fdtag) || isGenBoolVar(fd, fdtag)
+  return OZ_isPosSmallInt(fd) || isGenFDVar(fd, fdtag) || isGenBoolVar(fd, fdtag)
     ? PROCEED : FAILED;
 }
 OZ_C_proc_end
@@ -97,7 +97,7 @@ OZ_C_proc_begin(BIfdGetAsList, 2)
     LTuple * ltuple = new LTuple(var, AtomNil);
     return OZ_unify(makeTaggedLTuple(ltuple), OZ_getCArg(1));
   } else if (isGenFDVar(var,vartag)) {
-    FiniteDomain &fdomain = tagged2GenFDVar(var)->getDom();
+    OZ_FiniteDomain &fdomain = tagged2GenFDVar(var)->getDom();
     return OZ_unify(fdomain.getAsList(), OZ_getCArg(1));
   } else if (isGenBoolVar(var,vartag)) {
     return OZ_unify(makeTaggedLTuple(new LTuple(mkTuple(0, 1), AtomNil)),
@@ -120,7 +120,7 @@ OZ_C_proc_begin(BIfdGetCardinality,2)
   if(isSmallInt(vartag)) {
     return OZ_unify(OZ_CToInt(1), OZ_getCArg(1));
   } else if (isGenFDVar(var,vartag)) {
-    FiniteDomain &fdomain = tagged2GenFDVar(var)->getDom();
+    OZ_FiniteDomain &fdomain = tagged2GenFDVar(var)->getDom();
     return OZ_unify(OZ_CToInt(fdomain.getSize()), OZ_getCArg(1));
   } else if (isGenBoolVar(var,vartag)) {
     return OZ_unify(OZ_CToInt(2), OZ_getCArg(1));
@@ -148,7 +148,7 @@ OZ_C_proc_begin(BIfdNextTo, 3)
 
   OZ_getCArgDeref(0, var, varptr, vartag);
 
-  if (isPosSmallInt(var)) {
+  if (OZ_isPosSmallInt(var)) {
     return OZ_unify(OZ_getCArg(2), var);
   } else if (isGenFDVar(var,vartag)) {
     int next_val, n_val = OZ_intToC(n);
@@ -270,7 +270,7 @@ OZ_C_proc_begin(BIfdPutList, 3)
 
   if (! x.introduce(OZ_getCArg(0))) return FAILED;
 
-  LocalFD aux; aux.init(OZ_getCArg(1));
+  OZ_FiniteDomain aux; aux.init(OZ_getCArg(1));
 
   if (OZ_intToC(s) != 0) aux = ~aux;
 
@@ -314,7 +314,7 @@ OZ_C_proc_begin(BIfdPutInterval, 3)
 
   if (! x.introduce(OZ_getCArg(0))) return FAILED;
 
-  LocalFD aux;
+  OZ_FiniteDomain aux;
 
   FailOnEmpty(aux.init(OZ_intToC(l), OZ_intToC(u)));
   FailOnEmpty(*x &= aux);

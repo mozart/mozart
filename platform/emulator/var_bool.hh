@@ -46,7 +46,7 @@ public:
   // is X=val still valid, i.e. is val an smallint and either 0 ro 1.
   Bool valid(TaggedRef val);
 
-  void becomesSmallIntAndPropagate(TaggedRef * trPtr, FiniteDomain & fd);
+  void becomesSmallIntAndPropagate(TaggedRef * trPtr, OZ_FiniteDomain & fd);
 
   int getSuspListLength(void) { return suspList->length(); }
 
@@ -54,6 +54,9 @@ public:
 
   void propagate(TaggedRef var, PropCaller prop_eq = pc_propagator) {
     if (suspList) GenCVariable::propagate(var, suspList, prop_eq);
+  }
+  void propagateUnify(TaggedRef var) {
+    propagate(var, pc_cv_unif);
   }
 };
 

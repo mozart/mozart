@@ -19,6 +19,7 @@
 // include oz.h
 #include "fdomn.hh"
 #include "fdprofil.hh"
+#include "fdinterface.hh"
 
 // have to vanish
 //#include "fdhook.hh"
@@ -45,11 +46,11 @@ enum Recalc_e {lower, upper};
 
 #if PROFILE_FD == 1
 #define FailFD (_PROFILE_CODE1(FDProfiles.inc_item(no_failed_props)), FAILED)
-#define SuspendFD (_PROFILE_CODE1(FDProfiles.inc_item(no_susp_props)), PROCEED)
+#define SuspendFD (_PROFILE_CODE1(FDProfiles.inc_item(no_susp_props)), SLEEP)
 #define EntailFD (_PROFILE_CODE1(FDProfiles.inc_item(no_ent_props)), PROCEED)
 #else
 #define FailFD FAILED
-#define SuspendFD PROCEED
+#define SuspendFD SLEEP
 #define EntailFD PROCEED
 #endif
 
@@ -141,8 +142,6 @@ extern int static_index_size[MAXFDBIARGS];
 //-----------------------------------------------------------------------------
 // Auxiliary stuff
 //-----------------------------------------------------------------------------
-
-OZ_Boolean isPosSmallInt(OZ_Term val);
 
 // return TRUE if i is not negative
 OZ_Boolean getSign(int i);
@@ -243,7 +242,7 @@ inline int idx_b(int i) { return idx(0, i); }
 inline int idx_v(int i) { return idx(1, i); }
 inline int idx_vp(int c, int v) { return idx(2+c, v); }
 
-extern FiniteDomain __CDVoidFiniteDomain;
+extern OZ_FiniteDomain __CDVoidFiniteDomain;
 
 class BIfdBodyManager {
 private:
@@ -252,8 +251,8 @@ private:
   static OZ_Term ** bifdbm_varptr;
   static pm_term_type * bifdbm_vartag;
 
-  static FiniteDomainPtr * bifdbm_dom;
-  static FiniteDomain * bifdbm_domain;
+  static OZ_FiniteDomainPtr * bifdbm_dom;
+  static OZ_FiniteDomain * bifdbm_domain;
 
   static int curr_num_of_vars;
   static int * bifdbm_init_dom_size;
@@ -297,10 +296,6 @@ private:
 public:
   BIfdBodyManager(int s);
 
-  OZ_Boolean setCurr_num_of_vars(int i);
-
-  OZ_Boolean indexIsInvalid(int i) {return (i < 0) || (i >= curr_num_of_vars);}
-
   void add(int i, int size);
 
   int getCurrNumOfVars(void) {return curr_num_of_vars;}
@@ -316,9 +311,9 @@ public:
   void backup(void);
   void restore(void);
 
-  FiniteDomain &operator [](int i);
+  OZ_FiniteDomain &operator [](int i);
 
-  FiniteDomain &operator ()(int i, int j);
+  OZ_FiniteDomain &operator ()(int i, int j);
 
   void printDebug(void);
   void printDebug(int i);
@@ -330,10 +325,7 @@ public:
   void introduce(int i, int j, OZ_Term v);
   void introduceSpeculative(int i, OZ_Term v);
 
-  OZ_Bool checkAndIntroduce(int i, OZ_Term v);
-
   void reintroduce(int i, OZ_Term v);
-
 
   void process(int i) {processFromTo(i, i+1);}
 
@@ -373,14 +365,14 @@ public:
 
   OZ_Boolean areIdentVar(int a, int b);
 
-  FiniteDomainPtr * getDoms(void) {return bifdbm_dom;}
+  OZ_FiniteDomainPtr * getDoms(void) {return bifdbm_dom;}
 
 // exactly one variable is regarded
   BIfdBodyManager(void) {backup_count = 0; curr_num_of_vars = 1;}
 
   OZ_Boolean introduce(OZ_Term v);
 
-  FiniteDomain &operator *(void) {return *bifdbm_dom[0];}
+  OZ_FiniteDomain &operator *(void) {return *bifdbm_dom[0];}
 
   static void restoreDomainOnToplevel(void);
 

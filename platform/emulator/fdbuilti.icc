@@ -66,13 +66,13 @@ void BIfdBodyManager::add(int i, int size) {
 }
 
 inline
-FiniteDomain &BIfdBodyManager::operator [](int i) {
+OZ_FiniteDomain &BIfdBodyManager::operator [](int i) {
   AssertFD(0 <= i && i < curr_num_of_vars);
   return *bifdbm_dom[i];
 }
 
 inline
-FiniteDomain &BIfdBodyManager::operator ()(int i, int j) {
+OZ_FiniteDomain &BIfdBodyManager::operator ()(int i, int j) {
   return operator [](idx(i, j));
 }
 

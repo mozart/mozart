@@ -29,10 +29,11 @@ class FDIntervals;
 enum FDPropState {fd_det = 0, fd_bounds, fd_any};
 enum FDState {fd_empty, fd_full, fd_bool, fd_singleton};
 #define MAXFDBIARGS 1000 // maximum number of arguments of fd built-ins
+#define FDMAGICNUMBER MAXFDBIARGS
 const int fd_inf = 0;
 const int fd_sup = OZ_getMaxInt() - 1;
 
-class FiniteDomain {
+class OZ_FiniteDomain {
 private:
   int simplify(int list_len, int * list_left, int * list_right);
 
@@ -66,18 +67,18 @@ public:
   void dispose(void);
   void FiniteDomainInit(void * d);
 
-  FiniteDomain(void * d);
-  FiniteDomain(void);
+  OZ_FiniteDomain(void * d);
+  OZ_FiniteDomain(void);
 
   unsigned getDescrSize(void);
 
   int setEmpty(void);
   int setFull(void);
 
-  FiniteDomain(FDState state);
+  OZ_FiniteDomain(FDState state);
 
-  FiniteDomain(const FiniteDomain &);
-  const FiniteDomain &operator = (const FiniteDomain &fd);
+  OZ_FiniteDomain(const OZ_FiniteDomain &);
+  const OZ_FiniteDomain &operator = (const OZ_FiniteDomain &fd);
 
   int initFull(void);
   int initEmpty(void);
@@ -103,15 +104,15 @@ public:
   int constrainBool(void);
 
   // non-destructive operators
-  FiniteDomain operator & (const FiniteDomain &) const; // intersection
-  FiniteDomain operator | (const FiniteDomain &) const; // union
-  FiniteDomain operator ~ (void) const;                 // inversion
+  OZ_FiniteDomain operator & (const OZ_FiniteDomain &) const; // intersection
+  OZ_FiniteDomain operator | (const OZ_FiniteDomain &) const; // union
+  OZ_FiniteDomain operator ~ (void) const;                 // inversion
 
   // destructive operators
-  int operator &= (const FiniteDomain &);
+  int operator &= (const OZ_FiniteDomain &);
   int operator &= (const int);
   int operator -= (const int);
-  int operator -= (const FiniteDomain &);
+  int operator -= (const OZ_FiniteDomain &);
   int operator += (const int);
   int operator <= (const int);
   int operator >= (const int);
@@ -131,15 +132,15 @@ public:
 };
 
 
-typedef FiniteDomain * FiniteDomainPtr;
+typedef OZ_FiniteDomain * OZ_FiniteDomainPtr;
 
 class FDIterator {
 private:
-  FiniteDomainPtr finiteDomain;
+  OZ_FiniteDomainPtr finiteDomain;
   int current;
   int size;
 public:
-  FDIterator(FiniteDomainPtr fd) : finiteDomain(fd) {}
+  FDIterator(OZ_FiniteDomainPtr fd) : finiteDomain(fd) {}
 
   int reset(void) {
     size = finiteDomain->getSize() - 1;
@@ -161,10 +162,9 @@ public:
 #include "fdomn.icc"
 #endif
 
-typedef FiniteDomain LocalFD;
 
 inline
-ostream &operator << (ostream &ofile, const FiniteDomain &fd) {
+ostream &operator << (ostream &ofile, const OZ_FiniteDomain &fd) {
   fd.print(ofile);
   return ofile;
 }
