@@ -6,7 +6,7 @@
 %%%  Version: $Revision$
 
 
-PanelWidth       = 530
+PanelWidth       = 560
 FrameWidth       = PanelWidth - 20
 FullPanelHeight  = 335
 PartPanelHeight  = 240
@@ -26,35 +26,72 @@ MinuteF        = {IntToFloat MinuteI}
 HourI          = 60 * MinuteI
 HourF          = {IntToFloat HourI}
 
-EnterColor     = wheat
+BitMapDir      = '@' # {System.get home} # '/lib/bitmaps/'
 
-RunnableColor  = lightslateblue
+DashLine       = BitMapDir # 'dash-line.xbm'
 
-ThresholdColor = lightslateblue
-SizeColor      = mediumvioletred
-ActiveColor    = mediumaquamarine
-
-TimeColors   = colors(run:  lightslateblue
-		      prop: mediumvioletred
-		      copy: mediumaquamarine
-		      gc:   mediumseagreen
-		      load: wheat)
-
-AboutColor = blue
+EnterColor       #
+RunnableColor    # RunnableStipple  #
+ThresholdColor   # ThresholdStipple #
+SizeColor        # SizeStipple      #
+ActiveColor      # ActiveStipple    #
+TimeColors       # TimeStipple      # 
+AboutColor       = case Tk.isColor then
+		      wheat #
+		      lightslateblue   # '' #
+		      lightslateblue   # '' #
+		      mediumvioletred  # '' #
+		      mediumaquamarine # '' #
+		      color(run:  lightslateblue 
+			    prop: mediumvioletred
+			    copy: mediumaquamarine
+			    gc:   mediumseagreen
+			    load: wheat) #
+		      stipple(run:  ''
+			      prop: ''
+			      copy: ''
+			      gc:   ''
+			      load: '') #
+		      blue
+		   else
+		      white #
+		      black # (BitMapDir # 'grid-50.xbm')  #
+		      black # (BitMapDir # 'grid-25.xbm')  #
+		      black # (BitMapDir # 'grid-50.xbm') #
+		      black # '' #
+		      color(run:  black
+			    prop: black
+			    copy: black
+			    gc:   black
+			    load: black) #
+		      stipple(run:  BitMapDir # 'grid-25.xbm'
+			      prop: BitMapDir # 'grid-50.xbm'
+			      copy: BitMapDir # 'lines-lr.xbm'
+			      gc:   BitMapDir # 'lines-rl.xbm'
+			      load: BitMapDir # 'zig-zag.xbm') #
+		      blue
+		   end
 
 AboutFont       = '-Adobe-times-bold-r-normal--*-240*'
 
 TitleName = 'Oz Panel'
 
 
-BitMap = '@' # {System.get home} # '/lib/bitmaps/panel.xbm'
+BitMap = BitMapDir # 'panel.xbm'
 
-SampleTimes = [500   # '500ms'
-	       1000  # '1s'
-	       2000  # '2s'
-	       5000  # '5s'
-	       10000 # '10s'
-	       60000 # '1m']
+UpdateTimes         = [500   # '500ms'
+		       1000  # '1s'
+		       5000  # '5s'
+		       10000 # '10s']
+DefaultUpdateTime   = 1000
+
+HistoryRanges       = [30000  # '30s'
+		       60000  # '1m'
+		       120000 # '2m'
+		       360000 # '6m']
+DefaultHistoryRange = 120000
+
+LoadWidth           = 240
 
 BoldFontFamily  = '-*-helvetica-bold-r-normal--*-'
 FontMatch       = '-*-*-*-*-*-*'

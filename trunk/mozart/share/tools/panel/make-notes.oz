@@ -8,9 +8,9 @@
 local
    Border       = 2
    LabelWidth   = 8
+   SquareSize   = 10
    TextWidth    = 18
    ButtonWidth  = 6
-   BackColor    = white
 
    fun {GetFeature X}
       case {HasFeature X feature} then X.feature
@@ -19,13 +19,26 @@ local
 	     Char.toLower}}
       end
    end
+
+   class Square
+      from Tk.canvas
+      meth init(parent:P color:C stipple:S)
+	 <<Square tkInit(parent:             P
+			 width:              SquareSize
+			 height:             SquareSize
+			 bd:                 Border
+			 relief:             groove
+			 highlightthickness: 0)>>
+	 <<Square tk(crea rectangle ~2 ~2 SquareSize+2 SquareSize+2
+		     fill:C stipple:S)>>
+      end
+   end
    
    class PrintNumber
       from Tk.label
       attr Saved:~1 Clear:0
-      meth init(parent:P color:C)
-	 <<PrintNumber tkInit(parent:P text:0 anchor:e width:LabelWidth
-			      fg:C bg:BackColor)>>
+      meth init(parent:P)
+	 <<PrintNumber tkInit(parent:P text:0 anchor:e width:LabelWidth)>>
       end
       meth set(N)
 	 case N==@Saved then true else
@@ -36,6 +49,7 @@ local
       meth clear
 	 Clear <- @Saved
 	 Saved <- ~1
+	 <<PrintNumber tk(conf text:0)>>
       end
    end
 
@@ -50,9 +64,8 @@ local
       from Tk.label
       feat Dim
       attr Saved:~1 Clear:0
-      meth init(parent:P dim:D color:C)
-	 <<PrintTime tkInit(parent:P text:0 anchor:e width:LabelWidth
-			    fg:C bg:BackColor)>>
+      meth init(parent:P dim:D)
+	 <<PrintTime tkInit(parent:P text:0 anchor:e width:LabelWidth)>>
 	 self.Dim = D
       end
       meth set(N)
@@ -81,6 +94,7 @@ local
       end
       meth clear
 	 {self.Dim tk(conf text:ms)}	       
+	 <<PrintTime tk(conf text:0)>>
 	 Clear <- @Saved
 	 Saved <- ~1
       end
@@ -217,41 +231,59 @@ local
 				      text:   L.text
 				      anchor: w
 				      width:  TextWidth)}
-	    L2 = {New PrintNumber init(parent:P
-				       color: {CondSelect L color black})}
+	    L2 = {New PrintNumber init(parent:P)}
+	    L3 = case {HasFeature L color} orelse {HasFeature L stipple} then
+		    C = {CondSelect L color black}
+		    S = {CondSelect L stipple ''}
+		 in {New Square init(parent:P color:C stipple:S)}
+		 else {New Tk.frame tkInit(parent:P)}
+		 end
 	 in
 	    R.{GetFeature L}=L2
 	    grid(L1 sticky:e column:0 row:N) |
-	    grid(L2 sticky:e column:1 row:N) | TclR
+	    grid(L2 sticky:e column:1 row:N) | 
+	    grid(L3 padx:Pad sticky:e column:2 row:N) | TclR
 	 [] size then
 	    L1 = {New Tk.label tkInit(parent: P
 				      text:   L.text
 				      anchor: w
 				      width:  TextWidth)}
-	    L2 = {New PrintNumber init(parent:P
-				       color: {CondSelect L color black})}
+	    L2 = {New PrintNumber init(parent:P)}
 	    L3 = {New Tk.label tkInit(parent: P
 				      anchor: e
 				      text:   'KB')}
+	    L4 = case {HasFeature L color} orelse {HasFeature L stipple} then
+		    C = {CondSelect L color black}
+		    S = {CondSelect L stipple ''}
+		 in {New Square init(parent:P color:C stipple:S)}
+		 else {New Tk.frame tkInit(parent:P)}
+		 end
 	 in
 	    R.{GetFeature L}=L2
 	    grid(L1 sticky:e column:0 row:N) |
 	    grid(L2 sticky:e column:1 row:N) | 
-	    grid(L3 sticky:e column:2 row:N) | TclR
+	    grid(L3 sticky:e column:2 row:N) | 
+	    grid(L4 padx:Pad sticky:e column:3 row:N) | TclR
 	 [] time then
 	    L1 = {New Tk.label tkInit(parent: P
 				      text:   L.text
 				      anchor: w
 				      width:  TextWidth)}
-	    L3 = {New Tk.label  tkInit(parent:P anchor:w width:4)}
+	    L3 = {New Tk.label  tkInit(parent:P anchor:e)}
 	    L2 = {New PrintTime init(parent: P
-				     color:  {CondSelect L color black}
 				     dim:    L3)}
+	    L4 = case {HasFeature L color} orelse {HasFeature L stipple} then
+		    C = {CondSelect L color black}
+		    S = {CondSelect L stipple ''}
+		 in {New Square init(parent:P color:C stipple:S)}
+		 else {New Tk.frame tkInit(parent:P)}
+		 end
 	 in
 	    R.{GetFeature L}=L2
 	    grid(L1 sticky:e column:0 row:N) |
 	    grid(L2 sticky:e column:1 row:N) | 
-	    grid(L3 sticky:e column:2 row:N) | TclR
+	    grid(L3 sticky:w column:2 row:N) | 
+	    grid(L4 padx:Pad sticky:e column:3 row:N) | TclR
 	 [] button  then
 	    B = {New Button init(parent: P
 				 text:   L.text
@@ -280,16 +312,20 @@ local
 	    R.{GetFeature L}=E2
 	    grid(L1 sticky:e column:0 row:N) |
 	    grid(E2 sticky:e column:1 row:N) | TclR
-	 [] pie then
-	    L1 = {New Pie init(parent: P)}
+	 [] timebar then
+	    F  = {New Tk.frame tkInit(parent:            P
+				      highlightthickness:0)}
+	    L1 = {New RuntimeBar init(parent: F)}
 	 in
 	    R.{GetFeature L}=L1
-	    grid(L1 sticky:e column:0 row:N) | TclR
+	    grid(F sticky:ens column:0 row:N) |
+	    pack(L1 side:top pady:40) | TclR
 	 [] load then
-	    L1 = {New Load init(parent: P
-				colors: L.colors
-				maxy:   5.0
-				dim:    {CondSelect L dim ''})}
+	    L1 = {New Load init(parent:  P
+				colors:  L.colors
+				stipple: L.stipple
+				maxy:    5.0
+				dim:     {CondSelect L dim ''})}
 	 in
 	    R.{GetFeature L}=L1
 	    grid(L1 sticky:e column:0 row:N) | TclR

@@ -6,8 +6,10 @@
 %%%  Version: $Revision$
 
 local
-   DarkColor      = '#828282'
-   BrightColor    = '#ffffff'
+   DarkColor   #
+   BrightColor  = case Tk.isColor then '#828282' # '#ffffff'
+		  else black # black
+		  end
 
    fun {TclGetConf T Opt}
       l(lindex(l(T conf '-'#Opt) 4))
@@ -65,7 +67,7 @@ local
 	 end
       end
    end
-   
+
 in
 
    class Notebook
@@ -244,10 +246,7 @@ in
       meth MoveNotes(Ns X ByX)
 	 case Ns of nil then true
 	 [] N|Nr then
-	    case N.1<X then true else
-	       {Show movenote(N)}
-	       Note = N.3
-	    in
+	    case N.1<X then true else Note = N.3 in
 	       {Note.NoteBorderTag  tk(delete)}
 	       {Note.MarkBorderTag  tk(move ByX 0)}
 	       {Note.HighlightTag   tk(move ByX 0)}

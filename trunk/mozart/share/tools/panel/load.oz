@@ -12,10 +12,10 @@ local
    end
 
    ActiveColor     = white
-   Width           = 240
-   LeftWidth       = 60
-   HalfWidth       = Width div 2
+   LeftWidth       = 50
+   HalfWidth       = LoadWidth div 2
    Border          = 5
+   BlackTickSize   = 4 
    Height          = 60
 
    FontFamily      = '-*-helvetica-medium-r-normal--*-'
@@ -60,21 +60,23 @@ in
 	 CoverTag
 	 Dimension
 	 Colors
+	 Stipple
       attr
-	 LeftTag:   Unit
-	 RightTag:  Unit
-	 LeftMaxY:  0.0
-	 RightMaxY: 0.0
-	 PrevYs:    nil
-	 CurX:      0
-	 CurScale:  1.0
-	 CurLimit:  0.0
+	 LeftTag:      Unit
+	 RightTag:     Unit
+	 LeftMaxY:     0.0
+	 RightMaxY:    0.0
+	 PrevYs:       nil
+	 CurX:         0
+	 CurScale:     1.0
+	 CurLimit:     0.0
+	 Slice:        (LoadWidth * DefaultUpdateTime) div DefaultHistoryRange
       
-      meth init(parent:P maxy:Y dim:Dim colors:Cs)
+      meth init(parent:P maxy:Y dim:Dim colors:Cs stipple:Ss)
 	 Limit = {GetLimit Y}
       in
 	 <<Tk.canvas tkInit(parent:             P
-			    width:              Width+LeftWidth+1
+			    width:              LoadWidth+LeftWidth+1
 			    height:             Height+1+2*Border
 			    highlightthickness: 0
 			    xscrollincrement:   1
@@ -88,11 +90,12 @@ in
 	 self.TextTag   =  {New Tk.canvasTag tkInit(parent: self)}
 	 self.Dimension = Dim # ' '
 	 self.Colors    = Cs
+	 self.Stipple   = Ss
 	 CurScale  <- {IntToFloat Height} / Limit
 	 CurLimit  <- Limit
 	 LeftMaxY  <- Y
 	 RightMaxY <- 0.0
-	 <<Tk.canvas tk(crea rectangle 0 0 Width ~Height
+	 <<Tk.canvas tk(crea rectangle 0 0 LoadWidth ~Height
 			fill:ActiveColor)>>
 	 <<Load DrawTicks(5 ~ Height div 5)>>
 	 <<Tk.canvas tk(crea rectangle
@@ -100,34 +103,44 @@ in
 			outline: {TclGetConf self bg}
 			fill:    {TclGetConf self bg}
 			tags:    self.CoverTag)>>
-	 <<Tk.canvas tk(crea rectangle 0 0 Width ~Height)>>
+	 <<Tk.canvas tk(crea rectangle 0 0 LoadWidth ~Height)>>
 	 <<Load DrawLabel(5 ~ Height div 5 Limit / 5.0)>>
       end
 
       meth DrawTicks(N D)
-	 <<Load tk(crea line 0 D*N Width D*N)>>
+	 <<Load tk(crea line 0 D*N LoadWidth D*N stipple:DashLine)>>
 	 case N>0 then <<Load DrawTicks(N-1 D)>> else true end
       end
       
       meth DrawLabel(N D Y)
 	 <<Load tk(crea text 0 D*N
 		   font: TickFont
-		   text: N*{FloatToInt Y}#' '#self.Dimension 
+		   text: N*{FloatToInt Y}#' '#self.Dimension
 		   anchor: e
 		   tags:   self.TextTag)>>
 	 <<Load tk(raise self.TextTag)>>
 	 case N>0 then <<Load DrawLabel(N-1 D Y)>> else true end
       end
       
-      meth DisplayLoads(Y1s Y2s X1 X2 Cs T)
+      meth DisplayLoads(Y1s Y2s X1 X2 Cs Ss T)
 	 case Y1s of nil then true
-	 [] Y1|Y1r then !Y2s=Y2|Y2r !Cs=C|Cr S=@CurScale in
+	 [] Y1|Y1r then
+	    !Y2s = Y2|Y2r
+	    !Cs  = C|Cr
+	    !Ss  = S|Sr
+	    CS   = ~@CurScale
+	    Y3   = case Y1r of nil then 0.0 [] Y|_ then Y end
+	    Y4   = case Y2r of nil then 0.0 [] Y|_ then Y end
+	 in
 	    <<Tk.canvas tk(crea polygon
-			   X1 0 X1 ~S*Y1 X2 ~S*Y2 X2 0
-			   fill: C
+			   X1 CS*Y3 X1 CS*Y1 X2 CS*Y2 X2 CS*Y4
+			   fill: C stipple: S
+			   tags: q(T self.BothTag))>>
+	    <<Tk.canvas tk(crea line
+			   X1 CS*Y1 X2 CS*Y2
 			   tags: q(T self.BothTag))>>
 	    <<Load tk(lower self.BothTag self.CoverTag)>>
-	    <<Load DisplayLoads(Y1r Y2r X1 X2 Cr T)>>
+	    <<Load DisplayLoads(Y1r Y2r X1 X2 Cr Sr T)>>
 	 end
       end
 
@@ -139,24 +152,45 @@ in
 	 {self.TextTag tk(delete)}
 	 <<Load DrawLabel(5 ~Height div 5 NewLimit / 5.0)>>
       end
+
+      meth clear
+	 NewLimit = {GetLimit {FoldL @PrevYs Max 0.0}}
+      in
+	 {@LeftTag  tk(delete)}
+	 {@RightTag tk(delete)}
+	 CurX <- 0
+	 case NewLimit==@CurLimit then true else
+	    <<Load ReScale(NewLimit)>>
+	    CurLimit <- NewLimit
+	 end
+      end
+
+      meth slice(S)
+	 Slice <- S
+	 <<Load clear>>
+      end
       
-      meth display(Ys S)
-	 Y          = Ys.1
-	 IsLeft     = (@CurX < HalfWidth)
-	 NeedsScale = (Y > @CurLimit)
+      meth display(Ys)
+	 S          = @Slice
+	 Y          = {FoldL Ys Max 0.0}
+	 X          = @CurX
+	 NextX      = S + X
+	 L          = @CurLimit
+	 IsLeft     = (X < HalfWidth)
+	 NeedsScale = (Y > L)
       in
 	 %% Check whether display needs to be scrolled
-	 case @CurX+S>=Width then
+	 case NextX >= LoadWidth then
 	    TmpTag = @LeftTag
 	 in
 	    {TmpTag    tk(delete)}
 	    {@RightTag tk(move ~HalfWidth 0)}
-	    CurX     <- @CurX - HalfWidth
+	    CurX     <- X - HalfWidth
 	    LeftTag  <- @RightTag
 	    RightTag <- TmpTag
 	    case NeedsScale then true
 	    else RightLimit = {GetLimit @RightMaxY} in
-	       case RightLimit < @CurLimit then
+	       case RightLimit < L then
 		  <<Load ReScale(RightLimit)>>
 		  CurLimit  <- RightLimit
 	       else true
@@ -166,23 +200,17 @@ in
 	    RightMaxY <- Y
 	 else true end
 	 %% Check whether display needs to be rescaled
-	 case NeedsScale then
-	    NewLimit = {GetLimit Y}
-	 in
+	 case NeedsScale then NewLimit = {GetLimit Y} in
 	    <<Load ReScale(NewLimit)>>
 	    CurLimit <- NewLimit
 	 else true end
-	 case IsLeft then
-	    LeftMaxY  <- {Max @LeftMaxY Y}
-	 else
-	    RightMaxY <- {Max @RightMaxY Y}
+	 case IsLeft then LeftMaxY <- {Max @LeftMaxY Y}
+	 else RightMaxY <- {Max @RightMaxY Y}
 	 end 
-	 <<Load DisplayLoads(@PrevYs Ys @CurX @CurX+S self.Colors
-			     case @CurX+S>HalfWidth then @RightTag
-			     else @LeftTag
-			     end)>>
+	 <<Load DisplayLoads(@PrevYs Ys X NextX self.Colors self.Stipple
+			     case IsLeft then @LeftTag else @RightTag end)>>
 	 PrevYs <- Ys
-	 CurX   <- @CurX + S
+	 CurX   <- NextX
       end
 
    end
