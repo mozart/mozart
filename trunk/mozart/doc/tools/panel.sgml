@@ -1,0 +1,359 @@
+<chapter id="chapter.panel">
+<title/The Oz Panel/
+<p>
+The Oz Panel is a graphical tool to visualize and
+control the most important parameters of a running DFKI Oz system.
+
+<section>
+<title/Usage/
+<p>
+This section briefly outlines the features of the Oz Panel.
+<p>
+<para><title/invoking/
+The Panel is invoked by either feeding the 
+expression
+<<<{Panel open}>>>
+or by selecting from the Oz Menu in the Oz Programming Interface the
+<<Panel>> entry. Furthermore, it is possible to invoke the Panel from
+the Oz Programming Interface with the key <KBD/C-C p/.
+<p>
+<para><title/monitor/The Panel <def/monitors/ the
+most important system parameters. The Panel can be configured (see
+<Ptr to="section.panel.menu.options">) to also allow to
+<para><title/configure/<def/configure/ system parameters. The Panel
+works as a graphical frontend for the procedures 
+<<System.get>>
+<index/System<and>get/
+and
+<<System.set>>
+<index/System<and>set/ that are described in
+<!--** <Ptr to="chapter.system">. -->
+<p>
+<para><title/update/The panel periodically updates its display. By
+default, only when the mouse pointer is over the Panel's window updating
+takes place. However, this can be changed (see
+<Ptr to="section.panel.menu.options">).
+<p>
+The information the panel displays is described in 
+<Ptr to="figure.panel.threads"> to <Ptr to="figure.panel.opi">.
+<p>
+<figure class="maxi Figure" id="figure.panel.threads">
+<caption/Information on threads./
+<picture latex>
+<![RCDATA[
+\newcommand{\SSGL}{\cline{2-3}}
+
+\newcommand{\panpic}[1]{\begin{tabular}{c}\\[-.4em]\mbox{\epsffile{/home/ps-home/hydra/handbook/dumps/System/panel/#1}}\\\end{tabular}}
+
+\begin{tabular}{|l|l|p{8cm}|}
+\hline
+\multicolumn{1}{|c}{\bf Frame} & 
+\multicolumn{1}{|c|}{\bf Field} & 
+\multicolumn{1}{|c|}{\bf Explanation} \\
+\hline\hline
+\bf Runtime    & Run                &
+        Run time.
+        \\\SSGL
+               & Garbage Collection &
+        Time spent on garbage collection.
+        \\\SSGL
+               & Copy               &
+        Time spent on copying (that is, on cloning of spaces).
+        \\\SSGL
+               & Propagation        &
+        Time spent on executing finite domain propagators.
+        \\\SSGL
+               & Load               &
+        Time spent on loading precompiled Oz files.
+        \\\SSGL
+               & \panpic{runtime-load.ps} &
+        Operating system load of the Oz process.
+        \\\SSGL
+               & \panpic{runtime-dist.ps} &
+        Relative distribution of entire computation time.
+        \\\hline\hline
+\bf Threads    & Created            &
+        Total number of threads created.
+        \\\SSGL
+               & Runnable     &
+        Number of currently runnable threads.
+        \\\SSGL
+               & \panpic{threads-runnable.ps} &
+        Displays number of currently runnable threads.
+        \\\hline\hline
+\bf Priorities & High / Medium        &
+        Relation between time slices available for threads of
+        priorities \?high? and \?medium?. 
+        \\\SSGL
+	       & Medium / Low         &
+        Relation between time slices available for threads of
+        priorities \?medium? and \?low?. 
+        \\\hline
+\end{tabular}
+]]>
+</picture>
+</figure>
+
+
+<figure class="maxi Figure" id="figure.panel.memory">
+<caption/Information on memory/
+<picture latex>
+<![RCDATA[
+\begin{center}\small
+\begin{tabular}{|l|l|p{8cm}|}
+\hline
+\multicolumn{1}{|c}{\bf Frame} & 
+\multicolumn{1}{|c|}{\bf Field} & 
+\multicolumn{1}{|c|}{\bf Explanation} \\
+\hline\hline
+\bf Heap Usage & Threshold   &
+        Heap size when next automatic garbage collection takes
+        place. Gets recomputed after every garbage collection. 
+        \\\SSGL
+	       & Size        &
+        Current heap size.
+        \\\SSGL
+               & Active Size &
+        Heap size after last garbage collection.
+        \\\SSGL
+               & \panpic{heap-usage.ps} &
+        Displays the three values from above.
+	\\\hline\hline
+\bf Heap Parameters   & Minimal Size &
+        Minimal heap size. 
+        \\\SSGL
+                      & Maximal Size &
+        Maximal allowed heap size. If the heap size exceeds this
+        limit by a percentage of heap tolerance (see below) before garbage
+	collection 
+        can take place, the user is prompted to increase the limit.
+        \\\SSGL
+                      & Free         &
+        Gives the percentage of free heap memory after garbage
+        collection. For example, a value of $75$ means that 
+        the heap threshold is set to approximately: 
+        $$\mbox{Active Size} * 100/(100-75)$$
+	that is:
+        $$\mbox{Active Size} * 4.$$
+        \\\SSGL
+                      & Tolerance    &
+        Gives the percentage by which the system is allowed for
+        purposes of better memory allocation to exceed
+        the maximal heap size or to increase the heap threshold.
+        \\\hline\hline
+\bf Garbage Collector & Active       &
+        Whether garbage collection is invoked automatically.
+        \\\hline
+\end{tabular}
+\end{center}
+]]>
+</picture>
+</figure> 
+
+
+<figure class="maxi Figure" id="figure.panel.ps">
+<caption/Information on problem solving./
+<picture latex>
+<![RCDATA[
+\begin{tabular}{|l|l|p{8cm}|}
+\hline
+\multicolumn{1}{|c}{\bf Frame} & 
+\multicolumn{1}{|c|}{\bf Field} & 
+\multicolumn{1}{|c|}{\bf Explanation} \\
+\hline\hline
+\bf Finite Domain Constraints & Variables Created   &
+        Number of finite domain variables created.
+        \\\SSGL
+                              & Propagators Created &
+        Number of finite domain propagators created.
+        \\\SSGL
+                              & Propagators Invoked &
+        Number of finite domain propagators invoked.
+        \\\hline\hline
+\bf Spaces                    & Created   &
+        Number of computation spaces created by \?Space.new?.%
+        \\\SSGL
+                              & Cloned    &
+        Number of computation spaces cloned by \?Space.clone?.
+        \\\SSGL
+                              & Committed &
+        Number of computation spaces committed by \?Space.commit?.
+        \\\SSGL
+                              & Failed    &
+        Number of failed computation spaces.
+        \\\SSGL
+                              & Succeeded &
+        Number of succeeded computation spaces.
+        \\\hline
+\end{tabular}
+]]>
+</picture>
+</figure>
+
+
+<figure class="maxi Figure" id="figure.panel.opi">
+<caption/Information on programming interface./
+<picture latex>
+<![RCDATA[
+\begin{center}\small
+\begin{tabular}{|l|l|p{8cm}|}
+\hline
+\multicolumn{1}{|c}{\bf Frame} & 
+\multicolumn{1}{|c|}{\bf Field} & 
+\multicolumn{1}{|c|}{\bf Explanation} \\
+\hline\hline
+\bf Status messages & Idle               &
+        Whether messages are printed when the Oz Emulator gets idle.
+        \\\SSGL
+                    & Garbage Collection &
+        Whether messages on garbage collection are printed.
+        \\\hline\hline
+\bf Output          & Maximal Depth      &
+        Maximal depth used for \?Show? and \?Print?
+        (see Section~\ref{sec:printing}).
+        \\\SSGL
+		    & Maximal Width      &
+        Maximal width used for \?Show? and \?Print?
+        (see Section~\ref{sec:printing}).
+        \\\hline\hline
+\bf Errors          & Show Location    &
+        Whether error messages contain location information.
+        \\\SSGL
+                    & Show Hints       &
+        Whether error messages contain hint information.
+        \\\SSGL
+                    & Maximal Depth    &
+        Maximal depth used for printing values in error messages.
+        \\\SSGL
+                    & Maximal Width    &
+        Maximal width used for printing values in error messages.
+        \\\SSGL
+		    & Maximal Tasks    &
+        Number of tasks on the thread to be printed.              
+\\\hline
+\end{tabular}
+\end{center}
+]]>
+
+</picture>
+</figure>
+</section>
+
+
+<section id="section.panel.menu">
+<title/The Menu Bar/
+<p>
+<subsection id="section.panel.menu.panel">
+<title/The <<Panel>> Menu/
+<p>
+This menu contains operations to clear and close the panel and to stop
+the Oz system.
+<p>
+<list>
+<entry><menu/About.../
+<item>
+Displays a window containing short information on the
+Panel.
+
+<Entry><menu key="C-r"/Reset/
+<Item>Clears all monitoring information of the Panel.
+
+<Entry><menu/Save Parameters&ellipsis;/
+<Item>
+Save the current system parameters settings to a file. Feeding that file
+resets the system parameters to their saved values. 
+
+<Entry><menu/Shutdown System&ellipsis;/
+<Item>
+After confirmation with a dialog the entire Oz system is halted.
+
+<Entry><menu key="C-x"/Close/
+<Item>
+Closes the Panel window.
+</list>
+</subsection>
+
+
+<subsection id="section.panel.menu.options">
+<title/The <<Options>> Menu/
+<p>
+<list>
+<Entry><menu/Configure/
+<Item>
+Toggles whether the Panel provides for monitoring only, or for both
+monitoring and configuring.
+
+<Entry><menu/Update&ellipsis;/
+<Item>
+Creates a dialog to set options when the Panel updates its display.
+<<Update Time>> gives the time period after which the display is
+updated.
+<<Update Requirement>> allows to toggle whether the display is
+updated, only if the mouse pointer is over the Panel's window.
+
+
+<Entry><menu/History&ellipsis;/
+<Item>
+Creates a dialog to set the history range for the thread and memory 
+graphs.
+</list>
+</section>
+
+<section>
+<title/The <<Panel>> Object/
+<p>
+This section lists all methods of the <<Panel>> object. New
+Panels can be created by 
+creating new objects from the class <<PanelClass>>. Execution of
+<index class=module/PanelClass/
+<<<MyPanel = {New PanelClass init}>>>
+creates a new Panel which can be accessed by the variable
+<<MyPanel>>.
+
+<subsection>
+<title/Invoking/
+<p>
+<list>
+<entry>open
+<Synopsis>
+<<<{Panel open}>>>
+<index class=module/Panel<and>open/
+<Item>
+Invokes the Panel.
+</list>
+</subsection>
+
+<subsection>
+<title/Options/
+<p>
+<list>
+<entry>option
+<Synopsis>
+<<<{Panel option(configure ?+{B})>>>
+<index class=module/Panel<and>option/
+<item>
+Toggles whether the panel allows to configure system parameters.
+
+<entry>option
+<Synopsis>
+<<<{Panel option(update time:  ?+{I}<=_
+                     mouse: ?+{B}<=_)}>>>
+<index class=module/Panel<and>option/
+<item>
+Sets the parameters for updating as described in
+<Ptr to="section.panel.menu.options">.
+
+<entry>option
+<Synopsis>
+<<<{Panel option(history range: ?+{I}<=_)>>>
+<index class=module/Panel<and>option/
+<Item>
+Sets the parameters for the history range as described in
+<Ptr to="section.panel.menu.options">.
+</list>
+</subsection>
+</section>
+
+
+
+
