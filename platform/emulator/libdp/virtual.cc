@@ -119,7 +119,7 @@ static Bool processGCMsgChunks(unsigned long clock,
 			       VSMsgChunkPoolManagerOwned *cpm);
 
 //
-DebugCode(VSSendRecvCounter vsSRCounter;);
+DebugVSMsgs(VSSendRecvCounter vsSRCounter;);
 
 ///
 /// (static) interface methods for virtual sites;
@@ -146,7 +146,7 @@ void zeroRefsToVirtualImpl(VirtualSite *vs)
 int sendTo_VirtualSiteImpl(VirtualSite *vs, MsgBuffer *mb, 
 			   MessageType mt, DSite *storeSite, int storeIndex)
 {
-  DebugCode(vsSRCounter.send(););
+  DebugVSMsgs(vsSRCounter.send(););
   return (vs->sendTo((VSMsgBufferOwned *) mb, mt, storeSite, storeIndex,
 		     &freeMsgBufferPool));
 }
@@ -400,7 +400,7 @@ static Bool readVSMessages(unsigned long clock, void *vMBox)
 
       //
       if (msgType == VS_M_PERDIO) {
-	DebugCode(vsSRCounter.recv(););
+	DebugVSMsgs(vsSRCounter.recv(););
 	msgReceived(myVSMsgBufferImported);
       } else {
 	//
