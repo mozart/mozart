@@ -85,3 +85,69 @@ entailment:
   r.leave(); s.leave(); d.leave();
   return OZ_ENTAILED;
 }
+
+//-----------------------------------------------------------------------------
+
+OZ_C_proc_begin(fsp_isInR, 3)
+{
+  OZ_EXPECTED_TYPE(OZ_EM_INT "," OZ_EM_FSET "," OZ_EM_FD);
+
+  PropagatorExpect pe;
+
+  OZ_EXPECT(pe, 0, expectInt);
+  OZ_EXPECT(pe, 1, expectFSetVarAny);
+  OZ_EXPECT(pe, 2, expectIntVarAny);
+
+  return pe.impose(new IsInRPropagator(OZ_args[1],
+                                       OZ_args[0],
+                                       OZ_args[2]));
+}
+OZ_C_proc_end
+
+OZ_CFun IsInRPropagator::spawner = fsp_isInR;
+
+OZ_Return IsInRPropagator::propagate(void)
+{
+  OZ_DEBUGPRINTTHIS("in: ");
+
+  OZ_FDIntVar b(_b);
+  OZ_FSetVar v(_v);
+
+  // TMUELLER if is singleton do the right things
+  if (v->isIn(_i)) {
+    FailOnEmpty(*b &= 1);
+    b.leave();
+    v.leave();
+    OZ_DEBUGPRINTTHIS("entailed: ");
+    return OZ_ENTAILED;
+  }
+  if (v->isNotIn(_i)) {
+    FailOnEmpty(*b &= 0);
+    b.leave();
+    v.leave();
+    OZ_DEBUGPRINTTHIS("entailed: ");
+    return OZ_ENTAILED;
+  }
+  if (*b == fd_singl) {
+    if (b->getSingleElem() == 0) {
+      FailOnInvalid(*v-= _i);
+    } else {
+      FailOnInvalid(*v += _i);
+    }
+    b.leave();
+    v.leave();
+    OZ_DEBUGPRINTTHIS("entailed: ");
+    return OZ_ENTAILED;
+  }
+
+  OZ_DEBUGPRINTTHIS("sleep: ");
+  b.leave();
+  v.leave();
+  return SLEEP;
+
+failure:
+  OZ_DEBUGPRINTTHIS("fail: ");
+  b.fail();
+  v.fail();
+  return FAILED;
+}

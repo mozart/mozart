@@ -124,6 +124,7 @@ OZ_C_proc_proto(fdtest_sumac)
 
 OZ_C_proc_proto(fsp_init)
 OZ_C_proc_proto(fsp_isIn)
+OZ_C_proc_proto(fsp_isInR)
 OZ_C_proc_proto(fsp_include)
 OZ_C_proc_proto(fsp_exclude)
 OZ_C_proc_proto(fsp_match)

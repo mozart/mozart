@@ -14,16 +14,21 @@
 
 OZ_C_proc_begin(fsp_isIn, 3)
 {
-  OZ_EXPECTED_TYPE(OZ_EM_FSET "," OZ_EM_INT "," OZ_EM_FD);
+  OZ_EXPECTED_TYPE(OZ_EM_INT "," OZ_EM_FSET "," OZ_EM_TNAME);
 
   PropagatorExpect pe;
 
-  OZ_EXPECT(pe, 0, expectFSetVarAny);
-  OZ_EXPECT(pe, 1, expectInt);
-  OZ_EXPECT(pe, 2, expectIntVarAny);
+  OZ_EXPECT(pe, 0, expectInt);
+  OZ_EXPECT(pe, 1, expectFSetVarAny);
 
-  return pe.impose(new IsInPropagator(OZ_args[0],
-                                      OZ_args[1],
+  if (!OZ_isVariable(OZ_args[2]) &&
+      !(OZ_isTrue(OZ_args[2]) || OZ_isFalse(OZ_args[2]))) {
+    pe.fail();
+    return OZ_typeError(expectedType, 2, "");
+  }
+
+  return pe.impose(new IsInPropagator(OZ_args[1],
+                                      OZ_args[0],
                                       OZ_args[2]));
 }
 OZ_C_proc_end
@@ -34,32 +39,28 @@ OZ_Return IsInPropagator::propagate(void)
 {
   OZ_DEBUGPRINTTHIS("in: ");
 
-  OZ_FDIntVar b(_b);
   OZ_FSetVar v(_v);
 
-  // TMUELLER if is singleton do the right things
   if (v->isIn(_i)) {
-    FailOnEmpty(*b &= 1);
-    b.leave();
+    if (OZ_unify(_b, OZ_true()) == OZ_FAILED)
+      goto failure;
     v.leave();
     OZ_DEBUGPRINTTHIS("entailed: ");
     return OZ_ENTAILED;
   }
   if (v->isNotIn(_i)) {
-    FailOnEmpty(*b &= 0);
-    b.leave();
+    if (OZ_unify(_b, OZ_false())  == OZ_FAILED)
+      goto failure;
     v.leave();
     OZ_DEBUGPRINTTHIS("entailed: ");
     return OZ_ENTAILED;
   }
   OZ_DEBUGPRINTTHIS("sleep: ");
-  b.leave();
   v.leave();
   return SLEEP;
 
 failure:
   OZ_DEBUGPRINTTHIS("fail: ");
-  b.fail();
   v.fail();
   return FAILED;
 }
