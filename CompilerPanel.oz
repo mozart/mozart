@@ -29,12 +29,11 @@ import
    Pickle(load save)
    Tk
    TkTools
-   Compiler(genericInterface)
+   Listener('class')
    Browser(browse)
    Emacs(condSend)
 export
-   'class':           CompilerPanel
-
+   'class': CompilerPanel
 define
    local
       UrlDefaults = \insert '../url-defaults.oz'
