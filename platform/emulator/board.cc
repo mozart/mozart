@@ -141,9 +141,6 @@ Board::Board(Actor *a,int typ)
   suspCount = 0;
   u.actor   = a;
   gcField   = (Board *) 0;
-#ifdef PROP_MERGING
-  pq        = (PropagatorQueue *) 0;
-#endif
 }
 
 
