@@ -1,0 +1,96 @@
+SRCDIR =	@srcdir@
+
+INSTALL=	@INSTALL@
+INSTALL_BIN=	$(INSTALL) -m 555
+INSTALL_OTHER=	$(INSTALL) -m 444
+INSTALL_DIR=	@INSTALLDIR@
+
+OZPLATFORM=	@OZPLATFORM@
+OZHOME=		@prefix@
+OZVERSION=	@OZVERSION@
+
+SUBDIRS=	Emulator lib bin elisp
+
+DISTDIR=	dist
+
+FILES=		README* LICENSE BUGS
+ALLFILES=	$(FILES:%=$(OZHOME)/%)
+
+INSTALLDIR=	$(INSTALL) -d -g ps-soft -m 775
+
+DIRS=		bin demo include lib platform tools man
+LIBDIRS=	elisp browser panel explorer bitmaps compiler wish
+ALLDIRS=	$(OZHOME) $(DIRS:%=$(OZHOME)/%) $(LIBDIRS:%=$(OZHOME)/lib/%) \
+		$(PLATFORMS:%=$(OZHOME)/platform/%)
+
+COMMONFILES = oz/bin oz/demo oz/include oz/lib \
+		oz/README* oz/LICENSE oz/BUGS \
+                oz/man oz/tools \
+                oz/cache
+
+COMPRESS = compress
+ZIP      = gzip -9
+
+CACHEDIR=oz/cache/http/www.ps.uni-sb.de/ozhome/lib
+
+.PHONY:	all install clean distclean realclean veryclean World files
+
+all:
+
+all install clean realclean depend distclean:
+	dirs="$(SUBDIRS)"; for i in $$dirs; do (cd $$i && $(MAKE) $@); done
+
+veryclean: realclean
+
+install: $(ALLDIRS) $(ALLFILES)
+
+$(ALLFILES):
+	$(INSTALL) -m 444 $(FILES) $(OZHOME)
+
+$(ALLDIRS) $(DISTDIR):
+	$(INSTALLDIR) $@
+
+dist: common $(PLATFORMS)
+
+home: mini-common wish-linux src linuxz
+
+src:
+	(cd $(SRCDIR)/Emulator; make realclean; cvs update)
+	(cd $(SRCDIR); tar vzcf dist/oz-emu.tgz Emulator)
+	(cd $(SRCDIR); cvs update -l;
+	 tar vzcf dist/oz-misc.tgz \
+	  Imake.tmpl Imakefile ozmkmf include bin elisp CVS
+	(cd $(SRCDIR)/lib; make realclean; cvs update)
+	(cd $(SRCDIR)/TestFiles; cvs update)
+	(cd $(SECDIR); tar vzcf dist/oz-lib.tgz lib TestFiles)
+
+mini-common: $(DISTDIR)
+	(cd $(OZHOME)/..; \
+	tar -zvcf - oz/bin oz/include oz/lib) > \
+	   $(DISTDIR)/mini-$(OZVERSION).tgz
+
+common: $(DISTDIR)
+	(cd $(OZHOME)/..; \
+	tar -cf - $(COMMONFILES)) | \
+        $(ZIP) > $(DISTDIR)/oz-$(OZVERSION)-$@.tar.gz
+
+$(PLATFORMS): $(DISTDIR)
+	(cd $(OZHOME)/..; \
+        tar -cf - oz/platform/$@) | \
+        $(ZIP) > $(DISTDIR)/oz-$(OZVERSION)-$@.tar.gz
+
+oz-win::
+	rm -rf oz oz-$(OZVERSION)
+	( cd $(OZHOME)/..; \
+	  tar cf - oz/?*.exe oz/demo oz/include oz/lib \
+		   oz/README* oz/LICENSE oz/BUGS oz/ChangeLog \
+                   oz/platform/win32-i486/?*.exe \
+                   oz/platform/win32-i486/?*.dll \
+                   oz/platform/win32-i486/tcldoc \
+         ) | tar xf -
+	rm -f oz/demo/rundemo oz/lib/compiler/?*.ql
+	mkdir -p $(CACHEDIR)
+	mv oz/lib/?*.ozc $(CACHEDIR)
+	mv $(CACHEDIR)/OPI.ozc oz/lib
+	(cd oz/lib/wish; rm -rf tk tcl tcl8.0 tk8.0; mv tcl7.6 tcl; mv tk4.2 tk)
+	mv oz oz3
