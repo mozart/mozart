@@ -1,11 +1,10 @@
 @SET_MAKE@
 BUILDTOP	= @BUILDTOP@
+SRCTOP		= @SRCTOP@
 prefix		= @prefix@
 SRCDIR          = @srcdir@
 VPATH           = @srcdir@
 PLATFORM	= @PLATFORM@
-PACKAGE		= @PACKAGE@
-PROTOCOL	= @PROTOCOL@
 LIB_DIR		= $(prefix)/contrib
 
 OZC		= @OZC@
@@ -14,8 +13,9 @@ OZDYNLD		= @OZDYNLD@
 
 CXX		= @CXX@
 CXXFLAGS	= @CXXFLAGS@
-CPPBASE		= -I$(SRCDIR)/../../platform/emulator -I$(prefix)/include
-CPPFLAGS	= @CPPFLAGS@ $(CPPBASE)
+CPPFLAGS	= -I$(SRCTOP)/platform/emulator \
+		  -I$(BUILDTOP)/platform/emulator \
+		  -I$(prefix)/include @CPPFLAGS@
 LDFLAGS		= @LDFLAGS@
 LIBS		= @LIBS@ -lc
 
@@ -55,7 +55,7 @@ clean veryclean:
 distclean: clean
 	-$(RM) config.* Makefile
 
-include $(SRCDIR)/../../share/Makefile.boot
+include $(SRCTOP)/share/Makefile.boot
 
 bootstrap: boot-all
 
