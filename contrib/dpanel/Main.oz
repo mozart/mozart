@@ -9,18 +9,21 @@ import
 export
    open:Start
 define
-   SD
    MainLock = {NewLock}
    Running={NewCell false}
+   RunSync = {NewCell unit}
 
    proc {Start} O N in
       {Exchange Running O N}
       if O\=false then
-         {GUI.open true O}
+         {GUI.reOpen}
+         %% Start the thread again
+         {Access RunSync} = unit
          N=O
-      else ST OT BT NI in
-         N={Thread.this}
-         {GUI.open false N}
+      else ST OT BT NI SD in
+         {GUI.open RunSync}
+
+         N = true
 
          SD = {New SiteInfo.sitesDict init(Colour.list GUI)}
          ST = {New SiteInfo.sites init(SD)}
@@ -33,20 +36,23 @@ define
          {BT setGui(GUI.bsites GUI.bactive GUI.bnumber)}
          {Finalize.everyGC proc{$}
                               lock MainLock then
-                                 {GUI.oactive   divider(col:darkred)}
-                                 {GUI.sactivity divider(col:darkred)}
-                                 {GUI.bactive   divider(col:darkred)}
-                                 {GUI.onumber   divider(col:darkred)}
-                                 {GUI.snumber   divider(col:darkred)}
-                                 {GUI.bnumber   divider(col:darkred)}
+                                 if {Not {IsFree {Access RunSync}}} then
+                                    {GUI.oactive   divider(col:darkred)}
+                                    {GUI.sactivity divider(col:darkred)}
+                                    {GUI.bactive   divider(col:darkred)}
+                                    {GUI.onumber   divider(col:darkred)}
+                                    {GUI.snumber   divider(col:darkred)}
+                                    {GUI.bnumber   divider(col:darkred)}
+                                 end
                               end
                            end }
 
-         {Updater ST OT BT NI}
+         thread {Updater ST OT BT NI} end
       end
    end
 
    proc {Updater ST OT BT NI}
+      {Wait {Access RunSync}}
       lock MainLock then
          {ST display}
          {TableInfo.fetchInfo OT BT}

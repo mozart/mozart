@@ -3,16 +3,13 @@ import
    Browser(browse)
    DPPane(getTablesInfo) at 'x-oz://boot/DPPane'
    DPB at 'x-oz://boot/DPB'
+   System
 export
    ownerTable:OwnerTable
    borrowTable:BorrowTable
    fetchInfo:FetchInfo
 define
    {Wait DPB}
-
-   proc {SetDiff Xs Ys Zs}
-      {List.filter Xs fun {$ X} {List.member X Ys}==false end Zs}
-   end
 
    class ColorAlloc
       feat
@@ -136,9 +133,7 @@ define
          if {Dictionary.member self.table Key} then
             OldCredit = {self.getCredit {Dictionary.get self.table Key}}
          in
-            if OldCredit == {self.getCredit Data} then
-               skip
-            else
+            if OldCredit \= {self.getCredit Data} then
                Table, increment(self.diff Site)
             end
          else
@@ -156,9 +151,8 @@ define
          Table, resetDictionary(self.counter)
          Table, resetDictionary(self.diff)
          new <- nil
-         {List.map Data.list proc {$ E K} Table, updateEntity(E K) end
-          CurrentKeys}
-         OwnerTable, removeObsolete(CurrentKeys)
+         CurrentKeys={Map Data.list proc{$ E K} Table,updateEntity(E K) end}
+         {self removeObsolete(CurrentKeys)}
       end
 
       meth displayGraph(Dict Graph) Keys DisplayList in
@@ -171,6 +165,22 @@ define
                         end DisplayList}
          {Graph display({List.reverse DisplayList})}
       end
+
+      meth removeObsolete(CurrentKeyList)
+         RemovedKeys = {Filter CurrentKeyList
+                        fun{$ K}
+                           {Not {Dictionary.member self.table K}}
+                        end}
+      in
+         remove <- _
+         {List.map RemovedKeys proc {$ K I}
+                                  I = {Dictionary.get self.table K}.index
+                                  {Dictionary.remove self.table K}
+                               end @remove}
+         Table, removeDictObsolete(self.diff)
+         Table, removeDictObsolete(self.counter)
+      end
+
 
       meth display
          if @new \= nil then
@@ -206,29 +216,19 @@ define
                                                 guiNumber:self.guiNumber)}
       end
 
-      meth update(Data) Localized Key in
+      meth update(Data)
          Localized = Data.localized
          Key = {self.makeSite _}
+      in
          Table, update(Data)
+         %% Calculates the total number of entries. All localized
+         %% entities should be acounted for during this this
          if Localized > 0 then Old I in
             {Dictionary.get self.diff Key Old#I}
             {Dictionary.put self.diff Key Old+Localized#I}
          end
       end
 
-      meth removeObsolete(CurrentKeyList)
-         RemovedKeys
-         KeyListAll = {Dictionary.keys self.table}
-      in
-         {SetDiff KeyListAll CurrentKeyList RemovedKeys}
-         remove <- _
-         {List.map RemovedKeys proc {$ K I}
-                                  I = {Dictionary.get self.table K}.index
-                                  {Dictionary.remove self.table K}
-                               end @remove}
-         Table, removeDictObsolete(self.diff)
-         Table, removeDictObsolete(self.counter)
-      end
    end
 
    class BorrowTable from Table
@@ -247,29 +247,6 @@ define
          self.colorAlloc = {New ColorAlloc init(retCol:RetCol getCol:GetCol
                                                 guiActive:self.guiActive
                                                 guiNumber:self.guiNumber)}
-      end
-
-      meth removeObsolete(CurrentKeyList)
-         RemovedKeys
-         KeyListAll = {Dictionary.keys self.table}
-      in
-         {SetDiff KeyListAll CurrentKeyList RemovedKeys}
-         remove <- _
-         {List.map RemovedKeys
-          proc {$ K I} E in
-             E = {Dictionary.get self.table K}
-             I = E.index
-             if {Dictionary.member self.counter E.na.site} then
-                if {Dictionary.get self.counter E.na.site}==0 then
-                   {self.colorAlloc free(E.na.site)}
-                else skip end
-             else
-                {self.colorAlloc free(E.na.site)}
-             end
-             {Dictionary.remove self.table K}
-          end @remove}
-         Table, removeDictObsolete(self.diff)
-         Table, removeDictObsolete(self.counter)
       end
    end
 
