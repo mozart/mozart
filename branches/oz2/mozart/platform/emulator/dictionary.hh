@@ -32,6 +32,10 @@ public:
   {
     table = DynamicTable::newDynamicTable();
   }
+  OzDictionary(Board *b, DynamicTable *t) : ConstTermWithHome(b,Co_Dictionary)
+  {
+    table = t->copyDynamicTable();
+  }
   
   OZ_Return getArg(TaggedRef key, TaggedRef &out) 
   { 
@@ -72,6 +76,14 @@ public:
 
   TaggedRef pairs() { 
     return table->getPairs();
+  }
+
+  TaggedRef items() {
+    return table->getItems();
+  }
+
+  TaggedRef clone() {
+    return makeTaggedConst(new OzDictionary(home, table));
   }
 
   TaggedRef toRecord(TaggedRef lbl) 
