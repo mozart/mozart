@@ -76,7 +76,7 @@ greater-than operator <<&gt;>>.
 <P>In this example <<Z>> is bound to the maximum of <<X>> and <<Y>>,
 i.e. to <<Y>>:
 <P><FIGURE ID="CaseStatement" CLASS="Figure">
-<CAPTION>Using a case statement</CAPTION>
+<CAPTION>Using a if statement</CAPTION>
 <<<
 local X Y Z in
    X = 5 Y = 10
@@ -402,7 +402,7 @@ end
 <P>The expression ?{E} we may match against, could be any record
 structure, and not just a variable. This allows multiple argument
 matching, as shown in <PTR TO="SMerge">, which
-expects to sorted lists <<Xs>> and <<Ys>> and merges them into a
+expects two sorted lists <<Xs>> and <<Ys>> and merges them into a
 sorted list <<Zs>>.
 
 
@@ -491,7 +491,7 @@ end
 <P>There is one more rule to remember. It has to do with a nested
 application inside a record or a tuple as in:
 
-<<<Zs = X|{SMerge Xr Ys $}>>>
+<<<Zs = X|{SMerge Xr Ys}>>>
 
 <P>Here, the nested application goes <EM>after</EM> the record (or list)
 construction statement. Therefore, we get
@@ -520,9 +520,9 @@ proc {SMerge Xs Ys Zs}
    [] Xs#nil then Zs=Xs
    [] (X|Xr) # (Y|Yr) then
       if X=&lt;Y then
-         Zs = X|{SMerge Xr Ys $}
+         Zs = X|{SMerge Xr Ys}
       else Zr in
-         Zs = Y|{SMerge Xs Yr $}
+         Zs = Y|{SMerge Xs Yr}
       end
    end
 end
@@ -531,7 +531,7 @@ end
 
 <SECTION id=control.procasvals><TITLE/Procedures as Values/
 <P>Since we have been inserting elements in binary trees, let us
-define a program that checks if is a data structure is actually a
+define a program that checks if a data structure is actually a
 binary tree. The procedure <<BinaryTree>> shown in <PTR TO="CheckBinTree">
 checks a structure to verify whether it is a binary tree or not, and
 accordingly returns <<true>> or <<false>> in its result argument <<B>>.
@@ -737,7 +737,7 @@ finally
 end
 >>>
 
-<P>Assume that <<F>><NOTE FOOT>We will how see how input/output is
+<P>Assume that <<F>><NOTE FOOT>We will now see how input/output is
 handled later</NOTE> is an opened file; the procedure <<Process/1>>
 manipulates the file in some way; and the procedure <<CloseFile/1>>
 closes the file. The following program ensures that the <code/F/ is closed
@@ -763,7 +763,9 @@ labels: <<failure>>, <<error>>, and <<system>>.
 as applying a nonprocedure to some argument or adding an integer to an
 atom, etc.
 
- <ITEM><<system>>: indicates a runtime condition because of the environment ofthe Mozart operating system process, i.e., an unforeseeable  situation like a closed file or window; or failing to open a connection between two Mozart processes.
+ <ITEM><<system>>: indicates a runtime condition because of the environment of
+the Mozart operating system process, i.e., an unforeseeable  situation like
+a closed file or window; or failing to open a connection between two Mozart processes.
 
 </LIST>
 

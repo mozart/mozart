@@ -211,7 +211,7 @@ the following form:
 <P>A method call invokes the method defined in the class argument. A
 method call can only be used inside method definitions. This is
 because a method call takes the current object denoted by <<self>> as
-implicit argument. The method could be defined the class <<C>> or inherited
+implicit argument. The method could be defined in the class <<C>> or inherited
 from a super class. Inheritance will be explained shortly.
 
 
@@ -352,8 +352,7 @@ class C from A B end
 </FIGURE>
 
 
-<P>Also the class <<C>> below is invalid, and two methods <<m>> are
-is available in <<C>>.
+<P>Also the class <<C>> below is invalid, since two methods <<m>> is available in <<C>>.
 
 <<<
 class A meth m(...) ... end end
@@ -377,7 +376,7 @@ caches, at execution time.
 understand the total inheritance hierarchy, which is sometimes worth
 the effort. This is important when there is a shared common ancestor.
 
-<ITEM> Oz restricts multiple inheritance is a way that most
+<ITEM> Oz restricts multiple inheritance in a way that most
 the problems with it do not occur.
 
 <ITEM>Oz forces the programming methodology that when a method-name conflict
@@ -507,7 +506,7 @@ the abstract class to a <EM/concrete/ class.
 
 <P>In Oz, we have also another natural method for creating generic
 classes. Since classes are first-class values, we can instead define a
-function the takes some type argument(s) and return a class that is
+function that takes some type argument(s) and return a class that is
 specialized for the type(s). In <PTR TO="paramClass">, the function
 <<SortClass>> is defined that takes a class as its single argument and
 returns a sorting class specialized for the argument.
@@ -686,7 +685,7 @@ subsubclasses etc. In Oz there is no direct way to define a method to
 be protected.  However there is a programming technique that gives the
 same effect. We know that attributes are only visible inside a class
 or to descendants of a class by inheritance.  We may make a method
-protected by first making it private and second by storing it is in
+protected by first making it private and second by storing it in
 an attribute.  Consider the following example:
 
 <<<

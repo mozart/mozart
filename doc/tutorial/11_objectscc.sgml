@@ -56,7 +56,7 @@ section guarded by the lock will block. We say <EM>reentrancy</EM> is
 not supported. Simple locks can be modeled in Oz as follows, where
 <<Code>> is a nullary procedure encapsulating the computation to be
 performed in the critical section.  The lock is represented as a
-procedure: when applied to so some code, it tries to get the lock
+procedure: when applied to some code, it tries to get the lock
 by waiting until <<Old>> gets bound to <<unit>>. Notice that the lock is
 released upon normal as well as abnormal exit.
 
@@ -160,7 +160,7 @@ module <<Array>>.
 
 <LIST>
 
-<ITEM><<{NewArray +L +H +I ?A>> creates an array <<A>>, where <<L>>
+<ITEM><<{NewArray +L +H +I ?A}>> creates an array <<A>>, where <<L>>
 is the lower-bound index, <<H>> is the higher-bound index, and <<I>> is
 the initial value of the array elements.
 
@@ -481,7 +481,7 @@ end
 
 <SECTION id=section.objectscc.active><TITLE/Active Objects/
 <P>An active object is a thread whose behavior is described by a class
-definition. Communication with active objects is though asynchronous
+definition. Communication with active objects is through asynchronous
 message passing. An active object reacts to received messages by
 executing the corresponding methods in its associated class. An active
 object executes one method at a time. Therefore locking is not needed
