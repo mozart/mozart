@@ -27,8 +27,8 @@
 #ifndef __PROTOCOLCREDITHH
 #define __PROTOCOLCREDITHH
 
-#include "table.hh"
-
+void sendPrimaryCredit(DSite *sd,int OTI,Credit c);
+void sendSecondaryCredit(DSite *cs,DSite *sd,int OTI,Credit c);
 void sendCreditBack(DSite* sd,int OTI,Credit c);
 
 #endif
