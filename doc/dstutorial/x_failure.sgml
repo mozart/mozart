@@ -253,7 +253,6 @@ object-record is fetched over the network, which might fail.
 The operation <<{Probe Entity}>> can be done on all
 entities and will block forever until a distribution fault
 causes an exception to be raised or a handler to be called.
-Watchers (see the Advanced Model) are implemented by means of <<Probe>>.
 A temporary limitation of the current release is that
 the <<Probe>> operation is not available to users.
 </LIST>
@@ -354,23 +353,22 @@ as soon as the site finds out about the failure.
 Two operations are provided:
 <LIST>
 <ITEM> <<proc {Fault.installWatcher Entity FStates WatcherProc}>>
-<ITEM> <<proc {Fault.deinstallWatcher Entity}>>
+<ITEM> <<proc {Fault.deinstallWatcher Entity WatcherProc}>>
 </LIST>
 <P>The procedure <<Fault.installWatcher>> creates a new thread
 on the current site, in which <<WatcherProc>> will be invoked
 as soon as the site detects that
 a fault state in <<FStates>> occurs.
-The procedure <<Fault.deinstallWatcher>> removes all watchers
-on the current site.
+The procedure <<Fault.deinstallWatcher>> removes the given
+watcher from the current site.
 
-<P>A watcher <<WatcherProc>> is a three-argument
-procedure with exactly the same argument list as a handler.
-It is called as <<{WatcherProc E FS OP}>>.
+<P>A watcher <<WatcherProc>> is a two-argument
+procedure that is called as <<{WatcherProc E FS}>>.
 The arguments <<E>> and <<FS>>
-are exactly the same arguments as given
-in a distribution exception.
-The argument <<OP>> always has the value <<probe>>.
-
+are exactly the same arguments are
+in a distribution exception or in a handler call.
+Watchers are a derived concept.
+They are implemented with handlers and the <<Probe>> operation.
 
 <SECTION><TITLE>Fault states for language entities</TITLE>
 
@@ -567,7 +565,7 @@ then the entity argument <<E>> is undefined.
 i.e., the call <<{Fault.install global _ _}>> is not implemented.
 If an attempt is made to install a <<global>> handler,
 then a <<notImplemented>> exception is given.
-<ITEM>The operation <<Probe>> is not available to the user.
+<ITEM>The operation <<Probe>> is not available to users.
 </LIST>
 
 </CHAPTER>
