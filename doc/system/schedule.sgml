@@ -322,7 +322,7 @@ capacities (for <<FD.record>> see&nbsp;<ptr to="FD.record">).
 <<cumulativeEF>>
 <synopsis>
 <<<
-{Schedule.cumulativeED ?+{TasksLIvv} ?+{StartR} ?+{DurR}
+{Schedule.cumulativeEF ?+{TasksLIvv} ?+{StartR} ?+{DurR}
                        ?+{UseR} ?+{CapIv}}
 >>>
 <item>
