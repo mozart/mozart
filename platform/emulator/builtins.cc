@@ -679,6 +679,7 @@ OZ_C_proc_begin(BIsystemTellSize,3)
       // Unify newofsvar and term:
       Bool ok=am.unify(makeTaggedRef(newTaggedCVar(newofsvar)),
                        makeTaggedRef(tPtr));
+      if(!ok) {error("system BISystemTellSize");}
       Assert(ok);
       return PROCEED;
     }

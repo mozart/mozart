@@ -4886,7 +4886,7 @@ Bool cellReceiveContentsManager(CellManager *cm,TaggedRef val,int mI){
   short  state=cf->getState();
   Assert(state & Cell_Requested);
   pendThreadResumeAll(cf->getPending());
-  DebugCode(cf->setPending(NULL));
+  cf->setPending(NULL);
 
   TaggedRef head=cf->getHead();
   SiteUnify(head,val);
@@ -4955,7 +4955,7 @@ Bool cellReceiveContentsFrame(CellFrame *cf,TaggedRef val,Site *mS,int mI){
   Assert(state & Cell_Requested);
 
   pendThreadResumeAll(cf->getPending());
-  DebugCode(cf->setPending(NULL));
+  cf->setPending(NULL);
   SiteUnify(cf->getHead(),val);
   if(state & Cell_Next){
     if(cf->getCtr()==0){
@@ -5012,6 +5012,11 @@ TaggedRef cellGetContentsFast(Tertiary *c)
 /* --------------------- initiate ------------------------------------- */
 
 inline void e_invalid(CellFrame *cf,TaggedRef old,TaggedRef nw,Thread* th){
+  {
+    PendThread *head=cf->getPending();
+    PendThread *pt=head;
+    while(pt!=NULL) pt=pt->next;}
+
   cf->setState(Cell_Requested);
   cf->setHead(old);
   cf->setContents(nw);

@@ -1892,10 +1892,10 @@ public:
   CellSec(){ // on Proxy becoming Frame
     state=Cell_Invalid;
     readCtr=0;
+    pending=NULL;
 
     DebugCode(head=makeTaggedNULL());
     DebugCode(contents=makeTaggedNULL());
-    DebugCode(pending=NULL);
     DebugCode(next=NULL);}
 };
 
@@ -2135,6 +2135,7 @@ private:
   PendThread *pending;
 public:
   LockLocal(Board *b) : OzLock(b,Te_Local){
+    pending=NULL;
     setPtr(NULL);
     pending= NULL;}
 
