@@ -30,6 +30,10 @@
 		             out => ['value'],
 		             bi  => BIdot},
 
+     'dotAssign'	=> { in  => ['*recordCOrChunk','+feature','value'],
+			     out => [],
+			     BI  => BIdotAssign},
+
      'wait'	        => { in  => ['+value'],
 			     out => [],
 			     bi  => BIwait},
