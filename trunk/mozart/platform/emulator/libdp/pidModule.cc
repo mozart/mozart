@@ -117,7 +117,8 @@ OZ_BI_define(BITicket2Port,4,1)
     time = (time_t) i;
   } else if (oz_isBigInt(timeV)) {
     unsigned long i = OZ_intToCulong(timeV);
-    if (i==0 || i>=OzMaxUnsignedLong) goto tbomb;
+    if (i==0)
+      goto tbomb;
     time = (time_t) i;
   } else {
   tbomb:
