@@ -154,6 +154,7 @@ enum EmulatorPropertyIndex {
   PROP_PERDIO_MINIMAL,
   PROP_PERDIO_VERSION,
   PROP_PERDIO_USEALTVARPROTOCOL,
+  PROP_PERDIO_TIMEOUT,
   PROP_PERDIO,
   // DPTABLE
   PROP_DPTABLE_DEFAULTOWNERTABLESIZE,
@@ -437,6 +438,7 @@ OZ_Term GetEmulatorProperty(EmulatorPropertyIndex prop) {
   CASE_BOOL(PROP_PERDIO_SEIFHANDLER,ozconf.perdioSeifHandler);
   CASE_INT(PROP_PERDIO_FLOWBUFFERSIZE,ozconf.perdioFlowBufferSize);
   CASE_INT(PROP_PERDIO_FLOWBUFFERTIME,ozconf.perdioFlowBufferTime);
+  CASE_INT(PROP_PERDIO_TIMEOUT,ozconf.perdioTimeout);
   CASE_BOOL(PROP_PERDIO_MINIMAL,ozconf.perdioMinimal);
 
   case PROP_PERDIO_VERSION: return OZ_pair2(oz_int(PERDIOMAJOR),
@@ -746,6 +748,7 @@ OZ_Return SetEmulatorProperty(EmulatorPropertyIndex prop,OZ_Term val) {
     CASE_BOOL(PROP_PERDIO_SEIFHANDLER,ozconf.perdioSeifHandler);
     CASE_NAT(PROP_PERDIO_FLOWBUFFERSIZE,ozconf.perdioFlowBufferSize);
     CASE_NAT(PROP_PERDIO_FLOWBUFFERTIME,ozconf.perdioFlowBufferTime);
+    CASE_NAT(PROP_PERDIO_TIMEOUT,ozconf.perdioTimeout);
     // PERDIO    
     CASE_REC(PROP_PERDIO,
 	     SET_NAT(AtomDebugPerdio,ozconf.debugPerdio);
@@ -1042,8 +1045,9 @@ void initVirtualProperties()
 		       PROP_PERDIO_USEALTVARPROTOCOL);
   VirtualProperty::add("perdio.minimal",PROP_PERDIO_MINIMAL);
   VirtualProperty::add("perdio.version",PROP_PERDIO_VERSION);
-  VirtualProperty::add("perdio.flowbuffersize",PROP_PERDIO_FLOWBUFFERTIME);
-  VirtualProperty::add("perdio.flowbuffertime",PROP_PERDIO_FLOWBUFFERSIZE);
+  VirtualProperty::add("perdio.flowbuffersize",PROP_PERDIO_FLOWBUFFERSIZE);
+  VirtualProperty::add("perdio.flowbuffertime",PROP_PERDIO_FLOWBUFFERTIME);
+  VirtualProperty::add("perdio.timeout",PROP_PERDIO_TIMEOUT);
   VirtualProperty::add("perdio.seifHandler",PROP_PERDIO_SEIFHANDLER);
   VirtualProperty::add("perdio",PROP_PERDIO);
   // DPTABLE
