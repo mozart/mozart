@@ -95,7 +95,7 @@
 	  An error or warning message&nbsp;?_{R}, related to the source
 	  coordinates ?_{Coord}, is to be printed out.  ?_{R}&nbsp;has
 	  the standard error message format, described in <Ptr.Extern
-	  to="ozdoc:system" key="Chapter.Error">.
+	  to="ozdoc:system" key="chapter.error">.
 	<Entry><<insert(?_{V} ?_{Coord})>>
 	<Item>
 	  During parsing, the file named&nbsp;?_{V} has been read.
