@@ -288,6 +288,7 @@ OZ_C_proc_begin(fdp_distinct, 1)
   return pe.impose(new DistinctPropagator(OZ_args[0]));
 }
 OZ_C_proc_end
+
  
 OZ_Return DistinctPropagator::propagate(void)
 {
@@ -333,20 +334,13 @@ OZ_Return DistinctPropagator::propagate(void)
       reg_l[to++] = reg_l[from];
   sz = to;
 
-  /*
-  for (i = to; i--; ) {
-    f = f | *l[i];
-    if (f.getSize() >= to) goto escape;
-  }
-  if (f.getSize() < to) goto failure;
-  */ 
-
  escape:
   return P.leave();
 
 failure:
   return P.fail();
 }
+
 
 //-----------------------------------------------------------------------------
 
