@@ -176,7 +176,7 @@ compiler-Version.oz: $(COMPILERSRCNOVER) compiler/Opcodes.m4oz
 # NOTE: update this list also in platform/emulator/Makefile.in
 BIMODSPECS = \
         Array Atom BitArray Bool Cell Char Chunk Class \
-        Dictionary Exception Float ForeignPointer Int Literal \
+        Dictionary Exception Float ForeignPointer Int List Literal \
         Lock Name Number Object Port Procedure Record Space \
         String Thread Time Tuple Unit Value VirtualString \
         BitString ByteString
