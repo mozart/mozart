@@ -75,7 +75,7 @@ Bool GenFSetVariable::unifyFSet(TaggedRef * vptr, TaggedRef var,
       }
 
       goto t;
-    }
+    } // case FSETVALUE:
   case CVAR:
     {
       switch(tagged2CVar(term)->getType()) {
@@ -137,7 +137,7 @@ Bool GenFSetVariable::unifyFSet(TaggedRef * vptr, TaggedRef var,
                   term_var->dispose();
               }
               break;
-            }
+            } // TRUE + 2 * TRUE:
           case TRUE + 2 * FALSE: // var is local and term is global
             {
               if (t_fset->isWeakerThan(new_fset)) {
@@ -164,7 +164,7 @@ Bool GenFSetVariable::unifyFSet(TaggedRef * vptr, TaggedRef var,
                 if (disp) dispose();
               }
               break;
-            }
+            } // TRUE + 2 * FALSE:
           case FALSE + 2 * TRUE: // var is global and term is local
             {
               if (fset->isWeakerThan(new_fset)){
@@ -192,7 +192,7 @@ Bool GenFSetVariable::unifyFSet(TaggedRef * vptr, TaggedRef var,
                   term_var->dispose();
               }
               break;
-            }
+            } // FALSE + 2 * TRUE:
           case FALSE + 2 * FALSE: // var and term is global
             {
               if (new_fset.isFSetValue()){
@@ -216,20 +216,20 @@ Bool GenFSetVariable::unifyFSet(TaggedRef * vptr, TaggedRef var,
                                        c_var, term_var, prop);
               }
               break;
-            }
+            } // FALSE + 2 * FALSE:
           default:
             error("unexpected case in unifyFSet");
             break;
           } // switch (varIsLocal + 2 * termIsLocal)
           goto t;
-        }
+        } // case FSetVariable:
       default:
-        break;
-      }
+        goto f;
+      } // switch(tagged2CVar(term)->getType())
     } // case CVAR;
   default:
-    break;
-  }
+    goto f;
+  } // switch switch (ttag)
 t:
 #ifdef DEBUG_FSUNIFY
   (*cpi_cout) << " true" << endl << flush;
