@@ -131,26 +131,13 @@ platform=`../bin/ozplatform`
 PLATFORM="`echo $platform|sed -e s/-/_/|tr a-z A-Z`"
 AC_DEFINE_UNQUOTED($PLATFORM)
 
-OS="`echo $host_os|sed -e s/-/_/|tr a-z A-Z`"
+OS=`echo $PLATFORM|sed -e 's/.*_//'`
 AC_DEFINE_UNQUOTED($OS)
+echo $OS
 
-case "$host_cpu" in
-        i?86)
-                AC_DEFINE(I486)
-        ;;
-        sparc)
-                AC_DEFINE(SPARC)
-        ;;
-esac
-
-case "$host_os" in
-        linux*)
-                AC_DEFINE(LINUX)
-        ;;
-        solaris*|sunos*)
-                AC_DEFINE(SUN)
-        ;;
-esac
+ARCH=`echo $PLATFORM|sed -e 's/_.*//'`
+AC_DEFINE_UNQUOTED($ARCH)
+echo $ARCH
 
 dnl *****************************************************************
 dnl variables

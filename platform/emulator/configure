@@ -2516,41 +2516,19 @@ cat >> confdefs.h <<EOF
 EOF
 
 
-OS="`echo $host_os|sed -e s/-/_/|tr a-z A-Z`"
+OS=`echo $PLATFORM|sed -e 's/.*_//'`
 cat >> confdefs.h <<EOF
 #define $OS 1
 EOF
 
+echo $OS
 
-case "$host_cpu" in
-        i?86)
-                cat >> confdefs.h <<\EOF
-#define I486 1
+ARCH=`echo $PLATFORM|sed -e 's/_.*//'`
+cat >> confdefs.h <<EOF
+#define $ARCH 1
 EOF
 
-        ;;
-        sparc)
-                cat >> confdefs.h <<\EOF
-#define SPARC 1
-EOF
-
-        ;;
-esac
-
-case "$host_os" in
-        linux*)
-                cat >> confdefs.h <<\EOF
-#define LINUX 1
-EOF
-
-        ;;
-        solaris*|sunos*)
-                cat >> confdefs.h <<\EOF
-#define SUN 1
-EOF
-
-        ;;
-esac
+echo $ARCH
 
 
 EMUEXE=oz.emulator.bin
@@ -2561,7 +2539,7 @@ libs="$psdir/lib/$platform $HOME/lib/$platform"
 for p in $libs
 do
   echo $ac_n "checking for dir $p""... $ac_c" 1>&6
-echo "configure:2565: checking for dir $p" >&5
+echo "configure:2543: checking for dir $p" >&5
   if test -d $p
   then
     LDFLAGS="$LDFLAGS -L$p"
@@ -2572,7 +2550,7 @@ echo "configure:2565: checking for dir $p" >&5
 done
 
 echo $ac_n "checking for mpz_init in -lgmp""... $ac_c" 1>&6
-echo "configure:2576: checking for mpz_init in -lgmp" >&5
+echo "configure:2554: checking for mpz_init in -lgmp" >&5
 ac_lib_var=`echo gmp'_'mpz_init | sed 'y%./+-%__p_%'`
 if eval "test \"`echo '$''{'ac_cv_lib_$ac_lib_var'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
@@ -2580,7 +2558,7 @@ else
   ac_save_LIBS="$LIBS"
 LIBS="-lgmp  $LIBS"
 cat > conftest.$ac_ext <<EOF
-#line 2584 "configure"
+#line 2562 "configure"
 #include "confdefs.h"
 /* Override any gcc2 internal prototype to avoid an error.  */
 #ifdef __cplusplus
@@ -2594,7 +2572,7 @@ int main() {
 mpz_init()
 ; return 0; }
 EOF
-if { (eval echo configure:2598: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
+if { (eval echo configure:2576: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
   rm -rf conftest*
   eval "ac_cv_lib_$ac_lib_var=yes"
 else
@@ -2624,7 +2602,7 @@ fi
 
 
 echo $ac_n "checking for --enable-ozma""... $ac_c" 1>&6
-echo "configure:2628: checking for --enable-ozma" >&5
+echo "configure:2606: checking for --enable-ozma" >&5
 # Check whether --enable-ozma or --disable-ozma was given.
 if test "${enable_ozma+set}" = set; then
   enableval="$enable_ozma"
@@ -2642,7 +2620,7 @@ EOF
         fi
 
 echo $ac_n "checking for --enable-opt""... $ac_c" 1>&6
-echo "configure:2646: checking for --enable-opt" >&5
+echo "configure:2624: checking for --enable-opt" >&5
 # Check whether --enable-opt or --disable-opt was given.
 if test "${enable_opt+set}" = set; then
   enableval="$enable_opt"
@@ -2683,7 +2661,7 @@ EOF
                 ;;
         esac
         echo $ac_n "checking for   --enable-threaded""... $ac_c" 1>&6
-echo "configure:2687: checking for   --enable-threaded" >&5
+echo "configure:2665: checking for   --enable-threaded" >&5
         # Check whether --enable-threaded or --disable-threaded was given.
 if test "${enable_threaded+set}" = set; then
   enableval="$enable_threaded"
@@ -2701,7 +2679,7 @@ EOF
         fi
 
         echo $ac_n "checking for   --enable-fastreg""... $ac_c" 1>&6
-echo "configure:2705: checking for   --enable-fastreg" >&5
+echo "configure:2683: checking for   --enable-fastreg" >&5
         # Check whether --enable-fastreg or --disable-fastreg was given.
 if test "${enable_fastreg+set}" = set; then
   enableval="$enable_fastreg"
@@ -2718,7 +2696,7 @@ EOF
                 echo "$ac_t""no" 1>&6
         fi
         echo $ac_n "checking for   --enable-regopt""... $ac_c" 1>&6
-echo "configure:2722: checking for   --enable-regopt" >&5
+echo "configure:2700: checking for   --enable-regopt" >&5
         # Check whether --enable-regopt or --disable-regopt was given.
 if test "${enable_regopt+set}" = set; then
   enableval="$enable_regopt"
@@ -2739,7 +2717,7 @@ EOF
         then
           if test -n "$PGXX"; then
             echo $ac_n "checking for   --with-pgcc""... $ac_c" 1>&6
-echo "configure:2743: checking for   --with-pgcc" >&5
+echo "configure:2721: checking for   --with-pgcc" >&5
             # Check whether --with-pgcc or --without-pgcc was given.
 if test "${with_pgcc+set}" = set; then
   withval="$with_pgcc"
@@ -2763,7 +2741,7 @@ esac
 
 
 echo $ac_n "checking for --enable-linkprop""... $ac_c" 1>&6
-echo "configure:2767: checking for --enable-linkprop" >&5
+echo "configure:2745: checking for --enable-linkprop" >&5
 # Check whether --enable-linkprop or --disable-linkprop was given.
 if test "${enable_linkprop+set}" = set; then
   enableval="$enable_linkprop"
@@ -2783,7 +2761,7 @@ EOF
 fi
 
 echo $ac_n "checking for --enable-peanuts""... $ac_c" 1>&6
-echo "configure:2787: checking for --enable-peanuts" >&5
+echo "configure:2765: checking for --enable-peanuts" >&5
 # Check whether --enable-peanuts or --disable-peanuts was given.
 if test "${enable_peanuts+set}" = set; then
   enableval="$enable_peanuts"
