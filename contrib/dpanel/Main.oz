@@ -5,20 +5,20 @@ import
    SiteInfo(sitesDict sites)
    Colour(list)
    Finalize(everyGC)
+   NetInfo(netInfo)
 export
    open:Start
 define
    SD
    MainLock = {NewLock}
 
-   proc {Start} ST OT BT in
+   proc {Start} ST OT BT NI in
       SD = {New SiteInfo.sitesDict init(Colour.list GUI)}
       ST = {New SiteInfo.sites init(SD)}
       OT = {New TableInfo.ownerTable init}
       BT = {New TableInfo.borrowTable init(SD)}
-%      G={MM apply(url:'' Graph $)}
-%      {MM enter(name:'Graph' G)}
-%      GUI={MM apply(url:'' A $)}
+      NI = {New NetInfo.netInfo init(GUI)}
+
       {ST setGui(GUI)}
       {OT setGui(GUI.osites GUI.oactive GUI.onumber)}
       {BT setGui(GUI.bsites GUI.bactive GUI.bnumber)}
@@ -32,17 +32,18 @@ define
                               {GUI.bnumber   divider(col:darkred)}
                            end
                         end }
-      {Updater ST OT BT}
+      {Updater ST OT BT NI}
    end
 
-   proc {Updater ST OT BT}
+   proc {Updater ST OT BT NI}
       lock MainLock then
          {ST display}
          {TableInfo.fetchInfo OT BT}
          {OT display}
          {BT display}
+         {NI display}
       end
       {Delay 2000}
-      {Updater ST OT BT}
+      {Updater ST OT BT NI}
    end
 end

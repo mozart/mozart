@@ -8,15 +8,15 @@ PLATFORM        = @PLATFORM@
 LIB_DIR         = $(PREFIX)/contrib/tools
 HOMEURL         = @HOMEURL@
 
-OZC             = @OZC@
+OZC             = @OZC@ -p
 OZL             = @OZL@
 
 INSTALL         = @INSTALL@
 INSTALL_DIR     = @INSTALL_DIR@
 INSTALL_LIB     = $(INSTALL) -m 444
 
-FUNCTORS        = Main.ozf Graph.ozf SiteInfo.ozf Widgets.ozf Colour.ozf GUI.ozf \
-                  TableInfo.ozf
+FUNCTORS        = Main.ozf Graph.ozf SiteInfo.ozf Widgets.ozf Colour.ozf \
+                  GUI.ozf NetInfo.ozf TableInfo.ozf
 
 LIB_FUNCTORS    = $(addprefix $(LIB_DIR)/,$(FUNCTORS))
 
