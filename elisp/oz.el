@@ -362,7 +362,7 @@ Input and output via buffers *Oz Compiler* and *Oz Emulator*."
       (if (not start-flag) (message "Oz died for some reason. Restarting ..."))
       (make-comint "Oz Compiler" "oz.compiler" nil "-emacs" "-S" file)
       (setq oz-compiler-buffer "*Oz Compiler*")
-      (oz-create-buffer oz-compiler-buffer)
+      (oz-create-buffer oz-compiler-buffer t)
       (set-process-filter (get-buffer-process oz-compiler-buffer)
 			  'oz-compiler-filter)
       (bury-buffer oz-compiler-buffer)
@@ -374,7 +374,7 @@ Input and output via buffers *Oz Compiler* and *Oz Emulator*."
 	(make-comint "Oz Emulator" "oz.emulator" nil "-emacs" "-S" file)
 	(set-process-filter (get-buffer-process oz-emulator-buffer)
 			    'oz-emulator-filter)
-	(oz-create-buffer oz-emulator-buffer)
+	(oz-create-buffer oz-emulator-buffer nil)
 	)
 
       (bury-buffer oz-emulator-buffer)
@@ -1025,32 +1025,36 @@ How many percent of the actual screen will be occupied by the
 OZ compiler, emulator and error window")
 
 (defun oz-show-buffer (buffer)
-  (save-excursion
-    (let* ((edges (window-edges (selected-window)))
-	   (win (or (get-buffer-window oz-emulator-buffer)
-		    (get-buffer-window oz-compiler-buffer)
-		    (split-window (selected-window)
-				  (/ (* (- (nth 3 edges) (nth 1 edges))
-					(- 100 oz-other-buffer-percent))
-				     100)))))
-      (set-window-buffer win buffer)
+  (if (get-buffer-window buffer)
+      t
+    (save-excursion
+      (let* ((edges (window-edges (selected-window)))
+	     (win (or (get-buffer-window oz-emulator-buffer)
+		      (get-buffer-window oz-compiler-buffer)
+		      (split-window (selected-window)
+				    (/ (* (- (nth 3 edges) (nth 1 edges))
+					  (- 100 oz-other-buffer-percent))
+				       100)))))
+	(set-window-buffer win buffer)
+	)
       )
-    )
+    
+    (bury-buffer oz-emulator-buffer)
+    (bury-buffer oz-compiler-buffer)
+    (bury-buffer buffer)))
 
-  (bury-buffer oz-emulator-buffer)
-  (bury-buffer oz-compiler-buffer)
-  (bury-buffer buffer))
 
-
-(defun oz-create-buffer (buf)
+(defun oz-create-buffer (buf ozmode)
   (save-excursion
     (set-buffer (get-buffer-create buf))
 
 ;; enter oz-mode but no highlighting !
-    (kill-all-local-variables)
-    (use-local-map oz-mode-map)
-    (setq mode-name "Oz-Output")
-    (setq major-mode 'oz-mode)
+    (if ozmode
+	(progn
+	  (kill-all-local-variables)
+	  (use-local-map oz-mode-map)
+	  (setq mode-name "Oz-Output")
+	  (setq major-mode 'oz-mode)))
     (if oz-lucid
      (set-buffer-menubar (append current-menubar oz-menubar)))
     (delete-region (point-min) (point-max))))
