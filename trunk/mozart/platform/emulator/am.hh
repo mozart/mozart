@@ -172,6 +172,8 @@ public:
   TaggedRef aVarBindHandler;
   TaggedRef dVarHandler;
 
+  TaggedRef methApplHdl;
+
   TaggedRef defaultExceptionHandler;
 
   unsigned long lastThreadID;
@@ -282,7 +284,7 @@ public:
   TaggedRef createNamedVariable(int regIndex, TaggedRef name);
   void handleToplevelBlocking();
 
-  Bool isToplevel();
+  Bool isToplevel() { return currentBoard == rootBoard; }
 
   void gc(int msgLevel);  // ###
   void doGC();
@@ -294,7 +296,10 @@ public:
 
   // entailment check
   Bool entailment();
-  Bool isEmptyTrailChunk();
+  Bool isEmptyTrailChunk() {
+    return trail.isEmptyChunk();
+  }
+
   void checkEntailment();
   int handleFailure(Continuation *&cont, AWActor *&aa);
   INLINE int commit(Board *bb, Thread *tt=0);
@@ -322,13 +327,18 @@ public:
   Bool isLocalVariable(TaggedRef var,TaggedRef *varPtr);
   Bool isMoreLocal(TaggedRef var1, TaggedRef var2);
 
-  void pushCall(TaggedRef def, int arity, RefsArray args);
+  INLINE void pushCall(TaggedRef def, int arity, RefsArray args);
+
   void pushDebug(TaggedRef def, int arity, RefsArray args);
-  void pushSetFinal();
-  void pushTaskInline(ProgramCounter pc,
-		      RefsArray y,RefsArray g,RefsArray x,int i);
-  void pushTask(ProgramCounter pc,RefsArray y,RefsArray g,RefsArray x=0,int i=0);
-  void pushCFun(OZ_CFun f, RefsArray x=0, int i=0);
+  INLINE void pushSetFinal();
+
+  INLINE void pushTaskInline(ProgramCounter pc,
+			     RefsArray y,RefsArray g,RefsArray x,int i);
+
+  void pushTask(ProgramCounter pc,RefsArray y,RefsArray g,
+		RefsArray x=0,int i=0);
+
+  INLINE void pushCFun(OZ_CFun f, RefsArray x=0, int i=0);
 
  private:
   void genericBind(TaggedRef *varPtr, TaggedRef var,

@@ -30,8 +30,6 @@
  * Object stuff
  */
 
-extern TaggedRef methApplHdl;
-
 inline
 Abstraction *getSendMethod(Object *obj, TaggedRef label, SRecordArity arity, 
 			   InlineCache *cache, RefsArray X)
@@ -64,55 +62,6 @@ Abstraction *getApplyMethodForGenCall(Object *obj, TaggedRef label,
 
 // -----------------------------------------------------------------------
 // TOPLEVEL FAILURE (HF = Handle Failure)
-
-/*
- * make an record
- *  the subtrees are initialized with new variables
- */
-static
-TaggedRef mkRecord(TaggedRef label,SRecordArity ff)
-{
-  SRecord *srecord = SRecord::newSRecord(label,ff,getWidth(ff));
-  srecord->initArgs(am.currentUVarPrototype);
-  return makeTaggedSRecord(srecord);
-}
-
-Abstraction *dvarApply(Abstraction *pred, int arity, RefsArray X)
-{
-  TaggedRef arglist = OZ_toList(arity,X);
-  X[0] = makeTaggedConst(pred);
-  if (am.isToplevel()) {
-    X[1] = OZ_mkTupleC("apply",1,arglist);
-  } else {
-    TaggedRef syncvar = makeTaggedRef(newTaggedUVar(am.rootBoard));
-    X[1] = OZ_mkTupleC("askApply",2,syncvar,arglist);
-
-    RefsArray args = allocateRefsArray(2,NO);
-    args[0] = makeTaggedConst(pred);
-    args[1] = OZ_mkTupleC("getApply",2,syncvar,OZ_int(arity));
-
-    spawnThread(am.dVarHandler, args, 2, am.rootBoard);
-  }
-  
-  return tagged2Abstraction(am.dVarHandler);
-}
-
-OZ_Term adjoinT(TaggedRef tuple,TaggedRef arg)
-{
-  if (!isSTuple(tuple)) {
-    Assert(OZ_isAtom(tuple));
-    OZ_Term tmp=OZ_tuple(tuple,1);
-    OZ_putArg(tmp,0,arg);
-    return tmp;
-  } else {
-    SRecord *st=tagged2SRecord(tuple);
-    int len=st->getWidth();
-    OZ_Term tmp=OZ_tuple(st->getLabel(),len+1);
-    OZ_putArg(tmp,0,arg);
-    for (int i=0; i < len; i++) OZ_putArg(tmp,i+1,st->getArg(i));
-    return tmp;
-  }
-}
 
 /*
  * Exception handling
@@ -213,66 +162,6 @@ if (predArity != arityExp && VarArity != arityExp) {	\
       JUMP(offset);
 
 
-
-static
-ProgramCounter switchOnTermOutline(TaggedRef term, TaggedRef *termPtr,
-				   IHashTable *table, TaggedRef *&sP)
-{
-  ProgramCounter offset = table->getElse();
-  if (isSRecord(term)) {
-    if (table->functorTable) {
-      SRecord *rec = tagged2SRecord(term);
-      Literal *lname = rec->getLabelLiteral();
-      Assert(lname!=NULL);
-      int hsh = table->hash(lname->hash());
-      offset = table->functorTable[hsh]->lookup(lname,rec->getSRecordArity(),offset);
-      sP = rec->getRef();
-    }
-    return offset;
-  }
-
-  if (isLiteral(term)) {
-    if (table->literalTable) {
-      int hsh = table->hash(tagged2Literal(term)->hash());
-      offset = table->literalTable[hsh]->lookup(tagged2Literal(term),offset);
-    }
-    return offset;
-  }
-
-  if (isNotCVar(term)) {
-    return table->varLabel;
-  }
-
-  if (isSmallInt(term)) {
-    if (table->numberTable) {
-      int hsh = table->hash(smallIntHash(term));
-      offset = table->numberTable[hsh]->lookup(term,offset);
-    }
-    return offset;
-  }
-
-  if (isFloat(term)) {
-    if (table->numberTable) {
-      int hsh = table->hash(tagged2Float(term)->hash());
-      offset = table->numberTable[hsh]->lookup(term,offset);
-    }
-    return offset;
-  }
-
-  if (isBigInt(term)) {
-    if (table->numberTable) {
-      int hsh = table->hash(tagged2BigInt(term)->hash());
-      offset =table->numberTable[hsh]->lookup(term,offset);
-    }
-    return offset;
-  }
-
-  if (isCVar(term) && !table->disentailed(tagged2CVar(term),termPtr)) {
-    return table->varLabel;
-  }
-
-  return offset;
-}
 
 #ifdef OUTLINE
 #define inline
@@ -815,13 +704,6 @@ void AM::checkEntailment()
   deinstallCurrent();
   return;
 } 
-
-
-// aux debugging;
-#define VERBMSG(S,A1,A2)                                                   \
-    fprintf(verbOut,"(em) %s (arg#1 0x%x, arg#2 0x%x) :%d\n",              \
-	    S,A1,A2,__LINE__);                                             \
-    fflush(verbOut);
 
 
 /* &Var prevent Var to be allocated to a register,
@@ -2517,7 +2399,7 @@ LBLdispatcher:
 
 
   bombApply:
-    if (methApplHdl == makeTaggedNULL()) {
+    if (e->methApplHdl == makeTaggedNULL()) {
       error("no apply handler");
     }
 
@@ -2525,7 +2407,7 @@ LBLdispatcher:
     X[0] = origObject;
 
     predArity = 2;
-    predicate = tagged2Const(methApplHdl);
+    predicate = tagged2Const(e->methApplHdl);
     goto LBLcall;
   }
 
