@@ -1,6 +1,3 @@
-;(load "oz")
-(require 'gdb)
-
 (defun set-machine()
   (interactive)
   (setenv "OZMACHINE" 
@@ -18,7 +15,7 @@
   (interactive)
   (if (getenv "OZ_PI")
       t
-    (message "setting OZPATH/PATH") (sleep-for 5)
+    (message "setting OZPATH/PATH") (sleep-for 1)
     (setenv "OZ_PI" "1")
     (setenv "OZHOME" (or (getenv "OZHOME") "/usr/share/gs/soft/oz"))
     (setenv "OZPATH" 
