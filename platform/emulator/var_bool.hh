@@ -93,8 +93,8 @@ public:
   void patchStoreBool(OZ_FiniteDomain * d) { store_patch = d; }
   OZ_FiniteDomain * getStorePatchBool(void) { return store_patch; }
 
-  OZ_Return unify(TaggedRef*, TaggedRef*, ByteCode*);
-  OZ_Return bind(TaggedRef*, TaggedRef, ByteCode*);
+  OZ_Return unify(TaggedRef*, TaggedRef*);
+  OZ_Return bind(TaggedRef*, TaggedRef);
 
   void printStream(ostream &out,int depth = 10) {
     out << "{0#1}";

@@ -204,7 +204,7 @@ Bool wakeup_Suspension(Suspension susp, Board * home, PropCaller calledBy)
 SuspList * oz_checkAnySuspensionList(SuspList *suspList,Board *home,
 				     PropCaller calledBy)
 {
-  if (am.inShallowGuard())
+  if (am.inEqEq())
     return suspList;
 
   SuspList * retSuspList = NULL;
@@ -291,7 +291,7 @@ void oz_bindUVar(TaggedRef *varPtr, TaggedRef term)
 {
   Assert(isUVar(*varPtr));
   if (!oz_isLocalUVar(varPtr)) {
-    Assert(am.inShallowGuard() || checkHome(varPtr));
+    Assert(am.inEqEq() || checkHome(varPtr));
     am.trail.pushRef(varPtr,*varPtr);
   }
   doBind(varPtr,term);
@@ -309,7 +309,7 @@ void oz_bindGlobalVar(OzVariable *ov, TaggedRef *varPtr, TaggedRef term)
 {
   Assert(tagged2CVar(*varPtr)==ov);
   Assert(!oz_isLocalVar(ov));
-  Assert(am.inShallowGuard() || checkHome(varPtr));
+  Assert(am.inEqEq() || checkHome(varPtr));
   oz_checkSuspensionList(ov, pc_std_unif);
   am.trail.pushRef(varPtr,*varPtr);
   doBind(varPtr,term);
@@ -319,7 +319,7 @@ void oz_bindLocalVar(OzVariable *ov, TaggedRef *varPtr, TaggedRef term)
 {
   Assert(tagged2CVar(*varPtr)==ov);
   Assert(oz_isLocalVar(ov));
-  Assert(!am.inShallowGuard());
+  Assert(!am.inEqEq());
   oz_checkSuspensionList(ov, pc_std_unif);
   DEREF(term,termPtr,_);
   if (isCVar(term)) {
@@ -442,7 +442,7 @@ void rebind(TaggedRef *refPtr, TaggedRef term2)
     TaggedRef *refPtr = (TaggedRef*) rebindTrail.pop(); 
 
 
-OZ_Return oz_unify(TaggedRef t1, TaggedRef t2, ByteCode *scp)
+OZ_Return oz_unify(TaggedRef t1, TaggedRef t2)
 {
   unifyStack.pushMark();
   CHECK_NONVAR(t1); CHECK_NONVAR(t2);
@@ -487,7 +487,7 @@ loop:
  var_nonvar:
 
   if (isCVar(tag1)) {
-    int res = oz_var_bindINLINE(tagged2CVar(term1),termPtr1, term2, scp);
+    int res = oz_var_bindINLINE(tagged2CVar(term1),termPtr1, term2);
     if (res == PROCEED)
       goto next;
     result = res;
@@ -534,7 +534,7 @@ loop:
   }
 
   {
-    int res = oz_var_unifyINLINE(tagged2CVar(term1),termPtr1, termPtr2, scp);
+    int res = oz_var_unifyINLINE(tagged2CVar(term1),termPtr1, termPtr2);
     if (res == PROCEED)
       goto next;
     result = res;

@@ -50,7 +50,7 @@ void OzFSVariable::dispose(void) {
 #endif
 
 
-OZ_Return OzFSVariable::bind(OZ_Term * vptr, OZ_Term term, ByteCode * scp)
+OZ_Return OzFSVariable::bind(OZ_Term * vptr, OZ_Term term)
 {
   Assert(!oz_isRef(term));
   if (!oz_isFSetValue(term)) return FAILED;
@@ -70,7 +70,7 @@ OZ_Return OzFSVariable::bind(OZ_Term * vptr, OZ_Term term, ByteCode * scp)
   Bool isLocalVar = oz_isLocalVar(this);
   Bool isNotInstallingScript = !am.isInstallingScript();
       
-  if (scp==0 && (isNotInstallingScript || isLocalVar)) 
+  if (!am.inEqEq() && (isNotInstallingScript || isLocalVar)) 
     propagate(fs_prop_val);
       
   if (isLocalVar) {
@@ -88,7 +88,7 @@ OZ_Return OzFSVariable::bind(OZ_Term * vptr, OZ_Term term, ByteCode * scp)
 }
 
 
-OZ_Return OzFSVariable::unify(OZ_Term * vptr, OZ_Term *tptr, ByteCode * scp)
+OZ_Return OzFSVariable::unify(OZ_Term * vptr, OZ_Term *tptr)
 {
   OZ_Term term = *tptr;
   OzVariable *cv=tagged2CVar(term);
@@ -218,7 +218,7 @@ OZ_Return OzFSVariable::unify(OZ_Term * vptr, OZ_Term *tptr, ByteCode * scp)
       if (new_fset.isValue()){
 	OZ_Term new_fset_var
 	  = makeTaggedFSetValue(new FSetValue(*((FSetConstraint *) &new_fset)));
-	if (scp==0) {
+	if (!am.inEqEq()) {
 	  if (var_is_constrained) propagateUnify();
 	  if (term_is_constrained) term_var->propagateUnify();
 	}
@@ -228,7 +228,7 @@ OZ_Return OzFSVariable::unify(OZ_Term * vptr, OZ_Term *tptr, ByteCode * scp)
 	OzFSVariable *c_var
 	  = new OzFSVariable(new_fset,oz_currentBoard());
 	TaggedRef * var_val = newTaggedCVar(c_var);
-	if (scp==0) {
+	if (!am.inEqEq()) {
 	  if (var_is_constrained) propagateUnify();
 	  if (term_is_constrained) term_var->propagateUnify();
 	}

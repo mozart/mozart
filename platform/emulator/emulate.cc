@@ -270,7 +270,7 @@ OZ_Return fastUnify(OZ_Term A, OZ_Term B) {
     goto exit;
   }
   
-  return oz_unify(A,B,NULL);
+  return oz_unify(A,B);
   
  exit:
   COUNT(varOptUnify);

@@ -62,8 +62,8 @@ public:
   void gc(OzFSVariable *); 
   void dispose(void);
   
-  OZ_Return bind(OZ_Term *, OZ_Term, ByteCode *);
-  OZ_Return unify(OZ_Term *, OZ_Term*, ByteCode *);
+  OZ_Return bind(OZ_Term *, OZ_Term);
+  OZ_Return unify(OZ_Term *, OZ_Term*);
   OZ_FSetConstraint &getSet(void) { return _fset; }
   void setSet(OZ_FSetConstraint fs) { _fset = fs; }
 
