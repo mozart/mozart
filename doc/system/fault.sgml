@@ -186,14 +186,13 @@ This call always succeeds.
 
 </list>
 On a given entity at the <<global>> level,
-exactly one enable can be done or one handler installed.
-At the <<site>> level, one enable or handler
+at most one enable can be done or one handler installed.
+At the <<site>> level, at most one enable or handler
 can be installed per site.
-At the <<'thread'(_)>> level, one enable or handler
+At the <<'thread'(_)>> level, at most one enable or handler
 can be installed per thread.
 To do another enable or install,
-first a disable or deinstall must be done.
-
+it is necessary to do a disable or deinstall first.
 
 <section><title/Limitations and modifications/
 
