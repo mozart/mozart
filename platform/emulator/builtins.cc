@@ -6096,11 +6096,12 @@ OZ_C_proc_end
 // Debugging: special builtins for Benni
 // ---------------------------------------------------------------------------
 
-OZ_C_proc_begin(BIsetStreamVar,1)
+OZ_C_proc_begin(BIcurrentThread,1)
 {
-  OZ_Term var = OZ_getCArg(0);
-  am.currentThread->setStreamVar(var);
-  return PROCEED;
+  return OZ_unify(OZ_getCArg(0),
+                  makeTaggedConst(new OzThread(am.currentBoard,
+                                  am.currentThread,
+                                  am.currentThread->dbgGetTaskStack(NOCODE))));
 }
 OZ_C_proc_end
 
@@ -6129,10 +6130,10 @@ OZ_C_proc_begin(BIstartTraceMode,2)
   ConstTerm *rec = tagged2Const(chunk);
   Thread *thread = ((OzThread*) rec)->th();
 
-  TaggedRef var = OZ_newVariable();
-  thread->setStreamVar(var);
+  TaggedRef tail = OZ_newVariable();
+  thread->setStreamTail(tail);
   thread->startTraceMode();
-  return OZ_unify(out, var);
+  return OZ_unify(out, tail);
 }
 OZ_C_proc_end
 
@@ -6143,26 +6144,32 @@ OZ_C_proc_begin(BIstopTraceMode,1)
   ConstTerm *rec = tagged2Const(chunk);
   Thread *thread = ((OzThread*) rec)->th();
 
-  thread->setStreamVar(OZ_atom("noStream"));
+  thread->setStreamTail(OZ_atom("noStream"));
   thread->stopTraceMode();
   return PROCEED;
 }
 OZ_C_proc_end
 
-OZ_C_proc_begin(BIrunPermission,2)
+OZ_C_proc_begin(BIstopThread,1)
 {
-  OZ_Term chunk = OZ_deref(OZ_getCArg(0));
-  char   *yesno = toC(OZ_getCArg(1));
-
+  OZ_Term chunk  = OZ_deref(OZ_getCArg(0));
   ConstTerm *rec = tagged2Const(chunk);
   Thread *thread = ((OzThread*) rec)->th();
 
-  if (!strcmp(yesno, "yes"))
-    thread->runPermission();
-  else if (!strcmp(yesno, "no"))
-    thread->noRunPermission();
-  else
-    warning("runPermission: invalid second argument: must be 'yes' or 'no'");
+  thread->noRunPermission();
+  return PROCEED;
+}
+OZ_C_proc_end
+
+OZ_C_proc_begin(BIcontinueThread,1)
+{
+  OZ_Term chunk  = OZ_deref(OZ_getCArg(0));
+  ConstTerm *rec = tagged2Const(chunk);
+  Thread *thread = ((OzThread*) rec)->th();
+
+  thread->runPermission();
+  thread->markPropagated(); // why is this needed?
+  am.scheduleThread(thread);
   return PROCEED;
 }
 OZ_C_proc_end
@@ -6175,14 +6182,15 @@ OZ_C_proc_begin(BIqueryDebugState,2)
   ConstTerm *rec = tagged2Const(chunk);
   Thread *thread = ((OzThread*) rec)->th();
 
-  return OZ_unify(out,
-                  OZ_mkTupleC("debugState",
-                              3,
-                              thread->traceMode() ? OZ_true() : OZ_false(),
-                              thread->stepMode() ? OZ_true() : OZ_false(),
-                              thread->stopped() ? OZ_atom("stopped")
-                                                : OZ_atom("running")
-                              ));
+  return OZ_unify(out, OZ_mkTupleC("debugState",
+                                   3,
+                                   thread->traceMode() ? OZ_atom("traceON")
+                                                       : OZ_atom("traceOFF"),
+                                   thread->stepMode()  ? OZ_atom("stepON")
+                                                       : OZ_atom("stepOFF"),
+                                   thread->stopped()   ? OZ_atom("stopped")
+                                                       : OZ_atom("running")
+                                   ));
 
 }
 OZ_C_proc_end
@@ -7114,17 +7122,13 @@ BIspec allSpec2[] = {
 
   {"halt",0,BIhalt},
 
-  // Debugging ---
-  {"setStreamVar",1,BIsetStreamVar},
-
+  // Debugging
+  {"currentThread",1,BIcurrentThread},
   {"startTraceMode",2,BIstartTraceMode},
   {"stopTraceMode",1,BIstopTraceMode},
-
   {"setStepMode",2,BIsetStepMode},
-
-  {"runPermission",2,BIrunPermission},
-  // End Debugging ---
-
+  {"stopThread",1,BIstopThread},
+  {"continueThread",1,BIcontinueThread},
   {"queryDebugState",2,BIqueryDebugState},
 
   {"printLong",1,BIprintLong},
