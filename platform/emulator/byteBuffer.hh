@@ -29,6 +29,49 @@
 #include "genhashtbl.hh"
 #include "mbuffer.hh"
 
+/*
+
+  A guide to the pointers of this circular buffer:
+
+   Static            Dynamic
+
+          ----------
+      buf |        |
+          |////////| getptr
+          |////////|
+          |////////| posMB
+          |////////|
+          |        | putptr
+          |        |
+    endMB |        |
+          ----------
+
+    ///=filled area
+    view each line as a byte and the pointers as pointing to the
+    byte of their line
+
+    buf:      the beginning of the buffer
+    endMB:    the end (last byte) of the buffer
+    getptr:   the beginning of the filled area
+    posMB:    the next byte to be read (unmarshaling) or written (marshaling)
+    putptr:   the beginning of the empty area
+
+    getptr and putptr are static while marshaling or unmarshaling and will
+    be adjusted together with the used field when getCommit or putEnd are
+    called.
+
+    posMB is moved by the get and put methods implemented in
+    mbuffer.hh. For efficiency reasons it is not possible to adjust
+    anything else in those methods. If posMB reaches the end of the
+    buffer the corresponding putNext or getNext method will be called,
+    allowing this buffer to be circular.
+
+    Note that the condition on when posMB reaches the end is
+    assymetric in mbuffer.hh (posMB==endMB vs posMB>endMB) and that
+    endMB points to the last byte making the size=endMB+1-buf.
+
+*/
+
 #define BYTE_MODE_MARSHALING 0
 #define BYTE_MODE_UNMARSHALING 1
 #define BYTE_MODE_NONE 2
