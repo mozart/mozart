@@ -6930,14 +6930,6 @@ OZ_C_proc_begin(BIraise,1)
 }
 OZ_C_proc_end
 
-OZ_C_proc_begin(BIraiseF,2)
-{
-  oz_declareArg(0,exc);
-
-  return OZ_raise(exc);
-}
-OZ_C_proc_end
-
 OZ_C_proc_begin(BIraiseError,1)
 {
   oz_declareArg(0,exc);
@@ -7548,7 +7540,6 @@ BIspec allSpec[] = {
   {"handleException",            1, BIhandleException,            0},
 
   {"raise",      1, BIraise,      0},
-  {"raiseF",     2, BIraiseF,     0},
   {"raiseError", 1, BIraiseError, 0},
 
   // builtins for the new compiler's environment handling:
