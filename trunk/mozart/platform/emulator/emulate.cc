@@ -649,12 +649,6 @@ int engine(Bool init)
 // *** Emulator: execute instructions
 // ------------------------------------------------------------------------
 
- LBLemulate:
-  asmLbl(EMULATE);
-
-  JUMPABSOLUTE( PC );
-
-  asmLbl(END_EMULATE);
 #ifndef THREADED
 LBLdispatcher:
   asmLbl(DISPATCH);
