@@ -182,6 +182,18 @@ output()
   output_token_translations();
   output_actions();
 
+  /* Warnings */
+  if (src_total > 0 || rrc_total > 0) {
+    ftable = OZ_cons(OZ_pairA("conflicts",
+			      OZ_pair2(OZ_int(src_total),
+				       OZ_int(rrc_total))), ftable);
+  }
+  if (nuseless_productions > 0 || nuseless_nonterminals > 0) {
+    ftable = OZ_cons(OZ_pairA("useless",
+			      OZ_pair2(OZ_int(nuseless_nonterminals),
+				       OZ_int(nuseless_productions))), ftable);
+  }
+
   return OZ_recordInit(OZ_atom("ozbisonTables"), ftable);
 }
 

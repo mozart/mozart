@@ -40,20 +40,18 @@ void set_conflicts();
 void resolve_sr_conflict();
 void flush_shift();
 void log_resolution();
-void total_conflicts();
 void count_sr_conflicts();
 void count_rr_conflicts();
 
 char any_conflicts;
 char *conflicts;
 errs **err_table;
-int expected_conflicts;
 
 
 static unsigned *shiftset;
 static unsigned *lookaheadset;
-static int src_total;
-static int rrc_total;
+int src_total;
+int rrc_total;
 static int src_count;
 static int rrc_count;
 
@@ -331,8 +329,6 @@ conflict_log()
 	  rrc_total += rrc_count;
 	}
     }
-
-  total_conflicts();
 }
   
 
@@ -372,34 +368,6 @@ verbose_conflict_log()
 	  putc('\n', foutput);
 	}
     }
-
-  total_conflicts();
-}
-
-
-void
-total_conflicts()
-{
-  if (src_total == expected_conflicts && rrc_total == 0)
-    return;
-
-      fprintf(stderr, "input contains");
-
-      if (src_total == 1)
-	fprintf(stderr, " 1 shift/reduce conflict");
-      else if (src_total > 1)
-	fprintf(stderr, " %d shift/reduce conflicts", src_total);
-
-      if (src_total > 0 && rrc_total > 0)
-	fprintf(stderr, " and");
-
-      if (rrc_total == 1)
-	fprintf(stderr, " 1 reduce/reduce conflict");
-      else if (rrc_total > 1)
-	fprintf(stderr, " %d reduce/reduce conflicts", rrc_total);
-
-      putc('.', stderr);
-      putc('\n', stderr);
 }
 
 
