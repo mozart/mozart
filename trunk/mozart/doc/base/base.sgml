@@ -46,6 +46,9 @@
 
 <Book proglang=oz>
   <Front>
+    <Meta name="latex.package" value="pstricks">
+    <Meta name="latex.package" value="pst-node">
+
     <Meta name="html.split" value="chapter.introduction">
     <Meta name="html.split" value="chapter.typestruct">
     <Meta name="html.split" value="chapter.values">
