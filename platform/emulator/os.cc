@@ -1148,10 +1148,10 @@ int WINAPI dll_entry(int a,int b,int c)
 #define F_OK 00
 #endif
 
-int osDlopen(char *filename, OZ_Term out)
+int osDlopen(char *filename, OZ_Term& ret)
 {
   OZ_Term err=NameUnit;
-  OZ_Term ret=NameUnit;
+  //OZ_Term ret=NameUnit;
 
   // filename = expandFileName(filename,ozconf.linkPath);
 
@@ -1200,7 +1200,8 @@ int osDlopen(char *filename, OZ_Term out)
   }
 #endif
 
-  return oz_unify(out,ret);
+  return PROCEED;
+  // return oz_unify(out,ret);
 
 raise:
 

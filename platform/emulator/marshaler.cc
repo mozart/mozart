@@ -1281,10 +1281,8 @@ void marshalFullObjectAndClass(Object *o,MsgBuffer* bs){
 /*   SECTION 15: statistics                                            */
 /* *********************************************************************/
 
-OZ_C_proc_begin(BIperdioStatistics,1)
+OZ_BI_define(BIperdioStatistics,0,1)
 {
-  OZ_declareArg(0,out);
-
   OZ_Term dif_send_ar=oz_nil();
   OZ_Term dif_recv_ar=oz_nil();
   int i;
@@ -1336,9 +1334,8 @@ OZ_C_proc_begin(BIperdioStatistics,1)
   OZ_Term ar=oz_nil();
   ar=oz_cons(oz_pairA("send",send),ar);
   ar=oz_cons(oz_pairA("recv",recv),ar);
-  return OZ_unify(out,OZ_recordInit(oz_atom("perdioStatistics"),ar));
+  OZ_RETURN(OZ_recordInit(oz_atom("perdioStatistics"),ar));
 }
-OZ_C_proc_end
 
 BIspec marshalerSpec[]= {
   {"perdioStatistics",  1, BIperdioStatistics, 0},
