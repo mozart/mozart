@@ -815,7 +815,8 @@ i.e.:</p>
 <subsubsection><title>mogul</title>
 
 <p>feature <oz>mogul</oz> is the mogul id uniquely identifying this
-package.  It is used to create/publish this package and to install the
+package.  It is used to identify the package in the database of
+installed packages, to create/publish the package, and to install its
 documention files.</p>
 
 </subsubsection>
