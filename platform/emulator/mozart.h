@@ -411,9 +411,12 @@ _FUNDECL(void,OZ_eventPush,(OZ_Term));
 #define OZ_BI_proto(Name)  extern ozdeclspec OZ_Return (ozcdecl Name)()
 #endif
 
-#define OZ_in(N)     (*(_OZ_LOC[(N)]))
-#define OZ_out(N)    (*(_OZ_LOC[_OZ_arity+(N)]))
-#define OZ_result(V) OZ_out(0)=V
+_FUNDECL(OZ_Term, _OZ_LOC_TO_LIST,(int,OZ_Term**));
+
+#define OZ_in(N)      (*(_OZ_LOC[(N)]))
+#define OZ_out(N)     (*(_OZ_LOC[_OZ_arity+(N)]))
+#define OZ_result(V)  OZ_out(0)=V
+#define OZ_inAsList() (_OZ_LOC_TO_LIST(_OZ_arity,_OZ_LOC))
 
 #define OZ_BI_define(Name,Arity_IN,Arity_OUT)    \
 OZ_BI_proto(Name);                               \
