@@ -20,14 +20,6 @@
 %%% WARRANTIES.
 
 
-%% some helpers to be used already in this file
-%% (prelude.oz not yet inserted here)
-
-fun {VS2A X}         %% virtual string to atom
-   {String.toAtom {VirtualString.toString X}}
-end
-
-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Text
 %%
@@ -39,7 +31,7 @@ IconName               = 'Ozcar'
 Platform               = local
 			    X#Y = {System.get platform}
 			 in
-			    {VS2A X#'-'#Y}
+			    {VirtualString.toAtom X#'-'#Y}
 			 end
 WindowsPlatform        = 'win32-i486'
 
@@ -94,9 +86,10 @@ RecordType             = '<record>'
 KindedRecordType       = '<recordc>'
 ChunkType              = '<chunk>'
 SpaceType              = '<space>'
-FSValueType            = '<FS val>'
-FSVarType              = '<FS var>'
-FDVarType              = '<FD var>'
+FSValueType            = '<fs val>'
+FSVarType              = '<fs var>'
+FDVarType              = '<fd var>'
+LazyVarType            = '<lazy var>'
 ForeignPointerType     = '<foreign>'
 UnknownType            = '<???>'
 UnboundType            = '_'
@@ -173,8 +166,8 @@ StopButtonBitmap       = stop
 DetachButtonBitmap     = detach
 TermButtonBitmap       = term
 
-AddQueriesBitmap       = {VS2A queries  # BitmapExtension}
-AddSubThreadsBitmap    = {VS2A children # BitmapExtension}
+AddQueriesBitmap       = {VirtualString.toAtom queries  # BitmapExtension}
+AddSubThreadsBitmap    = {VirtualString.toAtom children # BitmapExtension}
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

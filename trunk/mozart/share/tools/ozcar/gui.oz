@@ -95,6 +95,7 @@ local
 	 elsecase {IsRecordC X}          then KindedRecordType
 	 else                                 UnknownType
 	 end
+      elsecase {IsLazy X} then                LazyVarType
       else                                    UnboundType
       end
    end
@@ -210,7 +211,7 @@ in
 		       TermButtonBitmap    # TermButtonColor #
 		       'terminate and detach']
 		  fun {$ S}
-		     Bitmap # ForegroundColor # BalloonHelpText = S
+		     Bitmap # ForegroundColor # _ = S
 		     B = {New Tk.button
 			  tkInit(parent:           self.ButtonFrame
 				 bitmap:           (OzcarBitmapDir # Bitmap #
@@ -243,7 +244,7 @@ in
 	      ConfigSubThreads #
 	      'attach subthreads']
 	     proc {$ B}
-		C # Xbm # Action # Default # BalloonHelpText = B
+		C # Xbm # Action # Default # _ = B
 	     in
 		C = {New Tk.checkbutton
 		     tkInit(parent:           self.ButtonFrame
@@ -408,7 +409,8 @@ in
 		case {IsDet Value} andthen {IsCell Value} then
 		   X = {Access Value}
 		in
-		   {VS2A '{Access ' # Name # '}'} # {V2VS X} # X
+		   {VirtualString.toAtom
+		    '{Access ' # Name # '}'} # {V2VS X} # X
 		else
 		   Name # {V2VS Value} # Value
 		end

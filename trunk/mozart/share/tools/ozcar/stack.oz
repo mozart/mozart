@@ -82,7 +82,10 @@ local
 				 {System.valueToVirtualString Data 0 0}
 			      else {System.printName Data}
 			      end
-			   else '_'
+			   elsecase {IsLazy Data} then
+			      LazyVarType
+			   else
+			      UnboundType
 			   end
 			[] 'lock' then 'lock'
 			[] handler then 'exception handler'
