@@ -547,7 +547,6 @@ void AM::suspendCond(AskActor *aa)
   switch (currentThread->getCompMode()) {
   case ALLSEQMODE:
     currentThread->setSuspended();
-    aa->setThread(currentThread);
     break;
   case SEQMODE:
     {
@@ -559,6 +558,7 @@ void AM::suspendCond(AskActor *aa)
       break;
     }
   case PARMODE:
+    aa->setThread(0);
     break;
   default:
     error("invalid comp mode");
@@ -1148,6 +1148,7 @@ void engine()
       {
         taskstack->setTop(topCache);
 	DebugTrace(trace("solve task",CBB));
+	Assert(e->currentThread->getCompMode()==PARMODE);
 	Assert(CBB->isSolve());
 	Assert(!CBB->isCommitted() && !CBB->isFailed());
 	SolveActor *sa = SolveActor::Cast(CBB->getActor());
@@ -1166,7 +1167,7 @@ void engine()
 	switch (e->checkEntailment(cont,aa)) {
 	case CE_FAIL:
 	  DebugCode (e->currentThread = savedCT);
-	  e->pushSolve();
+	  e->pushLocal(); // so discard local tasks works
 	  HF_NOMSG;
 
 	case CE_SOLVE_CONT:
@@ -1181,7 +1182,6 @@ void engine()
 	  e->pushSolve();
 	  sa->incThreads();
 	  CBB->incSuspCount();
-	  e->createTask();
 	  LOADCONT(cont);
 	  goto LBLemulate;
 
@@ -1191,9 +1191,13 @@ void engine()
 	    Thread *tt=0;
 	    if (aa->isAsk()) {
 	      tt=AskActor::Cast(aa)->getThread();
-	    }
-	    if (tt) {
-	      e->wakeUpThread(tt);
+	      if (tt) {
+		Assert(tt!=e->currentThread);
+		e->cleanUpThread(tt);
+	      } else {
+		tt = e->createThread(aa->getPriority(),
+				     aa->getCompMode());
+	      }
 	    } else {
 	      tt = e->createThread(aa->getPriority(),
 				   aa->getCompMode());
@@ -1285,7 +1289,10 @@ void engine()
 
 LBLkillDiscardedThread:
   {
-    e->decSolveThreads(e->currentThread->getBoardFast());
+    Board *bb=e->currentThread->getBoardFast();
+    
+    bb=bb->gcGetNotificationBoard();
+    e->decSolveThreads(bb);
     e->disposeThread(e->currentThread);
     e->currentThread=0;
     goto LBLstart;
@@ -1343,9 +1350,12 @@ LBLkillThread:
 	  Thread *tt=0;
 	  if (aa->isAsk()) {
 	    tt=AskActor::Cast(aa)->getThread();
-	  }
-	  if (tt) {
-	    e->wakeUpThread(tt);
+	    if (tt) {
+	      e->cleanUpThread(tt);
+	    } else {
+	      tt = e->createThread(aa->getPriority(),
+				   aa->getCompMode());
+	    }
 	  } else {
 	    tt = e->createThread(aa->getPriority(),
 				 aa->getCompMode());
@@ -2273,23 +2283,36 @@ LBLkillThread:
        if (isEatWaits)    sa->setEatWaits();
        if (isSolveDebug)  sa->setDebug();
        
-       e->setCurrent(new Board(sa, Bo_Solve), OK);
-       DebugCheckT(currentDebugBoard=CBB);
-       CBB->setInstalled();
-       e->trail.pushMark();
-       sa->setSolveBoard(CBB);
+       Board *sb=new Board(sa, Bo_Solve);
+       sa->setSolveBoard(sb);
 
-       // put ~'solve actor';
-       // Note that CBB is already the 'solve' board; 
-       e->pushSolve();    // no args;
-       e->createTask();
-       
        // apply the predicate;
        predArity = 1;
        predicate = (Abstraction *) tagValueOf (x0);
        X[0] = makeTaggedRef (sa->getSolveVarRef ());
        isTailCall = OK;
-       goto LBLcall;   // spare a task - call the predicate directly; 
+       if (e->currentThread->getCompMode()==PARMODE) {
+	 e->setCurrent(sb);
+	 e->trail.pushMark();
+	 CBB->setInstalled();
+	 DebugCheckT(currentDebugBoard=CBB);
+
+	 // put ~'solve actor';
+	 // Note that CBB is already the 'solve' board; 
+	 e->pushSolve();
+
+	 goto LBLcall;   // spare a task - call the predicate directly; 
+       }
+
+       {
+	 Thread *tt = e->newThread(CPP,sb,SEQMODE);
+	 tt->pushCall(predicate,X,1);
+	 if (e->currentSolveBoard) {
+	   e->incSolveThreads(e->currentSolveBoard);
+	 }
+	 e->scheduleThread(tt);
+	 goto LBLpopTask;
+       }
      }
 
 // ------------------------------------------------------------------------
@@ -2558,7 +2581,8 @@ LBLkillThread:
 
       CAA = new AskActor(CBB,CPP,e->currentThread->getCompMode(),
 			 elsePC ? elsePC : NOCODE,
-			 NOCODE, Y, G, X, argsToSave);
+			 NOCODE, Y, G, X, argsToSave,
+			 e->currentThread);
       DISPATCH(3);
     }
 
@@ -2824,6 +2848,21 @@ int AM::handleFailure(Continuation *&cont, AWActor *&aaout)
     aaout=aaa;
     if (aaa->hasNext()) {
       cont = aaa->getNext();
+      Thread *tt=aaa->getThread();
+      if (tt) {
+	if (tt!=currentThread) {
+	  if (tt->isSuspended() // fast test
+	      || tt->isBelowFailed(currentBoard)) { // slow test
+	    cleanUpThread(tt);
+	    tt->pushCont(cont);
+	    return CE_NOTHING;
+	  }
+	  /*
+	   * tt is executing another clause: don't disturb him
+	   */
+	  return CE_NOTHING;
+	}
+      }
       return CE_CONT;
     }
     /* check if else clause must be activated */
@@ -2843,11 +2882,12 @@ int AM::handleFailure(Continuation *&cont, AWActor *&aaout)
 
       Thread *tt=aaa->getThread();
       if (tt) {
-	wakeUpThread(tt);
-	tt->pushCont(cont);
-	return CE_NOTHING;
+	if (tt!=currentThread) {
+	  cleanUpThread(tt);
+	  tt->pushCont(cont);
+	  return CE_NOTHING;
+	}
       }
-
       return CE_CONT;
     }
     return CE_SUSPEND;
