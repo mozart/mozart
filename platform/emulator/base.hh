@@ -248,6 +248,8 @@ class Chain;
 class RefTable;
 class RefTrail;
 
+class GenTraverser;
+
 class Site;
 class DSite;
 

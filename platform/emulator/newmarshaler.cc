@@ -32,10 +32,6 @@
 
 #include "newmarshaler.hh"
 
-//
-#define RememberNode(node,bs)			\
-  int ind = remember(node);			\
-  marshalTermDef(ind, bs);
 
 //
 void Marshaler::processSmallInt(OZ_Term siTerm)
@@ -74,7 +70,7 @@ void Marshaler::processLiteral(OZ_Term litTerm)
 
   marshalDIF(bs, litTag);
   const char *name = lit->getPrintName();
-  RememberNode(litTerm, bs);
+  rememberNode(litTerm, bs);
   marshalString(name, bs);
   marshalGName(gname, bs);
 }
@@ -93,12 +89,12 @@ void Marshaler::processBuiltin(OZ_Term biTerm, ConstTerm *biConst)
   Builtin *bi= (Builtin *)biConst;
   if (bi->isSited()) {
     processNoGood(biTerm,OK);
-    RememberNode(biTerm,bs);
+    rememberNode(biTerm,bs);
     return;
   }
   
   marshalDIF(bs,DIF_BUILTIN);
-  RememberNode(biTerm,bs);
+  rememberNode(biTerm,bs);
   marshalString(bi->getPrintName(),bs);
 }
 
@@ -116,20 +112,54 @@ void Marshaler::processNoGood(OZ_Term resTerm, Bool trail)
 void Marshaler::processExtension(OZ_Term extensionTerm)
 { OZ_error("not implemented!"); }
 
-void Marshaler::processObject(OZ_Term objTerm, ConstTerm *objConst)
-{ OZ_error("not implemented!"); }
 
-void Marshaler::processLock(OZ_Term lockTerm, Tertiary *lockTert)
-{ OZ_error("not implemented!"); }
 
-void Marshaler::processCell(OZ_Term cellTerm, Tertiary *cellTert)
-{ OZ_error("not implemented!"); }
 
-void Marshaler::processPort(OZ_Term portTerm, Tertiary *portTert)
-{ OZ_error("not implemented!"); }
+void Marshaler::processObject(OZ_Term term, ConstTerm *objConst)
+{
+  MsgBuffer *bs = (MsgBuffer *) getOpaque();
+  Object *o = (Object*) objConst;
+  if(ozconf.perdioMinimal || o->getClass()->isSited()) {
+    processNoGood(term,OK);
+    return;
+  }
+  if (!bs->globalize()) return;
+  (*marshalObject)(o,bs,this);
+}
 
-void Marshaler::processResource(OZ_Term resTerm, Tertiary *resTert)
-{ OZ_error("not implemented!"); }
+#define HandleTert(string,tert,term,tag,check)		\
+    MsgBuffer *bs = (MsgBuffer *) getOpaque();		\
+    if (check && ozconf.perdioMinimal) {		\
+      processNoGood(term,OK);				\
+      return;						\
+    }							\
+    if (!bs->globalize()) return;			\
+    if ((*marshalTertiary)(tert,tag,bs)) return;	\
+    rememberNode(term, bs);
+
+
+void Marshaler::processLock(OZ_Term term, Tertiary *tert)
+{
+  HandleTert("lock",tert,term,DIF_LOCK,OK);
+}
+
+
+void Marshaler::processCell(OZ_Term term, Tertiary *tert)
+{
+  HandleTert("cell",tert,term,DIF_LOCK,OK);
+}
+
+void Marshaler::processPort(OZ_Term term, Tertiary *tert)
+{
+  HandleTert("port",tert,term,DIF_LOCK,NO);
+}
+
+void Marshaler::processResource(OZ_Term term, Tertiary *tert)
+{
+  HandleTert("resource",tert,term,DIF_LOCK,OK);
+}
+
+#undef HandleTert
 
 
 void Marshaler::processUVar(OZ_Term *uvarTerm)
@@ -141,7 +171,7 @@ void Marshaler::processCVar(OZ_Term *cvarTerm)
 {
   MsgBuffer *bs = (MsgBuffer *) getOpaque();
   if (!bs->visit(makeTaggedRef(cvarTerm)) || 
-      (*marshalVariable)(cvarTerm, bs))
+      (*marshalVariable)(cvarTerm, bs, this))
     return;
   processNoGood(makeTaggedRef(cvarTerm),NO);
 }
@@ -160,7 +190,7 @@ Bool Marshaler::processLTuple(OZ_Term ltupleTerm)
   MsgBuffer *bs = (MsgBuffer *) getOpaque();
 
   marshalDIF(bs, DIF_LIST);
-  RememberNode(ltupleTerm, bs);
+  rememberNode(ltupleTerm, bs);
 
   return (NO);
 }
@@ -173,11 +203,11 @@ Bool Marshaler::processSRecord(OZ_Term srecordTerm)
 
   if (rec->isTuple()) {
     marshalDIF(bs, DIF_TUPLE);
-    RememberNode(srecordTerm, bs);
+    rememberNode(srecordTerm, bs);
     marshalNumber(rec->getTupleWidth(), bs);
   } else {
     marshalDIF(bs, DIF_RECORD);
-    RememberNode(srecordTerm, bs);
+    rememberNode(srecordTerm, bs);
   }
 
   return (NO);
@@ -190,7 +220,7 @@ Bool Marshaler::processChunk(OZ_Term chunkTerm, ConstTerm *chunkConst)
   SChunk *ch    = (SChunk *) chunkConst;
   GName *gname  = globalizeConst(ch,bs);
   marshalDIF(bs,DIF_CHUNK);
-  RememberNode(chunkTerm, bs);
+  rememberNode(chunkTerm, bs);
   marshalGName(gname,bs);
   return NO;
 }
@@ -198,6 +228,7 @@ Bool Marshaler::processChunk(OZ_Term chunkTerm, ConstTerm *chunkConst)
 
 #define CheckD0Compatibility(Term,Trail) \
    if (ozconf.perdioMinimal) { processNoGood(Term,Trail); return OK; }
+
 
 Bool Marshaler::processFSETValue(OZ_Term fsetvalueTerm)
 {
@@ -213,7 +244,20 @@ Bool Marshaler::processFSETValue(OZ_Term fsetvalueTerm)
 }
 
 Bool Marshaler::processDictionary(OZ_Term dictTerm, ConstTerm *dictConst)
-{ OZ_error("not implemented!"); return(OK); }
+{
+  OzDictionary *d = (OzDictionary *) dictConst;
+
+  if (!d->isSafeDict()) {
+    processNoGood(dictTerm,OK);
+    return OK;
+  }
+
+  MsgBuffer *bs = (MsgBuffer *) getOpaque();
+  marshalDIF(bs,DIF_DICT);
+  rememberNode(dictTerm, bs);
+  marshalNumber(d->getSize(),bs);
+  return NO;
+}
 
 Bool Marshaler::processClass(OZ_Term classTerm, ConstTerm *classConst)
 { 
@@ -222,13 +266,17 @@ Bool Marshaler::processClass(OZ_Term classTerm, ConstTerm *classConst)
   ObjectClass *cl = (ObjectClass *) classConst;
   marshalDIF(bs,DIF_CLASS);
   GName *gn = globalizeConst(cl,bs);
-  RememberNode(classTerm, bs);
+  rememberNode(classTerm, bs);
   marshalGName(gn,bs);
+  marshalNumber(cl->getFlags(),bs);
   return NO;
 }
 
 Bool Marshaler::processAbstraction(OZ_Term absTerm, ConstTerm *absConst)
-{ OZ_error("not implemented!"); return(OK); }
+{ OZ_warning("processAbstraction not implemented!");
+ processSmallInt(newSmallInt(4711)); 
+ return(OK); 
+}
 
 //
 Marshaler marshaler;
@@ -358,12 +406,14 @@ OZ_Term newUnmarshalTerm(MsgBuffer *bs)
 	break;
       }
 
-    case DIF_REF_DEBUG:
-      { OZ_error("not implemented!"); }
-
     case DIF_OWNER:
     case DIF_OWNER_SEC:
-      { OZ_error("not implemented!"); }
+      {
+	OZ_Term tert = (*unmarshalOwner)(bs, tag);
+	b->buildValue(tert);
+	break;
+      }
+
     case DIF_RESOURCE_T:
     case DIF_PORT:
     case DIF_THREAD_UNUSED:
@@ -371,9 +421,19 @@ OZ_Term newUnmarshalTerm(MsgBuffer *bs)
     case DIF_CELL:
     case DIF_LOCK:
     case DIF_OBJECT:
-      { OZ_error("not implemented!"); }
+      {
+	OZ_Term tert = (*unmarshalTertiary)(bs, tag);
+	int refTag = unmarshalRefTag(bs);
+	b->buildValueRemeber(tert,refTag);
+	break;
+      }
+
     case DIF_RESOURCE_N:
-      { OZ_error("not implemented!"); }
+      {
+	OZ_Term tert = (*unmarshalTertiary)(bs, tag);
+	b->buildValue(tert);
+	break;
+      }
     
     case DIF_CHUNK:
       {
@@ -405,26 +465,39 @@ OZ_Term newUnmarshalTerm(MsgBuffer *bs)
 	}
 	break;
       }
+
     case DIF_VAR: 
-      { OZ_error("not implemented!"); }
-
+      {
+	b->buildValue((*unmarshalVar)(bs,FALSE,FALSE));
+	break;
+      }
+      
     case DIF_FUTURE: 
-      { OZ_error("not implemented!"); }
-
+      {
+	b->buildValue((*unmarshalVar)(bs,TRUE,FALSE));
+	break;
+      }
+      
     case DIF_VAR_AUTO: 
-      { OZ_error("not implemented!"); }
-
+      {
+	b->buildValue((*unmarshalVar)(bs,FALSE,TRUE));
+	break;
+      }
+      
     case DIF_FUTURE_AUTO: 
-      { OZ_error("not implemented!"); }
-
-    case DIF_PROC:
-      { OZ_error("not implemented!"); }
+      {
+	b->buildValue((*unmarshalVar)(bs,TRUE,TRUE));
+	break;
+      }
 
     case DIF_DICT:
-      { OZ_error("not implemented!"); }
-
-    case DIF_ARRAY:
-      { OZ_error("not implemented!"); }
+      {
+	int refTag = unmarshalRefTag(bs);
+	int size   = unmarshalNumber(bs);
+	Assert(oz_onToplevel());
+	b->buildDictionaryRemember(size,refTag);
+	break;
+      }
 
     case DIF_BUILTIN:
       {
@@ -456,7 +529,16 @@ OZ_Term newUnmarshalTerm(MsgBuffer *bs)
 	break;
       }
 
+    case DIF_REF_DEBUG:
+      { OZ_error("not implemented!"); }
+
+    case DIF_PROC:
+      { OZ_error("not implemented!"); }
+
     case DIF_EXTENSION:
+      { OZ_error("not implemented!"); }
+
+    case DIF_ARRAY:
       { OZ_error("not implemented!"); }
 
     case DIF_EOF:

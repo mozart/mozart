@@ -123,12 +123,12 @@ OZ_Term unmarshalVarStub(MsgBuffer*,Bool, Bool)
   OZ_error("'unmarshalVar' called without DP library?");
   return ((OZ_Term) 0);
 }
-Bool marshalVariableStub(TaggedRef*, MsgBuffer*)
+Bool marshalVariableStub(TaggedRef*, MsgBuffer*, GenTraverser *)
 {
   OZ_error("'marshalVariable' called without DP library?");
   return (NO);
 }
-void marshalObjectStub(ConstTerm *t, MsgBuffer *bs)
+void marshalObjectStub(ConstTerm *t, MsgBuffer *bs, GenTraverser *)
 {
   OZ_error("'marshalObject' called without DP library?");
 }
@@ -265,9 +265,9 @@ OZ_Term (*unmarshalOwner)(MsgBuffer *bs,MarshalTag mt)
 //
 OZ_Term (*unmarshalVar)(MsgBuffer*,Bool,Bool)
   = unmarshalVarStub;
-Bool (*marshalVariable)(TaggedRef*, MsgBuffer*)
+Bool (*marshalVariable)(TaggedRef*, MsgBuffer*, GenTraverser *)
   = marshalVariableStub;
-void (*marshalObject)(ConstTerm *t, MsgBuffer *bs)
+void (*marshalObject)(ConstTerm *t, MsgBuffer *bs, GenTraverser *)
   = marshalObjectStub;
 void (*marshalSPP)(TaggedRef term, MsgBuffer *bs,Bool trail)
   = marshalSPPStub;
