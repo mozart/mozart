@@ -121,10 +121,19 @@ define
 	 Args        : unit
 	 Optlist     : unit
 	 DoRequires  : true
-	 Binary      : false
+	 Binary      : unit
 
       meth set_binary(V) Binary<-V end
-      meth get_binary($) @Binary end
+      meth get_binary($)
+	 if @Binary==unit then
+	    if @Superman\=unit then
+	       Binary<-{@Superman get_binary($)}
+	    else
+	       Binary<-false
+	    end
+	 end
+	 @Binary
+      end
 
       meth set_args(V) Args<-V end
       meth get_args($) @Args end

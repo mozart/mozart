@@ -38,14 +38,61 @@ define
 	 catch _ then raise ozmake(create:write(PKG)) end end
       end
 
+      meth get_needed_locally($)
+	 {self makefile_read}
+	 %% we need to get everything needed to build the targets of the
+	 %% makefile except for those in src which must be prebuilt
+	 Needed={NewDictionary}
+	 %% are we creating a binary package?
+	 Binary = {self get_binary($)}
+	 %% make sure we also grab the makefile (unless we create a binary package)
+	 if Binary then skip else F={self get_makefile($)} in
+	    if {Path.exists F} then
+	       Needed.{Path.toAtom {Path.basename F}} := true
+	    end
+	 end
+	 %% now track dependencies starting from install targets
+	 Stack = {Utils.newStackFromList {self get_install_targets($)}}
+	 %% avoid loops from circular imports
+	 Done = {NewDictionary}
+      in
+	 try
+	    for do F={Stack.pop} in
+	       if {HasFeature Done F} then skip else
+		  Done.F := unit
+		  if Binary orelse {self target_is_src(F $)} then
+		     %% it must be built and packed, but not the sources
+		     %% needed to build it
+		     Needed.F := true
+		  else
+		     R = {self get_rule(F $)}
+		  in
+		     if R.tool==unit then
+			%% there is no rule to build it: it must be distributed
+			Needed.F := true
+		     else
+			%% else consider all the sources needed to build it
+			for D in {self get_depends(F $)} do {Stack.push D} end
+		     end
+		  end
+		  %% in all cases, also consider the runtime dependencies
+		  for D in {self get_autodepend_install(F $)} do {Stack.push D} end
+	       end
+	    end
+	 catch empty then skip end
+	 {Dictionary.keys Needed}
+      end
+
       meth GetNeeded($)
 	 {self makefile_read}
 	 %% we need to get everything needed to build the targets
 	 %% of the makefile except for those in src which must be
 	 %% prebuilt
 	 Needed = {NewDictionary}
-	 %% make sure we also grab the makefile
-	 local F={self get_makefile($)} in
+	 %% are we creating a binary package?
+	 Binary = {self get_binary($)}
+	 %% make sure we also grab the makefile (unless we create a binary package)
+	 if Binary then skip else F={self get_makefile($)} in
 	    if {Path.exists F} then
 	       Needed.{Path.toAtom {Path.basename F}} := true
 	    end
@@ -54,8 +101,6 @@ define
 	 Stack  = {Utils.newStackFromList {self get_install_targets($)}}
 	 %% avoid loops from circular imports
 	 Done = {NewDictionary}
-	 %%
-	 Binary = {self get_binary($)}
       in
 	 try
 	    for do F={Stack.pop} in

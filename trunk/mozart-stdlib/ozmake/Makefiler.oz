@@ -661,7 +661,9 @@ define
 	 MAK.bin     := {self get_bin_targets($)}
 	 MAK.lib     := {self get_lib_targets($)}
 	 MAK.doc     := {self get_doc_targets($)}
-	 MAK.src     := {self get_src_targets($)}
+	 MAK.src     := if {self get_binary($)}
+			then {self get_needed_locally($)}
+			else {self get_src_targets($)} end
 	 if Tar\=nil then MAK.tar := Tar end
 	 MAK.depends := {Utils.toRecord @Target2Depends}
 	 MAK.rules   := {Record.map {Utils.toRecord @Target2Rule}

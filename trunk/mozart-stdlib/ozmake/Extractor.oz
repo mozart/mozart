@@ -177,16 +177,20 @@ define
 		  {{Resolve.make 'ozmake'
 		    init(Resolve.handler.default|
 			 {Resolve.pickle.getHandlers})}.localize PKG}
+		  %% we need a work around the bad compilation of try
+		  %% without this trick the value returned from Pickler.fromFile
+		  %% is somehow lost when exiting the try.
+		  VAL
 	       in
 		  try
-		     {self trace('trying load')}
-		     try {Pickle.load LOC.1}
-		     catch _ then {self trace('trying unpickler')} {Pickler.fromFile LOC.1} end
+		     try local V={Pickle.load LOC.1} in VAL=V end
+		     catch _ then local V={Pickler.fromFile LOC.1} in VAL=V end end
 		  finally
 		     case LOC of new(F) then
 			try {OS.unlink F} catch _ then skip end
 		     else skip end
 		  end
+		  VAL
 	       end
 	    end
 	 catch _ then raise ozmake(extract:load(PKG)) end end
