@@ -31,6 +31,7 @@
 #include "var_opt.hh"
 #include "unify.hh"
 
+/*
 OZ_Return OptVar::bind(TaggedRef* vPtr, TaggedRef t)
 {
   Assert(suspList == (SuspList *) 0);
@@ -40,21 +41,22 @@ OZ_Return OptVar::bind(TaggedRef* vPtr, TaggedRef t)
 
 OZ_Return OptVar::unify(TaggedRef* vPtr, TaggedRef *tPtr)
 {
-  Assert(suspList == (SuspList *) 0);
-  OzVariable *tv = tagged2Var(*tPtr);
-  if (tv->getType() == OZ_VAR_OPT
-      && oz_isBelow(tv->getBoardInternal(), GETBOARD(this))
-#ifdef VAR_BIND_NEWER
-      // if both are local, then check heap
-      && (!oz_isLocalVar(this) || heapNewer(tPtr, vPtr))
-#endif
-      ) {
-    oz_bindVar(tv, tPtr, makeTaggedRef(vPtr));
-  } else {
-    oz_bindVar(this, vPtr, makeTaggedRef(tPtr));
-  }
-  return PROCEED;
+//    Assert(suspList == (SuspList *) 0);
+//    OzVariable *tv = tagged2Var(*tPtr);
+//    if (tv->getType() == OZ_VAR_OPT
+//        && oz_isBelow(tv->getBoardInternal(), GETBOARD(this))
+//  #ifdef VAR_BIND_NEWER
+//        // if both are local, then check heap
+//        && (!oz_isLocalVar(this) || heapNewer(tPtr, vPtr))
+//  #endif
+//        ) {
+//      oz_bindVar(tv, tPtr, makeTaggedRef(vPtr));
+//    } else {
+  oz_bindVar(this, vPtr, makeTaggedRef(tPtr));
+//    }
+  return (PROCEED);
 }
+*/
 
 void OptVar::printLongStream(ostream &out, int depth, int offset)
 {
