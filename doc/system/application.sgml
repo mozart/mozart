@@ -381,8 +381,9 @@
           under feature&nbsp;<<1>> of this record.
           <Grammar.Rule>?={option record}
             <Grammar.Alt/<<optRec(1: ?={option list}>>/
-            <Grammar.Alt/<<       ?={option name}: ?={value}>> &ellipsis;/
-            <Grammar.Alt/<<       ?={option name}: ?={value})>>/
+            <Grammar.Alt space
+              /<<       ?={option name}: ?={value}>> &ellipsis;/
+            <Grammar.Alt space/<<       ?={option name}: ?={value})>>/
           </Grammar.Rule>
         <SubSection class=unnumbered id="section.application.record.examples">
           <Title/Record Examples/
@@ -437,6 +438,5 @@
             <Samp/--cattle=dexter,highland/ on one command line would
             result in the following option record:
 <<<optRec(1: nil
-       cattle: [angus belgianred charolais
-                dexter highland])>>>
+       cattle: [angus belgianred charolais dexter highland])>>>
   </Chapter>
