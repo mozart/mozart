@@ -17,11 +17,6 @@ BOOTCOM=$(BOOTEMU) -u $(BUILDLIB)/ozc --
 BOOTENG=$(SRCTOP)/share/ozengine.sh
 BOOTAR=$(BOOTENG) $(BUILDTOP)/share/lib/ozar
 
-OZ_ELISP_DIR=$(PREFIX)/share/elisp
-export OZ_ELISP_DIR
-export OZ_DOC_PATH
-export OZ_DOC_BIBINPUTS
-
 ifdef OZC
 export OZC
 endif
@@ -42,6 +37,30 @@ ifdef OZPATH
 export OZPATH
 endif
 
+ifdef OZDOC_HOME
+export OZDOC_HOME
+endif
+
+ifdef OZDOC_AUTHOR_PATH
+export OZDOC_AUTHOR_PATH
+endif
+
+ifdef OZDOC_BIB_PATH
+export OZDOC_BIB_PATH
+endif
+
+ifdef OZDOC_BST_PATH
+export OZDOC_BST_PATH
+endif
+
+ifdef OZDOC_ELISP_PATH
+export OZDOC_ELISP_PATH
+endif
+
+ifdef OZDOC_SBIN_PATH
+export OZDOC_SBIN_PATH
+endif
+
 boot-%:
 	$(MAKE) $* \
 	OZEMULATOR=$(BOOTEMU) \
@@ -51,9 +70,12 @@ boot-%:
 	OZPATH=.:$(BUILDLIB):$(BUILDTOOLS):$(SOURCELIB):$(SOURCETOOLS) \
 	OZ_LOAD=root=.:prefix=/=/:prefix=./=./:prefix=$(URL)/share/=$(BUILDLIB)/:prefix=$(URL)/share/=$(BUILDTOOLS)/:= \
 	OZAR="$(BOOTAR)" \
-	OZ_ELISP_DIR=$(BUILDSHARE)/elisp \
-	OZ_DOC_PATH=$(SRCTOP)/doc \
-	OZ_DOC_BIBINPUTS=.:$(SRCDIR):$(SRCTOP)/doc/utilities
+	OZDOC_HOME="$(SRCTOP)/doc/utilities" \
+	OZDOC_AUTHOR_PATH="$(SRCDIR):$(SRCTOP)/doc" \
+	OZDOC_BIB_PATH="$(SRCDIR)" \
+	OZDOC_BST_PATH="$(SRCDIR):$(SRCTOP)/doc/utilities" \
+	OZDOC_ELISP_PATH="$(BUILDDIR):$(BUILDTOP)/doc:$(BUILDTOP)/doc/utilities:$(BUILDTOP)/share/elisp" \
+	OZDOC_SBIN_PATH="$(SRCTOP)/doc/utilities"
 
 # stage1-all: create the components using the BUILDTOP/share/lib/stage1
 STAGE1_LIB=$(BUILDLIB)/stage1
