@@ -371,6 +371,34 @@ OZ_BI_define(BIaskVerboseSpace, 2,0) {
 } OZ_BI_end
 
 
+OZ_BI_define(BIaskUnsafeSpace, 2,0) {
+  declareSpace();
+  oz_declareIN(1,out);
+
+  if (space->isProxy()) Assert(0);
+
+  if (space->isFailed())
+    return oz_unify(out, AtomFailed);
+  
+  if (space->isMerged())
+    return oz_unify(out, AtomMerged);
+
+  if (oz_solve_isBlocked(space->getSolveActor())) {
+    SRecord *stuple = SRecord::newSRecord(AtomBlocked, 1);
+    stuple->setArg(0, am.currentUVarPrototype());
+
+    if (oz_unify(out, makeTaggedSRecord(stuple)) == FAILED) // mm2
+      return FAILED;
+
+    OZ_in(1) = stuple->getArg(0);
+  } 
+  
+  TaggedRef answer = space->getSolveActor()->getResult();
+  
+  return oz_unify(OZ_in(1), answer);
+} OZ_BI_end
+
+
 OZ_BI_define(BImergeSpace, 1,1) {
   declareSpace();
 
