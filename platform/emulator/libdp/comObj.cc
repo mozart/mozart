@@ -346,46 +346,44 @@ Bool ComObj::canBeFreed() {
   localRef=FALSE;
   if(hasNeed())
     return FALSE;
+  else if(remoteRef)
+    return FALSE;
   else {
-    // It is important at exit (dpExit) not to send too many clearrefs.
-    if(!sentclearref) {
-      MsgContainer *msgC=msgContainerManager->newMsgContainer(NULL);
-      msgC->put_C_CLEAR_REFERENCE();
-      send(msgC,-1);
-      sentclearref=TRUE;
-    }
-    if(remoteRef)
+    switch(state) {
+    case WORKING: {
+      // It is important at exit (dpExit) not to send too many clearrefs.
+      if(!sentclearref) {
+        MsgContainer *msgC=msgContainerManager->newMsgContainer(NULL);
+        msgC->put_C_CLEAR_REFERENCE();
+        send(msgC,-1);
+        sentclearref=TRUE;
+      }
+      clearTimers();
+      MsgContainer *msgC2=msgContainerManager->newMsgContainer(NULL);
+      msgC2->put_C_CLOSE_WEAK();
+      send(msgC2,-1);
+      state=CLOSING_WEAK; // State change "closes" outgoing channel do
+      // after send.
+      timers->setTimer(closetimer,CLOSE_TIMEOUT,
+                       comObj_closeTimerExpired,(void *) this);
       return FALSE;
-    else {
-      switch(state) {
-      case WORKING: {
-        clearTimers();
-        MsgContainer *msgC2=msgContainerManager->newMsgContainer(NULL);
-        msgC2->put_C_CLOSE_WEAK();
-        send(msgC2,-1);
-        state=CLOSING_WEAK; // State change "closes" outgoing channel do
-                            // after send.
-        timers->setTimer(closetimer,CLOSE_TIMEOUT,
-                         comObj_closeTimerExpired,(void *) this);
-        return FALSE;
-      }
-      case OPENING_WF_PRESENT:
-      case OPENING_WF_NEGOTIATE_ANS:
-      case CLOSING_HARD:
-      case CLOSING_WEAK:
-      case CLOSING_WF_DISCONNECT:
-      case ANONYMOUS_WF_NEGOTIATE:
-        return FALSE;             // Wait for next gc.
-      case CLOSED:
-      case CLOSED_WF_HANDOVER:
-      case CLOSED_WF_REMOTE:
-      case CLOSED_PROBLEM:
-        clearTimers();
-        return TRUE;
-      default:
-        OZ_error("ComObject in unknown state at gc");
-        return FALSE;
-      }
+    }
+    case OPENING_WF_PRESENT:
+    case OPENING_WF_NEGOTIATE_ANS:
+    case CLOSING_HARD:
+    case CLOSING_WEAK:
+    case CLOSING_WF_DISCONNECT:
+    case ANONYMOUS_WF_NEGOTIATE:
+      return FALSE;             // Wait for next gc.
+    case CLOSED:
+    case CLOSED_WF_HANDOVER:
+    case CLOSED_WF_REMOTE:
+    case CLOSED_PROBLEM:
+      clearTimers();
+      return TRUE;
+    default:
+      OZ_error("ComObject in unknown state at gc");
+      return FALSE;
     }
   }
 }
