@@ -2394,7 +2394,7 @@ inline void EntityInfo::gcWatchers(){
     base= &(newW->next);
     w=*base;}}
 
-inline void Tertiary::gcEntityInfo(){
+void Tertiary::gcEntityInfo(){
   if(info==NULL) return;
   EntityInfo *newInfo = (EntityInfo *) gcRealloc(info,sizeof(EntityInfo));
   info=newInfo;

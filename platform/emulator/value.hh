@@ -824,7 +824,7 @@ public:
     info=NULL;
     return;}
 
-  inline void gcEntityInfo();
+  void gcEntityInfo();
 
   Watcher *getWatchers(){
     return info->watchers;}
