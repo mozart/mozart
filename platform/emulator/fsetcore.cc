@@ -1,12 +1,13 @@
 /*
  *  Authors:
- *    Tobias Mueller (tmueller@ps.uni-sb.de)
+ *    Tobias Müller (tmueller@ps.uni-sb.de)
  * 
  *  Contributors:
- *    optional, Contributor's name (Contributor's email address)
+ *    Christian Schulte <schulte@ps.uni-sb.de>
  * 
  *  Copyright:
- *    Organization or Person (Year(s))
+ *    Tobias Müller, 1999
+ *    Christian Schulte, 1999
  * 
  *  Last change:
  *    $Date$ by $Author$
@@ -56,17 +57,17 @@ OZ_BI_define(BIfsIsVarB, 1,1)
   OZ_RETURN(oz_bool(isGenFSetVar(oz_deref(OZ_in(0)))));
 } OZ_BI_end
 
-OZ_C_proc_begin(BIfsIsValueB, 2)
+
+OZ_BI_define(BIfsIsValueB, 1, 1)
 {
-  OZ_Term term = OZ_args[0];
+  OZ_Term term = OZ_in(0);
   DEREF(term, term_ptr, term_tag);
   if (isVariableTag(term_tag)) 
     oz_suspendOnPtr(term_ptr);
 
-  return OZ_unify(OZ_getCArg (1),
-		  oz_bool(oz_isFSetValue(oz_deref(OZ_getCArg(0)))));
-}
-OZ_C_proc_end
+  OZ_RETURN(oz_bool(oz_isFSetValue(term)));
+} OZ_BI_end
+
 
 void
 makeFSetValue(OZ_Term desc,OZ_Term*fs)
@@ -74,7 +75,7 @@ makeFSetValue(OZ_Term desc,OZ_Term*fs)
   *fs = makeTaggedFSetValue(new FSetValue(desc));
 }
 
-OZ_C_proc_begin(BIfsSetValue, 2) 
+OZ_BI_define(BIfsSetValue, 1, 1) 
 {
   ExpectedTypes(OZ_EM_FSETDESCR "," OZ_EM_FSETVAL);
 
@@ -82,12 +83,10 @@ OZ_C_proc_begin(BIfsSetValue, 2)
   
   EXPECT_BLOCK(pe, 0, expectFSetDescr, FSETDESCR_SYNTAX);
 
-  return OZ_unify(OZ_getCArg(1),
-		  makeTaggedFSetValue(new FSetValue(OZ_getCArg(0))));
-}
-OZ_C_proc_end
+  OZ_RETURN(makeTaggedFSetValue(new FSetValue(OZ_in(0))));
+} OZ_BI_end
 
-OZ_C_proc_begin(BIfsSet, 3) 
+OZ_BI_define(BIfsSet, 3, 0) 
 {
   ExpectedTypes(OZ_EM_FSETDESCR "," OZ_EM_FSETDESCR "," OZ_EM_FSET);
   
@@ -96,23 +95,25 @@ OZ_C_proc_begin(BIfsSet, 3)
   EXPECT_BLOCK(pe, 0, expectFSetDescr, FSETDESCR_SYNTAX);
   EXPECT_BLOCK(pe, 1, expectFSetDescr, FSETDESCR_SYNTAX);
   
-  FSetConstraint fset(OZ_getCArg(0), OZ_getCArg(1));
+  FSetConstraint fset(OZ_in(0), OZ_in(1));
 
   if (! fset.isValid()) {
     TypeError(2, "Invalid set description");
     return FAILED;
   }
 
-  return tellBasicConstraint(OZ_getCArg(2), &fset);
+  return tellBasicConstraint(OZ_in(2), &fset);
 }
-OZ_C_proc_end
+OZ_BI_end
 
-OZ_BI_define(BIfsSup, 0,1)
+
+OZ_BI_define(BIfsSup, 0, 1)
 {
   OZ_RETURN_INT(fset_sup);
 } OZ_BI_end
 
-OZ_C_proc_begin(BIfsClone, 2) 
+
+OZ_BI_define(BIfsClone, 2, 0) 
 {
   ExpectedTypes(OZ_EM_FSET "," OZ_EM_FSET);
   
@@ -120,187 +121,186 @@ OZ_C_proc_begin(BIfsClone, 2)
   
   EXPECT_BLOCK(pe, 0, expectFSetVar, "");
   
-  DEREF(OZ_getCArg(0), arg0ptr, arg0tag);
+  DEREF(OZ_in(0), arg0ptr, arg0tag);
 
-  return arg0tag == FSETVALUE ? OZ_unify(OZ_getCArg(0), OZ_getCArg(1))
-    : tellBasicConstraint(OZ_getCArg(1), 
-			  (FSetConstraint *) &tagged2GenFSetVar(oz_deref(OZ_getCArg(0)))->getSet());
-}
-OZ_C_proc_end
+  return arg0tag == FSETVALUE ? OZ_unify(OZ_in(0), OZ_in(1))
+    : tellBasicConstraint(OZ_in(1), 
+			  (FSetConstraint *) &tagged2GenFSetVar(oz_deref(OZ_in(0)))->getSet());
+} OZ_BI_end
+
 
 //-----------------------------------------------------------------------------
 
-OZ_C_proc_begin(BIfsGetKnownIn, 2) 
+OZ_BI_define(BIfsGetKnownIn, 1, 1) 
 {
   ExpectedTypes(OZ_EM_FSET ","  OZ_EM_FSETDESCR);
   
-  OZ_Term v = OZ_getCArg(0);
+  OZ_Term v = OZ_in(0);
   DEREF(v, vptr, vtag);
 
   if (isFSetValueTag(vtag)) {
-    OZ_FSetValue * fsetval = tagged2FSetValue(v);
-    return OZ_unify(OZ_getCArg(1), fsetval->getKnownInList());
+    OZ_RETURN(tagged2FSetValue(v)->getKnownInList());
   } else if (isGenFSetVar(v, vtag)) {
     OZ_FSetConstraint * fsetconstr = &tagged2GenFSetVar(v)->getSet();
-    return OZ_unify(OZ_getCArg(1), fsetconstr->getKnownInList());
+    OZ_RETURN(fsetconstr->getKnownInList());
   } else if (oz_isNonKinded(v)) {
     oz_suspendOnPtr(vptr);
   } 
   TypeError(0, "");
 }
-OZ_C_proc_end
+OZ_BI_end
 
-OZ_C_proc_begin(BIfsGetNumOfKnownIn, 2) 
+OZ_BI_define(BIfsGetNumOfKnownIn, 1, 1) 
 {
   ExpectedTypes(OZ_EM_FSET "," OZ_EM_INT);
   
-  OZ_Term v = OZ_getCArg(0);
+  OZ_Term v = OZ_in(0);
   DEREF(v, vptr, vtag);
 
   if (isFSetValueTag(vtag)) {
     OZ_FSetValue * fsetval = tagged2FSetValue(v);
-    return OZ_unify(OZ_getCArg(1), OZ_int(fsetval->getCard()));
+    OZ_RETURN(newSmallInt(fsetval->getCard()));
   } else if (isGenFSetVar(v, vtag)) {
     OZ_FSetConstraint * fsetconstr = &tagged2GenFSetVar(v)->getSet();
-    return OZ_unify(OZ_getCArg(1), OZ_int(fsetconstr->getKnownIn()));
+    OZ_RETURN(newSmallInt(fsetconstr->getKnownIn()));
   } else if (oz_isNonKinded(v)) {
     oz_suspendOnPtr(vptr);
   } 
   TypeError(0, "");
 }
-OZ_C_proc_end
+OZ_BI_end
 
 //-----------------------------------------------------------------------------
 
-OZ_C_proc_begin(BIfsGetKnownNotIn, 2) 
+OZ_BI_define(BIfsGetKnownNotIn, 1, 1) 
 {
   ExpectedTypes(OZ_EM_FSET ","  OZ_EM_FSETDESCR);
   
-  OZ_Term v = OZ_getCArg(0);
+  OZ_Term v = OZ_in(0);
   DEREF(v, vptr, vtag);
 
   if (isFSetValueTag(vtag)) {
     OZ_FSetValue * fsetval = tagged2FSetValue(v);
-    return OZ_unify(OZ_getCArg(1), fsetval->getKnownNotInList());
+    OZ_RETURN(fsetval->getKnownNotInList());
   } else if (isGenFSetVar(v, vtag)) {
     OZ_FSetConstraint * fsetconstr = &tagged2GenFSetVar(v)->getSet();
-    return OZ_unify(OZ_getCArg(1), fsetconstr->getKnownNotInList());
+    OZ_RETURN(fsetconstr->getKnownNotInList());
   } else if (oz_isNonKinded(v)) {
     oz_suspendOnPtr(vptr);
   } 
   TypeError(0, "");
 }
-OZ_C_proc_end
+OZ_BI_end
 
-OZ_C_proc_begin(BIfsGetNumOfKnownNotIn, 2) 
+OZ_BI_define(BIfsGetNumOfKnownNotIn, 1, 1) 
 {
   ExpectedTypes(OZ_EM_FSET "," OZ_EM_INT);
   
-  OZ_Term v = OZ_getCArg(0);
+  OZ_Term v = OZ_in(0);
   DEREF(v, vptr, vtag);
 
   if (isFSetValueTag(vtag)) {
     OZ_FSetValue * fsetval = tagged2FSetValue(v);
-    return OZ_unify(OZ_getCArg(1), OZ_int(fsetval->getKnownNotIn()));
+    OZ_RETURN(newSmallInt(fsetval->getKnownNotIn()));
   } else if (isGenFSetVar(v, vtag)) {
     OZ_FSetConstraint * fsetconstr = &tagged2GenFSetVar(v)->getSet();
-    return OZ_unify(OZ_getCArg(1), OZ_int(fsetconstr->getKnownNotIn()));
+    OZ_RETURN(newSmallInt(fsetconstr->getKnownNotIn()));
   } else if (oz_isNonKinded(v)) {
     oz_suspendOnPtr(vptr);
   } 
   TypeError(0, "");
 }
-OZ_C_proc_end
+OZ_BI_end
 
 //-----------------------------------------------------------------------------
 
-OZ_C_proc_begin(BIfsGetUnknown, 2) 
+OZ_BI_define(BIfsGetUnknown, 1, 1) 
 {
   ExpectedTypes(OZ_EM_FSET "," OZ_EM_FSETDESCR);
   
-  OZ_Term v = OZ_getCArg(0);
+  OZ_Term v = OZ_in(0);
   DEREF(v, vptr, vtag);
 
   if (isFSetValueTag(vtag)) {
-    return OZ_unify(OZ_getCArg(1), OZ_nil());
+    OZ_RETURN(oz_nil());
   } else if (isGenFSetVar(v, vtag)) {
     OZ_FSetConstraint * fsetconstr = &tagged2GenFSetVar(v)->getSet();
-    return OZ_unify(OZ_getCArg(1), fsetconstr->getUnknownList());
+    OZ_RETURN(fsetconstr->getUnknownList());
   } else if (oz_isNonKinded(v)) {
     oz_suspendOnPtr(vptr);
   } 
   TypeError(0, "");
 }
-OZ_C_proc_end
+OZ_BI_end
 
-OZ_C_proc_begin(BIfsGetNumOfUnknown, 2) 
+OZ_BI_define(BIfsGetNumOfUnknown, 1, 1) 
 {
   ExpectedTypes(OZ_EM_FSET "," OZ_EM_INT);
   
-  OZ_Term v = OZ_getCArg(0);
+  OZ_Term v = OZ_in(0);
   DEREF(v, vptr, vtag);
 
   if (isFSetValueTag(vtag)) {
-    return OZ_unify(OZ_getCArg(1), OZ_int(0));
+    OZ_RETURN(newSmallInt(0));
   } else if (isGenFSetVar(v, vtag)) {
     OZ_FSetConstraint * fsetconstr = &tagged2GenFSetVar(v)->getSet();
-    return OZ_unify(OZ_getCArg(1), OZ_int(fsetconstr->getUnknown()));
+    OZ_RETURN(newSmallInt(fsetconstr->getUnknown()));
   } else if (oz_isNonKinded(v)) {
     oz_suspendOnPtr(vptr);
   } 
   TypeError(0, "");
 }
-OZ_C_proc_end
+OZ_BI_end
 
 //-----------------------------------------------------------------------------
 
-OZ_C_proc_begin(BIfsGetLub, 2) 
+OZ_BI_define(BIfsGetLub, 1, 1) 
 {
   ExpectedTypes(OZ_EM_FSET "," OZ_EM_FSETDESCR);
   
-  OZ_Term v = OZ_getCArg(0);
+  OZ_Term v = OZ_in(0);
   DEREF(v, vptr, vtag);
 
   if (isFSetValueTag(vtag)) {
     OZ_FSetValue * fsetval = tagged2FSetValue(v);
-    return OZ_unify(OZ_getCArg(1), fsetval->getKnownInList());
+    OZ_RETURN(fsetval->getKnownInList());
   } else if (isGenFSetVar(v, vtag)) {
     OZ_FSetConstraint * fsetconstr = &tagged2GenFSetVar(v)->getSet();
-    return OZ_unify(OZ_getCArg(1), fsetconstr->getLubList());
+    OZ_RETURN(fsetconstr->getLubList());
   } else if (oz_isNonKinded(v)) {
     oz_suspendOnPtr(vptr);
   } 
   TypeError(0, "");
 }
-OZ_C_proc_end
+OZ_BI_end
 
-OZ_C_proc_begin(BIfsGetCard, 2) 
+OZ_BI_define(BIfsGetCard, 1, 1) 
 {
   ExpectedTypes(OZ_EM_FSET "," OZ_EM_INT);
   
-  OZ_Term v = OZ_getCArg(0);
+  OZ_Term v = OZ_in(0);
   DEREF(v, vptr, vtag);
 
   if (isFSetValueTag(vtag)) {
     OZ_FSetValue * fsetval = tagged2FSetValue(v);
-    return OZ_unify(OZ_getCArg(1), OZ_int(fsetval->getCard()));
+    OZ_RETURN(newSmallInt(fsetval->getCard()));
   } else if (isGenFSetVar(v, vtag)) {
     OZ_FSetConstraint * fsetconstr = &tagged2GenFSetVar(v)->getSet();
-    return OZ_unify(OZ_getCArg(1), fsetconstr->getCardTuple());
+    OZ_RETURN(fsetconstr->getCardTuple());
   } else if (oz_isNonKinded(v)) {
     oz_suspendOnPtr(vptr);
   } 
   TypeError(0, "");
 }
-OZ_C_proc_end
+OZ_BI_end
 
-OZ_C_proc_begin(BIfsCardRange, 3) 
+OZ_BI_define(BIfsCardRange, 3, 0) 
 {
   ExpectedTypes(OZ_EM_INT "," OZ_EM_INT "," OZ_EM_FSET);
   
   int l = -1;
   {
-    OZ_Term lt = OZ_getCArg(0);
+    OZ_Term lt = OZ_in(0);
     DEREF(lt, ltptr, lttag);
     
     if (isSmallIntTag(lttag)) {
@@ -314,7 +314,7 @@ OZ_C_proc_begin(BIfsCardRange, 3)
 
   int u = -1;
   {
-    OZ_Term ut = OZ_getCArg(1);
+    OZ_Term ut = OZ_in(1);
     DEREF(ut, utptr, uttag);
     
     if (isSmallIntTag(uttag)) {
@@ -330,7 +330,7 @@ OZ_C_proc_begin(BIfsCardRange, 3)
     return FAILED;
 
   {
-    OZ_Term v = OZ_getCArg(2);
+    OZ_Term v = OZ_in(2);
     DEREF(v, vptr, vtag);
     
     if (isFSetValueTag(vtag)) {
@@ -351,5 +351,11 @@ OZ_C_proc_begin(BIfsCardRange, 3)
   }
   TypeError(2, "");
 }
-OZ_C_proc_end
+OZ_BI_end
+
+
+
+
+
+
 
