@@ -1034,10 +1034,9 @@ the GDB commands `cd DIR' and `directory'."
     (modify-syntax-entry ?\` "\"" table)
     (modify-syntax-entry ?%  "<" table)
     (modify-syntax-entry ?\n ">" table)
-;    (modify-syntax-entry ?%  "< b" table)
-;    (modify-syntax-entry ?\n "> b" table)
-    (modify-syntax-entry ?/ "_ 14" table)
-    (modify-syntax-entry ?* "_ 23b" table)
+    (modify-syntax-entry ?/ ". 14" table)
+    (modify-syntax-entry ?* ". 23b" table)
+    (modify-syntax-entry ?. "_" table)
     (setq oz-mode-syntax-table table)
     (set-syntax-table oz-mode-syntax-table)))
 
@@ -1595,18 +1594,14 @@ OZ compiler, emulator and error window")
 ;;; when space must be inserted.
 
 
-;;; unfortunately more pattern, since those used for indenting
+;;; unfortunately one more pattern, since those used for indenting
 ;;; are not exactly what is required; but they are used to define the
-;;; new ones here
+;;; new one here
 
-(defconst oz-expr-begin-pattern
-  (concat oz-declare-pattern "\\|" oz-begin-pattern))
 
 (defconst oz-expr-between-pattern
-  (concat oz-between-pattern "\\|" oz-middle-pattern))
-
-(defconst oz-expr-end-pattern oz-end-pattern)
-
+  (concat oz-declare-pattern "\\|" oz-between-pattern "\\|"
+	  oz-middle-pattern)) 
 
 
 (defun forward-oz-expr (&optional arg)
@@ -1624,11 +1619,11 @@ With argument, do it that many times. Negative ARG means backwards."
 	  (and (= (char-syntax (char-after (1- pos))) ?w)
 	       (save-excursion
 		 (forward-word -1)
-		 (cond ((looking-at oz-expr-begin-pattern)
+		 (cond ((looking-at oz-begin-pattern)
 			(setq keyword-kind 'begin))
 		       ((looking-at oz-expr-between-pattern)
 			(setq keyword-kind 'between))
-		       ((looking-at oz-expr-end-pattern)
+		       ((looking-at oz-end-pattern)
 			(setq keyword-kind 'end))))
 	       (cond ((eq keyword-kind 'begin)
 		      (oz-goto-matching-end 1))
@@ -1654,9 +1649,9 @@ With argument, do it that many times. Negative ARG means backwards."
 	  (goto-char pos)
 	  (if (equal (char-syntax (char-after (1- pos))) ?w)
 	      (and (forward-word -1)
-		   (cond ((looking-at oz-expr-end-pattern)
+		   (cond ((looking-at oz-end-pattern)
 			  (setq nest-level (1- nest-level)))
-			 ((looking-at oz-expr-begin-pattern)
+			 ((looking-at oz-begin-pattern)
 			  (setq nest-level (1+ nest-level)))
 			 (t t))
 		   (goto-char pos)))
@@ -1679,11 +1674,11 @@ With argument, do it that many times. Argument must be positive."
       (if (equal pos nil)
 	  (beginning-of-buffer)
 	(goto-char pos)
-	(cond ((looking-at oz-expr-end-pattern)
+	(cond ((looking-at oz-end-pattern)
 	       (oz-goto-matching-begin 1))
 	      ((looking-at oz-expr-between-pattern)
 	       (backward-oz-expr))
-	      ((looking-at oz-expr-begin-pattern)
+	      ((looking-at oz-begin-pattern)
 	       (error "Containing expression ends")))))
     (setq arg (1- arg))))
 
@@ -1701,9 +1696,9 @@ With argument, do it that many times. Argument must be positive."
 		  pos (point-min))
 	  (goto-char pos)
 	  (if (equal (char-syntax (following-char)) ?w)
-	      (cond ((looking-at oz-expr-end-pattern)
+	      (cond ((looking-at oz-end-pattern)
 		     (setq nest-level (1+ nest-level)))
-		    ((looking-at oz-expr-begin-pattern)
+		    ((looking-at oz-begin-pattern)
 		     (setq nest-level (1- nest-level)))
 		    (t t)))
 	  (if (< nest-level 1)
