@@ -1345,7 +1345,7 @@ LBLpopTask:
 	
 	Assert(!ltq->isEmpty());
 	
-	//unsigned int starttime = osUserTime();
+	unsigned int starttime = osUserTime();
 	Thread * backup_currentThread = e->currentThread;
 	
 	while (!ltq->isEmpty() && e->isNotPreemtiveScheduling()) {
@@ -1362,7 +1362,7 @@ LBLpopTask:
 	  } else if (r == FAILED) {
 	    thr->closeDonePropagator();
 	    e->currentThread = backup_currentThread;
-	    //ozstat.timeForPropagation.incf(osUserTime()-starttime);
+	    ozstat.timeForPropagation.incf(osUserTime()-starttime);
 	    goto LBLfailure; // top-level failure not possible
 	  } else {
 	    Assert(r == SCHEDULED);
@@ -1371,7 +1371,7 @@ LBLpopTask:
 	} 
 	
 	e->currentThread = backup_currentThread;
-	//ozstat.timeForPropagation.incf(osUserTime()-starttime);
+	ozstat.timeForPropagation.incf(osUserTime()-starttime);
 	
 	if (ltq->isEmpty()) {
 	  sa->resetLocalThreadQueue();
@@ -1556,6 +1556,13 @@ LBLkillToplevelThread:
 	//  ... no, we have fetched something - go ahead;
 	goto LBLpreemption;
       }
+    } else if (e->currentThread->isNewPropagator() || 
+	  e->currentThread->isPropagator()) {
+      
+      e->currentThread->disposeRunnableThread ();
+      e->currentThread = (Thread *) NULL;
+
+      goto LBLstart;
     } else {
 
       // Tell the debugger about termination of current thread
