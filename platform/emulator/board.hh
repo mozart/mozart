@@ -72,7 +72,6 @@ enum BoardFlags {
   Bo_Failed	= 0x0100,
   Bo_Committed	= 0x0200,
   Bo_Waiting    = 0x0800,
-  Bo_NervousSolve= 0x1000
 };
 
 
@@ -104,7 +103,7 @@ public:
   OZPRINTLONG;
 
   void printTree();
-  Board * getHighestSolveDebug(void); 
+  Board * getHighestSolveDebug(void); // TMUELLER
 
   inline void incSuspCount(int n=1);
   void decSuspCount();
@@ -124,7 +123,6 @@ public:
   Bool isFailed() { return flags & Bo_Failed ? OK : NO; }
   Bool isInstalled() { return flags & Bo_Installed ? OK : NO; }
   Bool isNervous() { return flags & Bo_Nervous ? OK : NO; }
-  Bool isNervousSolve() { return flags & Bo_NervousSolve ? OK : NO; }
   Bool isPathMark() { return flags & Bo_PathMark ? OK : NO; }
   Bool isWaitTop() { return flags & Bo_WaitTop ? OK : NO; }
   Bool isWait() { return flags & Bo_Wait ? OK : NO; }
@@ -138,7 +136,6 @@ public:
   void setInstalled() { flags |= Bo_Installed; }
   void setNervous() { flags |= Bo_Nervous; }
   void setFailed() { flags |= Bo_Failed; }
-  void setNervousSolve() { flags |= Bo_NervousSolve; }
   void setPathMark() { flags |= Bo_PathMark; }
 
   void setScript(int i,TaggedRef *v,TaggedRef r);
@@ -148,7 +145,6 @@ public:
   void setActor (Actor *aa) { u.actor = aa; }   // needed for the solve combinator; 
   void unsetInstalled() { flags &= ~Bo_Installed; }
   void unsetNervous() { flags &= ~Bo_Nervous; }
-  void unsetNervousSolve() { flags &= ~Bo_NervousSolve; }
   void unsetPathMark() { flags &= ~Bo_PathMark; }
 };
 
