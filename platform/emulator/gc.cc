@@ -1964,9 +1964,10 @@ void performCopying(void){
 int bigGCLimit   = InitialBigGCLimit;
 int smallGCLimit = InitialSmallGCLimit;
 
+// signal handler
 void checkGC() {
   if (getUsedMemory() > bigGCLimit && am.conf.gcFlag) {
-    am.setSFlag(StartGC);
+    am.setSFlagInt(StartGC);
   }
 }
 
