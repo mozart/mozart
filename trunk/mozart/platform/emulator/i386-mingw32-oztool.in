@@ -44,8 +44,9 @@ done
 defname=${libname}.def
 
 ${plat}-dlltool --as ${plat}-as --output-def $defname \
-		--dllname $libname $args
+		--dllname $libname $args || exit 1
 
+exec \
 ${plat}-dllwrap --dlltool-name ${plat}-dlltool \
 		--driver-name ${plat}-gcc \
 		--as ${plat}-as -s -o $libname --def $defname \
