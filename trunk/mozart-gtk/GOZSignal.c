@@ -526,8 +526,10 @@ OZ_BI_define (native_get_str, 0, 1) {
   return OZ_ENTAILED;
 } OZ_BI_end
 
+static OZ_Term gtk_null;
+
 OZ_BI_define (native_null, 0, 1) {
-  OZ_out(0) = OZ_makeForeignPointer((void *) NULL);
+  OZ_out(0) = gtk_null;
   return OZ_ENTAILED;
 } OZ_BI_end
 
@@ -777,5 +779,7 @@ static OZ_C_proc_interface oz_interface[] = {
 char oz_module_name[] = "GOZSignal";
 
 OZ_C_proc_interface *oz_init_module() {
+  gtk_null = OZ_makeForeignPointer((void *) NULL);
+  OZ_protect(&gtk_null);
   return oz_interface;
 }
