@@ -22,19 +22,24 @@
   -->
 
 <Chapter id="chapter.flowers">
-    <Title/Flowers/
+  <Title/Flowers/
+    <Author.Extern to="author.db" key="Gert.Smolka">
+    <Author.Extern to="author.db" key="Tobias.Mueller">
+
 
   <P>
     <List class=linkmenu>
       <Item><Ref.Extern to="applets/Flowers.oza"/Start Applet for Flowers/
-      <Item><Ref to="appendix.enable"/How to enable Applets/
+      <Item>
+	<Ref.extern to="ozdoc:apptut" key="applets"/How to enable Applets/
     </List>
   </P>
 
   <P>
     <List class=linkmenu>
       <Item><Ref.Extern to="applets/Flowers3d.oza"/Start Applet for 3D Flowers/
-      <Item><Ref to="appendix.enable"/How to enable Applets/
+      <Item>
+	<Ref.extern to="ozdoc:apptut" key="applets"/How to enable Applets/
     </List>
   </P>
 
