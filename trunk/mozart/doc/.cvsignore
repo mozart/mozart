@@ -8,3 +8,4 @@ ced.el
 ozdoc.ced
 xref.db
 index.db
+global-xref-db.xml
