@@ -52,7 +52,8 @@ OZ_C_proc_begin(fdp_sumR, 4)
     OZ_EXPECT(pe, 2, expectIntVarMinMax);
   }
 
-  OZ_EXPECT(pe, 3, expectBoolVar);
+  int dummy;
+  OZ_EXPECT_SUSPEND(pe, 3, expectBoolVar, dummy);
 
   if (!strcmp(SUM_OP_EQ, op)) {
     return pe.impose(new SumREqPropagator(OZ_args[0], OZ_args[2], OZ_args[3]));
@@ -94,7 +95,9 @@ OZ_C_proc_begin(fdp_sumCR, 5)
   } 
 
   OZ_EXPECT(pe, 0, expectVectorInt);
-  OZ_EXPECT(pe, 4, expectBoolVar);
+
+  int dummy;
+  OZ_EXPECT_SUSPEND(pe, 4, expectBoolVar, dummy);
 
   if (!strcmp(SUM_OP_EQ, op)) {
     return pe.impose(new SumCREqPropagator(OZ_args[0], 
@@ -153,7 +156,9 @@ OZ_C_proc_begin(fdp_sumCNR, 5)
   }
 
   OZ_EXPECT(pe, 0, expectVectorInt);
-  OZ_EXPECT(pe, 4, expectBoolVar);
+
+  int dummy; 
+  OZ_EXPECT_SUSPEND(pe, 4, expectBoolVar, dummy);
 
   if (!strcmp(SUM_OP_EQ, op)) {
     return pe.impose(new SumCNREqPropagator(OZ_args[0], OZ_args[1], OZ_args[3], OZ_args[4]));
@@ -461,7 +466,9 @@ OZ_C_proc_begin(fdp_card, 4)
   OZ_EXPECT(pe, 0, expectVectorIntVarMinMax);
   OZ_EXPECT(pe, 1, expectIntVarMinMax);
   OZ_EXPECT(pe, 2, expectIntVarMinMax);
-  OZ_EXPECT(pe, 3, expectBoolVar);
+  
+  int dummy;
+  OZ_EXPECT_SUSPEND(pe, 3, expectBoolVar, dummy);
 
   return pe.impose(new CardBPropagator(OZ_args[0], 
 				       OZ_args[1], 
