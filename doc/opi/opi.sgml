@@ -23,7 +23,7 @@
 <!DOCTYPE Book SYSTEM "ozdoc.dtd" [
 
 <!-- Extension to the DTD -->
-<!ENTITY % proglang.values.local "|sh">
+<!ENTITY % proglang.values.local "|sh|none">
 
 <!-- Abbreviations -->
 <!ENTITY amp "&">
@@ -50,6 +50,8 @@
     <Meta name="html.split" value="chapter.running">
     <Meta name="html.split" value="chapter.tools">
     <Meta name="html.split" value="chapter.profiles">
+    <Meta name="html.split" value="prof.custom">
+    <Meta name="html.split" value="prof.params">
     <Meta name="html.split" value="appendix.keybindings">
     <Meta name="html.split" value="appendix.devel">
     <Meta name="html.split" value="appendix.api">
@@ -68,6 +70,7 @@
     <Meta name=status value=draft>
     <Title/The Oz Programming Interface/
     <Author.Extern to="author.db" key="Leif.Kornstaedt">
+    <Author.Extern to="author.db" key="Denys.Duchier">
     <Abstract>
       The Oz Programming Interface (&OPI;) is the primary tool for
       interaction with the Mozart development system.  It offers special
@@ -968,30 +971,225 @@
 	    >{Profiler.open}</Code> to the Oz Compiler.  With ?_{ARG}, close
 	    it instead by <Code proglang=oz>{Profiler.close}</Code>.
 	</List>
+
+<!-- PROFILES: BEGIN -->
+
     <Chapter id="chapter.profiles">
       <Title/Using Profiles/
       <P>
-	To make it easy to run multiple versions of Oz and also customize
-	them through the <File/.emacs/ file, there is the notion of
-	<Def/profiles/.  A profile is an alist providing values for the
-	Oz mode variables you want to set different from their default.
-	Besides the ability to have profiles for multiple versions of
-	Mozart, you can also define profiles for build and debug directories
-	(with possibly different gdb setting for interactive debugging
-	for debug directories).
+      A <def/profile/ defines all the settings necessary to run a particular version
+      or installation of Oz.  You can have an number of profiles and you can switch
+      between them while remaining in the same Emacs session.  The advantages for
+      regular users are:
+      <list>
+        <item/You don't need to invoke <code proglang=sh/oz/ to start an Oz session.
+Rather, you start your regular Emacs and whenever you want to start interacting with
+a certain version of Oz installed on your system, you select the appropriate profile
+and all appropriate settings are automagically installed./
+       <item/You can thus easily switch between several installations of Mozart./
+       <item/It is easy to customize the settings for a profile using Emacs's
+<code proglang=none/customize/ interface./
+      </list>
+      Additional advantages for Mozart developers are that you can easily define profiles
+      <list>
+        <item/to run Oz from a build directory./
+	<item/to run a debug emulator under GDB./
+      </list>
 	<List>
 	  <Entry class=useroption><Span class=index/<<oz-profiles>>/
 	    (default: <<nil>>)
 	  <Item>
-	    An alist of profiles for different Oz mode configurations.
+	    An alist of profiles for different Oz mode configurations.  The keys of this
+	    alist are the names of the profiles.
 	  <Entry class=command><Span class=index/<<oz-set-profile>>/
 	    <<?_{NAME}>>
 	  <Item>
-	    Select profile ?_{NAME} from those defined in <<oz-profiles>>.
+	    Select profile ?_{NAME} from those defined in <<oz-profiles>>.  If Oz is currently
+	    running, the user is prompted to decide whether to kill it.  A new profile
+	    can only be installed when Oz is not currently running in the OPI.
 	  <Entry class=command><Span class=index/<<oz-profile-undo>>/
 	  <Item>
-	    Undo the bindings established by the current profile.
+	    Undo the bindings established by the current profile.  This is rarely useful
+	    because <<oz-set-profile>> automatically invokes <<oz-profile-undo>> in order to
+	    undo existing settings and replace them with new ones.
 	</List>
+      <section id="prof.custom">
+        <title/Creating and Customizing Profiles/
+	<p>A profile is an alist providing values for Oz mode variables and environment
+	variables.  The best way to create and customize profiles is through Emacs's
+	<code proglang=none/customize/ interface.  For example
+<Key/M-x customize-variable RET oz-profiles/
+	will provide you with an interactive customization sheet as shown in
+	<ptr to="fig.prof1">.
+	<figure id="fig.prof1">
+	<caption>Initial Customization Sheet</caption>
+	<picture.extern display GIF to="prof1.gif">
+	</figure>
+	We create a new profile by clicking the <code proglang=none/INS/ (insert) button,
+	and obtain a new entry as shown in <ptr to="fig.prof2"> with many possible settable
+	parameters.
+	<figure id="fig.prof2">
+	<caption>After Clicking INS</caption>
+	<picture.extern display GIF to="prof2.gif">
+	</figure>
+	Fortunately, you never need to specify many of them.  All the others take appropriate
+	default values.
+	<subsection proglang=none><title/Global Profile/
+	<p>For example, let's define a profile to use the globally installed Mozart in the usual
+	fashion.  Here are the steps to follow:
+	<list>
+	  <item/Give a name to the profile, &eg; <code/global/./
+	  <item/Select type <code/installed/ from the value menu for the
+<code/Type/ parameter.  This type information allows other important
+settings to be automatically computed./
+          <item>Select the <code/OZHOME/ parameter by clicking in the box, and then
+set its value to the directory of an installed Mozart system.  For example <file>/usr/local/oz</file>.</item>
+	</list>
+	We arrive at the profile customization shown in <ptr to="fig.prof3">.  Don't forget
+	to save it by clicking the <code/Save For Future Sessions/ button.
+	<figure id="fig.prof3">
+	<caption>Global Profile</caption>
+	<picture.extern display GIF to="prof3.gif">
+	</figure>
+	</subsection>
+	<subsection proglang=none>
+	  <title/Default Profile/
+	  <p>A so-called default profile consists of whatever settings were present
+in your environment when you started Emacs.  This is for proper operation when you actually
+choose to invoke <code proglang=sh/oz/ rather than plain <code proglang=sh/emacs/: in that case,
+the default profile consists of the settings established by the <code proglang=sh/oz/ script.
+You can also create a default profile:
+         <list>
+	   <item/Give a name to the profile, &eg; <code/default//
+	   <item/Select type <code/default//
+	 </list>
+The only reason to have a named default profile is so that you can revert to the original settings
+in force when you started <code proglang=sh/oz/ by switching to this profile.
+	</subsection>
+	<subsection proglang=none>
+	  <title/Build Profile/
+	  <p>Developers may find it marginally convenient to be able to define a profile where
+the emulator and all modules are looked up directly in the build tree.  Here are the steps to
+follow:
+        <list>
+	  <item/Give a name to the profile, &eg; <code/build//
+	  <item/Select type <code/build//
+	  <item/Set the source directory: this is the top directory in which you checked
+out the Mozart sources/
+	  <item/Set the build directory: this is the top directory in which you
+built the Mozart system/
+	</list>
+For example, <ptr to="fig.prof4"> shows typical build settings on my laptop.
+	<figure id="fig.prof4">
+	<caption>Build Profile</caption>
+	<picture.extern display GIF to="prof4.gif">
+	</figure>
+	</subsection>
+	<subsection proglang=none>
+	  <title/Debug Profile/
+	  <p>Developers will find it particularly convenient to be able to define
+debug profiles, &ie; build profiles for builds configured with <code proglang=sh
+/--enable-opt=d/, and, in particular the ability to state that they should be run
+under control of GDB.  Here are the steps to follow:
+        <list>
+	  <item/Give a name to the profile, &eg; <code/debug//
+	  <item/Select type <code/build//
+	  <item/Set the source directory/
+	  <item/Set the build directory/
+	  <item/When compiling a debug emulator you really don't want to recompile
+the entire system, and in particular not the libraries because that is rather slow
+with a debug emulator.  So, typically you will configure with <code proglang=sh
+/--enable-opt=d/, but then you will <code proglang=sh/cd platform/ and invoke
+<code proglang=sh/make bootstrap/ there.  Yet, in order to run the system you need
+the rest too.  This is why it is possible to specify a second build directory: this
+is supposed to be your usual build directory, not the one configured for debugging.
+By setting the second build directory, everything not found in the debug build directory
+is looked in the second build directory./
+          <item/You can optionally, state that the debug profile should be started
+under control of GDB: select item <code/Run under GDB/, then select &eg;
+<code/Yes + Auto Start/ from its value menu./
+	</list>
+For example, <ptr to="fig.prof5"> shows typical debug settings on my laptop.
+	<figure id="fig.prof5">
+	<caption>Build Profile</caption>
+	<picture.extern display GIF to="prof5.gif">
+	</figure>
+Note that any profile can be set to run under GDB, but this is rarely useful except
+when used with a debug emulator.
+	</subsection>
+<section id="prof.params">
+  <title/Profile Parameters/
+  <p>There are many parameters in a profile, but you almost never have to fiddle with
+them: the very few used in the earlier examples are typically all you'll ever need.
+They all correspond to parameters also documented elsewhere.
+However, here is the full list of them:
+<list>
+  <entry/<span class=index/<<Name>>//
+  <item/The profile's name/
+  <entry/<span class=index/<<Type>>//
+  <item/Its type: one of <code/default/, <code/installed/, or <code/build//
+  <entry/<span class=index/<<OZHOME>>//
+  <item/Oz installation directory/
+  <entry/<span class=index/<<OZLOAD>>//
+  <item/Methods used by the resolver to resolve URIs/
+  <entry/<span class=index/<<OZPATH>>//
+  <item/Directories searched for <code proglang=oz/\insert/ directives/
+  <entry/<span class=index/<<OZ_TRACE_LOAD>>//
+  <item/Whether the resolver should output tracing information/
+  <entry/<span class=index/<<OZ_TRACE_MODULE>>//
+  <item/Whether the module manager should output tracing information/
+  <entry/<span class=index/<<LD_LIBRARY_PATH>>//
+  <item/Additional directories to search for dynamically linked libraries/
+  <entry/<span class=index/<<DYLD_LIBRARY_PATH>>//
+  <item/Additional directories to search for MacOS X dylib libraries/
+  <entry/<span class=index/<<OZEMULATOR>>//
+  <item/Path to <file/emulator.exe//
+  <entry/<span class=index/<<OZINIT>>//
+  <item/Path to <file/Init.ozf//
+  <entry/<span class=index/<<PATH>>//
+  <item/Additional directories to search for executable programs/
+  <entry/<span class=index/<<Change Title>>//
+  <item/Whether to change the Emacs frame title while Mozart is running/
+  <entry/<span class=index/<<Frame Title>>//
+  <item/String to use as the Emacs frame title while Mozart is running/
+  <entry/<span class=index/<<Prepend Line>>//
+  <item/Whether to prepend a <code proglang=oz/\line/ directive to all
+Oz queries/
+  <entry/<span class=index/<<Default Host>>//
+  <item/Name of host to use for creating socket connections/
+  <entry/<span class=index/<<Source Directory>>//
+  <item/Directory of the Mozart sources/
+  <entry/<span class=index/<<Build Directory>>//
+  <item/Directory in which Mozart was configured and built/
+  <entry/<span class=index/<<Secondary Build Directory>>//
+  <item/Another such directory/
+  <entry/<span class=index/<<Root Functor>>//
+  <item/URI of the root functor to load on startup/
+  <entry/<span class=index/<<Run Under GDB>>//
+  <item/Whether to start the OPI under control of the GNU Debugger.
+Possible values are one of <code/No/, <code/Yes/, and
+<code/Yes + Auto Start//
+  <entry/<span class=index/<<Other Buffer Size>>//
+  <item>Percentage of frame to use for Oz Compiler/Emulator/Temp window</item>
+  <entry/<span class=index/<<Popup on Error>>//
+  <item/Whether to popup the Compiler &resp; Emulator buffer upon error/
+  <entry/<span class=index/<<Halt Timeout>>//
+  <item/Number of seconds to wait for shutdown in <code proglang=elisp/oz-halt//
+  <entry/<span class=index/<<Compile Command>>//
+  <item/default shell command to do a compilation            
+                This may contain at most one occurrence of `%s', which is
+                replaced by the current buffer's file name/
+  <entry/<span class=index/<<Application Command>>//
+  <item/default shell command to execute an Oz application
+                This may contain at most one occurrence of `%s', which
+                is replaced by the current buffer's file name, minus the
+                `.oz' or `.ozg' extension./
+  <entry/<span class=index/<<Engine Program>>//
+  <item/Default <code/ozengine/ to run the OPI/
+</list>
+
+<!-- PROFILES: END -->
+
     <Appendix id="appendix.keybindings">
       <Title/Summary of Oz-Specific Emacs Key Bindings/
       <P>
