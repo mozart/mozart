@@ -1,0 +1,148 @@
+<CHAPTER ID="chapter.basics">
+  <TITLE>Basic Operations</TITLE>
+
+<SECTION><TITLE>Distribution model</TITLE>
+
+<SECTION><TITLE>Global naming</TITLE>
+
+Global names are needed when an application
+wants to interact with the world outside it.
+Mozart supports three basic kinds of global names:
+
+<LIST>
+<ITEM> A <EM>ticket</EM> is a string that references a data
+structure inside a running application.
+Tickets are created by Mozart and
+can be used to connect running applications together.
+<ITEM> A <EM>URL</EM> is a string that references
+a file across the network.
+The string follows the standard URL syntax.
+In Mozart the file can be a <EM>pickle</EM>, in which case
+it can hold any kind of stateless data--procedures,
+classes, records, strings, etc.
+<ITEM> A <EM>hostname</EM> is a string that
+refers to a host (another machine) across the network.
+The string follows the standard DNS syntax.
+An application can use the hostname to start up another
+Mozart process there.
+</LIST>
+
+<SUBSECTION><TITLE>Connecting applications with tickets</TITLE>
+
+Let's say Application 1 has a stream that
+it wants others to access.
+It can do this by creating a ticket
+that references the stream.
+The module <<Connection>> implements tickets.
+Application 1 first creates a ticket for the stream
+by using <<Connection>> as follows:
+
+<<<
+declare Stream Tkt in
+{Connection.offer Stream Tkt}
+{Show Tkt}
+>>>
+
+Then Application 1 publishes the ticket somewhere so that
+other applications can access it.
+Our example displays
+the ticket string in the emulator window.
+We will use copy and paste to communicate the ticket
+to another application.
+The ticket looks something like
+<<'x-ozticket://193.10.66.30:9002:SpGK0:U4v/y:s:f:xl'>>.
+Don't worry about exactly what's inside the ticket.
+Users don't normally see tickets:
+they are stored in files or passed across the network,
+e.g., in mail messages.
+Application 2 can use the ticket to get a reference
+to the stream:
+
+<<<
+declare Stream in
+{Connection.take 
+   'x-ozticket://193.10.66.30:9002:SpGK0:U4v/y:s:f:xl'
+   Stream}
+{Browse Stream}
+>>>
+
+If Application 1 binds the stream
+by doing <<Stream=a|b|c|_>>
+then Application 2's browse window will show the bindings.
+
+
+<SUBSECTION><TITLE>Persistent data structures</TITLE>
+
+An application can save
+any stateless data structure
+in a file and load it again from a file.
+The loading may be done from a URL, used as 
+a file's global name.
+The module <<Pickle>> implements the saving
+and loading, and the conversion to and from
+the file format.
+
+For example, let's define a function and save it:
+
+<<<
+declare
+fun {Fact N}
+   if N=<1 then 1 else X*{Fact N-1} end
+end
+
+{Pickle.save Fact "~pvr/public_html/fact"}
+>>>
+
+Since the function is in a <<public_html>> directory,
+anyone can load it by giving a URL that specifies
+the file:
+
+<<<
+declare
+Fact={Pickle.load "http://www.sics.se/~pvr/fact"}
+
+{Browse {Fact 10}}
+>>>
+
+Anything stateless can be saved in a pickle,
+including functions, procedures, classes,
+records, and atoms.
+Stateful entities, such as objects and variables,
+cannot be pickled.
+
+<SUBSECTION><TITLE>Remote computations</TITLE>
+
+An application can start a computation
+on a given host that uses the resources
+of that host and
+that continues to interact with the
+application.
+The computation is specified as a functor,
+which is the standard way to
+define computations with the resources they need.
+
+First we create a new Mozart process
+that is ready to accept new computations:
+<<<
+declare
+R={New Remote.manager init(host:"sinuhe.sics.se")}
+>>>
+
+Let's make the process do some work:
+<<<
+declare F X in
+F=functor define X={Fact 30} end
+
+{R apply(name:"" F)}  % Do the calculation remotely
+
+{Browse X}            % See the answer
+>>>
+
+If the remote computation needs resources,
+you have to specify the base URL for the resources.
+
+<SECTION><TITLE>
+
+
+</CHAPTER>
+

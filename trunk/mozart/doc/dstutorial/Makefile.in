@@ -2,12 +2,11 @@ SRCTOP		= @SRCTOP@
 SRCDIR		= @srcdir@
 VPATH		= @srcdir@
 
-HTMLEXTRAFILES = 
+HTMLEXTRAFILES = tutorial.gif
 
 WHAT	= dstutorial
 MAIN	= dstutorial.sgml
-SGMLSRCS = 
-
+SGMLSRCS = 1_abstract.sgml 2_introduction.sgml
 
 include ../Makefile.common
  
