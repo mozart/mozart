@@ -567,9 +567,9 @@ negated implication)./
 	<Entry id=port.new><Span class=index/<<NewPort>>/
 	  <Index class=tails/<<Port>><And><<new>>/
 	<Synopsis>
-	  <<{Port.new ?_{Xs} ??{Port}}>>
+	  <<{Port.new ??{Xs} ??{Port}}>>
 	<Item>
-	  returns a new port pointing to the stream&nbsp;?_{Xs}.
+	  returns a new port, together with its associated stream&nbsp;?_{Xs}.
 
 	<Entry><Span class=index/<<Send>>/
 	  <Index/<<Port>><And><<send>>/
