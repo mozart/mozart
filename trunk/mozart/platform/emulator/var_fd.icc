@@ -38,16 +38,10 @@
 inline
 void OzFDVariable::dispose(void) {
   finiteDomain.disposeExtension();
-  SuspList *sl=fdSuspList[fd_prop_singl];
-  while (sl) {
-    sl=sl->dispose();
-  }
-  DebugCode(fdSuspList[fd_prop_singl]=0);
-  sl = fdSuspList[fd_prop_bounds];
-  while (sl) {
-    sl=sl->dispose();
-  }
-  DebugCode(fdSuspList[fd_prop_bounds]=0);
+
+  DISPOSE_SUSPLIST(fdSuspList[fd_prop_singl]);
+  DISPOSE_SUSPLIST(fdSuspList[fd_prop_bounds]);
+
   disposeS();
   freeListDispose(this, sizeof(OzFDVariable));
 }
