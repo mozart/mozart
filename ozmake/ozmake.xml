@@ -1,0 +1,206 @@
+<package>
+  <head>
+    <title>ozmake</title>
+    <mogul>mogul:/duchier/ozmake</mogul>
+    <version>0.78</version>
+    <author>
+      <name>Denys Duchier</name>
+      <email>duchier@ps.uni-sb.de</email>
+      <www>http://www.ps.uni-sb.de/~duchier/</www>
+    </author>
+    <blurb>a tool for Mozart project building and package management</blurb>
+  </head>
+
+  <p>See <a href="CHANGES">CHANGES</a> for a list of changes between
+  successive versions.</p>
+
+  <section>
+    <title>USAGE</title>
+    <dlist>
+      <item>
+        <label><cmd>ozmake <meta>OPTIONS</meta> <meta>TARGETS</meta></cmd></label>
+      </item>
+    </dlist>
+    <p><tool>ozmake</tool> is a tool for building Mozart-based projects and for
+creating, installing, managing, and publishing Mozart packages.  It was inspired
+by the Unix tools <tool>make</tool> and <tool>rpm</tool>, but is much, much simpler
+and specialized for Mozart-based software development and deployment.
+<tool>ozmake</tool> must currently be invoked from a shell, but it
+will eventually acquire additionally an optional, user-friendly
+graphical interface.</p>
+  </section>
+
+  <section>
+    <title>SYNOPSIS</title>
+    <dlist>
+      <item>
+        <label><cmd>ozmake --help</cmd></label>
+	<label><cmd>ozmake [--build] [<meta>TARGETS</meta><dots/>]</cmd></label>
+	<label><cmd>ozmake --install [<meta>TARGETS</meta><dots/>]</cmd></label>
+	<label><cmd>ozmake --install [--package=(<meta>FILE</meta>|<meta>MOGULID</meta>)]</cmd></label>
+	<label><cmd>ozmake --uninstall [--package=(<meta>FILE</meta>|<meta>MOGULID</meta>)]</cmd></label>
+	<label><cmd>ozmake --(very)clean</cmd></label>
+	<label><cmd>ozmake --create [--package=<meta>FILE</meta>]</cmd></label>
+	<label><cmd>ozmake --publish</cmd></label>
+	<label><cmd>ozmake --extract --package=(<meta>FILE</meta>|<meta>MOGULID</meta>)</cmd></label>
+	<label><cmd>ozmake --list [--package=<meta>MOGULID</meta>]</cmd></label>
+	<label><cmd>ozmake --config=(put|delete|list) <dots/></cmd></label>
+	<label><cmd>ozmake --mogul=(put|delete|list|export) <dots/></cmd></label>
+      </item>
+    </dlist>
+  </section>
+
+  <section>
+    <title>OPTIONS</title>
+
+    <p>In the following, we write meta-variables between angle brackets,
+    e.g. <meta>PREFIX</meta> or <meta>URI as cache path</meta></p>
+
+    <section>
+      <title>General Options</title>
+
+      <dlist type="options">
+        <item>
+	  <label><cmd>-v</cmd></label>
+	  <label><cmd>--verbose</cmd></label>
+	  <p>print out more information than the default.  By
+	  supplying this option twice, you will in some cases get even
+	  more information</p>
+	</item>
+	<item>
+	  <label><cmd>-q</cmd></label>
+	  <label><cmd>--quiet</cmd></label>
+	  <p>suppress all tracing and feedback information</p>
+	</item>
+	<item>
+	  <label><cmd>-n</cmd></label>
+	  <label><cmd>--just-print</cmd></label>
+	  <p>perform a dry run, <ie/> just print what would happen
+	  without actually performing the actions</p>
+	</item>
+	<item>
+	  <label><cmd>--local</cmd></label>
+	  <p>do not recurse into subdirectories</p>
+	</item>
+      </dlist>
+    </section>
+    <p>What you should remember here is that <cmd>-vn</cmd> is your
+    friend.  Add <cmd>-vn</cmd> at the end of any <tool>ozmake</tool>
+    invocation and it will tell you in great detail what the command
+    would do, without actually doing it.</p>
+  </section>
+
+  <section>
+    <title>Directories and URLs</title>
+    <dlist type="options">
+      <item>
+        <label><cmd>--prefix=<meta>PREFIX</meta></cmd></label>
+	<label type="default"><file>~/.oz</file></label>
+	<p>root of private installation area</p>
+      </item>
+      <item>
+        <label><cmd>--dir=<meta>DIR</meta></cmd></label>
+	<label type="default">current directory</label>
+	<p>default directory for other options below</p>
+      </item>
+      <item>
+        <label><cmd>--builddir=<meta>BUILDDIR</meta></cmd></label>
+	<label type="default"><meta>DIR</meta></label>
+	<p>directory in which to build</p>
+      </item>
+      <item>
+        <label><cmd>--srcdir=<meta>SRCDIR</meta></cmd></label>
+	<label type="default"><meta>DIR</meta></label>
+	<p>directory where source files are located</p>
+      </item>
+      <item>
+        <label><cmd>--bindir=<meta>BINDIR</meta></cmd></label>
+	<label type="default"><file><meta>PREFIX</meta>/bin</file></label>
+	<p>directory where <file>bin</file> targets are placed</p>
+      </item>
+      <item>
+        <label><cmd>--libroot=<meta>LIBROOT</meta></cmd></label>
+	<label type="default"><file><meta>PREFIX</meta>/cache</file></label>
+	<p>root directory of cache into which <file>lib</file> targets
+	are installed</p>
+      </item>
+      <item>
+        <label><cmd>--libdir=<meta>LIBDIR</meta></cmd></label>
+	<label type="default"><file><meta>LIBROOT</meta>/<meta>URI as cache path</meta></file></label>
+	<p>directory into which <file>lib</file> targets are
+	installed:
+	  <align>
+	    <row>
+	      <col><meta>URI</meta></col>
+	      <col>=</col>
+	      <col><file>x-ozlib://foo/bar/baz</file></col>
+	    </row>
+	    <row>
+	      <col><meta>URI as cache path</meta></col>
+	      <col>=</col>
+	      <col><file>x-ozlib/foo/bar/baz</file></col>
+	    </row>
+	    <row>
+	      <col><meta>LIBDIR</meta></col>
+	      <col>=</col>
+	      <col><file><meta>LIBROOT</meta>/x-ozlib/foo/bar/baz</file></col>
+	    </row>
+	  </align>
+	</p>
+      </item>
+      <item>
+        <label><cmd>--docroot=<meta>DOCROOT</meta></cmd></label>
+	<label type="default"><file><meta>PREFIX</meta>/doc</file></label>
+	<p>root directory into which <file>doc</file> targets are
+	installed</p>
+      </item>
+      <item>
+        <label><cmd>--docdir=<meta>DOCDIR</meta></cmd></label>
+	<label type="default"><file><meta>DOCROOT</meta>/<meta>MOGUL as filename</meta></file></label>
+	<p>
+	  <align>
+	    <row>
+	      <col><meta>MOGUL</meta></col>
+	      <col>=</col>
+	      <col><file>mogul:/aaa/bbb/ccc</file></col>
+	    </row>
+	    <row>
+	      <col><meta>MOGUL as filename</meta></col>
+	      <col>=</col>
+	      <col><file>aaa-bbb-ccc</file></col>
+	    </row>
+	    <row>
+	      <col><meta>DOCDIR</meta></col>
+	      <col>=</col>
+	      <col><file><meta>DOCROOT</meta>/aaa-bbb-ccc</file></col>
+	    </row>
+	  </align>
+	</p>
+      </item>
+      <item>
+        <label><cmd>--extracdir=<meta>EXTRACDIR</meta></cmd></label>
+	<label type="default"><meta>DIR</meta></label>
+	<p>directory into which to extract a package</p>
+      </item>
+      <item>
+        <label><cmd>--archive=<meta>ARCHIVE</meta></cmd></label>
+	<label type="default"><file>http://ww.mozart-oz.org/mogul/pkg</file></label>
+	<p>URL of mogul archive from which packages can be
+	downloaded.  For example:
+	  <align>
+	    <row>
+	      <col><meta>MOGUL</meta></col>
+	      <col>=</col>
+	      <col><file>mogul:/aaa/bbb/ccc</file></col>
+	    </row>
+	  </align>
+	  is downloaded from
+	  <file><meta>ARCHIVE</meta>/aaa/bbb/ccc/aaa-bbb-ccc.pkg</file>
+	</p>
+      </item>
+      <item>
+        <
+      </item>
+    </dlist>
+  </section>
+</package>
