@@ -313,7 +313,8 @@ OZ_BI_end
  
 OZ_Return DistinctPropagator::propagate(void)
 {
-  if (reg_l_sz == 0) return PROCEED;
+  if (reg_l_sz < 2) 
+    return PROCEED;
 
   int &sz  = reg_l_sz;
 
