@@ -125,6 +125,16 @@ in
 			     A#{ByNeed fun {$} {Module.load A unit} end}
 			  end}}))}
 
+      %% QUICK HACK, I WILL TAKE CARE OF IT SOON: CS
+
+      local
+	 System = {Module.load 'System' unit}
+      in
+	 {OPICompiler
+	  enqueue(mergeEnv(env('Show':   System.show
+			       'Print':  System.print)))}
+      end
+
       CompilerUI = {New Emacs.interface init(OPICompiler)}
       Sock = {CompilerUI getSocket($)}
       {Property.put 'opi.compiler' CompilerUI}
