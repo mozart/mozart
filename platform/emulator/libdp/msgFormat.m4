@@ -67,9 +67,13 @@ message(M_REQUESTED,Index)
 
 message(M_PING)
 
+message(M_PONG_TERM,Site,Index,Index2,Term)
+message(M_PONG_PL,Site,Index,Index2)
+
 message(C_PRESENT,String,Site)        //String is Version
 message(C_NEGOTIATE,String,Site,Term)
 message(C_NEGOTIATE_ANS,Term)
+message(C_SEND_PING_PONG,Index,Index2)
 
 message(C_ACK)
 message(C_SET_ACK_PROP,Index,Index2)  // time, length
