@@ -296,6 +296,7 @@ public:
    }
 };
 
+extern BuiltinTab builtinTab;
 
 class OneCallBuiltin: public Builtin {
 private:
