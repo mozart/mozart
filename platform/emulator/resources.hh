@@ -51,6 +51,10 @@
 #define TIME_SLICE		50  /* ms */
 #define CLOCK_TICK	        TIME_SLICE*(1000/5)	/* usec */
 
+/* task manager */
+/* 4 tasks are needed by virtual sites, see virtual.cc */
+#define	MAXTASKS	        4
+
 #define NAMETRUE "true"
 #define NAMEFALSE "false"
 #define NAMEGROUPVOID "NameGroupVoid"

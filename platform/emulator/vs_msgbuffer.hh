@@ -530,9 +530,19 @@ public:
   void* operator new(size_t, void *place) { return (place); }
 
   //
+  // kost@ : Note the 'owned' buffer is initialized when created
+  // since virtual sites put (at least) a "vs" header into it;
   VSMsgBufferOwned(VSMsgChunkPoolManagerOwned *cpmIn, Site *siteIn) 
     : cpm(cpmIn), site(siteIn) { 
-    DebugCode(currentAddr = (VSMsgChunkOwned *) 0);
+    Assert(first < 0);
+    // allocate the first chunk unconditionally
+    // (there are no empty messages?)
+    current = first = cpm->getMsgChunk();
+    allocatedChunks = 1;
+    currentAddr = cpm->getChunkAddr(current);
+    //
+    posMB = currentAddr->getDataAddr();
+    endMB = posMB + cpm->getChunkDataSize() - 1; // in bytes; // kost@ : TODO
   }
   virtual ~VSMsgBufferOwned() {
     error("VSMsgBufferOwned destroyed?");
@@ -580,22 +590,10 @@ public:
 
   //
   // "to be provided" methods;
-  void marshalBegin() {		// allocates first chunk;
-    Assert(first < 0);
-    // allocate the first chunk unconditionally
-    // (there are no empty messages?)
-    current = first = cpm->getMsgChunk();
-    allocatedChunks = 1;
-    currentAddr = cpm->getChunkAddr(current);
-    //
-    posMB = currentAddr->getDataAddr();
-    endMB = posMB + cpm->getChunkDataSize() - 1; // in bytes; // kost@ : TODO
-  }
+  void marshalBegin() {}	// already initialized;
   void marshalEnd() {}		// no special action now;
   void unmarshalBegin() {}	// already initialized (allocated);
-  void unmarshalEnd() {
-    releaseChunks();
-  }
+  void unmarshalEnd() {}        // but the chunks need to be released yet;
 
   //
   // Yields the first chunk's address - for putting it in a mailbox;
@@ -612,6 +610,7 @@ public:
   //     of each particular buffer;
   Site* getSite() { return (site); }
 };
+
 
 //
 // The message buffer used for feeding in incoming messages.
@@ -648,10 +647,23 @@ private:
     gotoNextChunk();
     return (*posMB++);
   }
+  void putNext(BYTE) { 
+    error("there is no 'putNext' for VSMsgBufferImported!");
+  }
 
   //
 public:
   //
+  void* operator new(size_t size) {
+    error("VSMsgBufferImported allocated using 'new(size_t)'");
+    return ((void *) -1);	// gcc warning;
+  }
+  void* operator new(size_t, void *place) { return (place); }
+
+  //
+  // kost@ : Note the 'imported' buffer is initialized when created
+  // (imported) since virtual sites put (at least) a "vs" header into
+  // it;
   VSMsgBufferImported(VSMsgChunkPoolManagerImported *cpmIn, int chunkIndex)
     : cpm(cpmIn) {
     current = first = chunkIndex;
@@ -696,11 +708,17 @@ public:
   void marshalBegin() { error("VSMsgBufferImported::marshalBegin?"); }
   void marshalEnd()   { error("VSMsgBufferImported::marshalBegin?"); }
   void unmarshalBegin() {}	// already initialized (allocated);
-  void unmarshalEnd() { releaseChunks(); }
+  void unmarshalEnd() {}        // but the chunks need to be released yet;
 
   //
   // ('siteStringrep' exists just for debugging;)
   char* siteStringrep();
+
+  //
+  Site* getSite() { 
+    error("there is no 'getSite' method for VSMsgBufferImported!");
+    return ((Site *) -1);
+  }
 };
 
 #endif // VIRTUALSITES
