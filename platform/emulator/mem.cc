@@ -152,16 +152,18 @@ Bool checkAddress(void *ptr)
 // ----------------------------------------------------------------
 // mem from os with 3 alternatives MMAP, SBRK or MALLOC
 
-// mm2: I've disabled mmap because many people reported spurious problems.
-// Please check with Denys and afranke@ags.uni-sb.de before reenabling it.
-
-/* #undef HAVE_MMAP */
-
 //
 // kost@: i have not tested that on anything else than 2.0.*
 // Linux-i486 (2.0.7-based) and Solaris-Sparc. And don't risk
 // otherwise...
-#if !(defined(LINUX_I486) || defined(SOLARIS_SPARC))
+
+//#if !(defined(LINUX_I486) || defined(SOLARIS_SPARC))
+//#undef HAVE_MMAP
+//#endif
+
+// RS: mmap does not work under Linux 2.2.0 - 2.2.3 (at least)
+//     seems to be a bug in Linux 2.2 itself!
+#if !defined(SOLARIS_SPARC)
 #undef HAVE_MMAP
 #endif
 
