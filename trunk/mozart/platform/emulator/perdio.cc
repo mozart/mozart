@@ -2453,7 +2453,7 @@ void unmarshallTertiary(ByteStream *bs, TaggedRef *ret, MarshallTag tag, char *c
   }
   PD(UNMARSHALL,"%s miss b:%d",bi,comment);
 
-  Tertiary *tert;
+  Tertiary *tert = NULL;
   switch (tag) {
   case M_PORT:
     tert = new PortProxy(bi);
