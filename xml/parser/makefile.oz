@@ -1,8 +1,8 @@
 makefile(
-   lib        : ['Parser.ozf' 'Parser-0.2.1.ozf']
-   doc        : ['index.html' 'index-0.2.1.html' 'fig1.gif' 'fig2.gif' 'fig3.gif' 'example.xml']
+   lib        : ['Parser.ozf']
+   doc        : ['index.html' 'example.xml']
    version    : '0.5'
-   uri        : 'x-ozlib://duchier/xml'
+   uri        : 'x-ozlib://system/xml'
    mogul      : 'mogul:/duchier/xml/parser'
    author     : 'mogul:/duchier/denys'
    blurb      : 'namespace aware XML parser'
