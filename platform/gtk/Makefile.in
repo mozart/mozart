@@ -1,5 +1,8 @@
 VPATH           = @srcdir@
 PREFIX          = @prefix@
+
+SRCDIR          = @srcdir@
+SRCTOP          = @SRCTOP@
 BUILDTOP        = @BUILDTOP@
 
 PLATFORM        = @PLATFORM@
@@ -14,8 +17,8 @@ CXX             = @CXX@
 
 LIBS            = @LIBS@
 EXTRALDFLAGS    = @EXTRALDFLAGS@
-CPPFLAGS        = -I. -I$(VPATH) @CPPFLAGS@
-CFLAGS          = -I. -I$(VPATH) @CFLAGS@
+CPPFLAGS        = -I. -I$(SRCDIR) @CPPFLAGS@
+CFLAGS          = -I. -I$(SRCDIR) @CFLAGS@
 LDFLAGS         = @LDFLAGS@ $(LIBS)
 LN_S            = @LN_S@
 OZTOOL          = @OZTOOL@
@@ -53,10 +56,11 @@ NEWPLATFORMFILES = $(PLATFORMFILES:$(PLATFORMDIR)/%=$(NEWCACHEDIR)/%)
 
 ### end of files to install
 
-ALL_INCLUDES         = -I$(VPATH)/../emulator
+ALL_INCLUDES         = -I$(SRCTOP)/platform/emulator \
+                       -I$(BUILDTOP)/platform/emulator
 
 # build scripts
-BUILD_SCRIPT         = $(VPATH)/goz_build_native.perl
+BUILD_SCRIPT         = $(SRCDIR)/goz_build_native.perl
 BUILD                = $(PERL) $(BUILD_SCRIPT)
 BUILD_GTK            = $(BUILD) --includes="gtk/gtk.h"
 ifeq ($(HAVE_GTK_CANVAS),yes)
@@ -67,7 +71,7 @@ endif
 BUILD_CANVAS         = $(BUILD) --includes="$(CANVAS_HEADER) $(GTK_CANVAS_RENAMER)"
 
 # specs
-SPECS_PATH           = $(VPATH)/../../share/lib/gtk/specs
+SPECS_PATH           = $(SRCTOP)/share/lib/gtk/specs
 GTK_SPECS            = $(SPECS_PATH)/gtk/*.spec
 GDK_SPECS            = $(SPECS_PATH)/gdk/*.spec
 CANVAS_SPECS         = $(SPECS_PATH)/gnome-canvas/*.spec
