@@ -521,6 +521,7 @@ void CodeArea::display (ProgramCounter from, int sz, FILE* ofile)
     case CREATEVARIABLEY:
     case CREATEVARIABLEG:
     case GETSELF:
+    case CLEARY:
       /* OP Reg       */
       fprintf(ofile, "(%d)\n", regToInt(getRegArg(PC+1)));
       DISPATCH();
