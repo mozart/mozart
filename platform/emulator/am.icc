@@ -12,7 +12,7 @@
 #ifndef __AM_ICC
 #define __AM_ICC
 
-#ifndef OUTLINE
+#if !defined(OUTLINE) && defined(__GNUC__)
 #pragma interface
 #endif
 
