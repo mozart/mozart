@@ -119,7 +119,8 @@ BASESRC1 = \
 	VirtualString Object Loop Port \
 	Time Thread Space Array Dictionary \
 	Exception Functor BitArray BitString \
-	ByteString ForeignPointer Base
+	ByteString ForeignPointer Base InterFault \
+	Combinators
 BASESRC = $(BASESRC1:%=base/%.oz)
 
 new-base: $(BASESRC)
