@@ -75,8 +75,10 @@ public:
     OZ_collectHeapTerm(X,X);
     OZ_collectHeapTerm(K,K);
     OZ_collectHeapTerm(L,L);
-    OZ_collectHeapTerm(FH,FH);
-    OZ_collectHeapTerm(FT,FT);
+    if (FH)
+      OZ_collectHeapTerm(FH,FH);
+    if (FT)
+      OZ_collectHeapTerm(FT,FT);
   }
   virtual size_t sizeOf(void) { return sizeof(MonitorArityPropagator); }
   virtual OZ_Return propagate(void);
