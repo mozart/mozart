@@ -277,11 +277,11 @@ starts the emulator under gdb")
      ("Other Demo"              . oz-find-demo-file)
      ("Modules File"            . oz-find-modules-file)
      )
-    ("Print"
-     ("Region"                  . oz-print-region)
-     ("Buffer (Portrait)"	. oz-print-buffer)
-     ("Buffer (Landscape)"	. oz-print-buffer-landscape)
-     )
+;    ("Print"
+;     ("Region"                  . oz-print-region)
+;     ("Buffer (Portrait)"	. oz-print-buffer)
+;     ("Buffer (Landscape)"	. oz-print-buffer-landscape)
+;     )
     ("Core Syntax"
      ("Buffer"      . oz-to-coresyntax-buffer)
      ("Region"      . oz-to-coresyntax-region)
