@@ -21,210 +21,188 @@
   -
   -->
 
-<CHAPTER id="chapter.interactive"><TITLE>Interactive Examination</TITLE>
+<CHAPTER id="chapter.interactive"><TITLE/Interactive Examination/
   <P>
-    Once a value is displayed, it can be examined more
-    closely by using the nodes context menu.
-    The context menu offers a configurable set of type specific operations
-    for that node and can be opened by clicking the right mouse button
-    on a so-called node access point.
-  </P>
-  <SECTION><TITLE>Node Access Points</TITLE>
+    Once a value is displayed, it can be examined more closely by using
+    the context menus attached to its nodes.  A node's context menu offers
+    a configurable set of type-specific operations on that node and can be
+    opened by right-clicking the node's so-called <EM/access point/.
+  <SECTION><TITLE/Node Access Points/
   <P>
-    Node access points are as follows.
-  </P>
+    Node access points are defined as follows:
   <P>
     <LIST>
       <ITEM>
-        Any atomic node is a node access point to itself.
+        Any atomic node is a node access point for itself.
+        (An <EM/atomic node/ is a node that has no subnodes.)
       <ITEM>
-        For any tuple excluding lists,
-        the label and the braces are access points to the entire tuple node.
+        For any tuple excluding lists, the label and the parentheses are
+        access points for the entire tuple node.
       <ITEM>
-        For any record, the label and and the braces are access points to the entire record node.
-        Note that record features itself are not used as node access points.
+        For any record, the label and and the parentheses are access points
+        for the entire record node.  In particular, the record's features
+        are defined <EM/not/ to be node access points.
       <ITEM>
-         Lists are handled special in the sense that their node access points depend on
-         the display mode. In tree mode, the braces and pipes always refer to the entire list
-         whereas in graph mode the pipes refer to the sublist starting at that point.
+         The node access points of lists depend on the display mode.
+         In tree mode, the brackets and pipe symbols (<<'|'>>) are node access
+         points for the entire list.  In graph mode, each pipe symbol is
+         a node access point for the sublist starting at that point.
     </LIST>
-  </P>
-  <SECTION><TITLE>Node Operations</TITLE>
+  <SECTION><TITLE/Node Operations/
   <P>
+    The Inspector offers three types of operations on nodes: exploration,
+    filtering and mapping, and actions (see <PTR to="figure.context">).
     <FIGURE id="figure.context">
-      <CAPTION>A context menu opened over the closing brace</CAPTION>
-      <PICTURE.CHOICE>
-        <PICTURE.EXTERN to="context.gif" type=gif>
-      </PICTURE.CHOICE>
+      <CAPTION/A context menu opened over the closing parenthesis/
+      <PICTURE.EXTERN to="context.gif" type=gif>
     </FIGURE>
-  </P>
-  <P>
-    The Inspector offers three types of node operations: exploration, mapping and actions
-    (see figure <PTR to="figure.context">).
-  </P>
   <P>
     <LIST>
       <ITEM>
-        Exploration allows to locally modify the depth and the width exploration limits,
-        thereby exanding or shrinking the value to the region of interest.
+        <EM/Exploration/ allows to locally modify the depth and width
+        exploration limits, thereby expanding or shrinking the value to
+        the region of interest.
       <ITEM>
-        Mapping allows to transform the displayed value
-        with respect to a given mapping function.
-        This makes it possible to either arbitrarly prune regions of the value or to extract
-        information from abstract datatypes.
+        <EM/Mappings/ allow to transform values for display with respect
+        to a given mapping function.  This makes it possible to either
+        arbitrarily prune regions of the value (also called <EM/filtering/)
+        or to extract information from abstract datatypes.
       <ITEM>
-        Actions allow to connect displayed values to external tools such as the Investigator,
-        thereby gathering information beyond the scope of the Inspector.
+        <EM/Actions/ allow to apply side-effecting operations on displayed
+        values.  For instance, this allows to make values available to
+        external tools such as the experimental Constraint Investigator,
+        for gathering information beyond the scope of the Inspector.
     </LIST>
-  </P>
-  <SUBSECTION><TITLE>Tree Inspection</TITLE>
+    These types of operations are explained in the following sections.
+  <SUBSECTION id="section.interactive.exploration"><TITLE/Exploration/
   <P>
+    Having only a global depth and width is often too restrictive:  When
+    inspecting a large data structure, one will want to zoom in on a
+    subvalue or hide currently uninteresting data.  This is what the
+    exploration operations are intended for.  Two different kinds of
+    operations exist, for modifying the depth and the width limits
+    respectively (see <PTR to="figure.exploration">).
     <FIGURE id="figure.exploration">
-      <CAPTION>Sample inspection and various results</CAPTION>
+      <CAPTION/Sample inspection and various results/
       <TABLE>
-         <TR><TD><PICTURE.EXTERN to="explore1.gif" type=gif></TD></TR>
-         <TR><TD><PICTURE.EXTERN to="explore2.gif" type=gif></TD></TR>
+        <TR><TD><PICTURE.EXTERN to="explore1.gif" type=gif>
+        <TR><TD><PICTURE.EXTERN to="explore2.gif" type=gif>
       </TABLE>
     </FIGURE>
-  </P>
+  <PARA><TITLE/Depth/
+    Applying the operation <Q/Depth +?{n}/ to a node causes the subtree
+    starting at that node to be redrawn, with a depth of ?{n}&nbsp;levels.
+    Applying the operation <Q/Depth -?{n}/ causes the node to be pruned,
+    as well as its ?{n} - 1 parent nodes.  The effect of the global depth
+    limit is that when new values are inspected, immediately the operation
+    <Q/Depth +?{d}/ is applied to them, where ?{d} is the global depth limit.
+  <PARA><TITLE/Width/
+    Every node also has a display width associated with it.  If a node has
+    a display width ?{w}, only its first ?{w}&nbsp;subtrees will be displayed
+    (in the case that ?{w} is zero, that means none).  Initially, <EM/all/
+    nodes are created with the default display width.  Applying the operation
+    <Q/Width +?{n}/ or <Q/Width -?{n}/ to a node modifies that node's display
+    width by the specified amount and causes it to be redrawn accordingly.
   <P>
-    The Inspector displays graphs in a tree-like fashion. Therefore, every node
-    can be uniquely identified by its position, that is, its depth and width in the tree
-    representation.
-  </P>
+    <PTR to="figure.exploration"> shows some examples of the effects of
+    the operations described above.  They have all been obtained from
+    inspecting the sample tuple given above, and applying operations to
+    it as follows:
+    <LIST ENUM>
+      <ITEM>
+        The sample tuple has been shrinked by applying <Q/Width -5/.
+      <ITEM>
+        The sample tuple has been subject to applying <Q/Width -5/ once
+        and <Q/Width +1/ twice.
+      <ITEM>
+        The sample tuple has been collapsed by applying <Q/Depth -1/.
+      <ITEM>
+        The sample tuple is only partially displayed when applying
+        <Q/Depth +1/.  Note that the operation does not augment the
+        display depth, but replaces it.
+      <ITEM>
+        The sample tuple has been partially displayed using <Q/Depth +1/
+        and then shrinked in width by applying <Q/Width -1/ twice.
+        This shows that the exploration functions are compositional.
+    </LIST>
+  <SUBSECTION><TITLE/Filtering and Mapping/
   <P>
-    In order to make inspection work locally, it works relative to the position of the
-    accessed node in the tree representation and only affects either the depth or the width limit.
-  </P>
+    The Inspector defines default mappings for many data types, to perform
+    commonly-used operations such as inspecting the state of mutable data
+    structures.  <PTR to="figure.mapping"> demonstrates an example of this:
+    By default, dictionaries are displayed as the unspecific tag
+    <SAMP/&lt;dictionary&gt;/.  The default mapping <Q/Show Items/ for
+    dictionaries replaces the dictionary node by a snapshot of its contents
+    (specifically, as the result of the <<Dictionary.items>> procedure).
+    <FIGURE id="figure.mapping">
+      <CAPTION/Example mapping invocation and its result/
+      <TABLE>
+        <TR><TD><PICTURE.EXTERN to="mapping1.gif" type=gif>
+        <TR><TD><PICTURE.EXTERN to="mapping2.gif" type=gif>
+      </TABLE>
+    </FIGURE>
   <P>
-    Assume that the selected node resides at depth <CODE>D</CODE> and width <CODE>W</CODE>.
-    The idea now is to temporarily change the exploration limit (depth or width) to the value
-    <CODE>DMax = {Max (D + N) 0}</CODE> and <CODE>WMax = {Max (W + N) 0}</CODE>, respectively.
-    Figure <PTR to="figure.exploration"> shows some examples:
-  </P>
+    Note how the different choice of background color indicates that this
+    is, in fact, a mapped representation.  Mappings can be undone using
+    the context menu option <Q/unmap/.
   <P>
+    Mappings have the following properties:
     <LIST>
       <ITEM>
-        The sample tuple has been shrinked by applying Width -5.
+        Mappings are fully compositional, meaning that any other mapping can
+        be applied to an already-mapped node.
       <ITEM>
-        The sample tuple has been created by applying once Width -5 and twice With +1.
+        Mapping works on a per-node basis.  In particular, the Inspector will
+        happily apply new mappings to any child nodes of a mapped node.
       <ITEM>
-        The sample tuple has been collapsed by applying Depth -1.
-      <ITEM>
-        The sample tuple has been partially unfolded by applying Depth +1. Note that this
-        behavior is the result from adding 1 to the depth 0 which yields 1. But a limit of
-        two would be required to display the entire structure again.
-      <ITEM>
-        The sample tuple has been partially unfolded by applying Depth +1 and shrinked again
-        by applying Width -1 twice. This is to illustrate that the exploration functions are
-        fully compositional.
+        Mapping functions are type-specific. That means that every type offers
+        its own collection of mapping functions.
     </LIST>
-  </P>
-  <SUBSECTION><TITLE>Mapping</TITLE>
   <P>
-    <FIGURE id="figure.mapping">
-      <CAPTION>Example mapping invocation and its result</CAPTION>
-      <TABLE>
-        <TR><TD><PICTURE.EXTERN to="mapping1.gif" type=gif></TD></TR>
-        <TR><TD><PICTURE.EXTERN to="mapping2.gif" type=gif></TD></TR>
-      </TABLE>
-    </FIGURE>
-  </P>
+    Mapping functions can be applied automaticly before inspection of the
+    value.  See <PTR to="section.gui.structure"> for details on how to
+    do this.  Keep in mind that the results can be confusing due to the
+    per-node mapping strategy.
+  <SUBSECTION><TITLE/Triggering Actions/
   <P>
-    Figure <PTR to="figure.mapping"> demonstrates an application of tree mapping. The contents
-    of the dictionary are shown instead of the uninteresting tag <CODE>dictionary</CODE>.
-    To indicate that a mapped representation is shown, it is drawn with an different background
-    color. Any mapping can be undone via the context menu and is fully compositional.
-  </P>
-  <P>
-    Mapping works on a per-node basis. This means, that the Inspector tries to map every child node
-    of the already mapped node again.
-  </P>
-  <P>
-    Mapping functions are type specific. That means, every type has its own collection of
-    mapping functions which can be applied to any instance of that type.
-    Writing mapping functions is easy because every function follows the pattern below.
-  </P>
-  <P>
-    <CODE>
-      fun {MyMapFunction Value MaxWidth MaxDepth}
-         if {WantToMap Value} then ... computations ... else Value end
-      end</CODE>
-  </P>
-  <P>
-    <CODE>MaxWidth</CODE> and <CODE>MaxDepth</CODE> are integers denoting the current
-     width and depth limits. This allows to handle cycles whith respect to the fact
-     that they would have been recognized or not. See X dor details on how to register a new
-     mapping function. Keep in mind that mapping functions must not have side-effects
-     on the value.
-  </P>
-  <P>
-    Mapping functions can be applied automaticly before inspection of the value. See X for
-   details on how to do this. Keep in mind that this can produce confusing results due to the
-   per node mapping strategy.
-  </P>
-  <P>
-    The Inspector is configured to provide a collection of useful default mapping functions for
-    each type making their use easy.
-  </P>
-  <SUBSECTION><TITLE>Triggering Actions</TITLE>
-  <P>
+    <PTR to="figure.action"> demonstrates the invocation of an action.
+    The by-need future is forced, whereupon the Inspector will update its
+    display accordingly, showing its value.
     <FIGURE id="figure.action">
-      <CAPTION>Example action invocation and its result</CAPTION>
+      <CAPTION/Example action invocation and its result/
       <TABLE>
-        <TR><TD><PICTURE.EXTERN to="action1.gif" type=gif></TD></TR>
-        <TR><TD><PICTURE.EXTERN to="action2.gif" type=gif></TD></TR>
+        <TR><TD><PICTURE.EXTERN to="action1.gif" type=gif>
+        <TR><TD><PICTURE.EXTERN to="action2.gif" type=gif>
       </TABLE>
     </FIGURE>
-  </P>
   <P>
-    Figure <PTR to="figure.action"> demonstrates the invocation of an action. The by-need future
-    has been forced and its value can be seen. This feature is useful for searching module exports.
-  </P>
+    Like mappings, actions are type-specific.
+    See <PTR to="section.configure.actions"> for details on how to
+    register new actions.
+  <SECTION><TITLE/Using Selections/
   <P>
-    Actions are type specific and follow the pattern below.
-  </P>
-  <P>
-    <CODE>
-      proc {MyAction Value}
-         ... computations ...
-      end</CODE>
-  </P>
-  <P>
-    See X for details on how to register a new action.
-  </P>
-  <SECTION><TITLE>The selection interface</TITLE>
-  <P>
+    Some of the operations presented above can also be triggered on the
+    selected node by the <Q/Selection/ menu.  To <Q/select/ a node means
+    to left-click a node access point:  The corresponding node will be
+    drawn with a selection frame around it.  <PTR to="figure.selection">
+    shows the operations that can be applied to the selected node.
     <FIGURE id="figure.selection">
-      <CAPTION>The selection interface</CAPTION>
-        <PICTURE.EXTERN to="selection.gif" type=gif>
+      <CAPTION/The selection interface/
+      <PICTURE.EXTERN to="selection.gif" type=gif>
     </FIGURE>
-  </P>
+  <SUBSECTION><TITLE/Substructure Lifting/
   <P>
-    Some of the operations presented above can also be triggered by selecting a node. This is
-    achieved by pressing the left button on a node access point and
-    causes a selection frame being drawn covering the entire selection.
-    This gives visual feedback on which nodes the system
-    is operating on. Now any operation from the selection menu can be invoked as shown in
-    figure <PTR to="figure.selection">.
-  </P>
-  <SUBSECTION><TITLE>Substructure lifting</TITLE>
-  <P>
+    <PTR to="figure.lifting"> demonstrates another application of selections:
+    Any selected substructure can be lifted to toplevel by applying the
+    <Q/Clear all but Selection/ command from the Inspector menu.
     <FIGURE id="figure.lifting">
-      <CAPTION>Substructure lifting</CAPTION>
+      <CAPTION/Substructure lifting/
       <TABLE>
-        <TR><TD><PICTURE.EXTERN to="lift1.gif" type=gif></TD></TR>
-        <TR><TD><PICTURE.EXTERN to="lift2.gif" type=gif></TD></TR>
+        <TR><TD><PICTURE.EXTERN to="lift1.gif" type=gif>
+        <TR><TD><PICTURE.EXTERN to="lift2.gif" type=gif>
       </TABLE>
     </FIGURE>
-  </P>
   <P>
-    Figure <PTR to="figure.lifting"> demonstrates another application of the selection interface:
-    Any selected substructure can be lifted to toplevel
-    by applying the <CODE>"Clear all but Selection"</CODE> command from the inspector menu.
-  </P>
-  <P>
-    Substructure lifting is intended to rapidly prune large trees and currently works only with
-    one structure selection and cannot be undone.
-  </P>
+    Substructure lifting is intended to rapidly prune large trees and
+    currently works only with one structure selection.  It cannot be undone.
 </CHAPTER>

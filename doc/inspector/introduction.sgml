@@ -32,7 +32,7 @@
     <LIST>
       <ITEM>Fast drawing services</ITEM>
       <ITEM>Human readable and predictable data layout</ITEM>
-      <ITEM>Interactive and automatic type-specific tree transformations</ITEM>
+      <ITEM>Interactive and automatic type-directed tree transformations</ITEM>
       <ITEM>Multiple views of the same data</ITEM>
       <ITEM>Widely configurable</ITEM>
     </LIST>

@@ -21,84 +21,70 @@
   -
   -->
 
-<CHAPTER id="chapter.basic"><TITLE>Basic Facts</TITLE>
+<CHAPTER id="chapter.basic"><TITLE/Basic Facts/
   <P>
-    This chapter provides some basic understanding about how the inspector can be used.
-  </P>
-  <SECTION><TITLE>Simple Invocation</TITLE>
-  <P>
-    <FIGURE id="figure.usage">
-      <CAPTION>The Oz Inspector</CAPTION>
-      <PICTURE.CHOICE>
-        <PICTURE.EXTERN to="use.gif" type=gif>
-      </PICTURE.CHOICE>
-    </FIGURE>
-  </P>
+    This chapter provides some basic understanding about how the Inspector
+    can be used.
+  <SECTION><TITLE/Simple Invocation/
   <P>
     The simplest usage of the Inspector is to execute the statement
-    <CODE>{Inspect ?+{X}}</CODE>, with <CODE>X</CODE> any valid Oz datastructure.
-    If not already present, this will open a new window (see figure <PTR to="figure.usage">)
-    at the screen showing the given value.
-    Inspecting more than one value at the same time
-    is possible. By default, new values are appended to the current window.
-  </P>
-  <SECTION><TITLE>Selective Invocation</TITLE>
+    <<{Inspect ?_{X}}>>, where ?_{X} can be any Oz value.  Unless the
+    Inspector window is already open, this will create a new window
+    (see <PTR to="figure.usage">) displaying the given value.
+    It is possible to inspect more than one value at the same time.
+    By default, new values are appended to the current window.
+    <FIGURE id="figure.usage">
+      <CAPTION/The Oz Inspector/
+      <PICTURE.EXTERN to="use.gif" type=gif>
+    </FIGURE>
+  <SECTION><TITLE/Inspecting within Multiple Widgets/
   <P>
-    In addition, the Inspector can handle arbitrarily many viewing windows which
-    can be accessed and configured independently (see figure <PTR to="figure.views">).
-    To show the value <CODE>X</CODE> the <CODE>I</CODE>-th window, execute the statement
-    <CODE>{InspectN ?+{I} ?+{X}}</CODE>.
-  </P>
-  <SUBSECTION><TITLE>Handling Widgets</TITLE>
+    In addition, the Inspector can handle arbitrarily many viewing windows
+    (<EM/widgets/) which can be accessed and configured independently.
+  <SUBSECTION><TITLE/Handling Widgets/
   <P>
+    To open a new display widget, click <Q/Add new Widget/ from the Inspector
+    menu as shown in <PTR to="figure.panes">.
     <FIGURE id="figure.panes">
-      <CAPTION>Adding new display widgets</CAPTION>
+      <CAPTION/Adding a new display widget/
       <TABLE>
-        <TR><TD><PICTURE.EXTERN to="panes1.gif" type=gif></TD></TR>
-        <TR><TD><PICTURE.EXTERN to="panes2.gif" type=gif></TD></TR>
+        <TR><TD><PICTURE.EXTERN to="panes1.gif" type=gif>
+        <TR><TD><PICTURE.EXTERN to="panes2.gif" type=gif>
       </TABLE>
     </FIGURE>
-  </P>
   <P>
-    To open a new display widget, click <CODE>"Add new Widget"</CODE> from the inspector
-    menu as shown in figure <PTR to="figure.panes">.
-  </P>
+    With more than one widget open, the notion of the <EM/active widget/
+    matters.  The active widget receives all work caused by applications
+    of <<Inspect>>.  By default, the initial widget is the active widget.
+    This can be changed using the <KEY/TAB/ key. The active widget is
+    marked with an extra black box around its viewing area.
   <P>
-    With more than one widget open, the notion of active widget matters. The active widget
-    recieves all work caused by applications of <CODE>Inspect</CODE>. The initial widgets defaults
-    to be the active widget. This assigment can be changed using the TAB key. The active widget
-    is marked with an extra black box around its viewing area. The widgets are enumerated starting
-    at zero.
-  </P>
+    To show the value ?_{X} in the ?_{I}-th window, execute the statement
+    <<{InspectN ?_{I} ?_{X}}>>.  The widgets are numbered starting at zero.
   <P>
-     Only active widgets can be removed. To do so, click <CODE>"Delete active Widget"</CODE>
-     from the inspector menu (see figure <PTR to="figure.panes">). The widget below the active
-     widget becomes the new active widget. If only one widget is left, nothing will happen.
-  </P>
-  <SECTION><TITLE>Value Representation</TITLE>
+    The active widget can be removed by clicking <Q/Delete active Widget/
+    from the Inspector menu (see <PTR to="figure.panes">).  The widget below
+    the active widget becomes the new active widget.  If only a single widget
+    is left, this action is ignored.
+  <SECTION><TITLE/Value Representation/
   <P>
+    The Inspector can be configured to display values using either a
+    tree-like or graph-like representation (see <PTR to="figure.views">).
     <FIGURE id="figure.views">
-      <CAPTION>Three views on the same datastructure</CAPTION>
-      <PICTURE.CHOICE>
-        <PICTURE.EXTERN to="views.gif" type=gif>
-      </PICTURE.CHOICE>
+      <CAPTION/Three views on the same datastructure/
+      <PICTURE.EXTERN to="views.gif" type=gif>
     </FIGURE>
-  </P>
-  <P>
-    Depending on the value and given Inspector settings,
-    you will obtain a tree-like or graph-like representation (see figure <PTR to="figure.views">).
-  </P>
-  <PARA><TITLE>Tree</TITLE>
-    The value will be shown as a tree with respect to given depth and with exploration limits.
-    If the value happens to be larger than the given limits, it is truncated and
-    the cut position is signaled by either a down or left arrow, respectively.
-  </PARA>
-  <PARA><TITLE>Graph</TITLE>
-    The value will be shown not only with respect to given depth and with exploration limits
-    but also with respect to an equality relation. That is, equal
-    values will not be displayed again. Instead, a reference to the first ocurrence will be shown.
-    This yields a more compact value representation revealing more
-    information about its structure. The equality is computed in depth-first-left-most
-    traversal covering the entire structure.
+  <PARA><TITLE/Tree/
+    The value will be shown as a tree with respect to given depth and width
+    exploration limits.  Values larger than the given limits are truncated,
+    the cut positions being indicated by down and right arrows, respectively.
+  <PARA><TITLE/Graph/
+    The value will be shown not only with respect to given depth and width
+    exploration limits but also with respect to an equivalence relation:
+    Repeatedly occurring sub-values will only be displayed once, all later
+    occurrences being replaced by references to the first occurrence.
+    This yields a more compact representation revealing more information
+    about the value's structure. Equivalence is computed in a depth-first
+    left-to-right traversal over the entire (truncated) value.
   </PARA>
 </CHAPTER>
