@@ -59,8 +59,7 @@ $(OZEX)/sampler/constraints/%.oz: sampler/constraints/%.oz
 	$(INSTALL_FILE) $< $@
 
 
-.PHONY: all install
-.PHONY: clean veryclean
+.PHONY: all install clean veryclean distclean bootstrap check depend
 
 install: all $(OZEX) $(OZEXDIRS) $(SAMPLER) $(EXAMPLES)
 
@@ -78,3 +77,5 @@ bootstrap:
 	$(MAKE) boot-all
 
 check:
+
+depend:

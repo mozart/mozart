@@ -37,7 +37,7 @@ INSTALL_DIR	= @INSTALL_DIR@
 LIBFILES = $(ELISPDIR)/oz.el $(ELISPDIR)/oz.elc \
 	   $(ELISPDIR)/oz-extra.el $(ELISPDIR)/oz-extra.elc
 
-.PHONY: bootstrap all install clean veryclean distclean tags
+.PHONY: bootstrap all install clean veryclean distclean tags check depend
 
 all: oz.elc oz-extra.elc
 
@@ -81,3 +81,5 @@ tags:
 	etags oz.el oz-extra.el
 
 check:
+
+depend:
