@@ -27,6 +27,8 @@ local
    \insert './DP/RemoteServer.oz'
 
    AllLoader = {MakeAllLoader full}
+
+   {Wait AllLoader}
    
 in
    
