@@ -97,8 +97,7 @@ in
 \ifdef CS_SPECIAL
       meth sYnc(Script Order <= false)
 	 lock
-	    {@MyManager script(proc {$ X} {Script X} end Order)}
-	    {@MyManager next}
+	    {@MyManager script(proc {$ X} {Script X} end Order 'next')}
 	    {Wait {Tk.return update(idletasks)}}
 	 end
       end
