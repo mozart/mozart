@@ -3386,7 +3386,7 @@ OZ_Return adjoinPropListInline(TaggedRef t0, TaggedRef list, TaggedRef &out,
       len=length(arity); // NOTE: duplicates may be removed
       SRecord *newrec = SRecord::newSRecord(t0,aritytable.find(arity));
       newrec->setFeatures(list);
-      out = makeTaggedSRecord(newrec);
+      out = newrec->normalize();
       return PROCEED;
     }
   case SRECORD:
@@ -7224,6 +7224,7 @@ BIspec allSpec2[] = {
   {"Thread.resume",1,BIthreadResume},
   {"Thread.terminate",1,BIthreadTerminate},
   {"Thread.raise",2,BIthreadRaise},
+  {"Thread.injectException",2,BIthreadRaise},
   {"Thread.preempt",1,BIthreadPreempt},
   {"Thread.setPriority",2,BIthreadSetPriority},
   {"Thread.getPriority",2,BIthreadGetPriority},
