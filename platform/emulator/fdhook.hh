@@ -36,7 +36,7 @@ SuspList * addSuspToList(SuspList * list, Thread * elem, Board * home);
 Thread * createPropagator (OZ_CFun func, int arity, RefsArray xregs);
 Thread * createNewPropagator (OZ_Propagator * p,
 
-int prio = OZPROPAGATOR_PRIORITY);
+int prio = PROPAGATOR_PRIORITY);
 
 inline
 Bool isUnifyCurrentPropagator () {

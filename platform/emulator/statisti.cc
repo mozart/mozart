@@ -42,6 +42,18 @@ void printTime(FILE *fd,char *s,unsigned int t)
 }
 
 static
+void printPercent(FILE *fd,char *s,unsigned int t,unsigned int total)
+{
+  fprintf(fd,s);
+  if (total == 0) {
+    fprintf(fd,"0%%");
+  } else {
+    unsigned int rel = (t*100)/total;
+    fprintf(fd,"%u%%",rel);
+  }
+}
+
+static
 void printMem(FILE *fd,char *s,double m)
 {
   fprintf(fd,s);
@@ -235,14 +247,16 @@ void Statistics::printIdle(FILE *fd)
 
   if (ozconf.showIdleMessage) {
     fprintf(fd,"idle (");
-    printTime(fd,"r: ",
-              timeUtime.sinceidle()-
-              (timeForGC.sinceidle()+timeForLoading.sinceidle()
-               +timeForCopy.sinceidle()+timeForPropagation.sinceidle()));
-    printTime(fd,", p: ",timeForPropagation.sinceidle());
-    printTime(fd,", c: ",timeForCopy.sinceidle());
-    printTime(fd,", g: ",timeForGC.sinceidle());
-    printTime(fd,", l: ",timeForLoading.sinceidle());
+    printTime(fd,"r: ", timeUtime.sinceidle());
+    printPercent(fd,", p: ",
+                 timeForPropagation.sinceidle(),
+                 timeUtime.sinceidle());
+    printPercent(fd,", c: ",
+                 timeForCopy.sinceidle(),
+                 timeUtime.sinceidle());
+    printPercent(fd,", g: ",
+                 timeForGC.sinceidle(),
+                 timeUtime.sinceidle());
     printMem(fd,", h: ", (totalHeap-heapUsed.sinceIdle)*KB);
     fprintf(fd,")\n");
     fflush(fd);

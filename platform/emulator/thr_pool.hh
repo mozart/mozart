@@ -18,12 +18,12 @@
 
 #include "thrqueue.hh"
 
-// == 1 if local propagation integrated as OZMAX_PRIORITY+1 queue
+// == 1 if local propagation integrated as MAX_PRIORITY+1 queue
 // (forthcoming???)
 #define ADDITIONAL_PRIOS  0
 
 // just the size of a stack and lookup table;
-#define TAB_SIZE   (OZMAX_PRIORITY-OZMIN_PRIORITY+1+ADDITIONAL_PRIOS)
+#define TAB_SIZE   (MAX_PRIORITY-MIN_PRIORITY+1+ADDITIONAL_PRIOS)
 
 class ThreadsPool {
 private:
@@ -45,7 +45,7 @@ private:
   // priority. HENCE, it must be updated by every 'scheduleThread ()';
   // It's equal to (ThreadQueue *) NULL iff currentPriority == -1;
   ThreadQueue *currentQueue;
-  //  Invariant: it can range between OZMIN_PRIORITY and OZMAX_PRIORITY,
+  //  Invariant: it can range between MIN_PRIORITY and MAX_PRIORITY,
   // complains with the 'currentQueue', and is equal to '-1' when
   // there is no runnable thread;
   int currentPriority;

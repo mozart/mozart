@@ -771,16 +771,27 @@ typedef int32 SRecordArity; /* do not want to use a pointer on the Alpha! */
 
 #endif
 
-inline Bool sraIsTuple(SRecordArity a)      Body({ return a&1; })
-inline SRecordArity mkTupleWidth(int w)     Body({ return (SRecordArity) ((w<<1)|1);})
-inline int getTupleWidth(SRecordArity a)    Body({ return a>>1; })
-inline SRecordArity mkRecordArity(Arity *a) Body({ return ToInt32(a); })
-inline Arity *getRecordArity(SRecordArity a)Body({ return (Arity*) ToPointer(a); })
-inline Bool sameSRecordArity(SRecordArity a, SRecordArity b) Body({ return a==b; })
+inline Bool sraIsTuple(SRecordArity a)
+     Body({ return a&1; })
+
+inline SRecordArity mkTupleWidth(int w)
+     Body({ return (SRecordArity) ((w<<1)|1);})
+
+inline int getTupleWidth(SRecordArity a)
+     Body({ return a>>1; })
+
+inline SRecordArity mkRecordArity(Arity *a)
+     Body({ Assert(!a->isTuple()); return ToInt32(a); })
+
+inline Arity *getRecordArity(SRecordArity a)
+     Body({ return (Arity*) ToPointer(a); })
+
+inline Bool sameSRecordArity(SRecordArity a, SRecordArity b)
+     Body({ return a==b; })
 inline int getWidth(SRecordArity a)
-Body({
-  return sraIsTuple(a) ? getTupleWidth(a) : getRecordArity(a)->getWidth();
-})
+     Body({
+       return sraIsTuple(a) ? getTupleWidth(a) : getRecordArity(a)->getWidth();
+     })
 
 #undef Body
 

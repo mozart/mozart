@@ -143,8 +143,8 @@ void SolveActor::pushToLocalThreadQueue(Thread * thr, Board * b) {
     localThreadQueue->enqueue(thr);
   } else {
     localThreadQueue = new LocalThreadQueue(thr);
-    Thread * ltq_thr = new Thread(b, OZPROPAGATOR_PRIORITY, this);
-    am.scheduleThread(ltq_thr, OZPROPAGATOR_PRIORITY);
+    Thread * ltq_thr = new Thread(b, PROPAGATOR_PRIORITY, this);
+    am.scheduleThread(ltq_thr, PROPAGATOR_PRIORITY);
   }
 }
 

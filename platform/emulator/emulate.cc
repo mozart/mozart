@@ -561,7 +561,7 @@ Bool AM::hookCheckNeeded()
 
 
 #define SUSP_PC(TermPtr,RegsToSave,PC)          \
-   e->pushTask(PC,Y,G,X,RegsToSave);    \
+   e->pushTask(PC,Y,G,X,RegsToSave);            \
    addSusp(TermPtr,e->mkSuspThread ());         \
    CHECK_CURRENT_THREAD;
 
@@ -2317,7 +2317,7 @@ LBLsuspendThread:
           }
 
         case RAISE:
-          RAISE_BI(OZ_mkTupleC("proc",4,OZ_atom("`.`"),XPC(1),feature,AtomVoid));
+          RAISE_BI(OZ_mkTupleC("proc",4,OZ_atom("."),XPC(1),feature,AtomVoid));
 
         case SLEEP:
         default:
@@ -2328,7 +2328,7 @@ LBLsuspendThread:
       SHALLOWFAIL;
       DORAISE(OZ_mkTupleC("typeError",1,
                       OZ_mkTupleC("proc",4,
-                              OZ_atom("`.`"),XPC(1),feature,AtomVoid)));
+                              OZ_atom("."),XPC(1),feature,AtomVoid)));
     }
 
   Case(INLINEAT)
@@ -2346,7 +2346,7 @@ LBLsuspendThread:
       }
       DORAISE(OZ_mkTupleC("accessFailure",1,
                           OZ_mkTupleC("proc",4,
-                                      OZ_atom("`@`"),
+                                      OZ_atom("@"),
                                       rec?makeTaggedSRecord(rec):OZ_atom("noattributes"),
                                       fea,
                                       AtomVoid)));
@@ -2368,7 +2368,7 @@ LBLsuspendThread:
 
       DORAISE(OZ_mkTupleC("assignFailure",1,
                           OZ_mkTupleC("proc",4,
-                                      OZ_atom("`<-`"),
+                                      OZ_atom("<-"),
                                       rec?makeTaggedSRecord(rec):OZ_atom("noattributes"),
                                       fea,
                                       XPC(2))));
@@ -2396,10 +2396,10 @@ LBLsuspendThread:
       case FAILED:
         LOCAL_PROPAGATION(localPropStore.reset());
       localhack4:
-        HF_FAIL(OZ_mkTupleC("proc",4,OZ_atom("`^`"),XPC(1),XPC(2),AtomVoid));
+        HF_FAIL(OZ_mkTupleC("proc",4,OZ_atom("^"),XPC(1),XPC(2),AtomVoid));
 
       case RAISE:
-        RAISE_BI(OZ_mkTupleC("proc",4,OZ_atom("`^`"),XPC(1),XPC(2),AtomVoid));
+        RAISE_BI(OZ_mkTupleC("proc",4,OZ_atom("^"),XPC(1),XPC(2),AtomVoid));
 
       case SLEEP:
       default:
