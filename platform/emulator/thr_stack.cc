@@ -38,7 +38,10 @@ loop:
            ozconf.stackMaxSize,newMaxSize);
     fflush(stdout);
     char buf[1000];
-    osfgets(buf,1000,stdin);
+    if (osfgets(buf,1000,stdin) == 0) {
+      perror("\nofsgets");
+      am.exitOz(1);
+    }
     switch (buf[0]) {
     case 'n':
       am.exitOz(1);
