@@ -134,8 +134,9 @@ int BitString::pickleV(MarshalerBuffer *mb)
   return (OK);
 }
 
-OZ_Term unmarshalBitString(MarshalerBuffer *mb)
+OZ_Term unmarshalBitString(void * p)
 {
+  MarshalerBuffer * mb = (MarshalerBuffer *) p;
 #ifdef USE_FAST_UNMARSHALER
   int width = unmarshalNumber(mb);
 #else
@@ -355,8 +356,9 @@ int ByteString::pickleV(MarshalerBuffer *mb)
   return (OK);
 }
 
-OZ_Term unmarshalByteString(MarshalerBuffer *mb)
+OZ_Term unmarshalByteString(void * p)
 {
+  MarshalerBuffer * mb = (MarshalerBuffer *) p;
 #ifdef USE_FAST_UNMARSHALER
   int width = unmarshalNumber(mb);
 #else

@@ -1836,7 +1836,7 @@ public:
   void getOzValue(OzValueProcessor proc, void *arg) {
     GetBTFrame(frame);
     EnsureBTSpace(frame, 2);
-    PutBTFrame2Ptrs(frame, proc, arg);
+    PutBTFrame2Ptrs(frame, (void *) proc, (void *) arg);
     PutBTTask(frame, BT_binary_getValue);
     SetBTFrame(frame);
   }
