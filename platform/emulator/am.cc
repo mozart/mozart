@@ -963,6 +963,14 @@ char flagChar(StatusBit flag)
 }
 #endif
 
+void AM::addSuspendVarList(TaggedRef t) {
+  addSuspendVarListInline(t);
+}
+
+void AM::addSuspendVarList(TaggedRef * t) {
+  addSuspendVarListInline(t);
+}
+
 void AM::prepareCall(TaggedRef pred, RefsArray * args)
 {
   CallList **aux = &preparedCalls;

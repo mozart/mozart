@@ -83,9 +83,9 @@ OZ_BI_define(BIwaitOr,2,0)
   Assert(oz_isVar(a) && oz_isVar(b));
 
   if (!tagged2Var(a)->isInSuspList(oz_currentThread()))
-    am.addSuspendVarList(aPtr);
+    am.addSuspendVarListInline(aPtr);
   if (!tagged2Var(b)->isInSuspList(oz_currentThread()))
-    am.addSuspendVarList(bPtr);
+    am.addSuspendVarListInline(bPtr);
   return SUSPEND;
 } OZ_BI_end
 
@@ -109,7 +109,7 @@ OZ_BI_define(BIwaitOrF,1,1)
       OZ_RETURN(OZ_head(arity));
     }
     if (!tagged2Var(v)->isInSuspList(oz_currentThread()))
-      am.addSuspendVarList(vPtr);
+      am.addSuspendVarListInline(vPtr);
     arity=OZ_tail(arity);
   }
 

@@ -392,18 +392,23 @@ public:
     _suspendVarList=slv;
   }
 
-  int isEmptySuspendVarList(void) { return OZ_eq(_suspendVarList,oz_nil()); }
+  int isEmptySuspendVarList(void) {
+    return oz_eq(_suspendVarList,oz_nil());
+  }
 
-  void addSuspendVarList(TaggedRef t)
+  void addSuspendVarListInline(TaggedRef t)
   {
     Assert(oz_isVar(oz_deref(t)));
-
     _suspendVarList=oz_cons(t,_suspendVarList);
   }
-  void addSuspendVarList(TaggedRef *t)
+
+  void addSuspendVarListInline(TaggedRef *t)
   {
     addSuspendVarList(makeTaggedRef(t));
   }
+  void addSuspendVarList(TaggedRef);
+  void addSuspendVarList(TaggedRef*);
+
   OZ_Return suspendOnVarList(Thread *thr);
 
   void prepareCall(TaggedRef pred, RefsArray * args);

@@ -120,7 +120,7 @@ OZ_Return Future::bind(TaggedRef *vPtr, TaggedRef t)
   }
 
   if (oz_isLocalVar(this)) {
-    am.addSuspendVarList(vPtr);
+    am.addSuspendVarListInline(vPtr);
     return SUSPEND;
   } else {
     oz_bindVar(this,vPtr, t);

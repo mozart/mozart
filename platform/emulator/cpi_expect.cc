@@ -764,7 +764,7 @@ OZ_Return OZ_Expect::suspend(void)
   Assert(staticSuspendVarsNumber > 0);
 
   for (int i = staticSuspendVarsNumber; i--; )
-    am.addSuspendVarList(staticSuspendVars[i].var);
+    am.addSuspendVarListInline(staticSuspendVars[i].var);
   return SUSPEND;
 }
 
