@@ -12,7 +12,7 @@
 #ifndef __FDOMN__H__
 #define __FDOMN__H__
 
-#ifdef __GNUC__
+#if defined(__GNUC__)
 #pragma interface
 #endif
 
@@ -29,7 +29,8 @@
 #define BA_COVERS_R
 
 // limits of a bit array
-const int baSize = 8;
+//const int baSize = 8;
+const int baSize = 4;
 
 //const int baSize = 32;
 
@@ -47,6 +48,9 @@ const int fdMinR = 0;
 enum LeGeFull_e {em, le, ge, fu, no, bo, si};
 enum DFlag_e {empty, full, discrete, boolish, singleton};
 
+extern unsigned char numOfBitsInByte[];
+extern int toTheLowerEnd[];
+extern int toTheUpperEnd[];
 
 class BitArray {
 private:
@@ -58,7 +62,7 @@ public:
   BitArray() {};
   BitArray(const BitArray *ba) {*this = *ba;}
 
-  Bool isInDomain(int i) const { 
+  Bool contains(int i) const { 
     if (i > fdMaxBA || i < fdMinBA)
       return NO;
     else
@@ -86,16 +90,25 @@ public:
     array[i / bits] &= ~(1 << (i % bits));
   }
   
-  void findLowerUpperSize(unsigned short &lower, unsigned short &upper);
+  int findLowerUpperSize(unsigned short &lower, unsigned short &upper);
+  unsigned short findLower(void);
+  unsigned short findUpper(void);
+  void findSize(void);
 
-  int getSize(void) {return size;};
+  int getSize(void) {return size;}
+    
+  void adjustSizeBy(int s) {size += s;}
 
   int &operator [](int i) {
     return array[i];
   }
 
-  inline TaggedRef getAsList(void) const;
-  inline Bool next(int i, int &n) const;
+  int operator <=(const int y_upper);    
+  int operator >=(const int y_lower);
+
+  TaggedRef getAsList(void) const;
+  Bool next(int i, int &n) const;
+  int nextBiggerElem(int v, int upper) const;
 
   void print(ostream & = cout, int = 0) const;
   void printLong(ostream & = cout, int = 0) const;  
@@ -103,7 +116,7 @@ public:
 
 #define RANGEFLAG 1
 
-enum FDState {det=0, bounds, size, eqvar, any}; // any must always be the last
+enum FDState {det=0, bounds, size, eqvar, any};
 
 class FiniteDomain { 
 protected:
@@ -133,17 +146,24 @@ protected:
       bitArray = new BitArray;
   }
   
-  inline BitArray rangeToBitArray(void) const;
+  BitArray rangeToBitArray(void) const;
+  BitArray * rangeToBitArray(BitArray * ba) const;
 
+  int getRangeSize(void) const {
+    DebugCheck(isRange() == NO, error("Range expected."));
+    return upper - lower + 1;
+  }
+
+  Bool containsRange(int i) const {
+    return (i >= lower && i <= upper) ? OK : NO;
+  }
+
+  BitArray * becomeBitArray(void);
 public:
   USEHEAPMEMORY;
 
   FiniteDomain(BitArray* ba = NULL) : bitArray(setRange(ba)) {};
-  inline FiniteDomain(int len, int intList[]);
-  inline FiniteDomain(int intList[], int len); // constr for fdNotList
-  inline FiniteDomain(int from, int to);
-  inline FiniteDomain(LeGeFull_e type, int n = -1);
-  inline FiniteDomain(const FiniteDomain &fd);
+  FiniteDomain(const FiniteDomain &fd);
 
   const FiniteDomain &operator =(const FiniteDomain &fd) {
     if (this != &fd) {
@@ -167,24 +187,42 @@ public:
     return *this;
   }
 
-  inline FiniteDomain &operator &(const FiniteDomain &y) const; // intersection
-  inline FiniteDomain &operator |(const FiniteDomain &y) const; // union
-  inline FiniteDomain &operator ~(void) const;                  // inversion
+  void init(int len, int intList[]);
+  void init(int intList[], int len); // constr for fdNotList
+  void init(int from, int to);
+  void init(LeGeFull_e type, int n = -1);
 
-  inline FiniteDomain &operator <=(const int y_upper) const;    
-  inline FiniteDomain &operator >=(const int y_lower) const;
+  FiniteDomain &operator &(const FiniteDomain &y) const; // intersection
+  FiniteDomain &operator |(const FiniteDomain &y) const; // union
+  FiniteDomain &operator ~(void) const;                  // inversion
+
+  FiniteDomain &operator <=(const int y_upper) const;    
+  FiniteDomain &operator >=(const int y_lower) const;
   
-  inline FiniteDomain &operator -=(const int not_in); 
-  inline FiniteDomain &operator +=(const int is_in); 
-  inline FiniteDomain &operator &=(const int singl);
+  int operator <(const int y_upper);    
+  int operator >(const int y_lower);
+  int operator &=(const FiniteDomain &y);
+  
+  FiniteDomain &operator -=(const int not_in); 
+  FiniteDomain &operator +=(const int is_in); 
+  FiniteDomain &operator &=(const int singl);
+
   
   int minElem(void) const {return lower;}
   int maxElem(void) const {return upper;}
   void getMinMax(int &l, int &u) const {l = lower; u = upper;}
   
   int getSize(void) const {
-    return isRange() == OK ? upper - lower + 1 : bitArray->getSize();
+    return isRange() == OK ? getRangeSize() : bitArray->getSize();
   }
+
+  Bool contains(int i) const {
+    if (isRange() == OK)
+      return containsRange(i);
+    else
+      return bitArray->contains(i);
+  }
+
 
   Bool operator == (const DFlag_e flag) const
   {
@@ -204,7 +242,7 @@ public:
     case singleton:
       return (lower == upper) ? OK : NO;
     case boolish:
-      return (isInDomain(0) == OK || isInDomain(1) == OK) ? OK : NO;
+      return (contains(0) == OK || contains(1) == OK) ? OK : NO;
     default:
       error("Unexpected case at %s:%d.", __FILE__, __LINE__);
       return NO;
@@ -229,7 +267,7 @@ public:
     case singleton:
       return (lower == upper) ? NO : OK;
     case boolish:
-      return (isInDomain(0) == OK || isInDomain(1) == OK) ? NO : OK;
+      return (contains(0) == OK || contains(1) == OK) ? NO : OK;
     default:
       error("Unexpected case at %s:%d.", __FILE__, __LINE__);
       return NO;
@@ -237,16 +275,19 @@ public:
   }
 
 
-  inline Bool operator == (const FiniteDomain &) const;
-  inline Bool operator != (const FiniteDomain &) const;
+  Bool operator == (const FiniteDomain &) const;
+  Bool operator != (const FiniteDomain &) const;
 
-  inline TaggedRef getAsList(void) const;
-  inline Bool next(int i, int &n) const;
+  TaggedRef getAsList(void) const;
+  Bool next(int i, int &n) const;
+  int nextBiggerElem(int v) const;
 
-  inline FDState checkDom(FiniteDomain &dom);
+  FDState checkDom(FiniteDomain &dom);
   
-  inline Bool isInDomain(int i) const;
-  int getSingleton(void) const {return lower;}
+  int singl(void) const {
+    DebugCheck(getSize() != 1, error("Domain must be singletons"));
+    return lower;
+  }
 
   void constrainBool(void)
   {
@@ -254,15 +295,16 @@ public:
     if ((*this == boolish) == NO)
       error("Boolish finite domain expected.");
 #endif
-    Bool zero = isInDomain(0);
-    Bool one = isInDomain(1);
+    Bool zero = contains(0);
+    Bool one = contains(1);
     bitArray = setRange(bitArray);
-    lower = zero == OK ? 0 : 1;
-    upper = one == OK ? 1 : 0;
+    lower = (zero == OK) ? 0 : 1;
+    upper = (one == OK) ? 1 : 0;
   }
   
   void print(ostream & = cout, int = 0) const;
   void printLong(ostream & = cout, int = 0) const;
+  void printDebug(void) const;
 
   void gc(void) {
     if (isRange() == OK)
@@ -282,6 +324,29 @@ public:
 }; // FiniteDomain
 
 
+class FDIterator {
+private:
+  FiniteDomain* finiteDomain;
+  int current;
+  int size;
+public:
+  FDIterator(FiniteDomain* fd) : finiteDomain(fd) {}
+
+  int reset(void) {
+    size = finiteDomain->getSize() - 1;    
+    return current = finiteDomain->minElem();
+  }
+
+  int next(void) {
+    if (size > 0) {
+      size -= 1;
+      return current = finiteDomain->nextBiggerElem(current);
+    } else {
+      return -1;
+    }
+  }
+};
+
 
 class LocalFD : public FiniteDomain {
 public:
@@ -289,18 +354,14 @@ public:
   LocalFD() {bitArray = setRange(&localBitArray);}
   const LocalFD& operator =(const FiniteDomain &fd){
     FiniteDomain::operator=(fd);
+    return *this;
   }
 };
 
 
-inline TaggedRef makeRangeTuple(int from, int to){
-  OZ_Term s = OZ_tuple(OZ_CToAtom("#"),2);
-  OZ_putArg(s,1,OZ_CToInt(from));
-  OZ_putArg(s,2,OZ_CToInt(to));
-  return s;
-} // makeRangeTupel
+TaggedRef makeRangeTuple(int from, int to);
 
-
+  
 #if !defined(OUTLINE) && !defined(FDOUTLINE)
 #include "fdomn.icc"
 #endif
