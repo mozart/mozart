@@ -53,6 +53,7 @@ export
    ifClause:               SAIfClause
    patternCase:            SAPatternCase
    patternClause:          SAPatternClause
+   sideCondition:          SASideCondition
    recordPattern:          SARecordPattern
    equationPattern:        SAEquationPattern
    elseNode:               SAElseNode
@@ -2696,7 +2697,7 @@ define
 	 %% also save arbiter !!
 	 Env   = {GetGlobalEnv {Add ArbV @globalVars}}
 	 T N PVal
-      in	 
+      in
 	 {@pattern sa(Ctrl)}
 
 	 %% the value of record patterns is 
@@ -2704,22 +2705,69 @@ define
 	 PVal = if {@pattern isConstruction($)}
 		then {@pattern getValue($)}
 		else @pattern end
-	    
+
 	 {Ctrl getTopNeeded(T N)}
 	 {Ctrl notTopNotNeeded}
-	    
+
 	 {Ctrl setErrorMsg('pattern never matches')}
 	 {Ctrl setUnifier(Arbiter PVal)}
 
 	 {Arbiter unify(Ctrl PVal)}
 	 {Ctrl resetUnifier}
 	 {Ctrl resetErrorMsg}
-	 
+
 	 SAStatement, saBody(Ctrl @statements)
 	 {Ctrl setTopNeeded(T N)}
 
 	 {InstallGlobalEnv Env}
       end
+      meth applyEnvSubst(Ctrl)
+	 {@pattern applyEnvSubst(Ctrl)}
+      end
+   end
+
+   class SASideCondition
+      meth getValue($)
+	 {@pattern getValue($)}
+      end
+      meth setValue(Val)
+	 {@pattern setValue(Val)}
+      end
+      meth getLastValue($)
+	 {@pattern getLastValue($)}
+      end
+      meth setLastValue(Val)
+	 {@pattern setLastValue(Val)}
+      end
+      meth getLabel($)
+	 {@pattern getLabel($)}
+      end
+      meth getArgs($)
+	 {@pattern getArgs($)}
+      end
+      meth getType($)
+	 {@pattern getType($)}
+      end
+      meth isOpen($)
+	 {@pattern isOpen($)}
+      end
+      meth isRecordConstr($)
+	 {@pattern isRecordConstr($)}
+      end
+
+      meth deref(VO)
+	 {@pattern deref(VO)}
+      end
+
+      meth sa(Ctrl)
+	 {@pattern sa(Ctrl)}
+	 SAStatement, saBody(Ctrl @statements)
+      end
+
+      meth reachable(Vs $)
+	 {@pattern reachable({@left reachable(Vs $)} $)}
+      end
+
       meth applyEnvSubst(Ctrl)
 	 {@pattern applyEnvSubst(Ctrl)}
       end
