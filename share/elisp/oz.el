@@ -1432,7 +1432,7 @@ and initial percent signs."
 Used only for fontification.")
 
 (defconst oz-directive-matcher
-  "\\(^\\|[^&]\\)\\(\\\\\\([^\'%\n]\\|'[\"-~]'\\)*\\)"
+  "\\(^\\|[^&]\\)\\(\\\\[a-z]\\([^\'%\n]\\|'[\"-~]'\\)*\\)"
   "Regular expression matching a compiler or macro directive.
 Used only for fontification.")
 
