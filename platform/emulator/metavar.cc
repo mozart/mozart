@@ -482,12 +482,35 @@ OZ_C_proc_begin(BImetaWatchVar, 2)
 }
 OZ_C_proc_end
 
+OZ_C_proc_begin(BImetaWatchVarB, 3)
+{
+  ExpectedTypes("GenMetaVariable<ConstraintData>,ConstraintData");
+
+  OZ_getCArgDeref(0, v, vptr, vtag);
+
+  if(! isAnyVar(vtag)) {
+    return (OZ_unify (OZ_getCArg (2), NameTrue));
+  } else if (isGenMetaVar(v, vtag)) {
+    if (((GenMetaVariable*)tagged2CVar(v))->isStrongerThan(makeTaggedRef(vptr),
+                                                           deref(OZ_args[1])))
+      return (OZ_unify (OZ_getCArg (2), NameTrue));
+
+    OZ_addThread(makeTaggedRef(vptr),
+                 OZ_makeThread(OZ_self, OZ_args, OZ_arity));
+    return (OZ_unify (OZ_getCArg (2), NameTrue));
+  } else {
+    TypeError(0, "");
+  }
+}
+OZ_C_proc_end
+
 
 static
 BIspec metaSpec[] = {
   {"metaIsVar", 1, BImetaIsVar},
   {"metaIsVarB", 2, BImetaIsVarB},
   {"metaWatchVar", 2, BImetaWatchVar},
+  {"metaWatchVarB", 3, BImetaWatchVarB},
   {"metaGetDataAsAtom", 2, BImetaGetDataAsAtom},
   {"metaGetNameAsAtom", 2, BImetaGetNameAsAtom},
   {"metaGetStrength", 2, BImetaGetStrength},
