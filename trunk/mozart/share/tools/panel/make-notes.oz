@@ -42,7 +42,10 @@ local
    end
 
    fun {CutTrail N}
-      (N div 100)#'.'#(N mod 100)
+      Head = N div 100
+      Tail = N mod 100
+   in
+      Head#'.'#case Tail<10 then '0'#Tail else Tail end
    end
    
    class PrintTime
@@ -64,10 +67,10 @@ local
 	    case C>HourI then
 	       DimText   = 'h'
 	       PrintText = {CutTrail C * 100 div HourI}
-	    elsecase N>MinuteI then
+	    elsecase C>MinuteI then
 	       DimText   = 'm'
 	       PrintText = {CutTrail C * 100 div HourI}
-	    elsecase N>SecondI then
+	    elsecase C>SecondI then
 	       DimText   = 's'
 	       PrintText = {CutTrail C * 100 div SecondI}
 	    else
@@ -79,6 +82,7 @@ local
 	 end
       end
       meth clear
+	 {self.Dim tk(conf text:ms)}	       
 	 Clear <- @Saved
 	 Saved <- ~1
       end
