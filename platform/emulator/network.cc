@@ -79,8 +79,10 @@
 #include <sys/socket.h>
 #include <sys/utsname.h>
 #endif
-#include <errno.h>
+#ifndef __MINGW32__
 #include <netdb.h>
+#endif
+#include <errno.h>
 #include <stdlib.h>
 #include <unistd.h>
 #include <fcntl.h>
@@ -128,8 +130,6 @@
 #define OZConnectTries    200
 #endif
 #define OZWritePortNumber 9500
-
-#include <netdb.h>
 
 static const int netIntSize=4;
 static const int msgNrSize =4;
@@ -2705,7 +2705,7 @@ static int acceptHandler(int fd,void *unused)
   Assert(auxbuf-accHbuf == accHbufSize);
   // EK!!
   // fcntl(newFD,F_SETFL,O_NONBLOCK);
-#ifndef MINGW32
+#ifndef __MINGW32__
   fcntl(newFD,F_SETFL,O_NDELAY);
 #endif
   int written = 0;
@@ -3015,7 +3015,7 @@ retry:
     return IP_TEMP_BLOCK;}
 
   // EK!!
-#ifndef MINGW32
+#ifndef __MINGW32__
   fcntl(fd,F_SETFL,O_NDELAY);
 #endif
   if(osconnect(fd,(struct sockaddr *) &addr,sizeof(addr))==0

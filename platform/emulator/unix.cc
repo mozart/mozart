@@ -35,7 +35,7 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <unistd.h>
-#if defined(WINDOWS) && !defined(GNUWIN32)
+#if defined(WINDOWS) && (!defined(GNUWIN32) || defined(__MINGW32__))
 #include <direct.h>
 #else
 #include <dirent.h>
@@ -64,7 +64,7 @@ extern int h_errno;
 
 #include <signal.h>
 
-#if !defined(WINDOWS) || (defined(GNUWIN32) && !defined(MINGW32))
+#if !defined(WINDOWS) || (defined(GNUWIN32) && !defined(__MINGW32__))
 #include <sys/wait.h>
 #include <sys/utsname.h>
 #endif
@@ -190,7 +190,7 @@ int raiseUnixError(char *f,int n, char * e, char * g) {
 
 static char* h_strerror(const int err) {
   switch (err) {
-#ifndef MINGW32
+#ifndef __MINGW32__
   case HOST_NOT_FOUND:
     return "No such host is known.";
   case TRY_AGAIN:
@@ -525,7 +525,7 @@ inline OZ_Return buffer_vs(OZ_Term vs, char *write_buff, int *len,
 // unix IO
 // -------------------------------------------------
 
-#ifndef _MSC_VER
+#if !defined(_MSC_VER) && !defined(__MINGW32__)
 OZ_BI_iodefine(unix_fileDesc,1,1)
 {
   OZ_declareAtomIN( 0, OzFileDesc);
@@ -602,7 +602,7 @@ OZ_BI_iodefine(unix_stat,1,1)
   OZ_RETURN(OZ_recordInit(OZ_atom("stat"),pairlist));
 } OZ_BI_ioend
 
-#if !defined(WINDOWS) || (defined(GNUWIN32) && !defined(MINGW32))
+#if !defined(WINDOWS) || (defined(GNUWIN32) && !defined(__MINGW32__))
 OZ_BI_iodefine(unix_uName,0,1)
 {
   struct utsname buf;
@@ -732,7 +732,7 @@ OZ_BI_iodefine(unix_open,3,1)
 #ifdef OS2_I486
     return OZ_typeError(2,"enum openMode");
 #else
-#if !defined(_MSC_VER) && !defined(MINGW32)
+#if !defined(_MSC_VER) && !defined(__MINGW32__)
     if (OZ_eqAtom(hd,"S_IRUSR") == PROCEED) { mode |= S_IRUSR; }
     else if (OZ_eqAtom(hd,"S_IWUSR") == PROCEED) { mode |= S_IWUSR; }
     else if (OZ_eqAtom(hd,"S_IXUSR") == PROCEED) { mode |= S_IXUSR; }
@@ -1555,7 +1555,7 @@ OZ_BI_iodefine(unix_system,1,1)
   OZ_RETURN_INT(ret);
 } OZ_BI_ioend
 
-#if !defined(WINDOWS) || (defined(GNUWIN32) && !defined(MINGW32))
+#if !defined(WINDOWS) || (defined(GNUWIN32) && !defined(__MINGW32__))
 OZ_BI_iodefine(unix_wait,0,2)
 {
   // OZ_out(0) == rpid
@@ -1752,14 +1752,14 @@ OZ_BI_define(Fun,InArity,OutArity)                      \
 } OZ_BI_end
 
 
-#ifdef _MSC_VER
-NotAvail("OS.getDir",          2, unix_getDir);
-NotAvail("OS.fileDesc",        2, unix_fileDesc);
+#if defined(_MSC_VER) || defined(__MINGW32__)
+NotAvail("OS.getDir",          1,1, unix_getDir);
+NotAvail("OS.fileDesc",        1,1, unix_fileDesc);
 #endif
 
 #endif
 
-#ifndef MINGW32
+#ifndef __MINGW32__
 #include <pwd.h>
 
 #include <sys/types.h>
@@ -1788,7 +1788,7 @@ retry:
 } OZ_BI_end
 #endif
 
-#if defined(MINGW32)
+#if defined(__MINGW32__)
 NotAvail("OS.getServByName",   2,1, unix_getServByName);
 NotAvail("OS.wait",            0,2, unix_wait);
 NotAvail("OS.uName",           0,1, unix_uName);

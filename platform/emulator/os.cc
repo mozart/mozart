@@ -87,10 +87,7 @@ extern "C" int dlclose(void *);
 #include <sys/time.h>
 #include <process.h>
 
-#ifdef MINGW32
-// RS: HACK !!!!!!!!!!!!!
-char     _ctype_[1000];
-#else
+#ifndef __MINGW32__
 extern "C" int _fmode;
 extern "C" void setmode(int,mode_t);
 #endif

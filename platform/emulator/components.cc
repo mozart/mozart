@@ -54,6 +54,9 @@
 #include <sys/socket.h>
 #include <sys/wait.h>
 #endif
+#ifndef __MINGW32__
+#include <netdb.h>
+#endif
 
 #include <sys/stat.h>
 #include <fcntl.h>
@@ -61,7 +64,6 @@
 #include <unistd.h>
 #include <stdio.h>
 #include <errno.h>
-#include <netdb.h>
 
 #include "zlib.h"
 
