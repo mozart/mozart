@@ -57,28 +57,31 @@ enum TypeOfGenCVariable {
   FSetVariable,
   PerdioVariable,
   LazyVariable,
+  CtVariable,
   NonGenCVariable
 };
 
 #define GenVarCheckType(t)                              \
     Assert(t == FDVariable || t == OFSVariable ||       \
            t == MetaVariable || t == BoolVariable ||    \
-           t==PerdioVariable || t == FSetVariable || \
-           t ==LazyVariable)
+           t == PerdioVariable || t == FSetVariable ||  \
+           t ==LazyVariable || t == CtVariable)
 
 class GenCVariable: public SVariable {
 
 friend class GenFDVariable;
 friend class GenFSetVariable;
+friend class GenCtVariable;
 
 private:
   union {
     TypeOfGenCVariable var_type;
-    OZ_FiniteDomain *patchDomain;
-    OZ_FSetConstraint *patchFSet;
+    OZ_FiniteDomain   * patchDomain;
+    OZ_FSetConstraint * patchFSet;
+    OZ_GenConstraint  * patchCt;
   } u;
 
-  enum u_mask_t {u_fd=0, u_bool=1, u_fset=2, u_ri=3, u_mask=3};
+  enum u_mask_t {u_fd = 0, u_bool = 1, u_fset = 2, u_ct = 3, u_mask = 3};
 
 protected:
 
@@ -136,7 +139,8 @@ public:
   OZ_Boolean isBoolPatched(void) { return (u.var_type & u_mask) == u_bool; }
   OZ_Boolean isFDPatched(void) { return (u.var_type & u_mask) == u_fd; }
   OZ_Boolean isFSetPatched(void) { return (u.var_type & u_mask) == u_fset; }
-  OZ_Boolean isRIPatched(void) { return (u.var_type & u_mask) == u_ri; }
+  OZ_Boolean isCtPatched(void) { return (u.var_type & u_mask) == u_ct; }
+
   OZ_FiniteDomain * getReifiedPatch(void) {
     return (OZ_FiniteDomain *)  (u.var_type & ~u_mask);
   }
@@ -208,7 +212,7 @@ OZ_Boolean testResetReifiedFlag(OZ_Term t)
 }
 
 inline
-OZ_FiniteDomain * unpatchReified(OZ_Term t, Bool isBool)
+OZ_FiniteDomain * unpatchReifiedFD(OZ_Term t, Bool isBool)
 {
   Assert(!isUVar(t) && oz_isVariable(t) && !oz_isRef(t));
   GenCVariable * v = ((GenCVariable *) tagValueOf(t));
@@ -217,19 +221,20 @@ OZ_FiniteDomain * unpatchReified(OZ_Term t, Bool isBool)
   return v->getReifiedPatch();
 }
 
-void addSuspCVarOutline(TaggedRef *v, Thread *el, int unstable=TRUE);
+void addSuspCVarOutline(TaggedRef * v, Suspension susp, int unstable = TRUE);
 
 #include "fsgenvar.hh"
 #include "fdgenvar.hh"
 #include "fdbvar.hh"
 #include "ofgenvar.hh"
 #include "metavar.hh"
+#include "ctgenvar.hh"
 #include "perdiovar.hh"
 #include "lazyvar.hh"
 #include "promise.hh"
 
 #ifdef OUTLINE
-void addSuspCVar(TaggedRef *v, Thread *el, int unstable=TRUE);
+void addSuspCVar(TaggedRef * v, Suspension susp, int unstable = TRUE);
 #else
 #include "genvar.icc"
 #endif

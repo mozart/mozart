@@ -47,20 +47,20 @@ enum ThreadFlag {
   T_null   = 0x000000,   // no flag is set;
   T_dead   = 0x000001,   // the thread is dead;
   T_runnable=0x000002,   // the thread is runnable;
-  T_p_thr  = 0x000004,   // 'real' propagators by Tobias;
+  //T_p_thr  = 0x000004,   // 'real' propagators by Tobias;
   T_stack  = 0x000008,   // it has an (allocated) stack;
   T_catch  = 0x000010,   // has or has had an exception handler
   T_solve  = 0x000020,   // it was created in a search CS
                          // (former notificationBoard);
   T_ext    = 0x000040,   // an external suspension wrt current search problem;
-  T_unif   = 0x000080,   // the thread is due to a (proper) unification
+  //T_unif   = 0x000080,   // the thread is due to a (proper) unification
                          // of fd variables;
-  T_loca   = 0x000100,   // all variables of this propagator are local;
+  //T_loca   = 0x000100,   // all variables of this propagator are local;
   T_tag    = 0x000200,   // a special stuff for fd (Tobias, please comment?);
-  T_ofs    = 0x000400,   // the OFS thread (needed for DynamicArity);
+  //T_ofs    = 0x000400,   // the OFS thread (needed for DynamicArity);
 
-  T_ltq    = 0x000800,   // designates local thread queue
-  T_nmo    = 0x001000,   // designates nonmonotonic propagator
+  T_lpq    = 0x000800,   // designates local thread queue
+  //T_nmo    = 0x001000,   // designates nonmonotonic propagator
 
   T_noblock= 0x002000,   // if this thread blocks, raise an exception
 
@@ -73,10 +73,9 @@ enum ThreadFlag {
 };
 
 
-#define  S_TYPE_MASK  (T_stack|T_p_thr)
+#define  S_TYPE_MASK  T_stack
 #define  S_WAKEUP     T_null
 #define  S_RTHREAD    T_stack
-#define  S_PR_THR     T_p_thr
 
 
 class RunnableThreadBody {
@@ -99,7 +98,6 @@ public:
 };
 
 union ThreadBodyItem {
-  OZ_Propagator *propagator;
   RunnableThreadBody *threadBody;
 };
 
@@ -178,28 +176,28 @@ public:
     item.threadBody = 0;
   }
 
-  void freePropBody() {
-    delete item.propagator;
-    item.propagator = 0;
-  }
-
   void markDeadThread() {
     state.flags = state.flags | T_dead;
   }
 
   int getFlags() { return state.flags; }
 
-  void markPropagatorThread () {
-    Assert(!isDeadThread());
-    state.flags = state.flags | T_p_thr;
+  void markLPQThread(void) {
+    state.flags = state.flags | T_lpq;
   }
-  void unmarkPropagatorThread() {
-    Assert (!isDeadThread());
-    state.flags &= ~T_p_thr;
+  Bool isLPQThread(void) {
+    return state.flags & T_lpq;
   }
-  Bool isPropagator() {
-    Assert(!isDeadThread());
-    return state.flags & T_p_thr;
+
+  void markTagged() {
+    if (isDeadThread ()) return;
+    state.flags = state.flags | T_tag;
+  }
+  void unmarkTagged() {
+    state.flags = state.flags & ~T_tag;
+  }
+  Bool isTagged() {
+    return (state.flags & T_tag);
   }
 
   Bool isWakeup() {
@@ -209,12 +207,6 @@ public:
 
   void setBody(RunnableThreadBody *rb) { item.threadBody=rb; }
   RunnableThreadBody *getBody()        { return item.threadBody; }
-
-  void setInitialPropagator(OZ_Propagator * pro) {
-    item.propagator = pro;
-    state.flags = T_p_thr | T_runnable | T_unif;
-    if (!pro->isMonotonic()) markNonMonotonicPropagatorThread();
-  }
 
   unsigned int getID() { return id; }
   void setID(unsigned int newId) { id = newId; }
@@ -244,7 +236,7 @@ public:
     return !(state.flags & T_runnable);
   }
   Bool isRunnable() {
-    Assert(!isDeadThread());
+    /* Assert(!isDeadThread()); */ // TMUELLER
     return state.flags & T_runnable;
   }
 
@@ -288,19 +280,6 @@ public:
     return state.flags & T_ext;
   }
 
-  void markNonMonotonicPropagatorThread(void) {
-    Assert(!isDeadThread() && isPropagator());
-    state.flags = state.flags | T_nmo;
-  }
-  void unmarkNonMonotonicPropagatorThread(void) {
-    Assert(!isDeadThread() && isPropagator());
-    state.flags &= ~T_nmo;
-  }
-  Bool isNonMonotonicPropagatorThread(void) {
-    Assert(!isDeadThread() && isPropagator());
-    return state.flags & T_nmo;
-  }
-
   void setNoBlock(Bool yesno) {
     state.flags = yesno ? state.flags | T_noblock : state.flags & ~T_noblock;
   }
@@ -337,51 +316,6 @@ public:
     state.flags = (state.flags & ~S_TYPE_MASK) | S_WAKEUP;
   }
 
-  void markUnifyThread() {
-    Assert(isPropagator () && !isDeadThread());
-    state.flags = state.flags | T_unif;
-  }
-  void unmarkUnifyThread () {
-    Assert(isPropagator() && !isDeadThread());
-    state.flags = state.flags & ~T_unif;
-  }
-  Bool isUnifyThread() {
-    Assert(isPropagator() && !isDeadThread());
-    return (state.flags & T_unif);
-  }
-
-  void setOFSThread() {
-    Assert((isPropagator ()) && !(isDeadThread ()));
-    state.flags = state.flags | T_ofs;
-  }
-  Bool isOFSThread() {
-    Assert(!isDeadThread());
-    return (state.flags & T_ofs);
-  }
-
-  // the following six member functions operate on dead threads too
-  void markLocalThread() {
-    if (isDeadThread()) return;
-    state.flags = state.flags | T_loca;
-  }
-  void unmarkLocalThread() {
-    state.flags = state.flags & ~T_loca;
-  }
-  Bool isLocalThread() {
-    return (state.flags & T_loca);
-  }
-
-  void markTagged() {
-    if (isDeadThread ()) return;
-    state.flags = state.flags | T_tag;
-  }
-  void unmarkTagged() {
-    state.flags = state.flags & ~T_tag;
-  }
-  Bool isTagged() {
-    return (state.flags & T_tag);
-  }
-
   Bool hasStack() {
     Assert(!isDeadThread());
     return (state.flags & T_stack);
@@ -392,7 +326,6 @@ public:
   }
   void setHasStack() {
     Assert(isRunnable());
-    Assert(!isPropagator());
     state.flags = state.flags | T_stack;
   }
 
@@ -404,25 +337,8 @@ public:
   TaggedRef getStreamTail();
   void setStreamTail(TaggedRef v);
 
-  OZ_Propagator * swapPropagator(OZ_Propagator * p) {
-    OZ_Propagator * r = item.propagator;
-    item.propagator = p;
-    return r;
-  }
-
-  void setPropagator(OZ_Propagator * p) {
-    Assert(isPropagator());
-    delete item.propagator;
-    item.propagator = p;
-  }
-
-  OZ_Propagator * getPropagator(void) {
-    Assert(isPropagator());
-    return item.propagator;
-  }
-
-  void pushLTQ(Board * sb) {
-    item.threadBody->taskStack.pushLTQ(sb);
+  void pushLPQ(Board * sb) {
+    item.threadBody->taskStack.pushLPQ(sb);
   }
   void pushDebug(OzDebug *dbg, OzDebugDoit dothis) {
     item.threadBody->taskStack.pushDebug(dbg,dothis);
@@ -481,12 +397,6 @@ public:
   }
 
 
-  DebugCode
-  (void removePropagator () {
-    Assert (isPropagator ());
-    item.propagator = (OZ_Propagator *) NULL;
-  })
-
   int getRunnableNumber();
 };
 
@@ -503,4 +413,324 @@ Thread *tagged2Thread(TaggedRef term)
   return (Thread *) tagged2Const(term);
 }
 
+
+//-----------------------------------------------------------------------------
+// class Propagator
+
+enum PropagatorFlag {
+  P_null     = 0x000000,
+  P_gcmark   = 0x000001, // you must not change that
+  P_dead     = 0x000002,
+  P_tag      = 0x000004,
+  P_nmo      = 0x000008,
+  P_local    = 0x000010,
+  P_runnable = 0x000020,
+  P_ofs      = 0x000040,
+  P_ext      = 0x000080,
+  P_unify    = 0x000100,
+  P_max      = 0x800000
+};
+
+
+#define MARKFLAG(F)        (_flags |= (F))
+#define UNMARKFLAG(F)      (_flags &= ~(F))
+#define UNMARKFLAGTO(T, F) ((T) (_flags & ~(F)))
+#define ISMARKEDFLAG(F)    (_flags & (F))
+
+class Propagator {
+private:
+  unsigned _flags;
+  OZ_Propagator * _p;
+  Board * _b;
+  static Propagator * _runningPropagator;
+public:
+  Propagator(OZ_Propagator * p, Board * b)
+    : _p(p), _b(b), _flags(p->isMonotonic() ? P_null : P_nmo)
+  {
+    Assert(_p);
+    Assert(_b);
+  }
+
+  OZ_Propagator * getPropagator(void) { return _p; }
+
+  void setPropagator(OZ_Propagator * p) {
+    Assert (p);
+    Assert (_p);
+    _p = p;
+    if (! _p->isMonotonic())
+      MARKFLAG(P_nmo);
+  }
+
+  USEHEAPMEMORY;
+
+  OZPRINTLONG;
+
+  static void setRunningPropagator(Propagator * p) { _runningPropagator = p;}
+  static Propagator * getRunningPropagator(void) { return _runningPropagator;}
+
+  void dispose(void) {
+    delete _p;
+
+    DebugCode(
+              _p = (OZ_Propagator *) NULL;
+              _b = (Board * ) NULL;
+              );
+  }
+
+  Propagator * gcPropagator(void);
+  Propagator * gcPropagatorOutlined(void);
+  void gcRecurse(void);
+  Bool gcIsMarked(void);
+  void gcMark(Propagator *);
+  void ** gcGetMarkField(void);
+  Propagator * gcGetFwd(void);
+
+  Board * getBoardInternal(void) {
+    return _b;
+  }
+
+  Bool isDeadPropagator(void) {
+    return ISMARKEDFLAG(P_dead);
+  }
+  void markDeadPropagator(void) {
+    MARKFLAG(P_dead);
+  }
+
+  Bool isRunnable(void) {
+    return ISMARKEDFLAG(P_runnable);
+  }
+  void unmarkRunnable(void) {
+    UNMARKFLAG(P_runnable);
+  }
+  void markRunnable(void) {
+    MARKFLAG(P_runnable);
+  }
+
+  Bool isLocalPropagator(void) {
+    return ISMARKEDFLAG(P_local);
+  }
+  void unmarkLocalPropagator(void) {
+    UNMARKFLAG(P_local);
+  }
+  void markLocalPropagator(void) {
+    MARKFLAG(P_local);
+  }
+
+  Bool isUnifyPropagator(void) {
+    return ISMARKEDFLAG(P_unify);
+  }
+  void unmarkUnifyPropagator(void) {
+    UNMARKFLAG(P_unify);
+  }
+  void markUnifyPropagator(void) {
+    MARKFLAG(P_unify);
+  }
+
+  Bool isTagged(void) {
+    return ISMARKEDFLAG(P_tag);
+  }
+  void markTagged(void) {
+    MARKFLAG(P_tag);
+  }
+  void unmarkTagged(void) {
+    UNMARKFLAG(P_tag);
+  }
+
+  Bool isOFSPropagator(void) {
+    return ISMARKEDFLAG(P_ofs);
+  }
+  void markOFSPropagator(void) {
+    MARKFLAG(P_ofs);
+  }
+
+  Bool wasExtPropagator(void) {
+    return ISMARKEDFLAG(P_ext);
+  }
+  void setExtPropagator(void) {
+    MARKFLAG(P_ext);
+  }
+
+  OZ_NonMonotonic::order_t getOrder(void) {
+    return _p->getOrder();
+  }
+
+  Bool isNonMonotonicPropagator(void) {
+    return ISMARKEDFLAG(P_nmo);
+  }
+
+  void markNonMonotonicPropagator(void) {
+    MARKFLAG(P_nmo);
+  }
+
+  OZ_Propagator * swapPropagator(OZ_Propagator * prop) {
+    OZ_Propagator * p = _p;
+    setPropagator(prop);
+    return p;
+  }
+};
+
+
+//-----------------------------------------------------------------------------
+// class Suspension
+
+// A suspension is a tagged pointer either to a propagator or a thread.
+
+#define THREADTAG 0x1
+
+class Suspension {
+
+friend Bool operator == (Suspension, Suspension);
+
+private:
+  union _susp_t {
+    Thread * _t;
+    Propagator * _p;
+    _susp_t(void) {
+      DebugCode(_t = (Thread *) 0x5e5e5e5e);
+    }
+    _susp_t(Thread * t) : _t(t) {}
+    _susp_t(Propagator * p) : _p(p) {}
+  } _s;
+  Bool _isThread(void) {
+    return ((_ToInt32(_s._t)) & THREADTAG);
+  }
+  Thread * _getThread(void) {
+    return (Thread *) ((_ToInt32(_s._t)) & ~THREADTAG);
+  }
+  Propagator * _getPropagator(void) {
+    return _s._p;
+  }
+  void _markAsThread(Thread * t) {
+    _s._t = (Thread *) ((_ToInt32(t)) | THREADTAG);
+  }
+public:
+  Suspension(void) {}
+  Suspension(Thread * t) {
+    _markAsThread(t);
+  }
+  Suspension(Propagator * p) : _s(p) {}
+
+  USEHEAPMEMORY;
+
+  OZPRINTLONG;
+
+  Bool isPropagator(void) { return !_isThread(); }
+  Bool isThread(void) { return _isThread(); }
+  Bool isNull(void) { return ((void *) _getThread()) == NULL;}
+
+  void setPropagator(OZ_Propagator * p) {
+    _s._p->setPropagator(p);
+  }
+  Propagator * getPropagator(void) {
+    Assert(isPropagator());
+    return _s._p;
+  }
+  Thread * getThread(void) {
+    Assert(_isThread());
+    return _getThread();
+  }
+  void setThread(Thread * t) {
+    _markAsThread(t);
+  }
+
+  Bool isDead(void) {
+    return (_isThread()
+            ? _getThread()->isDeadThread()
+            : _getPropagator()->isDeadPropagator());
+  }
+  Bool isRunnable(void) {
+    return (_isThread()
+            ? _getThread()->isRunnable()
+            : _getPropagator()->isRunnable());
+  }
+  Board * getBoardInternal(void) {
+    return (_isThread()
+            ? _getThread()->getBoardInternal()
+            : _getPropagator()->getBoardInternal());
+  }
+
+  void unmarkLocalPropagator(void) {
+    if (isPropagator())
+      _getPropagator()->unmarkLocalPropagator();
+  }
+
+  void markLocalPropagator(void) {
+    if (isPropagator())
+      _getPropagator()->markLocalPropagator();
+  }
+  Bool isLocalPropagator(void) {
+    if (isPropagator())
+      return _getPropagator()->isLocalPropagator();
+    return FALSE;
+  }
+
+  void unmarkUnifyPropagator(void) {
+    if (isPropagator())
+      _getPropagator()->unmarkUnifyPropagator();
+  }
+
+  void markUnifyPropagator(void) {
+    if (isPropagator())
+      _getPropagator()->markUnifyPropagator();
+  }
+  Bool isUnifyPropagator(void) {
+    if (isPropagator())
+      return _getPropagator()->isUnifyPropagator();
+    return FALSE;
+  }
+
+  void markTagged(void) {
+    if (_isThread())
+      _getThread()->markTagged();
+    else
+      _getPropagator()->markTagged();
+  }
+  void unmarkTagged(void) {
+    if (_isThread())
+      _getThread()->unmarkTagged();
+    else
+      _getPropagator()->unmarkTagged();
+  }
+  Bool isTagged(void) {
+    return (_isThread()
+            ? _getThread()->isTagged()
+            : _getPropagator()->isTagged());
+  }
+
+  void setExtSuspension(void) {
+    if (_isThread())
+      _getThread()->setExtThread();
+    else
+      _getPropagator()->setExtPropagator();
+  }
+
+  Bool wasExtSuspension(void) {
+    return (_isThread()
+            ? _getThread()->wasExtThread()
+            : _getPropagator()->wasExtPropagator());
+  }
+
+  Bool isOFSPropagator(void) {
+    if (isPropagator())
+      return _getPropagator()->isOFSPropagator();
+    return FALSE;
+  }
+
+  Suspension gcSuspension(void);
+}; // class Suspension
+
+inline
+Bool operator == (Suspension a, Suspension b)
+{
+  return (a._getPropagator() == b._getPropagator());
+}
+
+#define GETSUSPPTR(S)                           \
+(S.isThread()                                   \
+ ? (void *) S.getThread()                       \
+ : (void *) S.getPropagator())
+
 #endif
+
+// eof
+//-----------------------------------------------------------------------------

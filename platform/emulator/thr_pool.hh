@@ -32,6 +32,7 @@
 #endif
 
 #include "thrqueue.hh"
+#include "thread.hh"
 
 class ThreadsPool {
 private:

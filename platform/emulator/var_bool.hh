@@ -47,7 +47,7 @@
 class GenBoolVariable : public GenCVariable {
 
   friend class GenCVariable;
-  friend inline void addSuspBoolVar(TaggedRef, Thread *);
+  friend inline void addSuspBoolVar(TaggedRef, Suspension);
 
 private:
   OZ_FiniteDomain * store_patch;
@@ -96,7 +96,7 @@ public:
 inline Bool isGenBoolVar(TaggedRef term);
 inline Bool isGenBoolVar(TaggedRef term, TypeOfTerm tag);
 inline GenBoolVariable * tagged2GenBoolVar(TaggedRef term);
-inline void addSuspBoolVar(TaggedRef, Thread *);
+inline void addSuspBoolVar(TaggedRef, Suspension);
 
 
 #ifndef OUTLINE

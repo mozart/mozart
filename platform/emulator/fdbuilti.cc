@@ -161,15 +161,6 @@ OZ_Boolean BIfdHeadManager::areIdentVar(int a, int b) {
   return (bifdhm_varptr[a] == bifdhm_varptr[b] && oz_isVariable(bifdhm_var[a]));
 }
 
-void BIfdHeadManager::addPropagators (Thread *thr, OZ_FDPropState target) {
-  for (int i = curr_num_of_items; i--; )
-    addPropagator (i, thr, target);
-
-  if (global_vars == 0)
-    thr->markLocalThread ();
-}
-
-
 #ifdef FDBISTUCK
 
 OZ_Return BIfdHeadManager::addSuspFDish(OZ_CFun, OZ_Term *, int) {
@@ -249,49 +240,6 @@ Bool BIfdHeadManager::addSuspXorYdet(OZ_CFun f, OZ_Term * x, int a)
 
 #endif
 
-
-void BIfdHeadManager::addPropagator (int i, Thread *thr, OZ_FDPropState target)
-{
-  DebugCheck(i < 0 || i >= curr_num_of_items, error("index overflow"));
-
-  pm_term_type tag = bifdhm_vartag[i];
-
-  if (tag == pm_singl) {
-    return;
-  } else if (tag == pm_fd) {
-    addSuspFDVar(bifdhm_var[i], thr, target);
-    if (! am.isLocalSVar(bifdhm_var[i])) global_vars += 1;
-  } else if (tag == pm_bool) {
-    addSuspBoolVar(bifdhm_var[i], thr);
-    if (! am.isLocalSVar(bifdhm_var[i])) global_vars += 1;
-  } else if (tag == pm_uvar) {
-    if (bifdhm_var[i] != *bifdhm_varptr[i]) return;
-    if (am.isLocalUVar(bifdhm_var[i],&bifdhm_var[i])) {
-      OZ_Term * taggedfdvar = newTaggedCVar(new GenFDVariable());
-      addSuspFDVar(*taggedfdvar, thr, target);
-      doBind(bifdhm_varptr[i], makeTaggedRef(taggedfdvar));
-    } else {
-      global_vars += 1;
-      addSuspUVar(bifdhm_varptr[i], thr);
-    }
-  } else {
-    Assert(tag == pm_svar);
-
-    if (bifdhm_var[i] != *bifdhm_varptr[i]) return;
-    if (am.isLocalSVar(bifdhm_var[i])) {
-      GenFDVariable * fdvar = new GenFDVariable();
-      OZ_Term * taggedfdvar = newTaggedCVar(fdvar);
-      am.checkSuspensionList(bifdhm_var[i]);
-      fdvar->setSuspList(tagged2SVar(bifdhm_var[i])->getSuspList());
-      addSuspFDVar(*taggedfdvar, thr, target);
-      doBind(bifdhm_varptr[i], makeTaggedRef(taggedfdvar));
-    } else {
-      global_vars += 1;
-      addSuspSVar(bifdhm_var[i],thr);
-    }
-  }
-}
-
 #ifdef DEBUG_PRINT
 void BIfdHeadManager::printDebug(void) {
   for (int i = 0; i < curr_num_of_items; i += 1)
@@ -310,8 +258,8 @@ BIfdBodyManager::BIfdBodyManager(int s) {
   DebugCodeFD(backup_count = 0);
   AssertFD(0 <= s && s < MAXFDBIARGS);
   curr_num_of_vars = s;
-  AssertFD(am.currentThread());
-  only_local_vars = am.currentThread()->isLocalThread ();
+  AssertFD(Propagator::getRunningPropagator());
+  only_local_vars = Propagator::getRunningPropagator()->isLocalPropagator();
 }
 
 void BIfdBodyManager::saveDomainOnTopLevel(int i) {
@@ -320,58 +268,6 @@ void BIfdBodyManager::saveDomainOnTopLevel(int i) {
       bifdbm_domain[i] = tagged2GenFDVar(bifdbm_var[i])->getDom();
   }
 }
-
-#ifdef FDBISTUCK
-
-OZ_Return BIfdHeadManager::suspendOnVar(OZ_CFun, int, OZ_Term *,
-                                      OZ_Term * t)
-{
-  OZ_suspendOn(makeTaggedRef(t));
-}
-
-OZ_Return BIfdHeadManager::suspendOnVar(OZ_CFun, int, OZ_Term *,
-                                      OZ_Term * t1, OZ_Term * t2)
-{
-  OZ_suspendOn2(makeTaggedRef(t1),
-                makeTaggedRef(t2));
-}
-
-OZ_Return BIfdHeadManager::suspendOnVar(OZ_CFun, int, OZ_Term *,
-                                      OZ_Term * t1, OZ_Term * t2, OZ_Term * t3)
-{
-  OZ_suspendOn3(makeTaggedRef(t1),
-                makeTaggedRef(t2),
-                makeTaggedRef(t3));
-}
-
-#else
-
-OZ_Return BIfdHeadManager::suspendOnVar(OZ_CFun f, int a, OZ_Term * x,
-                                      OZ_Term * t)
-{
-  OZ_addThread(makeTaggedRef(t), OZ_makeSuspendedThread(f, x, a));
-  return PROCEED;
-}
-
-OZ_Return BIfdHeadManager::suspendOnVar(OZ_CFun f, int a, OZ_Term * x,
-                                      OZ_Term * t1, OZ_Term * t2)
-{
-  OZ_Thread th = OZ_makeSuspendedThread(f, x, a);
-  OZ_addThread(makeTaggedRef(t1), th);
-  OZ_addThread(makeTaggedRef(t2), th);
-  return PROCEED;
-}
-
-OZ_Return BIfdHeadManager::suspendOnVar(OZ_CFun f, int a, OZ_Term * x,
-                                      OZ_Term * t1, OZ_Term * t2, OZ_Term * t3)
-{
-  OZ_Thread th = OZ_makeSuspendedThread(f, x, a);
-  OZ_addThread(makeTaggedRef(t1), th);
-  OZ_addThread(makeTaggedRef(t2), th);
-  OZ_addThread(makeTaggedRef(t3), th);
-  return PROCEED;
-}
-#endif
 
 //-----------------------------------------------------------------------------
 //                              class BIfdBodyManager
@@ -419,7 +315,6 @@ void BIfdBodyManager::backup(void)
   backup_curr_num_of_vars1 = curr_num_of_vars;
   backup_vars_left1 = vars_left;
   backup_only_local_vars1 = only_local_vars;
-  backup_FDcurrentThread = am.currentThread();
 
   bifdbm_var += backup_curr_num_of_vars1;
   bifdbm_varptr += backup_curr_num_of_vars1;
@@ -453,8 +348,8 @@ void BIfdBodyManager::restore(void)
   curr_num_of_vars = backup_curr_num_of_vars1;
   vars_left = backup_vars_left1;
   only_local_vars = backup_only_local_vars1;
-  am.setCurrentThread(backup_FDcurrentThread);
 }
+
 
 int BIfdBodyManager::initCache(void) {
   int num_of_slots = int(ceil(double(curr_num_of_vars)/double(cache_slot_size)));
@@ -1115,37 +1010,3 @@ void BIfdBodyManager::printTerm(int i) {
   }
 }
 #endif
-
-
-#ifdef DEBUG_STABLE
-
-OZ_C_proc_begin(debugStable,0)
-{
-  printBCDebug();
-  return PROCEED;
-}
-OZ_C_proc_end
-
-OZ_C_proc_begin(resetStable,0)
-{
-  board_constraints = NULL;
-  return PROCEED;
-}
-OZ_C_proc_end
-
-#endif
-//-----------------------------------------------------------------------------
-// Introduce FD Built-ins to the Emulator
-
-#include "fdbuilti.dcl"
-
-static
-BIspec fdSpec[] = {
-#include "fdbuilti.tbl"
-  {0,0,0,0}
-};
-
-void BIinitFD(void)
-{
-  BIaddSpec(fdSpec);
-}

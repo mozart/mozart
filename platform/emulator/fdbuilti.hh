@@ -138,21 +138,6 @@ void getDoubleCoeff(int i, OZ_Term v);
 void getIntCoeff(int i, OZ_Term v);
 
 //-----------------------------------------------------------------------------
-// fd built-ins don't cause stuck threads, but may cause their minds, therefore
-
-#undef FDBISTUCK
-
-#ifdef FDBISTUCK
-
-#define SUSPEND_PROCEED SUSPEND
-
-#else
-
-#define SUSPEND_PROCEED PROCEED
-
-#endif
-
-//-----------------------------------------------------------------------------
 //                          class BIfdHeadManager
 //-----------------------------------------------------------------------------
 
@@ -165,9 +150,6 @@ private:
   static int curr_num_of_items;
 
   int global_vars;
-
-  void addPropagator (int i, Thread *thr, OZ_FDPropState target);
-  void addPropagators (Thread *thr, OZ_FDPropState target);
 
 public:
   BIfdHeadManager(int s);
@@ -189,9 +171,6 @@ public:
   OZ_Return spawnPropagator(OZ_FDPropState, OZ_CFun, int, OZ_Term *);
   OZ_Return spawnPropagator(OZ_FDPropState, OZ_FDPropState, OZ_CFun, int, OZ_Term *);
   OZ_Return spawnPropagator(OZ_FDPropState, OZ_CFun, int, OZ_Term, ...);
-  static OZ_Return suspendOnVar(OZ_CFun, int, OZ_Term *, OZ_Term *);
-  static OZ_Return suspendOnVar(OZ_CFun, int, OZ_Term *, OZ_Term *, OZ_Term *);
-  static OZ_Return suspendOnVar(OZ_CFun, int, OZ_Term *, OZ_Term *, OZ_Term *, OZ_Term *);
 
   OZ_Boolean areIdentVar(int a, int b);
 
@@ -252,7 +231,6 @@ private:
   int backup_curr_num_of_vars1;
   OZ_Boolean backup_vars_left1;
   OZ_Boolean backup_only_local_vars1;
-  Thread * backup_FDcurrentThread;
 
 // private methods
   OZ_Boolean isTouched(int i);

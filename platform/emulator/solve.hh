@@ -67,13 +67,12 @@ public:
 
   void gcRecurse();
 
-  void incThreads() { threads++; }
-  void incThreads(int n) { threads += n; }
-  int  decThreads() { Assert (threads > 0); return (--threads); }
-  int  getThreads() { return threads; }
+  void incThreads(int = 1);
+  int  decThreads(void);
+  int  getThreads(void) { return threads; }
 
-  void addSuspension(Thread *thr);
-  void addSuspension(SuspList *l);
+  void addSuspension(Suspension);
+  void addSuspension(SuspList *);
   Bool areNoExtSuspensions();
 
   void inject(int prio, TaggedRef proc);
@@ -128,7 +127,7 @@ public:
 private:
   OrderedSuspList * nonMonoSuspList;
 public:
-  void addToNonMonoSuspList(Thread *);
+  void addToNonMonoSuspList(Propagator *);
   void scheduleNonMonoSuspList(void);
   void mergeNonMonoSuspListWith(OrderedSuspList *);
   void setNonMonoSuspList(OrderedSuspList * l) {
@@ -138,10 +137,10 @@ public:
 //-----------------------------------------------------------------------------
 
 public:
-  void clearSuspList(Thread *killThr = NULL);
+  void clearSuspList(Suspension killSusp);
 private:
   Bool checkExtSuspList () {
-    clearSuspList();            // Christian's; (no spaces!);
+    clearSuspList((Thread *) NULL);             // Christian's; (no spaces!);
     return (suspList == NULL);
   }
 };

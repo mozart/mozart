@@ -77,7 +77,6 @@ int     cs_copy_size  = 0;
 
 static void OZ_collectHeapBlock(TaggedRef *, TaggedRef *, int);
 
-
 /*
  *               Debug
  *
@@ -378,6 +377,7 @@ enum TypeOfPtr {
   PTR_BOARD,
   PTR_ACTOR,
   PTR_THREAD,
+  PTR_PROPAGATOR,
   PTR_CVAR,
   PTR_CONSTTERM
 };
@@ -893,14 +893,20 @@ Thread *Thread::gcThreadInline() {
   if (!isInGc && (GETBOARD(this))->isMarkedGlobal())
     return this;
 
-  Assert(isInGc || !isRunnable());
+  //Assert(isInGc || !isRunnable()); // TMUELLER
+
+#ifdef DEBUG_THREADCOUNT
+  if (!(isInGc || !isRunnable())) {
+    printf("runnable propagator while cloning\n");
+    fflush(stdout);
+  }
+#endif
 
   // Note that runnable threads can be also counted
   // in solve actors (for stability check), and, therefore,
   // might not just dissappear!
   if (isSuspended() && !GETBOARD(this)->gcIsAlive())
     return (Thread *) NULL;
-
 
   Thread * newThread = (Thread *) gcReallocStatic(this, sizeof(Thread));
 
@@ -918,6 +924,104 @@ Thread * Thread::gcThread(void) {
   return gcThreadInline();
 }
 
+//-----------------------------------------------------------------------------
+// gc routines of `Propagator'
+
+inline
+Bool Propagator::gcIsMarked(void)
+{
+  return ISMARKEDFLAG(P_gcmark);
+}
+
+inline
+void Propagator::gcMark(Propagator * fwd)
+{
+  Assert(!gcIsMarked());
+
+  if (!isInGc)
+    cpTrail.save((int32 *) &_flags);
+
+  _flags = (int32) fwd;
+  MARKFLAG(P_gcmark);
+}
+
+inline
+void ** Propagator::gcGetMarkField(void)
+{
+  return (void **) (void *) &_flags;
+}
+
+inline
+Propagator * Propagator::gcGetFwd(void)
+{
+  return UNMARKFLAGTO(Propagator *, P_gcmark);
+}
+
+inline
+Propagator * Propagator::gcPropagator(void)
+{
+  if (gcIsMarked())
+    return (Propagator *) gcGetFwd();
+
+  if (isDeadPropagator())
+    return NULL;
+
+  Board * bb = _b;
+
+  if (bb && bb->gcIsAlive()) {
+    Assert(isInGc || (!isRunnable()));
+
+    Assert(!bb->derefBoard()->isMarkedGlobal());
+
+    Propagator * newPropagator
+      = (Propagator *) heapMalloc(sizeof(Propagator));
+
+    gcStack.push(newPropagator, PTR_PROPAGATOR);
+
+    newPropagator->_b     = bb;
+    newPropagator->_p     = this->_p;
+    newPropagator->_flags = this->_flags;
+
+    this->gcMark(newPropagator);
+
+    return newPropagator;
+  }
+  return NULL;
+}
+
+Propagator * Propagator::gcPropagatorOutlined(void)
+{
+  return gcPropagator();
+}
+
+inline
+void Propagator::gcRecurse(void)
+{
+
+  Assert(_b);
+
+  _b = _b->gcBoard();
+
+  Assert(_b);
+
+  _p = _p->gc();
+
+  Assert(_p);
+
+  _p->updateHeapRefs(isInGc);
+
+}
+
+inline
+Suspension Suspension::gcSuspension(void)
+{
+  if (_isThread()) {
+    return _getThread()->gcThreadInline();
+  } else {
+    return _getPropagator()->gcPropagator();
+  }
+}
+
 /*
  *  We reverse the order of the list, but this should be no problem.
  *
@@ -926,16 +1030,14 @@ Thread * Thread::gcThread(void) {
  *
  */
 inline
-SuspList * SuspList::gc() {
-  SuspList *ret = NULL;
+SuspList * SuspList::gc(void) {
+  SuspList * ret = NULL;
 
-  for (SuspList* help = this; help != NULL; help = help->next) {
-    Thread *aux = (help->getElem())->gcThreadInline();
-    if (!aux) {
-      continue;
+  for (SuspList * help = this; help != NULL; help = help->getNext()) {
+    Suspension susp = help->getSuspension().gcSuspension();
+    if (! susp.isNull()) {
+      ret = new SuspList(susp, ret);
     }
-    ret = new SuspList(aux, ret);
-
   }
 
   return (ret);
@@ -1282,7 +1384,6 @@ SRecord *SRecord::gcSRecord() {
   return ret;
 }
 
-
 Thread *Thread::gcDeadThread() {
   Assert(isDeadThread());
 
@@ -1351,16 +1452,6 @@ void Thread::gcRecurse () {
     //  should not contain any reference;
     Assert(item.threadBody == (RunnableThreadBody *) NULL);
     break;
-
-  case S_PR_THR:
-    {
-      OZ_Propagator * p = item.propagator->gc();
-
-      p->updateHeapRefs(isInGc);
-
-      item.propagator = p;
-      break;
-    }
 
   default:
     Assert(0);
@@ -1866,6 +1957,11 @@ static Bool across_redid = NO;
 
 Board* AM::copyTree(Board* bb, Bool *getIsGround)
 {
+#ifdef DEBUG_THREADCOUNT_VERBOSE
+  printf("(AM::copyTree LTQs=%d) ", existingLTQs); fflush(stdout);
+  //  if (existingLTQs) Assert(0);
+#endif
+
 #ifdef VERBOSE
   if (verbOut == (FILE *) NULL)
     verbReopen ();
@@ -2010,7 +2106,7 @@ void AbstractionEntry::gcAbstractionEntries()
 }
 
 void ThreadsPool::doGC () {
-  Assert(_currentThread==NULL);
+  // Assert(_currentThread==NULL); // TMUELLER
   threadBodyFreeList = (RunnableThreadBody *) NULL;
 
   hiQueue.gc();
@@ -2040,22 +2136,22 @@ void ThreadQueue::gc() {
    tail    = size - 1;
 }
 
-LocalThreadQueue * LocalThreadQueue::gc() {
+LocalPropagatorQueue * LocalPropagatorQueue::gc() {
   if (!this)
     return NULL;
 
   Assert(isInGc);
   Assert(!isEmpty());
 
-  LocalThreadQueue * new_ltq = new LocalThreadQueue (suggestNewSize());
+  LocalPropagatorQueue * new_lpq = new LocalPropagatorQueue (suggestNewSize());
 
   // gc local thread queue thread
-  new_ltq->ltq_thr = ltq_thr->gcThread();
+  new_lpq->lpq_thr = lpq_thr->gcThread();
 
   // gc and copy entries
-  for ( ; !isEmpty(); new_ltq->enqueue(dequeue()->gcThread()));
+  for ( ; !isEmpty(); new_lpq->enqueue(dequeue()->gcPropagator()));
 
-  return new_ltq;
+  return new_lpq;
 }
 
 // Note: the order of the list must be maintained
@@ -2065,14 +2161,14 @@ OrderedSuspList * OrderedSuspList::gc() {
 
   while (help != NULL) {
 
-    Thread * aux = help->t->gcThreadInline();
+    Propagator * aux = help->_p->gcPropagator();
 
     if (aux) {
       *p = new OrderedSuspList(aux, NULL);
-      p = & (*p)->n;
+      p = & (*p)->_n;
     }
 
-    help = help->n;
+    help = help->_n;
   }
 
   return (ret);
@@ -2627,7 +2723,7 @@ void TaskStack::gc(TaskStack *newstack) {
       Y = gcRefsArray(Y); // X
     } else if (PC == C_LOCK_Ptr) {
       Y = (RefsArray) ((OzLock *) Y)->gcConstTerm();
-    } else if (PC == C_LTQ_Ptr) {
+    } else if (PC == C_LPQ_Ptr) {
       Y = (RefsArray) ((Board *) Y)->gcBoard();
     } else if (PC == C_ACTOR_Ptr) {
       Y = (RefsArray) ((Actor *) Y)->gcActor();
@@ -2735,7 +2831,7 @@ void Board::gcRecurse() {
   body.gc();
   u.actor = u.actor ? u.actor->gcActor() : 0;
 
-  localThreadQueue = localThreadQueue->gc();
+  localPropagatorQueue = localPropagatorQueue->gc();
 
   script.Script::gc();
 }
@@ -2920,6 +3016,10 @@ void GcStack::recurse(void) {
 
     case PTR_THREAD:
       ((Thread *) ptr)->gcRecurse();
+      break;
+
+    case PTR_PROPAGATOR:
+      ((Propagator *) ptr)->gcRecurse();
       break;
 
     case PTR_CVAR:

@@ -77,6 +77,11 @@ OZ_Return GenCVariable::unify(TaggedRef * tptr1, TaggedRef *tptr2, TaggedRef ter
       return FAILED;
     break;
 
+  case CtVariable:
+    if (! ((GenCtVariable*) this)->unifyCt(tptr1, term1, tptr2, term2, scp))
+      return FAILED;
+    break;
+
   default:
     Assert(0);
   }
@@ -136,15 +141,19 @@ void GenCVariable::installPropagators(GenCVariable * glob_var)
 {
   Assert(getType() == glob_var->getType() ||
          (getType() == BoolVariable && glob_var->getType() == FDVariable));
-  Assert(am.inShallowGuard() || am.isLocalSVar(this) && ! am.isLocalSVar(glob_var));
+  Assert(am.inShallowGuard() || am.isLocalSVar(this) &&
+         ! am.isLocalSVar(glob_var));
 
   Board * glob_home = GETBOARD(glob_var);
+
+  // any suspension list
   suspList = am.installPropagators(suspList, glob_var->getSuspList(),
                                    glob_home);
 
   switch (glob_var->getType()) {
 
   case FDVariable:
+    // a global fd variable can stay fd variable or become a boolean variable
     {
       switch (getType()){
 
@@ -163,42 +172,32 @@ void GenCVariable::installPropagators(GenCVariable * glob_var)
         Assert(0);
         break;
       }
-      break;
     } // case FDVariable
+  break;
 
   case BoolVariable:
+    // boolean variable do only have an any suspension list
     {
-      switch (getType()){
-
-      case FDVariable:
-        ((GenFDVariable *)this)->installPropagators((GenFDVariable *) glob_var,
-                                                    glob_home);
-        break;
-
-      case BoolVariable:
-        break;
-
-      default:
-        Assert(0);
-        break;
-      }
-      break;
+      Assert (getType() == BoolVariable);
     } // case BoolVariable
+  break;
 
   case FSetVariable:
     {
-      switch (getType()){
+      Assert (getType() == FSetVariable);
 
-      case FSetVariable:
-        ((GenFSetVariable *)this)->installPropagators((GenFSetVariable *) glob_var,
-                                                      glob_home);
-        break;
-
-      default:
-        Assert(0);
-        break;
-      }
+      ((GenFSetVariable *)this)->installPropagators((GenFSetVariable *) glob_var,
+                                                    glob_home);
     } // case FSetVariable
+  break;
+
+  case CtVariable:
+    {
+      Assert (getType() == CtVariable);
+      ((GenCtVariable *)this)->installPropagators((GenCtVariable *) glob_var,
+                                                  glob_home);
+    } // case CtVariable
+  break;
 
   // the following types of variable do not have extra suspension
   // lists which have to be installed
@@ -253,18 +252,18 @@ void GenCVariable::dispose(void)
 
 
 inline
-void addSuspCVar(TaggedRef *v, Thread *el, int unstable=TRUE)
+void addSuspCVar(TaggedRef *v, Suspension susp, int unstable=TRUE)
 {
-  GenCVariable *cv = tagged2CVar(*v);
+  GenCVariable * cv = tagged2CVar(*v);
   switch(cv->getType()) {
   case PerdioVariable:
-    ((PerdioVar*)cv)->addSuspPerdioVar(v,el,unstable);
+    ((PerdioVar*) cv)->addSuspPerdioVar(v, susp, unstable);
     break;
   case LazyVariable:
-    ((GenLazyVariable*)cv)->addSuspLazy(el,unstable);
+    ((GenLazyVariable*) cv)->addSuspLazy(susp, unstable);
     break;
   default:
-    cv->addSuspSVar(el,unstable);
+    cv->addSuspSVar(susp, unstable);
     break;
   }
 }

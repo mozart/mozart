@@ -176,6 +176,7 @@ INLINE
 Thread *AM::mkRunnableThreadOPT(int prio, Board *bb)
 {
   Thread *th = newThreadInternal(prio,bb);
+
   Assert(isCurrentBoard(bb) || isCurrentBoard(bb->getParent()));
   if (isBelowSolveBoard()) {
     int inSolve=incSolveThreads(bb);
@@ -189,14 +190,20 @@ Thread *AM::mkRunnableThreadOPT(int prio, Board *bb)
 
 //
 INLINE
-Thread *AM::mkPropagator(Board *bb, int prio, OZ_Propagator *pro)
+Propagator * AM::mkPropagator(Board * bb, int prio, OZ_Propagator * p)
 {
-  Thread *th = new Thread(S_PR_THR,prio,bb,newId());
-  th->setInitialPropagator(pro);
-  bb->incSuspCount();
-  checkDebug(th,bb);
+  Propagator * prop = new Propagator(p, bb);
+  prop->markRunnable();
+  prop->markUnifyPropagator();
 
-  return th;
+  if (! p->isMonotonic())
+    prop->markNonMonotonicPropagator();
+
+  bb->incSuspCount();
+
+  /* checkDebug(th,bb); TMUELLER ask BENNI */
+
+  return prop;
 }
 
 //
@@ -206,6 +213,7 @@ Thread *AM::mkSuspendedThread(Board *bb, int prio)
   Thread *th = new Thread(S_RTHREAD,prio,bb,newId());
   th->setBody(allocateBody());
   bb->incSuspCount();
+
   checkDebug(th,bb);
 
   return th;
@@ -290,21 +298,21 @@ void AM::propagatorToRunnable(Thread *tt)
 
 //
 INLINE
-void AM::checkExtThread(Thread *tt)
+void AM::checkExtSuspension(Suspension susp)
 {
-  if (tt->wasExtThread()) {
-    checkExtThreadOutlined(tt);
+  if (susp.wasExtSuspension()) {
+    checkExtSuspensionOutlined(susp);
   }
 }
 
 #define WAKEUP_PROPAGATOR(CALL_WAKEUP_FUN)      \
 {                                               \
-  Board *bb = GETBOARD(tt);                     \
+  Board * bb = GETBOARD(prop);                  \
   switch (oz_isBetween(bb, home)) {             \
   case B_BETWEEN:                               \
                                                 \
     if (calledBy)                               \
-      tt->markUnifyThread();                    \
+      prop->markUnifyPropagator();              \
                                                 \
     CALL_WAKEUP_FUN;                            \
     return FALSE;                               \
@@ -313,9 +321,9 @@ void AM::checkExtThread(Thread *tt)
     return FALSE;                               \
                                                 \
   case B_DEAD:                                  \
-    tt->markDeadThread();                       \
-    checkExtThread(tt);                         \
-    tt->freePropBody();                         \
+    prop->markDeadPropagator();                 \
+    checkExtSuspension(prop);                   \
+    prop->dispose();                            \
     return TRUE;                                \
                                                 \
   default:                                      \
@@ -325,78 +333,62 @@ void AM::checkExtThread(Thread *tt)
 }
 
 INLINE
-Bool AM::wakeUpPropagator(Thread *tt, Board *home, PropCaller calledBy)
+Bool AM::wakeUpPropagator(Propagator * prop, Board * home, PropCaller calledBy)
 {
-  Assert(tt->isSuspended());
-  Assert(tt->getThrType() == S_PR_THR);
+  Assert(prop->getBoardInternal() && prop->getPropagator());
 
   Board *cb_cache = currentBoard();
 
-  if (tt->isNonMonotonicPropagatorThread() && isBelowSolveBoard()) {
+  if (prop->isNonMonotonicPropagator() && isBelowSolveBoard()) {
 #ifdef DEBUG_NONMONOTONIC
-    OZ_CFunHeader * header = tt->getPropagator()->getHeader();
+    OZ_CFunHeader * header = prop->getPropagator()->getHeader();
     OZ_CFun headerfunc = header->getHeaderFunc();
     printf("wakeUpPropagator: nonmono prop <%s %d>\n",
            builtinTab.getName((void *) headerfunc),
-           tt->getPropagator()->getOrder());
+           prop->getPropagator()->getOrder());
     fflush(stdout);
 #endif
 
-    Assert(!tt->getPropagator()->isMonotonic());
+    Assert(!prop->getPropagator()->isMonotonic());
 
-    WAKEUP_PROPAGATOR(tt->markRunnable();
-                      SolveActor::Cast(_currentSolveBoard->getActor())->addToNonMonoSuspList(tt));
+    WAKEUP_PROPAGATOR(prop->markRunnable();
+                      SolveActor::Cast(_currentSolveBoard->getActor())->addToNonMonoSuspList(prop));
   }
-
-#ifndef NO_LTQ
-  if (cb_cache->isSolve() && cb_cache == GETBOARD(tt) &&
-      tt->getPriority() == PROPAGATOR_PRIORITY) {
-    tt->markRunnable();
-
-    cb_cache->pushToLTQ(tt);
-    if (calledBy)
-      tt->markUnifyThread();
-
-    return FALSE;
-  }
-#endif
 
   if (localPropStore.isUseIt()) {
-    Assert(GETBOARD(tt) == cb_cache);
-    tt->markRunnable();
-    localPropStore.push(tt);
+    Assert(GETBOARD(prop) == cb_cache);
+    prop->markRunnable();
+    localPropStore.push(prop);
     return FALSE;
   }
 
-  WAKEUP_PROPAGATOR(propagatorToRunnable(tt);
-                    scheduleThreadInline(tt, tt->getPriority()));
+  WAKEUP_PROPAGATOR(prop->markRunnable();
+                    GETBOARD(prop)->pushToLPQ(prop));
 }
 
 INLINE
-void AM::scheduledPropagator(Thread *tt)
+void AM::scheduledPropagator(Propagator * prop)
 {
-  Assert(tt);
-  Assert(!tt->isDeadThread());
-  Assert(tt->isPropagator());
-  Assert(isCurrentBoard(GETBOARD(tt)));
+  Assert(prop);
+  Assert(!prop->isDeadPropagator());
+  Assert(isCurrentBoard(GETBOARD(prop)));
 
-  tt->unmarkRunnable();
-  wakeUpPropagator(tt,currentBoard(), pc_propagator);
+  prop->unmarkRunnable();
+  wakeUpPropagator(prop, currentBoard(), pc_propagator);
 }
 
 
 //
 //  (re-)Suspend the propagator again (former 'reviveCurrentTaskSusp');
 INLINE
-void AM::suspendPropagator(Thread *tt)
+void AM::suspendPropagator(Propagator * prop)
 {
-  Assert(tt);
-  Assert(!tt->isDeadThread());
-  Assert(tt->isPropagator());
-  Assert(isCurrentBoard(GETBOARD(tt)));
+  Assert(prop);
+  Assert(!prop->isDeadPropagator());
+  Assert(isCurrentBoard(GETBOARD(prop)));
 
-  tt->unmarkRunnable();
-  tt->unmarkUnifyThread();
+  prop->unmarkRunnable();
+  prop->unmarkUnifyPropagator();
 }
 
 //
@@ -415,10 +407,6 @@ void AM::disposeThread(Thread *tt)
     break;
 
   case S_WAKEUP:
-    break;
-
-  case S_PR_THR:
-    tt->freePropBody();
     break;
 
   default:
@@ -441,6 +429,11 @@ void AM::disposeSuspendedThread(Thread *tt)
 INLINE
 void AM::disposeRunnableThread(Thread *tt)
 {
+#ifdef DEBUG_THREADCOUNT
+  if (tt->isLPQThread())
+      existingLTQs -= 1;
+#endif
+
   Assert(tt->isRunnable());
 
   disposeThread(tt);
@@ -452,20 +445,19 @@ void AM::disposeRunnableThread(Thread *tt)
 // 'LBLkillxxxx' in emulate.cc, but one cannot jump from the local
 // propagation queue there;
 INLINE
-void AM::closeDonePropagator(Thread *tt)
+void AM::closeDonePropagator(Propagator * prop)
 {
-  Assert(tt);
-  Assert(!tt->isDeadThread());
-  Assert(tt->isPropagator());
-  Assert(isCurrentBoard(GETBOARD(tt)));
+  Assert(prop);
+  Assert(!prop->isDeadPropagator());
+  Assert(isCurrentBoard(GETBOARD(prop)));
 
   // constructive disjunction ???
   // kost@: i don't know what's going on here - just keep it as it was;
   //if (isSuspended ())
   //return;
-  Assert(!tt->isSuspended());
 
-  disposeRunnableThread(tt);    // kost@: TODO? optimize;
+  prop->dispose();      // kost@: TODO? optimize;
+  prop->markDeadPropagator();
 
   //
   //  Actually, the current board can be alive or not -
@@ -477,7 +469,7 @@ void AM::closeDonePropagator(Thread *tt)
   // there is a limitation in the implementation that no stability
   // can be achieved before a propagator on a global variable(s)
   // completely disappears. Therefore, we make the check here;
-  checkExtThread(tt);
+  checkExtSuspension(prop);
 
   //
   //  An ESSENTIAL invariant:
@@ -486,34 +478,33 @@ void AM::closeDonePropagator(Thread *tt)
 }
 
 INLINE
-void AM::closeDonePropagatorThreadCD(Thread *tt)
+void AM::closeDonePropagatorThreadCD(Propagator * prop)
 {
-  tt->markRunnable();
+  prop->markRunnable();
   currentBoard()->decSuspCount();
-  tt->markDeadThread();
-  checkExtThread(tt);
+  prop->markDeadPropagator();
+  checkExtSuspension(prop);
 }
 
 INLINE
-void AM::closeDonePropagatorCD(Thread *tt)
+void AM::closeDonePropagatorCD(Propagator * prop)
 {
-  tt->markRunnable();
-  disposeRunnableThread(tt);
-  currentBoard()->decSuspCount ();
-  tt->markDeadThread();
-  checkExtThread(tt);
+  prop->markRunnable();
+  prop->dispose();
+  prop->markDeadPropagator();
+  currentBoard()->decSuspCount();
+  checkExtSuspension(prop);
 }
 
 INLINE
-OZ_Return AM::runPropagator(Thread *tt)
+OZ_Return AM::runPropagator(Propagator * p)
 {
-  Assert(tt->isPropagator());
   ozstat.propagatorsInvoked.incf();
 
   CpiHeap.reset();
 
   if (profileMode) {
-    OZ_CFunHeader *prop = tt->getPropagator()->getHeader();
+    OZ_CFunHeader * prop = p->getPropagator()->getHeader();
     ozstat.enterProp(prop);
     int heapNow = getUsedMemoryBytes();
 #ifdef DEBUG_PROPAGATORS
@@ -525,7 +516,7 @@ OZ_Return AM::runPropagator(Thread *tt)
       printf("<CDSuppl"); fflush(stdout);
     }
 #endif
-    OZ_Return ret = tt->getPropagator()->propagate();
+    OZ_Return ret = p->getPropagator()->propagate();
 #ifdef DEBUG_PROPAGATORS
     printf(">\n"); fflush(stdout);
 #endif
@@ -537,18 +528,18 @@ OZ_Return AM::runPropagator(Thread *tt)
     return ret;
   } else {
 #ifdef DEBUG_PROPAGATORS
-    OZ_CFunHeader * header = tt->getPropagator()->getHeader();
+    OZ_CFunHeader * header = p->getPropagator()->getHeader();
     if (header) {
       OZ_CFun headerfunc = header->getHeaderFunc();
       printf("<%s", builtinTab.getName((void *) headerfunc)); fflush(stdout);
     } else {
       printf("<CDSuppl"); fflush(stdout);
     }
-    OZ_Return ret = tt->getPropagator()->propagate();
+    OZ_Return ret = p->getPropagator()->propagate();
     printf(">\n"); fflush(stdout);
     return ret;
 #else
-    return tt->getPropagator()->propagate();
+    return p->getPropagator()->propagate();
 #endif
   }
 }

@@ -86,6 +86,15 @@ void OZ_Expect::addSpawn(OZ_FSetPropState ps, OZ_Term * v)
     staticAddSpawn(ps, v);
 }
 
+inline
+void OZ_Expect::addSpawn(OZ_GenDefinition * def,
+                         OZ_GenWakeUpDescriptor w,
+                         OZ_Term * v)
+{
+  if (collect)
+    staticAddSpawn(def, w, v);
+}
+
 // variables are insuffiently constrained
 
 inline
@@ -103,7 +112,7 @@ void OZ_Expect::addSuspend(OZ_Term * v)
   }
 }
 
-
+// finite domain constraints
 inline
 void OZ_Expect::addSuspend(OZ_FDPropState ps, OZ_Term * v)
 {
@@ -116,6 +125,7 @@ void OZ_Expect::addSuspend(OZ_FDPropState ps, OZ_Term * v)
   }
 }
 
+// finite set constraints
 inline
 void OZ_Expect::addSuspend(OZ_FSetPropState ps, OZ_Term * v)
 {
@@ -127,6 +137,53 @@ void OZ_Expect::addSuspend(OZ_FSetPropState ps, OZ_Term * v)
     staticSuspendVars.request(staticSuspendVarsNumber);
   }
 }
+
+// generic constraints
+inline
+void OZ_Expect::addSuspend(OZ_GenDefinition * def,
+                           OZ_GenWakeUpDescriptor w,
+                           OZ_Term * v)
+{;
+  if (collect) {
+    staticSuspendVars[staticSuspendVarsNumber].var = v;
+    staticSuspendVars[staticSuspendVarsNumber].expected_type = CtVariable;
+    staticSuspendVars[staticSuspendVarsNumber++].state.ct.def = def;
+    staticSuspendVars[staticSuspendVarsNumber++].state.ct.w = w;
+
+    staticSuspendVars.request(staticSuspendVarsNumber);
+  }
+}
+
+//-----------------------------------------------------------------------------
+// generic constraint variable
+
+OZ_expect_t OZ_Expect::expectGenCtVar(OZ_Term t,
+                                      OZ_GenDefinition * def,
+                                      OZ_GenWakeUpDescriptor w)
+{
+  DEREF(t, tptr, ttag);
+
+  if (def->isValidValue(t)) {
+    return expectProceed(1, 1);
+  } else if (isGenCtVar(t, ttag)) {
+    GenCtVariable * ctvar = tagged2GenCtVar(t);
+
+    // check the kind
+    if (ctvar->getDefinition()->getKind() != def->getKind())
+      goto fail;
+
+    addSpawn(def, w, tptr);
+    return expectProceed(1, 1);
+  } else if (isNotCVar(ttag)) {
+    addSuspend(def, w, tptr);
+    return expectSuspend(1, 0);
+  }
+
+fail:
+  return expectFail();
+}
+
+
 
 //*****************************************************************************
 // member functions related to finite domain constraints
@@ -191,7 +248,6 @@ OZ_expect_t OZ_Expect::expectDomDescr(OZ_Term descr, int level)
     return expectDomDescr(makeTaggedRef(descr_ptr), 0);
   }
   return expectFail();
-
 }
 
 OZ_expect_t OZ_Expect::expectIntVar(OZ_Term t, OZ_FDPropState ps)
@@ -278,7 +334,6 @@ OZ_expect_t OZ_Expect::_expectFSetDescr(OZ_Term descr, int level)
     return expectDomDescr(makeTaggedRef(descr_ptr), 0);
   }
   return expectFail();
-
 }
 
 OZ_expect_t OZ_Expect::expectFSetVar(OZ_Term t, OZ_FSetPropState ps)
@@ -591,43 +646,46 @@ OZ_Return OZ_Expect::impose(OZ_Propagator * p, int prio,
 
       if (type == FDVariable) {
         tellBasicConstraint(makeTaggedRef(vptr), (OZ_FiniteDomain *) NULL);
-      } else {
-        Assert(type == FSetVariable);
+      } else if (type == FSetVariable) {
         tellBasicConstraint(makeTaggedRef(vptr), (OZ_FSetConstraint *) NULL);
+      } else {
+        Assert(type == CtVariable);
+
+        tellBasicConstraint(makeTaggedRef(vptr),
+                            (OZ_GenConstraint *) NULL,
+                            staticSuspendVars[i].state.ct.def);
+
       }
     }
   }
 
-  Thread * thr = am.mkPropagator(am.currentBoard(), prio, p);
+  Propagator * prop = am.mkPropagator(am.currentBoard(), prio, p);
   ozstat.propagatorsCreated.incf();
 
   // only monotonic propagator are run on imposition
   if (is_monotonic) {
     ozstat.propagatorsInvoked.incf();
 
-    Thread * backup_currentThread = am.currentThread();
-    am.setCurrentThread(thr);
-    switch (am.runPropagator(thr)) {
+    Propagator::setRunningPropagator(prop);
+
+    switch (am.runPropagator(prop)) {
     case FAILED:
-      am.closeDonePropagator(thr);
-      am.setCurrentThread(backup_currentThread);
+      am.closeDonePropagator(prop);
       staticSpawnVarsNumber = staticSuspendVarsNumber = 0;
-    return FAILED;
+      return FAILED;
     case SLEEP:
-      am.suspendPropagator(thr);
+      am.suspendPropagator(prop);
       break;
     case SCHEDULED:
-      am.scheduledPropagator(thr);
+      am.scheduledPropagator(prop);
       break;
     case PROCEED:
-      am.closeDonePropagator(thr);
-      am.setCurrentThread(backup_currentThread);
+      am.closeDonePropagator(prop);
       staticSpawnVarsNumber = staticSuspendVarsNumber = 0;
       return PROCEED;
     default:
       error("Unexpected return value.");
     }
-    am.setCurrentThread(backup_currentThread);
   }
 
 // only if a propagator survives its first run proper suspension are created
@@ -643,23 +701,26 @@ OZ_Return OZ_Expect::impose(OZ_Propagator * p, int prio,
       Assert(!isCVar(vtag) || (!testStoreFlag(v) && !testReifiedFlag(v)));
 
       if (isGenFDVar(v, vtag)) {
-        addSuspFDVar(v, thr, staticSpawnVars[i].state.fd);
+        addSuspFDVar(v, prop, staticSpawnVars[i].state.fd);
         all_local &= am.isLocalSVar(v);
       } else if (isGenFSetVar(v, vtag)) {
-        addSuspFSetVar(v, thr, staticSpawnVars[i].state.fs);
-        all_local &= am.isLocalSVar(v);
-      } else if (isGenOFSVar(v, vtag)) {
-        addSuspOFSVar(v, thr);
+        addSuspFSetVar(v, prop, staticSpawnVars[i].state.fs);
         all_local &= am.isLocalSVar(v);
       } else if (isGenBoolVar(v, vtag)) {
-        addSuspBoolVar(v, thr);
+        addSuspBoolVar(v, prop);
+        all_local &= am.isLocalSVar(v);
+      } else if (isGenCtVar(v, vtag)) {
+        addSuspCtVar(v, prop, staticSpawnVars[i].state.ct.w);
+        all_local &= am.isLocalSVar(v);
+      } else if (isGenOFSVar(v, vtag)) {
+        addSuspOFSVar(v, prop);
         all_local &= am.isLocalSVar(v);
       } else if (isSVar(vtag)) {
-        addSuspSVar(v, thr);
+        addSuspSVar(v, prop);
         all_local &= am.isLocalSVar(v);
       } else {
         Assert(isUVar(vtag));
-        addSuspUVar(vptr, thr);
+        addSuspUVar(vptr, prop);
         all_local &= am.isLocalUVar(v,vptr);
       }
     }
@@ -673,17 +734,17 @@ OZ_Return OZ_Expect::impose(OZ_Propagator * p, int prio,
     if (isVariableTag(vtag)) {
       Assert(isCVar(vtag));
 
-      addSuspCVar(vptr, thr);
+      addSuspCVar(vptr, prop);
       all_local &= am.isLocalSVar(v);
     }
   }
 
   if (all_local)
-    thr->markLocalThread();
+    prop->markLocalPropagator();
 
   switch (flags) {
   case OFS_flag:
-    thr->setOFSThread();
+    prop->markOFSPropagator();
     break;
   case NULL_flag:
     break;
@@ -698,7 +759,7 @@ OZ_Return OZ_Expect::impose(OZ_Propagator * p, int prio,
 #ifdef DEBUG_NONMONOTONIC
     printf("Setting nonmono prop runnable.\n"); fflush(stdout);
 #endif
-    am.scheduledPropagator(thr);
+    am.scheduledPropagator(prop);
   }
   return PROCEED;
 }

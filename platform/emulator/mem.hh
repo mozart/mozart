@@ -83,24 +83,60 @@ public:
     from the free list.  The same holds for memory used from heap. */
 
 
-#define USEFREELISTMEMORY \
-  static void *operator new(size_t chunk_size) \
-    { return freeListMalloc(chunk_size); } \
-  static void operator delete(void *,size_t ) \
+#ifdef __GNUC__
+// `new' and `delete' operators also for arrays
+
+#define USEFREELISTMEMORY                               \
+  static void *operator new(size_t chunk_size)          \
+    { return freeListMalloc(chunk_size); }              \
+  static void operator delete(void *,size_t )           \
+    { Assert(NO); }                                     \
+  static void *operator new[](size_t chunk_size)        \
+    { return freeListMalloc(chunk_size); }              \
+  static void operator delete[](void *,size_t )         \
     { Assert(NO); }
 
-
-#define USEHEAPMEMORY \
-  static void *operator new(size_t chunk_size) \
-    { return heapMalloc(chunk_size); }\
-  static void operator delete(void *,size_t) \
+#define USEHEAPMEMORY                                   \
+  static void *operator new(size_t chunk_size)          \
+    { return heapMalloc(chunk_size); }                  \
+  static void operator delete(void *,size_t)            \
+    { Assert(NO); }                                     \
+  static void *operator new[](size_t chunk_size)        \
+    { return heapMalloc(chunk_size); }                  \
+  static void operator delete[](void *,size_t)          \
     { Assert(NO); }
 
-#define USEHEAPMEMORY32 \
-  static void *operator new(size_t chunk_size) \
-    { return int32Malloc(chunk_size); }\
-  static void operator delete(void *,size_t) \
+#define USEHEAPMEMORY32                                 \
+  static void *operator new(size_t chunk_size)          \
+    { return int32Malloc(chunk_size); }                 \
+  static void operator delete(void *,size_t)            \
+    { Assert(NO); }                                     \
+  static void *operator new[](size_t chunk_size)        \
+    { return int32Malloc(chunk_size); }                 \
+  static void operator delete[](void *,size_t)          \
     { Assert(NO); }
+
+#else
+
+#define USEFREELISTMEMORY                       \
+  static void *operator new(size_t chunk_size)  \
+    { return freeListMalloc(chunk_size); }      \
+  static void operator delete(void *,size_t )   \
+    { Assert(NO); }
+
+#define USEHEAPMEMORY                           \
+  static void *operator new(size_t chunk_size)  \
+    { return heapMalloc(chunk_size); }          \
+  static void operator delete(void *,size_t)    \
+    { Assert(NO); }
+
+#define USEHEAPMEMORY32                         \
+  static void *operator new(size_t chunk_size)  \
+    { return int32Malloc(chunk_size); }         \
+  static void operator delete(void *,size_t)    \
+    { Assert(NO); }
+
+#endif
 
 // Heap Memory
 //  concept: allocate dynamically

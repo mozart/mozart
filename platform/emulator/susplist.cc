@@ -44,10 +44,10 @@
 int SuspList::length(void)
 {
   int i=0;
-  for(SuspList * aux = this; aux != NULL; aux = aux->next) {
-    if (!aux->getElem()->isDeadThread () &&
-        !aux->getElem()->isRunnable () &&
-        GETBOARD(aux->getElem())) {
+  for(SuspList * aux = this; aux != NULL; aux = aux->getNext()) {
+    if (!aux->getElem().isDead() &&
+        !aux->getElem().isRunnable() &&
+        GETBOARDOBJ(aux->getElem())) {
       i++;
     }
   }
@@ -57,10 +57,10 @@ int SuspList::length(void)
 int SuspList::lengthProp(void)
 {
   int i=0;
-  for(SuspList * aux = this; aux != NULL; aux = aux->next) {
-    if (!aux->getElem()->isDeadThread () &&
-        aux->getElem()->isRunnable () &&
-        GETBOARD(aux->getElem())) {
+  for(SuspList * aux = this; aux != NULL; aux = aux->getNext()) {
+    if (!aux->getElem().isDead() &&
+        aux->getElem().isRunnable() &&
+        GETBOARDOBJ(aux->getElem())) {
       i++;
     }
   }

@@ -52,7 +52,7 @@ void scheduler() {
    * Get thread from queue
    * ----------------------------------------------------------------------- */
 LBLstart:
-  Assert(CTT==0);
+  //  Assert(CTT==0); // TMUELLER
 
   // check status register
   if (e->isSetSFlag()) {
@@ -86,10 +86,8 @@ LBLstart:
       case INST_OK:
         break;
       case INST_REJECTED:
-        DebugCode (if (CTT->isPropagator()) CTT->removePropagator());
         goto LBLdiscardThread;
       case INST_FAILED:
-        DebugCode (if (CTT->isPropagator()) CTT->removePropagator());
         goto LBLfailure;
       }
     }
@@ -97,60 +95,6 @@ LBLstart:
 
   // Constraints are implicitly propagated
   CBB->unsetNervous();
-
-  if (CTT->isPropagator()) {
-    // Propagator
-    //    unsigned int starttime = osUserTime();
-    switch (e->runPropagator(CTT)) {
-    case SLEEP:
-      e->suspendPropagator(CTT);
-      if (e->isBelowSolveBoard()) {
-        e->decSolveThreads(e->currentSolveBoard());
-        //  but it's still "in solve";
-      }
-      e->unsetCurrentThread();
-
-      goto LBLstart;
-
-    case SCHEDULED:
-      e->scheduledPropagator(CTT);
-      if (e->isBelowSolveBoard()) {
-        e->decSolveThreads (e->currentSolveBoard());
-        //  but it's still "in solve";
-      }
-      e->unsetCurrentThread();
-
-      goto LBLstart;
-
-    case PROCEED:
-      // Note: CTT must be reset in 'LBLkillXXX';
-
-      goto LBLterminate;
-
-      //  Note that *propagators* never yield 'SUSPEND';
-    case FAILED:
-      // propagator failure never catched
-      if (!e->onToplevel()) goto LBLfailure;
-
-      // simulate the case that the propagator runs on a usual stack
-      {
-        OZ_Propagator *prop = CTT->getPropagator();
-        e->setCurrentThread(e->mkRunnableThreadOPT(PROPAGATOR_PRIORITY, CBB));
-        e->cachedStack = CTT->getTaskStackRef();
-        e->restartThread();
-        e->exception.info  = NameUnit;
-        e->exception.value = RecordFailure;
-        e->exception.debug = ozconf.errorDebug;
-        e->exception.info  = OZ_mkTupleC("apply",2,
-                                         OZ_atom(builtinTab.getName((void *)(prop->getHeader()->getHeaderFunc()))),
-                                         prop->getParameters());
-        e->exception.pc = NOCODE;
-        goto LBLraise;
-      }
-    }
-    error("propagator failure");
-    goto LBLerror;
-  }
 
   Assert(CTT->isRunnable());
 
@@ -237,7 +181,7 @@ LBLterminate:
     Assert(CTT);
     Assert(!CTT->isDeadThread());
     Assert(CTT->isRunnable());
-    Assert(CTT->isWakeup() || CTT->isPropagator() || CTT->isEmpty());
+    Assert(CTT->isWakeup() || CTT->isEmpty());
 
     //  Note that during debugging the thread does not carry
     // the board pointer (== NULL) wenn it's running;
@@ -254,7 +198,7 @@ LBLterminate:
     CBB->decSuspCount();
 
     e->disposeRunnableThread(CTT);
-    e->unsetCurrentThread();
+    //e->unsetCurrentThread(); // TMUELLER
 
     // fall through to checkEntailmentAndStability
   }
@@ -305,7 +249,7 @@ LBLcheckEntailmentAndStability:
         //
         //  kost@ : optimize the most probable case!
         if (sa->decThreads () != 0) {
-          e->decSolveThreads (nb);
+          e->DECSOLVETHREADS (nb, "a");
           goto LBLstart;
         }
       } else {
@@ -340,7 +284,7 @@ LBLcheckEntailmentAndStability:
 
     //
     //  deref nb, because it maybe just committed!
-    if (nb) e->decSolveThreads (nb->derefBoard());
+    if (nb) e->DECSOLVETHREADS (nb->derefBoard(), "b");
     goto LBLstart;
   }
 
@@ -369,6 +313,10 @@ LBLdiscardThread:
     Assert(!CTT->isDeadThread());
     Assert(CTT->isRunnable());
 
+#ifdef DEBUG_THREADCOUNT
+    GETBOARD(CTT)->resetLocalPropagatorQueue();
+#endif
+
     //
     //  Note that we may not use the 'currentSolveBoard' test here,
     // because it may point to an irrelevant board!
@@ -382,9 +330,9 @@ LBLdiscardThread:
         Assert (sa);
         Assert (sa->getSolveBoard () == tmpBB);
 
-        e->decSolveThreads(GETBOARD(sa));
+        e->DECSOLVETHREADS(GETBOARD(sa), "c");
       } else {
-        e->decSolveThreads (tmpBB);
+        e->DECSOLVETHREADS (tmpBB, "d");
       }
     }
     e->disposeRunnableThread(CTT);
@@ -476,6 +424,10 @@ LBLfailure:
      Assert(CTT);
      Assert(CTT->isRunnable());
 
+#ifdef DEBUG_THREADCOUNT
+     GETBOARD(CTT)->resetLocalPropagatorQueue();
+#endif
+
      Actor *aa=CBB->getActor();
 
      e->failBoard();
@@ -548,7 +500,7 @@ LBLfailure:
        }
      }
 
-     e->decSolveThreads(CBB);
+     e->DECSOLVETHREADS(CBB, "e");
      e->disposeRunnableThread(CTT);
      e->unsetCurrentThread();
 
@@ -564,7 +516,7 @@ LBLraise:
     DebugCheck(ozconf.stopOnToplevelFailure,
                DebugTrace(ozd_tracerOn();ozd_trace("raise")));
 
-    Assert(CTT && !CTT->isPropagator());
+    Assert(CTT);
 
     Bool foundHdl;
 

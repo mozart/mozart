@@ -47,7 +47,7 @@ SuspList * SuspList::appendToAndUnlink(SuspList * &to_list, Bool reset_local)
 
     if (reset_local)
       for (aux = this; aux; aux = aux->getNext())
-        aux->getElem()->unmarkLocalThread();
+        aux->getElem().unmarkLocalPropagator();
 
     if (to_list) {
       // this != NULL && to_list != NULL
@@ -56,7 +56,7 @@ SuspList * SuspList::appendToAndUnlink(SuspList * &to_list, Bool reset_local)
       // ... tag this-list and find last entry
       SuspList * last DebugCode(= NULL);
       for (aux = this; 1; ) {
-        aux->getElem()->markTagged();
+        aux->getElem().markTagged();
 
         SuspList * aux_next = aux->getNext();
 
@@ -73,16 +73,16 @@ SuspList * SuspList::appendToAndUnlink(SuspList * &to_list, Bool reset_local)
       // remove tagged entries from to_list
       SuspList ** aux1 = &to_list;
       while (*aux1) {
-        if ((*aux1)->getElem()->isTagged()) {
+        if ((*aux1)->getElem().isTagged()) {
           *aux1 = (*aux1)->getNext();
           continue;
         }
-        aux1 = &(*aux1)->next;
+        aux1 = &(*aux1)->_next;
       }
 
       // untag this-list
       for (aux = this; aux; aux = aux->getNext())
-        aux->getElem()->unmarkTagged();
+        aux->getElem().unmarkTagged();
 
       last->setNext(to_list);
     }
@@ -96,20 +96,20 @@ SuspList * SuspList::appendToAndUnlink(SuspList * &to_list, Bool reset_local)
 // class OrderedSuspList
 
 inline
-OrderedSuspList * OrderedSuspList::insert(Thread * thr)
+OrderedSuspList * OrderedSuspList::insert(Propagator * prop)
 {
 #ifdef DEBUG_NONMONOTONIC
   cout << "OrderedSuspList::insert" << endl << flush;
 #endif
 
-  Assert(thr->isNonMonotonicPropagatorThread());
+  Assert(prop->isNonMonotonicPropagator());
 
   OrderedSuspList * r = this, ** p = &r;
-  OZ_NonMonotonic::order_t n_order = thr->getPropagator()->getOrder();
-  while (*p && (n_order > (*p)->t->getPropagator()->getOrder()))
-    p = &((*p)->n);
+  OZ_NonMonotonic::order_t n_order = prop->getPropagator()->getOrder();
+  while (*p && (n_order > (*p)->_p->getPropagator()->getOrder()))
+    p = &((*p)->_n);
 
-  *p = new OrderedSuspList(thr, *p);
+  *p = new OrderedSuspList(prop, *p);
 
   return r;
 }

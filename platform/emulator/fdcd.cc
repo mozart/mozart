@@ -507,16 +507,16 @@ OZ_CFunHeader CDPropagator::spawner = BIfdConstrDisj;
 
 CDSuppl::CDSuppl(OZ_Propagator * p, OZ_Term b) : reg_b(b)
 {
-  thr = (OZ_Thread) am.mkPropagator(am.currentBoard(),
-                                    OZ_getHighPrio(),
-                                    p);
+  prop = (void *) am.mkPropagator(am.currentBoard(),
+                                  OZ_getHighPrio(),
+                                  p);
   // cd threads,  are expected to be suspended
-  ((Thread *) thr)->unmarkRunnable();
+  ((Propagator *) prop)->unmarkRunnable();
 }
 
 void CDSuppl::updateHeapRefs(OZ_Boolean) {
-  thr = (OZ_Thread) ((Thread *)thr)->gcThread();
-  OZ_collectHeapTerm(reg_b,reg_b);
+  prop = (void *) ((Propagator *) prop)->gcPropagatorOutlined();
+  OZ_collectHeapTerm(reg_b, reg_b);
 }
 
 OZ_Return CDSuppl::propagate(void)
@@ -524,43 +524,44 @@ OZ_Return CDSuppl::propagate(void)
   OZ_FDIntVar b(reg_b);
   PropagatorController_V P(b);
 
-  OZ_DEBUGPRINT(("cdsuppl.in: b=%s",b->toString()));
+  OZ_DEBUGPRINT(("cdsuppl.in: b=%s", b->toString()));
 
   if (*b == 0) {
-    am.closeDonePropagatorCD((Thread *) thr);
+    am.closeDonePropagatorCD((Propagator *) prop);
     return PROCEED;
   }
 
   if (*b == 1) {
-    OZ_Propagator * p = ((Thread *) thr)->swapPropagator(this);
-    am.closeDonePropagatorThreadCD((Thread *) thr);
+    OZ_Propagator * p = ((Propagator *) prop)->swapPropagator(this);
+    am.closeDonePropagatorThreadCD((Propagator *) prop);
     return replaceBy(p);
   }
 
-  Thread * backup_currentThread = am.currentThread();
-  am.setCurrentThread((Thread *) thr);
+  Propagator * backup_runningPropagator = Propagator::getRunningPropagator();
+  Propagator::setRunningPropagator((Propagator *) prop);
+
   // propagate unify flag to actual propagator
-  if (backup_currentThread->isUnifyThread()) {
-    backup_currentThread->unmarkUnifyThread();
-    ((Thread *) thr)->markUnifyThread();
+  if (backup_runningPropagator->isUnifyPropagator()) {
+    backup_runningPropagator->unmarkUnifyPropagator();
+    ((Propagator *) prop)->markUnifyPropagator();
   }
 
-  OZ_Return ret_val = am.runPropagator((Thread *) thr);
+  OZ_Return ret_val = am.runPropagator((Propagator *) prop);
 
-  am.setCurrentThread(backup_currentThread);
+  Propagator::setRunningPropagator(backup_runningPropagator);
 
   OZ_ASSERT(b->getMaxElem() >= 2);
 
   if (ret_val == PROCEED) {
-    am.closeDonePropagatorCD((Thread *) thr);
+    am.closeDonePropagatorCD((Propagator *) prop);
     *b <= (b->getMaxElem() - 1);
     OZ_ASSERT(b->getMaxElem() >= 2);
   } else if (ret_val == FAILED) {
-    am.closeDonePropagatorCD((Thread *) thr);
+    am.closeDonePropagatorCD((Propagator *) prop);
     *b &= 0;
   }
 
-  OZ_DEBUGPRINT(("cdsuppl.out: b=",b->toString()));
+  OZ_DEBUGPRINT(("cdsuppl.out: b=", b->toString()));
 
   P.vanish();
   return ret_val == FAILED ? PROCEED : ret_val;

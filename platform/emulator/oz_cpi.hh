@@ -315,28 +315,27 @@ private:
 public:
   OZ_CFunHeader(OZ_CFun header);
 
-  OZ_CFun getHeaderFunc(void) { return _header; }
-  void incSamples()           { _samples++; }
-  void incCalls()             { _calls++; }
-  unsigned getSamples()       { return _samples; }
-  unsigned getCalls()         { return _calls; }
-  void incHeap(unsigned inc)  { _heap += inc; }
-  unsigned getHeap()          { return _heap; }
+  OZ_CFun getHeaderFunc(void)     { return _header; }
+  void incSamples(void)           { _samples++; }
+  void incCalls(void)             { _calls++; }
+  unsigned getSamples(void)       { return _samples; }
+  unsigned getCalls(void)         { return _calls; }
+  void incHeap(unsigned inc)      { _heap += inc; }
+  unsigned getHeap(void)          { return _heap; }
 
   static OZ_CFunHeader *getFirst() { return _all_headers; }
-  OZ_CFunHeader *getNext()         { return _next; }
+  OZ_CFunHeader *getNext(void)     { return _next; }
 
-  static void profileReset();
+  static void profileReset(void);
 };
 
 enum OZ_FDPropState {fd_prop_singl = 0, fd_prop_bounds, fd_prop_any};
 
 // virtual base class; never create an object from this class
 class OZ_Propagator {
-  friend class Thread;
+  friend class Propagator;
 private:
   OZ_Propagator * gc(void);
-
 public:
   OZ_Propagator(void) {}
   virtual ~OZ_Propagator(void) {}
@@ -369,69 +368,6 @@ public:
 };
 
 //-----------------------------------------------------------------------------
-// class OZ_Expect, etc.
-
-struct OZ_expect_t {
-  int size, accepted;
-  OZ_expect_t(int s, int a) : size(s), accepted(a) {}
-};
-
-enum OZ_PropagatorFlags {NULL_flag, OFS_flag};
-
-class OZ_Expect;
-
-typedef OZ_expect_t (OZ_Expect::*OZ_ExpectMeth) (OZ_Term);
-
-class OZ_Expect {
-private:
-  OZ_Boolean collect;
-
-  OZ_expect_t _expectFSetDescr(OZ_Term descr, int level);
-protected:
-  void addSpawn(OZ_FDPropState, OZ_Term *);
-  void addSpawn(OZ_FSetPropState, OZ_Term *);
-  void addSuspend(OZ_Term *);
-  void addSuspend(OZ_FDPropState, OZ_Term *);
-  void addSuspend(OZ_FSetPropState, OZ_Term *);
-public:
-  OZ_Expect(void);
-  ~OZ_Expect(void);
-
-  void collectVarsOn(void);
-  void collectVarsOff(void);
-
-  OZ_expect_t expectDomDescr(OZ_Term descr, int level = 4);
-  OZ_expect_t expectFSetDescr(OZ_Term descr) {
-    return _expectFSetDescr(descr, 3);
-  }
-  OZ_expect_t expectVar(OZ_Term t);
-  OZ_expect_t expectRecordVar(OZ_Term);
-  OZ_expect_t expectIntVar(OZ_Term, OZ_FDPropState = fd_prop_any);
-  OZ_expect_t expectFSetVar(OZ_Term, OZ_FSetPropState = fs_prop_any);
-  OZ_expect_t expectInt(OZ_Term);
-  OZ_expect_t expectFSetValue(OZ_Term);
-  OZ_expect_t expectLiteral(OZ_Term);
-  OZ_expect_t expectVector(OZ_Term, OZ_ExpectMeth);
-  OZ_expect_t expectProperRecord(OZ_Term, OZ_ExpectMeth);
-  OZ_expect_t expectProperTuple(OZ_Term, OZ_ExpectMeth);
-  OZ_expect_t expectList(OZ_Term, OZ_ExpectMeth);
-  OZ_expect_t expectStream(OZ_Term st);
-
-  OZ_Return impose(OZ_Propagator * p,
-                   int prio = OZ_getMediumPrio(),
-                   OZ_PropagatorFlags flags=NULL_flag);
-  OZ_Return suspend(OZ_Thread);
-  OZ_Return fail(void);
-  OZ_Boolean isSuspending(OZ_expect_t r) {
-    return (r.accepted == 0 || (0 < r.accepted && r.accepted < r.size));
-  }
-  OZ_Boolean isFailing(OZ_expect_t r) {
-    return (r.accepted == -1);
-  }
-};
-
-
-//-----------------------------------------------------------------------------
 // class OZ_FDIntVar
 
 class OZ_FDIntVar {
@@ -462,8 +398,8 @@ public:
   static void operator delete[](void *, size_t);
 #endif
 
-  OZ_FiniteDomain &operator * (void) {return *domPtr;}
-  OZ_FiniteDomain * operator -> (void) {return domPtr;}
+  OZ_FiniteDomain &operator * (void) { return *domPtr; }
+  OZ_FiniteDomain * operator -> (void) { return domPtr; }
 
   OZ_Boolean isTouched(void) const {return initial_size > domPtr->getSize();}
 
@@ -586,4 +522,225 @@ int OZ_vectorSize(OZ_Term);
 OZ_Term * OZ_getOzTermVector(OZ_Term, OZ_Term *);
 int * OZ_getCIntVector(OZ_Term, int *);
 
+//-----------------------------------------------------------------------------
+// Interface to Generic Constraint Systems
+
+class OZ_GenConstraint;
+
+//-----------------------------------------------------------------------------
+// OZ_GenDefinition
+
+class OZ_GenDefinition {
+public:
+  virtual int getKind(void) = 0;
+  virtual int getNoOfWakeUpLists(void) = 0;
+  virtual OZ_GenConstraint * toConstraint(OZ_Term) = 0;
+  virtual OZ_GenConstraint * leastConstraint(void) = 0;
+  virtual OZ_Boolean isValidValue(OZ_Term) = 0;
+
+};
+
+//-----------------------------------------------------------------------------
+// OZ_GenWakeUpDescriptor
+
+// there are not more than 32 wake up lists
+class OZ_GenWakeUpDescriptor {
+private:
+  unsigned _wakeUpDescriptor;
+public:
+  // don't define any constructor
+  void init(unsigned d) { _wakeUpDescriptor = d; }
+  OZ_Boolean isEmpty(void) { return (_wakeUpDescriptor == 0); }
+  OZ_Boolean isWakeUp(int i) { return (_wakeUpDescriptor & (1 << i)); }
+  static OZ_GenWakeUpDescriptor getWakeUpAll(void) {
+    OZ_GenWakeUpDescriptor aux;
+    aux._wakeUpDescriptor = 0xffff;
+    return aux;
+  };
+};
+
+#define OZ_WAKEUP_ALL OZ_GenWakeUpDescriptor::getWakeUpAll()
+
+//-----------------------------------------------------------------------------
+// OZ_GenConstraintProfile
+
+class OZ_GenConstraintProfile {
+public:
+  OZ_GenConstraintProfile(void) {}
+  OZ_GenConstraintProfile(OZ_GenConstraint *);
+
+};
+
+//-----------------------------------------------------------------------------
+// OZ_GenConstraint
+
+class OZ_GenConstraint {
+
+public:
+  virtual OZ_Boolean isValue(void) = 0;
+  virtual OZ_Term toValue(void) = 0;
+  virtual OZ_Boolean isValid(void) = 0;
+  virtual OZ_Boolean isWeakerThan(OZ_GenConstraint *) = 0;
+  virtual OZ_GenConstraint * unify(OZ_GenConstraint *) = 0;
+  virtual OZ_Boolean unify(OZ_Term) = 0;
+  virtual size_t sizeOf(void) = 0;
+  virtual OZ_GenConstraintProfile * getProfile(void) = 0;
+  virtual OZ_GenWakeUpDescriptor getWakeUpDescriptor(OZ_GenConstraintProfile *) = 0;
+  virtual char * toString(void) = 0;
+};
+
+//-----------------------------------------------------------------------------
+// OZ_GenCtVar
+
+class OZ_GenCtVar {
+private:
+
+  OZ_GenConstraintProfile * _profile; // necessary ?
+  OZ_GenDefinition * _definition;
+
+  OZ_Term var;
+  OZ_Term * varPtr;
+
+  enum State_e {loc_e = 1, glob_e = 2, encap_e = 3} state;
+  OZ_Boolean isState(State_e s) const {return s == state;}
+  void setState(State_e s) {state = s;}
+
+  enum Sort_e {val_e = 1, var_e = 2} sort;
+  OZ_Boolean isSort(Sort_e s) const {return s == sort;}
+  void setSort(Sort_e s) {sort = s;}
+
+  OZ_Boolean tell(void);
+
+  void ctSetLocalConstraint(OZ_GenConstraint * c) {
+    ctRefConstraint(c);
+  }
+  void ctSetGlobalConstraint(OZ_GenConstraint * c) {
+    // copy constraint ...
+    ctSaveConstraint(c);
+    // ... but compute on constraint in store
+    ctRefConstraint(c);
+  }
+  OZ_GenConstraint * ctSetEncapConstraint(OZ_GenConstraint * c) {
+    // copy constraint and compute on the copy
+    return ctRefConstraint(ctSaveConstraint(c));
+  }
+
+  OZ_GenWakeUpDescriptor ctGetWakeUpDescrptor(void) {
+    return ctGetConstraint()->getWakeUpDescriptor(ctGetConstraintProfile());
+  }
+
+protected:
+
+  virtual void ctSetValue(OZ_Term) = 0;
+
+  virtual OZ_GenConstraint * ctRefConstraint(OZ_GenConstraint *) = 0;
+  virtual OZ_GenConstraint * ctSaveConstraint(OZ_GenConstraint *) = 0;
+  virtual void ctRestoreConstraint(void) = 0;
+
+  virtual void ctSetConstraintProfile(void) = 0;
+  virtual OZ_GenConstraintProfile * ctGetConstraintProfile(void) = 0;
+
+  virtual OZ_GenConstraint * ctGetConstraint(void) = 0;
+
+public:
+
+  OZ_GenCtVar(void);
+  OZ_GenCtVar(OZ_Term);
+
+  static void * operator new(size_t);
+  static void operator delete(void *, size_t);
+
+#ifdef __GNUC__
+  static void * operator new[](size_t);
+  static void operator delete[](void *, size_t);
+#endif
+
+  virtual OZ_Boolean isTouched(void) const = 0;
+
+  void ask(OZ_Term);
+  void read(OZ_Term);
+  void readEncap(OZ_Term);
+  OZ_Boolean leave(void) { return isSort(val_e) ? OZ_FALSE : tell(); }
+  void fail(void);
+};
+
+//-----------------------------------------------------------------------------
+// Misc
+
+OZ_Term mkCtVariable(OZ_GenConstraint *, OZ_GenDefinition *);
+
+//-----------------------------------------------------------------------------
+// class OZ_Expect, etc.
+
+struct OZ_expect_t {
+  int size, accepted;
+  OZ_expect_t(int s, int a) : size(s), accepted(a) {}
+};
+
+enum OZ_PropagatorFlags {NULL_flag, OFS_flag};
+
+class OZ_Expect;
+
+typedef OZ_expect_t (OZ_Expect::*OZ_ExpectMeth) (OZ_Term);
+
+class OZ_Expect {
+private:
+  OZ_Boolean collect;
+
+  OZ_expect_t _expectFSetDescr(OZ_Term descr, int level);
+
+protected:
+  void addSpawn(OZ_FDPropState, OZ_Term *);
+  void addSpawn(OZ_FSetPropState, OZ_Term *);
+  void addSpawn(OZ_GenDefinition *, OZ_GenWakeUpDescriptor, OZ_Term *);
+
+  void addSuspend(OZ_Term *);
+  void addSuspend(OZ_FDPropState, OZ_Term *);
+  void addSuspend(OZ_FSetPropState, OZ_Term *);
+  void addSuspend(OZ_GenDefinition *, OZ_GenWakeUpDescriptor, OZ_Term *);
+
+public:
+  OZ_Expect(void);
+  ~OZ_Expect(void);
+
+  void collectVarsOn(void);
+  void collectVarsOff(void);
+
+  OZ_expect_t expectDomDescr(OZ_Term descr, int level = 4);
+  OZ_expect_t expectFSetDescr(OZ_Term descr) {
+    return _expectFSetDescr(descr, 3);
+  }
+  OZ_expect_t expectVar(OZ_Term t);
+  OZ_expect_t expectRecordVar(OZ_Term);
+  OZ_expect_t expectIntVar(OZ_Term, OZ_FDPropState = fd_prop_any);
+  OZ_expect_t expectFSetVar(OZ_Term, OZ_FSetPropState = fs_prop_any);
+  OZ_expect_t expectInt(OZ_Term);
+  OZ_expect_t expectFSetValue(OZ_Term);
+  OZ_expect_t expectLiteral(OZ_Term);
+  OZ_expect_t expectVector(OZ_Term, OZ_ExpectMeth);
+  OZ_expect_t expectProperRecord(OZ_Term, OZ_ExpectMeth);
+  OZ_expect_t expectProperTuple(OZ_Term, OZ_ExpectMeth);
+  OZ_expect_t expectList(OZ_Term, OZ_ExpectMeth);
+  OZ_expect_t expectStream(OZ_Term st);
+  OZ_expect_t expectGenCtVar(OZ_Term,
+                             OZ_GenDefinition *,
+                             OZ_GenWakeUpDescriptor);
+
+  OZ_Return impose(OZ_Propagator * p,
+                   int prio = OZ_getMediumPrio(),
+                   OZ_PropagatorFlags flags = NULL_flag);
+  OZ_Return suspend(OZ_Thread);
+  OZ_Return fail(void);
+  OZ_Boolean isSuspending(OZ_expect_t r) {
+    return (r.accepted == 0 || (0 < r.accepted && r.accepted < r.size));
+  }
+  OZ_Boolean isFailing(OZ_expect_t r) {
+    return (r.accepted == -1);
+  }
+};
+
+
 #endif // __OZ_CPI_HH__
+
+//
+//-----------------------------------------------------------------------------

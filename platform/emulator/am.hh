@@ -48,6 +48,12 @@
 
 // more includes at end!
 
+#ifdef DEBUG_THREADCOUNT
+#define DECSOLVETHREADS(BB, S) decSolveThreads(BB, S)
+#else
+#define DECSOLVETHREADS(BB, S) decSolveThreads(BB)
+#endif
+
 /* -----------------------------------------------------------------------
  * StatusReg
  * -----------------------------------------------------------------------*/
@@ -394,9 +400,9 @@ public:
   INLINE Thread *newThreadInternal(int prio, Board *bb);
   INLINE Thread *mkRunnableThread(int prio, Board *bb);
   INLINE Thread *mkRunnableThreadOPT(int prio, Board *bb);
-  Thread *mkLTQ(Board *bb, int prio);
+  Thread *mkLPQ(Board *bb, int prio);
   inline Thread *mkWakeupThread(Board *bb);
-  Thread *mkPropagator(Board *bb, int prio, OZ_Propagator *pro);
+  Propagator * mkPropagator(Board *bb, int prio, OZ_Propagator *pro);
   INLINE Thread *mkSuspendedThread(Board *bb, int prio);
   INLINE int newId();
 
@@ -407,13 +413,13 @@ public:
   INLINE void updateSolveBoardPropagatorToRunnable(Thread *tt);
 
   // wake up cconts and board conts
-  void wakeupAny(Thread *tt,Board *bb);
-  inline Bool wakeUp(Thread *tt,Board *home, PropCaller calledBy);
-  INLINE Bool wakeUpPropagator(Thread *tt, Board *home,
+  void wakeupAny(Suspension susp, Board * bb);
+  inline Bool wakeUp(Suspension susp, Board * home, PropCaller calledBy);
+  INLINE Bool wakeUpPropagator(Propagator * prop, Board *home,
                         PropCaller calledBy = pc_propagator);
   inline Bool wakeUpBoard(Thread *tt, Board *home);
   inline Bool wakeUpThread(Thread *tt, Board *home);
-  INLINE OZ_Return runPropagator(Thread *tt);
+  INLINE OZ_Return runPropagator(Propagator *);
 
   //
   //  Note: killing the suspended thread *might not* make any
@@ -441,25 +447,25 @@ public:
 
   //  Check all the solve actors above for stabily
   // (and, of course, wake them up if needed);
-  INLINE void checkExtThread(Thread *tt);
+  INLINE void checkExtSuspension(Suspension);
   INLINE void removeExtThread(Thread *tt);
 
-  void setExtThreadOutlined(Thread *tt, Board *varHome);
+  void setExtSuspensionOutlined(Suspension susp, Board *varHome);
 
   //  special allocator for thread's bodies;
   INLINE void freeThreadBody(Thread *tt);
 
   //
   //  it asserts that the suspended thread is 'external' (see beneath);
-  void checkExtThreadOutlined(Thread *tt);
+  void checkExtSuspensionOutlined(Suspension susp);
   void removeExtThreadOutlined(Thread *tt);
 
   //
   //  (re-)Suspend a propagator again; (was: 'reviveCurrentTaskSusp');
   //  It does not take into account 'solve threads', i.e. it must
   // be done externally - if needed;
-  INLINE void suspendPropagator(Thread *tt);
-  INLINE void scheduledPropagator(Thread *tt);
+  INLINE void suspendPropagator(Propagator *);
+  INLINE void scheduledPropagator(Propagator *);
 
   //
   //  Terminate a propagator thread which is (still) marked as runnable
@@ -473,10 +479,10 @@ public:
   //  Philosophy (am i right, Tobias?):
   // When some propagator returns 'PROCEED' and still has the
   // 'runnable' flag set, then it's done.
-  INLINE void closeDonePropagator(Thread *tt);
+  INLINE void closeDonePropagator(Propagator *);
 
-  INLINE void closeDonePropagatorCD(Thread *tt);
-  INLINE void closeDonePropagatorThreadCD(Thread *tt);
+  INLINE void closeDonePropagatorCD(Propagator *);
+  INLINE void closeDonePropagatorThreadCD(Propagator *);
 
   SuspList *installPropagators(SuspList *local_list, SuspList *glob_list,
                                Board *glob_home);
@@ -526,7 +532,11 @@ public:
   SuspList * checkSuspensionList(SVariable * var,
                                  SuspList * suspList, PropCaller calledBy);
   int incSolveThreads(Board *bb);
+#ifdef DEBUG_THREADCOUNT
+  void decSolveThreads(Board *bb, char *);
+#else
   void decSolveThreads(Board *bb);
+#endif
   DebugCode(Bool isInSolveDebug(Board *bb);)
 
   void restartThread();

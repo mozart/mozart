@@ -47,7 +47,7 @@ extern ProgramCounter
   C_LOCK_Ptr           , //
   C_SET_SELF_Ptr       , // set am.ooRegisters
   C_SET_ABSTR_Ptr      ,
-  C_LTQ_Ptr            , // local thread queue
+  C_LPQ_Ptr            , // local propagator queue
   C_CATCH_Ptr          , // exception handler
   C_ACTOR_Ptr          , // actor
   C_EMPTY_STACK        ;
@@ -205,7 +205,7 @@ public:
     pushFrame(C_CALL_CONT_Ptr, ToPointer(pred), x);
   }
 
-  void pushLTQ(Board * sb)       { pushFrame(C_LTQ_Ptr, sb, 0); }
+  void pushLPQ(Board * sb)       { pushFrame(C_LPQ_Ptr, sb, 0); }
   void pushLock(OzLock *lck)     { pushFrame(C_LOCK_Ptr,lck,0); }
   void pushCatch()               { pushFrame(C_CATCH_Ptr,0,0); }
   void discardCatch()            { discardFrame(C_CATCH_Ptr); }

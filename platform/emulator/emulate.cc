@@ -2355,67 +2355,75 @@ LBLdispatcher:
        }
      }
 
-  Case(TASKLTQ)
+  Case(TASKLPQ)
      {
+#ifdef DEBUG_THREADCOUNT
+       extern int existingLTQs;
+       if (existingLTQs <= 0)
+         Assert(0);
+#endif
        Y = NULL;  // sa here unused
-       Assert(e->currentBoard()->isSolve());
-       Assert(!e->onToplevel());
+       //       Assert(e->currentBoard()->isSolve());
+       //Assert(!e->onToplevel());
        Assert(CTS->isEmpty()); // approximates one LTQ task
 
        // postpone poping task from taskstack until
        // local thread queue is empty
        Board * sb = e->currentBoard();
-       LocalThreadQueue * ltq = sb->getLocalThreadQueue();
+       LocalPropagatorQueue * lpq = sb->getLocalPropagatorQueue();
 
 #ifdef DEBUG_LTQ
        cout << "sb=" << sb << " emu " << " thr="
             << e->currentThread() << endl << flush;
 #endif
 
-       Assert(!ltq->isEmpty());
-
-       unsigned int starttime = 0;
-
-       if (ozconf.timeDetailed)
-         starttime = osUserTime();
-
-       Thread * backup_currentThread = CTT;
-
-       while (!ltq->isEmpty() && e->isNotPreemptiveScheduling()) {
-         Thread * thr = ltq->dequeue();
-         e->setCurrentThread(thr);
-         Assert(!thr->isDeadThread());
-
-         OZ_Return r = e->runPropagator(thr);
-
-         if (r == SLEEP) {
-           e->suspendPropagator(thr);
-         } else if (r == PROCEED) {
-           e->closeDonePropagator(thr);
-         } else if (r == FAILED) {
-           e->closeDonePropagator(thr);
-           e->setCurrentThread(backup_currentThread);
-
-           if (ozconf.timeDetailed)
-             ozstat.timeForPropagation.incf(osUserTime()-starttime);
-
-           CTS->pushLTQ(sb); // RS: is this needed ???
-           // failure of propagator is never catched !
-           goto LBLfailure; // top-level failure not possible
-         } else {
-           Assert(r == SCHEDULED);
-           e->scheduledPropagator(thr);
-         }
+       if (lpq == NULL) {
+         goto LBLpopTask;
        }
 
-       e->setCurrentThread(backup_currentThread);
+       {
+         unsigned int starttime = 0;
 
-       if (ozconf.timeDetailed)
-         ozstat.timeForPropagation.incf(osUserTime()-starttime);
+         if (ozconf.timeDetailed)
+           starttime = osUserTime();
 
+         Thread * backup_currentThread = CTT;
 
-       if (ltq->isEmpty()) {
-         sb->resetLocalThreadQueue();
+         while (!lpq->isEmpty() && e->isNotPreemptiveScheduling()) {
+           Propagator * prop = lpq->dequeue();
+           Propagator::setRunningPropagator(prop);
+           Assert(!prop->isDeadPropagator());
+
+           OZ_Return r = e->runPropagator(prop);
+
+           if (r == SLEEP) {
+             e->suspendPropagator(prop);
+           } else if (r == PROCEED) {
+             e->closeDonePropagator(prop);
+           } else if (r == FAILED) {
+             e->closeDonePropagator(prop);
+
+             if (ozconf.timeDetailed)
+               ozstat.timeForPropagation.incf(osUserTime()-starttime);
+
+             CTS->pushLPQ(sb); // RS: is this needed ???
+             // failure of propagator is never catched !
+             Assert(prop->isDeadPropagator() || !prop->isRunnable());
+             goto LBLfailure; // top-level failure not possible
+           } else {
+             Assert(r == SCHEDULED);
+             e->scheduledPropagator(prop);
+           }
+           Assert(prop->isDeadPropagator() || !prop->isRunnable());
+         }
+
+         if (ozconf.timeDetailed)
+           ozstat.timeForPropagation.incf(osUserTime()-starttime);
+
+       }
+
+       if (lpq->isEmpty()) {
+         sb->resetLocalPropagatorQueue();
 #ifdef DEBUG_LTQ
          cout << "sb emu sb=" << sb << " EMPTY" << endl << flush;
 #endif
@@ -2424,8 +2432,8 @@ LBLdispatcher:
 #ifdef DEBUG_LTQ
          cout << "sb emu sb=" << sb << " PREEMPTIVE" << endl << flush;
 #endif
-         CTS->pushLTQ(sb);
-         Assert(sb->getLocalThreadQueue());
+         CTS->pushLPQ(sb);
+         Assert(sb->getLocalPropagatorQueue());
          return T_PREEMPT;
        }
      }

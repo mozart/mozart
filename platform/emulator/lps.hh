@@ -49,26 +49,26 @@ private:
   enum {initmaxsize = 0x1000}; // expected to be power of 2
 #endif
   struct queue_t {
-    Thread *thr;
-  } *queue;
+    Propagator * prop;
+  } * queue;
 
 public:
   void resize(void);
 
-  void enqueue (Thread *thr) {
+  void enqueue (Propagator * prop) {
     if (size == maxsize) resize ();
     tail = (tail + 1) & (maxsize - 1); // reason for maxsize to be power of 2
-    queue[tail].thr = thr;
+    queue[tail].prop = prop;
     size += 1;
   }
 
-  Thread *dequeue () {
+  Propagator * dequeue () {
     if (size == 0)
       error ( "Cannot dequeue from empty queue.");
-    Thread *thr = queue[head].thr;
+    Propagator * prop = queue[head].prop;
     head = (head + 1) & (maxsize - 1);
     size -= 1;
-    return (thr);
+    return prop;
   }
 
   LocalPropagationQueue ()
@@ -97,7 +97,6 @@ private:
   Bool propagate_locally ();
   Bool useit;
 
-  DebugCode (Bool checkIsPropagator (Thread *thr);)
 public:
   LocalPropagationStore () {}
 
@@ -115,12 +114,11 @@ public:
     return (TRUE);
   }
 
-  void push (Thread *thr) {
-    Assert (checkIsPropagator (thr));
-    enqueue (thr);
+  void push (Propagator * prop) {
+    enqueue (prop);
   }
 
-  Thread *pop () {
+  Propagator * pop () {
     return (dequeue ());
   }
 

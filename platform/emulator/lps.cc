@@ -52,8 +52,8 @@ void LocalPropagationQueue::resize () {
   int old_size = size;
 
   while (size) {
-    Thread *thr = dequeue ();
-    new_queue[index].thr = thr;
+    Propagator * prop = dequeue ();
+    new_queue[index].prop = prop;
     index -= 1;
   }
 
@@ -65,42 +65,25 @@ void LocalPropagationQueue::resize () {
   maxsize = new_maxsize;
 }
 
-#ifdef DEBUG_CHECK
-Bool LocalPropagationStore::checkIsPropagator (Thread *thr)
-{
-  return (thr->isPropagator());
-}
-#endif
-
 Bool LocalPropagationStore::propagate_locally () {
   Board *currentBoard = am.currentBoard();
-  Thread *savedCurrentThread = am.currentThread();
   RefsArray args;
 
-  /*
-   *  We save the actual 'am.currentThread' pointer and restore
-   * it before returning. This is because propagators must have
-   * an access to themselves; this is provided by setting the
-   * (global) 'am.currentThread' to an actual propagator (thread);
-   *
-   */
   // kost@ : --> let's try ...
   Assert (currentBoard->getSuspCount () >= getSize ());
 
   while (!(isEmpty ())) {
-    Thread *thr = pop ();
-    am.setCurrentThread(thr);
-    Assert(thr != (Thread *) NULL);
-    Assert(am.isCurrentBoard(GETBOARD(thr)));
+    Propagator * prop = pop ();
+    Propagator::setRunningPropagator(prop);
+    Assert(am.isCurrentBoard(GETBOARD(prop)));
     //
     //  No 'runnable' threads are allowed here,
     // because only true propagators are in the LPS;
-    Assert (!(am.currentThread()->isDeadThread ()));
-    Assert (am.currentThread()->isPropagator ());
+    Assert (! prop->isDeadPropagator() );
 
     OZ_Return ret_val;
 
-    ret_val = am.runPropagator(thr);
+    ret_val = am.runPropagator(prop);
 
     switch (ret_val) {
     case FAILED:
@@ -108,13 +91,12 @@ Bool LocalPropagationStore::propagate_locally () {
         errorHeader();
 
         ostrstream buf;
-        buf << thr->getPropagator()->toString() << '\0';
+        buf << prop->getPropagator()->toString() << '\0';
         char *str = buf.str();
         message("Propagator %s failed\n", str);
         delete str;
       }
-      am.closeDonePropagator(am.currentThread());
-      am.setCurrentThread(savedCurrentThread);
+      am.closeDonePropagator(prop);
       return reset();
 
     case RAISE:
@@ -124,19 +106,18 @@ Bool LocalPropagationStore::propagate_locally () {
       error ("propagate_locally: 'SUSPEND' is returned?\n");
 
     case SLEEP:
-      am.suspendPropagator(am.currentThread());
+      am.suspendPropagator(prop);
       break;
 
     case SCHEDULED:
-      am.scheduledPropagator(am.currentThread());
+      am.scheduledPropagator(prop);
       break;
 
     case PROCEED:
-      am.closeDonePropagator(am.currentThread());
+      am.closeDonePropagator(prop);
       break;
     }
 
   }
-  am.setCurrentThread(savedCurrentThread);
   return (TRUE);
 }

@@ -217,6 +217,7 @@ class GenFDVariable;
 class GenMetaVariable;
 class GenBoolVariable;
 class GenFSetVariable;
+class GenCtVariable;
 class DynamicTable;
 class SRecord;
 class Arity;
@@ -264,6 +265,8 @@ class Continuation;
 
 class SuspList;
 class CondSuspList;
+class Suspension;
+class Propagator;
 
 class CpStack;
 class Thread;
@@ -356,7 +359,7 @@ void handlerCHLD();
 void handlerFPE();
 void handlerALRM();
 
-void checkExtThread(Thread *elem, Board *home);
+void checkExtSuspension(Suspension susp, Board * home);
 
 #ifdef DEBUG_STABLE
 extern SuspList * board_constraints;

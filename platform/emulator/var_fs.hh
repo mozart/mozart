@@ -40,7 +40,7 @@
 class GenFSetVariable: public GenCVariable {
 
 friend class GenCVariable;
-friend void addSuspFSetVar(OZ_Term, Thread *, OZ_FSetPropState);
+friend void addSuspFSetVar(OZ_Term, Suspension, OZ_FSetPropState);
 
 private:
   OZ_FSetConstraint _fset;
@@ -88,7 +88,7 @@ public:
   void installPropagators(GenFSetVariable *, Board *);
 
   OZ_FSetConstraint * getReifiedPatch(void) {
-    return (OZ_FSetConstraint *)  (u.var_type & ~1);
+    return (OZ_FSetConstraint *) (u.var_type & ~u_mask);
   }
   void patchReified(OZ_FSetConstraint * s) {
     u.patchFSet =  (OZ_FSetConstraint *) ToPointer(ToInt32(s) | u_fset);
@@ -101,7 +101,7 @@ public:
 };
 
 void addSuspFSetVar(OZ_Term, SuspList *, OZ_FSetPropState = fs_prop_any);
-void addSuspFSetVar(OZ_Term, Thread *, OZ_FSetPropState = fs_prop_any);
+void addSuspFSetVar(OZ_Term, Suspension, OZ_FSetPropState = fs_prop_any);
 OZ_Return tellBasicConstraint(OZ_Term, OZ_FSetConstraint *);
 
 #if !defined(OUTLINE)
@@ -110,7 +110,7 @@ OZ_Return tellBasicConstraint(OZ_Term, OZ_FSetConstraint *);
 Bool isGenFSetVar(OZ_Term term);
 Bool isGenFSetVar(OZ_Term term, TypeOfTerm tag);
 GenFSetVariable * tagged2GenFSetVar(OZ_Term term);
-OZ_FSetConstraint * unpatchReified(OZ_Term t);
+OZ_FSetConstraint * unpatchReifiedFSet(OZ_Term t);
 
 #undef inline
 #endif

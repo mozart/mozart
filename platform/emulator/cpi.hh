@@ -46,7 +46,14 @@
 struct _spawnVars_t {
   OZ_Term * var;
   TypeOfGenCVariable expected_type;
-  union {OZ_FDPropState fd; OZ_FSetPropState fs;} state;
+  union {
+    OZ_FDPropState fd;
+    OZ_FSetPropState fs;
+    struct {
+      OZ_GenDefinition * def;
+      OZ_GenWakeUpDescriptor w;
+    } ct;
+  } state;
 };
 
 extern EnlargeableArray<_spawnVars_t> staticSpawnVars;
@@ -94,6 +101,11 @@ void staticAddSpawn(OZ_FDPropState ps, OZ_Term * v);
 
 void staticAddSpawnProp(OZ_FSetPropState ps, OZ_Term * v);
 void staticAddSpawn(OZ_FSetPropState ps, OZ_Term * v);
+
+void staticAddSpawnProp(OZ_GenDefinition * def, OZ_Term * v);
+void staticAddSpawn(OZ_GenDefinition * def,
+                    OZ_GenWakeUpDescriptor w,
+                    OZ_Term * v);
 
 #if !defined(OUTLINE)
 #include "cpi.icc"

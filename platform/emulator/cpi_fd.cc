@@ -99,7 +99,7 @@ int OZ_FDIntVar::read(OZ_Term v)
   } else {
     Assert(isCVar(vtag));
 
-    if (am.currentThread()->isLocalThread()) {
+    if (Propagator::getRunningPropagator()->isLocalPropagator()) {
     // local variable per definition
 
       setState(loc_e);
@@ -241,7 +241,7 @@ int OZ_FDIntVar::readEncap(OZ_Term v)
 OZ_Boolean OZ_FDIntVar::tell(void)
 {
   if (testReifiedFlag(var))
-    unpatchReified(var, isSort(bool_e));
+    unpatchReifiedFD(var, isSort(bool_e));
 
   if (!testResetStoreFlag(var)) {
     return OZ_FALSE;
@@ -300,7 +300,7 @@ void OZ_FDIntVar::fail(void)
   if (isSort(sgl_e))
     return;
   if (isState(encap_e)) {
-    unpatchReified(var, isSort(bool_e));
+    unpatchReifiedFD(var, isSort(bool_e));
     return;
   }
 

@@ -50,10 +50,10 @@
 void SVariable::wakeupAll()
 {
   while (suspList) {
-    Thread *tt = suspList->getElem();
+    Suspension susp = suspList->getElem();
 
-    if (!tt->isDeadThread() && !tt->isRunnable()) {
-      am.wakeupAny(tt,GETBOARD(this));
+    if (!susp.isDead() && !susp.isRunnable()) {
+      am.wakeupAny(susp, GETBOARD(this));
     }
     suspList = suspList->dispose();
   }

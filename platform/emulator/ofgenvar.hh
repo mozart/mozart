@@ -46,7 +46,7 @@
 class GenOFSVariable: public GenCVariable {
 
     friend class GenCVariable;
-    friend inline void addSuspOFSVar(TaggedRef, Thread *);
+    friend inline void addSuspOFSVar(TaggedRef, Suspension);
 
 private:
     TaggedRef label;
@@ -209,10 +209,10 @@ Bool isGenOFSVar(TaggedRef term, TypeOfTerm tag);
 GenOFSVariable *tagged2GenOFSVar(TaggedRef term);
 
 inline
-void addSuspOFSVar(TaggedRef v, Thread * el)
+void addSuspOFSVar(TaggedRef v, Suspension susp)
 {
   GenOFSVariable * ofs = tagged2GenOFSVar(v);
-  AddSuspToList(ofs->suspList, el, ofs->home);
+  AddSuspToList(ofs->suspList, susp, ofs->home);
 }
 
 
