@@ -228,7 +228,6 @@ if (predArity != arityExp && VarArity != arityExp) {			\
   RAISE_ERROR(kernelError("arity",2,proc,OZ_toList(predArity,X)));	\
 }
 
-
 // -----------------------------------------------------------------------
 //
 
@@ -434,11 +433,8 @@ Bool AM::hookCheckNeeded()
 
 #define CallPushCont(ContAdr) e->pushTaskInline(ContAdr,Y,G,NULL,0)
 
-#define SaveSelf(e,obj,pushOntoStack)		\
-    if (pushOntoStack)				\
+#define SaveSelf(obj)				\
       e->changeSelf(obj);			\
-    else					\
-      e->saveSelf();
 
 
 /* NOTE:
@@ -864,6 +860,7 @@ void engine()
 # define CBB (e->currentBoard)
 # define CTT (e->currentThread)
 # define CPP (CTT->getPriority())
+# define CTS (e->cachedStack)
 
 #ifdef CATCH_SEGV
   //
@@ -898,7 +895,7 @@ void engine()
 // ------------------------------------------------------------------------
  LBLpreemption:
 
-  SaveSelf(e,NULL,NO);
+  SaveSelf(NULL);
   Assert(CTT->getBoard()==CBB);
   e->scheduleThreadInline(CTT, CPP);
   CTT=0;
@@ -1215,9 +1212,12 @@ LBLpopTask:
       taskstack->setTop(topCache);
       goto LBLemulate;
 
-    case C_SETFINAL:
-      am.setFinal();
-      goto next_task;
+    case C_LOCK:
+      {
+	OzLock *lck = (OzLock *) TaskStackPop(--topCache);
+	lck->unlock();
+	goto next_task;
+      }
 
     case C_DEBUG_CONT:
       {
@@ -1351,8 +1351,8 @@ LBLpopTask:
 	taskstack->setTop(topCache+2);
 	goto LBLsuspendThread;
       }
-    case C_SET_OOREGS:
-      e->restoreSelf(ToInt32(TaskStackPop(--topCache)));
+    case C_SET_SELF:
+      e->setSelf((Object*)TaskStackPop(--topCache));
       goto next_task;
       
     default:
@@ -1621,7 +1621,7 @@ LBLsuspendThread:
     //  First, set the board and self, and perform special action for 
     // the case of blocking the root thread;
     Assert(CTT->getBoard()==CBB);
-    SaveSelf(e,NULL,NO);
+    SaveSelf(NULL);
 
 #ifdef DEBUG_CHECK
     if (CTT==e->rootThread) {
@@ -2035,7 +2035,6 @@ LBLdispatcher:
 
   Case(INLINEAT)
     {
-      Assert(e->getSelf()->isLocked());
       TaggedRef fea = getLiteralArg(PC+1);
 
       Assert(e->getSelf()!=NULL);
@@ -2055,7 +2054,6 @@ LBLdispatcher:
 
   Case(INLINEASSIGN)
     {      
-      Assert(e->getSelf()->isLocked());
       TaggedRef fea = getLiteralArg(PC+1);
 
       SRecord *rec = e->getSelf()->getState();
@@ -2329,44 +2327,43 @@ LBLdispatcher:
       taskstack->pop(TaskStack::frameSize(C_CONT));
       DISPATCH(1);
     }
-  Case(LOCKOBJECT)
-    { 
-      if (e->isLocked()) {
-	DISPATCH(2);
+
+  Case(LOCKTHREAD)
+    {
+      ProgramCounter lbl = getLabelArg(PC+1);
+      int reg      = regToInt(getRegArg(PC+2));
+      int toSave   = getPosIntArg(PC+3);
+
+      TaggedRef aux = X[reg];
+      DEREF(aux,auxPtr,_1);
+      if (isAnyVar(aux)) {
+	SUSP_PC(auxPtr,toSave,PC);
       }
-      Object *obj = e->getSelf();
-      if (obj->isClosed()) {
+      
+      if (!isLock(aux)) {
 	RAISE_ERROR(objectError("attempt to lock closed object",0));
       }
 
+      OzLock *lck = tagged2Lock(aux);
       if (!e->isToplevel()) {
-	if (am.currentBoard != obj->getBoard()) {
+	if (e->currentBoard != lck->getBoard()) {
 	  RAISE_ERROR(objectError("attempt to lock object in guard",0));
 	}
       }
-
-      if (obj->isLocked()) {
-	TaggedRef suspvar = obj->attachThread();
-	int regsToSave = getPosIntArg(PC+1);
-	SUSP_PC(suspvar,regsToSave,PC);
+      
+      Thread *cs = e->currentThread;
+      if (lck->isLocked(cs)) {
+	e->pushTask(lbl,Y,G);
+	DISPATCH(4);
       }
-      e->setLocked();
-      obj->setLocked();
-      DISPATCH(2);
-    }
-
-  Case(UNLOCKOBJECT)
-    e->unlockSelf();
-    DISPATCH(1);
-
-  Case(UNSETFINAL)
-    {
-      e->pushTask(getLabelArg(PC+1),Y,G);
-      if (e->isFinal()) {
-	e->pushSetFinal();
-	e->unsetFinal();
+      TaggedRef *var = lck->lock(cs);
+      if (var==NULL) {
+	e->pushTask(lbl,Y,G);
+	CTS->pushLock(lck);
+	DISPATCH(4);
       }
-      DISPATCH(2);
+	
+      SUSP_PC(var,toSave,PC);
     }
 
   Case(RETURN)
@@ -2488,7 +2485,7 @@ LBLdispatcher:
       }
 
       if (!isTailCall) CallPushCont(PC+6);
-      SaveSelf(e,obj,OK);
+      SaveSelf(obj);
       CallDoChecks(def,def->getGRegs(),getWidth(arity));
       JUMP(def->getPC());
     }
@@ -2619,7 +2616,7 @@ LBLdispatcher:
 	     if (!isTailCall) { 
 	       CallPushCont(PC);
 	     }
-	     SaveSelf(e,o,OK); 
+	     SaveSelf(o); 
 	   } else {
 	     def = (Abstraction *) predicate;
 	     CheckArity(def->getArity(), makeTaggedConst(def));

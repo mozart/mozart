@@ -549,7 +549,8 @@ enum TypeOfConst {
   Co_Chunk,
   Co_Array,
   Co_Dictionary,    /* 12 */
-  Dummy           // GCTAG  
+  Dummy,           // GCTAG  
+  Co_Lock
   /* Co_PRec         14 - reserve for future use */
   /* Co_PPort        15 - could optimize P[port] */
 };
@@ -1145,13 +1146,13 @@ private:
   Abstraction *send;
   SRecord *unfreeFeatures;
   TaggedRef ozclass;    /* the class as seen by the Oz user */
-
+  Bool locking;
 public:
   USEHEAPMEMORY;
 
   ObjectClass(OzDictionary *fm, Literal *pn, OzDictionary *sm, 
 	      Abstraction *snd, SRecord *uf,
-	      OzDictionary *dm)
+	      OzDictionary *dm, Bool lck)
   {
     fastMethods    = fm;
     printName      = pn;
@@ -1160,8 +1161,11 @@ public:
     unfreeFeatures = uf;
     defaultMethods = dm;
     ozclass        = AtomNil;
-
+    locking = lck;
   }
+
+  Bool supportsLocking() { return locking; }
+
   OzDictionary *getSlowMethods() { return slowMethods; }
   OzDictionary *getDefMethods()  { return defaultMethods; }
   OzDictionary *getfastMethods() { return fastMethods; }
@@ -1192,8 +1196,7 @@ public:
 typedef enum {
   OFlagClosed = 1,
   OFlagDeep   = 1<<2,
-  OFlagClass  = 1<<3,
-  OFlagLocked = 1<<4
+  OFlagClass  = 1<<3
 } OFlag;
 
 
@@ -1204,6 +1207,7 @@ protected:
   int32 aclass; // was: ObjectClass *aclass
   TaggedRef threads;  /* list of variables with threads attached to them */
   int32 flags;
+  OzLock *lock;
 public:
   Object();
   ~Object();
@@ -1222,14 +1226,11 @@ public:
   Bool isClass()        { return getFlag(OFlagClass); }
   Bool isDeep()         { return getFlag(OFlagDeep); }
   Bool isClosed()       { return getFlag(OFlagClosed); }
-  Bool isLocked()       { return getFlag(OFlagLocked); }
   void setClass()       { setFlag(OFlagClass); }
   void setIsDeep()      { setFlag(OFlagDeep); }
-  void setLocked()      { setFlag(OFlagLocked); }
-  void unsetLocked()    { unsetFlag(OFlagLocked); }
   void close();
 
-  Object(SRecord *s,ObjectClass *ac,SRecord *feat,Bool iscl):
+  Object(SRecord *s,ObjectClass *ac,SRecord *feat,Bool iscl, OzLock *lck):
     ConstTerm(Co_Object)
   {
     setFreeRecord(feat);
@@ -1238,12 +1239,14 @@ public:
     setClass(ac);
     setState(s);
     if (iscl) setClass();
+    lock = lck;
   }
 
   void setClass(ObjectClass *c) { aclass = ToInt32(c); }
 
   TaggedRef attachThread();
-  inline void unlock();
+
+  OzLock *getLock() { return lock; }
 
   ObjectClass *getClass() { return (ObjectClass*) ToPointer(aclass); }
 
@@ -1315,26 +1318,6 @@ public:
 };
 
 
-inline
-void Object::unlock()
-{
-  Assert(!isRef(threads));
-  Assert(isLocked());
-  if (isClosed()) {
-    /* GC the state */
-    setState(NULL);
-  }
-  unsetLocked();
-  if (!isNil(threads)) {
-    /* wake first thread */
-    TaggedRef var = head(threads);
-    if (OZ_unify(var, isClosed() ? NameTrue : NameFalse)==FAILED) {
-      warning("Object::wakeThreads: unify failed");
-    }
-    threads = tail(threads);
-  }
-}
-
 /* objects not created on toplevel need a home pointer */
 
 class DeepObject: public Object {
@@ -1347,8 +1330,8 @@ public:
   ~DeepObject();
   DeepObject(DeepObject&);
   DeepObject(SRecord *s,ObjectClass *cl,
-	     SRecord *feat,Bool iscl, Board *bb):
-    Object(s,cl,feat,iscl)
+	     SRecord *feat,Bool iscl, Board *bb, OzLock *lck):
+    Object(s,cl,feat,iscl,lck)
   {
     setIsDeep();
     home=bb;
@@ -1887,6 +1870,60 @@ Space *tagged2Space(TaggedRef term)
 {
   Assert(isSpace(term));
   return (Space *) tagged2Const(term);
+}
+
+
+/*===================================================================
+ * Locks
+ *=================================================================== */
+
+class OzLock: public ConstTermWithHome {
+  friend void ConstTerm::gcConstRecurse(void);
+private:
+  Thread *locker;
+  TaggedRef threads;
+public:
+  OzLock(Board *b) : ConstTermWithHome(b,Co_Lock) 
+  {
+    locker = NULL;
+    threads = nil();
+  }
+
+  void unlock()
+  {
+    Assert(!isRef(threads));
+    Assert(locker);
+    locker = NULL;
+
+    if (!isNil(threads)) {
+      /* wake first thread */
+      TaggedRef var = head(threads);
+      if (OZ_unify(var, NameUnit)==FAILED) {
+	warning("OzLock::wakeThreads: unify failed");
+      }
+      threads = tail(threads);
+    }
+  }
+
+  Bool isLocked(Thread *t) { return (locker==t); }
+  TaggedRef *lock(Thread *t);
+
+  OZPRINT;
+  OZPRINTLONG;
+};
+
+
+inline
+Bool isLock(TaggedRef term)
+{
+  return isConst(term) && tagged2Const(term)->getType() == Co_Lock;
+}
+
+inline
+OzLock *tagged2Lock(TaggedRef term)
+{
+  Assert(isLock(term));
+  return (OzLock *) tagged2Const(term);
 }
 
 /*===================================================================
