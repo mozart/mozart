@@ -389,44 +389,96 @@ end
       The available tickle classes are shown in <ptr
       to="figure.tk.hierarchy">, where the classes that are shadowed
       gray are classes provided by the <<Tk>> module, the others are
-      just conceptual.
-
+      just conceptual. The rest of the document will be concerned with
+      giving a short overview on the tickle object interfaces. 
+   
     <p> 
-      To give a convenient translation from the message to a tickle,
-      we will use the following procedure that takes a <<Message>>,
-      removes the features <<Remove>> of the <<Message>> and adjoins
-      the record <<Add>> to it.
-    
-<figure id="figure.tk.tclify">
-<caption/Procedure <<Tclify>> transforms a message into a tickle./
-<<<fun {Tclify Message Remove Add}
-   {Adjoin {FoldL Remove fun {$ F M}
-                            {Record.subtract M F}
-                         end 
-                  Message}
-           Add}
-end
->>>
-</figure>
+      Messages to tickle objects are translated in a straightforward
+      way to tickles, for examples see <ptr.extern to="ozdoc:wp"
+      key="section.widgets-1.tickles">.
 
-      <p>
-        In the following we will present methods that will be
-        recurring.
-
-    <subsection id="section.tk.tkInit">
-       <title/Initialization: <<tkInit>>/
-
-    <subsection id="section.tk.tk">
-       <title/Commands: <<tk>>/
-
-    <subsection id="section.tk.tkReturn">
-       <title/Commands with return value: <<tkReturn>>/
-
-    <subsection id="section.tk.tkBind">
-       <title/Event bindings: <<tkBind>>/
+    <p>
+      In the following we will present values other than tickles that
+      are used in messages to tickle objects.
 
     <subsection id="section.tk.action-values">
-       <title/Action Values/
+      <title/Action Values/
+
+      <p>
+        An action value is either   
+        <list>
+          <entry> A procedure ?_{P}.
+          <item> The action is <def/invoked/ by creating a new thread
+          that applies ?_{P} to action or event arguments.
+
+          <entry> A listener object method pair <<?_{ListenerO}#?_{M}>>
+          <item> The action is <def/invoked/ by letting the
+          ?_{ListenerO} serve the message ?_{M1} (see <ptr
+          to="section.tk.listener">). The message ?_{M1} is obtained
+          by appending action or event arguments to ?_{M}.
+
+          <entry> An object method pair <<?_{O}#?_{M}>>
+          <item> Here of course, ?_{O} must not be an instance of a
+          listener. The action is <def/invoked/ by creating a new thread
+          that executes the object application <<{?_{O} ?_{M1}}>>. The
+          message ?_{M1} is obtained 
+          by appending action or event arguments to ?_{M}.
+        </list>
+
+    <subsection id="section.tk.action-arguments">
+      <title/Action Argument Values/
+
+      <p>
+        When an action is executed, it possibly has some
+        arguments attached to it. <def/Action argument values/
+        describe the number and types of arguments that are used with
+        the invoked action value. For an example see <ptr.extern
+        to="ozdoc:wp" key="section.widgets-2.scale">.
+
+      <p>
+        Legal action argument values are lists whose elements are
+        drawn from the following set:
+        <table class=dyptic>
+          <tr/<td/<<string>>/ <td/<<atom>>/ 
+              <td/<<int>>/ <td/<<float>>//
+          <tr/<td/<<list(string)>>/ <td/<<list(atom)>>/ 
+              <td/<<list(int)>>/ <td/<<list(float)>>//
+        </table>
+        The length of the list defines the number of action arguments
+        and the elements define in the obvious way the type of the
+        arguments.
+
+    <subsection id="section.tk.action-event-arguments">
+      <title/Event Argument Values/
+
+      <p>
+        When an event is executed, it possibly has some
+        arguments attached to it. <def/Event argument values/
+        describe the number, types, and substitutions of arguments
+        that are used with 
+        the invoked action value. For an example see <ptr.extern
+        to="ozdoc:wp" key="section.canvas.tags">. For reference
+        information on substitutions see <ref.extern
+        to="&tkcmd;/bind.htm"/<file/bind//.
+
+      <p>
+        Legal action argument values are lists whose elements are
+        drawn from the following set:
+        <table class=dyptic>
+          <tr/<td/<<string(?_{V})>>/ <td/<<atom(?_{V})>>/ 
+              <td/<<int(?_{V})>>/ <td/<<float(?_{V})>>//
+          <tr/<td/<<list(string(?_{V}))>>/ <td/<<list(atom(?_{V}))>>/ 
+              <td/<<list(int(?_{V}))>>/ <td/<<list(float(?_{V}))>>//
+        </table>
+
+      <p>
+        The length of the list defines the number of action arguments
+        and the elements define the type of the
+        arguments, where ?_{V} gives the substitution to be performed.
+        For example, the value <<[int(x)]>> describes, that the action
+        handler value takes a single argument. The single argument
+        will be <<x>>-coordinate as an integer associated with the
+        event.
 
 
   <section id="section.tk.no-action">
@@ -1205,14 +1257,14 @@ tkReturnListFloat(... ??{FBs})>>>
        <synopsis>
          <<<tkInit()>>>
        <item>
-         Creates a new listener, which consists of a meessage stream
+         Creates a new listener, which consists of a message stream
          and a thread that serves each message on the stream by
          applying <<self>> to it.
 
        <entry><<tkServe>>
          <index class=module/Tk<and>listener<and>tkServe/
        <synopsis>
-         <<<tkServ(?+{MessageR})>>>
+         <<<tkServe(?+{MessageR})>>>
        <item>
          Adds the message ?_{MessageR} to the current tail of the
          message stream.
