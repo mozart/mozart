@@ -10,7 +10,7 @@ right thing by default in almost all cases.
 For example, procedure code is transferred to sites
 immediately, so that sites never need ask for
 procedure code.
-In the other cases, e.g., for objects, the developer can
+In the case of objects, the developer can
 specify the desired distribution behavior, e.g.,
 mobile (cached) objects, stationary objects,
 stationary single-threaded objects.
@@ -20,7 +20,7 @@ stationary single-threaded objects.
 <P> The most critical entities in a distributed application
 in terms of network efficiency are the objects.
 Objects have a state that has to be updated in a
-globally consistent way.
+globally-consistent way.
 The efficiency of this operation depends
 on the object's distributed behavior.
 Many distribution behaviors are possible,
@@ -30,14 +30,17 @@ Here are some of the more useful ones:
 <ITEM> <EM>Cached object</EM>:
 Objects and cells are cached by default--we also call
 this "mobile objects".
-A site attempting to execute a method will first fetch the object,
+Objects are always executed locally,
+in the thread that invokes the method.
+This means that
+a site attempting to execute a method will first fetch the object,
 which requires up to three network messages.
 After this, no further messages are needed as long
 as the object stays on the site.
+The object will not move as long as execution
+stays within a method.
 If many sites use the object, then it will travel
 among the sites, giving everyone a fair share of the object use.
-Object execution is always in the thread that invoked
-the method.
 
 <P>The class of a cached object is copied to each
 site that calls the object.
@@ -174,10 +177,10 @@ When the value is there, then
 it is sent to all sites that need it.
 <ITEM> They are the basic mechanism
 for synchronization and communication
-in the concurrent execution.
+in concurrent execution.
 Mozart does not need an explicit
 monitor or signal concept--rather,
-logic variables let programs
+logic variables let threads
 wait for data availability,
 which is 90% of the needs of concurrency,
 and 9% more is provided by reentrant locking,
@@ -196,14 +199,16 @@ a stream is just a list whose last element is a logic variable.
 If the stream is bound on the owner site,
 then the binding is sent asynchronously to all sites that
 have the variable.
-Messages from the same thread appear
+Bindings from the same thread appear
 in the stream in the same order 
-in which they were sent in the thread.
+that they occur in the thread.
 
 <P>A port together with a stream implement an
 asynchronous many-to-many channel
 that respects the order of messages
 sent from the same thread.
+No order is enforced between
+messages from different threads.
 
 </LIST>
 
@@ -257,6 +262,9 @@ then the object's class is not copied to
 the site until the object is called.
 However, if a class is passed to a site,
 then it is copied eagerly.
+
+% <P> Computed functors, i.e., functors with
+% external references, can be stateful.
 
 <ITEM> <EM>Chunks</EM>:
 A chunk is a lazy record.
@@ -368,7 +376,8 @@ used to manage the dataflow and the concurrency.
 in distributed component-based programming.
 A functor is essentially a component.
 A functor is stateless, so it can be transparently copied
-anywhere across the net and made persistent by pickling on a file.
+anywhere across the net and made persistent by pickling on a file
+(see next section).
 A functor is linked on a site by evaluating it there
 with the site resources that it needs.
 The result is a new resource, which can be
@@ -401,7 +410,7 @@ An application can use the hostname to start up another
 Mozart process there.
 </LIST>
 
-<SUBSECTION><TITLE>Connecting applications with tickets</TITLE>
+<SUBSECTION><TITLE>Connecting applications by means of tickets</TITLE>
 
 <P> Let's say Application 1 has a stream that
 it wants others to access.
@@ -480,7 +489,7 @@ Fact={Pickle.load "http://www.sics.se/~pvr/fact"}
 
 <P> Anything stateless can be saved in a pickle,
 including functions, procedures, classes,
-records, and atoms.
+functors, records, and atoms.
 Stateful entities, such as objects and variables,
 cannot be pickled.
 
@@ -509,10 +518,16 @@ when we evaluate it:
 declare F M
 F=functor export x:X define X={Fact 30} end 
 
-M={R apply(url:'./' F $)}  % Do the calculation remotely
+M={R apply(url:'./' F $)}
 
-{Browse M.x}               % See the answer
+{Browse M.x}
 >>>
+
+<P> The answer is returned to the client site in the module <<M>>,
+which should not reference any resources.
+Module <<M>> is a record; the answer is at <<M.x>>.
+If it does, an exception will be raised in the thread
+doing the <<apply>>.
 
 <SUBSECTION><TITLE>Remote computations and functors</TITLE>
 
@@ -527,7 +542,7 @@ We give this solution later in the tutorial.
 <P> Another solution is to use a functor with
 an external reference:
 <<<
-declare F M
+declare F M X in
 F=functor define {Fact 30 X} end
 
 M={R apply(url:'./' F $)}
@@ -546,7 +561,7 @@ talk about computed functors.
 <P> A server is a long-lived computation that provides a service to clients.
 We will show progressively how to build different kinds of servers.
 
-<SUBSECTION><TITLE>The <<"Hello world">> server</TITLE>
+<SUBSECTION><TITLE>The hello server</TITLE>
 
 <P> Let's build a basic server that returns the string <<"Hello world">>
 to clients.
@@ -615,10 +630,15 @@ end
 >>>
 where <<MakeStat>> takes an object or a one-argument
 procedure and returns a one-argument procedure that
-obeys exactly the same language semantics and that is stationary.
+obeys exactly the same language semantics and is stationary.
+
+<NOTE FOOT>One-argument procedures are not exactly
+objects, since they do not have features.
+For all practical purposes, though, they
+are identical.</NOTE>
 
 
-<SUBSECTION><TITLE>The <<"Hello world">> server with stationary objects</TITLE>
+<SUBSECTION><TITLE>The hello server with stationary objects</TITLE>
 
 <P> The previous section showed how to build a basic server
 using a port to collect messages.
@@ -751,8 +771,7 @@ In practice, the upgrade can even
 be done interactively.
 A person sits down at a terminal anywhere
 in the world, starts up an interactive Mozart
-session, and can
-upgrade the server while it is running.
+session, and upgrades the server while it is running.
 
 <P> Let's first define a generic upgradable server:
 <<<
@@ -784,7 +803,7 @@ From then on,
 the object stays on the server site permanently.
 
 <P> A client creates an upgradable compute server almost
-exactly in the same way as a fixed compute server,
+exactly as it creates a fixed compute server,
 by executing the following on the server site:
 <<<
 declare Srv Upgrade in
