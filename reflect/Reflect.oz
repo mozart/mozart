@@ -77,7 +77,7 @@ define
 			     type:      Type
 			     reference: Reference)}
 		     SL = {Record.map SuspLists FS.value.make}
-		     PS = {FS.unionN SL}
+		     PS = {FS.var.decl} = {FS.unionN SL}
 		     CV = {FS.diff {FS.unionN
 				    {Map
 				     {FS.reflect.lowerBoundList PS}
