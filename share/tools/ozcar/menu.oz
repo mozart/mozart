@@ -40,14 +40,25 @@ in
 	 {TkTools.menubar self.toplevel self.toplevel
 	  [MB(text: IconName
 	      menu:
-		 [C(label:   'About...'
-		    action:  self # about)
-		  separator
-		  C(label:   'Destroy'
-		    action:  Ozcar # reInit)
-		  C(label:   'Suspend'
-		    action:  self # off
-		    key:     ctrl(x))])
+		 (C(label:   'About...'
+		    action:  self # about)|
+		  separator|
+		  if {Property.get 'oz.standalone'} then
+		     [C(label:   'Close'
+			action:  proc {$}
+				    case {Cget closeAction} of unit then
+				       {self off}
+				    elseof P then {P}
+				    end
+				 end
+			key:     ctrl(x))]
+		  else
+		     [C(label:   'Destroy'
+			action:  Ozcar # reInit)
+		      C(label:   'Suspend'
+			action:  self # off
+			key:     ctrl(x))]
+		  end))
 	   MB(text: 'Action'
 	      menu:
 		 [C(label:  'Step Into'

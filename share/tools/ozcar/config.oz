@@ -316,7 +316,10 @@ Config =
  class
 
     feat
-       ConfAllowed
+       ConfAllowed: confAllowed(timeoutToSwitch:    true
+				timeoutToUpdateEnv: true
+				emacsInterface:     true
+				closeAction:        true)
 
     attr
        verbose :               ConfigVerbose
@@ -331,18 +334,14 @@ Config =
        timeoutToSwitch:        TimeoutToSwitch
        timeoutToUpdateEnv:     TimeoutToUpdateEnv
        emacsInterface:         EmacsInterface
+       closeAction:            unit
 
     meth init
-       D = {Dictionary.new}
-    in
-       {Dictionary.put D timeoutToSwitch unit}
-       {Dictionary.put D timeoutToUpdateEnv unit}
-       {Dictionary.put D emacsInterface unit}
-       self.ConfAllowed = D
+       skip
     end
 
     meth confAllowed(F $)
-       {Dictionary.member self.ConfAllowed F}
+       {CondSelect self.ConfAllowed F false}
     end
 
     meth toggle(What)
