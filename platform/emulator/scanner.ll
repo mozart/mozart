@@ -997,6 +997,7 @@ REGEXCHAR    "["([^\]\\]|\\.)+"]"|\"[^"]+\"|\\.|[^<>"\[\]\\\n]
 
 "andthen"                      { return andthen; }
 "andthen"/\(                   { return andthen; }
+"at"/\(                        { return at; }
 "attr"                         { return attr; }
 "attr"/\(                      { return attr; }
 "body"                         { return body; }
@@ -1015,6 +1016,7 @@ REGEXCHAR    "["([^\]\\]|\\.)+"]"|\"[^"]+\"|\\.|[^<>"\[\]\\\n]
 "condis"/\(                    { return _condis_; }
 "declare"                      { return declare; }
 "declare"/\(                   { return declare; }
+"define"/\(                    { return define; }
 "dis"                          { return dis; }
 "dis"/\(                       { return dis; }
 "else"                         { return _else_; }
@@ -1068,14 +1070,16 @@ REGEXCHAR    "["([^\]\\]|\\.)+"]"|\"[^"]+\"|\\.|[^<>"\[\]\\\n]
 "orelse"/\(                    { return orelse; }
 "parser"                       { return xy_gumpSyntax? _parser_: OZATOM; }
 "parser"/\(                    { return xy_gumpSyntax? _parser_: ATOM_LABEL; }
+"prepare"/\(                   { return prepare; }
 "proc"                         { return proc; }
 "proc"/\(                      { return proc; }
 "prod"                         { return xy_gumpSyntax? prod: OZATOM; }
 "prod"/\(                      { return xy_gumpSyntax? prod: ATOM_LABEL; }
 "prop"                         { return prop; }
 "prop"/\(                      { return prop; }
-"raise"                        { return ozraise; }
-"raise"/\(                     { return ozraise; }
+"raise"                        { return _raise_; }
+"raise"/\(                     { return _raise_; }
+"require"/\(                   { return require; }
 "scanner"                      { return xy_gumpSyntax? _scanner_: OZATOM; }
 "scanner"/\(                   { return xy_gumpSyntax? _scanner_: ATOM_LABEL; }
 "self"                         { return self; }
