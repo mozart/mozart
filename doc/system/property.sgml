@@ -97,6 +97,451 @@
   <P>
 
 
+  <Subsection class=unnumbered id="section.property.application">  
+    <Title/Application Support: <<application>>/
+
+    <P>
+      <Table id="table.prop.application">
+        <Tr><Th/Field/ <Th/Mutable/ <Th/Type/ <Th/Explanation/</Tr>
+        <Tr>
+          <Td/<<args>>/
+          <Td/no/
+          <Td/list of atoms/
+          <Td/The arguments passed to an application./
+        </Tr>
+        <Tr>
+          <Td/<<url>>/
+          <Td/no/
+          <Td/<<Atom>>/
+          <Td/The url of the root functor of an application./
+        </Tr>
+      </Table>
+    </P>
+
+  </Subsection>
+
+
+  <Subsection class=unnumbered id="section.property.errors">  
+    <Title/Printing Errors: <<errors>>/
+
+    <P>
+      <Table id="table.prop.errors">
+        <Tr><Th/Field/ <Th/Mutable/ <Th/Type/ <Th/Explanation/</Tr>
+        <Tr>
+          <Td/<<debug>>/
+          <Td/yes/
+          <Td/<<Bool>>/
+          <Td/Whether error exceptions contain debug information./
+        </Tr>
+        <Tr>
+          <Td/<<'thread'>>/
+          <Td/yes/
+          <Td/<<Int>>/
+          <Td/Number of tasks on the thread to be printed./
+        </Tr>
+        <Tr>
+          <Td/<<width>>/
+          <Td/yes/
+          <Td/<<Int>>/
+          <Td/Maximal width used for printing values in error messages./
+        </Tr>
+        <Tr>
+          <Td/<<depth>>/
+          <Td/yes/
+          <Td/<<Int>>/
+          <Td/Maximal depth used for printing values in error messages./
+        </Tr>
+        <Tr>
+          <Td/<<toplevel>>/
+          <Td/yes/
+          <Td/<<Procedure>>/
+          <Td/Nullary procedure invoked after a message has been printed out
+	    about an uncaught exception raised on top level./
+        </Tr>
+        <Tr>
+          <Td/<<subordinate>>/
+          <Td/yes/
+          <Td/<<Procedure>>/
+          <Td/Nullary procedure invoked after a message has been printed out
+	    about an uncaught exception raised within a computation space./
+        </Tr>
+      </Table>
+    </P>
+
+  </Subsection>
+
+
+  <Subsection class=unnumbered id="section.property.fd">  
+    <Title/Finite Domains: <<fd>>/
+
+    <P>
+      <Table id="table.prop.fd">
+        <Tr><Th/Field/ <Th/Mutable/ <Th/Type/ <Th/Explanation/</Tr>
+        <Tr>
+          <Td/<<variables>>/
+          <Td/no/
+          <Td/<<Int>>/
+          <Td/Number of finite domain variables created./
+        </Tr>
+        <Tr>
+          <Td/<<propagators>>/
+          <Td/no/
+          <Td/<<Int>>/
+          <Td/Number of finite domain propagators created./
+        </Tr>
+        <Tr>
+          <Td/<<invoked>>/
+          <Td/no/
+          <Td/<<Int>>/
+          <Td/Number of finite domain propagators invoked./
+        </Tr>
+        <Tr>
+          <Td/<<threshold>>/
+          <Td/no/
+          <Td/<<Int>>/
+          <Td/Integer when internal domain representation switches from
+        bit sets to interval lists./
+        </Tr>
+      </Table>
+    </P>
+
+  </Subsection>
+
+
+  <Subsection class=unnumbered id="section.property.gc">  
+    <Title/Garbage Collection: <<gc>>/
+
+    <P>
+      <Table id="table.prop.gc">
+        <Tr><Th/Field/ <Th/Mutable/ <Th/Type/ <Th/Explanation/</Tr>
+        <Tr>
+          <Td/<<size>>/
+          <Td/no/
+          <Td/<<Int>>/
+          <Td/Current heap size in bytes/
+        </Tr>
+        <Tr>
+          <Td/<<threshold>>/
+          <Td/no/
+          <Td/<<Int>>/
+          <Td/Heap size in bytes when next automatic garbage collection takes
+        place. Gets recomputed after every garbage collection./
+        </Tr>
+        <Tr>
+          <Td/<<active>>/
+          <Td/no/
+          <Td/<<Int>>/
+          <Td/Heap size in bytes after last garbage collection./
+        </Tr>
+        <Tr>
+          <Td/<<min>>/
+          <Td/yes/
+          <Td/<<Int>>/
+          <Td/Minimal heap size in bytes./
+        </Tr>
+        <Tr>
+          <Td/<<free>>/
+          <Td/yes/
+          <Td/<<1>>&ellipsis;<<100>>/
+          <Td>Gives the percentage of free heap memory after garbage
+        collection. For example, a value of 75 means that 
+        <<threshold>> is set to approximately: 
+        <<active>>*100/(100-75)=<<active>>*4.</Td>
+        </Tr>
+        <Tr>
+          <Td/<<tolerance>>/
+          <Td/yes/
+          <Td/<<1>>&ellipsis;<<100>>/
+          <Td/Gives the percentage by which the emulator is allowed for
+        purposes of better memory allocation to increase <<threshold>>./
+        </Tr>
+        <Tr>
+          <Td/<<on>>/
+          <Td/yes/
+          <Td/<<Bool>>/
+          <Td/Whether garbage collection is invoked automatically./
+        </Tr>
+        <Tr>
+          <Td/<<codeCycle>>/
+          <Td/yes/
+          <Td/<<Int>>/
+          <Td/After how many garbage collections also code garbage
+          collection is performed (zero means no code garbage
+          collection)./
+        </Tr>
+      </Table>
+    </P>
+
+  </Subsection>
+
+
+  <Subsection class=unnumbered id="section.property.limits">  
+    <Title/Implementation Limits: <<limits>>/
+
+    <P>
+      <Table id="table.prop.limits">
+        <Tr><Th/Field/ <Th/Mutable/ <Th/Type/ <Th/Explanation/</Tr>
+        <Tr>
+          <Td/<<int.min>>/
+          <Td/no/
+          <Td/<<Int>>/
+          <Td/The smallest integer that can be represented efficiently
+          (that is, by a single word in memory)
+          by the engine./
+        </Tr>
+        <Tr>
+          <Td/<<int.max>>/
+          <Td/no/
+          <Td/<<Int>>/
+          <Td/The largest integer that can be represented efficiently
+          (that is, by a single word in memory)
+          by the engine./
+        </Tr>
+        <Tr>
+          <Td/<<bytecode.xregisters>>/
+          <Td/no/
+          <Td/<<Int>>/
+          <Td/The number of X&nbsp;registers this engine is able to handle
+	  in the bytecode./
+        </Tr>
+      </Table>
+    </P>
+
+  </Subsection>
+
+
+  <Subsection class=unnumbered id="section.property.marshaler">  
+    <Title/Marshaler: <<marshaler>>/
+
+    <P>
+      <Table id="table.prop.marshaler">
+        <Tr><Th/Field/ <Th/Mutable/ <Th/Type/ <Th/Explanation/</Tr>
+        <Tr>
+          <Td/<<version>>/
+          <Td/no/
+          <Td/a hash-tuple of two integers/
+          <Td/The version of the marshaler./
+        </Tr>
+      </Table>
+    </P>
+
+  </Subsection>
+
+
+  <Subsection class=unnumbered id="section.property.memory">  
+    <Title/Memory Usage: <<memory>>/
+
+    <P>
+      <Table id="table.prop.memory">
+        <Tr><Th/Field/ <Th/Mutable/ <Th/Type/ <Th/Explanation/</Tr>
+        <Tr>
+          <Td/<<atoms>>/
+          <Td/no/
+          <Td/<<Int>>/
+          <Td/Memory used in bytes for atoms./
+        </Tr>
+        <Tr>
+          <Td/<<names>>/
+          <Td/no/
+          <Td/<<Int>>/
+          <Td/Memory used in bytes for names./
+        </Tr>
+        <Tr>
+          <Td/<<freelist>>/
+          <Td/no/
+          <Td/<<Int>>/
+          <Td/Memory allocated but held in free lists for later use in bytes./
+        </Tr>
+        <Tr>
+          <Td/<<code>>/
+          <Td/no/
+          <Td/<<Int>>/
+          <Td/Memory used in bytes for Mozart bytecode./
+        </Tr>
+        <Tr>
+          <Td/<<heap>>/
+          <Td/no/
+          <Td/<<Int>>/
+          <Td/Total memory used in Kilo bytes (i.e., 1024 bytes) since start
+        of the Mozart engine. Is increased after each garbage collection by
+        the heap threshold./
+        </Tr>
+      </Table>
+    </P>
+
+  </Subsection>
+
+
+  <Subsection class=unnumbered id="section.property.messages">  
+    <Title/Printing Messages: <<messages>>/
+
+    <P>
+      <Table id="table.prop.messages">
+        <Tr><Th/Field/ <Th/Mutable/ <Th/Type/ <Th/Explanation/</Tr>
+        <Tr>
+          <Td/<<gc>>/
+          <Td/yes/
+          <Td/<<Bool>>/
+          <Td/Whether messages on garbage collection are printed./
+        </Tr>
+        <Tr>
+          <Td/<<idle>>/
+          <Td/yes/
+          <Td/<<Bool>>/
+          <Td/Whether messages are printed when the Mozart Engine gets idle./
+        </Tr>
+      </Table>
+    </P>
+
+  </Subsection>
+
+
+  <Subsection class=unnumbered id="section.property.platform">  
+    <Title/Platform Information: <<platform>>/
+
+    <P>
+      <Table id="table.prop.platform">
+        <Tr><Th/Field/ <Th/Mutable/ <Th/Type/ <Th/Explanation/</Tr>
+        <Tr>
+          <Td/<<name>>/
+          <Td/no/
+          <Td/<<Atom>>/
+          <Td>
+              The name of the platform as atom of the form
+              <<?_{OS}-?_{ARCH}>> where the following combinations are
+              currently supported:
+              <Table>
+                <Tr><Th/Name/              <Th/OS/   <Th/ARCH/</Tr>
+                <Tr><Th/<<'aix3-rs6000'>>/   <Th/<<'aix3'>>/    <Th/<<'rs6000'>>/</Tr>
+                <Tr><Th/<<'freebsd-i486'>>/  <Th/<<'freebsd'>>/ <Th/<<'i486'>>/</Tr>
+                <Tr><Th/<<'irix5-mips'>>/    <Th/<<'irix'>>/    <Th/<<'mips'>>/</Tr>
+                <Tr><Th/<<'linux-i486'>>/    <Th/<<'linux'>>/ <Th/<<'i486'>>/</Tr>
+                <Tr><Th/<<'linux-m68k'>>/    <Th/<<'linux'>>/ <Th/<<'m68k'>>/</Tr>
+                <Tr><Th/<<'netbsd-i486'>>/   <Th/<<'netbsd'>>/ <Th/<<'i486'>>/</Tr>
+                <Tr><Th/<<'netbsd-m68k'>>/   <Th/<<'netbsd'>>/ <Th/<<'m68k'>>/</Tr>
+                <Tr><Th/<<'netbsd-sparc'>>/  <Th/<<'netbsd'>>/ <Th/<<'sparc'>>/</Tr>
+                <Tr><Th/<<'osf1-alpha'>>/    <Th/<<'osf1'>>/ <Th/<<'alpha'>>/</Tr>
+                <Tr><Th/<<'solaris-i486'>>/  <Th/<<'solaris'>>/ <Th/<<'i486'>>/</Tr>
+                <Tr><Th/<<'solaris-sparc'>>/ <Th/<<'solaris'>>/ <Th/<<'sparc'>>/</Tr>
+                <Tr><Th/<<'sunos-sparc'>>/   <Th/<<'sunos'>>/   <Th/<<'sparc'>>/</Tr>
+                <Tr><Th/<<'ultrix-mips'>>/   <Th/<<'ultrix'>>/  <Th/<<'mips'>>/</Tr>
+                <Tr><Th/<<'win32-i486'>>/    <Th/<<'win32'>>/   <Th/<<'i486'>>/</Tr>
+              </Table>
+          </Td>
+        </Tr>
+        <Tr>
+          <Td/<<os>>/
+          <Td/no/
+          <Td/<<Atom>>/
+          <Td/The operating system part of the platform name./
+        </Tr>
+        <Tr>
+          <Td/<<arch>>/
+          <Td/no/
+          <Td/<<Atom>>/
+          <Td/The architecture part of the platform name./
+        </Tr>
+      </Table>
+    </P>
+
+  </Subsection>
+
+
+  <Subsection class=unnumbered id="section.property.print">  
+    <Title/Printing Values: <<print>>/
+
+    <P>
+      <Table id="table.prop.print">
+        <Tr><Th/Field/ <Th/Mutable/ <Th/Type/ <Th/Explanation/</Tr>
+        <Tr>
+          <Td/<<width>>/
+          <Td/yes/
+          <Td/<<Int>>/
+          <Td/Maximal width used for <<System.show>> and
+          <<System.print>> (see <Ptr to="chapter.system">)./
+        </Tr>
+        <Tr>
+          <Td/<<depth>>/
+          <Td/yes/
+          <Td/<<Int>>/
+          <Td/Maximal depth used for <<System.show>> and
+          <<System.print>> (see <Ptr to="chapter.system">)./
+        </Tr>
+      </Table>
+    </P>
+
+  </Subsection>
+
+
+  <Subsection class=unnumbered id="section.property.priority">  
+    <Title/Thread Priorities: <<priorities>>/
+
+    <P>
+      <Table id="table.prop.prio">
+        <Tr><Th/Field/ <Th/Mutable/ <Th/Type/ <Th/Explanation/</Tr>
+        <Tr>
+          <Td/<<high>>/
+          <Td/yes/
+          <Td/<<1>>&ellipsis;<<100>>/
+          <Td/Relation between time slices available for threads of
+        priorities <<medium>> and <<low>>./
+        </Tr>
+        <Tr>
+          <Td/<<medium>>/
+          <Td/yes/
+          <Td/<<1>>&ellipsis;<<100>>/
+          <Td/Relation between time slices available for threads of
+        priorities <<high>> and <<medium>>./
+        </Tr>
+      </Table>
+    </P>
+
+  </Subsection>
+
+
+  <Subsection class=unnumbered id="section.property.spaces">  
+    <Title/Computation Spaces: <<space>>/
+
+    <P>
+      <Table id="table.prop.space">
+        <Tr><Th/Field/ <Th/Mutable/ <Th/Type/ <Th/Explanation/</Tr>
+        <Tr>
+          <Td/<<created>>/
+          <Td/no/
+          <Td/<<Int>>/
+          <Td/Number of computation spaces created by <<Space.new>>./
+        </Tr>
+        <Tr>
+          <Td/<<cloned>>/
+          <Td/no/
+          <Td/<<Int>>/
+          <Td/Number of computation spaces cloned by <<Space.clone>>./
+        </Tr>
+        <Tr>
+          <Td/<<committed>>/
+          <Td/no/
+          <Td/<<Int>>/
+          <Td/Number of computation spaces committed by
+          <<Space.commit>>./
+        </Tr>
+        <Tr>
+          <Td/<<failed>>/
+          <Td/no/
+          <Td/<<Int>>/
+          <Td/Number of failed computation spaces./
+        </Tr>
+        <Tr>
+          <Td/<<succeeded>>/
+          <Td/no/
+          <Td/<<Int>>/
+          <Td/Number of succeeded computation spaces./
+        </Tr>
+      </Table>
+    </P>
+
+  </Subsection>
+
+
   <Subsection class=unnumbered id="section.property.threads">  
     <Title/Threads: <<threads>>/
 
@@ -126,30 +571,6 @@
 
   </Subsection>
 
-  <Subsection class=unnumbered id="section.property.priority">  
-    <Title/Thread Priorities: <<priorities>>/
-
-    <P>
-      <Table id="table.prop.prio">
-        <Tr><Th/Field/ <Th/Mutable/ <Th/Type/ <Th/Explanation/</Tr>
-        <Tr>
-          <Td/<<high>>/
-          <Td/yes/
-          <Td/<<1>>&ellipsis;<<100>>/
-          <Td/Relation between time slices available for threads of
-        priorities <<medium>> and <<low>>./
-        </Tr>
-        <Tr>
-          <Td/<<medium>>/
-          <Td/yes/
-          <Td/<<1>>&ellipsis;<<100>>/
-          <Td/Relation between time slices available for threads of
-        priorities <<high>> and <<medium>>./
-        </Tr>
-      </Table>
-    </P>
-
-  </Subsection>
 
   <Subsection class=unnumbered id="section.property.time">  
     <Title/Time Usage: <<time>>/
@@ -224,398 +645,6 @@
     </P>
 
   </Subsection>
-
-  <Subsection class=unnumbered id="section.property.gc">  
-    <Title/Garbage Collection: <<gc>>/
-
-    <P>
-      <Table id="table.prop.gc">
-        <Tr><Th/Field/ <Th/Mutable/ <Th/Type/ <Th/Explanation/</Tr>
-        <Tr>
-          <Td/<<size>>/
-          <Td/no/
-          <Td/<<Int>>/
-          <Td/Current heap size in bytes/
-        </Tr>
-        <Tr>
-          <Td/<<threshold>>/
-          <Td/no/
-          <Td/<<Int>>/
-          <Td/Heap size in bytes when next automatic garbage collection takes
-        place. Gets recomputed after every garbage collection./
-        </Tr>
-        <Tr>
-          <Td/<<active>>/
-          <Td/no/
-          <Td/<<Int>>/
-          <Td/Heap size in bytes after last garbage collection./
-        </Tr>
-        <Tr>
-          <Td/<<min>>/
-          <Td/yes/
-          <Td/<<Int>>/
-          <Td/Minimal heap size in bytes./
-        </Tr>
-        <Tr>
-          <Td/<<free>>/
-          <Td/yes/
-          <Td/<<1>>&ellipsis;<<100>>/
-          <Td>Gives the percentage of free heap memory after garbage
-        collection. For example, a value of 75 means that 
-        <<threshold>> is set to approximately: 
-        <<active>>*100/(100-75)=<<active>>*4.</Td>
-        </Tr>
-        <Tr>
-          <Td/<<tolerance>>/
-          <Td/yes/
-          <Td/<<1>>&ellipsis;<<100>>/
-          <Td/Gives the percentage by which the emulator is allowed for
-        purposes of better memory allocation to increase <<threshold>>./
-        </Tr>
-        <Tr>
-          <Td/<<on>>/
-          <Td/yes/
-          <Td/<<Bool>>/
-          <Td/Whether garbage collection is invoked automatically./
-        </Tr>
-        <Tr>
-          <Td/<<codeCycle>>/
-          <Td/yes/
-          <Td/<<Int>>/
-          <Td/After how many garbage collections also code garbage
-          collection is performed (zero means no code garbage
-          collection)./
-        </Tr>
-      </Table>
-    </P>
-
-  </Subsection>
-
-  <Subsection class=unnumbered id="section.property.print">  
-    <Title/Printing Values: <<print>>/
-
-    <P>
-      <Table id="table.prop.print">
-        <Tr><Th/Field/ <Th/Mutable/ <Th/Type/ <Th/Explanation/</Tr>
-        <Tr>
-          <Td/<<width>>/
-          <Td/yes/
-          <Td/<<Int>>/
-          <Td/Maximal width used for <<System.show>> and
-          <<System.print>> (see <Ptr to="chapter.system">)./
-        </Tr>
-        <Tr>
-          <Td/<<depth>>/
-          <Td/yes/
-          <Td/<<Int>>/
-          <Td/Maximal depth used for <<System.show>> and
-          <<System.print>> (see <Ptr to="chapter.system">)./
-        </Tr>
-      </Table>
-    </P>
-
-  </Subsection>
-
-  <Subsection class=unnumbered id="section.property.fd">  
-    <Title/Finite Domains: <<fd>>/
-
-    <P>
-      <Table id="table.prop.fd">
-        <Tr><Th/Field/ <Th/Mutable/ <Th/Type/ <Th/Explanation/</Tr>
-        <Tr>
-          <Td/<<variables>>/
-          <Td/no/
-          <Td/<<Int>>/
-          <Td/Number of finite domain variables created./
-        </Tr>
-        <Tr>
-          <Td/<<propagators>>/
-          <Td/no/
-          <Td/<<Int>>/
-          <Td/Number of finite domain propagators created./
-        </Tr>
-        <Tr>
-          <Td/<<invoked>>/
-          <Td/no/
-          <Td/<<Int>>/
-          <Td/Number of finite domain propagators invoked./
-        </Tr>
-        <Tr>
-          <Td/<<threshold>>/
-          <Td/no/
-          <Td/<<Int>>/
-          <Td/Integer when internal domain representation switches from
-        bit sets to interval lists./
-        </Tr>
-      </Table>
-    </P>
-
-  </Subsection>
-
-  <Subsection class=unnumbered id="section.property.spaces">  
-    <Title/Computation Spaces: <<space>>/
-
-    <P>
-      <Table id="table.prop.space">
-        <Tr><Th/Field/ <Th/Mutable/ <Th/Type/ <Th/Explanation/</Tr>
-        <Tr>
-          <Td/<<created>>/
-          <Td/no/
-          <Td/<<Int>>/
-          <Td/Number of computation spaces created by <<Space.new>>./
-        </Tr>
-        <Tr>
-          <Td/<<cloned>>/
-          <Td/no/
-          <Td/<<Int>>/
-          <Td/Number of computation spaces cloned by <<Space.clone>>./
-        </Tr>
-        <Tr>
-          <Td/<<committed>>/
-          <Td/no/
-          <Td/<<Int>>/
-          <Td/Number of computation spaces committed by
-          <<Space.commit>>./
-        </Tr>
-        <Tr>
-          <Td/<<failed>>/
-          <Td/no/
-          <Td/<<Int>>/
-          <Td/Number of failed computation spaces./
-        </Tr>
-        <Tr>
-          <Td/<<succeeded>>/
-          <Td/no/
-          <Td/<<Int>>/
-          <Td/Number of succeeded computation spaces./
-        </Tr>
-      </Table>
-    </P>
-
-  </Subsection>
-
-  <Subsection class=unnumbered id="section.property.errors">  
-    <Title/Printing Errors: <<errors>>/
-
-    <P>
-      <Table id="table.prop.errors">
-        <Tr><Th/Field/ <Th/Mutable/ <Th/Type/ <Th/Explanation/</Tr>
-        <Tr>
-          <Td/<<debug>>/
-          <Td/yes/
-          <Td/<<Bool>>/
-          <Td/Whether error exceptions contain debug information./
-        </Tr>
-        <Tr>
-          <Td/<<'thread'>>/
-          <Td/yes/
-          <Td/<<Int>>/
-          <Td/Number of tasks on the thread to be printed./
-        </Tr>
-        <Tr>
-          <Td/<<width>>/
-          <Td/yes/
-          <Td/<<Int>>/
-          <Td/Maximal width used for printing values in error messages./
-        </Tr>
-        <Tr>
-          <Td/<<depth>>/
-          <Td/yes/
-          <Td/<<Int>>/
-          <Td/Maximal depth used for printing values in error messages./
-        </Tr>
-        <Tr>
-          <Td/<<toplevel>>/
-          <Td/yes/
-          <Td/<<Procedure>>/
-          <Td/Nullary procedure invoked after a message has been printed out
-	    about an uncaught exception raised on top level./
-        </Tr>
-        <Tr>
-          <Td/<<subordinate>>/
-          <Td/yes/
-          <Td/<<Procedure>>/
-          <Td/Nullary procedure invoked after a message has been printed out
-	    about an uncaught exception raised within a computation space./
-        </Tr>
-      </Table>
-    </P>
-
-  </Subsection>
-
-  <Subsection class=unnumbered id="section.property.messages">  
-    <Title/Printing Messages: <<messages>>/
-
-    <P>
-      <Table id="table.prop.messages">
-        <Tr><Th/Field/ <Th/Mutable/ <Th/Type/ <Th/Explanation/</Tr>
-        <Tr>
-          <Td/<<gc>>/
-          <Td/yes/
-          <Td/<<Bool>>/
-          <Td/Whether messages on garbage collection are printed./
-        </Tr>
-        <Tr>
-          <Td/<<idle>>/
-          <Td/yes/
-          <Td/<<Bool>>/
-          <Td/Whether messages are printed when the Mozart Engine gets idle./
-        </Tr>
-      </Table>
-    </P>
-
-  </Subsection>
-
-  <Subsection class=unnumbered id="section.property.memory">  
-    <Title/Memory Usage: <<memory>>/
-
-    <P>
-      <Table id="table.prop.memory">
-        <Tr><Th/Field/ <Th/Mutable/ <Th/Type/ <Th/Explanation/</Tr>
-        <Tr>
-          <Td/<<atoms>>/
-          <Td/no/
-          <Td/<<Int>>/
-          <Td/Memory used in bytes for atoms./
-        </Tr>
-        <Tr>
-          <Td/<<names>>/
-          <Td/no/
-          <Td/<<Int>>/
-          <Td/Memory used in bytes for names./
-        </Tr>
-        <Tr>
-          <Td/<<freelist>>/
-          <Td/no/
-          <Td/<<Int>>/
-          <Td/Memory allocated but held in free lists for later use in bytes./
-        </Tr>
-        <Tr>
-          <Td/<<code>>/
-          <Td/no/
-          <Td/<<Int>>/
-          <Td/Memory used in bytes for Mozart bytecode./
-        </Tr>
-        <Tr>
-          <Td/<<heap>>/
-          <Td/no/
-          <Td/<<Int>>/
-          <Td/Total memory used in Kilo bytes (i.e., 1024 bytes) since start
-        of the Mozart engine. Is increased after each garbage collection by
-        the heap threshold./
-        </Tr>
-      </Table>
-    </P>
-
-  </Subsection>
-
-  <Subsection class=unnumbered id="section.property.limits">  
-    <Title/Implementation Limits: <<limits>>/
-
-    <P>
-      <Table id="table.prop.limits">
-        <Tr><Th/Field/ <Th/Mutable/ <Th/Type/ <Th/Explanation/</Tr>
-        <Tr>
-          <Td/<<int.min>>/
-          <Td/no/
-          <Td/<<Int>>/
-          <Td/The smallest integer that can be represented efficiently
-          (that is, by a single word in memory)
-          by the engine./
-        </Tr>
-        <Tr>
-          <Td/<<int.max>>/
-          <Td/no/
-          <Td/<<Int>>/
-          <Td/The largest integer that can be represented efficiently
-          (that is, by a single word in memory)
-          by the engine./
-        </Tr>
-        <Tr>
-          <Td/<<bytecode.xregisters>>/
-          <Td/no/
-          <Td/<<Int>>/
-          <Td/The number of X&nbsp;registers this engine is able to handle
-	  in the bytecode./
-        </Tr>
-      </Table>
-    </P>
-
-  </Subsection>
-
-  <Subsection class=unnumbered id="section.property.platform">  
-    <Title/Platform Information: <<platform>>/
-
-    <P>
-      <Table id="table.prop.platform">
-        <Tr><Th/Field/ <Th/Mutable/ <Th/Type/ <Th/Explanation/</Tr>
-        <Tr>
-          <Td/<<name>>/
-          <Td/no/
-          <Td/<<Atom>>/
-          <Td>
-              The name of the platform as atom of the form
-              <<?_{OS}-?_{ARCH}>> where the following combinations are
-              currently supported:
-              <Table>
-                <Tr><Th/Name/              <Th/OS/   <Th/ARCH/</Tr>
-                <Tr><Th/<<'aix3-rs6000'>>/   <Th/<<'aix3'>>/    <Th/<<'rs6000'>>/</Tr>
-                <Tr><Th/<<'freebsd-i486'>>/  <Th/<<'freebsd'>>/ <Th/<<'i486'>>/</Tr>
-                <Tr><Th/<<'irix5-mips'>>/    <Th/<<'irix'>>/    <Th/<<'mips'>>/</Tr>
-                <Tr><Th/<<'linux-i486'>>/    <Th/<<'linux'>>/ <Th/<<'i486'>>/</Tr>
-                <Tr><Th/<<'linux-m68k'>>/    <Th/<<'linux'>>/ <Th/<<'m68k'>>/</Tr>
-                <Tr><Th/<<'netbsd-i486'>>/   <Th/<<'netbsd'>>/ <Th/<<'i486'>>/</Tr>
-                <Tr><Th/<<'netbsd-m68k'>>/   <Th/<<'netbsd'>>/ <Th/<<'m68k'>>/</Tr>
-                <Tr><Th/<<'netbsd-sparc'>>/  <Th/<<'netbsd'>>/ <Th/<<'sparc'>>/</Tr>
-                <Tr><Th/<<'osf1-alpha'>>/    <Th/<<'osf1'>>/ <Th/<<'alpha'>>/</Tr>
-                <Tr><Th/<<'solaris-i486'>>/  <Th/<<'solaris'>>/ <Th/<<'i486'>>/</Tr>
-                <Tr><Th/<<'solaris-sparc'>>/ <Th/<<'solaris'>>/ <Th/<<'sparc'>>/</Tr>
-                <Tr><Th/<<'sunos-sparc'>>/   <Th/<<'sunos'>>/   <Th/<<'sparc'>>/</Tr>
-                <Tr><Th/<<'ultrix-mips'>>/   <Th/<<'ultrix'>>/  <Th/<<'mips'>>/</Tr>
-                <Tr><Th/<<'win32-i486'>>/    <Th/<<'win32'>>/   <Th/<<'i486'>>/</Tr>
-              </Table>
-          </Td>
-        </Tr>
-        <Tr>
-          <Td/<<os>>/
-          <Td/no/
-          <Td/<<Atom>>/
-          <Td/The operating system part of the platform name./
-        </Tr>
-        <Tr>
-          <Td/<<arch>>/
-          <Td/no/
-          <Td/<<Atom>>/
-          <Td/The architecture part of the platform name./
-        </Tr>
-      </Table>
-    </P>
-
-  </Subsection>
-
-  <Subsection class=unnumbered id="section.property.application">  
-    <Title/Application Support: <<application>>/
-
-    <P>
-      <Table id="table.prop.application">
-        <Tr><Th/Field/ <Th/Mutable/ <Th/Type/ <Th/Explanation/</Tr>
-        <Tr>
-          <Td/<<args>>/
-          <Td/no/
-          <Td/list of atoms/
-          <Td/The arguments passed to an application./
-        </Tr>
-        <Tr>
-          <Td/<<url>>/
-          <Td/no/
-          <Td/<<Atom>>/
-          <Td/The url of the root functor of an application./
-        </Tr>
-      </Table>
-    </P>
-
-  </Subsection>
-
 
   </Section>
 

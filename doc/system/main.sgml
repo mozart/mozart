@@ -115,31 +115,34 @@
     <Meta name=latex.package value="pifont">
 
     <Meta name=latex.input value="system-utils.tex">
-    <Meta name=latex.table.spec arg1="table.prop.threads"
-	  arg2="lllp{0.6\linewidth}">
-    <Meta name=latex.table.spec arg1="table.prop.prio"
-	  arg2="lllp{0.6\linewidth}">
-    <Meta name=latex.table.spec arg1="table.prop.time"
-	  arg2="lllp{0.6\linewidth}">
-    <Meta name=latex.table.spec arg1="table.prop.gc"
-	  arg2="lllp{0.6\linewidth}">
-    <Meta name=latex.table.spec arg1="table.prop.print"
-	  arg2="lllp{0.6\linewidth}">
-    <Meta name=latex.table.spec arg1="table.prop.fd"
-	  arg2="lllp{0.6\linewidth}">
-    <Meta name=latex.table.spec arg1="table.prop.space"
+
+    <Meta name=latex.table.spec arg1="table.prop.application"
 	  arg2="lllp{0.6\linewidth}">
     <Meta name=latex.table.spec arg1="table.prop.errors"
 	  arg2="lllp{0.6\linewidth}">
-    <Meta name=latex.table.spec arg1="table.prop.messages"
+    <Meta name=latex.table.spec arg1="table.prop.fd"
 	  arg2="lllp{0.6\linewidth}">
-    <Meta name=latex.table.spec arg1="table.prop.memory"
+    <Meta name=latex.table.spec arg1="table.prop.gc"
 	  arg2="lllp{0.6\linewidth}">
     <Meta name=latex.table.spec arg1="table.prop.limits"
 	  arg2="lllp{0.6\linewidth}">
+    <Meta name=latex.table.spec arg1="table.prop.marshaler"
+	  arg2="lllp{0.6\linewidth}">
+    <Meta name=latex.table.spec arg1="table.prop.memory"
+	  arg2="lllp{0.6\linewidth}">
+    <Meta name=latex.table.spec arg1="table.prop.messages"
+	  arg2="lllp{0.6\linewidth}">
     <Meta name=latex.table.spec arg1="table.prop.platform"
 	  arg2="lllp{0.6\linewidth}">
-    <Meta name=latex.table.spec arg1="table.prop.application"
+    <Meta name=latex.table.spec arg1="table.prop.print"
+	  arg2="lllp{0.6\linewidth}">
+    <Meta name=latex.table.spec arg1="table.prop.prio"
+	  arg2="lllp{0.6\linewidth}">
+    <Meta name=latex.table.spec arg1="table.prop.space"
+	  arg2="lllp{0.6\linewidth}">
+    <Meta name=latex.table.spec arg1="table.prop.threads"
+	  arg2="lllp{0.6\linewidth}">
+    <Meta name=latex.table.spec arg1="table.prop.time"
 	  arg2="lllp{0.6\linewidth}">
 
     <!-- Splitting the document into different HTML nodes -->
@@ -222,19 +225,20 @@
 
 
     <Meta name="html.split"       value="chapter.property">
-    <Meta name="html.split"       value="section.property.threads">  
-    <Meta name="html.split"       value="section.property.priority">  
-    <Meta name="html.split"       value="section.property.time">  
-    <Meta name="html.split"       value="section.property.gc">  
-    <Meta name="html.split"       value="section.property.print">  
-    <Meta name="html.split"       value="section.property.fd">  
-    <Meta name="html.split"       value="section.property.spaces">  
-    <Meta name="html.split"       value="section.property.errors">  
-    <Meta name="html.split"       value="section.property.messages">  
-    <Meta name="html.split"       value="section.property.memory">  
-    <Meta name="html.split"       value="section.property.limits">  
     <Meta name="html.split"       value="section.property.application">  
+    <Meta name="html.split"       value="section.property.errors">  
+    <Meta name="html.split"       value="section.property.fd">  
+    <Meta name="html.split"       value="section.property.gc">  
+    <Meta name="html.split"       value="section.property.limits">  
+    <Meta name="html.split"       value="section.property.marshaler">  
+    <Meta name="html.split"       value="section.property.memory">  
+    <Meta name="html.split"       value="section.property.messages">  
     <Meta name="html.split"       value="section.property.platform">  
+    <Meta name="html.split"       value="section.property.print">  
+    <Meta name="html.split"       value="section.property.priority">  
+    <Meta name="html.split"       value="section.property.spaces">  
+    <Meta name="html.split"       value="section.property.threads">  
+    <Meta name="html.split"       value="section.property.time">  
 
     <Meta name="html.split"       value="chapter.error">
     <Meta name="html.split"       value="chapter.errorformatters">
