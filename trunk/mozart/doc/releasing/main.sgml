@@ -1,0 +1,245 @@
+<!--
+  - Authors:
+  -   Denys Duchier     <duchier@ps.uni-sb.de>
+  -   Leif Kornstaedt <kornstae@ps.uni-sb.de>
+  -   Christian Schulte <schulte@ps.uni-sb.de>
+  -
+  - Copyright:
+  -   Denys Duchier, 1998
+  -   Leif Kornstaedt, 1998
+  -   Christian Schulte, 1998
+  -
+  - Last change:
+  -   $Date$ by $Author$
+  -   $Revision$
+  -
+  - This file is part of Mozart, an implementation
+  - of Oz 3
+  -    http://www.mozart-oz.org
+  -
+  - See the file "LICENSE" or
+  -    http://www.mozart-oz.org/LICENSE.html
+  - for information on usage and redistribution
+  - of this file, and for a DISCLAIMER OF ALL
+  - WARRANTIES.
+  -
+  -->
+
+<!DOCTYPE BOOK SYSTEM "ozdoc.dtd" [
+
+<!ENTITY % proglang.values.local "|sh|makefile|fundamental">
+<!ENTITY % author.class "author|author.extern|comic">
+<!ENTITY % picture.element "picture|picture.extern|picture.choice">
+<!ELEMENT comic - O (%picture.element;)>
+<!ENTITY nbsp PI "nbsp">
+<!ENTITY ellipsis PI "ellipsis">
+<!ENTITY ie PI "ie">
+<!ENTITY eg PI "eg">
+<!ENTITY le "<">
+<!ENTITY gt ">">
+<!entity amp "&">
+<!entity etc PI "ellipsis">
+]>
+<book proglang=sh>
+<!--
+    <meta name="html.split.toc"   value="">
+    <meta name="html.split.bib"   value="">
+    <meta name="html.split.index" value="">
+-->
+    <meta name="proglang.mode" arg1="sh" arg2="shell-script-mode">
+    <meta name="proglang.mode" arg1="fundamental" arg2="fundamental-mode">
+    <title/Making Releases/
+    <author.Extern to="author.db" key="Denys.Duchier">
+    <Abstract>
+    This document explains how to create releases for various platforms.
+    </Abstract>
+
+    <chapter id="chap.intro">
+      <title/Introduction/
+      <p>You need to get, from the Mozart CVS archive, the sources
+      corresponding to the release.  A release is identified by a tag,
+      e.g. <code/mozart-1-2-2-a/.  In the following, I'll write
+      <code/$REL/ for the release tag.  Use <code/ssh/, &ie; set
+      environment variable <code/CVS_RSH=ssh/.
+      <code display>cvs -d :pserver:anoncvs@cvs.mozart-oz.org:/services/mozart/CVS get -r $REL mozart</code>
+      Get yourself a cup of coffee, and by the time you've savoured it
+      you have become the proud owner of a copy of the Mozart
+      sources.  I will refer to the top directory containing these
+      sources as <code/$SOURCE/: it is typically called <file/mozart/
+      unless you used option <code/-d/ to the CVS <code/get/ command
+      (which is unrelated to the <code/-d/ option to the <code/cvs/
+      command itself).</p>
+      <p>In order to build the release, you should create a separate
+      build directory.  I will call it <code/$BUILD/.  <code/$BUILD/
+      should not be created in <code/$SOURCE/ tree.  Simplest is to
+      create it as a sibling of <code/$SOURCE/.</p>
+      <p>To build the system, you first need to configure it.  Make
+      very sure that no OZ utilities are found in your shell's search
+      path and no OZ related variables are set in your environment.
+      Personally, I have defined shell aliases <code/ozon/ and
+      <code/ozoff/ to switch between having OZ utilities in my path
+      and having a pristine environment blissfully unaware of things
+      Mozartian.
+      <code display>cd $BUILD
+$MOZART/configure</code>
+      By default, this will set things up to install in the default
+      location <file>/usr/local/oz</file>.  You can change this
+      default using option <code/--prefix=DIR/.  It's a good idea to
+      set up dependencies in case you need to update the sources and
+      then rebuild what needs rebuilding:
+      <code display>make depend</code>
+      Now, you can build the system:
+      <code display/make/
+      And optionally install it:
+      <code display/make install/
+      or install it in a different installation directory <code/$DIR/:
+      <code display/make install PREFIX=$DIR/
+      Note that it is not possible to skip the <code/make/ step and
+      directly invoke <code/make install/.  At the top level
+      <code/make/ is equivalent to <code/make bootstrap/. If you want
+      to do it in one command, then you need to type:
+      <code display/make bootstrap install/</p>
+      <p>If you need to reconfigure, beware that <code/configure/
+      builds a cache of configuration data in
+      <file>$BUILD/config.cache</file>.  You may need to remove
+      that.</p>
+      <p>In order to also build the documentation, you need to invoke
+      configure with option:
+      <code display>--with-documentation=all</code></p>
+    </chapter>
+
+    <chapter id="chap.tarballs">
+      <title/Tarballs/
+      <section>
+        <title/Source Tarball/
+	<p>This assumes that you have checked out the sources and
+	configured a build directory (see <ptr to="chap.intro">).
+	The top level <file/Makefile/ provides support for creating a
+	source tarball:
+	<code display>cd $BUILD
+make src</code>
+        This will result in the creation of file
+	<file>mozart-$VERSION.$DATE-src.tar.gz</file>
+	where <code/$VERSION/ is the release number and <code/$DATE/
+	is the build date (the current date).  That's it, you're
+	done.</p>
+      </section>
+      <section>
+        <title/Documentation Tarball/
+	<p>For this, you need to build and install the documentation.
+	As mentioned earlier, this requires that you configured using
+	option <code/--with-documents=all/.  Note that building the
+	documentation takes very long and you need additional software
+	on your machine (such as LaTeX, nsgmls, Ghostscript, the
+	netpbm package, also java if you are going to build the
+	postscript and pdf documentation, and probably other things I
+	forget).</p>
+	<p>Let's assume that you
+	configured, built and installed the system (I will not explain
+	here how to additionally create the Postscript and PDF
+	documentation).  The top level <file/Makefile/ contains
+	support for creating a documentation tarball:
+	<code display>cd $BUILD
+make doc</code>
+        This will suck in all the installed documentation and create
+	file <file>mozart-$VERSION.$DATE-src.tar.gz</file>.</p>
+      </section>
+      <section>
+        <title/Binary Tarballs/
+	<p>Here again, we assume that you have configured, built and
+	installed the system.  The top level <file/Makefile/ contains
+	support for creating binary tarballs:
+	<code display>cd $BUILD
+make bin</code>
+	This will suck in from the installation directory all
+	necessary files to include in the binary tarballs.  As a
+	result, three tarballs are created:
+<list>
+<item><file>mozart-$VERSION.$DATE-$PLATFORM.tar.gz</file></item>
+<item><file>mozart-$VERSION.$DATE-$PLATFORM-contrib.tar.gz</file></item>
+<item><file>mozart-$VERSION.$DATE-$PLATFORM-internal.tar.gz</file></item>
+</list>
+        where <code/$PLATFORM/ stands for your platform, &ie; the
+	value returned by shell script:
+	<code display>$SOURCE/share/bin/ozplatform</code>
+        You can ignore the last tarball.</p>
+	<subsection>
+	  <title/Non-Linux Platforms/
+	  <p>Mozart requires a number of libraries which are not
+	  necessarily available by default on Non-Linux platforms.
+	  You will need to provide these libraries with the binary
+	  release.  There are 2 ways: using static linking or using
+	  shared object libraries.  I will describe the second way.
+	  Note, that the situation may be further complicated by the
+	  question of whether your platform supports dynamic linking
+	  or not.
+	  </p>
+	  <subsubsection>
+	    <title/Using Shared Object Libraries/
+	    <p>The aim here is to provide both the compiled system
+	    together with the dynamic libraries that it requires.
+	    Here is a little known fact: the scripts that invoke OZ
+	    utilities are designed to modify the search path for
+	    dynamic libraries so that the linker also looks first in:
+	    <code display>$HOME/.oz/platform/$PLATFORM/lib</code>
+	    and then in
+	    <code display>$PREFIX/platform/$PLATFORM/lib</code>
+	    where <code/$PREFIX/ stands for the installation
+	    directory.  Thus, the trick is to plunk the necessary
+	    shared libraries into this last directory before building the
+	    binary tarballs.</p>
+	    <p>Of course, the assumption is that you will be able to
+	    fetch the missing packages and build or otherwise obtain
+	    shared object libraries for them.  This is usually the
+	    case.</p>
+	  </subsubsection>
+	  <subsubsection>
+	    <title>Tcl/Tk</title>
+	    <p>This is frequently a pain in the rear.  Check other
+	    documentation as well as
+	    <file>$SOURCE/platform/wish/configure.in</file>.</p>
+	  </subsubsection>
+	</subsection>
+      </section>
+    </chapter>
+
+    <chapter>
+      <title/RPMs/
+      <section>
+        <title/Binary RPMs/
+        <p>If your platform uses RPMs, then you are in luck.  Download
+        the source RPM from our download page, become somebody really
+	important (I mean <code/root/) and execute:
+	<code display>rpm --rebuild mozart-$VERSION.$DATE-src.rpm</code>
+	This will create the binary RPMs in
+	<file>/usr/src/redhat/RPMS/i386</file>.
+      </section>
+      <section>
+        <title/Source RPM/
+	<p>In order to create the source RPM, you need to have already
+	created or downloaded the source and documentation tarballs.
+	Become somebody important and execute:
+	<code display>$SOURCE/misc/create-rpm $BUILD $BUILD</code>
+	Note that this will create both a source RPM and binary RPMs.
+	They will be placed in <code>$BUILD</code> or whatever
+	directory you supplied as the second argument to
+	<file/create-rpm/:
+<list>
+<item><file>mozart-$VERSION-$DATE-$REVISION.src.rpm</file></item>
+<item><file>mozart-$VERSION-$DATE-$REVISION.i386.rpm</file></item>
+<item><file>mozart-contrib-$VERSION-$DATE-$REVISION.i386.rpm</file></item>
+<item><file>mozart-doc-$VERSION-$DATE-$REVISION.i386.rpm</file></item>
+</list>
+
+      </section>
+    </chapter>
+</book>
+<!--
+Local Variables:
+mode: sgml
+mode: auto-fill
+sgml-default-dtd-file: "book.ced"
+sgml-auto-activate-dtd: t
+adaptive-fill-mode: nil
+End:
+-->
