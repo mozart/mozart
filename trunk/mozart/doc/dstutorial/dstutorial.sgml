@@ -12,13 +12,14 @@
 
 
 <!-- Include Files -->
-<!ENTITY abstract	SYSTEM	"1_abstract.sgml">
-<!ENTITY introduction	SYSTEM	"2_introduction.sgml">
-<!ENTITY x_dist		SYSTEM	"x_dist_model.sgml">
-<!ENTITY x_examples	SYSTEM	"x_examples.sgml">
-<!ENTITY x_failure	SYSTEM	"x_failure.sgml">
-<!ENTITY x_ft_examples	SYSTEM	"x_ft_examples.sgml">
-<!ENTITY x_limits	SYSTEM	"x_limits.sgml">
+<!ENTITY abstract		SYSTEM	"1_abstract.sgml">
+<!ENTITY introduction		SYSTEM	"2_introduction.sgml">
+<!ENTITY x_dist			SYSTEM	"x_dist_model.sgml">
+<!ENTITY x_examples		SYSTEM	"x_examples.sgml">
+<!ENTITY x_agentexamples	SYSTEM	"x_agentexamples.sgml">
+<!ENTITY x_failure		SYSTEM	"x_failure.sgml">
+<!ENTITY x_ft_examples		SYSTEM	"x_ft_examples.sgml">
+<!ENTITY x_limits		SYSTEM	"x_limits.sgml">
 
 <!-- Abbreviations -->
 <!ENTITY dot "." -- to distinguish it from periods -->
@@ -37,6 +38,7 @@
     <Meta name="html.split" value="chapter.introduction">
     <Meta name="html.split" value="chapter.distmodel">
     <Meta name="html.split" value="chapter.examples">
+    <Meta name="html.split" value="chapter.agentexamples">
     <Meta name="html.split" value="chapter.failure">
     <Meta name="html.split" value="chapter.ft_examples">
     <Meta name="html.split" value="chapter.limits">
@@ -61,6 +63,7 @@
    &introduction;
    &x_dist;
    &x_examples;
+   &x_agentexamples;
    &x_failure;
    &x_ft_examples;
    &x_limits;
@@ -69,12 +72,3 @@
   <BACK>
     <Bib.Extern id="saraswat94" to="bibliography.bib" key="saraswat94">
 </BOOK>
-
-
-
-
-
-
-
-
-
