@@ -205,15 +205,11 @@ public:
   OZ_Return validV(TaggedRef* /* vPtr */, TaggedRef val ) {
     return valid(val);
   }
-  OZ_Return hasFeatureV(TaggedRef val, TaggedRef *ptr) {
-    return hasFeature(val,ptr);
-  }
   GenCVariable* gcV() { error("not impl"); return 0; }
   void gcRecurseV() { error("not impl"); }
   void addSuspV(Suspension susp, TaggedRef* ptr, int state) {
     // mm2: addSuspFDVar(makeTaggedRef(ptr),susp,state);
   }
-  Bool isKindedV() { return true; }
   void disposeV(void) { freeListDispose(this, sizeof(GenOFSVariable)); }
   int getSuspListLengthV() { return getSuspListLength(); }
   void printStreamV(ostream &out,int depth = 10) {

@@ -135,10 +135,6 @@ public:
     // covered by `addSuspCVar(OZ_Term, Suspension, int)' [genvar.icc]
   }
 
-  virtual Bool isKindedV(void) {
-    return true;
-  }
-
   virtual void disposeV(void) {
     // dispose suspension lists
     freeListDispose(_susp_lists, getNoOfSuspLists() * sizeof(SuspList *));

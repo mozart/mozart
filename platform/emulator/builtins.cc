@@ -52,7 +52,6 @@
 #include "runtime.hh"
 
 #include "genvar.hh"
-#include "lazyvar.hh"
 
 #include "ofgenvar.hh"
 #include "fdbuilti.hh"
@@ -167,26 +166,17 @@ OZ_BI_define(Name,3,1)                                  \
 } OZ_BI_end
 
 
-#define NEW_DECLAREBOOLFUN1(BIfun,ifun,irel)            \
-OZ_BI_define(BIfun,1,1)                                 \
-{                                                       \
-  OZ_Return r = irel(OZ_in(0));                         \
-  switch (r) {                                          \
-  case PROCEED: OZ_RETURN(NameTrue);                    \
-  case FAILED : OZ_RETURN(NameFalse);                   \
-  case SUSPEND: oz_suspendOn(OZ_in(0));                 \
-  default     : return r;                               \
-  }                                                     \
-} OZ_BI_end                                             \
-OZ_Return ifun(TaggedRef val, TaggedRef &out)           \
-{                                                       \
-  OZ_Return r = irel(val);                              \
-  switch (r) {                                          \
-  case PROCEED: out=NameTrue; return PROCEED;           \
-  case FAILED : out=NameFalse; return PROCEED;          \
-  default     : return r;                               \
-  }                                                     \
-}
+#define NEW_DECLAREBOOLFUN1(BIfun,irel)         \
+OZ_BI_define(BIfun,1,1)                         \
+{                                               \
+  OZ_Return r = irel(OZ_in(0));                 \
+  switch (r) {                                  \
+  case PROCEED: OZ_RETURN(NameTrue);            \
+  case FAILED : OZ_RETURN(NameFalse);           \
+  case SUSPEND: oz_suspendOn(OZ_in(0));         \
+  default     : return r;                       \
+  }                                             \
+} OZ_BI_end
 
 /********************************************************************
  * `builtin`
@@ -268,7 +258,7 @@ OZ_Return isLiteralInline(TaggedRef t)
   return isLiteralTag(tag) ? PROCEED : FAILED;
 }
 
-NEW_DECLAREBOOLFUN1(BIisLiteralB,isLiteralBInline,isLiteralInline)
+NEW_DECLAREBOOLFUN1(BIisLiteralB,isLiteralInline)
 
 
 OZ_Return isAtomInline(TaggedRef t)
@@ -296,7 +286,7 @@ OZ_Return isAtomInline(TaggedRef t)
   return oz_isAtom(term) ? PROCEED : FAILED;
 }
 
-NEW_DECLAREBOOLFUN1(BIisAtomB,isAtomBInline,isAtomInline)
+NEW_DECLAREBOOLFUN1(BIisAtomB,isAtomInline)
 
 OZ_Return isLockInline(TaggedRef t)
 {
@@ -304,49 +294,32 @@ OZ_Return isLockInline(TaggedRef t)
   return oz_isLock(term) ? PROCEED : FAILED;
 }
 
-NEW_DECLAREBOOLFUN1(BIisLockB,isLockBInline,isLockInline)
+NEW_DECLAREBOOLFUN1(BIisLockB,isLockInline)
 
-
-
-
+inline
 OZ_Return isFreeRelInline(TaggedRef term) {
   DEREF(term, _1, tag);
-  // mm2: use oz_isFree
-  switch (tag) {
-  case UVAR: case SVAR: return PROCEED;
-  default:              return FAILED;
-  }
+  if (oz_isFree(term)) return PROCEED;
+  return FAILED;
 }
 
-NEW_DECLAREBOOLFUN1(BIisFree,isFreeInline,isFreeRelInline)
+NEW_DECLAREBOOLFUN1(BIisFree,isFreeRelInline)
 
+inline
 OZ_Return isKindedRelInline(TaggedRef term) {
   DEREF(term, _1, tag);
-  // mm2: use oz_isFree
-  if (isCVar(tag)) {
-    Bool kinded = OK;
-    switch (tagged2CVar(term)->getType()) {
-      // mm2: generalize
-    case LazyVariable: kinded=tagged2LazyVar(term)->isKindedV(); break;
-    default:
-      if (isFuture(term))
-        kinded=tagged2Future(term)->isKinded();
-      break;
-    }
-    return kinded?PROCEED:FAILED;
-  }
-  else
-    return FAILED;
+  if (oz_isFree(term)) return FAILED;
+  return PROCEED;
 }
 
-NEW_DECLAREBOOLFUN1(BIisKinded,isKindedInline,isKindedRelInline)
+NEW_DECLAREBOOLFUN1(BIisKinded,isKindedRelInline)
 
 OZ_Return isDetRelInline(TaggedRef term) {
-  DEREF(term, _1, tag);
-  return isVariableTag(tag) ? FAILED : PROCEED;
+  DEREF(term, _1, _2);
+  return oz_isVariable(term) ? FAILED : PROCEED;
 }
 
-NEW_DECLAREBOOLFUN1(BIisDet,isDetInline,isDetRelInline)
+NEW_DECLAREBOOLFUN1(BIisDet,isDetRelInline)
 
 
 
@@ -378,7 +351,7 @@ OZ_Return isNameInline(TaggedRef t)
   return oz_isAtom(term) ? FAILED: PROCEED;
 }
 
-NEW_DECLAREBOOLFUN1(BIisNameB,isNameBInline,isNameInline)
+NEW_DECLAREBOOLFUN1(BIisNameB,isNameInline)
 
 
 OZ_Return isTupleInline(TaggedRef t)
@@ -396,7 +369,7 @@ OZ_Return isTupleInline(TaggedRef t)
   return oz_isTuple(term) ? PROCEED : FAILED;
 }
 
-NEW_DECLAREBOOLFUN1(BIisTupleB,isTupleBInline,isTupleInline)
+NEW_DECLAREBOOLFUN1(BIisTupleB,isTupleInline)
 
 
 OZ_Return isRecordInline(TaggedRef t)
@@ -414,7 +387,7 @@ OZ_Return isRecordInline(TaggedRef t)
   return oz_isRecord(term) ? PROCEED : FAILED;
 }
 
-NEW_DECLAREBOOLFUN1(BIisRecordB,isRecordBInline,isRecordInline)
+NEW_DECLAREBOOLFUN1(BIisRecordB,isRecordInline)
 
 
 OZ_Return isProcedureInline(TaggedRef t)
@@ -423,7 +396,7 @@ OZ_Return isProcedureInline(TaggedRef t)
   return oz_isProcedure(term) ? PROCEED : FAILED;
 }
 
-NEW_DECLAREBOOLFUN1(BIisProcedureB,isProcedureBInline,isProcedureInline)
+NEW_DECLAREBOOLFUN1(BIisProcedureB,isProcedureInline)
 
 OZ_Return isChunkInline(TaggedRef t)
 {
@@ -440,7 +413,7 @@ OZ_Return isChunkInline(TaggedRef t)
   }
   return oz_isChunk(term) ? PROCEED : FAILED;
 }
-NEW_DECLAREBOOLFUN1(BIisChunkB,isChunkBInline,isChunkInline)
+NEW_DECLAREBOOLFUN1(BIisChunkB,isChunkInline)
 
 OZ_Return procedureArityInline(TaggedRef procedure, TaggedRef &out)
 {
@@ -529,14 +502,14 @@ OZ_Return isCellInline(TaggedRef cell)
   NONVAR( cell, term);
   return oz_isCell(term) ? PROCEED : FAILED;
 }
-NEW_DECLAREBOOLFUN1(BIisCellB,isCellBInline,isCellInline)
+NEW_DECLAREBOOLFUN1(BIisCellB,isCellInline)
 
 OZ_Return isPortInline(TaggedRef port)
 {
   NONVAR( port, term );
   return oz_isPort(term) ? PROCEED : FAILED;
 }
-NEW_DECLAREBOOLFUN1(BIisPortB,isPortBInline,isPortInline)
+NEW_DECLAREBOOLFUN1(BIisPortB,isPortInline)
 
 /*********************************************************************
  * OFS Records
@@ -749,7 +722,7 @@ OZ_Return isRecordCInline(TaggedRef t)
   return PROCEED;
 }
 
-NEW_DECLAREBOOLFUN1(BIisRecordCB,isRecordCBInline,isRecordCInline)
+NEW_DECLAREBOOLFUN1(BIisRecordCB,isRecordCInline)
 
 
 
@@ -1899,10 +1872,19 @@ LBLagain:
     return SUSPEND;
 
   case CVAR:
-    {
-      int ret = tagged2CVar(term)->hasFeature(fea,out);
-      if (ret == FAILED) goto typeError0;
-      return ret;
+    switch (tagged2CVar(term)->getType()) {
+    case OFSVariable:
+      {
+        int ret = tagged2GenOFSVar(term)->hasFeature(fea,out);
+        if (ret == FAILED) goto typeError0;
+        return ret;
+      }
+    case FDVariable:
+    case BoolVariable:
+    case FSetVariable:
+      goto typeError0;
+    default:
+      return SUSPEND;
     }
 
   case LITERAL:
@@ -1952,7 +1934,7 @@ OZ_Return dotInline(TaggedRef term, TaggedRef fea, TaggedRef &out)
 }
 NEW_DECLAREBI_USEINLINEFUN2(BIdot,dotInline)
 
-
+inline
 OZ_Return hasFeatureInline(TaggedRef term, TaggedRef fea)
 {
   return genericDot(term,fea,0,FALSE);
@@ -1979,13 +1961,11 @@ OZ_Return hasFeatureBInline(TaggedRef val1, TaggedRef val2, TaggedRef &out)
   }
 }
 
+inline
 OZ_Return subtreeInline(TaggedRef term, TaggedRef fea, TaggedRef &out)
 {
   return genericDot(term,fea,&out,FALSE);
 }
-
-extern OZ_Return subtreeInline(TaggedRef term, TaggedRef fea, TaggedRef &out);
-
 
 /*
  * fun {matchDefault Term Attr Defau}
@@ -2090,7 +2070,7 @@ OZ_Return isUnitInline(TaggedRef t)
     return FAILED;
 }
 
-NEW_DECLAREBOOLFUN1(BIisUnitB,isUnitBInline,isUnitInline)
+NEW_DECLAREBOOLFUN1(BIisUnitB,isUnitInline)
 
 // ---------------------------------------------------------------------
 // Bool things
@@ -2133,7 +2113,7 @@ OZ_Return isBoolInline(TaggedRef t)
     return FAILED;
 }
 
-NEW_DECLAREBOOLFUN1(BIisBoolB,isBoolBInline,isBoolInline)
+NEW_DECLAREBOOLFUN1(BIisBoolB,isBoolInline)
 
 OZ_Return notInline(TaggedRef A, TaggedRef &out)
 {
@@ -4243,7 +4223,7 @@ OZ_Return BIisFloatInline(TaggedRef num)
   return isFloatTag(tag) ? PROCEED : FAILED;
 }
 
-NEW_DECLAREBOOLFUN1(BIisFloatB,BIisFloatBInline,BIisFloatInline)
+NEW_DECLAREBOOLFUN1(BIisFloatB,BIisFloatInline)
 
 OZ_Return BIisIntInline(TaggedRef num)
 {
@@ -4256,7 +4236,7 @@ OZ_Return BIisIntInline(TaggedRef num)
   return oz_isInt(num) ? PROCEED : FAILED;
 }
 
-NEW_DECLAREBOOLFUN1(BIisIntB,BIisIntBInline,BIisIntInline)
+NEW_DECLAREBOOLFUN1(BIisIntB,BIisIntInline)
 
 
 
@@ -4271,7 +4251,7 @@ OZ_Return BIisNumberInline(TaggedRef num)
   return oz_isNumber(num) ? PROCEED : FAILED;
 }
 
-NEW_DECLAREBOOLFUN1(BIisNumberB,BIisNumberBInline,BIisNumberInline)
+NEW_DECLAREBOOLFUN1(BIisNumberB,BIisNumberInline)
 
 
 /* -----------------------------------------------------------------------
@@ -6427,7 +6407,7 @@ OZ_Return BIisObjectInline(TaggedRef t)
   return oz_isObject(t) ?  PROCEED : FAILED;
 }
 
-NEW_DECLAREBOOLFUN1(BIisObjectB,BIisObjectBInline,BIisObjectInline)
+NEW_DECLAREBOOLFUN1(BIisObjectB,BIisObjectInline)
 
 
 OZ_Return getClassInline(TaggedRef t, TaggedRef &out)

@@ -108,22 +108,37 @@ public:
   GenCVariable(TypeOfGenCVariable t, DummyClass *) { setType(t); };
   GenCVariable(TypeOfGenCVariable, Board * = (Board*)0);
 
+  // gc: copying
   virtual GenCVariable* gcV() = 0;
+  // gc: collect entry points
   virtual void          gcRecurseV() = 0;
+  // tell
   virtual OZ_Return     unifyV(TaggedRef *, TaggedRef, ByteCode *) = 0;
 
-  virtual int           isKindedV() = 0;
+  // ask
   virtual OZ_Return     validV(TaggedRef *, TaggedRef) = 0;
-  virtual OZ_Return     hasFeatureV(TaggedRef, TaggedRef *) = 0;
 
-  virtual void          addSuspV(Suspension susp, TaggedRef *vPtr,
-                                 int unstable = TRUE) = 0;
+  virtual void addSuspV(Suspension susp, TaggedRef *vPtr,
+                        int unstable = TRUE)
+  {
+    addSuspSVar(susp, unstable);
+  }
 
+  // destructor
   virtual void          disposeV() = 0;
-  virtual void          printStreamV(ostream &out,int depth = 10) = 0;
+  virtual void          printStreamV(ostream &out,int depth = 10)
+  {
+    out << "<cvar: " << getType() << ">";
+  }
   virtual void          printLongStreamV(ostream &out,int depth = 10,
-                                         int offset = 0) = 0;
-  virtual int           getSuspListLengthV() = 0;
+                                         int offset = 0)
+  {
+    printStreamV(out,depth); out << endl;
+  }
+  virtual int           getSuspListLengthV()
+  {
+    return getSuspListLengthS();
+  }
 
   void printV(void) { printStreamV(cerr); cerr << endl; cerr.flush(); }
   void printLongV(void) { printLongStreamV(cerr); cerr.flush(); }
@@ -141,7 +156,6 @@ public:
 
   // is X=val still valid
   Bool valid(TaggedRef *varPtr, TaggedRef val);
-  int hasFeature(TaggedRef fea,TaggedRef *out);
 
   OZPRINTLONG;
 
@@ -175,9 +189,10 @@ public:
     case FDVariable:
     case BoolVariable:
     case OFSVariable:
+    case FSetVariable:
       return true;
     default:
-      return isKindedV();
+      return false;
     }
   }
 };

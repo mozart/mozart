@@ -47,7 +47,6 @@ public:
 
   OZ_Return unifyV(TaggedRef* vPtr,TaggedRef t,ByteCode* scp);
   OZ_Return validV(TaggedRef* /* vPtr */, TaggedRef /* val */) { return TRUE; }
-  OZ_Return hasFeatureV(TaggedRef, TaggedRef *) { return SUSPEND; }
   GenCVariable* gcV() { return new GenLazyVariable(*this); }
   void gcRecurseV() {
     if (function!=0) {
@@ -56,9 +55,7 @@ public:
     }
   }
   void addSuspV(Suspension, TaggedRef*, int);
-  Bool isKindedV() { return false; }
   void disposeV(void) { freeListDispose(this, sizeof(GenLazyVariable)); }
-  int getSuspListLengthV() { return getSuspListLengthS(); }
   void printStreamV(ostream &out,int depth = 10) {
     OZ_Term f = getFunction();
     if (f==0) out << "<lazy>";

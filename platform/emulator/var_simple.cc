@@ -37,15 +37,17 @@ OZ_Return SimpleVar::unifyV(TaggedRef* vPtr, TaggedRef t, ByteCode* scp) {
   if (oz_isRef(t)) {
     TaggedRef *tPtr=tagged2Ref(t);
     GenCVariable *tv=tagged2CVar(*tPtr);
-    if (oz_isBelow(GETBOARD(tv),GETBOARD(this))
+    if (tv->getType()==SimpleVarType
+        && oz_isBelow(GETBOARD(tv),GETBOARD(this))
 #ifdef VAR_BIND_NEWER
         // if both are local, then check heap
         && (!am.isLocalSVar(this) ||
             heapNewer(tPtr,vPtr))
 #endif
         ) {
-      Swap(t,v,TaggedRef);
-      vPtr=tPtr;
+      t=    makeTaggedRef(vPtr);
+      v=    *tPtr;
+      vPtr= tPtr;
     }
     oz_bind(vPtr, v, t);
   } else {

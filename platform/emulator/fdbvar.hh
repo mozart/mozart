@@ -107,14 +107,12 @@ public:
   OZ_Return validV(TaggedRef* /* vPtr */, TaggedRef val ) {
     return valid(val);
   }
-  OZ_Return hasFeatureV(TaggedRef val, TaggedRef *) { return FAILED; }
   GenCVariable* gcV() { error("not impl"); return 0; }
   void gcRecurseV() { error("not impl"); }
   void addSuspV(Suspension susp, TaggedRef* ptr, int state) {
     error("not impl");
     // mm2: addSuspBoolVar(makeTaggedRef(ptr),susp,state);
   }
-  Bool isKindedV() { return true; }
   void disposeV(void) { dispose(); }
   int getSuspListLengthV() { return getSuspListLength(); }
   void printStreamV(ostream &out,int depth = 10) {
