@@ -1953,6 +1953,7 @@ BIspec fdSpec[] = {
 #endif
   // Distribution builtins: fddist.cc
   {"fddistribute", 5, BIfdDistribute},
+  {"fddistributeMinPairs", 5, BIfdDistributeMinPairs},
 
   {0,0,0,0}
 };

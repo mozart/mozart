@@ -11,7 +11,6 @@
 
 #include "fdbuilti.hh"
 
-
 // ---------------------------------------------------------------------
 //                  Finite Domains Distribution Built-ins
 // ---------------------------------------------------------------------
@@ -215,3 +214,142 @@ OZ_C_proc_begin(BIfdDistribute, 5) {
   return (OZ_unify(out_variable, variable) &&
 	  OZ_unify(out_value,    value)) ? PROCEED : FAILED;
 } OZ_C_proc_end
+
+
+// ---------------------------------------------------------------------
+//                  Scheduling Distribution 
+// ---------------------------------------------------------------------
+
+static inline double min(double a, double b) { return a < b ? a : b; }
+static inline double max(double a, double b) { return a > b ? a : b; }
+
+inline
+static double pairCosts(int min_left, int max_left, int min_right, 
+		     int max_right, int dur_left, int dur_right) {
+  double slack_left_right = max_right - min_left - dur_left;
+  double slack_right_left = max_left - min_right - dur_right;
+  double s = min( slack_left_right,  slack_right_left) / 
+    max( slack_left_right,  slack_right_left);
+  double square_root = (s < 0) ? sqrt(-s) : sqrt(s); 
+  return min(slack_left_right / square_root, slack_right_left / square_root);
+}
+
+OZ_C_proc_begin(BIfdDistributeMinPairs, 5) { 
+  TaggedRef tagged_pair_vector  = deref(OZ_getCArg(0));
+  TaggedRef tagged_start_record = deref(OZ_getCArg(1));
+  TaggedRef tagged_dur_record   = deref(OZ_getCArg(2));
+  TaggedRef out_pair            = OZ_getCArg(3); 
+  TaggedRef out_rest            = OZ_getCArg(4); 
+  TaggedRef left, right;
+
+  SRecord *pair_vector = tagged2SRecord(tagged_pair_vector);
+  SRecord *start_record = tagged2SRecord(tagged_start_record);
+  SRecord *dur_record = tagged2SRecord(tagged_dur_record);
+  int     width  = pair_vector->getWidth();
+  int     cur    = 0;
+  int     new_cur = 0;
+  TaggedRef tagged_best_pair;
+  SRecord *best_pair = NULL;
+  double     best_costs = (double) OZ_getFDSup();
+  TaggedRef tagged_pair;
+  SRecord *pair;
+
+  if (width == 0) {
+    cout << "width of tuple must not be zero";
+    return FAILED;
+  }
+
+  // Find the minimal pair
+  do {
+    tagged_pair = deref(pair_vector->getArg(cur));
+    pair = tagged2SRecord(tagged_pair);
+
+    left = deref(pair->getArg(0));
+    right = deref(pair->getArg(1));
+
+    TaggedRef left_var = deref(start_record->getFeature(left));
+    TaggedRef right_var = deref(start_record->getFeature(right));
+    
+    int min_left = getMin(left_var);
+    int max_left = getMax(left_var);
+    int min_right = getMin(right_var);
+    int max_right = getMax(right_var);
+    int dur_left = smallIntValue(deref(dur_record->getFeature(left)));
+    int dur_right = smallIntValue(deref(dur_record->getFeature(right)));
+
+    // test if already entailed
+    if ( (max_left + dur_left <= min_right) ||
+	 (max_right + dur_right <= min_left) ||
+	 (min_left + dur_left > max_right) ||
+	 (min_right + dur_right > max_left) 
+	 ) 
+      continue;
+
+    double costs = pairCosts(min_left, max_left, min_right, max_right, dur_left, dur_right);
+
+    if (costs < best_costs) {
+      if (best_pair != NULL) {
+	pair_vector->setArg(new_cur, tagged_best_pair);
+	tagged_best_pair = tagged_pair;
+	best_pair = pair;
+	best_costs = costs;
+	new_cur++;
+      }
+      else { 
+	tagged_best_pair = tagged_pair;
+	best_pair = pair;
+	best_costs = costs;
+      }
+    }
+    else {
+      pair_vector->setArg(new_cur, tagged_pair);
+      new_cur++;
+    }
+
+  } while (++cur < width);
+
+
+  if ( (new_cur > 0) && (new_cur < width))
+    pair_vector->downSize(new_cur);
+
+  if ( (best_pair == NULL) || (width == 1) || (new_cur == 0)) {
+    return (OZ_unify(out_pair, makeTaggedSmallInt(0)) &&
+	  OZ_unify(out_rest, tagged_pair_vector   )) ? PROCEED : FAILED; 
+  }
+  else {
+    // build pair depending on order
+    TaggedRef left = deref(best_pair->getArg(0));
+    TaggedRef right = deref(best_pair->getArg(1));
+
+    TaggedRef left_var = deref(start_record->getFeature(left));
+    TaggedRef right_var = deref(start_record->getFeature(right));
+    
+    int min_left = getMin(left_var);
+    int max_left = getMax(left_var);
+    int min_right = getMin(right_var);
+    int max_right = getMax(right_var);
+    int dur_left = smallIntValue(deref(dur_record->getFeature(left)));
+    int dur_right = smallIntValue(deref(dur_record->getFeature(right)));
+
+    double slack_left_right = max_right - min_left - dur_left;
+    double slack_right_left = max_left - min_right - dur_right;
+    double s = min( slack_left_right,  slack_right_left) / 
+      max( slack_left_right,  slack_right_left);
+    double square_root = (s < 0) ? sqrt(-s) : sqrt(s); 
+    if (slack_left_right / square_root >  slack_right_left / square_root) {
+      return (OZ_unify(out_pair, tagged_best_pair) &&
+	      OZ_unify(out_rest, tagged_pair_vector   )) ? PROCEED : FAILED;
+    }
+    else {
+      SRecord *new_pair = SRecord::newSRecord(makeTaggedAtom("#"), 2);
+      new_pair->setArg(0, right);
+      new_pair->setArg(1, left);
+      return (OZ_unify(out_pair, makeTaggedSRecord(new_pair)) &&
+	      OZ_unify(out_rest, tagged_pair_vector   )) ? PROCEED : FAILED;
+    }
+
+
+  }
+
+} OZ_C_proc_end
+
