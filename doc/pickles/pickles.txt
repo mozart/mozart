@@ -1,7 +1,11 @@
 
 <pickle> ::=  S:<nonquoted-string>     % header (any sequence of characters)
 	      S:<string>	       % version number
-	      <pair>*		       % separated by blanks
+	      <value>		       % the value contained in the pickle
+
+
+<value>	 ::= D:<termtag>	       % to be detailed soon
+	     <pair>*		       % separated by blanks
 
 
 <pair> ::=  S:<string>
