@@ -1230,6 +1230,10 @@ TaggedRef gcVariable(TaggedRef var)
 inline
 void FiniteDomain::gc(void)
 {
+#if defined(DEBUG_CHECK) && defined(DEBUG_FD)
+  Assert(isConsistent());
+#endif
+
   descr_type type = getType();
   if (type == fd_descr) {
     setType(fd_descr, NULL);
