@@ -622,8 +622,8 @@ OZ_Return MonitorArityPropagator::propagate(void)
         // The home board of v(ar) must be taken from outside propFeat!
         // Get the home board for any new variables:
         //
-        // kost@ : don't ask me what happens if the 'tmptail' is not a
-        //         variable! ;-V
+        // kost@ : FT (tmptail) is encapsulated within the propagator,
+        //         so the following really holds:
         Assert(oz_isVar(tmptail));
         OzVariable *ov = tagged2Var(tmptail);
         Board *home = ov->getBoardInternal();
