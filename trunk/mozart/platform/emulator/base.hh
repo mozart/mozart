@@ -361,9 +361,7 @@ void handlerPIPE();
 void handlerCHLD();
 void handlerFPE();
 void handlerALRM();
-#ifdef VIRTUALSITES
 void handlerUSR2();
-#endif
 
 void checkExtSuspension(Suspension susp, Board * home);
 
