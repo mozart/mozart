@@ -29,8 +29,7 @@ RM		= rm -f
 
 LIBS     	= -lc -lm
 
-CFLAGS   	=  -O3
-CFLAGS   	+= -UDEBUG
+CXXFLAGS   	+= -UDEBUG
 
 CXX      	= $(OZTOOL) c++
 LD       	= $(OZTOOL) ld
@@ -91,7 +90,7 @@ $(LIB_DIR)/%.so-$(PLATFORM): %.so-$(PLATFORM)
 	$(LD) -o $@ $^ $(LDFLAGS) $(LIBS)
 
 %.o: %.cc 
-	$(CXX) $(CPPFLAGS) $(OPTIMIZE) $(CFLAGS) -c $< -o $@ 
+	$(CXX) $(CPPFLAGS) $(CFLAGS) -c $< -o $@ 
 
 #----------------------------------------------------------------------
 # Maintenance
