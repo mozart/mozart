@@ -29,8 +29,6 @@ FactorsToCm      =cTo(i: 2.54
 
 StatusUpdateCnt = 50
 
-TitleName    = 'Oz Explorer'
-
 StartSizeX   = 500
 StartSizeY   = 300
 MinSizeX     = 360
