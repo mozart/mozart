@@ -58,11 +58,11 @@
                              out => ['+bitArray'],
                              BI  => BIbitArray_clone},
 
-     'or'               => { in  => ['+bitArray','+bitArray'],
+     'disj'               => { in  => ['+bitArray','+bitArray'],
                              out => [],
                              BI  => BIbitArray_or},
 
-     'and'              => { in  => ['+bitArray','+bitArray'],
+     'conj'              => { in  => ['+bitArray','+bitArray'],
                              out => [],
                              BI  => BIbitArray_and},
 
