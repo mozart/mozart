@@ -27,7 +27,7 @@ typedef void* StackEntry;
 
 typedef enum {
   Stack_WithMalloc,
-  Stack_WithFreelist,
+  Stack_WithFreelist
 } StackAllocation;
 
 class Stack {
