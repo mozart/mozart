@@ -143,7 +143,8 @@
 
   <Back>
 
-  <bib.extern id="system"     to="cpi.bib" key="system">
+<!--    <bib.extern id="system"     to="cpi.bib" key="system">
+
   <bib.extern id="murray"     to="cpi.bib" key="murray">
   <bib.extern id="primer"     to="cpi.bib" key="primer">
   <bib.extern id="absmachine" to="cpi.bib" key="absmachine">
@@ -156,5 +157,5 @@
   <Bib.Extern id="Benhamou:95a" to ="cpi.bib" key="Benhamou:95a">
   <Bib.Extern id="Chvantal:83" to ="cpi.bib" key="Chvantal:83">
   <Bib.Extern id="Mueller:98a" to="cpi.bib" key="Mueller:98a">
-
+-->
 </Book>
