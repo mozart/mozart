@@ -366,7 +366,7 @@ TaggedRef reverseC(TaggedRef l)
 }
 
 GName *Object::globalize() {
-  if (!getPtr()) {
+  if (!getGName1()) {
     setGName(newGName(makeTaggedConst(this),GNT_OBJECT));
     if (!isClass()) {
       RecOrCell state = getState();
