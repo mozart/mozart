@@ -9,7 +9,11 @@ BODY {
   width: 130px;
 }
 
-BODY, P, H1, H2, H3, H4, TABLE, TR, TH, TD, IMG {
+DIV.maxi {
+  margin-left: -160px;
+}
+
+BODY, P, H1, H2, H3, H4, TH, TD {
   font-family: sans-serif;
 }
 
