@@ -328,12 +328,14 @@ in
 	 
 	 meth read(size:Size <=ReadSize
 		   list:?Is  tail:It<=nil len:?N<=_)
-	    lock self.ReadLock then
+	    lock self.ReadLock then IsL NL in
 	       lock self.WriteLock then D=@ReadDesc in
-		  if {IsInt D} then
-		     N = case Size of all then {DoReadAll D ?Is It 0}
-			 else {OS.read D Size ?Is It}
-			 end
+		  if {IsInt D} then 
+		     NL = case Size of all then {DoReadAll D ?IsL It 0}
+			  else {OS.read D Size ?IsL It}
+			  end
+		     Is = IsL
+		     N = NL
 		  else
 		     {RaiseClosed self
 		      read(size:Size list:Is tail:It len:N)}
@@ -388,22 +390,23 @@ in
       %%
       
       class SockAndPipe from DescClass
-			   
 	 meth read(size: Size <= ReadSize
 		   len:  Len  <= _
 		   list: List
 		   tail: Tail <= nil)
-	    lock self.ReadLock then D=@ReadDesc in
+	    lock self.ReadLock then D=@ReadDesc ListL LenL in
 	       if {IsInt D} then
-		  Len = case Size of all then {DoReadAll D ?List Tail 0}
-			else {OS.read D Size ?List Tail}
-			end
+		  LenL = case Size of all then {DoReadAll D ?ListL Tail 0}
+			 else {OS.read D Size ?ListL Tail}
+			 end
+		  List = ListL
+		  Len = LenL
 	       else {RaiseClosed self
 		     read(size:Size len:Len list:List tail:Tail)}
 	       end
 	    end
 	 end
-	 
+
 	 meth write(vs:V len:I<=_)
 	    lock self.WriteLock then D=@WriteDesc in
 	       if {IsInt D} then I={DoWrite D V 0}
@@ -411,7 +414,7 @@ in
 	       end
 	    end
 	 end
-	 
+
 	 meth flush(how:How<=[receive send])
 	    R = {Member receive How}
 	    S = {Member send    How}
@@ -427,8 +430,7 @@ in
 	    end
 	 end
       end
-      
-      
+
       local
 	 fun {DoSend D V M}
 	    case {OS.send D V nil}
@@ -436,7 +438,7 @@ in
 	    elseof N then N+M
 	    end
 	 end
-	 
+
 	 fun {DoSendTo Desc V Host Port M}
 	    case {OS.sendTo Desc V nil Host Port}
 	    of suspend(N S V) then {Wait S} {DoSendTo Desc V Host Port N+M}
@@ -444,7 +446,7 @@ in
 	    end
 	 end
       in
-	 
+
 	 class Socket
 	    from SockAndPipe
 	       %% Implementation of socket
