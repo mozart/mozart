@@ -185,8 +185,8 @@
     <Meta name="latex.picture.width" arg1="pic.q7" arg2="1cm">
     <Meta name="latex.picture.width" arg1="pic.q8" arg2="1cm">
 
-    <Meta name="latex.picture.width" arg1="pic.bridgeProblem" arg2="\linewidth">
-    <Meta name="latex.picture.width" arg1="pic.gantt" arg2="\linewidth">
+    <Meta name="latex.picture.width" arg1="pic.bridgeProblem" arg2="">
+    <Meta name="latex.picture.width" arg1="pic.gantt" arg2="">
 
     <Title/Finite Domain Constraint Programming in &Oz;. A Tutorial./
       <Author.Extern to="author.db" key="Christian.Schulte"> 
