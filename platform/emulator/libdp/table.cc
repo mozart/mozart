@@ -236,7 +236,8 @@ void OwnerTable::print(){
   printf("***********************************************\n");
   printf("********* OWNER TABLE *************************\n");
   printf("***********************************************\n");
-  printf("Size:%d No_used:%d \n\n",size,no_used);
+  printf("Size:%d No_used:%d \n",size,no_used);
+  printf("site:%s\n\n",myDSite->stringrep());
   printf("OI\t OWNER\t Credit\t Flags\n");
   int i;
   for(i=0;i<size;i++){
@@ -615,7 +616,8 @@ void BorrowTable::print(){
   printf("***********************************************\n");
   printf("********* BORROW TABLE *************************\n");
   printf("***********************************************\n");
-  printf("Size:%d No_used:%d \n\n",size,no_used);
+  printf("Size:%d No_used:%d \n",size,no_used);
+  printf("site:%s\n\n",myDSite->stringrep());
   printf("BI\t BORROW\t OI\t PrimCredit\t SecCredit\n");
   int i;
   BorrowEntry *b;
@@ -1252,6 +1254,7 @@ int BorrowTable::closeProxyToFree(unsigned int ms){
 	  proxies++;
 	}
 	if(t->isFrame()) {
+	  /*
 	  int type = t->getType();
 	  int state;
 	  if(type==Co_Cell)
@@ -1288,6 +1291,7 @@ int BorrowTable::closeProxyToFree(unsigned int ms){
 	  default:
 	    Assert(0);
 	  }
+	  */
 	  frames++;
 	}
       }
@@ -1312,3 +1316,36 @@ int BorrowTable::closeProxyToFree(unsigned int ms){
   return frames+proxies;
 }
 
+int OwnerTable::notGCMarked() {
+  OwnerEntry *be;
+  for(int i=0;i<size;i++){
+    be = getOwner(i);
+    if(!be->isFree()) {
+      if(be->isGCMarked())
+	return FALSE;
+      if(be->isTertiary()) {
+	if(be->getTertiary()->gcIsMarked())
+	  return FALSE;
+	Assert(be->getTertiary()->getIndex() == i);
+      }
+    }
+  }
+  return TRUE;
+}
+
+int BorrowTable::notGCMarked() {
+  BorrowEntry *be;
+  for(int i=0;i<size;i++){
+    be = getBorrow(i);
+    if(!be->isFree()) {
+      if(be->isGCMarked())
+	return FALSE;
+      if(be->isTertiary()) {
+	if(be->getTertiary()->gcIsMarked())
+	  return FALSE;
+	Assert(be->getTertiary()->getIndex() == i);
+      }
+    }
+  }
+  return TRUE;
+}
