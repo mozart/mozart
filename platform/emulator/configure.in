@@ -460,6 +460,7 @@ then
     AC_CHECK_LIB(ccmalloc,main,true,AC_MSG_ERROR(cannot find lib ccmalloc))
     AC_DEFINE(CCMALLOC)
     LIBS="$LIBS -lccmalloc"
+    oz_enable_modules_static=yes
 elif test -n "$with_ccmalloc"
 then
     AC_MSG_ERROR(only yes allowed)
