@@ -8,7 +8,8 @@
 local
 
    GetCenterAbove = {NewName}
-   UpperSpace     = VerSpace - CircleWidth
+   UpperSpaceI    = VerSpaceI - CircleWidthI
+   UpperSpaceF    = {IntToFloat UpperSpaceI}
    TagEnd         = v(']')
 
    class NumberNode
@@ -25,11 +26,11 @@ local
 	    <<getCenterAbove(X Y Above)>>
 	    case Font==False then true else
 	       {Canvas tk(crea text
-			  Scale * X
-			  Scale * case <<isHidden($)>> then
-				     Y + UpperSpace / 2.0
-				  else Y
-				  end
+			  Scale * {IntToFloat X}
+			  Scale * {IntToFloat case <<isHidden($)>> then
+						 Y + UpperSpaceI div 2
+					      else Y
+					      end}
 			  o(font: Font
 			    text: N
 			    tags: q(NodePrefix#self.suffix
@@ -48,10 +49,11 @@ local
       in
 	 <<getCenterAbove(X Y Above)>>
 	 {Canvas tk(crea text
-		    Scale * X
-		    Scale * case <<isHidden($)>> then Y + UpperSpace / 2.0
-			    else Y
-			    end
+		    Scale * {IntToFloat X}
+		    Scale * {IntToFloat case <<isHidden($)>> then
+					   Y + UpperSpaceI div 2
+					else Y
+					end}
 		    o(font: Font
 		      text: @number
 		      tags: q(NodePrefix#self.suffix
@@ -75,17 +77,17 @@ local
       end
 	 
       meth getCenterAbove(?X ?Y ?Above)
-	 <<GetCenterAbove(0.0 0.0 nil ?X ?Y ?Above)>>
+	 <<GetCenterAbove(0 0 nil ?X ?Y ?Above)>>
       end
 
       meth GetCenter(X1 Y1 ?X2 ?Y2)
 	 case self.mom of !False then X2=X1+RootX Y2=Y1+RootY
-	 elseof Mom then {Mom GetCenter(X1+@offset Y1+VerSpace ?X2 ?Y2)}
+	 elseof Mom then {Mom GetCenter(X1+@offset Y1+VerSpaceI ?X2 ?Y2)}
 	 end
       end
 	    
       meth getCenter(?X ?Y)
-	 <<TkNode GetCenter(0.0 0.0 ?X ?Y)>>
+	 <<TkNode GetCenter(0 0 ?X ?Y)>>
       end
 
       meth close
@@ -132,10 +134,12 @@ local
 	 in
 	    case self.mom of !False then true else
 	       {Canvas tk(coords LinkPrefix#Suffix
-			  Scale*MomX  Scale*(MyY - UpperSpace)
-			  Scale*MyX   Scale*(MyY - CircleWidth))}
+			  Scale*{IntToFloat MomX}
+			  Scale*{IntToFloat (MyY - UpperSpaceI)}
+			  Scale*{IntToFloat MyX}
+			  Scale*{IntToFloat (MyY - CircleWidthI)})}
 	    end
-	    {Canvas tk(move Node Scale*MyByX 0)}
+	    {Canvas tk(move Node Scale*{IntToFloat MyByX} 0)}
 	    case @toDo\=nil orelse @isHidden then true else
 	       {Canvas tk(itemconfigure Node TkMoveOpt)}
 	    end
@@ -147,10 +151,12 @@ local
 	 in
 	    case self.mom of !False then true else
 	       {Canvas tk(coords LinkPrefix#Suffix
-			  Scale*MomX  Scale*(MyY - UpperSpace)
-			  Scale*MyX   Scale*(MyY - RectangleWidth))}
+			  Scale*{IntToFloat MomX}
+			  Scale*{IntToFloat (MyY - UpperSpaceI)}
+			  Scale*{IntToFloat MyX}
+			  Scale*{IntToFloat (MyY - RectangleWidthI)})}
 	    end
-	    {Canvas tk(move TreePrefix#Suffix Scale*MyByX 0)}
+	    {Canvas tk(move TreePrefix#Suffix Scale*{IntToFloat MyByX} 0)}
 	 end
 
       
@@ -163,7 +169,7 @@ local
 	 end
 	 
 	 meth purge
-	    offset <- 0.0
+	    offset <- 0
 	    shape  <- nil
 	    {Purge @kids}
 	 end
@@ -172,10 +178,10 @@ local
 	    case {System.isVar Break} then
 	       NewOffset   = @offset.1
 	       MyX         = MomX + NewOffset
-	       ScaledWidth = Scale * CircleWidth
-	       ScaledMomX  = Scale * MomX
-	       ScaledMyX   = Scale * MyX
-	       ScaledMyY   = Scale * MyY
+	       ScaledWidth = Scale * CircleWidthF
+	       ScaledMomX  = Scale * {IntToFloat MomX}
+	       ScaledMyX   = Scale * {IntToFloat MyX}
+	       ScaledMyY   = Scale * {IntToFloat MyY}
 	       Canvas      = self.canvas
 	       Suffix      = self.suffix
 	       Node        = !NodePrefix#Suffix
@@ -184,7 +190,7 @@ local
 	       case self.mom of !False then true else
 		  {Canvas tk(crea line
 			     ScaledMomX
-			     ScaledMyY - Scale * UpperSpace
+			     ScaledMyY - Scale * UpperSpaceF
 			     ScaledMyX
 			     ScaledMyY - ScaledWidth
 			     o(tag: o(Canvas.tagsVar LinkPrefix#Suffix
@@ -193,9 +199,9 @@ local
 	       end
 	       {Canvas.addTag TreePrefix#Suffix}
 	       case @isHidden then
-		  ScaledVerSpace = Scale * VerSpace
+		  ScaledVerSpace = Scale * VerSpaceF
 		  BottomY        = ScaledMyY + ScaledVerSpace
-		  ScaledHorSpace = Scale * HalfHorSpace
+		  ScaledHorSpace = Scale * HalfHorSpaceF
 	       in
 		  {Canvas tk(crea polygon
 			     ScaledMyX
@@ -219,7 +225,8 @@ local
 		     case Font==False then true else
 			{Canvas tk(crea text
 				   ScaledMyX
-				   ScaledMyY + (ScaledVerSpace - ScaledWidth) / 2.0
+				   ScaledMyY +
+				   (ScaledVerSpace - ScaledWidth) / 2.0
 				   o(font: Font
 				     text: N
 				     tags: o(Canvas.tagsVar
@@ -250,7 +257,7 @@ local
 					     TagEnd)))}
 		     end
 		  end
-		  <<ChoiceNode DrawKids(@kids Break MyX MyY+VerSpace
+		  <<ChoiceNode DrawKids(@kids Break MyX MyY+VerSpaceI
 					Scale Font)>>
 	       end
 	       {Canvas.skipTag}
@@ -271,7 +278,7 @@ local
 	       Y2 = Y1 + RootY
 	       A2 = TreePrefix#self.suffix|A1
 	    elseof Mom then
-	       {Mom GetCenterAbove(X1+@offset Y1+VerSpace
+	       {Mom GetCenterAbove(X1+@offset Y1+VerSpaceI
 				   TreePrefix#self.suffix|A1
 				   ?X2 ?Y2 ?A2)}
 	    end
@@ -302,12 +309,12 @@ local
 	       Y2 = Y1 + RootY
 	       A2 = A1
 	    elseof Mom then
-	       {Mom GetCenterAbove(X1+@offset Y1+VerSpace A1 ?X2 ?Y2 ?A2)}
+	       {Mom GetCenterAbove(X1+@offset Y1+VerSpaceI A1 ?X2 ?Y2 ?A2)}
 	    end
 	 end
 	 
 	 meth purge
-	    offset <- 0.0
+	    offset <- 0
 	 end
 	 
 	 meth deleteTree
@@ -348,10 +355,10 @@ local
 	 meth drawTree(Break MomX MyY Scale Font)
 	    NewOffset   = @offset.1
 	    MyX         = MomX + NewOffset
-	    ScaledWidth = Scale * RectangleWidth
-	    ScaledMomX  = Scale * MomX
-	    ScaledMyX   = Scale * MyX
-	    ScaledMyY   = Scale * MyY
+	    ScaledWidth = Scale * RectangleWidthF
+	    ScaledMomX  = Scale * {IntToFloat MomX}
+	    ScaledMyX   = Scale * {IntToFloat MyX}
+	    ScaledMyY   = Scale * {IntToFloat MyY}
 	    Canvas      = self.canvas
 	    Suffix      = self.suffix
 	    Node        = !NodePrefix#Suffix
@@ -360,7 +367,7 @@ local
 	    case self.mom of !False then true else
 	       {Canvas tk(crea line
 			  ScaledMomX
-			  ScaledMyY - Scale * UpperSpace
+			  ScaledMyY - Scale * UpperSpaceF
 			  ScaledMyX
 			  ScaledMyY - ScaledWidth
 			  o(tag: o(Canvas.tagsVar LinkPrefix#Suffix TagEnd)
@@ -383,10 +390,12 @@ local
 	 in
 	    case self.mom of !False then true else
 	       {Canvas tk(coords LinkPrefix#Suffix
-			  Scale*MomX  Scale*(MyY - UpperSpace)
-			  Scale*MyX   Scale*(MyY - RectangleWidth))}
+			  Scale*{IntToFloat MomX}
+			  Scale*{IntToFloat (MyY - UpperSpaceI)}
+			  Scale*{IntToFloat MyX}
+			  Scale*{IntToFloat (MyY - RectangleWidthI)})}
 	    end
-	    {Canvas tk(move NodePrefix#Suffix Scale*MyByX 0)}
+	    {Canvas tk(move NodePrefix#Suffix Scale*{IntToFloat MyByX} 0)}
 	 end
       
       end
@@ -397,30 +406,30 @@ local
 	 meth drawTree(Break MomX MyY Scale Font)
 	    NewOffset       = @offset.1
 	    MyX             = MomX + NewOffset
-	    ScaledHalfWidth = Scale * SmallRectangleWidth
-	    ScaledFullWidth = Scale * RectangleWidth
-	    ScaledMomX      = Scale * MomX
-	    ScaledMyX   = Scale * MyX
-	    ScaledMyY   = Scale * MyY
-	    X0          = ScaledMyX - ScaledFullWidth
-	    X1          = ScaledMyX - ScaledHalfWidth
-	    X2          = ScaledMyX
-	    X3          = ScaledMyX + ScaledHalfWidth
-	    X4          = ScaledMyX + ScaledFullWidth
-	    Y0          = ScaledMyY - ScaledFullWidth
-	    Y1          = ScaledMyY - ScaledHalfWidth
-	    Y2          = ScaledMyY
-	    Y3          = ScaledMyY + ScaledHalfWidth
-	    Y4          = ScaledMyY + ScaledFullWidth
-	    Canvas      = self.canvas
-	    Suffix      = self.suffix
-	    Node        = !NodePrefix#Suffix
+	    ScaledHalfWidth = Scale * SmallRectangleWidthF
+	    ScaledFullWidth = Scale * RectangleWidthF
+	    ScaledMomX      = Scale * {IntToFloat MomX}
+	    ScaledMyX       = Scale * {IntToFloat MyX}
+	    ScaledMyY       = Scale * {IntToFloat MyY}
+	    X0              = ScaledMyX - ScaledFullWidth
+	    X1              = ScaledMyX - ScaledHalfWidth
+	    X2              = ScaledMyX
+	    X3              = ScaledMyX + ScaledHalfWidth
+	    X4              = ScaledMyX + ScaledFullWidth
+	    Y0              = ScaledMyY - ScaledFullWidth
+	    Y1              = ScaledMyY - ScaledHalfWidth
+	    Y2              = ScaledMyY
+	    Y3              = ScaledMyY + ScaledHalfWidth
+	    Y4              = ScaledMyY + ScaledFullWidth
+	    Canvas          = self.canvas
+	    Suffix          = self.suffix
+	    Node            = !NodePrefix#Suffix
 	 in
 	    offset <- NewOffset
 	    case self.mom of !False then true else
 	       {Canvas tk(crea line
 			  ScaledMomX
-			  ScaledMyY - Scale * UpperSpace
+			  ScaledMyY - Scale * UpperSpaceF
 			  ScaledMyX
 			  ScaledMyY - ScaledHalfWidth
 			  o(tag: o(Canvas.tagsVar LinkPrefix#Suffix TagEnd)
@@ -440,10 +449,12 @@ local
 	 in
 	    case self.mom of !False then true else
 	       {Canvas tk(coords LinkPrefix#Suffix
-			  Scale*MomX  Scale*(MyY - UpperSpace)
-			  Scale*MyX   Scale*(MyY - RectangleWidth))}
+			  Scale*{IntToFloat MomX}
+			  Scale*{IntToFloat (MyY - UpperSpaceI)}
+			  Scale*{IntToFloat MyX}
+			  Scale*{IntToFloat (MyY - RectangleWidthI)})}
 	    end
-	    {Canvas tk(move NodePrefix#Suffix Scale*MyByX 0)}
+	    {Canvas tk(move NodePrefix#Suffix Scale*{IntToFloat MyByX} 0)}
 	 end
       
       end
@@ -455,10 +466,10 @@ local
 	    meth drawTree(MomX MyY Scale Font TkOpt)
 	       NewOffset   = @offset.1
 	       MyX         = MomX + NewOffset
-	       ScaledWidth = Scale * RhombeWidth
-	       ScaledMomX  = Scale * MomX
-	       ScaledMyX   = Scale * MyX
-	       ScaledMyY   = Scale * MyY
+	       ScaledWidth = Scale * RhombeWidthF
+	       ScaledMomX  = Scale * {IntToFloat MomX}
+	       ScaledMyX   = Scale * {IntToFloat MyX}
+	       ScaledMyY   = Scale * {IntToFloat MyY}
 	       Canvas      = self.canvas
 	       Suffix      = self.suffix
 	       Node        = !NodePrefix#Suffix
@@ -473,7 +484,7 @@ local
 	       case self.mom of !False then true else
 		  {Canvas tk(crea line
 			     ScaledMomX
-			     ScaledMyY - Scale * UpperSpace
+			     ScaledMyY - Scale * UpperSpaceF
 			     ScaledMyX
 			     ScaledMyY - ScaledWidth
 			     o(tag: o(Canvas.tagsVar LinkPrefix#Suffix TagEnd)
@@ -503,10 +514,12 @@ local
 	    in
 	       case self.mom of !False then true else
 		  {Canvas tk(coords LinkPrefix#Suffix
-			     Scale*MomX  Scale*(MyY - UpperSpace)
-			     Scale*MyX   Scale*(MyY - RhombeWidth))}
+			     Scale*{IntToFloat MomX}
+			     Scale*{IntToFloat (MyY - UpperSpaceI)}
+			     Scale*{IntToFloat MyX}
+			     Scale*{IntToFloat (MyY - RhombeWidthI)})}
 	       end
-	       {Canvas tk(move NodePrefix#Suffix Scale*MyByX 0)}
+	       {Canvas tk(move NodePrefix#Suffix Scale*{IntToFloat MyByX} 0)}
 	    end
 	    
 	 end

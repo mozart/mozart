@@ -7,8 +7,6 @@
 
 local
 
-   Delta = 0.02
-   
    local
       local
 	 fun {DoFind As SA Bs SB G}
@@ -16,14 +14,14 @@ local
 	    [] A|Ar then
 	       case Bs of nil then G
 	       [] B|Br then NSA=SA+A.2 NSB=SB+B.1 in
-		  {DoFind Ar NSA Br NSB {Max G NSA-NSB+HorSpace}}
+		  {DoFind Ar NSA Br NSB {Max G NSA-NSB+HorSpaceI}}
 	       end
 	    end
 	 end
       in
 	 fun {FindGap As Bs}
 	    %% Computes the minimal gap needed between two shapes
-	    {DoFind As 0.0 Bs 0.0 HorSpace}
+	    {DoFind As 0 Bs 0 HorSpaceI}
 	 end
       end
 
@@ -52,17 +50,14 @@ local
       local
 	 fun {FindLeftGaps A Bs PrevGap ?Width}
 	    case Bs of nil then Width=PrevGap nil
-	    [] B|Br then
-	       Gap = {FindGap A B}
-	    in
+	    [] B|Br then Gap = {FindGap A B} in
 	       Gap-PrevGap|{FindLeftGaps {MergeShapes A B Gap} Br Gap ?Width}
 	    end
 	 end
       in
 	 fun {GetLeftGaps As ?Width}
-	    case As of nil then Width=0.0 nil
-	    [] A|Ar then
-	       {FindLeftGaps A Ar 0.0 Width}
+	    case As of nil then Width=0 nil
+	    [] A|Ar then {FindLeftGaps A Ar 0 Width}
 	    end
 	 end
       end
@@ -76,7 +71,7 @@ local
 	       RightA
 	       Gr  = {FindRightGaps RightA Br}
 	       Gap = {FindGap B RightA}
-	 in
+	    in
 	       A = {MergeShapes B RightA Gap}
 	       Gap|Gr
 	    end
@@ -92,7 +87,7 @@ local
 	    case As of nil then nil
 	    [] A|Ar then
 	       !Bs       = B|Br
-	       NewRelPos = (A + B) / 2.0 + RelPos
+	       NewRelPos = (A + B) div 2 + RelPos
 	    in
 	       NewRelPos|{GetOffsets Ar Br NewRelPos}
 	    end
@@ -112,22 +107,24 @@ local
 	 [] Shape1|Shaper then
 	    case Shaper of nil then
 	       AdjShape   = Shape1
-	       NewOffsets = [0.0]
+	       NewOffsets = [0]
 	    [] Shape2|Shaper then
 	       case Shaper of nil then
 		  Width          = {FindGap Shape1 Shape2}
 		  (A|B)|NewShape = {MergeShapes Shape1 Shape2 Width}
-		  HalfWidth      = Width / 2.0
+		  HalfWidth      = Width div 2
 	       in
-		  AdjShape   = ((A - HalfWidth)|(B - HalfWidth))|NewShape 
+		  AdjShape   = ((A - HalfWidth)|(B - Width + HalfWidth))
+		               |NewShape 
 		  NewOffsets = [~HalfWidth HalfWidth]
 	       else
 		  Width NewShape A B
 		  LeftGaps  = {GetLeftGaps  Shapes ?Width}
 		  RightGaps = {GetRightGaps Shapes (A|B)|NewShape}
-		  HalfWidth = Width / 2.0
+		  HalfWidth = Width div 2
 	       in
-		  AdjShape   = ((A - HalfWidth)|(B - HalfWidth))|NewShape 
+		  AdjShape   = ((A - HalfWidth)|(B - Width + HalfWidth))
+		               |NewShape 
 		  NewOffsets = {Offsets LeftGaps RightGaps HalfWidth}
 	       end
 	    end
@@ -145,32 +142,32 @@ local
 	    !S=SL|SR 
 	    NL=CL+SL NR=CR+SR
 	 in
-	    {Box Sr NL NR {Min NL ML} {Max NR MR} CD+1.0 ?L ?R ?D}
+	    {Box Sr NL NR {Min NL ML} {Max NR MR} CD+1 ?L ?R ?D}
 	 end
       end
    in
       fun {GetBoundingBox Shape}
 	 L R D
       in
-	 {Box Shape 0.0 0.0 0.0 0.0 0.5 ?L ?R ?D}
-	 bounding(L-HalfHorSpace R+HalfHorSpace D*VerSpace)
+	 {Box Shape 0 0 0 0 0 ?L ?R ?D}
+	 bounding(L-HalfHorSpaceI R+HalfHorSpaceI D*VerSpaceI)
       end
    end
    
-   RootExtent  = 0.0|0.0
+   RootExtent  = 0|0
    RootShape   = [RootExtent]
-   HiddenShape = [RootExtent ~!HalfHorSpace|!HalfHorSpace]
+   HiddenShape = [RootExtent ~!HalfHorSpaceI|!HalfHorSpaceI]
 
    Layout = {NewName}
    Adjust = {NewName}
 
    class LayoutLeaf
       attr
-	 offset:    0.0
+	 offset: 0
       meth layout(Break Scale Font)
-	 <<LayoutLeaf Layout(_ 0.0)>>
-	 <<LayoutLeaf Adjust(Break RootX 0.0 RootY Scale Font nil)>>
-	 {self.canvas bounding(~HalfHorSpace HalfHorSpace VerSpace / 2.0)}
+	 <<LayoutLeaf Layout(_ 0)>>
+	 <<LayoutLeaf Adjust(Break RootX 0 RootY Scale Font nil)>>
+	 {self.canvas bounding(~HalfHorSpaceI HalfHorSpaceI HalfVerSpaceI)}
       end
 
       meth !Layout(?Shape Offset)
@@ -213,13 +210,13 @@ local
    class LayoutNode
       attr
 	 shape:  RootShape
-	 offset: 0.0
+	 offset: 0
       
       meth layout(Break Scale Font)
-	 Shape = <<LayoutNode Layout($ 0.0)>>
+	 Shape = <<LayoutNode Layout($ 0)>>
       in
 	 {self.canvas {GetBoundingBox Shape}}
-	 <<LayoutNode Adjust(Break RootX 0.0 RootY Scale Font nil)>>
+	 <<LayoutNode Adjust(Break RootX 0 RootY Scale Font nil)>>
       end
 
       meth !Layout(?Shape Offset)
@@ -246,17 +243,17 @@ local
 	       offset <- NewOffset
 	       <<moveNode(MomX MyX MyByX MyY Scale)>>
 	       case @isHidden then true else
-		  {AdjustKids @kids Break MyX MyByX MyY+VerSpace
+		  {AdjustKids @kids Break MyX MyByX MyY+VerSpaceI
 		   Scale Font TreePrefix#self.suffix|Above}
 	       end
 	    else
 	       {self.canvas.initTags Above}
 	       <<drawTree(Break MomX MyY Scale Font)>>
 	    end
-	 elsecase {Abs MyByX}>Delta then
-	    <<moveTree(MomX MyX MyByX MyY Scale)>>
+	 elsecase MyByX==0 then
 	    offset <- NewOffset
 	 else
+	    <<moveTree(MomX MyX MyByX MyY Scale)>>
 	    offset <- NewOffset
 	 end
       end

@@ -36,9 +36,6 @@ DefPostscriptOptions = o(width:  6.5 * FactorsToCm.i
 			 color:  case IsColor then color else mono end
 			 orient: 0)
 
-DefRecomputeMax   = 100
-
-
 ErrorAspect     = 250
 StatusUpdateCnt = 50
 
@@ -51,20 +48,21 @@ MinSizeY     = 300   CanvasHeight = 240.0
 
 
 %% Configuration of the scale bar
-MinScalePercent =   2
-MaxScalePercent = 200
-DefScalePercent = 100
-InitialScale    = 1.0
+IntScaleBase    = 256
+FloatScaleBase  = {IntToFloat IntScaleBase}
+MinScale = 0.05 / FloatScaleBase
+MaxScale = 2.00 / FloatScaleBase
+DefScale = 1.00 / FloatScaleBase
 
 AboutFont       = '-Adobe-times-bold-r-normal--*-240*'
 FontFamily      = '-*-helvetica-medium-r-normal--*-'
 BoldFontFamily  = '-*-helvetica-bold-r-normal--*-'
 FontMatch       = '-*-*-*-*-*-*'
-NumberFonts     = [font(name:FontFamily#180#FontMatch scale:1.8)
-		   font(name:FontFamily#140#FontMatch scale:1.4)
-		   font(name:FontFamily#120#FontMatch scale:1.2)
-		   font(name:FontFamily#100#FontMatch scale:1.0)
-		   font(name:FontFamily# 80#FontMatch scale:0.8)]
+NumberFonts     = [font(name:FontFamily#180#FontMatch scale:1.8/FloatScaleBase)
+		   font(name:FontFamily#140#FontMatch scale:1.4/FloatScaleBase)
+		   font(name:FontFamily#120#FontMatch scale:1.2/FloatScaleBase)
+		   font(name:FontFamily#100#FontMatch scale:1.0/FloatScaleBase)
+		   font(name:FontFamily# 80#FontMatch scale:0.8/FloatScaleBase)]
 StatusFont      = FontFamily#100#FontMatch
 BoldStatusFont  = BoldFontFamily#100#FontMatch
 
@@ -82,15 +80,19 @@ LargeEntryWidth = 20
 SmallEntryWidth = 6
 
 %% Distance between nodes
-HorSpace         = 35.0
-VerSpace         = 40.0
+HorSpaceI        = 32 * IntScaleBase
+VerSpaceI        = 38 * IntScaleBase
+HorSpaceF        = {IntToFloat HorSpaceI}
+VerSpaceF        = {IntToFloat VerSpaceI}
 
-HalfHorSpace     = HorSpace / 2.0
-HalfVerSpace     = VerSpace / 2.0
+HalfHorSpaceI    = HorSpaceI div 2
+HalfVerSpaceI    = VerSpaceI div 2
+HalfHorSpaceF    = {IntToFloat HalfHorSpaceI}
+HalfVerSpaceF    = {IntToFloat HalfVerSpaceI}
 
 %% Initial coordinates of the root of the tree
-RootX            = 0.0
-RootY            = HalfVerSpace
+RootX            = 0
+RootY            = HalfVerSpaceI
 
 
 %% Get our colormodel
@@ -98,23 +100,29 @@ IsColor          = ({Tk.depth} > 1)
 
 
 %% Sizes for the nodes and links
-CircleWidth         = 10.0
-TriangleWidth       =  8.0
-RectangleWidth      =  8.0
-SmallRectangleWidth =  6.0
-RhombeWidth         = 10.0
+CircleWidthI         = 10 * IntScaleBase
+CircleWidthF         = {IntToFloat CircleWidthI}
+TriangleWidthI       =  8 * IntScaleBase
+TriangleWidthF       = {IntToFloat TriangleWidthI}
+RectangleWidthI      =  8 * IntScaleBase
+RectangleWidthF      = {IntToFloat RectangleWidthI}
+SmallRectangleWidthI =  6 * IntScaleBase
+SmallRectangleWidthF = {IntToFloat SmallRectangleWidthI}
+RhombeWidthI         = 10 * IntScaleBase
+RhombeWidthF         = {IntToFloat RhombeWidthI}
+
 ImageSize           = 18.0
 ImageCenter         = ImageSize / 2.0
-ImageScale          = 0.6
-ImageBorder         = 1.0
-MaxExtent           = 12.0
+ImageScale          = 0.6 / FloatScaleBase
+ImageBorder         = 1
+MaxExtent           = 12.0 * FloatScaleBase
 
 NodeBorderWidth     #
 TermNodeBorderWidth = case IsColor then 1#1 else 1#2 end
 LinkWidth           = 1
 
 %% How big and how far removed should the cursor shade be?
-ShadeWidth          = case IsColor then 4.00 else 5.00 end
+ShadeWidth          = case IsColor then 4 else 5 end * IntScaleBase
 ShadeScale          = case IsColor then 1.05 else 1.10 end
 
 %% Set up some colors
