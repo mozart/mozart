@@ -590,23 +590,24 @@ int OZ_featureCmp(OZ_Term term1, OZ_Term term2)
 /*
  * PRINTING
  */
-static
-void smallInt2buffer(ostream &out, OZ_Term term)
+inline
+void smallInt2buffer(ostream &out, OZ_Term term, const char sign)
 {
   int i = smallIntValue(term);
   if (i < 0) {
-    out << '~' << -i;
+    out << sign << -i;
   } else {
     out << i;
   }
 }
 
-static
-void bigInt2buffer(ostream &out, BigInt *bb)
+inline
+void bigInt2buffer(ostream &out, BigInt *bb, const char sign)
 {
   char *str = new char[bb->stringLength()+1];
   bb->getString(str);
-  if (*str == '-') *str = '~';
+  if ((*str == '-') && (sign != '-'))
+    *str = sign;
   out << str;
   delete str;
 }
@@ -625,7 +626,7 @@ char *strAndDelete(ostrstream *out)
 }
 
 static
-void float2buffer(ostream &out, OZ_Term term)
+void float2buffer(ostream &out, OZ_Term term, const char sign)
 {
   double f = floatValue(term);
 
@@ -650,7 +651,7 @@ void float2buffer(ostream &out, OZ_Term term)
       out << c;
       break;
     case '-':
-      out << '~';
+      out << sign;
       break;
     case '+':
       break;
@@ -827,13 +828,13 @@ void name2buffer(ostream &out, Literal *a) {
 }
 
 inline
-void const2buffer(ostream &out, ConstTerm *c)
+void const2buffer(ostream &out, ConstTerm *c,const char sign)
 {
   const char *s = c->getPrintName();
 
   switch (c->getType()) {
   case Co_BigInt:
-    bigInt2buffer(out,(BigInt *)c);
+    bigInt2buffer(out,(BigInt *)c,sign);
     break;
   case Co_Abstraction:
   case Co_Builtin:
@@ -1094,7 +1095,7 @@ void term2Buffer(ostream &out, OZ_Term term, int depth)
     }
     break;
   case OZCONST:
-    const2buffer(out,tagged2Const(term));
+    const2buffer(out,tagged2Const(term),'~');
     break;
   case LITERAL:
     {
@@ -1107,10 +1108,10 @@ void term2Buffer(ostream &out, OZ_Term term, int depth)
       break;
     }
   case OZFLOAT:
-    float2buffer(out,term);
+    float2buffer(out,term,'~');
     break;
   case SMALLINT:
-    smallInt2buffer(out,term);
+    smallInt2buffer(out,term,'~');
     break;
   default:
     out << "<Unknown Tag: " << (int) tag << ">";
@@ -1246,25 +1247,25 @@ void byteString2buffer(ostream &out,OZ_Term term)
 void virtualString2buffer(ostream &out,OZ_Term term,int nulok)
 {
   OZ_Term t=oz_deref(term);
-  if (oz_isCons(t)) {
-    string2buffer(out,t,nulok);
-    return;
-  }
   if (oz_isAtom(t)) {
     if (oz_isNil(t) || oz_isPair(t)) return;
     vsatom2buffer(out,t);
     return;
   }
   if (oz_isSmallInt(t)) {
-    smallInt2buffer(out,t);
+    smallInt2buffer(out,t,'-');
+    return;
+  }
+  if (oz_isCons(t)) {
+    string2buffer(out,t,nulok);
     return;
   }
   if (oz_isBigInt(t)) {
-    bigInt2buffer(out,tagged2BigInt(t));
+    bigInt2buffer(out,tagged2BigInt(t),'-');
     return;
   }
   if (oz_isFloat(t)) {
-    float2buffer(out,t);
+    float2buffer(out,t,'-');
     return;
   }
   if (oz_isByteString(t)) {
