@@ -2228,6 +2228,9 @@ OZ_FiniteDomain::OZ_FiniteDomain(OZ_FDState state)
   case fd_full:
     CASTTHIS->initFull();
     break;
+  case fd_bool:
+    CASTTHIS->initBool();
+    break;
   default:
     error("Unexpected OZ_FDState.");
     break;

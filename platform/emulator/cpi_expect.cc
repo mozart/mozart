@@ -814,7 +814,8 @@ OZ_Return OZ_Expect::impose(OZ_Propagator * p, int prio,
     DEREF(v, vptr, vtag);
     TypeOfVariable type = staticSuspendVars[i].expected_type;
 
-    Assert(type == OZ_VAR_FD || type == OZ_VAR_FS || type == OZ_VAR_CT);
+    Assert(type == OZ_VAR_FD || type == OZ_VAR_FS ||
+           type == OZ_VAR_CT || type == OZ_VAR_BOOL);
 
     if (oz_isFree(v)) {
       if (type == OZ_VAR_FD) {

@@ -148,6 +148,9 @@ public:
   OZ_expect_t expectVectorInt(OZ_Term t) {
     return expectVector(t, (PropagatorExpectMeth) &PropagatorExpect::expectInt);
   }
+  OZ_expect_t expectVectorBoolVar(OZ_Term t) {
+    return expectVector(t, (PropagatorExpectMeth) &PropagatorExpect::expectBoolVar);
+  }
 };
 
 //-----------------------------------------------------------------------------
