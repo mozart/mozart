@@ -2894,11 +2894,6 @@ $builtins = {
                              bi  => BIfsGetNumOfUnknown,
                              module=>fset },
 
-    'mkFSetVar'         => { in  => ['+int','+int','value','value'],
-                             out => ['fset'],
-                             BI  => BImkFSetVar,
-                             module=>fset },
-
     'fsClone'           => { in  => ['fset','fset'],
                              out => [],
                              bi  => BIfsClone,

@@ -331,7 +331,7 @@ OZ_C_proc_begin(BIfsCardRange, 3)
       OZ_FSetConstraint * fsetconstr = &tagged2GenFSetVar(v)->getSet();
       if (!fsetconstr->putCard(l, u))
         return FAILED;
-      /* a variable might have become s fset value because of
+      /* a variable might have become a fset value because of
          imposing a card constraints */
       if (fsetconstr->isValue())
         tagged2GenFSetVar(v)->becomesFSetValueAndPropagate(vptr);
@@ -343,15 +343,6 @@ OZ_C_proc_begin(BIfsCardRange, 3)
   TypeError(2, "");
 }
 OZ_C_proc_end
-
-// TMUELLER: already redundant
-OZ_BI_define(BImkFSetVar, 4,1)
-{
-  FSetConstraint fset(OZ_intToC(OZ_in(0)), OZ_intToC(OZ_in(1)),
-                      OZ_in(2), OZ_in(3));
-
-  OZ_RETURN(makeTaggedRef(newTaggedCVar(new GenFSetVariable(fset))));
-} OZ_BI_end
 
 #include "fsbuilti.dcl"
 static
