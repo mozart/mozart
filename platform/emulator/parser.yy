@@ -219,6 +219,7 @@ static inline int xycharno() {
 // Operations on CTerms
 //----------------------
 
+static int nerrors;
 static CTerm yyoutput;
 
 inline CTerm pos() {
@@ -421,8 +422,8 @@ static CTerm decls[DEPTH];
 %%
 
 file		: queries ENDOFFILE
-		  { if (yynerrs) {
-		      yyoutput = newCTerm("parseErrors",OZ_int(yynerrs));
+		  { if (nerrors) {
+		      yyoutput = newCTerm("parseErrors",OZ_int(nerrors));
 		      YYABORT;
 		    } else {
 		      yyoutput = $1;
@@ -430,8 +431,8 @@ file		: queries ENDOFFILE
 		    }
 		  }
 		| prodClauseList ENDOFFILE
-		  { if (yynerrs) {
-		      yyoutput = newCTerm("parseErrors",OZ_int(yynerrs));
+		  { if (nerrors) {
+		      yyoutput = newCTerm("parseErrors",OZ_int(nerrors));
 		      YYABORT;
 		    } else {
 		      yyoutput = newCTerm("fSynTopLevelProductionTemplates",$1);
@@ -439,7 +440,7 @@ file		: queries ENDOFFILE
 		    }
 		  }
 		| error
-		  { yyoutput = newCTerm("parseErrors",OZ_int(yynerrs));
+		  { yyoutput = newCTerm("parseErrors",OZ_int(nerrors));
 		    YYABORT;
 		  }
 		;
@@ -1383,7 +1384,7 @@ static void append(int i) {
 
 void xyreportError(char *kind, char *msg, char *file, int line, int offset) {
   if (strcmp(kind,"warning"))
-    yynerrs++;
+    nerrors++;
 
   append("\n%************ ");
   append(kind);
@@ -1471,6 +1472,7 @@ static void parserInit() {
   xyscannerInit();
   for (int i = 0; i < DEPTH; i++)
     terms[i] = 0;
+  nerrors = 0;
 }
 
 static CTerm parse() {
