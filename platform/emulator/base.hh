@@ -40,6 +40,8 @@
 #include "resources.hh"
 #include "config.h"
 
+#include <string.h>
+
 // more includes at end!
 
 #if !defined(__GNUC__) && !defined(NULL)
