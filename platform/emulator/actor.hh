@@ -83,8 +83,6 @@ public:
   ~AWActor();
 
   USEHEAPMEMORY;
-  OZPRINT;
-  OZPRINTLONG;
 
   void addChild(Board *n);
   void failChild(Board *n);
