@@ -176,13 +176,6 @@ public:
 
 //-----------------------------------------------------------------------------
 
-class OZ_ParamIterator {
-public:
-  virtual OZ_Return leave(int vars_left = 0) = 0;
-  virtual OZ_Return fail(void) = 0;
-  virtual OZ_Return vanish(void) = 0;
-};
-
 class PropagatorController_S_S : public OZ_ParamIterator {
 protected:
   OZ_FSetVar &v1, &v2;

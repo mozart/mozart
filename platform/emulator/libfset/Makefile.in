@@ -46,7 +46,8 @@ all: $(FSETTARGETS)
         $(AR) -rc $@ $(FSETLIBOBJS) && $(RANLIB) $@
 
 depend:: $(FSETLIBSRCS)
-        $(DEPEND) $(FSETLIBSRCS:%=$(SRCDIR)/%) > Makefile.deps
+        $(DEPEND) $(FSETLIBSRCS:%=$(SRCDIR)/%) \
+        | sed -e 's/\.o:/\.lo:/g' > Makefile.deps
 
 Makefile: Makefile.in
         (cd ..;./config.status)
@@ -59,9 +60,19 @@ cleaner::
         -rm -f *.a *.so
 
 veryclean::
-        -rm -f *.a *.so Makefile.deps
+        -rm -f *.a *.so TAGS Makefile.deps
 
 include ../Makefile.rules
 
 distclean::
         -rm -f Makefile makefile
+
+BUILDDIR=$(shell pwd)
+tags:   $(CREATEDFILES)
+        etags \
+        --regex='/OZ_BI_\(io\)?define([         ]*\([^  ,)]+\)/\2/' \
+        --regex='/OZ_C_\(io\)?proc_begin([      ]*\([^  ,)]+\)/\2/' \
+        --regex='/OZ_DECLARE[A-Z0-9_]*([        ]*\([^  ,)]+\)/\2/' -l c++ \
+        -o $(SRCDIR)/TAGS \
+        $(addprefix $(BUILDDIR)/,$(CREATEDFILES)) \
+        $(SRCDIR)/*c $(SRCDIR)/*h $(SRCDIR)/../*c $(SRCDIR)/../*h
