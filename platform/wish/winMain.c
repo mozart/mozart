@@ -12,7 +12,6 @@
 #pragma aux (cdecl) Tcl_AppendResult;
 #pragma aux (cdecl) Tcl_CreateCommand;
 #pragma aux (cdecl) Tcl_PosixError;
-#pragma aux (cdecl) Tcl_GetOpenFile;
 #pragma aux (cdecl) Tcl_Merge;
 #pragma aux (cdecl) Tcl_SetVar;
 #pragma aux (cdecl) Tcl_CreateInterp;
@@ -25,14 +24,10 @@
 #pragma aux (cdecl) Tcl_SetPanicProc;
 #pragma aux (cdecl) Tcl_SetVar2;
 #pragma aux (cdecl) Tk_ParseArgv;
-#pragma aux (cdecl) Tk_CreateMainWindow;
 #pragma aux (cdecl) Tcl_DStringInit;
 #pragma aux (cdecl) Tcl_ResetResult;
 #pragma aux (cdecl) Tcl_VarEval;
-#pragma aux (cdecl) Tk_CreateMainWindow;
 #pragma aux (cdecl) Tk_GetNumMainWindows;
-#pragma aux (cdecl) Tk_DoOneEvent;
-#pragma aux (cdecl) Tk_MainWindow;
 #pragma aux (cdecl) Tk_Init;
 #pragma aux (cdecl) TkWinXInit;
 #pragma aux (cdecl) Tcl_DStringAppend;
@@ -48,12 +43,16 @@
 #include <io.h>
 #include <process.h>
 
-#include "tcl.h"
+#define Tk_MainLoop xx
 #include "tk.h"
+#undef Tk_MainLoop
 
 static void WishPanic(char *x,...);
 static unsigned __stdcall readerThread();
 static int asyncHandler(ClientData *cd, Tcl_Interp *i, int code);
+
+extern void __cdecl Tk_MainLoop();
+
 FILE *outstream, *dbgout;
 
 
@@ -64,15 +63,7 @@ FILE *outstream, *dbgout;
 HINSTANCE appInstance;		/* Application instance handle. */
 int initShowState;		/* Initial window startup state. */
 
-static Tk_Window mainWindow;	/* The main window for the application.  If
-				 * NULL then the application no longer
-				 * exists. */
 static Tcl_Interp *interp;	/* Interpreter for this application. */
-char *tcl_RcFileName = NULL;	/* Name of a user-specific startup script
-				 * to source if the application is being run
-				 * interactively (e.g. "~/.wishrc").  Set
-				 * by Tcl_AppInit.  NULL means don't source
-				 * anything ever. */
 static Tcl_DString command;	/* Used to assemble lines of terminal input
 				 * into Tcl commands. */
 static int tty;			/* Non-zero means standard input is a
@@ -87,7 +78,6 @@ static char argv0[255];		/* Buffer used to hold argv0. */
 
 static int synchronize = 0;
 static char *fileName = NULL;
-static char *name = NULL;
 static char *display = NULL;
 static char *geometry = NULL;
 
@@ -96,8 +86,6 @@ static Tk_ArgvInfo argTable[] = {
 	"Display to use"},
     {"-geometry", TK_ARGV_STRING, (char *) NULL, (char *) &geometry,
 	"Initial geometry for window"},
-    {"-name", TK_ARGV_STRING, (char *) NULL, (char *) &name,
-	"Name to use for application"},
     {"-sync", TK_ARGV_CONSTANT, (char *) 1, (char *) &synchronize,
 	"Use synchronous mode for display server"},
     {(char *) NULL, TK_ARGV_END, (char *) NULL, (char *) NULL,
@@ -139,13 +127,7 @@ PutsCmd(clientData, interp, argc, argv)
 	i++;
     }
 
-    if (strcmp(fileId,"stdout")==0) {
-      f = outstream;
-    } else {
-      if (Tcl_GetOpenFile(interp, fileId, 1, 1, &f) != TCL_OK) {
-	return TCL_ERROR;
-      }
-    }
+    f = outstream;
 
     clearerr(f);
     fputs(argv[i], f);
@@ -167,6 +149,7 @@ PutsCmd(clientData, interp, argc, argv)
 typedef struct {
   char *cmd;
   HANDLE event;
+  DWORD toplevelThread;
   Tcl_AsyncHandler ash;
 } ReaderInfo;
 
@@ -195,7 +178,7 @@ WinMain(hInstance, hPrevInstance, lpszCmdLine, nCmdShow)
     LPSTR lpszCmdLine;
     int nCmdShow;
 {
-    char **argv, **argvlist, *args, *p, *class;
+    char **argv, **argvlist, *args, *p;
     int argc, size, i, code;
     char buf[20];
     size_t length;
@@ -283,18 +266,10 @@ WinMain(hInstance, hPrevInstance, lpszCmdLine, nCmdShow)
 	    TK_ARGV_DONT_SKIP_FIRST_ARG) != TCL_OK) {
 	WishPanic("%s\n", interp->result);
     }
-    if (name == NULL) {
-	if (fileName != NULL) {
-	    p = fileName;
-	} else {
-	    p = argv0;
-	}
-	name = strrchr(p, '\\');
-	if (name != NULL) {
-	    name++;
-	} else {
-	    name = p;
-	}
+    if (fileName != NULL) {
+      p = fileName;
+    } else {
+      p = argv0;
     }
 
     /*
@@ -326,37 +301,6 @@ WinMain(hInstance, hPrevInstance, lpszCmdLine, nCmdShow)
     Tcl_SetVar2(interp, "env", "DISPLAY", display, TCL_GLOBAL_ONLY);
 
     /*
-     * Initialize the Tk application.  If a -name option was provided,
-     * use it;  otherwise, if a file name was provided, use the last
-     * element of its path as the name of the application; otherwise
-     * use the last element of the program name.  For the application's
-     * class, capitalize the first letter of the name.
-     */
-
-    if (name == NULL) {
-	p = (fileName != NULL) ? fileName : argv0;
-	name = strrchr(p, '/');
-	if (name != NULL) {
-	    name++;
-	} else {
-	    name = strrchr(p, '\\');
-	    if (name != NULL) {
-		name++;
-	    } else {
-		name = p;
-	    }
-	}
-    }
-    class = ckalloc((unsigned) (strlen(name) + 1));
-    strcpy(class, name);
-    class[0] = toupper((unsigned char) class[0]);
-    mainWindow = Tk_CreateMainWindow(interp, display, name, class);
-    ckfree(class);
-    if (mainWindow == NULL) {
-	WishPanic("%s\n", interp->result);
-    }
-
-    /*
      * Set the "tcl_interactive" variable.
      */
 
@@ -385,42 +329,6 @@ WinMain(hInstance, hPrevInstance, lpszCmdLine, nCmdShow)
 	    WishPanic("%s\n", p);
 	}
 	tty = 0;
-    } else {
-	/*
-	 * Commands will come from the console.  Evaluate the .rc file, if one
-	 * has been specified.  Create the console if the input device
-	 * is a terminal.
-	 */
-
-	if (tcl_RcFileName != NULL) {
-	    Tcl_DString buffer;
-	    char *fullName;
-	    FILE *f;
-    
-	    fullName = Tcl_TildeSubst(interp, tcl_RcFileName, &buffer);
-	    if (fullName == NULL) {
-		WishPanic("%s\n", interp->result);
-	    } else {
-		f = fopen(fullName, "r");
-		if (f != NULL) {
-		    code = Tcl_EvalFile(interp, fullName);
-		    if (code != TCL_OK) {
-			WishPanic("%s\n", interp->result);
-		    }
-		    fclose(f);
-		}
-	    }
-	    Tcl_DStringFree(&buffer);
-	}
-	if (tty) {
-	    /*
-	     * Create and display the console window.
-	     */
-
-	  /*	    if (Console_Init(interp) != TCL_OK) {
-		return;
-	    }*/
-	}
     }
     Tcl_DStringInit(&command);
     Tcl_ResetResult(interp);
@@ -462,28 +370,33 @@ WinMain(hInstance, hPrevInstance, lpszCmdLine, nCmdShow)
       unsigned long thread;
 
       info->event = CreateEvent(NULL, FALSE, FALSE, NULL);
+      info->toplevelThread = GetCurrentThreadId();
       info->cmd=NULL;
       info->ash=ash;
 
+      dbgout = fopen("/tmp/out","w");
       thread =_beginthreadex(NULL,0,readerThread,info,0,&tid);
       if (thread==0) {
 	fprintf(outstream, "w reader thread creation failed\n.\n");
 	fflush(outstream); /* added mm */
 	exit(1);
       }
-
-      Tk_MainLoop();
-
-      /*
-       * Don't exit directly, but rather invoke the Tcl "exit" command.
-       * This gives the application the opportunity to redefine "exit"
-       * to do additional cleanup.
-       */
-      TerminateThread(thread,0);
-      Tcl_Eval(interp, "exit");
-      exit(1);
     }
-    return 1;
+
+    fprintf(dbgout,"before mainloop\n"); fflush(dbgout);
+    Tk_MainLoop();
+    fprintf(dbgout,"after mainloop\n"); fflush(dbgout);
+
+    /*
+     * Don't exit directly, but rather invoke the Tcl "exit" command.
+     * This gives the application the opportunity to redefine "exit"
+     * to do additional cleanup.
+     */
+    /*      TerminateThread(thread,0);
+	    Tcl_Eval(interp, "exit");*/
+    fprintf(dbgout,"after eval exit\n"); fflush(dbgout);
+    /*    exit(0);*/
+    return 0;
 }
 
 
@@ -523,34 +436,9 @@ Tcl_AppInit(interp)
 	return TCL_ERROR;
     }
 
-    tcl_RcFileName = "~/wishrc.tcl";
     return TCL_OK;
 }
-
-/*
- *--------------------------------------------------------------
- *
- * Tk_MainLoop --
- *
- *	Call Tk_DoOneEvent over and over again in an infinite
- *	loop as long as there exist any main windows.
- *
- * Results:
- *	None.
- *
- * Side effects:
- *	Arbitrary;  depends on handlers for events.
- *
- *--------------------------------------------------------------
- */
 
-void
-Tk_MainLoop()
-{
-  while (Tk_GetNumMainWindows() > 0) {
-    Tk_DoOneEvent(0);
-  }
-}
 
 /*
  *----------------------------------------------------------------------
@@ -614,10 +502,10 @@ static unsigned __stdcall readerThread(void *arg)
   char input[BUFFER_SIZE+1];
   static int gotPartial = 0;
   char *cmd;
+  BOOL bol;
   int count;
   /*Tcl_Interp *interp = Tcl_CreateInterp();*/
   int fdin = _hdopen((int)GetStdHandle(STD_INPUT_HANDLE),O_RDONLY|O_BINARY);
-  dbgout = fopen("/tmp/out","w");
     
 #define TclRead read
 
@@ -626,11 +514,12 @@ start:
 
   count = read(fdin, input, BUFFER_SIZE);
 
-  fprintf(dbgout,"after read(%d)\n",count); fflush(dbgout);
+  /*  fprintf(dbgout,"after read(%d)\n",count); fflush(dbgout);*/
 
   if (count <= 0) {
-    fprintf(outstream, "s stop\n");
-    fflush(outstream); /* added mm */
+    /*    fprintf(dbgout,"readerThread exit\n",count); fflush(dbgout);*/
+    /*    fprintf(outstream, "s stop\n");
+    fflush(outstream);*/ /* added mm */
     return 0;
   }
   fprintf(dbgout,"before append\n"); fflush(dbgout);
@@ -651,7 +540,9 @@ start:
   ri->cmd = cmd;
   ResetEvent(ri->event);
   Tcl_AsyncMark(ri->ash);
-  fprintf(dbgout,"before wait: %s\n",cmd); fflush(dbgout);
+  bol = PostThreadMessage(ri->toplevelThread,WM_NULL,NULL,NULL);
+  fprintf(dbgout,"before wait: %s,bol=%d,err=%d\n",
+	  cmd,bol,GetLastError()); fflush(dbgout);
   if (WaitForSingleObject(ri->event, INFINITE) != WAIT_OBJECT_0)
     return 0;
   fprintf(dbgout,"after wait\n"); fflush(dbgout);
