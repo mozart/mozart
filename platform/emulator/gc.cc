@@ -1910,10 +1910,10 @@ void ConstTerm::gcConstRecurse()
     {
       SChunk *c = (SChunk *) this;
 
-      c->home = c->home->gcBoard();
+      gcTagged(c->value,c->value);
+      c->setPtr(((Board *) c->getPtr())->gcBoard());
       varCount++;
 
-      c->setPtr(c->getRecord()->gcSRecord());
       break;
     }
 
