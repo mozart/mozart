@@ -114,7 +114,6 @@ char *OZ_termToStr(OZ_Term term)
   return tagged2String(term);
 }
 
-
 char *OZ_intTermToString(OZ_Term term)
 {
   DEREF(term,_1,tag);
@@ -122,17 +121,19 @@ char *OZ_intTermToString(OZ_Term term)
     return NULL;
   }
 
-  if (isSmallInt(term)) {
-    char buf[1000];
-    sprintf(buf,"%d",smallIntValue(term));
-    if (buf[0] == '-') {
-      buf[0] = '~';
+  if (isBigInt(term)) {
+    char *s =  tagged2BigInt(term)->string();
+    if (s[0] == '~') {
+      s[0] = '-';
     }
-    return ozstrdup(buf);
+    return s;
   }
 
-  return tagged2BigInt(term)->string();
+  char buf[1000];
+  sprintf(buf,"%d",smallIntValue(term));
+  return ozstrdup(buf);
 }
+
 
 OZ_Term OZ_intToTerm (int i)
 {
