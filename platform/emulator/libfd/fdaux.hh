@@ -186,7 +186,7 @@ public:
     return expectProperRecord(t, &PropagatorExpect::expectIntVarMinMax);
   }
   OZ_expect_t expectProperRecordInt(OZ_Term t) {
-    return expectProperRecord(t, &PropagatorExpect::expectInt);
+    return expectProperRecord(t, (PropagatorExpectMeth) &PropagatorExpect::expectInt);
   }
 };
 
