@@ -253,8 +253,9 @@ define
 	 end
       end
    in
-      fun {ScrambleEvent Canvas Board}
+      fun {ScrambleEvent Button Canvas Board}
 	 proc {$ _}
+	    {Button setSensitive(false)}
 	    case Board
 	    of ItemArr#_ then
 	       {OS.srand 0}
@@ -283,7 +284,7 @@ define
 	 {Frame add(Canvas)}
 	 {Canvas show}
 	 {self packStart(Button false false 0)}
-	 {Button signalConnect('clicked' {ScrambleEvent Canvas Board} _)}
+	 {Button signalConnect('clicked' {ScrambleEvent Button Canvas Board} _)}
       end
    end
    
