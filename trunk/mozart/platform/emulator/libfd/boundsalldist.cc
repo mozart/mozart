@@ -32,6 +32,10 @@
  *
  */
 
+#ifdef USE_SORT_TEMPLATE
+#include "sort.hh"
+#endif
+
 #include "boundsalldist.hh"
 
 OZ_BI_define(fdp_distinctB, 1, 0)
@@ -53,6 +57,17 @@ public:
   int pos;
 };
 
+#ifdef USE_SORT_TEMPLATE
+inline
+Bool order_by_max_inc(const varinfo &x, const varinfo &y) {
+  return x.max < y.max;
+}
+
+inline
+Bool order_by_min_dec(const varinfo &x, const varinfo &y) {
+  return x.min > y.min;
+}
+#else
 inline
 void swap_varinfo(varinfo * vi, int i, int j) {
   varinfo v=vi[i]; vi[i]=vi[j]; vi[j]=v;
@@ -109,6 +124,7 @@ void sort_min(varinfo * x, int n)
     goto next;
   }
 }
+#endif
 
 OZ_Return BoundsDistinctPropagator::propagate(void)
 {
@@ -141,7 +157,11 @@ OZ_Return BoundsDistinctPropagator::propagate(void)
   }
   
   // Sort variables in ascending order of max
+#ifdef USE_SORT_TEMPLATE
+  fastsort<varinfo,order_by_max_inc>(xi, n);
+#else
   sort_max(xi, n);
+#endif
 
   // Propagate lower bounds
   for (i = 0; i < n; i++) {
@@ -172,7 +192,11 @@ OZ_Return BoundsDistinctPropagator::propagate(void)
   }
 
   // Sort variables in descending order of min
+#ifdef USE_SORT_TEMPLATE
+  fastsort<varinfo,order_by_min_dec>(xi, n);
+#else
   sort_min(xi, n);
+#endif
 
   // Propagate upper bounds
   for (i = 0; i < n; i++) {
