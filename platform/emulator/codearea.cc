@@ -214,9 +214,7 @@ ProgramCounter CodeArea::definitionStart(ProgramCounter from)
     case CREATENAMEDVARIABLEG:
       return NOCODE;
 
-    case DEFINITIONX:
-    case DEFINITIONY:
-    case DEFINITIONG:
+    case DEFINITION:
       counter++;
       DISPATCH();
 
@@ -580,9 +578,7 @@ void CodeArea::display (ProgramCounter from, int sz, FILE* ofile)
         fprintf(ofile, "(%s)\n", OZ_toC(literal));
       }
       DISPATCH();
-    case DEFINITIONX:
-    case DEFINITIONY:
-    case DEFINITIONG:
+    case DEFINITION:
           /* ***type 11:    OP predicate     */
       {
         Reg reg = regToInt(getRegArg(PC+1));
@@ -591,7 +587,7 @@ void CodeArea::display (ProgramCounter from, int sz, FILE* ofile)
         TaggedRef line      = getNumberArg(PC+4);
         PrTabEntry *pred    = getPredArg(PC+5);
 
-        fprintf(ofile, "(%d,0x%x,%s,%s,%s,[",reg,next,
+        fprintf(ofile, "(X%d,0x%x,%s,%s,%s,[",reg,next,
                 pred ? pred->getPrintName() : "(NULL)",
                 OZ_toC(file), OZ_toC(line));
 
