@@ -1,0 +1,10 @@
+# -*-makefile-*-
+# this file was provided by ozskel - read the ozskel documentation
+# Here you may provide additional make rules for use in Makefile.in
+
+ozmake: Main.ozf Utils.ozf Path.ozf Shell.ozf Executor.ozf Attribs.ozf \
+	Builder.ozf Makefile.ozf Manager.ozf
+	$(OZL) $(OZLFLAGS) -x Main.ozf -o $@
+
+clean::
+	-rm -f ozmake
