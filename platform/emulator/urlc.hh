@@ -9,7 +9,7 @@
    returns (int) file descriptor of the file or error.
    the file dissapears when close(2) the fd.
    */
-int openUrl(const char* Url);
+int openUrl(const char* Url, char *tmpfile);
 
 
 /* gets in a local file the content of the URL passed as first argument.
@@ -17,7 +17,7 @@ int openUrl(const char* Url);
    don't forget to free(3) *fnp!
    return 0 (URLC_OK) on success, reason on error.
    */
-int localizeUrl(const char* Url, char** fnp);
+int localizeUrl(const char* Url, char* fnp);
 
 
 /* return codes */

@@ -5,7 +5,7 @@
 
 
 /* int openUrl(const char*);
-   int localizeUrl(const char* Url, char** fnp);
+   int localizeUrl(const char* Url, char* fnp);
    defined at the end
    */
 
@@ -133,7 +133,7 @@ private:
 
     /* annoying and support functions */
     int clean(void); // cleans the data fields
-    int tmp_file_open(char **file); // opens a temporary file
+    int tmp_file_open(char *file); // opens a temporary file
     int tcpip_open(const char* host, int port); // opens connection
     int writen(int sockfd, char* buf, int n); // write n bytes to socket
     int write3(int sockfd, const char* p1, int lp1, // writev limited clone
@@ -150,19 +150,18 @@ private:
     int get_file(void);
 
     int parse_http(const char* line);
-    int get_http(char **file);
+    int get_http(char *file);
 
     int parse_ftp(const char* line);
-    int get_ftp(char **file);
+    int get_ftp(char *file);
 
     int parse(const char* line);
-    int getURL(const char* line, char **file);
 
 public:
     urlc(void);
     ~urlc(void);
-    int openURL(const char* Url);
-    int localizeURL(const char* Url, char** fnp);
+    int localizeURL(const char* Url, char* fnp);
+    int getURL(const char* line, char *file);
 };
 
 
@@ -237,43 +236,25 @@ urlc::~urlc(void)
 
 
 /* opens a temporary file.
-   if mode == URLC_UNLINK => remove the filename else
-   put name in file.
    returns file descriptor number or error reason
    */
-int
-urlc::tmp_file_open(char **file)
-{
-    int lofd = -1;
-    char tn[L_tmpnam] = ""; // I like POSIX!
-    if(NULL == tmpnam(tn)) {
-        URLC_PERROR("tmpnam");
-        return (URLC_EFILE);
-    }
-    do {
-        errno = 0;
-        lofd = osopen(tn, O_RDWR | O_CREAT | O_EXCL,
-                      S_IRUSR | S_IWUSR); // data destination
-        if((-1 == lofd) && (EINTR == errno))
-            continue;
-        if(0 < lofd)
-            break;
-        URLC_PERROR("open");
-        return (URLC_EFILE);
-    } while(1);
-    if(file == NULL) {
-      if(-1 == unlink(tn)) {
-        URLC_PERROR("unlink");
-        return (URLC_EFILE);
-      }
-    } else {
-        *file = (char*)malloc(1 + strlen(tn));
-        if(NULL == *file)
-          return (URLC_EALLOC);
-        strcpy(*file, tn);
-    }
 
-    return (lofd);
+int
+urlc::tmp_file_open(char *file)
+{
+  int lofd = -1;
+  do {
+    lofd = osopen(file, O_RDWR | O_CREAT | O_EXCL,
+                  S_IRUSR | S_IWUSR); // data destination
+    if((-1 == lofd) && (EINTR == errno))
+      continue;
+    if(0 < lofd)
+      break;
+    URLC_PERROR("open");
+    return (URLC_EFILE);
+  } while(1);
+
+  return (lofd);
 }
 
 
@@ -877,7 +858,7 @@ urlc::ftp_get_reply(char* buf, int* blen, int sockfd)
    returns URLC_OK on asuccess or reason.
    */
 int
-urlc::get_ftp(char **file)
+urlc::get_ftp(char *file)
 {
     ofd = -1; // preparing for desasters
     int sockfd = tcpip_open(host, port);
@@ -1366,7 +1347,7 @@ urlc::http_get_header(char* buf, int* brem, int& n, int sockfd)
    returns URLC_OK on success, reason on error.
  */
 int
-urlc::get_http(char **file)
+urlc::get_http(char *file)
 {
     int n = 0;
     int n2 = 0;
@@ -1443,7 +1424,7 @@ bomb:
    negative error status (URLC_*).
  */
 int
-urlc::getURL(const char* line, char **file)
+urlc::getURL(const char* line, char *file)
 {
     int n = 0;
     int t = 0;
@@ -1484,15 +1465,9 @@ urlc::getURL(const char* line, char **file)
 }
 
 
-int
-urlc::openURL(const char* line)
-{
-    return getURL(line, NULL);
-}
-
 
 int
-urlc::localizeURL(const char* line, char** fnp)
+urlc::localizeURL(const char* line, char* fnp)
 {
     int fd = -1;
 
@@ -1525,15 +1500,15 @@ urlc::localizeURL(const char* line, char** fnp)
 
 
 /* ---------------- the aim of all this stuff ------------------- */
-int openUrl(const char* Url)
+int openUrl(const char* Url, char *tmpfile)
 {
     urlc s;
 
-    return (s.openURL(Url));
+    return (s.getURL(Url,tmpfile));
 }
 
 
-int localizeUrl(const char* Url, char** fnp)
+int localizeUrl(const char* Url, char* fnp)
 {
     urlc s;
 

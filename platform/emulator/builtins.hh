@@ -30,6 +30,8 @@ OZ_Term OZ_findBuiltin(char *name, OZ_Term handler);
 BuiltinTabEntry *BIinit();
 BuiltinTabEntry *BIadd(char *name,int arity,OZ_CFun fun,IFOR infun=(IFOR) NULL);
 
+void threadRaise(Thread *th,OZ_Term E);
+
 // -----------------------------------------------------------------------
 // tables
 
