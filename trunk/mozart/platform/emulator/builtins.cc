@@ -4503,7 +4503,7 @@ OZ_C_proc_begin(BInewLock,1)
 {
   oz_declareArg(0,out);
 
-  OZ_Term ret = makeTaggedConst(new OzLock(am.currentBoard));
+  OZ_Term ret = makeTaggedConst(new LockLocal(am.currentBoard));
 
   return oz_unify(out,ret);
 }
@@ -4518,18 +4518,28 @@ OZ_C_proc_begin(BIlockLock,1)
     oz_typeError(0,"Lock");
   }
 
-  OzLock *lck = tagged2Lock(lock);
-  if (!am.isToplevel()) {
-    if (am.currentBoard != lck->getBoard()) {
-      return oz_raise(E_ERROR,E_KERNEL,"globalState",1,oz_atom("lock"));
-    }
+  Tertiary *t=tagged2Tert(lock);
+  switch(t->getTertType()){
+  case Te_Local:{
+    LockLocal *ll=(LockLocal*)t;
+    if (!am.isToplevel()) {
+      if (am.currentBoard != ll->getBoard()) {
+	return oz_raise(E_ERROR,E_KERNEL,"globalState",1,oz_atom("lock"));
+      }}
+    ll->lock(am.currentThread);
+    return PROCEED;}
+  case Te_Manager:{
+    ((LockManager *)t)->lock(am.currentThread);
+    return PROCEED;}
+  case Te_Proxy:{
+    ((LockProxy*)t)->lock(am.currentThread);
+    return PROCEED;}
+  case Te_Frame:{
+    ((LockFrame*)t)->lock(am.currentThread);
+    return PROCEED;}
   }
-
-  TaggedRef *aux = lck->lock(am.currentThread);
-  if (aux==NULL)
-    return PROCEED;
-
-  oz_suspendOn(*aux);
+  Assert(0);
+  return PROCEED;
 }
 OZ_C_proc_end
 
@@ -4541,9 +4551,21 @@ OZ_C_proc_begin(BIunlockLock,1)
   if (!isLock(lock)) {
     oz_typeError(0,"Lock");
   }
-
-  tagged2Lock(lock)->unlock();
-
+  Tertiary *t=tagged2Tert(lock);
+  switch(t->getTertType()){
+  case Te_Local:{
+    ((LockLocal*)t)->unlock();
+    return PROCEED;}
+  case Te_Manager:{
+    ((LockManager*)t)->unlock();
+    return PROCEED;}
+  case Te_Proxy:{
+    return oz_raise(E_ERROR,E_KERNEL,"globalState",1,oz_atom("lock"));}
+  case Te_Frame:{
+    ((LockFrame*)t)->unlock();
+    return PROCEED;}
+  }
+  Assert(0);
   return PROCEED;
 }
 OZ_C_proc_end
@@ -4612,8 +4634,10 @@ OZ_Return BIaccessCellInline(TaggedRef c, TaggedRef &out)
   }
   Tertiary *tert=tagged2Tert(rec);
   if(tert->getTertType()!=Te_Local){
-    cellDoAccess(tert,out);
-    return PROCEED;}
+    TaggedRef newVal = makeTaggedRef(newTaggedUVar(am.currentBoard)); /* ATTENTION - clumsy */
+    cellDoAccess(tert,newVal);
+    out = newVal;
+    return PROCEED;} 
   CellLocal *cell = (CellLocal*)tert;
   out = cell->getValue();
   return PROCEED;
@@ -6513,8 +6537,8 @@ Object *newObject(SRecord *feat, SRecord *st, ObjectClass *cla,
 		  Bool iscl, Board *b)
 {
   OzLock *lck = cla->supportsLocking()
-    ? new OzLock(am.currentBoard)
-    : (OzLock*) NULL;
+    ? new LockLocal(am.currentBoard)
+    : (LockLocal*) NULL;
   return new Object(b,st,cla,feat,iscl,lck);
 }
 
