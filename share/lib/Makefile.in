@@ -161,7 +161,7 @@ install:: \
 clean::
 	$(RM) compiler/Version.oz compiler/Opcodes.oz ozcar/version.oz
 	$(RM) $(TYPS) $(HELPCOMPONENTS) $(COMPONENTS) ozbatch
-	$(RM) ozbatch.ozm TAGS $(SRCDIR)/Makefile.bak
+	$(RM) TAGS $(SRCDIR)/Makefile.bak
 
 distclean::
 	$(RM) confdefs.h config.cache config.status config.log
