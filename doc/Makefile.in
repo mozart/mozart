@@ -26,7 +26,7 @@ INSTALL         = @INSTALL@
 INSTALL_FILE    = $(INSTALL) -m 444
 INSTALL_DIR     = @INSTALL_DIR@
 
-FILES           = ozdoc.dcl ozdoc.dtd ozdoc.doc
+FILES           = ozdoc.dcl ozdoc.dtd ozdoc.doc catalog
 LIBFILES        = $(addprefix $(DOCDIR)/,$(FILES))
 
 .PHONY: bootstrap all install clean veryclean distclean
