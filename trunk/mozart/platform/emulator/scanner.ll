@@ -27,8 +27,8 @@ extern "C" int xyreportError(char *kind, char *message,
 CTerm xyFileNameAtom;
 char xyFileName[100];
 char xyhelpFileName[100];
-int xy_showInsert;
-int xy_gumpSyntax;
+int xy_showInsert, xy_gumpSyntax, xy_systemVariables;
+CTerm xy_errorMessages;
 
 static int errorFlag;
 
@@ -509,6 +509,10 @@ static void transBody(char c, char *text, int &i, int &j) {
 
 static void stripTrans(char c) {
   if (xytext[0] == c) {
+    if (!xy_systemVariables && c == '`')
+      xyreportError("lexical error",
+		    "use of system variables not allowed in user programs",
+		    xyFileName,xylino,xycharno());
     int i = 0;
     int j = 1;
     transBody(c, xytext, i, j);
@@ -770,7 +774,10 @@ REGEXCHAR    "["([^\]\\]|\\.)+"]"|\"[^"]+\"|\\.|[^<>"\[\]\\\n]
 				   char *fullname = scExpndFileName(xytext,xyFileName);
 				   if (fullname != NULL) {
 				     if (xy_showInsert) {
-				       printf("%%%%%%\tinserting file \"%s\"\n",fullname);
+				       char *s = new char[27+strlen(fullname)];
+				       sprintf(s, "%%%%%%     inserting file \"%s\"\n",fullname);
+				       xy_errorMessages = OZ_pair2(xy_errorMessages,OZ_string(s));
+				       delete[] s;
 				       fflush(stdout);
 				     }
 				     FILE *filep = fopen(fullname, "r");
