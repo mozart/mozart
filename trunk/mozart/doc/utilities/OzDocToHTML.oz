@@ -606,7 +606,7 @@ define
 	    [] title then
 	       TopTitle <- span(COMMON: @Common OzDocToHTML, Batch(M 1 $))
 	       {@MyCrossReferencer
-		putTop(SEQ([VERBATIM('``') @TopTitle VERBATIM('\'\'')]))}
+		putTop(SEQ([PCDATA('``') @TopTitle PCDATA('\'\'')]))}
 	       EMPTY
 	    [] author then
 	       Authors <- {Append @Authors
