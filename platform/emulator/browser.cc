@@ -184,6 +184,26 @@ OZ_BI_define(BIvarSpace,1,1)
   OZ_RETURN_INT(ToInt32(addr));
 } OZ_BI_end
 
+
+OZ_BI_define(BIprocLoc,1,3)
+{
+  oz_declareIN(0,v);
+  DEREF(v,vPtr,vTag);
+
+  if (oz_isAbstraction(v)) {
+    Abstraction *a = tagged2Abstraction(v);
+    PrTabEntry *p = a->getPred();
+
+    OZ_out(0) = p->getFile();
+    OZ_out(1) = OZ_int(p->getLine());
+    OZ_out(2) = OZ_int(p->getColumn());
+    return PROCEED;
+  } else {
+    return oz_raise(E_ERROR,E_SYSTEM,"BIprocLoc: no procedure",1,v);
+  }
+} OZ_BI_end
+
+
 /*
  * The builtin table
  */
