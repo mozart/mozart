@@ -96,7 +96,7 @@ C={New Tk.canvas tkInit(parent:T)}
     <p>
       <figure id="figure.canvas.barchart">
         <caption/A canvas for displaying bar charts./
-<chunk><title/Definition of BarCanvas/
+<chunk class=anonymous><title/Definition of BarCanvas/
 local
    O=if Tk.isColor then o(fill:wheat)
      else               o(stipple:gray50 fill:black)
@@ -112,10 +112,13 @@ in
             {self DrawBars(Yr H X+W)}
          end
       end
+      meth configure(SX SY)
+         {self tk(configure scrollregion:q(B ~B SX+B SY+B))}
+      end
       meth bars(Ys)
-         WY=W*{Length Ys} HY=W*{FoldL Ys Max 0}
+         WY=W*({Length Ys}+1) HY=W*({FoldL Ys Max 0}+1)
       in
-         {self tk(configure scrollregion:q(B ~B W+WY+B D+HY+B))}
+         {self configure(WY HY))}
          {self DrawBars(Ys HY D)}
       end
    end
@@ -158,11 +161,44 @@ V={New Tk.scrollbar tkInit(parent:T orient:vertical)}
 </chunk>
       </figure>
 
-
+<!--
   <section id="section.canvas.region">
     <title/The Scrollregion: Resizing/
 
     <p>
+      The previous example made use of the scrollregion of a canvas:
+      the part of the canvas which can be made visible by using the
+      scrollbars. When a canvas widget gets resized, also the
+      scrollregion should be resized in order to utilize the window
+      space as good as possible.
+
+    <p>
+      For this reason let us refine the bar canvas such that it
+      adapts the scrolling region as soon as it gets resized.
+
+    <p>
+      <figure id="figure.canvas.barchart">
+        <caption/A canvas for displaying bar charts./
+<chunk class=anonymous><title/Definition of ResizableBarCanvas/
+local
+   O=if Tk.isColor then o(fill:wheat)
+     else               o(stipple:gray50 fill:black)
+     end
+   D=10  W=2*D B=10
+in
+   class ResizableBarCanvas from BarCanvas
+      attr sx:0 sy: cx:0 cy:0
+      meth tkInit(...) = M
+         BarCanvas,M
+      end
+      meth configure(SX SY)
+      end
+   end
+end
+</chunk>
+      </figure>
+
+-->
 
   <section id="section.canvas.tags">
     <title/Canvas Tags/
