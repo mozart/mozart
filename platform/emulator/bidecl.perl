@@ -2885,7 +2885,7 @@ $builtins = {
 			     bi  => BIfsGetLub,
 			     module=>fset },
 
-    'fsGetCard'		=> { in  => ['fset','int'],
+    'fsGetCard'		=> { in  => ['fset','value'],
 			     out => [],
 			     bi  => BIfsGetCard,
 			     module=>fset },
