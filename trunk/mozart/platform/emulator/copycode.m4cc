@@ -152,7 +152,7 @@ SRecordArity checkSRA(SRecordArity sra, HashTable *ht)
   Assert(copies==0 || copies==len);
 
   newlist = reverseC(newlist);
-  Assert(isSorted(newlist));
+  // mm2:  Assert(isSorted(newlist));
   aux = mkRecordArity(aritytable.find(newlist));
   ht->htAdd(sra,ToPointer(aux));
   return aux;

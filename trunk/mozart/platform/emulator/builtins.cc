@@ -329,7 +329,9 @@ OZ_Return isKindedRelInline(TaggedRef term) {
   if (isCVar(tag)) {
     Bool kinded = OK;
     switch (tagged2CVar(term)->getType()) {
+      // mm2: generalize
     case LazyVariable: kinded=tagged2LazyVar(term)->isKinded(); break;
+    case PROMISE:      kinded=tagged2Promise(term)->isKinded(); break;
     default: break;
     }
     return kinded?PROCEED:FAILED;
@@ -637,7 +639,7 @@ OZ_BI_define(BIsystemTellSize,3,0)
       // Unify newofsvar and term:
       Bool ok=oz_unify(makeTaggedRef(newTaggedCVar(newofsvar)),
 		       makeTaggedRef(tPtr));
-      Assert(ok); // mm_u
+      Assert(ok==PROCEED); // mm_u
       return PROCEED;
     }
   default:
@@ -661,7 +663,7 @@ OZ_BI_define(BIrecordTell,2,0)
     GenOFSVariable *newofsvar=new GenOFSVariable(label);
     Bool ok=oz_unify(makeTaggedRef(newTaggedCVar(newofsvar)),
 		     makeTaggedRef(tPtr));
-    Assert(ok); // mm_u
+    Assert(ok==PROCEED); // mm_u
     return PROCEED;
   }
 
@@ -717,7 +719,7 @@ OZ_BI_define(BIrecordTell,2,0)
       // Unify newofsvar and term:
       Bool ok=oz_unify(makeTaggedRef(newTaggedCVar(newofsvar)),
 		       makeTaggedRef(tPtr));
-      Assert(ok); // mm_u
+      Assert(ok==PROCEED); // mm_u
       return PROCEED;
     }
   default:
@@ -837,7 +839,7 @@ OZ_C_proc_begin(BIwidthC, 2)
         GenFDVariable *fdvar=new GenFDVariable(); // Variable with maximal domain
         // Unify fdvar and wid:
         Bool ok=oz_unify(makeTaggedRef(newTaggedCVar(fdvar)),rawwid);
-        Assert(ok); // mm_u
+        Assert(ok==PROCEED); // mm_u
         break;
     }
     case CVAR:
@@ -1196,7 +1198,7 @@ OZ_Return genericUparrowInline(TaggedRef term, TaggedRef fea, TaggedRef &out, Bo
 	  // Unify newofsvar and term:
 	  Bool ok=oz_unify(makeTaggedRef(newTaggedCVar(newofsvar)),
 			   makeTaggedRef(termPtr));
-	  Assert(ok); // mm_u
+	  Assert(ok==PROCEED); // mm_u
 	  term=makeTaggedRef(termPtr);
 	  DEREF(term, termPtr2, tag2);
 	  termPtr=termPtr2;
@@ -1249,7 +1251,7 @@ OZ_Return genericUparrowInline(TaggedRef term, TaggedRef fea, TaggedRef &out, Bo
                 // Unify newofsvar and term (which is also an ofsvar):
                 Bool ok2=oz_unify(makeTaggedRef(newTaggedCVar(newofsvar)),
 				  makeTaggedRef(termPtr));
-                Assert(ok2); // mm_u
+                Assert(ok2==PROCEED); // mm_u
             }
         }
         return PROCEED;
@@ -1268,7 +1270,7 @@ OZ_Return genericUparrowInline(TaggedRef term, TaggedRef fea, TaggedRef &out, Bo
         // Unify newofsvar (CVAR) and term (SVAR or UVAR):
 	Bool ok2=oz_unify(makeTaggedRef(newTaggedCVar(newofsvar)),
 			  makeTaggedRef(termPtr));
-	Assert(ok2); // mm_u
+	Assert(ok2==PROCEED); // mm_u
         return PROCEED;
       }
   
@@ -2909,23 +2911,29 @@ NEW_DECLAREBI_USEINLINEFUN1(BIstatus,BIstatusInline)
 inline
 OZ_Return AM::eqeq(TaggedRef Ain,TaggedRef Bin)
 {
+  // simulate a shallow guard
   trail.pushMark();
   shallowHeapTop = heapTop;
-  Bool ret = oz_unify(Ain,Bin,(ByteCode*)1); // mm_u
+  Bool ret = oz_unify(Ain,Bin,(ByteCode*)1);
   shallowHeapTop = NULL;
-  if (ret == NO) {
+
+  if (ret == PROCEED) {
+    if (trail.isEmptyChunk()) {
+      trail.popMark();
+      return PROCEED;
+    }
+
+    reduceTrailOnEqEq();
+    return SUSPEND;
+  }
+
+  if (ret == FAILED) {
     reduceTrailOnFail();
     return FAILED;
   }
 
-  if (trail.isEmptyChunk()) {
-    trail.popMark();
-    return PROCEED;
-  }
-
-  reduceTrailOnEqEq();
-
-  return SUSPEND;
+  reduceTrailOnFail();
+  return ret;
 }
 
 inline
@@ -4419,24 +4427,23 @@ OZ_Return sendPort(OZ_Term prt, OZ_Term val)
   OZ_Term old = ((PortWithStream*)port)->exchangeStream(lt->getTail());
   DEREF(old,oldPtr,_1);
 
+  // mm2: hack alert!
   if(isAnyVar(old) && !isCVar(old)) {
-    oz_bindToNonvar(oldPtr,old,makeTaggedLTuple(lt)); // mm_u
+    oz_bindToNonvar(oldPtr,old,makeTaggedLTuple(lt));
   } else {
     old = makeTaggedRef(oldPtr);
-    if (oz_unify(makeTaggedLTuple(lt),old)!=PROCEED) { // mm_u
-      /* respect port semantics:
-       *
-       * fun {NewPort S}
-       *   C={NewCell S}
-       * in
-       *   proc {$ Val}
-       *     {Exchange Cell Old T}
-       *     thread Old=H|T end         %% !!!
-       *   end
-       * end
-       */
-      OZ_unifyInThread(makeTaggedLTuple(lt),old);
-    }
+    /* respect port semantics:
+     *
+     * fun {NewPort S}
+     *   C={NewCell S}
+     * in
+     *   proc {$ Val}
+     *     {Exchange Cell Old T}
+     *     thread Old=H|T end         %% !!!
+     *   end
+     * end
+     */
+    OZ_unifyInThread(makeTaggedLTuple(lt),old);
   }
   return PROCEED;
 }
@@ -4980,30 +4987,6 @@ OZ_Return applyProc(TaggedRef proc, TaggedRef args)
   }
   
   am.prepareCall(proc,argsArray);
-  return BI_REPLACEBICALL;
-}
-
-
-/* bind control var in it's home space */
-void controlVarUnify(TaggedRef var, TaggedRef val)
-{
-  TaggedRef aux = deref(var);
-  Board *home = isSVar(aux) ? tagged2SVar(aux)->getHome1() 
-                            : tagged2VarHome(aux);
-  if (am.onToplevel() && home==oz_rootBoard()) {
-    OZ_Return aux = oz_unify(var,val); 
-    Assert(aux==PROCEED);
-  } else {
-    Thread *th=am.mkRunnableThread(DEFAULT_PRIORITY,home);
-    th->pushCall(BI_Unify,var,val);
-    am.scheduleThread(th);
-  }
-}
-
-OZ_Return suspendOnControlVar()
-{
-  am.prepareCall(BI_controlVarHandler,am.getSuspendVarList());
-  am.emptySuspendVarList();
   return BI_REPLACEBICALL;
 }
 
@@ -6791,7 +6774,6 @@ extern void BIinitUnix();
 extern void BIinitAssembler();
 extern void BIinitTclTk();
 extern void BIinitPerdio();
-extern void BIinitLazy();
 extern void initVirtualProperties();
 
 Builtin *BIinit()
@@ -6832,9 +6814,6 @@ Builtin *BIinit()
   BI_load=makeTaggedConst(builtinTab.find("load"));
   BI_fail=makeTaggedConst(builtinTab.find("fail"));
   BI_url_load=makeTaggedConst(builtinTab.find("URL.load"));
-
-  // BIinitLazy();
-
 
   dummyRecord = makeTaggedNULL();
   OZ_protect(&dummyRecord);

@@ -39,10 +39,9 @@
 // see tagged.hh: oz_eq(x,y)
 
 OZ_Return oz_unify(OZ_Term t1, OZ_Term t2, ByteCode *scp=0);
-void oz_bind(OZ_Term *varPtr, OZ_Term var,
-	     OZ_Term *termPtr, OZ_Term term);
+void oz_bind(OZ_Term *varPtr, OZ_Term var, OZ_Term term);
+void oz_bind_global(OZ_Term var, OZ_Term term);
 
-// mm_u
 inline
 void oz_bindToNonvar(OZ_Term *varPtr, OZ_Term var,
 		     OZ_Term a, ByteCode *scp=0)
@@ -53,7 +52,7 @@ void oz_bindToNonvar(OZ_Term *varPtr, OZ_Term var,
   if (am.currentUVarPrototypeEq(var) && scp==0) {
     doBind(varPtr,a);
   } else {
-    oz_bind(varPtr,var,NULL,a);
+    oz_bind(varPtr,var,a);
   }
 }
 
@@ -285,24 +284,23 @@ Arity *oz_makeArity(OZ_Term list)
 OZ_Term var = makeTaggedRef(newTaggedUVar(home));	\
 am.addSuspendVarList(var);
 
-
-void controlVarUnify(TaggedRef var, TaggedRef val);
+#define _controlVarUnify(var,val) oz_bind_global(var,val)
 
 #define ControlVarResume(var)			\
-controlVarUnify(var,NameUnit)
+_controlVarUnify(var,NameUnit)
 
 
 #define ControlVarRaise(var,exc) 			\
-controlVarUnify(var,OZ_mkTuple(AtomException,1,exc))
+_controlVarUnify(var,OZ_mkTuple(AtomException,1,exc))
 
 #define ControlVarUnify(var,A,B) 			\
-controlVarUnify(var,OZ_mkTuple(AtomUnify,2,A,B))
+_controlVarUnify(var,OZ_mkTuple(AtomUnify,2,A,B))
 
 #define ControlVarApply(var,P,Args)			\
-controlVarUnify(var,OZ_mkTuple(AtomApply,2,P,Args))
+_controlVarUnify(var,OZ_mkTuple(AtomApply,2,P,Args))
 
 #define ControlVarApplyList(var,PairList)			\
-controlVarUnify(var,OZ_mkTuple(AtomApplyList,1,PairList))
+_controlVarUnify(var,OZ_mkTuple(AtomApplyList,1,PairList))
 
 
 OZ_Return suspendOnControlVar();
