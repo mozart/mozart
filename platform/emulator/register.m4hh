@@ -254,9 +254,8 @@ Case(SETCONSTANT)
 Case(SETVOID)
     {
       int n = getPosIntArg(PC+1);
-      TaggedRef newVar = e->currentUVarPrototype();
       for (int i = 0; i < n; i++ ) {
-	*sPointer++ = newVar;
+	*sPointer++ = e->currentUVarPrototype();
       }
       DISPATCH(2);
     }
@@ -277,7 +276,7 @@ Case(SETVOID)
 	     SRecord *srecord = SRecord::newSRecord(label,ff,getWidth(ff));
 	     if(isCVar(term) == OK){
 	       // fill w/unb. var.
-               srecord->initArgs(e->currentUVarPrototype());
+               srecord->initArgs();
 	       TaggedRef srecordRef=makeTaggedSRecord(srecord);
 	       if(tagged2CVar(term)->unifyOutline(termPtr, term, 
 						  &srecordRef, srecordRef,
@@ -519,7 +518,8 @@ Case(SETVOID)
 		   LTuple *ltuple = new LTuple();
 		   sPointer = ltuple->getRef();
 		   if (isCVar(term)) {
-		     ltuple->initArgs(e->currentUVarPrototype());
+		     ltuple->setHead(e->currentUVarPrototype());
+		     ltuple->setTail(e->currentUVarPrototype());
 		     SetReadMode;
 
 		     if(tagged2CVar(term)
@@ -729,10 +729,9 @@ Case(UNIFYCONSTANT)
     {
       int n = getPosIntArg(PC+1);
       if (InWriteMode) {
-	TaggedRef newVar = e->currentUVarPrototype();
 	TaggedRef *sp = GetSPointerWrite(sPointer);
 	for (int i = n-1; i >=0; i-- ) {
-	  *sp++ = newVar;
+	  *sp++ = e->currentUVarPrototype();
 	}
       }
       sPointer += n;

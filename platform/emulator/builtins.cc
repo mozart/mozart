@@ -1016,7 +1016,7 @@ OZ_Return WidthPropagator::propagate(void)
                     TaggedRef alist=tagged2GenOFSVar(rec)->getTable()->getArityList();
                     Arity *arity=aritytable.find(alist);
                     SRecord *newrec = SRecord::newSRecord(lbl,arity);
-		    newrec->initArgs(am.currentUVarPrototype()); 
+		    newrec->initArgs();
                     Bool res=am.unify(rawrec,newrec->normalize());
                     Assert(res);
                 }
@@ -1743,9 +1743,8 @@ OZ_Return tupleInline(TaggedRef label, TaggedRef argno, TaggedRef &out)
       {
 	SRecord *s = SRecord::newSRecord(label,i);
 
-	TaggedRef newVar = am.currentUVarPrototype();
 	for (int j = 0; j < i; j++) {
-	  s->setArg(j,newVar);
+	  s->setArg(j,am.currentUVarPrototype());
 	}
 
 	out = s->normalize();
@@ -6742,12 +6741,10 @@ TaggedRef cloneObjectRecord(TaggedRef record, Bool cloneAll)
   SRecord *in  = tagged2SRecord(record);
   SRecord *rec = SRecord::newSRecord(in);
 
-  OZ_Term proto = am.currentUVarPrototype();
-
   for(int i=0; i < in->getWidth(); i++) {
     OZ_Term arg = in->getArg(i);
     if (cloneAll || literalEq(NameOoFreeFlag,deref(arg))) {
-      arg = makeTaggedRef(newTaggedUVar(proto));
+      arg = oz_newVariable();
     }
     rec->setArg(i,arg);
   }
