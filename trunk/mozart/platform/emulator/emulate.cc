@@ -464,6 +464,14 @@ void AM::checkStatus()
 #define PushCont(PC,Y,G)  CTS->pushCont(PC,Y,G);
 #define PushContX(PC,Y,G,X,n)  { CTS->pushCont(PC,Y,G); CTS->pushX(X,n); }
 
+#define PushDummyDebug(PC)                                              \
+  if (e->debugmode() && e->currentThread->stepMode()) {                 \
+    time_t feedtime = CodeArea::findTimeStamp(PC);                      \
+    OZ_Term dinfo = cons(OZ_int(0),cons(OZ_int(feedtime),nil()));       \
+    OzDebug *dbg  = new OzDebug(DBG_STEP,dinfo);                        \
+    CTS->pushDebug(dbg);                                                \
+  }
+
 /* NOTE:
  * in case we have call(x-N) and we have to switch process or do GC
  * we have to save as cont address Pred->getPC() and NOT PC
@@ -2172,6 +2180,7 @@ LBLdispatcher:
     INCFPC(3); /* suspend on NEXT instructions: WeakDET suspensions are
                   woken up always, even if variable is bound to another var */
 
+    PushDummyDebug(PC);
     SUSP_PC(termPtr,argsToSave,PC);
   }
 
@@ -2662,18 +2671,20 @@ LBLdispatcher:
       ProgramCounter elsePC = getLabelArg(PC+1);
       int argsToSave = getPosIntArg(PC+2);
 
+      PushDummyDebug(PC);
       CAA = new AskActor(CBB,CTT,
 			 elsePC ? elsePC : NOCODE,
 			 NOCODE, Y, G, X, argsToSave);
-      CTS->pushActor(CAA);
+      CTS->pushActor(CAA,PC);
       CBB->incSuspCount(); 
       DISPATCH(3);
     }
 
   Case(CREATEOR)
     {
+      PushDummyDebug(PC);
       CAA = new WaitActor(CBB, CTT, NOCODE, Y, G, X, 0, NO);
-      CTS->pushActor(CAA);
+      CTS->pushActor(CAA,PC);
       CBB->incSuspCount(); 
 
       DISPATCH(1);
@@ -2683,8 +2694,9 @@ LBLdispatcher:
     {
       Board *bb = CBB;
 
+      PushDummyDebug(PC);
       CAA = new WaitActor(bb, CTT, NOCODE, Y, G, X, 0, NO);
-      CTS->pushActor(CAA);
+      CTS->pushActor(CAA,PC);
       CBB->incSuspCount(); 
 
       if (bb->isWait()) {
@@ -2700,8 +2712,9 @@ LBLdispatcher:
     {
       Board *bb = CBB;
 
+      PushDummyDebug(PC);
       CAA = new WaitActor(bb, CTT, NOCODE, Y, G, X, 0, OK);
-      CTS->pushActor(CAA);
+      CTS->pushActor(CAA,PC);
       CBB->incSuspCount(); 
 
       Assert(CAA->isChoice());
