@@ -143,6 +143,19 @@ void message(const char *format, ...)
   va_end(ap);
 }
 
+//
+// kost@ : very quick hack to kill emulators that are lost...
+Bool isDeadSTDOUT()
+{
+  char *buf = "\n";
+  fflush(stdout);
+  if (write(fileno(stdout), buf, 1) == -1 && errno == EPIPE)
+    return (TRUE);
+  else
+    return (FALSE);
+}
+
+
 void errorTrailer()
 {
   message("----------------------------------------\n\n");

@@ -34,6 +34,9 @@
 
 #ifdef VIRTUALSITES
 
+#include <sys/types.h>
+#include <sys/wait.h>
+
 //
 void VirtualSite::connect()
 {
@@ -403,9 +406,13 @@ Bool VSProbingObject::processProbes(unsigned long clock) {
 
       //
       pid = vs->getVSPid();
-      if (pid && oskill(pid, 0)) {
-        // no such process;
-        s->probeFault(PROBE_PERM);
+      if (pid) {
+        // delete zombie;
+        (void) waitpid(pid, (int *) 0, WNOHANG);
+        if (oskill(pid, 0)) {
+          // no such process;
+          s->probeFault(PROBE_PERM);
+        }
       }
     }
 
