@@ -1061,6 +1061,8 @@ REGEXCHAR    "["([^\]\\]|\\.)+"]"|\"[^"]+\"|\\.|[^<>"\[\]\\\n]
 "elseof"/\(                    { return elseof; }
 "end"                          { return end; }
 "end"/\(                       { return end; }
+"export"                       { return export; }
+"export"/\(                    { return export; }
 "fail"                         { return fail; }
 "fail"/\(                      { return fail; }
 "false"                        { return false; }
@@ -1076,6 +1078,8 @@ REGEXCHAR    "["([^\]\\]|\\.)+"]"|\"[^"]+\"|\\.|[^<>"\[\]\\\n]
 "functor"/\(                   { return functor; }
 "if"                           { return _if_; }
 "if"/\(                        { return _if_; }
+"import"                       { return import; }
+"import"/\(                    { return import; }
 "in"                           { return _in_; }
 "in"/\(                        { return _in_; }
 "lex"                          { if (xy_gumpSyntax) { BEGIN(LEX); return lex; } else return OZATOM; }
