@@ -24,7 +24,7 @@ extern "C" void *sbrk(int incr);
 // heap memory
 
 // allocate 2000 kilo byte chuncks of memory
-const heapMaxSize = 2 * MB;
+const heapBlockSize = 2 * MB;
 
 MemChunks *MemChunks::list = NULL;
 
@@ -347,24 +347,24 @@ void *heapMallocOutline(size_t chunk_size)
 
 void getMemFromOS(size_t sz)
 {
-  if (sz > heapMaxSize) {
+  if (sz > heapBlockSize) {
     message("memory exhausted: required chunk bigger thank max size");
     message(" hint: look for an endless recursion");
     IO::exitOz(1);
   }
 
-  heapTotalSize += heapMaxSize;
+  heapTotalSize += heapBlockSize/KB;
 
-  heapTop = (char *) ozMalloc(heapMaxSize);
+  heapTop = (char *) ozMalloc(heapBlockSize);
 
   if (!heapTop) {
     error("heapMalloc: Virtual memory exceeded");
   }
 
   /* initialize with zeros */
-  DebugCheckT(memset(heapTop,0,heapMaxSize));
+  DebugCheckT(memset(heapTop,0,heapBlockSize));
 
-  heapEnd = &heapTop[heapMaxSize];
+  heapEnd = &heapTop[heapBlockSize];
 
   //  message("heapEnd: 0x%x\n maxPointer: 0x%x\n",heapEnd,maxPointer+1);
   if (heapEnd > (char*)maxPointer) {
@@ -372,11 +372,11 @@ void getMemFromOS(size_t sz)
     IO::exitOz(1);
   }
 
-  MemChunks::list = new MemChunks(heapTop,MemChunks::list,heapMaxSize);
+  MemChunks::list = new MemChunks(heapTop,MemChunks::list,heapBlockSize);
 
-  DebugCheck(heapTotalSize > heapMaxSize,
+  DebugCheck(heapTotalSize > heapBlockSize/KB,
              message("Increasing heap memory to %d kilo bytes\n",
-                     heapTotalSize / KB));
+                     heapTotalSize));
 }
 
 
