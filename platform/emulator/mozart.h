@@ -387,6 +387,145 @@ extern OZ_Return _FUNDECL(OZ_suspendOnInternal3,(OZ_Term,OZ_Term,OZ_Term));
  * III. macros
  * ------------------------------------------------------------------------ */
 
+/* Transitional Interface for the new regime for builtins */
+/* OZ_BI_define(Name,InArity,OutArity){ ... }
+   	defines Name to be a builtin with arity=InArity+OutArity
+	define BI__Name to be the new style primitive with
+		InArity input registers
+		OutArity output register
+	Name calls BI__Name and performs necessary unifications
+	when it returns
+
+   OZ_in(n) accesses input register n
+   OZ_out(n) accesses output register n
+   OZ_result(v) assigns v to output register 0 (the usual case)
+   */
+
+/*
+ * special return values for builtins moved from base.hh
+ */
+#define BI_PREEMPT       1024
+#define BI_REPLACEBICALL 1025
+#define BI_TYPE_ERROR    1026
+#define BI_CONTROL_VAR   1027
+
+#define OZ_STATUS_OK(s) ((s)==PROCEED || (s)==BI_PREEMPT)
+
+#ifdef __cplusplus
+#define OZ_BI_proto(Name) \
+  extern "C" OZ_Return _FUNDECL(Name,(OZ_Term [],int []));
+#else
+#define OZ_BI_proto(Name) \
+  OZ_Return _FUNDECL(Name,(OZ_Term [],int []));
+#endif
+
+#define OZ_ID_MAP 0
+#define OZ_in(N) OZ_args[OZ__LOC==OZ_ID_MAP?N:OZ__LOC[N]]
+#define OZ_out(N) OZ_args[OZ__LOC==OZ_ID_MAP?OZ_arity+N:OZ__LOC[OZ_arity+N]]
+#define OZ_result(V) OZ_out(0)=V
+
+#define OZ_BI_define(Name,Arity_IN,Arity_OUT)			\
+OZ_BI_proto(Name);						\
+OZ_Return _FUNDECL(Name,(OZ_Term OZ_args[],int OZ__LOC[])) {	\
+    const OZ_CFun OZ_self = Name;				\
+    const int OZ_arity = Arity_IN;
+
+#define OZ_BI_end }
+
+#define OZ_declareIN(ARG,VAR) \
+     OZ_Term VAR = OZ_in(ARG);
+
+#define OZ_nonvarIN(ARG)			\
+{						\
+  if (OZ_isVariable(OZ_in(ARG))) {		\
+    OZ_suspendOn(OZ_in(ARG));			\
+  }						\
+}
+
+#define OZ_declareNonvarIN(ARG,VAR)		\
+OZ_Term VAR = OZ_in(ARG);			\
+{						\
+  if (OZ_isVariable(VAR)) {			\
+    OZ_suspendOn(VAR);				\
+  }						\
+}
+
+#define OZ_declareIntIN(ARG,VAR)		\
+ int VAR;					\
+ OZ_nonvarIN(ARG);				\
+ if (! OZ_isInt(OZ_in(ARG))) {			\
+   return OZ_typeError(ARG,"Int");		\
+ } else {					\
+   VAR = OZ_intToC(OZ_in(ARG));			\
+ }
+
+#define OZ_declareFloatIN(ARG,VAR)		\
+ double VAR;					\
+ OZ_nonvarIN(ARG);				\
+ if (! OZ_isFloat(OZ_in(ARG))) {		\
+   return OZ_typeError(ARG,"Float");		\
+   return FAILED;				\
+ } else {					\
+   VAR = OZ_floatToC(OZ_in(ARG));		\
+ }
+
+
+#define OZ_declareAtomIN(ARG,VAR)		\
+ CONST char *VAR;				\
+ OZ_nonvarIN(ARG);				\
+ if (! OZ_isAtom(OZ_in(ARG))) {			\
+   return OZ_typeError(ARG,"Atom");		\
+ } else {					\
+   VAR = OZ_atomToC(OZ_in(ARG));		\
+ }
+
+#define OZ_declareProperStringIN(ARG,VAR)		\
+ char *VAR;						\
+ {							\
+   OZ_Term OZ_avar;					\
+   if (!OZ_isProperString(OZ_in(ARG),&OZ_avar)) {	\
+     if (OZ_avar == 0) {				\
+       return OZ_typeError(ARG,"ProperString");		\
+     } else {						\
+       OZ_suspendOn(OZ_avar);				\
+     }							\
+   }							\
+   VAR = OZ_stringToC(OZ_in(ARG));			\
+ }
+
+#define OZ_declareVirtualStringIN(ARG,VAR)		\
+ char *VAR;						\
+ {							\
+   OZ_Term OZ_avar;					\
+   if (!OZ_isVirtualString(OZ_in(ARG),&OZ_avar)) {	\
+     if (OZ_avar == 0) {				\
+       return OZ_typeError(ARG,"VirtualString");	\
+     } else {						\
+       OZ_suspendOn(OZ_avar);				\
+     }							\
+   }							\
+   VAR = OZ_virtualStringToC(OZ_in(ARG));		\
+ }
+
+#define OZ_declareForeignPointerIN(ARG,VAR)	\
+void *VAR;					\
+{						\
+  OZ_declareNonvarIN(ARG,_VAR);		\
+  if (!OZ_isForeignPointer(_VAR)) {		\
+    return OZ_typeError(ARG,"ForeignPointer");  \
+  } else {					\
+    VAR = OZ_getForeignPointer(_VAR);		\
+  }						\
+}
+
+#define OZ_RETURN(V) return ((OZ_result(V)),PROCEED)
+#define OZ_RETURN_INT(I) OZ_RETURN(OZ_int(I))
+#define OZ_RETURN_ATOM(S) OZ_RETURN(OZ_atom(S))
+#define OZ_RETURN_STRING(S) OZ_RETURN(OZ_string(S))
+
+
+/* the old interface */
+
 #define OZ_C_proc_proto(Name)	OZ_BI_proto(Name)
 
 #define OZ_C_proc_begin(Name,arity)	OZ_BI_define(Name,arity,0)
@@ -590,135 +729,5 @@ extern OZ_Return _FUNDECL(OZ_datumToValue,(OZ_Datum d, OZ_Term   t));
 #if defined(__cplusplus) && !defined(OZ_DEBUG_INTERFACE)
 }
 #endif
-
-
-/* Transitional Interface for the new regime for builtins */
-/* OZ_BI_define(Name,InArity,OutArity){ ... }
-   	defines Name to be a builtin with arity=InArity+OutArity
-	define BI__Name to be the new style primitive with
-		InArity input registers
-		OutArity output register
-	Name calls BI__Name and performs necessary unifications
-	when it returns
-
-   OZ_in(n) accesses input register n
-   OZ_out(n) accesses output register n
-   OZ_result(v) assigns v to output register 0 (the usual case)
-   */
-
-/*
- * special return values for builtins moved from base.hh
- */
-#define BI_PREEMPT       1024
-#define BI_REPLACEBICALL 1025
-#define BI_TYPE_ERROR    1026
-#define BI_CONTROL_VAR   1027
-
-#define OZ_STATUS_OK(s) ((s)==PROCEED || (s)==BI_PREEMPT)
-#define OZ_BI_proto(Name) OZ_Return Name(OZ_Term OZ_args[],int OZ__LOC[]);
-
-#define OZ_ID_MAP 0
-#define OZ_in(N) OZ_args[OZ__LOC==OZ_ID_MAP?N:OZ__LOC[N]]
-#define OZ_out(N) OZ_args[OZ__LOC==OZ_ID_MAP?OZ_arity+N:OZ__LOC[OZ_arity+N]]
-#define OZ_result(V) OZ_out(0)=V
-
-#define OZ_BI_define(Name,Arity_IN,Arity_OUT)		\
-OZ_BI_proto(Name);					\
-OZ_Return Name(OZ_Term OZ_args[],int OZ__LOC[]) {	\
-    const OZ_CFun OZ_self = Name;			\
-    const int OZ_arity = Arity_IN;
-
-#define OZ_BI_end }
-
-#define OZ_declareIN(ARG,VAR) \
-     OZ_Term VAR = OZ_in(ARG);
-
-#define OZ_nonvarIN(ARG)			\
-{						\
-  if (OZ_isVariable(OZ_in(ARG))) {		\
-    OZ_suspendOn(OZ_in(ARG));			\
-  }						\
-}
-
-#define OZ_declareNonvarIN(ARG,VAR)		\
-OZ_Term VAR = OZ_in(ARG);			\
-{						\
-  if (OZ_isVariable(VAR)) {			\
-    OZ_suspendOn(VAR);				\
-  }						\
-}
-
-#define OZ_declareIntIN(ARG,VAR)		\
- int VAR;					\
- OZ_nonvarIN(ARG);				\
- if (! OZ_isInt(OZ_in(ARG))) {			\
-   return OZ_typeError(ARG,"Int");		\
- } else {					\
-   VAR = OZ_intToC(OZ_in(ARG));			\
- }
-
-#define OZ_declareFloatIN(ARG,VAR)		\
- double VAR;					\
- OZ_nonvarIN(ARG);				\
- if (! OZ_isFloat(OZ_in(ARG))) {		\
-   return OZ_typeError(ARG,"Float");		\
-   return FAILED;				\
- } else {					\
-   VAR = OZ_floatToC(OZ_in(ARG));		\
- }
-
-
-#define OZ_declareAtomIN(ARG,VAR)		\
- CONST char *VAR;				\
- OZ_nonvarIN(ARG);				\
- if (! OZ_isAtom(OZ_in(ARG))) {			\
-   return OZ_typeError(ARG,"Atom");		\
- } else {					\
-   VAR = OZ_atomToC(OZ_in(ARG));		\
- }
-
-#define OZ_declareProperStringIN(ARG,VAR)		\
- char *VAR;						\
- {							\
-   OZ_Term OZ_avar;					\
-   if (!OZ_isProperString(OZ_in(ARG),&OZ_avar)) {	\
-     if (OZ_avar == 0) {				\
-       return OZ_typeError(ARG,"ProperString");		\
-     } else {						\
-       OZ_suspendOn(OZ_avar);				\
-     }							\
-   }							\
-   VAR = OZ_stringToC(OZ_in(ARG));			\
- }
-
-#define OZ_declareVirtualStringIN(ARG,VAR)		\
- char *VAR;						\
- {							\
-   OZ_Term OZ_avar;					\
-   if (!OZ_isVirtualString(OZ_in(ARG),&OZ_avar)) {	\
-     if (OZ_avar == 0) {				\
-       return OZ_typeError(ARG,"VirtualString");	\
-     } else {						\
-       OZ_suspendOn(OZ_avar);				\
-     }							\
-   }							\
-   VAR = OZ_virtualStringToC(OZ_in(ARG));		\
- }
-
-#define OZ_declareForeignPointerIN(ARG,VAR)	\
-void *VAR;					\
-{						\
-  OZ_declareNonvarIN(ARG,_VAR);		\
-  if (!OZ_isForeignPointer(_VAR)) {		\
-    return OZ_typeError(ARG,"ForeignPointer");  \
-  } else {					\
-    VAR = OZ_getForeignPointer(_VAR);		\
-  }						\
-}
-
-#define OZ_RETURN(V) return ((OZ_result(V)),PROCEED)
-#define OZ_RETURN_INT(I) OZ_RETURN(OZ_int(I))
-#define OZ_RETURN_ATOM(S) OZ_RETURN(OZ_atom(S))
-#define OZ_RETURN_STRING(S) OZ_RETURN(OZ_string(S))
 
 #endif /* __OZ_H__ */
