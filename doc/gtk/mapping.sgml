@@ -173,7 +173,7 @@ end>>>
 	    <Th>Destructor
 	  <Tr>
 	    <Td proglang=c><<GdkImlibImage *>>
-	    <Td><<GDK.imlib>>
+	    <Td><<GDK.imlibImage>>
 	    <Td><<loadImage>> method
 	    <Td>object
 	    <Td><<destroyImage>> method
