@@ -34,7 +34,8 @@ enum ContFlag {
   C_LOCAL          = 6, // a local computation space
   C_SET_CAA        = 8, // supply the emulator with the CAA pointer;
   C_SET_SELF       = 9, // set am.cachedSelf
-  C_LTQ            = 10 // local thread queue
+  C_LTQ            = 10, // local thread queue
+  C_CATCH          = 11 // exception handler
 };
 
 
@@ -62,8 +63,6 @@ ContFlag getContFlag(TaggedPC tpc)
 {
   return (ContFlag) tagTypeOf(tpc);
 }
-
-
 
 typedef StackEntry TaskStackEntry;
 
@@ -127,6 +126,14 @@ public:
 
   void gc(TaskStack *newstack);
 
+  TaggedRef findCatch(TaggedRef &traceback);
+  void pushCatch(TaggedRef hdl)
+  {
+    ensureFree(2);
+    push(ToPointer(hdl),NO);
+    push(ToPointer(C_CATCH),NO);
+  }
+    
   void pushCall(TaggedRef pred, RefsArray  x, int i)
   {
     DebugCheckT(for (int ii = 0; ii < i; ii++) CHECK_NONVAR(x[ii]));
