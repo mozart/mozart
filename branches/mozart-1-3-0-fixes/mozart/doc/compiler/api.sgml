@@ -1,0 +1,166 @@
+<!--
+  - Author:
+  -   Leif Kornstaedt <kornstae@ps.uni-sb.de>
+  -
+  - Copyright:
+  -   Leif Kornstaedt, 1998-2003
+  -
+  - Last change:
+  -   $Date$ by $Author$
+  -   $Revision$
+  -
+  - This file is part of Mozart, an implementation of Oz 3:
+  -   http://www.mozart-oz.org
+  -
+  - See the file "LICENSE" or
+  -   http://www.mozart-oz.org/LICENSE.html
+  - for information on usage and redistribution
+  - of this file, and for a DISCLAIMER OF ALL
+  - WARRANTIES.
+  -
+  -->
+
+<Chapter id="chapter.api">
+  <Title/Application Programmer's Interface/
+  <P>
+    The compiler is available to Mozart applications through the module
+    <<Compiler>>.  This chapter describes the functionality provided by
+    that module and its classes.
+  <P>
+    First, a number of additional secondary type names used in this
+    description is introduced in <Ptr to="section.api.types">, then the
+    <<Compiler>> module is described in <Ptr to="section.api.module">.
+    The material in that section should prove sufficient for most cases.
+    The remainder of the chapter is intended for advanced uses.
+  <P>
+    An arbitrary number of compilers may be instantiated, each with its
+    own internal state, and used concurrently.  We distinguish between
+    <Def/compiler engines/, described in <Ptr to="section.api.engines">,
+    which store the state of a compiler and perform the compilation
+    proper, and <Def/compiler interfaces/, described in <Ptr
+    to="section.api.interfaces">, which allow to observe the
+    activities of compiler engines and to react to them.  Both
+    of these use the narrator&slash;listener mechanism described
+    in <Ptr to="appendix.narrator">; familiarity with this is
+    assumed.
+  <P>
+    Finally, examples are presented in <Ptr to="section.api.examples">;
+    in particular, the provided abstractions are explained in terms of
+    compiler engines and interfaces.
+  <Section id="section.api.types">
+    <Title/Additional Secondary Types/
+    <P>
+      This section describes additional secondary types used in the
+      descriptions in this chapter.  The conventions defined in <Ptr.Extern
+      to="ozdoc:base" key="section.typestruct.format"> will be respected.
+      <List>
+	<Entry>?_{Coord}
+	<Item>
+	  stands for information about source coordinates.  This is
+	  either <<unit>> if no information is known or a tuple
+	  <<pos(?_{FileName} ?_{Line} ?_{Column})>>, where ?_{FileName}
+	  is represented as an atom (<<''>> meaning <Q class=quasi/unknown/)
+	  and ?_{Line} and ?_{Column} are integers.  Line numbering begins
+	  at&nbsp;<<1>> and column numbering at&nbsp;<<0>>; a column number
+	  of <<~1>> means <Q class=quasi/unknown/.
+	<Entry>?_{SwitchName}
+	<Item>
+	  is an atom which must be a valid switch name (see <Ptr
+	  to="appendix.switches">).
+	<Entry>?_{PrintName}
+	<Item>
+	  is an atom which must be a valid variable print name.
+	<Entry>?_{Env}
+	<Item>
+	  represents an environment, represented as a record whose
+	  features are valid print names.
+      </List>
+  <Section id="section.api.module">
+    <Title/The <<Compiler>> Module/
+    <P>
+      <List>
+	<Entry><<evalExpression>>
+	<Synopsis>
+	  <<{Compiler.evalExpression ?+{V} ?+{Env} ??{KillP} ?_{X}}>>
+	<Item>
+	  evaluates an expression, given as a virtual string&nbsp;?_{V}, in
+	  a base environment enriched by the bindings given by ?_{Env}, either
+	  returning the result&nbsp;?_{X} of the evaluation or raising an
+	  exception.  Furthermore, the variable ?_{KillP} is bound to a
+	  nullary procedure which, when applied, interrupts compilation.
+
+	<Entry><<virtualStringToValue>>
+	<Synopsis>
+	  <<{Compiler.virtualStringToValue ?+{V} ?_{X}}>>
+	<Item>
+	  is a replacement for <<System.virtualStringToValue>>, which
+	  was available in Mozart's predecessor DFKI Oz.
+	<P>
+	  Note that you are discouraged from using this for large
+	  data structures:  Because it is much more powerful than
+	  <<System.virtualStringToValue>>, it can also be much less
+	  efficient.  Rather, you should use pickling and unpickling
+	  of data structures (see <Ptr.Extern to="ozdoc:system"
+	  key="chapter.pickle">).
+
+	<Entry><<engine>>
+	<Synopsis>
+	  <<Compiler.engine>>
+	<Item>
+	  is the final class from which compiler engines can be instantiated.
+	  This is described in detail in <Ptr to="section.api.engines">.
+
+	<Entry><<interface>>
+	<Synopsis>
+	  <<Compiler.interface>>
+	<Item>
+	  is a class providing a simple mechanism to create
+	  compiler interfaces.  It is described in detail in
+	  <Ptr to="section.api.interfaces">.
+
+	<Entry><<parseOzFile>>
+	<Synopsis>
+	  <<{Compiler.parseOzFile ?+{V} ?+{O} ?+{P} ?+{Dictionary} ??{T}}>>
+	<Item>
+	  parses the Oz source file named ?_{V}, returning an abstract
+	  syntax tree as defined in <Ptr to="appendix.syntax"> in ?_{T}.
+	  ?_{O} is an instance of the <<PrivateNarrator>> class described
+	  in <Ptr to="appendix.narrator">; its methods are invoked for
+	  example to report compilation errors.  ?_{P} is a unary procedure
+	  expecting a switch name as described in <Ptr to="appendix.switches">
+	  and returning a boolean value indicating the switch's state;
+	  in the current implementation, only the settings of <<gump>>,
+	  <<allowdeprecated>> and <<showinsert>> are requested.  Finally,
+	  ?_{Dictionary} is the set of macro names:  The keys are defined
+	  macro names; its items should always be <<true>>.  As a side-effect,
+	  ?_{Dictionary} is modified according to <<\define>> and <<\undef>>
+	  macro directives.
+
+	<Entry><<parseOzVirtualString>>
+	<Synopsis>
+<<{Compiler.parseOzVirtualString ?+{V} ?+{O} ?+{P} ?+{Dictionary} ??{T}}>>
+	<Item>
+	  is similar to <<parseOzFile>>, except that ?_{V} denotes the
+	  source text itself instead of a source file name.
+
+	<Entry><<assemble>>
+	<Synopsis>
+	  <<{Compiler.assemble ?+{Ts} ?+{Xs} ?+{SwitchR} ??{P} ??{V}}>>
+	<Item>
+	  takes a list of bytecode instructions ?_{Ts} for the Mozart virtual
+	  machine (see <Ptr to="appendix.bytecode">), assembles them and
+	  returns the result in ?_{P}, a nullary procedure which causes the
+	  code to be executed when applied.  ?_{Xs} is a list of global
+	  variables (the closure of ?_{P}), the first element corresponding
+	  to register <<g(0)>>.  ?_{SwitchR} is a record whose features
+	  are switch names and whose values are booleans.  In the current
+	  implementation, the switches <<profile>>, <<controlflowinfo>>,
+	  <<verify>>, and <<peephole>> are used.  All features of ?_{SwitchR}
+	  are optional (default values are substituted).  ?_{V} is a lazily
+	  computed virtual string containing an external representation of the
+	  assembled code after peephole optimization.
+      </List>
+  &engines;
+  &interfaces;
+  &examples;
+</Chapter>

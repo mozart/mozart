@@ -1,0 +1,3 @@
+DOCTYPE BOOK "@REAL_OZHOME@/share/doc/ozdoc.dtd"
+SYSTEM ozdoc.dtd "@REAL_OZHOME@/share/doc/ozdoc.dtd"
+SGMLDECL "@REAL_OZHOME@/share/doc/ozdoc.dcl"

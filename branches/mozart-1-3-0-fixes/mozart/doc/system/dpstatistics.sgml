@@ -1,0 +1,102 @@
+<Chapter id="Chapter.DPStatistics">
+  <Title/Retriving statistical information from the Distribution layer: <<DPStatistics>>/
+
+<P>
+To be able to understand and tune distributed Mozart programs the distribution layer 
+can produce log files and exposes interfaces to it's inner state. 
+</P>
+
+<section><title/Interface of <code/DPStatistics/ Module/
+
+<p>
+<list> 
+<entry/<code/DPStatistics.siteStatistics //
+<synopsis/<code/{DPStatistics.siteStatistics ??{SiteList}}  //
+<item> Returns a list of all currently know remote sites. <<SiteList>> contains records that has the following fields: 
+
+<list>
+
+<entry/<code/ip//
+<item> The ip number of the remote site in string format.
+
+<entry/<code/lastRTT// 
+<item> The last measured round trip to the remote site in ms. If no connection is established the value is <<~1>>. 
+
+<entry/<code/pid// 
+<item>The proces identifier of the remote sites proces. 
+<entry/<code/port// 
+<item>The tcp port of the remote site. It is used for accepting connection atempts. 
+<entry/<code/received// 
+<item>Number of received messages from the remote site. This number will be cleared at each invokation to <code/DPStatistics.siteStatistics /
+<entry/<code/sent// 
+<item>Number of  messages sent to the remote site from this site. This number will be cleared at each invokation to <code/DPStatistics.siteStatistics /
+<entry/<code/state// 
+<item>The state of the remote site from the current sites point of view.  
+<entry/<code/table// 
+<item>Internal information.
+<entry/<code/siteid// 
+<item>The unique string identifying the remote site. 
+<entry/<code/timestamp// 
+<item>The time when the remote site was created. 
+
+
+</list>
+
+
+<entry/<code/DPStatistics.getTablesInfo //
+<synopsis/<code/{DPStatistics.getTablesInfo ??{TableInfo} } //
+<item> Returns information about the tables holding imported and exported entities. 
+<<TableInfo>> is a list containing of the following format: 
+<p><code/[bt(list:BTlist size:BTsize) ot(list:OTlist size:OTsize)] /
+<list>
+
+<entry/<<BTlist>>/
+<item> A list of all currently imported entities, each entry in the list are of the following format:
+<p><code/be(index:OTindex na:NetAddress primCred:PrimCredit secCred:SecCredit type:Type)/
+
+<entry/<<BTsize>>/
+<item> The size of the Borrow table. The borrow table will grow and shrink to fit the number of imported entities. 
+
+<entry/<<OTlist>>/
+<item> A list of all currently exported entities, each entry in the list are of the following format: 
+<p><code/ oe(credit:PrimCredit index:OTindex type:Type)/
+
+<entry/<<OTsize>>/
+<item> The size of the Owner table. The owner table will grow and shrink to fit the number of exported entities. 
+
+</list>
+
+
+<entry/<code/DPStatistics.getNetInfo //
+<synopsis/<code/{DPStatistics.getNetInfo  ??{NetInfo} } //
+
+<item> Returns information about internaly allocated object in the distribution layer. <<NetInfo>> is a list containing records with the following fields
+<list>
+<entry/<<type>>/
+<item> The type of the object
+<entry/<<nr>>/
+<item> The number of allocated objects of this type
+<entry/<<size>>/
+<item> The size of this object in bytes. 
+</list>
+<entry/<code/DPStatistics.perdioStatistics //
+<synopsis/<code/{DPStatistics.perdioStatistics   ??{Ans} }//
+<item>The distribution layer keeps information of the number of received and sent messages per message type basis as the number of marshaled and unmarshaled marshaling types. This information is returned in record with the following fields: 
+
+<list>
+<entry/<code/recv//
+<item>Contains a record with the total number of unmarshaled dif's per type and received messages per message type. 
+
+<entry/<code/sent/
+<item>Contains a record with the total number of marshaled dif's per type and sent messages per message type. 
+
+</list>
+
+
+<entry/<code/DPStatistics.createLogFile//
+<synopsis/<code/{DPStatistics.createLogFile ?+{File}}//
+<item> Directs the loging output from the distribution layer to the file <<File>>. 
+</list>
+
+</Section>
+</Chapter>

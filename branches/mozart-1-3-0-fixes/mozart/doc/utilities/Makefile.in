@@ -1,0 +1,107 @@
+#
+#  Author:
+#    Leif Kornstaedt <kornstae@ps.uni-sb.de>
+#
+#  Copyright:
+#    Leif Kornstaedt, 1998
+#
+#  Last change:
+#    $Date$ by $Author$
+#    $Revision$
+#
+#  This file is part of Mozart, an implementation of Oz 3:
+#     http://www.mozart-oz.org
+#
+#  See the file "LICENSE" or
+#     http://www.mozart-oz.org/LICENSE.html
+#  for information on usage and redistribution 
+#  of this file, and for a DISCLAIMER OF ALL 
+#  WARRANTIES.
+#
+
+PREFIX		= @prefix@
+VPATH		= @srcdir@
+SRCDIR		= @srcdir@
+SRCTOP		= @SRCTOP@
+BUILDTOP	= @BUILDTOP@
+BINDIR		= $(PREFIX)/bin
+DOCDIR		= $(PREFIX)/share/doc
+HOMEURL         = @HOMEURL@
+PLATFORM	= @PLATFORM@
+
+INSTALL		= @INSTALL@
+INSTALL_DIR	= @INSTALL_DIR@
+INSTALL_BIN	= $(INSTALL) -m 555
+INSTALL_FILE	= $(INSTALL) -m 444
+
+OZCFLAGS	= 
+OZC		= @OZC@
+OZL		= @OZL@
+EMACS		= emacs
+OZENGINE	= @OZENGINE@
+
+# make it possible to configure and build just the doc
+-include $(BUILDTOP)/share/Makefile.boot
+
+CYGPATH		= $(SRCTOP)/share/lib/cygpath.sh
+
+FUNCTORS = \
+	SGML.ozf AuthorDB.ozf BibliographyDB.ozf Indexer.ozf Fontifier.ozf \
+	CrossReferencer.ozf Thumbnails.ozf LaTeXToPNG.ozf PostScriptToPNG.ozf \
+	File.ozf HTML.ozf OzDocToHTML.ozf Main.ozf Chunk.ozf \
+	XMLTokenizer.ozf XMLParser.ozf XMLOzdoc.ozf
+
+SYSLETS = ozdoc$(EXE_EXT)
+SHELLSCRIPTS = latex2png gif2thumbnail
+
+BINFILES = $(SYSLETS:%=$(BINDIR)/%)
+DOCBINFILES = $(SHELLSCRIPTS:%=$(DOCDIR)/%)
+DOCFILES = $(DOCDIR)/html.bst
+
+.PHONY: bootstrap boot1st boot2nd all clean veryclean distclean 1st 2nd boot-1st boot-2nd clean-xref
+
+all: $(FUNCTORS) $(SYSLETS) $(ELCS)
+
+1st:
+2nd:
+depend:
+boot1st: boot-all
+boot-1st: boot-all
+boot2nd: boot-all
+boot-2nd: boot-all
+
+bootstrap: boot-all
+
+Makefile: Makefile.in config.status
+	./config.status
+
+ozdoc$(EXE_EXT): $(FUNCTORS)
+	$(OZL) -z 9 -x $(OZEXECFILE) Main.ozf -o $@
+
+%.ozf: %.oz
+	$(OZC) $(OZCFLAGS) -c $(shell $(CYGPATH) "$<") -o $@
+
+install: $(BINDIR) $(BINFILES)
+install: $(DOCDIR) $(DOCBINFILES) $(DOCFILES)
+installps:
+
+$(BINDIR) $(DOCDIR):
+	$(INSTALL_DIR) $@
+
+$(BINFILES): $(BINDIR)/% : %
+	$(INSTALL_BIN) $< $@
+
+$(DOCBINFILES): $(DOCDIR)/% : %
+	$(INSTALL_BIN) $< $@
+
+$(DOCFILES): $(DOCDIR)/% : %
+	$(INSTALL_FILE) $< $@
+
+clean:
+	rm -rf $(FUNCTORS) $(SYSLET) $(ELCS)
+
+veryclean: clean
+
+distclean: veryclean
+	rm -f Makefile config.log config.status config.cache
+clean-xref:

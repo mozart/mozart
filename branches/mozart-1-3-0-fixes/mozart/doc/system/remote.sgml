@@ -1,0 +1,280 @@
+<!--
+  - Authors:
+  -   Christian Schulte <schulte@ps.uni-sb.de>
+  -
+  - Copyright:
+  -   Christian Schulte, 1998
+  -
+  - Last change:
+  -   $Date$ by $Author$
+  -   $Revision$
+  -
+  - This file is part of Mozart, an implementation
+  - of Oz 3
+  -    http://www.mozart-oz.org
+  -
+  - See the file "LICENSE" or
+  -    http://www.mozart-oz.org/LICENSE.html
+  - for information on usage and redistribution
+  - of this file, and for a DISCLAIMER OF ALL
+  - WARRANTIES.
+  -
+  -->
+
+  <Chapter id="Chapter.Remote">
+    <Title/Spawning Computations Remotely: <<Remote>>/
+
+    <P>
+      The module <<Remote>> provides the class <<Remote.manager>> by
+      which new Oz processes on arbitrary networked computers that 
+      also have Mozart installed can be created. Creating an instance of
+      that class does the following two things:
+      <List>
+        <Item> A new Oz process with a module manager ?_{M} is
+               created on a networked computer. 
+        <Item> The newly created object ?_{O} serves as a proxy to
+               ?_{M}. ?_{O} is called a <def/remote module
+               manager/. This allows to start applications remotely
+               that access remote resources by local system modules.
+      </List>
+    </P>
+ 
+    <P>
+      The methods of the class <<Remote.manager>> are as follows.
+    </P>
+
+    <P>
+      <List>
+        <Entry><Span class=index/<<init>>/
+	  <Index/<<Remote>><And><<manager>><And><<init>>/
+        <Synopsis>
+<code display/init(host:   ?+{HostV}   <= localhost
+     fork:   ?+{ForkA}   <= automatic
+     detach: ?+{DetachB} <= false)/
+        <Item>
+          Creates a new Oz process at the computer with host name
+	  ?_{HostV} (specified by a virtual
+          string), where <<localhost>> is the computer running the
+          current Oz process.
+
+        <P>
+          ?_{ForkA} (an atom) determines an operating system command 
+          to fork the remote Oz process. The atoms <<'automatic'>> and
+          <<'sh'>> have special meaning. <<'automatic'>> is the
+          default method. Other useful values for ?_{ForkA} are
+          <<'rsh'>> (remote shell command) and <<'ssh'>> (secure shell
+          command). 
+
+        <para class=apropos proglang=sh><title/<<sh>> configuration/
+          If <<'sh'>> is used as fork method, 
+          a new Oz engine is created on the current host by using the Unix <code
+          proglang=sh>sh</code> command. You can test whether this
+          method works on your computer by:
+          <<<sh -c 'ozengine x-oz://system/RemoteServer.ozf --test'>>>
+          This should be always the case, if Mozart
+          has been installed properly on your computer. This in
+          particular requires that <<$OZHOME/bin>> is in your path of
+          executables (<<$OZHOME>> refers to the directory where
+          Mozart has been installed).
+
+        <p>
+          Note that the value of ?_{HostV} is ignored (the hostname 
+          is assumed to be <<localhost>>), if <<'sh'>> is used as fork 
+          method.
+
+        <P>
+          If ?_{HostV} is <<'localhost'>> and ?_{ForkA} is
+          <<'automatic'>> (which is the default), then on some
+          platforms the forked and forking processes communicate through 
+          shared memory rather than sockets, which is more
+          efficient. The system property
+          <<'distribution.virtualsites'>> carries a boolean telling
+          whether this facility, called <def/virtual sites/, is
+          supported in the running Mozart process; the <<'sh'>> fork
+          method is used as a fall-back.
+
+        <p>
+          If ?_{HostV} is different from <<'localhost'>> and the
+          method is <<'automatic'>> the command <<'rsh'>> is used.
+          <<'rsh'>> creates a shell remotely by using the Unix <code
+          proglang=sh>rsh</code> command, which in turn creates the
+          new Oz engine.  
+
+        <para class=apropos proglang=sh><title/<code proglang=sh/rsh/ configuration/
+          Remote managers with method <<rsh>> only work properly, if
+          the <<rsh>> command has been set up properly. You can test it for
+          the host ?{Host} by executing the following command in the
+          operating system shell: 
+          <<<rsh ?{Host} ozengine x-oz://system/RemoteServer.ozf --test>>> 
+          If the message
+          <code display proglang=fundamental>Remote: Test succeeded...</code>   
+          is printed, your configuration is okay. This requires
+          two things:
+          <list enum>
+            <item>
+               Execution of <<rsh ?{Host}>> must not prompt for a
+               password. This is usually achieved by having a special
+               file <file/.rhosts/ in your home directory. Each entry
+               in that file must be a host name. For those hosts
+               having an entry in that file, <<rsh>> does not prompt for a
+               password. 
+
+              <p>
+               Take the following sample <file/.rhosts/ file at the computer <<wallaby.ps.uni-sb.de>>:
+<code display proglang=none>
+godzilla.ps.uni-sb.de
+bamse.sics.se
+</code>
+               If <<rsh wallaby.ps.uni-sb.de>> is executed on
+               <<bamse.sics.se>> or <<godzilla.ps.uni-sb.de>>, then
+               <<rsh>> does not prompt for a password.
+
+              <p>
+               With other words, all host names that you ever want to
+               use with <<Remote.manager>> should be in <file/.rhosts/.
+               
+            <item>
+               After the login performed by <<rsh>> the
+               command <<ozengine>> must be 
+               executable. This should be always the case, if Mozart
+               has been installed properly on your computer. This in
+               particular requires that <<$OZHOME/bin>> is in your path of
+               executables (<<$OZHOME>> refers to the directory where
+               Mozart has been installed). 
+          </list>
+          
+        <para class=apropos proglang=sh><title/Other commands/
+          Rather than using <<rsh>>, any value for ?_{ForkA} is
+          possible. In that case the following operating system
+command:
+          <<<?{ForkA} ?{Host} ozengine x-oz://system/RemoteServer.ozf --test>>>  
+          should print the message
+          <code display proglang=fundamental>Remote: Test succeeded...</code>    
+        <p>
+          A prominent example of a different command and a very recommended
+          substitute for <<rsh>> is <<ssh>> (secure shell) which is a
+          more powerful and secure replacement for <<rsh>>. For more
+          information on <<ssh>>, see <ref.extern
+          to="http://www.ssh.fi"><file>www.ssh.fi</file></ref.extern>. 
+
+        <P>
+          If ?_{DetachB} is <<false>>, a non-detached process is
+          created. A non-detached process terminates as soon as 
+          the creating process does (think of crashes, there will be
+          no orphaned processes). The lifetime of a detached process
+          (that is, ?_{DetachB} is <<true>>) is independent of the
+          creating process.
+
+    
+<p class=danger>
+          On some platforms (in particular on <<solaris-sparc>>) the
+	  operating system in its default configuration does not support
+          virtual sites efficiently. Namely,
+	  the Solaris OS limits the total number of shared memory
+	  pages per process to six and the number of shared memory pages
+	  system-wide to 100, while each connected Mozart process
+	  requires at least two shared memory pages for efficient communication. 
+	  Please ask your system administrator to increase those limits
+	  with respect to your needs.
+
+<p class=danger>
+          The Mozart system tries to do its best to reclaim shared
+	  memory identifiers, even upon process crashes, but it is
+	  still possible that some shared memory pages become
+	  unaccounted and thus stay forever in the OS. In these cases
+	  please use Unix utilities (on Solaris and Linux these are
+          <<ipcs>> and <<ipcrm>>) to get rid of them.
+
+        <Entry><Span class=index/<<link>>/
+	  <Index/<<Remote>><And><<manager>><And><<link>>/
+        <Synopsis>
+	    <code display/link(url:?+{UrlV} ?_{ModuleR} <= _)/
+	    <code display/link(name:?+{NameV} ?_{ModuleR} <= _)/
+        <Item>
+            Links the module identified either by a url ?_{UrlV} (a
+            virtual string) or a module name ?_{NameV} (a virtual
+            string). Returns a module ?_{ModuleR}.
+          <p>
+            For explanation see <ptr
+	    to="chapter.module">.
+
+          <Entry><Span class=index/<<apply>>/
+	    <Index/<<Remote>><And><<manager>><And><<apply>>/
+          <Synopsis>
+	    <code display/apply(?+{Functor} ?_{ModuleR} <= _)/
+	    <code display/apply(url:?+{UrlV} ?+{Functor} ?_{ModuleR} <= _)/
+	    <code display/apply(name:?+{NameV} ?+{Functor} ?_{ModuleR} <= _)/
+          <Item>
+            Applies the functor ?_{Functor}, where the url ?_{UrlV} (a
+            virtual string) or the module name ?_{NameV} (a virtual
+            string) serve as base url for resolving the functor's
+            import.
+          <p>
+            For explanation see <ptr
+	    to="chapter.module">.
+
+          <Entry><Span class=index/<<enter>>/
+	    <Index/<<Remote>><And><<manager>><And><<enter>>/
+          <Synopsis>
+	    <code display/enter(url:?+{UrlV} ?_{ModuleR})/
+	    <code display/enter(name:?+{NameV} ?_{ModuleR})/
+          <Item>
+            Installs the module ?_{ModuleR} under the url ?_{UrlV} (a
+            virtual string) or the module name ?_{NameV} (a virtual
+            string).
+          <p>
+            For explanation see <ptr
+	    to="chapter.module">.
+
+          <Entry><Span class=index/<<ping>>/
+	    <Index/<<Remote>><And><<manager>><And><<ping>>/
+          <Synopsis>
+	    <code display/ping()/
+          <Item>
+           Raises exception if remote process is dead. Blocks until
+           executed by remote process.
+
+          <Entry><Span class=index/<<close>>/
+	    <Index/<<Remote>><And><<manager>><And><<close>>/
+          <Synopsis>
+	    <code display/close()/
+          <Item>
+            Performs a controlled shutdown of all remote processes
+            (for a discussion of controlled shutdown see <ptr.extern
+to="ozdoc:dstutorial" key="section.distmodel.shutdown">).
+
+        </List>
+       </P>         
+
+   <section>
+     <title/Process Termination and Remote Managers/
+     <p>Here are some tentative explanations of what happens to the
+     children of a process when the latter is terminated.
+     <list>
+       <item>if a process is properly shutdown, then detached children
+       survive and non-detached children are terminated.</item>
+       <item>if a process is killed with <code proglang=sh/kill -INT/,
+       then its children are terminated whether they are detached or
+       not.</item>
+       <item>if a process is killed with <code proglang=sh/kill -KILL/,
+       then no child is terminated because the proper shutdown
+       sequence is not executed.</item>
+       <item>if a process is killed by typing <key/C-c/, then the
+       <code proglang=sh/INT/ signal is sent to the <em/process group/
+       to which both parent and children belong.<note foot>This is the case
+       in the current regime, but could be changed if desired</note>
+       Thus all are terminated.</item>
+     </list>
+   </section>
+     
+  </Chapter>
+
+<!--
+Local Variables:
+mode: sgml
+mode: auto-fill
+sgml-default-dtd-file: "part.ced"
+sgml-auto-activate-dtd: t
+adaptive-fill-mode: nil
+End:
+-->

@@ -1,0 +1,37 @@
+VPATH		= @srcdir@
+SRCDIR		= @srcdir@
+
+WHAT = op
+MAIN = main.sgml
+WHATCLASS=tutorial
+PRINTNAME=OpenProgramming
+SGMLSRCS = \
+	main.sgml intro.sgml data.sgml files.sgml text.sgml sockets.sgml \
+	pipe.sgml open.bib
+HTMLEXTRAFILES = \
+	open.gif
+HTMLEXTRASUPPORTFILES = \
+	danger.gif
+OZDOCHTMLFLAGS = --autoindex
+
+include ../Makefile.common
+
+CHUNKFILES = \
+	OpenProgramming.oz
+
+all:: $(CHUNKFILES)
+1st:: $(CHUNKFILES)
+2nd:: $(CHUNKFILES)
+
+clean:: 
+	-rm -f $(CHUNKFILES)
+
+OpenProgramming.oz: $(MAIN) $(SGMLSRCS)
+	$(DOCIFY) --in=$< --type=chunk --out=EXAMPLES --include=EXTRA > $@ 
+
+install:: $(CHUNKFILES:%=$(DOCDIR)/%)
+
+$(DOCDIR)/%.oz: $(DOCDIR)
+
+$(DOCDIR)/%.oz: %.oz
+	$(INSTALL_FILE) $< $@

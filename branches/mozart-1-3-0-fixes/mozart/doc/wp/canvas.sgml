@@ -1,0 +1,481 @@
+<!--
+  - Authors:
+  -   Christian Schulte <schulte@ps.uni-sb.de>
+  -
+  - Copyright:
+  -   Christian Schulte, 1998
+  -
+  - Last change:
+  -   $Date$ by $Author$
+  -   $Revision$
+  -
+  - This file is part of Mozart, an implementation
+  - of Oz 3
+  -    http://www.mozart-oz.org
+  -
+  - See the file "LICENSE" or
+  -    http://www.mozart-oz.org/LICENSE.html
+  - for information on usage and redistribution
+  - of this file, and for a DISCLAIMER OF ALL
+  - WARRANTIES.
+  -
+  -->
+
+
+<Chapter id="chapter.canvas">
+  <Title/Canvas Widgets/
+
+  <p> 
+    <index/canvas/Canvas widgets allow to create and manipulate graphical
+    items. In particular, arbitrary widgets can be embedded within
+    canvas widgets. Reference information on canvas widgets can be
+    found in <ref.extern to="&tkcmd;/canvas.htm"/<kbd/canvas//.
+
+
+
+  <section id="section.canvas.widgets">
+    <title/Getting Started/
+
+    <para class=apropos><title/items/
+      A canvas widget displays <def/items/. An item is created
+      with the <<create>> command, followed by coordinates and options. The
+      number of coordinates and the options depend on
+      the particular type of item to be created. An item is of one the
+      following types:
+      <list>
+        <entry><<arc>>
+        <item> <index class=tails/item<and>arc/An arc item displays a piece of a circle.
+        <entry><<bitmap>>
+        <item> <index class=tails/item<and>bitmap/A bitmap item displays a bitmap with a given name.
+        <entry><<image>>
+        <item> <index class=tails/item<and>image/Displays an image.
+        <entry><<line>>
+        <item> <index class=tails/item<and>line/A line item consists of several connected segments. It is
+        possible to configure line items such that Bézier splines are used.
+        <entry><<oval>>
+        <item> <index class=tails/item<and>oval/An oval can either be a circle or an ellipsis.
+        <entry><<polygon>>
+        <item> <index class=tails/item<and>polygon/A polygon is described by three or more line segments. As
+        with line items, it is possible to use Bézier splines.
+        <entry><<rectangle>>
+        <item> <index class=tails/item<and>rectangle/Displays a rectangle.
+        <entry><<text>>
+        <item> <index class=tails/item<and>text/Displays text consisting of a single or several lines.
+        <entry><<window>>
+        <item> <index class=tails/item<and>window/Displays a widget in the canvas where the canvas widget
+        serves as geometry manager for the widget.
+      </list>
+
+    <p>
+      For example,
+<index class=tails/<<Tk>><and><<canvas>>/
+<chunk class=anonymous><title/canvas/
+C={New Tk.canvas tkInit(parent:W)}
+{Tk.send pack(C)}
+{C tk(create rectangle 10 10 1#c 1#c fill:red outline:blue)}
+</chunk>
+      creates a red rectangle with a blue outline near to the upper
+      left corner of the canvas widget <<C>>. More information on the
+      different items can be found in <ref.extern
+      to="&tkcmd/canvas.htm"/<kbd/canvas//.
+
+
+  <section id="section.canvas.barchart">
+    <title/Example: Drawing Bar Charts/
+
+    <p>
+      <index/bar chart/As a more interesting example let us consider a program to draw
+      bar charts. The definition of a class to display barcharts is
+      shown in <ptr to="figure.canvas.barchart">. Before any item is
+      created in the canvas by the method <<bars>>, the canvas widget
+      is configured such that the scrollable region is just large
+      enough for the barchart to be drawn.
+
+    <p>
+      <figure id="figure.canvas.barchart">
+        <caption/A canvas for displaying bar charts./
+<index class=tails/<<Tk>><and><<isColor>>/
+<chunk class=anonymous><title/Definition of BarCanvas/
+local	  
+   O=if Tk.isColor then o(fill:wheat)
+     else               o(stipple:gray50 fill:black)
+     end
+   D=10  D2=2*D B=10
+in
+   class BarCanvas from Tk.canvas
+      meth DrawBars(Ys H X)
+	 case Ys of nil then skip
+	 [] Y|Yr then 
+	    {self tk(create rectangle X H X+D H-Y*D2 O)}
+	    {self tk(create text      X H+D text:Y anchor:w)}
+	    {self DrawBars(Yr H X+D2)}
+	 end
+      end
+      meth configure(SX SY)
+         {self tk(configure scrollregion:q(B ~B SX+B SY+B))}
+      end
+      meth bars(Ys)
+	 WY=D2*({Length Ys}+1) HY=D2*({FoldL Ys Max 0}+1)
+      in
+         {self configure(WY HY)}
+	 {self DrawBars(Ys HY D)}
+      end
+   end
+end
+</chunk>
+      </figure>
+
+
+    <p>
+      The method <<DrawBars>> creates for each element of the list
+      <<Ys>> a rectangle item as well as a text item, which both
+      correspond to the value of the particular item. The value of
+      <<O>> is used as option for the rectangle items. This value
+      depends on <<Tk.isColor>> which is <<true>> if the screen is a
+      color screen, and <<false>> otherwise. For a color screen the
+      rectangle items are filled with the color <<wheat>>. For a black
+      and white screen, the rectangle items are drawn in a stippled
+      fashion: only those pixels are drawn with the fill color (that
+      is <<black>>) where the stipple bitmap contains a pixel.
+
+    <p>
+      <ptr to="figure.canvas.usebar"> shows how the bar chart canvas
+      is used in order to display data.
+
+    <p>
+      <Figure id="figure.canvas.usebar">
+	<Caption/Using a canvas for drawing barcharts./
+	<P>
+               <picture.choice>
+	  <Picture.Extern to="barchart.gif" type=gif>
+	  <Picture.extern to="pictures/canvas/barchart.eps.gz" type=ps>
+               </picture.choice>
+<index class=tails/<<Tk>><and><<scrollbar>>/
+<chunk class=anonymous><title/barchart/
+C={New BarCanvas    tkInit(parent:W bg:white width:300 height:120)}
+H={New Tk.scrollbar tkInit(parent:W orient:horizontal)}
+V={New Tk.scrollbar tkInit(parent:W orient:vertical)}
+{Tk.addXScrollbar C H} {Tk.addYScrollbar C V}
+{Tk.batch [grid(C row:0 column:0)
+	   grid(H row:1 column:0 sticky:we)
+	   grid(V row:0 column:1 sticky:ns)]}
+{C bars([1 3 4 5 3 4 2 1 7 2 3 4 2 4 
+         5 6 7 7 8 4 3 5 6 7 7 8 4 3])}
+</chunk>
+      </figure>
+     
+
+
+  <section id="section.canvas.tags">
+    <title/Canvas Tags/
+
+    <p>
+<index class=tails/canvas<and>tag/
+      Each item in a canvas is identified by a unique integer. This
+      integer can be returned by using the <<tkReturnInt>> method for
+      creating items rather than the <<tk>> method. The returned
+      integer can then be used to manipulate the corresponding
+      item. However, returning values from the graphics engine
+      involves latency. But there are some good news here, since it is
+      not necessary to refer to items by numbers.
+
+    <para class=apropos><title/tags/
+      Canvas widgets offer a more powerful and easier method to
+      manipulate single items or even groups of items. Items can be
+      referred to by <def/tags/. A single item can be referred to by as
+      many tags as you like to. Tags are provided as objects in
+      &Oz;. Before an item can be added to a tag, a tag object must
+      be created from the class <<Tk.canvasTag>> and initialized with
+      respect to a particular canvas. 
+
+    <p>
+      To add an item to a tag, the option <<tags>> is used when
+      creating the item. For instance, 
+<index class=tails/<<Tk>><and><<canvasTag>>/
+<chunk class=anonymous><title/tags/
+R={New Tk.canvasTag tkInit(parent:C)}
+{C tk(create rectangle 10 10 40 40 fill:red tags:R)}
+</chunk>
+      creates a new rectangle item and adds it to the tag <<R>>. 
+
+    <p>
+      A second oval item can be added to the tag <<R>> by
+<chunk class=anonymous><title/tags2/
+{C tk(create oval 20 20 40 40 tags:R)}
+</chunk>
+      All items referred to by a tag can be manipulated
+      simultaneously. The following moves all items 40 pixels 
+      to the right:
+<chunk class=anonymous><title/move/
+{R tk(move 40 0)}
+</chunk>
+
+
+    <p>
+      <ptr to="figure.canvas.tags"> shows a small program that creates
+      items interactively. Pressing the mouse button over the canvas
+      widget creates either a rectangle item or an oval item at the
+      position of the mouse pointer. All rectangle items created are
+      added to the tag <<R>>, and all oval items are added to the tag
+      <<O>>. 
+
+    <p>
+      <figure id="figure.canvas.tags">
+	<Caption/A canvas for creating rectangles and ovals./
+	<P>
+               <picture.choice>
+	  <Picture.Extern to="tags.gif" type=gif>
+	  <Picture.extern to="pictures/canvas/tags.eps.gz" type=ps>
+               </picture.choice>
+<chunk class=anonymous><title/tags interactive/
+C={New Tk.canvas    tkInit(parent:W width:300 height:200 bg:white)}
+R={New Tk.canvasTag tkInit(parent:C)}
+O={New Tk.canvasTag tkInit(parent:C)}
+{C tkBind(event:  '&lt;1&gt;' 
+          args:   [int(x) int(y)]
+          action: proc {$ X Y}
+                     {C tk(create rectangle X-10 Y-10 X+10 Y+10
+                           tags:R fill:steelblue)}
+                  end)}
+{C tkBind(event:  '&lt;2&gt;' 
+          args:   [int(x) int(y)]
+          action: proc {$ X Y}
+                     {C tk(create oval X-10 Y-10 X+10 Y+10
+                           tags:O fill:orange)}
+                  end)}
+{Tk.send pack(C)}
+</chunk>
+      </figure> 
+
+    <para class=apropos><title/configuring items/
+<index class=tails/item<and>configuration/
+      Items can be configured with the command <<itemconfigure>>,
+      which is similar to the command <<configure>> for widgets. The
+      color of all rectangle and oval items in our previous example
+      can be changed by: 
+<chunk class=anonymous><title/itemconfigure/
+{R tk(itemconfigure fill:wheat)}
+{O tk(itemconfigure fill:blue)}
+</chunk>
+
+    <p>
+      Besides of the <<move>> command there are other commands for
+      manipulating items. For instance, executing the following 
+      statement
+<chunk class=anonymous><title/delete all/
+{O tk(delete)}
+</chunk>
+      deletes all oval items attached to the tag <<O>>. Other commands
+      allow to scale items, to change the coordinates of items and so
+      on. More information on possible commands are available from 
+      <ref.extern to="&tkcmd/canvas.htm"/<kbd/canvas//.
+
+    <subsection>
+      <title/Event Bindings/
+
+    <p>
+      Similar to widgets, event bindings can be created for
+      tags. Creating an event binding for a tag means to create the
+      binding for all items referred to by the tag. The following
+      example creates an event binding for all oval items. 
+<index/<<tkBind>>/
+<chunk class=anonymous><title/tags event/
+Colors={New class $ from BaseObject
+               attr cs:(Cs=red|green|blue|yellow|orange|Cs 
+                           in 
+                        Cs)
+               meth get(?C) 
+                  Cr in C|Cr = (cs := Cr) 
+               end
+            end noop}
+{O tkBind(event:  '<3>' 
+	  action: proc {$}
+		     {O tk(itemconfigure 
+                           fill:{Colors get($)})}
+		  end)}
+</chunk>
+    <p>
+      Clicking with the right mouse button on an oval item, configures
+      all items referred to by <<O>> to employ a different color. The
+      <<Colors>> object serves as color generator. Each time the
+      method <<get>> is invoked, it returns a color from the circular
+      list of colors stored in the attribute <<cs>>.
+
+
+  <section id="section.canvas.animated">
+    <title/Example: An Animated Time Waster/
+
+    <p>
+      In this section we want to program a procedure that signals to
+      the user that a particular computation is still running and
+      entertains the user by some animation.
+
+    <p>
+      <ptr to="figure.canvas.animclass"> shows a subclass of
+      <<Tk.canvasTag>> that creates a bitmap item showing a magnifying
+      glass and starts a thread to move that bitmap randomly. The
+      random movement can be stopped by binding the variable <<D>>
+      given as value for the feature <<done>>. If the animation has
+      stopped indeed, the variable <<S>> gets bound, as you can see in
+      method <<move>>. 
+
+    <p>
+      <figure id="figure.canvas.animclass">
+	<Caption/An animated time waster class./
+<chunk class=anonymous><title/animated class/
+local
+   fun {RandCoord} {OS.rand} mod 20 + 15 end
+in
+   class RandMag from Tk.canvasTag
+      meth init(parent:P done:D stopped:S)
+         {self tkInit(parent:P)}
+         {P tk(create bitmap 0 0
+   	       bitmap:'@'#{Property.get 'oz.home'}#
+                      '/doc/wp/magnifier.xbm'
+   	       tags:self foreground:blue)}
+         thread {self move(D S)} end
+      end
+      meth move(D S)
+         {WaitOr {Alarm 400} D}
+         if {IsDet D} then S=unit else
+	    {self tk(coords {RandCoord} {RandCoord})}
+	    {self move(D S)}
+         end
+      end
+   end
+end
+</chunk>
+      </figure>
+
+    <p>
+      The procedure <<WaitDone>> shown in <ptr
+      to="figure.canvas.waitdone"> takes a
+      variable <<Done>> which is used for signalling when the
+      computation we are waiting for is finished. It creates a
+      randomly moving magnifier item and as soon as the magnifier
+      signals that it has been stopped (by <<Stopped>>) the toplevel
+      windows is closed.
+
+    <p>
+      <figure id="figure.canvas.waitdone">
+        <caption/A procedure for creating wait dialogs./
+        <p>
+               <picture.choice>
+	  <Picture.Extern to="waitdone.gif" type=gif>
+	  <Picture.extern to="pictures/canvas/waitdone.eps.gz" type=ps>
+               </picture.choice>
+<chunk class=anonymous><title/WaitDone/
+proc {WaitDone Done}
+   W={New Tk.toplevel tkInit(withdraw:true)}
+   L={New Tk.label    tkInit(parent:W text:'Computing...')}
+   C={New Tk.canvas   tkInit(parent:W width:50 height:50)}
+   Stopped
+in
+   {Tk.batch [wm(overrideredirect W true)
+              pack(L C side:left pady:2#m padx:2#m)
+              wm(deiconify W)]}
+   _={New RandMag init(parent:C done:Done stopped:Stopped)}
+   thread {Wait Stopped} {W tkClose} end
+end
+</chunk>
+      </figure> 
+
+    <p>
+      For example,
+<chunk class=anonymous><title/Use WaitDone/
+declare Done
+{WaitDone Done}
+</chunk>
+      creates a waiting dialog which disappears by binding <<Done>>
+<chunk class=anonymous><title/Is Done/
+Done=unit
+</chunk>
+
+
+<![ %EXTRA; [
+<section><title/Examples/
+<p>
+<chunk><title/EXAMPLES/
+%%%
+%%% Chapter: Canvas Widgets
+%%%
+
+%%
+%% Getting started
+%%
+
+declare
+W={New Tk.toplevel tkInit}
+<chunk.ref/canvas/
+
+
+{W tkClose}
+
+
+
+%%
+%% Example: Drawing Bar Charts
+%%
+
+declare
+<chunk.ref/Definition of BarCanvas/
+
+declare
+W={New Tk.toplevel tkInit}
+<chunk.ref/barchart/
+
+
+
+%%
+%% Canvas Tags
+%%
+
+declare
+W={New Tk.toplevel tkInit}
+C={New Tk.canvas tkInit(parent:W)}
+{Tk.send pack(C)}
+<chunk.ref/tags/
+
+<chunk.ref/tags2/
+
+<chunk.ref/move/
+
+{W tkClose}
+
+
+declare
+W={New Tk.toplevel tkInit}
+<chunk.ref/tags interactive/
+
+<chunk.ref/itemconfigure/
+
+<chunk.ref/delete all/
+
+declare
+<chunk.ref/tags event/
+
+
+
+
+%%
+%% Example: An Animated Time Waster
+%%
+
+declare
+<chunk.ref/animated class/
+
+declare
+<chunk.ref/WaitDone/
+
+
+<chunk.ref/Use WaitDone/
+
+<chunk.ref/Is Done/
+
+
+
+
+</chunk>
+]]>
+
+</Chapter>
