@@ -92,7 +92,9 @@ dnl *****************************************************************
 dnl *** X11
 dnl *****************************************************************
 
-AC_MSG_CHECKING(for --with-x11)
+: ${oz_inc_path="/usr/local/include"}
+: ${oz_lib_path="/usr/local/lib"}
+
 AC_ARG_WITH(x11,
     [--with-x11=<dir>
         search x11 library and header in <dir> (default: NONE)])
@@ -121,11 +123,8 @@ then
     oz_x11_inc_dir=$with_x11_include
 fi
 
-: ${oz_x11_lib_dir=/usr/X11R6/lib}
-: ${oz_x11_inc_dir=/usr/X11R6/include}
-
-: ${oz_inc_path="/usr/local/include /usr/X11R6/include /usr/X11/include /opt/X11R6/include /opt/X11/include"}
-: ${oz_lib_path="/usr/local/lib /opt/X11/lib /usr/X11/lib /usr/X11R6/lib /opt/X11R6/lib"}
+: ${oz_x11_inc_dir="/usr/X11R6/include /usr/X11/include /opt/X11R6/include /opt/X11/include"}
+: ${oz_x11_lib_dir="/usr/X11R6/lib /usr/X11/lib /opt/X11/lib /opt/X11R6/lib"}
 
 oz_inc_path="$oz_x11_inc_dir $oz_inc_path"
 oz_lib_path="$oz_x11_lib_dir $oz_lib_path"
@@ -140,7 +139,6 @@ dnl *****************************************************************
 dnl *** Tcl/Tk
 dnl *****************************************************************
 
-AC_MSG_CHECKING(for --with-tcl)
 AC_ARG_WITH(tcl,
     [--with-tcl=<dir>
         search tcl library, header, tcl-library in <dir> (default: NONE)])
@@ -194,7 +192,6 @@ OZ_CHECK_LIB_PATH(tcl, Tcl_Init, ,
 
 AC_SUBST(oz_tcl_lib_tcl_dir)
 
-AC_MSG_CHECKING(for --with-tk)
 AC_ARG_WITH(tk,
     [--with-tk=<dir>
         search tk library, header, tk tcl-library in <dir> (default: NONE)])
