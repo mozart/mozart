@@ -28,7 +28,6 @@ functor
 import
    Tk
    QTkDevel(splitParams:        SplitParams
-	    condFeat:           CondFeat
 	    tkInit:             TkInit
 	    assert:             Assert
 	    execTk:             ExecTk
@@ -114,7 +113,7 @@ define
 	    if {HasFeature M group}==false then
 	       {Exception.raiseError qtk(missingParameter group self.widgetType M)}
 	    end
-	    self.Return={CondFeat M return _}
+	    self.Return={CondSelect M return _}
 	    {SplitParams M [ipadx ipady init group] A B}
 	    self.Name=B.group
 	    local
@@ -123,12 +122,12 @@ define
 	       self.TkVar=R.1
 	       self.Value=R.2+1
 	    end
-	    if {CondFeat M init false} then
+	    if {CondSelect M init false} then
 	       {self.TkVar tkSet(self.Value)}
 	       {self.toplevel notifyRadioButton(self.Name)}
 	    end
-	    Tk.radiobutton,{Record.adjoin {TkInit A} tkInit(padx:{CondFeat B ipadx 2}
-							    pady:{CondFeat B ipady 2}
+	    Tk.radiobutton,{Record.adjoin {TkInit A} tkInit(padx:{CondSelect B ipadx 2}
+							    pady:{CondSelect B ipady 2}
 							    action:self.toplevel.port#r(self Execute)
 							    variable:self.TkVar
 							    value:self.Value

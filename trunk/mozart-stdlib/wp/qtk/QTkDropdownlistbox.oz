@@ -29,8 +29,7 @@ import
    Tk
    QTkBare
    QTkImage
-   QTkDevel(condFeat:           CondFeat
-	    assert:             Assert
+   QTkDevel(assert:             Assert
 	    splitParams:        SplitParams
 	    subtracts:          Subtracts
 	    qTkClass:           QTkClass
@@ -150,7 +149,7 @@ define
 	    A B
 	 in
 	    QTkClass,{Record.adjoin M init}
-	    self.Return={CondFeat M return _}
+	    self.Return={CondSelect M return _}
 	    A#B={FilterButton M}
 	    Tk.button,{Record.adjoin B tkInit(parent:M.parent
 					      action:self#DropDown

@@ -58,7 +58,7 @@ class QTkFont
    end
    meth get(...)=M
       lock
-	 Actual={CondFeat M actual false}
+	 Actual={CondSelect M actual false}
 	 DisplayOf={HasFeature M displayof}
 	 N={Subtracts M [actual displayof]}
       in
@@ -88,7 +88,7 @@ class QTkFont
       lock
 	 fun{Loop Str}
 	    case Str
-	    of &{|Xs then
+	    of &{|_ then
 	       L R
 	    in
 	       {List.takeDropWhile Str fun{$ C} C\=&} end L R}

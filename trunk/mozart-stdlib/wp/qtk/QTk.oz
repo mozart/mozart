@@ -31,7 +31,6 @@ import
 %   System(show:Show)
    Tk
    Module
-   Property
    Error
    QTkDevel
    QTkImage(newImage:           NewImage
@@ -84,229 +83,89 @@ export
    WInfo
    SetAssertLevel
 
-define
-
-%   {Show 'QTk'}
-
-   LoadTk=QTkDevel.loadTk
-   LoadTkPI=QTkDevel.loadTkPI
-   SetAssertLevel=QTkDevel.setAssertLevel
-
-   QTkAction
-   NewLook
-   Split
-   SplitGeometry
-   SplitParams
-   CondFeat
-   TkInit
-   ExecTk
-   ReturnTk
-   MakeClass
-   CheckType
-   Assert
-   SetGet
-   QTkClass
-   Subtracts
-   TkToolTips
-   GlobalInitType
-   GlobalUnsetType
-   GlobalUngetType
-   RegisterWidget
-   MapLabelToObject
-
-   {List.map [qTkAction newLook split splitGeometry splitParams condFeat tkInit
-	      execTk returnTk makeClass checkType assert
-	      setGet qTkClass subtracts qTkTooltips
-	      globalInitType globalUnsetType globalUngetType
-	      registerWidget mapLabelToObject] fun{$ I} QTkDevel.I end}=[QTkAction
-									 NewLook
-									 Split
-									 SplitGeometry
-									 SplitParams
-									 CondFeat
-									 TkInit
-									 ExecTk
-									 ReturnTk
-									 MakeClass
-									 CheckType
-									 Assert
-									 SetGet
-									 QTkClass
-									 Subtracts
-									 TkToolTips
-									 GlobalInitType
-									 GlobalUnsetType
-									 GlobalUngetType
-									 RegisterWidget
-									 MapLabelToObject]
-
+prepare
    NoArgs={NewName}
-
-   ModMan={New Module.manager init}
-   {ModMan enter(name:"QTkDevel" QTkDevel)} %% this prevents QTkDevel from being loaded again in this module manager
-   {ModMan enter(name:"QTk" QTkDevel.qTk)}
+   CharToUpper = Char.toUpper
    fun{Majus Str}
       case {VirtualString.toString Str}
-      of C|Cs then C-32|Cs
+      of C|Cs then {CharToUpper C}|Cs
       [] X then X
       end
    end
+   VsToString=VirtualString.toString
+define
 
-   %% Registers a widget, raising correctly the error if any
-   %% special thanks to Andreas Franke for his contribution
-%   local
-%      ModHandlers = {NewDictionary}
-%      %% save old handler, create default handler for module errors
-%      local
-%	 OldHandler = {Property.get 'errors.handler'}
-%      in
-%	 {Property.put 'errors.other' OldHandler}
-%	 if {Property.condGet 'errors.module' unit}==unit then
-%	    {Property.put 'errors.module' OldHandler}
-%	 end
-%      end
-%      %% create new handler
-%      fun {MkAbsUrl Url}
-%	 if {URL.isAbsolute Url} then Url
-%	 else
-%	    {URL.toAtom {URL.resolve {Property.get 'application.url'} Url}}
-%	 end
-%      end
-%      local
-%	 local
-%	    local
-%	       proc {DefaultModHandler Exc}
-%		  Handler = {Property.get 'errors.module'} in
-%		  {Handler Exc}
-%	       end
-%	    in
-%	       proc {ModHandler Exc}
-%		  case Exc
-%		  of system(module(notFound load Url)...) then
-%		     case {Dictionary.condGet ModHandlers {MkAbsUrl Url} unit}
-%		     of unit    then {DefaultModHandler Exc}
-%		     [] Handler then {Handler Exc}
-%		     end
-%		  [] qtk(...) then
-%		     case {Dictionary.condGet ModHandlers {MkAbsUrl Url} unit}
-%		     of unit    then {DefaultModHandler Exc}
-%		     [] Handler then {Handler Exc}
-%		     end
-%		  else {DefaultModHandler Exc}
-%		  end
-%	       end
-%	    end
-%	 in
-%	    local
-%	       proc {OtherHandler Exc}
-%		  Handler = {Property.get 'errors.other'} in
-%		  {Handler Exc}
-%	       end
-%	    in
-%	       proc {NewHandler Exc}
-%		  case Exc of system(module(...)...) then {ModHandler Exc}
-%		  else {OtherHandler Exc}
-%		  end
-%	       end
-%	    end
-%	 end
-%      in
-%	 {Property.put 'errors.handler' NewHandler}
-%      end
-%      proc {SetDefaultHandler Proc1}
-%	 {Type.ask.'procedure/1' Proc1}
-%	 {Property.put 'errors.module' Proc1}
-%      end
-%      proc {SetHandler Url Proc1}
-%	 {Type.ask.'procedure/1' Proc1}
-%	 {Dictionary.put ModHandlers {MkAbsUrl Url} Proc1}
-%      end
-%      proc {Redirect Url Thr}
-%	 {Type.ask.'thread' Thr}
-%	 {SetHandler Url proc {$ Exc} {Thread.injectException Thr Exc} end} 
-%      end
-%   in
-%      fun{QTkRegisterWidget GName}
-%	 FName=case {VirtualString.toString GName}
-%	       of 116|100|X then {VirtualString.toString "QTk"#{Majus X}#".ozf"}
-%	       [] 108|114|X then {VirtualString.toString "QTk"#{Majus X}#".ozf"}
-%	       else {VirtualString.toString "QTk"#{Majus GName}#".ozf"}
-%	       end
-%	 M
-%      in
-%	 {Redirect FName {Thread.this}}
-%	 {ModMan link(url:FName M)}
-%	 {Wait M} %% force M to load and register itself
-%	 M
-%      end
-%   end
+   LoadTk		= QTkDevel.loadTk
+   LoadTkPI		= QTkDevel.loadTkPI
+   SetAssertLevel	= QTkDevel.setAssertLevel
+   QTkAction		= QTkDevel.qTkAction
+   NewLook		= QTkDevel.newLook
+   Split		= QTkDevel.split
+   SplitGeometry	= QTkDevel.splitGeometry
+   SplitParams		= QTkDevel.splitParams
+   TkInit		= QTkDevel.tkInit
+   ExecTk		= QTkDevel.execTk
+   ReturnTk		= QTkDevel.returnTk
+   MakeClass		= QTkDevel.makeClass
+   CheckType		= QTkDevel.checkType
+   Assert		= QTkDevel.assert
+   SetGet		= QTkDevel.setGet
+   QTkClass		= QTkDevel.qTkClass
+   Subtracts		= QTkDevel.subtracts
+   TkToolTips		= QTkDevel.qTkTooltips
+   GlobalInitType	= QTkDevel.globalInitType
+   GlobalUnsetType	= QTkDevel.globalUnsetType
+   GlobalUngetType	= QTkDevel.globalUngetType
+   MapLabelToObject	= QTkDevel.mapLabelToObject
+   PropagateLook	= QTkDevel.propagateLook
+   RegisterWidget	= QTkDevel.registerWidget
+
+   %% create a module manager with Tk and QTkDevel
+   %% so that these don't get reloaded and relinked
    
+   ModMan={New Module.manager init}
+   {ModMan enter(name:"QTkDevel" QTkDevel)}
+   {ModMan enter(name:"QTk" QTkDevel.qTk)}
+
    fun{QTkRegisterWidget GName}
-      %%
-      %% Warning this function has a bad behaviour
-      %% however it is the best behaviour I succeeded to obtain
-      %%
-      FName=case {VirtualString.toString GName}
-	    of 116|100|X then {VirtualString.toString "QTk"#{Majus X}#".ozf"}
-	    [] 108|114|X then {VirtualString.toString "QTk"#{Majus X}#".ozf"}
-	    else {VirtualString.toString "QTk"#{Majus GName}#".ozf"}
-	    end
+      FName={VsToString
+	     "QTK" #
+	     case {VsToString GName}
+	     of &t|&d|X then {Majus X}
+	     [] &l|&r|X then {Majus X}
+	     []       X then {Majus X}
+	     end   #
+	     ".ozf"}
       M
-      OldHandler={Property.get 'errors.handler'}
-      Except
-      proc{NewHandler Exc}
-	 Except=Exc
-      end
    in
-      {Property.put 'errors.handler' NewHandler}
+      %% this has become simpler with the new usage of
+      %% failed futures to capture concurrent exceptions
       {ModMan link(url:FName M)}
-      {WaitOr M Except} %% force M to load and register itself
-      {Property.put 'errors.handler' OldHandler}
-      if {IsDet Except} then {Error.raiseException Except} end
+      {Wait M}
       M
    end
 
    {Wait NewMenu}
-%   {Show 'Menu'}
    {Wait QTkSpace}
-%   {Show 'Space'}
    {Wait QTkLabel} 
-%   {Show 'Label'}
    {Wait QTkButton}
-%   {Show 'Button'}
    {Wait QTkCheckbutton}
-%   {Show 'Checkbutton'}
    {Wait QTkRadiobutton}
-%   {Show 'Radiobutton'}
    {Wait QTkScale}
-%   {Show 'Scale'}
    {Wait QTkScrollbar}
-%   {Show 'Scrollbar'}
    {Wait QTkEntry}
-%   {Show 'Entry'}
    {Wait QTkCanvas}
-%   {Show 'Canvas'}
    {Wait QTkListbox}
-%   {Show 'Listbox'}
    {Wait QTkText} % makes sure these functors are loaded
-%   {Show 'Text'}
 \ifdef FULLLOAD
    {Wait QTkPlaceholder}
-%   {Show 'Placeholder'}
    {Wait QTkGrid}
-%   {Show 'Grid'}
    {Wait QTkPanel}
-%   {Show 'Panel'}
    {Wait QTkRubberframe}
-%   {Show 'Rubberframe'}
    {Wait QTkScrollframe}
-%   {Show 'Scrollframe'}
    {Wait QTkToolbar}
-%   {Show 'Toolbar'}
    {Wait QTkDropdownlistbox}
-%   {Show 'Dropdownlistbox'}
    {Wait QTkNumberentry}
-%   {Show 'Numberentry'}
 \endif
    
    \insert QTkClipboard.oz
@@ -328,7 +187,9 @@ define
 	 Destroyed
 	 RadiobuttonsNotify
 	 widgetType:toplevel
-	 WM:[title aspect client focusmodel geometry grid group iconbitmap iconmask iconname iconposition iconwindow maxsize minsize overrideredirect resizable transient]
+	 WM:[title aspect client focusmodel geometry grid group
+	     iconbitmap iconmask iconname iconposition iconwindow
+	     maxsize minsize overrideredirect resizable transient]
 	 typeInfo:r(all:r(look:no
 			  borderwidth:pixel
 			  cursor:cursor
@@ -383,7 +244,7 @@ define
       
       meth init(M1)
 	 lock
-	    M={QTkDevel.propagateLook M1}
+	    M={PropagateLook M1}
 	    if {IsFree self.Init} then self.Init=unit else
 	       {Exception.raiseError qtk(custom "Can't build a window" "The window has already been initialized" M)}
 	    end
@@ -427,7 +288,7 @@ define
 	       else skip end
 	    end
 	    A B
-	    Title={CondFeat M title "Oz/QTk Window"}
+	    Title={CondSelect M title "Oz/QTk Window"}
 	 in
 	    self.toplevel=self
 	    self.Radiobuttons={NewDictionary}
@@ -438,13 +299,13 @@ define
 				     fun{$ I _}
 					{Int.is I}==false
 				     end} init(parent:self
-					       action:{CondFeat M action toplevel#close})}
-	    self.Return={CondFeat M return _}
+					       action:{CondSelect M action toplevel#close})}
+	    self.Return={CondSelect M return _}
 	    {SplitParams M self.WM A B}
 	    Tk.toplevel,{Record.adjoin {TkInit A} tkInit(delete:self.port#r(self Execute)
 							 withdraw:true)}
 	    {self {Record.adjoin B WM(title:Title
-				      iconname:{CondFeat M iconname Title})}}
+				      iconname:{CondSelect M iconname Title})}}
 	    Frame,init({Subtracts {Record.adjoinAt M parent self} [action return]})
 	    thread
 	       {Listen Out}

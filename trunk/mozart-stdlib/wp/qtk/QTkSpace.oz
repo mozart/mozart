@@ -28,7 +28,6 @@ functor
 import
    Tk
    QTkDevel(splitParams:        SplitParams
-	    condFeat:           CondFeat
 	    tkInit:             TkInit
 	    assert:             Assert
 	    execTk:             ExecTk
@@ -70,7 +69,7 @@ define
       meth init(M)
 	 lock
 	    A
-	    W={CondFeat M width 5}
+	    W={CondSelect M width 5}
 	 in
 	    QTkClass,{Record.adjoin M init}
 	    {SplitParams M [width] A _}

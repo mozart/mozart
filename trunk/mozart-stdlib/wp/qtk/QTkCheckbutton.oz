@@ -28,7 +28,6 @@ functor
 import
    Tk
    QTkDevel(splitParams:        SplitParams
-	    condFeat:           CondFeat
 	    tkInit:             TkInit
 	    assert:             Assert
 	    execTk:             ExecTk
@@ -108,11 +107,11 @@ define
 	    A B
 	 in
 	    QTkClass,{Record.adjoin M init}
-	    self.Return={CondFeat M return _}
+	    self.Return={CondSelect M return _}
 	    {SplitParams M [ipadx ipady init] A B}
-	    self.TkVar={New Tk.variable tkInit({CondFeat M init false})}
-	    Tk.checkbutton,{Record.adjoin {TkInit A} tkInit(padx:{CondFeat B ipadx 2}
-							    pady:{CondFeat B ipady 2}
+	    self.TkVar={New Tk.variable tkInit({CondSelect M init false})}
+	    Tk.checkbutton,{Record.adjoin {TkInit A} tkInit(padx:{CondSelect B ipadx 2}
+							    pady:{CondSelect B ipady 2}
 							    action:{self.action action($)}
 							    variable:self.TkVar
 							   )}

@@ -112,15 +112,15 @@ class Frame
 %		   {List.takeDropWhile Ls fun{$ C} C==continue end L1 L2}
 %		   Span={Length L1}*2+1
 %		in
-%		   {Tk.send grid(L.obj Row:Y+Y-1 Column:X+X-1 Rowspan:Span sticky:{CondFeat L glue ""}
-%				 padx:{CondFeat L padx 0} pady:{CondFeat L pady 0})}
+%		   {Tk.send grid(L.obj Row:Y+Y-1 Column:X+X-1 Rowspan:Span sticky:{CondSelect L glue ""}
+%				 padx:{CondSelect L padx 0} pady:{CondSelect L pady 0})}
 %		   {Loop X+{Length L1}+1 L2}
 		   L1
 		   {List.takeWhile Ls fun{$ C} {Label C}==continue end L1}
 		   Span={Length L1}*2+1
 		in
-		   {Tk.send grid(L.obj Row:Y+Y-1 Column:X+X-1 Rowspan:Span sticky:{CondFeat L glue ""}
-				 padx:{CondFeat L padx 0} pady:{CondFeat L pady 0})}
+		   {Tk.send grid(L.obj Row:Y+Y-1 Column:X+X-1 Rowspan:Span sticky:{CondSelect L glue ""}
+				 padx:{CondSelect L padx 0} pady:{CondSelect L pady 0})}
 		   {Loop X+1 Ls}
 		end
 	     else skip end
@@ -136,7 +136,7 @@ class Frame
 	 N=119 S=101 W=110 E=115
       end
       proc{Test Left Right V L R}
-	 Sticky={VirtualString.toString {CondFeat V glue ""}}
+	 Sticky={VirtualString.toString {CondSelect V glue ""}}
       in
 	 case {Label V}
 	 of continue then skip

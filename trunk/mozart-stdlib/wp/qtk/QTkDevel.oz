@@ -39,7 +39,6 @@ export
    split:              Split
    splitGeometry:      SplitGeometry
    splitParams:        SplitParams
-   condFeat:           CondFeat
    makeClass:          MakeClass
    execTk:             ExecTk
    lastInt:            LastInt
@@ -160,15 +159,6 @@ prepare
       end
    end
 
-   fun{CondFeat R F D}
-      %
-      % This function returns the specified feature of a record, or a default value
-      % if the record doesn't have that feature
-      %
-      if {IsRecord R} andthen {HasFeature R F} then R.F else D end
-   end
-
-   
    fun{TkInit Var}
       %
       % This function returns a record that is Var minus several features that aren't
@@ -1331,7 +1321,6 @@ define
    end
 
    Obj={NewName}
-   Apply={NewName}
    
    class BlackboxClass
 
@@ -1376,7 +1365,7 @@ define
 	 end
 	 thread
 	    proc{Loop O}
-	       case O of X|Xs then
+	       case O of _|Xs then
 		  OutS<-Xs
 		  {Loop Xs}
 	       end
@@ -1609,7 +1598,7 @@ define
 	    self.Events={NewDictionary}
 	    {Assert self.widgetType self.typeInfo M}
 	    if {HasFeature self action} then % action widget
-	       self.action={New QTkAction init(parent:self action:{CondFeat M action proc{$} skip end})}
+	       self.action={New QTkAction init(parent:self action:{CondSelect M action proc{$} skip end})}
 	    end
 	    if self.tooltipsAvailable==true then % this widget has got a tooltips
 	       {self SetToolTip(M)}
@@ -1903,7 +1892,7 @@ define
    proc{RegisterWidget M}
       try
 	 {Dictionary.put Widgets M.widgetType
-	  r(feature:{CondFeat M feature false}
+	  r(feature:{CondSelect M feature false}
 	    object:M.{VirtualString.toAtom qTk#{Majus M.widgetType}})}
       catch _ then
 	 {Exception.raiseError qtk(custom "Unable to register a widget" "The specified module is not a correct QTk widget module" M)}
@@ -1959,11 +1948,11 @@ define
    end
 
    fun{GetLook Rec}
-      {{CondFeat Rec look DefLook}.get Rec}
+      {{CondSelect Rec look DefLook}.get Rec}
    end
 
    fun{PropagateLook Rec}
-      Look={CondFeat Rec look DefLook}
+      Look={CondSelect Rec look DefLook}
    in
       {GetLook
        {Record.mapInd Rec
@@ -2142,7 +2131,7 @@ define
 	 {SetHandle}
       [] S then %% special support for scrollable widgets !
 	 if S==scroll orelse S==scrollfeat then
-	    if {CondFeat R tdscrollbar false} orelse {CondFeat R lrscrollbar false} then
+	    if {CondSelect R tdscrollbar false} orelse {CondSelect R lrscrollbar false} then
 	       Type={Label R}
 	       B
 	       {SplitParams R [tdscrollbar lrscrollbar scrollwidth] _ B}
@@ -2160,23 +2149,23 @@ define
 			{Tk.batch [grid(self.Type row:0 column:0 sticky:nswe)
 				   grid(rowconfigure self 0 weight:1)
 				   grid(columnconfigure self 0 weight:1)]}
-			if {CondFeat B tdscrollbar false} then
+			if {CondSelect B tdscrollbar false} then
 			   self.tdscrollbar={New {Dictionary.get Widgets tdscrollbar}.object
 					     {Record.adjoin
 					      if Win32 then if {HasFeature B scrollwidth} then r(width:B.scrollwidth) else r end
-					      else r(width:{CondFeat B scrollwidth 10}) end
+					      else r(width:{CondSelect B scrollwidth 10}) end
 					      tdscrollbar(parent:self)}}
-%					     tdscrollbar(parent:self width:{CondFeat B scrollwidth 10})}
+%					     tdscrollbar(parent:self width:{CondSelect B scrollwidth 10})}
 			   {Tk.send grid(self.tdscrollbar row:0 column:1 sticky:ns)}
 			   {Tk.addYScrollbar self.Type self.tdscrollbar}
 			end
-			if {CondFeat B lrscrollbar false} then
+			if {CondSelect B lrscrollbar false} then
 			   self.lrscrollbar={New {Dictionary.get Widgets lrscrollbar}.object
 					     {Record.adjoin
 					      if Win32 then if {HasFeature B scrollwidth} then r(width:B.scrollwidth) else r end
-					      else r(width:{CondFeat B scrollwidth 10}) end
+					      else r(width:{CondSelect B scrollwidth 10}) end
 					      lrscrollbar(parent:self)}}
-%					     lrscrollbar(parent:self width:{CondFeat B scrollwidth 10})}
+%					     lrscrollbar(parent:self width:{CondSelect B scrollwidth 10})}
 			   {Tk.send grid(self.lrscrollbar row:1 column:0 sticky:we)}
 			   {Tk.addXScrollbar self.Type self.lrscrollbar}
 			end
@@ -2197,10 +2186,10 @@ define
 		  meth destroy
 		     lock
 			{self.Type destroy}
-			if {CondFeat B tdscrollbar false} then
+			if {CondSelect B tdscrollbar false} then
 			   {self.tdscrollbar destroy}
 			end
-			if {CondFeat B lrscrollbar false} then
+			if {CondSelect B lrscrollbar false} then
 			   {self.lrscrollbar destroy}
 			end
 		     end
@@ -2210,8 +2199,8 @@ define
 		  end
 	       end
 	       ScrollObj={Class.new [ScrollWidget] q
-			  if {CondFeat B tdscrollbar false} then
-			     if {CondFeat B lrscrollbar false} then
+			  if {CondSelect B tdscrollbar false} then
+			     if {CondSelect B lrscrollbar false} then
 				q(Type tdscrollbar lrscrollbar)
 			     else
 				q(Type tdscrollbar)

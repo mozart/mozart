@@ -29,20 +29,15 @@ import
    Tk
    QTkDevel(tkInit:             TkInit
 	    mapLabelToObject:   MapLabelToObject
-%	    subtracts:          Subtracts
 	    execTk:             ExecTk
 	    returnTk:           ReturnTk
-	    condFeat:           CondFeat
-	    assert:             Assert
 	    qTkClass:           QTkClass
 	    propagateLook:      PropagateLook
 	    globalInitType:     GlobalInitType
 	    globalUnsetType:    GlobalUnsetType
 	    globalUngetType:    GlobalUngetType
 	    registerWidget:     RegisterWidget
-	    redirector:         Redirector
-	    splitParams:        SplitParams)
-   System(show:Show)
+	    redirector:         Redirector)
 
 export
    WidgetType

@@ -28,7 +28,6 @@ functor
 import
    Tk
    QTkDevel(subtracts:          Subtracts
-	    condFeat:           CondFeat
 	    assert:             Assert
 	    tkInit:             TkInit
 	    qTkClass:           QTkClass
@@ -123,7 +122,7 @@ define
 	    %% B contains the structure of
 	    %% creates the children
 	    Children<-nil
-	    TitleFont<-{CondFeat A font courier}
+	    TitleFont<-{CondSelect A font courier}
 	    TitleHeight<-{Tk.returnInt font(metrics @TitleFont "-linespace")}
 	    self.Place={New {MakeClass QTkPlaceHolder}
 			     placeholder(parent:self
@@ -299,7 +298,7 @@ define
 	    {self.Place set({Record.adjoinAt
 			     {Subtracts D [title]}
 			     handle O})}
-	    {CondFeat M.1 handle _}=O
+	    {CondSelect M.1 handle _}=O
 	    Rec=r(object:O
 		  title:D.title
 		  tag:{New Tk.canvasTag tkInit(parent:self.Canvas)})
