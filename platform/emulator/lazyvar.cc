@@ -111,7 +111,7 @@ GenLazyVariable::kickLazy()
 }
 
 int
-GenLazyVariable::unifyLazy(TaggedRef*vPtr,TaggedRef*tPtr,ByteCode*scp)
+GenLazyVariable::unifyLazy(TaggedRef*vPtr,TaggedRef t,ByteCode*scp)
 {
   // if x:lazy=y:var y<-x if x is global, then trail
   // ^^^DONE AUTOMATICALLY
@@ -119,17 +119,7 @@ GenLazyVariable::unifyLazy(TaggedRef*vPtr,TaggedRef*tPtr,ByteCode*scp)
 
   kickLazy();
 
-  // create a free var in the same home space
-  // and bind this to the free var
-  if (suspList!=NULL) {
-    SVariable* sv = new SVariable(home);
-    sv->setSuspList(suspList);
-    *vPtr = makeTaggedSVar(sv);
-  } else {
-    *vPtr = makeTaggedUVar(home);
-  }
-
-  oz_bind(vPtr,*vPtr,tPtr,*tPtr); // mm_u
+  oz_bind(vPtr,*vPtr,t);
   dispose();
   return OK;
 }

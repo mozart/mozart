@@ -1083,6 +1083,12 @@ void cvar2buffer(ostream &out, const char *s, GenCVariable *cv, int depth)
       }
       break;
     }
+  case PROMISE:
+    {
+      out << s;
+      out << "<promise>";
+      break;
+    }
   default:
     out << s << "<Unknown variable type: " << cv->getType() << ">";
     break;
