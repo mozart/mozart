@@ -20,7 +20,8 @@ public:
   static int id;
   virtual int getIdV() { return id; }
   virtual OZ_Term typeV() { return OZ_atom("gdbm"); }
-  virtual OZ_Extension* gcV();
+  virtual OZ_Extension* gCollectV(void);
+  virtual OZ_Extension* sCloneV(void) { Assert(0); return NULL; }
   virtual OZ_Term printV(int depth = 10);
   //
   void release();
@@ -46,7 +47,7 @@ inline GDBM* tagged2Gdbm(OZ_Term t)
   return (GDBM*) OZ_getExtension(OZ_deref(t));
 }
 
-OZ_Extension* GDBM::gcV()
+OZ_Extension* GDBM::gCollectV(void)
 {
   return(new GDBM(filename,db));
 }

@@ -19,7 +19,8 @@ public:
   virtual int getIdV() { return id; }
   virtual OZ_Term typeV() { return OZ_atom("fileDescriptor"); }
   virtual OZ_Term printV(int depth = 10);
-  virtual OZ_Extension* gcV();
+  virtual OZ_Extension* gCollectV(void);
+  virtual OZ_Extension* sCloneV(void) { Assert(0); return NULL; }
   //
   void doFree();
   void doClose();
@@ -56,7 +57,7 @@ OZ_Term FileDescriptor::printV(int depth = 10)
 			   OZ_atom(">")));
 }
 
-OZ_Extension* FileDescriptor::gcV()
+OZ_Extension* FileDescriptor::gCollectV()
 {
   return new FileDescriptor(fd);
 }
