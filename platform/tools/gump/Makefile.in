@@ -7,6 +7,7 @@
 VPATH           = @srcdir@
 BUILDTOP        = @BUILDTOP@
 PREFIX          = @prefix@
+PLATFORM        = @platform@
 SRCDIR          = @srcdir@
 SRCTOP          = @SRCTOP@
 SUBDIRS         = ozflex ozbison
@@ -20,24 +21,23 @@ LDFLAGS         = @LDFLAGS@
 LIBS            = @LIBS@ -lc
 CFLAGS          = -O6
 
-DYNLDIR         = $(PREFIX)/platform/@platform@/share/gump
-INCDIR          = $(PREFIX)/include
-
 INSTALL         = @INSTALL@
 INSTALLPRG      = $(INSTALL) -m 555
 INSTALLFILE     = $(INSTALL) -m 444
 MKINSTALLDIRS   = @MKINSTALLDIRS@
 
-PACKAGE         = www.ps.uni-sb.de/ozhome/share/gump
-CACHE_DIR       = $(PREFIX)/platform/@platform@/cache/$(PACKAGE)
-GUMP_FILES      = GumpScanner.dl flex ozbison.dl
-DYNLDIR_FILES   = $(addprefix $(DYNLDIR)/,$(GUMP_FILES))
-CACHE_FILES     = $(addprefix $(CACHE_DIR)/,$(GUMP_FILES))
+SHAREDIR = $(PREFIX)/share
+SHAREFILES = \
+        $(SHAREDIR)/GumpScanner.so-$(PLATFORM) \
+        $(SHAREDIR)/ozbison.so-$(PLATFORM)
+PLATFORMDIR = $(PREFIX)/platform/$(PLATFORM)
+PLATFORMFILES = \
+        $(PLATFORMDIR)/oz.flex.bin
+INCDIR = $(PREFIX)/include
+INCFILES = \
+        $(INCDIR)/FlexLexer.h $(INCDIR)/lexer.h
 
-HEADERS1 = FlexLexer.h lexer.h
-HEADERS = $(HEADERS1:%=$(INCDIR)/%)
-
-all: Makefile subdirs GumpScanner.dl
+all: Makefile subdirs GumpScanner.so
 
 bootstrap: all
 
@@ -50,7 +50,7 @@ subdirs:
           fi; \
         done
 
-GumpScanner.dl: GumpScanner.C $(SRCTOP)/platform/emulator/oz.h
+GumpScanner.so: GumpScanner.C $(SRCTOP)/platform/emulator/oz.h
         $(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $< -o GumpScanner.o && \
         $(DYNLD) -o $@ GumpScanner.o $(LDFLAGS) $(LIBS)
 
@@ -59,27 +59,27 @@ GumpScanner.dl: GumpScanner.C $(SRCTOP)/platform/emulator/oz.h
 ## install into the cache, I think.
 
 install: all \
-        $(DYNLDIR) $(DYNLDIR_FILES) \
-        $(CACHE_DIR) $(CACHE_FILES) \
-        $(INCDIR) $(HEADERS)
+        $(SHAREDIR) $(SHAREFILES) \
+        $(PLATFORMDIR) $(PLATFORMFILES) \
+        $(INCDIR) $(INCFILES)
 
-$(DYNLDIR) $(INCDIR) $(CACHE_DIR):
+$(SHAREDIR) $(PLATFORMDIR) $(INCDIR):
         $(MKINSTALLDIRS) $@
 
-$(DYNLDIR)/GumpScanner.dl $(CACHE_DIR)/GumpScanner.dl: GumpScanner.dl
+$(SHAREDIR)/GumpScanner.so-$(PLATFORM): GumpScanner.so
         $(INSTALLFILE) $< $@
 
-$(DYNLDIR)/flex $(CACHE_DIR)/flex: ozflex/flex
+$(SHAREDIR)/ozbison.so-$(PLATFORM): ozbison/ozbison.so
+        $(INSTALLFILE) $< $@
+
+$(PLATFORMDIR)/oz.flex.bin: ozflex/flex
         $(INSTALLPRG) $< $@
-
-$(DYNLDIR)/ozbison.dl $(CACHE_DIR)/ozbison.dl: ozbison/ozbison.dl
-        $(INSTALLFILE) $< $@
 
 $(INCDIR)/%: %
         $(INSTALLFILE) $< $@
 
 clean veryclean:
-        $(RM) *~ *.o *.dl
+        $(RM) *~ *.o *.so
         for i in $(SUBDIRS); do (cd $$i && $(MAKE) clean); done
 
 distclean: clean
