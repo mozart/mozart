@@ -75,8 +75,8 @@ FalseName              = 'false'
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Geometry
 %%
-ToplevelGeometry       = '590x420+7+100'
-SourceWindowGeometry   = '496x564+612+100'  %% I really hate hardcoding this
+ToplevelGeometry       = '590x420+7+50'
+SourceWindowGeometry   = '496x564+612+50'   %% I really hate hardcoding this
                                             %% but window managers seem
                                             %% to be f*cking stupid :-((
 SourceWindowTextSize   = 80 # 40
@@ -156,7 +156,7 @@ case Tk.isColor then
    BlockedThreadColor      = '#e07070'
    DeadThreadColor         = '#505050'
    ZombieThreadColor       = '#f000f0'
-   TrunkColor              = '#a00000'
+   TrunkColor              = black % '#a00000'
 
    RunningThreadText       = nil
    BlockedThreadText       = nil

@@ -89,7 +89,7 @@ local
 					  end
 				       end)}
 	 in
-	    {ForAll [tk(insert 'end' {PrintF L 4} # {FixTabs Line} # NL q(L))
+	    {ForAll [tk(insert 'end' {PrintF L 5} # {FixTabs Line} # NL q(L))
 		     tk(tag bind q(L) '<1>' AcSet)
 		     tk(tag bind q(L) '<3>' AcDelete)] self}
 	    {self DoLoad(F L+1)}
@@ -187,7 +187,7 @@ in
 	 end
       end
 	 
-      meth scrollbar(file:F line:L color:C what:What<=appl)
+      meth scrollbar(file:F line:L color:C what:What<=appl ack:Ack<=unit)
 	 case F == undef orelse F == '' orelse F == noDebugInfo then
 	    SourceManager,EraseScrollbar(What)
 	 else
@@ -204,6 +204,7 @@ in
 	    else
 	       {self NewFile(file:RealF line:L color:C what:What)}
 	    end
+	    case {IsDet Ack} then skip else Ack = unit end
 	    case @WithDrawn then
 	       {Tk.batch [wm(geometry  self SourceWindowGeometry)
 			  wm(resizable self false false)
