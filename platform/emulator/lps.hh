@@ -35,11 +35,6 @@
 #include "base.hh"
 #include "oz_cpi.hh"
 
-#ifdef OUTLINE
-#define inline
-#endif
-
-
 /*
  *  Local propagation store;
  *
