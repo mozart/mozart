@@ -34,7 +34,7 @@ PREFIX=`pwd`
 
 packageroot="$PREFIX/packages/$PLAT"
 build=$PREFIX/build-$PLAT
-build-stdlib=$PREFIX/build-stdlib-$PLAT
+build-stdlib=$PREFIX/build-$PLAT-stdlib
 dst=$PREFIX
 PATH=$packageroot/bin:$PATH
 LD_LIBRARY_PATH=$packageroot/lib:$LD_LIBRARY_PATH
