@@ -16,7 +16,7 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Text
 %%
-Version                = '1.5.1 (Apr 97)'
+Version                = '1.5.2 (Apr 97)'
 TitleName              = 'Oz Debugger Interface'
 IconName               = 'Ozcar'
 
@@ -62,6 +62,11 @@ FirstSelectThread      = 'You must select a thread first!' /* end */
 IgnoreNoFileStep       = 'Ignoring new thread as there\'s' # /* end */
                          ' no line information available. ' #
                          ' Hint: save your Emacs buffer!'
+
+ForgetMessage          = 'Removed thread #' /* end */
+ForgetMessage2         = ', which can continue to run'
+TerminateMessage       = 'Thread #'
+TerminateMessage2      = ' has been terminated'
 
 ID                     = fun {$ I} ' (id ' # I # ')' end
 OzcarMessagePrefix     = 'Ozcar: '
