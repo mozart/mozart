@@ -75,6 +75,9 @@
  *   FAILURE handling
  *   perdio prelude
  *     setMethHdl, setSendHdl, ....
+ *   version number
+ *     during initial connection
+ *     SAVE/LOAD
  * -----------------------------------------------------------------------*/
 
 #ifdef PERDIO
