@@ -3364,7 +3364,7 @@ Case(GETVOID)
     }
 
     if (!CBB->isRoot()) {
-      TaggedRef ev = e->exception.value;
+      TaggedRef ev = oz_deref(e->exception.value);
       if ((oz_isLiteral(ev) && oz_eq(ev,AtomFailure)) ||
           (oz_isSRecord(ev) &&
            oz_eq(tagged2SRecord(ev)->getLabel(),AtomFailure)))
