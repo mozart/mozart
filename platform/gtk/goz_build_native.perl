@@ -342,11 +342,11 @@ sub write_oz_bi_definition {
 	  #
 	  } elsif (is_array($arg)) {
 	      my $type = clean_type($arg);
-	      $arg =~ s/\[\w+\]/\*/s;
-	      print "/* Array type not supported */\n";
-	      print "\tOZ_declareForeignType ($i, arg$i, $arg);\n";
+	      $type =~ s/\[\]/\*/g;
+	      print "/* Array type not supported yet */\n";
+	      print "\tOZ_declareForeignType ($i, arg$i, $type);\n";
           #
-	  # handle enumerations
+	  # enumerations
 	  #
 	  } elsif (is_enumeration($arg)) {
 	      print "OZ_declareInt ($i, arg$i\_);\n";
