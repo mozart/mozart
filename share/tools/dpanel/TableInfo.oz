@@ -25,7 +25,7 @@
 functor
 import
    Browser(browse)
-   DPPane(getTablesInfo) at 'x-oz://boot/DPPane'
+   DPStatistics(getTablesInfo) at 'x-oz://boot/DPStatistics'
    DPB at 'x-oz://boot/DPB'
 export
    ownerTable:OwnerTable
@@ -294,7 +294,7 @@ define
    end
    
    proc {FetchInfo OT BT} BTData OTData in
-      [BTData OTData] = {DPPane.getTablesInfo $}
+      [BTData OTData] = {DPStatistics.getTablesInfo $}
       {BT update(BTData)}
       {OT update(OTData)}
    end
