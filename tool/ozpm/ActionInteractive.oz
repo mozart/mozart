@@ -267,6 +267,38 @@ define
 	 C=InfoView
       end
    end
+
+   AuthorsDB={New class $
+		     feat dict
+		     meth init
+			self.dict={NewDictionary}
+			{ForAll Global.mogulDB.authors
+			 proc{$ R}
+			    {Dictionary.put self.dict R.id R.name}
+			 end}
+		     end
+		     meth condGet(Key Def Ret)
+			Ret={Dictionary.condGet self.dict Key Def}
+		     end
+		  end
+	      init}
+   
+   fun{AuthorsToString L}
+      fun{AuthorIDToName ID}
+	 {AuthorsDB condGet({VirtualString.toAtom ID} ID $)}
+      end
+   in
+      if {List.is L} then
+	 {List.drop
+	  {VirtualString.toString
+	   {List.foldL L fun{$ S X} S#"\n"#{AuthorIDToName X} end ""}
+	  } 1}
+      else
+	 {VirtualString.toString {AuthorIDToName L}}
+      end
+   end
+
+   
    %%
    %%
    %%
@@ -313,7 +345,8 @@ define
 		       label(glue:w
 			     feature:desc)
 		       label(glue:nwe
-			     anchor:w
+			     anchor:nw
+			     justify:left
 			     look:AuthorLook
 			     feature:data))
 		    lr(glue:nswe
@@ -352,7 +385,8 @@ define
 	    {self.handle.title set({Capitalize {GetLabel Info.id}})}
 	    if {CondSelect Info author unit}\=unit then 
 	       {self.handle.author.desc set("Author : ")}
-	       {self.handle.author.data set({ListToString Info.author})}
+	       {self.handle.author.data set({AuthorsToString Info.author})}
+%					   {ListToString Info.author})}
 	    else
 	       {self.handle.author.desc set("No author defined.")}
 	    end
