@@ -6156,18 +6156,18 @@ OZ_C_proc_begin(BIstopThread,1)
   ConstTerm *rec = tagged2Const(chunk);
   Thread *thread = ((OzThread*) rec)->th();
 
-  thread->noRunPermission();
+  thread->stop();
   return PROCEED;
 }
 OZ_C_proc_end
 
-OZ_C_proc_begin(BIcontinueThread,1)
+OZ_C_proc_begin(BIcontThread,1)
 {
   OZ_Term chunk  = OZ_deref(OZ_getCArg(0));
   ConstTerm *rec = tagged2Const(chunk);
   Thread *thread = ((OzThread*) rec)->th();
 
-  thread->runPermission();
+  thread->cont();
   thread->markPropagated(); // why is this needed?
   am.scheduleThread(thread);
   return PROCEED;
@@ -7128,7 +7128,7 @@ BIspec allSpec2[] = {
   {"stopTraceMode",1,BIstopTraceMode},
   {"setStepMode",2,BIsetStepMode},
   {"stopThread",1,BIstopThread},
-  {"continueThread",1,BIcontinueThread},
+  {"contThread",1,BIcontThread},
   {"queryDebugState",2,BIqueryDebugState},
 
   {"printLong",1,BIprintLong},
