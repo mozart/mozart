@@ -329,21 +329,7 @@ PRINT(STuple)
 PRINT(SRecord)
 {
   CHECKDEPTH;
-  switch (getType()) {
-  case R_ABSTRACTION:
-  case R_OBJECT:
-    ((Abstraction *) this)->print(stream,depth,offset);
-    break;
-  case R_CELL:
-    ((Cell *) this)->print(stream,depth,offset);
-    break;
-  case R_BUILTIN:
-    ((Builtin *) this)->print(stream,depth,offset);
-    break;
-  case R_RECORD:
-    tagged2Stream(getLabel(),stream,depth,offset);
-    break;
-  }
+  tagged2Stream(getLabel(),stream,depth,offset);
 
   TaggedRef ar = getArityList();
   CHECK_DEREF(ar);
@@ -467,7 +453,7 @@ PRINT(Cell)
 PRINT(Abstraction)
 {
   CHECKDEPTH;
-  if (getType() == R_OBJECT) {
+  if (getCType() == C_OBJECT) {
     stream << "O:" << ((Object*)this)->getPrintName();
     return;
   }
@@ -701,9 +687,32 @@ PRINTLONG(ConstTerm)
   case Co_Actor:
     ((Actor *) this)->printLong(stream, depth, offset);
     break;
-  case Co_Chunk:
+  case Co_HeapChunk:
     ((HeapChunk *) this)->printLong(stream, depth, offset);
     break;
+  case Co_Chunk:
+    {
+      Chunk *ch = (Chunk*) this;
+      switch (ch->getCType()) {
+      case C_ABSTRACTION:
+      case C_OBJECT:
+	((Abstraction *) this)->printLong(stream,depth,offset);
+	break;
+      case C_CELL:
+	((Cell *) this)->printLong(stream,depth,offset);
+      break;
+      case C_BUILTIN:
+	((Builtin *) this)->printLong(stream,depth,offset);
+	break;
+      default:
+      Assert(NO);
+      }
+      if (ch->getRecord()) {
+	ch->getRecord()->printLong(stream,depth,offset);
+      }
+      break;
+    }
+
   default:
     error("ConstTerm::printLong");
   }
@@ -722,9 +731,32 @@ PRINT(ConstTerm)
   case Co_Actor:
     ((Actor *) this)->print(stream, depth, offset);
     break;
-  case Co_Chunk:
+  case Co_HeapChunk:
     ((HeapChunk *) this)->print(stream, depth, offset);
     break;
+  case Co_Chunk:
+    {
+      Chunk *ch = (Chunk*) this;
+      switch (ch->getCType()) {
+      case C_ABSTRACTION:
+      case C_OBJECT:
+	((Abstraction *) this)->print(stream,depth,offset);
+	break;
+      case C_CELL:
+	((Cell *) this)->print(stream,depth,offset);
+      break;
+      case C_BUILTIN:
+	((Builtin *) this)->print(stream,depth,offset);
+	break;
+      default:
+      Assert(NO);
+      }
+      if (ch->getRecord()) {
+	ch->getRecord()->print(stream,depth,offset);
+      }
+      break;
+    }
+
   default:
     error("ConstTerm::print");
   }
@@ -1100,7 +1132,7 @@ PRINTLONG(Abstraction)
 {
   CHECKDEPTHLONG;
   stream << indent(offset)
-	 << (getType() == R_OBJECT ? "Object " : "")
+	 << (getCType() == C_OBJECT ? "Object " : "")
 	 << "Abstraction @id"
 	 << getId() << endl;
   pred->printLong(stream,depth,offset);
@@ -1166,27 +1198,12 @@ PRINTLONG(SRecord)
 {
   CHECKDEPTHLONG;
   stream << indent(offset);
-  switch (getType()) {
-  case R_ABSTRACTION:
-  case R_OBJECT:
-    ((Abstraction *) this)->printLong(stream,depth,offset);
-    break;
-  case R_CELL:
-    ((Cell *) this)->printLong(stream,depth,offset);
-    break;
-  case R_BUILTIN:
-    ((Builtin *) this)->printLong(stream,depth,offset);
-    break;
-
-  case R_RECORD:
-    stream << "Record @"
-	   << this << ":\n"
-	   << indent(offset)
-	   << "Label: ";
-    tagged2Stream(u.label,stream,DEC(depth),offset);
-    stream << endl;
-    break;
-  }
+  stream << "Record @"
+	 << this << ":\n"
+	 << indent(offset)
+	 << "Label: ";
+  tagged2Stream(label,stream,DEC(depth),offset);
+  stream << endl;
 
   stream << indent(offset) << "Args:\n";
   TaggedRef ar = getArityList();
