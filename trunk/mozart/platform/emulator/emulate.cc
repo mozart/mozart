@@ -1055,13 +1055,11 @@ void engine()
 
   e->currentThread = e->getFirstThread ();
 
-#if 0
   // Debugger
   if (e->currentThread->stopped()) {
     e->currentThread = (Thread *) NULL;  // byebye...
     goto LBLstart;
   }
-#endif
 
   DebugTrace (trace("new thread"));
   //  now, we have *globally* am.currentThread;
@@ -3188,6 +3186,9 @@ LBLsuspendThread:
       
       // else
 
+      Board *b = e->currentBoard;       // how can we avoid this ugly hack?
+      e->currentBoard = e->rootBoard;
+      
       TaggedRef tail = e->currentThread->getStreamTail();
 
       OZ_Term debugInfo = OZ_mkTupleC("debugInfo",
@@ -3205,7 +3206,9 @@ LBLsuspendThread:
       if (e->currentThread->stopped()) {
 	am.setSFlag(ThreadSwitch); // byebye...
       }
-  
+
+      e->currentBoard = b;
+
       DISPATCH(6);
     }
   
