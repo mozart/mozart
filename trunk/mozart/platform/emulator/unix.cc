@@ -594,7 +594,7 @@ OZ_BI_iodefine(unix_uName,0,1) {
 		       "sysname"  OZ_COMMA
 		       "version" },
 		   { unknown              OZ_COMMA
-		       oslocalhostname()  OZ_COMMA
+		       OZ_string(oslocalhostname())  OZ_COMMA
 		       unknown            OZ_COMMA
 		       OZ_string("WIN32") OZ_COMMA
 		       unknown }, r);
