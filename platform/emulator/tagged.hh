@@ -697,13 +697,22 @@ GenCVariable *tagged2CVar(TaggedRef ref) {
 //   ....
 // }
 
-#define DEREF(term, termPtr, tag)                                             \
-  TaggedRef *termPtr = NULL;                                                  \
+#define _DEREF(term, termPtr, tag)                                             \
   while(IsRef(term)) {                                                        \
     termPtr = tagged2Ref(term);                                               \
     term = *termPtr;                                                          \
   }                                                                           \
   TypeOfTerm tag = tagTypeOf(term);                                           \
+
+
+#define DEREF(term, termPtr, tag)                                             \
+  TaggedRef *termPtr = NULL;                                                  \
+  _DEREF(term,termPtr,tag);
+
+
+#define FASTDEREF(term, termPtr, tag)                                         \
+  TaggedRef *termPtr;                                                         \
+  _DEREF(term,termPtr,tag);
 
 
 #define DEREFPTR(termPtr, term, tag)                                          \
