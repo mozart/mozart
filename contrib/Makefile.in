@@ -6,7 +6,7 @@ SUBDIRS = @CONTRIBDIRS@
 
 .PHONY: bootstrap all install clean distclean veryclean World files check
 
-bootstrap::
+all::
 
 bootstrap all install clean veryclean depend distclean::
         dirs="$(SUBDIRS)"; \
