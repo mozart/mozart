@@ -49,9 +49,9 @@ void usage(int /* argc */,char **argv) {
 	  "usage: %s <options>\n",
 	  argv[0]);
   fprintf(stderr, " -d           : debugging on\n");
-  fprintf(stderr, " -init <file> : load and execute init procedure\n");
-  fprintf(stderr, " -u <url>     : start a compute server\n");
-  fprintf(stderr, " -x <hex>     : start as a virtual site\n");
+  fprintf(stderr, " -init <file> : init functor\n");
+  fprintf(stderr, " -u <url>     : application functor\n");
+  fprintf(stderr, " -x <hex>     : virtual site identifier\n");
   fprintf(stderr, " -- <args> ...: application arguments\n");
   osExit(1);
 }
