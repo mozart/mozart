@@ -55,6 +55,7 @@ const unsigned int MB = KB*KB;
 const int WordSize = sizeof(void*);
 
 // see print.cc
+#ifdef DEBUG_PRINT
 #define OZPRINT                                                              \
   void printStream(ostream &stream=cout, int depth = 10);    \
   void printLongStream(ostream &stream=cout, int depth = 10, int offset = 0) \
@@ -71,6 +72,10 @@ const int WordSize = sizeof(void*);
     { printStream(cerr); cerr << endl; cerr.flush(); }                \
   void printLong(void)                                                        \
     { printLongStream(cerr); cerr.flush(); }
+#else
+#define OZPRINT
+#define OZPRINTLONG
+#endif
 
 inline int min(int a, int b) {return a < b ? a : b;}
 inline int max(int a, int b) {return a > b ? a : b;}
@@ -335,6 +340,7 @@ void oz_print(OZ_Term term);
 // see also OZ_toC();
 char *toC(OZ_Term);
 
+#ifdef DEBUG_PRINT
 // debug print (see print.cc)
 void ozd_printStream(OZ_Term val, ostream &stream, int depth=20);
 void ozd_print(OZ_Term term);
@@ -344,6 +350,7 @@ void ozd_printLong(OZ_Term term);
 void ozd_printBoards();
 void ozd_printThreads();
 void ozd_printAM();
+#endif
 
 char *replChar(char *s,char from,char to);
 char *delChar(char *s,char c);

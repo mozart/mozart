@@ -1488,6 +1488,13 @@ void LocalPropagationQueue::printStream(ostream &stream, int depth)
   }
 }
 
+void OrderedSuspList::printStream(ostream &stream, int depth)
+{
+  for (OrderedSuspList * p = this; p != NULL; p = p->n) {
+    OZ_Propagator * pr = p->t->getPropagator();
+    stream << "   " << pr->toString();
+  }
+}
 
 // -----------------------------------------------------------------------
 // Debug.print Builtins
