@@ -38,5 +38,6 @@ Misc/papers/oopp        mail -s "I have changed %s" mmueller henz schulte
 Misc/papers/WLP-FDCD	mail -s "I have changed %s" tmueller,wuertz
 Misc/papers/WS		mail -s "I have changed %s" mmueller niehren podelski@mpi-sb.mpg.de
 Misc/papers/Elephant	mail -s "I have changed %s" mmueller tmueller vanroy
+Misc/papers/FD-CDR	mail -s "I have changed %s" tmueller,wuertz
 
 
