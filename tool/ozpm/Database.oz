@@ -16,17 +16,23 @@ define
 	 file <- {{Path.make File} expand($)}
 	 db   <- {LoadDB}
       end
-      meth get(K V) {Dictionary.get @db K V} end
-      meth put(K V) {Dictionary.put @db K V} end
-      meth condGet(K D V) {Dictionary.condGet @db K D V} end
+      meth get(K V) {Dictionary.get @db {ToKey K} V} end
+      meth put(K V) {Dictionary.put @db {ToKey K} V} end
+      meth condGet(K D V) {Dictionary.condGet @db {ToKey K} D V} end
       meth keys($) {Dictionary.keys @db} end
       meth items($) {Dictionary.items @db} end
       meth entries($) {Dictionary.entries @db} end
-      meth remove(K) {Dictionary.remove @db K} end
-      meth member(K $) {Dictionary.member @db K} end
+      meth remove(K) {Dictionary.remove @db {ToKey K}} end
+      meth member(K $) {Dictionary.member @db {ToKey K}} end
       meth save
 	 try {Pickle.save {Dictionary.toRecord o @db} @file}
 	 catch _ then skip end
+      end
+   end
+   %%
+   fun {ToKey ID}
+      if {IsAtom ID} then ID else
+	 {VirtualString.toAtom ID}
       end
    end
 end
