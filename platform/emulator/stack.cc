@@ -22,7 +22,9 @@ void Stack::resizeOutline(int n)
 
 void Stack::resize(int newSize)
 {
-  DebugCheckT(printf("Resizing stack from %d to %d\n",size,newSize));
+#ifdef DEBUG_STACK
+  warning("Resizing stack from %d to %d\n",size,newSize));
+#endif
   DebugCheck(newSize <= 0,error("Resizing stack <= 0\n"));
   int used = tos-array;
   array = reallocate(array, size, newSize);
