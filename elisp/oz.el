@@ -1202,6 +1202,10 @@ OZ compiler, emulator and error window")
 					  (- 100 oz-other-buffer-percent))
 				       100)))))
 	(set-window-buffer win buffer)
+
+	;; set point in window to end
+	(set-buffer buffer) (set-window-point win (point-max))
+
 	(bury-buffer buffer)))))
 
 
