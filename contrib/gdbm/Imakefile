@@ -26,8 +26,6 @@ CFLAGS = -O
 GDBM_HOME = $(OZHOME)/tools/gdbm
 GDBM_LIBHOME = $(OZHOME)/platform/OzPlatform/tools/gdbm
 
-OZINCLUDES = 
-
 INCLUDES  = -I$(OZHOME)/include INCS
 LIBRARIES = LIBS
 
