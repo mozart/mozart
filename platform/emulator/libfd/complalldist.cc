@@ -345,9 +345,12 @@ OZ_Return CompleteAllDistProp::xpropagate(void) {
     }
 
     if (!overlap) {
-      DEBUG(("complalldist: no overlapping - returning proceed\n"));
+      DEBUG(("complalldist: no overlapping - returning sleep\n"));
+
+      DEBUG(("%s\n", toString()));
+
       PC.leave();
-      return PROCEED;
+      return SLEEP;
     }
 
     matching = g.MAX_CARD_BIPARTITE_MATCHING(A, B);
@@ -382,8 +385,6 @@ OZ_Return CompleteAllDistProp::xpropagate(void) {
     }
 
   }
-  retval = (isFailed)? PC.fail() : PC.leave();
-
   DEBUG(("\r\nLEAVING PROPAGATOR\r\n"));
 #ifdef OZ_DEBUG
   {
@@ -397,6 +398,9 @@ OZ_Return CompleteAllDistProp::xpropagate(void) {
     }
   }
 #endif
+
+  DEBUG(("%s\n", toString()));
+  retval = (isFailed)? PC.fail() : PC.leave();
 
   return retval;
 }

@@ -282,6 +282,13 @@ OZ_C_proc_begin(BIfdWatchSize, 3)
 {
   ExpectedTypes(OZ_EM_FD "," OZ_EM_INT "," OZ_EM_TNAME);
 
+  OZ_getCArgDeref(2, t, tptr, ttag);
+  if (!isAnyVar(ttag)) {
+    if (t == NameTrue || t == NameFalse)
+      return PROCEED;
+    return FAILED;
+  }
+
   OZ_getCArgDeref(0, v, vptr, vtag);
   int vsize = 0;
 
@@ -316,6 +323,9 @@ OZ_C_proc_begin(BIfdWatchSize, 3)
 
   if (isAnyVar(vtag)){
     //  must return SUSPEND;
+    if (isAnyVar(ttag))
+      return BIfdHeadManager::suspendOnVar(OZ_self, OZ_arity, OZ_args,
+                                           vptr, tptr);
     return BIfdHeadManager::suspendOnVar(OZ_self, OZ_arity, OZ_args, vptr);
   }
 
@@ -325,6 +335,13 @@ OZ_C_proc_begin(BIfdWatchSize, 3)
 OZ_C_proc_begin(BIfdWatchMin, 3)
 {
   ExpectedTypes(OZ_EM_FD "," OZ_EM_INT "," OZ_EM_TNAME);
+
+  OZ_getCArgDeref(2, t, tptr, ttag);
+  if (!isAnyVar(ttag)) {
+    if (t == NameTrue || t == NameFalse)
+      return PROCEED;
+    return FAILED;
+  }
 
   OZ_getCArgDeref(0, v, vptr, vtag);
   int vmin = -1, vmax = -1;
@@ -361,6 +378,9 @@ OZ_C_proc_begin(BIfdWatchMin, 3)
 
   if (isAnyVar(vtag) && min < vmax){
     //  must return SUSPEND;
+    if (isAnyVar(ttag))
+      return BIfdHeadManager::suspendOnVar(OZ_self, OZ_arity, OZ_args,
+                                           vptr, tptr);
     return BIfdHeadManager::suspendOnVar(OZ_self, OZ_arity, OZ_args, vptr);
   }
 
@@ -370,6 +390,13 @@ OZ_C_proc_begin(BIfdWatchMin, 3)
 OZ_C_proc_begin(BIfdWatchMax, 3)
 {
   ExpectedTypes(OZ_EM_FD "," OZ_EM_INT "," OZ_EM_TNAME);
+
+  OZ_getCArgDeref(2, t, tptr, ttag);
+  if (!isAnyVar(ttag)) {
+    if (t == NameTrue || t == NameFalse)
+      return PROCEED;
+    return FAILED;
+  }
 
   OZ_getCArgDeref(0, v, vptr, vtag);
   int vmin = -1, vmax = -1;
@@ -406,6 +433,9 @@ OZ_C_proc_begin(BIfdWatchMax, 3)
 
   if (isAnyVar(vtag) && vmin < max){
     //  must return SUSPEND;
+    if (isAnyVar(ttag))
+      return BIfdHeadManager::suspendOnVar(OZ_self, OZ_arity, OZ_args,
+                                           vptr, tptr);
     return BIfdHeadManager::suspendOnVar(OZ_self, OZ_arity, OZ_args, vptr);
   }
 
