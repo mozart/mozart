@@ -606,7 +606,7 @@ define
                       [] Id then Id
                       end
          in
-            TextFile, putS({Util.indent 1}#NewName)
+            TextFile, putS({Util.indent 1}#"'"#NewName#"' : "#NewName)
             GtkClasses, emitSingleCI(Ir)
          [] nil then skip
          end

@@ -40,7 +40,7 @@ define
 
    class MyToplevel from GTK.window
       meth new
-         GTK.window, new(GTK.wINDOW_TOPLEVEL)
+         GTK.window, new(GTK.'WINDOW_TOPLEVEL')
          GTK.window, signalConnect('delete_event' deleteEvent _)
          GTK.window, setBorderWidth(10)
          GTK.window, setTitle("List Test")

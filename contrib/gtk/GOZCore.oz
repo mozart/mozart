@@ -52,7 +52,9 @@ define
    in
       %% Obtain Pointer from Oz Object/Pointer
       fun {ObjectToPointer Object}
-         if {IsObject Object}
+         if Object == unit
+         then {GOZSignal.null}
+         elseif {IsObject Object}
          then {Object UnwrapPointer($)}
          else Object
          end
