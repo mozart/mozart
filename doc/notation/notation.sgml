@@ -1262,15 +1262,19 @@ end>>/
 	    </Rewrite>
 	    <Rewrite>?={statement} ?={expression}
 	      <Rewrite.From
-/<<proc &ellipsis; lazy &ellipsis; {?{E1} ?{P1} &ellipsis; ?{Pn}}
+/<<fun &ellipsis; lazy &ellipsis; {?{E1} ?{P1} &ellipsis; ?{Pn}}
    ?{E2}
 end>>/
 	      <Rewrite.To
-/<<proc &ellipsis; {?{E1} ?{P1} &ellipsis; ?{Pn}}
-   {`Value.byNeed` fun {$} ?{E2} end}
+/<<fun &ellipsis; {?{E1} ?{X1} &ellipsis; ?{Xn}}
+   {`Value.byNeed`
+    fun {$}
+       case X1#&ellipsis;#X?{n} of ?{P1}#&ellipsis;#?{Pn} then ?{E2}
+       end
+    end}
 end>>/
-	      <Rewrite.Condition/where all occurrences of <<lazy>> have
-		been removed from the procedure flags./
+	      <Rewrite.Condition/where all occurrences of <<lazy>> are
+		removed from the procedure flags./
 	    </Rewrite>
 	    <Rewrite>?={statement} ?={expression}
 	      <Rewrite.From
@@ -1282,9 +1286,10 @@ end>>/
    X = ?{E2}
 end>>/
 	      <Rewrite.Condition/if <<$>> occurs in&nbsp;?{Pk} and no
-		other&nbsp;<<$>> occurs in ?{P1} &ellipsis; ?{Pn}.
-		?{Pk'}&nbsp;is the result of replacing the&nbsp;<<$>>
-		in&nbsp;?{Pk} by&nbsp;<<X>>./
+		other&nbsp;<<$>> occurs in ?{P1} &ellipsis; ?{Pn} and no
+		<<lazy>> occurs in the procedure flags.  ?{Pk'}&nbsp;is
+		the result of replacing the&nbsp;<<$>> in&nbsp;?{Pk}
+		by&nbsp;<<X>>./
 	    </Rewrite>
 	    <Rewrite>?={statement} ?={expression}
 	      <Rewrite.From
@@ -1296,9 +1301,9 @@ end>>/
    case X1#&ellipsis;#X?{n} of ?{P1}#&ellipsis;#?{Pn} then ?{S}
    end
 end>>/
-	      <Rewrite.Condition/if ?{P1} &ellipsis; ?{Pn} are
-		not distinct variables and no <<$>> occurs in
-		?{P1} &ellipsis; ?{Pn}./
+	      <Rewrite.Condition/if ?{P1} &ellipsis; ?{Pn} are not distinct
+		variables and no <<$>> occurs in ?{P1} &ellipsis; ?{Pn} and
+		no <<lazy>> occurs in the procedure flags./
 	    </Rewrite>
 	    <Rewrite>?={statement}
 	      <Rewrite.From
