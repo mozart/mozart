@@ -291,8 +291,9 @@ in
 	    Breakpoint <- true
 	 else skip end
 	 
-	 case {IsTuple Q} then %% exception
+	 case {IsTuple Q} then  %% exception
 	    Gui,addNode(I 0)
+	    {Stack checkNew(_)} %% _don't_ do a first step here!
 	    ThreadManager,switch(I false)
 	    {Stack printException(Q.1)}
 	 else
