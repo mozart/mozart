@@ -118,9 +118,9 @@ prepare
    in
       fun {MakeDummyClass PN}
 	 {OoExtensions.'class' nil Meth 'attr' 'feat' nil
-	  if PN==unit then '' else PN end}
+	  case PN of unit then '_' else PN end}
       end
-      
+
       fun {MakeDummyObject PN}
 	 {New {MakeDummyClass PN} noop()}
       end
@@ -1852,11 +1852,8 @@ define
 
       meth doNew(Ctrl)
 	 ClsArg   = {Nth @actualArgs 1}
-	 DummyObj = {MakeDummyObject
-		     case {ClsArg getPrintName($)} of unit then ''
-		     elseof PN then PN
-		     end}
 	 Cls      = {GetClassData ClsArg}
+	 DummyObj = {MakeDummyObject {ClsArg getPrintName($)}}
 	 Msg      = {Nth @actualArgs 2}
 	 Token    = {New Core.objectToken init(DummyObj Cls)}
 	 BndVO    = {Nth @actualArgs 3}
@@ -2893,10 +2890,11 @@ define
 	 isComplex:false
 
       meth saSimple(Ctrl)
-	 IllClass TestClass 
+	 IllClass TestClass
 	 DummyClass = {MakeDummyClass
-		       case {@designator getPrintName($)} of unit then ''
-		       elseof PN then PN
+		       case @printName of '' then
+			  {@designator getPrintName($)}
+		       elseof X then X
 		       end}
 	 Value = {New Core.classToken init(DummyClass)}
       in
@@ -3275,7 +3273,7 @@ define
 	 {@feature applyEnvSubst(Ctrl)}
       end
    end
-   class SAMethFormalOptional from SAMethFormal
+   class SAMethFormalOptional from SAMethFormal   %--** why inherit?
       meth getFormal($)
 	 optional(@feature)
       end
