@@ -582,19 +582,19 @@ private:
   TaggedRef parent;
 public:
   Group(TaggedRef p) : ConstTerm(Co_Group), parent(p)
-  { Assert(!parent || isGroup(parent)); exceptionHandler = 0; }
-
-  void setExceptionHandler(TaggedRef hdl) { exceptionHandler = hdl; }
-
-  TaggedRef getExceptionHandler() {
-    Group *gr = this;
-  loop:
-    if (gr->exceptionHandler) return gr->exceptionHandler;
-    if (!gr->parent) return 0;
-    gr=tagged2Group(gr->parent);
-    goto loop;
+  {
+    if (parent) {
+      Assert(isGroup(parent));
+      exceptionHandler = tagged2Group(parent)->getExceptionHandler();
+    } else {
+      exceptionHandler = 0;
+    }
   }
 
+  void      setExceptionHandler(TaggedRef hdl) { exceptionHandler = hdl; }
+  TaggedRef getExceptionHandler()              { return exceptionHandler; }
+
+  TaggedRef getParent()  { return parent; }
 };
 
 /*===================================================================
