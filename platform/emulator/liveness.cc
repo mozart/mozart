@@ -519,7 +519,8 @@ outerLoop2:
           if (table->lookupLTuple()!=table->lookupElse())
             PUSH(table->lookupLTuple());
           for (int i = table->getSize(); i--; )
-            if (table->entries[i].val)
+            if (table->entries[i].val &&
+                (table->entries[i].lbl != table->lookupElse()))
               PUSH(table->entries[i].lbl);
           BREAK;
         }

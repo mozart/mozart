@@ -1117,10 +1117,33 @@ ProgramCounter
   C_EMPTY_STACK;
 
 
+CodeArea * CodeArea::skipInGC = NULL;
 
-CodeArea::~CodeArea()
-{
-  gclist->dispose();
+CodeArea::~CodeArea(void) {
+  Assert(this != CodeArea::skipInGC);
+  // Find dynamically allocate data structures that must be deallocated
+  ProgramCounter PC = getStart();
+  while (OK) {
+    Opcode op = getOpcode(PC);
+    switch (op) {
+    case ENDOFFILE:
+      Assert(PC+1 == getStart()+size);
+      return;
+    case TESTBI:
+    case CALLBI:
+      ((OZ_Location *) getAdressArg(PC+2))->deallocate();
+      break;
+    case MATCHX:
+    case MATCHY:
+    case MATCHG:
+      ((IHashTable *) getAdressArg(PC+2))->deallocate();
+      break;
+    default:
+      break;
+    }
+    PC += sizeOf(op);
+  }
+
 #ifdef DEBUG_CHECK
   memset(getStart(),-1,size*sizeof(ByteCode));
 #else
@@ -1129,11 +1152,9 @@ CodeArea::~CodeArea()
 }
 
 
-CodeArea::CodeArea(int sz)
-{
+CodeArea::CodeArea(int sz) {
   allocateBlock(sz);
   referenced = NO;
-  gclist     = NULL;
 }
 
 void CodeArea::init(void **instrTable)
@@ -1159,6 +1180,7 @@ void CodeArea::init(void **instrTable)
   ProgramCounter aux = writeOpcode(TASKEMPTYSTACK,  C_EMPTY_STACK);
   /* mark end with GLOBALVARNAME, so definitionEnd works properly */
   (void) writeOpcode(GLOBALVARNAME,aux);
+  CodeArea::skipInGC = code;
 }
 
 #ifdef RECINSTRFETCH
@@ -1227,74 +1249,28 @@ CodeArea *CodeArea::findBlock(ProgramCounter PC)
 }
 
 
-inline
-void CodeGCList::remove(int ltag, TaggedRef * t) {
-  for (CodeGCList *aux = this; aux!=NULL; aux = aux->next) {
-    for (int i=0; i<codeGCListBlockSize; i++) {
-      GCListEntry & bl = aux->block[i];
-
-      if (bl.getTag() == ltag && (TaggedRef*) bl.getPtr() == t) {
-        bl.set(NULL,C_FREE);
-        return;
-      }
-    }
-  }
-
-  Assert(0);
-}
-
-void CodeArea::unprotectTagged(TaggedRef* t) {
-  gclist->remove(C_TAGGED,t);
-}
-
-
-
-
-
-ProgramCounter CodeArea::writeCache(ProgramCounter PC)
-{
+ProgramCounter CodeArea::writeCache(ProgramCounter PC) {
   InlineCache *cache = (InlineCache *) PC;
   PC = writeInt(0, PC);
   PC = writeInt(0, PC);
   cache->invalidate();
-  protectInlineCache(cache);
   return PC;
 }
 
-void CodeArea::allocateBlock(int sz)
-{
+void CodeArea::allocateBlock(int sz)  {
   size = sz + 1;
   codeBlock  = new ByteCode[size]; /* allocation via malloc! */
+  // Important for garbage collection
+  for (int i = size; i--; )
+    codeBlock[i] = 0;
   writeOpcode(ENDOFFILE,codeBlock+sz); /* mark the end, so that
                                         * displayCode and friends work */
+  Assert(getOpcode(codeBlock+sz) == 0);
   wPtr       = codeBlock;
   nextBlock  = allBlocks;
   allBlocks  = this;
 }
 
-
-// kost@ : TODO : with disappearance of the old marshaler, this must
-// become a procedure returning nothing;
-ProgramCounter CodeArea::writeTagged(TaggedRef t, ProgramCounter ptr)
-{
-  Assert(getStart()<=ptr && ptr < getStart()+size);
-  ProgramCounter ret = writeWord(t,ptr);
-  TaggedRef *tptr = (TaggedRef *)ptr;
-  if (!needsNoCollection(*tptr)) {
-    checkPtr(tptr);
-    gclist = gclist->addTagged((ProgramCounter)tptr);
-  }
-  return ret;
-}
-
-
-ProgramCounter CodeArea::writeAbstractionEntry(AbstractionEntry *p, ProgramCounter ptr)
-{
-  ProgramCounter ret = writeAddress(p,ptr);
-  checkPtr(ptr);
-  gclist = gclist->addAbstractionEntry(ptr);
-  return ret;
-}
 
 
 /*
@@ -1393,9 +1369,10 @@ OZ_Location * OZ_Location::getLocation(int n) {
 
   OZ_Location * l = alloc(n);
 
+  l->fingerprint = fp;
+
   if (fp != -1) {
-    l->fingerprint = fp;
-    cache[sfp]     = new OZ_LocList(l,cache[sfp]);
+    cache[sfp] = new OZ_LocList(l,cache[sfp]);
   }
 
   for (int i = n; i--; )

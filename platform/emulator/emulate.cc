@@ -1702,7 +1702,7 @@ Case(GETVOID)
     retry:
       switch (tagTypeOf(term)) {
       case TAG_LTUPLE:
-        Assert(table->listLabel);
+        Assert(table->lookupLTuple());
         sPointer = tagged2LTuple(term)->getRef();
         JUMPRELATIVE(table->lookupLTuple());
       case TAG_SRECORD:
@@ -3069,7 +3069,6 @@ Case(GETVOID)
 
       if (oz_isAbstraction(pred)) {
         CodeArea *code = CodeArea::findBlock(PC);
-        code->unprotectTagged((TaggedRef*)(PC+1));
         AbstractionEntry *entry = new AbstractionEntry(NO);
         entry->setPred(tagged2Abstraction(pred));
         CodeArea::writeOpcode((tailcallAndArity&1)? FASTTAILCALL: FASTCALL,PC);

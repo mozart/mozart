@@ -44,10 +44,10 @@ define(instruction,
           break;')
 
 define(opAction,
-`ifelse($1,Literal, handleLiteral(PC++,ht,code);,
-        $1,Feature, handleLiteral(PC++,ht,code);,
-        $1,Constant,handleLiteral(PC,ht,code);PC++;,
-        $1,Number,handleLiteral(PC,ht,code);PC++;,
+`ifelse($1,Literal, handleTagged(PC++,ht,code);,
+        $1,Feature, handleTagged(PC++,ht,code);,
+        $1,Constant,handleTagged(PC,ht,code);PC++;,
+        $1,Number,handleTagged(PC,ht,code);PC++;,
         $1,RecordArity, handleRecordArity(PC++,ht);,
         $1,ProcedureRef,handleProcedureRef(PC++,ht,code);,
         $1,PredId,  handlePredId(PC++,ht);,
@@ -66,24 +66,16 @@ define(opAction,
     return aux;
 
 static
-TaggedRef checkTagged(TaggedRef t, HashTable *ht)
-{
+inline
+TaggedRef checkTagged(TaggedRef t, HashTable *ht) {
   CheckHT(TaggedRef,t);
   return t;
 }
 
 static
-Literal *checkLiteral(Literal *l, HashTable *ht)
-{
-  return tagged2Literal(oz_deref(checkTagged(makeTaggedLiteral(l),ht)));
-}
-
-
-static
-void handleLiteral(ProgramCounter PC, HashTable *ht, CodeArea *code)
-{
-  TaggedRef newlit = checkTagged(getTaggedArg(PC),ht);
-  code->writeTagged(newlit,PC);
+inline
+void handleTagged(ProgramCounter PC, HashTable *ht, CodeArea *code) {
+  code->writeTagged(checkTagged(getTaggedArg(PC),ht),PC);
 }
 
 
@@ -114,6 +106,7 @@ void handleCallMethodInfo(ProgramCounter PC, HashTable *ht)
 
 
 static
+inline
 SRecordArity checkSRA(SRecordArity sra, HashTable *ht)
 {
   if (sraIsTuple(sra))
@@ -199,8 +192,7 @@ void handleHashTable(ProgramCounter PC, HashTable * ht) {
   IHashTable * table    = ((IHashTable *) getAdressArg(PC))->clone();
   for (int i = table->getSize(); i--; )
     if (table->entries[i].val && oz_isLiteral(table->entries[i].val)) {
-      table->entries[i].val =
-        makeTaggedLiteral(checkLiteral(tagged2Literal(table->entries[i].val),ht));
+      table->entries[i].val = checkTagged(table->entries[i].val,ht);
       table->entries[i].sra = checkSRA(table->entries[i].sra,ht);
     }
   CodeArea::writeIHashTable(table, PC);

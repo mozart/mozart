@@ -52,6 +52,7 @@ public:
 
   static IHashTable * allocate(int, int);
   IHashTable * clone(void);
+  void gCollect(void);
 
   void deallocate(void) {
     free(this);
@@ -83,9 +84,9 @@ public:
     register int i  = tagged2Literal(t)->hash();
     while (OK) {
       i &= hm;
-      if ((oz_eq(entries[i].val,t) &&
-           sameSRecordArity(entries[i].sra,mkTupleWidth(0))) ||
-          !entries[i].val)
+      if (!entries[i].val ||
+          (oz_eq(entries[i].val,t) &&
+           sameSRecordArity(entries[i].sra,mkTupleWidth(0))))
         return entries[i].lbl;
       i++;
     }
@@ -96,7 +97,7 @@ public:
     register int i  = smallIntHash(t);
     while (OK) {
       i &= hm;
-      if (oz_eq(entries[i].val,t) || !entries[i].val)
+      if (!entries[i].val || oz_eq(entries[i].val,t))
         return entries[i].lbl;
       i++;
     }
@@ -137,8 +138,8 @@ public:
     int i            = tagged2Literal(l)->hash();
     while (OK) {
       i &= hm;
-      if ((oz_eq(entries[i].val,l) && sameSRecordArity(entries[i].sra,sra)) ||
-          !entries[i].val)
+      if (!entries[i].val ||
+          (oz_eq(entries[i].val,l) && sameSRecordArity(entries[i].sra,sra)))
         return entries[i].lbl;
       i++;
     }

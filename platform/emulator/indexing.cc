@@ -119,8 +119,7 @@ Bool IHashTable::disentailed(OzVariable *cvar) {
   case OZ_VAR_OF:
     {
       OzOFVariable * ofsvar = (OzOFVariable*) cvar;
-      if ((listLbl != elseLbl) &&
-          !ofsvar->disentailed(tagged2Literal(AtomCons),2))
+      if (!ofsvar->disentailed(tagged2Literal(AtomCons),2))
         return NO;
       for (int i = getSize(); i--; )
         if (entries[i].val && oz_isLiteral(entries[i].val)) {

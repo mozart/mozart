@@ -106,68 +106,6 @@ public:
 #endif
 
 
-#define C_TAGGED      0
-#define C_INLINECACHE 1
-#define C_ABSTRENTRY  2
-#define C_FREE        3
-
-const int codeGCListBlockSize = 10;
-
-class GCListEntry {
-private:
-  Tagged2 entry;
-public:
-  void set(void * p, int t) {
-    entry.set(p,t);
-  }
-  int getTag(void) {
-    return entry.getTag();
-  }
-  void * getPtr(void) {
-    return entry.getPtr();
-  }
-};
-
-class CodeGCList {
-  CodeGCList *next;
-  int nextFree;
-  GCListEntry block[codeGCListBlockSize];
-
-public:
-  CodeGCList(CodeGCList *nxt) { nextFree=0; next=nxt; }
-
-  void dispose() {
-    CodeGCList *aux = this;
-    while(aux) {
-      CodeGCList *aux1 = aux->next;
-      delete aux;;
-      aux = aux1;
-    }
-  }
-
-
-  CodeGCList *add(ProgramCounter ptr, int tag)
-  {
-    if (this==NULL || nextFree >= codeGCListBlockSize) {
-      CodeGCList *aux = new CodeGCList(this);
-      return aux->add(ptr,tag);
-    }
-
-    block[nextFree].set(ptr,tag);
-    nextFree++;
-    return this;
-  }
-
-  CodeGCList *addInlineCache(ProgramCounter ptr) { return add(ptr,C_INLINECACHE); }
-  CodeGCList *addTagged(ProgramCounter ptr) { return add(ptr,C_TAGGED); }
-  CodeGCList *addAbstractionEntry(ProgramCounter ptr) { return add(ptr,C_ABSTRENTRY); }
-
-  void remove(int,TaggedRef *);
-
-  void collectGClist();
-};
-
-
 class CodeArea {
   friend class AM;
   friend class TMapping;
@@ -192,14 +130,15 @@ protected:
   ProgramCounter wPtr;    /* write pointer for the code block */
   ProgramCounter curInstr;/* start of current instruction */
   Bool referenced;        /* for GC */
+  static CodeArea * skipInGC;
 public:
-  CodeGCList *gclist;
 
 #define CheckWPtr Assert(wPtr < codeBlock+size)
 
   static CodeArea *allBlocks;
 
   void allocateBlock(int sz);
+
   static void init(void **instrtab);
 
 public:
@@ -216,9 +155,7 @@ public:
       Assert(getStart()<=ptr && ptr<getStart()+size);
   }
 
-  void protectInlineCache(InlineCache *cache) {
-    gclist = gclist->addInlineCache((ProgramCounter)cache);
-  }
+  void gCollectInstructions(void);
 
   static ProgramCounter printDef(ProgramCounter PC,FILE *out=stderr);
   static TaggedRef dbgGetDef(ProgramCounter PC, ProgramCounter definitionPC,
@@ -319,11 +256,14 @@ public:
 
   // kost@ : TODO : with disappearance of the old marshaler, this must
   // become a procedure returning nothing;
-  ProgramCounter writeTagged(TaggedRef t, ProgramCounter ptr);
+  ProgramCounter writeTagged(TaggedRef t, ProgramCounter ptr) {
+    Assert(getStart()<=ptr && ptr < getStart()+size);
+    return writeWord(t,ptr);
+  }
 
   static CodeArea *findBlock(ProgramCounter PC);
 
-  void unprotectTagged(TaggedRef* t);
+
 
   static ProgramCounter writeInt(TaggedRef i, ProgramCounter ptr)
   {
@@ -408,9 +348,18 @@ public:
   }
 
 
-  ProgramCounter writeAbstractionEntry(AbstractionEntry *p, ProgramCounter ptr);
-  void writeAbstractionEntry(AbstractionEntry *p)
+  static ProgramCounter writeAddress(void *p, ProgramCounter ptr)
   {
+    return writeWord(p, ptr);
+  }
+
+  ProgramCounter writeAbstractionEntry(AbstractionEntry *p, ProgramCounter ptr) {
+    ProgramCounter ret = writeAddress(p,ptr);
+    checkPtr(ptr);
+    return ret;
+  }
+
+  void writeAbstractionEntry(AbstractionEntry *p) {
     wPtr = writeAbstractionEntry(p,wPtr);
   }
 
@@ -422,10 +371,6 @@ public:
     writeWordAllocated((ByteCode)ToInt32(p),ptr);
   }
 
-  static ProgramCounter writeAddress(void *p, ProgramCounter ptr)
-  {
-    return writeWord(p, ptr);
-  }
   static void writeAddressAllocated(void *p, ProgramCounter ptr) {
     writeWordAllocated(p, ptr);
   }
@@ -571,10 +516,9 @@ public:
     isTailCall = ist;
     arity = ar;
     mn = name;
-    OZ_protect(&mn);
   }
 
-  ~CallMethodInfo() { OZ_unprotect(&mn); }
+  ~CallMethodInfo() {}
   void dispose()      { delete this; }
 };
 
@@ -587,7 +531,7 @@ public:
 
 class OZ_Location {
 private:
-  int         fingerprint;
+  int          fingerprint;
   TaggedRef * map[1];
   static TaggedRef  * new_map[];
   static OZ_LocList * cache[];
@@ -604,6 +548,12 @@ public:
     int sz = sizeof(OZ_Location)+sizeof(TaggedRef*)*(n-1);
     return (OZ_Location *) malloc(sz);
   }
+  void deallocate(void) {
+    if (fingerprint == -1) {
+      free(this);
+    }
+  }
+
   static void set(int n, int i) {
     new_map[n]=&(XREGS[i]);
   }
