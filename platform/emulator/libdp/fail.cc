@@ -160,15 +160,15 @@ EntityCond EntityInfo::getSummaryWatchCond(){
 }
 
 TaggedRef mkOp1(char* label,TaggedRef first){
-  TaggedRef ret=OZ_mkTupleC(label,1,first);
+  return OZ_mkTupleC(label,1,first);
 }
 
 TaggedRef mkOp2(char* label,TaggedRef first,TaggedRef second){
-  TaggedRef ret=OZ_mkTupleC(label,2,first,second);
+  return OZ_mkTupleC(label,2,first,second);
 }
 
 TaggedRef mkOp3(char* label,TaggedRef first,TaggedRef second,TaggedRef third){
-  TaggedRef ret=OZ_mkTupleC(label,3,first,second,third);
+  return OZ_mkTupleC(label,3,first,second,third);
 }
 
 /**********************************************************************/
@@ -1021,7 +1021,10 @@ TaggedRef listifyWatcherCond(EntityCond ec,Bool owner,Bool state){
 TaggedRef listifyWatcherCond(EntityCond ec,Tertiary *t){
   switch(t->getType()){
   case Co_Lock:
-  case Co_Cell:
+  case Co_Cell:{
+    if(t->getTertType()==Te_Manager){
+      return listifyWatcherCond(ec,FALSE,TRUE);}
+    return listifyWatcherCond(ec,TRUE,FALSE);}
   default:
     return listifyWatcherCond(ec,FALSE,FALSE);}
   Assert(0);
@@ -1029,7 +1032,7 @@ TaggedRef listifyWatcherCond(EntityCond ec,Tertiary *t){
 }
 
 TaggedRef listifyWatcherCond(EntityCond ec){
-    listifyWatcherCond(ec,FALSE,FALSE);}
+  return listifyWatcherCond(ec,FALSE,FALSE);}
 
 /**********************************************************************/
 /*   new                          */
