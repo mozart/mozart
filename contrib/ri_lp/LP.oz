@@ -29,8 +29,7 @@ functor
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 import
 
-   Export_RI at
-   'http://www.ps.uni-sb.de/~tmueller/mozart/ri.so{native}'
+   Export_RI at 'ri.so{native}'
 
 export
 
