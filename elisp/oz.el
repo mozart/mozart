@@ -137,29 +137,34 @@ starts the emulator under gdb")
   "The format string for the window title")
 
 
-(defun oz-set-title ()
-  (if oz-gnu19
-      (mapcar '(lambda(scr)
-		 (modify-frame-parameters 
-		  scr
-		  (list (cons 'name oz-title-format))))
-	      (visible-screen-list)))
+(defvar oz-change-title t
+  "If non-nil means change the title of the Emacs window")
 
-  (if oz-lucid
-      (setq screen-title-format oz-title-format)))
+(defun oz-set-title ()
+  (if oz-change-title
+      (if oz-gnu19
+	  (mapcar '(lambda(scr)
+		     (modify-frame-parameters 
+		      scr
+		      (list (cons 'name oz-title-format))))
+		  (visible-screen-list)))
+    
+    (if oz-lucid
+	(setq screen-title-format oz-title-format))))
 
 
 
 (defun oz-reset-title ()
   "reset to the initial window title"
-  (if oz-lucid
-   (setq screen-title-format oz-old-screen-title))
-  (if oz-gnu19
-   (mapcar '(lambda(scr)
-	      (modify-frame-parameters 
-	       scr
-	       (list (cons 'name oz-old-screen-title))))
-	   (visible-screen-list))))
+  (if oz-change-title
+      (if oz-lucid
+	  (setq screen-title-format oz-old-screen-title))
+    (if oz-gnu19
+	(mapcar '(lambda(scr)
+		   (modify-frame-parameters 
+		    scr
+		    (list (cons 'name oz-old-screen-title))))
+		(visible-screen-list)))))
 
 (defun oz-window-system()
   "Non-nil iff we are running under X"
