@@ -622,8 +622,17 @@ Bool GenOFSVariable::unifyOFS(TaggedRef *vPtr, TaggedRef var,
   
     case CVAR:
       {
-        if (tagged2CVar(term)->getType() != OFSVariable) return FALSE;
-        Assert(term!=var);
+	{
+	  GenCVariable* cv = tagged2CVar(term);
+	  TypeOfGenCVariable typ = cv->getType();
+	  if (typ==LazyVariable) {
+	    return
+	    ((GenLazyVariable*)cv)->unifyLazy(tPtr,vPtr,scp);
+	  } else if (typ!=OFSVariable) {
+	    return FALSE;
+	  }
+	}
+	Assert(term!=var);
 
         // Get the GenOFSVariable corresponding to term:
         GenOFSVariable* termVar=tagged2GenOFSVar(term);
