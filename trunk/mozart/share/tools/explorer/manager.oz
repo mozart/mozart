@@ -97,10 +97,10 @@ in
 	 ToClose <- nil
       end
 
-      meth reset
+      meth reset(AwaitStable <= false)
 	 lock
 	    case @script of false then skip elseof Script then
-	       Manager,script(Script @order 'skip')
+	       Manager,script(Script @order 'skip' AwaitStable)
 	    end
 	 end
       end
@@ -194,7 +194,7 @@ in
 	 Manager,Layout
       end
 
-      meth script(Script Order Action)
+      meth script(Script Order Action AwaitStable <= false)
 	 lock
 	    Manager,clear
 	    IsBAB   <- (Order\=false)
@@ -204,7 +204,7 @@ in
 	    PrevSol <- false
 	    {self.status setBAB(@IsBAB)}
 	    StatusManager,start(_)
-	    root <- {MakeRoot self Script Order}
+	    root <- {MakeRoot self Script Order AwaitStable}
 	    StatusManager,stop
 	    Manager,Layout
 	    Manager,SetCursor(@root)
@@ -515,7 +515,7 @@ in
 	       CurNode
 	    in
 	       if Mom.sentinel then
-		  Manager,reset
+		  Manager,reset(true)
 	       else
 		  {Mom  removeLast(Manager,GetPrevSol($))}
 		  {Node deleteTree}
