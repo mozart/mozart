@@ -236,6 +236,32 @@ OZ_BI_define(BIReflectPropagatorName, 1, 1)
 
 //-----------------------------------------------------------------------------
 
+OZ_BI_define(BIIsPropagatorFailed, 1, 1)
+{
+  DEBUGPRINT(("BIIsPropagatorFailed in\n"));
+
+  OZ_Term v1 = oz_deref(OZ_in(0));
+
+  if (! oz_isExtension(v1)) {
+    return OZ_raiseErrorC(EXCEPTION, 0, EXPECT_PROPGATORREF, v1);
+  }
+
+  OZ_Extension * se1 = oz_tagged2Extension(v1);
+
+  if (PropagatorReference::getId() != se1->getIdV()) {
+    OZ_RETURN(oz_false());
+  }
+
+  Propagator * p = ((PropagatorReference*) se1)->getPropagator();
+
+  DEBUGPRINT(("BIIsPropagatorFailed out\n"));
+
+  OZ_RETURN(p->isFailed() ? oz_true() : oz_false());
+} OZ_BI_end
+
+
+//-----------------------------------------------------------------------------
+
 OZ_BI_define(BIReflectPropagatorCoordinates, 1, 1)
 {
   DEBUGPRINT(("BIReflectPropagatorCoordinates in\n"));
@@ -398,6 +424,7 @@ extern "C"
       {"propagatorEq",          2, 1, BIPropagatorEq},
       {"propagatorReflect",     1, 1, BIReflectPropagator},
       {"propagatorName",        1, 1, BIReflectPropagatorName},
+      {"propagatorIsFailed",    1, 1, BIIsPropagatorFailed},
       {"propagatorCoordinates", 1, 1, BIReflectPropagatorCoordinates},
       {0,0,0,0}
     };
