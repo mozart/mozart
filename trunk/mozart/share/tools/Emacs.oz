@@ -48,8 +48,18 @@ fun
 	      end
    WindowsPlatform = 'win32-i486'
 
-   OzRawPath       = {OS.getEnv 'OZPATH'}
-   FieldSeparator  = case Platform == WindowsPlatform then &; else &: end
+   FieldSeparator = case Platform == WindowsPlatform then &; else &: end
+   OzRawPath      = local
+		       HomeEnv   = {OS.getEnv 'HOME'}
+		       OzPathEnv = {OS.getEnv 'OZPATH'}
+		    in
+		       case HomeEnv \= false then
+			  {VirtualString.toString
+			   HomeEnv # '/Oz/lib' # [FieldSeparator] # OzPathEnv}
+		       else
+			  OzPathEnv
+		       end
+		    end
    OzPath
 
    local
