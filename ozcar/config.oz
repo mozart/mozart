@@ -264,7 +264,7 @@ case UseColors then
    DeadThreadColor         = '#b0b0b0'
 
    ZombieThreadColor       = '#f000f0'
-   TrunkColor              = black % '#a00000'
+   TrunkColor              = grey70
 
    RunnableThreadText      = nil
    BlockedThreadText       = nil
@@ -346,6 +346,9 @@ Config =
 {New
  class
 
+    feat
+       ConfAllowed
+
     attr
        verbose :               ConfigVerbose
 
@@ -368,7 +371,15 @@ Config =
        timeoutToUpdateEnv:     TimeoutToUpdateEnv
 
     meth init
-       skip
+       D = {Dictionary.new}
+    in
+       {Dictionary.put D timeoutToSwitch unit}
+       {Dictionary.put D timeoutToUpdateEnv unit}
+       self.ConfAllowed = D
+    end
+
+    meth confAllowed(F $)
+       {Dictionary.member self.ConfAllowed F}
     end
 
     meth toggle(What)
@@ -391,12 +402,6 @@ Config =
 
     meth get(What $)
        @What
-    end
-
-    meth getTk(What $)
-       Value = {@What tkReturnInt($)}
-    in
-       case Value == 0 then false else true end
     end
 
  end init}
