@@ -26,7 +26,6 @@ SRCTOP		= @SRCTOP@
 BINDIR		= $(PREFIX)/bin
 DOCDIR		= $(PREFIX)/share/doc
 ELISPDIR	= $(PREFIX)/share/elisp
-CSSDIR		= /www/css
 HOMEURL         = @HOMEURL@
 BUILDTOP        = @BUILDTOP@
 
@@ -55,7 +54,6 @@ BINFILES = $(SYSLETS:%=$(BINDIR)/%)
 DOCBINFILES = $(SHELLSCRIPTS:%=$(DOCDIR)/%)
 DOCFILES = $(DOCDIR)/html.bst
 ELISPFILES = $(ELS:%=$(ELISPDIR)/%) $(ELCS:%=$(ELISPDIR)/%)
-CSSFILES = $(CSSDIR)/ozdoc.css $(CSSDIR)/page.gif
 
 .PHONY: bootstrap all clean veryclean distclean quick
 
@@ -84,9 +82,8 @@ ozdoc: $(FUNCTORS)
 install: $(BINDIR) $(BINFILES)
 install: $(DOCDIR) $(DOCBINFILES) $(DOCFILES)
 install: $(ELISPDIR) $(ELISPFILES)
-install: $(CSSDIR) $(CSSFILES)
 
-$(BINDIR) $(DOCDIR) $(ELISPDIR) $(CSSDIR):
+$(BINDIR) $(DOCDIR) $(ELISPDIR):
 	$(INSTALL_DIR) $@
 
 $(BINFILES): $(BINDIR)/% : %
@@ -99,9 +96,6 @@ $(DOCFILES): $(DOCDIR)/% : %
 	$(INSTALL_FILE) $< $@
 
 $(ELISPFILES): $(ELISPDIR)/% : %
-	$(INSTALL_FILE) $< $@
-
-$(CSSFILES): $(CSSDIR)/% : %
 	$(INSTALL_FILE) $< $@
 
 clean:
