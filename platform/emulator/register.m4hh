@@ -41,7 +41,7 @@ define(M4INSTRONEREG,``''
 define(M4INSTRTWOREGS,``''
        case INSTRUCTION($1XX):
        ``define(``Reg1'',Xreg(``$''1))'' ``define(``Reg2'',Xreg(``$''1))''{$2}
-       INSTRUCTION($1XY):
+       case INSTRUCTION($1XY):
        ``define(``Reg1'',Xreg(``$''1))'' ``define(``Reg2'',Yreg(``$''1))''{$2}
        case INSTRUCTION($1XG):
        ``define(``Reg1'',Xreg(``$''1))'' ``define(``Reg2'',Greg(``$''1))''{$2}
@@ -592,7 +592,7 @@ case INSTRUCTION(SETVOID):
 
 
   /* a unify void in read case mode */
-INSTRUCTION(GETVOID):
+case INSTRUCTION(GETVOID):
     {
       sPointer += getPosIntArg(PC+1);
       DISPATCH(2);
