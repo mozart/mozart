@@ -655,7 +655,15 @@ define
 		       {@RegOpt neq(IndS IndT)} end}
 		end}
 	    end
-	    Emitter, ConfigureXBank()
+            %% PR#1329
+            %% In ConfigureXBank() when we have cycles we call spillTemporary to
+            %% grab a temp X register to break the cycle. This uses
+            %% the X register pointed to by LowestFreeX, we must make
+            %% sure LowestFreeX is really free in both the current (old) X
+            %% registers and the (new) X registers being constructed. 
+            LowestFreeX <- {NextFreeIndex @Temporaries @Arity}
+
+            Emitter, ConfigureXBank()
 	    Temporaries <- {Dictionary.clone Ts}
 	    Permanents <- {Dictionary.clone Ps}
 	    Emitter, Emit(branch(Label))
