@@ -77,6 +77,12 @@ public:
     return _definition->getNoOfWakeUpLists();
   }
 
+  SuspList * getSuspList(int i) {
+    return (0 <= i && i < getNoOfSuspLists()
+            ?  _susp_lists[i]
+            : (SuspList *) NULL);
+  }
+
   GenCtVariable(OZ_GenConstraint * c, OZ_GenDefinition * d)
     : _definition(d), GenCVariable(CtVariable)
   {

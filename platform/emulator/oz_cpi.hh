@@ -317,6 +317,7 @@ private:
   unsigned _calls, _samples, _heap;
 
 public:
+  OZ_PropagatorProfile(void) {}
   OZ_PropagatorProfile(char * propagator_name);
 
   char * getPropagatorName()      { return _propagator_name; }
@@ -538,6 +539,7 @@ class OZ_GenDefinition {
 public:
   virtual int getKind(void) = 0;
   virtual int getNoOfWakeUpLists(void) = 0;
+  virtual char ** getNamesOfWakeUpLists(void) = 0;
   virtual char * getName(void) = 0;
   virtual OZ_GenConstraint * toConstraint(OZ_Term) = 0;
   virtual OZ_GenConstraint * leastConstraint(void) = 0;
