@@ -1384,7 +1384,9 @@ prepare
 	 %--** there's a get for more than one parameter: getScrollRegion
 	 o(api: gtkcanvas
 	   isa: layout
-	   args: [scrollRegionLeftmost(type: float)
+	   args: [imageSupport(type: bool
+			       default: true)
+		  scrollRegionLeftmost(type: float)
 		  scrollRegionUpper(type: float)
 		  scrollRegionRightmost(type: float)
 		  scrollRegionLower(type: float)
@@ -1393,7 +1395,7 @@ prepare
 		  dither(type: rgbDither
 			 set: setDither
 			 get: getDither)]
-	   new: [nil#new]
+	   new: [[imageSupport]#new]
 	   set: [[scrollRegionLeftmost scrollRegionUpper
 		  scrollRegionRightmost scrollRegionLower]#setScrollRegion]))
 end
