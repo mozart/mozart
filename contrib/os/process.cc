@@ -45,7 +45,7 @@ inline Process* tagged2Process(OZ_Term t)
 Process* OZ_toProcess(OZ_Term t)
 { return tagged2Process(oz_deref(t)); }
 
-OZ_Term Process::printV(int depth = 10)
+OZ_Term Process::printV(int)
 {
   return OZ_pair2(OZ_atom("<process "),
 		  OZ_pair2(OZ_int((pid<0)?-pid:pid),

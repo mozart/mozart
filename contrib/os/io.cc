@@ -52,7 +52,7 @@ inline FileDescriptor* tagged2FileDescriptor(OZ_Term t)
 FileDescriptor* OZ_toFileDescriptor(OZ_Term t)
 { return tagged2FileDescriptor(oz_deref(t)); }
 
-OZ_Term FileDescriptor::printV(int depth = 10)
+OZ_Term FileDescriptor::printV(int)
 {
   return OZ_pair2(OZ_atom("<fileDescriptor "),
 		  OZ_pair2(fd < 0 ? OZ_atom("[closed]") : OZ_int(fd),

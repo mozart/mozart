@@ -87,6 +87,10 @@ public:
   }
   */
 
+  // needed for explicit placement
+  void* operator new(size_t,void*p) { return p; }
+  void* operator new(size_t n) { return new char[n]; }
+
   // must be empty;
   CppObjMemory() {}
   ~CppObjMemory() {}

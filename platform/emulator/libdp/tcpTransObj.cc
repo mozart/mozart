@@ -276,7 +276,7 @@ unmarshalReturn TCPTransObj::unmarshal() {
   // ----------------------------------------- // Must read read
   if(readBuffer->canGet(framesize-MUSTREAD)) { // Can all be read?
     b=readBuffer->get();           // MessageType
-    GenCast(b,BYTE,type,MessageType);
+    type = (MessageType) b;
     cf=readBuffer->get();          // CF
 
     //
@@ -395,7 +395,7 @@ TransObj *TCPTransController::newTransObj()
   if (f == NULL) {
     tcpTransObj=new TCPTransObj();
   } else {
-    GenCast(f,FreeListEntry*,tcpTransObj,TCPTransObj*);
+    tcpTransObj = new (f) TCPTransObj();
   }
 
   tcpTransObj->init();
@@ -421,7 +421,7 @@ void TCPTransController::deleteTransObj(TransObj* transObj)
 
   FreeListEntry *f;
   --wc;
-  GenCast((TCPTransObj *)transObj,TCPTransObj*,f,FreeListEntry*);
+  f = (FreeListEntry*)(void*)(TCPTransObj *)transObj;
   if(putOne(f)) 
     return;
 
@@ -462,7 +462,7 @@ TCPTransController::~TCPTransController() {
   for(int i=0;i<l;i++) {
     f=getOne();
     Assert(f!=NULL);
-    GenCast(f,FreeListEntry*,tcpTransObj,TCPTransObj*);
+    tcpTransObj = new (f) TCPTransObj();
     delete tcpTransObj;
   }
   Assert(length()==0);

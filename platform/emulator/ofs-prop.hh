@@ -27,8 +27,11 @@
  */
 
 #ifndef __OFS_PROP_HH__
-
 #define  __OFS_PROP_HH__
+
+#if defined(INTERFACE)
+#pragma interface
+#endif
 
 #include <math.h>
 #include "var_of.hh"

@@ -45,6 +45,8 @@ private:
   inline void marshal(MsgContainer *msgC, int acknum);
   inline enum unmarshalReturn unmarshal();
 public:
+  void* operator new(size_t,void*p) { return p; }
+  void* operator new(size_t n) { return new char[n]; }
   void init();
   void close();
   void close(Bool isrunning);

@@ -122,8 +122,11 @@ protected:
   ComObj *next_cache; // For TransController usage
   Bool canBeClosed();
 public:
+  void* operator new(size_t,void*p) { return p; }
+  void* operator new(size_t n) { return new char[n]; }
   Bool hasQueued();
   ComObj(DSite *site);
+  ComObj(bool){}; // fake init before delete
   void init(DSite *site);
 
   DSite *getSite() {return site;}
