@@ -2702,7 +2702,7 @@ LBLdispatcher:
      {
        // 
        // by kost@ : 'solve actors' are represented via a c-function; 
-       biFun = (OZ_CFun) Y;
+       biFun = (OZ_CFun) (void*) Y;
        RefsArray tmpX = G;
        G = Y = NULL;
        if (tmpX != NULL) {
