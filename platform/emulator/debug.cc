@@ -107,7 +107,7 @@ void debugStreamCont(Thread *tt) {
   TaggedRef newTail = OZ_newVariable();
 
   //if (!am.runChildren)
-  stop();
+  tt->stop();
 
   TaggedRef pairlist = 
     cons(OZ_pairA("thr",
