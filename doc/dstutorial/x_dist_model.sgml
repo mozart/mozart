@@ -4,21 +4,35 @@
 <P>The basic difference between a distributed and
 a centralized program is that the former
 is partitioned among several sites.
+<index id=idx.site/site/
+<index id=idx.geographicdistribution/site<and>geographic distribution/
 We define a <EM>site</EM>
 as the basic unit of geographic distribution.
 In the current implementation,
-a site is always one operating system process on one machine.
+a site is always one
+<index id=idx.process/process/
+operating system process on one machine.
+<index id=idx.multitasking/multitasking/
+/index id=idx.sitemultitasking/site<and>multitasking/
 A multitasking system can host several sites.
-An Oz language entity has the same language
-semantics whether it is used on only one site
+An Oz language entity has the same
+<index id=idx.languagesemantics/language semantics/
+<index id=idx.semanticslanguage/semantics<and>language/
+<index id=idx.semanticscentralized/semantics<and>centralized/
+language semantics whether it is used on only one site
 or on several sites.
-We say that Mozart is <EM>network-transparent</EM>.
+We say that Mozart is
+<index id=idx.networktransparent/network-transparent/
+<EM>network-transparent</EM>.
 If used on several sites, the language entity
 is implemented using a distributed protocol.
 This gives the language entity a particular
 distributed semantics in terms of network messages.
 
-<P>The <EM>distributed semantics</EM> defines
+<P>The
+<index id=idx.distributedsemantics/distributed semantics/
+<index id=idx.semanticsdistributed/semantics<and>distributed/
+<EM>distributed semantics</EM> defines
 the network communications done by the system
 when operations are performed on an entity.
 The distributed semantics of the entities
@@ -59,6 +73,8 @@ providing a range of trade-offs for the developer.
 Here are some of the more useful ones:
 <LIST>
 <ITEM> <EM>Cached object</EM>:
+<index id=idx.cachedobject/cached object/
+<index id=idx.objectcached/object<and>cached/
 Objects and cells are cached by default--we also call
 this "mobile objects".
 Objects are always executed locally,
@@ -74,10 +90,15 @@ If many sites use the object, then it will travel
 among the sites, giving everyone a fair share of the object use.
 
 <P>The site where the object is created
-is called its <EM>owner site</EM>.
+is called its
+<index id=idx.ownersite/owner site/
+<index id=idx.siteowner/site<and>owner/
+<EM>owner site</EM>.
 A reference to an object on its owner site
 is called an <EM>owner</EM> or <EM>owner node</EM>.
 All other sites referencing the object are
+<index id=idx.proxysite/proxy site/
+<index id=idx.siteproxy/site<and>proxy/
 <EM>proxy sites</EM>.
 A remote reference to an object is
 called a <EM>proxy</EM> or a <EM>proxy node</EM>.
@@ -91,15 +112,20 @@ state pointer to the requesting site.
 
 <P>The class of a cached object is copied to each
 site that calls the object.
+<index id=lazyclass/lazy<and>class/
 This is done lazily, i.e., the class is only
 copied when the object is called for the first time.
 Once the class is on the site, no further copies are done.
 
 <ITEM> <EM>Stationary object (server)</EM>:
+<index id=stationaryobject/stationary object/
+<index id=objectstationary/object<and>stationary/
 A stationary object remains on the site at which it was created.
 Each method invocation uses one message to start the method
 and one message to synchronize with the caller
 when the method is finished.
+<index id=threadlightweight/thread<and>lightweight/
+<index id=lightweightthread/lightweight thread/
 Exceptions are raised in the caller's thread.
 Each method executes in a new thread created
 for it on the object's site.
@@ -108,6 +134,7 @@ since threads in Mozart are extremely lightweight
 (millions can be created on one machine).
 
 <ITEM> <EM>Sequential asynchronous stationary object</EM>:
+<index id=sasoobject/object<and>sequential asynchronous stationary/
 In this object,
 each method invocation uses one message only and does not
 wait until the method is finished.
@@ -135,15 +162,20 @@ semantics in Oz.
 distributed semantics:
 <LIST>
 <ITEM> <EM>Thread</EM>:
+<index id=idx.thread/thread/
 A thread actively executes a sequence of instructions.
 The thread is stationary on the site it is created.
 Threads communicate through shared data and
 block when the data is unavailable, i.e.,
 when trying to access unbound logic variables.
-This makes Oz a dataflow language.
+<index id=idx.dataflow/data-flow/
+This makes Oz a data-flow language.
 Threads are <EM>sited</EM> entities (see <ptr to="sited.entities">).
 
 <ITEM> <EM>Port</EM>:
+<index id=idx.port/port/
+<index id=idx.channel/channel<and>asynchronous many-to-one/
+<index id=idx.amtochannel/asynchronous many-to-one channel/
 A port is an asynchronous many-to-one channel
 that respects FIFO for messages sent from within the same thread.
 A port is stationary on the site it is created,
@@ -165,8 +197,10 @@ When enough memory is freed, the send is continued.
 This provides an end-to-end flow control.
 
 <P>Oz ports, which are a language concept,
-should not be confused with Unix ports, which
-are an OS concept.
+should not be confused with
+<index id=idx.portunixoz/port<and>Oz vs. Unix/
+<index id=idx.unixport/Unix port/
+Unix ports, which are an OS concept.
 Mozart applications will never use Unix ports explicitly
 except when communicating with other applications
 that have a Unix port interface.
@@ -183,6 +217,9 @@ but once the cell is local, then further
 updates do not use the network any more.
 
 <ITEM> <EM>Thread-reentrant lock</EM>:
+<index id=idx.threadreentrant/thread<and>thread-reentrant lock/
+<index id=idx.threadreentrantlock/thread-reentrant lock/
+<index id=idx.lockthread/lock<and>thread-reentrant/
 A thread-reentrant lock allows only a single
 thread to enter a given program region.
 Locks can be created dynamically
@@ -199,10 +236,13 @@ exclusion algorithm.
 are those that can be assigned only to one value:
 <LIST>
 <ITEM> <EM>Logic variable</EM>:
+<index id=idx.logicvariable/logic variable/
+<index id=idx.variablelogic/variable<and>logic/
 Logic variables have two operations:
 they can be bound (i.e., assigned)
 or read (i.e., wait until bound).
 A logic variable resembles a single-assignment variable,
+<index id=idx.variablefinal/variable<and><<final>> in Java/
 e.g., a <<final>> variable in Java.
 It is more than that because two logic variables can
 be bound together even before they are assigned,
@@ -218,8 +258,9 @@ to create a cell for that case.
 <P>When a logic variable is bound,
 the value is sent to its <EM>owner site</EM>,
 namely the site on which it was created.
-The owner site
-then multicasts the value to all the
+The owner site then
+<index id=idx.multicast/multicast/
+multicasts the value to all the
 proxy sites, namely the sites that have the variable.
 The current release implements
 the multicast as a sequence of message sends.
@@ -230,7 +271,9 @@ When a variable arrives on a site
 for the first time, it is immediately
 registered with the owner site.
 This takes one message.
-<ITEM> They can be used to improve latency tolerance.
+<ITEM> They can be used to improve
+<index id=idx.latencytolerance/latency tolerance/
+latency tolerance.
 A logic variable can be passed in a message
 or stored in a data structure
 before it is assigned a value.
@@ -538,7 +581,7 @@ are the basic data structures
 of the application--they are
 passed between sites when needed.
 Logic variables and locks are
-used to manage dataflow and concurrency.
+used to manage concurrency and data-flow execution.
 See <ptr to="practical.tips"> for more
 information on how to organize an application.
 
