@@ -60,6 +60,8 @@ local
 			in
 			   case {IsDet Data} then
 			      case Data == unit then 'unknown'
+			      elsecase {IsObject Data} then
+				 {System.valueToVirtualString Data 0 0}
 			      else {System.printName Data}
 			      end
 			   else '_'   %--** should be clickable!
