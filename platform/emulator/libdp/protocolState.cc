@@ -90,14 +90,14 @@ void cellLockSendGet(BorrowEntry *be){
   DSite *toS=na->site;
   //  installProbeNoRet(toS,PROBE_TYPE_ALL);
   PD((CELL,"M_CELL_LOCK_GET indx:%d site:%s",na->index,toS->stringrep()));
-  MsgContainer *msgC = msgContainerManager->newMsgContainer(toS);
+  MsgContainer *msgC = msgContainerManager->newMsgContainer(toS, am.currentThread()->getPriority());
   msgC->put_M_CELL_LOCK_GET(na->index,myDSite);
-  send(msgC,-1);}
+  send(msgC);}
 
 void cellLockSendForward(DSite *toS,DSite *fS,int mI){
   MsgContainer *msgC = msgContainerManager->newMsgContainer(toS);
   msgC->put_M_CELL_LOCK_FORWARD(myDSite,mI,fS);
-  send(msgC,-1);}
+  send(msgC);}
 
 void cellLockReceiveDump(OwnerEntry *oe,DSite* fromS){
   Tertiary *t=oe->getTertiary();
@@ -114,7 +114,7 @@ void cellLockSendDump(BorrowEntry *be){
 
   MsgContainer *msgC = msgContainerManager->newMsgContainer(toS);
   msgC->put_M_CELL_LOCK_DUMP(na->index,myDSite);
-  send(msgC,-1);}
+  send(msgC);}
 
 /**********************************************************************/
 /*   Cell protocol - receive                            */
@@ -315,13 +315,13 @@ void cellSendReadAns(DSite* toS,DSite* mS,int mI,TaggedRef val){
     return;}
   MsgContainer *msgC = msgContainerManager->newMsgContainer(toS);
   msgC->put_M_CELL_READANS(mS,mI,val);
-  send(msgC,-1);
+  send(msgC);
 }
 
 void cellSendRemoteRead(DSite* toS,DSite* mS,int mI,DSite* fS,DSite *cS){ 
   MsgContainer *msgC = msgContainerManager->newMsgContainer(toS);
   msgC->put_M_CELL_REMOTEREAD(mS,mI,fS);
-  send(msgC,-1);
+  send(msgC);
 }
 
 void cellSendContents(TaggedRef tr,DSite* toS,DSite *mS,int mI){
@@ -329,7 +329,7 @@ void cellSendContents(TaggedRef tr,DSite* toS,DSite *mS,int mI){
   PD((SPECIAL,"CellContents %s",toC(tr)));
   MsgContainer *msgC = msgContainerManager->newMsgContainer(toS);
   msgC->put_M_CELL_CONTENTS(mS,mI,tr);
-  send(msgC,-1);
+  send(msgC);
 }
 
 void cellSendRead(BorrowEntry *be,DSite *dS){
@@ -338,7 +338,7 @@ void cellSendRead(BorrowEntry *be,DSite *dS){
   // installProbeNoRet(toS,PROBE_TYPE_ALL);
   MsgContainer *msgC = msgContainerManager->newMsgContainer(toS);
   msgC->put_M_CELL_READ(na->index,dS);
-  send(msgC,-1);
+  send(msgC);
 }
 
 void chainSendAck(DSite* toS, int mI){
@@ -346,7 +346,7 @@ void chainSendAck(DSite* toS, int mI){
   PD((CHAIN,"M_CHAIN_ACK indx:%d site:%s",mI,toS->stringrep()));
   MsgContainer *msgC = msgContainerManager->newMsgContainer(toS);
   msgC->put_M_CHAIN_ACK(mI,myDSite);
-  send(msgC,-1);
+  send(msgC);
 }
 
 /**********************************************************************/
@@ -493,7 +493,7 @@ void lockReceiveForward(BorrowEntry *be,DSite *toS,DSite* mS,int mI){
 void lockSendToken(DSite *mS,int mI,DSite* toS){
   MsgContainer *msgC = msgContainerManager->newMsgContainer(toS);
   msgC->put_M_LOCK_TOKEN(mS,mI);
-  send(msgC,-1);
+  send(msgC);
 }
 
 /**********************************************************************/
@@ -592,7 +592,7 @@ void cellSendCantPut(TaggedRef tr,DSite* toS, DSite *mS, int mI){
       toS->stringrep(), mS->stringrep(),mI));
   MsgContainer *msgC = msgContainerManager->newMsgContainer(toS);
   msgC->put_M_CELL_CANTPUT(mI, toS, tr, myDSite);
-  send(msgC,-1);
+  send(msgC);
 }
 
 void cellSendContentsFailure(TaggedRef tr,DSite* toS,DSite *mS, int mI){ 
@@ -611,7 +611,7 @@ void lockSendCantPut(DSite* toS, DSite *mS, int mI){
       toS->stringrep(),mS->stringrep(),mI));
   MsgContainer *msgC = msgContainerManager->newMsgContainer(mS);
   msgC->put_M_LOCK_CANTPUT(mI, toS, myDSite);
-  send(msgC,-1);
+  send(msgC);
 }
 
 void lockSendTokenFailure(DSite* toS,DSite *mS, int mI){ 
@@ -657,12 +657,12 @@ void chainSendQuestion(DSite* toS,int mI,DSite *deadS){
   PD((ERROR_DET,"chainSendQuestion  %s",toS->stringrep()));
   MsgContainer *msgC = msgContainerManager->newMsgContainer(toS);
   msgC->put_M_CHAIN_QUESTION(mI,myDSite,deadS);
-  send(msgC,-1);
+  send(msgC);
 }
 
 void chainSendAnswer(BorrowEntry* be,DSite* toS, int mI, int ans, DSite *deadS){
   MsgContainer *msgC = msgContainerManager->newMsgContainer(toS);
   msgC->put_M_CHAIN_ANSWER(mI,myDSite,ans,deadS);
-  send(msgC,-1);
+  send(msgC);
 }
 
