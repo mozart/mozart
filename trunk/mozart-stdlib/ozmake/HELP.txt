@@ -579,6 +579,8 @@ MAKEFILE
    ozc
         executable
                make the result executable
+        'define'(S)
+               define macro S. Same as -DS on the command line
    ozl
         executable
                make the result executable

@@ -4,3 +4,5 @@ ozmake
 .cvsignore
 Makefile
 config.*
+*.tar
+*.tgz
