@@ -9,3 +9,4 @@ oz.c
 initffuns.cc
 config.status
 config.cache
+config.log
