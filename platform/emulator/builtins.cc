@@ -4468,8 +4468,16 @@ OZ_Return sendPort(OZ_Term prt, OZ_Term val)
   LTuple *lt = new LTuple(val,am.currentUVarPrototype);
     
   OZ_Term old = ((PortWithStream*)port)->exchangeStream(lt->getTail());
+  DEREF(old,oldPtr,_1);
     
-  if (OZ_unify(makeTaggedLTuple(lt),old)!=PROCEED) {
+
+  /* optimize most common case */
+  if(isAnyVar(old) && !isCVar(old)) {
+    am.bindToNonvar(oldPtr,old,makeTaggedLTuple(lt),OK);
+    return PROCEED;
+  }
+
+  if (OZ_unify(makeTaggedLTuple(lt),makeTaggedRef(oldPtr))!=PROCEED) {
     OZ_fail("OZ_send failed\n");
   }
   return PROCEED;
