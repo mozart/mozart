@@ -23,6 +23,8 @@ MISCSRCS = \
         base.bib
 GIFSRCS = \
         base.gif
+HTMLUTILFILES = \
+        ozdoc.css
 
 .PHONY: all validate install clean veryclean distclean
 
@@ -36,10 +38,10 @@ Makefile: Makefile.in ../config.status
         cd .. && ./config.status
 
 base-html: $(SGMLSRCS) $(MISCSRCS) $(GIFSRCS)
-        $(DOCIFY) --in=$(SRCDIR)/base.sgml --out=$@ --type=html-stylesheets \
-        --autoindex \
-        --bib-path=$(SRCDIR):$(SRCTOP)/doc \
-        --bst-path=$(SRCTOP)/doc/utilities && \
+        $(DOCIFY) --in=$(SRCDIR)/base.sgml --out=$@ \
+        --type=html-stylesheets --stylesheet=ozdoc.css \
+        --autoindex && \
+        cp -p $(addprefix $(SRCDIR)/../utilities/,$(HTMLUTILFILES)) $@ && \
         cp -p $(addprefix $(SRCDIR)/,$(GIFSRCS)) $@
 
 base-tex: $(SGMLSRCS) $(MISCSRCS)
