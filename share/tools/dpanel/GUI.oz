@@ -49,6 +49,8 @@ export
    nibyte:NIByte
    messageSent: MsentStat
    messageReceived: MreceivedStat
+   diffSent:DsentStat
+   diffReceived:DreceivedStat
 define
    SSites SActive SRTT
    OSites OActive ONumber
@@ -58,6 +60,12 @@ define
    MreceivedStat
    SMLabel
    RMLabel
+
+   DsentStat
+   DreceivedStat
+   SDLabel
+   RDLabel
+   
    class TitleGraph from Tk.frame
       feat graph 
 
@@ -226,7 +234,7 @@ define
 							{Exchange RunSync unit _}
 						     end)}
       !CardF={New Widgets.cardFrame tkInit(parent:T padx:10 pady:10 width:1000 height:190)}
-      SiteF OwnerF BorrowF MessageF % NetInfoF
+      SiteF OwnerF BorrowF MessageF DiffTypeF
    in
       %% Site frame
       SiteF={New Tk.frame tkInit(parent:CardF)}
@@ -306,6 +314,20 @@ define
       
       MreceivedStat = {New FieldDisplay.fieldDisplayClass
 		       open(parent:MessageF width:450 height:17*8)}
+
+      %% DiffTypeStatistics
+      DiffTypeF={New Tk.frame tkInit(parent:CardF)}
+      SDLabel ={New Tk.label tkInit(parent:DiffTypeF
+				    text:"Sent diff types counted by type")}
+      
+      RDLabel ={New Tk.label tkInit(parent:DiffTypeF
+				    text:"Received diff types counted by type")}
+      
+      DsentStat = {New FieldDisplay.fieldDisplayClass
+		   open(parent:DiffTypeF width:450 height:17*8)}
+      
+      DreceivedStat = {New FieldDisplay.fieldDisplayClass
+		       open(parent:DiffTypeF width:450 height:17*8)}
       
       {Tk.batch [grid(SSites	row:0 column:0 sticky:news)
 		 grid(SActive	row:0 column:1 sticky:news)
@@ -327,6 +349,11 @@ define
 		 grid(RMLabel row:0 column:1 sticky:news)
 		 grid(MsentStat row:1 column:0 sticky:news)
 		 grid(MreceivedStat row:1 column:1 sticky:news)
+
+		 grid(SDLabel row:0 column:0 sticky:news)
+		 grid(RDLabel row:0 column:1 sticky:news)
+		 grid(DsentStat row:1 column:0 sticky:news)
+		 grid(DreceivedStat row:1 column:1 sticky:news)
 		 
 		 grid(columnconfigure SiteF 0 weight:1)
 		 grid(columnconfigure OwnerF 0 weight:1)
@@ -339,6 +366,7 @@ define
 		 grid(rowconfigure OwnerF 0 weight:1)
 		 grid(rowconfigure BorrowF 0 weight:1)
 		 grid(rowconfigure MessageF 0 weight:1)
+		 grid(rowconfigure DiffTypeF 0 weight:1)
 		 grid(rowconfigure NetInfoF 0 weight:1)
 		]}
 
@@ -347,12 +375,13 @@ define
       {CardF addCard(id:3 title:" Imported entities " frame:BorrowF)}
 %	 {CardF addCard(id:4 title:" Net Info " frame:NetInfoF)}
       {CardF addCard(id:4 title:" Message Statistics " frame:MessageF)}
+      {CardF addCard(id:5 title:" Diff Type  Statistics " frame:DiffTypeF)}
       {Tk.batch [grid(columnconfigure T 0 weight:1)
 		 grid(rowconfigure T 0 weight:1)
 		 grid(CardF row:0 column:0 sticky:news)]}
    end
    proc{OpenNetInfo}
-      {CardF addCard(id:5 title:" Net Info " frame:NetInfoF)}     
+      {CardF addCard(id:6 title:" Net Info " frame:NetInfoF)}     
    end
 end
 

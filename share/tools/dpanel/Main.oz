@@ -84,7 +84,7 @@ define
 	 OT = {New TableInfo.ownerTable init}
 	 BT = {New TableInfo.borrowTable init(SD)}
 	 NI = {New NetInfo.netInfo init(GUI)}
-	 MI = {New MessageInfo.messageInfoClass init(GUI)}
+	 MI = {New MessageInfo.messageDiffInfoClass init(GUI)}
 	 {ST setGui(GUI)}
 	 {OT setGui(GUI.osites GUI.oactive GUI.onumber)}
 	 {BT setGui(GUI.bsites GUI.bactive GUI.bnumber)}
@@ -109,6 +109,11 @@ define
       {Updater ST OT BT NI MI}
    end
 end
+
+
+
+
+
 
 
 
