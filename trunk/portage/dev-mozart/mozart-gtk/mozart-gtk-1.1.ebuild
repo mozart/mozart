@@ -6,6 +6,7 @@ DEPEND="
   =x11-libs/gtk+-1.2*
   dev-lang/mozart-base
   dev-lang/mozart-gtk-canvas
+  app-text/openjade
 "
 S="${WORKDIR}/mozart-gtk-1.1"
 
