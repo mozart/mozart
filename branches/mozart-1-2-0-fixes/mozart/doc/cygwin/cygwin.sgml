@@ -72,7 +72,9 @@
 	<<uname -r>> displays at least version 1.3.5.  It is a good idea
 	that you familiarize yourself with this environment, as you'll
 	be using it for a while before your Mozart build is finished.
-	I recommend that you read the <Q/Cygwin User's Guide/.
+	I recommend that you read the <Ref.Extern
+	to="http://cygwin.com/cygwin-ug-net/cygwin-ug-net.html"/<Q
+	/Cygwin User's Guide//.
       <Para class=apropos><Title/Cygwin Basics/
 	As you will have seen on the Cygwin web site, Cygwin actually consists
 	of two parts:  A DLL providing a significant part of the Unix API,
