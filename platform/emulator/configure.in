@@ -99,7 +99,7 @@ case "$target" in
    ;;
 
    *)
-        AC_MSG_ERROR("cannot cross-compile for target $target")
+        AC_MSG_ERROR("can only cross-compile for target i386-mingw32 not for $target")
     ;;
 esac
 
