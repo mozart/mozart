@@ -19,7 +19,7 @@
 # in addition to the first matching regex or DEFAULT.
 #
 ALL		/home/ps-home/hydra/CVS/CVSROOT/log.pl -m mehl %s
-Oz/Emulator	mail -s "I have changed %s" scheidhr,tmueller
+Oz/Emulator	mail -s "I have changed %s" scheidhr,tmueller,perbrand
 Oz/TestFiles	mail -s "I have changed %s" tmueller
 Oz/FDLib	mail -s "I have changed %s" scheidhr,tmueller,wuertz
 Oz/Compiler	mail -s "I have changed %s" henz,scheidhr
