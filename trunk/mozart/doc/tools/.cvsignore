@@ -1,4 +1,5 @@
 *~
+Makefile
 tools-html
 tools-tex
-Makefile
+latex.db
