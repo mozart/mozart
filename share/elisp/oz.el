@@ -56,10 +56,6 @@
   "Feed a file to the Oz Compiler." t)
 (autoload 'oz-compile-file "mozart"
   "Compile an Oz program non-interactively." t)
-(autoload 'oz-find-demo-file "mozart"
-  "Find an Oz file in the demo directory." t)
-(autoload 'oz-find-modules-file "mozart"
-  "Find an Oz file in the lib directory." t)
 (autoload 'oz-to-coresyntax-buffer "mozart"
   "Display the core syntax expansion of the current buffer." t)
 (autoload 'oz-to-coresyntax-region "mozart"
@@ -1102,9 +1098,6 @@ buffer."
     ("Feed File"           oz-feed-file t)
     ("Compile File"        oz-compile-file (buffer-file-name))
     ("-----")
-    ("Find" nil
-     ("Demo"               oz-find-demo-file t)
-     ("Modules File"       oz-find-modules-file t))
     ("Core Syntax" nil
      ("Buffer"             oz-to-coresyntax-buffer t)
      ("Region"             oz-to-coresyntax-region (mark t))
