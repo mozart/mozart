@@ -1906,8 +1906,8 @@ Thread *Thread::gcThread()
 
 #ifdef DEBUG_CHECK
   //mm2
-  Board *bb=getBoardFast();
-  if (!bb->gcIsAlive()) {
+  Board *bb=home?getBoardFast():0;
+  if (!bb || !bb->gcIsAlive()) {
     warning("discarded thread detected ...");
   }
 #endif
