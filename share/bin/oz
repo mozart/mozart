@@ -83,7 +83,7 @@ fi
 if [ \( "$cmd" = "oz" -o "$cmd" = "ozemacs" \) -a "${OZEMACS-0}" = 0 ]; then
 
   CHECKEMACS=${OZHOME}/ozemacs/bin/emacs
-  if [ -f $CHECKEMACS ]; then
+  if [ -f $CHECKEMACS -a -f ${OZHOME}/ozemacs/platform/${OZPLATFORM}/bin/emacs ]; then
     OZEMACS=$CHECKEMACS
 
   # Backward compatibility for older ozemacs (19.28)
