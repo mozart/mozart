@@ -1124,8 +1124,9 @@ private:
     return newArray;
   }
   int *allocate(int size) {
-    COUNT1(sizeBitArrays,size);
-    return (int *) alignedMalloc(size, sizeof(double));
+    size_t n = size * sizeof(int);
+    COUNT1(sizeBitArrays,n);
+    return (int *) alignedMalloc(n, sizeof(double));
   }
 public:
   OZPRINT;
