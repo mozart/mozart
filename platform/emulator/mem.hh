@@ -4,6 +4,7 @@
  *
  *  Contributors:
  *    Michael Mehl (mehl@dfki.de)
+ *    Konstantin Popov (kost@sics.se)
  *
  *  Copyright:
  *    Organization or Person (Year(s))

@@ -91,7 +91,7 @@ VSMsgChunkPoolSegmentManagerOwned(int chunkSizeIn, int chunksNumIn,
   if ((int) (shmid = shmget(shmkey, chunkSizeIn*chunksNumIn,
                             (IPC_CREAT | IPC_EXCL | S_IRWXU))) < 0)
     error("Virtual Sites: failed to allocate a shared memory page");
-  if ((int) (mem = shmat(shmid, (char *) 0, 0)) < 0)
+  if ((int) (mem = shmat(shmid, (char *) 0, 0)) == -1)
     error("Virtual Sites:: failed to attach a shared-memory page");
   //
 #ifdef TRACE_SEGMENTS
@@ -216,7 +216,7 @@ VSMsgChunkPoolSegmentManagerImported::VSMsgChunkPoolSegmentManagerImported(key_t
     chunkSize = chunksNum = -1;
     return;
   }
-  if ((int) (mem = shmat(shmid, (char *) 0, 0)) < 0)
+  if ((int) (mem = shmat(shmid, (char *) 0, 0)) == -1)
     error("Virtual Sites:: failed to attach a shared-memory page");
   //
 #ifdef TRACE_SEGMENTS
