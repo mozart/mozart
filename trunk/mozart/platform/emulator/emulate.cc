@@ -3202,10 +3202,10 @@ LBLsuspendThread:
 
       e->currentThread->setStreamTail(newTail);;
   
-      if (e->currentThread->stopped()) {  // here's some work...
-        //OZ_warning("continuing stopped thread");
+      if (e->currentThread->stopped()) {
+	am.setSFlag(ThreadSwitch); // byebye...
       }
-
+  
       DISPATCH(6);
     }
   

@@ -259,10 +259,10 @@ public:
     state.flags = state.flags & ~T_G_step;
   }
   
-  void runPermission() {
+  void cont() {
     state.flags = state.flags & ~T_G_stop;
   }
-  void noRunPermission() {
+  void stop() {
     state.flags = state.flags | T_G_stop;
   }
 
