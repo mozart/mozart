@@ -159,6 +159,21 @@ AC_PROG_MAKE_SET
 AC_PROG_RANLIB
 
 AC_CHECK_PROGS(M4, gm4 m4, true)
+
+# check if M4 understands option -E
+if test -n "$M4"
+then
+    AC_MSG_CHECKING(if $M4 understands -E option)
+    ac_res=`$M4 -E < /dev/null 2>&1`
+    if test -n "$ac_res"
+    then
+	AC_MSG_RESULT(no)
+    else
+	AC_MSG_RESULT(yes)
+	M4="$M4 -E"
+    fi
+fi
+
 AC_CHECK_PROGS(RM, rm, true)
 AC_CHECK_PROGS(SH, sh bash ksh, true)
 AC_CHECK_PROGS(MV, mv, true)
@@ -174,7 +189,7 @@ then
   AC_MSG_ERROR("required ozplatform script not found")
 fi
 
-M4_S="$M4"
+M4_S=""
 AC_SUBST(M4_S)
 
 AC_PATH_PROG(DEPEND, makedepend, true)
@@ -215,7 +230,7 @@ AC_SUBST(CWARN)
 if test "${GXX}" = yes; then
     O_OPT="$O_OPT -O6"
     G_OPT="$G_OPT -g3 -DINTERFACE"
-    M4_S="$M4 -s"
+    M4_S="-s"
     DEPEND="$CXX -MM"
     CWARN="\$(WARNINGS)"
     if test "${platform}" = linux-i486

@@ -29,10 +29,10 @@ tags::
 	$(CXXCPP) $(CPPFLAGS) -o $@ $<
 
 .m4cc.cc:
-	$(M4_S) $< > $@
+	$(M4) $(M4_S) $(M4_D) $< > $@ || ($(RM) $@; exit 1)
 
 .m4hh.hh:
-	$(M4_S) $< > $@
+	$(M4) $(M4_S) $(M4_D) $< > $@ || ($(RM) $@; exit 1)
 
 @tmphack_target@:
 	tmp=/tmp/ozobj$$$$.o; \
@@ -40,3 +40,6 @@ tags::
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c -o $$tmp $< && \
 		rcp $$tmp @tmphack_host@:`pwd`/$@ && \
 		rm -f $$tmp
+
+%.d: %.cc
+	$(DEPEND) $< | sed "s/$*.o/& $@/g" > $@
