@@ -228,24 +228,25 @@ TkTools.ozf: DefaultURL.ozf
 
 # gtk dependencies
 # gtk dependencies and rules
-GTKSPECS = $(VPATH)/gtk/gtk/*.spec
-GDKSPECS = $(VPATH)/gtk/gdk/*.spec
-BUILDER  = $(PERL) $(VPATH)/gtk/builder.perl
+GTKSPECS   = $(VPATH)/gtk/gtk/*.spec
+GDKSPECS   = $(VPATH)/gtk/gdk/*.spec
+BUILDERSCR = $(VPATH)/gtk/builder.perl
+BUILDER    = $(PERL) $(BUILDERSRC)
 
 GTK.ozf: gtkclasses.oz gtkexports.oz
 
 GDK.ozf: gdkclasses.oz gdkexports.oz
 
-gtkclasses.oz: $(GTKSPECS) $(BUILDER)
+gtkclasses.oz: $(GTKSPECS) $(BUILDERSRC)
         $(BUILDER) --oz-classes $(GTKSPECS) > $@
 
-gdkclasses.oz: $(GDKSPECS) $(BUILDER)
+gdkclasses.oz: $(GDKSPECS) $(BUILDERSRC)
         $(BUILDER) --oz-classes $(GDKSPECS) > $@
 
-gtkexports.oz: $(GTKSPECS) $(BUILDER)
+gtkexports.oz: $(GTKSPECS) $(BUILDERSRC)
         $(BUILDER) --oz-exportlist $(GTKSPECS) > $@
 
-gdkexports.oz: $(GDKSPECS) $(BUILDER)
+gdkexports.oz: $(GDKSPECS) $(BUILDERSRC)
         $(BUILDER) --oz-exportlist $(GDKSPECS) > $@
 
 # compiler dependencies
