@@ -35,6 +35,9 @@ AC_INIT(oz.cc)
 
 OZ_INIT
 
+
+OZ_CXX_CHOOSE
+
 dnl *****************************************************************
 dnl windows cross compilation
 dnl *****************************************************************
@@ -44,7 +47,6 @@ case "$target" in
    ;;
    i386-mingw32)
         AC_MSG_RESULT(cross compiling for windows)
-        CXX=${target}-g++
         platform=win32-i486
    ;;
    *)
@@ -59,7 +61,6 @@ AC_SUBST(platform)
 case "$platform" in
    win32-i486)
         OZ_CXX_OPTIONS(-mno-cygwin,oz_a)
-        : ${CXX=c++}
         CXX="$CXX $oz_a"
    ;;
 
