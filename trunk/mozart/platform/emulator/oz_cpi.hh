@@ -141,7 +141,8 @@ public:
   virtual size_t sizeOf(void) = 0;
   virtual void gcRecurse(void) = 0;
   virtual OZ_Return run(void) = 0;
-  virtual ostream& print(ostream&) const = 0;
+  virtual OZ_Term getArguments(void) const = 0;
+  virtual OZ_CFun getSpawner(void) const = 0;
 
   OZ_Boolean isEqualVarsPossible(void);
   OZ_Return replaceBy(OZ_Propagator *);
