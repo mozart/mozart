@@ -1403,6 +1403,8 @@ OZ_Return eqeqInline(TaggedRef A, TaggedRef B, TaggedRef &out)
     return PROCEED;
   case BI_REPLACEBICALL:
     return (BI_REPLACEBICALL);
+  case RAISE:
+    return RAISE;
   default:
     return SUSPEND;
   }
@@ -1420,6 +1422,8 @@ OZ_Return neqInline(TaggedRef A, TaggedRef B, TaggedRef &out)
     return PROCEED;
   case BI_REPLACEBICALL:
     return (BI_REPLACEBICALL);
+  case RAISE:
+    return RAISE;
     // case SUSPEND:
   default:
     return SUSPEND;
