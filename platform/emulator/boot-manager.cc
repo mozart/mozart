@@ -107,6 +107,7 @@ static TaggedRef dictionary_of_modules;
 #include "modCTB-if.cc"
 #include "modRecordC-if.cc"
 #include "modCompat-if.cc"
+#include "modWin32-if.cc"
 #include "modSchedule-if.cc"
 #include "modParser-if.cc"
 #include "modFSB-if.cc"
@@ -209,6 +210,7 @@ static ModuleEntry ext_module_table[] = {
   {"DPMisc",          mod_int_DPMisc},
   {"VirtualSite",     mod_int_VirtualSite},
   {"Compat",          mod_int_Compat},
+  {"Win32",           mod_int_Win32},
   {"System",          mod_int_System},
   {"Profile",         mod_int_Profile},
 #endif
