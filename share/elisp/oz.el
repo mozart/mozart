@@ -940,41 +940,51 @@ buffer."
 ;;}}}
 ;;{{{ Keymap Definitions
 
-(defun oz-define-prefixed-keys (map prefix)
-  (define-key map `[,@prefix ?e] 'oz-toggle-emulator)
-  (define-key map `[,@prefix ?c] 'oz-toggle-compiler)
-  (define-key map `[,@prefix ?t] 'oz-toggle-temp)
-  (define-key map `[,@prefix ?r] 'run-oz)
-  (define-key map `[,@prefix ?h] 'oz-halt)
-  (define-key map `[,@prefix ?n] 'oz-new-buffer)
-  (define-key map `[,@prefix ?d] 'oz-gdb)
-  (define-key map `[,@prefix ?o] 'oz-other)
-  (define-key map `[,@prefix ?m] 'oz-set-other)
+(defun oz-defkey (key fun)
+  ;; if is-alias is non nil, define fun/tty to be an alias for fun
+  ;; and use fun/tty as the definition instead of fun.  This way
+  ;; menu entries will always document the short prefix
+  (let ((afun fun))
+    (cond (is-alias
+	   (setq afun (intern (concat (symbol-name fun) "/tty")))
+	   (fset afun fun)))
+    (define-key map key afun)))
+
+(defun oz-define-prefixed-keys (map prefix &optional is-alias)
+  (oz-defkey `[,@prefix ?e] 'oz-toggle-emulator)
+  (oz-defkey `[,@prefix ?c] 'oz-toggle-compiler)
+  (oz-defkey `[,@prefix ?t] 'oz-toggle-temp)
+  (oz-defkey `[,@prefix ?r] 'run-oz)
+  (oz-defkey `[,@prefix ?h] 'oz-halt)
+  (oz-defkey `[,@prefix ?n] 'oz-new-buffer)
+  (oz-defkey `[,@prefix ?d] 'oz-gdb)
+  (oz-defkey `[,@prefix ?o] 'oz-other)
+  (oz-defkey `[,@prefix ?m] 'oz-set-other)
   ;;
-  (define-key map `[,@prefix (control ?b)] 'oz-feed-buffer)
-  (define-key map `[,@prefix (control ?r)] 'oz-feed-region)
-  (define-key map `[,@prefix (control ?l)] 'oz-feed-line)
-  (define-key map `[,@prefix (control ?p)] 'oz-feed-paragraph)
+  (oz-defkey `[,@prefix (control ?b)] 'oz-feed-buffer)
+  (oz-defkey `[,@prefix (control ?r)] 'oz-feed-region)
+  (oz-defkey `[,@prefix (control ?l)] 'oz-feed-line)
+  (oz-defkey `[,@prefix (control ?p)] 'oz-feed-paragraph)
   ;;
-  (define-key map `[,@prefix ?s (control ?b)] 'oz-show-buffer)
-  (define-key map `[,@prefix ?s (control ?r)] 'oz-show-region)
-  (define-key map `[,@prefix ?s (control ?l)] 'oz-show-line)
-  (define-key map `[,@prefix ?s (control ?p)] 'oz-show-paragraph)
+  (oz-defkey `[,@prefix ?s (control ?b)] 'oz-show-buffer)
+  (oz-defkey `[,@prefix ?s (control ?r)] 'oz-show-region)
+  (oz-defkey `[,@prefix ?s (control ?l)] 'oz-show-line)
+  (oz-defkey `[,@prefix ?s (control ?p)] 'oz-show-paragraph)
   ;;
-  (define-key map `[,@prefix ?b (control ?b)] 'oz-browse-buffer)
-  (define-key map `[,@prefix ?b (control ?r)] 'oz-browse-region)
-  (define-key map `[,@prefix ?b (control ?l)] 'oz-browse-line)
-  (define-key map `[,@prefix ?b (control ?p)] 'oz-browse-paragraph)
+  (oz-defkey `[,@prefix ?b (control ?b)] 'oz-browse-buffer)
+  (oz-defkey `[,@prefix ?b (control ?r)] 'oz-browse-region)
+  (oz-defkey `[,@prefix ?b (control ?l)] 'oz-browse-line)
+  (oz-defkey `[,@prefix ?b (control ?p)] 'oz-browse-paragraph)
   ;;
-  ;;(define-key map `[,@prefix ?i (control ?b)] 'oz-inspect-buffer)
-  ;;(define-key map `[,@prefix ?i (control ?r)] 'oz-inspect-region)
-  ;;(define-key map `[,@prefix ?i (control ?l)] 'oz-inspect-line)
-  ;;(define-key map `[,@prefix ?i (control ?p)] 'oz-inspect-paragraph)
+  ;;(oz-defkey `[,@prefix ?i (control ?b)] 'oz-inspect-buffer)
+  ;;(oz-defkey `[,@prefix ?i (control ?r)] 'oz-inspect-region)
+  ;;(oz-defkey `[,@prefix ?i (control ?l)] 'oz-inspect-line)
+  ;;(oz-defkey `[,@prefix ?i (control ?p)] 'oz-inspect-paragraph)
   ;;
-  (define-key map `[,@prefix (control ?.) ?s] 'oz-open-panel)
-  (define-key map `[,@prefix (control ?.) ?c] 'oz-open-compiler-panel)
-  (define-key map `[,@prefix (control ?.) ?p] 'oz-profiler)
-  (define-key map `[,@prefix (control ?.) ?d] 'oz-debugger))
+  (oz-defkey `[,@prefix ,@prefix ?s] 'oz-open-panel)
+  (oz-defkey `[,@prefix ,@prefix ?c] 'oz-open-compiler-panel)
+  (oz-defkey `[,@prefix ,@prefix ?p] 'oz-profiler)
+  (oz-defkey `[,@prefix ,@prefix ?d] 'oz-debugger))
 
 (defvar oz-mode-map
   (let ((map (make-sparse-keymap)))
@@ -999,7 +1009,8 @@ buffer."
     (define-key map [(meta ?p)] 'oz-previous-buffer)
     ;;
     (oz-define-prefixed-keys map '[(control ?.)])
-    (oz-define-prefixed-keys map '[(control ?c) ?.])
+    ;; use aliases for the long prefix
+    (oz-define-prefixed-keys map '[(control ?c) ?.] 't)
     map)
   "Keymap used in the Oz modes.")
 
