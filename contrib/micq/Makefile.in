@@ -34,6 +34,7 @@ $(LIB_DIR)/%.oza: %.oza
 $(DEMO_DIR)/MIM.oza: client.oza
         $(INSTALL_LIB) $< $@
 BMETH = $(BUILDTOP)/contrib/micq/methods.ozf
+SMETH = $(SRCDIR)/methods.oz
 
 
 $(GIFCONV) : Gif2Functor.oz GifToBase64.ozf
@@ -127,6 +128,9 @@ distclean: veryclean
 include $(SRCTOP)/share/Makefile.boot
 
 bootstrap: boot-all
+
+newboot:
+        $(COMPILE) -c $(SMETH) -o $(SMETH)f.orig
 
 #---------------------------------------------------------------------
 # Automatic Makefile update
