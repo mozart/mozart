@@ -1657,15 +1657,10 @@ LBLdispatcher:
       if (isTailCall) {
 	TaggedRef list = oz_deref(Xreg(reg));
 	ProgramCounter preddPC = predd->PC;
-#ifndef DISABLE_DEFINITIONCOPY
 	Bool copyOnce = predd->isCopyOnce();
 	predd = new PrTabEntry(predd->getName(), predd->getMethodArity(),
 			       predd->getFileName(), predd->getLine(), NO);
 	predd->PC = copyCode(preddPC,list,copyOnce==NO);
-#else
-	predd->copyOnce = OK;
-	copyCode(preddPC,alist,NO);
-#endif
       }
       int size = list->getSize();
       RefsArray gRegs = (size == 0) ? (RefsArray) NULL : allocateRefsArray(size);
