@@ -38,10 +38,9 @@ OZ_BI_define(fdp_distance, 4, 0)
   PropagatorExpect pe;
 
   OZ_EXPECT(pe, 2, expectLiteral);
+  sum_ops op = getSumOps(OZ_in(2));
 
-  const char * op = OZ_atomToC(OZ_in(2));
-
-  if (!strcmp(SUM_OP_NEQ, op)) {
+  if (op == sum_ops_neq) {
     OZ_EXPECT(pe, 0, expectIntVarSingl);
     OZ_EXPECT(pe, 1, expectIntVarSingl);
     OZ_EXPECT(pe, 3, expectIntVarSingl);
@@ -53,24 +52,26 @@ OZ_BI_define(fdp_distance, 4, 0)
     OZ_EXPECT(pe, 1, expectIntVarMinMax);
     OZ_EXPECT(pe, 3, expectIntVarMinMax);
 
-    if (!strcmp(SUM_OP_EQ, op)) {
+    switch (op) {
+    case sum_ops_eq:
       return pe.impose(new DistancePropagatorEq(OZ_in(0), OZ_in(1), 
-					       OZ_in(3), 0));
-    } else if (!strcmp(SUM_OP_LEQ, op)) {
-      return pe.impose(new DistancePropagatorLeq(OZ_in(0), OZ_in(1), 
 						OZ_in(3), 0));
-    } else if (!strcmp(SUM_OP_LT, op)) {
+    case sum_ops_leq:
       return pe.impose(new DistancePropagatorLeq(OZ_in(0), OZ_in(1), 
-					      OZ_in(3), 1));
-    } else if (!strcmp(SUM_OP_GEQ, op)) {
+						 OZ_in(3), 0));
+    case sum_ops_lt:
+      return pe.impose(new DistancePropagatorLeq(OZ_in(0), OZ_in(1), 
+						 OZ_in(3), 1));
+    case sum_ops_geq:
       return pe.impose(new DistancePropagatorGeq(OZ_in(0), OZ_in(1), 
-						OZ_in(3), 0 ));
-    } else if (!strcmp(SUM_OP_GT, op)) {
+						 OZ_in(3), 0 ));
+    case sum_ops_gt:
       return pe.impose(new DistancePropagatorGeq(OZ_in(0), OZ_in(1), 
-						OZ_in(3), 1));
+						 OZ_in(3), 1));
+    default: ;
     } 
   }
-
+  
   ERROR_UNEXPECTED_OPERATOR(2);
 }
 OZ_BI_end

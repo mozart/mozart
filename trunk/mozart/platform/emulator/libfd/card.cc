@@ -42,9 +42,9 @@ OZ_BI_define(fdp_sumR, 4, 0)
   PropagatorExpect pe;
 
   OZ_EXPECT(pe, 1, expectLiteral);
-  const char * op = OZ_atomToC(OZ_in(1));
+  sum_ops op = getSumOps(OZ_in(1));
 
-  if (!strcmp(SUM_OP_EQ, op) || !strcmp(SUM_OP_NEQ, op)){  
+  if ((op == sum_ops_eq) || (op == sum_ops_neq)){  
     OZ_EXPECT(pe, 0, expectVectorIntVarAny);
     OZ_EXPECT(pe, 2, expectIntVarAny);
   } else {
@@ -55,20 +55,21 @@ OZ_BI_define(fdp_sumR, 4, 0)
   int dummy;
   OZ_EXPECT_SUSPEND(pe, 3, expectBoolVar, dummy);
 
-  if (!strcmp(SUM_OP_EQ, op)) {
+  switch (op) {
+  case sum_ops_eq:
     return pe.impose(new SumREqPropagator(OZ_in(0), OZ_in(2), OZ_in(3)));
-  } else if (!strcmp(SUM_OP_NEQ, op)) {
+  case sum_ops_neq:
     return pe.impose(new SumRNeqPropagator(OZ_in(0), OZ_in(2), OZ_in(3)));
-  } else if (!strcmp(SUM_OP_LEQ, op)) {
+  case sum_ops_leq:
     return pe.impose(new SumRLeqPropagator(OZ_in(0), OZ_in(2), OZ_in(3)));
-  } else if (!strcmp(SUM_OP_LT, op)) {
+  case sum_ops_lt:
     return pe.impose(new SumRLtPropagator(OZ_in(0), OZ_in(2), OZ_in(3)));
-  } else if (!strcmp(SUM_OP_GEQ, op)) {
+  case sum_ops_geq:
     return pe.impose(new SumRGeqPropagator(OZ_in(0), OZ_in(2), OZ_in(3)));
-  } else if (!strcmp(SUM_OP_GT, op)) {
+  case sum_ops_gt:
     return pe.impose(new SumRGtPropagator(OZ_in(0), OZ_in(2), OZ_in(3)));
+  default: ;
   } 
-  
   ERROR_UNEXPECTED_OPERATOR(1);
 }
 OZ_BI_end
@@ -83,52 +84,53 @@ OZ_BI_define(fdp_sumCR, 5, 0)
   PropagatorExpect pe;
 
   OZ_EXPECT(pe, 2, expectLiteral);
-  const char * op = OZ_atomToC(OZ_in(2));
-
+  sum_ops op = getSumOps(OZ_in(2));
   
-  if (!strcmp(SUM_OP_EQ, op) || !strcmp(SUM_OP_NEQ, op)) {
+  if ((op == sum_ops_eq) || (op == sum_ops_neq)) {
     OZ_EXPECT(pe, 1, expectVectorIntVarAny);
     OZ_EXPECT(pe, 3, expectIntVarAny);
   } else {
     OZ_EXPECT(pe, 1, expectVectorIntVarMinMax);
     OZ_EXPECT(pe, 3, expectIntVarMinMax);
-  } 
+  }
 
   OZ_EXPECT(pe, 0, expectVectorInt);
 
   int dummy;
   OZ_EXPECT_SUSPEND(pe, 4, expectBoolVar, dummy);
 
-  if (!strcmp(SUM_OP_EQ, op)) {
+  switch (op) {
+  case sum_ops_eq:
     return pe.impose(new SumCREqPropagator(OZ_in(0), 
 					   OZ_in(1), 
 					   OZ_in(3), 
 					   OZ_in(4)));
-  } else if (!strcmp(SUM_OP_NEQ, op)) {
+  case sum_ops_neq:
     return pe.impose(new SumCRNeqPropagator(OZ_in(0), 
 					    OZ_in(1), 
 					    OZ_in(3), 
 					    OZ_in(4)));
-  } else if (!strcmp(SUM_OP_LEQ, op)) {
+  case sum_ops_leq:
     return pe.impose(new SumCRLeqPropagator(OZ_in(0), 
 					    OZ_in(1), 
 					    OZ_in(3), 
 					    OZ_in(4)));
-  } else if (!strcmp(SUM_OP_LT, op)) {
+  case sum_ops_lt:
     return pe.impose(new SumCRLtPropagator(OZ_in(0), 
 					   OZ_in(1), 
 					   OZ_in(3),
 					   OZ_in(4)));
-  } else if (!strcmp(SUM_OP_GEQ, op)) {
+  case sum_ops_geq:
     return pe.impose(new SumCRGeqPropagator(OZ_in(0),
 					    OZ_in(1),
 					    OZ_in(3), 
 					    OZ_in(4)));
-  } else if (!strcmp(SUM_OP_GT, op)) {
+  case sum_ops_gt:
     return pe.impose(new SumCRGtPropagator(OZ_in(0),
 					   OZ_in(1),
 					   OZ_in(3),
 					   OZ_in(4)));
+  default: ;
   } 
   
   ERROR_UNEXPECTED_OPERATOR(2);
@@ -145,12 +147,12 @@ OZ_BI_define(fdp_sumCNR, 5, 0)
   PropagatorExpect pe;
 
   OZ_EXPECT(pe, 2, expectLiteral);
-  const char * op = OZ_atomToC(OZ_in(2));
+  sum_ops op = getSumOps(OZ_in(2));
 
   // wait for linearity
   OZ_EXPECT(pe, 1, expectVectorLinearVector);
 
-  if (strcmp(SUM_OP_NEQ, op)) {
+  if (op == sum_ops_neq) {
     OZ_EXPECT(pe, 1, expectVectorVectorIntVarAny);
     OZ_EXPECT(pe, 3, expectIntVarAny);
   } else {
@@ -163,20 +165,21 @@ OZ_BI_define(fdp_sumCNR, 5, 0)
   int dummy; 
   OZ_EXPECT_SUSPEND(pe, 4, expectBoolVar, dummy);
 
-  if (!strcmp(SUM_OP_EQ, op)) {
+  switch (op) {
+  case sum_ops_eq:
     return pe.impose(new SumCNREqPropagator(OZ_in(0), OZ_in(1), OZ_in(3), OZ_in(4)));
-  } else if (!strcmp(SUM_OP_NEQ, op)) {
+  case sum_ops_neq:
     return pe.impose(new SumCNRNeqPropagator(OZ_in(0), OZ_in(1), OZ_in(3), OZ_in(4)));
-  } else if (!strcmp(SUM_OP_LEQ, op)) {
+  case sum_ops_leq:
     return pe.impose(new SumCNRLeqPropagator(OZ_in(0), OZ_in(1), OZ_in(3), OZ_in(4)));
-  } else if (!strcmp(SUM_OP_LT, op)) {
+  case sum_ops_lt:
     return pe.impose(new SumCNRLtPropagator(OZ_in(0), OZ_in(1), OZ_in(3), OZ_in(4)));
-  } else if (!strcmp(SUM_OP_GEQ, op)) {
+  case sum_ops_geq:
     return pe.impose(new SumCNRGeqPropagator(OZ_in(0), OZ_in(1), OZ_in(3), OZ_in(4)));
-  } else if (!strcmp(SUM_OP_GT, op)) {
+  case sum_ops_gt:
     return pe.impose(new SumCNRGtPropagator(OZ_in(0), OZ_in(1), OZ_in(3), OZ_in(4)));
+  default: ;
   } 
-  
   ERROR_UNEXPECTED_OPERATOR(2);
 }
 OZ_BI_end
