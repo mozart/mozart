@@ -278,7 +278,7 @@
 	      <<raise>> | <<require>></Grammar.Alt>
 	    <Grammar.Alt><<self>> | <<skip>> | <<then>> | <<thread>> |
 	      <<true>> | <<try>></Grammar.Alt>
-	    <Grammar.Alt><<unit>> | <<with>> | <<(>> | <<)>> | <<[>> |
+	    <Grammar.Alt><<unit>> | <<(>> | <<)>> | <<[>> |
 	      <<]>> | <<{>> | <<}>></Grammar.Alt>
 	    <Grammar.Alt><<|>> | <<#>> | <<:>> | <<...>> | <<=>> |
 	      <<.>> | <<^>> | <<[]>> | <<$>></Grammar.Alt>
@@ -467,8 +467,6 @@
 	    <Grammar.Alt type=space/[ <<finally>> ?={in statement} ]/
 	    <Grammar.Alt type=space/<<end>>/
 	    <Grammar.Alt/<<raise>> ?={in expression} <<end>>/
-	    <Grammar.Alt/<<raise>> ?={in expression}
-	      <<with>> ?={in expression} <<end>>/
 	    <Grammar.Alt/?={expression} <Q class=terminal/<<=>>/
 	      ?={expression}/
 	    <Grammar.Alt/<<skip>>//
@@ -507,8 +505,6 @@
 	    <Grammar.Alt type=space/[ <<finally>> ?={in statement} ]/
 	    <Grammar.Alt type=space/<<end>>/
 	    <Grammar.Alt/<<raise>> ?={in expression} <<end>>/
-	    <Grammar.Alt/<<raise>> ?={in expression}
-	      <<with>> ?={in expression} <<end>>/
 	    <Grammar.Alt/?={expression} <Q class=terminal/<<=>>/
 	      ?={expression}/
 	    <Grammar.Alt/?={expression} <<orelse>> ?={expression}/
@@ -1502,19 +1498,6 @@ end>>/
 	      <Rewrite.From/<<?{x} = raise ?{E} end>>/
 	      <Rewrite.To/<<raise ?{E} end>>/
 	    </Rewrite>
-	    <Rewrite>?={statement} ?={expression}
-	      <Rewrite.From/<<raise ?{E1} with ?{E2} end>>/
-	      <Rewrite.To
-/<<local ?_{X} in
-   ?_{X} = ?{E1}
-   if {`RaiseDebugCheck` ?_{X}} then
-      raise {`RaiseDebugExtend` ?_{X} ?{E2}} end
-   else
-      raise ?_{X} end
-   end
-end>>/
-	    </Rewrite>
-	    <!--** missing: definitions of `RaiseDebug{Check,Extend}` -->
 	<SubSection class=unnumbered>
 	  <Title/Equations/
 	  <P>
