@@ -1089,7 +1089,7 @@ void engine() {
       }
 
       Suspension *susp = 
-	new Suspension(new SuspContinuation(CBB,PC,Y,G,X,argsToSave));
+	new Suspension(new SuspContinuation(CBB,shallowCP,Y,G,X,argsToSave));
 
       CBB->addSuspension();
       e->reduceTrailOnShallow(susp,numbOfCons);

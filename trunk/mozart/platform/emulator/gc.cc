@@ -713,7 +713,7 @@ inline Suspension *Suspension::gc(Bool tcFlag){
   
   CHECKCOLLECTED(flag, Suspension*);
   
-  Board *el = getNode()->getBoardDeref();
+  Board *el = getNode()->gcGetBoardDeref();
 
   if (isDead() || !el) {
     return NULL;
@@ -739,7 +739,7 @@ inline Suspension *Suspension::gc(Bool tcFlag){
     error("Unexpected case in Suspension::gc().");
   }
   
-  DebugCheck(!getNode()->getBoardDeref(),
+  DebugCheck(!getNode()->gcGetBoardDeref(),
 	     warning("gc: adding dead node (3)"));
 
   setHeapCell((int *)&flag, GCMARK(newSusp));
@@ -776,37 +776,33 @@ SuspList *SuspList::gc(Bool tcFlag)
   return ret;
 }
 
+Board *Board::gcGetBoardDeref()
+{
+  Board *bb = this;
+  while (OK) {
+    if (GCISMARKED(*(int*)bb)) {
+      return (Board*) GCUNMARK(*(int*)bb);
+    }
+    if (bb->isDiscarded() || bb->isFailed()) {
+      return NULL;
+    } else if (bb->isCommitted()) {
+      bb = bb->board;
+    } else {
+      return bb;
+    }
+  }
+  error("Board::gcGetBoardDeref");
+}
+
 // This procedure derefences cluster chains and collects only the object at 
 // the end of such a chain.
 Board *gcBoardChain(Board* bb)
 {
   GCPROCMSG("gcBoardChain");
 
-  DebugCheck((bb == NULL),
-	     warning("gcBoardChain: NULL board pointer"));
-
-  while (bb->isCommitted()) {
-    if (GCISMARKED((int)bb->board)){
-      return (Board*)GCUNMARK((int) bb->board);
-    }
-    DebugCheck(bb == NULL,
-	       error ("gcBoardChain: null board pointer"));
-    bb = bb->board;
-  }
-
-  DebugCheck(bb == NULL,
-	     error("bb == NULL");
-	     return NULL;);
+  bb=bb->gcGetBoardDeref();
   
-  DebugCheck(opMode == IN_TC && !isLocalBoard(bb),
-	     error ("gcBoardChain: nonlocal board reached");
-	     return (NULL););
-
-  if (GCISMARKED(*(int*)bb)) {
-    return (Board*) GCUNMARK(*(int*)bb);
-  }
-  
-  return bb->gc();
+  return bb ? bb->gc() : bb;
 }
 
 // This procedure collects the entry points into heap provided by variables, 
@@ -1349,8 +1345,8 @@ TaskStack *TaskStack::gc()
 
     switch (cFlag){
       case C_NERVOUS:
-      if (bb->getBoardDeref()) {
-	newBB = bb->gc();
+      newBB = bb->gc();
+      if (newBB) {
 	newStack->gcQueue(setContFlag(newBB,cFlag));
       }
       break;
@@ -1358,7 +1354,8 @@ TaskStack *TaskStack::gc()
     case C_XCONT:
     case C_CONT: 
       // Continuation to continue at codearea PC
-      if (!bb->getBoardDeref()) {
+      newBB = bb->gc();
+      if (!newBB) {
 	pop(); // pc
 	pop(); // Y
 	pop(); // G
@@ -1367,9 +1364,8 @@ TaskStack *TaskStack::gc()
 	  pop();
 	}
 	break;
-      } // if
+      }
       
-      newBB = bb->gc();
       newStack->gcQueue(setContFlag(newBB,cFlag));
       
       newStack->gcQueue(pop()); // pc
@@ -1388,14 +1384,14 @@ TaskStack *TaskStack::gc()
 
     case C_CFUNC_CONT:
       // Continuation to continue at c codeaddress
-      if (!bb->getBoardDeref()) {
+      newBB = bb->gc();
+      if (!newBB) {
 	pop(); // BIFun
 	pop(); // Suspension
 	pop(); // x regs
 	break;
       } // if
       
-      newBB = bb->gc();
       newStack->gcQueue(setContFlag(newBB,cFlag));
       
       newStack->gcQueue(pop()); // BIFun
@@ -1432,28 +1428,28 @@ int TaskStack::gcGetUsedSize()
 
     switch (cFlag){
     case C_NERVOUS:
-      if (n->getBoardDeref()) {
+      if (n->gcGetBoardDeref()) {
 	ret++;
       }
       break;
 
     case C_XCONT:
       pop(4);
-      if (n->getBoardDeref()) {
+      if (n->gcGetBoardDeref()) {
 	ret += 5;
       }
       break;
 
     case C_CONT:
       pop(3);
-      if (n->getBoardDeref()) {
+      if (n->gcGetBoardDeref()) {
 	ret += 4;
       }
       break;
       
     case C_CFUNC_CONT:
       pop(3);
-      if (n->getBoardDeref()) {
+      if (n->gcGetBoardDeref()) {
 	ret += 4;
       }
       break;
@@ -1476,6 +1472,7 @@ void Thread::GC()
   GCREF(Head);
   GCREF(Tail);
   GCREF(Current);
+  GCREF(Root);
   if (am.currentTaskStack && Current) {
     am.currentTaskStack=Current->taskStack;
   } else {
@@ -1560,7 +1557,7 @@ Actor *Actor::gc()
 void Actor::gcRecurse()
 {
   GCMETHMSG("Actor::gc");
-  next.gc();
+  next.gcRecurse();
   GCREF(board);
   if (isWait()) {
     ((WaitActor *)this)->gcRecurse();
@@ -1569,13 +1566,17 @@ void Actor::gcRecurse()
 
 void WaitActor::gcRecurse()
 {
-  int no = 0;
-  for (int i=0; no < childCount; i++) {
+  int no = (int) childs[-1];
+  Board **newChilds=(Board **) heapMalloc((no+1)*sizeof(Board *));
+  *newChilds++ = (Board *) no;
+  for (int i=0; i < no; i++) {
     if (childs[i]) {
-      no++;
-      GCREF(childs[i]);
+      newChilds[i] = childs[i]->gc();
+    } else {
+      newChilds[i] = (Board *) NULL;
     }
   }
+  childs=newChilds;
 }
 
 
