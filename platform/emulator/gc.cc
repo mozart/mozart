@@ -1947,7 +1947,8 @@ Board* Board::gcGetNotificationBoard ()
     if (bb->isDiscarded() || bb->isFailed()) {
       auxActor = bb->u.actor;
       DebugGC(auxActor == NULL ||
-              (auxActor->getType() != Co_Actor) && !GCISMARKED(*auxActor->getGCField()),
+              (auxActor->getType() != Co_Actor) &&
+              !GCISMARKED(*auxActor->getGCField()),
               error ("non-actor is got in Board::gcGetNotificationBoard"));
       bb = auxActor->getBoard();
       nb = bb;   // probably not dead;
@@ -1959,7 +1960,8 @@ Board* Board::gcGetNotificationBoard ()
     }
     auxActor = bb->u.actor;
     DebugGC(auxActor == NULL ||
-            (auxActor->getType() != Co_Actor) && !GCISMARKED(*auxActor->getGCField()),
+            (auxActor->getType() != Co_Actor) &&
+            !GCISMARKED(*auxActor->getGCField()),
             error ("non-actor is got in Board::gcGetNotificationBoard"));
     bb = auxActor->getBoard ();
   }
