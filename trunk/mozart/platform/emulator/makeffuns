@@ -78,13 +78,6 @@ void **ffuns;
 
 #define numffuns 200
 
-// RS: hack
-#ifndef DENYS_EVENTS
-void OZ_eventPush(OZ_Term e)
-{
-}
-#endif
-
 void initffuns()
 {
   int i=0;
