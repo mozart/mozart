@@ -141,7 +141,7 @@ local
 		  case {@CurCompUI hasErrors($)} then ResultText in
 		     case RunningWithOPI then
 			ResultText = 'Compile Error (see *Oz Compiler* buffer)'
-			{System.printInfo [6]#{@CurCompUI getVS($)}#[5]}
+			{System.printInfo [6 17]#{@CurCompUI getVS($)}#[5]}
 		     else
 			ResultText = 'Compile Error'
 			{System.printInfo {@CurCompUI getVS($)}}
