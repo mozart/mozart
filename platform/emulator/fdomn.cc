@@ -941,7 +941,7 @@ Bool FiniteDomain::next(int i, int &n) const
 
 TaggedRef FiniteDomain::getAsList(void) const
 {
-  AssertFD(size != 0);
+  if (size == 0) return AtomNil;
 
   descr_type type = getType();
   if (type == fd_descr) {
