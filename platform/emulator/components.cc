@@ -29,9 +29,9 @@
 #include "conf.h"
 #endif
 
-#ifdef WINDOWS
 #include "wsock.hh"
-#else
+
+#ifndef WINDOWS
 #include <sys/types.h>
 #include <sys/time.h>
 #include <netinet/in.h>

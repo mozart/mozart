@@ -27,12 +27,13 @@
 
 // abstract interface to the ip network
 
-#ifdef WINDOWS
 #include "wsock.hh"
-#else
+
+#ifndef WINDOWS
 #include <sys/types.h>
 #include <sys/time.h>
 #include <netinet/in.h>
+#include <netinet/tcp.h>
 #include <arpa/inet.h>
 #include <sys/socket.h>
 #endif
@@ -2040,7 +2041,7 @@ void NetMsgBuffer::constructMsg(RemoteSite* rs, tcpMessageType msg){
 static
 int nagleOff(int fd)
 {
-  int ON = 1;
+  char ON = 1;
   return setsockopt(fd,IPPROTO_TCP,TCP_NODELAY,&ON,sizeof(ON));
 }
 
