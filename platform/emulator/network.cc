@@ -397,8 +397,10 @@ public:
   void resend();
 
 
-  void init(){type=BS_None;first=NULL;start=NULL;last=NULL;
-  site=NULL;remotesite=NULL;stop=NULL;}
+  void init(){
+    MsgBuffer::init();
+    type=BS_None;first=NULL;start=NULL;last=NULL;
+    site=NULL;remotesite=NULL;stop=NULL;}
 
   void init(Site *s){type=BS_None;first=NULL;start=NULL;last=NULL;
   site=s;remotesite=NULL;stop=NULL;}
@@ -2097,6 +2099,7 @@ class TcpOpenMsgBuffer:public MsgBuffer{
   int size;
 public:
   TcpOpenMsgBuffer(){
+    MsgBuffer::init();
     pos = NULL;}
   void marshalBegin(){
     posMB = buffer + 5;
@@ -2508,7 +2511,7 @@ int tcpConnectionHandler(int fd,void *r0){
   if (strlen(PERDIOVERSION)!=strngLen ||
       strncmp(PERDIOVERSION,(char*)pos,strngLen)!=0) {
     buf[bufSize-1] = 0;
-    OZ_warning("Perioversion conflict with site");
+    OZ_warning("Perdioversion conflict with site");
     r->connectionLost();
     delete buf;
     return 0;

@@ -67,7 +67,7 @@ define(opAction,
         $1,XRegisterIndex,marshalNumber(regToInt(getRegArg(PC++)),bs);,
         $1,YRegisterIndex,marshalNumber(regToInt(getRegArg(PC++)),bs);,
         $1,Arity,marshalNumber((unsigned int)getPosIntArg(PC++),bs);,
-        $1,Label,marshalLabel(getLabelArg(PC++),start,bs);,
+        $1,Label,marshalLabel(getLabelArg(PC++),bs);,
         $1,Count,marshalNumber((unsigned int)getPosIntArg(PC++),bs);,
         $1,NLiveRegs,marshalNumber((unsigned int)getPosIntArg(PC++),bs);,
         $1,IsTail,marshalNumber((unsigned int)getPosIntArg(PC++),bs);,
@@ -90,9 +90,9 @@ void marshalBuiltinTabEntry(BuiltinTabEntry *entry,MsgBuffer *bs)
 }
 
 inline
-void marshalLabel(ProgramCounter lbl, ProgramCounter start,MsgBuffer *bs)
+void marshalLabel(int lbl, MsgBuffer *bs)
 {
-  marshalNumber(lbl-start,bs);
+  marshalNumber(lbl,bs);
 }
 
 
@@ -196,10 +196,12 @@ void marshalCode(ProgramCounter start, MsgBuffer *bs)
   start -= sizeOf(DEFINITION);
 
   Reg reg;
-  ProgramCounter ende;
+  int nxt;
   PrTabEntry *pred;
   TaggedRef file,line,column,predName;
-  CodeArea::getDefinitionArgs(start,reg,ende,file,line,column,predName);
+  CodeArea::getDefinitionArgs(start,reg,nxt,file,line,column,predName);
+
+  ProgramCounter ende = start+nxt;
 
   int codesize = (ende-start)*sizeof(ByteCode);
 
@@ -248,9 +250,9 @@ void marshalHashTableRef(ProgramCounter start, IHashTable *table,MsgBuffer *bs)
 {
   int sz = table->size;
   marshalNumber(sz,bs);
-  marshalLabel(table->elseLabel,start,bs);
-  marshalLabel(table->listLabel,start,bs);
-  marshalLabel(table->varLabel,start,bs);
+  marshalLabel(table->elseLabel,bs);
+  marshalLabel(table->listLabel,bs);
+  marshalLabel(table->varLabel,bs);
 
   int entries = table->numentries;
   marshalNumber(entries,bs);
@@ -261,7 +263,7 @@ void marshalHashTableRef(ProgramCounter start, IHashTable *table,MsgBuffer *bs)
       while(aux) {
         entries--;
         marshalNumber(ATOMTAG,bs);
-        marshalLabel(aux->getLabel(),start,bs);
+        marshalLabel(aux->getLabel(),bs);
         marshalTerm(makeTaggedLiteral(aux->getLiteral()),bs);
         aux = aux->getNext();
       }
@@ -274,7 +276,7 @@ void marshalHashTableRef(ProgramCounter start, IHashTable *table,MsgBuffer *bs)
       while(aux) {
         entries--;
         marshalNumber(NUMBERTAG,bs);
-        marshalLabel(aux->getLabel(),start,bs);
+        marshalLabel(aux->getLabel(),bs);
         marshalTerm(aux->getNumber(),bs);
         aux = aux->getNext();
       }
@@ -287,7 +289,7 @@ void marshalHashTableRef(ProgramCounter start, IHashTable *table,MsgBuffer *bs)
       while(aux) {
         entries--;
         marshalNumber(FUNCTORTAG,bs);
-        marshalLabel(aux->getLabel(),start,bs);
+        marshalLabel(aux->getLabel(),bs);
         SRecordArity sra;
         Literal *label = aux->getFunctor(sra);
         marshalTerm(makeTaggedLiteral(label),bs);
@@ -318,7 +320,7 @@ define(opAction,
         $1,XRegisterIndex,PC=unmarshalReg(PC,bs);,
         $1,YRegisterIndex,PC=unmarshalReg(PC,bs);,
         $1,Arity,PC=unmarshalNum(PC,bs);,
-        $1,Label,PC=unmarshalLabel(PC,start,bs);,
+        $1,Label,PC=unmarshalLabel(PC,lastPC-start,bs);,
         $1,Count,PC=unmarshalNum(PC,bs);,
         $1,NLiveRegs,PC=unmarshalNum(PC,bs);,
         $1,IsTail,PC=unmarshalNum(PC,bs);,
@@ -326,7 +328,7 @@ define(opAction,
         $1,Dummy,PC=unmarshalNum(PC,bs);,
         $1,PredicateRef,PC=unmarshalPredicateRef(PC,bs);,
         $1,PredId,PC=unmarshalPredId(PC,lastPC,bs);,
-        $1,HashTableRef,PC=unmarshalHashTableRef(PC,start,bs);,
+        $1,HashTableRef,PC=unmarshalHashTableRef(PC,lastPC-start,bs);,
         $1,RecordArity,PC=unmarshalRecordArity(PC,bs);,
         $1,GenCallInfo,PC=unmarshalGenCallInfo(PC,bs);,
         $1,ApplMethInfo,PC=unmarshalApplMethInfo(PC,bs);,
@@ -374,8 +376,11 @@ ProgramCounter unmarshalBuiltinTabEntry(ProgramCounter PC, MsgBuffer *bs)
 }
 
 inline
-ProgramCounter unmarshalLabel(ProgramCounter PC, ProgramCounter start, MsgBuffer *bs)
+ProgramCounter unmarshalLabel(ProgramCounter PC, int start, MsgBuffer *bs)
 {
+  if (!bs->unmarshallingOld) {
+    start = 0;
+  }
   int offset = unmarshalNumber(bs);
   return PC ? CodeArea::writeLabel(offset,start,PC,NO) : 0;
 }
@@ -456,20 +461,22 @@ ProgramCounter unmarshalGenCallInfo(ProgramCounter PC,MsgBuffer *bs)
 
 
 inline
-ProgramCounter getLabel(ProgramCounter start, MsgBuffer *bs)
+int getLabel(int offset, MsgBuffer *bs)
 {
-  return start + unmarshalNumber(bs);
+  if (bs->unmarshallingOld)
+    return unmarshalNumber(bs)-offset;
+  else
+    return unmarshalNumber(bs);
 }
 
-ProgramCounter unmarshalHashTableRef(ProgramCounter PC, ProgramCounter start,
-                                      MsgBuffer *bs)
+ProgramCounter unmarshalHashTableRef(ProgramCounter PC, int start, MsgBuffer *bs)
 {
   int sz               = unmarshalNumber(bs);
-  ProgramCounter label = getLabel(start,bs); /* the else label */
+  int label            = getLabel(start,bs); /* the else label */
   IHashTable *table    = PC ? new IHashTable(sz,label) : 0;
 
-  ProgramCounter pc1 = getLabel(start,bs);
-  ProgramCounter pc2 = getLabel(start,bs);
+  int pc1 = getLabel(start,bs);
+  int pc2 = getLabel(start,bs);
   if (PC) {
     table->addList(pc1);
     table->addVar(pc2);

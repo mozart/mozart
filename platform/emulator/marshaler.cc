@@ -1415,6 +1415,19 @@ void initMarshaler(){
   BIaddSpec(marshalerSpec);}
 
 
+static
+void splitversion(char *vers, char *&major, char*&minor)
+{
+  major = vers;
+  minor = strrchr(vers,'#');
+  if (minor) {
+    minor++;
+  } else {
+    minor = "0";
+  }
+}
+
+
 Bool unmarshal_SPEC(MsgBuffer* buf,char* &vers,OZ_Term &t){
   PD((MARSHAL_BE,"unmarshal begin: %s s:%s","$1",buf->siteStringrep()));
   refTable->reset();
@@ -1422,9 +1435,20 @@ Bool unmarshal_SPEC(MsgBuffer* buf,char* &vers,OZ_Term &t){
   Assert(refTrail->isEmpty());
   if(buf->get()==DIF_SECONDARY) {Assert(0);return NO;}
   vers=unmarshalString(buf);
-  if (strcmp(PERDIOVERSION,vers)!=0) {
+  char *major, *minor;
+  splitversion(vers,major,minor);
+  if (strncmp(PERDIOMAJOR,major,strlen(PERDIOMAJOR))!=0) {
     return NO;}
+  int minordiff = atoi(PERDIOMINOR) - atoi(minor);
+  if (minordiff > 1 || /* we only support the last minor */
+      minordiff < 0) { /* emulator older than component */
+    return NO;
+  }
+  buf->unmarshallingOld = (minordiff!=0);
   t=unmarshalTerm(buf);
+  if (minordiff) {
+    warning("unmarshalling old component(%s), needs resaving",toC(t));
+  }
   buf->unmarshalEnd();
   refTrail->unwind();
   PD((MARSHAL_BE,"unmarshal end: %s s:%s","$1",buf->siteStringrep()));
