@@ -586,8 +586,12 @@ OZ_BI_iodefine(unix_stat,1,1)
   char *fileType;
   OZ_declareVsIN(0, filename);
 
-  if (stat(filename, &buf) < 0)
+ retry:
+  if (stat(filename, &buf) < 0) {
+    // EINTR may happen on some systems (SVR4)
+    if (errno==EINTR) goto retry;
     RETURN_UNIX_ERROR("stat");
+  }
 
 #ifndef _MSC_VER
   if      (S_ISREG(buf.st_mode))  fileType = "reg";
