@@ -34,14 +34,14 @@
 #include "codearea.hh"
 #include "indexing.hh"
 
-#include "perdio_debug.hh"
 #include "genvar.hh"
+#include "controlvar.hh"
 #include "gc.hh"
 #include "dictionary.hh"
 #include "genhashtbl.hh"
 #include "urlc.hh"
 #include "marshaler.hh"
-#include "comm.hh"
+#include "site.hh"
 #include "msgbuffer.hh"
 #include "builtins.hh"
 #include "os.hh"
@@ -69,13 +69,11 @@
 
 
 // ATTENTION
+// kost@: PER-LOOK what it has to do here?!!
 #define tcpHeaderSize   7
 
 
 #include "componentBuffer.cc"
-
-// perdio
-OZ_Term getGatePort(Site*);
 
 /* ********************************************************************** */
 /*              BUILTINS                                                  */
@@ -200,7 +198,44 @@ OZ_Return raiseGeneric(char *msg, OZ_Term arg)
   return OZ_raise(makeGenericExc(msg,arg));
 }
 
+#define M_FILE          (PERDIOMAGICSTART)
+#define M_EXPORT        (PERDIOMAGICSTART + 1)
 
+//
+// Per: More seriously: The bytes 'M_FILE' and 'DIF_PRIMARY' are not
+// really necessary;
+void marshal_M_FILE(MsgBuffer * buf,char* str,TaggedRef t) {
+  buf->marshalBegin();
+  buf->put(M_FILE);
+  buf->put(DIF_PRIMARY);
+  marshalString(str, buf);
+  marshalTermRT(t, buf);
+  buf->marshalEnd();
+  return;
+}
+static void marshal_M_EXPORT(MsgBuffer * buf, TaggedRef t) {
+  buf->marshalBegin();
+  buf->put(M_EXPORT);
+  buf->put(DIF_PRIMARY);
+  marshalTermRT(t,buf);
+  buf->marshalEnd();
+  return;
+}
+
+//
+void unmarshal_M_FILE(MsgBuffer* buf,char* &str, TaggedRef &t) {
+  (void) buf->get();
+  str=unmarshalString(buf);
+  t=unmarshalTermRT(buf);
+  buf->unmarshalEnd();
+}
+void unmarshal_M_EXPORT(MsgBuffer* buf,TaggedRef &t) {
+  (void) buf->get();
+  t=unmarshalTermRT(buf);
+  buf->unmarshalEnd();
+}
+
+//
 OZ_Return onlyFutures(OZ_Term l) {
   if (oz_isNil(l)) return PROCEED;
   while (oz_isCons(l)) {
@@ -877,80 +912,3 @@ OZ_Return OZ_datumToValue(OZ_Datum d,OZ_Term t)
 {
   return loadDatum(d,t);
 }
-
-
-/*************************************************************/
-/* Port interface to Gate                                    */
-/*************************************************************/
-
-OZ_BI_define(BIGetPID,0,1)
-{
-  // pid = pid(host:String port:Int time:Int#Int)
-
-  char *nodename = oslocalhostname();
-  if(nodename==NULL) { return oz_raise(E_ERROR,E_SYSTEM,"getPidUname",0); }
-  struct hostent *hostaddr=gethostbyname(nodename);
-  free(nodename);
-  struct in_addr tmp;
-  memcpy(&tmp,hostaddr->h_addr_list[0],sizeof(in_addr));
-
-  OZ_Term host = oz_pairA("host",oz_string(inet_ntoa(tmp)));
-  OZ_Term port = oz_pairA("port",oz_int(mySite->getPort()));
-  OZ_Term time =
-    oz_pairA("time",
-             OZ_pair2(oz_unsignedLong((unsigned long) mySite->getTimeStamp()->start),
-                      oz_int(mySite->getTimeStamp()->pid)));
-  // NOTE: converting time_t to an unsigned long, maybe a [long] double!
-
-  OZ_Term l = oz_cons(host,oz_cons(port,oz_cons(time,oz_nil())));
-  OZ_RETURN(OZ_recordInit(OZ_atom("PID"),l));
-} OZ_BI_end
-
-OZ_BI_define(BIReceivedPID,1,0)
-{
-  oz_declareIN(0,stream);
-  return oz_unify(GateStream,stream);
-} OZ_BI_end
-
-
-OZ_BI_define(BITicket2Port,4,1)
-{
-  oz_declareVirtualStringIN(0,host);
-  oz_declareIntIN(1,port);
-  oz_declareNonvarIN(2,timeV);
-  oz_declareIntIN(3,pid);
-
-  time_t time;
-  if (oz_isSmallInt(timeV)) {
-    int i = oz_IntToC(timeV);
-    if (i <= 0) goto tbomb;
-    time = (time_t) i;
-  } else if (oz_isBigInt(timeV)) {
-    unsigned long i = tagged2BigInt(timeV)->getUnsignedLong();
-    if (i==0 && i == OzMaxUnsignedLong) goto tbomb;
-    time = (time_t) i;
-  } else {
-  tbomb:
-    return oz_raise(E_ERROR,E_SYSTEM,"PID.send",2,
-                    OZ_atom("badTime"),OZ_in(2));
-  }
-
-  struct hostent *hostaddr = gethostbyname(host);
-  if (!hostaddr) {
-    return oz_raise(E_ERROR,E_SYSTEM,"PID.send",2,
-                    OZ_atom("gethostbyname"),OZ_in(0));
-  }
-  struct in_addr tmp;
-  memcpy(&tmp,hostaddr->h_addr_list[0],sizeof(in_addr));
-  ip_address addr;
-  addr = ntohl(tmp.s_addr);
-  TimeStamp ts(time,pid);
-  Site *site = findSite(addr,port,ts);
-
-  if (!site) {
-    return oz_raise(E_ERROR,E_SYSTEM,"Ticket2Port",4,
-                    OZ_atom("findSite"),OZ_in(0),OZ_in(1),
-                    OZ_in(2));}
-
-  OZ_RETURN(getGatePort(site));
-} OZ_BI_end

@@ -28,6 +28,7 @@
 #ifndef __allgenvar_hh__
 #define __allgenvar_hh__
 
+#include "base.hh"
 #include "genvar.hh"
 
 #include "fsgenvar.hh"
@@ -35,10 +36,10 @@
 #include "fdbvar.hh"
 #include "ofgenvar.hh"
 #include "ctgenvar.hh"
-#include "perdiovar.hh"
 #include "simplevar.hh"
 #include "future.hh"
 #include "extvar.hh"
+#include "dpInterface.hh"
 
 inline
 // mm2: should be OZ_Return
@@ -47,7 +48,7 @@ Bool oz_cv_validINLINE(GenCVariable *cv,TaggedRef *ptr,TaggedRef val)
   switch (cv->getType()){
   case OZ_VAR_SIMPLE:   return ((SimpleVar *) cv)->valid(val);
   case OZ_VAR_FUTURE:   return ((Future *) cv)->valid(val);
-  case PerdioVariable:  return ((PerdioVar *) cv)->validV(val);
+  case PerdioVariable:  return (perdioVarValid(cv, val));
   case BoolVariable:    return ((GenBoolVariable*) cv)->valid(val);
   case FDVariable:      return ((GenFDVariable*) cv)->valid(val);
   case OFSVariable:     return ((GenOFSVariable*) cv)->valid(val);
@@ -65,7 +66,7 @@ OZ_Return oz_cv_unifyINLINE(GenCVariable *cv,TaggedRef *ptr,TaggedRef val,
   switch (cv->getType()){
   case OZ_VAR_SIMPLE:   return ((SimpleVar *) cv)->unify(ptr,val,scp);
   case OZ_VAR_FUTURE:   return ((Future *) cv)->unify(ptr,val,scp);
-  case PerdioVariable:  return ((PerdioVar *) cv)->unifyV(ptr,val,scp);
+  case PerdioVariable:  return (perdioVarUnify(cv, ptr, val, scp));
   case BoolVariable:    return ((GenBoolVariable*) cv)->unify(ptr,val,scp);
   case FDVariable:      return ((GenFDVariable*) cv)->unify(ptr,val,scp);
   case OFSVariable:     return ((GenOFSVariable*) cv)->unify(ptr,val,scp);
@@ -84,7 +85,7 @@ OZ_Return oz_cv_bindINLINE(GenCVariable *cv,TaggedRef *ptr,TaggedRef val,
     /*
   case OZ_VAR_SIMPLE:   return ((SimpleVar *) cv)->bind(ptr,val,scp);
   case OZ_VAR_FUTURE:   return ((Future *) cv)->bind(ptr,val,scp);
-  case PerdioVariable:  return ((PerdioVar *) cv)->bind(ptr,val,scp);
+  case PerdioVariable:  return (perdioVarBind(cv, ptr, val, scp));
   case BoolVariable:    return ((GenBoolVariable*) cv)->bind(ptr,val,scp);
   case FDVariable:      return ((GenFDVariable*) cv)->bind(ptr,val,scp);
   case OFSVariable:     return ((GenOFSVariable*) cv)->bind(ptr,val,scp);
@@ -105,7 +106,7 @@ void oz_cv_addSuspINLINE(GenCVariable *cv, TaggedRef *v, Suspension susp,
   case OZ_VAR_FUTURE:
     ((Future *) cv)->addSusp(v, susp, unstable); return;
   case PerdioVariable:
-    ((PerdioVar *) cv)->addSuspV(v, susp, unstable); return;
+    perdioVarAddSusp(cv, v, susp, unstable); return;
   case OZ_VAR_EXTENTED:
     ((ExtentedVar *) cv)->addSuspV(v, susp, unstable); return;
   default:

@@ -8,6 +8,7 @@
  *
  *  Contributors:
  *    Denys Duchier (duchier@ps.uni-sb.de)
+ *    Per Brand (perbrand@sics.se)
  *
  *  Copyright:
  *    Organization or Person (Year(s))
@@ -48,25 +49,16 @@
 #include "ctgenvar.hh"
 #include "future.hh"
 #include "simplevar.hh"
-#include "perdiovar.hh"
 #include "extvar.hh"
 #include "threadInterface.hh"
 #include "pointer-marks.hh"
+#include "dpInterface.hh"
+#include "gname.hh"
 
 // hack alert: usage #pragma interface requires this
 #ifdef OUTLINE
 #define inline
 #endif
-
-// perdio
-void gcPendThread(PendThread**);
-void gcGName(GName *);
-void gcPerdioFinal();
-void gcPerdioRoots();
-void gcBorrowTableUnusedFrames();
-void gcFrameToProxy();
-void gcGName(GName*);
-Bool checkMySite();
 
 /*
  * isCollecting: collection is running
@@ -240,6 +232,10 @@ void * gcReallocStatic(void * p, size_t sz) {
   }
 
   return to;
+}
+
+void* gcRealloc(void * p, size_t sz) {
+  return (gcReallocStatic(p, sz));
 }
 
 #undef LD0
@@ -1057,7 +1053,7 @@ GenCVariable * GenCVariable::gcG(void) {
   case OZ_VAR_SIMPLE:   to = ((SimpleVar *)this)->gc(); break;
   case OZ_VAR_FUTURE:   to = ((Future *)this)->gc(); break;
   case OFSVariable:     to = new GenOFSVariable(*(GenOFSVariable*) this);break;
-  case PerdioVariable:  to = ((PerdioVar*)this)->gcV(); break;
+  case PerdioVariable:  to = gcCopyPerdioVar(this); break;
   case CtVariable:      to = ((GenCtVariable*)this)->gc(); break;
   case OZ_VAR_EXTENTED: to = ((ExtentedVar *)this)->gcV(); break;
   default:
@@ -1113,7 +1109,7 @@ void GenCVariable::gcRecurseG(void) {
   switch (getType()) {
   case OZ_VAR_SIMPLE:   ((SimpleVar *)this)->gcRecurse(); break;
   case OZ_VAR_FUTURE:   ((Future *)this)->gcRecurse(); break;
-  case PerdioVariable:  ((PerdioVar *)this)->gcRecurseV(); break;
+  case PerdioVariable:  gcPerdioVarRecurse(this); break;
   case BoolVariable:    Assert(0); break;
   case FDVariable:      Assert(0); break;
   case OFSVariable:     ((GenOFSVariable*)this)->gcRecurse(); break;
@@ -1735,8 +1731,6 @@ void AM::gc(int msgLevel)
 #ifdef VERBOSE
   verbReopen ();
 #endif
-  Assert(checkMySite());
-
   gcFrameToProxy();
 
   isCollecting = OK;
@@ -1796,6 +1790,8 @@ void AM::gc(int msgLevel)
   varFix.fix();
   Assert(gcStack.isEmpty());
 
+  GT.gcGNameTable();
+  gcSiteTable();
   gcPerdioFinal();
   Assert(gcStack.isEmpty());
 
@@ -1814,9 +1810,6 @@ void AM::gc(int msgLevel)
   ozstat.printGcMsg(msgLevel);
 
   isCollecting = NO;
-
-  Assert(checkMySite());
-
 } // AM::gc
 
 
@@ -2119,12 +2112,12 @@ void ConstTerm::gcConstRecurse()
   case Co_Object:
     {
       Object *o = (Object *) this;
-      o->gcEntityInfo();
+      gcEntityInfo(o);
 
       switch(o->getTertType()) {
       case Te_Local:   o->setBoard(GETBOARD(o)->gcBoard()); break;
-      case Te_Proxy:   o->gcProxy(); break;
-      case Te_Manager: o->gcManager(); break;
+      case Te_Proxy:   gcProxyRecurse(o); break;
+      case Te_Manager: gcManagerRecurse(o); break;
       default:         Assert(0);
       }
 
@@ -2169,60 +2162,34 @@ void ConstTerm::gcConstRecurse()
   case Co_Cell:
     {
       Tertiary *t=(Tertiary*)this;
-      t->gcEntityInfo();
-      switch(t->getTertType()){
-      case Te_Local:{
+      if (t->isLocal()) {
         CellLocal *cl=(CellLocal*)t;
         cl->setBoard(GETBOARD(cl)->gcBoard());
         OZ_collectHeapTerm(cl->val,cl->val);
-        break;}
-      case Te_Proxy:{
-        t->gcProxy();
-        break;}
-      case Te_Frame:{
-        CellFrame *cf=(CellFrame*)t;
-        CellSec *cs=cf->sec;
-        cf->sec=(CellSec*)gcReallocStatic(cs,sizeof(CellSec));
-        cf->gcCellFrame();
-        break;}
-      case Te_Manager:{
-        CellManager *cm=(CellManager*)t;
-        CellFrame *cf=(CellFrame*)t;
-        CellSec *cs=cf->sec;
-        cf->sec=(CellSec*)gcReallocStatic(cs,sizeof(CellSec));
-        cm->gcCellManager();
-        break;}
-      default:{
-        Assert(0);}}
+        break;
+      } else {
+        gcDistCellRecurse(t);
+      }
       break;
     }
 
   case Co_Port:
     {
       Port *p = (Port*) this;
-      p->gcEntityInfo();
-      switch(p->getTertType()){
-      case Te_Local:{
+      if (p->isLocal()) {
         p->setBoard(GETBOARD(p)->gcBoard()); /* ATTENTION */
         PortWithStream *pws = (PortWithStream *) this;
         OZ_collectHeapTerm(pws->strm,pws->strm);
-        break;}
-      case Te_Proxy:{
-        p->gcProxy();
-        break;}
-      case Te_Manager:{
-        p->gcManager();
-        PortWithStream *pws = (PortWithStream *) this;
-        OZ_collectHeapTerm(pws->strm,pws->strm);
-        break;}
-      default:{
-        Assert(0);}}
+        break;
+      } else {
+        gcDistPortRecurse(p);
+      }
       break;
     }
   case Co_Space:
     {
       Space *s = (Space *) this;
-      s->gcEntityInfo();
+      Assert(s->getInfo()==NULL);
       if (!s->isProxy()) {
         if (s->solve != (Board *) 1) {
           s->solve = s->solve->gcBoard();
@@ -2266,37 +2233,15 @@ void ConstTerm::gcConstRecurse()
   case Co_Lock:
     {
       Tertiary *t=(Tertiary*)this;
-      t->gcEntityInfo();
-      switch(t->getTertType()){
-
-      case Te_Local:{
+      if (t->isLocal()) {
         LockLocal *ll = (LockLocal *) this;
         ll->setBoard(GETBOARD(ll)->gcBoard());  /* maybe getBoardInternal() */
-        gcPendThread(&(ll->pending));
+        gcPendThreadEmul(&(ll->pending));
         ll->setLocker(ll->getLocker()->gcThread());
-        break;}
-
-      case Te_Manager:{
-        LockManager* lm=(LockManager*)t;
-        LockFrame* lf=(LockFrame*)t;
-        LockSec* ls= lf->sec;
-        lf->sec=(LockSec*)gcReallocStatic(ls,sizeof(LockSec));
-        lm->gcLockManager();
-        break;}
-
-      case Te_Frame:{
-        LockFrame *lf=(LockFrame*)t;
-        LockSec *ls=lf->sec;
-        lf->sec=(LockSec*)gcReallocStatic(ls,sizeof(LockSec));
-        lf->gcLockFrame();
-        break;}
-
-      case Te_Proxy:{
-        t->gcProxy();
-        break;}
-
-      default:{
-        Assert(0);}}
+        break;
+      } else {
+        gcDistLockRecurse(t);
+      }
       break;
     }
 
@@ -2311,31 +2256,6 @@ void ConstTerm::gcConstRecurse()
    if (!bb->gcIsAlive()) return NULL;                \
    if (!isInGc && bb->isMarkedGlobal()) return this; \
 }
-
-inline void EntityInfo::gcWatchers(){
-  Watcher **base=&watchers;
-  Watcher *w=*base;
-  if(object) object=((Object *)object)->gcObject();
-  while(w!=NULL){
-    Thread *th = w->thread;
-    if(w->isHandler() && w->thread != DefaultThread)
-      th=w->thread->gcThread();
-    if(w->isHandler() && th==NULL){
-      *base= w->next;
-      w=*base;
-      continue;}
-    Watcher* newW=(Watcher*) gcReallocStatic(w,sizeof(Watcher));
-    *base=newW;
-    newW->thread=th;
-    OZ_collectHeapTerm(newW->proc,newW->proc);
-    base= &(newW->next);
-    w=*base;}}
-
-void Tertiary::gcEntityInfo(){
-  if(info==NULL) return;
-  EntityInfo *newInfo = (EntityInfo *) gcReallocStatic(info,sizeof(EntityInfo));
-  info=newInfo;
-  info->gcWatchers();}
 
 
 ConstTerm *ConstTerm::gcConstTerm() {
@@ -2398,25 +2318,19 @@ ConstTerm *ConstTerm::gcConstTerm() {
     }
   case Co_Cell:
     {
-
       switch(((Tertiary *)this)->getTertType()){
       case Te_Local:
         CheckLocal((CellLocal*)this);
       case Te_Proxy:
       case Te_Manager:
-        ret = (ConstTerm *) gcReallocStatic(this,sizeof(CellManager));
+        ret = (ConstTerm *) gcReallocStatic(this,sizeof(CellManagerEmul));
         break;
       case Te_Frame:{
-        CellFrame *cf=(CellFrame *)this;
-        if (cf->isAccessBit()) {
-          // has only been reached via gcBorrowRoot so far
-          DebugCode(cf->resetAccessBit());
-          void* forward=cf->getForward();
-          ((CellFrame*)forward)->resetAccessBit();
-          gcMark((ConstTerm *) forward);
-          return (ConstTerm*) forward;
-        }
-        ret = (ConstTerm *) gcReallocStatic(this,sizeof(CellFrame));
+        ConstTerm *aux;
+        if (aux = auxGcDistCell((Tertiary *) this))
+          return (aux);
+        else
+          ret = (ConstTerm *) gcReallocStatic(this,sizeof(CellFrameEmul));
         break;
       }
       default:{
@@ -2477,18 +2391,16 @@ ConstTerm *ConstTerm::gcConstTerm() {
         CheckLocal((LockLocal*)this);
       case Te_Proxy:
       case Te_Manager:
-        ret = (ConstTerm *) gcReallocStatic(this,sizeof(LockManager));
+        ret = (ConstTerm *) gcReallocStatic(this,sizeof(LockLocal));
         break;
       case Te_Frame:{
-        LockFrame *lf=(LockFrame *)this;
-        if(lf->isAccessBit()){
-          DebugCode(lf->resetAccessBit());
-          void* forward=lf->getForward();
-          ((LockFrame*)forward)->resetAccessBit();
-          gcMark((ConstTerm *) forward);
-          return (ConstTerm*) forward;}
-        ret = (ConstTerm *) gcReallocStatic(this,sizeof(LockFrame));
-        break;}
+        ConstTerm *aux;
+        if (aux = auxGcDistLock((Tertiary *) this))
+          return (aux);
+        else
+          ret = (ConstTerm *) gcReallocStatic(this,sizeof(LockLocal));
+        break;
+      }
       default:{
         Assert(0);
         break;}}
@@ -2530,18 +2442,7 @@ ConstTerm* ConstTerm::gcConstTermSpec() {
   Tertiary *t=(Tertiary*)this;
   Assert((t->getType()==Co_Cell) || (t->getType()==Co_Lock));
   Assert(t->isFrame());
-  ConstTerm *ret;
-  if(t->getType()==Co_Cell){
-    CellFrame *cf=(CellFrame*)t;
-    cf->setAccessBit();
-    ret = (ConstTerm *) gcReallocStatic(this,sizeof(CellFrame));
-    cf->myStoreForward(ret);}
-  else{
-    Assert(getType()==Co_Lock);
-    LockFrame *lf=(LockFrame*)t;
-    lf->setAccessBit();
-    ret = (ConstTerm *) gcReallocStatic(this,sizeof(LockFrame));
-    lf->myStoreForward(ret);}
+  ConstTerm *ret = gcStatefulSpec(t);
 
   gcStack.push(ret,PTR_CONSTTERM);
   return ret;

@@ -49,6 +49,7 @@
 #include "solve.hh"
 #include "oz_cpi.hh"
 #include "dictionary.hh"
+#include "dpInterface.hh"
 
 #include <string.h>
 #include <time.h>
@@ -56,15 +57,6 @@
 #include <ctype.h>
 #include <math.h>
 #include <stdarg.h>
-
-// perdio
-OZ_Return remoteSend(Tertiary *p, char *biName, TaggedRef msg);
-OZ_Return portSend(Tertiary *p, TaggedRef msg);
-OZ_Return cellDoExchange(Tertiary*,TaggedRef,TaggedRef);
-OZ_Return cellDoAccess(Tertiary*,TaggedRef);
-OZ_Return cellAtAccess(Tertiary*,TaggedRef,TaggedRef);
-OZ_Return cellAtExchange(Tertiary*,TaggedRef,TaggedRef);
-OZ_Return cellAssignExchange(Tertiary*,TaggedRef,TaggedRef);
 
 /********************************************************************
  * Type tests
@@ -380,10 +372,7 @@ OZ_BI_define(BIaskSpace, 1,1) {
   declareSpace();
 
   // mm2: dead code
-  if (space->isProxy()) {
-    OZ_out(0) = oz_newVariable();
-    return remoteSend(space,"Space.ask",OZ_out(0));
-  }
+  if (space->isProxy()) Assert(0);
 
   if (space->isFailed()) OZ_RETURN(AtomFailed);
 
@@ -413,9 +402,7 @@ OZ_BI_define(BIaskVerboseSpace, 2,0) {
   declareSpace();
   oz_declareIN(1,out);
 
-  if (space->isProxy()) {
-    return remoteSend(space,"Space.askVerbose",out);
-  }
+  if (space->isProxy()) Assert(0);
 
   if (space->isFailed())
     return oz_unify(out, AtomFailed);
@@ -447,10 +434,7 @@ OZ_BI_define(BIaskVerboseSpace, 2,0) {
 OZ_BI_define(BImergeSpace, 1,1) {
   declareSpace();
 
-  if (space->isProxy()) {
-    OZ_out(0) = oz_newVariable();
-    return remoteSend(space,"Space.merge",OZ_out(0));
-  }
+  if (space->isProxy()) Assert(0);
 
   if (space->isMerged())
     return oz_raise(E_ERROR,E_KERNEL,"spaceMerged",1,tagged_space);
@@ -527,10 +511,7 @@ OZ_BI_define(BImergeSpace, 1,1) {
 OZ_BI_define(BIcloneSpace, 1,1) {
   declareSpace();
 
-  if (space->isProxy()) {
-    OZ_out(0) = oz_newVariable();
-    return remoteSend(space,"Space.clone",OZ_out(0));
-  }
+  if (space->isProxy()) Assert(0);
 
   if (space->isMerged())
     return oz_raise(E_ERROR,E_KERNEL,"spaceMerged",1,tagged_space);
@@ -555,9 +536,7 @@ OZ_BI_define(BIcommitSpace, 2,0) {
   declareSpace();
   oz_declareIN(1,choice);
 
-  if (space->isProxy()) {
-    return remoteSend(space,"Space.commit",choice);
-  }
+  if (space->isProxy()) Assert(0);
 
   if (space->isMerged())
     return oz_raise(E_ERROR,E_KERNEL,"spaceMerged",1,tagged_space);
@@ -641,9 +620,7 @@ OZ_BI_define(BIinjectSpace, 2,0)
   declareSpace();
   oz_declareIN(1,proc);
 
-  if (space->isProxy()) {
-    return remoteSend(space,"Space.inject",proc);
-  }
+  if (space->isProxy()) Assert(0);
 
   if (space->isMerged())
     return oz_raise(E_ERROR,E_KERNEL,"spaceMerged",1,tagged_space);
@@ -3286,18 +3263,16 @@ OZ_BI_define(BIlockLock,1,0)
 
   switch(t->getTertType()){
   case Te_Manager:{
-    ((LockManager *)t)->lock(oz_currentThread());
+    ((LockManagerEmul *)t)->lock(oz_currentThread());
     return PROCEED;}
   case Te_Proxy:{
-    ((LockProxy*)t)->lock(oz_currentThread());
+    lockLockProxy(t, oz_currentThread());
     return PROCEED;}
   case Te_Frame:{
-    ((LockFrame*)t)->lock(oz_currentThread());
+    ((LockFrameEmul *)t)->lock(oz_currentThread());
     return PROCEED;}
   default:
     Assert(0);}
-
-  Assert(0);
   return PROCEED;
 } OZ_BI_end
 
@@ -3310,17 +3285,19 @@ OZ_BI_define(BIunlockLock,1,0)
     oz_typeError(0,"Lock");
   }
   Tertiary *t=tagged2Tert(lock);
+
+  //
   switch(t->getTertType()){
   case Te_Local:{
     ((LockLocal*)t)->unlock();
     return PROCEED;}
   case Te_Manager:{
-    ((LockManager*)t)->unlock(oz_currentThread());
+    ((LockManagerEmul *)t)->unlock(oz_currentThread());
     return PROCEED;}
   case Te_Proxy:{
     return oz_raise(E_ERROR,E_KERNEL,"globalState",1,oz_atom("lock"));}
   case Te_Frame:{
-    ((LockFrame*)t)->unlock(oz_currentThread());
+    ((LockFrameEmul *)t)->unlock(oz_currentThread());
     return PROCEED;}
   }
   Assert(0);
@@ -3361,11 +3338,11 @@ OZ_Return exchangeCell(OZ_Term cell, OZ_Term newVal, OZ_Term &oldVal)
     return PROCEED;
   } else {
     if(!tert->isProxy()){
-      CellSec* sec;
+      CellSecEmul* sec;
       if(tert->getTertType()==Te_Frame){
-        sec=((CellFrame*)tert)->getSec();}
+        sec=((CellFrameEmul*)tert)->getSec();}
       else{
-        sec=((CellManager*)tert)->getSec();}
+        sec=((CellManagerEmul*)tert)->getSec();}
       if(sec->getState()==Cell_Lock_Valid){
         TaggedRef old=sec->getContents();
         sec->setContents(newVal);
@@ -4169,11 +4146,11 @@ SRecord *getRecordFromState(RecOrCell state)
   }
 
   if(!t->isProxy()) {
-    CellSec* sec;
+    CellSecEmul* sec;
     if(t->getTertType()==Te_Frame) {
-      sec=((CellFrame*)t)->getSec();
+      sec=((CellFrameEmul*)t)->getSec();
     } else {
-      sec=((CellManager*)t)->getSec();
+      sec=((CellManagerEmul*)t)->getSec();
     }
     if(sec->getState()==Cell_Lock_Valid) {
       TaggedRef old=oz_deref(sec->getContents());

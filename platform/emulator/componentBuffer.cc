@@ -75,7 +75,7 @@ class ByteStream: public MsgBuffer {
   int type;
 
 public:
-  Site *getSite(){return (Site*) NULL;}
+  DSite *getSite() { return ((DSite*) NULL); }
   Bool isPersistentBuffer() { return OK; }
 
   char *siteStringrep() {return "toFile";}
@@ -133,7 +133,6 @@ public:
 
   void sentFirst(){
     Assert(type==BS_Write);
-    PD((BUFFER,"bytebuffer dumped sent: %d",no_bufs()));
     if(first==last){
       removeSingle();
       return;}
@@ -201,10 +200,8 @@ public:
   void marshalBegin();
 
   void putNext(BYTE b){
-    PD((MARSHAL_CT,"one character put c:%d d:%d",b,b));
     Assert(type==BS_Marshal);
     Assert(posMB==endMB+1);
-    PD((BUFFER,"bytebuffer alloc Marshal: %d",no_bufs()));
     ByteBuffer *bb=getAnother();
     last->next=bb;
     last=bb;
@@ -216,7 +213,6 @@ public:
 
   void marshalEnd(){
     Assert(type==BS_Marshal);
-    PD((MARSHAL_BE,"marshal end"));
     endpos=posMB;
     pos=first->head();
     if(endpos==NULL) {totlen +=BYTEBUFFER_SIZE;}
@@ -227,7 +223,6 @@ public:
 
   void unmarshalBegin(){
     type=BS_Unmarshal;
-    PD((MARSHAL_BE,"unmarshal begin"));
     Assert(within(pos,first));
     if(first==last) {
       Assert(within(curpos,first));
@@ -254,7 +249,6 @@ public:
       Assert(first!=last);
       ch=*posMB;
       removeFirst();
-      PD((BUFFER,"bytebuffer dumped UnMarshal: %d",no_bufs()));
       posMB=first->head();
       if(within(curpos,first)) {
         endMB=curpos;}
@@ -266,7 +260,6 @@ public:
 
   void unmarshalEnd(){
     Assert(type==BS_Unmarshal);
-    PD((MARSHAL_BE,"unmarshal end"));
     type=BS_None;
     Assert(pos==NULL);}
 };
@@ -293,7 +286,7 @@ public:
 
   void freeByteStream(ByteStream *bs);
   ByteStream* newByteStream();
-  void CompBufferManager::deleteByteStream(ByteStream* bs);
+  void deleteByteStream(ByteStream* bs);
 
   ByteBuffer* getByteBuffer();
   void freeByteBuffer(ByteBuffer *bb);
@@ -302,8 +295,15 @@ public:
 
 CompBufferManager *bufferManager= new CompBufferManager();
 
-MsgBuffer* getComponentMsgBuffer(){        // interface
-  return bufferManager->getByteStream();}
+//
+// kost@ : interface methods. The only usage for it is SB-style
+// exporting of variables;
+MsgBuffer* getComponentMsgBuffer(){
+  return (bufferManager->getByteStream());
+}
+void freeComponentMsgBuffer(MsgBuffer *buf) {
+  bufferManager->freeByteStream((ByteStream *) buf);
+}
 
 /* **********************************************************************
  *                  BYTE STREAM
@@ -360,7 +360,6 @@ ByteBuffer *ByteStream::getAnother(){
   return(bufferManager->getByteBuffer());}
 
 void ByteStream::marshalBegin(){
-  PD((MARSHAL_BE,"marshal begin"));
   Assert(type==BS_None);
   Assert(first==NULL);
   Assert(last==NULL);
@@ -433,7 +432,6 @@ Bool ByteStream::skipHeader()
 
 BYTE* ByteStream::initForRead(int &len){
   Assert(type==BS_None);
-  PD((BUFFER,"bytebuffer alloc Read: %d",no_bufs()));
   pos=first->head();
   endpos=first->head();
   len=BYTEBUFFER_SIZE;
@@ -450,7 +448,6 @@ BYTE* ByteStream::beginRead(int &len){
       len=BYTEBUFFER_SIZE;
       return endpos;}
     Assert(within(pos,first));
-    PD((BUFFER,"bytebuffer alloc Read: %d",no_bufs()));
     ByteBuffer *bb=bufferManager->getByteBuffer();
     last->next=bb;
     last=bb;

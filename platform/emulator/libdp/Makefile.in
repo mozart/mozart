@@ -1,0 +1,72 @@
+#  Authors:
+#    Michael Mehl (mehl@dfki.de)
+#
+#  Contributors:
+#    optional, Contributor's name (Contributor's email address)
+#
+#  Copyright:
+#    Michael Mehl (mehl@dfki.de)
+#
+#  Last change:
+#    $Date$ by $Author$
+#    $Revision$
+#
+#  This file is part of Mozart, an implementation
+#  of Oz 3:
+#     http://mozart.ps.uni-sb.de
+#
+#  See the file "LICENSE" or
+#     http://mozart.ps.uni-sb.de/LICENSE.html
+#  for information on usage and redistribution
+#  of this file, and for a DISCLAIMER OF ALL
+#  WARRANTIES.
+
+include ../Makefile.vars
+
+BUILDTOP        = @BUILDTOP@
+VPATH           = @srcdir@
+SRCDIR          = @srcdir@
+INCS            = -I. -I$(SRCDIR)/.. -I..
+M4_D=           -DEMUDIR=$(SRCDIR)
+
+REALDPSRCS = dpBuiltins.cc dpMarshaler.cc port.cc virtual.cc    \
+            dpDebug.cc network.cc protocolState.cc vs_comm.cc dsite.cc  \
+            perdio.cc state.cc vs_interface.cc fail.cc                  \
+            protocolCredit.cc table.cc vs_mailbox.cc protocolFail.cc    \
+            var.cc vs_msgbuffer.cc msgType.cc chain.cc protocolVar.cc
+
+
+CREATEDDPFILES = marshalMsg.cc dpMarshaler.hh
+CREATEDDPSRCS = marshalMsg.cc
+
+DPSRCS = $(REALDPSRCS) $(CREATEDDPSRCS)
+
+DPLIBOBJS = $(DPSRCS:.cc=.o)
+
+all:
+
+../DP.so: $(DPLIBOBJS)
+        $(DYNLD) -o $@ $(DPLIBOBJS)
+
+../libDP.a: $(DPLIBOBJS)
+        $(AR) -rc $@ $(DPLIBOBJS) && $(RANLIB) $@
+
+first:  $(CREATEDDPFILES)
+
+depend:: Makefile $(REALDPSRCS)
+        $(MAKE) first
+        $(DEPEND) $(REALDPSRCS:%=$(SRCDIR)/%) > Makefile.deps
+
+Makefile: Makefile.in
+        (cd ..;./config.status)
+
+-include Makefile.deps
+include ../Makefile.rules
+
+distclean::
+        -rm -f Makefile
+
+veryclean::
+        -rm -f *.a *.so Makefile.deps
+
+dpMarshaler.hh marshalMsg.cc: msgFormat.m4

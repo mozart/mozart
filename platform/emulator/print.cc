@@ -590,41 +590,6 @@ void Float::printStream(ostream &stream, int depth)
   stream << "<Float " << toC(makeTaggedFloat(this)) << ">";
 }
 
-void CellLocal::printStream(ostream &stream, int depth)
-{
-  stream << "CellLocal@" << this;
-}
-
-void CellManager::printStream(ostream &stream, int depth)
-{
-  stream << "CellManager@" << this;
-}
-
-void CellProxy::printStream(ostream &stream, int depth)
-{
-  stream << "CellProxy@" << this;
-}
-
-void CellFrame::printStream(ostream &stream, int depth)
-{
-  stream << "CellFrame@" << this;
-}
-
-void PortLocal::printStream(ostream &stream, int depth)
-{
-  stream << "PortLocal@" << this;
-}
-
-void PortProxy::printStream(ostream &stream, int depth)
-{
-  stream << "PortProxy@" << this;
-}
-
-void PortManager::printStream(ostream &stream, int depth)
-{
-  stream << "PortManager@" << this;
-}
-
 void Space::printStream(ostream &stream, int depth)
 {
   stream << "Space@" << this;
@@ -645,26 +610,6 @@ void OzArray::printStream(ostream &stream, int depth)
 void OzDictionary::printStream(ostream &stream, int depth)
 {
   stream << "<Dictionary@" << this << ">";
-}
-
-void LockLocal::printStream(ostream &stream, int depth)
-{
-  stream << "<LockLocal@" << this << ">";
-}
-
-void LockProxy::printStream(ostream &stream, int depth)
-{
-  stream << "<LockProxy@" << this << ">";
-}
-
-void LockFrame::printStream(ostream &stream, int depth)
-{
-  stream << "<LockFrame@" << this << ">";
-}
-
-void LockManager::printStream(ostream &stream, int depth)
-{
-  stream << "<LockManager@" << this << ">";
 }
 
 void SChunk::printStream(ostream &stream, int depth)
@@ -784,16 +729,16 @@ void ConstTerm::printLongStream(ostream &stream, int depth, int offset)
   case Co_Cell:
     switch(((Tertiary *)this)->getTertType()){
     case Te_Local:
-      ((CellLocal *)   this)->printLongStream(stream,depth,offset);
+      stream << "CellLocal@" << this;
       break;
     case Te_Frame:
-      ((CellFrame *)   this)->printLongStream(stream,depth,offset);
+      stream << "CellFrame@" << this;
       break;
     case Te_Manager:
-      ((CellManager *) this)->printLongStream(stream,depth,offset);
+      stream << "CellManager@" << this;
       break;
     case Te_Proxy:
-      ((CellProxy *)   this)->printLongStream(stream,depth,offset);
+      stream << "CellProxy@" << this;
       break;
     default:
       Assert(NO);
@@ -802,13 +747,13 @@ void ConstTerm::printLongStream(ostream &stream, int depth, int offset)
   case Co_Port:
     switch(((Tertiary *)this)->getTertType()){
     case Te_Local:
-      ((PortLocal *)   this)->printLongStream(stream,depth,offset);
+      stream << "PortLocal@" << this;
       break;
     case Te_Manager:
-      ((PortManager *) this)->printLongStream(stream,depth,offset);
+      stream << "PortManager@" << this;
       break;
     case Te_Proxy:
-      ((PortProxy *)   this)->printLongStream(stream,depth,offset);
+      stream << "PortProxy@" << this;
       break;
     default:
       Assert(NO);
@@ -829,16 +774,16 @@ void ConstTerm::printLongStream(ostream &stream, int depth, int offset)
   case Co_Lock:
     switch(((Tertiary *)this)->getTertType()){
     case Te_Local:
-      ((LockLocal *)   this)->printLongStream(stream,depth,offset);
+      stream << "<LockLocal@" << this << ">";
       break;
     case Te_Frame:
-      ((LockFrame *)   this)->printLongStream(stream,depth,offset);
+      stream << "<LockFrame@" << this << ">";
       break;
     case Te_Manager:
-      ((LockManager *) this)->printLongStream(stream,depth,offset);
+      stream << "<LockManager@" << this << ">";
       break;
     case Te_Proxy:
-      ((LockProxy *)   this)->printLongStream(stream,depth,offset);
+      stream << "<LockProxy@" << this << ">";
       break;
     default:         Assert(NO);
     }
@@ -866,13 +811,17 @@ void ConstTerm::printStream(ostream &stream, int depth)
     break;
   case Co_Cell:
     switch(((Tertiary *)this)->getTertType()){
-    case Te_Local:   ((CellLocal *)   this)->printStream(stream,depth);
+    case Te_Local:
+      stream << "CellLocal@" << this;
       break;
-    case Te_Frame:   ((CellFrame *)   this)->printStream(stream,depth);
+    case Te_Frame:
+      stream << "CellFrame@" << this;
       break;
-    case Te_Manager: ((CellManager *) this)->printStream(stream,depth);
+    case Te_Manager:
+      stream << "CellManager@" << this;
       break;
-    case Te_Proxy:   ((CellProxy *)   this)->printStream(stream,depth);
+    case Te_Proxy:
+      stream << "CellProxy@" << this;
       break;
     default:
       Assert(NO);
@@ -880,11 +829,14 @@ void ConstTerm::printStream(ostream &stream, int depth)
     break;
   case Co_Port:
     switch(((Tertiary *)this)->getTertType()){
-    case Te_Local:      ((PortLocal *)   this)->printStream(stream,depth);
+    case Te_Local:
+      stream << "PortLocal@" << this;
       break;
-    case Te_Manager:    ((PortManager *) this)->printStream(stream,depth);
+    case Te_Manager:
+      stream << "PortManager@" << this;
       break;
-    case Te_Proxy:      ((PortProxy *)   this)->printStream(stream,depth);
+    case Te_Proxy:
+      stream << "PortProxy@" << this;
       break;
     default:
       Assert(NO);
@@ -900,13 +852,17 @@ void ConstTerm::printStream(ostream &stream, int depth)
     break;
   case Co_Lock:
     switch(((Tertiary *)this)->getTertType()){
-    case Te_Local:   ((LockLocal *)   this)->printStream(stream,depth);
+    case Te_Local:
+      stream << "<LockLocal@" << this << ">";
       break;
-    case Te_Frame:   ((LockFrame *)   this)->printStream(stream,depth);
+    case Te_Frame:
+      stream << "<LockFrame@" << this << ">";
       break;
-    case Te_Manager: ((LockManager *) this)->printStream(stream,depth);
+    case Te_Manager:
+      stream << "<LockManager@" << this << ">";
       break;
-    case Te_Proxy:   ((LockProxy *)   this)->printStream(stream,depth);
+    case Te_Proxy:
+      stream << "<LockProxy@" << this << ">";
       break;
     default:         Assert(NO);
     }
@@ -1309,33 +1265,6 @@ void Builtin::printLongStream(ostream &stream, int depth, int offset)
 }
 
 
-void CellLocal::printLongStream(ostream &stream, int depth, int offset)
-{
-  stream << indent(offset)
-         << "CellLocal@id" << this << endl
-         << indent(offset)
-         << " value:"<<endl;
-  ozd_printLongStream(val,stream,depth,offset+2);
-}
-
-void PortLocal::printLongStream(ostream &stream, int depth, int offset)
-{
-  stream << indent(offset)
-         << "PortLocal@id" << this << endl
-         << indent(offset)
-         << " stream:"<<endl;
-  ozd_printLongStream(strm,stream,depth,offset+2);
-}
-
-
-void PortManager::printLongStream(ostream &stream, int depth, int offset)
-{
-  stream << indent(offset)
-         << "PortManager@id" << this << endl
-         << indent(offset)
-         << " stream:"<<endl;
-  ozd_printLongStream(strm,stream,depth,offset+2);
-}
 
 void Space::printLongStream(ostream &stream, int depth, int offset)
 {

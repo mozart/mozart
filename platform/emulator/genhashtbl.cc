@@ -34,13 +34,6 @@
 #include <stdio.h>
 
 #include "genhashtbl.hh"
-#include "perdio_debug.hh"
-
-#ifdef DEBUG_PERDIO
-#define IFDEBUG(A) A
-#else
-#define IFDEBUG(A)
-#endif
 
 const int STEP=5;
 const double MAXFULL=0.75; // The max. load of HashTable
@@ -67,21 +60,6 @@ int nextPrime2(int prime){
     prime += 2;}
   return prime;}
 
-/* ********************************************************************** *
- *      GenHashNode
- * ********************************************************************** */
-
-#ifdef DEBUG_PERDIO
-int GenHashNode::getLength(){
-  Assert(!isEmpty());
-  int ct=1;
-  GenHashNode *try0=next;
-  while(try0){
-    ct++;
-    try0=try0->next;}
-  return ct;}
-#endif
-
 /* ********************************************************************** */
 /*      HIDDEN MEMBER FUNCTIONS                                           */
 /* ********************************************************************** */
@@ -93,12 +71,10 @@ GenHashTable::basic_htAdd(int ke,GenHashBaseKey* kb, GenHashEntry *en){
   GenHashNode *main= &table[index];
   if(main->isEmpty()){
       main->set(ke,kb,en);
-      PD((HASH,"add-direct at %d",index));
       return;}
   Assert(!(kb==main->getBaseKey()));
   GenHashNode *ne=manager->newGenHashNode();
   ne->setWithNext(ke,kb,en,main->getNext());
-  PD((HASH,"add-collision at %d",index));
   main->setNext(ne);}
 
 inline void GenHashTable::rehash(GenHashNode *old,int size){
@@ -124,9 +100,6 @@ void GenHashTable::calc_percents(){
 
 void GenHashTable::resize(){
   int newSize=nextPrime2(tableSize*EXPANSION_FACTOR);
-  PD((TABLE,"hash-table resize old=%d new=%d used=%d",
-                tableSize,newSize,counter));
-  PERDIO_DEBUG_DO1(TABLE2,resize_hash());
   GenHashNode *oldtable=table;
   table= (GenHashNode *) malloc(newSize * sizeof(GenHashNode));
   Assert(table!=NULL);
@@ -137,8 +110,6 @@ void GenHashTable::resize(){
   tableSize=newSize;
   rehash(oldtable,oldSize);
   calc_percents();
-  PD((TABLE,"recomplete resize hash"));
-  PERDIO_DEBUG_DO1(TABLE2,resize_hash());
   free(oldtable);}
 
 void GenHashTable::compactify(){
@@ -148,22 +119,16 @@ void GenHashTable::compactify(){
   int newSize = nextPrime2((int) ( ((double) counter) / IDEALFULL));
   if(newSize<minSize) newSize=minSize;
   Assert(newSize<tableSize);
-  PD((TABLE,"compactify hash old=%d new=%d used=%d",
-                tableSize,newSize,counter));
-  PERDIO_DEBUG_DO1(TABLE2,resize_hash());
   GenHashNode *oldtable=table;
   table= (GenHashNode *) malloc(newSize * sizeof(GenHashNode));
   Assert(table!=NULL);
   if(table==NULL){
-    PD((TABLE,"compactify hash failed"));
     return;}
   init(0,newSize);
   int oldSize=tableSize;
   tableSize=newSize;
   rehash(oldtable,oldSize);
   calc_percents();
-  PD((TABLE,"hash-table resize complete"));
-  PERDIO_DEBUG_DO1(TABLE2,resize_hash());
   free(oldtable);}
 
 /* ********************************************************************** */
@@ -196,18 +161,15 @@ Bool GenHashTable::htSub(int bigIndex,GenHashNode *cur){
   GenHashNode *try0=&table[index];
   if(try0==cur){
     if(cur->next==NULL){
-      PD((HASH,"sub-direct at %d - no coll",index));
       cur->makeEmpty();}
     else{
       try0=cur->next;
       cur->copyFrom(try0);
-      PD((HASH,"sub-direct at %d - with coll",index));
       manager->deleteGenHashNode(try0);
       return FALSE;
     }}
   else{
     while(try0->next!=cur) {Assert(try0!=NULL);try0=try0->next;}
-    PD((HASH,"sub-cll chain at %d",index));
     try0->next=cur->next;
     manager->deleteGenHashNode(cur);}
   return TRUE;}
@@ -259,28 +221,5 @@ GenHashNode *GenHashTable::getNext(GenHashNode *ghn,int &i){
   if(ghn->next!=NULL) return ghn->next;
   i++;
   return getByIndex(i);}
-
-
-#ifdef DEBUG_PERDIO
-void GenHashTable::printStatistics(){
-  int maxx = 0, sum = 0, collpl = 0, coll = 0;
-  for(int i = 0; i < tableSize; i++) {
-    if (table[i].isEmpty())
-      continue;
-    int l = table[i].getLength();
-    maxx = maxx > l ? maxx : l;
-    sum += l;
-    coll  += l > 1 ? l - 1 : 0;
-    collpl += l > 1 ? 1 : 0;
-  }
-  printf("\nHashtable-Statistics:\n");
-  printf("\tmaximum bucket length     : %d\n", maxx);
-  printf("\tnumber of collision places: %d\n", collpl);
-  printf("\tnumber of collisions      : %d\n", coll);
-  printf("\t%d table entries have been used for %d literals (%d%%)\n",
-         tableSize, counter, counter*100/tableSize);
-  printf("\tfreelistHashNodememory    : %d\n",manager->length());
-}
-#endif
 
 GenFreeListManager *genFreeListManager;

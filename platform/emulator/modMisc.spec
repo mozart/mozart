@@ -24,46 +24,6 @@
 
 %builtins_all =
 (
-
-    ###
-    ### Perdio
-    ###
-
-
-    'crash'             => { in  => [],
-                             out => [],
-                             BI  => BIcrash,
-                             doesNotReturn=>1},
-
-    'dvset'             => { in  => ['+int','+int'],
-                             out => [],
-                             BI  => BIdvset,
-                             ifdef=>DEBUG_PERDIO},
-
-    'siteStatistics'    => { in  => [],
-                             out => ['+[value]'],
-                             BI  => BIsiteStatistics},
-
-    'getTablesInfo'     => { in  => [],
-                             out => ['+[value]'],
-                             BI  => BItablesExtract},
-
-    'printBorrowTable'  => { in  => [],
-                             out => [],
-                             BI  => BIprintBorrowTable},
-
-    'printOwnerTable'   => { in  => [],
-                             out => [],
-                             BI  => BIprintOwnerTable},
-
-    'perdioStatistics'  => { in  => [],
-                             out => ['+record'],
-                             BI  => BIperdioStatistics},
-
-    'slowNet'           => { in  => ['+int', '+int'],
-                             out => [],
-                             bi  => BIslowNet},
-
     ###
     ### Statistics
     ###

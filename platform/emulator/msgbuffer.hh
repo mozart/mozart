@@ -31,8 +31,10 @@
 #pragma interface
 #endif
 
+#include "base.hh"
+#include "am.hh"
 #include "tagged.hh"
-#include "comm.hh"
+#include "dpInterface.hh"
 
 #define MSGFLAG_TEXTMODE  0x1
 #define MSGFLAG_OLDFORMAT 0x2
@@ -73,7 +75,7 @@ public:
   BYTE get(){
     if(posMB==endMB){
       return getNext();}
-    PD((MARSHAL_CT,"one char got c:%d",*posMB));
+    DebugCode(maybeDebugBufferGet(*posMB););
     return *posMB++;}
 
   void put(BYTE b){
@@ -81,12 +83,12 @@ public:
       putNext(b);
       return;}
     *posMB++=b;
-    PD((MARSHAL_CT,"one char put c:%d p:%d",b,*posMB));
+    DebugCode(maybeDebugBufferPut(*posMB););
   }
 
   //
   virtual char* siteStringrep()=0;
-  virtual Site* getSite()=0;                    // overrided for network/vsite comm
+  virtual DSite* getSite()=0;                    // overrided for network/vsite comm
   virtual Bool isPersistentBuffer()=0;
   virtual void unmarshalReset()                 {} // only for network receovery
 
@@ -96,31 +98,11 @@ public:
   OZ_Term getNoGoods()      { return nogoods; }
 };
 
+//
+// kost@  The whole thing should be in 'components.hh' if there would
+// be one;
 MsgBuffer* getComponentMsgBuffer();
-MsgBuffer* getRemoteMsgBuffer(Site *);
-MsgBuffer* getVirtualMsgBuffer(Site *);
-void dumpRemoteMsgBuffer(MsgBuffer*);
-void dumpVirtualMsgBuffer(MsgBuffer*);
-
-class MsgBufferManager{
-public:
-  MsgBuffer* getMsgBuffer(Site * s){
-    if(s){
-      if(s->remoteComm()){
-        return getRemoteMsgBuffer(s);}
-      return getVirtualMsgBuffer(s);}
-    return getComponentMsgBuffer();}
-
-  void dumpMsgBuffer(MsgBuffer *m){ // only for marshaled/write stuff (not read)
-    Site *s=m->getSite();
-    if(s->remoteComm()){
-      dumpRemoteMsgBuffer(m);}
-    else{
-      Assert(s!=NULL);
-      dumpVirtualMsgBuffer(m);}}
-};
-
-extern MsgBufferManager *msgBufferManager;
+void freeComponentMsgBuffer(MsgBuffer *buf);
 
 /* RS: have to GC the byte stream again !!!!!!!!!*/
 #define CheckNogoods(val,bs,msg,Cleanup)                                \

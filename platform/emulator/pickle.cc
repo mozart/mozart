@@ -26,7 +26,6 @@
 
 #ifdef TEXT2PICKLE
 #define EmulatorOnly(Code)
-#define PD(x)
 #else
 #define EmulatorOnly(Code) Code
 #endif
@@ -196,7 +195,6 @@ const int shortSize = 2;
 
 void marshalShort(unsigned short i, MsgBuffer *bs)
 {
-  PD((MARSHAL_CT,"Short %d BYTES:2",i));
   if (bs->textmode()) {
     for (int k=0; k<shortSize; k++) {
       putTag(TAG_BYTE,bs);
@@ -239,7 +237,6 @@ void marshalString(const char *s, MsgBuffer *bs)
   }
 
   marshalNumber(strlen(s),bs);
-  PD((MARSHAL_CT,"String BYTES:%d",strlen(s)));
   while(*s) {
     bs->put(*s);
     s++;

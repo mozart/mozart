@@ -40,6 +40,7 @@
 #endif
 
 #include "variable.hh"
+#include "dpInterface.hh"
 
 #ifdef DEBUG_CHECK
 #include "am.hh"
@@ -71,13 +72,6 @@ enum TypeOfGenCVariable {
   CtVariable,
   NonGenCVariable,
   OZ_VAR_EXTENTED
-};
-
-enum VariableStatus {
-  OZ_FREE,
-  OZ_FUTURE,
-  OZ_KINDED,
-  OZ_OTHER
 };
 
 #ifdef DEBUG_CHECK
@@ -162,8 +156,6 @@ public:
  * Kinded/Free
  * ------------------------------------------------------------------------- */
 
-VariableStatus _oz_statusPerdioVar(PerdioVar *cv);
-
 inline
 VariableStatus oz_cv_status(GenCVariable *cv)
 {
@@ -179,7 +171,7 @@ VariableStatus oz_cv_status(GenCVariable *cv)
   case OZ_VAR_FUTURE:
     return OZ_FUTURE;
   case PerdioVariable:
-    return _oz_statusPerdioVar((PerdioVar*)cv);
+    return perdioVarStatus(cv);
   default:
     return OZ_OTHER;
   }

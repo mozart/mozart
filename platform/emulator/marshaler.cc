@@ -33,18 +33,16 @@
 #include "wsock.hh"
 #include "codearea.hh"
 #include "indexing.hh"
-#include "dp_table.hh"
-#include "dp_gname.hh"
-#include "perdio_debug.hh"
+#include "gname.hh"
 #include "genvar.hh"
-#include "perdiovar.hh"
 #include "gc.hh"
 #include "dictionary.hh"
 #include "urlc.hh"
 #include "marshaler.hh"
-#include "comm.hh"
+#include "site.hh"
 #include "msgbuffer.hh"
 #include "extension.hh"
+#include "pickle.hh"
 
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -56,34 +54,25 @@
 #include <ctype.h>
 #include <stdarg.h>
 
+//
+SendRecvCounter dif_counter[DIF_LAST];
+SendRecvCounter misc_counter[MISC_LAST];
+
+char *misc_names[MISC_LAST] = {
+  "string",
+  "gname",
+  "site"
+};
+
+RefTable *refTable;
 
 /* ************************************************************************ */
 /*  SECTION ::  provided to marshaler from perdio.cc */
 /* ************************************************************************ */
 
-OZ_Term unmarshalTertiary(MsgBuffer*,MarshalTag);
-OZ_Term unmarshalOwner(MsgBuffer*,MarshalTag);
-Site *unmarshalGNameSite(MsgBuffer*);
-OZ_Term unmarshalVar(MsgBuffer*);
-Site* unmarshalSite(MsgBuffer*);
-void unmarshalUnsentSite(MsgBuffer*);
-Credit unmarshalCreditOutline(MsgBuffer*);
-
-Bool marshalTertiary(Tertiary *,MarshalTag, MsgBuffer*);
-void marshalVar(PerdioVar *,MsgBuffer*);
-void marshalSite(Site *,MsgBuffer*);
-void marshalCreditOutline(Credit c,MsgBuffer *bs);
-void marshalDIF(MsgBuffer *bs, MarshalTag tag);
-
 void addGName(GName*,TaggedRef);
 TaggedRef oz_findGName(GName*);
 void deleteGName(GName*);
-
-// isn't this a variety of globalization - ATTENTION
-PerdioVar *var2PerdioVar(TaggedRef *);
-
-void SiteUnifyCannotFail(TaggedRef,TaggedRef); // ATTENTION
-void pushUnify(Thread *,TaggedRef,TaggedRef); // ATTENTION - for compponents
 
 /* *****************************************************************************
                        ORGANIZATION
@@ -116,174 +105,17 @@ void pushUnify(Thread *,TaggedRef,TaggedRef); // ATTENTION - for compponents
 /* *********************************************************************/
 
 OZ_Term unmarshalTerm(MsgBuffer *);
-void unmarshalUnsentTerm(MsgBuffer *);
 void marshalTerm(OZ_Term, MsgBuffer *);
 ProgramCounter unmarshalCode(MsgBuffer*,Bool);
-void marshalVariable(PerdioVar *, MsgBuffer *);
 SRecord *unmarshalSRecord(MsgBuffer *);
-void unmarshalUnsentSRecord(MsgBuffer *);
 void unmarshalTerm(MsgBuffer *, OZ_Term *);
-int unmarshalUnsentNumber(MsgBuffer *bs);
 
 #define CheckD0Compatibility \
    if (ozconf.perdiod0Compatiblity) goto bomb;
 
 
-/* *********************************************************************/
-/*   SECTION 2: global variables                                       */
-/* *********************************************************************/
-
-SendRecvCounter dif_counter[DIF_LAST];
-SendRecvCounter misc_counter[MISC_LAST];
-
-char *misc_names[MISC_LAST] = {
-  "string",
-  "gname",
-  "site"
-};
-
-/* *********************************************************************/
-/*   SECTION 3: utility routines                                       */
-/* *********************************************************************/
-
-
-/* *********************************************************************/
-/*   SECTION 4: classes RefTable RefTrail                              */
-/* *********************************************************************/
-
-class RefTable {
-  OZ_Term *array;
-  int size;
-  int nextFree; // only for backwards compatibility
-public:
-  void reset() { nextFree=0; }
-  RefTable()
-  {
-    reset();
-    size     = 100;
-    array    = new OZ_Term[size];
-  }
-  OZ_Term get(int i)
-  {
-    return (i>=size) ? makeTaggedNULL() : array[i];
-  }
-  void set(OZ_Term val, int pos)
-  {
-    if (pos == -1) {
-      pos = nextFree++;
-    }
-    if (pos>=size)
-      resize(pos);
-    array[pos] = val;
-  }
-  void resize(int newsize)
-  {
-    int oldsize = size;
-    OZ_Term  *oldarray = array;
-    while(size <= newsize) {
-      size = (size*3)/2;
-    }
-    array = new OZ_Term[size];
-    for (int i=0; i<oldsize; i++) {
-      array[i] = oldarray[i];
-    }
-    delete oldarray;
-  }
-};
-
-RefTable *refTable;
-
-int unmarshalRefTag(MsgBuffer *bs)
-{
-  return bs->oldFormat() ? -1 : unmarshalNumber(bs);
-}
-
-inline void gotRef(MsgBuffer *bs, TaggedRef val, int index)
-{
-  refTable->set(val,index);
-}
-
-
-
-/*
-
-  RefTrail
-  Problem: there is no room in lists to remember, that they have
-  been visited already: first element might be a variable which was bound
-  --> we might have REF cells pointing to the beginning of the list, so we
-  run into problems if the list is _first_ marshalled.
-  Solution: for lists we do not mark the datastructure but remember a
-  pointer to it on the refTrail together with its counter value.
-
- */
-
-#define RT_LISTTAG 0x1
-
-class RefTrail: public Stack {
-  int counter;
-
-public:
-  int getCounter() { return counter; }
-
-  RefTrail() : Stack(200,Stack_WithMalloc) { counter=0; }
-  void pushInt(int i) { push(ToPointer(i)); }
-  int trail(OZ_Term *t)
-  {
-    pushInt(*t);
-    push(t);
-    return counter++;
-  }
-  int trail(LTuple *l)
-  {
-    Assert(find(l)==-1);
-    pushInt(counter++);
-    pushInt(ToInt32(l)|RT_LISTTAG);
-    return counter-1;
-  }
-
-  int find(LTuple *l)
-  {
-    int ret = -1;
-    StackEntry *savedTop = tos;
-
-    while(!isEmpty()) {
-      unsigned int l1 = ToInt32(pop());
-      int n = ToInt32(pop());
-      if ((l1&RT_LISTTAG) && l1==(ToInt32(l)|RT_LISTTAG)) {
-        ret = n;
-        break;
-      }
-    }
-    tos = savedTop;
-    return ret;
-  }
-
-  void unwind()
-  {
-    while(!isEmpty()) {
-      OZ_Term *loc = (OZ_Term*) pop();
-      OZ_Term oldval = ToInt32(pop());
-      if ((ToInt32(loc)&RT_LISTTAG)==0) {
-        *loc = oldval;
-      }
-      counter--;
-    }
-    Assert(counter==0);
-  }
-};
-
 RefTrail *refTrail;
 
-/* *********************************************************************/
-/*   SECTION 5: unmarshalHeader                                        */
-/* *********************************************************************/
-
-MessageType unmarshalHeader(MsgBuffer *bs){
-  bs->unmarshalBegin();
-  refTable->reset();
-  MessageType mt= (MessageType) bs->get();
-  mess_counter[mt].recv();
-  return mt;}
 
 /* *********************************************************************/
 /*   SECTION 6:  simple ground marshaling/unmarshaling                 */
@@ -294,7 +126,6 @@ unsigned short unmarshalShort(MsgBuffer *bs){
   unsigned int i1 = bs->get();
   unsigned int i2 = bs->get();
   sh= (i1 + (i2<<8));
-  PD((UNMARSHAL_CT,"Short %d BYTES:2",sh));
   return sh;}
 
 class DoubleConv {
@@ -350,17 +181,9 @@ char *unmarshalString(MsgBuffer *bs)
   for (int k=0; k<i; k++) {
     ret[k] = bs->get();
   }
-  PD((UNMARSHAL_CT,"String BYTES:%d",i));
   ret[i] = '\0';
   return ret;
 }
-
-void unmarshalUnsentString(MsgBuffer *bs)
-{
-  char *aux = unmarshalString(bs);
-  delete [] aux;
-}
-
 
 #define Comment(Args) if (bs->textmode()) {comment Args;}
 
@@ -384,12 +207,10 @@ void comment(MsgBuffer *bs, const char *format, ...)
 void marshalGName(GName *gname, MsgBuffer *bs)
 {
   misc_counter[MISC_GNAME].send();
-  PD((MARSHAL,"gname: s:%s", gname->site->stringrep()));
 
   Comment((bs,"GNAMESTART"));
-  gname->site->marshalPSite(bs);
+  gname->site->marshalSite(bs);
   for (int i=0; i<fatIntDigits; i++) {
-    PD((MARSHAL,"gname: id%d:%u", i,gname->id.number[i]));
     marshalNumber(gname->id.number[i],bs);
   }
   marshalNumber((int)gname->gnameType,bs);
@@ -398,19 +219,15 @@ void marshalGName(GName *gname, MsgBuffer *bs)
 
 void unmarshalGName1(GName *gname, MsgBuffer *bs)
 {
-  gname->site=unmarshalPSite(bs);
-  PD((UNMARSHAL,"gname: s:%s", gname->site->stringrep()));
+  gname->site=unmarshalSite(bs);
   for (int i=0; i<fatIntDigits; i++) {
     gname->id.number[i] = unmarshalNumber(bs);
-    PD((MARSHAL,"gname: id%d:%u", i, gname->id.number[i]));
   }
   gname->gnameType = (GNameType) unmarshalNumber(bs);
-  PD((UNMARSHAL,"gname finish type:%d", gname->gnameType));
 }
 
 GName *unmarshalGName(TaggedRef *ret, MsgBuffer *bs)
 {
-  PD((UNMARSHAL,"gname"));
   misc_counter[MISC_GNAME].recv();
   GName gname;
   unmarshalGName1(&gname,bs);
@@ -431,8 +248,6 @@ int debugRefs = 0;
 
 void marshalRef(int n, MsgBuffer *bs, TypeOfTerm tag)
 {
-  PD((MARSHAL,"circular: %d",n));
-
   if (debugRefs && tag!=REF) {
     Assert(0); // not yet implemented
     marshalDIF(bs,DIF_REF_DEBUG);
@@ -453,13 +268,10 @@ inline Bool checkCycle(OZ_Term t, MsgBuffer *bs, TypeOfTerm tag)
   return NO;
 }
 
-
-
 inline void trailCycle(OZ_Term *t, MsgBuffer *bs)
 {
   int counter = refTrail->trail(t);
   marshalTermDef(counter,bs);
-  PD((REF_COUNTER,"trail: %d",counter));
   *t = ((counter)<<tagSize)|GCTAG;
 }
 
@@ -479,6 +291,15 @@ inline void trailCycle(LTuple *l, MsgBuffer *bs)
   marshalTermDef(counter,bs);
 }
 
+void trailCycleOutLine(LTuple *l, MsgBuffer *bs){
+  trailCycle(l, bs);}
+void trailCycleOutLine(OZ_Term *l, MsgBuffer *bs){
+  trailCycle(l, bs);}
+Bool checkCycleOutLine(LTuple *l, MsgBuffer *bs){
+  return checkCycle(l, bs);}
+Bool checkCycleOutLine(OZ_Term t, MsgBuffer *bs, TypeOfTerm tag){
+  return checkCycle(t, bs, tag);}
+
 void marshalSRecord(SRecord *sr, MsgBuffer *bs)
 {
   TaggedRef t = oz_nil();
@@ -497,24 +318,12 @@ void marshalClass(ObjectClass *cl, MsgBuffer *bs)
   marshalSRecord(cl->getFeatures(),bs);
 }
 
-
-
 void marshalNoGood(TaggedRef term, MsgBuffer *bs)
 {
   bs->addNogood(term);
   marshalTerm(NameNonExportable,bs); // to make bs consistent
 }
 
-
-
-void marshalObject(Object *o, MsgBuffer *bs, GName *gnclass)
-{
-  if (marshalTertiary(o,DIF_OBJECT,bs)) return;   /* ATTENTION */
-  Assert(o->hasGName());
-  marshalGName(o->hasGName(),bs);
-  marshalGName(gnclass,bs);
-  trailCycle(o->getCycleRef(),bs);
-}
 
 /* *********************************************************************/
 /*   SECTION 10: ConstTerm and Term marshaling                          */
@@ -524,14 +333,12 @@ void marshalConst(ConstTerm *t, MsgBuffer *bs)
 {
   switch (t->getType()) {
   case Co_BigInt:
-    PD((MARSHAL,"bigint"));
     marshalDIF(bs,DIF_BIGINT);
     marshalString(toC(makeTaggedConst(t)),bs);
     return;
 
   case Co_Dictionary:
     {
-      PD((MARSHAL,"dictionary"));
       OzDictionary *d = (OzDictionary *) t;
 
       if (!d->isSafeDict()) {
@@ -556,7 +363,6 @@ void marshalConst(ConstTerm *t, MsgBuffer *bs)
 
   case Co_Builtin:
     {
-      PD((MARSHAL,"builtin"));
       Builtin *bi= (Builtin *)t;
       if (bi->isNative())
         goto bomb;
@@ -569,7 +375,6 @@ void marshalConst(ConstTerm *t, MsgBuffer *bs)
     }
   case Co_Chunk:
     {
-      PD((MARSHAL,"chunk"));
       SChunk *ch=(SChunk *) t;
       GName *gname=ch->getGName();
       marshalDIF(bs,DIF_CHUNK);
@@ -580,7 +385,6 @@ void marshalConst(ConstTerm *t, MsgBuffer *bs)
     }
   case Co_Class:
     {
-      PD((MARSHAL,"class"));
       ObjectClass *cl = (ObjectClass*) t;
       if (cl->isNative())
         goto bomb;
@@ -591,7 +395,6 @@ void marshalConst(ConstTerm *t, MsgBuffer *bs)
     }
   case Co_Abstraction:
     {
-      PD((MARSHAL,"abstraction"));
       Abstraction *pp=(Abstraction *) t;
       if (pp->getPred()->isNative())
         goto bomb;
@@ -612,9 +415,7 @@ void marshalConst(ConstTerm *t, MsgBuffer *bs)
         marshalTerm(pp->getG(i),bs);
       }
 
-      PD((MARSHAL,"code begin"));
       marshalCode(pc,bs);
-      PD((MARSHAL,"code end"));
       return;
     }
 
@@ -622,20 +423,15 @@ void marshalConst(ConstTerm *t, MsgBuffer *bs)
     {
       CheckD0Compatibility;
 
-      PD((MARSHAL,"object"));
-      Object *o = (Object*) t;
-      ObjectClass *oc = o->getClass();
-      oc->globalize();
-      o->globalize();
-      bs->addRes(makeTaggedConst(t));
-      marshalObject(o,bs,oc->getGName());
+      if (!isPerdioInitialized()) perdioInitLocal();
+      marshalObject(t, bs);
       return;
     }
 
 #define HandleTert(string,tag,check)                    \
     if (check) { CheckD0Compatibility; }                \
-    PD((MARSHAL,string));                               \
     bs->addRes(makeTaggedConst(t));                     \
+    if (!isPerdioInitialized()) perdioInitLocal();      \
     if (marshalTertiary((Tertiary *) t,tag,bs)) return; \
     trailCycle(t->getCycleRef(),bs);                    \
     return;
@@ -661,24 +457,20 @@ void marshalTerm(OZ_Term t, MsgBuffer *bs)
   int depth = 0;
 loop:
   DEREF(t,tPtr,tTag);
-  PD((MARSHAL,"tag:%d",tTag));
   switch(tTag) {
 
   case SMALLINT:
-    PD((MARSHAL,"small int: %d",smallIntValue(t)));
     marshalDIF(bs,DIF_SMALLINT);
     marshalNumber(smallIntValue(t),bs);
     break;
 
   case OZFLOAT:
-    PD((MARSHAL,"float"));
     marshalDIF(bs,DIF_FLOAT);
     marshalFloat(tagged2Float(t)->getValue(),bs);
     break;
 
   case LITERAL:
     {
-      PD((MARSHAL,"literal"));
       Literal *lit = tagged2Literal(t);
       if (checkCycle(*lit->getCycleRef(),bs,tTag)) goto exit;
 
@@ -709,13 +501,10 @@ loop:
   case LTUPLE:
     {
       depth++; Comment((bs,"("));
-      PD((MARSHAL,"ltuple"));
       LTuple *l = tagged2LTuple(t);
       if (checkCycle(l,bs)) goto exit;
       marshalDIF(bs,DIF_LIST);
       trailCycle(l,bs);
-      PD((MARSHAL_CT,"tag DIF_LIST BYTES:1"));
-      PD((MARSHAL,"list"));
 
       marshalTerm(l->getHead(),bs);
 
@@ -727,7 +516,6 @@ loop:
   case SRECORD:
     {
       depth++; Comment((bs,"("));
-      PD((MARSHAL,"srecord"));
       SRecord *rec = tagged2SRecord(t);
       if (checkCycle(*rec->getCycleAddr(),bs,tTag)) goto exit;
       TaggedRef label = rec->getLabel();
@@ -735,17 +523,14 @@ loop:
       if (rec->isTuple()) {
         marshalDIF(bs,DIF_TUPLE);
         trailCycle(rec->getCycleAddr(),bs);
-        PD((MARSHAL_CT,"tag DIF_TUPLE BYTES:1"));
         marshalNumber(rec->getTupleWidth(),bs);
       } else {
         marshalDIF(bs,DIF_RECORD);
         trailCycle(rec->getCycleAddr(),bs);
-        PD((MARSHAL_CT,"tag DIF_RECORD BYTES:1"));
         marshalTerm(rec->getArityList(),bs);
       }
       marshalTerm(label,bs);
       int argno = rec->getWidth();
-      PD((MARSHAL,"record-tuple no:%d",argno));
 
       for(int i=0; i<argno-1; i++) {
         marshalTerm(rec->getArg(i),bs);
@@ -757,7 +542,6 @@ loop:
 
   case EXT:
     {
-      PD((MARSHAL,"extension"));
       // hack alert using vtable to trail cycle
       if (!checkCycle(*((TaggedRef*)oz_tagged2Extension(t)),bs,tTag)) {
         marshalDIF(bs,DIF_EXTENSION);
@@ -770,7 +554,6 @@ loop:
     }
   case OZCONST:
     {
-      PD((MARSHAL,"constterm"));
       if (!checkCycle(*(tagged2Const(t)->getCycleRef()),bs,tTag)) {
         Comment((bs,"("));
         marshalConst(tagged2Const(t),bs);
@@ -783,7 +566,6 @@ loop:
     {
       CheckD0Compatibility;
 
-      PD((MARSHAL,"finite set value"));
       OZ_FSetValue * fsetval = tagged2FSetValue(t);
       marshalDIF(bs,DIF_FSETVALUE);
       // tail recursion optimization
@@ -794,16 +576,12 @@ loop:
   case UVAR:
     // FUT
   case CVAR:
-    {
-      PerdioVar *pvar = var2PerdioVar(tPtr);
-      if (pvar==NULL) {
-        t = makeTaggedRef(tPtr);
-        goto bomb;
-      }
-      bs->addRes(makeTaggedRef(tPtr));
-      marshalVariable(pvar,bs);
+    if (!isPerdioInitialized()) perdioInitLocal();
+    if (marshalVariable(tPtr, bs))
       break;
-    }
+    else
+      t=makeTaggedRef(tPtr);
+      goto bomb;
 
   default:
   bomb:
@@ -826,7 +604,6 @@ void unmarshalDict(MsgBuffer *bs, TaggedRef *ret)
 {
   int refTag = unmarshalRefTag(bs);
   int size   = unmarshalNumber(bs);
-  PD((UNMARSHAL,"dict size:%d",size));
   Assert(oz_onToplevel());
   OzDictionary *aux = new OzDictionary(am.currentBoard(),size);
   aux->markSafe();
@@ -841,32 +618,6 @@ void unmarshalDict(MsgBuffer *bs, TaggedRef *ret)
   return;
 }
 
-void unmarshalObject(ObjectFields *o, MsgBuffer *bs){
-  o->feat = unmarshalSRecord(bs);
-  o->state=unmarshalTerm(bs);
-  o->lock=unmarshalTerm(bs);}
-
-void fillInObject(ObjectFields *of, Object *o){
-  o->setFreeRecord(of->feat);
-  o->setState(tagged2Tert(of->state));
-  o->setLock(oz_isNil(of->lock) ? (LockProxy*)NULL : (LockProxy*)tagged2Tert(of->lock));}
-
-void unmarshalUnsentObject(MsgBuffer *bs){
-  unmarshalUnsentSRecord(bs);
-  unmarshalUnsentTerm(bs);
-  unmarshalUnsentTerm(bs);}
-
-void unmarshalObjectAndClass(ObjectFields *o, MsgBuffer *bs){
-  unmarshalObject(o,bs);
-  o->clas = unmarshalTerm(bs);}
-
-void unmarshalUnsentObjectAndClass(MsgBuffer *bs){
-  unmarshalUnsentObject(bs);
-  unmarshalUnsentTerm(bs);}
-
-void fillInObjectAndClass(ObjectFields *of, Object *o){
-  fillInObject(of,o);
-  o->setClass(tagged2ObjectClass(of->clas));}
 
 void unmarshalClass(ObjectClass *cl, MsgBuffer *bs)
 {
@@ -904,9 +655,6 @@ SRecord *unmarshalSRecord(MsgBuffer *bs){
   return oz_isNil(t) ? (SRecord*)NULL : tagged2SRecord(t);
 }
 
-void unmarshalUnsentSRecord(MsgBuffer *bs){
-  unmarshalUnsentTerm(bs);}
-
 /* *********************************************************************/
 /*   SECTION 12: term unmarshaling                                     */
 /* *********************************************************************/
@@ -915,19 +663,16 @@ void unmarshalTerm(MsgBuffer *bs, OZ_Term *ret)
 {
 loop:
   MarshalTag tag = (MarshalTag) bs->get();
-  PD((UNMARSHAL,"term tag:%s %d",dif_names[(int) tag].name,tag));
 
   dif_counter[tag].recv();
   switch(tag) {
 
   case DIF_SMALLINT:
     *ret = OZ_int(unmarshalNumber(bs));
-    PD((UNMARSHAL,"small int %d",smallIntValue(*ret)));
     return;
 
   case DIF_FLOAT:
     *ret = OZ_float(unmarshalFloat(bs));
-    PD((UNMARSHAL,"float"));
     return;
 
   case DIF_NAME:
@@ -943,8 +688,6 @@ loop:
         printname = unmarshalString(bs);
         gname     = unmarshalGName(ret,bs);
       }
-
-      PD((UNMARSHAL,"name %s",printname));
 
       if (gname) {
         Name *aux;
@@ -979,8 +722,6 @@ loop:
       int refTag      = unmarshalRefTag(bs);
       char *printname = unmarshalString(bs);
 
-      PD((UNMARSHAL,"unique name %s",printname));
-
       *ret = oz_uniqueName(printname);
       gotRef(bs,*ret,refTag);
       delete printname;
@@ -991,7 +732,6 @@ loop:
     {
       int refTag = unmarshalRefTag(bs);
       char *aux  = unmarshalString(bs);
-      PD((UNMARSHAL,"atom %s",aux));
       *ret = OZ_atom(aux);
       gotRef(bs,*ret,refTag);
       delete aux;
@@ -1001,7 +741,6 @@ loop:
   case DIF_BIGINT:
     {
       char *aux = unmarshalString(bs);
-      PD((UNMARSHAL,"big int %s",aux));
       *ret = OZ_CStringToNumber(aux);
       delete aux;
       return;
@@ -1009,7 +748,6 @@ loop:
 
   case DIF_LIST:
     {
-      PD((UNMARSHAL,"list"));
       LTuple *l = new LTuple();
       *ret = makeTaggedLTuple(l);
       int refTag = unmarshalRefTag(bs);
@@ -1023,7 +761,6 @@ loop:
     {
       int refTag = unmarshalRefTag(bs);
       int argno  = unmarshalNumber(bs);
-      PD((UNMARSHAL,"tuple no_args:%d",argno));
       TaggedRef label = unmarshalTerm(bs);
       SRecord *rec = SRecord::newSRecord(label,argno);
       *ret = makeTaggedSRecord(rec);
@@ -1047,7 +784,6 @@ loop:
         TaggedRef aux = duplist(arity,len);
         sortedarity = sortlist(aux,len);
       }
-      PD((UNMARSHAL,"record no:%d",oz_fastlength(arity)));
       TaggedRef label = unmarshalTerm(bs);
       SRecord *rec    = SRecord::newSRecord(label,aritytable.find(sortedarity));
       *ret = makeTaggedSRecord(rec);
@@ -1064,7 +800,6 @@ loop:
   case DIF_REF:
     {
       int i = unmarshalNumber(bs);
-      PD((UNMARSHAL,"ref: %d",i));
       *ret = refTable->get(i);
       Assert(*ret);
       return;
@@ -1075,7 +810,6 @@ loop:
       Assert(0); // not yet implemented
       int i          = unmarshalNumber(bs);
       TypeOfTerm tag = (TypeOfTerm) unmarshalNumber(bs);
-      PD((UNMARSHAL,"ref: %d",i));
       *ret = refTable->get(i);
       Assert(*ret);
       Assert(tag==tagTypeOf(*ret));
@@ -1103,8 +837,6 @@ loop:
 
   case DIF_CHUNK:
     {
-      PD((UNMARSHAL,"chunk"));
-
       int refTag   = unmarshalRefTag(bs);
       GName *gname = unmarshalGName(ret,bs);
 
@@ -1128,7 +860,6 @@ loop:
 
   case DIF_CLASS:
     {
-      PD((UNMARSHAL,"class"));
       int refTag = unmarshalRefTag(bs);
 
       GName *gname=unmarshalGName(ret,bs);
@@ -1157,8 +888,6 @@ loop:
 
   case DIF_PROC:
     {
-      PD((UNMARSHAL,"proc"));
-
       int refTag    = unmarshalRefTag(bs);
       GName *gname  = unmarshalGName(ret,bs);
       OZ_Term name  = unmarshalTerm(bs);
@@ -1194,13 +923,11 @@ loop:
 
   case DIF_DICT:
     {
-      PD((UNMARSHAL,"dict"));
       unmarshalDict(bs,ret);
       return;
     }
   case DIF_ARRAY:
     {
-      PD((UNMARSHAL,"array"));
       warning("unmarshal array not impl");  // mm2
       return;
     }
@@ -1208,7 +935,6 @@ loop:
     {
       int refTag = unmarshalRefTag(bs);
       char *name = unmarshalString(bs); // ATTENTION deletion
-      PD((UNMARSHAL,"builtin: %s",name));
       Builtin * found = string2Builtin(name);
 
       if (!found) {
@@ -1228,7 +954,6 @@ loop:
 
   case DIF_FSETVALUE:
     {
-      PD((UNMARSHAL,"finite set value"));
       OZ_Term glb=unmarshalTerm(bs);
       extern void makeFSetValue(OZ_Term,OZ_Term*);
       makeFSetValue(glb,ret);
@@ -1238,7 +963,6 @@ loop:
   case DIF_EXTENSION:
     {
       int type = unmarshalNumber(bs);
-      PD((UNMARSHAL,"extension %d",type));
       *ret = oz_extension_unmarshal(type,bs);
       return;
     }
@@ -1253,113 +977,6 @@ loop:
   Assert(0);
 }
 
-void unmarshalUnsentTerm(MsgBuffer *bs) {
-  OZ_Term t=unmarshalTerm(bs);}
-
-/* *********************************************************************/
-/*   SECTION 13: perdiovar - special                                  */
-/* *********************************************************************/
-
-void marshalVariable(PerdioVar *pvar, MsgBuffer *bs)
-{
-  pvar->marshalV(bs);
-}
-
-void marshalObjVar(OldPerdioVar *pv,MsgBuffer *bs)
-{
-  Assert(pv->isObject());
-  PD((MARSHAL,"var objectproxy"));
-
-  if (checkCycle(*(pv->getObject()->getCycleRef()),bs,OZCONST))
-    return;
-
-  GName *classgn =  pv->isObjectClassAvail()
-    ? pv->getClass()->getGName() : pv->getGNameClass();
-
-  marshalObject(pv->getObject(),bs,classgn);
-}
-
-/* *********************************************************************/
-/*   SECTION 14: full object/class unmarshaling/marshaling             */
-/* *********************************************************************/
-
-void marshalFullObject(Object *o,MsgBuffer* bs){
-  PD((MARSHAL,"full object"));
-  marshalSRecord(o->getFreeRecord(),bs);
-  marshalTerm(makeTaggedConst(getCell(o->getState())),bs);
-  if (o->getLock()) {marshalTerm(makeTaggedConst(o->getLock()),bs);}
-  else {marshalTerm(oz_nil(),bs);}}
-
-void marshalFullObjectAndClass(Object *o,MsgBuffer* bs){
-  PD((MARSHAL,"full object and class"));
-  ObjectClass *oc=o->getClass();
-  marshalFullObject(o,bs);
-  marshalClass(oc,bs);}
-
-/* *********************************************************************/
-/*   SECTION 15: statistics                                            */
-/* *********************************************************************/
-
-#ifdef MISC_BUILTINS
-
-OZ_BI_define(BIperdioStatistics,0,1)
-{
-  OZ_Term dif_send_ar=oz_nil();
-  OZ_Term dif_recv_ar=oz_nil();
-  int i;
-  for (i=0; i<DIF_LAST; i++) {
-    dif_send_ar=oz_cons(oz_pairAI(dif_names[i].name,dif_counter[i].getSend()),
-                        dif_send_ar);
-    dif_recv_ar=oz_cons(oz_pairAI(dif_names[i].name,dif_counter[i].getRecv()),
-                        dif_recv_ar);
-  }
-  OZ_Term dif_send=OZ_recordInit(oz_atom("dif"),dif_send_ar);
-  OZ_Term dif_recv=OZ_recordInit(oz_atom("dif"),dif_recv_ar);
-
-  OZ_Term misc_send_ar=oz_nil();
-  OZ_Term misc_recv_ar=oz_nil();
-  for (i=0; i<MISC_LAST; i++) {
-    misc_send_ar=oz_cons(oz_pairAI(misc_names[i],misc_counter[i].getSend()),
-                         misc_send_ar);
-    misc_recv_ar=oz_cons(oz_pairAI(misc_names[i],misc_counter[i].getRecv()),
-                         misc_recv_ar);
-  }
-  OZ_Term misc_send=OZ_recordInit(oz_atom("misc"),misc_send_ar);
-  OZ_Term misc_recv=OZ_recordInit(oz_atom("misc"),misc_recv_ar);
-
-  OZ_Term mess_send_ar=oz_nil();
-  OZ_Term mess_recv_ar=oz_nil();
-  for (i=0; i<M_LAST; i++) {
-    mess_send_ar=oz_cons(oz_pairAI(mess_names[i],mess_counter[i].getSend()),
-                         mess_send_ar);
-    mess_recv_ar=oz_cons(oz_pairAI(mess_names[i],mess_counter[i].getRecv()),
-                         mess_recv_ar);
-  }
-  OZ_Term mess_send=OZ_recordInit(oz_atom("messages"),mess_send_ar);
-  OZ_Term mess_recv=OZ_recordInit(oz_atom("messages"),mess_recv_ar);
-
-
-  OZ_Term send_ar=oz_nil();
-  send_ar = oz_cons(oz_pairA("dif",dif_send),send_ar);
-  send_ar = oz_cons(oz_pairA("misc",misc_send),send_ar);
-  send_ar = oz_cons(oz_pairA("messages",mess_send),send_ar);
-  OZ_Term send=OZ_recordInit(oz_atom("send"),send_ar);
-
-  OZ_Term recv_ar=oz_nil();
-  recv_ar = oz_cons(oz_pairA("dif",dif_recv),recv_ar);
-  recv_ar = oz_cons(oz_pairA("misc",misc_recv),recv_ar);
-  recv_ar = oz_cons(oz_pairA("messages",mess_recv),recv_ar);
-  OZ_Term recv=OZ_recordInit(oz_atom("recv"),recv_ar);
-
-
-  OZ_Term ar=oz_nil();
-  ar=oz_cons(oz_pairA("send",send),ar);
-  ar=oz_cons(oz_pairA("recv",recv),ar);
-  OZ_RETURN(OZ_recordInit(oz_atom("perdioStatistics"),ar));
-} OZ_BI_end
-
-#endif
-
 /* *********************************************************************/
 /*   SECTION 16: initialization                                       */
 /* *********************************************************************/
@@ -1373,9 +990,7 @@ void initMarshaler(){
 
 Bool unmarshal_SPEC(MsgBuffer* buf,char* &vers,OZ_Term &t)
 {
-  PD((MARSHAL_BE,"unmarshal begin: %s s:%s","$1",buf->siteStringrep()));
   refTable->reset();
-  Assert(creditSiteIn==NULL);
   Assert(refTrail->isEmpty());
   if(buf->get()==DIF_SECONDARY) {Assert(0);return NO;}
   vers=unmarshalString(buf);
@@ -1394,7 +1009,6 @@ Bool unmarshal_SPEC(MsgBuffer* buf,char* &vers,OZ_Term &t)
   t=unmarshalTerm(buf);
   buf->unmarshalEnd();
   refTrail->unwind();
-  PD((MARSHAL_BE,"unmarshal end: %s s:%s","$1",buf->siteStringrep()));
   return OK;
 }
 
@@ -1409,16 +1023,6 @@ Bool unmarshal_SPEC(MsgBuffer* buf,char* &vers,OZ_Term &t)
 /*   SECTION 18: Exported to marshalMsg.m4cc                         */
 /* *********************************************************************/
 
-void marshalFullObjectRT(Object *o,MsgBuffer* bs){
-  Assert(refTrail->isEmpty());
-  marshalFullObject(o,bs);
-  refTrail->unwind();}
-
-void marshalFullObjectAndClassRT(Object *o,MsgBuffer* bs){
-  Assert(refTrail->isEmpty());
-  marshalFullObjectAndClass(o, bs);
-  refTrail->unwind();}
-
 void marshalTermRT(OZ_Term t, MsgBuffer *bs){
   Assert(refTrail->isEmpty());
   marshalTerm(t, bs);
@@ -1431,39 +1035,6 @@ OZ_Term unmarshalTermRT(MsgBuffer *bs){
   ret =  unmarshalTerm(bs);
   refTrail->unwind();
   return ret;
-}
-
-void unmarshalObjectRT(ObjectFields *o, MsgBuffer *bs){
-  refTable->reset();
-  Assert(refTrail->isEmpty());
-  unmarshalObject(o,bs);
-  refTrail->unwind();
-}
-
-
-void unmarshalObjectAndClassRT(ObjectFields *o, MsgBuffer *bs){
-  refTable->reset();
-  Assert(refTrail->isEmpty());
-  unmarshalObjectAndClass(o, bs);
-  refTrail->unwind();
-}
-
-
-/* *********************************************************************/
-/*   SECTION 19: message marshaling                                    */
-/* *********************************************************************/
-
-#include "marshalMsg.cc"
-
-
-/* *********************************************************************/
-/*   SECTION 20: The following go at the very end,                     */
-/*               so they will not be inlined                           */
-/* *********************************************************************/
-
-int unmarshalUnsentNumber(MsgBuffer *bs) // ATTENTION
-{
-  return unmarshalNumber(bs);
 }
 
 #include "pickle.cc"

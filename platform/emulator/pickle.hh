@@ -154,7 +154,6 @@ void marshalCodeStart(int codesize, MsgBuffer *bs);
 void putComment(char *s,MsgBuffer *bs);
 void putString(const char *s, MsgBuffer *bs);
 void putTag(char tag, MsgBuffer *bs);
-void marshalDIF(MsgBuffer *bs, MarshalTag tag) ;
 void marshalByte(unsigned char c, MsgBuffer *bs);
 void marshalString(const char *s, MsgBuffer *bs);
 void marshalLabel(int start, int lbl, MsgBuffer *bs);

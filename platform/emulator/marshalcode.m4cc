@@ -125,7 +125,6 @@ void marshalRecordArity(SRecordArity ar,MsgBuffer *bs)
 
 void marshalPredId(PrTabEntry *p,MsgBuffer *bs)
 {
-  PD((MARSHAL,"pred id begin"));
   marshalTerm(p->getName(),bs);
   marshalRecordArity(p->getMethodArity(),bs);
   marshalTerm(p->getFile(),bs);
@@ -133,7 +132,6 @@ void marshalPredId(PrTabEntry *p,MsgBuffer *bs)
   marshalNumber(p->getColumn(),bs);
   marshalTerm(p->getFlagsList(),bs);
   marshalNumber(p->getMaxX(),bs);
-  PD((MARSHAL,"pred id end"));
 }
 
 void marshalGenCallInfo(GenCallInfoClass *gci,MsgBuffer *bs)
@@ -215,7 +213,6 @@ void marshalCode(ProgramCounter start, MsgBuffer *bs)
 
 
   marshalCodeStart(codesize,bs);
-  PD((MARSHAL,"codesize %d",codesize));
 
   ProgramCounter PC = start;
 
@@ -231,7 +228,6 @@ void marshalCode(ProgramCounter start, MsgBuffer *bs)
     if (op==FASTCALL || op==FASTTAILCALL) {
       AbstractionEntry *entry = (AbstractionEntry *) getAdressArg(PC);
       if (!entry->copyable) {
-        PD((MARSHAL,"marshalledfastcall"));
         marshalOpCode(instrstart-start,MARSHALLEDFASTCALL,bs);
         Abstraction *abstr = entry->getAbstr();
         marshalTerm(makeTaggedConst(abstr),bs);
@@ -244,7 +240,6 @@ void marshalCode(ProgramCounter start, MsgBuffer *bs)
     }
 
     marshalOpCode(instrstart-start,op,bs);
-    PD((MARSHAL,"op put %d",op));
     switch(op) {
 
       changequote(`,') dnl '
@@ -257,7 +252,6 @@ void marshalCode(ProgramCounter start, MsgBuffer *bs)
 
   marshalOpCode(PC-start,ENDOFFILE,bs);
   marshalCodeEnd(bs);
-  PD((MARSHAL,"end of file put %d"));
 }
 
 enum { ATOMTAG, NUMBERTAG, RECORDTAG};
@@ -527,7 +521,6 @@ ProgramCounter unmarshalApplMethInfo(ProgramCounter PC,MsgBuffer *bs, CodeArea *
 ProgramCounter unmarshalCode(MsgBuffer *bs, Bool discard)
 {
   int codesize = unmarshalNumber(bs);  // this is in Bytes!!!
-  PD((UNMARSHAL,"codesize %d",codesize));
 
   ProgramCounter start, PC, lastPC;
   CodeArea *code = NULL;
@@ -541,7 +534,6 @@ ProgramCounter unmarshalCode(MsgBuffer *bs, Bool discard)
   while (OK) {
     lastPC = PC;
     Opcode op = (Opcode) bs->get();
-    PD((UNMARSHAL,"in code op %d",op));
     if (op == ENDOFFILE)
       break;
 
