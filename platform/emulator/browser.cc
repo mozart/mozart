@@ -36,6 +36,7 @@
 #include "builtins.hh"
 #include "var_base.hh"
 #include "space.hh"
+#include "thr_int.hh"
 
 
 OZ_BI_define(BIaddr,1,1)
@@ -116,7 +117,7 @@ OZ_C_proc_begin(BIgetsBoundB, 2)
   if (isVariableTag(vTag)){
     Thread *thr =
       (Thread *) OZ_makeSuspendedThread (_getsBound_dummyB, OZ_args, OZ_arity);
-    addSuspAnyVar(vPtr, thr);
+    if (oz_var_addSusp(vPtr, thr)) oz_wakeupThread(thr);
   }
 
   return PROCEED;		// no result yet;

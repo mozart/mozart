@@ -158,6 +158,8 @@ LBLrunThread:
 
     int ret=engine(NO);
 
+    DebugTrace(ozd_trace("emulation finished"));
+
     CTT->setAbstr(ozstat.currAbstr);
     ozstat.leaveCall(NULL);
     e->saveSelf();
@@ -547,6 +549,7 @@ LBLfailure:
 
 LBLraise:
   {
+    DebugTrace(ozd_trace("raise"));
     DebugCheck(ozconf.stopOnToplevelFailure,
 	       DebugTrace(ozd_tracerOn();ozd_trace("raise")));
 

@@ -195,7 +195,7 @@ OZ_Boolean OZ_Propagator::imposeOn(OZ_Term t)
 {
   DEREF(t, tptr, ttag);
   if (isVariableTag(ttag)) {
-    addSuspAnyVar(tptr, Propagator::getRunningPropagator());
+    oz_var_addSusp(tptr, Propagator::getRunningPropagator());
     return OZ_TRUE;
   } 
   return OZ_FALSE;
@@ -258,7 +258,7 @@ void OZ_Propagator::impose(OZ_Propagator * p, int prio)
       //      all_local &= isLocalVar(v);
     } else {
       Assert(isUVar(vtag));
-      addSuspUVar(vptr, prop);
+      oz_var_addSusp(vptr, prop);
       all_local &= oz_isLocalVar(tagged2CVar(*vptr));
     }
 

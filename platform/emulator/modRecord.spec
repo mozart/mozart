@@ -28,7 +28,7 @@
     (
      'is'	  => { in  => ['+value'],
 		       out => ['+bool'],
-		       bi  => BIisRecordB},
+		       bi  => BIisRecord},
 
      'isC'	  => { in  => ['+value'],
 		       out => ['+bool'],

@@ -250,29 +250,17 @@ public:
 
 /* ---------------------------------------------------------------------- */
 
-// mm2: not yet inlined
-void addSuspUVar(TaggedRef * v, Suspension susp, int unstable = TRUE);
+// mm2: not inlined
+OzVariable *oz_getVar(TaggedRef *v);
 
 Bool oz_var_valid(OzVariable*,TaggedRef*,TaggedRef);
 OZ_Return oz_var_unify(OzVariable*,TaggedRef*,TaggedRef*, ByteCode* = 0);
 OZ_Return oz_var_bind(OzVariable*,TaggedRef*,TaggedRef, ByteCode* = 0);
 OZ_Return oz_var_forceBind(OzVariable*,TaggedRef*,TaggedRef, ByteCode* = 0);
-void oz_var_addSusp(OzVariable*, TaggedRef*, Suspension, int = TRUE);
+Bool oz_var_addSusp(TaggedRef*, Suspension, int = TRUE);
 void oz_var_dispose(OzVariable*);
 void oz_var_printStream(ostream&, const char*, OzVariable*, int = 10);
 int oz_var_getSuspListLength(OzVariable*);
-
-inline
-void addSuspAnyVar(TaggedRef * v, Suspension susp,int unstable = TRUE)
-{
-  TaggedRef t = *v;
-  // FUT
-  if (isCVar(t)) {
-    oz_var_addSusp(tagged2CVar(*v), v, susp, unstable);
-  } else {
-    addSuspUVar(v, susp, unstable);
-  }
-}
 
 inline
 Bool isFuture(TaggedRef term)

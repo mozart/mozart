@@ -189,6 +189,14 @@ oz_declareDerefIN(ARG,VAR);			\
   }						\
 }
 
+#define oz_declareNonKindedIN(ARG,VAR)		\
+oz_declareDerefIN(ARG,VAR);			\
+{						\
+  if (oz_isNonKinded(VAR)) {			\
+    oz_suspendOnPtr(VAR ## Ptr);		\
+  }						\
+}
+
 #define oz_declareTypeArg(ARG,VAR,TT,TYPE)	\
 TT VAR;						\
 {						\

@@ -42,99 +42,100 @@
 
 inline
 // mm2: should be OZ_Return
-Bool oz_var_validINLINE(OzVariable *cv,TaggedRef *ptr,TaggedRef val)
+Bool oz_var_validINLINE(OzVariable *ov,TaggedRef *ptr,TaggedRef val)
 {
-  switch (cv->getType()){
-  case OZ_VAR_SIMPLE:  return ((SimpleVar *) cv)->valid(val);
-  case OZ_VAR_FUTURE:  return ((Future *) cv)->valid(val);
-  case OZ_VAR_BOOL:    return ((OzBoolVariable*) cv)->valid(val);
-  case OZ_VAR_FD:      return ((OzFDVariable*) cv)->valid(val);
-  case OZ_VAR_OF:      return ((OzOFVariable*) cv)->valid(val);
-  case OZ_VAR_FS:      return ((OzFSVariable*) cv)->valid(val);
-  case OZ_VAR_CT:      return ((OzCtVariable*) cv)->valid(val);
-  case OZ_VAR_EXT:     return ((ExtVar *) cv)->validV(val);
+  switch (ov->getType()){
+  case OZ_VAR_SIMPLE:  return ((SimpleVar *) ov)->valid(val);
+  case OZ_VAR_FUTURE:  return ((Future *) ov)->valid(val);
+  case OZ_VAR_BOOL:    return ((OzBoolVariable*) ov)->valid(val);
+  case OZ_VAR_FD:      return ((OzFDVariable*) ov)->valid(val);
+  case OZ_VAR_OF:      return ((OzOFVariable*) ov)->valid(val);
+  case OZ_VAR_FS:      return ((OzFSVariable*) ov)->valid(val);
+  case OZ_VAR_CT:      return ((OzCtVariable*) ov)->valid(val);
+  case OZ_VAR_EXT:     return ((ExtVar *) ov)->validV(val);
   default: error("not impl"); return FAILED;
   }
 }
 
 inline
-OZ_Return oz_var_unifyINLINE(OzVariable *cv,TaggedRef *ptr,TaggedRef *val,
+OZ_Return oz_var_unifyINLINE(OzVariable *ov,TaggedRef *ptr,TaggedRef *val,
 			     ByteCode *scp)
 {
-  switch (cv->getType()){
-  case OZ_VAR_SIMPLE:  return ((SimpleVar *) cv)->unify(ptr,val,scp);
-  case OZ_VAR_FUTURE:  return ((Future *) cv)->unify(ptr,val,scp);
-  case OZ_VAR_BOOL:    return ((OzBoolVariable*) cv)->unify(ptr,val,scp);
-  case OZ_VAR_FD:      return ((OzFDVariable*) cv)->unify(ptr,val,scp);
-  case OZ_VAR_OF:      return ((OzOFVariable*) cv)->unify(ptr,val,scp);
-  case OZ_VAR_FS:      return ((OzFSVariable*) cv)->unify(ptr,val,scp);
-  case OZ_VAR_CT:      return ((OzCtVariable*) cv)->unify(ptr,val,scp);
-  case OZ_VAR_EXT:     return ((ExtVar *) cv)->unifyV(ptr,val);
+  switch (ov->getType()){
+  case OZ_VAR_SIMPLE:  return ((SimpleVar *) ov)->unify(ptr,val,scp);
+  case OZ_VAR_FUTURE:  return ((Future *) ov)->unify(ptr,val,scp);
+  case OZ_VAR_BOOL:    return ((OzBoolVariable*) ov)->unify(ptr,val,scp);
+  case OZ_VAR_FD:      return ((OzFDVariable*) ov)->unify(ptr,val,scp);
+  case OZ_VAR_OF:      return ((OzOFVariable*) ov)->unify(ptr,val,scp);
+  case OZ_VAR_FS:      return ((OzFSVariable*) ov)->unify(ptr,val,scp);
+  case OZ_VAR_CT:      return ((OzCtVariable*) ov)->unify(ptr,val,scp);
+  case OZ_VAR_EXT:     return ((ExtVar *) ov)->unifyV(ptr,val);
   default:  error("not impl"); return FAILED;
   }
 }
 
 inline
-OZ_Return oz_var_bindINLINE(OzVariable *cv,TaggedRef *ptr,TaggedRef val,
+OZ_Return oz_var_bindINLINE(OzVariable *ov,TaggedRef *ptr,TaggedRef val,
 			    ByteCode *scp)
 {
-  switch (cv->getType()){
-  case OZ_VAR_SIMPLE:  return ((SimpleVar *) cv)->bind(ptr,val,scp);
-  case OZ_VAR_FUTURE:  return ((Future *) cv)->bind(ptr,val,scp);
-  case OZ_VAR_BOOL:    return ((OzBoolVariable*) cv)->bind(ptr,val,scp);
-  case OZ_VAR_FD:      return ((OzFDVariable*) cv)->bind(ptr,val,scp);
-  case OZ_VAR_OF:      return ((OzOFVariable*) cv)->bind(ptr,val,scp);
-  case OZ_VAR_FS:      return ((OzFSVariable*) cv)->bind(ptr,val,scp);
-  case OZ_VAR_CT:      return ((OzCtVariable*) cv)->bind(ptr,val,scp);
-  case OZ_VAR_EXT:     return ((ExtVar *) cv)->bindV(ptr,val);
+  switch (ov->getType()){
+  case OZ_VAR_SIMPLE:  return ((SimpleVar *) ov)->bind(ptr,val,scp);
+  case OZ_VAR_FUTURE:  return ((Future *) ov)->bind(ptr,val,scp);
+  case OZ_VAR_BOOL:    return ((OzBoolVariable*) ov)->bind(ptr,val,scp);
+  case OZ_VAR_FD:      return ((OzFDVariable*) ov)->bind(ptr,val,scp);
+  case OZ_VAR_OF:      return ((OzOFVariable*) ov)->bind(ptr,val,scp);
+  case OZ_VAR_FS:      return ((OzFSVariable*) ov)->bind(ptr,val,scp);
+  case OZ_VAR_CT:      return ((OzCtVariable*) ov)->bind(ptr,val,scp);
+  case OZ_VAR_EXT:     return ((ExtVar *) ov)->bindV(ptr,val);
   default:  error("not impl"); return FAILED;
   }
 }
 
 inline
-OZ_Return oz_var_forceBindINLINE(OzVariable *cv,TaggedRef *ptr,TaggedRef val,
+OZ_Return oz_var_forceBindINLINE(OzVariable *ov,TaggedRef *ptr,TaggedRef val,
 			    ByteCode *scp)
 {
-  switch (cv->getType()){
-  case OZ_VAR_SIMPLE:  return ((SimpleVar *) cv)->bind(ptr,val,scp);
-  case OZ_VAR_FUTURE:  return ((Future *) cv)->forceBind(ptr,val,scp);
-  case OZ_VAR_BOOL:    return ((OzBoolVariable*) cv)->bind(ptr,val,scp);
-  case OZ_VAR_FD:      return ((OzFDVariable*) cv)->bind(ptr,val,scp);
-  case OZ_VAR_OF:      return ((OzOFVariable*) cv)->bind(ptr,val,scp);
-  case OZ_VAR_FS:      return ((OzFSVariable*) cv)->bind(ptr,val,scp);
-  case OZ_VAR_CT:      return ((OzCtVariable*) cv)->bind(ptr,val,scp);
-  case OZ_VAR_EXT:     return ((ExtVar *) cv)->forceBindV(ptr,val);
+  switch (ov->getType()){
+  case OZ_VAR_SIMPLE:  return ((SimpleVar *) ov)->bind(ptr,val,scp);
+  case OZ_VAR_FUTURE:  return ((Future *) ov)->forceBind(ptr,val,scp);
+  case OZ_VAR_BOOL:    return ((OzBoolVariable*) ov)->bind(ptr,val,scp);
+  case OZ_VAR_FD:      return ((OzFDVariable*) ov)->bind(ptr,val,scp);
+  case OZ_VAR_OF:      return ((OzOFVariable*) ov)->bind(ptr,val,scp);
+  case OZ_VAR_FS:      return ((OzFSVariable*) ov)->bind(ptr,val,scp);
+  case OZ_VAR_CT:      return ((OzCtVariable*) ov)->bind(ptr,val,scp);
+  case OZ_VAR_EXT:     return ((ExtVar *) ov)->forceBindV(ptr,val);
   default:  error("not impl"); return FAILED;
   }
 }
 
 inline
-void oz_var_disposeINLINE(OzVariable *cv)
+void oz_var_disposeINLINE(OzVariable *ov)
 {
-  switch (cv->getType()){
-  case OZ_VAR_SIMPLE:  ((SimpleVar *) cv)->dispose(); break;
-  case OZ_VAR_FUTURE:  ((Future *) cv)->dispose(); break;
-  case OZ_VAR_BOOL:    ((OzBoolVariable*) cv)->dispose(); break;
-  case OZ_VAR_FD:      ((OzFDVariable*) cv)->dispose(); break;
-  case OZ_VAR_OF:      ((OzOFVariable*) cv)->dispose(); break;
-  case OZ_VAR_FS:      ((OzFSVariable*) cv)->dispose(); break;
-  case OZ_VAR_CT:      ((OzCtVariable*) cv)->dispose(); break;
-  case OZ_VAR_EXT:     ((ExtVar *) cv)->disposeV(); break;
+  switch (ov->getType()){
+  case OZ_VAR_SIMPLE:  ((SimpleVar *) ov)->dispose(); break;
+  case OZ_VAR_FUTURE:  ((Future *) ov)->dispose(); break;
+  case OZ_VAR_BOOL:    ((OzBoolVariable*) ov)->dispose(); break;
+  case OZ_VAR_FD:      ((OzFDVariable*) ov)->dispose(); break;
+  case OZ_VAR_OF:      ((OzOFVariable*) ov)->dispose(); break;
+  case OZ_VAR_FS:      ((OzFSVariable*) ov)->dispose(); break;
+  case OZ_VAR_CT:      ((OzCtVariable*) ov)->dispose(); break;
+  case OZ_VAR_EXT:     ((ExtVar *) ov)->disposeV(); break;
   default:  error("not impl");
   }
 }
 
 inline
-void oz_var_addSuspINLINE(OzVariable *cv, TaggedRef *v, Suspension susp,
-			  int unstable = TRUE)
+Bool oz_var_addSuspINLINE(TaggedRef *v, Suspension susp, int unstable = TRUE)
 {
-  switch(cv->getType()) {
+  OzVariable *ov=oz_getVar(v);
+  switch(ov->getType()) {
   case OZ_VAR_FUTURE:
-    ((Future *) cv)->addSusp(v, susp, unstable); return;
+    return ((Future *) ov)->addSusp(v, susp, unstable);
   case OZ_VAR_EXT:
-    ((ExtVar *) cv)->addSuspV(v, susp, unstable); return;
+    return ((ExtVar *) ov)->addSuspV(v, susp, unstable);
   default:
-    cv->addSuspSVar(susp,unstable);
+    ov->addSuspSVar(susp,unstable);
+    return FALSE;
   }
 }
 
