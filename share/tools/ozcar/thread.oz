@@ -37,9 +37,10 @@ in
       feat
 	 ThreadDic             %% dictionary that holds various information
 			       %% about debugged threads
-	 ReadLoopThread
 
       attr
+	 ReadLoopThread
+
 	 currentThread : undef
 	 currentStack  : undef
 	 SkippedProcs  : nil
@@ -50,8 +51,16 @@ in
 
       meth init
 	 self.ThreadDic = {Dnew}
+	 ThreadManager,reinit
+      end
+
+      meth reinit
+	 case {IsDet @ReadLoopThread} then
+	    {Thread.terminate @ReadLoopThread}
+	 else skip
+	 end
 	 thread
-	    self.ReadLoopThread = {Thread.this}
+	    ReadLoopThread <- {Thread.this}
 	    {OzcarReadEvalLoop {Dbg.stream}}
 	 end
       end
@@ -103,7 +112,9 @@ in
 	       end
 
 	    else
-	       ForMe = case {CondSelect M data unit} \= `ooSend` then false
+	       Data = {CondSelect M data unit}
+	       ForMe = case {Not {IsDet Data}} orelse Data \= `ooSend` then
+			  false
 		       elsecase {CondSelect M args nil} of [_ _ Obj] then
 			  {IsDet Obj} andthen Obj == self
 		       else false
@@ -264,6 +275,17 @@ in
 		     ThreadManager,add(T I exc(X) false)
 		  end
 	       end
+	    end
+
+	 [] update(thr:T) then
+	    I = {Thread.id T}
+	 in
+	    case ThreadManager,Exists(I $) then
+	       Stack = {Dget self.ThreadDic I}
+	    in
+	       {Stack rebuild(true)}
+	    else
+	       {OzcarMessage 'ignoring update of unknown thread'}
 	    end
 
 	 else
