@@ -109,9 +109,7 @@ GenLazyVariable::kickLazy()
 }
 
 OZ_Return
-GenLazyVariable::unifyV(TaggedRef *vPtr,TaggedRef v,
-			TaggedRef *tPtr,TaggedRef t,
-			ByteCode*scp)
+GenLazyVariable::unifyV(TaggedRef *vPtr, TaggedRef t, ByteCode*scp)
 {
   // if x:lazy=y:var y<-x if x is global, then trail
   // ^^^DONE AUTOMATICALLY
@@ -119,7 +117,7 @@ GenLazyVariable::unifyV(TaggedRef *vPtr,TaggedRef v,
 
   kickLazy();
 
-  oz_bind(vPtr,*vPtr,oz_isVariable(t)?makeTaggedRef(tPtr):t);
+  oz_bind(vPtr,*vPtr,t);
   return PROCEED;
 }
 

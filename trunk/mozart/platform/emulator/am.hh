@@ -509,9 +509,12 @@ public:
   void doTrail(TaggedRef *vp, TaggedRef v) {
     trail.pushRef(vp,v);
   }
-  void doBindAndTrail(TaggedRef v, TaggedRef * vp, TaggedRef t);
-  void doBindAndTrailAndIP(TaggedRef v, TaggedRef * vp, TaggedRef t,
-			   GenCVariable * lv, GenCVariable * gv);
+  void doBindAndTrail(TaggedRef * vp, TaggedRef t);
+
+#define DoBindAndTrailAndIP(vp,t,lv,gv) {	\
+  lv->GenCVariable::installPropagators(gv);	\
+  am.doBindAndTrail(vp,t);			\
+  }
 
   Bool isLocalUVarOutline(TaggedRef var,TaggedRef *varPtr);
   Bool isLocalSVarOutline(SVariable *var);

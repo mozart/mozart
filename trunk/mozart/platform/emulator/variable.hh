@@ -98,6 +98,8 @@ public:
   }
   Board *getBoardInternal() { return home; }
   SuspList *getSuspList() { return suspList; }
+  int getSuspListLengthS() { return suspList->length()-1; }
+
   void setSuspList(SuspList *inSuspList) { suspList = inSuspList; }
   void unlinkSuspList() { suspList = NULL; }
 
@@ -158,6 +160,10 @@ void addSuspSVar(TaggedRef v, Suspension susp,int unstable = TRUE)
   tagged2SVar(v)->addSuspSVar(susp, unstable);
 }
 
+// #define SIMPLEVAR
+#ifdef SIMPLEVAR
+extern void addSuspUVar(TaggedRefPtr v, Suspension susp, int unstable = TRUE);
+#else
 inline
 void addSuspUVar(TaggedRefPtr v, Suspension susp, int unstable = TRUE)
 {
@@ -165,6 +171,7 @@ void addSuspUVar(TaggedRefPtr v, Suspension susp, int unstable = TRUE)
   *v = makeTaggedSVar(sv);
   sv->addSuspSVar(susp, unstable);
 }
+#endif
 
 extern
 void addSuspCVarOutline(TaggedRef *v, Suspension susp, int unstable);

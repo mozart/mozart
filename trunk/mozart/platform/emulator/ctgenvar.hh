@@ -49,13 +49,9 @@ private:
   int _noOfSuspLists;
   SuspList ** _susp_lists;
 
-  Bool unifyCt(OZ_Term *, OZ_Term, 
-	       OZ_Term *, OZ_Term, 
-	       ByteCode *, Bool = TRUE);
-  
-  void propagate(OZ_Term, OZ_GenWakeUpDescriptor, PropCaller);
-  void propagateUnify(OZ_Term var) { 
-    propagate(var, OZ_WAKEUP_ALL, pc_cv_unif); 
+  void propagate(OZ_GenWakeUpDescriptor, PropCaller);
+  void propagateUnify() { 
+    propagate(OZ_WAKEUP_ALL, pc_cv_unif); 
   }
 
   void copyConstraint(OZ_GenConstraint * c) { 
@@ -108,10 +104,7 @@ public:
   }
 
 
-  OZ_Return unifyV(TaggedRef *vPtr,TaggedRef v,TaggedRef *tPtr,TaggedRef t,
-		   ByteCode*scp) {
-    return unifyCt(vPtr,v,tPtr,t,scp);
-  }
+  OZ_Return unifyV(TaggedRef *vPtr, TaggedRef t, ByteCode*scp);
   OZ_Return validV(TaggedRef* /* vPtr */, TaggedRef val ) {
     return FALSE; // mm2
   }
@@ -124,9 +117,13 @@ public:
   Bool isKindedV() { return true; }
   void disposeV(void) { error("not impl"); }
   int getSuspListLengthV() { return getSuspListLength(); }
-  void printV() {}
-  void printLongV() {}
-
+  void printStreamV(ostream &out,int depth = 10) {
+    out << "<ct>";
+  }
+  void printLongStreamV(ostream &out,int depth = 10,
+			int offset = 0) {
+    printStreamV(out,depth); out << endl;
+  }
 };
 
 OZ_Return tellBasicConstraint(OZ_Term, OZ_GenConstraint *, OZ_GenDefinition *);
