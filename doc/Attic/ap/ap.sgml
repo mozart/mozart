@@ -22,11 +22,11 @@
 <Book proglang=oz>
   <Front>
     <!-- Splitting the document into different HTML nodes -->
+    <Meta name="html.split" value="chapter.module">
     <Meta name="html.split" value="chapter.parsingconventions">
     <Meta name="html.split" value="chapter.specifications">
     <Meta name="html.split" value="section.list.examples">
     <Meta name="html.split" value="section.record.examples">
-    <Meta name="html.split" value="chapter.accessing">
 
     <Meta name=ozversion value="3.0">
     <Meta name=status value=draft>
@@ -43,6 +43,42 @@
       types of applications.  It supports the automatic loading of required
       modules as well as parameter passing.
   <Body>
+    <Chapter id="chapter.module">
+      <Title/The <<Application>> module/
+      <P>
+        The <<Application>> module provides procedures for accessing the
+        application's arguments, and for terminating applications.
+        <List>
+          <Entry><<getCgiArgs>>
+          <Synopsis>
+            <<{Application.getCgiArgs ?+{Spec} ??{R}}>>
+          <Item>
+            acquires the arguments (both <Samp/GET/ and <Samp/POST/ methods
+            supported) and parses them according to ?_{Spec}.  Returns the
+            options in&nbsp;?_{R}.
+
+          <Entry><<getCmdArgs>>
+          <Synopsis>
+            <<{Application.getCmdArgs ?+{Spec} ??{R}}>>
+          <Item>
+            acquires the arguments from the system property <<argv>>
+            and parses them according to ?_{Spec}.  Returns the options
+            in&nbsp;?_{R}.
+        </List>
+      <Para class=apropos><Title/Error Handling/
+        If an error is encountered in the input, an error exception of the
+        form <<ap(usage ?_{VS})>> is raised.  ?_{VS} describes the error
+        in textual form.
+      <P>
+        <List>
+          <Entry><<exit>>
+          <Synopsis>
+            <<{Application.exit ?+{I}}>>
+          <Item>
+            terminates the application with return status&nbsp;?_{I},
+            <<0>>&nbsp;indicating success and non-<<0>> indicating failure
+            of some kind.
+        </List>
     <Chapter proglang=sh id="chapter.parsingconventions">
       <Title/Parsing Conventions/
       <P>
@@ -409,7 +445,8 @@
               </Table>
             <Item>
               If no ?={occ} is given, <<rightmost>> is assigned as a
-              default.
+              default for <<single(&ellipsis;)>>, <<multiple>> for
+              <<multiple(&ellipsis;)>>.
             <Item>
               For ?={option name}s of length&nbsp;1, a single-character
               option is accepted.
@@ -419,36 +456,4 @@
               an empty list.  This list will only consist of unparsed
               arguments and will thus be empty in the case of CGI parsing.
           </List>
-    <Chapter id="chapter.accessing">
-      <Title/Accessing the Arguments/
-      <Section>
-        <Title/Accessing CGI Arguments/
-        <P>
-          <List>
-            <Entry><<getCgiArgs>>
-            <Synopsis>
-              <<{Application.getCgiArgs ?+{Spec} ??{R}}>>
-            <Item>
-              acquires the arguments (both <Samp/GET/ and <Samp/POST/ methods
-              supported) and parses them according to ?_{Spec}.  Returns the
-              options in&nbsp;?_{R}.
-          </List>
-      <Section>
-        <Title/Accessing Command Line Arguments/
-        <P>
-          <List>
-            <Entry><<getCmdArgs>>
-            <Synopsis>
-              <<{Application.getCmdArgs ?+{Spec} ??{R}}>>
-            <Item>
-              acquires the arguments from the system property <<argv>>
-              and parses them according to ?_{Spec}.  Returns the options
-              in&nbsp;?_{R}.
-          </List>
-      <Section>
-        <Title/Error Handling/
-        <P>
-          If an error is encountered in the input, an error exception of the
-          form <<ap(usage ?_{VS})>> is raised.  ?_{VS} describes the error
-          in textual form.
 </Book>
