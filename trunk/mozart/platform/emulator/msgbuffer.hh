@@ -36,8 +36,9 @@
 #include "tagged.hh"
 #include "dpInterface.hh"
 
-#define MSGFLAG_TEXTMODE  0x1
-#define MSGFLAG_ATEND     0x2
+#define MSGFLAG_TEXTMODE   0x1
+#define MSGFLAG_ATEND      0x2
+#define MSGFLAG_CLONECELLS 0x4
 
 class MsgBuffer {
 private:
@@ -73,6 +74,9 @@ public:
 
   void markEnd()  { flags |= MSGFLAG_ATEND; }
   Bool atEnd()    { return (flags&MSGFLAG_ATEND); }
+
+  void setCloneCells() { flags |= MSGFLAG_CLONECELLS; }
+  Bool cloneCells()    { return (flags&MSGFLAG_CLONECELLS); }
 
   // NON-virtual!
   BYTE get(){

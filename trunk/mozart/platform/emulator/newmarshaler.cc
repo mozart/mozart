@@ -268,15 +268,15 @@ void Marshaler::processObject(OZ_Term term, ConstTerm *objConst)
 
 #define HandleTert(string,tert,term,tag,check)		\
     MsgBuffer *bs = (MsgBuffer *) getOpaque();		\
-    if (!bs->visit(term)) return;			\
-    if (check && ozconf.perdioMinimal) {		\
-      processNoGood(term, OK);				\
-      rememberNode(term, bs);				\
-      return;						\
-    }							\
-    if (!bs->globalize()) return;			\
-    (*marshalTertiary)(tert,tag,bs);			\
-    rememberNode(term, bs);
+    if (bs->visit(term)) {				\
+      if (check && ozconf.perdioMinimal) {		\
+	processNoGood(term, OK);			\
+	rememberNode(term, bs);				\
+      } else if (bs->globalize()) {			\
+	(*marshalTertiary)(tert,tag,bs);		\
+	rememberNode(term, bs);				\
+      }							\
+    }
 
 
 void Marshaler::processLock(OZ_Term term, Tertiary *tert)
@@ -285,9 +285,17 @@ void Marshaler::processLock(OZ_Term term, Tertiary *tert)
 }
 
 
-void Marshaler::processCell(OZ_Term term, Tertiary *tert)
+Bool Marshaler::processCell(OZ_Term term, Tertiary *tert)
 {
-  HandleTert("cell",tert,term,DIF_CELL,OK);
+  MsgBuffer *bs = (MsgBuffer *) getOpaque();
+  if (bs->cloneCells() && tert->isLocal()) {
+    marshalDIF(bs, DIF_CLONEDCELL);
+    rememberNode(term, bs);
+    return (0);
+  } else {
+    HandleTert("cell",tert,term,DIF_CELL,OK);
+    return (1);
+  }
 }
 
 void Marshaler::processPort(OZ_Term term, Tertiary *tert)
@@ -1143,6 +1151,22 @@ OZ_Term newUnmarshalTermInternal(MsgBuffer *bs)
       case DIF_SYNC:
 	b->processSync();
 	break;
+
+      case DIF_CLONEDCELL:
+	{
+#ifndef USE_FAST_UNMARSHALER
+	  int e;
+	  int refTag = unmarshalRefTagRobust(bs, b, &e);
+	  if (e) {
+	    (void) b->finish();
+	    return 0;
+	  }
+#else
+	  int refTag = unmarshalRefTag(bs);
+#endif
+	  b->buildClonedCellRemember(refTag);
+	  break;
+	}
 
       case DIF_EOF: 
 	return (b->finish());

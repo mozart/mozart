@@ -158,7 +158,7 @@ public:
 
 class ByteSink {
 public:
-  OZ_Return putTerm(OZ_Term,char*,char*,unsigned int,Bool);
+  OZ_Return putTerm(OZ_Term,char*,char*,unsigned int,Bool,Bool);
   virtual OZ_Return putBytes(BYTE*,int) = 0;
   virtual OZ_Return allocateBytes(int,char*,unsigned int,crc_t,Bool) = 0;
 };
@@ -239,11 +239,14 @@ OZ_Return onlyFutures(OZ_Term l) {
 }
 
 OZ_Return
-ByteSink::putTerm(OZ_Term in, char *filename, char *header, unsigned int hlen, Bool textmode)
+ByteSink::putTerm(OZ_Term in, char *filename, char *header, unsigned int hlen,
+		  Bool textmode, Bool cloneCells)
 {
   ByteStream* bs=bufferManager->getByteStream();
-  if (textmode) 
+  if (textmode)
     bs->setTextmode();
+  if (cloneCells)
+    bs->setCloneCells();
   saveTerm(bs,in);
 
   OZ_Return ret=onlyFutures(bs->getResources());
@@ -375,7 +378,7 @@ OZ_Return
 saveDatum(OZ_Term in,OZ_Datum& dat)
 {
   ByteSinkDatum sink;
-  OZ_Return result = sink.putTerm(in,"UNKNOWN FILENAME","",0,NO);
+  OZ_Return result = sink.putTerm(in,"UNKNOWN FILENAME","",0,NO,NO);
   if (result==PROCEED) {
     dat=sink.dat;
   } else {
@@ -387,7 +390,7 @@ saveDatum(OZ_Term in,OZ_Datum& dat)
 static
 OZ_Return saveIt(OZ_Term val, char *filename, char *header,
 		 unsigned int hlen,
-		 int compressionlevel, Bool textmode)
+		 int compressionlevel, Bool textmode, Bool cloneCells)
 {
   if (compressionlevel < 0 || compressionlevel > 9) {
     return raiseGeneric("save:compressionlevel",
@@ -398,7 +401,7 @@ OZ_Return saveIt(OZ_Term val, char *filename, char *header,
   }
 
   ByteSinkFile sink(filename,compressionlevel);
-  OZ_Return ret = sink.putTerm(val,filename,header,hlen,textmode);
+  OZ_Return ret = sink.putTerm(val,filename,header,hlen,textmode,cloneCells);
   if (ret!=PROCEED)
     unlink(filename);
   return ret;
@@ -408,7 +411,7 @@ OZ_BI_define(BIsave,2,0)
 {
   OZ_declareTerm(0,in);
   OZ_declareVirtualString(1,filename);
-  return saveIt(in,filename,"",0,0,NO);
+  return saveIt(in,filename,"",0,0,NO,NO);
 } OZ_BI_end
 
 
@@ -417,7 +420,7 @@ OZ_BI_define(BIsaveCompressed,3,0)
   OZ_declareTerm(0,in);
   OZ_declareVirtualString(1,filename);
   OZ_declareInt(2,complevel);
-  return saveIt(in,filename,"",0,complevel,NO);
+  return saveIt(in,filename,"",0,complevel,NO,NO);
 } OZ_BI_end
 
 
@@ -432,7 +435,24 @@ OZ_BI_define(BIsaveWithHeader,4,0)
   filename = strdup(filename);
   OZ_declareVS(2,header,len);
 
-  OZ_Return ret = saveIt(value,filename,header,len,compressionlevel,NO);
+  OZ_Return ret = saveIt(value,filename,header,len,compressionlevel,NO,NO);
+  free(filename);
+  return ret;
+} OZ_BI_end
+
+
+OZ_BI_define(BIsaveWithCells,4,0)
+{
+  OZ_declareTerm(0,value);
+  OZ_expectDet(1);
+  OZ_expectDet(2);
+  OZ_declareInt(3,compressionlevel);
+
+  OZ_declareVirtualString(1,filename);
+  filename = strdup(filename);
+  OZ_declareVS(2,header,len);
+
+  OZ_Return ret = saveIt(value,filename,header,len,compressionlevel,NO,OK);
   free(filename);
   return ret;
 } OZ_BI_end
@@ -450,7 +470,7 @@ Bool pickle2text()
     return NO;
   } 
   char * s = OZ_stringToC(header,0);
-  aux = saveIt(res,"-",s,strlen(s),0,OK);
+  aux = saveIt(res,"-",s,strlen(s),0,OK,NO);
   if (aux==RAISE) {
     fprintf(stderr,"Exception: %s\n",OZ_toC(am.getExceptionValue(),10,100));
     return NO;
