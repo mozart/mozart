@@ -167,8 +167,11 @@ if test -z "$AR"; then
 fi
 
 OZ_PATH_PROG(PLATFORMSCRIPT, ozplatform)
-OZ_PATH_PROG(OZTOOL, oztool)
 AC_PATH_PROG(DEPEND, makedepend, makedepend)
+
+OZTOOL_SH="sh `pwd`/oztool.sh"
+AC_SUBST(OZTOOL_SH)
+
 
 dnl *****************************************************************
 dnl platform
