@@ -1436,7 +1436,8 @@ and initial semicolons."
 		    (what (match-string 3)))
                 (replace-match "" nil t)
 		(if (string-equal what "hide")
-		    (overlay-put scrollbar-overlay 'face 'default)
+		    (if (not (eq scrollbar-overlay nil))
+			(overlay-put scrollbar-overlay 'face 'default))
 		  (oz-scrollbar file line what)))))
 	  
 	  (if (or moving errs-found) (goto-char (process-mark proc))))
