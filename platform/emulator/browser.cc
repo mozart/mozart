@@ -212,9 +212,6 @@ OZ_BI_define(BIgetTermSize,3,1) {
 
 #ifndef MODULES_LINK_STATIC
 
-OZ_C_proc_interface mod_int_Browser[] = {
-#include "modBrowser.tbl"
- {0,0,0,0}
-};
+#include "modBrowser-if.cc"
 
 #endif

@@ -51,13 +51,15 @@ MODSPECS = FDP FSP Schedule Wif Parser OS Property Pickle \
         Debug Fault Foreign Browser Misc Distribution \
         Builtins
 
+MODINTERS = $(MODSPECS:%=mod%-if.cc)
+
 CREATEDOTHERS= \
         instrtab.hh opcodes.hh optostr.hh marshaler.hh\
         marshalcode.cc marshalMsg.cc register.hh oz.c \
         atoms.hh \
         config.h scanner.cc parser.cc \
-        $(MODSPECS:%=mod%.dcl) \
-        $(MODSPECS:%=mod%.tbl)
+        $(MODINTERS)
+
 
 CREATEDSRCS= \
         copycode.cc opcodes.cc \
@@ -124,12 +126,14 @@ all: $(TARGETS)
 
 bootstrap:: all
 
+$(MODINTERS): bidecl.perl
+
 libFDP.a libFDP.so libSchedule.a libSchedule.so: \
-        libfd modFDP.dcl modFDP.tbl modSchedule.tbl modSchedule.dcl
+        libfd modFDP-if.cc modSchedule-if.cc
         cd libfd; $(MAKE) $@
 
 libFSP.a libFSP.so: \
-        libfset modFSP.dcl modFSP.tbl
+        libfset modFSP-if.cc
         cd libfset; $(MAKE) $@
 
 
@@ -145,7 +149,7 @@ libCompilerSupport.so: compiler.o
 libCompilerSupport.a: compiler.o
         $(AR) -rc $@ compiler.o && $(RANLIB) $@
 
-browser.o: modBrowser.tbl modBrowser.dcl
+browser.o: modBrowser-if.cc
 
 libBrowser.so: browser.o
         $(DYNLD) -o $@ browser.o
@@ -242,19 +246,16 @@ libParser.so: parser.o scanner.o parsertable.o
 libParser.a: parser.o scanner.o parsertable.o
         $(AR) -rc $@ parser.o scanner.o parsertable.o && $(RANLIB) $@
 
-wif.o: modWif.tbl modWif.dcl
+wif.o: modWif-if.cc
 
-parsertable.o: modParser.dcl modParser.tbl
+parsertable.o: modParser-if.cc
 
-compiler.o: modCompilerSupport.dcl modCompilerSupport.tbl
+compiler.o: modCompilerSupport-if.cc
 
-boot-manager.o: $(MODSPECS:%=mod%.dcl) $(MODSPECS:%=mod%.tbl)
+boot-manager.o: $(MODINTERS)
 
-%.tbl: %.spec
-        perl $(SRCDIR)/bidecl.perl -file $< -ctable > $@
-
-%.dcl: %.spec
-        perl $(SRCDIR)/bidecl.perl -file $< -cdecl  > $@
+%-if.cc: %.spec
+        perl $(SRCDIR)/bidecl.perl -file $< -interface > $@
 
 # this special rule ensures that warnings issued in bison.simple
 # are not treated as errors:

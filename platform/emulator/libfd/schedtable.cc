@@ -33,11 +33,6 @@
 
 #ifndef MODULES_LINK_STATIC
 
-#include "../modSchedule.dcl"
-
-OZ_C_proc_interface mod_int_Schedule[] = {
-#include "../modSchedule.tbl"
- {0,0,0,0}
-};
+#include "../modSchedule-if.cc"
 
 #endif

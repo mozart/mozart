@@ -4,10 +4,8 @@
 ### to generate both the table of builtins used by the emulator and the
 ### information used by the Oz compiler.
 ###
-###     bidecl.perl -ctable
+###     bidecl.perl -interface
 ###             generates the table of builtins for the emulator
-###     bidecl.perl -cdecl
-###             generates the extern declarations for the above table
 ###     bidecl.perl -oztable
 ###             generates the table of builtins for the Oz compiler
 ###
@@ -139,8 +137,26 @@
 ### -include or -exclude.
 ###
 
-sub CTABLE {
-    my ($key,$info);
+sub INTERFACE {
+
+    print "\n/* PROTOTYPES */\n";
+
+    my ($key,$info,$bi);
+    while (($key,$info) = each %$builtins) {
+        next unless &included($info);
+        $bi = $info->{bi} || $info->{BI};
+        print "OZ_C_proc_proto($bi);\n";
+    }
+
+    print "\n/* INTERFACE */\n";
+
+    $mod_name = $_[0];
+
+    $mod_name =~ s/^mod//o;
+    $mod_name =~ s/\.spec//o;
+
+    print("OZ_C_proc_interface mod_int_$mod_name\[\] = \{\n");
+
     while (($key,$info) = each %$builtins) {
         next unless &included($info);
         my $inArity = @{$info->{in}};
@@ -152,10 +168,13 @@ sub CTABLE {
         foreach $macro (@ifdef)  { print "#ifdef $macro\n"; }
         foreach $macro (@ifddef) { print "#ifndef $macro\n"; }
         $BI = $info->{bi} unless $BI;
-        print "{\"$key\",\t$inArity,\t$outArity,$BI},\n";
+        print "  {\"$key\",\t$inArity,\t$outArity,$BI},\n";
         foreach $macro (@ifddef) { print "#endif\n"; }
         foreach $macro (@ifdef)  { print "#endif\n"; }
     }
+
+    print "  {0,0,0,0}\n\};\n\n"
+
 }
 
 sub argspec {
@@ -239,19 +258,6 @@ sub OZTABLE {
     }
 }
 
-sub CDECL {
-    my ($key,$info,$bi);
-    while (($key,$info) = each %$builtins) {
-        next unless &included($info);
-        $bi = $info->{bi} || $info->{BI};
-        print "OZ_C_proc_proto($bi);\n";
-    }
-}
-
-
-sub STRUCTURE {
-    exec "grep '#\\*' $0 | sed -e 's/[ \t]*#/  /'g";
-}
 
 my %include = ();
 my %exclude = ();
@@ -269,10 +275,8 @@ my ($option,$choice,@include,@exclude);
 
 while (@ARGV) {
     $option = shift;
-    if    ($option eq '-ctable' )    { $choice='ctable';  }
-    elsif ($option eq '-cdecl'  )    { $choice='cdecl';   }
+    if    ($option eq '-interface' )    { $choice='interface';  }
     elsif ($option eq '-oztable')    { $choice='oztable'; }
-    elsif ($option eq '-structure')   { $choice='structure'; }
     elsif ($option eq '-include')    { push @include,split(/\,/,shift); }
     elsif ($option eq '-exclude')    { push @exclude,split(/\,/,shift); }
     elsif ($option eq '-file')       { push @files,shift; }
@@ -292,9 +296,7 @@ foreach $file (@files) {
     require $file;
     $builtins = { %builtins_all };
 
-    if ($choice eq 'ctable' )    { &CTABLE; }
-    elsif ($choice eq 'cdecl'  )    { &CDECL;   }
+    if ($choice eq 'interface' )    { &INTERFACE($file); }
     elsif ($choice eq 'oztable')    { &OZTABLE; }
-    elsif ($choice eq 'structure')   { &STRUCTURE; }
-    else { die "must specify one of: -ctable -cdecl -oztable -structure -sortnativeness"; }
+    else { die "must specify one of: -interface -oztable"; }
 }

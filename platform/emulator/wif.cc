@@ -1548,9 +1548,6 @@ OZ_BI_define(BIdelFastGroup,1,0)
 
 #ifndef MODULES_LINK_STATIC
 
-OZ_C_proc_interface mod_int_Wif[] = {
-#include "modWif.tbl"
- {0,0,0,0}
-};
+#include "modWif-if.cc"
 
 #endif
