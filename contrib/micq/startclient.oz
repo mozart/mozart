@@ -40,7 +40,7 @@ define
                'login'(single char:&l type:string default:DefaultLogin)
                'passwd'(single char:&p type:string default:"" ))
 
-   proc{StartICQ Args}
+   proc{StartMIM Args}
       T={New Tk.toplevel tkInit(title:"Settings for Client...")}
       V1 V2 V3
       B1 B2 BF={New Tk.frame tkInit(parent:T)}
@@ -89,7 +89,7 @@ define
 in
    {Property.put 'errors.toplevel' proc {$} skip end}
    try Args = {Application.getCmdArgs Spec} in
-      {StartICQ Args}
+      {StartMIM Args}
    catch X then
       case X of quit then
          {Application.exit 0}
