@@ -1237,6 +1237,8 @@ CodeArea::~CodeArea(void)
     case DECONSCALLX:
     case DECONSCALLY:
     case DECONSCALLG:
+    case TAILDECONSCALLX:
+    case TAILDECONSCALLG:
       PC += 2;
       break;
     case INLINEMINUS1:
@@ -1257,6 +1259,8 @@ CodeArea::~CodeArea(void)
     case CONSCALLX:
     case CONSCALLY:
     case CONSCALLG:
+    case TAILCONSCALLX:
+    case TAILCONSCALLG:
     case CALLGLOBAL:
     case GETNUMBERG:
     case GETNUMBERY:
