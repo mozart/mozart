@@ -76,40 +76,42 @@ define
       %%
       meth updateInfo(Id Url Pid)=M
 	 {Manager incTrace('--> updateInfo '#Id)}
-	 if {Manager ignoreID(Id $)} then
-	    {Manager trace('Ignoring ID='#Id)}
-	 elseif {Manager ignoreURL(Url $)} then
-	    {Manager trace('Ignoring URL='#Url)}
-	 else
-	    try
-	       {Manager trace('Fetching info from '#Url)}
-	       Msg   = try {Parse {Slurp Url}}
-		       catch _ then {Raise mogul(notFound(Url))} unit end
-	       {Msg check_id_expected(Id Pid)}
-	       {Msg check_keys(['type'])}
-	       Type  = {VirtualString.toAtom {ToLower {Msg get1('type' $)}}}
-	       Class = case Type
-		       of 'contact' then Contact.'class'
-		       [] 'package' then Package.'class'
-		       [] 'section' then Section.'class'
-		       [] T         then {Raise mogul(wrong_type(T))} unit
-		       end
-	       Prev  = Database,condGet(Id unit $)
-	       Entry = {New Class init(Msg Id Url Pid Prev)}
-	    in
-	       Database,put({Entry getSlot('id' $)} Entry)
-	       if Type=='section' then
-		  {Manager trace('Processing entries')}
-		  {Record.forAllInd {Entry getSlot('toc' $)}
-		   proc {$ K V}
-		      Database,updateInfo(K V Id)
-		   end}
+	 try
+	    if {Manager ignoreID(Id $)} then
+	       {Manager trace('Ignoring ID='#Id)}
+	    elseif {Manager ignoreURL(Url $)} then
+	       {Manager trace('Ignoring URL='#Url)}
+	    else
+	       try
+		  {Manager trace('Fetching info from '#Url)}
+		  Msg   = try {Parse {Slurp Url}}
+			  catch _ then {Raise mogul(notFound(Url))} unit end
+		  {Msg check_id_expected(Id Pid)}
+		  {Msg check_keys(['type'])}
+		  Type  = {VirtualString.toAtom {ToLower {Msg get1('type' $)}}}
+		  Class = case Type
+			  of 'contact' then Contact.'class'
+			  [] 'package' then Package.'class'
+			  [] 'section' then Section.'class'
+			  [] T         then {Raise mogul(wrong_type(T))} unit
+			  end
+		  Prev  = Database,condGet(Id unit $)
+		  Entry = {New Class init(Msg Id Url Pid Prev)}
+	       in
+		  Database,put({Entry getSlot('id' $)} Entry)
+		  if Type=='section' then
+		     {Manager trace('Processing entries')}
+		     {Record.forAllInd {Entry getSlot('toc' $)}
+		      proc {$ K V}
+			 Database,updateInfo(K V Id)
+		      end}
+		  end
+	       catch mogul(...)=E then
+		  {Manager addReport(M E)}
 	       end
-	    catch mogul(...)=E then
-	       {Manager addReport(M E)}
-	    finally
-	       {Manager decTrace('<-- updateInfo '#Id)}
 	    end
+	 finally
+	    {Manager decTrace('<-- updateInfo '#Id)}
 	 end
       end
       %%
@@ -138,27 +140,35 @@ define
       end
       %%
       meth updateHtml(Id)=M
-	 try
-	    case Database,condGet(Id unit $)
-	    of unit then
-	       {Raise mogul(entry_not_found(Id))}
-	    [] E then {E updateHtml(self)} end
-	 catch mogul(...)=E then
-	    {Manager addReport(M E)}
+	 if {Manager ignoreID(Id $)} then
+	    {Manager trace('Ignoring ID='#Id)}
+	 else
+	    try
+	       case Database,condGet(Id unit $)
+	       of unit then
+		  {Raise mogul(entry_not_found(Id))}
+	       [] E then {E updateHtml(self)} end
+	    catch mogul(...)=E then
+	       {Manager addReport(M E)}
+	    end
 	 end
       end
       %%
       meth updateProvided(ID D)=M
-	 try
-	    case Database,condGet(ID unit $)
-	    of unit then
-	       {Raise mogul(entry_not_found(ID))}
-	    [] E then
-	       {E updateProvided(self D)}
-	       Database,put('*provided*' {Dictionary.toRecord o D})
+	 if {Manager ignoreID(ID $)} then
+	    {Manager trace('Ignoring ID='#ID)}
+	 else
+	    try
+	       case Database,condGet(ID unit $)
+	       of unit then
+		  {Raise mogul(entry_not_found(ID))}
+	       [] E then
+		  {E updateProvided(self D)}
+		  Database,put('*provided*' {Dictionary.toRecord o D})
+	       end
+	    catch mogul(...)=E then
+	       {Manager addReport(M E)}
 	    end
-	 catch mogul(...)=E then
-	    {Manager addReport(M E)}
 	 end
       end
       %%
@@ -180,27 +190,31 @@ define
       end
       %%
       meth updateAuthorList(ID)=M
-	 try
-	    case Database,condGet(ID unit $)
-	    of unit then
-	       {Raise mogul(entry_not_found(ID))}
-	    [] E then
-	       Ls={E updateAuthorList(self nil $)}
-	       DB={NewDictionary}
-	       proc{InsertDB X} Id=X.id in
-		  for A in X.authors do
-		     Key={String.toAtom {ByteString.toString A}}
-		  in
-		     {Dictionary.put DB Key Id|{Dictionary.condGet DB Key nil}}
+	 if {Manager ignoreID(ID $)} then
+	    {Manager trace('Ignoring ID='#ID)}
+	 else
+	    try
+	       case Database,condGet(ID unit $)
+	       of unit then
+		  {Raise mogul(entry_not_found(ID))}
+	       [] E then
+		  Ls={E updateAuthorList(self nil $)}
+		  DB={NewDictionary}
+		  proc{InsertDB X} Id=X.id in
+		     for A in X.authors do
+			Key={String.toAtom {ByteString.toString A}}
+		     in
+			{Dictionary.put DB Key Id|{Dictionary.condGet DB Key nil}}
+		     end
 		  end
+		  {ForAll Ls InsertDB}
+		  L={Dictionary.toRecord authors DB}
+	       in
+		  Database,put('*author list*' L)
 	       end
-	       {ForAll Ls InsertDB}
-	       L={Dictionary.toRecord authors DB}
-	    in
-	       Database,put('*author list*' L)
+	    catch mogul(...)=E then
+	       {Manager addReport(M E)}
 	    end
-	 catch mogul(...)=E then
-	    {Manager addReport(M E)}
 	 end
       end
       meth updateAuthorListFor(ID L $)=M
@@ -216,15 +230,19 @@ define
       end
       %%
       meth updatePkgList(ID)=M
-	 try
-	    case Database,condGet(ID unit $)
-	    of unit then
-	       {Raise mogul(entry_not_found(ID))}
-	    [] E then L={E updatePkgList(self nil $)} in
-	       Database,put('*package list*' L)
+	 if {Manager ignoreID(ID $)} then
+	    {Manager trace('Ignoring ID='#ID)}
+	 else
+	    try
+	       case Database,condGet(ID unit $)
+	       of unit then
+		  {Raise mogul(entry_not_found(ID))}
+	       [] E then L={E updatePkgList(self nil $)} in
+		  Database,put('*package list*' L)
+	       end
+	    catch mogul(...)=E then
+	       {Manager addReport(M E)}
 	    end
-	 catch mogul(...)=E then
-	    {Manager addReport(M E)}
 	 end
       end
       meth updatePkgListFor(ID L $)=M
