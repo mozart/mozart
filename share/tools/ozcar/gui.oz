@@ -149,6 +149,10 @@ in
 	 EnvMsgListTl      : nil
 	 StatusMsgListTl   : nil
 
+	 StackMsgListLn    : 0
+	 EnvMsgListLn      : 0
+	 StatusMsgListLn   : 0
+
       meth resetLastSelectedFrame
 	 LSF = @LastSelectedFrame
       in
@@ -941,6 +945,7 @@ in
 	       elsecase
 		  {Dbg.checkStopped T} then Gui,StoppedStatus(I A)
 	       else
+		  Gui,status('You have stopped thread #' # I)
 		  case S == blocked then
 		     F L C in
 		     {Thread.suspend T}
@@ -952,7 +957,6 @@ in
 		     {Stack rebuild(true)}
 		  end
 		  {Dbg.step T true}
-		  Gui,doStatus('You have stopped thread #' # I)
 	       end
 	    end
 
@@ -990,9 +994,9 @@ in
 
       meth GetQueue(W $)
 	 case W
-	 of stack  then StackMsgList  # StackMsgListTl
-	 [] env    then EnvMsgList    # EnvMsgListTl
-	 [] status then StatusMsgList # StatusMsgListTl
+	 of stack  then StackMsgList  # StackMsgListTl  # StackMsgListLn
+	 [] env    then EnvMsgList    # EnvMsgListTl    # EnvMsgListLn
+	 [] status then StatusMsgList # StatusMsgListTl # StatusMsgListLn
 	 end
       end
 
@@ -1005,7 +1009,7 @@ in
 	       Gui,Enqueue(W Tr)
 	    else
 	       NewTl
-	       MsgList # MsgListTl = Gui,GetQueue(W $)
+	       MsgList # MsgListTl # MsgListLn = Gui,GetQueue(W $)
 	    in
 	       case {IsDet @MsgListTl} then
 		  MsgList <- Ticklet|NewTl
@@ -1013,17 +1017,26 @@ in
 		  @MsgListTl = Ticklet|NewTl
 	       end
 	       MsgListTl <- NewTl
+
+	       case @MsgListLn > 250 then % avoid overflow
+		  {OzcarMessage W #
+		   ' queue has become very big -- clearing...'}
+		  Gui,ClearQueue(W)
+	       else
+		  MsgListLn <- @MsgListLn + 1
+	       end
 	    end
 	 end
       end
 
       meth ClearQueue(W)
 	 lock QueueLock then
-	    MsgList # MsgListTl = Gui,GetQueue(W $)
+	    MsgList # MsgListTl # MsgListLn = Gui,GetQueue(W $)
 	 in
 	    @MsgListTl = nil
 	    {Tk.batch @MsgList}
-	    MsgList <- nil
+	    MsgList   <- nil
+	    MsgListLn <- 0
 	 end
       end
 
