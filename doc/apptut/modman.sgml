@@ -149,7 +149,7 @@ import
   <figure class=table id="table.modman.system">
     <caption/System modules./
     <table id="table.sysmods">
-      <tr/<th/Module Name/ <th/Description/ <th/Documentation//
+      <tr/<th/Name/ <th/Description/ <th/Documentation//
       <tr/<th colspan=3/Application Programming//
       <tr/<td/<<Application>>/
           <td/Command processing and application termination/
@@ -275,7 +275,7 @@ import
       <caption/Example for resolving urls./
       
       <table id="table.url.resolution">
-        <tr/ <th/Module name/ <th/Resolved url/ <th/Import specification/
+        <tr/ <th/Name/ <th/Resolved url/ <th/Import specification/
         <tr>
            <td/<<A>>/
            <td>

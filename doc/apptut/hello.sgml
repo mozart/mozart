@@ -36,11 +36,16 @@
       Our first application is a program that copies a file from a
       url to a local file. The program is called <kbd/Webget.oza/. 
 
+<figure id="figure.hello.invoke">
+  <caption/Get yourself a Mozart license./
+<<<ozengine Webget.oza --in http://www.mozart-oz.org/LICENSE --out LICENSE>>>
+</figure>
+
     <p>
       Our goal is to have an application that can be started like any
       other application from the
-      operating system shell. For example, 
-<<<ozengine Webget.oza --in http://www.mozart-oz.org/LICENSE --out LICENSE>>>
+      operating system shell. For example, executing the command shown in 
+      <ptr to="figure.hello.invoke"> 
       gets us a local copy of the Mozart license file.
 
     <p>
@@ -121,7 +126,7 @@ import
 </chunk>
 
     <p>
-      The import specification serves two purposes: firstly, the
+      The import specification serves two purposes: the
       variable identifiers <<Application>> and <<Open>> are introduced
       with a lexical scope that extends over the entire
       body of the functor. Secondly, the identifiers also serve
@@ -273,9 +278,8 @@ end
       application arguments. For example, to copy the Mozart license
       file at url
       <file>http://www.mozart-oz.org/LICENSE</file> to the local
-      file <file/LICENSE/, simply enter the command line below at your
-      shell promt:
-<<<ozengine Webget.oza --in http://www.mozart-oz.org/LICENSE --out LICENSE>>>
+      file <file/LICENSE/, simply enter the command line shown in <ptr to="figure.hello.invoke"> at your
+      shell promt.
 
     <p>
       Execution of an application proceeds as follows:
