@@ -40,9 +40,16 @@ local
 
 	 V = {New Tk.label tkInit(parent: self
 				  bg:     DefaultBackground
-				  text:   ('Version of ' # Version #
-					   '\n' #
-					   'Current platform is ' # Platform))}
+				  text:
+				 ('Version of ' # Version # '\n' #
+				  'Platform: ' # Platform # ', ' #
+				  if RunningWithXF86Display then
+				     'Display: XF86'
+				  elseif Platform \= WindowsPlatform then
+				     'Display: X11'
+				  else
+				     'Display: Windows'
+				  end))}
 
 	 A = {New Tk.label tkInit(parent: self
 				  bg:     DefaultBackground
