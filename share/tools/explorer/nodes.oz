@@ -65,7 +65,7 @@ local
 	 
 	 meth init(Mom Depth Control)
 	    Status         = self.status
-	    UnwrapControl  = job {UnwrapBlocked Control} end
+	    UnwrapControl  = thread {UnwrapBlocked Control} end
 	    KillFlag KillId
 	 in
 	    self.mom = Mom
@@ -198,7 +198,7 @@ in
 		  choose:    class $ from ChooseNode    Features end)
       S = {Space.new Query}
    in   
-      case job {Space.askVerbose S} end
+      case thread {Space.askVerbose S} end
       of failed then
 	 {New Classes.failed init(Sentinel 1)}
       [] succeeded(SA) then
