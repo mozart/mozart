@@ -34,7 +34,8 @@ FDLIBSRCS = arith.cc fdaux.cc bool.cc \
             sum.cc sumequal.cc \
             distance.cc streamProps.cc \
             sumd.cc sumabs.cc complalldist.cc diffn.cc \
-            distribute.cc fdtable.cc fdinit.cc
+            distribute.cc fdtable.cc fdinit.cc \
+            prop_fncts.cc prop_engine.cc
 
 FDLIBOBJS = $(FDLIBSRCS:.cc=.lo)
 

@@ -28,7 +28,6 @@
 #include "disjoint.hh"
 #include "rel.hh"
 #include "auxcomp.hh"
-#include "prop_engine.hh"
 
 #include <stdlib.h>
 
@@ -186,121 +185,6 @@ failure:
 
 //-----------------------------------------------------------------------------
 // TasksOverlapPropagator
-
-class TasksOverlapPropagator : public Propagator_D_I_D_I_D {
-  friend INIT_FUNC(fdp_nit);
-
-private:
-  static OZ_PropagatorProfile profile;
-
-  int _first;
-  OZ_FDProfile _x_profile, _y_profile;
-  PropFnctTable _prop_fnct_table;
-  ParamTable _param_table;
-
-  // clause 1: t1 + d1 >: t2 /\ t2 + d2 >: t1 /\ o =: 1
-  enum _var_ix1 {_cl1_t1 = 0, _cl1_t2, _cl1_o,
-
-  // clause 2: t1 + d1 =<: t2 /\ o =: 0
-        _cl2_t1, _cl2_t2, _cl2_o,
-
-  // clause 3: t2 + d2 =<: t1 /\ o =: 0
-        _cl3_t1, _cl3_t2, _cl3_o, nb_lvars };
-
-  enum _var_ix2 {_d1 = nb_lvars, _d2, nb_consts};
-
-  OZ_FiniteDomain _ld[nb_lvars];
-  FDEventLists    _el[nb_lvars];
-  PropQueue       _prop_queue_cl1, _prop_queue_cl2, _prop_queue_cl3;
-
-public:
-  TasksOverlapPropagator(OZ_Term x, OZ_Term xd, OZ_Term y, OZ_Term yd,
-                         OZ_Term o);
-
-  virtual OZ_Return propagate(void);
-  virtual OZ_PropagatorProfile * getProfile(void) const { return &profile; }
-  virtual void updateHeapRefs(OZ_Boolean duplicate = OZ_FALSE) {
-    Propagator_D_I_D_I_D::updateHeapRefs(duplicate);
-
-    // here goes the additional stuff:
-    _prop_fnct_table.gc();
-    _param_table.gc();
-    for (int i = nb_lvars; i--; ) {
-      _ld[i].copyExtension();
-      _el[i].gc();
-    }
-  }
-  virtual size_t sizeOf(void) { return sizeof(TasksOverlapPropagator); }
-};
-
-//-----------------------------------------------------------------------------
-// propagation functions
-
-// X + C <= Y
-pf_return_t lessEqOff(int * map, SuspVar * regs[])
-{
-  CDM(("lessEqOff function %p ", map));
-
-  SuspFDIntVar &x = *(SuspFDIntVar *) regs[map[0]];
-  int c = (int) regs[map[1]];
-  SuspFDIntVar &y = *(SuspFDIntVar *) regs[map[2]];
-
-  FailOnEmpty(*x <= (y->getMaxElem() - c));
-  FailOnEmpty(*y >= (x->getMinElem() + c));
-
-  if (x->getMaxElem() + c <= y->getMinElem()) {
-    x.wakeUp();
-    y.wakeUp();
-    CDM(("\t-> entailed\n"));
-    return pf_entailed;
-  }
-
-  if (x->getMinElem() + c > y->getMaxElem()) {
-    CDM(("\t-> failed\n"));
-    goto failure;
-  }
-  {
-    pf_return_t r = (x.wakeUp() | y.wakeUp()) ? pf_sleep : pf_entailed;
-    CDM(("\t-> %s\n", r == pf_sleep ? "sleep" : "entailed"));
-    return r;
-  }
- failure:
-  CDM(("\t-> failed\n"));
-  return pf_failed;
-}
-
-// X + C > Y
-pf_return_t greaterOff(int * map, SuspVar * regs[])
-{
-  CDM(("greaterOff function %p ", map));
-
-  SuspFDIntVar &x = *(SuspFDIntVar *) regs[map[0]];
-  int c = (int) regs[map[1]];
-  SuspFDIntVar &y = *(SuspFDIntVar *) regs[map[2]];
-
-  FailOnEmpty(*x >= (y->getMinElem() - c + 1));
-  FailOnEmpty(*y <= (x->getMaxElem() + c - 1));
-
-  if (x->getMinElem() + c > y->getMaxElem()) {
-    x.wakeUp();
-    y.wakeUp();
-    CDM(("\t-> entailed\n"));
-    return pf_entailed;
-  }
-
-  if (x->getMaxElem() + c <= y->getMinElem()) {
-    CDM(("\t-> failed\n"));
-    goto failure;
-  }
-  {
-    pf_return_t r = (x.wakeUp() | y.wakeUp()) ? pf_sleep : pf_entailed;
-    CDM(("\t-> %s\n", r == pf_sleep ? "sleep" : "entailed"));
-    return r;
-  }
- failure:
-  CDM(("\t-> failed\n"));
-  return pf_failed;
-}
 
 //-----------------------------------------------------------------------------
 // constructor
