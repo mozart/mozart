@@ -514,6 +514,8 @@ typedef enum {
 static
 LoadTermRet loadTerm(PickleBuffer *buf, char* &vers, OZ_Term &t)
 {
+  buf->unmarshalBegin();	
+
 #ifndef USE_FAST_UNMARSHALER   
   int error;
   vers = unmarshalVersionStringRobust(buf, &error);
@@ -606,8 +608,6 @@ ByteSource::getTerm(OZ_Term out, const char *compname, Bool wantHeader)
    
   OZ_Return result = loadPickleBuffer(buffer,compname);
   if (result != PROCEED) return (result);
-
-  buffer->unmarshalBegin();	
 
   char *versiongot = 0;
   OZ_Term val;
