@@ -136,11 +136,4 @@ public:
 
 extern LocalPropagationStore localPropStore;
 
-#ifdef OUTLINE
-#undef inline
-#else
-#include "lps.icc"
-#endif
-
-
 #endif //__LPS_H__
