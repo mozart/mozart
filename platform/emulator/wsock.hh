@@ -26,8 +26,8 @@
 
 #include <windows.h>
 
-#undef winmin
-#undef winmax
+#undef min
+#undef max
 
 #undef FAILED /* used in oz.h as well */
 #undef Bool
