@@ -441,7 +441,17 @@ Bool hookCheckNeeded(AM *e)
 
 #endif
 
+/*
+ * Handling of the READ/WRITE mode bit:
+ * last significant bit of sPointer set iff in WRITE mode
+ */
 
+#define SetReadMode
+#define SetWriteMode (sPointer = (TaggedRef *)((long)sPointer+1));
+
+#define InWriteMode (((long)sPointer)&1)
+
+#define GetSPointerWrite(ptr) (TaggedRef*)(((long)ptr)-1)
 
 // ------------------------------------------------------------------------
 // outlined auxiliary functions
@@ -614,6 +624,7 @@ SRecord *newSRecordOutline(Arity *ff, TaggedRef label)
 
 #define NoReg(Var) { void *p = &Var; }
 
+
 void engine() {
 
 // ------------------------------------------------------------------------
@@ -626,9 +637,8 @@ void engine() {
   register RefsArray X         Reg2 = am.xRegs;
   register RefsArray Y         Reg3 = NULL;
   register TaggedRef *sPointer Reg4 = NULL;
-  register AMModus mode        Reg5 = READ;
-  register AM *e               Reg6 = &am;
-  register RefsArray G         Reg7 = NULL;
+  register AM *e               Reg5 = &am;
+  register RefsArray G         Reg6 = NULL;
 
   int XSize = 0; NoReg(XSize);
 
@@ -741,7 +751,7 @@ void engine() {
       Y = (RefsArray) TaskStackPop(topCache-3);
       G = (RefsArray) TaskStackPop(topCache-4);
       taskstack->setTop(topCache-4);
-      Board *auxBoard = getBoard(tb,cFlag);
+      Board *auxBoard = getBoard(tb,C_CONT);
       if (!auxBoard->isRoot()) {
         auxBoard = auxBoard->getBoardDeref();
         if (auxBoard == NULL) {
@@ -2193,7 +2203,7 @@ void engine() {
     // try to reduce a solve board;
     DebugCheck ((CBB->isReflected () == OK),
                 error ("trying to reduce an already reflected solve actor"));
-    if (SolveActor::Cast (CBB->getActor ())->isStable () == OK) {
+    if (SolveActor::Cast(CBB->getActor())->isStable() == OK) {
       DebugCheck ((e->trail.isEmptyChunk () == NO),
                   error ("non-empty trail chunk for solve board"));
       // all possible reduction steps require this;
