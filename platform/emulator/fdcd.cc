@@ -388,18 +388,16 @@ OZ_Bool cd_wrapper_a(int OZ_arity, OZ_Term OZ_args[], OZ_CFun, OZ_CFun BI_body)
   x.restore();
 
   Assert(x[0].maxElem() >= 2);
-  if (FDcurrentTaskSusp->isPropagated()) {
-    if (ret_val == PROCEED) {
-      x[0] <= (x[0].maxElem() - 1);
-      Assert(x[0].maxElem() >= 2);
-    } else {
-      x[0] &= 0;
-    }
-  }
 
+  if (ret_val == PROCEED) {
+    x[0] <= (x[0].maxElem() - 1);
+    Assert(x[0].maxElem() >= 2);
+  } else if (ret_val == FAILED) {
+    x[0] &= 0;
+  }
   x.process(0);
 
-  return EntailFD;
+  return ret_val == SLEEP ? SLEEP : PROCEED;
 }
 
 OZ_C_proc_begin(BIfdGenLinEqCD, 4)

@@ -455,9 +455,12 @@ void BIfdBodyManager::saveDomainOnTopLevel(int i) {
 OZ_Bool BIfdHeadManager::spawnPropagator(FDPropState t,
                                          OZ_CFun f, int a, OZ_Term * x)
 {
-  addResSusps(createResSusp(f, a, x), t);
+  Suspension * s = createResSusp(f, a, x);
+  addResSusps(s, t);
+  FDcurrentTaskSusp = NULL;
 
-  return f(a, x);
+  localPropStore.push(s->getCCont(), s);
+  return PROCEED;
 }
 
 OZ_Bool BIfdHeadManager::spawnPropagator(FDPropState t1, FDPropState t2,
@@ -466,8 +469,10 @@ OZ_Bool BIfdHeadManager::spawnPropagator(FDPropState t1, FDPropState t2,
   Suspension * s = createResSusp(f, a, x);
   addResSusp(0, s, t1);
   addResSusp(1, s, t2);
+  FDcurrentTaskSusp = NULL;
 
-  return f(a, x);
+  localPropStore.push(s->getCCont(), s);
+  return PROCEED;
 }
 
 OZ_Bool BIfdHeadManager::spawnPropagator(FDPropState t,
@@ -485,9 +490,12 @@ OZ_Bool BIfdHeadManager::spawnPropagator(FDPropState t,
 
   va_end(ap);
 
-  addResSusps(createResSusp(f, a, x), t);
+  Suspension * s = createResSusp(f, a, x);
+  addResSusps(s, t);
+  FDcurrentTaskSusp = NULL;
 
-  return f(a, x);
+  localPropStore.push(s->getCCont(), s);
+  return PROCEED;
 }
 
 #ifdef FDBISTUCK
@@ -1311,6 +1319,9 @@ void BIfdBodyManager::_propagate_unify_cd(int clauses, int variables,
 
         // unify corresponding local variables
         for (c = 0; c < clauses; c++) {
+
+          if (*bifdbm_dom[idx_b(c)] == 0) continue;
+
           // check void variables
           OZ_Term l_var, r_var;
 
