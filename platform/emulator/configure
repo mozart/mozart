@@ -1577,10 +1577,10 @@ fi
 	LD=gcc
 	
 	ozm_out=
-	if test -n ""-fno-exceptions -fno-rtti""
+	if test -n "-fno-exceptions -fno-rtti"
 	then
 	    echo 'void f(){}' > oz_conftest.c
-	    for ozm_opt in "-fno-exceptions -fno-rtti"
+	    for ozm_opt in -fno-exceptions -fno-rtti
 	    do
 		echo $ac_n "checking compiler option $ozm_opt""... $ac_c" 1>&6
 echo "configure:1587: checking compiler option $ozm_opt" >&5
