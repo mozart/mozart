@@ -41,7 +41,7 @@ Bool Suspendable::_wakeup(Board * home, PropCaller calledBy) {
   if (isDead())
     return OK;
 
-  Board * sb = getBoardInternal();
+  Board * sb = getBoardInternal()->derefBoard();
 
   oz_BFlag between = oz_isBetween(sb, home);
   
@@ -83,7 +83,7 @@ Bool Suspendable::_wakeup(Board * home, PropCaller calledBy) {
 	setDead();
 
 	if (isExternal())
-	  sb->derefBoard()->checkSolveThreads();
+	  sb->checkSolveThreads();
 
 	SuspToThread(this)->disposeStack();
 	return OK;
@@ -99,9 +99,9 @@ Bool Suspendable::_wakeup(Board * home, PropCaller calledBy) {
 	if (isNMO() && !oz_onToplevel()) {
 	  Assert(!SuspToPropagator(this)->getPropagator()->isMonotonic());
 
-	  am.currentBoard()->addToNonMono(SuspToPropagator(this));
+	  sb->addToNonMono(SuspToPropagator(this));
 	} else {
-	  (void) oz_pushToLPQ(SuspToPropagator(this));
+	  sb->addToLPQ(SuspToPropagator(this));
 	}
 	return NO;
       case B_NOT_BETWEEN:
@@ -109,7 +109,7 @@ Bool Suspendable::_wakeup(Board * home, PropCaller calledBy) {
       case B_DEAD:
 	setDead();
 	if (isExternal())
-	  sb->derefBoard()->checkSolveThreads();
+	  sb->checkSolveThreads();
 	SuspToPropagator(this)->dispose();
 	return OK;
       }
@@ -158,10 +158,8 @@ void oz_checkAnySuspensionList(SuspList ** suspList,
 }
 
 
-static SuspQueue * lpq_cache = NULL;
-
 inline
-Bool Suspendable::_wakeupLocal(PropCaller calledBy) {
+Bool Suspendable::_wakeupLocal(Board * sb, PropCaller calledBy) {
   if (isDead())
     return OK;
   
@@ -174,12 +172,9 @@ Bool Suspendable::_wakeupLocal(PropCaller calledBy) {
     if (isNMO() && !oz_onToplevel()) {
       Assert(!SuspToPropagator(this)->getPropagator()->isMonotonic());
       
-      am.currentBoard()->addToNonMono(SuspToPropagator(this));
+      sb->addToNonMono(SuspToPropagator(this));
     } else {
-      if (lpq_cache)
-	lpq_cache->enqueue(this);
-      else
-	lpq_cache = oz_pushToLPQ(SuspToPropagator(this));
+      sb->addToLPQ(SuspToPropagator(this));
     }
     
   }
@@ -193,17 +188,23 @@ void oz_checkLocalSuspensionList(SuspList ** suspList,
   if (am.inEqEq())
     return;
 
-  lpq_cache = NULL;
-  
-  SuspList ** p  = suspList;
 
-  SuspList * sl = *suspList; 
+  SuspList ** p = suspList;
 
-  while (sl) {
+  SuspList * sl = *p; 
+
+  if (!sl)
+    return;
+
+  Board * sb = sl->getSuspendable()->getBoardInternal()->derefBoard();
+
+  do {
     
     SuspList ** n = sl->getNextRef();
-    
-    if (sl->getSuspendable()->_wakeupLocal(calledBy)) {
+
+    Assert(sb == sl->getSuspendable()->getBoardInternal()->derefBoard());
+  
+    if (sl->getSuspendable()->_wakeupLocal(sb,calledBy)) {
       *p = *n;
       sl->dispose();
       sl = *p;
@@ -213,7 +214,7 @@ void oz_checkLocalSuspensionList(SuspList ** suspList,
     }
     
     
-  }
+  } while (sl);
     
 }
 

@@ -32,29 +32,29 @@
 
 void ThreadsPool::init(void) {
   hi = mid = 0;
-  _q[ HI_PRIORITY] = new SuspQueue();
-  _q[MID_PRIORITY] = new SuspQueue();
-  _q[LOW_PRIORITY] = new SuspQueue();
+  _q[ HI_PRIORITY].init();
+  _q[MID_PRIORITY].init();
+  _q[LOW_PRIORITY].init();
 }
 
 int ThreadsPool::getRunnableNumber() {
   return
-    _q[ HI_PRIORITY]->getSize() +
-    _q[MID_PRIORITY]->getSize() +
-    _q[LOW_PRIORITY]->getSize() +
+    _q[ HI_PRIORITY].getSize() +
+    _q[MID_PRIORITY].getSize() +
+    _q[LOW_PRIORITY].getSize() +
     1;
 }
 
 Bool ThreadsPool::isScheduledSlow(Thread * thr) {
-  return (_q[MID_PRIORITY]->isIn(thr) ||
-	  _q[ HI_PRIORITY]->isIn(thr) ||
-	  _q[LOW_PRIORITY]->isIn(thr));
+  return (_q[MID_PRIORITY].isIn(thr) ||
+	  _q[ HI_PRIORITY].isIn(thr) ||
+	  _q[LOW_PRIORITY].isIn(thr));
 }
 
 void ThreadsPool::deleteThread(Thread * thr) {
-  _q[ HI_PRIORITY]->remove(thr);
-  _q[MID_PRIORITY]->remove(thr);
-  _q[LOW_PRIORITY]->remove(thr);
+  _q[ HI_PRIORITY].remove(thr);
+  _q[MID_PRIORITY].remove(thr);
+  _q[LOW_PRIORITY].remove(thr);
 }
 
 void ThreadsPool::rescheduleThread(Thread *th) {

@@ -129,8 +129,6 @@ error include resources.hh before mozart.h
 #endif
 
 
-#define QUEUEMINSIZE	        32
-
 #define TIMEDETAILED            0
 
 #define NumberOfXRegisters	10000
