@@ -435,12 +435,12 @@ void unmarshalUselessVirtualInfo(MsgBuffer *mb)
 #endif
 
   //
-  (void) unmarshalNumber(mb);
+  skipNumber(mb);
   (void) unmarshalShort(mb);
-  (void) unmarshalNumber(mb);
-  (void) unmarshalNumber(mb);
+  skipNumber(mb);
+  skipNumber(mb);
   //
-  (void) unmarshalNumber(mb);
+  skipNumber(mb);
 }
 
 //

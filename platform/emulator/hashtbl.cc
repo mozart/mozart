@@ -287,3 +287,145 @@ void HashTable::printStatistic()
   printf("\t%d table entries have been used for %d literals (%d%%)\n",
          tableSize, counter, counter*100/tableSize);
 }
+
+
+//
+// above this do usual sequential reset;
+const double DUMMYRESET = 0.33;
+
+//
+//
+void HashTableFastReset::mkTable()
+{
+  counter = 0;
+  percent = (int) (MAXFULL * tableSize);
+  prev = (HashNodeLinked *) 0;
+  table = new HashNodeLinked[tableSize];
+}
+
+HashTableFastReset::HashTableFastReset(int sz)
+{
+  tableSize = nextPrime(sz);
+  mkTable();
+}
+
+HashTableFastReset::~HashTableFastReset()
+{
+  delete [] table;
+  DebugCode(prev = (HashNodeLinked *) -1);
+}
+
+inline int HashTableFastReset::findIndex(intlong i)
+{
+  int key = hashFunc(i);
+  while (! table[key].isEmpty() && table[key].key.fint != i) {
+    key = incKey(key,tableSize);
+  }
+  return key;
+}
+
+void HashTableFastReset::htAdd(intlong k, void *val)
+{
+  Assert(val != htEmpty);
+
+  //
+  if (counter > percent) resize();
+
+  //
+  int key = findIndex(k);
+  if (table[key].isEmpty()) { // may be already in there;
+    table[key].key.fint  = k;
+    table[key].value = val;
+    table[key].prev = prev;
+
+    //
+    prev = &table[key];
+    counter++;
+  }
+}
+
+void HashTableFastReset::mkEmpty()
+{
+  if (counter > (int) (DUMMYRESET * tableSize)) {
+    for(int i = 0; i < tableSize; i++) {
+      table[i].setEmpty();
+    }
+    prev = (HashNodeLinked *) 0;
+  } else {
+    while (prev) {
+      HashNodeLinked *node = prev;
+      prev = prev->prev;
+      node->setEmpty();
+    }
+  }
+  counter = 0;
+}
+
+void *HashTableFastReset::htFind(intlong i)
+{
+  int key = findIndex(i);
+  return (table[key].isEmpty())
+    ? htEmpty : table[key].value;
+}
+
+void HashTableFastReset::resize()
+{
+  int oldSize = tableSize;
+  HashNodeLinked* old = table;
+
+  tableSize = nextPrime(tableSize*2);
+  mkTable();
+
+  //
+  for (int i = 0; i < oldSize; i++) {
+    if (! old[i].isEmpty())
+      htAdd(old[i].key.fint, old[i].value);
+  }
+
+  //
+  delete [] old;
+}
+
+#ifdef DEBUG_CHECK
+void HashTableFastReset::print()
+{
+  for(int i = 0; i < tableSize; i++) {
+    if (!table[i].isEmpty()) {
+      printf("table[%d] = <%ld,0x%p>\n", i,
+             table[i].key.fint, table[i].value);
+    }
+  }
+  printStatistics();
+}
+
+void HashTableFastReset::printStatistics()
+{
+  int maxx = 0, sum = 0, collpl = 0, coll = 0;
+  for(int i = 0; i < tableSize; i++) {
+    if (table[i].isEmpty())
+      continue;
+    int l = lengthList(i);
+    maxx = maxx > l ? maxx : l;
+    sum += l;
+    coll  += l > 1 ? l - 1 : 0;
+    collpl += l > 1 ? 1 : 0;
+  }
+  printf("\nHashtable-Statistics:\n");
+  printf("\tmaximum bucket length     : %d\n", maxx);
+  printf("\tnumber of collision places: %d\n", collpl);
+  printf("\tnumber of collisions      : %d\n", coll);
+  printf("\t%d table entries have been used for %d literals (%d%%)\n",
+         tableSize, counter, counter*100/tableSize);
+}
+
+int HashTableFastReset::lengthList(int i)
+{
+  int key = hashFunc(table[i].key.fint);
+  int ret = 1;
+  while (key != i) {
+    ret++;
+    key = incKey(key, tableSize);
+  }
+  return (ret);
+}
+#endif

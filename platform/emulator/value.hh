@@ -542,10 +542,12 @@ enum TypeOfConst {
   Co_Space,
   Co_Resource,
 
-  /* chunks must stay together and the first one must be Co_Object
-   * otherwise you'll have to change the "isChunk" test
-   * NOTE: update the builtins: subtree and chunkArity, when adding new chunks
-   */
+  //
+  // chunks must stay together and the first one must be Co_Object
+  // otherwise you'll have to change the "isChunk" test;
+  //
+  // NOTE: update the builtins: subtree and chunkArity, when adding
+  //       new chunks
   Co_Object,
   Co_Port,
   Co_Chunk,
@@ -1219,17 +1221,23 @@ public:
   }
 
   TaggedRef getArg(int i) { return tagged2NonVariable(args+i); }
-  void setArg(int i, TaggedRef t) { args[i] = t; }
+  void setArg(int i, TaggedRef t) {   Assert(i >= 0); args[i] = t; }
   TaggedRef *getRef() { return args; }
   TaggedRef *getRef(int i) { return args+i; }
-  TaggedRef &operator [] (int i) {return args[i];}
+  TaggedRef &operator [] (int i) { return args[i]; }
 
   void setFeatures(TaggedRef proplist);
 
   TaggedRef getLabel() { return label; }
-  void setLabelInternal(TaggedRef l) { label=l; }
+  void setLabelInternal(TaggedRef l) {
+    CHECK_LITERAL(l);
+    label=l;
+  }
   Literal *getLabelLiteral() { return tagged2Literal(label); }
-  void setLabelForAdjoinOpt(TaggedRef newLabel) { label = newLabel; }
+  void setLabelForAdjoinOpt(TaggedRef newLabel) {
+    CHECK_LITERAL(newLabel);
+    label = newLabel;
+  }
 
   TaggedRef getArityList() {
     return sraGetArityList(getSRecordArity());

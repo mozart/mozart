@@ -1,10 +1,10 @@
 /*
  *  Authors:
- *    Tobias Mueller (tmueller@ps.uni-sb.de)
- *    Ralf Scheidhauer (Ralf.Scheidhauer@ps.uni-sb.de)
+ *    Tobias Mueller <tmueller@ps.uni-sb.de>
+ *    Ralf Scheidhauer <Ralf.Scheidhauer@ps.uni-sb.de>
  *
  *  Contributors:
- *    optional, Contributor's name (Contributor's email address)
+ *    Konstantin Popov <kost@sics.se>
  *
  *  Copyright:
  *    Organization or Person (Year(s))
@@ -74,6 +74,7 @@ public:
   HashTable(HtKeyType,int sz);
   ~HashTable();
 
+  //
   int getSize() { return counter; }
   void htAdd(const char *k, void *val);
   void htAdd(intlong k, void *val);
@@ -85,22 +86,73 @@ public:
   unsigned memRequired(int valSize = 0);
   int getTblSize(){return tableSize;}
 
-  HashNode *getNext(HashNode *hn)
-  {
-    hn++;
-
-    for (; hn < table+tableSize; hn++) {
+  //
+protected:
+  HashNode *getNext(HashNode *hn) {
+    for (hn++; hn < table+tableSize; hn++) {
       if (!hn->isEmpty())
-        return hn;
+        return (hn);
     }
-
-    return NULL;
+    return ((HashNode *) 0);
   }
+  HashNode *getFirst() { return (getNext(table-1)); }
+};
 
-  HashNode *getFirst()
-  {
-    return getNext(table-1);
-  }
+//
+// kost@ : A hash table with the O(n) (n=number of entries) reset
+// time. Useful e.g. for marshaling. The idea is that a hash node
+// keeps the number of a previously allocated node, so 'reset()'
+// traverses those backwards (keep in mind also that there is no
+// 'delete' operation). Unfortunately, i don't see any simple and
+// efficient way to just extend the 'HashTable'. So, a lot of things
+// are plain copied...
+
+//
+class HashNodeLinked {
+public:
+  HtKey key;
+  void * value;
+  HashNodeLinked *prev;
+
+  //
+public:
+  void setEmpty() { key.fint = (intlong) htEmpty; }
+  Bool isEmpty()  { return (key.fint == (intlong) htEmpty); }
+  //
+  HashNodeLinked() { setEmpty(); }
+};
+
+//
+// Only 'intlong' keys are supported by now;
+class HashTableFastReset {
+private:
+  int counter;      // number of entries
+  int percent;      // if more than percent is used, we reallocate
+  int tableSize;
+  HashNodeLinked *table;
+  HashNodeLinked *prev;
+
+  //
+private:
+  int hashFunc(intlong i) { return (((unsigned) i) % tableSize); }
+  int findIndex(intlong i);
+  void mkTable();
+  void resize();
+  DebugCode(int lengthList(int););
+
+  //
+public:
+  HashTableFastReset(int sz);
+  ~HashTableFastReset();
+
+  //
+  int getSize() { return (counter); }
+  void htAdd(intlong k, void *val);
+  void *htFind(intlong k);
+  void mkEmpty();
+  //
+  DebugCode(void print(););
+  DebugCode(void printStatistics(););
 };
 
 #endif

@@ -38,16 +38,13 @@
 #include "fail.hh"
 
 
-
-void ObjectVar::marshal(MsgBuffer *bs, GenTraverser *gt)
+//
+void ObjectVar::marshal(MsgBuffer *bs)
 {
   PD((MARSHAL,"var objectproxy"));
-  int done=checkCycleOutLine(getObject(),bs);
-  if (!done) {
-    GName *classgn =  isObjectClassAvail()
-      ? globalizeConst(getClass(),bs) : getGNameClass();
-    marshalObjectImpl(getObject(),bs,classgn,gt);
-  }
+  GName *classgn = isObjectClassAvail()
+    ? globalizeConst(getClass(), bs) : getGNameClass();
+  marshalVarObject(getObject(), bs, classgn);
 }
 
 /* --- ObjectProxis --- */

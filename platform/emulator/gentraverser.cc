@@ -1,7 +1,6 @@
 /*
  *  Authors:
  *    Kostja Popov (kost@sics.se)
- *    Per Brand (perbrand@sics.se)
  *
  *  Contributors:
  *    optional, Contributor's name (Contributor's email address)
@@ -30,6 +29,9 @@
 #endif
 
 #include "base.hh"
+
+#ifdef NEWMARSHALER
+
 #include "gentraverser.hh"
 #include "pickle.hh"
 
@@ -46,16 +48,8 @@ void GenTraverser::doit()
     OZ_Term t = get();
     // a push-pop pair for the topmost entry is saved:
   bypass:
-    DebugCode(debugNODES++;);
-    CrazyDebug(debugNODES++;);
+    CrazyDebug(incDebugNODES(););
     DEREF(t, tPtr, tTag);
-
-    //
-    int ind = find(t);
-    if (ind >= 0) {
-      (void) processRepetition(t, ind);
-      continue;
-    }
 
     //
     switch(tTag) {
@@ -69,37 +63,62 @@ void GenTraverser::doit()
       break;
 
     case LITERAL:
-      processLiteral(t);
-      break;
+      {
+        int ind = find(t);
+        if (ind >= 0) {
+          (void) processRepetition(ind);
+          continue;
+        }
+        processLiteral(t);
+        break;
+      }
 
     case LTUPLE:
-      if (!processLTuple(t)) {
-        LTuple *l = tagged2LTuple(t);
-        ensureFree(1);
-        put(l->getTail());
-        t = l->getHead();
-        goto bypass;
-      }
-      break;
-
-    case SRECORD:
-      if (!processSRecord(t)) {
-        SRecord *rec = tagged2SRecord(t);
-        TaggedRef label = rec->getLabel();
-        int argno = rec->getWidth();
+      {
+        int ind = find(t);
+        if (ind >= 0) {
+          (void) processRepetition(ind);
+          continue;
+        }
 
         //
-        // The order is: label, [arity], subrees...
-        // Both tuple and record args appear in a reverse order;
-        ensureFree(argno+2);    // pessimistic approximation;
-        for(int i = 0; i < argno; i++)
-          put(rec->getArg(i));
-        if (!rec->isTuple())
-          put(rec->getArityList());
-        t = rec->getLabel();
-        goto bypass;
+        if (!processLTuple(t)) {
+          LTuple *l = tagged2LTuple(t);
+          ensureFree(1);
+          put(l->getTail());
+          t = l->getHead();
+          goto bypass;
+        }
+        break;
       }
-      break;
+
+    case SRECORD:
+      {
+        int ind = find(t);
+        if (ind >= 0) {
+          (void) processRepetition(ind);
+          continue;
+        }
+
+        //
+        if (!processSRecord(t)) {
+          SRecord *rec = tagged2SRecord(t);
+          TaggedRef label = rec->getLabel();
+          int argno = rec->getWidth();
+
+          //
+          // The order is: label, [arity], subtrees...
+          // Both tuple and record args appear in a reverse order;
+          ensureFree(argno+1);  // pessimistic approximation;
+          for(int i = 0; i < argno; i++)
+            put(rec->getArg(i));
+          if (!rec->isTuple())
+            put(rec->getArityList());
+          t = rec->getLabel();
+          goto bypass;
+        }
+        break;
+      }
 
   case EXT:
     processExtension(t);
@@ -107,6 +126,13 @@ void GenTraverser::doit()
 
   case OZCONST:
     {
+      int ind = find(t);
+      if (ind >= 0) {
+        (void) processRepetition(ind);
+        continue;
+      }
+
+      //
       ConstTerm *ct = tagged2Const(t);
       switch (ct->getType()) {
 
@@ -155,17 +181,24 @@ void GenTraverser::doit()
         break;
 
       case Co_Abstraction:
-        if (!processAbstraction(t, ct)) {
-          Abstraction *pp = (Abstraction *) t;
-          int gs = pp->getPred()->getGSize();
-          ensureFree(gs);
-          for (int i=0; i < gs; i++)
-            put(pp->getG(i));
+        {
+          if (!processAbstraction(t, ct)) {
+            Abstraction *pp = (Abstraction *) ct;
+            int gs = pp->getPred()->getGSize();
+            //
+            // in the stream: file, name, registers, code area:
+            ensureFree(gs+2);
+            for (int i=0; i < gs; i++)
+              put(pp->getG(i));
+            //
+            put(pp->getName());
+            put(pp->getPred()->getFile());
+          }
         }
         break;
 
       case Co_Object:
-        processBuiltin(t, ct);
+        processObject(t, ct);
         break;
 
       case Co_Lock:
@@ -198,9 +231,51 @@ void GenTraverser::doit()
     case UVAR:
       processUVar(tPtr);
       break;
+
     case CVAR:
-      processCVar(tPtr);
-      break;
+      {
+        int ind = find(t);
+        if (ind >= 0) {
+          (void) processRepetition(ind);
+          continue;
+        }
+
+        //
+        OZ_Term value;
+        if ((value = processCVar(tPtr))) {
+          t = value;
+          goto bypass;
+        }
+        break;
+      }
+
+    case GCTAG:
+      {
+        // If the argument is zero then the task is empty:
+        void *arg = getPtr();
+
+        //
+        if (arg) {
+          MarshalerBinaryAreaProcessor proc =
+            (MarshalerBinaryAreaProcessor) lookupPtr();
+          // 'proc' is preserved in stack;
+          StackEntry *se = putPtrSERef(0);
+          putInt(taggedBATask); // pre-cooked;
+
+          //
+          if (!(*proc)(this, arg)) {
+            // not yet done - restore the argument back;
+            updateSEPtr(se, arg);
+          }
+          // ... otherwise do nothing: the empty task will be
+          // discarded later -
+        } else {
+          CrazyDebug(decDebugNODES(););
+          // - here, to be exact:
+          dropEntry();          // 'proc';
+        }
+        break;
+      }
 
     default:
       processNoGood(t,NO);
@@ -254,9 +329,9 @@ repeat:
     {
       GetBTTaskPtr1(frame, OZ_Term*, spointer);
       *spointer = value;
-      DebugCode(debugNODES++;);
-      CrazyDebug(debugNODES++;);
+      CrazyDebug(incDebugNODES(););
       DiscardBTFrame(frame);
+      DebugCode(value = (OZ_Term) -1;); // 'value' is expired;
       GetBTTaskTypeNoDecl(frame, type);
       goto repeat;
     }
@@ -284,11 +359,10 @@ repeat:
       }
 
       //
-      GetNextTaskType(frame, nt);
+      GetBTNextTaskType(frame, nt);
       if (nt == BT_spointer) {
-        DebugCode(debugNODES++;);
-        CrazyDebug(debugNODES++;);
-        GetNextTaskPtr1(frame, OZ_Term*, spointer);
+        CrazyDebug(incDebugNODES(););
+        GetBTNextTaskPtr1(frame, OZ_Term*, spointer);
         *spointer = recTerm;
         DiscardBT2Frames(frame);
 
@@ -300,7 +374,7 @@ repeat:
         }
       } else {
         //
-        ReplaceTask1stArg(frame, BT_buildValue, recTerm);
+        ReplaceBTTask1stArg(frame, BT_buildValue, recTerm);
 
         //
         OZ_Term *args = rec->getRef();
@@ -310,33 +384,34 @@ repeat:
         EnsureBTSpace(frame, arity);
         arity--;
         PutBTTaskPtr(frame, BT_spointer_iterate, args++);
-        while(arity-- > 0)
+        while (arity-- > 0) {
           PutBTTaskPtr(frame, BT_spointer, args++);
+        }
       }
       break;
     }
 
   case BT_takeRecordLabel:
     {
-      ReplaceTask1stArg(frame, BT_takeRecordArity, value);
+      ReplaceBTTask1stArg(frame, BT_takeRecordArity, value);
       break;
     }
 
   case BT_takeRecordLabelMemo:
     {
-      ReplaceTask1stArg(frame, BT_takeRecordArityMemo, value);
+      ReplaceBTTask1stArg(frame, BT_takeRecordArityMemo, value);
       break;
     }
 
   case BT_takeRecordArity:
     {
-      ReplaceTask2ndArg(frame, BT_makeRecord_intermediate, value);
+      ReplaceBTTask2ndArg(frame, BT_makeRecord_intermediate, value);
       break;
     }
 
   case BT_takeRecordArityMemo:
     {
-      ReplaceTask2ndArg(frame, BT_makeRecordMemo_intermediate, value);
+      ReplaceBTTask2ndArg(frame, BT_makeRecordMemo_intermediate, value);
       break;
     }
 
@@ -370,8 +445,7 @@ repeat:
       //
       GetBTTaskType(frame, nt);
       if (nt == BT_spointer) {
-        DebugCode(debugNODES++;);
-        CrazyDebug(debugNODES++;);
+        CrazyDebug(incDebugNODES(););
         GetBTTaskPtr1(frame, OZ_Term*, spointer);
         *spointer = recTerm;
         DiscardBTFrame(frame);
@@ -379,11 +453,12 @@ repeat:
         //
         while (oz_isCons(arity)) {
           EnsureBTSpace1Frame(frame);
-          PutBTTask2Args(frame, BT_recordArg, rec, oz_head(arity));
+          PutBTTaskPtrArg(frame, BT_recordArg, rec, oz_head(arity));
           arity = oz_tail(arity);
         }
       } else {
         //
+        EnsureBTSpace1Frame(frame);
         PutBTTaskPtrArg(frame, BT_recordArg_iterate, rec, oz_head(arity));
         arity = oz_tail(arity);
         while (oz_isCons(arity)) {
@@ -415,9 +490,8 @@ repeat:
       DiscardBTFrame(frame);
       rec->setFeature(fea, value);
       //
-      DebugCode(debugNODES++;);
-      CrazyDebug(debugNODES++;);
-      value = makeTaggedSRecord(rec);
+      CrazyDebug(incDebugNODES(););
+      value = makeTaggedSRecord(rec); // new value;
       GetBTTaskTypeNoDecl(frame, type);
       goto repeat;
     }
@@ -426,7 +500,7 @@ repeat:
     {
       GetBTTaskPtr1(frame, OzDictionary*, dict);
       // 'dict' remains in place:
-      ReplaceTask2ndArg(frame, BT_dictVal, value);
+      ReplaceBTTask2ndArg(frame, BT_dictVal, value);
       break;
     }
 
@@ -441,13 +515,13 @@ repeat:
 
   case BT_fsetvalue:
     {
-      ReplaceTask2ndArg(frame, BT_fsetvalueFinal, value);
+      ReplaceBTTask2ndArg(frame, BT_fsetvalueFinal, value);
       break;
     }
 
   case BT_fsetvalueMemo:
     {
-      ReplaceTask2ndArg(frame, BT_fsetvalueFinalMemo, value);
+      ReplaceBTTask2ndArg(frame, BT_fsetvalueFinalMemo, value);
       break;
     }
 
@@ -501,43 +575,39 @@ repeat:
       goto repeat;
     }
 
-  case BT_classMemo:
-    doMemo = OK;
-    // fall through;
-  case BT_class:
+  case BT_classFeatures:
     {
       Assert(oz_isSRecord(value));
-      GetBTTaskPtr1(frame, GName*, gname);
+      GetBTTaskPtr1(frame, ObjectClass*, cl);
       GetBTTaskArg2(frame, int, flags);
       DiscardBTFrame(frame);
 
       //
-      OZ_Term classTerm;
-      ObjectClass *cl = new ObjectClass(NULL, NULL, NULL, NULL, NO, NO,
-                                        am.currentBoard());
-      cl->setGName(gname);
-      classTerm = makeTaggedConst(cl);
-      addGName(gname, classTerm);
-
-      //
       SRecord *feat = tagged2SRecord(value);
       TaggedRef ff = feat->getFeature(NameOoFeat);
-
+      //
       cl->import(feat,
                  tagged2Dictionary(feat->getFeature(NameOoFastMeth)),
                  oz_isSRecord(ff) ? tagged2SRecord(ff) : (SRecord*)NULL,
                  tagged2Dictionary(feat->getFeature(NameOoDefaults)),
                  flags);
 
-      value = classTerm;
-      if (doMemo) {
-        GetBTFrameArg1(frame, int, memoIndex);
-        DiscardBTFrame(frame);
-        set(value, memoIndex);
-        doMemo = NO;
-      }
+      //
+      value = makeTaggedConst(cl);
       GetBTTaskTypeNoDecl(frame, type);
       goto repeat;
+    }
+
+  case BT_procFile:
+    {
+      ReplaceBTTask1stArg(frame, BT_proc, value);
+      break;
+    }
+
+  case BT_procFileMemo:
+    {
+      ReplaceBTTask1stArg(frame, BT_procMemo, value);
+      break;
     }
 
   case BT_procMemo:
@@ -545,52 +615,61 @@ repeat:
     // fall through;
   case BT_proc:
     {
-      Assert(oz_onToplevel());
-      GetBTTaskPtr1(frame, GName*, gname);
-      GetBTTaskArg2(frame, int, maybeMemoIndex);
+      OZ_Term name = value;
+      GetBTTaskArg1(frame, OZ_Term, file);
+      DiscardBTFrame(frame);
+      GetBTFramePtr1(frame, GName*, gname);
+      GetBTFramePtr2(frame, ProgramCounter, pc);
+      GetBTFrameArg3(frame, int, maybeMemoIndex);
+      DiscardBTFrame(frame);
+      GetBTFrameArg1(frame, int, maxX);
+      GetBTFrameArg2(frame, int, line);
+      GetBTFrameArg3(frame, int, column);
       DiscardBTFrame(frame);
       GetBTFrameArg1(frame, int, arity);
       GetBTFrameArg2(frame, int, gsize);
-      GetBTFrameArg3(frame, int, maxX);
       DiscardBTFrame(frame);
-      GetBTFramePtr1(frame, ProgramCounter, pc);
-      DiscardBTFrame(frame);
-      OZ_Term name  = value;
-      OZ_Term procTerm;
 
       //
-      PrTabEntry *pr = new PrTabEntry(name, mkTupleWidth(arity), 0,0,0,
+      Assert(gname);            // must be an unknown procedure here;
+      OZ_Term procTerm;
+      // kost@ : 'flags' are obviously not used (otherwise something
+      // would not work: flags are not passed as e.g. 'file' is);
+      PrTabEntry *pr = new PrTabEntry(name, mkTupleWidth(arity),
+                                      file, line, column,
                                       oz_nil(), maxX);
+      pr->PC = pc;
       pr->setGSize(gsize);
       Abstraction *pp = Abstraction::newAbstraction(pr, am.currentBoard());
       procTerm = makeTaggedConst(pp);
       pp->setGName(gname);
       addGName(gname, procTerm);
-      pr->PC = pc;
-      pr->patchFileAndLine();
 
       //
       if (doMemo) {
-        set(value, maybeMemoIndex);
+        set(procTerm, maybeMemoIndex);
         doMemo = NO;
       }
 
       //
       if (gsize > 0) {
-        // reverse order...
+        // reverse order... and don't bother with 'spointer' tasks:
+        // just issue an '_iterate' task;
         EnsureBTSpace(frame, gsize);
         PutBTTaskPtrArg(frame, BT_closureElem_iterate, pp, 0);
         for (int i = 1; i < gsize; i++) {
           PutBTTaskPtrArg(frame, BT_closureElem, pp, i);
         }
-        //
-        break;
+        break;                  // BT_proc:
       } else {
-        // no args;
-        value = procTerm;
+        value = makeTaggedConst(pp);
         GetBTTaskTypeNoDecl(frame, type);
         goto repeat;
       }
+
+      //
+      // (code area is done by the user himself;)
+      Assert(0);
     }
 
   case BT_closureElem:
@@ -609,9 +688,52 @@ repeat:
       DiscardBTFrame(frame);
       pp->initG(ind, value);
       //
-      DebugCode(debugNODES++;);
-      CrazyDebug(debugNODES++;);
+      CrazyDebug(incDebugNODES(););
       value = makeTaggedConst(pp);
+      GetBTTaskTypeNoDecl(frame, type);
+      goto repeat;
+    }
+
+  //
+  // 'BT_binary' is transient here: it must be either saved or
+  // discarded if it's already done;
+  case BT_binary:
+    {
+      GetBTTaskPtr1(frame, void*, arg);
+      if (arg)
+        binaryTasks.save(arg);
+      DiscardBTFrame(frame);
+      GetBTTaskTypeNoDecl(frame, type);
+      goto repeat;
+    }
+
+  case BT_binary_getValue:
+    {
+      GetBTTaskPtr1(frame, OzValueProcessor, proc);
+      GetBTTaskPtr2(frame, void*, arg);
+      DiscardBTFrame(frame);
+      (*proc)(arg, value);
+      break;
+    }
+
+  case BT_binary_getCompleteValue:
+    {
+      ReplaceBTTask1stArg(frame, BT_binary_getValue_intermediate, value);
+      break;
+    }
+
+  case BT_binary_getValue_intermediate:
+    {
+      GetBTTaskArg1(frame, OZ_Term, ozValue);
+      DiscardBTFrame(frame);
+      GetBTFramePtr1(frame, OzValueProcessor, proc);
+      GetBTFramePtr2(frame, void*, arg);
+      DiscardBTFrame(frame);
+      //
+      (*proc)(arg, ozValue);
+
+      //
+      // 'value' is preserved;
       GetBTTaskTypeNoDecl(frame, type);
       goto repeat;
     }
@@ -621,5 +743,14 @@ repeat:
   }
 
   //
+  while (!binaryTasks.isEmpty()) {
+    void *arg = binaryTasks.pop();
+    Assert(arg);
+    EnsureBTSpace1Frame(frame);
+    PutBTTaskPtr(frame, BT_binary, arg);
+  }
+  //
   SetBTFrame(frame);
 }
+
+#endif

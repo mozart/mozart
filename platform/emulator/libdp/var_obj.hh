@@ -107,7 +107,7 @@ private:
 
 public:
   Object *getObject() { return obj; }
-  void marshal(MsgBuffer*,GenTraverser *);
+  void marshal(MsgBuffer *);
   void sendObject(DSite*, int, ObjectFields&, BorrowEntry*);
   void sendObjectAndClass(ObjectFields&, BorrowEntry*);
 

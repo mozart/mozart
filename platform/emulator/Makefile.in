@@ -73,7 +73,7 @@ MODINTERS = $(MODSPECS:%=mod%-if.cc)
 
 CREATEDFILES=                                           \
         instrtab.hh opcodes.hh                          \
-        marshalcode.cc mozart.c         \
+        marshalcode.cc  newmarshalcode.cc mozart.c      \
         atoms.hh atoms.cc                               \
         config.h                                        \
         version.cc initffuns.cc copycode.cc opcodes.cc  \
@@ -118,8 +118,8 @@ MEMSRCS=\
         g-collect.cc mem.cc liveness.cc
 
 PICKLESRCS=\
-        gname.cc components.cc marshaler.cc site.cc
-#       gentraverser.cc newmarshaler.cc
+        gname.cc components.cc marshaler.cc site.cc \
+        gentraverser.cc newmarshaler.cc
 
 OFSRCS= var_of.cc
 
@@ -395,9 +395,10 @@ config.h: config.m4h $(OZVERSION)
 
 value.o: atoms.hh
 
-copycode.cc marshalcode.cc opcodes.hh opcodes.cc instrtab.hh config.h: instrDefs.m4
+copycode.cc marshalcode.cc newmarshalcode.cc opcodes.hh opcodes.cc instrtab.hh config.h: instrDefs.m4
 
 marshaler.o: marshalcode.cc pickle.cc
+newmarshaler.o: newmarshalcode.cc pickle.cc
 text2Pickle.o: pickle.cc
 components.o: componentBuffer.cc
 

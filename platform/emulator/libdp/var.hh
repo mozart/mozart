@@ -255,7 +255,7 @@ ManagerVar *oz_getManagerVar(TaggedRef v) {
 
 void sendRedirect(DSite*, int, TaggedRef);
 OZ_Term unmarshalVarImpl(MsgBuffer*,Bool,Bool);
-Bool marshalVariableImpl(TaggedRef *tPtr, MsgBuffer *bs, GenTraverser *);
+Bool marshalVariableImpl(TaggedRef *tPtr, MsgBuffer *bs);
 Bool triggerVariableImpl(TaggedRef *);
 
 /* ---------------------------------------------------------------------- */

@@ -458,18 +458,20 @@ void ManagerVar::marshal(MsgBuffer *bs)
     marshalOwnHead(DIF_VAR,i,bs);}
 }
 
+//
 void ProxyVar::marshal(MsgBuffer *bs)
 {
   DSite *sd=bs->getSite();
   int i=getIndex();
   PD((MARSHAL,"var proxy o:%d",i));
-  if(sd && borrowTable->getOriginSite(i)==sd) {
-    marshalToOwner(i,bs);}
-  else {
-    if(isFuture()){
-      marshalBorrowHead(DIF_FUTURE,i,bs);}
-    else{
-      marshalBorrowHead(DIF_VAR,i,bs);}
+  if (sd && borrowTable->getOriginSite(i) == sd) {
+    marshalToOwner(i, bs);
+  } else {
+    if (isFuture()) {
+      marshalBorrowHead(DIF_FUTURE, i, bs);
+    } else {
+      marshalBorrowHead(DIF_VAR, i, bs);
+    }
   }
 }
 
@@ -487,7 +489,8 @@ ManagerVar* globalizeFreeVariable(TaggedRef *tPtr){
 }
 
 // Returning 'NO' means we are going to proceed with 'marshal bomb';
-Bool marshalVariableImpl(TaggedRef *tPtr, MsgBuffer *bs,GenTraverser * gt) {
+Bool marshalVariableImpl(TaggedRef *tPtr, MsgBuffer *bs)
+{
   const TaggedRef var = *tPtr;
   if (oz_isManagerVar(var)) {
     if (!bs->globalize()) return TRUE;
@@ -497,7 +500,7 @@ Bool marshalVariableImpl(TaggedRef *tPtr, MsgBuffer *bs,GenTraverser * gt) {
     oz_getProxyVar(var)->marshal(bs);
   } else if (oz_isObjectVar(var)) {
     Assert(bs->globalize());
-    oz_getObjectVar(var)->marshal(bs,gt);
+    oz_getObjectVar(var)->marshal(bs);
   } else if (oz_isFree(var) || isFuture(var)) {
     if (!bs->globalize()) return TRUE;
     Assert(perdioInitialized);

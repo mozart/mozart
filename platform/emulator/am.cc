@@ -40,6 +40,9 @@
 #include "fdomn.hh"
 #include "trace.hh"
 #include "space.hh"
+#ifdef NEWMARSHALER
+#include "newmarshaler.hh"
+#endif
 
 AM am;
 
@@ -316,6 +319,9 @@ void AM::init(int argc,char **argv)
   //
   initSite();
   initMarshaler();
+#ifdef NEWMARSHALER
+  initNewMarshaler();
+#endif
 
   //
   initExtensions();
@@ -363,6 +369,12 @@ void AM::init(int argc,char **argv)
     // Task1: load functor
     tt->pushCall(BI_load,oz_atom(initFile),functor);
   }
+
+#ifdef DEBUG_CHECK
+//    fprintf(stderr, "Waiting 10 secs... hook up (pid %d)!\n", osgetpid());
+//    fflush(stderr);
+//    sleep(10);
+#endif
 
   //
   sleepQueue = (OzSleep *) 0;

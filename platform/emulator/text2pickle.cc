@@ -476,8 +476,13 @@ public:
 void pickle(TaggedPair *aux, MsgBuffer *out)
 {
   /* write new version number */
+  // kost@ : i don't get: why new version number??! Say when a lexical
+  // analyzer of a language A can also parse language B, it does not
+  // mean it can compile B...
   Assert(aux->tag==TAG_STRING);
-  marshalString(PERDIOVERSION,out);
+
+  // marshalString(PERDIOVERSION,out);
+  marshalString(aux->val.string, out);
   aux = aux->next;
 
   while(aux) {
@@ -510,8 +515,13 @@ void pickle(TaggedPair *aux, MsgBuffer *out)
         break;
       }
 
+    case TAG_NEWCODESTART:
+      newMarshalCodeStart(out);
+      break;
+
     case TAG_INT:       marshalNumber(aux->val.num,out); break;
     case TAG_CODEEND:   marshalCodeEnd(out); break;
+    case TAG_NEWCODEEND:newMarshalCodeEnd(out); break;
     case TAG_BYTE:      marshalByte(aux->val.num,out); break;
     case TAG_OPCODE:    marshalOpCode(0,aux->val.opcode,out,0); break;
     case TAG_STRING:    marshalString(aux->val.string,out); break;
@@ -544,7 +554,10 @@ public:
     PC(pc), lastPair(p), next(nxt) {}
 };
 
-
+//
+// kost@ : stack is needed for handling code areas: they can be
+// nested. Note that "old" and "new" pickles are handled in the same
+// way;
 CodeInfo *stack = NULL;
 
 void enterBlock(ProgramCounter PC, TaggedPair **p)
@@ -608,11 +621,13 @@ TaggedPair *unpickle(FILE *in)
       break;
 
     case TAG_CODESTART:
+    case TAG_NEWCODESTART:
       enterBlock(PC,lastPair);
       PC     = 0;
       val.pc = 0; /* leaveBlock will update to contain address of last instr */
       break;
 
+    case TAG_NEWCODEEND:
     case TAG_CODEEND:
       val.pc = PC;
       PC     = leaveBlock(lastPC);

@@ -211,9 +211,11 @@ OZ_Return raiseGeneric(char *id, char *msg, OZ_Term arg)
 
 
 #ifdef NEWMARSHALER
-Bool newMarshaler = NO;
+Bool newMarshaler = OK;
 #endif
 
+//
+inline static
 void marshalTermRT0(OZ_Term t, MsgBuffer *bs)
 {
 #ifdef NEWMARSHALER
@@ -228,7 +230,7 @@ void marshalTermRT0(OZ_Term t, MsgBuffer *bs)
 void saveTerm(ByteStream* buf,TaggedRef t) {
   buf->marshalBegin();
 #ifdef NEWMARSHALER
-  char *version  =  newMarshaler ? "2#0" : PERDIOVERSION;
+  char *version  =  newMarshaler ? NEWMARSHALER_PV : PERDIOVERSION;
 #else
   char *version  =  PERDIOVERSION;
 #endif
@@ -544,8 +546,8 @@ Bool loadTerm(ByteStream *buf,char* &vers,OZ_Term &t)
 #ifdef NEWMARSHALER
   Bool newFormat = NO;
 
-  if (major!=PERDIOMAJOR || minor > PERDIOMINOR) {
-    if (major==2 && minor==0)
+  if (major != PERDIOMAJOR || minor > PERDIOMINOR) {
+    if (major == NEWMARSHALER_PMAJOR && minor == NEWMARSHALER_PMINOR)
       newFormat = OK;
     else
       return NO;

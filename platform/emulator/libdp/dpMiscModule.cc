@@ -163,6 +163,7 @@ OZ_BI_define(BImarshalerPerf,2,0)
   unsigned int timeNow;
   int heapNow;
 
+  fprintf(stdout, "checking marshalers...\n");
   // check marshaler (old one);
 #ifdef USE_VS_MSGBUFFERS
   buf = getCoreVirtualMsgBuffer((DSite *) 0);
@@ -203,6 +204,7 @@ OZ_BI_define(BImarshalerPerf,2,0)
     return (oz_raise(E_ERROR, E_SYSTEM, "odd new marshaler", 0));
 
   // Now let's spin for a while. First, do marshaling speed:
+  fprintf(stdout, "measuring old marshaler...\n");
   timeNow = osUserTime();
   heapNow = getUsedMemory();
   int i;
@@ -227,6 +229,7 @@ OZ_BI_define(BImarshalerPerf,2,0)
   fprintf(stdout, "\n"); fflush(stdout);
 
   // ... new marshaler:
+  fprintf(stdout, "measuring new marshaler...\n");
   timeNow = osUserTime();
   heapNow = getUsedMemory();
   for (i = 0; i < count; i++) {
@@ -250,6 +253,7 @@ OZ_BI_define(BImarshalerPerf,2,0)
   fprintf(stdout, "\n"); fflush(stdout);
 
   // unmarshalling:
+  fprintf(stdout, "measuring old unmarshaler...\n");
 #ifdef USE_VS_MSGBUFFERS
   buf = getCoreVirtualMsgBuffer((DSite *) 0);
 #else
@@ -276,6 +280,7 @@ OZ_BI_define(BImarshalerPerf,2,0)
   dumpRemoteMsgBuffer(buf);
 #endif
 
+  fprintf(stdout, "measuring new unmarshaler...\n");
 #ifdef USE_VS_MSGBUFFERS
   buf = getCoreVirtualMsgBuffer((DSite *) 0);
 #else
