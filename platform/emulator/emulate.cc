@@ -1232,7 +1232,6 @@ LBLsuspendThread:
     //  First, set the board and self, and perform special action for
     // the case of blocking the root thread;
     Assert(GETBOARD(CTT)==CBB);
-    SaveSelf;
 
 #ifdef DEBUG_ROOT_THREAD
     // this can happen if \sw -threadedqueries,
@@ -1243,11 +1242,14 @@ LBLsuspendThread:
 #endif
 
     if (e->debugmode() && CTT->getTrace()) {
+      SaveSelf;
       debugStreamBlocked(CTT);
     } else if (CTT->getNoBlock() && CAA == NULL) {
       (void) oz_raise(E_ERROR,E_KERNEL,"block",1,makeTaggedConst(CTT));
       CTT->markRunnable();
       goto LBLraise;
+    } else {
+      SaveSelf;
     }
 
     e->unsetCurrentThread();
