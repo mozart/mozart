@@ -163,29 +163,6 @@ char *getMemFromOS(size_t size);
  * Assertion heapTop is alway aligned to int32 boundaries
  */
 
-#if !defined(DEBUG_CHECK) && !defined(HEAP_PROFILE)
-#define int32Malloc(s)				\
- ((heapEnd > heapTop - (s)) 			\
- ? (int32 *) getMemFromOS(s)			\
- : (int32 *) (heapTop -= (s)))
-#else
-inline int32 *int32Malloc(size_t chunk_size)
-{
-  ProfileCode(ozstat.heapAlloced(chunk_size);)
-  Assert(ToInt32(heapTop)%sizeof(int32) == 0);
-
-  if (heapEnd > heapTop - chunk_size) {
-    return (int32 *) (void*) getMemFromOS(chunk_size);
-  }
-
-  heapTop -= chunk_size;
-
-#ifdef DEBUG_MEM
-  memset((char *)heapTop,0x5A,chunk_size);
-#endif
-  return (int32 *) (void*) heapTop;
-}
-#endif
 
 
 /* return "chunk_size" aligned to "align" */
@@ -202,17 +179,29 @@ retry:
   }
 
   /* heapTop might now be negative!! */
-  if ((int)heapEnd > (int)heapTop) {
-    Assert((int)heapEnd>0); // otherwise the above test is wrong
+  if ((long)heapEnd > (long)heapTop) {
+    Assert((long)heapEnd>0); // otherwise the above test is wrong
     (void) getMemFromOS(chunk_size);
     goto retry;
   }
 #ifdef DEBUG_MEM
-  memset((char *)heapTop,0x5A,chunk_size);
+  if (heapTop)
+    memset((char *)heapTop,0x5A,chunk_size);
 #endif
   return heapTop;
 }
 
+#if !defined(DEBUG_CHECK) && !defined(HEAP_PROFILE)
+#define int32Malloc(s)				\
+ (((long)heapEnd > (long)(heapTop - (s)))	\
+ ? (int32 *) getMemFromOS(s)			\
+ : (int32 *) (heapTop -= (s)))
+#else
+inline int32 *int32Malloc(size_t chunk_size)
+{
+  return (int32*) alignedMalloc(chunk_size,sizeof(int32));
+}
+#endif
 
 /* ptr1 is newer than ptr2 on the heap */
 inline Bool heapNewer(void *ptr1, void *ptr2)
