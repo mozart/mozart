@@ -29,7 +29,7 @@
 #endif
 #endif
 
-#if defined(__GNUC__) || defined(__cplusplus)
+#if defined(__STDC__)
 #define OZStringify(Name) #Name
 #define CONST const
 #else
@@ -43,10 +43,12 @@
 #define OzFun(fun) fun
 #endif
 
-#if defined(__cplusplus)
+#if defined(__STDC__) || defined(__cplusplus) || __BORLANDC__ || _MSC_VER
 #define _FUNDECL(fun,arglist) OzFun(fun) arglist
 #define _FUNTYPEDECL(fun,arglist) (ozcdecl *fun) arglist
+#ifdef __cplusplus
 extern "C" {
+#endif
 #else
 #define _FUNDECL(fun,ignore) OzFun(fun) ()
 #define _FUNTYPEDECL(fun,ignore) (ozcdecl *fun) ()
@@ -262,7 +264,11 @@ extern void _FUNDECL(OZ_send,(OZ_Term,OZ_Term));
 extern OZ_Term _FUNDECL(OZ_newName,());
 
 /* print warning */
+#ifdef __cplusplus
 extern void _FUNDECL(OZ_warning,(CONST char * ...));
+#else
+extern void _FUNDECL(OZ_warning,(CONST char *, ...));
+#endif
 
 /* generate the unix error string from an errno (see perror(3)) */
 extern char * _FUNDECL(OZ_unixError,(int err));
@@ -273,11 +279,11 @@ extern int _FUNDECL(OZ_onToplevel,());
 extern int _FUNDECL(OZ_addBuiltin,(CONST char *, int, OZ_CFun));
 
 /* replace new builtins */
-struct OZ_BIspec {
+typedef struct {
   char *name;
   int arity;
   OZ_CFun fun;
-};
+} OZ_BIspec;
 
 /* add specification to builtin table */
 extern void _FUNDECL(OZ_addBISpec,(OZ_BIspec *spec));
@@ -348,10 +354,15 @@ extern OZ_Return _FUNDECL(OZ_suspendOnInternal3,(OZ_Term,OZ_Term,OZ_Term));
  * III. macros
  * ------------------------------------------------------------------------ */
 
-#ifdef __cplusplus
+#if defined(__STDC__) || defined(__cplusplus) || __BORLANDC__ || _MSC_VER
 
+#ifdef __cplusplus
 #define OZ_C_proc_proto(Name)                                                 \
     extern "C" OZ_Return ozcdecl Name(int OZ_arityArg, OZ_Term OZ_args[]);
+#else
+#define OZ_C_proc_proto(Name)                                                 \
+    extern OZ_Return ozcdecl Name(int OZ_arityArg, OZ_Term OZ_args[]);
+#endif
 
 #define OZ_C_proc_header(Name)                                                \
     OZ_Return ozcdecl Name(int OZ_arityArg, OZ_Term OZ_args[]) {
@@ -359,7 +370,7 @@ extern OZ_Return _FUNDECL(OZ_suspendOnInternal3,(OZ_Term,OZ_Term,OZ_Term));
 #else
 
 #define OZ_C_proc_proto(Name)                   \
-  OZ_Return ozcdecl Name(OZ_arityArg, OZ_args);
+  OZ_Return ozcdecl Name();
 
 #define OZ_C_proc_header(Name)                  \
   OZ_Return ozcdecl Name(OZ_arityArg, OZ_args)  \
@@ -368,7 +379,7 @@ extern OZ_Return _FUNDECL(OZ_suspendOnInternal3,(OZ_Term,OZ_Term,OZ_Term));
 #endif
 
 #define OZ_C_proc_begin(Name,arity)             \
-    OZ_C_proc_proto(Name);                      \
+    OZ_C_proc_proto(Name)                       \
     OZ_C_proc_header(Name)                      \
        OZ_CFun OZ_self = Name;                  \
        int OZ_arity = arity;
@@ -534,10 +545,10 @@ extern OZ_Return _FUNDECL(OZ_suspendMetaProp,(OZ_CFun, OZ_Term *, int));
 
 /* Perdio related things */
 
-struct OZ_Datum {
+typedef struct {
   char *data;  /* NULL on error */
   int size;    /* contain error code */
-};
+} OZ_Datum;
 
 
 #define OZ_DATUM_UNKNOWNERROR -1
