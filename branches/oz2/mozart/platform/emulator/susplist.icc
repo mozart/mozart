@@ -117,7 +117,7 @@ void OrderedSuspList::print(void)
 {
   for (OrderedSuspList * p = this; p != NULL; p = p->n) {
     OZ_Propagator * pr = p->t->getPropagator();
-    cout << "   " << *pr 
+    cout << "   " << pr->toString()
 	 << endl << flush;
   }
 }

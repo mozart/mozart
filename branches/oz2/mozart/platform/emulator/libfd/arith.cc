@@ -597,7 +597,7 @@ OZ_C_proc_end
 
 OZ_Return ModIPropagator::propagate(void)
 {
-  OZ_DEBUGPRINT("in: " << *this);
+  OZ_DEBUGPRINTTHIS("in: ");
 
   if (mayBeEqualVars() && OZ_isEqualVars(reg_x, reg_z))
     return replaceBy(new LessEqOffPropagator(reg_x, OZ_int(reg_y), -1));

@@ -71,7 +71,7 @@ OZ_C_proc_end
 
 OZ_Return LessEqOffPropagator::propagate(void)
 {
-  OZ_DEBUGPRINT("in " << *this);
+  OZ_DEBUGPRINTTHIS("in ");
   
   int &c = reg_c;
 
@@ -87,12 +87,12 @@ OZ_Return LessEqOffPropagator::propagate(void)
   if (x->getMaxElem() <= y->getMinElem() + c) return P.vanish();
   if (x->getMinElem() > y->getMaxElem() + c) goto failure;
 
-  OZ_DEBUGPRINT("out " << *this);
+  OZ_DEBUGPRINTTHIS("out ");
   
   return P.leave();
 
 failure:
-  OZ_DEBUGPRINT("fail");
+  OZ_DEBUGPRINT(("fail"));
   
   return P.fail();
 }
@@ -366,7 +366,7 @@ OZ_C_proc_end
 
 OZ_Return DistinctOffsetPropagator::propagate(void)
 {
-  OZ_DEBUGPRINT("in " << *this);
+  OZ_DEBUGPRINTTHIS("in ");
 
   if (reg_sz == 0) return PROCEED;
 
@@ -421,12 +421,12 @@ loop:
   sz = to;
   
 
-  OZ_DEBUGPRINT("out " << *this);
+  OZ_DEBUGPRINTTHIS("out ");
 
   return P.leave();
 
 failure:
-  OZ_DEBUGPRINT("fail");
+  OZ_DEBUGPRINT(("fail"));
 
   return P.fail();
 }

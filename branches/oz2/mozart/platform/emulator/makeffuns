@@ -15,7 +15,6 @@
 # instantiates all the function pointers like "OZ_isAtom" to the real
 # functions that are passed through the parameter "ffuns".
 
-
 ozc=oz.c
 in=oz.h
 initffuns=initffuns.cc

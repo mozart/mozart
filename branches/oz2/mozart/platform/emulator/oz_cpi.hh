@@ -13,7 +13,6 @@
 #define __OZ_CPI_HH__
 
 #include <stddef.h>
-#include <iostream.h>
 
 #include "oz.h"
 
@@ -60,12 +59,10 @@
 enum OZ_FDState {fd_empty, fd_full, fd_bool, fd_singl};
 
 class OZ_FiniteDomain {
-friend ostream &operator << (ostream &, const OZ_FiniteDomain &);
 protected:
   int min_elem, max_elem, size;
   void * descr;
 
-  ostream &print(ostream &) const;
 public:
 
   OZ_FiniteDomain(void) : descr((void *) 0) {}
@@ -114,13 +111,10 @@ public:
   OZ_Boolean isIn(int i) const;
   void copyExtension(void);
   void disposeExtension(void);
+
+  char *toString() const;
 };   
 
-
-inline
-ostream &operator << (ostream &ofile, const OZ_FiniteDomain &fd) {
-  return fd.print(ofile);
-}
 
 //-----------------------------------------------------------------------------
 // class OZ_Propagator
@@ -171,9 +165,9 @@ public:
   virtual OZ_NonMonotonic::order_t getOrder(void) const { 
     return 0; 
   }
-};
 
-ostream& operator << (ostream& o, const OZ_Propagator &p);
+  char *toString() const;
+};
 
 //-----------------------------------------------------------------------------
 // class OZ_Expect, etc.
