@@ -36,20 +36,17 @@ distributors.
   <title/A Naive Distribution Strategy/
 
 <p>
-The distributor we program in this section implements a rather naive
-strategy. It has
-a single argument which is a list of finite domain variables. From this
-list the distributor will select the leftmost undetermined variable
-<math/x/ and
-distributes with the constraint <math>x=l</math> where <math/l/ is the
-least possible value for <math/x/. The distributor is shown in
-<ptr to=fig.naiveDist>.
+The distributor we program in this section
+implements a naive distribution strategy: choose
+the first not yet determined variable from a list
+and try the smallest possible value first. The
+distributor is shown in <ptr to=fig.naiveDist>.
 
 <figure id=fig.naiveDist>
 <caption/A distributor for a naive distribution strategy./
 <chunk class=anonymous><title/NaiveDistributor/
 proc {NaiveDistributor Is}
-   choice skip end
+   {Space.waitStable}
    local
       Fs={Filter Is fun {$ I} {FD.reflect.size I}>1 end}
    in
@@ -64,20 +61,23 @@ proc {NaiveDistributor Is}
 end
 </chunk>
 
-<para><title/choice-statements/
-To maximize the information available for distribution we have to wait
-on stability of a computation space.
-For this purpose Oz provides a so-called choice-statement. If a thread reaches
-the statement <<choice ?{S} end>> the thread is blocked until its hosting
-computation space becomes stable. Then the computation in the blocked
-thread is resumed and the statement ?{S} is executed.
+<para><title/choice-statements/ To maximize the
+information available for distribution we wait
+until the computation space becomes stable. A
+thread that executes <<{Space.waitStable}>> blocks
+until its hosting computation space ?{S} becomes
+stable. When ?{S} becomes stable, execution
+proceeds with the next statement.
 
 <p>
-Thus, the variable <<Fs>> in <ptr to=fig.naiveDist> denotes the
-list of  undetermined variables after the space
-has become stable. To detect undetermined variables we use the procedure
-<<FD.reflect.size>> which reflects the current size of a variable's
-domain. If the domain size is one, the variable is determined.
+Thus, the variable <<Fs>> in <ptr
+to=fig.naiveDist> denotes the list of undetermined
+variables after ?{S} has become stable. To
+detect undetermined variables we use the procedure
+<<FD.reflect.size>> that returns the current
+size of a variable's domain. If the domain size is
+one, the variable is determined and consequently
+not included in the list <<Fs>>.
 
 <p>
 Then the least possible value for the first
@@ -125,7 +125,7 @@ The program is shown in <ptr to=fig.splitDist>.
 <caption/A distributor for a  domain-splitting strategy./
 <chunk class=anonymous><title/SplitDistributor/<![ RCDATA [
 proc {SplitDistributor Is}
-   choice skip end
+   {Space.waitStable}
    local
       Fs={Filter Is fun {$ I} {FD.reflect.size I}>1 end}
    in
