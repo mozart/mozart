@@ -27,8 +27,8 @@ COMPILE         = $(OZC) $(OZFLAGS) -l Standard -c
 EXEC            = $(OZC) $(OZFLAGS)
 COMPILESYSLET   = $(OZC) $(OZFLAGS) -l Standard -x
 
-PICKLE2TEXT     = $(SRCDIR)/p2t.sh
-TEXT2PICKLE     = $(SRCDIR)/t2p.sh
+P2T             = $(SRCDIR)/p2t.sh
+T2P             = $(SRCDIR)/t2p.sh
 OZAR            = ozar
 
 # exports
@@ -313,8 +313,7 @@ clean:
         -rm -f $(CLEANFILES)
 
 veryclean: clean
-        -rm -f -r $(STAGE1) $(STAGE2) $(STAGE2A) $(STAGE2B)
-        -rm -f -r $(STAGE3) $(STAGE3A) $(STAGE3B) $(SAVE)
+        -rm -rf $(STAGE1) $(STAGE2) $(STAGE3) $(SAVE)
 
 distclean: veryclean
         @echo To really make distclean, please use \"cd ..\; make distclean\".
@@ -332,7 +331,7 @@ distclean: veryclean
 
 URL=http\\://www.ps.uni-sb.de/ozhome
 
-# use Ozma to create the functors
+# use the boot compiler to create the functors
 bootstrap:
         $(MAKE) boot-init boot-ozc all \
         OZC=$(SRCDIR)/boot-ozc.sh \
@@ -404,12 +403,12 @@ check:
 
 boot-init.txt:
         $(MAKE) boot-init.ar
-        $(PICKLE2TEXT) < boot-init.ar > boot-init.txt
+        $(P2T) < boot-init.ar > boot-init.txt
         rm -f boot-init.ar
 
 boot-ozc.txt:
         $(MAKE) boot-ozc.ar
-        $(PICKLE2TEXT) < boot-ozc.ar  > boot-ozc.txt
+        $(P2T) < boot-ozc.ar  > boot-ozc.txt
         rm -f boot-ozc.ar
 
 new-boot:
@@ -421,10 +420,10 @@ BOOTINITTXT     = boot-init.txt
 BOOTOZCTXT      = boot-ozc.txt
 
 boot-ozc: $(BOOTOZCTXT)
-        $(TEXT2PICKLE) < $< > $@
+        $(T2P) < $< > $@
 
 boot-init: $(BOOTINITTXT)
-        $(TEXT2PICKLE) < $< > $@
+        $(T2P) < $< > $@
 
 # OZMAKE_COPYALWAYS=yes causes the emulator to always copy functors
 # regardless of whether they have `prop once' or not.  This is required
