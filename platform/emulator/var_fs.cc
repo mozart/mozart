@@ -227,6 +227,17 @@ OZ_Return OzFSVariable::unify(OZ_Term * vptr, OZ_Term *tptr)
 
 OZ_Return tellBasicConstraint(OZ_Term v, OZ_FSetConstraint * fs)
 {
+#ifdef TELLCONSTRAINTS_BY_UNIFICATION
+  // create appropriate constrained variable
+  OzFSVariable * fcv =
+    fs ? new OzFSVariable(*fs,oz_currentBoard())
+    : new OzFSVariable(oz_currentBoard());
+
+    OZ_Term *  tcv = newTaggedCVar(fcv);
+
+    return OZ_unify(v, makeTaggedRef(tcv));
+#else
+
   DEREF(v, vptr, vtag);
 
   if (fs && !((FSetConstraint *) fs)->isValid())
@@ -330,6 +341,7 @@ proceed:
 #endif
 
   return PROCEED;
+#endif /* TELLCONSTRAINTS_BY_UNIFICATION */
 }
 
 // inline DISABLED CS

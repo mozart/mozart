@@ -228,3 +228,48 @@ VarStatus _var_check_status(OzVariable *cv) {
   Assert(cv->getType()==OZ_VAR_EXT);
   return ((ExtVar*)cv)->checkStatusV();
 }
+
+#ifdef TMUELLER
+// dealing with global variables
+// add assertions that right sides of bin and cast are global or values!
+void bindGlobalVar(OZ_Term *, OZ_Term)
+{
+}
+
+void castGlobalVar(OZ_Term *, OZ_Term)
+{
+}
+
+void constrainGlobalVar(OZ_Term *, OZ_FiniteDomain &)
+{
+}
+
+void constrainGlobalVar(OZ_Term *, OZ_FSetConstraint &)
+{
+}
+
+void constrainGlobalVar(OZ_Term *, OZ_Ct *, OZ_CtDefinition *)
+{
+}
+
+// dealing with local variables
+void bindLocalVar(OZ_Term *, OZ_Term)
+{
+}
+
+void castLocalVar(OZ_Term *, OZ_Term)
+{
+}
+
+void constrainLocalVar(OZ_Term *, OZ_FiniteDomain &)
+{
+}
+
+void constrainLocalVar(OZ_Term *, OZ_FSetConstraint &)
+{
+}
+
+void constrainLocalVar(OZ_Term *, OZ_Ct *, OZ_CtDefinition *)
+{
+}
+#endif

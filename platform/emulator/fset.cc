@@ -2165,6 +2165,12 @@ OZ_Boolean FSetConstraint::isWeakerThan(FSetConstraint const &y) const
   DEBUG_FSET_IR(("{FSIR.'isWeakerThan' %s %s ",
                  this->toString(), y.toString()));
   FSDEBUG(printf("fsc::isweakerthan(fsc)\n"); DP(); y.DP("y"));
+  /*
+  printf("%s => _known_in=%d, _known_not_in=%d, getCardSize()=%d\n",
+         toString(), _known_in, _known_not_in, getCardSize());
+  printf("%s => _y.known_in=%d, y._known_not_in=%d, y.getCardSize()=%d\n",
+         y.toString(), y._known_in, y._known_not_in, y.getCardSize());
+  */
   OZ_Boolean ret_val = ((_known_in < y._known_in) ||
                         (_known_not_in < y._known_not_in) ||
                         (getCardSize() > y.getCardSize()));
