@@ -36,57 +36,17 @@
 
 #include "tagged.hh"
 #include "hashtbl.hh"
+#include "atoms.hh"
 
 /*===================================================================
  * global names and atoms
  *=================================================================== */
-extern TaggedRef AtomNil, AtomCons, AtomPair, AtomVoid,
-       AtomSucceeded, AtomAlt, AtomMerged, AtomFailed,
-       AtomEntailed, AtomSuspended, AtomBlocked,
-       AtomEmpty, AtomUpper, AtomLower, AtomDigit, 
-       AtomCharSpace, AtomPunct, AtomOther,
-       NameTrue, NameFalse, AtomBool, AtomSup, AtomCompl,
-       AtomMin, AtomMax, AtomMid, AtomLow,
-       AtomNaive, AtomSize, AtomNbSusps,
-       AtomDebugCallC, AtomDebugCallF, AtomDebugCondC, AtomDebugCondF,
-       AtomDebugLockC, AtomDebugLockF, AtomDebugNameC, AtomDebugNameF,
-       AtomException, AtomUnify,
 
-       AtomExport, AtomManager, AtomBoot, 
+extern TaggedRef 
+  RecordFailure,
 
-       NameOoFreeFlag,NameOoAttr,NameOoFreeFeatR,NameOoUnFreeFeat,
-       NameOoFastMeth,NameOoDefaults,NameOoRequiredArg,NameOoDefaultVar,
-       NameOoPrintName,NameOoLocking,NameOoFallback,NameOoId,
-       AtomNew, AtomApply, AtomApplyList,
+  NameTrue, NameFalse,
 
-       NameUnit, NameGroupVoid,
-       NameNonExportable,
-       AtomKinded, AtomDet, AtomRecord, AtomFSet, 
-       // Atoms for System.get and System.set
-       AtomActive, AtomAtoms, AtomBuiltins, AtomCommitted, 
-       AtomMoreInfo, AtomTotal, AtomCache,
-       AtomCloned, AtomCode, AtomCopy, AtomCreated, AtomDebug, AtomDepth, 
-       AtomFeed, AtomForeign, AtomFree, AtomFreelist, AtomGC, AtomHigh, 
-       AtomHints, AtomIdle, AtomInt, AtomInvoked, AtomLimits, AtomLoad, 
-       AtomLocation, AtomMedium, AtomNames, AtomOn, AtomPropagate, 
-       AtomPropagators, AtomRun, AtomRunnable, AtomShowSuspension, 
-       AtomStopOnToplevelFailure, AtomSystem, AtomThread, 
-       AtomThreshold, AtomTolerance, AtomUser, AtomVariables, AtomWidth,
-  AtomDetailed, AtomBrowser, AtomApplet,
-  AtomHeap, AtomDebugIP, AtomDebugPerdio,
-  // Atoms for NetError Handlers
-  AtomTempBlocked, AtomPermBlocked,  
-  AtomPermMe, AtomTempMe,
-  AtomPermAllOthers, AtomTempAllOthers,
-  AtomPermSomeOther, AtomTempSomeOther,AtomEntityNormal,
-  AtomPerm, AtomTemp,AtomTempHome,AtomTempForeign,
-  AtomPermHome,AtomPermForeign,
-  AtomContinue, AtomRetry,
-  AtomYes,AtomNo,AtomPerSite,AtomPerThread,AtomAny,AtomAll,
-  AtomHandler,AtomWatcher,
-  
-RecordFailure,
-  E_ERROR, E_KERNEL, E_OBJECT, E_TK, E_OS, E_SYSTEM,
   BI_portWait,BI_Unify,BI_send,BI_probe,BI_Delay,BI_startTmp,
   BI_load,BI_fail,BI_url_load, BI_boot_manager,
   BI_dot,

@@ -54,13 +54,14 @@ MODSPECS = FDP FSP Schedule Wif Parser OS Property Pickle \
 CREATEDOTHERS= \
 	instrtab.hh opcodes.hh optostr.hh marshaler.hh\
 	marshalcode.cc marshalMsg.cc register.hh oz.c \
+	atoms.hh \
 	config.h scanner.cc parser.cc \
 	$(MODSPECS:%=mod%.dcl) \
 	$(MODSPECS:%=mod%.tbl)
 
 CREATEDSRCS= \
 	copycode.cc opcodes.cc \
-	version.cc initffuns.cc
+	version.cc initffuns.cc atoms.cc
 
 CREATEDFILES= $(CREATEDOTHERS) $(CREATEDSRCS)
 
@@ -271,6 +272,8 @@ os.o: os.cc
 
 # dependencies
 -include Makefile.deps
+
+value.cc: atoms.hh
 
 marshaler.hh marshalMsg.cc: msgFormat.m4
 copycode.cc optostr.hh marshalcode.cc opcodes.hh opcodes.cc instrtab.hh config.h: instrDefs.m4
