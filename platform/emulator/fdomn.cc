@@ -30,7 +30,6 @@
 
 #include "ozostream.hh"
 #include "fdomn.hh"
-#include "fdbuilti.hh"
 
 //-----------------------------------------------------------------------------
 
@@ -116,6 +115,8 @@ void reInitFDs(int threshold)
   }
 }
 
+void initFDCD(void);
+
 void initFDs()
 {
   fd_bv_max_high = 32;
@@ -147,11 +148,7 @@ void initFDs()
     numOfBitsInHalfWord[i] = numOfBitsInByte[i&0xff] + numOfBitsInByte[i>>8];
   }
 
-
-  BIfdHeadManager::initStaticData();
-  BIfdBodyManager::initStaticData();
-
-  __CDVoidFiniteDomain.initFull();
+  initFDCD();
 }
 
 //-----------------------------------------------------------------------------

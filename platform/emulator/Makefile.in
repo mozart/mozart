@@ -134,7 +134,7 @@ COMPONENTSSRCS=\
 OFSRCS= ofgenvar.cc ofbi.cc
 
 FDSRCS=\
-        fdbuilti.cc fdomn.cc fdcore.cc \
+        fdomn.cc fdcore.cc \
         fdcd.cc fdbvar.cc
 
 CPISRCS=\
