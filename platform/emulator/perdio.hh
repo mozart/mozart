@@ -35,11 +35,8 @@
 
 #include "value.hh"
 #include "genhashtbl.hh"
+#include "pickle.hh"
 #include "perdio_debug.hh"
-
-#define PERDIOMINOR      "14"
-#define PERDIOMAJOR      OZVERSION
-#define PERDIOVERSION    PERDIOMAJOR "#" PERDIOMINOR
 
 /* ************************************************************************ */
 /*                         ORGANIZATION                                 
@@ -51,6 +48,7 @@
 /* ************************************************************************ */
 /*  SECTION ::  ENUMs common to protocol/marshaler                          */
 /* ************************************************************************ */
+
 
 //
 // kost@ : those who update this, must update 'mess_names' as well!!
@@ -92,7 +90,7 @@ enum MessageType {
   M_SEND_OBJECT,        //
   M_SEND_OBJECTANDCLASS,//
 
-  M_FILE = 31,          // HACK ALERT see componentBuffer.cc
+  M_FILE = PERDIOMAGICSTART ,          // HACK ALERT see componentBuffer.cc
   M_EXPORT,
   M_UNASK_ERROR,
   M_SEND_GATE,
@@ -100,50 +98,8 @@ enum MessageType {
   M_LAST
 };
 
+
 extern char *mess_names[];
-
-// the DIFs
-// the protocol layer needs to know about some of these 
-
-typedef enum {
-  DIF_UNUSED0,
-  DIF_SMALLINT,         
-  DIF_BIGINT,           
-  DIF_FLOAT, 		
-  DIF_ATOM,		
-  DIF_NAME,		
-  DIF_UNIQUENAME,	
-  DIF_RECORD,		
-  DIF_TUPLE,
-  DIF_LIST,
-  DIF_REF, 
-  DIF_REF_DEBUG, 
-  DIF_OWNER, 
-  DIF_OWNER_SEC,
-  DIF_PORT,		
-  DIF_CELL,             
-  DIF_LOCK,             
-  DIF_VAR,
-  DIF_BUILTIN,
-  DIF_DICT,
-  DIF_OBJECT,
-  DIF_THREAD,		
-  DIF_SPACE,		
-  DIF_CHUNK,            // SITE INDEX NAME value
-  DIF_PROC,		// SITE INDEX NAME ARITY globals code
-  DIF_CLASS,            // SITE INDEX NAME obj class
-  DIF_ARRAY,
-  DIF_FSETVALUE,	// finite set constant
-  DIF_ABSTRENTRY,	// AbstractionEntry (code instantiation)
-  DIF_PRIMARY,
-  DIF_SECONDARY,
-  DIF_SITE,
-  DIF_SITE_VI,
-  DIF_SITE_PERM,
-  DIF_PASSIVE,
-  DIF_COPYABLENAME,
-  DIF_LAST
-} MarshalTag;
 
 
 // the names of the difs for statistics 
@@ -158,7 +114,6 @@ enum {
 };
 
 extern char* misc_names[];
-extern char* dif_names[];
 
 /* ************************************************************************ */
 /*  SECTION ::  general common                                              */
@@ -213,6 +168,7 @@ Bool marshalTertiary(Tertiary *,MarshalTag, MsgBuffer*);
 void marshalVar(PerdioVar *,MsgBuffer*);
 void marshalSite(Site *,MsgBuffer*);
 void marshalCreditOutline(Credit c,MsgBuffer *bs);
+void marshalDIF(MsgBuffer *bs, MarshalTag tag);
 
 void addGName(GName*,TaggedRef);
 TaggedRef findGNameOutline(GName*);

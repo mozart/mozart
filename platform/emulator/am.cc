@@ -181,7 +181,18 @@ void AM::init(int argc,char **argv)
       *last_slash = 0;
   }
 
+#ifdef PICKLE2TEXTHACK
+    int p2t = 0;
+#endif
+
   for (int i=url?2:1; i<argc; i++) {
+#ifdef PICKLE2TEXTHACK
+    if (strcmp(argv[i],"--pickle2text")==0) {
+      p2t = 1;
+      break;
+    }
+#endif
+
     if (strcmp(argv[i],"-d")==0) {
 #ifdef DEBUG_TRACE
       ozd_tracerOn();
@@ -226,7 +237,7 @@ void AM::init(int argc,char **argv)
   ozconf.showIdleMessage=1;
 #endif
 
-  if (!initFile && !assemblyCodeFile) {
+  if (!p2t && !initFile && !assemblyCodeFile) {
     char* ini = "/share/Init.ozf";
     int m = strlen(ozconf.ozHome);
     int n = m+strlen(ini)+1;
@@ -238,7 +249,7 @@ void AM::init(int argc,char **argv)
   }
   if (initFile && *initFile=='\0') initFile=0;
 
-  if (!initFile && !assemblyCodeFile) {
+  if (!p2t && !initFile && !assemblyCodeFile) {
     fprintf(stderr,"neither init file nor assembly code.\n");
     usage(argc,argv);
   }
@@ -309,6 +320,14 @@ void AM::init(int argc,char **argv)
     warning("Perdio initialization failed");
   }
 
+#ifdef PICKLE2TEXTHACK
+  if (p2t) {
+    extern int pickle2text();
+    Bool aux = pickle2text();
+    exit(aux ? 0 : 1);
+  }
+#endif
+
   Thread *tt = oz_newThread();
 
   if (assemblyCodeFile) {
@@ -368,20 +387,12 @@ void AM::init(int argc,char **argv)
     TaggedRef export    = oz_newVariable();
 
     // Construct import for functor:
-    extern TaggedRef AtomExport;      // value.cc
-    extern TaggedRef AtomManager;     // value.cc
-    extern TaggedRef AtomBoot;        // value.cc
-    extern TaggedRef BI_boot_manager; // value.cc builtins.cc
-
     TaggedRef boot_module = 
       OZ_recordInit(AtomExport,
 		    oz_cons(oz_pair2(AtomManager,BI_boot_manager),oz_nil()));
     TaggedRef boot_import = 
       OZ_recordInit(AtomExport,
 		    oz_cons(oz_pair2(AtomBoot,   boot_module),oz_nil()));
-
-    extern TaggedRef AtomApply; // value.cc
-    extern TaggedRef BI_dot;	// value.cc builtins.cc
 
     // Task3: execute functor's code
     tt->pushCall(procedure,boot_import,export);
