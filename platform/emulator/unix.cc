@@ -1397,7 +1397,7 @@ OZ_C_ioproc_begin(unix_pipe,4)
   OZ_declareVsArg("pipe",0,s);
   OZ_declareArg(1, args);
   OZ_declareArg(2, rpid);
-  OZ_declareArg(3, rsock);
+  OZ_declareArg(3, rwsock);
 
   OZ_Term hd, tl, argl;
   int argno = 0;
@@ -1525,15 +1525,18 @@ OZ_C_ioproc_begin(unix_pipe,4)
   }
   close(sv[1]);
 
-  int sock = sv[0];
+  int rsock = sv[0];
+  /* we cann use the same descriptor for both reading and writing: */
+  int wsock = rsock;
 #endif
 
   int i;
   for (i=1 ; i<argno ; i++)
     free(argv[i]);
 
+  TaggedRef rw = OZ_pair(OZ_CToInt(rsock),OZ_CToInt(wsock));
   return OZ_unifyInt(rpid,pid) == PROCEED
-    && OZ_unifyInt(rsock,sock) == PROCEED ? PROCEED : FAILED;
+    && OZ_unify(rwsock,rw) == PROCEED ? PROCEED : FAILED;
 }
 OZ_C_proc_end
 
