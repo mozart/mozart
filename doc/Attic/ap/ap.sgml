@@ -258,5 +258,9 @@
 	    <Item>
 	      For ?={option name}s of length&nbsp;1, a single-character
 	      option is accepted.
+	    <Item>
+	      The returned record will contain the option list under
+	      feature&nbsp;<<2>>.  Feature&nbsp;<<1>> will always contain
+	      an empty list.
 	  </List>
 </Book>
