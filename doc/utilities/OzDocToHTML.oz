@@ -309,6 +309,8 @@ define
 	 GrammarHead: unit
 	 GrammarAltType: unit
 	 GrammarNote: unit
+	 % for Chunk and Chunk.Ref:
+	 ChunkDefinitions: unit ChunkLinks: unit
 	 % for Ref.Extern and Ptr.Extern:
 	 MyCrossReferencer: unit
 	 % for Table:
@@ -385,7 +387,7 @@ define
 	       {@Reporter startSubPhase('writing output files')}
 	       {ForAll @ToWrite
 		proc {$ DocType#Node#File}
-		   {WriteFile DocType#{HTML.toVirtualString Node} File}
+		   {WriteFile DocType#{HTML.toVirtualString Node}#'\n' File}
 		end}
 	    end
 	 catch tooManyErrors then
@@ -537,6 +539,8 @@ define
 	       IdxNode <- _
 	       TOC <- nil
 	       TOCMode <- false
+	       ChunkDefinitions <- {NewDictionary}
+	       ChunkLinks <- nil
 	       HTML = [OzDocToHTML, Process(M.1=front(...) $)
 		       if {HasFeature M 3} then
 			  OzDocToHTML, Process(M.3=back(...) $)
@@ -618,6 +622,14 @@ define
 		process({Dictionary.condGet @Meta 'latex.package' nil}
 			@Reporter)}
 	       {@MyThumbnails process(@Reporter)}
+	       {ForAll @ChunkLinks
+		proc {$ Name#LinkedTitle}
+		   LinkedTitle =
+		   case {Dictionary.condGet @ChunkDefinitions Name nil}
+		   of nil then VERBATIM(Name)
+		   elseof Tos then a(href: {List.last Tos} VERBATIM(Name))
+		   end
+		end}
 	       unit
 	    %-----------------------------------------------------------
 	    % Front and Back Matter
@@ -714,7 +726,7 @@ define
 	    %-----------------------------------------------------------
 	    % Body and Sectioning Elements
 	    %-----------------------------------------------------------
-	    [] 'body' then
+	    [] body then
 	       BodyCommon <- @Common
 	       Part <- 0
 	       Chapter <- 0
@@ -1093,35 +1105,31 @@ define
 	    %-----------------------------------------------------------
 	    % Literate Programming
 	    %-----------------------------------------------------------
-	    [] chunk then
-	       Title = OzDocToHTML,Batch(M.1 1 $)
-	       Left  = span(COMMON  : @Common
-			    'class' : [chunkborder]
-			    VERBATIM('&lt;'))
-	       Right = span(COMMON  : @Common
-			    'class' : [chunkborder]
-			    VERBATIM('&gt;='))
-	       TITLE = span(COMMON  : @Common
-			    'class' : [chunktitle]
-			    SEQ([Left Title Right]))
-	       Body  = OzDocToHTML, BatchCode(M.2 1 $)
-	       CHUNK = dl(COMMON:@Common
-			  dt(COMMON:@Common TITLE)
-			  dd(COMMON:@Common 'class':[code] Body))
-	    in
-	       BLOCK(CHUNK)
-	    [] 'chunk.ref' then
-	       Title = OzDocToHTML,Batch(M 1 $)
-	       Left  = span(COMMON  : @Common
-			    'class' : [chunkborder]
-			    VERBATIM('&lt;'))
-	       Right = span(COMMON  : @Common
-			    'class' : [chunkborder]
-			    VERBATIM('&gt;'))
-	    in
-	       span(COMMON : @Common
-		    'class' : [chunktitle]
-		    SEQ([Left Title Right]))
+	    [] chunk then Title Label Name Left Right Body in
+	       OzDocToHTML, Batch(M.1=title(...) 1 ?Title)
+	       ToGenerate <- Label|@ToGenerate
+	       Name = {VirtualString.toAtom
+		       {HTML.toVirtualString {HTML.clean Title}}}
+	       {Dictionary.put @ChunkDefinitions Name
+		@CurrentNode#"#"#Label|
+		{Dictionary.condGet @ChunkDefinitions Name nil}}
+	       Left = span('class': [chunkborder] VERBATIM('&lt;'))
+	       Right = span('class': [chunkborder] VERBATIM('&gt;='))
+	       Body = OzDocToHTML, BatchCode(M.2 1 $)
+	       BLOCK(dl(COMMON: @Common
+			dt(span('class': [chunktitle]
+				SEQ([Left a(name: Label Title) Right])))
+			dd('class': [code] Body)))
+	    [] 'chunk.ref' then Title LinkedTitle Left Right in
+	       OzDocToHTML, Batch(M 1 ?Title)
+	       ChunkLinks <- ({VirtualString.toAtom
+			       {HTML.toVirtualString {HTML.clean Title}}}#
+			      LinkedTitle)|@ChunkLinks
+	       Left = span('class': [chunkborder] VERBATIM('&lt;'))
+	       Right = span('class': [chunkborder] VERBATIM('&gt;'))
+	       span(COMMON: @Common
+		    'class': [chunktitle]
+		    SEQ([Left LinkedTitle Right]))
 	    %-----------------------------------------------------------
 	    % Cross References
 	    %-----------------------------------------------------------
