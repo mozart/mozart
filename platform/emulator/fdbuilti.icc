@@ -20,19 +20,50 @@
 //-----------------------------------------------------------------------------
 // Inlined member functions of class BIfdHeadManager
 
+
+
 inline
-Bool BIfdHeadManager::addForXorYdet(OZ_CFun func, RefsArray xregs, int arity)
-{
-  if (bifdhm_vartag[0] == pm_singl || bifdhm_vartag[1] == pm_singl)
-    return TRUE;
+OZ_Bool BIfdHeadManager::addSuspFDish(void) {
+  am.emptySuspendVarList();
 
-  Suspension * s = createNonResSusp(func, xregs, arity);
+  for (int i = curr_num_of_items; i--; )
+    if (pm_is_noncvar(bifdhm_vartag[i])) {
+      Assert(isAnyVar(*bifdhm_varptr[i]));
+      am.addSuspendVarList(bifdhm_varptr[i]);
+    }
 
-  addSuspFDVar(bifdhm_var[0], new SuspList(s, NULL), fd_det);
-  addSuspFDVar(bifdhm_var[1], new SuspList(s, NULL), fd_det);
+  Assert(am.suspendVarList != makeTaggedNULL());
 
-  return FALSE;
+  return SUSPEND;
 }
+
+inline
+OZ_Bool BIfdHeadManager::addSuspSingl(void) {
+  am.emptySuspendVarList();
+
+  for (int i = curr_num_of_items; i--; )
+    if (pm_is_var(bifdhm_vartag[i])) {
+      Assert(isAnyVar(*bifdhm_varptr[i]));
+      am.addSuspendVarList(bifdhm_varptr[i]);
+    }
+
+  Assert(am.suspendVarList != makeTaggedNULL());
+
+  return SUSPEND;
+}
+
+
+inline
+Bool BIfdHeadManager::addSuspXorYdet(void)
+{
+  if (pm_is_var(bifdhm_vartag[0]) && pm_is_var(bifdhm_vartag[1])) {
+    am.addSuspendVarList(bifdhm_varptr[0]);
+    am.addSuspendVarList(bifdhm_varptr[1]);
+    return FALSE;
+  }
+  return TRUE;
+}
+
 
 inline
 Bool BIfdHeadManager::expectFDish(int i, TaggedRef v, int &s)
@@ -252,41 +283,6 @@ void BIfdBodyManager::restore(void)
   glob_vars_touched = backup_glob_vars_touched1;
   only_local_vars = backup_only_local_vars1;
   FDcurrentTaskSusp = backup_FDcurrentTaskSusp1;
-}
-
-//-----------------------------------------------------------------------------
-// Inlined functions
-
-inline
-OZ_Bool addNonResSuspForDet(TaggedRef v, TaggedRefPtr vp, TypeOfTerm vt,
-                            Suspension * s)
-{
-  if (isGenFDVar(v, vt)) {
-    addSuspFDVar(v, new SuspList(s), fd_det);
-  } else if (isGenBoolVar(v, vt)) {
-    addSuspBoolVar(v, new SuspList(s));
-  } else if (isSVar(vt)) {
-    addSuspSVar(v, new SuspList(s));
-  } else {
-    Assert(isUVar(vt));
-
-    addSuspOnlyToUVar(vp, new SuspList(s));
-  }
-
-  return PROCEED;
-}
-
-inline
-OZ_Bool addNonResSuspForCon(TaggedRef v, TaggedRefPtr vp, TypeOfTerm vt,
-                            Suspension * s)
-{
-  if (isSVar(vt)) {
-    addSuspSVar(v, new SuspList(s));
-  } else {
-    Assert(isUVar(vt));
-    addSuspOnlyToUVar(vp, new SuspList(s));
-  }
-  return PROCEED;
 }
 
 #endif
