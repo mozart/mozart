@@ -270,7 +270,7 @@ Bool hookCheckNeeded(AM *e)
 #   define DODISPATCH goto* *(void **)(((char *)instrTable)+help);
 #endif
 
-#define WANT_INSTRPROFILE
+//#define WANT_INSTRPROFILE
 #if defined(WANT_INSTRPROFILE) && defined(sparc)
 #   define INSTRUCTION(INSTR)   INSTR##LBL: asm(" " #INSTR ":");
 #else
