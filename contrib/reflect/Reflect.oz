@@ -182,9 +182,10 @@ define
          ProcTable = {MakeRecord procTable
                       {FS.reflect.lowerBoundList
                        {FS.value.make
-                        {Map PropList fun {$ P}
-                                         P.location.propInvoc.invoc
-                                      end}}
+                        {Map PropList
+                         fun {$ P}
+                            P.location.propInvoc.invoc
+                         end}}
                       }
                      }
          {ForAll PropList
