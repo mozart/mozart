@@ -115,10 +115,13 @@ define
       if Kind=='IMPLIED' then L
       else
          (Prop#if Prop=='class' then Value
-               elsecase Value of [V] then
-                  if {ByteString.is V}
-                  then {ByteString.toString V}
-                  else V end
+               else
+                  case Value of [V] then
+                     if {ByteString.is V}
+                     then {ByteString.toString V}
+                     else V
+                     end
+                  end
                end)|L
       end
    end
