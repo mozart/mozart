@@ -42,13 +42,16 @@ private:
   int * reg_ordered;
   int * reg_ordered_resources;
 
+  // Flag whether firstsLasts (0), firsts (1), lasts (2)
+  int reg_flag;
+
   int reg_resource; 
 
   OZ_Term stream;
 
   static OZ_CFun spawner;
 public:
-  FirstsLasts(OZ_Term, OZ_Term, OZ_Term, OZ_Term);
+  FirstsLasts(OZ_Term, OZ_Term, OZ_Term, OZ_Term, int);
   ~FirstsLasts();
   virtual size_t sizeOf(void) { return sizeof(FirstsLasts); }
   virtual void updateHeapRefs(OZ_Boolean);
