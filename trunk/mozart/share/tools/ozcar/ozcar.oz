@@ -17,14 +17,14 @@ Ozcar =
 	meth off
 	   {Debug.off}
 	   {Tk.send wm(withdraw self.toplevel)}
+	   {Compile "\\switch -debuginfo"}
 	   SourceManager,removeBar
-	   {Compile "\\switch -debuginfo\n"}
 	end
 	
 	meth on
 	   {Tk.batch [update(idletasks)
 		      wm(deiconify self.toplevel)]}
-	   {Compile "\\switch +debuginfo\n"}
+	   {Compile "\\switch +debuginfo"}
 	   {Debug.on}
 	   case @currentThread == undef then
 	      Gui,status(InitStatus)
