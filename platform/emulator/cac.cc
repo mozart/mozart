@@ -1236,44 +1236,6 @@ void VarFix::_cacFix(void) {
 static Bool across_redid = NO;
 #endif
 
-/*
- * Before copying all spaces but the space to be copied get marked.
- * 
- * Important: even committed boards must be marked, since the globality
- * test does not do a dereference!
- *
- */
-
-void Board::setGlobalMarks(void) {
-  Assert(!isRoot());
-
-  Board * b = this;
-
-  do {
-    b = b->getParentInternal(); 
-    Assert(!b->hasMarkOne());
-    b->setMarkOne();
-  } while (!b->isRoot());
-  
-}
-
-/*
- * Purge marks after copying
- */
-
-void Board::unsetGlobalMarks(void) {
-  Assert(!isRoot());
-
-  Board * b = this;
-
-  do {
-    b = b->getParentInternal(); 
-    Assert(b->hasMarkOne());
-    b->unsetMarkOne();
-  } while (!b->isRoot());
-
-}
-
 Board * Board::clone(void) {
 
 #ifdef CS_PROFILE
@@ -1393,15 +1355,9 @@ void ArityTable::gCollect(void) {
   }
 }
 
-void PrTabEntry::gCollectPrTabEntries()
-{
-  PrTabEntry *aux = allPrTabEntries;
-  while(aux) {
-    oz_gCollectTerm(aux->info,aux->info);    
-    oz_gCollectTerm(aux->file,aux->file);    
-    oz_gCollectTerm(aux->printname,aux->printname);    
-    aux = aux->next;
-  }
+void PrTabEntry::gCollectPrTabEntries(void) {
+  for (PrTabEntry *aux = allPrTabEntries; aux; aux=aux->next)
+    OZ_gCollectBlock(&(aux->printname),&(aux->printname),3);    
 }
 
 void AbstractionEntry::freeUnusedEntries()
@@ -1411,8 +1367,9 @@ void AbstractionEntry::freeUnusedEntries()
   while (aux) {
     AbstractionEntry *aux1 = aux->next;
     if (aux->collected || 
-	aux->abstr==NULL) { // RS: HACK alert: compiler might have reference to
-                            // abstraction entries: how to detect them??
+	aux->abstr==makeTaggedNULL()) { 
+      // RS: HACK alert: compiler might have reference to
+      // abstraction entries: how to detect them??
       aux->collected = NO;
       aux->next  = allEntries;
       allEntries = aux;
@@ -1423,11 +1380,12 @@ void AbstractionEntry::freeUnusedEntries()
   }
 }
 
+inline
 void AbstractionEntry::gCollectAbstractionEntry(void) {
   if (this==NULL || collected) return;
 
   collected = OK;
-  abstr = (Abstraction *) abstr->gCollectConstTerm();
+  oz_cacTerm(abstr,abstr);
 }
 
 #endif
@@ -1834,15 +1792,6 @@ ConstTerm *ConstTerm::sCloneConstTermInline(void) {
 #endif
 
 
-/* the purpose of this procedure is to provide an additional entry
-   into gc so to be able to distinguish between owned perdio-objects that
-   are locally accssible to those that are not - currently this is needed
-   only for frames (cells and locks).
-   The distinction is that in this procedure the BORROW ENTRY is not marked
-   but in gcConstTerm it is marked.
-   Note- all other Tertiarys are marked in gcConstRecurse
-*/
-
 #ifdef G_COLLECT
 
 inline
@@ -1850,10 +1799,8 @@ OzDebug *OzDebug::gCollectOzDebug(void) {
   OzDebug *ret = (OzDebug*) gCollectReallocStatic(this,sizeof(OzDebug));
   
   ret->Y   = gCollectRefsArray(ret->Y);
-  ret->CAP = (Abstraction *) ret->CAP->gCollectConstTerm();
 
-  if (ret->data)
-    oz_gCollectTerm(ret->data,ret->data);
+  OZ_gCollectBlock(&(ret->CAP),&(ret->CAP),2);
   
   if (ret->arity > 0) {
     ret->arguments = (TaggedRef *) 
@@ -1871,66 +1818,58 @@ OzDebug *OzDebug::gCollectOzDebug(void) {
 inline
 TaskStack * TaskStack::_cac(void) {
 
-  TaskStack *newstack = new TaskStack(suggestNewSize());
-  TaskStack *oldstack = this;
+  TaskStack *newstack = new TaskStack(this);
 
-  Frame *oldtop = oldstack->getTop();
-  int offset    = oldstack->getUsed();
-  Frame *newtop = newstack->array + offset;
+  Assert(newstack->getUsed() == getUsed());
+
+  Frame * newtop = newstack->tos;
 
   while (1) {
-    GetFrame(oldtop,PC,Y,CAP);
-
+    ProgramCounter PC    = (ProgramCounter) *(--newtop);
+    RefsArray      * Y   = (RefsArray *)      --newtop;
+    TaggedRef      * CAP = (TaggedRef *)      --newtop;
+    
 #ifdef G_COLLECT
     gCollectCode(PC);
 #endif
 
     if (PC == C_EMPTY_STACK) {
-      *(--newtop) = PC;
-      *(--newtop) = Y;
-      *(--newtop) = CAP;
-      Assert(newstack->array == newtop);
-      newstack->setTop(newstack->array+offset);
       return newstack;
     } else if (PC == C_CATCH_Ptr) {
     } else if (PC == C_XCONT_Ptr) {
       // mm2: opt: only the top task can/should be xcont!!
-      ProgramCounter pc   = (ProgramCounter) *(oldtop-1);
+      ProgramCounter pc   = (ProgramCounter) *(newtop-1);
 #ifdef G_COLLECT
       gCollectCode(pc);
 #endif
-      (void) CodeArea::livenessX(pc,Y,getRefsArraySize(Y));
-      Y = _cacRefsArray(Y); // X
+      (void) CodeArea::livenessX(pc,*Y,getRefsArraySize(*Y));
+      *Y = _cacRefsArray(*Y);
     } else if (PC == C_LOCK_Ptr) {
-      Y = (RefsArray) ((OzLock *) Y)->_cacConstTerm();
+      oz_cacTerm(*CAP, *CAP);
     } else if (PC == C_SET_SELF_Ptr) {
-      Y = (RefsArray) (Y ? (((Object*)Y)->_cacConstTerm()) : 0);
+      oz_cacTerm(*CAP, *CAP);
     } else if (PC == C_SET_ABSTR_Ptr) {
       ;
     } else if (PC == C_DEBUG_CONT_Ptr) {
 #ifdef G_COLLECT
-      Y = (RefsArray) ((OzDebug *) Y)->gCollectOzDebug();
+      *Y = (RefsArray) ((OzDebug *) *Y)->gCollectOzDebug();
 #else
       Assert(0);
 #endif
     } else if (PC == C_CALL_CONT_Ptr) {
-      /* tt might be a variable, so use this ugly construction */
-      *(newtop-2) = Y; /* UGLYYYYYYYYYYYY !!!!!!!! */
-      TaggedRef *tt = (TaggedRef*) (newtop-2);
-      oz_cacTerm(*tt,*tt);
-      Y = (RefsArray) ToPointer(*tt);
-      CAP = (Abstraction *) _cacRefsArray((RefsArray)CAP);
+      oz_cacTerm(*((TaggedRef *) Y), *((TaggedRef *) Y));
+      *CAP = makeTaggedMiscp((void *) 
+			     _cacRefsArray((RefsArray) 
+					   tagValueOf(*CAP)));
     } else if (PC == C_CFUNC_CONT_Ptr) {
-      CAP = (Abstraction *) _cacRefsArray((RefsArray)CAP);
+      *Y = _cacRefsArray(*Y);
     } else { // usual continuation
-      Y   = _cacRefsArray(Y);
-      CAP = (Abstraction *) CAP->_cacConstTerm();
+      *Y   = _cacRefsArray(*Y);
+      oz_cacTerm(*CAP, *CAP);
     }
 
-    *(--newtop) = PC;
-    *(--newtop) = Y;
-    *(--newtop) = CAP;
-  } // while not task stack is empty
+  }
+
 }
 
 inline 
@@ -2626,6 +2565,4 @@ Suspendable * Suspendable::_cacSuspendable(void) {
   return (this == NULL) ? (Suspendable *) NULL : _cacSuspendableInline();
 }
 
-ConstTerm * ConstTerm::_cacConstTerm(void) {
-  return this ? _cacConstTermInline() : this;
-}
+

@@ -35,7 +35,6 @@
 #define _cacFix                 sCloneFix
 #define _cacMark                sCloneMark
 
-#define _cacConstTerm           sCloneConstTerm
 #define _cacConstTermInline     sCloneConstTermInline
 #define _cacConstRecurse        sCloneConstRecurse
 

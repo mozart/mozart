@@ -593,3 +593,41 @@ Bool Board::install(void) {
 
 }
 
+/*
+ * Before copying all spaces but the space to be copied get marked.
+ * 
+ * Important: even committed boards must be marked, since the globality
+ * test does not do a dereference!
+ *
+ */
+
+void Board::setGlobalMarks(void) {
+  Assert(!isRoot());
+
+  Board * b = this;
+
+  do {
+    b = b->getParentInternal(); 
+    Assert(!b->hasMarkOne());
+    b->setMarkOne();
+  } while (!b->isRoot());
+  
+}
+
+/*
+ * Purge marks after copying
+ */
+
+void Board::unsetGlobalMarks(void) {
+  Assert(!isRoot());
+
+  Board * b = this;
+
+  do {
+    b = b->getParentInternal(); 
+    Assert(b->hasMarkOne());
+    b->unsetMarkOne();
+  } while (!b->isRoot());
+
+}
+

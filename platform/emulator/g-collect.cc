@@ -35,7 +35,6 @@
 #define _cacMark                 gCollectMark
 #define _cacFix                  gCollectFix
 
-#define _cacConstTerm            gCollectConstTerm
 #define _cacConstTermInline      gCollectConstTermInline
 #define _cacConstRecurse         gCollectConstRecurse
 
