@@ -26,8 +26,6 @@ INSTALL_LIB	= $(INSTALL) -m 444
 USECPLEX = 
 #USECPLEX = 1
 
-PLATFORM = $(shell ozplatform)
-
 OPTIMIZE = -O3
 #OPTIMIZE = -g3 -DDEBUG_CHECK
 
