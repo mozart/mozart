@@ -38,8 +38,6 @@ public:
     int tmp_size = (s + (8 - (s & 7)));
     _heap_left -= tmp_size;
 
-    Assert(tmp_size <= _heap_size);
-
     if (_heap_left >= 0) {
       char * tmp = _heap;
       
@@ -47,6 +45,11 @@ public:
       
       return tmp;
     } else { 
+      if (tmp_size > _heap_size) {
+	error("cpi heap memory exhausted");
+      }
+
+
       _heap_t * aux = new _heap_t;
       aux->heap = _heap_top;
       aux->next = _aux_heaps;
