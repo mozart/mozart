@@ -28,6 +28,8 @@ BINDIR          = $(PREFIX)/bin
 DOCDIR          = $(PREFIX)/share/doc
 ELISPDIR        = $(PREFIX)/share/elisp
 CSSDIR          = /www/css
+HOMEURL         = @HOMEURL@
+
 
 INSTALL         = @INSTALL@
 INSTALL_DIR     = @INSTALL_DIR@

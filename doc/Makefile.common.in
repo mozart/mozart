@@ -5,6 +5,8 @@ BUILDTOP        = @BUILDTOP@
 SRCTOP          = @SRCTOP@
 OZENGINE        = @OZENGINE@
 OZDOC           = @OZDOC@
+HOMEURL         = @HOMEURL@
+
 OZDOCFLAGS      =
 DOCIFY          = $(OZENGINE) $(OZDOC) $(OZDOCFLAGS)
 
@@ -20,9 +22,9 @@ HTMLSUPPORTFILES0 = \
 HTMLSUPPORTFILES = \
         $(addprefix $(SRCTOP)/doc/utilities/,$(HTMLSUPPORTFILES0))
 
-.PHONY: all quick validate verify install clean veryclean distclean
+.PHONY: all bootstrap quick validate verify install clean veryclean distclean
 
-all: $(WHAT)-html/index.html
+all:: Makefile $(BUILDTOP)/Makefile.common $(WHAT)-html/index.html
 
 include $(SRCTOP)/share/Makefile.boot
 

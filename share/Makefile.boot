@@ -9,6 +9,7 @@ BUILDLIB=$(BUILDSHARE)/lib
 BUILDTOOLS=$(BUILDSHARE)/tools
 BUILDCONTRIB=$(BUILDTOP)/contrib
 BUILDGDBM=$(BUILDCONTRIB)/gdbm
+BUILDOS=$(BUILDCONTRIB)/os
 
 SOURCELIB=$(SRCTOP)/share/lib
 SOURCETOOLS=$(SRCTOP)/share/tools
@@ -73,7 +74,7 @@ boot-%:
         OZC="$(BOOTCOM)" \
         OZINIT=$(BUILDLIB)/Init.ozf \
         OZPATH=.:$(BUILDLIB):$(BUILDTOOLS):$(SOURCELIB):$(SOURCETOOLS) \
-        OZ_LOAD=root=.:prefix=/=/:prefix=./=./:prefix=$(HOMEURL)/share/=$(BUILDLIB)/:prefix=$(HOMEURL)/share/=$(BUILDTOOLS)/:prefix=$(HOMEURL)/contrib/=$(BUILDCONTRIB)/:prefix=$(HOMEURL)/contrib/=$(BUILDGDBM)/:= \
+        OZ_LOAD=root=.:prefix=/=/:prefix=./=./:prefix=$(HOMEURL)/share/=$(BUILDLIB)/:prefix=$(HOMEURL)/share/=$(BUILDTOOLS)/:prefix=$(HOMEURL)/contrib/=$(BUILDCONTRIB)/:prefix=$(HOMEURL)/contrib/=$(BUILDGDBM)/:prefix=$(HOMEURL)/contrib/os/=$(BUILDOS)/:= \
         OZL="$(BOOTOZL)" \
         OZDOC_HOME="$(SRCTOP)/doc/utilities" \
         OZDOC_AUTHOR_PATH="$(SRCDIR):$(SRCTOP)/doc" \
