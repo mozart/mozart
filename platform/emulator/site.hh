@@ -122,21 +122,21 @@ public:
     timestamp.start=unmarshalNumber(buf);
     timestamp.pid=unmarshalNumber(buf);
   }
-  void unmarshalBaseSiteRobust(MsgBuffer* buf, int *overload){
+  void unmarshalBaseSiteRobust(MsgBuffer* buf, int *error){
     int o;
     address=unmarshalNumberRobust(buf, &o);
-    if(o || (address > sizeof(int32)) || (address <= NON_BROADCAST_MIN)) {
-      *overload = OK;
+    if(o || (address <= NON_BROADCAST_MIN)) { // address should be of int32
+      *error = OK;
       return;
     }
     port=unmarshalShort(buf);
     timestamp.start=unmarshalNumberRobust(buf, &o);
     if(o || timestamp.start < 0) {
-      *overload = OK;
+      *error = OK;
       return;
     }
     timestamp.pid=unmarshalNumberRobust(buf, &o);
-    *overload = o || (timestamp.pid > MAX_PID);
+    *error = o || (timestamp.pid > MAX_PID);
   }
 
   void unmarshalBaseSiteGName(MsgBuffer* buf, int minor){
@@ -145,13 +145,13 @@ public:
     timestamp.start=unmarshalNumber(buf);
     timestamp.pid=unmarshalNumber(buf);
   }
-  void unmarshalBaseSiteGNameRobust(MsgBuffer* buf, int minor, int *overload){
+  void unmarshalBaseSiteGNameRobust(MsgBuffer* buf, int minor, int *error){
     int o1, o2, o3;
     address=unmarshalNumberRobust(buf, &o1);
     port = 0;
     timestamp.start=unmarshalNumberRobust(buf, &o2);
     timestamp.pid=unmarshalNumberRobust(buf, &o3);
-    *overload= o1 || o2 || o3;
+    *error= o1 || o2 || o3;
   }
 
   int checkTimeStamp(time_t t){

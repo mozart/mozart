@@ -325,8 +325,8 @@ RecordArityType unmarshalRecordArityType(MsgBuffer *bs) {
 }
 //
 inline
-RecordArityType unmarshalRecordArityTypeRobust(MsgBuffer *bs, int *overload) {
-  return ((RecordArityType) unmarshalNumberRobust(bs, overload));
+RecordArityType unmarshalRecordArityTypeRobust(MsgBuffer *bs, int *overflow) {
+  return ((RecordArityType) unmarshalNumberRobust(bs, overflow));
 }
 inline
 void marshalRecordArityType(RecordArityType type, MsgBuffer *bs) {
@@ -1102,7 +1102,6 @@ class TermTable {
   OZ_Term *array;
   int size;
   int last_index; // used for robust marshaler
-  int last_set_index;
 public:
   TermTable() {
     size     = 100;
@@ -1240,7 +1239,6 @@ public:
   }
   // returns '0' if inconsistent:
   OZ_Term finish() {
-    resetIndexChecker();
     if (isEmpty()) {
       // CrazyDebug(fprintf(stdout, " --- %d nodes.\n", debugNODES););
       // CrazyDebug(fflush(stdout););

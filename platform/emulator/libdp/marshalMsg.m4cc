@@ -37,7 +37,7 @@ void messageError(DSite *dsite, Bool dsite_unmarshalled) {
     char *s1;
     s1 = "Malicious message received from site: ";
     strcpy(s, s1);
-    strcat(s, "dsite->stringrep()");
+    strcat(s, dsite->stringrep());
     OZ_error(s);
   }
   else
