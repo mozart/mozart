@@ -44,6 +44,7 @@
 #include "board.hh"
 #include "thread.hh"
 #include "tracer.hh"
+#include "ozdebug.hh"
 
 // -----------------------------------------------------------------------
 // TOPLEVEL FAILURE
@@ -163,9 +164,6 @@
 #define inline
 #endif
 
-// where to define this !!!!!!!!!!!
-void traceCall(Abstraction *def,int arity, TaggedRef *args);
-
 inline HookValue emulateHook(Abstraction *def, int arity, TaggedRef *args)
 {
 #ifdef DEBUG_DET
@@ -193,7 +191,7 @@ inline HookValue emulateHook(Abstraction *def, int arity, TaggedRef *args)
     unblockSignals();
 
     if (def && am.isSetSFlag(DebugMode)) {
-      traceCall(def,arity,args);
+      enterCall(Board::GetCurrent(),def,arity,args);
     }
 
     return (HOOK_OK);
@@ -329,6 +327,8 @@ inline TaggedRef makeMethod(int arity, Atom *label, TaggedRef *X)
       goto LBLfailure;							      \
     }									      \
   }
+
+
 void engine() {
   
 // ------------------------------------------------------------------------
@@ -492,12 +492,13 @@ void engine() {
     } else {
       TaskStack *taskStack = e->currentTaskStack;
       TaskStackEntry *topCache = taskStack->getTop() - 1;
-      TaskStackEntry e = TaskStackPop(topCache);
-      if (taskStack->isEmpty(e)) {
+      TaggedBoard tb = (TaggedBoard) TaskStackPop(topCache);
+      if (taskStack->isEmpty((TaskStackEntry) tb)) {
 	goto LBLTaskEmpty;
       }
-      tmpBB = (Board *) e;
-      switch (getContFlag(tmpBB)){
+      ContFlag cFlag = getContFlag(tb);
+      tmpBB = clrContFlag(tb,cFlag);
+      switch (cFlag){
       case C_CONT:
 	PC = (ProgramCounter) TaskStackPop(--topCache);
 	Y = (RefsArray) TaskStackPop(--topCache);
@@ -505,7 +506,6 @@ void engine() {
 	taskStack->setTop(topCache);
 	goto LBLTaskCont;
       case C_XCONT:
-	tmpBB = clrContFlag(tmpBB, C_XCONT);
 	PC = (ProgramCounter) TaskStackPop(--topCache);
 	Y = (RefsArray) TaskStackPop(--topCache);
 	G = (RefsArray) TaskStackPop(--topCache);
@@ -519,14 +519,34 @@ void engine() {
 	}
 	taskStack->setTop(topCache);
 	goto LBLTaskCont;
+
+      case C_DEBUG_CONT:
+	{
+	  OzDebug *ozdeb = (OzDebug *) TaskStackPop(--topCache);
+	  taskStack->setTop(topCache);
+	  tmpBB->removeSuspension();
+
+	  if (CBB != tmpBB) {
+	    switch (e->installPath(tmpBB)) {
+	    case INST_REJECTED:
+	      exitCall(FAILED,ozdeb);
+	      goto LBLfindWork;
+	    case INST_FAILED:
+	      exitCall(FAILED,ozdeb);
+	      goto LBLfailure;
+	    }
+	  }
+
+	  exitCall(PROCEED,ozdeb);
+	  goto LBLreduce;
+	}
+
       case C_NERVOUS:
 	error("mm2: never here");
-	tmpBB = clrContFlag(tmpBB, C_NERVOUS);
 	taskStack->setTop(topCache);
 	goto LBLTaskNervous;
       case C_CFUNC_CONT:
 	error("mm2: never here");
-	tmpBB = clrContFlag(tmpBB, C_CFUNC_CONT);
 	if (taskStack->isEmpty(e)) goto LBLTaskEmpty;
 	biFun = (BIFun) TaskStackPop(--topCache);
 	currentTaskSusp = (Suspension*) TaskStackPop(--topCache);
@@ -1542,45 +1562,55 @@ void engine() {
 	  goto LBLBIloadFile;
 
 	case BIDefault:
-	  switch (bi->getFun()(predArity, X)){
-	  case SUSPEND:
-	    predicate = bi->getSuspHandler();
-	    if (!predicate) {
-	      warning("call: builtin %s/%d: no suspension handler",
-		       bi->getPrintName(),
-		       bi->getArity());
-	      HANDLE_FAILURE1(contAdr,
-			      message("call: builtin %s/%d: "
-				      "no suspension handler",
-				      bi->getPrintName(),
-				      bi->getArity()));
-
+	  {
+	    if (am.isSetSFlag(DebugMode)) {
+	      enterCall(Board::GetCurrent(),bi,predArity,X);
 	    }
-	    goto LBLcall;
-	  case FAILED:
-	    HANDLE_FAILURE(contAdr,
-			   message("call: builtin %s/%d failed",
-				    bi->getPrintName(),
-				    bi->getArity());
-			   for (int i = 0; i < predArity; i++)
-			   { message("\nArg %d: %s",i+1,tagged2String(X[i])); }
-			   );
-	  case PROCEED:
-	    if (isExecute) {
-	      goto LBLreduce;
+	    OZ_Bool res = bi->getFun()(predArity, X);
+	    if (am.isSetSFlag(DebugMode)) {
+	      exitBuiltin(res,bi,predArity,X);
 	    }
-	    switch (emulateHook (NULL,0,NULL)) {
-	    case HOOK_SCHEDULE:
-	      e->pushTask(CBB, contAdr,Y,G);
-	      goto LBLschedule;
-	    case HOOK_FIND:
-	      e->pushTask(CBB, contAdr,Y,G);
-	      goto LBLfindWorkDir;
+	    switch (res) {
+	    
+	    case SUSPEND:
+	      predicate = bi->getSuspHandler();
+	      if (!predicate) {
+		warning("call: builtin %s/%d: no suspension handler",
+			bi->getPrintName(),
+			bi->getArity());
+		HANDLE_FAILURE1(contAdr,
+				message("call: builtin %s/%d: "
+					"no suspension handler",
+					bi->getPrintName(),
+					bi->getArity()));
+		
+	      }
+	      goto LBLcall;
+	    case FAILED:
+	      HANDLE_FAILURE(contAdr,
+			     message("call: builtin %s/%d failed",
+				     bi->getPrintName(),
+				     bi->getArity());
+			     for (int i = 0; i < predArity; i++)
+			     { message("\nArg %d: %s",i+1,tagged2String(X[i])); }
+			     );
+	    case PROCEED:
+	      if (isExecute) {
+		goto LBLreduce;
+	      }
+	      switch (emulateHook (NULL,0,NULL)) {
+	      case HOOK_SCHEDULE:
+		e->pushTask(CBB, contAdr,Y,G);
+		goto LBLschedule;
+	      case HOOK_FIND:
+		e->pushTask(CBB, contAdr,Y,G);
+		goto LBLfindWorkDir;
+	      }
+	      JUMP(contAdr);
+	    default:
+	      error("builtin: bad return value");
+	      goto LBLerror;
 	    }
-	    JUMP(contAdr);
-	  default:
-	    error("builtin: bad return value");
-	    goto LBLerror;
 	  }
 	default:
 	  break;
