@@ -39,7 +39,7 @@ State BIfdIsInline(TaggedRef fd) {
   return (isPosSmallInt(fd) || isGenFDVar(fd, fdtag)) ? PROCEED : FAILED;
 }
 
-DECLAREBI_USEINLINEREL1(BIfdIs, BIfdIsInline);
+DECLAREBI_USEINLINEREL1(BIfdIs, BIfdIsInline)
 
 OZ_C_proc_begin(BIfdMin, 2)
 {

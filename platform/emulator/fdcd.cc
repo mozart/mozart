@@ -55,12 +55,12 @@ OZ_C_proc_begin(BIfdConstrDisjSetUp, 4)
 
   // constrain Bi to {0..Pi+2} if Bi is an uvar
   for (int i = clauses; i--; ) {
-    TaggedRef bi = TaggedRef(&b[i]);
+    TaggedRef bi = makeTaggedRef(&b[i]);
     DEREF(bi, bi_ptr, bi_tag);
     if (isNotCVar(bi_tag)) {
       GenFDVariable * fdvar = new GenFDVariable();
       fdvar->getDom().init(0, smallIntValue(deref(p[i])) + 2);
-      doBind(bi_ptr, TaggedRef(newTaggedCVar(fdvar)));
+      doBind(bi_ptr, makeTaggedRef(newTaggedCVar(fdvar)));
     } else {
       error("Unexpected CVar found.");
     }
@@ -80,12 +80,12 @@ OZ_C_proc_begin(BIfdConstrDisjSetUp, 4)
     }
     
     for (int j = variables; j--; ) {
-      TaggedRef vp_i_j = TaggedRef(&vp_i[j]);
+      TaggedRef vp_i_j = makeTaggedRef(&vp_i[j]);
       DEREF(vp_i_j, vp_i_j_ptr, vp_i_j_tag);
       if (isNotCVar(vp_i_j_tag)) {
 	GenFDVariable * fdvar = new GenFDVariable();
 	fdvar->getDom().initFull();
-	doBind(vp_i_j_ptr, TaggedRef(newTaggedCVar(fdvar)));
+	doBind(vp_i_j_ptr, makeTaggedRef(newTaggedCVar(fdvar)));
       }
     }
   }
@@ -113,7 +113,7 @@ OZ_C_proc_begin(BIfdConstrDisj, 3)
   BIfdHeadManager x_items(variables);
 
   for (int suspend = 0, i = variables; i--; ) 
-    if (! x_items.expectFDish(i, TaggedRef(&v[i]), suspend))
+    if (! x_items.expectFDish(i, makeTaggedRef(&v[i]), suspend))
       TypeError(1, "");
 
   if (suspend > 0) { 
@@ -178,13 +178,13 @@ OZ_C_proc_begin(BIfdConstrDisj_body, 3)
   // introduce Bs
   x.add(0, clauses);
   for (int c = clauses; c--; ) {
-    x.introduce(idx_b(c), TaggedRef(&_b[c]));
+    x.introduce(idx_b(c), makeTaggedRef(&_b[c]));
   }
   
   // introduce Vs
   x.add(1, variables);
   for (int v = variables; v--; ) {
-    x.introduce(idx_v(v), TaggedRef(&_v[v]));
+    x.introduce(idx_v(v), makeTaggedRef(&_v[v]));
   }
   
   // introduce Vps
@@ -192,7 +192,7 @@ OZ_C_proc_begin(BIfdConstrDisj_body, 3)
     STuple &vp_c = *tagged2STuple(deref(_vp[c]));
     x.add(2 + c, variables);
     for (v = variables; v--; ) { 
-      x.introduce(idx_vp(c, v), TaggedRef(&vp_c[v]));
+      x.introduce(idx_vp(c, v), makeTaggedRef(&vp_c[v]));
     }
   }
   
@@ -289,14 +289,14 @@ OZ_C_proc_begin(BIfdConstrDisj_body, 3)
 // we need to reintroduce Bs and Vps
   // introduce Bs
   for (c = clauses; c--; ) {
-    x.reintroduce(idx_b(c), TaggedRef(&_b[c]));
+    x.reintroduce(idx_b(c), makeTaggedRef(&_b[c]));
   }
   
   // introduce Vps
   for (c = 0; c < clauses; c += 1) {  // acendingly counting ('cause of x.add)
     STuple &vp_c = *tagged2STuple(deref(_vp[c]));
     for (v = variables; v--; ) { 
-      x.reintroduce(idx_vp(c, v), TaggedRef(&vp_c[v]));
+      x.reintroduce(idx_vp(c, v), makeTaggedRef(&vp_c[v]));
     }
   }
 

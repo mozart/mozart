@@ -87,7 +87,7 @@ Bool BIfdHeadManager::expectNonLin(int i, STuple &at, STuple &xt,
   Suspension * susp;
   
   for (int j = ts, fds_found = 0; j-- && (fds_found < 2); ) {
-    var = TaggedRef(&xtc[j]);
+    var = makeTaggedRef(&xtc[j]);
     deref(var, varptr, vartag);
  
     if (vartag == SMALLINT) {
@@ -119,7 +119,7 @@ Bool BIfdHeadManager::expectNonLin(int i, STuple &at, STuple &xt,
   case 1: // exactly one variable left
     bifdhm_vartag[i] = CVAR;
     bifdhm_var[i] = last_fdvar;
-    xt[i] = TaggedRef(bifdhm_varptr[i] = last_fdvarptr);
+    xt[i] = makeTaggedRef(bifdhm_varptr[i] = last_fdvarptr);
     bifdhm_coeff[i] *= prod;
     if (bifdhm_coeff[i] < OzMinInt || OzMaxInt < bifdhm_coeff[i]) return FALSE;
     at[i] = newSmallInt(bifdhm_coeff[i]);
@@ -165,7 +165,7 @@ void BIfdHeadManager::addResSusp(int i, Suspension * susp, FDPropState target)
     if (am.isLocalUVar(bifdhm_var[i])) {
       TaggedRef * taggedfdvar = newTaggedCVar(new GenFDVariable());
       addSuspFDVar(*taggedfdvar, new SuspList(susp, NULL), target);
-      doBind(bifdhm_varptr[i], TaggedRef(taggedfdvar));
+      doBind(bifdhm_varptr[i], makeTaggedRef(taggedfdvar));
     } else {
       global_vars += 1;
       addSuspUVar(bifdhm_varptr[i], new SuspList(susp, NULL));
@@ -178,7 +178,7 @@ void BIfdHeadManager::addResSusp(int i, Suspension * susp, FDPropState target)
       am.checkSuspensionList(bifdhm_var[i], makeTaggedRef(taggedfdvar));
       fdvar->setSuspList(tagged2SVar(bifdhm_var[i])->getSuspList());
       addSuspFDVar(*taggedfdvar, new SuspList(susp, NULL), target);
-      doBind(bifdhm_varptr[i], TaggedRef(taggedfdvar));
+      doBind(bifdhm_varptr[i], makeTaggedRef(taggedfdvar));
     } else {
       global_vars += 1;
       addSuspSVar(bifdhm_var[i], new SuspList(susp, NULL));
@@ -392,19 +392,19 @@ void BIfdBodyManager::processFromTo(int from, int to)
 	      becomesSmallIntAndPropagate(bifdbm_varptr[i]);
 	  } else {
 	    tagged2GenFDVar(bifdbm_var[i])->propagate(bifdbm_var[i], fd_det,
-						      TaggedRef(bifdbm_varptr[i]));
+						      makeTaggedRef(bifdbm_varptr[i]));
 	    doBindAndTrail(bifdbm_var[i], bifdbm_varptr[i],
 			   newSmallInt(bifdbm_dom[i]->singl()));
 	    glob_vars_touched = TRUE;
 	  }
 	} else {
 	  tagged2GenFDVar(bifdbm_var[i])->propagate(bifdbm_var[i], fd_bounds,
-						    TaggedRef(bifdbm_varptr[i]));
+						    makeTaggedRef(bifdbm_varptr[i]));
 	  if (! bifdbm_is_local[i]) {
 	    GenFDVariable * newfdvar = new GenFDVariable(*bifdbm_dom[i]);
 	    TaggedRef * newtaggedfdvar = newTaggedCVar(newfdvar);
 	    doBindAndTrail(bifdbm_var[i], bifdbm_varptr[i],
-			   TaggedRef(newtaggedfdvar));
+			   makeTaggedRef(newtaggedfdvar));
 	    glob_vars_touched = TRUE;
 	  }
 	  vars_left = TRUE;
@@ -428,7 +428,7 @@ void BIfdBodyManager::processFromTo(int from, int to)
 	TaggedRef * newtaggedfdvar = newTaggedCVar(newfdvar);
 	am.checkSuspensionList(bifdbm_var[i], makeTaggedRef(newtaggedfdvar));
 	doBindAndTrail(bifdbm_var[i], bifdbm_varptr[i],
-		       TaggedRef(newtaggedfdvar));
+		       makeTaggedRef(newtaggedfdvar));
 	vars_left = TRUE;
       }
       PROFILE_CODE1(
@@ -459,7 +459,7 @@ void BIfdBodyManager::processNonRes(void)
 	  becomesSmallIntAndPropagate(bifdbm_varptr[0]);
       } else {
 	tagged2GenFDVar(bifdbm_var[0])->propagate(bifdbm_var[0], fd_det,
-						  TaggedRef(bifdbm_varptr[0]));
+						  makeTaggedRef(bifdbm_varptr[0]));
 	
 	if (susp == NULL) susp = new Suspension(am.currentBoard);
 	addSuspFDVar(bifdbm_var[0], new SuspList(susp, NULL));
@@ -469,7 +469,7 @@ void BIfdBodyManager::processNonRes(void)
       }
     } else {
       tagged2GenFDVar(bifdbm_var[0])->propagate(bifdbm_var[0], fd_bounds,
-						TaggedRef(bifdbm_varptr[0]));
+						makeTaggedRef(bifdbm_varptr[0]));
       if (! bifdbm_is_local[0]) {
 	if (susp == NULL) susp = new Suspension(am.currentBoard); 
 	addSuspFDVar(bifdbm_var[0], new SuspList(susp, NULL));
@@ -477,7 +477,7 @@ void BIfdBodyManager::processNonRes(void)
 	GenFDVariable * newfdvar = new GenFDVariable(*bifdbm_dom[0]);
 	TaggedRef * newtaggedfdvar = newTaggedCVar(newfdvar);
 	doBindAndTrail(bifdbm_var[0], bifdbm_varptr[0],
-		       TaggedRef(newtaggedfdvar));
+		       makeTaggedRef(newtaggedfdvar));
 	glob_vars_touched = TRUE;
       }
     }
@@ -500,7 +500,7 @@ void BIfdBodyManager::processNonRes(void)
       TaggedRef * newtaggedfdvar = newTaggedCVar(newfdvar);
       am.checkSuspensionList(bifdbm_var[0], makeTaggedRef(newtaggedfdvar));
       addSuspSVar(bifdbm_var[0], new CondSuspList(susp, NULL, isConstrained));
-      doBindAndTrail(bifdbm_var[0], bifdbm_varptr[0], TaggedRef(newtaggedfdvar));
+      doBindAndTrail(bifdbm_var[0], bifdbm_varptr[0], makeTaggedRef(newtaggedfdvar));
       vars_left = TRUE;
     }
     PROFILE_CODE1(
@@ -550,9 +550,9 @@ Bool BIfdBodyManager::introduce(TaggedRef v)
       TaggedRef * taggedfdvar = newTaggedCVar(fdvar);
       bifdbm_dom[0] = &fdvar->getDom();
       bifdbm_init_dom_size[0] = bifdbm_dom[0]->getSize();
-      am.checkSuspensionList(v, TaggedRef(taggedfdvar));
+      am.checkSuspensionList(v, makeTaggedRef(taggedfdvar));
       fdvar->setSuspList(tagged2SVar(v)->getSuspList());
-      doBind(vptr, TaggedRef(taggedfdvar));
+      doBind(vptr, makeTaggedRef(taggedfdvar));
       bifdbm_var[0] = *(bifdbm_varptr[0] = taggedfdvar);
       bifdbm_vartag[0] = CVAR;
     } else {
@@ -568,7 +568,7 @@ Bool BIfdBodyManager::introduce(TaggedRef v)
       TaggedRef * taggedfdvar = newTaggedCVar(fdvar);
       bifdbm_dom[0] = &fdvar->getDom();
       bifdbm_init_dom_size[0] = bifdbm_dom[0]->getSize();
-      doBind(vptr, TaggedRef(taggedfdvar));
+      doBind(vptr, makeTaggedRef(taggedfdvar));
       bifdbm_var[0] = *(bifdbm_varptr[0] = taggedfdvar);
       bifdbm_vartag[0] = CVAR;
     } else {
@@ -662,14 +662,14 @@ void BIfdBodyManager::_propagate_unify_cd(int clauses, int variables,
 	  if (isLiteral(bifdbm_vartag[idx_vp(c, fs)])) {
 	    // convert void variable to heap variable
 	    GenFDVariable * fv = new GenFDVariable(*bifdbm_dom[idx_vp(c, fs)]);
-	    l_var = TaggedRef(newTaggedCVar(fv));
+	    l_var = makeTaggedRef(newTaggedCVar(fv));
 	    // update arguments
 	    STuple &vp_c = *tagged2STuple(deref(vp[c]));
 	    vp_c[fs] = l_var;
 	  } else if (isSmallInt(bifdbm_vartag[idx_vp(c, fs)])) {
 	    l_var = bifdbm_var[idx_vp(c, fs)];
 	  } else if (isCVar(bifdbm_vartag[idx_vp(c, fs)])) {
-	    l_var = TaggedRef(bifdbm_varptr[idx_vp(c, fs)]);
+	    l_var = makeTaggedRef(bifdbm_varptr[idx_vp(c, fs)]);
 	  } else {
 	    error("Unexpected type found for l_var variable.");
 	  }
@@ -677,14 +677,14 @@ void BIfdBodyManager::_propagate_unify_cd(int clauses, int variables,
 	  if (isLiteral(bifdbm_vartag[idx_vp(c, v)])) {
 	    // convert void variable to heap variable
 	    GenFDVariable * fv = new GenFDVariable(*bifdbm_dom[idx_vp(c, v)]);
-	    r_var = TaggedRef(newTaggedCVar(fv));
+	    r_var = makeTaggedRef(newTaggedCVar(fv));
 	    // update arguments
 	    STuple &vp_c = *tagged2STuple(deref(vp[c]));
 	    vp_c[v] = r_var;
 	  } else if (isSmallInt(bifdbm_vartag[idx_vp(c, v)])) {
 	    r_var = bifdbm_var[idx_vp(c, v)];
 	  } else if (isCVar(bifdbm_vartag[idx_vp(c, v)])) {
-	    r_var  = TaggedRef(bifdbm_varptr[idx_vp(c, v)]);
+	    r_var  = makeTaggedRef(bifdbm_varptr[idx_vp(c, v)]);
 	  } else {
 	    error("Unexpected type found for r_var variable.");
 	  }
