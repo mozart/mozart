@@ -99,6 +99,97 @@ struct StartDurTerms {
   int dur;
 };
 
+
+void myqsortDesc(int *my,int left, int right){
+  register int i,j;
+  int x,y;
+  i=left; j=right;
+  int middle;
+  x = my[(left+right)/2];
+  do {
+    while(xx[my[i]]->getMinElem() > xx[x]->getMinElem() && i < right) i++;
+    while(xx[x]->getMinElem() > xx[my[j]]->getMinElem() && j > left) j--;
+    if (i <= j) {
+      y = my[i];
+      my[i] = my[j];
+      my[j] = y;
+      i++; j--;
+    }
+  } while(i <= j);
+  if (left < j) myqsortDesc(my,left,j);
+  if (i < right) myqsortDesc(my,i,right);
+}
+
+void myqsortAsc(int *my,int left, int right){
+  register int i,j;
+  int x,y;
+  i=left; j=right;
+  int middle;
+  x = my[(left+right)/2];
+  do {
+    while(xx[my[i]]->getMaxElem()+dd[my[i]] < xx[x]->getMaxElem()+dd[x] && i < right) i++;
+    while(xx[x]->getMaxElem()+dd[x] < xx[my[j]]->getMaxElem()+dd[my[j]] && j > left) j--;
+    if (i <= j) {
+      y = my[i];
+      my[i] = my[j];
+      my[j] = y;
+      i++; j--;
+    }
+  } while(i <= j);
+  if (left < j) myqsortAsc(my,left,j);
+  if (i < right) myqsortAsc(my,i,right);
+}
+
+void myqsortDur(struct StartDurTerms *my,int left, int right){
+  register int i,j;
+  struct StartDurTerms x,y;
+  i=left; j=right;
+  int middle;
+  x = my[(left+right)/2];
+  do {
+    while(my[i].dur > x.dur && i < right) i++;
+    while(x.dur > my[j].dur && j > left) j--;
+    if (i <= j) {
+      y = my[i];
+      my[i] = my[j];
+      my[j] = y;
+      i++; j--;
+    }
+  } while(i <= j);
+  if (left < j) myqsortDur(my,left,j);
+  if (i < right) myqsortDur(my,i,right);
+}
+
+
+/*
+void myqsort(char *my, int left, int right, int w,   int (*compar)(const void * a, const void * b))
+{
+  register int i,j;
+  char *x,*y;
+  i=left; j=right;
+  int middle;
+  if ((left + right) % 2 == 0) middle = (left+right)/2;
+  else {
+    middle = (left+right)/2+1;
+  }
+  x=&my[middle*w];
+  do {
+    while((*compar)(&my[i*w],x)   && (i < right)) i++;
+    while((*compar)(x,&my[j*w]) && j > left) j--;
+    
+    if (i <= j) {
+      y = &my[i*w];
+      my[i*w] = my[j*w];
+      my[j*w] = *y;
+      i++; j--;
+    }
+  } while(i <= j);
+  
+  if (left < j) myqsort(my,left,j,w,compar);
+  if (i < right) myqsort(my,i,right,w,compar);
+}
+*/
+
 int compareDurs(const void * a, const void * b) {
   return ((StartDurTerms *) b)->dur - ((StartDurTerms *) a)->dur;
 }
@@ -135,7 +226,9 @@ CPIteratePropagator::CPIteratePropagator(OZ_Term tasks,
 
   OZ_ASSERT(i == reg_sz);
 
-  qsort(sd, reg_sz, sizeof(StartDurTerms), compareDurs);
+//  qsort(sd, reg_sz, sizeof(StartDurTerms), compareDurs);
+myqsortDur(sd,0,reg_sz-1);
+//myqsort((char *)sd,0,reg_sz-1,sizeof(StartDurTerms), compareDurs);
 
   for (i = reg_sz; i--; ) {
     reg_l[i]      = sd[i].start;
@@ -161,6 +254,7 @@ OZ_C_proc_begin(sched_cpIterate, 3)
 
   VectorIterator vi(OZ_args[0]);
 
+
   for (int i = OZ_vectorSize(OZ_args[0]); i--; ) {
     OZ_Term tasks = vi.getNext();
 
@@ -171,7 +265,7 @@ OZ_C_proc_begin(sched_cpIterate, 3)
       OZ_Term task = vi_tasks.getNext();
       OZ_Term start_task = OZ_subtree(starts, task);
       OZ_Term dur_task = OZ_subtree(durs, task);
-      if (!start_task || !dur_task) 
+      if (!start_task || !dur_task)  
 	return OZ_typeError(expectedType, 0, "Scheduling applications expect that all task symbols are features of the records denoting the start times and durations.");
       pe.expectIntVarMinMax(OZ_subtree(starts, task));
     }
@@ -214,8 +308,6 @@ OZ_Return CPIteratePropagator::propagate(void)
   xx = x;
   dd = reg_offset;
 
-
-  
   int upFlag = 0;
   int downFlag = 0;
   int disjFlag = 0;
@@ -315,7 +407,8 @@ cploop:
   //////////  
   // sort by descending release date; ie. min(s1) > min(s2) > min(s3) etc.
   //////////  
-  qsort(forCompSet0Up, ts, sizeof(int), compareDescRel);
+//  qsort(forCompSet0Up, ts, sizeof(int), compareDescRel);
+  myqsortDesc(forCompSet0Up, 0, ts-1);
 
   {
   for (int upTask=0; upTask < ts; upTask++) {
@@ -518,7 +611,8 @@ cploop:
   //////////  
   // sort by ascending due date; ie. max(s1)+dur(s1) < max(s2)+dur(s2)
   //////////  
-  qsort(forCompSet0Down, ts, sizeof(int), compareAscDue);
+//  qsort(forCompSet0Down, ts, sizeof(int), compareAscDue);
+  myqsortAsc(forCompSet0Down, 0, ts-1);
 
 
   {
@@ -702,7 +796,7 @@ cploop:
 		}
 	      }
 
-	      lCount++;
+	      lCount++; 
 	    }
 	    else lCount++;
 
@@ -770,7 +864,6 @@ reifiedloop:
     disjFlag = 0;
     goto reifiedloop;
   }
-
 
   return P.leave();
 
