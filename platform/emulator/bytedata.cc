@@ -27,6 +27,11 @@
 // BitData
 // -------------------------------------------------------------------
 
+void BitData::printStream(ostream& out) {
+  int w = getWidth();
+  for (int i=0; i<w; i++) out << ((get(i))?"1":"0");
+}
+
 Bool BitData::equal(BitData *s) {
   if (width != s->width) return 0;
   int size = getSize();
@@ -57,7 +62,7 @@ void BitData::conj(BitData* s) {
 void BitData::disj(BitData* s) {
   Assert(width==s->width);
   int size = getSize();
-  for (int i=0; i<size; i++) data[i] &= s->data[i];
+  for (int i=0; i<size; i++) data[i] |= s->data[i];
 }
 
 // after a negation, we must zero out the highest
@@ -127,6 +132,18 @@ void unmarshalBitString(MsgBuffer*bs,OZ_Term*ret) {
   for (int i=0; i<size; i++) s->getByte(i) = bs->get();
   * ret = makeTaggedConst(s);
   return;
+}
+
+void BitString::printStreamV(ostream &out,int depth = 10) {
+  out << "<BitString \"";
+  printStream(out);
+  out << "\">";
+}
+
+void BitString::printLongStreamV(ostream &out,
+				 int depth=10,int offset=0) {
+  out << "bit string: " << width
+      << " bits at " << this << '.' << endl;
 }
 
 void BitString_init() {
@@ -266,6 +283,11 @@ OZ_BI_define(BIBitString_toList,1,1)
 // ByteData
 // -------------------------------------------------------------------
 
+void ByteData::printStream(ostream& out) {
+  int w = getWidth();
+  for (int i=0; i<w; i++) out << get(i);
+}
+
 Bool ByteData::equal(ByteData *s) {
   if (width != s->width) return 0;
   int size = width;
@@ -301,6 +323,18 @@ void unmarshalByteString(MsgBuffer*bs,OZ_Term*ret) {
 
 void ByteString_init() {
   ByteString::type_id = registerConstExtension(unmarshalByteString);
+}
+
+void ByteString::printStreamV(ostream &out,int depth = 10) {
+  out << "<ByteString \"";
+  printStream(out);
+  out << "\">";
+}
+
+void ByteString::printLongStreamV(ostream &out,
+				  int depth=10,int offset=0) {
+  out << "byte string: " << width
+      << " bytes at " << this << '.' << endl;
 }
 
 ByteString* ByteString::clone() {
@@ -357,7 +391,7 @@ OZ_BI_define(BIByteString_get,2,1)
     return oz_raise(E_ERROR,E_SYSTEM,"ByteString.get",3,
 		    oz_atom("indexOutOfBound"),
 		    OZ_in(0),OZ_in(1));
-  OZ_RETURN((b1->get(i))?OZ_true():OZ_false());
+  OZ_RETURN_INT(b1->get(i));
 } OZ_BI_end
 
 OZ_BI_define(BIByteString_append,2,1)
