@@ -293,7 +293,10 @@ Bool DPMarshaler::marshalObjectStub(OZ_Term term, ConstTerm *objConst)
       //
       ObjectClass *oc = o->getClass();
       GName *gnclass = globalizeConst(oc, bs);
+      Assert(gnclass);
       GName *gnobj = globalizeConst(o, bs);
+      Assert(o->getGName1());
+      Assert(gnobj);
       Assert(o->getTertType() == Te_Manager);
       // No "lazy class" protocol, so it isn't a tertiary:
       // Assert(oc->getTertType() == Te_Manager);
@@ -301,9 +304,8 @@ Bool DPMarshaler::marshalObjectStub(OZ_Term term, ConstTerm *objConst)
       marshalOwnHead(bs, DIF_STUB_OBJECT, o->getIndex());
 
       //
-      Assert(o->getGName1());
-      if (gnobj) marshalGName(bs, gnobj);
-      if (gnclass) marshalGName(bs, gnclass);
+      marshalGName(bs, gnobj);
+      marshalGName(bs, gnclass);
 
       //
       rememberNode(this, bs, term);
@@ -480,11 +482,12 @@ Bool DPMarshaler::processChunk(OZ_Term chunkTerm, ConstTerm *chunkConst)
   if (bs->availableSpace() >= 2*DIFMaxSize + MNumberMaxSize + MGNameMaxSize) {
     SChunk *ch    = (SChunk *) chunkConst;
     GName *gname  = globalizeConst(ch,bs);
+    Assert(gname);
 
     //
     marshalDIF(bs,DIF_CHUNK);
     rememberNode(this, bs, chunkTerm);
-    if (gname) marshalGName(bs, gname);
+    marshalGName(bs, gname);
 
     return (NO);
   } else {
@@ -570,8 +573,9 @@ Bool DPMarshaler::processClass(OZ_Term classTerm, ConstTerm *classConst)
       //
       marshalDIF(bs, DIF_CLASS);
       GName *gn = globalizeConst(cl, bs);
+      Assert(gn);
       rememberNode(this, bs, classTerm);
-      if (gn) marshalGName(bs, gn);
+      marshalGName(bs, gn);
       marshalNumber(bs, cl->getFlags());
       return (NO);
     }
@@ -601,13 +605,14 @@ Bool DPMarshaler::processAbstraction(OZ_Term absTerm, ConstTerm *absConst)
         2*DIFMaxSize + 7*MNumberMaxSize + MGNameMaxSize) {
       //
       GName* gname = globalizeConst(pp, bs);
+      Assert(gname);
 
       //
       marshalDIF(bs, DIF_PROC);
       rememberNode(this, bs, absTerm);
 
       //
-      if (gname) marshalGName(bs, gname);
+      marshalGName(bs, gname);
       marshalNumber(bs, pp->getArity());
       ProgramCounter pc = pp->getPC();
       int gs = pred->getGSize();

@@ -44,9 +44,9 @@ static int line=1, col=0;
 void OZ_error(const char *format, ...)
 {
 #if defined(DEBUG_CHECK)
-//    fprintf(stderr, "Waiting 10 secs... hook up (pid %d)!\n", getpid());
-//    fflush(stderr);
-//    sleep(10);
+   fprintf(stderr, "Waiting 10 secs... hook up (pid %d)!\n", getpid());
+   fflush(stderr);
+   sleep(10);
 #endif
   va_list ap;
   va_start(ap,format);

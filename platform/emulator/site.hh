@@ -99,6 +99,7 @@ public:
   //
   void marshalBaseSite(MarshalerBuffer* buf);
   void marshalBaseSiteForGName(MarshalerBuffer* buf);
+  void marshalBaseSiteForGName(PickleBuffer *buf);
 #ifdef USE_FAST_UNMARSHALER
   void unmarshalBaseSite(MarshalerBuffer* buf);
   void unmarshalBaseSiteGName(MarshalerBuffer* buf);
@@ -161,7 +162,12 @@ public:
   void resetGCFlag() { flags &= ~NSITE_GC_MARK; }
   Bool hasGCFlag() { return (flags & NSITE_GC_MARK); }
   void marshalSite(MarshalerBuffer *buf) { marshalBaseSite(buf); }
-  void marshalSiteForGName(MarshalerBuffer *buf) { marshalBaseSiteForGName(buf); }
+  void marshalSiteForGName(MarshalerBuffer *buf) {
+    marshalBaseSiteForGName(buf);
+  }
+  void marshalSiteForGName(PickleBuffer *buf) {
+    marshalBaseSiteForGName(buf);
+  }
 };
 
 //
