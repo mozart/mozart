@@ -304,7 +304,8 @@ in
 			     width:  0
 			     bd:     0
 			     cursor: TextCursor
-			     font:   StatusFont)}
+			     font:   StatusFont
+			     wrap:   none)}
 	 {self.StatusText tkBind(event:  HelpEvent
 				 action: self # help(StatusHelp))}
 	 {Tk.send pack(self.StatusText side:left padx:2 fill:x expand:yes)}
@@ -1000,7 +1001,7 @@ in
       meth toggleEmacs
 	 case {Cget useEmacsBar} then
 	    Gui,doStatus('Not using Emacs Bar')
-	    {Emacs removeBar}
+	    {Emacs.condSend.interface removeBar}
 	 else
 	    Gui,doStatus('Using Emacs Bar')
 	 end
