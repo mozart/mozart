@@ -346,8 +346,8 @@ define
 		  ToGenerate <- Label|@ToGenerate
 		  TOC <- {Append @TOC [2#Label#@CurrentNode#Title]}
 		  @BibNode = @CurrentNode
-		  Out <- @Out#('<H2><A name='#thread {MakeCDATA Label} end#'>'#
-			       Title#'</A></H2>\n'#VS)
+		  Out <- @Out#('<H1><A name='#thread {MakeCDATA Label} end#'>'#
+			       Title#'</A></H1>\n'#VS)
 		  OzDocToHTML, PopNode(X)
 	       end
 	       OzDocToHTML, EndNode()
@@ -365,10 +365,10 @@ define
 	       Meta <- {NewDictionary}
 	       OzDocToHTML, Batch(M 1)
 	       OzDocToHTML, StartNode(@Title)
-	       Out <- @Out#'<H1 align=center>'#@Title#'</H1>\n'
+	       Out <- @Out#'<H1 align=center class=title>'#@Title#'</H1>\n'
 	       case @Authors of nil then skip
 	       else
-		  Out <- @Out#('\n<H2 align=center>\n'#
+		  Out <- @Out#('\n<H2 align=center class=authors>\n'#
 			       OzDocToHTML, FormatAuthors($)#
 			       '</H2>')
 	       end
@@ -429,7 +429,8 @@ define
 				      end
 				      ': ' Title
 				      fun {$ VS}
-					 '<H1 align=center>'#VS#'</H1>\n'
+					 '<H1 align=center class=part>'#VS#
+					 '</H1>\n'
 				      end
 				      M 1)
 	       OzDocToHTML, Batch(M 2)
@@ -448,7 +449,7 @@ define
 					 @Chapter
 				      end
 				      ' ' Title
-				      fun {$ VS} '<H2>'#VS#'</H2>\n' end
+				      fun {$ VS} '<H1>'#VS#'</H1>\n' end
 				      M 2)
 	       OzDocToHTML, Batch(M 2)
 	       OzDocToHTML, PopNode(X)
@@ -471,7 +472,7 @@ define
 					 {Alpha @Chapter}
 				      end
 				      ' ' Title
-				      fun {$ VS} '<H2>'#VS#'</H2>\n' end
+				      fun {$ VS} '<H1>'#VS#'</H1>\n' end
 				      M 2)
 	       OzDocToHTML, Batch(M 2)
 	       OzDocToHTML, PopNode(X)
@@ -490,7 +491,7 @@ define
 					 end#'.'#@Section
 				      end
 				      ' ' Title
-				      fun {$ VS} '<H3>'#VS#'</H3>\n' end
+				      fun {$ VS} '<H2>'#VS#'</H2>\n' end
 				      M 3)
 	       OzDocToHTML, Batch(M 2)
 	       OzDocToHTML, PopNode(X)
@@ -508,7 +509,7 @@ define
 					 end#'.'#@Section#'.'#@SubSection
 				      end
 				      ' ' Title
-				      fun {$ VS} '<H4>'#VS#'</H4>\n' end
+				      fun {$ VS} '<H3>'#VS#'</H3>\n' end
 				      M 4)
 	       OzDocToHTML, Batch(M 2)
 	       OzDocToHTML, PopNode(X)
@@ -517,7 +518,7 @@ define
 			  OzDocToHTML, Excursion(M.1 $)
 		       else unit
 		       end
-	       Out <- @Out#'<H5>'#Title#'</H5>\n'
+	       Out <- @Out#'<H4>'#Title#'</H4>\n'
 	       OzDocToHTML, Batch(M 2)
 	    %-----------------------------------------------------------
 	    % Paragraphs
