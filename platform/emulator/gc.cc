@@ -168,6 +168,54 @@ DebugCheckT(MemChunks *from);
 #endif
 
 
+/**************************************************
+ *  Dumping of threads
+ **************************************************/
+
+class ThreadList {
+public:
+  static ThreadList *allthreads;
+  ThreadList *next;
+  Thread *elem;
+  ThreadList(Thread *el, ThreadList *nxt): elem(el), next(nxt) {};
+
+  static void add(Thread *t)
+  {
+    allthreads = new ThreadList(t,allthreads);
+  }
+
+  static void dispose()
+  {
+    ThreadList *aux = allthreads;
+    allthreads = NULL;
+    while(aux) {
+      ThreadList *aux1 = aux;
+      aux = aux->next;
+      delete aux1;
+    }
+  }
+
+  static void print()
+  {
+    ThreadList *aux = allthreads;
+    while(aux) {
+      aux->elem->printDebug(NULL,NO);
+      aux = aux->next;
+    }
+  }
+
+};
+
+ThreadList *ThreadList::allthreads = NULL;
+
+
+OZ_C_proc_begin(BIdumpThreads, 0)
+{
+  ThreadList::print();
+  return PROCEED;
+}
+OZ_C_proc_end
+
 /****************************************************************************
  *   Modes of working:
  *     IN_GC: garbage collecting
@@ -1877,6 +1925,7 @@ Thread *Thread::gcThread()
 
   size_t sz = sizeof(Thread);
   Thread *ret = (Thread *) gcRealloc(this,sz);
+  ThreadList::add(ret);
   taskStack.gc(&ret->taskStack);
   GCNEWADDRMSG(ret);
   ptrStack.push(ret,PTR_THREAD);
@@ -2257,7 +2306,7 @@ void checkGC()
 void AM::doGC()
 {
   osBlockSignals();
-
+  ThreadList::dispose();
   Assert(isToplevel());
 
   /* do gc */
@@ -2299,8 +2348,3 @@ OzDebug *OzDebug::gcOzDebug()
   args = gcRefsArray(args);
   return this;
 }
-
-
-#ifdef OUTLINE
-#undef inline
-#endif
