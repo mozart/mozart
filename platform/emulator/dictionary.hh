@@ -50,7 +50,8 @@ public:
     if (table->fullTest()) {
       table = table->doubleDynamicTable();
     }
-    (void) table->add(key,value);
+    Bool ret = table->add(key,value);
+    Assert(ret==OK);
   }
 
   void remove(TaggedRef key)
