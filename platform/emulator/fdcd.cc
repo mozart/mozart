@@ -140,10 +140,9 @@ OZ_C_proc_begin(BIfdConstrDisj, 3)
     return x_items.addSuspFDish();
   }
 
-  TaggedRefPtr new_args = allocateRegs(b_tuple, v_tuple, vp_tuple);
-  x_items.addResSusps(createResSusp(BIfdConstrDisj_body, 3, new_args), fd_any);
-//  FDcurrentTaskSusp->markStable();
-  return BIfdConstrDisj_body(3, new_args);
+  return x_items.spawnPropagator(fd_any, BIfdConstrDisj_body, 3, 
+				 b_tuple, v_tuple, vp_tuple);
+  //  FDcurrentTaskSusp->markStable();
 }
 OZ_C_proc_end 
 

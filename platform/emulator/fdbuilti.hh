@@ -377,6 +377,10 @@ private:
   int simplifyHead(int ts, STuple &a, STuple &x);
 
   int global_vars;
+
+  void addResSusp(int i, Suspension * susp, FDPropState target);
+  void addResSusps(Suspension * susp, FDPropState target);
+
 public:
   BIfdHeadManager(int s) : global_vars(0) {
     DebugCheck(s < 0 || s > MAXFDBIARGS, error("too many items"));
@@ -397,16 +401,6 @@ public:
   Bool expectNonLin(int i, STuple &at, STuple &xt, TaggedRef tagged_xtc,
 		    int &s, OZ_CFun func, RefsArray xregs, int arity);
   
-  void addResSusp(int i, Suspension * susp, FDPropState target);
-  
-  void addResSusps(Suspension * susp, FDPropState target) {
-    for (int i = curr_num_of_items; i--; )
-      addResSusp(i, susp, target);
-    
-    if (global_vars == 0)
-      FDcurrentTaskSusp->markLocalSusp();
-  }
-
   OZ_Bool addSuspFDish(void);
   OZ_Bool addSuspSingl(void);
   Bool addSuspXorYdet(void);
@@ -414,12 +408,6 @@ public:
   int simplify(STuple &a, STuple &x) {
     return curr_num_of_items = simplifyHead(curr_num_of_items, a, x);
   }
-  int simplify(int ts, STuple &a, STuple &x) {
-    DebugCheck(ts > curr_num_of_items,
-	       error("ts must be less or equal to curr_num_of_items."));
-    return simplifyHead(ts, a, x);
-  }
-
   int allOne(void) {
     for (int i = curr_num_of_items; i--; )
       if (bifdhm_coeff[i] != 1 && bifdhm_coeff[i] != -1)
@@ -447,7 +435,11 @@ public:
 			makeTaggedRef(bifdhm_varptr[y]),
 			newSmallInt(c_val));
   }
-  
+
+  OZ_Bool spawnPropagator(FDPropState, OZ_CFun, int, OZ_Term *);
+  OZ_Bool spawnPropagator(FDPropState, FDPropState, OZ_CFun, int, OZ_Term *);
+  OZ_Bool spawnPropagator(FDPropState, OZ_CFun, int, OZ_Term, ...);
+
   Bool areIdentVar(int a, int b) {
     DebugCheck((a < 0 || a >= curr_num_of_items) ||
 	       (b < 0 || b >= curr_num_of_items),
@@ -669,12 +661,6 @@ public:
   OZ_Bool checkAndIntroduce(int i, TaggedRef v);
   
   void reintroduce(int i, TaggedRef v) {
-    int aux = bifdbm_init_dom_size[i];
-    introduce(i, v);
-    bifdbm_init_dom_size[i] = aux;
-  }
-  
-  void reintroduce1(int i, TaggedRef v) {
     int aux = bifdbm_init_dom_size[i];
     introduce(i, v);
     bifdbm_init_dom_size[i] = aux;
