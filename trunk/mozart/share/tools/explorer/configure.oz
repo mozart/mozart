@@ -33,8 +33,6 @@ BitMap       = '@' # BitMapDir # 'explorer.xbm'
 
 MinSizeX     = 500
 MinSizeY     = 300
-DepthWidth   = 120 
-DepthHeight  = 8
 
 %% Configuration of the scale bar
 IntScaleBase    = 256
