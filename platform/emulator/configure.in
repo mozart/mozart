@@ -1693,7 +1693,7 @@ int MaybeJumpHere = -1;
 int engine(void**bytecode)
 {
   static int init = 0;
-  int n;
+  volatile int n;
 
   if (! init) 
     {
