@@ -373,7 +373,7 @@ void patchToFastCall(Abstraction *abstr, ProgramCounter PC, Bool isTailCall)
 inline
 Bool hookCheckNeeded()
 {
-#if defined(DEBUG_DET) || defined(SCHED_COUNTER)
+#if defined(DEBUG_DET)
   static int counter = DET_COUNTER;
   if (--counter < 0) {
     am.handleAlarm(CLOCK_TICK/1000);   // simulate an alarm
