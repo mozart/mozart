@@ -36,12 +36,9 @@ in
 	 make		: MAKE
 	 close		: CLOSE
 	 free		: FREE
-	 readLock	: READLOCK
-	 writeLock	: WRITELOCK
 	 open		: OPEN
 	 socketpair	: SOCKETPAIR
 	 dup		: DUP
-	 fork		: FORK
 	 pipe		: PIPE
 	 getfd		: GETFD
 	 ) @ 'io.so{native}'
@@ -50,27 +47,20 @@ in
       Finalize URL Resolve Exception OS
    export
       is	: IS
-      Make Write Read ReadAsString Open Close SocketPair Dup
-      Fork Run Pipe DevNull Getfd
+      make	: MAKE
+      getfd	: GETFD
+      close	: CLOSE
+      read	: READ
+      socketpair: SOCKETPAIR
+      dup	: DUP
+      Write ReadS ReadSLazy Open Run Pipe DevNull
       Stdin Stdout Stderr
    define
-
-      fun {Getfd X} {GETFD X} end
-
-      fun {Make I}
-	 {MAKE I {NewLock} {NewLock}}
-      end
-
-      proc {Close FD}
-	 lock {WRITELOCK FD} then
-	    lock {READLOCK FD} then {CLOSE FD} end
-	 end
-      end
 
       proc {Write FD X}
 	 B = if {ByteString.is X} then X else {ByteString.make X} end
       in
-	 lock {WRITELOCK FD} then {DoWrite FD B 0} end
+	 {DoWrite FD B 0}
       end
 
       proc {DoWrite FD B I}
@@ -79,26 +69,23 @@ in
 	 if J==unit then skip else {DoWrite FD B J} end
       end
 
-      fun {Read FD}
-	 lock {READLOCK FD} then {READ FD} end
+      proc {ReadS FD STRING}
+	 B = {READ FD}
+      in
+	 if B==unit then STRING=nil else MORE in
+	    {ByteString.toStringWithTail B MORE STRING}
+	    {ReadS FD MORE}
+	 end
       end
 
-      fun {ReadAsString FD}
-	 UNLOCK
-	 fun lazy {Loop}
-	    B = {READ FD}
-	 in
-	    case B==unit then UNLOCK=unit nil else Front Back in
-	       {ByteString.toStringWithTail B Back Front}
-	       {Loop Back}
-	       Front
-	    end
-	 end
+      fun lazy {ReadSLazy FD}
+	 B = {READ FD}
       in
-	 %% acquire and hold the read lock until all input has eventually
-	 %% been (lazily) read.
-	 thread lock {READLOCK FD} then {Wait UNLOCK} end end
-	 {Loop}
+	 if B==unit then nil else STRING MORE in
+	    {ByteString.toStringWithTail B MORE STRING}
+	    {ReadS FD MORE}
+	    STRING
+	 end
       end
 
       proc {Open Spec ?FD}
@@ -124,7 +111,7 @@ in
 	 else
 	    R  = {Resolve.localize Url}
 	 in
-	    FD = try {Make {OPEN R.1 Flags Mode}}
+	    FD = try {OPEN R.1 Flags Mode}
 		 finally
 		    if new=={Label R} then
 		       try {OS.unlink R.1} catch _ then skip end
@@ -134,23 +121,9 @@ in
 	 end
       end
 
-      proc {SocketPair FD1 FD2}
-	 I1 I2
-      in
-	 {SOCKETPAIR I1 I2}
-	 {Make I1 FD1}
-	 {Make I2 FD2}
-      end
-
-      fun {Dup FD}
-	 {Make {DUP FD}}
-      end
-
-      fun {Fork} {FORK} end
-
-      fun {Pipe} I1 I2 in
-	 {PIPE I1 I2}
-	 pipe(read:{Make I1} write:{Make I2})
+      fun {Pipe} RD WR in
+	 {PIPE RD WR}
+	 pipe(read:RD write:WR)
       end
 
       fun {DevNull}
@@ -172,7 +145,7 @@ in
 	    WR=FD {RunProcess {Adjoin Spec process(stdin:RD)} PID}
 	    {CLOSE RD}
 	 [] readWrite then FD1 FD2 in
-	    {SocketPair FD1 FD2}
+	    {SOCKETPAIR FD1 FD2}
 	    FD=FD1 {RunProcess {Adjoin Spec process(stdin:FD2 stdout:FD2)} PID}
 	 [] process   then
 	    FD=PID {RunProcess Spec PID}
@@ -192,9 +165,9 @@ in
 	 IOMAP= L3
       in {PROC.make CMD ARGS IOMAP} end
 
-      Stdin  = {Make 0}
-      Stdout = {Make 1}
-      Stderr = {Make 2}
+      Stdin  = {MAKE 0}
+      Stdout = {MAKE 1}
+      Stderr = {MAKE 2}
 
    end
 end
