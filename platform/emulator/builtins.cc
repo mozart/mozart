@@ -5773,6 +5773,79 @@ OZ_BI_define(BIdelAllFastGroup,1,1)
 
 
 /********************************************************************
+ * Inspecting values (EXPERIMENTAL by mm)
+ ******************************************************************** */
+
+/*
+ * This function should subsume various other hacks, e.g. BIprintname,
+ * Inspect the toplevel of an Oz value
+ *
+ * returns:
+ *  RET     = variable(printName:PN suspensions:SL kind:KIND)
+ *          | ref(N RET)             N = length of reference chain
+ *          | det
+ *  PN      = print name
+ *  SL      = length of susp list
+ *  KIND    = uvar
+ *          | svar
+ *          | future(SUBKIND)
+ *          | generic
+ *  SUBKIND = byNeed(requested)
+ *          | byNeed(FUN)
+ *  FUN     = an null-ary function
+ */
+
+OZ_Term oz_inspect(OZ_Term t)
+{
+  int refCount=0;
+  if (oz_isRef(t)) {
+    OZ_Term *tptr;
+  loop:
+    tptr = tagged2Ref(t);
+    t = *tptr;
+    if (oz_isRef(t)) {
+      refCount++;
+      goto loop;
+    }
+    if (oz_isVariable(t)) {
+      OZ_Term kind;
+      int sl = 0;
+      if (isCVar(t)) {
+        kind = tagged2CVar(t)->inspectV();
+        sl = tagged2CVar(t)->getSuspListLengthV();
+      } else if (isSVar(t)) {
+        kind = OZ_atom("svar");
+        sl = tagged2SVar(t)->getSuspList()->length();
+      } else {
+        Assert(isUVar(t));
+        kind = OZ_atom("uvar");
+      }
+      const char *pn=VariableNamer::getName(makeTaggedRef(tptr));
+      OZ_Term pl = oz_list(OZ_pairAA("printName",pn),
+                           OZ_pairAI("suspensions",sl),
+                           OZ_pairA("kind",kind),
+                           0);
+      OZ_Term ret = OZ_recordInitC("variable",pl);
+      if (refCount!=0) {
+        ret=OZ_mkTupleC("ref",2,OZ_int(refCount),ret);
+      }
+      return ret;
+    }
+  }
+  OZ_Term ret=oz_atom("det");
+  if (refCount) {
+    ret = OZ_mkTupleC("ref",2,OZ_int(refCount),ret);
+  }
+  return ret;
+}
+
+OZ_BI_define(BIinspect, 1, 1)
+{
+  OZ_Term t = OZ_in(0);
+  OZ_RETURN(oz_inspect(t));
+} OZ_BI_end
+
+/********************************************************************
  * Table of builtins
  ******************************************************************** */
 

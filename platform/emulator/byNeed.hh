@@ -42,31 +42,28 @@ public:
   ByNeedVariable(); // mm2: fake compiler
   ByNeedVariable(OZ_Term fun) : GenCVariable(OZ_VAR_BYNEED),function(fun){}
   OZ_Term getFunction() { return function; }
-  void kickLazy(TaggedRef *);
+  void kick(TaggedRef *);
 
-  OZ_Return unifyV(TaggedRef* vPtr,TaggedRef t,ByteCode* scp);
-  OZ_Return validV(TaggedRef* /* vPtr */, TaggedRef /* val */) { return TRUE; }
-  GenCVariable* gcV() { return new ByNeedVariable(*this); }
-  void gcRecurseV() {
+  virtual OZ_Return unifyV(TaggedRef* vPtr,TaggedRef t,ByteCode* scp);
+  virtual OZ_Return validV(TaggedRef* /* vPtr */, TaggedRef /* val */) {
+    return TRUE;
+  }
+  virtual GenCVariable* gcV() { return new ByNeedVariable(*this); }
+  virtual void gcRecurseV() {
     if (function!=0) {
       OZ_collectHeapTerm(function,function);
     }
   }
-  void addSuspV(Suspension, TaggedRef*, int);
-  void disposeV(void) { freeListDispose(this, sizeof(ByNeedVariable)); }
-  void printStreamV(ostream &out,int depth = 10) {
-    OZ_Term f = getFunction();
-    if (f==0) out << "<byNeed requested>";
-    else {
-      out << "<byNeed: ";
-      oz_printStream(f,out,depth-1);
-      out << ">";
-    }
+  virtual void addSuspV(Suspension, TaggedRef*, int);
+  virtual void disposeV(void) {
+    freeListDispose(this, sizeof(ByNeedVariable));
   }
-  void printLongStreamV(ostream &out,int depth = 10,
-                        int offset = 0) {
+  virtual void printStreamV(ostream &out,int depth = 10);
+  virtual void printLongStreamV(ostream &out,int depth = 10,
+                                int offset = 0) {
     printStreamV(out,depth); out << endl;
   }
+  virtual OZ_Term inspectV();
 };
 
 

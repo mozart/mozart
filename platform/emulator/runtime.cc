@@ -30,6 +30,36 @@
 
 #include <stdarg.h>
 
+/*
+ * simplified list generation, e.g.
+ *  oz_list(oz_atom("a"),
+ *          oz_atom("b"),
+ *          oz_atom("c"),
+ *          0)
+ * returns the Oz list [a b c].
+ */
+OZ_Term oz_list(OZ_Term t1, ...)
+{
+  va_list ap;
+  va_start(ap,t1);
+
+  LTuple *lt=new LTuple();
+  OZ_Term ret=makeTaggedLTuple(lt);
+  lt->setHead(t1);
+  while (1) {
+    OZ_Term t2 = va_arg(ap,OZ_Term);
+    if (!t2) break;
+    LTuple *nl=new LTuple();
+    lt->setTail(makeTaggedLTuple(nl));
+    lt=nl;
+    lt->setHead(t2);
+  }
+
+  lt->setTail(oz_nil());
+  va_end(ap);
+  return ret;
+}
+
 int oz_raise(OZ_Term cat, OZ_Term key, char *label, int arity, ...)
 {
   Assert(!oz_isRef(cat));

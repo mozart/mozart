@@ -131,6 +131,7 @@ public:
   {
     out << "<cvar: " << getType() << ">";
   }
+  virtual OZ_Term       inspectV();
   virtual void          printLongStreamV(ostream &out,int depth = 10,
                                          int offset = 0)
   {
