@@ -243,7 +243,6 @@ outerLoop2:
       case FASTCALL:
       case FASTTAILCALL:
       case CALLPROCEDUREREF:
-      case GENFASTCALL:
 	{
 	  AbstractionEntry *ae = (AbstractionEntry *) getAdressArg(PC+1);
 	  Abstraction *ab = ae->getAbstr();
@@ -256,7 +255,6 @@ outerLoop2:
 	}
       case CALLGLOBAL:
       case CALLCONSTANT:
-      case MARSHALLEDFASTCALL:
 	{
 	  int i  = getPosIntArg(PC+2)>>1;
 	  ISREAD_TO(i);
@@ -366,7 +364,6 @@ outerLoop2:
 	BREAK;
 
       case CALLMETHOD:
-      case GENCALL:
 	{
 	  CallMethodInfo *cmi = (CallMethodInfo*)getAdressArg(PC+1);
 	  ISREAD_TO(getWidth(cmi->arity));
@@ -403,10 +400,6 @@ outerLoop2:
 	break;
       case GETSELF:
 	ISWRITE(GETREGARG(PC+1));
-	break;
-      case SETSELF:
-      case SETSELFG:
-	ISREAD(GETREGARG(PC+1));
 	break;
       case GETRETURNX:
       case CREATEVARIABLEX:

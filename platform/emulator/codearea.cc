@@ -507,7 +507,6 @@ void CodeArea::display(ProgramCounter from, int sz, FILE* ofile,
     case CREATEVARIABLEX:
     case CREATEVARIABLEY:
     case GETSELF:
-    case SETSELF:
     case SETSELFG:
     case CLEARY:
       fprintf(ofile, "(%d)\n", regToInt(getRegArg(PC+1)));
@@ -659,7 +658,6 @@ void CodeArea::display(ProgramCounter from, int sz, FILE* ofile,
 	DISPATCH();
       }
 
-    case GENFASTCALL:
     case FASTCALL:
     case FASTTAILCALL:
     case CALLPROCEDUREREF:
@@ -670,7 +668,6 @@ void CodeArea::display(ProgramCounter from, int sz, FILE* ofile,
 	DISPATCH();
       }
 
-    case SETPREDICATEREF:
     case SETPROCEDUREREF:
       {
 	AbstractionEntry *entry = (AbstractionEntry *) getAdressArg(PC+1);
@@ -874,7 +871,6 @@ void CodeArea::display(ProgramCounter from, int sz, FILE* ofile,
       DISPATCH();
 
     case CALLMETHOD:
-    case GENCALL:
       {
 	CallMethodInfo *cmi = (CallMethodInfo*)getAdressArg(PC+1);
 	fprintf(ofile, "(%p[ri:%d l:%s", cmi,cmi->regIndex, toC(cmi->mn));
@@ -884,7 +880,6 @@ void CodeArea::display(ProgramCounter from, int sz, FILE* ofile,
       }
 
     case CALLCONSTANT:
-    case MARSHALLEDFASTCALL:
       {
 	fprintf(ofile, "(%s %d)\n",toC(getTaggedArg(PC+1)),getPosIntArg(PC+2));
 	DISPATCH();
