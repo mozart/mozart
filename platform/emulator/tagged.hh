@@ -83,13 +83,17 @@ const int mallocBase = 0x20000000;
 #ifdef HPUX_700
 const int mallocBase = 0x40000000;
 #else
+#ifdef OSF1_ALPHA
+const long int mallocBase = 0x140000000;
+#else
 const int mallocBase = 0;
+#endif
 #endif
 #endif
 #endif
 
 /* we loose 4 bits for tags */
-const int maxPointer = ((unsigned int)~0 >> tagSize)|mallocBase;
+const long int maxPointer = ((unsigned long int)~0 >> tagSize)|mallocBase;
 
 
 // ------------------------------------------------------

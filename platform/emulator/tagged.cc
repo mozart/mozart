@@ -24,8 +24,8 @@ void initTagged()
   if (p != p1) {
     fprintf(stderr,"\n*******\nError, wrong configuration\n");
     fprintf(stderr,"Try defining\n\n");
-    fprintf(stderr,"\t const int mallocBase = 0x%x;\n\n",
-            (int)p - (int)p1);
+    fprintf(stderr,"\t const long int mallocBase = 0x%lx;\n\n",
+            (long int)p - (long int)p1);
     fprintf(stderr,"in \"tagged.hh\"\n\n");
     exit(1);
   }

@@ -128,7 +128,7 @@ while ((RET = CALL) < 0) {                          \
 { RETURN_ANY_ERROR(OUT,errno,OZ_unixError(errno),"unix"); }
 
 
-#if defined(SUNOS_SPARC) || defined(SOLARIS_SPARC) || defined(LINUX_I486) || defined(HPUX_700) || defined(IRIX5_MIPS) || defined(AIX3_RS6000)
+#if defined(SUNOS_SPARC) || defined(SOLARIS_SPARC) || defined(LINUX_I486) || defined(HPUX_700) || defined(IRIX5_MIPS) || defined(AIX3_RS6000) || defined(OSF1_ALPHA)
 
 static char* h_strerror(const int err) {
   switch (err) {
