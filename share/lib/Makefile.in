@@ -205,7 +205,7 @@ Core.ozf: compiler/Core.oz compiler/Annotate.oz
 
 StaticAnalysis.ozf: compiler/StaticAnalysis.oz compiler/POTypes.oz \
 	Search.ozf FD.ozf FS.ozf
-	$(COMPILE) -l Search=Search.ozf,FD=FD.ozf,FS=FS.ozf \
+	$(COMPILE) -l Search=Search.ozf,FD=FD.ozf,FS=FS.ozf\
 	compiler/StaticAnalysis.oz -o $@
 
 CodeGen.ozf: compiler/CodeGen.oz compiler/CodeStore.oz compiler/CodeEmitter.oz
@@ -216,7 +216,7 @@ Main.ozf: compiler/Main.oz compiler-Env.oz compiler/FormatStrings.oz \
 	compiler/CheckTupleSyntax.oz compiler/Reporter.oz compiler/ParseOz.oz \
 	compiler/CompilerClass.oz compiler/GenericInterface.oz \
 	compiler/QuietInterface.oz compiler/Abstractions.oz \
-	compiler/Errors.oz compiler-Version.oz
+	compiler/Errors.oz compiler-Version.oz 
 
 RunTime.ozf: compiler/RunTime.oz Standard.ozf StandardBuiltins.ozf
 	$(OZC) -l Standard,StandardBuiltins -c $< -o $@
