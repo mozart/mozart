@@ -5382,6 +5382,118 @@ OZ_C_proc_begin(BIfindFunction,3)
 }
 OZ_C_proc_end
 
+// {FindFile R Name ?Fullpath}
+// R is tuple of symbols representing directories
+
+#include <sys/types.h>
+#include <sys/stat.h>
+
+OZ_C_proc_begin(BIFindFile,3)
+{
+  OZ_declareNonvarArg(0,R);
+  OZ_declareVirtualStringArg(1,N);
+  OZ_Term Fullpath = OZ_getCArg(2);
+#define NAMESIZE 256
+  char Name[NAMESIZE];
+  if (!OZ_isTuple(R)) return OZ_typeError(0,"Tuple");
+  int NameLen = strlen(N);
+  if (NameLen>=NAMESIZE)
+    return OZ_raiseErrorC("FindFile",2,OZ_atom("bufferOverflow"),
+			  OZ_getCArg(1));
+  strcpy(Name,N);
+  // Each element of the tuple must be a virtual string
+  // and is interpreted as naming a directory
+  int width = OZ_width(R);
+  char buffer[NAMESIZE];
+  for(int i=0;i<width;i++) {
+    OZ_Term term = OZ_getArg(R,i);
+    if (!OZ_isVirtualString(term,0))
+      return OZ_raiseErrorC("FindFile",2,
+			    OZ_atom("notVirtualString"),
+			    term);
+    char * Dir = OZ_virtualStringToC(term);
+    int DirLen = strlen(Dir);
+    // 1 is for possible additional / to insert
+    if ((NameLen + DirLen + 1)>=NAMESIZE)
+      return OZ_raiseErrorC("FindFile",2,
+			    OZ_atom("bufferOverflow"),
+			    OZ_pair2(term,OZ_getCArg(1)));
+    memcpy(buffer,Dir,DirLen);
+    if (buffer[DirLen-1]!='/') {
+      buffer[DirLen] = '/';
+      DirLen++;
+    }
+    memcpy(buffer+DirLen,Name,NameLen+1);
+    struct stat buf;
+    if (stat(buffer,&buf)==0)
+      return OZ_unify(Fullpath,OZ_atom(buffer));
+  }
+  return OZ_unify(Fullpath,OZ_false());
+}
+OZ_C_proc_end
+
+// {EnvToTuple "PATH" ?Tuple}
+// looks up an environment variable that is supposed to be a list
+// os pathnames separated by ':' and turns it into a tuple appropriate
+// as an argument to FindFile.  If the environment variable does not
+// exist, `false' is returned instead.
+
+OZ_C_proc_begin(BIEnvToTuple,2)
+{
+  OZ_declareVirtualStringArg(0,V);
+  OZ_Term result = OZ_getCArg(1);
+  char * S = getenv(V);
+  if (S==NULL)
+    return OZ_unify(OZ_false(),result);
+  // S is a list of pathnames separated by ':'
+#ifndef NAMESIZE
+#define NAMESIZE 256
+#endif
+  OZ_Term arg[NAMESIZE];
+  int argidx = 0;
+#define QPUSH(T)					\
+  if (argidx<NAMESIZE) {				\
+    arg[argidx++] = T;					\
+  } else {						\
+    return OZ_raiseErrorC("EnvToTuple",2,		\
+			  OZ_atom("tooManyPathnames"),	\
+			  OZ_getCArg(0));		\
+  }
+  char buffer[NAMESIZE];
+  int index;
+split:
+  switch (*S) {
+  case '\0': goto finish;
+  case ':' : QPUSH(OZ_nil()); S++; goto split;
+  case ' ' :
+  case '\t':
+  case '\n': S++; goto split;
+  default  :
+    index = 0;
+    buffer[index++] = *S++;
+    goto splitx;
+  }
+splitx:
+  switch (*S) {
+  case '\0':
+    buffer[index] = '\0';
+    QPUSH(OZ_atom(buffer));
+    goto finish;
+  case ':' :
+    buffer[index] = '\0';
+    QPUSH(OZ_atom(buffer));
+    S++; goto split;
+  default:
+    buffer[index++] = *S++;
+    goto splitx;
+  }
+finish:
+  OZ_Term tuple = OZ_tuple(OZ_atom("env"),argidx);
+  for(int i=0;i<argidx;i++)
+    OZ_putArg(tuple,i,arg[i]);
+  return OZ_unify(result,tuple);
+}
+OZ_C_proc_end
 
 /* ------------------------------------------------------------
  * Shutdown
@@ -7406,6 +7518,9 @@ BIspec allSpec[] = {
 
   {"dlOpen",2,          BIdlOpen,		0},
   {"dlClose",1,         BIdlClose,		0},
+
+  {"FindFile",3,	BIFindFile,		0},
+  {"EnvToTuple",2,	BIEnvToTuple,		0},
 
   {"findFunction",   3, BIfindFunction,		0},
   {"shutdown",       0, BIshutdown,		0},
