@@ -188,7 +188,7 @@ static OZ_Term getApplicationArgs(void) {
 // Handle the case of indexed property P whose value can be
 // found at location L.  Return the corresponding Oz term.
 
-#define CASE_INT( P,L) case P: return oz_int( L)
+#define CASE_INT( P,L) case P: return OZ_int( L)
 #define CASE_BOOL(P,L) case P: return oz_bool(L)
 #define CASE_ATOM(P,L) case P: return oz_atomNoDup(L)
 
@@ -246,7 +246,7 @@ REC__ = SRecord::newSRecord(LAB__,(Arity*)ARY__);
 
 // set feature F or REC__ to appropriate term
 
-#define SET_INT( F,I) SET_REC(F,oz_int( I))
+#define SET_INT( F,I) SET_REC(F,OZ_int( I))
 #define SET_BOOL(F,B) SET_REC(F,oz_bool(B))
 #define SET_ATOM(F,A) SET_REC(F,oz_atom(A))
 
@@ -842,8 +842,10 @@ OZ_Return VirtualProperty::set(OZ_Term) { Assert(0); return FAILED  ; }
 static OZ_Term vprop_registry;
 OZ_Term system_registry;	// eventually make it static [TODO]
 
-void VirtualProperty::add(char * s, int p) {
-  tagged2Dictionary(vprop_registry)->setArg(oz_atomNoDup(s),OZ_int(p));
+inline
+void VirtualProperty::add(const char * s, const int p) {
+  tagged2Dictionary(vprop_registry)->setArg(oz_atomNoDup(s),
+					    newSmallInt(p));
 }
 
 // in addition to the usual OZ_Return values, the following
@@ -937,6 +939,140 @@ OZ_BI_define(BIputProperty,2,0)
   else return status;
 } OZ_BI_end
 
+struct prop_entry {
+  const char * name;
+  enum EmulatorPropertyIndex epi;
+};
+  
+static const struct prop_entry prop_entries[] = {
+  // THREADS
+  {"threads.created",PROP_THREADS_CREATED},
+  {"threads.runnable",PROP_THREADS_RUNNABLE},
+  {"threads.min",PROP_THREADS_MIN},
+  {"threads.max",PROP_THREADS_MAX},
+  {"threads",PROP_THREADS},
+  // PRIORITIES
+  {"priorities.high",PROP_PRIORITIES_HIGH},
+  {"priorities.medium",PROP_PRIORITIES_MEDIUM},
+  {"priorities",PROP_PRIORITIES},
+  // TIME
+  {"time.copy",PROP_TIME_COPY},
+  {"time.gc",PROP_TIME_GC},
+  {"time.propagate",PROP_TIME_PROPAGATE},
+  {"time.run",PROP_TIME_RUN},
+  {"time.system",PROP_TIME_SYSTEM},
+  {"time.total",PROP_TIME_TOTAL},
+  {"time.user",PROP_TIME_USER},
+  {"time.idle",PROP_TIME_IDLE},
+  {"time.detailed",PROP_TIME_DETAILED},
+  {"time",PROP_TIME},
+  // GC
+  {"gc.min",PROP_GC_MIN},
+  {"gc.max",PROP_GC_MAX},
+  {"gc.free",PROP_GC_FREE},
+  {"gc.tolerance",PROP_GC_TOLERANCE},
+  {"gc.on",PROP_GC_ON},
+  {"gc.codeCycles",PROP_GC_CODE_CYCLES},
+  {"gc.threshold",PROP_GC_THRESHOLD},
+  {"gc.size",PROP_GC_SIZE},
+  {"gc.active",PROP_GC_ACTIVE},
+  {"gc",PROP_GC},
+  // PRINT
+  {"print.depth",PROP_PRINT_DEPTH},
+  {"print.width",PROP_PRINT_WIDTH},
+  {"print",PROP_PRINT},
+  // FD
+  {"fd.variables",PROP_FD_VARIABLES},
+  {"fd.propagators",PROP_FD_PROPAGATORS},
+  {"fd.invoked",PROP_FD_INVOKED},
+  {"fd.threshold",PROP_FD_THRESHOLD},
+  {"fd",PROP_FD},
+  // SPACES
+  {"spaces.committed",PROP_SPACES_COMMITTED},
+  {"spaces.cloned",PROP_SPACES_CLONED},
+  {"spaces.created",PROP_SPACES_CREATED},
+  {"spaces.failed",PROP_SPACES_FAILED},
+  {"spaces.succeeded",PROP_SPACES_SUCCEEDED},
+  {"spaces",PROP_SPACES},
+  // ERRORS
+  {"errors.handler",PROP_ERRORS_HANDLER},
+  {"errors.debug",PROP_ERRORS_DEBUG},
+  {"errors.thread",PROP_ERRORS_THREAD},
+  {"errors.depth",PROP_ERRORS_DEPTH},
+  {"errors.width",PROP_ERRORS_WIDTH},
+  {"errors",PROP_ERRORS},
+  // MESSAGES
+  {"messages.gc",PROP_MESSAGES_GC},
+  {"messages.idle",PROP_MESSAGES_IDLE},
+  {"messages",PROP_MESSAGES},
+  // MEMORY
+  {"memory.atoms",PROP_MEMORY_ATOMS},
+  {"memory.names",PROP_MEMORY_NAMES},
+  {"memory.freelist",PROP_MEMORY_FREELIST},
+  {"memory.code",PROP_MEMORY_CODE},
+  {"memory.heap",PROP_MEMORY_HEAP},
+  {"memory",PROP_MEMORY},
+  // LIMITS
+  {"limits.int.min",PROP_LIMITS_INT_MIN},
+  {"limits.int.max",PROP_LIMITS_INT_MAX},
+  {"limits.bytecode.xregisters",
+		       PROP_LIMITS_BYTECODE_XREGISTERS},
+  {"limits",PROP_LIMITS},
+  // APPLICATION
+  {"application.args",PROP_APPLICATION_ARGS},
+  {"application.url",PROP_APPLICATION_URL},
+  {"application.gui",PROP_APPLICATION_GUI},
+  {"application",PROP_APPLICATION},
+  // PLATFORM
+  {"platform.name", PROP_PLATFORM_NAME},
+  {"platform.os",   PROP_PLATFORM_OS},
+  {"platform.arch", PROP_PLATFORM_ARCH},
+  {"platform",      PROP_PLATFORM},
+  // MISC
+  {"oz.standalone",PROP_STANDALONE},
+  {"oz.configure.home",PROP_OZ_CONFIGURE_HOME},
+  {"oz.emulator.home",PROP_OZ_EMULATOR_HOME},
+  {"oz.version",PROP_OZ_VERSION},
+  {"oz.date",PROP_OZ_DATE},
+  // Suspending on SimpleVars raises an exception
+  {"oz.style.useFutures",PROP_OZ_STYLE_USE_FUTURES},
+  // Distribution
+  {"distribution.virtualsites",
+		       PROP_DISTRIBUTION_VIRTUALSITES},
+  // INTERNAL
+  {"internal",PROP_INTERNAL},
+  {"internal.debug",PROP_INTERNAL_DEBUG},
+  {"internal.propLocation",PROP_INTERNAL_PROPLOCATION},
+  {"internal.suspension",PROP_INTERNAL_SUSPENSION},
+  {"internal.stop",PROP_INTERNAL_STOP},
+  {"internal.ip.debug",PROP_INTERNAL_DEBUG_IP},
+  // PERDIO
+  {"perdio.debug",PROP_PERDIO_DEBUG},
+  {"perdio.useAltVarProtocol", 
+		       PROP_PERDIO_USEALTVARPROTOCOL},
+  {"perdio.minimal",PROP_PERDIO_MINIMAL},
+  {"perdio.version",PROP_PERDIO_VERSION},
+  {"perdio.flowbuffersize",PROP_PERDIO_FLOWBUFFERSIZE},
+  {"perdio.flowbuffertime",PROP_PERDIO_FLOWBUFFERTIME},
+  {"perdio.timeout",PROP_PERDIO_TIMEOUT},
+  {"perdio.seifHandler",PROP_PERDIO_SEIFHANDLER},
+  {"perdio",PROP_PERDIO},
+  // DPTABLE
+  {"dpTable.defaultOwnerTableSize",
+		       PROP_DPTABLE_DEFAULTOWNERTABLESIZE},
+  {"dpTable.defaultBorrowTableSize",
+		       PROP_DPTABLE_DEFAULTBORROWTABLESIZE},
+  {"dpTable.lowLimit", PROP_DPTABLE_LOWLIMIT},
+  {"dpTable.expandFactor", PROP_DPTABLE_EXPANDFACTOR},
+  {"dpTable.buffer", PROP_DPTABLE_BUFFER},
+  {"dpTable.worthwhileRealloc",
+		       PROP_DPTABLE_WORTHWHILEREALLOC},
+  {"dpTable", PROP_DPTABLE},
+  //CLOSE
+  {"close.time",PROP_CLOSE_TIME},
+  {0,PROP__LAST},
+};
+
 void initVirtualProperties()
 {
   vprop_registry  = makeTaggedConst(new OzDictionary(oz_rootBoard()));
@@ -948,131 +1084,8 @@ void initVirtualProperties()
     OzDictionary * dict = tagged2Dictionary(system_registry);
     dict->setArg(oz_atomNoDup("oz.home"),oz_atom(ozconf.ozHome));
   }
-  // THREADS
-  VirtualProperty::add("threads.created",PROP_THREADS_CREATED);
-  VirtualProperty::add("threads.runnable",PROP_THREADS_RUNNABLE);
-  VirtualProperty::add("threads.min",PROP_THREADS_MIN);
-  VirtualProperty::add("threads.max",PROP_THREADS_MAX);
-  VirtualProperty::add("threads",PROP_THREADS);
-  // PRIORITIES
-  VirtualProperty::add("priorities.high",PROP_PRIORITIES_HIGH);
-  VirtualProperty::add("priorities.medium",PROP_PRIORITIES_MEDIUM);
-  VirtualProperty::add("priorities",PROP_PRIORITIES);
-  // TIME
-  VirtualProperty::add("time.copy",PROP_TIME_COPY);
-  VirtualProperty::add("time.gc",PROP_TIME_GC);
-  VirtualProperty::add("time.propagate",PROP_TIME_PROPAGATE);
-  VirtualProperty::add("time.run",PROP_TIME_RUN);
-  VirtualProperty::add("time.system",PROP_TIME_SYSTEM);
-  VirtualProperty::add("time.total",PROP_TIME_TOTAL);
-  VirtualProperty::add("time.user",PROP_TIME_USER);
-  VirtualProperty::add("time.idle",PROP_TIME_IDLE);
-  VirtualProperty::add("time.detailed",PROP_TIME_DETAILED);
-  VirtualProperty::add("time",PROP_TIME);
-  // GC
-  VirtualProperty::add("gc.min",PROP_GC_MIN);
-  VirtualProperty::add("gc.max",PROP_GC_MAX);
-  VirtualProperty::add("gc.free",PROP_GC_FREE);
-  VirtualProperty::add("gc.tolerance",PROP_GC_TOLERANCE);
-  VirtualProperty::add("gc.on",PROP_GC_ON);
-  VirtualProperty::add("gc.codeCycles",PROP_GC_CODE_CYCLES);
-  VirtualProperty::add("gc.threshold",PROP_GC_THRESHOLD);
-  VirtualProperty::add("gc.size",PROP_GC_SIZE);
-  VirtualProperty::add("gc.active",PROP_GC_ACTIVE);
-  VirtualProperty::add("gc",PROP_GC);
-  // PRINT
-  VirtualProperty::add("print.depth",PROP_PRINT_DEPTH);
-  VirtualProperty::add("print.width",PROP_PRINT_WIDTH);
-  VirtualProperty::add("print",PROP_PRINT);
-  // FD
-  VirtualProperty::add("fd.variables",PROP_FD_VARIABLES);
-  VirtualProperty::add("fd.propagators",PROP_FD_PROPAGATORS);
-  VirtualProperty::add("fd.invoked",PROP_FD_INVOKED);
-  VirtualProperty::add("fd.threshold",PROP_FD_THRESHOLD);
-  VirtualProperty::add("fd",PROP_FD);
-  // SPACES
-  VirtualProperty::add("spaces.committed",PROP_SPACES_COMMITTED);
-  VirtualProperty::add("spaces.cloned",PROP_SPACES_CLONED);
-  VirtualProperty::add("spaces.created",PROP_SPACES_CREATED);
-  VirtualProperty::add("spaces.failed",PROP_SPACES_FAILED);
-  VirtualProperty::add("spaces.succeeded",PROP_SPACES_SUCCEEDED);
-  VirtualProperty::add("spaces",PROP_SPACES);
-  // ERRORS
-  VirtualProperty::add("errors.handler",PROP_ERRORS_HANDLER);
-  VirtualProperty::add("errors.debug",PROP_ERRORS_DEBUG);
-  VirtualProperty::add("errors.thread",PROP_ERRORS_THREAD);
-  VirtualProperty::add("errors.depth",PROP_ERRORS_DEPTH);
-  VirtualProperty::add("errors.width",PROP_ERRORS_WIDTH);
-  VirtualProperty::add("errors",PROP_ERRORS);
-  // MESSAGES
-  VirtualProperty::add("messages.gc",PROP_MESSAGES_GC);
-  VirtualProperty::add("messages.idle",PROP_MESSAGES_IDLE);
-  VirtualProperty::add("messages",PROP_MESSAGES);
-  // MEMORY
-  VirtualProperty::add("memory.atoms",PROP_MEMORY_ATOMS);
-  VirtualProperty::add("memory.names",PROP_MEMORY_NAMES);
-  VirtualProperty::add("memory.freelist",PROP_MEMORY_FREELIST);
-  VirtualProperty::add("memory.code",PROP_MEMORY_CODE);
-  VirtualProperty::add("memory.heap",PROP_MEMORY_HEAP);
-  VirtualProperty::add("memory",PROP_MEMORY);
-  // LIMITS
-  VirtualProperty::add("limits.int.min",PROP_LIMITS_INT_MIN);
-  VirtualProperty::add("limits.int.max",PROP_LIMITS_INT_MAX);
-  VirtualProperty::add("limits.bytecode.xregisters",
-		       PROP_LIMITS_BYTECODE_XREGISTERS);
-  VirtualProperty::add("limits",PROP_LIMITS);
-  // APPLICATION
-  VirtualProperty::add("application.args",PROP_APPLICATION_ARGS);
-  VirtualProperty::add("application.url",PROP_APPLICATION_URL);
-  VirtualProperty::add("application.gui",PROP_APPLICATION_GUI);
-  VirtualProperty::add("application",PROP_APPLICATION);
-  // PLATFORM
-  VirtualProperty::add("platform.name", PROP_PLATFORM_NAME);
-  VirtualProperty::add("platform.os",   PROP_PLATFORM_OS);
-  VirtualProperty::add("platform.arch", PROP_PLATFORM_ARCH);
-  VirtualProperty::add("platform",      PROP_PLATFORM);
-  // MISC
-  VirtualProperty::add("oz.standalone",PROP_STANDALONE);
-  VirtualProperty::add("oz.configure.home",PROP_OZ_CONFIGURE_HOME);
-  VirtualProperty::add("oz.emulator.home",PROP_OZ_EMULATOR_HOME);
-  VirtualProperty::add("oz.version",PROP_OZ_VERSION);
-  VirtualProperty::add("oz.date",PROP_OZ_DATE);
-  // Suspending on SimpleVars raises an exception
-  VirtualProperty::add("oz.style.useFutures",PROP_OZ_STYLE_USE_FUTURES);
-  // Distribution
-  VirtualProperty::add("distribution.virtualsites",
-		       PROP_DISTRIBUTION_VIRTUALSITES);
-  // INTERNAL
-  VirtualProperty::add("internal",PROP_INTERNAL);
-  VirtualProperty::add("internal.debug",PROP_INTERNAL_DEBUG);
-  VirtualProperty::add("internal.propLocation",PROP_INTERNAL_PROPLOCATION);
-  VirtualProperty::add("internal.suspension",PROP_INTERNAL_SUSPENSION);
-  VirtualProperty::add("internal.stop",PROP_INTERNAL_STOP);
-  VirtualProperty::add("internal.ip.debug",PROP_INTERNAL_DEBUG_IP);
-  // PERDIO
-  VirtualProperty::add("perdio.debug",PROP_PERDIO_DEBUG);
-  VirtualProperty::add("perdio.useAltVarProtocol", 
-		       PROP_PERDIO_USEALTVARPROTOCOL);
-  VirtualProperty::add("perdio.minimal",PROP_PERDIO_MINIMAL);
-  VirtualProperty::add("perdio.version",PROP_PERDIO_VERSION);
-  VirtualProperty::add("perdio.flowbuffersize",PROP_PERDIO_FLOWBUFFERSIZE);
-  VirtualProperty::add("perdio.flowbuffertime",PROP_PERDIO_FLOWBUFFERTIME);
-  VirtualProperty::add("perdio.timeout",PROP_PERDIO_TIMEOUT);
-  VirtualProperty::add("perdio.seifHandler",PROP_PERDIO_SEIFHANDLER);
-  VirtualProperty::add("perdio",PROP_PERDIO);
-  // DPTABLE
-  VirtualProperty::add("dpTable.defaultOwnerTableSize",
-		       PROP_DPTABLE_DEFAULTOWNERTABLESIZE);
-  VirtualProperty::add("dpTable.defaultBorrowTableSize",
-		       PROP_DPTABLE_DEFAULTBORROWTABLESIZE);
-  VirtualProperty::add("dpTable.lowLimit", PROP_DPTABLE_LOWLIMIT);
-  VirtualProperty::add("dpTable.expandFactor", PROP_DPTABLE_EXPANDFACTOR);
-  VirtualProperty::add("dpTable.buffer", PROP_DPTABLE_BUFFER);
-  VirtualProperty::add("dpTable.worthwhileRealloc",
-		       PROP_DPTABLE_WORTHWHILEREALLOC);
-  VirtualProperty::add("dpTable", PROP_DPTABLE);
-  //CLOSE
-  VirtualProperty::add("close.time",PROP_CLOSE_TIME);
+  for (const struct prop_entry * pe = prop_entries; pe->name; pe++)
+    VirtualProperty::add(pe->name,pe->epi);
 }
 
 

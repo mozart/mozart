@@ -495,7 +495,9 @@ TaggedRef SRecord::normalize(void) {
   return makeTaggedSRecord(this);
 }
 
-
+TaggedRef SRecord::getFeature(TaggedRef f) {
+  return getFeatureInline(f);
+}
 
 /************************************************************************/
 /*			Useful Stuff: Lists				*/
