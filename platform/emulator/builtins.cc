@@ -5298,7 +5298,7 @@ OZ_C_proc_end
 
 OZ_C_proc_begin(BIdlClose,1)
 {
-  oz_declareIntArg(0,handle);
+  OZ_declareForeignPointerArg(0,handle);
 
   return osDlclose(handle);
 }
@@ -5309,11 +5309,11 @@ OZ_C_proc_begin(BIfindFunction,3)
 {
   oz_declareVirtualStringArg(0,functionName);
   oz_declareIntArg(1,functionArity);
-  oz_declareIntArg(2,handle);
+  OZ_declareForeignPointerArg(2,handle);
 
   // get the function
   OZ_CFun func;
-  if ((func = (OZ_CFun) osDlsym((void *) handle,functionName)) == 0) {
+  if ((func = (OZ_CFun) osDlsym(handle,functionName)) == 0) {
 #ifdef WINDOWS
     OZ_warning("error=%d\n",GetLastError());
 #endif
@@ -5328,28 +5328,29 @@ OZ_C_proc_begin(BIfindFunction,3)
 }
 OZ_C_proc_end
 
-OZ_C_proc_begin(BIfindInterface,2)
+OZ_C_proc_begin(BIdlLoad,3)
 {
-  oz_declareIntArg(0,handle);
-  oz_declareArg(1,module);
+  oz_declareVirtualStringArg(0,filename);
+  oz_declareArg(1,handlePtr);
+  oz_declareArg(2,module);
+  OZ_Return res = osDlopen(filename,handlePtr);
+  if (res!=PROCEED) return res;
+  void* handle = OZ_getForeignPointer(handlePtr);
   OZ_C_proc_interface * I;
-  I = (OZ_C_proc_interface *) osDlsym((void*)handle,"oz_interface");
+  I = (OZ_C_proc_interface *) osDlsym(handle,"oz_interface");
   if (I==0)
-    return oz_raise(E_ERROR, oz_atom("foreign"), "cannotFindInterface", 2,
-		    OZ_getCArg(0), 
-		    OZ_getCArg(1));
+    return oz_raise(E_ERROR,AtomForeign, "cannotFindInterface", 1,
+		    OZ_getCArg(0));
   OZ_Term l = nil();
   OZ_CFun func;
   BuiltinTabEntry *bi;
   while (I->name) {
-    func = (OZ_CFun) osDlsym((void*)handle,I->name);
+    func = (OZ_CFun) osDlsym(handle,I->name);
     if (func==0)
-      return oz_raise(E_ERROR, oz_atom("foreign"),
-		      "cannotFindInterfaceFunction", 1,
-		      oz_atom(I->name));
-    OZ_addBuiltin(ozstrdup(I->name),I->arity,*func);
-    bi = builtinTab.find(I->name);
-    Assert(bi!=htEmpty);
+      return oz_raise(E_ERROR,AtomForeign,
+		      "cannotFindInterfaceFunction", 2,
+		      OZ_getCArg(0), oz_atom(I->name));
+    bi = new BuiltinTabEntry(I->name,I->arity,*func,(IFOR)NULL);
     l = cons(oz_pairA(I->name,makeTaggedConst(bi)),l);
     I++;
   }
@@ -7282,7 +7283,8 @@ BIspec allSpec[] = {
   {"dlOpen",2,          BIdlOpen,		0},
   {"dlClose",1,         BIdlClose,		0},
   {"findFunction",   3, BIfindFunction,		0},
-  {"findInterface",  2, BIfindInterface,        0},
+  {"dlLoad",         3, BIdlLoad,               0},
+
   {"shutdown",       1, BIshutdown,		0},
 
   {"Alarm",          2, BIalarm,		0},
