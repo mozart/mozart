@@ -570,7 +570,7 @@ ProgramCounter unmarshalCode(MsgBuffer *bs, Bool discard)
 
     default: Assert(0); break;
     }
-    if (op == DEBUGENTRY) {
+    if (op==DEBUGENTRY && discard==NO) {
       TaggedRef file = getTaggedArg(lastPC+1);
       int line = smallIntValue(getNumberArg(lastPC+2));
       CodeArea::writeDebugInfo(lastPC,file,line);
