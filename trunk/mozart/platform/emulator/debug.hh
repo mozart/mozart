@@ -114,4 +114,4 @@ void tracerOff();
 OZ_C_proc_proto(BIhalt)
 #endif
 
-#endif
+#endif /* __DEBUGH */

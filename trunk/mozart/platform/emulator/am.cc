@@ -1944,7 +1944,7 @@ Thread *AM::mkLTQ(Board *bb, int prio, SolveActor * sa)
   Thread *th = new Thread(S_RTHREAD | T_runnable | T_ltq,prio,bb,newId());
   th->setBody(allocateBody());
   bb->incSuspCount();
-  checkDebug(th);
+  checkDebug(th,bb);
   Assert(isCurrentBoard(bb));
   Assert(isInSolveDebug(bb));
 
