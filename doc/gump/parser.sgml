@@ -390,21 +390,19 @@
 	    <List>
 	      <Entry><<'prec'(?{A})>>
 	      <Item>
-		<P.silent><!--**-->
-		  By inserting an application of <<prec>> into a sequence,
-		  the latter is assigned an associativity and a precedence.
-		  These are taken from the token&nbsp;<Var type=meta>A</Var>.
-		  Sequences that contain no application of <<prec>> inherit
-		  the values of the last token used in the sequence if there
-		  is one, and have no associated associativity and precedence
-		  otherwise.
+		By inserting an application of <<prec>> into a sequence,
+		the latter is assigned an associativity and a precedence.
+		These are taken from the token&nbsp;<Var type=meta>A</Var>.
+		Sequences that contain no application of <<prec>> inherit
+		the values of the last token used in the sequence if there
+		is one, and have no associated associativity and precedence
+		otherwise.
 	      <Entry><<'error'>>
 	      <Item>
-		<P.silent><!--**-->
-		  The application of the predefined terminal <<'error'>>
-		  defines a restart point for error recovery.  Consult
-		  the &bison; manual&nbsp;<Ptr to="donellystallman95"
-		  info="Node `Error Recovery'"> for additional information.
+		The application of the predefined terminal <<'error'>>
+		defines a restart point for error recovery.  Consult
+		the &bison; manual&nbsp;<Ptr to="donellystallman95"
+		info="Node `Error Recovery'"> for additional information.
 	    </List>
 	  <P>
 	    An assignment equates a variable with the value of an EBNF
@@ -451,23 +449,18 @@
 	    parts:
 	    <List enum>
 	      <Item>
-		<P.silent><!--**-->
-		  whether the production template is an expression or a
-		  statement when it is instantiated (expressions being denoted
-		  by <<V=&ellipsis;>> or <<$=&ellipsis>>; in the head);
+		whether the production template is an expression or a
+		statement when it is instantiated (expressions being denoted
+		by <<V=&ellipsis;>> or <<$=&ellipsis>>; in the head);
 	      <Item>
-		<P.silent><!--**-->
-		  the optional identification name of the template, written
-		  before a colon;
+		the optional identification name of the template, written
+		before a colon;
 	      <Item>
-		<P.silent><!--**-->
-		  the used parentheses, brackets or braces, if any;
+		the used parentheses, brackets or braces, if any;
 	      <Item>
-		<P.silent><!--**-->
-		  the number of arguments, all being separated by <<//>>; and
+		the number of arguments, all being separated by <<//>>; and
 	      <Item>
-		<P.silent><!--**-->
-		  the used postfix operator, if any.
+		the used postfix operator, if any.
 	    </List>
 	  <P>
 	    For example, you could define the commonly used notation
@@ -542,34 +535,28 @@
 	    avoided.  This is why the expansion proceeds in several steps:
 	    <List>
 	      <Item>
-		<P.silent><!--**-->
-		  The local variables of the template are uniquely renamed,
-		  both in the body's EBNF phrase as well as in the local rules.
+		The local variables of the template are uniquely renamed,
+		both in the body's EBNF phrase as well as in the local rules.
 	      <Item>
-		<P.silent><!--**-->
-		  The local rules are uniquely renamed to avoid confusion with
-		  other rules in the parser specification.
+		The local rules are uniquely renamed to avoid confusion with
+		other rules in the parser specification.
 	      <Item>
-		<P.silent><!--**-->
-		  The actual EBNF phrases are substituted for the parameter
-		  variables of the production template.  The formal parameter
-		  variables may only occur as applications of grammar symbols
-		  and may either be applied with a single actual parameter or
-		  none at all.  If the parameter is given, then the actual
-		  EBNF phrase must be an expression whose value is unified
-		  with the application's actual parameter.
+		The actual EBNF phrases are substituted for the parameter
+		variables of the production template.  The formal parameter
+		variables may only occur as applications of grammar symbols
+		and may either be applied with a single actual parameter or
+		none at all.  If the parameter is given, then the actual
+		EBNF phrase must be an expression whose value is unified
+		with the application's actual parameter.
 	      <Item>
-		<P.silent><!--**-->
-		  The local rules are quantified over the local variables used
-		  in actual EBNF phrases of the instantiation by adding these
-		  as parameters.
+		The local rules are quantified over the local variables used
+		in actual EBNF phrases of the instantiation by adding these
+		as parameters.
 	      <Item>
-		<P.silent><!--**-->
-		  The local rules are aded to the table of grammar symbols.
+		The local rules are aded to the table of grammar symbols.
 	      <Item>
-		<P.silent><!--**-->
-		  The template instantiation is replaced by the body's EBNF
-		  phrase from the production template's definition.
+		The template instantiation is replaced by the body's EBNF
+		phrase from the production template's definition.
 	    </List>
 	<SubSubSection>
 	  <Title/Predefined Production Templates/
@@ -582,39 +569,39 @@
 	    constructs yield Oz lists of their first argument.
 	    <Figure float id="table.parser.predef" class=table>
 	      <Caption>Predefined production templates.</Caption>
-	      <P><!--**-->
-	      <Table>
-		<TR>
-		  <TD>Grouping
-		  <TD><<( ?{A} )>>
-		<TR>
-		  <TD>Option
-		  <TD><<[ ?{A} ]>>
-		<TR>
-		  <TD>Mandatory Repetition
-		  <TD>
-		    <P.silent><!--**--><<?{A}+>>
-		    <P><<( ?{A} )+>>
-		    <P><<{ ?{A} }+>>
-		<TR>
-		  <TD>Optional Repetition
-		  <TD>
-		    <P.silent><!--**--><<?{A}*>>
-		    <P><<( ?{A} )*>>
-		    <P><<{ ?{A} }*>>
-		<TR>
-		  <TD>Mandatory Separated Repetition
-		  <TD>
-		    <P.silent><!--**--><<( ?{A} // ?{B} )+>>
-		    <P><<( ?{A} // ?{B} )>>
-		    <P><<{ ?{A} // ?{B} }+>>
-		    <P><<{ ?{A} // ?{B} }>>
-		<TR>
-		  <TD>Optional Repetition
-		  <TD>
-		    <P.silent><!--**--><<( ?{A} // ?{B} )*>>
-		    <P><<{ ?{A} // ?{B} }*>>
-	      </Table>
+	      <P>
+		<Table>
+		  <TR>
+		    <TD>Grouping
+		    <TD><<( ?{A} )>>
+		  <TR>
+		    <TD>Option
+		    <TD><<[ ?{A} ]>>
+		  <TR>
+		    <TD>Mandatory Repetition
+		    <TD>
+		      <P.silent><!--**--><<?{A}+>>
+		      <P><<( ?{A} )+>>
+		      <P><<{ ?{A} }+>>
+		  <TR>
+		    <TD>Optional Repetition
+		    <TD>
+		      <P.silent><!--**--><<?{A}*>>
+		      <P><<( ?{A} )*>>
+		      <P><<{ ?{A} }*>>
+		  <TR>
+		    <TD>Mandatory Separated Repetition
+		    <TD>
+		      <P.silent><!--**--><<( ?{A} // ?{B} )+>>
+		      <P><<( ?{A} // ?{B} )>>
+		      <P><<{ ?{A} // ?{B} }+>>
+		      <P><<{ ?{A} // ?{B} }>>
+		  <TR>
+		    <TD>Optional Repetition
+		    <TD>
+		      <P.silent><!--**--><<( ?{A} // ?{B} )*>>
+		      <P><<{ ?{A} // ?{B} }*>>
+		</Table>
 	    </Figure>
 	<SubSubSection>
 	  <Title/Assignment of Attribute Types/
@@ -648,39 +635,35 @@
 	    their uses in applications of grammar symbols:
 	    <List>
 	      <Item>
-		<P.silent><!--**-->
-		  The (optional) parameter of a terminal always is a
-		  synthesized attribute (since the scanner always produces
-		  the token value).
+		The (optional) parameter of a terminal always is a
+		synthesized attribute (since the scanner always produces
+		the token value).
 	      <Item>
-		<P.silent><!--**-->
-		  Let the <Var type=meta>i</Var>th actual parameter of an
-		  application of a grammar symbol&nbsp;<Var type=meta>B</Var>
-		  be either an uninitialized local variable&nbsp;<Var type=meta
-		  >V</Var> or a nesting marker.  Then the <Var type=meta
-		  >i</Var>th formal parameter of&nbsp;<Var type=meta>B</Var>
-		  is a synthesized attribute.  Furthermore, <Var type=meta
-		  >V</Var>&nbsp;may not occur in any other actual parameter
-		  of the application.
+		Let the <Var type=meta>i</Var>th actual parameter of an
+		application of a grammar symbol&nbsp;<Var type=meta>B</Var>
+		be either an uninitialized local variable&nbsp;<Var type=meta
+		>V</Var> or a nesting marker.  Then the <Var type=meta
+		>i</Var>th formal parameter of&nbsp;<Var type=meta>B</Var>
+		is a synthesized attribute.  Furthermore, <Var type=meta
+		>V</Var>&nbsp;may not occur in any other actual parameter
+		of the application.
 	      <Item>
-		<P.silent><!--**-->
-		  Let the <Var type=meta>i</Var>th actual parameter of an
-		  application of a grammar symbol&nbsp;<Var type=meta>B</Var>
-		  be either an initialized local variable&nbsp;<Var type=meta
-		  >V</Var> or a complex &Oz; expression (&ie;, neither a
-		  variable nor a nesting marker).  Then the <Var type=meta
-		  >i</Var>th formal parameter of&nbsp;<Var type=meta>B</Var>
-		  is an inherited attribute.  Furthermore, no uninitialized
-		  variable may occur in said actual parameter.
+		Let the <Var type=meta>i</Var>th actual parameter of an
+		application of a grammar symbol&nbsp;<Var type=meta>B</Var>
+		be either an initialized local variable&nbsp;<Var type=meta
+		>V</Var> or a complex &Oz; expression (&ie;, neither a
+		variable nor a nesting marker).  Then the <Var type=meta
+		>i</Var>th formal parameter of&nbsp;<Var type=meta>B</Var>
+		is an inherited attribute.  Furthermore, no uninitialized
+		variable may occur in said actual parameter.
 	      <Item>
-		<P.silent><!--**-->
-		  If a formal parameter of the syntax rule for a
-		  nonterminal&nbsp;<Var type=meta>A</Var> is used as actual
-		  parameter of an application of a nonterminal&nbsp;<Var
-		  type=meta>B</Var>, then the corresponding formal parameters
-		  of <Var type=meta>A</Var> and&nbsp;<Var type=meta>B</Var>
-		  are attributes of the same type, &ie;, either both
-		  synthesized or both inherited.
+		If a formal parameter of the syntax rule for a
+		nonterminal&nbsp;<Var type=meta>A</Var> is used as actual
+		parameter of an application of a nonterminal&nbsp;<Var
+		type=meta>B</Var>, then the corresponding formal parameters
+		of <Var type=meta>A</Var> and&nbsp;<Var type=meta>B</Var>
+		are attributes of the same type, &ie;, either both
+		synthesized or both inherited.
 	    </List>
 	    Note that nothing can be concluded from the use of a formal
 	    parameter variable in a semantic action, since Oz does not
@@ -699,21 +682,21 @@
 	before a parser specification.
 	<Figure float id="table.parser.params" class=table>
 	  <Caption>Compiler switches for the &Gump; Parser Generator.</Caption>
-	  <P><!--**-->
-	  <Table>
-	    <TR>
-	      <TH>Switch
-	      <TH>Effect
-	    <TR>
-	      <TD><Code><Span class=ignore>\switch +</Span
-		>gumpparseroutputsimplified</Code>
-	      <TD>create the <File/.simplified/ file with the BNF version
-		of the grammar
-	    <TR>
-	      <TD><Code><Span class=ignore>\switch +</Span>verbose</Code>
-	      <TD>create the <File/.output/ file with the Bison verbose
-		output
-	  </Table>
+	  <P>
+	    <Table>
+	      <TR>
+		<TH>Switch
+		<TH>Effect
+	      <TR>
+		<TD><Code><Span class=ignore>\switch +</Span
+		  >gumpparseroutputsimplified</Code>
+		<TD>create the <File/.simplified/ file with the BNF version
+		  of the grammar
+	      <TR>
+		<TD><Code><Span class=ignore>\switch +</Span>verbose</Code>
+		<TD>create the <File/.output/ file with the Bison verbose
+		  output
+	    </Table>
 	</Figure>
     <SubSection id="section.parser.class">
       <Title/The Mixin Class <<GumpParser.'class'>>/
@@ -733,9 +716,8 @@
 	<List>
 	  <Entry><<meth synExecuteAction(?+{I})>>
 	  <Item>
-	    <P.silent><!--**-->
-	      This method is invoked each time a reduction takes place.
-	      The parameter&nbsp;<<I>> is the number of the rule reduced.
+	    This method is invoked each time a reduction takes place.
+	    The parameter&nbsp;<<I>> is the number of the rule reduced.
 	</List>
       <P>
 	<<GumpParser.'class'>> defines several attributes and methods that
@@ -744,78 +726,66 @@
 	<List>
 	  <Entry><<attr lookaheadSymbol>>
 	  <Item>
-	    <P.silent><!--**-->
-	      This contains the token class of the current lookahead symbol.
+	    This contains the token class of the current lookahead symbol.
 	  <Entry><<attr lookaheadValue>>
 	  <Item>
-	    <P.silent><!--**-->
-	      This contains the token value of the current lookahead symbol.
+	    This contains the token value of the current lookahead symbol.
 	  <Entry><<feat noLookahead>>
 	  <Item>
-	    <P.silent><!--**-->
-	      This is the value <<lookaheadSymbol>> should be set to if you
-	      want to skip a token from inside a semantic action.
+	    This is the value <<lookaheadSymbol>> should be set to if you
+	    want to skip a token from inside a semantic action.
 	  <Entry><<meth init(?+{P})>>
 	  <Item>
-	    <P.silent><!--**-->
-	      This initializes the internal structures of the
-	      <<GumpParser.'class'>> and connects it to a scanner&nbsp;<<P>>.
-	      <<P>>&nbsp;must at least understand the messages <<putToken>> and
-	      <<getToken>> as described in <Ptr to="section.scanner.class">.
+	    This initializes the internal structures of the
+	    <<GumpParser.'class'>> and connects it to a scanner&nbsp;<<P>>.
+	    <<P>>&nbsp;must at least understand the messages <<putToken>> and
+	    <<getToken>> as described in <Ptr to="section.scanner.class">.
 	  <Entry><<meth parse(?+{T} ??{B})>>
 	  <Item>
-	    <P.silent><!--**-->
-	      This methods initates a parse.  The label of tuple&nbsp;<<T>>
-	      denotes the start symbol to use (which must be a declared
-	      nonterminal named by an atom); its features correspond to
-	      the parameters of the corresponding syntax rule.  Values of
-	      inherited attributes are extracted from this tuple, values
-	      of synthesized attributes are unified with the corresponding
-	      features after the parse is finished (successfully).  The
-	      parameter&nbsp;<<B>> is unified with <<true>> if the parse was
-	      successful and with <<false>> otherwise.
+	    This methods initates a parse.  The label of tuple&nbsp;<<T>>
+	    denotes the start symbol to use (which must be a declared
+	    nonterminal named by an atom); its features correspond to
+	    the parameters of the corresponding syntax rule.  Values of
+	    inherited attributes are extracted from this tuple, values
+	    of synthesized attributes are unified with the corresponding
+	    features after the parse is finished (successfully).  The
+	    parameter&nbsp;<<B>> is unified with <<true>> if the parse was
+	    successful and with <<false>> otherwise.
 	  <Entry><<meth accept()>>
 	  <Item>
-	    <P.silent><!--**-->
-	      By calling this method the parse is interrupted and success
-	      reported.  (Note that the values of synthesized attributes of
-	      the start symbol given to <<parse>> are not influenced by this.)
+	    By calling this method the parse is interrupted and success
+	    reported.  (Note that the values of synthesized attributes of
+	    the start symbol given to <<parse>> are not influenced by this.)
 	  <Entry><<meth abort()>>
 	  <Item>
-	    <P.silent><!--**-->
-	      By calling this method the parse is interrupted and failure
-	      reported.  (Note that the <<error>> method is not called.)
+	    By calling this method the parse is interrupted and failure
+	    reported.  (Note that the <<error>> method is not called.)
 	  <Entry><<meth raiseError()>>
 	  <Item>
-	    <P.silent><!--**-->
-	      This method places the parser in the same state as if a syntax
-	      error had been found in the input.  Normal error recovery is
-	      attempted.  The method <<error>> is not called.
+	    This method places the parser in the same state as if a syntax
+	    error had been found in the input.  Normal error recovery is
+	    attempted.  The method <<error>> is not called.
 	  <Entry><<meth errorOK()>>
 	  <Item>
-	    <P.silent><!--**-->
-	      When a production with a restart point (token <<error>>) is
-	      reduced, this method may be called to tell the parser that the
-	      error recovery process is finished and normal parsing may be
-	      resumed.
+	    When a production with a restart point (token <<error>>) is
+	    reduced, this method may be called to tell the parser that the
+	    error recovery process is finished and normal parsing may be
+	    resumed.
 	  <Entry><<meth clearLookahead()>>
 	  <Item>
-	    <P.silent><!--**-->
-	      When a production with a restart point (token <<error>>) is
-	      reduced, this method may be called to clear the lookahead token
-	      (if, for example, it was used to synchronize to the restart
-	      point and is not legal thereafter).
+	    When a production with a restart point (token <<error>>) is
+	    reduced, this method may be called to clear the lookahead token
+	    (if, for example, it was used to synchronize to the restart
+	    point and is not legal thereafter).
 	  <Entry><<meth error(?+{V})>>
 	  <Item>
-	    <P.silent><!--**-->
-	      This method is always invoked when (during normal parsing) an
-	      error in the input is recognized.  It is handed a diagnostic
-	      message in&nbsp;<<V>>.  This method may be overridden in derived
-	      classes.
+	    This method is always invoked when (during normal parsing) an
+	    error in the input is recognized.  It is handed a diagnostic
+	    message in&nbsp;<<V>>.  This method may be overridden in derived
+	    classes.
 	  <Entry><<meth getScanner(??{P})>>
 	  <Item>
-	    <P.silent><!--**-->
-	      Returns the scanner object or procedure&nbsp;<<P>> currently
-	      used as the token source.
+	    Returns the scanner object or procedure&nbsp;<<P>> currently
+	    used as the token source.
 	</List>
 </Chapter>
