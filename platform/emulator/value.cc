@@ -177,7 +177,7 @@ TaggedRef Object::attachThread()
   return head(*aux);
 }
 
-Abstraction *Object::getMethod(TaggedRef label, int arity)
+Abstraction *Object::getMethod(TaggedRef label, SRecordArity arity)
 {
   SRecord *methods = getMethods();
   TaggedRef method = methods ? methods->getFeature(label)
@@ -188,7 +188,7 @@ Abstraction *Object::getMethod(TaggedRef label, int arity)
   Assert(!isRef(method) && isAbstraction(method));
   
   Abstraction *abstr = (Abstraction*) tagged2Const(method);
-  if (abstr->getArity() != arity) {
+  if (!sameSRecordArity(abstr->getMethodArity(),arity)) {
     return NULL;
   }
   
