@@ -250,13 +250,14 @@ define
 	 {self mogul_trace_package(R vs:VS file:F)}
       end
 
-      meth mogul_trace_package(P vs:VS0<=unit file:F0<=unit)
+      meth mogul_trace_package(P vs:VS0<=unit file:F0<=unit print:PR<=false)
 	 VS = if VS0==unit then {self ToMogulPackageEntry(P $)} else VS0 end
 	 F  = if F0==unit then nil else ' [ '#F0#' ] ' end
+	 TR = if PR then print else ptrace end
       in
-	 {self ptrace({self format_title(F $)})}
-	 {self ptrace(VS)}
-	 {self ptrace({self format_dashes($)})}
+	 {self TR({self format_title(F $)})}
+	 {self TR(VS)}
+	 {self TR({self format_dashes($)})}
       end
 
       meth mogul_export_contact(C)
@@ -269,13 +270,14 @@ define
 	 {self mogul_trace_contact(C vs:VS file:F)}
       end
 
-      meth mogul_trace_contact(C vs:VS0<=unit file:F0<=unit)
+      meth mogul_trace_contact(C vs:VS0<=unit file:F0<=unit print:PR<=false)
 	 VS = if VS0==unit then {self ToMogulContactEntry(C $)} else VS0 end
 	 F  = if F0==unit then nil else ' [ '#F0#' ] ' end
+	 TR = if PR then print else ptrace end
       in
-	 {self ptrace({self format_title(F $)})}
-	 {self ptrace(VS)}
-	 {self ptrace({self format_dashes($)})}
+	 {self TR({self format_title(F $)})}
+	 {self TR(VS)}
+	 {self TR({self format_dashes($)})}
       end
 
       meth mogul_validate_id(ID)
@@ -364,16 +366,17 @@ define
 	 {self decr}
       end
 
-      meth mogul()
+      meth mogul(Targets)
 	 case {self get_mogul_action($)}
 	 of put      then {self mogul_put}
-	 %[] db       then {self mogul_db_list}
+	 [] delete   then {self mogul_del(Targets)}
+	 [] list     then {self mogul_list(Targets)}
 	 [] 'export' then {self mogul_export}
 	 end
       end
 
       meth mogul_validate_action(S $)
-	 case for A in [put delete print db 'export'] collect:C do
+	 case for A in [put delete list 'export' setup] collect:C do
 		 if {IsPrefix S {AtomToString A}} then {C A} end
 	      end
 	 of nil then raise ozmake(mogul:unknownaction(S)) end
@@ -398,47 +401,53 @@ define
 	 end
 	 @Dashes
       end
-/*
-      meth mogul_db_readfiles()
-	 if @EntryFiles==unit then
-	    %% sections are deduced from the existing contact and package entries
-	    %% which can be indentified by their .mogul extension
-	    D = {self get_moguldbdir($)}
-	    L =
-	    for F in {Path.dir D} collect:Collect do
-	       case {Reverse F}
-	       of &l|&u|&g|&o|&m|&.|_ then {Collect {StringToAtom F}}
-	       else skip end
+
+      meth mogul_del(Targets)
+	 {self mogul_del_targets(
+		  if Targets==nil then
+		     {self makefile_read_maybe_from_package}
+		     [{self get_mogul($)}]
+		  else Targets end)}
+      end
+
+      meth mogul_del_targets(Targets) Save in
+	 {self mogul_read}
+	 for T in Targets do
+	    if {HasFeature @DB T} then
+	       {self trace('deleting entry : '#T)}
+	       Save=unit
+	       {Dictionary.remove @DB T}
+	    else
+	       {self xtrace('entry not found: '#T)}
 	    end
-	 in
-	    EntryFiles <- {Sort L Value.'<'}
 	 end
+	 if {IsDet Save} then {self mogul_save} end
       end
 
-      meth mogul_db_list()
-	 {self mogul_db_readfiles}
-	 D = {self get_moguldbdir($)}
+      meth mogul_list(Targets)
+	 {self mogul_read}
+	 Keys = if Targets==nil then L={Dictionary.keys @DB} in
+		   if L==nil then
+		      {self xtrace('your mogul database is empty')}
+		      nil
+		   else
+		      {Sort L Value.'<'}
+		   end
+		else
+		   {Sort
+		    for T in Targets collect:COL do
+		       if {HasFeature @DB T} then {COL T} else
+			  {self xtrace('entry not found: '#T)}
+		       end
+		    end Value.'<'}
+		end
       in
-	 for E in @EntryFiles B in false;true do
-	    if B then {self print(nil)} end
-	    {self print({self format_title(' [ '#E#' ] ' $)})}
-	    {self print({Utils.slurpFile {Path.resolve D E}})}
-	 end
-	 if @EntryFiles\=nil then
-	    {self print({self format_dashes($)})}
+	 for K in Keys do E=@DB.K in
+	    case E.type
+	    of contact then {self mogul_trace_contact(E print:true)}
+	    [] package then {self mogul_trace_package(E print:true)}
+	    end
 	 end
       end
-
-      meth CollectMogulIds()
-	 {self mogul_db_readfiles}
-	 EntryIds <-
-	 for F in @EntryFiles collect:COL do
-	    {COL for L in {String.tokens {Utils.slurpFile F} &\n} return:R do
-		    case {String.token L &:}
-		    of 
-		 end}
-	 end
-      end
-      */
    end
 end

@@ -4,6 +4,7 @@ export
 import
    Path at 'Path.ozf'
 prepare
+   IsPrefix = List.isPrefix
    fun {Return X} X end
    fun {PadKey X}
       N = {VirtualString.length X}
@@ -88,23 +89,23 @@ define
       meth config(Args OPTLIST)
 	 {self config_read}
 	 if @DB==unit then DB<-{NewDictionary} end
-	 case Args.config
-	 of set then
+	 case {self get_config_action($)}
+	 of put then
 	    {self incr}
 	    try
 	       for Key#_#Flag in OPTLIST do
 		  if {HasFeature Args Key} then
 		     if Flag then
-			{self trace('setting : '#Key)}
+			{self xtrace('setting '#Key#': '#Args.Key)}
 			@DB.Key := Args.Key
 		     else
-			{self trace('ignoring: '#Key)}
+			{self vtrace('ignoring: '#Key)}
 		     end
 		  end
 	       end
 	    finally {self decr} end
 	    {self config_save}
-	 [] unset then
+	 [] delete then
 	    {self incr}
 	    try
 	       for S in Args.1 do Key={StringToAtom S} in
@@ -123,6 +124,16 @@ define
 	    do
 	       {self print({PadKey K}#':  '#{ToVS V})}
 	    end
+	 end
+      end
+
+      meth config_validate_action(S $)
+	 case for A in [put delete list] collect:C do
+		 if {IsPrefix S {AtomToString A}} then {C A} end
+	      end
+	 of nil then raise ozmake(config:unknownaction(S)) end
+	 [] [A] then A
+	 []  L  then raise ozmake(config:ambiguousaction(S L)) end
 	 end
       end
       

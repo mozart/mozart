@@ -11,6 +11,7 @@ prepare
    TITLE_UNINSTALL = 'ozmake [uninstall] error'
    TITLE_MOGUL     = 'ozmake [mogul package] error'
    TITLE_CONTACT   = 'ozmake [mogul contact] error'
+   TITLE_CONFIG    = 'ozmake [config] error'
    fun {OzMakeErrorFormatter E}
       case E
       of ozmake(get_uri) then
@@ -377,36 +378,96 @@ prepare
       [] ozmake(mogul:nopkgurl) then
 	 error(kind : TITLE_MOGUL
 	       msg  : 'your MOGUL url for packages is not known'
-	       items: [line('either supply it with --mogulpkgurl=URL')
-		       line('or setup a default using:')
+	       items: [line('either supply it explicitly using --mogulpkgurl=PKGURL')
+		       line('or explicitly supply --mogulurl=URL instead, from which')
+		       line('it will be derived as URL/pkg, or setup defaults for either')
+		       line('or both options for subsequent ozmake invocations using:')
 		       line('')
-		       line('    ozmake --config=set --mogulpkgurl=URL')
+		       line('    ozmake --config=put --mogulpkgurl=PKGURL')
+		       line('or  ozmake --config=put --mogulurl=URL')
 		       line('')
-		       line('this is the URL corresponding to the directory')
-		       line('specified by --mogulpkgdir=DIR and for which')
-		       line('you can also setup a default')])
+		       line('PKGURL is the url corresponding to the directory specified')
+		       line('by --mogulpkgdir=PKGDIR and for which you can also setup a')
+		       line('default')])
       [] ozmake(mogul:nodocurl) then
 	 error(kind : TITLE_MOGUL
 	       msg  : 'your MOGUL url for documentation is not known'
-	       items: [line('either supply it with --moguldocurl=URL')
-		       line('or setup a default using:')
+	       items: [line('either supply it explicitly using --moguldocurl=DOCURL')
+		       line('or explicitly supply --mogulurl=URL instead, from which')
+		       line('it will be derived as URL/doc, or setup defaults for either')
+		       line('or both options for subsequent ozmake invocations using:')
 		       line('')
-		       line('    ozmake --config=set --moguldocurl=URL')
+		       line('    ozmake --config=put --moguldocurl=DOCURL')
+		       line('or  ozmake --config=put --mogulurl=URL')
 		       line('')
-		       line('this is the URL corresponding to the directory')
-		       line('specified by --moguldocdir=DIR and for which')
-		       line('you can also setup a default')])
+		       line('DOCURL is the url corresponding to the directory specified')
+		       line('by --moguldocdir=DOCDIR and for which you can also setup a')
+		       line('default')])
       [] ozmake(mogul:nodburl) then
 	 error(kind : TITLE_MOGUL
-	       msg  : 'your MOGUL base url for your part of the MOGUL database is not known'
-	       items: [line('either supply it with --moguldburl=URL')
-		       line('or setup a default using:')
+	       msg  : 'your MOGUL url for your entries in the MOGUL database is not known'
+	       items: [line('either supply it explicitly using --moguldburl=DBURL')
+		       line('or explicitly supply --mogulurl=URL instead, from which')
+		       line('it will be derived as URL/db, or setup defaults for either')
+		       line('or both options for subsequent ozmake invocations using:')
 		       line('')
-		       line('    ozmake --config=set --moguldburl=URL')
+		       line('    ozmake --config=put --moguldburl=DBURL')
+		       line('or  ozmake --config=put --mogulurl=URL')
 		       line('')
-		       line('this is the URL corresponding to the directory')
-		       line('specified by --moguldbdir=DIR and for which')
-		       line('you can also setup a default')])
+		       line('DBURL is the URL corresponding to the directory specified')
+		       line('by --moguldbdir=DBDIR and for which you can also setup a')
+		       line('default')])
+      [] ozmake(mogul:nomoguldbdir) then
+	 error(kind : TITLE_MOGUL
+	       msg  : 'MOGUL database directory is not known'
+	       items: [line('the directory in which to store your entries for the MOGUL')
+		       line('database is not known')
+		       line('')
+		       line('either supply it explicitly using --moguldbdir=DBDIR')
+		       line('or explicitly supply --moguldir=DIR instead, from which')
+		       line('it will be derived as DIR/db, or setup defaults for either')
+		       line('or both options for subsequent ozmake invocations using:')
+		       line('')
+		       line('    ozmake --config=put --moguldbdir=DBDIR')
+		       line('or  ozmake --config=put --moguldir=DIR')
+		       line('')
+		       line('DBDIR is the directory corresponding to the url specified')
+		       line('by --moguldburl=DBURL and for which you can also setup a')
+		       line('default')])
+      [] ozmake(mogul:nomoguldocdir) then
+	 error(kind : TITLE_MOGUL
+	       msg  : 'MOGUL documentation directory is not known'
+	       items: [line('the directory in which to store the documentation for each')
+		       line('of your MOGUL contributions is not known')
+		       line('')
+		       line('either supply it explicitly using --moguldocdir=DOCDIR')
+		       line('or explicitly supply --moguldir=DIR instead, from which')
+		       line('it will be derived as DIR/doc, or setup defaults for either')
+		       line('or both options for subsequent ozmake invocations using:')
+		       line('')
+		       line('    ozmake --config=put --moguldocdir=DOCDIR')
+		       line('or  ozmake --config=put --moguldir=DIR')
+		       line('')
+		       line('DOCDIR is the directory corresponding to the url specified')
+		       line('by --moguldocurl=DOCURL and for which you can also setup a')
+		       line('default')])
+      [] ozmake(mogul:nomogulpkgdir) then
+	 error(kind : TITLE_MOGUL
+	       msg  : 'MOGUL package directory is not known'
+	       items: [line('the directory in which to store the ozmake packages for each')
+		       line('of your MOGUL contributions is not known')
+		       line('')
+		       line('either supply it explicitly using --mogulpkgdir=PKGDIR')
+		       line('or explicitly supply --moguldir=DIR instead, from which')
+		       line('it will be derived as DIR/pkg, or setup defaults for either')
+		       line('or both options for subsequent ozmake invocations using:')
+		       line('')
+		       line('    ozmake --config=put --mogulpkgdir=PKGDIR')
+		       line('or  ozmake --config=put --moguldir=DIR')
+		       line('')
+		       line('PKGDIR is the directory corresponding to the url specified')
+		       line('by --mogulpkgurl=DBURL and for which you can also setup a')
+		       line('default')])
       [] ozmake(mogul:unknownaction(S)) then
 	 error(kind : TITLE_MOGUL
 	       msg  : 'unrecognized --mogul action'
@@ -438,6 +499,15 @@ prepare
 	       msg  : 'bad contact feature'
 	       items: [hint(l:'Feature' m:F)
 		       hint(l:'Value' m:oz(V))])
+      [] ozmake(config:unknownaction(S)) then
+	 error(kind : TITLE_CONFIG
+	       msg  : 'unrecognized --config action'
+	       items: [hint(l:'Action' m:S)])
+      [] ozmake(config:ambiguousaction(S L)) then
+	 error(kind : TITLE_CONFIG
+	       msg  : 'ambiguous --config action'
+	       items: [hint(l:'Action' m:S)
+		       hint(l:'Choices' m:list(L ' '))])
       end
    end
 define
