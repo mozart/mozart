@@ -1501,7 +1501,7 @@ TaggedRef TaskStack::dbgGetTaskStack(ProgramCounter pc, int depth)
 
     if (PC==C_DEBUG_CONT_Ptr) {
       OzDebug *ozdeb = (OzDebug *) Y;
-      out = cons(OZ_mkTupleC("args",1,ozdeb->info), out);
+      out = cons(OZ_mkTupleC("debug",1,ozdeb->info), out);
       continue;
     }
 
@@ -1532,7 +1532,7 @@ TaggedRef TaskStack::dbgGetTaskStack(ProgramCounter pc, int depth)
       // definitionStart(PC) == NOCODE_GLOBALVARNAME
       ;
   }
-  return reverseC(out);
+  return out;
 }
 
 

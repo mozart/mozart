@@ -169,12 +169,12 @@ public:
   TaggedRef defaultExceptionHandler;
 
   unsigned long lastThreadID;
+  unsigned long lastStackFrameID;
 
   // Debugging stuff
   TaggedRef threadStream;
   TaggedRef threadStreamTail;
   Toplevel *toplevelQueue;
-
 
   void printBoards();
 

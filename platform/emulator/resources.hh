@@ -73,6 +73,8 @@
 
 #define NumberOfXRegisters	10000
 
+#define MAX_ID                  (1<<27)
+
 #define OzCompiler	"oz.compiler"
 
 #define MAX_TCP_CACHE     5
