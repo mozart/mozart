@@ -181,7 +181,7 @@ local
 	     {R generate(self I ?Flex0 ?Expr)}
 	     (I + 1)#(Flex#Flex0)#((I#Expr)|Cases)
 	  end 1#""#[0#fApply(fSelf(unit)
-			     [fRecord(fAtom('lexYield' unit)
+			     [fRecord(fAtom('putToken1' unit)
 				      [fAtom('EOF' unit)])] unit)]}
 	 CaseClauses =
 	 {FoldL ICs
