@@ -56,13 +56,14 @@ enum FindType{
 #define PRIMARY_SITE_TABLE_SIZE    10
 #define SECONDARY_SITE_TABLE_SIZE  50
 
+
 class DSiteHashTable : public GenHashTable {
 
 public:
   DSiteHashTable(int size):GenHashTable(size){}
 
-  FindType findPrimary(DSite *s,int hvalue,DSite* &found){
-    GenHashNode *ghn=htFindFirst(hvalue);
+  FindType findPrimary(DSite *s,unsigned int hvalue,DSite* &found){
+    GenHashNode *ghn=htFindFirstU(hvalue);
     while(ghn!=NULL){
       GenCast(ghn->getBaseKey(),GenHashBaseKey*,found,DSite*);
       if(s->compareSitesNoTimestamp(found)==0) {
@@ -70,38 +71,38 @@ public:
         if(ft==0) {return SAME;}
         if(ft<0) {return I_AM_YOUNGER;}
         return I_AM_OLDER;}
-      ghn=htFindNext(ghn,hvalue);}
+      ghn=htFindNextU(ghn,hvalue);}
     found=NULL; // optimize
     return NONE;}
 
-  DSite* findSecondary(DSite *s, int hvalue){
-    GenHashNode *ghn=htFindFirst(hvalue);
+  DSite* findSecondary(DSite *s, unsigned int hvalue){
+    GenHashNode *ghn=htFindFirstU(hvalue);
     DSite* found;
     while(ghn!=NULL){
       GenCast(ghn->getBaseKey(),GenHashBaseKey*,found,DSite*);
       if(s->compareSites(found)==0) return found;
-      ghn=htFindNext(ghn,hvalue);}
+      ghn=htFindNextU(ghn,hvalue);}
     return NULL;}
 
-  void insertPrimary(DSite *s,int hvalue){
+  void insertPrimary(DSite *s,unsigned int hvalue){
     GenHashBaseKey *ghn_bk;
     GenHashEntry *ghn_e=NULL;
     GenCast(s,DSite*,ghn_bk,GenHashBaseKey*);
     PD((SITE,"add hvalue:%d site:%s",hvalue,s->stringrep()));
-    htAdd(hvalue,ghn_bk,ghn_e);}
+    htAddU(hvalue,ghn_bk,ghn_e);}
 
   void insertSecondary(DSite *s,int hvalue){
     insertPrimary(s,hvalue);}
 
-  void removePrimary(DSite *s,int hvalue){
-    GenHashNode *ghn=htFindFirst(hvalue);
+  void removePrimary(DSite *s,unsigned int hvalue){
+    GenHashNode *ghn=htFindFirstU(hvalue);
     DSite* found;
     while(ghn!=NULL){
       GenCast(ghn->getBaseKey(),GenHashBaseKey*,found,DSite*);
       if(s->compareSites(found)==0){
-        htSub(hvalue,ghn);
+        htSubU(hvalue,ghn);
         return;}
-      ghn=htFindNext(ghn,hvalue);}
+      ghn=htFindNextU(ghn,hvalue);}
     Assert(0);}
 
   void removeSecondary(DSite *s,int hvalue){
@@ -109,6 +110,7 @@ public:
 
   void cleanup();
 };
+
 
 DSiteHashTable* primarySiteTable=new DSiteHashTable(PRIMARY_SITE_TABLE_SIZE);
 DSiteHashTable* secondarySiteTable=new DSiteHashTable(SECONDARY_SITE_TABLE_SIZE);
@@ -323,24 +325,9 @@ char *DSite::stringrep_notype()
 char *oz_site2String(DSite *s) { return s->stringrep(); }
 
 //
-int DSite::hashWOTimestamp(){
-  BYTE *p=(BYTE*)&address;
-  unsigned h=0,g;
-  int i;
-  int limit=sizeof(address);
-  for(i=0;i<limit;i++,p++){
-    h = (h << 4) + (*p);
-    if ((g = h & 0xf0000000)) {
-      h = h ^ (g >> 24);
-      h = h ^ g;}}
-  p= (BYTE*) &port;
-  limit=sizeof(port);
-  for(i=0;i<limit;i++,p++){
-    h = (h << 4) + (*p);
-    if ((g = h & 0xf0000000)) {
-      h = h ^ (g >> 24);
-      h = h ^ g;}}
-  return (int) h;}
+unsigned int DSite::hashWOTimestamp(){
+  return ((unsigned int) address) + ((unsigned int) port);
+}
 
 /**********************************************************************/
 /*   SECTION :: Site object methods                                   */
