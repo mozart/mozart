@@ -307,7 +307,7 @@ case $platform in
     ;;
     *rhapsody | *darwin)
 	AC_DEFINE(RHAPSODY)
-	TOOLLDCMD="ld"
+	TOOLLDCMD="ld -dynamic -bundle -undefined suppress"
 	oz_enable_modules_static=yes
     ;;
     *)
@@ -1005,17 +1005,22 @@ AC_SUBST(DYNAMIC_MODULES)
 case ${platform} in
 *-darwin)
     ## seems needed on Darwin (MacOS X)
-    ## emitds pic code suitable for fynamic linking and avoiding
+    ## emits pic code suitable for fynamic linking and avoiding
     ## any limit on the size of the global offset table
     ## (according to info from Marc-Antoine Parent maparent@acm.org)
     PICOPTIONS="-fPIC -fpic -Kpic"
     PICOPTIONSCC="-fPIC -fpic -Kpic"
+    PICOPTIONSEXTRA="-fno-common"
     ;;
 *)  PICOPTIONS="-fpic -Kpic"
     PICOPTIONSCC="-fpic -Kpic"
     ;;
 esac
-OZ_CXX_OPTIONS($PICOPTIONS,OZTOOLDYNOPT)
+OZ_CXX_FIRST_OPTION($PICOPTIONS,OZTOOLDYNOPT)
+OZ_CXX_OPTIONS($PICOPTIONSEXTRA,ozm_tmp)
+if test -n "$ozm_tmp"; then
+  OZTOOLDYNOPT="$OZTOOLDYNOPT $ozm_tmp"
+fi
 if test "$oz_enable_modules_static" != "yes" ; then 
     CDYNOPT=$OZTOOLDYNOPT
 fi
@@ -1445,7 +1450,11 @@ AC_SUBST(OZTOOL_CXX)
 OZ_CC_CHOOSE
 AC_LANG_SAVE
 AC_LANG_C
-OZ_CC_OPTIONS($PICOPTIONSCC,OZTOOLDYNOPTCC)
+OZ_CC_FIRST_OPTION($PICOPTIONSCC,OZTOOLDYNOPTCC)
+OZ_CC_OPTIONS($PICOPTIONSEXTRA,ozm_tmp)
+if test -n "$ozm_tmp"; then
+  OZTOOLDYNOPTCC="$OZTOOLDYNOPTCC $ozm_tmp"
+fi
 AC_LANG_RESTORE
 AC_SUBST(OZTOOLDYNOPTCC)
 
