@@ -1,27 +1,15 @@
-$cmode='dyn';
-
 %builtins_all =
 (
-    ##* Virtual Properties
-
     'get'	=> { in  => ['+literal'],
 			     out => ['value'],
-			     BI  => BIgetProperty,
-			     module=> 'vprop',
-			     native => true},
+			     BI  => BIgetProperty},
 
     'condGet'	=> { in  => ['+literal','value'],
 			     out => ['value'],
-			     BI  => BIcondGetProperty,
-			     module=> 'vprop',
-			     native => true},
+			     BI  => BIcondGetProperty},
 
     'put'	=> { in  => ['+literal','value'],
 			     out => [],
-			     BI  => BIputProperty,
-			     module=>'vprop',
-			     native => true},
-
-
+			     BI  => BIputProperty},
 
  );
