@@ -468,10 +468,8 @@ void OZ_addSuspension(OZ_Term *var, Suspension *s)
 {
   SVariable *svar = taggedBecomesSuspVar(var);
 
-  if (am.currentSolveBoard != (Board *) NULL &&
-      am.isInScope (am.currentSolveBoard, svar->getHome ()) == NO) {
+  if (am.setExtSuspension (svar->getHome (), s) == OK) {
     s->setExtSusp ();
-    am.currentSolveBoard->addSuspension (s);
   }
 
   svar->addSuspension(s);

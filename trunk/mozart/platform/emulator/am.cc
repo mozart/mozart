@@ -442,6 +442,22 @@ Bool AM::isBetween(Board *to, Board *varHome)
   return OK;
 }
 
+Bool AM::setExtSuspension (Board *varHome, Suspension *susp)
+{
+  Board *bb = currentSolveBoard;
+  Bool wasFound = NO;
+  while (bb != (Board *) NULL && bb != varHome) {
+    DebugCheck ((bb == rootBoard),
+		error ("the root board is reached in AM::setExtSuspensions"));
+    if (bb->isSolve () == OK) {
+      bb->addSuspension (susp);
+      wasFound = OK;
+    }
+    bb = (bb->getParentBoard ())->getSolveBoard ();
+  }
+  return (wasFound);
+}
+
 Bool AM::checkExtSuspension (Suspension *susp)
 {
   if (susp->isExtSusp () == OK) {
@@ -449,21 +465,53 @@ Bool AM::checkExtSuspension (Suspension *susp)
     DebugCheck ((sb == (Board *) NULL),
 		error ("no board is found in AM::checkExtSuspension"));
     if (sb->isSolve () == NO)
-      sb = sb->GetSolveBoard ();
-    DebugCheck ((sb == (Board *) NULL || sb->isSolve () == NO),
-		error ("no solve board is found in AM::checkExtSuspension"));
+      sb = sb->getSolveBoard ();
 
-    if (sb->isCommitted () == NO &&
-	sb->isFailed () == NO &&
-	sb->isDiscarded () == NO) {
+    Bool wasFound = (sb == (Board *) NULL) ? NO : OK; 
+    while (sb != (Board *) NULL) {
+      DebugCheck ((sb->isSolve () == NO),
+		  error ("no solve board is found in AM::checkExtSuspension"));
+
       SolveActor *sa = CastSolveActor (sb->getActor ());
       if (sa->areNoExtSuspensions () == OK) {
 	Thread::ScheduleWakeup (sb, NO);
+	// Note:
+	//  The observation is that some actors which have imposed instability
+        // could be discarded by reduction of other such actors. It means,
+	// that the stability condition can be COMPLETELY controlled by the absence
+	// of active threads; 
       }
-    } 
-    return (OK);
+      sb = (sb->getParentBoard ())->getSolveBoard ();
+    }
+    return (wasFound);
   } else {
     return (NO);
+  }
+}
+
+void AM::incSolveThreads (Board *bb)
+{
+  bb = bb->getBoardDeref ();
+  while (bb != (Board *) NULL && bb != rootBoard) {
+    if (bb->isSolve () == OK) {
+      CastSolveActor (bb->getActor ())->incThreads ();
+    }
+    bb = (bb->getParentBoard ())->getBoardDeref ();
+  }
+}
+
+void AM::decSolveThreads (Board *bb)
+{
+  bb = bb->getBoardDeref ();
+  while (bb != (Board *) NULL && bb != rootBoard) {
+    if (bb->isSolve () == OK) {
+      SolveActor *sa = CastSolveActor (bb->getActor ());
+      sa->decThreads ();
+      if (sa->isStable () == OK) {
+  	Thread::ScheduleWakeup (bb, NO);
+      }
+    }
+    bb = (bb->getParentBoard ())->getBoardDeref ();
   }
 }
 
@@ -687,7 +735,6 @@ void AM::reduceTrailOnSuspend()
     susp = new Suspension(bb);
   }
   
-  Bool isOuterSuspMaint = (currentSolveBoard == (Board *) NULL) ? OK : NO;
   for (int index = 0; index < numbOfCons; index++) {
     TaggedRef *refPtr;
     TaggedRef value;
@@ -709,20 +756,14 @@ void AM::reduceTrailOnSuspend()
 		  return;);
       if(!isLocalVariable(oldVal)) { // add susps to global vars
 	SVariable *svar = taggedBecomesSuspVar (ptrOldVal);
-	if (isOuterSuspMaint == NO &&
-	    isInScope (currentSolveBoard, svar->getHome ()) == NO) {
-	  isOuterSuspMaint = OK;
+	if (setExtSuspension (svar->getHome (), susp) == OK) {
 	  susp->setExtSusp ();
-	  currentSolveBoard->addSuspension (susp);
 	}
 	svar->addSuspension (susp);
       }
     }
-    if (isOuterSuspMaint == NO &&
-	isInScope (currentSolveBoard, tagged2SuspVar (value)->getHome ()) == NO) {
-      isOuterSuspMaint = OK;
+    if (setExtSuspension (tagged2SuspVar (value)->getHome (), susp) == OK) {
       susp->setExtSusp ();
-      currentSolveBoard->addSuspension (susp);
     }
     tagged2SuspVar(value)->addSuspension(susp);
 
@@ -750,8 +791,6 @@ void AM::reduceTrailOnFail()
 
 void AM::reduceTrailOnShallow(Suspension *susp,int numbOfCons)
 {
-  Bool isOuterSuspMaint = (currentSolveBoard == (Board *) NULL) ? OK : NO;
-
   // one single suspension for all
   
   for (int i = 0; i < numbOfCons; i++) {
@@ -764,11 +803,8 @@ void AM::reduceTrailOnShallow(Suspension *susp,int numbOfCons)
 	       error("Non-variable on trail"));
     
     SVariable *svar = taggedBecomesSuspVar(refPtr);
-    if (isOuterSuspMaint == NO &&
-	isInScope (currentSolveBoard, svar->getHome ()) == NO) {
-      isOuterSuspMaint = OK;
+    if (setExtSuspension (svar->getHome (), susp) == OK) {
       susp->setExtSusp ();
-      currentSolveBoard->addSuspension (susp);
     }
     svar->addSuspension(susp);
   }
