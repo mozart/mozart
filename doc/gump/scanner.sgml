@@ -438,9 +438,9 @@
 	    functions, which includes the generated scanner tables.
 	  <Entry><<meth lexExecuteAction(?+{I})>>
 	  <Item>
-	    This method is called each time a regular expression is matched.
-	    Regular expressions are assigned unique integers; the parameter
-	    to this method indicates which rule's associated action is to be
+	    This method is called each time a regular expression is
+	    matched.  Regular expressions are assigned unique integers;
+	    ?_{I}&nbsp;indicates which rule's associated action is to be
 	    run.
 	</List>
 	The <<GumpScanner.'class'>> class defines some user functionality
@@ -455,26 +455,26 @@
 	  <Entry><<meth setMode(?+{I})>>
 	  <Item>
 	    The operation mode of the scanner is set to the lexical
-	    mode&nbsp;<<I>>.  Lexical modes are represented internally as
+	    mode&nbsp;?_{I}.  Lexical modes are represented internally as
 	    integers.  Since modes are identified by variables, the class
 	    generation phase wraps a <<local &ellipsis; end>> around the
 	    class equating the mode variables to the assigned unique
 	    integers.
 	  <Entry><<meth currentMode(??{I})>>
 	  <Item>
-	    This returns the integer identifying the lexical mode the scanner
-	    currently operates in.
+	    This returns the integer&nbsp;?_{I} identifying the lexical mode
+	    the scanner currently operates in.
 	  <Entry><<meth getAtom(??{A})>>
 	  <Item>
 	    This method is used to access the lexeme last matched.  It is
-	    returned as an atom in the variable&nbsp;<<A>>.  Note that if
+	    returned as an atom in the variable&nbsp;?_{A}.  Note that if
 	    the lexeme contains a <Name type=char>NUL</Name> character
 	    (ISO&nbsp;0) then only the text up to the first
 	    <Name type=char>NUL</Name> but excluding it is returned.
 	  <Entry><<meth getString(??{S})>>
 	  <Item>
 	    This method returns the lexeme as a string in the
-	    variable&nbsp;<<S>>.  The restrictions concerning <<getAtom>>
+	    variable&nbsp;?_{S}.  The restrictions concerning <<getAtom>>
 	    do not apply for <<getString>>.
 	  <Entry><<meth getLength(??{I})>>
 	  <Item>
@@ -483,41 +483,41 @@
 	  <Entry><<meth putToken(?+{X} ?_{Y})>>
 	  <Item>
 	    This method may be used to append a token with token
-	    class&nbsp;<<X>> and value&nbsp;<<Y>> to the token stream.
+	    class&nbsp;?_{X} and value&nbsp;?_{Y} to the token stream.
 	    (Actually, the token class may be an arbitrary &Oz; value, but
 	    atoms and the integers between 0 and&nbsp;255 are the only
 	    representations understood by &Gump;-generated parsers.)
 	  <Entry><<meth putToken1(?+{X})>>
 	  <Item>
 	    This method may be used to append a token with token
-	    class&nbsp;<<X>> and value <<unit>> to the token stream.
+	    class&nbsp;?_{X} and value <<unit>> to the token stream.
 	  <Entry><<meth getToken(??{X} ?_{Y})>>
 	  <Item>
 	    The next token is removed from the token stream and returned.
-	    The token class is returned in&nbsp;<<X>> and its value
-	    in&nbsp;<<Y>>.
+	    The token class is returned in&nbsp;?_{X} and its value
+	    in&nbsp;?_{Y}.
 	  <Entry><<meth input(??{C})>>
 	  <Item>
 	    The next (unmatched) character is removed from the character
-	    stream and returned in&nbsp;<<C>>.
+	    stream and returned in&nbsp;?_{C}.
 	  <Entry><<meth unput(?+{C})>>
 	  <Item>
-	    A character&nbsp;<<C>> is prepended to the input character
+	    A character&nbsp;?_{C} is prepended to the input character
 	    stream.  This is next used by matching operations or returned
 	    by <<input>>.
 	  <Entry><<meth scanFile(?+{V})>>
 	  <Item>
 	    This method causes the currently scanned buffer (if any) to be
 	    pushed on a stack of active buffers.  A new buffer is created
-	    from the file with name&nbsp;<<V>> and scanned.
+	    from the file with name&nbsp;?_{V} and scanned.
 	    If the file does not exist, the error exception
 	    <<gump(fileNotFound ?_{V})</Code> with the filename
-	    in&nbsp;<<V>> is raised; the default treatment is the invocation
+	    in&nbsp;?_{V} is raised; the default treatment is the invocation
 	    of a custom error printer.
 	  <Entry><<meth scanVirtualString(?+{V})>>
 	  <Item>
-	    Like <<scanFile>>, but scans a virtual string&nbsp;<<V>>.
-	    If&nbsp;<<V>> contains <Name type=char >NUL</Name> characters
+	    Like <<scanFile>>, but scans a virtual string&nbsp;?_{V}.
+	    If&nbsp;?_{V} contains <Name type=char >NUL</Name> characters
 	    (ISO&nbsp;0) then the virtual string is only scanned up to and
 	    excluding the first <Name type=char>NUL</Name> character.
 	  <Entry><<meth setInteractive(?+{B})>>
@@ -526,8 +526,8 @@
 	    interactive buffer only reads as many characters as are needed
 	    to be considered to decide about a match; a non-interactive
 	    buffer may read ahead.  This method allows the topmost buffer
-	    on the stack to be set to interactive (if <<B>> is <<true>>) or
-	    non-interactive (if <<B>> is <<false>>).  New buffers are always
+	    on the stack to be set to interactive (if ?_{B} is <<true>>) or
+	    non-interactive (if ?_{B} is <<false>>).  New buffers are always
 	    created as non-interactive buffers.
 	  <Entry><<meth getInteractive(??{B})>>
 	  <Item>
