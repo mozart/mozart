@@ -121,7 +121,7 @@ public:
 
 class ByteSink {
 public:
-  virtual OZ_Return putTerm(OZ_Term,OZ_Term);
+  virtual OZ_Return putTerm(OZ_Term,char*);
   virtual OZ_Return putBytes(BYTE*,int);
   virtual OZ_Return allocateBytes(int);
   virtual OZ_Return maybeSaveHeader(ByteStream*);
@@ -186,17 +186,12 @@ ByteSink::allocateBytes(int n)
 }
 
 OZ_Return
-ByteSink::putTerm(OZ_Term in, OZ_Term resources)
+ByteSink::putTerm(OZ_Term in, char *filename)
 {
   ByteStream* bs=bufferManager->getByteStream();
   marshal_M_FILE(bs,PERDIOVERSION,in);
 
-  OZ_Term nogoods = bs->getNoGoods();
-  if (!literalEq(nil(),nogoods)) {
-    return oz_raise(E_ERROR,OZ_atom("dp"),"save",2,
-                    oz_atom("nogoods"),
-                    nogoods);
-  }
+  CheckNogoods(bs,"save",bufferManager->freeByteStream(bs));
 
   bs->beginWrite();
   bs->incPosAfterWrite(tcpHeaderSize);
@@ -218,7 +213,15 @@ ByteSink::putTerm(OZ_Term in, OZ_Term resources)
   bs->writeCheck();
   bufferManager->freeByteStream(bs);
 
-  return oz_unify(resources,bs->resources);
+  //  return oz_unify(resources,bs->resources);
+  if (!isNil(bs->resources)) {
+    return oz_raise(E_ERROR,OZ_atom("dp"),"save",3,
+                    oz_atom("resources"),
+                    oz_atom(filename),
+                    bs->resources);
+  }
+
+  return PROCEED;
 }
 
 // ===================================================================
@@ -298,31 +301,43 @@ ByteSinkDatum::maybeSaveHeader(ByteStream*)
   return PROCEED;
 }
 
-OZ_Return saveFile(OZ_Term in,char *filename,OZ_Term resources)
-{
-  ByteSinkFile sink(filename);
-  return sink.putTerm(in,resources);
-}
-
 OZ_Return
-saveDatum(OZ_Term in,OZ_Datum& dat,OZ_Term resources)
+saveDatum(OZ_Term in,OZ_Datum& dat)
 {
   ByteSinkDatum sink;
-  OZ_Return result = sink.putTerm(in,resources);
-  if (result==PROCEED) dat=sink.dat;
-  else {
+  OZ_Return result = sink.putTerm(in,"filename unknown");
+  if (result==PROCEED) {
+    dat=sink.dat;
+  } else {
     if (sink.dat.data!=0) free(sink.dat.data);
   }
   return result;
 }
 
-OZ_BI_define(BIsmartSave,3,0)
+OZ_BI_define(BIsave,2,0)
 {
   OZ_declareIN(0,in);
-  OZ_declareIN(2,resources);
   OZ_declareVirtualStringIN(1,filename);
 
-  return saveFile(in,filename,resources);
+  ByteSinkFile sink(filename);
+  OZ_Return ret = sink.putTerm(in,filename);
+  if (ret!=PROCEED)
+    unlink(filename);
+  return ret;
+} OZ_BI_end
+
+
+OZ_BI_define(BIexport,1,0)
+{
+  OZ_declareIN(0,in);
+  ByteStream* bs=bufferManager->getByteStream();
+  marshal_M_EXPORT(bs,in);
+
+  CheckNogoods(bs,"export",bufferManager->freeByteStream(bs));
+
+  bufferManager->freeByteStream(bs);
+
+  return PROCEED;
 } OZ_BI_end
 
 
@@ -503,12 +518,12 @@ class PipeInfo {
 public:
   int fd;
   int pid;
-  char *file;
+  const char *file;
   char *url;
   TaggedRef controlvar, out;
   URLAction action;
 
-  PipeInfo(int f, int p, char *tmpf, const char *u, TaggedRef o, TaggedRef var,
+  PipeInfo(int f, int p, const char *tmpf, const char *u, TaggedRef o, TaggedRef var,
            URLAction act):
     fd(f), pid(p), file(tmpf), out(o), action(act)
   {
@@ -611,10 +626,10 @@ int pipeHandler(int, void *arg)
 
 class URLInfo {
 public:
-  char *tmpfile;
+  const char *tmpfile;
   const char *url;
   int fd;
-  URLInfo(char *file, char *u, int f):
+  URLInfo(const char *file, const char *u, int f):
     tmpfile(ozstrdup(file)), url(ozstrdup(u)), fd(f) {}
   ~URLInfo() {
     delete tmpfile;
@@ -622,7 +637,6 @@ public:
   }
 };
 
-static
 unsigned __stdcall fetchThread(void *p)
 {
   URLInfo *ui = (URLInfo *) p;
@@ -794,13 +808,13 @@ OZ_C_proc_end
 
 OZ_Return OZ_valueToDatum(OZ_Term t, OZ_Datum* d)
 {
-  return saveDatum(t,*d,OZ_nil());
+  return saveDatum(t,*d);
 }
 
 
 OZ_Return OZ_datumToValue(OZ_Datum d,OZ_Term t)
 {
-  return loadDatum(d,t,"unknown");
+  return loadDatum(d,t,"filename unknown");
 }
 
 static
@@ -891,7 +905,7 @@ OZ_BI_define(BISendPID,4,0)
   MsgBuffer *bs = msgBufferManager->getMsgBuffer(site);
   marshal_M_SEND_GATE(bs,val);
 
-  CheckNogoods(bs,"send");
+  CheckNogoods(bs,"send",);
   SendTo(site,bs,M_SEND_GATE,0,0);
   return PROCEED;
 } OZ_BI_end

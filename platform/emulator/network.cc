@@ -415,11 +415,10 @@ public:
     site=s;
   }
 
-  void setSite(Site *s){
-  site = s;}
+  void setSite(Site *s){ site = s;}
+  Site* getSite(){ return site;}
 
-  Site* getSite(){
-    return site;}
+  Bool isPersistentBuffer() { return NO; }
 
   RemoteSite* getRemoteSite(){
     return remotesite;}
@@ -2087,6 +2086,7 @@ public:
   Site *getSite(){
     Assert(0);
     return NULL;}
+  Bool isPersistentBuffer() { return NO; }
   int getLen(){
     return size;}
   BYTE* getBuf(){

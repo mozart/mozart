@@ -80,6 +80,8 @@ class ByteStream: public MsgBuffer {
 
 public:
   Site *getSite(){return (Site*) NULL;}
+  Bool isPersistentBuffer() { return OK; }
+
   char *siteStringrep() {return "toFile";}
   Bool skipHeader();
 

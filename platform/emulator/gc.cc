@@ -1820,7 +1820,6 @@ void AM::gc(int msgLevel)
   gc_finalize();
 #endif
 
-  gcOwnerTable();
   gcBorrowTableRoots();
   gcStack.recurse();
 
@@ -1838,6 +1837,7 @@ void AM::gc(int msgLevel)
   Assert(gcStack.isEmpty());
 
   gcBorrowTableFinal();
+  gcOwnerTable();
   gcSiteTable();
 
   exitCheckSpace();
@@ -2258,22 +2258,13 @@ void ConstTerm::gcConstRecurse()
   case Co_Array:
     {
       OzArray *a = (OzArray*) this;
-
       a->gcConstTermWithHome();
-
       int aw = a->getWidth();
-
       if (aw > 0) {
-
-        TaggedRef *newargs =
-          (TaggedRef*) heapMalloc(sizeof(TaggedRef) * aw);
-
+        TaggedRef *newargs = (TaggedRef*) heapMalloc(sizeof(TaggedRef) * aw);
         OZ_collectHeapBlock(a->getArgs(), newargs, aw);
-
         a->args=newargs;
-
       }
-
       break;
     }
 
