@@ -37,7 +37,7 @@ else
 FREEBSDFLAGS    =
 endif
 CPPFLAGS        = -I. $(TK_XINCLUDES) $(FREEBSDFLAGS) \
-        -I$(TCL_PREFIX)/include -I$(TK_PREFIX)/include
+        -I$(TCL_PREFIX)/include -I$(TK_PREFIX)/include @CPPFLAGS@
 TCLLIBTCLDIR    = $(TCL_PREFIX)/lib/tcl$(TCL_VERSION)
 TKLIBTCLDIR     = $(TK_PREFIX)/lib/tk$(TK_VERSION)
 
