@@ -1090,11 +1090,6 @@ void DSite::communicationProblem(MessageType mt, DSite* storeSite,
     case M_LOCK_CANTPUT:{
       return;}
 
-    case M_FILE:{
-      Assert(0);
-      OZ_warning("impossible\n");
-      return;}
-
     case M_CHAIN_ACK:{
       flag=USUAL_BORROW_CASE;
       break;}
