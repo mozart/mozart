@@ -1,7 +1,10 @@
 #include "oz_api.h"
 #include "extension.hh"
+#include "base.hh"
 #include <unistd.h>
 #include <sys/wait.h>
+#include <sys/types.h>
+#include <signal.h>
 
 class Process : public Extension {
 public:
@@ -10,12 +13,12 @@ public:
   Process(pid_t i,OZ_Term s):Extension(),pid(i),status(s){}
   Process(Process&);
   // Extension
-  static int id;
-  virtual int getIdV() { return id; }
-  virtual OZ_Term typeV() { return OZ_atom("process"); }
-  virtual void printStreamV(ostream &out,int depth = 10);
+  static  int id;
+  virtual int        getIdV() { return id; }
+  virtual OZ_Term    typeV()  { return OZ_atom("process"); }
+  virtual void       printStreamV(ostream &out,int depth = 10);
   virtual Extension* gcV();
-  //virtual void gcRecurseV();
+  virtual void gcRecurseV();
 };
 
 OZ_Term all_processes;
@@ -42,7 +45,9 @@ Process* OZ_toProcess(OZ_Term t)
 
 void Process::printStreamV(ostream &out,int depth = 10)
 {
-  out << "<process " << pid << ">";
+  out << "<process " << ((pid<0)?-pid:pid);
+  if (OZ_isVariable(status)) out << " running>";
+  else out << " exit(" << OZ_intToC(status) << ")>";
 }
 
 Extension* Process::gcV()
@@ -50,9 +55,20 @@ Extension* Process::gcV()
   return new Process(pid,status);
 }
 
+void Process::gcRecurseV()
+{
+  OZ_collectHeapTerm(status,status);
+}
+
 typedef struct { int from; int to; } fdPair;
 
 extern void addChildProc(pid_t);
+
+#ifdef DEBUG_SUBPROCESSES
+#define PDEBUG(X) X
+#else
+#define PDEBUG(X)
+#endif
 
 Process* makeProcess(char* const argv[],
                      fdPair map[],int n)
@@ -70,20 +86,20 @@ Process* makeProcess(char* const argv[],
       int from = map[i].from;
       for (int j=0;j<n;j++)
         if (from==map[j].to) {
-          cerr << "==> DUP " << from;
+          PDEBUG(cerr << "==> DUP " << from;)
           map[i].from = dup(from);
-          cerr << " -> " << map[i].from << endl;
+          PDEBUG(cerr << " -> " << map[i].from << endl;)
           break;
         }
     }
     // dup2(from,to) for each entry
     for(int i=0;i<n;i++) {
-      cerr << "==> DUP2 " << map[i].from << " -> " << map[i].to;
+      PDEBUG(cerr << "==> DUP2 " << map[i].from << " -> " << map[i].to;)
       int ret = dup2(map[i].from,map[i].to);
-      cerr << ((ret<0)?" FAILED":"") << endl;
+      PDEBUG(cerr << ((ret<0)?" FAILED":"") << endl;)
     }
     for(int i=0;i<n;i++) {
-      cerr << "==> CLOSE " << map[i].from << endl;
+      PDEBUG(cerr << "==> CLOSE " << map[i].from << endl;)
       close(map[i].from);
     }
     //
@@ -157,7 +173,7 @@ OZ_BI_define(process_make,3,1)
   //
   // register process
   //
-  cerr << "REGISTERING CHILD: " << p->pid << endl;
+  PDEBUG(cerr << "REGISTERING CHILD: " << p->pid << endl;)
   OZ_Term proc = oz_makeTaggedExtension(p);
   all_processes = OZ_cons(proc,all_processes);
   OZ_RETURN(proc);
@@ -171,7 +187,7 @@ OZ_BI_define(process_is,1,1)
 
 void process_child_handler()
 {
-  cerr << "[BEGIN] Process Child Handler" << endl;
+  PDEBUG(cerr << "[BEGIN] Process Child Handler" << endl;)
   OZ_Term l = all_processes;
   while (!OZ_isNil(l)) {
     Process*p = OZ_toProcess(OZ_head(l));
@@ -179,33 +195,54 @@ void process_child_handler()
     int status;
     if (p->pid<0) continue;
     waitpid(p->pid,&status,WNOHANG);
-    if (WIFEXITED(status)) {
-      cerr << "\tprocess done: " << p->pid << endl;
-      p->pid = -(p->pid);
-    }
+    if      (WIFEXITED(  status)) { status = WEXITSTATUS(status); }
+    else if (WIFSIGNALED(status)) { status = -(WTERMSIG(status)); }
+    else continue;
+    PDEBUG(cerr << "\tprocess done: " << p->pid << endl;)
+    p->pid = -(p->pid);
+    // Assert(oz_onTopLevel());
+    OZ_unifyInThread(p->status,OZ_int(status));
   }
-  cerr << "[END] Process Child Handler" << endl;
+  PDEBUG(cerr << "[END] Process Child Handler" << endl;)
 }
 
 OZ_BI_define(process_dropDead,0,0)
 {
   OZ_Term l1 = all_processes;
   OZ_Term l2 = OZ_nil();
-  cerr << "[BEGIN] CHILD HANDLER" << endl;
+  PDEBUG(cerr << "[BEGIN] CHILD HANDLER" << endl;)
   while (!OZ_isNil(l1)) {
     OZ_Term head = OZ_head(l1);
     Process*p = OZ_toProcess(head);
     // pid==-1 indicates a dead process
     if (p->pid>=0) {
       l2=OZ_cons(head,l2);
-      cerr << "\tkeeping " << (p->pid) << endl;
+      PDEBUG(cerr << "\tkeeping " << (p->pid) << endl;)
     } else {
-      cerr << "\tdropping " << -(p->pid) << endl;
+      PDEBUG(cerr << "\tdropping " << -(p->pid) << endl;)
     }
     l1 = OZ_tail(l1);
   }
-  cerr << "[END] CHILD HANDLER" << endl;
+  PDEBUG(cerr << "[END] CHILD HANDLER" << endl;)
   all_processes=l2;
+  return PROCEED;
+} OZ_BI_end
+
+#define OZ_declareProcess(ARG,VAR) \
+OZ_declareType(ARG,VAR,Process*,"process", \
+               OZ_isProcess,OZ_toProcess)
+
+OZ_BI_define(process_status,1,1)
+{
+  OZ_declareProcess(0,P);
+  OZ_RETURN(P->status);
+} OZ_BI_end
+
+OZ_BI_define(process_kill,2,0)
+{
+  OZ_declareProcess(0,P);
+  OZ_declareInt(    1,N);
+  if (P->pid>=0) kill(P->pid,N);
   return PROCEED;
 } OZ_BI_end
 
@@ -219,6 +256,8 @@ extern "C"
       {"make"           ,3,1,process_make},
       {"is"             ,1,1,process_is},
       {"dropDead"       ,0,0,process_dropDead},
+      {"status"         ,1,1,process_status},
+      {"kill"           ,2,0,process_kill},
       {0,0,0,0}
     };
     Process::id = oz_newUniqueId();

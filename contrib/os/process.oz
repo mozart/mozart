@@ -4,11 +4,15 @@ import
       is        : IS
       make      : MAKE
       dropDead  : DROPDEAD
+      status    : STATUS
+      kill      : KILL
       ) @ 'process.so{native}'
    Finalize
 export
-   is   : IS
-   make : Make
+   is           : IS
+   make         : Make
+   status       : Status
+   kill         : KILL
 define
 
    fun {IsIntPair X}
@@ -27,11 +31,8 @@ define
       else raise process(make CMD ARGS IOMAP) end end
    end
 
-   proc {AfterGC _}
-      {DROPDEAD}
-      {Finalize.register AfterGC AfterGC}
-   end
+   fun {Status P} !!{STATUS P} end
 
-   {Finalize.register AfterGC AfterGC}
+   {Finalize.everyGC DROPDEAD}
 
 end

@@ -40,10 +40,11 @@ in
          pipe           : PIPE
          getfd          : GETFD
          ) @ 'io.so{native}'
-      PROC @ 'process.so{native}'
+      PROC @ 'process'
       MODE @ 'mode'
       Finalize
    export
+      is        : IS
       Make Write Read ReadAsString Open Close SocketPair Dup
       Fork Run Pipe DevNull Getfd
    define
@@ -141,10 +142,12 @@ in
             pipe(read:RD write:WR) = {Pipe}
          in
             RD=FD {RunProcess {Adjoin Spec process(stdout:WR)} PID}
+            {CLOSE WR}
          [] write     then
             pipe(read:RD write:WR) = {Pipe}
          in
             WR=FD {RunProcess {Adjoin Spec process(stdin:RD)} PID}
+            {CLOSE RD}
          [] readWrite then FD1 FD2 in
             {SocketPair FD1 FD2}
             FD=FD1 {RunProcess {Adjoin Spec process(stdin:FD2 stdout:FD2)} PID}
