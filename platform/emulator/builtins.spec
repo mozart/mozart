@@ -946,6 +946,11 @@ $cmode='stat';
 			     BI  => BIthreadTaskStack,
 			     native => false},
 
+    'Thread.taskStackError' => { in  => ['+thread','+bool'],
+			     out => ['+[record]'],
+			     BI  => BIthreadTaskStackError,
+			     native => false},
+
     'Thread.frameVariables'=> { in  => ['+thread','+int'],
 				out => ['+record'],
 				BI  => BIthreadFrameVariables,
@@ -1145,6 +1150,10 @@ $cmode='stat';
 			     doesNotReturn => 1,
 			     native => false},
 
+    'Exception.raiseDebugCheck' => { in  => ['value'],
+					out => ['+bool'],
+					BI  => BIraiseDebugCheck,
+					native => false},
 
     ##* Finalization
 
