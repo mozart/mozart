@@ -248,9 +248,9 @@ public:
   CpTrail() : Stack(1024, Stack_WithMalloc) {}
   ~CpTrail() {}
   
-  void save(int * p) {
+  void save(int * p, Bool check) {
     // Save content and address
-    ensureFree(2);
+    ensureFree(2); // ALways check for now ;-(
     push((StackEntry) *p, NO);
     push((StackEntry) p,  NO);
   }
@@ -287,18 +287,29 @@ if (GCISMARKED(elem)) {return (Type) GCUNMARK(elem);}
  *
  */
 inline
-void _cacStoreFwd(int32* fromPtr, void *newValue, Bool domark=OK) {
+void _cacStoreFwdNoMark(int32* fromPtr, void *newValue, Bool check) {
 #ifdef S_CLONE
-  cpTrail.save(fromPtr);
+  cpTrail.save(fromPtr,check);
 #else
   GCDBG_INFROMSPACE(fromPtr);
 #endif
 
-  *fromPtr = domark ? GCMARK(newValue) : ToInt32(newValue);
+  *fromPtr = ToInt32(newValue);
 }
 
-#define storeFwdField(d,t) \
-  _cacStoreFwd((int32*) d->cacGetMarkField(), t, NO); d->cacMark(t);
+inline
+void _cacStoreFwdMark(int32* fromPtr, void *newValue, Bool check) {
+#ifdef S_CLONE
+  cpTrail.save(fromPtr,check);
+#else
+  GCDBG_INFROMSPACE(fromPtr);
+#endif
+
+  *fromPtr = GCMARK(newValue);
+}
+
+#define storeFwdField(d,t,c) \
+  _cacStoreFwdNoMark((int32*) d->cacGetMarkField(), t, c); d->cacMark(t);
 
 #ifdef G_COLLECT
 
@@ -428,12 +439,6 @@ CacStack cacStack;
  * Collect all types of terms
  ****************************************************************************/
 
-// This procedure derefences cluster chains and collects only the object at 
-// the end of such a chain.
-
-
-
-
 // Structure of type 'RefsArray' (see ./tagged.h)
 // r[0]..r[n-1] data
 // r[-1] gc tag set --> has already been copied
@@ -447,7 +452,7 @@ Bool _cacRefsArrayIsMarked(RefsArray r) {
 
 inline 
 void _cacRefsArrayMark(RefsArray r, void *ptr) {
-  _cacStoreFwd((int32*)&r[-1],ToPointer(ToInt32(ptr)|RAGCTag),NO);
+  _cacStoreFwdNoMark((int32*)&r[-1],ToPointer(ToInt32(ptr)|RAGCTag),OK);
 }
 
 inline 
@@ -510,7 +515,7 @@ inline
 void Board::_cacMark(Board * fwd) {
   Assert(!cacIsMarked());
 #ifdef S_CLONE
-  cpTrail.save((int32 *) &parentAndFlags);
+  cpTrail.save((int32 *) &parentAndFlags, NO);
 #endif
   parentAndFlags.set((void *) fwd, BoTag_MarkTwo);
 }
@@ -579,7 +584,7 @@ Name *Name::_cacName() {
 
     Name *aux = (Name*) _cacReallocStatic(this,sizeof(Name));
 
-    _cacStoreFwd(&homeOrGName, aux);
+    _cacStoreFwdMark(&homeOrGName, aux, NO);
     
 #ifdef G_COLLECT
     if (gn) {
@@ -623,7 +628,7 @@ inline
 void OzVariable::_cacMark(TaggedRef * fwd) {
   Assert(!cacIsMarked());
 #ifdef S_CLONE
-  cpTrail.save((int32 *) &suspList);
+  cpTrail.save((int32 *) &suspList, NO);
 #endif
   suspList = (SuspList *) MarkPointer(fwd,1);
 }
@@ -714,13 +719,16 @@ OzVariable * OzVariable::_cacVarInline(void) {
   }
   
   to->setHome(bb);
-  cacSuspList(&(to->suspList));
+  cacSuspList(&(to->suspList),NO);
 
   return to;
     
 }
 
 OzVariable * OzVariable::_cacVar(void) {
+  /*
+   * This routine MUST go, it breaks a lot of invariants!
+   */
   return _cacVarInline();
 }
 
@@ -856,7 +864,7 @@ SRecord *SRecord::_cacSRecord() {
   ret->label       = label;
   ret->recordArity = recordArity;
 
-  _cacStoreFwd((int32*)&label, ret);
+  _cacStoreFwdMark((int32*)&label, ret, NO);
 
   cacStack.push(this, PTR_SRECORD);
 
@@ -869,15 +877,6 @@ OZ_Propagator * OZ_Propagator::cac(void) {
   OZ_Propagator * to = (OZ_Propagator *) oz_hrealloc(this, sizeOf());
 
   return to;
-}
-
-ForeignPointer * ForeignPointer::cac(void) {
-  ForeignPointer * ret =
-    (ForeignPointer*) _cacReallocStatic(this,sizeof(ForeignPointer));
-  ret->ptr = ptr;
-
-  storeFwdField(this, ret);
-  return ret;
 }
 
 #endif
@@ -907,30 +906,19 @@ TaggedRef _cacExtension(TaggedRef term) {
   OZ_Extension *ret = ex->_cacV();
 
   if (bb) 
-    ret->__setSpaceInternal(bb);
+    ret->__setSpaceInternal(bb->_cacBoard());
   
   cacStack.push(ret,PTR_EXTENSION);
 
   int32 *fromPtr = (int32*)ex;
 
 #ifdef S_CLONE
-  cpTrail.save(fromPtr);
+  cpTrail.save(fromPtr,NO);
 #endif
   
   *fromPtr = ToInt32(ret)|1;
 
   return oz_makeTaggedExtension(ret);
-}
-
-inline
-void _cacExtensionRecurse(OZ_Extension *ex)
-{
-  Board *bb=(Board*) (ex->__getSpaceInternal());
-
-  if (bb) 
-    ex->__setSpaceInternal(bb->_cacBoard());
-
-  ex->_cacRecurseV();
 }
 
 // ===================================================================
@@ -1127,6 +1115,76 @@ void gCollect_finalize()
 #endif
 
 void OZ_cacBlock(OZ_Term * frm, OZ_Term * to, const int sz) {
+  
+  /*
+   * Reserve space on the various stacks
+   */
+
+  /*
+   * varFix: at maximum one entry per block field
+   */
+
+  varFix.ensureFree(sz);
+
+  /*
+   *  - REF*, GCTAG, SMALLINT, FSETVALUE, OZFLOAT:
+   *     no entry:                               0
+   *  - LITERAL:
+   *     board:                                  1
+   *  - EXT:
+   *     board, entry                            2
+   *  - LTUPLE, SRECORD:
+   *     entry                                   1
+   *  - UVAR:
+   *     board:                                  1
+   *  - CVAR:
+   *     entry, board, susplist, loc. susplist:  5
+   *  - OZCONST:
+   *     UNBOUNDED for arbitray calls, so it must
+   *     check locally!
+   *     for local calls in this routine, at most:
+   *     entry, board, board:                    3
+   *     
+   *
+   * conservative estimate: 5 entries
+   *
+   * DOES NOT WORK YET, BECAUSE OF UNSOLCITED ENTRIES INTO 
+   * GC ROUTINES
+   *
+   */
+
+  // cacStack.ensureFree(sz * 5);
+
+#ifdef S_CLONE
+
+  /*
+   * copying trail:
+   *  - REF*, GCTAG, SMALLINT, FSETVALUE, OZFLOAT, LTUPLE:
+   *     no entry:                               0
+   *  - LITERAL:
+   *     entry, board:                           2
+   *  - EXT:
+   *     board, entry                            2
+   *  - SRECORD:
+   *     entry                                   1
+   *  - UVAR:
+   *     entry, board:                           2
+   *  - CVAR:
+   *     entry, board:                           2
+   *  - OZCONST:
+   *    entry, board, board:                     3 
+   *
+   * conservative estimate: 3 entries
+   *
+   * DOES NOT WORK YET, BECAUSE OF UNSOLCITED ENTRIES INTO 
+   * GC ROUTINES
+   *
+   */
+
+  // cpTrail.ensureFree(sz * 2 * 3);
+
+#endif
+
   for (int i=sz; i--; ) {
     TaggedRef aux = frm[i];
 
@@ -1269,7 +1327,7 @@ void OZ_cacBlock(OZ_Term * frm, OZ_Term * to, const int sz) {
 	  frm[i] = makeTaggedRef(&to[i]);
 	  to[i]  = aux;
 	}
-	_cacStoreFwd((int32 *)&frm[i], &to[i]);
+	_cacStoreFwdMark((int32 *)&frm[i], &to[i], NO);
       }
       break;
 
@@ -1291,7 +1349,7 @@ void OZ_cacBlock(OZ_Term * frm, OZ_Term * to, const int sz) {
 	  // the original variable is replaced by a reference!
 	  frm[i] = makeTaggedRef(&to[i]);
 	  to[i]  = aux;
-	  _cacStoreFwd((int32*) &frm[i], &to[i]);
+	  _cacStoreFwdMark((int32*) &frm[i], &to[i], NO);
 	}
 	
       }
@@ -1437,7 +1495,7 @@ void VarFix::_cacFix(void) {
     Assert(tagTypeOf(aux) == UVAR || tagTypeOf(aux) == GCTAG);
     
     *to = makeTaggedRef(to_ptr);
-    _cacStoreFwd((int32 *) aux_ptr, to_ptr);
+    _cacStoreFwdMark((int32 *) aux_ptr, to_ptr, OK);
     
   } while (!isEmpty());
 
@@ -1646,41 +1704,63 @@ void AbstractionEntry::gCollectAbstractionEntry(void) {
 
 #endif
 
-//*********************************************************************
-//                           NODEs
-//*********************************************************************
-
-#ifdef G_COLLECT
-
-// failure interface for local tertiarys
-inline void maybeGCForFailure(Tertiary *t){
-  if(t->getInfo()!=NULL) (*gCollectEntityInfo)(t);}
-
-#else
-
-#define maybeGCForFailure(t) 
-
-#endif
-
-
-inline
-void ConstTermWithHome::_cacConstTermWithHome()
-{
-  if (hasGName()) {
-#ifdef G_COLLECT
-    dogcGName(getGName1());
-#endif
-  } else {
-    setBoard(getBoardInternal()->_cacBoard());
-  }
-}
+/*
+ * CONST collection
+ *
+ */
 
 ObjectClass * ObjectClass::_cacClass() { 
   return this ? ((ObjectClass *) _cacConstTerm()) : this; 
 }
 
-void ConstTerm::_cacConstRecurse()
-{
+
+#ifdef G_COLLECT
+
+// failure interface for local tertiarys
+inline void maybeGCForFailure(Tertiary *t) {
+  if(t->getInfo()!=NULL) 
+    (*gCollectEntityInfo)(t);
+}
+
+inline
+void ConstTermWithHome::gCollectConstTermWithHome(void) {
+  if (hasGName()) {
+    dogcGName(getGName1());
+  } else {
+    setBoard(getSubBoardInternal()->gCollectBoard());
+  }
+}
+
+inline
+void Tertiary::gCollectTertiary(void) {
+  if (isLocal()) {
+    setBoardLocal(getBoardLocal()->gCollectBoard());
+  }
+}
+
+#else
+
+#define maybeGCForFailure(t) 
+
+inline
+void ConstTermWithHome::sCloneConstTermWithHome(void) {
+  Assert(!hasGName());
+  setBoard(getSubBoardInternal()->sCloneBoard());
+}
+
+
+inline
+void Tertiary::sCloneTertiary(void) {
+  Assert(isLocal());
+  setBoardLocal(getBoardLocal()->sCloneBoard());
+}
+
+
+#endif
+
+
+
+void ConstTerm::_cacConstRecurse(void) {
   switch(getType()) {
   case Co_Object:
     {
@@ -1688,7 +1768,6 @@ void ConstTerm::_cacConstRecurse()
 
       switch(o->getTertType()) {
       case Te_Local:   
-	o->setBoard(o->getBoardInternal()->_cacBoard()); 
 	maybeGCForFailure(o);
 	break;
 #ifdef G_COLLECT
@@ -1726,7 +1805,6 @@ void ConstTerm::_cacConstRecurse()
   case Co_Class:
     {
       ObjectClass *cl = (ObjectClass *) this;
-      cl->_cacConstTermWithHome();
       cl->fastMethods    = (OzDictionary*) cl->fastMethods->_cacConstTerm();
       cl->defaultMethods = (OzDictionary*) cl->defaultMethods->_cacConstTerm();
       cl->features       = cl->features->_cacSRecord();
@@ -1738,7 +1816,6 @@ void ConstTerm::_cacConstRecurse()
   case Co_Abstraction:
     {
       Abstraction *a = (Abstraction *) this;
-      a->_cacConstTermWithHome();
 #ifdef G_COLLECT
       gCollectCode(a->getPred()->getCodeBlock());
 #endif
@@ -1752,7 +1829,6 @@ void ConstTerm::_cacConstRecurse()
       Tertiary *t=(Tertiary*)this;
       if (t->isLocal()) {
 	CellLocal *cl=(CellLocal*)t;
-	cl->setBoard(cl->getBoardInternal()->_cacBoard()); 
 	oz_cacTerm(cl->val,cl->val);
 	maybeGCForFailure(t);
       }
@@ -1768,7 +1844,6 @@ void ConstTerm::_cacConstRecurse()
     {
       Port *p = (Port*) this;
       if (p->isLocal()) {
-	p->setBoard(p->getBoardInternal()->_cacBoard());
 	PortWithStream *pws = (PortWithStream *) this;
 	oz_cacTerm(pws->strm,pws->strm);
 	maybeGCForFailure(p);
@@ -1781,37 +1856,17 @@ void ConstTerm::_cacConstRecurse()
 #endif
       break;
     }
-  case Co_Space:
-    {
-      Space *s = (Space *) this;
-      Assert(s->getInfo()==NULL);
-      if (!s->isProxy()) {
-	if (!s->isMarkedFailed() && !s->isMarkedMerged()) {
-	  if (s->solve->cacIsAlive()) {
-	    s->solve = s->solve->_cacBoard();
-	  } else {
-	    s->solve = (Board *) 0;
-	    Assert(s->isMarkedFailed());
-	  }
-	}
-	if (s->isLocal())
-	  s->setBoard(s->getBoardInternal()->_cacBoard());
-      }
-      break;
-    }
-    
+
   case Co_Chunk:
     {
       SChunk *c = (SChunk *) this;
       oz_cacTerm(c->value,c->value);
-      c->_cacConstTermWithHome();
       break;
     }
     
   case Co_Array:
     {
       OzArray *a = (OzArray*) this;
-      a->_cacConstTermWithHome();
       int aw = a->getWidth();
       if (aw > 0) {
 	TaggedRef *newargs = (TaggedRef*) heapMalloc(sizeof(TaggedRef) * aw);
@@ -1824,7 +1879,6 @@ void ConstTerm::_cacConstRecurse()
   case Co_Dictionary:
     {
       OzDictionary *dict = (OzDictionary *) this;
-      dict->_cacConstTermWithHome();
       dict->table = dict->table->_cac();
       break;
     }
@@ -1834,7 +1888,6 @@ void ConstTerm::_cacConstRecurse()
       Tertiary *t=(Tertiary*)this;
       if (t->isLocal()) {
 	LockLocal *ll = (LockLocal *) this;
-	ll->setBoard(ll->getBoardInternal()->_cacBoard());
 #ifdef G_COLLECT
 	gCollectPendThreadEmul(&(ll->pending));
 #endif
@@ -1857,16 +1910,29 @@ void ConstTerm::_cacConstRecurse()
 
 #ifdef S_CLONE
 
-#define CheckLocal(CONST) \
-{					  \
-   Board *bb=(CONST)->getBoardInternal(); \
-   Assert(bb->cacIsAlive());              \
-   if (!NEEDSCOPYING(bb)) return this;    \
+#define CheckLocalWithHome                                \
+{					                  \
+   ConstTermWithHome * ctwh = (ConstTermWithHome *) this; \
+   if (ctwh->hasGName()) return this;                     \
+   Board * bb = ctwh->getSubBoardInternal();              \
+   Assert(bb->cacIsAlive());                              \
+   if (!NEEDSCOPYING(bb)) return this;                    \
+}
+
+#define CheckLocalTertiary             \
+{				       \
+   Tertiary * t = (Tertiary *) this;   \
+   if (!t->isLocal()) return this;     \
+   Board * bb = t->getBoardLocal();    \
+   Assert(bb->cacIsAlive());           \
+   if (!NEEDSCOPYING(bb)) return this; \
 }
 
 #else
 
-#define CheckLocal(CONST)
+#define CheckLocalWithHome
+
+#define CheckLocalTertiary
 
 #endif
 
@@ -1876,167 +1942,154 @@ ConstTerm *ConstTerm::_cacConstTerm() {
   if (cacIsMarked())
     return cacGetFwd();
 
-#ifdef G_COLLECT
-  GName *gn = NULL;
-#endif
-
   ConstTerm * ret;
 
   switch (getType()) {
+
+    /*
+     * Unsituated types
+     *
+     */
+
   case Co_BigInt:
 #ifdef G_COLLECT
     ret = ((BigInt *) this)->gCollect();
-    storeFwdField(this, ret);
+    storeFwdField(this, ret, OK);
     return ret;
 #else
     return this;
 #endif
-  case Co_Abstraction: 
-    {
-      Abstraction *a = (Abstraction *) this;
-      CheckLocal(a);
 
-      Abstraction *newA = Abstraction::newAbstraction(a->getPred(),
-						      a->getBoardInternal());
-      cacStack.push(newA,PTR_CONSTTERM);
-      storeFwdField(this, newA);
+  case Co_Foreign_Pointer:
 #ifdef G_COLLECT
-      gn = a->getGName1();
-      if (gn) {
-	newA->setGName(gn);
-	dogcGName(gn);
-      }
+    ret = (ConstTerm *) _cacReallocStatic(this,sizeof(ForeignPointer));
+    storeFwdField(this, ret, OK);
+    return ret;
+#else
+    return this;
 #endif
-      memcpy((void *) newA->getGRef(), a->getGRef(), 
-	     sizeof(TaggedRef) * a->getPred()->getGSize());
-      
-      return newA;
-    }
 
-  case Co_Object: 
-    {
-      Object *o = (Object *) this;
-      CheckLocal(o);
-      ret = (ConstTerm *) _cacReallocStatic(this,sizeof(Object));
+  case Co_Resource:
 #ifdef G_COLLECT
-      gn = o->getGName1();
+    ret = (*gCollectDistResource)(this);
+    storeFwdField(this, ret, OK);
+    return ret;
+#else
+    return this;
 #endif
-      break;
-    }
-  case Co_Class: 
-    {
-      ObjectClass *cl = (ObjectClass *) this;
-      CheckLocal(cl);
-#ifdef G_COLLECT
-      gn = cl->getGName1();
-#endif
-      ret = (ConstTerm *) _cacReallocStatic(this,sizeof(ObjectClass));
-      break;
-    }
-  case Co_Cell:
-    {
-      switch(((Tertiary *)this)->getTertType()){
-      case Te_Local:
-	CheckLocal((CellLocal*)this);
-      case Te_Proxy:
-      case Te_Manager:
-	ret = (ConstTerm *) _cacReallocStatic(this,sizeof(CellManagerEmul));
-	break;
-      case Te_Frame:{
-	ret = (ConstTerm *) _cacReallocStatic(this,sizeof(CellFrameEmul));
-	break;
-      }
-      default:{
-	Assert(0);
-	break;}}
-      break;
-    }
 
-  case Co_Port:  
-    {
-#ifdef G_COLLECT
-      if(((Tertiary *)this)->getTertType()==Te_Proxy) {
-	ret = (ConstTerm *) _cacReallocStatic(this, SIZEOFPORTPROXY);
-	break;}
-#endif
-      if(((Tertiary *)this)->getTertType()==Te_Local) {
-	CheckLocal((PortLocal *) this);}
-      ret = (ConstTerm *) _cacReallocStatic(this,sizeof(PortLocal));
-      break;
-    }
-  case Co_Space:
-    {
-      Space *sp = (Space *) this;
-      CheckLocal(sp);
-
-      ret = (ConstTerm *) _cacReallocStatic(this,sizeof(Space));
-      break;
-    }
-
-  case Co_Chunk:
-    {
-      SChunk *sc = (SChunk *) this;
-      CheckLocal(sc);
-#ifdef G_COLLECT
-      gn = sc->getGName1();
-#endif
-      ret = (ConstTerm *) _cacReallocStatic(this,sizeof(SChunk));
-      break;
-    }
-
-  case Co_Array:
-    CheckLocal((OzArray *) this);
-    ret = (ConstTerm *) _cacReallocStatic(this,sizeof(OzArray));
-    break;
-
-  case Co_Dictionary:
-    CheckLocal((OzDictionary *) this);
-    ret = (ConstTerm *) _cacReallocStatic(this,sizeof(OzDictionary));
-    break;
-
-  case Co_Lock:
-    {
-      switch(((Tertiary *)this)->getTertType()) {
-      case Te_Local:
-	CheckLocal((LockLocal*)this);
-      case Te_Frame:
-      case Te_Proxy:
-      case Te_Manager:
-	ret = (ConstTerm *) _cacReallocStatic(this,sizeof(LockLocal));
-	break;
-      default:
-	Assert(0);
-	break;
-      }
-      break;
-    }
-
-  /* builtins are allocate dusing malloc */
   case Co_Builtin:
     return this;
 
-  case Co_Foreign_Pointer:
-    return ((ForeignPointer*)this)->cac();
-  
-#ifdef G_COLLECT
-  case Co_Resource:{
-    ret = (*gCollectDistResource)(this);
-    storeFwdField(this, ret);
-    return ret;
-}
-#endif
+    /*
+     * ConstTermWithHome
+     *
+     */
 
-  default:
-    Assert(0);
-    return 0;
+  case Co_Abstraction: 
+    CheckLocalWithHome;
+    ret = (ConstTerm *) oz_hrealloc(this, 
+				    ((Abstraction *) this)->getAllocSize());
+    goto const_withhome;
+
+  case Co_Chunk:
+    CheckLocalWithHome;
+    ret = (ConstTerm *) _cacReallocStatic(this,sizeof(SChunk));
+    goto const_withhome;
+
+  case Co_Array:
+    CheckLocalWithHome;
+    ret = (ConstTerm *) _cacReallocStatic(this,sizeof(OzArray));
+    goto const_withhome;
+
+  case Co_Dictionary:
+    CheckLocalWithHome;
+    ret = (ConstTerm *) _cacReallocStatic(this,sizeof(OzDictionary));
+    goto const_withhome;
+
+  case Co_Class: 
+    CheckLocalWithHome;
+    ret = (ConstTerm *) _cacReallocStatic(this,sizeof(ObjectClass));
+    goto const_withhome;
+
+    /*
+     * Tertiary
+     *
+     */
+
+  case Co_Object: 
+    CheckLocalTertiary;
+    ret = (ConstTerm *) _cacReallocStatic(this,sizeof(Object));
+#ifdef G_COLLECT
+    dogcGName(((Object *) this)->getGName1());
+#endif
+    goto const_tertiary;
+
+  case Co_Cell:
+    CheckLocalTertiary;
+#ifdef G_COLLECT
+    if (((Tertiary *)this)->getTertType() == Te_Frame) {
+      ret = (ConstTerm *) _cacReallocStatic(this,sizeof(CellFrameEmul));
+    } else {
+      ret = (ConstTerm *) _cacReallocStatic(this,sizeof(CellManagerEmul));
+    }
+#else
+    ret = (ConstTerm *) _cacReallocStatic(this,sizeof(CellManagerEmul));
+#endif
+    goto const_tertiary;
+    
+  case Co_Port:  
+    CheckLocalTertiary;
+#ifdef G_COLLECT
+    if (((Tertiary *)this)->getTertType() == Te_Proxy) {
+      ret = (ConstTerm *) _cacReallocStatic(this, SIZEOFPORTPROXY);
+    } else {
+      ret = (ConstTerm *) _cacReallocStatic(this,sizeof(PortLocal));
+    }
+#else
+    ret = (ConstTerm *) _cacReallocStatic(this,sizeof(PortLocal));
+#endif
+    goto const_tertiary;
+
+  case Co_Space:
+    CheckLocalTertiary;
+    ret = (ConstTerm *) _cacReallocStatic(this,sizeof(Space));
+    {
+      Space *s = (Space *) ret;
+      if (!s->isProxy()) {
+	if (!s->isMarkedFailed() && !s->isMarkedMerged()) {
+	  if (s->solve->cacIsAlive()) {
+	    s->solve = s->solve->_cacBoard();
+	  } else {
+	    s->solve = (Board *) 0;
+	    Assert(s->isMarkedFailed());
+	  }
+	}
+      }
+    }
+    goto const_tertiary_nopush;
+
+  case Co_Lock:
+    CheckLocalTertiary;
+    ret = (ConstTerm *) _cacReallocStatic(this,sizeof(LockLocal));
+    goto const_tertiary;
+
   }
 
+ const_tertiary:
+  // Reserve space on stack
   cacStack.push(ret,PTR_CONSTTERM);
-  storeFwdField(this, ret);
-#ifdef G_COLLECT
-  dogcGName(gn);
-#endif
+ const_tertiary_nopush:
+  ((Tertiary *) ret)->_cacTertiary();
+  storeFwdField(this, ret, OK);
   return ret;
+
+ const_withhome:
+  ((ConstTermWithHome *) ret)->_cacConstTermWithHome();
+  cacStack.push(ret,PTR_CONSTTERM);
+  storeFwdField(this, ret, OK);
+  return ret;
+
 }
 
 /* the purpose of this procedure is to provide an additional entry
@@ -2201,7 +2254,7 @@ Suspendable * Suspendable::_cacSuspendableInline(void) {
   }
 
   to->flags = flags;
-  storeFwdField(this, to);
+  storeFwdField(this, to, OK);
 
   return to;
 }
@@ -2236,7 +2289,7 @@ Propagator * Propagator::_cacLocalInline(Board * bb) {
 
   to->flags = flags;
   
-  storeFwdField(this, to);
+  storeFwdField(this, to, OK);
 
   Assert(to->isPropagator());
 
@@ -2308,7 +2361,7 @@ void SuspQueue::_cac(void) {
   SuspList * head = last->getNext();
 
 #ifdef S_CLONE
-  cpTrail.save((int32 *) last->getNextRef());
+  cpTrail.save((int32 *) last->getNextRef(),OK);
 #endif
 
   last->setNext(NULL);
@@ -2367,9 +2420,9 @@ void Board::_cacRecurse() {
   oz_cacTerm(rootVar,rootVar);
   oz_cacTerm(status,status);
 
-  cacSuspList(&suspList);
+  cacSuspList(&suspList,OK);
   setDistBag(getDistBag()->_cac());
-  cacSuspList((SuspList **) &nonMonoSuspList);
+  cacSuspList((SuspList **) &nonMonoSuspList,OK);
 
 #ifdef CS_PROFILE
 #ifdef G_COLLECT
@@ -2410,7 +2463,7 @@ void LTuple::_cacRecurse() {
   if (!oz_isLTuple(aux) || tagged2LTuple(aux) != this) {
     frm->args[0] = to->args[0];
     oz_cacTerm(frm->args[0], to->args[0]);
-    _cacStoreFwd((int32 *)frm->args, to->args);
+    _cacStoreFwdMark((int32 *)frm->args, to->args, OK);
   } else {
     to->args[0] = makeTaggedLTuple((LTuple *) to);
   }
@@ -2439,7 +2492,7 @@ void LTuple::_cacRecurse() {
     
     oz_cacTerm(frm->args[0], to->args[0]);
 
-    _cacStoreFwd((int32 *)frm->args, to->args);
+    _cacStoreFwdMark((int32 *)frm->args, to->args, OK);
 
   } 
   
@@ -2471,7 +2524,7 @@ void CacStack::_cacRecurse(void) {
       ((ConstTerm *) ptr)->_cacConstRecurse();   
       break;
     case PTR_EXTENSION: 
-      _cacExtensionRecurse((OZ_Extension *)ptr);
+      ((OZ_Extension *) ptr)->_cacRecurseV();
       break;
     case PTR_SUSPLIST:
       *((SuspList **) ptr) = (*(SuspList **) ptr)->_cacRecurse(NULL);
