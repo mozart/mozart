@@ -359,6 +359,7 @@ void exitCheckSpace() {
  *
  */
 
+inline
 RefsArray * RefsArray::_cac(void) {
   if (!this)
     return this;

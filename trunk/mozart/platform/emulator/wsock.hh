@@ -40,8 +40,21 @@
 #define min winmin
 #define max winmax
 
-#include <windows.h>
-#include <winsock.h>
+/* The windows header files can sometimes #define INTERFACE.
+ * We make sure here that if it was undefined before we include
+ * the Windows files then it will be undefined afterwards.
+ */
+
+#ifndef INTERFACE
+ #define OZNOINTERFACE
+#endif 
+
+ #include <windows.h>
+ #include <winsock.h>
+
+#ifdef OZNOINTERFACE
+  #undef INTERFACE
+#endif
 
 #undef min
 #undef max
