@@ -392,6 +392,18 @@ OZ_FSetImpl::OZ_FSetImpl(OZ_Term ins, OZ_Term outs)
   Assert(_card_min <= _card_max);
 }
 
+OZ_FSetImpl::OZ_FSetImpl(const OZ_FSetImpl &s)
+{
+  init(s);
+}
+
+OZ_FSetImpl &OZ_FSetImpl::operator = (const OZ_FSetImpl &s)
+{
+  if (this != &s)
+    init(s);
+
+  return *this;
+}
 
 void OZ_FSetImpl::printGlb(ostream &o) const
 {
@@ -446,34 +458,7 @@ failure:
   DEBUG_FSETIR("FALSE" << endl);
   return OZ_FALSE;
 }
-/*
-OZ_Boolean OZ_FSetImpl::unify(const FSetValue &fs)
-{
-  DEBUG_FSETIR("( " << *this << " unify (val)" << fs << " ) = ");
 
-  if (fs._card < _card_min || _card_max < fs._card)
-    goto failure;
-
-  _card_min = _card_max = fs._card;
-
-  for (int i = fset_high; i--; ) {
-    _in[i] = _in[i] | fs._in[i];
-
-    if (_in[i] & ~fs._in[i])
-      goto failure;
-    if (_not_in[i] & fs._in[i])
-      goto failure;
-  }
-
-  normalize();
-  return OZ_TRUE;
-
-failure:
-  DEBUG_FSETIR("FALSE" << endl);
-  _card_min = -1;
-  return OZ_FALSE;
-}
-*/
 OZ_FSetImpl OZ_FSetImpl::unify(const OZ_FSetImpl &y) const
 {
   DEBUG_FSETIR("( " << *this << " unify " << y << " ) = ");
@@ -497,12 +482,6 @@ OZ_FSetImpl OZ_FSetImpl::unify(const OZ_FSetImpl &y) const
     }
   }
 
-  /*
-    z._known_in = findBitsSet(fset_high, z._in);
-    z._known_not_in = findBitsSet(fset_high, z._not_in);
-    z._card_min = max(z._card_min, z._known_in);
-    z._card_max = min(z._card_max, (32 * fset_high) - z._known_not_in);
-    */
   z.normalize();
   return z;
 
@@ -560,6 +539,16 @@ void OZ_FSetImpl::init(OZ_FSetState s)
   default:
     error("Unexpected case in \"OZ_FSetImpl::init(OZ_FSetState\".");
   }
+}
+
+void OZ_FSetImpl::init(const OZ_FSetImpl &s)
+{
+  for (int i = fset_high; i--; ) {
+    _in[i] = s._in[i];
+    _not_in[i] = s._not_in[i];
+  }
+  _card_min = s._card_min;
+  _card_max = s._card_max;
 }
 
 OZ_Boolean OZ_FSetImpl::isIn(int i) const
@@ -995,6 +984,16 @@ OZ_FSetConstraint::OZ_FSetConstraint(const OZ_FSetValue &s)
 OZ_FSetConstraint::OZ_FSetConstraint(OZ_FSetState s)
 {
   CASTTHIS->init(s);
+}
+
+OZ_FSetConstraint::OZ_FSetConstraint(const OZ_FSetConstraint &s)
+{
+  CASTTHIS->init(* (OZ_FSetImpl *) &s);
+}
+
+OZ_FSetConstraint &OZ_FSetConstraint::operator = (const OZ_FSetConstraint &s)
+{
+  return CASTTHIS->operator = (* (OZ_FSetImpl *) &s);
 }
 
 void OZ_FSetConstraint::init(void)
