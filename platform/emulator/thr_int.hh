@@ -39,44 +39,47 @@
 
 // exported functions
 
-inline void oz_checkExtSuspension(Suspension susp);
-void oz_checkExtSuspension(Suspension susp, Board * home);
-void oz_checkExtSuspensionOutlined(Suspension susp);
-inline void oz_removeExtThread(Thread *tt);
-void oz_removeExtThreadOutlined(Thread *tt);
-inline Thread *oz_mkRunnableThread(int prio, Board *bb);
-inline Thread *oz_mkRunnableThreadOPT(int prio, Board *bb);
-Thread *oz_mkLPQ(Board *bb, int prio);
-Propagator * oz_mkPropagator(Board *bb, int prio, OZ_Propagator *pro);
-inline Thread *oz_mkSuspendedThread(Board *bb, int prio);
-inline Thread *oz_mkWakeupThread(Board *bb);
-void oz_pushToLPQ(Board *bb, Propagator * prop);
-inline void oz_suspThreadToRunnableOPT(Thread *tt);
-inline void oz_suspThreadToRunnable(Thread *tt);
-inline void oz_wakeupToRunnable(Thread *tt);
-inline void oz_propagatorToRunnable(Thread *tt);
-inline void oz_updateSolveBoardPropagatorToRunnable(Thread *tt);
-void oz_solve_scheduleNonMonoSuspList(SolveActor *sa);
-inline void oz_suspendPropagator(Propagator *);
-inline void oz_scheduledPropagator(Propagator *);
-inline void oz_closeDonePropagator(Propagator *);
-inline void oz_closeDonePropagatorCD(Propagator *);
-inline void oz_closeDonePropagatorThreadCD(Propagator *);
-inline void oz_disposeSuspendedThread(Thread *tt);
-inline void oz_disposeRunnableThread(Thread *tt);
-inline OZ_Return oz_runPropagator(Propagator *);
-SuspList *oz_checkAnySuspensionList(SuspList *suspList,Board *home,
-				    PropCaller calledBy);
-void oz_wakeupAny(Suspension susp, Board * bb);
-inline Bool oz_wakeUp(Suspension susp, Board * home, PropCaller calledBy);
-inline Bool oz_wakeUpPropagator(Propagator * prop, Board *home, 
-			PropCaller calledBy = pc_propagator);
-inline Bool oz_wakeUpBoard(Thread *tt, Board *home);
-inline Bool oz_wakeUpThread(Thread *tt, Board *home);
-
+inline
+void
+oz_checkExtSuspension(Suspension susp);
+void
+oz_checkExtSuspension(Suspension susp, Board * home);
+void
+oz_checkExtSuspensionOutlined(Suspension susp);
+void
+oz_removeExtThreadOutlined(Thread *tt);
+Thread *
+oz_mkLPQ(Board *bb, int prio);
+Propagator *
+oz_mkPropagator(Board *bb, int prio, OZ_Propagator *pro);
+void
+oz_pushToLPQ(Board *bb, Propagator * prop);
+void
+oz_solve_scheduleNonMonoSuspList(SolveActor *sa);
 
 /* -------------------------------------------------------------------------
- * inlines
+ * Suspension lists
+ * ------------------------------------------------------------------------- */
+
+void
+oz_wakeupAll(SVariable *sv);
+
+SuspList *
+oz_checkAnySuspensionList(SuspList *suspList,Board *home,
+			  PropCaller calledBy);
+
+// mm2: maybe #define this???
+inline
+void
+oz_checkSuspensionList(SVariable *var,
+		       PropCaller calledBy=pc_propagator)
+{
+  var->setSuspList(oz_checkAnySuspensionList(var->getSuspList(),
+					     GETBOARD(var),calledBy));
+}
+
+/* -------------------------------------------------------------------------
+ * Threads
  * ------------------------------------------------------------------------- */
 
 static
@@ -89,60 +92,52 @@ Thread *_newThread(int prio, Board *bb) {
   return th;
 }
 
-//
-//  Make a runnable thread with a task stack;
-inline 
-Thread *oz_mkRunnableThread(int prio, Board *bb)
+inline
+Thread *oz_newThread(int prio=DEFAULT_PRIORITY)
 {
-  Thread *th = _newThread(prio,bb);
+  Board *bb=oz_currentBoard();
+  Thread *tt = _newThread(prio,bb);
 
-  int inSolve = oz_incSolveThreads(bb);
-  if (inSolve) {
-    th->setInSolve();
-  }
-  return th;
-}
-
-//
-//  Make a runnable thread with a task stack;
-inline 
-Thread *oz_mkRunnableThreadOPT(int prio, Board *bb)
-{
-  Thread *th = _newThread(prio,bb);
-
-  Assert(oz_isCurrentBoard(bb) || oz_isCurrentBoard(bb->getParent()));
   if (am.isBelowSolveBoard()) {
     int inSolve=oz_incSolveThreads(bb);
     Assert(inSolve);
-    th->setInSolve();
+    tt->setInSolve();
   } else {
     Assert(!oz_isInSolveDebug(bb));
   }
-  return th;
+  am.threadsPool.scheduleThread(tt);
+  return tt;
 }
 
-//
+
 inline
-Propagator * oz_mkPropagator(Board * bb, int prio, OZ_Propagator * p)
+Thread *oz_newThreadToplevel(int prio=DEFAULT_PRIORITY)
 {
-  Propagator * prop = new Propagator(p, bb);
-  prop->markRunnable();
-  prop->markUnifyPropagator();
+  Board *bb=oz_rootBoard();
+  Thread *tt = _newThread(prio,bb);
 
-  if (! p->isMonotonic()) 
-    prop->markNonMonotonicPropagator();
-
-  bb->incSuspCount();
-
-  /* checkDebug(th,bb); TMUELLER ask BENNI */
-
-  return prop;
+  am.threadsPool.scheduleThread(tt);
+  return tt;
 }
 
-//
-inline 
-Thread *oz_mkSuspendedThread(Board *bb, int prio)
+inline
+Thread *oz_newThreadInject(int prio,Board *bb)
 {
+  Thread *tt = _newThread(prio,bb);
+
+  int inSolve = oz_incSolveThreads(bb);
+  if (inSolve) {
+    tt->setInSolve();
+  }
+  am.threadsPool.scheduleThread(tt);
+  return tt;
+}
+
+
+inline
+Thread *oz_newThreadSuspended(int prio=DEFAULT_PRIORITY)
+{
+  Board *bb = oz_currentBoard();
   Thread *th = new Thread(S_RTHREAD,prio,bb,am.newId());
   th->setBody(am.threadsPool.allocateBody());
   bb->incSuspCount();
@@ -152,16 +147,8 @@ Thread *oz_mkSuspendedThread(Board *bb, int prio)
   return th;
 }
 
-//
-//  Constructors for 'suspended' cases:
-//    deep 'unify' suspension;
-//    suspension with continuation;
-//    suspension with a 'C' function;
-//    suspended sequential thread (with a task stack);
-//
 inline
-// static
-Thread *oz_mkWakeupThread(Board *bb) 
+Thread *oz_newThreadPropagate(Board *bb) 
 {
   Thread *th = new Thread(S_WAKEUP,DEFAULT_PRIORITY,bb,am.newId());
   bb->incSuspCount();
@@ -169,81 +156,17 @@ Thread *oz_mkWakeupThread(Board *bb)
   return th;
 }
 
-inline 
-void oz_suspThreadToRunnableOPT(Thread *tt)
-{
-  Assert(tt->isSuspended());
-
-  tt->markRunnable();
-
-  Assert(oz_isCurrentBoard(GETBOARD(tt)) || tt->isExtThread() ||
-	 (oz_isCurrentBoard(GETBOARD(tt)->getParent())
-	  && !GETBOARD(tt)->isSolve()));
-
-  if (am.debugmode() && tt->getTrace()) {
-    //Thread *t; if ((t = oz_currentThread()) && t->isTraced())
-    //  execBreakpoint(t);
-    debugStreamReady(tt);
-  }
-  
-  if (am.isBelowSolveBoard() || tt->isExtThread()) {
-    Assert(oz_isInSolveDebug(GETBOARD(tt)));
-    oz_incSolveThreads(GETBOARD(tt));
-    tt->setInSolve();
-    oz_removeExtThread(tt);
-    tt->clearExtThread();
-  } else {
-    Assert(!oz_isInSolveDebug(GETBOARD(tt)));
-  }
-}
-
-inline 
-void oz_suspThreadToRunnable(Thread *tt)
-{
-  Assert(tt->isSuspended());
-
-  tt->markRunnable();
-
-  if (am.debugmode() && tt->getTrace()) {
-    //Thread *t; if ((t = oz_currentThread()) && t->isTraced())
-    //  execBreakpoint(t);
-    debugStreamReady(tt);
-  }
-  
-  int inSolve = oz_incSolveThreads(GETBOARD(tt));
-  if (inSolve) {
-    tt->setInSolve();
-    oz_removeExtThread(tt);
-    tt->clearExtThread();
-  }
-}
- 
-inline 
-void oz_updateSolveBoardPropagatorToRunnable(Thread *tt)
-{
-  if (am.isBelowSolveBoard() || tt->isExtThread()) {
-    Assert(oz_isInSolveDebug(GETBOARD(tt)));
-    oz_incSolveThreads(GETBOARD(tt));
-    tt->setInSolve();
-  } else {
-    Assert(!oz_isInSolveDebug(GETBOARD(tt)));
-  }
-}
-
-inline
-void oz_propagatorToRunnable(Thread *tt)
-{
-  tt->markRunnable();
-
-  oz_updateSolveBoardPropagatorToRunnable(tt);
-}
-
 
 //  Dispose a thread.
 inline
-static
-void oz_disposeThreadInternal(Thread *tt)
+void oz_disposeThread(Thread *tt)
 {
+#ifdef DEBUG_THREADCOUNT
+  if (tt->isRunnable() && tt->isLPQThread())
+    existingLTQs -= 1;
+#endif
+  Assert(!tt->isSuspended() || !GETBOARD(tt)->checkAlive());
+
   tt->markDeadThread();
 
   if (am.debugmode() && tt->getTrace())
@@ -262,47 +185,77 @@ void oz_disposeThreadInternal(Thread *tt)
   }
 }
 
-  // 
-  //  Note: killing the suspended thread *might not* make any
-  // actor reducible OR reducibility must be tested somewhere else !!!
-  //
-  //  Invariant: 
-  // There can be no threads which are suspended not in its 
-  // "proper" home, i.e. not in the comp. space where it is started;
-  // 
-  //  Note that this is true for wakeups, continuations etc. anyway, 
-  // *and* this is also true for threads suspended in the sequential 
-  // mode! The point is that whenever a thread tries to suspend in a 
-  // deep guard, a new (local) thread is created which carries the 
-  // rest of the guard (Hi, Michael!);
-  //
-  //  Note also that these methods don't decrement suspCounters, 
-  // thread counters or whatever because their home board might 
-  // not exist at all - such things should be done outside!
 inline
-void oz_disposeSuspendedThread(Thread *tt)
+static
+void _wakeupThread(Thread *tt)
 {
   Assert(tt->isSuspended());
-  Assert(!GETBOARD(tt)->checkAlive());
 
-  oz_disposeThreadInternal(tt);
+  tt->markRunnable();
+
+  if (am.debugmode() && tt->getTrace()) {
+    //Thread *t; if ((t = oz_currentThread()) && t->isTraced())
+    //  execBreakpoint(t);
+    debugStreamReady(tt);
+  }
+  am.threadsPool.scheduleThread(tt);
 }
 
-//  It marks the thread as dead and disposes it;
-//
-//  It marks also the thread as dead;
 inline 
-void oz_disposeRunnableThread(Thread *tt)
+void oz_wakeupThreadOPT(Thread *tt)
 {
-#ifdef DEBUG_THREADCOUNT
-  if (tt->isLPQThread())
-    existingLTQs -= 1;
-#endif
+  _wakeupThread(tt);
 
-  Assert(tt->isRunnable());
+  Assert(oz_isCurrentBoard(GETBOARD(tt)) || tt->isExtThread() ||
+	 (oz_isCurrentBoard(GETBOARD(tt)->getParent())
+	  && !GETBOARD(tt)->isSolve()));
 
-  oz_disposeThreadInternal(tt);
+  if (am.isBelowSolveBoard() || tt->isExtThread()) {
+    Assert(oz_isInSolveDebug(GETBOARD(tt)));
+    oz_incSolveThreads(GETBOARD(tt));
+    tt->setInSolve();
+    oz_removeExtThread(tt);
+    tt->clearExtThread();
+  } else {
+    Assert(!oz_isInSolveDebug(GETBOARD(tt)));
+  }
 }
+
+inline 
+void oz_wakeupThread(Thread *tt)
+{
+  _wakeupThread(tt);
+  
+  int inSolve = oz_incSolveThreads(GETBOARD(tt));
+  if (inSolve) {
+    tt->setInSolve();
+    oz_removeExtThread(tt);
+    tt->clearExtThread();
+  }
+}
+
+/* -------------------------------------------------------------------------
+ * Propagators
+ * ------------------------------------------------------------------------- */
+
+inline
+Propagator * oz_newPropagator(int prio, OZ_Propagator * p)
+{
+  Board * bb = oz_currentBoard();
+  Propagator * prop = new Propagator(p, bb);
+  prop->markRunnable();
+  prop->markUnifyPropagator();
+
+  if (! p->isMonotonic()) 
+    prop->markNonMonotonicPropagator();
+
+  bb->incSuspCount();
+
+  /* checkDebug(th,bb); TMUELLER ask BENNI */
+
+  return prop;
+}
+
 
 //
 //  Terminate a propagator thread which is (still) marked as runnable
@@ -421,13 +374,10 @@ OZ_Return oz_runPropagator(Propagator * p)
   }
 }
 
-inline
-void oz_checkSuspensionList(SVariable *var,
-			    PropCaller calledBy=pc_propagator)
-{
-  var->setSuspList(oz_checkAnySuspensionList(var->getSuspList(),
-					     GETBOARD(var),calledBy));
-}
+
+/* -------------------------------------------------------------------------
+ * TODO
+ * ------------------------------------------------------------------------- */
 
 // EXT STUFF
 
@@ -449,66 +399,8 @@ void oz_removeExtThread(Thread *tt)
 
 // WAKEUP
 
-#define WAKEUP_PROPAGATOR(CALL_WAKEUP_FUN)	\
-{						\
-  Board * bb = GETBOARD(prop);			\
-  switch (oz_isBetween(bb, home)) {		\
-  case B_BETWEEN:				\
-						\
-    if (calledBy)				\
-      prop->markUnifyPropagator();		\
-						\
-    CALL_WAKEUP_FUN;				\
-    return FALSE;				\
-						\
-  case B_NOT_BETWEEN:				\
-    return FALSE;				\
-						\
-  case B_DEAD:					\
-    prop->markDeadPropagator();			\
-    oz_checkExtSuspension(prop);		\
-    prop->dispose();				\
-    return TRUE;				\
-						\
-  default:					\
-    Assert(0);					\
-    return FALSE;				\
-  }						\
-}
-
-inline
-Bool oz_wakeUpPropagator(Propagator * prop, Board * home, PropCaller calledBy)
-{
-  Assert(prop->getBoardInternal() && prop->getPropagator());
-
-  Board *cb_cache = oz_currentBoard();
-  
-  if (prop->isNonMonotonicPropagator() && am.isBelowSolveBoard()) {
-#ifdef DEBUG_NONMONOTONIC
-    OZ_PropagatorProfile * profile = prop->getPropagator()->getProfile();
-    char * pn = profile->getPropagatorName();
-    printf("wakeUpPropagator: nonmono prop <%s %d>\n", 
-	   pn, 
-	   prop->getPropagator()->getOrder()); 
-    fflush(stdout);
-#endif
-
-    Assert(!prop->getPropagator()->isMonotonic());
-
-    WAKEUP_PROPAGATOR(prop->markRunnable();
-		      SolveActor::Cast(am.currentSolveBoard()->getActor())->addToNonMonoSuspList(prop));
-  }
-  
-  if (localPropStore.isUseIt()) {
-    Assert(GETBOARD(prop) == cb_cache);
-    prop->markRunnable();
-    localPropStore.push(prop);
-    return FALSE;
-  }
-  
-  WAKEUP_PROPAGATOR(prop->markRunnable();
-		    oz_pushToLPQ(GETBOARD(prop),prop));
-} 
+// mm2: outlined
+Bool _wakeup_Propagator(Propagator * prop, Board * home, PropCaller calledBy);
 
 inline
 void oz_scheduledPropagator(Propagator * prop)
@@ -518,7 +410,7 @@ void oz_scheduledPropagator(Propagator * prop)
   Assert(oz_isCurrentBoard(GETBOARD(prop)));
 
   prop->unmarkRunnable();
-  oz_wakeUpPropagator(prop, oz_currentBoard(), pc_propagator);
+  _wakeup_Propagator(prop, oz_currentBoard(), pc_propagator);
 }
 
 //  
@@ -536,20 +428,6 @@ void oz_suspendPropagator(Propagator * prop)
 
   prop->unmarkRunnable();
   prop->unmarkUnifyPropagator();
-}
-
-inline
-Thread *oz_newSuspendedThread()
-{
-  return oz_mkSuspendedThread(oz_currentBoard(), DEFAULT_PRIORITY);
-}
-
-inline
-Thread *oz_newRunnableThread(int prio=DEFAULT_PRIORITY)
-{
-  Thread *tt = oz_mkRunnableThreadOPT(prio, oz_currentBoard());
-  am.threadsPool.scheduleThread(tt);
-  return tt;
 }
 
 inline

@@ -149,8 +149,6 @@ public:
     AddSuspToList(suspList, susp, unstable ? home : 0);
   }
 
-  void wakeupAll();
-
   OZPRINTLONG;
 };
 

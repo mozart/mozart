@@ -208,14 +208,13 @@ OZ_Boolean OZ_Propagator::addImpose(OZ_FDPropState ps, OZ_Term v)
 
 void OZ_Propagator::impose(OZ_Propagator * p, int prio) 
 {
-  Board * cb = oz_currentBoard();
-  Propagator * prop = oz_mkPropagator(cb, prio, p);
+  Propagator * prop = oz_newPropagator(prio, p);
   ozstat.propagatorsCreated.incf();
 
   oz_suspendPropagator(prop);
 
   prop->markRunnable();
-  oz_pushToLPQ(cb,prop);
+  oz_pushToLPQ(oz_currentBoard(),prop);
 
   OZ_Boolean all_local = OZ_TRUE;
 
