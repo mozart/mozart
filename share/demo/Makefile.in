@@ -98,6 +98,8 @@ Transport/Country.ozf: Transport/Germany.oz
 Transport.oza: $(TRANSPORTFUN)
         $(LINK) Transport/Main.ozf -o $@
 
+DemoUrls.ozf: DemoUrls.oz
+        $(ZCOMPILE) $< -o $@
 
 %.ozf: DemoUrls.ozf
 
