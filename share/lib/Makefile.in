@@ -26,7 +26,16 @@ OZENGINE        = @OZENGINE@
 COMPRESSLEVEL   = @oz_picklecompression@
 COMPRESSFLAGS   = -z $(COMPRESSLEVEL)
 
-OZCFLAGS	= $(COMPRESSFLAGS)
+DENYS_EVENTS=no
+ifeq ($(DENYS_EVENTS),yes)
+DENYS_FLAGS	= -DDENYS_EVENTS
+DENYS_SRCS	= EventSIGCHLD EventSIGUSR2
+else
+DENYS_FLAGS	=
+DENYS_SRCS	=
+endif
+
+OZCFLAGS	= $(COMPRESSFLAGS) $(DENYS_FLAGS)
 OZC		= @OZC@
 
 COMPILENOMODE   = $(OZC) $(OZCFLAGS) -l Base=$(SRCDIR)/Base.ozf -b $(BUILDDIR)/
@@ -52,7 +61,7 @@ export OZ_LOAD = root=.:prefix=$(SRCDIR)=$(BUILDDIR):prefix=$(HOMEURL)/share/=$(
 export OZMAKE_COPYALWAYS	= no
 export OZMAKE_VERBOSE		= no
 
-SPSRC   = Error ErrorFormatters Finalize
+SPSRC   = Error ErrorFormatters Finalize $(DENYS_SRCS)
 OPSRC   = Open
 APSRC   = Application
 CPSRC1  = Search FD FS
