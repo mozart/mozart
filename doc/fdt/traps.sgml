@@ -29,7 +29,7 @@
   -
   -->
 
-<chapter id=chapter.traps><title/Traps and Pitfalls/
+<appendix id=appendix.traps><title/Traps and Pitfalls/
 
 <p>
 This section lists traps and pitfalls that
@@ -220,4 +220,4 @@ and that the compiler does not eliminate the
 auxiliary variable.  The Grocery Puzzle in
 <ptr to=SecFDGrocery> uses this trick.
 </section>
-</chapter>
+</appendix>

@@ -36,6 +36,7 @@ solutions that minimize a given cost function.
 If the cost function is simple enough, we can
 obtain the minimization effect by employing a
 two-dimensional distribution strategy.
+
 <p>
 This section will present two examples, map
 coloring and conference scheduling, for which a
@@ -60,7 +61,7 @@ number of colors is used.
   <title/Model/
 
 <p>
-We have a variable <math/NbColors/ saying how may
+We have a variable <math/NbColors/ saying how many
 different colors we can use.  Moreover, we have a
 variable for every country.  For every pair <math/A/,
 <math/B/ of countries having a border in common we
@@ -83,7 +84,7 @@ first-fail strategy.
 <figure id="ProgMapColoring">
 <caption/A script for the Map Coloring Problem
 together with a data specification./
-<<<
+<chunk class=anonymous><title/MapColoring/
 fun {MapColoring Data}
    Countries = {Map Data fun {$ C#_} C end}
 in
@@ -111,7 +112,7 @@ Data = [ austria     # [italy switzerland germany]
          portugal    # nil
          spain       # [portugal]
          switzerland # [italy france germany austria] ]
->>>
+</chunk>
 </figure>
 
 <subsection class=unnumbered>
@@ -249,7 +250,7 @@ first-fail strategy.
 <caption/A script for conference scheduling
 together with a data specification./
 
-<<<
+<chunk class=anonymous><title/Conference/
 fun {Conference Data}
    NbSessions    = Data.nbSessions
    NbParSessions = Data.nbParSessions
@@ -269,7 +270,8 @@ in
       {ForAll Constraints
        proc {$ C}
           case C
-          of before(X Y) then Plan.X <: Plan.Y
+          of before(X Y) then
+             Plan.X <: Plan.Y
           [] disjoint(X Ys) then
              {ForAll Ys proc {$ Y} Plan.X \=: Plan.Y end}
           end
@@ -285,7 +287,7 @@ Data = data(nbSessions:11  nbParSessions:3
                            disjoint(3 [5 6 8])  disjoint(4 [6 8 10])
                            disjoint(6 [7 10])   disjoint(7 [8 9])
                            disjoint(8 [10]) ] )
->>>
+</chunk>
 
 </figure>
 
@@ -347,5 +349,36 @@ and the sessions 8 and 11 take place in slot 4.
 
 </section>
 
+<![ %EXTRA; [
+<section><title/NONE/
+<p>
+<chunk><title/EXAMPLES/
+%%%
+%%% Chapter: Minimizing a Cost Function
+%%%
+
+%%
+%% Example: Coloring a Map
+%%
+
+declare
+<chunk.ref/MapColoring/
+
+{ExploreOne {MapColoring Data}}
+
+
+
+%%
+%% Example: Conference
+%%
+
+<chunk.ref/Conference/
+
+{ExploreOne {Conference Data}}
+
+
+
+</chunk>
+]]>
 
 </chapter>

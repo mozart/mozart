@@ -100,7 +100,7 @@ the selected variable first.
 <p>
 <figure id="ProgGrocery" class="Figure">
 <caption/A script for the Grocery Puzzle./
-<<<
+<chunk class=anonymous><title/Grocery/
 proc {Grocery Root}
    A#B#C#D = Root
    S       = 711
@@ -114,7 +114,7 @@ in
    C =<: D
    {FD.distribute generic(value:splitMax) Root}
 end
->>>
+</chunk>
 </figure>
 
 <subsection class=unnumbered>
@@ -151,7 +151,7 @@ The procedure <<{FD.decl X}>> constrains its
 argument to an integer in the finite domain
 <<0#sup>>, where <<sup>> stands for a large
 implementation-dependent integer
-(<<134217726>> in Mozart on Linux).
+(<<134217726>> in Mozart on Linux or Sparcs).
 
 <p>
 The new propagator for <<A=:79*X>> reduces the
@@ -235,10 +235,10 @@ first-fail strategy.  The strategy splits the
 domain of the selected variable and tries the
 lower part of the domain first.
 
-<figure class="Figure" id="ProgFamily">
+<figure id="ProgFamily">
 <caption/A script for the Family Puzzle./
 
-<<<
+<chunk class=anonymous><title/Family/
 proc {Family Root}
    proc {IsFamily Name F}
       Coeffs = [1 1 1 ~1 ~1 ~1]
@@ -268,7 +268,7 @@ in
    {FD.sum Ages '=:' 60}
    {FD.distribute split Ages}
 end
->>>
+</chunk>
 </figure>
 
 
@@ -408,9 +408,9 @@ property holds.
 We distribute on the variables for the properties
 with the standard first-fail strategy.
 
-<figure class="Figure" id="ProgZebra">
+<figure id="ProgZebra">
 <caption/A script for the Zebra Puzzle./
-<<<
+<chunk class=anonymous><title/Zebra/
 proc {Zebra Nb}
    Groups     = [ [english spanish japanese italian norwegian]
                   [green red yellow blue white]
@@ -445,7 +445,7 @@ in
    Nb.zebra = Nb.white
    {FD.distribute ff Nb}
 end
->>>
+</chunk>
 </figure>
 
 <subsection class=unnumbered>
@@ -493,4 +493,50 @@ number(
       )
 >>>
 </section>
+
+<![ %EXTRA; [
+<section><title/NONE/
+<p>
+<chunk><title/EXAMPLES/
+%%%
+%%% Chapter: Elimination of Symmetries and Defined Constraints
+%%%
+
+%%
+%% Example: Grocery
+%%
+
+declare
+<chunk.ref/Grocery/
+
+{ExploreAll Grocery}
+
+
+
+%%
+%% Example: Family
+%%
+
+declare
+<chunk.ref/Family/
+
+{ExploreAll Family}
+
+
+
+%%
+%% Example: Zebra Puzzle
+%%
+
+declare
+<chunk.ref/Zebra/
+
+{ExploreAll Zebra}
+
+
+
+</chunk>
+]]>
+
+
 </chapter>

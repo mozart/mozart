@@ -1,0 +1,185 @@
+<!--
+  - Authors:
+  -   Christian Schulte <schulte@dfki.de>
+  -   Gert Smolka <smolka@dfki.de>
+  -   Jörg Würtz
+  -
+  - Contributors:
+  -   Daniel Simon <dansim@ps.uni-sb.de>
+  -   Andy Walter <anwalt@ps.uni-sb.de>
+  -
+  - Copyright:
+  -   Christian Schulte, 1998
+  -   Gert Smolka, 1998
+  -   Jörg Würtz, 1997
+  -
+  - Last change:
+  -   $Date$ by $Author$
+  -   $Revision$
+  -
+  - This file is part of Mozart, an implementation
+  - of Oz 3
+  -    http://mozart.ps.uni-sb.de
+  -
+  - See the file "LICENSE" or
+  -    http://mozart.ps.uni-sb.de/LICENSE.html
+  - for information on usage and redistribution
+  - of this file, and for a DISCLAIMER OF ALL
+  - WARRANTIES.
+  -
+  -->
+
+<appendix id=appendix.data>
+  <title/Example Data/
+
+<p> The following appendix features some data specifications omitted
+in the chapters' text.
+
+<section id="section.data.scheduling">
+  <title/Scheduling/
+
+<p>
+<chunk id=data.bridge><title/Bridge task specification/
+[pa  #  0 # nil  # noResource
+ a1  #  4 # [pa] # excavator
+ a2  #  2 # [pa] # excavator
+ a3  #  2 # [pa] # excavator
+ a4  #  2 # [pa] # excavator
+ a5  #  2 # [pa] # excavator
+ a6  #  5 # [pa] # excavator
+ p1  # 20 # [a3] # pileDriver
+ p2  # 13 # [a4] # pileDriver
+ ue  # 10 # [pa] # noResource
+ s1  #  8 # [a1] # carpentry
+ s2  #  4 # [a2] # carpentry
+ s3  #  4 # [p1] # carpentry
+ s4  #  4 # [p2] # carpentry
+ s5  #  4 # [a5] # carpentry
+ s6  # 10 # [a6] # carpentry
+ b1  #  1 # [s1] # concreteMixer
+ b2  #  1 # [s2] # concreteMixer
+ b3  #  1 # [s3] # concreteMixer
+ b4  #  1 # [s4] # concreteMixer
+ b5  #  1 # [s5] # concreteMixer
+ b6  #  1 # [s6] # concreteMixer
+ ab1 #  1 # [b1] # noResource
+ ab2 #  1 # [b2] # noResource
+ ab3 #  1 # [b3] # noResource
+ ab4 #  1 # [b4] # noResource
+ ab5 #  1 # [b5] # noResource
+ ab6 #  1 # [b6] # noResource
+ m1  # 16 # [ab1] # bricklaying
+ m2  #  8 # [ab2] # bricklaying
+ m3  #  8 # [ab3] # bricklaying
+ m4  #  8 # [ab4] # bricklaying
+ m5  #  8 # [ab5] # bricklaying
+ m6  # 20 # [ab6] # bricklaying
+ l   #  2 # nil # crane
+ t1  # 12 # [m1 m2 l] # crane
+ t2  # 12 # [m2 m3 l] # crane
+ t3  # 12 # [m3 m4 l] # crane
+ t4  # 12 # [m4 m5 l] # crane
+ t5  # 12 # [m5 m6 l] # crane
+ ua  # 10 # nil # noResource
+ v1  # 15 # [t1] # caterpillar
+ v2  # 10 # [t5] # caterpillar
+ pe  #  0 # [t2 t3 t4 v1 v2 ua] # noResource]
+</chunk>
+
+<p>
+<chunk id=data.abz6><title/ABZ6 Specification/
+abz6(taskSpec:
+        [% task # duration # preceding tasks # resources
+         pa # 0  # nil  # noResource
+         a1#62#[pa]#m7 a2#24#[a1]#m8 a3#25#[a2]#m5 a4#84#[a3]#m3
+         a5#47#[a4]#m4 a6#38#[a5]#m6 a7#82#[a6]#m2 a8#93#[a7]#m0
+         a9#24#[a8]#m9 a10#66#[a9]#m1
+         b1#47#[pa]#m5 b2#97#[b1]#m2 b3#92#[b2]#m8 b4#22#[b3]#m9
+         b5#93#[b4]#m1 b6#29#[b5]#m4 b7#56#[b6]#m7 b8#80#[b7]#m3
+         b9#78#[b8]#m0 b10#67#[b9]#m6
+         c1#45#[pa]#m1 c2#46#[c1]#m7 c3#22#[c2]#m6 c4#26#[c3]#m2
+         c5#38#[c4]#m9 c6#69#[c5]#m0 c7#40#[c6]#m4 c8#33#[c7]#m3
+         c9#75#[c8]#m8 c10#96#[c9]#m5
+         d1#85#[pa]#m4 d2#76#[d1]#m8 d3#68#[d2]#m5 d4#88#[d3]#m9
+         d5#36#[d4]#m3 d6#75#[d5]#m6 d7#56#[d6]#m2 d8#35#[d7]#m1
+         d9#77#[d8]#m0 d10#85#[d9]#m7
+         e1#60#[pa]#m8 e2#20#[e1]#m9 e3#25#[e2]#m7 e4#63#[e3]#m3
+         e5#81#[e4]#m4 e6#52#[e5]#m0 e7#30#[e6]#m1 e8#98#[e7]#m5
+         e9#54#[e8]#m6 e10#86#[e9]#m2
+         f1#87#[pa]#m3 f2#73#[f1]#m9 f3#51#[f2]#m5 f4#95#[f3]#m2
+         f5#65#[f4]#m4 f6#86#[f5]#m1 f7#22#[f6]#m6 f8#58#[f7]#m8
+         f9#80#[f8]#m0 f10#65#[f9]#m7
+         g1#81#[pa]#m5 g2#53#[g1]#m2 g3#57#[g2]#m7 g4#71#[g3]#m6
+         g5#81#[g4]#m9 g6#43#[g5]#m0 g7#26#[g6]#m4 g8#54#[g7]#m8
+         g9#58#[g8]#m3 g10#69#[g9]#m1
+         h1#20#[pa]#m4 h2#86#[h1]#m6 h3#21#[h2]#m5 h4#79#[h3]#m8
+         h5#62#[h4]#m9 h6#34#[h5]#m2 h7#27#[h6]#m0 h8#81#[h7]#m1
+         h9#30#[h8]#m7 h10#46#[h9]#m3
+         i1#68#[pa]#m9 i2#66#[i1]#m6 i3#98#[i2]#m5 i4#86#[i3]#m8
+         i5#66#[i4]#m7 i6#56#[i5]#m0 i7#82#[i6]#m3 i8#95#[i7]#m1
+         i9#47#[i8]#m4 i10#78#[i9]#m2
+         j1#30#[pa]#m0 j2#50#[j1]#m3 j3#34#[j2]#m7 j4#58#[j3]#m2
+         j5#77#[j4]#m1 j6#34#[j5]#m5 j7#84#[j6]#m8 j8#40#[j7]#m4
+         j9#46#[j8]#m9 j10#44#[j9]#m6
+         pe#0#[ j10 i10 h10 g10 f10 e10 d10 c10 b10 a10 ]#noResource ]
+     constraints:
+        proc {$ _ _}
+           skip
+        end)
+</chunk>
+
+<p>
+<chunk id=data.mt10><title/MT10 Specification/
+mt10(taskSpec:
+        [% task # duration # preceding tasks # resources
+         pa # 0  # nil  # noResource
+         a1#29#[pa]#m1 a2#78#[a1]#m2 a3#9#[a2]#m3 a4#36#[a3]#m4
+         a5#49#[a4]#m5 a6#11#[a5]#m6 a7#62#[a6]#m7 a8#56#[a7]#m8
+         a9#44#[a8]#m9 a10#21#[a9]#m10
+         b1#43#[pa]#m1 b2#90#[b1]#m3 b3#75#[b2]#m5 b4#11#[b3]#m10
+         b5#69#[b4]#m4 b6#28#[b5]#m2 b7#46#[b6]#m7 b8#46#[b7]#m6
+         b9#72#[b8]#m8 b10#30#[b9]#m9
+         c1#91#[pa]#m2 c2#85#[c1]#m1 c3#39#[c2]#m4 c4#74#[c3]#m3
+         c5#90#[c4]#m9 c6#10#[c5]#m6 c7#12#[c6]#m8 c8#89#[c7]#m7
+         c9#45#[c8]#m10 c10#33#[c9]#m5
+         d1#81#[pa]#m2 d2#95#[d1]#m3 d3#71#[d2]#m1 d4#99#[d3]#m5
+         d5#9#[d4]#m7 d6#52#[d5]#m9 d7#85#[d6]#m8 d8#98#[d7]#m4
+         d9#22#[d8]#m10 d10#43#[d9]#m6
+         e1#14#[pa]#m3 e2#6#[e1]#m1 e3#22#[e2]#m2 e4#61#[e3]#m6
+         e5#26#[e4]#m4 e6#69#[e5]#m5 e7#21#[e6]#m9 e8#49#[e7]#m8
+         e9#72#[e8]#m10 e10#53#[e9]#m7
+         f1#84#[pa]#m3 f2#2#[f1]#m2 f3#52#[f2]#m6 f4#95#[f3]#m4
+         f5#48#[f4]#m9 f6#72#[f5]#m10 f7#47#[f6]#m1 f8#65#[f7]#m7
+         f9#6#[f8]#m5 f10#25#[f9]#m8
+         g1#46#[pa]#m2 g2#37#[g1]#m1 g3#61#[g2]#m4 g4#13#[g3]#m3
+         g5#32#[g4]#m7 g6#21#[g5]#m6 g7#32#[g6]#m10 g8#89#[g7]#m9
+         g9#30#[g8]#m8 g10#55#[g9]#m5
+         h1#31#[pa]#m3 h2#86#[h1]#m1 h3#46#[h2]#m2 h4#74#[h3]#m6
+         h5#32#[h4]#m5 h6#88#[h5]#m7 h7#19#[h6]#m9 h8#48#[h7]#m10
+         h9#36#[h8]#m8 h10#79#[h9]#m4
+         i1#76#[pa]#m1 i2#69#[i1]#m2 i3#76#[i2]#m4 i4#51#[i3]#m6
+         i5#85#[i4]#m3 i6#11#[i5]#m10 i7#40#[i6]#m7 i8#89#[i7]#m8
+         i9#26#[i8]#m5 i10#74#[i9]#m9
+         j1#85#[pa]#m2 j2#13#[j1]#m1 j3#61#[j2]#m3 j4#7#[j3]#m7
+         j5#64#[j4]#m9 j6#76#[j5]#m10 j7#47#[j6]#m6 j8#52#[j7]#m4
+         j9#90#[j8]#m5
+         j10#45#[j9]#m8
+         pe#0#[a10 b10 c10 d10 e10 f10 g10 h10 i10 j10]#noResource
+        ]
+     constraints:
+        proc {$ _ _}
+           skip
+        end)
+</chunk>
+
+<p id=data.optmt10>
+<chunk><title/Definition of OptMT10/
+OptMT10 = {AdjoinAt MT10 constraints
+           proc {$ Start Dur}
+              Start.pe <: 930
+           end}
+</chunk>
+
+</section>
+
+</appendix>

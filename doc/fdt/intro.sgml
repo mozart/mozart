@@ -159,4 +159,16 @@ suggest <Ptr.extern to="ozdoc:tutorial">.  The full functionality of
 Oz provided for constraint programming is included in the document
 <ptr.extern to="ozdoc:system" key="part.constraints">.
 
+<section class=unnumbered>
+  <title/The Examples/
+
+<p>
+The tutorial features a large number of examples. To ease the
+understanding the examples should be tried in the <Ref.extern
+to="ozdoc:opi"/Oz Programming Environment (OPI)/. The Oz programs are
+contained in the following <Ref.extern
+to="FiniteDomainTutorial.oz"/file/. Oz programs for some solutions to
+the exercises are contained in the following <Ref.extern
+to="FiniteDomainTutorialSolutions.oz"/file/.
+
 </chapter>

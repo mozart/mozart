@@ -96,7 +96,7 @@ standard first-fail strategy.
 
 <figure id="ProgFractions">
 <caption/A script for the Fractions Puzzle./
-<<<
+<chunk class=anonymous><title/Fractions/
 proc {Fractions Root}
    sol(a:A b:B c:C d:D e:E f:F g:G h:H i:I) = Root
    BC = {FD.decl}
@@ -116,7 +116,8 @@ in
    3*A >=: BC
    3*G =<: HI
    {FD.distribute ff Root}
-end>>>
+end
+</chunk>
 </figure>
 
 <subsection class=unnumbered>
@@ -185,7 +186,7 @@ using the standard first-fail strategy.
 <figure id="ProgPythagoras" class="Figure">
 <caption/A script that enumerates Pythagoras triples./
 
-<<<
+<chunk class=anonymous><title/Pythagoras/
 proc {Pythagoras Root}
    proc {Square X S}
       {FD.times X X S}
@@ -201,7 +202,8 @@ in
    B =<: C
    2*BB >=: CC  % redundant constraint
    {FD.distribute ff Root}
-end>>>
+end
+</chunk>
 </figure>
 
 <subsection class=unnumbered>
@@ -211,9 +213,9 @@ end>>>
 Given the script in <Ptr to="ProgPythagoras">,
 we can compute the number of different triples
 with the statement
-<<<
+<chunk class=anonymous><title/{SearchAll Pythagoras}/
 {Browse {Length {SearchAll Pythagoras}}}
->>>
+</chunk>
 
 The script introduces a defined constraint
 <<<
@@ -243,7 +245,7 @@ The propagator for the redundant constraint does
 not significantly reduce the size of the search
 tree.  However, it reduces the number of
 propagation steps from about 1000000 to
-about about 500000, which makes computation
+about 500000, which makes computation
 twice as fast.
 <para class=apropos><title/statistics/
 To find out about this, pop
@@ -378,7 +380,8 @@ lower half first.
 <figure class="Figure" id="ProgMagicSquare">
 <caption/A script for the Magic Square Puzzle./
 
-<<<fun {MagicSquare N}
+<chunk class=anonymous><title/MagicSquare/
+fun {MagicSquare N}
    NN  = N*N
    L1N = {List.number 1 N 1}  % [1 2 3 ... N]
 in
@@ -412,7 +415,8 @@ in
       %%
       {FD.distribute split Square}
    end
-end>>>
+end
+</chunk>
 
 </figure>
 
@@ -447,6 +451,7 @@ of higher order.  With the help of this defined
 constraint it is straightforward to state that
 the sums of the rows, columns, and main diagonals
 are all equal to <<Sum>>.
+
 <p>
 With the Explorer you can find out that for <<N=3>>
 there is exactly one magic square satisfying the
@@ -524,7 +529,8 @@ x_0\;+\;\ldots\;+\;x_{n-1}
 <P>
 Here is a parametrized script for the Magic
 Sequence Puzzle:
-<<<fun {MagicSequence N}
+<chunk class=anonymous><title/MagicSequence/
+fun {MagicSequence N}
    Cs = {List.number ~1 N-2 1}
 in
    proc {$ S}
@@ -537,9 +543,73 @@ in
       %%
       {FD.distribute ff S}
    end
-end>>>
+end
+</chunk>
 </answer>
 
 </section>
+
+<![ %EXTRA; [
+<section><title/NONE/
+<p>
+<chunk><title/EXAMPLES/
+%%%
+%%% Chapter: Propagators for Redundant Constraints
+%%%
+
+%%
+%% Example: Fractions
+%%
+
+declare
+<chunk.ref/Fractions/
+
+{ExploreAll Fractions}
+
+
+
+%%
+%% Example: Pythagoras
+%%
+
+declare
+<chunk.ref/Pythagoras/
+
+{ExploreOne Phythagoras}
+
+<chunk.ref/{SearchAll Pythagoras}/
+
+
+
+%%
+%% Example: Magic Squares
+%%
+
+declare
+<chunk.ref/MagicSquare/
+
+{ExploreOne {MagicSquare 4}}
+
+
+
+</chunk>
+<chunk><title/ANSWERS/
+%%%
+%%% Chapter: Propagators for Redundant Constraints
+%%%
+
+%%
+%% Magic Sequence
+%%
+
+declare
+<chunk.ref/MagicSequence/
+
+{ExploreAll {MagicSequence 14}}
+
+
+
+</chunk>
+]]>
 
 </chapter>
