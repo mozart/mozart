@@ -1,6 +1,6 @@
 This tutorial shows how to write efficient and robust distributed
-applications with the Mozart platform.
-We first present and motivate the distributed programming model and
+applications with the Mozart programming system.
+We first present and motivate the distribution model and
 the basic primitives needed for building distributed applications.
 We then progressively introduce
 examples of distributed applications
