@@ -188,7 +188,7 @@ fault detection on the given entity at the given level.
 <P>The function <<Fault.enable>> returns <<true>> if and only if the
 enable was successful, i.e., the entity was not already
 enabled for that level.
-The function <<Fault.disable>> returns <<false>> if and only if the
+The function <<Fault.disable>> returns <<true>> if and only if the
 disable was successful, i.e., the entity was already
 enabled for that level.
 Both functions raise a type error exception if their arguments
@@ -544,7 +544,7 @@ objects have two new failure modes:
 the object-record can be temporarily or permanently absent.
 In both cases the object
 cannot be used, so we simply consider the new failure modes
-to be instances of <<permFail>> and <<tempFail>>.
+to be instances of <<tempFail>> and <<permFail>>.
 
 <SECTION><TITLE>Limitations of current release</TITLE>
 
