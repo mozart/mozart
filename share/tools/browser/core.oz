@@ -122,10 +122,5 @@ FSetGetLub = {`Builtin` fsGetLub 2}
 FSetGetCard = {`Builtin` fsGetCard 2}
 IsFSetVar = {`Builtin` fsIsVarB 2}
 
-
-
-
-
-
-
-
+%%
+ForeignPointerToInt = {`Builtin` 'ForeignPointerToInt' 2}
