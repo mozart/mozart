@@ -2505,6 +2505,7 @@ LBLsuspendThread:
       Object *obj       = (Object *) tagged2Const(object);
       Abstraction *def = getSendMethod(obj,label,arity,X);
       if (def == StateLocked) {
+        goto bombSend;
         TaggedRef state = obj->getCell(); DEREF(state,statePtr,_2);
         Assert(isAnyVar(state));
         SUSP_PC(statePtr,arity+3+1,PC);
