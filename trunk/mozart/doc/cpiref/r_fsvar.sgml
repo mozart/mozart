@@ -138,8 +138,8 @@ store. Using this function requires to call either <<leave()>> or
 for constraints to be read from the constraint store and to perform
 encapsulated constraint propagation as required by reified constraint
 propagators. Using this function requires to call either <<leave()>>
-or <<fail()>> when leaving the member function <<propagate()>> of
-class <<OZ_Propagator>>. For further details see <Ptr.Extern
+or <<fail()>> when leaving the member function
+<<OZ_Propagator::propagate()>>. For further details see <Ptr.Extern
 to="ozdoc:cpitut" key="u_advanced.reified">.
 
 
