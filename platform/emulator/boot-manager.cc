@@ -261,6 +261,7 @@ OZ_BI_proto(BIfail);
 OZ_BI_proto(BIskip);
 OZ_BI_proto(BIurl_load);
 OZ_BI_proto(BIload);
+OZ_BI_proto(BI_prop_lpq);
 
 
 
@@ -559,6 +560,10 @@ void initBuiltins() {
   BI_obtain_native =
     makeTaggedConst(new Builtin("OBTAIN_NATIVE", 2, 1, BIObtainNative, OK));
 
+  // The main propagator scheduler is implemented by this guy
+  BI_PROP_LPQ = 
+    makeTaggedConst(new Builtin("PROP_LPQ", 0, 0, BI_prop_lpq, OK));
+  
   bi_raise      = getBuiltin_c("Exception.raise");
   bi_raiseError = getBuiltin_c("Exception.raiseError");
 }

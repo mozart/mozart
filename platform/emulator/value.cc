@@ -53,6 +53,7 @@ TaggedRef
   BI_exchangeCell,BI_assign,BI_atRedo,
   BI_controlVarHandler,
   BI_unknown,
+  BI_PROP_LPQ,
 
   __UNUSED_DUMMY_END_MARKER;
 
