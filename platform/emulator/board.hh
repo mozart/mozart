@@ -29,7 +29,6 @@ public:
   static void SetCurrent(Board *c, Bool checkNotGC=OK);
   static void NewCurrentAsk(Actor *a);
   static void NewCurrentWait(Actor *a);
-  static Board *NewRoot();
   static Actor *FailCurrent();
 
 private:
@@ -54,15 +53,15 @@ public:
   MPRINT
   void printTree();
 
-  inline void addSuspension();
+  void addSuspension(int n=1) { suspCount += n; }
+  Board *gcGetBoardDeref();
   Actor *getActor();
+  Board *getBoard();
+  inline Board *getBoardDeref();
   Continuation *getBodyPtr();
   Board *getParentBoard();
   ConsList &getScriptRef();
-  Board *getBoard();
-  inline Board *getBoardDeref();
-  Board *gcGetBoardDeref();
-  int getSuspCount(void);
+  int getSuspCount() {return suspCount; }
   Bool hasSuspension();
   Bool isAsk();
   Bool isCommitted();

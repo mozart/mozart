@@ -89,12 +89,12 @@ enum BoardFlags {
   Bo_Waiting    = 1<<10
 };
 
-Board *Board::NewRoot()
+void Board::Init()
 {
-  Board *bb = new Board(NULL,Bo_Root);
-  bb->setInstalled();
-  SetCurrent(bb,OK);
-  return bb;
+  am.rootBoard = new Board(NULL,Bo_Root);
+  am.rootBoard->setInstalled();
+  am.currentBoard = NULL;
+  SetCurrent(am.rootBoard,OK);
 }
 
 void Board::NewCurrentAsk(Actor *a)
@@ -167,11 +167,6 @@ inline ConsList &Board::getScriptRef()
 inline Board *Board::getBoard()
 {
   return u.board;
-}
-
-inline int Board::getSuspCount()
-{
-  return suspCount;
 }
 
 inline Bool Board::hasSuspension()
@@ -305,7 +300,6 @@ inline void Board::setCommitted(Board *s)
   flags |= Bo_Committed;
   u.actor->setCommitted();
   u.board = s;
-  s->suspCount += suspCount; // bug fix (kp 31.8.94)
 }
 
 inline void Board::setWaitTop()
