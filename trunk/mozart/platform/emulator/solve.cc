@@ -249,16 +249,10 @@ OZ_Term oz_solve_merge(SolveActor *solveActor, Board *bb, int sibling)
 inline
 Board *oz_solve_clone(SolveActor *sa, Board *bb) {
   ozstat.incSolveCloned();
-  Bool testGround;
-  Board *copy = (Board *) am.copyTree(sa->getSolveBoard(), &testGround);
+  Board *copy = (Board *) am.copyTree(sa->getSolveBoard());
   SolveActor *ca = SolveActor::Cast(copy->getActor());
  
   ca->setBoard(bb);
-
-  if (testGround == OK) {
-    ca->setGround();
-    sa->setGround();
-  }
 
 #ifdef CS_PROFILE
   ca->orig_start = cs_orig_start;
@@ -574,7 +568,6 @@ OZ_BI_define(BIcommitSpace, 2,0) {
 
   Thread *tt = wa->getThread();
 
-  sa->unsetGround();
   sa->clearResult(GETBOARD(space));
 
   oz_wakeupThread(tt);
@@ -612,7 +605,6 @@ OZ_BI_define(BIinjectSpace, 2,0)
   SolveActor *sa = space->getSolveActor();
 
   // clear status
-  sa->unsetGround();
   sa->clearResult(GETBOARD(space));
 
   // inject
