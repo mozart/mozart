@@ -241,6 +241,7 @@ public:
 private:
   Bool _inEqEq;
   TaggedRef _currentOptVar;	// (former uvar"s;)
+  TaggedRef _saveCurrentOptVar;	// (former uvar"s;)
 
   TaggedRef _suspendVarList;
   CallList *preparedCalls;      // for BI_REPLACEBICALL
@@ -311,7 +312,15 @@ public:
   Board *rootBoard()      { return _rootBoard; }
 
   Bool inEqEq()          { return _inEqEq; }
-  void setInEqEq(Bool b) { _inEqEq=b; }
+  void setInEqEq(Bool b) { 
+    _inEqEq=b; 
+    if (b) {
+      _saveCurrentOptVar = _currentOptVar;
+      _currentOptVar     = makeTaggedNULL();
+    } else {
+      _currentOptVar = _saveCurrentOptVar;
+    }
+  }
 
   TaggedRef getDefaultExceptionHdl() { return defaultExceptionHdl; }
   void setDefaultExceptionHdl(TaggedRef pred) {
@@ -370,7 +379,8 @@ public:
   // a space. Note that an OptVar from a merged space is not
   // recognized as such; instead, a regular binding routine is used.
   int isOptVar(TaggedRef t) {
-    return (t == _currentOptVar && !_inEqEq);
+    Assert(_inEqEq || _currentOptVar);
+    return t == _currentOptVar;
   }
 
   TaggedRef getCurrentOptVar() {

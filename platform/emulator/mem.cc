@@ -585,12 +585,17 @@ void FL_Manager::init(void)
   }
 }
 
-#define FL_RFL_Small 24
+#define FL_RFL_Small 32
 #define FL_RFL_N1    4
 #define FL_RFL_N2    32
 
-void FL_Manager::refill(const size_t sz)
+void FL_Manager::refill(void)
 {
+  register size_t sz = FL_MinSize;
+
+  while (smmal[FL_SizeToIndex(sz)])
+    sz += FL_MinSize;
+  
   register char * block;
   register size_t n;
 

@@ -198,6 +198,7 @@ unsigned int getUsedMemoryBytes(void) {
  */
 
 // Maximal size of block in free list
+#define FL_MinSize  8
 #define FL_MaxSize  64
 
 // Transformations between FreeListIndex and Size
@@ -259,7 +260,7 @@ private:
   static FL_Large * large;
 
 private:
-  static void refill(const size_t s);
+  static void refill(void);
 
 public:  
   static void init(void);
@@ -274,7 +275,7 @@ public:
       FL_Small * n = f->getNext();
       smmal[FL_SizeToIndex(s)] = n;
       if (!n) 
-	refill(s);
+	refill();
       return f;
     }
   }
