@@ -54,7 +54,7 @@ InvalidThreadID        = 'Invalid Thread ID in step message'
 NoFileInfo             = ('step message without line number information, ' #
 			  'continuing thread #')
 NoFileBlockInfo        = ' blocks without line number information'
-EarlyThreadDeath       = 'won\'t add thread #'
+EarlyThreadDeath       = 'won\'t add short living thread #'
 EarlyTermThread        = 'Early terminating thread'
 KnownThread            = 'Got known thread'
 NewThread              = 'Got new thread'
@@ -183,8 +183,6 @@ TextCursor             = left_ptr
 TimeoutToCalcTree      = 380 % ms
 TimeoutToBlock         = 620
 TimeoutToUpdateEnv     = 430
-TimeoutToUpdateBar     = TimeoutToUpdateEnv
-TimeoutToConfigBar     = 70
 TimeoutToSwitch        = 340
 TimeoutToStatus        = 210
 

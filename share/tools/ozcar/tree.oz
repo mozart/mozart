@@ -328,8 +328,8 @@ in
       end
 
       meth SwitchToThread(I)
-	 {ForAll [status('You have selected thread #' # I)
-		  switch(I)] Ozcar}
+	 {Ozcar PrivateSend(status('You have selected thread #' # I))}
+	 {Ozcar PrivateSend(switch(I))}
       end
    end
 end
