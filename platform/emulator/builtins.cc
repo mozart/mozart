@@ -4968,6 +4968,15 @@ OZ_C_proc_begin(BIstatisticsPrint, 0)
 }
 OZ_C_proc_end
 
+#ifdef PROFILE_INSTR
+OZ_C_proc_begin(BIinstructionsPrint, 0)
+{
+  ozstat.printInstr();
+  return PROCEED;
+}
+OZ_C_proc_end
+#endif
+
 
 OZ_C_proc_begin(BIstatisticsPrintProcs, 0)
 {
@@ -7708,6 +7717,9 @@ BIspec allSpec[] = {
   {"statisticsPrintProcs",0, BIstatisticsPrintProcs},
   {"statisticsGetProcs",  1, BIstatisticsGetProcs},
   {"setProfileMode",      1, BIsetProfileMode},
+#ifdef PROFILE_INSTR
+  {"instructionsPrint",   0, BIinstructionsPrint},
+#endif
 
   {"traceBack",0,BItraceBack},
 

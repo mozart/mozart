@@ -33,7 +33,7 @@
 #endif
 
 /* like malloc(3): return pointer aligned to void* */
-#define heapMalloc(chunk_size) (mallocBody(chunk_size,WordSize))
+#define heapMalloc(chunk_size) (alignedMalloc(chunk_size,sizeof(void *)))
 
 extern void *heapMallocOutline(size_t chunk_size);
 
@@ -78,7 +78,11 @@ public:
   static void operator delete(void *,size_t) \
     { error("deleting heap mem");}
 
-
+#define USEHEAPMEMORY32 \
+  static void *operator new(size_t chunk_size) \
+    { return int32Malloc(chunk_size); }\
+  static void operator delete(void *,size_t) \
+    { error("deleting heap mem");}
 
 // Heap Memory
 //  concept: allocate dynamically
@@ -99,54 +103,59 @@ extern char *heapEnd;
 extern unsigned int heapTotalSize;        // # kilo bytes allocated
 extern unsigned int heapTotalSizeBytes;   // # bytes allocated
 
-void getMemFromOS(size_t size);
+char *getMemFromOS(size_t size);
 
 
 /* Allocation functions.
  * Assertion heapTop is alway aligned to int32 boundaries
  */
 
-
-
-/* Assert: heapTop grows to LOWER address */
-#define HeapTopAlign(align) heapTop = (char *)((long)heapTop & (-align));
-
-
-inline void *mallocBody(size_t chunk_size, int align)
+#ifndef DEBUG_CHECK
+#define int32Malloc(s)                          \
+ ((heapEnd > heapTop - (s))                     \
+ ? (int32 *) getMemFromOS(s)                    \
+ : (int32 *) (heapTop -= (s)))
+#else
+inline int32 *int32Malloc(size_t chunk_size)
 {
   ProfileCode(ozstat.heapAlloced(chunk_size);)
   Assert(ToInt32(heapTop)%sizeof(int32) == 0);
 
-retry:
+  if (heapEnd > heapTop - chunk_size) {
+    return (int32 *) getMemFromOS(chunk_size);
+  }
+
   heapTop -= chunk_size;
 
+#ifdef DEBUG_MEM
+  memset((char *)heapTop,0x5A,chunk_size);
+#endif
+  return (int32 *) heapTop;
+}
+#endif
+
+
+/* return "chunk_size" aligned to "align" */
+inline void *alignedMalloc(size_t chunk_size, int align)
+{
+  ProfileCode(ozstat.heapAlloced(chunk_size);)
+  Assert(ToInt32(heapTop)%sizeof(int32) == 0);
+
+  heapTop -= chunk_size;
+
+retry:
   if (sizeof(int32) != align) {
-    HeapTopAlign(align);
+    heapTop = (char *)((long)heapTop & (-align));
   }
 
   if (heapEnd > heapTop) {
-    getMemFromOS(chunk_size);
+    (void) getMemFromOS(chunk_size);
     goto retry;
   }
 #ifdef DEBUG_MEM
   memset((char *)heapTop,0x5A,chunk_size);
 #endif
   return heapTop;
-}
-
-
-
-/* return pointer aligned to sizeof(int32) */
-inline int32 *int32Malloc(size_t chunk_size)
-{
-  return (int32 *) mallocBody(chunk_size,sizeof(int32));
-}
-
-
-/* return "chunk_size" aligned to "align" */
-inline void *alignedMalloc(size_t chunk_size, int align)
-{
-  return mallocBody(chunk_size,align);
 }
 
 

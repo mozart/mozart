@@ -540,7 +540,7 @@ void pushDummyDebug(TaskStack *stk, ProgramCounter PC)
 
 #else /* THREADED */
 
-#define Case(INSTR)   case INSTR :
+#define Case(INSTR)   case INSTR :  asmLbl(INSTR);
 #define DISPATCH(INC) INCFPC(INC); goto LBLdispatcher
 
 #endif
@@ -1390,6 +1390,11 @@ LBLdispatcher:
 
   op = CodeArea::getOP(PC);
   // displayCode(PC,1);
+
+#ifdef PROFILE_INSTR
+  if (op < PROFILE_INSTR_MAX) ozstat.instr[op]++;
+#endif
+
   switch (op) {
 #endif
 

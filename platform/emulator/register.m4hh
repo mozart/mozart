@@ -456,23 +456,20 @@ Case(SETVOID)
 /* getListValVar(N,R,M) == getList(X[N]) unifyVal(R), unifyVar(X[M]) */
   CaseOneReg(GETLISTVALVAR,
                 ``{
-                 Reg reg1 = getRegArg(PC+1);
-                 Reg reg2 = getRegArg(PC+2);
-                 Reg reg3 = getRegArg(PC+3);
-
-
-                 TaggedRef term = Xreg(reg1);
+                 TaggedRef term = Xreg(getRegArg(PC+1));
                  DEREF(term,termPtr,tag);
 
                  if(isAnyVar(term)) {
-                   LTuple *ltuple = new LTuple(Reg1(reg2),
-                                               e->currentUVarPrototype());
+                   register LTuple *ltuple = new LTuple();
+                   ltuple->setHead(Reg1(getRegArg(PC+2)));
+                   ltuple->setTail(e->currentUVarPrototype());
 
-                   if (isCVar(term) == OK) {
+                   if (isCVar(term)) {
                      if (tagged2CVar(term)->unifyOutline(termPtr, term, NULL,
                                                          makeTaggedLTuple(ltuple),
                                                          NOFLATGUARD)) {
-                       Xreg(reg3) = makeTaggedRef(ltuple->getRef()+1);
+                       Xreg(getRegArg(PC+3)) =
+                         makeTaggedRef(ltuple->getRef()+1);
                        DISPATCH(4);
                      }
                      SHALLOWFAIL;
@@ -481,7 +478,8 @@ Case(SETVOID)
                    } else {
                      e->bindToNonvar(termPtr, term, makeTaggedLTuple(ltuple),
                                      NOFLATGUARD);
-                     Xreg(reg3) = makeTaggedRef(ltuple->getRef()+1);
+                     Xreg(getRegArg(PC+3)) =
+                       makeTaggedRef(ltuple->getRef()+1);
 
                      DISPATCH(4);
                    }
@@ -489,19 +487,20 @@ Case(SETVOID)
 
                  if (isLTuple(term)) {
                    TaggedRef *argg = tagged2LTuple(term)->getRef();
-                   if (e->fastUnify(Reg1(reg2),makeTaggedRef(argg),
+                   if (e->fastUnify(Reg1(getRegArg(PC+2)),makeTaggedRef(argg),
                                     NOFLATGUARD)) {
-                     Xreg(reg3) = tagged2NonVariable(argg+1);
+                     Xreg(getRegArg(PC+3)) =
+                       tagged2NonVariable(argg+1);
 
                      DISPATCH(4);
                    }
                    SHALLOWFAIL;
-                   HF_TELL(Reg1(reg2), makeTaggedRef(argg));
+                   HF_TELL(Reg1(getRegArg(PC+2)), makeTaggedRef(argg));
 
                  }
 
                  SHALLOWFAIL;
-                 HF_TELL(Xreg(getRegArg(PC+1)), makeTaggedLTuple(new LTuple(Reg1(reg2),e->currentUVarPrototype())));
+                 HF_TELL(Xreg(getRegArg(PC+1)), makeTaggedLTuple(new LTuple(Reg1(getRegArg(PC+2)),e->currentUVarPrototype())));
 
                }''
                )

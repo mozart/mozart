@@ -658,7 +658,7 @@ public:
   PendLink *next;
 
   void print() {
-    printf("Credit debt: %c\n",debt);
+    printf("Credit debt: c:%ld\n",debt);
     pend->print();
   }
   void initialize(Credit c,PendEntry* p){
@@ -826,7 +826,7 @@ public:
 char *GNameSite::print() {
   static char buf[100];
 
-  sprintf(buf,"%d.%d.%d.%d:%d:%d",
+  sprintf(buf,"%ld.%ld.%ld.%ld:%d:%ld",
           (ip/(256*256*256))%256,
           (ip/(256*256))%256,
           (ip/256)%256,
@@ -1752,7 +1752,7 @@ void PendEntry::print() {
 }
 
 void OB_Entry::print() {
-  printf("Credit:%d\n",getCredit());
+  printf("Credit:%ld\n",getCredit());
 }
 
 void BorrowEntry::print() {
@@ -5636,7 +5636,7 @@ OZ_C_proc_begin(BInewGate,2)
 
   static char url[100];
 
-  sprintf(url,"ozp://%u.%u.%u.%u:%u/%u/%u",
+  sprintf(url,"ozp://%lu.%lu.%lu.%lu:%u/%lu/%u",
           (ip/(256*256*256))%256,
           (ip/(256*256))%256,
           (ip/256)%256,

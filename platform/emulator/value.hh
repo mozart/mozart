@@ -478,37 +478,33 @@ Assert(!isRef(lab) && !isAnyVar(lab) && isLiteral(lab));
  *=================================================================== */
 
 class LTuple {
-protected:
-// DATA
-  TaggedRef args[2];   // head, tail
- public:
-  USEHEAPMEMORY;
+private:
+  TaggedRef args[2];
 
-  LTuple(void) {COUNT1(sizeLists,sizeof(LTuple);)} // called by putlist and the like
-  LTuple(TaggedRef head, TaggedRef tail)
-  { COUNT1(sizeLists,sizeof(LTuple)); args[0] = head; args[1] = tail; }
+public:
+  USEHEAPMEMORY32;
 
-  TaggedRef getHead() { return tagged2NonVariable(args); }
-  TaggedRef getTail() { return tagged2NonVariable(args+1); }
-  void setHead(TaggedRef term) { args[0] = term;}
-  void setTail(TaggedRef term) { args[1] = term;}
-  TaggedRef getLabel() { return AtomCons; }
-  Literal *getLabelLiteral() { return tagged2Literal(AtomCons); }
-  TaggedRef *getRef() { return &args[0]; }
-  TaggedRef *getRefHead() { return &args[0]; }
-  TaggedRef *getRefTail() { return &args[1]; }
+  LTuple(void) {
+    COUNT1(sizeLists,sizeof(LTuple));
+  }
+  LTuple(TaggedRef head, TaggedRef tail) {
+    COUNT1(sizeLists,sizeof(LTuple));
+    args[0] = head; args[1] = tail;
+  }
 
   OZPRINT;
   OZPRINTLONG;
-
   void gcRecurse();
   LTuple *gc();
+
+  TaggedRef getHead()          { return tagged2NonVariable(args); }
+  TaggedRef getTail()          { return tagged2NonVariable(args+1); }
+  void setHead(TaggedRef term) { args[0] = term;}
+  void setTail(TaggedRef term) { args[1] = term;}
+  TaggedRef *getRef()          { return args; }
+  TaggedRef *getRefTail()      { return args+1; }
+  TaggedRef *getRefHead()      { return args; }
 };
-
-
-// functions for builtins and features
-//   with explicit deref
-
 
 inline
 Bool isCons(TaggedRef term) {
@@ -522,7 +518,6 @@ Bool isNil(TaggedRef term) {
 
 inline
 TaggedRef nil() { return AtomNil; }
-
 
 inline
 TaggedRef cons(TaggedRef head, TaggedRef tail)
@@ -550,24 +545,10 @@ TaggedRef head(TaggedRef list)
 }
 
 inline
-TaggedRef * headRef(TaggedRef list)
-{
-  Assert(isLTuple(list));
-  return tagged2LTuple(list)->getRefHead();
-}
-
-inline
 TaggedRef tail(TaggedRef list)
 {
   Assert(isLTuple(list));
   return tagged2LTuple(list)->getTail();
-}
-
-inline
-TaggedRef * tailRef(TaggedRef list)
-{
-  Assert(isLTuple(list));
-  return tagged2LTuple(list)->getRefTail();
 }
 
 inline

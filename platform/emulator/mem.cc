@@ -42,8 +42,7 @@ void initMemoryManagement(void) {
 
   // allocate first chunck of memory;
   MemChunks::list = NULL;
-  getMemFromOS(0);
-
+  (void) getMemFromOS(0);
 }
 
 
@@ -144,7 +143,7 @@ class SbrkMemory {
 
   void print() {
     if (this != NULL) {
-      printf("new = %d\nsize = %d\nnext = 0x%x\n\n\n",
+      printf("new = 0x%p\nsize = %d\nnext = 0x%p\n\n\n",
              newBrk,size,next);
       next->print();
     }
@@ -371,7 +370,7 @@ void MemChunks::print()
 {
   MemChunks *aux = this;
   while (aux) {
-    printf(" chunk( from: 0x%x, to: 0x%x )\n",
+    printf(" chunk( from: 0x%p, to: 0x%p )\n",
            aux->block, aux->block + aux->xsize);
     aux = aux->next;
     if (aux) {
@@ -389,7 +388,7 @@ void *heapMallocOutline(size_t chunk_size)
 }
 
 
-void getMemFromOS(size_t sz) {
+char *getMemFromOS(size_t sz) {
   int thisBlockSz = ozconf.heapBlockSize;
   if ((int)sz > ozconf.heapBlockSize) {
     thisBlockSz = sz;
@@ -446,6 +445,9 @@ void getMemFromOS(size_t sz) {
 
   //  DebugCheck(heapTotalSize > thisBlockSz/KB,
   //message("Increasing heap memory to %d kilo bytes\n",heapTotalSize));
+
+  heapTop -= sz;
+  return heapTop;
 }
 
 
