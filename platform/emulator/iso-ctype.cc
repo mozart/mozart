@@ -116,20 +116,19 @@ const unsigned char iso_conv_tab[]
 // ---------------------------------------------------------------------
 
 #define OZ_FirstCharArg \
- TaggedRef tc = OZ_in(0);	    \
- int i;				    \
- { DEREF(tc, tc_ptr);               \
- if (oz_isVar(tc)) {                \
-   am.addSuspendVarList(tc_ptr);    \
-   return SUSPEND;                  \
- }                                  \
- if (!oz_isSmallInt(tc)) {          \
-   oz_typeError(0,"Char");	    \
- } else {			    \
-   i = tagged2SmallInt(tc);	    \
-   if ((i < 0) || (i > 255)) {	    \
-     oz_typeError(0,"Char");	    \
-   }				    \
+ TaggedRef tc = OZ_in(0);	        \
+ int i;				        \
+ { DEREF(tc, tc_ptr);                   \
+ if (oz_isVar(tc)) {                    \
+   return oz_addSuspendVarList(tc_ptr); \
+ }                                      \
+ if (!oz_isSmallInt(tc)) {              \
+   oz_typeError(0,"Char");	        \
+ } else {			        \
+   i = tagged2SmallInt(tc);	        \
+   if ((i < 0) || (i > 255)) {	        \
+     oz_typeError(0,"Char");	        \
+   }				        \
  } }
 
 #define OZ_TestChar(TEST)                                            \
@@ -178,23 +177,6 @@ OZ_BI_define(BIcharToAtom,1,1) {
   }
   OZ_RETURN(AtomEmpty);
 } OZ_BI_end
-
-#define FirstCharIN		    \
- TaggedRef tc = OZ_in(0);	    \
- int i;				    \
- { DEREF(tc, tc_ptr);               \
- if (oz_isVar(tc)) {                \
-   am.addSuspendVarList(tc_ptr);    \
-   return SUSPEND;                  \
- }                                  \
- if (!oz_isSmallInt(tc)) {          \
-   oz_typeError(0,"Char");	    \
- } else {			    \
-   i = tagged2SmallInt(tc);	    \
-   if ((i < 0) || (i > 255)) {	    \
-     oz_typeError(0,"Char");	    \
-   }				    \
- } }
 
 OZ_BI_define(BIcharType,1,1) {
   OZ_FirstCharArg;
