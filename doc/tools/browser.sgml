@@ -1,4 +1,4 @@
-<chapter id="chapter.browser">
+<chapter id="chapter.browser" proglang=oz>
 <title/The &Oz; Browser/
 
 <p>
@@ -21,7 +21,11 @@ and its use is quite straightforward.
 <p>
 <figure id=fig.browser.prime>
 <caption/The &Oz; Browser./
+<picture.choice>
+<picture.extern to="nicebrowser.gif" type=gif>
+<picture.extern to="pictures/nicebrowser.eps" type=ps>
 <picture.extern to="pictures/browser.eps" type=ps>
+</picture.choice>
 </figure>
 
 Browser can be easily used in an &Oz; application as an <Q/embedded/
@@ -101,12 +105,13 @@ during the selection, and that there are no word- or line- selection
 modes.
 </subsection>
 
-<subsection><title/'BrowserClass', 'Browser', and 'Browse'/
+<subsection><title/Browser Module/
 
 <p>
-<index/BrowserClass/
-<index/Browser/
-<index/Browse/
+<index/<code/Browser.'class'//
+<index/<code/Browser.object//
+<index/<code/Browser.browse//
+<index/<code/Browser.close//
 The 'Browser' module of the &Oz; Prelude defines three variables:
 <list>
 <entry><<BrowserClass>>
@@ -861,7 +866,7 @@ objects is described.
 One can create Browser objects similarly to the pre-defined <<Browser>>
 one:
 <code display>
-  Browser = {New BrowserClass init}
+BrowserObject = {New Browser.'class' init}
 </code>
 <p>
 The plain <<init>> method makes a newly created Browser placed on its own
@@ -872,27 +877,33 @@ toplevel widget. One can tell a Browser object to use a Tk frame
 <index class=module/init/
 <index class=module/browse/
 <code display>
-   declare W F BO in
-   W = {New Tk.toplevel tkInit}
-   {Tk.send wm(geometry W "500x300")}
-   F = {New Tk.frame tkInit(parent: W
-                            bd: 5
-                            relief: raised
-                            width: 450
-                            height: 250)}
-   {Tk.send pack(F o(fill: none
-                     expand: no
-                     side: right))}
-   {Tk.send pack(propagate F no)}
-
-   %
-   BO = {New Browse.browserClass init(origWindow: F)}
-
-   %
-   {BO createWindow}
-
-   %
-   {BO browse(aaa(bbb))}
+declare W F BrowserObject in
+%%
+W = {New Tk.toplevel tkInit(bg:ivory)}
+{Tk.send wm(geometry W "500x300")}
+%%
+F = {New Tk.frame tkInit(parent : W
+                         bd     : 3
+                         bg     : white
+                         relief : groove
+                         width  : 450
+                         height : 250)}
+{Tk.send pack(F fill:both padx:10 pady:10 expand:true)}
+%%
+BrowserObject = {New Browser.'class' init(origWindow: F)}
+{BrowserObject createWindow}
+%%
+{BrowserObject
+ browse(
+    record(
+       atom: bonjour
+       quotedAtom: 'hello world'
+       list: [one two three four five six seven nine]
+       integer: 57
+       float: 34.56e~76
+       string:"adieu, monde cruel!"
+       byteString:{ByteString.make "squeeze me"}
+       tuple: foo(one(1) two(1 2) three(1 2 3))))}
 </code>
 <p>
 The window produced that way is shown on
@@ -901,7 +912,11 @@ The window produced that way is shown on
 toplevel widget.
 <figure id=fig.browser.oz-em-browser>
 <caption/An Embedded Application Browser/
-<picture.extern to="pictures/emb_browser.eps" type=ps>
+<picture.choice>
+<picture.extern to="emb_nicebrowser.gif" type=gif>
+<picture.extern to="pictures/emb_nicebrowser.eps" type=ps>
+<picture.extern to="pictures/emb_nicebrowser.eps" type=ps>
+</picture.choice>
 </figure>
 
 <index class=module/createWindow/
