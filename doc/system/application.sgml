@@ -41,9 +41,9 @@
           <Synopsis>
             <<{Application.getCmdArgs ?+{Spec} ??{R}}>>
           <Item>
-            acquires the arguments from the system property <<argv>>
-            and parses them according to ?_{Spec}.  Returns the options
-            in&nbsp;?_{R}.
+            acquires the arguments from the system property
+            <<'application.args'>> and parses them according
+            to ?_{Spec}.  Returns the options in&nbsp;?_{R}.
 
           <Entry><<getGuiArgs>>
           <Synopsis>
