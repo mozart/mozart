@@ -15,10 +15,6 @@
 #define INLINE inline
 #endif
 
-#ifdef INTERFACE
-#pragma interface
-#endif
-
 #include "oz.h"
 #include "oz_cpi.hh"
 

@@ -8,10 +8,6 @@
   ------------------------------------------------------------------------
 */
 
-#if defined(INTERFACE) && !defined(PEANUTS)
-#pragma implementation "am.hh"
-#endif
-
 #include "am.hh"
 
 #include "genvar.hh"
