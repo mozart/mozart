@@ -21,6 +21,9 @@ define
    IdCounter = {New Aux.counterClass init}
    
    fun {MakeParameterEdge Hist VarTable Event VarId EventPs AllParams}
+\ifdef DEBUG
+      {System.show makeParameterEdge}
+\endif
       VarStr = {Hist get_sol_var(VarId $)}
       #VarTable.VarId.nameconstraint
 \ifdef SHOW_ID
@@ -30,7 +33,7 @@ define
       "l(\"e<"#{IdCounter next($)}#">\",e(\"\", ["
       #"a(\"_DIR\",\"none\"),"
       #"a(\"EDGECOLOR\",\""#Config.edgeColour#"\")],l(\"vn<"
-      #VarId#">\",n(\"\",["
+      #{IdCounter next($)}#">\",n(\"\",["
       #"a(\"OBJECT\",\""#VarStr#"\"),"
       #"a(\"COLOR\",\""#Config.paramColour#"\"),"
       #{Hist get_param_node_attr(VarId $)}
@@ -67,6 +70,9 @@ define
    end
    
    fun {MakeParameterEdges Hist VarTable Event Ps AllPs AllParams}
+\ifdef DEBUG
+      {System.show makeParameterEdges}
+\endif
       case Ps
       of A|B|T then
 	 {MakeParameterEdge Hist VarTable Event A AllPs AllParams}#","
@@ -76,6 +82,9 @@ define
    end
 
    fun {MakeEventEdge Hist VarTable Event AllParams}
+\ifdef DEBUG
+      {System.show makeEventEdge}
+\endif
       "l(\"e<"#{IdCounter next($)}
       #">\",e(\"\", [a(\"_DIR\",\"none\"),a(\"EDGECOLOR\",\""#Config.edgeColour
       #"\")],l(\""#Event.1
@@ -111,6 +120,9 @@ define
    end
    
    fun {MakeEventEdges Hist VarTable Events AllParams}
+\ifdef DEBUG
+      {System.show makeEventEdges}
+\endif
       case Events
       of A|B|T then
 	 {MakeEventEdge Hist VarTable A AllParams}#","
@@ -120,6 +132,9 @@ define
    end
 
    fun {ConstraintEvents VarTable ReflC ReflParams}
+\ifdef DEBUG
+      {System.show constraintEvents}
+\endif
       Params = {FoldR {FS.reflect.lowerBoundList ReflParams}
 		fun {$ L R} (VarTable.L)|R end nil}
 
