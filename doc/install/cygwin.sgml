@@ -80,6 +80,13 @@
       built for MinGW.  So before we can actually start on the Mozart
       sources, we will build these additional packages.  Thankfully we
       need to do this only once.
+    <Para class=apropos><Title/gcc Versions/
+      Cygwin currently provides two major gcc versions:  Version 2.95
+      and Version 3.2.  These come in two packages (<File/gcc2/ and
+      <File/gcc/, respectively) that can be installed concurrently.
+      While Mozart for Unix by now builds fine with Version 3.2, Mozart
+      for Windows requires Version 2.95 due to bugs in the Windows port
+      of Version 3.2.
   <Section id="section.cygwin.packages">
     <Title/Acquiring the Required Packages/
     <Para class=apropos><Title/Package Directory/
@@ -297,7 +304,8 @@ cvs -d cvs.mozart-oz.org:/services/mozart/CVS get mozart-stdlib>>>
 <<<cd ?{build}
 mkdir mozart-build
 cd mozart-build
-?{mozart}/configure --prefix=?{install} \
+CC=gcc-2 CXX=gcc-2 ?{mozart}/configure \
+    --prefix=?{install} \
     --with-inc-dir=?{packages}/include \
     --with-lib-dir=?{packages}/lib \
     --with-tcl=?{packages} \
