@@ -552,9 +552,11 @@ public:
 
 
 inline
-Bool needsNoCollection(Literal *l)
+Bool needsCollection(Literal *l)
 {
-  return l->isAtom() || !((Name*)l)->isOnHeap();
+  if (l->isAtom()) return NO;
+  Name *nm = (Name*) l;
+  return nm->isOnHeap() || nm->hasGName();
 }
 
 
@@ -565,7 +567,7 @@ Bool needsNoCollection(TaggedRef t)
 
   TypeOfTerm tag = tagTypeOf(t);
   return isSmallInt(tag) ||
-         isLiteral(tag) && needsNoCollection(tagged2Literal(t));
+         isLiteral(tag) && !needsCollection(tagged2Literal(t));
 }
 
 
@@ -713,7 +715,7 @@ Name *Name::gcName()
     gcGName(getGName());
   }
   if (opMode == IN_GC && isOnHeap() ||
-      isLocalBoard(getBoard())) {
+      opMode == IN_TC && isLocalBoard(getBoard())) {
     GCMETHMSG("Name::gc");
     COUNT(literal);
     setVarCopied;
@@ -732,7 +734,7 @@ Name *Name::gcName()
 inline
 Literal *Literal::gc()
 {
-  if (needsNoCollection(this))
+  if (!needsCollection(this))
     return this;
 
   Assert(isName());
