@@ -25,9 +25,9 @@
     <Title/Truck Race/
 
   <P>
-    <List>
-      <Item><Ref.Extern to="applets/Trucks.oza"/[Start Applet]/
-      <Item><Ref to="appendix.enable"/[How to enable Applets]/
+    <List class=linkmenu>
+      <Item><Ref.Extern to="applets/Trucks.oza"/Start Applet/
+      <Item><Ref to="appendix.enable"/How to enable Applets/
     </List>
   </P>
 
