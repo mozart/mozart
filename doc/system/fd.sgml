@@ -653,7 +653,7 @@ definition.
 <entry><<&lt;:>><item> Analogous to <<=&lt;:>>
 <entry><<&gt;:>><item> Analogous to <<&gt;=:>>
 <entry><<=:>><item> In this case, the operational semantics is
-defined by conjunction of the formulas given for <<=&lt;:>> and <<gt;=:>>.
+defined by conjunction of the formulas given for <<=&lt;:>> and <<&gt;=:>>.
 <entry><<\=:>><item>
 In this case, the propagator waits until at most one
 non-determined variable is left, say <math/D_{kl}/. Then, <math/{\mbox{\sl RHS}}_k/
