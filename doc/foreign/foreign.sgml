@@ -1,5 +1,53 @@
-<chapter id=cha.foreign>
-<title/Interfacing to C and C++/
+<!DOCTYPE Book SYSTEM "ozdoc.dtd" [
+
+<!-- Extension to the DTD -->
+<!ENTITY % p.mix.local "|Em">
+<!ELEMENT Em - - (#PCDATA)>
+<!ENTITY % proglang.values.local "|lambda">
+<!ENTITY % picture.element "picture|picture.extern|picture.choice">
+<!ELEMENT comic - O (%picture.element;)>
+
+<!-- Abbreviations -->
+<!ENTITY lt "<">
+<!ENTITY gt ">">
+<!ENTITY Oz "Oz">
+<!ENTITY ampersand "&">
+
+<!-- Processing Instructions -->
+<!ENTITY nbsp PI "nbsp">
+<!ENTITY ellipsis PI "ellipsis">
+<!ENTITY slash PI "slash">
+<!ENTITY ie PI "ie">
+<!ENTITY resp PI "resp">
+<!ENTITY eg PI "eg">
+<!ENTITY etc PI "etc">
+<!ENTITY LaTeX PI "LaTeX">
+
+]>
+
+<Book proglang=oz>
+  <Front>
+    <Meta name=ozversion value="3.0">
+    <Meta name=status value=revised>
+    <Meta name=latex.package value="oz">
+    <Meta name=latex.package value="pstricks">
+    <Meta name=latex.package value="rotate">
+    <Meta name=latex.package value="pifont">
+
+    <Title/Interfacing to C and C++/
+     <Author.Extern to="author.db" key="Michael.Mehl"> 
+     <Author.Extern to="author.db" key="Christian.Schulte"> 
+     <Author.Extern to="author.db" key="Ralf.Scheidhauer"> 
+    <Abstract>
+    &Oz; provides a simple yet powerful interface to dynamically link
+native C and C++ code to &Oz;. It provides for
+access and conversion from most &Oz; values to C data structures and
+vice versa and supports mechanisms to handle suspension for C(++)
+functions.
+    </Abstract>
+  <Body proglang=cc>
+<chapter>
+<title/Introduction/
 <p>
 &Oz; provides a simple yet powerful interface to dynamically link
 native C and C++ code to &Oz;<note foot>Dynamic linking is currently
@@ -11,8 +59,9 @@ functions.
 The usage of the C and C++ interface is first explained using an
 example followed by a reference part that describes the interface in
 detail.
+</chapter>
 
-<section id=sec.foreignEx><title/A small Example/
+<chapter id=sec.foreignEx><title/A small Example/
 <p>
 <figure class="Program" id=getenvC>
 <caption/File <file/getenv.cc/: a C++ program to provide a getenv for &Oz;/
@@ -64,9 +113,9 @@ To realize this we have to perform the following steps:
 </LIST>
 These steps are explained in more detail below.
 <p>
-</section>
+</chapter>
 
-<section><title/The C Part/
+<chapter><title/The C Part/
 <p>
 <ptr to=getenvC> shows a first attempt to provide access to the
 <code /getenv/ C library function as explained above. In the following
@@ -134,18 +183,18 @@ Lines 16--23 in <ptr to=getenvC> are needed for the linking step and
 will be explained in <ptr to=sec.foreignLink>.
 
 
-</section>
-<section><title>Compiling the C program</title>
+</chapter>
+<chapter><title>Compiling the C program</title>
 <p>
 TODO: need to provide special options to the C compiler
 
-</section>
-<section><title>Creating a dynamic library</title>
+</chapter>
+<chapter><title>Creating a dynamic library</title>
 <p>
-TODO: need to provide special options to the C compiler
+TODO: need to provide special options to the linker
 
-</section>
-<section id=sec.foreignLink><title>Linking a native module</title>
+</chapter>
+<chapter id=sec.foreignLink><title>Linking a native module</title>
 <p>
 In the last step we make the native module available by linking
 it into &Oz;. Lines 16--23 in <ptr to=getenvC> are needed to
@@ -154,7 +203,7 @@ declare the export signature of the native module. A function named <code
 function will be called when the module is linked into &Oz;. It can be
 used to do some module dependent initialization and has to return an
 array whose elements are of type <code /OZ_C_proc_interface/; the end
-of the array is terminated by an empty structure. The array describes
+of the array must be terminated by an empty structure. The array describes
 the signature of the functions being exported from the module:
 <code display >
 <![RCDATA[
@@ -191,34 +240,39 @@ it like this:
 
 <p>
 
-</section>
-<section><title>Creating object files under Windows 95/NT</title>
+</chapter>
+<chapter><title>Creating object files under Windows 95/NT</title>
 <p>
 TODO: check this 
 <p>
-Under Windows 95/NT &Oz; cannot directly link object files (ending in
-<code /.obj/); you have to create a DLL (dynamic link library) out of
-all the object files you want to link. Consult your C compilers
+Currently there is no <code/oztool/ available for Windows 95/NT to
+compile and create a DLL (dynamic link library). Consult your C compilers
 documentation on how to create DLLs. When loading a DLL, &Oz; will
 automatically call a C function named <code /OZ_linkFF/ to do a certain
 special linking step needed on the Windows platform. This function is
-defined in the file <code /oz.c/ contained in the <code /include/
+defined in the file <code /mozart.c/ contained in the <code /include/
 subdirectory of the &Oz; installation directory. So you have to compile
-<code /oz.c/ and include it into the DLL. You also have to explicitely
+<code /mozart.c/ and include it into the DLL. You also have to explicitely
 export all the functions you want to call from &Oz; (including
 <code /OZ_linkFF/) from the DLL.
 <p>
 Dynamic linking has been testet using Watcom version 10.6 and MS
 Visual C++ version 4.0. In the following we shortly describe how to
 proceed on each of these compilers to create the DLL named
-<code /getenv.dll/ for the example above. This DLL can be loaded into
-&Oz; as described in Section <ptr to=sec.opprog-foreign-oz> using
-<code display proglang=oz>
-Goodies = {Foreign.load 
-             ['C:/whatever/getenv.dll'] 
-             goodies(getenv: 2)}
-</code>
-<subsection><title/Watcom/
+<code /getenv.dll/ for the example above. 
+<p>
+TODO:
+For some strange reason that I don't know the DLL has to have the
+suffix <code /.so-win32-i486/. So after you've created <code
+/getenv.dll/ as described below, rename it to <code
+/getenv.so-win32-i486/ which then can be loaded into &Oz; as described
+above.
+
+
+
+<section><title/Watcom/
+<p>
+TODO: check whether this works
 <p>
 First create a file named <code /getenv.lnk/ with the following contents:
 <code display >
@@ -233,12 +287,15 @@ that you want to export.
 Then compile the source files and create the DLL using the following
 commands:
 <code display >
-wcc386 -zq -bd oz.c
-wcc386 -zq -bd getenv.c
+wcc386 -zq -bd mozart.c
+wcc386 -zq -bd getenv.cc
 wlink @getenv
 </code>
-</subsection>
-<subsection><title/Miscrosoft Visual C++/
+</section>
+
+<section><title/Microsoft Visual C++/
+<p>
+TODO: check whether this works
 <p>
 First create a file named <code /getenv.def/ with the following contents:
 <code display >
@@ -250,14 +307,13 @@ EXPORTS
 <p>
 Compilation and creation of the DLL is done using the following commands:
 <code display >
-cl /c oz.c getenv.c
+cl /c mozart.c getenv.cc
 link /def:getenv.def /dll oz.obj getenv.obj
 </code>
-</subsection>
 </section>
+</chapter>
 
-
-<section><title/More Details/
+<chapter><title/Tuning the Example/
 <p>
 
 <para><title/Raising Exceptions/
@@ -287,7 +343,7 @@ is incorrect and the name of the expected type is <code /expectedType/.
 
 <para id=sec.suspensionC><title/Suspension of C functions/
 <index/suspension of C functions/
-The macro <code /OZ_declareAtom/ internally also makes use facilities
+The macro <code /OZ_declareAtom/ internally also makes use of facilities
 that allow C functions to suspend the running thread on variables. 
 Thus <code /OZ_declareAtom/ uses some code of the following form: 
 <code display >
@@ -317,14 +373,14 @@ the C function <code /BIgetenv/ is called again from the beginning and
 the browser updates the display of the value of the environment
 variable as expected.
 <p>
-</section>
+</chapter>
 
-<section id=sec.CInterfaceSpec><title/Specification of the C interface/
+<chapter id=sec.CInterfaceSpec><title/Specification of the C interface/
 <p>
 Below we give a reference of the functionality provided by the C and C++
 interface.
 
-<subsection><title/General Remarks/
+<section><title/General Remarks/
 <p>
 Before we go into more detail we start with some general remarks.
 <p>
@@ -346,7 +402,7 @@ overwritten by the user and the next call to any of the interface
 functions may modify it.  So the user should take care to make a
 copy of these memory blocks if necessary and free it again himself.
 <p>
-<subsection><title/Data types/
+<section><title/Data types/
 <p>
 The following data types are defined in the interface:
 <list>
@@ -375,9 +431,9 @@ typedef struct {
 <item>This structure declares the signature of a function being
 exported from a native module.
 </list>
-</subsection>
+</section>
 
-<subsection><title/Declaration/
+<section><title/Declaration/
 <p>
 
 <list>
@@ -396,33 +452,154 @@ exported from a native module.
   defined. <code /InArity/ and <code /OutArity/ specify the number of
   input and output arguments the function expects.
 
-</list></subsection>
+</list></section>
 
 
-<subsection><title/Accessing arguments/
-<subsubsection><title/Accessing input arguments/
+<section><title/Accessing arguments/
+<subsection><title/Accessing input arguments/
 <p>
 
 <list>
-<entry><<OZ_in(n)>>
-<synopsis>
-<index class=module/OZ_in/
-<item> Abstract access to input argument number <code /n/ (counting
-starts with 0) is provided through this macro, returning a value of
-type <code /OZ_Term/.
+
+<!--  <entry/<<OZ_in(n)>>/ -->
+<!--  <synopsis> -->
+<!--  <index class=module/OZ_in/ -->
+<!--  <item> Abstract access to input argument number <code /n/ (counting -->
+<!--  starts with 0) is provided through this macro. It returns a value of -->
+<!--  type <code /OZ_Term/. The use of this macro is discouraged. You should -->
+<!--  use one of the macros below. -->
+
+<entry/<<OZ_declareTerm(n,var)>>/
+<item> Declares a new variable of type <code /OZ_Term/ named <code
+/var/, which is initialized with the value of the <code /n/-th
+(counting starts from zero) input argument.
+
+<entry/<<OZ_declareDetTerm(n,var)>>/
+<item> Works like <code /OZ_declareTerm/ but additionally suspends if
+the input argument is a free variable.
+
+<entry/<<OZ_declareInt(n,var)>>/
+<item> The function expects in input argument number <code /n/ an Oz
+integer. It then declares a variable named <code /var/ of type <code
+/int/ and initializes <code /var/ with the value of this argument. The
+macro raises an exception if the argument is ill typed and suspends if
+the argument is an unbound variable.
+
+<entry/<<OZ_declareFloat(n,var)>>/
+<item>Works like <code /OZ_declareInt/ but expectes an Oz float and
+declares a variable of type <code /double/.
+
+<entry/<<OZ_declareAtom(n,var)>>/
+<item>Works like <code /OZ_declareInt/ but expectes an Oz atom and
+declares a variable of type <code /char */.
+
+<entry/<<OZ_declareVirtualString(n,var)>>/
+<item>Works like <code /OZ_declareInt/ but expectes an Oz virtual
+string and declares a variable of type <code /char */.
+
+<entry/<<OZ_declareVS(n,var,len)>>/
+<item> Like <code /OZ_declareVirtualString/, but additionally sets
+<code /len/ to the size of the result.
+
+<entry/<<OZ_declareBool(n,var)>>/
+<item> Declares a variable of type <code /int/ named <code /var/,
+which is non-zero iff the <code /n/-th argument is equal to <<true>>.
+
 </list>
 
-</subsubsection>
+The above macros always declare a new C variable and then do some
+checks. Therefor in C (not in C++) only one of them can be used only
+at the start of a new block statement. For this reason there is also a
+second set of macros named <code /OZ_set*/ that expect that their
+second argument has already been declared. Thus in C++ you can use
+<p>
+<code>
+  OZ_declareAtom(0,mystring);
+  OZ_declareInt(1,myint);
+</code>
+<p>
+whereas in plain C you have to write
+<p>
+<code>
+  char *mystring;
+  int myint;
+  OZ_setAtom(0,mystring);
+  OZ_setInt(1,myint);
+</code>
+
+
 </subsection>
 
-<subsection><title/Type testing/
+<subsection><title/Accessing output arguments/
+<p>
+<list>
+<entry/<<OZ_out(n)>>/
+<synopsis>
+<index class=module/OZ_out/
+<item> Abstract access to output argument number <code /n/ (counting
+starts with 0). Should only be used for writing an output argument and
+never for reading. Usage is like
+<p>
+<code >
+  OZ_out(3) = OZ_atom("myResult");
+</code>
+<p>
+This macro should only be used in case a function returns more than
+one value. For returning values in the first output argument one of
+the functions below should be used.
+
+<entry/<<OZ_RETURN(V)>>/
+<synopsis>
+<index class=module/OZ_RETURN/
+<item> Returns from the C function with output value <<V>>. It is a
+macro which expands to 
+<p>
+<code>
+  return (OZ_out(0)=V,OZ_ENTAILED)
+</code>
+</list>
+
+For convenience we also provide the following macros:
+
+<list>
+<entry/<<OZ_RETURN_INT(I)>>/
+<synopsis>
+<index class=module/OZ_RETURN_INT/
+<item> Return a C integer. Expands to
+<code>OZ_RETURN(OZ_int(I))</code>
+
+<entry/<<OZ_RETURN_ATOM(A)>>/
+<synopsis>
+<index class=module/OZ_RETURN_ATOM/
+<item> Return a C integer. Expands to
+<code>OZ_RETURN(OZ_atom(A))</code>
+
+<entry/<<OZ_RETURN_STRING(S)>>/
+<synopsis>
+<index class=module/OZ_RETURN_STRING/
+<item> Return a C integer. Expands to
+<code>OZ_RETURN(OZ_string(S))</code>
+
+<entry/<<OZ_RETURN_BOOL(X)>>/
+<synopsis>
+<index class=module/OZ_RETURN_BOOL/
+<item> Returns <<false>> if  X equals to 0, <<true>>
+otherwise. Expands to 
+<code>OZ_RETURN((X)?OZ_true():OZ_false())</code>
+
+
+</list>
+
+</subsection>
+</section>
+
+<section><title/Type testing/
 <p>
 To check whether a given <code /OZ_Term/ is a certain &Oz; value several
 functions are provided:
 <list>
 <entry><<OZ_isAtom>>
 <entry><<OZ_isBool>>
-<entry><<OZ_isBigInt>>
 <entry><<OZ_isCell>>
 <entry><<OZ_isThread>>
 <entry><<OZ_isPort>>
@@ -433,6 +610,8 @@ functions are provided:
 <entry><<OZ_isFeature>>
 <entry><<OZ_isFloat>>
 <entry><<OZ_isInt>>
+<entry><<OZ_isBigInt>>
+<entry><<OZ_isSmallInt>>
 <entry><<OZ_isNumber>>
 <entry><<OZ_isLiteral>>
 <entry><<OZ_isName>>
@@ -442,7 +621,6 @@ functions are provided:
 <entry><<OZ_isPair2>>
 <entry><<OZ_isProcedure>>
 <entry><<OZ_isRecord>>
-<entry><<OZ_isSmallInt>>
 <entry><<OZ_isTrue>>
 <entry><<OZ_isTuple>>
 <entry><<OZ_isUnit>>
@@ -462,24 +640,26 @@ A few of these need some more explanation:
 
 <code >int OZ_isBigInt(OZ_Term t)
 int OZ_isSmallInt(OZ_Term t)</code>
+<p>
 The emulator has two representations for integers: small integers
 and big integers. Small integers are implemented very efficiently.
 <p>
 <index class=module/OZ_isPair/
-<code >int OZ_isPair(OZ_Term t)</code>
+<code >int OZ_isPair(OZ_Term t)</code><p>
 Returns zero iff <code /t/ is a tuple with label <<#>>.
 <p>
 <index class=module/OZ_isPair2/
-<code >int OZ_isPair2(OZ_Term t)</code>
+<code >int OZ_isPair2(OZ_Term t)</code><p>
 Returns nonzero iff <code /t/ is a tuple with label <<#>> and arity of 2.
 <p>
 <index class=module/OZ_isValue/
-<code >int OZ_isValue(OZ_Term t)</code>
+<code >int OZ_isValue(OZ_Term t)</code><p>
 Returns nonzero iff <code /t/ is not a variable.
 <p>
 <index class=module/OZ_isVar/
-<code >int OZ_isVariable(OZ_Term t)</code>
+<code>int OZ_isVariable(OZ_Term t)</code><p>
 Returns nonzero iff <code /t/ is a variable.
+
 <entry><<OZ_isList>>
 <synopsis>
   <code>int OZ_isList(OZ_Term term, OZ_Term *var)</code>
@@ -487,6 +667,7 @@ Returns nonzero iff <code /t/ is a variable.
     list, but the tail is a variable, then <code /*var/ is set to the
     tail of the list, else it is set to null.  <code /var/ may be null.
     If <code /term/ is cyclic then <code /OZ_isList/ never terminates!  
+
 <entry><<OZ_isString>>
 <synopsis>
   <code>int OZ_isString(OZ_Term term, OZ_Term *var)</code>
@@ -495,6 +676,7 @@ Returns nonzero iff <code /t/ is a variable.
     then <code /*var/ is set to this variable, else it is set to null.
     <code /var/ may be null.  If <code /term/ is cyclic then 
       <code /OZ_isString/ never terminates!  
+
 <entry><<OZ_isVirtualString>>
 <synopsis>
   <code >int OZ_isVirtualString(OZ_Term term, OZ_Term *var)</code>
@@ -503,19 +685,22 @@ Returns nonzero iff <code /t/ is a variable.
     <code /*var/ is set to this variable, else it is set to null.
       <code /var/ may be null.  If <code /term/ is cyclic then
       <code /OZ_isVirtualString/ never terminates!  
+
 <entry><<OZ_termType>>
 <synopsis>
-  <code >OZ_Term OZ_termType(OZ_Term t)</code>
-<item>Returns an atom describing the type of <code /t/. The following types
+  <code>OZ_Term OZ_termType(OZ_Term t)</code>
+<item>
+Returns an atom describing the type of <code /t/. The following types
     are returned:
 <<<
-      variable, int, float, atom, name, tuple, record, fset,
-      foreignPointer, procedure, cell, space, object, port,
-      chunk, array, dictionary, lock class, resource
-   >>>
-    (see also <<Value.type>> in <ptr to=modules>).
-</list></subsection>
-<subsection><title/Conversion/
+variable, int, float, atom, name, tuple, record, fset,
+foreignPointer, procedure, cell, space, object, port,
+chunk, array, dictionary, lock class, resource
+>>>
+    (see also <<Value.type>> in 
+<ptr.extern to="ozdoc:base" key="section.values.status">).
+</list></section>
+<section><title/Conversion/
 <p>
 The following functions are used to convert from &Oz; values to C data
 structures and vice versa.
@@ -548,13 +733,13 @@ structures and vice versa.
   <code >char *OZ_parseInt(char *s)</code>
 <item>Parse <code /s/ as an &Oz; integer.  Returns a pointer to the next
     character after the integer or null if <code /s/ does not start
-    with an integer in &Oz; syntax (see <ptr to=notation>).
+    with an integer in &Oz; syntax (see <ptr.extern to="ozdoc:notation">).
 
 <entry><<OZ_CStringToInt>>
 <synopsis>
   <code >OZ_Term OZ_CStringToInt(char *s)</code>
 <item>Converts C string <code /s/ to an &Oz; integer. <code /s/ must be a valid
-  integer in &Oz; syntax (see <ptr to=notation>).
+  integer in &Oz; syntax (see <ptr.extern to="ozdoc:notation">).
 
 <entry><<OZ_floatToC>>
 <synopsis>
@@ -566,24 +751,29 @@ structures and vice versa.
 <code >OZ_Term OZ_float(double f)</code>
 <item>Converts C float <code /f/ to an &Oz; float.
 
+<entry><<OZ_boolToC>>
+<synopsis>
+<code >int OZ_boolToC(OZ_Term t)</code>
+<item>Returns non-zero iff <code /t/ is equal to <<true>>.
+
 <entry><<OZ_parseFloat>>
 <synopsis>
 <code >char *OZ_parseFloat(char *s)</code>
 <item>Parse <code /s/ as an &Oz; float. Returns a pointer to the next
   character after the float or null if <code /s/ is not an 
-  float in &Oz; syntax (see <ptr to=notation>).
+  float in &Oz; syntax (see <ptr.extern to="ozdoc:notation">).
 
 <entry><<OZ_CStringToFloat>>
 <synopsis>
 <code >OZ_Term OZ_CStringToFloat(char *s)</code>
 <item>Converts C string <code /s/ to an &Oz; float. <code /s/ must be a valid
-  float in &Oz; syntax (see <ptr to=notation/).
+  float in &Oz; syntax (see <ptr.extern to="ozdoc:notation">).
 
 <entry><<OZ_CStringToNumber>>
 <synopsis>
 <code >OZ_Term OZ_CStringToNumber(char *s)</code>
 <item> Converts C string <code /s/ to an &Oz; number. <code /s/ must be a valid
-  integer or float in &Oz; syntax (see <ptr to=notation/).
+  integer or float in &Oz; syntax (see <ptr.extern to="ozdoc:notation">).
 
 <entry><<OZ_toC>>
 <synopsis>
@@ -610,8 +800,8 @@ structures and vice versa.
 <synopsis>
 <code >char *OZ_virtualStringToC(OZ_Term t, int *n)</code>
 <item>Converts &Oz; virtual string <code /t/ to a C string.
-</list></subsection>
-<subsection><title/Term access and construction/
+</list></section>
+<section><title/Term access and construction/
 <p>
 Several functions are available to access and construct terms.
 <list>
@@ -807,8 +997,8 @@ OZ_pair2(OZ_atom(left),OZ_string(right))
 
 <entry><<OZ_newPort>>
 <synopsis>
-  <code >OZ_Term OZ_newPort(OZ_Term t)</code>
-<item>Creates a new port.
+  <code >OZ_Term OZ_newPort(OZ_Term s)</code>
+<item>Creates a new port with stream <code /s/.
 
 <entry><<OZ_send>>
 <synopsis>
@@ -820,8 +1010,8 @@ OZ_pair2(OZ_atom(left),OZ_string(right))
   <code >int OZ_onToplevel()</code>
 <item>Returns nonzero iff called on toplevel, &ie; not within a local
     space.
-</list></subsection>
-<subsection><title/Exceptions/
+</list></section>
+<section><title/Exceptions/
 <p>
 <list>
 
@@ -842,8 +1032,8 @@ OZ_pair2(OZ_atom(left),OZ_string(right))
 <item>Raises an exception indicating that the argument at position 
       <code /pos/ is of incorrect type. <code /type/ should be a string
     describing the expected type.
-</list></subsection>
-<subsection><title/Unification/
+</list></section>
+<section><title/Unification/
 <p>
 <list>
 
@@ -873,15 +1063,34 @@ OZ_pair2(OZ_atom(left),OZ_string(right))
   <code >OZ_Return OZ_eq(OZ_Term t1, OZ_Term t2)</code>
 <item>Return non-null, if <code /t1/ and <code /t2/ reference the same Oz
   object in the store.
-</list></subsection>
-<subsection><title/Threads/
+
+<entry><<OZ_eqAtom>>
+<synopsis>
+  <code >OZ_Return OZ_eqAtom(OZ_Term t1, char *s)</code>
+<item>This is an abbreviation for <code /OZ_eq(t1, OZ_atom(s))/
+
+<entry><<OZ_eqInt>>
+<synopsis>
+  <code >OZ_Return OZ_eqInt(OZ_Term t1, int i)</code>
+<item>This is an abbreviation for <code /OZ_eq(t1, OZ_int(i))/
+
+<entry><<OZ_eqFloat>>
+<synopsis>
+  <code >OZ_Return OZ_eqFloat(OZ_Term t1, double d)</code>
+<item>This is an abbreviation for <code /OZ_eq(t1, OZ_float(d))/
+
+
+</list></section>
+
+
+
+<section><title/Threads/
 <p>
 <list>
 
 <entry><<OZ_makeRunnableThread>>
 <synopsis>
-  <code >void OZ_makeRunnableThread
-&nbsp;&nbsp;&nbsp;&nbsp;(OZ_CFun fun, OZ_Term *args, int n) </code>
+  <code >void OZ_makeRunnableThread(OZ_CFun fun, OZ_Term *args, int n) </code>
 <item>Creates a thread with one task to execute the function <code /fun/
     with arguments <code /args[0],&ellipsis;,args[n-1]/.
 
@@ -896,8 +1105,8 @@ int OZ_getMediumPrio()
 int OZ_getHighPrio()
 </code>
 <item>Return the appropriate thread priorities.
-</list></subsection>
-<subsection><title/Printing/
+</list></section>
+<section><title/Printing/
 <p>
 <list>
 
@@ -907,13 +1116,11 @@ int OZ_getHighPrio()
 <item>Prints a warning message to the standard error device. Can be used
     like <code /printf(3)/.
 
-<entry><<OZ_printVirtualString>>
-<synopsis>
-  <code >void OZ_printVirtualString(OZ_Term t)</code>
-<item>Prints the virtual string <code /t/ to the standard output device.
-</list></subsection>
-<subsection><title/Miscellaneous/
+</list></section>
+
+<section><title/Miscellaneous/
 <p>
+
 <list>
 
 <entry><<OZ_false>>
@@ -948,62 +1155,6 @@ int OZ_getHighPrio()
     equal, -1 if <code /t1/ is less than <code /t2/ and 1 if <code /t2/ is
     less than <code /t1/.
 
-<entry><<OZ_getCArg>>
-<synopsis>
-  <code >OZ_Term OZ_getCArg(int n)</code>
-<item>Returns the <code /n/'th argument (by starting counting from zero) of
-    the enclosing C function.
-
-<entry><<OZ_nonvarArg>>
-<synopsis>
-  <code >OZ_nonvarArg(ARG)</code>
-<item>This is a macro to suspend a C function on argument number <code /ARG/,
-    if it is not bound. It is defined as:
-<code display >
-if (OZ_isVariable(OZ_getCArg(ARG))) {
-  OZ_suspendOn(OZ_getCArg(ARG));
-}
-</code>
-
-<entry><<OZ_declareNonvarArg>>
-<synopsis>
-  <code >OZ_declareNonvarArg(ARG,VAR)</code>
-<item>This is a macro to declare a new C variable <code /VAR/ of type       <code /OZ_Term/ that is constructed from argument number <code /ARG/. It
-    suspends the functions of the argument is an unbound variable.
-    It is defined as:
-<code display >
-OZ_Term VAR = OZ_getCArg(ARG);
-if (OZ_isVariable(VAR)) {
-  OZ_suspendOn(VAR);
-}
-</code>
-
-<entry><<OZ_declareIntArg>>
-<entry><<OZ_declareFloatArg>>
-<entry><<OZ_declareAtomArg>>
-<entry><<OZ_declareProperStringArg>>
-<entry><<OZ_declareVirtualStringArg>>
-<synopsis>
-  <code >
-    OZ_declareIntArg(ARG,VAR)
-    OZ_declareFloatArg(ARG,VAR)
-    OZ_declareAtomArg(ARG,VAR)
-    OZ_declareProperStringArg(ARG,VAR)
-    OZ_declareVirtualStringArg(ARG,VAR)</code>
-<item>These macros declare a new C variable <code /VAR/ of the types 
-      <code /int/, <code /float/, resp.  <code /char*/ that is constructed from
-    argument number <code /ARG/.  The macro <code /OZ_declareIntArg/ is
-    for example defined as:
-<code display >
-int VAR;
-OZ_nonvarArg(ARG);
-if (! OZ_isInt(OZ_getCArg(ARG))) {
-  return OZ_typeError(ARG,"Int");
-} else {
-  VAR = OZ_intToC(OZ_getCArg(ARG));
-}
-</code>
-
 <entry><<OZ_suspendOn>>
 <synopsis>
   <code >OZ_suspendOn(OZ_Term v)</code>
@@ -1022,13 +1173,15 @@ OZ_suspendOn3(OZ_Term v1, OZ_Term v2, OZ_Term v3)
 </code>
 <item>Like <code /OZ_suspendOn/ , but suspends the executing thread
     disjunctively on the argument variables.
-</list></subsection>
-<subsection><title/Garbage collection/
+</list>
+</section>
+
+<section><title/Garbage collection/
 <p>
 Care must be taken about proper interaction with the &Oz; garbage
 collector: it does not notice if you store an <code /OZ_Term/ into a
 global C variable. Therefore it will free the space on the heap
-occupied by this term and leads to memory fault. &Oz; provides functions
+occupied by this term, which leads to memory faults. &Oz; provides functions
 to explicitly inform the garbage collector about external references
 to the heap.
 <list>
@@ -1045,7 +1198,188 @@ to the heap.
 <item>This is the inverse function to <code /OZ_protect/ informing the
     garbage collector that the reference to the heap is no longer
     used.
-</list></subsection></section></chapter>
+</list>
+</section>
 
 
-<!--  TODO: OZ_featureCmp -->
+<section><title>Concurrent Input and Output</title>
+<p>
+Reading from or writing to a file descriptor may block, since buffers
+my be empty or resp. full. Thus calling <code /read/ or <code /write/
+might block the whole Oz process. We therefor provide abstractions that
+allow concurrent access to file descriptors from within the C level.
+
+<p>
+We first declare an abstact type <code /OZ_IOHandler/ which is a
+function expecting an integer and an arbitry pointer:
+<p>
+<code>
+   typedef int OZ_IOHandler(int, void *);
+</code>
+<p>
+
+The user can than use the following abstractions:
+<list>
+<entry><<OZ_registerReadHandler>>
+<synopsis>
+  <code >void OZ_registerReadHandler(int fd,OZ_IOHandler fun,void *args)</code>
+<item>Registers <code /fun/ as a read handler for file descriptor
+<code /fd/. Any previously registered function will be
+overridden. When input gets available on <code /fd/ then <code
+/fun(fd,args)/ will be called by the Oz scheduler. The usage of <code
+/args/ provides a way to pass arbitrary arguments to <code /fun/.
+
+<entry><<OZ_unregisterRead>>
+<synopsis>
+  <code >void OZ_unregisterRead(int fd)</code>
+<item>Unregisters a previously registered read handler for file
+descriptor <code /fd/.
+
+<entry><<OZ_registerWriteHandler>>
+<synopsis>
+  <code >void OZ_registerWriteHandler(int fd,OZ_IOHandler fun,void *args)</code>
+<item>Analogously to <code /OZ_registerReadHandler/ for writing. <code
+/fun/ is called as soon as the output buffer for <code /fd/ gets empty.
+
+<entry><<OZ_unregisterWrite>>
+<synopsis>
+  <code >void OZ_unregisterWrite(int fd)</code>
+<item>Unregisters a previously registered write handler for file
+descriptor <code /fd/.
+</list>
+
+</section>
+
+</chapter>
+
+<Chapter id="chapter.extension">
+<Title/The Extension class/
+
+<P>The C++ class <<OZ_Extension>> allows for an easy integration of new
+ built-in data types into the Oz VM.
+
+<p>To add a new data type a native module must be implemented which contains
+(1) a subclass of <<OZ_Extension>> (see below) and (2) built-in procedures
+implementing the operation on the new type.
+
+<p>If you want to implement situated extension, i.e. data types which
+are situated in computation spaces and need to be copied you should
+subclass <<OZ_SituatedExtension>> with has the same interface as
+<<OZ_Extension>>.
+
+<p>In <Ptr to="section.extension.reference"> you find the reference
+documentation and in <Ptr to="section.extension.example"> an example.
+
+<Section id="section.extension.reference">
+  <Title/Reference/
+
+    <SubSection id="section.extension.reference.class">
+<Title/The class <<Oz_Extension>>/
+
+ <p>The class <<OZ_Extension>> implements the methods defined below.
+ The methods <<getIdV>> and <<gcV>> which are marked as
+ required are pure virtual and have to be implemented in every
+ subclass.
+
+<LIST CLASS=EXPORTS>
+
+  <ENTRY><<virtual int getIdV()>> // required
+
+  <ITEM>Allows to discriminate the different kinds of extensions. It
+      should return a unique number.  Unique numbers can be obtained
+      using <<int OZ_getUniqueId()>>.
+
+      <p>Ids can be statically assigned by extending the enumeration
+      <<OZ_Registered_Extension_Id>>.
+
+  <ENTRY><<virtual Extension* gcV()>> // required
+
+<ITEM>Invoked when copying is request. Needed for garbage collection and
+      in the case of <<OZ_SituatedExtension>> also for copying.
+
+  <ENTRY><<virtual void gcRecurseV()>> // default: do nothing
+<ITEM>Invoked on the copy obtained from <<gcV>>.  The VM has marked the data
+such that recursive updates of fields, e.g. running <<OZ_gcHeapNode>>,
+do not run into cycles.
+
+  <ENTRY><<virtual OZ_Term printV(int depth = 10)>> // default: return
+  <<extension>>
+  <ITEM>printV should return a virtual string and is used for
+  printing, e.g. System.show.
+
+  <ENTRY><<virtual OZ_Term printLongV(int depth = 10, int offset = 0)>> // default: call printV
+  <ITEM>This may help debugging, but is currently not used.
+
+  <ENTRY><<virtual OZ_Term typeV()>> // default: return <<extension>>
+  <ITEM>typeV should return an atom describing the type of the
+      extension. This value is also return in Value.status and
+      Value.type.  It should not conflict with the built-in types.
+
+<ENTRY><<virtual OZ_Term inspectV()>> // default: call typeV
+<ITEM>Not used. Idea: hook for debugging tools to get information.
+
+  <ENTRY><<virtual Bool isChunkV()>> // default: return true
+<ITEM>Define this to return false is the extension in not a subtype of
+      chunk.
+
+  <ENTRY><<virtual OZ_Term getFeatureV(OZ_Term fea)>> // default: return 0
+<ITEM>If the operator <<.>> (dot) is applied to an extension this function is
+      called. If <<getFeatureV>> returns 0 an exception is raised that the
+      feature is not available.
+
+  <ENTRY><<virtual OZ_Return eqV(OZ_Term t)>> // default: return false
+<ITEM>This function is called during unification and equality test
+      (==), if both values are extensions. Implement it if you need
+      structural equality. Note that in this case <<isChunkV>> should
+      return false.
+
+  <ENTRY><<virtual Bool marshalV(MsgBuffer *bs)>>  // default: return false
+<ITEM>      This is the hook to serialization.  It returns true if the
+      extension is serializable and writes it external representation
+      into the message buffer (see <<oz_registerExtension>> below).
+
+  <ENTRY><<OZ_Boolean isLocal()>>
+<ITEM>Returns true if a situated extensions is local to the current space.
+
+</LIST>
+
+<SubSection id="section.extension.reference.functions">
+<Title/Functions/
+
+<p>
+<LIST CLASS=EXPORTS>
+<ENTRY><<Bool OZ_isExtension(OZ_Term t)>>
+<ITEM>Tests if the OZ_Term is an extension (<<t>> must be dereferenced
+first).
+
+<ENTRY><<Extension *OZ_getExtension(OZ_Term t)>>
+<ITEM>Unbox the OZ_Term into an extension
+     (<<t>> must be dereferenced).
+	    
+<ENTRY><<OZ_Term oz_extension(Extension *e)>>
+<ITEM>Box the Extension into an OZ_Term.
+
+<ENTRY><<typedef OZ_Term (*oz_unmarshalProcType)(MsgBuffer*)
+void oz_registerExtension(int id, oz_unmarshalProcType f)>>
+<ITEM>Registers an unmarshal procedure for the extension with the given
+id.
+
+<ENTRY><<int OZ_getUniqueId()>>
+<ITEM>Returns a new unique number usable as the id of an extension.
+
+</LIST>
+
+
+<Section id="section.extension.example">
+  <Title/Example/
+
+<p>The following is a snippet from the implementation of bit arrays
+(bitarray.cc).
+
+<Code.extern display TO="bitarray.cc">
+
+
+</chapter>
+
+  <Back>
+</Book>
