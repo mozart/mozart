@@ -177,9 +177,9 @@ doing the <<apply>>.
 <P>Any Oz statement <EM>S</EM> can be executed
 remotely by creating a functor:
 <LIST>
-<ITEM>
-</LIST> <<F=functor import>> <EM>ResourceList</EM>
+<ITEM> <<F=functor import>> <EM>ResourceList</EM>
 <<export>> <EM>Results</EM> <<define>> <EM>S</EM> <<end>>
+</LIST>
 <P>To evaluate this functor remotely,
 the client executes <<M={R apply(F $)}>>.
 The <EM>ResourceList</EM> must list all the resources used by <EM>S</EM>.

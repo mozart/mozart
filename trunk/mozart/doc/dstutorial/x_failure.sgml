@@ -457,7 +457,7 @@ The following failure modes are possible:
 <ITEM> Some or all proxy sites unreachable
 (<<remoteProblem(I))>> where <<I>> is <<tempSome>> or <<tempAll>>).
 </LIST>
-<P A logic variable has two operations,
+<P> A logic variable has two operations,
 binding and waiting until bound.
 Bind operations are explicit in the program text.
 Most wait operations are implicit:
