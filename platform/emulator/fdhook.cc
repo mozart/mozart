@@ -78,6 +78,18 @@ SuspList * addSuspToList(SuspList * list, SuspList * elem, Board * hoome)
   return elem;
 }
 
+Suspension * createResSusp(OZ_CFun func, int arity, RefsArray xregs)
+{
+  Suspension * s = makeHeadSuspension(func, xregs, arity);
+
+  s->headInit();
+
+  Assert(FDcurrentTaskSusp == NULL);
+  
+  FDcurrentTaskSusp = s;
+  return s;
+}
+
 #ifdef DEBUG_STABLE
 SuspList * board_constraints = NULL;
 
