@@ -3376,6 +3376,24 @@ int FSetConstraint::getUnknownNextLargerElem(int i) const {
   return getUnknownSet().getNextLargerElem(i);
 }
 
+inline
+void FSetConstraint::operator <= (const int)
+{
+}
+inline
+void FSetConstraint::operator >= (const int)
+{
+}
+inline
+void FSetConstraint::operator |= (const FSetValue &)
+{
+}
+inline
+void FSetConstraint::operator &= (const FSetValue &)
+{
+}
+
+
 // ****************************************************************************
 
 #define CASTPTR (FSetValue *)
@@ -3886,6 +3904,30 @@ void
 makeFSetValue(OZ_Term desc,OZ_Term*fs)
 {
   *fs = makeTaggedFSetValue(new FSetValue(desc));
+}
+
+
+#undef CASTREF
+#define CASTREF * (const FSetValue *) &
+
+void OZ_FSetConstraint::operator <= (const int i)
+{
+  CASTTHIS->operator <= (i);
+}
+
+void OZ_FSetConstraint::operator >= (const int i)
+{
+  return CASTTHIS->operator >= (i);
+}
+
+void OZ_FSetConstraint::operator |= (const OZ_FSetValue &y)
+{
+  CASTTHIS->operator |= (CASTREF y);
+}
+
+void OZ_FSetConstraint::operator &= (const OZ_FSetValue &y)
+{
+   CASTTHIS->operator &= (CASTREF y);
 }
 
 
