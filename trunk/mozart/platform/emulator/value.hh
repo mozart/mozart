@@ -37,6 +37,7 @@
 #include "tagged.hh"
 #include "dpInterface.hh"
 #include "atoms.hh"
+#include "pointer-marks.hh"
 
 /*===================================================================
  * global names and atoms
@@ -2430,12 +2431,21 @@ public:
     globals[i]=val;
   }
   TaggedRef getG(int i) {
-    Assert(i>=0 && i<getPred()->getGSize());
+    Assert(i>=0 && i<cacGetPred()->getGSize());
     return globals[i];
   }
   TaggedRef *getGRef() { return globals; }
 
-  PrTabEntry *getPred()  { return pred; }
+  // WARNING: During garbage collection we overwrite the pred pointer
+  // with a to pointer.  During GC use cacGetPred() instead which Does
+  // The Right Thing (and don't forget these other methods that
+  // indirectly call getPred() too).  Making cacGetPred() the default
+  // caused performance problems in one of my test programs.
+  PrTabEntry *getPred() {
+    Assert (!cacIsCopied());
+    return pred; 
+  }
+
   ProgramCounter getPC() { return getPred()->getPC(); }
   int getArity()         { return getPred()->getArity(); }
   SRecordArity getMethodArity()   { return getPred()->getMethodArity(); }
@@ -2445,6 +2455,41 @@ public:
   TaggedRef DBGgetGlobals();
 
   GName *globalize();
+
+  //
+  // Garbage collection and copying
+  //
+
+  // pred field is overwritten when abstraction first
+  // copied to to-space.  If we need to access getPred() 
+  // during gc this ensures result is always correct
+  PrTabEntry *cacGetPred() {
+    if (cacIsCopied())
+      return cacGetCopy()->getPred();
+    else
+      return pred;
+  }
+
+  Bool cacIsCopied(void) {
+    return IsMarkedPointer(pred,1);
+  }
+  Abstraction * cacGetCopy(void) {
+    Assert(cacIsCopied());
+    return (Abstraction *) UnMarkPointer(pred,1);
+  }
+  int32 ** cacGetCopyField(void) {
+    return (int32 **) &pred;
+  }
+
+  void cacCopy(Abstraction * fwd) {
+    Assert(!cacIsCopied());
+    pred = (PrTabEntry *) MarkPointer(fwd,1);
+  }
+
+  Abstraction* gCollect(int gUsageLen, int * gUsage);
+  Abstraction* gCollect(void) {
+    return gCollect(0, (int *) NULL);
+  }
 };
 
 inline
