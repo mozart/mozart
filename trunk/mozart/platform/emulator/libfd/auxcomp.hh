@@ -384,6 +384,12 @@ private:
   static int modWord(int n) { return n & 0x1f; }
 
 public:
+  static int requiredVectSize(int x_dim, int y_dim, int z_dim)
+  {
+    int i = x_dim * y_dim * z_dim;
+    return modWord(i) ? divWord(i) + 1 : divWord(i);
+  }
+
   BoolMatrix3(int *vect, int vs, int x, int y, int z) 
     : _vector(vect), vect_size(vs), 
       _x_dim(x), _y_dim(y), _z_dim(z)
@@ -391,12 +397,6 @@ public:
     OZ_ASSERT(vect_size == requiredVectSize(x, y, z));
     _y_off = _x_dim;
     _z_off = _x_dim * _y_dim;
-  }
-
-  static int requiredVectSize(int x_dim, int y_dim, int z_dim)
-  {
-    int i = x_dim * y_dim * z_dim;
-    return modWord(i) ? divWord(i) + 1 : divWord(i);
   }
 
   void init(OZ_Boolean how = OZ_FALSE)
