@@ -131,14 +131,14 @@ AbstractionEntry *addAbstractionTab(int id)
 #ifdef THREADED
 AdressOpcode CodeArea::opcodeToAdress(Opcode oc)
 {
-  return globalInstrTable[oc];
+  return ToInt32(globalInstrTable[oc]);
 }
 
 
 Opcode CodeArea::adressToOpcode(AdressOpcode adr) 
 {
   for(int i = 0; i < (int) ERROR; i++)
-    if (globalInstrTable[i] == adr)
+    if (ToInt32(globalInstrTable[i]) == adr)
       return (Opcode)i;
   return ERROR;
 }
@@ -186,7 +186,7 @@ inline Reg regToInt(Reg N) { return N; }
 
 char *getBIName(ProgramCounter PC)
 {
-  BuiltinTabEntry* entry = (BuiltinTabEntry*) *PC;
+  BuiltinTabEntry* entry = (BuiltinTabEntry*) getAdressArg(PC);
   return entry->getPrintName();
 
 }
