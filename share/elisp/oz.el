@@ -7,6 +7,7 @@
 ;; - state message: Should we use the mode-line ???
 
 (require 'comint)
+(require 'compile)
 
 ;; ---------------------------------------------------------------------
 ;; global effects
