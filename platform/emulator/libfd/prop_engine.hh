@@ -145,36 +145,43 @@ public:
   }
 };
 
+//*****************************************************************************
+//
+// Here starts the definition of the Propagation Engine Library
+// Note all relevant names are prepended by PEL_
+//*****************************************************************************
+
 //-----------------------------------------------------------------------------
-class PropQueue;
-class PropFnctTable;
+class PEL_PropQueue;
+class PEL_PropFnctTable;
 
-class ParamTable : public IntHeapPushArray {
+class PEL_ParamTable : public IntHeapPushArray {
 public:
   int add(int i) { return push(i); }
 };
 
-class EventList : public IntHeapPushArray {
+//-----------------------------------------------------------------------------
+
+class PEL_EventList : public IntHeapPushArray {
 public:
   int add(int i) { return push(i); }
-  void wakeup(PropQueue *, PropFnctTable *);
+  void wakeup(PEL_PropQueue *, PEL_PropFnctTable *);
 };
-
 
 //-----------------------------------------------------------------------------
 // propagation function: return type, signature, tables etc.
 
-class SuspVar;
+class PEL_SuspVar;
 typedef enum { pf_failed, pf_entailed, pf_sleep } pf_return_t;
-typedef pf_return_t (* pf_fnct_t)(int *, SuspVar * []);
+typedef pf_return_t (* pf_fnct_t)(int *, PEL_SuspVar * []);
 
-class PropFnctTableEntry {
+class PEL_PropFnctTableEntry {
 private:
   enum _fnct_flags { _dead = 1, _scheduled = 2};
   int       _param_idx;
   pf_fnct_t _prop_fn;
 public:
-  PropFnctTableEntry(pf_fnct_t fn, int idx) {
+  PEL_PropFnctTableEntry(pf_fnct_t fn, int idx) {
     _prop_fn = fn;
     _param_idx = idx;
   }
@@ -201,19 +208,23 @@ public:
   }
 };
 
-typedef PushArray<PropFnctTableEntry, HeapAlloc>
+typedef PushArray<PEL_PropFnctTableEntry, HeapAlloc>
 PropFnctHeapPushArray;
 
-class PropFnctTable : public PropFnctHeapPushArray {
+class PEL_PropFnctTable : public PropFnctHeapPushArray {
 private:
-  int add(ParamTable &, PropQueue &, pf_fnct_t, ...);
+  int add(PEL_ParamTable &, PEL_PropQueue &, pf_fnct_t, ...);
+  //
 public:
-  PropFnctTable(void) {}
-
-  int add(ParamTable &pt, PropQueue &pq, pf_fnct_t fnct, int x, int y) {
+  //
+  PEL_PropFnctTable(void) {}
+  //
+  int add(PEL_ParamTable &pt, PEL_PropQueue &pq, 
+	  pf_fnct_t fnct, int x, int y) {
     return add(pt, pq, fnct, x, y, -1);
   }
-  int add(ParamTable &pt, PropQueue &pq, pf_fnct_t fnct, int x, int y, int z) {
+  int add(PEL_ParamTable &pt, PEL_PropQueue &pq, 
+	  pf_fnct_t fnct, int x, int y, int z) {
     return add(pt, pq, fnct, x, y, z, -1);
   }
 };
@@ -221,7 +232,7 @@ public:
 //-----------------------------------------------------------------------------
 typedef ResizeableArray<int, PropAlloc> IntPropResizeableArray;
 
-class PropQueue {
+class PEL_PropQueue {
 private:
   int _alive_prop_fncts;
 
@@ -245,18 +256,17 @@ private:
   }
 
 public:
-  PropQueue(void)
+  PEL_PropQueue(void)
     : _alive_prop_fncts(0), _read(0), _write(_init_maxsize - 1),
-      _size(0), _maxsize(0), _failed(0)
-    {}
-
+      _size(0), _maxsize(0), _failed(0) { }
+  //
   void enqueue (int fnct_idx) {
     if (_size == _maxsize) resize();
     _write = (_write + 1) & (_maxsize - 1); // reason for _maxsize to 2^n
     _queue[_write] = fnct_idx;
     _size += 1;
   }
-
+  //
   int dequeue (void) {
     if (_size == 0)
       OZ_error ( "Cannot dequeue from empty queue.");
@@ -266,7 +276,7 @@ public:
     return fnct_idx;
   }
   //
-  pf_return_t apply(PropFnctTable &, ParamTable &, SuspVar * []);
+  pf_return_t apply(PEL_PropFnctTable &, PEL_ParamTable &, PEL_SuspVar * []);
   //
   int isEmpty(void) { return (_size == 0) || _failed; }
   // if one of the next is true then queue is empty
@@ -292,12 +302,12 @@ public:
 
 //-----------------------------------------------------------------------------
 
-class OZ_FSetProfile {
+class PEL_FSetProfile {
 private:
   int _known_in, _known_not_in, _card_size;
 
 public:
-  OZ_FSetProfile(void) {};
+  PEL_FSetProfile(void) {};
 
   void init(OZ_FSetConstraint &fset) {
     _known_in     = fset.getKnownIn();
@@ -321,15 +331,15 @@ public:
   }
 };
 
-class FSetEventLists {
+class PEL_FSetEventLists {
 private:
-  EventList _lowerBound;
-  EventList _upperBound;
-  EventList _singleValue;
+  PEL_EventList _lowerBound;
+  PEL_EventList _upperBound;
+  PEL_EventList _singleValue;
 public:
-  EventList &getLowerBound(void) { return _lowerBound; }
-  EventList &getUpperBound(void) { return _upperBound; }
-  EventList &getSingleValue(void) { return _singleValue; }
+  PEL_EventList &getLowerBound(void) { return _lowerBound; }
+  PEL_EventList &getUpperBound(void) { return _upperBound; }
+  PEL_EventList &getSingleValue(void) { return _singleValue; }
   void gc(void) {
     _lowerBound.gc();
     _upperBound.gc();
@@ -337,19 +347,20 @@ public:
   }
 };
 
-//--------------------------------------------------
-class OZ_FDProfile {
+//-----------------------------------------------------------------------------
+class PEL_FDProfile {
 private:
   int _size, _lb, _ub;
 
 public:
-  OZ_FDProfile(void) {}
+  PEL_FDProfile(void) {}
+  //
   void init(OZ_FiniteDomain &fd) {
     _size = fd.getSize();
     _lb   = fd.getMinElem();
     _ub   = fd.getMaxElem();
   }
-
+  //
   int isTouchedWidth(OZ_FiniteDomain &fd) {
     return (fd.getMaxElem() - fd.getMinElem()) < (_ub - _lb);
   }
@@ -371,48 +382,47 @@ public:
   }
 };
 
-class FDEventLists {
+class PEL_FDEventLists {
 private:
-  EventList _bounds;
-  EventList _singleValue;
+  PEL_EventList _bounds;
+  PEL_EventList _singleValue;
 public:
-  EventList &getBounds(void) { return _bounds; }
-  EventList &getSingleValue(void) { return _singleValue; }
+  PEL_EventList &getBounds(void) { return _bounds; }
+  PEL_EventList &getSingleValue(void) { return _singleValue; }
   void gc(void) {
     _bounds.gc();
     _singleValue.gc();
   }
 };
 
-//--------------------------------------------------
-class SuspVar {
+//-----------------------------------------------------------------------------
+class PEL_SuspVar {
 public:
-
   virtual OZ_Boolean wakeUp(void) = 0;
 };
 
-class SuspFSetVar : public SuspVar {
+class PEL_SuspFSetVar : public PEL_SuspVar {
 private:
-  OZ_FSetProfile _profile;
-  PropQueue * _prop_queue;
-  FSetEventLists * _event_list;
-
   OZ_FSetConstraint * _fset;
-
-  PropFnctTable * _prop_fnct_table;
-
-  void _init(FSetEventLists &fsetel, PropQueue &pq) {
+  //
+  PEL_FSetProfile _profile;
+  PEL_PropQueue * _prop_queue;
+  PEL_FSetEventLists * _event_lists;
+  PEL_PropFnctTable * _prop_fnct_table;
+  //
+  void _init(PEL_FSetEventLists &fsetel, PEL_PropQueue &pq) {
     _prop_queue = &pq;
-    _event_list = &fsetel;
+    _event_lists = &fsetel;
   }
 public:
-  SuspFSetVar(void) {}
+  PEL_SuspFSetVar(void) {}
+  //
   //---------------------------------------------------------------------------
   // store variable and propagation variable are identical,
   // initialization and propagation are conjoined in a single function
-  SuspFSetVar * init(OZ_FSetProfile &fsetp, OZ_FSetConstraint &fset,
-		     FSetEventLists &fsetel, PropQueue &pq, PropFnctTable &pft,
-		     int first = 1) {
+  PEL_SuspFSetVar * init(PEL_FSetProfile &fsetp, OZ_FSetConstraint &fset,
+			 PEL_FSetEventLists &fsetel, PEL_PropQueue &pq,
+			 PEL_PropFnctTable &pft, int first = 1) {
     _init(fsetel, pq);
     //
     _profile = fsetp;
@@ -422,17 +432,17 @@ public:
     return this;
   }
   //
-  SuspFSetVar(OZ_FSetProfile &fsetp, OZ_FSetConstraint &fset,
-		     FSetEventLists &fsetel, PropQueue &pq, PropFnctTable &pft,
-		     int first = 1) {
+  PEL_SuspFSetVar(PEL_FSetProfile &fsetp, OZ_FSetConstraint &fset,
+		  PEL_FSetEventLists &fsetel, PEL_PropQueue &pq,
+		  PEL_PropFnctTable &pft, int first = 1) {
     (void) init(fsetp, fset, fsetel, pq, pft, first);
   }
   //---------------------------------------------------------------------------
   // store variable and propagation variable are separate,
   // initialization and propagation are separate functions
-  SuspFSetVar * init(OZ_FSetConstraint &fsetl,
-		     FSetEventLists &fsetel, PropQueue &pq, PropFnctTable &pft,
-		     int first = 1) {
+  PEL_SuspFSetVar * init(OZ_FSetConstraint &fsetl,
+			 PEL_FSetEventLists &fsetel, PEL_PropQueue &pq,
+			 PEL_PropFnctTable &pft, int first = 1) {
     _init(fsetel, pq);
     //
     _profile.init(fsetl);
@@ -441,9 +451,9 @@ public:
     return this;
   }
   //
-  SuspFSetVar(OZ_FSetConstraint &fsetl,
-		     FSetEventLists &fsetel, PropQueue &pq, PropFnctTable &pft,
-		     int first = 1) {
+  PEL_SuspFSetVar(OZ_FSetConstraint &fsetl,
+		  PEL_FSetEventLists &fsetel, PEL_PropQueue &pq,
+		  PEL_PropFnctTable &pft, int first = 1) {
     (void) init(fsetl, fsetel, pq, pft, first);
   }
   //
@@ -457,13 +467,13 @@ public:
   //
   virtual OZ_Boolean wakeUp(int first = 0) {
     if (first || _profile.isTouchedSingleValue(*_fset))
-      _event_list->getSingleValue().wakeup(_prop_queue, _prop_fnct_table);
+      _event_lists->getSingleValue().wakeup(_prop_queue, _prop_fnct_table);
     //
     if (first || _profile.isTouchedLowerBound(*_fset))
-      _event_list->getLowerBound().wakeup(_prop_queue, _prop_fnct_table);
+      _event_lists->getLowerBound().wakeup(_prop_queue, _prop_fnct_table);
     //
     if (first || _profile.isTouchedUpperBound(*_fset))
-      _event_list->getUpperBound().wakeup(_prop_queue, _prop_fnct_table);
+      _event_lists->getUpperBound().wakeup(_prop_queue, _prop_fnct_table);
     //
     _profile.init(*_fset);
     //
@@ -474,28 +484,28 @@ public:
   OZ_FSetConstraint * operator -> (void) { return _fset; }
 };
 
-class SuspFDIntVar : public SuspVar {
+class PEL_SuspFDIntVar : public PEL_SuspVar {
 private:
-  OZ_FDProfile _profile;
-  PropQueue    * _prop_queue;
-  FDEventLists * _event_list;
-
   OZ_FiniteDomain * _fd;
-
-  PropFnctTable * _prop_fnct_table;
-
-  void _init(FDEventLists &fdel, PropQueue &pq) {
+  //
+  PEL_FDProfile _profile;
+  PEL_PropQueue    * _prop_queue;
+  PEL_FDEventLists * _event_lists;
+  PEL_PropFnctTable * _prop_fnct_table;
+  //
+  void _init(PEL_FDEventLists &fdel, PEL_PropQueue &pq) {
     _prop_queue = &pq;
-    _event_list = &fdel;
+    _event_lists = &fdel;
   }
 public:
-  SuspFDIntVar(void) {}
+  PEL_SuspFDIntVar(void) {}
+  //
   //---------------------------------------------------------------------------
   // store variable and propagation variable are identical,
   // initialization and propagation are conjoined in a single function
-  SuspFDIntVar * init(OZ_FDProfile &fdp, OZ_FiniteDomain &fd,
-		      FDEventLists &fdel, PropQueue &pq, PropFnctTable &pft,
-		      int first = 1)
+  PEL_SuspFDIntVar * init(PEL_FDProfile &fdp, OZ_FiniteDomain &fd,
+			  PEL_FDEventLists &fdel, PEL_PropQueue &pq,
+			  PEL_PropFnctTable &pft, int first = 1)
   {
     _init(fdel, pq);
     //    
@@ -505,16 +515,17 @@ public:
     wakeUp();
     return this;
   }
-  SuspFDIntVar(OZ_FDProfile &fdp, OZ_FiniteDomain &fdv,
-	       FDEventLists &fdel, PropQueue &pd, PropFnctTable &pft,
-	       int first = 1) {
+  PEL_SuspFDIntVar(PEL_FDProfile &fdp, OZ_FiniteDomain &fdv,
+		   PEL_FDEventLists &fdel, PEL_PropQueue &pd,
+		   PEL_PropFnctTable &pft, int first = 1) {
     (void) init(fdp, fdv, fdel, pd, pft, first);
   }
   //---------------------------------------------------------------------------
   // store variable and propagation variable are separate,
   // initialization and propagation are separate functions
-  SuspFDIntVar * init(OZ_FiniteDomain &fdl,
-		      FDEventLists &fdel, PropQueue &pq, PropFnctTable &pft)
+  PEL_SuspFDIntVar * init(OZ_FiniteDomain &fdl,
+			  PEL_FDEventLists &fdel, PEL_PropQueue &pq,
+			  PEL_PropFnctTable &pft)
   {
     _init(fdel, pq);
     //
@@ -524,11 +535,10 @@ public:
     return this;
   }
   //
-  SuspFDIntVar(OZ_FiniteDomain &fdl, FDEventLists &fdel,
-	       PropQueue &pd, PropFnctTable &pft) {
+  PEL_SuspFDIntVar(OZ_FiniteDomain &fdl, PEL_FDEventLists &fdel,
+		   PEL_PropQueue &pd, PEL_PropFnctTable &pft) {
     (void) init(fdl, fdel, pd, pft);
   }
-
   // propagate store constraints to encapsulated constraints
   int propagate_to(OZ_FiniteDomain &fd, int first = 0) {
     int r = (*_fd &= fd);
@@ -540,10 +550,10 @@ public:
   //
   virtual OZ_Boolean wakeUp(int first  = 0) {
     if (first || _profile.isTouchedSingleValue(*_fd))
-      _event_list->getSingleValue().wakeup(_prop_queue, _prop_fnct_table);
+      _event_lists->getSingleValue().wakeup(_prop_queue, _prop_fnct_table);
     //
     if (first || _profile.isTouchedBounds(*_fd))
-      _event_list->getBounds().wakeup(_prop_queue, _prop_fnct_table);
+      _event_lists->getBounds().wakeup(_prop_queue, _prop_fnct_table);
     //
     _profile.init(*_fd);
     //

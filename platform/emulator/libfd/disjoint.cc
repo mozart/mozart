@@ -260,11 +260,11 @@ OZ_Return TasksOverlapPropagator::propagate(void)
   _prop_queue_cl2.reset();
   _prop_queue_cl3.reset();
 
-  SuspFDIntVar _x[nb_lvars];
-  SuspVar * x[nb_lvars+nb_consts];
+  PEL_SuspFDIntVar _x[nb_lvars];
+  PEL_SuspVar * x[nb_lvars+nb_consts];
 
-  x[_d1] = (SuspVar *) d1;
-  x[_d2] = (SuspVar *) d2;
+  x[_d1] = (PEL_SuspVar *) d1;
+  x[_d2] = (PEL_SuspVar *) d2;
 
   for (int var_idx = _cl1_t1; var_idx <= _cl1_o; var_idx += 1)
     x[var_idx]=_x[var_idx].init(_ld[var_idx], _el[var_idx],
