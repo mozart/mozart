@@ -55,7 +55,7 @@ possible atoms and the associated relations are summarized below.
 <tr/<td/<math>\sim_A</math> /<td/ <math>=</math> /<td/ <math>&gt;</math> /<td/ <math>\geq</math> /<td/ <math><</math> /<td/ <math>\leq</math> /<td/ <math>\neq</math>//
 </table>
 
-<section><title/Some Facts About Propagators/
+<section id="section.fd.facts"><title/Some Facts About Propagators/
 
 <para><title/domain propagation,
 interval propagation/
@@ -113,9 +113,9 @@ Constructive disjunction narrows the domains of <<X>> and <<Y>>
 to&nbsp;<math/\{0,1,9,10\}/.
 </section>
 
-<section id=sfd><title/Finite Domains/
+<section id="section.fd.general"><title/Finite Domains/
 <p>
-<index scope=sfd/Finite Domains/
+<index scope="section.fd.general"/Finite Domains/
 
 <list>
 
@@ -153,7 +153,7 @@ tests whether ?*{D} is an integer between 0 and <<FD.sup>>.
 </list>
 </section>
 
-<section id=subsec.telling><title/Telling Domains/
+<section id="section.fd.telling"><title/Telling Domains/
 <p>
 <list>
 <entry>
@@ -227,7 +227,7 @@ Abbreviates <<{FD.int 0#FD.sup D}>>.
 </list>
 </section>
 
-<section><title/Reflection/
+<section id="section.fd.reflection"><title/Reflection/
 <p>
 <list>
 <entry>
@@ -327,7 +327,7 @@ returns the current number of suspensions  on ?*{D}.
 </list>
 </section>
 
-<section><title/Watching Domains/
+<section id="section.fd.watching"><title/Watching Domains/
 <p>
 <list>
 <entry>
@@ -367,7 +367,7 @@ than ?+{D2}.
 </list>
 </section>
 
-<section id=subsec.arith><title/Generic Propagators/
+<section id="section.fd.arithmetic"><title/Generic Propagators/
 <p>
 The generic propagators <<FD.sum>>, <<FD.sumC>> and <<FD.sumCN>> do
 interval propagation. The propagators  <<FD.sumAC>> and
@@ -712,7 +712,7 @@ The operational semantics is defined analogously to <<FD.sumAC>>.
 </list>
 </section>
 
-<section id=subsec.nonLinear><title/Symbolic Propagators/
+<section id="section.fd.nonlinear"><title/Symbolic Propagators/
 <p>
 The following propagators do domain propagation or amplify the store by
 constraints <<X::Spec>>, where <<Spec>> may also contain holes. 
@@ -814,7 +814,7 @@ to <math/\{5,7\}/.
 ?{D1} is constrained to be greater than 0. 
 </list></section>
 
-<section id=subsec:boolean><title>0/1 Propagators</title>
+<section id="section.fd.bool"><title>0/1 Propagators</title>
 <p>
 Using the mapping from ?{0} and ?{1} to the truth values <def/false/ and
 <def/true/, respectively,  logical connectives between finite
@@ -904,7 +904,7 @@ end
 (<Q/<math/{\tt D1}\leftrightarrow?{\tt D2}//). 
 </list></section>
 
-<section><title/Reified Constraints/
+<section id="section.fd.reified"><title/Reified Constraints/
 <p>
 Reified constraints reflect the validity of a constraint ?{C} into a 0/1-valued
 finite domain integer. The propagator realizing a reified constraint is
@@ -1125,7 +1125,7 @@ instead, which constrains the variables <<D1>> and <<D2>> as follows.
 \lceil \sqrt{\underline{{\tt D3}}} \rceil \leq {\tt D1} \leq \lfloor
 \sqrt{\overline{{\tt D3}}} \rfloor
 </math><p>
-For notation see&nbsp;<ptr to=subsec.arith>.
+For notation see&nbsp;<ptr to="section.fd.arithmetic">.
 
 <entry>
 <index class=module/FD<and>timesD/
@@ -1157,7 +1157,7 @@ The propagator constrains the variables <<D1>> and <<D2>> as follows.
 \lceil \sqrt[{\tt D2}]{\underline{{\tt D1}}} \rceil \leq {\tt D2} \leq \lfloor
 \sqrt[{\tt D2}]{\overline{{\tt D1}}} \rfloor
 </math><p>
-For notation see &nbsp;<ptr to=subsec.arith>.
+For notation see &nbsp;<ptr to="section.fd.arithmetic">.
 
 <entry>
 <index class=module/FD<and>divI/
@@ -1363,7 +1363,7 @@ end
 </list></section>
 
 
-<section><title/Distribution/
+<section id="section.fd.distribution"><title/Distribution/
 <p>
 In this section it is shown how Oz supports distribution with
 constraints.  The following procedure creates binary
