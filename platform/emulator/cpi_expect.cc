@@ -339,28 +339,6 @@ OZ_Return OZ_Expect::spawn(OZ_Propagator * p, int prio,
     
     if (isNotCVar(vtag)) {
       tellBasicConstraint(makeTaggedRef(vptr));
-      /*
-      GenFDVariable * fv = new GenFDVariable();
-      OZ_Term * tfv = newTaggedCVar(fv);
-      
-      if (isSVar(vtag)) {
-	if (am.isLocalSVar(v)) {
-	  am.checkSuspensionList(v);
-	  fv->setSuspList(tagged2SVar(v)->getSuspList());
-	  doBind(vptr, makeTaggedRef(tfv));
-	} else {
-	  am.doBindAndTrail(v, vptr, makeTaggedRef(tfv));
-	}
-      } else {
-	Assert(isUVar(vtag));
-	
-	if (am.isLocalUVar(v)) {
-	  doBind(vptr, makeTaggedRef(tfv));
-	} else {
-	  am.doBindAndTrail(v, vptr, makeTaggedRef(tfv));
-	}
-      }
-      */
     }
   }
   

@@ -96,6 +96,7 @@ public:
 
   void resetLocalThreadQueue(void) {
     Assert(localThreadQueue);
+    localThreadQueue->getLTQThread()->getTaskStackRef()->makeEmpty();
     localThreadQueue->dispose ();
     localThreadQueue = NULL;
   }
