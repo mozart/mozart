@@ -2394,6 +2394,11 @@ $builtins = {
 			     BI  => BIdisplayDef,
 			     native => true},
 
+    'Debug.displayCode'	=> { in  => ['+int','+int'],
+			     out => [],
+			     BI  => BIdisplayCode,
+			     native => true},
+
     'Debug.procedureCode'=> { in  => ['+procedure'],
 			      out => ['+int'],
 			      BI  => BIprocedureCode,
