@@ -42,6 +42,7 @@ int run_thread(Thread * ct) {
   am.restartThread(); // start a new time slice
 
   am.setCurrentThread(ct);
+
   ozstat.leaveCall(ct->getAbstr());
   ct->setAbstr(NULL);
   am.cachedStack = ct->getTaskStackRef();
@@ -57,6 +58,8 @@ int run_thread(Thread * ct) {
     am.cachedSelf = (Object *) NULL;
   }
 
+  am.setCurrentThread((Thread *) NULL);
+
   return ret;
 }
 
@@ -66,8 +69,6 @@ void scheduler(void) {
   register Board  * cb;
 
   do {
-
-    ct = (Thread *) NULL;
 
     /*
      * Do everything that is expensive and ugly: garbage collection...
