@@ -215,12 +215,8 @@ OZ_Boolean FDIntervals::contains(int i) const
 }
 
 inline
-int FDIntervals::next(int i) const
+int FDIntervals::midElem(int i) const
 {
-  if (contains(i)) {
-    return i;
-  }
-
   int j;
   for (j = 0;
        j < high - 1 &&
@@ -748,11 +744,8 @@ int FDBitVector::nextLargerElem(int v, int max_elem) const
 } 
 
 inline
-int FDBitVector::next(int i) const
+int FDBitVector::midElem(int i) const
 {
-  if (contains(i))
-    return i;
-
   // find lower neighbour
   int lb = mod32(i), lw = div32(i), ub = lb;
   if (!(b_arr[lw] << (32 - 1 - lb))) {
@@ -1454,21 +1447,17 @@ int OZ_FiniteDomainImpl::nextLargerElem(int v) const
 } 
 
 inline
-int OZ_FiniteDomainImpl::next(int i) const
+int OZ_FiniteDomainImpl::midElem(void) const
 {
-  if (i <= min_elem) {
-    return min_elem;
-  } else if (i >= max_elem) {
-    return max_elem;
-  }
-  
+  int mid = (min_elem + max_elem) / 2;
+
   descr_type type = getType();
   if (type == fd_descr) {
-    return i;
+    return mid;
   } else if (type == bv_descr) {
-    return get_bv()->next(i);
+    return get_bv()->midElem(mid);
   } else {
-    return get_iv()->next(i);
+    return get_iv()->midElem(mid);
   }
 }
 
@@ -2001,9 +1990,9 @@ OZ_Term OZ_FiniteDomain::getAsList(void) const
   return CASTTHIS->getAsList();
 }
 
-int OZ_FiniteDomain::next(int i) const
+int OZ_FiniteDomain::midElem(void) const
 {
-  return CASTTHIS->next(i);
+  return CASTTHIS->midElem();
 }
 
 int OZ_FiniteDomain::nextSmallerElem(int v) const
