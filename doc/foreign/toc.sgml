@@ -1,0 +1,66 @@
+<!--
+  Translated to SGML by:
+     Daniel Simon, dansim@ps.uni-sb.de
+-->
+
+<!DOCTYPE Book SYSTEM "ozdoc.dtd" [
+
+<!-- Extension to the DTD -->
+<!ENTITY % p.mix.local "|Em">
+<!ELEMENT Em - - (#PCDATA)>
+<!ENTITY % proglang.values.local "|lambda">
+<!ENTITY % author.class "author|author.extern|comic">
+<!ENTITY % picture.element "picture|picture.extern|picture.choice">
+<!ELEMENT comic - O (%picture.element;)>
+
+<!-- Include Files -->
+<!ENTITY foreign SYSTEM "foreign.sgml">
+
+<!-- Abbreviations -->
+<!ENTITY lt "<">
+<!ENTITY gt ">">
+<!ENTITY Oz "Oz">
+<!ENTITY ampersand "&">
+
+<!-- Processing Instructions -->
+<!ENTITY nbsp PI "nbsp">
+<!ENTITY ellipsis PI "ellipsis">
+<!ENTITY slash PI "slash">
+<!ENTITY ie PI "ie">
+<!ENTITY resp PI "resp">
+<!ENTITY eg PI "eg">
+<!ENTITY etc PI "etc">
+<!ENTITY LaTeX PI "LaTeX">
+
+]>
+
+<Book proglang=oz>
+  <Front>
+    <Meta name="html.split" value="cha.foreign">
+    <Meta name="html.split.bib" value="">
+    <Meta name="html.split.index" value="">
+
+    <Meta name=ozversion value="3.0">
+    <Meta name=status value=revised>
+    <Meta name=latex.package value="oz">
+    <Meta name=latex.package value="pstricks">
+    <Meta name=latex.package value="rotate">
+    <Meta name=latex.package value="pifont">
+
+
+    <Title/Foreign Programming in &Oz;/
+     <Author.Extern to="author.db" key="Michael.Mehl"> 
+     <Author.Extern to="author.db" key="Christian.Schulte"> 
+     <Author.Extern to="author.db" key="Ralf.Scheidhauer"> 
+    <Comic>
+      <Picture.Choice>
+	<Picture.Extern to="lozs.gif" type=gif>
+      </Picture.Choice>
+    <Abstract>
+    This document needs some abstract. And the picture has nothing to do 
+    with this document at all!
+    </Abstract>
+  <Body proglang=c>
+    &foreign;  
+  <Back>
+</Book>
