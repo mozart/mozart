@@ -83,6 +83,12 @@ public:
 
   int perdioUseAltVarProtocol;
 
+  int perdioTempRetryCeiling;
+  int perdioTempRetryFloor;
+  int perdioTempRetryFactor;
+  int perdioMaxTCPCache;
+  int perdioCheckAliveInterval;
+
   int dpTableDefaultOwnerTableSize;
   int dpTableDefaultBorrowTableSize;
   int dpTableLowLimit;

@@ -95,6 +95,11 @@ void ConfigData::init() {
   perdioFlowBufferTime  = FLOW_BUFFER_TIME;
   perdioUseAltVarProtocol = FALSE;
   perdioTimeout = PERDIO_TIMEOUT;
+  perdioTempRetryCeiling = PERDIO_TEMP_RETRY_CEILING;
+  perdioTempRetryFloor = PERDIO_TEMP_RETRY_FLOOR;
+  perdioTempRetryFactor = PERDIO_TEMP_RETRY_FACTOR;
+  perdioMaxTCPCache = PERDIO_MAX_TCP_CACHE;
+  perdioCheckAliveInterval = PERDIO_CHECK_ALIVE_INTERVAL;
 
   dpTableDefaultOwnerTableSize = DEFAULT_OWNER_TABLE_SIZE;
   dpTableDefaultBorrowTableSize = DEFAULT_BORROW_TABLE_SIZE;

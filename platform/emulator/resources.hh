@@ -144,6 +144,12 @@ error include resources.hh before mozart.h
 #define FLOW_BUFFER_TIME    1000
 #define PERDIO_TIMEOUT      30000 /* ms */
 
+#define PERDIO_TEMP_RETRY_CEILING    200000
+#define PERDIO_TEMP_RETRY_FLOOR      500
+#define PERDIO_TEMP_RETRY_FACTOR     50
+#define PERDIO_MAX_TCP_CACHE         30
+#define PERDIO_CHECK_ALIVE_INTERVAL  600
+
 //
 // Distributed Oz - virtual sites
 #define PROBE_INTERVAL      1000 /* ms */
