@@ -108,8 +108,8 @@ define
 	  fromOz: fun {$ B} B end
 	  toOz: fun {$ X} X end)
      boolean(is: IsBool
-	     fromOz: fun {$ B} if B then 1 else 0 end end
-	     toOz: fun {$ X} X \= 0 end)
+	     fromOz: fun {$ B} B end
+	     toOz: fun {$ X} X end)
      string(is: IsVirtualString
 	    fromOz: fun {$ V} V end
 	    toOz: fun {$ X} X end)
