@@ -733,19 +733,16 @@ Board * Board::gcBoard() {
   return ret;
 }
 
-
+void dogcGName(GName *gn) {
+  if (gn && isInGc)
+    gcGName(gn);
+}
 
 /*
  * Literals:
  *   3 cases: atom, optimized name, dynamic name
  *   only dynamic names need to be copied
  */
-
-void dogcGName(GName *gn) {
-  if (gn && isInGc)
-    gcGName(gn);
-}
-
 
 Name *Name::gcName() {
   CHECKCOLLECTED(homeOrGName, Name *);
@@ -2250,6 +2247,16 @@ void ConstTerm::gcConstRecurse()
 
   case Co_Thread:
       break;
+
+  case Co_SituatedExtension:
+    ((ConstTermWithHome *) this)->gcConstTermWithHome();
+    ((SituatedExtension *) this)->gcRecurseV();
+    break;
+
+  case Co_ConstExtension:
+    Assert(isInGc);
+    ((ConstExtension *) this)->gcRecurseV();
+    break;
 
   default:
     Assert(0);
