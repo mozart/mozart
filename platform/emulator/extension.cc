@@ -30,7 +30,7 @@
 #include "am.hh"
 #include "value.hh"
 
-#if defined(__CYGWIN32__) || defined(__MINGW32__) || defined(_MSC_VER)
+#if defined(__CYGWIN32__) || defined(__MINGW32__)
 #  define ozdeclspec __declspec(dllexport)
 #else
 #  define ozdeclspec

@@ -1,4 +1,4 @@
-WINDIR=Y:/.root/project/ps/soft/win32-i486
+WINDIR=C:/packages
 
 # at SICS use
 #WINDIR=Y:/.root/home/scheidhr/build/packages/win32-i486
@@ -7,14 +7,15 @@ WINDIR=Y:/.root/project/ps/soft/win32-i486
 #COPT = -Zi #-W3
 
 # for fast code
-COPT = -Ox
+COPT = -O2 -W0
+CXX  = icl
 
 
 ######################################################################
 
 
-DEFS = -DWINDOWS_EMULATOR -DHAVE_CONFIG_H
-INCS =  -I$(WINDIR)/include -I.
+DEFS = -DWINDOWS -DWINDOWS_EMULATOR -DHAVE_CONFIG_H
+INCS =  -Ic:\programme\micros~2\vc98\include -I$(WINDIR)/include -I.
 LHOME = $(WINDIR)/lib
 LIBS = $(LHOME)/zlib.lib $(LHOME)/gmp.lib
 
@@ -24,25 +25,14 @@ LIBS = $(LHOME)/zlib.lib $(LHOME)/gmp.lib
 .SUFFIXES: .obj .cc .hh .s
 
 SRCS= \
-	main.cc board-bi.cc ct-bi.cc\
-	version.cc initffuns.cc \
+	main.cc board-bi.cc ct-bi.cc version.cc \
 	statisti.cc trace.cc \
 	print.cc base.cc ozconfig.cc \
 	foreign.cc dpInterface.cc boot-manager.cc \
-	builtins.cc vprops.cc debug.cc interFault.cc\
-	tk.cc compiler.cc compat.cc browser.cc debugBI.cc\
-	parser.cc winscanner.cc\
-	system.cc profile.cc\
-	libdp/chain.cc           libdp/marshalMsg.cc      libdp/table.cc\
-	libdp/dpDebug.cc         libdp/msgType.cc         libdp/var.cc\
-	libdp/dpMarshaler.cc     libdp/network.cc         libdp/var_obj.cc\
-	libdp/dpMiscModule.cc    libdp/perdio.cc          libdp/virtual.cc\
-	libdp/dpPaneModule.cc    libdp/pidModule.cc       libdp/vs_comm.cc\
-	libdp/dpResource.cc      libdp/port.cc            libdp/vs_interface.cc\
-	libdp/dsite.cc           libdp/protocolCredit.cc  libdp/vs_mailbox.cc\
-	libdp/fail.cc            libdp/protocolFail.cc    libdp/vs_msgbuffer.cc\
-	libdp/faultModule.cc     libdp/protocolState.cc\
-	libdp/flowControl.cc     libdp/state.cc \
+	builtins.cc vprops.cc debug.cc interFault.cc \
+	tk.cc compiler.cc compat.cc browser.cc debugBI.cc \
+	parser.cc winscanner.cc \
+	system.cc profile.cc \
 	stack.cc genhashtbl.cc ozostream.cc hashtbl.cc \
 	iso-ctype.cc weakdict.cc\
 	os.cc unix.cc urlc.cc ioHandler.cc\
@@ -70,7 +60,9 @@ SRCS= \
 	var_ct.cc\
 	fset.cc fsetcore.cc var_fs.cc\
         newmarshaler.cc gentraverser.cc \
-	\
+	sit-check.cc ostime.cc \
+	libdp/chain.cc           libdp/marshalMsg.cc      libdp/table.cc\
+	libdp/dpDebug.cc         libdp/msgType.cc         libdp/var.cc\
 	libfset/standard.cc libfset/telling.cc \
 	libfset/testing.cc libfset/fsaux.cc \
 	libfset/intsets.cc libfset/monitor.cc \
@@ -90,22 +82,33 @@ SRCS= \
 	\
 	libfd/scheduling.cc libfd/schedulingDist.cc \
 	libfd/schedulingDistAux.cc libfd/taskintervals.cc  \
-	libfd/schedtable.cc libfd/schedinit.cc
+	libfd/schedtable.cc libfd/schedinit.cc \
+	libdp/dpMarshaler.cc     libdp/network.cc         libdp/var_obj.cc\
+	libdp/dpMiscModule.cc    libdp/perdio.cc          libdp/virtual.cc\
+	libdp/dpPaneModule.cc    libdp/pidModule.cc       libdp/vs_comm.cc\
+	libdp/dpResource.cc      libdp/port.cc            libdp/vs_interface.cc\
+	libdp/dsite.cc           libdp/protocolCredit.cc  libdp/vs_mailbox.cc\
+	libdp/fail.cc            libdp/protocolFail.cc    libdp/vs_msgbuffer.cc\
+	libdp/faultModule.cc     libdp/protocolState.cc\
+	libdp/flowControl.cc     libdp/state.cc 
 
 
 OBJS=   $(SRCS:.cc=.obj)
 
 
 .cc.obj:
-	cl $(COPT) $(DEFS) $(INCS) -c -Fo$@ -nologo -Tp $<
+	$(CXX) $(COPT) $(DEFS) $(INCS) -c -Fo$@ -nologo -Tp $<
 
 .cc.s:
-	cl $(COPT) $(DEFS) $(INCS) -c -Fa$@ -nologo -Tp $<
+	$(CXX) $(COPT) $(DEFS) $(INCS) -c -Fa$@ -nologo -Tp $<
 
 
-all: emulator.exe
+all: emulator.dll
 
-emulator.exe: $(OBJS)
-	cl $(COPT) $(OBJS) $(LIBS) wsock32.lib -Feemulator.exe 
+emulator.dll: $(OBJS)
+	$(CXX) $(COPT) $(OBJS) $(LIBS) wsock32.lib -Feemulator.dll
+
+
+
 
 
