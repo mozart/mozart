@@ -2782,17 +2782,19 @@ void doPortSend(PortWithStream *port,TaggedRef val,Board * home) {
     DEREF(oldFut,ptr);
     oz_bindFuture(ptr,lt);
   } else {
+    // I believe this branch is only for sending to a port
+    // in a super-ordinated space.  oz_sendPort has already
+    // performed the check of situatedness.  We cannot perform
+    // oz_bindFuture right here: it must be done in the port's
+    // home space (this is required for properly waking up
+    // suspensions, etc...).  In order to preserve order on
+    // the stream, we must perform the exchange immediately.
+    // *** HOWEVER I SEE NO REASON FOR INTRODUCING A VARIABLE
+    // *** AND PERFORMING AN ADDITIONAL UNIFY
     OZ_Term newFut = oz_newFuture(home);
     OZ_Term newVar = oz_newVariable(home);
     OZ_Term lt     = oz_cons(newVar,newFut);
     OZ_Term oldFut = port->exchangeStream(newFut);
-    // this a send to a port in a super-ordinated space
-    // perform unification in the port's space
-    // it has already been verified that val is at least
-    // situated in that space.
-    // -- I don't really understand why we need to do this.
-    // -- (1) does bindFuture trail otherwise?
-    // -- (2) why do I need newVar?
     Thread * t = oz_newThreadInject(home);
     t->pushCall(BI_Unify,RefsArray::make(val,newVar));
     t->pushCall(BI_bindFuture,RefsArray::make(oldFut,lt));
