@@ -2,12 +2,12 @@
  *  Authors:
  *    Kostja Popow (popow@ps.uni-sb.de)
  *    Michael Mehl (mehl@dfki.de)
- * 
- *  Contributors:
- *    optional, Contributor's name (Contributor's email address)
+ *    Christian Schulte (schulte@dfki.de)
  * 
  *  Copyright:
- *    Organization or Person (Year(s))
+ *    Kostja Popow, 1998
+ *    Michael Mehl, 1998
+ *    Christian Schulte, 1998
  * 
  *  Last change:
  *    $Date$ by $Author$
