@@ -1,3 +1,5 @@
+config.log
+config.status
 *.ozf
 *~
 ozmake
