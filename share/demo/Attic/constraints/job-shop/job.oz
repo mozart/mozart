@@ -65,7 +65,7 @@ in
       meth DelTask(Ts D $)
 	 case Ts of nil then nil
 	 [] T|Tr then
-	    case T==D then
+	    if T==D then
 	       {ForAll Tr
 		proc {$ T}
 		   {T move(~{D getDuration($)} * DurUnit)}
@@ -84,7 +84,7 @@ in
       meth SetDur(Ts S D)
 	 case Ts of nil then skip
 	 [] T|Tr then
-	    case T==S then
+	    if T==S then
 	       {ForAll Tr
 		proc {$ T}
 		   {T move((D-{S getDuration($)}) * DurUnit)}
@@ -103,12 +103,9 @@ in
       meth setSol(S)
 	 {Record.forAllInd S
 	  proc {$ A S}
-	     case A==pa orelse A==pe then skip
-	     else J T in
+	     if A\=pa andthen A\=pe then J T in
 		{TaskNameTo A ?J ?T}
-		case self.Number==J then {{Nth @Tasks T} setSol(S)}
-		else skip
-		end
+		if self.Number==J then {{Nth @Tasks T} setSol(S)} end
 	     end
 	  end}
       end
@@ -127,7 +124,7 @@ in
 	 {List.mapInd @Tasks
 	  fun {$ I T}
 	     {GetTaskName self.Number I} # {T getDuration($)} #
-	     case I==1 then [pa] else [{GetTaskName self.Number I-1}] end #
+	     if I==1 then [pa] else [{GetTaskName self.Number I-1}] end #
 	     {GetResourceName {T getResource($)}}
 	  end}
       end

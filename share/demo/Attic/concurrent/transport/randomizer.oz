@@ -34,7 +34,7 @@ local
    fun {DiffCity City}
       RandCity = {RandomDot Cities}
    in
-      case RandCity==City then {DiffCity City}
+      if RandCity==City then {DiffCity City}
       else RandCity
       end
    end
@@ -51,7 +51,7 @@ in
       meth toggle
 	 case
 	    lock
-	       case @On then On <- false  Stamp <- @Stamp + 1 ~1
+	       if @On then On <- false  Stamp <- @Stamp + 1 ~1
 	       else On <- true @Stamp
 	       end
 	    end
@@ -75,7 +75,7 @@ in
 	    CurLow  = @Low
 	    CurHigh = @High
 	 end
-	 case CurS==S then
+	 if CurS==S then
 	    Src={RandomDot Cities}
 	 in
 	    {self.broker announce(src:    Src
@@ -84,7 +84,6 @@ in
 				  weight: {Uniform LowGood HighGood})}
 	    {Delay {Uniform CurLow CurHigh}}
 	    {self Go(S)}
-	 else skip
 	 end
       end
       meth close

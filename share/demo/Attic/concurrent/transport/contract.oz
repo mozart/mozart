@@ -32,9 +32,9 @@ local
    fun {FindBest As BA}
       case As of nil then BA
       [] A|Ar then
-	 RA#KA = case A.answer==reject then A#BA
-		 elsecase BA.answer==reject then BA#A
-		 elsecase A.answer>BA.answer then A#BA
+	 RA#KA = if A.answer==reject then A#BA
+		 elseif BA.answer==reject then BA#A
+		 elseif A.answer>BA.answer then A#BA
 		 else BA#A
 		 end
       in
