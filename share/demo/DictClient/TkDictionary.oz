@@ -274,8 +274,17 @@ define
       meth append(Definition)
          case Definition
          of definition(word: Word db: _ dbname: DBName body: Body) then
-            InformationWindow, append(Word#', '#DBName titleTag)
-            InformationWindow, append('\n\n'#Body#'\n\n')
+            InformationWindow, append(Word#', '#DBName#'\n' titleTag)
+            DefinitionWindow, Append(nil#'\n'#Body)
+            DefinitionWindow, Append('\n\n')
+         end
+      end
+      meth Append(VS)
+         case VS of V#'\n'#Rest then
+            InformationWindow, append(V#'\n')
+            DefinitionWindow, Append(Rest)
+         else
+            InformationWindow, append(VS)
          end
       end
    end
