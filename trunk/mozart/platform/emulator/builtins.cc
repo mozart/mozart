@@ -321,7 +321,7 @@ OZ_C_proc_begin(BIbuiltin,3)
 
   if (arity!=-1 && (arity != found->getArity())) {
     return am.raise(E_ERROR,E_SYSTEM,"builtinArity",2,
-		    OZ_getCArg(0),OZ_int(found->getArity()));
+		    OZ_getCArg(0),makeTaggedSmallInt(found->getArity()));
   }
 
   return OZ_unify(ret,makeTaggedConst(found));
@@ -2007,14 +2007,14 @@ OZ_Return widthInline(TaggedRef term, TaggedRef &out)
 
   switch (tag) {
   case LTUPLE:
-    out = OZ_int(2);
+    out = makeTaggedSmallInt(2);
     return PROCEED;
   case SRECORD:
   record:
-    out = OZ_int(tagged2SRecord(term)->getWidth());
+    out = makeTaggedSmallInt(tagged2SRecord(term)->getWidth());
     return PROCEED;
   case LITERAL:
-    out = OZ_int(0);
+    out = makeTaggedSmallInt(0);
     return PROCEED;
   case UVAR:
   case SVAR:
@@ -2545,7 +2545,7 @@ OZ_C_proc_begin(BIrecordWidth, 2)
     case OFSVariable:
       {
 	GenOFSVariable *ofsVar = tagged2GenOFSVar(arg);
-	return (OZ_unify (out, OZ_int(ofsVar->getWidth ())));
+	return (OZ_unify (out, makeTaggedSmallInt(ofsVar->getWidth ())));
       }
 
     default:
@@ -2553,7 +2553,7 @@ OZ_C_proc_begin(BIrecordWidth, 2)
     }
 
   case SRECORD:
-    return (OZ_unify (out, OZ_int(tagged2SRecord(arg)->getWidth ())));
+    return (OZ_unify (out, makeTaggedSmallInt(tagged2SRecord(arg)->getWidth ())));
 
   default:
     TypeErrorT(0, "Record");
@@ -3002,17 +3002,26 @@ OZ_C_proc_end
 // Char
 // ---------------------------------------------------------------------
 
-#define FirstCharArg(NAME)			\
- int i;						\
- OZ_nonvarArg(0);				\
- if (!OZ_isInt(OZ_getCArg(0))) {		\
-   return OZ_typeError(1,"Char");		\
- } else {					\
-   i = OZ_intToC(OZ_getCArg(0));		\
-   if ((i < 0) || (i > 255)) {			\
-     return OZ_typeError(1,"Char");		\
-   }						\
- }
+#define FirstCharArg \
+ TaggedRef tc = OZ_getCArg(0);      \
+ int i;				    \
+ { DEREF(tc, tc_ptr, tc_tag);       \
+ if (isAnyVar(tc_tag)) {            \
+   am.addSuspendVarList(tc_ptr);    \
+   return SUSPEND;                  \
+ }                                  \
+ if (!isSmallInt(tc)) {             \
+   return OZ_typeError(1,"Char");   \
+ } else {			    \
+   i = smallIntValue(tc);	    \
+   if ((i < 0) || (i > 255)) {	    \
+     return OZ_typeError(1,"Char"); \
+   }				    \
+ } }
+
+#define TestChar(TEST)                                            \
+  FirstCharArg;                                                   \
+  return OZ_unify(OZ_getCArg(1), TEST (i) ? NameTrue : NameFalse);
 
 OZ_C_proc_begin(BIcharIs,2) {
  OZ_declareNonvarArg(0,c);
@@ -3023,73 +3032,40 @@ OZ_C_proc_begin(BIcharIs,2) {
  return OZ_unify(out,(i >=0 && i <= 255) ? NameTrue : NameFalse);
 } OZ_C_proc_end
 
-OZ_C_proc_begin(BIcharIsAlNum,2) {
-  FirstCharArg("Char.isAlNum");
-  return OZ_unify(OZ_getCArg(1), isalnum(i) ? NameTrue : NameFalse);
-} OZ_C_proc_end
+OZ_C_proc_begin(BIcharIsAlNum,2) { TestChar(isalnum); } OZ_C_proc_end
 
-OZ_C_proc_begin(BIcharIsAlpha,2) {
-  FirstCharArg("Char.isAlpha");
-  return OZ_unify(OZ_getCArg(1), isalpha(i) ? NameTrue : NameFalse);
-} OZ_C_proc_end
+OZ_C_proc_begin(BIcharIsAlpha,2) { TestChar(isalpha); } OZ_C_proc_end
 
-OZ_C_proc_begin(BIcharIsCntrl,2) {
-  FirstCharArg("Char.isCntrl");
-  return OZ_unify(OZ_getCArg(1), iscntrl(i) ? NameTrue : NameFalse);
-} OZ_C_proc_end
+OZ_C_proc_begin(BIcharIsCntrl,2) { TestChar(iscntrl); } OZ_C_proc_end
 
-OZ_C_proc_begin(BIcharIsDigit,2) {
-  FirstCharArg("Char.isDigit");
-  return OZ_unify(OZ_getCArg(1), isdigit(i) ? NameTrue : NameFalse);
-} OZ_C_proc_end
+OZ_C_proc_begin(BIcharIsDigit,2) { TestChar(isdigit); } OZ_C_proc_end
 
-OZ_C_proc_begin(BIcharIsGraph,2) {
-  FirstCharArg("Char.isGraph");
-  return OZ_unify(OZ_getCArg(1), isgraph(i) ? NameTrue : NameFalse);
-} OZ_C_proc_end
+OZ_C_proc_begin(BIcharIsGraph,2) { TestChar(isgraph); } OZ_C_proc_end
 
-OZ_C_proc_begin(BIcharIsLower,2) {
-  FirstCharArg("Char.isLower");
-  return OZ_unify(OZ_getCArg(1), islower(i) ? NameTrue : NameFalse);
-} OZ_C_proc_end
+OZ_C_proc_begin(BIcharIsLower,2) { TestChar(islower); } OZ_C_proc_end
 
-OZ_C_proc_begin(BIcharIsPrint,2) {
-  FirstCharArg("Char.isPrint");
-  return OZ_unify(OZ_getCArg(1), isprint(i) ? NameTrue : NameFalse);
-} OZ_C_proc_end
+OZ_C_proc_begin(BIcharIsPrint,2) { TestChar(isprint); } OZ_C_proc_end
 
-OZ_C_proc_begin(BIcharIsPunct,2) {
-  FirstCharArg("Char.isPunct");
-  return OZ_unify(OZ_getCArg(1), ispunct(i) ? NameTrue : NameFalse);
-} OZ_C_proc_end
+OZ_C_proc_begin(BIcharIsPunct,2) { TestChar(ispunct); } OZ_C_proc_end
 
-OZ_C_proc_begin(BIcharIsSpace,2) {
-  FirstCharArg("Char.isSpace");
-  return OZ_unify(OZ_getCArg(1), isspace(i) ? NameTrue : NameFalse);
-} OZ_C_proc_end
+OZ_C_proc_begin(BIcharIsSpace,2) { TestChar(isspace); } OZ_C_proc_end
 
-OZ_C_proc_begin(BIcharIsUpper,2) {
-  FirstCharArg("Char.isUpper");
-  return OZ_unify(OZ_getCArg(1), isupper(i) ? NameTrue : NameFalse);
-} OZ_C_proc_end
+OZ_C_proc_begin(BIcharIsUpper,2) { TestChar(isupper); } OZ_C_proc_end
 
-OZ_C_proc_begin(BIcharIsXDigit,2) {
-  FirstCharArg("Char.isXDigit");
-  return OZ_unify(OZ_getCArg(1), isxdigit(i) ? NameTrue : NameFalse);
-} OZ_C_proc_end
+OZ_C_proc_begin(BIcharIsXDigit,2) {TestChar(isxdigit);} OZ_C_proc_end
 
 OZ_C_proc_begin(BIcharToLower,2) {
-  FirstCharArg("Char.toLower");
+  FirstCharArg;
   return OZ_unifyInt(OZ_getCArg(1), tolower(i));
 } OZ_C_proc_end
 
 OZ_C_proc_begin(BIcharToUpper,2) {
-  FirstCharArg("Char.toUpper");
+  FirstCharArg;
   return OZ_unifyInt(OZ_getCArg(1), toupper(i));
 } OZ_C_proc_end
 
 OZ_C_proc_begin(BIcharToAtom,2) {
-  FirstCharArg("Char.toAtom");
+  FirstCharArg;
   if (i) {
      char s[2]; s[0]= (char) i; s[1]='\0';
      return OZ_unify(OZ_getCArg(1), makeTaggedAtom(s));
@@ -3098,7 +3074,7 @@ OZ_C_proc_begin(BIcharToAtom,2) {
 } OZ_C_proc_end
 
 OZ_C_proc_begin(BIcharType,2) {
-  FirstCharArg("Char.type");
+  FirstCharArg;
   TaggedRef type;
   if (isupper(i))      type = AtomUpper; 
   else if (islower(i)) type = AtomLower;
@@ -5730,7 +5706,7 @@ OZ_C_proc_begin(BIgetTermSize,4) {
   OZ_declareIntArg(2,width);
   OZ_declareArg(3,out);
 
-  return OZ_unify(out, OZ_int(OZ_termGetSize(t, depth, width)));
+  return OZ_unify(out, makeTaggedSmallInt(OZ_termGetSize(t, depth, width)));
 }
 OZ_C_proc_end
 
