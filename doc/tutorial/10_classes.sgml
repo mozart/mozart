@@ -54,12 +54,14 @@ local
       {Browse {Access S.val}}
    end
 in
-   Counter = {NewChunk c(methods:MethodTable attrs:Atts)}
+   Counter = {NewChunk c(methods:MethodTable attrs:Attrs)}
 end
 >>>
 </FIGURE>
 
-<P CLASS=WARNING>*** Talk about the example.
+<P> As we can see, the method <<init>> assigns the attribute <<val>> the
+value <<Value>>, the method <<inc>> increments the attribute <<val>>, and
+the method <<browse>> browses the current value of <<val>>.
 
 <SECTION id=section.classes.objectprinciples><TITLE/Objects from First Principles/
 <P><PTR TO="objectConstr"> shows a generic procedure that creates an
@@ -82,7 +84,7 @@ proc {NewObject Class InitialMethod ?Object}
       State O
    in
       State = {MakeRecord s Class.attrs}
-      {Record.forAll State proc {$ A} {NewCell A} end}
+      {Record.forAll State proc {$ A} {NewCell _ A} end}
       proc {O M}
        {Class.methods.{Label M} M State O}
       end
