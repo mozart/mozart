@@ -222,7 +222,7 @@ Bool AM::emulateHookOutline(Abstraction *def,
   // without signal blocking;
   if (isSetSFlag(ThreadSwitch)) {
     if (threadQueueIsEmpty()
-	|| threadsHead->getPriority() < currentThread->getPriority()){
+	|| getNextThPri () < currentThread->getPriority()) {
       restartThread();
     } else {
       return TRUE;
@@ -449,15 +449,15 @@ Bool AM::hookCheckNeeded()
 
 // free the memory of the thread (there are no references to it anymore)
 inline
-void AM::disposeThread(Thread *th)
+void ThreadsPool::disposeThread(Thread *th)
 {
   Verbose((VERB_THREAD,"Thread::dispose = 0x%x\n",this));
   if (th == rootThread) {
-    rootThread->init(th->getPriority(),rootBoard);
-    checkToplevel();
+    rootThread->init(th->getPriority(),am.rootBoard);
+    am.checkToplevel();
   } else {
     /* dispose thread: */
-    th->next=threadsFreeList;
+    th->home = (Board *) threadsFreeList;
     threadsFreeList = th;
   }
 }
