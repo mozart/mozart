@@ -53,7 +53,6 @@ private:
     DynamicTable* dynamictable;
 
 public:
-  NO_DEFAULT_CONSTRUCTORS2(GenOFSVariable);
     GenOFSVariable(DynamicTable &dt)
     : GenCVariable(OFSVariable) {
         label=oz_newVariable();
@@ -201,6 +200,28 @@ public:
     // void becomesSmallIntAndPropagate (meaningless for ofs)
     // void setDom (meaningless for ofs)
     // FiniteDomain &getDom (meaningless for ofs)
+
+
+  OZ_Return unifyV(TaggedRef *vPtr,TaggedRef v,TaggedRef *tPtr,TaggedRef t,
+		   ByteCode*scp) {
+    return unifyOFS(vPtr,v,tPtr,t,scp);
+  }
+  OZ_Return validV(TaggedRef* /* vPtr */, TaggedRef val ) {
+    return valid(val);
+  }
+  OZ_Return hasFeatureV(TaggedRef val, TaggedRef *ptr) {
+    return hasFeature(val,ptr);
+  }
+  GenCVariable* gcV() { error("not impl"); return 0; }
+  void gcRecurseV() { error("not impl"); }
+  void addSuspV(Suspension susp, TaggedRef* ptr, int state) {
+    // mm2: addSuspFDVar(makeTaggedRef(ptr),susp,state);
+  }
+  Bool isKindedV() { return true; }
+  void disposeV(void) { freeListDispose(this, sizeof(GenOFSVariable)); }
+  int getSuspListLengthV() { return getSuspListLength(); }
+  void printV() {}
+  void printLongV() {}
 };
 
 

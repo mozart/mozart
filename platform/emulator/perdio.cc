@@ -3579,7 +3579,9 @@ void msgReceived(MsgBuffer* bs)
       if (oe->isVar()) {
 	PD((PD_VAR,"SURRENDER do it"));
 	PerdioVar *pv = oe->getVar();
-	// bug fixed: may be bound to a different perdio var
+	// mm2: bug: the new var may no be the correct one wrt.
+        //           to variable ordering -> may introduce net cycle.
+	// ??: bug fixed: may be bound to a different perdio var
 	pv->primBind(oe->getPtr(),v);
 	oe->mkRef();
 	if (oe->hasFullCredit()) {

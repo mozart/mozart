@@ -99,7 +99,8 @@ public:
   void setpvType(PV_TYPES t) { pvtype = (short) t; }
   PV_TYPES getpvType()       { return (PV_TYPES) pvtype; }
 
-  NO_DEFAULT_CONSTRUCTORS2(PerdioVar);
+  PerdioVar() : GenCVariable(PerdioVariable) {}
+
   PerdioVar(Bool isf) : GenCVariable(PerdioVariable) {
     u.proxies=0;
     flags = isf ? PV_FUTURE : 0;
@@ -195,6 +196,24 @@ public:
   void dispose(void);
 
   void gcRecurse(void);
+
+  OZ_Return unifyV(TaggedRef *vptr,TaggedRef v,
+		   TaggedRef *tptr, TaggedRef t,
+		   ByteCode *scp) {
+    return unifyPerdioVar(vptr,tptr?tptr:&t,scp);
+  }
+  OZ_Return validV(TaggedRef* ptr, TaggedRef val ) { return valid(ptr,val); }
+  OZ_Return hasFeatureV(TaggedRef val, TaggedRef *) { return SUSPEND; }
+  GenCVariable* gcV() { error("not impl"); return 0; }
+  void gcRecurseV() { error("not impl"); }
+  void addSuspV(Suspension susp, TaggedRef* ptr, int state) {
+    // mm2: addSuspFDVar(makeTaggedRef(ptr),susp,state);
+  }
+  Bool isKindedV() { return true; }
+  void disposeV(void) { dispose(); }
+  int getSuspListLengthV() { return getSuspListLength(); }
+  void printV() {}
+  void printLongV() {}
 };
 
 inline

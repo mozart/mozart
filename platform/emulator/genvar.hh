@@ -4,6 +4,7 @@
  * 
  *  Contributors:
  *    Christian Schulte (schulte@dfki.de)
+ *    Michael Mehl (mehl@dfki.de)
  * 
  *  Copyright:
  *    Organization or Person (Year(s))
@@ -38,7 +39,6 @@
 #pragma interface
 #endif
 
-#include "am.hh"
 #include "variable.hh"
 #include "pointer-marks.hh"
 
@@ -58,6 +58,8 @@ enum TypeOfGenCVariable {
   PerdioVariable,
   LazyVariable,
   CtVariable,
+  SimpleVariable,
+  ComplexVariable,
   NonGenCVariable
 };
 
@@ -65,7 +67,7 @@ enum TypeOfGenCVariable {
     Assert(t == FDVariable || t == OFSVariable ||	\
 	   t == MetaVariable || t == BoolVariable ||	\
 	   t == PerdioVariable || t == FSetVariable ||	\
-	   t ==LazyVariable || t == CtVariable)
+	   t == LazyVariable || t == CtVariable)
 
 class GenCVariable: public SVariable {
 
@@ -89,7 +91,9 @@ protected:
 
 public:
   USEFREELISTMEMORY;
-  NO_DEFAULT_CONSTRUCTORS(GenCVariable);
+
+  GenCVariable(); // not needed
+
   // the constructor creates per default a local variable (wrt curr. node)
   GenCVariable(TypeOfGenCVariable, Board * = NULL);
 
@@ -98,7 +102,27 @@ public:
     GenVarCheckType(t);
     u.var_type = t;
   }  
-    
+
+#ifdef GENVAR_VIRTUAL_DEFAULTS
+# define GENVAR_VIRTUAL
+#else
+# define GENVAR_VIRTUAL = 0
+#endif
+
+  virtual GenCVariable* gcV() GENVAR_VIRTUAL;
+  virtual void          gcRecurseV() GENVAR_VIRTUAL;
+  virtual OZ_Return     unifyV(TaggedRef *, TaggedRef, TaggedRef *, TaggedRef,
+			       ByteCode *) GENVAR_VIRTUAL;
+  virtual OZ_Return     validV(TaggedRef *, TaggedRef) GENVAR_VIRTUAL;
+  virtual OZ_Return     hasFeatureV(TaggedRef, TaggedRef *) GENVAR_VIRTUAL;
+  virtual void          addSuspV(Suspension susp, TaggedRef *vPtr,
+				 int unstable = TRUE) GENVAR_VIRTUAL;
+  virtual void          disposeV() GENVAR_VIRTUAL;
+  virtual int           isKindedV() GENVAR_VIRTUAL;
+  virtual void          printV() GENVAR_VIRTUAL;
+  virtual void          printLongV() GENVAR_VIRTUAL;
+  virtual int           getSuspListLengthV() GENVAR_VIRTUAL;
+
   // methods relevant for term copying (gc and solve)  
   GenCVariable * gc(void);
   void gcRecurse(void);
@@ -118,8 +142,6 @@ public:
   OZPRINTLONG;
 
   void installPropagators(GenCVariable *);
-
-  void addDetSusp (Thread *thr, TaggedRef *tptr);
 
   void dispose(void);
 
@@ -144,78 +166,78 @@ public:
   OZ_FiniteDomain * getReifiedPatch(void) { 
     return (OZ_FiniteDomain *)  (u.var_type & ~u_mask); 
   }
-  Bool isKinded() { return true; }
+  Bool isKinded() {
+    switch (getType()) {
+    case FDVariable:
+    case BoolVariable:
+    case OFSVariable:
+      return true;
+    default:
+      return isKindedV();
+    }
+  }
 };
 
-
+// isKinded = !isFree
+inline
+int oz_isFree(TaggedRef r)
+{
+  return oz_isVariable(r) && (!isCVar(r) || !tagged2CVar(r)->isKinded());
+}
+  
 // only SVar and their descendants can be exclusive
 inline
 void setStoreFlag(OZ_Term t) 
 {
-  Assert(!isUVar(t) && oz_isVariable(t) && !oz_isRef(t));
-
-  ((SVariable *) tagValueOf(t))->setStoreFlag();
+  tagged2SVarPlus(t)->setStoreFlag();
 }
 
 inline
 void setReifiedFlag(OZ_Term t) 
 {
-  Assert(!isUVar(t) && oz_isVariable(t) && !oz_isRef(t));
-
-  ((SVariable *) tagValueOf(t))->setReifiedFlag();
+  tagged2SVarPlus(t)->setReifiedFlag();
 }
 
 inline
 OZ_Boolean testReifiedFlag(OZ_Term t) 
 {
-  Assert(!isUVar(t) && oz_isVariable(t) && !oz_isRef(t));
-
-  return ((SVariable *) tagValueOf(t))->testReifiedFlag();
+  return tagged2CVar(t)->testReifiedFlag();
 }
 
 inline
 void patchReified(OZ_FiniteDomain * fd, OZ_Term t, Bool isBool)
 {
-  ((GenCVariable *) tagValueOf(t))->patchReified(fd, isBool);
+  tagged2CVar(t)->patchReified(fd, isBool);
 }
 
 inline
 OZ_Boolean testBoolPatched(OZ_Term t) 
 {
-  Assert(!isUVar(t) && oz_isVariable(t) && !oz_isRef(t));
-
-  return ((GenCVariable *) tagValueOf(t))->isBoolPatched();
+  return tagged2CVar(t)->isBoolPatched();
 }
 
 inline
 OZ_Boolean testResetStoreFlag(OZ_Term t) 
 {
-  Assert(!isUVar(t) && oz_isVariable(t) && !oz_isRef(t));
-
-  return ((SVariable *) tagValueOf(t))->testResetStoreFlag();
+  return tagged2SVarPlus(t)->testResetStoreFlag();
 }
 
 inline
 OZ_Boolean testStoreFlag(OZ_Term t) 
 {
-  Assert(!isUVar(t) && oz_isVariable(t) && !oz_isRef(t));
-
-  return ((SVariable *) tagValueOf(t))->testStoreFlag();
+  return tagged2SVarPlus(t)->testStoreFlag();
 }
 
 inline
 OZ_Boolean testResetReifiedFlag(OZ_Term t) 
 {
-  Assert(!isUVar(t) && oz_isVariable(t) && !oz_isRef(t));
-
-  return ((SVariable *) tagValueOf(t))->testResetReifiedFlag();
+  return tagged2SVarPlus(t)->testResetReifiedFlag();
 }
 
 inline
 OZ_FiniteDomain * unpatchReifiedFD(OZ_Term t, Bool isBool) 
 {
-  Assert(!isUVar(t) && oz_isVariable(t) && !oz_isRef(t));
-  GenCVariable * v = ((GenCVariable *) tagValueOf(t));
+  GenCVariable * v = tagged2CVar(t);
   
   v->unpatchReified(isBool);
   return v->getReifiedPatch();
@@ -230,7 +252,6 @@ void addSuspCVarOutline(TaggedRef * v, Suspension susp, int unstable = TRUE);
 #include "metavar.hh"
 #include "ctgenvar.hh"
 #include "perdiovar.hh"
-#include "lazyvar.hh"
 #include "promise.hh"
 
 #ifdef OUTLINE
