@@ -66,6 +66,7 @@ public:
    * Pushing
    *
    */
+  void test(void);
 
   void pushMark(void);
 

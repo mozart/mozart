@@ -106,7 +106,16 @@ static void outputArgsList(ostream& o, OZ_Term args, Bool not_top)
 	    goto fs_lbl;
 	  if (cv->isCtPatched()) 
 	    goto ct_lbl; 
-
+#ifdef TMUELLER
+	} else if (cv->isParamTagged() ) {
+	  switch (cv->getTypeMasked()) {
+	  case OZ_VAR_FD: goto fd_lbl;
+	  case OZ_VAR_BOOL: goto bool_lbl;
+	  case OZ_VAR_FS: goto fs_lbl;
+	  case OZ_VAR_CT: goto ct_lbl;
+	  default: goto problem;
+	  }
+#endif
 	} else if (cv->getType() == OZ_VAR_FD) {
 	fd_lbl:
 	  o << ((OzFDVariable *) cv)->getDom().toString();
@@ -230,19 +239,34 @@ void OZ_Propagator::impose(OZ_Propagator * p)
 
     Assert(oz_isVariable(v));
 
+#ifdef TMUELLER
+    void * cpi_raw = (void *) NULL;
+    int isNonEncapTagged = 0, isEncapTagged = 0;
+#else
     Bool isStorePatched = 0, isReifiedPatched = 0, isBoolPatched = 0;
     OZ_FiniteDomain * tmp_fd = NULL;
-
+#endif
+    
+#ifdef TMUELLER
+    if (oz_isCVar(v)) {
+      OzVariable * cvar = tagged2CVar(v);
+      isNonEncapTagged  = cvar->isParamNonEncapTagged();
+      isEncapTagged     = cvar->isParamEncapTagged();
+      cpi_raw           = cvar->getRawAndUntag();
+    }
+#else
     // TMUELLER: needs to extended to FSet and GenConstraint
     if (oz_isCVar(v)) {
       isStorePatched = testResetStoreFlag(v);
       isReifiedPatched = testResetReifiedFlag(v);
+      
       if (isReifiedPatched) {
 	isBoolPatched = testBoolPatched(v);
 	tmp_fd = unpatchReifiedFD(v, isBoolPatched);
       }
     }
-
+#endif
+    
     if (isGenFDVar(v)) {
       addSuspFDVar(v, prop, staticSpawnVarsProp[i].state.fd);
       all_local &= oz_isLocalVar(tagged2CVar(v));
@@ -261,15 +285,30 @@ void OZ_Propagator::impose(OZ_Propagator * p)
       oz_var_addSusp(vptr, prop);
       all_local &= oz_isLocalVar(tagged2CVar(*vptr));
     }
-
+    //
+    // undo everything
+    //
+#ifdef TMUELLER
+    if (oz_isCVar(v)) {
+      OzVariable * cvar = tagged2CVar(v);
+      if (isNonEncapTagged) {
+	cvar->setStoreFlag();
+      }
+      if (isEncapTagged) {
+	cvar->setReifiedFlag();
+      }
+      cvar->putRawTag(cpi_raw);
+    }
+#else
     if (oz_isCVar(v)) {
       if (isStorePatched) 
 	setStoreFlag(v);
       if (isReifiedPatched)
 	patchReified(tmp_fd, v, isBoolPatched);
     }
-  }
-
+#endif
+  } // for
+  //
   if (all_local) 
     prop->setLocal();
   
