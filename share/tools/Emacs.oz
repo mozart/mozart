@@ -23,8 +23,6 @@
 %%% of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 %%%
 
-\ifdef LILO
-
 functor $
 
 import
@@ -54,18 +52,6 @@ export
    interface: CompilerInterfaceEmacs
 
 body
-
-\else
-
-fun instantiate {$ IMPORT}
-   \insert 'SP.env'
-   = IMPORT.'SP'
-   \insert 'OP.env'
-   = IMPORT.'OP'
-   \insert 'Compiler.env'
-   = IMPORT.'Compiler'
-
-\endif
 
    TimeoutToConfigBar = 100
    TimeoutToUpdateBar = TimeoutToConfigBar
@@ -285,8 +271,6 @@ fun instantiate {$ IMPORT}
 
    GetOPI = {`Builtin` getOPICompiler 1}
 
-\ifdef LILO
-
    CondSend = condSend(interface:
 			  proc {$ M}
 			     case {GetOPI} of false then skip
@@ -302,29 +286,4 @@ fun instantiate {$ IMPORT}
 			     end
 			  end)
 
-\else
-   
-   Emacs = emacs(getOPI: GetOPI
-		 condSend: condSend(interface:
-				       proc {$ M}
-					  case {GetOPI} of false then skip
-					  elseof OPI then
-					     {OPI M}
-					  end
-				       end
-				    compiler:
-				       proc {$ M}
-					  case {GetOPI} of false then skip
-					  elseof OPI then
-					     {{OPI getCompiler($)} M}
-					  end
-				       end)
-		 interface: CompilerInterfaceEmacs)
-\endif
-
-\ifndef LILO
-in
-   \insert 'Emacs.env'
-\endif
-   
 end

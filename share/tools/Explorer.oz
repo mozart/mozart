@@ -20,8 +20,6 @@
 %%% WARRANTIES.
 %%%
 
-\ifdef LILO
-
 functor $
 
 import
@@ -67,36 +65,3 @@ body
    end
 
 end
-
-\else
-
-fun instantiate {$ IMPORT}
-   \insert 'SP.env'
-       = IMPORT.'SP'
-   \insert 'WP.env'
-       = IMPORT.'WP'
-   \insert 'Browser.env'
-       = IMPORT.'Browser'
-   
-   \insert 'explorer/main.oz'
-
-   Explorer = {New ExplorerClass init}
-
-   proc {ExploreOne P}
-      {Explorer one(P)}
-   end
-
-   proc {ExploreAll P}
-      {Explorer all(P)}
-   end
-   
-   proc {ExploreBest P O}
-      {Explorer all(P O)}
-   end
-
-in
-   \insert 'Explorer.env'
-end
-
-\endif
-

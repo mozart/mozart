@@ -20,8 +20,6 @@
 %%% WARRANTIES.
 %%%
 
-\ifdef LILO
-
 functor $ prop once
 
 import
@@ -55,24 +53,3 @@ body
 
    Panel = {New PanelClass init}
 end
-
-\else
-
-fun instantiate {$ IMPORT}
-   \insert 'SP.env'
-       = IMPORT.'SP'
-   \insert 'OP.env'
-       = IMPORT.'OP'
-   \insert 'WP.env'
-       = IMPORT.'WP'
-in
-   local
-      \insert 'panel/main.oz'
-      Panel = {New PanelClass init}
-   in
-      \insert 'Panel.env'
-   end
-end
-
-\endif
-

@@ -19,8 +19,6 @@
 %%% WARRANTIES.
 %%%
 
-\ifdef LILO
-
 functor $
 
 import
@@ -41,33 +39,9 @@ import
    Component.{Load = load
 	      save}
 
-   Tk.{isColor
-       toplevel
-       frame
-       label
-       text
-       batch
-       listbox
-       scrollbar
-       addYScrollbar
-       scale
-       variable
-       entry
-       send
-       return
-       returnInt
-       button
-       checkbutton
-       menuentry
-       action}
+   Tk
 
-   TkTools.{dialog
-	    error
-	    textframe
-	    menubar
-	    note
-	    notebook
-	    numberentry}
+   TkTools
 
    Compiler.{genericInterface}
 
@@ -83,32 +57,3 @@ body
    \insert compilerPanel/CompilerPanelClass
 
 end
-
-\else
-
-
-fun instantiate {$ IMPORT}
-   \insert 'SP.env'
-   = IMPORT.'SP'
-   \insert 'CP.env'
-   = IMPORT.'CP'
-   \insert 'OP.env'
-   = IMPORT.'OP'
-   \insert 'WP.env'
-   = IMPORT.'WP'
-   \insert 'Compiler.env'
-   = IMPORT.'Compiler'
-   \insert 'Browser.env'
-   = IMPORT.'Browser'
-   \insert 'Emacs.env'
-   = IMPORT.'Emacs'
-in
-   local
-      \insert compilerPanel/CompilerPanelClass
-   in
-      \insert 'CompilerPanel.env'
-   end
-end
-
-
-\endif
