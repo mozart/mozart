@@ -1010,6 +1010,7 @@ PRINT(Thread)
   }
 
   stream << indent(offset) << "Thread @" << this;
+  
   switch (getPriority()) {
   case LOW_PRIORITY:
     stream << " low";
@@ -1051,7 +1052,7 @@ PRINT(Thread)
   if ((getFlags ()) & T_tag)       stream << " T";
   if ((getFlags ()) & T_ltq)       stream << " Q";
   stream << " <";
-  getBoard()->print(stream, DEC(depth));
+  //  getBoard()->printLong(stream, DEC(depth));
   stream << ">";
 }
 

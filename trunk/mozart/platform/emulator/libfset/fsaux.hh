@@ -1,5 +1,9 @@
 #include "../oz_cpi.hh" // TMUELLER
 
+#ifdef FSET_FILE_PRINT
+#include <fstream.h>
+#endif
+
 //-----------------------------------------------------------------------------
 // debug macros
 
@@ -7,10 +11,15 @@
 #define OZ_DEBUG
 #endif
 
+#ifdef FSET_FILE_PRINT
+extern ofstream * fscout;
+#else
+extern ostream * fscout;
+#endif
 
 #ifdef OZ_DEBUG
 #define OZ_DEBUGCODE(C) C
-#define _OZ_DEBUGPRINT(C) cout << C << endl << flush 
+#define _OZ_DEBUGPRINT(C) (*fscout) << C << endl << flush 
 #define OZ_DEBUGPRINT(C) /* _OZ_DEBUGPRINT(C) */
 #define OZ_ASSERT(C)						\
   if (! (C)) {							\

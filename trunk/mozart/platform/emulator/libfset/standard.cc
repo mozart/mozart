@@ -99,34 +99,37 @@ loop:
   xt = x;  yt = y;  zt = z;
 
   if (z->isEmpty()) {
+    _OZ_DEBUGPRINT("replace: (z empty)" << *this);
     P.vanish();
     return replaceBy(new FSetDisjointPropagator(_x, _y));
   }
   if (x->isSubsumedBy(*y)) {
+    _OZ_DEBUGPRINT("replace: (x subsumbed by y)" << *this);
     P.vanish();
     return replaceBy(_x, _z);
   }
   if (y->isSubsumedBy(*x)) {
+    _OZ_DEBUGPRINT("replace: (y subsumbed by xy)" << *this);
     P.vanish();
     return replaceBy(_y, _z);
   }
   
   FailOnInvalid(*x <= -(- *z & *y)); // lub
-  _OZ_DEBUGPRINT("x=" << *x);
+  OZ_DEBUGPRINT("x=" << *x);
   FailOnInvalid(*y <= -(- *z & *x)); // lub
-  _OZ_DEBUGPRINT("y=" << *y);
+  OZ_DEBUGPRINT("y=" << *y);
 
   FailOnInvalid(*z <<= (*x & *y)); // glb
-  _OZ_DEBUGPRINT("z=" << *z);
+  OZ_DEBUGPRINT("z=" << *z);
   FailOnInvalid(*x >= *z); // glb
-  _OZ_DEBUGPRINT("x=" << *x);
+  OZ_DEBUGPRINT("x=" << *x);
   FailOnInvalid(*y >= *z); // glb
-  _OZ_DEBUGPRINT("y=" << *y);
+  OZ_DEBUGPRINT("y=" << *y);
 
   if (xt <= x || yt <= y || zt <= z) 
     goto loop;
 
-  _OZ_DEBUGPRINT("out " << *this);
+  _OZ_DEBUGPRINT("leave " << *this);
   return P.leave1();
 
 failure:
@@ -136,7 +139,7 @@ failure:
 
 OZ_Return FSetUnionPropagator::run(void) 
 {
-  OZ_DEBUGPRINT("in " << *this);
+  _OZ_DEBUGPRINT("in " << *this);
 
   OZ_FSetVar x(_x), y(_y), z(_z);
   PropagatorController_S_S_S P(x, y, z);
@@ -162,25 +165,25 @@ loop:
   }
 
   FailOnInvalid(*x >= (*z & - *y)); // glb
-  _OZ_DEBUGPRINT("x=" << *x);
+  OZ_DEBUGPRINT("x=" << *x);
   FailOnInvalid(*y >= (*z & - *x)); // glb
-  _OZ_DEBUGPRINT("y=" << *y);
+  OZ_DEBUGPRINT("y=" << *y);
 
   FailOnInvalid(*z <<= (*x | *y)); // lub
-  _OZ_DEBUGPRINT("z=" << *z);
+  OZ_DEBUGPRINT("z=" << *z);
   FailOnInvalid(*x <= *z); // lub
-  _OZ_DEBUGPRINT("x=" << *x);
+  OZ_DEBUGPRINT("x=" << *x);
   FailOnInvalid(*y <= *z); // lub
-  _OZ_DEBUGPRINT("y=" << *y);
+  OZ_DEBUGPRINT("y=" << *y);
 
   if (xt <= x || yt <= y || zt <= z) 
     goto loop;
 
-  OZ_DEBUGPRINT("out " << *this);
+  _OZ_DEBUGPRINT("out " << *this);
   return P.leave1();
 
 failure:
-  OZ_DEBUGPRINT("failed " << *this);
+  _OZ_DEBUGPRINT("failed " << *this);
   return P.fail();
 }
 
