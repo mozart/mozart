@@ -31,11 +31,6 @@
    "current thread"
      - the currently running thread
 
-   "current taskstack"
-     - optimized into a register -> am.currentTaskStack
-     - is only visible variable to the outside ?
-
-     
    */
 
 #include "types.hh"
@@ -73,17 +68,14 @@
      priority: the thread priority
                -MININT ... +MAXINT
 	       low     ... high priority
-     flags: see ThreadFlags
-     u.taskStack: the stack of elaboration tasks
-     u.suspension: a suspension scheduled for execution
-     u.board: a board scheduled for visiting
-       Note: taskStack,suspension and board are shared (union)
+     taskStack: the stack of elaboration tasks
      */
 
 
 // head and tail of the thread queue
 Thread *Thread::Head;
 Thread *Thread::Tail;
+Thread *Thread::FreeList;
 
 /*
  * Toplevel is a queue of toplevel queries, which must be executed
@@ -95,20 +87,19 @@ class Toplevel {
 public:
   ProgramCounter pc;
   Toplevel *next;
-  Toplevel(ProgramCounter pc, Toplevel *next) : pc(pc), next(next) {}
+  Toplevel(ProgramCounter p, Toplevel *nxt) : pc(p), next(nxt) {}
 };
 
 Toplevel *Thread::ToplevelQueue;
 
 void Thread::Init()
 {
-  Head = (Thread *) NULL;
-  Tail = (Thread *) NULL;
+  Head     = (Thread *) NULL;
+  Tail     = (Thread *) NULL;
+  FreeList = (Thread *) NULL;
   ToplevelQueue = (Toplevel *) NULL;
   am.currentThread = (Thread *) NULL;
   am.rootThread = new Thread(am.conf.defaultPriority);
-  
-  am.currentTaskStack = NULL;
 }
 
 /*
@@ -129,7 +120,7 @@ void Thread::checkToplevel()
 
 void Thread::addToplevel(ProgramCounter pc)
 {
-  if (u.taskStack->isEmpty()) {
+  if (taskStack.isEmpty()) {
     Verbose((VERB_THREAD,"Thread::addToplevel: push\n"));
     pushToplevel(pc);
   } else {
@@ -140,9 +131,8 @@ void Thread::addToplevel(ProgramCounter pc)
 
 void Thread::pushToplevel(ProgramCounter pc)
 {
-  Assert(isNormal() && u.taskStack);
   am.rootBoard->incSuspCount();
-  u.taskStack->pushCont(am.rootBoard,pc,am.toplevelVars);
+  taskStack.pushCont(am.rootBoard,pc,am.toplevelVars);
   if (this!=am.currentThread && !this->isScheduled()) {
     schedule();
   }
@@ -163,31 +153,27 @@ Thread *Thread::GetTail()
 
 void Thread::ScheduleSuspCont(SuspContinuation *c, Bool wasExtSusp)
 {
-  Thread *t=new Thread;
-  t->flags = T_SuspCont;
+  Thread *t = newThread(c->getPriority());
   if (am.currentSolveBoard != (Board *) NULL || wasExtSusp == OK) {
     Board *nb = c->getBoard ();
     am.incSolveThreads (nb);
     t->setNotificationBoard (nb);
   }
-  t->priority = c->getPriority();
-  t->u.suspCont = c;
+  t->taskStack.pushCont(c->getBoard(),c->getPC(),c->getY(),c->getG(),
+			c->getX(),c->getXSize(), NO);
   t->schedule();
 }
 
 void Thread::ScheduleSuspCCont(CFuncContinuation *c, Bool wasExtSusp,
 			       Suspension *s)
 {
-  Thread *t=new Thread;
-  t->resSusp = s;
-  t->flags = T_SuspCCont;
+  Thread *t = newThread(c->getPriority());
   if (am.currentSolveBoard != (Board *) NULL || wasExtSusp == OK) {
-    Board *nb = c->getBoard ();
-    am.incSolveThreads (nb);
-    t->setNotificationBoard (nb);
+    Board *nb = c->getBoard();
+    am.incSolveThreads(nb);
+    t->setNotificationBoard(nb);
   }
-  t->priority = c->getPriority();
-  t->u.suspCCont = c;
+  t->taskStack.pushCFunCont(c->getBoard(),c->getCFunc(),s,c->getX(),c->getXSize(),NO);
   t->schedule();
 }
 
@@ -195,14 +181,12 @@ void Thread::ScheduleSuspCCont(CFuncContinuation *c, Bool wasExtSusp,
 // create a new thread after wakeup (nervous)
 void Thread::ScheduleWakeup(Board *b, Bool wasExtSusp)
 {
-  Thread *t = new Thread;
-  t->flags = T_Nervous;
+  Thread *t = newThread(b->getActor()->getPriority());
   if (am.currentSolveBoard != (Board *) NULL || wasExtSusp == OK) {
     am.incSolveThreads (b);
     t->setNotificationBoard (b);
   }
-  t->priority = b->getActor()->getPriority();
-  t->u.board = b;
+  t->taskStack.pushNervous(b);
   b->setNervous();
   t->schedule();
 }
@@ -213,22 +197,11 @@ void Thread::ScheduleSolve (Board *b)
   DebugCheck ((b->isCommitted () == OK || b->isSolve () == NO),
 	      error ("no solve board in Thread::ScheduleSolve ()"));
   // DebugCheckT (message("Thread::ScheduleSolve (@0x%x)\n", (void *) b->getActor ()));
-  Thread *t = new Thread;
-  t->flags = T_Nervous;
+  Thread *t = new Thread(b->getActor()->getPriority());
   Board *nb = (b->getParentBoard ())->getSolveBoard ();
   am.incSolveThreads (nb);
   t->setNotificationBoard (nb);
-  t->priority = b->getActor()->getPriority();
-  t->u.board = b;
+  t->taskStack.pushNervous(b);
   b->setNervous();
   t->schedule();
 }
-
-
-TaskStack *Thread::makeTaskStack()
-{
-  Assert(isNormal() && !u.taskStack);
-  u.taskStack = new TaskStack(am.conf.taskStackSize);
-  return u.taskStack;
-}
-
