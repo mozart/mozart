@@ -71,6 +71,13 @@ local
 
    end
 
+   class TagCounter
+      from UrObject
+      attr n:0
+
+      meth clear  n<-0 end
+      meth get($) N=@n in n<-N+1 N end
+   end
 
    class ScrollCanvas
       from Tk.canvas
@@ -87,9 +94,7 @@ local
    
       feat
 	 manager
-	 genTreeId
-	 genNodeId
-	 genLinkId
+	 genTagId
 	 tagsVar
 	 initTags
 	 addTag
@@ -150,9 +155,7 @@ local
 			    args:   [h w]
 			    append: True)>>
 	 self.manager   = Manager
-	 self.genNodeId = {New Tk.server tkInit}
-	 self.genTreeId = {New Tk.server tkInit}
-	 self.genLinkId = {New Tk.server tkInit}
+	 self.genTagId  = {New TagCounter clear}
 	 self.tagsVar   = v({String.toAtom
 			     {VirtualString.toString
 			      '[linsert $'#TagsVar#' 0'}})
@@ -428,7 +431,7 @@ in
 			  (Y + ShadeWidth) * Scale
 			  Scale}
 		    o(fill:CursorColor outline: '' tags:self.cursor))}
-	 {Canvas tk(lower self.cursor CurNode.node)}
+	 {Canvas tk(lower self.cursor NodePrefix#CurNode.suffix)}
 	 case CurNode==@curNode orelse IsVisible then true else
 	    {Canvas scrollTo(X Y)}
 	 end
@@ -447,8 +450,8 @@ in
 				  fill:  CursorColor
 				  width: LinkWidth
 				  tags:  self.connection))
-			  tk(raise self.connection CmpNode.node)
-			  tk(raise self.connection CurNode.node)]}
+			  tk(raise self.connection NodePrefix#CmpNode.suffix)
+			  tk(raise self.connection NodePrefix#CurNode.suffix)]}
 	    end
 	 end
       end
