@@ -28,7 +28,7 @@ export
    Stop
 import
    Tk
-   Connection(take offerMultiple)
+   Connection(take offerUnlimited)
    Open(file)
    OS
    Browser(browse:Show)
@@ -280,7 +280,7 @@ define
       S P A={New ServerSide init(user:User)}
    in
       {NewPort S P}
-      {Connection.offerMultiple P Ticket _}
+      {Connection.offerUnlimited P Ticket}
 
       thread
          {ForAll S proc{$ X} {A X} end}
