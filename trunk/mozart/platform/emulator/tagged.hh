@@ -87,7 +87,7 @@ extern char *TypeOfTermString[];
 typedef TaggedRef *TaggedRefPtr;
 
 const int tagSize = 4;
-const int tagMask   = 0xF;
+const int tagMask = 0xF;
 
 
 // ------------------------------------------------------
@@ -766,14 +766,14 @@ TaggedRef deref(TaggedRef t) {
 
 
 // RefsArray is an array of TaggedRef
-// a[-1] = LL...LLLTT,
+// a[-1] = LL...LLLTTTT,
 //     L = length
-//     T = tag
-// if gc bit set contains forward address
-// a[0] .. a[length-1] == contents
+//     T = tag (RADirty/RAFreed) or GCTAG during GC
+
 
 typedef TaggedRef *RefsArray;
 
+/* any combination of the following two must not be equal to the GCTAG */
 const int RADirty = 1; // means something has suspendeed on it
 #ifdef DEBUG_CHECK
 const int RAFreed = 2; // means has been already deallocated
@@ -807,15 +807,17 @@ void markFreedRefsArray(RefsArray a)
 #endif
 
 inline
-void setRefsArraySize(RefsArray a, int n)
+void setRefsArraySize(RefsArray a, int32 n)
 {
-  a[-1] = (TaggedRef)n<<2;
+  a[-1] = (n<<tagSize);
 }
 
 inline
-int getRefsArraySize(RefsArray a) {
-  return (int) a[-1] >> 2;
+int getRefsArraySize(RefsArray a)
+{
+  return (a[-1]>>tagSize);
 }
+
 
 inline
 Bool initRefsArray(RefsArray a, int size, Bool init)
