@@ -44,7 +44,7 @@ export OZPLATFORM
 if [ ${OZEMULATOR-xx} = xx ]; then
     OZEMULATOR=$OZHOME/platform/$OZPLATFORM/oz.emulator.bin
 else
-    echo "Using $OZEMULATOR" >&2
+    $doecho "Using $OZEMULATOR" >&2
 fi
 
 
