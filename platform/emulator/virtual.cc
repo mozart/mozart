@@ -112,6 +112,13 @@ static VSMailboxManagerOwned *myVSMailboxManager;
 static VSMsgChunkPoolManagerOwned *myVSChunksPoolManager;
 
 //
+// By now we need four tasks (MAXTASKS):
+// (a) input between virtual sites,
+// (b) pending (because of locks at the receiver site) sends,
+// (c) probing of virtual sites.
+// (d) GCing of chunk pool segments;
+
+//
 //
 // The 'check'&'process' procedures for processing incoming messages
 // (see am.hh, class 'TaskNode'):
@@ -287,15 +294,113 @@ void dumpVirtualInfo(VirtualInfo* vi)
 }
 
 //
-MsgBuffer* getVirtualMsgBuffer(Site* site)
+// This method gives us a virtual sites message buffer without
+// header;
+static inline
+VSMsgBufferOwned* getBasicVirtualMsgBuffer(Site* site)
 {
   VSMsgBufferOwned *voidBUF = freeMsgBufferPool.allocate();
   VSMsgBufferOwned *buf = 
     new (voidBUF) VSMsgBufferOwned(myVSChunksPoolManager, site);
+  return (buf);
+}
+
+//
+static VSMsgHeaderOwned vsStdMsgHeader(VS_M_PERDIO);
+
+//
+// The interface method: a message buffer for perdio messages;
+MsgBuffer* getVirtualMsgBuffer(Site* site)
+{
+  VSMsgBufferOwned *buf = getBasicVirtualMsgBuffer(site);
+  vsStdMsgHeader.marshal(buf);
 
   //
   return (buf);			// upcast (actually, even 2 steps);
 }
+
+//
+// Virtual sites methods;
+//
+// Internal message types - those that are not handled by (passed to)
+// the perdio layer but processed internally;
+static VSMsgHeaderOwned vsInitMsgHeader(VS_M_INIT_VS);
+static VSMsgHeaderOwned vsSiteIsAliveMsgHeader(VS_M_SITE_IS_ALIVE);
+static VSMsgHeaderOwned vsSiteAliveMsgHeader(VS_M_SITE_ALIVE);
+static VSMsgHeaderOwned vsUnusedShmIdMsgHeader(VS_M_UNUSED_SHMID);
+
+//
+VSMsgBufferOwned* composeVSInitMsg()
+{
+  VSMsgBufferOwned *buf = getBasicVirtualMsgBuffer((Site *) -1);
+  vsInitMsgHeader.marshal(buf);
+  mySite->marshalSite(buf);
+  return (buf);
+}
+
+//
+VSMsgBufferOwned* composeVSSiteIsAliveMsg(Site *s)
+{
+  VSMsgBufferOwned *buf = getBasicVirtualMsgBuffer(s);
+  vsSiteIsAliveMsgHeader.marshal(buf);
+  mySite->marshalSite(buf);
+  return (buf);
+}
+
+//
+VSMsgBufferOwned* composeVSSiteAliveMsg(Site *s)
+{
+  VSMsgBufferOwned *buf = getBasicVirtualMsgBuffer(s);
+  vsSiteAliveMsgHeader.marshal(buf);
+  mySite->marshalSite(buf);
+  return (buf);
+}
+
+//
+VSMsgBufferOwned* composeVSUnusedShmIdMsg(Site *s, key_t shmid)
+{
+  Assert(sizeof(key_t) <= sizeof(unsigned int));
+  VSMsgBufferOwned *buf = getBasicVirtualMsgBuffer(s);
+  vsUnusedShmIdMsgHeader.marshal(buf);
+  mySite->marshalSite(buf);
+  marshalNumber((unsigned int) shmid, buf);
+  return (buf);
+}
+
+//
+// Unmarshaling the "vs" header;
+VSMsgType getVSMsgType(VSMsgBufferImported *mb)
+{
+  VSMsgHeaderImported vsMsgHeader(mb);
+  return (vsMsgHeader.getMsgType());
+}
+
+//
+void decomposeVSInitMsg(VSMsgBuffer *mb, Site* &s)
+{
+  s = unmarshalSite(mb);
+}
+
+//
+void decomposeVSSiteIsAliveMsg(VSMsgBuffer *mb, Site* &s)
+{
+  s = unmarshalSite(mb);
+}
+
+//
+void decomposeVSSiteAliveMsg(VSMsgBuffer *mb, Site* &s)
+{
+  s = unmarshalSite(mb);
+}
+
+//
+void decomposeVSUnusedShmIdMsg(VSMsgBuffer *mb, Site* &s, key_t &shmid)
+{
+  Assert(sizeof(key_t) <= sizeof(unsigned int));
+  s = unmarshalSite(mb);
+  shmid = (key_t) unmarshalNumber(mb);
+}
+
 
 //
 //
@@ -318,6 +423,7 @@ static Bool readVSMessages(unsigned long clock, void *vMBox)
   while (mbox->isNotEmpty() && msgs) {
     key_t msgChunkPoolKey;
     int chunkNumber;
+    VSMsgType msgType;
 
     //
     if (mbox->dequeue(msgChunkPoolKey, chunkNumber)) {
@@ -325,13 +431,65 @@ static Bool readVSMessages(unsigned long clock, void *vMBox)
       //
       VSMsgChunkPoolManagerImported *cpm =
 	chunkPoolRegister.import(msgChunkPoolKey);
-      myVSMsgBufferImported->
-	VSMsgBufferImported::VSMsgBufferImported(cpm, chunkNumber);
-      //
-      // Note that the mailbox is NOT locked at this place;
-      msgReceived(myVSMsgBufferImported);
+      myVSMsgBufferImported = 
+	new (myVSMsgBufferImported) VSMsgBufferImported(cpm, chunkNumber);
 
       //
+      msgType = getVSMsgType(myVSMsgBufferImported);
+
+      //
+      if (msgType == VS_M_PERDIO) {
+	msgReceived(myVSMsgBufferImported);
+      } else {
+	//
+	switch (msgType) {
+	case VS_M_INVALID:
+	  error("readVSMessages: M_INVALID message???");
+	  break;
+
+	case VS_M_INIT_VS:
+	  error("readVSMessages: VS_M_INIT_VS is not expected here.");
+	  break;
+
+	case VS_M_SITE_IS_ALIVE:
+	  {
+	    Site *s;
+	    VirtualSite *vs;
+
+	    //
+	    decomposeVSSiteIsAliveMsg(myVSMsgBufferImported, s);
+	    vs = s->getVirtualSite();
+	    Assert(vs);
+
+	    //
+	    VSMsgBufferOwned *bs = composeVSSiteAliveMsg(s);
+	    if (sendTo_VirtualSite(vs, bs, /* messageType */ M_NONE,
+				   /* storeSite */ (Site *) 0,
+				   /* storeIndex */ 0) != ACCEPTED)
+	      error("readVSMessages: unable to send 'site_alive' message?");
+	    break;
+	  }
+
+	case VS_M_SITE_ALIVE:
+	  {
+	    Site *s;
+	    decomposeVSSiteAliveMsg(myVSMsgBufferImported, s);
+	    s->siteAlive();
+	    break;
+	  }
+
+	case VS_M_UNUSED_SHMID:
+	  error("not implemented yet!");
+	  break;
+
+	default:
+	  error("readVSMessages: unknown 'vs' message type!");
+	  break;
+	}
+      }
+
+      //
+      myVSMsgBufferImported->releaseChunks();
       myVSMsgBufferImported->cleanup();
     } else {
       // is locked - then let's try to read later;
@@ -439,7 +597,7 @@ OZ_BI_define(BIVSnewMailbox,0,1)
 {
   //
   VSMailboxManagerCreated *mbm;
-  VSMsgBufferOwned *voidBUF, *buf;
+  VSMsgBufferOwned *buf;
   char keyChars[sizeof(key_t)*2 + 3]; // in the form "0xNNNNNNNN";
 
   //
@@ -482,17 +640,17 @@ OZ_BI_define(BIVSnewMailbox,0,1)
   slavesRegister.add(mbm->getSHMKey());
 
   //
-  // Put the 'M_INIT_VS' message into it;
-  voidBUF = freeMsgBufferPool.allocate();
-  buf = new (voidBUF) VSMsgBufferOwned(myVSChunksPoolManager, (Site *) -1);
-  marshal_M_INIT_VS(buf, mySite);
+  // Put the 'VS_M_INIT_VS' message into it;
+  buf = composeVSInitMsg();
+
+  //
   if (!mbm->getMailbox()->enqueue(buf->getSHMKey(),
 				  buf->getFirstChunk()))
     error("Virtual sites: unable to put the M_INIT_VS message");
   buf->passChunks();
   buf->cleanup();
   freeMsgBufferPool.dispose(buf);
-  DebugCode(voidBUF = buf = (VSMsgBufferOwned *) 0);
+  DebugCode(buf = (VSMsgBufferOwned *) 0);
 
   //
   mbm->unmap();			// we don't need that object now anymore;
@@ -510,13 +668,15 @@ OZ_BI_define(BIVSnewMailbox,0,1)
 OZ_BI_define(BIVSinitServer,1,0)
 {
   //
-  VirtualInfo *vi;
   key_t msgChunkPoolKey;
   int chunkNumber;
   OZ_declareVirtualStringIN(0, mbKeyChars);
   Assert(sizeof(key_t) <= sizeof(int));
   key_t mbKey;
   VSMailboxOwned *mbox;
+  VSMsgType msgType;
+  VirtualInfo *vi;
+  Site *ms;
 
   //
   Assert(sizeof(key_t) == sizeof(int));
@@ -559,9 +719,37 @@ OZ_BI_define(BIVSinitServer,1,0)
     (VSMsgBufferImported *) malloc(sizeof(VSMsgBufferImported));
   VSMsgChunkPoolManagerImported *cpm =
     chunkPoolRegister.import(msgChunkPoolKey);
-  myVSMsgBufferImported->
-    VSMsgBufferImported::VSMsgBufferImported(cpm, chunkNumber);
-  msgReceived(myVSMsgBufferImported);
+  myVSMsgBufferImported = 
+    new (myVSMsgBufferImported) VSMsgBufferImported(cpm, chunkNumber);
+
+  //
+  // (we must read-in the type field);
+  msgType = getVSMsgType(myVSMsgBufferImported);
+  fprintf(stdout, "%d\n", (int) msgType); fflush(stdout); // '!'
+  Assert(msgType == VS_M_INIT_VS);
+
+  //
+  // The father's virtual site is registered during
+  // unmarshaling, but it is NOT recognized as a virtual one
+  // (since 'mySite' has not been yet initialized - a
+  // bootstrapping problem! :-))
+  decomposeVSInitMsg(myVSMsgBufferImported, ms);
+
+  //
+  Assert(!mySite->hasVirtualInfo());
+  // The 'mySite' and 'ms' share the same master (which
+  // might be 'ms' itself), so virtual infos differ in the
+  // mailbox key only, which is to be set later:
+  vi = new VirtualInfo(ms->getVirtualInfo());
+  mySite->makeMySiteVirtual(vi);
+
+  //
+  // Change the type of 'ms': this is a virtual site (per
+  // definition);
+  ms->makeActiveVirtual();
+
+  //
+  myVSMsgBufferImported->releaseChunks();
   myVSMsgBufferImported->cleanup();
 
   //
