@@ -153,6 +153,13 @@ define
 	 id<-L
 	 try
 	    {@server S_login(id:L passwd:PW client:self.this host:{OS.uName}.nodename)}
+
+% Ralf, Erik
+%	    {System.show gcDo}
+%	    {System.gcDo}
+%	    {System.show gcDone}
+%	    {@server S_login(id:L passwd:PW client:self.this host:{OS.uName}.nodename)}
+
 	 catch X then {System.printError X} end
       end
 
