@@ -226,7 +226,7 @@ GName *Name::globalize()
 {
   if (!hasGName()) {
     Assert(getBoard()==am.rootBoard);
-    homeOrGName = ToInt32(newGName(makeTaggedLiteral(this)));
+    homeOrGName = ToInt32(newGName(makeTaggedLiteral(this),GNT_NAME));
     setFlag(Lit_hasGName);
   }
   return getGName();
@@ -240,24 +240,19 @@ void Name::import(GName *name)
 }
 
 
-GName *Abstraction::globalize()
+void Abstraction::globalize()
 {
-  GName *ret = getGName();
-  if (ret==NULL) {
-    ret = newGName(makeTaggedConst(this));
-    setGName(ret);
+  if (getGName()==NULL) {
+    setGName(newGName(makeTaggedConst(this),GNT_PROC));
   }
-  return ret;
+  getPred()->globalize();
 }
 
-GName *PrTabEntry::globalize()
+void PrTabEntry::globalize()
 {
-  GName *ret = getGName();
-  if (ret==NULL) {
-    ret = newGName(this);
-    setGName(ret);
+  if (getGName()==NULL) {
+    setGName(newGName(this));
   }
-  return ret;
 }
 
 
