@@ -6,7 +6,7 @@
 <P>Global names are needed when an application
 wants to interact with the world outside it.
 Mozart supports three basic kinds of global names:
-<index/ticket<and>/
+<index/ticket<and>definition/
 <index/global name<and>ticket/
 <LIST>
 <ITEM> A <EM>ticket</EM> is a string that references a data
@@ -15,19 +15,19 @@ Tickets can be created by Mozart and
 used by active applications to connect themselves
 (see module <ref.extern to="ozdoc:system"
 key="chapter.connection"/<<Connection>>/).
-<index/URL/
+<index/URL<and>definition/
 <index/global name<and>URL/
 <ITEM> A <EM>URL</EM> is a string that references
 a file across the network.
 The string follows the standard URL syntax.
-<index/pickle/
+<index/pickle<and>/
 <index/stateless entity<and>pickle/
 In Mozart the file can be a <EM>pickle</EM>, in which case
 it can hold any kind of stateless data--procedures,
 classes, functors, records, strings, and so forth
 (see module <ref.extern to="ozdoc:system"
 key="chapter.pickle"/<<Pickle>>/).
-<index/hostname/
+<index/hostname<and>definition/
 <index/global name<and>hostname/
 <ITEM> A <EM>hostname</EM> is a string that
 refers to a host (another machine) across the network.

@@ -4,7 +4,7 @@
 <P>The basic difference between a distributed and
 a centralized program is that the former
 is partitioned among several sites.
-<index id=idx.site/site<and>/
+<index id=idx.site/site<and>definition/
 <index/geographic distribution/
 We define a <EM>site</EM>
 as the basic unit of geographic distribution.
@@ -30,7 +30,7 @@ This gives the language entity a particular
 distributed semantics in terms of network messages.
 
 <P>The <EM>distributed semantics</EM>
-<index id=idx.distributedsemantics/distributed semantics<and>/
+<index id=idx.distributedsemantics/distributed semantics<and>definition/
 <index id=idx.semanticsdistributed/semantics<and>distributed/
 defines the network communications done by the system
 when operations are performed on an entity.
@@ -173,7 +173,7 @@ Threads are <EM>sited</EM> entities (see <ptr to="sited.entities">).
 
 <ITEM> <EM>Port</EM>:
 <index id=idx.port/port<and>/
-<index id=idx.channel/channel<and>asynchronous many-to-one/
+<index id=idx.channel/channel<and>port (asynchronous many-to-one)/
 <index id=idx.amtochannel/asynchronous many-to-one channel/
 A port is an asynchronous many-to-one channel
 that respects FIFO for messages sent from within the same thread.
@@ -219,7 +219,7 @@ but once the cell is local, then further
 updates do not use the network any more.
 
 <ITEM> <EM>Thread-reentrant lock</EM>:
-<index id=idx.threadreentrant/thread<and>thread-reentrant lock/
+<index id=idx.threadreentrant/thread<and>reentrant lock/
 <index id=idx.threadreentrantlock/thread-reentrant lock/
 <index id=idx.lockthread/lock<and>thread-reentrant/
 A thread-reentrant lock allows only a single
@@ -448,7 +448,7 @@ where a module is a record.
 
 <P>Entities that can be used only on one site
 are called <EM>sited</EM>.
-<index/sited entity<and>/
+<index/sited entity<and>definition/
 <index/language entity<and>sited/
 <index/owner site/
 <index/home site/
@@ -467,7 +467,7 @@ Since Oz is a network-transparent
 except for a few exceptional cases listed below.
 Not all modules are sited, though.
 <index/module<and>definition/
-<index/language entity/module/
+<index/language entity<and>module/
 <index/record<and>module/
 A <EM>module</EM> is a record that
 groups related operations and
