@@ -125,8 +125,8 @@ provide a fix for the standard gdbm distribution: its purpose is to automate the
 creation of the shared object library. Both the standard gdbm 1.7.3 distribution and
 our fix can be downloaded from our ftp server:
 <list>
-	<item><ref.extern to="ftp://ftp.mozart-oz.org/pub/mozart/extras/gdbm-1.7.3.tar.gz">ftp://ftp.mozart-oz.org/pub/mozart/extras/gdbm-1.7.3.tar.gz</ref.extern>
-	<item><ref.extern to="ftp://ftp.mozart-oz.org/pub/mozart/extras/gdbm-1.7.3-fix.tar.gz">ftp://ftp.mozart-oz.org/pub/mozart/extras/gdbm-1.7.3-fix.tar.gz</ref.extern>
+	<item><ref.extern to="http://www.mozart-oz.org/download/mozart-ftp/extras/gdbm-1.7.3.tar.gz">http://www.mozart-oz.org/download/mozart-ftp/extras/gdbm-1.7.3.tar.gz</ref.extern>
+	<item><ref.extern to="http://www.mozart-oz.org/download/mozart-ftp/extras/gdbm-1.7.3-fix.tar.gz">http://www.mozart-oz.org/download/mozart-ftp/extras/gdbm-1.7.3-fix.tar.gz</ref.extern>
       </list>
 They both unpack into the same directory (namely
 <file>gdbm-1.7.3</file>).  You should unpack the standard distribution
