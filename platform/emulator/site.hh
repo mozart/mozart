@@ -40,8 +40,6 @@
 
 // Broadcast IP-addresses starts with zero-byte
 #define NON_BROADCAST_MIN 16777215
-// PID is a 15-bit number
-#define MAX_PID  32767
 
 typedef unsigned short port_t;
 typedef unsigned int ip_address;
@@ -138,7 +136,9 @@ public:
       return;
     }
     timestamp.pid=unmarshalNumberRobust(buf, &o);
-    *error = o || (timestamp.pid > MAX_PID);
+    // andreas & kost@ : Windows* return arbitrary pid_t"s, 
+    // so no MAX_PID whatsoever!
+    *error = o;
   }
 #endif
 
