@@ -903,22 +903,3 @@ void sendGate(OZ_Term t) {
     sendPort(pidPort,t);
   }
 }
-
-BIspec componentsSpec[] = {
-  {"smartSave",    3, BIsmartSave, 0},
-  {"load",         2, BIload, 0},
-
-  {"PID.get",       1, BIGetPID},
-  {"PID.received",  1, BIReceivedPID},
-  {"PID.close",     0, BIClosePID},
-  {"PID.send",      4, BISendPID},
-
-  {"URL.localize", 2, BIurl_localize},
-  {"URL.open",     2, BIurl_open},
-  {"URL.load",     2, BIurl_load},
-  {0,0,0,0}
-};
-
-void initComponents() {
-  BIaddSpec(componentsSpec);
-}
