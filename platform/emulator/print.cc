@@ -46,6 +46,24 @@ void printWhere(ostream &cout,ProgramCounter PC);
 // #define NEWLINE(off) stream << endl << indent((off));
 #define NEWLINE(off) stream << " ";
 
+
+#define DEC(depth) ((depth)==-1?(depth):(depth)-1)
+#define CHECKDEPTH							      \
+{									      \
+  if (depth == 0) {							      \
+    stream << ",,,";							      \
+    return;								      \
+  }									      \
+}
+
+#define CHECKDEPTHLONG							      \
+{									      \
+  if (depth == 0) {							      \
+    stream << indent(offset) << ",,," << endl;				      \
+    return;								      \
+  }									      \
+}
+
 //-----------------------------------------------------------------------------
 //                         Miscellaneous stuff
 
@@ -76,7 +94,7 @@ inline Bool isEffectiveList(SuspList* sl) {
 
 static void tagged2Stream(TaggedRef ref,ostream &stream=cout,
 			  int depth = 10,int offset = 0) {
-
+  CHECKDEPTH;
   if (ref == makeTaggedNULL()) {
     stream << "*** NULL TERM ***";
     return;
@@ -132,8 +150,9 @@ static void tagged2Stream(TaggedRef ref,ostream &stream=cout,
   }
 }
 
-void printTerm(TaggedRef t, ostream &s, int d = 10, int o= 0){
-  tagged2Stream(t, s, d, o);
+void printTerm(TaggedRef t, ostream &stream, int depth = 10, int offset= 0){
+  CHECKDEPTH;
+  tagged2Stream(t, stream, depth, offset);
 }
     
 
@@ -149,6 +168,7 @@ char *getVarName(TaggedRef v)
 
 void SVariable::print(ostream &stream, int depth, int offset, TaggedRef v)
 {
+  CHECKDEPTH;
   stream << "SV:"
 	 << getVarName(v)
 	 << "@"
@@ -158,6 +178,7 @@ void SVariable::print(ostream &stream, int depth, int offset, TaggedRef v)
 
 void GenCVariable::print(ostream &stream, int depth, int offset, TaggedRef v)
 {
+  CHECKDEPTH;
   switch(getType()){
   case FDVariable:
     {
@@ -199,14 +220,10 @@ void GenCVariable::print(ostream &stream, int depth, int offset, TaggedRef v)
         stream << " a" << suspList->length();
 
       stream << ' ';
-      if (depth<=1) {
-          stream << "...(...)";
-      } else {
-          GenOFSVariable* me = (GenOFSVariable *) this;
-          tagged2Stream(me->getLabel(),stream,depth-1,offset);
-          // me->getLabel()->print(stream, depth-1, offset);
-          me->getTable()->print(stream, depth-1, offset+2);
-      }
+      GenOFSVariable* me = (GenOFSVariable *) this;
+      tagged2Stream(me->getLabel(),stream,DEC(depth),offset);
+      // me->getLabel()->print(stream,DEC(depth), offset);
+      me->getTable()->print(stream,DEC(depth), offset+2);
       break;
    }
 
@@ -233,6 +250,7 @@ void GenCVariable::print(ostream &stream, int depth, int offset, TaggedRef v)
 // Non-Name Features are output in alphabetic order:
 PRINT(DynamicTable)
 {
+    CHECKDEPTH;
     stream << '(';
     int nonempty=FALSE;
     // Count Atoms & Names in dynamictable:
@@ -288,31 +306,29 @@ PRINT(DynamicTable)
 
 PRINTLONG(DynamicTable)
 {
-    print(stream, depth, offset);
+  print(stream, depth, offset);
 }
 
 
 
 PRINT(STuple)
 {
+  CHECKDEPTH;
   int i;
 
   tagged2Stream(getLabel(),stream,depth,offset);
-  if ( depth <= 1 ) {
-    stream << "(...)";
-  } else {
-    stream << "(";
+  stream << "(";
+  NEWLINE(offset+2);
+  for (i = 0; i < getSize (); i++) {
+    tagged2Stream(getArg(i),stream, DEC(depth),offset+2);
     NEWLINE(offset+2);
-    for (i = 0; i < getSize (); i++) {
-      tagged2Stream(getArg(i),stream, depth-1,offset+2);
-      NEWLINE(offset+2);
-    }
-    stream << ")";
   }
+  stream << ")";
 }
 
 PRINT(SRecord)
 {
+  CHECKDEPTH;
   switch (getType()) {
   case R_ABSTRACTION:
   case R_OBJECT:
@@ -333,21 +349,17 @@ PRINT(SRecord)
   TaggedRef ar = getArityList();
   CHECK_DEREF(ar);
   if (isCons(ar)) {
-    if (depth <= 1) {
-      stream << "(...)";
-    } else {
-      stream << "(";
+    stream << "(";
+    NEWLINE(offset+2);
+    while (isCons(ar)) {
+      TaggedRef feat = head(ar);
+      CHECK_DEREF(feat);
+      tagged2Stream(feat,stream,depth,offset);
+      ar = tail(ar);
+      CHECK_DEREF(ar);
+      stream << ": ";
+      tagged2Stream(getFeature(feat),stream,DEC(depth),offset+2);
       NEWLINE(offset+2);
-      while (isCons(ar)) {
-	TaggedRef feat = head(ar);
-	CHECK_DEREF(feat);
-	tagged2Stream(feat,stream,depth,offset);
-	ar = tail(ar);
-	CHECK_DEREF(ar);
-	stream << ": ";
-	tagged2Stream(getFeature(feat),stream,depth-1,offset+2);
-	NEWLINE(offset+2);
-      }
       stream << ")";
     }
   }
@@ -355,22 +367,19 @@ PRINT(SRecord)
 
 PRINT(LTuple)
 {
-  if ( depth <= 1 ) {
-    stream << " ... ";
+  CHECKDEPTH;
+  TaggedRef headd = getHead();
+  DEREF(headd,_1,tag1);
+  if (isLTuple(tag1) ) {
+    stream << "(";
+    tagged2Stream(headd,stream, DEC(depth),offset);
+    stream << ")"
+	   << NameOfCons;
   } else {
-    TaggedRef headd = getHead();
-    DEREF(headd,_1,tag1);
-    if (isLTuple(tag1) ) {
-      stream << "(";
-      tagged2Stream(headd,stream, depth-1,offset);
-      stream << ")"
-	     << NameOfCons;
-    } else {
-      tagged2Stream(getHead(),stream, depth-1,offset);
-      stream << NameOfCons;
-    }
-    tagged2Stream(getTail(),stream, depth-1, offset);
+    tagged2Stream(getHead(),stream, DEC(depth),offset);
+    stream << NameOfCons;
   }
+  tagged2Stream(getTail(),stream, DEC(depth), offset);
 }
 
 
@@ -425,6 +434,7 @@ static Bool isWellFormed(char *s)
 
 PRINT(Literal)
 {
+  CHECKDEPTH;
   if (!isAtom()) {
     stream << OZ_literalToC(makeTaggedLiteral(this));
     return;
@@ -440,6 +450,7 @@ PRINT(Literal)
 
 PRINT(Float)
 {
+  CHECKDEPTH;
   char *s = OZ_floatToCString(makeTaggedFloat(this));
   OZ_normFloat(s);
   stream << s;
@@ -448,6 +459,7 @@ PRINT(Float)
 
 PRINT(Cell)
 {
+  CHECKDEPTH;
   stream << "C:"
 	 << getPrintName()
 	 <<"@" << (void*) getId();
@@ -455,6 +467,7 @@ PRINT(Cell)
 
 PRINT(Abstraction)
 {
+  CHECKDEPTH;
   if (getType() == R_OBJECT) {
     stream << "O:" << ((Object*)this)->getPrintName();
     return;
@@ -466,6 +479,7 @@ PRINT(Abstraction)
 
 PRINT(Builtin)
 {
+  CHECKDEPTH;
   stream << "B:"
 	 << getPrintName() << "/" << getArity();
 //	 << "@" << (void*) getId();
@@ -474,6 +488,7 @@ PRINT(Builtin)
 
 PRINT(BuiltinTabEntry)
 {
+  CHECKDEPTH;
   stream << "<builtin "
 	 << getPrintName()
 	 << "/"
@@ -486,6 +501,7 @@ PRINT(BuiltinTabEntry)
 
 PRINT(Arity)
 {
+  CHECKDEPTH;
   stream << "Arity: ";
   tagged2Stream(list,stream,depth,offset);
   stream << endl;
@@ -510,6 +526,7 @@ PRINT(Arity)
 
 PRINT(ArityTable)
 {
+  CHECKDEPTH;
   Arity *c;
   for (int i = 0 ; i < size ; i ++) {
     stream << "Position " << i << endl;
@@ -528,6 +545,7 @@ PRINT(ArityTable)
 
 PRINT(SuspList)
 {
+  CHECKDEPTH;
   if (isEffectiveList(this) == NO) {
     stream << indent(offset) << "- empty -" << endl;
     return;
@@ -549,6 +567,7 @@ PRINT(SuspList)
 
 PRINT(CFuncContinuation)
 {
+  CHECKDEPTH;
   stream  << "ccont = "
 	  << builtinTab.getName((void *)getCFunc())
 	  << '(' << getXSize() << ", "
@@ -558,6 +577,7 @@ PRINT(CFuncContinuation)
 
 PRINT(Suspension)
 {
+  CHECKDEPTH;
   stream << indent(offset) << " [";
   if (isDead()) stream << 'D';
   if (isPropagated()) stream << 'P';
@@ -591,8 +611,9 @@ PRINT(Suspension)
 static void tagged2StreamLong(TaggedRef ref,ostream &stream = cout,
 			      int depth = 1,int offset = 0)
 {
+  CHECKDEPTHLONG;
   if (ref == makeTaggedNULL()) {
-    stream << "*** NULL TERM ***" << endl;
+    stream << indent(offset) << "*** NULL TERM ***" << endl;
     return;
   }
 
@@ -603,7 +624,7 @@ static void tagged2StreamLong(TaggedRef ref,ostream &stream = cout,
 	   << ": "
 	   << (void *) *tagged2Ref(ref)
 	   << endl;
-    tagged2StreamLong(*tagged2Ref(ref),stream,depth-1,offset+2);
+    tagged2StreamLong(*tagged2Ref(ref),stream,DEC(depth),offset+2);
     return;
   }
 
@@ -670,6 +691,7 @@ static void tagged2StreamLong(TaggedRef ref,ostream &stream = cout,
 
 PRINTLONG(ConstTerm)
 {
+  CHECKDEPTHLONG;
   switch (typeOf()) {
   case Co_Board:
     ((Board *) this)->printLong(stream, depth, offset);
@@ -690,6 +712,7 @@ PRINTLONG(ConstTerm)
 
 PRINT(ConstTerm)
 {
+  CHECKDEPTH;
   switch (typeOf()) {
   case Co_Board:
     ((Board *) this)->print(stream, depth, offset);
@@ -710,6 +733,7 @@ PRINT(ConstTerm)
 
 PRINT(HeapChunk)
 {
+  CHECKDEPTH;
   stream << indent(offset)
 	 << "heap chunk: " << chunk_size << " bytes at " << this << '.'
 	 << endl;
@@ -724,6 +748,7 @@ PRINT(HeapChunk)
 
 PRINTLONG(HeapChunk)
 {
+  CHECKDEPTHLONG;
   stream << indent(offset)
 	 << "heap chunk: " << chunk_size << " bytes at " << this << '.'
 	 << endl;
@@ -748,6 +773,7 @@ void AM::print()
 
 PRINT(Board)
 {
+  CHECKDEPTH;
   stream << indent(offset);
   if (!this) {
     stream << "(NULL Board)";
@@ -782,21 +808,18 @@ PRINT(Board)
 
 PRINTLONG(Board)
 {
+  CHECKDEPTHLONG;
   print(stream,depth,offset); stream << endl;
-  if (depth <= 0) {
-    stream << indent(offset) << "..." << endl;
-    return;
-  }
   stream << indent(offset) << "Flags: " << (void *) flags << endl;
   stream << indent(offset) << "Script: " << endl;
-  script.printLong(stream,depth-1,offset+2);
+  script.printLong(stream,DEC(depth),offset+2);
   if (u.board) {
     if (isCommitted()) {
       stream << indent(offset) << "Board:" << endl;
-      u.board->printLong(stream,depth-1,offset+2);
+      u.board->printLong(stream,DEC(depth),offset+2);
     } else {
       stream << indent(offset) << "Actor:" << endl;
-      u.actor->printLong(stream,depth-1,offset+2);
+      u.actor->printLong(stream,DEC(depth),offset+2);
     }
   }
 }
@@ -814,6 +837,7 @@ void Board::Print()
 
 PRINT(Script)
 {
+  CHECKDEPTH;
   stream << indent(offset);
   if (getSize() <= 0) {
     stream << "- empty -";
@@ -827,12 +851,14 @@ PRINT(Script)
 
 PRINTLONG(Script)
 {
+  CHECKDEPTHLONG;
   print(stream,depth,offset);
   stream << endl;
 }
 
 PRINT(Equation)
 {
+  CHECKDEPTH;
   tagged2Stream(getLeft(),stream,depth,offset);
   stream << " = ";
   tagged2Stream(getRight(),stream,depth,offset);
@@ -840,11 +866,13 @@ PRINT(Equation)
 
 PRINTLONG(Equation)
 {
+  CHECKDEPTHLONG;
   print(stream,depth,offset);
 }
 
 PRINT(Actor)
 {
+  CHECKDEPTH;
   if (!this) {
     stream << indent(offset) << "(NULL Actor)";
     return;
@@ -871,35 +899,34 @@ PRINT(Actor)
 
 PRINTLONG(Actor)
 {
+  CHECKDEPTHLONG;
   print(stream,depth,offset);
   stream << endl;
-  if (depth <= 0) {
-    stream << indent(offset) << "..." << endl;
-    return;
-  }
   stream << indent(offset) << "Priority: " << priority << endl;
   if (isSolve()) {
     ((SolveActor *)this)->printLong(stream,depth,offset);
   }
   stream << indent(offset) << "Board: " << endl;
-  board->printLong(stream,depth-1,offset+2);
+  board->printLong(stream,DEC(depth),offset+2);
 }
 
 PRINT(SolveActor)
 {
+  CHECKDEPTH;
 }
 
 PRINTLONG(SolveActor)
 {
+  CHECKDEPTHLONG;
   stream  << indent(offset) << "solveVar=";
-  tagged2Stream(solveVar,stream,depth-1,0);
+  tagged2Stream(solveVar,stream,DEC(depth),0);
   stream << endl;
   stream << indent(offset) << "result=";
-  tagged2Stream(result,stream,depth-1,0);
+  tagged2Stream(result,stream,DEC(depth),0);
   stream << endl;
   stream << indent(offset) << "threads=" << threads << endl;
   stream << indent(offset) << "SuspList:" << endl;
-  suspList->print(stream,depth-1,offset+2);
+  suspList->print(stream,DEC(depth),offset+2);
 }
 
 void Thread::Print()
@@ -932,6 +959,7 @@ void Thread::Print()
 
 PRINT(Thread)
 {
+  CHECKDEPTH;
   if (!this) {
     stream << indent(offset) << "(NULL Thread)";
     return;
@@ -949,12 +977,14 @@ PRINT(Thread)
 
 PRINTLONG(Thread)
 {
+  CHECKDEPTHLONG;
   this->print(stream,depth,offset);
   stream << endl;
 }
 
 PRINTLONG(Literal)
 {
+  CHECKDEPTHLONG;
   if (isAtom()) {
     stream << indent(offset) << "Atom @" << this << ": ";
   } else {
@@ -967,6 +997,7 @@ PRINTLONG(Literal)
 
 void SVariable::printLong(ostream &stream, int depth, int offset, TaggedRef v)
 {
+  CHECKDEPTHLONG;
   stream << indent(offset)
 	 << "SV "
 	 << getVarName(v)
@@ -983,8 +1014,10 @@ void SVariable::printLong(ostream &stream, int depth, int offset, TaggedRef v)
   stream << endl;
 }
 
-void GenCVariable::printLong(ostream &stream, int depth, int offset, TaggedRef v)
+void GenCVariable::printLong(ostream &stream, int depth, int offset,
+			     TaggedRef v)
 {
+  CHECKDEPTHLONG;
   stream << indent(offset)
 	 << "CV "
 	 << getVarName(v)
@@ -1013,14 +1046,10 @@ void GenCVariable::printLong(ostream &stream, int depth, int offset, TaggedRef v
   case OFSVariable:
     {
       stream << indent(offset);
-      if (depth<=1) {
-          stream << "...(...)";
-      } else {
-          GenOFSVariable* me = (GenOFSVariable *) this;
-          tagged2Stream(me->getLabel(),stream,depth-1,offset);
-          // me->getLabel()->print(stream, depth-1, offset);
-          me->getTable()->print(stream, depth-1, offset+2);
-      }
+      GenOFSVariable* me = (GenOFSVariable *) this;
+      tagged2Stream(me->getLabel(),stream,DEC(depth),offset);
+      // me->getLabel()->print(stream, DEC(depth), offset);
+      me->getTable()->print(stream, DEC(depth), offset+2);
       stream << endl;
       break;
     }
@@ -1030,7 +1059,7 @@ void GenCVariable::printLong(ostream &stream, int depth, int offset, TaggedRef v
       stream << indent(offset)
 	     << "<<MV: '" << me->getName() << "' " << me->PrintMeta()
 	     << endl;
-      tagged2Stream(me->data, stream, depth - 1, offset + 2);
+      tagged2Stream(me->data, stream, DEC(depth), offset + 2);
       stream << indent(offset) << ">>" << endl;
       break;
     }
@@ -1045,20 +1074,17 @@ void GenCVariable::printLong(ostream &stream, int depth, int offset, TaggedRef v
 
 PRINTLONG(STuple)
 {
+  CHECKDEPTHLONG;
   int i;
 
   stream << indent(offset) << "Tuple @" << this << endl
 	 << indent(offset) << "Label: ";
   tagged2StreamLong(label,stream,depth,offset);
   stream << endl;
-  if ( depth <= 1 ) {
-    stream << indent(offset) <<  "Args: ...";
-  } else {
-    for (i = 0; i < getSize (); i++) {
-      stream << indent(offset) <<  "Arg "<< i << ":\n";
-      tagged2StreamLong (getArg(i),stream,depth-1,offset);
-      stream << " ";
-    }
+  for (i = 0; i < getSize (); i++) {
+    stream << indent(offset) <<  "Arg "<< i << ":\n";
+    tagged2StreamLong (getArg(i),stream,DEC(depth),offset);
+    stream << " ";
   }
   stream << endl;
 }
@@ -1066,20 +1092,18 @@ PRINTLONG(STuple)
 
 PRINTLONG(LTuple)
 {
+  CHECKDEPTHLONG;
   stream << indent(offset) << "List @" << this << endl;
 
-  if ( depth <= 1 ) {
-    stream << indent(offset) << "Args: ...\n";
-  } else {
-    stream << indent(offset) << "Head:\n";
-    tagged2StreamLong(getHead(),stream,depth-1,offset+2);
-    stream << indent(offset) << "Tail:\n";
-    tagged2StreamLong(getTail(),stream,depth-1,offset+2);
-  }
+  stream << indent(offset) << "Head:\n";
+  tagged2StreamLong(getHead(),stream,DEC(depth),offset+2);
+  stream << indent(offset) << "Tail:\n";
+  tagged2StreamLong(getTail(),stream,DEC(depth),offset+2);
 }
 
 PRINTLONG(Abstraction)
 {
+  CHECKDEPTHLONG;
   stream << indent(offset)
 	 << (getType() == R_OBJECT ? "Object " : "")
 	 << "Abstraction @id"
@@ -1103,6 +1127,7 @@ PRINTLONG(Abstraction)
 
 PRINTLONG(PrTabEntry)
 {
+  CHECKDEPTHLONG;
   stream << indent(offset)
 	 <<  "Name: " << getPrintName()
 	 << "/" << arity
@@ -1114,13 +1139,14 @@ PRINTLONG(PrTabEntry)
 
 PRINTLONG(Builtin)
 {
+  CHECKDEPTHLONG;
   print(stream,depth,offset);
   stream << endl;
   if (gRegs && getRefsArraySize(gRegs) > 0) {
     stream << indent(offset) << "gRegs:" << endl;
     for (int i=0; i < getRefsArraySize(gRegs); i++) {
       stream << indent(offset+2) << "g[" << i << "] = ";
-      tagged2Stream(gRegs[i],stream,depth-1,offset+2);
+      tagged2Stream(gRegs[i],stream,DEC(depth),offset+2);
       stream << endl;
     }
   } else {
@@ -1132,6 +1158,7 @@ PRINTLONG(Builtin)
 
 PRINTLONG(Cell)
 {
+  CHECKDEPTHLONG;
   stream << indent(offset)
 	 << "Cell " << getPrintName()
 	 << " @id"  << getId() << endl
@@ -1142,6 +1169,7 @@ PRINTLONG(Cell)
 
 PRINTLONG(SRecord)
 {
+  CHECKDEPTHLONG;
   stream << indent(offset);
   switch (getType()) {
   case R_ABSTRACTION:
@@ -1162,34 +1190,31 @@ PRINTLONG(SRecord)
 	   << this << ":\n"
 	   << indent(offset)
 	   << "Label: ";
-    tagged2Stream(u.label,stream,depth-1,offset);
+    tagged2Stream(u.label,stream,DEC(depth),offset);
     stream << endl;
     break;
   }
 
-  if (depth <= 1) {
-    stream << indent(offset) << "Args: ...\n";
-  } else {
-    stream << indent(offset) << "Args:\n";
-    TaggedRef ar = getArityList();
+  stream << indent(offset) << "Args:\n";
+  TaggedRef ar = getArityList();
+  CHECK_DEREF(ar);
+  while (isCons(ar)) {
+    stream << indent(offset+2);
+    TaggedRef feat = head(ar);
+    CHECK_DEREF(feat);
+    tagged2Stream(feat,stream,DEC(depth),offset+2);
+    ar = tail(ar);
     CHECK_DEREF(ar);
-    while (isCons(ar)) {
-      stream << indent(offset+2);
-      TaggedRef feat = head(ar);
-      CHECK_DEREF(feat);
-      tagged2Stream(feat,stream,depth-1,offset+2);
-      ar = tail(ar);
-      CHECK_DEREF(ar);
-      stream << ": ";
-      tagged2StreamLong(getFeature(feat),stream,depth-1,offset+2);
-    }
-    stream << indent(offset) << "End of Args\n";
+    stream << ": ";
+    tagged2StreamLong(getFeature(feat),stream,DEC(depth),offset+2);
   }
+  stream << indent(offset) << "End of Args\n";
 }
 
 
 PRINTLONG(Float)
 {
+  CHECKDEPTHLONG;
   stream << indent(offset) << "Float @" << this << ": ";
   print(stream,depth,offset);
   stream << endl;
@@ -1197,6 +1222,7 @@ PRINTLONG(Float)
 
 PRINTLONG(BigInt)
 {
+  CHECKDEPTHLONG;
   stream << indent(offset)
 	 << "BigInt @" << this << ": ";
   tagged2Stream(makeTaggedBigInt(this),stream,depth,offset);
@@ -1207,6 +1233,7 @@ PRINTLONG(BigInt)
 
 PRINT(TaskStack)
 {
+  CHECKDEPTH;
   int counter=1;
   stream << "*traceback*" << endl;
   if (this && !isEmpty()) {
@@ -1289,6 +1316,7 @@ PRINT(TaskStack)
 
 PRINTLONG(TaskStack)
 {
+  CHECKDEPTHLONG;
   if (isEmpty() == OK) {
     stream << "*** TaskStack is empty ***" << endl;
     return;
@@ -1297,7 +1325,7 @@ PRINTLONG(TaskStack)
 
   TaskStackEntry *p = getTop();
   
-  while (!isEmpty() && depth-- > 0) {
+  while (!isEmpty() && (depth=DEC(depth)) != 0) {
     TaggedBoard tb = (TaggedBoard) ToInt32(pop());
     ContFlag flag = getContFlag(tb);
     Board* n = getBoard(tb,flag);
