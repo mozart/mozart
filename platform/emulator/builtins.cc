@@ -417,7 +417,26 @@ OZ_Return genericDot(TaggedRef term, TaggedRef fea, TaggedRef *out, Bool dot) {
 	}
 	break;
       case Co_Array:
+	{
+	  TaggedRef t = (oz_isSmallInt(fea))?
+	    tagged2Array(term)->getArg(smallIntValue(fea))
+	    :0;
+	  if (!t) {
+	    if (dot) goto raise; else return FAILED;
+	  }
+	  if (out) *out = t;
+	  return PROCEED;
+	}
       case Co_Dictionary:
+	{
+	  TaggedRef t;
+	  extern OZ_Return dictionaryGetInline(TaggedRef,TaggedRef,TaggedRef&);
+	  if (dictionaryGetInline(term,fea,t)!=PROCEED) {
+	    if (dot) goto raise; else return FAILED;
+	  }
+	  if (out) *out = t;
+	  return PROCEED;
+	}
       default:
 	// no public known features
 	t = makeTaggedNULL();
