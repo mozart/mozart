@@ -32,13 +32,16 @@
 
 
 /* magic marker for start of saved components */
-/* HACK ALERT: */
+static char SYSLETHEADER = 2;
+
+/* magic marker for start of saved components */
+/* OUTDATED only for backwards compatibility */
 #define PERDIOMAGICSTART       31
 
 #define PERDIOMAJOR      1
-#define PERDIOMINOR      3
+#define PERDIOMINOR      4
 
-#define PERDIOVERSION     "1#3" /* PERDIOMAJOR "#" PERDIOMINOR */
+#define PERDIOVERSION     "1#4" /* PERDIOMAJOR "#" PERDIOMINOR */
 
 // the DIFs
 // the protocol layer needs to know about some of these
@@ -174,6 +177,12 @@ void marshalLabelDef(char *lbl, MsgBuffer *bs);
 void marshalTermDef(int lbl, MsgBuffer *bs);
 void marshalTermRef(int lbl, MsgBuffer *bs);
 
+char *makeHeader(unsigned long crc, int *headerSize);
+
+
 OZ_Term digOutVars(OZ_Term);
+
+unsigned long update_crc(unsigned long crc, unsigned char *buf, int len);
+inline unsigned long init_crc() { return 0; }
 
 #endif /* __PICKLEH */

@@ -339,3 +339,68 @@ void marshalTermRef(int lbl, MsgBuffer *bs)
     marshalNumber(lbl,bs);
   }
 }
+
+
+char *makeHeader(unsigned long crc, int *headerSize)
+{
+  static char buf[20];
+  unsigned int crc32 = (unsigned int) crc;
+  sprintf(buf,"%c%c%c%c%c%c%c",
+          SYSLETHEADER,SYSLETHEADER,SYSLETHEADER,
+          (char) (crc>> 0)&0xff,
+          (char) (crc>> 8)&0xff,
+          (char) (crc>>16)&0xff,
+          (char) (crc>>24)&0xff);
+  *headerSize = 7;
+  return buf;
+}
+
+
+// The following sample code represents a practical implementation of the
+// CRC (Cyclic Redundancy Check) employed in PNG chunks. (See also ISO
+// 3309 [ISO-3309] or ITU-T V.42 [ITU-V42] for a formal specification.)
+
+
+/* Table of CRCs of all 8-bit messages. */
+unsigned long crc_table[256];
+
+/* Make the table for a fast CRC. */
+void make_crc_table(void)
+{
+  unsigned long c;
+  int n, k;
+
+  for (n = 0; n < 256; n++) {
+    c = (unsigned long) n;
+    for (k = 0; k < 8; k++) {
+      if (c & 1)
+        c = 0xedb88320L ^ (c >> 1);
+      else
+        c = c >> 1;
+    }
+    crc_table[n] = c;
+  }
+
+}
+
+/* Update a running CRC with the bytes buf[0..len-1]--the CRC
+   should be initialized to all 1's, and the transmitted value
+   is the 1's complement of the final running CRC (see the
+   crc() routine below)). */
+
+unsigned long update_crc(unsigned long crc, unsigned char *buf, int len)
+{
+  static int tablemade = 0;
+  if (!tablemade) {
+    make_crc_table();
+    tablemade = 1;
+  }
+
+  unsigned long c = crc;
+  int n;
+
+  for (n = 0; n < len; n++) {
+    c = crc_table[(c ^ buf[n]) & 0xff] ^ (c >> 8);
+  }
+  return c;
+}
