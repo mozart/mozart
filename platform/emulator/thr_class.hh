@@ -67,7 +67,7 @@ private:
     TaskStack *taskStack;
     Suspension *suspension;
     Board *board;
-  };
+  } u;
   int priority;
 public:
   USEFREELISTMEMORY;

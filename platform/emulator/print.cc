@@ -682,8 +682,8 @@ PRINT(Thread)
     << ", ";
   if (isNormal()) {
     stream << " Normal (#";
-    if (taskStack) {
-      stream << taskStack->getUsed()-1;
+    if (u.taskStack) {
+      stream << u.taskStack->getUsed()-1;
     } else {
       stream << "NULL";
     }
@@ -1012,10 +1012,10 @@ void Board::printTree()
     bb->print(cout,0,off);
     cout << endl;
     if (bb->isCommitted()) {
-      bb=bb->board;
+      bb=bb->u.board;
     } else {
       off++;
-      aa = bb->actor;
+      aa = bb->u.actor;
       aa->print(cout,0,off);
       cout << endl;
       off++;

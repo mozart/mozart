@@ -476,7 +476,8 @@ void engine() {
             }
           }
         }
-        DebugCheck(!c->isNormal()||(c->taskStack && !c->taskStack->isEmpty()),
+        DebugCheck(!c->isNormal()||(c->u.taskStack
+                                    && !c->u.taskStack->isEmpty()),
                    error("engine::POPTASK"));
         goto LBLTaskEmpty;
       }
@@ -536,7 +537,7 @@ void engine() {
         taskStack->setTop(topCache);
         goto LBLTaskCFuncCont;
       default:
-        error("POPTASK: unexpected task found.");
+        error("engine: POPTASK: unexpected task found.");
       }
     }
 

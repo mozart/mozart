@@ -45,14 +45,15 @@ private:
   union {
     Actor *actor;
     Board *board;
-  };
+  } u;
   ConsList script;
   Board(Actor *a,int type);
 public:
   ~Board();
 
   USEHEAPMEMORY;
-  Board *gc();
+  Board *gcBoard1();
+  Board *gcBoard();
   void gcRecurse(void);
   OZPRINT;
   OZPRINTLONG;
