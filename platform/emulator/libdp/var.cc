@@ -157,7 +157,6 @@ void sendSurrender(BorrowEntry *be,OZ_Term val){
 }
 
 Bool dealWithInjectors(TaggedRef t,EntityInfo *info,EntityCond ec,Thread* th,Bool &hit,TaggedRef term){
-  Watcher* w;
   Watcher** base= info->getWatcherBase();
   while(TRUE){
     if((*base)==NULL) return FALSE;

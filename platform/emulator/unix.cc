@@ -516,7 +516,6 @@ OZ_BI_iodefine(unix_fileDesc,1,1)
 
 static 
 OZ_Term readEntries(DIR *dp) {
-  struct dirent *dirp;
   OZ_Term dirs = oz_nil();
   do {
   retry:

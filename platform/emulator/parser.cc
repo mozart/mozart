@@ -1,5 +1,5 @@
 
-/*  A Bison parser, made from /home/chris/devel/mozart/platform/emulator/parser.yy
+/*  A Bison parser, made from /home/schulte/devel/mozart/platform/vc/parser.yy
  by  GNU Bison version 1.27
   */
 
@@ -3455,7 +3455,6 @@ void xyreportError(char *kind, char *msg, const char *file,
 }
 
 static void xyerror(char *s) {
-  char *news;
   if (!strncmp(s, "parse error", 11)) {
     if (strlen(s) > 13) {
       xyreportError("parse error", s + 13, xyFileName, xylino, xycharno());
