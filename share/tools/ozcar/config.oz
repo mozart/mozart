@@ -104,9 +104,7 @@ SpaceType              = '<space>'
 FSValueType            = '<fs val>'
 FSVarType              = '<fs var>'
 FDVarType              = '<fd var>'
-LazyVarType            = '<lazy var>'
 ForeignPointerType     = '<foreign>'
-PromiseType            = '<promise>'
 UnknownType            = '<???>'
 
 

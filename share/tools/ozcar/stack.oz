@@ -99,8 +99,6 @@ local
 			   else
 			      {System.valueToVirtualString Data 0 0}
 			   end
-			elsecase {IsLazy Data} then
-			   LazyVarType
 			else
 			   {System.printName Data}
 			end
