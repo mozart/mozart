@@ -42,13 +42,13 @@
 void prefixError()
 {
   if (ozconf.runningUnderEmacs) 
-    putc(MSG_ERROR,stderr);
+    fputc(MSG_ERROR,stderr);
 }
 
 void prefixWarning()
 {
   if (ozconf.runningUnderEmacs) 
-    putc(MSG_WARN,stderr);
+    fputc(MSG_WARN,stderr);
 }
 
 void error(const char *format, ...)
