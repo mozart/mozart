@@ -1818,11 +1818,15 @@ void CodeArea::writeInstr(void){
 
 char *tagged2String(TaggedRef ref,int depth,int offset)
 {
-  ostrstream out;
+  ostrstream *out = new ostrstream;
 
-  tagged2Stream(ref,out,depth,offset);
-  out << ends;
-  char *s = out.str();
+  tagged2Stream(ref,*out,depth,offset);
+
+  (*out) << ends;
+  char *s = ozstrdup(out->str());
+  out->freeze(0);
+  delete out;  
+
   return s;
 }
 
