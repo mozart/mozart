@@ -39,15 +39,19 @@ public:
   ozostream(FILE *f) { fd=f;}
   virtual ozostream &operator << (const char *s);
   virtual ozostream &operator << (char c);
+
   ozostream &operator << (const void *p);
   ozostream &operator << (long i);
   ozostream &operator << (double f);
-  ozostream &operator << (unsigned char c) { return (*this) << (char) c; }
+
+  virtual ozostream &operator<<(ozostream& (*func)(ozostream&)) {
+    return (*func)(*this); }
+
   virtual ozostream &flush() { fflush(fd); return (*this); }
   ozostream &ends() { return (*this) << '\0'; }
   ozostream &endl() { return (*this) << "\n"; }
-  virtual ozostream &operator<<(ozostream& (*func)(ozostream&)) {
-    return (*func)(*this); }
+
+  ozostream &operator << (unsigned char c) { return (*this) << (char) c; }
   ozostream &operator << (unsigned int i)  { return (*this) << (long) i; }
   ozostream &operator << (int i)           { return (*this) << (long) i; }
   ozostream &operator << (unsigned long i) { return (*this) << (long) i; }
@@ -86,6 +90,11 @@ public:
   ozostream &flush() { return (*this); }
   ozostream &operator<<(ozostream& (*func)(ozostream&)) {
     return (*func)(*this); }
+
+  ozostream &operator << (const void *p) { return (*this).ozostream::operator <<(p); }
+  ozostream &operator << (long i)        { return (*this).ozostream::operator <<(i); }
+  ozostream &operator << (double f)      { return (*this).ozostream::operator <<(f); }
+
 };
 
 extern ozostream ozcout, ozcerr;
