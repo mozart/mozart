@@ -43,7 +43,6 @@ prepare
 
    ParamWinTitle = 'Animated Queens: Size'
 
-   LargeFont     = '-Adobe-times-bold-r-normal--*-240*'
 
    %% Derived Parameters
    WidthByMag    = s(micro:2 tiny:5 small:10 middle:25 large:50)
@@ -51,6 +50,8 @@ prepare
    MaxBoardSize  = 255
 
 define
+
+   LargeFont     = {New Tk.font tkInit(family:times weight:bold size:~24)}
 
    BlackColor    #
    WhiteColor    #

@@ -77,7 +77,7 @@ define
 
    Images = {TkTools.images ImageNames}
 
-   Bold = 'lucidasanstypewriter-bold-18'
+   Bold   = {New Tk.font tkInit(family:courier weight:bold size:~24)}
 
    %%
    %% constants and procedures for the graphical representation

@@ -78,11 +78,14 @@ prepare
    tea # jam # grease # cigarettes # toys # corn # hamburgers
 
 
-   %% Fonts
-   Fonts = fonts(text:  '-adobe-helvetica-medium-r-normal-*-*-120*'
-                 about: '-adobe-times-bold-r-normal-*-*-240*')
-
 define
+
+   %% Fonts
+   Fonts = fonts(text:
+                    {New Tk.font tkInit(family:helvetica size:~12)}
+                 about:
+                    {New Tk.font tkInit(family:times size:~24 weight:bold)})
+
 
    Colors = if Tk.isColor then FullColors else BwColors end
 
