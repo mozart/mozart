@@ -34,8 +34,9 @@
 ;; automatically switch into Oz-Mode when loading
 ;; files ending in ".oz"
 (or (assoc "\\.oz$" auto-mode-alist)
-    (setq auto-mode-alist (cons '("\\.oz$" . oz-mode)
-				auto-mode-alist)))
+    (setq auto-mode-alist (cons '("/\\.ozrc$" . oz-mode)
+				(cons '("\\.oz$" . oz-mode)
+				      auto-mode-alist))))
 
 
 ;;------------------------------------------------------------
