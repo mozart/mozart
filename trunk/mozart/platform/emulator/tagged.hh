@@ -106,13 +106,13 @@ extern int gcing;
 
 
 #ifdef LARGEADRESSES
-#define _tagValueOf(ref)         TaggedToPointer((ref >> (tagSize-2))&~3)
-#define _tagValueOfVerbatim(ref) ((void*)((ref >> (tagSize-2))&~3))
+#define _tagValueOf(ref)         TaggedToPointer(((ref) >> (tagSize-2))&~3)
+#define _tagValueOfVerbatim(ref) ((void*)(((ref) >> (tagSize-2))&~3))
 #define _makeTaggedRef2(tag,i)   ((i << (tagSize-2)) | tag)
 
 #else
-#define _tagValueOf(ref)         TaggedToPointer(ref >> tagSize)
-#define _tagValueOfVerbatim(ref) (ref >> tagSize)
+#define _tagValueOf(ref)         TaggedToPointer((ref) >> tagSize)
+#define _tagValueOfVerbatim(ref) ((ref) >> tagSize)
 #define _makeTaggedRef2(tag,i)   ((i << tagSize) | (tag))
 
 #endif
@@ -164,9 +164,9 @@ Bool isNullPtr(TaggedRef p) { return _isNullPtr(p); }
 
 #else
 
-#define tagValueOf(ref)         _tagValueOf(ref)
-#define tagValueOfVerbatim(ref) _tagValueOfVerbatim(ref)
-#define tagTypeOf(ref)          _tagTypeOf(ref)
+#define tagValueOf(ref)         _tagValueOf((TaggedRef)ref)
+#define tagValueOfVerbatim(ref) _tagValueOfVerbatim((TaggedRef)ref)
+#define tagTypeOf(ref)          _tagTypeOf((TaggedRef)ref)
 #define makeTaggedRef2i(tag,i)  _makeTaggedRef2(tag,i)
 #define makeTaggedRef2p(tag,i)  _makeTaggedRef2i(tag,i)
 #define isNullPtr(p)            _isNullPtr(p)
