@@ -90,8 +90,7 @@ CPSRC2  = Schedule ParSearch ParWorker ParLogging
 DPSRC   = Connection Discovery Remote RemoteServer Fault URL DPStatistics DPInit ConnectionFunctor AcceptFunctor ConnectAcceptModule $(DENYS_DPSRCS)
 WPSRC   = Tk TkTools Tix
 GTKSRC  = GTK GDK Glade GnomeCanvas GTKSimpleBuilder
-# QTK DISABLED SCHULTE
-# QTKSRC  = QTk QTkDevel
+QTKSRC  = QTk QTkDevel
 SUPPSRC = Type Narrator Listener ErrorListener DefaultURL ObjectSupport
 MACSRC	= Macro BackquoteMacro LoopMacro
 
@@ -110,10 +109,8 @@ FUNCTORS1 = \
         $(GTKSRC:%=%.ozf) \
 	$(SUPPSRC:%=%.ozf) \
 	$(CPSRC2:%=%.ozf) \
+	$(QTKSRC:%=%.ozf) \
 	Compiler.ozf
-
-# QTK DISABLED SCHULTE
-#	$(QTKSRC:%=%.ozf)
 
 FUNCTORS = $(FUNCTORS1) Init.ozf
 
@@ -280,58 +277,57 @@ gnome-canvas-classes.oz: $(GNOME_CANVAS_SPECS) $(BUILDER_SRC)
 gnome-canvas-exports.oz: $(GNOME_CANVAS_SPECS) $(BUILDER_SRC)
 	$(BUILDER) --oz-exportlist $(GNOME_CANVAS_SPECS) > $@
 
-# QTK DISABLED SCHULTE
 # QTk dependencies
-#
-#QTKDEPS1	= \
-#	QTkDevel.ozf QTkImage.ozf QTkMenu.ozf QTkSpace.ozf QTkLabel.ozf	\
-#	QTkButton.ozf QTkCheckbutton.ozf QTkRadiobutton.ozf		\
-#	QTkScale.ozf QTkScrollbar.ozf QTkEntry.ozf QTkCanvas.ozf	\
-#	QTkListbox.ozf QTkText.ozf
-#
-#QTKDEPS2	= $(QTKDEPS1)	\
-#	QTkPlaceholder.ozf	\
-#	QTkPanel.ozf QTkRubberframe.ozf QTkScrollframe.ozf QTkToolbar.ozf
-#
-#QTKDEPS3	= $(QTKDEPS2)	\
-#	QTkDropdownlistbox.ozf QTkNumberentry.ozf
-#
-#
-#QTkBare.ozf:qtk/QTk.oz qtk/Frame.oz qtk/QTkClipboard.oz qtk/QTkFont.oz qtk/QTkDialogbox.oz
-#	$(COMPILE) --define=FULLLOAD $< -o $@
-#
-#QTkDevel.ozf:qtk/QTkDevel.oz
-#	$(COMPILE) --define=DEBUG $< -o $@
-#
-#mini-down.xbm:qtk/mini-down.xbm
-#	cp $< $@
-#
-#mini-dec.xbm:qtk/mini-dec.xbm
-#	cp $< $@
-#
-#mini-inc.xbm:qtk/mini-inc.xbm
-#	cp $< $@
-#
-#QTkDropdownbutton_bitmap.ozf: \
-#	QTkImage.ozf $(QTKDEPS2) \
-#	QTkDropdownbutton_gen_bitmap.ozf mini-down.xbm
-#	$(OZENGINE) QTkDropdownbutton_gen_bitmap.ozf
-#
-#QTkDropdownlistbox.ozf: \
-#	qtk/QTkDropdownlistbox.oz \
-#	QTkBare.ozf QTkImage.ozf QTkDevel.ozf \
-#	QTkDropdownbutton_bitmap.ozf
-#	$(COMPILE) $< -o $@
-#
-#QTkNumberentry_bitmap.ozf: \
-#	QTkImage.ozf $(QTKDEPS2) \
-#	QTkNumberentry_gen_bitmap.ozf mini-inc.xbm mini-dec.xbm
-#	$(OZENGINE) QTkNumberentry_gen_bitmap.ozf
-#
-#QTkNumberentry.ozf: QTkNumberentry_bitmap.ozf
-#
-#QTk.ozf: QTkBare.ozf $(QTKDEPS3)
-#	$(OZENGINE) ozl $(COMPRESSFLAGS) $< -o $@
+
+QTKDEPS1	= \
+	QTkDevel.ozf QTkImage.ozf QTkMenu.ozf QTkSpace.ozf QTkLabel.ozf	\
+	QTkButton.ozf QTkCheckbutton.ozf QTkRadiobutton.ozf		\
+	QTkScale.ozf QTkScrollbar.ozf QTkEntry.ozf QTkCanvas.ozf	\
+	QTkListbox.ozf QTkText.ozf
+
+QTKDEPS2	= $(QTKDEPS1)	\
+	QTkPlaceholder.ozf	\
+	QTkPanel.ozf QTkRubberframe.ozf QTkScrollframe.ozf QTkToolbar.ozf
+
+QTKDEPS3	= $(QTKDEPS2)	\
+	QTkDropdownlistbox.ozf QTkNumberentry.ozf
+
+
+QTkBare.ozf:qtk/QTk.oz qtk/Frame.oz qtk/QTkClipboard.oz qtk/QTkFont.oz qtk/QTkDialogbox.oz
+	$(COMPILE) --define=FULLLOAD $< -o $@
+
+QTkDevel.ozf:qtk/QTkDevel.oz
+	$(COMPILE) --define=DEBUG $< -o $@
+
+mini-down.xbm:qtk/mini-down.xbm
+	cp $< $@
+
+mini-dec.xbm:qtk/mini-dec.xbm
+	cp $< $@
+
+mini-inc.xbm:qtk/mini-inc.xbm
+	cp $< $@
+
+QTkDropdownbutton_bitmap.ozf: \
+	QTkImageLibBoot.ozf $(QTKDEPS2) \
+	QTkDropdownbutton_gen_bitmap.ozf mini-down.xbm
+	$(OZENGINE) QTkDropdownbutton_gen_bitmap.ozf
+
+QTkDropdownlistbox.ozf: \
+	qtk/QTkDropdownlistbox.oz \
+	QTkBare.ozf QTkImage.ozf QTkDevel.ozf \
+	QTkDropdownbutton_bitmap.ozf
+	$(COMPILE) $< -o $@
+
+QTkNumberentry_bitmap.ozf: \
+	QTkImageLibBoot.ozf $(QTKDEPS2) \
+	QTkNumberentry_gen_bitmap.ozf mini-inc.xbm mini-dec.xbm
+	$(OZENGINE) QTkNumberentry_gen_bitmap.ozf
+
+QTkNumberentry.ozf: QTkNumberentry_bitmap.ozf
+
+QTk.ozf: QTkBare.ozf $(QTKDEPS3)
+	$(OZENGINE) ozl $(COMPRESSFLAGS) $< -o $@
 
 
 # compiler dependencies
