@@ -91,7 +91,7 @@ define
    fun {Parse      Data} {ParseInternal Data false} end
    fun {ParseNodup Data} {ParseInternal Data true } end
    %%
-   %% burst a disgest of email-like data separated by SEP and
+   %% burst a digest of email-like data separated by SEP and
    %% return a list of Messages
    %%
    fun {BurstInternal Data Sep Nodup}
