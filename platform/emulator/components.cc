@@ -1066,7 +1066,7 @@ OZ_Term toXML(OZ_Term t,marshalFun f)
   bs->beginWrite();
   bs->incPosAfterWrite(tcpHeaderSize);
   int total=bs->calcTotLen();
-  OZ_Term val = OZ_nil();
+  OZ_Term val = oz_nil();
   while (total) {
     int len=bs->getWriteLen();
     BYTE* pos=bs->getWritePos();
