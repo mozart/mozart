@@ -61,11 +61,11 @@ public:
   }
 
   void setExclusive(void) {
-    int(suspList) |= 1;
+    suspList = (SuspList *) (((long) suspList) | 1);
   }
   OZ_Boolean testResetExclusive(void) {
-    OZ_Boolean r = int(suspList) & 1;
-    int(suspList) &= ~1;
+    OZ_Boolean r = ((long)suspList) & 1;
+    suspList = (SuspList *) (((long) suspList) & ~1);
     return r;
   }
   void print(ostream &stream, int depth, int offset, TaggedRef v);
