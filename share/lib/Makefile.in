@@ -374,7 +374,10 @@ stage3:
 	OZC=$(SRCDIR)/ozc.sh \
 	OZINIT=$(STAGE2)/share/Init.ozf \
 	OZMAINIT=$(STAGE2)/share/Init.ozf \
-	OZMAFILE="-init $(STAGE2)/share/ozc.ozp"
+	OZMAFILE="-init $(STAGE2)/share/ozc.ozp"; \
+	cmp $(STAGE2)/share/ozc.ozm ozc.ozm || \
+	( mv ozc.ozm ozc.ozm.new; \
+	  echo New ozc.ozm differs from old one - saved in ozc.ozm.new )
 
 # stage3a: recreate only the functors using the stage2b Ozma file
 stage3a:
