@@ -407,12 +407,17 @@ define
    FSUniversalRefl = [0#FSSup]
    FSUniversal     = {FSSetValue FSUniversalRefl}
 
+   /*
    fun {FSIntersectN Vs}
       Xs = {VectorToList Vs}
    in
       {FoldR Xs FSIntersect FSUniversal}
    end
-
+   */
+   proc {FSIntersectN Vs U}
+      {FSP.intersectN Vs U}
+   end
+   
    proc {FSUnionN Vs U}
       {FD.sum {Map {VectorToList Vs} fun {$ V} {FSCard V} end}
        '>=:' {FSCard U}}

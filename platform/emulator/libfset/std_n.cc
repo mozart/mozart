@@ -147,7 +147,7 @@ OZ_Return FSetDisjointNPropagator::propagate(void)
 
 //-----------------------------------------------------------------------------
 
-OZ_BI_define(fsp_unionN, 2, o)
+OZ_BI_define(fsp_unionN, 2, 0)
 {
   OZ_EXPECTED_TYPE(OZ_EM_VECT OZ_EM_FSET "," OZ_EM_FSET);
 
@@ -241,7 +241,6 @@ OZ_Return FSetUnionNPropagator::propagate(void)
   DECL_DYN_ARRAY(OZ_FSetVar, vs, _vs_size);
   OZ_FSetVar s(_s);
   OZ_FSetConstraint * aux = _aux;
-  DECL_DYN_ARRAY(FSetTouched, vst, _vs_size);
   PropagatorController_VS_S P(_vs_size, vs, s);
   int i;
   OZ_Boolean isAllValues = OZ_TRUE;
@@ -493,9 +492,130 @@ failure:
 
 }
 
+//-----------------------------------------------------------------------------
+
+#include "filter.hh"
+
+OZ_BI_define(fsp_intersectionN, 2, 0)
+{
+  OZ_EXPECTED_TYPE(OZ_EM_VECT OZ_EM_FSET "," OZ_EM_FSET);
+
+  PropagatorExpect pe;
+
+  int susp_count = 0;
+
+  OZ_EXPECT_SUSPEND(pe, 0, expectVectorFSetVarBounds, susp_count);
+  OZ_EXPECT_SUSPEND(pe, 1, expectFSetVarBounds, susp_count);
+
+  if (susp_count > 1)
+    return pe.suspend();
+
+  return pe.impose(new FSetIntersectionNPropagator(OZ_in(0),
+						   OZ_in(1)));
+}
+OZ_BI_end
+
+
+OZ_Service &filter_intersectN(OZ_Service& s,
+			      OZ_FSetVarVector &xs, OZ_FSetVar &z)
+{
+  DSP(("filter_intersect\n"));
+  //
+  int n = xs.getHigh();
+  //
+  DECL_DYN_ARRAY(OZ_FSetValue, a, n);
+  DECL_DYN_ARRAY(OZ_FSetValue, b, n);
+  //
+  if (z->isEmpty()) {
+    return s.replace_propagator(new FSetDisjointNPropagator(xs.getOzTermVector()));
+  }
+  //
+  if (z->isFull()) {
+    for (int i = n; i-- ; ) {
+      FailOnInvalid(xs[i]->putCard(fs_max_card, fs_max_card));
+    }
+  }
+  //
+  for (int i = n; i--; ) {
+    if (xs[i]->isEmpty()) {
+      FailOnInvalid(z->putCard(0, 0));
+      return s.entail();
+    }
+  }
+  //
+  {
+    int replace = 0;
+    int * e = xs.find_equals();
+    //
+    for (int i = n; i--; ) {
+      if (xs[i]->isFull() || (e[i] != i && e[i] >= 0)) {
+	xs[i].dropParameter();
+	replace = 1;
+	DSP(("dropping x[%d]\n", i+1));
+      }
+    }
+    if (replace) {
+      return s.replace_propagator(new FSetIntersectionNPropagator(xs.getOzTermVector(), z));
+    }
+  }
+  
+  int redo;
+  //
+  do {
+    FSetTouched t;
+    redo = 0;
+    //
+    a[0].init(fs_full);
+    b[n-1].init(fs_full);
+    //
+    for (int i = n; i-- ; ) {
+      FailOnInvalidTouched(redo, z, *z <= *xs[i]);
+      FailOnInvalidTouched(redo, xs[i], *xs[i] >= *z);
+    }
+    //
+    for (int i = 1; i < n; i += 1) {
+      a[i] = a[i-1] & xs[i-1]->getGlbSet();
+    }
+    for (int i = n; i > 1; i -= 1) {
+      b[i-2] = b[i-1] & xs[i-1]->getGlbSet();
+    }
+    //
+    FailOnInvalidTouched(redo, z, *z >= (a[n-1] & xs[n-1]->getGlbSet()));
+    //
+    for (int i = 1; i <= n; i += 1) {
+      FailOnInvalidTouched(redo, xs[i-1],
+			   *xs[i-1] <= -((a[i-1] & b[i-1]) - z->getLubSet()));
+    }
+  } while (redo);
+  //
+  return s;
+  //
+ failure:
+  return s.fail();
+}
+
+OZ_Return FSetIntersectionNPropagator::propagate(void)
+{
+  DECL_DYN_ARRAY(OZ_FSetVar, vs, _vs_size);
+  for (int i = _vs_size; i--; )
+    vs[i].read(_vs[i]);
+  OZ_FSetVarVector xs(_vs_size, vs, &_vs);
+
+  OZ_FSetVar z(_s);
+  //
+  PropagatorController_VS_S P(_vs_size, vs, z);
+  //
+  OZ_Service s(this, &P);
+  //
+  return filter_intersectN(s, xs, z)();
+}
+
+//-----------------------------------------------------------------------------
+
 OZ_PropagatorProfile FSetUnionNPropagator::profile;
 OZ_PropagatorProfile FSetDisjointNPropagator::profile;
 OZ_PropagatorProfile FSetPartitionPropagator::profile;
+OZ_PropagatorProfile FSetIntersectionNPropagator::profile;
 
 // eof
 //-----------------------------------------------------------------------------

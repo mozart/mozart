@@ -614,22 +614,47 @@ inline OZ_Propagator::OZ_Propagator(void) {}
 // class OZ_CPIVar
 
 class ozdeclspec OZ_CPIVar {
+  //
   friend class OZ_Expect;
   friend void initCPI(void);
+  //
 private:
+  //
   static int _first_run;
   static OZ_Term _vars_removed;
   static void add_vars_removed(OZ_Term *);
   static int is_in_vars_removed(OZ_Term *);
   static void reset_vars_removed(void);
   static void set_vars_removed(void);
+  //
 protected:
+  //
+  enum State_e {empty_e = 0x00,
+		loc_e   = 0x01,
+		glob_e  = 0x02,
+		encap_e = 0x04,
+		val_e   = 0x08,
+		var_e   = 0x10,
+		sgl_e   = 0x20,
+		bool_e  = 0x40,
+		int_e   = 0x80,
+		drop_e  = 0x100} _state;
+  //
+  OZ_Boolean isSort(State_e s) const;
+  void setSort(State_e s);
+  OZ_Boolean isState(State_e s) const;
+  void setState(State_e s);
+  //
   int _nb_refs;
   OZ_Term var, * varPtr;
+  //
 public:
+  //
   OZ_CPIVar(void)
-    : _nb_refs(0) {}
+    : _nb_refs(0), _state(empty_e) {}
   void dropParameter(void);
+  int is_dropped(void) {  return isState(drop_e); }
+
   static void * operator new(size_t);
   static void operator delete(void *, size_t);
 
@@ -643,6 +668,27 @@ public:
   operator OZ_Term () const { return varPtr == NULL ? var : (OZ_Term) varPtr; }
 };
 
+inline
+OZ_Boolean OZ_CPIVar::isState(State_e s) const {
+  return _state & s;
+}
+inline
+void OZ_CPIVar::setState(State_e s) {
+  _state = State_e(_state | s);
+  Assert(!(isState(glob_e) && isState(loc_e)));
+}
+
+inline
+OZ_Boolean OZ_CPIVar::isSort(State_e s) const {
+  return _state & s;
+}
+inline
+void OZ_CPIVar::setSort(State_e s) {
+  _state = State_e(_state | s);
+  Assert(!(isSort(sgl_e) && isSort(bool_e) && isSort(int_e)));
+  Assert(!(isSort(val_e) && isSort(var_e)));
+}
+
 //-----------------------------------------------------------------------------
 // class OZ_FDIntVar
 
@@ -650,17 +696,6 @@ class ozdeclspec OZ_FDIntVar : public OZ_CPIVar {
   OZ_FiniteDomain _copy, _encap;
   OZ_FiniteDomain * _domain;
   int initial_size, initial_width;
-  enum State_e {empty_e = 0x00,
-		loc_e   = 0x01,
-		glob_e  = 0x02,
-		encap_e = 0x04,
-		sgl_e   = 0x08,
-		bool_e  = 0x10,
-		int_e   = 0x20} _state;
-  OZ_Boolean isSort(State_e s) const;
-  void setSort(State_e s);
-  OZ_Boolean isState(State_e s) const;
-  void setState(State_e s);
   OZ_Boolean tell(void);
 public:
   OZ_FDIntVar(void);
@@ -685,10 +720,10 @@ public:
 
 inline
 OZ_FDIntVar::OZ_FDIntVar(void)
-  : _state(empty_e), OZ_CPIVar() {}
+  : OZ_CPIVar() {}
 inline
 OZ_FDIntVar::OZ_FDIntVar(OZ_Term v)
-  : _state(empty_e), OZ_CPIVar() {
+  : OZ_CPIVar() {
   read(v);
 }
 inline
@@ -699,27 +734,6 @@ inline
 OZ_Boolean OZ_FDIntVar::isTouched(void) const {
   return initial_size > _domain->getSize();
 }
-
-inline
-OZ_Boolean OZ_FDIntVar::isState(State_e s) const {
-  return _state & s;
-}
-inline
-void OZ_FDIntVar::setState(State_e s) {
-  _state = State_e(_state | s);
-  Assert(!(isState(glob_e) && isState(loc_e)));
-}
-
-inline
-OZ_Boolean OZ_FDIntVar::isSort(State_e s) const {
-  return _state & s;
-}
-inline
-void OZ_FDIntVar::setSort(State_e s) {
-  _state = State_e(_state | s);
-  Assert(!(isSort(sgl_e) && isSort(bool_e) && isSort(int_e)));
-}
-
 
 inline
 OZ_Boolean OZ_FDIntVar::leave(void) {
@@ -734,17 +748,6 @@ private:
   OZ_FSetConstraint _copy, _encap;
   OZ_FSetConstraint * _set;
   int known_in, known_not_in, card_size;
-  enum State_e {empty_e = 0x00,
-		loc_e   = 0x01,
-		glob_e  = 0x02,
-		encap_e = 0x04,
-		val_e   = 0x08,
-		var_e   = 0x10} _state;
-  OZ_Boolean isSort(State_e s) const;
-  void setSort(State_e s);
-  OZ_Boolean isState(State_e s) const;
-  void setState(State_e s);
-
   OZ_Boolean tell(void);
 public:
   OZ_FSetVar(void);
@@ -764,10 +767,10 @@ public:
 
 inline
 OZ_FSetVar::OZ_FSetVar(void)
-  : _state(empty_e), OZ_CPIVar() {}
+  : OZ_CPIVar() {}
 inline
 OZ_FSetVar::OZ_FSetVar(OZ_Term v)
-  : _state(empty_e), OZ_CPIVar() {
+  : OZ_CPIVar() {
   read(v);
 }
 inline
@@ -775,23 +778,6 @@ OZ_FSetConstraint &OZ_FSetVar::operator * (void) {return *_set;}
 inline
 OZ_FSetConstraint * OZ_FSetVar::operator -> (void) {return _set;}
 
-inline
-OZ_Boolean OZ_FSetVar::isState(State_e s) const {
-  return s & _state;
-}
-inline
-void OZ_FSetVar::setState(State_e s) {
-  _state = State_e(_state | s);
-  Assert(!(isState(glob_e) && isState(loc_e)));
-}
-inline
-OZ_Boolean OZ_FSetVar::isSort(State_e s) const {
-  return _state & s;
-}
-inline
-void OZ_FSetVar::setSort(State_e s) {
-  _state = State_e(_state | s);
-}
 inline
 OZ_Boolean OZ_FSetVar::leave(void) {
   return isSort(val_e) ? OZ_FALSE : tell();
@@ -988,17 +974,6 @@ private:
 
   OZ_CtProfile * _profile; // necessary ?
   OZ_CtDefinition * _definition;
-  enum State_e {empty_e = 0x00,
-		loc_e   = 0x01,
-		glob_e  = 0x02,
-		encap_e = 0x04,
-		val_e   = 0x08,
-		var_e   = 0x10} _state;
-  OZ_Boolean isSort(State_e s) const;
-  void setSort(State_e s);
-  OZ_Boolean isState(State_e s) const;
-  void setState(State_e s);
-
   OZ_Boolean tell(void);
 
   OZ_CtWakeUp ctGetWakeUpDescriptor(void);
@@ -1032,28 +1007,13 @@ public:
 
 inline
 OZ_CtVar::OZ_CtVar(void)
-  : OZ_CPIVar(), _state(empty_e) {}
-inline
-OZ_Boolean OZ_CtVar::isState(State_e s) const {
-  return s & _state;
-}
-inline
-void OZ_CtVar::setState(State_e s) {
-   _state = State_e(_state | s);
-   Assert(!(isState(glob_e) && isState(loc_e)));
-}
-inline
-OZ_Boolean OZ_CtVar::isSort(State_e s) const {
-  return s & _state;
-}
-inline
-void OZ_CtVar::setSort(State_e s) {
-  _state = State_e(_state | s);
-}
+  : OZ_CPIVar() {}
+
 inline
 OZ_CtWakeUp OZ_CtVar::ctGetWakeUpDescriptor(void) {
   return ctGetConstraint()->getWakeUpDescriptor(ctGetConstraintProfile());
 }
+
 inline
 OZ_Boolean OZ_CtVar::leave(void) {
   return isSort(val_e) ? OZ_FALSE : tell();
