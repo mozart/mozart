@@ -413,17 +413,6 @@ OZ_C_proc_begin(BIwaitOr,2) {
 OZ_C_proc_end
 
 
-OZ_C_proc_begin(BIdet,2)
-{
-  OZ_Term val = OZ_getCArg(0);
-  OZ_Term out = OZ_getCArg(1);
-  if (OZ_isVariable(val))       {
-    OZ_suspendOn(val);
-  }
-  return OZ_unify(out,NameUnit);
-}
-OZ_C_proc_end
-
 OZ_Return isLiteralInline(TaggedRef t)
 {
   NONSUVAR( t, term, tag );
@@ -7243,7 +7232,6 @@ BIspec allSpec2[] = {
   {"IsString", 2,BIisString,      0},
   {"IsProperString", 2,BIisProperString, 0},
 
-  {"Det",    2, BIdet,                (IFOR) 0},
   {"Wait",   1, BIisValue,            (IFOR) isValueInline},
   {"WaitOr", 2, BIwaitOr,             (IFOR) 0},
 
