@@ -504,16 +504,16 @@ int OwnerTable::notGCMarked()
 #if defined(DEBUG_CHECK)
 void OwnerTable::checkEntries()
 {
-  for (int i = tableSize; i--; ) {
-    if (!table[i].isFree()) {
-      OwnerEntry *oe = table[i].getOE();
-      if (oe->isVar()) {
-	TaggedRef *ptr = oe->getPtr();
-	if (!oz_isVar(*ptr))
-	  OZ_error("bang!");
-      }
-    }
-  }
+//    for (int i = tableSize; i--; ) {
+//      if (!table[i].isFree()) {
+//        OwnerEntry *oe = table[i].getOE();
+//        if (oe->isVar()) {
+//  	TaggedRef *ptr = oe->getPtr();
+//  	if (!oz_isVar(*ptr))
+//  	  OZ_error("bang!");
+//        }
+//      }
+//    }
 }
 #endif
 
