@@ -121,8 +121,13 @@ define
 	 %% we need the chDir in order for the .so created by Gump to end up
 	 %% the appropriate directory.  This is fairly aggravating: we should
 	 %% NEVER change or rely on the current directory being one thing or
-	 %% another
-	 DIR = {Path.dirname DST}
+	 %% another.  Fortunately, starting with version 1.2.3 we now have the
+	 %% --gumpdir option.
+	 DSTDir = {Path.dirname DST}
+	 SRCDir = {Path.dirname SRC}
+	 DIR = if DSTDir==SRCDir then nil
+	       elseif DSTDir==nil then "."
+	       else DSTDir end
 	 HaveGumpdir = {Fixes.condGet gumpdir false}
 	 CUR = if HaveGumpdir then unit else {OS.getCWD} end
 	 DSTBase SRCBase
@@ -137,11 +142,11 @@ define
 	 {self subresolver_push(DST SRC)}
 	 try
 	    Executor,exec_mkdir(DIR)
-	    if {Not HaveGumpdir} andthen DIR\=nil then {OS.chDir DIR} end
+	    if {Not HaveGumpdir} andthen DIR\=nil andthen DSTDir\=nil then {OS.chDir DSTDir} end
 	    L1 = [SRCBase '-o' DSTBase]
 	    L2 = if {self get_optlevel($)}==debug then '-g'|L1 else L1 end
 	    L3 = if {Member executable Options} then '-x'|L2 else '-c'|L2 end
-	    L4 = if HaveGumpdir then '--gumpdir='#DIR|L3 else L3 end
+	    L4 = if DIR\=nil andthen HaveGumpdir then '--gumpdir='#DIR|L3 else L3 end
 	 in
 	    {self xtrace({Utils.listToVS ozc|L4})}
 	    if {self get_justprint($)} then
@@ -155,7 +160,7 @@ define
 	       end
 	    end
 	 finally
-	    if {Not HaveGumpdir} andthen DIR\=nil then
+	    if {Not HaveGumpdir} andthen DIR\=nil andthen DSTDir\=nil then
 	       try {OS.chDir CUR} catch _ then skip end
 	    end
 	    {self subresolver_pop()}
@@ -169,7 +174,7 @@ define
 	 Executor,exec_mkdir(DIR)
 	 L0 = [SRC '-o' DST]
 	 L1 = if {Member executable Options} then '-x'|L0 else L0 end
-	 L2 = if {self get_optlevel($)}==debug then '-g'|L1 else L1 end
+	 L2 = L1%if {self get_optlevel($)}==debug then '-g'|L1 else L1 end
 	 %% here is a temporary fix. The right thing to do is
 	 %% to extend ozl with --rooturl=URL to let it know
 	 %% from where to resolve the imports
