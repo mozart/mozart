@@ -22,7 +22,6 @@
 %%% WARRANTIES.
 %%%
 
-
 declare
    Object
    IsObject
@@ -87,7 +86,7 @@ end
 %%
 
 local
-
+   
    local
       NewUniqueName = {`Builtin` 'NewUniqueName' 2}
    in
@@ -106,6 +105,7 @@ local
       `ooId`             = {NewUniqueName 'ooId'}
    end
 
+   
    %%
    %% Fallback routines that are supplied with classes
    %%
@@ -122,11 +122,11 @@ local
 	 elseof M then {M Mess}
 	 end
       end
-
+      
       proc {FbSend M C Self}
 	 {`ooSetSelf` Self} {FbApply C M}
       end
-
+      
       local
 	 NewObject = {`Builtin` newObject 2}
       in
@@ -134,21 +134,19 @@ local
 	    O={NewObject C} in {O Message} O
 	 end
       end
-
+      
    in
       Fallback = fallback(new:   FbNew
 			  send:  FbSend
 			  apply: FbApply)
    end
-
+   
    %%
    %% Builtins needed for class creation
    %%
-
    MakeClass = {`Builtin` makeClass 6}
    MarkSafe  = {`Builtin` 'Dictionary.markSafe' 1}
-
-
+   
    local
       %% Initialize mapping from ids to classes and return classes
       fun {InitMap Cs ITCM IG FCs}
@@ -163,7 +161,7 @@ local
 	     end}
 	 end
       end
-
+      
       %% Build inheritance graph
       proc {AddIG I1 C1r IG}
 	 %% Note that classes are in inverse order!
@@ -171,17 +169,18 @@ local
 	 [] C2|C2r then
 	    I2=C2.`ooId` Is={Dictionary.get IG I2}
 	 in
-	    {Dictionary.put IG I2 case {Member I1 Is} then Is else I1|Is end}
+	    {Dictionary.put IG I2
+	     case {Member I1 Is} then Is else I1|Is end}
 	    {AddIG I2 C2r IG}
 	 end
       end
-
+      
       proc {InitIG Cs IG}
 	 case Cs of nil then skip
 	 [] C|Cr then {AddIG C.`ooId` C.`ooParents` IG} {InitIG Cr IG}
 	 end
       end
-
+      
       local
 	 %% Compute precedence
 	 fun {Remove Xs Y}
@@ -189,7 +188,7 @@ local
 	    [] X|Xr then case X==Y then Xr else X|{Remove Xr Y} end
 	    end
 	 end
-
+	 
 	 fun {RemoveBefore Is L ITCM IG NLs}
 	    case Is of nil then NLs
 	    [] I|Ir then
@@ -207,7 +206,7 @@ local
 	       end
 	    end
 	 end
-
+	 
 	 fun {RemoveLeader Ls Is ITCM IG NLs}
 	    %% Forall Is remove the leaders Ls and compute new leaders
 	    case Ls of nil then NLs
@@ -216,7 +215,7 @@ local
 		{RemoveBefore Is L.`ooId` ITCM IG NLs}}
 	    end
 	 end
-
+	 
 	 fun {GetPairs ITCM IG}
 	    %% Used for supplying error info
 	    {FoldR {Dictionary.entries IG}
@@ -251,15 +250,14 @@ local
 	 {Iterate [C] ITCM IG}
       end
    end
-
-
-
+      
+      
    %%
    %% Compute method tables
    %%
    local
       NoArg = {NewName}
-
+      
       proc {SetOne One Meth FastMeth Defaults}
 	 %% Enters a single method
 	 L = One.1
@@ -286,7 +284,7 @@ local
 	    {SetMethods N-1 NewMeth Meth FastMeth Defaults}
 	 end
       end
-
+      
       local
 	 %% Adding of non conflicting methods
 	 proc {AddMethods N NewMeth Meth FastMeth Defaults}
@@ -298,7 +296,7 @@ local
 	       {AddMethods N-1 NewMeth Meth FastMeth Defaults}
 	    end
 	 end
-
+	 
 	 proc {SafeAdd N NewMeth C SoFar Meth FastMeth Defaults}
 	    case N==0 then skip else
 	       One=NewMeth.N L=One.1
@@ -317,7 +315,7 @@ local
 	       {SafeAdd N-1 NewMeth C SoFar Meth FastMeth Defaults}
 	    end
 	 end
-
+	 
 	 proc {SafeAddMethods Cs SoFar Meth FastMeth Defaults}
 	    case Cs of nil then skip
 	    [] C|Cr then NewMeth=C.`ooNewMeth` in
@@ -339,11 +337,11 @@ local
 	 end
       end
    end
-
+      
    %%
    %% Compute attributes and features
    %%
-
+   
    local
       proc {AddOther As R D}
 	 case As of nil then skip
@@ -354,7 +352,7 @@ local
 	    {AddOther Ar R D}
 	 end
       end
-
+      
       proc {SafeAdd As R C SoFar D}
 	 case As of nil then skip
 	 [] A|Ar then
@@ -373,7 +371,7 @@ local
 	    {SafeAdd Ar R C SoFar D}
 	 end
       end
-
+      
       proc {SafeAddOther Cs SoFar D T}
 	 case Cs of nil then skip
 	 [] C|Cr then R=C.T in
@@ -392,11 +390,11 @@ local
 	 end
       end
    end
-
+   
    %%
    %% Computing free features
    %%
-
+   
    local
       fun {Free As R}
 	 case As of nil then nil
@@ -413,7 +411,7 @@ local
 	 {List.toRecord free {Free {Arity R} R}}
       end
    end
-
+   
    local
       fun {Add A}
 	 A#`ooFreeFlag`
@@ -423,11 +421,11 @@ local
 	 {AdjoinList R {Map As Add}}
       end
    end
-
+   
    %%
    %% Check parents for non-final classes
    %%
-
+   
    proc {CheckParents Cs PrintName}
       case Cs of nil then skip
       [] C|Cr then
@@ -441,7 +439,7 @@ local
 	 {CheckParents Cr PrintName}
       end
    end
-
+   
    %%
    %% Test whether at least one parent is locking
    %%
@@ -451,9 +449,12 @@ local
       end
    end
 
-in
 
-   proc {`class` Parents NewMeth NewAttr NewFeat NewProp PrintName ?C}
+   %%
+   %% The real class creation
+   %%
+   
+   proc {!`class` Parents NewMeth NewAttr NewFeat NewProp PrintName ?C}
       {CheckParents Parents PrintName}
       %% To be computed for methods
       Meth FastMeth Defaults
@@ -532,12 +533,12 @@ in
 	    end
 	 end
       end
-
+      
       %% Mark these dictionaries safe as it comes to marshalling
       {MarkSafe Meth}
       {MarkSafe FastMeth}
       {MarkSafe Defaults}
-
+      
       %% Create the real class
       C = {MakeClass FastMeth
 	   case IsFinal then
@@ -555,7 +556,7 @@ in
 	   Feat Defaults IsLocking}
    end
 \ifndef NEWCOMPILER
-   fun {`class.old` FromList NewAttr NewFeat NewProp NewMeth PrintName Send}
+   fun {!`class.old` FromList NewAttr NewFeat NewProp NewMeth PrintName Send}
       {`class`
        FromList
        {List.toTuple m
@@ -577,7 +578,7 @@ in
        PrintName}
    end
 \endif
-   fun {`extend` From NewFeat NewFreeFeat}
+   fun {!`extend` From NewFeat NewFreeFeat}
       %% Methods
       Defaults  = From.`ooDefaults`
       Locking   = From.`ooLocking`
@@ -600,28 +601,20 @@ in
 			    `ooPrintName`:  PrintName
 			    `ooLocking`:    Locking
 			    `ooFallback`:   Fallback)
-		 Feat Defaults Locking}
+       Feat Defaults Locking}
    end
-
-end
-
-%% %%%%%%%%%%%%%%%%%%%%
-%% The Class BaseObject
-%% %%%%%%%%%%%%%%%%%%%%
-
-class BaseObject
-
-   meth noop
-      skip
+   
+   %% %%%%%%%%%%%%%%%%%%%%
+   %% The Class BaseObject
+   %% %%%%%%%%%%%%%%%%%%%%
+   
+   class !BaseObject
+	 
+      meth noop
+	 skip
+      end
+      
    end
-
-end
-
-%% %%%%%%%%%%%%%%%%%%%%
-%% The module Object
-%% %%%%%%%%%%%%%%%%%%%%
-
-local
 
 
    %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -674,21 +667,85 @@ local
 	 end
       end
    end
+   
+   local
+      PRIVATE = {NewName}
+   in
+      class MetaObject
+			  
+	 meth clone($)
+	    C = {Class.get self}
+	 in
+	    MetaObject,Create(C 
+			      MetaObject,GetAttr({Arity C.`ooAllAttr`} $)
+			      MetaObject,GetFeat({Arity C.`ooFreeFeatR`} $) $)
+	 end
+	 
+	 meth Create(C A F $)
+	    O = {New C SetAttr(A)}
+	 in
+	    {O SetFeat(F)} O
+	 end
+	 
+	 meth toChunk($)
+	    C = {Class.get self}
+	 in
+	    {Chunk.new
+	     c(PRIVATE:
+		  o('class': {Class.get self}
+		    'attr':  MetaObject,GetAttr({Arity C.`ooAllAttr`} $)
+		    'feat':  MetaObject,GetFeat({Arity C.`ooFreeFeatR`} $)))}
+	 end
+			    
+	 meth frmChunk(Ch $)
+	    o('class': C 'attr':A 'feat':F) = Ch.PRIVATE
+	 in
+	    MetaObject,Create(C A F $)
+	 end
+      
+	 meth GetAttr(As $)
+	    case As of nil then nil
+	    [] A|Ar then (A|@A)|MetaObject,GetAttr(Ar $)
+	    end
+	 end
+	 
+	 meth GetFeat(Fs $)
+	    case Fs of nil then nil
+	    [] F|Fr then (F|self.F)|MetaObject,GetFeat(Fr $)
+	    end
+	 end
+	 
+	 meth SetAttr(AXs)
+	    case AXs of nil then skip
+	    [] AX|AXr then A|X=AX in A<-X MetaObject,SetAttr(AXr)
+	    end
+	 end
+	 
+	 meth SetFeat(FXs)
+	    case FXs of nil then skip
+	    [] FX|FXr then F|X=FX in self.F=X MetaObject,SetFeat(FXr)
+	    end
+	 end
+      end
+   end
+
 in
+
    Object=object(
 		  %% Globally available
-		  is:             IsObject
-		  new:             New
-		  base:            BaseObject
-		  ',':             `,`
-		  '@':             `@`
-		  '<-':             `<-`
-		  'send':          `send`
-		  'class':         `class`
-
-		  %% only in module
-
-		  master :     MasterObject
-		  slave  :     SlaveObject
+		 is:             IsObject
+		 new:             New
+		 base:            BaseObject
+		 meta:            MetaObject
+		 ',':             `,`
+		 '@':             `@`
+		 '<-':             `<-`
+		 'send':          `send`
+		 'class':         `class`
+		 
+		 %% only in module
+		 
+		 master :     MasterObject
+		 slave  :     SlaveObject
 		)
 end
