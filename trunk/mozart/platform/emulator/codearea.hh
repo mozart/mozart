@@ -216,6 +216,9 @@ public:
     return (time_t) 0;
   }
 
+  Bool isReferenced(void) {
+    return referenced;
+  }
   ByteCode *getStart() { return codeBlock; }
   static int getTotalSize(void);
 

@@ -2186,6 +2186,7 @@ public:
   CodeArea *getCodeBlock();
 
   static void gCollectPrTabEntries(void);
+  static void gCollectDispose(void);
 };
 
 
