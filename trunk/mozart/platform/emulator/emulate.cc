@@ -2639,12 +2639,11 @@ Assert(0);
       }
 
       if (oz_isAbstraction(pred)) {
-	CodeArea::unprotect((TaggedRef*)(PC+1));
-	Abstraction *abstr = tagged2Abstraction(pred);
-	AbstractionEntry *entry = new AbstractionEntry(NO);
-	entry->setPred(abstr);
-	CodeArea::writeOpcode((tailcallAndArity&1)? FASTTAILCALL: FASTCALL,PC);
 	CodeArea *code = CodeArea::findBlock(PC);
+	code->unprotect((TaggedRef*)(PC+1));
+	AbstractionEntry *entry = new AbstractionEntry(NO);
+	entry->setPred(tagged2Abstraction(pred));
+	CodeArea::writeOpcode((tailcallAndArity&1)? FASTTAILCALL: FASTCALL,PC);
 	code->writeAbstractionEntry(entry, PC+1);
 	DISPATCH(0);
       }
@@ -2725,6 +2724,9 @@ Assert(0);
   Case(TASKCATCH)
     {
       OZ_error("impossible");
+      /* remove unused continuation for handler */
+      CTS->discardFrame(NOCODE);
+      DISPATCH(1);
     }
 
   Case(ENDOFFILE)
