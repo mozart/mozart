@@ -65,10 +65,7 @@ enum SuspendableFlags {
   SF_Step     = 0x002000,
   SF_Stop     = 0x004000,
   SF_NoBlock  = 0x008000,
-
-  // Experimental
-  SF_VeryDead = 0x010000,
-
+  
 };
 
 #define FLAGTESTS(FLAG) \
@@ -148,6 +145,8 @@ public:
   FLAGTESTS(Runnable)
   FLAGTESTS(External)
 
+  Bool _wakeup(Board *, PropCaller);
+  Bool wakeup(Board *, PropCaller);
 
   /*
    * Threads 
@@ -166,11 +165,6 @@ public:
   FLAGTESTS(OFS)
   FLAGTESTS(Failed)
   FLAGTESTS(Unify)
-
-  /*
-   * Experimental
-   */
-  FLAGTESTS(VeryDead)
 
   /*
    * Threads
