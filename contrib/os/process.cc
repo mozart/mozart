@@ -1,6 +1,6 @@
-#include "mozart.h"
 #include "base.hh"
 #include "value.hh"
+#include "mozart.h"
 #include <unistd.h>
 #include <sys/wait.h>
 #include <sys/types.h>
