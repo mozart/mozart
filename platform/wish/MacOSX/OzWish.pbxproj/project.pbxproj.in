@@ -52,6 +52,7 @@
 				F537553B016C376E01DC9062,
 			);
 			isa = PBXGroup;
+			path = MacOSX;
 			name = Resources;
 			refType = 4;
 		};
