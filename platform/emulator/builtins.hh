@@ -185,8 +185,10 @@ TT VAR;						\
 {						\
   register OZ_Term _VAR = OZ_in(ARG);           \
   while (OK) {                                  \
-    if (oz_is ## TYPE(_VAR))                    \
+    if (oz_is ## TYPE(_VAR)) {                  \
+      VAR = oz_ ## TYPE ## ToC(_VAR);		\
       break;                                    \
+    }                                           \
     if (oz_isRef(_VAR)) {                       \
       _VAR = * tagged2Ref(_VAR);                \
       continue;                                 \
@@ -196,16 +198,20 @@ TT VAR;						\
     }                                           \
     oz_typeError(ARG, #TYPE);                   \
   }                                             \
-  VAR = oz_ ## TYPE ## ToC(_VAR);		\
 }
 
 
-#define oz_declareIntIN(ARG,VAR) oz_declareTypeIN(ARG,VAR,int,Int)
-#define oz_declareFloatIN(ARG,VAR) oz_declareTypeIN(ARG,VAR,double,Float)
-#define oz_declareBoolIN(ARG,VAR) oz_declareTypeIN(ARG,VAR,Bool,Bool)
-#define oz_declareAtomIN(ARG,VAR) oz_declareTypeIN(ARG,VAR,const char*,Atom)
-
-#define oz_declareThreadIN(ARG,VAR)				\
+#define oz_declareFloatIN(ARG,VAR) \
+ oz_declareTypeIN(ARG,VAR,double,Float)
+#define oz_declareAtomIN(ARG,VAR) \
+ oz_declareTypeIN(ARG,VAR,const char*,Atom)
+#define oz_declareDictionaryIN(ARG,VAR) \
+ oz_declareTypeIN(ARG,VAR,OzDictionary*,Dictionary)
+#define oz_declareSRecordIN(ARG,VAR) \
+ oz_declareTypeIN(ARG,VAR,SRecord*,SRecord)
+#define oz_declareSTupleIN(ARG,VAR) \
+ oz_declareTypeIN(ARG,VAR,SRecord*,STuple)
+#define oz_declareThreadIN(ARG,VAR) \
  oz_declareTypeIN(ARG,VAR,Thread*,Thread);
 
 #define oz_declareThread(ARG,VAR)				\
@@ -213,12 +219,53 @@ TT VAR;						\
  if ((VAR)->isDead())				\
    return oz_raise(E_ERROR,E_KERNEL,"deadThread",1,OZ_in(ARG));
 
-#define oz_declareDictionaryIN(ARG,VAR) \
- oz_declareTypeIN(ARG,VAR,OzDictionary*,Dictionary)
-#define oz_declareSRecordIN(ARG,VAR) \
- oz_declareTypeIN(ARG,VAR,SRecord*,SRecord)
-#define oz_declareSTupleIN(ARG,VAR) \
- oz_declareTypeIN(ARG,VAR,SRecord*,STuple)
+#define oz_declareIntIN(ARG,VAR) \
+int VAR;					\
+{						\
+  register OZ_Term _VAR = OZ_in(ARG);           \
+  while (OK) {                                  \
+    if (oz_isSmallInt(_VAR)) {                  \
+      VAR = tagged2SmallInt(_VAR);              \
+      break;                                    \
+    }                                           \
+    if (oz_isRef(_VAR)) {                       \
+      _VAR = * tagged2Ref(_VAR);                \
+      continue;                                 \
+    }                                           \
+    if (oz_isBigInt(_VAR)) {                    \
+      VAR = tagged2BigInt(_VAR)->getInt();      \
+      break;                                    \
+    }                                           \
+    if (oz_isVar(_VAR)) {                       \
+      oz_suspendOn(OZ_in(ARG));			\
+    }                                           \
+    oz_typeError(ARG, "Int");                   \
+  }                                             \
+}
+
+#define oz_declareBoolIN(ARG,VAR) \
+Bool VAR;					\
+{						\
+  register OZ_Term _VAR = OZ_in(ARG);           \
+  while (OK) {                                  \
+    if (oz_isTrue(_VAR)) {                      \
+      VAR = OK;                                 \
+      break;                                    \
+    }                                           \
+    if (oz_isFalse(_VAR)) {                     \
+      VAR = NO;                                 \
+      break;                                    \
+    }                                           \
+    if (oz_isRef(_VAR)) {                       \
+      _VAR = * tagged2Ref(_VAR);                \
+      continue;                                 \
+    }                                           \
+    if (oz_isVar(_VAR)) {                       \
+      oz_suspendOn(OZ_in(ARG));			\
+    }                                           \
+    oz_typeError(ARG, "Bool");                  \
+  }                                             \
+}
 
 
 #define oz_declareProperStringIN(ARG,VAR)			\
