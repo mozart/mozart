@@ -36,6 +36,8 @@
 #include "verbose.hh"
 #include "fdomn.hh"
 
+#include "dictionary.hh"
+
 #ifdef OUTLINE
 #define inline
 #endif
@@ -1931,6 +1933,13 @@ void ConstTerm::gcConstRecurse()
       break;
     }
 
+  case Co_Dictionary:
+    {
+      OzDictionary *dict = (OzDictionary *) this;
+      dict->table = dict->table->gc();
+      break;
+    }
+
   case Co_Builtin:
     {
       Builtin *bi = (Builtin *) this;
@@ -1998,6 +2007,10 @@ ConstTerm *ConstTerm::gcConstTerm()
 
   case Co_Array:
     sz = sizeof(OzArray);
+    break;
+
+  case Co_Dictionary:
+    sz = sizeof(OzDictionary);
     break;
 
   case Co_Builtin:
