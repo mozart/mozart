@@ -53,7 +53,7 @@ LIBS=		$(CORE_LIBS) @LIBS@
 
 INCS=		-I. -I$(SRCDIR)
 M4_D=		-DEMUDIR=$(SRCDIR)
-TARGETS=	@TARGETS@ text2pickle
+TARGETS=	@TARGETS@ text2pickle oztool.sh
 MODULETARGETS=	@MODULETARGETS@
 # kost@, Per: temporary: include libDP.a:
 MODULETARGETS += libDP.a
