@@ -2,21 +2,37 @@ functor
 import
    Open
 export
-   Program Catalog object:SgmlParserObject
+   program : Program
+   catalog : Catalog
+   casefold: CaseFold
+   object  : SgmlParserObject
 define
    ExceptionLabel = sgmlParser
 
    ParamProgram = {NewCell 'nsgmls'}
    Program = program(get:proc {$ X} {Access ParamProgram X} end
-		     put:proc {$ X} {Assign ParamProgram X} end)
+		     set:proc {$ X} {Assign ParamProgram X} end)
    ParamCatalog = {NewCell 'catalog'}
    Catalog = catalog(get:proc {$ X} {Access ParamCatalog X} end
-		     put:proc {$ X} {Assign ParamCatalog X} end)
+		     set:proc {$ X} {Assign ParamCatalog X} end)
+   ParamCaseFold= {NewCell none}
+   CaseFold= casefold(get:proc{$ X} {Access ParamCaseFold X} end
+		      set:proc{$ X} {Assign ParamCaseFold X} end)
 
    class TextPipe from Open.pipe Open.text end
+   ToLower = Char.toLower
+   ToUpper = Char.toUpper
+
+   fun {CaseFoldNone  X} X end
+   fun {CaseFoldLower X} {Map X ToLower} end
+   fun {CaseFoldUpper X} {Map X ToUpper} end
 
    fun {MakeAtom L}
       {String.toAtom {Unescape L}}
+   end
+
+   fun {MakeName L CaseNormalize}
+      {String.toAtom {CaseNormalize {Unescape L}}}
    end
 
    fun {MakeBytes L}
@@ -27,15 +43,15 @@ define
       {String.toInt {Unescape L}}
    end
 
-   fun {MakeToken L}
-      S = {Unescape L}
+   fun {MakeToken L CaseNormalize}
+      S = {CaseNormalize {Unescape L}}
    in
       try {String.toInt S} catch _ then {String.toAtom S} end
    end
 
    %% for uniformity the value of an attribute is always a list
 
-   proc {ParseKindValue L K V}
+   proc {ParseKindValue L K V CaseNormalize}
       Kind Value
    in
       {String.token L &  Kind Value}
@@ -43,38 +59,41 @@ define
       case K
       of 'IMPLIED'  then V=nil
       [] 'CDATA'    then V=[{MakeBytes Value}]
-      [] 'NOTATION' then V=[{MakeAtom Value}]
+      [] 'NOTATION' then V=[{MakeAtom  Value}]
       [] 'ENTITY'   then
 	 V={Map {String.tokens Value & } MakeAtom}
       [] 'TOKEN'    then
-	 V={Map {String.tokens Value & } MakeToken}
-      [] 'ID'       then V=[{MakeToken Value}]
+	 V={Map {String.tokens Value & }
+	    fun {$ X} {MakeToken X CaseNormalize} end}
+      [] 'ID'       then V=[{MakeToken Value CaseNormalize}]
       end
    end
 
-   fun {GetEvent Output}
+   fun {GetEvent Output CaseNormalize}
       case {Output getS($)} of false then false
       [] C|L then
 	 case C
-	 of &( then '('( {MakeAtom  L})
-	 [] &) then ')'( {MakeAtom  L})
+	 of &( then '('( {MakeName  L CaseNormalize})
+	 [] &) then ')'( {MakeName  L CaseNormalize})
 	 [] &- then '-'( {MakeBytes L})
 	 [] && then '\&'({MakeAtom  L})
 	 [] &? then '?'( {MakeAtom  L})
 	 [] &A then Name Kind Value Tmp in
 	    {String.token L   &  Name Tmp}
-	    {ParseKindValue Tmp Kind Value}
-	    'A'({MakeAtom Name} Kind Value)
+	    {ParseKindValue Tmp Kind Value CaseNormalize}
+	    'A'({MakeName Name CaseNormalize} Kind Value)
 	 [] &D then Ename Name Kind Value Tmp1 Tmp2 in
 	    {String.token L    &  Ename Tmp1}
 	    {String.token Tmp1 &  Name  Tmp2}
-	    {ParseKindValue Tmp2 Kind Value}
-	    'D'({MakeAtom Ename} {MakeAtom Name} Kind Value)
+	    {ParseKindValue Tmp2 Kind Value CaseNormalize}
+	    'D'({MakeAtom Ename}
+		{MakeName Name  CaseNormalize} Kind Value)
 	 [] &a then Type Name Kind Value Tmp1 Tmp2 in
 	    {String.token L    &  Type Tmp1}
 	    {String.token Tmp1 &  Name Tmp2}
-	    {ParseKindValue Tmp2 Kind Value}
-	    'a'({MakeAtom Type} {MakeAtom Name} Kind Value)
+	    {ParseKindValue Tmp2 Kind Value CaseNormalize}
+	    'a'({MakeName Type CaseNormalize}
+		{MakeName Name CaseNormalize} Kind Value)
 	 [] &N then 'N'({MakeAtom L})
 	 [] &E then Ename Type Nname Tmp in
 	    {String.token L   &  Ename Tmp}
@@ -138,14 +157,14 @@ define
       end
    end
 
-   fun {MakeEventGenerator Cmd Args}
+   fun {MakeEventGenerator Cmd Args CaseNormalize}
       Output = {New TextPipe init(cmd:Cmd args:Args)}
       fun {Loop}
-	 {GetEvent Output}
+	 {GetEvent Output CaseNormalize}
       end
    in Loop end
 
-   fun {Parse NextEvent}
+   fun {Parse NextEvent CaseNormalize}
       DocElem
       Attr  = {NewCell nil}
       Link = {NewCell nil}
@@ -247,13 +266,20 @@ define
 
    class SgmlParser
       meth init skip end
-      meth process(Files Document program:P<=unit catalog:C<=unit)
+      meth process(Files Document
+		   program:P<=unit catalog:C<=unit casefold:F<=unit)
 	 Pgm = case P of unit then {Access ParamProgram} else P end
 	 Cat = case C of unit then {Access ParamCatalog} else C end
+	 Fld = case F of unit then {Access ParamCaseFold}else F end
+	 CaseNormalize =
+	 case F
+	 of none  then CaseFoldNone
+	 [] upper then CaseFoldUpper
+	 [] lower then CaseFoldLower end
       in
 	 {Parse
-	  {MakeEventGenerator Pgm '-c'#Cat|Files}
-	  Document}
+	  {MakeEventGenerator Pgm '-c'#Cat|Files CaseNormalize}
+	  CaseNormalize Document}
       end
    end
 
