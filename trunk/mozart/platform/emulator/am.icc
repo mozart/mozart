@@ -2,9 +2,6 @@
   Hydra Project, DFKI Saarbruecken,
   Stuhlsatzenhausweg 3, D-66123 Saarbruecken, Phone (+49) 681 302-5312
   Author: popow, mehl
-  Last modified: $Date$ from $Author$
-  Version: $Revision$
-  State: $State$
 
   ------------------------------------------------------------------------
 */
@@ -103,29 +100,6 @@ void AM::deinstallPath(Board *top)
     deinstallCurrent();
     Assert(currentBoard != rootBoard || top == rootBoard);
   }
-}
-
-inline
-Bool AM::installScript(Script &script)
-{
-  Bool ret = OK;
-  installingScript = TRUE;
-  for (int index = 0; index < script.getSize(); index++) {
-    if (!unify(script[index].getLeft(),script[index].getRight())) {
-      ret = NO;
-      if (!isToplevel()) {
-	break;
-      }
-    }
-  }
-  installingScript = FALSE;
-#ifndef DEBUG_CHECK
-  script.dealloc();
-#else
-  if (ret == OK) 
-    script.dealloc ();
-#endif
-  return ret;
 }
 
 inline

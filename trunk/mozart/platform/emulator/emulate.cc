@@ -3,9 +3,6 @@
   Hydra Project, DFKI Saarbruecken,
   Stuhlsatzenhausweg 3, D-66123 Saarbruecken, Phone (+49) 681 302-5312
   Author: popow,mehl,scheidhr
-  Last modified: $Date$ from $Author$
-  Version: $Revision$
-  State: $State$
 
   The main engine
   ------------------------------------------------------------------------
@@ -16,10 +13,6 @@
 
 #ifdef DEBUGMAGIC
  #include <sys/stat.h>
-#endif
-
-#ifdef INTERFACE
-#pragma implementation "emulate.hh"
 #endif
 
 #include "am.hh"
@@ -326,6 +319,96 @@ Bool AM::hookCheckNeeded()
   return (isSetSFlag());
 }
 
+void AM::suspendEngine()
+{
+  deinstallPath(rootBoard);
+
+  ozstat.printIdle(stdout);
+
+  osBlockSignals(OK);
+
+  while (1) {
+
+    if (isSetSFlag(UserAlarm)) {
+      handleUser();
+    }
+
+    if (isSetSFlag(IOReady) || !compStream->bufEmpty()) {
+      handleIO();
+    }
+    
+    if (!threadQueuesAreEmpty()) {
+      break;
+    }
+
+    if (isStandalone() && !compStream->cseof()) {
+      loadQuery(compStream);
+      continue;
+    }
+    Assert(compStream->bufEmpty());
+
+    int ticksleft = osBlockSelect(userCounter);
+    setSFlag(IOReady);
+
+    if (userCounter>0 && ticksleft==0) {
+      handleUser();
+      continue;
+    }
+
+    setUserAlarmTimer(ticksleft);
+  }
+
+  ozstat.printRunning(stdout);
+  
+  // restart alarm
+  osSetAlarmTimer(CLOCK_TICK/1000);
+
+  osUnblockSignals();
+}
+
+
+//
+//  As said (in thread.hh), lazy allocation of stack can be toggled
+// just by moving the code to the '<something>ToRunnable ()';
+inline
+void Thread::makeRunning ()
+{
+  Assert (isRunnable ());
+
+  //
+  //  Note that this test covers also the case when a runnable thread
+  // was suspended in a sequential mode: it had already a stack, 
+  // so we don't have to do anything now;
+  switch (getThrType ()) {
+
+  case S_WAKEUP:
+    //
+    //  Wakeup;
+    //  No regions were pre-allocated, - so just make a new one;
+    setHasStack ();
+    item.threadBody = am.allocateBody ();
+
+    getBoardInternal()->setNervous ();
+    // no break here
+
+  case S_RTHREAD:
+    am.cachedStack = getTaskStackRef();
+    am.cachedSelf = self;
+    self = 0;
+    break;			// nothing to do;
+
+  case S_PR_THR:
+    warning("Thread::makeRunning hits a propagator");
+    //  This case is intentially moved back, since normally it has 
+    // to be catched already in the emulator;
+    break;
+
+  default:
+    Assert(0);
+  }
+}
+
+/* ********************************************************************** */
 
 /* macros are faster ! */
 #define emulateHookCall(e,def,arity,arguments,Code) 		\
@@ -1382,6 +1465,12 @@ LBLdispatcher:
 	e->suspendOnVarList(CTT);
 	goto LBLsuspendThread;
 
+      case BI_NEWCALL:
+	e->pushTask(PC+3,Y,G,X,predArity);
+	CTT->pushCall(e->suspendBI.proc,
+		      e->suspendBI.args,e->suspendBI.argsNo);
+	goto LBLpopTask;
+
       case BI_PREEMPT:
 	e->pushTask(PC+3,Y,G);
 	goto LBLpreemption;
@@ -2318,6 +2407,14 @@ LBLdispatcher:
 	 }
 	 goto LBLpreemption;
 	 
+       case BI_NEWCALL:
+	 if (!isTailCall) {
+	   e->pushTask(PC,Y,G);
+	 }
+	 CTT->pushCall(e->suspendBI.proc,
+		       e->suspendBI.args,e->suspendBI.argsNo);
+	 goto LBLpopTask;
+
        default: Assert(0);
        }
      }

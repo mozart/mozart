@@ -1,17 +1,13 @@
 /*
  * FBPS Saarbr"ucken
  * Author: mehl
- * Last modified: $Date$ from $Author$
- * Version: $Revision$
- * State: $State$
  */
 
 #if defined(INTERFACE)
 #pragma implementation "value.hh"
 #endif
 
-#include "am.hh"
-#include "board.hh"
+#include "runtime.hh"
 #include "genvar.hh"
 #include "dictionary.hh"
 #include "ip.hh"
@@ -1092,17 +1088,17 @@ void SRecord::setFeatures(TaggedRef proplist)
     proplist = deref(tail(proplist));
     CHECK_NONVAR(proplist);
 
-    TaggedRef fea = left(pair);
+    TaggedRef fea = oz_left(pair);
     DEREF(fea,_5,_6);
     CHECK_NONVAR(fea);
 
 #ifdef DEBUG_CHECK
-    if (!setFeature(fea, right(pair))) {
+    if (!setFeature(fea, oz_right(pair))) {
       error("SRecord::setFeatures: improper feature: %s",
-	    toC(left(pair)));
+	    toC(oz_left(pair)));
     }
 #else
-    setFeature(fea, right(pair));
+    setFeature(fea, oz_right(pair));
 #endif
 
   }
