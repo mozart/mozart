@@ -264,7 +264,7 @@ define
 			     unget:r(image:unit
 				    1:unit))
 	       from QTkClass
-	       meth !Init(...)=M
+	       meth init(...)=M
 		  lock
 		     self.parent=Self
 		     self.toplevel=Self.toplevel
@@ -290,7 +290,7 @@ define
 	       end
 	    end
 	 in
-	    Img={New TextImage {Record.adjoin {Record.subtract M Last} Init}}
+	    Img={New TextImage {Record.adjoin {Record.subtract M Last} init}}
 	 end
       end
 

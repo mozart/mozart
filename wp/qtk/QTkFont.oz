@@ -116,18 +116,18 @@ class QTkFont
    meth measure(Text Ret displayof:D<=NoArgs)
       lock
 	 if D==NoArgs then
-	    {ReturnTk font measure(self Text Ret) int}
+	    {ReturnTk font measure(self Text Ret)}
 	 else
-	    {ReturnTk font measure(self "-displayof" D Text Ret) int}
+	    {ReturnTk font measure(self "-displayof" D Text Ret)}
 	 end
       end
    end
    meth metrics(Opt Ret displayof:D<=NoArgs)
       lock
 	 if D==NoArgs then
-	    {ReturnTk font metrics(self "-"#Opt Ret) int}
+	    {ReturnTk font metrics(self "-"#Opt Ret)}
 	 else
-	    {ReturnTk font metrics(self "-displayof" D "-"#Opt Ret) int}
+	    {ReturnTk font metrics(self "-displayof" D "-"#Opt Ret)}
 	 end
       end
    end
