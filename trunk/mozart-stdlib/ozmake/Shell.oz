@@ -77,7 +77,9 @@ define
    if Windows.isWin then
       if Windows.isOldWin then
 	 fun {!ToCommandVS CMD}
-	    'COMMAND.COM /C'#{QuoteUsing CMD QUOTE}
+	    First|Rest = CMD
+	 in
+	    'COMMAND.COM /C '#First#{QuoteUsing Rest QUOTE}
 	 end
       else
 	 fun {!ToCommandVS CMD}
