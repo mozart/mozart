@@ -313,22 +313,13 @@ Bool AM::performUnify(TaggedRef *termPtr1, TaggedRef *termPtr2)
 
 
 // unification involving at least one generic variable
-  if(tag2 == CVAR) {
-    GenCVariable::unifyGenCVariables =
-      (GenCVariable::unifyGenCVariables == OK && tag1 == CVAR) ? OK : NO; 
-    Bool ret = tagged2CVar(term2)->unify(termPtr2, term2, tag2,
-					 termPtr1, term1, tag1);
-    GenCVariable::unifyGenCVariables = OK;
-    return ret;
-  }
-  if(tag1 == CVAR) {
-    GenCVariable::unifyGenCVariables =
-      (GenCVariable::unifyGenCVariables == OK && tag2 == CVAR) ? OK : NO;
-    Bool ret = tagged2CVar(term1)->unify(termPtr1, term1, tag1,
-					 termPtr2, term2, tag2);
-    GenCVariable::unifyGenCVariables = OK;
-    return ret;    
-  }
+  if(tag2 == CVAR) 
+    return tagged2CVar(term2)->unify(termPtr2, term2, tag2,
+				     termPtr1, term1, tag1);
+
+  if(tag1 == CVAR) 
+    return tagged2CVar(term1)->unify(termPtr1, term1, tag1,
+				     termPtr2, term2, tag2);
 
 // unify non-variable terms
       /* At this point there are two refs which point to a non-ref    */
