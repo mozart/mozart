@@ -400,10 +400,12 @@ and so forth.
 
 <SECTION><TITLE>Controlled system shutdown</TITLE>
 
-<P>A site can be stopped in two ways:
-by a controlled shutdown initiated
-within the site, or by an external problem
-that causes the site to crash.
+<P>A site can be stopped in two ways: normally or abnormally.
+The normal way is a controlled shutdown initiated
+by <<{Application.exit I}>>, where <<I>> is
+the return status (see the module <<Application>>).
+The abnormal way is a site crash
+triggered by an external problem.
 The failure model (explained later) is used
 to survive site crashes.
 Here we explain what a controlled shutdown means
@@ -412,14 +414,13 @@ in the distribution model.
 <P>All language entities, except for stateless entities
 that are copied immediately, have an owner site and proxy sites.
 The owner site is always the site on which the entity was created.
-A controlled shutdown has no effect on any
-distributed entity whose owner node is
-on another site.
+A controlled shutdown has no adverse effect on any
+distributed entity whose owner is on another site.
 This is enforced by the distributed protocols.
 For example, if a cell's state pointer is on
-the shutting down site, then the state pointer is
+the shutting-down site, then the state pointer is
 moved to the owner site before shutting down.
-If the owner node is on the shutting down site,
+If the owner node is on the shutting-down site,
 then that entity will no longer work.
 
 <SECTION><TITLE>Bringing it all together</TITLE>
