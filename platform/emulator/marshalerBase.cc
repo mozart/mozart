@@ -154,11 +154,11 @@ void skipNumber(MarshalerBuffer *bs)
 //
 void marshalBuiltin(GenTraverser *gt, Builtin *entry)
 {
-  gt->marshalOzValue(makeTaggedConst(entry));
+  gt->traverseOzValue(makeTaggedConst(entry));
 }
 void traverseBuiltin(GenTraverser *gt, Builtin *entry)
 {
-  gt->marshalOzValue(makeTaggedConst(entry));
+  gt->traverseOzValue(makeTaggedConst(entry));
 }
 
 
@@ -171,22 +171,22 @@ void traverseBuiltin(GenTraverser *gt, Builtin *entry)
 void traverseRecordArity(GenTraverser *gt, SRecordArity sra)
 {
   if (!sraIsTuple(sra))
-    gt->marshalOzValue(getRecordArity(sra)->getList());
+    gt->traverseOzValue(getRecordArity(sra)->getList());
 }
 
 //
 void traversePredId(GenTraverser *gt, PrTabEntry *p)
 {
-  gt->marshalOzValue(p->getName());
+  gt->traverseOzValue(p->getName());
   traverseRecordArity(gt, p->getMethodArity());
-  gt->marshalOzValue(p->getFile());
-  gt->marshalOzValue(p->getFlagsList());
+  gt->traverseOzValue(p->getFile());
+  gt->traverseOzValue(p->getFlagsList());
 }
 
 //
 void traverseCallMethodInfo(GenTraverser *gt, CallMethodInfo *cmi)
 {
-  gt->marshalOzValue(cmi->mn);
+  gt->traverseOzValue(cmi->mn);
   traverseRecordArity(gt, cmi->arity);
 }
 
@@ -201,16 +201,16 @@ void traverseHashTableRef(GenTraverser *gt, int start, IHashTable *table)
       if (oz_isLiteral(table->entries[i].val)) {
 	if (table->entries[i].sra == mkTupleWidth(0)) {
 	  // That's a literal entry
-	  gt->marshalOzValue(table->entries[i].val);//makeTaggedLiteral(aux->getLiteral()));
+	  gt->traverseOzValue(table->entries[i].val);//makeTaggedLiteral(aux->getLiteral()));
 	} else {
 	  // That's a record entry
-	  gt->marshalOzValue(table->entries[i].val);
+	  gt->traverseOzValue(table->entries[i].val);
 	  traverseRecordArity(gt, table->entries[i].sra);
 	}
       } else {
 	Assert(oz_isNumber(table->entries[i].val));
 	// That's a number entry
-	gt->marshalOzValue(table->entries[i].val);//aux->getNumber());
+	gt->traverseOzValue(table->entries[i].val);//aux->getNumber());
       }
     }
   }
