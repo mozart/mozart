@@ -115,6 +115,7 @@ extern int _FUNDECL(OZ_isRecord,(OZ_Term));
 extern int _FUNDECL(OZ_isSmallInt,(OZ_Term));
 extern int _FUNDECL(OZ_isTrue,(OZ_Term));
 extern int _FUNDECL(OZ_isTuple,(OZ_Term));
+extern int _FUNDECL(OZ_isUnit,(OZ_Term));
 extern int _FUNDECL(OZ_isValue,(OZ_Term));
 extern int _FUNDECL(OZ_isVariable,(OZ_Term));
 
@@ -164,6 +165,7 @@ extern int     _FUNDECL(OZ_smallIntMin,(void));
 extern int     _FUNDECL(OZ_smallIntMax,(void));
 extern OZ_Term _FUNDECL(OZ_false,(void));
 extern OZ_Term _FUNDECL(OZ_true,(void));
+extern OZ_Term _FUNDECL(OZ_unit,(void));
 extern OZ_Term _FUNDECL(OZ_int,(int));
 extern int     _FUNDECL(OZ_getLowPrio,(void));
 extern int     _FUNDECL(OZ_getMediumPrio,(void));
