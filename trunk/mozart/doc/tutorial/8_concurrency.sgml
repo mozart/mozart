@@ -553,8 +553,8 @@ One way to access <<Y>> is by perform the operation
 <<{Wait Y}>> which triggers the producing procedure.
 
 
-<P> Now we can rewrite program of <PTR TO="volvo2"> as shown in
-<PTR TO="volvo3">. This looks very similar to <PTR TO="volvos">
+<P> Now we can rewrite program of <PTR TO="volvos2"> as shown in
+<PTR TO="volvos3">. This looks very similar to <PTR TO="volvos">
 
 <FIGURE ID="volvos3" CLASS="Figure">
 <CAPTION>Producing Volvo's using <<ByNeed>> </CAPTION>
