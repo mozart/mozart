@@ -568,13 +568,8 @@ void suspendInlineFun(TaggedRef A, TaggedRef B, TaggedRef C, TaggedRef &Out,
 
   if (OZ_isVariable(A)) OZ_addSuspension(A,susp);
 
-  // special hack for exchangeCell: suspends only on the first argument
-  if (noArgs == 3 && OZ_isVariable(B) && inFun != BIexchangeCellInline) {
-    OZ_addSuspension(B,susp);
-  } else {
-    if (noArgs>=3 && OZ_isVariable(B)) OZ_addSuspension(B,susp);
-    if (noArgs>=4 && OZ_isVariable(C)) OZ_addSuspension(C,susp);
-  }
+  if (noArgs>=3 && OZ_isVariable(B)) OZ_addSuspension(B,susp);
+  if (noArgs>=4 && OZ_isVariable(C)) OZ_addSuspension(C,susp);
 }
 
 static
@@ -957,14 +952,13 @@ void engine() {
           LOCAL_PROPAGATION(if (! localPropStore.do_propagation())
                             goto localhack0;);
           extern TaggedRef *globalSeqSuspendHack;
-          if (globalSeqSuspendHack) {
-            Suspension *susp =
-              mkSuspension(CBB,GET_CURRENT_PRIORITY(),
-                           biFun,X,XSize);
-            taggedBecomesSuspVar(globalSeqSuspendHack)
-              ->addSuspension(susp);
-            globalSeqSuspendHack=0;
-          }
+          Assert(globalSeqSuspendHack);
+          Suspension *susp =
+            mkSuspension(CBB,GET_CURRENT_PRIORITY(),
+                         biFun,X,XSize);
+          taggedBecomesSuspVar(globalSeqSuspendHack)
+            ->addSuspension(susp);
+          globalSeqSuspendHack=0;
           if (e->currentThread->getCompMode() == ALLSEQMODE) {
             e->currentThread=0;
             goto LBLstart;
@@ -1675,7 +1669,7 @@ void engine() {
 
               predicate = bi->getSuspHandler();
               if (!predicate) {
-                e->pushTask(CBB,PC,Y,G,X,predArity);
+                if (!isTailCall) e->pushTask(CBB,PC,Y,G);
                 extern TaggedRef *globalSeqSuspendHack;
                 if (globalSeqSuspendHack) {
                   Suspension *susp =
