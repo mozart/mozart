@@ -452,49 +452,65 @@ OwnerEntry* maybeReceiveAtOwner(DSite* mS,int OTI){
     if(!oe->isPersistent())
       oe->receiveCredit(OTI);
     return oe;}
-  return NULL;}
+  return NULL;
+}
 
 inline OwnerEntry* receiveAtOwner(int OTI){
   OwnerEntry *oe=OT->getOwner(OTI);
   Assert(!oe->isFree());
   if(!oe->isPersistent())
     oe->receiveCredit(OTI);
-  return oe;}
+  return oe;
+}
 
 inline OwnerEntry* receiveAtOwnerNoCredit(int OTI){
   OwnerEntry *oe=OT->getOwner(OTI);
   Assert(!oe->isFree());
-  return oe;}
+  return oe;
+}
 
 BorrowEntry* receiveAtBorrow(DSite* mS,int OTI){
   NetAddress na=NetAddress(mS,OTI);
   BorrowEntry* be=BT->find(&na);
   Assert(be!=NULL);
   be->receiveCredit();
-  return be;}
+  return be;
+}
 
 inline BorrowEntry* receiveAtBorrowNoCredit(DSite* mS,int OTI){
   NetAddress na=NetAddress(mS,OTI);
   BorrowEntry* be=BT->find(&na);
   Assert(be!=NULL);
-  return be;}
+  return be;
+}
 
 inline BorrowEntry* maybeReceiveAtBorrow(DSite* mS,int OTI){
   NetAddress na=NetAddress(mS,OTI);
   BorrowEntry* be=BT->find(&na);
-  if(be==NULL){sendCreditBack(na.site,na.index,1);}
-  else {be->receiveCredit();}
-  return be;}
+  if(be==NULL){
+    sendCreditBack(na.site,na.index,1);}
+  else {
+    be->receiveCredit();}
+  return be;
+}
 
 void msgReceived(MsgBuffer* bs)
 {
-
   Assert(oz_onToplevel());
   Assert(creditSiteIn==NULL);
   Assert(creditSiteOut==NULL);
   MessageType mt = (MessageType) unmarshalHeader(bs);
-  PD((MSG_RECEIVED,"msg type %d",mt));
 
+  // this is a necessary check - you should never receive
+  // a message from a site that you think is PERM or TEMP
+  // this can happen - though it is very rare
+  // for virtual sites we do not know, for now, the sending site so
+  // we can do nothing
+  DSite *ds=bs->getSite(); 
+  if(ds!=NULL && ds->siteStatus()!=SITE_OK){
+    return;}
+
+  PD((MSG_RECEIVED,"msg type %d",mt));
   switch (mt) {
   case M_PORT_SEND:   
     {
@@ -676,23 +692,6 @@ void msgReceived(MsgBuffer* bs)
 	PD((PD_VAR,"SURRENDER discard"));
 	PD((WEIRD,"SURRENDER discard"));
 	// ignore redirect: NOTE: v is handled by the usual garbage collection
-      }
-      break;
-    }
-
-  case M_REQUESTED:
-    {
-      int OTI;
-      unmarshal_M_REQUESTED(bs,OTI);
-      PD((MSG_RECEIVED,"M_REQUESTED index:%d", OTI));
-      OwnerEntry *oe = receiveAtOwner(OTI);
-
-      if (oe->isVar()) {
-	PD((PD_VAR,"REQUESTED do it"));
-	GET_VAR(oe,Manager)->requested(oe->getPtr());
-      } else {
-	PD((PD_VAR,"REQUESTED discard"));
-	PD((WEIRD,"REQUESTED discard"));
       }
       break;
     }
@@ -1044,6 +1043,7 @@ void initDPCore()
   unmarshalOwner = unmarshalOwnerImpl;
   unmarshalVar = unmarshalVarImpl;
   marshalVariable = marshalVariableImpl;
+  triggerVariable = triggerVariableImpl;
   marshalObject = marshalObjectImpl;
   marshalSPP = marshalSPPImpl;
   gcProxyRecurse = gcProxyRecurseImpl;
