@@ -335,6 +335,7 @@ void lockLockManagerOutlineImpl(LockManagerEmul *lmu, Thread *thr);
 void unlockLockManagerOutlineImpl(LockManagerEmul *lmu, Thread *thr);
 void lockLockFrameOutlineImpl(LockFrameEmul *lfu, Thread *thr);
 void unlockLockFrameOutlineImpl(LockFrameEmul *lfu, Thread *thr);
+void secLockGet(LockSec*,Tertiary*,Thread*);
 //
 void gcDistCellRecurseImpl(Tertiary *t);
 void gcDistLockRecurseImpl(Tertiary *t);
