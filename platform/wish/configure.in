@@ -75,6 +75,20 @@ AC_SUBST(WINDLLDIR)
 AC_SUBST(INSTALLWINDLLS)
 
 dnl ****************************************************************
+dnl   For MacOS X: maybe build with AquaTk
+dnl ****************************************************************
+
+AC_MSG_CHECKING([whether to build with AquaTk])
+AC_ARG_WITH(tk-aqua,
+    [--with-tk-aqua=DIR
+     build with AquaTk (default: no)],
+    : ${oz_tk_aqua="$with_tk_aqua"}
+    $oztmp="yes using $oz_tk_aqua",
+    : ${oz_tk_aqua=""}
+    $oztmp="no")
+AC_MSG_RESULT($oztmp)
+
+dnl ****************************************************************
 dnl   Places where to look for configuration scripts...
 dnl ****************************************************************
 

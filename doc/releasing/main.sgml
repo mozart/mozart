@@ -127,7 +127,7 @@ $SOURCE/configure</code>
       that.</p>
       <p>In order to also build the documentation, you need to invoke
       configure with option:
-      <code display>--with-documentation=all</code></p>
+      <code display>--with-documents=all</code></p>
     </chapter>
 
     <chapter id="chap.tarballs">
