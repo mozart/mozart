@@ -132,6 +132,11 @@ static void tagged2Stream(TaggedRef ref,ostream &stream=cout,
   }
 }
 
+void printTerm(TaggedRef t, ostream &s, int d = 10, int o= 0){
+  tagged2Stream(t, s, d, o);
+}
+    
+
 char *getVarName(TaggedRef v)
 {
   TaggedRef n = VariableNamer::getName(v);
@@ -196,8 +201,20 @@ void GenCVariable::print(ostream &stream, int depth, int offset, TaggedRef v)
       break;
    }
 
+  case MetaVariable:
+    {
+      GenMetaVariable* me = (GenMetaVariable *) this;
+      stream << indent(offset) << "<MV(" << me->getName() << "): "
+	     << getVarName(v) << " @" << this;
+
+      if (isEffectiveList(suspList))
+	stream << " a" << suspList->length();
+      
+      stream << ' ' << me->PrintMeta() << '>';
+      break;
+    }
   default:
-    error("Unexpected type generic variable at %s:%d.",
+    error("Unexpected type of generic variable at %s:%d.",
 	  __FILE__, __LINE__);
     break;
   }
@@ -554,29 +571,38 @@ PRINT(SuspList)
   } // for
 }
 
+PRINT(CFuncContinuation)
+{
+  stream  << "ccont = "
+	  << builtinTab.getName((void *)getCFunc())
+	  << '(' << getXSize() << ", "
+	  << (void *) getX() << "[]), ";
+}
+
+
 PRINT(Suspension)
 {
-    stream << indent(offset) << " [";
-    if (isDead()) stream << 'D';
-    if (isPropagated()) stream << 'P';
-    if (isResistant()) stream << 'R';
-    if (isExtSusp()) stream << 'E';
+  stream << indent(offset) << " [";
+  if (isDead()) stream << 'D';
+  if (isPropagated()) stream << 'P';
+  if (isResistant()) stream << 'R';
+  if (isExtSusp()) stream << 'E';
     if (isSurvSusp()) stream << 'S';
-    if (isUnifySusp()) stream << 'U';
-    if (isLocalSusp()) stream << 'L';
-    stream << "] -> ";
-
-    if (getCont())
-      stream << "cont ";
-    else if (getCCont()) {
-      stream  << "ccont = "
-	      << builtinTab.getName((void *)getCCont()->getCFunc())
-	      << '(' << getCCont()->getXSize() << ", "
-	      << (void *) getCCont()->getX() << "[]), ";
-    } else {
-      stream << "board ";
-    }
-    getBoard()->print(stream, 0);
+  if (isUnifySusp()) stream << 'U';
+  if (isLocalSusp()) stream << 'L';
+  stream << "] -> ";
+  
+  if (getCont())
+    stream << "cont ";
+  else if (getCCont()) {
+    stream  << "ccont = "
+	    << builtinTab.getName((void *)getCCont()->getCFunc())
+	    << '(' << getCCont()->getXSize() << ", "
+	    << (void *) getCCont()->getX() << "[]), ";
+  } else {
+    stream << "board ";
+  }
+  getBoard()->print(stream, 0);
 }
 
 
@@ -670,10 +696,16 @@ PRINTLONG(ConstTerm)
   switch (typeOf()) {
   case Co_Board:
     ((Board *) this)->printLong(stream, depth, offset);
+    break;
   case Co_Thread:
     ((Thread *) this)->printLong(stream, depth, offset);
+    break;
   case Co_Actor:
     ((Actor *) this)->printLong(stream, depth, offset);
+    break;
+  case Co_Chunk:
+    ((HeapChunk *) this)->printLong(stream, depth, offset);
+    break;
   default:
     error("ConstTerm::printLong");
   }
@@ -691,9 +723,33 @@ PRINT(ConstTerm)
   case Co_Actor:
     ((Actor *) this)->print(stream, depth, offset);
     break;
+  case Co_Chunk:
+    ((HeapChunk *) this)->print(stream, depth, offset);
+    break;
   default:
     error("ConstTerm::print");
   }
+}
+
+PRINT(HeapChunk)
+{
+  stream << indent(offset)
+	 << "heap chunk: " << chunk_size << " bytes at " << this << '.'
+	 << endl;
+/*
+  char * data = (char *) chunk_data;
+  for (int i = 0; i < chunk_size; i += 1)
+    stream << indent(offset + 3)
+	   << "chunk_data[" << i << "]@" << &data[i] << "="
+	   << data[i] << endl;
+	   */
+}
+
+PRINTLONG(HeapChunk)
+{
+  stream << indent(offset)
+	 << "heap chunk: " << chunk_size << " bytes at " << this << '.'
+	 << endl;
 }
 
 void AM::print()
@@ -918,6 +974,16 @@ void GenCVariable::printLong(ostream &stream, int depth, int offset, TaggedRef v
           // me->getLabel()->print(stream, depth-1, offset);
           me->getTable()->print(stream, depth-1, offset+2);
       }
+      break;
+    }
+  case MetaVariable:
+    {
+      GenMetaVariable* me = (GenMetaVariable *) this;
+      stream << indent(offset)
+	     << "<<MV: '" << me->getName() << "' " << me->PrintMeta()
+	     << endl;
+      tagged2Stream(me->data, stream, depth - 1, offset + 2);
+      stream << indent(offset) << ">>" << endl;
       break;
     }
   default:
