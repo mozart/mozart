@@ -147,10 +147,10 @@ public:
     return expectVector(t, &PropagatorExpect::expectFSetVarGlb);
   }
   OZ_expect_t expectVectorFSetValue(OZ_Term t) {
-    return expectVector(t, &PropagatorExpect::expectFSetValue);
+    return expectVector(t, (PropagatorExpectMeth) &PropagatorExpect::expectFSetValue);
   }
   OZ_expect_t expectVectorInt(OZ_Term t) {
-    return expectVector(t, &PropagatorExpect::expectInt);
+    return expectVector(t, (PropagatorExpectMeth) &PropagatorExpect::expectInt);
   }
 };
 
