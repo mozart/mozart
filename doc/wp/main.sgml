@@ -33,6 +33,7 @@
 <!ENTITY % proglang.values.local "|none|sh|tcl">
 <!ENTITY % author.class "author|author.extern|comic">
 <!ENTITY % picture.element "picture|picture.extern|picture.choice">
+<!entity % EXTRA "IGNORE">
 <!ELEMENT comic - O (%picture.element;)>
 
 <!-- Include Files -->
@@ -50,6 +51,7 @@
 <!ENTITY gt ">">
 <!ENTITY Oz "Oz">
 <!ENTITY amp "&">
+<!ENTITY tkcmd "../tcltk/TkCmd">
 
 <!-- Processing Instructions -->
 <!ENTITY nbsp PI "nbsp">
@@ -96,6 +98,8 @@
       widgets allowing for object-oriented and concurrent window programming.
     </Abstract>
   <Body>
+
+
     &intro;  
     &started;  
     &widgets-1; 
