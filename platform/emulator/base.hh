@@ -235,6 +235,7 @@ class Float;
 class SmallInt;
 class BigInt;
 class ConstTerm;
+class Extension;
 class Cell;
 class SChunk;
 

@@ -595,20 +595,20 @@ cvar:
       goto next;
     goto fail;
     
+  case EXT:
+    {
+      int res = oz_tagged2Extension(term1)->eqV(term2);
+      if (res == PROCEED)
+	goto next;
+      result = res;
+      goto fail;
+    }
   case OZCONST:
     switch (tagged2Const(term1)->getType()) {
     case Co_BigInt:
       if (bigIntEq(term1,term2))
 	goto next;
       break;
-    case Co_Extension:
-      {
-	int res = tagged2Extension(term1)->eqV(term2);
-	if (res == PROCEED)
-	  goto next;
-	result = res;
-	break;
-      }
     default:
       break;
     }

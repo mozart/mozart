@@ -148,9 +148,9 @@ OZ_BI_define(BIwaitQuiet,1,0)
 
 OZ_BI_define(BIbyNeed,1,1)
 {
-  OZ_Term p = OZ_in(0);
-  if (!OZ_isProcedure(p) && !OZ_isObject(p)) {
-    oz_typeError(0,"Unary Procedure|Object");
+  oz_declareNonvarIN(0,p);
+  if (!oz_isProcedure(p) || oz_procedureArity(p)!=1) {
+    oz_typeError(0,"Unary Procedure");
   }
   OZ_RETURN(makeTaggedRef(newTaggedCVar(new Future(p,oz_currentBoard()))));
 } OZ_BI_end

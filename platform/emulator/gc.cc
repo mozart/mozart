@@ -266,7 +266,8 @@ enum TypeOfPtr {
   PTR_THREAD,
   PTR_PROPAGATOR,
   PTR_CVAR,
-  PTR_CONSTTERM
+  PTR_CONSTTERM,
+  PTR_EXTENSION
 };
 
 
@@ -1346,6 +1347,46 @@ ForeignPointer * ForeignPointer::gc(void) {
 }
 
 // ===================================================================
+// Extension
+
+TaggedRef gcExtension(TaggedRef term)
+{
+  Extension *ex = oz_tagged2Extension(term);
+  if (ex == NULL) {
+    return makeTaggedNULL();
+  }
+
+  // hack alert: write forward into vtable!
+  if ((*(int32*)ex)&1) {
+    return oz_makeTaggedExtension((Extension *)ToPointer((*(int32*)ex)&~1));
+  }
+
+  Board *bb=ex->getBoardInternal();
+  if (bb) {
+    bb = bb->derefBoard();
+    if (!bb->gcIsAlive()) return makeTaggedNULL();
+    if (!isInGc && bb->isMarkedGlobal()) return term;
+  }
+  Extension *ret = ex->gcV();
+  if (bb) ret->setBoardInternal(bb);
+
+  gcStack.push(ret,PTR_EXTENSION);
+
+  int32 *fromPtr = (int32*)ex;
+  if (!isInGc) cpTrail.save(fromPtr);
+  *fromPtr = ToInt32(ret)|1;
+
+  return oz_makeTaggedExtension(ret);
+}
+
+void gcExtensionRecurse(Extension *ex)
+{
+  Board *bb=ex->getBoardInternal();
+  if (bb) ex->setBoardInternal(bb->gcBoard());
+  ex->gcRecurseV();
+}
+
+// ===================================================================
 // Finalization
 
 extern OZ_Term guardian_list;
@@ -1427,7 +1468,7 @@ void gcTagged(TaggedRef & frm, TaggedRef & to,
       case SMALLINT:  goto DO_SMALLINT;
       case FSETVALUE: goto DO_FSETVALUE;
       case LITERAL:   goto DO_LITERAL;
-      case UNUSED7:   error("unused7");
+      case EXT:       goto DO_EXT;
       case LTUPLE:    goto DO_LTUPLE;
       case SRECORD:   goto DO_SRECORD;
       case OZFLOAT:   goto DO_OZFLOAT;
@@ -1525,7 +1566,9 @@ void gcTagged(TaggedRef & frm, TaggedRef & to,
       return;
     }
 
-  case UNUSED7: error("unused7");
+  case EXT: DO_EXT:
+    to = gcExtension(aux);
+    return;
     
   case LTUPLE: DO_LTUPLE:
     to = makeTaggedLTuple(tagged2LTuple(aux)->gc()); 
@@ -2222,15 +2265,6 @@ void ConstTerm::gcConstRecurse()
       break;
     }
     
-  case Co_Extension:
-    {
-      Extension *ex=(Extension *) this;
-      Board *bb=ex->getBoardInternal();
-      if (bb) ex->setBoardInternal(bb->gcBoard());
-      ex->gcRecurseV();
-      break;
-     }
-	
   default:
     Assert(0);
   }
@@ -2432,20 +2466,6 @@ ConstTerm *ConstTerm::gcConstTerm() {
 
   case Co_Foreign_Pointer:
     return ((ForeignPointer*)this)->gc();
-
-  case Co_Extension:
-    {
-      Extension *ex= (Extension *) this;
-      Board *bb=ex->getBoardInternal();
-      if (bb) {
-	bb = bb->derefBoard();
-	if (!bb->gcIsAlive()) return NULL;
-	if (!isInGc && bb->isMarkedGlobal()) return this;
-      }
-      ret = ex->gcV();
-      if (bb) ((Extension *)ret)->setBoardInternal(bb);
-      break;
-    }
 
   default:
     Assert(0);
@@ -2874,6 +2894,10 @@ void GcStack::recurse(void) {
 
     case PTR_CONSTTERM: 
       ((ConstTerm *) ptr)->gcConstRecurse();   
+      break;
+
+    case PTR_EXTENSION: 
+      gcExtensionRecurse((Extension *)ptr);
       break;
 
     default:
