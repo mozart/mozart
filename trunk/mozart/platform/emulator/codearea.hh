@@ -348,7 +348,7 @@ void displayCode(ProgramCounter from, int ssize);
  */
 
 class InlineCache {
-  int32 key;
+  uint32 key;
   int32 value;
       
 public:
@@ -356,7 +356,7 @@ public:
 
   int lookup(SRecord *rec, TaggedRef feature)
   {
-    if (key!=rec->getSRecordArity()) {
+    if (key!=(uint32)rec->getSRecordArity()) {
       key   = rec->getSRecordArity();
       value = rec->getIndex(feature); // is ok even if index==-1 !
     }
