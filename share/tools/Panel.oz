@@ -13,6 +13,6 @@ local
 
 in
 
-   Panel = {New PanelClass noop}
+   Panel = {New PanelClass init}
 
 end
