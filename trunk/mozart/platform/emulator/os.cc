@@ -1935,6 +1935,13 @@ static DWORD __stdcall readerThread(void *p)
   HANDLE in = io->fd2;
   delete io;
 
+  // this one solves a problem with W2K SP2.
+  // readerThread cause the system to freeze if we
+  // don't call gethostname() (?load ws2_32.dll? changed with SP2)
+  // before ReadFile().
+  char dummyBuf[1000];
+  int dummy = gethostname(dummyBuf,sizeof(dummyBuf));
+
   char buf[bufSz];
   while(1) {
     DWORD count;
