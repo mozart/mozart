@@ -84,7 +84,7 @@ define
 	 case Res1 of unit then
 	    case Res2 of unit then
 	       To = unit
-	       HTML = '[??]'
+	       HTML = PCDATA('[??]')
 	    [] X#Y then
 	       To = X
 	       HTML = Y
