@@ -4,6 +4,8 @@
 local
 
    class AboutDialog from TkTools.dialog
+      prop
+	 final
       meth init(master:Master)
 	 TkTools.dialog,tkInit(master:  Master
 			       root:    pointer
@@ -31,53 +33,97 @@ local
    end
 
    class EvalDialog from TkTools.dialog
+      prop
+	 final
       feat
 	 Expr
 	 Result
+      attr
+	 CurComp    : unit
+	 CurEnv     : unit
+	 EvalThread : unit
 
       meth init(master:Master)
 	 fun {EvalInit}
-	    CC     = {New Compiler.interface.quiet init}
+	    C      = {New Compiler.interface.quiet init}
 	    AuxEnv = {Ozcar PrivateSend(getEnv(unit $))}
-	    CurEnv = {Record.adjoinList env {Append AuxEnv.'G' AuxEnv.'Y'}}
 	 in
-	    {CC putEnv(\insert Base.env
-		      )}
-	    {CC mergeEnv(\insert Standard.env
-			)}
-	    {CC mergeEnv(CurEnv)}
+	    CurComp <- C
+	    CurEnv  <- {Record.adjoinList env {Append AuxEnv.'G' AuxEnv.'Y'}}
 
-	    {CC reset}
+	    {C putEnv(\insert Base.env
+		      )}
+	    {C mergeEnv(\insert Standard.env
+		       )}
+	    {C mergeEnv(\insert Browser.env
+		       )}
+	    {C mergeEnv(@CurEnv)}
+	    {C reset}
 
 	    {self.Result tk(conf fg:DefaultForeground)}
 	    {self.Result tk(delete 0 'end')}
-	    CC
+	    C
 	 end
 
-	 proc {Eval}
-	    CC  = {EvalInit}
-	    V   = {self.Expr tkReturn(get $)}
-	 in
-	    {CC feedVirtualString('declare fun {`result`}\n' # V # '\nend')}
-	    case {CC hasErrors($)} then
-	       {self.Result tk(conf fg:BlockedThreadColor)}
-	       {self.Result tk(insert 0 'Compiler Error')}
-	       {System.printInfo {CC getVS($)}}
+	 proc {Dots W X}
+	    case {IsFree X} then
+	       {Delay 500}
+	       {W tk(insert 'end' '.')}
+	       {Dots W X}
+	    else skip end
+	 end
+
+	 proc {Doit V}
+	    case @EvalThread == unit then
+	       EvalThread <- {Thread.this}
+	       C           = {EvalInit}
+	       Self        = {CondSelect @CurEnv 'self' unit}
+	    in
+	       case Self of unit then
+		  {C feedVirtualString('declare fun {`result` _}\n' # V #
+				       '\nend')}
+	       else
+		  {C feedVirtualString('\\switch +selfallowedanywhere\n' #
+				       'declare fun {`result` Self}\n' #
+				       '{`ooSetSelf` Self}' # V # '\nend')}
+	       end
+	       case {C hasErrors($)} then
+		  {self.Result tk(conf fg:BlockedThreadColor)}
+		  {self.Result tk(insert 0 'Compile Error')}
+		  {System.printInfo {C getVS($)}}
+	       else R in
+		  thread try
+			    R = {{C getEnv($)}.'`result`' Self}
+			 finally
+			    case {IsFree R} then R = unit else skip end
+			 end
+		  end
+		  {Thread.preempt {Thread.this}}
+		  {Dots self.Result R}
+		  {self.Result tk(insert 0 {V2VS R})}
+	       end
+	       EvalThread <- unit
 	    else
-	       {self.Result tk(insert 0 {V2VS {{CC getEnv($)}.'`result`'}})}
+	       skip
 	    end
 	 end
 
+	 proc {Eval}
+	    {Doit {self.Expr tkReturn(get $)}}
+	 end
+
 	 proc {DoBrowse}
-	    CC = {EvalInit}
-	    V  = {self.Expr tkReturn(get $)}
-	 in
-	    {CC mergeEnv(\insert Browser.env
-			)}
-	    {CC feedVirtualString('{Browse ' # V # '}')}
-	    case {CC hasErrors($)} then
-	       {System.printInfo {CC getVS($)}}
-	    else skip end
+	    {Doit '{Browse ' # {self.Expr tkReturn(get $)} # '} unit'}
+	 end
+
+	 proc {Kill}
+	    case @EvalThread == unit then skip else
+	       {Thread.terminate @EvalThread}
+	       EvalThread <- unit
+	    end
+	    {self.Result tk(conf fg:DefaultForeground)}
+	    {self.Result tk(delete 0 'end')}
+	    {self.Expr   tk(delete 0 'end')}
 	 end
 
 	 TkTools.dialog,tkInit(master:  Master
@@ -85,6 +131,7 @@ local
 			       title:   'Evaluate Expression'
 			       buttons: ['Eval'   # Eval
 					 'Browse' # DoBrowse
+					 'Reset'  # Kill
 					 'Done'   # tkClose]
 			       pack:    false
 			       default: 1)

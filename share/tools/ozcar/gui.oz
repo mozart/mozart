@@ -686,6 +686,19 @@ in
 	 else skip end
       end
 
+      meth ContinueTo(T Frame)
+	 Gui,UnselectStackFrame
+	 Gui,markNode({Thread.id T} running)
+	 Gui,markStack(inactive)
+	 {Emacs configureBar(running)}
+	 case Frame.frameID of unit then
+	    {Dbg.unleash T 0}
+	 elseof FrameID then
+	    {Dbg.unleash T FrameID}
+	 end
+	 {Thread.resume T}
+      end
+
       meth action(A)
 	 lock
 	    case {IsName A} then skip else
@@ -725,20 +738,10 @@ in
 		  [] blocked    then Gui,BlockedStatus(T A)
 		  [] terminated then Gui,TerminatedStatus(T A)
 		  else
-		     Frame
+		     TopFrame = {@currentStack getTop($)}
 		  in
-		     {@currentStack getFrame(~1 Frame)}
-		     case Frame == unit then skip else
-			Gui,UnselectStackFrame
-			Gui,markNode({Thread.id T} running)
-			{Emacs configureBar(running)}
-			Gui,markStack(inactive)
-			case Frame.frameID of unit then
-			   {Dbg.unleash T 0}
-			elseof FrameID then
-			   {Dbg.unleash T FrameID}
-			end
-			{Thread.resume T}
+		     case TopFrame == unit then skip else
+			Gui,ContinueTo(T TopFrame)
 		     end
 		  end
 	       end
@@ -760,17 +763,12 @@ in
 		     TopFrame = {@currentStack getTop($)}
 		  in
 		     case TopFrame == unit then skip else
-			{Dbg.step T false}
-			Gui,UnselectStackFrame
-			Gui,markNode(I running)
-			Gui,markStack(inactive)
-			{Emacs configureBar(running)}
-			case TopFrame.frameID of unit then
-			   {Dbg.unleash T 0}
-			elseof FrameID then
-			   {Dbg.unleash T FrameID}
+			case TopFrame.dir == exit then
+			   {OzcarMessage '`next\' on exit --> doing a `step\''}
+			else
+			   {Dbg.step T false}
 			end
-			{Thread.resume T}
+			Gui,ContinueTo(T TopFrame)
 		     end
 		  end
 	       end
