@@ -30,8 +30,13 @@ INSTALL_DIR     = @INSTALL_DIR@
 INSTALL_LIB     = $(INSTALL) -m 444
 INSTALL_DLL     = $(INSTALL) -m 555
 
+ifeq ($(PLATFORM),win32-i486)
+FUNCTORS        = mode.ozf
+NATIVES         =
+else
 FUNCTORS        = mode.ozf io.ozf process.ozf open.ozf
 NATIVES         = io.so-$(PLATFORM) process.so-$(PLATFORM)
+endif
 
 LIB_FUNCTORS    = $(addprefix $(LIB_DIR)/,$(FUNCTORS))
 LIB_NATIVES     = $(addprefix $(LIB_DIR)/,$(NATIVES))
