@@ -455,26 +455,6 @@ define
 	    HTML = EMPTY
 	 end
       end
-      meth PictureExtern(Dir M To R) Display HTML in
-	 Display = case @PictureDisplay of unit then M.display
-		   elseof X then X
-		   end
-	 HTML = if {SGML.isOfClass M thumbnail} then ThumbnailName in
-		   {@MyThumbnails get(Dir To ?ThumbnailName)}
-		   a(href: To
-		     img(COMMON: @Common src: ThumbnailName alt: ''))
-		else
-		   img(COMMON: @Common src: To alt: '')
-		end
-	 R = case Display of display then Align in
-		Align = if {SGML.isOfClass M left} then left
-			elseif {SGML.isOfClass M right} then right
-			else center
-			end
-		BLOCK('div'(align: Align HTML))
-	     [] inline then HTML
-	     end
-      end
       meth Process(M $)
 	 Tag = case {Label M} of sect0 then chapter
 	       [] sect1 then section
@@ -584,8 +564,8 @@ define
 	       TopTOC = if @SomeSplit then EMPTY
 			else SEQ([hr() {FormatTOC @TOC} hr()])
 			end
-	       {@Reporter startSubPhase('converting LaTeX sections to GIF')}
-	       {@MyLaTeXToGIF process()}
+	       {@MyLaTeXToGIF process(@Reporter)}
+	       {@MyThumbnails process(@Reporter)}
 	       unit
 	    %-----------------------------------------------------------
 	    % Front and Back Matter
@@ -910,9 +890,16 @@ define
 	    % Picture Element
 	    %-----------------------------------------------------------
 	    [] picture then
-	       {@Reporter error(kind: OzDocError
-				msg: 'unsupported element'   %--**
-				items: [hint(l: 'Node' m: oz(M))])}
+	       case {CondSelect M type unit}
+	       of 'latex' then FileName in
+		  {@MyLaTeXToGIF convertPicture(M.1 ?FileName)}
+		  OzDocToHTML, PictureExtern("" M FileName $)
+	       elseof N then
+		  {@Reporter error(kind: OzDocError
+				   msg: 'unsupported picture notation'   %--**
+				   items: [hint(l: 'Notation' m: N)])}
+		  unit
+	       end
 	    [] 'picture.extern' then
 	       case {CondSelect M type unit}
 	       of 'gif' then
@@ -1220,7 +1207,7 @@ define
 			      tr(td(OzDocToHTML,Batch(M 1 $))
 				 td(Img))))
 	       else
-		  EMPTY	       
+		  EMPTY
 	       end
 	    [] 'menu' then
 	       Menu  = table(bgcolor:     '#cccccc'
@@ -1257,7 +1244,6 @@ define
 	       BLOCK(table(COMMON:@Common
 			   tr(td(Menu)
 			      td(Mouse))))
-	       
 	    %-----------------------------------------------------------
 	    %--** ozdoc.sgml Specials
 	    %-----------------------------------------------------------
@@ -1510,6 +1496,26 @@ define
 	 HTML = 'div'(COMMON: @Common 'class': [footnote]
 		      SEQ([a(name: Label PCDATA(N#'. '))
 			   OzDocToHTML, Batch(M.1 1 $)]))
+      end
+      meth PictureExtern(Dir M To $) Display HTML in
+	 Display = case @PictureDisplay of unit then M.display
+		   elseof X then X
+		   end
+	 HTML = if {SGML.isOfClass M thumbnail} then ThumbnailName in
+		   {@MyThumbnails get(Dir#To ?ThumbnailName)}
+		   a(href: To
+		     img(COMMON: @Common src: ThumbnailName alt: ''))
+		else
+		   img(COMMON: @Common src: To alt: '')
+		end
+	 case Display of display then Align in
+	    Align = if {SGML.isOfClass M left} then left
+		    elseif {SGML.isOfClass M right} then right
+		    else center
+		    end
+	    BLOCK('div'(align: Align HTML))
+	 [] inline then HTML
+	 end
       end
       meth Index(M Ands $) SeeHTML in
 	 if {SGML.isOfClass M tails} orelse {HasFeature M id} then L in

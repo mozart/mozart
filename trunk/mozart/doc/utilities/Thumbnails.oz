@@ -28,19 +28,32 @@ define
    GIF2THUMBNAIL = 'gif2thumbnail'
 
    class ThumbnailsClass
-      attr DirName: unit N: unit
+      attr DirName: unit N: unit ToProcess: unit
       meth init(Dir)
 	 DirName <- Dir
 	 N <- 0
+	 ToProcess <- nil
       end
-      meth get(Dir FileName ?OutFileName)
+      meth get(FileName ?OutFileName)
 	 N <- @N + 1
 	 OutFileName = 'thumbnail'#@N#'.gif'
-	 case
-	    {OS.system GIF2THUMBNAIL#' '#Dir#FileName#' '#@DirName#'/'#OutFileName}
-	 of 0 then skip
-	 elseof I then
-	    {Exception.raiseError ozDoc(thumbnail FileName I)}
+	 ToProcess <- FileName#OutFileName|@ToProcess
+      end
+      meth process(Reporter)
+	 case @ToProcess of nil then skip
+	 elseof Xs then
+	    {Reporter startSubPhase('generating thumbnails')}
+	    {ForAll Xs
+	     proc {$ FileName#OutFileName}
+		case
+		   {OS.system
+		    GIF2THUMBNAIL#' '#FileName#' '#@DirName#'/'#OutFileName}
+		of 0 then skip
+		elseof I then
+		   {Exception.raiseError ozDoc(thumbnail FileName I)}
+		end
+	     end}
+	    ToProcess <- nil
 	 end
       end
    end
