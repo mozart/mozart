@@ -204,6 +204,9 @@ public:
     // Return list of features in srecord that are not in current table:
     TaggedRef extraSRecFeatures(SRecord &sr);
 
+    // Return sorted list containing all features:
+    TaggedRef getArity();
+
 private:
 
     // Hash and rehash until the element or an empty slot is found
