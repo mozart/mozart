@@ -45,3 +45,20 @@ void Thread::printTaskStack(int depth) {
 }
 
 #endif
+
+// given a list of terms which used to be variables
+// on which the thread was suspended, the thread removes
+// itself from the suspension lists of those which are
+// still variables
+#include "var_base.hh"
+void Thread::removeSuspensions(TaggedRef list)
+{
+  while (list!=AtomNil) {
+    Assert(oz_isCons(list));
+    TaggedRef car = oz_head(list);
+    DEREF(car,ptr,tag);
+    if (isVariableTag(tag))
+      tagged2Var(car)->removeFromSuspList(this);
+    list = oz_tail(list);
+  }
+}
