@@ -3,7 +3,14 @@
 
 # drucke oz dateien aus
 # prinzip: oz2tex --> latex --> dvips
-# Argumente: oz-files
+# Argumente: -landscape oz-files
+
+DVIPS=dvips
+if [ $1 = "-landscape" ]
+then
+   shift
+   DVIPS=dvi2to1p
+fi
 
 if [ $# -lt 1 ]; then
   echo "usage: $0 <oz-files>"
@@ -75,9 +82,8 @@ if [ $? != 0 ]; then
   continue
 fi
 
-echo "dvips $tmpfile ..."
-dvips /tmp/$tmpfile > /dev/null 2>&1
-#xdvi /tmp/$tmpfile
+echo "DVIPS $tmpfile ..."
+${DVIPS} /tmp/$tmpfile > /dev/null 2>&1
 cleanup
 
 done # for
