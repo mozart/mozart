@@ -179,8 +179,11 @@ an operation at the given level (levels are explained below),
 then an exception is raised instead of doing the operation.
 The <<Entity>> is a reference to
 a particular object, cell, port, lock, or logic variable.
-The <<Level>> is <<global>>, <<site>>, or <<thread(T)>>
+The <<Level>> is <<global>>, <<site>>, or <<'thread'(T)>>
 (where <<T>> is a thread identifier, e.g., <<{Thread.this T}>>).
+
+<NOTE FOOT>Since <<thread>> is already used as keyword in the language,
+it has to be quoted.</NOTE>
 
 <ITEM> <<fun {Fault.disable Entity Level}>> disables
 fault detection on the given entity at the given level.
@@ -270,7 +273,7 @@ Next is <<site>>, which detects the fault when the
 operation is attempted on one particular site.
 Each site can have a set of enabled fault states.
 Finally, the most fine-grained is
-<<thread(T)>>, which detects the fault when the
+<<'thread'(T)>>, which detects the fault when the
 operation is attempted in a particular thread.
 The thread is identified by
 <<T>>, which can be obtained in the thread by <<{Thread.this T}>>.
