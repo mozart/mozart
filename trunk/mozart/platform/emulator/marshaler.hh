@@ -50,7 +50,7 @@ void marshalGName(GName*, MsgBuffer*);
 
 OZ_Term unmarshalTerm(MsgBuffer*);
 OZ_Term unmarshalTermRT(MsgBuffer *bs);
-int unmarshalNumber(MsgBuffer*);
+unsigned int unmarshalNumber(MsgBuffer*);
 double unmarshalFloat(MsgBuffer *bs);
 char *unmarshalString(MsgBuffer *);
 char *unmarshalVersionString(MsgBuffer *);
