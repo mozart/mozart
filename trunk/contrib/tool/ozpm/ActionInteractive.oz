@@ -12,6 +12,9 @@ import
    FileUtils(isExtension:IsExtension)
    Tree(treeNode:TreeNode)
    String(capitalize:Capitalize) at 'x-ozlib://duchier/lib/String.ozf'
+   OS(stat unlink)
+   Open
+   Resolve(localize)
 define
 
    PackageIcon={QTk.newImage photo(file:"package_small.gif")}
@@ -904,8 +907,57 @@ define
 						       end}})}
 	 in
 	    if SaveFile\=nil then
-	       {Show download#{VirtualString.toAtom ToInstall}}
-	       {Show to#SaveFile}
+	       In
+	       Out
+	       PackageFile
+	       proc{Copy}
+		  Buffer
+	       in
+		  {In read(list:Buffer
+			   size:8096)}
+		  if Buffer==nil then
+		     {In close}
+		     {Out close}
+		  else
+		     {Out write(vs:Buffer)}
+		     {Copy}
+		  end
+	       end
+	    in
+	       try
+		  PackageFile = {Resolve.localize ToInstall}
+		  In={New Open.file init(name:PackageFile.1)}
+		  Out={New Open.file init(name:SaveFile
+					  flags:[write create])}
+		  {Copy}
+		  try
+		     if {OS.stat SaveFile}.type==reg then
+			{{QTk.build td(title:"Download package"
+				       label(text:"Downdload successfull")
+				       button(text:"Close"
+					      action:toplevel#close
+					      glue:s))}
+			 show(wait:true modal:true)}
+		     else
+			raise error end
+		     end
+		  catch _ then
+		     {{QTk.build td(title:"Download Package"
+				    label(text:"An unexpected error occured")
+				    button(text:"Close"
+					   action:toplevel#close
+					   glue:s))}
+		      show(wait:true modal:true)}
+		  end
+%		  {Show download#{VirtualString.toAtom ToInstall}}
+%		  {Show to#SaveFile}
+	       finally
+		  if {IsDet In} then try {In close} catch _ then skip end end
+		  if {IsDet Out} then try {Out close} catch _ then skip end end
+		  case PackageFile of new(F) then
+		     {OS.unlink F}
+		  end
+	       end
 	    end
 	 end
       end
