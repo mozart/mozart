@@ -76,9 +76,8 @@
     These types of operations are explained in the following sections.
   <SUBSECTION id="section.interactive.exploration"><TITLE/Exploration/
   <P>
-    Having only a global depth and width is often too restrictive:  When
-    inspecting a large data structure, one will want to zoom in on a
-    subvalue or hide currently uninteresting data.  This is what the
+    When inspecting a large data structure, one often needs to zoom in
+    on a subvalue or hide currently irrevelant data.  This is what the
     exploration operations are intended for.  Two different kinds of
     operations exist, for modifying the depth and the width limits
     respectively (see <PTR to="figure.exploration">).
