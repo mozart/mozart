@@ -468,12 +468,12 @@ OZ_C_proc_begin(BIfdDistributeTaskIntervals, 7) {
   int number_of_resources = tasks_vector->getWidth();
   int number_of_jobs[MAXRESOURCES];
 
-  TaggedRef all_tasks[number_of_resources];
+  TaggedRef all_tasks[MAXRESOURCES];
 
   // to store task intervals
-  struct Set taskints[number_of_resources][MAXJOBS][MAXJOBS];
+  struct Set taskints[MAXRESOURCES][MAXJOBS][MAXJOBS];
   // to store orders
-  int ordered[number_of_resources][MAXJOBS][MAXJOBS];
+  int ordered[MAXRESOURCES][MAXJOBS][MAXJOBS];
 
   for (i=0; i < number_of_resources; i++) {
     TaggedRef tagged_tasks = deref(tasks_vector->getArg(i));
@@ -959,12 +959,12 @@ OZ_C_proc_begin(BIfdDistributeTaskIntervalsOpt, 7) {
   int number_of_resources = tasks_vector->getWidth();
   int number_of_jobs[MAXRESOURCES];
 
-  TaggedRef all_tasks[number_of_resources];
+  TaggedRef all_tasks[MAXRESOURCES];
 
   // to store task intervals
-  struct Set taskints[number_of_resources][MAXJOBS][MAXJOBS];
+  struct Set taskints[MAXRESOURCES][MAXJOBS][MAXJOBS];
   // to store orders
-  int ordered[number_of_resources][MAXJOBS][MAXJOBS];
+  int ordered[MAXRESOURCES][MAXJOBS][MAXJOBS];
 
   for (i=0; i < number_of_resources; i++) {
     TaggedRef tagged_tasks = deref(tasks_vector->getArg(i));
