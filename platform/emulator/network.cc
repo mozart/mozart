@@ -890,6 +890,10 @@ class RemoteSite{
   Message *sentMsg;      // non-acknowledge msgs
   IOQueue writeQueue; //Unsent Messages,
   int tSn;
+
+  int nrOfSentMsgs;
+  int nrOfRecMsgs;
+
 public:
   Site* site;
 
@@ -897,6 +901,17 @@ protected:
   void init(Site*, int);
 public:
   RemoteSite(): writeConnection(NULL),readConnection(NULL){}
+
+  void incNOSM(){nrOfSentMsgs = (1 + nrOfSentMsgs) %  199802;}
+  void incNORM(){nrOfRecMsgs = (1 + nrOfRecMsgs)  %  199802;}
+  int  getNOSM(){
+    int tmp =  nrOfSentMsgs;
+    nrOfSentMsgs = 0;
+    return tmp;}
+  int  getNORM(){
+    int tmp =  nrOfRecMsgs;
+    nrOfRecMsgs = 0;
+    return tmp;}
 
   void setAckStartNr(int nr);
   int resendAckQueue(Message *m);
@@ -3152,7 +3167,9 @@ int tcpWriteHandler(int fd,void *r0){
     ret=tcpSend(r->getFD(),m,TRUE);
     if(ret<0){
       goto writeHerrorBlock;
-    }}
+    }
+    r->remoteSite->incNOSM();
+  }
 
   if(r->isClosing()){
     messageManager->freeMessageAndMsgBuffer(m);
@@ -3174,6 +3191,7 @@ int tcpWriteHandler(int fd,void *r0){
     Assert(m!=NULL);
     ret=tcpSend(r->getFD(),m,FALSE);
     if(ret<0) goto writeHerrorBlock;
+    r->remoteSite->incNOSM();
   }
 
 
@@ -3259,6 +3277,7 @@ close_handler_read:
 /************************************************************/
 
 Bool ReadConnection::informSiteAck(int m, int s){
+  remoteSite->incNORM();
   if(!isClosing() && remoteSite->receivedNewMsg(m)){
     receivedNewSize(s);
     return TRUE;}
@@ -3557,6 +3576,8 @@ void RemoteSite::init(Site* s, int msgCtr){
     site = s;
     tSn = 0;
     status = SITE_OK;
+    nrOfSentMsgs = 0;
+    nrOfRecMsgs = 0;
 }
 
 void RemoteSite::setWriteConnection(WriteConnection *r){
@@ -3730,6 +3751,7 @@ storeS,msg,storeInd);
   Assert(fd>0);
   switch(tcpSend(fd,m,FALSE)){
   case IP_OK:{
+    incNOSM();
     PD((TCP_INTERFACE,"reliableSend- all sent %d"));
     return ACCEPTED;}
   case IP_BLOCK:{
@@ -3816,6 +3838,10 @@ void discoveryPerm_RemoteSite(RemoteSite* site){
 
 void siteAlive_RemoteSite(RemoteSite*) {}
 
+int getNOSM_RemoteSite(RemoteSite* site){
+  return site->getNOSM();}
+int getNORM_RemoteSite(RemoteSite* site){
+  return site->getNORM();}
 
 void initNetwork()
 {
