@@ -18,12 +18,15 @@ in
    create Manager from UrObject with init
       feat
 	 Stream            %% info stream of the emulator
+	 ReadLoopThread    %% we need to kill it when closing the manager
+      
       attr
 	 Threads : nil     %% list of debugged threads
       
       meth init
 	 self.Stream = {Dbg.stream}
 	 thread
+	    self.ReadLoopThread = {Thread.this}
 	    {ReadLoop self.Stream self}
 	 end
       end
@@ -71,6 +74,14 @@ in
 	    end
 	    
 	 else skip end
+      end
+
+      meth close
+	 %% actually, we should kill this damned thread, but then we get this:
+         %% board.icc:21
+         %% Internal Error:  assertion '!isCommitted() && !isFailed()' failed
+	 %% (DFKI Oz Emulator 1.9.16 (sunos-sparc) of Mon Oct, 07, 1996) 
+	 {Thread.suspend self.ReadLoopThread}
       end
    end
 
