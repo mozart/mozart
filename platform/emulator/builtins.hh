@@ -322,9 +322,9 @@ public:
   char * getName(void * fp) {
     HashNode * hn = getFirst();
     for (; hn != NULL; hn = getNext(hn)) {
-      BuiltinTabEntry * bit = (BuiltinTabEntry *) hn->value;
-      if (bit->getInlineFun() == (InlineFunOrRel) fp ||
-	  bit->getFun() == (OZ_CFun) fp)
+      BuiltinTabEntry * abit = (BuiltinTabEntry *) hn->value;
+      if (abit->getInlineFun() == (InlineFunOrRel) fp ||
+	  abit->getFun() == (OZ_CFun) fp)
 	return hn->key.fstr;
     }
     return "???";
