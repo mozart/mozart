@@ -879,9 +879,10 @@ SuspList *SuspList::gc(Bool tcFlag)
     } else {
       ret = new SuspList(aux, ret);
     }
-  } // for
+  }
 
-  return ret;
+  GCNEWADDRMSG (ret);
+  return (ret);
 }
 
 // This procedure collects the entry points into heap provided by variables, 
