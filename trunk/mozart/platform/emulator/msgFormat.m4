@@ -53,7 +53,7 @@ message(M_LOCK_CANTPUT,Index,Site)
 message(M_CHAIN_ACK,Index,Site)
 message(M_CHAIN_QUESTION,Index,Site)
 message(M_CHAIN_ANSWER,Index,Site,Index2)
-message(M_ASK_ERROR,Index,Index2);
+message(M_ASK_ERROR,Index,Site,Index2);
 message(M_TELL_ERROR,Site,Index,Index2);
 
 message(M_GET_OBJECT,Index,Site)
