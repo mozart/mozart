@@ -30,6 +30,8 @@
 
 <!ENTITY ip_reference SYSTEM "ip_reference.sgml">
 
+<!ENTITY pel_reference SYSTEM "pel_reference.sgml">
+
 
 <!ENTITY r_anhang SYSTEM "r_anhang.sgml">
 
@@ -100,6 +102,21 @@
 
     <Meta name="html.split" arg1="chapter.lp" arg2="lp.html">
 
+    <Meta name="html.split" arg1="chapter.pel" arg2="pel.html">
+    <Meta name="html.split" value="pel.overview">
+    <Meta name="html.split" value="pel.paramtable">
+    <Meta name="html.split" value="pel.eventlist">
+    <Meta name="html.split" value="pel.propfncttableentry">
+    <Meta name="html.split" value="pel.propfncttable">
+    <Meta name="html.split" value="pel.propqueue">
+    <Meta name="html.split" value="pel.fsetprofile">
+    <Meta name="html.split" value="pel.fseteventlists">
+    <Meta name="html.split" value="pel.fdprofile">
+    <Meta name="html.split" value="pel.fdeventlists">
+    <Meta name="html.split" value="pel.suspvar">
+    <Meta name="html.split" value="pel.suspfsetvar">
+    <Meta name="html.split" value="pel.suspfdintvar">
+
     <Meta name="entry.category" value="macro">
     <Meta name="entry.category" value="virtual">
     <Meta name="entry.category" value="static">
@@ -111,6 +128,7 @@
     <Meta name="entry.category" value="constant">
     <Meta name="entry.category" value="member">
     <Meta name="entry.category" value="function">
+    <Meta name="entry.category" arg1="fncttype" arg2="function  type">
     <Meta name="entry.category" arg1="enumtype" arg2="enumerable  type">
     <Meta name="entry.category" arg1="purevirtual" arg2="pure virtual">
     <Meta name="entry.category" arg1="datatype" arg2="data type">
@@ -137,9 +155,11 @@
 
    &ip_reference;
 
-   &ct_cpi_reference
+   &ct_cpi_reference;
 
-   &lp_reference
+   &lp_reference;
+
+   &pel_reference;
 
   <Back>
 
