@@ -215,8 +215,7 @@ OZ_C_proc_begin(BIfdConstrDisj_body, 3)
 	    not_failed = top_commit = FALSE;
 	    break;
 	  } else {
-	    if (x.isNotCDVoid(idx_vp(c, v)))
-	      top_commit &= (v_v_size == x[idx_vp(c, v)].getSize());
+	    top_commit &= (v_v_size == x[idx_vp(c, v)].getSize());
 	  }
 	}
       }
