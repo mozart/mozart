@@ -128,6 +128,10 @@ void printBanner(char*initFile)
 }
 
 
+#ifdef MODULES_LINK_STATIC
+OZ_C_proc_proto(ozma_readProc);
+#endif
+
 extern void bigIntInit(); /* from value.cc */
 extern void initffuns();  /* from initffuns.cc */
 
@@ -156,7 +160,6 @@ void AM::init(int argc,char **argv)
   char *url = NULL;
   char *initFile = getenv("OZINIT");
   char *assemblyCodeFile = NULL;
-  //int denys = 0;
 
   /* process command line arguments */
   ozconf.argV = NULL;
@@ -191,11 +194,6 @@ void AM::init(int argc,char **argv)
       ozconf.url = url;
       continue;
     }
-    //    if (strcmp(argv[i],"-denys")==0) {
-    //      url = getOptArg(i,argc,argv);
-    //      denys = 1;
-    //      continue;
-    //    }
 
     if (strcmp(argv[i],"-b")==0) {
       assemblyCodeFile = getOptArg(i,argc,argv);
@@ -215,11 +213,6 @@ void AM::init(int argc,char **argv)
     usage(argc,argv);
   }
 
-  //  if ((!url && !assemblyCodeFile) || (url && assemblyCodeFile)) {
-  //    fprintf(stderr,"Exactly one of '-u', '-b' required.\n");
-  //    usage(argc,argv);
-  //  }
-  //  else ozconf.url = url;
   if (url && assemblyCodeFile) {
     fprintf(stderr,"Options '-u' and '-b' are mutually exclusive.\n");
     usage(argc,argv);
@@ -235,7 +228,7 @@ void AM::init(int argc,char **argv)
 #endif
 
   if (!initFile && !assemblyCodeFile) {
-    char* ini = "/lib/Init.ozp";
+    char* ini = "/lib/Init.ozf";
     int m = strlen(ozconf.ozHome);
     int n = m+strlen(ini)+1;
     char*s = new char[n];
@@ -352,13 +345,9 @@ void AM::init(int argc,char **argv)
 
     printf("Ozma library statically linked\n");
 
-    Builtin *bi = builtinTab.find("ozma_readProc");
-    if (bi==htEmpty) {
-      fprintf(stderr,"builtin ozma_readProc not found");
-      osExit(1);
-    }
-    f = bi->getFun();
+    f = ozma_readProc;
 #endif
+
     OZ_Term args[2] = { oz_atom(assemblyCodeFile),0 };
     OZ_Return r=(*f)(args,0);
     if (r!=PROCEED) {
