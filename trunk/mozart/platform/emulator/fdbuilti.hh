@@ -562,7 +562,7 @@ void getIntCoeff(int i, TaggedRef v) {
 inline
 Suspension * createNonResSusp(OZ_CFun func, RefsArray xregs, int arity)
 {
-  return (Suspension *) OZ_makeSuspension(func, xregs, arity);
+  return (Suspension *) OZ_makeThread(func, xregs, arity);
 }
 
 

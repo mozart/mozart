@@ -40,7 +40,7 @@ typedef enum {
   SUSPEND
 } OZ_Bool;
   
-typedef void *OZ_Suspension;
+typedef void *OZ_Thread;
 
 typedef OZ_Bool (*OZ_CFun) _PROTOTYPE((int, OZ_Term *));
 
@@ -178,18 +178,23 @@ extern int OZ_unprotect       _PROTOTYPE((OZ_Term *));
 
 /* Suspending builtins */
 
-OZ_Suspension OZ_makeThreadSuspension _PROTOTYPE((void));
-OZ_Suspension OZ_makeSuspension       _PROTOTYPE((OZ_CFun, OZ_Term *, int));
-void          OZ_addSuspension        _PROTOTYPE((OZ_Term, OZ_Suspension));
+OZ_Thread  OZ_makeThread   _PROTOTYPE((OZ_CFun, OZ_Term *, int));
+void       OZ_addThread    _PROTOTYPE((OZ_Term, OZ_Thread));
+OZ_Thread  OZ_makeSuspension   _PROTOTYPE((OZ_CFun, OZ_Term *, int));
+void       OZ_addSuspension    _PROTOTYPE((OZ_Term, OZ_Thread));
 
 /* for example
-   OZ_Suspension s = OZ_makeSuspension(BIplus,OZ_args,OZ_arity);
-   OZ_addSuspension(t1,s);
-   OZ_addSuspension(t2,s);
+   OZ_Thread s = OZ_makeThread(BIplus,OZ_args,OZ_arity);
+   OZ_addThread(t1,s);
+   OZ_addThread(t2,s);
    */
 
 /* suspend self */
-#define OZ_makeSelfSuspension()   OZ_makeSuspension(OZ_self,OZ_args,OZ_arity)
+#define OZ_makeSelfThread()   OZ_makeThread(OZ_self,OZ_args,OZ_arity)
+
+OZ_Bool OZ_suspendOnVar  _PROTOTYPE((OZ_Term var));
+OZ_Bool OZ_suspendOnVar2 _PROTOTYPE((OZ_Term var1,OZ_Term var2));
+OZ_Bool OZ_suspendOnVar3 _PROTOTYPE((OZ_Term var1,OZ_Term var2,OZ_Term var3));
 
 /* ------------------------------------------------------------------------ *
  * III. macros
@@ -255,10 +260,11 @@ OZ_C_proc_begin(Name,Arity) 				          	      \
 #define OZ_declareArg(ARG,VAR) \
      OZ_Term VAR = OZ_getCArg(ARG);
 
-#define OZ_nonvarArg(ARG) 						      \
-{ if (OZ_isVariable(OZ_getCArg(ARG))) 					      \
-      {   OZ_addSuspension(OZ_getCArg(ARG),OZ_makeSelfSuspension());          \
-        return PROCEED; }                                                     \
+#define OZ_nonvarArg(ARG)						      \
+{									      \
+  if (OZ_isVariable(OZ_getCArg(ARG))) {					      \
+    return OZ_suspendOnVar(OZ_getCArg(ARG));				      \
+  }									      \
 }
 
 #define OZ_declareIntArg(FUN,ARG,VAR) 					      \
