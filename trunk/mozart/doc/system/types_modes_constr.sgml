@@ -200,14 +200,6 @@ specifies that the application waits until ?*{Dvv} and all its
 elements are determined, and until their elements are constrained to
 finite domain integers. 
 
-<P>
-Where the Standard Modules provide two procedures which are identical up
-to synchronisation behavior, the less synchronising one will have a <<C>>
-attached to its name. For example consider
-<<Width>>  and <<WidthC>>.  Less synchronisation often implies stronger
-tell behaviour and occurs mainly for constraint programming procedures
-(hence the mnemonic <<C>>).
-
 <Para><Title/Generic Propagators/
 For some procedures like that for generic
 propagators, an atom occurring as an argument denotes a relation
