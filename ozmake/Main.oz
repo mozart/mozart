@@ -106,6 +106,8 @@ prepare
       '_speed'(single type:bool)
       fast(alias:['_speed'#true])
       slow(alias:['_speed'#false])
+
+      autodepend(single type:bool)
       )
 
    OPTLIST =
@@ -165,6 +167,7 @@ prepare
     config         # set_config_action    # false
     '_speed'       # set_fast             # true
     packageversion # set_want_version     # false
+    autodepend     # set_autodepend       # true
    ]
       
 define

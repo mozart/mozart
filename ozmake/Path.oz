@@ -4,6 +4,7 @@ export
    ToURL
    ToBaseURL		ToBase
    ToNonBaseURL		ToNonBase       ToNonBaseAtom
+   DropInfoURL          DropInfo        DropInfoAtom
    ResolveURL		Resolve		ResolveAtom
    IsRelative IsAbsolute ToString ToAtom
    ExpandURL 		Expand
@@ -16,7 +17,8 @@ export
    MaybeAddPlatform
    ToCacheURL ToCache Stat SafeStat Dir Ls
    Exists IsDir IsFile
-   Unresolve		UnresolveURL IsAncestor
+   Unresolve		UnresolveURL   UnresolveAtom
+   IsAncestor
    MakeDir MakeDirRec
    Remove RemoveDir RemoveRec
    CopyFile
@@ -93,6 +95,10 @@ define
 
    fun {IsRelative P} {URL.isRelative {ToURL P}} end
    fun {IsAbsolute P} {URL.isAbsolute {ToURL P}} end
+
+   fun {DropInfoURL U} {AdjoinAt {ToURL U} info unit} end
+   fun {DropInfo U} {ToString {DropInfoURL U}} end
+   fun {DropInfoAtom U} {ToAtom {DropInfoURL U}} end
 
    %% On Win95/98 (aka old Windows), we need to use old style
    %% pathnames with \ instead of /.
@@ -223,6 +229,9 @@ define
    end
    fun {UnresolveURL Base Path}
       {ToURL {Unresolve Base Path}}
+   end
+   fun {UnresolveAtom Base Path}
+      {StringToAtom {Unresolve Base Path}}
    end
    
    fun {IsAncestor Base Path}

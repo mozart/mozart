@@ -14,15 +14,19 @@ define
 
       meth build_all
 	 if {self get_includelibs($)} then
-	    for T in {self get_lib_targets($)} do Builder,build_target(T) end
+	    for T in {self get_lib_targets($)} do
+	       Builder,build_target(T runtime:true)
+	    end
 	 end
 	 if {self get_includebins($)} then
-	    for T in {self get_bin_targets($)} do Builder,build_target(T) end
+	    for T in {self get_bin_targets($)} do
+	       Builder,build_target(T runtime:true)
+	    end
 	 end
 	 {self recurse(build_all)}
       end
 
-      meth build_target(T)
+      meth build_target(T runtime:RunTime<=false)
 	 {self extend_resolver}
 	 {self trace('target '#T)}
 	 {self incr}
@@ -40,6 +44,11 @@ define
 		     raise ozmake(build:outdated(T)) end
 		  end
 	       else {self trace(T#' is up to date')} end
+	    end
+	    if RunTime then
+	       for D in {self get_autodepend_install(T $)} do
+		  Builder,build_target(D runtime:true)
+	       end
 	    end
 	 finally {self decr} end
       end

@@ -20,13 +20,13 @@ makefile(
 	     'Uninstaller.ozf' 'Errors.ozf' 'Windows.ozf'
 	     'MakeGUI.ozf' 'Fixes.ozf' 'DatabaseLib.ozf'
 	     'Config.ozf' 'Mogul.ozf' 'Pickler.ozf'
-	     'ExecutorFast.ozf']
+	     'ExecutorFast.ozf' 'Depends.ozf']
 	 'Help.ozf' :
 	    ['Utils.ozf' 'Path.ozf' 'Windows.ozf'
 	     'Shell.ozf' 'HELP.txt'])
    blurb : "a tool for project building and package management"
    categories : [tool]
-   version: "0.82"
+   version: "0.83"
    info_html:
       '<P>
 <SPAN CLASS="TOOL">ozmake</SPAN> is a tool for building Mozart-based projects
