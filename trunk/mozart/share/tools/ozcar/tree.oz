@@ -138,6 +138,8 @@ local
 
 	 trees
 
+	 GotCompilerNode
+
       meth init(O)
 	 self.ThreadDic = {O getThreadDic($)}
 	 nodes <- nil
@@ -161,6 +163,7 @@ local
 
 	 {WC init}
 
+	 GotCompilerNode <- false
 	 {self DoCalculatePositions(1 3)}     %% Emacs queries...
 	 {self DoCalculatePositions(2 3)}     %% ...Tk actions...
 	 {ForAll {Filter {Dictionary.keys @trees}
@@ -187,7 +190,16 @@ local
       meth Nodegroup(Q $)
 	 {Reverse {Filter @nodes
 		   fun{$ N}
-		      {N get($)}.q == Q
+		      D = {N get($)}
+		   in
+		      case D.i == 1 then %% whoops, debugging OPI compiler...
+			 case @GotCompilerNode then false else
+			    GotCompilerNode <- true
+			    true
+			 end
+		      else
+			 D.q == Q
+		      end
 		   end}}
       end
 
