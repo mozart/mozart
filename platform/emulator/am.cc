@@ -583,12 +583,12 @@ SuspList * AM::checkSuspensionList(SVariable * var, TaggedRef taggedvar,
           suspList = suspList->dispose();
           continue;
         } else if (unifyingVar) {
-          susp->setEqvSusp();
+          susp->markUnifySusp();
         }
       }
-    } else if (unifyingVar && ! susp->isEqvSusp())
+    } else if (unifyingVar && ! susp->isUnifySusp())
       if (isBetween(susp->getNode(), var->getHome()))
-        susp->setEqvSusp();
+        susp->markUnifySusp();
 
     // susp cannot be woken up therefore relink it
     SuspList * first = suspList;
