@@ -301,12 +301,18 @@ TaggedRef SolveActor::genEnumedFail ()
 
   // right side - the rest: 
   status = allocateRefsArray (1);
-  contGRegs = allocateRefsArray (1);
+  //: kost@ 21.12.94: not necessary any more;
+  //: Moreover, because the new implementation of OneCallBuiltin, 
+  //: it MUST BE NULL!
+  //: contGRegs = allocateRefsArray (1);
+  contGRegs = (RefsArray) NULL;
   status[0] = lastAtom;
-  contGRegs[0] = makeTaggedConst (solveBoard);  // but it has no impact;
+  //: contGRegs[0] = makeTaggedConst (solveBoard);  // but it has no impact;
   OneCallBuiltin *bi = new OneCallBuiltin (solveContBITabEntry, contGRegs,
 					   SolveContArity, status);
-  bi->hasSeen ();
+  //: kost@ 22.12.94: contGRegs == NULL means now "already seen";
+  //: so, it's not necessary (although quite correct);
+  //: bi->hasSeen ();
   stuple->setArg (1, makeTaggedSRecord (bi));
 
   return (makeTaggedSTuple (stuple));
