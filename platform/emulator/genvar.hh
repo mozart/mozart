@@ -140,6 +140,20 @@ OZ_Boolean testReifiedFlag(OZ_Term t)
 }
 
 inline
+void patchReified(OZ_FiniteDomain * fd, OZ_Term t, Bool isBool)
+{
+  ((GenCVariable *) tagValueOf(t))->patchReified(fd, isBool);
+}
+
+inline
+OZ_Boolean testBoolPatched(OZ_Term t)
+{
+  Assert(!isUVar(t) && isAnyVar(t) && !isRef(t));
+
+  return ((GenCVariable *) tagValueOf(t))->isBoolPatched();
+}
+
+inline
 OZ_Boolean testResetStoreFlag(OZ_Term t)
 {
   Assert(!isUVar(t) && isAnyVar(t) && !isRef(t));
@@ -148,11 +162,21 @@ OZ_Boolean testResetStoreFlag(OZ_Term t)
 }
 
 inline
-void unpatchReified(OZ_Term t, Bool isBool)
+OZ_Boolean testResetReifiedFlag(OZ_Term t)
 {
   Assert(!isUVar(t) && isAnyVar(t) && !isRef(t));
 
-  ((GenCVariable *) tagValueOf(t))->unpatchReified(isBool);
+  return ((SVariable *) tagValueOf(t))->testResetReifiedFlag();
+}
+
+inline
+OZ_FiniteDomain * unpatchReified(OZ_Term t, Bool isBool)
+{
+  Assert(!isUVar(t) && isAnyVar(t) && !isRef(t));
+  GenCVariable * v = ((GenCVariable *) tagValueOf(t));
+
+  v->unpatchReified(isBool);
+  return v->getReifiedPatch();
 }
 
 inline
