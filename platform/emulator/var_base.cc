@@ -285,9 +285,10 @@ OZ_Return oz_var_cast(TaggedRef * &fp, Board * fb, TypeOfVariable tt) {
     break;
 
   case VTP(BOOL,FD):
+    tv = new OzBoolVariable(fb);
     // Care for the susp lists
-    ((OzFDVariable *) fv)->relinkSuspListToItself();
-    // fall...
+    ((OzFDVariable *) fv)->relinkSuspListTo((OzBoolVariable *) tv);
+    break;
 
   case VTP(BOOL,SIMPLE): case VTP(BOOL,FUTURE):
   case VTP(BOOL,EXT):
