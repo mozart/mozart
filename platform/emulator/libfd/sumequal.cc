@@ -14,6 +14,8 @@
  * COULD NOT COMPILE IT CORRECTLY
  */
 
+#define VERBOSE(X) // X
+
 #include <string.h>
 
 #include "sum.hh"
@@ -34,8 +36,7 @@ OZ_Return LinEqPropagator::propagate(void)
   OZ_DEBUGPRINT("in (after simplify)" << *this);
 
   if (sz == 0) return c ? FAILED : PROCEED;
-  if (sz == 2 && c == 0 && 
-      ((a[0] == 1 && a[1] == -1) || (a[0] == -1 && a[1] == 1)))
+  if (sz == 2 && c == 0 && (a[0] == -a[1]))
     return replaceBy(reg_x[0], reg_x[1]);
   
   DECL_DYN_ARRAY(OZ_FDIntVar, x, sz);
@@ -47,10 +48,41 @@ OZ_Return LinEqPropagator::propagate(void)
   int i;
   for (i = sz; i--; ) {
     x[i].read(reg_x[i]);
+#ifndef FLAGS
     flag_txl[i] = flag_txu[i] = OZ_TRUE;
+#else
+    flag_txl[i] = flag_txu[i] = OZ_FALSE;
+#endif
   }
 
+#ifdef FLAGS
+  VERBOSE(cout << endl << "in: " << *this << endl <<flush);
+
+  for (i = sz; i--; ) {
+    if (_l[i] < x[i]->getMinElem()) {
+
+      VERBOSE(cout << _l[i] << "<" << x[i]->getMinElem() << " " << flush);
+
+      for (int j = sz; j--; ) {
+	if (i != j) flag_txl[j] |= is_recalc_txl_lower(j, i, a);
+	if (i != j) flag_txu[j] |= is_recalc_txu_lower(j, i, a); 
+      }
+    }
+    
+    if (_u[i] > x[i]->getMaxElem()) {
+
+      VERBOSE(cout << _u[i] << ">" << x[i]->getMaxElem() << " " << flush);
+      
+      for (int j = sz; j--; ) {
+	if (i != j) flag_txl[j] |= is_recalc_txl_upper(j, i, a);
+	if (i != j) flag_txu[j] |= is_recalc_txu_upper(j, i, a);
+      }
+    }
+  }
+  if (0) { 
+#else
   if (reg_sz > CACHESLOTSIZE + 2) { 
+#endif
     // 
     // uncached part
     //
@@ -150,9 +182,16 @@ OZ_Return LinEqPropagator::propagate(void)
 	//	OZ_Boolean repeat_inner = OZ_FALSE;
 	
 	if (flag_txl[i]) {
+#ifdef FLAGS
+	  VERBOSE(cout << "-" << flush);
+#endif
+	  
 	  int txl_i = calc_txl_lin(i, sz, a, x, c);
 	  
 	  if (txl_i > x[i]->getMinElem()) {
+#ifdef FLAGS
+	    VERBOSE(cout << "!" << flush);
+#endif
 	    FailOnEmpty(*x[i] >= txl_i);
 	    for (int j = sz; j--; ) {
 	      flag_txl[j] |= is_recalc_txl_lower(j, i, a);
@@ -162,6 +201,9 @@ OZ_Return LinEqPropagator::propagate(void)
 	  }
 	  flag_txl[i] = OZ_FALSE;
 	}
+#ifdef FLAGS
+	VERBOSE(else cout << "." << flush);
+#endif
 	/*
 	if (repeat_inner) {
 	  repeat_outer = OZ_TRUE;
@@ -172,35 +214,61 @@ OZ_Return LinEqPropagator::propagate(void)
     loop4:      
       for (i = sz; i--; ) {
 	//OZ_Boolean repeat_inner = OZ_FALSE;
+	
+	if (flag_txu[i]) {
+#ifdef FLAGS
+	  VERBOSE(cout << "+" << flush);
+#endif
+	  int txu_i = calc_txu_lin(i, sz, a, x, c);
 	  
-	  if (flag_txu[i]) {
-	    int txu_i = calc_txu_lin(i, sz, a, x, c);
-	    
-	    if (txu_i < x[i]->getMaxElem()) {
-	      FailOnEmpty(*x[i] <= txu_i);
-	      for (int j = sz; j--; ) {
-		flag_txl[j] |= is_recalc_txl_upper(j, i, a);
-		flag_txu[j] |= is_recalc_txu_upper(j, i, a);
-	      }
-	      repeat_outer = OZ_TRUE;
+	  if (txu_i < x[i]->getMaxElem()) {
+#ifdef FLAGS
+	    VERBOSE(cout << "!" << flush);
+#endif
+	    FailOnEmpty(*x[i] <= txu_i);
+	    for (int j = sz; j--; ) {
+	      flag_txl[j] |= is_recalc_txl_upper(j, i, a);
+	      flag_txu[j] |= is_recalc_txu_upper(j, i, a);
 	    }
-	    flag_txu[i] = OZ_FALSE;
-	  }
-	  /*
-	  if (repeat_inner) {
 	    repeat_outer = OZ_TRUE;
-	    goto loop4;
+	  }
+	  flag_txu[i] = OZ_FALSE;
+	}
+#ifdef FLAGS
+	VERBOSE(else cout << "." << flush);
+#endif
+	/*
+	  if (repeat_inner) {
+	  repeat_outer = OZ_TRUE;
+	  goto loop4;
 	  }
 	  */
       } // for 
+#ifdef FLAGS
+      VERBOSE(cout << "   " << flush);
+#endif
+
     } while (repeat_outer);
   }
   OZ_DEBUGPRINT("out " << *this);
+
+#ifdef FLAGS
+      VERBOSE(cout << endl << flush);
+      for (i = reg_sz; i--; ) {
+	_l[i] = x[i]->getMinElem();
+	_u[i] = x[i]->getMaxElem();
+      }
+  VERBOSE(cout << "out: " << *this << endl <<flush);
+#endif
   
   return P.leave();
   
 failure:
   OZ_DEBUGPRINT("fail");
+
+#ifdef FLAGS
+  VERBOSE(cout << "fail: " << *this << endl <<flush);
+#endif
   
   return P.fail();
 }
