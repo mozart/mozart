@@ -304,7 +304,7 @@
 	    <Grammar.Alt><<unit>> | <<(>> | <<)>> | <<[>> |
 	      <<]>> | <<{>> | <<}>></Grammar.Alt>
 	    <Grammar.Alt><<|>> | <<#>> | <<:>> | <<...>> | <<=>> |
-	      <<.>> | <<^>> | <<[]>> | <<$>></Grammar.Alt>
+	      <<.>> | <<:=>> | <<^>> | <<[]>> | <<$>></Grammar.Alt>
 	    <Grammar.Alt><<!>> | <<_>> | <<~>> | <<+>> | <<->> | <<*>> |
 	      <</>> | <<@>> | <<&lt;->></Grammar.Alt>
 	    <Grammar.Alt><<,>> | <<!!>> | <<&lt;=>> | <<==>> | <<\=>> |
@@ -448,7 +448,7 @@
       <Title/Context-Free Syntax/
       <P>
 	In this section, we give a context-free grammar for a superset of
-	Oz programs.  Any sequence of tokens that is not member of the
+	Oz programs.  Any sequence of tokens that is not a member of the
 	language described by this grammar, starting from the ?={statement}
 	nonterminal, is considered erroneous.
       <P>
@@ -492,6 +492,10 @@
 	    <Grammar.Alt/<<raise>> ?={in expression} <<end>>/
 	    <Grammar.Alt/?={expression} <Q class=terminal/<<=>>/
 	      ?={expression}/
+	    <Grammar.Alt/?={expression} <Q class=terminal/<<:=>>/
+	      ?={expression}/
+	    <Grammar.Alt/?={expression} <Q class=terminal/<<.>>/ ?={expression} <Q class=terminal/<<:=>>/
+	      ?={expression}/
 	    <Grammar.Alt/<<skip>>//
 	<Para class=apropos><Title/Expressions/
 	  <!--** explain the nesting marker -->
@@ -534,6 +538,9 @@
 	    <Grammar.Alt/?={expression} <<andthen>> ?={expression}/
 	    <Grammar.Alt/?={monop} ?={expression}/
 	    <Grammar.Alt/?={expression} ?={binop} ?={expression}/
+	    <Grammar.Alt/?={expression} <Q class=terminal/<<:=>>/ ?={expression}/
+	    <Grammar.Alt/?={expression} <Q class=terminal/<<.>>/ ?={expression} <Q class=terminal/<<:=>>/
+	      ?={expression}/
 	    <Grammar.Alt/?={possibly escaped variable}/
 	    <Grammar.Alt/<Q class=terminal/<<_>>//
 	    <Grammar.Alt/?={atom} | ?={int} | ?={float}/
@@ -558,12 +565,25 @@
 	  <Grammar.Rule/?={subtree}
 	    <Grammar.Alt/[ ?={feature} <Q class=terminal/<<:>>/ ]
 	      ?={expression}//
+	<Para class=apropos><Title/Precedence/
+          Note that in both ?={statement}s and ?={expression}s there is potential ambiguity
+          between ?={expression} <Q class=terminal/<<:=>>/ ?={expression} and
+	  ?={expression} <Q class=terminal/<<.>>/ ?={expression} <Q class=terminal/<<:=>>/
+          ?={expression}. In fact <Q class=terminal/<<. :=>>/ is a ternary operator and has
+          precedence.  Parenthesis must be used for
+          the alternate parse, that is, (?={expression}<Q class=terminal/<<.>>/ ?={expression}) <Q class=terminal/<<:=>>/
+          ?={expression}. 
+         <P>
+	  The assignment operators <Q class=terminal/<<. :=>>/ and <Q class=terminal/<<:=>>/, 
+          when used in expression position,
+	  perform an atomic exchange, the result of the operation
+	  being the previous value of the stateful entity assigned to.
 	<Para class=apropos><Title/Operators/
-	  Note that expressions with operators need additional disambiguating
+	  Expressions with operators need additional disambiguating
 	  rules introduced in&nbsp;<Ptr to="section.context-free.operators">.
 	  <Grammar.Rule/?={monop}
 	    <Grammar.Alt/<Q class=terminal/<<~>>/ |
-	      <Q class=terminal/<<!!>>//
+	      <Q class=terminal/<<!!>>/ | <Q class=terminal/<<@>>//
 	  <Grammar.Rule>?={binop}
 	    <Grammar.Alt/<Q class=terminal/<<.>>/ |
 	      <Q class=terminal/<<^>>//
@@ -794,12 +814,11 @@
 	      ?={expression}/
 	    <Grammar.Alt/?={expression} <Q class=terminal/<<,>>/
 	      ?={expression}//
-	  The assignment operator, when used in expression position,
+	  The assignment operator <Q class=terminal/<<&lt;->>/, when used in expression position,
 	  performs an atomic exchange, the result of the operation
 	  being the previous value of the attribute assigned to.
 	  <Grammar.Rule/?={expression}
 	    <Grammar.Alt type=add/<<lock>> ?={in expression} <<end>>/
-	    <Grammar.Alt/<Q class=terminal/<<@>>/ ?={expression}/
 	    <Grammar.Alt/?={expression} <Q class=terminal/<<&lt;->>/
 	      ?={expression}/
 	    <Grammar.Alt/?={expression} <Q class=terminal/<<,>>/
@@ -899,7 +918,7 @@
 	      <TD/<<=>>/
 	      <TD/right/
 	    <TR>
-	      <TD/<<&lt;->>/
+	      <TD/<<&lt;->> <<:=>> <<. :=>>/
 	      <TD/right/
 	    <TR>
 	      <TD/<<orelse>>/
@@ -970,6 +989,18 @@
 	      ?={statement}/
 	    <Grammar.Alt type=space/<<end>>/
 	    <Grammar.Alt/?={variable} <Q class=terminal/<<=>>/
+	      <Q class=terminal/<<@>>/ ?={variable}/
+	    <Grammar.Alt/?={variable} <Q class=terminal/<<:=>>/
+	      ?={variable}/
+	    <Grammar.Alt/?={variable} <Q class=terminal/<<=>>/
+	      ?={variable} <Q class=terminal/<<:=>>/
+	      ?={variable}/
+	    <Grammar.Alt/?={variable} <Q class=terminal/<<.>>/ ?={variable} <Q class=terminal/<<:=>>/
+	      ?={variable}/
+	    <Grammar.Alt/?={variable} <Q class=terminal/<<=>>/
+	      ?={variable} <Q class=terminal/<<.>>/ ?={variable} <Q class=terminal/<<:=>>/
+	      ?={variable}/
+	    <Grammar.Alt/?={variable} <Q class=terminal/<<=>>/
 	      ?={expression}/
 	    <Grammar.Alt/<<skip>>//
 	<Para class=apropos><Title/Expressions/
@@ -1002,8 +1033,6 @@
 	      ?={variable}/
 	    <Grammar.Alt/?={variable} <Q class=terminal/<<=>>/
 	      ?={variable} <Q class=terminal/<<&lt;->>/ ?={variable}/
-	    <Grammar.Alt/?={variable} <Q class=terminal/<<=>>/
-	      <Q class=terminal/<<@>>/ ?={variable}/
 	    <Grammar.Alt/?={variable} <Q class=terminal/<<,>>/ ?={variable}/
 	    <Grammar.Alt/?={variable} <Q class=terminal/<<=>>/ <<self>>//
 	<Para class=apropos><Title/Methods/
@@ -1592,6 +1621,108 @@ end
 	    </Rewrite>
 	    <Note><!--**-->Missing: dots, omitted features</Note>
 	<SubSection class=unnumbered>
+	  <Title/Uniform State/
+	  <P>
+	    <Rewrite>?={statement}
+	      <Rewrite.From/<<?{x} = @?{E}>>/
+	      <Rewrite.To
+/<<local ?_{X} in
+   ?_{X} = ?{E}
+   ?{x} = @?_{X}
+end>>/
+	      <Rewrite.Condition/if ?{E} is no variable./
+	    </Rewrite
+            <Rewrite>?={statement}
+	      <Rewrite.From/<<?{E1} := ?{E2}>>/
+	      <Rewrite.To
+/<<local ?_{X} in
+   ?_{X} = ?{E1}
+   ?_{X} := ?{E2}
+end>>/
+	      <Rewrite.Condition/if ?{E1} is no variable./
+	    </Rewrite>
+	    <Rewrite>?={statement}
+	      <Rewrite.From/<<?{x} := ?{E}>>/
+	      <Rewrite.To
+/<<local ?_{X} in
+   ?_{X} = ?{E}
+   ?_{x} := ?_{X}
+end>>/
+	      <Rewrite.Condition/if ?{E} is no variable./
+	    </Rewrite>
+	    <Rewrite>?={statement}
+	      <Rewrite.From/<<?{x} = ?{E1} := ?{E2}>>/
+	      <Rewrite.To
+/<<local ?_{X} in
+   ?_{X} = ?{E1}
+   ?{x} = ?_{X} := ?{E2}
+end>>/
+	      <Rewrite.Condition/if ?{E1} is no variable./
+	    </Rewrite>
+	    <Rewrite>?={statement}
+	      <Rewrite.From/<<?{x} = ?{y} := ?{E}>>/
+	      <Rewrite.To
+/<<local ?_{X} in
+   ?_{X} = ?{E}
+   ?{x} = ?{y} := ?_{X}
+end>>/
+	      <Rewrite.Condition/if ?{E} is no variable./
+	    </Rewrite>
+            <Rewrite>?={statement}
+	      <Rewrite.From/<<?{E1}.?{E2} := ?{E3}>>/
+	      <Rewrite.To
+/<<local ?_{X} in
+   ?_{X} = ?{E1}
+   ?_{X}.?_{E2} := ?{E3}
+end>>/
+	      <Rewrite.Condition/if ?{E1} is no variable./
+	    </Rewrite>
+	    <Rewrite>?={statement}
+	      <Rewrite.From/<<?{x}.?{E2} := ?{E3}>>/
+	      <Rewrite.To
+/<<local ?_{X} in
+   ?_{X} = ?{E2}
+   ?{x}.?_{X} := ?{E3}
+end>>/
+	      <Rewrite.Condition/if ?{E2} is no variable./
+	    </Rewrite>
+	    <Rewrite>?={statement}
+	      <Rewrite.From/<<?{x}.?{y} := ?{E}>>/
+	      <Rewrite.To
+/<<local ?_{X} in
+   ?_{X} = ?{E}
+   ?{x}.?{y} := ?_{X}
+end>>/
+	      <Rewrite.Condition/if ?{E} is no variable./
+	    </Rewrite>
+            <Rewrite>?={statement}
+	      <Rewrite.From/<<?{x} = ?{E1}.?{E2} := ?{E3}>>/
+	      <Rewrite.To
+/<<local ?_{X} in
+   ?_{X} = ?{E1}
+   ?{x} = ?_{X}.?_{E2} := ?{E3}
+end>>/
+	      <Rewrite.Condition/if ?{E1} is no variable./
+	    </Rewrite>
+	    <Rewrite>?={statement}
+	      <Rewrite.From/<<?{x} = ?{y}.?{E2} := ?{E3}>>/
+	      <Rewrite.To
+/<<local ?_{X} in
+   ?_{X} = ?{E2}
+   ?{x} = ?{y}.?_{X} := ?{E3}
+end>>/
+	      <Rewrite.Condition/if ?{E2} is no variable./
+	    </Rewrite>
+	    <Rewrite>?={statement}
+	      <Rewrite.From/<<?{x} = ?{y}.?{z} := ?{E}>>/
+	      <Rewrite.To
+/<<local ?_{X} in
+   ?_{X} = ?{E}
+   ?{x} = ?{y}.?{z} := ?_{X}
+end>>/
+	      <Rewrite.Condition/if ?{E} is no variable./
+	    </Rewrite>
+	<SubSection class=unnumbered>
 	  <Title/Wildcard/
 	  <P>
 	    <Rewrite>?={expression}
@@ -1770,17 +1901,8 @@ end>>/
 	    </Rewrite>
 	<SubSection class=unnumbered>
 	  <Title/Operators/
-	  <P>
-	    <Rewrite>?={statement}
-	      <Rewrite.From/<<?{x} = @?{E}>>/
-	      <Rewrite.To
-/<<local ?_{X} in
-   ?_{X} = ?{E}
-   ?{x} = @?_{X}
-end>>/
-	      <Rewrite.Condition/if ?{E} is no variable./
-	    </Rewrite>
-	    <Rewrite>?={statement}
+	  <P>	
+    <Rewrite>?={statement}
 	      <Rewrite.From/<<?{E1} <- ?{E2}>>/
 	      <Rewrite.To
 /<<local ?_{X} in
