@@ -77,6 +77,8 @@ OZ_BI_end
 
 #include "sum_filter.hh"
 
+template unsigned int make_lessEqOffsetN<unsigned int, PropagatorExpect, unsigned int>(unsigned int, PropagatorExpect &, unsigned int, unsigned int, unsigned int);
+
 OZ_BI_define(fdp_sumC, 4, 0)
 {
   OZ_EXPECTED_TYPE(OZ_EM_VECT OZ_EM_INT","OZ_EM_VECT OZ_EM_FD","OZ_EM_LIT
@@ -248,6 +250,9 @@ OZ_Return LinNotEqPropagator::propagate(void)
 #ifdef TMUELLER
 #ifdef NEW
 #include "sum_filter.hh"
+
+template OZ_Filter<OZ_Propagator> & filter_lessEqOffsetN<OZ_Filter<OZ_Propagator>, CPIVector<OZ_FDIntVar> >(OZ_Filter<OZ_Propagator> &, int *, CPIVector<OZ_FDIntVar> &, int &);
+
 
 OZ_Return LinLessEqPropagator::propagate(void)
 {

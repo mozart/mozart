@@ -813,11 +813,10 @@ Bool ComObj::merge(ComObj *old,ComObj *anon,OZ_Term channelinfo) {
     old->close(CLOSED,TRUE);
     goto adopt_anon;
   case OPENING_WF_NEGOTIATE_ANS:
-    if(myDSite->compareSites(site)<0) {
+    if (myDSite->compare(site) < 0) {
       old->close(CLOSED,TRUE);
       goto adopt_anon;
-    }
-    else {
+    } else {
       goto drop_anon;
     }
   case WORKING:

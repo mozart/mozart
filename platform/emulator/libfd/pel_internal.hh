@@ -161,6 +161,8 @@ public:
   //
 };
 
+template class EnlargeableArray<int, HeapAlloc>;
+template class PushArray<int, HeapAlloc>;
 typedef PushArray<int, HeapAlloc> IntHeapPushArray;
 
 // initial size == 0; increase size by explicit resizable
@@ -212,6 +214,8 @@ typedef enum { pf_failed, pf_entailed, pf_sleep } pf_return_t;
 // has to be power of 2
 #define ALIGN_SIZE sizeof(double)
 
+template class EnlargeableArray<char,HeapAlloc>;
+
 class _PEL_PropagatorHeap : public EnlargeableArray<char,HeapAlloc> {
 protected:
   int _high;
@@ -230,6 +234,7 @@ public:
     _high += s_align;
     return r;
   }
+
   //
   char * getAddress(int i) { return _array + i; }
 };
@@ -338,6 +343,8 @@ void _PEL_PropagatorTable::print(PEL_Engine &e) {
 
 //-----------------------------------------------------------------------------
 
+template class EnlargeableArray<int, PropAlloc>;
+template class ResizeableArray<int, PropAlloc>;
 typedef ResizeableArray<int, PropAlloc> IntPropResizeableArray;
 
 static const int _PEL_PropQueue_init_maxsize = 0x10; // must be power of 2

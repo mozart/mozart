@@ -247,6 +247,10 @@ OZ_Return CountPropagator<atleast,atmost>::propagate(void)
 
 //-----------------------------------------------------------------------------
 
+template class CountPropagator<true,true>;
+template class CountPropagator<false,true>;
+template class CountPropagator<true,false>;
+
 class ExactlyPropagator : public CountPropagator<true,true> {
   friend INIT_FUNC(fdp_init);
 private:

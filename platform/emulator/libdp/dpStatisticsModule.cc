@@ -54,43 +54,38 @@ OZ_BI_define(BItablesExtract,0,1)
 OZ_BI_define(BItablesBTinfo,0,1)
 {
   initDP();
-  int limit = BT->getSize();
-  for(int ctr = 0; ctr<limit;ctr++)
-    {
-      BucketHashNode* o = BT->getBucket(ctr);
-      while(o){
-	BorrowEntry *be = (BorrowEntry *)o;
-	o = o->getNext();
-	ans = oz_cons(be->extract_info(),ans);
-      }
+  for (int i = getSize(); i--; ) {
+  BorrowEntry *be = getFirstNode(i); 
+    while (be) {
+      ans = oz_cons(be->extract_info(),ans);
+      be = be->getNext();
     }
+  }
 }
 */
+
 OZ_BI_define(BIsiteStatistics,0,1)
 {
-  initDP();
+  int i;
   OZ_Term sitelist = oz_nil(); 
-  int limit = primarySiteTable->getSize();
-  int ctr = 0;
-  for(ctr = 0; ctr<limit;ctr++)
-    {
-      DSite *found = (DSite *) primarySiteTable->getBucket(ctr);
-      while (found){
-	sitelist = oz_cons(found->getOzRep(),sitelist);
-	found = (DSite *)found->getNext();
-      }
-    }
 
-  limit = secondarySiteTable->getSize();
-  for(ctr = 0; ctr<limit;ctr++)
-    {
-      DSite *found = (DSite *) secondarySiteTable->getBucket(ctr);
-      while (found){
-	sitelist = oz_cons(found->getOzRep(),sitelist);
-	found = (DSite *)found->getNext();
-      }
+  initDP();
+  for (int i = primarySiteTable->getSize(); i--; ) {
+    DSite *site = (DSite *) primarySiteTable->getFirstNode(i);
+    while (site) {
+      sitelist = oz_cons(site->getOzRep(), sitelist);
+      site = site->getNext();
     }
-  
+  }
+
+  for (int i = secondarySiteTable->getSize(); i--; ) {
+    DSite *site = (DSite *) secondarySiteTable->getFirstNode(i);
+    while (site) {
+      sitelist = oz_cons(site->getOzRep(), sitelist);
+      site = site->getNext();
+    }
+  }
+
   OZ_RETURN(sitelist);
 } OZ_BI_end
 

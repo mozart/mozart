@@ -475,7 +475,7 @@ class MgrVarPatch : public OzValuePatch {
 private:
   Bool isMarshaled;		// for the case of transmission failure;
   OB_TIndex oti;
-  RRinstance *remoteRef;	// '!' memory???
+  RRinstance *remoteRef;
   MarshalTag tag;		// future? auto?
 
   //
@@ -545,7 +545,7 @@ private:
   DebugCode(OB_TIndex bti;);
   Bool isMarshaled;
   Ext_OB_TIndex oti;
-  RRinstance *remoteRef;	// '!' memory???
+  RRinstance *remoteRef;
   DSite *ms;			// manager site, always;
   short isFuture;		//
   short isToOwner;		//

@@ -486,15 +486,17 @@ void portProxyProbeFault(Tertiary *t, int pr){
     Assert(0);
   }
 }
+
+// kost@ : the 'PROBE_TEMP' and 'PROBE_OK' cases were switched !?? '!'
 void resourceProxyProbeFault(Tertiary *t, int pr){
   switch(pr){
   case PROBE_PERM:
     if(addEntityCond(t,PERM_FAIL)) entityProblem(t);
     break;
-  case PROBE_OK:
+  case PROBE_TEMP:
     if(addEntityCond(t,TEMP_FAIL)) entityProblem(t);
     break;
-  case PROBE_TEMP:
+  case PROBE_OK:
     subEntityCond(t,TEMP_FAIL);
     break;
   default: 
@@ -547,42 +549,40 @@ void managerProbeFault(Tertiary *t, DSite* s,int pr) {
 
 void DSite::probeFault(ProbeReturn pr) {
   PD((PROBES,"PROBEfAULT  site:%s",stringrep()));
-  int limit=OT->getSize();
-  int ctr = 0;
-  for(ctr = 0; ctr<limit;ctr++){
-    BucketHashNode* o = OT->getBucket(ctr); 
-    while(o){
-      OwnerEntry *oe = (OwnerEntry *)(o);
-      o = o -> getNext();
-      if(oe->isTertiary()){
+  int i;
+  for (i = OT->getSize(); i--; ) {
+    OwnerEntry *oe = OT->getOE(i);
+    if (oe) {
+      if (oe->isTertiary()){
 	Tertiary *tr=oe->getTertiary();
 	PD((PROBES,"Informing Manager"));
 	Assert(tr->isManager());
-	managerProbeFault(tr,this,pr);}
-      else{
-	if(oe->isVar()){
+	managerProbeFault(tr,this,pr);
+      } else {
+	if (oe->isVar()){
 	  GET_VAR(oe,Manager)->probeFault(this,pr);
 	}
       }
     }
   }
-  limit=BT->getSize();
-  for(ctr = 0; ctr<limit;ctr++){
-    BucketHashNode* o = BT->getBucket(ctr); 
-    while(o){
-      BorrowEntry *be = (BorrowEntry *)(o);
-      o = o -> getNext();
-      if(be->isTertiary()){
-	if(be->getSite()==this){
-	  proxyProbeFault(be->getTertiary(),pr);}}
-      else{
-	if(be->isVar()){
-	  if(be->getSite()==this){	
-	    if(typeOfBorrowVar(be)==VAR_PROXY){
-	      GET_VAR(be,Proxy)->probeFault(pr);}
-	    else{
-	      Assert(typeOfBorrowVar(be)==VAR_LAZY);
-	      GET_VAR(be, Lazy)->probeFault(pr);}}}}}
+
+  for (i = BT->getSize(); i--; ) {
+    BorrowEntry *be = (BorrowEntry *) BT->getFirstNode(i); 
+    while (be) {
+      if (be->isTertiary() && (be->getSite()==this)) {
+	proxyProbeFault(be->getTertiary(),pr);
+      } else {
+	if (be->isVar() && (be->getSite()==this)) {
+	  if (typeOfBorrowVar(be)==VAR_PROXY) {
+	    GET_VAR(be,Proxy)->probeFault(pr);
+	  } else {
+	    Assert(typeOfBorrowVar(be)==VAR_LAZY);
+	    GET_VAR(be, Lazy)->probeFault(pr);
+	  }
+	}
+      }
+      be = be->getNext();
+    }
   }
 }
 
@@ -594,14 +594,14 @@ void Chain::establish_PERM_SOME(Tertiary* t){
   if(hasFlag(TOKEN_PERM_SOME)) return;
   setFlag(TOKEN_PERM_SOME);
   OB_TIndex OTI = MakeOB_TIndex(t->getTertPointer());
-  triggerInforms(&inform,OT->index2entry(OTI),PERM_SOME);
+  triggerInforms(&inform,ownerIndex2ownerEntry(OTI),PERM_SOME);
   addEntityCond(t,PERM_SOME);
   entityProblem(t);}
 
 void Chain::establish_TOKEN_LOST(Tertiary* t){
   setFlagAndCheck(TOKEN_LOST);
   OB_TIndex OTI = MakeOB_TIndex(t->getTertPointer());
-  triggerInforms(&inform,OT->index2entry(OTI),PERM_SOME|PERM_ALL|PERM_FAIL);
+  triggerInforms(&inform,ownerIndex2ownerEntry(OTI),PERM_SOME|PERM_ALL|PERM_FAIL);
   addEntityCond(t,PERM_SOME|PERM_FAIL|PERM_ALL);}
 
 void Chain::shortcutCrashLock(LockManager* lm){
@@ -620,12 +620,12 @@ void Chain::shortcutCrashLock(LockManager* lm){
   ce=getFirstNonGhost();
   OB_TIndex OTI = MakeOB_TIndex(lm->getTertPointer());
   if(ce->site==myDSite){
-    lockReceiveTokenManager(OT->index2entry(OTI), OT->entry2extOTI(OTI));
+    lockReceiveTokenManager(ownerIndex2ownerEntry(OTI), ownerEntry2extOTI(OTI));
     return;}
   //  kost@ 'lockSendToken()' signature ??!
   //  was like that:
   // lockSendToken(myDSite,OTI,ce->site);
-  lockSendToken(myDSite, OT->entry2extOTI(OTI), ce->site);
+  lockSendToken(myDSite, ownerEntry2extOTI(OTI), ce->site);
 }
 
 void Chain::shortcutCrashCell(CellManager* cm,TaggedRef val){
@@ -645,12 +645,12 @@ void Chain::shortcutCrashCell(CellManager* cm,TaggedRef val){
   ce=getFirstNonGhost();
   OB_TIndex index = MakeOB_TIndex(cm->getTertPointer());
   if(ce->site==myDSite){
-    cellReceiveContentsManager(OT->index2entry(index),val,OT->entry2extOTI(index));
+    cellReceiveContentsManager(ownerIndex2ownerEntry(index),val,ownerEntry2extOTI(index));
     return;}
   //  kost@ 'cellSendContents()' signature ??!
   //  was like that:
   // cellSendContents(val,ce->site,myDSite,index);
-  cellSendContents(val, ce->site, myDSite, OT->entry2extOTI(index));
+  cellSendContents(val, ce->site, myDSite, ownerEntry2extOTI(index));
 }
 
 void
@@ -732,7 +732,7 @@ void Chain::managerSeesSitePerm(Tertiary *t,DSite* s){
     return;}
   PD((ERROR_DET,"Token lost"));
   OB_TIndex OTI = MakeOB_TIndex(t->getTertPointer());
-  handleTokenLost(t, OT->index2entry(OTI), OT->entry2extOTI(OTI));
+  handleTokenLost(t, ownerIndex2ownerEntry(OTI), ownerEntry2extOTI(OTI));
   Assert(inform==NULL);
   return;
 }
@@ -773,7 +773,7 @@ void triggerInformsOK(InformElem **base,OwnerEntry* oe,EntityCond ec){
 void Chain::managerSeesSiteTemp(Tertiary *t,DSite* s){
   EntityCond ec;
   OB_TIndex index = MakeOB_TIndex(t->getTertPointer());
-  OwnerEntry *oe=OT->index2entry(index);
+  OwnerEntry *oe=ownerIndex2ownerEntry(index);
   PD((ERROR_DET,"managerSeesSiteTemp site:%s nr:%d",
       s->stringrep(),index));
 
@@ -794,7 +794,7 @@ void Chain::managerSeesSiteOK(Tertiary *t,DSite* s){
   Assert(hasFlag(INTERESTED_IN_OK));
 
   OB_TIndex index = MakeOB_TIndex(t->getTertPointer());
-  OwnerEntry *oe=OT->index2entry(index);
+  OwnerEntry *oe=ownerIndex2ownerEntry(index);
   PD((ERROR_DET,"managerSeesSiteOK site:%s nr:%d",
       s->stringrep(),index));
 
@@ -816,11 +816,11 @@ void Chain::managerSeesSiteOK(Tertiary *t,DSite* s){
 /**********************************************************************/
 
 inline void proxyInform(Tertiary* t,EntityCond ec){
-  sendAskError(BT->bi2borrow(MakeOB_TIndex(t->getTertPointer())),ec);
+  sendAskError(borrowIndex2borrowEntry(MakeOB_TIndex(t->getTertPointer())),ec);
 }
 
 inline void proxyDeInform(Tertiary* t,EntityCond ec){
-  sendUnAskError(BT->bi2borrow(MakeOB_TIndex(t->getTertPointer())),ec);
+  sendUnAskError(borrowIndex2borrowEntry(MakeOB_TIndex(t->getTertPointer())),ec);
 }
 
 EntityCond askPart(Tertiary* t, EntityCond ec){
@@ -852,9 +852,9 @@ void varAdjustPOForFailure(OB_TIndex index,EntityCond oldC, EntityCond newC)
 {
   if(varAskPart(oldC)==varAskPart(newC)) return;
   if(varAskPart(oldC)!=ENTITY_NORMAL){
-    sendUnAskError(BT->bi2borrow(index),oldC);}
+    sendUnAskError(borrowIndex2borrowEntry(index),oldC);}
   if(varAskPart(newC)!=ENTITY_NORMAL){
-    sendAskError(BT->bi2borrow(index),newC);}
+    sendAskError(borrowIndex2borrowEntry(index),newC);}
 }
 
 /**********************************************************************/
@@ -1013,7 +1013,7 @@ Bool installWatcher(Tertiary* t,EntityCond wc,TaggedRef proc,
   else{
     // Establish a connection if a watcher is installed. 
     if (!w->isInjector()) {
-      BorrowEntry* b = BT->bi2borrow(MakeOB_TIndex(t->getTertPointer()));
+      BorrowEntry* b = borrowIndex2borrowEntry(MakeOB_TIndex(t->getTertPointer()));
       NetAddress *na = b->getNetAddress();
       DSite* site    = na->site;
       MsgContainer *msgC = msgContainerManager->newMsgContainer(site);
@@ -1118,7 +1118,7 @@ TaggedRef listifyWatcherCond(EntityCond ec,Tertiary *t){
   case Co_Cell:{
     if(t->getTertType()==Te_Manager){
       return listifyWatcherCond(ec,FALSE,TRUE);}
-    DSite*s =BT->bi2borrow(MakeOB_TIndex(t->getTertPointer()))->getNetAddress()->site;
+    DSite*s =borrowIndex2borrowEntry(MakeOB_TIndex(t->getTertPointer()))->getNetAddress()->site;
     if(s->siteStatus()==SITE_PERM)
       return listifyWatcherCond(ec,TRUE,FALSE);
     else
@@ -1460,8 +1460,7 @@ OZ_Return tertiaryFailHandle(Tertiary* c,TaggedRef proc,EntityCond ec,
 OZ_Term createFailedEntity(Ext_OB_TIndex OTI, Bool defer)
 {
   OZ_Term oz; 
-  NetAddress na = NetAddress(myDSite,OTI); 
-  BorrowEntry *b = borrowTable->find(&na);
+  BorrowEntry *b = borrowTable->find(OTI, myDSite);
   if (b!=NULL)
     {
       oz = b->getValue();
@@ -1471,7 +1470,7 @@ OZ_Term createFailedEntity(Ext_OB_TIndex OTI, Bool defer)
       // Did not exists 
       OB_TIndex bi=borrowTable->newBorrow(NULL,myDSite,OTI);
       Tertiary *tert = new DistResource(bi);
-      borrowTable->bi2borrow(bi)->changeToTertiary(tert);
+      borrowIndex2borrowEntry(bi)->changeToTertiary(tert);
       
       // The entity is now marked as perm_failed. 
       // This could be done directly, but if the message is

@@ -44,7 +44,12 @@
 #define PO_getValue(po) \
 ((po)->isTertiary() ? makeTaggedConst((po)->getTertiary()) : (po)->getRef())
 
-NewOwnerTable *ownerTable;
+//
+template class GenDistEntryTable<BorrowEntry>;
+#include "hashtblDefs.cc"
+
+
+OwnerTable *ownerTable;
 BorrowTable *borrowTable;
 
 
@@ -53,92 +58,80 @@ void oz_dpvar_localize(TaggedRef *);
 
 void OwnerEntry::localize()
 {
-  if (isVar()) { 
-    if(GET_VAR(this,Manager)->getInfo()==NULL)
-      oz_dpvar_localize(getPtr());
-    else return;
-  } else {
-    if(isTertiary() &&
-       !localizeTertiary(getTertiary()))
+  if (isTertiary()) {
+    if (!localizeTertiary(getTertiary()))
       return;
-  } 
-  homeRef.removeReference();
+  } else if (isVar()) {
+    if (GET_VAR(this,Manager)->getInfo() == NULL)
+      oz_dpvar_localize(getPtr());
+    else 
+      return;
+  }
+  // entity localization complete - get rid of 'this';
   OT->freeOwnerEntry(getExtOTI());
+  delete this;
 }
 
-void OwnerEntry::updateReference(DSite* site){
-  if (isVar() || isTertiary()){
+void OwnerEntry::updateReference(DSite* site)
+{
+  if (isVar() || isTertiary()) {
     MsgContainer *msgC = msgContainerManager->newMsgContainer(site);
     msgC->put_M_BORROW_REF(getValue());
     send(msgC);
-  }
-  else
+  } else
     printf("Warning: Updating bound variable!\n");
 }
 
-
-
-
-
-OZ_Term BorrowEntry::extract_info() {
+OZ_Term BorrowEntry::extract_info()
+{
   OZ_Term primCred, secCred;
   OZ_Term na=
     OZ_recordInit(oz_atom("netAddress"),
 		  oz_cons(oz_pairA("site", oz_atom(remoteRef.netaddr.site->stringrep_notype())),
-			  oz_cons(oz_pairAI("index",(int)remoteRef.netaddr.index), oz_nil())));
-  
+		  oz_cons(oz_pairAI("index",(int)remoteRef.netaddr.index), oz_nil())));
+
   return OZ_recordInit(oz_atom("be"),
 		       oz_cons(oz_pairAA("type", toC(PO_getValue(this))),
-			       oz_cons(oz_pairA("na", na),
-				       oz_cons(oz_pairA("dist_gc",remoteRef.extract_info()),
-					       oz_nil()))));
+		       oz_cons(oz_pairA("na", na),
+		       oz_cons(oz_pairA("dist_gc",remoteRef.extract_info()),
+			       oz_nil()))));
 }
 
-
-void BorrowEntry::freeBorrowEntry(){
+void BorrowEntry::freeBorrowEntry()
+{
   Assert(remoteRef.canBeReclaimed());
-  if(isVar() && typeOfBorrowVar(this)==VAR_PROXY){
-    GET_VAR(this,Proxy)->nowGarbage(this);}
-  setFlags(474747);
-  if(!isPersistent())
-    remoteRef.dropReference();}
+  if (isVar() && typeOfBorrowVar(this) == VAR_PROXY) {
+    GET_VAR(this,Proxy)->nowGarbage(this);
+  }
+  if (!isPersistent())
+    remoteRef.dropReference();
+  DebugCode(setFlags(-1););
+}
 
-void BorrowEntry::gcBorrowRoot(int i) {
-  if (isVar()) 
-    {
-      if(oz_isMark(getRef()))
-	{
-	  gcPO();
-	  return;
-	}
-      if (tagged2Var(*getPtr())->getSuspList()!=0) 
-	{
-	  gcPO();
-	  return;
-	}
-      if(!remoteRef.canBeReclaimed()) 
-	{
-	  gcPO();
-	}
-      return;
-    }
-  
-  if(isRef())
-    {
-      gcPO(); 
-      return;
-    }
-  Assert(isTertiary());
-
-  if(getTertiary()->cacIsMarked() || !remoteRef.canBeReclaimed() ||
-     isTertiaryPending(getTertiary()))
-    {
+void BorrowEntry::gcBorrowRoot()
+{
+  if (isTertiary()) {
+    if(getTertiary()->cacIsMarked() || 
+       !remoteRef.canBeReclaimed() ||
+       isTertiaryPending(getTertiary())) {
       gcPO();
     }
-  return;
+  } else if (isRef()) {
+    gcPO(); 
+  } else {
+    Assert(isVar());
+    if (oz_isMark(getRef())) {
+      gcPO();
+    } else if (tagged2Var(*getPtr())->getSuspList() != 0) {
+      gcPO();
+    } else if (!remoteRef.canBeReclaimed()) {
+      gcPO();
+    }
+  }
 }
 
-void OB_Entry::gcPO() {
+void OB_Entry::gcPO()
+{
   if (isGCMarked()) return;
   makeGCMark();
   Assert(isTertiary() || isRef() || isVar());
@@ -148,199 +141,190 @@ void OB_Entry::gcPO() {
 
 void BorrowTable::gcBorrowTableRoots()
 {
-   int size = getSize();
-   for(int i=0;i<size;i++) 
-     {
-       BucketHashNode* o = getBucket(i); 
-       while(o){
-	 BorrowEntry *b = (BorrowEntry *) o;
-	 o = o->getNext();
-	 if (!b->isGCMarked())b->gcBorrowRoot(i);
-       }
-     }
+  for (int i = getSize(); i--; ) {
+    BorrowEntry *be = getFirstNode(i); 
+    while (be) {
+      if (!be->isGCMarked())
+	be->gcBorrowRoot();
+      be = be->getNext();
+    }
+  }
 }
 
-void BorrowEntry::gcBorrowUnusedFrame(Tertiary* t) {
-  Assert(!(isTertiaryPending(getTertiary())));
-  if(t->getType()==Co_Cell){
+void BorrowEntry::gcBorrowUnusedFrame()
+{
+  Tertiary* t = getTertiary();
+  Assert(!(isTertiaryPending(t)));
+  if (t->getType() == Co_Cell) {
     CellFrame *cf = (CellFrame*) t;
-    if(cf->dumpCandidate()){
-      cellLockSendDump(this);}}
-  else{
-    Assert(t->getType()==Co_Lock);
+    if (cf->dumpCandidate())
+      cellLockSendDump(this);
+  } else {
+    Assert(t->getType() == Co_Lock);
     LockFrame *lf = (LockFrame*) t;
-    if(lf->dumpCandidate()){
-      cellLockSendDump(this);}
+    if (lf->dumpCandidate())
+      cellLockSendDump(this);
   }
   gcPO();
 }
 
 void BorrowTable::gcBorrowTableUnusedFrames()
 {
-  int size = getSize();
-  for(int i=0;i<size;i++) 
-    {
-      BucketHashNode* o = getBucket(i); 
-      while(o){
-	BorrowEntry *b = (BorrowEntry *) o;
-	o = o->getNext();
-	if((!b->isGCMarked()) && b->isTertiary() && 
-	   b->getTertiary()->isFrame()){
-	  b->gcBorrowUnusedFrame(b->getTertiary());}}
+  for (int i = getSize(); i--; ) {
+    BorrowEntry *be = getFirstNode(i); 
+    while (be) {
+      if ((!be->isGCMarked()) &&
+	  be->isTertiary() && 
+	  be->getTertiary()->isFrame())
+	be->gcBorrowUnusedFrame();
+      be = be->getNext();
     }
+  }
 }
 
-void BorrowTable::gcFrameToProxy(){
-   int size = getSize();
-   for(int i=0;i<size;i++) 
-     {
-       BucketHashNode* o = getBucket(i); 
-       while(o)
-	 {
-	   BorrowEntry *b = (BorrowEntry *) o;
-	   o = o->getNext();
-	   if((b->isTertiary())){
-	     Tertiary *t=b->getTertiary();
-	     if(t->isFrame()) {
-	       if((t->getType()==Co_Cell)
-		  && ((CellFrame*)t)->getState()==Cell_Lock_Invalid
-		  && ((CellSec*)((CellFrame*)t)->getSec())->getPending()==NULL){
-		 ((CellFrame*)t)->convertToProxy();}
-	       else{
-		 if((t->getType()==Co_Lock)
-		    && ((LockFrame*)t)->getState()==Cell_Lock_Invalid){
-		   ((LockFrame*)t)->convertToProxy();}}}}
-	 }
-     }
+void BorrowTable::gcFrameToProxy()
+{
+  for (int i = getSize(); i--; ) {
+    BorrowEntry *be = getFirstNode(i); 
+    while (be) {
+      if ((be->isTertiary())) {
+	Tertiary *t= be->getTertiary();
+	if (t->isFrame()) {
+	  if ((t->getType()==Co_Cell)
+	      && ((CellFrame*)t)->getState()==Cell_Lock_Invalid
+	      && ((CellSec*)((CellFrame*)t)->getSec())->getPending()==NULL) {
+	    ((CellFrame*)t)->convertToProxy();
+	  } else {
+	    if ((t->getType()==Co_Lock)
+		&& ((LockFrame*)t)->getState()==Cell_Lock_Invalid)
+	      ((LockFrame*)t)->convertToProxy();
+	  }
+	}
+      }
+      be = be->getNext();
+    }
+  }
 }
 
 
 /* OBSERVE - this must done at the end of other gc */
 void BorrowTable::gcBorrowTableFinal()
 {
-   int size = getSize();
-   for(int i=0;i<size;i++) 
-     {
-       BucketHashNode* o = getBucket(i); 
-       while(o)
-	 {
-	   BorrowEntry *b = (BorrowEntry *) o;
-	   o = o->getNext();
-	   if(b->isVar()) 
-	     {
-	       if(b->isGCMarked())
-		 {
-		   b->removeGCMark();
-		   b->getSite()->makeGCMarkSite();
-		 }
-	       else
-		 {
-		   if(!errorIgnoreVar(b)) maybeUnaskVar(b);
-		   
-		   borrowTable->maybeFreeBorrowEntry(MakeOB_TIndex(b));
-		 }
-	     }
-	   else 
-	     if(b->isTertiary())
-	       {
-		 Tertiary *t = b->getTertiary();
-		 if(b->isGCMarked()) 
-		   {
-		     b->removeGCMark();
-		     b->getSite()->makeGCMarkSite();
-		   }
-		 else
-		   {
-		     if(!errorIgnore(t)) maybeUnask(t);
-		     Assert(t->isProxy());
-		     borrowTable->maybeFreeBorrowEntry(MakeOB_TIndex(b));
-		   }
-	       }
-	     else 
-	       if(b->isRef())
-		 {
-		   Assert(b->isGCMarked());
-		   b->removeGCMark();
-		   b->getSite()->makeGCMarkSite();
-		 }
-	 }
-     }
+  for (int i = getSize(); i--; ) {
+    BorrowEntry *be = getFirstNode(i); 
+    while (be) {
+      BorrowEntry *nbe = be->getNext();
+
+      //
+      if (be->isTertiary()) {
+	Tertiary *t = be->getTertiary();
+	if (be->isGCMarked()) {
+	  be->removeGCMark();
+	  be->getSite()->makeGCMarkSite();
+	} else {
+	  if (!errorIgnore(t)) maybeUnask(t);
+	  Assert(t->isProxy());
+	  borrowTable->maybeFreeBorrowEntry(MakeOB_TIndex(be));
+	}
+
+	//
+      } else if (be->isRef()) {
+	Assert(be->isGCMarked());
+	be->removeGCMark();
+	be->getSite()->makeGCMarkSite();
+
+	//
+      } else {
+	Assert(be->isVar());
+	if (be->isGCMarked()) {
+	  be->removeGCMark();
+	  be->getSite()->makeGCMarkSite();
+	} else {
+	  if(!errorIgnoreVar(be)) maybeUnaskVar(be);
+	  borrowTable->maybeFreeBorrowEntry(MakeOB_TIndex(be));
+	}
+      }
+
+      //
+      be = nbe;
+    }
+  }
 }
 
 int BorrowTable::dumpFrames()
 {
   int notReady = 0;
-  
+
   //
-  int size = getSize();
-  for(int i=0;i<size;i++) {
-    BucketHashNode* o = getBucket(i); 
-    while(o)
-      {
-	BorrowEntry *be = (BorrowEntry *) o;
-	o = o->getNext();
-	if (be->isTertiary()){
-	  Tertiary *t = be->getTertiary();
-	  if (t->isFrame()) {
-	    int type = t->getType();
-	    int state;
-	    
-	    if (type == Co_Cell) {
-	      state = ((CellFrame *) t)->getState();
-	      ((CellFrame *) t)->getCellSec()->dumpPending();
-	    } else if (type == Co_Lock) {
-	      state = ((LockFrame *) t)->getState();
-	      ((LockFrame *) t)->getLockSec()->dumpPending();
+  for (int i = getSize(); i--; ) {
+    BorrowEntry *be = getFirstNode(i); 
+    while (be) {
+      if (be->isTertiary()){
+	Tertiary *t = be->getTertiary();
+	if (t->isFrame()) {
+	  int type = t->getType();
+	  int state;
+
+	  if (type == Co_Cell) {
+	    state = ((CellFrame *) t)->getState();
+	    ((CellFrame *) t)->getCellSec()->dumpPending();
+	  } else if (type == Co_Lock) {
+	    state = ((LockFrame *) t)->getState();
+	    ((LockFrame *) t)->getLockSec()->dumpPending();
+	  } else {
+	    be = be->getNext();
+	    continue;
+	  }
+
+	  switch (state){
+	  case Cell_Lock_Invalid:
+	    if (type == Co_Lock)
+	      ((CellFrame *) t)->convertToProxy();
+	    else
+	      ((LockFrame *) t)->convertToProxy();
+	    break;
+
+	  case Cell_Lock_Requested:
+	  case Cell_Lock_Valid:
+	    cellLockSendDump(be);
+	    if (type == Co_Lock)
+	      ((CellFrame *) t)->getCellSec()->markDumpAsk();
+	    else
+	      ((LockFrame *) t)->getLockSec()->markDumpAsk();
+	    notReady++;		// dumping just begun;
+	    break;
+
+	  case Cell_Lock_Valid|Cell_Lock_Dump_Asked:
+	  case Cell_Lock_Requested|Cell_Lock_Next:
+	  case Cell_Lock_Requested|Cell_Lock_Next|Cell_Lock_Dump_Asked:
+	  case Cell_Lock_Requested|Cell_Lock_Dump_Asked:
+	    notReady++;		// dumping still in progress;
+	    break;
+
+	    // kost@ : optimization: don't do 'ask dump' protocol, but
+	    // just break the lock locally and send it away:
+	  case Cell_Lock_Valid|Cell_Lock_Next:
+	    if(type == Co_Lock) {
+	      NetAddress *na = be->getNetAddress();
+	      LockSec *sec = ((LockFrame *) t)->getLockSec();
+	      sec->markInvalid();
+	      DSite *toS = sec->getNext();
+	      lockSendToken(na->site, na->index, toS);
+	      ((LockFrame *) t)->convertToProxy();
 	    } else {
-	      continue;
-	    }
-	    
-	    switch (state){
-	    case Cell_Lock_Invalid:
-	      if (type == Co_Lock)
-		((CellFrame *) t)->convertToProxy();
-	      else
-		((LockFrame *) t)->convertToProxy();
-	      break;
-		 
-	    case Cell_Lock_Requested:
-	    case Cell_Lock_Valid:
-	      cellLockSendDump(be);
-	      if (type == Co_Lock)
-		((CellFrame *) t)->getCellSec()->markDumpAsk();
-	      else
-		((LockFrame *) t)->getLockSec()->markDumpAsk();
-	      notReady++;		// dumping just begun;
-	      break;
-	      
-	    case Cell_Lock_Valid|Cell_Lock_Dump_Asked:
-	       case Cell_Lock_Requested|Cell_Lock_Next:
-	    case Cell_Lock_Requested|Cell_Lock_Next|Cell_Lock_Dump_Asked:
-	    case Cell_Lock_Requested|Cell_Lock_Dump_Asked:
-	      notReady++;		// dumping still in progress;
-	      break;
-	      
-	      // kost@ : optimization: don't do 'ask dump' protocol, but
-	      // just break the lock locally and send it away:
-	    case Cell_Lock_Valid|Cell_Lock_Next:
-	      if(type == Co_Lock) {
-		NetAddress *na = be->getNetAddress();
-		LockSec *sec = ((LockFrame *) t)->getLockSec();
-		sec->markInvalid();
-		DSite *toS = sec->getNext();
-		lockSendToken(na->site, na->index, toS);
-		((LockFrame *) t)->convertToProxy();
-	      } else {
-		Assert(0);
-	      }
-	      break;
-	      
-	    default:
 	      Assert(0);
 	    }
+	    break;
+
+	  default:
+	    Assert(0);
 	  }
 	}
       }
+
+      //
+      be = be->getNext();
+    }
   }
   return (notReady);
 }
@@ -350,244 +334,200 @@ void BorrowTable::dumpProxies()
 {
   DebugCode(int proxies = 0;);
   DebugCode(int frames = 0;);
-  int size = getSize();
-  for(int i=0;i<size;i++) {
-    BucketHashNode* o = getBucket(i); 
-    while(o)
-      {
-	BorrowEntry *be = (BorrowEntry *) o;
-	o = o->getNext();
-	if (be->isTertiary()) {
-	  Tertiary *t = be->getTertiary();
-	  
-	  if (t->isProxy()) {
-	    maybeFreeBorrowEntry(MakeOB_TIndex(be));
-	    DebugCode(proxies++;);
-	    continue;
-	  }
-	  
+
+  //
+  for (int i = getSize(); i--; ) {
+    BorrowEntry *be = getFirstNode(i); 
+    while (be) {
+      BorrowEntry *nbe = be->getNext();
+
+      //
+      if (be->isTertiary()) {
+	Tertiary *t = be->getTertiary();
+
+	if (t->isProxy()) {
+	  maybeFreeBorrowEntry(MakeOB_TIndex(be));
+	  DebugCode(proxies++;);
+	} else {
 	  // kost@ : any frames left over are stuck here: it does not
 	  // make any sense to reclaim the credit 'cause some credit
 	  // will be lost anyway;
 	  if (t->isFrame()) {
 	    DebugCode(frames++;);
-	    continue;
 	  }
 	}
-	else 
-	  {
-	    if (be->isVar() && oz_isProxyVar(oz_deref(be->getRef()))) 
-	      {
-		maybeFreeBorrowEntry(MakeOB_TIndex(be));
-		DebugCode(proxies++;);
-		continue;
-	      }
-	  }
+      } else {
+	if (be->isVar() && oz_isProxyVar(oz_deref(be->getRef()))) {
+	  maybeFreeBorrowEntry(MakeOB_TIndex(be));
+	  DebugCode(proxies++;);
+	}
       }
+
+      //
+      be = nbe;
+    }
   }
 }
 
-int BorrowTable::notGCMarked() {
-  int size = getSize();
-  for(int i=0;i<size;i++) {
-    BucketHashNode* o = getBucket(i); 
-    while(o)
-      {
-	BorrowEntry *be = (BorrowEntry *) o;
-	o = o->getNext();
-	if(be->isGCMarked())
-	  return FALSE;
-	if(be->isTertiary()) {
-	  if(be->getTertiary()->cacIsMarked())
-	    return FALSE;
-	  Assert(BT->bi2borrow(MakeOB_TIndex(be->getTertiary()->getTertPointer())) == be);
-	  
-	}
+#if defined(DEBUG_CHECK)
+int BorrowTable::notGCMarked()
+{
+  for (int i = getSize(); i--; ) {
+    BorrowEntry *be = getFirstNode(i); 
+    while (be) {
+      if (be->isGCMarked())
+	return (FALSE);
+      if (be->isTertiary()) {
+	if (be->getTertiary()->cacIsMarked())
+	  return (FALSE);
+	Assert(borrowIndex2borrowEntry(MakeOB_TIndex(be->getTertiary()->getTertPointer())) == be);
       }
+      be = be->getNext();
+    }
   }
-  return TRUE;
+  return (TRUE);
 }
+#endif
 
-/*******************************************************************
+//
+// Owner Table
+//
 
-New Owner Table
-
- *******************************************************************/
-
-void NewOwnerTable::compactify()
+OwnerTable::OwnerTable(int sizeIn)
+  : tableSize(sizeIn), localized(0) DebugArg(counter(0))
 {
-  printf("New owner table is not compactified\n");
-}
-void NewOwnerTable::resize()
-{
-  printf("We dont have to resize the NewOwnerTable\n");
-}
-
-OB_TIndex NewOwnerTable::newOwner(OwnerEntry *&oe, int algs)
-{
-  Ext_OB_TIndex extOTI = MakeExt_OB_TIndex(nxtId++); 
-  oe = new OwnerEntry(extOTI, algs);
-  htAdd(hash(extOTI), oe);
-  return (MakeOB_TIndex(oe));
+  table = (OwnerTableSlot *) malloc(tableSize * sizeof(OwnerTableSlot));
+  if (table == (OwnerTableSlot *) 0)
+    OZ_error("Memory allocation: OwnerTable (re)allocation not possible");
+  //
+  table[tableSize-1].setFree(-1);
+  for (int i = tableSize-1; i--; )
+    table[i].setFree(i+1);
+  nextfree = 0;
 }
 
-void NewOwnerTable::freeOwnerEntry(Ext_OB_TIndex extOTI)
+OwnerTable::~OwnerTable()
 {
-  (void) htSubPkSk(hash(extOTI), (unsigned int) Ext_OB_TIndex2Int(extOTI));
-  localized++; 
-  return;
+  DebugCode(tableSize = counter = localized = nextfree = -1;);
+  delete [] table;
+  DebugCode(table = (OwnerTableSlot *) -1;);
 }
 
-OZ_Term NewOwnerTable::extract_info(){
+void OwnerTable::resize()
+{
+  int newsize = (ozconf.dpTableExpandFactor * tableSize) / 100;
+  Assert(newsize > tableSize);
+  table =
+    (OwnerTableSlot *) realloc(table, newsize * sizeof(OwnerTableSlot));
+  if (table == (OwnerTableSlot *) 0)
+    OZ_error("Memory allocation: OwnerTable (re)allocation not possible");
+  //
+  table[newsize-1].setFree(-1);
+  for (int i = tableSize; i < newsize-1; i++)
+    table[i].setFree(i+1);
+  nextfree = tableSize;
+  //
+  tableSize = newsize;
+}
+
+OZ_Term OwnerTable::extract_info()
+{
   OZ_Term list=oz_nil();
   OZ_Term credit;
   int size = getSize();
-  for(int i=0;i<size;i++) {
-    BucketHashNode* o = getBucket(i); 
-    while(o){
-      OwnerEntry *oe = (OwnerEntry *)o; 
-      credit=oe->homeRef.extract_info();
-      o = o->getNext();
+
+  //
+  for (int i = 0; i<size; i++) {
+    if (!table[i].isFree()) {
+      OwnerEntry *oe = table[i].getOE();
+      credit = oe->homeRef.extract_info();
       list=
 	oz_cons(OZ_recordInit(oz_atom("oe"),
-	        oz_cons(oz_pairAI("extOTI",oe->homeRef.extOTI),
-		oz_cons(oz_pairAA("type", toC(PO_getValue(oe))),
-	        oz_cons(oz_pairA("dist_gc", credit), 
-		oz_nil())))), list);
-    
+			      oz_cons(oz_pairAI("extOTI",oe->getExtOTI()),
+			      oz_cons(oz_pairAA("type",toC(PO_getValue(oe))),
+			      oz_cons(oz_pairA("dist_gc", credit), 
+				      oz_nil())))), list);
     }
   }
+
+  //
   return OZ_recordInit(oz_atom("ot"),
 		       oz_cons(oz_pairAI("size", size),
-			       oz_cons(oz_pairAI("localized", getLocalized()),
-				       oz_cons(oz_pairA("list", list), oz_nil()))));  
+		       oz_cons(oz_pairAI("localized", getLocalized()),
+		       oz_cons(oz_pairA("list", list), oz_nil()))));  
 }
  
+void OwnerTable::print() { printf("OwnerTable::print\n"); }
 
-void NewOwnerTable::print(){ printf("print\n");}
-
-void NewOwnerTable::gcOwnerTableRoots()
+void OwnerTable::gcOwnerTableRoots()
 {
-  int size = getSize();
-  for(int i=0;i<size;i++) {
-    BucketHashNode* o = getBucket(i); 
-    while(o){
-      OwnerEntry *en = (OwnerEntry *)(o);
-      en->gcPO();
-      o = o->getNext();
-    }
-  } 
+  for (int i = tableSize; i--; )
+    if (!table[i].isFree())
+      (table[i].getOE())->gcPO();
 } 
 
-void NewOwnerTable::gcOwnerTableFinal()
+void OwnerTable::gcOwnerTableFinal()
 {
-  int size = getSize();
-  for(int i=0;i<size;i++) {
-    BucketHashNode* o = getBucket(i); 
-    while(o){
-      OwnerEntry *oe = (OwnerEntry*) o;
-      o = o->getNext();
+  for (int i = tableSize; i--; ) {
+    if (!table[i].isFree()) {
+      OwnerEntry *oe = table[i].getOE();
       oe->removeGCMark();
-      if (oe->isVar()){
+      if (oe->isVar()) {
 	TaggedRef *ptr = oe->getPtr();
 	DEREFPTR(v,ptr);
 	Assert(oz_isManagerVar(v));
-	oe->mkVar(makeTaggedRef(ptr),oe->getFlags());
+	oe->mkVar(makeTaggedRef(ptr), oe->getFlags());
       }
     }
   }
   // compactify?
 }
 
-int NewOwnerTable::notGCMarked() {
+#if defined(DEBUG_CHECK)
+int OwnerTable::notGCMarked()
+{
   int size = getSize();
-  for(int i=0;i<size;i++) {
-    BucketHashNode* o = getBucket(i); 
-    while(o){
-      OwnerEntry *oe = (OwnerEntry *)o;
-      o = o->getNext();
-      if(oe->isGCMarked()) return FALSE;
-      if(oe->isTertiary() && oe->getTertiary()->cacIsMarked()) return FALSE;
+  for (int i=0; i<size; i++) {
+    if (!table[i].isFree()) {
+      OwnerEntry *oe = table[i].getOE();
+      if (oe->isGCMarked() ||
+	  (oe->isTertiary() && oe->getTertiary()->cacIsMarked()))
+	return (FALSE);
     }
   }
-  return TRUE;
+  return (TRUE);
 }
+#endif
 
-OwnerEntry* NewOwnerTable::extOTI2entry(Ext_OB_TIndex extOTI)
+OZ_Term BorrowTable::extract_info()
 {
-  Assert(Ext_OB_TIndex2Int(extOTI) <= nxtId);
-  unsigned int hvalue = hash(extOTI);
-  BucketHashNode *aux = htFindPk(hvalue);
-  while(aux && aux->getPrimKey() != extOTI) aux = aux ->getNext(); 
-  return ((OwnerEntry *) aux);
-}
-
-
-BorrowEntry *BorrowTable::find(NetAddress *na)
-{
-  return find(na->index, na->site);
-}
-
-
-BorrowEntry *BorrowTable::find(Ext_OB_TIndex index, DSite  *site)
-{
-  return ((BorrowEntry *) htFindPkSk((unsigned int) OB_TIndex2Int(index),
-				     (unsigned int) site)); 
-}
- 
-OB_TIndex BorrowTable::newBorrow(RRinstance *c, DSite * sd, Ext_OB_TIndex extOTI)
-{
-  BorrowEntry* be = new BorrowEntry(sd, extOTI, c);
-  htAdd((unsigned int) Ext_OB_TIndex2Int(extOTI), be);
-  return (MakeOB_TIndex(be));
-}  
-
-Bool BorrowTable::maybeFreeBorrowEntry(OB_TIndex index)
-{
-  BorrowEntry *b = bi2borrow(index);
-  if(!b->remoteRef.canBeReclaimed()) {
-    if(b->isVar()){
-      b->changeToRef();
-    }
-    return FALSE;
-  }
-  int ans = (int) htSubPkSk(b->getPrimKey(),b->getSecKey());
-  b->freeBorrowEntry();  
-  delete b;
-  return TRUE;
-}
-
-OZ_Term BorrowTable::extract_info() {
   OZ_Term ans = oz_nil();
   int size = getSize();
-  for(int i=0;i<size;i++) {
-    BucketHashNode* o = getBucket(i); 
-    while(o){
-      BorrowEntry *be = (BorrowEntry *)o;
-      o = o->getNext();
-      ans = oz_cons(be->extract_info(),ans);
+  for (int i=0; i<size; i++) {
+    BorrowEntry *be = getFirstNode(i); 
+    while (be) {
+      ans = oz_cons(be->extract_info(), ans);
+      be = be->getNext();
     }
   }
   return OZ_recordInit(oz_atom("ot"),
-		       oz_cons(oz_pairAI("size", size),oz_cons(oz_pairA("list",ans),oz_nil())));
+		       oz_cons(oz_pairAI("size", size),
+		       oz_cons(oz_pairA("list",ans),oz_nil())));
 
 }
 
 void BorrowTable::print()
 {
   int size = getSize();
-  for(int i=0;i<size;i++) {
-    BucketHashNode* o = getBucket(i); 
-    if(o){
-      printf("E %d",i);
-      while(o){
-	printf(" %d#%d",o->getPrimKey(),o->getSecKey());
-	o = o->getNext();
+  for (int i=0;i<size;i++) {
+    BorrowEntry *be = getFirstNode(i); 
+    while (be) {
+      printf("E %d", i);
+      while (be){
+	printf(" %d#%d", be->getExtOTI(), ToInt32(be));
+	be = be->getNext();
       }
-      
     }
   }
   printf("\n"); 
 }
-	
-	
