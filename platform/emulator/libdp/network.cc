@@ -1544,9 +1544,32 @@ class TcpCache {
   unsigned long myTime;
   unsigned long curTime;
   
-  void newTmpDwn(){if(!tmpTime) tmpTime=curTime+WKUPTMP_TIME;}
-  void newProbe(){if(!probeTime)probeTime=curTime+WKUPPRB_TIME;}
-  void newMyDwn(){if(!myTime)   myTime=curTime+WKUPMYC_TIME;}
+  void setMinTime(int time){
+    int testTime = time + 1; 
+    if(time <min( 
+		 min(tmpTime?WKUPTMP_TIME:testTime, 
+		     probeTime?WKUPPRB_TIME:testTime) , 
+		 myTime?WKUPMYC_TIME:testTime))
+      am.setMinimalTaskInterval((void*)this, time);
+  }
+
+  void newTmpDwn(){
+    if(!tmpTime){ 
+      tmpTime=curTime+WKUPTMP_TIME;
+      setMinTime(WKUPTMP_TIME);}
+  }
+  
+  void newProbe(){
+    if(!probeTime){
+      probeTime=curTime+WKUPPRB_TIME;
+      setMinTime(WKUPPRB_TIME);}
+    
+  }
+  void newMyDwn(){
+    if(!myTime)   {
+      myTime=curTime+WKUPMYC_TIME;
+      setMinTime(WKUPMYC_TIME);}
+  }
 
 
   void addToFront(Connection *r, Connection* &head, Connection* &tail){
@@ -1837,7 +1860,10 @@ void  TcpCache::wakeUp(unsigned int time){
     if(sendProbeConnections())
       probeTime += WKUPPRB_TIME; 
     else
-      probeTime = 0;}
+      probeTime = 0;
+  if(!(probeTime|tmpTime|myTime))
+    am.setMinimalTaskInterval((void*)this,0);
+}
 
 Bool TcpCache::checkWakeUp(unsigned int time){
   curTime = time;
@@ -3923,7 +3949,7 @@ void initNetwork()
   PD((OS,"register ACCEPT- acceptHandler fd:%d",tcpFD));
   tcpCache->nowAccept();  // can be removed ?? 
 
-  if(!am.registerTask(NULL, checkTcpCache, wakeUpTcpCache))
+  if(!am.registerTask((void*) tcpCache, checkTcpCache, wakeUpTcpCache))
     OZ_error("Unable to register TCPCACHE task");
   
  

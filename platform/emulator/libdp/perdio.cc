@@ -1191,7 +1191,7 @@ void initDPCore()
   flowControler    = new FlowControler();
   msgBufferManager = new MsgBufferManager();
   
-  if(!am.registerTask(NULL, FlowControlCheck, FlowControlExecute))
+  if(!am.registerTask((void*)flowControler, FlowControlCheck, FlowControlExecute))
     OZ_error("Unable to register FlowControl task");
    
   ozconf.perdioFlowBufferSize  =  1000000;
