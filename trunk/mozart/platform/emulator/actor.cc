@@ -96,14 +96,16 @@ void WaitActor::failChildInternal(Board *bb)
   error("WaitActor::failChildInternal");
 }
 
-int WaitActor::selectChildren(int l, int r) {
-  int32 maxx = ToInt32(childs[-1]);
-
+int WaitActor::selectOrFailChildren(int l, int r) {
   if (l<=r && l>=0 && r<childCount) {
-    for (int i = l; i <= r; i++)
+    for (int i = l; i <= r; i++) {
+      childs[i-l]->setFailed();
       childs[i-l] = childs[i];
-    for (int j = r+1; j < maxx; j++)
+    }
+    for (int j = r+1; j < childCount; j++) {
+      childs[j]->setFailed();
       childs[j] = NULL;
+    }
     childCount = r-l+1;
     return childCount;
   } else {
@@ -112,7 +114,18 @@ int WaitActor::selectChildren(int l, int r) {
 
 }
 
+int WaitActor::selectOrFailChild(int i) {
+  if (i>=0 && i<childCount) {
+    for (int j = 0;   j < i;    j++) 
+      childs[j]->setFailed();
+    for (int k = i+1; k < childCount; k++) 
+      childs[k]->setFailed();
+    return 1;
+  } else {
+    return 0;
+  }
 
+}
 
 #ifdef OUTLINE
 #define inline
