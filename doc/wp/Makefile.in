@@ -28,7 +28,7 @@ TEXT = \
 	display toy text-tags
 TOOLS = \
 	dialog error menubar
-	
+
 HTMLEXTRAFILES0 = \
 	$(STARTED:%=started/%.gif) \
 	$(WIDGETS1:%=widgets-1/%.gif) \
@@ -50,7 +50,8 @@ CHUNKFILES = \
 	WindowProgramming.oz
 
 all:: $(CHUNKFILES)
-quick:: $(CHUNKFILES)
+1st:: $(CHUNKFILES)
+2nd:: $(CHUNKFILES)
 
 clean:: 
 	-rm -f $(CHUNKFILES)

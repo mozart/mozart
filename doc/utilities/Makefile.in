@@ -58,14 +58,17 @@ BINFILES = $(SYSLETS:%=$(BINDIR)/%)
 DOCBINFILES = $(SHELLSCRIPTS:%=$(DOCDIR)/%)
 DOCFILES = $(DOCDIR)/html.bst
 
-.PHONY: bootstrap bootquick all clean veryclean distclean quick boot-quick clean-xref
+.PHONY: bootstrap boot1st boot2nd all clean veryclean distclean 1st 2nd boot-1st boot-2nd clean-xref
 
 all: $(FUNCTORS) $(SYSLETS) $(ELCS)
 
-quick:
+1st:
+2nd:
 depend:
-bootquick: boot-all
-boot-quick: boot-all
+boot1st: boot-all
+boot-1st: boot-all
+boot2nd: boot-all
+boot-2nd: boot-all
 
 bootstrap: boot-all
 
