@@ -230,7 +230,8 @@ DefaultURL.ozf: URL.ozf
 Open.ozf: op/HtmlTable.oz
 
 # wp dependencies
-Tk.ozf: wp/TkInit.oz wp/TkOptions.oz
+Tk.ozf: wp/Tk.oz wp/TkInit.oz wp/TkOptions.oz
+        $(COMPILE) --norecordhoist $< -o $@
 TkTools.ozf: DefaultURL.ozf
 
 # gtk dependencies and rules
