@@ -2442,7 +2442,7 @@ LBLdispatcher:
 
        if (foundHdl) {
 	 X[0] = e->exception.value;
-	 goto LBLpopTask;
+	 goto LBLpopTaskNoPreempt;
        }
 
        if (!e->isToplevel() &&
@@ -2453,7 +2453,7 @@ LBLdispatcher:
        RefsArray argsArray = allocateRefsArray(1,NO);
        argsArray[0] = e->exception.value;
        CTT->pushCall(e->defaultExceptionHandler,argsArray,1);
-       goto LBLpopTask;
+       goto LBLpopTaskNoPreempt;
      }
    }
 
