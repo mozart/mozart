@@ -93,6 +93,8 @@ protected:
   // array);
   int maxSize;
   int size, head, tail;
+  // don't change the initial 'msgs' sizes without respecting the
+  // 'VSMailboxManagerCreated::VSMailboxManagerCreated' !
 #ifdef DEBUG_CHECK
   VSMailboxMsg msgs[1];         // 'gdb' crashes with '[0]';
 #else

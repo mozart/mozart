@@ -63,7 +63,16 @@ public:
   long getRecv() { return (r); }
 };
 //
-DebugCode(extern VSSendRecvCounter vsSRCounter;);
+// #define DEBUG_VSMSGS
+#ifdef DEBUG_CHECK
+#define DEBUG_VSMSGS
+#endif
+#ifdef DEBUG_VSMSGS
+#define DebugVSMsgs(C) C
+#else
+#define DebugVSMsgs(C)
+#endif
+DebugVSMsgsDebugCode(extern VSSendRecvCounter vsSRCounter;);
 
 //
 class VSMsgBuffer;
