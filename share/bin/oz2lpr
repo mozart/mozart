@@ -43,7 +43,7 @@ if ($status) then
   continue
 endif
 
-echo "\documentstyle[11pt,dina4]{article}\
+echo "\documentstyle[dina4]{article}\
 \include{oz2tex_preamble}\
 \pagestyle{empty}\
 \begin{document}\
