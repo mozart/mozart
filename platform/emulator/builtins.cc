@@ -6,6 +6,7 @@
  * 
  *  Contributors:
  *    Peter van Roy (pvr@info.ucl.ac.be)
+ *    Denys Duchier (duchier@ps.uni-sb.de)
  *    Leif Kornstaedt (kornstae@ps.uni-sb.de)
  * 
  *  Copyright:
