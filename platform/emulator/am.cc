@@ -779,7 +779,12 @@ void handlerALRM(int)
 // 'USR2' serves right now only virtual sites;
 void handlerUSR2(int)
 {
+#ifdef DENYS_EVENTS
+  static TaggedRef sigusr2 = oz_atom("SIGUSR2");
+  OZ_eventPush(sigusr2);
+#else
   am.handleUSR2();
+#endif
 }
 
 /* -------------------------------------------------------------------------
