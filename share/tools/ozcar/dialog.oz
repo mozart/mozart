@@ -230,10 +230,10 @@ local
 	 ExprLabel = {New Tk.label tkInit(parent: Frame.inner
 					  anchor: w
 					  text:   'Query:')}
-	 ExprEntry = {New TkExtEntry tkInit(parent:     Frame.inner
-					    font:       DefaultFont
-					    background: DefaultBackground
-					    width:      40)}
+	 ExprEntry = {New Tk.entry tkInit(parent:     Frame.inner
+					  font:       DefaultFont
+					  background: DefaultBackground
+					  width:      40)}
 	 ResultLabel = {New Tk.label tkInit(parent: Frame.inner
 					    anchor: w
 					    text:   'Result:')}
