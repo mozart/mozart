@@ -6124,7 +6124,7 @@ OZ_C_proc_begin(BISystemSetInternal,1) {
 
   if (!debugmode) {
     am.unsetSFlag(DebugMode);
-  } else if (debugmode) {
+  } else if (debugmode > 0) {
     am.setSFlag(DebugMode);
   }
     
