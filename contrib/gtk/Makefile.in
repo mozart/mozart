@@ -184,9 +184,9 @@ $(NATCMPS):%.so-$(PLATFORM): %.o
 .PHONY: all install clean veryclean distclean bootstrap depend
 
 all:		$(TARGETS) binding
-install:	$(LIB_DIR) $(LIB_TARGETS)
-install_level:
-	cp ClassLevels.ozp $(LIB_DIR)/ClassLevels.ozp
+install:	$(LIB_DIR) $(LIB_TARGETS) install_names
+install_names:
+	cp ClassNames.ozp $(LIB_DIR)/ClassNames.ozp
 
 #---------------------------------------------------------------------
 # Create Parser Files

@@ -21,7 +21,6 @@
 
 #include <mozart.h>
 #include <gtk/gtk.h>
-#include <string.h>
 #include <stdio.h>
 #include "GOZData.h"
 
@@ -62,7 +61,7 @@ OZ_BI_define (native_handle_pending_events, 0, 1) {
  */
 
 static OZ_Term createExposeEvent(char *type, GdkEventExpose *event) {
-  GdkRectangle *rect = (GdkRectangle *) malloc(sizeof(GdkRectangle));
+  GdkRectangle *rect = (GdkRectangle *) g_malloc(sizeof(GdkRectangle));
   
   memcpy(rect, &(event->area), sizeof(GdkRectangle));
 
@@ -392,7 +391,7 @@ OZ_BI_define(native_signal_emit, 2, 0) {
 
 OZ_BI_define (native_alloc_int, 1, 1) {
   OZ_declareInt(0, val);
-  int *ret = (int *) malloc(sizeof(int));
+  int *ret = (int *) g_malloc(sizeof(int));
   
   *ret = val;
   OZ_out(0) = OZ_makeForeignPointer(ret);
@@ -401,7 +400,7 @@ OZ_BI_define (native_alloc_int, 1, 1) {
 
 OZ_BI_define (native_alloc_double, 1, 1) {
   OZ_declareFloat(0, val);
-  double *ret = (double *) malloc(sizeof(double));
+  double *ret = (double *) g_malloc(sizeof(double));
   
   *ret = val;
   OZ_out(0) = OZ_makeForeignPointer(ret);
@@ -414,23 +413,23 @@ OZ_BI_define (native_alloc_str, 1, 1) {
   OZ_declareInt(0, len);
 
   if (use_str != NULL) {
-    free(use_str);
+    g_free(use_str);
   }
-  use_str = (char *) malloc(len);
+  use_str = (char *) g_malloc(len);
   OZ_out(0) = OZ_makeForeignPointer(&use_str);
   return OZ_ENTAILED;
 } OZ_BI_end
 
 OZ_BI_define (native_alloc_color, 3, 1) {
-  GdkColor *ret = (GdkColor *) malloc(sizeof(GdkColor));
+  GdkColor *ret = (GdkColor *) g_malloc(sizeof(GdkColor));
   
   OZ_declareInt(0, red);
-  OZ_declareInt(1, blue);
-  OZ_declareInt(2, green);
+  OZ_declareInt(1, green);
+  OZ_declareInt(2, blue);
   
   ret->red   = red;
-  ret->blue  = blue;
   ret->green = green;
+  ret->blue  = blue;
 
   OZ_out(0) = OZ_makeForeignPointer(ret);
   return OZ_ENTAILED;
@@ -471,7 +470,7 @@ OZ_BI_define (native_free_data, 1, 0) {
   OZ_declareForeignType(0, val, void *);
 
   if (val != NULL) {
-    free(val);
+    g_free(val);
   }
   return OZ_ENTAILED;
 } OZ_BI_end
@@ -499,10 +498,18 @@ OZ_BI_define(native_points_put, 3, 0) {
  * Lowlevel GtkArg Handling
  */ 
 
+OZ_BI_define(native_make_empty_arg, 1, 1) {
+  GOZ_declareString(0, name);
+  GtkArg *ret = (GtkArg *) g_malloc(sizeof(GtkArg));
+  ret->name = name;
+  OZ_out(0) = OZ_makeForeignPointer(ret);
+  return OZ_ENTAILED;
+} OZ_BI_end
+
 OZ_BI_define(native_make_arg, 2, 1) {
   GOZ_declareString(0, name);
   GOZ_declareTerm(1, val);
-  GtkArg *ret = (GtkArg *) malloc(sizeof(GtkArg));
+  GtkArg *ret = (GtkArg *) g_malloc(sizeof(GtkArg));
   ret->name = name;
   if (OZ_isInt(val)) {
     ret->type = GTK_TYPE_INT;
@@ -561,7 +568,7 @@ OZ_BI_define(native_get_object_type, 1, 1) {
 
 OZ_BI_define (native_alloc_str_arr, 1, 1) {
   OZ_declareInt(0, len);
-  char **arr = (char **) malloc(sizeof(char *) * len);
+  char **arr = (char **) g_malloc(sizeof(char *) * len);
   for (;len--;) {
     arr[len] = NULL;
   }
@@ -572,11 +579,11 @@ OZ_BI_define (native_alloc_str_arr, 1, 1) {
 OZ_BI_define (native_make_str_arr, 2, 1) {
   OZ_declareInt(0, len);
   OZ_declareTerm(1, t);
-  char **arr = (char **) malloc(sizeof(char *) * (len + 1));
+  char **arr = (char **) g_malloc(sizeof(char *) * (len + 1));
   arr[len] = NULL;
   len = 0;
   while (OZ_isCons(t)) {
-    arr[len++] = strdup(OZ_virtualStringToC(OZ_head(t), NULL));
+    arr[len++] = g_strdup(OZ_virtualStringToC(OZ_head(t), NULL));
     t = OZ_tail(t);
   }
   OZ_out(0) = OZ_makeForeignPointer(arr);
@@ -594,6 +601,31 @@ OZ_BI_define (native_get_str_arr, 1, 1) {
     t = OZ_cons(OZ_string(arr[i--]), t);
   }
   OZ_out(0) = t;
+  return OZ_ENTAILED;
+} OZ_BI_end
+
+/*
+ * Lowlevel Color Array Handling
+ */
+
+OZ_BI_define (native_make_color_array, 1, 1) {
+  OZ_declareTerm(0, colors);
+  double *arr = (double *) g_malloc(4 * sizeof(double));
+  for (int i = 0; i < 4; i++) {
+    arr[i] = OZ_floatToC(OZ_head(colors));
+    colors = OZ_tail(colors);
+  }
+  OZ_out(0) = OZ_makeForeignPointer(arr);
+  return OZ_ENTAILED;
+} OZ_BI_end
+
+OZ_BI_define (native_get_color_list, 1, 1) {
+  GOZ_declareForeignType(double *, 0, arr);
+  OZ_Term colors = OZ_nil();
+  for (int i = 4; i--;) {
+    colors = OZ_cons(OZ_float(arr[i]), colors);
+  }
+  OZ_out(0) = colors;
   return OZ_ENTAILED;
 } OZ_BI_end
 
@@ -619,6 +651,7 @@ static OZ_C_proc_interface oz_interface[] = {
   {"null", 0, 1, native_null},
   {"freeData", 1, 0, native_free_data},
   {"pointsPut", 3, 0, native_points_put},
+  {"makeEmptyArg", 1, 1, native_make_empty_arg},
   {"makeArg", 2, 1, native_make_arg},
   {"getArg", 1, 1, native_get_arg},
   {"isObject", 1, 1, native_is_object},
@@ -626,6 +659,8 @@ static OZ_C_proc_interface oz_interface[] = {
   {"allocStrArr", 1, 1, native_alloc_str_arr},
   {"getStrArr", 1, 1, native_get_str_arr},
   {"makeStrArr", 2, 1, native_make_str_arr},
+  {"makeColorArr", 1, 1, native_make_color_array},
+  {"getColorList", 1, 1, native_get_color_list},
   {0, 0, 0, 0}
 };
 

@@ -104,6 +104,8 @@ define
 			 "GOZ_ARG_context(arg->d.object_data);"
 		      [] 'GTK_TYPE_GDK_COLORMAP' then
 			 "GOZ_ARG_map(arg->d.object_data);"
+		      [] 'GTK_TYPE_GDK_DRAG_CONTEXT' then
+			 "GOZ_ARG_drag(arg->d.object_data);"
 		      [] 'GTK_TYPE_GDK_DRAWABLE' then
 			 "GOZ_ARG_drawable(arg->d.object_data);"
 		      [] 'GTK_TYPE_GDK_FONT' then
@@ -112,8 +114,14 @@ define
 			 "GOZ_ARG_gc(arg->d.object_data);"
 		      [] 'GTK_TYPE_GDK_IMAGE' then
 			 "GOZ_ARG_image(arg->d.object_data);"
+		      [] 'GTK_TYPE_GDK_VISUAL' then
+			 "GOZ_ARG_visual(arg->d.object_data);"
 		      [] 'GTK_TYPE_GDK_WINDOW' then
 			 "GOZ_ARG_window(arg->d.object_data);"
+		      [] 'GTK_TYPE_ACCEL_GROUP' then
+			 "GOZ_ARG_accel(arg->d.object_data);"
+		      [] 'GTK_TYPE_STYLE' then
+			 "GOZ_ARG_style(arg->d.object_data);"
 		      else "GOZ_ARG_pointer(arg->d.object_data);"
 		      end
 	    in
