@@ -31,8 +31,6 @@ The entry point is reader().  */
 
 #include <oz.h>
 
-extern int expected_conflicts;
-
 static void read_tokens(OZ_Term);
 static void read_assocs(OZ_Term);
 static void read_rules(OZ_Term);
@@ -73,7 +71,6 @@ void reader(OZ_Term inputGrammar) {
   read_rules(OZ_getArg(inputGrammar, 3));
   ssym = getsym(OZ_atomToC(OZ_getArg(inputGrammar, 0)));
   start_symbol = ssym->value;
-  expected_conflicts = OZ_intToC(OZ_getArg(inputGrammar, 4));
 
   /* assign the symbols their symbol numbers.  */
   packsymbols();
@@ -83,6 +80,9 @@ void reader(OZ_Term inputGrammar) {
   /* free the symbol table data structure
      since symbols are now all referred to by symbol number.  */
   free_symtab();
+
+  src_total = rrc_total = 0;
+  nuseless_productions = nuseless_nonterminals = 0;
 }
 
 static void read_tokens(OZ_Term tokens) {
