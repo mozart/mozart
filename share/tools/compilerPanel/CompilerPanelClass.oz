@@ -121,7 +121,7 @@ local
 	     'Object'#Cyan
 	     'Array'#Green 'Dictionary'#Green 'Port'#Green 'Lock'#Green
 	     'Thread'#Orange 'Space'#Orange
-	     'FSet'#Red]
+	     'Finite Set Value'#Red 'Foreign Pointer'#Red]
 
    fun {SetColor TextWidget PrintName Value ColorDict} C in
       C = case {IsDet Value} then Type in
@@ -143,7 +143,8 @@ local
 	     elsecase {IsChunk Value} then 'Chunk'
 	     elsecase {IsThread Value} then 'Thread'
 	     elsecase {IsSpace Value} then 'Space'
-	     elsecase {FS.value.is Value} then 'FSet'
+	     elsecase {FS.value.is Value} then 'Finite Set Value'
+	     elsecase {Foreign.pointer.is Value} then 'Foreign Pointer'
 	     end = Type
 	     {Dictionary.get ColorDict Type}
 	  else
