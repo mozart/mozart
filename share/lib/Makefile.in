@@ -127,11 +127,11 @@ Standard.ozf: Init.ozp
 	$(COMPILE) $< -o $@
 %.ozf: wp/%.oz
 	$(COMPILE) $< -o $@
-%.ozf: compiler/%.oz
-	$(COMPILE) $< -o $@
 %.ozf: misc/%.oz
 	$(COMPILE) $< -o $@
 %.ozf: %.oz
+	$(COMPILE) $< -o $@
+%.ozf: compiler/%.oz
 	$(COMPILE) $< -o $@
 
 # ap dependencies
