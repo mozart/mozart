@@ -82,19 +82,6 @@ TypeOfTerm tag;                                 \
 }
 
 
-#define DECLAREBI_USEINLINEREL1(Name,InlineName)        \
-OZ_C_proc_begin(Name,1)                                 \
-{                                                       \
-  oz_declareArg(0,arg1);                                \
-  OZ_Return state = InlineName(arg1);                   \
-  if (state == SUSPEND) {                               \
-    oz_suspendOn(arg1);                                 \
-  } else {                                              \
-    return state;                                       \
-  }                                                     \
-}                                                       \
-OZ_C_proc_end
-
 #define NEW_DECLAREBI_USEINLINEREL1(Name,InlineName)    \
 OZ_BI_define(Name,1,0)                                  \
 {                                                       \
@@ -106,21 +93,6 @@ OZ_BI_define(Name,1,0)                                  \
     return state;                                       \
   }                                                     \
 } OZ_BI_end
-
-
-#define DECLAREBI_USEINLINEREL2(Name,InlineName)        \
-OZ_C_proc_begin(Name,2)                                 \
-{                                                       \
-  oz_declareArg(0,arg0);                                \
-  oz_declareArg(1,arg1);                                \
-  OZ_Return state = InlineName(arg0,arg1);              \
-  if (state == SUSPEND) {                               \
-    oz_suspendOn2(arg0,arg1);                           \
-  } else {                                              \
-    return state;                                       \
-  }                                                     \
-}                                                       \
-OZ_C_proc_end
 
 #define NEW_DECLAREBI_USEINLINEREL2(Name,InlineName)    \
 OZ_BI_define(Name,2,0)                                  \
@@ -135,22 +107,6 @@ OZ_BI_define(Name,2,0)                                  \
   }                                                     \
 } OZ_BI_end
 
-
-#define DECLAREBI_USEINLINEREL3(Name,InlineName)        \
-OZ_C_proc_begin(Name,3)                                 \
-{                                                       \
-  oz_declareArg(0,arg0);                                \
-  oz_declareArg(1,arg1);                                \
-  oz_declareArg(2,arg2);                                \
-  OZ_Return state = InlineName(arg0,arg1,arg2);         \
-  if (state == SUSPEND) {                               \
-    oz_suspendOn3(arg0,arg1,arg2);                      \
-  } else {                                              \
-    return state;                                       \
-  }                                                     \
-}                                                       \
-OZ_C_proc_end
-
 #define NEW_DECLAREBI_USEINLINEREL3(Name,InlineName)    \
 OZ_BI_define(Name,3,0)                                  \
 {                                                       \
@@ -164,25 +120,6 @@ OZ_BI_define(Name,3,0)                                  \
     return state;                                       \
   }                                                     \
 } OZ_BI_end
-
-
-#define DECLAREBI_USEINLINEFUN1(Name,InlineName)        \
-OZ_C_proc_begin(Name,2)                                 \
-{                                                       \
-  OZ_Term help;                                         \
-  oz_declareArg(0,arg1);                                \
-  oz_declareArg(1,out);                                 \
-  OZ_Return state = InlineName(arg1,help);              \
-  switch (state) {                                      \
-  case SUSPEND:                                         \
-    oz_suspendOn(arg1);                                 \
-  case PROCEED:                                         \
-    return oz_unify(help,out);                          \
-  default:                                              \
-    return state;                                       \
-  }                                                     \
-}                                                       \
-OZ_C_proc_end
 
 #define NEW_DECLAREBI_USEINLINEFUN1(Name,InlineName)    \
 OZ_BI_define(Name,1,1)                                  \
@@ -200,26 +137,6 @@ OZ_BI_define(Name,1,1)                                  \
   }                                                     \
 } OZ_BI_end
 
-
-#define DECLAREBI_USEINLINEFUN2(Name,InlineName)        \
-OZ_C_proc_begin(Name,3)                                 \
-{                                                       \
-  OZ_Term help;                                         \
-  oz_declareArg(0,arg0);                                \
-  oz_declareArg(1,arg1);                                \
-  oz_declareArg(2,out);                                 \
-  OZ_Return state=InlineName(arg0,arg1,help);           \
-  switch (state) {                                      \
-  case SUSPEND:                                         \
-    oz_suspendOn2(arg0,arg1);                           \
-  case PROCEED:                                         \
-    return oz_unify(help,out);                          \
-  default:                                              \
-    return state;                                       \
-  }                                                     \
-}                                                       \
-OZ_C_proc_end
-
 #define NEW_DECLAREBI_USEINLINEFUN2(Name,InlineName)    \
 OZ_BI_define(Name,2,1)                                  \
 {                                                       \
@@ -236,26 +153,6 @@ OZ_BI_define(Name,2,1)                                  \
     return state;                                       \
   }                                                     \
 } OZ_BI_end
-
-#define DECLAREBI_USEINLINEFUN3(Name,InlineName)        \
-OZ_C_proc_begin(Name,4)                                 \
-{                                                       \
-  OZ_Term help;                                         \
-  oz_declareArg(0,arg0);                                \
-  oz_declareArg(1,arg1);                                \
-  oz_declareArg(2,arg2);                                \
-  oz_declareArg(3,out);                                 \
-  OZ_Return state=InlineName(arg0,arg1,arg2,help);      \
-  switch (state) {                                      \
-  case SUSPEND:                                         \
-    oz_suspendOn3(arg0,arg1,arg2);                      \
-  case PROCEED:                                         \
-    return oz_unify(help,out);                          \
-  default:                                              \
-    return state;                                       \
-  }                                                     \
-}                                                       \
-OZ_C_proc_end
 
 #define NEW_DECLAREBI_USEINLINEFUN3(Name,InlineName)    \
 OZ_BI_define(Name,3,1)                                  \
@@ -275,18 +172,6 @@ OZ_BI_define(Name,3,1)                                  \
   }                                                     \
 } OZ_BI_end
 
-#define DECLAREBOOLFUN1(BIfun,BIifun,BIirel)            \
-OZ_Return BIifun(TaggedRef val, TaggedRef &out)         \
-{                                                       \
-  OZ_Return state = BIirel(val);                        \
-  switch(state) {                                       \
-  case PROCEED: out = NameTrue;  return PROCEED;        \
-  case FAILED:  out = NameFalse; return PROCEED;        \
-  default: return state;                                \
-  }                                                     \
-}                                                       \
-DECLAREBI_USEINLINEFUN1(BIfun,BIifun)
-
 #define NEW_DECLAREBOOLFUN1(BIfun,BIifun,BIirel)        \
 OZ_BI_define(BIfun,1,1)                                 \
 {                                                       \
@@ -299,18 +184,6 @@ OZ_BI_define(BIfun,1,1)                                 \
 } OZ_BI_end                                             \
 OZ_Return BIifun(TaggedRef val, TaggedRef &out)         \
 { return BI__##BIfun(&val,&out); }
-
-#define DECLAREBOOLFUN2(BIfun,BIifun,BIirel)                            \
-OZ_Return BIifun(TaggedRef val1, TaggedRef val2, TaggedRef &out)        \
-{                                                                       \
-  OZ_Return state = BIirel(val1,val2);                                  \
-  switch(state) {                                                       \
-  case PROCEED: out = NameTrue;  return PROCEED;                        \
-  case FAILED:  out = NameFalse; return PROCEED;                        \
-  default: return state;                                                \
-  }                                                                     \
-}                                                                       \
-DECLAREBI_USEINLINEFUN2(BIfun,BIifun)
 
 #define NEW_DECLAREBOOLFUN2(BIfun,BIifun,BIirel)        \
 OZ_BI_define(BIfun,2,1)                                 \
@@ -3242,23 +3115,6 @@ OZ_BI_define(BIisString,1,1)
 OZ_Return ifun(TaggedRef arg1,TaggedRef& out)   \
 { return fun(&arg1,&out); }
 
-#define FirstCharArg \
- TaggedRef tc = OZ_getCArg(0);      \
- int i;                             \
- { DEREF(tc, tc_ptr, tc_tag);       \
- if (isAnyVar(tc_tag)) {            \
-   am.addSuspendVarList(tc_ptr);    \
-   return SUSPEND;                  \
- }                                  \
- if (!isSmallInt(tc)) {             \
-   oz_typeError(1,"Char");          \
- } else {                           \
-   i = smallIntValue(tc);           \
-   if ((i < 0) || (i > 255)) {      \
-     oz_typeError(1,"Char");        \
-   }                                \
- } }
-
 #define NEW_FirstCharArg \
  TaggedRef tc = OZ_in(0);           \
  int i;                             \
@@ -3275,10 +3131,6 @@ OZ_Return ifun(TaggedRef arg1,TaggedRef& out)   \
      oz_typeError(1,"Char");        \
    }                                \
  } }
-
-#define TestChar(TEST)                                            \
-  FirstCharArg;                                                   \
-  return oz_unify(OZ_getCArg(1), TEST ((unsigned char) i) ? NameTrue : NameFalse);
 
 #define NEW_TestChar(TEST)                                            \
   NEW_FirstCharArg;                                                   \
@@ -5346,7 +5198,7 @@ OZ_BI_define(BIfindFunction,3,0)
                     OZ_in(2));
   }
 
-  OZ_addBuiltin(ozstrdup(functionName),functionArity,*func);
+  OZ_addBuiltin(ozstrdup(functionName),functionArity,0,*func); // mm2
   return PROCEED;
 } OZ_BI_end
 
@@ -5371,7 +5223,7 @@ OZ_BI_define(BIdlLoad,1,1)
       return oz_raise(E_ERROR,AtomForeign,
                       "cannotFindInterfaceFunction", 2,
                       OZ_in(0), oz_atom(I->name));
-    bi = new Builtin(I->name,I->arity,*func,(IFOR)NULL);
+    bi = new Builtin(I->name,I->arity,0,*func,(IFOR)NULL); // mm2
     l = cons(oz_pairA(I->name,makeTaggedConst(bi)),l);
     I++;
   }
@@ -5552,26 +5404,6 @@ OZ_BI_define(BIdeepFeed,2,0)
 /* ---------------------------------------------------------------------
  * Browser: special builtins: getsBound, intToAtom
  * --------------------------------------------------------------------- */
-
-OZ_BI_define(_getsBound_dummy, 0,0)
-{
-  return PROCEED;
-} OZ_BI_end
-
-
-OZ_BI_define(BIgetsBound, 1,0)
-{
-  oz_declareDerefIN(0,v);
-
-  if (isAnyVar(vTag)){
-    Thread *thr =
-      (Thread *) OZ_makeSuspendedThread (_getsBound_dummy, NULL, 0);
-    addSuspAnyVar(vPtr, thr);
-  }
-
-  return PROCEED;
-} OZ_BI_end
-
 
 OZ_BI_define(_getsBound_dummyB, 1,1)
 {
@@ -6786,7 +6618,7 @@ extern void initVirtualProperties();
 
 Builtin *BIinit()
 {
-  Builtin *bi = BIadd("builtin",3,BIbuiltin);
+  Builtin *bi = BIadd("builtin",2,1,BIbuiltin);
 
   if (!bi)
     return bi;

@@ -302,12 +302,13 @@ extern char * _FUNDECL(OZ_unixError,(int err));
 /* check for toplevel */
 extern int _FUNDECL(OZ_onToplevel,());
 
-extern int _FUNDECL(OZ_addBuiltin,(CONST char *, int, OZ_CFun));
+extern int _FUNDECL(OZ_addBuiltin,(CONST char *, int, int, OZ_CFun));
 
 /* replace new builtins */
 typedef struct {
   char *name;
-  int arity;
+  int inArity;
+  int outArity;
   OZ_CFun fun;
 } OZ_BIspec;
 

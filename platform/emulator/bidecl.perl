@@ -1107,10 +1107,6 @@ $builtins = {
 
     # browser primitives
 
-    'getsBound'         => { in  => ['value'],
-                             out => [],
-                             BI  => BIgetsBound},
-
     'getsBoundB'        => { in  => ['value','value'],
                              out => [],
                              BI  => BIgetsBoundB},
@@ -2817,7 +2813,8 @@ sub CTABLE {
     my ($key,$info);
     while (($key,$info) = each %$builtins) {
         next unless &included($info);
-        my $arity = @{$info->{in}} + @{$info->{out}};
+        my $inArity = @{$info->{in}};
+        my $outArity = @{$info->{out}};
         my $BI = $info->{BI};
         my @ifdef  = split(/\,/,$info->{ifdef});
         my @ifndef = split(/\,/,$info->{ifndef});
@@ -2826,14 +2823,14 @@ sub CTABLE {
         foreach $macro (@ifddef) { print "#ifndef $macro\n"; }
         if ($BI) {
             # new style
-            print "{\"$key\",\t$arity,$BI,\t0},\n";
+            print "{\"$key\",\t$inArity,\t$outArity,$BI,\t0},\n";
         } else {
             # old style
             my $bi  = $info->{bi};
             my $ibi = $info->{ibi};
             if ($ibi) { $ibi = "(IFOR) $ibi"; }
             else      { $ibi = "0"; }
-            print "{\"$key\",\t$arity,$bi,\t$ibi},\n";
+            print "{\"$key\",\t$inArity,\t$outArity,$bi,\t$ibi},\n";
         }
         foreach $macro (@ifddef) { print "#endif\n"; }
         foreach $macro (@ifdef)  { print "#endif\n"; }

@@ -1302,7 +1302,7 @@ OZ_BI_define(BIperdioStatistics,0,1)
 } OZ_BI_end
 
 BIspec marshalerSpec[]= {
-  {"perdioStatistics",  1, BIperdioStatistics, 0},
+  {"perdioStatistics",  0, 1, BIperdioStatistics, 0},
   {0,0,0,0}
 };
 

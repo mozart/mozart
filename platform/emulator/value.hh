@@ -2009,7 +2009,8 @@ class Builtin: public ConstTerm {
 friend void ConstTerm::gcConstRecurse(void);
 private:
   TaggedRef printname; //must be atom
-  int arity;
+  int inArity;
+  int outArity;
   OZ_CFun fun;
   IFOR inlineFun;
 #ifdef PROFILE_BI
@@ -2024,8 +2025,8 @@ public:
   static void *operator new(size_t chunk_size)
   { return ::new char[chunk_size]; }
 
-  Builtin(const char *s,int arty,OZ_CFun fn,IFOR infun)
-  : arity(arty),fun(fn), inlineFun(infun), ConstTerm(Co_Builtin)
+  Builtin(const char *s,int inArity,int outArity, OZ_CFun fn,IFOR infun)
+  : inArity(inArity),outArity(outArity),fun(fn), inlineFun(infun), ConstTerm(Co_Builtin)
   {
     printname = makeTaggedAtom(s);
 #ifdef PROFILE_BI
@@ -2034,7 +2035,9 @@ public:
   }
 
   OZ_CFun getFun() { return fun; }
-  int getArity() { return arity; }
+  int getArity() { return inArity+outArity; }
+  int getInArity() { return inArity; }
+  int getOutArity() { return outArity; }
   const char *getPrintName() {
     return tagged2Literal(printname)->getPrintName();
   }
