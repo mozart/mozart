@@ -2457,7 +2457,8 @@ LBLdispatcher:
        }
 
        if (foundHdl) {
-         debugStreamUpdate(CTT);
+         if (e->debugmode() && CTT->getTrace())
+           debugStreamUpdate(CTT);
          X[0] = e->exception.value;
          goto LBLpopTaskNoPreempt;
        }
@@ -2991,7 +2992,7 @@ LBLdispatcher:
 
   Case(DEBUGENTRY)
     {
-      if (e->debugmode() && e->isToplevel()) {
+      if ((e->debugmode() || CTT->getTrace()) && e->isToplevel()) {
         int line = smallIntValue(getNumberArg(PC+2));
         if (line < 0) {
           execBreakpoint(e->currentThread);
