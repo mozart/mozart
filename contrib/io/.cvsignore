@@ -1,5 +1,4 @@
+config.log config.status config.cache
 Makefile
-config.log
-config.status
 *.ozf
 *~
