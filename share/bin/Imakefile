@@ -34,9 +34,8 @@ setup.exe: setup.obj setup.res
 oz.exe: oz.obj oz.res
         $(VCBIN)/cl -o $@ oz.obj oz.res user32.lib advapi32.lib
 
-ozdemo.exe: oz.exe
-        cp $< $@
+ozdemo.exe: ozdemo.obj oz.res
+        $(VCBIN)/cl -o $@ ozdemo.obj oz.res user32.lib advapi32.lib
 
 win-install:: setup.exe oz.exe ozdemo.exe
         cp setup.exe oz.exe ozdemo.exe $(OZHOME)
-        cp ozdemo.bat $(OZHOME)/platform/win32-i486
