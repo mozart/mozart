@@ -481,7 +481,7 @@ in
 	 self.StackText
       end
       
-      meth rawStatus(S M<=clear)
+      meth rawStatus(S M<=clear C<=DefaultForeground)
 	 W = self.StatusText
       in
 	 case M == clear then
@@ -489,7 +489,7 @@ in
 	 else
 	    Gui,Enable(W)
 	 end
-	 Gui,Append(W S)
+	 Gui,Append(W S C)
 	 Gui,Disable(W)
       end
 
@@ -587,8 +587,9 @@ in
 	 {Widget tk(conf state:normal)}
       end
       
-      meth Append(Widget Text)
-	 {Widget tk(insert 'end' Text)}
+      meth Append(Widget Text Color<=DefaultForeground)
+	 {ForAll [tk(insert 'end' Text)
+		  tk(conf fg:Color)] Widget}
       end
       
       meth Disable(Widget)

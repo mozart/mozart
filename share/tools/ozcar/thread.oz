@@ -264,17 +264,16 @@ in
 	    T = M.thr.1
 	    I = M.thr.2
 	    X = M.exc
-	    S = M.stack
 	    E = {Ozcar exists(I $)}
 	 in
 	    case E then
 	       StackObj = {Dget self.ThreadDic I}
 	    in
-	       {StackObj printException(X#S)}
+	       {StackObj printException(X)}
 	    else
 	       thread
 		  {Delay 280}
-		  ThreadManager,add(T I X#S false)
+		  ThreadManager,add(T I X#_ false)
 	       end
 	    end
 	    
@@ -306,7 +305,7 @@ in
 	 case {IsTuple Q} then %% exception
 	    Gui,addNode(I 0)
 	    ThreadManager,switch(I)
-	    {Stack printException(Q)}
+	    {Stack printException(Q.1)}
 	 else
 	    Gui,addNode(I Q)
 	    case Q == 0 orelse Q == 1 then 
