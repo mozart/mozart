@@ -78,12 +78,9 @@ class SiteManager: public FreeListManager{
   Site* newSite(){
     Site* s;
     PD((SITE,"New Site allocated"));
-    return new Site();
     FreeListEntry *f=getOne();
     if(f==NULL) {s=new Site();}
-    else{GenCast(f,FreeListEntry*,s,Site*);
-    Assert(s->getPort() == 0 &&
-	   s->getTimeStamp() == 0)}
+    else GenCast(f,FreeListEntry*,s,Site*);
     return s;}
 
   void deleteSite(Site *s){
@@ -316,7 +313,7 @@ Site* unmarshalSiteInternal(MsgBuffer *buf, Site *tryS, MarshalTag mt)
 	s->makeActiveVirtual();}
       return s;}
     Assert(mt==DIF_REMOTE);
-    if(!s->ActiveSite()) {
+    if(!s->ActiveSite() && s != mySite ) {
       s->makeActiveRemote();}
     return s;}
 
