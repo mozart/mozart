@@ -81,7 +81,9 @@ OZSRCS    = GOZCore.oz \
             NativeEmitter.oz \
             ToolKit.oz \
             Main.oz \
-            OzWrapper.oz
+            OzWrapper.oz \
+            AliceWrapper.oz
+
 OZOBJS    = $(OZSRCS:%.oz=%.ozf)
 OZINSTALL = $(LIB_DIR)/GOZCore.ozf
 
@@ -201,6 +203,7 @@ ifeq ($(GTKGENERATED), GDK.oz)
 	@$(MAKE) wrapper_files
 else
 	$(OZENGINE) Main.ozf OzWrapper.ozf
+	$(OZENGINE) Main.ozf AliceWrapper.ozf
 	@$(MAKE) wrapper_files
 endif
 
