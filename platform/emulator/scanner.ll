@@ -1176,7 +1176,6 @@ static void xy_init(OZ_Term defines) {
   hashTable->insert("NEWCOMPILER");
   while (OZ_isCons(defines)) {
     char *x = OZ_virtualStringToC(OZ_head(defines));
-printf("%s\n", x);
     hashTable->insert(x);
     defines = OZ_tail(defines);
   }
