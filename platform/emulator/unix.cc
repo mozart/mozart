@@ -1558,7 +1558,7 @@ OZ_BI_define(unix_exec,3,1){
 
   PROCESS_INFORMATION pinf;
   
-  if (!CreateProcess(NULL,buf,&sa,NULL,TRUE,0,
+  if (!CreateProcess(NULL,buf,&sa,NULL,FALSE,0,
 		     NULL,NULL,&si,&pinf)) {
     return raiseUnixError("exec",0, "Cannot exec process.", 
 			  "os");
