@@ -63,6 +63,7 @@ define
          thread
             {self Log2(Msg {GetDate})}
          end
+         {Thread.preempt {Thread.this}}
       end
 
       meth Log2(Msg Date resend:R<=0)
