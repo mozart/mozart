@@ -437,11 +437,7 @@ void Board::checkStability(void) {
   pb->decSolveThreads();
 }
 
-void Board::fail(Thread * ct) {
-  // Note that ``this'' might be different from the thread's home:
-  // this can happen while trying to install the space!
-  Assert(ct->isRunnable());
-
+void Board::fail(void) {
   Board * pb = getParent();
 
   Assert(!isRoot());
@@ -455,9 +451,6 @@ void Board::fail(Thread * ct) {
   bindStatus(genFailed());
 
   pb->decSolveThreads();
-
-  oz_disposeThread(ct);
-
 }
 
 /*
@@ -528,57 +521,31 @@ OZ_Return Board::installScript(Bool isMerging) {
 
 
 /*
- *
- *  Install every board from the currentBoard to 'n'
- * and move cursor to 'n'
- *
- *  Algorithm:
- *   find common parent board of 'to' and 'currentBoard'
- *   deinstall until common parent (go upward)
- *   install (go downward)
- *
- *  Pre-conditions:
- *  - 'to' ist not deref'd;
- *  - 'to' may be committed, failed or discarded;
- *
- *  Return values and post-conditions:
- *  - INST_OK:
- *      installation successful, currentBoard == 'to';
- *  - INST_FAILED:
- *      installation of *some* board on the "down" path has failed,
- *      'am.currentBoard' points to that board;
- *  - INST_REJECTED:
- *      *some* board on the "down" path is already failed or discarded,
- *      'am.currentBoard' stays unchanged;
+ * Constraint installation
  *
  */
 
 
-Board * Board::installDown(Board * frm) {
+Bool Board::installDown(Board * frm) {
 
   if (frm == this)
-    return frm;
+    return OK;
 
-  Board * r = getParent()->installDown(frm);
-
-  if (r != frm)
-    return r;
+  if (!getParent()->installDown(frm))
+    return NO;
 
   am.setCurrent(this);
   am.trail.pushMark();
 
-  DEBUG_CONSTRAIN_CVAR(("\n==== Start installDown %p ====", this));
-
   OZ_Return ret = installScript(NO);
-
-  DEBUG_CONSTRAIN_CVAR(("\n==== Stop installDown ===="));
 
   if (ret != PROCEED) {
     Assert(ret==FAILED);
-    return this;
+    fail();
+    return NO;
   }
 
-  return r;
+  return OK;
 
 }
 
@@ -596,7 +563,11 @@ Bool Board::install(void) {
   if (frm == this)
     return OK;
 
-  Assert(isAlive());
+  if (!isAlive()) {
+    if (!isRoot())
+      getParent()->decSolveThreads();
+    return NO;
+  }
 
   // Step 1: Mark all spaces including root as installed
   {
@@ -642,7 +613,6 @@ Bool Board::install(void) {
 
   // Step 4: Install from "ancestor" to "this"
 
-  Bool ret = installDown(ancestor) == ancestor;
+  return installDown(ancestor);
 
-  return ret;
 }

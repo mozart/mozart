@@ -220,7 +220,7 @@ private:
 
   OZ_Return installScript(Bool isMerging);
 
-  Board * installDown(Board *);
+  Bool installDown(Board *);
 
   void setScript(TaggedRef s) {
     script = s;
@@ -308,7 +308,7 @@ public:
   // Operations
   //
   Board * clone(void);
-  void fail(Thread *);
+  void fail(void);
   int commit(int, int);
   void inject(TaggedRef, int arity = 1);
   OZ_Return merge(Board *, Bool);

@@ -109,19 +109,8 @@ void scheduler(void) {
     // Normalize the current thread's board
     ct->setBoardInternal(cb);
 
-    if (!cb->isAlive()) {
-      // Some space superordinated to ct's home is dead
-
-      if (!cb->isRoot())
-        cb->getParent()->decSolveThreads();
-
-      oz_disposeThread(ct);
-      continue;
-
-    }
-
     if (!cb->install()) {
-      oz_currentBoard()->fail(ct);
+      oz_disposeThread(ct);
       continue;
     }
 
@@ -131,7 +120,7 @@ void scheduler(void) {
 
     case T_PREEMPT:
       am.threadsPool.scheduleThread(ct);
-      break;
+      continue;
 
     case T_SUSPEND:
       Assert(!cb->isFailed());
@@ -143,25 +132,26 @@ void scheduler(void) {
       } else {
         cb->checkStability();
       }
-
-      break;
+      continue;
 
     case T_TERMINATE:
       Assert(!ct->isDead() && ct->isRunnable() && ct->isEmpty());
-      cb->decSuspCount();
-      oz_disposeThread(ct);
-      if (!cb->isRoot())
+      if (!cb->isRoot()) {
+        cb->decSuspCount();
         cb->checkStability();
+      }
       break;
 
     case T_FAILURE:
-      cb->fail(ct);
+      cb->fail();
       break;
 
     case T_ERROR:
     default:
       Assert(0);
     }
+
+    oz_disposeThread(ct);
 
   } while(1);
 
