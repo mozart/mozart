@@ -126,6 +126,9 @@ extern int static_int_a[MAXFDBIARGS];
 extern int static_int_b[MAXFDBIARGS];
 extern float static_float_a[MAXFDBIARGS];
 extern float static_float_b[MAXFDBIARGS];
+extern int static_index_offset[MAXFDBIARGS];
+extern int static_index_size[MAXFDBIARGS];
+
 
 //-----------------------------------------------------------------------------
 //                         Prototypes of FD-built-ins
@@ -236,8 +239,11 @@ OZ_C_proc_proto(BIfdImpl_body);
 OZ_C_proc_proto(BIfdElement_body);
 OZ_C_proc_proto(BIfdAtMost_body);
 OZ_C_proc_proto(BIfdGenLinEq_body);
+OZ_C_proc_proto(BIfdGenNonLinEq_body);
 OZ_C_proc_proto(BIfdGenLinNotEq_body);
+OZ_C_proc_proto(BIfdGenNonLinNotEq_body);
 OZ_C_proc_proto(BIfdGenLinLessEq_body);
+OZ_C_proc_proto(BIfdGenNonLinLessEq_body);
 OZ_C_proc_proto(BIfdGenLinAbs_body);
 OZ_C_proc_proto(BIfdGenLinNotEq_body);
 OZ_C_proc_proto(BIfdGenLinLessEq_body);
@@ -475,10 +481,16 @@ private:
   int global_vars;
 public:
   BIfdHeadManager(int s) : global_vars(0) {
-    DebugCheck(s < 0 || s > MAXFDBIARGS, error("too many items."));
+    DebugCheck(s < 0 || s > MAXFDBIARGS, error("too many items"));
     curr_num_of_items = s;
   }
 
+  void increaseSizeBy(int s) {
+    curr_num_of_items += s;
+    DebugCheck(curr_num_of_items < 0 || curr_num_of_items > MAXFDBIARGS,
+	       error("too many items"));
+  }
+  
   static
   void initStaticData(void);
   
@@ -571,6 +583,14 @@ public:
 //                           class BIfdBodyManager
 //-----------------------------------------------------------------------------
 
+inline
+int idx(int i, int j) {
+  Assert(0 <= j && j < static_index_size[i]);
+  Assert(0 <= static_index_offset[i] + j &&
+	 static_index_offset[i] + j < MAXFDBIARGS);
+  return static_index_offset[i] + j;
+}
+
 class BIfdBodyManager {
 private:
   static TaggedRef * bifdbm_var;
@@ -584,7 +604,9 @@ private:
   static int curr_num_of_vars;
   static Bool vars_left;
   static Bool glob_vars_touched;
-
+  static int * index_offset;
+  static int * index_size;
+  
   Bool isTouched(int i) {
     return bifdbm_init_dom_size[i] > bifdbm_dom[i]->getSize();
   }
@@ -606,6 +628,17 @@ public:
     only_local_vars = FDcurrentTaskSusp->isLocalSusp();
   }
 
+  void add(int i, int size) {
+    curr_num_of_vars += size;
+    DebugCheck(curr_num_of_vars < 0 || curr_num_of_vars > MAXFDBIARGS,
+	       error("too many variables."));
+    if (i == 0) index_offset[0] = 0;
+    index_offset[i + 1] = index_offset[i] + size;
+    index_size[i] = size;
+  }
+
+  int getCurrNumOfVars(void) {return curr_num_of_vars;}
+  
   static
   void initStaticData(void);
   
@@ -614,6 +647,10 @@ public:
     return *bifdbm_dom[i];
   }
 
+  FiniteDomain &operator ()(int i, int j) {
+    return operator [](idx(i, j));
+  }
+  
   void printDebug(void) {
     for (int i = 0; i < curr_num_of_vars; i += 1)
       printDebug(i);
@@ -636,6 +673,16 @@ public:
     }
   }
   
+  void introduce(int i, int j, TaggedRef v) {
+    int index = idx(i, j);
+    Assert(index_offset[i] <= index && index < index_offset[i + 1]); 
+    if (only_local_vars) {
+      introduceLocal(index, v);
+    } else {
+      _introduce(index, v);
+    }
+  }
+
   OZ_Bool entailment(void) {
     if (only_local_vars) {
       processLocal();
