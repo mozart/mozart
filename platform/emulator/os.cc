@@ -44,7 +44,7 @@
 #include "os.hh"
 
 
-
+Bool *isSocket;
 
 
 // return current usertime in milliseconds
@@ -269,7 +269,11 @@ unsigned __stdcall readerThread(void *arg)
 
   while(1) {
     sr->status=NO;
-    int ret = read(sr->fd, &sr->chr, sizeof(char));
+    int ret;
+    if (isSocket[sr->fd])
+      ret = recv(sr->fd, &sr->chr, sizeof(char),0);
+    else
+      ret = read(sr->fd, &sr->chr, sizeof(char));
     sr->status = (ret == sizeof(char));
     if (ret<0) {
       perror("readerThread: read");
@@ -287,6 +291,28 @@ unsigned __stdcall readerThread(void *arg)
   return 0;
 }
 
+unsigned __stdcall acceptThread(void *arg)
+{
+  StreamReader *sr = (StreamReader *)arg;
+
+  sr->status=NO;
+  fd_set readfds;
+  FD_ZERO(&readfds);
+  FD_SET(sr->fd,&readfds);
+
+  int ret = select(1,&readfds,NULL,NULL,NULL);
+  if (ret<=0) {
+    warning("acceptThread(%d) failed, error=%d\n",
+            sr->fd,WSAGetLastError());
+  } else {
+    sr->status = OK;
+    SetEvent(sr->char_avail);
+  }
+  sr->thrd = NULL;
+  _endthreadex(0);
+  return 0;
+}
+
 static
 void deleteReader(int fd)
 {
@@ -294,7 +320,7 @@ void deleteReader(int fd)
   readers[fd].thrd = 0;
 }
 
-Bool createReader(int fd)
+Bool createReader(int fd, Bool doAcceptSelect)
 {
   StreamReader *sr = &readers[fd];
 
@@ -309,7 +335,9 @@ Bool createReader(int fd)
   }
 
   unsigned thrid;
-  sr->thrd = _beginthreadex(NULL,0,&readerThread,sr,0,&thrid);
+  sr->thrd = _beginthreadex(NULL,0,
+                            doAcceptSelect ? &acceptThread : &readerThread,
+                            sr,0,&thrid);
   if (sr->thrd == NULL) {
     goto err;
   }
@@ -352,7 +380,7 @@ int win32Select(int maxfd, fd_set *fds, int *timeout)
 
   int wait = (timeout==WAIT_INFINITE || *timeout==0) ? INFINITE : *timeout;
 
-  HANDLE wait_hnd[OPEN_MAX];
+  HANDLE wait_hnd[OPEN_MAX+FD_SETSIZE];
 
   int nh = 0;
   int i;
@@ -399,7 +427,8 @@ unsigned __stdcall timerThread(void *p)
   return 1;
 }
 
-#endif
+
+#endif /* WINDOWS */
 
 void osSetAlarmTimer(int t, Bool interval)
 {
@@ -519,7 +548,7 @@ static long openMax;
 int osOpenMax()
 {
 #ifdef WINDOWS
-  return OPEN_MAX;
+  return OPEN_MAX+FD_SETSIZE;
 #else
   int ret = sysconf(_SC_OPEN_MAX);
   if (ret == -1) {
@@ -547,6 +576,11 @@ void osInit()
   FD_ZERO(&globalFDs[SEL_READ]);
   FD_ZERO(&globalFDs[SEL_WRITE]);
 
+  isSocket = new Bool[openMax];
+  for(int k=0; k<=openMax; k++) {
+    isSocket[k] = NO;
+  }
+
 #ifdef WINDOWS
   readers = new StreamReader[openMax];
   for(int i=0; i<=openMax; i++) {
@@ -559,24 +593,36 @@ void osInit()
 
 #define CheckMode(mode) Assert(mode==SEL_READ || mode==SEL_WRITE)
 
-
-void osWatchFD(int fd, int mode)
+static
+void osWatchFDInternal(int fd, int mode, Bool watchAccept)
 {
   CheckMode(mode);
   FD_SET(fd,&globalFDs[mode]);
 #ifdef WINDOWS
   Assert(mode==SEL_READ);
-  createReader(fd);
+  createReader(fd,watchAccept);
 #endif
 }
+
+
+void osWatchFD(int fd, int mode)
+{
+  osWatchFDInternal(fd,mode,NO);
+}
+
+void osWatchAccept(int fd)
+{
+  osWatchFDInternal(fd,SEL_READ,OK);
+}
+
 
 void osClrWatchedFD(int fd, int mode)
 {
   CheckMode(mode);
   FD_CLR(fd,&globalFDs[mode]);
 #ifdef WINDOWS
-  Assert(mode==SEL_READ);
-  //  deleteReader(fd);
+  // Assert(mode==SEL_READ);
+  // deleteReader(fd);
 #endif
 }
 
@@ -630,7 +676,7 @@ int osTestSelect(int fd, int mode)
 
   /* for a disk file hopefully input will not block */
   HANDLE h = (HANDLE)_os_handle(fd);
-  if (GetFileType(h) != FILE_TYPE_PIPE)
+  if (!isSocket[fd] && GetFileType(h) != FILE_TYPE_PIPE)
     return 1;
 
   //  if (readers[fd].thrd==NULL)
@@ -773,7 +819,11 @@ int osread(int fd, void *buf, unsigned int len)
       WaitForSingleObject(readers[fd].char_avail, INFINITE);
     }
     *(char*)buf = readers[fd].chr;
-    int ret = read(fd,((char*)buf)+1,len-1);
+    int ret;
+      if (isSocket[fd])
+        ret = recv(fd,((char*)buf)+1,len-1,0);
+      else
+        ret = read(fd,((char*)buf)+1,len-1);
     if (ret<0)
       return ret;
     readers[fd].status=NO;
@@ -785,9 +835,43 @@ int osread(int fd, void *buf, unsigned int len)
   return read(fd, buf, len);
 }
 
+void registerSocket(int fd)
+{
+  isSocket[fd] = OK;
+}
+
+
 
 /* currently no wrapping for write */
 int oswrite(int fd, void *buf, unsigned int len)
 {
+  if (isSocket[fd])
+    return send(fd, (char *)buf, len, 0);
   return write(fd, buf, len);
+}
+
+int osclose(int fd)
+{
+#ifdef WINDOWS
+  if (isSocket[fd])
+    return closesocket(fd);
+#endif
+  isSocket[fd] = NO;
+  return close(fd);
+}
+
+int osopen(const char *path, int flags, int mode)
+{
+  int ret = open(path,flags,mode);
+  if (ret >= 0)
+    isSocket[ret] = NO;
+  return ret;
+}
+
+int ossocket(int domain, int type, int protocol)
+{
+  int ret = socket(domain,type,protocol);
+  if (ret >= 0)
+    isSocket[ret] = OK;
+  return ret;
 }
