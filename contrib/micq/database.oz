@@ -255,9 +255,9 @@ define
       feat
 	 type: members
       meth store(id:ID firstname:FName lastname:LName organization:Org email:Email passwd:Pass userlevel: UL
-		 settings: S<=nil)
+		 settings: S<=nil extra:Xtra<=nil)
 	 StorageClass, store(id:ID firstname: FName lastname:LName organization:Org
-			     email:Email passwd:Pass userlevel:UL settings:S)
+			     email:Email passwd:Pass userlevel:UL settings:S extra:Xtra)
       end
    end
    
@@ -382,10 +382,11 @@ define
       end
 
       meth updateUser( id: ID firstname: FName lastname: LName organization: Org
-		       email: Email passwd: PassWd userlevel: UL )
+		       email: Email passwd: PassWd userlevel: UL extra:Xtra<=nil)
 	 {self.membersDB update( id: ID firstname: {List.take FName 25}
 				 lastname: {List.take LName 25} organization: Org
-				 email: Email passwd: PassWd userlevel:UL )}
+				 email: Email passwd: PassWd userlevel:UL
+				 extra:Xtra)}
       end
 
       meth updateSettings( id: ID settings: S )
@@ -393,14 +394,15 @@ define
       end
       
       meth addUser( id: ID firstname: FName lastname: LName
-		    organization: Org friends: Friends
+		    organization: Org friends: Friends extra:Xtra<=nil
 		    email: Email passwd: PassWd userlevel: UL)
 	 lock
 	    if {self.membersDB isMember(id: ID status:$)} then raise idAllreadyInUse(ID) end
 	    else
 	       {self.membersDB store( id: ID firstname: {List.take FName 25} lastname: {List.take LName 25}
 				      organization: Org email: Email
-				      passwd: PassWd userlevel:UL)}
+				      passwd: PassWd userlevel:UL
+				      extra:Xtra)}
 	       {self addFriends( id: ID friends: Friends) }
 	    end
 	 end
