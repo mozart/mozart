@@ -494,7 +494,7 @@ local
 					     width: LabelWidth)}      
 	    SizeEntry = {New Tk.entry [tkInit(parent: Size
 					      back:   EntryColor
-					      width:  20)
+					      width:  LargeEntryWidth)
 				       tk(insert 0 Prev.size)]}
 	 in
 	    {Tk.batch [pack(ColorLabel ColorButton GrayButton MonoButton
@@ -551,8 +551,6 @@ local
 				 width:    TextWidth
 				 anchor:   w
 				 variable: IsHide
-				 onvalue:  1
-				 offvalue: 0
 				 text:     'Hide failed subtrees')}
 	    RedrawFrame = {New Tk.frame tkInit(parent:self)}
 	    RedrawFirst = {New Tk.label tkInit(parent:RedrawFrame
@@ -560,7 +558,7 @@ local
 					       text: 'Update every ')}
 	    RedrawEntry = {New Tk.entry [tkInit(parent:RedrawFrame
 						background: EntryColor
-						width: 4)
+						width: SmallEntryWidth)
 					 tk(insert 0 Previous.update)]}
 	    RedrawSnd   = {New Tk.label tkInit(parent:RedrawFrame
 					       anchor:w
@@ -578,14 +576,14 @@ local
 
    
    local
-      RadioWidth  = 16
-      FrameHeight = 3.5#c
-      FrameWidth  = 1.6#c
 
       class DistanceWidget
 	 from Tk.frame
-	 feat scale mode
-	 meth init(parent:Parent text:Text distance:Dist)
+	 feat mode entry
+	 meth init(parent:   Parent
+		   text:     Text
+		   distance: Dist
+		   custom:   CustomDist)
       	    <<Tk.frame tkInit(parent: Parent
 			      relief: groove
 			      bd:     Border)>>
@@ -600,88 +598,97 @@ local
 					      [] ~1 then full
 					      else       custom
 					      end)}
-
-	    Forget = {New Tk.action tkInit(parent: self
-					   action: proc {$}
-						      {Tk.send
-						       pack(forget Scale)}
-						   end)}
-	    proc {PackScale}
-	       {Tk.send pack(Scale o(fill:both))}
-	    end
 	    
-	    Pack   = {New Tk.action tkInit(parent: self
-					   action: proc {$} {PackScale} end)}
-
 	    None    = {New Tk.radiobutton tkInit(parent:   Buttons
 						 value:    none
 						 variable: Mode
 						 anchor:   w
-						 width:    RadioWidth
-						 command:  Forget
 						 text:     'None')}
 	    Full    = {New Tk.radiobutton tkInit(parent:   Buttons
 						 value:    full
 						 variable: Mode
 						 anchor:   w
-						 command:  Forget
-						 width:    RadioWidth
 						 text:     'Full')}
-	    Custom  = {New Tk.radiobutton tkInit(parent:   Buttons
-						 value:    custom
-						 variable: Mode
-						 anchor:   w
-						 command:  Pack
-						 width:    RadioWidth
-						 text:     'Choose distance')}
-	    
-	    ScaleFrame = {New Tk.frame tkInit(parent:             self
-					      highlightthickness: 0
-					      height:             FrameHeight
-					      width:              FrameWidth)}
-	    Scale      = {New Tk.scale [tkInit(parent:    ScaleFrame
-					       'from':    2
-					       to:        DefRecomputeMax
-					       showvalue: 1
-					       width:     ScaleWidth)
-					tk(set {Max Dist 2})]}
+	    Custom  = {New Tk.frame tkInit(parent:             Buttons
+					   highlightthickness: 0)}
+	    CustomButton = {New Tk.radiobutton 
+			    tkInit(parent:   Custom
+				   value:    custom
+				   variable: Mode
+				   anchor:   w
+				   text:     'Choose distance')}
+
+	    CustomEntry  = {New Tk.entry
+			    [tkInit(parent:   Custom
+				    back:     EntryColor
+				    width:    SmallEntryWidth)
+			     tk(insert 0 CustomDist)]}
 	 in
-	    {Tk.batch [pack(None Full Custom
+	    {Tk.batch [pack(CustomButton CustomEntry
+			    o(side:left))
+		       pack(None Full Custom
 			    o(side:top padx:Pad pady:Pad fill:both expand:1))
 		       pack(Head
 			    o(side:top padx:BigPad pady:BigPad
 			      ipadx:BigPad ipady:BigPad fill:x))
-		       pack(Buttons o(side:left fill:y expand:1))
-		       pack(ScaleFrame o(side:right expand:1))
-		       pack(propagate ScaleFrame 0)]}
-	    case Dist<2 then true else {PackScale} end
-	    self.scale = Scale
+		       pack(Buttons o(side:left fill:y expand:1))]}
 	    self.mode  = Mode
+	    self.entry = CustomEntry
 	 end
 
-	 meth getDistance(?Dist)
-	    Dist = case {self.mode tkReturn($)}
-		   of "none" then 1
-		   [] "full" then ~1
-		   else {self.scale tkReturnInt(get $)}
-		   end
+	 meth getDistance(?Dist ?CustomDist)
+	    CustomDist = {self.entry tkReturnInt(get $)}
+	    Dist       = case {self.mode tkReturn($)}
+			 of "none" then 1
+			 [] "full" then ~1
+			 else CustomDist
+			 end
 	 end
       end
 
    in
 
-      class SearchDialog from DialogClass
+      class SearchDialog
+	 from DialogClass
+
 	 meth init(master:Master previous:Prev options:?Options)
 	    <<DialogClass
-	    init(master:Master
-		 title: TitleName#': Search Options'
-		 focus:  1
-		 return: 1
+	    init(master:  Master
+		 title:   TitleName#': Search Options'
+		 focus:   1
+		 return:  1
 		 buttons: ['Okay'#
 			   proc {$}
-			      Options = o(dist:{Dist getDistance($)})
-			      case {Det Options.dist} then
+			      GetDist GetCustomDist
+			      GetCustomDepth = {DepthEntry tkReturnInt(get $)}
+			      GetCustomNodes = {NodesEntry tkReturnInt(get $)}
+			      GetDepth = case {DepthVar tkReturnInt($)}
+					 of 0 then ~1
+					 [] 1 then GetCustomDepth
+					 end
+			      GetNodes = case {NodesVar tkReturnInt($)}
+					 of 0 then ~1
+					 [] 1 then GetCustomNodes
+					 end
+			   in
+			      {Dist getDistance(GetDist GetCustomDist)}
+			      case
+				 {IsInt GetDist} andthen
+				 {IsInt GetCustomDist} andthen
+				 {IsInt GetDepth} andthen
+				 {IsInt GetCustomDepth} andthen
+				 {IsInt GetNodes} andthen
+				 {IsInt GetCustomNodes}
+			      then
+				 Options = o(dist:        GetDist
+					     customDist:  GetCustomDist
+					     depth:       GetDepth
+					     customDepth: GetCustomDepth
+					     nodes:       GetNodes
+					     customNodes: GetCustomNodes
+					    )
 				 {self close}
+			      else true
 			      end
 			   end
 			   'Cancel'#
@@ -690,14 +697,65 @@ local
 				 end)])>>
 	    Dist = {New DistanceWidget init(parent:   self
 					    text:     'Search Recomputation'
-					    distance: Prev.dist)}
+					    distance: Prev.dist
+					    custom:   Prev.customDist)}
+	    Stop = {New Tk.frame tkInit(parent: self
+					relief: groove
+					bd:     Border)}
+
+	    Head    = {New Tk.label tkInit(parent: Stop
+					   relief: ridge
+					   bd:     Border
+					   text:   'Search Limits')}
+
+	    Buttons = {New Tk.frame tkInit(parent: Stop)}
+
+	    Depth   = {New Tk.frame tkInit(parent:             Buttons
+					   highlightthickness: 0)}
+	    DepthVar    = {New Tk.variable tkInit(Prev.depth\=~1)}
+	    DepthButton = {New Tk.checkbutton 
+			   tkInit(parent:   Depth
+				  variable: DepthVar
+				  anchor:   w
+				  text:     'Depth')}
+
+	    DepthEntry  = {New Tk.entry
+			   [tkInit(parent:   Depth
+				   back:     EntryColor
+				   width:    SmallEntryWidth)
+			    tk(insert 0 Prev.customDepth)]}
+	    Nodes  = {New Tk.frame tkInit(parent:             Buttons
+					  highlightthickness: 0)}
+	    NodesVar    = {New Tk.variable tkInit(Prev.nodes\=~1)}
+	    NodesButton = {New Tk.checkbutton 
+			   tkInit(parent:   Nodes
+				  variable: NodesVar
+				  anchor:   w
+				  text:     'Nodes')}
+
+	    NodesEntry  = {New Tk.entry
+			   [tkInit(parent:   Nodes
+				   back:     EntryColor
+				   width:    SmallEntryWidth)
+			    tk(insert 0 Prev.customNodes)]}
 	 in
-	    {Tk.send pack(Dist o(side:top fill:x padx:BigPad pady:BigPad))}
+	    {Tk.batch [pack(NodesButton NodesEntry o(side:left))
+		       pack(DepthButton DepthEntry o(side:left))
+		       pack(Depth Nodes
+			    o(side:top anchor:w padx:Pad pady:Pad fill:both))
+		       pack(Head
+			    o(side:top padx:BigPad pady:BigPad
+			      ipadx:BigPad ipady:BigPad fill:x))
+		       pack(Buttons o(side:left fill:y))
+		       pack(Dist Stop
+			    o(side:top fill:x padx:BigPad pady:BigPad))]}
 	 end
 
       end
 
-      class InfoDialog from DialogClass
+      class InfoDialog
+	 from DialogClass
+	 
 	 meth init(master:Master previous:?Prev options:?Options)
 	    <<DialogClass
 	      init(master:  Master
@@ -706,13 +764,20 @@ local
 		   return:  1
 		   buttons: ['Okay'#
 			     proc {$}
-				Options = o(dist: {Dist getDistance($)}
-					    keep: {IsKeep tkReturnInt($)}==1)
+				GetDist GetCustomDist
+				GetKeep = {IsKeep tkReturnInt($)}==1
+			     in
+				{Dist getDistance(GetDist GetCustomDist)}
 				case
-				   {Det Options.dist} andthen
-				   {Det Options.keep}
+				   {IsInt GetDist} andthen
+				   {IsInt GetCustomDist} andthen
+				   {Det GetKeep}
 				then
+				   Options = o(dist:       GetDist
+					       customDist: GetCustomDist
+					       keep:       GetKeep) 
 				   {self close}
+				else true
 				end
 			     end
 			     'Cancel'#
@@ -721,24 +786,23 @@ local
 				   end)])>>
 	    Dist = {New DistanceWidget init(parent: self
 					    text:   'Information Recomputation'
-					    distance: Prev.dist)}
-	    IsKeep     = {New Tk.variable
-			  tkInit(case Prev.keep then 1 else 0 end)}
+					    distance: Prev.dist
+					    custom:   Prev.customDist)}
+	    IsKeep     = {New Tk.variable tkInit(Prev.keep)}
+	    KeepFrame  = {New Tk.frame tkInit(parent: self
+					      relief: groove
+					      border: Border)}
 	    KeepButton = {New Tk.checkbutton
-			  tkInit(parent:   self
-				 relief:   groove
-				 border:   Border
+			  tkInit(parent:   KeepFrame
 				 anchor:   w
-				 onvalue:  1
-				 offvalue: 0
 				 variable: IsKeep
 				 text:     'Keep solution information')}
 	 in
-	    {Tk.batch [pack(Dist
+	    {Tk.batch [pack(KeepButton
+			    o(side:top padx:Pad pady:Pad fill:both expand:1))
+		       pack(Dist KeepFrame
 			    o(side:top fill:x padx:BigPad pady:BigPad))
-		       pack(KeepButton
-			    o(side:bottom fill:x ipadx:BigPad ipady:BigPad
-			      padx:BigPad pady:BigPad))]}
+		       ]}
 	 end
 
       end
@@ -747,7 +811,7 @@ local
 
    class PostscriptManager
       attr
-	 Options:  DefPostscriptOptions
+	 Options: DefPostscriptOptions
       feat
 	 FS
       meth init
@@ -806,12 +870,8 @@ local
    end
 
    class SearchOptionsManager
-      attr
-	 Options:      DefSearchOptions
-	 ClearOptions: DefSearchOptions
-      meth clear
-	 ClearOptions <- @Options
-      end
+      attr Options: DefSearchOptions
+
       meth searchOptions
 	 NewOptions = {New SearchDialog init(master:   self.toplevel
 					     previous: @Options
@@ -824,18 +884,22 @@ local
 	 Options <- {UpdateOption O recomputation @Options dist Id}
       end
       
-      meth getSearchDistance(?Dist)
-	 Dist = @ClearOptions.dist
+      meth getSearchDistance($)
+	 @Options.dist
+      end
+
+      meth getSearchDepth($)
+	 @Options.depth
+      end
+
+      meth getSearchNodes($)
+	 @Options.nodes
       end
    end
 
    class InfoOptionsManager
-      attr
-	 Options:      DefInfoOptions
-	 ClearOptions: DefInfoOptions
-      meth clear
-	 ClearOptions <- @Options
-      end
+      attr Options: DefInfoOptions
+
       meth infoOptions
 	 NewOptions = {New InfoDialog init(master:   self.toplevel
 					   previous: @Options
@@ -843,27 +907,27 @@ local
       in
 	 case {Det NewOptions} then Options <- NewOptions end
       end
+
       meth setInfoOptions(O)
 	 Options <- {UpdateOption O recomputation
 		     {UpdateOption O solutions @Options
 		      keep Id}
 		     dist Id}
       end
-      meth getInfoDistance(?Dist)
-	 Dist = @ClearOptions.dist
+
+      meth getInfoDistance($)
+	 @Options.dist
       end
-      meth getKeepSolutions(?Keep)
-	 Keep = @ClearOptions.keep
+
+      meth getKeepSolutions($)
+	 @Options.keep
       end
+
    end
 
    class LayoutOptionsManager
-      attr
-	 Options:      DefLayoutOptions
-	 ClearOptions: DefLayoutOptions
-      meth clear
-	 ClearOptions <- @Options
-      end
+      attr Options: DefLayoutOptions
+
       meth layoutOptions
 	 NewOptions = {New LayoutDialog init(master:   self.toplevel
 					     previous: @Options
@@ -871,18 +935,22 @@ local
       in
 	 case {Det NewOptions} then Options <- NewOptions end
       end
+
       meth setLayoutOptions(O)
 	 Options <- {UpdateOption O hide
 		     {UpdateOption O update @Options
 		      update Id}
 		     hide Id}
       end
-      meth getAutoHide(?Hide)
-	 Hide  = @ClearOptions.hide
+
+      meth getAutoHide($)
+	 @Options.hide
       end
-      meth getUpdateSol(?Sols)
-	 Sols  = @ClearOptions.update
+
+      meth getUpdateSol($)
+	 @Options.update
       end
+
    end
 
 in
@@ -898,12 +966,6 @@ in
 	 <<PostscriptManager init>>
       end
 
-      meth clear
-	 <<SearchOptionsManager clear>>
-	 <<InfoOptionsManager   clear>>
-	 <<LayoutOptionsManager clear>>
-      end
-      
       meth Lock(O)
 	 case {Object.closed O} then <<UrObject nil>> end
       end
