@@ -51,7 +51,7 @@
 #define oz_newCell(val) makeTaggedConst(new CellLocal(am.currentBoard, (val)))
   // access, assign
 
-#define oz_float(f)     makeTaggedFloat((f))
+#define oz_float(f)     newTaggedFloat((f))
 #define oz_int(i)       makeInt((i))
 
 inline
