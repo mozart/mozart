@@ -11,7 +11,8 @@ import
    Pickle
    Open
    Browser(browse:Browse)
-   FileUtils(expand:Expand withSlash:WithSlash fullName:FullName)
+   FileUtils(expand:Expand withSlash:WithSlash fullName:FullName
+	    dirname:Dirname)
    Resolve
    Message(parse:Parse slurp:Slurp)
    
@@ -25,15 +26,6 @@ define
    OZPMPKG={Expand "~/.oz/"}
    MOGUL = "http://www.mozart-oz.org/mogul/" %"./"
    INFO  = "ozpm.info"
-   
-   fun{ExtractPath P}
-      {Reverse
-       {List.dropWhile
-	{Reverse {VirtualString.toString P}}
-	fun{$ C}
-	   C\=92 andthen C\=47
-	end}}
-   end
 
    proc{CreatePath P}
       Stat
@@ -371,7 +363,7 @@ define
 						      action:toplevel#close)))} show(wait:true)}
 			  in
 			     if R then
-				{CreatePath {ExtractPath OZPMINFO}}
+				{CreatePath {Dirname OZPMINFO}}
 				{Pickle.save nil OZPMINFO}
 				Ret=nil
 			     else {Application.exit 1} end
