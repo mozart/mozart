@@ -100,7 +100,6 @@ public:
   void ** gcGetMarkField(void);
   SVariable * gcGetFwd(void);
   SVariable * gc();
-  Bool gcNeeded();
 
   void setStoreFlag(void) {
     suspList = (SuspList *) (((long) suspList) | STORE_FLAG);
