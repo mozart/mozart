@@ -797,25 +797,10 @@ void unBind(TaggedRef *p, TaggedRef t)
 
 typedef TaggedRef *RefsArray;
 
-/* any combination of the following two must not be equal to the GCTAG */
-const int RADirty = 1; // means something has suspendeed on it
+/* any combination of the following must not be equal to the GCTAG */
 #ifdef DEBUG_CHECK
-const int RAFreed = 2; // means has been already deallocated
-#endif
+const int RAFreed = 1; // means has been already deallocated
 
-inline
-Bool isDirtyRefsArray(RefsArray a)
-{
-  return (a[-1]&RADirty);
-}
-
-inline
-void markDirtyRefsArray(RefsArray a)
-{
-  if (a) a[-1] |= RADirty;
-}
-
-#ifdef DEBUG_CHECK
 inline
 Bool isFreedRefsArray(RefsArray a)
 {
@@ -828,18 +813,26 @@ void markFreedRefsArray(RefsArray a)
   if (a) a[-1] |= RAFreed;
 }
 
+#define RAtagSize tagSize
+
+#else
+
+#define RAtagSize 0
+
 #endif
+
+
 
 inline
 void setRefsArraySize(RefsArray a, int32 n)
 {
-  a[-1] = (n<<tagSize);
+  a[-1] = (n<<RAtagSize);
 }
 
 inline
 int getRefsArraySize(RefsArray a)
 {
-  return (a[-1]>>tagSize);
+  return (a[-1]>>RAtagSize);
 }
 
 
@@ -925,8 +918,8 @@ void deallocateY(RefsArray a)
 }
 
 inline
-RefsArray allocateStaticRefsArray(int n) {
-// RefsArray a = (RefsArray) new char[(n+1) * sizeof(TaggedRef)];
+RefsArray allocateStaticRefsArray(int n)
+{
   RefsArray a = new TaggedRef[n + 1];
   a += 1;
   initRefsArray(a,n,OK);
@@ -935,7 +928,8 @@ RefsArray allocateStaticRefsArray(int n) {
 
 
 inline
-RefsArray copyRefsArray(RefsArray a) {
+RefsArray copyRefsArray(RefsArray a)
+{
   int n = getRefsArraySize(a);
   RefsArray r = allocateRefsArray(n,NO);
   for (int i = n-1; i >= 0; i--) {
@@ -945,7 +939,8 @@ RefsArray copyRefsArray(RefsArray a) {
 }
 
 inline
-RefsArray copyRefsArray(RefsArray a,int n,Bool init=NO) {
+RefsArray copyRefsArray(RefsArray a,int n,Bool init=NO)
+{
   RefsArray r = allocateRefsArray(n,init);
   for (int i = n-1; i >= 0; i--) {
     CHECK_NONVAR(a[i]);
@@ -956,7 +951,8 @@ RefsArray copyRefsArray(RefsArray a,int n,Bool init=NO) {
 
 
 inline
-RefsArray resize(RefsArray r, int s){
+RefsArray resize(RefsArray r, int s)
+{
   int size = getRefsArraySize(r);
   if (s < size){
     setRefsArraySize(r,s);
@@ -985,38 +981,6 @@ Bool termEq(TaggedRef t1, TaggedRef t2)
     return t1Ptr==t2Ptr;
   }
   return t1==t2;
-}
-
-inline
-TaggedRef * allocateRegs(TaggedRef t1, TaggedRef t2)
-{
-  TaggedRef * a = (TaggedRef *) heapMalloc(2 * sizeof(TaggedRef));
-  a[0] = t1;
-  a[1] = t2;
-  return a;
-}
-
-inline
-TaggedRef * allocateRegs(TaggedRef t1, TaggedRef t2, TaggedRef t3)
-{
-  TaggedRef * a = (TaggedRef *) heapMalloc(3 * sizeof(TaggedRef));
-  a[0] = t1;
-  a[1] = t2;
-  a[2] = t3;
-  return a;
-}
-
-inline
-TaggedRef * allocateRegs(TaggedRef t1, TaggedRef t2, TaggedRef t3,
-                         TaggedRef t4, TaggedRef t5)
-{
-  TaggedRef * a = (TaggedRef *) heapMalloc(5 * sizeof(TaggedRef));
-  a[0] = t1;
-  a[1] = t2;
-  a[2] = t3;
-  a[3] = t4;
-  a[4] = t5;
-  return a;
 }
 
 inline

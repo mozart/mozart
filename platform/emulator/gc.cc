@@ -458,11 +458,11 @@ class SavedPtrStack: public Stack {
 public:
   SavedPtrStack() : Stack(1000,Stack_WithMalloc) {}
   ~SavedPtrStack() {}
-  void pushPtr(int32* ptr, int32 value)
+  void pushPtr(int32* ptr)
   {
     ensureFree(2);
     push(ptr,NO);
-    push((StackEntry) value,NO);
+    push((StackEntry) *ptr,NO);
   }
 };
 
@@ -499,10 +499,10 @@ if (GCISMARKED(elem)) {return (Type) GCUNMARK(elem);}
  *
  */
 inline
-void storeForward (int32* fromPtr, void *newValue)
+void storeForward (int32* fromPtr, void *newValue, Bool domark=OK)
 {
   if (opMode == IN_TC) {
-    savedPtrStack.pushPtr(fromPtr, (int32) *fromPtr);
+    savedPtrStack.pushPtr(fromPtr);
   }
   DebugGC(opMode == IN_GC
           && MemChunks::list->inChunkChain((void *)fromPtr),
@@ -510,7 +510,7 @@ void storeForward (int32* fromPtr, void *newValue)
   DebugGC(opMode == IN_GC
           && from->inChunkChain(newValue),
           error("storing (marked) ref in to FROM-space"));
-  *fromPtr = GCMARK(newValue);
+  *fromPtr = domark ? GCMARK(newValue) : ToInt32(newValue);
 }
 
 inline
@@ -817,19 +817,22 @@ void Script::gc()
   }
 }
 
+#define RAGCTag (1<<31)
+
 inline Bool refsArrayIsMarked(RefsArray r)
 {
-  return GCISMARKED(r[-1]);
+  return (r[-1]&RAGCTag);
 }
 
 inline void refsArrayMark(RefsArray r, void *ptr)
 {
-  storeForward((int32*)&r[-1],ptr);
+  Assert((ToInt32(ptr)&RAGCTag)==0);
+  storeForward((int32*)&r[-1],ToPointer(ToInt32(ptr)|RAGCTag),NO);
 }
 
 inline RefsArray refsArrayUnmark(RefsArray r)
 {
-  return (RefsArray) GCUNMARK(r[-1]);
+  return (RefsArray) ToPointer(r[-1]&~(RAGCTag));
 }
 
 
@@ -859,13 +862,6 @@ RefsArray gcRefsArray(RefsArray r)
   GCNEWADDRMSG(aux);
 
   FDPROFILE_GC(cp_size_refsarray, (sz + 1) * sizeof(TaggedRef));
-
-  if (isDirtyRefsArray(r)) {
-    markDirtyRefsArray(aux);
-  }
-
-  DebugCheck(isFreedRefsArray(r),
-             markFreedRefsArray(aux););
 
   refsArrayMark(r,aux);
 
@@ -932,15 +928,13 @@ void OZ_updateHeapTerm(OZ_Term &t)
 //
 //  ... Continuation;
 inline
-void Continuation::gcRecurse (){
+void Continuation::gcRecurse ()
+{
   GCMETHMSG ("Continuation::gcRecurse");
 
-  Assert (!isFreedRefsArray (yRegs));
-  yRegs = gcRefsArray (yRegs);
-  Assert (!isFreedRefsArray (gRegs));
-  gRegs = gcRefsArray (gRegs);
-  Assert (!isFreedRefsArray (xRegs));
-  xRegs = gcRefsArray (xRegs);
+  yRegs = gcRefsArray(yRegs);
+  gRegs = gcRefsArray(gRegs);
+  xRegs = gcRefsArray(xRegs);
 }
 
 Continuation *Continuation::gc()
@@ -1972,7 +1966,6 @@ void ConstTerm::gcConstRecurse()
   case Co_Abstraction:
     {
       Abstraction *a = (Abstraction *) this;
-      Assert(!isFreedRefsArray(a->gRegs));
       a->gRegs = gcRefsArray(a->gRegs);
 
       a->home = a->home->gcBoard();
@@ -2265,7 +2258,6 @@ void Board::gcRecurse()
 {
   GCMETHMSG("Board::gcRecurse");
   Assert(!isCommitted() && !isFailed());
-  Assert(!isFreedRefsArray(body.getY ()));
   body.gcRecurse();
   u.actor=u.actor->gcActor();
 
@@ -2350,7 +2342,6 @@ void AWActor::gcRecurse()
 void WaitActor::gcRecurse()
 {
   GCMETHMSG("WaitActor::gcRecurse");
-  Assert(!isFreedRefsArray(next.getY()));
   board = board->gcBoard();
   Assert(board);
 
@@ -2386,8 +2377,6 @@ void WaitActor::gcRecurse()
 
 void AskActor::gcRecurse () {
   GCMETHMSG("AskActor::gcRecurse");
-  DebugCheck (isFreedRefsArray(next.getY ()),
-              error ("freed 'y' regs in AskActor::gcRecurse ()"));
   next.gcRecurse ();
   board = board->gcBoard ();
   Assert(board);
