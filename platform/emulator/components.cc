@@ -351,12 +351,12 @@ Bool pickle2text()
   OZ_Term res =   oz_newVariable();
   OZ_Return aux = loadFD(STDIN_FILENO,res,"-");
   if (aux==RAISE) {
-    fprintf(stderr,"Exception: %s",OZ_toC(am.getExceptionValue(),10,100));
+    fprintf(stderr,"Exception: %s\n",OZ_toC(am.getExceptionValue(),10,100));
     return NO;
   } 
   aux = saveIt(res,"-",OK);
   if (aux==RAISE) {
-    fprintf(stderr,"Exception: %s",OZ_toC(am.getExceptionValue(),10,100));
+    fprintf(stderr,"Exception: %s\n",OZ_toC(am.getExceptionValue(),10,100));
     return NO;
   } 
   return OK;
