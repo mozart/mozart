@@ -352,7 +352,7 @@ void oz_disposeThread(Thread *tt)
   tt->markDeadThread();
 
   if (am.debugmode() && tt->getTrace())
-    am.debugStreamTerm(tt);
+    debugStreamTerm(tt);
 
   switch (tt->getThrType()) {
   case S_RTHREAD:
