@@ -182,7 +182,7 @@ OZ_C_proc_end
 OZ_C_proc_begin(BIwriteRecordArity,3)
 {
   PCIN("writeRecordArity");
-  Arity *ar = SRecord::aritytable.find(OZ_getCArg(1));
+  Arity *ar = aritytable.find(OZ_getCArg(1));
 
   RET(CodeArea::writeRecordArity(ar,pc),2);
 }

@@ -497,7 +497,7 @@ OZ_Term OZ_CToString(char *s)
 /* convert an Oz string to a C string */
 char *OZ_stringToC(OZ_Term list)
 {
-  int len = OZ_length(list);
+  int len = lengthOfList(list);
   if (len < 0) {
     return (char *) len;
   }
@@ -676,22 +676,24 @@ OZ_Term OZ_tail(OZ_Term list)
  */
 int OZ_length(OZ_Term list)
 {
-  int len = 0;
-  OZ_Term tmp;
+  return lengthOfList(list);
+}
 
-  for (tmp = list; OZ_isCons(tmp); tmp=OZ_tail(tmp)) {
-    len++;
-  }
 
-  if (OZ_isNil(tmp)) {
-    return len;
-  }
+/* -----------------------------------------------------------------
+ * pairs
+ * -----------------------------------------------------------------*/
 
-  if (OZ_isVariable(tmp)) {
-    return -1; // SUSPENDED
-  }
+OZ_Term OZ_pair(OZ_Term t1,OZ_Term t2) {
+  OZ_Term out = OZ_tuple(OZ_CToAtom("#"),2);
+  OZ_putArg(out,1,t1);
+  OZ_putArg(out,2,t2);
+  return out;
+}
 
-  return -2; // FAILED
+int OZ_isPair(OZ_Term t)
+{
+  return OZ_isTuple(t) && OZ_label(t)==OZ_CToAtom("#") && OZ_width(t)==2;
 }
 
 /* -----------------------------------------------------------------
@@ -702,27 +704,25 @@ int OZ_length(OZ_Term list)
    the fields are not initialized */
 OZ_Term OZ_record(OZ_Term label, OZ_Term arity)
 {
-  OZ_warning("OZ_record not impl");
-  return OZ_nil();
+  Arity *newArity = mkArity(arity);
+  if (!newArity) return nil();
+  RefsArray newArgs = allocateRefsArray(newArity->getSize());
+  return makeTaggedSRecord(new SRecord(newArity,label,newArgs));
 }
 
 /* take a label and a property list and construct a record */
-OZ_Term OZ_recordProp(OZ_Term label, OZ_Term propList)
+OZ_Term OZ_recordList(OZ_Term label, OZ_Term propList)
 {
-  OZ_warning("not impl");
-  return OZ_nil();
-#ifdef MM2
   OZ_Term out;
   OZ_Bool ret = adjoinPropList(label,propList,out,NO);
 
   if (ret != PROCEED) {
-    OZ_warning("OZ_record(%s,%s): failed",
+    OZ_warning("OZ_recordList(%s,%s): failed",
                OZ_toC(label),OZ_toC(propList));
     return nil();
   }
 
   return out;
-#endif
 }
 
 void OZ_putRecordArg(OZ_Term record, OZ_Term feature, OZ_Term value)
