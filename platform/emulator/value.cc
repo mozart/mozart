@@ -1,6 +1,6 @@
 /*
- * FBPS Saarbr"ucken
- * Author: mehl
+  PS Lab, DFKI, Saarbruecken
+  Author: mehl
  */
 
 #if defined(INTERFACE)
@@ -541,15 +541,11 @@ void bigIntInit()
  * SRecord
  *=================================================================== */
 
-/*
- * make an record
- *  the subtrees are initialized with new variables
- */
-TaggedRef mkRecord(TaggedRef label,SRecordArity ff)
+
+void SRecord::initArgs()
 {
-  SRecord *srecord = SRecord::newSRecord(label,ff,getWidth(ff));
-  srecord->initArgs(am.currentUVarPrototype());
-  return makeTaggedSRecord(srecord);
+  for (int i = getWidth(); i--; )
+    args[i] = oz_newVariable();
 }
 
 /************************************************************************/

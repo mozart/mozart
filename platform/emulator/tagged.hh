@@ -560,9 +560,13 @@ TaggedRef tagged2NonVariable(TaggedRef *term)
 {
   GCDEBUG(*term);
   TaggedRef ret = *term;
+#ifdef OPT_VAR_IN_STRUCTURE
   if (!IsRef(ret) && isAnyVar(ret)) {
     ret = makeTaggedRef(term);
   }
+#else
+  Assert(IsRef(ret) || !isAnyVar(ret));
+#endif
   return ret;
 }
 

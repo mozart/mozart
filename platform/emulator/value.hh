@@ -1,8 +1,8 @@
 /*
- * FBPS Saarbr"ucken
- * Author: mehl
- *
- * Values: literal, list, records
+  PS Lab, DFKI, Saarbruecken
+  Author: mehl
+
+  Values: literal, list, records, ...
  */
 
 #ifndef __VALUEHH
@@ -492,7 +492,6 @@ protected:
   TaggedRef *getRef() { return &args[0]; }
   TaggedRef *getRefHead() { return &args[0]; }
   TaggedRef *getRefTail() { return &args[1]; }
-  void initArgs(TaggedRef val) { args[0]=val; args[1]=val;}
 
   OZPRINT;
   OZPRINTLONG;
@@ -1003,11 +1002,7 @@ public:
     return makeTaggedSRecord(this);
   }
 
-  void initArgs(TaggedRef val)
-  {
-    for (int i = getWidth(); i--; )
-      args[i] = val;
-  }
+  void initArgs();
 
   int getWidth() { return ::getWidth(getSRecordArity()); }
 
@@ -1129,7 +1124,6 @@ public:
 Bool isSorted(TaggedRef list);
 
 TaggedRef sortlist(TaggedRef list,int len);
-TaggedRef mkRecord(TaggedRef label,SRecordArity ff);
 
 inline
 Bool isRecord(TaggedRef term) {
