@@ -50,10 +50,10 @@ CRITICAL_SECTION lock;
 
 #define bufsz 1000
 
-unsigned __stdcall readerThread(void *arg)
+DWORD __stdcall readerThread(void *arg)
 {
   HANDLE hd = (HANDLE)arg;
-  unsigned int ret;
+  DWORD ret;
   char buf[bufsz];
   while(1) {
     if (ReadFile(hd,buf,bufsz-1,&ret,0)==FALSE)
@@ -170,7 +170,7 @@ WinMain(HINSTANCE /*hInstance*/, HINSTANCE /*hPrevInstance*/,
   }
 
 #ifdef OZENGINEW
-  unsigned thrid;
+  DWORD thrid;
   CreateThread(0,10000,&readerThread,rh,0,&thrid);
 #endif
 
