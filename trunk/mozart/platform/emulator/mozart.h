@@ -75,6 +75,8 @@ extern char *   OZ_atomToC    _PROTOTYPE((OZ_Term));
 extern char *   OZ_literalToC _PROTOTYPE((OZ_Term));
 extern OZ_Term  OZ_CToAtom    _PROTOTYPE((char *));
 
+extern int      OZ_getMinInt     _PROTOTYPE((void));
+extern int      OZ_getMaxInt     _PROTOTYPE((void));
 extern OZ_Term  OZ_CToInt        _PROTOTYPE((int));
 extern int      OZ_intToC        _PROTOTYPE((OZ_Term));
 extern OZ_Term  OZ_CStringToInt  _PROTOTYPE((char *str));
