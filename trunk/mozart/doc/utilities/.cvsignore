@@ -1,3 +1,5 @@
+Makefile
+config.log config.cache config.status
 *.ozf
 *.elc
 ozdoc
