@@ -1173,8 +1173,6 @@ public:
 
   SRecord *gCollectSRecord(void);
   SRecord *sCloneSRecord(void);
-  SRecord *gCollectSRecordInline(void);
-  SRecord *sCloneSRecordInline(void);
   
   Bool isTuple() { return sraIsTuple(recordArity); }
 
@@ -1497,17 +1495,15 @@ class ObjectClass: public ConstTermWithHome {
   friend void ConstTerm::gCollectConstRecurse(void);
   friend void ConstTerm::sCloneConstRecurse(void);
 private:
-  SRecord *features;
-  SRecord *unfreeFeatures;
-  OzDictionary *fastMethods;
-  OzDictionary *defaultMethods;
+  // Never change order, the garbage collector relies on it!
+  TaggedRef features, unfreeFeatures, fastMethods, defaultMethods;
   int flags;
 public:
   USEHEAPMEMORY;
   OZPRINTLONG
   NO_DEFAULT_CONSTRUCTORS(ObjectClass)
 
-  ObjectClass(SRecord *feat,OzDictionary *fm,SRecord *uf,OzDictionary *dm,
+  ObjectClass(TaggedRef feat, TaggedRef fm, TaggedRef uf, TaggedRef dm,
 	      Bool lck, Bool sited, Board *b)
     : ConstTermWithHome(b,Co_Class)
   {
@@ -1520,36 +1516,50 @@ public:
     if (sited) flags |= CLASS_SITED;
   }
 
-  int supportsLocking() { return flags&CLASS_LOCKING; }
-  int isSited()         { return flags&CLASS_SITED; }
+  int supportsLocking(void) { 
+    return flags&CLASS_LOCKING; 
+  }
+  int isSited(void)         { 
+    return flags&CLASS_SITED; 
+  }
 
-  int getFlags() { return flags; }
-  void setFlags(int f) { flags = f; }
+  int getFlags(void) { 
+    return flags; 
+  }
+  void setFlags(int f) { 
+    flags = f; 
+  }
 
-  OzDictionary *getDefMethods()  { return defaultMethods; }
-  OzDictionary *getfastMethods() { return fastMethods; }
+  OzDictionary * getDefMethods(void)  { 
+    return (OzDictionary *) tagged2Const(defaultMethods); 
+  }
+  OzDictionary * getfastMethods(void) { 
+    return (OzDictionary *) tagged2Const(fastMethods); 
+  }
+  SRecord * getUnfreeRecord(void) { 
+    return unfreeFeatures ? tagged2SRecord(unfreeFeatures) : (SRecord *) NULL; 
+  }
+  SRecord * getFeatures(void) { 
+    return tagged2SRecord(features); 
+  }
 
   Abstraction *getMethod(TaggedRef label, SRecordArity arity, RefsArray X,
 			 Bool &defaultsUsed);
 
-  TaggedRef getFallbackNew();
-  TaggedRef getFallbackApply();
+  TaggedRef getFallbackNew(void);
+  TaggedRef getFallbackApply(void);
 
   Bool lookupDefault(TaggedRef label, SRecordArity arity, RefsArray X);
 
-  TaggedRef classGetFeature(TaggedRef lit)
-  {
-    return features->getFeature(lit);
+  TaggedRef classGetFeature(TaggedRef lit) {
+    return getFeatures()->getFeature(lit);
   }
 
-  SRecord *getUnfreeRecord() { return unfreeFeatures; }
-  SRecord *getFeatures()     { return features; }
 
-  const char *getPrintName();
+  const char * getPrintName(void);
 
-  void import(SRecord *feat,OzDictionary *fm, SRecord *uf,
-	      OzDictionary *dm, int f)
-  {
+  void import(TaggedRef feat, TaggedRef fm, TaggedRef uf,
+	      TaggedRef dm, int f) {
     features       = feat;
     fastMethods    = fm;
     unfreeFeatures = uf;
@@ -1557,10 +1567,15 @@ public:
     flags          = f;
   }
 
-  TaggedRef getArityList();
-  int getWidth();
+  TaggedRef getArityList(void) {
+    return getFeatures()->getArityList();
+  }
+  int getWidth(void) {
+    return getFeatures()->getWidth();
+  }
 
-  GName *globalize();
+
+  GName *globalize(void);
 };
 
 
@@ -1569,62 +1584,79 @@ public:
  */
 
 
-typedef int32 RecOrCell;
+typedef TaggedRef RecOrCell;
 
 inline
-Bool stateIsCell(RecOrCell rc)     { return rc&1; }
-
-inline
-Tertiary *getCell(RecOrCell rc)   {
-  Assert(stateIsCell(rc)); return (Tertiary*) ToPointer(rc-1);
+Bool stateIsCell(RecOrCell rc) { 
+  return oz_isConst(rc); 
 }
 
 inline
-SRecord *getRecord(RecOrCell rc) {
-  Assert(!stateIsCell(rc)); return (SRecord*) ToPointer(rc);
+Tertiary * getCell(RecOrCell rc)   {
+  Assert(stateIsCell(rc)); 
+  return (Tertiary *) tagged2Const(rc);
 }
 
 inline
-RecOrCell makeRecCell(Tertiary *c)    { return ToInt32(c)|1; }
-
-inline
-RecOrCell makeRecCell(SRecord *r) { return ToInt32(r); }
-
+SRecord * getRecord(RecOrCell rc) {
+  Assert(!stateIsCell(rc)); 
+  return tagged2SRecord(rc);
+}
 
 class Object: public Tertiary {
   friend void ConstTerm::gCollectConstRecurse(void);
   friend void ConstTerm::sCloneConstRecurse(void);
 private:
-  ObjectClass *cl1;
-  RecOrCell state;
-  OzLock *lock;
-  SRecord *freeFeatures;
   GName  *objectID; 
+  TaggedRef cl1, lock, freeFeatures, state;
 public:
   OZPRINTLONG
   NO_DEFAULT_CONSTRUCTORS(Object)
 
-  ObjectClass *getClass()       { return cl1; }
+  ObjectClass * getClass(void) { 
+    return (ObjectClass *) tagged2Const(cl1); 
+  }
   void setClass(ObjectClass *c) {
-    Assert(!c||c->supportsLocking()>=0);
-    cl1=c;
+    Assert(!c || c->supportsLocking()>=0);
+    cl1=makeTaggedConst(c);
   }
   
-  GName *getGName1()       { return objectID; }
+  GName *getGName1(void)       { return objectID; }
   void setGName(GName *gn) { objectID = gn;}
     
-  OzLock *getLock() { return lock; }
-  void setLock(OzLock *l) { lock=l; }
+  OzLock *getLock(void) { 
+    return ((lock == makeTaggedNULL()) ? 
+	    (OzLock *) NULL : (OzLock *) tagged2Const(lock)); 
+  }
+  void setLock(OzLock *l) { 
+    lock = l ? makeTaggedConst((ConstTerm *) l) : makeTaggedNULL();
+  }
 
-  const char *getPrintName()    { return getClass()->getPrintName(); }
-  RecOrCell getState()          { return state; }
-  void setState(SRecord *s)     { Assert(s!=0); state=makeRecCell(s); }
-  void setState(Tertiary *c)    { state = makeRecCell(c); }
+  const char *getPrintName(void) { 
+    return getClass()->getPrintName(); 
+  }
+  RecOrCell getState(void) { 
+    return state; 
+  }
+  void setState(SRecord *s) { 
+    Assert(s!=0); 
+    state=makeTaggedSRecord(s); 
+  }
+  void setState(Tertiary *c) { 
+    state = c ? makeTaggedConst(c) : makeTaggedNULL(); 
+  }
+
   OzDictionary *getDefMethods() { return getClass()->getDefMethods(); }
 
-  SRecord *getFreeRecord()          { return freeFeatures; }
-  SRecord *getUnfreeRecord() { return getClass()->getUnfreeRecord(); }
-  void setFreeRecord(SRecord *aRec) { freeFeatures = aRec; }
+  SRecord *getFreeRecord(void) { 
+    return freeFeatures ? tagged2SRecord(freeFeatures) : (SRecord *) NULL;
+  }
+  SRecord *getUnfreeRecord() { 
+    return getClass()->getUnfreeRecord(); 
+  }
+  void setFreeRecord(SRecord *aRec) { 
+    freeFeatures = aRec ? makeTaggedSRecord(aRec) : makeTaggedNULL(); 
+  }
 
   /* same functionality is also in instruction inlineDot */
   TaggedRef getFeature(TaggedRef lit) 
@@ -1678,16 +1710,16 @@ public:
     setClass(ac);
     setState(s);
     setGName(NULL);
-    lock = lck;
+    setLock(lck);
   }
 
   Object(int i): Tertiary(i,Co_Object,Te_Proxy)
   {
-    setFreeRecord(NULL);
-    setClass(NULL);
-    setState((Tertiary*)NULL);
+    cl1          = makeTaggedNULL();
+    lock         = makeTaggedNULL();
+    freeFeatures = makeTaggedNULL();
+    state        = makeTaggedNULL();
     setGName(NULL);
-    lock = 0;
   }
 
 

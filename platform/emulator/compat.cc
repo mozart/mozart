@@ -118,20 +118,25 @@ OZ_BI_define(compat_importClass, 3, 1)
   GName *gname = makeGName(OZ_in(0), &ret);
   if (gname) {
     OZ_declareInt(1, flags);
-    SRecord *feat = tagged2SRecord(oz_deref(OZ_in(2)));
+    TaggedRef t_feat = oz_deref(OZ_in(2));
+    SRecord *feat = tagged2SRecord(t_feat);
 
     ObjectClass *cl =
-      new ObjectClass(NULL, NULL, NULL, NULL, NO, NO, am.currentBoard());
+      new ObjectClass(makeTaggedNULL(), 
+		      makeTaggedNULL(), 
+		      makeTaggedNULL(), 
+		      makeTaggedNULL(), 
+		      NO, NO, am.currentBoard());
     cl->setGName(gname);
 
     ret = makeTaggedConst(cl);
     addGName(gname, ret);
 
     TaggedRef ff = oz_deref(feat->getFeature(NameOoFeat));
-    cl->import(feat,
-	       tagged2Dictionary(oz_deref(feat->getFeature(NameOoFastMeth))),
-	       oz_isSRecord(ff)? tagged2SRecord(ff): (SRecord *) NULL,
-	       tagged2Dictionary(oz_deref(feat->getFeature(NameOoDefaults))),
+    cl->import(t_feat,
+	       oz_deref(feat->getFeature(NameOoFastMeth)),
+	       oz_isSRecord(ff) ? ff: makeTaggedNULL(),
+	       oz_deref(feat->getFeature(NameOoDefaults)),
 	       flags);
   }
   OZ_RETURN(ret);

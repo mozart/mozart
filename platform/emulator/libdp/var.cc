@@ -296,7 +296,7 @@ OZ_Return ManagerVar::addSuspV(TaggedRef *vPtr, Suspendable * susp)
 
 void ManagerVar::gCollectRecurseV(void)
 {
-  origVar=origVar->gCollectVar();
+  oz_gCollectTerm(origVar,origVar);
   OT->getOwner(getIndex())->gcPO();
   PD((GC,"ManagerVar o:%d",getIndex()));
   ProxyList **last=&proxies;
@@ -613,18 +613,18 @@ inline
 void ManagerVar::localize(TaggedRef *vPtr)
 {
   Assert(getInfo()==NULL);
-  origVar->setSuspList(unlinkSuspList());
-  *vPtr=makeTaggedCVar(origVar);
-  origVar=0;
+  getOrigVar()->setSuspList(unlinkSuspList());
+  *vPtr=origVar;
+  origVar=makeTaggedNULL();
   disposeV();
 }
 
 OZ_Term ManagerVar::statusV() {
-  return origVar->getType()==OZ_VAR_FUTURE ? AtomFuture : AtomFree;
+  return getOrigVar()->getType()==OZ_VAR_FUTURE ? AtomFuture : AtomFree;
 }
 
 VarStatus ManagerVar::checkStatusV(){
-  return origVar->getType()==OZ_VAR_FUTURE ?  EVAR_STATUS_FUTURE : 
+  return getOrigVar()->getType()==OZ_VAR_FUTURE ?  EVAR_STATUS_FUTURE : 
     EVAR_STATUS_FREE;
 }
 

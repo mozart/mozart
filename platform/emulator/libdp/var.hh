@@ -164,15 +164,22 @@ public:
 class ManagerVar : public ProxyManagerVar {
 private:
   ProxyList *proxies;
-  OzVariable *origVar;
+  TaggedRef origVar;
   InformElem *inform; // for failure
 protected:
   void sendRedirectToProxies(OZ_Term val, DSite* ackSite);
 public:
   ManagerVar(OzVariable *ov, int index)
     :  ProxyManagerVar(ov->getBoardInternal(),index), inform(NULL), 
-       proxies(0),origVar(ov) {}
+       proxies(0) {
+    // This is for garbage collection purpose only!
+    Assert(ov);
+    origVar = makeTaggedCVar(ov);
+  }
 
+  OzVariable * getOrigVar(void) {
+    return tagged2CVar(origVar);
+  }
   int getIdV() { return OZ_EVAR_MANAGER; }
   OZ_Term statusV();
   VarStatus checkStatusV();
@@ -192,9 +199,9 @@ public:
       pl=pl->dispose();
     }
     DebugCode(proxies=0);
-    if (origVar) {
-      oz_var_dispose(origVar);
-      DebugCode(origVar=0);
+    if (origVar != makeTaggedNULL()) {
+      oz_var_dispose(getOrigVar());
+      DebugCode(origVar=makeTaggedNULL());
     }
     freeListDispose(this,sizeof(ManagerVar));
   }
@@ -221,8 +228,8 @@ public:
 
   inline void localize(TaggedRef *vPtr);
   Bool isFuture(){ // mm3
-    if(origVar->getType()==OZ_VAR_FUTURE) return TRUE;
-    return FALSE;}
+    return (getOrigVar()->getType()==OZ_VAR_FUTURE);
+  }
 
   // for failure
   void newInform(DSite*, EntityCond);
