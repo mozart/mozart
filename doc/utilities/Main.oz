@@ -31,7 +31,7 @@ import
    OzDocToHTML(translate)
    OS(getEnv putEnv)
    URL
-   Chunk(getChunk)
+   Chunk(getChunk processSpecs)
    %% for html-global-index
    Indexer(makeIndex)
    Gdbm at 'x-oz://contrib/gdbm'
@@ -39,10 +39,14 @@ import
    HTML(seq: SEQ pcdata: PCDATA toVirtualString)
 prepare
    Spec = record('in'(single char: &i type: string optional: false)
-		 'type'(single char: &t type: string optional: false)
+		 'type'(single char: &t type: string optional: false
+			validate:alt(when(chunk false) true))
 		 'html'(alias: 'type'#"html-stylesheets")
-		 'out'(single char: &o type: string optional: false)
+		 'out'(single char: &o type: string optional: false
+		       validate:alt(when(chunk false) true))
 		 'autoindex'(rightmost type: bool default: false)
+		 'chunk'(multiple type:string)
+		 'chunk-sep'(single type:string default:"\t")
 		 %% HTML options
 		 'top'(single type: string default: unit)
 		 'stylesheet'(single type: string default: unit)
@@ -175,6 +179,9 @@ define
       %% The actual translation
       case Args.1 of _|_ then
 	 {Raise usage('extra command line arguments')}
+      elseif {HasFeature Args 'chunk'} then
+	 {Chunk.processSpecs Args.'in' Args.'chunk'
+	  if Args.'chunk-sep'==nil then &\t else Args.'chunk-sep'.1 end}
       elsecase Args.'type' of "html-color" then
 	 {OzDocToHTML.translate color Args}
       elseof "html-mono" then
