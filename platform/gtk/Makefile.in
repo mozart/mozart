@@ -21,7 +21,7 @@ PERL            = @PERL@
 
 SHAREDIR        = $(PREFIX)/share
 SHAREFILES      = $(SHAREDIR)/GTK.so-$(PLATFORM)
-
+PLATFORMFILES   = $(PLATFORMDIR)/GTK.so-$(PLATFORM)
 GOZWRIGHT       = $(PERL) $(VPATH)/gozwright.pl
 GOZCONST        = $(PERL) $(VPATH)/genconstants.pl
 
@@ -84,7 +84,11 @@ veryclean: clean
 distclean: veryclean
         -rm -f conf.h config.* Makefile
 
-install: $(PLATFORMDIR) $(SHAREDIR) $(SHAREFILES) $(PROVIDETCLLIBS)
+install: $(PLATFORMDIR) $(PLATFORMFILES) \
+         $(SHAREDIR) $(SHAREFILES) $(PROVIDETCLLIBS)
+
+
+$(PLATFORMDIR)/GTK.so-$(PLATFORM): GTK.so-$(PLATFORM)
         $(INSTALL_BIN) GTK.so-$(PLATFORM) $(PLATFORMDIR)/GTK.so
 
 $(SHAREDIR)/GTK.so-$(PLATFORM): $(PLATFORMDIR)/GTK.so
