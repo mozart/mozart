@@ -91,9 +91,9 @@ void init_cache_slot_index(int sz, int cache_num,
 inline
 void update_cache(int slot, int a[], OZ_FDIntVar x[],
                   int cache_from[], int cache_to[],
-                  int pos_cache[], int neg_cache[])
+                  double pos_cache[], double neg_cache[])
 {
-  NUMBERCAST cache_val_pos = 0, cache_val_neg = 0;
+  double cache_val_pos = 0, cache_val_neg = 0;
   int cache_slot_to = cache_to[slot];
 
   for (int j = cache_from[slot]; j < cache_slot_to; j += 1)
@@ -104,14 +104,14 @@ void update_cache(int slot, int a[], OZ_FDIntVar x[],
       cache_val_pos += NUMBERCAST(a[j]) * x[j]->getMaxElem();
       cache_val_neg += NUMBERCAST(a[j]) * x[j]->getMinElem();
     }
-  pos_cache[slot] = doubleToInt(cache_val_pos);
-  neg_cache[slot] = doubleToInt(cache_val_neg);
+  pos_cache[slot] = cache_val_pos;
+  neg_cache[slot] = cache_val_neg;
 }
 
 inline
-int precalc_lin(int slots, int slot_k, int cache[], int c)
+double precalc_lin(int slots, int slot_k, double cache[], int c)
 {
-  int sum = c;
+  double sum = c;
 
   for (int i = slots; i--; )
     if (i != slot_k)
@@ -123,9 +123,9 @@ inline
 int calc_txl_lin(int i, int slot,
                  int a[], OZ_FDIntVar x[],
                  int cache_from[], int cache_to[],
-                 int pos_txl_cache, int neg_txl_cache)
+                 double pos_txl_cache, double neg_txl_cache)
 {
-  NUMBERCAST s;
+  double s;
   // summing up uncached values
   int cache_slot_to = cache_to[slot];
   if (a[i] >= 0) {
@@ -146,9 +146,9 @@ inline
 int calc_txu_lin(int i, int slot,
                  int a[], OZ_FDIntVar x[],
                  int cache_from[], int cache_to[],
-                 int pos_txu_cache, int neg_txu_cache)
+                 double pos_txu_cache, double neg_txu_cache)
 {
-  NUMBERCAST s;
+  double s;
   // summing up uncached values
   int cache_slot_to = cache_to[slot];
   if (a[i] >= 0) {
