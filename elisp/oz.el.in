@@ -742,7 +742,7 @@ If FORCE is non-nil, kill it immediately."
 	      (setq filter
 		    (process-filter (get-buffer-process oz-emulator-buffer))))
 	  (setq oz-emulator-buffer "*Oz Emulator*")
-	  (let ((opi "http://www.ps.uni-sb.de/ozhome/bin/opi"))
+	  (let ((opi "http://www.ps.uni-sb.de/ozhome/share/OPI.ozf"))
 	    (if oz-win32
 		(make-comint "Oz Emulator" "ozemulator" nil "-u" opi)
 	      (make-comint "Oz Emulator" "ozengine" nil opi)))
