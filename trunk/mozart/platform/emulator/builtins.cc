@@ -2726,6 +2726,16 @@ OZ_BI_define(BIsendPort,2,0)
   return oz_sendPort(prt,val);
 } OZ_BI_end
 
+// this simply gets a new variable in the home space of the port
+OZ_BI_define(BInewServiceVar,1,1)
+{
+  oz_declareNonvarIN(0,prt);
+  if (!oz_isPort(prt)) {
+    oz_typeError(0,"Port");
+  }
+  OZ_RETURN(oz_newVar(tagged2Port(prt)->getBoardInternal()->derefBoard()));
+} OZ_BI_end
+
 
 // ---------------------------------------------------------------------
 // Locks
