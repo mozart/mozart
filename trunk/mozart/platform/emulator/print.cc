@@ -457,6 +457,12 @@ PRINT(Cell)
   stream << "C@" << this;
 }
 
+PRINT(Space)
+{
+  CHECKDEPTH;
+  stream << "Space@" << this;
+}
+
 PRINT(SChunk)
 {
   CHECKDEPTH;
@@ -671,6 +677,7 @@ PRINTLONG(ConstTerm)
   case Co_Abstraction:  ((Abstraction *) this)->printLong(stream,depth,offset);  break;
   case Co_Object:	((Object *) this)->printLong(stream,depth,offset); 	 break;
   case Co_Cell:	        ((Cell *) this)->printLong(stream,depth,offset);         break;
+  case Co_Space:	((Space *) this)->printLong(stream,depth,offset);         break;
   case Co_Chunk:	((SChunk *) this)->printLong(stream,depth,offset);       break;
   case Co_Builtin:	((Builtin *) this)->printLong(stream,depth,offset);      break;
   default: 	        Assert(NO);
@@ -687,6 +694,7 @@ PRINT(ConstTerm)
   case Co_Abstraction: ((Abstraction *) this)->print(stream,depth,offset);   break;
   case Co_Object:      ((Object *) this)->print(stream,depth,offset);        break;
   case Co_Cell:        ((Cell *) this)->print(stream,depth,offset);          break;
+  case Co_Space:       ((Space *) this)->print(stream,depth,offset);         break;
   case Co_Chunk:       ((SChunk *) this)->print(stream,depth,offset);        break;
   case Co_Builtin:     ((Builtin *) this)->print(stream,depth,offset);       break;
   default:              Assert(NO);
@@ -791,7 +799,6 @@ PRINT(Board)
   if (isFailed())    stream << 'F';
   if (isCommitted()) stream << 'C';
   if (isWaiting())   stream << 'W';
-  if (isReflected()) stream << 'R';
   
   stream << " #" << suspCount;
   stream << ']';
@@ -1283,6 +1290,16 @@ PRINTLONG(Cell)
 	 << indent(offset)
 	 << " value:"<<endl;
   tagged2StreamLong(val,stream,depth,offset+2);
+}
+
+PRINTLONG(Space)
+{
+  CHECKDEPTHLONG;
+  stream << indent(offset)
+	 << "Space@id" << this << endl
+	 << indent(offset)
+	 << " actor:"<<endl;
+  ((SolveActor *) solve->getActor())->printLong(stream,depth,offset+2);
 }
 
 PRINTLONG(SChunk)
