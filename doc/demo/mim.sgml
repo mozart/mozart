@@ -30,9 +30,9 @@
 
   <P><LIST CLASS=linkmenu>
       <ITEM/<REF.EXTERN
-      TO="http://www.sics.se/~nilsf/micq/clientz.oza"/Start Client//
+      TO="http://www.sics.se/mozart/mim/clientz.oza"/Start Client//
       <ITEM/<REF.EXTERN
-      TO="http://www.sics.se/~nilsf/micq/"/More Information//
+      TO="http://www.sics.se/mozart/mim/"/More Information//
       <ITEM><REF.EXTERN TO="ozdoc:apptut" KEY="applets"/How to enable Applets/
     </LIST></P>
   <SECTION CLASS=unnumbered>
@@ -42,7 +42,7 @@
     button and fill-in the fields. Use <KEY/TAB/ to move between the
     fields and press <KEY/RET/ when done. More information about
     <EM>Mozart Instant messegner</EM> is found <REF.EXTERN
-    TO="http://www.sics.se/~nilsf/micq/">here</REF.EXTERN>.
+    TO="http://www.sics.se/mozart/mim/">here</REF.EXTERN>.
 </SECTION>
 </CHAPTER>
 
