@@ -126,6 +126,10 @@ typedef float ri_float;
 
 #define FailOnInvalid(X) if((X) < 0.0) goto failure;
 
+#ifdef FailOnInvalidTouched
+#undef FailOnInvalidTouched
+#endif
+
 #define FailOnInvalidTouched(X, W, F)		\
 {						\
   ri_float _w = (X);				\

@@ -109,8 +109,8 @@ OZ_Term reflect_variable(OZ_Term var)
 
     OzCtVariable * v = tagged2GenCtVar(var);
     OZ_CtDefinition * def = v->getDefinition();
-    int numOfSuspLists = def->getNoOfWakeUpLists();
-    char ** namesOfSuspLists = def->getNamesOfWakeUpLists();
+    int numOfSuspLists = def->getNoEvents();
+    char ** namesOfSuspLists = def->getEventNames();
     const int ind_offset = 2;
     OZ_Term susp_arity_def[ind_offset + numOfSuspLists];
 
