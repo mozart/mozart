@@ -53,7 +53,7 @@ import
    Pickle(save load)
    DP(open) at 'x-oz://contrib/tools/DistPanel'
    Panel
-   Fault
+%   Fault
    Browser(browse:Browse)
    Database(db:DB getID:GetID) at 'database.ozf'
    Mobility(stationaryClass:StationaryClass newStationary:NewStationary) at 'mobility.ozf'
@@ -72,78 +72,6 @@ define
    end
    InitServer = {NewName}
    HaltServer = {NewName}
-   %% Tmp solution
-   NewAccountGui=functor
-		    $
-		 import
-		    Tk
-		    OS(getEnv)
-		 export
-		    start:Start
-		 define
-		    Organization=case {OS.getEnv 'ORGANIZATION'} of false then "" elseof X then X end
-		    
-		    proc{Start Args}
-		       T={New Tk.toplevel tkInit(title:"New Account...")}
-		       V1 V2 V3 V4 V5 V6
-		       Index={NewCell 0}
-		       GO
-		       proc{Start2}
-			  A=S_addUser(id:{V1 tkReturnAtom($)}
-				      passwd:{V2 tkReturnAtom($)}
-				      firstname:{V3 tkReturnString($)}
-				      lastname:{V4 tkReturnString($)}
-				      organization:{V5 tkReturnString($)}
-				      email:{V6 tkReturnString($)}
-				      userlevel: user)
-		       in
-			  {Wait A.id} {Wait A.passwd} {Wait A.firstname} {Wait A.firstname} {Wait A.organization} {Wait A.email}
-			  {T tkClose}
-			  
-			  try
-			     {Args.server A}
-			     {Args.client registerclient(id:A.id passwd:A.passwd)}
-			  catch idAllreadyInUse(M) then
-			     T={New Tk.toplevel tkInit(title:"Error")}
-			     L={New Tk.label tkInit(parent:T text:"Login is allready '"#M#"' taken...")}
-			     B1={New Tk.button tkInit(parent:T text:"Choose another login" action:proc{$}
-												     {T tkClose}
-												     {Start {Record.adjoin Args A}}
-												  end)}
-			     B2={New Tk.button tkInit(parent:T text:"Cancel" action:proc{$}
-										       {T tkClose}
-										    end)}
-			  in
-			     {Tk.batch [grid(L row:0 column:0 columnspan:2 sticky:we)
-					grid(B1 row:5 column:0 sticky:we)
-					grid(B2 row:5 column:1 sticky:we)
-					focus(B1)]}
-			  end	    
-		       end
-		       
-		       proc{NewEntry Title Value V}
-			  O N E L={New Tk.label tkInit(parent:T text:Title)}
-		       in
-			  {Exchange Index O N} N=O+1
-			  V={New Tk.variable tkInit(Value)}
-			  E={New Tk.entry tkInit(parent:T width:50 textvariable:V)}
-			  {Tk.batch [grid(L row:N column:0 sticky:e)
-				     grid(E row:N column:1 sticky:w)]}
-			  {E tkBind(event:'<Return>' action:proc{$} GO=unit end)}
-			  if N==1 then {Tk.send focus(E)} else skip end
-		       end
-		    in
-		       V1={NewEntry "Login:" Args.id}
-		       V2={NewEntry "Password:" Args.passwd}
-		       V3={NewEntry "Firstname:" {CondSelect Args firstname ""}}
-		       V4={NewEntry "Lastname:" {CondSelect Args lastname ""}}
-		       V5={NewEntry "Organization:" {CondSelect Args organization Organization}}
-		       V6={NewEntry "Email:" {CondSelect Args email ""}}
-		       
-		       {Wait GO}
-		       {Start2}
-		    end 
-		 end
    WaitQuit
    
    fun{GetDate}
@@ -205,7 +133,7 @@ define
 	 lock P={Dictionary.condGet self.watchers ID nil} in
 	    if P\=nil then
 	       {Dictionary.remove self.watchers ID}
-	       {Fault.removeSiteWatcher P.port P.procedure}
+%	       {Fault.removeSiteWatcher P.port P.procedure}
 	    end
 	    {self Notify(id:ID online:offline)}
 	    {WriteLog "Logged out "#ID}
@@ -275,8 +203,6 @@ define
 	    end
 	 end
 	 fun{NewFun Mess}
-	    Server=self.this
-	 in
 	    functor $
 	    import
 	       Tk
@@ -329,17 +255,14 @@ define
 						   {Wait GO}
 						   {Start}
 						end
-					     end) "Couldn't apply functor 'newlogin'"}
+					     end) "Could not apply functor 'newlogin'"}
 				 end)}
-	       B2={New Tk.button tkInit(parent:T text:"Create Account"
+	       B2={New Tk.button tkInit(parent:T text:"New User (Create Account)"
 					action:proc{$}
-						  {C1 apply(NewAccountGui %'newaccountgui.ozf'
-							    execute:proc{$ M}
-								       {T tkClose}
-								       {M.start newaccount(id:ID
-											   passwd:PW
-											   server:Server
-											   client:C1)} end)}
+						  {T tkClose}
+						  try
+						     {C1 newAccount(args(login:ID passwd:PW))} 
+						  catch X then raise X end end
 					       end)}
 	       B3={New Tk.button tkInit(parent:T text:"Quit" action:proc{$}
 								       {T tkClose}
@@ -355,8 +278,7 @@ define
 	    end
 	 end
 	 proc{WatcherProc X E}
-	    {WriteLog "System detected client crash for "#ID#" on "#H#
-	     ". Initialize autologgout..."} 
+	    {WriteLog "System detected client crash for "#ID#" on "#H#". Initialize autologgout..."} 
 	    {Autologout ID}
 	 end
       in
@@ -366,8 +288,8 @@ define
 	    if PW == E.passwd then
 	       %% Add handlers and watchers on the client
 	       {C1 'GETPORT'(CP)}
-	       {Fault.injector CP proc{$ X E} raise networkFailure(X E) end end}
-	       {Fault.siteWatcher CP WatcherProc }
+%	       {Fault.injector CP proc{$ X E} raise networkFailure(X E) end end}
+%	       {Fault.siteWatcher CP WatcherProc }
 
 	       %% Check if client is allready logged in...
 	       if {DB isOnline(id:ID online:$)} \= false then OldC in
@@ -461,9 +383,11 @@ define
 
       meth !S_inviteUser(id:Id sender:S ticket:T client:C name:N aid: Aid) 
 	 if {DB isOnline(id:Id online:$)}\=false then Cl={DB getClient(id:Id client:$)} in
-	    {Cl inviteUser(sender:S ticket:T client:C
-			   description: {DB getApplicationInfo( id:Aid info:$ )}.description
-			   id:Id name:N) "Could not invite "#Id#" to "#N#" from "#S}
+	    try
+	       {Cl inviteUser(sender:S ticket:T client:C
+			      description: {DB getApplicationInfo( id:Aid info:$ )}.description
+			      id:Id name:N) "Could not invite "#Id#" to "#N#" from "#S}
+	    catch _ then skip end
 	 end
       end
 
@@ -487,10 +411,9 @@ define
 	 {WriteLog "User '"#Id#"' is being removed!"}
 	 if {DB isOnline( id:Id online:$ )}\=false then
 	    try C={DB getClient(id:Id client:$)} in
-	       {C serverLogout()
-		"Can't logout "#Id}
-	    catch networkFailure(...) then skip end
-
+	       {C serverLogout() "Can't logout "#Id}
+	    catch networkFailure(...) then skip
+	    end
 	    {self S_logout( id: Id )}
 	 end
 
@@ -502,8 +425,7 @@ define
 							       C={DB getClient(id:X client:$)}
 							    in
 							       {C removeFriend(friend: Id)
-							     "Can't remove friend ("#Id#") from client ("#
-								X#")"}
+								"Can't remove friend ("#Id#") from client ("#X#")"}
 							    catch networkFailure(...) then skip end
 							 end
 							 {self S_removeFriend( id: X friend: Id )}
@@ -572,8 +494,7 @@ define
 	    Sender={DB getSender( mid: Mid sender:$)}
 	    C={DB getClient(id: Sender client:$)}
 	    {C messageAck(id:Id mid:Mid) "Couldn't send messageAck("#Mid#") to sender"}
-	 catch _ then {WriteLog "Couldn't send messageAck("#Mid#") from "#
-		       Id#" to sender"} end
+	 catch _ then {WriteLog "Couldn't send messageAck("#Mid#") from "#Id#" to sender"} end
 	 
 	 if {DB messageAck(id:Id mid:Mid read:$)} then
 	    {self S_removeMessage(mid:Mid)}
@@ -659,8 +580,7 @@ define
 	 {ForAll ON proc{$ N}
 		       thread
 			  try C={DB getClient(id:N.id client:$)} in
-			     {C notify(id:ID online:O) "Could not notify ("#O#") "#
-			      N.id#" from "#ID}
+			     {C notify(id:ID online:O) "Could not notify ("#O#") "#N.id#" from "#ID}
 			  catch networkFailure(...) then skip end
 		       end
 		    end}
@@ -677,14 +597,14 @@ define
       EnterTicket
       S={NewStationary ServerClass InitServer(dbdir:Args.dbdir)}
    in
-      Logger = {New Log.log init(file:Args.dbdir#"log.db")}
+      Logger = {New Log.log init(file:Args.dbdir#"server.log")}
       {WriteLog "Server is started"}
+      {System.showInfo "Logfile is "#Args.dbdir#"server.log"}
       {DB loadAll(dir:Args.dbdir)}
       {WriteLog "Database is loaded"}
       
       Gate={New Connection.gate init(S EnterTicket)}
       {Pickle.save EnterTicket Args.ticketSave}
-
       {WriteLog "Ticket is saved to "#Args.ticketSave}
 
       thread
@@ -784,9 +704,9 @@ define
 	 CAV={New Tk.variable tkInit(0)}
 	 CAE={New Tk.entry tkInit(parent:AF1 textvariable:CAV state:disabled justify:right)}
 	 {Tk.batch [grid(COL row:0 column:0 sticky:e)
-		    grid(COE row:0 column:1 sticky:we padx:1)
+		    grid(COE row:0 column:1 sticky:we padx:2)
 		    grid(CAL row:0 column:0 sticky:e)
-		    grid(CAE row:0 column:1 sticky:we padx:1)
+		    grid(CAE row:0 column:1 sticky:we padx:2)
 		    grid(columnconfigure OF1 1 weight:1)
 		    grid(columnconfigure AF1 1 weight:1)]}
 
@@ -805,8 +725,8 @@ define
 							       {S HaltServer({HSV tkReturnString($)})}
 							    end)}
 	 {Tk.batch [grid({Separator "Administration"} row:ADR column:0 columnspan:2 sticky:we pady:3)
-		    grid(OF1 row:ADR+1 column:0 sticky:we padx:5)
-		    grid(AF1 row:ADR+1 column:1 sticky:we padx:5)
+		    grid(OF1 row:ADR+1 column:0 sticky:we padx:7)
+		    grid(AF1 row:ADR+1 column:1 sticky:we padx:7)
 		    grid(B5 row:ADR+2 column:0 sticky:we)
 		    grid(B6 row:ADR+2 column:1 sticky:we)
 		    grid(HSE row:ADR+3 column:0 sticky:we columnspan:2 pady:1)]}

@@ -25,27 +25,10 @@
 functor
     
 require
-   Meths(%getApplicationInfo:S_getApplicationInfo
-	 getapplication:S_getapplication
-%	 message:S_message
+   Meths(getapplication:S_getapplication
 	 logout:S_logout
-%	 addFriends:S_addFriends
-%	 removeFriend:S_removeFriend
-%	 getFriends:S_getFriends
-%	 setStatus:S_setStatus
-%	 searchFriends:S_searchFriends
 	 login:S_login
-%	 updateSettings:S_updateSettings
-%	 addApplication:S_addApplication
-%	 editApplication:S_editApplication
 	 inviteUser:S_inviteUser
-%	 addUser:S_addUser
-%	 removeUser:S_removeUser
-%	 getInfo:S_getInfo
-%	 updateUser:S_updateUser
-%	 messageAck:S_messageAck
-%	 removeMessage:S_removeMessage
-%	 getUserName:S_getUserName
 	 removeApplication:S_removeApplication) at 'methods.ozf'
 import
    Browser(browse:Browse)
@@ -57,6 +40,7 @@ import
    DisplayMess at 'messagedisplay.ozf'
    MManager(newSecureManager:NewSecureManager) at 'manager.ozf'
    Mobility(newStationary:NewStationary stationaryClass:StationaryClass) at 'mobility.ozf'
+   NewAccountGui(start) at 'newaccountgui.ozf'
    CGUI(start:StartGUI
 	shutdown:StopGUI
 	addapp:AddApp
@@ -103,6 +87,8 @@ define
 		  {StopGUI}
 		  {Delay 1}
 		  unit=WaitQuit
+	       elseof idAllreadyInUse(ID) then
+		  raise idAllreadyInUse(ID)  end
 	       elseof noSuchMethodInServer(...) then
 		  {ErrorBox "You are running a client that is not compliant with the server!\n"#
 		   "Please make sure that you are running a client compiled for this particular server, or make "#
@@ -129,6 +115,10 @@ define
 	 {@server S_login(id:L passwd:PW client:self.this host:{String.toAtom {OS.uName}.nodename})}
       end
 
+      meth newAccount(A)
+	 {NewAccountGui.start {Adjoin A newaccount(id:A.login server:@server client:self.this)}}
+      end
+      
       meth startgui(settings:S<=nil)
 	 try
 	    {StartGUI self.this @server @id {Load @args.file} S}
@@ -291,15 +281,22 @@ define
 	 S={Connection.take {Pickle.load A.ticketURL}}
 	 C={NewStationary ClientClass init(server:S args:A)}
       in
-	 {C registerclient(id:A.login passwd:A.passwd)}
+	 if A.newuser==false then
+	    {C registerclient(id:A.login passwd:A.passwd)}
+	 else
+	    {C newAccount(A)}
+	 end
       catch X then
 	 case X of error(1:connection(ticketToDeadSite _) ...) then
 	    {ErrorBox "Server ("#A.ticketURL#") is down!"}
 	    unit=WaitQuit
 	 else
-	    {Browse X}
-	    {ErrorBox "Unknown exception: "#{Label X}}
-	    unit=WaitQuit
+	    %{Browse X}
+	    thread
+	       {ErrorBox "Unknown exception: "#{Label X}}
+	       unit=WaitQuit
+	    end
+	    raise X end
 	 end
       end
       {Wait WaitQuit}
