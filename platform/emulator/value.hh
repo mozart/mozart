@@ -1658,6 +1658,8 @@ public:
 
   void setNames(TaggedRef n) { names = n; }
   TaggedRef getNames()       { return names; }
+  
+  void patchFileAndLine();
 
   void gcPrTabEntry();
 };
