@@ -414,6 +414,7 @@ in
 	    in
 	       Gui,Disable(W)
 	       case FrameDir == enter then % should also work with 'leave' :-(
+		  {W tk(yview 'end')}
 		  Gui,frameClick(frame:Frame highlight:false)
 	       else skip end
 	    else skip end
@@ -442,6 +443,7 @@ in
 		   proc{$ Frame}
 		      Gui,printStackFrame(frame:Frame delete:false)
 		   end}
+		  {W tk(yview 'end')}
 		  Gui,Disable(W)
 		  case LastFrame == nil then
 		     {OzcarError 'printStack: LastFrame == nil ??'}
