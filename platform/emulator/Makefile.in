@@ -394,11 +394,6 @@ config.status: configure
 
 .PHONY: test-all test lib-all check
 
-test-all:
-	OZEMULATOR=`pwd`/oz.emulator.bin; export OZEMULATOR; \
-	cd $(TESTDIR) && ./configure && make clean all
-	$(MAKE) test1;
-
 test:
 	OZEMULATOR=`pwd`/oz.emulator.bin; export OZEMULATOR; \
 	cd $(TESTDIR) && \
