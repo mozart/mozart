@@ -16,7 +16,7 @@ CPPFLAGS	= -I$(SRCTOP)/platform/emulator \
 		  -I$(BUILDTOP)/platform/emulator \
 		  -I$(PREFIX)/include @CPPFLAGS@ @DEFS@
 LDFLAGS		= @LDFLAGS@
-LIBS		= @LIBS@ -lc
+LIBS		= @LIBS@
 
 INSTALL		= @INSTALL@
 INSTALL_DIR	= @INSTALL_DIR@
