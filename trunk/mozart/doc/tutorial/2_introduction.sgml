@@ -273,8 +273,11 @@ list with unbound tail. The operation <<{Send P M}>> adds <<M>> to the
 end of <<S>>. Successive sends from the same thread appear in the
 order they were sent.
 
+<!--
 <P><FIGURE ID="CompModel" CLASS="Figure">
 <CAPTION>The Oz computation model</CAPTION>
 <PICTURE.EXTERN TO="image1.gif" TYPE="gif">
 </FIGURE>
+-->
+
 </CHAPTER>
