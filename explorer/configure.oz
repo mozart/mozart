@@ -11,8 +11,7 @@ IsColor          = ({Tk.depth} > 1)
 
 %% Global default settings
 
-DefLayoutOptions = o(wait:   !False
-                     hide:   !False
+DefLayoutOptions = o(hide:   !False
                      update: 10)
 
 DefSearchOptions = o(dist: 1)
