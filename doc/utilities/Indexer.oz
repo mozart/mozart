@@ -238,16 +238,17 @@ define
       meth process(DBName Prefix DocumentTitle ?IndexHTML)
          thread
             case DBName of unit then skip
-            else DB Es in
-               try
-                  {Gdbm.new write(DBName)}
-               catch _ then
-                  {Gdbm.new create(DBName)}
-               end
+            else
+               DB=try
+                     {Gdbm.new write(DBName)}
+                  catch _ then
+                     {Gdbm.new create(DBName)}
+                  end
                Es = DocumentTitle#{Map @Entries
                                    fun {$ Ands#_#GlobalLink#Classes}
                                       Ands#GlobalLink#Classes
                                    end}
+            in
                try
                   {Gdbm.put DB Prefix Es}
                catch error(dp(generic _ _ 'Resources'#Rs|_) ...) then
