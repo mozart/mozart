@@ -97,15 +97,14 @@ define(M4INSTRTWOREGS,``''
     ``
     {
       int regIndex = getRegArg(PC+1);
-      DebugCheck(&Reg1(0)!= &am.toplevelVars[0],
-                 error("createNamedVar: am.toplevelVars expected"););
-      int size = getRefsArraySize(am.toplevelVars);
+      DebugCheck(&Reg1(0)!= &(e->toplevelVars[0]),
+                 error("createNamedVar: e->toplevelVars expected"););
+      int size = getRefsArraySize(e->toplevelVars);
       if (LessIndex(size,regIndex)) {
         int newSize = int(size*1.5);
-        message("resizing store for toplevel vars from %d to %d\n",
-                size,newSize);
-        am.toplevelVars = resize(am.toplevelVars,newSize);
-        Y = am.toplevelVars;
+        message("resizing store for toplevel vars from %d to %d\n",size,newSize);
+        e->toplevelVars = resize(e->toplevelVars,newSize);
+        Y = e->toplevelVars;
         // no deletion of old array --> GC does it
       }
       SVariable *svar = new SVariable(CBB, makeTaggedAtom(getAtomArg(PC+2)));
