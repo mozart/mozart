@@ -39,12 +39,15 @@ enum ThreadFlags
   T_Nervous =     0x08
 };
 
+class Toplevel;
+
 class Thread : public ConstTerm
 {
 friend void engine();
 private:
   static Thread *Head;
   static Thread *Tail;
+  static Toplevel *ToplevelQueue;
 
 public:
   static void Init();
@@ -101,9 +104,11 @@ public:
   void pushTask(Board *n,ProgramCounter pc,
 		       RefsArray y,RefsArray g,RefsArray x=NULL,int i=0);
   void pushTask (Board *n, OZ_CFun f, RefsArray x=NULL, int i=0);
-  void queueCont(Board *bb,ProgramCounter PC,RefsArray y);
   void schedule();
   void setPriority(int prio);
+  void checkToplevel();
+  void addToplevel(ProgramCounter pc);
+  void pushToplevel(ProgramCounter pc);
 
 private:
   Thread() : ConstTerm(Co_Thread) { init(); resSusp = NULL; }

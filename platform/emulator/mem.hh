@@ -27,10 +27,16 @@
 class MemChunks {
 public:
   static MemChunks *list;
+  static Bool isInHeap(TaggedRef term);
+  static Bool areRegsInHeap(TaggedRef *regs, int size);
+
+private:
+  int xsize;
   char *block;
   MemChunks *next;
-  int size;
-  MemChunks(char *bl, MemChunks *n, int sz) : block(bl), next(n), size(sz) {};
+
+public:
+  MemChunks(char *bl, MemChunks *n, int sz) : block(bl), next(n), xsize(sz) {};
   void deleteChunkChain();
   Bool inChunkChain(void *value);
   void print();

@@ -24,18 +24,18 @@ class HTEntry {
   ProgramCounter label;
   HTEntry *next;
   union {
-    Atom *atom;
+    Literal *literal;
     TaggedRef number;
     struct {
-      Atom *fname;
+      Literal *fname;
       int arity;
     } functor;
   };
 
  public:
 
-  HTEntry(Atom *name, ProgramCounter lbl, HTEntry *nxt) 
-    : atom(name), label(lbl), next(nxt) {};
+  HTEntry(Literal *name, ProgramCounter lbl, HTEntry *nxt) 
+    : literal(name), label(lbl), next(nxt) {};
 
   HTEntry(TaggedRef num, ProgramCounter lbl, HTEntry *nxt) 
     : number(num), label(lbl), next(nxt) 
@@ -43,7 +43,7 @@ class HTEntry {
     OZ_protect(&number);
   };
 
-  HTEntry(Atom *name, int arity, ProgramCounter lbl, HTEntry *nxt) 
+  HTEntry(Literal *name, int arity, ProgramCounter lbl, HTEntry *nxt) 
     : label(lbl), next(nxt) {
     functor.fname = name;
     functor.arity = arity;
@@ -53,13 +53,13 @@ class HTEntry {
 
   TaggedRef getNumber()  {return number;}
 
-  /* look up an atom */
-  ProgramCounter lookup(Atom *name, ProgramCounter elseLabel) 
+  /* look up an literal */
+  ProgramCounter lookup(Literal *name, ProgramCounter elseLabel) 
     {
       ProgramCounter  ret = elseLabel;
       
       for (HTEntry *help = this; help != NULL; help = help->next) {
-	if (help->atom == name) {
+	if (help->literal == name) {
 	  ret = help->label;
 	  break;
 	}
@@ -68,7 +68,7 @@ class HTEntry {
     }
 
   /* look up functor/arity */
-  ProgramCounter lookup(Atom *name, int arity, ProgramCounter elseLabel) 
+  ProgramCounter lookup(Literal *name, int arity, ProgramCounter elseLabel) 
     {
       ProgramCounter ret = elseLabel;
       
@@ -112,7 +112,7 @@ class IHashTable {
   int size;      // is always a power of 2
   int hashMask;  // always size-1
   
-  EntryTable atomTable;
+  EntryTable literalTable;
   EntryTable functorTable;
   EntryTable numberTable;
 
@@ -123,15 +123,15 @@ class IHashTable {
   IHashTable(int sz, ProgramCounter elseLbl) {
     size = nextPowerOf2(sz);
     hashMask = size-1;
-    atomTable = functorTable = numberTable = NULL;
+    literalTable = functorTable = numberTable = NULL;
     elseLabel = elseLbl;
     listLabel = elseLabel;
     varLabel  = elseLabel;
   };
 
   void add(TaggedRef number, ProgramCounter label);
-  void add(Atom *constant, ProgramCounter label);
-  void add(Atom *functor, int arity, ProgramCounter label);
+  void add(Literal *constant, ProgramCounter label);
+  void add(Literal *functor, int arity, ProgramCounter label);
   void addVar(/* no arg means list structure*/ ProgramCounter label) {
     varLabel = label;
   }
