@@ -92,20 +92,20 @@ void SuspList::disposeList(void) {
 // class OrderedSuspList
 
 inline   
-OrderedSuspList * OrderedSuspList::insert(Thread * n)
+OrderedSuspList * OrderedSuspList::insert(Thread * thr)
 {
 #ifdef DEBUG_NONMONOTONIC
   cout << "OrderedSuspList::insert" << endl << flush;
 #endif
 
-  Assert(n->isNonMonotonicPropagatorThread());
+  Assert(thr->isNonMonotonicPropagatorThread());
 
   OrderedSuspList * r = this, ** p = &r;
-  OZ_NonMonotonic::order_t n_order = n->getPropagator()->getOrder();
+  OZ_NonMonotonic::order_t n_order = thr->getPropagator()->getOrder();
   while (*p && (n_order > (*p)->t->getPropagator()->getOrder()))
     p = &((*p)->n);
 
-  *p = new OrderedSuspList(n, *p);
+  *p = new OrderedSuspList(thr, *p);
 
   return r;
 }

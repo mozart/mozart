@@ -96,10 +96,8 @@ int * OZ_findEqualVars(int sz, OZ_Term * ts)
   /* gcc supports dynamic array sizes */
   OZ_Term * _ts_ptr[sz], _ts[sz];
 #else
-#if defined(__WATCOMC__) || defined(_MSC_VER)
-  OZ_Term ** _ts_ptr = (OZ_Term**) alloca(sizeof(OZ_Term*)*sz);
-  OZ_Term  * _ts     = (OZ_Term*)  alloca(sizeof(OZ_Term) *sz);
-#endif
+  OZ_Term ** _ts_ptr = new OZ_Term*[sz];
+  OZ_Term  * _ts     = new OZ_Term[sz];
 #endif
   int i;
 
@@ -133,6 +131,11 @@ int * OZ_findEqualVars(int sz, OZ_Term * ts)
       *_ts_ptr[i] = _ts[i];
       Assert(OZ_isVariable(makeTaggedRef(_ts_ptr[i])));
     }
+
+#ifndef __GNUC__
+  delete _ts_ptr;
+  delete _ts;
+#endif
 
   return is;
 }
