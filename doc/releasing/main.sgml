@@ -44,7 +44,7 @@
 -->
     <meta name="proglang.mode" arg1="sh" arg2="shell-script-mode">
     <meta name="proglang.mode" arg1="fundamental" arg2="fundamental-mode">
-    <title/Making Releases/
+    <title/The Secret Sucky Guide To Making Releases/
     <author.Extern to="author.db" key="Denys.Duchier">
     <Abstract>
     This document explains how to create releases for various platforms.
