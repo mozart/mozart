@@ -21,20 +21,11 @@ if test -z "${OZHOME}"
 then
   dir=`dirname $howcalled`
   OZHOME=`(cd $dir; cd ..; /bin/pwd)`
-fi
-export OZHOME
-
-# determine machine architecture and OS version
-if test -z "${OZPLATFORM}"
-then
-  OZPLATFORM=`$OZHOME/bin/ozplatform`
+  export OZHOME
 fi
 
-if test -z "${OZEMULATOR}"
-then
-    OZEMULATOR=$OZHOME/platform/$OZPLATFORM/emulator.exe
-fi
-
+: ${OZPLATFORM=`$OZHOME/bin/ozplatform`}
+: ${OZEMULATOR=$OZHOME/platform/$OZPLATFORM/emulator.exe}
 
 # set OZPATH & PATH
 if test -z "${OZ_PI}"
