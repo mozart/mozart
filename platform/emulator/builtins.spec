@@ -1173,11 +1173,6 @@ $cmode='stat';
 
     ##* Printing
 
-    'showBuiltins'	=> { in  => [],
-			     out => [],
-			     BI  => BIshowBuiltins,
-			     native => true},
-
     'Print'		=> { in  => ['value'],
 			     out => [],
 			     bi  => BIprint,
@@ -1265,6 +1260,16 @@ $cmode='stat';
     'System.printError'	=> { in  => ['virtualString'],
 			     out => [],
 			     BI  => BIprintError,
+			     native => true},
+
+    'System.showInfo'	=> { in  => ['virtualString'],
+			     out => [],
+			     BI  => BIshowInfo,
+			     native => true},
+
+    'System.showError'	=> { in  => ['virtualString'],
+			     out => [],
+			     BI  => BIshowError,
 			     native => true},
 
     'System.valueToVirtualString'=> { in  => ['value','+int','+int'],
