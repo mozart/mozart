@@ -1151,7 +1151,7 @@ point is not moved."
     (beginning-of-line)
     (while (and (not ret)
 		(prog1
-		    (re-search-forward "[\"'`&%]\\|$" nil t)
+		    (re-search-forward "[\"'`&%]\\|lex\\|$" nil t)
 		  (setq cont-point (match-end 0))
 		  (goto-char (match-beginning 0)))
 		(< (point) p))
@@ -1159,6 +1159,14 @@ point is not moved."
 	     (let ((quote-end (match-end 0)))
 	       (if (< p quote-end)
 		   (setq ret t)
+		 (goto-char quote-end))))
+	    ((and oz-gump-indentation
+		  (looking-at oz-gump-regex-matcher))
+	     (let ((quote-end (match-end 0)))
+	       (if (< p quote-end)
+		   (progn
+		     (forward-char 3)
+		     (setq ret t))
 		 (goto-char quote-end))))
 	    ((looking-at "\"")
 	     (error
