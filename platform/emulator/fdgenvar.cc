@@ -89,7 +89,7 @@ Bool GenFDVariable::unifyFD(TaggedRef *vPtr, TaggedRef var,
               propagate(var, l_dom, int_term, pc_cv_unif);
               termVar->propagate(term, r_dom, int_term, pc_cv_unif);
               doBind(tPtr, int_term);
-              doBind(vPtr, makeTaggedRef(tPtr));
+              doBind(vPtr, int_term);
               if (disp) {
                 dispose();
                 termVar->dispose();
@@ -108,7 +108,7 @@ Bool GenFDVariable::unifyFD(TaggedRef *vPtr, TaggedRef var,
               termVar->propagate(term, r_dom, int_var, pc_cv_unif);
               propagate(var, l_dom, int_var, pc_cv_unif);
               doBind(vPtr, int_var);
-              doBind(tPtr, makeTaggedRef(vPtr));
+              doBind(tPtr, int_var);
               if (disp) {
                 dispose();
                 termVar->dispose();
@@ -133,7 +133,7 @@ Bool GenFDVariable::unifyFD(TaggedRef *vPtr, TaggedRef var,
               propagate(var, l_dom, int_var, pc_cv_unif);
               termVar->addSuspension(new Suspension(am.currentBoard));
               doBind(vPtr, int_var);
-              am.doBindAndTrail(term, tPtr, makeTaggedRef(vPtr));
+              am.doBindAndTrail(term, tPtr, int_var);
               if (disp) dispose();
             } else {
               setDom(intsct);
@@ -161,7 +161,7 @@ Bool GenFDVariable::unifyFD(TaggedRef *vPtr, TaggedRef var,
               termVar->propagate(term, r_dom, int_term, pc_cv_unif);
               addSuspension(new Suspension(am.currentBoard));
               doBind(tPtr, int_term);
-              am.doBindAndTrail(var, vPtr, makeTaggedRef(tPtr));
+              am.doBindAndTrail(var, vPtr, int_term);
               if (disp) termVar->dispose();
             } else {
               termVar->setDom(intsct);
@@ -189,7 +189,7 @@ Bool GenFDVariable::unifyFD(TaggedRef *vPtr, TaggedRef var,
               termVar->propagate(term, r_dom, int_val, pc_cv_unif);
             }
             am.doBindAndTrail(var, vPtr, int_val);
-            am.doBindAndTrail(term, tPtr, makeTaggedRef(vPtr));
+            am.doBindAndTrail(term, tPtr, int_val);
           } else {
             GenFDVariable * fd_var = new GenFDVariable(intsct);
             TaggedRef * var_val = newTaggedCVar(fd_var);

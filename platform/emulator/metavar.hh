@@ -73,7 +73,7 @@ public:
   Bool isSingleValue(void) {return tag->sgl_val_meta_data(data);}
 
   mur_t check(OZ_MetaType t, TaggedRef d) {
-    return tag->unify_meta_meta(getData(), d, t, NULL);
+    return tag->unify_meta_meta(0, getData(), 0, d, t, NULL);
   }
 };
 

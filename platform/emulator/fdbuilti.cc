@@ -399,6 +399,65 @@ void BIfdBodyManager::initStaticData(void) {
 //-----------------------------------------------------------------------------
 // Member functions
 
+void BIfdBodyManager::introduceLocal(int i, TaggedRef v)
+{
+  DebugCheck(i < 0 || i >= curr_num_of_vars, error("index overflow"));
+
+  TypeOfTerm &vartag = bifdbm_vartag[i];
+  TaggedRef  &var = bifdbm_var[i] = v;
+
+  deref(var, bifdbm_varptr[i], vartag);
+  Assert(isCVar(vartag) || isSmallInt(vartag) || isLiteral(vartag));
+
+  bifdbm_var_state[i] = fdbm_local;
+  if (vartag == SMALLINT) {
+    bifdbm_domain[i].setSingleton(smallIntValue(var));
+    bifdbm_dom[i] = &bifdbm_domain[i];
+    bifdbm_init_dom_size[i] = 1;
+  } else if (isGenFDVar(var, vartag)) {
+    bifdbm_dom[i] = &tagged2GenFDVar(var)->getDom();
+    bifdbm_init_dom_size[i] = bifdbm_dom[i]->getSize();
+  } else if (vartag == LITERAL) {
+    bifdbm_dom[i] = &__CDVoidFiniteDomain;
+    bifdbm_init_dom_size[i] = bifdbm_dom[i]->getSize();
+  } else {
+    error("Found unexpected term tag.");
+  }
+}
+
+
+void BIfdBodyManager::processLocalFromTo(int from, int to)
+{
+  vars_left = FALSE;
+
+  for (int i = from; i < to; i += 1) {
+    Assert(isCVar(bifdbm_vartag[i]) || isSmallInt(bifdbm_vartag[i]));
+
+    if (bifdbm_var_state[i] == fdbm_speculative)
+      continue;
+
+    if (bifdbm_vartag[i] == SMALLINT || isSmallInt(*bifdbm_varptr[i])) {
+      continue;
+    } else {
+      if (!isTouched(i)) {
+        vars_left = TRUE;
+      } else {
+        glob_vars_touched |= tagged2GenFDVar(bifdbm_var[i])->isTagged();
+        if (*bifdbm_dom[i] == fd_singleton) {
+          tagged2GenFDVar(bifdbm_var[i])->
+            becomesSmallIntAndPropagate(bifdbm_varptr[i]);
+        } else {
+          tagged2GenFDVar(bifdbm_var[i])->
+            propagate(bifdbm_var[i], fd_bounds,
+                      makeTaggedRef(bifdbm_varptr[i]));
+          vars_left = TRUE;
+        }
+      }
+    }
+  }
+} // BIfdBodyManager::processLocal
+
+
 void BIfdBodyManager::_introduce(int i, TaggedRef v)
 {
   DebugCheck(i < 0 || i >= curr_num_of_vars, error("index overflow"));
@@ -489,7 +548,7 @@ OZ_Bool BIfdBodyManager::checkAndIntroduce(int i, TaggedRef v)
   return PROCEED;
 }
 
-inline
+
 void BIfdBodyManager::processFromTo(int from, int to)
 {
   vars_left = glob_vars_touched = FALSE;

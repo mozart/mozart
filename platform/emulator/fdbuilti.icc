@@ -80,44 +80,6 @@ Bool BIfdHeadManager::expectInt(int i, TaggedRef v, int &s)
 // Inlined member functions of class BIfdHeadManager
 
 inline
-void BIfdBodyManager::processLocalFromTo(int from, int to)
-{
-  vars_left = FALSE;
-
-  for (int i = from; i < to; i += 1) {
-    Assert(isCVar(bifdbm_vartag[i]) || isSmallInt(bifdbm_vartag[i]));
-
-    if (bifdbm_var_state[i] == fdbm_speculative)
-      continue;
-
-    if (bifdbm_vartag[i] == SMALLINT || isSmallInt(*bifdbm_varptr[i])) {
-      continue;
-    } else {
-      if (!isTouched(i)) {
-        vars_left = TRUE;
-      } else {
-        glob_vars_touched |= tagged2GenFDVar(bifdbm_var[i])->isTagged();
-        if (*bifdbm_dom[i] == fd_singleton) {
-          tagged2GenFDVar(bifdbm_var[i])->
-            becomesSmallIntAndPropagate(bifdbm_varptr[i]);
-        } else {
-          tagged2GenFDVar(bifdbm_var[i])->
-            propagate(bifdbm_var[i], fd_bounds,
-                      makeTaggedRef(bifdbm_varptr[i]));
-          vars_left = TRUE;
-        }
-      }
-    }
-  }
-} // BIfdBodyManager::processLocal
-
-inline
-void BIfdBodyManager::processLocal(void)
-{
-  processLocalFromTo(0, curr_num_of_vars);
-}
-
-inline
 OZ_Bool BIfdBodyManager::entailmentClause(int from_b, int to_b,
                                           int from,   int to,
                                           int from_p, int to_p)
@@ -178,31 +140,15 @@ void BIfdBodyManager::setSpeculative(int i) {
 
 
 inline
-void BIfdBodyManager::introduceLocal(int i, TaggedRef v)
-{
-  DebugCheck(i < 0 || i >= curr_num_of_vars, error("index overflow"));
-
-  TypeOfTerm &vartag = bifdbm_vartag[i];
-  TaggedRef  &var = bifdbm_var[i] = v;
-
-  deref(var, bifdbm_varptr[i], vartag);
-  Assert(isCVar(vartag) || isSmallInt(vartag) || isLiteral(vartag));
-
-  bifdbm_var_state[i] = fdbm_local;
-  if (vartag == SMALLINT) {
-    bifdbm_domain[i].setSingleton(smallIntValue(var));
-    bifdbm_dom[i] = &bifdbm_domain[i];
-    bifdbm_init_dom_size[i] = 1;
-  } else if (isGenFDVar(var, vartag)) {
-    bifdbm_dom[i] = &tagged2GenFDVar(var)->getDom();
-    bifdbm_init_dom_size[i] = bifdbm_dom[i]->getSize();
-  } else if (vartag == LITERAL) {
-    bifdbm_dom[i] = &__CDVoidFiniteDomain;
-    bifdbm_init_dom_size[i] = bifdbm_dom[i]->getSize();
-  } else {
-    error("Found unexpected term tag.");
-  }
+void BIfdBodyManager::introduceSpeculative(int i, TaggedRef v) {
+  if (only_local_vars) {
+    introduceLocal(i, v);
+    } else {
+      _introduce(i, v);
+    }
+  setSpeculative(i);
 }
+
 
 inline
 int BIfdBodyManager::initCache(void) {
@@ -262,6 +208,27 @@ Bool BIfdBodyManager::addAnySuspToTouchedGlobalVars(void) {
     }
 
   return s != NULL;
+}
+
+
+inline
+OZ_Bool BIfdBodyManager::entailmentAndSuspOnAny(void) {
+  Assert(FDcurrentTaskSusp);
+  killPropagatedCurrentTaskSusp();
+
+  Bool a = FALSE;
+
+  if (only_local_vars) {
+    processLocal();
+  } else {
+    a = addAnySuspToTouchedGlobalVars();
+    process();
+  }
+
+  if (a)
+    activateCurrentTaskSusp();
+
+  return EntailFD;
 }
 
 

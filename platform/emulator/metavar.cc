@@ -50,9 +50,9 @@ Bool GenMetaVariable::unifyMeta(TaggedRef * vptr, TaggedRef v,
     TaggedRef result, trail = v;
 
     *vptr = makeTaggedRef(tptr);
-    mur_t ret_value = tag->unify_meta_meta(getData(),
-                                           term->getData(), term->getTag(),
-                                           &result);
+    mur_t ret_value = tag->unify_meta_meta(TaggedRef(vptr), getData(),
+                                           TaggedRef(tptr), term->getData(),
+                                           term->getTag(), &result);
     *vptr = trail;
 
 #ifdef DEBUG_META
@@ -179,7 +179,7 @@ Bool GenMetaVariable::unifyMeta(TaggedRef * vptr, TaggedRef v,
 
     // bind temporarily to catch cycles
     if (vptr && tptr) *vptr = makeTaggedRef(tptr);
-    mur_t ret_value = tag->unify_meta_det(getData(),
+    mur_t ret_value = tag->unify_meta_det(TaggedRef(vptr), getData(),
                                           t, OZ_typeOf(t),
                                           &result);
     if (vptr && tptr) *vptr = trail;
@@ -206,17 +206,14 @@ Bool GenMetaVariable::valid(TaggedRef v)
 {
   Assert(!isRef(v));
 
-  TaggedRef d;
-
-  return meta_failed != tag->unify_meta_det(getData(), v, OZ_typeOf(v), &d);
+  return meta_failed != tag->unify_meta_det(0, getData(),
+                                            v, OZ_typeOf(v), NULL);
 }
 
 
 Bool GenMetaVariable::isStrongerThan(TaggedRef d)
 {
-  TaggedRef result;
-
-  mur_t ret_value = tag->unify_meta_meta(getData(), d, getTag(), &result);
+  mur_t ret_value = tag->unify_meta_meta(0, getData(), 0, d, getTag(), NULL);
 
   if (ret_value == meta_failed) {
     warning("GenMetaVariable::isStrongerThan found inconsistency.");
