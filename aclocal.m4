@@ -681,14 +681,10 @@ changequote([,])
 Perl version] OZ_VERSION_PERL [or higher is needed to build the system.
 It can be retrieved from:
 
-	http://language.perl.com/info/software.html
+	http://www.perl.org/get.html
 
-The latest version at this time is 5.006 and is available
-packaged as the following archive:
-
-	http://language.perl.com/CPAN/src/latest.tar.gz
-
-You may find further information on the Perl site:
+The latest version at this time is 5.8.2.  You may find further
+information on the Perl site:
 
 	http://www.perl.org/
 ])
@@ -737,7 +733,7 @@ AC_DEFUN(OZ_PROG_M4,[
 GNU m4 is needed to build the system.
 It can be retrieved from:
 
-	ftp://ftp.gnu.org/pub/gnu/
+	ftp://ftp.gnu.org/pub/gnu/m4/
 
 The latest version at this time is 1.4 and is available
 packaged as the following archive:
@@ -793,12 +789,12 @@ AC_DEFUN(OZ_PROG_MAKE,[
 GNU make is needed to build the system.
 It can be retrieved from:
 
-	ftp://ftp.gnu.org/pub/gnu/
+	ftp://ftp.gnu.org/pub/gnu/make/
 
-The latest version at this time is 3.77 and is available
+The latest version at this time is 3.80 and is available
 packaged as the following archive:
 
-	make-3.77.tar.gz
+	make-3.80.tar.gz
 
 You may find a mirror archive closer to you by consulting:
 
@@ -911,12 +907,12 @@ The GNU Multiple Precision Arithmetic Library (gmp)
 version] OZ_VERSION_GMP [or higher is required
 to build the system.  It can be retrieved from:
 
-	ftp://ftp.gnu.org/pub/gnu/
+	ftp://ftp.gnu.org/pub/gnu/gmp/
 
-The latest version at this time is 3.0.1 and is available
+The latest version at this time is 4.1.2 and is available
 packaged as the following archive:
 
-	ftp://ftp.gnu.org/pub/gnu/gmp/gmp-3.0.1.tar.gz
+	ftp://ftp.gnu.org/pub/gnu/gmp/gmp-4.1.2.tar.gz
 
 You may find a mirror archive closer to you by consulting:
 
@@ -973,7 +969,7 @@ if test "$oz_zlib_inc_found" = no || \
 The ZLIB general purpose compression library is required to
 build the system.  It can be retrieved from:
 
-	http://www.info-zip.org/pub/infozip/zlib/
+        http://www.gzip.org/zlib/
 
 ])
 fi
