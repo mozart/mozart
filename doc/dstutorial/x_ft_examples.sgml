@@ -23,29 +23,34 @@ The client should
 be informed in finite time of a server problem
 by means of a new exception, <<serverError>>.
 
-<P>The system raises exceptions
+<P>We show how to rewrite this example
+with the basic failure model.
+In this model, the system raises exceptions
 when it tries to do operations
-on entities that have problems.
-All distributed exceptions are of the
+on entities that have problems related to distribution.
+All these exceptions are of the
 form <<system(dp(conditions:FS ...) ...)>> where
 <<FS>> is the list of actual fault states
 as defined before, except for <<ok>> since it
 is not wrong behavior.
+By default, the system will raise exceptions
+only on the fault states <<tempFail>> and <<permFail>>.
 
-<P>Assume that we have two new abstractions.
-<<{SafeSend Prt X}>> sends to a port
+<P>Assume that we have two new abstractions:
+<LIST>
+<ITEM> <<{SafeSend Prt X}>> sends to a port
 and raises the exception <<serverError>>
 if this is permanently impossible.
-<<{SafeWait X T}>> waits until <<X>> is
+<ITEM> <<{SafeWait X T}>> waits until <<X>> is
 instantiated and raises the exception
 <<serverError>> if this is permanently impossible
 or if the time <<T>> is exceeded.
-We first show how to use these abstractions
-before defining them in our failure model.
-
-<P>With <<SafeSend>> and <<SafeWait>>, we can
+</LIST>
+<P>We first show how to use these abstractions
+before defining them in the basic model.
+With these abstractions, we can
 write the client and the server almost exactly
-as before.
+in the same way as in the non-fault-tolerant case.
 Let's first write the server:
 <<<
 declare Str Prt Srv in 
@@ -97,11 +102,14 @@ and a wait, which is replaced by <<SafeWait>>.
 If there is a problem sending the
 message or receiving the reply,
 then the exception <<serverError>> is raised.
-Note that we also catch exceptions during the
-<<Connection.take>> and the <<Pickle.load>>.
+This example also raises an exception if
+there is any problem during the
+startup phase, that is
+during <<Connection.take>> and <<Pickle.load>>.
+
+<SUBSECTION><TITLE>Definition of <<SafeSend>> and <<SafeWait>></TITLE>
 
 <P><<SafeSend>> is defined as follows:
-
 <<<
 proc {SafeSend Prt X}
    try
@@ -115,14 +123,12 @@ proc {SafeSend Prt X}
    end
 end
 >>>
-
 <P>This raises a <<serverError>> if there is
 a permanent server failure
 and retries indefinitely each 100 ms if there
 is a temporary failure.
 
 <P><<SafeWait>> is defined as follows:
-
 <<<
 declare
 local
@@ -151,7 +157,6 @@ in
    end
 end
 >>>
-
 <P>This raises a <<serverError>> if there is
 a permanent server failure
 and retries each 100 ms if there is a
@@ -165,18 +170,18 @@ that the server has crashed.
 indefinitely, it must time out.
 We need a time-out since otherwise a client
 will be stuck when the server drops it like a hot potato.
-The time-out is an argument to <<SafeWait>>.
+The duration of the time-out is an argument to <<SafeWait>>.
 
 <SUBSECTION><TITLE>Utilities for fault tolerance</TITLE>
 
 <P>In the above example and later on in this chapter,
 we use the utility functions <<FMember>> and <<FSomeOf>>
-to simplify checking for fault conditions.
+to simplify checking for fault states.
 We specify these functions as follows.
 
 <P>The call <<{FMember permFail FS}>> checks whether the
 fault state <<permFail>> occurs in the set of actual
-fault conditions <<FS>>.  Extra information in <<FS>>
+fault states <<FS>>.  Extra information in <<FS>>
 is not taken into account in the membership check.
 The function <<FMember>> is defined as follows:
 <<<
