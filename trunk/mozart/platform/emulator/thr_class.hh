@@ -51,7 +51,12 @@ public:
   {
     taskStack.pushDebug(d);
   }
-
+  void setBoard(Board *bb) {
+    board=bb;
+  }
+  Bool discardLocalTasks() {
+    return taskStack.discardLocalTasks();
+  }
   void setSuspended() { flags |= T_Suspended; }
   void unsetSuspended() { flags &= ~T_Suspended; }
   int  isSuspended() { return (flags & T_Suspended); }
@@ -79,6 +84,10 @@ public:
     taskStack.pushCFunCont(f,s,x,n,copyF);
   }
 
+  void pushCont(Continuation *cont) {
+    pushCont(cont->getPC(),cont->getY(),cont->getG(),
+	     cont->getX(),cont->getXSize(),NO);
+  }
   void pushCont(ProgramCounter pc,
 		RefsArray y,RefsArray g,RefsArray x,int n,
 		Bool copyF)
