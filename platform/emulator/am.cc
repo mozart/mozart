@@ -614,20 +614,29 @@ PROFILE_CODE1
    )
 
   // already propagated susps remain in suspList
-    if (! susp->isPropagated()) {
-      if ((susp->wakeUp(var->getBoardFast(), calledBy))) {
-        // dispose only non-resistant susps
-        if (! susp->isResistant()) {
-          Assert(susp->isDead());
+    if (susp->isPropagated()) {
+      Assert(susp->isResistant());
+      if (calledBy &&  !susp->isUnifySusp()) {
+        switch (isBetween(susp->getBoardFast(), var->getBoardFast())) {
+        case B_BETWEEN:
+          susp->markUnifySusp();
+          break;
+        case B_DEAD:
+          susp->markDead();
           suspList = suspList->dispose();
           continue;
-        } else if (calledBy) {
-          susp->markUnifySusp();
+        case B_NOT_BETWEEN:
+          break;
         }
       }
-    } else if (calledBy && susp->isResistant() && ! susp->isUnifySusp())
-      if (isBetween(susp->getBoardFast(), var->getBoardFast())!=B_NOT_BETWEEN)
-        susp->markUnifySusp();
+    } else {
+      Bool disposeFlag=susp->wakeUp(var->getBoardFast(), calledBy);
+      if (disposeFlag) {
+        Assert(susp->isDead());
+        suspList = suspList->dispose();
+        continue;
+      }
+    }
 
     // susp cannot be woken up therefore relink it
     SuspList * first = suspList;
