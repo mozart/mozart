@@ -158,11 +158,12 @@ char *OZ_Propagator::toString() const
 }
 
 
+#ifdef WINDOWS
 OZ_Boolean OZ_Propagator::mayBeEqualVars(void)
 {
   return Propagator::getRunningPropagator()->isUnify();
 }
-
+#endif
 
 OZ_Return OZ_Propagator::replaceBy(OZ_Propagator * p)
 {
