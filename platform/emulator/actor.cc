@@ -48,6 +48,7 @@ inline Actor::Actor(int type,Board *bb,int prio,ProgramCounter p,RefsArray y,
                      RefsArray g,RefsArray x,int i)
 : ConstTerm(Co_Actor),flags(type),board(bb),priority(prio)
 {
+  childCount=0;
   bb->addSuspension();
   next.setPC(p);
   next.setY(y);
