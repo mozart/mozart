@@ -45,15 +45,15 @@ OZ_Return ExactlyPropagator::run(void)
 
   for (i = l_sz; i--; ) {
     l[i].read(reg_l[i]);
-    if (*l[i] == fd_singleton && l[i]->getSingleElem() == v) tn += 1;
+    if (*l[i] == fd_singl && l[i]->getSingleElem() == v) tn += 1;
     if (! l[i]->isIn(v)) tnn += 1;    
   }
 
-  if (*n_var == fd_singleton) {
+  if (*n_var == fd_singl) {
     int n = n_var->getSingleElem();
     if (tn == n) {
       for (i = l_sz; i--; ) 
-	if (*l[i] != fd_singleton)
+	if (*l[i] != fd_singl)
 	  FailOnEmpty(*l[i] -= v);
       return P.vanish(); 
     } else if (l_sz - tnn == n) {
@@ -66,7 +66,7 @@ OZ_Return ExactlyPropagator::run(void)
   } else {
     if (tn == n_var->getMaxElem()) {
       for (i = l_sz; i--; ) 
-	if (*l[i] != fd_singleton)
+	if (*l[i] != fd_singl)
 	  FailOnEmpty(*l[i] -= v);
       FailOnEmpty(*n_var &= tn);
       return P.vanish(); 
@@ -118,11 +118,11 @@ OZ_Return AtLeastPropagator::run(void)
 
   for (i = l_sz; i--; ) {
     l[i].read(reg_l[i]);
-    if (*l[i] == fd_singleton && l[i]->getSingleElem() == v) tn += 1;
+    if (*l[i] == fd_singl && l[i]->getSingleElem() == v) tn += 1;
     if (! l[i]->isIn(v)) tnn += 1;    
   }
 
-  if (*n_var == fd_singleton) {
+  if (*n_var == fd_singl) {
     int n = n_var->getSingleElem();
     if (l_sz - tnn == n) {
       for (i = l_sz; i--; ) 
@@ -186,15 +186,15 @@ OZ_Return AtMostPropagator::run(void)
 
   for (i = l_sz; i--; ) {
     l[i].read(reg_l[i]);
-    if (*l[i] == fd_singleton && l[i]->getSingleElem() == v) tn += 1;
+    if (*l[i] == fd_singl && l[i]->getSingleElem() == v) tn += 1;
     if (! l[i]->isIn(v)) tnn += 1;    
   }
 
-  if (*n_var == fd_singleton) {
+  if (*n_var == fd_singl) {
     int n = n_var->getSingleElem();
     if (tn == n) {
       for (i = l_sz; i--; ) 
-	if (*l[i] != fd_singleton)
+	if (*l[i] != fd_singl)
 	  FailOnEmpty(*l[i] -= v);
       return P.vanish();
     } else if  (tn > n) {
@@ -205,7 +205,7 @@ OZ_Return AtMostPropagator::run(void)
   } else {
     if (n_var->getMaxElem() == tn) {
       for (i = l_sz; i--; ) 
-	if (*l[i] != fd_singleton)
+	if (*l[i] != fd_singl)
 	  FailOnEmpty(*l[i] -= v);
       FailOnEmpty(*n_var >= tn);
       return P.vanish();
@@ -272,7 +272,7 @@ OZ_Return ElementPropagator::run(void)
       }
   }
 
-  if (*n_var == fd_singleton) {
+  if (*n_var == fd_singl) {
     FailOnEmpty(*v_var &= l[n_var->getSingleElem() - 1]);
     return P.vanish();
   } else if (v_dom_new == fd_empty) {
@@ -280,7 +280,7 @@ OZ_Return ElementPropagator::run(void)
   } else {
     *v_var &= v_dom_new;
   }
-  return (*v_var == fd_singleton) ? P.vanish() : P.leave();
+  return (*v_var == fd_singl) ? P.vanish() : P.leave();
 
 failure:
   return P.fail();

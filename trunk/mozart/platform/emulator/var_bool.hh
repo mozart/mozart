@@ -41,7 +41,7 @@ public:
   GenBoolVariable(void) : GenCVariable(BoolVariable) {
     ozstat.fdvarsCreated.incf();
   }
-  
+
   // methods relevant for term copying (gc and solve)
   size_t getSize(void){return sizeof(GenBoolVariable);}
   void dispose(void);

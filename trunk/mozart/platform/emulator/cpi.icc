@@ -12,11 +12,12 @@
 #ifndef __CPI_ICC__
 #define __CPI_ICC__
 
+// Note: the field "expected_type" can be left uninitialized
+
 inline
 void staticAddSpawnProp(OZ_FDPropState ps, OZ_Term * v)
 {
   staticSpawnVarsProp[staticSpawnVarsNumberProp].state.fd = ps;
-  staticSpawnVarsProp[staticSpawnVarsNumberProp].expected_type = FDVariable;
   staticSpawnVarsProp[staticSpawnVarsNumberProp++].var = v;
   
   Assert(staticSpawnVarsNumberProp < MAXFDBIARGS);
@@ -26,7 +27,24 @@ inline
 void staticAddSpawn(OZ_FDPropState ps, OZ_Term * v)
 {
   staticSpawnVars[staticSpawnVarsNumber].state.fd = ps;
-  staticSpawnVars[staticSpawnVarsNumber].expected_type = FDVariable;
+  staticSpawnVars[staticSpawnVarsNumber++].var = v;
+  
+  Assert(staticSpawnVarsNumber < MAXFDBIARGS);
+}
+
+inline
+void staticAddSpawnProp(OZ_FSetPropState ps, OZ_Term * v)
+{
+  staticSpawnVarsProp[staticSpawnVarsNumberProp].state.fs = ps;
+  staticSpawnVarsProp[staticSpawnVarsNumberProp++].var = v;
+  
+  Assert(staticSpawnVarsNumberProp < MAXFDBIARGS);
+}
+
+inline
+void staticAddSpawn(OZ_FSetPropState ps, OZ_Term * v)
+{
+  staticSpawnVars[staticSpawnVarsNumber].state.fs = ps;
   staticSpawnVars[staticSpawnVarsNumber++].var = v;
   
   Assert(staticSpawnVarsNumber < MAXFDBIARGS);

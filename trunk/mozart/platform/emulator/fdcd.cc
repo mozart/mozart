@@ -11,6 +11,7 @@
 
 #include "fdbuilti.hh"
 
+//#define DEBUG_FDCD
 
 //-----------------------------------------------------------------------------
 // BIfdConstrDisj
@@ -220,7 +221,13 @@ OZ_Return CDPropagator::run(void)
   
 // check if vars got unified and if so propagate equality to local vars
   // void variables become heap variables
+  Assert(localPropStore.isEmpty());
+  
+  // propagating equality 
+  localPropStore.setUseIt();
   x.propagate_unify_cd(clauses, variables, _vp);
+  localPropStore.unsetUseIt();
+
   int unified_vars = unifiedVars(variables, &_v[0]);
   
   for (c = clauses; c--; ) {
@@ -234,12 +241,12 @@ OZ_Return CDPropagator::run(void)
 	} 
   }
 
-  Assert(localPropStore.isEmpty());
   localPropStore.setUseIt();
 
   for (c = clauses; c--; ) {
     if (x[idx_b(c)] == 0) {
       x.process(idx_b(c));
+
       x.backup();
       if (!localPropStore.do_propagation()) 
 	error("local propagation must be empty");
@@ -307,6 +314,9 @@ OZ_Return CDPropagator::run(void)
     }
   }
   if (failed_clauses == clauses) {                            // failure
+#ifdef DEBUG_FDCD
+    cout << "failure" << endl << flush;
+#endif
     return FailFD;
   } else if ((clauses - failed_clauses) == 1) {               // unit commit
     
@@ -322,20 +332,35 @@ OZ_Return CDPropagator::run(void)
 	  if (FAILED == OZ_unify(_v[i], _v[is[i]]))
 	    error("Failure occured while commiting clause in constr disj."); 
     }
+
+#ifdef DEBUG_FDCD
+    cout << "unit commit" << endl << flush;
+#endif
+
     return x.entailmentClause(idx_b(0), idx_b(clauses - 1),
 			      idx_v(0), idx_v(variables - 1),
 			      idx_vp(not_failed_clause, 0),
 			      idx_vp(not_failed_clause, variables - 1));
   } else if (entailed_clause != -1 && 
-	     unified_vars == unifiedVars(variables, &(*tagged2SRecord(deref(_vp[entailed_clause])))[0])) {                         // top commit
+	     unified_vars == unifiedVars(variables, 
+					 &(*tagged2SRecord(deref(_vp[entailed_clause])))[0])) {                         // top commit
     for (c = clauses; c--; )
       if (c != entailed_clause)
 	x[idx_b(c)] &= 0;
     x[idx_b(entailed_clause)] &= 1;
 
+#ifdef DEBUG_FDCD
+    cout << "top commit" << endl << flush;
+#endif
+
     return x.entailmentClause(idx_b(0), idx_b(clauses - 1));
   }
   
+
+#ifdef DEBUG_FDCD
+  x.printDebug();
+#endif
+
 // constrain global variables with union of corresponding local vars
   for (v = variables; v--; ) {
     int maxsize = 0, v_v_size = x[idx_v(v)].getSize();
@@ -356,6 +381,10 @@ OZ_Return CDPropagator::run(void)
   
   DebugCode(for (c = clauses; c--; ) Assert(x[idx_b(c)] != 1);)
     
+#ifdef DEBUG_FDCD
+  x.printDebug();
+#endif
+
   return x.releaseReify(idx_b(0), idx_b(clauses - 1),
 			idx_v(0), idx_v(variables - 1));
 }
@@ -498,20 +527,8 @@ OZ_Return CDSuppl::run(void)
     ((Thread *) thr)->markUnifyThread();
   }
 
-  /*
-    // TMUELLER
-    cout << "in: cd(" << *((Thread *) thr)->getPropagator() << ')'
-    << endl << flush;
-    */
-
   OZ_Return ret_val = ((Thread *) thr)->runPropagator();
 
-  /*  
-      // TMUELLER
-      cout << "out: cd(" << *((Thread *) thr)->getPropagator() << ')'
-      << endl << flush;
-      */
-  
   am.currentThread = backup_currentThread;
 
   OZ_ASSERT(b->getMaxElem() >= 2);
@@ -533,3 +550,5 @@ OZ_Return CDSuppl::run(void)
 
 // end fo file
 //-----------------------------------------------------------------------------
+
+

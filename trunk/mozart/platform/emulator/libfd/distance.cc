@@ -248,7 +248,7 @@ OZ_Return DistancePropagatorEq::run(void)
     return P.vanish();
   }
     
-  if ((*x == fd_singleton) && (*y == fd_singleton) && (*z == fd_singleton)){  
+  if ((*x == fd_singl) && (*y == fd_singl) && (*z == fd_singl)){  
     if (xu + zl == yl) return P.vanish();
     if (yu + zl == xl) return P.vanish();
     return FAILED;
@@ -418,23 +418,23 @@ OZ_Return DistancePropagatorNeq::run(void)
     return P.vanish();
   }
 
-  if ( (*x == fd_singleton) && (*y == fd_singleton) && (*z == fd_singleton)){
+  if ( (*x == fd_singl) && (*y == fd_singl) && (*z == fd_singl)){
     if ((xl-yl != zl) && (yl-xl != zl)) 
       return PROCEED;
     else return FAILED;
   }
   
-  if ( (*x == fd_singleton) && (*y == fd_singleton)) {
+  if ( (*x == fd_singl) && (*y == fd_singl)) {
     FailOnEmpty(*z -= x->getSingleElem() - y->getSingleElem());
     FailOnEmpty(*z -= y->getSingleElem() - x->getSingleElem());
     return P.vanish();
   }
-  if ( (*x == fd_singleton) && (*z == fd_singleton)) {
+  if ( (*x == fd_singl) && (*z == fd_singl)) {
     FailOnEmpty(*y -= x->getSingleElem() - z->getSingleElem());
     FailOnEmpty(*y -= z->getSingleElem() + x->getSingleElem());
     return P.vanish();
   }
-  if ( (*z == fd_singleton) && (*y == fd_singleton)) {
+  if ( (*z == fd_singl) && (*y == fd_singl)) {
     FailOnEmpty(*x -= z->getSingleElem() + y->getSingleElem());
     FailOnEmpty(*x -= y->getSingleElem() - z->getSingleElem());
     return P.vanish();

@@ -57,10 +57,13 @@ int SuspList::lengthProp(void)
 SuspList * installPropagators(SuspList * local_list, SuspList * glob_list,
 			      Board * glob_home)
 {
+  Assert((local_list && glob_list && (local_list != glob_list)) || 
+	 !local_list || !glob_list);
+
   SuspList * aux = local_list, * ret_list = local_list;
 
   
-  // mark up local suspensions
+  // mark up local suspensions to avoid copying them
   while (aux) {
     aux->getElem()->markTagged();
     aux = aux->getNext();
@@ -73,14 +76,16 @@ SuspList * installPropagators(SuspList * local_list, SuspList * glob_list,
     
     if (!(thr->isDeadThread ()) && 
 	(thr->isPropagator()) &&
-	!(thr->isTagged ()) && 
-	am.isBetween (thr->getBoard(), glob_home ) == B_BETWEEN) {
+	!(thr->isTagged ()) && /* TMUELLER possible optimization 
+				  isTaggedAndUntag */
+	am.isBetween (thr->getBoard(), glob_home) == B_BETWEEN) {
       ret_list = new SuspList (thr, ret_list);
     }
     
     aux = aux->getNext();
   }
 
+  // unmark local suspensions 
   aux = local_list;
   while (aux) {
     aux->getElem()->unmarkTagged();
