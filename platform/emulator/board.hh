@@ -88,8 +88,10 @@ private:
   } u;
   Script script;
 public:
-  Board(Actor *a,int type);
+  Board();
   ~Board();
+  Board(Board&);
+  Board(Actor *a,int type);
 
   USEHEAPMEMORY;
   Board *gcBoard();

@@ -1345,9 +1345,14 @@ void TaskStack::printTaskStack(ProgramCounter pc, Bool verbose, int depth)
         break;
       }
 
-    case C_LOCAL:
-      message("\tIn local space\n");
-      break;
+    case C_ACTOR:
+      {
+	AWActor *aa = (AWActor *) pop();
+	message("\tActor\n");
+        if (verbose)
+          message("\tActor @0x%x\n", aa);
+	break;
+      }
 
     case C_CFUNC_CONT:
       {
@@ -1383,14 +1388,6 @@ void TaskStack::printTaskStack(ProgramCounter pc, Bool verbose, int depth)
 	TaggedRef pred = (TaggedRef) ToInt32(pop());
 	message("\tCatch %s\n",toC(pred));
 	break;
-      }
-
-    case C_SET_CAA:
-      { 
-        AskActor *aa = (AskActor *) pop ();
-        if (verbose)
-          message("\tC_SET_CAA: AA=0x%x\n", aa);
-        break;
       }
 
     case C_SET_SELF:
@@ -1460,8 +1457,9 @@ TaggedRef TaskStack::dbgGetTaskStack(ProgramCounter pc, int depth)
         break;
       }
 
-    case C_LOCAL:
-      out = cons(OZ_atom("local"),out);
+    case C_ACTOR:
+      pop();
+      out = cons(OZ_atom("actor"),out);
       break;
 
     case C_CFUNC_CONT:
@@ -1500,13 +1498,6 @@ TaggedRef TaskStack::dbgGetTaskStack(ProgramCounter pc, int depth)
       {
         TaggedRef pred = (TaggedRef) ToInt32(pop());
         out = cons(OZ_mkTupleC("catch",1,pred),out);
-        break;
-      }
-
-    case C_SET_CAA:
-      { 
-        AskActor *aa = (AskActor *) pop ();
-        out = cons(OZ_atom("setCAA"),out);
         break;
       }
 
@@ -1786,7 +1777,7 @@ void printWhere(ostream &stream,ProgramCounter PC)
   PC = CodeArea::definitionStart(PC);
 
   if (PC == NOCODE) {
-    stream << "on toplevel";
+    stream << "in toplevel code";
   } else {
     TaggedRef file      = getLiteralArg(PC+3);
     TaggedRef line      = getNumberArg(PC+4);

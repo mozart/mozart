@@ -31,10 +31,11 @@ enum ContFlag {
   C_DEBUG_CONT     = 3, // a continuation for debugging
   C_CALL_CONT      = 4, // an application
   C_JOB            = 5, // job marker
-  C_LOCAL          = 6, // a local computation space
-  C_SET_CAA        = 8, // supply the emulator with the CAA pointer;
+  C_ACTOR          = 6, // an actor task
+  C_XXXX           = 7, //
+  C_XXXX2          = 9, // 
   C_SET_SELF       = 9, // set am.cachedSelf
-  C_LTQ            = 10, // local thread queue
+  C_LTQ            = 10,// local thread queue
   C_CATCH          = 11 // exception handler
 };
 
@@ -145,8 +146,6 @@ public:
     push(ToPointer(C_CALL_CONT), NO);
   }
 
-  void pushLocal()   { push(ToPointer(C_LOCAL)); }
-
   void pushCFunCont(OZ_CFun f, RefsArray  x, int i, Bool copy)
   {
     DebugCheckT(for (int ii = 0; ii < i; ii++) CHECK_NONVAR(x[ii]));
@@ -201,8 +200,8 @@ public:
   }
 
   void pushDebug(OzDebug *deb)   { pushPair(deb,C_DEBUG_CONT); }
-  void pushSetCaa (AskActor *aa) { pushPair(aa,C_SET_CAA); }
   void pushSelf(Object *obj)     { pushPair(obj,C_SET_SELF); }
+  void pushActor(Actor *aa)      { pushPair(aa,C_ACTOR); }
 
   static TaskStackEntry makeJobEntry(Bool hasJob)
   {
