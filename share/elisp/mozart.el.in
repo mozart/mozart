@@ -455,10 +455,12 @@ Handle input and output via the Oz Emulator buffer."
 
 (defun oz-halt (force)
   "Halt the Mozart sub-process.
-If FORCE is nil, send the `{Application.exit 0}' statement and wait for the
+If FORCE is nil, feed an `{Application.exit 0}' statement and wait for the
 process to terminate.  Waiting time is limited by variable `oz-halt-timeout';
-after this delay, the process is simply killed if still living.
-If FORCE is non-nil, kill it immediately."
+after this delay, the process is sent a SIGHUP if still living.
+
+If FORCE is the symbol '-, send the process a SIGKILL.  If FORCE
+is non-nil and not the symbol '-, send it a SIGHUP."
   (interactive "P")
   (if (oz-is-running)
       (progn
