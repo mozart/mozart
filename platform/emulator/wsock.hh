@@ -21,8 +21,13 @@
 
 #define NOMINMAX
 #define Bool WinBool
+#define min winmin
+#define max winmax
 
 #include <windows.h>
+
+#undef winmin
+#undef winmax
 
 #undef FAILED /* used in oz.h as well */
 #undef Bool
@@ -47,6 +52,8 @@ extern "C" {
 typedef void *PVOID;
 #include "winsock.h"
 
+#ifdef OLDCYGGNUS
+
 #define MAKEWORD(a, b) ((WORD)(((BYTE)(a)) | ((WORD)((BYTE)(b))) << 8))
 
   BOOL WINAPI SetStdHandle(DWORD nStdHandle, HANDLE hHandle);
@@ -54,14 +61,6 @@ typedef void *PVOID;
   HMODULE WINAPI GetModuleHandleA(LPCSTR lpModuleName);
   BOOL WINAPI FreeLibrary(HINSTANCE hLibModule);
   FARPROC WINAPI GetProcAddress(HINSTANCE hModule,LPCSTR lpProcName);
-
-  inline void _endthreadex( unsigned __retval )
-  {
-    /* empty for now */
-  }
-
-#define _beginthreadex(security, stack_size,fun,args,initflag,thrdaddr) \
-  CreateThread(security,stack_size,(void(*)(void*))(fun),args,initflag,thrdaddr);
 
 typedef struct _OSVERSIONINFOW {
     DWORD dwOSVersionInfoSize;
@@ -76,6 +75,16 @@ BOOL WINAPI GetVersionExW(LPOSVERSIONINFO lpVersionInformation);
 #define VER_PLATFORM_WIN32s             0
 #define VER_PLATFORM_WIN32_WINDOWS      1
 #define VER_PLATFORM_WIN32_NT           2
+
+#endif
+
+  inline void _endthreadex( unsigned __retval )
+  {
+    /* empty for now */
+  }
+
+#define _beginthreadex(security, stack_size,fun,args,initflag,thrdaddr) \
+  CreateThread(security,stack_size,fun,args,initflag,thrdaddr);
 
 }
 
