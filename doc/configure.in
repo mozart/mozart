@@ -63,7 +63,7 @@ AC_ARG_WITH(documents,
 : ${oz_doc_dirs=}
 AC_MSG_RESULT($oz_doc_dirs)
 
-test "${oz_doc_dirs}" = "all" && oz_doc_dirs="apptut base bugs compiler contrib demo foreign gump op opi ozcar profiler ozdoc system tools wp fdt fst cpitut cpiref install tutorial overview panel explorer browser notation dstutorial changes tcltk howtoread faq limitations macro loop dpanel"
+test "${oz_doc_dirs}" = "all" && oz_doc_dirs="apptut base bugs compiler contrib demo foreign gump op opi ozcar profiler ozdoc system tools wp fdt fst cpitut cpiref install tutorial overview panel explorer browser notation dstutorial changes tcltk howtoread faq limitations macro loop qtk dpanel"
 
 DOC_DIRS=$oz_doc_dirs
 AC_SUBST(DOC_DIRS)
@@ -86,7 +86,7 @@ AC_SUBST(SUBDIRS)
 
 AC_CONFIG_SUBDIRS(utilities chm)
 
-AC_OUTPUT(Makefile Makefile.common Makefile.vars catalog bootcatalog base/Makefile bugs/Makefile foreign/Makefile apptut/Makefile wp/Makefile system/Makefile compiler/Makefile opi/Makefile tools/Makefile ozcar/Makefile profiler/Makefile gump/Makefile ozdoc/Makefile contrib/Makefile demo/Makefile op/Makefile fdt/Makefile fst/Makefile cpitut/Makefile cpiref/Makefile install/Makefile tutorial/Makefile overview/Makefile notation/Makefile browser/Makefile panel/Makefile explorer/Makefile dstutorial/Makefile changes/Makefile tcltk/Makefile howtoread/Makefile faq/Makefile limitations/Makefile xsl/Makefile xsl/ozdoc-info.sty:xsl/ozdoc-info.in macro/Makefile loop/Makefile dpanel/Makefile)
+AC_OUTPUT(Makefile Makefile.common Makefile.vars catalog bootcatalog base/Makefile bugs/Makefile foreign/Makefile apptut/Makefile wp/Makefile system/Makefile compiler/Makefile opi/Makefile tools/Makefile ozcar/Makefile profiler/Makefile gump/Makefile ozdoc/Makefile contrib/Makefile demo/Makefile op/Makefile fdt/Makefile fst/Makefile cpitut/Makefile cpiref/Makefile install/Makefile tutorial/Makefile overview/Makefile notation/Makefile browser/Makefile panel/Makefile explorer/Makefile dstutorial/Makefile changes/Makefile tcltk/Makefile howtoread/Makefile faq/Makefile limitations/Makefile xsl/Makefile xsl/ozdoc-info.sty:xsl/ozdoc-info.in macro/Makefile loop/Makefile qtk/Makefile dpanel/Makefile)
 
 errprint(ifdef([OZ_INIT],
  [autoconf succeeded
