@@ -30,7 +30,7 @@ export
    'GOZCore' : GOZCore
 define
    Dispatcher
-
+   
    %%
    %% Force Evaluation of Modules in appropriate Order
    %%
@@ -203,7 +203,7 @@ define
 	 end
       end
    end
-
+   
    %%
    %% Gtk Canvas Helper
    %%
@@ -228,7 +228,7 @@ define
 	 meth new
 	    @object = unit
 	 end
-	 meth signalConnect(Signal ProcOrMeth $)
+	 meth signalConnect(Signal ProcOrMeth ArgDesc $)
 	    SigHandler = if {IsProcedure ProcOrMeth}
 			 then
 			    fun {$ Event}
@@ -241,7 +241,7 @@ define
 			       unit
 			    end
 			 end
-	    SignalId   = {Dispatcher registerHandler(SigHandler $)}
+	    SignalId   = {Dispatcher registerHandler(SigHandler ArgDesc $)}
 	 in
 	    signals <- SignalId|@signals
 	    {GOZSignal.signalConnect @object Signal SignalId}
@@ -296,9 +296,35 @@ define
 	 end
       end
    end
+
+   %%
+   %% Argument Conversion
+   %%
+
+   fun {ConvertArguments DataS DescS MapS}
+      case DescS
+      of Desc|DescR then
+	 case DataS
+	 of Data|DataR then
+	    NewData = case Desc
+		      of int          then Data
+		      [] float        then Data
+		      [] bool         then Data
+		      [] pointer      then Data
+		      [] gdk_event    then {GetGdkEvent Data}
+		      [] 'obj'(Class) then {PointerToObject Class Data}
+		      else raise 'dispatcher: illegal argument desc' end
+		      end
+	 in
+	    {ConvertArguments DataR DescR NewData|MapS}
+	 [] _ then raise 'dispatcher: argument mismatch' end
+	 end
+      [] nil then {Reverse MapS}
+      end
+   end
    
    %%
-   %% Core Dispatcher Class (functional setup (used by Oz and Alice))
+   %% Core Dispatcher Class
    %%
 
    local
@@ -354,10 +380,10 @@ define
 	    meth !NewSignalId($)
 	       signalId <- (@signalId + 1)
 	    end
-	    meth registerHandler(Handler $)
+	    meth registerHandler(Handler ArgDesc $)
 	       SignalId = DispatcherObject, NewSignalId($)
 	    in
-	       {Dictionary.put @handlerDict SignalId Handler}
+	       {Dictionary.put @handlerDict SignalId Handler#ArgDesc}
 	       SignalId
 	    end
 	    meth unregisterHandler(SignalId)
@@ -365,8 +391,14 @@ define
 	    end
 	    meth !Dispatch(Stream)
 	       case Stream
-	       of event(Id Data)|Tail then
-		  _ = {{Dictionary.condGet @handlerDict Id EmptyHandler} Data}
+	       of Event|Tail then
+		  Id   = Event.1
+		  Data = {Record.toList Event}.2
+	       in
+		  case {Dictionary.condGet @handlerDict Id EmptyHandler#nil}
+		  of Handler#Desc then
+		     _ = {Handler {ConvertArguments Data Desc nil}}
+		  end
 		  DispatcherObject, Dispatch(Tail)
 	       [] _ then skip
 	       end

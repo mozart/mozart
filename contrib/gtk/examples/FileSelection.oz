@@ -39,10 +39,10 @@ define
 	 CancelButton = {self fileSelectionGetFieldCancelButton($)}
 	 {OkButton signalConnect('clicked' proc {$ _}
 					      {self handleOk}
-					   end _)}
+					   end nil _)}
 	 {OkButton signalConnect('clicked' proc {$ _}
 					      {self handleCancel}
-					   end _)}
+					   end nil _)}
       end
       meth handleOk
 	 File = {self getFilename($)}

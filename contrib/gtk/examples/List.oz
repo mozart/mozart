@@ -41,13 +41,13 @@ define
    class MyToplevel from GTK.window
       meth new
 	 GTK.window, new(GTK.'WINDOW_TOPLEVEL')
-	 GTK.window, signalConnect('delete_event' deleteEvent _)
+	 GTK.window, signalConnect('delete_event' deleteEvent nil _)
 	 GTK.window, setBorderWidth(10)
 	 GTK.window, setTitle("List Test")
 	 GTK.window, add({New MyList new})
 	 GTK.window, showAll
       end
-      meth deleteEvent(Event)
+      meth deleteEvent(Args)
 	 %% Caution: At this time, the underlying GTK object
 	 %% Caution: has been destroyed already
 	 %% Caution: Destruction also includes all attached child objects.
