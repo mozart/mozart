@@ -2318,57 +2318,6 @@ $builtins = {
 				  BI  => BIisCopyablePredicateRef,
 				  native => true},
 
-    ###* RegSets
-    'RegSet.new'	=> { in  => ['+int','+int'],
-			     out => ['+chunk'],
-			     BI  => BIregSet_new,
-			     native => true},
-
-    'RegSet.copy'	=> { in  => ['+chunk'],
-			     out => ['+chunk'],
-			     BI  => BIregSet_copy,
-			     native => true},
-
-    'RegSet.adjoin'	=> { in  => ['+chunk','+int'],
-			     out => [],
-			     BI  => BIregSet_adjoin,
-			     native => true},
-
-    'RegSet.remove'	=> { in  => ['+chunk','+int'],
-			     out => [],
-			     BI  => BIregSet_remove,,
-			     native => true},
-
-    'RegSet.member'	=> { in  => ['+int','+chunk'],
-			     out => ['+bool'],
-			     BI  => BIregSet_member,
-			     native => true},
-
-    'RegSet.union'	=> { in  => ['+chunk','+chunk'],
-			     out => [],
-			     BI  => BIregSet_union,
-			     native => true},
-
-    'RegSet.intersect'	=> { in  => ['+chunk','+chunk'],
-			     out => [],
-			     BI  => BIregSet_intersect,
-			     native => true},
-
-    'RegSet.subtract'	=> { in  => ['+chunk','+chunk'],
-			     out => [],
-			     BI  => BIregSet_subtract,
-			     native => true},
-
-    'RegSet.toList'	=> { in  => ['+chunk'],
-			     out => ['+[int]'],
-			     BI  => BIregSet_toList,
-			     native => true},
-
-    'RegSet.complementToList'	=> { in  => ['+chunk'],
-				     out => ['+[int]'],
-				     BI  => BIregSet_complementToList,
-				     native => true},
-
     ###* Parser
 
     'parser_parseFile'	        => { in     => ['+virtualString','+record'],
