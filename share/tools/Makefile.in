@@ -267,6 +267,7 @@ clean:
 	$(RM) opi
 
 realclean: clean
+	$(RM) -r $(STAGE1)
 
 veryclean: realclean
 	$(RM) TAGS
