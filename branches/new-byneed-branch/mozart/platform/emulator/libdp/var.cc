@@ -267,12 +267,6 @@ OZ_Return ManagerVar::addSuspV(TaggedRef *vPtr, Suspendable * susp)
   if(!errorIgnore()){
     if(failurePreemption(AtomWait)) return BI_REPLACEBICALL;}
   
-  /*
-  if (origVar->getType()==OZ_VAR_FUTURE) {
-    if (((Future *)origVar)->kick(vPtr))
-      return PROCEED;
-  }
-  */
   extVar2Var(this)->addSuspSVar(susp);
   return SUSPEND;
 }
@@ -498,7 +492,7 @@ OZ_Term unmarshalVar(MarshalerBuffer* bs, Bool isFuture, Bool isAuto)
     sendRegister((BorrowEntry *)ob);}
   else{
     pvar->makeAuto();}
-   // If the entity carries failure info react to it
+  // If the entity carries failure info react to it
   // othervise check the local environment. The present 
   // representation of the entities site might have information
   // about the failure state.

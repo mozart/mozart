@@ -334,7 +334,6 @@ public:
 
 void sendRedirect(DSite*, OB_TIndex, TaggedRef);
 OZ_Term unmarshalVar(MarshalerBuffer*, Bool, Bool);
-Bool triggerVariable(TaggedRef *);
 
 /* ---------------------------------------------------------------------- */
 

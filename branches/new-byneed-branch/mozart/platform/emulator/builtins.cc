@@ -1595,6 +1595,7 @@ OZ_Term oz_status(OZ_Term term)
       return AtomFuture;
     case EVAR_STATUS_FAILED:
       return AtomFailed;
+    case EVAR_STATUS_DET:
     case EVAR_STATUS_UNKNOWN:
       return _var_status(cv);
     case EVAR_STATUS_KINDED:
