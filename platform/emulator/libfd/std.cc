@@ -454,10 +454,17 @@ OZ_Term Propagator_VD_VI::getParameters(void) const
 
 Propagator_VD_VI_VI_I::Propagator_VD_VI_VI_I(OZ_Term l, OZ_Term offset, OZ_Term use, OZ_Term cap)
 {
-  reg_offset = vectorToInts(offset, reg_sz);
-  reg_l = vectorToOzTerms(l, reg_sz);
-  reg_use = vectorToInts(use, reg_sz);
+  reg_offset   = vectorToInts(offset, reg_sz);
+  reg_l        = vectorToOzTerms(l, reg_sz);
+  reg_use      = vectorToInts(use, reg_sz);
   reg_capacity = OZ_intToC(cap);
+}
+
+Propagator_VD_VI_VI_I::Propagator_VD_VI_VI_I(int size) : reg_sz(size)
+{
+  reg_offset = OZ_hallocCInts(size);
+  reg_use    = OZ_hallocCInts(size);
+  reg_l      = OZ_hallocOzTerms(size);
 }
 
 Propagator_VD_VI_VI_I::~Propagator_VD_VI_VI_I(void) 

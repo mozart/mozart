@@ -121,10 +121,10 @@ FirstsLasts::~FirstsLasts()
 
   if (int(reg_durs[-1]) == 0) {
     for (int i=0; i<reg_nb_tasks_size; i++) {
-      :: delete reg_durs[i];
+      :: delete [] reg_durs[i];
     }
     reg_durs--;
-    :: delete reg_durs;
+    :: delete [] reg_durs;
   } else {
     reg_durs[-1] = (int *) int(reg_durs[-1]) - 1;
   }
@@ -470,11 +470,6 @@ OZ_Return FirstsLasts::propagate(void)
 	      }
 	    }
 	  }
-
-	  /*
-	  qsort(firsts, number_of_firsts, sizeof(min_max_dur_setFL), CompareFirsts);
-	  qsort(lasts, number_of_lasts, sizeof(min_max_dur_setFL), CompareLasts);
-	  */
 
 
 	  OZ_Term nil = OZ_nil();
