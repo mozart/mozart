@@ -2,6 +2,297 @@
 #include "rel.hh"
 #include "auxcomp.hh"
 
+//-----------------------------------------------------------------------------
+
+// #define NDEBUG 1
+
+class ExtendedExpect : public OZ_Expect
+{
+ public:
+  OZ_expect_t expectIntVarSingl(OZ_Term t)
+   {return expectIntVar(t, fd_singl);}
+  OZ_expect_t expectIntVarMinMax(OZ_Term t)
+   {return expectIntVar(t, fd_bounds);}
+  OZ_expect_t expectVectorInt(OZ_Term t)
+   {return expectVector(t, &expectInt);}
+  OZ_expect_t expectVectorIntVarAny(OZ_Term t)
+   {return expectVector(t, &expectIntVarAny);}
+  OZ_expect_t expectVectorIntVarSingl(OZ_Term t)
+   {return expectVector(t, (OZ_ExpectMeth) &expectIntVarSingl);}
+  OZ_expect_t expectVectorIntVarMinMax(OZ_Term t)
+   {return expectVector(t, (OZ_ExpectMeth) &expectIntVarMinMax);}
+};
+
+class SumACProp : public OZ_Propagator
+{
+ private:
+  static OZ_CFun spawner;
+  int c,size;
+  OZ_Term *_a,*_x,_d;
+ public:
+  SumACProp(OZ_Term a, OZ_Term x, OZ_Term d)
+  :size(OZ_vectorSize(x)),_d(d)
+   {
+    _a = OZ_hallocOzTerms(size);
+    _x = OZ_hallocOzTerms(size);
+    OZ_getOzTermVector(a, _a);
+    OZ_getOzTermVector(x, _x);
+    c=0;
+   }
+  virtual OZ_Return run(void);
+  virtual size_t sizeOf(void) {return sizeof(SumACProp);}
+  virtual void updateHeapRefs(OZ_Boolean)
+   {
+    OZ_updateHeapTerm(_d);
+    OZ_Term *new_a=OZ_hallocOzTerms(size),
+            *new_x=OZ_hallocOzTerms(size);
+    for(int i=size; i--;)
+     {
+      new_a[i]=_a[i];
+      OZ_updateHeapTerm(new_a[i]);
+      new_x[i]=_x[i];
+      OZ_updateHeapTerm(new_x[i]);
+     }
+    _a=new_a;
+    _x=new_x;
+   }
+  virtual OZ_Term getArguments(void) const
+   {
+    OZ_Term _a_list=OZ_nil(),_x_list=OZ_nil();
+    for(int i=size;i--;)
+     {
+      _a_list=OZ_cons(_a[i],_a_list);
+      _x_list=OZ_cons(_x[i],_x_list);
+     }
+    return OZ_cons(_a_list, OZ_cons(_x_list, OZ_cons(_d, OZ_nil())));
+   }
+  virtual OZ_CFun getSpawner(void) const {return spawner;}
+  friend int simplify(int*,int*,OZ_Term*,OZ_Term,int*);
+};
+
+int simplify(int *size,int *a,OZ_Term *x,OZ_Term d,int *c)
+{ // gibt Position von d im Vektor zur"uck
+ if (size==0) return -1;
+ DECL_DYN_ARRAY(OZ_Term,xd,*size+1);
+ for(int j=*size;j--;) xd[j]=x[j];
+ xd[*size]=d;
+ int *is=OZ_findEqualVars(*size+1,xd);
+ int dpos=is[*size];
+ for (int j=*size;j--;)
+  {
+   if(is[j]==-1)       // singleton in x
+    {
+     *c+=int(OZ_intToC(x[j])*NUMBERCAST(a[j]));
+     x[j]=0;
+    }
+   else if(j!=is[j])    // multiple appearing var in x
+    {
+     a[is[j]]+=a[j];
+     x[j]=0;
+    }
+  }
+
+ int from=0,to=0;
+ for (;from<*size;from++)
+  {
+   if(x[from]!=0 && a[from]!=0)
+    {
+     if(from!=to)
+      {
+       a[to]=a[from];
+       x[to]=x[from];
+      }
+     to++;
+    }
+   else if(dpos!=*size && from<dpos) dpos--;
+  }
+ *size=to;
+ return dpos;
+}
+
+
+OZ_Return SumACProp::run(void)
+{
+ int summax,summin,axmax,axmin,dmax,dmin,dpos,i,j,k,dummy;
+ double bound1,bound2;
+ OZ_FiniteDomain d_aux_neg,d_aux_pos;
+ OZ_Boolean klausel,unified=false,changed,vars_left;
+
+ DECL_DYN_ARRAY(int,a,size);
+ for(j=size; j--;) a[j]=OZ_intToC(_a[j]);
+
+ dpos=simplify(&size,a,_x,_d,&c);
+ if(dpos>-1 && dpos<size) unified=true;
+
+ OZ_FDIntVar d(_d);
+ DECL_DYN_ARRAY(OZ_FDIntVar,x,size);
+ DECL_DYN_ARRAY(OZ_FiniteDomain,x_aux_neg,size);
+ DECL_DYN_ARRAY(OZ_FiniteDomain,x_aux_pos,size);
+
+ for(j=size; j--;)
+  {
+   x[j].read(_x[j]);
+   x_aux_neg[j]=x_aux_pos[j]=*x[j];
+  }
+
+ if(unified)
+  {
+   a[dpos]--;
+
+   /****************************************/
+
+   cout << *x[dpos] << ' ' <<*d << endl << flush;
+   *(x[dpos])&=*d;
+
+   /****************************************/
+
+   d_aux_neg.initSingleton(0);
+   d_aux_pos.initSingleton(0);
+  }
+ else d_aux_neg=d_aux_pos=*d;
+
+
+ klausel=false;
+ do
+  {
+   changed=false;
+   summin=summax=(klausel ? -c : c);
+
+   for(j=size; j--;)
+    {
+     axmax=int(NUMBERCAST(a[j])*
+           (klausel ? x_aux_neg[j].getMaxElem() : x_aux_pos[j].getMaxElem()));
+     axmin=int(NUMBERCAST(a[j])*
+           (klausel ? x_aux_neg[j].getMinElem() : x_aux_pos[j].getMinElem()));
+     if(a[j]<0)
+      {
+       summin+=axmax;
+       summax+=axmin;
+      }
+     if(a[j]>0)
+      {
+       summin+=axmin;
+       summax+=axmax;
+      }
+    }
+   dummy=(klausel ? d_aux_neg.getSize() : d_aux_pos.getSize());
+   (klausel ? d_aux_neg : d_aux_pos)>=summin;
+   (klausel ? d_aux_neg : d_aux_pos)<=summax;
+
+ #ifndef NDEBUG
+   cout<<endl;
+   cout<<(klausel ? "negativ:" : "positiv:")<<endl;
+   cout<<"summin="<<summin<<" summax="<<summax<<endl;
+   cout<<summin<<"<=d<="<<summax<<endl;
+   cout<<"d_"<<(klausel ? "neg=" : "pos=")
+       <<(klausel ? d_aux_neg : d_aux_pos)<<endl;
+ #endif
+
+   changed|=!(dummy==(klausel ? d_aux_neg.getSize() : d_aux_pos.getSize()));
+   dmax=(klausel ? d_aux_neg.getMaxElem() : d_aux_pos.getMaxElem());
+   dmin=(klausel ? d_aux_neg.getMinElem() : d_aux_pos.getMinElem());
+
+   for(j=size;j--;)
+    {
+     summin=summax=(klausel ? -c : c);
+     for(k=size;k--;)
+      if(j!=k)
+       {
+        axmax=int(NUMBERCAST(a[k])*
+           (klausel ? x_aux_neg[k].getMaxElem() : x_aux_pos[k].getMaxElem()));
+        axmin=int(NUMBERCAST(a[k])*
+           (klausel ? x_aux_neg[k].getMinElem() : x_aux_pos[k].getMinElem()));
+        if(a[k]<0)
+         {
+          summin+=axmax;
+          summax+=axmin;
+         }
+        if(a[k]>0)
+         {
+          summin+=axmin;
+          summax+=axmax;
+         }
+       }
+     bound1=(dmin-summax)/double(a[j]);
+     bound2=(dmax-summin)/double(a[j]);
+     dummy=(klausel ? x_aux_neg[j].getSize() : x_aux_pos[j].getSize());
+     if(a[j]<0)
+      {
+       (klausel ? x_aux_neg[j] : x_aux_pos[j])>=int(ceil (bound2));
+       (klausel ? x_aux_neg[j] : x_aux_pos[j])<=int(floor(bound1));
+      }
+     if(a[j]>0)
+      {
+       (klausel ? x_aux_neg[j] : x_aux_pos[j])>=int(ceil (bound1));
+       (klausel ? x_aux_neg[j] : x_aux_pos[j])<=int(floor(bound2));
+      }
+     changed|=!
+      (dummy==(klausel ? x_aux_neg[j].getSize() : x_aux_pos[j].getSize()));
+
+ #ifndef NDEBUG
+     cout<<"summin="<<summin<<" summax="<<summax<<endl;
+     if(a[j]<0)
+       cout<<int(ceil (bound2))<<"<=x"<<j<<"<="
+           <<int(floor(bound1))<<endl;
+     if(a[j]>0)
+      cout<<int(ceil (bound1))<<"<=x"<<j<<"<="
+          <<int(floor(bound2))<<endl;
+     cout<<'a'<<j<<'='<<a[j]
+         <<" x"<<j<<(klausel ? "_neg=" : "_pos=")
+         <<(klausel ? x_aux_neg[j] : x_aux_pos[j])<<endl;
+ #endif
+
+    }
+   if(!changed && !klausel)
+    {
+     klausel=changed=true;
+     if(unified) a[dpos]+=2;        // a[dpos]++, Vorz. umk., a[dpos]--
+     for(j=size; j--;) a[j]=-a[j];
+    }
+  }
+ while(changed);
+
+ for(j=size; j--;) FailOnEmpty(*x[j]&=x_aux_neg[j]|x_aux_pos[j]);
+ FailOnEmpty(*d&=(unified ? *x[dpos] : d_aux_neg|d_aux_pos));
+ vars_left=d.leave();
+ for(j=size; j--;) vars_left|=x[j].leave();
+ return (vars_left ? SLEEP : ENTAILED); // Iteratorclass
+
+ failure:
+ for(j=size;j--;) x[j].fail();
+ d.fail();
+ return FAILED;
+}
+
+OZ_C_proc_begin(fdtest_sumac, 3)
+{
+ OZ_EXPECTED_TYPE(OZ_EM_VECT OZ_EM_INT","OZ_EM_VECT OZ_EM_FD","OZ_EM_FD);
+
+ #ifndef NDEBUG
+  cout << "fdtest_sumac=" << (void *) fdtest_sumac << endl << flush;
+ #endif
+
+ ExtendedExpect pe;
+ OZ_EXPECT(pe, 0, expectVectorInt);
+ OZ_EXPECT(pe, 1, expectVectorIntVarMinMax);
+ OZ_EXPECT(pe, 2, expectIntVarMinMax);
+
+ if(OZ_vectorSize(OZ_args[0])==0 ||
+    OZ_vectorSize(OZ_args[1])==0 ||
+    OZ_vectorSize(OZ_args[0])!=OZ_vectorSize(OZ_args[1]))
+  return pe.fail();
+
+ return pe.spawn(new SumACProp(OZ_args[0],OZ_args[1],OZ_args[2]));
+}
+OZ_C_proc_end
+
+OZ_CFun SumACProp::spawner = fdtest_sumac;
+
+
+
+
+
+
 
 //-----------------------------------------------------------------------------
 

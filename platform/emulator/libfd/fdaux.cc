@@ -15,14 +15,12 @@
 
 OZ_C_proc_begin(fdp_init, 0)
 {
-  cout << "Finite Domain Propagator Module of "
-       << __DATE__ << " (" << __TIME__ << ')'
+
 #ifdef OZ_DEBUG
-       << " (DEBUG)"
+  cout << "*** DEBUG-FDLIB ***" << endl << flush;
 #elif OZ_PROFILE
-       << " (PROFILE)"
+  cout << "*** PROFILE-FDLIB ***" << endl << flush;
 #endif
-       << '.' << endl << flush;
   return PROCEED;
 }
 OZ_C_proc_end
