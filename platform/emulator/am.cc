@@ -724,6 +724,9 @@ next:
   termPtr2 = (TaggedRef*) unifyStack.pop();
   termPtr1 = (TaggedRef*) unifyStack.pop();
   argSize  = ToInt32(unifyStack.pop());
+#ifdef DEBUG_CHECK
+  result   = FAILED;
+#endif
   // fall through
 
 push:
