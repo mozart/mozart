@@ -18,6 +18,7 @@
 
 #include "thread.hh"
 #include "unify.hh"
+#include "genvar.hh"
 
 // optimize: inline ....
 inline
