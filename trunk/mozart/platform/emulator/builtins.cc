@@ -1867,14 +1867,14 @@ OZ_BI_define(BIaritySublist,2,1)
   if (oz_isRecord(a)) {
     ar1 = OZ_arityList(a);
   } else if (oz_isLiteral(a)) {
-    ar1 = OZ_nil();
+    ar1 = AtomNil;
   } else {
     oz_typeError(0,"Record");
   }
   if (oz_isRecord(b)) {
     ar2 = OZ_arityList(b);
   } else if (oz_isLiteral(b)) {
-    ar2 = OZ_nil();
+    ar2 = AtomNil;
   } else {
     oz_typeError(1,"Record");
   }
