@@ -36,19 +36,6 @@ fun {NewExplorer Tk TkTools Browse}
 
 \ifdef SAVE
 in
-   explorer('ExplorerClass': ExplorerClass
-	    'Explorer':      Explorer
-	    'ExploreOne':    ExploreOne
-	    'ExploreAll':    ExploreAll
-	    'ExploreBest':   ExploreBest)
+  \insert 'Explorer.env'
 end
-
-
-explorer('ExplorerClass': ExplorerClass
-	 'Explorer':      Explorer
-	 'ExploreOne':    ExploreOne
-	 'ExploreAll':    ExploreAll
-	 'ExploreBest':   ExploreBest)
-= {NewExplorer Tk TkTools Browse}
 \endif
-
