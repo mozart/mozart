@@ -41,8 +41,8 @@ CANVASDIR       = @CANVASDIR@
 
 BUILDDIR        = $(shell pwd)
 
-GTKFLAGS        = @GTK_CFLAGS@ @IMLIB_CFLAGS@
-GTKLIBS         = @GTK_LIBS@ @IMLIB_LIBS@
+GTKFLAGS        = @GTK_CFLAGS@
+GTKLIBS         = @GTK_LIBS@
 
 ifeq ($(HAVE_CANVAS), yes)
 GTKCANVASFLAGS = -I$(CANVASDIR)/include @LIBART_CFLAGS@
