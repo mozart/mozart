@@ -290,7 +290,7 @@ private:
   Bool   _currentBoardIsRoot;
 
   // source level debugger
-  TaggedRef debugStreamTail;
+  TaggedRef debugPort;
   Bool debugMode;
 
   // location of propagators on/off
@@ -418,12 +418,12 @@ public:
     defaultExceptionHdl = pred;
   }
 
-  TaggedRef getDebugStreamTail() { return debugStreamTail; }
+  TaggedRef getDebugStreamTail() {
+    return tagged2PortWithStream(debugPort)->strm;
+  }
 
   void debugStreamMessage(TaggedRef message) {
-    TaggedRef newTail = OZ_newVariable();
-    OZ_Return ret     = OZ_unify(debugStreamTail,oz_cons(message,newTail));
-    debugStreamTail   = newTail;
+    OZ_Return ret = oz_sendPort(debugPort, message);
     Assert(ret == PROCEED);
   }
 
