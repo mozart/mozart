@@ -2520,8 +2520,10 @@ LBLsuspendThread:
     JUMP( getLabelArg(PC+1) );
 
 
-  /* weakDet(X) woken up, WHENEVER something happens to X
-   *            (important if X is a FD var) */
+  /*
+   * weakDet(X) woken up and continues with next instruction,
+   * WHENEVER something happens to X, even if variable is bound to another var
+   */
   Case(WEAKDETX) ONREG(WeakDet,X);
   Case(WEAKDETY) ONREG(WeakDet,Y);
   Case(WEAKDETG) ONREG(WeakDet,G);
@@ -2533,7 +2535,7 @@ LBLsuspendThread:
     if (!isAnyVar(tag)) {
       DISPATCH(3);
     }
-    /* INCFPC(3); do NOT suspend on next instructions: DET suspensions are
+    INCFPC(3); /* suspend on NEXT instructions: WeakDET suspensions are
                   woken up always, even if variable is bound to another var */
 
     int argsToSave = getPosIntArg(PC+2);
@@ -2834,7 +2836,7 @@ LBLsuspendThread:
        DebugCheck(ozconf.stopOnToplevelFailure, tracerOn();trace("raise"));
 
        Thread *tt = e->currentThread;
-       if (e->currentThread) {
+       if (e->currentThread && e->currentThread->isRThread()) {
          if (PC != NOCODE) e->pushTask(PC,Y,G);
        } else {
          tt = new Thread (ozconf.defaultPriority,am.currentBoard);
@@ -2861,9 +2863,10 @@ LBLsuspendThread:
        argsArray[1]=e->dbgGetSpaces();
        tt->pushCall(deref(pred),argsArray,2);
 
-       if (e->currentThread) {
+       if (e->currentThread && e->currentThread->isRThread()) {
          goto LBLpopTask;
        } else {
+         e->currentThread=(Thread *) NULL;
          goto LBLstart;
        }
      }
