@@ -48,7 +48,7 @@ TypeOfTerm tag;								      \
 }
 
 #define DECLAREBI_USEINLINEREL1(Name,InlineName)			      \
-OZ_C_proc_begin(Name,1)							      \
+OZ_C_proc_begin(Name,1)						      \
 {									      \
   OZ_Term arg1 = OZ_getCArg(0);						      \
   State state = InlineName(arg1);				      	      \
@@ -62,7 +62,7 @@ OZ_C_proc_end
 
 
 #define DECLAREBI_USEINLINEREL2(Name,InlineName)			      \
-OZ_C_proc_begin(Name,2)							      \
+OZ_C_proc_begin(Name,2)						      \
 {									      \
   OZ_Term arg0 = OZ_getCArg(0);						      \
   OZ_Term arg1 = OZ_getCArg(1);						      \
@@ -77,7 +77,7 @@ OZ_C_proc_end
 
 
 #define DECLAREBI_USEINLINEFUN1(Name,InlineName)			      \
-OZ_C_proc_begin(Name,2)							      \
+OZ_C_proc_begin(Name,2)						      \
 {									      \
   OZ_Term help;								      \
   									      \
@@ -99,7 +99,7 @@ OZ_C_proc_end
 
 
 #define DECLAREBI_USEINLINEFUN2(Name,InlineName)			      \
-OZ_C_proc_begin(Name,3)							      \
+OZ_C_proc_begin(Name,3)						      \
 {									      \
   OZ_Term help;								      \
   									      \
@@ -121,7 +121,7 @@ OZ_C_proc_end
 
 
 #define DECLAREBI_USEINLINEFUN3(Name,InlineName)			      \
-OZ_C_proc_begin(Name,4)							      \
+OZ_C_proc_begin(Name,4)						      \
 {									      \
   OZ_Term help;								      \
   									      \
@@ -143,7 +143,7 @@ OZ_C_proc_begin(Name,4)							      \
 OZ_C_proc_end
 
 #define DECLAREBOOLFUN1(BIfun,BIifun,BIirel) 				      \
-State BIifun(TaggedRef val, TaggedRef &out)				      \
+State BIifun(TaggedRef val, TaggedRef &out)			      \
 {									      \
   State state = BIirel(val);						      \
   switch(state) {							      \
@@ -155,7 +155,7 @@ State BIifun(TaggedRef val, TaggedRef &out)				      \
 DECLAREBI_USEINLINEFUN1(BIfun,BIifun)
 
 #define DECLAREBOOLFUN2(BIfun,BIifun,BIirel) 				      \
-State BIifun(TaggedRef val1, TaggedRef val2, TaggedRef &out)		      \
+State BIifun(TaggedRef val1, TaggedRef val2, TaggedRef &out)	      \
 {									      \
   State state = BIirel(val1,val2);					      \
   switch(state) {							      \
@@ -222,8 +222,8 @@ private:
 
 
 
-class Builtin: public Chunk {
-friend void Chunk::gcRecurse(void);
+class Builtin: public ConstTerm {
+friend void ConstTerm::gcConstRecurse(void);
 private:
   BuiltinTabEntry *fun;
   TaggedRef suspHandler; // this one is called, when it must suspend
@@ -231,11 +231,7 @@ protected:
   RefsArray gRegs;       // context;
 public:
   Builtin(BuiltinTabEntry *fn, TaggedRef handler, RefsArray gregs = NULL)
-    : suspHandler(handler), fun(fn), Chunk(Co_Builtin),
-    gRegs (gregs) {}
-  Builtin(BuiltinTabEntry *fn, TaggedRef handler, RefsArray gregs,
-	  Arity *arity)
-    : suspHandler(handler), fun(fn), Chunk(Co_Builtin,arity),
+    : suspHandler(handler), fun(fn), ConstTerm(Co_Builtin),
     gRegs (gregs) {}
 
   Builtin *clone() { return new Builtin(fun,suspHandler,gRegs); }
@@ -249,9 +245,8 @@ public:
   TaggedRef getName()  { return fun->getName(); }
   BIType getType()     { return fun->getType(); } 
 
-  Chunk *getSuspHandler() { 
-    return suspHandler == makeTaggedNULL() ?
-      (Chunk*) NULL : chunkCast(suspHandler);
+  TaggedRef getSuspHandler() { 
+    return suspHandler;
   }
   TaggedRef getDBGHandler() { 
     return suspHandler == makeTaggedNULL() ? nil() : suspHandler;
