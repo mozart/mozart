@@ -118,6 +118,8 @@ if test "${enable_wincross}" = yes; then
         with_sunpro=no
         oz_gmp_lib_dir=$oz_wincross_gmp_lib_dir
         oz_gmp_inc_dir=$oz_wincross_gmp_inc_dir
+        oz_zlib_lib_dir=$oz_wincross_zlib_lib_dir
+        oz_zlib_inc_dir=$oz_wincross_zlib_inc_dir
         oz_enable_modules_static=yes
         oz_malloc_obj=
         oz_warn_error=
@@ -383,9 +385,9 @@ dnl AC_TYPE_SIGNAL
 dnl AC_FUNC_VPRINTF
 dnl AC_CHECK_FUNCS(getcwd gethostname gettimeofday putenv select socket strdup strerror strstr strtod strtol strtoul uname setpgid)
 
-AC_FUNC_MMAP
-
-AC_CHECK_FUNCS(sbrk dlopen)
+if test -z "${enable_wincross}"; then
+    AC_CHECK_FUNCS(sbrk dlopen mmap)
+fi
 
 dnl *****************************************************************
 dnl MISC
@@ -441,7 +443,6 @@ AC_ARG_WITH(zlib,
     with_zlib=$withval,
     with_zlib=yes)
 
-
 if test "$with_zlib" != no
 then
     AC_MSG_RESULT(yes)
@@ -452,9 +453,14 @@ then
         oz_zlib_inc_dir=$with_zlib
     fi
 
-    OZ_CHECK_HEADER_PATH(zlib.h,
-        OZ_CHECK_LIB_PATH(z, zlibVersion, AC_DEFINE(USE_ZLIB) ,)
-        , )
+    oz_inc_path="$oz_zlib_inc_dir $oz_inc_path"
+    oz_lib_path="$oz_zlib_lib_dir $oz_lib_path"
+
+    OZ_CHECK_HEADER_PATH(zlib.h,,
+            AC_MSG_ERROR(required zlib include file not found))
+
+    OZ_CHECK_LIB_PATH(z, zlibVersion, ,
+            AC_MSG_ERROR(required zlib lib not found))
 else
     AC_MSG_RESULT(no)
 fi
