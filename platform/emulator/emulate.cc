@@ -53,7 +53,7 @@ class MethodCache {
   Abstraction *abstr;
 
 public:
-  Abstraction *lookup(Object *obj, TaggedRef meth, int arity)
+  Abstraction *lookup(Object *obj, TaggedRef meth, SRecordArity arity)
   {
     ObjectClass *cla = obj->getClass();
     if (cla!=cl) {
@@ -139,14 +139,10 @@ OZ_Term adjoinT(TaggedRef tuple,TaggedRef arg)
 #define DORAISE(T) { X[0] = (T); goto LBLraise; }
 
 
-#define HF_FAIL(R)                                      \
-   if (!e->isToplevelFailure()) { goto LBLfailure; }    \
-   DORAISE(OZ_mkTupleC("toplevelFailure",1,(R)));               \
+#define HF_FAIL(R)                                                      \
+   if (!e->isToplevel()) { goto LBLfailure; }                   \
+   DORAISE(OZ_mkTupleC("toplevelFailure",1,(R)));
 
-#define HF_PROC                                 \
- HF_FAIL1(mkSTupleX("proc",                     \
-                   predicate->getPrintName(),   \
-                   X,predArity));
 
 #define INFO_BI                                 \
  mkSTupleX("proc",                              \
@@ -381,7 +377,7 @@ Bool AM::hookCheckNeeded()
 #define emulateHookPopTask(e,Code) emulateHookCall(e,0,0,0,Code)
 
 
-#define CallPushCont(ContAdr) e->pushTask(ContAdr,Y,G)
+#define CallPushCont(ContAdr) e->pushTaskInline(ContAdr,Y,G,NULL,0)
 
 #define SaveSelf(e,obj,pushOntoStack)           \
   {                                             \
@@ -404,7 +400,7 @@ Bool AM::hookCheckNeeded()
      Y = NULL;                                                          \
      G = gRegs;                                                         \
      emulateHookCall(e,Pred,Arity,X,                                    \
-                     e->pushTaskOutline(Pred->getPC(),NULL,G,X,Arity);  \
+                     e->pushTask(Pred->getPC(),NULL,G,X,Arity); \
                      goto LBLpreemption;);
 
 
@@ -463,7 +459,7 @@ Bool AM::hookCheckNeeded()
 
 #endif
 
-#define JUMP(absAdr) PC = absAdr; DISPATCH(0)
+#define JUMP(absAdr) Assert(absAdr!=0); PC=absAdr; DISPATCH(0)
 
 #define ONREG(Label,R)      HelpReg = (R); goto Label
 #define ONREG2(Label,R1,R2) HelpReg1 = (R1); HelpReg2 = (R2); goto Label
@@ -566,11 +562,10 @@ Bool AM::hookCheckNeeded()
 
 
 #define SUSP_PC(TermPtr,RegsToSave,PC)          \
-   e->pushTaskOutline(PC,Y,G,X,RegsToSave);     \
+   e->pushTask(PC,Y,G,X,RegsToSave);    \
    addSusp(TermPtr,e->mkSuspThread ());         \
    CHECK_CURRENT_THREAD;
 
-inline
 void addSusp(TaggedRef var, Thread *thr)
 {
   DEREF(var,varPtr,_1);
@@ -579,7 +574,6 @@ void addSusp(TaggedRef var, Thread *thr)
   taggedBecomesSuspVar(varPtr)->addSuspension (thr);
 }
 
-inline
 void addSusp(TaggedRef *varPtr, Thread *thr)
 {
   taggedBecomesSuspVar(varPtr)->addSuspension (thr);
@@ -2094,7 +2088,7 @@ LBLsuspendThread:
 
       switch (biFun(predArity, X)){
       case SUSPEND:
-        e->pushTaskOutline(PC,Y,G,X,predArity);
+        e->pushTask(PC,Y,G,X,predArity);
         e->suspendOnVarList(e->mkSuspThread ());
         CHECK_CURRENT_THREAD;
 
@@ -2133,7 +2127,7 @@ LBLsuspendThread:
           e->trail.pushIfVar(XPC(2));
           DISPATCH(4);
         }
-        e->pushTaskOutline(PC,Y,G,X,getPosIntArg(PC+3));
+        e->pushTask(PC,Y,G,X,getPosIntArg(PC+3));
         e->suspendInline(1,XPC(2));
         CHECK_CURRENT_THREAD;
       case FAILED:
@@ -2171,7 +2165,7 @@ LBLsuspendThread:
             DISPATCH(5);
           }
 
-          e->pushTaskOutline(PC,Y,G,X,getPosIntArg(PC+4));
+          e->pushTask(PC,Y,G,X,getPosIntArg(PC+4));
           e->suspendInline(2,XPC(2),XPC(3));
           CHECK_CURRENT_THREAD;
         }
@@ -2211,7 +2205,7 @@ LBLsuspendThread:
             e->trail.pushIfVar(A);
             DISPATCH(5);
           }
-          e->pushTaskOutline(PC,Y,G,X,getPosIntArg(PC+4));
+          e->pushTask(PC,Y,G,X,getPosIntArg(PC+4));
           e->suspendInline(1,A);
           CHECK_CURRENT_THREAD;
         }
@@ -2257,7 +2251,7 @@ LBLsuspendThread:
             e->trail.pushIfVar(B);
             DISPATCH(6);
           }
-          e->pushTaskOutline(PC,Y,G,X,getPosIntArg(PC+5));
+          e->pushTask(PC,Y,G,X,getPosIntArg(PC+5));
           e->suspendInline(2,A,B);
           CHECK_CURRENT_THREAD;
         }
@@ -2309,7 +2303,7 @@ LBLsuspendThread:
               e->trail.pushIfVar(A);
               DISPATCH(7);
             }
-            e->pushTaskOutline(PC,Y,G,X,getPosIntArg(PC+4));
+            e->pushTask(PC,Y,G,X,getPosIntArg(PC+4));
             e->suspendInline(1,A);
             CHECK_CURRENT_THREAD;
           }
@@ -2387,7 +2381,7 @@ LBLsuspendThread:
       case SUSPEND:
           Assert(!shallowCP);
           OZ_suspendOnVar2(XPC(1),XPC(2));
-          e->pushTaskOutline(PC,Y,G,X,getPosIntArg(PC+4));
+          e->pushTask(PC,Y,G,X,getPosIntArg(PC+4));
           e->suspendOnVarList(e->mkSuspThread());
           CHECK_CURRENT_THREAD;
 
@@ -2429,7 +2423,7 @@ LBLsuspendThread:
             e->trail.pushIfVar(C);
             DISPATCH(7);
           }
-          e->pushTaskOutline(PC,Y,G,X,getPosIntArg(PC+6));
+          e->pushTask(PC,Y,G,X,getPosIntArg(PC+6));
           e->suspendInline(3,A,B,C);
           CHECK_CURRENT_THREAD;
         }
@@ -2464,7 +2458,7 @@ LBLsuspendThread:
         {
           TaggedRef A=XPC(2);
           TaggedRef B=XPC(3);
-          e->pushTaskOutline(PC,Y,G,X,getPosIntArg(PC+5));
+          e->pushTask(PC,Y,G,X,getPosIntArg(PC+5));
           e->suspendInline(2,A,B);
           CHECK_CURRENT_THREAD;
         }
@@ -2500,7 +2494,7 @@ LBLsuspendThread:
       case PROCEED: DISPATCH(5);
       case FAILED:  JUMP( getLabelArg(PC+3) );
       case SUSPEND:
-        e->pushTaskOutline(PC,Y,G,X,getPosIntArg(PC+4));
+        e->pushTask(PC,Y,G,X,getPosIntArg(PC+4));
         addSusp (XPC(2), e->mkSuspThread ());
         CHECK_CURRENT_THREAD;
 
@@ -2527,7 +2521,7 @@ LBLsuspendThread:
 
       case SUSPEND:
         {
-          e->pushTaskOutline(PC,Y,G,X,getPosIntArg(PC+5));
+          e->pushTask(PC,Y,G,X,getPosIntArg(PC+5));
           Thread *thr = e->mkSuspThread ();
           OZ_Term A=XPC(2);
           OZ_Term B=XPC(3);
@@ -2557,7 +2551,7 @@ LBLsuspendThread:
       }
 
       int argsToSave = getPosIntArg(shallowCP+2);
-      e->pushTaskOutline(shallowCP,Y,G,X,argsToSave);
+      e->pushTask(shallowCP,Y,G,X,argsToSave);
       Thread *thr = e->mkSuspThread ();
       shallowCP = NULL;
       e->reduceTrailOnShallow ();
@@ -2612,7 +2606,7 @@ LBLsuspendThread:
     DISPATCH(1);
 
   Case(SAVECONT)
-    e->pushTaskOutline(getLabelArg(PC+1),Y,G);
+    e->pushTask(getLabelArg(PC+1),Y,G);
     DISPATCH(2);
 
   Case(RELEASEOBJECT)
@@ -2702,7 +2696,7 @@ LBLsuspendThread:
     }
     /* INCFPC(3): dont do it */
     int argsToSave = getPosIntArg(PC+2);
-    e->pushTaskOutline(PC,Y,G,X,argsToSave);
+    e->pushTask(PC,Y,G,X,argsToSave);
     Thread *thr = e->mkSuspThread ();
     if (isCVar (tag)) {
       (tagged2CVar (term))->addDetSusp (thr);
@@ -2938,7 +2932,7 @@ LBLsuspendThread:
                  {
                    TaggedRef sh = bi->getSuspHandler();
                    if (sh==makeTaggedNULL()) {
-                     if (!isTailCall) e->pushTaskOutline(PC,Y,G);
+                     if (!isTailCall) e->pushTask(PC,Y,G);
                      e->pushCFun(biFun,X,predArity);
                      Thread *thr=e->mkSuspThread();
                      e->suspendOnVarList(thr);
@@ -3073,7 +3067,7 @@ LBLsuspendThread:
 
        // put continuation if any;
        if (isTailCall == NO)
-         e->pushTaskOutline(PC, Y, G);
+         e->pushTask(PC, Y, G);
 
        // Note: don't perform any derefencing on X[2];
        SolveActor *sa = new SolveActor (CBB,CPP,
@@ -3440,7 +3434,7 @@ LBLsuspendThread:
       }
 
       Thread *tt = new Thread (prio, CBB);
-      tt->pushCont(newPC,Y,G,NULL,0,OK);
+      tt->pushCont(newPC,Y,G,NULL,0);
       e->scheduleThread (tt);
 
       JUMP(contPC);
@@ -3519,7 +3513,7 @@ LBLsuspendThread:
       ProgramCounter contPC = getLabelArg(PC+1);
 
       markDirtyRefsArray(Y);
-      e->currentThread->pushCont(contPC,Y,G,NULL,0,OK);
+      e->currentThread->pushCont(contPC,Y,G,NULL,0);
       e->currentThread->pushJob();
       DISPATCH(2);
     }
