@@ -57,9 +57,7 @@ prepare
 		'Explorer'('ExploreOne':  [one]
 			   'ExploreAll':  [all]
 			   'ExploreBest': [best])
-\ifdef INSPECTOR
 		'Inspector'('Inspect': [inspect])
-\endif
 	       ]
 
    fun {Dots M Fs}
