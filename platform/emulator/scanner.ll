@@ -3,11 +3,8 @@
  *    Martin Henz (henz@iscs.nus.sg)
  *    Leif Kornstaedt (kornstae@ps.uni-sb.de)
  * 
- *  Contributors:
- *    optional, Contributor's name (Contributor's email address)
- * 
  *  Copyright:
- *    Organization or Person (Year(s))
+ *    Martin Henz and Leif Kornstaedt, 1996, 1997
  * 
  *  Last change:
  *    $Date$ by $Author$
@@ -1006,6 +1003,7 @@ REGEXCHAR    "["([^\]\\]|\\.)+"]"|\"[^"]+\"|\\.|[^<>"\[\]\\\n]
 "finally"/\(?                  { return finally; }
 "from"/\(?                     { return _from_; }
 "fun"/\(?                      { return _fun_; }
+"functor"/\(?                  { return functor; }
 "if"/\(?                       { return _if_; }
 "in"/\(?                       { return _in_; }
 "lex"                          { if (xy_gumpSyntax) { BEGIN(LEX); return lex; } else return OZATOM; }
