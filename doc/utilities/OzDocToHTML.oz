@@ -54,7 +54,8 @@ define
 		   constructor#'constructor' destructor#'destructor'
 		   operator#'operator' member#'member' function#'function'
 		   macro#'macro'
-		   variable#'variable' command#'command' face#'face']
+		   variable#'variable' useroption#'user option'
+		   command#'command' face#'face']
 
    fun {CollapseSpaces S DropSpace}
       case S of C|Cr then
