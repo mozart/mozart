@@ -1016,7 +1016,7 @@ fi
         if expr "$oz_tmp" : egcs >/dev/null; then
           :
 
-        elif oz_tmp=`expr "$oz_tmp" : '\([0-9.]\+\)'`; then
+        elif oz_tmp=`expr "$oz_tmp" : '\([0-9.]*\)'`; then
 
           echo $ac_n "checking $CXX version is at least 2.7""... $ac_c" 1>&6
 echo "configure:1023: checking $CXX version is at least 2.7" >&5

@@ -188,18 +188,21 @@ AC_DEFUN(OZ_CHECK_VERSION,[
   [$1]=$oz_tmp__ok])
 
 dnl ------------------------------------------------------------------
-dnl OZ_PROG_VERSION_CHECK(VAR,PROG,VERSION)
+dnl OZ_PROG_VERSION_CHECK(VAR,PROG,VERSION [,HOW])
 dnl
 dnl gets the --version of PROG and compares it to VERSION
-dnl sets VAR to yes or no accordingly
+dnl sets VAR to yes or no accordingly. HOW is the command to execute
+dnl to get the text containing the string `version XXXX' where XXXX
+dnl is the version number.  If HOW is not supplied we use the
+dnl --version option.
 dnl ------------------------------------------------------------------
 
 AC_DEFUN(OZ_PROG_VERSION_CHECK,[
   AC_MSG_CHECKING([$2 version is at least $3])
   [$1]=no
-  if oz_tmp_version=`[$2] --version 2>/dev/null`; then
+  if oz_tmp_version=`ifelse([$4],[],[$2 --version],[$4]) 2>/dev/null`; then
 changequote(<,>)
-    oz_tmp_version=`expr "$oz_tmp_version" : '.*version \([0-9._]\+\)'`
+    oz_tmp_version=`expr "$oz_tmp_version" : '.*version \([0-9._]*\)'`
 changequote([,])
     if test -n "$oz_tmp_version"; then
       OZ_CHECK_VERSION([$1],$oz_tmp_version,[$3])
@@ -232,7 +235,7 @@ dnl    CXXFLAGS=
 dnl I don't know what the appropriate version number is for egcs
           :
 changequote(<,>)
-        elif oz_tmp=`expr "$oz_tmp" : '\([0-9.]\+\)'`; then
+        elif oz_tmp=`expr "$oz_tmp" : '\([0-9.]*\)'`; then
 changequote([,])
           AC_MSG_CHECKING($CXX version is at least OZ_VERSION_GXX)
           OZ_CHECK_VERSION(oz_tmp_ok,$oz_tmp,OZ_VERSION_GXX)
@@ -345,7 +348,7 @@ dnl    CFLAGS=
 dnl I don't know what the appropriate version number is for egcs
           :
 changequote(<,>)
-        elif oz_tmp=`expr "$oz_tmp" : '\([0-9.]\+\)'`; then
+        elif oz_tmp=`expr "$oz_tmp" : '\([0-9.]*\)'`; then
 changequote([,])
           AC_MSG_CHECKING($CC version is at least OZ_VERSION_GCC)
           OZ_CHECK_VERSION(oz_tmp_ok,$oz_tmp,OZ_VERSION_GCC)
@@ -513,7 +516,7 @@ AC_DEFUN(OZ_PROG_PERL,[
     if test "$PERL" = NONE; then
       oz_tmp_ok=no;
     else
-      OZ_PROG_VERSION_CHECK(oz_tmp_ok,$PERL,OZ_VERSION_PERL)
+      OZ_PROG_VERSION_CHECK(oz_tmp_ok,$PERL,OZ_VERSION_PERL,[$PERL -v])
     fi
     if test "$oz_tmp_ok" = yes; then
       oz_cv_PERL=$PERL
@@ -821,9 +824,9 @@ changequote([,])
       AC_TRY_CPP([#include "$1"],[
         oz_tmp_ok=yes],[
         for oz_tmp in $oz_inc_path; do
-          CPPFLAGS="$oz_tmp_cppflags -I$p"
+          CPPFLAGS="$oz_tmp_cppflags -I$oz_tmp"
           AC_TRY_CPP([#include "$1"],[
-            oz_tmp_ok="-I$p"
+            oz_tmp_ok="-I$oz_tmp"
             break])
         done])
       CPPFLAGS=$oz_tmp_cppflags

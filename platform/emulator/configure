@@ -1100,7 +1100,7 @@ fi
         if expr "$oz_tmp" : egcs >/dev/null; then
           :
 
-        elif oz_tmp=`expr "$oz_tmp" : '\([0-9.]\+\)'`; then
+        elif oz_tmp=`expr "$oz_tmp" : '\([0-9.]*\)'`; then
 
           echo $ac_n "checking $CXX version is at least 2.7""... $ac_c" 1>&6
 echo "configure:1107: checking $CXX version is at least 2.7" >&5
@@ -1317,7 +1317,7 @@ echo "configure:1317: checking $LEX version is at least 2.5.3" >&5
   oz_tmp_ok=no
   if oz_tmp_version=`$LEX --version 2>/dev/null`; then
 
-    oz_tmp_version=`expr "$oz_tmp_version" : '.*version \([0-9._]\+\)'`
+    oz_tmp_version=`expr "$oz_tmp_version" : '.*version \([0-9._]*\)'`
 
     if test -n "$oz_tmp_version"; then
 
@@ -1430,7 +1430,7 @@ echo "configure:1430: checking $YACC version is at least 1.25" >&5
   oz_tmp_ok=no
   if oz_tmp_version=`$YACC --version 2>/dev/null`; then
 
-    oz_tmp_version=`expr "$oz_tmp_version" : '.*version \([0-9._]\+\)'`
+    oz_tmp_version=`expr "$oz_tmp_version" : '.*version \([0-9._]*\)'`
 
     if test -n "$oz_tmp_version"; then
 
@@ -1774,9 +1774,9 @@ test -n "$PERL" || PERL="NONE"
   echo $ac_n "checking $PERL version is at least 5""... $ac_c" 1>&6
 echo "configure:1776: checking $PERL version is at least 5" >&5
   oz_tmp_ok=no
-  if oz_tmp_version=`$PERL --version 2>/dev/null`; then
+  if oz_tmp_version=`$PERL -v 2>/dev/null`; then
 
-    oz_tmp_version=`expr "$oz_tmp_version" : '.*version \([0-9._]\+\)'`
+    oz_tmp_version=`expr "$oz_tmp_version" : '.*version \([0-9._]*\)'`
 
     if test -n "$oz_tmp_version"; then
 
@@ -2735,7 +2735,7 @@ else
   rm -rf conftest*
 
         for oz_tmp in $oz_inc_path; do
-          CPPFLAGS="$oz_tmp_cppflags -I$p"
+          CPPFLAGS="$oz_tmp_cppflags -I$oz_tmp"
           cat > conftest.$ac_ext <<EOF
 #line 2741 "configure"
 #include "confdefs.h"
@@ -2747,7 +2747,7 @@ ac_err=`grep -v '^ *+' conftest.out`
 if test -z "$ac_err"; then
   rm -rf conftest*
 
-            oz_tmp_ok="-I$p"
+            oz_tmp_ok="-I$oz_tmp"
             break
 else
   echo "$ac_err" >&5
@@ -3249,7 +3249,7 @@ else
   rm -rf conftest*
 
         for oz_tmp in $oz_inc_path; do
-          CPPFLAGS="$oz_tmp_cppflags -I$p"
+          CPPFLAGS="$oz_tmp_cppflags -I$oz_tmp"
           cat > conftest.$ac_ext <<EOF
 #line 3255 "configure"
 #include "confdefs.h"
@@ -3261,7 +3261,7 @@ ac_err=`grep -v '^ *+' conftest.out`
 if test -z "$ac_err"; then
   rm -rf conftest*
 
-            oz_tmp_ok="-I$p"
+            oz_tmp_ok="-I$oz_tmp"
             break
 else
   echo "$ac_err" >&5
