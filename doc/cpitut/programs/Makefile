@@ -53,6 +53,8 @@ CCSNIPPETS  =   ex_a.1.cc ex_a.1a.cc \
 
 all: $(NATIVEFNCTS)
 
+new: clean all
+
 %.so-$(PLATFORM): %.o
 	$(OZDYNLD) -o $@ $< $(LDFLAGS) $(LIBS)
 
