@@ -78,8 +78,7 @@ e.g. <meta>PREFIX</meta> or <meta>URI as cache path</meta></p>
     <opt>--(no)autodepend</opt>
   </option>
   <default><opt>true</opt></default>
-  <item>
-	automatically determine build-time and install-time (run-time)
+  <item>automatically determine build-time and install-time (run-time)
 	dependencies.  Currently, this is only supported for Oz sources
 	by looking at <oz>import</oz> and <oz>require</oz> sections.
   </item>
@@ -89,8 +88,7 @@ e.g. <meta>PREFIX</meta> or <meta>URI as cache path</meta></p>
     <opt>--(no)requires</opt>
   </option>
   <default><opt>true</opt></default>
-  <item>
-        automatically fetch and install other packages that the current one
+  <item>automatically fetch and install other packages that the current one
 	requires.  This option is relevant both for building and for installing.
   </item>
 </optentry>
@@ -262,8 +260,7 @@ one for mogul database entries.</item>
     <opt>-p <meta>PKG</meta></opt>
     <opt>--package=<meta>PKG</meta></opt>
   </option>
-  <item>
-        file or URL of package.  when creating a package, it should be
+  <item>file or URL of package.  when creating a package, it should be
         a local filename.  when extracting or installing, it can also
         be a URL or a mogul id; in the latter case, the package is
         automatically downloaded from the mogul archive
@@ -274,8 +271,7 @@ one for mogul database entries.</item>
     <opt>-V <meta>VERSION</meta></opt>
     <opt>--packageversion=<meta>VERSION</meta></opt>
   </option>
-  <item>
-	this option is respected by <opt>--extract</opt> and
+  <item>this option is respected by <opt>--extract</opt> and
 	<opt>--install</opt>.  When <opt>--extract</opt> is given a
 	MOGUL id and downloads the corresponding package from the
 	MOGUL archive, it will look precisely for the given
@@ -289,8 +285,7 @@ one for mogul database entries.</item>
     <opt>--database=<meta>DB</meta></opt>
   </option>
   <default><file><meta>PREFIX</meta>/DATABASE</file></default>
-  <item>
-        base path of installed packages database.
+  <item>base path of installed packages database.
         The database is saved in both pickled and textual format
         respectively in files <file><meta>DB</meta>.ozf</file> and
         <file><meta>DB</meta>.txt</file>
@@ -362,8 +357,7 @@ one for mogul database entries.</item>
   <option>
     <opt>--(no)gnu</opt>
   </option>
-  <item>
-        is the C++ compiler the GNU compiler.  this is determined
+  <item>is the C++ compiler the GNU compiler.  this is determined
         automatically and allows a greater optimization level, namely
         passing <opt>-O3</opt> rather than just <opt>-O</opt> to the
         compiler
@@ -506,8 +500,7 @@ one for mogul database entries.</item>
     <opt>--(no)replacefiles</opt>
   </option>
   <default><opt>false</opt></default>
-  <item>
-        allow installation to overwrite files from other packages
+  <item>allow installation to overwrite files from other packages
   </item>
 </optentry>
 <optentry>
@@ -515,8 +508,7 @@ one for mogul database entries.</item>
     <opt>-R</opt>
     <opt>--replace</opt>
   </option>
-  <item>
-        equivalent to <opt>--install --grade=any --replacefiles</opt>
+  <item>equivalent to <opt>--install --grade=any --replacefiles</opt>
   </item>
 </optentry>
 <optentry>
@@ -524,8 +516,7 @@ one for mogul database entries.</item>
     <opt>--(no)extendpackage</opt>
   </option>
   <default><opt>false</opt></default>
-  <item>
-        whether to replace or extend the current installation of this
+  <item>whether to replace or extend the current installation of this
         package if any
   </item>
 </optentry>
@@ -534,8 +525,7 @@ one for mogul database entries.</item>
     <opt>-X</opt>
     <opt>--extend</opt>
   </option>
-  <item>
-        equivalent to <opt>--install --grade=any --extendpackage</opt>
+  <item>equivalent to <opt>--install --grade=any --extendpackage</opt>
   </item>
 </optentry>
 <optentry>
@@ -543,8 +533,7 @@ one for mogul database entries.</item>
     <opt>--(no)savedb</opt>
   </option>
   <default><opt>true</opt></default>
-  <item>
-        save the updated database after installation
+  <item>save the updated database after installation
   </item>
 </optentry>
 <optentry>
@@ -576,8 +565,7 @@ one for mogul database entries.</item>
     <opt>--(no)keepzombies</opt>
   </option>
   <default><opt>false</opt></default>
-  <item>
-        whether to remove files left over from a previous installation
+  <item>whether to remove files left over from a previous installation
         of this package
   </item>
 </optentry>
@@ -586,8 +574,7 @@ one for mogul database entries.</item>
     <opt>--exe=( default | yes | no | both | multi )</opt>
   </option>
   <default><opt>default</opt></default>
-  <item>
-        the convention on Windows is that executables have a <file>.exe</file>, while
+  <item>the convention on Windows is that executables have a <file>.exe</file>, while
 	on Unix they have no extension.  The <opt>--exe</opt> option allows you to
 	control the conventions used by <tool>ozmake</tool> when installing executables.
         <optlist>
@@ -648,8 +635,7 @@ one for mogul database entries.</item>
   <usage>ozmake --clean</usage>
   <usage>ozmake --veryclean</usage>
   <default type="glob"><opt>*~ *.ozf *.o *.so-* *.exe</opt></default>
-  <item>
-        remove files as specified by the makefile's clean and
+  <item>remove files as specified by the makefile's clean and
 	veryclean features. <opt>--veryclean</opt> implies
 	<opt>--clean</opt>.
   </item>
@@ -661,8 +647,7 @@ one for mogul database entries.</item>
 
 <usagelist>
   <usage>ozmake --create [--package=<meta>FILE</meta>]</usage>
-  <item>
-        create a package and save it in <meta>FILE</meta>.  the files
+  <item>create a package and save it in <meta>FILE</meta>.  the files
         needed for the package are automatically computed from the
         makefile.  If <opt>--package=<meta>FILE</meta></opt> is not supplied,
 	a default is computed using the mogul id (and possibly version number)
@@ -676,8 +661,7 @@ one for mogul database entries.</item>
     <opt>--include(bins|libs|docs)</opt>
     <opt>--exclude(bins|libs|docs)</opt>
   </option>
-  <item>
-        control which target types are included in the package
+  <item>control which target types are included in the package
   </item>
 </optentry>
 </optlist>
@@ -688,8 +672,7 @@ one for mogul database entries.</item>
 
 <usagelist>
   <usage>ozmake --publish</usage>
-  <item>
-        automatically takes care of all the steps necessary for
+  <item>automatically takes care of all the steps necessary for
         creating/updating a package contributed by the user and
 	making all necessary data available to the MOGUL librarian.
 	See documentation for <opt>--mogul</opt> below.
@@ -702,8 +685,7 @@ one for mogul database entries.</item>
 
 <usagelist>
   <usage>ozmake --extract --package=<meta>PKG</meta></usage>
-  <item>
-        extract the files from file or URL <mate>PKG</mate>.  if
+  <item>extract the files from file or URL <mate>PKG</mate>.  if
         <meta>PKG</meta> is a mogul id, then the package is
         automatically downloaded from the mogul archive
   </item>
@@ -718,7 +700,7 @@ one for mogul database entries.</item>
   <item>list info for all packages in the installed package
   database</item>
   <usage>ozmake --list --package=<meta>MOGUL</meta></usage>
-  <item> list info for the installed package indentified by mogul id
+  <item>list info for the installed package identified by mogul id
         <meta>MOGUL</meta>
   </item>
 </usagelist>
@@ -742,7 +724,7 @@ one for mogul database entries.</item>
   <item>record the given <meta>OPTIONS</meta> in <tool>ozmake</tool>'s
   configuration database, and use them as defaults in subsequent
   invocations of <tool>ozmake</tool> unless explicitly
-  overriden on the command line.  For example:
+  overridden on the command line.  For example:
   <opt>ozmake --config=put --prefix=/usr/local/oz</opt>
   saves <file>/usr/local/oz</file> as the default value for option
   <opt>--prefix</opt></item>
@@ -765,7 +747,7 @@ It makes it easy for you to maintain a database of your contributions
 and to export them so that the MOGUL librarian may automatically
 find them.  In fact, the simplest way is to use
 <opt>ozmake --publish</opt> which will take take care of all
-defails for you.</p>
+details for you.</p>
 
 <usagelist>
   <usage>ozmake --mogul=put</usage>
@@ -794,7 +776,7 @@ defails for you.</p>
 on the WEB.  You want to just update a local directory with your contributions, but,
 in order for the MOGUL librarian to find them, these directories must also be available
 through URLs on the WEB.  Here are some options that allow you to control this
-correspondance, and for which you should set default using
+correspondence, and for which you should set default using
 <opt>ozmake --config=put</opt></p>
 
 <optlist>
@@ -902,7 +884,7 @@ installed packages.</p>
 
 <p>There are many more features which can occur in the makefile and
 they are all optional.  If you omit all the features, you only get the
-defaults and you don't even need a makefile.  All values, suchs as
+defaults and you don't even need a makefile.  All values, such as
 <oz>files</oz>, should be given as virtual string; atoms are
 recommended except for features <oz>blurb</oz>, <oz>info_text</oz> and
 <oz>info_html</oz>, where strings are recommended.</p>
@@ -1126,7 +1108,7 @@ also implies the former.  Files to be removed are specified by
 patterns where <opt>?</opt> matches any 1 character and <opt>*</opt>
 matches a sequence of 0 or more characters.  All files in
 <metya>BUILDDIR</metya> matching one such pattern is removed.  There
-are built-in patterns, but ou can override them with features
+are built-in patterns, but you can override them with features
 <oz>clean</oz> and <oz>veryclean</oz> which should be lists of
 glob patterns.  For example the default clean glob patterns are:</p>
 <oz.display>
@@ -1157,7 +1139,7 @@ i.e.:</p>
 <p>feature <oz>mogul</oz> is the mogul id uniquely identifying this
 package.  It is used to identify the package in the database of
 installed packages, to create/publish the package, and to install its
-documention files.</p>
+documentation files.</p>
 
 </subsubsection>
 
@@ -1184,7 +1166,7 @@ and time of release in the following format:</p>
 <oz.display>
         released : "YYYY-MM-DD-HH:MM:SS"
 </oz.display>
-<p>time is optional.  An appropriate release date using the currentdate
+<p>time is optional.  An appropriate release date using the current date
 and time is automatically inserted when invoking
 <opt>ozmake --create</opt> or <opt>ozmake --publish</opt>.</p>
 </subsubsection>
@@ -1219,7 +1201,7 @@ source, i.e. in particular non-buildable.  All targets mentioned in
 distributing packages with pre-built targets and without giving out
 the corresponding sources.  You should not do this with native
 functors since they are platform dependent and not portable, but it
-can be a convenient means of distributing prebuilt Oz libraries. For
+can be a convenient means of distributing pre-built Oz libraries. For
 example:</p>
 <oz.display>
         makefile(
@@ -1228,7 +1210,7 @@ example:</p>
           uri : 'x-ozlib://mylib'
           mogul : 'mogul:/myname/foolib')
 </oz.display>
-<p>is a makefile for a package that distribute the precompiled
+<p>is a makefile for a package that distribute the pre-compiled
 <file>Foo.ozf</file>, but does not also distribute its source
 <file>Foo.oz</file>.  Normally, when you build a package it simply
 checks that the <oz>src</oz> files are present but will not attempt to
@@ -1244,7 +1226,7 @@ subdirectories of the project.  By default, when necessary,
 expected that each subdirectory should provide its own makefile.  The
 mogul id is automatically inherited to subdirectories and the uri is
 automatically extended by appending the name of the subdirectory: thus
-submakefiles can be simpler since they don't need to be concerned with
+sub-makefiles can be simpler since they don't need to be concerned with
 package-level features.</p>
 </subsubsection>
 
@@ -1273,7 +1255,7 @@ information about what the package provides, normally automatically
 computed from the <oz>bin</oz> and <oz>lib</oz> targets: it should be
 a list which contains a subset of these targets.  The
 <oz>provides</oz> feature of a makefile does not override or otherwise
-affect its submakefiles: each makefile should separately override if
+affect its sub-makefiles: each makefile should separately override if
 it so desires.  To state that a makefile does not officially provide
 any functors or executable application, you would add:
 <oz.display>

@@ -377,7 +377,7 @@ OPTIONS
           list info for all packages in the installed package database
 
    ozmake --list --package=<MOGUL>
-          list info for the installed package indentified by mogul id
+          list info for the installed package identified by mogul id
           <MOGUL>
 
    --linewidth=N
@@ -389,7 +389,7 @@ OPTIONS
    ozmake --config=put <OPTIONS>
           record the given <OPTIONS> in ozmake's configuration database,
           and use them as defaults in subsequent invocations of ozmake
-          unless explicitly overriden on the command line. For example:
+          unless explicitly overridden on the command line. For example:
           ozmake --config=put --prefix=/usr/local/oz saves /usr/local/oz
           as the default value for option --prefix
 
@@ -411,7 +411,7 @@ OPTIONS
    maintain a database of your contributions and to export them so that
    the MOGUL librarian may automatically find them. In fact, the simplest
    way is to use ozmake --publish which will take take care of all
-   defails for you.
+   details for you.
 
    ozmake --mogul=put
           update the user's database of own mogul contributions with the
@@ -446,7 +446,7 @@ OPTIONS
    your contributions, but, in order for the MOGUL librarian to find
    them, these directories must also be available through URLs on the
    WEB. Here are some options that allow you to control this
-   correspondance, and for which you should set default using ozmake
+   correspondence, and for which you should set default using ozmake
    --config=put
 
    --moguldir=<MOGULDIR>
@@ -513,7 +513,7 @@ MAKEFILE
 
    There are many more features which can occur in the makefile and they
    are all optional. If you omit all the features, you only get the
-   defaults and you don't even need a makefile. All values, suchs as
+   defaults and you don't even need a makefile. All values, such as
    files, should be given as virtual string; atoms are recommended except
    for features blurb, info_text and info_html, where strings are
    recommended.
@@ -651,7 +651,7 @@ MAKEFILE
    also implies the former. Files to be removed are specified by glob
    patterns where ? matches any 1 character and * matches a sequence of 0
    or more characters. All files in BUILDDIR matching one such pattern is
-   removed. There are built-in patterns, but ou can override them with
+   removed. There are built-in patterns, but you can override them with
    features clean and veryclean which should be lists of glob patterns.
    For example the default clean glob patterns are:
         clean : [ "*~" "*.ozf" "*.o" "*.so-*" "*.exe" ]
@@ -672,7 +672,7 @@ MAKEFILE
 
    feature mogul is the mogul id uniquely identifying this package. It is
    used to identify the package in the database of installed packages, to
-   create/publish the package, and to install its documention files.
+   create/publish the package, and to install its documentation files.
 
     author
 
@@ -691,7 +691,7 @@ MAKEFILE
    release in the following format:
         released : "YYYY-MM-DD-HH:MM:SS"
 
-   time is optional. An appropriate release date using the currentdate
+   time is optional. An appropriate release date using the current date
    and time is automatically inserted when invoking ozmake --create or
    ozmake --publish.
 
@@ -721,14 +721,14 @@ MAKEFILE
    distributing packages with pre-built targets and without giving out
    the corresponding sources. You should not do this with native functors
    since they are platform dependent and not portable, but it can be a
-   convenient means of distributing prebuilt Oz libraries. For example:
+   convenient means of distributing pre-built Oz libraries. For example:
         makefile(
           lib : [ 'Foo.ozf' ]
           src : [ 'Foo.ozf' ]
           uri : 'x-ozlib://mylib'
           mogul : 'mogul:/myname/foolib')
 
-   is a makefile for a package that distribute the precompiled Foo.ozf,
+   is a makefile for a package that distribute the pre-compiled Foo.ozf,
    but does not also distribute its source Foo.oz. Normally, when you
    build a package it simply checks that the src files are present but
    will not attempt to build them. If you have the sources, you can force
@@ -741,7 +741,7 @@ MAKEFILE
    recurse into these subdirectories. It is expected that each
    subdirectory should provide its own makefile. The mogul id is
    automatically inherited to subdirectories and the uri is automatically
-   extended by appending the name of the subdirectory: thus submakefiles
+   extended by appending the name of the subdirectory: thus sub-makefiles
    can be simpler since they don't need to be concerned with
    package-level features.
 
@@ -770,7 +770,7 @@ MAKEFILE
    what the package provides, normally automatically computed from the
    bin and lib targets: it should be a list which contains a subset of
    these targets. The provides feature of a makefile does not override or
-   otherwise affect its submakefiles: each makefile should separately
+   otherwise affect its sub-makefiles: each makefile should separately
    override if it so desires. To state that a makefile does not
    officially provide any functors or executable application, you would
    add:

@@ -90,7 +90,6 @@ do not recurse into subdirectories
 .br 
 \fBdefault:\fP true
 .br 
-
 automatically determine build-time and install-time (run-time) dependencies. Currently, this is only supported for Oz sources by looking at import and require sections. 
 .TP
 .SM
@@ -98,7 +97,6 @@ automatically determine build-time and install-time (run-time) dependencies. Cur
 .br 
 \fBdefault:\fP true
 .br 
-
 automatically fetch and install other packages that the current one requires. This option is relevant both for building and for installing. 
 .P
 What you should remember here, is that \fB-vn\fR is your friend. Add
@@ -208,13 +206,11 @@ location of makefile
 .SM
 -p \fI<PKG>\fP  --package=\fI<PKG>\fP  
 .br 
-
 file or URL of package. when creating a package, it should be a local filename. when extracting or installing, it can also be a URL or a mogul id; in the latter case, the package is automatically downloaded from the mogul archive 
 .TP
 .SM
 -V \fI<VERSION>\fP  --packageversion=\fI<VERSION>\fP  
 .br 
-
 this option is respected by  \fB--extract\fR  and	 \fB--install\fR .When  \fB--extract\fR  is given a MOGUL id and downloads the corresponding package from the MOGUL archive, it will look precisely for the given	VERSION of the package.  \fB--install\fR 
 will simply check that the package to be installed really has this VERSION. 
 .TP
@@ -223,7 +219,6 @@ will simply check that the package to be installed really has this VERSION.
 .br 
 \fBdefault:\fP \fI<PREFIX>\fP/DATABASE
 .br 
-
 base path of installed packages database. The database is saved in both pickled and textual format respectively in files DB.ozf and DB.txt
 .SS
 Help
@@ -276,7 +271,6 @@ compile with full optimization. this is the default
 .SM
 --(no)gnu  
 .br 
-
 is the C++ compiler the GNU compiler. this is determined automatically and allows a greater optimization level, namely passing  \fB-O3\fR  rather than just  \fB-O\fR  to the compiler 
 .TP
 .SM
@@ -368,13 +362,11 @@ equivalent to  \fB--install --grade=freshen\fR
 .br 
 \fBdefault:\fP false
 .br 
-
 allow installation to overwrite files from other packages 
 .TP
 .SM
 -R  --replace  
 .br 
-
 equivalent to  \fB--install --grade=any --replacefiles\fR 
 .TP
 .SM
@@ -382,13 +374,11 @@ equivalent to  \fB--install --grade=any --replacefiles\fR
 .br 
 \fBdefault:\fP false
 .br 
-
 whether to replace or extend the current installation of this package if any 
 .TP
 .SM
 -X  --extend  
 .br 
-
 equivalent to  \fB--install --grade=any --extendpackage\fR 
 .TP
 .SM
@@ -396,7 +386,6 @@ equivalent to  \fB--install --grade=any --extendpackage\fR
 .br 
 \fBdefault:\fP true
 .br 
-
 save the updated database after installation 
 .TP
 .SM
@@ -425,7 +414,6 @@ whether to install the bin targets
 .br 
 \fBdefault:\fP false
 .br 
-
 whether to remove files left over from a previous installation of this package 
 .TP
 .SM
@@ -433,7 +421,6 @@ whether to remove files left over from a previous installation of this package
 .br 
 \fBdefault:\fP default
 .br 
-
 the convention on Windows is that executables have a .exe,while on Unix they have no extension. The  \fB--exe\fR  option allows you to control the conventions used by ozmake when installing executables.  \fB--exe=default\fR use the platform's convention \fB--exe=yes\fR use a .exe extension \fB--exe=no\fR use no extension \fB--exe=both\fR install all executables with .exe extension and without \fB--exe=multi\fR install executable functors for both Unix and Windows. The Unix versions are installed without extension, and the Windows versions are installed with .exe extension
 .SS
 Uninstall
@@ -463,7 +450,6 @@ Clean
 \fBozmake --veryclean\fR
 .br *~ *.ozf *.o *.so-* *.exe
 .RS
-
 remove files as specified by the makefile's clean and veryclean features.  \fB--veryclean\fR  implies	 \fB--clean\fR . 
 .RE
 
@@ -473,7 +459,6 @@ Create
 \fBozmake --create [--package=\fI<FILE>\fR]\fR
 .br 
 .RS
-
 create a package and save it in FILE.the files needed for the package are automatically computed from the makefile. If  \fB--package=\fI<FILE>\fR\fR  is not supplied, a default is computed using the mogul id (and possibly version number) found in the makefile. 
 .RE
 
@@ -481,7 +466,6 @@ create a package and save it in FILE.the files needed for the package are automa
 .SM
 --include(bins|libs|docs)  --exclude(bins|libs|docs)  
 .br 
-
 control which target types are included in the package 
 .SS
 Publish
@@ -489,7 +473,6 @@ Publish
 \fBozmake --publish\fR
 .br 
 .RS
-
 automatically takes care of all the steps necessary for creating/updating a package contributed by the user and making all necessary data available to the MOGUL librarian. See documentation for  \fB--mogul\fR  below. 
 .RE
 
@@ -499,7 +482,6 @@ Extract
 \fBozmake --extract --package=\fI<PKG>\fR\fR
 .br 
 .RS
-
 extract the files from file or URL PKG.if PKG is a mogul id, then the package is automatically downloaded from the mogul archive 
 .RE
 
@@ -515,7 +497,7 @@ list info for all packages in the installed package database
 \fBozmake --list --package=\fI<MOGUL>\fR\fR
 .br 
 .RS
- list info for the installed package indentified by mogul id MOGUL
+list info for the installed package identified by mogul id MOGUL
 .RE
 
 .TP
@@ -531,7 +513,7 @@ Config
 \fBozmake --config=put \fI<OPTIONS>\fR\fR
 .br 
 .RS
-record the given OPTIONS in ozmake's configuration database, and use them as defaults in subsequent invocations of ozmake unless explicitly overriden on the command line. For example:  \fBozmake --config=put --prefix=/usr/local/oz\fR 
+record the given OPTIONS in ozmake's configuration database, and use them as defaults in subsequent invocations of ozmake unless explicitly overridden on the command line. For example:  \fBozmake --config=put --prefix=/usr/local/oz\fR 
 saves /usr/local/oz as the default value for option  \fB--prefix\fR 
 .RE
 
@@ -557,7 +539,7 @@ Mogul
 .P
 If you choose to contribute packages to the MOGUL archive,
 \fBozmake --mogul=\fI<ACTION>\fR\fR simplifies your task. It makes it easy for you to maintain a database of your contributions and to export them so that the MOGUL librarian may automatically find them. In fact, the simplest way is to use
-\fBozmake --publish\fR which will take take care of all defails for you.
+\fBozmake --publish\fR which will take take care of all details for you.
 
 \fBozmake --mogul=put\fR
 .br 
@@ -604,7 +586,7 @@ write all necessary mogul entries for the user's own mogul contributions. These 
 .RE
 
 .P
-The data for your contributions need to be made available to the MOGUL librarian on the WEB. You want to just update a local directory with your contributions, but, in order for the MOGUL librarian to find them, these directories must also be available through URLs on the WEB. Here are some options that allow you to control this correspondance, and for which you should set default using
+The data for your contributions need to be made available to the MOGUL librarian on the WEB. You want to just update a local directory with your contributions, but, in order for the MOGUL librarian to find them, these directories must also be available through URLs on the WEB. Here are some options that allow you to control this correspondence, and for which you should set default using
 \fBozmake --config=put\fR
 
 .TP
@@ -695,7 +677,7 @@ and implicitly that it should be compiled from the Oz source file
 \fBmogul\fP feature serves to uniquely identify this package and the files it contributes in the \fBozmake\fP database of installed packages.
 
 .P
-There are many more features which can occur in the makefile and they are all optional. If you omit all the features, you only get the defaults and you don't even need a makefile. All values, suchs as
+There are many more features which can occur in the makefile and they are all optional. If you omit all the features, you only get the defaults and you don't even need a makefile. All values, such as
 \fBfiles\fP,should be given as virtual string; atoms are recommended except for features \fBblurb\fP, \fBinfo_text\fP and
 \fBinfo_html\fP,where strings are recommended.
 
@@ -888,7 +870,7 @@ During development, it is often convenient to be able to easily remove all junk 
 \fIglob\fP
 patterns where \fB?\fR matches any 1 character and \fB*\fR
 matches a sequence of 0 or more characters. All files in
-BUILDDIR matching one such pattern is removed. There are built-in patterns, but ou can override them with features
+BUILDDIR matching one such pattern is removed. There are built-in patterns, but you can override them with features
 \fBclean\fP and \fBveryclean\fP which should be lists of glob patterns. For example the default clean glob patterns are:
 
         clean : [ "*~" "*.ozf" "*.o" "*.so-*" "*.exe" ]
@@ -913,7 +895,7 @@ states that all \fBlib\fP targets (e.g. \fIFoo.ozf\fR)will be installed under th
 mogul
 
 .P
-feature \fBmogul\fP is the mogul id uniquely identifying this package. It is used to identify the package in the database of installed packages, to create/publish the package, and to install its documention files.
+feature \fBmogul\fP is the mogul id uniquely identifying this package. It is used to identify the package in the database of installed packages, to create/publish the package, and to install its documentation files.
 
 .B
 author
@@ -937,7 +919,7 @@ feature \fBreleased\fP is a virtual string specifying the date and time of relea
         released : "YYYY-MM-DD-HH:MM:SS"
 
 .P
-time is optional. An appropriate release date using the currentdate and time is automatically inserted when invoking
+time is optional. An appropriate release date using the current date and time is automatically inserted when invoking
 \fBozmake --create\fR or \fBozmake --publish\fR..
 
 .B
@@ -964,7 +946,7 @@ src
 .P
 feature \fBsrc\fP indicates which targets should be considered source, i.e. in particular non-buildable. All targets mentioned in
 \fBsrc\fP should be mentioned in \fBbin\fP, \fBlib\fP,or
-\fBdoc\fP too. The point of \fBsrc\fP is to support distributing packages with pre-built targets and without giving out the corresponding sources. You should not do this with native functors since they are platform dependent and not portable, but it can be a convenient means of distributing prebuilt Oz libraries. For example:
+\fBdoc\fP too. The point of \fBsrc\fP is to support distributing packages with pre-built targets and without giving out the corresponding sources. You should not do this with native functors since they are platform dependent and not portable, but it can be a convenient means of distributing pre-built Oz libraries. For example:
 
         makefile(
           lib : [ 'Foo.ozf' ]
@@ -973,7 +955,7 @@ feature \fBsrc\fP indicates which targets should be considered source, i.e. in p
           mogul : 'mogul:/myname/foolib')
 
 .P
-is a makefile for a package that distribute the precompiled
+is a makefile for a package that distribute the pre-compiled
 \fIFoo.ozf\fR,but does not also distribute its source
 \fIFoo.oz\fR.Normally, when you build a package it simply checks that the \fBsrc\fP files are present but will not attempt to build them. If you have the sources, you can force building the
 \fBsrc\fP targets if necessary using \fB--fullbuild\fR..
@@ -983,7 +965,7 @@ subdirs
 
 .P
 feature \fBsubdirs\fP is a list of bare filenames representing subdirectories of the project. By default, when necessary,
-\fBozmake\fP will recurse into these subdirectories. It is expected that each subdirectory should provide its own makefile. The mogul id is automatically inherited to subdirectories and the uri is automatically extended by appending the name of the subdirectory: thus submakefiles can be simpler since they don't need to be concerned with package-level features.
+\fBozmake\fP will recurse into these subdirectories. It is expected that each subdirectory should provide its own makefile. The mogul id is automatically inherited to subdirectories and the uri is automatically extended by appending the name of the subdirectory: thus sub-makefiles can be simpler since they don't need to be concerned with package-level features.
 
 .B
 requires
@@ -1009,7 +991,7 @@ provides
 
 .P
 feature \fBprovides\fP is used to override the default information about what the package provides, normally automatically computed from the \fBbin\fP and \fBlib\fP targets: it should be a list which contains a subset of these targets. The
-\fBprovides\fP feature of a makefile does not override or otherwise affect its submakefiles: each makefile should separately override if it so desires. To state that a makefile does not officially provide any functors or executable application, you would add:
+\fBprovides\fP feature of a makefile does not override or otherwise affect its sub-makefiles: each makefile should separately override if it so desires. To state that a makefile does not officially provide any functors or executable application, you would add:
 
 provides : nil
 
