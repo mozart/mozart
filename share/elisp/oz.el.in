@@ -88,7 +88,7 @@
 	   (cdr (assoc 'name (frame-parameters (car (visible-frame-list))))))
 	  (oz-lucid-emacs
 	   frame-title-format))
-    "Saved Emacs window title."))
+    "Saved Emacs frame title."))
 
 ;;}}}
 ;;{{{ Customization
@@ -185,12 +185,12 @@ and that no command will be bound to C-c followed by a letter."
 	   :type 'boolean
 	   :group 'oz)))
 (put 'oz-change-title 'variable-interactive
-     "XChange frame title when Oz is running? (t or nil): ")
+     "XChange frame title while Oz is running? (t or nil): ")
 
 (eval-and-compile
   (eval '(defcustom oz-frame-title
 	   (concat "Oz Programming Interface (" oz-old-frame-title ")")
-	   "*String to be used as Emacs window title while Oz is running."
+	   "*String to be used as Emacs frame title while Oz is running."
 	   :type 'string
 	   :group 'oz)))
 (put 'oz-frame-title 'variable-interactive
@@ -198,7 +198,7 @@ and that no command will be bound to C-c followed by a letter."
 
 (eval-and-compile
   (eval '(defcustom oz-prepend-line t
-	   "*Whether to prepend a \\line directive to all Oz queries."
+	   "*If non-nil, prepend a \\line directive to all Oz queries."
 	   :type 'boolean
 	   :group 'oz)))
 (put 'oz-prepend-line 'variable-interactive
@@ -250,7 +250,7 @@ run the emulator when you issue the command `run' to gdb."
 
 (eval-and-compile
   (eval '(defcustom oz-other-buffer-size 35
-	   "*Percentage of screen to use for Oz Compiler and Emulator windows."
+	   "*Percentage of screen to use for Oz Compiler/Emulator/Temp window."
 	   :type 'integer
 	   :group 'oz)))
 (put 'oz-other-buffer-size 'variable-interactive
@@ -270,7 +270,7 @@ run the emulator when you issue the command `run' to gdb."
 	   :type 'integer
 	   :group 'oz)))
 (put 'oz-halt-timeout 'variable-interactive
-     "nNumer of seconds to wait for shutdown of the Oz system: ")
+     "nNumber of seconds to wait for shutdown of the Mozart sub-process: ")
 
 ;;}}}
 ;;{{{ win32 Support
@@ -374,7 +374,7 @@ All strings matching this regular expression are removed.")
 ;;{{{ Setting the Frame Title
 
 (defun oz-set-title (frame-title)
-  "Set the title of the Emacs window."
+  "Set the title of the Emacs frame."
   (cond ((not oz-change-title) t)
 	(oz-gnu-emacs
 	 (mapcar (function (lambda (scr)
@@ -688,9 +688,8 @@ With ARG, stop it instead."
 ;;{{{ Start/Stop Oz
 
 (defun run-oz ()
-  "Start the Oz System.
-Handle input and output via the buffers whose names are found in
-variables `oz-compiler-buffer' and `oz-emulator-buffer'."
+  "Start Mozart as a sub-process.
+Handle input and output via the Oz Emulator buffer."
   (interactive)
   (save-excursion
     (oz-check-running t))
@@ -700,7 +699,7 @@ variables `oz-compiler-buffer' and `oz-emulator-buffer'."
       (oz-new-buffer)))
 
 (defun oz-halt (force)
-  "Halt Oz System.
+  "Halt the Mozart sub-process.
 If FORCE is nil, send the `{System.exit 0}' statement and wait for the process
 to terminate.  Waiting time is limited by variable `oz-halt-timeout';
 after this delay, the process is simply killed if still living.
@@ -2546,23 +2545,23 @@ The ARG is interpreted just as with \\[recenter]."
     (erase-buffer)))
 
 (defun oz-toggle-compiler ()
-  "Toggle Oz Compiler window.
-If the compiler window is not visible, then show it.
-If it is, then remove it."
+  "Toggle visibility of the Oz Compiler window.
+If the compiler buffer is not visible in any window, then display it.
+If it is, then delete the corresponding window."
   (interactive)
   (oz-toggle-window oz-compiler-buffer))
 
 (defun oz-toggle-emulator ()
-  "Toggle Oz Emulator window.
-If the emulator window is not visible, then show it.
-If it is, then remove it."
+  "Toggle visibility of the Oz Emulator window.
+If the emulator buffer is not visible in any window, then display it.
+If it is, then delete the corresponding window."
   (interactive)
   (oz-toggle-window oz-emulator-buffer))
 
 (defun oz-toggle-temp ()
-  "Toggle Oz Temp window.
-If the temp window is not visible, then show it.
-If it is, then remove it."
+  "Toggle visibility of the Oz Temp window.
+If the temporary buffer is not visible in any window, then show it.
+If it is, then delete the corresponding window."
   (interactive)
   (oz-toggle-window oz-temp-buffer))
 
