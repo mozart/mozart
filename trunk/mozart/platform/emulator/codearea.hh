@@ -293,7 +293,9 @@ public:
   void writeOpcode(Opcode oc)            { CheckWPtr; wPtr=writeOpcode(oc,wPtr); }
   void writeSRecordArity(SRecordArity ar){ CheckWPtr; wPtr=writeSRecordArity(ar,wPtr); }
   void writeAddress(void *ptr)           { CheckWPtr; wPtr=writeWord(ptr,wPtr); }
+  void writeReg(int i)                   { CheckWPtr; wPtr=writeRegIndex(i,wPtr); }
   void writeLabel(int lbl)         { CheckWPtr; wPtr=writeLabel(lbl,codeBlock,wPtr,OK); }
+
 };
 
 
