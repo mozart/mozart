@@ -143,6 +143,8 @@ ozmake --config=put --archive=http://www.mozart-oz.org/mogul/pkg/1.2.5/source
       has been fixed.  The compiler bug that was responsible was fixed and a workaround
       was also added to ozmake in case someone compiles it with a compiler that still
       has the bug.
+      <p>syntax errors discovered while scanning functors for automatically extracting
+      dependencies are now reported nicely
     </section>
 
     <section id="section.m131.changes">
@@ -165,6 +167,12 @@ ozmake --config=put --archive=http://www.mozart-oz.org/mogul/pkg/1.2.5/source
       must be empty before it is removed.
       <p>Extended <code proglang=oz/OS.stat/ to also return <code proglang=oz/ino/ and
       <code proglang=oz/dev/ for inode and device information.
+
+      <subsection><title/Standard Library/
+      <p>The standard library was improved and extended, and documentation was
+      added for all modules.  The library currently has sections for abstract
+      datatypes, networking support, operating system support, GUI programming
+      and XML support.
 
     </section>
 
