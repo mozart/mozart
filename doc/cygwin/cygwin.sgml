@@ -168,7 +168,9 @@
 	to="ftp://ftp.mozart-oz.org/pub/mozart/extras/packages.tgz"><File
 	>ftp://ftp.mozart-oz.org/pub/mozart/extras/packages.tgz</File
 	></Ref.Extern> and skip most of the following sections (in fact,
-	all but those about the msvcrt and Emacs).
+	all but those about the msvcrt and Emacs).  Be sure to adapt
+	the included <File/tclConfig.sh/ and <File/tkConfig.sh/ files
+	to reflect your system's paths!
       <Section>
 	<Title/Microsoft Visual C++ Runtime/
 	<P>
@@ -217,9 +219,9 @@ make install>>>
 	  the following files and directories from the installed location:
 	  <Table>
 	    <TR><TD>?{packages}<File>/include/tcl.h</File>
-	    <TR><TD>?{packages}<File>/include/tclDefs.h</File>
+	    <TR><TD>?{packages}<File>/include/tclDecls.h</File>
 	    <TR><TD>?{packages}<File>/include/tk.h</File>
-	    <TR><TD>?{packages}<File>/include/tkDefs.h</File>
+	    <TR><TD>?{packages}<File>/include/tkDecls.h</File>
 	    <TR><TD>?{packages}<File>/include/X11/*</File>
 	    <TR><TD>?{packages}<File>/lib/tk8.3/*</File>
 	    <TR><TD>?{packages}<File>/lib/tcl8.3/*</File>
