@@ -34,7 +34,6 @@
 #include "board.hh"
 #include "thr_int.hh"
 #include "prop_int.hh"
-#include "space.hh"
 #include "builtins.hh"
 #include "value.hh"
 #include "var_base.hh"
@@ -50,7 +49,7 @@
  *
  */
 
-Bool Board::_isInstalling = NO;
+Bool Board::_ignoreWakeUp = NO;
 
 /*
  * Generic operations
@@ -60,7 +59,8 @@ Bool Board::_isInstalling = NO;
 Board::Board() 
   : suspCount(0), bag(0),
     threads(0), suspList(0), nonMonoSuspList(0),
-    status(taggedVoidValue), rootVar(taggedVoidValue)
+    status(taggedVoidValue), rootVar(taggedVoidValue),
+    script(taggedVoidValue)
 {
   parentAndFlags.set((void *) 0, (int) BoTag_Root);
   lpq.init();
@@ -69,7 +69,8 @@ Board::Board()
 
 Board::Board(Board * p) 
   : suspCount(0), bag(0),
-    threads(0), suspList(0), nonMonoSuspList(0)
+    threads(0), suspList(0), nonMonoSuspList(0),
+    script(taggedVoidValue)
 {
   Assert(!p->isCommitted());
   status  = oz_newFuture(p);
@@ -362,6 +363,8 @@ void Board::checkStability(void) {
 
   Assert(!isFailed() && !isCommitted());
 
+  Assert(this == oz_currentBoard());
+
   Board * pb = getParent();
 
   if (decThreads() != 0) {
@@ -391,7 +394,7 @@ void Board::checkStability(void) {
       } else {
 	// don't decrement counter of parent board!
 	am.trail.popMark();
-	am.setCurrent(getParent());
+	am.setCurrent(pb);
       
 	bindStatus(genAlt(n));
 
@@ -402,28 +405,32 @@ void Board::checkStability(void) {
     
     // succeeded
     am.trail.popMark();
-    am.setCurrent(getParent());
+    am.setCurrent(pb);
     
     bindStatus(genSucceeded(getSuspCount() == 0));
 
     goto exit;
   }
 
-  if (getThreads() == 0) {
-    // There are some external suspensions: blocked
+  {
+    int t = getThreads();
 
-    oz_deinstallCurrent();
+    setScript(am.trail.unwind(this));
+    am.setCurrent(pb);
+  
+    if (t == 0) {
+      // There are some external suspensions: blocked
 
-    TaggedRef newVar = oz_newFuture(oz_currentBoard());
+      TaggedRef newVar = oz_newFuture(pb);
+      
+      bindStatus(genBlocked(newVar));
+      
+      setStatus(newVar);
 
-    bindStatus(genBlocked(newVar));
+    }
 
-    setStatus(newVar);
-
-    goto exit;
   }
 
-  oz_deinstallCurrent();
 
  exit:
   
@@ -453,4 +460,190 @@ void Board::fail(Thread * ct) {
   
 }
 
+/*
+ * Script installation
+ *
+ */
+
+OZ_Return Board::installScript(Bool isMerging) {
+
+  OZ_Return ret = PROCEED;
+
+  TaggedRef xys = oz_deref(script);
+
+  setScript(oz_nil());
+  
+  while (oz_isCons(xys)) {
+    TaggedRef xy = oz_deref(oz_head(xys));
+    Assert(oz_isCons(xy));
+    TaggedRef x = oz_head(xy);
+    TaggedRef y = oz_tail(xy);
+
+    xys = oz_deref(oz_tail(xys));
+    
+    if (!isMerging) {
+      /*
+       * This is very important! Normally it is okay to not
+       * wake during installation, since all wakeups will
+       * happen anyway and otherwise no termination is achieved.
+       *
+       * However, if there is the possibility that a new speculative
+       * is realized (e.g. <f(X),f(a)> with X global is in the script)
+       * we _have_ to wake: that's okay, because the next time the
+       * script will be simplified!
+       *
+       */
+      if (!oz_isVariable(oz_deref(x)) && !oz_isVariable(oz_deref(y)))
+	Board::ignoreWakeUp(NO);
+      else
+	Board::ignoreWakeUp(OK);
+    }
+
+    int res = oz_unify(x, y);
+
+    Board::ignoreWakeUp(NO);
+
+    if (res == PROCEED)
+      continue;
+
+    if (res == FAILED) {
+      ret = FAILED;
+      if (!oz_onToplevel()) {
+	break;
+      }
+    } else {
+      // mm2: instead of failing, this should corrupt the space
+      (void) am.emptySuspendVarList();
+      ret = FAILED;
+      if (!oz_onToplevel()) {
+	break;
+      }
+    }
+  }
+
+  return ret;
+}
+
+
+
+
+/*
+ *
+ *  Install every board from the currentBoard to 'n'
+ * and move cursor to 'n'
+ *
+ *  Algorithm:
+ *   find common parent board of 'to' and 'currentBoard'
+ *   deinstall until common parent (go upward)
+ *   install (go downward)
+ *
+ *  Pre-conditions:
+ *  - 'to' ist not deref'd;
+ *  - 'to' may be committed, failed or discarded;
+ *
+ *  Return values and post-conditions:
+ *  - INST_OK:
+ *      installation successful, currentBoard == 'to';
+ *  - INST_FAILED:
+ *      installation of *some* board on the "down" path has failed,
+ *      'am.currentBoard' points to that board;
+ *  - INST_REJECTED:
+ *      *some* board on the "down" path is already failed or discarded,
+ *      'am.currentBoard' stays unchanged;
+ *
+ */
+
+
+Board * Board::installDown(Board * frm) {
+
+  if (frm == this)
+    return frm;
+
+  Board * r = getParent()->installDown(frm);
+
+  if (r != frm)
+    return r;
+
+  am.setCurrent(this);
+  am.trail.pushMark();
+
+  DEBUG_CONSTRAIN_CVAR(("\n==== Start installDown %p ====", this));
+
+  OZ_Return ret = installScript(NO);
+
+  DEBUG_CONSTRAIN_CVAR(("\n==== Stop installDown ===="));
+
+  if (ret != PROCEED) {
+    Assert(ret==FAILED);
+    return this;
+  }
+
+  return r;
+
+}
+
+
+Bool Board::install(void) {
+  // Tries to install "this".
+  // If installation of a script fails, NO is returned and
+  // the highest space for which installation is possible gets installed.
+  // Otherwise, OK is returned.
+
+  Board * frm = oz_currentBoard();
+
+  Assert(!frm->isCommitted() && !this->isCommitted());
+
+  if (frm == this)
+    return OK;
+
+  Assert(isAlive());
+
+  // Step 1: Mark all spaces including root as installed
+  {
+    Board * s;
+
+    for (s = frm; !s->isRoot(); s=s->getParent()) {
+      Assert(!s->hasMarkOne());
+      s->setMarkOne();
+    }
+    Assert(!s->hasMarkOne());
+    s->setMarkOne();
+  }
+
+  // Step 2: Find ancestor
+  Board * ancestor = this;
+
+  while (!ancestor->hasMarkOne())
+    ancestor = ancestor->getParent();
+
+  // Step 3: Deinstall from "frm" to "ancestor", also purge marks
+  {
+    Board * s = frm;
+
+    while (s != ancestor) {
+      Assert(s->hasMarkOne());
+      s->unsetMarkOne();
+      s->setScript(am.trail.unwind(s));
+      s=s->getParent();
+      am.setCurrent(s);
+    }
+
+    am.setCurrent(ancestor);
+
+    // Purge remaining marks
+    for ( ; !s->isRoot() ; s=s->getParent()) {
+      Assert(s->hasMarkOne());
+      s->unsetMarkOne();
+    }
+    Assert(s->hasMarkOne());
+    s->unsetMarkOne();
+
+  }
+
+  // Step 4: Install from "ancestor" to "this"
+
+  Bool ret = installDown(ancestor) == ancestor;
+
+  return ret;
+}
 

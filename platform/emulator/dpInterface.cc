@@ -31,7 +31,6 @@
 #include "dpInterface.hh"
 #include "value.hh"
 #include "os.hh"
-#include "space.hh"
 
 //
 Bool isPerdioInitializedStub()

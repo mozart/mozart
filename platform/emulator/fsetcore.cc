@@ -26,7 +26,6 @@
  */
 
 #include "builtins.hh"
-#include "space.hh"
 #include "cpi.hh"
 #include "var_fs.hh"
 

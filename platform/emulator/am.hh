@@ -290,22 +290,6 @@ public:
   void unsetProfileMode() { _profileMode=FALSE; }
   Bool profileMode()      { return _profileMode; }
 
-#ifdef DEBUG_CHECK
-private:
-  Bool merging;  // ask TM
-public:
-  void setMerging()   { merging=TRUE; }
-  void unsetMerging() { merging=FALSE; }
-  Bool isMerging(void) {return merging;}
-#endif
-
-private:
-  Bool installingScript;  // ask TM
-public:
-  void setInstallingScript()   { installingScript=TRUE; }
-  void unsetInstallingScript() { installingScript=FALSE; }
-  Bool isInstallingScript(void) {return installingScript;}
-
 public:
   ThreadsPool threadsPool;
   Trail trail;

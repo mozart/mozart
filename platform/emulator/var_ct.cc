@@ -55,7 +55,6 @@ OZ_Return OzCtVariable::bind(OZ_Term * vptr, OZ_Term term)
     return FAILED;
   }
   Bool isLocalVar = oz_isLocalVar(this);
-  Bool isNotInstallingScript = !am.isInstallingScript();
   //
   propagateUnify();
   //

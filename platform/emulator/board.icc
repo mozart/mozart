@@ -42,8 +42,6 @@
 #include "am.hh"
 #include "var_base.hh"
 
-OZ_Return oz_installScript(Script &script);
-
 #ifdef OUTLINE
 #define inline
 #endif
@@ -302,15 +300,7 @@ OZ_Return Board::merge(Board *bb, Bool sibling) {
   // Merge constraints
   DEBUG_CONSTRAIN_CVAR(("\n==== Start Merging ===="));
 
-#ifdef DEBUG_CHECK
-  am.setMerging();
-#endif
-
-  OZ_Return ret = oz_installScript(this->getScript());
-
-#ifdef DEBUG_CHECK
-  am.unsetMerging();
-#endif
+  OZ_Return ret = installScript(OK);
 
   DEBUG_CONSTRAIN_CVAR(("\n==== Stop Merging ===="));
 
