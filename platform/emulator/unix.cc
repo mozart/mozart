@@ -1731,6 +1731,13 @@ static OZ_Term make_time(const struct tm* tim)
   return OZ_recordInit(OZ_atom("time"),l2);
 }
 
+OZ_C_ioproc_begin(unix_time, 1)
+{
+  OZ_Term out = OZ_getCArg(0);
+  return OZ_unify(out, OZ_int(time(0)));
+}
+OZ_C_proc_end
+
 OZ_C_ioproc_begin(unix_gmTime, 1)
 {
   OZ_Term out = OZ_getCArg(0);
@@ -1848,6 +1855,7 @@ OZ_BIspec spec[] = {
   {"Unix.system",2,unix_system},
   {"Unix.getEnv",2,unix_getEnv},
   {"Unix.putEnv",2,unix_putEnv},
+  {"Unix.time",1,unix_time},
   {"Unix.gmTime",1,unix_gmTime},
   {"Unix.localTime",1,unix_localTime},
   {"Unix.srand",1,unix_srand},
