@@ -5,28 +5,6 @@
  * ozmkmf -DINCS='-I/opt/gnu/include' -DLIBS='/opt/gnu/lib/libgdbm.a -lc'
  */
 
-#ifdef SOLARIS
-DYNLD = ld -G -lsocket -lnsl -lintl -o
-#endif
-#ifdef SUNOS_SPARC
-DYNLD = ld -o
-#endif
-#ifdef IRIX5_MIPS
-DYNLD = ld -shared -check_registry /dev/null -o
-#endif
-#ifdef OSF1_ALPHA
-DYNLD = ld -shared -expect_unresolved \* -o
-#endif
-#ifdef HPUX_700
-DYNLD = ld -b -o
-#endif
-#ifdef LINUX
-DYNLD = ld -shared -o
-#endif
-#if defined(FREEBSD) || defined(NETBSD)
-DYNLD = ld -Bshareable -o
-#endif
-
 #if defined(PS) && defined(SOLARIS)
 #ifndef INCS
 #define INCS -I/opt/gnu/include
@@ -55,8 +33,11 @@ LIBRARIES = LIBS
 
 all:: gdbm.dl gdbm.ozc
 
-install:: $(GDBM_LIBHOME)/gdbm.dl \
-          $(GDBM_HOME)/gdbm.ozc
+install:: install.dl install.ozc
+
+install.dl: $(GDBM_LIBHOME)/gdbm.dl
+
+install.ozc: $(GDBM_HOME)/gdbm.ozc
 
 clean::
         $(RM) *~ *.bak gdbm.o gdbm.dl ozrc.oz save.oz halt.oz gdbm.ozc
