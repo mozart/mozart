@@ -132,7 +132,9 @@ private:
 public:
   WaitActor(Board *s,int prio,int compMode,
             ProgramCounter p,RefsArray y,RefsArray g,RefsArray x,int i);
-  WaitActor (WaitActor *wa);  // without childs;
+  WaitActor(WaitActor *wa);  // without children;
+
+  USEFREELISTMEMORY;
 
   void gcRecurse();
 
@@ -148,6 +150,9 @@ public:
   Bool hasOneChild() { return ((childCount == 1 && !hasNext()) ? OK : NO); }
   Bool hasNoChilds() { return ((childCount == 0 && !hasNext()) ? OK : NO); }
   int selectChildren(int l, int r);
+
+  void dispose(void);
+
 };
 
 // ------------------------------------------------------------------------

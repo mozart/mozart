@@ -53,6 +53,7 @@ private:
 public:
   SolveActor (Board *bb, int prio, int compMode,
               TaggedRef resTR, TaggedRef guiTR=0);
+
   void setSolveBoard(Board *bb);
   Board *getSolveBoard() { return solveBoard; }
 
