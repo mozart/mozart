@@ -7,5 +7,5 @@ Oz/elisp	mail -s "I have changed %s" scheidhr
 Oz/papers	mail -s "I have changed %s" scheidhr
 Oz/graphic/oz	mail -s "I have changed %s" wuertz,zenner
 GNU	/usr/share/gs/etc/cvs2news %s
-Hydra	/usr/share/news/bin/inews -d hydra -n dfki.hydra.cvs -t "I have changed %s" -S
-Oz	/usr/share/news/bin/inews -d hydra -n dfki.hydra.cvs -t "I have changed  %s" -S
+#Hydra	/usr/share/news/bin/inews -d hydra -n dfki.hydra.cvs -t "I have changed %s" -S
+#Oz	/usr/share/news/bin/inews -d hydra -n dfki.hydra.cvs -t "I have changed  %s" -S
