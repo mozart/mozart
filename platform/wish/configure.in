@@ -43,9 +43,7 @@ case "$target" in
         SRCS="ozMain.c ozAppInit.c"
    ;;
    i386-mingw32)
-        AC_MSG_RESULT(cross compiling for windows)
-        EXTRALDFLAGS="-mwindows -s"
-        SRCS="winMain.c"
+        platform=win32-i486
    ;;
 
    *)
@@ -71,6 +69,20 @@ OZ_PATH_PROG(PLATFORMSCRIPT, ozplatform)
 
 : ${platform=`$PLATFORMSCRIPT`}
 AC_SUBST(platform)
+
+case "$platform" in
+   win32-i486)
+        OZ_CXX_OPTIONS(-mno-cygwin,oz_a)
+        LDFLAGS="$oz_a $LDFLAGS"
+        CPPFLAGS="$oz_a $CPPFLAGS"
+        EXTRALDFLAGS="-mwindows -s"
+        SRCS="winMain.c"
+   ;;
+
+   *)
+        SRCS="ozMain.c ozAppInit.c"
+    ;;
+esac
 
 
 AC_MSG_CHECKING(checking for S.u.S.E. Linux)
@@ -158,7 +170,7 @@ fi
 oz_inc_path="$oz_x11_inc_dir $oz_inc_path $oz_x11_inc_path_extra"
 oz_lib_path="$oz_x11_lib_dir $oz_lib_path $oz_x11_lib_path_extra"
 
-if test "$target" != i386-mingw32
+if test "$platform" != win32-i486
 then
     OZ_CHECK_HEADER_PATH(X11/Xlib.h,,
             AC_MSG_ERROR(required X include files not found))
