@@ -1,6 +1,6 @@
 .SUFFIXES: .el .elc
 
-ELS  = oz.el ozstartup.el
+ELS  = oz.el
 ELCS = $(ELS:.el=.elc)
 ELISPDIR = $(OZHOME)/lib/elisp
 all:: help
