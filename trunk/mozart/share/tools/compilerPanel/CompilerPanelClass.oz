@@ -609,7 +609,7 @@ in
       attr
 	 ErrorTagCounter: 0
 	 ColoringIsEnabled
-	 LastFeededVS LastURL EnvSelection ActionCount ValueDict TagDict
+	 LastFeededVS LastURL EnvSelection ActionCount CachedEnv TagDict
 	 QueryIdsHd QueryIdsTl
       feat
 	 isClosed
@@ -712,7 +712,7 @@ in
 		     {self.MaxNumberOfErrors tkSet(N)}
 		  end
 	       [] env(Env) then
-		  ValueDict <- Env
+		  CachedEnv <- Env
 		  CompilerPanel, RedisplayEnv()
 	       [] info(VS) then
 		  CompilerPanel, ShowInfo(VS)
@@ -1341,7 +1341,7 @@ in
 			RunWithDebuggerSw DebugInfoControlSw
 			DebugInfoVarnamesSw]
 	 self.InterruptMenuItem = Menu.compiler.interrupt
-	 ValueDict <- {NewDictionary}
+	 CachedEnv <- env()
 	 TagDict <- {NewDictionary}
 	 local X in
 	    QueryIdsHd <- X
@@ -1433,13 +1433,12 @@ in
       in
 	 Fraction = {self.EnvDisplay tkReturnList(yview $)}.1
 	 case {self.SystemVariables tkReturnInt($)} == 1 then
-	    PrintNames = {Sort {Dictionary.keys @ValueDict} Value.'<'}
+	    PrintNames = {Arity @CachedEnv}
 	 else
-	    PrintNames = {Sort
-			  {Filter {Dictionary.keys @ValueDict}
-			   fun {$ PrintName}
-			      {Atom.toString PrintName}.1 \= &`
-			   end} Value.'<'}
+	    PrintNames = {Filter {Arity @CachedEnv}
+			  fun {$ PrintName}
+			     {Atom.toString PrintName}.1 \= &`
+			  end}
 	 end
 	 Count = {Length PrintNames}
 	 {self.NColsInEnv tkReturnInt(?NCols)}
@@ -1492,8 +1491,8 @@ in
 	     o(self.EnvDisplay tag bind q(PrintName) '<1>' Action1)|
 	     o(self.EnvDisplay tag bind q(PrintName) '<Double-1>' Action2)|
 	     case @ColoringIsEnabled then
-		{SetColor self.EnvDisplay PrintName
-		 {Dictionary.get @ValueDict PrintName} self.ColorDict}|Tickles
+		{SetColor self.EnvDisplay PrintName @CachedEnv.PrintName
+		 self.ColorDict}|Tickles
 	     else Tickles
 	     end
 	     {Dictionary.put @TagDict PrintName Ind1#Ind2#Action1#Action2}
@@ -1501,7 +1500,7 @@ in
 	     else 1#(C + NCharsInCol + 1)#NewTickles
 	     end
 	  end 1#0#(o(self.EnvDisplay configure state: disabled)|
-		   case {Dictionary.member @ValueDict @EnvSelection} then
+		   case {HasFeature @CachedEnv @EnvSelection} then
 		      case Tk.isColor then
 			 [o(self.EnvDisplay tag configure q(@EnvSelection)
 			    background: wheat)
@@ -1532,17 +1531,18 @@ in
 	 {ForAll Colors proc {$ T#C} {Dictionary.put self.ColorDict T C} end}
 	 ColoringIsEnabled <- IsEnabled
 	 {Tk.batch
-	  {Map {Dictionary.entries @ValueDict}
-	   case IsEnabled then
+	  case IsEnabled then
+	     {Map {Record.toListInd @CachedEnv}
 	      fun {$ PrintName#Value}
 		 {SetColor self.EnvDisplay PrintName Value self.ColorDict}
-	      end
-	   else
-	      fun {$ PrintName#_}
+	      end}
+	  else
+	     {Map {Arity @CachedEnv}
+	      fun {$ PrintName}
 		 o(self.EnvDisplay tag configure q(PrintName)
 		   foreground: black)
-	      end
-	   end}}
+	      end}
+	  end}
       end
       meth SelectEnv(PrintName)
 	 case @EnvSelection of '' then skip
@@ -1554,8 +1554,8 @@ in
 	     o(self.EnvDisplay tag bind q(PrintName) '<1>' Action1)|
 	     o(self.EnvDisplay tag bind q(PrintName) '<Double-1>' Action2)|
 	     case @ColoringIsEnabled then
-		[{SetColor self.EnvDisplay PrintName
-		  {Dictionary.get @ValueDict PrintName} self.ColorDict}]
+		[{SetColor self.EnvDisplay PrintName @CachedEnv.PrintName
+		  self.ColorDict}]
 	     else nil
 	     end}
 	 end
@@ -1572,13 +1572,12 @@ in
       meth ExecuteEnv(PrintName)
 	 case {self.ActionVariable tkReturnInt($)} of 0 then skip
 	 elseof N then
-	    {{Dictionary.get self.ActionDict N}
-	     {Dictionary.get @ValueDict PrintName}}
+	    {{Dictionary.get self.ActionDict N} @CachedEnv.PrintName}
 	 end
       end
       meth RemoveVariable() PrintName in
 	 {self.EditedVariable tkReturnAtom(get ?PrintName)}
-	 case {Dictionary.member @ValueDict PrintName} then
+	 case {HasFeature @CachedEnv PrintName} then
 	    %--** the above is an insufficient test, but workable for now
 	    Compiler.genericInterface, enqueue(removeFromEnv(PrintName))
 	 else
@@ -1614,8 +1613,8 @@ in
       end
       meth SaveVariable() PrintName in
 	 {self.EditedVariable tkReturnAtom(get ?PrintName)}
-	 case {Dictionary.member @ValueDict PrintName} then Value in
-	    Value = {Dictionary.get @ValueDict PrintName}
+	 case {HasFeature @CachedEnv PrintName} then Value in
+	    Value = @CachedEnv.PrintName
 	    {Send Compiler.genericInterface, getPort($) DoSaveVariable(Value)}
 	 else
 	    {New TkTools.error
