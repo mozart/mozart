@@ -24,7 +24,7 @@ local
    local
       fun {DoTreeRemoveAndNext Xs F N}
 	 case Xs of nil then nil
-	 [] X|Xr then case {F X} then
+	 [] X|Xr then if {F X} then
 			 X | {DoTreeRemoveAndNext Xr F N}
 		      else
 			 N = Xr
@@ -36,8 +36,8 @@ local
       fun {TreeRemoveAndNext Xs F}
 	 N R in
 	 {DoTreeRemoveAndNext {Reverse Xs} F N R}
-	 case N == nil then
-	    case R == nil then nil # nil else {Reverse R} # {Reverse R}.1 end
+	 if N == nil then
+	    if R == nil then nil # nil else {Reverse R} # {Reverse R}.1 end
 	 else {Reverse R} # N.1 end
       end
    end
@@ -127,7 +127,7 @@ local
 	  proc {$ N}
 	     Q = {N get($)}.q
 	  in
-	     case {Dictionary.member self.ThreadDic Q} then
+	     if {Dictionary.member self.ThreadDic Q} then
 		{N setRoot(false)}
 	     else
 		{N setRoot(true)}
@@ -167,8 +167,8 @@ local
 		   fun{$ N}
 		      D = {N get($)}
 		   in
-		      case D.i == 1 then %% whoops, debugging OPI compiler...
-			 case @GotCompilerNode then false else
+		      if D.i == 1 then %% whoops, debugging OPI compiler...
+			 if @GotCompilerNode then false else
 			    GotCompilerNode <- true
 			    true
 			 end
@@ -181,7 +181,7 @@ local
       meth DoCalculatePositions(Q X)
 	 NG = BaseTree,Nodegroup(Q $)
       in
-	 case NG == nil then /* leaf node */ skip else
+	 if NG == nil then /* leaf node */ skip else
 	    Wold = {WC get($)}
 	 in
 	    {ForAll NG
@@ -227,7 +227,7 @@ in
 	 CalcSync <- New = unit
 	 thread
 	    {WaitOr New {Alarm TimeoutToUpdate*3}}
-	    case {IsDet New} then skip else
+	    if {IsDet New} then skip else
 	       lock
 		  BaseTree,calculatePositions
 		  Tree,display(I)
@@ -242,7 +242,7 @@ in
 	 BaseTree,reorg(I)
 	 nodes <- R
 	 Tree,syncCalc
-	 Next = case N == nil then 0 else {N get($)}.i end
+	 Next = if N == nil then 0 else {N get($)}.i end
       end
 
       meth selectPrevious
@@ -255,7 +255,7 @@ in
 		end
 	 New = {Dictionary.get self.ytoNodeDic NewY}
       in
-	 case New == Old then skip else
+	 if New \= Old then
 	    Tree,SwitchToThread({New get($)}.i)
 	 end
       end
@@ -270,7 +270,7 @@ in
 		end
 	 New = {Dictionary.get self.ytoNodeDic NewY}
       in
-	 case New == Old then skip else
+	 if New \= Old then
 	    Tree,SwitchToThread({New get($)}.i)
 	 end
       end
@@ -303,20 +303,20 @@ in
       end
 
       meth select(I)
-	 case I == 0 then
+	 if I == 0 then
 	    LastSelected <- unit
 	    Selected     <- unit
 	 else
 	    CT OldCT OldI
 	    N = {List.filter @nodes fun {$ X} {X get($)}.i == I end}
 	 in
-	    case N \= nil then
+	    if N \= nil then
 	       LastSelected <- @Selected
 	       Selected <- N.1
-	       case @LastSelected \= unit then
+	       if @LastSelected \= unit then
 		  node(ct:OldCT i:OldI ...) = {@LastSelected get($)}
 		  {self tk(itemconfigure OldCT text:OldI)}
-	       else skip end
+	       end
 	       node(ct:CT ...) = {@Selected get($)}
 	       {self tk(itemconfigure CT text:I#' *')}
 	       Tree,condScroll(I)
@@ -329,7 +329,7 @@ in
       meth mark(I How)
 	 N = {List.filter @nodes fun {$ X} {X get($)}.i == I end}
       in
-	 case N == nil then
+	 if N == nil then
 	    {OzcarError 'attempt to mark unknown node ' # I}
 	 else node(ct:CT s:S ...) = {N.1 get($)} in
 	    case How
@@ -372,7 +372,7 @@ in
 	     %% the horizontal line
 	     {self tk(crea line X*SFX-OS Y*SFY (X-1)*SFX-OS Y*SFY
 		      width:2 capstyle:projecting fill:TrunkColor)}
-	     case R then
+	     if R then
 		{self tk(crea line (X-1)*SFX-OS Y*SFY
 			 (X-1)*SFX-OS (Y-DY+1)*SFY-5
 			 width:2 capstyle:projecting fill:TrunkColor)}

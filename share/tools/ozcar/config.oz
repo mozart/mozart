@@ -120,7 +120,7 @@ ThreadTreeOffset       = 4
 StackTextWidth         = 0
 EnvTextWidth           = 24
 EnvVarWidth            = fun {$}
-			    case {Cget envPrintTypes} then 14 else 6 end
+			    if {Cget envPrintTypes} then 14 else 6 end
 			 end
 
 ScrollbarWidth         = 10
@@ -135,7 +135,7 @@ SmallBoldFont
 DefaultFont
 BoldFont
 
-case Platform == WindowsPlatform then
+if Platform == WindowsPlatform then
    SmallFont           = '-*-courier new-medium-r-*-*-12-*-*-*-*-*-*-*'
    SmallBoldFont       = '-*-courier new-bold-r-*-*-12-*-*-*-*-*-*-*'
    DefaultFont         = SmallFont
@@ -226,7 +226,7 @@ DirtyColor
 
 UseColors = {And Tk.isColor Platform \= WindowsPlatform}
 
-case UseColors then
+if UseColors then
    %% main window
    DefaultBackground       = '#f0f0f0'
    DefaultForeground       = black
@@ -348,18 +348,18 @@ Config =
        What <- {Not @What}
        {OzcarMessage 'Config: setting `' # What #
 	'\' to value `' # {V2VS @What} # '\''}
-       case What == updateEnv andthen @What == true then
+       if What == updateEnv andthen @What == true then
 	  {Ozcar PrivateSend(What)}
-       else skip end
+       end
     end
 
     meth set(What Value)
        What <- Value
        {OzcarMessage 'Config: setting `' # What #
 	'\' to value `' # {V2VS Value} # '\''}
-       case What == envPrintTypes then
+       if What == envPrintTypes then
 	  {Ozcar PrivateSend(rebuildCurrentStack)}
-       else skip end
+       end
     end
 
     meth get(What $)

@@ -45,7 +45,7 @@ local
    fun {FormatArgs A}
       {Map A
        fun {$ X}
-	  case {Cget envPrintTypes} then
+	  if {Cget envPrintTypes} then
 	     {CheckType X} # X
 	  else
 	     {V2VS X} # X
@@ -54,46 +54,46 @@ local
    end
 
    fun {CheckType X}
-      case {IsDet X} then
-	 case     {IsArray X}            then ArrayType
-	 elsecase {BitArray.is X}        then BitArrayType
-	 elsecase {IsThread X}           then ThreadType
-	 elsecase {IsAtom X}             then {Value.toVirtualString X 0 0}
-	 elsecase {IsBool X}             then {Value.toVirtualString X 0 0}
-	 elsecase {IsCell X}             then CellType
-	 elsecase {IsClass X}            then ClassType
-	 elsecase {IsDictionary X}       then DictionaryType
-	 elsecase {IsFloat X}            then case X >= BigFloat then
-						 BigFloatType
-					      else
-						 {V2VS X}
-					      end
-%	 elsecase {IsChar X}             then CharType
-%	 elsecase {FD.is X}              then FDValueType
-	 elsecase {IsInt X}              then case X >= BigInt then
-						 BigIntType
-					      else
-						 X
-					      end
-	 elsecase {IsUnit X}             then UnitType
-	 elsecase {IsName X}             then NameType
-	 elsecase {IsLock X}             then LockType
-	 elsecase {IsObject X}           then ObjectType
-	 elsecase {IsPort X}             then PortType
-	 elsecase {IsProcedure X}        then ProcedureType
-	 elsecase {IsDefList X}          then ListType
-	 elsecase {IsTuple X}            then TupleType
-	 elsecase {IsRecord X}           then RecordType
-	 elsecase {IsChunk X}            then ChunkType
-	 elsecase {IsSpace X}            then SpaceType
-	 elsecase {FS.value.is X}        then FSValueType
-	 elsecase {ForeignPointer.is X}  then ForeignPointerType
+      if {IsDet X} then
+	 if     {IsArray X}            then ArrayType
+	 elseif {BitArray.is X}        then BitArrayType
+	 elseif {IsThread X}           then ThreadType
+	 elseif {IsAtom X}             then {Value.toVirtualString X 0 0}
+	 elseif {IsBool X}             then {Value.toVirtualString X 0 0}
+	 elseif {IsCell X}             then CellType
+	 elseif {IsClass X}            then ClassType
+	 elseif {IsDictionary X}       then DictionaryType
+	 elseif {IsFloat X}            then if X >= BigFloat then
+					       BigFloatType
+					    else
+					       {V2VS X}
+					    end
+%	 elseif {IsChar X}             then CharType
+%	 elseif {FD.is X}              then FDValueType
+	 elseif {IsInt X}              then if X >= BigInt then
+					       BigIntType
+					    else
+					       X
+					    end
+	 elseif {IsUnit X}             then UnitType
+	 elseif {IsName X}             then NameType
+	 elseif {IsLock X}             then LockType
+	 elseif {IsObject X}           then ObjectType
+	 elseif {IsPort X}             then PortType
+	 elseif {IsProcedure X}        then ProcedureType
+	 elseif {IsDefList X}          then ListType
+	 elseif {IsTuple X}            then TupleType
+	 elseif {IsRecord X}           then RecordType
+	 elseif {IsChunk X}            then ChunkType
+	 elseif {IsSpace X}            then SpaceType
+	 elseif {FS.value.is X}        then FSValueType
+	 elseif {ForeignPointer.is X}  then ForeignPointerType
 	 else                                 UnknownType
 	 end
-      elsecase {IsKinded X} then
-	 case     {FD.is X}              then FDVarType
-	 elsecase {FS.var.is X}          then FSVarType
-	 elsecase {IsRecordC X}          then KindedRecordType
+      elseif {IsKinded X} then
+	 if     {FD.is X}              then FDVarType
+	 elseif {FS.var.is X}          then FSVarType
+	 elseif {IsRecordC X}          then KindedRecordType
 	 else                                 UnknownType
 	 end
       else                                    {System.printName X}
@@ -101,7 +101,7 @@ local
    end
 
    fun {MakeLines N}
-      case N < 1 then ""
+      if N < 1 then ""
       else &\n | {MakeLines N-1} end
    end
 
@@ -141,9 +141,9 @@ in
       meth resetLastSelectedFrame
 	 LSF = @LastSelectedFrame
       in
-	 case LSF > 0 then
+	 if LSF > 0 then
 	    Gui,DeactivateLine(LSF)
-	 else skip end
+	 end
 	 LastSelectedFrame <- 0
       end
 
@@ -205,7 +205,7 @@ in
 				 bitmap: {OzcarBitmap Bitmap}
 				 fg:     ForegroundColor
 				 activeforeground:
-				    case UseColors then
+				    if UseColors then
 				       ForegroundColor
 				    else
 				       SelectedForeground
@@ -345,7 +345,7 @@ in
       end
 
       meth setEmacsThreads(S)
-	 case S == AttachText then
+	 if S == AttachText then
 	    {EnqueueCompilerQuery setSwitch(runwithdebugger true)}
 	 else
 	    {EnqueueCompilerQuery setSwitch(runwithdebugger false)}
@@ -359,11 +359,11 @@ in
       meth getEnv(Frame $)
 	 NullEnv = v('Y': nil 'G': nil)
       in
-	 case @currentStack == unit then
+	 if @currentStack == unit then
 	    NullEnv
 	 else
-	    F = case Frame == unit then
-		   case @LastSelectedFrame > 0 then
+	    F = if Frame == unit then
+		   if @LastSelectedFrame > 0 then
 		      {@currentStack getFrame(@LastSelectedFrame $)}
 		   else
 		      {@currentStack getTop($)}
@@ -372,22 +372,22 @@ in
 		   Frame
 		end
 	 in
-	    case F == unit then
+	    if F == unit then
 	       NullEnv
 	    else
 	       FrameId   = F.frameID
 	       SavedVars = F.vars
 	    in
-	       case SavedVars \= unit then
+	       if SavedVars \= unit then
 		  {OzcarMessage
 		   'getEnv: using saved variables of frame ' # F.nr}
 		  SavedVars
-	       elsecase FrameId \= unit then
+	       elseif FrameId \= unit then
 		  {OzcarMessage
 		   'getEnv: requesting variables for frame ' # F.nr}
 		  V = {Debug.getFrameVariables @currentThread FrameId}
 	       in
-		  case V == unit then %% `FrameId' was an invalid frame id...
+		  if V == unit then %% `FrameId' was an invalid frame id...
 		     NullEnv
 		  else
 		     V
@@ -416,10 +416,10 @@ in
 	  proc{$ V}
 	     Name # Value = V
 	     PrintName # PrintValue # ClickValue =
-	     case {Cget envPrintTypes} then
+	     if {Cget envPrintTypes} then
 		Name # {CheckType Value} # Value
 	     else
-		case {IsDet Value} andthen {IsCell Value} then
+		if {IsDet Value} andthen {IsCell Value} then
 		   X = {Access Value}
 		in
 		   {VirtualString.toAtom
@@ -429,7 +429,7 @@ in
 		end
 	     end
 	  in
-	     case SV orelse {Atom.toString Name}.1 \= &` then
+	     if SV orelse {Atom.toString Name}.1 \= &` then
 		T  = {Widget newTag($)}
 		Ac = {New Tk.action
 		      tkInit(parent: Widget
@@ -445,13 +445,13 @@ in
       end
 
       meth printEnv(vars:V<=unit)
-	 case {Cget updateEnv} then
+	 if {Cget updateEnv} then
 	    New in
 	    EnvSync <- New = unit
 	    Gui,markEnv(active)
 	    thread
 	       {WaitOr New {Alarm {Cget timeoutToUpdateEnv}}}
-	       case {IsDet New} then skip else
+	       if {IsDet New} then skip else
 		  Gui,PrintEnv(vars:V)
 	       end
 	    end
@@ -462,7 +462,7 @@ in
 
       meth PrintEnv(vars:V)
 	 SV  = {Cget envSystemVariables}
-	 Y#G = case V == unit then
+	 Y#G = if V == unit then
 		  nil # nil
 	       else
 		  V.'Y' # V.'G'
@@ -470,27 +470,27 @@ in
       in
 	 {self.LocalEnvText resetTags}
 	 Gui,Clear(self.LocalEnvText)
-	 case V == unit then skip else
+	 if V \= unit then
 	    Gui,DoPrintEnv(self.LocalEnvText Y SV)
 	 end
 	 Gui,Disable(self.LocalEnvText)
 
 	 {self.GlobalEnvText resetTags}
 	 Gui,Clear(self.GlobalEnvText)
-	 case V == unit then skip else
+	 if V \= unit then
 	    Gui,DoPrintEnv(self.GlobalEnvText G SV)
 	 end
 	 Gui,Disable(self.GlobalEnvText)
       end
 
       meth FrameClick(frame:F highlight:Highlight<=true)
-	 case @currentThread == unit then skip
-	 elsecase {Dbg.checkStopped @currentThread} then
+	 if @currentThread == unit then skip
+	 elseif {Dbg.checkStopped @currentThread} then
 	    %% allow switching of stack frames only if thread is stopped
 	    Vars = Gui,getEnv(F $)
 	 in
-	    case Highlight then
-	       L = case F.line == unit then unit else {Abs F.line} end
+	    if Highlight then
+	       L = if F.line == unit then unit else {Abs F.line} end
 	    in
 	       {SendEmacs delayedBar(file:F.file line:L column:F.column
 				     state:unchanged)}
@@ -505,14 +505,14 @@ in
       end
 
       meth previousThread
-	 case {IsFree @switchDone} then skip else
+	 if {IsFree @switchDone} then skip else
 	    switchDone <- _
 	 end
 	 {self.ThreadTree selectPrevious}
       end
 
       meth nextThread
-	 case {IsFree @switchDone} then skip else
+	 if {IsFree @switchDone} then skip else
 	    switchDone <- _
 	 end
 	 {self.ThreadTree selectNext}
@@ -521,12 +521,12 @@ in
       meth neighbourStackFrame(Delta)
 	 Stack = @currentStack
       in
-	 case Stack == unit then skip else
+	 if Stack \= unit then
 	    LSF = @LastSelectedFrame
-	    N   = case LSF == 0 then ~1 else LSF + Delta end
+	    N   = if LSF == 0 then ~1 else LSF + Delta end
 	    F   = {Stack getFrame(N $)}
 	 in
-	    case F == unit then skip else
+	    if F \= unit then
 	       Gui,FrameClick(frame:F)
 	    end
 	 end
@@ -535,24 +535,24 @@ in
       meth SelectStackFrame(T)
 	 LSF = @LastSelectedFrame
       in
-	 case LSF \= T then
-	    case LSF > 0 then
+	 if LSF \= T then
+	    if LSF > 0 then
 	       Gui,DeactivateLine(LSF)
-	    else skip end
-	    case T > 0 then
+	    end
+	    if T > 0 then
 	       Gui,ActivateLine(T)
-	    else skip end
+	    end
 	    LastSelectedFrame <- T
-	 else skip end
+	 end
       end
 
       meth UnselectStackFrame
 	 LSF = @LastSelectedFrame
       in
-	 case LSF > 0 then
+	 if LSF > 0 then
 	    Gui,DeactivateLine(LSF)
 	    LastSelectedFrame <- 0
-	 else skip end
+	 end
       end
 
       meth printStackFrame(frame:Frame delete:Delete<=true)
@@ -564,7 +564,7 @@ in
 		      [] '#' then "#"
 		      else Frame.name end
 	 FrameData  = Frame.data
-	 FrameArgs  = case Frame.args == unit then unit
+	 FrameArgs  = if Frame.args == unit then unit
 		      else {FormatArgs Frame.args}  %% argument list
 		      end
 	 LineColTag = FrameNr       %% no need to garbage collect this tag
@@ -574,17 +574,17 @@ in
 			      action: self # FrameClick(frame:Frame))}
 	 LineEnd    = p(FrameNr 'end')
 	 UpToDate   = 1 > 0 %{Emacs isUpToDate(Frame.time $)}
-	 Arrow      = case Frame.dir == entry then ' -> ' else ' <- ' end
+	 Arrow      = if Frame.dir == entry then ' -> ' else ' <- ' end
       in
-	 case Delete then
+	 if Delete then
 	    Gui,Enable(W)
 	    Gui,DeleteToEnd(W FrameNr+1)
 	    Gui,DeleteLine(W FrameNr)
-	 else skip end
-	 case Frame.kind \= 'call' then
+	 end
+	 if Frame.kind \= 'call' then
 	    {W tk(insert LineEnd Arrow # FrameNr # ' ' # FrameName
 		  q(StackTag LineActTag LineColTag))}
-	 elsecase {IsDet FrameData} andthen FrameData == unit then
+	 elseif {IsDet FrameData} andthen FrameData == unit then
 	    {W tk(insert LineEnd Arrow # FrameNr # ' {' # FrameName
 		  q(StackTag LineActTag LineColTag))}
 	 else
@@ -601,9 +601,7 @@ in
 	    {W tk(tag conf ProcTag font:BoldFont)}
 	 end
 	 case FrameArgs of unit then
-	    case Frame.kind \= 'call' then
-	       skip
-	    else
+	    if Frame.kind == 'call' then
 	       {W tk(insert LineEnd ' ...' q(StackTag LineActTag LineColTag))}
 	    end
 	 else
@@ -622,20 +620,20 @@ in
 	     end}
 	 end
 	 {W tk(insert LineEnd
-	       case Frame.kind \= 'call' then
+	       if Frame.kind \= 'call' then
 		  '' else '}'
-	       end # case UpToDate then nil else
+	       end # if UpToDate then nil else
 			' (source has changed)' end #
-	       case Delete then '\n' else "" end
+	       if Delete then '\n' else "" end
 	       q(StackTag LineActTag LineColTag))}
 	 {W tk(tag add  LineActTag LineEnd)} % extend tag to EOL
 	 {W tk(tag add  LineColTag LineEnd)} % dito
 	 {W tk(tag bind LineActTag '<1>' LineAction)}
-	 case Delete then
+	 if Delete then
 	    Gui,Disable(W)
 	    {W tk(yview 'end')}
 	    Gui,FrameClick(frame:Frame highlight:false)
-	 else skip end
+	 end
       end
 
       meth printStack(id:I frames:Frames depth:Depth last:LastFrame<=nil)
@@ -643,16 +641,16 @@ in
       in
 	 {W resetTags}
 	 Gui,Clear(W)
-	 case I == 0 then   % clear stack and env windows; reset title
+	 if I == 0 then   % clear stack and env windows; reset title
 	    {self.StackText title(StackTitle)}
 	    Gui,Disable(W)
 	    Gui,clearEnv
 	 else
 	    {self.StackText title(AltStackTitle # I)}
-	    case Depth == 0 then T = @currentThread in
-	       case T == unit then
+	    if Depth == 0 then T = @currentThread in
+	       if T == unit then
 		  {OzcarError 'Gui,printStack: @currentThread == unit'}
-	       elsecase {CheckState T} == running then
+	       elseif {CheckState T} == running then
 		  Gui,Append(W (' There was no stack computed (yet)\n' #
 				' for this thread;' #
 				' stop it to compute one!'))
@@ -669,7 +667,7 @@ in
 		end}
 	       Gui,Disable(W)
 	       {W tk(yview 'end')}
-	       case LastFrame == nil then
+	       if LastFrame == nil then
 		  {OzcarError 'printStack: LastFrame == nil ?!'}
 	       else
 		  Gui,FrameClick(frame:LastFrame highlight:false)
@@ -707,7 +705,7 @@ in
       end
 
       meth status(S M<=clear C<=DefaultForeground)
-	 case M == clear then
+	 if M == clear then
 	    {self.StatusText replace(S C)}
 	 else
 	    {self.StatusText append(S C)}
@@ -744,7 +742,7 @@ in
 	 MarkStackSync <- New = unit
 	 thread
 	    {WaitOr New {Alarm TimeoutToUpdate*10}}
-	    case {IsDet New} then skip else
+	    if {IsDet New} then skip else
 	       Gui,DoMarkStack(How)
 	    end
 	 end
@@ -766,7 +764,7 @@ in
 	 MarkEnvSync <- New = unit
 	 thread
 	    {WaitOr New {Alarm TimeoutToUpdate*10}}
-	    case {IsDet New} then skip else
+	    if {IsDet New} then skip else
 	       Gui,DoMarkEnv(How)
 	    end
 	 end
@@ -784,7 +782,7 @@ in
       end
 
       meth MarkRunning(T)
-	 case {CheckState T} == blocked then skip else
+	 if {CheckState T} \= blocked then
 	    Gui,markNode({Debug.getId T} running)
 	 end
 	 Gui,markStack(inactive)
@@ -808,7 +806,7 @@ in
 	 lock
 	    {Wait @detachDone}
 	    {Wait @switchDone}
-	    case ThreadManager,emptyForest($) then
+	    if ThreadManager,emptyForest($) then
 	       Gui,status(NoThreads)
 	    else
 	       Gui,DoAction(A)
@@ -817,127 +815,133 @@ in
       end
 
       meth DoAction(A)
-	 case {IsName A} then skip else
+	 if {IsName A} then skip else
 	    {OzcarMessage 'action(' # A # ')'}
 	 end
 
-	 case A == TermAllAction then
+	 if A == TermAllAction then
 	    Gui,status('Terminating all threads...')
 	    ThreadManager,termAll
 	    Gui,status(' done' append)
 
-	 elsecase A == TermAllButCurAction then
+	 elseif A == TermAllButCurAction then
 	    Gui,status('Terminating all threads but current...')
 	    ThreadManager,termAllButCur
 	    Gui,status(' done' append)
 
-	 elsecase A == DetachAllAction then
+	 elseif A == DetachAllAction then
 	    Gui,status('Detaching all threads...')
 	    ThreadManager,detachAll
 	    Gui,status(' done' append)
 
-	 elsecase A == DetachAllButCurAction then
+	 elseif A == DetachAllButCurAction then
 	    Gui,status('Detaching all threads but current...')
 	    ThreadManager,detachAllButCur
 	    Gui,status(' done' append)
 
-	 elsecase A == DetachAllDeadAction then
+	 elseif A == DetachAllDeadAction then
 	    Gui,status('Detaching all dead threads...')
 	    ThreadManager,detachAllDead
 	    Gui,status(' done' append)
 
-	 elsecase A == StepButtonBitmap then T I in
+	 elseif A == StepButtonBitmap then T I in
 	    T = @currentThread
 	    I = {Debug.getId T}
-	    case {@currentStack getException($)} \= nil then
+	    if {@currentStack getException($)} \= nil then
 	       Gui,ExcStatus(I StepInto)
-	    elsecase {CheckState T}
-	    of running    then Gui,RunningStatus(I StepInto)
-	    [] terminated then Gui,TerminatedStatus(T StepInto)
 	    else
-	       TopFrame = {@currentStack getTop($)}
-	    in
-	       case TopFrame == unit then skip else
-		  case TopFrame.dir == exit then skip else
-		     {@currentStack incStep(_)}
+	       case {CheckState T}
+	       of running    then Gui,RunningStatus(I StepInto)
+	       [] terminated then Gui,TerminatedStatus(T StepInto)
+	       else
+		  TopFrame = {@currentStack getTop($)}
+	       in
+		  if TopFrame \= unit then
+		     if TopFrame.dir \= exit then
+			{@currentStack incStep(_)}
+		     end
+		     Gui,status('')
+		     Gui,ContinueTo(T TopFrame)
 		  end
-		  Gui,status('')
-		  Gui,ContinueTo(T TopFrame)
 	       end
 	    end
 
-	 elsecase A == NextButtonBitmap then T I in
+	 elseif A == NextButtonBitmap then T I in
 	    T = @currentThread
 	    I = {Debug.getId T}
-	    case {@currentStack getException($)} \= nil then
+	    if {@currentStack getException($)} \= nil then
 	       Gui,ExcStatus(I StepOver)
-	    elsecase {CheckState T}
-	    of running    then Gui,RunningStatus(I StepOver)
-	    [] terminated then Gui,TerminatedStatus(T StepOver)
 	    else
-	       TopFrame = {@currentStack getTop($)}
-	    in
-	       case TopFrame == unit then skip else
-		  case TopFrame.dir == exit then skip else
-		     {@currentStack incNext(_)}
-		     {Dbg.step T false}
+	       case {CheckState T}
+	       of running    then Gui,RunningStatus(I StepOver)
+	       [] terminated then Gui,TerminatedStatus(T StepOver)
+	       else
+		  TopFrame = {@currentStack getTop($)}
+	       in
+		  if TopFrame \= unit then
+		     if TopFrame.dir \= exit then
+			{@currentStack incNext(_)}
+			{Dbg.step T false}
+		     end
+		     Gui,status('')
+		     Gui,ContinueTo(T TopFrame)
 		  end
-		  Gui,status('')
-		  Gui,ContinueTo(T TopFrame)
 	       end
 	    end
 
-	 elsecase A == UnleashButtonBitmap then T I in
+	 elseif A == UnleashButtonBitmap then T I in
 	    T = @currentThread
 	    I = {Debug.getId T}
-	    case {@currentStack getException($)} \= nil then
+	    if {@currentStack getException($)} \= nil then
 	       Gui,ExcStatus(I A)
-	    elsecase {CheckState T}
-	    of running    then Gui,RunningStatus(I A)
-	    [] terminated then Gui,TerminatedStatus(T A)
 	    else
-	       Frame
-	       LSF = @LastSelectedFrame
-	       Stk = @currentStack
-	    in
-	       {Stk getFrame(LSF Frame)}
-	       case Frame == unit then skip
-%              elsecase Frame.dir == exit then
+	       case {CheckState T}
+	       of running    then Gui,RunningStatus(I A)
+	       [] terminated then Gui,TerminatedStatus(T A)
+	       else
+		  Frame
+		  LSF = @LastSelectedFrame
+		  Stk = @currentStack
+	       in
+		  {Stk getFrame(LSF Frame)}
+		  if Frame == unit then skip
+%              elseif Frame.dir == exit then
 %                 Gui,status('Already at end of procedure ' #
 %                              'application -- unleash has no effect')
-	       else
-		  {Dbg.step T false}
-		  {Stk rebuild(true)}
-		  case Frame.frameID of unit then
-		     {Dbg.unleash T 0}
-		  elseof FrameID then
-		     {Dbg.unleash T FrameID}
-		  end
+		  else
+		     {Dbg.step T false}
+		     {Stk rebuild(true)}
+		     case Frame.frameID of unit then
+			{Dbg.unleash T 0}
+		     elseof FrameID then
+			{Dbg.unleash T FrameID}
+		     end
 
-		  Gui,resetLastSelectedFrame
-		  Gui,MarkRunning(T)
-		  Gui,status('Unleashing thread ' # I #
-			     ' to frame ' #
-			     case LSF == 0 then 1 else LSF end)
-		  {Thread.resume T}
+		     Gui,resetLastSelectedFrame
+		     Gui,MarkRunning(T)
+		     Gui,status('Unleashing thread ' # I #
+				' to frame ' #
+				if LSF == 0 then 1 else LSF end)
+		     {Thread.resume T}
+		  end
 	       end
 	    end
 
-	 elsecase A == StopButtonBitmap then T S in
+	 elseif A == StopButtonBitmap then T S in
 	    T = @currentThread
 	    S = {Thread.state T}
-	    case S == terminated then Gui,TerminatedStatus(T A) else
+	    if S == terminated then Gui,TerminatedStatus(T A) else
 	       I         = {Debug.getId T}
 	       ThreadDic = ThreadManager,getThreadDic($)
 	       Stack     = {Dictionary.condGet ThreadDic I nil}
 	    in
-	       case
+	       if
 		  Stack == nil then skip
-	       elsecase
+	       elseif
 		  {Dbg.checkStopped T} then Gui,StoppedStatus(I A)
 	       else
 		  Gui,status('You have stopped thread ' # I)
-		  case S == blocked then
+		  if S == blocked then
 		     F L C in
 		     {Thread.suspend T}
 		     {Stack rebuild(true)}
@@ -952,12 +956,12 @@ in
 	       end
 	    end
 
-	 elsecase A == DetachButtonBitmap then T I in
+	 elseif A == DetachButtonBitmap then T I in
 	    T = @currentThread
 	    I = {Debug.getId T}
 	    lock UserActionLock then ThreadManager,detach(T I) end
 
-	 elsecase A == TermButtonBitmap then T I in
+	 elseif A == TermButtonBitmap then T I in
 	    T = @currentThread
 	    I = {Debug.getId T}
 	    ThreadManager,kill(T I)
@@ -966,7 +970,7 @@ in
       end
 
       meth toggleEmacs
-	 case {Cget useEmacsBar} then
+	 if {Cget useEmacsBar} then
 	    Gui,status('Not using Emacs Bar')
 	    {SendEmacs removeBar}
 	 else
@@ -976,7 +980,7 @@ in
       end
 
       meth toggleUpdateEnv
-	 case {Cget updateEnv} then
+	 if {Cget updateEnv} then
 	    Gui,status('Turning auto update off')
 	 else
 	    Gui,status('Turning auto update on')
@@ -1012,7 +1016,7 @@ in
 
       meth Append(W Text Color<=unit)
 	 {W tk(insert 'end' Text)}
-	 case Color == unit then skip else
+	 if Color \= unit then
 	    {W tk(conf fg:Color)}
 	 end
       end

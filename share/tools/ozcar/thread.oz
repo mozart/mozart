@@ -88,21 +88,21 @@ in
       end
 
       meth checkMe
-	 case ThreadManager,emptyForest($) then
+	 if ThreadManager,emptyForest($) then
 	    Gui,status(NoThreads)
 	 else
 	    T = @currentThread
 	    I = {Debug.getId T}
 	    P = try {Debug.getParentId T} catch
 		   error(kernel(deadThread ...) ...) then '?' end
-	    R = case {Dbg.checkStopped T} then 'stopped' else 'not stopped' end
+	    R = if {Dbg.checkStopped T} then 'stopped' else 'not stopped' end
 	    S = {Thread.state T}
 	    N = {Length {Dictionary.items self.ThreadDic}}
 	 in
 	    Gui,status(N # ' attached thread' #
-		       case N > 1 then 's, currently selected: ' else ': ' end
+		       if N > 1 then 's, currently selected: ' else ': ' end
 		       # I # '/' # P # ' (' #
-		       case S == terminated then S else R # ', ' # S end # ')')
+		       if S == terminated then S else R # ', ' # S end # ')')
 	 end
       end
 
@@ -131,7 +131,7 @@ in
 	 of breakpoint(thr:T) then
 	    I = {Debug.getId T}
 	 in
-	    case ThreadManager,Exists(I $) then %% already attached thread
+	    if ThreadManager,Exists(I $) then %% already attached thread
 	       M = 'Thread ' # I # ' has reached a breakpoint'
 	       S = {Dictionary.get self.ThreadDic I}
 	    in
@@ -147,10 +147,10 @@ in
 	 [] entry(thr:T ...) then
 	    I = {Debug.getId T}
 	 in
-	    case ThreadManager,Exists(I $) then %% already attached thread
+	    if ThreadManager,Exists(I $) then %% already attached thread
 	       Name = {CondSelect M data unit}
 	    in
-	       case {Not {IsDet Name}}
+	       if {Not {IsDet Name}}
 		  orelse {AppOK {System.printName Name}}
 	       then
 		  ThreadManager,M
@@ -162,23 +162,25 @@ in
 	       Q = {Debug.getParentId T}
 	       S = Gui,checkSubThreads($)
 	    in
-	       case S == AttachText orelse
+	       if S == AttachText orelse
 		  {Not ThreadManager,Exists(Q $)} then
 		  ThreadManager,add(T I Q)
-	       elsecase S
-	       of !IgnoreText then
-		  {OzcarMessage 'ignoring new subthread'}
-		  {Detach T}
-	       elseof U then
-		  ThreadManager,add(T I Q)
-		  {Dbg.step T false}
-		  case U
-		  of !Unleash0Text then
-		     {Dbg.unleash T 0}
-		  [] !Unleash1Text then
-		     {Dbg.unleash T 6}
+	       else
+		  case S
+		  of !IgnoreText then
+		     {OzcarMessage 'ignoring new subthread'}
+		     {Detach T}
+		  elseof U then
+		     ThreadManager,add(T I Q)
+		     {Dbg.step T false}
+		     case U
+		     of !Unleash0Text then
+			{Dbg.unleash T 0}
+		     [] !Unleash1Text then
+			{Dbg.unleash T 6}
+		     end
+		     {Thread.resume T}
 		  end
-		  {Thread.resume T}
 	       end
 	    end
 
@@ -188,14 +190,14 @@ in
 	    Found = {Member Key @SkippedProcs}
 	 in
 %           {OzcarShow @SkippedProcs # Key # Found}
-	    case Found then
+	    if Found then
 	       {OzcarMessage 'ignoring `exit\' message of ignored application'}
 	       SkippedProcs  <- {Filter @SkippedProcs fun {$ F} F \= Key end}
 	       {Thread.resume T}
 	    else
 	       Gui,markNode(I stopped)  % thread is not running anymore
 	       Gui,markStack(active)    % stack view has up-to-date content
-	       case T == @currentThread then
+	       if T == @currentThread then
 		  Stack = {Dictionary.get self.ThreadDic I}
 	       in
 		  {Stack exit(M)}
@@ -204,13 +206,13 @@ in
 				 column:{CondSelect M column unit}
 				 state:runnable)}
 		  {Stack printTop}
-	       else skip end
+	       end
 	    end
 
 	 elseof term(thr:T) then
 	    I = {Debug.getId T}
 	 in
-	    case ThreadManager,Exists(I $) then
+	    if ThreadManager,Exists(I $) then
 	       ThreadManager,remove(T I noKill)
 	    else
 	       {OzcarMessage
@@ -220,7 +222,7 @@ in
 	 [] blocked(thr:T) then
 	    I = {Debug.getId T}
 	 in
-	    case ThreadManager,Exists(I $) then
+	    if ThreadManager,Exists(I $) then
 	       ThreadManager,blocked(thr:T id:I)
 	    else
 	       {OzcarMessage
@@ -246,7 +248,7 @@ in
 	 [] exception(thr:T exc:X) then
 	    I = {Debug.getId T}
 	 in
-	    case ThreadManager,Exists(I $) then
+	    if ThreadManager,Exists(I $) then
 	       {OzcarMessage 'exception of attached thread'}
 	       Gui,markNode(I exc)
 	       Gui,markNode(I stopped)
@@ -261,7 +263,7 @@ in
 	 [] update(thr:T) then
 	    I = {Debug.getId T}
 	 in
-	    case ThreadManager,Exists(I $) then
+	    if ThreadManager,Exists(I $) then
 	       Stack = {Dictionary.get self.ThreadDic I}
 	    in
 	       {Stack rebuild(true)}
@@ -304,11 +306,11 @@ in
 	 else
 	    Gui,addNode(I Q)
 	    {Stack rebuild(true)}
-	    case Q == 1 orelse       %% all compiler threads have id #1
+	    if Q == 1 orelse         %% all compiler threads have id #1
 	       IsFirstThread then    %% there's no other attached thread
 	       ThreadManager,switch(I)
 	       Gui,status('Selecting new thread ' # I)
-	    else skip end
+	    end
 	 end
       end
 
@@ -316,32 +318,32 @@ in
 	 Next in
 	 {OzcarMessage 'removing thread ' # I # ' with mode ' # Mode}
 	 ThreadManager,removeSkippedProcs(I)
-	 case Mode == kill then
+	 if Mode == kill then
 	    Gui,killNode(I Next)
 	    {OzcarMessage 'next node is ' # Next}
 	    {Dictionary.remove self.ThreadDic I}
-	    case ThreadManager,emptyForest($) then
+	    if ThreadManager,emptyForest($) then
 	       currentThread <- unit
 	       currentStack  <- unit
 	       {SendEmacs removeBar}
 	       Gui,selectNode(0)
 	       Gui,clearStack
-	       case Select then
+	       if Select then
 		  Gui,status(', thread tree is now empty' append)
-	       else skip end
-	    else skip end
+	       end
+	    end
 	 else
 	    Gui,markNode(I dead)
 	    Gui,markNode(I stopped)
 	 end
-	 case T == @currentThread then
-	    case Mode == kill then
-	       case ThreadManager,emptyForest($) then skip else
-		  case Select then
+	 if T == @currentThread then
+	    if Mode == kill then
+	       if ThreadManager,emptyForest($) then skip else
+		  if Select then
 		     detachDone <- _
 		     ThreadManager,switch(Next)
 		     Gui,status(', new selected thread is ' # Next append)
-		  else skip end
+		  end
 	       end
 	    else
 	       Gui,status('Thread ' # I # ' died')
@@ -349,7 +351,7 @@ in
 	       Gui,markStack(active)
 	       Gui,printStack(id:I frames:nil depth:0)
 	    end
-	 else skip end
+	 end
       end
 
       meth kill(T I Select<=true)
@@ -358,9 +360,9 @@ in
 	    {Dbg.step T false}
 	    {Thread.terminate T}
 	 catch error(kernel(deadThread ...) ...) then skip end
-	 case Select then
+	 if Select then
 	    Gui,status('Thread ' # I # ' has been terminated')
-	 else skip end
+	 end
 	 ThreadManager,remove(T I kill Select)
       end
 
@@ -381,7 +383,7 @@ in
 	     I = {S getId($)}
 	     T = {S getThread($)}
 	  in
-	     case T == @currentThread then skip else
+	     if T \= @currentThread then
 		ThreadManager,kill(T I false)
 		Gui,status('.' append)
 	     end
@@ -406,7 +408,7 @@ in
 	     I = {S getId($)}
 	     T = {S getThread($)}
 	  in
-	     case T == @currentThread then skip else
+	     if T \= @currentThread then
 		{Detach T}
 		ThreadManager,remove(T I kill false)
 		Gui,status('.' append)
@@ -420,18 +422,18 @@ in
 	     I = {S getId($)}
 	     T = {S getThread($)}
 	  in
-	     case {Thread.state T} == terminated then
+	     if {Thread.state T} == terminated then
 		ThreadManager,remove(T I kill false)
 		Gui,status('.' append)
-	     else skip end
+	     end
 	  end}
-	 case @currentThread \= unit andthen
+	 if @currentThread \= unit andthen
 	    {Thread.state @currentThread} == terminated then
 	    thread
 	       {Delay 1000}   %% give the user a chance to read the ' done' ;)
 	       Gui,nextThread %% select next living thread
 	    end
-	 else skip end
+	 end
       end
 
       meth detach(T I)
@@ -447,7 +449,7 @@ in
 	 Gui,markNode(I stopped)  % thread is not running anymore
 	 Gui,markStack(active)    % stack view has up-to-date content
 	 {Stack entry(Frame)}
-	 case T == @currentThread then
+	 if T == @currentThread then
 	    F = {CondSelect Frame file ''}
 	    L = {CondSelect Frame line unit}
 	    C = {CondSelect Frame column unit}
@@ -458,24 +460,24 @@ in
 	       {SendEmacs bar(file:F line:L column:C state:runnable)}
 	    end
 	    {Stack printTop}
-	 else skip end
+	 end
       end
 
       meth blocked(thr:T id:I)
 	 Gui,markNode(I blocked)
 	 Gui,markNode(I running)
-%        case {CondSelect {@currentStack getTop($)} dir entry} of exit then
+%        if {CondSelect {@currentStack getTop($)} dir entry} of exit then
 %           ThreadManager,rebuildCurrentStack
-%        else skip end
+%        end
       end
 
       meth rebuildCurrentStack
 	 S = @currentStack
 	 T = @currentThread
       in
-	 case S == unit then
+	 if S == unit then
 	    Gui,status(NoThreads)
-	 elsecase {CheckState T} == running then
+	 elseif {CheckState T} == running then
 	    Gui,status('Cannot recalculate stack while thread is running')
 	 else
 	    Gui,status('Recalculating stack of thread ' #
@@ -491,7 +493,7 @@ in
 	 New in
 	 SwitchSync <- New = unit
 
-	 case {IsFree @switchDone} then skip else
+	 if {IsFree @switchDone} then skip else
 	    switchDone <- _
 	 end
 
@@ -499,7 +501,7 @@ in
 
 	 thread
 	    {WaitOr New {Alarm {Cget timeoutToSwitch}}}
-	    case {IsDet New} then skip else
+	    if {IsDet New} then skip else
 	       ThreadManager,DoSwitch(I PrintStack)
 	    end
 	 end
@@ -510,24 +512,24 @@ in
 	 T     = {Stack getThread($)}
 	 S     = {CheckState T}
       in
-	 case @currentStack == unit then skip else
+	 if @currentStack \= unit then
 	    CurT = @currentThread
 	    CurS = @currentStack
 	 in
 	    Gui,resetLastSelectedFrame
-	    case {CheckState CurT} == running then
+	    if {CheckState CurT} == running then
 	       {OzcarMessage 'setting `rebuild\' flag' #
 		' of (running) thread ' # {Debug.getId CurT}}
 	       {CurS rebuild(true)}
-	    else skip end
+	    end
 	 end
 
 	 {OzcarMessage 'switching to thread ' # I}
 	 currentThread <- T
 	 currentStack  <- Stack
 
-	 case PrintStack then
-	    case S == terminated then
+	 if PrintStack then
+	    if S == terminated then
 	       {SendEmacs removeBar}
 	       Gui,printStack(id:I frames:nil depth:0)
 	    else
@@ -546,7 +548,7 @@ in
 		  Gui,status(Exc clear ExcThreadColor)
 	       end
 	    end
-	 else skip end
+	 end
 
 	 @switchDone = unit
 	 @detachDone = unit

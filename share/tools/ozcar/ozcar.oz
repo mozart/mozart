@@ -38,16 +38,16 @@ local
       meth on
 	 {Tk.batch [update(idletasks)
 		    wm(deiconify self.toplevel)]}
-	 case {self.emacsThreadsMenu getCurrent($)} == AttachText then
+	 if {self.emacsThreadsMenu getCurrent($)} == AttachText then
 	    {EnqueueCompilerQuery setSwitch(debuginfo true)}
 	 else
 	    {EnqueueCompilerQuery setSwitch(debuginfovarnames true)}
 	    {EnqueueCompilerQuery setSwitch(debuginfocontrol true)}
 	 end
 	 {Dbg.on}
-	 case @currentThread == unit then
+	 if @currentThread == unit then
 	    Gui,status('Ready to attach threads')
-	 else skip end
+	 end
       end
 
       meth off
@@ -63,7 +63,7 @@ local
       meth conf(...)=M
 	 {Record.forAllInd M
 	  proc {$ F V}
-	     case {Config confAllowed(F $)} then
+	     if {Config confAllowed(F $)} then
 		{Config set(F V)}
 	     else
 		raise ozcar(badConfigFeature(F)) end
@@ -92,7 +92,7 @@ in
 
 	   meth reInit
 	      lock
-		 case @MyOzcar == unit then skip else
+		 if @MyOzcar \= unit then
 		    {@MyOzcar destroy}
 		 end
 		 MyOzcar <- {New OzcarClass init}
