@@ -33,6 +33,8 @@
 #include "comm.hh" // For FaultCode
 #include "table.hh"
 #include "dpMarshaler.hh"
+#include "controlvar.hh"
+
 
 #define MAX_NOF_FIELDS 5
 
@@ -60,7 +62,7 @@ struct msgField {
 };
 
 //
-class MsgContainer {
+class MsgContainer:public CppObjMemory {
   friend class MsgContainerManager;
 private:
   MessageType mt;
@@ -79,13 +81,27 @@ private:
   int msgNum;
   int def_priority;
   LongTime sendTime;
-
+  OZ_Term cntrlVar;
 public:
   DSite *destination;
   MsgContainer *next;
-
+  
   void init(DSite *site);
 
+  inline void setCntrlVar(OZ_Term c)
+  {
+    cntrlVar = c;
+  }
+  
+  inline void bindCntrlVar()
+  {
+    if (cntrlVar)
+      {
+	ControlVarResume(cntrlVar);
+	cntrlVar = (OZ_Term) 0; 
+      }
+  }
+  
   inline void setMsgNum(int msgNum) {
     this->msgNum = msgNum;
   }
