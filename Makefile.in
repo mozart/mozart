@@ -4,8 +4,10 @@
 #
 #  Contributors:
 #    Denys Duchier (duchier@ps.uni-sb.de)
+#    Christian Schulte <schulte@ps.uni-sb.de>
 #
 #  Copyright:
+#    Michael Mehl, 1998
 #
 #  Last change:
 #    $Date$ by $Author$
@@ -119,9 +121,7 @@ $(ALLFILES): $(PREFIX)/% : % $(PREFIX)
 PLATFORMS=      solaris-sparc aix3-rs600 freebsd-i486 hpux-700\
                 irix5-mips linux-i486 netbsd-i486 netbsd-m68k netbsd-sparc\
                 osf1-alpha solaris-i486 sunos-sparc win32-i486
-BASES=          $(PLATFORMS:%=%-base)
-CONTRIBS=       $(PLATFORMS:%=%-contrib)
-
+PLATFORMFILES=  LICENSE LICENSE.html bin cache contrib include share
 COMPRESS=       gzip -9
 TAR=            tar
 WINCACHEDIR=    oz/cache/$(HOMECACHE)
@@ -134,23 +134,36 @@ src: $(PACKDIR)
         (cd $(PACKDIR); \
          (cd $(SRCTOP)/..; \
           $(TAR) -cf - mozart) | $(TAR) -xf - ; \
-         find mozart -name CVS -type d -exec rm -rf ';' ; \
-         find mozart -name '.cvsignore' -type f -exec rm -f ';' ; \
+         find mozart -name CVS -type d -exec rm -rf '{}' ';' 2>/dev/null ; \
+         find mozart -name '.cvsignore' -type f -exec rm -f '{}' ';' ; \
          $(TAR) -cf - mozart ) | \
          $(COMPRESS) > mozart-`$(OZVERSION)`-`date +"%m%d%y"`-src.tar.gz
         rm -rf $(PACKDIR)/mozart
 
-doc: $(PACKDIR)
+doc: $(PACKDIR) $(PACKDIR)/mozart
         (cd $(PACKDIR); \
         (cd $(PREFIX); \
-         $(TAR) -cf - doc) | $(TAR) -xf -; \
-         rm -rf doc/demo/applets; \
-         $(TAR) -cf - doc ) | \
+         $(TAR) -cf - doc) | (cd mozart; $(TAR) -xf -); \
+         $(TAR) -cf - mozart ) | \
          $(COMPRESS) > mozart-`$(OZVERSION)`-`date +"%m%d%y"`-doc.tar.gz
-        rm -rf $(PACKDIR)/doc
+        rm -rf $(PACKDIR)/mozart
+
+$(PLATFORMS): $(PACKDIR) $(PACKDIR)/mozart
+        (cd $(PACKDIR); \
+         (cd $(PREFIX); \
+          $(TAR) -cf - $(PLATFORMFILES) platform/$@ ) | \
+         (cd mozart; $(TAR) -xf - ); \
+         find mozart -name '*.so-*' \
+                     -not -name \*.so-$@ -exec rm -f '{}' ';' )
+        (cd $(PACKDIR); $(TAR) -cf - mozart/contrib ) | \
+         $(COMPRESS) > mozart-`$(OZVERSION)`-`date +"%m%d%y"`-$@-contrib.tar.gz
+        rm -rf $(PACKDIR)/mozart/contrib
+        (cd $(PACKDIR); $(TAR) -cf - mozart ) | \
+        $(COMPRESS) > mozart-`$(OZVERSION)`-`date +"%m%d%y"`-$@.tar.gz
+        rm -rf $(PACKDIR)/mozart
 
 
-$(PACKDIR):
+$(PACKDIR) $(PACKDIR)/mozart:
         $(INSTALL_DIR) $@
 
 oz-win::
