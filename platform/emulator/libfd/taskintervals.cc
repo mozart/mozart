@@ -35,15 +35,6 @@ struct StartDurUseTerms {
   int use;
 };
 
-static int compareDurs(const void * a, const void * b) {
-  return ((StartDurTerms *) b)->dur - ((StartDurTerms *) a)->dur;
-}
-
-static int compareDursUse(const void * a, const void * b) {
-  return ((StartDurUseTerms *) b)->dur * ((StartDurUseTerms *) b)->use
-    - ((StartDurUseTerms *) a)->dur * ((StartDurUseTerms *) a)->use;
-}
-
 static OZ_FDIntVar * xx;
 static int * dd;
 
@@ -431,25 +422,57 @@ struct Interval {
   int left, right, use;
 };
 
-static int ozcdecl CompareIntervals(const void *In1, const void *In2) 
+template <class T>
+static void myqsort(T * my, int left, int right,   
+	     int (*compar)(const T &a, const T &b))
 {
-  Interval *Int1 = (Interval *)In1;
-  Interval *Int2 = (Interval *)In2;
-  int left1 = Int1->left;
-  int left2 = Int2->left;
-  if (left1 < left2) return -1;
+  register int i = left, j = right;
+  int middle = (left + right) / 2;
+  T x = my[middle];
+
+  do {
+    while((*compar)(my[i], x) && (i < right)) i++;
+    
+    while((*compar)(x, my[j]) && j > left) j--;
+    
+    if (i <= j) {
+      T aux = my[i];
+      my[i] = my[j];
+      my[j] = aux;
+      i++; 
+      j--;
+    }
+  } while(i <= j);
+  
+  if (left < j) myqsort(my, left, j, compar);
+  if (i < right) myqsort(my, i, right, compar);
+}
+
+static int compareDursUse(const StartDurUseTerms &a, const StartDurUseTerms &b) {
+  if (a.dur * a.use > b.dur * b.use) 
+    return 1;
+  else return 0;
+}
+
+static int ozcdecl CompareIntervals(const Interval &Int1, const Interval &Int2) 
+{
+  int left1 = Int1.left;
+  int left2 = Int2.left;
+  if (left1 >= left2) return 0;
   else {
     if (left1 == left2) {
-      return Int1->right - Int2->right;
+      if (Int1.right < Int2.right) return 1;
+      else return 0;
     }
     else return 1;
   }
 }
 
-
-static int ozcdecl CompareBounds(const void *Int1, const void *Int2) {
-  return *(int*)Int1 - *(int*)Int2;
+static int ozcdecl CompareBounds(const int &Int1, const int &Int2) {
+  if (Int1 < Int2) return 1;
+  else return 0;
 }
+
 
 CPIteratePropagatorCumTI::CPIteratePropagatorCumTI(OZ_Term tasks, 
 						   OZ_Term starts, 
@@ -477,7 +500,7 @@ CPIteratePropagatorCumTI::CPIteratePropagatorCumTI(OZ_Term tasks,
 
   OZ_ASSERT(i == reg_sz);
 
-  qsort(sdu, reg_sz, sizeof(StartDurUseTerms), compareDursUse);
+  myqsort(sdu, 0, reg_sz-1, compareDursUse);
 
   for (i = reg_sz; i--; ) {
     reg_l[i]      = sdu[i].start;
@@ -1049,7 +1072,7 @@ capLoop:
     // sort the intervals lexicographically
     //////////
     Interval * intervals = Intervals;
-    qsort(intervals, interval_nb, sizeof(Interval), CompareIntervals)
+    myqsort(intervals, 0, interval_nb-1, CompareIntervals)
 ;
     //////////
     // compute the set of all bounds of intervals
@@ -1066,7 +1089,7 @@ capLoop:
     // sort the bounds in ascending order
     //////////
     int * intervalBounds = IntervalBounds;
-    qsort(intervalBounds, double_nb, sizeof(int), CompareBounds);
+    myqsort(intervalBounds, 0, double_nb-1, CompareBounds);
 
 
     //////////
