@@ -77,16 +77,11 @@ void Script::dealloc()
 /* some random comments:
    flags:
      type:
-       Ask - Wait - Root
-         with addition WaitTop
-     needs entailment & failure check
-       Nervous
+       Root
      constraints are realized on heap with BIND
        Installed
      garbage collector
        PathMark
-     disjunction has elab the guard 'WAIT'
-       Waiting
      state
        active: -
        committed: Committed (entailed or unit committed)
@@ -100,7 +95,6 @@ void Script::dealloc()
   member data:
     flags: see enum BoardFlags
     suspCount: #tasks + #actors
-    body: then continuation
     board: parent board after commitment
     actor: actor who has introced me
      NOTE: parent and actor are shared
@@ -114,13 +108,9 @@ void Script::dealloc()
 
 /*
   enum BoardFlags
-    Bo_Ask: is an conditional board
-    Bo_Wait: is a disjunctive board
     Bo_Solve: is a solve board; 
     Bo_Root: is the root board
-      Bo_WaitTop
     Bo_Installed: board is installed
-    Bo_Nervous: board should be visited to check entailment/failure
     Bo_Failed: board has failed
     Bo_Committed
     Bo_Discarded
@@ -146,8 +136,7 @@ Board::Board(Actor *a,int typ)
 {
   Assert(a!=NULL || typ==Bo_Root);
   Assert(a==NULL || !a->isCommitted());
-  Assert (typ==Bo_Root || typ==Bo_Ask || typ==Bo_Wait || typ==Bo_Solve
-	  || typ==(Bo_Wait | Bo_Waiting));
+  Assert(typ==Bo_Root || typ==Bo_Solve);
   flags     = typ;
   suspCount = 0;
   u.actor   = a;

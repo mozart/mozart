@@ -40,11 +40,8 @@ Bool oz_install(Board *bb);
 void oz_reduceTrailOnUnitCommit();
 void oz_reduceTrailOnSuspend();
 void oz_reduceTrailOnFail();
-void oz_reduceTrailOnShallow();
 void oz_reduceTrailOnEqEq();
 
-int oz_handleFailure(Continuation *&cont, AWActor *&aa);
-int oz_commit(Board *bb, Thread *tt=0);
 void oz_failBoard();
 void oz_merge(Board *bb, Board *to,int inc);
 
@@ -90,11 +87,5 @@ void oz_deinstallPath(Board *top)
   }
 }
 
-// entailment check
-inline
-Bool oz_entailment() {
-  return (!oz_currentBoard()->hasSuspension()  // threads?
-	  && am.trail.isEmptyChunk());       // constraints?
-}
 
 #endif
