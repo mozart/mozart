@@ -1,0 +1,5 @@
+% some input to test the classes LambdaScanner/LambdaParser
+define f = lambda y.lambda z.(add y z);
+define c = 17;
+f c 7;
+((f) c) 7

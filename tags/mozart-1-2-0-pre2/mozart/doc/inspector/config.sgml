@@ -1,0 +1,96 @@
+<!--
+  - Authors:
+  -   Thorsten Brunklaus <brunklaus@ps.uni-sb.de>
+  -
+  - Copyright:
+  -   Thorsten Brunklaus, 2001
+  -
+  - Last change:
+  -   $Date$ by $Author$
+  -   $Revision$
+  -
+  - This file is part of Mozart, an implementation
+  - of Oz 3
+  -    http://www.mozart-oz.org
+  -
+  - See the file "LICENSE" or
+  -    http://www.mozart-oz.org/LICENSE.html
+  - for information on usage and redistribution
+  - of this file, and for a DISCLAIMER OF ALL
+  - WARRANTIES.
+  -
+  -->
+
+<CHAPTER id="chapter.configure"><TITLE/API Reference/
+  <P>
+    Note: The material in this section is still incomplete.
+  <P>
+    The Inspector functor is available for import at the URI
+    <<'x-oz://system/Inspector'>>.  It exports the following
+    application programmer's interface:
+    <LIST>
+      <ENTRY><<Inspect>>
+      <SYNOPSIS>
+	<<{Inspector.inspect ?_{X}}>>
+      <ITEM>
+	opens a new Inspector window if none exists, then displays
+	?_{X} in the active widget.
+      <ENTRY><<inspectN>>
+      <SYNOPSIS>
+	<<{Inspector.inspectN ?+{I} ?_{X}}>>
+      <ITEM>
+	opens a new Inspector window if none exists, then displays
+	?_{X} in the widget with number&nbsp;?_{I}, counting from zero.
+      <ENTRY><<configure>>
+      <SYNOPSIS>
+	<<{Inspector.configure ?+{A} ?+{X}}>>
+      <ITEM>
+	sets the configuration option with key&nbsp;?_{A} to value&nbsp;?_{X}.
+	<!--** missing: description of keys and values -->
+      <ENTRY><<close>>
+      <SYNOPSIS>
+	<<{Inspector.close}>>
+      <ITEM>
+	closes the Inspector window, if any.
+      <ENTRY><<'class'>>
+      <SYNOPSIS>
+	<<Inspector.'class'>>
+      <ITEM>
+	is the class from which Inspector instances can be created.
+	<!--** missing: methods -->
+      <ENTRY><<object>>
+      <SYNOPSIS>
+	<<Inspector.object>>
+      <ITEM>
+	is the default instance of class <<Inspector.'class'>> which
+	is implicitly used by <<Inspect>>, <<Inspector.inspectN>>,
+	<<Inspector.configure>> and <<Inspector.close>>.
+    </LIST>
+  <SECTION id="section.configure.mappings"><TITLE/Mapping Functions/
+    <P>
+      Writing mapping functions is easy: Every function follows the
+      pattern below.
+<<<fun {MyMapFunction Value MaxWidth MaxDepth}
+   if {WantToMap Value} then
+      &ellipsis; /* computations */ &ellipsis;
+   else Value
+   end
+end>>>
+    <P>
+      <<MaxWidth>> and <<MaxDepth>> are integers denoting the node's width
+      and depth limits.  This allows to handle cycles independently of whether
+      they would have been recognized or not.  Keep in mind that mapping
+      functions should not have side-effects.
+    <SUBSECTION><TITLE/Registering a Mapping Function/
+      <!--** missing -->
+  <SECTION id="section.configure.actions"><TITLE/Action Procedures/
+    <P>
+      Action procedures follow the pattern below.
+<<<proc {MyAction Value}
+   &ellipsis; /* computations */ &ellipsis;
+end>>>
+    <SUBSECTION><TITLE/Registering an Action Procedure/
+      <!--** missing -->
+  <SECTION id="section.configure.relations"><TITLE/Equivalence Relations/
+    <!--** missing -->
+</CHAPTER>

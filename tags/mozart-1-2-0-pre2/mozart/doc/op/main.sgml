@@ -1,0 +1,123 @@
+<!--
+  - Authors:
+  -   Christian Schulte <schulte@ps.uni-sb.de>
+  -
+  - Contributors (sgml translation):
+  -   Daniel Simon <dansim@ps.uni-sb.de>
+  -   Andy Walter <anwalt@ps.uni-sb.de>
+  -
+  - Copyright:
+  -   Christian Schulte, 1998
+  -
+  - Last change:
+  -   $Date$ by $Author$
+  -   $Revision$
+  -
+  - This file is part of Mozart, an implementation
+  - of Oz 3
+  -    http://www.mozart-oz.org
+  -
+  - See the file "LICENSE" or
+  -    http://www.mozart-oz.org/LICENSE.html
+  - for information on usage and redistribution
+  - of this file, and for a DISCLAIMER OF ALL
+  - WARRANTIES.
+  -
+  -->
+
+
+
+<!DOCTYPE Book SYSTEM "ozdoc.dtd" [
+
+<!-- Extension to the DTD -->
+<!ENTITY % proglang.values.local "|sh">
+<!ENTITY % author.class "author|author.extern|comic">
+<!ENTITY % picture.element "picture|picture.extern|picture.choice">
+<!ELEMENT comic - O (%picture.element;)>
+
+<!-- Include Files -->
+<!ENTITY intro SYSTEM "intro.sgml">
+<!ENTITY data SYSTEM "data.sgml">
+<!ENTITY files SYSTEM "files.sgml">
+<!ENTITY text SYSTEM "text.sgml">
+<!ENTITY sockets SYSTEM "sockets.sgml">
+<!ENTITY pipe SYSTEM "pipe.sgml">
+
+<!-- Abbreviations -->
+<!ENTITY lt "<">
+<!ENTITY gt ">">
+<!ENTITY Oz "Oz">
+<!ENTITY amp "&">
+
+<!-- Processing Instructions -->
+<!ENTITY nbsp PI "nbsp">
+<!ENTITY ellipsis PI "ellipsis">
+<!ENTITY ie PI "ie">
+<!ENTITY eg PI "eg">
+<!ENTITY slash PI "slash">
+<!ENTITY cdots PI "cdots">
+<!ENTITY % EXTRA "IGNORE">
+
+]>
+
+<Book proglang=oz>
+  <Front>
+
+    <Meta name="html.split" value="chapter.intro">
+
+    <Meta name="html.split" value="chapter.data">
+    <Meta name="html.split" value="section.data.strings">
+    <Meta name="html.split" value="section.data.virtualstrings">
+
+    <Meta name="html.split" value="chapter.files">
+    <Meta name="html.split" value="section.files.basic">
+    <Meta name="html.split" value="section.files.expand-a">
+
+    <Meta name="html.split" value="chapter.text">
+    <Meta name="html.split" value="section.text.expand">
+
+    <Meta name="html.split" value="chapter.sockets">
+    <Meta name="html.split" value="section.sockets.nutshell">
+    <Meta name="html.split" value="section.sockets.stream">
+    <Meta name="html.split" value="section.sockets.accept">
+    <Meta name="html.split" value="section.sockets.datagram">
+    <Meta name="html.split" value="section.sockets.finger">
+
+    <Meta name="html.split" value="chapter.pipe">
+    <Meta name="html.split" value="section.pipe.shell">
+
+    <Meta name="html.split.toc"   value="">
+    <Meta name="html.split.bib"   value="">
+    <Meta name="html.split.index" value="">
+
+    <Meta name=ozversion value="3.0">
+    <Meta name=status value=revised>
+
+    <Title/Open Programming in Mozart/
+    <Author.Extern to="author.db" key="Christian.Schulte"> 
+    <Comic>
+      <Picture.Choice>
+	<Picture.Extern to="open.gif" type=gif>
+      </Picture.Choice>
+    <Abstract>
+      &Oz; is a concurrent language providing for functional, object-oriented,
+      and constraint programming.  This document is intended as a
+      tutorial on how to program open applications for Mozart.
+    <P>
+      Open applications need access to the rest of the computational world
+      by exchanging data with it.  Mozart provides classes to handle files,
+      sockets, and processes. 
+    </Abstract>
+  <Body proglang=oz>
+    &intro; 
+    &data; 
+    &files; 
+    &text; 
+    &sockets; 
+    &pipe; 
+  <Back>
+    <Bib.Extern id="ISO_8859_1" to="open.bib" key="ISO_8859_1"> 
+    <Bib.Extern id="LEWINE.91" to="open.bib" key="LEWINE:91"> 
+    <Bib.Extern id="STEVENS.90" to="open.bib" key="STEVENS:90"> 
+    <Bib.Extern id="POSIX1" to="open.bib" key="POSIX1">
+</Book>
