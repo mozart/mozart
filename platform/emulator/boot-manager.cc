@@ -161,7 +161,7 @@ typedef OZ_C_proc_interface * (* init_fun_t) (void);
 
 struct ModuleEntry {
   const char * name;
-  init_fun_t   init_function; //OZ_C_proc_interface * interface;
+  init_fun_t   init_function;
 };
 
 /*
@@ -379,6 +379,7 @@ OZ_BI_define(BIObtainNative, 2, 1) {
   init_fun_t init_function = 0;
   char * if_identifier;
   char * filename;
+  char * mod_name = (char *) 0;
 
   if (is_boot) {
     // Might be something linked in statically, so try to find it in table
@@ -392,6 +393,8 @@ OZ_BI_define(BIObtainNative, 2, 1) {
     // Okay, later we will need a filename!
     int n = strlen(ozconf.emuhome);
     int m = strlen(name);
+
+    mod_name = name;
 
     filename = new char[n + m + 64];
 
@@ -456,7 +459,17 @@ OZ_BI_define(BIObtainNative, 2, 1) {
                     OZ_in(1));
   }
 
-  OZ_RETURN(ozInterfaceToRecord((*init_function)(), 0, OK));
+  if (!mod_name) {
+#ifdef DLOPEN_UNDERSCORE
+    char * name_sym = "_oz_module_name";
+#else
+    char * name_sym = "oz_module_name";
+#endif
+
+    mod_name = (char *)  osDlsym(handle,name_sym);
+  }
+
+  OZ_RETURN(ozInterfaceToRecord((*init_function)(), mod_name, OK));
 
 } OZ_BI_end
 
