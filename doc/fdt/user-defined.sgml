@@ -141,8 +141,8 @@ proc {SplitDistributor Is}
                               end F#{FD.reflect.size F}}
          Mid = {FD.reflect.mid MinVar}
       in
-         choice MinVar =<: Mid then {SplitDistributor Fs}
-         []     MinVar >: Mid  then {SplitDistributor Fs}
+         choice MinVar =<: Mid {SplitDistributor Fs}
+         []     MinVar >: Mid  {SplitDistributor Fs}
          end
       end
    end
