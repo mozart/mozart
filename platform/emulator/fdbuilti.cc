@@ -16,6 +16,8 @@
 #include "fdbuilti.hh"
 #include "fdprofil.hh"
 
+#include <stdarg.h>
+
 #if defined(OUTLINE) || defined(FDOUTLINE)
 #define inline
 #include "fdbuilti.icc"
@@ -264,6 +266,44 @@ int BIfdHeadManager::simplifyHead(int ts, STuple &a, STuple &x)
   x.downSize(to);
   return to;
 } // simplifyHead
+
+OZ_Bool BIfdHeadManager::spawnPropagator(FDPropState t,
+                                         OZ_CFun f, int a, OZ_Term * x)
+{
+  addResSusps(createResSusp(f, a, x), t);
+
+  return f(a, x);
+}
+
+OZ_Bool BIfdHeadManager::spawnPropagator(FDPropState t1, FDPropState t2,
+                                         OZ_CFun f, int a, OZ_Term * x)
+{
+  Suspension * s = createResSusp(f, a, x);
+  addResSusp(0, s, t1);
+  addResSusp(1, s, t2);
+
+  return f(a, x);
+}
+
+OZ_Bool BIfdHeadManager::spawnPropagator(FDPropState t,
+                                         OZ_CFun f, int a, OZ_Term t1, ...)
+{
+  OZ_Term * x = (OZ_Term *) heapMalloc(a * sizeof(OZ_Term));
+
+  x[0] = t1;
+
+  va_list ap;
+  va_start(ap, t1);
+
+  for (int i = 1; i < a; i += 1)
+    x[i] = va_arg(ap, OZ_Term);
+
+  va_end(ap);
+
+  addResSusps(createResSusp(f, a, x), t);
+
+  return f(a, x);
+}
 
 //-----------------------------------------------------------------------------
 // An OZ term describing a finite domain is either:
