@@ -26,15 +26,15 @@
 
 #include "thrqueue.hh"
 
-void ThreadQueue::resize () 
+void ThreadQueueImpl::resize () 
 {
   int new_maxsize = maxsize * 2;
-  ThreadPtr *new_queue = ::new ThreadPtr[new_maxsize];
+  Thread ** new_queue = ::new Thread*[new_maxsize];
   int index = 0; 
   int currentSize = size;
   int currentHead = head;
   int mod = maxsize - 1;
-
+  
   DebugCode(message("Resizing thread queue 0x%x --> 0x%x.\n",
 		    maxsize, new_maxsize));
   while (currentSize) {
@@ -42,7 +42,7 @@ void ThreadQueue::resize ()
     currentHead = (currentHead + 1) & mod;
     currentSize--;
   }
-
+  
   delete queue;
   queue = new_queue;
   head = 0;

@@ -75,6 +75,8 @@ enum ThreadFlag {
 			   // (Tobias, please comment?);
   T_S_ofs    = 0x001000,   // the OFS thread (needed for DynamicArity);
 
+  T_S_ltq    = 0x002000,   // designates local thread queue
+  
   //
   M_max    = 0x800000      // MAXIMAL FLAG;
 };
@@ -249,22 +251,13 @@ public:
   
   void headInitNewPropagator(void) {
     state.flags = T_G_new_p_thr | T_G_prop | T_S_unif;
-#ifndef TM_LP
-    state.pri = OZMAX_PRIORITY;
-#endif
   }
 
   void headInit (void) {
     state.flags = T_G_p_thr | T_G_prop | T_S_unif | S_CFUN;
-#ifndef TM_LP
-    state.pri = OZMAX_PRIORITY;
-#endif
   }
   void anyGlobalInit (void) {
     state.flags = T_G_p_thr | T_G_prop;
-#ifndef TM_LP
-    state.pri = OZMAX_PRIORITY;
-#endif
   }
 
   int getThrType () { return (state.flags & S_TYPE_MASK); }
@@ -380,6 +373,10 @@ public:
   void pushTask(ProgramCounter pc,RefsArray y,RefsArray g,RefsArray x,int i)
   {
     taskStack.pushCont(pc,y,g,x,i);
+  }
+  void pushTask(SolveActor * sa)
+  {
+    taskStack.pushLTQ(sa);
   }
 };
 
@@ -513,6 +510,8 @@ public:
   //  an empty suspended sequential thread (with a task stack!);
   Thread (Board *b, int prio);
   //
+  Thread (Board * b, int prio, SolveActor * sa);
+  //
   Thread (Board * b, int prio, OZ_Propagator *p);
 
   //  First - it inherits all the methods of 'ThreadState';
@@ -524,6 +523,12 @@ public:
 
   TaggedRef getDebugVar();
   void setDebugVar(TaggedRef v);
+
+  OZ_Propagator * swapNewPropagator(OZ_Propagator * p) {
+    OZ_Propagator * r = item.propagator;
+    item.propagator = p;
+    return r;
+  }
 
   void setNewPropagator(OZ_Propagator * p) {
     Assert(isNewPropagator());
@@ -700,6 +705,10 @@ public:
   // When some propagator returns 'PROCEED' and still has the 
   // 'propagated' flag set, then it's done.
   void closeDonePropagator ();
+  
+  void closeDonePropagatorCD ();
+  void closeDonePropagatorThreadCD ();
+
 
   // 
   //  Takes a propagator thread and makes out of it a usual 
@@ -712,7 +721,6 @@ public:
   // wake up cconts and board conts
   Bool wakeUp (Board *home, PropCaller calledBy);
 };
-
 
 #ifndef OUTLINE
 #include "thread.icc"

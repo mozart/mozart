@@ -69,6 +69,18 @@ TaggedRef SolveActor::merge(Board *bb) {
     }
   }
 
+  // merge local thread queue
+  if (localThreadQueue) {
+    SolveActor * sa = SolveActor::Cast(bb->getActor());
+
+    if (sa->getLocalThreadQueue()) {
+      for ( ; !localThreadQueue->isEmpty(); 
+	    sa->getLocalThreadQueue()->enqueue(localThreadQueue->dequeue()));
+    } else {
+      sa->setLocalThreadQueue(localThreadQueue);
+    }
+  }
+  
   return solveVar;
 }
 
@@ -123,6 +135,17 @@ void SolveActor::clearResult(Board* bb) {
     return;
 
   result = makeTaggedRef(newTaggedUVar(bb));
+}
+
+inline
+void SolveActor::pushToLocalThreadQueue(Thread * thr, Board * b) {
+  if (localThreadQueue) {
+    localThreadQueue->enqueue(thr);
+  } else {
+    localThreadQueue = new LocalThreadQueue(thr);
+    Thread * ltq_thr = new Thread(b, OZPROPAGATOR_PRIORITY, this);
+    am.scheduleThread(ltq_thr, OZPROPAGATOR_PRIORITY);
+  }
 }
 
 #endif  // __SOLVE_ICC_
