@@ -9,7 +9,7 @@
   ------------------------------------------------------------------------
 */
 
-// #define OZ_DEBUG
+//#define OZ_DEBUG
 
 #define DISTINCT // whether to include the code from FD.distinct
 
@@ -18,15 +18,6 @@
 // or OZ_CFunHeader (new version):
 
 #define OLDEMU   
-
-#ifdef OZ_DEBUG
-  int edgecount;
-  int nodecount;
-  int dlinkcount;
-  int dlinktotal;
-  int listcount;
-  int listtotal;
-#endif
 
 #include "complalldist.hh"
 
@@ -309,8 +300,6 @@ OZ_Return CompleteAllDistProp::xpropagate(void) {
     }
   }
   size = to;
-  
-escape:
 
   // here ends code from DISTINCT
 

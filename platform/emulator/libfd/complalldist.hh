@@ -14,9 +14,21 @@
 
 #include "std.hh"
 
-#undef OZ_DEBUG
+
+#ifdef OZ_DEBUG
+  int edgecount;
+  int nodecount;
+  int dlinkcount;
+  int dlinktotal;
+  int listcount;
+  int listtotal;
+#endif
+
+
+//#undef OZ_DEBUG
 //=============================================================================
 //#include "_generic.hh"
+
 
 // memory management:
 
@@ -114,7 +126,6 @@ typedef void* GenPtr;
 #endif
 
 class generic {
-private:
 public:
   virtual void write() const {
     DEBUG(("generic class (should be overloaded)\r\n"));
@@ -177,7 +188,7 @@ public:
 #endif
   }
 
-  list<T> (list<T> &E) : generic() {
+  list<T> (list<T> &E) :generic() {
     dlink<T> *p = E.root;
     dlink<T> *q = NULL;
     dlink<T> *r = NULL;
@@ -390,10 +401,11 @@ public:
   void write() const {
     DEBUG(("b_queue ["));
     int pos = start;
-    if (size) DEBUG(("%d", q[start]));
+		      
+    //if (size) DEBUG(("%d", q[start]));
     if (start != end) do {
       pos = (pos+1) % maxsize;
-      DEBUG((" %d", q[pos]));
+      //DEBUG((" %d", q[pos]));
     } while (pos != end);    
     DEBUG(("] "));
     DEBUG(("start: %d, end: %d, curr_size: %d/%d\r\n", 
@@ -521,10 +533,8 @@ inline bool node_struct::next_adj_edge(edge &e, node v) const {
 // ---------------------------------------------------------------------------
 
 class graph :public generic {
-friend class edge_array<edge>;
-friend class node_array<node>;
-  //friend class edge_array;
-  //friend class node_array;
+friend class edge_array<int>;
+friend class node_array<edge>;
 private:
   int mark; // for mcb matching
 
