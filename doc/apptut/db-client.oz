@@ -4,9 +4,9 @@ import
 define
    Args = {Application.getCmdArgs
 	   record(
-	      url(single char:&u type:string optional:false)
-	      get(single char:&g type:atom)
-	      put(single char:&p type:atom))}
+	      url(single type:string optional:false)
+	      get(single type:atom)
+	      put(single type:atom))}
    DB   = {Connection.take {Pickle.load Args.url}}
    if     {HasFeature Args get} then
       {System.showInfo {DB get(Args.get $)}}
