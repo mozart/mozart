@@ -2143,7 +2143,10 @@ and is used for fontification.")
 ;;{{{ Fontification for Oz-Machine Mode
 
 (defconst ozm-keywords-matcher
-  "\\<\\(true\\|false\\|unit\\)\\>")
+  (concat "\\<\\("
+	  "true\\|false\\|unit" "\\|"
+	  "pos\\|pid\\|ht\\|onScalar\\|onRecord\\|gci\\|ami"
+	  "\\)\\>"))
 
 (defconst ozm-instr-matcher-1
   (concat
