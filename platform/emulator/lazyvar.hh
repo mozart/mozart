@@ -27,7 +27,7 @@ public:
   OZ_Term getFunction() { return function; }
   void kickLazy();
   void kickLazy(TaggedRef*);
-  void addSuspLazy(Thread*);
+  void addSuspLazy(Thread*,int);
 };
 
 

@@ -215,18 +215,18 @@ void GenCVariable::dispose(void)
 
 
 inline
-void addSuspCVar(TaggedRef v, Thread *el)
+void addSuspCVar(TaggedRef v, Thread *el, int unstable=TRUE)
 {
   GenCVariable *cv = tagged2CVar(v);
   switch(cv->getType()) {
   case PerdioVariable:
-    ((PerdioVar*)cv)->addSuspPerdioVar(el);
+    ((PerdioVar*)cv)->addSuspPerdioVar(el,unstable);
     break;
   case LazyVariable:
-    ((GenLazyVariable*)cv)->addSuspLazy(el);
+    ((GenLazyVariable*)cv)->addSuspLazy(el,unstable);
     break;
   default:
-    cv->addSuspSVar(el);
+    cv->addSuspSVar(el,unstable);
     break;
   }
 }
