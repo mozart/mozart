@@ -71,7 +71,7 @@ SPSRC = $(SPSRC1:%=$(SRCDIR)/SP/%) $(SRCDIR)/SP.oz
 OPSRC1 = OS.oz Open.oz Component.oz
 OPSRC = $(OPSRC1:%.oz=$(SRCDIR)/OP/%.oz) $(SRCDIR)/OP.oz
 
-APSRC1 = Application.oz ArgParser.oz CgiParser.oz
+APSRC1 = Application.oz ArgParser.oz
 APSRC = $(APSRC1:%.oz=$(SRCDIR)/AP/%.oz) $(SRCDIR)/AP.oz
 
 CPSRC1 = Search.oz FD.oz FS.oz
