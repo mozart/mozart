@@ -1,9 +1,13 @@
 <!--
   - Authors:
   -   Denys Duchier <duchier@ps.uni-sb.de>
+  -   Ralf Scheidhauer <Ralf.Scheidhauer@ps.uni-sb.de>
+  -   Christian Schulte <schulte@ps.uni-sb.de>
   -
   - Copyright:
   -   Denys Duchier, 1998
+  -   Ralf Scheidhauer, 1998
+  -   Christian Schulte, 1998
   -
   - Last change:
   -   $Date$ by $Author$
@@ -32,6 +36,7 @@
 <!entity amp "&">
 <!entity etc PI "ellipsis">
 <!entity chapter.src.get system "src-get.sgml">
+<!entity chapter.rpm     system "rpm.sgml">
 <!entity chapter.src.make system "src-make.sgml">
 <!entity chapter.bin system "bin.sgml">
 <!entity section.configure system "configure.sgml">
@@ -42,18 +47,26 @@
     <meta name="entry.category" value="option">
     <meta name="entry.category" value="variable">
     <!-- split statements -->
+    <meta name="html.split" value="chapter.unix">
+    <meta name="html.split" value="chapter.windows">
+    <meta name="html.split" value="chapter.rpm">
     <meta name="html.split" value="chapter.src.get">
     <meta name="html.split" value="chapter.src.make">
     <title/Installation Manual/
     <author.extern to="author.db" key="Denys.Duchier">
-
-    <part id=part.rpm>
-      <title/RPM Distribution/
-    </part>
+    <author.extern to="author.db" key="Ralf.Scheidhauer">
+    <author.extern to="author.db" key="Christian.Schulte">
 
     <part id=part.bin>
       <title/Binary Distribution/
+      <p>
+        Installing Mozart is a very simple task; you can do without
+        super-user privileges or special knowledge about system
+        administration. A Mozart binary distribution configures itself
+        on startup. Therefore installation of Mozart only consists in
+        unpacking an archive file.
       &chapter.bin;
+      &chapter.rpm;
     </part>
 
     <part id=part.src>
