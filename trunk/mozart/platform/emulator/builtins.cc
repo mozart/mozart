@@ -6701,6 +6701,34 @@ OZ_Return newObjectInline(TaggedRef cla, TaggedRef &out)
 DECLAREBI_USEINLINEFUN1(BInewObject,newObjectInline)
 
 
+OZ_C_proc_begin(BIsetNewHdl,1)
+{
+  OZ_Term preed = OZ_getCArg(0); DEREF(preed,_1,_2);
+  if (! isAbstraction(preed)) {
+    oz_typeError(0,"abstraction");
+  }
+
+  if (am.newHdl) {
+    oz_raise(E_ERROR,E_SYSTEM,"fallbackInstalledTwice",1,
+	     oz_atom("setNewHdl"));
+  }
+
+  am.newHdl = preed;
+  return PROCEED;
+}
+OZ_C_proc_end
+
+OZ_C_proc_begin(BINew,3)
+{
+  if (!am.newHdl) {
+    oz_raise(E_ERROR,E_KERNEL,"fallbackNotInstalled",1,oz_atom("setNewHdl"));
+  }
+
+  oz_currentThread->pushCall(am.newHdl,OZ_args,3);
+  am.emptySuspendVarList();  
+  return BI_REPLACEBICALL;
+}
+OZ_C_proc_end
 
 
 OZ_C_proc_begin(BIgetSelf,1)
@@ -7204,6 +7232,8 @@ BIspec allSpec[] = {
   {"getClass",        2,BIgetClass, 	       (IFOR) getClassInline},
   {"ooGetLock",       1,BIooGetLock, 	       (IFOR) ooGetLockInline},
   {"newObject",       2,BInewObject, 	       (IFOR) newObjectInline},
+  {"setNewHdl",       1,BIsetNewHdl,          0},
+  {"New",             3,BINew,                0},
   {"getSelf",         1,BIgetSelf,            0},
   {"setSelf",         1,BIsetSelf,            0},
   {"ooExch",          3,BIooExch,             (IFOR) ooExchInline},
