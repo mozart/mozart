@@ -85,7 +85,7 @@ define
       TB={New Tk.text tkInit(parent:T width:50 height:10 bg:white wrap:word fg:black insertbackground:black exportselection:true)}
       SY={New Tk.scrollbar tkInit(parent:T width:8 orient:vertical)}
       B1 B2={New Tk.button tkInit(parent:T text:if Type==new then "Cancel!" else "Close Window!" end
-                                  action:proc{$} {T tkClose} end bd:1 relief:groove)}
+                                  action:proc{$} {T tkClose} end)}
 
       fun{MySplit In}
          case In of nil then nil
@@ -121,9 +121,9 @@ define
          end
       in
          {TB tkBind(event:'<Alt-Return>' action:GO)}
-         B1={New Tk.button tkInit(parent:T text:"Send Message!" bd:1 relief:groove action:GO)}
+         B1={New Tk.button tkInit(parent:T text:"Send Message!" action:GO)}
       else
-         B1={New Tk.button tkInit(parent:T text:"Reply Message!" bd:1 relief:groove
+         B1={New Tk.button tkInit(parent:T text:"Reply Message!"
                                   action:proc{$}
                                             Mess={Map Arg.message fun{$ C}
                                                                      if C==&\n then "\n>" else C end
