@@ -22,6 +22,13 @@
 <!ENTITY r_fsc SYSTEM "r_fsc.sgml">
 <!ENTITY r_aux SYSTEM "r_aux.sgml">
 
+<!ENTITY ct_cpi_tutorial SYSTEM "ct_cpi_tutorial.sgml">
+<!ENTITY ct_cpi_reference SYSTEM "ct_cpi_reference.sgml">
+
+<!ENTITY lp_tutorial SYSTEM "lp_tutorial.sgml">
+<!ENTITY lp_reference SYSTEM "lp_reference.sgml">
+<!ENTITY lp_tutorial_intro SYSTEM "lp_tutorial_intro.sgml">
+
 <!ENTITY r_anhang SYSTEM "r_anhang.sgml">
 
 
@@ -88,6 +95,45 @@
     <Meta name="html.split" value="anhang.ozcode">
     <Meta name="html.split" value="anhang.lesseq">
     
+    <Meta name="html.split" arg1="ct.chapter" arg2="ct.html">
+    <Meta name="html.split" value="ct.introduction">
+    <Meta name="html.split" value="ct.intro.model">
+    <Meta name="html.split" value="ct.intro.overview">
+    <Meta name="html.split" value="ct.casestudy">
+    <Meta name="html.split" value="ct.casestudy.impl">
+
+    <Meta name="html.split" value="ct.casestudy.impl.ridef">
+    <Meta name="html.split" value="ct.casestudy.impl.profilewakeup">
+    <Meta name="html.split" value="ct.casestudy.impl.constraint">
+    <Meta name="html.split" value="ct.casestudy.impl.rivar">
+    <Meta name="html.split" value="ct.casestudy.impl.expect">
+    <Meta name="html.split" value="ct.casestudy.impl.propagator">
+
+    <Meta name="html.split" value="ct.casestudy.reference">
+    <Meta name="html.split" value="ct.reference">
+    <Meta name="html.split" value="ct.reference.def">
+    <Meta name="html.split" value="ct.reference.wakeup">
+    <Meta name="html.split" value="ct.reference.profile">
+    <Meta name="html.split" value="ct.reference.constraint">
+    <Meta name="html.split" value="ct.reference.ctvar">
+
+    <Meta name="html.split" arg1="lp.chapter" arg2="lp.html">
+    <Meta name="html.split" value="lp.tutorial">
+    <Meta name="html.split" value="lp.tutorial.intro">
+    <Meta name="html.split" value="lp.tutorial.fd">
+    <Meta name="html.split" value="lp.tutorial.lp">
+    <Meta name="html.split" value="lp.tutorial.fdlp">
+    <Meta name="html.split" value="lp.tutorial.eval">
+    <Meta name="html.split" value="lp.reference">
+
+    <Meta name="entry.category" value="static">
+    <Meta name="entry.category" arg1="purevirtual" arg2="pure virtual">
+    <Meta name="entry.category" value="constructor">
+    <Meta name="entry.category" value="destructor">
+    <Meta name="entry.category" value="operator">
+    <Meta name="entry.category" value="member">
+    <Meta name="entry.category" value="function">
+
 
     <Meta name="html.split.bib" value="">
     <Meta name="html.split.index" value="">
@@ -164,7 +210,8 @@
     &u_nesting
     &u_vectors
     &u_advanced
-  </Chapter>
+    &ct_cpi_tutorial
+    &lp_tutorial 
 
   <Chapter id="reference_manual">
   <Title/Reference Manual/
@@ -177,24 +224,39 @@
     &r_fs
     &r_fsc
     &r_aux
-
+    &ct_cpi_reference 
+    &lp_reference 
   </Chapter>
   
-  <chapter id="anhang">
+  <Chapter id="anhang">
   <title/Appendix/
     &r_anhang
-  </chapter>
+  </Chapter>
+
+  <Chapter id="ct.chapter">
+    <Title/Building Constraints Systems from Scratch/
+   </Chapter>
+
+  <Chapter id="lp.chapter">
+    <Title/Employing Linear Programming Solvers/
+
+  </Chapter>
+
 
   <Back>
   
-  <bib.extern id="system" to="cpi.bib" key="system">
-  <bib.extern id="murray" to="cpi.bib" key="murray">
-  <bib.extern id="primer" to="cpi.bib" key="primer">
+  <bib.extern id="system"     to="cpi.bib" key="system">
+  <bib.extern id="murray"     to="cpi.bib" key="murray">
+  <bib.extern id="primer"     to="cpi.bib" key="primer">
   <bib.extern id="absmachine" to="cpi.bib" key="absmachine">
-  <bib.extern id="modules" to="cpi.bib" key="modules">
-  <bib.extern id="gdb" to="cpi.bib" key="gdb">
+  <bib.extern id="modules"    to="cpi.bib" key="modules">
+  <bib.extern id="gdb"        to="cpi.bib" key="gdb">
+
+  <Bib.Extern id="BeringerDeBacker:95a" to ="cpi.bib" 
+              key="BeringerDeBacker:95a">
+  <Bib.Extern id="Holzbaur:90" to="cpi.bib" key="Holzbaur:90">
+  <Bib.Extern id="Benhamou:95a" to ="cpi.bib" key="Benhamou:95a">
+  <Bib.Extern id="Chvantal:83" to ="cpi.bib" key="Chvantal:83">
+  <Bib.Extern id="Mueller:98a" to="cpi.bib" key="Mueller:98a">
 
 </Book>
-
-
-
