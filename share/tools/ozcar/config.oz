@@ -16,7 +16,7 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Text
 %%
-Version                = 'May 08 1997'
+Version                = 'May 10 1997'
 TitleName              = 'Oz Debugger Interface'
 IconName               = 'Ozcar'
 
@@ -26,7 +26,7 @@ EmailOfBenni           = 'lorenz@ps.uni-sb.de'
 InitStatus             = TitleName # ' initialized'
 
 IgnoreFeeds            = 'Ignore Queries'
-StartNewThreads        = 'Start Threads'
+IgnoreThreads          = 'Ignore Subthreads'
 
 TreeTitle              = 'Thread Tree'
 StackTitle             = 'Stack'
@@ -194,7 +194,7 @@ MaxStackSize           = 40
 MaxStackBrowseSize     = 15
 
 TimeoutToCalcTree      = 380 % ms
-TimeoutToBlock         = 470
+TimeoutToBlock         = 720
 TimeoutToUpdateEnv     = 430
 TimeoutToUpdateScroll  = TimeoutToUpdateEnv
 TimeoutToSwitch        = 260
