@@ -1393,6 +1393,25 @@ TaggedRef TaskStack::dbgGetTaskStack(ProgramCounter pc, int depth)
     if (PC==C_EMPTY_STACK)
       break;
 
+    if (PC==C_CFUNC_CONT_Ptr) {
+      OZ_CFun biFun    = (OZ_CFun) Y;
+      RefsArray X      = (RefsArray) G;
+      TaggedRef args = nil();
+      
+      if (X)
+	for (int i=getRefsArraySize(X)-1; i>=0; i--)
+	  args = cons(X[i],args);
+      else
+	args = nil();
+
+      TaggedRef pairlist = 
+	cons(OZ_pairA("name", OZ_atom(builtinTab.getName((void *) biFun))),
+	     cons(OZ_pairA("args", args),
+		  nil()));
+      TaggedRef entry = OZ_recordInit(OZ_atom("builtin"), pairlist);
+      out = cons(entry, out);
+      continue;
+    }
     out = cons(CodeArea::dbgGetDef(PC,G,Y),out);
   }
 
