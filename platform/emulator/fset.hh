@@ -18,9 +18,7 @@
 
 #include <iostream.h>
 
-#include "oz.h"
-
-const int fset_high = 2;
+#include "oz_cpi.hh"
 
 class FSetValue {
 friend class OZ_FSetImpl;
@@ -45,15 +43,21 @@ ostream &operator << (ostream &ofile, const FSetValue &fs) {
   return fs.print(ofile);
 }
 
+const int fset_sup = (32 * fset_high) - 1;
+
 class OZ_FSetImpl {
 friend class FSetValue;
 private:
   int _card_min, _card_max; /* _card_min is -1 if the set is not valid */
   int _known_not_in, _known_in;
   int _in[fset_high], _not_in[fset_high];
+
+  void printGlb(ostream &) const;
+  void printLub(ostream &) const;
 public:
   OZ_FSetImpl(void) {};
   OZ_FSetImpl(int, int, OZ_Term, OZ_Term);
+  OZ_FSetImpl(OZ_Term, OZ_Term);
 
   OZ_FSetImpl unify (const OZ_FSetImpl &) const;
   OZ_Boolean unify (const FSetValue &) const;

@@ -9,8 +9,8 @@
   ------------------------------------------------------------------------
 */
 
+#include "cpi.hh"
 #include "fdbuilti.hh"
-
 
 // ---------------------------------------------------------------------
 // misc stuff
@@ -311,24 +311,6 @@ OZ_C_proc_begin(BIfdPutGe, 2)
   return x.releaseNonRes();
 }
 OZ_C_proc_end
-
-extern OZ_Term ** staticSuspendVars;
-extern int staticSuspendVarsNumber;
-
-class ExpectOnly : public OZ_Expect {
-private:
-  OZ_Return spawn(OZ_Propagator *, int , OZ_PropagatorFlags ) {}
-  OZ_Return spawn(OZ_Propagator *, OZ_PropagatorFlags) {}
-  OZ_Return suspend(OZ_Thread) {}
-  OZ_Return fail(void) {}
-public:
-  ExpectOnly(void) : OZ_Expect() {}
-  OZ_Term * getSuspVar(void) {
-    if (staticSuspendVarsNumber == 0)
-      return NULL;
-    return staticSuspendVars[--staticSuspendVarsNumber];
-  }
-};
 
 OZ_C_proc_begin(BIfdPutList, 2)
 {

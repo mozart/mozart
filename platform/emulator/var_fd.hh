@@ -84,8 +84,10 @@ public:
   void propagateUnify(TaggedRef var);
 
   int getSuspListLength(void) {
-    return suspList->length() +
-      fdSuspList[fd_singl]->length() + fdSuspList[fd_bounds]->length();
+    int len = suspList->length();
+    for (int i = fd_any; i--; )
+      len += fdSuspList[i]->length();
+    return len;
   }
 
   void installPropagators(GenFDVariable *, Board *);

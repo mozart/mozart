@@ -20,43 +20,60 @@
 #include "genvar.hh"
 #include "fset.hh"
 #include "fdhook.hh"
+#include "oz_cpi.hh"
 
 class GenFSetVariable: public GenCVariable {
 private:
   OZ_FSet _fset;
+  SuspList * fsSuspList[fs_any];
 
 public:
-  GenFSetVariable(OZ_FSet &fs) : GenCVariable(FSetVariable) { _fset = fs; }
+  GenFSetVariable(OZ_FSet &fs) : GenCVariable(FSetVariable) {
+    _fset = fs;
+    for (int i = fs_any; i--; )
+      fsSuspList[i] = NULL;
+  }
 
   void gc(void);
   size_t getSize(void){return sizeof(GenFSetVariable);}
   void dispose(void);
 
-  Bool unifyFSet(TaggedRef *, TaggedRef, TaggedRef *, TaggedRef,
+  Bool unifyFSet(OZ_Term *, OZ_Term, OZ_Term *, OZ_Term,
                  Bool, Bool = TRUE);
   OZ_FSet &getSet(void) { return _fset; }
   void setSet(OZ_FSet fs) { _fset = fs; }
 
-  Bool valid(TaggedRef val);
+  Bool valid(OZ_Term val);
 
-  int getSuspListLength(void) { return suspList->length(); }
-
-  void propagate(TaggedRef var, PropCaller prop_eq = pc_propagator) {
-    if (suspList) GenCVariable::propagate(var, suspList, prop_eq);
+  int getSuspListLength(void) {
+    int len = suspList->length();
+    for (int i = fs_any; i--; )
+      len += fsSuspList[i]->length();
+    return len;
   }
-  void propagateUnify(TaggedRef var) { propagate(var, pc_cv_unif); }
+
+  void propagate(OZ_Term var, OZ_FSetPropState state,
+                 PropCaller prop_eq = pc_propagator);
+
+  void propagateUnify(OZ_Term var);
 };
 
 inline
-GenFSetVariable * tagged2GenFSetVar(TaggedRef term)
+GenFSetVariable * tagged2GenFSetVar(OZ_Term term)
 {
   GCDEBUG(term);
   return (GenFSetVariable *) tagged2CVar(term);
 }
 
-inline Bool isGenFSetVar(TaggedRef term, TypeOfTerm tag);
-inline GenFSetVariable * tagged2GenFSetVar(TaggedRef term);
-inline void addSuspFSetVar(TaggedRef, SuspList *);
-inline void addSuspFSetVar(TaggedRef, Thread *);
+inline Bool isGenFSetVar(OZ_Term term, TypeOfTerm tag);
+inline GenFSetVariable * tagged2GenFSetVar(OZ_Term term);
+inline void addSuspFSetVar(OZ_Term, SuspList *);
+inline void addSuspFSetVar(OZ_Term, Thread *);
+
+#if !defined(OUTLINE)
+#include "fsgenvar.icc"
+#else
+#undef inline
+#endif
 
 #endif // __FSGENVAR_HH__

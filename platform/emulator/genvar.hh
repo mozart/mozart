@@ -187,7 +187,6 @@ void addSuspCVar(TaggedRef v, Thread * el)
   sv->suspList = addSuspToList(sv->suspList, el, sv->home);
 }
 
-
 #include "fsgenvar.hh"
 #include "fdgenvar.hh"
 #include "fdbvar.hh"
