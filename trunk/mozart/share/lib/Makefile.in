@@ -77,8 +77,11 @@ APSRC = $(APSRC1:%.oz=AP/%.oz) AP.oz
 CPSRC1 = Search.oz FD.oz FS.oz
 CPSRC = $(CPSRC1:%=CP/%) CP.oz
 
-DPSRC1 = Site.oz Connection.oz Remote.oz agenda.oz remote.oz server.oz
+DPSRC1 = Connection.oz Remote.oz
 DPSRC = $(DPSRC1:%=DP/%) DP.oz
+
+MISCSRC1 = Agenda.oz Server.oz
+MISCSRC = $(MISCSRC1:%=Misc/%) Misc.oz
 
 WPSRC1 = Tk.oz TkOptions.oz TkTools.oz TkInit.oz
 WPSRC = $(WPSRC1:%=WP/%) WP.oz
@@ -162,7 +165,7 @@ ENVS1 = \
 	SP.env OP.env AP.env CP.env WP.env DP.env \
 	Compiler.env CompilerPanel.env Panel.env Browser.env Explorer.env \
 	Emacs.env Ozcar.env Profiler.env Gump.env GumpScanner.env \
-	GumpParser.env
+	GumpParser.env Misc.env
 ENVS = $(ENVS1:%=%) Base.env Standard.env
 TYPS = $(ENVS1:%.env=%.typ)
 TYCS = $(TYPS:%.typ=tyc/%.tyc)
@@ -178,7 +181,7 @@ COMPONENTS = \
 	Init.ozc OPI.ozc SP.ozc OP.ozc AP.ozc CP.ozc WP.ozc DP.ozc \
 	Compiler.ozc CompilerPanel.ozc Panel.ozc Browser.ozc \
 	Explorer.ozc Emacs.ozc Ozcar.ozc Profiler.ozc Gump.ozc \
-	GumpScanner.ozc GumpParser.ozc
+	GumpScanner.ozc GumpParser.ozc Misc.ozc
 
 LIBCOMPONENTS = $(COMPONENTS:%=$(OZLIB)/%)
 
@@ -304,8 +307,9 @@ CP.ozc: $(DUMPINTRO) $(CPSRC) SP.env CP.env Init.ozc
 
 WP.ozc: $(DUMPINTRO) $(WPSRC) SP.env OP.env WP.env Init.ozc
 
-DP.ozc: $(DUMPINTRO) $(DPSRC) SP.env OP.env \
-	AP.env WP.env DP.env Init.ozc
+DP.ozc: $(DUMPINTRO) $(DPSRC) OP.env AP.env DP.env Init.ozc
+
+Misc.ozc: $(DUMPINTRO) $(MISCSRC) SP.env OP.env AP.env WP.env DP.env Init.ozc
 
 Compiler.ozc: $(DUMPINTRO) $(COMPILERSRC) SP.env \
 	CP.env Gump.env Compiler.env Init.ozc
