@@ -2066,6 +2066,7 @@ LBLdispatcher:
 // INSTRUCTIONS: Definition
 // ------------------------------------------------------------------------
 
+  Case(DEFINITIONCOPY)
   Case(DEFINITION)
     {
       Reg reg                     = getRegArg(PC+1);
@@ -3148,6 +3149,13 @@ LBLdispatcher:
       error("Emulate: ENDDEFINITION instruction executed");
       goto LBLerror;
     }
+
+  Case(INLINEPLUS)
+  Case(INLINEPLUS1)
+  Case(INLINEMINUS)
+  Case(INLINEMINUS1)
+  Case(TESTLESS)
+  Case(TESTLESSEQ)
 
   Case(TESTLABEL1)
   Case(TESTLABEL2)
