@@ -238,10 +238,10 @@ if test -z "$LIBART_CONFIG"; then
   else
     AC_MSG_ERROR([
 No libart was found on your system.  You can supply the additional option
---enable-libart to configure, in which case we will use our own copy of libart.
-However, it is highly recommended that you install install instead the
-appropriate development support files from GNOME.  If your system is RPM-based,
-these are probably available in a RPM called gnome-libs-devel.
+--enable-private-libart to configure, in which case we will use our own copy
+of libart. However, it is highly recommended that you install install instead
+the appropriate development support files from GNOME.  If your system is
+RPM-based, these are probably available in a RPM called gnome-libs-devel.
 ])
   fi
 else
