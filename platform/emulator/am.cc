@@ -959,7 +959,7 @@ void AM::awakeIOVar(TaggedRef var)
   sl = sl->dispose();
   Assert(!sl);
 #else
-  deinstallPath(rootBoard);
+  Assert(isToplevel());
 
   Assert(isCons(var));
   if (OZ_unify(head(var),tail(var)) != PROCEED) {
@@ -1016,7 +1016,7 @@ Bool AM::loadQuery(CompStream *fd)
 
 OZ_Bool AM::readSelect(int fd,TaggedRef l,TaggedRef r)
 {
-  if (currentBoard != rootBoard) {
+  if (!isToplevel()) {
     warning("select only on toplevel");
     return PROCEED;
   }
