@@ -96,7 +96,8 @@ public:
   int index;
 
   NetAddress(DSite* s, int i) : site(s), index(i) {}
-
+  NetAddress(){}
+  
   void set(DSite *s,int i) {site=s,index=i;}
 
   Bool same(NetAddress *na) { return na->site==site && na->index==index; }
@@ -118,7 +119,7 @@ protected:
 
 private:
   //
-  int hashWOTimestamp();
+  unsigned int hashWOTimestamp();
 
   void setType(unsigned int i){flags=i;}
 
