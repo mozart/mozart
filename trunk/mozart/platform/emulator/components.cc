@@ -916,7 +916,7 @@ OZ_C_proc_begin(BISendGate,2)
   stamp=0;
   unsigned char *s;
   s = (unsigned char *)(url+strlen(url));
-  while (s>url) {
+  while (s>(unsigned char *)url) {
     int c = *(--s)-'a';
     if (c<0||c>25) goto bomb;
     stamp = stamp*26+c;
