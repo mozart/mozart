@@ -65,7 +65,7 @@
 <!-- Constraint programming -->
 
 <!ENTITY chapter.space       SYSTEM "space.sgml">
-<!ENTITY chapter.fc       SYSTEM "fc.sgml">
+<!ENTITY chapter.recordc     SYSTEM "recordc.sgml">
 <!ENTITY chapter.combinator SYSTEM "combinator.sgml">
 <!ENTITY chapter.fd       SYSTEM "fd.sgml">
 <!ENTITY chapter.fs       SYSTEM "fs.sgml">
@@ -195,7 +195,7 @@
     <Meta name="html.split"       value="section.fs.reflection">
     <Meta name="html.split"       value="section.fs.distribution">
 
-    <Meta name="html.split"       value="chapter.fc">
+    <Meta name="html.split"       value="chapter.recordc">
 
     <Meta name="html.split"       value="chapter.combinator">
 
@@ -304,7 +304,7 @@
     &chapter.fd;
     &chapter.schedule;
     &chapter.fs;
-    &chapter.fc;
+    &chapter.recordc;
     &chapter.combinator;
     &chapter.space;
   </Part>
