@@ -518,6 +518,10 @@ and
 <index/array<and>sited entity/
 <index/sited entity<and>space/
 <index/space<and>sited entity/
+<index/distributed semantics<and>dictionary/
+<index/distributed semantics<and>thread/
+<index/distributed semantics<and>array/
+<index/distributed semantics<and>space/
 threads, dictionaries, arrays, and spaces are sited
 even though they are in base modules.
 These entities will become
@@ -639,8 +643,9 @@ This will ensure there are no cross-site cycles.
 
 <SECTION id="bringing"><TITLE>Bringing it all together</TITLE>
 
-<P>Does the Mozart distribution model
+<index/application<and>overall structure/
 <index/feeling<and>warm, fuzzy/
+<P>Does the Mozart distribution model
 give programmers a warm, fuzzy feeling when
 writing distributed applications?
 In short, yes it does.
