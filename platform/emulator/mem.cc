@@ -429,9 +429,9 @@ char *getMemFromOS(size_t sz) {
                          (unsigned long) ozconf.heapMaxSize) / 100) :
        (heapTotalSize > (unsigned) ozconf.heapMaxSize))) {
     int newSize = (heapTotalSize * 3) / 2;
-    prefixError();
     printf("\n\n*** Heap maxsize exceeded. Increase from %d to %d? (y/n) ",
            ozconf.heapMaxSize,newSize);
+    prefixError();
     fflush(stdout);
     char buf[1000];
 
