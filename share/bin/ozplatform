@@ -49,6 +49,8 @@ case $system in
    ;;
    *Power*Mac*Rhapsody*) OZARCH=powermac-rhapsody
    ;;
+   *Power*Mac*Darwin*)	OZARCH=powermac-darwin
+   ;;
    *)  	                OZARCH=unknown-unknown
    ;;
 esac
