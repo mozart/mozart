@@ -78,27 +78,24 @@ OZ_BI_define(BIIsActivePropagator, 1, 1)
 {
   DEBUGPRINT(("BIIsActivePropagator in\n"));
 
-  printf("*** Not implemented yet! ***"); fflush(stdout);
-
   OZ_Term v1 = oz_deref(OZ_in(0));
 
   if (!oz_isExtension(v1)) {
-    OZ_RETURN(oz_false());
+    return OZ_raiseErrorC(EXCEPTION, 0, EXPECT_PROPGATORREF, v1);
   }
 
   OZ_Extension * se1 = oz_tagged2Extension(v1);
   if (PropagatorReference::getId() != se1->getIdV()) {
-    OZ_RETURN(oz_false());
+    return OZ_raiseErrorC(EXCEPTION, 0, EXPECT_PROPGATORREF, v1);
   }
 
-  OZ_RETURN(oz_true());
+  OZ_RETURN(((PropagatorReference *) se1)->isActive() 
+	    ? oz_true() : oz_false());
 } OZ_BI_end
 
 OZ_BI_define(BIDeactivatePropagator, 1, 0)
 {
   DEBUGPRINT(("BIDeactivatePropagator in\n"));
-
-  printf("*** Not implemented yet! ***"); fflush(stdout);
 
   OZ_Term v1 = oz_deref(OZ_in(0));
 
@@ -112,7 +109,7 @@ OZ_BI_define(BIDeactivatePropagator, 1, 0)
     return OZ_raiseErrorC(EXCEPTION, 0, EXPECT_PROPGATORREF, v1);
   }
 
-  ((PropagatorReference *) se1)->discard();
+  ((PropagatorReference *) se1)->deactivate();
 
   DEBUGPRINT(("BIDeactivatePropagator out\n"));
 
@@ -121,9 +118,7 @@ OZ_BI_define(BIDeactivatePropagator, 1, 0)
 
 OZ_BI_define(BIActivatePropagator, 1, 0)
 {
-  DEBUGPRINT(("BIDeactivatePropagator in\n"));
-
-  printf("*** Not implemented yet! ***"); fflush(stdout);
+  DEBUGPRINT(("BIActivatePropagator in\n"));
 
   OZ_Term v1 = oz_deref(OZ_in(0));
 
@@ -137,9 +132,9 @@ OZ_BI_define(BIActivatePropagator, 1, 0)
     return OZ_raiseErrorC(EXCEPTION, 0, EXPECT_PROPGATORREF, v1);
   }
 
-  ((PropagatorReference *) se1)->discard();
+  ((PropagatorReference *) se1)->activate();
 
-  DEBUGPRINT(("BIDeactivatePropagator out\n"));
+  DEBUGPRINT(("BIActivatePropagator out\n"));
 
   return PROCEED;
 } OZ_BI_end
