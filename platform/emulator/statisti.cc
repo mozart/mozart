@@ -164,6 +164,7 @@ void Statistics::printIdle(FILE *fd)
       fprintf(fd,"%%g)");
     }
     printMem(fd,", h: ", (totalHeap-heapUsed.sinceIdle)*KB);
+    fprintf(fd,"\n");
     fflush(fd);
   }
   heapUsed.sinceIdle = totalHeap;
