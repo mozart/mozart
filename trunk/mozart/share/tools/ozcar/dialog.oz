@@ -80,7 +80,7 @@ local
 	    CurCompUI <- CUI
 	    CurEnv    <- {Record.adjoinList env {Append AuxEnv.'G' AuxEnv.'Y'}}
 
-	    case {Compiler.getOPI} of false then skip
+	    case {Emacs.getOPI} of false then skip
 	    elseof OPI then
 	       {C enqueue(putEnv({{OPI getCompiler($)} enqueue(getEnv($))}))}
 	    end
@@ -295,7 +295,7 @@ local
 	       Verbose = {TkVerbose tkReturnInt($)} > 0
 	    in
 	       {Config set(verbose Verbose)}
-	       {Emacs  setVerbose(Verbose)}
+	       {Emacs.condSend.interface setTrace(Verbose)}
 	    end
 
 	    {Config set(stepDotBuiltin {TkStepDotBuiltin tkReturnInt($)} > 0)}
