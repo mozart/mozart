@@ -9,8 +9,6 @@ OZBIN		= $(PREFIX)/bin
 OZTOOLS		= $(PREFIX)/tools
 OZPATH		= .:$(PREFIX)/lib:$(PREFIX)/tools
 IMAGESDIR	= $(OZTOOLS)/images
-CACHEDIR	= $(PREFIX)/cache/http/www.ps.uni-sb.de/ozhome/tools
-CACHEBINDIR	= $(PREFIX)/cache/http/www.ps.uni-sb.de/ozhome/bin
 
 SHELL		= /bin/sh
 
@@ -20,15 +18,11 @@ INSTALL_BIN	= $(INSTALL) -m 555
 INSTALL_SRC	= @INSTALL_SRC@
 INSTALL_DIR	= @INSTALL_DIR@
 
-PERL		= @PERL@
-ENV2TYPE	= $(PERL) $(SRCTOP)/share/lib/env2type
+OZFLAGS		= -DLILO
+OZC		= @OZC@
 
-OZFLAGS		=
-OZBATCH		= @OZBATCH@
-OZFC		= $(OZBATCH) -DLILO -c
-
-COMPILE		= $(OZBATCH) $(OZFLAGS) -c
-EXEC		= $(OZBATCH) $(OZFLAGS)
+COMPILE		= $(OZC) $(OZFLAGS) -c
+EXEC		= $(OZC) $(OZFLAGS)
 
 COMPILERPANELSRC1 = \
 	CompilerPanelClass.oz
@@ -89,12 +83,6 @@ GUMPEXAMPLES = \
 	Examples.oz Lambda.in LambdaParser.ozg LambdaScanner.ozg \
 	OzParser.ozg OzScanner.ozg
 
-ENVS = \
-	CompilerPanel.env Panel.env Browser.env Explorer.env Emacs.env \
-	Ozcar.env Profiler.env Gump.env GumpScanner.env GumpParser.env
-TYPS = $(ENVS:%.env=tyc/%.typ)
-TYCS = $(TYPS:%.typ=%.tyc)
-
 ALLSRCS = \
 	$(COMPILERPANELSRC) $(PANELSRC) $(BROWSERSRC) \
 	$(EXPLORERSRC) $(EMACSSRC) $(OZCARSRC) $(PROFILERSRC) \
@@ -105,25 +93,16 @@ TOOLSDIRS = $(TOOLSDIRS1:%=$(OZTOOLS)/%)
 
 TOOLSFILES = \
 	$(GUMPEXAMPLES:%=$(OZTOOLS)/gump/examples/%) \
-	$(OZTOOLS)/gump/ProductionTemplates.oz \
-	$(ENVS:%=$(OZTOOLS)/%) \
-	$(TYCS:tyc/%=$(OZTOOLS)/%)
-
-COMPONENTS = \
-	CompilerPanel.ozc Panel.ozc Browser.ozc Explorer.ozc Emacs.ozc \
-	Ozcar.ozc Profiler.ozc Gump.ozc GumpScanner.ozc GumpParser.ozc
+	$(OZTOOLS)/gump/ProductionTemplates.oz
 
 FUNCTORS = \
 	CompilerPanel.ozf Panel.ozf Browser.ozf Explorer.ozf Emacs.ozf \
 	Ozcar.ozf Profiler.ozf Gump.ozf GumpScanner.ozf GumpParser.ozf
 
-TOOLSCOMPONENTS = $(COMPONENTS:%=$(OZTOOLS)/%)
-CACHECOMPONENTS = $(COMPONENTS:%=$(CACHEDIR)/%)
-CACHETYCS	= $(TYCS:tyc/%=$(CACHEDIR)/%)
+TOOLSFUNCTORS = $(FUNCTORS:%=$(OZTOOLS)/%)
 
 SYSLETS = opi
 BINFILES = $(SYSLETS:%=$(OZBIN)/%)
-CACHELETS = $(SYSLETS:%=$(CACHEBINDIR)/%)
 
 IMAGES1 = \
 	compiler.xbm compilermask.xbm \
@@ -131,17 +110,10 @@ IMAGES1 = \
 	browserMIcon.xbm browserIcon.xbm stop.xbm
 IMAGES = $(IMAGES1:%=$(IMAGESDIR)/%)
 
-.PHONY: all bootstrap lilo
 
-all: Makefile $(COMPONENTS) $(SYSLETS)
+.PHONY: all install bootstrap
 
-lilo: $(FUNCTORS)
-
-Makefile: Makefile.in ../config.status
-	cd .. && ./config.status
-
-../config.status: ../configure
-	cd .. && ./config.status --recheck
+all: Makefile $(FUNCTORS) $(SYSLETS)
 
 include $(SRCTOP)/share/Makefile.boot
 
@@ -151,46 +123,11 @@ bootstrap: boot-all
 # Components
 #---------------------------------------------------------------------
 
-tyc/%.typ: %.env
-	@-mkdir tyc
-	$(ENV2TYPE) $< > $@
-
-tyc/%.tyc: tyc/%.typ
-	$(COMPILE) $< -o $@
-
-%.ozc: %.oz
-	$(COMPILE) $< -o $@
-
 %.ozf: %.oz
-	$(OZFC) $< -o $@
+	$(COMPILE) $< -o $@
 
-CompilerPanel.ozc: $(COMPILERPANELSRC) Browser.env CompilerPanel.env
-
-Panel.ozc: $(PANELSRC) Panel.env
-
-Browser.ozc: $(BROWSERSRC) Browser.env
-
-Explorer.ozc: $(EXPLORERSRC) Browser.env Explorer.env
-
-Emacs.ozc: $(EMACSSRC) Emacs.env
-
-Ozcar.ozc: $(OZCARSRC) Browser.env Emacs.env Ozcar.env
-
-ozcar-version.oz: $(OZCARSRCNOVER)
-	echo \'`date '+%b %d'`\' > $@
-
-Profiler.ozc: $(PROFILERSRC) Browser.env Emacs.env Profiler.env
-
-Gump.ozc: $(GUMPSRC) $(SRCTOP)/share/lib/compiler/TupleSyntax.oz \
-	$(SRCTOP)/share/lib/compiler/Misc.oz \
-	$(SRCTOP)/share/lib/compiler/FormatStrings.oz Gump.env
-
-GumpScanner.ozc: $(GUMPSCANNERSRC) GumpScanner.env
-
-GumpParser.ozc: $(GUMPPARSERSRC) GumpParser.env
-
-opi: MakeOPI.oz $(TYCS)
-	$(EXEC) -l AP $<
+opi: MakeOPI.oz
+	$(EXEC) -l Application,Component $<
 
 
 
@@ -203,6 +140,9 @@ Browser.ozf: $(BROWSERSRC) Browser.env
 Explorer.ozf: $(EXPLORERSRC) Browser.env Explorer.env
 
 Emacs.ozf: $(EMACSSRC) Emacs.env
+
+ozcar-version.oz: $(OZCARSRCNOVER)
+	echo \'`date '+%b %d'`\' > $@
 
 Ozcar.ozf: $(OZCARSRC) Browser.env Emacs.env Ozcar.env
 
@@ -226,7 +166,7 @@ GumpParser.ozf: $(GUMPPARSERSRC) GumpParser.env
 install: install-main install-images install-cache
 
 install-main: all \
-	$(OZTOOLS) $(TOOLSDIRS) $(TOOLSFILES) $(TOOLSCOMPONENTS) \
+	$(OZTOOLS) $(TOOLSDIRS) $(TOOLSFILES) $(TOOLSFUNCTORS) \
 	$(OZBIN) $(BINFILES)
 
 install-images: \
@@ -238,7 +178,7 @@ $(OZBIN) $(OZTOOLS) $(TOOLSDIRS) $(IMAGESDIR) $(OZCARIMAGESDIR):
 $(OZTOOLS)/%.oz: %.oz
 	$(INSTALL_SRC) $< $@
 
-$(OZTOOLS)/%.ozc: %.ozc
+$(OZTOOLS)/%.ozf: %.ozf
 	$(INSTALL_FILE) $< $@
 
 $(OZTOOLS)/gump/examples/%: gump/examples/%
@@ -250,24 +190,20 @@ $(IMAGESDIR)/%: images/%
 $(OZCARIMAGESDIR)/%: ozcar/images/%
 	$(INSTALL_FILE) $< $@
 
-$(OZTOOLS)/%.env: %.env
-	$(INSTALL_SRC) $< $@
-
-$(OZTOOLS)/%.tyc: tyc/%.tyc
-	$(INSTALL_FILE) $< $@
-
 $(OZBIN)/%: %
 	$(INSTALL_BIN) $< $@
 
-install-cache: $(CACHEDIR) $(CACHECOMPONENTS) $(CACHETYCS) $(CACHELETS)
-$(CACHEDIR) $(CACHEBINDIR):
-	$(INSTALL_DIR) $@
-$(CACHECOMPONENTS): $(CACHEDIR)/%.ozc : %.ozc
-	$(INSTALL_FILE) $< $@
-$(CACHETYCS): $(CACHEDIR)/%.tyc : tyc/%.tyc
-	$(INSTALL_FILE) $< $@
-$(CACHELETS): $(CACHEBINDIR)/% : % $(CACHEBINDIR)
-	$(INSTALL_BIN) $< $@
+CACHEDIR  = $(PREFIX)/cache/http/www.ps.uni-sb.de
+CACHELINK = $(CACHEDIR)/ozhome
+
+install-cache: \
+	$(CACHEDIR) $(CACHELINK)
+
+$(CACHEDIR):
+	$(INSTALL_DIR) $(CACHEDIR)
+
+$(CACHELINK): $(CACHEDIR)
+	$(LN_S)  $(PREFIX) $(CACHELINK)
 
 #---------------------------------------------------------------------
 # Cleaning up
@@ -278,8 +214,7 @@ $(CACHELETS): $(CACHEBINDIR)/% : % $(CACHEBINDIR)
 clean:
 	rm -f *~ *.bak
 	rm -f ozcar-version.oz
-	rm -f -r tyc
-	rm -f $(COMPONENTS)
+	rm -f $(FUNCTORS)
 	rm -f opi
 
 veryclean: clean
@@ -299,6 +234,12 @@ tags:
 #---------------------------------------------------------------------
 # Testing Components Locally
 #---------------------------------------------------------------------
+
+Makefile: Makefile.in ../config.status
+	cd .. && ./config.status
+
+../config.status: ../configure
+	cd .. && ./config.status --recheck
 
 .PHONY: stage1
 
