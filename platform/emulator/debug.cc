@@ -31,6 +31,7 @@
 #include "builtins.hh"
 #include "thread.hh"
 #include "am.hh"
+#include "board.hh"
 
 #include <string.h>
 #include <signal.h>
