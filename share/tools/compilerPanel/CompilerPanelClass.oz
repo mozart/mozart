@@ -705,6 +705,10 @@ in
 	       [] info(VS Coord) then
 		  CompilerPanel, ShowInfo(VS Coord)
 	       [] message(Record Coord) then VSCell State in
+		  case {Label Record} of error then
+		     {self.Book toTop(self.Messages)}
+		  else skip
+		  end
 		  VSCell = {NewCell ""}
 		  {Error.msg
 		   proc {$ X}
@@ -717,10 +721,10 @@ in
 		  CompilerPanel, ShowInfo({Access VSCell} Coord State)
 	       [] displaySource(Title _ VS) then
 		  {New SourceWindow init(self.TopLevel Title VS) _}
-	       [] toTop() then
+	       [] attention() then skip
 		  {self.Book toTop(self.Messages)}
-	       [] errorFound() then skip
 	       [] pong() then skip
+	       [] insert(_ _) then skip
 	       else {self M}
 	       end
 	    end
