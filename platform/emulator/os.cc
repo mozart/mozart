@@ -108,8 +108,6 @@ extern "C" int dlclose(void *);
 #include <sys/select.h>
 #endif
 
-static long emulatorStartTime = 0;
-
 fd_set socketFDs;
 static int maxSocket = 0;
 
@@ -121,13 +119,13 @@ Bool isSocket(int fd)
   return (FD_ISSET(fd,&socketFDs));
 }
 
-int runningUnderNT()
+static int runningUnderNT()
 {
   static int underNT = -1;
   if (underNT==-1) {
     OSVERSIONINFO vi;
     vi.dwOSVersionInfoSize = sizeof(vi);
-    BOOL b = GetVersionExA(&vi);
+    BOOL b = GetVersionEx(&vi);
     Assert(b==TRUE);
     underNT = (vi.dwPlatformId==VER_PLATFORM_WIN32_NT);
   }
@@ -140,7 +138,7 @@ typedef long long verylong;
 typedef long verylong;
 #endif
 
-verylong fileTimeToMS(FILETIME *ft)
+static verylong fileTimeToMS(FILETIME *ft)
 {
   verylong x1 = ((verylong)(unsigned int)ft->dwHighDateTime)<<32;
   verylong x2 = x1 + (unsigned int)ft->dwLowDateTime;
@@ -149,18 +147,21 @@ verylong fileTimeToMS(FILETIME *ft)
 }
 
 
-FILETIME emuStartTime;
+static verylong emulatorStartTime;
 
 /* return time since start in milli seconds */
-unsigned int getTime()
+static unsigned int getTotalTime()
 {
   SYSTEMTIME st;
   GetSystemTime(&st);
   FILETIME ft;
   SystemTimeToFileTime(&st,&ft);
-  return fileTimeToMS(&ft)-fileTimeToMS(&emuStartTime);
+  return fileTimeToMS(&ft)-emulatorStartTime;
 }
 
+#else
+
+static long emulatorStartTime = 0;
 
 #endif
 
@@ -169,15 +170,13 @@ unsigned int getTime()
 unsigned int osUserTime()
 {
 #ifdef WINDOWS
-  if (!runningUnderNT()) {
-    return getTime();
-  }
-
-  /* only NT supports this */
   FILETIME ct,et,kt,ut;
-  GetProcessTimes(GetCurrentProcess(),&ct,&et,&kt,&ut);
-  return (unsigned int) fileTimeToMS(&ut);
-
+  if (GetProcessTimes(GetCurrentProcess(),&ct,&et,&kt,&ut) != FALSE) {
+    // only NT supports this
+    return (unsigned int) fileTimeToMS(&ut);
+  } else {
+    return getTotalTime();
+  }
 #else
   struct tms buffer;
 
@@ -190,15 +189,13 @@ unsigned int osUserTime()
 unsigned int osSystemTime()
 {
 #ifdef WINDOWS
-  if (!runningUnderNT()) {
+  FILETIME ct,et,kt,ut;
+  if (GetProcessTimes(GetCurrentProcess(),&ct,&et,&kt,&ut) != FALSE) {
+    // only NT supports this
+    return (unsigned int) fileTimeToMS(&kt);
+  } else {
     return 0;
   }
-
-  /* only NT supports this */
-  FILETIME ct,et,kt,ut;
-  GetProcessTimes(GetCurrentProcess(),&ct,&et,&kt,&ut);
-  return (unsigned int) fileTimeToMS(&kt);
-
 #else
   struct tms buffer;
 
@@ -212,7 +209,7 @@ unsigned int osSystemTime()
 unsigned int osTotalTime()
 {
 #if defined(WINDOWS)
-  return getTime();
+  return getTotalTime();
 
 #elif defined(SUNOS_SPARC)
 
@@ -243,7 +240,7 @@ public:
 
 static TimerThread *timerthread = NULL;
 
-DWORD __stdcall timerFun(void *p)
+static DWORD __stdcall timerFun(void *p)
 {
   TimerThread *ti = (TimerThread*) p;
   /* make sure that this thread is not mixed with others */
@@ -560,26 +557,24 @@ int osSystem(char *cmd)
   if (!runningUnderNT())
     return system(cmd);
 
-
   // RS: don't know why but NT hangs when I use system(3)
-  // this way however output gets lost
   STARTUPINFO si;
   memset(&si,0,sizeof(si));
   si.cb = sizeof(si);
   si.dwFlags = STARTF_FORCEOFFFEEDBACK;
 
-  SECURITY_ATTRIBUTES sa;
-  sa.nLength = sizeof(sa);
-  sa.lpSecurityDescriptor = NULL;
-  sa.bInheritHandle = TRUE;
-
   PROCESS_INFORMATION pinf;
 
-  BOOL ret = CreateProcess(NULL,cmd,&sa,NULL,FALSE,0,NULL,NULL,&si,&pinf);
+  if (CreateProcess(NULL,cmd,NULL,NULL,FALSE,0,NULL,NULL,&si,&pinf) == FALSE)
+    return 1;
+  CloseHandle(pinf.hThread);
+  DWORD ret = WaitForSingleObject(pinf.hProcess,INFINITE);
+  if (ret == WAIT_FAILED ||
+      GetExitCodeProcess(pinf.hProcess,&ret) == FALSE)
+    ret = 1;
 
-  return (ret==FALSE ||
-          WaitForSingleObject(pinf.hProcess,INFINITE) == WAIT_FAILED) ? 1:0;
-
+  CloseHandle(pinf.hProcess);
+  return ret;
 #else
   if (cmd == NULL) {
     return 1;
@@ -780,7 +775,7 @@ int osGetAlarmTimer()
 
 
 #ifdef WINDOWS
-int splitSocks(fd_set *in, fd_set *socks, fd_set *other)
+static int splitSocks(fd_set *in, fd_set *socks, fd_set *other)
 {
   FD_ZERO(socks);
   FD_ZERO(other);
@@ -800,7 +795,7 @@ int splitSocks(fd_set *in, fd_set *socks, fd_set *other)
 }
 
 
-int addOther(fd_set *socks, fd_set *other, fd_set *out)
+static int addOther(fd_set *socks, fd_set *other, fd_set *out)
 {
   FD_ZERO(out);
   *out = *socks;
@@ -942,7 +937,7 @@ char *oslocalhostname()
 #ifdef WINDOWS
   char buf[1000];
   int aux = gethostname(buf,sizeof(buf));
-  if (aux < 0) {
+  if (aux != 0) {
     // OZ_warning("cannot determine hostname\n");
     // sprintf(buf,"%s","localhost");
     return 0;
@@ -962,15 +957,16 @@ char *oslocalhostname()
 
 char *ostmpnam(char *s)
 {
-  char *prefix = osgetenv("TMPDIR");
-  if (prefix==NULL)
-    prefix = "C:\\TEMP";
+  char prefix[128];
+  DWORD ret = GetTempPath(sizeof(prefix),prefix);
+  if (ret == 0 || ret >= sizeof(prefix))
+    strcpy(prefix,"C:\\TEMP\\");
 
   static char *tn = NULL;
-  static int tnlen = 100;
+  static int tnlen = 128;
   if (tn==0) tn = (char *) malloc(tnlen*sizeof(char));
 
-  int newlen = strlen(prefix)+1 + 30;
+  int newlen = strlen(prefix) + 10;
   if (newlen>tnlen) {
     tnlen = newlen;
     tn = (char*)realloc(tn,tnlen);
@@ -978,7 +974,7 @@ char *ostmpnam(char *s)
 
   static int counter = 0;
   while(1) {
-    sprintf(tn,"%s\\oztmp%d",prefix,counter);
+    sprintf(tn,"%soztmp%d",prefix,counter);
     counter = (counter++) % 10000;
     if (access(tn,F_OK)!=0)
       break;
@@ -994,7 +990,7 @@ char *ostmpnam(char *s)
 
 int osdup(int fd)
 {
-  // no dup yet
+  //--** no dup yet
   return fd;
 }
 
@@ -1063,7 +1059,9 @@ void osInit()
 
   SYSTEMTIME st;
   GetSystemTime(&st);
-  SystemTimeToFileTime(&st,&emuStartTime);
+  FILETIME ft;
+  SystemTimeToFileTime(&st,&ft);
+  emulatorStartTime = fileTimeToMS(&ft);
 
   /* init sockets */
   WSADATA wsa_data;
