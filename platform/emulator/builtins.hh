@@ -303,8 +303,18 @@ public:
   BuiltinTab(int sz) : HashTable(CHARTYPE,sz) {};
   ~BuiltinTab() {};
   unsigned memRequired(void) {
-     return HashTable::memRequired(sizeof(BuiltinTabEntry));
-   }
+    return HashTable::memRequired(sizeof(BuiltinTabEntry));
+  }
+  char * getName(void * fp) {
+    HashNode * hn = getHashTableEntry(NULL);
+    for (; hn != NULL; hn = getHashTableEntry(hn)) {
+      BuiltinTabEntry * bit = (BuiltinTabEntry *) hn->value;
+      if (bit->getInlineFun() == (InlineFunOrRel) fp ||
+	  bit->getFun() == (OZ_CFun) fp)
+	return hn->key.fstr;
+    }
+    return "???";
+  }
 };
 
 extern BuiltinTab builtinTab;
