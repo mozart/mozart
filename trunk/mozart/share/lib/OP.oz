@@ -5,19 +5,24 @@
 %%%  Last modified: $Date$ by $Author$
 %%%  Version: $Revision$
 
-declare
+%%%
+%%% This file creates the Open Programming Functor
+%%%
 
-fun {NewWP IMPORT}
+\insert 'OS.oz'
+
+declare
+fun {NewOP IMPORT}
    \insert 'Standard.env'
-       = IMPORT.'Standard'
-   \insert 'OP.env'
-       = IMPORT.'OP'
+   = IMPORT.'Standard'
    \insert 'SP.env'
-       = IMPORT.'SP'
-   \insert 'Tk.oz'
-   Tk      = {NewTk Open}
-   \insert 'TkTools.oz'
-   TkTools = {NewTkTools Tk}
+   = IMPORT.'SP'
+
+   \insert 'Open.oz'
+   \insert 'Component.oz'
+   \insert 'Application.oz'
+   
 in
-   \insert 'WP.env'
+   \insert 'OP.env'
 end
+

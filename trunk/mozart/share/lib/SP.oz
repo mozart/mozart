@@ -5,19 +5,23 @@
 %%%  Last modified: $Date$ by $Author$
 %%%  Version: $Revision$
 
-declare
+%%%
+%%% This file creates the System Programming Functor
+%%%
 
-fun {NewWP IMPORT}
+declare
+fun {NewSP IMPORT}
    \insert 'Standard.env'
-       = IMPORT.'Standard'
-   \insert 'OP.env'
-       = IMPORT.'OP'
-   \insert 'SP.env'
-       = IMPORT.'SP'
-   \insert 'Tk.oz'
-   Tk      = {NewTk Open}
-   \insert 'TkTools.oz'
-   TkTools = {NewTkTools Tk}
+   = IMPORT.'Standard'
+
+   \insert 'Foreign.oz'
+   \insert 'System.oz'
+   \insert 'Debug.oz'
+   \insert 'Error.oz'
+
+   Foreign = {NewForeign}
+   Error   = {NewError}
 in
-   \insert 'WP.env'
+   \insert 'SP.env'
 end
+
