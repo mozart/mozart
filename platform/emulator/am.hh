@@ -203,7 +203,7 @@ public:
   Suspension *mkSuspension(Board *b, int prio, OZ_CFun bi,
 			   RefsArray X, int argsToSave);
   TaggedRef createNamedVariable(int regIndex, TaggedRef name);
-  void handleToplevelBlocking(ProgramCounter PC);
+  void handleToplevelBlocking();
 
   
   Bool isToplevel();
