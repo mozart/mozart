@@ -45,8 +45,6 @@ reference the object.
 for an <EM>object</EM>,
 then the attempted object operation cannot be retried.
 
-<item>The <<Probe>> operation is not available to users.
-
 </list>
 
 <SECTION><TITLE>Modifications</TITLE>
