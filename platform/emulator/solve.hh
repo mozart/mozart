@@ -60,10 +60,7 @@ private:
 #endif
 
 public:
-  SolveActor();
-  ~SolveActor();
-
-  SolveActor(SolveActor&);
+  NO_DEFAULT_CONSTRUCTORS(SolveActor);
   SolveActor(Board *bb);
 
   Board *getSolveBoard() { return solveBoard; }
