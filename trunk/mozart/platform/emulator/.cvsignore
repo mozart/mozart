@@ -14,3 +14,10 @@ marshalMsg.cc
 config.status
 config.cache
 config.log
+ozma.hh
+ozma-s.ll
+ozma-s.cc
+ozma-p.yy
+ozma-p.cc
+perdio.cc
+
