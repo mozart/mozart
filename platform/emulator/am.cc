@@ -332,6 +332,9 @@ void AM::init(int argc,char **argv)
 #ifdef DEBUG_CHECK
   dontPropagate = NO;
 #endif
+
+  profileMode = NO;
+
 }
 
 void AM::checkVersion()
@@ -1499,8 +1502,11 @@ void handlerALRM()
 
 void AM::handleAlarm()
 {
-  if (ozstat.currAbstr) 
+  if (ozstat.currPropagator) {
+    ozstat.currPropagator->incSamples();
+  } else if (ozstat.currAbstr) {
     ozstat.currAbstr->samples++;
+  }
 
   if (isCritical()) {  /* wait for next ALRM signal */
     return;

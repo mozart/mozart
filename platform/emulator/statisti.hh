@@ -17,6 +17,7 @@
 #endif
 
 #include "types.hh"
+#include "oz_cpi.hh"
 
 #ifdef HEAP_PROFILE
 # define ProfileCode(Code) Code
@@ -101,6 +102,10 @@ public:
   void enterCall(PrTabEntry  *a);
   void leaveCall(PrTabEntry  *old);
   void heapAlloced(int sz);
+
+  OZ_CFunHeader *currPropagator;
+  void enterProp(OZ_CFunHeader *p) { currPropagator = p; p->incCalls(); }
+  void leaveProp()                 { currPropagator = 0; }
 
   void initCount();
   void printCount();
