@@ -129,11 +129,11 @@ sub do_cmd_maketitle {
 sub remove_document_env {
     if (/\\begin${match_br_rx}document$match_br_rx/) {
     s/\\begin$match_br_rx[d]ocument$match_br_rx/\\latextohtmlditchpreceding \\maketitle /;
-    }
-#s/\\mchapter/\\chapter/g;
-#s/\\msection/\\section/g;
-
-    if (/\\end${match_br_rx}document$match_br_rx/) { $_ = $` }
+}
+if (/\\end${match_br_rx}document$match_br_rx/) { $_ = $` }
+s/maxifigure/figure/g;
+#s/(\\begin${match_br_rx})maxifigure($match_br_rx)/$1figure$2$1makeimage$2/g;
+#s/(\\end${match_br_rx})maxifigure($match_br_rx)/$1makeimage$2$1figure$2/g;
 }
 
 sub do_env_explain {
@@ -241,6 +241,8 @@ sub do_cmd_marginpar {
     "<SPAN CLASS=MARGINNOTE>$next</SPAN>$_";
 }
 
+sub do_cmd_Marginpar { &do_cmd_marginpar; }
+
 sub do_cmd_inexact {
     local ($_) = @_;
     local ($next);
@@ -267,13 +269,15 @@ sub do_cmd_HTMLNOLINEBREAK {
 
 sub do_cmd_danger {
     local ($_) = @_;
-    "<IMG HREF='/img/danger.gif' ALT='[DANGER]'>$_";
+    "<IMG SRC='/img/danger.gif' ALT='[DANGER]'>$_";
 }
+
+sub do_cmd_dbend { &do_cmd_danger; }
 
 sub do_cmd_ddanger {
     local ($_) = @_;
-    "<IMG HREF='/img/danger.gif' ALT='[DANGER]'>"
-        . "<IMG HREF='/img/danger.gif' ALT='[DANGER]'>"
+    "<IMG SRC='/img/danger.gif' ALT='[DANGER]'>"
+        . "<IMG SRC='/img/danger.gif' ALT='[DANGER]'>"
             . $_;
 }
 
@@ -290,5 +294,7 @@ sub lib_add_bbl_and_idx_dummy_commands {
 &ignore_commands( <<EOF);
 ozfont
 EOF
+
+sub do_env_denum { &do_env_enumerate; }
 
 1;;
