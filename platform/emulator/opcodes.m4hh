@@ -60,11 +60,11 @@ changecom(comment,COMMENT)
 
 define(`OPCODE',0)
 define(CATUPPER,`$1`'TOUPPER($2)')
-define(`instruction',`#define CATUPPER(OPM_,$1) ".long OPCODE" incrop(1)')
+define(`instruction',`#define CATUPPER(OPM_,$1) "OPCODE" incrop(1)')
 
 include(EMUDIR/instrDefs.m4)
 
-#define OPM_OZERROR ".long OPCODE"
+#define OPM_OZERROR "OPCODE"
 
 #endif
 
