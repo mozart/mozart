@@ -149,6 +149,8 @@ public:
 
   void dispose(void);
 
+  Bool isAliveUpToSolve(void);
+
   void pushChoice(WaitActor *wa);
   void pushChoices(CpStack *pcps);
   Bool hasChoices();
