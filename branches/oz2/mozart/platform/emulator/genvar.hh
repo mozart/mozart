@@ -31,13 +31,7 @@
 enum TypeOfGenCVariable {
   FDVariable,
   OFSVariable,
-#ifdef METAVAR
-  MetaVariable,
-#endif 
   BoolVariable,
-#ifdef FSETVAR
-  FSetVariable,
-#endif
   AVAR,
 };
 
@@ -191,11 +185,9 @@ void addSuspCVar(TaggedRef v, Thread * el)
   sv->suspList = addSuspToList(sv->suspList, el, sv->home);
 }
 
-#include "fsgenvar.hh"
 #include "fdgenvar.hh"
 #include "fdbvar.hh"
 #include "ofgenvar.hh"
-#include "metavar.hh"
 #include "avar.hh"
 
 #ifndef OUTLINE

@@ -1191,23 +1191,12 @@ void GenCVariable::gc(void)
     ((GenOFSVariable*)this)->gc();
     FDPROFILE_GC(cp_size_ofsvar, sizeof(GenOFSVariable));
     break;
-#ifdef METAVAR
-  case MetaVariable:
-    ((GenMetaVariable*)this)->gc();
-    FDPROFILE_GC(cp_size_metavar, sizeof(GenMetaVariable));
-    break;
-#endif /* METAVAR */
   case BoolVariable:
     FDPROFILE_GC(cp_size_boolvar, sizeof(GenBoolVariable));
     break;
   case AVAR:
     ((AVar *) this)->gcAVar();
     break;
-#ifdef FSETVAR
-  case FSetVariable:
-    ((GenFSetVariable *) this)->gc();
-    break;
-#endif /* FSETVAR */
   default:
     Assert(0);
   }
@@ -1314,27 +1303,6 @@ void GenFDVariable::gc(void)
   for (i = fd_prop_any; i--; )
     fdSuspList[i] = fdSuspList[i]->gc();
 }
-
-#ifdef FSETVAR
-void GenFSetVariable::gc(void)
-{
-  GCMETHMSG("GenFSetVariable::gc");
-}
-
-FSetValue * FSetValue::gc(void) 
-{
-  return (FSetValue *) gcRealloc(this, sizeof(*this));
-
-}
-#endif /* FSETVAR */
-
-#ifdef METAVAR
-void GenMetaVariable::gc(void)
-{
-  GCMETHMSG("GenMetaVariable::gc");
-  gcTagged(data, data);
-}
-#endif /* METAVAR */
 
 void AVar::gcAVar(void)
 { 
@@ -1443,10 +1411,6 @@ void gcTagged(TaggedRef &fromTerm, TaggedRef &toTerm)
   switch (auxTermTag) {
 
   case SMALLINT: toTerm = auxTerm; break;
-
-#ifdef FSETVAR
-  case FSETVALUE: toTerm = makeTaggedFSetValue(tagged2FSetValue(auxTerm)->gc()); break;
-#endif /* FSETVAR */
 
   case LITERAL:  toTerm = makeTaggedLiteral(tagged2Literal(auxTerm)->gc()); break;
   case LTUPLE:   toTerm = makeTaggedLTuple(tagged2LTuple(auxTerm)->gc()); break;
