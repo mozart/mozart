@@ -59,7 +59,9 @@ public:
 
   void becomesSmallIntAndPropagate(TaggedRef * trPtr);
 
-  ProgramCounter index(ProgramCounter elseLabel, IHashTable * table);
+  // is X=val still valid, i.e. is val an smallint and is it still in the domain
+  Bool valid(TaggedRef val);
+
 
   void setDom(FiniteDomain &fd) {finiteDomain = fd;}
   FiniteDomain &getDom(void) {return finiteDomain;}

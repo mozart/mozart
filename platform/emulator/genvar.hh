@@ -81,8 +81,8 @@ public:
   Bool unify(TaggedRef *, TaggedRef, TypeOfTerm,
              TaggedRef *, TaggedRef, TypeOfTerm);
 
-  // does indexing over constrained variables
-  ProgramCounter index(ProgramCounter elseLabel, IHashTable * table);
+  // is X=val still valid
+  Bool valid(TaggedRef val);
 
   OZPRINT;
   OZPRINTLONG;

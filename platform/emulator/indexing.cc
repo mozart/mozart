@@ -15,6 +15,7 @@
 
 
 #include "indexing.hh"
+#include "genvar.hh"
 
 
 EntryTable newEntryTable(int sz)
@@ -78,4 +79,37 @@ void IHashTable::add(TaggedRef number, ProgramCounter label)
 
   /* we do not check, whether it is already in there */
   numberTable[hsh] = new HTEntry(number, label, numberTable[hsh]);
+}
+
+
+// - 'table' holds the code to branch to when indexing
+// - 'elseLabel' is the PC of the ELSE-branch, ie. in case there is no
+//   clause to switch to
+// How it works:
+// If none of the numbers is member of the domain, no guard can ever be
+// entailed therefore goto to the else-branch. Otherwise goto varLabel, which
+// wait for determination of the variable. Usually if unconstrained variables
+// get bound to each other, det-nodes are not reentered, but since
+// unifying two fd variables may result in a singleton (ie. determined term),
+// det-nodes are reentered and we achieve completeness.
+
+ProgramCounter IHashTable::index(GenCVariable *cvar, ProgramCounter elseLbl)
+{
+  // if there are no integer guards goto else-branch
+  if (numberTable) {
+    HTEntry** aux_table = numberTable;
+    int tsize = size;
+
+    // if there is at least one integer member of the domain then goto varLabel
+    for (int i = 0; i < tsize; i++) {
+      HTEntry* aux_entry = aux_table[i];
+      while (aux_entry) {
+        if (cvar->valid(aux_entry->getNumber()))
+            return varLabel;
+        aux_entry = aux_entry->getNext();
+      }
+    }
+  }
+
+  return elseLbl;
 }

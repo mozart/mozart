@@ -95,9 +95,6 @@ class HTEntry {
       }
       return ret;
     }
-
-
-
 };
 
 inline int nextPowerOf2(int n)
@@ -145,6 +142,7 @@ class IHashTable {
   int hash(int n) { return (n & hashMask); }  // return a value n with 0 <= n < size
   ProgramCounter getElse() { return elseLabel; }
 
+  ProgramCounter index(GenCVariable *var, ProgramCounter elseLabel);
 };
 
 #endif

@@ -99,16 +99,13 @@ size_t GenCVariable::getSize(void){
 }
 
 
-ProgramCounter GenCVariable::index(ProgramCounter elseLabel,
-                                   IHashTable * table)
+Bool GenCVariable::valid(TaggedRef val)
 {
+  Assert(type==FDVariable);
   switch (type){
   case FDVariable:
-    return ((GenFDVariable*)this)->index(elseLabel, table);
   default:
-    error("Unexpected type generic variable at %s:%d.",
-          __FILE__, __LINE__);
-    return NOCODE;
+    return ((GenFDVariable*)this)->valid(val);
   }
 }
 

@@ -174,38 +174,11 @@ Bool GenFDVariable::unifyFD(TaggedRef * vPtr, TaggedRef var,  TypeOfTerm vTag,
 } // GenFDVariable::unify
 
 
-// - 'table' holds the code to branch to when indexing
-// - 'elseLabel' is the PC of the ELSE-branch, ie. in case there is no
-//   clause to switch to
-// How it works:
-// If none of the numbers is member of the domain, no guard can ever be
-// entailed therefore goto to the else-branch. Otherwise goto varLabel, which
-// wait for determination of the variable. Usually if unconstrained variables
-// get bound to each other, det-nodes are not reentered, but since
-// unifying two fd variables may result in a singleton (ie. determined term),
-// det-nodes are reentered and we achieve completeness.
 
-ProgramCounter GenFDVariable::index(ProgramCounter elseLabel,
-                                    IHashTable* table)
+Bool GenFDVariable::valid(TaggedRef val)
 {
-  // if there are no integer guards goto else-branch
-  if (table->numberTable) {
-    HTEntry** aux_table = table->numberTable;
-    int tsize = table->size;
-
-    // if there is at least one integer member of the domain then goto varLabel
-    for (int i = 0; i < tsize; i++) {
-      HTEntry* aux_entry = aux_table[i];
-      while (aux_entry) {
-        if (isSmallInt(aux_entry->getNumber()))
-          if (finiteDomain.contains(smallIntValue(aux_entry->getNumber())))
-            return table->varLabel;
-        aux_entry = aux_entry->getNext();
-      } // while
-    } // for
-  }
-
-  return elseLabel;
+  Assert(!isRef(val));
+  return (isSmallInt(val) && finiteDomain.contains(smallIntValue(val)));
 }
 
 
