@@ -219,10 +219,28 @@
 	  ( E_OS,    		"os"),
 	  ( E_SYSTEM,		"system"),
 	  ( E_DISTRIBUTION,	"distribution"),
+
 	  # debugger related
           ( AtomDebugExit,     "DEBUG_EXIT"),
           ( AtomDebugStep,     "DEBUG_STEP"),
           ( AtomDebugNoStep,   "DEBUG_NOSTEP"),
+
+          ( AtomEntry,         "entry" ),
+          ( AtomExit,          "exit" ),
+          ( AtomThr,           "thr" ),
+          ( AtomOrigin,        "origin" ),
+          ( AtomDebugFrame,    "debugFrame" ),
+          ( AtomProcedureFrame,"procedureFrame" ),
+          ( AtomPC,            "PC" ),
+          ( AtomKind,          "kind" ),
+          ( AtomArgs,          "args" ),
+          ( AtomVars,          "vars" ),
+          ( AtomFrameID,       "frameID" ),
+          ( AtomData,          "data" ),
+          ( AtomCall,          "call" ),
+          ( AtomY,             "Y" ),
+          ( AtomG,             "G" ),
+          ( AtomV,             "v" ),
 	  );
 
 
