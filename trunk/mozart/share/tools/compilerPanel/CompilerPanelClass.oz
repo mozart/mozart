@@ -120,7 +120,8 @@ local
 	     'Class'#Blue
 	     'Object'#Cyan
 	     'Array'#Green 'Dictionary'#Green 'Port'#Green 'Lock'#Green
-	     'Thread'#Orange 'Space'#Orange]
+	     'Thread'#Orange 'Space'#Orange
+	     'FSet'#Red]
 
    fun {SetColor TextWidget PrintName Value ColorDict} C in
       C = case {IsDet Value} then Type in
@@ -142,6 +143,7 @@ local
 	     elsecase {IsChunk Value} then 'Chunk'
 	     elsecase {IsThread Value} then 'Thread'
 	     elsecase {IsSpace Value} then 'Space'
+	     elsecase {FS.value.is Value} then 'FSet'
 	     end = Type
 	     {Dictionary.get ColorDict Type}
 	  else
@@ -964,6 +966,13 @@ in
 				 font: SwitchFont
 				 variable: EchoQueries
 				 action: {MkAction Switch(echoqueries)})}
+	 ShowDeclares = {New Tk.variable tkInit(true)}
+	 ShowDeclaresSw = {New Tk.checkbutton
+			   tkInit(parent: GlobalFrame
+				  text: 'Show declared variables'
+				  font: SwitchFont
+				  variable: ShowDeclares
+				  action: {MkAction Switch(showdeclares)})}
 	 ErrorsFrame = {New Tk.frame tkInit(parent: GlobalFrame
 					    highlightthickness: 0)}
 	 self.HasMaxErrorsEnabled = {New Tk.variable tkInit(true)}
@@ -1237,7 +1246,7 @@ in
 		    pack(WarningsLabel WarnRedeclSw WarnUnusedSw
 			 WarnUnusedFormalsSw WarnForwardSw anchor: w)
 		    pack(GlobalLabel CompilerPassesSw ShowInsertSw
-			 EchoQueriesSw ErrorsFrame anchor: w)
+			 EchoQueriesSw ShowDeclaresSw ErrorsFrame anchor: w)
 		    pack(DoMaxErrors self.MaxNumberOfErrors ErrorsLabel
 			 side: left anchor: w)
 		    pack(ParsingFrame SAFrame CoreFrame
@@ -1285,6 +1294,7 @@ in
 	 self.SwitchRec = switches(compilerpasses: CompilerPasses
 				   showinsert: ShowInsert
 				   echoqueries: EchoQueries
+				   showdeclares: ShowDeclares
 				   warnredecl: WarnRedecl
 				   warnunused: WarnUnused
 				   warnunusedformals: WarnUnusedFormals
@@ -1309,12 +1319,13 @@ in
 			self.MaxNumberOfErrors.inc self.MaxNumberOfErrors.dec
 			self.MaxNumberOfErrors.entry DoMaxErrors
 			CompilerPassesSw ShowInsertSw EchoQueriesSw
-			WarnRedeclSw WarnUnusedSw WarnUnusedFormalsSw
-			WarnForwardSw ExpressionSw SystemSw GumpSw
-			StaticAnalysisSw CoreSw RealCoreSw DebugValueSw
-			DebugTypeSw CodeGenSw OutputCodeSw FeedToEmulatorSw
-			ThreadedQueriesSw ProfileSw RunWithDebuggerSw
-			DebugInfoControlSw DebugInfoVarnamesSw]
+			ShowDeclaresSw WarnRedeclSw WarnUnusedSw
+			WarnUnusedFormalsSw WarnForwardSw ExpressionSw
+			SystemSw GumpSw StaticAnalysisSw CoreSw RealCoreSw
+			DebugValueSw DebugTypeSw CodeGenSw OutputCodeSw
+			FeedToEmulatorSw ThreadedQueriesSw ProfileSw
+			RunWithDebuggerSw DebugInfoControlSw
+			DebugInfoVarnamesSw]
 	 self.InterruptMenuItem = Menu.compiler.interrupt
 	 ValueDict <- {NewDictionary}
 	 TagDict <- {NewDictionary}
