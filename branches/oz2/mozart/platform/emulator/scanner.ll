@@ -56,19 +56,22 @@ static void xy_input(char *buf, int &result, const int max_size) {
   // read one line into buf
   int curpos = 0;
   int c = fgetc(xyin);
-  while(c != EOF && c != '\n' && curpos < max_size) {
+  while(curpos < max_size && c != EOF && c != '\n') {
     buf[curpos++] = c;
-    c = fgetc(xyin);
+    if (curpos < max_size)
+      c = fgetc(xyin);
   }
-  buf[curpos++] = c;
 
   if (c == EOF) {
-    if (curpos == 1)   // did we read other chars than EOF?
-      result = YY_NULL;
+    if (curpos > 0)   // did we read other chars than EOF?
+      result = curpos;
     else
-      result = curpos - 1;
-  } else
-    result = curpos;   // only one char to return
+      result = YY_NULL;
+  } else {
+    if (curpos < max_size)
+      buf[curpos++] = c;
+    result = curpos;
+  }
 }
 
 
@@ -927,14 +930,13 @@ REGEXCHAR    "["([^\]\\]|\\.)+"]"|\"[^"]+\"|\\.|[^<>"\[\]\\\n]
 "[]"		               { return CHOICE; }
 "..."                          { return LDOTS; }
 "<-"                           { return ASSIGN; }
-"<<"                           { return OBJPATTERNOPEN; }
-">>"                           { return OBJPATTERNCLOSE; }
 "<="                           { return DEFAULT; }
 "=>"                           { return REDUCE; }
 "//"                           { return SEP; }
 {ADD}                          { return ADD; }
 {FDMUL}                        { return FDMUL; }
-{OTHERMUL}/(\(|"<<")?          { return OTHERMUL; }
+{OTHERMUL}                     { return OTHERMUL; }
+{OTHERMUL}/\(                  { return OTHERMUL; }
 "=="|{COMPARE}                 { return COMPARE; }
 {FDIN}                         { return FDIN; }
 ("="|{COMPARE})":"             { return FDCOMPARE; }
@@ -960,73 +962,110 @@ REGEXCHAR    "["([^\]\\]|\\.)+"]"|\"[^"]+\"|\\.|[^<>"\[\]\\\n]
 
 ~?{INT}\.{DIGIT}*((e|E)~?{INT})? { return OZFLOAT; }
 
-"unit"/(\(|"<<")               { return UNIT_LABEL; }
-"true"/(\(|"<<")               { return TRUE_LABEL; }
-"false"/(\(|"<<")              { return FALSE_LABEL; }
+"unit"/\(                      { return UNIT_LABEL; }
+"true"/\(                      { return TRUE_LABEL; }
+"false"/\(                     { return FALSE_LABEL; }
 
-"andthen"/\(?                  { return andthen; }
-"attr"/\(?                     { return attr; }
-"case"/\(?                     { return _case_; }
-"catch"/\(?                    { return catch; }
-"choice"/\(?                   { return choice; }
-"class"/\(?                    { return _class_; }
-"condis"/\(?                   { return _condis_; }
-"declare"/\(?                  { return declare; }
-"dis"/\(?                      { return dis; }
-"else"/\(?                     { return _else_; }
-"elsecase"/\(?                 { return elsecase; }
-"elseif"/\(?                   { return elseif; }
-"elseof"/\(?                   { return elseof; }
-"end"/\(?                      { return end; }
-"fail"/\(?                     { return fail; }
+"andthen"                      { return andthen; }
+"andthen"/\(                   { return andthen; }
+"attr"                         { return attr; }
+"attr"/\(                      { return attr; }
+"case"                         { return _case_; }
+"case"/\(                      { return _case_; }
+"catch"                        { return catch; }
+"catch"/\(                     { return catch; }
+"choice"                       { return choice; }
+"choice"/\(                    { return choice; }
+"class"                        { return _class_; }
+"class"/\(                     { return _class_; }
+"condis"                       { return _condis_; }
+"condis"/\(                    { return _condis_; }
+"declare"                      { return declare; }
+"declare"/\(                   { return declare; }
+"dis"                          { return dis; }
+"dis"/\(                       { return dis; }
+"else"                         { return _else_; }
+"else"/\(                      { return _else_; }
+"elsecase"                     { return elsecase; }
+"elsecase"/\(                  { return elsecase; }
+"elseif"                       { return elseif; }
+"elseif"/\(                    { return elseif; }
+"elseof"                       { return elseof; }
+"elseof"/\(                    { return elseof; }
+"end"                          { return end; }
+"end"/\(                       { return end; }
+"fail"                         { return fail; }
+"fail"/\(                      { return fail; }
 "false"                        { return false; }
-"feat"/\(?                     { return feat; }
-"finally"/\(?                  { return finally; }
-"from"/\(?                     { return _from_; }
-"fun"/\(?                      { return _fun_; }
-"if"/\(?                       { return _if_; }
-"in"/\(?                       { return _in_; }
+"feat"                         { return feat; }
+"feat"/\(                      { return feat; }
+"finally"                      { return finally; }
+"finally"/\(                   { return finally; }
+"from"                         { return _from_; }
+"from"/\(                      { return _from_; }
+"fun"                          { return _fun_; }
+"fun"/\(                       { return _fun_; }
+"if"                           { return _if_; }
+"if"/\(                        { return _if_; }
+"in"                           { return _in_; }
+"in"/\(                        { return _in_; }
 "lex"                          { if (xy_gumpSyntax) { BEGIN(LEX); return lex; } else return OZATOM; }
 "lex"/\(                       { if (xy_gumpSyntax) { BEGIN(LEX); return lex; } else return ATOM_LABEL; }
-"local"/\(?                    { return local; }
-"lock"/\(?                     { return _lock_; }
-"meth"/\(?                     { return _meth_; }
+"local"                        { return local; }
+"local"/\(                     { return local; }
+"lock"                         { return _lock_; }
+"lock"/\(                      { return _lock_; }
+"meth"                         { return _meth_; }
+"meth"/\(                      { return _meth_; }
 "mode"                         { return xy_gumpSyntax? _mode_: OZATOM; }
 "mode"/\(                      { return xy_gumpSyntax? _mode_: ATOM_LABEL; }
-"not"/\(?                      { return not; }
-"of"/\(?                       { return of; }
-"or"/\(?                       { return or; }
-"orelse"/\(?                   { return orelse; }
+"not"                          { return not; }
+"not"/\(                       { return not; }
+"of"                           { return of; }
+"of"/\(                        { return of; }
+"or"                           { return or; }
+"or"/\(                        { return or; }
+"orelse"                       { return orelse; }
+"orelse"/\(                    { return orelse; }
 "parser"                       { return xy_gumpSyntax? _parser_: OZATOM; }
 "parser"/\(                    { return xy_gumpSyntax? _parser_: ATOM_LABEL; }
-"proc"/\(?                     { return proc; }
+"proc"                         { return proc; }
+"proc"/\(                      { return proc; }
 "prod"                         { return xy_gumpSyntax? prod: OZATOM; }
 "prod"/\(                      { return xy_gumpSyntax? prod: ATOM_LABEL; }
-"prop"/\(?                     { return prop; }
-"raise"/\(?                    { return ozraise; }
+"prop"                         { return prop; }
+"prop"/\(                      { return prop; }
+"raise"                        { return ozraise; }
+"raise"/\(                     { return ozraise; }
 "scanner"                      { return xy_gumpSyntax? _scanner_: OZATOM; }
 "scanner"/\(                   { return xy_gumpSyntax? _scanner_: ATOM_LABEL; }
-"self"/\(?                     { return self; }
-"skip"/\(?                     { return skip; }
+"self"                         { return self; }
+"self"/\(                      { return self; }
+"skip"                         { return skip; }
+"skip"/\(                      { return skip; }
 "syn"                          { return xy_gumpSyntax? syn: OZATOM; }
 "syn"/\(                       { return xy_gumpSyntax? syn: ATOM_LABEL; }
-"then"/\(?   	               { return then; }
+"then"                         { return then; }
+"then"/\(                      { return then; }
 "token"                        { return xy_gumpSyntax? token: OZATOM; }
 "token"/\(                     { return xy_gumpSyntax? token: ATOM_LABEL; }
-"thread"/\(?                   { return thread; }
-"true"		               { return true; }
-"try"/\(?                      { return try; }
+"thread"                       { return thread; }
+"thread"/\(                    { return thread; }
+"true"                         { return true; }
+"try"                          { return try; }
+"try"/\(                       { return try; }
 "unit"                         { return unit; }
-"with"/\(?                     { return with; }
+"with"                         { return with; }
+"with"/\(                      { return with; }
 
 {OZATOM}                       { stripTrans('\''); return OZATOM; }
 "'"[^']*"'"                    { xyreportError("lexical error","illegal atom syntax",xyFileName,xylino,xycharno()); return OZATOM;}
-{OZATOM}/(\(|"<<")             { stripTrans('\''); return ATOM_LABEL; }
-"'"[^']*"'"/(\(|"<<")          { xyreportError("lexical error","illegal atom syntax",xyFileName,xylino,xycharno()); return ATOM_LABEL;}
+{OZATOM}/\(                    { stripTrans('\''); return ATOM_LABEL; }
+"'"[^']*"'"/\(                 { xyreportError("lexical error","illegal atom syntax",xyFileName,xylino,xycharno()); return ATOM_LABEL;}
 {VARIABLE}                     { trans('`'); return VARIABLE; }
 "`"[^`]*"`"                    { xyreportError("lexical error","illegal variable syntax",xyFileName,xylino,xycharno()); return VARIABLE;}
-{VARIABLE}/(\(|"<<")           { trans('`'); return VARIABLE_LABEL; }
-"`"[^`]*"`"/(\(|"<<")          { xyreportError("lexical error","illegal variable syntax",xyFileName,xylino,xycharno()); return VARIABLE;}
+{VARIABLE}/\(                  { trans('`'); return VARIABLE_LABEL; }
+"`"[^`]*"`"/\(                 { xyreportError("lexical error","illegal variable syntax",xyFileName,xylino,xycharno()); return VARIABLE;}
 {STRING}                       { stripTrans('\"'); return STRING; }
 "\""[^\"]*"\""                 { xyreportError("lexical error","illegal string syntax",xyFileName,xylino,xycharno()); return STRING;}
 
