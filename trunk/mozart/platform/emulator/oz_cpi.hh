@@ -346,7 +346,7 @@ class OZ_Propagator {
   friend class Thread;
 private:
   OZ_Propagator * gc(void); 
-  
+    
 public:
   OZ_Propagator(void) {}
   virtual ~OZ_Propagator(void) {}
