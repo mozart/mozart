@@ -204,6 +204,19 @@ OZ_Term Statistics::getStatistics()
 }
 
 
+void Statistics::printRunning(FILE *fd)
+{
+  if (ozconf.showIdleMessage) {
+    fprintf(fd,"running...\n");
+  }
+
+#ifdef WINDOWS
+  /* Windows 95 osUserTime() returns also clock ticks of idle time */
+  timeUtime.incf(osUserTime()-timeUtime.sinceIdle);
+  timeUtime.idle();
+#endif
+}
+
 void Statistics::printIdle(FILE *fd)
 {
   unsigned int timeNow = osUserTime();
