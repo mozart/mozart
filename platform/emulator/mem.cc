@@ -250,7 +250,7 @@ SbrkMemory *SbrkMemory::freeList = NULL;
 /* allocate memory via sbrk, first see if there is
    a block in free list */
 
-void *ozMalloc(int size)
+void *ozMalloc(int chunk_size)
 {
   static int firstCall = 1;
 
@@ -266,28 +266,28 @@ void *ozMalloc(int size)
     free(malloc(1024*1024*2));
   }
 
-  size += sizeof(SbrkMemory);
+  chunk_size += sizeof(SbrkMemory);
   void *ret = NULL;
-  SbrkMemory::freeList = SbrkMemory::freeList->find(size,ret);
+  SbrkMemory::freeList = SbrkMemory::freeList->find(chunk_size,ret);
   if (ret != NULL) {
     return ret;
   } else {
 #ifdef DEBUG_TRACEMEM
-    printf("*** Allocating %d bytes\n",size);
+    printf("*** Allocating %d bytes\n",chunk_size);
 #endif
     void *old = sbrk(0);
-    void *ret = sbrk(size);
-    if (ret == (caddr_t)-1) {
+    void *ret_val = sbrk(chunk_size);
+    if (ret_val == (caddr_t) - 1) {
       error("Memory exhausted");
     }
     
-    SbrkMemory *newMem = (SbrkMemory *) ret;
+    SbrkMemory *newMem = (SbrkMemory *) ret_val;
     newMem->oldBrk = old;
     newMem->newBrk = sbrk(0);
-    newMem->size   = size;
+    newMem->size   = chunk_size;
     newMem->next   = NULL;
     
-    return (newMem+1);
+    return (newMem + 1);
   }
 }
 
@@ -327,7 +327,7 @@ void deleteChunkChain(char *oldChain) {
 } // deleteChunkChain
 
 // 'inChunkChain' returns 1 if value points into chunk chain otherwise 0.
-inChunkChain(void *Chain, void *value)
+int inChunkChain(void *Chain, void *value)
 {
   char *Chain1 = (char*) Chain;
   while (Chain1){
