@@ -2,7 +2,7 @@
 # Author: Denys Duchier, 2003
 # Copyright: Denys Duchier, 2003
 Name: gtk-canvas
-Version: 1
+Version: 0.1
 Release: 1
 Summary: a GTK 1.2. canvas for use by Mozart and Alice
 Copyright: GPL
@@ -10,7 +10,7 @@ Vendor: Mozart Consortium
 URL: http://www.mozart-oz.org/
 Group: Development/Languages
 Packager: Denys Duchier
-Source: ftp://ftp.mozart-oz.org/pub/extras/gtk-canvas-1.tar.gz
+Source: ftp://ftp.mozart-oz.org/pub/extras/gtk-canvas-0.1.tar.gz
 Prefix: /usr/local
 
 %description
