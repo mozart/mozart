@@ -177,9 +177,9 @@ TkTools.ozf: DefaultURL.ozf wp/EvalDialog.oz
 COMPILERSRC1 = \
         CompilerClass.oz PrintName.oz ParseOz.oz FormatStrings.oz \
         CheckTupleSyntax.oz Builtins.oz Core.oz Annotate.oz \
-        StaticAnalysis.oz POTypes.oz CodeGen.oz CodeStore.oz \
-        CodeEmitter.oz BindingAnalysis.oz TupleSyntax.oz Unnester.oz \
-        UnnestFD.oz Assembler.oz Interface.oz Abstractions.oz \
+        StaticAnalysis.oz POTypes.oz PatternMatching.oz CodeGen.oz \
+        CodeStore.oz CodeEmitter.oz BindingAnalysis.oz TupleSyntax.oz \
+        Unnester.oz UnnestFD.oz Assembler.oz Interface.oz Abstractions.oz \
         Errors.oz RunTime.oz
 
 COMPILERSRCEXTRA = compiler-Builtins.oz compiler-Opcodes.oz
@@ -226,7 +226,8 @@ StaticAnalysis.ozf: compiler/StaticAnalysis.oz compiler/POTypes.oz \
         Search.ozf FD.ozf FS.ozf
         $(COMPILE) compiler/StaticAnalysis.oz -o $@
 
-CodeGen.ozf: compiler/CodeGen.oz compiler/CodeStore.oz compiler/CodeEmitter.oz
+CodeGen.ozf: compiler/CodeGen.oz compiler/PatternMatching.oz \
+        compiler/CodeStore.oz compiler/CodeEmitter.oz
 
 Assembler.ozf: compiler/Assembler.oz compiler-Opcodes.oz
 
