@@ -79,13 +79,13 @@ extern "C" char *inet_ntoa(struct in_addr in);
 
 // checking
 
-inline int unixIsCons(OZ_Term cons, OZ_Term *head, OZ_Term *tail)
+inline int unixIsCons(OZ_Term list, OZ_Term *hd, OZ_Term *tl)
 { 
-  if (!OZ_isCons(cons)) {
+  if (!OZ_isCons(list)) {
     return 0;
   }
-  *head = OZ_head(cons);
-  *tail = OZ_tail(cons);
+  *hd = OZ_head(list);
+  *tl = OZ_tail(list);
   return 1;
 }
 
@@ -211,18 +211,18 @@ static char* h_strerror(const int err) {
 			     
 
 
-static OZ_Term openbuff2list(int len, const char *s, const OZ_Term tail)
+static OZ_Term openbuff2list(int len, const char *s, const OZ_Term tl)
 {
   // gives back a list of length len which elments are taken from a C-string
   // the tail of the list is given by list
-  OZ_Term prev, head;
+  OZ_Term prev, hd;
 
   if (len == 0)
-    return tail;
+    return tl;
 
-  head = OZ_tupleC("|", 2);
-  OZ_putArg(head, 1, OZ_CToInt((unsigned char) *s++));
-  prev = head;
+  hd = OZ_tupleC("|", 2);
+  OZ_putArg(hd, 1, OZ_CToInt((unsigned char) *s++));
+  prev = hd;
   
   while (--len) {
     OZ_Term next = OZ_tupleC("|", 2); 
@@ -232,8 +232,8 @@ static OZ_Term openbuff2list(int len, const char *s, const OZ_Term tail)
     prev = next;
   }
 
-  OZ_putArg(prev, 2, tail);
-  return head;
+  OZ_putArg(prev, 2, tl);
+  return hd;
 }
 
 
@@ -337,24 +337,24 @@ OZ_Bool float2buff(OZ_Term ozfloat, char **write_buff, int *len,
 OZ_Bool list2buff(OZ_Term list, char **write_buff, int *len,
 			 OZ_Term *rest, OZ_Term *susp)
 {
-  OZ_Term head, tail;
+  OZ_Term hd, tl;
 
-  while (unixIsCons(list, &head, &tail)) {
-    if ((*len == max_vs_length) || OZ_isVariable(head)) {
-      *susp = head;
+  while (unixIsCons(list, &hd, &tl)) {
+    if ((*len == max_vs_length) || OZ_isVariable(hd)) {
+      *susp = hd;
       *rest = list;
       return SUSPEND;
     }
 
     int c;
 
-    if (OZ_isInt(head)) {
-      c = OZ_intToC(head);
+    if (OZ_isInt(hd)) {
+      c = OZ_intToC(hd);
       if ((c >= 0) && (c < 256)) {
 	**write_buff = (unsigned char) c;
 	(*write_buff)++;
 	(*len)++;
-	list = tail;
+	list = tl;
 	continue;
       }
     }
@@ -517,7 +517,7 @@ OZ_C_proc_begin(unix_stat,2)
   OZ_declareVsArg("stat", 0, filename);
   OZ_declareArg(1, out);
 
-  if (lstat(filename, &buf) < 0)
+  if (stat(filename, &buf) < 0)
     RETURN_UNIX_ERROR(out);
 
   if      (S_ISREG(buf.st_mode))  fileType = "reg";
@@ -525,20 +525,15 @@ OZ_C_proc_begin(unix_stat,2)
   else if (S_ISCHR(buf.st_mode))  fileType = "chr";
   else if (S_ISBLK(buf.st_mode))  fileType = "blk";
   else if (S_ISFIFO(buf.st_mode)) fileType = "fifo";
-#ifdef S_ISLNK
-  else if (S_ISLNK(buf.st_mode))  fileType = "lnk";
-#endif
-#ifdef S_ISSOCK
-  else if (S_ISSOCK(buf.st_mode)) fileType = "sock";
-#endif
   else fileType = "unknown";
 
   fileSize = buf.st_size;
 
-  OZ_unifyString(OZ_getRecordArgC(out, "type"), fileType);
-  OZ_unifyInt(OZ_getRecordArgC(out, "size"), fileSize);
-
-  return PROCEED;
+  OZ_Term pairlist=
+    OZ_cons(OZ_pairAA("type",fileType),
+	    OZ_cons(OZ_pairAI("size",fileSize),
+		    OZ_nil()));
+  return OZ_unify(out,OZ_recordInit(OZ_CToAtom("stat"),pairlist));
 }
 OZ_C_proc_end
 
@@ -553,38 +548,38 @@ OZ_C_ioproc_begin(unix_open,4)
   // Compute flags from their textual representation
 
   int flags = 0;
-  OZ_Term head, tail;
+  OZ_Term hd, tl;
   
-  while (unixIsCons(OzFlags, &head, &tail)) {
+  while (unixIsCons(OzFlags, &hd, &tl)) {
 
-    if (OZ_isVariable(head)) return SUSPEND;
+    if (OZ_isVariable(hd)) return SUSPEND;
 
-    if (OZ_unifyString(head,"O_RDONLY") == PROCEED) {
+    if (OZ_unifyString(hd,"O_RDONLY") == PROCEED) {
       flags |= O_RDONLY;
-    } else if (OZ_unifyString(head,"O_WRONLY"  ) == PROCEED) {
+    } else if (OZ_unifyString(hd,"O_WRONLY"  ) == PROCEED) {
       flags |= O_WRONLY;
-    } else if (OZ_unifyString(head,"O_RDWR"    ) == PROCEED) {
+    } else if (OZ_unifyString(hd,"O_RDWR"    ) == PROCEED) {
       flags |= O_RDWR;
-    } else if (OZ_unifyString(head,"O_APPEND"  ) == PROCEED) {
+    } else if (OZ_unifyString(hd,"O_APPEND"  ) == PROCEED) {
       flags |= O_APPEND;
-    } else if (OZ_unifyString(head,"O_CREAT"   ) == PROCEED) {
+    } else if (OZ_unifyString(hd,"O_CREAT"   ) == PROCEED) {
       flags |= O_CREAT;
-    } else if (OZ_unifyString(head,"O_EXCL"    ) == PROCEED) {
+    } else if (OZ_unifyString(hd,"O_EXCL"    ) == PROCEED) {
       flags |= O_EXCL;
-    } else if (OZ_unifyString(head,"O_TRUNC"   ) == PROCEED) {
+    } else if (OZ_unifyString(hd,"O_TRUNC"   ) == PROCEED) {
       flags |= O_TRUNC;
-    } else if (OZ_unifyString(head,"O_NOCTTY"  ) == PROCEED) {
+    } else if (OZ_unifyString(hd,"O_NOCTTY"  ) == PROCEED) {
       flags |= O_NOCTTY;
-    } else if (OZ_unifyString(head,"O_NONBLOCK") == PROCEED) {
+    } else if (OZ_unifyString(hd,"O_NONBLOCK") == PROCEED) {
       flags |= O_NONBLOCK;
-    } else if (OZ_unifyString(head,"O_SYNC"    ) == PROCEED) {
+    } else if (OZ_unifyString(hd,"O_SYNC"    ) == PROCEED) {
       flags |= O_SYNC;
     } else {
       OZ_warning("open: illegal flag");
       return FAILED;
     }
 
-    OzFlags = tail;
+    OzFlags = tl;
   }
 
   if (OZ_isVariable(OzFlags)) {
@@ -596,29 +591,29 @@ OZ_C_ioproc_begin(unix_open,4)
   // Compute modes from their textual representation
 
   int mode = 0;
-  while (unixIsCons(OzMode, &head, &tail)) {
+  while (unixIsCons(OzMode, &hd, &tl)) {
 
-    if (OZ_isVariable(head))
+    if (OZ_isVariable(hd))
       return SUSPEND;
 #ifdef OS2_I486
     OZ_warning("open: illegal mode");
     return FAILED;
 #else
-    if (OZ_unifyString(head,"S_IRUSR") == PROCEED) { mode |= S_IRUSR; }
-    else if (OZ_unifyString(head,"S_IWUSR") == PROCEED) { mode |= S_IWUSR; }
-    else if (OZ_unifyString(head,"S_IXUSR") == PROCEED) { mode |= S_IXUSR; }
-    else if (OZ_unifyString(head,"S_IRGRP") == PROCEED) { mode |= S_IRGRP; }
-    else if (OZ_unifyString(head,"S_IWGRP") == PROCEED) { mode |= S_IWGRP; }
-    else if (OZ_unifyString(head,"S_IXGRP") == PROCEED) { mode |= S_IXGRP; }
-    else if (OZ_unifyString(head,"S_IROTH") == PROCEED) { mode |= S_IROTH; }
-    else if (OZ_unifyString(head,"S_IWOTH") == PROCEED) { mode |= S_IWOTH; }
-    else if (OZ_unifyString(head,"S_IXOTH") == PROCEED) { mode |= S_IXOTH; }
+    if (OZ_unifyString(hd,"S_IRUSR") == PROCEED) { mode |= S_IRUSR; }
+    else if (OZ_unifyString(hd,"S_IWUSR") == PROCEED) { mode |= S_IWUSR; }
+    else if (OZ_unifyString(hd,"S_IXUSR") == PROCEED) { mode |= S_IXUSR; }
+    else if (OZ_unifyString(hd,"S_IRGRP") == PROCEED) { mode |= S_IRGRP; }
+    else if (OZ_unifyString(hd,"S_IWGRP") == PROCEED) { mode |= S_IWGRP; }
+    else if (OZ_unifyString(hd,"S_IXGRP") == PROCEED) { mode |= S_IXGRP; }
+    else if (OZ_unifyString(hd,"S_IROTH") == PROCEED) { mode |= S_IROTH; }
+    else if (OZ_unifyString(hd,"S_IWOTH") == PROCEED) { mode |= S_IWOTH; }
+    else if (OZ_unifyString(hd,"S_IXOTH") == PROCEED) { mode |= S_IXOTH; }
     else {
       OZ_warning("open: illegal mode");
       return FAILED;
     }
 #endif
-    OzMode = tail;
+    OzMode = tl;
   }
 
   if (OZ_isVariable(OzMode)) {
@@ -664,11 +659,11 @@ OZ_C_ioproc_begin(unix_read,5)
   WRAPCALL(read(fd, buf, maxx), ret, outN);
 
 
-  OZ_Term head = openbuff2list(ret, buf, outTail);
+  OZ_Term hd = openbuff2list(ret, buf, outTail);
 
   free(buf);
   
-  return ((OZ_unify(outHead, head) == PROCEED)&&
+  return ((OZ_unify(outHead, hd) == PROCEED)&&
 	  (OZ_unifyInt(outN,ret) == PROCEED)) ? PROCEED : FAILED;
 }
 OZ_C_proc_end
@@ -1056,25 +1051,25 @@ OZ_C_proc_end
 
 static OZ_Bool get_send_recv_flags(OZ_Term OzFlags, int * flags)
 {
-  OZ_Term head, tail;
+  OZ_Term hd, tl;
 
   *flags = 0;
   
-  while (unixIsCons(OzFlags, &head, &tail)) {
+  while (unixIsCons(OzFlags, &hd, &tl)) {
 
-    if (OZ_isVariable(head))
+    if (OZ_isVariable(hd))
       return SUSPEND;
 
-    if (OZ_unifyString(head,"MSG_OOB") == PROCEED) {
+    if (OZ_unifyString(hd,"MSG_OOB") == PROCEED) {
       *flags |= MSG_OOB;
-    } else if (OZ_unifyString(head,"MSG_PEEK") == PROCEED) {
+    } else if (OZ_unifyString(hd,"MSG_PEEK") == PROCEED) {
       *flags |= MSG_PEEK;
     } else {
       OZ_warning("send or receive: illegal flag");
       return FAILED;
     }
 
-    OzFlags = tail;
+    OzFlags = tl;
   }
 
   if (OZ_isVariable(OzFlags))
@@ -1283,8 +1278,8 @@ OZ_C_ioproc_begin(unix_receiveFromInet,8)
   OZ_declareIntArg("receiveFromInet",0,sock);
   OZ_declareIntArg("receiveFromInet",1,maxx);
   OZ_declareArg(2, OzFlags);
-  OZ_declareArg(3, head);
-  OZ_declareArg(4, tail);
+  OZ_declareArg(3, hd);
+  OZ_declareArg(4, tl);
   OZ_declareArg(5, host);
   OZ_declareArg(6, port);
   OZ_declareArg(7, outN);
@@ -1308,11 +1303,11 @@ OZ_C_ioproc_begin(unix_receiveFromInet,8)
   struct hostent *gethost = gethostbyaddr((char *) &from.sin_addr,
 					    fromlen, AF_INET);
     
-  OZ_Term localhead = openbuff2list(ret, buf, tail);
+  OZ_Term localhead = openbuff2list(ret, buf, tl);
 
   free(buf);
 
-  return (OZ_unify(localhead, head) == PROCEED
+  return (OZ_unify(localhead, hd) == PROCEED
 	  && OZ_unifyInt(port, ntohs(from.sin_port)) == PROCEED
 	  && OZ_unify(host, OZ_CToString(gethost ?
 					gethost->h_name :
@@ -1327,8 +1322,8 @@ OZ_C_ioproc_begin(unix_receiveFromUnix,7)
   OZ_declareIntArg("receiveFromUnix",0,sock);
   OZ_declareIntArg("receiveFromUnix",1,maxx);
   OZ_declareArg(2, OzFlags);
-  OZ_declareArg(3, head);
-  OZ_declareArg(4, tail);
+  OZ_declareArg(3, hd);
+  OZ_declareArg(4, tl);
   OZ_declareArg(5, path);
   OZ_declareArg(6, outN);
 
@@ -1348,11 +1343,11 @@ OZ_C_ioproc_begin(unix_receiveFromUnix,7)
   WRAPCALL(recvfrom(sock, buf, maxx, flags,
 		    (struct sockaddr*)&from, &fromlen),ret,outN);
     
-  OZ_Term localhead = openbuff2list(ret, buf, tail);
+  OZ_Term localhead = openbuff2list(ret, buf, tl);
 
   free(buf);
 
-  return (OZ_unify(localhead, head) == PROCEED
+  return (OZ_unify(localhead, hd) == PROCEED
 	  && OZ_unify(path, OZ_CToString(from.sun_path)) == PROCEED
 	  && OZ_unifyInt(outN, ret) == PROCEED) ? PROCEED : FAILED;
     
@@ -1370,15 +1365,15 @@ OZ_C_ioproc_begin(unix_pipe,4)
   OZ_declareArg(2, rpid);
   OZ_declareArg(3, rsock);
 
-  OZ_Term head, tail, argl;
+  OZ_Term hd, tl, argl;
   int argno = 0;
 
   argl=args;
   
-  while (unixIsCons(argl, &head, &tail)) {
-    if (OZ_isVariable(head)) return SUSPEND;
+  while (unixIsCons(argl, &hd, &tl)) {
+    if (OZ_isVariable(hd)) return SUSPEND;
     argno++;
-    argl = tail;
+    argl = tl;
   }
 
   if (OZ_isVariable(argl))
@@ -1398,14 +1393,14 @@ OZ_C_ioproc_begin(unix_pipe,4)
 
   argno = 1;
   
-  while (unixIsCons(argl, &head, &tail)) {
+  while (unixIsCons(argl, &hd, &tl)) {
     int len;
     OZ_Bool status;
     OZ_Term rest, susp;
 
     char *vsarg = (char *) malloc(max_vs_length + 256);
     
-    status = buffer_vs(head, vsarg, &len, &rest, &susp);
+    status = buffer_vs(hd, vsarg, &len, &rest, &susp);
     
     if (status == SUSPEND) {
       free(vsarg);
@@ -1423,7 +1418,7 @@ OZ_C_ioproc_begin(unix_pipe,4)
 
     argv[argno++] = vsarg;
   
-    argl = tail;
+    argl = tl;
   }
 
   int sv[2];
@@ -1626,20 +1621,21 @@ OZ_C_ioproc_begin(unix_getServByName, 4)
 OZ_C_proc_end
 
 
-
-static OZ_Bool copy_time(const struct tm* tim, OZ_Term *term)
+static OZ_Term make_time(const struct tm* tim)
 {
-  return (
-	  OZ_unifyInt(OZ_getRecordArgC(*term, "sec"), tim->tm_sec) == PROCEED
-	  && OZ_unifyInt(OZ_getRecordArgC(*term, "min"), tim->tm_min) == PROCEED
-	  && OZ_unifyInt(OZ_getRecordArgC(*term, "hour"), tim->tm_hour) == PROCEED
-	  && OZ_unifyInt(OZ_getRecordArgC(*term, "mDay"), tim->tm_mday) == PROCEED
-	  && OZ_unifyInt(OZ_getRecordArgC(*term, "mon"), tim->tm_mon) == PROCEED
-	  && OZ_unifyInt(OZ_getRecordArgC(*term, "year"), tim->tm_year) == PROCEED
-	  && OZ_unifyInt(OZ_getRecordArgC(*term, "wDay"), tim->tm_wday) == PROCEED
-	  && OZ_unifyInt(OZ_getRecordArgC(*term, "yDay"), tim->tm_yday) == PROCEED
-	  && OZ_unifyInt(OZ_getRecordArgC(*term, "isDst"), tim->tm_isdst) == PROCEED
-	  ) ? PROCEED : FAILED;
+  OZ_Term t1=OZ_pairAI("sec",tim->tm_sec);
+  OZ_Term t2=OZ_pairAI("min",tim->tm_min);
+  OZ_Term t3=OZ_pairAI("hour",tim->tm_hour);
+  OZ_Term t4=OZ_pairAI("mDay",tim->tm_mday);
+  OZ_Term t5=OZ_pairAI("mon",tim->tm_mon);
+  OZ_Term t6=OZ_pairAI("year",tim->tm_year);
+  OZ_Term t7=OZ_pairAI("wDay",tim->tm_wday);	
+  OZ_Term t8=OZ_pairAI("yDay",tim->tm_yday);
+  OZ_Term t9=OZ_pairAI("isDst",tim->tm_isdst);
+
+  OZ_Term l1=OZ_cons(t6,OZ_cons(t7,OZ_cons(t8,OZ_cons(t9,OZ_nil()))));
+  OZ_Term l2=OZ_cons(t1,OZ_cons(t2,OZ_cons(t3,OZ_cons(t4,OZ_cons(t5,l1)))));
+  return OZ_recordInit(OZ_CToAtom("time"),l2);
 }
 
 OZ_C_ioproc_begin(unix_gmTime, 1)
@@ -1648,7 +1644,7 @@ OZ_C_ioproc_begin(unix_gmTime, 1)
   time_t timebuf;
 
   time(&timebuf);
-  return copy_time(gmtime(&timebuf), &out);
+  return OZ_unify(out,make_time(gmtime(&timebuf)));
   
 }
 OZ_C_proc_end
@@ -1659,7 +1655,7 @@ OZ_C_ioproc_begin(unix_localTime, 1)
   time_t timebuf;
 
   time(&timebuf);
-  return copy_time(localtime(&timebuf), &out);
+  return OZ_unify(out,make_time(localtime(&timebuf)));
   
 }
 OZ_C_proc_end
