@@ -136,7 +136,7 @@ unsigned __stdcall readerThread(void *arg)
       else
         ret = (unsigned)-1;
     }
-    if (ret < 0) {
+    if ((int)ret < 0) {
       sr->status = ST_ERROR;
       break;
     }

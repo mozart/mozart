@@ -49,8 +49,6 @@
 #include <arpa/inet.h>
 #include <sys/socket.h>
 #include <sys/wait.h>
-#endif
-#ifndef __MINGW32__
 #include <netdb.h>
 #endif
 
@@ -863,8 +861,8 @@ OZ_Return getURL(const char *url, TaggedRef out, URLAction act)
 
   HANDLE rh,wh;
   CreatePipe(&rh,&wh,0,0);
-  int wfd = _hdopen((int)wh,O_WRONLY|O_BINARY);
-  int rfd = _hdopen((int)rh,O_RDONLY|O_BINARY);
+  int wfd = oshdopen((int)wh,O_WRONLY|O_BINARY);
+  int rfd = oshdopen((int)rh,O_RDONLY|O_BINARY);
 
   URLInfo *ui = new URLInfo(tmpfile,url,wfd);
 

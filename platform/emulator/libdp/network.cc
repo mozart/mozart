@@ -77,12 +77,9 @@
 #include <arpa/inet.h>
 #include <sys/socket.h>
 #include <sys/utsname.h>
-#endif
-#ifndef __MINGW32__
 #include <netdb.h>
 #endif
 #include <errno.h>
-#include <netdb.h>
 #include <stdlib.h>
 #include <unistd.h>
 #include <fcntl.h>

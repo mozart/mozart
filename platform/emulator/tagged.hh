@@ -796,7 +796,7 @@ int getRefsArraySize(RefsArray a)
 }
 
 
-#if defined(DEBUG_CHECK) && defined(__MINGW32__)
+#if defined(DEBUG_CHECK) && defined(WINDOWS)
 static
 #else
 inline

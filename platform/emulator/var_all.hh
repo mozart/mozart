@@ -43,7 +43,7 @@
 // import from builtins
 int oz_raise(OZ_Term cat, OZ_Term key, char *label, int arity, ...);
 
-#if defined(DEBUG_CHECK) && defined(__MINGW32__)
+#if defined(DEBUG_CHECK) && defined(WINDOWS)
 static
 #else
 inline
@@ -64,7 +64,7 @@ Bool oz_var_validINLINE(OzVariable *ov,TaggedRef *ptr,TaggedRef val)
   }
 }
 
-#if defined(DEBUG_CHECK) && defined(__MINGW32__)
+#if defined(DEBUG_CHECK) && defined(WINDOWS)
 static
 #else
 inline
@@ -85,7 +85,7 @@ OZ_Return oz_var_unifyINLINE(OzVariable *ov,TaggedRef *ptr,TaggedRef *val,
   }
 }
 
-#if defined(DEBUG_CHECK) && defined(__MINGW32__)
+#if defined(DEBUG_CHECK) && defined(WINDOWS)
 static
 #else
 inline
@@ -106,7 +106,7 @@ OZ_Return oz_var_bindINLINE(OzVariable *ov,TaggedRef *ptr,TaggedRef val,
   }
 }
 
-#if defined(DEBUG_CHECK) && defined(__MINGW32__)
+#if defined(DEBUG_CHECK) && defined(WINDOWS)
 static
 #else
 inline
@@ -127,7 +127,7 @@ OZ_Return oz_var_forceBindINLINE(OzVariable *ov,TaggedRef *ptr,TaggedRef val,
   }
 }
 
-#if defined(DEBUG_CHECK) && defined(__MINGW32__)
+#if defined(DEBUG_CHECK) && defined(WINDOWS)
 static
 #else
 inline
@@ -147,7 +147,7 @@ void oz_var_disposeINLINE(OzVariable *ov)
   }
 }
 
-#if defined(DEBUG_CHECK) && defined(__MINGW32__)
+#if defined(DEBUG_CHECK) && defined(WINDOWS)
 static
 #else
 inline

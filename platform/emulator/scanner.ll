@@ -27,7 +27,7 @@
 #include <string.h>
 #include <sys/stat.h>
 
-#ifndef __MINGW32__
+#ifndef WINDOWS
 #include <pwd.h>
 #endif
 
