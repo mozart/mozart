@@ -192,7 +192,7 @@ void Statistics::printGcMsg(int level)
   if (level > 0) {
     printMem(stdout, " disposed ", gc_mem*KB);
     printf(" in %d msec.\n", gc_utime);
-
+    fflush(stdout);
   }
 }
 
