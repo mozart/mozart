@@ -241,8 +241,8 @@ bombGenCall:
      FALSE: can continue
    */
 
-Bool AM::emulateHookOutline(ProgramCounter PC, Abstraction *def, TaggedRef *arguments)
-{
+Bool AM::emulateHookOutline(ProgramCounter PC, Abstraction *def,
+                            TaggedRef *arguments) {
   // without signal blocking;
   if (isSetSFlag(ThreadSwitch)) {
     if (threadQueuesAreEmpty()) {
@@ -255,7 +255,7 @@ Bool AM::emulateHookOutline(ProgramCounter PC, Abstraction *def, TaggedRef *argu
     return TRUE;
   }
 
-  if (def && debugmode()) {
+  if (def && debugmode() && !currentSolveBoard) {
     OzDebug *dbg;
     int frameId   = ++lastFrameID % MAX_ID;
 
