@@ -551,7 +551,7 @@ OZ_Return oz_unify(TaggedRef t1, TaggedRef t2, ByteCode *scp)
   Assert(unifyStack.isEmpty()); /* unify is not reentrant */
   CHECK_NONVAR(t1); CHECK_NONVAR(t2);
 
-  Bool result = FAILED;
+  OZ_Return result = FAILED;
 
   TaggedRef *termPtr1 = &t1;
   TaggedRef *termPtr2 = &t2;
