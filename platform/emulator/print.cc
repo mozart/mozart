@@ -255,6 +255,9 @@ void ozd_printLongStream(OZ_Term val, ostream &stream, int depth, int offset)
     tagged2BigInt(ref)->printLongStream(stream,depth,offset);
     break;
   case SMALLINT:
+    stream << indent(offset);
+    ozd_printStream(val,stream,depth);
+    stream << endl;
     break;
   case OZCONST:
     tagged2Const(ref)->printLongStream(stream,depth,offset);
@@ -264,6 +267,7 @@ void ozd_printLongStream(OZ_Term val, ostream &stream, int depth, int offset)
       ->print(stream,depth);
     break;
   default:
+    stream << "unknown tag " << (int) tagTypeOf(ref) << endl;
     break;
   }
 }
