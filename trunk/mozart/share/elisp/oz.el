@@ -707,45 +707,53 @@ With ARG, start it instead."
       (let* ((last-nonmenu-event t)
 	     (buffer (oz-find-buffer-or-file file))
 	     (window (display-buffer buffer))
-	     start middle end oldpos)
+	     start1 end1 start2 end2 oldpos)
 	(save-excursion
 	  (set-buffer buffer)
 	  (save-restriction
 	    (widen)
 	    (setq oldpos (point))
 	    (goto-line line)
-	    (setq start (point))
+	    (setq start1 (point))
 	    (save-excursion
-	      (forward-char column)
-	      (setq middle (point)))
-	    (forward-line 1)
-	    (setq end (point))
-	    (if (> middle end)
-		(setq middle start))
+	      (forward-line 1)
+	      (setq end1 (point)))
+	    (forward-char column)
+	    (setq start2 (point))
+	    (let ((cs (char-syntax (following-char))))
+	      (while (= (char-syntax (following-char)) cs)
+		(forward-char))
+	      (setq end2 (point)))
+	    (if (> (point) end2)
+		(setq start2 start1 end2 end1))
 	    (or oz-bar-overlay
 		(cond (oz-gnu-emacs
-		       (setq oz-bar-overlay (make-overlay start middle)
-			     oz-bar-overlay-here (make-overlay middle end)))
+		       (setq oz-bar-overlay (make-overlay start1 end1)
+			     oz-bar-overlay-here (make-overlay start2 end2))
+		       (overlay-put oz-bar-overlay 'priority 17)
+		       (overlay-put oz-bar-overlay-here 'priority 18))
 		      (oz-lucid-emacs
-		       (setq oz-bar-overlay (make-extent start middle)
-			     oz-bar-overlay-here (make-extent middle end)))))
+		       (setq oz-bar-overlay (make-extent start1 end1)
+			     oz-bar-overlay-here (make-extent start2 end2))
+		       (set-extent-priority oz-bar-overlay 17)
+		       (set-extent-priority oz-bar-overlay-here 18))))
 	    (cond (oz-gnu-emacs
 		   (move-overlay
-		    oz-bar-overlay start middle (current-buffer))
+		    oz-bar-overlay start1 end1 (current-buffer))
 		   (move-overlay
-		    oz-bar-overlay-here middle end (current-buffer)))
+		    oz-bar-overlay-here start2 end2 (current-buffer)))
 		  (oz-lucid-emacs
 		   (set-extent-endpoints
-		    oz-bar-overlay start middle (current-buffer))
+		    oz-bar-overlay start1 end1 (current-buffer))
 		   (set-extent-endpoints
-		    oz-bar-overlay-here middle end (current-buffer))))
+		    oz-bar-overlay-here start2 end2 (current-buffer))))
 	    (or (string-equal state "unchanged")
 		(oz-bar-configure state)))
-	  (if (and (>= start (window-start)) (< start (window-end)))
+	  (if (and (>= start2 (window-start)) (< start2 (window-end)))
 	      (goto-char oldpos)
 	    (widen)
-	    (goto-char start)))
-	(set-window-point window start)))))
+	    (goto-char start2)))
+	(set-window-point window start2)))))
 
 (defun oz-bar-configure (state)
   "Change color of bar while not moving it."
