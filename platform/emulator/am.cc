@@ -477,7 +477,7 @@ Bool AM::checkExtSuspension (Suspension *susp)
 		  error ("no solve board is found in AM::checkExtSuspension"));
 
       SolveActor *sa = CastSolveActor (sb->getActor ());
-      if (sa->isStable () == OK) {
+      if (sa->isStable () == OK && sa->isSolveDet () == NO) {
 	Thread::ScheduleSolve (sb);
 	// Note:
 	//  The observation is that some actors which have imposed instability
@@ -503,16 +503,14 @@ void AM::incSolveThreads (Board *bb)
   while (bb != (Board *) NULL && bb->isCommitted () == OK)
     bb = bb->getBoard ();
   while (bb != (Board *) NULL && bb != rootBoard) {
-//     DebugCheck ((bb == (Board *) NULL),
-// 		error ("NULL board is reached in AM::incSolveThreads"));
     if (bb->isSolve () == OK) {
+      DebugCheck ((bb->isReflected () == OK),
+		  error ("reflected board is found in AM::incSolveThreads ()"));
       SolveActor *sa = CastSolveActor (bb->getActor ());
       DebugCheck ((sa->getBoard () == (Board *) NULL),
 		  error ("solve actor in abstraction (AM::incSolveThreads ())"));
       sa->incThreads ();
     }
-    DebugCheck ((bb->isCommitted () == OK),
-		error ("committed board in loop in AM::incSolveThreads ()"));
     bb = bb->getParentBoard ();
     while (bb != (Board *) NULL && bb->isCommitted () == OK)
       bb = bb->getBoard ();
@@ -521,24 +519,18 @@ void AM::incSolveThreads (Board *bb)
 
 void AM::decSolveThreads (Board *bb)
 {
-  // get the next "cluster"; 
-  // no getBoardDeref () !!!
   while (bb != (Board *) NULL && bb->isCommitted () == OK)
     bb = bb->getBoard ();
   while (bb != (Board *) NULL && bb != rootBoard) {
-//     DebugCheck ((bb == (Board *) NULL),
-// 		error ("NULL board is reached in AM::decSolveThreads"));
     if (bb->isSolve () == OK) {
+      DebugCheck ((bb->isReflected () == OK),
+		  error ("reflected board is found in AM::decSolveThreads ()"));
       SolveActor *sa = CastSolveActor (bb->getActor ());
-      if (sa->getBoard () != (Board *) NULL) {     // i.e. no abstraction; 
-	sa->decThreads ();
-	if (sa->isStable () == OK) {
-	  Thread::ScheduleSolve (bb);
-	}
+      sa->decThreads ();
+      if (sa->isStable () == OK && sa->isSolveDet () == NO) {
+	Thread::ScheduleSolve (bb);
       }
     }
-    DebugCheck ((bb->isCommitted () == OK),
-		error ("committed board in loop in AM::decSolveThreads ()"));
     bb = bb->getParentBoard ();
     while (bb != (Board *) NULL && bb->isCommitted () == OK)
       bb = bb->getBoard ();

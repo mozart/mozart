@@ -111,6 +111,8 @@ static Board *oldSolveBoard = (Board *) NULL;
 void Board::SetCurrent(Board *c, Bool checkNotGC)
 {
   Assert(c!=NULL);
+  DebugCheck ((c->isCommitted () == OK),
+	      error ("committed board in Board::SetCurrent ()"));
   DebugCheck(checkNotGC && oldBoard != am.currentBoard,
 	     error("someone has changed 'currentBoard'"));
   am.currentBoard = c;
@@ -136,6 +138,8 @@ Board* Board::getSolveBoard ()
 {
   Board *b = this;
   Board *rb = am.rootBoard;
+  DebugCheck ((b->isCommitted () == OK),
+	      error ("committed board in Board::getSolveBoard ()"));
   while (b != (Board *) NULL && b != rb) {
     if (b->isSolve () == OK)
       return (b);

@@ -337,23 +337,25 @@ OZ_Bool solveActorWaker (int n, TaggedRef *args)
   SolveActor *sa = CastSolveActor (bb->getActor ());
   // DebugCheckT (message ("solveActorWaker (@0x%x)\n", (void *) sa));
 
-  sa->decThreads ();      // get rid of threads - '1' in creator; 
-  if (sa->isStable () == OK) {
-    // DebugCheckT (message ("solveActorWaker: stable (@0x%x)\n", (void *) sa));
-    am.pushNervous (bb);  // inderectly - can't say 'goto LBLreduce'; 
-  }
+  DebugCheck ((bb->isReflected () == OK),
+	      error ("already reflected board in solveActorWaker"));
+  sa->unsetSolveDet ();   // sequential part is done;
+  sa->decThreads ();      // get rid of threads - '1' in creator;
+  // after return we are going to the "reduce" state,
+  // so reduce the actor if possible;
   return (PROCEED);    // always; 
 }
 
 
-// Note that threre is one thread ALREADY AT THE CREATION TIME!
+// Note that there is one thread ALREADY AT THE CREATION TIME!
 
 SolveActor::SolveActor (Board *bb, int prio, TaggedRef resTR)
      : Actor (Ac_Solve, bb, prio), result (resTR), 
      boardToInstall(NULL), suspList (NULL), threads (1)
 {
   Board::NewCurrentSolve (this);
-  solveBoard = am.currentBoard; 
+  solveBoard = am.currentBoard;
+  flags |= Ac_SolveDet; 
   solveVar = makeTaggedRef(newTaggedUVar (solveBoard));
 }
 
