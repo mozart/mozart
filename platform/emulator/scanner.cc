@@ -2172,24 +2172,24 @@ case YY_STATE_EOF(COMMENT):
 				 }
 				 BEGIN(DIRECTIVE);
 				 if (pop_insert())
-				   return ENDOFFILE;
+				   return T_ENDOFFILE;
 			       }
 	YY_BREAK
 case 8:
 YY_RULE_SETUP
-{ BEGIN(SWITCHDIR); return SWITCH; }
+{ BEGIN(SWITCHDIR); return T_SWITCH; }
 	YY_BREAK
 case 9:
 YY_RULE_SETUP
-{ BEGIN(DIRECTIVE); return PUSHSWITCHES; }
+{ BEGIN(DIRECTIVE); return T_PUSHSWITCHES; }
 	YY_BREAK
 case 10:
 YY_RULE_SETUP
-{ BEGIN(DIRECTIVE); return POPSWITCHES; }
+{ BEGIN(DIRECTIVE); return T_POPSWITCHES; }
 	YY_BREAK
 case 11:
 YY_RULE_SETUP
-{ BEGIN(DIRECTIVE); return LOCALSWITCHES; }
+{ BEGIN(DIRECTIVE); return T_LOCALSWITCHES; }
 	YY_BREAK
 case 12:
 YY_RULE_SETUP
@@ -2254,7 +2254,7 @@ YY_RULE_SETUP
 case YY_STATE_EOF(IGNOREDIRECTIVE):
 { BEGIN(DIRECTIVE);
 				 if (pop_insert())
-				   return ENDOFFILE;
+				   return T_ENDOFFILE;
 			       }
 	YY_BREAK
 
@@ -2282,7 +2282,7 @@ YY_RULE_SETUP
 case YY_STATE_EOF(DIRECTIVE):
 { BEGIN(DIRECTIVE);
 				 if (pop_insert())
-				   return ENDOFFILE;
+				   return T_ENDOFFILE;
 			       }
 	YY_BREAK
 
@@ -2332,7 +2332,7 @@ case YY_STATE_EOF(LINE):
 						 xyFileName,xylino,xycharno());
 				 BEGIN(DIRECTIVE);
 				 if (pop_insert())
-				   return ENDOFFILE;
+				   return T_ENDOFFILE;
 			       }
 	YY_BREAK
 
@@ -2347,7 +2347,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 35:
 YY_RULE_SETUP
-{ return SWITCHNAME; }
+{ return T_SWITCHNAME; }
 	YY_BREAK
 case 36:
 YY_RULE_SETUP
@@ -2372,7 +2372,7 @@ YY_RULE_SETUP
 case YY_STATE_EOF(SWITCHDIR):
 { BEGIN(DIRECTIVE);
 				 if (pop_insert())
-				   return ENDOFFILE;
+				   return T_ENDOFFILE;
 			       }
 	YY_BREAK
 
@@ -2388,7 +2388,7 @@ YY_RULE_SETUP
 						   OZ_int(xylino),
 						   OZ_int(xycharno()));
 				     xy_errorMessages =
-				       OZ_cons(OZ_mkTupleC("logInsert",2,
+				       oz_cons(OZ_mkTupleC("logInsert",2,
 							   OZ_atom(fullname),
 							   coord),
 					       xy_errorMessages);
@@ -2440,7 +2440,7 @@ case YY_STATE_EOF(INSERT):
 						 xyFileName,xylino,xycharno());
 				 BEGIN(DIRECTIVE);
 				 if (pop_insert())
-				   return ENDOFFILE;
+				   return T_ENDOFFILE;
 			       }
 	YY_BREAK
 
@@ -2450,7 +2450,7 @@ YY_RULE_SETUP
 { if (get_cond()) {
 				   trans('`');
 				   OZ_Term key = OZ_atom(xytext);
-				   defines->setArg(key, OZ_true());
+				   defines->setArg(key, NameTrue);
 				   BEGIN(DIRECTIVE);
 				 } else
 				   BEGIN(INITIAL);
@@ -2483,7 +2483,7 @@ case YY_STATE_EOF(DEFINE):
 						 xyFileName,xylino,xycharno());
 				 BEGIN(DIRECTIVE);
 				 if (pop_insert())
-				   return ENDOFFILE;
+				   return T_ENDOFFILE;
 			       }
 	YY_BREAK
 
@@ -2525,7 +2525,7 @@ case YY_STATE_EOF(UNDEF):
 						 xyFileName,xylino,xycharno());
 				 BEGIN(DIRECTIVE);
 				 if (pop_insert())
-				   return ENDOFFILE;
+				   return T_ENDOFFILE;
 			       }
 	YY_BREAK
 
@@ -2565,7 +2565,7 @@ case YY_STATE_EOF(IFDEF):
 						 xyFileName,xylino,xycharno());
 				 BEGIN(DIRECTIVE);
 				 if (pop_insert())
-				   return ENDOFFILE;
+				   return T_ENDOFFILE;
 			       }
 	YY_BREAK
 
@@ -2605,7 +2605,7 @@ case YY_STATE_EOF(IFNDEF):
 						 xyFileName,xylino,xycharno());
 				 BEGIN(DIRECTIVE);
 				 if (pop_insert())
-				   return ENDOFFILE;
+				   return T_ENDOFFILE;
 			       }
 	YY_BREAK
 
@@ -2644,7 +2644,7 @@ case YY_STATE_EOF(SCANNERPREFIX):
 						 xyFileName,xylino,xycharno());
 				 BEGIN(DIRECTIVE);
 				 if (pop_insert())
-				   return ENDOFFILE;
+				   return T_ENDOFFILE;
 			       }
 	YY_BREAK
 
@@ -2682,76 +2682,76 @@ case YY_STATE_EOF(PARSEREXPECT):
 						 xyFileName,xylino,xycharno());
 				 BEGIN(DIRECTIVE);
 				 if (pop_insert())
-				   return ENDOFFILE;
+				   return T_ENDOFFILE;
 			       }
 	YY_BREAK
 
 case 67:
 YY_RULE_SETUP
-{ BEGIN(INITIAL); return REGEX; }
+{ BEGIN(INITIAL); return T_REGEX; }
 	YY_BREAK
 case 68:
 YY_RULE_SETUP
-{ BEGIN(INITIAL); stripRegex(); return REGEX; }
+{ BEGIN(INITIAL); stripRegex(); return T_REGEX; }
 	YY_BREAK
 case 69:
 YY_RULE_SETUP
-{ return CHOICE; }
+{ return T_CHOICE; }
 	YY_BREAK
 case 70:
 YY_RULE_SETUP
-{ return LDOTS; }
+{ return T_LDOTS; }
 	YY_BREAK
 case 71:
 YY_RULE_SETUP
-{ return OOASSIGN; }
+{ return T_OOASSIGN; }
 	YY_BREAK
 case 72:
 YY_RULE_SETUP
-{ return DEFAULT; }
+{ return T_DEFAULT; }
 	YY_BREAK
 case 73:
 YY_RULE_SETUP
-{ return REDUCE; }
+{ return T_REDUCE; }
 	YY_BREAK
 case 74:
 YY_RULE_SETUP
-{ return DEREFF; }
+{ return T_DEREFF; }
 	YY_BREAK
 case 75:
 YY_RULE_SETUP
-{ return SEP; }
+{ return T_SEP; }
 	YY_BREAK
 case 76:
 YY_RULE_SETUP
-{ return ADD; }
+{ return T_ADD; }
 	YY_BREAK
 case 77:
 YY_RULE_SETUP
-{ return FDMUL; }
+{ return T_FDMUL; }
 	YY_BREAK
 case 78:
 YY_RULE_SETUP
-{ return OTHERMUL; }
+{ return T_OTHERMUL; }
 	YY_BREAK
 case 79:
 *yy_cp = yy_hold_char; /* undo effects of setting up yytext */
 yy_c_buf_p = yy_cp -= 1;
 YY_DO_BEFORE_ACTION; /* set up yytext again */
 YY_RULE_SETUP
-{ return OTHERMUL; }
+{ return T_OTHERMUL; }
 	YY_BREAK
 case 80:
 YY_RULE_SETUP
-{ return COMPARE; }
+{ return T_COMPARE; }
 	YY_BREAK
 case 81:
 YY_RULE_SETUP
-{ return FDIN; }
+{ return T_FDIN; }
 	YY_BREAK
 case 82:
 YY_RULE_SETUP
-{ return FDCOMPARE; }
+{ return T_FDCOMPARE; }
 	YY_BREAK
 case 83:
 YY_RULE_SETUP
@@ -2763,7 +2763,7 @@ YY_RULE_SETUP
 				 // where the last one is a float.
 				 // Caveat: Comments are not allowed
 				 //         between . and number.
-				 stripDot(); return DOTINT; }
+				 stripDot(); return T_DOTINT; }
 	YY_BREAK
 case 84:
 *yy_cp = yy_hold_char; /* undo effects of setting up yytext */
@@ -2775,657 +2775,657 @@ YY_RULE_SETUP
 				 // If this rule would not be there, the rule
 				 // for floats would match and an error would
 				 // occur.
-				 return OZINT; }
+				 return T_OZINT; }
 	YY_BREAK
 case 85:
 YY_RULE_SETUP
-{ return OZINT; }
+{ return T_OZINT; }
 	YY_BREAK
 case 86:
 YY_RULE_SETUP
-{ return OZFLOAT; }
+{ return T_OZFLOAT; }
 	YY_BREAK
 case 87:
 *yy_cp = yy_hold_char; /* undo effects of setting up yytext */
 yy_c_buf_p = yy_cp = yy_bp + 4;
 YY_DO_BEFORE_ACTION; /* set up yytext again */
 YY_RULE_SETUP
-{ return UNIT_LABEL; }
+{ return T_UNIT_LABEL; }
 	YY_BREAK
 case 88:
 *yy_cp = yy_hold_char; /* undo effects of setting up yytext */
 yy_c_buf_p = yy_cp = yy_bp + 4;
 YY_DO_BEFORE_ACTION; /* set up yytext again */
 YY_RULE_SETUP
-{ return TRUE_LABEL; }
+{ return T_TRUE_LABEL; }
 	YY_BREAK
 case 89:
 *yy_cp = yy_hold_char; /* undo effects of setting up yytext */
 yy_c_buf_p = yy_cp = yy_bp + 5;
 YY_DO_BEFORE_ACTION; /* set up yytext again */
 YY_RULE_SETUP
-{ return FALSE_LABEL; }
+{ return T_FALSE_LABEL; }
 	YY_BREAK
 case 90:
 YY_RULE_SETUP
-{ return andthen; }
+{ return T_andthen; }
 	YY_BREAK
 case 91:
 *yy_cp = yy_hold_char; /* undo effects of setting up yytext */
 yy_c_buf_p = yy_cp = yy_bp + 7;
 YY_DO_BEFORE_ACTION; /* set up yytext again */
 YY_RULE_SETUP
-{ return andthen; }
+{ return T_andthen; }
 	YY_BREAK
 case 92:
 YY_RULE_SETUP
-{ return at; }
+{ return T_at; }
 	YY_BREAK
 case 93:
 *yy_cp = yy_hold_char; /* undo effects of setting up yytext */
 yy_c_buf_p = yy_cp = yy_bp + 2;
 YY_DO_BEFORE_ACTION; /* set up yytext again */
 YY_RULE_SETUP
-{ return at; }
+{ return T_at; }
 	YY_BREAK
 case 94:
 YY_RULE_SETUP
-{ return attr; }
+{ return T_attr; }
 	YY_BREAK
 case 95:
 *yy_cp = yy_hold_char; /* undo effects of setting up yytext */
 yy_c_buf_p = yy_cp = yy_bp + 4;
 YY_DO_BEFORE_ACTION; /* set up yytext again */
 YY_RULE_SETUP
-{ return attr; }
+{ return T_attr; }
 	YY_BREAK
 case 96:
 YY_RULE_SETUP
-{ return _case_; }
+{ return T_case; }
 	YY_BREAK
 case 97:
 *yy_cp = yy_hold_char; /* undo effects of setting up yytext */
 yy_c_buf_p = yy_cp = yy_bp + 4;
 YY_DO_BEFORE_ACTION; /* set up yytext again */
 YY_RULE_SETUP
-{ return _case_; }
+{ return T_case; }
 	YY_BREAK
 case 98:
 YY_RULE_SETUP
-{ return catch; }
+{ return T_catch; }
 	YY_BREAK
 case 99:
 *yy_cp = yy_hold_char; /* undo effects of setting up yytext */
 yy_c_buf_p = yy_cp = yy_bp + 5;
 YY_DO_BEFORE_ACTION; /* set up yytext again */
 YY_RULE_SETUP
-{ return catch; }
+{ return T_catch; }
 	YY_BREAK
 case 100:
 YY_RULE_SETUP
-{ return choice; }
+{ return T_choice; }
 	YY_BREAK
 case 101:
 *yy_cp = yy_hold_char; /* undo effects of setting up yytext */
 yy_c_buf_p = yy_cp = yy_bp + 6;
 YY_DO_BEFORE_ACTION; /* set up yytext again */
 YY_RULE_SETUP
-{ return choice; }
+{ return T_choice; }
 	YY_BREAK
 case 102:
 YY_RULE_SETUP
-{ return _class_; }
+{ return T_class; }
 	YY_BREAK
 case 103:
 *yy_cp = yy_hold_char; /* undo effects of setting up yytext */
 yy_c_buf_p = yy_cp = yy_bp + 5;
 YY_DO_BEFORE_ACTION; /* set up yytext again */
 YY_RULE_SETUP
-{ return _class_; }
+{ return T_class; }
 	YY_BREAK
 case 104:
 YY_RULE_SETUP
-{ return cond; }
+{ return T_cond; }
 	YY_BREAK
 case 105:
 *yy_cp = yy_hold_char; /* undo effects of setting up yytext */
 yy_c_buf_p = yy_cp = yy_bp + 4;
 YY_DO_BEFORE_ACTION; /* set up yytext again */
 YY_RULE_SETUP
-{ return cond; }
+{ return T_cond; }
 	YY_BREAK
 case 106:
 YY_RULE_SETUP
-{ return declare; }
+{ return T_declare; }
 	YY_BREAK
 case 107:
 *yy_cp = yy_hold_char; /* undo effects of setting up yytext */
 yy_c_buf_p = yy_cp = yy_bp + 7;
 YY_DO_BEFORE_ACTION; /* set up yytext again */
 YY_RULE_SETUP
-{ return declare; }
+{ return T_declare; }
 	YY_BREAK
 case 108:
 YY_RULE_SETUP
-{ return define; }
+{ return T_define; }
 	YY_BREAK
 case 109:
 *yy_cp = yy_hold_char; /* undo effects of setting up yytext */
 yy_c_buf_p = yy_cp = yy_bp + 6;
 YY_DO_BEFORE_ACTION; /* set up yytext again */
 YY_RULE_SETUP
-{ return define; }
+{ return T_define; }
 	YY_BREAK
 case 110:
 YY_RULE_SETUP
-{ return dis; }
+{ return T_dis; }
 	YY_BREAK
 case 111:
 *yy_cp = yy_hold_char; /* undo effects of setting up yytext */
 yy_c_buf_p = yy_cp = yy_bp + 3;
 YY_DO_BEFORE_ACTION; /* set up yytext again */
 YY_RULE_SETUP
-{ return dis; }
+{ return T_dis; }
 	YY_BREAK
 case 112:
 YY_RULE_SETUP
-{ return _else_; }
+{ return T_else; }
 	YY_BREAK
 case 113:
 *yy_cp = yy_hold_char; /* undo effects of setting up yytext */
 yy_c_buf_p = yy_cp = yy_bp + 4;
 YY_DO_BEFORE_ACTION; /* set up yytext again */
 YY_RULE_SETUP
-{ return _else_; }
+{ return T_else; }
 	YY_BREAK
 case 114:
 YY_RULE_SETUP
-{ return elsecase; }
+{ return T_elsecase; }
 	YY_BREAK
 case 115:
 *yy_cp = yy_hold_char; /* undo effects of setting up yytext */
 yy_c_buf_p = yy_cp = yy_bp + 8;
 YY_DO_BEFORE_ACTION; /* set up yytext again */
 YY_RULE_SETUP
-{ return elsecase; }
+{ return T_elsecase; }
 	YY_BREAK
 case 116:
 YY_RULE_SETUP
-{ return elseif; }
+{ return T_elseif; }
 	YY_BREAK
 case 117:
 *yy_cp = yy_hold_char; /* undo effects of setting up yytext */
 yy_c_buf_p = yy_cp = yy_bp + 6;
 YY_DO_BEFORE_ACTION; /* set up yytext again */
 YY_RULE_SETUP
-{ return elseif; }
+{ return T_elseif; }
 	YY_BREAK
 case 118:
 YY_RULE_SETUP
-{ return elseof; }
+{ return T_elseof; }
 	YY_BREAK
 case 119:
 *yy_cp = yy_hold_char; /* undo effects of setting up yytext */
 yy_c_buf_p = yy_cp = yy_bp + 6;
 YY_DO_BEFORE_ACTION; /* set up yytext again */
 YY_RULE_SETUP
-{ return elseof; }
+{ return T_elseof; }
 	YY_BREAK
 case 120:
 YY_RULE_SETUP
-{ return end; }
+{ return T_end; }
 	YY_BREAK
 case 121:
 *yy_cp = yy_hold_char; /* undo effects of setting up yytext */
 yy_c_buf_p = yy_cp = yy_bp + 3;
 YY_DO_BEFORE_ACTION; /* set up yytext again */
 YY_RULE_SETUP
-{ return end; }
+{ return T_end; }
 	YY_BREAK
 case 122:
 YY_RULE_SETUP
-{ return export; }
+{ return T_export; }
 	YY_BREAK
 case 123:
 *yy_cp = yy_hold_char; /* undo effects of setting up yytext */
 yy_c_buf_p = yy_cp = yy_bp + 6;
 YY_DO_BEFORE_ACTION; /* set up yytext again */
 YY_RULE_SETUP
-{ return export; }
+{ return T_export; }
 	YY_BREAK
 case 124:
 YY_RULE_SETUP
-{ return fail; }
+{ return T_fail; }
 	YY_BREAK
 case 125:
 *yy_cp = yy_hold_char; /* undo effects of setting up yytext */
 yy_c_buf_p = yy_cp = yy_bp + 4;
 YY_DO_BEFORE_ACTION; /* set up yytext again */
 YY_RULE_SETUP
-{ return fail; }
+{ return T_fail; }
 	YY_BREAK
 case 126:
 YY_RULE_SETUP
-{ return false; }
+{ return T_false; }
 	YY_BREAK
 case 127:
 YY_RULE_SETUP
-{ return feat; }
+{ return T_feat; }
 	YY_BREAK
 case 128:
 *yy_cp = yy_hold_char; /* undo effects of setting up yytext */
 yy_c_buf_p = yy_cp = yy_bp + 4;
 YY_DO_BEFORE_ACTION; /* set up yytext again */
 YY_RULE_SETUP
-{ return feat; }
+{ return T_feat; }
 	YY_BREAK
 case 129:
 YY_RULE_SETUP
-{ return finally; }
+{ return T_finally; }
 	YY_BREAK
 case 130:
 *yy_cp = yy_hold_char; /* undo effects of setting up yytext */
 yy_c_buf_p = yy_cp = yy_bp + 7;
 YY_DO_BEFORE_ACTION; /* set up yytext again */
 YY_RULE_SETUP
-{ return finally; }
+{ return T_finally; }
 	YY_BREAK
 case 131:
 YY_RULE_SETUP
-{ return _from_; }
+{ return T_from; }
 	YY_BREAK
 case 132:
 *yy_cp = yy_hold_char; /* undo effects of setting up yytext */
 yy_c_buf_p = yy_cp = yy_bp + 4;
 YY_DO_BEFORE_ACTION; /* set up yytext again */
 YY_RULE_SETUP
-{ return _from_; }
+{ return T_from; }
 	YY_BREAK
 case 133:
 YY_RULE_SETUP
-{ return _fun_; }
+{ return T_fun; }
 	YY_BREAK
 case 134:
 *yy_cp = yy_hold_char; /* undo effects of setting up yytext */
 yy_c_buf_p = yy_cp = yy_bp + 3;
 YY_DO_BEFORE_ACTION; /* set up yytext again */
 YY_RULE_SETUP
-{ return _fun_; }
+{ return T_fun; }
 	YY_BREAK
 case 135:
 YY_RULE_SETUP
-{ return functor; }
+{ return T_functor; }
 	YY_BREAK
 case 136:
 *yy_cp = yy_hold_char; /* undo effects of setting up yytext */
 yy_c_buf_p = yy_cp = yy_bp + 7;
 YY_DO_BEFORE_ACTION; /* set up yytext again */
 YY_RULE_SETUP
-{ return functor; }
+{ return T_functor; }
 	YY_BREAK
 case 137:
 YY_RULE_SETUP
-{ return _if_; }
+{ return T_if; }
 	YY_BREAK
 case 138:
 *yy_cp = yy_hold_char; /* undo effects of setting up yytext */
 yy_c_buf_p = yy_cp = yy_bp + 2;
 YY_DO_BEFORE_ACTION; /* set up yytext again */
 YY_RULE_SETUP
-{ return _if_; }
+{ return T_if; }
 	YY_BREAK
 case 139:
 YY_RULE_SETUP
-{ return import; }
+{ return T_import; }
 	YY_BREAK
 case 140:
 *yy_cp = yy_hold_char; /* undo effects of setting up yytext */
 yy_c_buf_p = yy_cp = yy_bp + 6;
 YY_DO_BEFORE_ACTION; /* set up yytext again */
 YY_RULE_SETUP
-{ return import; }
+{ return T_import; }
 	YY_BREAK
 case 141:
 YY_RULE_SETUP
-{ return _in_; }
+{ return T_in; }
 	YY_BREAK
 case 142:
 *yy_cp = yy_hold_char; /* undo effects of setting up yytext */
 yy_c_buf_p = yy_cp = yy_bp + 2;
 YY_DO_BEFORE_ACTION; /* set up yytext again */
 YY_RULE_SETUP
-{ return _in_; }
+{ return T_in; }
 	YY_BREAK
 case 143:
 YY_RULE_SETUP
-{ if (xy_gumpSyntax) { BEGIN(LEX); return lex; } else return OZATOM; }
+{ if (xy_gumpSyntax) { BEGIN(LEX); return T_lex; } else return T_OZATOM; }
 	YY_BREAK
 case 144:
 *yy_cp = yy_hold_char; /* undo effects of setting up yytext */
 yy_c_buf_p = yy_cp = yy_bp + 3;
 YY_DO_BEFORE_ACTION; /* set up yytext again */
 YY_RULE_SETUP
-{ if (xy_gumpSyntax) { BEGIN(LEX); return lex; } else return ATOM_LABEL; }
+{ if (xy_gumpSyntax) { BEGIN(LEX); return T_lex; } else return T_ATOM_LABEL; }
 	YY_BREAK
 case 145:
 YY_RULE_SETUP
-{ return local; }
+{ return T_local; }
 	YY_BREAK
 case 146:
 *yy_cp = yy_hold_char; /* undo effects of setting up yytext */
 yy_c_buf_p = yy_cp = yy_bp + 5;
 YY_DO_BEFORE_ACTION; /* set up yytext again */
 YY_RULE_SETUP
-{ return local; }
+{ return T_local; }
 	YY_BREAK
 case 147:
 YY_RULE_SETUP
-{ return _lock_; }
+{ return T_lock; }
 	YY_BREAK
 case 148:
 *yy_cp = yy_hold_char; /* undo effects of setting up yytext */
 yy_c_buf_p = yy_cp = yy_bp + 4;
 YY_DO_BEFORE_ACTION; /* set up yytext again */
 YY_RULE_SETUP
-{ return _lock_; }
+{ return T_lock; }
 	YY_BREAK
 case 149:
 YY_RULE_SETUP
-{ return _meth_; }
+{ return T_meth; }
 	YY_BREAK
 case 150:
 *yy_cp = yy_hold_char; /* undo effects of setting up yytext */
 yy_c_buf_p = yy_cp = yy_bp + 4;
 YY_DO_BEFORE_ACTION; /* set up yytext again */
 YY_RULE_SETUP
-{ return _meth_; }
+{ return T_meth; }
 	YY_BREAK
 case 151:
 YY_RULE_SETUP
-{ return xy_gumpSyntax? _mode_: OZATOM; }
+{ return xy_gumpSyntax? T_mode: T_OZATOM; }
 	YY_BREAK
 case 152:
 *yy_cp = yy_hold_char; /* undo effects of setting up yytext */
 yy_c_buf_p = yy_cp = yy_bp + 4;
 YY_DO_BEFORE_ACTION; /* set up yytext again */
 YY_RULE_SETUP
-{ return xy_gumpSyntax? _mode_: ATOM_LABEL; }
+{ return xy_gumpSyntax? T_mode: T_ATOM_LABEL; }
 	YY_BREAK
 case 153:
 YY_RULE_SETUP
-{ return not; }
+{ return T_not; }
 	YY_BREAK
 case 154:
 *yy_cp = yy_hold_char; /* undo effects of setting up yytext */
 yy_c_buf_p = yy_cp = yy_bp + 3;
 YY_DO_BEFORE_ACTION; /* set up yytext again */
 YY_RULE_SETUP
-{ return not; }
+{ return T_not; }
 	YY_BREAK
 case 155:
 YY_RULE_SETUP
-{ return of; }
+{ return T_of; }
 	YY_BREAK
 case 156:
 *yy_cp = yy_hold_char; /* undo effects of setting up yytext */
 yy_c_buf_p = yy_cp = yy_bp + 2;
 YY_DO_BEFORE_ACTION; /* set up yytext again */
 YY_RULE_SETUP
-{ return of; }
+{ return T_of; }
 	YY_BREAK
 case 157:
 YY_RULE_SETUP
-{ return or; }
+{ return T_or; }
 	YY_BREAK
 case 158:
 *yy_cp = yy_hold_char; /* undo effects of setting up yytext */
 yy_c_buf_p = yy_cp = yy_bp + 2;
 YY_DO_BEFORE_ACTION; /* set up yytext again */
 YY_RULE_SETUP
-{ return or; }
+{ return T_or; }
 	YY_BREAK
 case 159:
 YY_RULE_SETUP
-{ return orelse; }
+{ return T_orelse; }
 	YY_BREAK
 case 160:
 *yy_cp = yy_hold_char; /* undo effects of setting up yytext */
 yy_c_buf_p = yy_cp = yy_bp + 6;
 YY_DO_BEFORE_ACTION; /* set up yytext again */
 YY_RULE_SETUP
-{ return orelse; }
+{ return T_orelse; }
 	YY_BREAK
 case 161:
 YY_RULE_SETUP
-{ return xy_gumpSyntax? _parser_: OZATOM; }
+{ return xy_gumpSyntax? T_parser: T_OZATOM; }
 	YY_BREAK
 case 162:
 *yy_cp = yy_hold_char; /* undo effects of setting up yytext */
 yy_c_buf_p = yy_cp = yy_bp + 6;
 YY_DO_BEFORE_ACTION; /* set up yytext again */
 YY_RULE_SETUP
-{ return xy_gumpSyntax? _parser_: ATOM_LABEL; }
+{ return xy_gumpSyntax? T_parser: T_ATOM_LABEL; }
 	YY_BREAK
 case 163:
 YY_RULE_SETUP
-{ return prepare; }
+{ return T_prepare; }
 	YY_BREAK
 case 164:
 *yy_cp = yy_hold_char; /* undo effects of setting up yytext */
 yy_c_buf_p = yy_cp = yy_bp + 7;
 YY_DO_BEFORE_ACTION; /* set up yytext again */
 YY_RULE_SETUP
-{ return prepare; }
+{ return T_prepare; }
 	YY_BREAK
 case 165:
 YY_RULE_SETUP
-{ return proc; }
+{ return T_proc; }
 	YY_BREAK
 case 166:
 *yy_cp = yy_hold_char; /* undo effects of setting up yytext */
 yy_c_buf_p = yy_cp = yy_bp + 4;
 YY_DO_BEFORE_ACTION; /* set up yytext again */
 YY_RULE_SETUP
-{ return proc; }
+{ return T_proc; }
 	YY_BREAK
 case 167:
 YY_RULE_SETUP
-{ return xy_gumpSyntax? prod: OZATOM; }
+{ return xy_gumpSyntax? T_prod: T_OZATOM; }
 	YY_BREAK
 case 168:
 *yy_cp = yy_hold_char; /* undo effects of setting up yytext */
 yy_c_buf_p = yy_cp = yy_bp + 4;
 YY_DO_BEFORE_ACTION; /* set up yytext again */
 YY_RULE_SETUP
-{ return xy_gumpSyntax? prod: ATOM_LABEL; }
+{ return xy_gumpSyntax? T_prod: T_ATOM_LABEL; }
 	YY_BREAK
 case 169:
 YY_RULE_SETUP
-{ return prop; }
+{ return T_prop; }
 	YY_BREAK
 case 170:
 *yy_cp = yy_hold_char; /* undo effects of setting up yytext */
 yy_c_buf_p = yy_cp = yy_bp + 4;
 YY_DO_BEFORE_ACTION; /* set up yytext again */
 YY_RULE_SETUP
-{ return prop; }
+{ return T_prop; }
 	YY_BREAK
 case 171:
 YY_RULE_SETUP
-{ return _raise_; }
+{ return T_raise; }
 	YY_BREAK
 case 172:
 *yy_cp = yy_hold_char; /* undo effects of setting up yytext */
 yy_c_buf_p = yy_cp = yy_bp + 5;
 YY_DO_BEFORE_ACTION; /* set up yytext again */
 YY_RULE_SETUP
-{ return _raise_; }
+{ return T_raise; }
 	YY_BREAK
 case 173:
 YY_RULE_SETUP
-{ return require; }
+{ return T_require; }
 	YY_BREAK
 case 174:
 *yy_cp = yy_hold_char; /* undo effects of setting up yytext */
 yy_c_buf_p = yy_cp = yy_bp + 7;
 YY_DO_BEFORE_ACTION; /* set up yytext again */
 YY_RULE_SETUP
-{ return require; }
+{ return T_require; }
 	YY_BREAK
 case 175:
 YY_RULE_SETUP
-{ return xy_gumpSyntax? _scanner_: OZATOM; }
+{ return xy_gumpSyntax? T_scanner: T_OZATOM; }
 	YY_BREAK
 case 176:
 *yy_cp = yy_hold_char; /* undo effects of setting up yytext */
 yy_c_buf_p = yy_cp = yy_bp + 7;
 YY_DO_BEFORE_ACTION; /* set up yytext again */
 YY_RULE_SETUP
-{ return xy_gumpSyntax? _scanner_: ATOM_LABEL; }
+{ return xy_gumpSyntax? T_scanner: T_ATOM_LABEL; }
 	YY_BREAK
 case 177:
 YY_RULE_SETUP
-{ return self; }
+{ return T_self; }
 	YY_BREAK
 case 178:
 *yy_cp = yy_hold_char; /* undo effects of setting up yytext */
 yy_c_buf_p = yy_cp = yy_bp + 4;
 YY_DO_BEFORE_ACTION; /* set up yytext again */
 YY_RULE_SETUP
-{ return self; }
+{ return T_self; }
 	YY_BREAK
 case 179:
 YY_RULE_SETUP
-{ return skip; }
+{ return T_skip; }
 	YY_BREAK
 case 180:
 *yy_cp = yy_hold_char; /* undo effects of setting up yytext */
 yy_c_buf_p = yy_cp = yy_bp + 4;
 YY_DO_BEFORE_ACTION; /* set up yytext again */
 YY_RULE_SETUP
-{ return skip; }
+{ return T_skip; }
 	YY_BREAK
 case 181:
 YY_RULE_SETUP
-{ return xy_gumpSyntax? syn: OZATOM; }
+{ return xy_gumpSyntax? T_syn: T_OZATOM; }
 	YY_BREAK
 case 182:
 *yy_cp = yy_hold_char; /* undo effects of setting up yytext */
 yy_c_buf_p = yy_cp = yy_bp + 3;
 YY_DO_BEFORE_ACTION; /* set up yytext again */
 YY_RULE_SETUP
-{ return xy_gumpSyntax? syn: ATOM_LABEL; }
+{ return xy_gumpSyntax? T_syn: T_ATOM_LABEL; }
 	YY_BREAK
 case 183:
 YY_RULE_SETUP
-{ return then; }
+{ return T_then; }
 	YY_BREAK
 case 184:
 *yy_cp = yy_hold_char; /* undo effects of setting up yytext */
 yy_c_buf_p = yy_cp = yy_bp + 4;
 YY_DO_BEFORE_ACTION; /* set up yytext again */
 YY_RULE_SETUP
-{ return then; }
+{ return T_then; }
 	YY_BREAK
 case 185:
 YY_RULE_SETUP
-{ return xy_gumpSyntax? token: OZATOM; }
+{ return xy_gumpSyntax? T_token: T_OZATOM; }
 	YY_BREAK
 case 186:
 *yy_cp = yy_hold_char; /* undo effects of setting up yytext */
 yy_c_buf_p = yy_cp = yy_bp + 5;
 YY_DO_BEFORE_ACTION; /* set up yytext again */
 YY_RULE_SETUP
-{ return xy_gumpSyntax? token: ATOM_LABEL; }
+{ return xy_gumpSyntax? T_token: T_ATOM_LABEL; }
 	YY_BREAK
 case 187:
 YY_RULE_SETUP
-{ return thread; }
+{ return T_thread; }
 	YY_BREAK
 case 188:
 *yy_cp = yy_hold_char; /* undo effects of setting up yytext */
 yy_c_buf_p = yy_cp = yy_bp + 6;
 YY_DO_BEFORE_ACTION; /* set up yytext again */
 YY_RULE_SETUP
-{ return thread; }
+{ return T_thread; }
 	YY_BREAK
 case 189:
 YY_RULE_SETUP
-{ return true; }
+{ return T_true; }
 	YY_BREAK
 case 190:
 YY_RULE_SETUP
-{ return try; }
+{ return T_try; }
 	YY_BREAK
 case 191:
 *yy_cp = yy_hold_char; /* undo effects of setting up yytext */
 yy_c_buf_p = yy_cp = yy_bp + 3;
 YY_DO_BEFORE_ACTION; /* set up yytext again */
 YY_RULE_SETUP
-{ return try; }
+{ return T_try; }
 	YY_BREAK
 case 192:
 YY_RULE_SETUP
-{ return unit; }
+{ return T_unit; }
 	YY_BREAK
 case 193:
 YY_RULE_SETUP
-{ stripTrans('\''); return OZATOM; }
+{ stripTrans('\''); return T_OZATOM; }
 	YY_BREAK
 case 194:
 YY_RULE_SETUP
-{ if (get_cond()) xyreportError("lexical error","illegal atom syntax",xyFileName,xylino,xycharno()); return OZATOM;}
+{ if (get_cond()) xyreportError("lexical error","illegal atom syntax",xyFileName,xylino,xycharno()); return T_OZATOM;}
 	YY_BREAK
 case 195:
 *yy_cp = yy_hold_char; /* undo effects of setting up yytext */
 yy_c_buf_p = yy_cp -= 1;
 YY_DO_BEFORE_ACTION; /* set up yytext again */
 YY_RULE_SETUP
-{ stripTrans('\''); return ATOM_LABEL; }
+{ stripTrans('\''); return T_ATOM_LABEL; }
 	YY_BREAK
 case 196:
 *yy_cp = yy_hold_char; /* undo effects of setting up yytext */
 yy_c_buf_p = yy_cp -= 1;
 YY_DO_BEFORE_ACTION; /* set up yytext again */
 YY_RULE_SETUP
-{ if (get_cond()) xyreportError("lexical error","illegal atom syntax",xyFileName,xylino,xycharno()); return ATOM_LABEL;}
+{ if (get_cond()) xyreportError("lexical error","illegal atom syntax",xyFileName,xylino,xycharno()); return T_ATOM_LABEL;}
 	YY_BREAK
 case 197:
 YY_RULE_SETUP
-{ trans('`'); return VARIABLE; }
+{ trans('`'); return T_VARIABLE; }
 	YY_BREAK
 case 198:
 YY_RULE_SETUP
-{ if (get_cond()) xyreportError("lexical error","illegal variable syntax",xyFileName,xylino,xycharno()); return VARIABLE;}
+{ if (get_cond()) xyreportError("lexical error","illegal variable syntax",xyFileName,xylino,xycharno()); return T_VARIABLE;}
 	YY_BREAK
 case 199:
 *yy_cp = yy_hold_char; /* undo effects of setting up yytext */
 yy_c_buf_p = yy_cp -= 1;
 YY_DO_BEFORE_ACTION; /* set up yytext again */
 YY_RULE_SETUP
-{ trans('`'); return VARIABLE_LABEL; }
+{ trans('`'); return T_VARIABLE_LABEL; }
 	YY_BREAK
 case 200:
 *yy_cp = yy_hold_char; /* undo effects of setting up yytext */
 yy_c_buf_p = yy_cp -= 1;
 YY_DO_BEFORE_ACTION; /* set up yytext again */
 YY_RULE_SETUP
-{ if (get_cond()) xyreportError("lexical error","illegal variable syntax",xyFileName,xylino,xycharno()); return VARIABLE;}
+{ if (get_cond()) xyreportError("lexical error","illegal variable syntax",xyFileName,xylino,xycharno()); return T_VARIABLE;}
 	YY_BREAK
 case 201:
 YY_RULE_SETUP
-{ stripTrans('\"'); return STRING; }
+{ stripTrans('\"'); return T_STRING; }
 	YY_BREAK
 case 202:
 YY_RULE_SETUP
-{ if (get_cond()) xyreportError("lexical error","illegal string syntax",xyFileName,xylino,xycharno()); return STRING;}
+{ if (get_cond()) xyreportError("lexical error","illegal string syntax",xyFileName,xylino,xycharno()); return T_STRING;}
 	YY_BREAK
 case 203:
 YY_RULE_SETUP
 { int i = 0;
 				 int j = 1;
 				 transBody(0, xytext, i, j);
-				 return AMPER;
+				 return T_AMPER;
 			       }
 	YY_BREAK
 case 204:
@@ -3465,7 +3465,7 @@ case YY_STATE_EOF(INITIAL):
 case YY_STATE_EOF(LEX):
 { BEGIN(DIRECTIVE);
 				 if (pop_insert())
-				   return ENDOFFILE;
+				   return T_ENDOFFILE;
 			       }
 	YY_BREAK
 case 209:
@@ -4375,8 +4375,8 @@ int xy_init_from_file(char *file, OZ_Term defines) {
   char *fullname = scExpndFileName(file, NULL);
   if (fullname == NULL)
     return 0;
-  xy_errorMessages = OZ_cons(OZ_mkTupleC("logInsert",1,OZ_atom(fullname)),
-			     OZ_nil());
+  xy_errorMessages = oz_cons(OZ_mkTupleC("logInsert",1,OZ_atom(fullname)),
+			     AtomNil);
   xyin = fopen(fullname, "r");
   if (xyin == NULL)
     return 0;
@@ -4390,7 +4390,7 @@ int xy_init_from_file(char *file, OZ_Term defines) {
 }
 
 void xy_init_from_string(char *str, OZ_Term defines) {
-  xy_errorMessages = OZ_nil();
+  xy_errorMessages = AtomNil;
   xyFileName[0] = '\0';
   xyFileNameAtom = OZ_atom(xyFileName);
   xyin = NULL;

@@ -23,6 +23,8 @@
 ### WARRANTIES.
 ###
 
+$module_init_fun_name = "parser_init";
+
 %builtins_all =
 (
  'file'			=> { in  => ['+virtualString','+record'],
