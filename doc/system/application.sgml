@@ -34,7 +34,8 @@
             <<{Application.getCgiArgs ?+{Spec} ??{R}}>>
           <Item>
             acquires the arguments (both <Samp/GET/ and <Samp/POST/ methods
-            supported) and parses them according to ?_{Spec}.  Returns the
+            supported) and parses them according to ?_{Spec} as described in
+            <Ptr to="section.application.specifications">.  Returns the
             options in&nbsp;?_{R}.
 
           <Entry><<getCmdArgs>>
@@ -42,16 +43,18 @@
             <<{Application.getCmdArgs ?+{Spec} ??{R}}>>
           <Item>
             acquires the arguments from the system property
-            <<'application.args'>> and parses them according
-            to ?_{Spec}.  Returns the options in&nbsp;?_{R}.
+            <<'application.args'>> and parses them according to ?_{Spec}
+            as described in <Ptr to="section.application.specifications">.
+            Returns the options in&nbsp;?_{R}.
 
           <Entry><<getGuiArgs>>
           <Synopsis>
             <<{Application.getGuiArgs ?+{Spec} ??{R}}>>
           <Item>
-            pops up a graphical interface with which the user can
-            interactively and comfortably edit the possible options
-            described by ?_{Spec}.  Returns the options in&nbsp;?_{R}.
+            pops up a graphical interface with which the user can interactively
+            and comfortably edit the possible options described by ?_{Spec}
+            as described in <Ptr to="section.application.specifications">.
+            Returns the options in&nbsp;?_{R}.
 
           <Entry><<getArgs>>
           <Synopsis>
