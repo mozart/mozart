@@ -46,14 +46,15 @@ extern "C" {
 
 typedef unsigned int OZ_Term;
 
-typedef enum {
-  FAILED,
-  PROCEED,
-  SUSPEND,
-  SLEEP,
-  SCHEDULED,
-  RAISE
-} OZ_Return;
+typedef unsigned int OZ_Return;
+
+#define FAILED    0
+#define PROCEED   1
+#define SUSPEND   2
+#define SLEEP     3
+#define SCHEDULED 4
+#define RAISE     5
+
 
 typedef void *OZ_Thread;
 typedef void *OZ_Arity;
