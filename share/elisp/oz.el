@@ -669,7 +669,7 @@ the GDB commands `cd DIR' and `directory'."
        "div" "mod" "andthen" "orelse"
        "thread" "job" "conc" "in"
        "condis" "not"
-       "try" "catch" "finally"
+       "try" "catch" "finally" "skip"
        ))
     "\\|\\.\\|\\[\\]\\|#\\|!\\|:\\|\\@"
     ))
