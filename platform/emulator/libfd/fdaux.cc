@@ -29,20 +29,6 @@
 #include "fdaux.hh"
 
 //-----------------------------------------------------------------------------
-
-OZ_C_proc_begin(fdp_init, 1)
-{
-  
-#ifdef OZ_DEBUG
-  oz_debugprint("*** DEBUG-FDLIB ***");
-#elif OZ_PROFILE
-  oz_debugprint("*** PROFILE-FDLIB ***");
-#endif
-  return OZ_unifyAtom(OZ_args[0], __DATE__ " (" __TIME__ ")");
-}
-OZ_C_proc_end
-
-//-----------------------------------------------------------------------------
 // convert vector to C++ arrays
 
 int * vectorToInts(OZ_Term t, int &sz) 
