@@ -238,34 +238,4 @@ void oz_reduceTrailOnEqEq()
   am.trail.popMark();
 }
 
-/* -------------------------------------------------------------------------
- * Search
- * -------------------------------------------------------------------------*/
-
-void oz_checkExtSuspension(Suspension susp, Board * varHome) {
-
-  if (!oz_onToplevel()) {
-  
-    varHome=varHome->derefBoard();
-
-    Board * bb = oz_currentBoard();
-
-    Bool wasFound = NO;
-
-    Assert (!varHome->isCommitted());
-
-    while (bb != varHome) {
-      Assert (!oz_isRootBoard(bb));
-      Assert (!bb->isCommitted() && !bb->isFailed());
-
-      bb->addSuspension(susp);
-      wasFound = OK;
-      
-      bb = bb->getParent();
-    }
-  
-    if (wasFound) 
-      susp.setExtSuspension();
-  }
-}
 

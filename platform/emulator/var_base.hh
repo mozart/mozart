@@ -73,9 +73,11 @@ enum TypeOfVariable {
   if ((List) && ((List)->getElem() == Susp)) {		\
   } else {						\
     List = new SuspList(Susp, List);			\
-    if (Home) oz_checkExtSuspension(Susp, Home);	\
+    if (Home && !oz_onToplevel())                       \
+      oz_checkExtSuspension(Susp,Home);	                \
   }							\
 }
+
 
 #define STORE_FLAG 1
 #define REIFIED_FLAG 2
