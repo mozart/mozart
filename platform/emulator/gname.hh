@@ -67,7 +67,7 @@ extern FatInt *idCounter;
 enum GNameType {
   GNT_NAME,
   GNT_PROC,
-  GNT_CODE,
+  GNT_CODE_UNUSED,
   GNT_CHUNK,
   GNT_OBJECT,
   GNT_CLASS,
@@ -117,7 +117,7 @@ public:
   void resetGCMark() { gcMark = 0;}
 
   void gcGName(){
-    if (getGNameType()!=GNT_CODE && !getGCMark()) {
+    if (!getGCMark()) {
       setGCMark();
       gcMarkSite();
       OZ_collectHeapTerm(value,value);}}
@@ -148,8 +148,6 @@ TaggedRef oz_findGName(GName *gn);
 void addGName(GName *gn, TaggedRef t);
 GName *newGName(TaggedRef t, GNameType gt);
 void deleteGName(GName *gn);
-GName *newGName(PrTabEntry *pr);
-PrTabEntry *findCodeGName(GName *gn);
 
 inline void gcGName(GName* name) { if (name) name->gcGName(); }
 
