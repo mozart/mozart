@@ -16,7 +16,15 @@
 \lefthyphenmin=2
 \righthyphenmin=3
 
+\renewcommand{\encodingdefault}{T1}
 \RequirePackage{times}
+
+% \DeclareFontShape{T1}{pcr}{c}{n}{
+%   <-> pcrr8rn
+% }
+% \DeclareFontShape{T1}{pcr}{c}{sl}{
+%   <->
+% }
 
 % pass options down to book class
 \DeclareOption*{\PassOptionsToClass{\CurrentOption}{book}}
@@ -32,6 +40,10 @@
 \RequirePackage{isolatin1}
 \RequirePackage{color}
 \RequirePackage{theorem}
+\RequirePackage{pstricks}
+
+% mozart info
+\RequirePackage{ozdoc-info}
 
 % layout parameter
 
@@ -210,7 +222,7 @@
 \AtBeginDocument{\mozart@front}
 
 \newcommand{\mozart@title@font@one}{%
-  \mozart@section@font\LARGE}
+  \mozart@section@font\huge}
 \newcommand{\mozart@title@font@two}{%
   \mozart@section@font\Large}
 \newcommand{\mozart@title@font@three}{%
@@ -224,19 +236,121 @@
   \renewcommand{\@oddfoot}{}%
   \renewcommand{\@evenfoot}{}}
 
+\newcommand{\mozComic}[1]{\renewcommand{\@comic}{\mozart@comic{#1}}}
 \newcommand{\@comic}{}
 \let\@author\@empty
 \let\@title\@empty
 
+\newcommand{\mozart@comic@height}{10cm}
+\newcommand{\mozart@comic}[1]{%
+  \mozart@cut@extension{#1}%
+  {\mozart@specials@other
+   \epsfig{file=\mozart@basename,height=\mozart@comic@height}}}
+
+\iftrue % IS NEW DESIGN
+\newcommand{\mozart@version}{\@mozartVersion}
+\newcommand{\mozart@date}{\expandafter\@mozart@date\@mozartBuildDate}
+
+\newcount\mozart@cnt
+\newcommand{\@mozart@date}[8]{%
+  \mozart@cnt=#1#2#3#4\relax
+  \edef\mozart@year{\the\mozart@cnt}%
+  \mozart@cnt=#5#6\relax
+  \edef\mozart@month{\the\mozart@cnt}%
+  \mozart@cnt=#7#8\relax
+  \def\mozart@day{\the\mozart@cnt}%
+  \ifcase\mozart@month
+  \or January
+  \or February
+  \or March
+  \or April
+  \or May
+  \or June
+  \or July
+  \or August
+  \or September
+  \or October
+  \or November
+  \or December
+  \fi
+  \mozart@day,
+  \mozart@year}
+
+\newcommand{\@mozartstyle}{H}
+\newcommand{\mozartstyle}[1]{%
+  \renewcommand{\@mozartstyle}{#1}}
+
+\newcommand{\mozart@bottomcomic}{\mozart@logo}
+
+\newcommand{\mozart@topcomic}{}
+\newcommand{\mozartstyle@A}{%
+  \renewcommand{\mozart@topcomic}{%
+    \begin{flushleft}\@comic\end{flushleft}}}
+
+\newcommand{\mozartstyle@B}{%
+  \renewcommand{\mozart@topcomic}{%
+    \begin{flushleft}\fbox{\@comic}\end{flushleft}}}
+
+\newcommand{\mozartstyle@C}{%
+  \renewcommand{\mozart@topcomic}{%
+    \begin{tabular*}{\mozart@fullwidth}{@{}l@{\extracolsep{\fill}}l|p{1cm}@{}}%
+      \@comic&&\\\hline&&
+    \end{tabular*}}}
+
+\newcommand{\mozartstyle@D}{%
+  \renewcommand{\mozart@topcomic}{%
+    \begin{pspicture}(20,12)%
+      \rput[tl](0,12){\@comic}%
+      \psline(14,12)(14,-1)%
+      \psline(2,1)(15.5,1)%
+    \end{pspicture}}}
+
+\newcommand{\mozartstyle@E}{%
+  \renewcommand{\mozart@topcomic}{%
+    \begin{pspicture}(20,12)%
+      \rput[tl](0,12){\@comic}%
+      \pstriangle[fillstyle=solid,fillcolor=lightgray,linestyle=none](14,-1)(0.5,15)%
+      \psline[linecolor=gray,linewidth=1mm](2,1)(15.5,1)%
+    \end{pspicture}}}
+
+\newcommand{\mozartstyle@F}{%
+  \renewcommand{\mozart@topcomic}{%
+    \begin{pspicture}(20,12)%
+      \rput[tl](0,12){\@comic}%
+      \pstriangle[fillstyle=solid,fillcolor=lightgray,linestyle=none](14,-1)(0.5,15)%
+      \psline[linecolor=gray,linewidth=1mm](10,1)(15.5,1)%
+    \end{pspicture}}}
+
+\newcommand{\mozartstyle@G}{%
+  \renewcommand{\mozart@bottomcomic}{}%
+  \renewcommand{\mozart@topcomic}{%
+    \begin{pspicture}(20,12)%
+      \rput[tl](0,12){\@comic}%
+      \pstriangle[fillstyle=solid,fillcolor=lightgray,linestyle=none](14,-1)(0.5,15)%
+      \rput[r](15.5,1){\mozart@logo}%
+    \end{pspicture}}}
+
+\newcommand{\mozartstyle@H}{%
+  \renewcommand{\mozart@topcomic}{%
+    \begin{pspicture}(20,12)%
+      \rput[tl](0,12){\@comic}%
+      \pstriangle[fillstyle=solid,fillcolor=lightgray,linestyle=none](14,-9)(0.5,23)%
+    \end{pspicture}}}
+
+%\mozartstyle{H}
+
 \newcommand{\mozart@titlepage}{%
 \bgroup
-  \let\ps@empty\ps@mozart@front
-  \pagestyle{empty}\thispagestyle{mozart@front}%
+  \pagestyle{empty}\thispagestyle{empty}%
+  \@nameuse{mozartstyle@\@mozartstyle}%
   \begin{titlepage}%
-    \hbox{}\vfill
     \begin{FULLWIDTH}%
-      \ifx\@comic\long@empty\else
-        \begin{center}\@comic\end{center}\fi
+      \ifx\@comic\long@empty
+        \vspace*{\mozart@comic@height}%
+      \else
+        \mozart@topcomic%
+      \fi
+      \vspace*{2cm}%
       \begin{flushright}
         \ifx\@title\@empty\else{\mozart@title@font@one\@title\\[1cm]}\fi
         \ifx\@author\@empty\else{\mozart@title@font@two\@author\\[1cm]}\fi
@@ -244,10 +358,17 @@
       \vfill
       \mozart@title@font@three
       \noindent
-      Mozart V\mozart@release@number\hfill\mozart@release@date
+      \begin{tabular}{@{}l@{}}%
+        Version \mozart@version\\\mozart@date
+      \end{tabular}\hfill\hbox{}\mozart@bottomcomic
     \end{FULLWIDTH}%
   \end{titlepage}%
 \egroup}
+\fi
+
+\newcommand{\mozart@logo}{%
+  \lower10mm\hbox{\@PICEXT{mozart-grey}{5cm}}%
+}
 
 \newlength{\mozart@quote@indent}
 \setlength{\mozart@quote@indent}{1cm}
@@ -299,6 +420,8 @@
     \end{mozart@quote}%
   \end{FULLWIDTH}}
 
+\newcommand{\mozAbstract}[1]{%
+  \long\def\@abstract{#1}}
 \newcommand{\long@empty}{}
 \newcommand{\mozart@abstract}{%
   \ifx\@abstract\@long@empty\else
@@ -558,11 +681,12 @@
   \ifx\@currsize\small		\scriptsize\else
   \ifx\@currsize\normalsize	\small\fi\fi}
 
+% pcrr8rn
+\newcommand{\mozart@code@family}{pcr}
 \newcommand{\mozart@code@font}{%
-  \fontencoding{\encodingdefault}%
-  \fontfamily{\familydefault}%
-  \fontshape{\shapedefault}\ttfamily\selectfont
-  \mozart@code@smaller}
+  \fontencoding{T1}%
+  \fontfamily{\mozart@code@family}%
+  \fontshape{\shapedefault}\selectfont\hyphenchar\font\m@ne}
 \newcommand{\@CODEINLINE}[1]{\mozart@code@font\mozart@specials@code@inline#1\egroup}
 \DeclareRobustCommand{\CODEINLINE}{\bgroup\let\FACETEXT\INLINEFACETEXT\@CODEINLINE}
 \newcommand{\CODEEXTERN}[1]{%
@@ -671,7 +795,7 @@
     \fi}%
   \mozart@@hasExtension#1\mozart@one#2\mozart@one\mozart@two}
 
-\newcommand{\@PICEXT}[2]{% #1=filename #2=width
+\newcommand{\mozart@cut@extension}[1]{%
   \@mozartExtensionfalse
   \if@mozartExtension\else\mozart@hasExtension{#1}{.ps}\fi
   \if@mozartExtension\else\mozart@hasExtension{#1}{.eps}\fi
@@ -680,7 +804,10 @@
   \if@mozartExtension\else
     \def\mozart@basename{#1}%
     \def\mozart@extension{}%
-  \fi
+  \fi}
+
+\newcommand{\@PICEXT}[2]{% #1=filename #2=width
+  \mozart@cut@extension{#1}%
   \def\mozart@temp{#2}%
   \ifx\mozart@temp\@empty
     \def\@@PICEXT{\epsfig{file=\mozart@basename}}%
