@@ -260,12 +260,9 @@ inline
 void AM::checkSuspensionList(TaggedRef taggedvar, TaggedRef term,
                              SVariable * rightVar, Bool calledByUnify)
 {
-  SVariable* var = tagged2SuspVar(taggedvar);
-  SuspList *from = var->getSuspList();
-  var->unlinkSuspList();
-  SuspList *suspList =
-    checkSuspensionList(var, taggedvar, from, term, rightVar, calledByUnify);
-  var->appendSuspList(suspList);
+  SVariable * var = tagged2SuspVar(taggedvar);
+  var->setSuspList(checkSuspensionList(var, taggedvar, var->getSuspList(),
+                                       term, rightVar, calledByUnify));
 }
 
 inline
