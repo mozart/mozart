@@ -74,9 +74,13 @@ OZ_C_proc_begin(BIbuiltin,3)
 
   if (found == htEmpty) {
     warning("builtin: '%s' not in table", str);
-    return(FAILED);
+    return FAILED;
   }
 
+  if (hdl == makeTaggedNULL() && !found->getFun()) {
+    warning("builtin '%s' is special and needs suspension handler",str);
+    return FAILED;
+  }
   if (hdl != makeTaggedNULL() && found->getInlineFun()) {
     hdl = makeTaggedNULL();
     warning("builtin '%s' is compiled inline, suspension handler ignored",str);
