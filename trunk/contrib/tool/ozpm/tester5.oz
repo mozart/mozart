@@ -22,6 +22,11 @@ define
       {A close}
    [] 'create' then
       {Archive.make Args.zip Args.files}
+   [] 'extract' then
+      A = {New Archive.'class' init(Args.zip)}
+   in
+      {A extract(Args.'from' Args.'to')}
+      {A close}
    end
    {Application.exit 0}
 end
