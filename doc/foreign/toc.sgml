@@ -60,7 +60,7 @@
     This document needs some abstract. And the picture has nothing to do
     with this document at all!
     </Abstract>
-  <Body proglang=c>
+  <Body proglang=cc>
     &foreign;
   <Back>
 </Book>
