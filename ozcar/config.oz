@@ -16,7 +16,7 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Text
 %%
-Version                = '04.29.97'
+Version                = '04.30.97'
 TitleName              = 'Oz Debugger Interface'
 IconName               = 'Ozcar'
 
