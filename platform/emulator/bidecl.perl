@@ -1426,8 +1426,8 @@ $builtins = {
                              bi  => BIgetClass,
                              ibi => getClassInline},
 
-    'ooGetLock'         => { in  => [],
-                             out => ['+lock'],
+    'ooGetLock'         => { in  => ['+lock'],
+                             out => [],
                              bi  => BIooGetLock,
                              ibi => ooGetLockInline},
 
@@ -2467,7 +2467,7 @@ $builtins = {
                              module=>'os'},
 
     'OS.getEnv'         => { in  => ['+virtualString'],
-                             out => ['+string'],
+                             out => ['+value'],
                              BI  => unix_getEnv,
                              module=>'os'},
 
