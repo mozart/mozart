@@ -276,7 +276,7 @@
   \mozart@day,
   \mozart@year}
 
-\newcommand{\@mozartstyle}{H}
+\newcommand{\@mozartstyle}{I}
 \newcommand{\mozartstyle}[1]{%
   \renewcommand{\@mozartstyle}{#1}}
 
@@ -342,7 +342,20 @@
       \pstriangle[fillstyle=solid,fillcolor=lightgray,linestyle=none](14,-9)(0.5,23)%
     \end{pspicture}}}
 
-%\mozartstyle{H}
+\newrgbcolor{I@color}{0.52941 0.8078431 0.9803921}
+%\newrgbcolor{I@color}{0.62941 0.8078431 0.9803921}
+%\newrgbcolor{I@color}{0.7 0.9 1}
+% cornflower:
+%\newrgbcolor{I@color}{0.3921 0.58431 0.92941}
+\newcommand{\mozartstyle@I}{%
+  \renewcommand{\mozart@logo@color}{color}%
+  \renewcommand{\mozart@topcomic}{%
+    \begin{pspicture}(20,12)%
+      \rput[tl](0,12){\@comic}%
+      \pstriangle[fillstyle=solid,fillcolor=I@color,linestyle=none](14,-9)(0.5,23)%
+    \end{pspicture}}}
+
+%\mozartstyle{I}
 
 \newcommand{\mozart@titlepage}{%
 \bgroup
@@ -375,8 +388,9 @@
 \providecommand{\mozart@titlepage@bottom@right}{%
   \mozart@bottomcomic}
 
+\newcommand{\mozart@logo@color}{grey}
 \newcommand{\mozart@logo}{%
-  \lower10mm\hbox{\@PICEXT{mozart-grey}{5cm}}%
+  \lower10mm\hbox{\@PICEXT{mozart-\mozart@logo@color}{5cm}}%
 }
 
 \newlength{\mozart@quote@indent}
