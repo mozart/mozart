@@ -420,29 +420,43 @@
 \begin{maxipage}%
 \vspace*{\fill}%
 \begin{center}%
-  {\LARGE\@title\par}%
-  \vspace{3em}%
-  {\large\begin{tabular}[t]{c}\@author\end{tabular}\par}%
+  {\Huge\@title\par}%
   \vspace{1.5em}%
   {\large\@date\par}%
+  \vspace{3em}%
+  {\large\begin{tabular}[t]{c}\@author\end{tabular}\par}%
 \end{center}%
+\if@abstractPage
+\ifx\@abstract\long@empty\else
+     \vspace*{\fill}%
+     \begin{center}\textbf{Abstract}\end{center}%
+     \begin{list}{}{\listparindent 1.5em%
+                    \itemindent\z@%\listparindent
+                    \rightmargin\leftmargin
+                    \parsep\z@\@plus\p@}\item\relax
+     \@abstract
+     \end{list}%
+\fi
+\fi
 \@thanks
 \vspace*{\fill}%
 \end{maxipage}%
 \fi
 }
 
-\newcommand{\front@four}{%
-\if@abstractPage
-\ifx\@abstract\long@empty\else
-  \clearpage
-  \thispagestyle{empty}%
-  \begin{maxipage}%
-    \begin{center}\textbf{Abstract}\end{center}\@abstract
-  \end{maxipage}%
-\fi
-\fi
-}
+%\newcommand{\front@four}{%
+%\if@abstractPage
+%\ifx\@abstract\long@empty\else
+%  \clearpage
+%  \thispagestyle{empty}%
+%  \begin{maxipage}%
+%    \begin{center}\textbf{Abstract}\end{center}\@abstract
+%  \end{maxipage}%
+%\fi
+%\fi
+%}
+
+\newcommand{\front@four}{\clearpage\thispagestyle{empty}}
 
 \newcommand{\front@five}{%
 \if@tableofcontents
@@ -482,10 +496,10 @@
   \\[2mm]
   Programming Systems Lab\\
   German Research Center for Artificial Intelligence (DFKI)\\
-  Stuhlsatzenhausweg 3,
-  D-66123 Saarbr\"ucken,
-  Germany\\
-  email: \texttt{\@email{}@dfki.uni-sb.de}}
+and Universit\"at des Saarlandes\\
+  Postfach 15~11~50\\
+  D-66041 Saarbr\"ucken, Germany\\
+  \texttt{\@email{}@ps.uni-sb.de}}
 
 \newcommand{\@bursttitle}{%
   \@ozwarning{Missing \string\bursttitle}}
