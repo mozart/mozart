@@ -19,6 +19,7 @@ define
 	 DocDir     : unit
 	 LibRoot    : unit
 	 DocRoot    : unit
+	 TmpDir     : unit
 	 MakeFile   : unit
 	 MakeFileGiven : false
 	 Uri        : unit
@@ -93,6 +94,14 @@ define
       end
 
       meth set_dir(D) Dir<-{Path.expand D} end
+
+      meth set_tmpdir(D) TmpDir<-{Path.expand D} end
+      meth get_tmpdir($) @TmpDir end
+      meth get_tmpnam($) F={OS.tmpnam} in
+	 if @TmpDir==unit then F else U={Path.toURL F} in
+	    {Path.resolve @TmpDir {Path.toString {AdjoinAt U absolute false}}}
+	 end
+      end
 
       meth set_builddir(D) BuildDir<-{Path.expand D} end
       meth get_builddir($)

@@ -232,8 +232,8 @@ define
 	 else false end
       end
    in
-      fun {HaveGNUC OZTOOL}
-	 F={OS.tmpnam}#'.h'
+      fun {HaveGNUC GetTmpnam OZTOOL}
+	 F={GetTmpnam}#'.h'
       in
 	 try
 	    O={New Open.file init(name:F flags:[write create truncate])}

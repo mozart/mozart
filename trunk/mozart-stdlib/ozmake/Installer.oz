@@ -2,14 +2,13 @@ functor
 export
    'class' : Installer
 import
-   OS
    Path  at 'Path.ozf'
    Utils at 'Utils.ozf'
 define
    class Installer
 
       meth install_from_package
-	 DIR={OS.tmpnam}
+	 DIR = {self get_tmpnam($)}
       in
 	 try
 	    {self exec_mkdir(DIR)}

@@ -29,6 +29,7 @@ prepare
       extractdir(single type:string)
       publishdir(single type:string)
       archive(   single type:string)
+      tmpdir(    single type:string)
 
       makefile(single char:&m type:string)
       package( single char:&p type:string)
@@ -36,7 +37,9 @@ prepare
 
       action(single type:atom(build install clean veryclean
 			      create publish extract list help
-			      uninstall edit)
+			      uninstall edit
+			      %%again
+			     )
 	     default:build)
       build(    char:&b alias:action#build)
       install(  char:&i alias:action#install)
@@ -50,6 +53,7 @@ prepare
       help(     char:&h alias:action#help)
       uninstall(char:&e alias:action#uninstall)
       edit(             alias:action#edit)
+      %% again(            alias:action#again)
 
       grade(single type:atom(none up down same any))
       upgrade(  char:&U alias:[action#install grade#up])
@@ -97,6 +101,7 @@ prepare
     extractdir     # set_extractdir
     publishdir     # set_publishdir
     archive        # set_archive
+    tmpdir         # set_tmpdir
     makefile       # set_makefile
     package        # set_package
     database       # set_database
@@ -138,6 +143,7 @@ define
       [] help      then {Help.help}
       [] uninstall then {Man uninstall}
       [] edit      then {Man makefileEdit}
+      %% [] again     then {Man again}
       end
       {Application.exit 0}
    catch E then
