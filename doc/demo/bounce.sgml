@@ -22,5 +22,27 @@
   -->
 
 <Chapter id="chapter.bounce">
-    <Title/Bounce/
+  <Title/Bounce/
+
+  <Section class=unnumbered>
+    <Title/Creating a Ball/  
+
+    <P>
+      Click the left mouse button to create a ball at the 
+      current mouse pointer position.
+    </P>
+
+  </Section>
+
+  <Section class=unnumbered>
+    <Title/Deleting a Ball/  
+
+    <P>
+     Click the right mouse button to delete the ball that has been
+     created last.
+    </P>
+
+  </Section>
+
+
 </Chapter>
