@@ -47,10 +47,11 @@ void fillInObject(ObjectFields *,Object *);
 
 // message routines provided by marshaler
 
-define(message,`void marshal_$1(MsgBuffer *,mxzArg($2,$3)mxzArg($3,$4)mxzArg($4,$5)mxzArg($5,$6));')
+define(message,`void marshal_$1(MsgBuffer *,mxzArg($2,$3)mxzArg($3,$4)mxzArg($4,$5)mxzArg($5,$6)mxzArg($6,$7));')
 
 define(mxzArg,`ifelse($1,Index,int,
 	           $1,Index2,int,
+	           $1,Index3,int,
                    $1,Term,TaggedRef,
 		   $1,String,char*,
                    $1,Credit,Credit,
@@ -66,6 +67,7 @@ include(msgFormat.m4)
 undefine(`mxzArg')
 define(mxzArg,`ifelse($1,Index,int &,
 	           $1,Index2,int &,
+	           $1,Index3,int &,
                    $1,Term,TaggedRef &,
 		   $1,String,char* &,
                    $1,Credit,Credit &,
@@ -77,11 +79,11 @@ define(mxzArg,`ifelse($1,Index,int &,
 
 
 undefine(`message')
-define(message,`void unmarshal_$1(MsgBuffer*, mxzArg($2,$3)mxzArg($3,$4)mxzArg($4,$5)mxzArg($5,$6));')
+define(message,`void unmarshal_$1(MsgBuffer*, mxzArg($2,$3)mxzArg($3,$4)mxzArg($4,$5)mxzArg($5,$6)mxzArg($6,$7));')
 include(msgFormat.m4)
 
 undefine(`message')
-define(message,`void unmarshalUnsent_$1(MsgBuffer*, mxzArg($2,$3)mxzArg($3,$4)mxzArg($4,$5)mxzArg($5,$6));')
+define(message,`void unmarshalUnsent_$1(MsgBuffer*, mxzArg($2,$3)mxzArg($3,$4)mxzArg($4,$5)mxzArg($5,$6)mxzArg($6,$7));')
 include(msgFormat.m4)
 
 

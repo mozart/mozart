@@ -43,6 +43,7 @@ enum MessageType {
   M_REMOTE_SEND,        // OTI STRING DIF (implicit 1 credit)
   M_ASK_FOR_CREDIT,     // OTI SITE (implicit 1 credit)
   M_OWNER_CREDIT,	// OTI CREDIT
+  M_OWNER_SEC_CREDIT,	// NA CREDIT
   M_BORROW_CREDIT,      // NA  CREDIT
   M_REGISTER,           // OTI SITE (implicit 1 credit)
   M_REDIRECT,           // NA  DIF
