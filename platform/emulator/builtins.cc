@@ -1694,10 +1694,14 @@ OZ_C_proc_begin(BIchooseSpace, 2) {
   if (space->isMerged())
     return raiseKernel("spaceMerged",1,tagged_space);
 
-  Board* CBB = am.currentBoard;
-
   if (space->isFailed())
     return PROCEED;
+
+  TaggedRef result = space->getSolveActor()->getResult();
+
+  DEREF(result, result_ptr, result_tag);
+  if (isAnyVar(result_tag))
+    OZ_suspendOn(makeTaggedRef(result_ptr));
 
   TaggedRef choice = OZ_getCArg(1);
 
