@@ -48,35 +48,37 @@
         \expandafter{\the\@temptokena#2}}%
   \the\@temptokena}
 
-\DeclareRobustCommand{\OzSpace}[1]{\@ncopies{#1}{{\ }}}
+\newcommand{\OzHmode}{\leavevmode}
+\DeclareRobustCommand{\OzSpace}[1]{\OzHmode\@ncopies{#1}{{\ }}}
 \newcommand{\newozchar}[1]{%
   \expandafter\newcommand
   \csname ozchar\string#1\endcsname}
 \newcommand{\renewozchar}[1]{%
   \expandafter\renewcommand
   \csname ozchar\string#1\endcsname}
-\DeclareRobustCommand{\OzChar}[1]{%
+\DeclareRobustCommand{\OzChar}[1]{\OzHmode
   \@ifundefined{ozchar\string#1}%
         {\char`#1}%
         {\@nameuse{ozchar\string#1}}}
-\newcommand{\OzFwdQuote}{{\ozquotefont\symbol{19}}}
-\newcommand{\OzBwdQuote}{{\ozquotefont\symbol{18}}}
+\newcommand{\OzFwdQuote}{\OzHmode{\ozquotefont\symbol{19}}}
+\newcommand{\OzBwdQuote}{\OzHmode{\ozquotefont\symbol{18}}}
 \newozchar{\'}{\OzFwdQuote}
 \newozchar{\`}{\OzBwdQuote}
 
-\DeclareRobustCommand{\OzKeyword}[1]{{\ozkeyfont#1}}
+\DeclareRobustCommand{\OzKeyword}[1]{\OzHmode{\ozkeyfont#1}}
 \DeclareRobustCommand{\OzFwd}[1]{\OzFwdQuote#1\OzFwdQuote}
 \DeclareRobustCommand{\OzBwd}[1]{\OzBwdQuote#1\OzBwdQuote}
-\DeclareRobustCommand{\OzString}[1]{"#1"}
+\DeclareRobustCommand{\OzString}[1]{\OzHmode"#1"}
 
 \DeclareRobustCommand{\OzInline}[1]{\ifmmode\expandafter\mbox\fi
   {\ozfont\let\OzEol\space#1}}
 
-\DeclareRobustCommand{\OzComment}[1]{{\ozcommentfont/*#1*/}}
-\DeclareRobustCommand{\OzEolComment}[1]{{\ozcommentfont\OzChar\%#1}\OzEol}
+\DeclareRobustCommand{\OzComment}[1]{\OzHmode{\ozcommentfont/*#1*/}}
+\DeclareRobustCommand{\OzEolComment}[1]{%
+        \OzHmode{\ozcommentfont\OzChar\%#1}\OzEol}
 \DeclareRobustCommand{\OzEol}{\leavevmode\par}
 
-\DeclareRobustCommand{\OzBox}[1]{{\ozfont\let\OzEol\space#1}}
+\DeclareRobustCommand{\OzBox}[1]{\OzHmode{\ozfont\let\OzEol\space#1}}
 \DeclareRobustCommand{\OzBsl}{\OzChar\\}
 
 \newcommand{\oz@docspecials}[1]{%
@@ -94,7 +96,7 @@
     \expandafter\gdef\csname coperator#1\endcsname{#2}%
   \endgroup}
 
-\DeclareRobustCommand{\OzOp}[1]{%
+\DeclareRobustCommand{\OzOp}[1]{\OzHmode
   \begingroup
     \oz@docspecials\string
     \@ifundefined{coperator#1}%
