@@ -127,7 +127,7 @@ INSPECTOROBJS = \
 	$(INSPECTORTREEWIDGETOBJS)
 
 INSPECTORTOPDEPSRC0 = \
-	FrameManager OptionsGUI
+	FrameManager OptionsGUI GtkOptionsGUI
 INSPECTORTOPDEPSRC = \
 	$(INSPECTORTOPDEPSRC0:%=inspector/%.oz)
 
@@ -153,7 +153,7 @@ INSPECTORTWDODEPSRC = $(INSPECTORTWDODEPSRC0:%=inspector/treewidget/%.oz)
 
 INSPECTORIMAGESDIR = $(CACHEDIR)/images/inspector
 INSPECTORIMAGES1 = \
-	depth.xbm width.xbm stop.xbm sep.xbm
+	depth.xbm width.xbm stop.xbm sep.xbm depth.jpg width.jpg
 INSPECTORIMAGES = $(INSPECTORIMAGES1:%=$(INSPECTORIMAGESDIR)/%)
 
 EXAMPLEFILES = $(GUMPEXAMPLEFILES:%=$(OZEXGUMP)/%)
