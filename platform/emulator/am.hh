@@ -421,7 +421,6 @@ public:
   TaggedRef getDebugStreamTail() { return debugStreamTail; }
 
   void debugStreamMessage(TaggedRef message) {
-    Assert(_currentBoard==_rootBoard);
     TaggedRef newTail = OZ_newVariable();
     OZ_Return ret     = OZ_unify(debugStreamTail,oz_cons(message,newTail));
     debugStreamTail   = newTail;
