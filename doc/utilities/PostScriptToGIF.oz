@@ -23,18 +23,25 @@
 %%% WARRANTIES.
 %%%
 
+%\define VERBOSE
+
 functor
 import
    OS(system tmpnam unlink)
+   System(showError)
 export
    'class': PostScriptToGIFClass
 define
 
    proc {PsToPpm PsName PpmName}
-      Stat = {OS.system ('(cat '#PsName#'; echo quit) | '#
-			 'gs -q -dNOPAUSE '#
-			 '-dTextAlphaBits=4 -dGraphicsAlphaBits=4 -r102 '#
-			 '-sDEVICE=ppmraw -sOutputFile='#PpmName#' - 1>&2')}
+      Cmd = ('(cat '#PsName#'; echo quit) | '#
+	     'gs -q -dNOPAUSE '#		
+	     '-dTextAlphaBits=4 -dGraphicsAlphaBits=4 -r102 '#
+	     '-sDEVICE=ppmraw -sOutputFile='#PpmName#' - 1>&2')
+\ifdef VERBOSE
+      {System.showError Cmd}
+\endif
+      Stat = {OS.system Cmd}
    in
       if Stat\=0 then
 	 {Exception.raiseError ozDoc(gs(PsName) Stat)}
@@ -42,11 +49,16 @@ define
    end
 
    proc {PpmToGif PpmName Info GifName}
-      Stat = {OS.system ('pnmcrop < '#PpmName#' 2>/dev/null | '#
-			 if Info=='' then ''
-			 else 'pnmscale '#Info#'  2>/dev/null | '
-			 end #
-			 'ppmtogif -interlace -transparent rgbi:1/1/1 2>/dev/null > '#GifName)}
+      Cmd  = ('pnmcrop < '#PpmName#' 2>/dev/null | '#
+	      if Info=='' then ''
+	      else 'pnmscale '#Info#'  2>/dev/null | '
+	      end #
+	      'ppmquant 256 2>/dev/null | ' #
+	      'ppmtogif -interlace -transparent rgbi:1/1/1 2>/dev/null > '#GifName)
+\ifdef VERBOSE
+      {System.showError Cmd}
+\endif
+      Stat = {OS.system Cmd}
    in
       if Stat\=0 then
 	 {Exception.raiseError ozDoc(ppmtogif(GifName) Stat)}
