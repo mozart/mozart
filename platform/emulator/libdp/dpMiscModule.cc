@@ -51,8 +51,8 @@ OZ_BI_define(BIdvset,2,0)
 {
   initDP();
 
-  OZ_declareIntIN(0,what);
-  OZ_declareIntIN(1,val);
+  OZ_declareInt(0,what);
+  OZ_declareInt(1,val);
 
   if (val) {
     DV->set(what);
@@ -68,8 +68,8 @@ OZ_BI_define(BIdvset,2,0)
 {
   initDP();
 
-  OZ_declareIntIN(0,what);
-  OZ_declareIntIN(1,val);
+  OZ_declareInt(0,what);
+  OZ_declareInt(1,val);
   OZ_warning("has no effect - you must compile with DEBUG_PERDIO");
   return PROCEED;
 } OZ_BI_end

@@ -100,7 +100,7 @@ OZ_BI_define(Name,InArity,OutArity)					\
 #define OZ_BI_ioend OZ_BI_end
 
 #define OZ_declareVsIN(ARG,VAR)						\
- vs_buff(VAR); OZ_nonvarIN(ARG);					\
+ vs_buff(VAR); OZ_expectDet(ARG);					\
  { int len; OZ_Return status; OZ_Term rest, susp;			\
    status = buffer_vs(OZ_in(ARG), VAR, &len, &rest, &susp);		\
    if (status == SUSPEND) {						\
@@ -143,8 +143,7 @@ OZ_Term VAR = OZ_in(ARG);						\
 }
 
 #define DeclareNonvarIN(ARG,VAR) \
-  OZ_Term VAR = OZ_in(ARG);    \
-  OZ_nonvarIN(ARG);
+  OZ_declareDetTerm(ARG,VAR)
 
 #define IsPair(s) (s[0]=='#' && s[1]=='\0')
 
@@ -534,7 +533,7 @@ inline OZ_Return buffer_vs(OZ_Term vs, char *write_buff, int *len,
 
 OZ_BI_iodefine(unix_fileDesc,1,1)
 {
-  OZ_declareAtomIN( 0, OzFileDesc);
+  OZ_declareAtom( 0, OzFileDesc);
   
   int desc;
   if (!strcmp(OzFileDesc,"STDIN_FILENO")) {
@@ -779,7 +778,7 @@ OZ_BI_iodefine(unix_open,3,1)
 
 OZ_BI_iodefine(unix_close,1,0)
 {
-  OZ_declareIntIN(0,fd);
+  OZ_declareInt(0,fd);
 
   WRAPCALL("close",osclose(fd),ret);
 
@@ -789,11 +788,11 @@ OZ_BI_iodefine(unix_close,1,0)
 
 OZ_BI_iodefine(unix_read,5,0)
 { 
-  OZ_declareIntIN(0,fd);
-  OZ_declareIntIN(1,maxx);
-  OZ_declareIN(2, outHead);
-  OZ_declareIN(3, outTail);
-  OZ_declareIN(4, outN);
+  OZ_declareInt(0,fd);
+  OZ_declareInt(1,maxx);
+  OZ_declareTerm(2, outHead);
+  OZ_declareTerm(3, outTail);
+  OZ_declareTerm(4, outN);
 
   CHECK_READ(fd);
 
@@ -813,7 +812,7 @@ OZ_BI_iodefine(unix_read,5,0)
 
 OZ_BI_iodefine(unix_write, 2,1)
 {
-  OZ_declareIntIN(0, fd);
+  OZ_declareInt(0, fd);
   DeclareNonvarIN(1, vs);
 
   CHECK_WRITE(fd);
@@ -853,9 +852,9 @@ OZ_BI_iodefine(unix_write, 2,1)
 
 
 OZ_BI_iodefine(unix_lSeek,3,1) {
-  OZ_declareIntIN(0, fd);
-  OZ_declareIntIN(1, offset);
-  OZ_declareAtomIN(2, OzWhence);
+  OZ_declareInt(0, fd);
+  OZ_declareInt(1, offset);
+  OZ_declareAtom(2, OzWhence);
 
   int whence;
   
@@ -876,7 +875,7 @@ OZ_BI_iodefine(unix_lSeek,3,1) {
 
 
 OZ_BI_iodefine(unix_readSelect, 1,0) {
-  OZ_declareIntIN(0,fd);
+  OZ_declareInt(0,fd);
 
   WRAPCALL("select",osTestSelect(fd,SEL_READ),sel);
 
@@ -897,7 +896,7 @@ OZ_BI_iodefine(unix_readSelect, 1,0) {
 
 
 OZ_BI_iodefine(unix_writeSelect,1,0) {
-  OZ_declareIntIN(0,fd);
+  OZ_declareInt(0,fd);
 
   WRAPCALL("select",osTestSelect(fd,SEL_WRITE),sel);
 
@@ -918,7 +917,7 @@ OZ_BI_iodefine(unix_writeSelect,1,0) {
 
 
 OZ_BI_iodefine(unix_acceptSelect,1,0) {
-  OZ_declareIntIN(0,fd);
+  OZ_declareInt(0,fd);
 
   WRAPCALL("select",osTestSelect(fd,SEL_READ),sel);
 
@@ -942,7 +941,7 @@ OZ_BI_iodefine(unix_acceptSelect,1,0) {
 
 
 OZ_BI_define(unix_deSelect,1,0) {
-  OZ_declareIntIN(0,fd);
+  OZ_declareInt(0,fd);
   OZ_deSelect(fd);
   return PROCEED;
 } OZ_BI_end
@@ -955,8 +954,8 @@ OZ_BI_define(unix_deSelect,1,0) {
 // -------------------------------------------------
 OZ_BI_iodefine(unix_socket,3,1)
 {
-  OZ_declareAtomIN(0, OzDomain);
-  OZ_declareAtomIN(1, OzType);
+  OZ_declareAtom(0, OzDomain);
+  OZ_declareAtom(1, OzType);
   OZ_declareVsIN(2, OzProtocol);
 
   int domain, type, protocol;
@@ -1004,8 +1003,8 @@ OZ_BI_iodefine(unix_socket,3,1)
 
 OZ_BI_iodefine(unix_bindInet,2,0)
 {
-  OZ_declareIntIN(0,sock);
-  OZ_declareIntIN(1,port);
+  OZ_declareInt(0,sock);
+  OZ_declareInt(1,port);
 
   struct sockaddr_in addr;
 
@@ -1022,7 +1021,7 @@ OZ_BI_iodefine(unix_bindInet,2,0)
 
 OZ_BI_define(unix_getSockName,1,1)
 {
-  OZ_declareIntIN(0,s);
+  OZ_declareInt(0,s);
 
   struct sockaddr_in addr;
 
@@ -1040,8 +1039,8 @@ OZ_BI_define(unix_getSockName,1,1)
 
 OZ_BI_iodefine(unix_listen,2,0)
 {
-  OZ_declareIntIN(0, s);
-  OZ_declareIntIN(1, n);
+  OZ_declareInt(0, s);
+  OZ_declareInt(1, n);
 
   WRAPCALL("listen",listen(s,n), ret);
 
@@ -1051,9 +1050,9 @@ OZ_BI_iodefine(unix_listen,2,0)
 
 OZ_BI_define(unix_connectInet,3,0)
 {
-  OZ_declareIntIN(0, s);
+  OZ_declareInt(0, s);
   OZ_declareVsIN(1, host);
-  OZ_declareIntIN(2, port);
+  OZ_declareInt(2, port);
 
   struct hostent *hostaddr;
 
@@ -1078,7 +1077,7 @@ OZ_BI_define(unix_connectInet,3,0)
 
 OZ_BI_iodefine(unix_acceptInet,1,3)
 {
-  OZ_declareIntIN(0, sock);
+  OZ_declareInt(0, sock);
   // OZ_out(0) == host
   // OZ_out(1) == port
   // OZ_out(2) == fd
@@ -1139,7 +1138,7 @@ static OZ_Return get_send_recv_flags(OZ_Term OzFlags, int * flags)
 
 OZ_BI_iodefine(unix_send, 3,1)
 {
-  OZ_declareIntIN(0, sock);
+  OZ_declareInt(0, sock);
   DeclareNonvarIN(1, vs);
   DeclareAtomListIN(2, OzFlags);
 
@@ -1189,11 +1188,11 @@ OZ_BI_iodefine(unix_send, 3,1)
 
 OZ_BI_iodefine(unix_sendToInet, 5,1)
 {
-  OZ_declareIntIN(0, sock);
+  OZ_declareInt(0, sock);
   DeclareNonvarIN(1, vs);
   DeclareAtomListIN(2, OzFlags);
   OZ_declareVsIN(3, host);
-  OZ_declareIntIN(4, port);
+  OZ_declareInt(4, port);
 
   int flags;
   OZ_Return flagBool;
@@ -1254,8 +1253,8 @@ OZ_BI_iodefine(unix_sendToInet, 5,1)
 
 OZ_BI_iodefine(unix_shutDown, 2,0)
 {
-  OZ_declareIntIN(0,sock);
-  OZ_declareIntIN(1,how);
+  OZ_declareInt(0,sock);
+  OZ_declareInt(1,how);
 
   WRAPCALL("shutdown",shutdown(sock, how), ret);
 
@@ -1266,11 +1265,11 @@ OZ_BI_iodefine(unix_shutDown, 2,0)
   
 OZ_BI_iodefine(unix_receiveFromInet,5,3)
 { 
-  OZ_declareIntIN(0,sock);
-  OZ_declareIntIN(1,maxx);
+  OZ_declareInt(0,sock);
+  OZ_declareInt(1,maxx);
   DeclareAtomListIN(2, OzFlags);
-  OZ_declareIN(3, hd);
-  OZ_declareIN(4, tl);
+  OZ_declareTerm(3, hd);
+  OZ_declareTerm(4, tl);
   // OZ_out(0) == host
   // OZ_out(1) == port
   // OZ_out(2) == n
@@ -1385,7 +1384,7 @@ static OZ_Return enter_exec_args(char * s, OZ_Term args, int &argno) {
 
 OZ_BI_define(unix_pipe,2,2) {
   OZ_declareVsIN(0, s);
-  OZ_declareIN(1, args);
+  OZ_declareTerm(1, args);
   // OZ_out(0) == rpid
   // OZ_out(1) == rwsock
 
@@ -1526,7 +1525,7 @@ OZ_BI_define(unix_pipe,2,2) {
 
 OZ_BI_define(unix_exec,2,1){
   OZ_declareVsIN(0, s);
-  OZ_declareIN(1, args);
+  OZ_declareTerm(1, args);
   // OZ_out(0) == rpid
 
   int argno;
@@ -1801,7 +1800,7 @@ OZ_BI_define(unix_rand, 0,1)
 
 OZ_BI_define(unix_srand, 1,0)
 {
-  OZ_declareIntIN(0, seed);
+  OZ_declareInt(0, seed);
 
   if (seed) {
     srand((unsigned int) seed);
@@ -1848,7 +1847,7 @@ OZ_BI_define(unix_random, 0,1)
 
 OZ_BI_define(unix_srandom, 1,0)
 {
-  OZ_declareIntIN(0, seed);
+  OZ_declareInt(0, seed);
 
   if (!seed) { seed = time(NULL); }
 
@@ -1871,7 +1870,7 @@ OZ_BI_define(unix_srandom, 1,0)
 
 OZ_BI_define(unix_getpwnam,1,1)
 {
-  OZ_declareVirtualStringIN(0,user);
+  OZ_declareVirtualString(0,user);
 retry:
   struct passwd *p = getpwnam(user);
   if (p==0) {
