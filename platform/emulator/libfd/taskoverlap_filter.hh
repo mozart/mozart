@@ -73,17 +73,6 @@ SERVICE &FilterTasksOverlap<SERVICE, FDVAR, FDM, P_PFDVAR, PFDVAR, ENGINE>::filt
   //
   int nb_failed_clauses = 0, not_first_iteration = 0;
 
-  /*
-     1. lift common information of unfailed clauses
-     2. propagate basic constraints into unfailed spaces
-     3. if all propagation queues are empty then:
-     3.a check for failure
-     3.b check for unit commit
-     3.c check entailment of disjunction
-     3.d otherwise leave propagator
-     4. otherwise run propagation queues
-     5. loop
-  */
   while (1) {
     //--------------------------------------------------
     // 2. step
@@ -120,6 +109,13 @@ SERVICE &FilterTasksOverlap<SERVICE, FDVAR, FDM, P_PFDVAR, PFDVAR, ENGINE>::filt
           engine_cl3.setFailed();
         }
       }
+      // 4.step
+      CDM(("cl1 running propagation queue\n"));
+      engine_cl1.propagate();
+      CDM(("cl2 running propagation queue\n"));
+      engine_cl2.propagate();
+      CDM(("cl3 running propagation queue\n"));
+      engine_cl3.propagate();
     //--------------------------------------------------
     // 1. step
       if (1 || not_first_iteration) {
@@ -212,32 +208,29 @@ SERVICE &FilterTasksOverlap<SERVICE, FDVAR, FDM, P_PFDVAR, PFDVAR, ENGINE>::filt
           x->getSize() <= cl1_t1->getSize() &&
           y->getSize() <= cl1_t2->getSize() &&
           o->getSize()  <= cl1_o->getSize()) {
+          CDM(("cl1 entailed\n"));
             goto vanish;
       }
       if (engine_cl2.isBasic() &&
           x->getSize() <= cl2_t1->getSize() &&
           y->getSize() <= cl2_t2->getSize() &&
           o->getSize()  <= cl2_o->getSize()) {
+          CDM(("cl2 entailed\n"));
         goto vanish;
       }
       if (engine_cl3.isBasic() &&
           x->getSize() <= cl3_t1->getSize() &&
           y->getSize() <= cl3_t2->getSize() &&
           o->getSize()  <= cl3_o->getSize()) {
+          CDM(("cl3 entailed\n"));
         goto vanish;
       }
+      CDM(("propagation fix-point reached\n"));
       break;
     } // step 3.
-    // 4.step
-    CDM(("cl1 running propagation queue\n"));
-    engine_cl1.propagate();
-    CDM(("cl2 running propagation queue\n"));
-    engine_cl2.propagate();
-    CDM(("cl3 running propagation queue\n"));
-    engine_cl3.propagate();
   } // while(1)
   //
-
+  //  printf("gaga %s",(*s).toString());
   CDM(("leaving\n"));
   OZ_DEBUGPRINTTHIS("out: ");
   return s.leave();
