@@ -124,16 +124,17 @@ in
    class StackManager
 
       feat
-	 T                 % the thread...
-	 I                 % ...with it's ID
-	 D                 % dictionary for stackframes
+	 T                    % the thread...
+	 I                    % ...with it's ID
+	 D                    % dictionary for stackframes
 
       attr
-	 Size              % current size of stack
-	 Rebuild           % should we re-calculate the stack
-			   % when the next 'step' message arrives?
+	 Size                 % current size of stack
+	 Rebuild              % should we re-calculate the stack
+			      % when the next 'step' message arrives?
 
-	 Exception : nil   % saved exception
+	 AtBreakpoint : false % currently stopped at a breakpoint?
+	 Exception : nil      % saved exception
 
 	 Step : 1
 	 Next : 1
@@ -144,6 +145,14 @@ in
 	 self.D = {Dictionary.new}
 	 Size    <- 0
 	 Rebuild <- false
+      end
+
+      meth atBreakpoint($)
+	 @AtBreakpoint
+      end
+
+      meth setAtBreakpoint(YesNo)
+	 AtBreakpoint <- YesNo
       end
 
       meth incStep($)
@@ -188,14 +197,15 @@ in
 			      end#
 			      {CondSelect Frame column unit}#
 			      Frame.time
-			   else (''#unit)#unit#999999999
+			   [] nil then (''#unit)#~1#999999999
+			      %% --** Leif meint, das ist Bullshit
 			   end
 	    S = entry(kind: exception thr: self.T
 		      file: F line: L column: C time: Time
 		      args: [X]) | Stack
 	 in
 	    Status = {FormatExceptionLine {Error.formatExc X}}
-	    {Ozcar PrivateSend(status(Status clear BlockedThreadColor))}
+	    {Ozcar PrivateSend(status(Status clear ExcThreadColor))}
 	    {SendEmacs bar(file:F line:L column:C state:blocked)}
 	    StackManager,ReCalculate({Reverse S})
 
@@ -203,7 +213,7 @@ in
 	    E = {V2VS X}
 	 in
 	    Status = 'Exception: ' # E # ' / no stack available'
-	    {Ozcar PrivateSend(status(Status clear BlockedThreadColor))}
+	    {Ozcar PrivateSend(status(Status clear ExcThreadColor))}
 	    {SendEmacs removeBar}
 	    StackManager,ReCalculate(nil)
 	 end
