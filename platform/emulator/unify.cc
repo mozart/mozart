@@ -275,7 +275,7 @@ loop:
   }
 
   Assert(isCVar(tag1) && isCVar(tag2));
-  /* prefered binding of perdio vars */
+  /* preferred binding of perdio vars */
   if (cmpCVar(tagged2CVar(term1),tagged2CVar(term2))>0) {
     Swap(term1,term2,TaggedRef);
     Swap(termPtr1,termPtr2,TaggedRef*);

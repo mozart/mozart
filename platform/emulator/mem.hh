@@ -205,7 +205,8 @@ inline int32 *int32Malloc(size_t chunk_size)
 #endif
 
 /* ptr1 is newer than ptr2 on the heap */
-inline Bool heapNewer(void *ptr1, void *ptr2)
+inline
+Bool heapNewer(void * ptr1, void * ptr2)
 {
   return (ptr1 < ptr2);
 }

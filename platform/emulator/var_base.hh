@@ -53,6 +53,7 @@
 // partial order required:
 //  Simple<<Future<<Distributed<<everything
 //  Bool<<FD
+// see int cmpCVar(OzVariable *, OzVariable *)
 
 enum TypeOfVariable {
   OZ_VAR_EXT,
