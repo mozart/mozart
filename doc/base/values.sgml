@@ -78,12 +78,12 @@
 	  <<{Value.status ?_{X} ??T}>>
 	<Item>
 	  returns status and type information on&nbsp;?_{X}.  If ?_{X} is
-	  free, the atom <<free>> is returned.  If ?_{X} is kinded, the
-	  tuple <<kinded(?{Y})>> is returned, where <Var type=meta/Y/ is
-	  bound to an atom depending on the type of&nbsp;?_{X}.  If ?_{X}
-	  is determined, the tuple <<det(?{Y})>> is returned, where <Var
-	  type=meta/Y/ is bound to an atom depending on the type of&nbsp;?_{X}.
-	  <!--** what atoms are returned for what type? -->
+	  a future, the atom <<future>> is returned.  If ?_{X} is free,
+	  the atom <<free>> is returned.  If ?_{X} is kinded, the tuple
+	  <<kinded(?{Y})>> is returned, where ?{Y} is bound to either the
+	  atom <<int>> or <<record>>, depending on the type of&nbsp;?_{X}.
+	  If ?_{X} is determined, the tuple <<det(?{Y})>> is returned, where
+	  ?{Y} is bound to the atom as returned by <<{Value.type ?_{X}}>>.
 
 	<!--** Value.type -->
       </List>
