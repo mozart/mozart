@@ -5,7 +5,7 @@ WHAT = gtk
 MAIN = gtk.sgml
 WHATCLASS=reference
 PRINTNAME=Gtk
-SGMLSRCS =
+SGMLSRCS = intro.sgml basics.sgml mapping.sgml builder.sgml reference.sgml
 HTMLEXTRAFILES =
 OZDOCHTMLFLAGS = --autoindex
 
