@@ -32,7 +32,7 @@
 
 
 /* magic marker for start of saved components */
-static char SYSLETHEADER = 2;
+const char SYSLETHEADER = 2;
 
 
 #define PERDIOMAJOR      1
