@@ -55,7 +55,6 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <time.h>
-#include <unistd.h>
 #include <stdio.h>
 #include <errno.h>
 
@@ -487,7 +486,7 @@ OZ_Return export(OZ_Term t)
   if (ozconf.perdioMinimal) {
     Exporter bs;
     marshalTermRT0(t,&bs);
-    CheckNogoods(t,(&bs),"export:nogoods","Non-exportables found during export",);
+    CheckNogoods(t,(&bs),"export:nogoods","Non-exportables found during export",;);
 
     OZ_Term vars = bs.getVars();
     while (!oz_isNil(vars)) {
@@ -829,11 +828,11 @@ public:
     tmpfile(ozstrdup(file)), url(ozstrdup(u)), fd(f) {}
   ~URLInfo() {
     delete tmpfile;
-    delete url;
+    delete (char*) url;
   }
 };
 
-unsigned __stdcall fetchThread(void *p)
+DWORD __stdcall fetchThread(void *p)
 {
   URLInfo *ui = (URLInfo *) p;
   int ret = localizeUrl(ui->url,ui->tmpfile);
@@ -866,7 +865,7 @@ OZ_Return getURL(const char *url, TaggedRef out, URLAction act)
 
   URLInfo *ui = new URLInfo(tmpfile,url,wfd);
 
-  unsigned tid;
+  DWORD tid;
   HANDLE thrd = CreateThread(NULL,0,&fetchThread,ui,0,&tid);
   if (thrd==NULL)
     return raiseGeneric("getURL:thread",
@@ -923,7 +922,6 @@ OZ_Return getURL(const char *url, TaggedRef out, URLAction act)
 //		of the remote file
 
 #include <ctype.h>
-#include <unistd.h>
 
 inline int toHex(char c) {
   return
