@@ -46,14 +46,15 @@
 //
 // oztool -msvc c++ -c <files> -o <outfile>
 //    cl -nologo -TP -I"$OZHOME\include" -c <files>
-//    // where `-o <outfile>' within <files> is converted to `/Fo<outfile>'
+//    // where `-o <outfile>' within <files> is converted to `-Fo<outfile>'
 // oztool -msvc cc -c <files>
 //    cl -nologo -TC -I"$OZHOME\include" -c <files>
-//    // where `-o <outfile>' within <files> is converted to `/Fo<outfile>'
+//    // where `-o <outfile>' within <files> is converted to `-Fo<outfile>'
 // oztool -msvc ld -o <target> <file1> ... <filen>
 //    lib /nologo /def:$OZHOME\include\emulator.def /machine:ix86 \
 //       /out:<tmpfile>.lib
 //    link /nologo /dll /out:<target> <file1> ...<filen> <tmpfile>.lib
+//       /nodefaultlib:libc.lib /defaultlib:msvcrt.lib
 //    rm <tmpfile>.lib <tmpfile>.exp
 //
 // oztool -watcom c++ -c <files>
@@ -248,6 +249,7 @@ int main(int argc, char** argv)
     switch (sys) {
     case SYS_GNU:
       {
+	//--** implementation still missing
 	char *libname  = argv[3];
 	char *defname  = concat(libname,".def");
 	char *aname    = concat("lib",concat(libname,".a"));
