@@ -37,59 +37,6 @@
 //-----------------------------------------------------------------------------
 //                           class SuspList
 
-inline
-SuspList * SuspList::appendToAndUnlink(SuspList * &to_list, Bool reset_local)
-{
-  if (this) {
-    SuspList * aux;
-
-    if (reset_local)
-      for (aux = this; aux; aux = aux->getNext())
-        aux->getSuspendable()->unsetLocal();
-
-    if (to_list) {
-      // this != NULL && to_list != NULL
-
-      // multiple entries of suspensions have to be removed; therefore ...
-      // ... tag this-list and find last entry
-      SuspList * last DebugCode(= NULL);
-      for (aux = this; 1; ) {
-        aux->getSuspendable()->setTagged();
-
-        SuspList * aux_next = aux->getNext();
-
-        if (aux_next) {
-          aux = aux_next;
-        } else {
-          last = aux;
-          break;
-        }
-      }
-
-      Assert (last);
-
-      // remove tagged entries from to_list
-      SuspList ** aux1 = &to_list;
-      while (*aux1) {
-        if ((*aux1)->getSuspendable()->isTagged()) {
-          *aux1 = (*aux1)->getNext();
-          continue;
-        }
-        aux1 = &(*aux1)->_next;
-      }
-
-      // untag this-list
-      for (aux = this; aux; aux = aux->getNext())
-        aux->getSuspendable()->unsetTagged();
-
-      last->setNext(to_list);
-    }
-
-    to_list = this;
-  }
-  return NULL;
-}
-
 //-----------------------------------------------------------------------------
 // class OrderedSuspList
 
