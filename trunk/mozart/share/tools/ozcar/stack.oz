@@ -4,19 +4,46 @@
 local
 
    local
-      FormatLine = Error.formatLine
-      FormatBody =
-      fun {$ B}
-	 {FoldL B
-	  fun {$ A L}
-	     A # ' / ' # {FormatLine {CondSelect L l nil}} #
-	     ': ' # {FormatLine {CondSelect L m nil}}
-	  end nil}
+      FDelimiter    = ' / '
+      LRDelimiter   = ': '
+
+      fun {FormatFeature R F D}
+         case {CondSelect R F unit} of unit then nil
+         elseof X then {Error.formatLine X} # D
+         end
+      end
+
+      fun {FormatLR L}
+	 Left  = {FormatFeature L l nil}
+	 Right = {FormatFeature L m nil}
+	 Both  = Left \= nil andthen Right \= nil
+      in
+	 Left # case Both then LRDelimiter else nil end # Right
+      end
+
+      fun {CheckNil A}
+	 case A == nil then nil else A # FDelimiter end
+      end
+
+      fun {FormatBody B}
+	 case B == nil then nil else
+	    {FoldL B
+	     fun {$ A L}
+		case {Label L}
+		of hint       then {CheckNil A} # {FormatLR L}
+		[] pos(X Y _) then {CheckNil A} # 'Pos: ' # X # ', line ' # Y
+		[] line(X)    then {CheckNil A} # {Error.formatLine X}
+		[] unit       then A
+		else {OzcarError 'wrong error message format'} A
+		end
+	     end nil}
+	 end
       end
    in
       fun {FormatExceptionLine E}
-	 ErrorExcText # {CondSelect E msg ""} #
-	 {FormatBody {CondSelect E body ""}}
+	 {FormatFeature E kind FDelimiter} #
+	 {FormatFeature E msg  FDelimiter} #
+	 {FormatBody {CondSelect E body nil}}
       end
    end
    
