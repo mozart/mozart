@@ -59,29 +59,31 @@ ResourceHashTable *resourceTable;
    */
 
 void ResourceHashTable::gcResourceTable(){
-  PD((GC,"Resource gc"));
   int index;
+  GenHashNode *aux = getFirst(index);
+  gcResourceTableRecurse(aux, index);
+}
+
+void ResourceHashTable::gcResourceTableRecurse(GenHashNode *in, int index){
   int  OTI;
   OwnerEntry *oe;
-  GenHashNode *aux = getFirst(index);
-  while (aux!=NULL) {
-    TaggedRef entity = (TaggedRef) aux->getBaseKey();
-    if(!oz_isBuiltin(entity)){
-      entity = oz_deref(entity);
-      Assert(!oz_isVariable(entity));
-      OTI =  (int) aux->getEntry();
-      if(htSub(index,aux)) ;
-      oe = OT->getEntry(OTI);
-      if(oe && oe->getRef()==entity)
-	add(entity, OTI);}
-    else{
-      OTI =  (int) aux->getEntry();
-      oe = OT->getEntry(OTI);
-      if(oe==NULL || oe->getRef()!=entity)
-	if(htSub(index,aux)) ;
-    }
-    aux = getNext(aux,index);
-  }
+  GenHashNode *aux = in;
+  if(aux==NULL) return;
+
+  TaggedRef entity = (TaggedRef) aux->getBaseKey();
+  if(!oz_isBuiltin(entity)){
+    entity = oz_deref(entity);
+    Assert(!oz_isVariable(entity));}
+  
+  OTI =  (int) aux->getEntry();
+  if(htSub(index,aux)) ;
+  
+  aux = getNext(aux,index);
+  gcResourceTableRecurse(aux,index);
+  
+  oe = OT->getEntry(OTI);
+  if(oe && (!oe->isFree()) && oe->getRef()==entity)
+    add(entity, OTI);
 }
 
 ConstTerm* gcDistResourceImpl(ConstTerm* term){
