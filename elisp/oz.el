@@ -54,7 +54,7 @@
 (defvar oz-machine-hook nil
   "Hook used if non nil for starting machine.
 For example
-  (setq oz-machine-hook 'gdb-machine)
+  (setq oz-machine-hook 'oz-gdb-machine)
 ")
 
 (defvar oz-wait-for-compiler 5
@@ -404,6 +404,9 @@ For example
   (define-key map "\C-c\C-l"    'oz-fontify)
   (define-key map "\C-c\C-r"    'run-oz)
   (define-key map "\C-cc"    'oz-precompile-file)
+  (define-key map "\C-cm"    'oz-set-gdb-machine)
+  (define-key map "\C-cd"    'oz-gdb)
+
   )
 
 (oz-mode-commands oz-mode-map)
@@ -518,19 +521,55 @@ Input and output via buffers *Oz Compiler* and *Oz Machine*."
 ;; GDB support
 ;;------------------------------------------------------------
 
-(defvar gdb-oz-machine "./oz.machine.bin"
+(defvar oz-gdb-machine "oz.machine.bin"
   "the oz machine for running under gdb")
 
-(defun gdb-machine (tmpfile)
+(autoload 'gdb-mode "gdb")
+
+(defun oz-set-gdb-machine()
+  (interactive)
+  (setq oz-gdb-machine 
+	(expand-file-name 
+	 (read-file-name "Choose Machine: "
+			 nil
+			 nil
+			 t
+			 nil))))
+
+(defun oz-gdb()
+  (interactive)
+  (if (getenv "OZ_PI")
+      t
+    (setenv "OZ_PI" "1")
+    (setenv "OZHOME" (or (getenv "OZHOME") "/usr/share/gs/soft/oz"))
+    (setenv "OZPATH" 
+	    (concat (or (getenv "OZPATH") ".") ":"
+		    (getenv "OZHOME") "/lib:"
+		    (getenv "OZHOME") "/lib/sun4:"
+		    (getenv "OZHOME") "/demo"))
+    (setenv "PATH"
+	    (concat (getenv "PATH") ":" (getenv "OZHOME") "/bin")))
+
+
+  (if oz-machine-hook
+      (setq oz-machine-hook nil)
+    (setq oz-machine-hook 'oz-gdb-machine)
+    )
+  
+  (if oz-machine-hook
+      (message "set gdb machine: %s" oz-gdb-machine)
+    (message "set global machine")))
+
+(defun oz-gdb-machine (tmpfile)
   "Run gdb on oz-machine in buffer *Oz Machine*.
 The directory containing FILE becomes the initial working directory
 and source-file directory for GDB.  If you wish to change this, use
 the GDB commands `cd DIR' and `directory'."
   (oz-set-state 'oz-machine-state "running under gdb")
-  (let* ((path (expand-file-name gdb-oz-machine))
+  (let* ((path (expand-file-name oz-gdb-machine))
 	(file (file-name-nondirectory path)))
 
-    (make-comint "Oz Machine" gdb-command-name nil "-fullname"
+    (make-comint "Oz Machine" "gdb" nil "-fullname"
 		 "-cd" (file-name-directory path) file)
     (save-excursion
       (set-buffer (get-buffer-create "*Oz Machine*"))
@@ -571,8 +610,7 @@ the GDB commands `cd DIR' and `directory'."
    (oz-hide-errors)
 ;   (let ((contents (buffer-substring start end)))
 ;     (oz-send-string (concat contents "\n"))
-;     )
-   
+;     ) 
    (write-region start end feed-tmpfile)
    (oz-feed-file feed-tmpfile)
    )
@@ -615,7 +653,7 @@ the GDB commands `cd DIR' and `directory'."
       (oz-make-keywords-for-match 
 	         '("local" "class" "meth" "create" "or" "if" "pred" "proc"
 		   "fun"
-		   "handle" "seq" "exists" "case" "begin" "process" "not"
+		   "handle" "seq" "exists" "declare" "case" "begin" "process" "not"
 		   )))
 
 (defconst oz-end-pattern
@@ -710,7 +748,7 @@ the GDB commands `cd DIR' and `directory'."
 		 (progn
 		   (search-backward "in")
 		   (oz-search-matching-begin t)
-		   (if (looking-at "exists")
+		   (if (looking-at "\\<exists\\>\\|\\<declare\\>")
 		       (current-column)
 		     (+ (current-column) oz-indent-chars)))
 	       (re-search-forward "[^ \t]")
@@ -828,7 +866,7 @@ the GDB commands `cd DIR' and `directory'."
       (if (re-search-backward oz-key-pattern 0 t) 
 	  (cond ((or (oz-comment-start) (oz-middle-of-string))
 		 t)
-		((looking-at "\\<exists\\>")
+		((looking-at "\\<exists\\>\\|\\<declare\\>")
 		 (if (and search-exists (= n 0))
 		     (setq s nil)
 		   )
@@ -944,7 +982,7 @@ the GDB commands `cd DIR' and `directory'."
        "pred" "proc" "fun" "true" "false" "local" "begin" "end"
        "in" "not" "process" "det" "if" "then" "else" "elseif" 
        "fi" "or" "ro" "meth" "create" "class" "from" "with" 
-       "exists" "case" "of"
+       "exists" "declare" "case" "of"
        "wait" "div" "mod" "self"
        ))
     "\\|\\.\\|\\[\\]\\|#\\|!\\|\\^\\|:\\|\\@"
