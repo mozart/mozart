@@ -57,6 +57,17 @@ in
    end
 end
 
+fun {LookupPath F}
+   %% heuristic: if F begins with '.?.' then it's a prelude file
+   FS = {Atom.toString F}
+in
+   case FS.1 == &. andthen FS.2.2.1 == &. then
+      {VS2A {System.get home} # '/lib/' # FS.2.2.2.2}
+   else
+      F
+   end
+end
+
 fun {StripPath File}
    case File == '' then
       '???'
