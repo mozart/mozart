@@ -978,15 +978,15 @@ prepare
       
       meth onEndElement(Tag) skip end
 
-      %% onStartChildren()
-      %% onEndChildren()
+      %% onStartChildren(Tag)
+      %% onEndChildren(Tag)
       %%
       %% invoked before and after processing the children of an
       %% element.  Material contributed with append(_) is added to
       %% the element's content list.
 
-      meth onStartChildren() skip end
-      meth onEndChildren() skip end
+      meth onStartChildren(_) skip end
+      meth onEndChildren(_) skip end
 
       %% onAttribute(Tag Value)
       %%
@@ -1118,8 +1118,8 @@ prepare
 	    if Empty then SaveCONTENTS=@CONTENTS SaveTAG=@TAG in
 	       CONTENTS <- Children
 	       TAG <- Tag
-	       {self onStartChildren()}
-	       {self onEndChildren()}
+	       {self onStartChildren(Tag)}
+	       {self onEndChildren(Tag)}
 	       @CONTENTS=nil
 	       CONTENTS <- SaveCONTENTS
 	       TAG <- SaveTAG
@@ -1129,7 +1129,7 @@ prepare
 	       STACK <- (@CONTENTS|@TAG)|@STACK
 	       CONTENTS <- Children
 	       TAG <- Tag
-	       {self onStartChildren()}
+	       {self onStartChildren(Tag)}
 	    end
 	    Parser,PARSE()
 	 [] etag(Name Coord) then
@@ -1144,7 +1144,7 @@ prepare
 				  found :Fullname
 				  coord :Coord))
 	       else
-		  {self onEndChildren()}
+		  {self onEndChildren(@TAG)}
 		  @CONTENTS = nil
 		  CONTENTS <- Tail
 		  @TAG.endCoord=Coord
