@@ -381,14 +381,6 @@ OZ_Return CompleteAllDistProp::xpropagate(void) {
     }
   }
   //
-  /*
-  int from, to;
-  for (from = 0, to = 0; from < size; from += 1) {
-    if (*reg[from] != fd_singl) {
-      reg_l[to++] = reg_l[from];
-    }
-  }
-  */
   //
   // now do the "complete thing" iff there still are variables left.
   //
@@ -472,9 +464,13 @@ OZ_Return CompleteAllDistProp::xpropagate(void) {
   retval = (isFailed)? PC.fail() : PC.leave();
 
   // finish above compression
-  /*
-      size = to;
-  */
+  int from, to;
+  for (from = 0, to = 0; from < size; from += 1) {
+    if (*reg[from] != fd_singl) {
+      reg_l[to++] = reg_l[from];
+    }
+  }
+  size = to;
   //
   return retval;
 }
