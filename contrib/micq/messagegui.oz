@@ -85,16 +85,20 @@ define
                                   action:proc{$} {T tkClose} end bd:1 relief:groove)}
    in
       if Type==new then
+         proc{GO} Mess={TB tkReturnString(get p(1 0) 'end' $)} in
+            {Wait Mess} {T tkClose} {Arg.send {ET getReceivers($)} Mess}
+         end
+      in
+         {TB tkBind(event:'<Alt-Return>'
+                    action:GO)}
          B1={New Tk.button tkInit(parent:T text:"Send Message!" bd:1 relief:groove
-                                  action:proc{$} Mess={TB tkReturnString(get p(1 0) 'end' $)} in
-                                            {Wait Mess} {T tkClose} {Arg.send {ET getReceivers($)} Mess}
-                                         end)}
+                                  action:GO)}
       else
          B1={New Tk.button tkInit(parent:T text:"Reply Message!" bd:1 relief:groove
                                   action:proc{$}
                                             Mess={Map Arg.message fun{$ C}
-                                                                    if C==&\n then "\n>" else C end
-                                                                 end}
+                                                                     if C==&\n then "\n>" else C end
+                                                                  end}
                                          in
                                             {T tkClose} {Arg.send ">"#{Flatten Mess}#"\n\n"}
                                          end)}
