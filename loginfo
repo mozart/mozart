@@ -12,5 +12,6 @@ Misc/papers/Rolls	mail -s "I have changed %s" niehren mmueller
 Misc/papers/Style	mail -s "I have changed %s" niehren mmueller
 Oz		mail -s "I have changed %s" mehl
 loginfo		mail -s "I have changed %s" mehl
-Misc/papers/Oz20        mail -s "I have changed %s" mmueller tmueller
+Misc/papers/Oz20        mail -s "I have changed %s" mmueller,tmueller
 Misc/papers/oopp        mail -s "I have changed %s" mmueller henz schulte
+Misc/papers/WLP-FDCD	mail -s "I have changed %s" tmueller,wuertz
