@@ -13,8 +13,15 @@
 #pragma implementation "fdprofil.hh"
 #endif
 
+#include <iostream.h>
+#include <limits.h>
+
 #include "fdprofil.hh"
-#include "fdbuilti.hh"
+
+#include "tagged.hh"
+#include "bignum.hh"
+#include "constter.hh"
+#include "board.hh"
 
 char * ProfileData::print_msg1[no_high1] = {
   "Number of propagators                 ",
@@ -63,6 +70,10 @@ char * ProfileData::print_msg2[no_high2] = {
 
 ProfileHost FDProfiles;
 
+
+//-----------------------------------------------------------------------------
+// Built-ins
+
 OZ_C_proc_begin(BIfdDiscard, 0)
 { 
   FDProfiles.discard();
@@ -81,7 +92,7 @@ OZ_C_proc_end
 OZ_C_proc_begin(BIfdGetNext, 1)
 { 
   cout << "Move on to next profile." << endl;
-  return OZ_unify(OZ_getCArg(0), newSmallInt(FDProfiles.next() ? 1 : 0));
+  return OZ_unify(OZ_getCArg(0), OZ_CToInt(FDProfiles.next() ? 1 : 0));
 }
 OZ_C_proc_end
 
@@ -100,6 +111,36 @@ OZ_C_proc_begin(BIfdReset, 0)
 }
 OZ_C_proc_end
 
+
+//-----------------------------------------------------------------------------
+// class ProfileData
+
+void ProfileData::init(void) { 
+  { for (int i = no_high1; i--; ) items1[i] = 0; }
+  { for (int i = no_high2; i--; ) items2[i].no = items2[i].size = 0; }
+}
+
+void ProfileData::inc_item(int i) { 
+  if (i < 0 || no_high1 <= i) error("index");
+  items1[i] += 1;
+}
+
+void ProfileData::inc_item(int i, int by) { 
+  if (i < 0 || no_high2 <= i) error("index");
+  items2[i].size += by; 
+  items2[i].no += 1;
+}
+
+char * ProfileData::getPrintMsg1(int i) {
+  if (i < 0 || i >= no_high1) error("Index overflow.");
+  return print_msg1[i];
+}
+
+char * ProfileData::getPrintMsg2(int i) {
+  if (i < 0 || i >= no_high2) error("Index overflow.");
+  return print_msg2[i];
+}
+
 void ProfileData::print(void) {
   int i;
   for (i = 0; i < no_high1; i += 1)
@@ -107,6 +148,18 @@ void ProfileData::print(void) {
   for (i = 0; i < no_high2; i += 1)
     cout << "\t" << print_msg2[i] << ": no=" << items2[i].no 
 	 << " size=" << items2[i].size << endl;
+}
+
+
+//-----------------------------------------------------------------------------
+// class ProfileDataTotal
+
+void ProfileDataTotal::init(void) { 
+  ProfileData::init();
+  for (int i = no_high2; i--; ) {
+    max2[i] = 0;
+    min2[i] = UINT_MAX; 
+  }
 }
 
 void ProfileDataTotal::printTotal(unsigned n) {
@@ -151,11 +204,27 @@ void ProfileDataTotal::operator += (ProfileData &y) {
   }
 }
 
+//-----------------------------------------------------------------------------
+// class ProfileList
+
+ProfileList::ProfileList(Board * b, int ident) 
+  : board(b), next(NULL), id(ident) {}
+
+void ProfileList::print(void) {
+  cout << "Distribution " << id << " Board (" << board << "):" << endl;
+  ProfileData::print();
+}
 
 void ProfileList::gc(void) { 
   if (board) board = board->gcBoard(); 
 }
 
+
+//-----------------------------------------------------------------------------
+// class ProfileHost
+
+ProfileHost::ProfileHost(void) 
+  : head(NULL), tail(NULL), curr(NULL) { add(NULL); }
 
 void ProfileHost::print_total_average(void) {
   total.init();
@@ -188,10 +257,64 @@ void ProfileHost::printBoardStat(Board * b) {
   }
 }
 
+ProfileList * ProfileHost::next(void) {
+  if (curr == tail)
+    return NULL;
+  return curr = curr ? curr->get_next() : head;
+}
+
+void ProfileHost::print(void) {
+  if (curr)
+    curr->print();
+  else
+    cout << "curr == NULL" << endl;
+}
+
+void ProfileHost::add(Board * bb = NULL) {
+  if (head) {
+    ProfileList * aux = new ProfileList(bb, tail->get_id() + 1);
+    tail->set_next(aux);
+    tail = aux;
+  } else {
+    head = tail = new ProfileList(NULL, 0);
+  }
+}
+
+void ProfileHost::discard(void) {
+  ProfileList * aux = head;
+  while (aux) {
+    ProfileList * aux_next = aux->get_next();
+    delete(aux);
+    aux = aux_next;
+  }
+  head = tail = curr = NULL;
+  add();
+}
+
+void ProfileHost::gc(void) {
+  ProfileList * aux = head;
+  while (aux) {
+    aux->gc();
+    aux = aux->get_next();
+  }
+}
+
+//-----------------------------------------------------------------------------
+// class TaggedRefSet
 
 TaggedRefSet * TaggedRefSet::root = NULL;
 
-Bool TaggedRefSet::add(TaggedRef t, TaggedRefSet * &st) {
+TaggedRefSet::TaggedRefSet(OZ_Term t) 
+  : item(t), left(NULL), right(NULL) {}
+
+TaggedRefSet::TaggedRefSet(void) {
+  if (root) {
+    cout << "Previous set was not dicarded." << endl;
+    discard();
+  }
+}
+
+OZ_Boolean TaggedRefSet::add(OZ_Term t, TaggedRefSet * &st) {
   if (st) {
     if (t < st->item) {
       return add(t, st->left);
@@ -199,12 +322,12 @@ Bool TaggedRefSet::add(TaggedRef t, TaggedRefSet * &st) {
       return add(t, st->right);
     } else {
 //      cout << "failed(" << (void *) t << ") ";
-      return FALSE;
+      return OZ_FALSE;
     }
   } else {
     st = new TaggedRefSet(t);
 //      cout << "succeeded(" << (void *) t << ") ";
-    return TRUE;
+    return OZ_TRUE;
   }
 }
 
@@ -226,7 +349,5 @@ void TaggedRefSet::print(TaggedRefSet * st) {
     print(st->right);
   }
 }
-
-
 
 TaggedRefSet FDVarsTouched;

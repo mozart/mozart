@@ -30,19 +30,21 @@ extern Suspension * FDcurrentTaskSusp;
 #ifdef DEBUG_STABLE
 extern SuspList * board_constraints;
 void printBC(ostream &, Board *);
-void printBCDebug(Board * b = NULL); 
+void printBCDebug(Board * = NULL); 
 #endif
 
 void reviveCurrentTaskSusp(void);
 void killPropagatedCurrentTaskSusp(void);
 
 
+SuspList * addSuspToList(SuspList * list, SuspList * elem, Board * home);
+
+Suspension * createResSusp(OZ_CFun func, int arity, RefsArray xregs);
+
 inline 
 Bool isUnifyCurrentTaskSusp(void) {
   return FDcurrentTaskSusp->isUnifySusp();
 }
-
-SuspList * addSuspToList(SuspList * list, SuspList * elem, Board * home);
 
 inline
 Suspension * makeHeadSuspension(OZ_Bool (*fun)(int,OZ_Term[]),
@@ -52,7 +54,6 @@ Suspension * makeHeadSuspension(OZ_Bool (*fun)(int,OZ_Term[]),
 			am.currentThread->getPriority(),
 			fun, args, arity);
 }
-
 
 
 #endif

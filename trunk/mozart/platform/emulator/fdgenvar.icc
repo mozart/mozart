@@ -50,6 +50,11 @@ void GenFDVariable::propagate(TaggedRef var, FDPropState state,
 }
 
 inline
+void GenFDVariable::propagateUnify(TaggedRef var) {
+  propagate(var, fd_det, pc_cv_unif);
+}  
+
+inline
 void GenFDVariable::relinkSuspListTo(GenFDVariable * lv, Bool reset_local)
 {
   GenCVariable::relinkSuspListTo(lv, reset_local); // any
@@ -65,7 +70,7 @@ void GenFDVariable::becomesSmallIntAndPropagate(TaggedRef * trPtr)
 
   Assert(this == tagged2SuspVar(*trPtr));
 
-  TaggedRef si_val = newSmallInt(finiteDomain.singl());
+  TaggedRef si_val = OZ_CToInt(finiteDomain.singl());
   propagate(*trPtr, fd_det);
   doBind(trPtr, si_val);
   dispose();
