@@ -1096,48 +1096,48 @@ and initial semicolons."
   (oz-filter proc string))
 
 
+(defun test ()
+  (interactive)
+  (save-excursion
+    (set-buffer "*Oz Emulator*")
+    (goto-char (process-mark (get-buffer-process "*Oz Emulator*")))
+    (insert-before-markers "xxa\n")))
+(test)
+
 (defun oz-filter (proc string)
-  (let ((old-buffer (current-buffer)))
-    (unwind-protect
-	(let ((newbuf (process-buffer proc))
-	      old-point
-	      moving
-	      index
-	      (errs-found (and oz-popup-on-error (string-match oz-error-string string))))
-	  
-	  (if errs-found
-	      (if oz-gnu19
-		  (delete-windows-on newbuf t)
-		(delete-windows-on newbuf)))
-	  (set-buffer newbuf)
-	  (setq moving (or errs-found
-			   (= (point) (process-mark proc))))
-	  
-	  (save-excursion
-	    ;; Insert the text, moving the process-marker.
-	    (goto-char (process-mark proc))
-	    (setq old-point (point))
-	    (goto-char (point-max))
+  (let ((newbuf (process-buffer proc))
+	old-point
+	index
+	(errs-found (and oz-popup-on-error (string-match oz-error-string string))))
+      ;(if errs-found
+	;  (if oz-gnu19
+	 ;     (delete-windows-on newbuf t)
+	  ;  (delete-windows-on newbuf)))
+    (save-excursion
+      (set-buffer newbuf)
+      
+      ;; Insert the text, moving the process-marker.
+      (goto-char (process-mark proc))
+      (setq old-point (point))
+      (goto-char (point-max))
 
-	    ;; Irix outputs garbage, when sending EOF
-	    (setq index (string-match "\\^D" string))
-	    (if index
-		(setq string (concat (substring string 0 index)
-				     (substring string (+ 4 index)))))
+      ;; Irix outputs garbage, when sending EOF
+      (setq index (string-match "\\^D" string))
+      (if index
+	  (setq string (concat (substring string 0 index)
+			       (substring string (+ 4 index)))))
 
-	    (insert-before-markers string)
-	    (set-marker (process-mark proc) (point))
-            
-	    ;; remove escape characters
-	    (goto-char old-point)
-	    (while (search-forward-regexp oz-remove-pattern nil t)
-	      (replace-match "" nil t)))
-	  (if moving (goto-char (process-mark proc)))
-	  (if errs-found
-	      (oz-show-buffer newbuf)))
-      (set-buffer old-buffer))))
-  
+      (insert-before-markers string)
+      ;; mm2: (set-marker (process-mark proc) (point))
 
+      ;; remove escape characters
+      (goto-char old-point)
+      (while (search-forward-regexp oz-remove-pattern nil t)
+	(replace-match "" nil t)))
+    (if errs-found
+	(progn (oz-show-buffer newbuf)
+	       (set-window-point (get-buffer-window newbuf)
+				 (process-mark proc))))))
 
 
 ;;------------------------------------------------------------
@@ -1155,17 +1155,12 @@ OZ compiler, emulator and error window")
     (save-excursion
       (let* ((win (or (get-buffer-window oz-emulator-buffer)
 		      (get-buffer-window oz-compiler-buffer)
-		      (split-window (selected-window)
-				    (/ (* (window-height (selected-window))
+		      (split-window (get-largest-window)
+				    (/ (* (window-height (get-largest-window))
 					  (- 100 oz-other-buffer-percent))
 				       100)))))
 	(set-window-buffer win buffer)
-	)
-      )
-    
-    (bury-buffer oz-emulator-buffer)
-    (bury-buffer oz-compiler-buffer)
-    (bury-buffer buffer)))
+	(bury-buffer buffer)))))
 
 
 (defun oz-create-buffer (buf ozmode)
