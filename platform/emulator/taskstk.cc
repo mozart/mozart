@@ -70,10 +70,7 @@ int TaskStack::getSeqSize()
 
     case C_NERVOUS: break;
     case C_SOLVE:   break;
-
-    case C_LOCAL:
-      tos++;
-      return -(oldTos-tos);
+    case C_LOCAL:   break;
 
     case C_CONT:
       tos-=2; // PC Y G
@@ -108,13 +105,7 @@ int TaskStack::getSeqSize()
  */
 void TaskStack::copySeq(TaskStack *newStack,int len)
 {
-  TaskStackEntry *next=newStack->tos;
-  if (len < 0) {
-    pushLocal();
-    len = -len;
-  } else {
-    next++;
-  }
+  TaskStackEntry *next=newStack->tos+1;
   for (;len>0;len--) {
     push(*next++);
   }
