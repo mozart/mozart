@@ -64,13 +64,9 @@ define
       try
 	 TypeDict = {Collect.collect FlatTree}
       in
-	 {System.show 'Processing Native Functions...'}
 	 if DoNative then {ToolKit.createFuncs TypeDict} end
-	 {System.show 'Processing Function Wrapper...'}
 	 {Wrapper.createFuncs TypeDict}
-	 {System.show 'Processing Native Field Accessors...'}
 	 if DoNative then {ToolKit.createFields TypeDict} end
-	 {System.show 'Processing Field Accessor Wrapper...'}
 	 {Wrapper.createFields TypeDict}
 	 {Application.exit 0}
       catch E then
