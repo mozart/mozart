@@ -92,11 +92,19 @@ void OZ_CPIVar::dropParameter(void)
   forward->_nb_refs -= 1;
 }
 
+void initCPI(void)
+{
+  OZ_CPIVar::_vars_removed = oz_nil();
+}
+
 void OZ_CPIVar::add_vars_removed(OZ_Term * tp) {
   Assert(!oz_isRef(*tp));
   _vars_removed = oz_cons(makeTaggedRef(tp), _vars_removed);
 }
+
 int OZ_CPIVar::is_in_vars_removed(OZ_Term * tp) {
+  Assert(_vars_removed || (_vars_removed == oz_nil()));
+
   for (OZ_Term p = _vars_removed; oz_nil() != p; p = oz_tail(p)) {
     if (oz_head(p) == makeTaggedRef(tp)) {
       return 1;
@@ -104,9 +112,11 @@ int OZ_CPIVar::is_in_vars_removed(OZ_Term * tp) {
   }
   return 0;
 }
+
 void OZ_CPIVar::reset_vars_removed(void) {
   _first_run = 0;
 }
+
 void OZ_CPIVar::set_vars_removed(void) {
   _first_run = 1;
   _vars_removed = oz_nil();
@@ -116,4 +126,3 @@ void OZ_CPIVar::set_vars_removed(void) {
 
 // End of File
 //-----------------------------------------------------------------------------
-
