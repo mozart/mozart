@@ -212,14 +212,14 @@ public:
     TaggedRef getOpenArityList(TaggedRef*,Board*);
     TaggedRef getOpenArityList(TaggedRef*);
 
-    // Return list of features in current table that are not in dt:
+    // Return list of features in current table that are not in dt
     TaggedRef extraFeatures(DynamicTable* &dt);
 
-    // Return list of features in srecord that are not in current table:
+    // Return list of features in srecord that are not in current table
     TaggedRef extraSRecFeatures(SRecord &sr);
 
-    // Return sorted list containing all features:
-    TaggedRef getArity();
+    // Return sorted list (with given tail) containing all features
+    TaggedRef getArityList(TaggedRef tail=AtomNil);
 
 private:
 
@@ -241,7 +241,7 @@ private:
         return i;
     }
 
-    // Return true iff argument is a power of two:
+    // Return true iff argument is a power of two
     static Bool isPwrTwo(dt_index s) {
         Assert(s>0);
         return (s & (s-1))==0;
@@ -304,8 +304,13 @@ public:
 	return dynamictable;
     }
 
+    // Return a sorted difference list of all the features currently in the OFS
+    // The head is the return value and the tail is returned through an argument.
     TaggedRef getOpenArityList(TaggedRef*,Board*);
     TaggedRef getOpenArityList(TaggedRef*);
+
+    // Return a sorted list of all features currently in the OFS
+    TaggedRef getArityList();
 
     void addDetSusp(Suspension *susp);
     Bool unifyOFS(TaggedRef *, TaggedRef, TaggedRef *, TaggedRef, Bool);
