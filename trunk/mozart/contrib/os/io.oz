@@ -44,7 +44,7 @@ in
 	 ) at 'io.so{native}'
       PROC at 'process'
       MODE at 'mode'
-      Finalize URL Resolve Exception OS
+      Finalize URL Resolve OS
    export
       is	: IS
       make	: MAKE
