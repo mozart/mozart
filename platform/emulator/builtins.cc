@@ -4123,6 +4123,10 @@ static int finalizable(OZ_Term& x)
   }
 }
 
+int OZ_isFinalizable(OZ_Term& t) {
+  return finalizable(t);
+}
+
 // Builtin {Finalize.register OBJECT HANDLER}
 
 OZ_BI_define(BIfinalize_register,2,0)

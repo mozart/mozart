@@ -73,7 +73,8 @@ MODSPECS= \
 	CompilerSupport Profile \
 	Debug Fault Browser Misc DPMisc Distribution \
 	VirtualSite Application DPPane \
-	$(BIMODSPECS)
+	$(BIMODSPECS) \
+	WeakDictionary
 
 MODINTERS = $(MODSPECS:%=mod%-if.cc)
 
@@ -106,7 +107,8 @@ STORESRCS=\
 	ozthread.cc heapchunk.cc bytedata.cc\
 	susplist.cc \
 	var_base.cc var_ext.cc var_simple.cc var_future.cc \
-	namer.cc
+	namer.cc \
+	weakdict.cc
 
 RUNSRCS=\
 	am.cc unify.cc indexing.cc codearea.cc lps.cc \
