@@ -678,9 +678,10 @@ int FDBitVector::mkRaw(int * list_left, int * list_right) const
   return len;
 }
 
-int FDBitVector::union_bv(const FDBitVector &x, const FDBitVector &y)
+int FDBitVector::union_bv(const FDBitVector &x, const int x_upper,
+                          const FDBitVector &y, const int y_upper)
 {
-  for (int i = fd_bv_max_high; i--; )
+  for (int i = word32(max(x_upper, y_upper)); i--; )
     b_arr[i] = x.b_arr[i] | y.b_arr[i];
   return findSize();
 }
@@ -1253,7 +1254,7 @@ FiniteDomain FiniteDomain::operator | (const FiniteDomain &y) const
     FDBitVector * y_v = y.asBitVector();
     FDBitVector * z_v;
     z.setType(z_v = new FDBitVector);
-    z.size = z_v->union_bv(*x_v, *y_v);
+    z.size = z_v->union_bv(*x_v, max_elem, *y_v, y.max_elem);
     z.min_elem = z_v->findMinElem();
     z.max_elem = z_v->findMaxElem();
   }

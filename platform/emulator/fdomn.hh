@@ -169,7 +169,8 @@ public:
   int operator >= (const int);
   int operator -= (const FDBitVector &);
   int mkRaw(int * list_left, int * list_right) const;
-  int union_bv(const FDBitVector &, const FDBitVector &);
+  int union_bv(const FDBitVector &, const int,
+               const FDBitVector &, const int);
   int intersect_bv(FDBitVector &, const FDBitVector &);
 };
 

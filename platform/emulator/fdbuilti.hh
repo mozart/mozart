@@ -30,7 +30,7 @@ enum Recalc_e {lower, upper};
 // Debug Macros
 //-----------------------------------------------------------------------------
 
-#if defined(DEBUG_CHECK) || 1
+#if defined(DEBUG_CHECK)
 #define FORCE_ALL 0
 
 #define FD_DEBUG_T(TEXT, SIZE, T, COND) \

@@ -943,7 +943,7 @@ void BIinitFD(void)
   BIadd("fdNotEqOff", 3, BIfdNotEqOff);
   BIadd("fdNotEqOff_body", 3, BIfdNotEqOff_body);
   BIadd("fdAllDifferent", 1, BIfdAllDifferent);
-  BIadd("fdAllDifferent_body", 2, BIfdAllDifferent_body);
+  BIadd("fdAllDifferent_body", 1, BIfdAllDifferent_body);
   BIadd("fdDistinctOffset", 2, BIfdDistinctOffset);
   BIadd("fdDistinctOffset_body", 2, BIfdDistinctOffset_body);
 
