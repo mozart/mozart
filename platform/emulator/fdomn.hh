@@ -41,6 +41,11 @@
 
 //-----------------------------------------------------------------------------
 
+#define CAST_FD_OBJ(O) (*((OZ_FiniteDomainImpl *) &O))
+#define CAST_FD_PTR(P) ((OZ_FiniteDomainImpl *) P)
+
+//-----------------------------------------------------------------------------
+
 const int fd_inf = 0;
 const int fd_sup = OzMaxInt - 1;
 
@@ -105,7 +110,7 @@ public:
   void printDebug(void) const;
   void printDebugLong(void) const;
 
-  OZ_Boolean contains(int i) const;
+  OZ_Boolean isIn(int i) const;
   int findSize(void);
   int findMinElem(void);
   int findMaxElem(void);
@@ -191,7 +196,7 @@ public:
   void printDebug(void) const;
   void printDebugLong(void) const;
 
-  OZ_Boolean contains(int i) const;
+  OZ_Boolean isIn(int i) const;
 
   void setEmpty(void);
   void setBit(int i);
@@ -274,7 +279,7 @@ public:
   OZ_FiniteDomainImpl(const OZ_FiniteDomainImpl &);
   const OZ_FiniteDomainImpl &operator = (const OZ_FiniteDomainImpl &fd);
 
-  OZ_Boolean contains(int i) const;
+  OZ_Boolean isIn(int i) const;
   int initFull(void);
   int initEmpty(void);
   int initSingleton(int);
@@ -289,7 +294,7 @@ public:
   int minElem(void) const {return min_elem;}
   int maxElem(void) const {return max_elem;}
   int getWidth(void) const {return max_elem - min_elem;}
-  int singl(void) const;
+  int getSingleElem(void) const;
    
   OZ_Term getAsList(void) const;
   int midElem(void) const; 
@@ -330,5 +335,95 @@ public:
 
 void initFDs();
 void reInitFDs(int);
+
+// frequently used functions
+
+inline
+OZ_Boolean OZ_FiniteDomainImpl::operator == (const OZ_FDState state) const
+{
+  if (state == fd_singl) {
+    return size == 1;
+  } else if (state == fd_bool) {
+    return size == 2 && min_elem == 0 && max_elem == 1;
+  } else {
+    Assert(state == fd_empty);
+    return size == 0;
+  }
+}
+
+inline
+int OZ_FiniteDomainImpl::findSize(void) const {
+  return max_elem - min_elem + 1;
+}
+
+inline  
+void OZ_FiniteDomainImpl::setType(descr_type t, void * p) {
+  descr = orPointer(p, t);
+}
+
+inline
+int OZ_FiniteDomainImpl::getSingleElem(void) const 
+{
+  if (size != 1)
+    return -1;
+  return min_elem;
+}
+
+inline
+OZ_Boolean OZ_FiniteDomainImpl::operator == (const int v) const
+{
+  return (size == 1) && (min_elem == v);
+}
+
+inline
+int OZ_FiniteDomainImpl::initBool(void)
+{
+  setType(fd_descr, NULL);
+  min_elem = 0;
+  max_elem = 1;
+  return size = 2;
+}
+
+inline
+int OZ_FiniteDomainImpl::initRange(int l, int r)
+{
+  l = max(l, fd_inf);
+  r = min(r, fd_sup);
+
+  setType(fd_descr, NULL);
+
+  if (l > r) return size = 0;
+  
+  min_elem = l;
+  max_elem = r;
+  return size = findSize();
+}  
+
+inline
+int OZ_FiniteDomainImpl::initFull(void)
+{
+  setType(fd_descr, NULL);
+  min_elem = fd_inf;
+  max_elem = fd_sup;
+  return size = fd_full_size;
+}  
+
+inline
+int OZ_FiniteDomainImpl::initEmpty(void)
+{
+  min_elem = max_elem = -1;
+  setType(fd_descr, NULL);
+  return size = 0;
+}
+
+inline
+int OZ_FiniteDomainImpl::initSingleton(int n)
+{
+  if (n < fd_inf || fd_sup < n)
+    return initEmpty();
+  setType(fd_descr, NULL);
+  min_elem = max_elem = n;
+  return size = 1;
+}
 
 #endif
