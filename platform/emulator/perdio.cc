@@ -142,7 +142,6 @@ class MsgBuffer;
 void marshalSite(Site *,MsgBuffer*);
 OZ_Return raiseGeneric(char *msg, OZ_Term arg);
 OZ_Return sendRedirect(Site* sd,int OTI,TaggedRef val);
-OZ_Return sendRedirect(PerdioVar *pv,OZ_Term val, Site* ackSite, int OTI);
 
 void sendCreditBack(Site* sd,int OTI,Credit c);
 
@@ -1262,14 +1261,8 @@ OZ_Term unmarshalTertiary(MsgBuffer *bs, MarshalTag tag)
       o->setGName(gnobj);
 
       // mm2: abstraction val=newObjectProxy(o,gnobj,gnclass,clas)
-      PerdioVar *pvar = new PerdioVar(o,oz_currentBoard());
-      val = makeTaggedRef(newTaggedCVar(pvar));
-      addGName(gnobj, val);
-      if (gnclass) {
-        pvar->setGNameClass(gnclass);
-      } else {
-        pvar->setClass(tagged2ObjectClass(oz_deref(clas)));
-      }
+      val = newObjectProxy(o,gnobj,gnclass,clas);
+
 
       ob->mkVar(val, ob->getFlags());
       return val;}
@@ -1465,7 +1458,7 @@ void msgReceived(MsgBuffer* bs)
       PD((MSG_RECEIVED,"REGISTER index:%d site:%s",OTI,rsite->stringrep()));
       OwnerEntry *oe=receiveAtOwner(OTI);
       if (oe->isVar()) {
-        oe->getPerdioVar()->registerSite(rsite);
+        oe->getPerdioVar()->registerSiteV(rsite);
       } else {
         sendRedirect(rsite,OTI,OT->getOwner(OTI)->getRef());
       }
@@ -1497,7 +1490,7 @@ void msgReceived(MsgBuffer* bs)
       PD((MSG_RECEIVED,"M_SEND_OBJECT site:%s index:%d",sd->stringrep(),si));
       BorrowEntry *be=receiveAtBorrow(sd,si);
 
-      PerdioVar *pv = be->getPerdioVar();
+      OldPerdioVar *pv = (OldPerdioVar *) (be->getPerdioVar());
       Object *o = pv->getObject();
       Assert(o);
       GName *gnobj = o->hasGName();
@@ -1528,7 +1521,7 @@ void msgReceived(MsgBuffer* bs)
           sd->stringrep(),si));
       BorrowEntry *be=receiveAtBorrow(sd,si);
 
-      PerdioVar *pv = be->getPerdioVar();
+      OldPerdioVar *pv = (OldPerdioVar *)(be->getPerdioVar());
       Object *o = pv->getObject();
       Assert(o);
       GName *gnobj = o->hasGName();
@@ -1558,18 +1551,8 @@ void msgReceived(MsgBuffer* bs)
       }
       Assert(be->isVar());
 
-      // mm2: abstraction: pv->proxyBind(vPtr,val)
       PerdioVar *pv = be->getPerdioVar();
-      PD((TABLE,"REDIRECT - borrow entry hit b:%d",pv->getIndex()));
-      Assert(pv->isProxy());
-      pv->primBind(be->getPtr(),val);
-      be->mkRef();
-      if (pv->hasVal()) {
-        PD((PD_VAR,"REDIRECT while pending"));
-        pv->redirect(val);
-      }
-      // pv->dispose();
-      BT->maybeFreeBorrowEntry(pv->getIndex());
+      pv->proxyBindV(be->getPtr(),val,be);
 
       break;
     }
@@ -1586,20 +1569,12 @@ void msgReceived(MsgBuffer* bs)
 
       if (oe->isVar()) {
 
-        // mm2: abstraction: pv->managerBind(varPtr,v)
         PD((PD_VAR,"SURRENDER do it"));
         PerdioVar *pv = oe->getPerdioVar();
         // mm2: bug: the new var may no be the correct one wrt.
         //           to variable ordering -> may introduce net cycle.
         // ??: bug fixed: may be bound to a different perdio var
-        pv->primBind(oe->getPtr(),v);
-        oe->mkRef();
-        if (oe->hasFullCredit()) {
-          PD((WEIRD,"SURRENDER: full credit"));
-        }
-        sendRedirect(pv,v,rsite,OTI);
-
-
+        pv->managerBindV(oe->getPtr(),v,oe,rsite,OTI);
       } else {
         PD((PD_VAR,"SURRENDER discard"));
         PD((WEIRD,"SURRENDER discard"));
@@ -1624,10 +1599,7 @@ void msgReceived(MsgBuffer* bs)
       // mm2: abstraction: pv->proxyAck(varPtr);
       Assert(be->isVar());
       PerdioVar *pv = be->getPerdioVar();
-      pv->acknowledge(be->getPtr());
-      be->mkRef();
-      // pv->dispose();
-      BT->maybeFreeBorrowEntry(pv->getIndex());
+      pv->proxyAckV(be->getPtr(),be);
 
       break;
     }

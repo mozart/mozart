@@ -86,6 +86,40 @@ public:
                            but can be bound to non-exportables */
 
 class PerdioVar: public GenCVariable {
+public:
+  PerdioVar(Board *bb) : GenCVariable(PerdioVariable,bb) {}
+
+  virtual VariableStatus statusV() = 0;
+
+  virtual PerdioVar *gcV(void) = 0;
+  virtual void gcRecurseV(void) = 0;
+  virtual Bool validV(TaggedRef v) = 0;
+  virtual OZ_Return unifyV(TaggedRef *vptr, TaggedRef t, ByteCode *scp) = 0;
+  virtual void addSuspV(TaggedRef *v, Suspension susp, int unstable) = 0;
+  virtual void printStreamV(ostream &out,int depth = 10) = 0;
+
+  // check if entry in borrow table is still alive
+  virtual Bool gcIsAliveV() = 0;
+  virtual void registerSiteV(Site* sd) = 0;
+  virtual void proxyBindV(TaggedRef *vPtr,TaggedRef val, BorrowEntry *be) = 0;
+  virtual void managerBindV(TaggedRef *vPtr, TaggedRef val,
+                            OwnerEntry *oe, Site *rsite, int OTI) = 0;
+  virtual void proxyAckV(TaggedRef *vPtr, BorrowEntry *be) = 0;
+  virtual void marshalV(MsgBuffer *bs) = 0;
+};
+
+
+class DistributedVar : public PerdioVar {
+public:
+  DistributedVar() : PerdioVar(0) {}
+};
+
+class LazyObjVar : public PerdioVar {
+public:
+  LazyObjVar() : PerdioVar(0) {}
+};
+
+class OldPerdioVar: public PerdioVar {
 protected:
   short flags;
 private:
@@ -101,20 +135,20 @@ public:
   void setpvType(PV_TYPES t) { pvtype = (short) t; }
   PV_TYPES getpvType()       { return (PV_TYPES) pvtype; }
 
-  PerdioVar(Board *bb) : GenCVariable(PerdioVariable,bb) {
+  OldPerdioVar(Board *bb) : PerdioVar(bb) {
     u.proxies=0;
     flags = 0;
     setpvType(PV_MANAGER);
   }
 
-  PerdioVar(int i,Board *bb) : GenCVariable(PerdioVariable,bb) {
+  OldPerdioVar(int i,Board *bb) : PerdioVar(bb) {
     u.bindings=0;
     flags = 0;
     setpvType(PV_PROXY);
     setIndex(i);
   }
 
-  PerdioVar(Object *o,Board *bb) : GenCVariable(PerdioVariable,bb) {
+  OldPerdioVar(Object *o,Board *bb) : PerdioVar(bb) {
     setpvType(PV_OBJECTCLASSAVAIL);
     ptr   = o;
     flags = 0;
@@ -141,8 +175,12 @@ public:
   Bool isObjectClassNotAvail() { return getpvType()==PV_OBJECTCLASSNOTAVAIL; }
   Bool isObject() { return isObjectClassAvail() || isObjectClassNotAvail();}
 
+  Bool gcIsAliveV() {
+    return getSuspList() || (isProxy() && hasVal());
+  }
+
   // mm2: OZ_DISTRIBUTED! and OZ_LAZY!
-  VariableStatus status() { return isObject()?OZ_OTHER:OZ_FREE; }
+  VariableStatus statusV() { return isObject()?OZ_OTHER:OZ_FREE; }
 
   int getIndex() { return ToInt32(ptr); }
 
@@ -155,7 +193,7 @@ public:
   Object *getObject() { Assert(isObject()); return (Object*)ptr; }
   ObjectClass *getClass() { Assert(isObjectClassAvail()); return u.aclass; }
 
-  void registerSite(Site* sd) {
+  void registerSiteV(Site* sd) {
     Assert(isManager());
     // test if already registered
     for (ProxyList *pl = u.proxies; pl != 0; pl=pl->next) {
@@ -188,11 +226,12 @@ public:
   }
   void redirect(OZ_Term val);
   void acknowledge(OZ_Term *ptr);
+  void proxyAckV(TaggedRef *vPtr, BorrowEntry *be);
 
   ProxyList *getProxies() { Assert(isManager()); return u.proxies; }
 
-  void addSusp(TaggedRef *v, Suspension susp, int unstable);
-  Bool valid(TaggedRef v) {
+  void addSuspV(TaggedRef *v, Suspension susp, int unstable);
+  Bool validV(TaggedRef v) {
     Assert(!oz_isRef(v) && !oz_isVariable(v));
     return (isObject()) ? FALSE : TRUE;
   }
@@ -201,10 +240,11 @@ public:
 
   void dispose(void) {}
 
-  void gcRecurse(void);
+  PerdioVar *gcV() { return new OldPerdioVar(*this); }
+  void gcRecurseV(void);
 
-  OZ_Return unify(TaggedRef *vptr, TaggedRef t, ByteCode *scp);
-  void printStream(ostream &out,int depth = 10) {
+  OZ_Return unifyV(TaggedRef *vptr, TaggedRef t, ByteCode *scp);
+  void printStreamV(ostream &out,int depth = 10) {
     out << "<dist:";
     char *type = "";
     if (isManager()) {
@@ -220,6 +260,11 @@ public:
                         int offset = 0) {
     printStream(out,depth); out << endl;
   }
+
+  void proxyBindV(TaggedRef *vPtr,TaggedRef val, BorrowEntry *be);
+  void managerBindV(TaggedRef *vPtr, TaggedRef val,
+                    OwnerEntry *oe, Site *rsite, int OTI);
+  void marshalV(MsgBuffer *bs);
 };
 
 inline
@@ -230,10 +275,12 @@ Bool isPerdioVar(TaggedRef term)
 }
 
 inline
-PerdioVar *tagged2PerdioVar(TaggedRef t) {
+OldPerdioVar *tagged2PerdioVar(TaggedRef t) {
   Assert(isPerdioVar(t));
-  return (PerdioVar *) tagged2CVar(t);
+  return (OldPerdioVar *) tagged2CVar(t);
 }
 
+TaggedRef newObjectProxy(Object *o, GName *gnobj,
+                         GName *gnclass, TaggedRef clas);
 
 #endif
