@@ -52,7 +52,7 @@ void send(MsgContainer *msgC);
 // That's quite natural: we don't know who send us a message (of
 // course, communication layer for remote site do know, but that's
 // another story).
-void msgReceived(MsgContainer *);
+void msgReceived(MsgContainer *,DSite *);
 
 // Used by networklayer to do pinging.
 void sendPing(DSite*);
@@ -131,8 +131,8 @@ extern OZ_Term ConnectPortStream;
 extern OZ_Term ConnectPort;
 
 // Avoid name-conflict
-inline void perdio_msgReceived(MsgContainer *msgC) {
-  msgReceived(msgC);
+inline void perdio_msgReceived(MsgContainer *msgC,DSite *site) {
+  msgReceived(msgC,site);
 }
 
 // Message Statistics:

@@ -53,7 +53,6 @@
 #include "protocolFail.hh"
 #include "msgContainer.hh"
 #include "dpMarshaler.hh"
-#include "flowControl.hh"
 #include "ozconfig.hh"
 
 #include "os.hh"
@@ -323,7 +322,6 @@ void gcPerdioRootsImpl()
     OT->gcOwnerTableRoots();
     BT->gcBorrowTableRoots();
     gcGlobalWatcher();
-    flowControler->gcEntries();
     gcDeferEvents();
     SendJobb* tmp=sendJobbLast;
     while(tmp){
@@ -507,7 +505,7 @@ inline BorrowEntry* maybeReceiveAtBorrow(DSite* mS,int OTI){
   return NULL;
 }
 
-void msgReceived(MsgContainer* msgC)
+void msgReceived(MsgContainer* msgC,DSite *sender)
 {
   Assert(oz_onToplevel());
 
@@ -515,6 +513,8 @@ void msgReceived(MsgContainer* msgC)
   MessageType mt = msgC->getMessageType();
 
   PD((MSG_RECEIVED,"msg type %d",mt));
+  //  if (mt != M_PING)
+  //  printf("msg received %d pid:%d\n ",mt,myDSite->getTimeStamp()->pid);
   switch (mt) {
   case M_PORT_SEND:
     {
@@ -533,17 +533,16 @@ void msgReceived(MsgContainer* msgC)
   case M_UPDATE_REFERENCE:
     {
       int index;
-      DSite *site;
-      msgC->get_M_UPDATE_REFERENCE(index,site);
+      msgC->get_M_UPDATE_REFERENCE(index);
       OwnerEntry *oe=receiveAtOwner(index);
       if (oe)
-          oe->updateReference(site);
+        oe->updateReference(sender);
       else
         {
           // If the owner entry does not exist the entity
           // has been reclaimed. A stub entry will now be created and
           // sent back instead.
-          MsgContainer *msgC = msgContainerManager->newMsgContainer(site);
+          MsgContainer *msgC = msgContainerManager->newMsgContainer(sender);
           msgC->put_M_BORROW_REF(createFailedEntity(index,FALSE));
           send(msgC);
         }
@@ -573,16 +572,15 @@ void msgReceived(MsgContainer* msgC)
   case M_REGISTER:
     {
       int OTI;
-      DSite* rsite;
-      msgC->get_M_REGISTER(OTI,rsite);
-      PD((MSG_RECEIVED,"REGISTER index:%d site:%s",OTI,rsite->stringrep()));
+      msgC->get_M_REGISTER(OTI);
+      PD((MSG_RECEIVED,"REGISTER index:%d site:%s",OTI,sender->stringrep()));
       OwnerEntry *oe=receiveAtOwner(OTI);
       if (oe)
         {
           if (oe->isVar()) {
-            (GET_VAR(oe,Manager))->registerSite(rsite);
+            (GET_VAR(oe,Manager))->registerSite(sender);
           } else {
-            sendRedirect(rsite,(int)oe,oe->getRef());
+            sendRedirect(sender,(int)oe,oe->getRef());
           }
         }
       break;
@@ -591,17 +589,16 @@ void msgReceived(MsgContainer* msgC)
   case M_DEREGISTER:
     {
       int OTI;
-      DSite* rsite;
-      msgC->get_M_REGISTER(OTI,rsite);
-      PD((MSG_RECEIVED,"REGISTER index:%d site:%s",OTI,rsite->stringrep()));
+      msgC->get_M_REGISTER(OTI);
+      PD((MSG_RECEIVED,"REGISTER index:%d site:%s",OTI,sender->stringrep()));
       OwnerEntry *oe=receiveAtOwner(OTI);
       if (oe)
         {
           if (oe->isVar()) {
-            (GET_VAR(oe,Manager))->deregisterSite(rsite);
+            (GET_VAR(oe,Manager))->deregisterSite(sender);
           } else {
             if(USE_ALT_VAR_PROTOCOL){
-              recDeregister(oe->getRef(),rsite);}
+              recDeregister(oe->getRef(),sender);}
           }
         }
       break;
@@ -745,16 +742,15 @@ void msgReceived(MsgContainer* msgC)
   case M_SURRENDER:
     {
       int OTI;
-      DSite* rsite;
       TaggedRef v;
-      msgC->get_M_SURRENDER(OTI,rsite,v);
+      msgC->get_M_SURRENDER(OTI,v);
       PD((MSG_RECEIVED,"M_SURRENDER index:%d site:%s val%s",
-          OTI,rsite->stringrep(),toC(v)));
+          OTI,sender->stringrep(),toC(v)));
       OwnerEntry *oe = receiveAtOwner(OTI);
       if (oe){
         if (oe->isVar()) {
           PD((PD_VAR,"SURRENDER do it"));
-          GET_VAR(oe,Manager)->surrender(oe->getPtr(),v,rsite);
+          GET_VAR(oe,Manager)->surrender(oe->getPtr(),v,sender);
         } else {
           PD((PD_VAR,"SURRENDER discard"));
           PD((WEIRD,"SURRENDER discard"));
@@ -767,15 +763,14 @@ void msgReceived(MsgContainer* msgC)
 
   case M_GETSTATUS:
     {
-      DSite* site;
       int OTI;
-      msgC->get_M_GETSTATUS(site,OTI);
+      msgC->get_M_GETSTATUS(OTI);
       PD((MSG_RECEIVED,"M_GETSTATUS index:%d",OTI));
       OwnerEntry *oe = receiveAtOwner(OTI);
       if (oe)
         {
           if(oe->isVar()){
-            varGetStatus(site,OTI,oz_status(oe->getValue()));}
+            varGetStatus(sender,OTI,oz_status(oe->getValue()));}
         }
       break;
     }
@@ -799,16 +794,14 @@ void msgReceived(MsgContainer* msgC)
 
   case M_ACKNOWLEDGE:
     {
-      DSite* sd;
       int si;
-      msgC->get_M_ACKNOWLEDGE(sd,si);
-      PD((MSG_RECEIVED,"M_ACKNOWLEDGE site:%s index:%d",sd->stringrep(),si));
-      BorrowEntry *be=BT->find(si,sd);
+      msgC->get_M_ACKNOWLEDGE(si);
+      PD((MSG_RECEIVED,"M_ACKNOWLEDGE site:%s index:%d",sender->stringrep(),si));
+      BorrowEntry *be=BT->find(si,sender);
       if (be) {
         Assert(be->isVar());
         GET_VAR(be,Proxy)->acknowledge(be->getPtr(), be);
       }
-
       break;
     }
   case M_CELL_LOCK_GET:
@@ -1176,13 +1169,7 @@ void initDPCore()
   borrowTable      = new BorrowTable(ozconf.dpTableDefaultBorrowTableSize);
   ownerTable       = new NewOwnerTable(ozconf.dpTableDefaultOwnerTableSize);
   resourceTable    = new ResourceHashTable(RESOURCE_HASH_TABLE_DEFAULT_SIZE);
-  flowControler    = new FlowControler();
   //  msgBufferManager = new MarshalerBufferManager();
-
-#ifndef DENYS_EVENTS
-  if(!am.registerTask((void*)flowControler, FlowControlCheck, FlowControlExecute))
-    OZ_error("Unable to register FlowControl task");
-#endif
 
   BI_defer = makeTaggedConst(new Builtin("", "defer", 0, 0, BIdefer, OK));
   globalWatcher = NULL;
@@ -1242,7 +1229,6 @@ DSite* getSiteFromBTI(int i){
 OZ_BI_proto(BIdp_task_tmpDown);
 OZ_BI_proto(BIdp_task_myDown);
 OZ_BI_proto(BIdp_task_probe);
-OZ_BI_proto(BIdp_task_flowControl);
 #endif
 
 extern "C"
@@ -1254,7 +1240,6 @@ extern "C"
       {"task.tmpDown",0,1,BIdp_task_tmpDown},
       {"task.myDown",0,1,BIdp_task_myDown},
       {"task.probe",0,1,BIdp_task_probe},
-      {"task.flowControl",0,1,BIdp_task_flowControl},
 #endif
       {0,0,0,0}
     };

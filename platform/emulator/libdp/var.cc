@@ -42,7 +42,6 @@
 #include "var_simple.hh"
 #include "var_future.hh"
 #include "chain.hh"
-#include "flowControl.hh"
 
 
 Bool globalRedirectFlag=AUT_REG;
@@ -153,7 +152,7 @@ static
 void sendSurrender(BorrowEntry *be,OZ_Term val){
   NetAddress *na = be->getNetAddress();
   MsgContainer *msgC = msgContainerManager->newMsgContainer(na->site, am.currentThread()->getPriority());
-  msgC->put_M_SURRENDER(na->index,myDSite,val);
+  msgC->put_M_SURRENDER(na->index,val);
   send(msgC);
 }
 
@@ -307,7 +306,7 @@ void ManagerVar::gCollectRecurseV(void)
 static void sendAcknowledge(DSite* sd,int OTI){
   PD((PD_VAR,"sendAck %s",sd->stringrep()));
   MsgContainer *msgC = msgContainerManager->newMsgContainer(sd);
-  msgC->put_M_ACKNOWLEDGE(myDSite,OT->entry2odi(OTI));
+  msgC->put_M_ACKNOWLEDGE(OT->entry2odi(OTI));
 
   send(msgC);
 }
@@ -347,18 +346,15 @@ void ManagerVar::sendRedirectToProxies(OZ_Term val, DSite* ackSite)
     if (sd==ackSite) {
       sendAcknowledge(sd,getIndex());}
     else {
-      if(!canSend(sd)){
-        flowControler->addElement(val,sd,getIndex());}
+      if(!(USE_ALT_VAR_PROTOCOL) && (pl->kind==EXP_REG || queueTrigger(sd))){
+        //NOTE globalRedirect is only important if we use the alt var
+        //NOTE protocol.
+        globalRedirectFlag=EXP_REG;
+        sendRedirect(sd,getIndex(),val);
+        globalRedirectFlag=AUT_REG;}
       else{
-        if(!(USE_ALT_VAR_PROTOCOL) && (pl->kind==EXP_REG || queueTrigger(sd))){
-          //NOTE globalRedirect is only important if we use the alt var
-          //NOTE protocol.
-          globalRedirectFlag=EXP_REG;
-          sendRedirect(sd,getIndex(),val);
-          globalRedirectFlag=AUT_REG;}
-        else{
-          Assert(pl->kind==AUT_REG);
-          sendRedirect(sd,getIndex(),val);}}}
+        Assert(pl->kind==AUT_REG);
+        sendRedirect(sd,getIndex(),val);}}
     pl=pl->dispose();
   }
   proxies = 0;
@@ -557,7 +553,7 @@ static void sendRegister(BorrowEntry *be) {
   PD((PD_VAR,"sendRegister"));
   NetAddress *na = be->getNetAddress();
   MsgContainer *msgC = msgContainerManager->newMsgContainer(na->site);
-  msgC->put_M_REGISTER(na->index,myDSite);
+  msgC->put_M_REGISTER(na->index);
   send(msgC);
 }
 
@@ -566,7 +562,7 @@ static void sendDeRegister(BorrowEntry *be) {
 
   NetAddress *na = be->getNetAddress();
   MsgContainer *msgC = msgContainerManager->newMsgContainer(na->site);
-  msgC->put_M_DEREGISTER(na->index,myDSite);
+  msgC->put_M_DEREGISTER(na->index);
   send(msgC);
 }
 
@@ -634,7 +630,7 @@ static
 void sendGetStatus(BorrowEntry *be){
   NetAddress *na = be->getNetAddress();
   MsgContainer *msgC = msgContainerManager->newMsgContainer(na->site);
-  msgC->put_M_GETSTATUS(myDSite,na->index);
+  msgC->put_M_GETSTATUS(na->index);
   send(msgC);
 }
 
