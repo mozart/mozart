@@ -8,6 +8,9 @@
   State: $State$
 
   $Log$
+  Revision 1.342  1996/07/09 05:44:36  scheidhr
+  BIwaitIdle for Christians Panel
+
   Revision 1.341  1996/07/04 12:05:58  mehl
   adding Log to the start of the file
 
@@ -995,7 +998,11 @@ void engine()
 
   /* process switch */
   if (e->threadQueueIsEmpty()) {
-    e->suspendEngine();
+    OZ_unify(VarIdle,NameUnit);  /* inform Panel */
+    if (e->threadQueueIsEmpty()) {
+      e->suspendEngine();
+      OZ_unify(VarRunning,NameUnit);
+    }
   }
 
 LBLinstallThread:
