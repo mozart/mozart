@@ -43,10 +43,12 @@ UnknownWokenThread     = 'Unknown woken thread' /* end */
 UnknownMessage         = 'Unknown message on stream' /* end */	
 UnknownTermThread      = 'Unknown terminating thread' /* end */
 
+WaitForThread          = 'waiting for thread to be added ' # /* end */
+                         'to dictionary of debugged threads...'
+
 ID                     = fun {$ I} ' (id ' # I # ')' end
 OzcarMessagePrefix     = 'Ozcar: '
 OzcarErrorPrefix       = 'Ozcar ERROR: '
-FileLineSeparator      = ' '
 
 BraceLeft              = '{'  /* } */
 BraceRight             = '}'

@@ -128,6 +128,8 @@ local
 		     background:NewColors.2)}
 	 else skip end
 	 case L \= undef then
+	    {OzcarMessage 'highlight line ' # L #
+	     ' of file ' # {StripPath self.filename}}
 	    {ForAll [tk(tag conf q(L)
 			foreground: SourceTextInvForeground
 			background: C)
