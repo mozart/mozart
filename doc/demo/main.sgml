@@ -74,6 +74,11 @@
     <Meta name="html.split"       value="chapter.jobshop">
     <Meta name="html.split"       value="chapter.college">
     <Meta name="html.split"       value="chapter.cutting">
+    <meta name="html.split"       value="code.cutting.compute">
+    <meta name="html.split"       value="code.cutting.configure">
+    <meta name="html.split"       value="code.cutting.edit">
+    <meta name="html.split"       value="code.cutting.main">
+    <meta name="html.split"       value="code.cutting.script">
 
     <Meta name="html.split"       value="chapter.trucks">
     <Meta name="html.split"       value="chapter.bounce">

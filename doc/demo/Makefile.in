@@ -1,8 +1,10 @@
 VPATH           = @srcdir@
 SRCDIR          = @srcdir@
+SRCTOP          = @SRCTOP@
 
 WHAT = demo
 MAIN = main.sgml
+PERL = perl
 
 SGMLSRCS = \
         board.sgml bounce.sgml corpus.sgml flights.sgml \
@@ -15,4 +17,22 @@ HTMLEXTRAFILES = \
 
 OZDOCHTMLFLAGS = --autoindex
 
+all:: cutting.code
+
 include ../Makefile.common
+
+SRC_CUTTING = Compute.oz Configure.oz Edit.oz Main.oz Script.oz
+
+cutting.code: Cutting $(addprefix Cutting/,$(SRC_CUTTING))
+Cutting:
+        mkdir Cutting
+Cutting/%: $(SRCTOP)/share/demo/Cutting/%
+        $(PERL) $(SRCDIR)/offwithhishead $< > $@
+
+install:: $(DOCDIR)/Cutting $(addprefix $(DOCDIR)/Cutting/,$(SRC_CUTTING))
+$(DOCDIR)/Cutting:
+        $(INSTALL_DIR) $@
+$(DOCDIR)/Cutting/%: $(SRCTOP)/share/demo/Cutting/%
+        $(INSTALL_FILE) $< $@
+clean::
+        -rm -rf Cutting
