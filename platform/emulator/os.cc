@@ -62,7 +62,7 @@ static long openMax;
 #ifdef WINDOWS
 int runningUnderNT = 0;
 
-int fileTimeToMS(FILETIME *ft);
+unsigned long fileTimeToMS(FILETIME *ft);
 int getTime();
 
 #endif
