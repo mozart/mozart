@@ -201,7 +201,7 @@ dnl ------------------------------------------------------------------
 AC_DEFUN(OZ_PROG_VERSION_CHECK,[
   AC_MSG_CHECKING([$2 version is at least $3])
   [$1]=no
-  if oz_tmp_version=`ifelse([$4],[],[$2 --version],[$4]) 2>/dev/null | tr -c 'a-zA-Z0-9._' ' '`; then
+  if oz_tmp_version=`ifelse([$4],[],[$2 --version],[$4]) 2>/dev/null | tr '\012' ' '`; then
 changequote(<,>)
     oz_tmp_version=`expr "$oz_tmp_version" : '.*version \([0-9._]*\)'`
 changequote([,])
@@ -649,9 +649,115 @@ You may find a mirror archive closer to you by consulting:
   fi
   AC_SUBST(MAKE)])
 
-dnl ==================================================================
-dnl OLD STUFF
-dnl ==================================================================
+dnl ------------------------------------------------------------------
+dnl OZ_LIB_GMP
+dnl
+dnl locates gmp.h and libgmp and checks the version number
+dnl ------------------------------------------------------------------
+
+AC_DEFUN(OZ_VERSION_GMP,[2])
+
+AC_DEFUN(OZ_LIB_GMP,[
+AC_MSG_CHECKING(for --with-gmp)
+AC_ARG_WITH(gmp,
+        [--with-gmp=<dir>   search gmp library and header in <dir> (default: yes)],
+    with_gmp=$withval,
+    with_gmp=yes)
+
+if test "$with_gmp" != no
+then
+    AC_MSG_RESULT(yes)
+
+    if test "${with_gmp}" != yes
+    then
+        oz_gmp_lib_dir=$with_gmp
+        oz_gmp_inc_dir=$with_gmp
+    fi
+
+    oz_inc_path="$oz_gmp_inc_dir $oz_inc_path"
+    oz_lib_path="$oz_gmp_lib_dir $oz_lib_path"
+
+else
+    AC_MSG_RESULT(no)
+fi
+
+OZ_CHECK_HEADER_PATH(gmp.h,
+ [oz_gmp_inc_found=yes],[oz_gmp_inc_found=no])
+
+if test "$oz_gmp_inc_found" = yes; then
+  OZ_CHECK_LIB_PATH(gmp, mpz_init,
+    [oz_gmp_lib_found=yes],[oz_gmp_lib_found=no])
+fi
+
+if test "$oz_gmp_lib_found" = yes; then
+  AC_MSG_CHECKING(gmp version is at least OZ_VERSION_GMP)
+  if test -z "$oz_cv_gmp_version_ok"; then
+    cat > conftest.$ac_ext <<EOF
+#include <gmp.h>
+TheVersion __GNU_MP_VERSION __GNU_MP_VERSION_MINOR
+EOF
+    oz_tmp=`$CXXCPP $CPPFLAGS conftest.$ac_ext | egrep TheVersion`;
+    rm -f conftest.$ac_ext 2>/dev/null
+    if oz_tmp=`expr "$oz_tmp" : 'TheVersion \(.*\)$'`; then
+      OZ_CHECK_VERSION(oz_tmp_ok,$oz_tmp,OZ_VERSION_GMP)
+      test "$oz_tmp_ok" = yes && oz_cv_gmp_version_ok=$oz_tmp_ok
+    else
+      oz_tmp_ok=no
+    fi
+    AC_MSG_RESULT($oz_tmp_ok)
+  else
+    oz_tmp_ok=$oz_cv_gmp_version_ok
+    AC_MSG_RESULT([(cached) $oz_tmp_ok])
+  fi
+  oz_gmp_version_ok=$oz_tmp_ok
+fi
+
+if test "$oz_gmp_inc_found" = no; then
+  AC_MSG_WARN([required GNU MP include file not found])
+elif test "$oz_gmp_lib_found" = no; then
+  AC_MSG_WARN([required GNU MP lib not found])
+elif test "$oz_gmp_version_ok" = no; then
+  AC_MSG_WARN([GNU MP version too old])
+fi
+
+if test "$oz_gmp_inc_found"  = no || \
+   test "$oz_gmp_lib_found"  = no || \
+   test "$oz_gmp_version_ok" = no; then
+  AC_MSG_ERROR([
+The GNU Multiple Precision Arithmetic Library (gmp)
+version] OZ_VERSION_GMP [or higher is required
+to build the system.  It can be retrieved from:
+
+        ftp://ftp.gnu.org/pub/gnu/
+
+The latest version at this time is ??? and is available
+packaged as the following archive:
+
+        ???
+
+You may find a mirror archive closer to you by consulting:
+
+        http://www.gnu.org/order/ftp.html
+])
+fi])
+
+dnl ------------------------------------------------------------------
+dnl OZ_NEEDS_FUNC(FUNCTION)
+dnl
+dnl makes sure that FUNCTION is now available, else signals an error.
+dnl ------------------------------------------------------------------
+
+AC_DEFUN(OZ_NEEDS_FUNC,[
+  AC_CHECK_FUNC([$1],[oz_tmp_ok=yes],[oz_tmp_ok=no])
+  if test "$oz_tmp_ok" = no; then
+    AC_MSG_ERROR([Function $1 is not available.
+The system cannot be built.
+])
+  fi])
+
+dnl ------------------------------------------------------------------
+dnl OZ_PATH_PROG(VAR,PROGRAM,ACTION-IF-NOT-FOUND)
+dnl ------------------------------------------------------------------
 
 AC_DEFUN(OZ_PATH_PROG, [
     dummy_PWD=`pwd | sed 's/\//\\\\\//g'`
@@ -669,7 +775,6 @@ AC_DEFUN(OZ_PATH_PROG, [
         $3
     fi
     ])
-
 
 AC_DEFUN(OZ_TRY_LINK, [
         AC_TRY_LINK(
