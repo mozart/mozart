@@ -1371,7 +1371,8 @@ void OZ_FiniteDomainImpl::printLong(ostream &stream, int idnt) const
 
 // ----------------------------------------------------
 
-// mm2!
+#ifdef DEBUG_CHECK
+
 void Board::printTree()
 {
   Board *bb = this;
@@ -1392,6 +1393,8 @@ void Board::printTree()
   bb->printStream(cout,1);
   cout << endl;
 }
+
+#endif
 
 void LocalPropagationQueue::printStream(ostream &stream, int depth)
 {

@@ -187,7 +187,7 @@ OZ_BI_define(BIfuture,1,1)
       Thread *thr = oz_newThreadInject(bb);
       thr->pushCFun(VarToFuture,args,2);
     } else { // optimize: immediately suspend thread
-      Thread *thr = oz_newThreadSuspendedInject(bb);
+      Thread *thr = oz_newThreadSuspended();
       thr->pushCFun(VarToFuture,args,2);
       OZ_Return ret = oz_var_addSusp(vPtr, thr);
       Assert(ret==SUSPEND);

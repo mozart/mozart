@@ -34,6 +34,7 @@
 #include "dpDebug.hh"
 #include "network.hh"
 #include "thr_int.hh"
+#include "thr_class.hh"
 
 //
 // This one is used by the 'Fault' library now;
