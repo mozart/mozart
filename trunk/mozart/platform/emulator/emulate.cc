@@ -1936,6 +1936,7 @@ LBLdispatcher:
 
   Case(SHALLOWTEST1)
     {
+      COUNT(inlinecalls);
       InlineRel1 rel = (InlineRel1)GetBI(PC+1)->getInlineFun();
       Assert(rel != NULL);
 
@@ -1967,6 +1968,7 @@ LBLdispatcher:
 
   Case(SHALLOWTEST2)
     {
+      COUNT(inlinecalls);
       InlineRel2 rel = (InlineRel2)GetBI(PC+1)->getInlineFun();
       Assert(rel != NULL);
       
@@ -2459,7 +2461,7 @@ LBLdispatcher:
        COUNT(nonoptbicalls);
      
        bi = (BuiltinTabEntry *) predicate;
-	   
+	
        CheckArity(bi->getArity(),makeTaggedConst(bi));
 	   
        if (e->debugmode() && e->currentThread->stepMode()) {
