@@ -241,10 +241,6 @@ void * gcReallocStatic(void * p, size_t sz) {
   return to;
 }
 
-void* gcRealloc(void * p, size_t sz) {
-  return (gcReallocStatic(p, sz));
-}
-
 #undef LD0
 #undef LD1
 #undef LD2

@@ -476,14 +476,14 @@ void gcDistCellRecurseImpl(Tertiary *t)
   case Te_Frame: {
     CellFrame *cf=(CellFrame*)t;
     CellSec *cs=cf->getCellSec();
-    cf->setCellSec((CellSec*)gcRealloc(cs,sizeof(CellSec)));
+    cf->setCellSec((CellSec*)OZ_hrealloc(cs,sizeof(CellSec)));
     cf->gcCellFrame();
     break; }
   case Te_Manager:{
     CellManager *cm=(CellManager*)t;
     CellFrame *cf=(CellFrame*)t;
     CellSec *cs=cf->getCellSec();
-    cf->setCellSec((CellSec*)gcRealloc(cs,sizeof(CellSec)));
+    cf->setCellSec((CellSec*)OZ_hrealloc(cs,sizeof(CellSec)));
     cm->gcCellManager();
     break;}
   default: {
@@ -499,14 +499,14 @@ void gcDistLockRecurseImpl(Tertiary *t)
     LockManager* lm=(LockManager*)t;
     LockFrame* lf=(LockFrame*)t;
     LockSec* ls= lf->getLockSec();
-    lf->setLockSec((LockSec*)gcRealloc(ls,sizeof(LockSec)));
+    lf->setLockSec((LockSec*)OZ_hrealloc(ls,sizeof(LockSec)));
     lm->gcLockManager();
     break;}
 
   case Te_Frame:{
     LockFrame *lf=(LockFrame*)t;
     LockSec *ls=lf->getLockSec();
-    lf->setLockSec((LockSec*)gcRealloc(ls,sizeof(LockSec)));
+    lf->setLockSec((LockSec*)OZ_hrealloc(ls,sizeof(LockSec)));
     lf->gcLockFrame();
     break;}
 
