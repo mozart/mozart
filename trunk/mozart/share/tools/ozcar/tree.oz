@@ -52,16 +52,25 @@ local
 
       attr
 	 nodes
+	 width
       
       meth init
 	 nodes <- nil
+	 width <- 0
       end
 
       meth calculatePositions
 	 {WC init}
+
 	 {self DoCalculatePositions(1 3)}  %% toplevel queries
-	 %{WC inc(_)}
 	 {self DoCalculatePositions(0 3)}  %% threads with unknown parent
+
+	 local
+	    Width = {WC get($)} - 1
+	 in
+	    {OzcarMessage 'tree width = ' # Width}
+	    width <- Width
+	 end
       end
 
       meth Nodegroup(Q $)
@@ -200,6 +209,12 @@ in
 	     end
 	     {N setTag(CT)}
 	  end}
+	 local
+	    Height = ThreadTreeStretchY * (@width + 3)
+	 in
+	    {OzcarMessage 'Tk.canvas scrollregion: _ _ _ ' # Height}
+	    {self tk(conf scrollregion:q(0 0 ThreadTreeWidth Height))}
+	 end
       end
    end
 end
