@@ -25,3 +25,11 @@ install.bin: $(BIN)
 install.sty: $(STY)
 	$(INSTALL) -m 444 ozbook.cls $(STYDIR)
 	$(INSTALL) -m 444 oz2tex.sty $(STYDIR)
+r2t.tex: r2t.nw
+	noweave -latex -x r2t.nw > r2t.tex
+r2t.dvi: r2t.tex
+	latexit r2t.tex
+test: raw2tex
+	./raw2tex <test.raw >test.tex
+	if diff test.out test.tex; then echo TEST SUCCEEDED; \
+	else echo TEST FAILED; fi
