@@ -39,6 +39,7 @@ import
    Debug(breakpoint) at 'x-oz://boot/Debug'
    Emacs(interface)
    Module(manager)
+   OPIEnv(full)
    OS(getEnv system)
    Open(socket)
    Ozcar(object)
@@ -91,6 +92,7 @@ define
 	       Socket = {New Open.socket server(port: ?Port)}
 	    end
 	    E = {New Compiler.engine init()}
+	    {E enqueue(mergeEnv(OPIEnv.full))}
 	    EMACS = case Args.emacs of unit then
 		       case {OS.getEnv 'OZEMACS'} of false then 'emacs'
 		       elseof X then X
