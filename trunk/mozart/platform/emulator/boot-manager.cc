@@ -114,6 +114,7 @@ static TaggedRef dictionary_of_modules;
 #include "modCompilerSupport-if.cc"
 #include "modBrowser-if.cc"
 #include "modDebug-if.cc"
+#include "modOsTime-if.cc"
 #include "modPID-if.cc"
 #include "modFault-if.cc"
 #include "modDPMisc-if.cc"
@@ -200,6 +201,7 @@ static ModuleEntry ext_module_table[] = {
   {"Browser",         mod_int_Browser},
   {"Tk",              mod_int_Tk},
   {"Schedule",        mod_int_Schedule},
+  {"OsTime",          mod_int_OsTime},
   {"Debug",           mod_int_Debug},
   {"DPB",             mod_int_DPB},
   {"PID",             mod_int_PID},
