@@ -52,6 +52,10 @@
     <meta name="html.split" value="applets">
     <meta name="html.split" value="chapter.src.get">
     <meta name="html.split" value="chapter.src.make">
+
+    <meta name="latex.table.spec" arg1="table.rpm.bin" arg2="@{}lp{0.6\linewidth}@{}">
+
+
     <title/Installation Manual/
     <author.extern to="author.db" key="Denys.Duchier">
     <author.extern to="author.db" key="Ralf.Scheidhauer">
