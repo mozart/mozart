@@ -211,7 +211,7 @@ OZ_BI_define(BIwaitQuiet,1,0)
   oz_declareDerefIN(0,fut);
   if (oz_isVariable(fut)) {
     if (oz_isFuture(fut)) {
-      oz_var_addSusp(futPtr, oz_currentThread());
+      ((Future*)tagged2Var(fut))->addSuspSVar(oz_currentThread());
       return (SUSPEND);
     }
     oz_suspendOnPtr(futPtr);
