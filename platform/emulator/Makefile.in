@@ -277,10 +277,16 @@ libozma.a: ozma-p.o ozma-s.o
 realclean::
 	$(RM) ozma-p.cc ozma-p.yy ozma-s.cc ozma-s.ll ozma.hh
 
-.PHONY: test test1 lib1
 
-TESTDIR=$(SRCDIR)/../test
+# testing the local emulator:
+#   make test-check       # runs the test suite with local emulator
+#   make test-local-check # ... with the local components
+#   make lib-check        # runs the check in the lib with local emulator
 
+.PHONY: test-all test lib-all check
+
+TESTDIR=$(TOPDIR)/share/test/$(TESTSUBDIR)
+LIBDIR=$(TOPDIR)/share/lib/$(LIBSUBDIR)
 test-all:
 	OZEMULATOR=`pwd`/oz.emulator.bin; export OZEMULATOR; \
 	cd $(TESTDIR) && ./configure && make clean all
@@ -296,12 +302,12 @@ lib-all:
 
 lib-%:
 	OZEMULATOR=`pwd`/oz.emulator.bin && export OZEMULATOR; \
-	cd $(SRCDIR)/../lib/$(LIBSUBDIR) && \
+	cd $(LIBDIR) && \
 	$(MAKE) `echo "$@"|sed "s/lib-//g"`
 
 test-%:
 	OZEMULATOR=`pwd`/oz.emulator.bin && export OZEMULATOR; \
-	cd $(SRCDIR)/../test/$(TESTSUBDIR) && \
+	cd $(TESTDIR) && \
 	$(MAKE) `echo "$@"|sed "s/test-//g"`
 
 check:	oz.emulator.bin
