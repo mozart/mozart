@@ -68,37 +68,37 @@ fields:
         <entry/<code/'cond'//
         <item> A list of fault conditions
         <entry/<code/entityType//
-        <item>the atom <code/'single'/ or <code/'all'/
+        <item>the atom <code/single/ or <code/all/
         <entry/<code/entity//
         <item>an arbitrary Oz-term
         <entry/<code/'thread'//
-        <item>the atom <code/'this'/ or <code/'all'/ or a first-class
+        <item>the atom <code/'this'/ or <code/all/ or a first-class
 thread
         <entry/<code/retry//
-        <item>the atom <code/'retry'/ or <code/'skip'/
+        <item>the atom <code/retry/ or <code/'skip'/
 </list>
 The <code/retry/ field may be omitted (the default is
 <code/retry:'skip'/). The entity field may be omitted if the
-<code/entityType/ is <code/'all'/.
+<code/entityType/ is <code/all/.
 <p>
-The legal fault conditions are restricted <code/topermBlocked/ and
+The legal fault conditions are restricted to <code/permBlocked/ and
 <code/tempBlocked/.
-<p>If the <code/entityType/ is <code/'single'/ then the injector is
-entity-specific. If the <code/'thread'/ field is not <code/'all'/ then
+<p>If the <code/entityType/ is <code/single/ then the injector is
+entity-specific. If the <code/'thread'/ field is not <code/all/ then
 injector is thread-specific. Currently, injectors can be in order of
 generality:
 <list>
         <item>entity and thread-specific  (<code/entityType:single/,
 <code/'thread':{'this',?={first-class thread}}/
         <item>entity-specific and thread-unspecific (<code/entityType:single/,
-<code/'thread':'all'/)
+<code/'thread':all/)
         <item>entity-unspecific and
-thread-unspecific. (<code/entityType:'all'/, <code/'thread':'all'/)
+thread-unspecific. (<code/entityType:all/, <code/'thread':all/)
 </list>
-The model is if that when threads attempt operations on distributed
-entities that is in a distribution fault state then if there is an
+The model is that when a thread attempts an operation on a distributed
+entity that is in a distribution fault state then if there is an
 applicable and triggered injector on that entity the handler
-procedurewill be invoked in that thread. The injector is applicable
+procedure will be invoked in that thread. The injector is applicable
 if:
 <list>
         <item>the entity matches (if the injector is entity-specific)
@@ -109,7 +109,7 @@ The injector is triggered if the entity currently is subject to one of
 the specified fault conditions. Upon completion of the
 handler-procedure the original operation that could not be performed
 is either repeated or skipped depending on the value of the
-<code/'retry'/ field.
+<code/retry/ field.
 <p>
 You can only install one entity and thread-unspecific injector per
 site. You can only install one entity-specific and thread-unspecific
@@ -149,8 +149,8 @@ injector invoked.
 The safe-injector specification record has almost the same fields as
 ordinary injectors. The difference is that the <code/entityType/ is not
 needed, in that this type of injector is always entity-specific (as if
-you had specified <code/'single'/). Also this type of injector is always
-thread-specific as well (so you may not use the value <code/'all'/ in the
+you had specified <code/single/). Also this type of injector is always
+thread-specific as well (so you may not use the value <code/all/ in the
 <code/'thread'/ field.
 <p>
 Safe injectors are thus always entity-specific and
@@ -199,7 +199,7 @@ The allowed fault conditions are:
 </list>
 <para><title/SiteWatchers/
 SiteWatchers provide you with information when one of the operations
-mentioned in the preceding section cannot be performed due to
+mentioned earlier cannot be performed due to
 distribution faults. The <code/blocked/ fault conditions occur when some
 thread is trying to perform an operation on the faulty entity, while
 the <code/willBlock/ conditions occur when the entity is faulty even when
@@ -224,7 +224,7 @@ Watchers are unsited and may be freely exported, and shared.
     <title/Deinstallation/
 
     <p>Deinstallation is basically the reverse of installation for all
-the distribution handlers (injectors andwatchers).
+the distribution handlers (injectors and watchers).
 <p>
 Currently you must supply the installed handler procedure in order to
 be able to  deinstall, except in the special case of the system
