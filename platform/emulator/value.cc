@@ -40,7 +40,8 @@ TaggedRef  AtomNil, AtomCons, AtomPair, AtomVoid,
   AtomPropagators, AtomRun, AtomRunnable, AtomShowSuspension, 
   AtomStopOnToplevelFailure, AtomSystem, AtomThread, 
   AtomTotal,
-  AtomThreshold, AtomTolerance, AtomUser, AtomVariables, AtomWidth, AtomHeap,
+  AtomThreshold, AtomTolerance, AtomUser, AtomVariables, AtomWidth, 
+  AtomHeap, AtomDetailed,
   RecordFailure,
   E_ERROR, E_KERNEL, E_OBJECT, E_TK, E_OS, E_SYSTEM;
 
@@ -145,6 +146,7 @@ void initLiterals()
   AtomKinded                = makeTaggedAtom("kinded");
   AtomDet                   = makeTaggedAtom("det");
   AtomRecord                = makeTaggedAtom("record");
+  AtomDetailed              = makeTaggedAtom("detailed");
   // AtomInt                   = makeTaggedAtom("int");
   
   RecordFailure = OZ_record(OZ_atom("failure"),

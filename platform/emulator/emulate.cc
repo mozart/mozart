@@ -957,7 +957,6 @@ LBLinstallThread:
       }
       CTT = 0;
 
-      //ozstat.timeForPropagation.incf(osUserTime()-starttime);
       goto LBLstart;
 
     case SCHEDULED:
@@ -968,13 +967,11 @@ LBLinstallThread:
       }
       CTT = 0;
 
-      //      ozstat.timeForPropagation.incf(osUserTime()-starttime); 
       goto LBLstart;
 
     case PROCEED:
       // Note: CTT must be reset in 'LBLkillXXX';
 
-      //ozstat.timeForPropagation.incf(osUserTime()-starttime);
       if (e->isToplevel ()) {
 	goto LBLkillToplevelThread;
       } else {
@@ -984,8 +981,6 @@ LBLinstallThread:
 
       //  Note that *propagators* never yield 'SUSPEND';
     case FAILED:
-      //ozstat.timeForPropagation.incf(osUserTime()-starttime);
-
       // propagator failure never catched
       if (!e->isToplevel()) goto LBLfailure;
 
@@ -2779,7 +2774,11 @@ LBLdispatcher:
 	
        Assert(!ltq->isEmpty());
 
-       unsigned int starttime = osUserTime();
+       unsigned int starttime = 0;
+
+       if (ozconf.timeDetailed) 
+	 starttime = osUserTime();
+
        Thread * backup_currentThread = CTT;
 
        while (!ltq->isEmpty() && e->isNotPreemptiveScheduling()) {
@@ -2796,7 +2795,8 @@ LBLdispatcher:
 	 } else if (r == FAILED) {
 	   thr->closeDonePropagator();
 	   CTT = backup_currentThread;
-	   ozstat.timeForPropagation.incf(osUserTime()-starttime);
+	   if (ozconf.timeDetailed)
+	     ozstat.timeForPropagation.incf(osUserTime()-starttime);
 	   CTS->restoreFrame(); // RS: is this needed ???
 	   // failure of propagator is never catched !
 	   goto LBLfailure; // top-level failure not possible
@@ -2807,7 +2807,8 @@ LBLdispatcher:
        } 
 	
        CTT = backup_currentThread;
-       ozstat.timeForPropagation.incf(osUserTime()-starttime);
+       if (ozconf.timeDetailed)
+	 ozstat.timeForPropagation.incf(osUserTime()-starttime);
 	
        if (ltq->isEmpty()) {
 	 sa->resetLocalThreadQueue();

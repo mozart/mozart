@@ -40,7 +40,7 @@ extern TaggedRef AtomNil, AtomCons, AtomPair, AtomVoid,
        AtomPropagators, AtomRun, AtomRunnable, AtomShowSuspension, 
        AtomStopOnToplevelFailure, AtomSystem, AtomThread, 
        AtomThreshold, AtomTolerance, AtomUser, AtomVariables, AtomWidth,
-       AtomHeap,
+       AtomHeap, AtomDetailed,
   RecordFailure,
   E_ERROR, E_KERNEL, E_OBJECT, E_TK, E_OS, E_SYSTEM
 ;

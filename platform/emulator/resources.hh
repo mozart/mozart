@@ -60,6 +60,8 @@
 #define INITIALHEAPTHRESHOLD	2048 /* kByte   */
 #define HEAPBLOCKSIZE	     1048576 /* byte    */
 
+#define TIMEDETAILED 0
+
 #define TASKFRAMESIZE   3
 
 #define RESIZESTACKMINSIZE 64 /* used for resizing a stack */
