@@ -4,7 +4,7 @@
  *    Michael Mehl (mehl@dfki.de)
  * 
  *  Contributors:
- *    optional, Contributor's name (Contributor's email address)
+ *    Denys Duchier (duchier@ps.uni-sb.de)
  * 
  *  Copyright:
  *    Organization or Person (Year(s))
@@ -102,7 +102,6 @@ void usage(int /* argc */,char **argv) {
   fprintf(stderr, " -c <compiler>: start the compiler\n");
   fprintf(stderr, " -S <fifo>    : connect to compiler via FIFO\n");
   fprintf(stderr, " -init <file> : load and execute init procedure\n");
-  fprintf(stderr, " -noinit      : don't (see above)\n");
   fprintf(stderr, " -u <url>     : start a compute server\n");
   fprintf(stderr, " -b <file>    : boot from assembly code\n");
   fprintf(stderr, " -B <dynlib>  : load ozma\n");
@@ -289,12 +288,6 @@ void AM::init(int argc,char **argv)
       initFile = getOptArg(i,argc,argv);
       continue;
     }
-
-    if (strcmp(argv[i],"-noinit")==0) {
-      initFile = 0;
-      continue;
-    }
-
     if (strcmp(argv[i],"-a")==0 ||
 	strcmp(argv[i],"--")==0) {
       ozconf.argC = argc-i-1;
@@ -330,6 +323,8 @@ void AM::init(int argc,char **argv)
 
   if (quiet == FALSE) {
     printBanner(initFile);
+  } else if (initFile && getenv("OZ_TRACE_LOAD")) {
+    fprintf(stderr,"Init file: %s\n",initFile);
   }
 
   isStandaloneF=NO;
