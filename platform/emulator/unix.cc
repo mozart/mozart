@@ -269,7 +269,7 @@ static OZ_Term openbuff2list(int len, const char *s, const OZ_Term tl) {
 
 inline OZ_Term buff2list(int len, const char *s)
 {
-  return openbuff2list(len, s, OZ_nil());
+  return openbuff2list(len, s, nil());
 }
 
 
@@ -503,10 +503,10 @@ static OZ_Term readEntries(DIR *dp) {
   OZ_Term dirEntry;
   if ((dirp = readdir(dp)) != NULL) {
     dirEntry = OZ_string(dirp->d_name);
-    return OZ_cons(dirEntry, readEntries(dp));
+    return cons(dirEntry, readEntries(dp));
   }
   else
-    return OZ_nil();
+    return nil();
 }
 
 OZ_C_proc_begin(unix_getDir,2)
@@ -554,9 +554,9 @@ OZ_C_proc_begin(unix_stat,2)
   fileSize = buf.st_size;
 
   OZ_Term pairlist=
-    OZ_cons(OZ_pairAA("type",fileType),
-            OZ_cons(OZ_pairAI("size",fileSize),
-                    OZ_nil()));
+    cons(OZ_pairAA("type",fileType),
+            cons(OZ_pairAI("size",fileSize),
+                    nil()));
   return OZ_unify(out,OZ_recordInit(OZ_atom("stat"),pairlist));
 }
 OZ_C_proc_end
@@ -781,7 +781,7 @@ OZ_C_ioproc_begin(unix_write, 3)
         return OZ_unifyInt(out, len);
       } else {
         Assert(len > ret);
-        RETURN_SUSPEND(out, OZ_int(ret), OZ_nil(), rest);
+        RETURN_SUSPEND(out, OZ_int(ret), nil(), rest);
       }
     } else {
       Assert(status == SUSPEND);
@@ -1202,7 +1202,7 @@ OZ_C_ioproc_begin(unix_send, 4)
     }
 
     if (status != SUSPEND) {
-      susp = OZ_nil();
+      susp = nil();
       rest = susp;
     }
 
@@ -1270,7 +1270,7 @@ OZ_C_ioproc_begin(unix_sendToInet, 6)
     }
 
     if (status != SUSPEND) {
-      susp = OZ_nil();
+      susp = nil();
       rest = susp;
     }
 
@@ -1326,7 +1326,7 @@ OZ_C_ioproc_begin(unix_sendToUnix, 5)
    }
 
    if (status != SUSPEND) {
-     susp = OZ_nil();
+     susp = nil();
      rest = susp;
    }
 
@@ -1632,9 +1632,9 @@ OZ_C_proc_end
 
 static OZ_Term mkAliasList(char **alias)
 {
-  OZ_Term ret = OZ_nil();
+  OZ_Term ret = nil();
   while (*alias != 0) {
-    ret = OZ_cons(OZ_string(*alias), ret);
+    ret = cons(OZ_string(*alias), ret);
     alias++;
   }
   return ret;
@@ -1642,9 +1642,9 @@ static OZ_Term mkAliasList(char **alias)
 
 static OZ_Term mkAddressList(char **lstptr)
 {
-  OZ_Term ret = OZ_nil();
+  OZ_Term ret = nil();
   while (*lstptr != NULL) {
-    ret = OZ_cons(OZ_string(inet_ntoa(**((struct in_addr **) lstptr))),
+    ret = cons(OZ_string(inet_ntoa(**((struct in_addr **) lstptr))),
                   ret);
     lstptr++;
   }
@@ -1665,7 +1665,7 @@ OZ_C_ioproc_begin(unix_getHostByName, 2)
   OZ_Term t1=OZ_pairAS("name",CHARCAST hostaddr->h_name);
   OZ_Term t2=OZ_pairA("aliases",mkAliasList(hostaddr->h_aliases));
   OZ_Term t3=OZ_pairA("addrList",mkAddressList(hostaddr->h_addr_list));
-  OZ_Term pairlist= OZ_cons(t1,OZ_cons(t2,OZ_cons(t3,OZ_nil())));
+  OZ_Term pairlist= cons(t1,cons(t2,cons(t3,nil())));
 
   return OZ_unify(out,OZ_recordInit(OZ_atom("hostent"),pairlist));
 }
@@ -1765,9 +1765,7 @@ OZ_C_ioproc_begin(unix_putEnv,2)
   int ret = putenv(buf);
   if (ret != 0) {
     delete buf;
-    return raiseUnixError(0,
-                          "Unix.putEnv failed.",
-                          "unix");
+    return raiseUnixError(0, "OS.putEnv failed.", "os");
   }
 
   return PROCEED;
@@ -1777,18 +1775,18 @@ OZ_C_proc_end
 
 OZ_Term make_time(const struct tm* tim)
 {
-  OZ_Term t1=OZ_pairAI("sec",tim->tm_sec);
-  OZ_Term t2=OZ_pairAI("min",tim->tm_min);
-  OZ_Term t3=OZ_pairAI("hour",tim->tm_hour);
-  OZ_Term t4=OZ_pairAI("mDay",tim->tm_mday);
+  OZ_Term t1=OZ_pairAI("hour",tim->tm_hour);
+  OZ_Term t2=OZ_pairAI("isDst",tim->tm_isdst);
+  OZ_Term t3=OZ_pairAI("mDay",tim->tm_mday);
+  OZ_Term t4=OZ_pairAI("min",tim->tm_min);
   OZ_Term t5=OZ_pairAI("mon",tim->tm_mon);
-  OZ_Term t6=OZ_pairAI("year",tim->tm_year);
+  OZ_Term t6=OZ_pairAI("sec",tim->tm_sec);
   OZ_Term t7=OZ_pairAI("wDay",tim->tm_wday);
   OZ_Term t8=OZ_pairAI("yDay",tim->tm_yday);
-  OZ_Term t9=OZ_pairAI("isDst",tim->tm_isdst);
+  OZ_Term t9=OZ_pairAI("year",tim->tm_year);
 
-  OZ_Term l1=OZ_cons(t6,OZ_cons(t7,OZ_cons(t8,OZ_cons(t9,OZ_nil()))));
-  OZ_Term l2=OZ_cons(t1,OZ_cons(t2,OZ_cons(t3,OZ_cons(t4,OZ_cons(t5,l1)))));
+  OZ_Term l1=cons(t6,cons(t7,cons(t8,cons(t9,nil()))));
+  OZ_Term l2=cons(t1,cons(t2,cons(t3,cons(t4,cons(t5,l1)))));
   return OZ_recordInit(OZ_atom("time"),l2);
 }
 
@@ -1874,7 +1872,7 @@ OZ_C_proc_begin(unix_random, 1)
 #if defined(SOLARIS_SPARC) || defined(SUNOS_SPARC) || defined(LINUX)
   return OZ_unifyInt(out,random());
 #else
-  return am.raise(E_SYSTEM,E_SYSTEM,"limitExternal",1,OZ_atom("Unix.random"));
+  return am.raise(E_SYSTEM,E_SYSTEM,"limitExternal",1,OZ_atom("OS.random"));
   // return OZ_unifyInt(out,rand());
 #endif
 }
@@ -1890,7 +1888,7 @@ OZ_C_proc_begin(unix_srandom, 1)
 #if defined(SOLARIS_SPARC) || defined(SUNOS_SPARC) || defined(LINUX)
   srandom((unsigned int) seed);
 #else
-  return am.raise(E_SYSTEM,E_SYSTEM,"limitExternal",1,OZ_atom("Unix.srandom"));
+  return am.raise(E_SYSTEM,E_SYSTEM,"limitExternal",1,OZ_atom("OS.srandom"));
   // srand((unsigned int) seed);
 #endif
 
