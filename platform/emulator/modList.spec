@@ -1,10 +1,8 @@
 ###
 ### Authors:
-###   Denys Duchier <duchier@ps.uni-sb.de>
 ###   Christian Schulte <schulte@dfki.de>
 ###
 ### Copyright:
-###   Denys Duchier, 1998
 ###   Christian Schulte, 1998
 ###
 ### Last change:
@@ -26,17 +24,10 @@
 
 %builtins_all =
     (
-     'is'    => { in  => ['+value'],
-		  out => ['+bool'],
-		  bi  => BIisProcedureB},
-
-     'arity' => { in  => ['+procedure'],
-		  out => ['+int'],
-		  bi  => BIprocedureArity},
-
-     'apply' => { in  => ['+procedureOrObject','+[value]'],
-		  out => [],
-		  BI  => BIapply},
+     'toRecord'	=> { in  => ['+literal','+[feature#value]'],
+		     out => ['+record'],
+		     BI  => BImakeRecord},
      
      );
 1;;
+
