@@ -576,7 +576,6 @@ define
 	    [] entry then ClassName in
 	       Out <- @Out#'<DT>'
 	       OzDocToHTML, Batch(M.1 1)
-	       Out <- @Out#'</DT>'
 	       ClassName = {FoldLTail
 			    {FoldR EntryClasses
 			     fun {$ C#T In}
@@ -587,9 +586,9 @@ define
 			    end ""}
 	       case ClassName of "" then skip
 	       else
-		  Out <- @Out#('<DD><P align=right><I>'#ClassName#
-			       '</I></P></DD>\n')
+		  Out <- @Out#'&nbsp;[<I>'#ClassName#'</I>]'
 	       end
+	       Out <- @Out#'</DT>'
 	    [] synopsis then X in
 	       Out <- @Out#'<DD><BLOCKQUOTE>\n'
 	       X = @Align
