@@ -189,7 +189,6 @@ void AM::init(int argc,char **argv)
   installingScript = FALSE;
 
   defaultExceptionHdl     = makeTaggedNULL();
-  opiCompiler             = makeTaggedNULL();
 
   preparedCalls = NULL;
 
