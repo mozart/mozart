@@ -326,7 +326,7 @@ OZ_BI_define(BIcloneSpace, 1,1) {
 
 OZ_BI_define(BIcommit1Space, 2, 0) {
   declareSpace;
-  oz_declareIntIN(1,n);
+  oz_declareSmallIntIN(1,n);
 
   if (space->isMarkedMerged())
     return oz_raise(E_ERROR,E_KERNEL,"spaceMerged",1,tagged_space);
@@ -484,7 +484,7 @@ OZ_BI_define(BIinjectSpace, 2,0)
 
 
 OZ_BI_define(BIchooseSpace, 1, 1) {
-  oz_declareIntIN(0, i);
+  oz_declareSmallIntIN(0, i);
 
   Board * bb = oz_currentBoard();
 

@@ -309,7 +309,10 @@ OZ_Return Board::merge(Board * dst, Bool isUpward) {
     }
     // Merge nonmonotonic propagators
     dst->setNonMono(dst->getNonMono()->merge(src->getNonMono()));
-
+    if (src->getDistributor()) {
+      Assert(!dst->getDistributor());
+      dst->setDistributor(src->getDistributor());
+    }
   }
 
   return ret;
