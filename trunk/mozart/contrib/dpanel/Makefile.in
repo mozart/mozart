@@ -1,0 +1,58 @@
+@SET_MAKE@
+BUILDTOP	= @BUILDTOP@
+SRCTOP		= @SRCTOP@
+PREFIX		= @prefix@
+SRCDIR          = @srcdir@
+VPATH           = @srcdir@
+PLATFORM	= @PLATFORM@
+LIB_DIR		= $(PREFIX)/contrib/tools
+HOMEURL         = @HOMEURL@
+
+OZC		= @OZC@
+OZL		= @OZL@
+
+INSTALL		= @INSTALL@
+INSTALL_DIR	= @INSTALL_DIR@
+INSTALL_LIB	= $(INSTALL) -m 444
+
+FUNCTORS	= Main.ozf Graph.ozf SiteInfo.ozf Widgets.ozf Colour.ozf GUI.ozf \
+	          TableInfo.ozf
+
+LIB_FUNCTORS	= $(addprefix $(LIB_DIR)/,$(FUNCTORS))
+
+.PHONY: all install clean veryclean distclean bootstrap depend
+
+all:		DistPanel.ozf
+install:	$(LIB_DIR) $(LIB_DIR)/DistPanel.ozf
+
+$(LIB_DIR):
+	$(INSTALL_DIR) $@
+
+$(LIB_DIR)/DistPanel.ozf : DistPanel.ozf
+	$(INSTALL_LIB) $< $@
+
+%.ozf: %.oz
+	$(OZC) -c $< -o $@
+
+DistPanel.ozf: $(FUNCTORS)
+	$(OZL) -z 9 $< -o $@
+
+clean veryclean:
+	-$(RM) *~ *.ozf
+
+distclean: veryclean
+	-$(RM) config.* Makefile
+
+include $(SRCTOP)/share/Makefile.boot
+
+bootstrap: boot-all
+
+#---------------------------------------------------------------------
+# Automatic Makefile update
+#---------------------------------------------------------------------
+
+Makefile: Makefile.in config.status
+	./config.status
+
+config.status: configure
+	./config.status --recheck
