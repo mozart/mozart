@@ -771,15 +771,93 @@
 	</List>
     <Chapter id="chapter.gdb">
       <Title/Running Mozart under gdb/
+      <Para class=apropos><Title/Developer's Section/
+	The commands and user options described in this section are
+	probably only interesting for people developing or extending
+	parts of Mozart and thus compiling their own system components.
+	They provide for testing parts of the system locally before
+	installing and for running them under the GNU Debugger gdb.
       <P>
-<!--**
- Testing Locally
- - oz-emulator, oz-components-path, oz-root-functor,
-   oz-set-other, oz-set-emulator, oz-set-components,
-   oz-other, oz-other-emulator, oz-other-components
- Running Under gdb
- - oz-gdb, oz-gdb-autostart
--->
+	For completeness and as a reference for the developers themselves,
+	they are described here nevertheless.
+      <Para class=apropos><Title/Testing Locally/
+	One part of the support is concerned with testing system components
+	locally.
+	<List>
+	  <Entry class=useroption><<oz-emulator>> (default: see below)
+	  <Item>
+	    <P.silent><!--**-->
+	      File name of the Oz Emulator binary.  This is used when running
+	      the Emulator under gdb and by the <<oz-other>> command.
+	  <Entry class=useroption><<oz-components-path>> (default: see below)
+	  <Item>
+	    <P.silent><!--**-->
+	      Search path for the Oz Components.  This is used by the
+	      <<oz-other>> command.  By default, this specifies rules to look
+	      for components in the <File/stage1/ directories under <File
+	      >~/mozart/share/lib</File> and <File>~/mozart/share/tools</File>.
+	      This is useful for first testing changes before installing the
+	      modified functors globally.
+	  <Entry class=useroption><<oz-root-functor>>
+	    (default: <<"http://www.ps.uni-sb.de/ozhome/share/OPI.ozf">>
+	  <Item>
+	    <P.silent><!--**-->
+	      Name of the root functor to load on startup.
+	  <Entry class=command><<oz-set-other SET-COMPONENTS>>
+	  <Item>
+	    <P.silent><!--**-->
+	      Interactively set the value of the environment variables
+	      <Var type=env/OZEMULATOR/ or <Var type=env/OZ_LOAD/.
+	    <P>
+	      If <<SET-COMPONENTS>> is <<nil>>, set <Var type=env/OZEMULATOR/
+	      and <<oz-emulator>> (the file name of the emulator binary, can
+	      also be done via <<oz-set-emulator>>).
+	    <P>
+	      Else, set <Var type=env/OZ_LOAD/ and <<oz-components-path>>
+	      (the components search path, can also be done via
+	      <<oz-set-components>>).
+	  <Entry class=command><<oz-set-emulator>>
+	  <Entry class=command><<oz-set-components>>
+	  <Item>
+	    <P.silent><!--**-->
+	      See <<oz-set-other>>.
+	  <Entry class=command><<oz-other SET-COMPONENTS>>
+	  <Item>
+	    <P.silent><!--**-->
+	      Toggle between global and local Oz Emulator or Oz Components.
+	      If <<SET-COMPONENTS>> is <<nil>>, toggle the emulator binary
+	      (via <<oz-other-emulator>>); else, toggle the components search
+	      path (via <<oz-other-components>>).
+	  <Entry class=command><<oz-other-emulator>>
+	  <Item>
+	    <P.silent><!--**-->
+	      Toggle between global and local Oz Emulator.  The local
+	      emulator is given by the user option <<oz-emulator>>; see
+	      <<oz-set-emulator>>.
+	  <Entry class=command><<oz-other-components>>
+	  <Item>
+	    <P.silent><!--**-->
+	      Toggle between global and local Oz Components search path.
+	      The local components are given by the user option
+	      <<oz-components-path>>; see <<oz-set-components>>.
+	</List>
+      <Para class=apropos><Title/Running under gdb/
+	The last command is for starting the Mozart Emulator under gdb.
+	<List>
+	  <Entry class=command><<oz-gdb>>
+	  <Item>
+	    <P.silent><!--**-->
+	      Toggle debugging of the Oz Emulator with gdb.  This sets
+	      some additional environment variables since the <File/oz/
+	      script has to be bypassed, and starts <<gud-mode>> with the
+	      emulator binary specified by the user option <<oz-emulator>>.
+	  <Entry class=useroption><<oz-gdb-autostart>> (default: <<t>>)
+	  <Item>
+	    <P.silent><!--**-->
+	      If non-<<nil>>, start emulator immediately when in gdb mode.
+	      Else you have the possibility to first set breakpoints and only
+	      run the emulator when you issue the <Samp/run/ command to gdb.
+	</List>
     <Chapter id="chapter.internals">
       <Title/Internal Functions/
       <P>
