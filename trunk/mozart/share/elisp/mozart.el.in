@@ -1277,7 +1277,7 @@ The first subexpression matches the file name without the extension.")
 (defconst ozm-keywords-matcher
   (concat "\\<\\("
 	  "true\\|false\\|unit" "\\|"
-	  "pos\\|pid\\|ht\\|onScalar\\|onRecord\\|gci\\|ami"
+	  "pos\\|pid\\|ht\\|onScalar\\|onRecord\\|cmi"
 	  "\\)\\>"))
 
 (defconst ozm-instr-matcher-1
@@ -1287,19 +1287,17 @@ The first subexpression matches the file name without the extension.")
     'identity
     '("move" "moveMoveXYXY" "moveMoveYXYX" "moveMoveXYYX" "moveMoveYXXY"
       "allocateL" "createVariable" "createVariableMove" "putConstant"
-      "putList" "putRecord" "setConstant" "setPredicateRef" "setValue"
+      "putList" "putRecord" "setConstant" "setProcedureRef" "setValue"
       "setVariable" "setVoid" "getNumber" "getLiteral" "getList"
       "getListValVar" "getListVarVar" "getRecord" "unifyNumber" "unifyLiteral"
       "unifyValue" "unifyVariable" "unifyValVar" "unifyVoid" "unify" "branch"
-      "callBI" "inlinePlus1?" "inlineMinus1?" "inlineDot" "inlineUparrow"
-      "inlineAt" "inlineAssign" "genCall" "call" "tailCall" "fastCall"
-      "fastTailCall" "genFastCall" "marshalledFastCall" "sendMsg"
-      "tailSendMsg" "applMeth" "tailApplMeth" "thread" "exHandler"
-      "createCond" "nextClause" "shallowGuard" "testLiteral" "testNumber"
-      "testRecord" "testList" "testBool" "testBI" "testLT" "testLE"
-      "match" "getVariable" "getVarVar" "getVoid" "lockThread" "getSelf"
-      "setSelf" "debugEntry" "debugExit" "globalVarname" "localVarname"
-      "clearY") "\\|")
+      "callBI" "inlinePlus1?" "inlineMinus1?" "inlineDot" "inlineAt"
+      "inlineAssign" "callGlobal" "callMethod" "call" "tailCall"
+      "callProcedureRef" "callConstant" "sendMsg" "tailSendMsg"
+      "exHandler" "testLiteral" "testNumber" "testRecord" "testList"
+      "testBool" "testBI" "testLT" "testLE" "match" "getVariable" "getVarVar"
+      "getVoid" "lockThread" "getSelf" "setSelf" "debugEntry" "debugExit"
+      "globalVarname" "localVarname" "clearY") "\\|")
    "\\)("))
 
 (defconst ozm-instr-matcher-2
@@ -1308,9 +1306,7 @@ The first subexpression matches the file name without the extension.")
    (mapconcat
     'identity
     '("allocateL[1-9]" "allocateL10" "deAllocateL" "deAllocateL[1-9]"
-      "deAllocateL10" "return" "popEx" "createOr" "createEnumOr"
-      "createChoice" "clause" "emptyClause" "lastClause" "shallowThen"
-      "failure" "skip" "wait" "waitTop" "ask" "profileProc")
+      "deAllocateL10" "return" "popEx" "skip" "profileProc")
     "\\|")
    "\\)$"))
 
