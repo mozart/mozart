@@ -62,12 +62,6 @@ error include resources.hh before mozart.h
 /* 1 for tcpCache, see network.cc */
 #define	MAXTASKS	        6
 
-#define NAMETRUE "true"
-#define NAMEFALSE "false"
-#define NAMEGROUPVOID "NameGroupVoid"
-#define TRUEFALSEID 0
-
-
 /* how to prefix errors/warnings, etc. for emacs */
 
 #define MSG_ERROR 17

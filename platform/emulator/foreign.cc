@@ -1170,9 +1170,8 @@ int OZ_boolToC(OZ_Term term)
  * -----------------------------------------------------------------*/
 
 /* convert a C string (char*) to an Oz string */
-OZ_Term OZ_string(OZ_CONST char *s)
-{
-  return oz_string(s);
+OZ_Term OZ_string(OZ_CONST char *s) {
+  return s ? oz_string(s,strlen(s),AtomNil) : AtomNil;
 }
 
 void string2buffer(ostream &out,OZ_Term list,int nulok)
