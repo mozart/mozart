@@ -75,8 +75,9 @@
       (see <Ptr to="section.directives.macro">).
     <P>
       Initially, the set of macro names consists of entries describing the
-      Oz version number, for instance, when running Oz&nbsp;3.0.10, all of
-      <<Oz_3>>, <<Oz_3_0>>, and <<Oz_3_0_10>> are macro names.
+      system's version number, for instance, when running Mozart&nbsp;1.1.0,
+      all of <<Mozart_1>>, <<Mozart_1_1>>, and <<Mozart_1_1_0>> are macro
+      names.
     <Para class=apropos><Title/Switches and Options/
       The compiler's behaviour is influenced by a number of boolean switches
       and non-boolean options.  While the switch settings can conveniently
