@@ -12,7 +12,7 @@ local
    Height       = 30
    Gap          = 2
    Border       = 2
-   Y0           = !Gap
+   Y0           = !Gap + 1
    Y1           = !Height
    Home         = ~10
 
@@ -120,7 +120,7 @@ in
 	       GcEnd     = CopyStart - CopyZero * Gap
 	       GcStart   = GcEnd   - GcWidth
 	       RunEnd    = GcStart   - GcZero * Gap
-	       RunStart  = !Gap
+	       RunStart  = Gap + 1
 	    in
 	       Saved <- T
 	       <<RuntimeBar tk(coords self.RunTag  RunStart  Y0 RunEnd  Y1)>>

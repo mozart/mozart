@@ -50,6 +50,7 @@ local
 	    {OR.propagation set(R.propagate)}
 	    {OR.load        set(R.load)}
 	 end
+	 touch
       end
       meth clear
 	 O  = self.options
@@ -64,6 +65,7 @@ local
 	 {OR.copy        clear}
 	 {OR.propagation clear}
 	 {OR.load        clear}
+	 touch
       end
       meth toggleInfo
 	 O = self.options
@@ -106,9 +108,11 @@ local
 	    else true
 	    end
 	 end
+	 touch
       end
       meth clear
 	 {self.options.usage.load clear}
+	 touch
       end
       meth toggleInfo
 	 O = self.options
@@ -140,6 +144,7 @@ local
 	 {OF.propc     set(F.propagators)}
 	 {OF.propi     set(F.invoked)}
 	 {OF.var       set(F.variables)}
+	 touch
       end
       meth clear
 	 O  = self.options
@@ -154,6 +159,7 @@ local
 	 {OF.propc     clear}
 	 {OF.propi     clear}
 	 {OF.var       clear}
+	 touch
       end
 
    end
@@ -177,6 +183,7 @@ local
 	 {OP.depth    set(P.depth)}
 	 {OM.gc       set(M.gc)}
 	 {OM.time     set(M.idle)}
+	 touch
       end
 
    end
@@ -683,6 +690,7 @@ in
 	 {self.threads clear}
 	 {self.memory  clear}
 	 {self.ps      clear}
+	 touch
       end
       
       meth close
