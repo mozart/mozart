@@ -320,9 +320,9 @@
       \begin{tabular*}{\fullwidth}%
 	{@{}l@{\extracolsep\fill}r@{\extracolsep{0pt}}@{}}%
 %	{%
-	{\titlefonttwo Describing the Programming Language Oz \@ozversion}\\[2mm]
-	{\titlefonttwo Implemented by DFKI Oz \@dfkiozversion}\\[2mm]
-	{\titlefonttwo Released on \@dfkiozreleasedate}\\[1cm]
+	Describing the Programming Language Oz \@ozversion\\
+	Implemented by DFKI Oz \@dfkiozversion\\
+	Released on \@dfkiozreleasedate\\[1cm]
 	Programming Systems Lab\\
 	German Research Center for Artificial Intelligence (DFKI)\\
 	Stuhlsatzenhausweg 3, D-66123 Saarbr\"ucken, Germany &
