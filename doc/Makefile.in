@@ -27,6 +27,8 @@ PREFIX          = @prefix@
 VPATH           = @srcdir@
 SHDOCDIR        = $(PREFIX)/share/doc
 DOCDIR          = $(PREFIX)/doc
+TKDOCBASE       = tcl8.0-tk8.0-man-html
+TKDOC           = $(VPATH)/$(TKDOCBASE).tar.gz
 
 INSTALL         = @INSTALL@
 INSTALL_FILE    = $(INSTALL) -m 444
@@ -43,14 +45,20 @@ EMACS           = emacs
 
 SUBDIRS         = @SUBDIRS@
 
-.PHONY: all quick bootstrap check install clean veryclean distclean depend
+.PHONY: all quick bootstrap check install clean veryclean distclean depend tkdoc
 
 all bootstrap:: $(CED)
 
 Makefile: Makefile.in config.status
         ./config.status
 
-install:: all $(SHDOCDIR) $(DOCDIR) $(DOCDIR)/index.html $(LIBFILES)
+install:: all $(SHDOCDIR) $(DOCDIR) $(DOCDIR)/index.html $(LIBFILES) tkdoc
+
+tkdoc: $(DOCDIR)
+        -rm -rf $(DOCDIR)/$(TKDOCBASE) $(DOCDIR)/tcltk
+        (cd $(DOCDIR) && \
+         gzip -dc $(TKDOC) | tar xf - && \
+         ln -s $(TKDOCBASE) tcltk)
 
 $(SHDOCDIR) $(DOCDIR):
         $(INSTALL_DIR) $@
