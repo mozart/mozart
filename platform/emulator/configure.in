@@ -540,8 +540,8 @@ fi
 
 AC_MSG_CHECKING(for --with-malloc)
 AC_ARG_WITH(malloc,
-    [--with-malloc=<dir>
-        search malloc library <dir> (default: NONE)])
+    [--with-malloc=<obj>
+        use malloc from object file <obj> (default: NONE)])
 
 if test -n "${with_malloc}"
 then
