@@ -137,7 +137,7 @@ case "$cmd" in
 
    ozemacs) exec $OZEMACS "$@" ;;
 
-   ozsa)    exec $OZEMULATOR -E "$@" ;;
+   ozsa)    exec $OZEMULATOR "$@" ;;
 
    oz-)     exec $OZILE $OZCOMPILER "$@" ;;
 
