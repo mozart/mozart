@@ -604,7 +604,9 @@ the GDB commands `cd DIR' and `directory'."
     (if (or (not file) (buffer-modified-p))
 	(oz-feed-region (point-min) (point-max))
       (oz-feed-file file))
-    (switch-to-buffer cur)))
+    (switch-to-buffer cur))
+  (if oz-lucid (setq zmacs-region-stays t)))
+
 
 
 (defun oz-feed-region (start end)
@@ -612,15 +614,16 @@ the GDB commands `cd DIR' and `directory'."
    (interactive "r")   
    (oz-hide-errors)
    (let ((contents (buffer-substring start end)))
-     (oz-send-string (concat contents "\n"))
-     ) 
-   )
+     (oz-send-string (concat contents "\n")))
+   (if oz-lucid (setq zmacs-region-stays t)))
+     
 
 (defun oz-feed-line ()
   "Consults one line."
    (interactive)
    (let* ((line (oz-line-pos)))
-     (oz-feed-region (car line) (cdr line))))
+     (oz-feed-region (car line) (cdr line)))
+   (if oz-lucid (setq zmacs-region-stays t)))
 
 (defun oz-send-string(string)
   (oz-check-running)
