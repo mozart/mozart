@@ -64,7 +64,7 @@ VSMsgChunkPoolManager::VSMsgChunkPoolManager(int chunkSizeIn,
   shmkey = vsTypeToKey(VS_MSGBUFFER_KEY);
   if ((shmid = shmget(shmkey, chunkSizeIn*chunksNumIn, IPC_CREAT)) < 0) 
     error("Virtual Sites: failed to allocate a shared memory page");
-  if ((mem = shmat(shmkey, (void *) 0, 0)) < 0) 
+  if ((mem = shmat(shmkey, (char *) 0, 0)) < 0) 
     error("Virtual Sites:: failed to attach a shared-memory page");
 
   // 
@@ -104,7 +104,7 @@ VSMsgChunkPoolManager::VSMsgChunkPoolManager(key_t shmkeyIn)
   // the page "as is";
   if ((shmid = shmget(shmkey, /* size */ 0, /* args */ 0)) < 0) 
     error("Virtual Sites: failed to get a shared memory page");
-  if ((mem = shmat(shmkey, (void *) 0, 0)) < 0) 
+  if ((mem = shmat(shmkey, (char *) 0, 0)) < 0) 
     error("Virtual Sites:: failed to attach a shared-memory page");
 
   // locations;
@@ -133,7 +133,7 @@ VSMsgChunkPoolManager::VSMsgChunkPoolManager(key_t shmkeyIn)
 //
 void VSMsgChunkPoolManager::destroy()
 {
-  if (shmdt(mem) < 0) {
+  if (shmdt((char *) mem) < 0) {
     error("Virtual Sites: can't detach the shared memory.");
   }
   DebugCode(mem = (void *) 0);

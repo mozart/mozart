@@ -33,7 +33,7 @@ VSMailboxManager::VSMailboxManager(long memSizeIn)
   shmkey = vsTypeToKey(VS_MAILBOX_KEY);
   if ((shmid = shmget(shmkey, memSizeIn, IPC_CREAT)) < 0) 
     error("Virtual Sites: failed to allocate a shared memory page");
-  if ((mem = shmat(shmkey, (void *) 0, 0)) < 0) 
+  if ((mem = shmat(shmkey, (char *) 0, 0)) < 0) 
     error("Virtual Sites:: failed to attach a shared-memory page");
 
   //
@@ -49,7 +49,7 @@ VSMailboxManager::VSMailboxManager(key_t shmkeyIn)
   //
   if ((shmid = shmget(shmkey, /* size */ 0, /* flags */0)) < 0) 
     error("Virtual Sites: failed to get the shared memory page");
-  if ((mem = shmat(shmkey, (void *) 0, 0)) < 0) 
+  if ((mem = shmat(shmkey, (char *) 0, 0)) < 0) 
     error("Virtual Sites:: failed to attach the shared-memory page");
 
   //
@@ -62,7 +62,7 @@ VSMailboxManager::VSMailboxManager(key_t shmkeyIn)
 //
 void VSMailboxManager::unmap()
 {
-  if (shmdt(mem) < 0) {
+  if (shmdt((char *) mem) < 0) {
     error("Virtual Sites: can't detach the shared memory.");
   }
   DebugCode(mbox = (VSMailbox *) 0);
