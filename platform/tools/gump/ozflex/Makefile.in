@@ -38,12 +38,14 @@ CC = $(OZTOOL) cc
 CPPFLAGS = -I. -I$(srcdir) @CPPFLAGS@
 
 .c.o:
-	$(CC) -c $(CPPFLAGS) $(CFLAGS) $<
+	$(CC) -c $(CPPFLAGS) $(CFLAGS) $< -o $@
 
 HEADERS = flexdef.h version.h
 
-SOURCES = ccl.c dfa.c ecs.c gen.c main.c misc.c nfa.c parse.c \
-	scan.c skel.c ssort.c sym.c tblcmp.c yylex.c
+PARSEC  = $(srcdir)/parse.c
+SCANC   = $(srcdir)/scan.c
+SOURCES = ccl.c dfa.c ecs.c gen.c main.c misc.c nfa.c $(PARSEC)\
+	$(SCANC) skel.c ssort.c sym.c tblcmp.c yylex.c
 OBJECTS = ccl.o dfa.o ecs.o gen.o main.o misc.o nfa.o parse.o \
 	scan.o skel.o ssort.o sym.o tblcmp.o yylex.o
 
@@ -69,26 +71,28 @@ $(FLEX): $(OBJECTS) $(FLEXLIB)
 
 .l.c:
 	@echo -- Warning $< newer than $@
+	@sleep 5
 
 .y.c:
 	@echo -- Warning $< newer than $@
+	@sleep 5
 
 
 new-parser:
 	$(YACC) -d $(srcdir)/parse.y
 	@sed '/extern char.*malloc/d' <y.tab.c >parse.tmp
-	@mv parse.tmp $(srcdir)/parse.c
+	@mv parse.tmp $(PARSEC)
 	@mv y.tab.h $(srcdir)/parse.h
 	@rm -f y.tab.c
 
-parse.h: parse.c
+parse.h: $(PARSEC)
 
 new-scanner:
-	$(FLEX_EXEC) $(FLEX_FLAGS) $(COMPRESSION) $(srcdir)/scan.l > $(srcdir)/scan.c
-	@sed s,\"$(srcdir)/scan.l\",\"scan.l\", < $(srcdir)/scan.c > scan.tmp
-	@mv scan.tmp $(srcdir)/scan.c
+	$(FLEX_EXEC) $(FLEX_FLAGS) $(COMPRESSION) $(srcdir)/scan.l > $(SCANC)
+	@sed s,\"$(srcdir)/scan.l\",\"scan.l\", < $(SCANC) > scan.tmp
+	@mv scan.tmp $(SCANC)
 
-scan.o: scan.c parse.h flexdef.h config.h
+scan.o: $(SCANC) parse.h flexdef.h config.h
 yylex.o: yylex.c parse.h flexdef.h config.h
 
 skel.c: flex.skl mkskel.sh
@@ -101,7 +105,7 @@ ecs.o: ecs.c flexdef.h config.h
 gen.o: gen.c flexdef.h config.h
 misc.o: misc.c flexdef.h config.h
 nfa.o: nfa.c flexdef.h config.h
-parse.o: parse.c flexdef.h config.h
+parse.o: $(PARSEC) flexdef.h config.h
 skel.o: skel.c flexdef.h config.h
 sym.o: sym.c flexdef.h config.h
 tblcmp.o: tblcmp.c flexdef.h config.h
