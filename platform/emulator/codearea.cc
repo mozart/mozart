@@ -242,7 +242,7 @@ TaggedRef CodeArea::getFrameVariables(ProgramCounter PC,
     for (int i=0; getOpcode(aux) == LOCALVARNAME; i++) {
       if (Y) {
         TaggedRef aux1 = getLiteralArg(aux+1);
-        if (!oz_eq(aux1, AtomEmpty) && Y[i] != makeTaggedNULL()) {
+        if (!oz_eq(aux1, AtomEmpty) && Y[i] != NameVoidRegister) {
           locals = oz_cons(OZ_mkTupleC("#", 2, aux1, Y[i]), locals);
         }
       }
