@@ -449,7 +449,12 @@ define
 	    L = {CondSelect @Target2Depends T nil}
 	    R = Makefile,get_rule(T $)
 	 in
-	    if R.tool==unit orelse {Member R.file L} then L else R.file|L end
+	    if R.tool==unit orelse {Member R.file L} then L
+	    elseif R.tool==ozg then Table={NewDictionary} in
+	       for D in L do Table.D := unit end
+	       for D in {self get_depends(R.file $)} do Table.D := unit end
+	       {Dictionary.keys Table}
+	    else R.file|L end
 	 end
       end
 
