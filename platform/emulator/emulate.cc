@@ -279,12 +279,12 @@ Bool hookCheckNeeded(AM *e)
  * in case we have call(x-N) and we have to switch process or do GC
  * we have to save as cont address Pred->getPC() and NOT PC
  */
-#define CallDoChecks(Pred,gRegs,IsEx,ContAdr,Arity)                           \
+#define CallDoChecks(Pred,gRegs,IsEx,ContAdr,Arity,CheckMode)                         \
      if (! IsEx) {                              \
        e->pushTask(CBB,ContAdr,Y,G);            \
      }                                          \
      G = gRegs;                                                               \
-     e->currentThread->checkCompMode(Pred->getCompMode()); \
+     if (CheckMode) e->currentThread->checkCompMode(Pred->getCompMode()); \
      if (emulateHook(e,Pred,Arity,X)) {                                       \
         e->pushTaskOutline(CBB,Pred->getPC(),NULL,G,X,Arity);                 \
         goto LBLschedule;                                                     \
@@ -1036,11 +1036,13 @@ void engine() {
 
   case INSTRUCTION(FASTCALL):
     {
+
       AbstractionEntry *entry = (AbstractionEntry *) getAdressArg(PC+1);
       INCFPC(2);
 
+      Assert((e->currentThread->getCompMode()&1) == entry->getAbstr()->getCompMode());
       CallDoChecks(entry->getAbstr(),entry->getGRegs(),NO,PC,
-                   entry->getAbstr()->getArity());
+                   entry->getAbstr()->getArity(),NO);
 
       Y = NULL; // allocateL(0);
       // set pc
@@ -1057,8 +1059,9 @@ void engine() {
     {
       AbstractionEntry *entry = (AbstractionEntry *) getAdressArg(PC+1);
 
+      Assert((e->currentThread->getCompMode()&1) == entry->getAbstr()->getCompMode());
       CallDoChecks(entry->getAbstr(),entry->getGRegs(),OK,PC,
-                   entry->getAbstr()->getArity());
+                   entry->getAbstr()->getArity(),NO);
 
       Y = NULL; // allocateL(0);
       // set pc
@@ -1473,7 +1476,7 @@ void engine() {
       goto bombSend;
     }
 
-    CallDoChecks(def,def->getGRegs(),isTailCall,PC,arity+3);
+    CallDoChecks(def,def->getGRegs(),isTailCall,PC,arity+3,OK);
     Y = NULL; // allocateL(0);
     JUMP(def->getPC());
 
@@ -1510,7 +1513,7 @@ void engine() {
       goto bombApply;
     }
 
-    CallDoChecks(def,def->getGRegs(),isTailCall,PC,arity);
+    CallDoChecks(def,def->getGRegs(),isTailCall,PC,arity,OK);
     Y = NULL; // allocateL(0);
     JUMP(def->getPC());
 
@@ -1585,7 +1588,7 @@ void engine() {
         Abstraction *def = (Abstraction *) predicate;
 
         CheckArity(predArity, def->getArity(), def, PC);
-        CallDoChecks(def,def->getGRegs(),isTailCall,PC,def->getArity());
+        CallDoChecks(def,def->getGRegs(),isTailCall,PC,def->getArity(),OK);
         Y = NULL; // allocateL(0);
 
         JUMP(def->getPC());
@@ -2162,7 +2165,7 @@ void engine() {
   case INSTRUCTION(ENDDEFINITION):
 
   case INSTRUCTION(SWITCHCOMPMODE):
-    // mm2: warning("switchcompmode can not be used\n");
+    e->currentThread->switchCompMode();
     DISPATCH(1);
 
   default:
