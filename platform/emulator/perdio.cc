@@ -3884,20 +3884,21 @@ OZ_Return portSend(Tertiary *p, TaggedRef msg, Thread *th) {
   MsgBuffer *bs=msgBufferManager->getMsgBuffer(site);
   b->getOneMsgCredit();
   marshal_M_PORT_SEND(bs,index,msg);
-
+  
   OZ_Term nogoods = bs->getNoGoods();
   if (!literalEq(nil(),nogoods)) {
+  /*
     int portIndex;
     OZ_Term t;
     unmarshal_M_PORT_SEND(bs,portIndex,t);
     dumpRemoteMsgBuffer(bs);
-    
+    */
     return oz_raise(E_ERROR,OZ_atom("dp"),"portSend",3,
 		    oz_atom("nogoods"),
 		    makeTaggedTert(p),
 		    nogoods);
   }
-
+  
 
   SendTo(site,bs,M_PORT_SEND,site,index);
   if(wait) 
