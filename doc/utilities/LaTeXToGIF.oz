@@ -58,19 +58,19 @@ define
             {Dictionary.get @Dict A OutFileName}
          end
       end
-      meth process(Reporter)
+      meth process(Packages Reporter)
          case @Dict of unit then skip
          else FileName File in
             {Reporter startSubPhase('converting LaTeX sections to GIF')}
             FileName = {OS.tmpnam}
             File = {New Open.file init(name: FileName
                                        flags: [write create truncate])}
-            {File write(vs: ('\\documentclass{report}\n'#
-                             '\\usepackage{wasysym}\n'#
-                             '\\usepackage{pstricks}\n'#
-                             '\\usepackage{pst-node}\n'#
-                             '\\usepackage{rotating}\n'#
-                             '\\pagestyle{empty}\n'#
+            {File write(vs: '\\documentclass{report}\n')}
+            {ForAll Packages
+             proc {$ P}
+                {File write(vs: '\\usepackage{'#P#'}\n')}
+             end}
+            {File write(vs: ('\\pagestyle{empty}\n'#
                              '\\begin{document}\n'))}
             {ForAll {Reverse @Keys}
              proc {$ X}
