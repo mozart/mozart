@@ -491,24 +491,11 @@ PRINT(Object)
   stream << ">";
 }
 
-PRINT(Builtin)
+PRINT(BuiltinTabEntry)
 {
   CHECKDEPTH;
   stream << "B:"
 	 << getPrintName() << "/" << getArity();
-}
-
-
-PRINT(BuiltinTabEntry)
-{
-  CHECKDEPTH;
-  stream << "<builtin "
-	 << getPrintName()
-	 << "/"
-	 << arity
-	 << " @"
-	 << this
-	 << ">";
 }
 
 
@@ -679,7 +666,7 @@ PRINTLONG(ConstTerm)
   case Co_Dictionary: ((OzDictionary *) this)->printLong(stream,depth,offset);break;
   case Co_Lock:       ((OzLock *) this)->printLong(stream,depth,offset);break;
   case Co_Thread:     ((Thread *) this)->printLong(stream,depth,offset);    break;
-  case Co_Builtin:    ((Builtin *) this)->printLong(stream,depth,offset);     break;
+  case Co_Builtin:    ((BuiltinTabEntry *) this)->printLong(stream,depth,offset);     break;
   default: 	      Assert(NO);
   }
 }
@@ -701,7 +688,7 @@ PRINT(ConstTerm)
   case Co_Dictionary:  ((OzDictionary *) this)->print(stream,depth,offset);break;
   case Co_Lock:        ((OzLock *) this)->print(stream,depth,offset);break;
   case Co_Thread:      ((Thread *) this)->print(stream,depth,offset);    break;
-  case Co_Builtin:     ((Builtin *) this)->print(stream,depth,offset);     break;
+  case Co_Builtin:     ((BuiltinTabEntry *) this)->print(stream,depth,offset);     break;
   default:             Assert(NO);
   }
 }
@@ -1219,13 +1206,14 @@ PRINTLONG(PrTabEntry)
 	 << indent(offset) <<  "Arity: " << arity << endl;
 }
 
-PRINTLONG(Builtin)
+PRINTLONG(BuiltinTabEntry)
 {
   CHECKDEPTHLONG;
   print(stream,depth,offset);
   stream << endl;
   stream << indent(offset) << "gRegs: -" << endl;
 }
+
 
 PRINTLONG(Cell)
 {
