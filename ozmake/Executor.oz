@@ -256,7 +256,7 @@ define
 	 end
       end
 
-      meth OZG(_) skip end
+      meth OZG(F) {self build_target(F)} end
 
       meth exec_simulated_touch(F) Executor,SimulatedTouch(F) end
 
