@@ -1702,7 +1702,9 @@ void Board::setGlobalMarks(void) {
   Board * b = this;
 
   do {
-    b = b->getParentInternal(); b->setGlobalMark();
+    b = b->getParentInternal();
+    Assert(!b->isMarkedGlobal());
+    b->setGlobalMark();
   } while (!b->isRoot());
 
 }
@@ -1717,7 +1719,9 @@ void Board::unsetGlobalMarks(void) {
   Board * b = this;
 
   do {
-    b = b->getParentInternal(); b->unsetGlobalMark();
+    b = b->getParentInternal();
+    Assert(b->isMarkedGlobal());
+    b->unsetGlobalMark();
   } while (!b->isRoot());
 
 }

@@ -453,7 +453,6 @@ void Board::checkStability(void) {
       } else {
         // don't decrement counter of parent board!
         am.trail.popMark();
-        unsetInstalled();
         am.setCurrent(getParent());
 
         int ret = oz_unify(getStatus(), genAlt(n));
@@ -466,7 +465,6 @@ void Board::checkStability(void) {
 
     // succeeded
     am.trail.popMark();
-    unsetInstalled();
     am.setCurrent(getParent());
 
     int ret = oz_unify(getStatus(), genSucceeded(getSuspCount() == 0));

@@ -265,7 +265,6 @@ void AM::init(int argc,char **argv)
   criticalFlag = NO;
 
   _rootBoard = new Board(NULL);
-  _rootBoard->setInstalled();
   _currentBoard = NULL;
   cachedStack  = NULL;
   cachedSelf   = NULL;
