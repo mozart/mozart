@@ -42,7 +42,6 @@ void sendPrimaryCredit(DSite *sd,int OTI,Credit c){
 
   MsgContainer *msgC = msgContainerManager->newMsgContainer(sd);
   msgC->put_M_OWNER_CREDIT(OTI,c);
-  printf("sendprim i:%d c:%d\n",OTI,c);
   SendTo(sd,msgC,3);
 }
 

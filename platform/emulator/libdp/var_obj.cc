@@ -88,7 +88,6 @@ void ObjectVar::sendRequest()
   MsgContainer *msgC = msgContainerManager->newMsgContainer(na->site);
   msgC->setImplicitMessageCredit(be->getOneMsgCredit());
 
-  DebugCode(printf("p-gl i:%d c:1 %d\n",be->getOTI(),be->getNetAddress()->site->getTimeStamp()->pid);)
   //
   msgC->put_M_GET_LAZY(na->index, sendClass, myDSite);
   SendTo(na->site, msgC, 3);
