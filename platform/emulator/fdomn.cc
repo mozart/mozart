@@ -1523,7 +1523,8 @@ int OZ_FiniteDomainImpl::initDescr(OZ_Term d)
 inline
 int OZ_FiniteDomainImpl::singl(void) const 
 {
-  AssertFD(size == 1);
+  if (size != 1)
+    return -1;
   return min_elem;
 }
 
