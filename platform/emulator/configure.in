@@ -180,7 +180,7 @@ if test "${GXX}" = yes; then
 #       oz_om="-fomit-frame-pointer"
     fi
     : ${oz_copt_optimize="$oz_opt $oz_om"}
-    : ${oz_copt_profile="$oz_opt -pg -fno-inline -fno-default-inline"}
+    : ${oz_copt_profile="$oz_opt -pg"}
     : ${oz_copt_debug="-g3 -DINTERFACE"}
 fi
 
@@ -487,7 +487,7 @@ case $enable_opt in
         AC_MSG_RESULT(profile (-DPROFILE_EMULATOR))
         AC_DEFINE(PROFILE_EMULATOR)
         OZ_CXX_OPTIONS($oz_copt_profile, COPT)
-        EMUFLAGS="$EMULDFLAGS $oz_lopt_profile"
+        EMULDFLAGS="$EMULDFLAGS $oz_lopt_profile"
         ;;
     rsp*)
         AC_MSG_RESULT(rsprofile (-DRS_PROFILE))
