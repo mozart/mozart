@@ -99,243 +99,86 @@ AC_SUBST(SRCS)
 AC_SUBST(WINDLLDIR)
 AC_SUBST(INSTALLWINDLLS)
 
-dnl *****************************************************************
-dnl Try to link system libraries statically
-dnl *****************************************************************
+dnl ****************************************************************
+dnl   Places where to look for configuration scripts...
+dnl ****************************************************************
 
-OZ_ENABLE(link-static,[ link system libraries statically],no,
-        AC_MSG_RESULT(yes)
-	,
-        AC_MSG_RESULT(no)
-	)
+: ${oz_tcltk_search="$prefix/lib /usr/lib /usr/local/lib /usr/pkg /usr/X11R6/lib /usr/X11/lib /opt/X11R6/lib /opt/X11/lib"}
+: ${oz_tcl_search=$oz_tcltk_search}
+: ${oz_tk_search=$oz_tcltk_search}
 
-dnl *****************************************************************
-dnl Checks for libraries.
-dnl *****************************************************************
+dnl ****************************************************************
+dnl   Look for tcl configuration script...
+dnl ****************************************************************
 
-# intl is required when linking statically
-AC_CHECK_LIB(intl, dgettext)
-
-case "$platform" in
-   irix6*) 
-	# do not try these otherwise we get lots of errors
-	;;
-
-   *)
-	AC_CHECK_LIB(nsl, gethostbyaddr)
-	AC_CHECK_LIB(socket, socket)
-	AC_CHECK_LIB(dl, dlopen)
-    ;;
-esac
-
-AC_CHECK_LIB(m, fabs)
-
-dnl *****************************************************************
-dnl FINALIZE
-dnl *****************************************************************
-
-AC_ARG_ENABLE(link-static,
-  [--enable-link-static  link libraries statically (default=no)])
-
-AC_MSG_CHECKING(whether to link libraries statically)
-
-if test "${enable_link_static}" = yes; then
-    AC_MSG_RESULT(yes)
-else
-   AC_MSG_RESULT(no)
-fi
-
-
-dnl *****************************************************************
-dnl *** X11
-dnl *****************************************************************
-
-: ${oz_x11_inc_path_extra="/usr/local/include /usr/pkg/include /usr/X11R6/include /usr/X11/include /opt/X11R6/include /opt/X11/include"}
-: ${oz_x11_lib_path_extra="/usr/local/lib /usr/pkg/lib /usr/X11R6/lib /usr/X11/lib /opt/X11/lib /opt/X11R6/lib"}
-
-AC_ARG_WITH(x11,
-    [--with-x11=<dir>
-    search x11 library and header in <dir> (default: NONE)])
-
-if test -n "${with_x11}"
-then
-    oz_x11_lib_dir=$with_x11
-    oz_x11_inc_dir=$with_x11
-fi
-
-AC_ARG_WITH(x11_lib,
-    [--with-x11-lib=<dir>
-    search x11 library in <dir> (default: /usr/local/lib)])
-
-if test -n "${with_x11_lib}"
-then
-    oz_x11_lib_dir=$with_x11_lib
-fi
-
-AC_ARG_WITH(x11_include,
-    [--with-x11-include=<dir>
-    search x11 header in <dir> (default: /usr/local/include)])
-
-if test -n "${with_x11_include}"
-then
-    oz_x11_inc_dir=$with_x11_include
-fi
-
-oz_inc_path="$oz_x11_inc_dir $oz_inc_path $oz_x11_inc_path_extra"
-oz_lib_path="$oz_x11_lib_dir $oz_lib_path $oz_x11_lib_path_extra"
-
-if test "$platform" != win32-i486
-then
-    OZ_CHECK_HEADER_PATH(X11/Xlib.h,,
-	    AC_MSG_ERROR(required X include files not found))
-
-    OZ_CHECK_LIB_PATH(X11, XOpenDisplay,,
-	    AC_MSG_ERROR(required lib X11 not found))
-fi
-
-dnl *****************************************************************
-dnl *** Tcl/Tk
-dnl *****************************************************************
-
-AC_ARG_WITH(tcltk-version,
-    [--with-tcltk-version=<version>
-     version of tcl and tk (for example 8.0, 8.3, default: 8.0)])
-
-if test -n "${with_tcltk_version}"
-then
-    oz_tcltk_version=$with_tcltk_version
-else
-    oz_tcltk_version=8.0
-fi
-
-
+AC_MSG_CHECKING(for tclConfig.sh)
 AC_ARG_WITH(tcl,
     [--with-tcl=<dir>
-    search tcl library, header, tcl-library in <dir> (default: NONE)])
+    search tclConfig.sh in <dir> (default: /usr)])
 
 if test -n "${with_tcl}"
 then
-    oz_tcl_lib_dir=$with_tcl/lib
-    oz_tcl_inc_dir=$with_tcl/include
-    oz_tcl_lib_tcl_dir=$with_tcl/lib/tcl${oz_tcltk_version}
+    oz_tcl_search=$with_tcl
 fi
 
-AC_ARG_WITH(tcl_lib,
-    [--with-tcl-lib=<dir>
-    search tcl library in <dir> (default: /usr/lib)])
+TCL_LIB_DIR=""
+for d in $oz_tcl_search ; do
+    if test -r $d/tclConfig.sh; then
+	TCL_LIB_DIR=$d
+	break
+    fi
+done
 
-if test -n "${with_tcl_lib}"
-then
-    oz_tcl_lib_dir=$with_tcl_lib
+if test -z "$TCL_LIB_DIR"; then
+   AC_MSG_ERROR(Can't find tcl. Use --with-tcl to specify the directory which contains tclConfig.sh)
 fi
 
-AC_ARG_WITH(tcl_include,
-    [--with-tcl-include=<dir>
-    search tcl header in <dir> (default: /usr/include)])
+AC_MSG_RESULT($TCL_LIB_DIR/tclConfig.sh)
 
-if test -n "${with_tcl_include}"
-then
-    oz_tcl_inc_dir=$with_tcl_include
-fi
+. $TCL_LIB_DIR/tclConfig.sh
 
-AC_MSG_CHECKING(for tcl library source)
-AC_ARG_WITH(tcl_lib_tcl,
-    [--with-tcl-lib-tcl=<dir>
-    search tcl libraries (tcl) in <dir> (default: ${oz_tcl_lib_dir:-/usr/lib}/tcl${oz_tcltk_version})])
+AC_SUBST(TCL_VERSION)
+AC_SUBST(TCL_PREFIX)
+AC_SUBST(TCL_LIBS)
+AC_SUBST(TCL_LIB_SPEC)
 
-if test -n "${with_tcl_lib_tcl}"
-then
-    oz_tcl_lib_tcl_dir=$with_tcl_lib_tcl
-fi
-
-: ${oz_tcl_lib_tcl_dir=${oz_tcl_lib_dir:-/usr/lib}/tcl${oz_tcltk_version}}
+dnl ****************************************************************
+dnl   Look for tk configuration script...
+dnl ****************************************************************
 
 
-if test "$oz_coolness" != yes && test ! -f "$oz_tcl_lib_tcl_dir/init.tcl"
-then
-    AC_MSG_ERROR("$oz_tcl_lib_tcl_dir/init.tcl" not found)
-fi
-
-AC_MSG_RESULT($oz_tcl_lib_tcl_dir)
-
-
-oz_inc_path="$oz_tcl_inc_dir $oz_inc_path"
-oz_lib_path="$oz_tcl_lib_dir $oz_lib_path"
-
-OZ_CHECK_HEADER_PATH(tcl${oz_tcltk_version}.h,
-    AC_DEFINE(HAVE_TCL8_0_H),
-    OZ_CHECK_HEADER_PATH(tcl.h,,
-	    AC_MSG_ERROR(required tcl${oz_tcltk_version}.h or tcl.h include file not found)))
-
-OZ_CHECK_LIB_PATH(tcl${oz_tcltk_version}, Tcl_Init, ,
-    OZ_CHECK_LIB_PATH(tcl, Tcl_Init, ,
-	OZ_CHECK_LIB_PATH(tcl80, Tcl_Init, ,
-	    AC_MSG_ERROR(required tcl80 or tcl library not found))))
-
-AC_SUBST(oz_tcl_lib_tcl_dir)
-
+AC_MSG_CHECKING(for tkConfig.sh)
 AC_ARG_WITH(tk,
     [--with-tk=<dir>
-    search tk library, header, tk tcl-library in <dir> (default: NONE)])
+    search tkConfig.sh in <dir> (default: /usr)])
+
 if test -n "${with_tk}"
 then
-    oz_tk_lib_dir=$with_tk/lib
-    oz_tk_inc_dir=$with_tk/include
-    oz_tk_lib_tcl_dir=$with_tk/lib/tk${oz_tcltk_version}
+    oz_tk_search=$with_tk
 fi
 
-AC_ARG_WITH(tk_lib,
-    [--with-tk-lib=<dir>
-    search tk library in <dir> (default: oz_tk_lib_dir)])
+TK_LIB_DIR=""
+for d in $oz_tk_search ; do
+    if test -r $d/tkConfig.sh; then
+	TK_LIB_DIR=$d
+	break
+    fi
+done
 
-if test -n "${with_tk_lib}"
-then
-    oz_tk_lib_dir=$with_tk_lib
+if test -z "$TK_LIB_DIR"; then
+   AC_MSG_ERROR(Can't find tk. Use --with-tk to specify the directory which contains tkConfig.sh)
 fi
 
-AC_ARG_WITH(tk_include,
-    [--with-tk-include=<dir>
-    search tk header in <dir> (default: oz_tk_inc_dir)])
+AC_MSG_RESULT($TK_LIB_DIR/tkConfig.sh)
 
-if test -n "${with_tk_include}"
-then
-    oz_tk_inc_dir=$with_tk_include
-fi
+. $TK_LIB_DIR/tkConfig.sh
 
-AC_MSG_CHECKING(for tk library source)
-AC_ARG_WITH(tk_lib_tcl,
-    [--with-tk-lib-tcl=<dir>
-    search tk libraries (tcl) in <dir> (default: ${oz_tk_lib_dir:-/usr/lib}/tk${oz_tcltk_version})])
+AC_SUBST(TK_VERSION)
+AC_SUBST(TK_PREFIX)
+AC_SUBST(TK_LIBS)
+AC_SUBST(TK_LIB_SPEC)
+AC_SUBST(TK_XINCLUDES)
 
-if test -n "${with_tk_lib_tcl}"
-then
-    oz_tk_lib_tcl_dir=$with_tk_lib_tcl
-fi
-
-: ${oz_tk_lib_tcl_dir=${oz_tk_lib_dir:-/usr/lib}/tk${oz_tcltk_version}}
-
-if test "$oz_coolness" != yes && test ! -f "$oz_tk_lib_tcl_dir/tk.tcl"
-then
-    AC_MSG_ERROR("$oz_tk_lib_tcl_dir/tk.tcl" not found)
-fi
-
-AC_MSG_RESULT($oz_tk_lib_tcl_dir)
-
-
-oz_inc_path="$oz_tk_inc_dir $oz_inc_path"
-oz_lib_path="$oz_tk_lib_dir $oz_lib_path"
-
-OZ_CHECK_HEADER_PATH(tk${oz_tcltk_version}.h,
-    AC_DEFINE(HAVE_TK8_0_H),
-    OZ_CHECK_HEADER_PATH(tk.h,,
-	    AC_MSG_ERROR(required tk${oz_tcltk_version}.h/tk.h include file not found)))
-
-OZ_CHECK_LIB_PATH(tk${oz_tcltk_version}, Tk_Init, ,
-    OZ_CHECK_LIB_PATH(tk, Tk_Init, ,
-	OZ_CHECK_LIB_PATH(tk80, Tk_Init, ,
-	    AC_MSG_ERROR(required lib "-ltk80/tk" not found))))
-
-AC_SUBST(oz_tk_lib_tcl_dir)
 
 dnl *****************************************************************
 dnl copy libs
