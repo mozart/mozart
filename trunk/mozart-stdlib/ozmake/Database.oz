@@ -108,7 +108,7 @@ define
 			  of unit#unit then eq
 			  [] unit#_    then gt
 			  [] _   #unit then lt
-			  else {Utils.versionCompare PVR VER} end
+			  else {Utils.versionCompare VER PVR} end
 		  %% make sure we actually get dates (not unit)
 		  CurDate = {Utils.dateCurrent}
 		  CurNext = {AdjoinAt CurDate sec 1+CurDate.sec}

@@ -4,6 +4,7 @@
 ** --fast is now `really' the default
 ** Renamed Makefile.oz to Makefiler.oz to avoid clash with makefile.oz on case
    insensitive systems
+** fixed bug in --install version checking
 
 * version 0.76
 ** ozmake --publish will now publish the package both under the bare filename
