@@ -211,11 +211,11 @@ OZ_Return CPIteratePropagator::propagate(void)
   int downFlag = 0;
   int disjFlag = 0;
 
+
   int kUp;
   int kDown;
   int dur0;
   int mSi;
-
 
   DECL_DYN_ARRAY(int, set0, ts);
   DECL_DYN_ARRAY(int, compSet0, ts);
@@ -349,7 +349,7 @@ cploop:
 	compSet0[compSet0Size++] = realL;
     }
 
-    if (kUp-kDown < dur0) return FAILED;
+    if (kUp-kDown < dur0) goto failure;
     
     struct Set *oset = &Sets[0];	
 //    oset ->cSi = kDown +dur0;
@@ -382,7 +382,7 @@ cploop:
 	int minL = MinMax[realL].min;
 	int newCSi = max( bset->cSi, minL+dSi);
 	if (newCSi > kUp) 
-	  return FAILED;
+	  goto failure;
 	else {
 	  struct Set *cset = &Sets[setSize];	
 	  cset->cSi = newCSi;
@@ -473,7 +473,7 @@ cploop:
 		int sext = Sets[0].ext[i];
 		int right = maxL-dur[sext];
 		if (right < 0) 
-		  return FAILED;
+		  goto failure;
 		if (MinMax[sext].max > right) {
 		  FailOnEmpty(*x[sext] <= right);
 		}
@@ -483,7 +483,7 @@ cploop:
 		int sext = Sets[i].val;
 		int right = maxL-dur[sext];
 		if (right < 0) 
-		  return FAILED;
+		  goto failure;
 		if (MinMax[sext].max > right) {
 		  FailOnEmpty(*x[sext] <= right);
 		}
@@ -560,7 +560,7 @@ cploop:
 	compSet0[compSet0Size++] = realL;
     }
 
-    if (kUp-kDown < dur0) return FAILED;
+    if (kUp-kDown < dur0) goto failure;
 
     struct Set *oset = &Sets[0];
     oset->cSi = min(kUp - dur0,minLst);
@@ -596,7 +596,7 @@ cploop:
 	  int maxL = MinMax[realL].max+durL;
 	  int newCSi = min( bset->cSi, maxL-dSi);
 	  if (newCSi < kDown) 
-	    return FAILED;
+	    goto failure;
 	  else {
 	    struct Set *cset = &Sets[setSize];	
 	    cset->cSi = newCSi;
@@ -685,7 +685,7 @@ cploop:
 	      downFlag = 1;
 	      int right = s->cSi - durL;
 	      if (right < 0)
-	        return FAILED;
+	        goto failure;
 	      FailOnEmpty(*x[l] <= right);
 
 	      int minDL = minL + durL;
@@ -933,6 +933,15 @@ int ozcdecl CompareIntervals(const void *In1, const void *In2)
   }
 }
 
+inline int EnergyFunct(int t1, int t2, int dura, int usea, int ra, int da)
+{
+  return max(0,
+	     usea*min(dura, 
+		      min(t2 - t1,
+			  min(ra + dura - t1,
+			      t2 - da + dura))));
+}
+
 int ozcdecl CompareBounds(const void *Int1, const void *Int2) {
   return *(int*)Int1 - *(int*)Int2;
 }
@@ -1066,6 +1075,7 @@ OZ_Return CPIteratePropagatorCap::propagate(void)
   int disjFlag = 0;
   int cap_flag = 0;
 
+
   int kUp;
   int kDown;
   int dur0;
@@ -1134,6 +1144,69 @@ OZ_Return CPIteratePropagatorCap::propagate(void)
       }
     }
 
+/* it is not worth the effort
+// energy from Baptistes thesis
+for (i=0; i<ts; i++) {
+  for (j=0; j<ts; j++) {
+    int ra = x[i]->getMinElem();
+    int sum1 = 0;
+    int val = x[j]->getMinElem();
+    for (int k = 0; k<ts; k++) {
+      if (i != k)
+	sum1 = sum1 + EnergyFunct(ra, val, dur[k], use[k], 
+				  x[k]->getMinElem(),
+				  x[k]->getMaxElem() + dur[k]);
+    }
+    int sum2 = sum1 + use[i] * min(dur[i], val - ra);
+    if ( capacity*(val - ra) < sum2) {
+      int up = (int) ceil( (double) sum1 / (double) capacity);
+      if (ra + up > x[i]->getMinElem()) {
+      cout << "gaga" << endl;
+	FailOnEmpty(*x[i] >= ra + up);
+      }
+    }
+    
+    sum1 = 0;
+    val = x[j]->getMaxElem() + dur[j];
+    for (int k = 0; k<ts; k++) {
+      if (i != k)
+	sum1 = sum1 + EnergyFunct(ra, val, dur[k], use[k], 
+				  x[k]->getMinElem(),
+				  x[k]->getMaxElem() + dur[k]);
+    }
+    sum2 = sum1 + use[i] * min(dur[i], val - ra);
+    if ( capacity*(val - ra) < sum2) {
+      int up = (int) ceil( (double) sum1 / (double) capacity);
+      if (ra + up > x[i]->getMinElem()) {
+      cout << "gaga" << endl;
+	FailOnEmpty(*x[i] >= ra + up);
+      }
+    }
+  }
+  
+  for (j=0; j<ts; j++) {
+    if (i != j) {
+      int leftBound = x[i]->getMinElem();
+      int rightBound = x[j]->getMaxElem()+dur[j];
+      if (rightBound >= leftBound) {
+	// test for failure; not sufficient space
+	int sum = 0;
+	for (int k = 0; k<ts; k++) {
+	  int energy = EnergyFunct(leftBound, rightBound, dur[k], use[k], 
+				   x[k]->getMinElem(),
+				   x[k]->getMaxElem() + dur[k]);
+	  sum = sum + energy;
+	}
+	if (sum > capacity * (rightBound - leftBound))
+	  goto failure;
+	
+	}
+    }
+  }
+}
+
+*/
+
 
 cploop:
 
@@ -1181,7 +1254,7 @@ cploop:
 
 
     if ((kUp-kDown)*capacity < use0) {
-      return FAILED;
+      goto failure;
     }
 
     
@@ -1211,7 +1284,7 @@ cploop:
 	int dSi = bset->dSi + dur[realL]*use[realL];
 	int minL = MinMax[realL].min;
 	if ( (kUp - minL)*capacity < dSi) {
-	  return FAILED;
+	  goto failure;
 	}
 	else {
 	  struct Set2 *cset = &Sets[setSize];	
@@ -1328,7 +1401,7 @@ cploop:
 	compSet0[compSet0Size++] = realL;
     }
     
-    if ( (kUp-kDown)*capacity < use0) return FAILED;
+    if ( (kUp-kDown)*capacity < use0) goto failure;
 
     struct Set2 *oset = &Sets[0];
     oset->dSi = use0;
@@ -1358,7 +1431,7 @@ cploop:
 	  int dSi = bset->dSi + durL*use[realL];
 	  int maxL = MinMax[realL].max+durL;
 	  if ( (maxL - kDown)*capacity < dSi)
-	    return FAILED;
+	    goto failure;
 	  else {
 	    struct Set2 *cset = &Sets[setSize];	
 	    cset->dSi = dSi;
@@ -1413,7 +1486,7 @@ cploop:
 		downFlag = 1;
 		int right = val - durL;
 		if (right < 0)
-		  return FAILED;
+		  goto failure;
 		FailOnEmpty(*x[l] <= right);
 //		MinMax[l].max = x[l]->getMaxElem();
 	      }
@@ -1520,12 +1593,6 @@ capLoop:
     Intervals[interval_nb].use = 0;
     interval_nb++;
     
-    /*
-    cout << "alt\n";
-    for(i=0;i<interval_nb;i++){
-      cout << Intervals[i].left << " " << Intervals[i].right << endl;
-    }
-    */
 
     //////////
     // sort the intervals lexicographically
@@ -1533,12 +1600,6 @@ capLoop:
     Interval * intervals = Intervals;
     qsort(intervals, interval_nb, sizeof(Interval), CompareIntervals);
 
-    /*
-    cout << "neu\n";
-    for(i=0;i<interval_nb;i++){
-      cout << Intervals[i].left << " " << Intervals[i].right << " " << Intervals[i].use << endl;
-    }
-    */
 
     //////////
     // compute the set of all bounds of intervals
@@ -1581,10 +1642,12 @@ capLoop:
 	int rightInt = Intervals[i].right;
 	if (leftInt > right_val) break;
 	if ( (left_val >= leftInt) && (right_val <= rightInt) ) {
-	  cum = cum + Intervals[i].use;
+	  cum = cum + (right_val - left_val) * Intervals[i].use;
 	}
       }
-      if (cum > capacity) return FAILED;
+      if (cum > (right_val - left_val) * capacity) {
+	goto failure;
+      }
       if (cum > 0) {
 	ExclusionIntervals[exclusion_nb].left = left_val;
 	ExclusionIntervals[exclusion_nb].right = right_val;
@@ -1615,13 +1678,14 @@ capLoop:
 	  int dur_i = dur[i];
 	  for (j=0; j<exclusion_nb; j++) {
 	    Interval Exclusion = ExclusionIntervals[j];
-	    if (Exclusion.use + use_i > capacity) {
+	    int span = Exclusion.right - Exclusion.left;
+	    if (Exclusion.use + span * use_i > span * capacity) {
 	      int left = Exclusion.left;
 	      int right = Exclusion.right;
 	      if (lst < ect) {
 		if ( (lst <= left) && (right <= ect) ) continue;
 		else {
-		  if (Exclusion.use + use_i > capacity) {
+		  if (Exclusion.use + span * use_i > span * capacity) {
 		    OZ_FiniteDomain la;
 		    la.initRange(left-dur_i+1,right-1);
 		    FailOnEmpty(*x[i] -= la);
@@ -1640,7 +1704,7 @@ capLoop:
 		}
 	      }
 	      else {
-		if (Exclusion.use + use_i > capacity) {
+		if (Exclusion.use + span * use_i > span * capacity) {
 		  OZ_FiniteDomain la;
 		  la.initRange(left-dur_i+1,right-1);
 		  FailOnEmpty(*x[i] -= la);
@@ -1741,7 +1805,7 @@ capLoop:
     if (cap_flag == 1) {
       cap_flag = 0;
       goto capLoop;
-    }
+    } 
 
       
   }
@@ -1944,11 +2008,11 @@ capLoop:
 	// really for this???
 	if (leftInt > right_val) break;
 	if ( (leftInt <= left_val) && (right_val <= rightInt) ) {
-	  cum = cum + Intervals[i].use;
+	  cum = cum + (right_val - left_val) * Intervals[i].use;
 	}
       }
-      if (cum < capacity) {
-	return FAILED;
+      if (cum < (right_val - left_val) * capacity) {
+	goto failure;
       }
       InclusionIntervals[inclusion_nb].left = left_val; 
       InclusionIntervals[inclusion_nb].right = right_val;
@@ -1966,11 +2030,12 @@ capLoop:
       int dur_i = dur[i];
       for (j=0; j<inclusion_nb; j++) {
 	Interval Inclusion = InclusionIntervals[j];
-	if (Inclusion.use - use_i < capacity) {
+	int span = Inclusion.right - Inclusion.left;
+	if (Inclusion.use - span * use_i < span * capacity) {
 	  int left = Inclusion.left;
 	  int right = Inclusion.right;
 	  if ( (mini <= left) && (right <= maxi) ) {
-	    if (Inclusion.use - use_i < capacity) {
+	    if (Inclusion.use - span * use_i < span * capacity) {
 	      if (dur_i < right - left) goto failure;
 	      OZ_FiniteDomain la;
 	      la.initRange(right-dur_i,left);
