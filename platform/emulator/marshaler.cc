@@ -488,7 +488,7 @@ void marshalClass(ObjectClass *cl, MsgBuffer *bs)
 {
   marshalDIF(bs,DIF_CLASS);
   marshalGName(cl->getGName(),bs);
-  trailCycle(cl->getRef(),bs,2);
+  trailCycle(cl->getCycleRef(),bs,2);
   marshalSRecord(cl->getFeatures(),bs);
 }
 
@@ -505,7 +505,7 @@ void marshalNoGood(TaggedRef term, MsgBuffer *bs)
 void marshalObject(Object *o, MsgBuffer *bs, GName *gnclass)
 {
   if (marshalTertiary(o,DIF_OBJECT,bs)) return;   /* ATTENTION */
-  trailCycle(o->getRef(),bs,111);
+  trailCycle(o->getCycleRef(),bs,111);
   marshalGName(gnclass,bs);
 }
 
@@ -528,7 +528,7 @@ void marshalConst(ConstTerm *t, MsgBuffer *bs)
       marshalDIF(bs,DIF_DICT);
       int size = d->getSize();
       marshalNumber(size,bs);
-      trailCycle(d->getRef(),bs,3);
+      trailCycle(d->getCycleRef(),bs,3);
       
       int i = d->getFirst();
       i = d->getNext(i);
@@ -561,7 +561,7 @@ void marshalConst(ConstTerm *t, MsgBuffer *bs)
       GName *gname=ch->getGName();
       marshalDIF(bs,DIF_CHUNK);
       marshalGName(gname,bs);
-      trailCycle(t->getRef(),bs,4);
+      trailCycle(t->getCycleRef(),bs,4);
       marshalTerm(ch->getValue(),bs);
       return;
     }
@@ -585,7 +585,7 @@ void marshalConst(ConstTerm *t, MsgBuffer *bs)
       marshalTerm(pp->getName(),bs);
       marshalNumber(pp->getArity(),bs);
       ProgramCounter pc = pp->getPC();
-      trailCycle(t->getRef(),bs,5);
+      trailCycle(t->getCycleRef(),bs,5);
       marshalClosure(pp,bs);
       PD((MARSHAL,"code begin"));
       marshalCode(pc,bs);
@@ -631,7 +631,7 @@ void marshalConst(ConstTerm *t, MsgBuffer *bs)
     goto bomb;
   }
 
-  trailCycle(t->getRef(),bs,6);
+  trailCycle(t->getCycleRef(),bs,6);
   return;
 
 bomb:
@@ -673,7 +673,7 @@ loop:
     {
       PD((MARSHAL,"literal"));
       Literal *lit = tagged2Literal(t);
-      if (checkCycle(*lit->getRef(),bs)) return;
+      if (checkCycle(*lit->getCycleRef(),bs)) return;
 
       if (lit->isAtom()) {
 	marshalDIF(bs,DIF_ATOM);
@@ -695,7 +695,7 @@ loop:
 	marshalString(lit->getPrintName(),bs);
 	PD((MARSHAL,"name: %s",lit->getPrintName()));
       }
-      trailCycle(lit->getRef(),bs,7);
+      trailCycle(lit->getCycleRef(),bs,7);
       break;
     }
 
@@ -703,12 +703,12 @@ loop:
     {
       PD((MARSHAL,"ltuple"));
       LTuple *l = tagged2LTuple(t);
-      if (checkCycle(*l->getRef(),bs)) return;
+      if (checkCycle(*l->getCycleRef(),bs)) return;
       marshalDIF(bs,DIF_LIST);
       PD((MARSHAL_CT,"tag DIF_LIST BYTES:1"));
       PD((MARSHAL,"list"));
 
-      TaggedRef *args = l->getRef();
+      TaggedRef *args = l->getCycleRef();
       if (!isRef(*args) && isAnyVar(*args)) {
 	PerdioVar *pvar = var2PerdioVar(args);
 	trailCycle(args,bs,8);
@@ -755,7 +755,7 @@ loop:
   case OZCONST:
     {
       PD((MARSHAL,"constterm"));
-      if (checkCycle(*(tagged2Const(t)->getRef()),bs))
+      if (checkCycle(*(tagged2Const(t)->getCycleRef()),bs))
 	break;
       marshalConst(tagged2Const(t),bs);
       break;
@@ -1214,7 +1214,7 @@ void marshalVariable(PerdioVar *pvar, MsgBuffer *bs)
 
   PD((MARSHAL,"var objectproxy"));
 
-  if (checkCycle(*(pvar->getObject()->getRef()),bs))
+  if (checkCycle(*(pvar->getObject()->getCycleRef()),bs))
     return;
 
   GName *classgn =  pvar->isObjectClassAvail() ?
