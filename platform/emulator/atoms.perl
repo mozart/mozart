@@ -175,6 +175,7 @@
 	  ( AtomOwner,	        "owner"),
 	  ( AtomSystem,	        "system"),
 	  ( AtomState,	        "state"),
+	  ( AtomIO,	        "io"),
 	  
 	# Types
 	  ( AtomBool,        "bool"),

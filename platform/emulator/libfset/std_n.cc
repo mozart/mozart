@@ -152,7 +152,8 @@ OZ_C_proc_begin(fsp_unionN, 2)
   OZ_EXPECT_SUSPEND(pe, 0, expectVectorFSetVarBounds, susp_count);
   OZ_EXPECT_SUSPEND(pe, 1, expectFSetVarBounds, susp_count);
   
-  if (susp_count > 1) return pe.suspend(OZ_makeSelfSuspendedThread());
+  if (susp_count > 1) 
+    return pe.suspend();
 
   return pe.impose(new FSetUnionNPropagator(OZ_args[0],
 					    OZ_args[1]));
@@ -327,7 +328,8 @@ OZ_C_proc_begin(fsp_partition, 2)
   OZ_EXPECT_SUSPEND(pe, 0, expectVectorFSetVarBounds, susp_count);
   OZ_EXPECT_SUSPEND(pe, 1, expectFSetVarBounds, susp_count);
   
-  if (susp_count > 1) return pe.suspend(OZ_makeSelfSuspendedThread());
+  if (susp_count > 1) 
+    return pe.suspend();
 
   return pe.impose(new FSetPartitionPropagator(OZ_args[0],
 					       OZ_args[1]));

@@ -756,19 +756,13 @@ OZ_expect_t OZ_Expect::expectStream(OZ_Term st)
 
 //-----------------------------------------------------------------------------
 
-OZ_Return OZ_Expect::suspend(OZ_Thread th)
+OZ_Return OZ_Expect::suspend(void)
 {
   Assert(staticSuspendVarsNumber > 0);
 
-  if (th == NULL) {
-    for (int i = staticSuspendVarsNumber; i--; )
-      am.addSuspendVarList(staticSuspendVars[i].var);
-    return SUSPEND;
-  } else {
-    for (int i = staticSuspendVarsNumber; i--; )
-      OZ_addThread (makeTaggedRef(staticSuspendVars[i].var), th);
-    return PROCEED;
-  }
+  for (int i = staticSuspendVarsNumber; i--; )
+    am.addSuspendVarList(staticSuspendVars[i].var);
+  return SUSPEND;
 }
 
 OZ_Return OZ_Expect::fail(void)

@@ -113,7 +113,8 @@ OZ_C_proc_begin(fdp_plus, 3)
   OZ_EXPECT_SUSPEND(pe, 1, expectIntVarMinMax, susp_count);
   OZ_EXPECT_SUSPEND(pe, 2, expectIntVarMinMax, susp_count);
 
-  if (susp_count > 1) return pe.suspend(OZ_makeSelfSuspendedThread());
+  if (susp_count > 1) 
+    return pe.suspend();
 
   return pe.impose(new PlusPropagator(OZ_args[0], OZ_args[1], OZ_args[2]));
 }
@@ -209,7 +210,8 @@ OZ_C_proc_begin(fdp_minus, 3)
   OZ_EXPECT_SUSPEND(pe, 1, expectIntVarMinMax, susp_count);
   OZ_EXPECT_SUSPEND(pe, 2, expectIntVarMinMax, susp_count);
 
-  if (susp_count > 1) return pe.suspend(OZ_makeSelfSuspendedThread());
+  if (susp_count > 1) 
+    return pe.suspend();
 
   return pe.impose(new PlusPropagator(OZ_args[2], OZ_args[1], OZ_args[0]));
 }
@@ -228,7 +230,8 @@ OZ_C_proc_begin(fdp_times, 3)
   OZ_EXPECT_SUSPEND(pe, 1, expectIntVarMinMax, susp_count);
   OZ_EXPECT_SUSPEND(pe, 2, expectIntVarMinMax, susp_count);
 
-  if (susp_count > 1) return pe.suspend(OZ_makeSelfSuspendedThread());
+  if (susp_count > 1) 
+    return pe.suspend();
 
   return pe.impose(new TimesPropagator(OZ_args[0], OZ_args[1], OZ_args[2]));
 }
@@ -336,10 +339,11 @@ OZ_C_proc_begin(fdp_divD, 3)
   int susp_count = 0;
 
   OZ_EXPECT_SUSPEND(pe, 0, expectIntVarMinMax, susp_count);
-  OZ_EXPECT(pe, 1, expectInt);
+  OZ_EXPECT_SUSPEND(pe, 1, expectInt,          susp_count);
   OZ_EXPECT_SUSPEND(pe, 2, expectIntVarMinMax, susp_count);
 
-  if (susp_count > 1) return pe.suspend(OZ_makeSelfSuspendedThread());
+  if (susp_count > 1) 
+    return pe.suspend();
 
   if (OZ_intToC(OZ_args[1]) == 0) return pe.fail();
 
@@ -386,10 +390,11 @@ OZ_C_proc_begin(fdp_divI, 3)
   int susp_count = 0;
 
   OZ_EXPECT_SUSPEND(pe, 0, expectIntVarMinMax, susp_count);
-  OZ_EXPECT(pe, 1, expectInt);
+  OZ_EXPECT_SUSPEND(pe, 1, expectInt,          susp_count);
   OZ_EXPECT_SUSPEND(pe, 2, expectIntVarMinMax, susp_count);
 
-  if (susp_count > 1) return pe.suspend(OZ_makeSelfSuspendedThread());
+  if (susp_count > 1) 
+    return pe.suspend();
 
   if (OZ_intToC(OZ_args[1]) == 0) return pe.fail();
 
@@ -449,10 +454,11 @@ OZ_C_proc_begin(fdp_modD, 3)
   int susp_count = 0;
 
   OZ_EXPECT_SUSPEND(pe, 0, expectIntVarMinMax, susp_count);
-  OZ_EXPECT(pe, 1, expectInt);
+  OZ_EXPECT_SUSPEND(pe, 1, expectInt,          susp_count);
   OZ_EXPECT_SUSPEND(pe, 2, expectIntVarMinMax, susp_count);
 
-  if (susp_count > 1) return pe.suspend(OZ_makeSelfSuspendedThread());
+  if (susp_count > 1) 
+    return pe.suspend();
 
   if (OZ_intToC(OZ_args[1]) == 0) return pe.fail();
 
@@ -516,10 +522,11 @@ OZ_C_proc_begin(fdp_modI, 3)
   int susp_count = 0;
 
   OZ_EXPECT_SUSPEND(pe, 0, expectIntVarMinMax, susp_count);
-  OZ_EXPECT(pe, 1, expectInt);
+  OZ_EXPECT_SUSPEND(pe, 1, expectInt,          susp_count);
   OZ_EXPECT_SUSPEND(pe, 2, expectIntVarMinMax, susp_count);
 
-  if (susp_count > 1) return pe.suspend(OZ_makeSelfSuspendedThread());
+  if (susp_count > 1) 
+    return pe.suspend();
 
   if (OZ_intToC(OZ_args[1]) == 0) return pe.fail();
 
@@ -612,7 +619,7 @@ OZ_C_proc_begin(fdp_power, 3)
   OZ_EXPECT_SUSPEND(pe, 2, expectIntVarMinMax, susp_count);
 
   if (susp_count > 1)
-    return pe.suspend(OZ_makeSelfSuspendedThread());
+    return pe.suspend();
 
   return pe.impose(new PowerPropagator(OZ_args[0], 
 				       OZ_args[2], 
@@ -751,7 +758,8 @@ OZ_C_proc_begin(fdp_plusD, 3)
   OZ_EXPECT_SUSPEND(pe, 1, expectIntVarMinMax, susp_count);
   OZ_EXPECT_SUSPEND(pe, 2, expectIntVarMinMax, susp_count);
 
-  if (susp_count > 1) return pe.suspend(OZ_makeSelfSuspendedThread());
+  if (susp_count > 1) 
+    return pe.suspend();
 
   return pe.impose(new PlusDPropagator(OZ_args[0], OZ_args[1], OZ_args[2]));
 }
@@ -813,7 +821,8 @@ OZ_C_proc_begin(fdp_minusD, 3)
   OZ_EXPECT_SUSPEND(pe, 1, expectIntVarMinMax, susp_count);
   OZ_EXPECT_SUSPEND(pe, 2, expectIntVarMinMax, susp_count);
 
-  if (susp_count > 1) return pe.suspend(OZ_makeSelfSuspendedThread());
+  if (susp_count > 1) 
+    return pe.suspend();
 
   return pe.impose(new PlusDPropagator(OZ_args[2], OZ_args[1], OZ_args[0]));
 }
@@ -832,7 +841,8 @@ OZ_C_proc_begin(fdp_timesD, 3)
   OZ_EXPECT_SUSPEND(pe, 1, expectIntVarMinMax, susp_count);
   OZ_EXPECT_SUSPEND(pe, 2, expectIntVarMinMax, susp_count);
 
-  if (susp_count > 1) return pe.suspend(OZ_makeSelfSuspendedThread());
+  if (susp_count > 1) 
+    return pe.suspend();
 
   return pe.impose(new TimesDPropagator(OZ_args[0], OZ_args[1], OZ_args[2]));
 }
