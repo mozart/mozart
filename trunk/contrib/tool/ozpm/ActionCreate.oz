@@ -29,9 +29,12 @@ define
 	       end}
        fun {$ F} F\=FILEMFTPKL andthen F\=FILEMFTTXT end}
       Info={Record.adjoinAt
-	    {Record.map
+	    {Record.mapInd
 	     {List.toRecord package {O entries($)}}
-	     List.last}
+	     fun{$ I L}
+		if {Length L}==1 andthen I\=requires then {List.last L}
+		else L end
+	     end}
 	    filelist Files}
       F
       MFTPKL={{{IN resolve(FILEMFTPKL $)} expand($)} toString($)}

@@ -1,7 +1,8 @@
 title:This is a test package
-id:mogul:/grolaux/qtk
+id:mogul:/grolaux/testpackage
 version:1.0
-file:QTk.ozf
-file:ozpm.exe
-description:Module for fast and easy GUI development in Oz
-pkg-name:QTk.pkg
+file:TestPackage
+description:Test package
+pkg-name:TestPackage.pkg
+requires:http://www.info.ucl.ac.be/people/ned/qtk/QTk.ozf
+requires:cacaboudin.ozf

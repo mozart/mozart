@@ -39,6 +39,9 @@ define
    DIRPREFIXDFT     = '~/.oz/'
    MOGUL            = 'http://www.mozart-oz.org/mogul/'
    INFO             = 'ozpm.info'
+
+   %% {Browse {Pickle.load 'http://www.mozart-oz.org/mogul/ozpm.info'}}
+   
    MOGULDB          = {ByNeed fun{$}
 				 try {Pickle.load {URL.resolve {URL.toBase Args.'mogul'} INFO}}
 				 catch _ then o(packages:nil authors:nil) end
@@ -83,6 +86,7 @@ define
 				      when(true false)))
 		'force'( single type:bool default:false)
 		'leave'( single type:bool default:false)
+		'simulate'( single type:bool default:false)
 		'update'(single type:bool default:false)
 		%%
 		%% other parameters
@@ -133,5 +137,6 @@ define
    fun{GetImage Name}
       {QTk.newImage photo(file:Name#".gif")}
    end
+
    
 end
