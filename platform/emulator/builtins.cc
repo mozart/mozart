@@ -97,6 +97,22 @@ OZ_C_proc_begin(Name,2)                                                       \
 OZ_C_proc_end
 
 
+#define DECLAREBI_USEINLINEREL3(Name,InlineName)                              \
+OZ_C_proc_begin(Name,3)                                                       \
+{                                                                             \
+  OZ_Term arg0 = OZ_getCArg(0);                                               \
+  OZ_Term arg1 = OZ_getCArg(1);                                               \
+  OZ_Term arg2 = OZ_getCArg(2);                                               \
+  OZ_Return state = InlineName(arg0,arg1,arg2);                               \
+  if (state == SUSPEND) {                                                     \
+    OZ_suspendOn3(arg0,arg1,arg2);                                            \
+  } else {                                                                    \
+    return state;                                                             \
+  }                                                                           \
+}                                                                             \
+OZ_C_proc_end
+
+
 #define DECLAREBI_USEINLINEFUN1(Name,InlineName)                              \
 OZ_C_proc_begin(Name,2)                                                       \
 {                                                                             \
@@ -2985,17 +3001,10 @@ OZ_Return arrayGetInline(TaggedRef t, TaggedRef i, TaggedRef &out)
 }
 DECLAREBI_USEINLINEFUN2(BIarrayGet,arrayGetInline)
 
-OZ_C_proc_begin(BIarrayPut,3)
+OZ_Return arrayPutInline(TaggedRef t, TaggedRef i, TaggedRef value)
 {
-  OZ_Term array = OZ_getCArg(0);
-  OZ_Term index = OZ_getCArg(1);
-  OZ_Term value = OZ_getCArg(2);
-
-  DEREF(array,_1,_2);
-  DEREF(index,_3,_4);
-  if (isAnyVar(array) || isAnyVar(index)) {
-    OZ_suspendOn2(OZ_getCArg(0),OZ_getCArg(1));
-  }
+  NONVAR( t, array, _1 );
+  NONVAR( i, index, _2 );
 
   if (!isArray(array)) {
     TypeErrorT(0,"Array");
@@ -3007,7 +3016,8 @@ OZ_C_proc_begin(BIarrayPut,3)
 
   return tagged2Array(array)->setArg(smallIntValue(index),value);
 }
-OZ_C_proc_end
+
+DECLAREBI_USEINLINEREL3(BIarrayPut,arrayPutInline)
 
 
 /* -----------------------------------------------------------------------
@@ -5149,7 +5159,7 @@ OZ_C_proc_begin(BIgetPrintName,2)
 
   case UVAR:    return OZ_unifyAtom(out, "_");
   case SVAR:
-  case CVAR:    return OZ_unify(out, VariableNamer::getName(OZ_getCArg(0)));
+  case CVAR:    return OZ_unifyAtom(out, VariableNamer::getName(OZ_getCArg(0)));
   case LITERAL: return OZ_unifyAtom(out, tagged2Literal(term)->getPrintName());
 
   default:      break;
@@ -6084,11 +6094,11 @@ BIspec allSpec[] = {
   {"pushExHdl",      1, BIpushExHdl,            0},
 
   {"Array.new",  4, BIarrayNew, 0},
-  {"Array.is",   2,BIisArray, (IFOR) isArrayInline},
-  {"Array.high", 2,BIarrayHigh, (IFOR) arrayHighInline},
-  {"Array.low",  2,BIarrayLow,  (IFOR) arrayLowInline},
-  {"Array.get",  3,BIarrayGet,  (IFOR) arrayGetInline},
-  {"Array.put",  3,BIarrayPut,  0},
+  {"Array.is",   2, BIisArray,   (IFOR) isArrayInline},
+  {"Array.high", 2, BIarrayHigh, (IFOR) arrayHighInline},
+  {"Array.low",  2, BIarrayLow,  (IFOR) arrayLowInline},
+  {"Array.get",  3, BIarrayGet,  (IFOR) arrayGetInline},
+  {"Array.put",  3, BIarrayPut,  (IFOR) arrayPutInline},
 
   {"setAbstractionTabDefaultEntry", 1, BIsetAbstractionTabDefaultEntry, 0},
 
