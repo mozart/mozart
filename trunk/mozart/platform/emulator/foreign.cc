@@ -1531,6 +1531,13 @@ OZ_Term OZ_toList(int len, OZ_Term *tuple)
   return l;
 }
 
+OZ_Term _OZ_LOC_TO_LIST(int n, OZ_Term **loc) {
+  OZ_Term l = AtomNil;
+  for (int i = n; n--; ) 
+    l = oz_cons(*loc[i], l);
+  return l;
+}
+
 /* -----------------------------------------------------------------
  * pairs
  * -----------------------------------------------------------------*/
