@@ -185,12 +185,12 @@ This section describes the search engines found in the module
 to stop their execution and various kinds of output.
 
 <para><title/Recomputation./
-Problem solvers which create a large number of variables or
-propagators or problem solvers for which the search tree is very deep
+Scripts which create a large number of variables or
+propagators or scripts for which the search tree is very deep
 might use too much memory to be feasible. The search engines described in
 this section feature support for so-called <def/
 recomputation/. Recomputation reduces the space requirements for
-these problems in that it trades space for time.
+these scripts in that it trades space for time.
 
 <p>
 Search engines that do not use recomputation, create a copy of a
@@ -225,7 +225,7 @@ other spaces are recomputed.
 
 <p>
 Recomputation can also <em/reduce/ both <em/space and time/
-requirements.  Searching a single solution of a problem solver which
+requirements.  Searching a single solution of a script which
 features a good heuristic (&ie; there are only very few failures)
 creates copies which are not used.  Recomputation avoids this, resulting
 in improvement with respect to both space and time.
@@ -325,7 +325,7 @@ no solution exists, <<nil>> is returned.
 <index/Search<and>one<and>depthP/
 <Synopsis>
 <<<
-{Search.one.depthP ?+{ProblemP} ?+{RcdI}
+{Search.one.depthP ?+{ScriptP} ?+{RcdI}
                    ??{KillP} ??{Ps}}
 >>>
 <item>
