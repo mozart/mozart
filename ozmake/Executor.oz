@@ -136,7 +136,8 @@ define
 
       meth OZL(DST SRC Options)
 	 Executor,exec_mkdir({Path.dirname DST})
-	 L1 = [SRC '-o' DST]
+	 L0 = [SRC '-o' DST]
+	 L1 = if {Member executable Options} then '-x'|L0 else L0 end
 	 L2 = if {self get_optlevel($)}==debug then '-g'|L1 else L1 end
       in
 	 {self xtrace({Utils.listToVS ozl|L2})}
