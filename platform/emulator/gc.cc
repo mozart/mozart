@@ -25,6 +25,7 @@
 #include "am.hh"
 
 #include "gc.hh"
+#include "tcl_tk.hh"
 
 #include "dllist.hh"
 
@@ -1565,6 +1566,9 @@ void AM::gc(int msgLevel)
 
   gcTagged(threadStream,threadStream);
   gcTagged(threadStreamTail,threadStreamTail);
+
+  gcTagged(tcl_lock, tcl_lock);
+  gcTagged(tcl_rets, tcl_rets);
 
   GCPROCMSG("ioNodes");
   for(int i = 0; i < osOpenMax(); i++) {
