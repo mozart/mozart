@@ -1722,7 +1722,6 @@ void xyreportError(char *kind, char *msg, const char *file,
 }
 
 static void xyerror(char *s) {
-  char *news;
   if (!strncmp(s, "parse error", 11)) {
     if (strlen(s) > 13) {
       xyreportError("parse error", s + 13, xyFileName, xylino, xycharno());

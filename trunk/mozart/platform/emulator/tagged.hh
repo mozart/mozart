@@ -894,7 +894,7 @@ Bool oz_eq(TaggedRef t1, TaggedRef t2)
 
 #else
 
-#define oz_eq(t1,t2) ((t1)==(t2))
+#define oz_eq(t1,t2) (((TaggedRef) (t1))==((TaggedRef) (t2)))
 
 #endif
 

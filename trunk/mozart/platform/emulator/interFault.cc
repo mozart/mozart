@@ -32,7 +32,6 @@
 Bool perdioInitialized=FALSE;
 
 Bool translateWatcherCond(TaggedRef tr,EntityCond &ec){
-  TaggedRef aux;
   if(tr==AtomPermFail){
     ec |= PERM_FAIL;
     return TRUE;}

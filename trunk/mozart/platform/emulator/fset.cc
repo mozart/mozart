@@ -1095,7 +1095,7 @@ FSetValue FSetValue::operator &= (const int y)
 #ifdef BIGFSET
 
   if (_normal) {
-    bool tb = testBit(_in, y);
+    int tb = testBit(_in, y);
     init(fs_empty);
     if (tb) {
       setBit(_in, y);
@@ -2476,7 +2476,6 @@ FSetConstraint FSetConstraint::operator - (void) const
     z._not_in[i] = _in[i];
   }
 #endif
- end:
   z.normalize();
   FSDEBUG(printf("op- -> "); z.DP("z"));
   return z;
@@ -2705,7 +2704,6 @@ OZ_Boolean FSetConstraint::operator <= (const FSetConstraint &y)
     _not_in[i] |= y._not_in[i];
 #endif
   _card_max = min(_card_max, y._card_max);
-end:
   OZ_Boolean retval = normalize();
   FSDEBUG(printf("result <= (%d): ", retval); DP());
   return retval;
@@ -2895,7 +2893,6 @@ FSetConstraint FSetConstraint::operator & (const FSetConstraint& y) const
   z._card_min = 0;
   z._card_max = min(_card_max, y._card_max);
 
-end:
   FSDEBUG(z.DP("z"));
   z.normalize();
   return z;
@@ -2958,7 +2955,6 @@ FSetConstraint FSetConstraint::operator | (const FSetConstraint& y) const
   z._card_min = max(_card_min, y._card_min);
   z._card_max = _card_max + y._card_max;
 
-end:
   FSDEBUG(z.DP("z"));
   z.normalize();
   return z;
@@ -3021,7 +3017,6 @@ FSetConstraint FSetConstraint::operator - (const FSetConstraint& y) const
   z._card_min = 0;
   z._card_max = _card_max;
 
-end:
   FSDEBUG(z.DP("z"));
   z.normalize();
   return z;

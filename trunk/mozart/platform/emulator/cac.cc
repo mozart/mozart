@@ -976,20 +976,20 @@ inline int isNowMarked(OZ_Term t)
   case GCTAG     : goto RETURN_YES;
   case SMALLINT  : goto RETURN_NO;
   case FSETVALUE : goto RETURN_NO;
-  case LITERAL   : DO_LITERAL:
+  case LITERAL   : 
     {
       Literal * lit = tagged2Literal(t);
       if (lit->isAtom()) return 1;
       else return ((Name*)lit)->cacIsMarked();
     }
-  case EXT       : DO_EXT: return ((*(int32*)oz_tagged2Extension(t))&1);
+  case EXT       : return ((*(int32*)oz_tagged2Extension(t))&1);
   case LTUPLE    : goto RETURN_NO;
   case SRECORD   : goto RETURN_NO;
   case OZFLOAT   : goto RETURN_NO;
-  case OZCONST   : DO_OZCONST: return (tagged2Const(t)->cacIsMarked());
+  case OZCONST   : return (tagged2Const(t)->cacIsMarked());
   case UNUSED_VAR: goto IMPOSSIBLE;
   case UVAR      : goto IMPOSSIBLE;
-  case CVAR      : DO_CVAR: return tagged2CVar(t)->cacIsMarked();
+  case CVAR      : return tagged2CVar(t)->cacIsMarked();
   default        : Assert(0);
   }
   return 0;
