@@ -292,7 +292,7 @@ a centralized object is that <<New>> is replaced by <<NewStat>>.
 This specifies the distributed semantics of the object
 independently of the object's class.
 
-<SUBSECTION ptr="making.stationary.objects"><TITLE>Making stationary objects</TITLE>
+<SUBSECTION id="making.stationary.objects"><TITLE>Making stationary objects</TITLE>
 
 <P>Stationary entities are a very important abstraction.
 Mozart provides two operations to
