@@ -93,14 +93,17 @@ GENOBJS    = Collect.ozf \
              Prepare.ozf \
              Util.ozf \
              NativeEmitter.ozf \
+             ArgumentEmitter.ozf \
              ToolKit.ozf \
              Main.ozf
 GENINSTALL = $(LIB_DIR)/Generator.ozf
 
-CSRCS    = GOZSignal.c
+CSIGSRCS = GOZSignal.c
+CSRCS    = $(CSIGSRCS) GOZArguments.c
 COBJS    = $(CSRCS:%.c=%.o)
-CCMPS    = $(CSRCS:%.c=%.so-$(PLATFORM))
-CINSTALL = $(CSRCS:%.c=$(LIB_DIR)/%.so-$(PLATFORM))
+CCMPS    = $(CSIGSRCS:%.c=%.so-$(PLATFORM))
+CINSTALL = $(CSIGSRCS:%.c=$(LIB_DIR)/%.so-$(PLATFORM))
+
 #---------------------------------------------------------------------
 # Native Wrapper
 #---------------------------------------------------------------------
@@ -143,7 +146,7 @@ WRPINSTALL = $(WRPSRCS:%.oz=$(LIB_DIR)/%.ozf)
 # Target Variables
 #---------------------------------------------------------------------
 
-TARGETS     = gtkraw.c $(PARSERCMPS) $(OZOBJS) $(CCMPS) Generator.ozf
+TARGETS     = gtkraw.c $(PARSERCMPS) $(OZOBJS) Generator.ozf
 GEN_TARGETS = $(NATCMPS) $(WRPOBJS)
 LIB_TARGETS = $(CINSTALL) $(OZINSTALL) $(WRPINSTALL) $(NATINSTALL) \
               $(GENINSTALL)
@@ -168,7 +171,8 @@ $(PARSERCMPS):%.so-$(PLATFORM): $(PARSEROBJS)
         $(OZTOOL) ld $(WINOZTOOLLDFLAGS) -o $@ $^
 
 $(CCMPS):%.so-$(PLATFORM): $(COBJS)
-        $(OZTOOL) ld $(WINOZTOOLLDFLAGS) -o $@ $^ $(NATEXTRAFLAGS)
+        $(OZTOOL) ld $(WINOZTOOLLDFLAGS) \
+        -o $@ $^ $(NATEXTRAFLAGS)
 
 $(NATCMPS):%.so-$(PLATFORM): %.o
         $(OZTOOL) ld $(WINOZTOOLLDFLAGS) -o $@ $< $(NATEXTRAFLAGS)
@@ -220,7 +224,7 @@ else
         @$(MAKE) wrapper_files
 endif
 
-wrapper_files: $(GEN_TARGETS)
+wrapper_files: $(GEN_TARGETS) $(CCMPS)
 
 #---------------------------------------------------------------------
 # Installing

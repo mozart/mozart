@@ -29,11 +29,11 @@ define
    class MyToplevel from GTK.window
       meth new
          GTK.window, new(GTK.'WINDOW_TOPLEVEL')
-         GTK.window, signalConnect('delete_event' deleteEvent _)
+         GTK.window, signalConnect('delete_event' deleteEvent nil _)
          GTK.window, setBorderWidth(10)
          GTK.window, setTitle("Hello GTK")
       end
-      meth deleteEvent(Event)
+      meth deleteEvent(Args)
          %% Caution: At this time, the underlying GTK object
          %% Caution: has been destroyed already
          %% Caution: Destruction also includes all attached child objects.
@@ -49,9 +49,9 @@ define
    class MyButton from GTK.button
       meth new
          GTK.button, newWithLabel("Hello, GTK!")
-         GTK.button, signalConnect('clicked' clickedEvent _)
+         GTK.button, signalConnect('clicked' clickedEvent nil _)
       end
-      meth clickedEvent(Event)
+      meth clickedEvent(Args)
          {System.show 'ClickedEvent occured'}
       end
    end

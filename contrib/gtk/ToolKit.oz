@@ -22,6 +22,7 @@
 functor $
 import
    NativeEmitter
+   ArgumentEmitter
 export
    'createFuncs'  : CreateFuncs
    'createFields' : CreateFields
@@ -80,6 +81,7 @@ define
                   T#funcEmitter#GtkEntries#"GtkNative.c"
                   T#funcEmitter#GtkCanvasEntries#"GtkCanvasNative.c"]
           EmitNative}
+         {ArgumentEmitter.create T}
       end
       proc {CreateFields T}
          {ForAll [T#fieldEmitter#"GdkClasses.ozp"#"GdkFieldNative.c"

@@ -261,6 +261,16 @@ define
       andthen D.1 == 'extern'
    end
 
+   fun {IsExternGtkType D Is}
+      D == 'stor_spec/decl_spec'('extern' 'GtkType') andthen {IsAtom Is}
+   end
+
+   proc {RegisterConstant Is}
+      Cs = {Dictionary.condGet Types gtk_const_kit nil}
+   in
+      {Dictionary.put Types gtk_const_kit Is|Cs}
+   end
+
    RegisterStructDef
 
    proc {CollectDecl D Is}
@@ -276,6 +286,8 @@ define
          then {RegisterStructAlias D.2 Is}
          else {RegisterPlainType D.2 Is}
          end
+      elseif {IsExternGtkType D Is}
+      then {RegisterConstant Is}
       elseif {IsExternRef D}
       then skip
       elseif {IsFunctionDef Is}

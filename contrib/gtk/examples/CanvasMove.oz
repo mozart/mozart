@@ -32,9 +32,9 @@ define
          GTK.window, new(GTK.'WINDOW_TOPLEVEL')
          GTK.window, setBorderWidth(10)
          GTK.window, setTitle("Canvas Move")
-         {self signalConnect('delete_event' deleteEvent _)}
+         {self signalConnect('delete_event' deleteEvent nil _)}
       end
-      meth deleteEvent(Event)
+      meth deleteEvent(Args)
          %% Caution: At this time, the underlying GTK object
          %% Caution: has been destroyed already
          %% Caution: Destruction also includes all attached child objects.
@@ -95,8 +95,8 @@ define
          ButtonY = {Cell.new 0.0}
          Pressed = {Cell.new false}
       in
-         proc {$ Event}
-            case {GDK.getEvent Event}
+         proc {$ Args}
+            case Args.1
             of 'GDK_BUTTON_PRESS'(button:Button x:X y:Y ...) then
                case Button
                of 1 then
@@ -124,7 +124,7 @@ define
          end
       end
    end
-   {RectItem signalConnect('event' {MakeRectEvent RectItem} _)}
+   {RectItem signalConnect('event' {MakeRectEvent RectItem} [gdk_event] _)}
 
    %% Make it all visible
    {Toplevel showAll}

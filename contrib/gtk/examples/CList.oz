@@ -50,7 +50,7 @@ define
          LObj = {New MyList new}
       in
          GTK.window, new(GTK.'WINDOW_TOPLEVEL')
-         GTK.window, signalConnect('delete_event' deleteEvent _)
+         GTK.window, signalConnect('delete_event' deleteEvent nil _)
          GTK.window, setBorderWidth(10)
          GTK.window, setTitle("CList Test")
 
@@ -58,7 +58,7 @@ define
          GTK.window, showAll
          {System.show {LObj getPos(0 0 $)}}
       end
-      meth deleteEvent(Event)
+      meth deleteEvent(Args)
          %% Caution: At this time, the underlying GTK object
          %% Caution: has been destroyed already
          %% Caution: Destruction also includes all attached child objects.
