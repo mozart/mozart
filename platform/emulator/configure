@@ -12,19 +12,19 @@ ac_help=
 ac_default_prefix=/usr/local
 # Any additions from configure.in:
 ac_help="$ac_help
---enable-lstatic   linux static linking"
+--enable-lstatic   linux static linking (default=yes)"
 ac_help="$ac_help
 --enable-ozma      add assembler (default=no)"
 ac_help="$ac_help
 --enable-opt       optimize [y|n|d[ebug]|p[rofile]] (default=yes)"
 ac_help="$ac_help
---enable-threaded  threaded code emulator (default=yes)"
+  --enable-threaded  threaded code emulator (default=yes)"
 ac_help="$ac_help
---enable-fastreg   fast register access (default=yes)"
+  --enable-fastreg   fast register access (default=yes)"
 ac_help="$ac_help
---enable-regopt    register optimization (default=yes)"
+  --enable-regopt    register optimization (default=yes)"
 ac_help="$ac_help
---with-pgcc	   use pgcc compiler (if available)"
+  --with-pgcc	     use pgcc compiler (if available)"
 ac_help="$ac_help
 --enable-linkprop  link propagators statically (default=yes)"
 ac_help="$ac_help
@@ -2706,10 +2706,7 @@ if test "${enable_opt+set}" = set; then
 fi
 
 case $enable_opt in
-    n*)
-        echo "$ac_t""no" 1>&6
-    ;;
-    d*)
+    n*|d*)
         echo "$ac_t""debug" 1>&6
 	cat >> confdefs.h <<\EOF
 #define DEBUG_EMULATOR 1
@@ -2745,7 +2742,7 @@ EOF
 		;;
 	esac
 	echo $ac_n "checking for   --enable-threaded""... $ac_c" 1>&6
-echo "configure:2749: checking for   --enable-threaded" >&5
+echo "configure:2746: checking for   --enable-threaded" >&5
 	# Check whether --enable-threaded or --disable-threaded was given.
 if test "${enable_threaded+set}" = set; then
   enableval="$enable_threaded"
@@ -2763,7 +2760,7 @@ EOF
 	fi
 	
 	echo $ac_n "checking for   --enable-fastreg""... $ac_c" 1>&6
-echo "configure:2767: checking for   --enable-fastreg" >&5
+echo "configure:2764: checking for   --enable-fastreg" >&5
 	# Check whether --enable-fastreg or --disable-fastreg was given.
 if test "${enable_fastreg+set}" = set; then
   enableval="$enable_fastreg"
@@ -2780,7 +2777,7 @@ EOF
 		echo "$ac_t""no" 1>&6
 	fi
 	echo $ac_n "checking for   --enable-regopt""... $ac_c" 1>&6
-echo "configure:2784: checking for   --enable-regopt" >&5
+echo "configure:2781: checking for   --enable-regopt" >&5
 	# Check whether --enable-regopt or --disable-regopt was given.
 if test "${enable_regopt+set}" = set; then
   enableval="$enable_regopt"
@@ -2801,7 +2798,7 @@ EOF
 	then
 	  if test -n "$PGXX"; then
 	    echo $ac_n "checking for   --with-pgcc""... $ac_c" 1>&6
-echo "configure:2805: checking for   --with-pgcc" >&5
+echo "configure:2802: checking for   --with-pgcc" >&5
 	    # Check whether --with-pgcc or --without-pgcc was given.
 if test "${with_pgcc+set}" = set; then
   withval="$with_pgcc"
@@ -2825,7 +2822,7 @@ esac
 
 
 echo $ac_n "checking for --enable-linkprop""... $ac_c" 1>&6
-echo "configure:2829: checking for --enable-linkprop" >&5
+echo "configure:2826: checking for --enable-linkprop" >&5
 # Check whether --enable-linkprop or --disable-linkprop was given.
 if test "${enable_linkprop+set}" = set; then
   enableval="$enable_linkprop"
@@ -2845,7 +2842,7 @@ EOF
 fi
 
 echo $ac_n "checking for --enable-peanuts""... $ac_c" 1>&6
-echo "configure:2849: checking for --enable-peanuts" >&5
+echo "configure:2846: checking for --enable-peanuts" >&5
 # Check whether --enable-peanuts or --disable-peanuts was given.
 if test "${enable_peanuts+set}" = set; then
   enableval="$enable_peanuts"
@@ -2868,7 +2865,7 @@ case $host_os in
 	if test -r $psdir/lib/linux-i486/gmalloc.o
 	then
 	    echo $ac_n "checking for --enable-lmalloc""... $ac_c" 1>&6
-echo "configure:2872: checking for --enable-lmalloc" >&5
+echo "configure:2869: checking for --enable-lmalloc" >&5
 	    # Check whether --enable-lmalloc or --disable-lmalloc was given.
 if test "${enable_lmalloc+set}" = set; then
   enableval="$enable_lmalloc"
