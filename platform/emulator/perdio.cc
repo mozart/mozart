@@ -122,6 +122,35 @@ BorrowTable *borrowTable;
 OwnerTable *ownerTable;
 OZ_Term loadHook;
 static FatInt *idCounter;
+
+class SendRecvCounter {
+private:
+  long c[2];
+public:
+  SendRecvCounter() { c[0]=0; c[1]=0; }
+  void send() { c[0]++; }
+  long getSend() { return c[0]; }
+  void recv() { c[1]++; }
+  long getRecv() { return c[1]; }
+};
+
+enum {
+  MISC_STRING,
+  MISC_GNAME,
+  MISC_SITE,
+
+  MISC_LAST
+};
+
+char *misc_names[MISC_LAST] = {
+  "string",
+  "gname",
+  "site"
+};
+
+SendRecvCounter misc_counter[MISC_LAST];
+
+
 // refTable
 // ozport
 // refTrail
@@ -225,7 +254,33 @@ enum MessageType {
   M_LOCK_SENT,          // NA*
   M_LOCK_FORWARD,       // NA* SITE
   M_LOCK_DUMP,          // OTI* SITE
+  M_LAST
 };
+
+SendRecvCounter mess_counter[M_LAST];
+char *mess_names[M_LAST] = {
+  "port_send",
+  "remote_send",
+  "ask_for_credit",
+  "owner_credit",
+  "borrow_credit",
+  "register",
+  "redirect",
+  "acknowledge",
+  "surrender",
+  "cell_get",
+  "cell_contents",
+  "cell_read",
+  "cell_remoteread",
+  "cell_forward",
+  "cell_dump",
+  "lock_get",
+  "lock_sent",
+  "lock_forward",
+  "lock_dump"
+};
+
+void marshallMess(ByteStream *bs, MessageType tag);
 
 /*
  *    NA      :=   SITE OTI
@@ -262,7 +317,39 @@ typedef enum {
   DIF_PROC,             // NA NAME ARITY globals code
   DIF_CLASS,        // NA NAME obj class
   DIF_URL,              // gname url
+  DIF_ARRAY,
+  DIF_LAST
 } MarshallTag;
+
+SendRecvCounter dif_counter[DIF_LAST];
+
+char *dif_names[DIF_LAST] = {
+  "smallint",
+  "bigint",
+  "float",
+  "atom",
+  "name",
+  "uniquename",
+  "record",
+  "tuple",
+  "list",
+  "ref",
+  "owner",
+  "port",
+  "cell",
+  "lock",
+  "var",
+  "builtin",
+  "dict",
+  "object",
+  "thread",
+  "space",
+  "chunk",
+  "proc",
+  "class",
+  "url",
+  "array",
+};
 
 
 /**********************************************************************/
@@ -1366,7 +1453,7 @@ void BorrowEntry::moreCredit(){
     return;
   }
   ByteStream *bs= bufferManager->getByteStreamMarshal();
-  bs->put(M_ASK_FOR_CREDIT);
+  marshallMess(bs,M_ASK_FOR_CREDIT);
   NetAddress *na = getNetAddress();
   Site* site = na->site;
   int index = na->index;
@@ -1380,7 +1467,7 @@ void BorrowEntry::moreCredit(){
 
 void sendRegister(BorrowEntry *be) {
   ByteStream *bs= bufferManager->getByteStreamMarshal();
-  bs->put(M_REGISTER);
+  marshallMess(bs,M_REGISTER);
   NetAddress *na = be->getNetAddress();
   Site* site = na->site;
   int index = na->index;
@@ -2470,6 +2557,7 @@ double unmarshallFloat(ByteStream *bs)
 inline
 char *unmarshallString(ByteStream *bs)
 {
+  misc_counter[MISC_STRING].recv();
   int i = unmarshallNumber(bs);
 
   char *ret = new char[i+1];  /* TODO: ask Ralf */
@@ -2485,6 +2573,7 @@ char *unmarshallString(ByteStream *bs)
 inline
 void marshallString(char *s, ByteStream *bs)
 {
+  misc_counter[MISC_STRING].send();
   marshallNumber(strlen(s),bs);
   PD((MARSHALL_CT,"String BYTES:%d",strlen(s)));
   while(*s) {
@@ -2494,6 +2583,7 @@ void marshallString(char *s, ByteStream *bs)
 
 void marshallGName(GName *gname, ByteStream *bs)
 {
+  misc_counter[MISC_GNAME].send();
   PD((MARSHALL,"gname: s:%s", gname->site.print()));
   marshallNumber(gname->site.ip,bs);
   marshallShort(gname->site.port,bs);
@@ -2520,6 +2610,7 @@ void unmarshallGName1(GName *gname, ByteStream *bs)
 
 GName *unmarshallGName(TaggedRef *ret, ByteStream *bs)
 {
+  misc_counter[MISC_GNAME].recv();
   GName gname;
   unmarshallGName1(&gname,bs);
 
@@ -2531,6 +2622,16 @@ GName *unmarshallGName(TaggedRef *ret, ByteStream *bs)
   GName *gn=new GName(gname);
   if (currentURL) { gn->markURL(currentURL); }
   return gn;
+}
+
+void marshallDIF(ByteStream *bs, MarshallTag tag) {
+  dif_counter[tag].send();
+  bs->put(tag);
+}
+
+void marshallMess(ByteStream *bs, MessageType tag) {
+  mess_counter[tag].send();
+  bs->put(tag);
 }
 
 /**********************************************************************/
@@ -2553,6 +2654,7 @@ Credit unmarshallCredit(ByteStream *bs){
 
 inline
 void marshallSite(Site *sd,ByteStream *bs){
+  misc_counter[MISC_SITE].send();
   ip_address ip;
   port_t port;
   time_t timestamp;
@@ -2578,6 +2680,7 @@ void marshallNetAddress(NetAddress *a, ByteStream *bs){
 
 inline
 Site * unmarshallSiteId(ByteStream *bs){
+  misc_counter[MISC_SITE].recv();
   ip_address ip=unmarshallNumber(bs);
   port_t port = unmarshallShort(bs);
   time_t timestamp = unmarshallNumber(bs);
@@ -2590,6 +2693,7 @@ Site * unmarshallSiteId(ByteStream *bs){
 
 inline
 Site * unmarshallKnownSiteId(ByteStream *bs){
+  misc_counter[MISC_SITE].recv();
   ip_address ip=unmarshallNumber(bs);
   port_t port = unmarshallShort(bs);
   time_t timestamp = unmarshallNumber(bs);
@@ -2623,7 +2727,7 @@ void marshallOwnHead(int tag,int i,ByteStream *bs){
  * marshall a BT entry (bi) which is send to its owner
  */
 void marshallToOwner(int bi,ByteStream *bs){
-  bs->put(DIF_OWNER);
+  marshallDIF(bs,DIF_OWNER);
   marshallNumber(borrowTable->getOriginIndex(bi),bs);
   BorrowEntry *b=BT->getBorrow(bi); /* implicit 1 credit */
   if(b->getOneCredit()) {
@@ -2638,8 +2742,8 @@ void marshallToOwner(int bi,ByteStream *bs){
 /*
  * marshall a BT entry (bi) into a message
  */
-void marshallBorrowHead(int tag, int bi,ByteStream *bs){
-  bs->put(tag);
+void marshallBorrowHead(MarshallTag tag, int bi,ByteStream *bs){
+  marshallDIF(bs,tag);
 
   BorrowEntry *b=borrowTable->getBorrow(bi);
   marshallNetAddress(b->getNetAddress(),bs);
@@ -2695,7 +2799,7 @@ Bool checkCycle(OZ_Term t, ByteStream *bs)
 {
   if (!IsRef(t) && _tagTypeOf(t)==GCTAG) {
     PD((MARSHALL,"circular: %d",t>>tagSize));
-    bs->put(DIF_REF);
+    marshallDIF(bs,DIF_REF);
     marshallNumber(t>>tagSize,bs);
     return OK;
   }
@@ -2724,7 +2828,7 @@ void marshallClosure(Site *sd,Abstraction *a,ByteStream *bs) {
   }
 }
 
-Bool marshallTert(Site *sd, Tertiary *t, int tag, ByteStream *bs)
+Bool marshallTert(Site *sd, Tertiary *t, MarshallTag tag, ByteStream *bs)
 {
   switch(t->getTertType()){
   case Te_Local:
@@ -2762,7 +2866,7 @@ Bool marshallTert(Site *sd, Tertiary *t, int tag, ByteStream *bs)
 
 void marshallURL(GName *gname, TaggedRef t, ByteStream *bs) {
   PD((MARSHALL,"URL %s",toC(t)));
-  bs->put(DIF_URL);
+  marshallDIF(bs,DIF_URL);
   marshallGName(gname,bs);
   Assert(isAtom(t));
   marshallTerm(0,t,bs);
@@ -2791,7 +2895,7 @@ void marshallObject(Site *sd, Object *o, TaggedRef oc, ByteStream *bs)
 {
   if (oc==makeTaggedNULL())
     oc = makeTaggedConst(o->getOzClass());
-  bs->put(DIF_OBJECT);
+  marshallDIF(bs,DIF_OBJECT);
   marshallGName(o->getGName(),bs);
   trailCycle(o->getRef(),bs,1);
 
@@ -2807,7 +2911,7 @@ void marshallObject(Site *sd, Object *o, TaggedRef oc, ByteStream *bs)
 
 void marshallClass(Site *sd, Object *o, ByteStream *bs)
 {
-  bs->put(DIF_CLASS);
+  marshallDIF(bs,DIF_CLASS);
   marshallGName(o->getGName(),bs);
   trailCycle(o->getRef(),bs,2);
   marshallSRecord(sd,o->getFreeRecord(),bs);
@@ -2836,14 +2940,21 @@ void marshallConst(Site *sd, ConstTerm *t, ByteStream *bs)
   case Co_Dictionary:
     {
       PD((MARSHALL,"dictionary"));
-      bs->put(DIF_DICT);
+      marshallDIF(bs,DIF_DICT);
       marshallDict(sd,(OzDictionary *) t,bs);
+      return;
+    }
+  case Co_Array:
+    {
+      PD((MARSHALL,"array"));
+      marshallDIF(bs,DIF_ARRAY);
+      warning("mm2: array not impl");
       return;
     }
   case Co_Builtin:
     {
       PD((MARSHALL,"builtin"));
-      bs->put(DIF_BUILTIN);
+      marshallDIF(bs,DIF_BUILTIN);
       PD((MARSHALL_CT,"tag DIF_BUILTIN BYTES:1"));
       marshallString(((BuiltinTabEntry *)t)->getPrintName(),bs);
       break;
@@ -2854,7 +2965,7 @@ void marshallConst(Site *sd, ConstTerm *t, ByteStream *bs)
       GName *gname=ch->getGName();
       if (checkURL(gname,bs)) return;
 
-      bs->put(DIF_CHUNK);
+      marshallDIF(bs,DIF_CHUNK);
       marshallGName(gname,bs);
 
       trailCycle(t->getRef(),bs,4);
@@ -2880,7 +2991,8 @@ void marshallConst(Site *sd, ConstTerm *t, ByteStream *bs)
       Abstraction *pp=(Abstraction *) t;
       GName *gname=pp->getGName();
       if (checkURL(gname,bs)) return;
-      bs->put(DIF_PROC);
+
+      marshallDIF(bs,DIF_PROC);
       marshallGName(gname,bs);
       marshallTerm(sd,pp->getName(),bs);
       marshallNumber(pp->getArity(),bs);
@@ -3000,19 +3112,19 @@ loop:
     break;
   }
   case SMALLINT:
-    bs->put(DIF_SMALLINT);
+    marshallDIF(bs,DIF_SMALLINT);
     marshallNumber(smallIntValue(t),bs);
     PD((MARSHALL,"small int: %d",smallIntValue(t)));
     break;
 
   case OZFLOAT:
-    bs->put(DIF_FLOAT);
+    marshallDIF(bs,DIF_FLOAT);
     marshallFloat(tagged2Float(t)->getValue(),bs);
     PD((MARSHALL,"float"));
     break;
 
   case BIGINT:
-    bs->put(DIF_BIGINT);
+    marshallDIF(bs,DIF_BIGINT);
     marshallString(toC(t),bs);
     PD((MARSHALL,"big int"));
     break;
@@ -3023,16 +3135,16 @@ loop:
       if (checkCycle(*lit->getRef(),bs)) return;
 
       if (lit->isAtom()) {
-        bs->put(DIF_ATOM);
+        marshallDIF(bs,DIF_ATOM);
         PD((MARSHALL_CT,"tag DIF_ATOM  BYTES:1"));
         marshallString(lit->getPrintName(),bs);
         PD((MARSHALL,"atom: %s",lit->getPrintName()));
       } else if (lit->getFlags()&Lit_isUniqueName) {
-        bs->put(DIF_UNIQUENAME);
+        marshallDIF(bs,DIF_UNIQUENAME);
         marshallString(lit->getPrintName(),bs);
         PD((MARSHALL,"unique name: %s",lit->getPrintName()));
       } else {
-        bs->put(DIF_NAME);
+        marshallDIF(bs,DIF_NAME);
         GName *gname = ((Name*)lit)->globalize();
         marshallGName(gname,bs);
         marshallString(lit->getPrintName(),bs);
@@ -3046,7 +3158,7 @@ loop:
     {
       LTuple *l = tagged2LTuple(t);
       if (checkCycle(*l->getRef(),bs)) return;
-      bs->put(DIF_LIST);
+      marshallDIF(bs,DIF_LIST);
       PD((MARSHALL_CT,"tag DIF_LIST BYTES:1"));
       PD((MARSHALL,"list"));
 
@@ -3072,11 +3184,11 @@ loop:
       TaggedRef label = rec->getLabel();
 
       if (rec->isTuple()) {
-        bs->put(DIF_TUPLE);
+        marshallDIF(bs,DIF_TUPLE);
         PD((MARSHALL_CT,"tag DIF_TUPLE BYTES:1"));
         marshallNumber(rec->getTupleWidth(),bs);
       } else {
-        bs->put(DIF_RECORD);
+        marshallDIF(bs,DIF_RECORD);
         PD((MARSHALL_CT,"tag DIF_RECORD BYTES:1"));
         marshallTerm(sd,rec->getArityList(),bs);
       }
@@ -3145,9 +3257,12 @@ void unmarshallTert(ByteStream *bs, TaggedRef *ret, MarshallTag tag,
 
   Tertiary *tert = NULL;
   switch (tag) {
-  case DIF_PORT:   tert = new PortProxy(bi);        break;
-  case DIF_THREAD: tert = new Thread(bi,Te_Proxy);  break;
-  case DIF_SPACE:  tert = new Space(bi,Te_Proxy);   break;
+  case DIF_PORT:
+    tert = new PortProxy(bi);        break;
+  case DIF_THREAD:
+    tert = new Thread(bi,Te_Proxy);  break;
+  case DIF_SPACE:
+    tert = new Space(bi,Te_Proxy);   break;
   default:         Assert(0);
   }
 
@@ -3234,6 +3349,7 @@ loop:
   MarshallTag tag = (MarshallTag) bs->get();
   PD((UNMARSHALL_CT,"tag %c BYTES:1",tag));
 
+  dif_counter[tag].recv();
   switch(tag) {
 
   case DIF_SMALLINT:
@@ -3365,9 +3481,12 @@ loop:
       return;
     }
 
-  case DIF_PORT:   unmarshallTert(bs,ret,tag,"port");   return;
-  case DIF_THREAD: unmarshallTert(bs,ret,tag,"thread"); return;
-  case DIF_SPACE:  unmarshallTert(bs,ret,tag,"space");  return;
+  case DIF_PORT:
+    unmarshallTert(bs,ret,tag,"port");   return;
+  case DIF_THREAD:
+    unmarshallTert(bs,ret,tag,"thread"); return;
+  case DIF_SPACE:
+    unmarshallTert(bs,ret,tag,"space");  return;
 
   case DIF_CELL:
     {
@@ -3601,6 +3720,12 @@ loop:
       unmarshallDict(bs,ret);
       return;
     }
+  case DIF_ARRAY:
+    {
+      PD((UNMARSHALL,"array"));
+      warning("mm2: array not impl");
+      return;
+    }
   case DIF_BUILTIN:
     {
       char *name = unmarshallString(bs);
@@ -3648,6 +3773,7 @@ void siteReceive(ByteStream* bs)
   currentURL=0;
 
   MessageType mt= (MessageType) bs->get();
+  mess_counter[mt].recv();
   switch (mt) {
   case M_PORT_SEND:    /* M_PORT_SEND index term */
     {
@@ -3710,7 +3836,8 @@ void siteReceive(ByteStream* bs)
       o->returnCredit(1); // don't delete entry
       Credit c= o->giveMoreCredit();
       ByteStream *bs1=bufferManager->getByteStreamMarshal();
-      bs1->put(M_BORROW_CREDIT);
+
+      marshallMess(bs1,M_BORROW_CREDIT);
       NetAddress na = NetAddress(mySite,na_index);
       marshallNetAddress(&na,bs1);
       marshallCredit(c,bs1);
@@ -3865,7 +3992,8 @@ void siteReceive(ByteStream* bs)
       bs->unmarshalEnd();
       PD((MSG_RECEIVED,"CELL_GET at index:%d to:%s",OTI,pSite(rsite)));
       OwnerEntry *oe=ownerTable->getOwner(OTI);
-      if(cellReceiveGet((CellManager*)(oe->getTertiary()),OTI,rsite)){oe->returnCredit(1);}
+      if(cellReceiveGet((CellManager*)(oe->getTertiary()),OTI,rsite)){
+        oe->returnCredit(1);}
       networkSiteCheck(rsite);
       break;
     }
@@ -3878,13 +4006,17 @@ void siteReceive(ByteStream* bs)
       PD((MSG_RECEIVED,"CELL_CONTENTS cell:%s-%d",pSite(rsite),OTI));
       if(rsite==mySite){
         OwnerEntry *oe=OT->getOwner(OTI);
-        if(cellReceiveContentsManager((CellManager*)(oe->getTertiary()),val,OTI)) {oe->returnCredit(1);}
+        if(cellReceiveContentsManager((CellManager*)(oe->getTertiary()),
+                                      val,OTI)) {
+          oe->returnCredit(1);}
         break;
       }
       NetAddress na=NetAddress(rsite,OTI);
       BorrowEntry *be=borrowTable->find(&na);
       Assert(be!=NULL);
-      if(cellReceiveContentsFrame((CellFrame*)(be->getTertiary()),val,rsite,OTI)) {be->addCredit(1);}
+      if(cellReceiveContentsFrame((CellFrame*)(be->getTertiary()),
+                                  val,rsite,OTI)) {
+        be->addCredit(1);}
       break;
     }
   case M_CELL_READ:
@@ -3894,8 +4026,10 @@ void siteReceive(ByteStream* bs)
       bs->unmarshalEnd();
       OwnerEntry *oe=ownerTable->getOwner(OTI);
       CellManager *cm=(CellManager*)oe->getTertiary();
-      PD((MSG_RECEIVED,"CELL_READ id:%d read_ctr:%d",OTI,((CellFrame*)oe->getTertiary())->getCtr()));
-      if(cellReceiveRead((CellManager*)(oe->getTertiary()),OTI,val)){oe->returnCredit(1);}
+      PD((MSG_RECEIVED,"CELL_READ id:%d read_ctr:%d",OTI,
+          ((CellFrame*)oe->getTertiary())->getCtr()));
+      if(cellReceiveRead((CellManager*)(oe->getTertiary()),OTI,val)){
+        oe->returnCredit(1);}
       break;
     }
   case M_CELL_REMOTEREAD:
@@ -3909,7 +4043,8 @@ void siteReceive(ByteStream* bs)
       BorrowEntry *be=borrowTable->find(&na);
       Assert(be!=NULL);
       CellFrame *cf= (CellFrame*) be->getTertiary();
-      PD((MSG_RECEIVED,"CELL_REMOTEREAD cell:%s-%d ctr:%d",pSite(rsite),OTI,cf->getCtr()));
+      PD((MSG_RECEIVED,"CELL_REMOTEREAD cell:%s-%d ctr:%d",
+          pSite(rsite),OTI,cf->getCtr()));
       be->addCredit(1);
       cellReceiveRemoteRead(cf,val);
       break;
@@ -3921,7 +4056,8 @@ void siteReceive(ByteStream* bs)
       int ctr=unmarshallNumber(bs);
       Site* rsite=unmarshallSiteId(bs);
       bs->unmarshalEnd();
-      PD((MSG_RECEIVED,"CELL_FORWARD ctr:%d cell:%s-%d to:%s",ctr,pSite(site),OTI,pSite2(rsite)));
+      PD((MSG_RECEIVED,"CELL_FORWARD ctr:%d cell:%s-%d to:%s",
+          ctr,pSite(site),OTI,pSite2(rsite)));
       NetAddress na=NetAddress(site,OTI);
       BorrowEntry *be=borrowTable->find(&na);
       Assert(be!=NULL);
@@ -3948,7 +4084,9 @@ void siteReceive(ByteStream* bs)
       bs->unmarshalEnd();
       PD((MSG_RECEIVED,"LOCK_GET at index:%d to:%s",OTI,pSite(rsite)));
       OwnerEntry *oe=OT->getOwner(OTI);
-      if(lockReceiveGet((LockManager*)(oe->getTertiary()),OTI,rsite)){oe->returnCredit(1);}
+      if(lockReceiveGet((LockManager*)(oe->getTertiary()),OTI,rsite)){
+        oe->returnCredit(1);
+      }
       break;
     }
   case M_LOCK_SENT:
@@ -3976,7 +4114,8 @@ void siteReceive(ByteStream* bs)
       int OTI=unmarshallNumber(bs);
       Site* rsite=unmarshallSiteId(bs);
       bs->unmarshalEnd();
-      PD((MSG_RECEIVED,"LOCK_FORWARD lock:%s-%d to:%s",pSite(site),OTI,pSite2(rsite)));
+      PD((MSG_RECEIVED,"LOCK_FORWARD lock:%s-%d to:%s",
+          pSite(site),OTI,pSite2(rsite)));
       NetAddress na=NetAddress(site,OTI);
       BorrowEntry *be=borrowTable->find(&na);
       Assert(be!=NULL);
@@ -4035,7 +4174,7 @@ OZ_Return remoteSend(Tertiary *p, char *biName, TaggedRef msg) {
   int index = na->index;
 
   ByteStream *bs = bufferManager->getByteStreamMarshal();
-  bs->put(M_REMOTE_SEND);
+  marshallMess(bs,M_REMOTE_SEND);
   marshallNumber(index,bs);
   marshallString(biName,bs);
   domarshallTerm(site,msg,bs);
@@ -4076,7 +4215,7 @@ void portSend(Tertiary *p, TaggedRef msg) {
 
   ByteStream *bs = bufferManager->getByteStream();
   bs->marshalBegin();
-  bs->put(M_PORT_SEND);
+  marshallMess(bs,M_PORT_SEND);
   marshallNumber(index,bs);
   domarshallTerm(site,msg,bs);
   bs->marshalEnd();
@@ -4132,7 +4271,7 @@ void sendMessage(int bi, MessageType msg)
 void sendSurrender(BorrowEntry *be,OZ_Term val)
 {
   ByteStream *bs= bufferManager->getByteStreamMarshal();
-  bs->put(M_SURRENDER);
+  marshallMess(bs,M_SURRENDER);
   NetAddress *na = be->getNetAddress();
   Site* site = na->site;
   int index = na->index;
@@ -4163,7 +4302,7 @@ void sendSurrender(BorrowEntry *be,OZ_Term val)
 void sendRedirect(Site* sd,int OTI,TaggedRef val)
 {
   ByteStream *bs= bufferManager->getByteStreamMarshal();
-  bs->put(M_REDIRECT);
+  marshallMess(bs,M_REDIRECT);
   marshallNetAddress2(mySite,OTI,bs);
   domarshallTerm(sd,val,bs);
   bs->marshalEnd();
@@ -4183,7 +4322,7 @@ void sendRedirect(Site* sd,int OTI,TaggedRef val)
 void sendAcknowledge(Site* sd,int OTI)
 {
   ByteStream *bs= bufferManager->getByteStreamMarshal();
-  bs->put(M_ACKNOWLEDGE);
+  marshallMess(bs,M_ACKNOWLEDGE);
   marshallNetAddress2(mySite,OTI,bs);
   bs->marshalEnd();
   PD((MSG_SENT,"ACKNOWLEDGE s:%s o:%d",pSite(sd),OTI));
@@ -4276,7 +4415,7 @@ void sendCreditBack(Site* sd,int OTI,Credit c)
 {
   PD((CREDIT,"give back - %d",c));
   ByteStream *bs= bufferManager->getByteStreamMarshal();
-  bs->put(M_OWNER_CREDIT);
+  marshallMess(bs,M_OWNER_CREDIT);
   marshallNumber(OTI,bs);
   marshallCredit(c,bs);
   bs->marshalEnd();
@@ -4315,7 +4454,7 @@ int compareNetAddress(PerdioVar *lVar,PerdioVar *rVar)
 void cellSendForward(Site *toS,Site *rS,int ctr,int mI){  // holding one credit
   PD((MSG_SENT,"CELL_FORWARD id:%d to s:%s then:%s ctr:%d",mI,pSite(toS),pSite2(rS),ctr));
   ByteStream* bs=bufferManager->getByteStreamMarshal();  // marshal
-  bs->put(M_CELL_FORWARD);
+  marshallMess(bs,M_CELL_FORWARD);
   marshallMySite(bs);
   marshallNumber(mI,bs);
   marshallNumber(ctr,bs);
@@ -4326,7 +4465,7 @@ void cellSendForward(Site *toS,Site *rS,int ctr,int mI){  // holding one credit
 
 void cellSendRemoteRead(int mI,Site *toS,TaggedRef val){  // holding one credit
   ByteStream* bs=bufferManager->getByteStreamMarshal();   // marshal
-  bs->put(M_CELL_REMOTEREAD);
+  marshallMess(bs,M_CELL_REMOTEREAD);
   marshallMySite(bs);
   marshallNumber(mI,bs);
   domarshallTerm(toS,val,bs);
@@ -4337,7 +4476,7 @@ void cellSendRemoteRead(int mI,Site *toS,TaggedRef val){  // holding one credit
 
 void cellSendContents(TaggedRef tr,Site* toS,Site *mS,int mI){ // holding one credit
   ByteStream *bs=bufferManager->getByteStreamMarshal();    // marshal
-  bs->put(M_CELL_CONTENTS);
+  marshallMess(bs,M_CELL_CONTENTS);
   marshallSite(mS,bs);
   marshallNumber(mI,bs);
   domarshallTerm(toS,tr,bs);
@@ -4351,7 +4490,7 @@ void cellSendGet(BorrowEntry *be){      // not holding any credit
   NetAddress *na=be->getNetAddress();
   Site *toS=na->site;
   ByteStream *bs=bufferManager->getByteStreamMarshal();
-  bs->put(M_CELL_GET);
+  marshallMess(bs,M_CELL_GET);
   marshallNumber(na->index,bs);
   marshallMySite(bs);
   bs->marshalEnd();
@@ -4363,7 +4502,7 @@ void cellSendRead(BorrowEntry *be,TaggedRef val){  // not holding any credit
   NetAddress *na=be->getNetAddress();
   Site *toS=na->site;
   ByteStream* bs=bufferManager->getByteStreamMarshal();
-  bs->put(M_CELL_READ);
+  marshallMess(bs,M_CELL_READ);
   marshallNumber(na->index,bs);
   domarshallTerm(na->site,val,bs);
   bs->marshalEnd();
@@ -4376,7 +4515,7 @@ void cellSendDump(BorrowEntry *be,CellFrame *cf){
   NetAddress *na=be->getNetAddress();
   Site *toS=na->site;
   ByteStream *bs=bufferManager->getByteStreamMarshal();
-  bs->put(M_CELL_DUMP);
+  marshallMess(bs,M_CELL_DUMP);
   marshallNumber(na->index,bs);
   marshallMySite(bs);
   bs->marshalEnd();
@@ -4671,7 +4810,7 @@ void cellDoAccess(Tertiary *c,TaggedRef val){
 void lockSendForward(Site *toS,Site *fS,int mI){         // holding one credit
   PD((MSG_SENT,"LOCK_FORWARD id:%d send-to:%s to:%s",mI,pSite(toS),pSite2(fS)));
   ByteStream* bs=bufferManager->getByteStreamMarshal();  // marshal
-  bs->put(M_LOCK_FORWARD);
+  marshallMess(bs,M_LOCK_FORWARD);
   marshallMySite(bs);
   marshallNumber(mI,bs);
   marshallSite(fS,bs);
@@ -4685,7 +4824,7 @@ void lockSendDump(BorrowEntry *be,LockFrame *lf){
   NetAddress *na=be->getNetAddress();
   Site *toS=na->site;
   ByteStream *bs=bufferManager->getByteStreamMarshal();
-  bs->put(M_LOCK_DUMP);
+  marshallMess(bs,M_LOCK_DUMP);
   marshallNumber(na->index,bs);
   marshallMySite(bs);
   bs->marshalEnd();
@@ -4697,7 +4836,7 @@ void lockSendDump(BorrowEntry *be,LockFrame *lf){
 void lockSendLockBorrow(BorrowEntry *be,Site* toS){
   NetAddress *na=be->getNetAddress();
   ByteStream *bs= bufferManager->getByteStreamMarshal();
-  bs->put(M_LOCK_SENT);
+  marshallMess(bs,M_LOCK_SENT);
   marshallSite(na->site,bs);
   marshallNumber(na->index,bs);
   bs->marshalEnd();
@@ -4707,7 +4846,7 @@ void lockSendLockBorrow(BorrowEntry *be,Site* toS){
 
 void lockSendLock(Site *mS,int mI,Site* toS){
   ByteStream *bs= bufferManager->getByteStreamMarshal();
-  bs->put(M_LOCK_SENT);
+  marshallMess(bs,M_LOCK_SENT);
   marshallSite(mS,bs);
   marshallNumber(mI,bs);
   bs->marshalEnd();
@@ -4718,7 +4857,7 @@ void lockSendLock(Site *mS,int mI,Site* toS){
 void lockSendGet(BorrowEntry *be){
   NetAddress *na=be->getNetAddress();
   ByteStream *bs= bufferManager->getByteStreamMarshal();
-  bs->put(M_LOCK_GET);
+  marshallMess(bs,M_LOCK_GET);
   marshallNumber(na->index,bs);
   marshallSite(mySite,bs);
   bs->marshalEnd();
@@ -5416,6 +5555,66 @@ OZ_C_proc_begin(BIloadFile,3)
 }
 OZ_C_proc_end
 
+
+OZ_C_proc_begin(BIperdioStatistics,1)
+{
+  OZ_declareArg(0,out);
+
+  OZ_Term dif_send_ar=oz_nil();
+  OZ_Term dif_recv_ar=oz_nil();
+  for (int i=0; i<DIF_LAST; i++) {
+    dif_send_ar=oz_cons(oz_pairAI(dif_names[i],dif_counter[i].getSend()),
+                        dif_send_ar);
+    dif_recv_ar=oz_cons(oz_pairAI(dif_names[i],dif_counter[i].getRecv()),
+                        dif_recv_ar);
+  }
+  OZ_Term dif_send=OZ_recordInit(oz_atom("dif"),dif_send_ar);
+  OZ_Term dif_recv=OZ_recordInit(oz_atom("dif"),dif_recv_ar);
+
+  OZ_Term misc_send_ar=oz_nil();
+  OZ_Term misc_recv_ar=oz_nil();
+  for (int i=0; i<MISC_LAST; i++) {
+    misc_send_ar=oz_cons(oz_pairAI(misc_names[i],misc_counter[i].getSend()),
+                         misc_send_ar);
+    misc_recv_ar=oz_cons(oz_pairAI(misc_names[i],misc_counter[i].getRecv()),
+                         misc_recv_ar);
+  }
+  OZ_Term misc_send=OZ_recordInit(oz_atom("misc"),misc_send_ar);
+  OZ_Term misc_recv=OZ_recordInit(oz_atom("misc"),misc_recv_ar);
+
+  OZ_Term mess_send_ar=oz_nil();
+  OZ_Term mess_recv_ar=oz_nil();
+  for (int i=0; i<M_LAST; i++) {
+    mess_send_ar=oz_cons(oz_pairAI(mess_names[i],mess_counter[i].getSend()),
+                         mess_send_ar);
+    mess_recv_ar=oz_cons(oz_pairAI(mess_names[i],mess_counter[i].getRecv()),
+                         mess_recv_ar);
+  }
+  OZ_Term mess_send=OZ_recordInit(oz_atom("messages"),mess_send_ar);
+  OZ_Term mess_recv=OZ_recordInit(oz_atom("messages"),mess_recv_ar);
+
+
+  OZ_Term send_ar=oz_nil();
+  send_ar = oz_cons(oz_pairA("dif",dif_send),send_ar);
+  send_ar = oz_cons(oz_pairA("misc",misc_send),send_ar);
+  send_ar = oz_cons(oz_pairA("messages",mess_send),send_ar);
+  OZ_Term send=OZ_recordInit(oz_atom("send"),send_ar);
+
+  OZ_Term recv_ar=oz_nil();
+  recv_ar = oz_cons(oz_pairA("dif",dif_recv),recv_ar);
+  recv_ar = oz_cons(oz_pairA("misc",misc_recv),recv_ar);
+  recv_ar = oz_cons(oz_pairA("messages",mess_recv),recv_ar);
+  OZ_Term recv=OZ_recordInit(oz_atom("recv"),recv_ar);
+
+
+  OZ_Term ar=oz_nil();
+  ar=oz_cons(oz_pairA("send",send),ar);
+  ar=oz_cons(oz_pairA("recv",recv),ar);
+  return OZ_unify(out,OZ_recordInit(oz_atom("perdioStatistics"),ar));
+}
+OZ_C_proc_end
+
+
 BIspec perdioSpec[] = {
   {"startSite",      2, BIStartSite, 0},
   {"connectSite",    3, BIConnectSite, 0},
@@ -5429,6 +5628,8 @@ BIspec perdioSpec[] = {
   {"loadFile",    3, BIloadFile, 0},
   {"setLoadHook", 1, BIsetLoadHook, 0},
   {"newGate",      2, BInewGate, 0},
+
+  {"perdioStatistics",  1, BIperdioStatistics, 0},
 
 #ifdef DEBUG_PERDIO
   {"dvset",    2, BIdvset, 0},
