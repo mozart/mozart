@@ -43,7 +43,7 @@
 #include "gname.hh"
 #include "state.hh"
 #include "port.hh"
-
+#include "dpResource.hh"
 /* for now credit is a 32-bit word */
 
 void marshalCreditOutline(Credit credit,MsgBuffer *bs){  
@@ -132,19 +132,19 @@ OZ_Term unmarshalBorrow(MsgBuffer *bs,OB_Entry *&ob,int &bi){
   }
   NetAddress na = NetAddress(sd,si); 
   BorrowEntry *b = borrowTable->find(&na);
-    if (b!=NULL) {
-      PD((UNMARSHAL,"borrow found"));
-      cred = unmarshalCredit(bs);    
-      if(mt==DIF_PRIMARY){
-	if(cred!=PERSISTENT_CRED)
-	  b->addPrimaryCredit(cred);
-	else Assert(b->isPersistent());}
-      else{
-	Assert(mt==DIF_SECONDARY);
-	DSite* s=unmarshalDSite(bs);
-	b->addSecondaryCredit(cred,s);}
-      ob = b;
-      return b->getValue();}
+  if (b!=NULL) {
+    PD((UNMARSHAL,"borrow found"));
+    cred = unmarshalCredit(bs);    
+    if(mt==DIF_PRIMARY){
+      if(cred!=PERSISTENT_CRED)
+	b->addPrimaryCredit(cred);
+      else Assert(b->isPersistent());}
+    else{
+      Assert(mt==DIF_SECONDARY);
+      DSite* s=unmarshalDSite(bs);
+      b->addSecondaryCredit(cred,s);}
+    ob = b;
+    return b->getValue();}
   cred = unmarshalCredit(bs);    		
   if(mt==DIF_PRIMARY){
     bi=borrowTable->newBorrow(cred,sd,si);
@@ -159,7 +159,6 @@ OZ_Term unmarshalBorrow(MsgBuffer *bs,OB_Entry *&ob,int &bi){
   bi=borrowTable->newSecBorrow(site,cred,sd,si);
   b=borrowTable->getBorrow(bi);
   PD((UNMARSHAL,"borrowed miss"));
-  // PER-LOOK indeed!
   b->moreCredit(); // The Borrow needs some of the real McCoys
   ob=b;
   return 0;
@@ -295,6 +294,20 @@ Bool marshalTertiary(Tertiary *t, MarshalTag tag, MsgBuffer *bs)
   return NO;
 }
 
+void marshalSPP(TaggedRef entity, MsgBuffer *bs, Bool trail){
+  int index = RHT->find(entity);
+  if(index == RESOURCE_NOT_IN_TABLE){
+    OwnerEntry *oe_manager;
+    index=ownerTable->newOwner(oe_manager);
+    PD((GLOBALIZING,"GLOBALIZING Resource index:%d",index));
+    oe_manager->mkRef(entity);
+    RHT->add(entity, index);
+  }
+  if(trail)  marshalOwnHead(DIF_RESOURCE_T,index,bs);
+  else  marshalOwnHead(DIF_RESOURCE_N,index,bs);
+}
+
+
 static char *tagToComment(MarshalTag tag)
 {
   switch(tag){
@@ -310,6 +323,9 @@ static char *tagToComment(MarshalTag tag)
     return "lock";
   case DIF_OBJECT:
     return "object";
+  case DIF_RESOURCE_T:
+  case DIF_RESOURCE_N:
+    return "resource";
   default:
     Assert(0);
     return "";
@@ -323,6 +339,8 @@ OZ_Term unmarshalTertiary(MsgBuffer *bs, MarshalTag tag)
   if(val){
     PD((UNMARSHAL,"%s hit b:%d",tagToComment(tag),bi));
     switch (tag) {
+    case DIF_RESOURCE_T:
+    case DIF_RESOURCE_N:
     case DIF_PORT:
     case DIF_THREAD_UNUSED:
     case DIF_SPACE:
@@ -352,7 +370,11 @@ OZ_Term unmarshalTertiary(MsgBuffer *bs, MarshalTag tag)
   PD((UNMARSHAL,"%s miss b:%d",tagToComment(tag),bi));  
   Tertiary *tert;
 
-  switch (tag) {
+  switch (tag) { 
+  case DIF_RESOURCE_N:
+  case DIF_RESOURCE_T:
+    tert = new DistResource(bi);
+    break;  
   case DIF_PORT:
     tert = new PortProxy(bi);        
     break;
