@@ -68,17 +68,18 @@ public:
 };
 
 class Chain{
-private:
+protected:
   ChainElem* first;
   ChainElem* last;
   InformElem* inform;
 public:
-
   Chain(){first = NULL;last=NULL;inform=NULL;}
 
   void init(Site*,int);
 
   void informHandle(Tertiary*,EntityCond);
+
+  ChainElem *getFirstChainElem(){return first;}
 
   Site* getCurrent(){
     Assert(last != NULL);
@@ -103,6 +104,13 @@ public:
   void removeFirstSite(){
     Assert(first!=NULL);
     first=first->getNext();}
+
+  void hasDumped(){
+    first=NULL;
+    last=NULL;}
+
+  Bool hasInform(){
+    return inform!=NULL;}
 
   void informAll(Tertiary*,Site* s);
   void maybeInform(EntityCond c,Site *s,int);
