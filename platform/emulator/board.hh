@@ -44,14 +44,14 @@ public:
   void allocate(int sizeInit);
   void dealloc();
 
-  inline short getSize() { return numbOfCons; }
+  inline int getSize() { return numbOfCons; }
   inline Equation* getRef()  { return (first); }
 
-  inline Equation &operator[] (short elem)  { return ( *(first + elem) ); }
+  inline Equation &operator[] (int elem)  { return ( *(first + elem) ); }
   /* no bounds checking;    */
 
 private:
-  short numbOfCons;
+  int numbOfCons;
   Equation* first;
 };
 
