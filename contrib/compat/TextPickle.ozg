@@ -347,6 +347,7 @@ define
 	    Args = {Map InstrArgs.Op.1 fun {$ Type} P, Type($) end}
 	    Instr = {List.toTuple Op Args}
 	    case InstrArgs.Op of none(_) then Instr
+	    [] none(_ Lab) then {Adjoin Instr Lab}
 	    [] one(ArgList Lab R) then
 	       case {Indices ArgList 1} of [I] then
 		  {Adjoin Instr Lab(I: R(Instr.I))}
