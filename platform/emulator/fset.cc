@@ -34,6 +34,7 @@
 #include "tagged.hh"
 #include "value.hh"
 #include "fddebug.hh"
+#include "fdomn.hh"
 
 //*****************************************************************************
 //#define DEBUG_FSET
@@ -59,8 +60,8 @@
 extern int toTheLowerEnd[];
 extern int toTheUpperEnd[];
 
-inline int div32(int n) { return n >> 5; }
-inline int mod32(int n) { return n & 0x1f; }
+//inline int div32(int n) { return n >> 5; }
+//inline int mod32(int n) { return n & 0x1f; }
 
 inline 
 unsigned char * initNumOfBitsInHalfWord(void)
