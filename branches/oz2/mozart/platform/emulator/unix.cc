@@ -570,15 +570,28 @@ OZ_C_proc_begin(unix_uName,1)
   if (uname(&buf) < 0)
     RETURN_UNIX_ERROR;
 
-  OZ_Term t1=OZ_pairAS("sysname",buf.sysname);
-  OZ_Term t2=OZ_pairAS("nodename",buf.nodename);
-  OZ_Term t3=OZ_pairAS("release",buf.release);
-  OZ_Term t4=OZ_pairAS("version",buf.version);
-  OZ_Term t5=OZ_pairAS("machine",buf.machine);
+#ifdef SUNOS_SPARC
+  char dname[65];
+  if (getdomainname(dname, 65)) {
+    RETURN_UNIX_ERROR;
+  }
+#else
+  char * dname;
+  dname = buf.domainname;
+#endif
+
+  OZ_Term t1=OZ_pairAS("domainname",dname);
+  OZ_Term t2=OZ_pairAS("machine",buf.machine);
+  OZ_Term t3=OZ_pairAS("nodename",buf.nodename);
+  OZ_Term t4=OZ_pairAS("release",buf.release);
+  OZ_Term t5=OZ_pairAS("sysname",buf.sysname);
+  OZ_Term t6=OZ_pairAS("version",buf.version);
+
 
   OZ_Term pairlist=
-    OZ_cons(t1,OZ_cons(t2,OZ_cons(t3,OZ_cons(t4,OZ_cons(t5,OZ_nil())))));
+    cons(t1,cons(t2,cons(t3,cons(t4,cons(t5,cons(t6,nil()))))));
   return OZ_unify(out,OZ_recordInit(OZ_atom("utsname"),pairlist));
+
 }
 OZ_C_proc_end
 #endif
