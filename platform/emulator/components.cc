@@ -910,7 +910,7 @@ OZ_BI_define(BITicket2Port,4,1)
   oz_declareVirtualStringIN(0,host);
   oz_declareIntIN(1,port);
   oz_declareNonvarIN(2,timeV);
-  oz_declareNonvarIN(3,pid);
+  oz_declareIntIN(3,pid);
 
   time_t time;
   if (oz_isSmallInt(timeV)) {
