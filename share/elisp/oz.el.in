@@ -176,12 +176,12 @@ and that no command will be bound to C-c followed by a letter."
      "XPrepend a \\line directive to all Oz queries? (t or nil): ")
 
 (eval-and-compile
-  (eval '(defcustom oz-host-name "127.0.0.1"
-	   "*Name of local host for creating the connection to the compiler."
+  (eval '(defcustom oz-default-host "127.0.0.1"
+	   "*Default name of host to use for creating socket connections."
 	   :type 'string
 	   :group 'oz)))
-(put 'oz-host-name 'variable-interactive
-     "sName of local host to use for socket connections: ")
+(put 'oz-default-host 'variable-interactive
+     "sDefault host name to use for socket connections: ")
 
 (eval-and-compile
   (eval '(defcustom oz-emulator
@@ -316,7 +316,7 @@ Used for popping up the corresponding buffer.")
 All strings matching this regular expression are removed.")
 
 (defconst oz-socket-pattern
-  "\'oz-socket \\([0-9]+\\)\'"
+  "'oz-socket \\(\"\\([^\"]*\\)\" \\)?\\([0-9]+\\)'"
   "Regex for reading the information about the compiler socket.")
 
 (defconst oz-show-temp-pattern
@@ -735,7 +735,7 @@ If FORCE is non-nil, kill it immediately."
 	(oz-set-title oz-frame-title)
 	(message "Oz started."))))
 
-(defun oz-socket (port)
+(defun oz-socket (host port)
   (let ((bs oz-compiler-buffers) (newbs nil))
     (while bs
       (if (not (comint-check-proc (car bs)))
@@ -749,7 +749,7 @@ If FORCE is non-nil, kill it immediately."
     (save-excursion
       (set-buffer buffer)
       (comint-mode))
-    (comint-exec buffer (buffer-name buffer) (cons oz-host-name port) nil nil)
+    (comint-exec buffer (buffer-name buffer) (cons host port) nil nil)
     (set-process-filter (get-buffer-process buffer) 'oz-compiler-filter)
     (oz-show-buffer buffer)
     (bury-buffer buffer)
@@ -2438,12 +2438,13 @@ The ARG is interpreted just as with \\[recenter]."
   ;; look for oz-socket:
   (let ((start 0))
     (while (string-match oz-socket-pattern string start)
-      (let ((port (string-to-number (oz-match-string 1 string))))
+      (let ((host (or (oz-match-string 2 string) oz-default-host))
+	    (port (string-to-number (oz-match-string 3 string))))
 	(setq start (match-beginning 0))
 	(setq string (concat (substring string 0 start)
 			     (substring string (match-end 0))))
 	(save-excursion
-	  (oz-socket port)))))
+	  (oz-socket host port)))))
   (funcall oz-emulator-filter-hook proc string))
 
 (defun oz-compiler-filter (proc string)
