@@ -141,6 +141,10 @@ prepare
 	 error(kind : TITLE_EXTRACT
 	       msg  : 'cannot read or download package'
 	       items: [hint(l:'Package' m:P)])
+      [] ozmake(extract:dir(D)) then
+	 error(kind : TITLE_EXTRACT
+	       msg  : 'default directory for extraction already exists'
+	       items: [hint(l:'Directory' m:D)])
       [] ozmake(install:overwriting(L)) then
 	 error(kind : TITLE_INSTALL
 	       msg  : 'need to overwrite files owned by other packages'

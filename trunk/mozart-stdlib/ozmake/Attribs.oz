@@ -80,6 +80,7 @@ define
 	 ResolverExtended : false
 	 SubResolverStack : nil
 	 FromPackage: false
+	 XMogul     : unit
 
       meth set_prefix(D) Prefix<-{Path.expand D} end
       meth get_prefix($)
@@ -207,6 +208,14 @@ define
 	 end
 	 if @Uri==unit then raise ozmake(get_uri) end else @Uri end
       end
+      meth maybe_get_uri($)
+	 if @Uri==unit andthen @Superman\=unit then
+	    U = {@Superman maybe_get_uri($)}
+	 in
+	    if U\=unit then Uri<-{Path.resolveAtom U @AsSubdir} end
+	 end
+	 @Uri
+      end
 
       meth set_mogul(M) Mogul<-M end
       meth get_mogul($)
@@ -217,10 +226,22 @@ define
 	 else @Mogul end
       end
 
+      meth set_xmogul(ID) XMogul<-ID end
+      meth get_xmogul($) @XMogul end
+
       meth set_extractdir(D) ExtractDir<-{Path.expand D} end
       meth get_extractdir($)
 	 if @ExtractDir==unit then
-	    ExtractDir<-Attribs,get_builddir($)
+	    if @BuildDir==unit andthen @Dir==unit andthen @XMogul\=unit then
+	       D={Utils.mogulToFilename @XMogul}
+	    in
+	       if {Path.exists D} then
+		  raise ozmake(extract:dir(D)) end
+	       end
+	       ExtractDir<-D
+	    else
+	       ExtractDir<-Attribs,get_builddir($)
+	    end
 	 end
 	 @ExtractDir
       end
