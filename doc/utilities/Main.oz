@@ -181,7 +181,7 @@ define
          {OzDocToHTML.translate mono Args}
       elseof "html-stylesheets" then
          {OzDocToHTML.translate stylesheets Args}
-      elseof "html-global-index" then DB Xs HTML1 HTML2 in
+      elseof "html-global-index" then DB Xs HTML1 HTML2 DocType in
          DB = {Gdbm.new read(Args.'in')}
          Xs = {Gdbm.entries DB}
          HTML1 = {Indexer.makeIndex
@@ -205,7 +205,9 @@ define
                                                  {Property.get 'oz.version'}#
                                                  ' ('#{Property.get 'oz.date'}#
                                                  ')')))))
-         {File.write {HTML.toVirtualString HTML2}#'\n' Args.'out'}
+         DocType = ('<!DOCTYPE html PUBLIC '#
+                    '"-//W3C//DTD HTML 4.0 Transitional//EN">\n')
+         {File.write DocType#{HTML.toVirtualString HTML2}#'\n' Args.'out'}
       elseof "chunk" then
          {System.showInfo
           {Chunk.getChunk Args.'in' Args.'out'}}
