@@ -937,7 +937,6 @@ void msgReceived(MsgBuffer* bs)
       int unused;
       DSite* fromS;
       unmarshal_M_SEND_PING(bs,fromS,unused);
-      printf("pingReceived from %s \n",fromS->stringrep());
       break;
     }
   default:
