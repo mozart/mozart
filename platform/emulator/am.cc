@@ -377,7 +377,7 @@ void AM::init(int argc,char **argv)
 
     OZ_Term v=oz_newVariable();
     Thread *tt = mkRunnableThread(DEFAULT_PRIORITY, _rootBoard);
-    OZ_Return ret = loadURL(url,v,makeTaggedNULL(),tt);
+    OZ_Return ret = loadURL(url,v,tt);
     if (ret!=PROCEED && ret!=BI_PREEMPT) {
       char *aux = (ret==RAISE) ? toC(exception.value) : "unknown error";
       prefixError();

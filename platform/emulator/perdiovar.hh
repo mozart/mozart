@@ -39,8 +39,7 @@ enum PV_TYPES {
   PV_MANAGER,
   PV_PROXY,
   PV_OBJECTURL,   // class available maybe only as URL
-  PV_OBJECTGNAME, // only the class's gname known
-  PV_URL
+  PV_OBJECTGNAME  // only the class's gname known
 };
 
 class ProxyList {
@@ -85,7 +84,6 @@ class PerdioVar: public GenCVariable {
     PendBinding *bindings;
     ProxyList *proxies;
     TaggedRef aclass;
-    TaggedRef url;
     GName *gnameClass;
   } u;
 public:
@@ -117,11 +115,6 @@ public:
     setpvType(PV_OBJECTGNAME);
     u.gnameClass=gn;
   }
-  PerdioVar(GName *gname, TaggedRef url) : GenCVariable(PerdioVariable) {
-    u.url = url;
-    setpvType(PV_URL);
-    ptr = gname;
-  }
 
   void globalize(int i) { setpvType(PV_MANAGER); ptr = ToPointer(i); }
 
@@ -129,15 +122,13 @@ public:
   Bool isProxy()     { return getpvType()==PV_PROXY; }
   Bool isObjectURL() { return getpvType()==PV_OBJECTURL; }
   Bool isObjectGName() { return getpvType()==PV_OBJECTGNAME; }
-  Bool isURL()       { return getpvType()==PV_URL; }
 
   int getIndex() { return ToInt32(ptr); }
 
-  GName *getGName() { return isURL() ? (GName *) ptr : 0; }
+  GName *getGName() { return 0; }
   GName *getGNameClass() { Assert(isObjectGName()); return u.gnameClass; }
-  TaggedRef getURL() { Assert(isURL()); return u.url; }
   void setIndex(int i) {
-    Assert(!isURL() && !isObjectURL() && !isObjectGName());
+    Assert(!isObjectURL() && !isObjectGName());
     ptr = ToPointer(i);
   }
 
@@ -202,10 +193,5 @@ PerdioVar *tagged2PerdioVar(TaggedRef t) {
   return (PerdioVar *) tagged2CVar(t);
 }
 
-inline
-Bool isURL(TaggedRef term)
-{
-  return isPerdioVar(term) && tagged2PerdioVar(term)->isURL();
-}
 
 #endif

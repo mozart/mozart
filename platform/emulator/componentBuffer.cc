@@ -31,20 +31,12 @@
 
 class MarshalInfo {
 public:
-  OZ_Term resources,saveTheseURLsToo, urlsFound, names,currentURL;
-  MarshalInfo(OZ_Term ds, OZ_Term urls,OZ_Term current) {
+  OZ_Term resources,names;
+  MarshalInfo() {
     resources = nil();
     names     = nil();
-    currentURL= current;
-    saveTheseURLsToo = deref(ds);
-    urlsFound = literalEq(urls,NameUnit) ? NameUnit : nil();
   }
   void addRes(OZ_Term res) { resources = cons(res,resources); }
-  void addURL(OZ_Term url) {
-    if (!literalEq(urlsFound,NameUnit) && !member(url,urlsFound)) {
-      urlsFound = cons(url,urlsFound);
-    }
-  }
 };
 
 
@@ -298,22 +290,12 @@ public:
   void addRes(OZ_Term t){
     info->addRes(t);}
 
-  void addURL(OZ_Term t){
-    info->addURL(t);}
-
-  Bool saveAnyway(OZ_Term t){
-    return (literalEq(NameUnit,info->saveTheseURLsToo) ||
-            member(t,info->saveTheseURLsToo));
-  }
-
   void marshaledProcHasNames(TaggedRef t){
     info->names=t;}
 
   Bool knownAsNewName(OZ_Term t){
     return member(t,info->names);
   }
-
-  void gnameMark(GName* gname){ if (info) gname->markURL(info->currentURL);}
 };
 
 

@@ -60,7 +60,6 @@ public:
   virtual void addURL(OZ_Term)                  {} // only for load/save - noop for rest
   virtual Bool saveAnyway(OZ_Term)              {return NO;} // only for load/save - returns NO for rest
   virtual void marshaledProcHasNames(TaggedRef) {} // only for load/save - noop for rest
-  virtual void gnameMark(GName* gn)             {gn->markURL(0);} // only otherwise for load/save
   virtual Bool knownAsNewName(OZ_Term)          {return NO;} // only for load/save - returns NO for rest
 };
 

@@ -126,7 +126,7 @@ typedef enum {
   DIF_CHUNK,            // SITE INDEX NAME value
   DIF_PROC,             // SITE INDEX NAME ARITY globals code
   DIF_CLASS,            // SITE INDEX NAME obj class
-  DIF_URL,              // gname url
+  DIF_URL,              // UNUSED
   DIF_ARRAY,
   DIF_FSETVALUE,        // finite set constant
   DIF_NEWNAME,          // allways create a new name (code instantiation)
@@ -346,8 +346,8 @@ void gcGName(GName *);
 /*  SECTION ::  provided by components                                      */
 /* ************************************************************************ */
 
-int loadURL(TaggedRef url, OZ_Term out, OZ_Term triggerVar, Thread *th);
-int loadURL(const char *,OZ_Term,OZ_Term, Thread *th);
+int loadURL(TaggedRef url, OZ_Term out, Thread *th);
+int loadURL(const char *,OZ_Term,Thread *th);
 void initComponents();
 
 /* ************************************************************************ */
