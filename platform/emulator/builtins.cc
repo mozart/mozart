@@ -783,85 +783,6 @@ OZ_C_proc_begin(BIrecordTell,2)
 OZ_C_proc_end
 
 
-OZ_C_proc_begin(BIrecordC,1)
-{
-  TaggedRef t = OZ_getCArg(0);
-  DEREF(t, tPtr, tag);
-
-  switch (tag) {
-  case LTUPLE:
-  case LITERAL:
-  case SRECORD:
-    return PROCEED;
-  case CVAR:
-    switch (tagged2CVar(t)->getType()) {
-    case OFSVariable:
-      return PROCEED;
-    case FDVariable:
-    case BoolVariable:
-      return FAILED;
-    default:
-      OZ_suspendOn (makeTaggedRef(tPtr));
-    }
-  case UVAR:
-  case SVAR:
-    {
-      // Create newofsvar with unbound variable as label:
-      GenOFSVariable *newofsvar=new GenOFSVariable();
-      // Unify newofsvar and term:
-      Bool ok=am.unify(makeTaggedRef(newTaggedCVar(newofsvar)),
-                       makeTaggedRef(tPtr));
-      Assert(ok);
-      return PROCEED;
-    }
-  default:
-    return FAILED;
-  }
-}
-OZ_C_proc_end
-
-
-
-// Constrain term to a record, with an initial size sufficient for at least
-// tNumFeats features.  Never suspend.  If term is already a record, do nothing.
-OZ_C_proc_begin(BIrecordCSize,2)
-{
-  TaggedRef tNumFeats = OZ_getCArg(0);
-  TaggedRef t = OZ_getCArg(1);
-
-  DEREF(tNumFeats, nPtr, ntag);
-  DEREF(t, tPtr, tag);
-
-  /* Calculate initial size of hash table */
-  if (!isSmallInt(tNumFeats)) TypeErrorT(0,"Int");
-  dt_index numFeats=smallIntValue(tNumFeats);
-  dt_index size=ceilPwrTwo((numFeats<=FILLLIMIT) ? numFeats
-                                                 : (int)ceil((double)numFeats/FILLFACTOR));
-  switch (tag) {
-  case LTUPLE:
-  case LITERAL:
-  case SRECORD:
-    return PROCEED;
-  case CVAR:
-    if (tagged2CVar(t)->getType()!=OFSVariable) return FAILED;
-    return PROCEED;
-  case UVAR:
-  case SVAR:
-    {
-      // Create newofsvar with unbound variable as label & given initial size:
-      GenOFSVariable *newofsvar=new GenOFSVariable(size);
-      // Unify newofsvar and term:
-      Bool ok=am.unify(makeTaggedRef(newTaggedCVar(newofsvar)),makeTaggedRef(tPtr));
-      Assert(ok);
-      return PROCEED;
-    }
-  default:
-    return FAILED;
-  }
-}
-OZ_C_proc_end
-
-
 // Suspend until can determine whether term is a record or not.
 // This routine extends isRecordInline to accept undetermined records.
 OZ_Return isRecordCInline(TaggedRef t)
@@ -1128,93 +1049,6 @@ OZ_Return WidthPropagator::run(void)
 
 
 
-OZ_C_proc_begin(BIlabelC,2)
-{
-  OZ_Term term = OZ_getCArg(0);
-  OZ_Term lbl  = OZ_getCArg(1);
-
-  DEREF(term,termPtr,tag);
-  TaggedRef lbldrf=lbl;
-  DEREF(lbldrf,_,lbltag);
-
-  /* most probable case first */
-  if (isLiteral(lbltag) && isNotCVar(tag)) {
-    GenOFSVariable *newofsvar=new GenOFSVariable(lbl);
-    Bool ok=am.unify(makeTaggedRef(newTaggedCVar(newofsvar)),makeTaggedRef(termPtr));
-    Assert(ok);
-    return PROCEED;
-  }
-
-  // Constrain term to a record:
-  // Get the term's label, if it exists
-  TaggedRef thelabel=makeTaggedNULL();
-  switch (tag) {
-  case LTUPLE:
-    thelabel=AtomCons;
-    break;
-  case LITERAL:
-    thelabel=term;
-    break;
-  case SRECORD:
-  record:
-    thelabel=tagged2SRecord(term)->getLabel();
-    break;
-  case UVAR:
-  case SVAR:
-    {
-      // Create newofsvar with unbound variable as label:
-      GenOFSVariable *newofsvar=new GenOFSVariable();
-      // Unify newofsvar and term:
-      Bool ok=am.unify(makeTaggedRef(newTaggedCVar(newofsvar)),makeTaggedRef(termPtr));
-      Assert(ok);
-      term=makeTaggedRef(termPtr);
-      DEREF(term, termPtr2, tag2);
-      termPtr=termPtr2;
-      tag=tag2;
-      thelabel=newofsvar->getLabel(); 
-      break;
-    }
-  case CVAR:
-    if (tagged2CVar(term)->getType()!=OFSVariable)
-        TypeErrorT(0,"Record");
-    thelabel=tagged2GenOFSVar(term)->getLabel(); 
-    break;
-  default:
-    TypeErrorT(0,"Record");
-  }
-
-  // At this point, thelabel is term's label
-  // Constrain the term's label to be lbl:
-  Assert(thelabel!=makeTaggedNULL());
-  TaggedRef thelabeldrf=thelabel;
-  DEREF(thelabeldrf,_1,_2);
-  // One of the two must be a literal:
-  if (!isLiteral(thelabeldrf) && !isLiteral(lbldrf)) {
-      // If neither are literals, then both must be variables:
-      if (isAnyVar(thelabeldrf) && isAnyVar(lbldrf)) {
-          // Create a thread with this task:
-          RefsArray x=allocateRefsArray(2, NO);
-          x[0]=OZ_getCArg(0);
-          x[1]=OZ_getCArg(1);
-          OZ_Thread thr=OZ_makeSuspendedThread(BIlabelC,x,2);
-          OZ_addThread(lbl,thr);
-          OZ_addThread(thelabel,thr);
-          return PROCEED;
-          // OZ_suspendOn2(thelabel,lbl);
-      } else {
-          // Label argument is not a literal:
-          TypeErrorT(1,"Literal");
-      }
-      // OZ_suspendOnVar2(thelabel,lbl);
-  }
-  if (!isAnyVar(lbltag) && !isLiteral(lbldrf)) return FAILED;
-  return (am.unify(thelabel,lbl)? PROCEED : FAILED);
-}
-OZ_C_proc_end
-
-// DECLAREBI_USEINLINEREL2(BIlabelC,labelCInline);
-
-
 // {RecordC.monitorArity X K L} -- builtin that tracks features added to OFS X
 // in the list L.  Goes away if K is determined (if K is determined on first call,
 // L is list of current features).  monitorArity imposes that X is a record (like
@@ -1344,87 +1178,6 @@ OZ_Return MonitorArityPropagator::run(void)
 }
 
 
-// {SetC X F Y}: destructively update feature F of X with new value Y.
-// X must be undetermined record, F must be literal, feature is added if it doesn't exist.
-// Non-monotonic built-in.
-OZ_C_proc_begin(BIsetC, 3)
-{
-    OZ_Term term = OZ_getCArg(0);
-    OZ_Term fea = OZ_getCArg(1);
-    OZ_Term val = OZ_getCArg(2);
-	
-    DEREF(term, termPtr, termTag);
-    DEREF(fea,  feaPtr,  feaTag);
-
-    // Error unless X is OFS:
-    if (termTag!=CVAR ||
-        tagged2CVar(term)->getType()!=OFSVariable) {
-        TypeErrorT(0,"undetermined record");
-    }
-
-    // Error unless F is a literal:
-    if (!isFeature(feaTag))
-        TypeErrorT(1,"Feature");
-
-    // At this point, X is OFS and F is feature.
-    GenOFSVariable *ofsvar=tagged2GenOFSVar(term);
-    // Destructively update the feature F:
-    Bool updated=ofsvar->setFeatureValue(fea,val);
-    if (!updated) {
-        // Feature doesn't exist so add it:
-        // Add feature by (1) creating new ofsvar with one feature,
-        // (2) unifying the new ofsvar with the old.
-        if (am.currentBoard == ofsvar->getBoardFast()) {
-            // Optimization:
-            // If current board is same as ofsvar board then can add feature directly
-            Bool ok=ofsvar->addFeatureValue(fea,val);
-            Assert(ok);
-            ofsvar->propagateOFS();
-
-	    return (PROCEED);
-        } else {
-            // Create newofsvar:
-            GenOFSVariable *newofsvar=new GenOFSVariable();
-            // Add feature to newofsvar:
-            Bool ok1=newofsvar->addFeatureValue(fea,val);
-            Assert(ok1);
-            // Unify newofsvar and term (which is also an ofsvar):
-            Bool ok2=am.unify(makeTaggedRef(newTaggedCVar(newofsvar)),makeTaggedRef(termPtr));
-            Assert(ok2);
-            return PROCEED;
-        }
-    }
-    return PROCEED;
-}
-OZ_C_proc_end
-
-
-// {RemoveC X F}: destructively remove feature F of X
-// X must be undetermined record and F must be feature.
-// Non-monotonic built-in.
-OZ_C_proc_begin(BIremoveC, 2)
-{
-    OZ_Term term = OZ_getCArg(0);
-    OZ_Term fea = OZ_getCArg(1);
-	
-    DEREF(term, termPtr, termTag);
-    DEREF(fea,  feaPtr,  feaTag);
-
-    // Error unless X is OFS:
-    if (termTag!=CVAR || tagged2CVar(term)->getType()!=OFSVariable)
-        TypeErrorT(0,"undetermined record");
-
-    // Error unless F is a Feature:
-    if (!isFeature(feaTag))
-        TypeErrorT(1,"Feature");
-
-    // At this point, X is OFS and F is feature.
-    GenOFSVariable *ofsvar=tagged2GenOFSVar(term);
-    // Destructively remove the feature F:
-    ofsvar->removeFeature(fea);
-    return PROCEED;
-}
-OZ_C_proc_end
 
 
 // {TestCB X F ?B}: B is boolean with truth value "X has feature F".
@@ -2276,16 +2029,13 @@ OZ_Return hasFeatureInline(TaggedRef term, TaggedRef fea)
 {
   return genericDot(term,fea,0,FALSE);
 }
-DECLAREBI_USEINLINEREL2(BIhasFeature,hasFeatureInline)
+
 DECLAREBOOLFUN2(BIhasFeatureB,hasFeatureBInline,hasFeatureInline)
 
 OZ_Return subtreeInline(TaggedRef term, TaggedRef fea, TaggedRef &out)
 {
   return genericDot(term,fea,&out,FALSE);
 }
-
-DECLAREBI_USEINLINEFUN2(BIsubtree,subtreeInline)
-
 
 extern OZ_Return subtreeInline(TaggedRef term, TaggedRef fea, TaggedRef &out);
 
@@ -7321,24 +7071,16 @@ BIspec allSpec2[] = {
   {"hasFeatureNow",  3, BIhasFeatureNow,  0},
   {"recordCIsVarB",  2, BIisRecordCVarB,  0},
 
-  // These eight will go away in a few days: (when Martin H. has opt. the object system)
-  // (their C definitions except for subtreeInline should go away also at that time)
-  {"MakeRecordC",  1, BIrecordC,        0},
-  {"recordCSize",  2, BIrecordCSize,    0},
-  {"LabelC",       2, BIlabelC,         0},
-  {"setC",         3, BIsetC,           0},
-  {"removeC",      2, BIremoveC,        0},
+  // This one is only used for AVar.oz Martin Mueller should check. 
+  // Otherwise it should go away.
   {"testCB",       3, BItestCB,         0},
-  {"Subtree",      3, BIsubtree,        (IFOR) subtreeInline},
-  {"SubtreeC",     3, BIuparrow,        (IFOR) uparrowInline},
 
   {".",            3,BIdot,              (IFOR) dotInline},
   {"^",            3,BIuparrow,        	 (IFOR) uparrowInline},
 
-  // First two should eventually change names to HasFeature:
-  {"HasSubtreeAtB", 3,BIhasFeatureB, (IFOR) hasFeatureBInline},
-  {"HasSubtreeAt",  2,BIhasFeature,  (IFOR) hasFeatureInline},
-  {"Width",         2,BIwidth,       (IFOR) widthInline},
+  {"HasFeature", 3, BIhasFeatureB,  (IFOR) hasFeatureBInline},
+  {"CondSelect", 4, BImatchDefault, (IFOR) matchDefaultInline},
+  {"Width",      2, BIwidth,       (IFOR) widthInline},
 
   {"AtomToString",    2, BIatomToString,	0},
   {"StringToAtom",    2, BIstringToAtom,	0},
@@ -7381,8 +7123,6 @@ BIspec allSpec2[] = {
   {"genericSet",     3, BIgenericSet,		0},
 
   {"atomHash",       3, BIatomHash,		0},
-
-  {"SubtreeIf",      4, BImatchDefault,         (IFOR) matchDefaultInline},
 
   {"gensym",         2, BIgensym,		0},
 
