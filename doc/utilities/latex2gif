@@ -10,8 +10,8 @@
 #   Leif Kornstaedt, 1998
 #
 # Last change:
-#   $Date: 1998/09/02 09:03:01 $ by $Author: kornstae $
-#   $Revision: 1.3 $
+#   $Date: 1998/09/04 15:10:25 $ by $Author: kornstae $
+#   $Revision: 1.4 $
 #
 # This file is part of Mozart, an implementation of Oz 3:
 #   $MOZARTURL$
@@ -52,18 +52,18 @@ gs -dTextAlphaBits=4 -dGraphicsAlphaBits=4 -r102 \
         exit=no
         while [ $exit ]; do
             read line
-            echo $line 1>&2
             case $line in
             *showpage*)
                 exit=""
                 ;;
             *)
+                echo $line 1>&2
                 ;;
             esac
         done
         i=`expr $i + 1`
         pnmcrop < latex$i.ppm |
-        ppmtogif -interlace -transparent rgbi:1/1/1 > $outdir/latex$i.gif
+        ppmtogif -interlace -transparent rgbi:1/1/1 > latex$i.gif
         rm latex$i.ppm
         echo Wrote latex$i.gif 1>&2
         echo
@@ -71,6 +71,8 @@ gs -dTextAlphaBits=4 -dGraphicsAlphaBits=4 -r102 \
     echo quit
     ) > moo
 )
+
+mv $tmpdir/latex*.gif $outdir
 
 rm -rf $tmpdir
 
