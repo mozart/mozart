@@ -107,6 +107,10 @@ OZ_Term atom_row, atom_opt, atom_type, atom_rhs, atom_min, atom_max,
 
 #define FailOnInvalid(X) if((X) < 0.0) goto failure;
 
+#ifdef FailOnInvalidTouched
+#undef FailOnInvalidTouched
+#endif
+
 #define FailOnInvalidTouched(X, W, F)           \
 {                                               \
   ri_float _w = (X);                            \

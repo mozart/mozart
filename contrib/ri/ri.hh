@@ -192,13 +192,23 @@ public:
     return _l <= _u;
   }
 
+  virtual OZ_Boolean isEmpty(void) {
+    return _l > _u;
+  }
+
   OZ_Boolean isWeakerThan(OZ_Ct * r) {
     RI * ri = (RI *) r;
     //    return (ri->_u - ri->_l) < (_u - _l);
     return (ri->getWidth() < getWidth());
   }
 
-  virtual OZ_Ct * unify(OZ_Ct * r) {
+  OZ_Boolean operator ==(OZ_Ct * r) {
+    RI * ri = (RI *) r;
+    return (ri->lowerBound() == lowerBound() &&
+            ri->upperBound() == upperBound());
+  }
+
+  virtual OZ_Ct * intersectDomains(OZ_Ct * r) {
     RI * x = this;
     RI * y = (RI *) r;
     static RI z;
@@ -209,7 +219,7 @@ public:
     return &z;
   }
 
-  virtual OZ_Boolean unify(OZ_Term rvt) {
+  virtual OZ_Boolean isInDomain(OZ_Term rvt) {
     if (OZ_isFloat(rvt)) { // TMUELLER: isValidValue
       double rv = OZ_floatToC(rvt);
 
@@ -229,7 +239,13 @@ public:
   }
 
   virtual
-  OZ_CtWakeUp getWakeUpDescriptor(OZ_CtProfile * p)
+  OZ_CtWakeUp computeEvents(OZ_Ct * c)
+  {
+    return computeEvents(((RI *) c)->getProfile());
+  }
+
+  virtual
+  OZ_CtWakeUp computeEvents(OZ_CtProfile * p)
   {
     OZ_CtWakeUp d;
     d.init();
@@ -339,16 +355,16 @@ private:
 
   static int _kind;
 public:
-  virtual int getKind(void) { return _kind; }
+  virtual int getId(void) { return _kind; }
   virtual char * getName(void) { return "real interval"; }
-  virtual int getNoOfWakeUpLists(void) { return 2; }
-  virtual char ** getNamesOfWakeUpLists(void);
+  virtual int getNoEvents(void) { return 2; }
+  virtual char ** getEventNames(void);
 
-  virtual OZ_Ct * leastConstraint(void) {
+  virtual OZ_Ct * fullDomain(void) {
     return RI::leastConstraint();
   }
 
-  virtual OZ_Boolean isValidValue(OZ_Term f) {
+  virtual OZ_Boolean isValueOfDomain(OZ_Term f) {
     return RI::isValidValue(f);
   }
 

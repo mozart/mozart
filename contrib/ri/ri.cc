@@ -33,7 +33,7 @@ RIDefinition * ri_definition;
 
 int RIDefinition::_kind;
 
-char ** RIDefinition::getNamesOfWakeUpLists(void)
+char ** RIDefinition::getEventNames(void)
 {
   static char * names[2] = {"lower", "upper"};
 

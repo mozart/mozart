@@ -196,7 +196,6 @@ declare [RI LP] = {Module.link ['x-oz://contrib/RI' 'x-oz://contrib/LP']}
 
  ]}
 
-
 {Browse {SearchOne proc {$ Sol} [A B] = Sol in
                       {ForAll Sol proc {$ V} {RI.var.bounds 1.0 3.0 V} end}
                       {RI.times A B 3.0}
@@ -210,7 +209,6 @@ declare [RI LP] = {Module.link ['x-oz://contrib/RI' 'x-oz://contrib/LP']}
                          {ForAll Sol RI.distribute}
 
                    end}}
-
 
 local
    fun {SelectVar VsPair}
@@ -233,26 +231,34 @@ local
               end}
    end
    proc {DistributeKnapSackLP Vs ObjFn Constraints MaxProfit}
-      choice
+      {Space.waitStable}
+{Show gaga}
+      local
          DupVs = {DuplicateRIs Vs}
          DupMaxProfit V DupV
       in
          DupMaxProfit = {RI.var.bounds
                          {RI.getLowerBound MaxProfit}
                          {RI.getUpperBound MaxProfit}}
+{Show 1}
 
          {LP.solve DupVs ObjFn Constraints DupMaxProfit optimal}
+{Show 2}
          V#DupV = {SelectVar Vs#DupVs}
 
          if {IsDet V} then
+{Show 3}
             DupMaxProfit = MaxProfit
             DupVs        = Vs
          else
+{Show 4}
             dis {RI.lessEq {Ceil DupV} V}
             then
+{Show gaga1}
                {DistributeKnapSackLP Vs ObjFn Constraints MaxProfit}
             [] {RI.lessEq V {Floor DupV}}
             then
+{Show gaga2}
                {DistributeKnapSackLP Vs ObjFn Constraints MaxProfit}
             end
          end
@@ -308,6 +314,9 @@ local
                     machine4:  r(ta: 16 npp: [0 3 0 0 0 5 0 3 0 0 0 3 3]))
       profit: [5 7 5 11 8 10 6 8 3 12 9 8 4])
 in
+skip
    {Browse {SearchBest {KnapsackFDLP Problem}
             proc {$ O N} O.maxprofit <: N.maxprofit end}}
+%   {ExploreBest {KnapsackFDLP Problem}
+%    proc {$ O N} O.maxprofit <: N.maxprofit end}
 end
