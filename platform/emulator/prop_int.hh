@@ -178,14 +178,19 @@ OZ_Return oz_runPropagator(Propagator * p)
 }
 
 inline
-void oz_preemptedPropagator(Propagator * prop)
-{
+void oz_preemptedPropagator(Propagator * prop) {
   Assert(prop);
   Assert(!prop->isDead());
   Assert(oz_isCurrentBoard(GETBOARD(prop)));
 
-  prop->unsetRunnable();
-  (void) ((Suspendable *) prop)->wakeup(oz_currentBoard(), pc_propagator);
+  Assert(prop->isRunnable());
+
+  if (prop->isNMO() && !oz_onToplevel()) {
+    oz_currentBoard()->addToNonMono(prop);
+  } else {
+    oz_currentBoard()->addToLPQ(prop);
+  }
+
 }
 
 //

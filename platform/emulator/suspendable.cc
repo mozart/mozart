@@ -69,17 +69,19 @@ Bool Suspendable::_wakeup(Board * home, PropCaller calledBy) {
 
     if (isThread()) {
 
+      Thread * t = SuspToThread(this);
+
       switch (between) {
       case B_BETWEEN:
-        oz_wakeupThread(SuspToThread(this));
+        oz_wakeupThread(t);
         DEBUG_CONSTRAIN_CVAR(("Suspendable::_wakeup_thread [t:%p s:%p c:%p]\n",
-                              SuspToThread(this),
-                              sb, oz_currentBoard()));
+                              t, sb, oz_currentBoard()));
         return OK;
+
       case B_NOT_BETWEEN:
         if (calledBy==pc_all) {
           Assert(0);
-          oz_wakeupThread(SuspToThread(this));
+          oz_wakeupThread(t);
           return OK;
         }
         return NO;
@@ -89,7 +91,7 @@ Bool Suspendable::_wakeup(Board * home, PropCaller calledBy) {
         if (isExternal())
           sb->checkSolveThreads();
 
-        SuspToThread(this)->disposeStack();
+        t->disposeStack();
         return OK;
       }
 
@@ -131,15 +133,10 @@ Bool Suspendable::_wakeup(Board * home, PropCaller calledBy) {
 
 }
 
-Bool Suspendable::wakeup(Board * bb, PropCaller calledBy) {
-  return _wakeup(bb, calledBy);
-}
-
-
 void oz_checkAnySuspensionList(SuspList ** suspList,
                                Board * home,
                                PropCaller calledBy) {
-  if (am.inEqEq())
+  if (am.inEqEq() || Board::isInstalling())
     return;
 
   home = home->derefBoard();
@@ -197,8 +194,7 @@ Bool Suspendable::_wakeupLocal(Board * sb, PropCaller calledBy) {
 
 void oz_checkLocalSuspensionList(SuspList ** suspList,
                                  PropCaller calledBy) {
-  // tmueller: what is that?
-  if (am.inEqEq())
+  if (am.inEqEq() || Board::isInstalling())
     return;
 
   SuspList ** p = suspList;
