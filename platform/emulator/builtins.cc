@@ -6733,13 +6733,12 @@ OZ_BI_define(BIsystem_registry,0,1)
 OZ_BI_define(BIcopyCode,2,0)
 {
   oz_declareNonvarIN(0,proc);
-  oz_declareNonvarIN(1,dict);
+  oz_declareNonvarIN(1,alist);
 
   if (!isAbstraction(proc)) { oz_typeError(0,"Abstraction"); }
-  if (!isDictionary(dict))  { oz_typeError(1,"Dictionary"); }
 
-  (void) copyCode(tagged2Abstraction(proc)->getPC(), tagged2Dictionary(dict),OK);
-  
+  (void) copyCode(tagged2Abstraction(proc)->getPC(),alist,OK);
+
   return PROCEED;
 }
 
