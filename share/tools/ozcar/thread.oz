@@ -40,9 +40,13 @@ local
    proc {OzcarReadEvalLoop S}
       case S
       of H|T then
-	 {OzcarMessage 'readloop:'} {OzcarShow H}
-	 {Ozcar PrivateSend(readStreamMessage(H))}
-	 {OzcarMessage 'ready for next message'}
+	 try
+	    {Ozcar PrivateSend(readStreamMessage(H))}
+	 catch E then
+	    {OzcarError 'Whoooops, got an unhandled exception:'}
+	    {System.show E}
+	 end
+	 {OzcarMessage 'OzcarReadEvalLoop: waiting for next message...'}
 	 {OzcarReadEvalLoop T}
       end
    end
@@ -118,6 +122,9 @@ in
       meth readStreamMessage(M)
 
 	 lock UserActionLock then skip end %% don't process messages too fast..
+
+	 {OzcarMessage 'readStreamMessage: dispatching:'}
+	 {OzcarShow M}
 
 	 case M
 
@@ -223,12 +230,13 @@ in
 	 [] ready(thr:T) then
 	    I = {Debug.getId T}
 	 in
-	    case ThreadManager,Exists(I $) then
+	    if ThreadManager,Exists(I $) then
 	       Gui,markNode(I runnable)
-	       case {Dbg.checkStopped T} andthen
-		  T == @currentThread then
-		  {SendEmacs configureBar(runnable)}
-		  %Gui,status('Thread ' # I # ' is runnable again')
+	       if {Dbg.checkStopped T} then
+		  Gui,markNode(I stopped)
+		  if T == @currentThread then
+		     {SendEmacs configureBar(runnable)}
+		  end
 	       end
 	    else
 	       {OzcarMessage
