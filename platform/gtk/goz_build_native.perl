@@ -394,7 +394,7 @@ sub write_oz_bi_definition {
 }
 
 sub process_spec {
-  return unless $$class{meths};
+  return unless $$class{meths} or $$class{inits};
 
   my $inits = $$class{inits};
   foreach my $meth (keys %$inits) {
