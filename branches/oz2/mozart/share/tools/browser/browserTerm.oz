@@ -115,10 +115,7 @@ in
 	 case KT
 	 of record  then T_Record
 	 [] int     then T_FDVariable
-	 [] other   then
-	    case {IsMetaVar Term} then T_MetaVariable % TODO
-	    else T_Variable	% don't know; 
-	    end
+	 [] other   then T_Variable	% don't know; 
 	 else T_Unknown
 	 end
 
@@ -211,7 +208,6 @@ in
       [] !T_HashTuple    then HashTupleTermObject
       [] !T_Variable     then VariableTermObject
       [] !T_FDVariable   then FDVariableTermObject
-      [] !T_MetaVariable then MetaVariableTermObject
       [] !T_Unknown      then UnknownTermObject
       else
 	 {BrowserError 'Unknown type in BrowserTerm.getObjClass: '}
@@ -251,7 +247,6 @@ in
       [] !T_HashTuple    then true
       [] !T_Variable     then false 
       [] !T_FDVariable   then false 
-      [] !T_MetaVariable then false 
       [] !T_Unknown      then false 
       else
 	 {BrowserWarning
@@ -291,7 +286,6 @@ in
       [] !T_HashTuple    then true
       [] !T_Variable     then true 
       [] !T_FDVariable   then true 
-      [] !T_MetaVariable then true
       [] !T_Unknown      then false 
       else
 	 {BrowserWarning
