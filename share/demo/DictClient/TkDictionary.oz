@@ -22,7 +22,7 @@
 functor
 import
    Tk(toplevel action frame label entry listbox scrollbar addYScrollbar
-      button text send batch return returnInt)
+      button text send batch return returnInt isColor)
    TkTools(images menubar error dialog)
    Open(file)
    NetDictionary('class'
@@ -65,6 +65,18 @@ prepare
 	  else ', '#In
 	  end
        end unit}
+   end
+
+   fun {Clean S}
+      {FoldR S
+       fun {$ C In}
+	  if C =< &  then
+	     case In of & |_ then In
+	     else & |In
+	     end
+	  else C|In
+	  end
+       end nil}
    end
 define
    Images = {TkTools.images [DemoUrls.image#'dict-client/dict.gif']}
@@ -268,23 +280,61 @@ define
    %%
 
    class DefinitionWindow from InformationWindow
-      meth init(Master)
+      attr tagNumber inTag tagText
+      feat action
+      meth init(Master Action)
+	 self.action = Action
+	 tagNumber <- 0
+	 inTag <- 0
+	 tagText <- ""
 	 InformationWindow, init(Master 'Definitions' status: true)
       end
       meth append(Definition)
 	 case Definition
 	 of definition(word: Word db: _ dbname: DBName body: Body) then
 	    InformationWindow, append(Word#', '#DBName#'\n' titleTag)
-	    DefinitionWindow, Append(nil#'\n'#Body)
-	    DefinitionWindow, Append('\n\n')
+	    DefinitionWindow, AppendLines(nil#'\n'#Body)
+	    InformationWindow, append('\n\n')
 	 end
       end
-      meth Append(VS)
-	 case VS of V#'\n'#Rest then
-	    InformationWindow, append(V#'\n')
-	    DefinitionWindow, Append(Rest)
+      meth AppendLines(VS)
+	 case VS of V#'\n'#Rest then V2 in
+	    V2 = V#'\n'
+	    DefinitionWindow, AppendWithHyperLinks({VirtualString.toString V2})
+	    DefinitionWindow, AppendLines(Rest)
 	 else
-	    InformationWindow, append(VS)
+	    DefinitionWindow, AppendWithHyperLinks({VirtualString.toString VS})
+	 end
+      end
+      meth AppendWithHyperLinks(S) S1 S2 in
+	 {List.takeDropWhile S fun {$ C} C \= &{ andthen C \= &} end ?S1 ?S2}
+	 if @inTag > 0 then
+	    InformationWindow, append(S1 @tagNumber)
+	    tagText <- @tagText#S1
+	 else
+	    InformationWindow, append(S1)
+	 end
+	 case S2 of C|Cr then
+	    case C of &{ then
+	       inTag <- @inTag + 1
+	       {self.text tk(tag configure @tagNumber underline: true)}
+	       if Tk.isColor then
+		  {self.text tk(tag configure @tagNumber foreground: blue)}
+	       end
+	    [] &} then
+	       inTag <- {Max @inTag - 1 0}
+	       if @inTag == 0 then Text Action in
+		  Text = {Clean {VirtualString.toString (tagText <- "")}}
+		  Action = {New Tk.action
+			    tkInit(parent: self.text
+				   action: proc {$} {self.action Text} end)}
+		  {self.text tk(tag bind @tagNumber '<1>' Action)}
+		  tagText <- ""
+		  tagNumber <- @tagNumber + 1
+	       end
+	    end
+	    DefinitionWindow, AppendWithHyperLinks(Cr)
+	 [] nil then skip
 	 end
       end
    end
@@ -603,7 +653,7 @@ define
 	 if Word \= "" andthen DBs \= nil then
 	    TkDictionary, Log('Look up `'#Word#'\' in: '#
 			      {FormatDBs DBs @Databases})
-	    {Send NetPort getDefinitions(Word DBs)}
+	    {Send NetPort getDefinitions(Word DBs NetPort)}
 	 end
       end
       meth GetMatches(NetPort) Word DBs Strategy in
@@ -618,7 +668,7 @@ define
 	 end
       end
       meth Lookup(Word DB NetPort)
-	 {Send NetPort getDefinitions(Word [DB])}
+	 {Send NetPort getDefinitions(Word [DB] NetPort)}
       end
       meth UpdateDatabases(NetPort)
 	 TkDictionary, Log('Update databases')
@@ -681,13 +731,18 @@ define
 	       catch E then
 		  TkDictionary, HandleException(E)
 	       end
-	    [] getDefinitions(Word DBs) then VS in
+	    [] getDefinitions(Word DBs NetPort) then VS in
 	       VS = ('Looking up `'#Word#'\' in: '#{FormatDBs DBs @Databases}#
 		     ' ...')
 	       TkDictionary, Status(VS)
-	       try T W TotalCount in
+	       try T Action W TotalCount in
 		  T = {Thread.this}
-		  W = {New DefinitionWindow init(self.Toplevel)}
+		  proc {Action Word}
+		     TkDictionary, Log('Look up `'#Word#'\' in: '#
+				       {FormatDBs DBs @Databases})
+		     {Send NetPort getDefinitions(Word DBs NetPort)}
+		  end
+		  W = {New DefinitionWindow init(self.Toplevel Action)}
 		  TotalCount = {NewCell 0}
 		  {ForAll DBs
 		   proc {$ DB} Count Res in
@@ -728,9 +783,9 @@ define
 	       TkDictionary, Status(VS)
 	       try Action W TotalCount in
 		  proc {Action Word DBs}
-		     TkDictionary, Log('Match `'#Word#'\' in: '#
+		     TkDictionary, Log('Look up `'#Word#'\' in: '#
 				       {FormatDBs DBs @Databases})
-		     {Send NetPort getDefinitions(Word DBs)}
+		     {Send NetPort getDefinitions(Word DBs NetPort)}
 		  end
 		  W = {New MatchWindow init(self.Toplevel Action)}
 		  TotalCount = {NewCell 0}
