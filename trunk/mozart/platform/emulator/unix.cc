@@ -578,34 +578,68 @@ OZ_BI_iodefine(unix_stat,1,1)
 
 OZ_BI_iodefine(unix_uName,0,1) {
 #ifdef WINDOWS
-  OZ_Term t2=OZ_pairAS("machine","unknown");
-  OZ_Term t3=OZ_pairAS("nodename",oslocalhostname());
-  OZ_Term t4=OZ_pairAS("release","unknown");
-  OZ_Term t5=OZ_pairAS("sysname","WIN32");
-  OZ_Term t6=OZ_pairAS("version","unknown");
+
+  OZ_Term unknown = OZ_string("unknown");
+
+  OZ_MAKE_RECORD_S("utsname",5,
+		   { "machine"    OZ_COMMA
+		       "nodename" OZ_COMMA
+		       "release"  OZ_COMMA
+		       "sysname"  OZ_COMMA
+		       "version" },
+		   { unknown              OZ_COMMA
+		       oslocalhostname()  OZ_COMMA
+		       unknown            OZ_COMMA
+		       OZ_string("WIN32") OZ_COMMA
+		       unknown }, r);
+
 #else
+
   struct utsname buf;
+
   if (uname(&buf) < 0)
     RETURN_UNIX_ERROR("uname");
 
-  OZ_Term t2=OZ_pairAS("machine",buf.machine);
-  OZ_Term t3=OZ_pairAS("nodename",buf.nodename);
-  OZ_Term t4=OZ_pairAS("release",buf.release);
-  OZ_Term t5=OZ_pairAS("sysname",buf.sysname);
-  OZ_Term t6=OZ_pairAS("version",buf.version);
-
-#endif
-  OZ_Term pairlist = oz_mklist(t2,t3,t4,t5,t6);
-
 #if defined(SUNOS_SPARC) || defined(LINUX)
+
   char dname[65];
   if (getdomainname(dname, 65)) {
     RETURN_UNIX_ERROR("getdomainname");
   }
-  pairlist = oz_cons(OZ_pairAS("domainname",dname),pairlist);
+
+  OZ_MAKE_RECORD_S("utsname", 6,
+		   { "machine"    OZ_COMMA
+		       "nodename" OZ_COMMA
+		       "release"  OZ_COMMA
+		       "sysname"  OZ_COMMA
+		       "version"  OZ_COMMA
+		       "domainname"},
+		   { OZ_string(buf.machine)    OZ_COMMA
+		       OZ_string(buf.nodename) OZ_COMMA
+		       OZ_string(buf.release)  OZ_COMMA
+		       OZ_string(buf.sysname)  OZ_COMMA
+		       OZ_string(buf.version)  OZ_COMMA
+		       OZ_string(dname)}, r);
+
+#else
+
+  OZ_MAKE_RECORD_S("utsname", 5,
+		   { "machine"    OZ_COMMA
+		       "nodename" OZ_COMMA
+		       "release"  OZ_COMMA
+		       "sysname"  OZ_COMMA
+		       "version"},
+		   { OZ_string(buf.machine)    OZ_COMMA
+		       OZ_string(buf.nodename) OZ_COMMA
+		       OZ_string(buf.release)  OZ_COMMA
+		       OZ_string(buf.sysname)  OZ_COMMA
+		       OZ_string(buf.version)}, r);
+
 #endif
 
-  OZ_RETURN(OZ_recordInit(OZ_atom("utsname"),pairlist));
+#endif
+
+  OZ_RETURN(r);
 } OZ_BI_ioend
 
 

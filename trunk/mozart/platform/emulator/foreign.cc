@@ -1863,14 +1863,12 @@ OZ_Return OZ_raiseC(char *label,int arity,...)
   return OZ_raise(tt);
 }
 
-OZ_Return OZ_raiseError(OZ_Term exc)
-{
-  OZ_Term ret = OZ_record(oz_atom("error"),
-			  oz_cons(oz_int(1),
-			       oz_cons(oz_atom("debug"),oz_nil())));
-  OZ_putSubtree(ret,oz_int(1),exc);
-  OZ_putSubtree(ret,oz_atom("debug"),NameUnit);
-
+OZ_Return OZ_raiseError(OZ_Term exc) {
+  OZ_Term ret = OZ_record(AtomError,
+			  oz_mklist(newSmallInt(1),AtomDebug));
+  OZ_putSubtree(ret, newSmallInt(1), exc);
+  OZ_putSubtree(ret, AtomDebug,      NameUnit);
+  
   am.setException(ret,TRUE);
   return RAISE;
 }
@@ -1908,11 +1906,9 @@ OZ_Term OZ_makeException(OZ_Term cat,OZ_Term key,char*label,int arity,...)
   va_end(ap);
 
 
-  OZ_Term ret = OZ_record(cat,
-			  oz_cons(OZ_int(1),
-			       oz_cons(OZ_atom("debug"),OZ_nil())));
-  OZ_putSubtree(ret,OZ_int(1),exc);
-  OZ_putSubtree(ret,OZ_atom("debug"),NameUnit);
+  OZ_Term ret = OZ_record(cat,oz_mklist(newSmallInt(1),AtomDebug));
+  OZ_putSubtree(ret, newSmallInt(1), exc);
+  OZ_putSubtree(ret, AtomDebug,      NameUnit);
   return ret;
 }
 

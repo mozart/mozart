@@ -72,37 +72,33 @@ TaggedRef OzDebug::getFrameVariables() {
 
 // ------------------ debug stream messages ---------------------------
 
+#define DBG_MESSAGE(MSG) \
+  OZ_MAKE_RECORD_S(MSG,1,{"thr"},{oz_thread(thread)},r); \
+  am.debugStreamMessage(r);
+
 void debugStreamBreakpoint(Thread *thread) {
-  TaggedRef pairlist =
-    oz_cons(OZ_pairA("thr",oz_thread(thread)),oz_nil());
-  am.debugStreamMessage(OZ_recordInit(OZ_atom("breakpoint"), pairlist));
+  DBG_MESSAGE("breakpoint");
 }
 
 void debugStreamBlocked(Thread *thread) {
-  TaggedRef pairlist =
-    oz_cons(OZ_pairA("thr",oz_thread(thread)),oz_nil());
-  am.debugStreamMessage(OZ_recordInit(OZ_atom("blocked"), pairlist));
+  DBG_MESSAGE("blocked");
 }
 
 void debugStreamReady(Thread *thread) {
-  TaggedRef pairlist =
-    oz_cons(OZ_pairA("thr",oz_thread(thread)),oz_nil());
-  am.debugStreamMessage(OZ_recordInit(OZ_atom("ready"), pairlist));
+  DBG_MESSAGE("ready");
 }
 
 void debugStreamTerm(Thread *thread) {
-  TaggedRef pairlist =
-    oz_cons(OZ_pairA("thr",oz_thread(thread)),oz_nil());
-  am.debugStreamMessage(OZ_recordInit(OZ_atom("term"), pairlist));
+  DBG_MESSAGE("term");
 }
 
 void debugStreamException(Thread *thread, TaggedRef exc) {
   oz_currentThread()->setStop();
 
-  TaggedRef pairlist =
-    oz_cons(OZ_pairA("thr",oz_thread(thread)),
-	 oz_cons(OZ_pairA("exc",exc),oz_nil()));
-  am.debugStreamMessage(OZ_recordInit(OZ_atom("exception"), pairlist));
+  OZ_MAKE_RECORD_S("exception",2,
+		   {"thr" OZ_COMMA "exc" },
+		   {oz_thread(thread) OZ_COMMA exc},r);
+  am.debugStreamMessage(r);
 }
 
 void debugStreamEntry(OzDebug *dbg, int frameId) {
@@ -117,9 +113,7 @@ void debugStreamExit(OzDebug *dbg, int frameId) {
 }
 
 void debugStreamUpdate(Thread *thread) {
-  TaggedRef pairlist =
-    oz_cons(OZ_pairA("thr",oz_thread(thread)),oz_nil());
-  am.debugStreamMessage(OZ_recordInit(OZ_atom("update"), pairlist));
+  DBG_MESSAGE("update");
 }
 
 void execBreakpoint(Thread *t) {
