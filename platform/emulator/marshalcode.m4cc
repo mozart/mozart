@@ -12,6 +12,8 @@
 
 #include "am.hh"
 
+define(readArg,$1)
+define(writeArg,$1)
 define(instruction,
 	`ifelse(numOfRegs($2,$3,$4),1,
                     case TOUPPER($1)X: 

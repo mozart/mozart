@@ -82,6 +82,8 @@ OZ_C_proc_proto(BIcheckStopped)
 OZ_C_proc_proto(BIbreakpointAt)
 OZ_C_proc_proto(BIbreakpoint)
 OZ_C_proc_proto(BIdisplayCode)
+OZ_C_proc_proto(BIprocedureCode)
+OZ_C_proc_proto(BIlivenessX)
 
 
 /* The Oz machine level debugger */

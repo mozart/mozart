@@ -143,6 +143,7 @@ public:
 
   /* with one argument it means that we need the code till the "query"  */
   static void display (ProgramCounter from, int size = 1, FILE* = stderr);
+  static int livenessX(ProgramCounter from, TaggedRef *X=0,int n=0);
 
   static ProgramCounter definitionStart(ProgramCounter from);
   static ProgramCounter definitionEnd(ProgramCounter from);

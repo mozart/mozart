@@ -129,7 +129,13 @@ public:
   Bool findCatch(ProgramCounter PC=NOCODE, TaggedRef *traceBack=0,
 		 Bool verbose=NO);
 
+
+  void checkLiveness(RefsArray X);
+
   void pushX(RefsArray X) {
+#ifdef DEBUG_LIVENESS
+    checkLiveness(X);
+#endif
     Assert(X);
     pushFrame(C_XCONT_Ptr,X,0);
   }
