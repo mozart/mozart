@@ -236,6 +236,9 @@ OZ_C_proc_begin(Name,Arity)                                                   \
 
 /* useful macros and functions (mm 9.2.93) */
 
+#define OZ_declareArg(ARG,VAR) \
+     OZ_Term VAR = OZ_getCArg(ARG);
+
 #define OZ_nonvarArg(ARG)                                                     \
 { if (OZ_isVariable(OZ_getCArg(ARG)))                                         \
       {   OZ_addSuspension(OZ_getCArg(ARG),OZ_makeSelfSuspension());          \
@@ -262,8 +265,6 @@ OZ_C_proc_begin(Name,Arity)                                                   \
    VAR = OZ_floatToC(OZ_getCArg(ARG));                                        \
  }
 
-#define OZ_declareStringArg(FUN,ARG,VAR)                                      \
-        OZ_declareAtomArg(FUN,ARG,VAR)
 
 #define OZ_declareAtomArg(FUN,ARG,VAR)                                        \
  char *VAR;                                                                   \

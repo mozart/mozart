@@ -48,7 +48,7 @@ BuiltinTabEntry *BIaddSpecial(char *name,int arity,BIType t, Bool replace)
 
 OZ_C_proc_begin(BIbuiltin,3)
 {
-  OZ_declareStringArg("builtin",0,str);
+  OZ_declareAtomArg("builtin",0,str);
   OZ_Term hdl = OZ_getCArg(1);
   OZ_Term ret = OZ_getCArg(2);
 
