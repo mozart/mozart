@@ -429,7 +429,12 @@ Bool AM::performUnify(TaggedRef *termPtr1, TaggedRef *termPtr2)
 
 Bool AM::isBetween(Board *to, Board *varHome)
 {
-  for (Board *tmp = to->getBoardDeref();
+  Board *tmp = to->getBoardDeref();
+
+  if (varHome == tmp)
+    return OK;
+
+  for (;
        tmp != currentBoard;
        tmp = tmp->getParentBoard()->getBoardDeref()) {
     if (tmp == varHome) {
@@ -686,9 +691,12 @@ void AM::genericBind(TaggedRef *varPtr, TaggedRef var,
     if ( termPtr && isAnyVar(term) ) {
       term = makeTaggedRef(termPtr);
     }
+    if (isSVar(var)) {
+      tagged2SVar(var)->dispose();
+    }
   }
 
-// term is set now correctly to a non variable TaggedRef
+  // term is set now correctly to a non variable TaggedRef
   doBind(varPtr,term);
 }
 
@@ -908,6 +916,69 @@ void AM::setCurrent(Board *c, Bool checkNotGC)
     DebugCheckT (oldSolveBoard = currentSolveBoard);
   }
 }
+
+
+
+#ifdef FASTSS
+Bool AM::fastUnifyOutline(TaggedRef term1, TaggedRef *term1Ptr, TaggedRef term2)
+{
+  SVariable *svar;
+  TaggedRef term;
+  TaggedRef *varPtr;
+
+  if (isSVar(term1) && isLocalVariable(term1)) {
+    svar = tagged2SVar(term1);
+    varPtr = term1Ptr;
+    term = term2;
+  } else {
+    DEREF(term2,term2Ptr,_1);
+    if (isSVar(term2) && isLocalVariable(term2)) {
+      svar = tagged2SVar(term2);
+      varPtr = term2Ptr;
+      term = makeTaggedRef(term1Ptr?term1Ptr:term1);
+    } else {
+      if (term1Ptr)
+        return unify(term1Ptr,term2);
+      else
+        return unify(term1,term2);
+    }
+  }
+
+  for (SuspList* sl = svar->getSuspList(); sl;  sl = sl->dispose()) {
+
+    Suspension* susp = sl->getElem();
+
+    if (susp->isDead()) {
+      continue;
+    }
+
+    if (susp->getNode()->getBoardDeref() == NULL) {
+      susp->markDead();
+      continue;
+    }
+
+    switch (susp->getFlag() & (S_cont|S_cfun)) {
+    case S_null:
+      susp->wakeUpNode(svar);
+      break;
+    case S_cont:
+      {
+        susp->markDead();
+        Thread::ScheduleSuspCont(susp->getCont(), NO);
+        break;
+      }
+    case S_cont|S_cfun:
+      susp->wakeUpCCont(svar);
+      break;
+    }
+  }
+
+  svar->dispose();
+
+  doBind(varPtr,term);
+}
+#endif
+
 
 #ifdef OUTLINE
 #define inline

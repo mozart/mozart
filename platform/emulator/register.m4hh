@@ -272,7 +272,7 @@ define(M4INSTRTWOREGS,``''
                  int arity = getPosIntArg(PC+2);
 
                  TaggedRef term = Reg1( getRegArg(PC+3) );
-                 FASTDEREF(term,termPtr,tag);
+                 DEREF(term,termPtr,tag);
 
                  if (isNotCVar(term)) {
                    // then produce new .
@@ -316,7 +316,7 @@ define(M4INSTRTWOREGS,``''
                  Arity *ff = (Arity *) getAdressArg(PC+2);
 
                  TaggedRef term = Reg1( getRegArg(PC+3) );
-                 FASTDEREF(term,termPtr,tag);
+                 DEREF(term,termPtr,tag);
 
                  if (isNotCVar(term)) {
                    // then produce new record
@@ -360,7 +360,7 @@ define(M4INSTRTWOREGS,``''
                  Atom *atom = getAtomArg(PC+1);
 
                  TaggedRef term = Reg1( getRegArg(PC+2) );
-                 FASTDEREF(term,termPtr,tag);
+                 DEREF(term,termPtr,tag);
 
                  if (isNotCVar(tag)) {
                    e->bindToNonvar(termPtr, term, makeTaggedAtom(atom));
@@ -393,7 +393,7 @@ define(M4INSTRTWOREGS,``''
                  Reg reg = getRegArg(PC+2);
 
                  TaggedRef term = Reg1(reg);
-                 FASTDEREF(term,termPtr,tag);
+                 DEREF(term,termPtr,tag);
 
                  if (isNotCVar(tag)) {
                    e->bind(termPtr, term, &i);
@@ -428,7 +428,7 @@ define(M4INSTRTWOREGS,``''
 
 
                  TaggedRef term = Xreg(reg1);
-                 FASTDEREF(term,termPtr,tag);
+                 DEREF(term,termPtr,tag);
 
                  if(isNotCVar(term)) {
                    LTuple *ltuple = new LTuple(Reg1(reg2),e->currentUVarPrototype);
@@ -471,12 +471,16 @@ define(M4INSTRTWOREGS,``''
                  Reg reg = getRegArg(PC+1);
 
                  register TaggedRef term = Reg1(reg);
-                 FASTDEREF(term,termPtr,tag);
+                 DEREF(term,termPtr,tag);
 
                  if(isNotCVar(term)) {
                    LTuple *ltuple = new LTuple();
+#ifdef FASTSS
+                   e->fastUnify(termPtr?makeTaggedRef(termPtr):term,
+                                makeTaggedLTuple(ltuple));
+#else
                    e->bindToNonvar(termPtr, term, makeTaggedLTuple(ltuple));
-
+#endif
                    sPointer = ltuple->getRef();
                    mode = WRITE;
                    DISPATCH(2);
