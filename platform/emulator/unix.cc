@@ -1627,6 +1627,29 @@ OZ_C_ioproc_begin(unix_wait,2)
 }
 OZ_C_proc_end
 
+
+OZ_C_ioproc_begin(unix_getServByName, 3)
+{
+  OZ_declareVsArg("getServByName", 0, name);
+  OZ_declareVsArg("getServByName", 1, proto);
+  OZ_Term out = OZ_getCArg(2);
+
+  struct servent *serv;
+  serv = getservbyname(name, proto);
+
+  if (!serv)
+    return OZ_unify(out, OZ_getNameFalse());
+
+  return OZ_unifyInt(out, ntohs(serv->s_port));
+}
+OZ_C_proc_end
+#endif
+
+#ifdef WINDOWS
+/* ignore dir and prefix! */
+#define tempnam(dir,prefix) tmpnam(NULL)
+#endif
+
 OZ_C_ioproc_begin(unix_tempName, 3)
 {
   OZ_declareVsArg("tempName", 0, directory);
@@ -1648,24 +1671,6 @@ OZ_C_ioproc_begin(unix_tempName, 3)
 }
 OZ_C_proc_end
   
-
-OZ_C_ioproc_begin(unix_getServByName, 3)
-{
-  OZ_declareVsArg("getServByName", 0, name);
-  OZ_declareVsArg("getServByName", 1, proto);
-  OZ_Term out = OZ_getCArg(2);
-
-  struct servent *serv;
-  serv = getservbyname(name, proto);
-
-  if (!serv)
-    return OZ_unify(out, OZ_getNameFalse());
-
-  return OZ_unifyInt(out, ntohs(serv->s_port));
-}
-OZ_C_proc_end
-#endif
-
 
 OZ_C_ioproc_begin(unix_getEnv,2)
 {
@@ -1804,7 +1809,6 @@ NotAvail("sendToUnix",5,unix_sendToUnix);
 NotAvail("connectUnix",3,unix_connectUnix);
 NotAvail("acceptUnix",3,unix_acceptUnix);
 NotAvail("receiveFromUnix",7,unix_receiveFromUnix);
-NotAvail("tempName",3,unix_tempName);
 NotAvail("wait",2,unix_wait);
 NotAvail("getServByName",3,unix_getServByName);
 NotAvail("uName",1,unix_uName);

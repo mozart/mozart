@@ -292,7 +292,6 @@ void deleteReader(int fd)
 {
   //  TerminateThread(readers[fd].thrd,0); !!!!!
   readers[fd].thrd = 0;
-  
 }
 
 Bool createReader(int fd)
@@ -382,7 +381,6 @@ int win32Select(int maxfd, fd_set *fds, int *timeout)
     return 0;
   }
    
-  Assert(wait != INFINITE);
   time_t endTime = time(NULL);
   double d = difftime(endTime,startTime);
   *timeout = wait - (int)(d*1000.0);
@@ -578,7 +576,7 @@ void osClrWatchedFD(int fd, int mode)
   FD_CLR(fd,&globalFDs[mode]); 
 #ifdef WINDOWS
   Assert(mode==SEL_READ);
-  deleteReader(fd);
+  //  deleteReader(fd);
 #endif
 }
 
