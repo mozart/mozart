@@ -69,11 +69,7 @@ AC_SUBST(EXTRALDFLAGS)
 dnl ******************************************************************
 OZ_INIT
 
-BUILDTOP=`cd ../.. && pwd`
-AC_SUBST(BUILDTOP)
-
-AC_PROG_CC
-AC_PROG_CPP
+OZ_CC_CHOOSE
 
 AC_PROG_LN_S
 
