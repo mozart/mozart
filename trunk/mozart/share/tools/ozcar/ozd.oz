@@ -38,6 +38,7 @@
 %% -- the environment of the created compiler should be richer (cf. OPI),
 %%    especially, it is not yet possible to set breakpoints since Ozcar is
 %%    not in there
+%% -- closing Ozcar should terminate the application
 %%
 
 functor
@@ -95,6 +96,8 @@ define
 			  end
 		       end}
 	 end
+	 {Property.put 'errors.toplevel' proc {$} skip end}
+	 {Property.put 'errors.subordinate' proc {$} fail end}
 	 MM = {New Module.manager init()}
 	 {Wait {MM apply(url: AppName AppFunc $)}}
       else
