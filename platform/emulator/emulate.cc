@@ -697,7 +697,7 @@ void printArg(OZ_Term arg)
     } else if (lab==OZ_atom("pos")) {
       message("For Argument #%s.\n",toC(st->getArg(0)));
     } else if (lab==OZ_atom("type")) {
-      message("Expected type '%s'.\n",toC(st->getArg(0)));
+      message("Expected type %s.\n",toC(st->getArg(0)));
     } else {
       message("%s.\n",toC(arg));
     }
