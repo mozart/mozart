@@ -307,7 +307,7 @@ if ("$option" eq "-body") {
     $atoms = 0;
     
     print "const char * _StaticAtomChars[] = {\n";
-    foreach $key (keys %atoms) { 
+    foreach $key (sort keys %atoms) { 
 	print "   \"$atoms{$key}\",\n"; $atoms++;
     }
     print "};\n\n";
@@ -315,7 +315,7 @@ if ("$option" eq "-body") {
     $names = 0;
     
     print "const char * _StaticNameChars[] = {\n";
-    foreach $key (keys %names) { 
+    foreach $key (sort keys %names) { 
 	print "   \"$names{$key}\",\n"; $names++;
     }
     print "};\n\n";
@@ -347,11 +347,11 @@ EOF
     print "extern ATOMVOLATILE TaggedRef _StaticAtomTable[];\n";
     print "extern NAMEVOLATILE TaggedRef _StaticNameTable[];\n\n\n";
     $i=0;
-    foreach $key (keys %atoms) { 
+    foreach $key (sort keys %atoms) { 
 	print "#define $key _StaticAtomTable[$i] \n"; $i++;
     }	
     $i=0;
-    foreach $key (keys %names) { 
+    foreach $key (sort keys %names) { 
 	print "#define $key _StaticNameTable[$i] \n"; $i++;
     }
     print "\n";
