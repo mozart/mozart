@@ -43,6 +43,7 @@ WinMain(HINSTANCE /*hInstance*/, HINSTANCE /*hPrevInstance*/,
   sprintf(buffer,"ozenginew.exe \"");
   int len = strlen(buffer);
   GetModuleFileName(NULL, buffer+len, sizeof(buffer)-len);
+  strcat(buffer,"\" ");
 
   //
   // We don't use the command line we got as argument since
@@ -62,18 +63,16 @@ WinMain(HINSTANCE /*hInstance*/, HINSTANCE /*hPrevInstance*/,
         isQuoted = !isQuoted;
       lpszCmdLine++;
     }
+    strcat(buffer,lpszCmdLine);
   }
-
-  strcat(buffer,"\" ");
-  strcat(buffer,lpszCmdLine);
 
   STARTUPINFO si;
   ZeroMemory(&si,sizeof(si));
   si.cb = sizeof(si);
 
-  PROCESS_INFORMATION pinf;
+  PROCESS_INFORMATION pi;
   BOOL ret = CreateProcess(NULL,buffer,NULL,NULL,TRUE,DETACHED_PROCESS,
-                           NULL,NULL,&si,&pinf);
+                           NULL,NULL,&si,&pi);
   if (ret == FALSE) {
     panic(1,"Cannot run '%s'.\n",buffer);
   }
