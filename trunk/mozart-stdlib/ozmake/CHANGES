@@ -9,6 +9,9 @@
 ** more checks are applied to the `author' feature to make sure that
    they don't contain a stupid mistake
 ** order is now preserved in `requires'
+** ozmake --extract -p MOG will now properly download the package denoted
+   by mogul id MOG from the MOGUL archive (if it was published using
+   ozmake --publish, i.e. follows the right naming convention).
 
 * version 0.74
 ** `requires' field now properly saved in mogul.db and is properly exported

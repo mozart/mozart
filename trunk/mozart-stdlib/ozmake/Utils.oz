@@ -11,7 +11,7 @@ export
    ReadTextDB
    WriteTextDB
    HaveGNUC
-   MogulToFilename MogulToPackagename
+   MogulToFilename MogulToPackagename MogulToRelative
    VersionToInts
    VersionFromInts
    IsVersion
@@ -332,6 +332,13 @@ define
 
    fun {MogulToPackagename MOG}
       {Append {MogulToFilename MOG} ".pkg"}
+   end
+
+   fun {MogulToRelative MOG}
+      {Path.toString
+       {Adjoin
+	{Path.toURL MOG}
+	url(scheme:unit device:unit absolute:false)}}
    end
 
    fun {AuthorOK S}

@@ -136,7 +136,9 @@ define
 	       %% archive
 	       Archive = {self get_archive($)}
 	       Filename = {Utils.mogulToPackagename PKG}
-	       Url = {URL.resolve {URL.toBase Archive} Filename}
+	       Url = {URL.resolve {URL.toBase Archive}
+		      {Path.resolve
+		       {Utils.mogulToRelative PKG} Filename}}
 	       UrlStr = {URL.toString Url}
 	    in
 	       {self xtrace('downloading '#UrlStr)}
