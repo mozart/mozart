@@ -394,7 +394,7 @@ public:
 void oz_checkExtSuspension(Suspension, Board *);
 
 #define CheckExtSuspension(susp)               \
-  if (((Suspension)susp).wasExtSuspension()) { \
+  if (((Suspension)susp).isExternal()) { \
     GETBOARDOBJ((Suspension) susp)->checkSolveThreads();   \
   }
 

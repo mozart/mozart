@@ -45,7 +45,7 @@ SuspList * SuspList::appendToAndUnlink(SuspList * &to_list, Bool reset_local)
     
     if (reset_local) 
       for (aux = this; aux; aux = aux->getNext())
-      	aux->getElem().unmarkLocalPropagator();
+      	aux->getElem().unsetLocal();
     
     if (to_list) {
       // this != NULL && to_list != NULL
@@ -54,7 +54,7 @@ SuspList * SuspList::appendToAndUnlink(SuspList * &to_list, Bool reset_local)
       // ... tag this-list and find last entry
       SuspList * last DebugCode(= NULL);
       for (aux = this; 1; ) {
-	aux->getElem().markTagged();
+	aux->getElem().setTagged();
 	
 	SuspList * aux_next = aux->getNext(); 
 	
@@ -80,7 +80,7 @@ SuspList * SuspList::appendToAndUnlink(SuspList * &to_list, Bool reset_local)
       
       // untag this-list
       for (aux = this; aux; aux = aux->getNext())
-      	aux->getElem().unmarkTagged();
+      	aux->getElem().unsetTagged();
       
       last->setNext(to_list);
     } 
@@ -100,7 +100,7 @@ OrderedSuspList * OrderedSuspList::insert(Propagator * prop)
   cout << "OrderedSuspList::insert" << endl << flush;
 #endif
 
-  Assert(prop->isNonMonotonicPropagator());
+  Assert(prop->isNMO());
 
   OrderedSuspList * r = this, ** p = &r;
   OZ_NonMonotonic::order_t n_order = prop->getPropagator()->getOrder();

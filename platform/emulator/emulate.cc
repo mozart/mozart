@@ -103,7 +103,7 @@ void enrichTypeException(TaggedRef value,const char *fun, OZ_Term args)
 Bool AM::hf_raise_failure()
 {
   if (!oz_onToplevel() &&
-      (!oz_currentThread()->hasCatchFlag() || 
+      (!oz_currentThread()->isCatch() || 
        !oz_isCurrentBoard(GETBOARD(oz_currentThread())))) {
     return OK;
   }
@@ -2949,7 +2949,7 @@ Case(GETVOID)
       OZ_warning("\n      TASKDEBUGCONT instruction executed -- "
 		 "this should not happen.\n      "
                  "Please send a bug report to <lorenz@dfki.de>.");
-      if (e->debugmode() && CTT->getTrace())
+      if (e->debugmode() && CTT->isTrace())
 	debugStreamUpdate(CTT);
       ((OzDebug *) Y)->dispose();
       goto LBLpopTaskNoPreempt;
@@ -3009,7 +3009,7 @@ Case(GETVOID)
 
   Case(DEBUGENTRY)
     {
-      if ((e->debugmode() || CTT->getTrace()) && oz_onToplevel()) {
+      if ((e->debugmode() || CTT->isTrace()) && oz_onToplevel()) {
 	int line = smallIntValue(getNumberArg(PC+2));
 	if (line < 0) {
 	  execBreakpoint(oz_currentThread());
@@ -3050,7 +3050,7 @@ Case(GETVOID)
 		  for (int i = iarity; i--; )
 		    dbg->arguments[i] = X[map[i]];
 		
-		if (CTT->getStep())
+		if (CTT->isStep())
 		  for (int i = oarity; i--; )
 		    dbg->arguments[iarity + i] = OZ_newVariable();
 		else 
@@ -3160,7 +3160,7 @@ Case(GETVOID)
 	  }
 	}
 
-	if (CTT->getStep()) {
+	if (CTT->isStep()) {
 	  CTT->pushDebug(dbg,DBG_STEP);
 	  debugStreamEntry(dbg,CTT->getTaskStackRef()->getFrameId());
 	  INCFPC(5);
@@ -3213,7 +3213,7 @@ Case(GETVOID)
 		  X[map == OZ_ID_MAP? iarity + i: map[iarity + i]];
 	}
 
-	if (dothis == DBG_STEP && CTT->getTrace()) {
+	if (dothis == DBG_STEP && CTT->isTrace()) {
 	  dbg->PC = PC;
 	  CTT->pushDebug(dbg,DBG_EXIT);
 	  debugStreamExit(dbg,CTT->getTaskStackRef()->getFrameId());

@@ -47,7 +47,7 @@ void oz_resetLocalPropagatorQueue(Board *bb) {
   case B_BETWEEN:				\
 						\
     if (calledBy)				\
-      prop->markUnifyPropagator();		\
+      prop->setUnify();		                \
 						\
     CALL_WAKEUP_FUN;				\
     return FALSE;				\
@@ -56,7 +56,7 @@ void oz_resetLocalPropagatorQueue(Board *bb) {
     return FALSE;				\
 						\
   case B_DEAD:					\
-    prop->markDeadPropagator();			\
+    prop->setDead();			        \
     CheckExtSuspension(prop);			\
     prop->dispose();				\
     return TRUE;				\
@@ -71,7 +71,7 @@ Bool oz_wakeup_Propagator(Propagator * prop, Board * home, PropCaller calledBy)
 {
   Assert(prop->getBoardInternal() && prop->getPropagator());
 
-  if (prop->isNonMonotonicPropagator() && !oz_onToplevel()) {
+  if (prop->isNMO() && !oz_onToplevel()) {
 #ifdef DEBUG_NONMONOTONIC
     OZ_PropagatorProfile * profile = prop->getPropagator()->getProfile();
     char * pn = profile->getPropagatorName();
@@ -83,11 +83,11 @@ Bool oz_wakeup_Propagator(Propagator * prop, Board * home, PropCaller calledBy)
 
     Assert(!prop->getPropagator()->isMonotonic());
 
-    WAKEUP_PROPAGATOR(prop->markRunnable();
+    WAKEUP_PROPAGATOR(prop->setRunnable();
 		      am.currentBoard()->addToNonMono(prop));
   }
   
-  WAKEUP_PROPAGATOR(prop->markRunnable();
+  WAKEUP_PROPAGATOR(prop->setRunnable();
 		    oz_pushToLPQ(GETBOARD(prop),prop));
 } 
 
@@ -103,7 +103,7 @@ SuspList * oz_installPropagators(SuspList * local_list, SuspList * glob_list,
   
   // mark up local suspensions to avoid copying them
   while (aux) {
-    aux->getSuspension().markTagged();
+    aux->getSuspension().setTagged();
     aux = aux->getNext();
   }
 
@@ -127,7 +127,7 @@ SuspList * oz_installPropagators(SuspList * local_list, SuspList * glob_list,
   // unmark local suspensions 
   aux = local_list;
   while (aux) {
-    aux->getSuspension().unmarkTagged();
+    aux->getSuspension().unsetTagged();
     aux = aux->getNext();
   }
   
@@ -156,7 +156,7 @@ OZ_BI_define(BI_prop_lpq, 0, 0) {
   while (!lpq->isEmpty() && !am.isSetSFlag()) {
     Propagator * prop = lpq->dequeue();
     Propagator::setRunningPropagator(prop);
-    Assert(!prop->isDeadPropagator());
+    Assert(!prop->isDead());
 	   
     OZ_Return r = oz_runPropagator(prop);
 	   
@@ -176,7 +176,7 @@ OZ_BI_define(BI_prop_lpq, 0, 0) {
 					    OZ_atom((prop->getPropagator()->getProfile()->getPropagatorName())),
 					    prop->getPropagator()->getParameters()));	
 	  oz_sleepPropagator(prop);
-	  prop->markFailed();
+	  prop->setFailed();
 	  oz_resetLocalPropagatorQueue(bb);
 	  return RAISE;
 	}
@@ -208,7 +208,7 @@ OZ_BI_define(BI_prop_lpq, 0, 0) {
       Assert(r == SCHEDULED);
       oz_preemptedPropagator(prop);
     } 
-    Assert(prop->isDeadPropagator() || !prop->isRunnable());
+    Assert(prop->isDead() || !prop->isRunnable());
   }
   
   if (ozconf.timeDetailed)
