@@ -2324,14 +2324,10 @@ Builtin *tagged2Builtin(TaggedRef term)
  * BuiltinTab
  * -----------------------------------------------------------------------*/
 
-extern TaggedRef builtinRecord;
+extern TaggedRef dictionary_of_builtins;
 
-inline
-Builtin * atom2Builtin(TaggedRef a) {
-  TaggedRef b = tagged2SRecord(builtinRecord)->getFeature(a);
-
-  return (b ? tagged2Builtin(b) : ((Builtin *) 0));
-}
+extern
+Builtin * atom2Builtin(TaggedRef);
 
 inline
 Builtin * string2Builtin(const char * s) {
