@@ -45,7 +45,7 @@ local
 					bg:     PopupBgColor
 					text:   Stat.f)} |
 		   if Stat.b>0 then
-		      [{New Images.blocked init(parent: BackFrame
+		      [{New Images.suspended init(parent: BackFrame
 						bg:     PopupBgColor)}
 		       {New Tk.label tkInit(parent: BackFrame
 					    font:   BoldStatusFont

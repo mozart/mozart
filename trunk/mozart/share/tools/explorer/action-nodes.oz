@@ -82,7 +82,7 @@ in
 
    ActionNodes=c(succeeded: Leaf
 		 failed:    Leaf
-		 blocked:   Leaf
+		 suspended: Leaf
 		 choose:    Choose)
 
 end

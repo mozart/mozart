@@ -54,26 +54,26 @@ local
    end
 
    local
-      fun {UnwrapBlocked UC}
-	 case UC of blocked(C) then {UnwrapBlocked C} else UC end
+      fun {UnwrapSuspended UC}
+	 case UC of suspended(C) then {UnwrapSuspended C} else UC end
       end
    in
-      class BlockedNode
+      class SuspendedNode
 	 from
-	    LayoutNodes.blocked
-	    HideNodes.blocked
-	    MoveNodes.blocked
-	    SearchNodes.blocked
-	    StatNodes.blocked
-	    ActionNodes.blocked
+	    LayoutNodes.suspended
+	    HideNodes.suspended
+	    MoveNodes.suspended
+	    SearchNodes.suspended
+	    StatNodes.suspended
+	    ActionNodes.suspended
 	 feat
 	    sentinel: false
-	    kind:     blocked
+	    kind:     suspended
 	    mom
 	    
 	 meth init(Mom Depth Control)
 	    Status         = self.status
-	    UnwrapControl  = thread {UnwrapBlocked Control} end
+	    UnwrapControl  = thread {UnwrapSuspended Control} end
 	    KillFlag KillId
 	 in
 	    self.mom = Mom
@@ -84,7 +84,7 @@ local
 		  {self.manager wake(self KillId)}
 	       end
 	    end
-	    {Status addBlocked(Depth)}
+	    {Status addSuspended(Depth)}
 	 end
       end
    end
@@ -167,6 +167,6 @@ in
 		    choose:    ChooseNode
 		    succeeded: SucceededNode
 		    failed:    FailedNode
-		    blocked:   BlockedNode)
+		    suspended: SuspendedNode)
 		    
 end
