@@ -121,10 +121,13 @@ in
 
       attr
 	 LastSelectedFrame : 0
-	 EnvSync    : _
-	 StatusSync : _
+	 EnvSync           : _
+	 StatusSync        : _
 
-	 LastClicked : unit
+	 LastClicked       : unit
+
+	 MsgList           : nil
+	 MsgListTl         : nil
 
       meth resetLastSelectedFrame
 	 LSF = @LastSelectedFrame
@@ -359,8 +362,6 @@ in
       end
 
       meth DoPrintEnv(Widget Vars SV)
-	 ThisThread = {Thread.this}
-      in
 	 {ForAll Vars
 	  proc{$ V}
 	     Name # Value = V
@@ -372,22 +373,19 @@ in
 	  in
 	     case SV orelse {Atom.toString Name}.1 \= &` then
 		T  = {Widget newTag($)}
+		W  = {Widget w($)}
 		Ac = {New Tk.action
-		      tkInit(parent: Widget
+		      tkInit(parent: W
 			     action: proc {$}
 					{Browse Value} LastClicked <- Value
 				     end)}
 	     in
-		{Widget tk(insert 'end' {PrintF ' ' # Name {EnvVarWidth}})}
-		{Widget tk(insert 'end' Print # '\n' T)}
-		{Widget tk(tag bind T '<1>' Ac)}
-		{Widget tk(tag conf T font:BoldFont)}
+		Gui,Enqueue(o(W insert 'end'
+			      {PrintF ' ' # Name {EnvVarWidth}}))
+		Gui,Enqueue(o(W insert 'end' Print # '\n' T))
+		Gui,Enqueue(o(W tag bind T '<1>' Ac))
+		Gui,Enqueue(o(W tag conf T font:BoldFont))
 	     else skip end
-
-	     %% enable "interleaved" filling of both environment windows
-	     %% (keeps time short while one window is completely empty,
-	     %%  thus avoiding too much flickering)
-	     {Thread.preempt ThisThread}
 	  end}
       end
 
@@ -408,30 +406,40 @@ in
       end
 
       meth PrintEnv(vars:V)
+	 LE  = {self.LocalEnvText  w($)}
+	 GE  = {self.GlobalEnvText w($)}
 	 SV  = {Cget envSystemVariables}
 	 Y#G = case V == unit then
 		  nil # nil
 	       else
 		  {Reverse V.'Y'} # {Reverse V.'G'}
 	       end
+	 OldLTags = {self.LocalEnvText resetTags($)}
+	 OldGTags = {self.GlobalEnvText resetTags($)}
       in
-	 %% use two threads to reduce flickering
-	 thread
-	    Gui,Clear(self.LocalEnvText)
-	    {self.LocalEnvText tk(conf foreground:DefaultForeground)}
-	    case V == unit then skip else
-	       Gui,DoPrintEnv(self.LocalEnvText Y SV)
-	    end
-	    Gui,Disable(self.LocalEnvText)
+	 case OldLTags == nil then skip else
+	    Gui,Enqueue(OldLTags)
 	 end
-	 thread
-	    Gui,Clear(self.GlobalEnvText)
-	    {self.GlobalEnvText tk(conf foreground:DefaultForeground)}
-	    case V == unit then skip else
-	       Gui,DoPrintEnv(self.GlobalEnvText G SV)
-	    end
-	    Gui,Disable(self.GlobalEnvText)
+	 Gui,Enqueue(o(LE conf state:normal))
+	 Gui,Enqueue(o(LE delete p(0 0) 'end'))
+	 Gui,Enqueue(o(LE conf foreground:DefaultForeground))
+	 case V == unit then skip else
+	    Gui,DoPrintEnv(self.LocalEnvText Y SV)
 	 end
+	 Gui,Enqueue(o(LE conf state:disabled))
+	 Gui,ClearQueue
+
+	 case OldGTags == nil then skip else
+	    Gui,Enqueue(OldGTags)
+	 end
+	 Gui,Enqueue(o(GE conf state:normal))
+	 Gui,Enqueue(o(GE delete p(0 0) 'end'))
+	 Gui,Enqueue(o(GE conf foreground:DefaultForeground))
+	 case V == unit then skip else
+	    Gui,DoPrintEnv(self.GlobalEnvText G SV)
+	 end
+	 Gui,Enqueue(o(GE conf state:disabled))
+	 Gui,ClearQueue
       end
 
       meth frameClick(frame:F highlight:Highlight<=true)
@@ -829,7 +837,7 @@ in
 			end
 
 			%% delete all tags
-			{self.StackText resetTags}
+			{Tk.batch {self.StackText resetTags($)}}
 			Gui,resetLastSelectedFrame
 
 			Gui,markNode({Thread.id T} running)
@@ -926,8 +934,30 @@ in
 	 {Ctoggle updateEnv}
       end
 
+      meth Enqueue(Ticklet)
+	 case Ticklet
+	 of nil  then skip
+	 [] T|Tr then
+	    Gui,Enqueue(T)
+	    Gui,Enqueue(Tr)
+	 else NewTl in
+	    case {IsDet @MsgListTl} then
+	       MsgList <- Ticklet|NewTl
+	    else
+	       @MsgListTl = Ticklet|NewTl
+	    end
+	    MsgListTl <- NewTl
+	 end
+      end
+
+      meth ClearQueue
+	 @MsgListTl = nil
+	 {Tk.batch @MsgList}
+	 MsgList <- nil
+      end
+
       meth Clear(Widget)
-	 {Widget resetTags}
+	 {Tk.batch {Widget resetTags($)}}
 	 {Widget tk(conf state:normal)}
 	 {Widget tk(delete p(0 0) 'end')}
       end
