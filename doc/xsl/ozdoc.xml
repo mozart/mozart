@@ -467,6 +467,9 @@
     <xsl:when test="$to='ozdoc:panel'">
      <xsl:text>Oz Panel</xsl:text>
     </xsl:when>
+    <xsl:when test="$to='ozdoc:dpanel'">
+     <xsl:text>Distribution Panel</xsl:text>
+    </xsl:when>
     <xsl:when test="$to='ozdoc:ozcar'">
      <xsl:text>The Mozart Debugger</xsl:text>
     </xsl:when>
