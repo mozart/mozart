@@ -477,6 +477,21 @@ OZ_BI_define(BIexport,1,0)
   return export(in);
 } OZ_BI_end
 
+// ===================================================================
+// pb2 used for perdio but put here as needs componentBuffer.cc data
+// structures - to be removed when marshaler rebuilt
+// ===================================================================
+
+OZ_Term digOutVars(OZ_Term t)
+{
+  int cached=ozconf.perdioMinimal;
+  ozconf.perdioMinimal=TRUE;
+  Exporter bs;
+  marshalTermRT(t,&bs);
+  OZ_Term vars=bs.getVars();
+  ozconf.perdioMinimal=cached;
+  return vars;
+}
 
 // ===================================================================
 // class ByteSource
