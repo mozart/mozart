@@ -328,6 +328,7 @@ PendLinkManager *pendLinkManager;
 #define DEFAULT_OWNER_TABLE_SIZE   100
 #define DEFAULT_BORROW_TABLE_SIZE  100
 #define NET_HASH_TABLE_DEFAULT_SIZE 100
+#define GNAME_HASH_TABLE_DEFAULT_SIZE 100
 
 static double TABLE_LOW_LIMIT=0.20;
 static double TABLE_EXPAND_FACTOR=2.00;
@@ -351,6 +352,150 @@ public:
   void print();
 #endif
 };
+
+
+
+/* ********************************************************************** */
+/*                  GNAME TABLE
+/* ********************************************************************** */
+
+#define GNAME_GC_MARK 1
+
+const int fatIntDigits = 2;
+const unsigned int maxDigit = ~0;
+
+class FatInt {
+public:
+  unsigned int number[fatIntDigits];
+
+  FatInt() { for(int i=0; i<fatIntDigits; i++) number[i]=0; }
+  inc()
+  {
+    int i=0;
+    while(number[i]==maxDigit) {
+      number[i]=0;
+      i++;
+    }
+    Assert(i<fatIntDigits);
+    number[i]++;
+  }
+
+  Bool same(FatInt &other)
+  {
+    for (int i=0; i<fatIntDigits; i++) {
+      if(number[i]!=other.number[i])
+	return NO;
+    }
+    return OK;
+  }
+};
+
+static FatInt *idCounter = NULL;
+
+class GNameSite {
+public:
+  char *ip;
+  int port;
+  int timestamp;
+  Bool same(GNameSite &other) 
+  { 
+    return (port==other.port && 
+	    timestamp==other.timestamp &&
+	    (strcmp(ip,other.ip)==0));
+  }
+};
+
+int lookupSite(char *h, int p, int t);       // return sd
+int getSite(int sd,char *&h, int &p, int &t);
+
+
+class GName {
+public:
+  int32 flags;
+
+  GNameSite site;
+  FatInt id;
+  Bool same(GName *other) { return site.same(other->site) && id.same(other->id); }
+  GName() {}
+  GName(char *ip, int port, int timestamp) 
+  {
+    flags = 0;
+
+    site.ip        = ip;
+    site.port      = port;
+    site.timestamp = timestamp;
+
+    idCounter->inc();
+    id = *idCounter;
+  }
+
+  void setGCMark() { flags |= GNAME_GC_MARK; }
+
+  Bool resetGCMark() { 
+    Bool ret = (flags&GNAME_GC_MARK);
+    flags &= ~GNAME_GC_MARK;
+    return ret;
+  }
+};
+
+class GNameTable: public GenHashTable{
+  int hashFunc(GName *);
+  Bool findPlace(int ,GName *, GenHashNode *&);
+public:
+  GNameTable():GenHashTable(GNAME_HASH_TABLE_DEFAULT_SIZE) {}
+  void gnameAdd(GName *name, TaggedRef t);
+  TaggedRef gnameFind(GName *name);
+  
+  void gcGNameTable();
+};
+
+
+int GNameTable::hashFunc(GName *gname)
+{
+  int ret = gname->site.port + gname->site.timestamp;
+  for(int i=0; i<fatIntDigits; i++) {
+    ret += gname->id.number[i];
+  }
+  return ret;
+}
+
+
+void GNameTable::gnameAdd(GName *name, TaggedRef t)
+{
+  int hvalue=hashFunc(name);
+  GenHashNode *ghn;
+  GenHashTable::htAdd(hvalue,(GenHashBaseKey*)name, (GenHashEntry *) ToPointer(t));
+}
+
+
+TaggedRef GNameTable::gnameFind(GName *name)
+{
+  int hvalue = hashFunc(name);
+  GenHashNode *aux = htFindFirst(hvalue);
+  while(aux) {
+    if (name->same((GName*)aux->getBaseKey())) {
+      return (TaggedRef) ToInt32(aux->getEntry());
+    }
+    aux = htFindNext(aux,hvalue);
+  }
+
+  return makeTaggedNULL();
+}
+
+
+static GNameTable *gnameTable = NULL;
+
+GName *newGName(TaggedRef t)
+{
+  char *ip;
+  int port,ts;
+  getSite(lookupLocalSite(),ip,port,ts);
+  GName *ret = new GName(ip,port,ts);
+  gnameTable->gnameAdd(ret,t);
+  return ret;
+}
+
+
 
 /* ********************************************************************** */
 /*    OB_Entry - common to borrow and owner tables                        */
@@ -649,7 +794,7 @@ public:
     PERDIO_DEBUG(GC,"GC:no mark found");
     return TRUE;}           // maybe garbage (only if pendLink==NULL); 
 
-inline void copyBorrow(BorrowEntry* from,int i){
+  inline void copyBorrow(BorrowEntry* from,int i){
     setCredit(from->getCredit());
     setObject(from->getObject());
     pendLink=from->pendLink;
@@ -1182,8 +1327,11 @@ void NetHashTable::print(){
 
 /* OBS: ---------- interface to gc.cc ----------*/
 
-void gcOwnerTable() { ownerTable->gcOwnerTable();}
-void gcBorrowTable(){ borrowTable->gcBorrowTable();}
+void gcOwnerTable()  { ownerTable->gcOwnerTable();}
+void gcBorrowTable() { borrowTable->gcBorrowTable();}
+void gcGNameTable()  { gnameTable->gcGNameTable();}
+
+void gcGName(GName* name) { name->setGCMark(); }
 
 void Tertiary::gcTertiary()
 {
@@ -1245,14 +1393,37 @@ void OwnerTable::gcOwnerTable()
 void BorrowTable::gcBorrowTable()
 {
   PERDIO_DEBUG(GC,"GC:borrow gc");
-  BorrowEntry *b;
   int i;
   for(i=0;i<size;i++){
-    b=borrowTable->getBorrow(i);
+    BorrowEntry *b=borrowTable->getBorrow(i);
     if(!(b->isFree())){
       if(b->gcCheck()) borrowTable->maybeFreeBorrowEntry(i);}}
   compactify();
   hshtbl->compactify();
+}
+
+/* OBSERVE - this must done at the end of other gc */
+void GNameTable::gcGNameTable()
+{
+  PERDIO_DEBUG(GC,"GC:gname gc");
+  int sz = getSize();
+  for(int i=0;i<sz;i++) {
+    GenHashNode *aux = htFindFirst(i);
+    while(aux) {
+      if (!aux->isEmptyForRS()) {
+	GName *gn = (GName*) aux->getBaseKey();
+	if (gn->resetGCMark()) {
+	  TaggedRef t = (TaggedRef) ToInt32(aux->getEntry());
+	  gcTagged(t,t);
+	  aux->setEntry((GenHashEntry*)ToPointer(t));
+	} else {
+	  aux->makeEmptyForRS();
+	}
+      }
+      aux = htFindNext(aux,i);
+    }
+  }
+  compactify();
 }
 
 /**********************************************************************/
@@ -1303,10 +1474,11 @@ void ProcProxy::localize(RefsArray g, ProgramCounter pc)
 
 
 
-typedef enum {SMALLINTTAG, BIGINTTAG, FLOATTAG, LITERALTAG, 
-	      RECORDTAG, TUPLETAG, LISTTAG, REFTAG, 
-	      OWNERTAG, 
-	      PORTTAG, PROCTAG, VARTAG, BUILTINTAG} MarshallTag;
+typedef enum {M_SMALLINT, M_BIGINT, M_FLOAT, 
+	      M_ATOM, M_NAME, M_NAMETRUE, M_NAMEFALSE,
+	      M_RECORD, M_TUPLE, M_LIST, M_REF, 
+	      M_OWNER, 
+	      M_PORT, M_PROC, M_VAR, M_BUILTIN} MarshallTag;
 
 int unmarshallWithDest(BYTE *buf, int len, OZ_Term *t);
 void unmarshallNoDest(BYTE *buf, int len, OZ_Term *t);
@@ -1491,6 +1663,16 @@ void marshallString(char *s, ByteStream *bs)
     s++;  }
 }
 
+void unmarshallGName(GName *gname, ByteStream *bs)
+{
+  gname->site.ip        = unmarshallString(bs);
+  gname->site.port      = unmarshallNumber(bs);
+  gname->site.timestamp = unmarshallNumber(bs);
+  for (int i=0; i<fatIntDigits; i++) {
+    gname->id.number[i] = unmarshallNumber(bs);
+  }
+}
+
 /**********************************************************************/
 /*            MARSHALLING/UNMARSHALLING NETWORK ADDRESSES             */
 /**********************************************************************/
@@ -1559,7 +1741,7 @@ void marshallOwnHead(int tag,int i,ByteStream *bs){
  * marshall a BT entry (bi) which is send to its owner
  */
 void marshallToOwner(int bi,ByteStream *bs,DebtRec *dr){
-  bs->put(OWNERTAG);
+  bs->put(M_OWNER);
   marshallNumber(borrowTable->getOriginIndex(bi),bs);
   BorrowEntry *b=borrowTable->getBorrow(bi); /* implicit 1 credit */
   if(b->getOneCredit()) {  
@@ -1652,7 +1834,7 @@ Bool checkCycle(OZ_Term t, ByteStream *bs)
 {
   if (!isRef(t) && tagTypeOf(t)==GCTAG) {
     PERDIO_DEBUG(MARSHALL,"MARSHALL:circular");
-    bs->put(REFTAG);
+    bs->put(M_REF);
     marshallNumber(t>>tagSize,bs);
     return OK;
   }
@@ -1681,8 +1863,8 @@ void marshallTertiary(int sd,Tertiary *t, ByteStream *bs, DebtRec *dr)
 
   int tag;
   switch (t->getType()) {
-  case Co_Port:        tag = PORTTAG;    break;
-  case Co_Abstraction: tag = PROCTAG;    break;
+  case Co_Port:        tag = M_PORT;    break;
+  case Co_Abstraction: tag = M_PROC;    break;
   default: Assert(0);  tag=0;
   }
 
@@ -1716,10 +1898,20 @@ void marshallVariable(int sd, PerdioVar *pvar, ByteStream *bs,DebtRec *dr)
     if(borrowTable->getOriginSite(i)==sd){
       marshallToOwner(i,bs,dr);
       return;}
-    marshallBorrowHead(VARTAG,i,bs,dr);
+    marshallBorrowHead(M_VAR,i,bs,dr);
   } else {  // owner
     Assert(pvar->isManager());
-    marshallOwnHead(VARTAG,i,bs);
+    marshallOwnHead(M_VAR,i,bs);
+  }
+}
+
+void marshallGName(GName *gname, ByteStream *bs)
+{
+  marshallString(gname->site.ip,bs);
+  marshallNumber(gname->site.port,bs);
+  marshallNumber(gname->site.timestamp,bs);
+  for (int i=0; i<fatIntDigits; i++) {
+    marshallNumber(gname->id.number[i],bs);
   }
 }
 
@@ -1735,34 +1927,53 @@ loop:
   switch(tTag) {
 
   case SMALLINT:
-    bs->put(SMALLINTTAG);
+    bs->put(M_SMALLINT);
     marshallNumber(smallIntValue(t),bs);
     PERDIO_DEBUG(MARSHALL,"MARSHALL:small int");
     break;
 
   case OZFLOAT:
-    bs->put(FLOATTAG);
+    bs->put(M_FLOAT);
     marshallFloat(tagged2Float(t)->getValue(),bs);
     PERDIO_DEBUG(MARSHALL,"MARSHALL:float");
     break;
 
   case BIGINT:
-    bs->put(BIGINTTAG);
+    bs->put(M_BIGINT);
     marshallString(toC(t),bs);
     PERDIO_DEBUG(MARSHALL,"MARSHALL:big int");
     break;
 
   case LITERAL:
-    bs->put(LITERALTAG);
-    marshallString(tagged2Literal(t)->getPrintName(),bs);
-    PERDIO_DEBUG(MARSHALL,"MARSHALL:atom");
-    break;
+    {
+      Literal *lit = tagged2Literal(t);
+      if (lit->isAtom()) {
+	bs->put(M_ATOM);
+	marshallString(lit->getPrintName(),bs);
+	PERDIO_DEBUG(MARSHALL,"MARSHALL:atom");
+      	break;
+      }
+      if (literalEq(NameTrue,t)) {
+	bs->put(M_NAMETRUE);
+	break;
+      }
+      if (literalEq(NameFalse,t)) {
+	bs->put(M_NAMEFALSE);
+	break;
+      }
+
+      bs->put(M_NAME);
+      GName *gname = ((Name*)lit)->globalize();
+      marshallGName(gname,bs);
+      marshallString(lit->getPrintName(),bs);
+      break;
+    }
 
   case LTUPLE:
     {
       LTuple *l = tagged2LTuple(t);
       if (checkCycle(*l->getRef(),bs)) return;
-      bs->put(LISTTAG);
+      bs->put(M_LIST);
       argno = 2;
       args  = l->getRef();
       PERDIO_DEBUG(MARSHALL,"MARSHALL:list");
@@ -1774,10 +1985,10 @@ loop:
       SRecord *rec = tagged2SRecord(t);
       if (checkCycle(*rec->getRef(),bs)) return; /* TODO mark instead of getRef ??*/
       if (rec->isTuple()) {
-	bs->put(TUPLETAG);
+	bs->put(M_TUPLE);
 	marshallNumber(rec->getTupleWidth(),bs);
       } else {
-	bs->put(RECORDTAG);
+	bs->put(M_RECORD);
 	marshallTerm(sd,rec->getArityList(),bs,dr);
       }
       marshallTerm(sd,rec->getLabel(),bs,dr);
@@ -1794,7 +2005,7 @@ loop:
 	break;
 
       if (isBuiltin(t)) {
-	bs->put(BUILTINTAG);
+	bs->put(M_BUILTIN);
 	marshallTerm(sd,tagged2Builtin(t)->getName(),bs,dr);
 	break;
       }
@@ -1889,17 +2100,43 @@ loop:
 
   switch(tag) {
 
-  case SMALLINTTAG: 
+  case M_SMALLINT: 
     *ret = OZ_int(unmarshallNumber(bs)); 
     PERDIO_DEBUG(UNMARSHALL,"UNMARSHALL:small int");
     return;
 
-  case FLOATTAG:    
+  case M_FLOAT:    
     *ret = OZ_float(unmarshallFloat(bs)); 
     PERDIO_DEBUG(UNMARSHALL,"UNMARSHALL:float");
     return;
 
-  case LITERALTAG:     
+  case M_NAMETRUE:  *ret=NameTrue; return;
+  case M_NAMEFALSE: *ret=NameFalse; return;
+
+  case M_NAME:
+    {
+      GName gname;
+      unmarshallGName(&gname,bs);
+      TaggedRef aux = gnameTable->gnameFind(&gname);
+      char *printname = unmarshallString(bs);
+
+      if (aux) {
+	*ret = aux;
+      } else {
+	GName *copy = new GName(gname);
+	if (strcmp("",printname)==0) {
+	  aux = OZ_newName();
+	} else {
+	  aux = makeTaggedLiteral(NamedName::newNamedName(printname));
+	}
+	((Name*)tagged2Literal(aux))->import(copy);
+        gnameTable->gnameAdd(copy,aux);
+	*ret = aux;
+      }
+      return;
+    }
+
+  case M_ATOM:
     {
       char *aux = unmarshallString(bs);
       *ret = OZ_atom(aux);
@@ -1908,7 +2145,7 @@ loop:
       return;
     }
 
-  case BIGINTTAG:
+  case M_BIGINT:
     {
       char *aux = unmarshallString(bs);
       *ret = OZ_CStringToNumber(aux);
@@ -1917,7 +2154,7 @@ loop:
       return;
     }
 
-  case LISTTAG:
+  case M_LIST:
     {
       OZ_Term head, tail;
       argno = 2;
@@ -1928,7 +2165,7 @@ loop:
       PERDIO_DEBUG(UNMARSHALL,"UNMARSHALL:list");
       goto processArgs;
     }
-  case TUPLETAG:
+  case M_TUPLE:
     {
       argno = unmarshallNumber(bs);
       TaggedRef label = unmarshallTerm(bs);
@@ -1940,7 +2177,7 @@ loop:
       goto processArgs;      
     }
 
-  case RECORDTAG:
+  case M_RECORD:
     {
       TaggedRef arity = unmarshallTerm(bs);
       argno = length(arity);
@@ -1953,7 +2190,7 @@ loop:
       goto processArgs;      
     }
 
-  case REFTAG:
+  case M_REF:
     {
       PERDIO_DEBUG(UNMARSHALL,"UNMARSHALL:ref");
       int i = unmarshallNumber(bs);
@@ -1961,7 +2198,7 @@ loop:
       return;
     }
 
-  case OWNERTAG:
+  case M_OWNER:
     {
       OwnerEntry *oe;
       int si=unmarshallOwn(bs,oe);
@@ -1970,7 +2207,7 @@ loop:
 
       return;}
 
-  case PORTTAG: 
+  case M_PORT: 
     {
       OB_Entry *ob;
       int bi;
@@ -1987,7 +2224,7 @@ loop:
       ((BorrowEntry *)ob)->setBorrowObject(po);
       return;
     }
-  case VARTAG: 
+  case M_VAR: 
     {
       OB_Entry *ob;
       int bi;
@@ -2004,7 +2241,7 @@ loop:
       ((BorrowEntry *)ob)->setBorrowObject(po);
       return;
     }
-  case PROCTAG: 
+  case M_PROC: 
     {
       OB_Entry *ob;
       int bi;
@@ -2027,7 +2264,7 @@ loop:
       return;
     }
 
-  case BUILTINTAG:
+  case M_BUILTIN:
     {
       char *name = tagged2Literal(unmarshallTerm(bs))->getPrintName();
       BuiltinTabEntry *found = builtinTab.find(name);
@@ -2069,8 +2306,8 @@ ASK_FOR_CREDIT oindex  site             implicit 1 credit
 GET_CODE       oindex  site
                                                                 
     term :=      ....                                                
-                 PORTTAG netaddr credit
-                 PROCTAG netaddr credit name arity
+                 M_PORT netaddr credit
+                 M_PROC netaddr credit name arity
 	    
     netaddr:=    site index
     site    :=   host port timestamp
@@ -2485,7 +2722,11 @@ void BIinitPerdio()
   debtRec= new DebtRec(); 
   pendLinkManager = new PendLinkManager();
   pendEntryManager = new PendEntryManager();
+
   /* TODO: gname-table */
+  idCounter = new FatInt();
+  gnameTable = new GNameTable();
+
 #ifdef DEBUG_PERDIO
   dvset();
 #endif
