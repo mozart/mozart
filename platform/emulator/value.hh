@@ -203,24 +203,14 @@ Bool oz_isName(TaggedRef term) {
   return oz_isLiteral(term) && tagged2Literal(term)->isName();
 }
 
-inline OZ_Term oz_true()  { return NameTrue; }
-inline OZ_Term oz_false() { return NameFalse; }
-inline OZ_Term oz_unit()  { return NameUnit; }
+#define oz_true() NameTrue
+#define oz_false() NameFalse
+#define oz_unit() NameUnit
 
-inline
-OZ_Term oz_bool(int i) {
-  return i ? oz_true() : oz_false();
-}
+#define oz_bool(i) ((i) ? NameTrue : NameFalse)
 
-inline
-Bool oz_isTrue(OZ_Term t) {
-  return oz_eq(t,oz_true());
-}
-
-inline
-Bool oz_isFalse(OZ_Term t) {
-  return oz_eq(t,oz_false());
-}
+#define oz_isTrue(t)  oz_eq((t),NameTrue)
+#define oz_isFalse(t) oz_eq((t),NameFalse)
 
 inline
 Bool oz_isBool(TaggedRef term) {
@@ -445,18 +435,11 @@ public:
 };
 
 
-inline
-TaggedRef oz_nil() { return AtomNil; }
+#define oz_nil() AtomNil
 
-inline
-Bool oz_isCons(TaggedRef term) {
-  return oz_isLTuple(term);
-}
+#define oz_isCons(term) oz_isLTuple(term)
 
-inline
-Bool oz_isNil(TaggedRef term) {
-  return oz_eq(term,oz_nil());
-}
+#define oz_isNil(term) oz_eq(term,oz_nil())
 
 inline
 TaggedRef oz_cons(TaggedRef head, TaggedRef tail)
@@ -521,6 +504,7 @@ TaggedRef oz_mklist(TaggedRef l1,TaggedRef l2,TaggedRef l3,TaggedRef l4,TaggedRe
 
 OZ_Term oz_list(OZ_Term t, ...);
 
+#ifdef DEBUG_CHECK
 inline
 TaggedRef oz_head(TaggedRef list)
 {
@@ -535,17 +519,14 @@ TaggedRef oz_tail(TaggedRef list)
   return tagged2LTuple(list)->getTail();
 }
 
-inline
-int oz_fastlength(OZ_Term l)
-{
-  int len = 0;
-  l = oz_deref(l);
-  while (oz_isCons(l)) {
-    len++;
-    l = oz_deref(oz_tail(l));
-  }
-  return len;
-}
+#else
+
+#define oz_head(list) (tagged2LTuple(list)->getHead())
+#define oz_tail(list) (tagged2LTuple(list)->getTail())
+
+#endif
+
+int oz_fastlength(OZ_Term l);
 
 
 
@@ -734,7 +715,7 @@ public:
 	mpz_cmp_si(&value,OzMinInt) < 0)
       ret = makeTaggedConst(this);
     else {
-      ret =  newSmallInt((int) mpz_get_si(&value));
+      ret =  makeTaggedSmallInt((int) mpz_get_si(&value));
       dispose();
     }
     return ret;
@@ -829,7 +810,7 @@ TaggedRef oz_int(int i)
   if (i > OzMaxInt || i < OzMinInt) 
     return makeTaggedConst(newBigInt(i));
   else
-    return newSmallInt(i);
+    return makeTaggedSmallInt(i);
 }
 
 inline
@@ -837,7 +818,7 @@ TaggedRef oz_ulong(unsigned long l) {
   if (l > (unsigned long) OzMaxInt) 
     return makeTaggedConst(newBigInt(l));
   else
-    return newSmallInt((int)l);
+    return makeTaggedSmallInt((int)l);
 }
 
 inline
@@ -859,7 +840,7 @@ TaggedRef oz_unsignedInt(unsigned int i)
   if (i > (unsigned int) OzMaxInt) 
     return makeTaggedConst(newBigInt(i));
   else
-    return newSmallInt(i);
+    return makeTaggedSmallInt(i);
 }
 
 inline

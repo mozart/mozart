@@ -154,6 +154,16 @@ void initLiterals()
   OZ_protect(&RecordFailure);
 }
 
+int oz_fastlength(OZ_Term l) {
+  int len = 0;
+  l = oz_deref(l);
+  while (oz_isCons(l)) {
+    len++;
+    l = oz_deref(oz_tail(l));
+  }
+  return len;
+}
+
 /*===================================================================
  * ConstTerm
  *=================================================================== */
