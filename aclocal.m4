@@ -1,4 +1,4 @@
-dnl -*- sh -*-
+dnl -*- m4 -*-
 dnl
 dnl  Authors:
 dnl    Denys Duchier (duchier@ps.uni-sb.de)
@@ -116,6 +116,199 @@ AC_DEFUN(OZ_INIT, [
 #OZ_PATH_PROG(DYNLD,          ozdynld)
 ])
 
+dnl ==================================================================
+dnl VERSION CHECKING
+dnl ==================================================================
+
+dnl ------------------------------------------------------------------
+dnl OZ_CHECK_VERSION(OK,GOT,WANT)
+dnl
+dnl GOT and WANT consist of integers separated by single periods, e.g.
+dnl 23.1 or 3.5.7, and OK is set to yes or no according to whether
+dnl GOT >= WANT with respect to the obvious ordering.
+dnl
+dnl for example
+dnl     OZ_CHECK_VERSION(OK,$VERSION,2.5.4)
+dnl sets OK to yes or no, according to whether $VERSION is greater
+dnl than 2.5.4
+dnl
+dnl IFS="$IFS." gives me the implicit break at periods in both the
+dnl `set' and the `for' statements.  Actually I am now using
+dnl `.' and `_' for breaks (to accommodate perl).
+dnl
+dnl `set $oz_tmp_got DONE' results in the component integers being
+dnl assigned to positional parameters $1, $2 etc... DONE marks the
+dnl of this sequence. The for loop goes through what we `want' but
+dnl also through what correspondingly we `got' through positional
+dnl parameter $1.  the `shift' at the end of the loop moves left
+dnl all positional parameters, thus bringing the next thing we `got'
+dnl into $1.
+dnl
+dnl Note that if GOT is empty the test succeeds (so don't do it)
+dnl ------------------------------------------------------------------
+
+AC_DEFUN(OZ_CHECK_VERSION,[
+  oz_tmp_got="[$2]"
+  oz_tmp_want="[$3]"
+  oz_tmp_IFS="$IFS"
+  IFS="$IFS._"
+  set $oz_tmp_got DONE
+  oz_tmp__ok=yes
+  for oz_tmp_cur in $oz_tmp_want; do
+    if test "$[1]" = DONE; then
+      break
+    elif test "$oz_tmp_cur" -lt "$[1]"; then
+      break
+    elif test "$oz_tmp_cur" -gt "$[1]"; then
+      oz_tmp__ok=no
+      break
+    fi
+    [shift]
+  done
+  IFS=$oz_tmp_IFS
+  [$1]=$oz_tmp__ok])
+
+dnl ------------------------------------------------------------------
+dnl OZ_PROG_VERSION_CHECK(VAR,PROG,VERSION)
+dnl
+dnl gets the --version of PROG and compares it to VERSION
+dnl sets VAR to yes or no accordingly
+dnl ------------------------------------------------------------------
+
+AC_DEFUN(OZ_PROG_VERSION_CHECK,[
+  AC_MSG_CHECKING([$2 version is at least $3])
+  [$1]=no
+  if oz_tmp_version=`[$2] --version 2>/dev/null`; then
+changequote(<,>)
+    oz_tmp_version=`expr "$oz_tmp_version" : '.*version \([0-9._]\+\)'`
+changequote([,])
+    if test -n "$oz_tmp_version"; then
+      OZ_CHECK_VERSION([$1],$oz_tmp_version,[$3])
+    fi
+  fi
+  if test -z "$oz_tmp_version"; then
+    AC_MSG_RESULT([no (cannot find version)])
+  else
+    AC_MSG_RESULT($[$1])
+  fi])
+
+dnl ==================================================================
+dnl CHOOSE C++ COMPILER
+dnl
+dnl choose only if the choice is not already in the cache.
+dnl note that CXXFLAGS is set to the empty string to avoid that it be
+dnl set by AC_PROG_CXX (we take care of our own defaults)
+dnl ==================================================================
+
+AC_DEFUN(OZ_VERSION_GXX,[2.7])
+AC_DEFUN(OZ_CXX_CHOOSE,[
+  if test -z "$oz_cv_cxx__chosen"; then
+    CXXFLAGS=
+    OZ_ARG_WITH_CXX
+    AC_PROG_CXX
+    if test "${GXX}" = yes; then
+      if oz_tmp=`$CXX --version 2>/dev/null`; then
+        if expr "$oz_tmp" : egcs >/dev/null; then
+dnl I don't know what the appropriate version number is for egcs
+          :
+changequote(<,>)
+        elif oz_tmp=`expr "$oz_tmp" : '\([0-9.]\+\)'`; then
+changequote([,])
+          AC_MSG_CHECKING($CXX version is at least OZ_VERSION_GXX)
+          OZ_CHECK_VERSION(oz_tmp_ok,$oz_tmp,OZ_VERSION_GXX)
+          AC_MSG_RESULT($oz_tmp_ok)
+          if test "$oz_tmp_ok" = no; then
+            AC_MSG_ERROR([
+configure found the GNU C++ compiler $CXX version $oz_tmp
+but version] OZ_VERSION_GXX [or higher is required to build the
+system.  It can be retrieved from:
+
+        ftp://ftp.gnu.org/pub/gnu/
+
+The latest version at this time is 2.8.1 and is available
+packaged as the following archive:
+
+        gcc-2.8.1.tar.gz
+
+You may find a mirror archive closer to you by consulting:
+
+        http://www.gnu.org/order/ftp.html
+])
+          fi
+        else
+          AC_MSG_WARN([Could not check $CXX version, assuming ok])
+        fi
+      else
+        AC_MSG_WARN([Could not check $CXX version, assuming ok])
+      fi
+    fi
+    AC_PROG_CXXCPP
+    oz_cv_CXX=$CXX
+    oz_cv_CXXCPP=$CXXCPP
+    oz_cv_GXX=$GXX
+    oz_cv_cxx__chosen=yes
+  else
+    OZ_FROM_CACHE(CXX,[for C++ compiler])
+    OZ_FROM_CACHE(GXX,[whether we are using GNU C++])
+    OZ_FROM_CACHE(CXXCPP,[for C++ preprocessor])
+  fi
+  AC_SUBST(CXX)
+  AC_SUBST(CXXCPP)])
+
+dnl ------------------------------------------------------------------
+dnl OZ_FROM_CACHE(VAR,MSG)
+dnl
+dnl sets VAR to $oz_cv_VAR while printing an appropriate MSG
+dnl this is useful to give feedback to the user.  use this when
+dnl whether to compute a value is decided directly through an `if'
+dnl test rather than by calling e.g. AC_CACHE_CHECK.
+dnl
+dnl OZ_MSG_FRONT(MSG)
+dnl
+dnl Same idea as AC_MSG_CHECKING, but doesn't say `Checking ', it just
+dnl displays the MSG
+dnl
+dnl OZ_MSG_CACHING(MSG,VAR)
+dnl
+dnl gives feedback when caching a value that was computed as a side
+dnl effect of doing something else.
+dnl ------------------------------------------------------------------
+
+AC_DEFUN(OZ_FROM_CACHE,[
+  OZ_MSG_FRONT([Looking up in cache $2])
+  [$1]=$oz_cv_$1
+  AC_MSG_RESULT([$$1])])
+
+define(OZ_MSG_FRONT,
+[echo $ac_n "$1""... $ac_c" 1>&AC_FD_MSG
+echo "configure:__oline__: $1" >&AC_FD_CC])
+
+define(OZ_MSG_CACHING,[
+  OZ_MSG_FRONT([Caching $1])
+  AC_MSG_RESULT($$2)])
+
+dnl ------------------------------------------------------------------
+dnl OZ_ARG_WITH_CXX
+dnl
+dnl maybe sets CCC to a specific C++ compiler
+dnl     1. --with-cxx=<CXX>     (command line)
+dnl     2. oz_cv_with_cxx       (config.cache)
+dnl     3. oz_with_cxx=<CXX>    (config.site)
+dnl this is intended to be used by AC_PROG_CXX because it checks
+dnl $CCC first in its list of alternative C++ compiler names
+dnl ------------------------------------------------------------------
+
+AC_DEFUN(OZ_ARG_WITH_CXX,[
+  AC_ARG_WITH(cxx,
+    [--with-cxx=<CXX>   use <CXX> as C++ compiler (default=NONE)],
+    oz_cv_with_cxx=$with_cxx)
+  : ${CCC:=$oz_cv_with_cxx}
+  : ${CCC:=$oz_with_cxx}
+])
+
+dnl ==================================================================
+dnl OLD STUFF
+dnl ==================================================================
 
 AC_DEFUN(OZ_PATH_PROG, [
     dummy_PWD=`pwd | sed 's/\//\\\\\//g'`
@@ -265,7 +458,7 @@ AC_DEFUN(OZ_CONTRIB_INIT,[
 
 AC_DEFUN(OZ_CONTRIB_INIT_CXX,[
     OZ_CONTRIB_INIT
-    AC_PROG_CXX
+    OZ_CXX_CHOOSE
     if test "${GXX}" = yes; then
       OZ_CXX_OPTIONS(-fno-rtti -fno-exceptions,CXXAVOID)
     else
