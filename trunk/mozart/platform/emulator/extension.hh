@@ -67,7 +67,7 @@ public:
 
   virtual OZ_Term       getFeatureV(OZ_Term fea) { return 0; }
 
-  virtual OZ_Return     unifyV(OZ_Term t)        { return FAILED; }
+  virtual OZ_Return     eqV(OZ_Term t)           { return FAILED; }
 
   virtual int           marshalV(MsgBuffer *bs)  { return 0; }
 
