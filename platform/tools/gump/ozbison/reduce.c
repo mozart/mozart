@@ -58,8 +58,8 @@ typedef short  *rule;
 
 static BSet     N, P, V, V1;
 
-static int      nuseful_productions, nuseless_productions,
-                nuseful_nonterminals, nuseless_nonterminals;
+static int      nuseful_productions, nuseful_nonterminals;
+int             nuseless_productions, nuseless_nonterminals;
 
 
 static void useless_nonterminals();
@@ -133,8 +133,6 @@ reduce_grammar ()
 
   if (reduced == FALSE)
     goto done_reducing;
-
-  print_notices();
 
   if (!BITISSET(N, start_symbol - ntokens))
     {
@@ -567,29 +565,4 @@ dump_grammar ()
       fprintf(foutput, "\n");
     }
   fprintf(foutput, "\n\n");
-}
-
-
-static void
-print_notices ()
-{
-  fprintf(stderr, "input contains ");
-
-  if (nuseless_nonterminals > 0)
-    {
-      fprintf(stderr, "%d useless nonterminal%s",
-              nuseless_nonterminals,
-              (nuseless_nonterminals == 1 ? "" : "s"));
-    }
-  if (nuseless_nonterminals > 0 && nuseless_productions > 0)
-    fprintf(stderr, " and ");
-
-  if (nuseless_productions > 0)
-    {
-      fprintf(stderr, "%d useless rule%s",
-              nuseless_productions,
-              (nuseless_productions == 1 ? "" : "s"));
-    }
-  fprintf(stderr, "\n");
-  fflush(stderr);
 }

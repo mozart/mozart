@@ -78,6 +78,9 @@ extern int nsyms;
 extern int ntokens;
 extern int nvars;
 
+extern int src_total, rrc_total;
+extern int nuseless_productions, nuseless_nonterminals;
+
 extern short *ritem;
 extern short *rlhs;
 extern short *rrhs;
