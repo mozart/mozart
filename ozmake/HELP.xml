@@ -73,6 +73,17 @@ e.g. <meta>PREFIX</meta> or <meta>URI as cache path</meta></p>
   </option>
   <item>do not recurse into subdirectories</item>
 </optentry>
+<optentry>
+  <option>
+    <opt>--(no)autodepend</opt>
+  </option>
+  <default><opt>true</opt></default>
+  <item>
+	automatically determine build-time and install-time (run-time)
+	dependencies.  Currently, this is only supported for Oz sources
+	by looking at <oz>import</oz> and <oz>require</oz> sections.
+  </item>
+</optentry>
 </optlist>
 
 <p>What you should remember here, is that <opt>-vn</opt> is your friend.  Add
@@ -346,17 +357,6 @@ one for mogul database entries.</item>
         automatically and allows a greater optimization level, namely
         passing <opt>-O3</opt> rather than just <opt>-O</opt> to the
         compiler
-  </item>
-</optentry>
-<optentry>
-  <option>
-    <opt>--(no)autodepend</opt>
-  </option>
-  <default><opt>true</opt></default>
-  <item>
-	automatically determine build-time and install-time (run-time)
-	dependencies.  Currently, this is only supported for Oz sources
-	by looking at <oz>import</oz> and <oz>require</oz> sections.
   </item>
 </optentry>
 <optentry>
