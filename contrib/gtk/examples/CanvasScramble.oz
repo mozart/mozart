@@ -143,7 +143,7 @@ define
 	    Text = {self itemNew(Group {self textGetType($)}
 				 ["text"#{Int.toString (I + 1)}
 				  "x"#25.0 "y"#25.0 "font"#Font
-				  "anchor"#GTK.aNCHOR_CENTER
+				  "anchor"#GTK.'ANCHOR_CENTER'
 				  "fill_color_gdk"#Black] $)}
 	    proc {PieceEvent Event}
 	       case {Label {GDK.getEvent Event}}
@@ -272,7 +272,7 @@ define
 	 {self show}
 	 {self packStart(Alignment 1 1 0)}
 	 {Alignment show}
-	 {Frame setShadowType(GTK.sHADOW_IN)}
+	 {Frame setShadowType(GTK.'SHADOW_IN')}
 	 {Alignment add(Frame)}
 	 {Frame show}
 	 {Frame add(Canvas)}
@@ -286,7 +286,7 @@ define
       meth new(Scramble)
 	 Notebook = {New GTK.notebook new}
       in
-	 GTK.window, new(GTK.wINDOW_TOPLEVEL)
+	 GTK.window, new(GTK.'WINDOW_TOPLEVEL')
 	 GTK.window, setTitle("Canvas Demo")
 	 GTK.window, add(Notebook)
 	 {Notebook setShowTabs(1)}
