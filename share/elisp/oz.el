@@ -361,11 +361,13 @@ The point is moved to the end of the line."
      ("Buffer"      . oz-to-coresyntax-buffer)
      ("Region"      . oz-to-coresyntax-region)
      ("Line"        . oz-to-coresyntax-line)
+     ("Paragraph"   . oz-to-coresyntax-paragraph)
      )
     ("Emulator Code"
      ("Buffer"      . oz-to-emulatorcode-buffer)
      ("Region"      . oz-to-emulatorcode-region)
      ("Line"        . oz-to-emulatorcode-line)
+     ("Paragraph"   . oz-to-emulatorcode-paragraph)
      )
     ("Indent"
      ("Line"   . oz-indent-line)
@@ -2254,6 +2256,14 @@ If it is, then remove it."
   (let ((line (oz-line-pos)))
     (oz-to-coresyntax-region (car line) (cdr line))))
 
+(defun oz-to-coresyntax-paragraph ()
+  (interactive)
+  (save-excursion
+    (backward-paragraph 1)
+    (let ((start (point)))
+      (forward-paragraph 1)
+      (oz-to-coresyntax-region start (point)))))
+
 (defun oz-to-coresyntax-region (start end)
    (interactive "r")
    (oz-directive-on-region start end "\\core" ".ozc" t))
@@ -2266,6 +2276,14 @@ If it is, then remove it."
   (interactive)
   (let ((line (oz-line-pos)))
     (oz-to-emulatorcode-region (car line) (cdr line))))
+
+(defun oz-to-emulatorcode-paragraph ()
+  (interactive)
+  (save-excursion
+    (backward-paragraph 1)
+    (let ((start (point)))
+      (forward-paragraph 1)
+      (oz-to-emulatorcode-region start (point)))))
 
 (defun oz-to-emulatorcode-region (start end)
    (interactive "r")
