@@ -168,10 +168,11 @@ void ObjectVar::sendObject(DSite* sd, int si, ObjectFields& of,
   }
   o->setClass(cl);
   Assert(be->isVar());
+  EntityInfo *savedInfo = info; // bind disposes this!
   oz_bindLocalVar(this,be->getPtr(),makeTaggedConst(o));
   be->changeToRef();
   int index=o->getIndex();
-  maybeHandOver(info,makeTaggedConst(o));
+  maybeHandOver(savedInfo,makeTaggedConst(o));
   o->localize();
   (void) BT->maybeFreeBorrowEntry(index);
 }
