@@ -18,16 +18,10 @@ in
       meth init
 	 self.menuBar = 
 	 {TkTools.menubar self.toplevel self.toplevel
-	  [MB(text: 'Ozcar'
-	      menu:
-		 [C(label:   'About...'
-		    action:  self # about
-		    feature: about)]
-	      feature: ozcar)
-	   MB(text: 'File'
+	  [MB(text: 'File'
 	      menu:
 		 [C(label:   'Quit'
-		    action:  self # exit
+		    action:  self # hide
 		    key:     ctrl(c)
 		    feature: quit)]
 	      feature: file)
@@ -58,10 +52,12 @@ in
 	      feature: options)]
 	  [MB(text: 'Help'
 	      menu:
-		 [separator]
+		 [C(label:   'About...'
+		    action:  self # about
+		    feature: about)]
 	      feature: help)
 	  ]}
-	 {self.menuBar tk(conf borderwidth:2)}
+	 %{self.menuBar tk(conf borderwidth:2)}
       end
    end
 end

@@ -95,7 +95,8 @@ in
 	 WithDrawn     : true
       
       meth init
-	 Tk.toplevel,tkInit(title:SourceWindowTitle withdraw:true)
+	 Tk.toplevel,tkInit(parent:self.toplevel
+			    title:SourceWindowTitle withdraw:true)
 	 self.NoteBook = {New TkTools.notebook tkInit(parent:self)}
 	 {Tk.batch [pack(self.NoteBook expand:yes fill:both)
 		    wm(iconname   self SourceWindowIcon)
