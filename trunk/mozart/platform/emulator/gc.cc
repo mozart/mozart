@@ -2131,6 +2131,7 @@ void SolveActor::gcRecurse ()
   gcTagged (guidance, guidance);
   gcTagged (result, result);
   suspList = suspList->gc(NO);
+  stable_sl = stable_sl->gc(NO);
   orActors.gc (SolveActor::StackEntryGC);   // higher order :))
 }
 

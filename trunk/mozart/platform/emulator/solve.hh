@@ -46,6 +46,7 @@ private:
   TaggedRef guidance;
   Board *boardToInstall;
   SuspList *suspList;
+  SuspList * stable_sl;
   int threads;
 public:
   SolveActor (Board *bb, int prio, TaggedRef resTR, TaggedRef guiTR=0);
@@ -74,7 +75,8 @@ public:
   void pushWaitActor (WaitActor *a);
   void pushWaitActorsStackOf (SolveActor *sa);
   WaitActor *getDisWaitActor ();
-  void unsetBoard () { board = (Board *) NULL; }
+  Bool stable_wake(void);
+  void add_stable_susp(Suspension *);
   void setBoard (Board *bb) { board = bb; }
   void setBoardToInstall (Board *bb) { boardToInstall = bb; }
   Board* getBoardToInstall () { return (boardToInstall); }
