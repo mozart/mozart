@@ -164,13 +164,16 @@ define
 	 attr
 	    Socket BarSync: _ BarLock: {NewLock} Trace: false Topped: false
 	    lastFile: unit lastLine: unit lastColumn: unit
-	 meth init(CompilerObject)
+	 meth init(CompilerObject Host <= unit)
 	    lock Port in
 	       Compiler.genericInterface, init(CompilerObject Serve)
 	       thread
 		  @Socket = {New TextSocket server(port: ?Port)}
 	       end
-	       {System.print {VirtualString.toAtom 'oz-socket '#Port}}
+	       {System.print {VirtualString.toAtom
+			      'oz-socket '#case Host of unit then ""
+					   else '"'#Host#'" '
+					   end#Port}}
 	    end
 	 end
 	 meth getSocket($)   %--** should be replaced by readQuery
