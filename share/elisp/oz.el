@@ -2140,13 +2140,13 @@ and is used for fontification.")
   "\\<\\(x\\|y\\|g\\)([0-9]+)")
 
 (defconst ozm-label-matcher
-  "^lbl([0-9]+)")
+  "^lbl(\\([A-Za-z0-9_]+\\|'[^'\n]*'\\))")
 
 (defconst ozm-name-matcher
   "<N: [^>]+>")
 
 (defconst ozm-builtin-name-matcher
-  "\t\\(callBI\\|testBI\\)(\\([A-Za-z0-9_]+\\|'[^'\n]'\\)")
+  "\t\\(callBI\\|testBI\\)(\\([A-Za-z0-9_]+\\|'[^'\n]*'\\)")
 
 (defconst ozm-font-lock-keywords-1
   (list (cons ozm-keywords-matcher 1)
