@@ -602,7 +602,7 @@ void cellSendContentsFailure(TaggedRef tr,DSite* toS,DSite *mS, int mI){
     cellManagerIsDown(tr,toS,mI);
     return;}
   if(mS==myDSite){// At managerSite 
-    cellReceiveCantPut(OT->index2entry(mI),tr,mI,mS,toS);
+    cellReceiveCantPut(OT->odi2entry(mI),tr,mI,mS,toS);
     return;}  
   cellSendCantPut(tr,toS,mS,mI);
   return;
