@@ -76,13 +76,14 @@ class OwnerCreditHandler : public CreditHandler {
   friend class OwnerEntry;
 
 protected:
-  int oti;
+
 
   // To be used by the OwnerEntry at gc.
   Bool hasFullCredit(){ return NO;}
   void setUp(int indx);
 
 public:
+  int oti;
   void addCredit(Credit c);
    
 

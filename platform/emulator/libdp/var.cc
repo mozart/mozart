@@ -80,7 +80,7 @@ TaggedRef ProxyVar::getTaggedRef(){
   return borrowTable->getBorrow(getIndex())->getRef();}
 
 TaggedRef ManagerVar::getTaggedRef(){
-  return ownerTable->getOwner(getIndex())->getRef();}
+  return OT->getEntry(getIndex())->getRef();}
 
 inline
 OZ_Return ProxyManagerVar::unifyV(TaggedRef *lPtr, TaggedRef *rPtr)
@@ -292,7 +292,7 @@ OZ_Return ManagerVar::addSuspV(TaggedRef *vPtr, Suspendable * susp)
 void ManagerVar::gCollectRecurseV(void)
 {
   oz_gCollectTerm(origVar,origVar);
-  OT->getOwner(getIndex())->gcPO();
+  OT->getEntry(getIndex())->gcPO();
   PD((GC,"ManagerVar o:%d",getIndex()));
   ProxyList **last=&proxies;
   for (ProxyList *pl = proxies; pl; pl = pl->next) {
@@ -378,7 +378,7 @@ OZ_Return ManagerVar::bindVInternal(TaggedRef *lPtr, TaggedRef r,DSite *s)
     EntityInfo *ei=info;
     sendRedirectToProxies(r, s);
     oz_bindLocalVar(this,lPtr,r);
-    OT->getOwner(OTI)->changeToRef();
+    OT->getEntry(OTI)->changeToRef();
     maybeHandOver(ei,r);
     return PROCEED;
   } else {
@@ -422,7 +422,7 @@ OZ_Return ManagerVar::forceBindV(TaggedRef *lPtr, TaggedRef r)
     sendRedirectToProxies(r, NULL);
     EntityInfo *ei=info;
     oz_bindLocalVar(this,lPtr,r);
-    OT->getOwner(OTI)->changeToRef();
+    OT->getEntry(OTI)->changeToRef();
     maybeHandOver(ei,r);
     return PROCEED;
   } else {
@@ -469,7 +469,7 @@ void ManagerVar::marshal(ByteBuffer *bs)
 //
 ManagerVar* globalizeFreeVariable(TaggedRef *tPtr){
   OwnerEntry *oe;
-  int i = ownerTable->newOwner(oe);
+  int i = OT->newOwner(oe);
   PD((GLOBALIZING,"globalize var index:%d",i));
   oe->mkVar(makeTaggedRef(tPtr));
   OzVariable *cv = oz_getNonOptVar(tPtr);
@@ -810,7 +810,7 @@ void ManagerVar::addEntityCond(EntityCond ec){
   if(info==NULL) info= new EntityInfo();
   if(!info->addEntityCond(ec)) return;
   int i=getIndex();
-  OwnerEntry* oe=OT->getOwner(i);
+  OwnerEntry* oe=OT->getEntry(i);
   triggerInforms(&inform,oe,i,ec);
   wakeAll();
   info->dealWithWatchers(getTaggedRef(),ec);
@@ -824,7 +824,7 @@ void ManagerVar::subEntityCond(EntityCond ec){
   if (info != NULL) {
     info->subEntityCond(ec);
     int i=getIndex();
-    OwnerEntry* oe=OT->getOwner(i);
+    OwnerEntry* oe=OT->getEntry(i);
     triggerInforms(&inform,oe,i,ec);
   }
 }
