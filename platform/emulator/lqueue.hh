@@ -83,6 +83,10 @@
 #ifndef __LQUEUE_HH
 #define __LQUEUE_HH
 
+#ifdef INTERFACE
+#pragma interface
+#endif
+
 #include <string.h>
 
 // the size of a block's array must be a multiple of 2:
