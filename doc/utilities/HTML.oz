@@ -111,6 +111,6 @@ define
    end
 
    fun {HTMLToVirtualString HTML}
-      {ToVSSub HTML unit unit}
+      {ToVSSub HTML unit unit}#'\n'
    end
 end
