@@ -584,9 +584,13 @@ loop:
   got = gzread(fd,pos,max);
   if (got < 0) {
     if (errno==EINTR) goto loop;
+    int errnum;
+    const char* msg;
+    msg = gzerror(fd,&errnum);
+    if (errnum==Z_ERRNO) msg=OZ_unixError(errno);
     return raiseGeneric("load:read",
                         "Read error during load",
-                        oz_cons(OZ_pairA("Error",oz_atom(OZ_unixError(errno))),
+                        oz_cons(OZ_pairA("Error",oz_atom(msg)),
                                 oz_nil()));
   }
   return PROCEED;
