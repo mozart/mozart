@@ -26,7 +26,7 @@
 #include "../include/config.h"
 
 
-#define PERDIOVERSION    OZVERSION "#3"
+#define PERDIOVERSION    OZVERSION "#4"
 
 /* magic marker for start of saved components */
 #define PERDIOMAGICSTART       '\1'
