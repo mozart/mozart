@@ -325,8 +325,10 @@ OZ_Return isKindedRelInline(TaggedRef term) {
     switch (tagged2CVar(term)->getType()) {
       // mm2: generalize
     case LazyVariable: kinded=tagged2LazyVar(term)->isKinded(); break;
-    case FUTURE:       kinded=tagged2Future(term)->isKinded(); break;
-    default: break;
+    default: 
+      if (isFuture(term))
+	kinded=tagged2Future(term)->isKinded(); 
+      break;
     }
     return kinded?PROCEED:FAILED;
   }

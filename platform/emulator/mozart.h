@@ -664,6 +664,7 @@ typedef enum {
   OZ_Type_Tuple,
   OZ_Type_Var,
   OZ_Type_ForeignPointer,
+  OZ_Type_Promise,
   OZ_Type_Unknown
 } OZ_TermType;
 
