@@ -11,7 +11,7 @@
 
 #include "fsaux.hh"
 
-OZ_C_proc_begin(fsp_init, 0)
+OZ_C_proc_begin(fsp_init, 1)
 {
 #ifdef OZ_DEBUG
   cout << "*** DEBUG-FSETLIB ***" << endl << flush;
@@ -19,7 +19,7 @@ OZ_C_proc_begin(fsp_init, 0)
   cout << "*** PROFILE-FSETLIB ***" << endl << flush;
 #endif
   //  cout << "fsetlib " << __DATE__ << ' ' << __TIME__ << endl << flush;
-  return PROCEED;
+  return OZ_unifyAtom(OZ_args[0], __DATE__ " (" __TIME__ ")");
 }
 OZ_C_proc_end
 

@@ -36,6 +36,8 @@ private:
 public:
   CPIteratePropagator(OZ_Term x, OZ_Term durations) 
     : Propagator_VD_VI(x, durations) {}
+
+  CPIteratePropagator(OZ_Term tasks, OZ_Term starts, OZ_Term durs);
   
   virtual OZ_Return propagate(void);
   virtual OZ_CFun getHeaderFunc(void) const { return spawner; }
