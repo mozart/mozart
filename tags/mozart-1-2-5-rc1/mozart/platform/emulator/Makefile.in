@@ -1,0 +1,574 @@
+#  Authors:
+#    Michael Mehl (mehl@dfki.de)
+# 
+#  Contributors:
+#    optional, Contributor's name (Contributor's email address)
+# 
+#  Copyright:
+#    Michael Mehl, 1998
+# 
+#  Last change:
+#    $Date$ by $Author$
+#    $Revision$
+# 
+#  This file is part of Mozart, an implementation 
+#  of Oz 3:
+#     http://www.mozart-oz.org
+# 
+#  See the file "LICENSE" or
+#     http://www.mozart-oz.org/LICENSE.html
+#  for information on usage and redistribution 
+#  of this file, and for a DISCLAIMER OF ALL 
+#  WARRANTIES.
+
+# !!! THIS MAKEFILE REQUIRES GNU MAKE !!!!
+
+############################################################################
+# VARIABLES
+############################################################################
+
+VPATH=	@srcdir@
+SRCDIR=	@srcdir@
+BUILDDIR = @builddir@
+
+include Makefile.vars
+
+MODULE_NAMES =							\
+	PID Fault DPMisc DPB VirtualSite DPStatistics Tk Schedule FDP FSP \
+	Parser \
+	CompilerSupport Browser Debug Space FDB FSB CTB RecordC Compat \
+	Win32 Profile OsTime
+
+STATIC_MODULES=		@STATIC_MODULES@
+DYNAMIC_MODULES=	@DYNAMIC_MODULES@
+STATIC_MODULELIBS=	-L. ${STATIC_MODULES:%=-l%}
+STATIC_MODULETARGETS=	$(STATIC_MODULES:%=lib%.a)
+DYNAMIC_MODULETARGETS=	$(DYNAMIC_MODULES:%=%.so-$(PLATFORM))
+
+LIBS=		$(STATIC_MODULELIBS) @LIBS@ 
+
+INCS=		-I. -I$(SRCDIR)
+M4_D=		-DEMUDIR=$(SRCDIR)
+TARGETS=	$(EMULATOR_EXE) text2pickle.exe
+SUBDIRS=	libdp libfd libfset
+OZVERSION=	$(SRCTOP)/OZVERSION
+
+# these are the builtin modules: non-sited primitives
+# NOTE: update this list also in share/lib/Makefile.in 
+BIMODSPECS = \
+	Array Atom BitArray Bool Cell Char Chunk Class \
+	Dictionary Exception Float ForeignPointer Int List Literal \
+	Lock Name Number Object Port Procedure Record \
+	String Thread Time Tuple Unit Value VirtualString \
+	BitString ByteString Word InterFault \
+	WeakDictionary Alice $(SITE_PROPERTY_SPECS) \
+	INTERNAL # do not include this at compiler (things will blow up!)
+
+MODSPECS= \
+	FDP FSP Schedule Tk Parser OS Property Pickle \
+	PID URL FDB FSB CTB RecordC Space System CTB \
+	CompilerSupport Compat Win32 Profile \
+	Debug Fault Browser Misc DPMisc \
+	VirtualSite Application DPStatistics OsTime \
+	$(BIMODSPECS) \
+	$(DENYS_SPECS)
+
+MODINTERS = $(MODSPECS:%=mod%-if.cc)
+
+CREATEDFILES=					\
+	instrtab.hh opcodes.hh			\
+	picklecode.cc				\
+	atoms.hh atoms.cc			\
+	config.h				\
+	version.cc opcodes.cc	\
+	$(MODINTERS)
+
+OTHERSRCS= \
+	main.cc \
+	version.cc \
+	statisti.cc \
+	print.cc base.cc ozconfig.cc \
+	foreign.cc dpInterface.cc boot-manager.cc \
+	builtins.cc vprops.cc debug.cc interFault.cc \
+	system.cc alice.cc
+
+SUPPORTSRCS=\
+	stack.cc genhashtbl.cc ozostream.cc hashtbl.cc \
+	iso-ctype.cc
+
+OSSRCS=\
+	os.cc unix.cc urlc.cc ioHandler.cc $(DENYS_SRCS)
+
+STORESRCS=\
+	refsarray.cc tagged.cc value.cc atoms.cc \
+	dictionary.cc extension.cc bitarray.cc word.cc \
+	ozthread.cc heapchunk.cc bytedata.cc bits.cc \
+	susplist.cc \
+	var_base.cc var_ext.cc var_simple.cc var_future.cc var_opt.cc \
+	namer.cc \
+	weakdict.cc $(SITE_PROPERTY_SRCS)
+
+RUNSRCS=\
+	am.cc unify.cc indexing.cc codearea.cc \
+	trail.cc emulate.cc scheduler.cc \
+	copycode.cc opcodes.cc controlvar.cc \
+	prop_int.cc prop_class.cc \
+	thr_stack.cc thr_class.cc thr_pool.cc \
+	susp_queue.cc thr_int.cc suspendable.cc
+
+SPACESRCS=\
+	board.cc distributor.cc
+
+MEMSRCS=\
+	g-collect.cc cmem.cc mem.cc liveness.cc
+
+PICKLESRCS=\
+	gname.cc site.cc \
+	gentraverser.cc marshalerBase.cc pickleBase.cc \
+        pickle.cc components.cc componentBuffer.cc byteBuffer.cc
+
+OFSRCS=	var_of.cc
+
+FDSRCS=\
+	fdomn.cc \
+	var_fd.cc var_bool.cc
+
+CPISRCS=\
+	cpi.cc cpi_fd.cc cpi_prop.cc cpi_filter.cc \
+	cpi_fs.cc cpi_expect.cc cpi_misc.cc \
+	cpi_stream.cc cpi_profile.cc cpi_ct.cc \
+	var_ct.cc
+
+FSETSRCS=\
+	fset.cc var_fs.cc
+
+TEXT2PICKLESRCS= text2pickle.cc
+TEXT2PICKLEOBJS= $(TEXT2PICKLESRCS:.cc=.o)
+
+SRCS= \
+	$(SUPPORTSRCS) $(STORESRCS) $(OSSRCS) $(WINDOWSSRCS) \
+	$(RUNSRCS) $(MEMSRCS) $(SPACESRCS) \
+	$(CPISRCS) $(FDSRCS) $(FSETSRCS) $(OFSRCS) \
+	$(PICKLESRCS)
+
+
+OBJS=   $(SRCS:%.cc=%.o) $(OTHERSRCS:%.cc=%.o)
+
+TKSRCS=	\
+	tk.cc
+COMPILERSUPPORTSRCS= \
+	compiler.cc
+BROWSERSRCS= \
+	browser.cc
+OSTIMESRCS= \
+	ostime.cc
+DEBUGSRCS= \
+	debugBI.cc
+SPACEOPSRCS = \
+	s-clone.cc board-bi.cc sit-check.cc
+FDBSRCS = \
+	fdcore.cc
+FSBSRCS = \
+	fsetcore.cc
+CTBSRCS = \
+	ct-bi.cc
+RECORDCSRCS = \
+	ofs-bi.cc
+COMPATSRCS = \
+	compat.cc
+WIN32SRCS=\
+	win32.cc
+SYSTEMSRCS =
+#	system.cc
+PROFILESRCS = \
+	profile.cc
+
+TKOBJS=	$(TKSRCS:%.cc=%.lo)
+COMPILERSUPPORTOBJS=	$(COMPILERSUPPORTSRCS:%.cc=%.lo)
+BROWSEROBJS=	$(BROWSERSRCS:%.cc=%.lo)
+OSTIMEOBJS=	$(OSTIMESRCS:%.cc=%.lo)
+DEBUGOBJS=	$(DEBUGSRCS:%.cc=%.lo)
+SPACEOPOBJS=	$(SPACEOPSRCS:%.cc=%.lo)
+FDBOBJS=	$(FDBSRCS:%.cc=%.lo)
+FSBOBJS=	$(FSBSRCS:%.cc=%.lo)
+CTBOBJS=	$(CTBSRCS:%.cc=%.lo)
+RECORDCOBJS=	$(RECORDCSRCS:%.cc=%.lo)
+COMPATOBJS=	$(COMPATSRCS:%.cc=%.lo)
+WIN32OBJS=	$(WIN32SRCS:%.cc=%.lo)
+SYSTEMOBJS=	$(SYSTEMSRCS:%.cc=%.lo)
+PROFILEOBJS=	$(PROFILESRCS:%.cc=%.lo)
+
+ALLSRCS= $(SRCS) \
+	$(TKSRCS) $(COMPILERSUPPORTSRCS) $(BROWSERSRCS) \
+	$(SPACEOPSRCS) $(FDBSRCS) $(FSBSRCS) $(CTBSRCS) \
+	$(RECORDCSRCS) $(COMPATSRCS) $(WIN32SRCS) $(SYSTEMSRCS) \
+	$(PROFILESRCS) $(OSTIMESRCS) \
+	$(DEBUGSRCS) $(TEXT2PICKLESRCS)
+
+ALLOBJS= $(OBJS) \
+	$(TKOBJS) $(COMPILERSUPPORTOBJS) $(BROWSEROBJS) \
+	$(SPACEOPOBJS) $(FDBOBJS) $(FSBOBJS) $(CTBOBJS) \
+	$(RECORDCOBJS) $(COMPATOBJS) $(WIN32OBJS) $(SYSTEMOBJS) \
+	$(PROFILEOBJS) $(OSTIMEOBJS) \
+	$(DEBUGOBJS)
+
+############################################################################
+### TARGETS
+############################################################################
+
+.NOEXPORT: emulate.o $(EMULATOR_EXE)
+.PHONY:	all first install install-bin install-inc \
+	install-dir depend tags clean cleaner distclean veryclean
+
+all: $(TARGETS) $(DYNAMIC_MODULETARGETS)
+
+bootstrap:: all
+
+$(MODINTERS): bidecl.perl
+
+.PHONY: libDPB.a DPB.so-$(PLATFORM)
+libDPB.a DPB.so-$(PLATFORM):
+	cd libdp; $(MAKE) ../$@
+
+.PHONY: libPID.a PID.so-$(PLATFORM)
+libPID.a PID.so-$(PLATFORM):
+	cd libdp; $(MAKE) ../$@
+
+.PHONY: libFault.a Fault.so-$(PLATFORM)
+libFault.a Fault.so-$(PLATFORM):
+	cd libdp; $(MAKE) ../$@
+
+
+.PHONY: libDPMisc.a DPMisc.so-$(PLATFORM)
+libDPMisc.a DPMisc.so-$(PLATFORM):
+	cd libdp; $(MAKE) ../$@
+
+.PHONY: libDPStatistics.a DPStatistics.so-$(PLATFORM)
+libDPStatistics.a DPStatistics.so-$(PLATFORM):
+	cd libdp; $(MAKE) ../$@
+
+.PHONY: libVirtualSite.a VirtualSite.so-$(PLATFORM)
+libVirtualSite.a VirtualSite.so-$(PLATFORM):
+	cd libdp; $(MAKE) ../$@
+
+.PHONY: libFDP.a FDP.so-$(PLATFORM) libSchedule.a Schedule.so-$(PLATFORM)
+libFDP.a FDP.so-$(PLATFORM) libSchedule.a Schedule.so-$(PLATFORM):
+	cd libfd; $(MAKE) ../$@
+
+.PHONY: libFSP.a FSP.so-$(PLATFORM)
+libFSP.a FSP.so-$(PLATFORM):
+	cd libfset; $(MAKE) ../$@
+
+Tk.so-$(PLATFORM): $(TKOBJS)
+	$(DYNLD) -o $@ $(TKOBJS)
+
+libTk.a: $(TKOBJS)
+	$(AR) -rc $@ $(TKOBJS) && $(RANLIB) $@
+
+s-clone.lo: cac.cc
+g-collect.o: cac.cc
+
+Space.so-$(PLATFORM): $(SPACEOPOBJS)
+	$(DYNLD) -o $@ $(SPACEOPOBJS)
+
+libSpace.a: $(SPACEOPOBJS)
+	$(AR) -rc $@ $(SPACEOPOBJS) && $(RANLIB) $@
+
+FDB.so-$(PLATFORM): $(FDBOBJS)
+	$(DYNLD) -o $@ $(FDBOBJS)
+
+libFDB.a: $(FDBOBJS)
+	$(AR) -rc $@ $(FDBOBJS) && $(RANLIB) $@
+
+FSB.so-$(PLATFORM): $(FSBOBJS)
+	$(DYNLD) -o $@ $(FSBOBJS)
+
+libFSB.a: $(FSBOBJS)
+	$(AR) -rc $@ $(FSBOBJS) && $(RANLIB) $@
+
+CTB.so-$(PLATFORM): $(CTBOBJS)
+	$(DYNLD) -o $@ $(CTBOBJS)
+
+libCTB.a: $(CTBOBJS)
+	$(AR) -rc $@ $(CTBOBJS) && $(RANLIB) $@
+
+RecordC.so-$(PLATFORM): $(RECORDCOBJS)
+	$(DYNLD) -o $@ $(RECORDCOBJS)
+
+libRecordC.a: $(RECORDCOBJS)
+	$(AR) -rc $@ $(RECORDCOBJS) && $(RANLIB) $@
+
+Compat.so-$(PLATFORM): $(COMPATOBJS)
+	$(DYNLD) -o $@ $(COMPATOBJS)
+
+libCompat.a: $(COMPATOBJS)
+	$(AR) -rc $@ $(COMPATOBJS) && $(RANLIB) $@
+
+Win32.so-$(PLATFORM): $(WIN32OBJS)
+	$(DYNLD) -o $@ $(WIN32OBJS)
+
+libWin32.a: $(WIN32OBJS)
+	$(AR) -rc $@ $(WIN32OBJS) && $(RANLIB) $@
+
+Profile.so-$(PLATFORM): $(PROFILEOBJS)
+	$(DYNLD) -o $@ $(PROFILEOBJS)
+
+libProfile.a: $(PROFILEOBJS)
+	$(AR) -rc $@ $(PROFILEOBJS) && $(RANLIB) $@
+
+CompilerSupport.so-$(PLATFORM): $(COMPILERSUPPORTOBJS)
+	$(DYNLD) -o $@ $(COMPILERSUPPORTOBJS)
+
+libCompilerSupport.a: $(COMPILERSUPPORTOBJS)
+	$(AR) -rc $@ $(COMPILERSUPPORTOBJS) && $(RANLIB) $@
+
+browser.o: modBrowser-if.cc
+
+Browser.so-$(PLATFORM): $(BROWSEROBJS)
+	$(DYNLD) -o $@ $(BROWSEROBJS)
+
+libBrowser.a: $(BROWSEROBJS)
+	$(AR) -rc $@ $(BROWSEROBJS) && $(RANLIB) $@
+
+OsTime.so-$(PLATFORM): $(OSTIMEOBJS)
+	$(DYNLD) -o $@ $(OSTIMEOBJS)
+
+libOsTime.a: $(OSTIMEOBJS)
+	$(AR) -rc $@ $(OSTIMEOBJS) && $(RANLIB) $@
+
+Debug.so-$(PLATFORM): $(DEBUGOBJS)
+	$(DYNLD) -o $@ $(DEBUGOBJS)
+
+libDebug.a: $(DEBUGOBJS)
+	$(AR) -rc $@ $(DEBUGOBJS) && $(RANLIB) $@
+
+System.so-$(PLATFORM): $(SYSTEMOBJS)
+	$(DYNLD) -o $@ $(SYSTEMOBJS)
+
+libSystem.a: $(SYSTEMOBJS)
+	$(AR) -rc $@ $(SYSTEMOBJS) && $(RANLIB) $@
+
+PRGDEP=$(CREATEDFILES) $(OBJS) $(STATIC_MODULETARGETS)
+
+first: $(CREATEDFILES)
+	for d in $(SUBDIRS); do (cd $$d; $(MAKE) first); done
+
+emulator.exe: $(PRGDEP)
+	$(LD) $(EMULDFLAGS) $(LDFLAGS) $(LDOPT) -o $@ $(OBJS) $(LIBS)
+
+emulator.dll: $(PRGDEP)
+	$(DLLTOOL) --as $(AS) --output-def emulator0.def \
+	--output-lib libemulator.a --dllname $@ $(ALLOBJS) && \
+	(echo 'LIBRARY emulator.dll'; \
+	 tail +2 emulator0.def | sed 's/ @.*//g') > emulator.def && \
+	tail +3 emulator.def | tr -d '\015' | \
+	awk '{ print "++'\''"$$1"'\''.'\''emulator.dll'\''" }' \
+	> emulator.cmd && \
+	$(DLLWRAP) --target i386-mingw32 \
+	--driver-name $(CXX) --dlltool-name $(DLLTOOL) --as $(AS) \
+	$(EMULDFLAGS) $(LDFLAGS) -o $@ --def emulator0.def $(OBJS) $(LIBS)
+
+text2pickle.exe: $(TEXT2PICKLEOBJS)
+	$(LD) $(EMULDFLAGS) $(LDFLAGS) $(LDOPT) -o $@ $(TEXT2PICKLEOBJS)
+
+install:: install-bin install-inc install-cache
+
+install-bin: $(TARGETS) $(BINDIR)
+	for exe in oztool.sh $(TARGETS); do\
+	  $(INSTALL_BIN) $$exe $(BINDIR) || exit 1;\
+	done
+
+NEWCACHEDIR = $(PREFIX)/cache/x-oz/boot
+NEWTARGETS = $(DYNAMIC_MODULETARGETS:%=$(NEWCACHEDIR)/%)
+
+install-cache: $(NEWCACHEDIR) $(NEWTARGETS)
+
+$(NEWCACHEDIR):
+	$(INSTALL_DIR) $@
+
+$(NEWCACHEDIR)/% : %
+	$(INSTALL_FILE) $< $@
+
+install-inc: $(INCDIR)
+	$(INSTALL_FILE) $(SRCDIR)/mozart.h $(INCDIR)
+	$(INSTALL_FILE) $(SRCDIR)/extension.hh $(INCDIR)
+	$(INSTALL_FILE) $(SRCDIR)/mozart_cpi.hh $(INCDIR)
+	if [ -r emulator.def ]; then $(INSTALL_FILE) emulator.def $(INCDIR); fi
+	if [ -r emulator.cmd ]; then $(INSTALL_FILE) emulator.cmd $(INCDIR); fi
+
+$(BINDIR) $(INCDIR):
+	$(INSTALL_DIR) $@
+
+version.cc: version.sed $(filter-out version.cc,$(ALLSRCS))
+	sed -e "s/HEREGOESDATE/@OZBUILDDATE@/" \
+	     -e "s/OZPLATFORM/$(PLATFORM)/" \
+	     $(SRCDIR)/version.sed > version.cc
+
+depend:: version.cc $(ALLSRCS)
+	$(MAKE) first
+	$(DEPEND) $^ > Makefile.deps
+	for d in $(SUBDIRS); do (cd $$d; $(MAKE) depend); done
+
+BUILDDIR=$(shell pwd)
+tags:	$(CREATEDFILES) version.cc
+	etags \
+	--regex='/OZ_BI_\(io\)?define([ 	]*\([^ 	,)]+\)/\2/' \
+	--regex='/OZ_C_\(io\)?proc_begin([ 	]*\([^ 	,)]+\)/\2/' \
+	--regex='/OZ_DECLARE[A-Z0-9_]*([ 	]*\([^ 	,)]+\)/\1/' \
+	--regex='/BI_TESTCHAR([ 	]*\([^ 	,)]+\)/\1/' -l c++ \
+	-o $(SRCDIR)/TAGS \
+	$(addprefix $(BUILDDIR)/,$(CREATEDFILES)) \
+	$(SRCDIR)/*c $(SRCDIR)/*h $(SRCDIR)/*/*c $(SRCDIR)/*/*h
+	for d in $(SUBDIRS); do (cd $$d; $(MAKE) tags); done
+
+clean::
+	-rm -f gmon.out  fetchedInstr.dump verb_out.txt
+
+
+new-scanner:
+	$(LEX) $(LFLAGS) -L -Pxy -o$(SRCDIR)/scanner.cc $(SRCDIR)/scanner.ll
+	grep -v unistd.h $(SRCDIR)/scanner.cc > $(SRCDIR)/winscanner.cc
+
+new-parser:
+	$(YACC) $(YFLAGS) -l -p xy $(SRCDIR)/parser.yy
+	@mv y.tab.c $(SRCDIR)/parser.cc
+	@mv y.tab.h $(SRCDIR)/parser.hh
+
+
+PARSEROBJS = parser.lo scanner.lo parsertable.lo
+scanner.lo: parser.hh
+Parser.so-$(PLATFORM): $(PARSEROBJS)
+	$(DYNLD) -o $@ $(PARSEROBJS)
+
+libParser.a: $(PARSEROBJS)
+	$(AR) -rc $@ $(PARSEROBJS) && $(RANLIB) $@
+
+board-bi.o: modSpace-if.cc
+board-bi.lo: modSpace-if.cc
+
+tk.o: modTk-if.cc
+
+parsertable.o: modParser-if.cc
+
+compiler.o: modCompilerSupport-if.cc
+
+boot-manager.o: $(MODINTERS)
+
+%-if.cc: %.spec
+	$(PERL) $(SRCDIR)/bidecl.perl -file $< -interface > $@
+
+# these special rules ensure that warnings issued in bison.simple
+# are not treated as errors:
+parser.o: parser.cc
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS_NO_ERROR) -c -o $@ $<
+parser.lo: parser.cc
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS_NO_ERROR) $(CDYNOPT) -c -o $@.o $< && \
+	mv $@.o $@
+
+config.h: config.m4h $(OZVERSION)
+	$(M4) $(M4_D) -DOZVERSION=\"`$(OZVERSION)`\" $(SRCDIR)/config.m4h > $@
+
+# dependencies
+-include Makefile.deps
+
+# dependencies on files generated by perl;
+value.o: atoms.hh
+
+# m4-files dependencies;
+config.h copycode.cc instrtab.hh opcodes.hh opcodes.cc picklecode.cc: instrDefs.m4
+instrtab.hh emulate.o: instrtab.m4hh
+opcodes.hh text2pickle.o value.o: opcodes.m4hh
+opcodes.cc text2pickle.o value.o: opcodes.m4cc
+picklecode.cc pickle.o: picklecode.m4cc
+
+# remaining '.cc' includes (should be actually generated in Makefile.deps);
+g-collect.o: cac.cc
+s-clone.o: cac.cc
+text2pickle.o: marshalerBase.cc
+text2pickle.o: pickleBase.cc
+
+# automatic configure
+#${srcdir}/configure: configure.in
+#	cd ${srcdir} && autoconf -l ..
+
+conf-others.h: conf-others.h.in
+	./config.status
+
+Makefile: Makefile.in
+	./config.status
+
+Makefile.vars: Makefile.vars.in
+	./config.status
+
+Makefile.rules: Makefile.rules.in
+	./config.status
+
+config.status: configure
+	./config.status --recheck
+
+############################################################################
+# testing the local emulator:
+#   make test-check       # runs the test suite with local emulator
+#   make test-stage1-check # ... with the stage1 components
+#   make lib-check        # runs the check in the lib with local emulator
+############################################################################
+
+.PHONY: test-all test lib-all check
+
+OZTESTOPTS=-v
+test:
+	OZEMULATOR=`pwd`/emulator.exe; export OZEMULATOR; \
+	cd $(TESTDIR) && \
+	$(MAKE) check OZTESTOPTS="$(OZTESTOPTS)"
+
+lib-all:
+	$(MAKE) lib-check
+
+lib-%:
+	OZEMULATOR=`pwd`/emulator.exe && export OZEMULATOR; \
+	cd $(LIBDIR) && \
+	$(MAKE) $*
+
+test-%:
+	OZEMULATOR=`pwd`/emulator.exe && export OZEMULATOR; \
+	cd $(TESTDIR) && \
+	$(MAKE) $* OZTESTOPTS=$(OZTESTOPTS)
+
+check-all: emulator.exe
+	$(MAKE) test
+	$(MAKE) lib-check
+
+
+############################################################################
+# RULES
+############################################################################
+
+include Makefile.rules
+
+atoms.cc: atoms.perl
+	$(PERL) $< -body > $@
+
+atoms.hh: atoms.perl
+	$(PERL) $< -header > $@
+
+# should be after make in subdirs (see Makefiles.rules)
+
+cleaner::
+	-rm -f version.cc $(TARGETS) \
+		*.exe *.map *.imp *.sym \
+		$(CREATEDFILES)
+
+veryclean::
+	-rm -f version.cc $(TARGETS) \
+		*.exe *.map *.imp *.sym \
+		$(CREATEDFILES) TAGS Makefile.deps \
+		$(DYNAMIC_MODULETARGETS)
+
+distclean::
+	-rm -f OZCONF.h conf-others.h config.cache config.log config.status \
+		Makefile.rules Makefile.vars Makefile makefile oztool.sh .gdbinit
+
+
+
+
+

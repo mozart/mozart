@@ -1,0 +1,7 @@
+This example shows how objects can be controlled on a canvas.
+
+- The middle mouse button adds a rectangle on the canvas.
+- Drag with the left mouse button to move rectangles.
+- Click on the right mouse button to delete rectangles.
+
+

@@ -1,0 +1,268 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 38;
+	objects = {
+		F537552A016C352C01DC9062 = {
+			buildStyles = (
+				F537552C016C352C01DC9062,
+				F537552D016C352C01DC9062,
+			);
+			isa = PBXProject;
+			mainGroup = F537552B016C352C01DC9062;
+			productRefGroup = F53755DD016C38D201DC9062;
+			projectDirPath = @SRCTOP@/platform/wish;
+			targets = (
+				F53756A0016C4DD401DC9062,
+			);
+		};
+		F537552B016C352C01DC9062 = {
+			children = (
+				F5375531016C376E01DC9062,
+				F537553C016C376E01DC9062,
+				F53755DD016C38D201DC9062,
+				F537567C016C3ADB01DC9062,
+			);
+			isa = PBXGroup;
+			refType = 4;
+		};
+		F537552C016C352C01DC9062 = {
+			buildRules = (
+			);
+			buildSettings = {
+				COPY_PHASE_STRIP = NO;
+			};
+			isa = PBXBuildStyle;
+			name = Development;
+		};
+		F537552D016C352C01DC9062 = {
+			buildRules = (
+			);
+			buildSettings = {
+				COPY_PHASE_STRIP = YES;
+				OPTIMIZATION_CFLAGS = "-O3";
+			};
+			isa = PBXBuildStyle;
+			name = Deployment;
+		};
+		F5375531016C376E01DC9062 = {
+			children = (
+				F537553B016C376E01DC9062,
+			);
+			isa = PBXGroup;
+			path = MacOSX;
+			name = Resources;
+			refType = 4;
+		};
+		F537553B016C376E01DC9062 = {
+			isa = PBXFileReference;
+			path = OzWish.icns;
+			refType = 4;
+		};
+		F537553C016C376E01DC9062 = {
+			children = (
+				F537553D016C376E01DC9062,
+				F5375546016C376E01DC9062,
+			);
+			isa = PBXGroup;
+			name = Source;
+			refType = 4;
+		};
+		F537553D016C376E01DC9062 = {
+			children = (
+			);
+			isa = PBXGroup;
+			name = Headers;
+			refType = 4;
+		};
+		F5375546016C376E01DC9062 = {
+			children = (
+				F5AAD3EB01BAA95F012A1931,
+			);
+			isa = PBXGroup;
+			name = Source;
+			refType = 4;
+		};
+		F53755DD016C38D201DC9062 = {
+			children = (
+				F537569F016C4DD401DC9062,
+			);
+			isa = PBXGroup;
+			name = Products;
+			refType = 4;
+		};
+		F537567C016C3ADB01DC9062 = {
+			children = (
+				F5875C7B016FEF1D01DC9062,
+				F5AAD3EC01BAA95F012A1931,
+			);
+			isa = PBXGroup;
+			name = "External Frameworks";
+			refType = 4;
+		};
+		F537569F016C4DD401DC9062 = {
+			isa = PBXApplicationReference;
+			path = OzWish.app;
+			refType = 3;
+		};
+		F53756A0016C4DD401DC9062 = {
+			buildPhases = (
+				F53756A1016C4DD401DC9062,
+				F53756A2016C4DD401DC9062,
+				F53756A4016C4DD401DC9062,
+				F53756A6016C4DD401DC9062,
+				F53756AA016C4DD401DC9062,
+				F5FBD6E30173513601DC9062,
+			);
+			buildSettings = {
+				FRAMEWORK_SEARCH_PATHS = "\"$(SYMROOT)\"";
+				HEADER_SEARCH_PATHS = "\"$(LOCAL_LIBRARY_DIR)/Frameworks/Tk.framework/Versions/8.4/Headers\"";
+				INSTALL_PATH = "@prefix@/platform/@PLATFORM@";
+				LIBRARY_SEARCH_PATHS = "";
+				OPTIMIZATION_CFLAGS = "-O0";
+				OTHER_CFLAGS = "-DMAC_OSX_TCL -DMAC_OSX_TK -DHAVE_UNISTD_H=1 -DHAVE_LIMITS_H=1 -DTCL_THREADS=1 -DHAVE_PTHREAD_ATTR_SETSTACKSIZE=1 -DHAVE_GETCWD=1 -DHAVE_OPENDIR=1 -DHAVE_STRSTR=1 -DHAVE_STRTOL=1 -DHAVE_TMPNAM=1 -DHAVE_WAITPID=1 -DNO_VALUES_H=1 -DNO_DLFCN_H=1 -DHAVE_UNISTD_H=1 -DHAVE_SYS_PARAM_H=1 -DUSE_TERMIOS=1 -DHAVE_SYS_TIME_H=1 -DTIME_WITH_SYS_TIME=1 -DHAVE_TM_ZONE=1 -DHAVE_TM_GMTOFF=1 -DHAVE_ST_BLKSIZE=1 -DSTDC_HEADERS=1 -DNEED_MATHERR=1 -DHAVE_SIGNED_CHAR=1 -DHAVE_SYS_IOCTL_H=1 -DHAVE_SYS_FILIO_H=1";
+				OTHER_REZFLAGS = "";
+				PRODUCT_NAME = OzWish;
+				SECTORDER_FLAGS = "";
+				WARNING_CFLAGS = "-Wmost -Wno-four-char-constants -Wno-unknown-pragmas";
+				WRAPPER_EXTENSION = app;
+			};
+			dependencies = (
+			);
+			isa = PBXApplicationTarget;
+			name = OzWish;
+			productInstallPath = "@prefix@/platform/@PLATFORM@";
+			productName = OzWish;
+			productReference = F537569F016C4DD401DC9062;
+			productSettingsXML = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>
+<!DOCTYPE plist PUBLIC \"-//Apple Computer//DTD PLIST 1.0//EN\" \"http://www.apple.com/DTDs/PropertyList-1.0.dtd\">
+<plist version=\"1.0\">
+<dict>
+	<key>CFBundleDevelopmentRegion</key>
+	<string>English</string>
+	<key>CFBundleExecutable</key>
+	<string>OzWish</string>
+	<key>CFBundleGetInfoString</key>
+	<string>OzWish 8.4a4
+MacOS X Port by Jim Ingham &amp; Ian Reid
+jingham@apple.com
+Copyright Apple Computer, Inc 2001</string>
+	<key>CFBundleIconFile</key>
+	<string>OzWish.icns</string>
+	<key>CFBundleIdentifier</key>
+	<string>org.mozart-oz.tk</string>
+	<key>CFBundleInfoDictionaryVersion</key>
+	<string>6.0</string>
+	<key>CFBundleName</key>
+	<string>OzWish</string>
+	<key>CFBundlePackageType</key>
+	<string>APPL</string>
+	<key>CFBundleShortVersionString</key>
+	<string>OzWish 8.4a4</string>
+	<key>CFBundleSignature</key>
+	<string>WiSH</string>
+	<key>CFBundleVersion</key>
+	<string>8.4a4</string>
+</dict>
+</plist>
+";
+			shouldUseHeadermap = 0;
+		};
+		F53756A1016C4DD401DC9062 = {
+			buildActionMask = 2147483647;
+			files = (
+			);
+			isa = PBXHeadersBuildPhase;
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		F53756A2016C4DD401DC9062 = {
+			buildActionMask = 2147483647;
+			files = (
+				F53756A3016C4DD401DC9062,
+			);
+			isa = PBXResourcesBuildPhase;
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		F53756A3016C4DD401DC9062 = {
+			fileRef = F537553B016C376E01DC9062;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F53756A4016C4DD401DC9062 = {
+			buildActionMask = 2147483647;
+			files = (
+				F5AAD3ED01BAA95F012A1931,
+			);
+			isa = PBXSourcesBuildPhase;
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		F53756A6016C4DD401DC9062 = {
+			buildActionMask = 2147483647;
+			files = (
+				F5875C7D016FEF1D01DC9062,
+				F5AAD3EE01BAA95F012A1931,
+			);
+			isa = PBXFrameworksBuildPhase;
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		F53756AA016C4DD401DC9062 = {
+			buildActionMask = 2147483647;
+			files = (
+			);
+			isa = PBXRezBuildPhase;
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		F5875C7B016FEF1D01DC9062 = {
+			isa = PBXFrameworkReference;
+			name = Tcl.framework;
+			path = /Library/Frameworks/Tcl.framework;
+			refType = 0;
+		};
+		F5875C7D016FEF1D01DC9062 = {
+			fileRef = F5875C7B016FEF1D01DC9062;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F5AAD3EB01BAA95F012A1931 = {
+			isa = PBXFileReference;
+			path = unixMain.cc;
+			refType = 4;
+		};
+		F5AAD3EC01BAA95F012A1931 = {
+			isa = PBXFrameworkReference;
+			name = Tk.framework;
+			path = /Library/Frameworks/Tk.framework;
+			refType = 0;
+		};
+		F5AAD3ED01BAA95F012A1931 = {
+			fileRef = F5AAD3EB01BAA95F012A1931;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F5AAD3EE01BAA95F012A1931 = {
+			fileRef = F5AAD3EC01BAA95F012A1931;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F5FBD6E30173513601DC9062 = {
+			buildActionMask = 2147483647;
+			files = (
+			);
+			generatedFileNames = (
+			);
+			isa = PBXShellScriptBuildPhase;
+			neededFileNames = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = pwd;
+		};
+	};
+	rootObject = F537552A016C352C01DC9062;
+}

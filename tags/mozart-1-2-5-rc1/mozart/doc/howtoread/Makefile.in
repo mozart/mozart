@@ -1,0 +1,15 @@
+VPATH		= @srcdir@
+SRCDIR		= @srcdir@
+
+WHAT = howtoread
+MAIN = main.sgml
+
+SGMLSRCS0 =
+
+SGMLSRCS = $(SGMLSRCS0:%=%.sgml)
+
+HTMLEXTRASUPPORTFILES =
+
+OZDOCHTMLFLAGS = --autoindex
+
+include ../Makefile.common

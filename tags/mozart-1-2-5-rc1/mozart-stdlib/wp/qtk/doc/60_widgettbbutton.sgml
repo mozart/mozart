@@ -1,0 +1,195 @@
+<section ID="chapter.widgets.tbbutton">
+  <TITLE>Tbbutton widget</title>
+<p>
+<picture.extern to="tbbutton.gif" type=gif>
+
+<<<local
+   Desc=td(
+	   lr(glue:nwe
+	      tbbutton(glue:w
+		       text:"tbbutton" )
+	      tdline(glue:wns)
+	      tbcheckbutton(glue:w
+			    text:"tbcheckbutton")
+	      tdspace(glue:w width:20)
+	      tbradiobutton(glue:w
+			    text:"tbradiobutton"
+			    init:true
+			    group:radio)
+	      tbradiobutton(glue:w
+			    text:"tbradiobutton"
+			    group:radio)))
+in
+   {{QTk.build Desc} show}
+end
+>>>
+
+
+<subsection> <TITLE>Description</TITLE>
+
+<P>
+A tbbutton is a widget that displays a textual string and a bitmap or image. If text is displayed, it is displayed below the bitmap or image if ever here is one defined. A tbbutton has a flat border that gets raised when the mouse cursor gets over it. If the mouse 1 button is clicked, the tbbutton gets a sunken border. A tbbutton is specially suited for toolbar buttons that looks like the toolbars of Netscape or Internet Explorer.  When a user invokes the button (by pressing mouse button 1 with the cursor over the button), then the command specified in the <<action>> option is invoked. 
+</P>
+<P>
+A tbbutton has four differents states that have their own combinations of colors and border type :
+<LIST>
+
+<ITEM> normal : State when the button is not disabled and when the mouse cursor is not above it. The colors are defined by the <<foreground>> and <<background>> parameters. The border is defined by the <<borderwidth>> and <<relief>> parameters. The picture displayed is defined by either by <<bitmap>> or <<image>>.
+
+<ITEM> highlighted : State when the button is not disabled and when the mouse cursor is above it. The colors are defined by the <<highlightforeground>> and <<highlightbackground>> parameters. The border is defined by the <<highlightborderwidth>> and <<highlightrelief>> parameters. The picture displayed is defined by either by <<highlightbitmap>> or <<highlightimage>>.
+
+<ITEM> selected : State when the button is not disabled and when the mouse cursor is above it and the mouse button 1 is currently clicked. The colors are defined by the <<selectforeground>> and <<selectbackground>> parameters. The border is defined by the <<selectborderwidth>> and <<selectrelief>> parameters. The picture displayed is defined by either by <<selectbitmap>> or <<selectimage>>.
+
+<ITEM> disabled : State when the button is not enabled. The colors are defined by the <<disabledforeground>> and <<disabledbackground>> parameters. The border is defined by the <<disabledborderwidth>> and <<disabledrelief>> parameters. The picture displayed is defined by either by <<disabledbitmap>> or <<disabledimage>>.
+
+</LIST>
+
+<subsection> <title>Parameter List</title><p>
+
+<subsubsection><title>Specific Parameters</title><p>
+<ref to="chapter.widgets.tbbutton.action">action</ref>
+<ref to="chapter.widgets.tbbutton.actionh">actionh</ref>
+<ref to="chapter.widgets.tbbutton.background">background</ref>
+<ref to="chapter.widgets.tbbutton.bitmap">bitmap</ref>
+<ref to="chapter.widgets.tbbutton.borderwidth">borderwidth</ref>
+<ref to="chapter.widgets.tbbutton.disabledbackground">disabledbackground</ref>
+<ref to="chapter.widgets.tbbutton.disabledbitmap">disabledbitmap</ref>
+<ref to="chapter.widgets.tbbutton.disabledborderwidth">disabledborderwidth</ref>
+<ref to="chapter.widgets.tbbutton.disabledforeground">disabledforeground</ref>
+<ref to="chapter.widgets.tbbutton.disabledimage">disabledimage</ref>
+<ref to="chapter.widgets.tbbutton.disabledrelief">disabledrelief</ref>
+<ref to="chapter.widgets.tbbutton.disabledstate">disabledstate</ref>
+<ref to="chapter.widgets.tbbutton.foreground">foreground</ref>
+<ref to="chapter.widgets.tbbutton.highlightbackground">highlightbackground</ref>
+<ref to="chapter.widgets.tbbutton.highlightbitmap">highlightbitmap</ref>
+<ref to="chapter.widgets.tbbutton.highlightborderwidth">highlightborderwidth</ref>
+<ref to="chapter.widgets.tbbutton.highlightforeground">highlightforeground</ref>
+<ref to="chapter.widgets.tbbutton.highlightimage">highlightimage</ref>
+<ref to="chapter.widgets.tbbutton.highlightrelief">highlightrelief</ref>
+<ref to="chapter.widgets.tbbutton.image">image</ref>
+<ref to="chapter.widgets.tbbutton.relief">relief</ref>
+<ref to="chapter.widgets.tbbutton.return">return</ref>
+<ref to="chapter.widgets.tbbutton.selectbackground">selectbackground</ref>
+<ref to="chapter.widgets.tbbutton.selectbitmap">selectbitmap</ref>
+<ref to="chapter.widgets.tbbutton.selectborderwidth">selectborderwidth</ref>
+<ref to="chapter.widgets.tbbutton.selectforeground">selectforeground</ref>
+<ref to="chapter.widgets.tbbutton.selectimage">selectimage</ref>
+<ref to="chapter.widgets.tbbutton.selectrelief">selectrelief</ref>
+
+<subsubsection><title>Non Specific Parameters</title><p>
+<ref to="chapter.widgets.tbbutton.param_feature">feature</ref>
+<ref to="chapter.widgets.tbbutton.param_glue">glue</ref>
+<ref to="chapter.widgets.tbbutton.param_handle">handle</ref>
+<ref to="chapter.widgets.tbbutton.param_look">look</ref>
+<ref to="chapter.widgets.tbbutton.param_padx">padx</ref>
+<ref to="chapter.widgets.tbbutton.param_pady">pady</ref>
+<ref to="chapter.widgets.tbbutton.param_text">text</ref>
+<ref to="chapter.widgets.tbbutton.param_tooltips">tooltips</ref>
+
+<subsection><title>Method List</title><p>
+
+<para><title>'raise'</title><p><<'raise'(1:W)>>: If the <<W>> argument is omitted then the command raises the widget so that it is above all of its siblings in the stacking order (it will not be obscured by any siblings and will obscure any siblings that overlap it). If <<W>> is specified then it must be a handle to another widget that is either a sibling of this widget or the descendant of a sibling of this widget. In this case the <<'raise'>> command will insert this widget into the stacking order just above <<W>>; this could end up either raising
+or lowering the widget.
+
+<para><title>bind</title><p><<bind(event:E action:A args:LA append:AP)>>: Specifies an action <<LA>> to execute when the event <<E>> is triggered.
+<list>
+<item> Actions can be specified either as a procedure, a pair <<Port#Message>> or a pair <<Object#Method>> (see <ptr to="basics.otherevents">). 
+<item> Events are strings (see <ptr to="misc.events.names">). 
+<item> The list of arguments <<LA>> specifies supplementary information to pass to the action, like the key code of a keypress, or the mouse coordinates of a mouse button click (see <ptr to="misc.events.args">). If <<LA>> if not specified, <<nil>> is assumed.
+<item> The boolean <<append>> parameter specifies if the binding overrides the previous binding for this event, or adds a supplementary action. If not specified, <<false>> is assumed.
+</LIST>
+
+<para><title>get</title><p><<get(parameter1:Variable1 ... parameterX:VariableX)>>: Obtains the value of one or more parameters. <<parameterX>> must be a valid parameter for the widget. <<VariableX>> must be free variables that will receive the current value of the parameters.
+
+<para><title>getFocus</title><p><<getFocus(force:B)>>: if <<B>> is <<false>> (or by default):  if the application currently has the input focus on the widget's display, this command resets the input focus for the widget's display to the widget. If the application doesn't currently have the input focus on the widget's display, the widget will be remembered as the focus for its top-level; the next time the focus arrives at the top-level, it will be redirected it to the widget. If <<B>> is <<true>>: sets the focus of the widget's display to the widget, even if the application doesn't currently have the input focus for the display. This command should be used sparingly, if at all. In normal usage, an application should not claim the focus for itself; instead, it should wait for the window manager to give it the focus. <<B>> must be a boolean.
+
+<para><title>getGrabStatus</title><p><<getGrabStatus(1:V)>>: Binds <<V>> to the atom <<none>> if there is no grab on the widget, to the atom <<local>> if there is a local grab and to <<global>> if there is a global grab. <<V>> must be a free variable.
+
+<para><title>lower</title><p><<lower(1:W)>>: If the <<W>> argument is omitted then the command lowers the widget so that it is below all of its siblings in the stacking order (it will be obscured by any siblings and will not obscure any siblings that overlap it). If <<W>> is specified then it must be a handle to another widget that is either a sibling of this widget or the descendant of a sibling of this widget. In this case the <<lower>> command will insert this widget into the stacking order just below <<W>>; this could end up either raising
+or lowering the widget. 
+
+<para><title>releaseGrab</title><p><<releaseGrab>>: Releases the grab on the widget if there is one, otherwise does nothing.
+
+<para><title>set</title><p><<set(parameter1:value1 ... parameterX:valueX)>>: Changes the value of one or more parameters. <<parameterX>> must be a valid parameter for the widget. <<valueX>> must be a valid value for the parameter.
+
+<para><title>setGrab</title><p><<setGrab(global:B)>>: Sets a grab on the widget. If <<B>> is <<true>> then the grab is global, otherwise it is local (<<B>> false by default). If a grab was already in effect for this application then it is automatically released. If there is already a grab on the widget and it has the same global/local form as the requested grab, then the command does nothing. Local grab affects only the grabbing application: events will be reported to other applications as if the grab had never occurred. A global grab locks out all applications on the screen, so that only the given subtree of the grabbing application will be sensitive to pointer events (mouse button presses, mouse button releases, pointer motions, window entries, and window exits). During global grabs the window manager will not receive pointer events either. Warning: whe a grab is set, it is define for the whole Oz process so that it will prevent the user to do input to other windows as well. Moreover a grab is still effective even if the window that contains the grabbed widgets is hidden. <<B>> must be a boolean.
+
+<para><title>winfo</title><p><<winfo(parameter1:value1 ... parameterX:valueX)>>: This commands works like the <<get>> method, but for window-related information. For more details, see <ptr to="misc.winfo">.
+
+<subsection><title>Detailed Parameters List</title><p>
+
+<para id="chapter.widgets.tbbutton.action"><title>action</title><p><<action:C>>: Specifies an action to execute right after the user clicked the button. <<C>> can take several different forms (see <ptr to="basics.events">).
+
+<para id="chapter.widgets.tbbutton.actionh"><title>actionh</title><p><<actionh:C>>: Similar to the <<action>> parameter where then handle of the widget is given as a parameter to the <<action>> to be executed. This parameter overrides the <<action>> parameter when present.
+
+<para id="chapter.widgets.tbbutton.background"><title>background</title><p><<background:C>>: or <<bg:C>>: Specifies the background color to display when the mouse cursor is not over the widget (if it is not disabled).  <<C>> must be a valid color (see <ptr to="misc.color">)
+
+<para id="chapter.widgets.tbbutton.bitmap"><title>bitmap</title><p><<bitmap:B>>: Specifies the bitmap to display when the mouse cursor is not over the widget (if it is not disabled). If there is an image defined, this option is ignored. 
+
+<para id="chapter.widgets.tbbutton.borderwidth"><title>borderwidth</title><p><<borderwidth:P>>: Specifies the border width to display when the mouse cursor is not over the widget (if it is not disabled).
+
+<para id="chapter.widgets.tbbutton.disabledbackground"><title>disabledbackground</title><p><<disabledbackground:C>>: Specifies the background color to display when the widget is disabled.  <<C>> must be a valid color (see <ptr to="misc.color">)
+
+<para id="chapter.widgets.tbbutton.disabledbitmap"><title>disabledbitmap</title><p><<disabledbitmap:B>>: Specifies the bitmap to display when the widget is disabled. If there is an image defined, this option is ignored. Is this option is not specified, it defaults to the value of the <<bitmap>> parameter.
+
+<para id="chapter.widgets.tbbutton.disabledborderwidth"><title>disabledborderwidth</title><p><<disabledborderwidth:P>>: Specifies the border width to display when the the widget is disabled.
+
+<para id="chapter.widgets.tbbutton.disabledforeground"><title>disabledforeground</title><p><<disabledforeground:C>>: Specifies the foreground color to display when the widget is disabled.  <<C>> must be a valid color (see <ptr to="misc.color">)
+
+<para id="chapter.widgets.tbbutton.disabledimage"><title>disabledimage</title><p><<disabledimage:I>>: Specifies the image to display when the widget is disabled. Is this option is not specified, it defaults to the value of the <<image>> parameter.
+
+<para id="chapter.widgets.tbbutton.disabledrelief"><title>disabledrelief</title><p><<disabledrelief:A>>: Specifies the relief to display when the the widget is disabled. Defaults to <<flat>>.
+
+<para id="chapter.widgets.tbbutton.disabledstate"><title>disabledstate</title><p><<disabledstate:A>>: Specifies one of two states for the button: <<normal>> or <<disabled>>. In normal state the button is displayed using the foreground and background options. Disabled state means that the button should be insensitive: the default bindings will refuse to activate the widget and will ignore mouse button presses. In this state the disabledforeground and background options determine how the button is displayed. <<A>> must be one of these three atoms: <<normal>> or <<disabled>>.
+
+<para id="chapter.widgets.tbbutton.foreground"><title>foreground</title><p><<foreground:C>>: or <<fg:C>>: Specifies the foreground color to display when the mouse cursor is not over the widget (if it is not disabled).  <<C>> must be a valid color (see <ptr to="misc.color">)
+
+<para id="chapter.widgets.tbbutton.highlightbackground"><title>highlightbackground</title><p><<highlightbackground:C>>: Specifies the background color to display when the mouse cursor is over the widget (if it is not disabled).  <<C>> must be a valid color (see <ptr to="misc.color">)
+
+<para id="chapter.widgets.tbbutton.highlightbitmap"><title>highlightbitmap</title><p><<highlightbitmap:B>>: Specifies the bitmap to display when the mouse cursor is over the widget (if it is not disabled). If there is an image defined, this option is ignored. Is this option is not specified, it defaults to the value of the <<bitmap>> parameter.
+
+<para id="chapter.widgets.tbbutton.highlightborderwidth"><title>highlightborderwidth</title><p><<highlightborderwidth:P>>: Specifies the border width to display when the mouse cursor is over the widget (if it is not disabled).
+
+<para id="chapter.widgets.tbbutton.highlightforeground"><title>highlightforeground</title><p><<highlightforeground:C>>: Specifies the foreground color to display when the mouse cursor is over the widget (if it is not disabled).  <<C>> must be a valid color (see <ptr to="misc.color">)
+
+<para id="chapter.widgets.tbbutton.highlightimage"><title>highlightimage</title><p><<highlightimage:I>>: Specifies the image to display when the mouse cursor is over the widget (if it is not disabled). Is this option is not specified, it defaults to the value of the <<image>> parameter.
+
+<para id="chapter.widgets.tbbutton.highlightrelief"><title>highlightrelief</title><p><<highlightrelief:A>>: Specifies the relief to display when the mouse cursor is over the widget (if it is not disabled). Defaults to <<raised>>.
+
+<para id="chapter.widgets.tbbutton.image"><title>image</title><p><<image:I>>: Specifies the image to display when the mouse cursor is not over the widget (if it is not disabled). 
+
+<para id="chapter.widgets.tbbutton.param_feature"><title>feature</title><p><<feature:A>>: Specifies a feature name for the container object to reference the object controlling this widget. For more details, see <ptr to="basics.interaction">. <<A>> must be an atom.
+
+<para id="chapter.widgets.tbbutton.param_glue"><title>glue</title><p><<glue:A>>: Specifies how a widget must fit in its own available place. <<A>> must be an atom that is any combination of <<n>>, <<s>>, <<w>> and <<e>>. If a direction is specified, the corresponding border is glued to its neighbor or border of the frame if there is no neighbor. If a direction is not specified, the corresponding border if such that the widget takes just the width or height it needs to draw itself. If none of opposite directions is specified, the widget is centered. For more details, see <ptr to="basics.geometry">.
+
+<para id="chapter.widgets.tbbutton.param_handle"><title>handle</title><p><<handle:V>>: Specifies a variable to reference the object controlling this widget. This variable is bound when the window is built. For more details, see <ptr to="basics.interaction">. <<V>> must be a free variable.
+
+<para id="chapter.widgets.tbbutton.param_look"><title>look</title><p><<look:L>>: Specifies a look to use for the widget. A look specifies default values for the parameters of widgets. This parameter can be specified at creation time only. Moreover changing a look will not change the appearance of widgets that are already displayed with that look. See <ptr to="misc.look"> for more details.
+
+<para id="chapter.widgets.tbbutton.param_padx"><title>padx</title><p><<padx:P>>: Specifies how much horizontal external padding to leave on each side of the widget. This space is added outside the widget border. <<P>> must be a valid screen distance (see  <ptr to="misc.distance">)
+
+<para id="chapter.widgets.tbbutton.param_pady"><title>pady</title><p><<pady:P>>: Specifies how much vertical external padding to leave on each side of the widget. This space is added outside the widget border. <<P>> must be a valid screen distance (see  <ptr to="misc.distance">)
+
+<para id="chapter.widgets.tbbutton.param_text"><title>text</title><p><<text:VS>>: Specifies a string to be displayed inside the widget. The way in which the string is displayed depends on the particular widget and may be determined by other options, such as <<anchor>> or <<justify>>. <<VS>> must be a virtual string.
+
+<para id="chapter.widgets.tbbutton.param_tooltips"><title>tooltips</title><p><<tooltips:VS>>: Specifies a tooltip for the widget. A tooltip is a small message that appears when the mouse cursor if left still over the widget for a while. If <<VS>> is set to <<nil>>, no tooltip will appear at all. <<VS>> must be a virtual string.
+
+<para id="chapter.widgets.tbbutton.relief"><title>relief</title><p><<relief:A>>: Specifies the relief to display when the mouse cursor is not over the widget (if it is not disabled). Defaults to <<flat>>.
+
+<para id="chapter.widgets.tbbutton.return"><title>return</title><p><<return:V>>: If the execution of the action of the button closes the window, Variable is bound to true. In all other cases where the window is closed, Variable is bound to false. This parameter is valid at creation time only. <<V>> must be a free variable.
+
+<para id="chapter.widgets.tbbutton.selectbackground"><title>selectbackground</title><p><<selectbackground:C>>: Specifies the background color to display when the user clicks the widget (if it is not disabled).  <<C>> must be a valid color (see <ptr to="misc.color">)
+
+<para id="chapter.widgets.tbbutton.selectbitmap"><title>selectbitmap</title><p><<selectbitmap:B>>: Specifies the bitmap to display when the user clicks the widget (if it is not disabled). If there is an image defined, this option is ignored. Is this option is not specified, it defaults to the value of the <<bitmap>> parameter.
+
+<para id="chapter.widgets.tbbutton.selectborderwidth"><title>selectborderwidth</title><p><<selectborderwidth:P>>: Specifies the border width to display when the user clicks the widget (if it is not disabled).
+
+<para id="chapter.widgets.tbbutton.selectforeground"><title>selectforeground</title><p><<selectforeground:C>>: Specifies the foreground color to display when the user clicks the widget (if it is not disabled).  <<C>> must be a valid color (see <ptr to="misc.color">)
+
+<para id="chapter.widgets.tbbutton.selectimage"><title>selectimage</title><p><<selectimage:I>>: Specifies the image to display when the user clicks the widget (if it is not disabled). Is this option is not specified, it defaults to the value of the <<image>> parameter.
+
+<para id="chapter.widgets.tbbutton.selectrelief"><title>selectrelief</title><p><<selectrelief:A>>: Specifies the relief to display when the user clicks the widget (if it is not disabled). Defaults to <<sunken>>.
+
+
+
+</section>

@@ -1,0 +1,144 @@
+/*
+ *  Authors:
+ *    Michael Mehl (mehl@dfki.de)
+ * 
+ *  Contributors:
+ *    optional, Contributor's name (Contributor's email address)
+ * 
+ *  Copyright:
+ *    Michael Mehl (1997)
+ * 
+ *  Last change:
+ *    $Date$ by $Author$
+ *    $Revision$
+ * 
+ *  This file is part of Mozart, an implementation 
+ *  of Oz 3:
+ *     http://www.mozart-oz.org
+ * 
+ *  See the file "LICENSE" or
+ *     http://www.mozart-oz.org/LICENSE.html
+ *  for information on usage and redistribution 
+ *  of this file, and for a DISCLAIMER OF ALL 
+ *  WARRANTIES.
+ *
+ */
+
+/* OS and CPU */
+#undef LINUX_I486
+#undef SUNOS_SPARC
+#undef SOLARIS_SPARC
+#undef OSF1_ALPHA
+#undef HPUX_700
+
+#undef WINDOWS
+#undef LINUX
+#undef SOLARIS
+#undef SUNOS
+#undef IRIX6
+#undef NETBSD
+#undef FREEBSD
+#undef OPENBSD
+#undef IRIX
+#undef OS2
+#undef RHAPSODY
+
+#undef ARCH_I486
+#undef ARCH_SPARC
+#undef ARCH_MIPS
+
+#undef SUNPRO
+
+/*
+ * emulator optimization
+ */
+
+/* define if threaded code (requires GCC) */
+#ifdef __GNUC__
+#undef THREADED
+#endif
+
+/* define if optimized register access (pre-shifted) */
+#undef FASTREGACCESS
+
+/* define if optimized X-register access (resolved to direct address) */
+#ifdef FASTREGACCESS
+#undef FASTERREGACCESS
+#endif
+
+/* define if try to use assembly code for integer arithmetic */
+#undef FASTARITH
+
+/* define if modules are linked statically */
+#undef MODULES_LINK_STATIC
+
+/* debugging */
+#undef DEBUG_EMULATOR
+
+/* profiling */
+#undef PROFILE_EMULATOR
+
+/* RS profiling */
+#undef RS_PROFILE
+
+/* use a debug malloc library */
+#undef DMALLOC
+#undef CCMALLOC
+
+/* Define if you want support for virtual sites */
+#undef VIRTUALSITES
+
+/* Define if you want to include misc builtins */
+#undef MISC_BUILTINS
+
+
+/* Define if you have the strdup function.  */
+#undef HAVE_STRDUP
+
+/* Define if you have the dlopen function.  */
+#undef HAVE_DLOPEN
+
+/* Define if you have <dlfcn.h>.  */
+#undef HAVE_DLFCN_H
+
+/* Define if you want to allocate memory with malloc.  */
+#undef USE_MALLOC
+
+/* Define if you want to allocate memory via mmap.  */
+#undef USE_MMAP
+
+/* Define if you have the sbrk function.  */
+/* kost@ : comment it out so: the configure should figure it out;	*/
+/* #ifndef RHAPSODY	*/
+#undef USE_SBRK
+/* #endif		*/
+
+/* do we have setpgid? */
+#undef HAVE_SETPGID
+
+/* does .align n align to 1<<n */
+#undef AS_HAS_POWER_ALIGN
+
+/* does .align n align to n */
+#undef AS_HAS_MULTIPLE_ALIGN
+
+
+/* Define if dlopen needs a leading underscore. */
+#undef DLOPEN_UNDERSCORE
+
+/* for virtual sites */
+#undef key_t
+
+/* type check */
+#undef HAVE_SOCKLEN_T
+#ifndef HAVE_SOCKLEN_T
+typedef int socklen_t;
+#endif
+
+#undef HAVE_STDINT_H
+
+/* whether gmp.h needs c++ */
+#undef GMP_NEEDS_CPLUSPLUS
+
+/* whether we have the times/sysconf(_SC_CLK_TCK) bug */
+#undef CLK_TCK_BUG_RATIO
