@@ -71,16 +71,21 @@ int nextPrime(int prime)
 
 
 
-HashTable::HashTable(HtKeyType typ, int s)
+void HashTable::mkEmpty()
 {
-  tableSize = nextPrime(s);
-  type = typ;
   counter = 0;
   percent = (int) (MAXFULL * tableSize);
-  table = new HashNode[tableSize];
   for(int i=0; i<tableSize; i++) {
     table[i].setEmpty();
   }
+}
+
+HashTable::HashTable(HtKeyType typ, int s)
+{
+  type = typ;
+  tableSize = nextPrime(s);
+  table = new HashNode[tableSize];
+  mkEmpty();
 }
 
 HashTable::~HashTable() 
