@@ -335,13 +335,11 @@ OZ_Return atom2buff(OZ_Term atom, char **write_buff, int *len,
 OZ_Return bytestring2buff(OZ_Term bs, char **write_buff, int *len, 
 			  OZ_Term *rest, OZ_Term *susp)
 {
-  cerr << "[bytestring2buff ";
   if (!OZ_isByteString(bs))
     return OZ_typeError(-1,"ByteString");
 
   int n;
   char* s = OZ_vsToC(bs,&n);
-  cerr << n << "]" << endl;
 
   while (n>0 && *len<max_vs_length) {
     **write_buff = *s;
