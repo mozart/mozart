@@ -236,6 +236,7 @@ LayoutObjects.ozf: $(INSPECTORTWLODEPSRC)
 DrawObjects.ozf:   $(INSPECTORTWDODEPSRC)
 TreeWidget.ozf:    $(INSPECTORTREEWIDGETOBJS)
 InspectorMain.ozf: $(INSPECTORTOPDEPSRC)
+GraphicSupport.ozf: inspector/treewidget/GtkGraphicSupport.oz
 
 %.ozf: inspector/treewidget/%.oz
 	$(COMPILE) $(shell $(CYGPATH) "$<") -o $@
