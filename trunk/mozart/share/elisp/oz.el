@@ -1003,19 +1003,16 @@ compiled using a default set of switches."
       (setq oz-compiler-output-start (point-max))
       (setq oz-next-error-marker nil))
     (if system
-	(progn
-	  (comint-send-string
-	   proc
-	   (concat "\\pushSwitches\n"
-		   "\\switch +threadedqueries -verbose "
-		   "-expression -runwithdebugger\n"
-		   eof))
-	  (comint-send-string proc string)
-	  (comint-send-string proc "\n\\popSwitches\n")
-	  (comint-send-string proc eof))
+	(comint-send-string
+	 proc
+	 (concat "\\pushSwitches\n"
+		 "\\switch +threadedqueries -verbose "
+		 "-expression -runwithdebugger\n"
+		 string
+		 "\n\\popSwitches\n"))
       (comint-send-string proc string)
-      (comint-send-string proc "\n")
-      (comint-send-string proc eof))))
+      (comint-send-string proc "\n"))
+    (comint-send-string proc eof)))
 
 
 ;;------------------------------------------------------------
