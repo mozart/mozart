@@ -1,7 +1,7 @@
-Oz/Emulator	mail -s "I have changed %s" scheidhr,tmueller,popow
+Oz/Emulator	mail -s "I have changed %s" scheidhr,tmueller
 Oz/Compiler	mail -s "I have changed %s" henz,scheidhr
 Oz/Compiler/frontend	mail -s "I have changed %s" mmueller
-Oz/include	mail -s "I have changed %s" scheidhr,tmueller,popow,henz
+Oz/include	mail -s "I have changed %s" scheidhr,tmueller,henz
 Oz/lib		mail -s "I have changed %s" henz,wuertz,popow,ibach
 Oz/elisp	mail -s "I have changed %s" scheidhr
 Oz		/usr/share/gs/etc/cvs2news %s
