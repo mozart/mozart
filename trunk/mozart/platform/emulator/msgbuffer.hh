@@ -87,7 +87,7 @@ public:
       putNext(b);
       return;}
     *posMB++=b;
-    DebugCode((*maybeDebugBufferPut)(*posMB););
+    DebugCode((*maybeDebugBufferPut)(b););
   }
       
   //
