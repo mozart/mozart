@@ -1,11 +1,13 @@
 functor
 export
-   Expand FileTree Mkdir Rmtree Exists
+   Expand FileTree Mkdir Rmtree Exists WithSlash
 import
    URL(toVirtualStringExtended) Resolve(expand)
    OS(getDir stat system unlink)
    Shell(shellCommand isWindows:IsWindows rmdir)
+   Property(get)
 define
+   Windows=({Property.get 'platform.os'}==win32)
    %%
    %% {Expand F}
    %%	expand a file name without loosing the weird chars
@@ -95,6 +97,19 @@ define
 	 if {Shell.shellCommand 'rm -rf '#F2}\=0 then
 	    raise ozpm(rmdir F2 commandFailed) end
 	 end
+      end
+   end
+   %%
+   %% adds a trailing slash if not present
+   %%
+   fun{WithSlash N}
+      V={VirtualString.toString N}
+   in
+      if (Windows andthen {List.last V}\=&\\)
+	 orelse ((Windows==false) andthen {List.last V}\=&/) then
+	 {VirtualString.toString V#if Windows then "\\" else "/" end}
+      else
+	 V
       end
    end
 end

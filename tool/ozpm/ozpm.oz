@@ -11,7 +11,7 @@ import
    Pickle
    Open
    Browser(browse:Browse)
-   FileUtils(expand:Expand)
+   FileUtils(expand:Expand withSlash:WithSlash)
    Resolve
    
 define
@@ -169,41 +169,81 @@ define
 	 Info=if L==nil then notFound else L.1 end
       end
 
-      meth create(Package)
-	 F={ParseFile Package}
-	 fun{Filter What}
-	    {List.map 
-	     {List.filter F fun{$ I} I.1==What end}
-	     fun{$ I}
-		I.2
-	     end}
-	 end
-	 fun{Get What}
-	    Fi={Filter What}
-	 in
-	    if {Length Fi}\=1 then
-	       raise error(parameterIsNotOccuringOnce What) end
-	       nil
-	    else
-	       Fi.1
-	    end
-	 end
-	 Name={Get name}
-	 Version={Get version}
-	 Files={Filter file}
-	 Desc={Get description}
-	 Pkg={Get 'pkg-name'}
-	 Info=package(name:Name
-		      version:Version
-		      filelist:Files
-		      description:Desc
-		      pkg:Pkg
-		      text:Package)
-      in
-	 {Pickle.save Info OZPMMANIFEST}
-	 {Archive.make Pkg OZPMMANIFEST|Package|Files}
-	 {OS.unlink OZPMMANIFEST}
+      meth create(In Out Info)
+	 
+
+	 
+%	 F={ParseFile Package}
+%	 fun{Filter What}
+%	    {List.map 
+%	     {List.filter F fun{$ I} I.1==What end}
+%	     fun{$ I}
+%		I.2
+%	     end}
+%	 end
+%	 fun{Get What}
+%	    Fi={Filter What}
+%	 in
+%	    if {Length Fi}\=1 then
+%	       raise error(parameterIsNotOccuringOnce What) end
+%	       nil
+%	    else
+%	       Fi.1
+%	    end
+%	 end
+%	 Name={Get name}
+%	 Version={Get version}
+%	 Files={Filter file}
+%	 Desc={Get description}
+%	 Pkg={Get 'pkg-name'}
+%	 Info=package(name:Name
+%		      version:Version
+%		      filelist:Files
+%		      description:Desc
+%		      pkg:Pkg
+%		      text:Package)
+%      in
+%	 {Pickle.save Info OZPMMANIFEST}
+%	 {Archive.make Pkg OZPMMANIFEST|Package|Files}
+%	 {OS.unlink OZPMMANIFEST}
+	 skip
       end
+      
+%      meth create(Package)
+%	 F={ParseFile Package}
+%	 fun{Filter What}
+%	    {List.map 
+%	     {List.filter F fun{$ I} I.1==What end}
+%	     fun{$ I}
+%		I.2
+%	     end}
+%	 end
+%	 fun{Get What}
+%	    Fi={Filter What}
+%	 in
+%	    if {Length Fi}\=1 then
+%	       raise error(parameterIsNotOccuringOnce What) end
+%	       nil
+%	    else
+%	       Fi.1
+%	    end
+%	 end
+%	 Name={Get name}
+%	 Version={Get version}
+%	 Files={Filter file}
+%	 Desc={Get description}
+%	 Pkg={Get 'pkg-name'}
+%	 Info=package(name:Name
+%		      version:Version
+%		      filelist:Files
+%		      description:Desc
+%		      pkg:Pkg
+%		      text:Package)
+%      in
+%	 {Pickle.save Info OZPMMANIFEST}
+%	 {Archive.make Pkg OZPMMANIFEST|Package|Files}
+%	 {OS.unlink OZPMMANIFEST}
+%      end
 
       meth view(Package Info LS)
 	 A = {New Archive.'class' init(Package)}
@@ -288,7 +328,10 @@ define
    
    Args={Application.getArgs
 	 record('install'(single type:string char:&i)
-		'create'(single type:string char:&c)
+		'create'(single char:&c)
+		'info'(single type:string)
+		'in'(single type:string)
+		'out'(single type:string)
 		'view'(single type:string char:&v)
 		'list'(single char:&l)
 		'info'(single type:string)
@@ -399,7 +442,10 @@ define
       {PrintInfo I L}
       {Application.exit 0}
    [] create then % create a new package
-      {ArchiveManager create(Args.'create')}
+      {ArchiveManager create(Args.'in'
+			     Args.'out'
+			     {CondFeat Args 'info' {WithSlash Args.'in'}#"OZPMINFO"}
+			    )}
       {Application.exit 0}
    [] install then % install/update a specified package
       R
