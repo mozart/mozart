@@ -133,7 +133,7 @@ TaggedRef TaskStack::findAbstrRecord(void)
     //
     if (PC == C_SET_ABSTR_Ptr && abstr != NULL &&
         strcmp(abstr->getPrintName(), "")) {
-      unsigned invoc_counter = (unsigned) G;
+      unsigned invoc_counter = (unsigned) ToInt32(G);
       //
       if (return_value == NameUnit) {
         // retrieve information for enclosing procedure

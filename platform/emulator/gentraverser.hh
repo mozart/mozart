@@ -349,22 +349,19 @@ public:
   }
 
   //
-  // Arbitrary locations are non-relocatable (that is, cannot point
-  // into heap), and limited in address space (but the only current
-  // usage of it ('marshalProcedureRef()') is a hack anyway:
-  // abstractions and "AbstractionEntry"s should be one unified
-  // entity!!!)
+  // 'rememberLocal()'/'findLocation()' deal with non-relocatable
+  // objects (those that are not in heap and should not be GCed).
+  // What we do is we reuse the 'var' tag, since that one cannot
+  // appear among TaggedRef"s stored in the GTIndexTable.
   int rememberLocation(void *p) {
     Assert(findLocation(p) == -1);
-    OZ_Term aux = makeTaggedMarkInt(ToInt32(p));
+    OZ_Term aux = makePseudoTaggedVar(p);
     int index = getSize();
     htAdd((intlong) aux, ToPointer(index));
     return (index);
   }
   int findLocation(void *p) {
-    // KOSTJA: GIVE ME A BREAK
-    Assert(ToInt32(p) == tagged2UnmarkedInt(makeTaggedMarkInt(ToInt32(p))));
-    OZ_Term aux = makeTaggedMarkInt(ToInt32(p));
+    OZ_Term aux = makePseudoTaggedVar(p);
     void *ret = htFind((intlong) aux);
     return ((ret == htEmpty) ? -1 : (int) ToInt32(ret));
   }
@@ -413,7 +410,7 @@ protected:
 //
 
 //
-#define MAKETRAVERSERTASK(task)  makeTaggedMarkInt((int32) task)
+#define MAKETRAVERSERTASK(task)  makeTaggedMarkIntNOTEST((int32) task)
 //
 inline
 int32 getTraverserTaskArg(OZ_Term taggedTraverserTask)

@@ -99,7 +99,7 @@ public:
   ~CacStack() {}
 
   void push(void * ptr, ptrtag_t tag) {
-    Assert(oz_isHeapAligned(ptr));
+    Assert(isSTAligned(ptr));
     FastStack::push1((StackEntry) (((unsigned int) ptr) | tag));
   }
 
@@ -109,7 +109,7 @@ public:
   }
 
   void pushLocalSuspList(Board * bb, SuspList ** sl, int n) {
-    Assert(oz_isHeapAligned(bb) && n<8);
+    Assert(isSTAligned(bb) && n<8);
     FastStack::push2((StackEntry) (((unsigned int) bb) | n),
                      (StackEntry) (((unsigned int) sl) | PTR_SUSPLIST));
   }

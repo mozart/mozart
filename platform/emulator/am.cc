@@ -143,6 +143,12 @@ void AM::init(int argc,char **argv)
   Assert(makeTaggedNULL() == 0);
   Assert(PROCEED && !FAILED);
 
+#ifdef DEBUG_CHECK
+//    fprintf(stderr, "Waiting 10 secs... hook up (pid %d)!\n", osgetpid());
+//    fflush(stderr);
+//    sleep(10);
+#endif
+
   ozconf.init();
   osInit();
   AssRegArray::init();
@@ -184,17 +190,13 @@ void AM::init(int argc,char **argv)
       *last_slash = 0;
   }
 
-#ifdef PICKLE2TEXTHACK
     int p2t = 0;
-#endif
 
   for (int i=url?2:1; i<argc; i++) {
-#ifdef PICKLE2TEXTHACK
     if (strcmp(argv[i],"--pickle2text")==0) {
       p2t = 1;
       break;
     }
-#endif
 
     if (strcmp(argv[i],"--gui")==0 ||
         strcmp(argv[i], "-gui")==0) {
@@ -333,13 +335,11 @@ void AM::init(int argc,char **argv)
   }
   initOzIdLoc();
 
-#ifdef PICKLE2TEXTHACK
   if (p2t) {
     extern int pickle2text();
     Bool aux = pickle2text();
     exit(aux ? 0 : 1);
   }
-#endif
 
   Thread *tt = oz_newThread();
 
@@ -366,12 +366,6 @@ void AM::init(int argc,char **argv)
     // Task1: load functor
     tt->pushCall(BI_load,RefsArray::make(oz_atom(initFile),functor));
   }
-
-#ifdef DEBUG_CHECK
-//    fprintf(stderr, "Waiting 10 secs... hook up (pid %d)!\n", osgetpid());
-//    fflush(stderr);
-//    sleep(10);
-#endif
 
   //
   sleepQueue = (OzSleep *) 0;

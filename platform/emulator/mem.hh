@@ -100,6 +100,8 @@ extern size_t _oz_alover;
 
 void _oz_getNewHeapChunk(const size_t);
 
+// Static(local) checks. The tagged.hh's 'isSTAligned()' are not
+// available here.
 #define oz_isHeapAligned(p)       (!(ToInt32(p) & (OZ_HEAPALIGNMENT - 1)))
 #define oz_isDoubleHeapAligned(p) (!(ToInt32(p) & (2*OZ_HEAPALIGNMENT - 1)))
 
@@ -112,18 +114,17 @@ void _oz_getNewHeapChunk(const size_t);
 #define oz_alignSize(sz) (((sz) + OZ_HEAPALIGNMENT - 1) & (-OZ_HEAPALIGNMENT))
 
 inline
-void * oz_heapMalloc(const size_t sz) {
+void * oz_heapMalloc(const size_t sz)
+{
   /*
    * The following invariants are enforced:
    *  - _oz_heap_cur is always aligned to OZ_HEAPALIGMENT
    *
    */
 
-  Assert(oz_isHeapAligned(_oz_heap_cur));
-
  retry:
-
   {
+    Assert(oz_isHeapAligned(_oz_heap_cur));
     size_t a_sz = oz_alignSize(sz);
 
 #ifdef TRACE_ALOVER
@@ -133,7 +134,6 @@ void * oz_heapMalloc(const size_t sz) {
 #endif
 
     _oz_heap_cur -= a_sz;
-
     Assert(oz_isHeapAligned(_oz_heap_cur));
 
     /* _oz_heap_cur might be negative!! */
@@ -144,9 +144,7 @@ void * oz_heapMalloc(const size_t sz) {
     }
 
     return _oz_heap_cur;
-
   }
-
 }
 
 
@@ -315,7 +313,8 @@ public:
 #endif
 
 inline
-void * oz_heapDoubleMalloc(const size_t sz) {
+void * oz_heapDoubleMalloc(const size_t sz)
+{
   /*
    * Returns block that is aligned to twice OZ_HEAPALIGNMENT
    *
@@ -397,5 +396,7 @@ inline void oz_freeListDisposeUnsafe(void * p, size_t s) {
 
 #endif
 
+#undef oz_isHeapAligned
+#undef oz_isDoubleHeapAligned
 
 #endif

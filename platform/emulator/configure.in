@@ -416,7 +416,384 @@ dnl AC_CHECK_FUNCS(getcwd gethostname gettimeofday putenv select socket strdup s
 AC_CHECK_FUNC(setpgid,AC_DEFINE(HAVE_SETPGID))
 
 if test -z "${enable_wincross}"; then
-    AC_CHECK_FUNCS(sbrk dlopen mmap)
+    AC_CHECK_FUNCS(dlopen)
+
+    AC_CHECKING(whether we could allocate Oz heap with malloc ...)
+    AC_CACHE_VAL(ac_cv_can_malloc,
+    [can_malloc=yes
+     AC_CHECK_FUNCS(malloc,, can_malloc=no)
+     if test $can_malloc = yes; then
+        AC_MSG_CHECKING(... with a test program)
+        AC_TRY_RUN([
+#include <malloc.h>
+#include <signal.h>
+#include <setjmp.h>
+
+// Check whether setting an malloc threshold can be called at all,
+// and that it does really work:
+// - large pages become allocated outside bss
+// - they are reasonably adjacent (modulo MALLOC_OVERHEAD)
+// - freed chunks are really returned to OS
+
+#define L_BLOCKSIZE     (512 * 1024)
+#define S_BLOCKSIZE     (512)
+
+#define L_MARGIN        (L_BLOCKSIZE - 1)
+#define MALLOC_OVERHEAD (L_BLOCKSIZE / 100)
+
+jmp_buf env;
+
+static
+void sh(int sig)
+{
+  longjmp(env, SIGSEGV);
+}
+
+main()
+{
+  void *s1, *s2, *l1, *l2;
+  // struct mallinfo mi = mallinfo();
+
+#if defined(M_MMAP_THRESHOLD)
+  int ret = mallopt(M_MMAP_THRESHOLD, L_MARGIN);
+#else
+  // still try it even if there is no M_MMAP_THRESHOLD;
+#endif
+
+  s1 = malloc(S_BLOCKSIZE);
+  l1 = malloc(L_BLOCKSIZE);
+  s2 = malloc(S_BLOCKSIZE);
+  l2 = malloc(L_BLOCKSIZE);
+
+  if (s1 == 0 || l1 == 0 || s2 == 0 || l2 == 0)
+    return (-1);
+
+  if (s2 > s1) {
+    if (l1 > s1 && l1 < s2)
+      return (-2);
+    if (l1 < s1 && (char *) l1 + L_BLOCKSIZE > s1)
+      return (-3);
+    if (l2 > s1 && l2 < s2)
+      return (-4);
+    if (l2 < s1 && (char *) l2 + L_BLOCKSIZE > s1)
+      return (-5);
+  } else {
+    if (l1 > s2 && l1 < s1)
+      return (-6);
+    if (l1 < s2 && (char *) l1 + L_BLOCKSIZE > s2)
+      return (-7);
+    if (l2 > s2 && l2 < s1)
+      return (-8);
+    if (l2 < s2 && (char *) l2 + L_BLOCKSIZE > s2)
+      return (-9);
+  }
+
+  if (l2 > l1) {
+    if ((char *) l2 > ((char *) l1) + L_BLOCKSIZE + MALLOC_OVERHEAD)
+      return (-10);
+  } else {
+    // conceivably possible..
+    if ((char *) l1 > ((char *) l2) + L_BLOCKSIZE + MALLOC_OVERHEAD)
+      return (-11);
+  }
+
+  if (setjmp(env) != 0)
+    return (0);
+  (void) signal(SIGSEGV, sh);
+
+  free(l1);
+  *((int *) l1) = 0;
+  return (1);
+}
+],
+        AC_MSG_RESULT(succeeded),
+        AC_MSG_RESULT(failed)
+        can_malloc=no,
+        AC_MSG_RESULT(dunno (no))
+        can_malloc=no)
+     fi
+     ac_cv_can_malloc=$can_malloc])
+    if test $ac_cv_can_malloc = yes; then
+       AC_MSG_RESULT([... yes, we can allocate Oz heap with malloc!])
+    else
+       AC_MSG_RESULT([... sorry, we shouldn't allocate Oz heap with malloc.])
+    fi
+
+    AC_CHECKING(whether we can allocate Oz heap via mmap...)
+    AC_CACHE_VAL(ac_cv_can_mmap,
+    [can_mmap=yes
+     AC_CHECK_FUNCS(mmap,, can_mmap=no)
+     if test $can_mmap = yes; then
+        AC_MSG_CHECKING(... with a test program)
+        AC_TRY_RUN([
+#include <sys/types.h>
+#include <unistd.h>
+#include <sys/mman.h>
+#include <signal.h>
+#include <setjmp.h>
+
+// Test whether:
+// - mmap is working
+// - subsequent mmap"s allocate contiguous memory (no fragmentation)
+// - munmap really returns memory
+
+#if defined(MAP_ANON) && !defined(MAP_ANONYMOUS)
+#define MAP_ANONYMOUS   MAP_ANON
+#elif defined(MAP_ANONYMOUS) && !defined(MAP_ANON)
+#define MAP_ANON        MAP_ANONYMOUS
+#endif
+
+#if !defined(MAP_ANONYMOUS)
+#include <sys/stat.h>
+#include <fcntl.h>
+#endif
+
+#define BLOCKSIZE       (512 * 1024)
+
+jmp_buf env;
+
+static
+void sh(int sig)
+{
+  longjmp(env, SIGSEGV);
+}
+
+main()
+{
+#ifdef _POSIX_MAPPED_FILES
+  void *loc1, *loc2;
+
+#ifdef MAP_ANONYMOUS
+  loc1 = mmap((void *) 0x0, BLOCKSIZE, (PROT_READ|PROT_WRITE),
+              (MAP_PRIVATE|MAP_ANONYMOUS), -1, (off_t) 0);
+  loc2 = mmap((void *) 0x0, BLOCKSIZE, (PROT_READ|PROT_WRITE),
+              (MAP_PRIVATE|MAP_ANONYMOUS), -1, (off_t) 0);
+#else
+  int zeroFD = open("/dev/zero", O_RDWR);
+  if (zeroFD < 0)
+    return (-2);
+  loc1 = mmap((void *) 0x0, BLOCKSIZE, (PROT_READ|PROT_WRITE),
+              (MAP_PRIVATE), zeroFD, (off_t) 0);
+  loc2 = mmap((void *) 0x0, BLOCKSIZE, (PROT_READ|PROT_WRITE),
+              (MAP_PRIVATE), zeroFD, (off_t) 0);
+#endif
+
+  if (loc1 == MAP_FAILED || loc2 == MAP_FAILED)
+    return (-3);
+  if (loc2 > loc1) {
+    if ((char *) loc2 != ((char *) loc1) + BLOCKSIZE)
+      return (-4);
+  } else {
+    // conceivable possible..
+    if ((char *) loc1 != ((char *) loc2) + BLOCKSIZE)
+      return (-4);
+  }
+
+  if (setjmp(env) != 0)
+    return (0);
+  (void) signal(SIGSEGV, sh);
+
+  if (munmap(loc1, BLOCKSIZE))
+    return (-5);
+  *((int *) loc1) = 0;
+  return (-6);
+
+#else // _POSIX_MAPPED_FILES
+  exit(-1);
+#endif
+}
+],
+        AC_MSG_RESULT(succeeded),
+        AC_MSG_RESULT(failed)
+        can_mmap=no,
+        AC_MSG_RESULT(dunno (no))
+        can_mmap=no)
+     fi
+     ac_cv_can_mmap=$can_mmap])
+    if test $ac_cv_can_mmap = yes; then
+       AC_MSG_RESULT([... yes, we can allocate Oz heap via mmap!])
+    else
+       AC_MSG_RESULT([... sorry, we cannot allocate Oz heap via mmap.])
+    fi
+
+    AC_CHECKING(whether we could allocate Oz heap via sbrk ...)
+    AC_CACHE_VAL(ac_cv_can_sbrk,
+    [can_sbrk=yes
+     AC_CHECK_FUNCS(sbrk,, can_sbrk=no)
+     if test $can_sbrk = yes; then
+        AC_MSG_CHECKING(... with a test program)
+        AC_TRY_RUN([
+#include <unistd.h>
+#include <malloc.h>
+#include <signal.h>
+#include <setjmp.h>
+
+// Test whether:
+// - both brk() and sbrk() are working, i.e. yielding some memory
+// - malloc does not interfere with brk"ed memory fragments
+//   - malloc works before and after brk()
+//   - malloc"ed memory allocated before brk() retains its content
+//   - malloc"ed memory can be deallocated
+// - sbrk can return memory back to the OS
+
+
+#define BLOCKSIZE       (512 * 1024)
+#define STRUCTSIZE      (256)
+
+jmp_buf env;
+
+static
+void sh(int sig)
+{
+  longjmp(env, SIGSEGV);
+}
+
+main()
+{
+  void *start;
+  void *s1, *s2;
+  void *end;
+  char *mar1, *mar2;
+  int i;
+
+  start = sbrk(0);
+  if (start == (void *) -1)
+    return (-1);
+
+  mar1 = (char *) malloc(STRUCTSIZE);
+  if (mar1 == (char *) NULL)
+    return (-2);
+  for (i = 0; i < STRUCTSIZE; i++)
+    mar1[i] = (char) i;
+
+  s1 = sbrk(BLOCKSIZE);
+  if (s1 == (void *) -1)
+    return (-3);
+  if ((char *) sbrk(0) != ((char *) s1) + BLOCKSIZE)
+    return (-4);
+
+  for (i = 0; i < STRUCTSIZE; i++) {
+    if (mar1[i] != (char) i)
+      return (-5);
+  }
+
+  mar2 = (char *) malloc(STRUCTSIZE);
+  if (mar2 == (char *) NULL)
+    return (-6);
+  for (i = 0; i < STRUCTSIZE; i++)
+    mar2[i] = (char) i;
+
+  s2 = sbrk(0);
+  if (sbrk == (void *) -1)
+    return (-7);
+  if (brk((void *) (((char *) s2) + BLOCKSIZE)) != 0)
+    return (-8);
+  if ((char *) sbrk(0) != ((char *) s2) + BLOCKSIZE)
+    return (-9);
+
+  for (i = 0; i < STRUCTSIZE; i++) {
+    if (mar1[i] != (char) i)
+      return (-10);
+    if (mar2[i] != (char) i)
+      return (-11);
+  }
+
+  if (brk(s2) != 0 || sbrk(0) != s2)
+    return (-12);
+  if (setjmp(env) == 0) {
+    (void) signal(SIGSEGV, sh);
+    *((int *) s2) = 0;
+    return (-13);
+  }
+
+  mar1 = (char *) malloc(STRUCTSIZE);
+  mar2 = (char *) malloc(STRUCTSIZE);
+  if (mar1 == (char *) NULL || mar2 == (char *) NULL)
+    return (-2);
+  for (i = 0; i < STRUCTSIZE; i++) {
+    mar1[i] = (char) i;
+    mar2[i] = (char) i;
+  }
+
+  free(mar1);
+  free(mar2);
+}
+],
+        AC_MSG_RESULT(succeeded),
+        AC_MSG_RESULT(failed)
+        can_sbrk=no,
+        AC_MSG_RESULT(dunno (no))
+        can_sbrk=no)
+     fi
+     ac_cv_can_sbrk=$can_sbrk])
+    if test $ac_cv_can_sbrk = yes; then
+       AC_MSG_RESULT([... yes, we can allocate Oz heap via sbrk!])
+    else
+       AC_MSG_RESULT([... sorry, we cannot allocate Oz heap with sbrk.])
+    fi
+
+    alloc_scheme=default
+    AC_MSG_CHECKING(for --enable-malloc-heap)
+    AC_ARG_ENABLE(malloc-heap, [--enable-malloc-heap    use malloc for Oz heap memory allocation],
+                  AC_MSG_RESULT(yes)
+                  alloc_scheme=malloc,
+                  if test $ac_cv_can_malloc = no; then
+                     AC_MSG_WARN(using malloc may cause C heap fragmentation!)
+                  fi
+                  AC_MSG_RESULT(no))
+    AC_MSG_CHECKING(for --enable-mmap-heap)
+    AC_ARG_ENABLE(mmap-heap, [--enable-mmap-heap        use mmap for Oz heap memory allocation],
+                  if test $alloc_scheme = default; then
+                     AC_MSG_RESULT(yes)
+                     alloc_scheme=mmap
+                     if test $ac_cv_can_mmap = no; then
+                        AC_MSG_WARN(mmap may fail to work on this platform!)
+                     fi
+                  else
+                     AC_MSG_RESULT(ignored: scheme "$alloc_scheme" is already specified)
+                  fi,
+                AC_MSG_RESULT(no))
+    AC_MSG_CHECKING(for --enable-sbrk-heap)
+    AC_ARG_ENABLE(sbrk-heap, [--enable-sbrk-heap        use sbrk for Oz heap memory allocation],
+                  if test $alloc_scheme = default; then
+                     AC_MSG_RESULT(yes)
+                     alloc_scheme=sbrk
+                     if test $ac_cv_can_sbrk = no; then
+                        AC_MSG_WARN(sbrk may fail to work on this platform!)
+                     fi
+                  else
+                     AC_MSG_RESULT(ignored: scheme "$alloc_scheme" is already specified)
+                  fi,
+                  AC_MSG_RESULT(no))
+
+    if test $alloc_scheme = default; then
+       if test $ac_cv_can_malloc = yes; then
+          alloc_scheme=malloc
+       elif test $ac_cv_can_mmap = yes; then
+          alloc_scheme=mmap
+       elif test $ac_cv_can_sbrk = yes; then
+          alloc_scheme=sbrk
+       fi
+    fi
+
+    case $alloc_scheme in
+    malloc)
+        AC_MSG_RESULT(... will use the (efficient) 'malloc'ing for Oz heap)
+        AC_DEFINE(USE_MALLOC)
+        ;;
+    mmap)
+        AC_MSG_RESULT(... will allocate Oz heap using 'mmap')
+        AC_DEFINE(USE_MMAP)
+        ;;
+    sbrk)
+        AC_MSG_RESULT(... will allocate Oz heap using 'sbrk')
+        AC_DEFINE(USE_SBRK)
+        ;;
+    *)
+        AC_MSG_RESULT(... will use the (inefficient) 'malloc'ing for Oz heap )
+        AC_DEFINE(USE_MALLOC)
+        ;;
+    esac
 fi
 
 AC_CHECK_FUNC(strdup,AC_DEFINE(HAVE_STRDUP))

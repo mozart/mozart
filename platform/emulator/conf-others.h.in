@@ -94,12 +94,6 @@
 #undef MISC_BUILTINS
 
 
-/* Define if you have the sbrk function.  */
-#ifndef RHAPSODY
-/* will probably work on final Rhapsody release */
-#undef HAVE_SBRK
-#endif
-
 /* Define if you have the strdup function.  */
 #undef HAVE_STRDUP
 
@@ -109,8 +103,17 @@
 /* Define if you have <dlfcn.h>.  */
 #undef HAVE_DLFCN_H
 
-/* Define if you have the mmap system call.  */
-#undef HAVE_MMAP
+/* Define if you want to allocate memory with malloc.  */
+#undef USE_MALLOC
+
+/* Define if you want to allocate memory via mmap.  */
+#undef USE_MMAP
+
+/* Define if you have the sbrk function.  */
+/* kost@ : comment it out so: the configure should figure it out;       */
+/* #ifndef RHAPSODY     */
+#undef USE_SBRK
+/* #endif               */
 
 /* do we have setpgid? */
 #undef HAVE_SETPGID

@@ -54,7 +54,16 @@ size_t _oz_alover;
 #endif
 
 
-void initMemoryManagement(void) {
+void initMemoryManagement(void)
+{
+  // VERY IMPORTANT: The memory allocator's and the engine's ideas
+  // about alignment requirements must coincide!
+  Assert(OZ_HEAPALIGNMENT == (1 << (STAG_BITS)));
+
+  // Force the 'mmap'-based allocation for Oz heap chunks, if we can:
+#if defined(M_MMAP_THRESHOLD)
+  (void) mallopt(M_MMAP_THRESHOLD, (HEAPBLOCKSIZE - 1));
+#endif
 
   // init heap memory
   heapTotalSizeBytes = heapTotalSize = 0;
@@ -66,341 +75,50 @@ void initMemoryManagement(void) {
 
   // allocate first chunk of memory;
   MemChunks::list = NULL;
-  _oz_getNewHeapChunk(0);
+  _oz_getNewHeapChunk(1);
 
   // init free memory list
   FL_Manager::init();
-
 }
 
-
-inline
-Bool checkAddress(void *ptr) {
-  void *aux = tagged2Verbatim(makeTaggedVerbatim(ptr));
-  return (aux == ptr);
-}
-
-
-// ----------------------------------------------------------------
-// mem from os with 3 alternatives MMAP, SBRK or MALLOC
-
 //
-// kost@: i have not tested that on anything else than 2.0.*
-// Linux-i486 (2.0.7-based) and Solaris-Sparc. And don't risk
-// otherwise...
-
-#if !(defined(LINUX_I486) || defined(SOLARIS_SPARC) || defined(__FreeBSD__))
-#undef HAVE_MMAP
-#endif
-
-// This is optional - that's kind'f not clear which evil is the
-// smallest one: rely on "choose a nearest next free address" linux
-// behaviour, or to use the discouraged 'MAP_FIXED' option;
-#if defined(LINUX_I486)
-#define USE_AUTO_PLACEMENT
-#endif
-
+// There are 4 alternatives for obtaining memorry from os:
+// - MALLOC with separated (mmap"ed) large objects area
+// - MMAP
+// - SBRK (somewhat prone to memory fragmentation)
+// - MALLOC unoptimized (very prone to memory fragmentation);
+// These alternatives are choosen by default in this order.
 //
-#if defined(HAVE_MMAP)
+// Now, handling of heap memory is greatly simplified: memory chunks
+// can be placed arbitrarily. So, all the troubles with 'mmap()'
+// (deprecated usage of fixed allocation addresses, incompatibility
+// between OSes and glitches in them) go away.
 
-#if ( !defined(MAP_ANONYMOUS) && defined(MAP_ANON) )
+#if defined(USE_MMAP)
+
+// kost@ : Linux has MAP_ANON(YMOUS), while e.g. Solaris does not.
+#if defined(MAP_ANON) && !defined(MAP_ANONYMOUS)
 #define MAP_ANONYMOUS   MAP_ANON
+#elif defined(MAP_ANONYMOUS) && !defined(MAP_ANON)
+#define MAP_ANON        MAP_ANONYMOUS
 #endif
 
 #include <sys/mman.h>
 #include <fcntl.h>
 
-#if !defined(USE_AUTO_PLACEMENT)
-
 //
-// When addresses for memory chunks are explicitly assigned, the space
-// for them is managed as follows:
-// (1) Chunks are allocated downward from the highest address possible.
-//     There is a pointer to the highest byte used - 'top';
-// (2) When a new chunk is allocated based on 'top', its address is
-//     checked against text area, data & bss.
-// (3) Released chunks are recorded in two bins: the standard size
-//     (HEAPBLOCKSIZE), which is unsorted, and with all the larger
-//     sizes, which is sorted by size. Note that all the chunk sizes
-//     are a multiple of HEAPBLOCKSIZE.
-// (4) Allocating a chunk of the standard size proceeds as (a) try
-//     the standard-size bin, (b) split a smallest one in the other
-//     bin ("best-fit" strategy), (c) allocate a new one from 'top'.
-// (5) Allocating a chunk of a different size proceeds as (a) find
-//     exact size in the second bin, (b) split the smallest possible
-//     there, (c) allocate a new from 'top'.
-//
-
-//
-// "standard size" bin elements: just address...
-class MemSTDHoleHandle {
-private:
-  caddr_t addr;
-  MemSTDHoleHandle *next;
-
-public:
-  MemSTDHoleHandle(caddr_t addrIn, MemSTDHoleHandle *nextIn)
-    : addr(addrIn), next(nextIn) {}
-  ~MemSTDHoleHandle() {
-    DebugCode(addr = (caddr_t) -1);
-    DebugCode(next = (MemSTDHoleHandle *) -1);
-  }
-
-  //
-  caddr_t getAddr() { return (addr); }
-  MemSTDHoleHandle* getNext() { return (next); }
-};
-
-//
-// The second bin: address&size, as well as the ability to
-// insert&delete elements in the middle of the queue;
-class MemOtherHoleHandle {
-private:
-  caddr_t addr;
-  size_t size;
-  MemOtherHoleHandle *next, *prev; // bubbled up with a 'start' token;
-
-public:
-  // 'start' token;
-  MemOtherHoleHandle()
-    : addr(0), size(0), next(this), prev(this) {}
-  MemOtherHoleHandle(caddr_t addrIn, size_t sizeIn)
-    : addr(addrIn), size(sizeIn) {
-      Assert(addrIn);           // since it is used for 'start' one;
-    DebugCode(next = (MemOtherHoleHandle *) -1);
-    DebugCode(prev = (MemOtherHoleHandle *) -1);
-  }
-  ~MemOtherHoleHandle() {
-    DebugCode(addr = (caddr_t) -1);
-    DebugCode(size = (size_t) -1);
-    Assert(next == (MemOtherHoleHandle *) -1);
-    Assert(prev == (MemOtherHoleHandle *) -1);
-  }
-
-  //
-  Bool isNotLast() { return ((Bool) addr); }
-  caddr_t getAddr() { return (addr); }
-  size_t getSize() { return (size); }
-  // only 'getNext()' : travel it in that direction;
-  MemOtherHoleHandle* getNext() { return (next); }
-
-  //
-  void shrink(size_t factor) {
-    Assert(size > factor);
-    addr += factor;
-    size -= factor;
-  }
-
-  //
-  void linkBefore(MemOtherHoleHandle *before) {
-    Assert(isNotLast());
-    Assert(next == (MemOtherHoleHandle *) -1);
-    Assert(prev == (MemOtherHoleHandle *) -1);
-    //
-    next = before;
-    prev = before->prev;
-    before->prev = this;
-    prev->next = this;
-  }
-  void unlink() {
-    Assert(isNotLast());
-    next->prev = prev;
-    prev->next = next;
-    DebugCode(next = prev = (MemOtherHoleHandle *) -1);
-  }
-  DebugCode(void drop() { next = prev = (MemOtherHoleHandle *) -1; })
-};
-
-//
-#if defined(SOLARIS_SPARC)
-extern char _end;
-#endif
-
-//
-// Allocator;
-class MemAllocator {
-private:
-  // 'top' is the first upper non-valid address. It starts
-  // with Mozart-specific address, and goes down over time.
-  caddr_t top;
-  caddr_t realTop;
-  size_t pagesize;              // cached up;
-#if defined(SOLARIS_SPARC)
-  // It is possible to figure out exactly where the memory pages are
-  // located, but that will be non-portable between Solaris
-  // versions... Thus, the (contemporary) property of Solaris
-  // process/memory management routines is used: text, data & bss are
-  // allocated right from bottom addresses, so we just keep track
-  // where bss finishes...
-  caddr_t bottom;
-#endif
-  MemSTDHoleHandle *std;        // unsorted;
-  MemOtherHoleHandle *other;    // sorted: small sizes first;
-  // observe that splitting the best - i.e. the first - keeps it
-  // in place;
-
-  //
-public:
-  MemAllocator() {
-    pagesize = sysconf(_SC_PAGESIZE);
-    realTop = top = (caddr_t)
-      (((((unsigned int32) -1) >> TAG_PTRBITS) / pagesize) * pagesize);
-#if defined(SOLARIS_SPARC)
-    bottom = &_end + MEM_C_HEAP_SIZE;
-#endif
-    std = (MemSTDHoleHandle *) 0;
-    other = new MemOtherHoleHandle(); // 'start' token;
-  }
-  ~MemAllocator() {
-    while (std) {
-      MemSTDHoleHandle *next = std->getNext();
-      delete std;
-      std = next;
-    }
-    while (other->isNotLast()) {
-      MemOtherHoleHandle *next = other->getNext();
-      DebugCode(other->drop(););
-      delete other;
-      other = next;
-    }
-    DebugCode(other->drop(););
-    delete other;               // 'start' token;
-  }
-
-  //
-  caddr_t reservePlace(size_t reqSize) {
-    Assert(reqSize >= HEAPBLOCKSIZE);
-    Assert(reqSize%HEAPBLOCKSIZE == 0);
-    caddr_t addr;
-    DebugCode(addr = (caddr_t) -1);
-
-    //
-    if (reqSize == HEAPBLOCKSIZE) {
-      if (std) {
-        MemSTDHoleHandle *next = std->getNext();
-        addr = std->getAddr();
-        delete std;
-        std = next;
-      } else {
-        MemOtherHoleHandle *ptr = other->getNext();
-        if (ptr->isNotLast()) {
-          // 'best fit' - here, just split the first one (because the
-          // list is sorted);
-          addr = ptr->getAddr();
-          if (ptr->getSize() > reqSize) {
-            ptr->shrink(reqSize);
-          } else {
-            // observe: it can happen that in the 'other' bin there are
-            // pages of standard size: that's due to split-up"s;
-            Assert(ptr->getSize() == reqSize);
-            ptr->unlink();
-            delete ptr;
-          }
-        } else {
-          // allocate from the 'top';
-          top -= reqSize;
-#if defined(SOLARIS_SPARC)
-          if (top < bottom)
-            addr = (caddr_t) 0;
-          else
-#endif
-            addr = top;
-        }
-      }
-    } else {                    // reqSize != HEAPBLOCKSIZE
-      if (other) {
-        // exact size or 'best fit';
-        MemOtherHoleHandle *ptr = other->getNext();
-
-        // find the smallest hole that fits 'reqSize';
-        while (ptr->isNotLast()) {
-          if (ptr->getSize() >= reqSize)
-            break;              // no need to go further;
-          ptr = ptr->getNext();
-        }
-
-        //
-        if (ptr->isNotLast()) {
-          // that is, there is hole large enough - the question is
-          // only whether it is to be split up;
-          addr = ptr->getAddr();
-          if (ptr->getSize() == reqSize) {
-            ptr->unlink();
-            delete ptr;
-          } else {
-            Assert(ptr->getSize() > reqSize);
-            // split it up;
-            ptr->shrink(reqSize);
-          }
-        } else {
-          // no page which is large enough - allocate from top;
-          top -= reqSize;
-#if defined(SOLARIS_SPARC)
-          if (top < bottom)
-            addr = (caddr_t) 0;
-          else
-#endif
-            addr = top;
-        }
-      } else {                  // 'other' bin is empty;
-        // ... then allocate from the 'top';
-        top -= reqSize;
-#if defined(SOLARIS_SPARC)
-        if (top < bottom)
-          addr = (caddr_t) 0;
-        else
-#endif
-          addr = top;
-      }
-    }
-
-    Assert(addr != (caddr_t) -1);
-    return (addr);
-  }
-
-  //
-  void markFree(caddr_t addr, size_t size) {
-    Assert(size >= HEAPBLOCKSIZE);
-    Assert(size%HEAPBLOCKSIZE == 0);
-    //
-    if (size == HEAPBLOCKSIZE) {
-      std = new MemSTDHoleHandle(addr, std);
-    } else {
-      MemOtherHoleHandle *nh = new MemOtherHoleHandle(addr, size);
-      MemOtherHoleHandle *ptr = other->getNext();
-
-      // now, find the place: just before a handle of a larger hole;
-      while (ptr->isNotLast()) {
-        if (ptr->getSize() >= size)
-          break;                // no need to go further;
-        ptr = ptr->getNext();
-      }
-
-      // regardless wither one was found or not:
-      nh->linkBefore(ptr);
-    }
-  }
-};
-
-//
-static MemAllocator memAllocator;
-
-#endif
-
-//
-// Real stuff;
 void ozFree(char *addr, size_t size)
 {
-#if !defined(USE_AUTO_PLACEMENT)
-  memAllocator.markFree(addr, size);
-#endif
   if (munmap(addr, size)) {
     ozperror("munmap");
   }
 }
 
 //
-#if defined(LINUX_I486) && defined(USE_AUTO_PLACEMENT)
+#if defined(LINUX_I486)
+// Potentially, the mmap-based regions could clash with the expanding
+// bss. We had a fix for that:
+#if defined(BSS_ALLOC_WA)
 extern char _end;
 // linux kernel (at least the 2.0.33 i'm currently using) seems to
 // reserve around 8Mb for potential expantion of bss. Which is not
@@ -408,8 +126,10 @@ extern char _end;
 static void *lowNoMap  = &_end;
 static void *highNoMap = &_end + MEM_C_HEAP_SIZE;
 #endif
+#endif
 
-void *ozMalloc(size_t size)
+//
+void* ozMalloc(size_t size)
 {
   static size_t const pagesize = sysconf(_SC_PAGESIZE);
 #if !defined(MAP_ANONYMOUS)
@@ -422,28 +142,16 @@ void *ozMalloc(size_t size)
   }
 #endif
 
-  // mm2: the interface of ozMalloc is wrong
-  //  when allocating more memory than is really used
-  //  the memory of the remainder of the page is not used.
-  //  ozMalloc should return the size allocated.
-  // kost@ : why?? it's perfectly used by subsequent Oz heap
-  // allocations...
-  if (size % pagesize != 0) {
-    // OZ_warning("*** WEIRD: ozMalloc: pagesize alignment problem ***\n");
-    size = (size / pagesize) * pagesize + pagesize;
-  }
-#if !defined(USE_AUTO_PLACEMENT)
-  char *nextAddr = memAllocator.reservePlace(size);
-#endif
+  // line up the size of a chunk, as mmap requires;
+  if (size % pagesize != 0)
+    size = ((size - 1) / pagesize) * pagesize + pagesize;
 
   //
 #if defined(MAP_ANONYMOUS)
-#if defined(USE_AUTO_PLACEMENT)
-  void *ret = mmap((char *) 0x1, size, (PROT_READ|PROT_WRITE),
+  void *ret = mmap(0, size, (PROT_READ|PROT_WRITE),
                    (MAP_PRIVATE|MAP_ANONYMOUS),
                    -1, (off_t) 0);
-
-#if defined(LINUX_I486)
+#if defined(BSS_ALLOC_WA)
   //
   // kost@ : make sure that there is some place for C heap.
   // For that, check where _end_start points to, and skip some
@@ -452,29 +160,17 @@ void *ozMalloc(size_t size)
     if (munmap((char *) ret, size))
       ozperror("munmap");
     char *baseAddress = (char *) highNoMap;
-    ret = mmap(baseAddress, size,
-               (PROT_READ|PROT_WRITE), (MAP_PRIVATE|MAP_ANONYMOUS),
-               -1, (off_t) 0);
+    ret = mmap(baseAddress, size, (PROT_READ|PROT_WRITE),
+               (MAP_PRIVATE|MAP_ANONYMOUS), -1, (off_t) 0);
     if (ret >= lowNoMap && ret < highNoMap)
       OZ_warning("Using C heap with mmap\"s!\n");
   }
-#endif
-#else
-  void *ret = mmap(nextAddr, size, (PROT_READ|PROT_WRITE),
-                   (MAP_PRIVATE|MAP_ANONYMOUS|MAP_FIXED),
-                   -1, (off_t) 0);
-#endif
-#else
-#if defined(USE_AUTO_PLACEMENT)
-  void *ret = mmap((char *) 0x1, size, (PROT_READ|PROT_WRITE),
-                   (MAP_PRIVATE),
-                   devZeroFD, (off_t) 0);
-#else
-  void *ret = mmap(nextAddr, size, (PROT_READ|PROT_WRITE),
-                   (MAP_PRIVATE|MAP_FIXED),
-                   devZeroFD, (off_t) 0);
-#endif
-#endif
+#endif // defined(BSS_ALLOC_WA)
+#else  // defined(MAP_ANONYMOUS)
+  void *ret = mmap(0, size, (PROT_READ|PROT_WRITE),
+                   (MAP_PRIVATE), devZeroFD, (off_t) 0);
+#endif // defined(MAP_ANONYMOUS)
+
   if (ret == MAP_FAILED) { ozperror("mmap"); }
 #ifdef DEBUG_CHECK
   //
@@ -495,13 +191,14 @@ void *ozMalloc(size_t size)
   return (ret);
 }
 
-#elif defined(HAVE_SBRK)
+#elif defined(USE_SBRK)  // defined(USE_MMAP)
 
 /* remember the last sbrk(0), if it changed --> malloc needs more
  * memory, so call fakeMalloc
  */
 static void *lastBrk = 0;
 
+//
 class SbrkMemory {
  public:
   /* a list containing all free blocks in ascending order */
@@ -523,11 +220,11 @@ class SbrkMemory {
   /* find a free block with size sz and bind it to ptr,
      return new free list */
   SbrkMemory *find(int sz, void *&ptr);
-
 };
 
 
-void SbrkMemory::print() {
+void SbrkMemory::print()
+{
   if (this != NULL) {
     printf("new = 0x%p\nsize = %d\nnext = 0x%p\n\n\n",
            newBrk,size,next);
@@ -536,7 +233,7 @@ void SbrkMemory::print() {
 }
 
 /* add a block to the free list, ascending order */
-SbrkMemory * SbrkMemory::add(SbrkMemory*elem)
+SbrkMemory* SbrkMemory::add(SbrkMemory*elem)
 {
   if (this == NULL) {
     elem->next = NULL;
@@ -554,8 +251,7 @@ SbrkMemory * SbrkMemory::add(SbrkMemory*elem)
 
 
 /* release all blocks, that are on top of our UNIX processes heap */
-
-SbrkMemory * SbrkMemory::shrink()
+SbrkMemory* SbrkMemory::shrink()
 {
   if (this == NULL)
     return NULL;
@@ -584,12 +280,10 @@ SbrkMemory * SbrkMemory::shrink()
 
 /* find a free block with size sz and bind it to ptr,
    return new free list */
-
-SbrkMemory * SbrkMemory::find(int sz, void *&ptr)
+SbrkMemory* SbrkMemory::find(int sz, void *&ptr)
 {
-  if (this == NULL) {
+  if (this == NULL)
     return NULL;
-  }
 
   if (sz <= size) {
     ptr = (void *) (this +1);
@@ -603,12 +297,11 @@ SbrkMemory * SbrkMemory::find(int sz, void *&ptr)
   return this;
 }
 
+
 SbrkMemory *SbrkMemory::freeList = NULL;
 
 /* allocate memory via sbrk, first see if there is
    a block in free list */
-
-
 
 
 /* first we allocate space via malloc and release it directly: this means
@@ -690,51 +383,22 @@ void ozFree(char *p, size_t ignored)
     (SbrkMemory::freeList->add(((SbrkMemory *)p)-1))->shrink();
 }
 
-#elif defined(WINDOWS)
+#elif defined(USE_MALLOC)  // defined(USE_SBRK)
+#if defined(WINDOWS)
 
 /* need windows.h: */
 #include "wsock.hh"
 
-
-void ozFree(char *ptr, int sz) {
-  if (ptr && VirtualFree(ptr,0,MEM_RELEASE) != TRUE) {
+void ozFree(char *ptr, int sz)
+{
+  if (ptr && VirtualFree(ptr,0,MEM_RELEASE) != TRUE)
     OZ_warning("free(0x%p) failed: %d\n",ptr,GetLastError());
-  }
 }
 
-
-char *ozMalloc0(int sz) {
-  char *ret = (char *)VirtualAlloc(0,sz,MEM_RESERVE|MEM_COMMIT,PAGE_READWRITE);
-
-  if (ret==0)
-    return ret;
-
-  if (checkAddress(ret+sz))
-    return ret;
-
-  ozFree(ret,sz);
-
-  /* address space exhausted, so we walk the whole address space: */
-  SYSTEM_INFO si;
-  GetSystemInfo(&si);
-  char *base = (char*)si.lpMinimumApplicationAddress;
-
-  while(1) {
-    ret = (char*)VirtualAlloc(base,sz,MEM_RESERVE|MEM_COMMIT,PAGE_READWRITE);
-    if (!checkAddress(ret+sz)) {
-      ozFree(ret,sz);
-      return NULL;
-    }
-
-    if (ret!=NULL) {
-      return ret;
-    }
-
-    if (!checkAddress(base+sz)) // address space exhausted ?
-      return NULL;
-
-    base += si.dwAllocationGranularity;
-  }
+char *ozMalloc0(int sz)
+{
+  return ((char *) VirtualAlloc(0, sz, (MEM_RESERVE|MEM_COMMIT),
+                                PAGE_READWRITE));
 }
 
 
@@ -744,21 +408,27 @@ char *ozMalloc(int sz)
   return aux;
 }
 
-#else
+#else  // defined(WINDOWS) // malloc
 
-void ozFree(char *addr, size_t ignored) {
+void ozFree(char *addr, size_t ignored)
+{
   free(addr);
 }
 
-void *ozMalloc(size_t size) {
+void *ozMalloc(size_t size)
+{
   return malloc(size);
 }
 
-#endif
+#endif  // defined(WINDOWS)
+#else   // defined(USE_MALLOC)
+BOOOOOM;                        // an undefined allocation scheme!!
+#endif  // defined(USE_MALLOC)
 
 
 
-void MemChunks::deleteChunkChain() {
+void MemChunks::deleteChunkChain()
+{
   MemChunks *aux = this;
   while (aux) {
 
@@ -775,7 +445,7 @@ void MemChunks::deleteChunkChain() {
 }
 
 
-#ifdef DEBUG_MEM
+#if defined(DEBUG_MEM)
 
 // 'inChunkChain' returns 1 if value points into chunk chain otherwise 0.
 Bool MemChunks::inChunkChain(void *value)
@@ -806,7 +476,7 @@ Bool MemChunks::isInHeap(TaggedRef term)
       if (oz_isBuiltin(term)) return OK;
       // no break
     case TAG_SRECORD:
-      if (!list->inChunkChain(tagged2Verbatim(term))) {
+      if (!list->inChunkChain(tagged2Addr(term))) {
         return NO;
       }
       break;
@@ -817,7 +487,8 @@ Bool MemChunks::isInHeap(TaggedRef term)
   return OK;
 }
 
-Bool MemChunks::areRegsInHeap(TaggedRef *regs, int sz) {
+Bool MemChunks::areRegsInHeap(TaggedRef *regs, int sz)
+{
   for (int i=0; i<sz; i++) {
     if (!isInHeap(regs[i])) {
       return NO;
@@ -827,7 +498,8 @@ Bool MemChunks::areRegsInHeap(TaggedRef *regs, int sz) {
 }
 
 
-void MemChunks::print() {
+void MemChunks::print()
+{
   MemChunks *aux = this;
   while (aux) {
     printf(" chunk( from: 0x%p, to: 0x%p )\n",
@@ -839,17 +511,27 @@ void MemChunks::print() {
   }
 }
 
-#endif
+#endif  // defined(DEBUG_MEM)
 
-#define HEAP_SAFETY_FOR_ALIGN 32
+// #define HEAP_SAFETY_FOR_ALIGN 32
 
-void _oz_getNewHeapChunk(const size_t raw_sz) {
-  size_t sz          = (raw_sz + HEAP_SAFETY_FOR_ALIGN) & ~7;
-  size_t thisBlockSz =
-    ((sz / ((size_t) HEAPBLOCKSIZE)) * ((size_t) HEAPBLOCKSIZE)) +
+// kost@ : the result is supposed to be just OZ_HEAPALIGMENT-aligned.
+// Within a [addr, addr+OZ_HEAPALIGNMENT-1] interval we have at least
+// one OZ_HEAPALIGN"ed address. So, we have:
+#define HEAP_ALIGN_SAFETY       (OZ_HEAPALIGNMENT - 1)
+#define HEAP_ALIGN_SAFETY_MASK  (-OZ_HEAPALIGNMENT)
+
+void _oz_getNewHeapChunk(const size_t raw_sz)
+{
+  Assert(raw_sz > 0);
+  size_t sz =
+    (raw_sz + HEAP_ALIGN_SAFETY) & HEAP_ALIGN_SAFETY_MASK;
+  size_t thisBlockSz =          // in chunks of HEAPBLOCKSIZE;
+    (((sz - 1) / ((size_t) HEAPBLOCKSIZE)) * ((size_t) HEAPBLOCKSIZE)) +
     ((size_t) HEAPBLOCKSIZE);
   // kost@ : these are the invariants now:
   Assert(thisBlockSz >= HEAPBLOCKSIZE);
+  Assert(thisBlockSz%OZ_HEAPALIGNMENT == 0);
   Assert(thisBlockSz%HEAPBLOCKSIZE == 0);
 
   heapTotalSize      += thisBlockSz/KB;
@@ -865,27 +547,22 @@ void _oz_getNewHeapChunk(const size_t raw_sz) {
     am.exitOz(1);
   }
 
-  /* align _oz_heap_end to word boundaries */
-  while (ToInt32(_oz_heap_end) % WordSize != 0) {
-    thisBlockSz--;
-    _oz_heap_end++;
-  }
-
-  DebugCheckT(memset(_oz_heap_end,0,thisBlockSz));
-
+  // kost@ : _oz_heap_end does NOT have to be "heap-aligned";
   _oz_heap_cur = _oz_heap_end + thisBlockSz;
-
-  if (!checkAddress(_oz_heap_cur)) {
-    OZ_warning("Mozart: address space exhausted.\n");
-    am.exitOz(1);
+  while (!isSTAligned(_oz_heap_cur)) {
+    thisBlockSz--;
+    _oz_heap_cur--;
   }
+  Assert(isSTAligned(_oz_heap_cur));
 
-  MemChunks::list = new MemChunks(malloc_block,MemChunks::list,malloc_size);
-
+  //
+  MemChunks::list =
+    new MemChunks(malloc_block, MemChunks::list, malloc_size);
 #ifdef CS_PROFILE
   across_chunks = OK;
 #endif
 }
+
 
 /*
  * Free List Management
@@ -895,7 +572,8 @@ void _oz_getNewHeapChunk(const size_t raw_sz) {
 FL_Small * FL_Manager::smmal[FL_SizeToIndex(FL_MaxSize) + 1];
 FL_Large * FL_Manager::large;
 
-void FL_Manager::init(void) {
+void FL_Manager::init(void)
+{
   large    = (FL_Large *) NULL;
   smmal[0] = NULL;
 
@@ -910,7 +588,8 @@ void FL_Manager::init(void) {
 #define FL_RFL_N1    4
 #define FL_RFL_N2    32
 
-void FL_Manager::refill(const size_t sz) {
+void FL_Manager::refill(const size_t sz)
+{
   register char * block;
   register size_t n;
 
@@ -946,7 +625,8 @@ void FL_Manager::refill(const size_t sz) {
 
 }
 
-unsigned int FL_Manager::getSize(void) {
+unsigned int FL_Manager::getSize(void)
+{
   unsigned int s = 0;
 
   for (int i = 1; i <= FL_SizeToIndex(FL_MaxSize); i++) {
