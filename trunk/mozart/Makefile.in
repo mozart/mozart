@@ -137,9 +137,10 @@ src: $(PACKDIR)
 	  $(TAR) -cf - mozart) | $(TAR) -xf - ; \
 	 find mozart -name CVS -type d -exec rm -rf '{}' ';' 2>/dev/null ; \
 	 find mozart -name '.cvsignore' -type f -exec rm -f '{}' ';' ; \
-	 $(TAR) -cf - mozart ) | \
+	 mv mozart mozart-`$(OZVERSION)`.$(OZBUILD); \
+	 $(TAR) -cf - mozart-`$(OZVERSION)`.$(OZBUILD) ) | \
 	 $(COMPRESS) > mozart-`$(OZVERSION)`.$(OZBUILD)-src.tar.gz
-	rm -rf $(PACKDIR)/mozart
+	rm -rf $(PACKDIR)/mozart-`$(OZVERSION)`.$(OZBUILD)
 
 doc: $(PACKDIR) $(PACKDIR)/mozart
 	rm -f files.doc
