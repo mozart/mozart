@@ -580,6 +580,8 @@ functorDescriptorList
                   { $$ = consList(newCTerm("fImport",$3,$2),$4); }
                 | export coord exportDecls functorDescriptorList
                   { $$ = consList(newCTerm("fExport",$3,$2),$4); }
+                | prop coord phrase phraseList functorDescriptorList
+                  { $$ = consList(newCTerm("fProp",consList($3,$4),$2),$5); }
                 ;
 
 importDecls     : /* empty */
