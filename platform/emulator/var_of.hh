@@ -246,12 +246,23 @@ public:
         dynamictable=DynamicTable::newDynamicTable();
     }
 
+    // GenOFSVariable(TaggedRef lbl)
+    // : GenCVariable(OFSVariable) {
+    //  Assert(isLiteral(lbl));
+    //  label=lbl;
+    //  dynamictable=DynamicTable::newDynamicTable();
+    // }
+
     // Methods relevant for term copying (gc and solve)
     void gc(void);
     size_t getSize(void) { return sizeof(GenOFSVariable); }
 
     TaggedRef getLabel(void) {
         return label;
+    }
+
+    int getWidth(void) {
+        return (int)(dynamictable->numelem);
     }
 
     DynamicTable* getTable(void) {
@@ -296,6 +307,9 @@ public:
     int getNumOfFeatures(void) {
         return (int) dynamictable->numelem;
     }
+
+    // Is X=val still valid, i.e., is val a literal and is width(ofs)==0 (see GenFDVariable::valid)
+    Bool valid(TaggedRef val);
 
     // These procedures exist as well in the class GenFDVariable,
     // but they are not needed in GenOFSVariable:

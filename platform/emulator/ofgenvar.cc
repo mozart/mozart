@@ -45,9 +45,10 @@ DynamicTable* DynamicTable::copyDynamicTable() {
 
 // Test whether the current table has too little room for one new element:
 // ATTENTION: Calls to insert should be preceded by fullTest.
+// This test sets maximum fullness of table to 75%.
 Bool DynamicTable::fullTest() {
     Assert(isPwrTwo(size));
-    return (numelem>=(size>>1));
+    return (numelem>=((size>>1)+(size>>2)));
 }
 
 // Return a table that is double the size of the current table and
@@ -185,10 +186,40 @@ Bool GenOFSVariable::unifyOFS(TaggedRef *vPtr, TaggedRef var,
                               TaggedRef *tPtr, TaggedRef term,
                               Bool prop)
 {
-    TypeOfTerm vTag = tagTypeOf(var);
     TypeOfTerm tTag = tagTypeOf(term);
 
     switch (tTag) {
+    case LITERAL:
+      {
+        // Literals have no features:
+        if (getWidth()>0) return FALSE;
+
+        // Unify the labels:
+        if (!am.unify(term,label,prop)) return FALSE;
+
+        // At this point, unification is successful
+
+        // Get local/global flag:
+        Bool vLoc=(prop && isLocalVariable());
+
+        // Bind OFSVar to the Literal:
+        if (vLoc) doBind(vPtr, TaggedRef(term));
+        else doBindAndTrail(var, vPtr, TaggedRef(term));
+
+        // Propagate changes to the suspensions:
+        // (this routine is actually GenCVariable::propagate)
+        if (prop) propagate(var, suspList, makeTaggedRef(vPtr), pc_cv_unif);
+
+        // Take care of linking suspensions
+        if (!vLoc) {
+            // Add a suspension to the OFSVariable if it is global:
+            Suspension* susp=new Suspension(am.currentBoard);
+            Assert(susp!=NULL);
+            addSuspension(susp);
+        }
+        return TRUE;
+      }
+
     case SRECORD:
       {
         // For all features of var, term should contain the feature.
@@ -202,9 +233,9 @@ Bool GenOFSVariable::unifyOFS(TaggedRef *vPtr, TaggedRef var,
         // Unify the labels:
         if (!am.unify(termSRec->getLabel(),label,prop)) return FALSE;
         // Must be literal or variable:
-        TaggedRef tmp=label;
-        DEREF(tmp,_1,_2);
-        if (!isLiteral(tmp) && !isAnyVar(tmp)) return FALSE;
+        // TaggedRef tmp=label;
+        // DEREF(tmp,_1,_2);
+        // if (!isLiteral(tmp) && !isAnyVar(tmp)) return FALSE;
 
         // Get local/global flag:
         Bool vLoc=(prop && isLocalVariable());
@@ -275,12 +306,21 @@ Bool GenOFSVariable::unifyOFS(TaggedRef *vPtr, TaggedRef var,
         GenOFSVariable* newVar=NULL;
         GenOFSVariable* otherVar=NULL;
         TaggedRef* nvRefPtr=NULL;
+        TaggedRef* otherPtr=NULL;
         Bool globConstrained=TRUE;
         if (vLoc && tLoc) {
-            // Reuse the var:
-            newVar=this;
-            nvRefPtr=vPtr;
-            otherVar=termVar;
+            // Reuse the largest table (optimization to improve unification speed):
+            if (getWidth()>termVar->getWidth()) {
+                newVar=this;
+                nvRefPtr=vPtr;
+                otherVar=termVar; // otherVar must be smallest
+                otherPtr=tPtr;
+            } else {
+                newVar=termVar;
+                nvRefPtr=tPtr;
+                otherVar=this; // otherVar must be smallest
+                otherPtr=vPtr;
+            }
         } else if (vLoc && !tLoc) {
             // Reuse the var:
             newVar=this;
@@ -294,19 +334,28 @@ Bool GenOFSVariable::unifyOFS(TaggedRef *vPtr, TaggedRef var,
             otherVar=this;
             globConstrained = otherVar->dynamictable->extraFeaturesIn(newVar->dynamictable);
         } else if (!vLoc && !tLoc) {
-            // Make a local copy of the var's DynamicTable.
-            DynamicTable* dt=dynamictable->copyDynamicTable();
-            // Make a new GenOFSVariable with the new DynamicTable:
-            TaggedRef pn=tagged2CVar(var)->getName();
-            newVar=new GenOFSVariable(*dt, pn);
-            nvRefPtr=newTaggedCVar(newVar);
-            otherVar=termVar;
+            // Reuse the largest table (this improves unification speed):
+            if (getWidth()>termVar->getWidth()) {
+                // Make a local copy of the var's DynamicTable.
+                DynamicTable* dt=dynamictable->copyDynamicTable();
+                // Make a new GenOFSVariable with the new DynamicTable:
+                TaggedRef pn=tagged2CVar(var)->getName();
+                newVar=new GenOFSVariable(*dt, pn);
+                nvRefPtr=newTaggedCVar(newVar);
+                otherVar=termVar; // otherVar must be smallest
+            } else {
+                // Same as above, but in opposite order:
+                DynamicTable* dt=termVar->getTable()->copyDynamicTable();
+                TaggedRef pn=tagged2CVar(term)->getName();
+                newVar=new GenOFSVariable(*dt, pn);
+                nvRefPtr=newTaggedCVar(newVar);
+                otherVar=this; // otherVar must be smallest
+            }
         } else Assert(FALSE);
         Assert(nvRefPtr!=NULL);
         Assert(newVar!=NULL);
         Assert(otherVar!=NULL);
 
-        // (CRUCIAL FUTURE OPTIMIZATION: Make merge direction depend on relative table sizes)
         // Merge otherVar's DynamicTable into newVar's DynamicTable.
         // (During the merge, calculate the list of feature pairs that correspond.)
         PairList* pairs;
@@ -318,7 +367,7 @@ Bool GenOFSVariable::unifyOFS(TaggedRef *vPtr, TaggedRef var,
         // the local to the global and relink the local's suspension list
         if (vLoc && tLoc) {
             // bind to var without trailing:
-            doBind(tPtr, makeTaggedRef(vPtr));
+            doBind(otherPtr, makeTaggedRef(nvRefPtr));
         } else if (vLoc && !tLoc) {
             if (globConstrained)
                 doBindAndTrail(term, tPtr, makeTaggedRef(vPtr));
@@ -367,7 +416,7 @@ Bool GenOFSVariable::unifyOFS(TaggedRef *vPtr, TaggedRef var,
 
         // Take care of linking suspensions
         if (vLoc && tLoc) {
-            termVar->relinkSuspListTo(this);
+            otherVar->relinkSuspListTo(newVar);
         } else if (vLoc && !tLoc) {
             if (globConstrained) {
                 Suspension* susp=new Suspension(am.currentBoard);
@@ -401,6 +450,16 @@ Bool GenOFSVariable::unifyOFS(TaggedRef *vPtr, TaggedRef var,
         error("unexpected case in unifyOFS");
         return FALSE;
     }
+}
+
+
+Bool GenOFSVariable::valid(TaggedRef val) {
+    if (!isLiteral(val)) return FALSE;
+    if (getWidth()>0) return FALSE;
+    TaggedRef tmp=label;
+    DEREF(tmp,_1,_2);
+    if (isLiteral(tmp) && !sameLiteral(tmp,val)) return FALSE;
+    return TRUE;
 }
 
 

@@ -83,7 +83,7 @@ Bool GenCVariable::valid(TaggedRef val)
   case FDVariable:
     return ((GenFDVariable*)this)->valid(val);
   case OFSVariable:
-    return NO;
+    return ((GenOFSVariable*)this)->valid(val);
   default:
     break;
   }
