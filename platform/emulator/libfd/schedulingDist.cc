@@ -300,7 +300,7 @@ OZ_Return TaskIntervalsProof::run(void)
 
 
   constraints = initConstraints;
-  int * constraintsExtension;
+  int * constraintsExtension = NULL;
 
   int constraintLimit = INITIALSIZE;
 
