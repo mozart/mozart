@@ -1003,7 +1003,7 @@ LBLstart:
 
   PC = NOCODE; // this is necessary for printing stacks (mm)
 
-  DebugTrace (trace("runnable thread->running"));
+  DebugTrace(trace("runnable thread->running"));
 
   // Debugger & oz_stop
   if (CTT->stopped()) {
@@ -1300,7 +1300,7 @@ LBLsuspendThread:
   {
     asmLbl(suspendThread);
 
-    DebugTrace (trace("suspend runnable thread", CBB));
+    DebugTrace(trace("suspend runnable thread", CBB));
 
     Assert(CTT);
     CTT->unmarkRunnable();

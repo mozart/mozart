@@ -528,7 +528,7 @@ Bool isInTable(TaggedRef def, char **table)
 }
 
 
-#ifdef MM_DEBUG
+#ifdef DEBUG_TRACE
 /*
  * the machine level debugger starts here
  */

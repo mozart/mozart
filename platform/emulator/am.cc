@@ -191,7 +191,7 @@ void AM::init(int argc,char **argv)
       continue;
     }
     if (strcmp(argv[i],"-d")==0) {
-#ifdef MM_DEBUG
+#ifdef DEBUG_TRACE
       tracerOn();
 #endif
       continue;
@@ -1633,7 +1633,7 @@ void handlerUSR1()
 
   CodeArea::writeInstr();
 
-#ifdef MM_DEBUG
+#ifdef DEBUG_TRACE
   tracerOn(); trace("halt");
 #endif
   message("Error handler exit ****\n");
