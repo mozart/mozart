@@ -377,12 +377,6 @@ void GenCVariable::printStream(ostream &stream, int depth)
       break;
     }
 
-  case MetaVariable:
-    {
-      GenMetaVariable* me = (GenMetaVariable *) this;
-      stream << " MV " << me->toString(PRINT_DEPTH_DEC(depth));
-      break;
-    }
   case PerdioVariable:
     stream << " PerdioVariable";
       break;
@@ -463,17 +457,6 @@ void GenCVariable::printLongStream(ostream &stream, int depth, int offset)
       break;
     }
 
-  case MetaVariable:
-    {
-      GenMetaVariable* me = (GenMetaVariable *) this;
-      stream << indent(offset)
-             << "<<MV: '" << me->getName() << "' "
-             << me->toString(PRINT_DEPTH_DEC(depth))
-             << endl;
-      ozd_printStream(me->data, stream, PRINT_DEPTH_DEC(depth));
-      stream << endl << indent(offset) << ">>" << endl;
-      break;
-    }
   case PerdioVariable:
     stream << indent(offset) << "<PerdioVariable *" << this << ">" << endl;
       break;

@@ -65,7 +65,6 @@ enum TypeOfGenCVariable {
   BoolVariable,
   FDVariable,
   OFSVariable,
-  MetaVariable,
   FSetVariable,
   CtVariable,
   NonGenCVariable
@@ -254,7 +253,6 @@ void addSuspCVarOutline(TaggedRef * v, Suspension susp, int unstable = TRUE);
 #include "fdgenvar.hh"
 #include "fdbvar.hh"
 #include "ofgenvar.hh"
-#include "metavar.hh"
 #include "ctgenvar.hh"
 #include "perdiovar.hh"
 #include "promise.hh"

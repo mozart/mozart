@@ -86,7 +86,7 @@ CXXSRCS= \
         foreign.cc \
         ofgenvar.cc genhashtbl.cc \
         ozostream.cc runtime.cc unix.cc \
-        metavar.cc perdio.cc \
+        perdio.cc \
         urlc.cc iso-ctype.cc hashtbl.cc \
         os.cc emulate.cc scheduler.cc builtins.cc \
         components.cc network.cc virtual.cc \
