@@ -222,8 +222,7 @@ ozbatch: MakeBatch.oz BatchCompile.oz $(DUMPINTRO) \
         AP.ozc AP.env
         $(EXECWITHSTD) MakeBatch.oz
 
-ozserver: MakeOzServer.oz $(DUMPINTRO) \
-        SP.env OP.env DP.env
+ozserver: MakeOzServer.oz $(DPSRC) $(DUMPINTRO) AP.ozc
         $(EXECWITHSTD) MakeOzServer.oz
 
 Base.ozc: Standard.ozc
@@ -231,6 +230,9 @@ Base.ozc: Standard.ozc
 
 Standard.ozc: $(STANDARDSRC) Base.env Standard.env
         OZMAINIT="" $(EXEC) DumpInitial.oz
+
+OPI.ozc: $(DUMPINTRO) OPI.oz Init.ozc AP.ozc Compiler.env $(TYCS)
+        $(COMPILE) -l AP OPI.oz -o OPI.ozc
 
 install: install-main install-bitmaps
 
@@ -307,19 +309,17 @@ tyc/%.tyc: %.typ $(DUMPINTRO) Init.ozc
 Init.ozc: $(DUMPINTRO) $(INITSRC)
         OZMAINIT="" $(COMPILE) Init.oz
 
-OPI.ozc: $(DUMPINTRO) OPI.oz Init.ozc SP.ozc OP.ozc AP.ozc Compiler.env $(TYCS)
-
 SP.ozc: $(DUMPINTRO) $(SPSRC) SP.env Init.ozc
 
 OP.ozc: $(DUMPINTRO) $(OPSRC) SP.env OP.env Init.ozc
 
 AP.ozc: $(DUMPINTRO) $(APSRC) SP.env OP.env AP.env Init.ozc
 
+DP.ozc: $(DUMPINTRO) $(DPSRC) OP.env Init.ozc
+
 CP.ozc: $(DUMPINTRO) $(CPSRC) SP.env CP.env Init.ozc
 
 WP.ozc: $(DUMPINTRO) $(WPSRC) SP.env OP.env WP.env Init.ozc
-
-DP.ozc: $(DUMPINTRO) $(DPSRC) OP.env AP.env DP.env Init.ozc
 
 Misc.ozc: $(DUMPINTRO) $(MISCSRC) Misc.env Init.ozc
 
@@ -394,7 +394,6 @@ STAGE2=./stage2
 STAGE3=./stage3
 
 stage1:
-        make all
         make install-main PREFIX=$(STAGE1)
 
 stage1-bootstrap:
