@@ -77,7 +77,12 @@ enum ExceptionTypes {
 
 OZ_Term formatError(OZ_Term info)
 {
-  return OZ_mkTupleC("error",1,info);
+  OZ_Term ret = OZ_record(OZ_atom("error"),
+                          cons(OZ_int(1),
+                               cons(OZ_atom("debug"),OZ_nil())));
+  OZ_putSubtree(ret,OZ_int(1),info);
+  OZ_putSubtree(ret,OZ_atom("debug"),NameUnit);
+  return ret;
 }
 
 OZ_Term formatError(OZ_Term info,OZ_Term traceBack,OZ_Term loc)
@@ -98,7 +103,10 @@ OZ_Term formatError(OZ_Term info,OZ_Term traceBack,OZ_Term loc)
 
 OZ_Term formatFailure()
 {
-  return OZ_atom("failure");
+  OZ_Term ret = OZ_record(OZ_atom("failure"),OZ_cons(OZ_atom("debug"),
+                                                     OZ_nil()));
+  OZ_putSubtree(ret,OZ_atom("debug"),NameUnit);
+  return ret;
 }
 
 OZ_Term formatFailure(OZ_Term info,OZ_Term traceBack,OZ_Term loc)
@@ -1453,13 +1461,8 @@ LBLsuspendThread:
 
   JUMP( PC );
 
-#ifdef SLOW_DEBUG_CHECK
-  /* These tests make the emulator really sloooooww */
-  osBlockSignals(OK);
-  DebugCheckT(osUnblockSignals());
-  Assert(e->currentSolveBoard == CBB->getSolveBoard ());
-  Assert(!isFreedRefsArray(Y));
-#endif
+#ifndef THREADED
+LBLdispatcher:
 
 #ifdef RECINSTRFETCH
   CodeArea::recordInstr(PC);
@@ -1469,8 +1472,6 @@ LBLsuspendThread:
                 goto LBLfailure;
               });
 
-#ifndef THREADED
-LBLdispatcher:
   op = CodeArea::getOP(PC);
   // displayCode(PC,1);
   switch (op) {
