@@ -171,7 +171,7 @@ extern int OZ_addBuiltin _PROTOTYPE((char *, int, OZ_CFun));
 
 /* IO */
 
-extern int OZ_select  _PROTOTYPE((int));
+extern OZ_Bool OZ_readSelect  _PROTOTYPE((int, OZ_Term, OZ_Term));
 extern int OZ_openIO  _PROTOTYPE((int));
 extern int OZ_closeIO _PROTOTYPE((int));
 

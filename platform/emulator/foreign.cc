@@ -898,10 +898,9 @@ OZ_Term OZ_newVariable()
  * IO
  * -----------------------------------------------------------------*/
 
-int OZ_select(int fd)
+OZ_Bool OZ_readSelect(int fd,OZ_Term l,OZ_Term r)
 {
-  am.select(fd);
-  return 1;
+  return am.readSelect(fd,l,r);
 }
 
 int OZ_openIO(int fd)
