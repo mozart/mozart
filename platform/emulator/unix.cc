@@ -1775,18 +1775,16 @@ OZ_C_proc_begin(unix_getpwnam,2)
   if (p==0) {
     return raiseUnixError(errno,OZ_unixError(errno),"getpwnam");
   } else {
+    // return only POSIX fields
     OZ_Term N1 = oz_pairAA("name"  ,p->pw_name  );
-    OZ_Term N2 = oz_pairAA("passwd",p->pw_passwd);
-    OZ_Term N3 = oz_pairAI("uid"   ,p->pw_uid   );
-    OZ_Term N4 = oz_pairAI("gid"   ,p->pw_gid   );
-    OZ_Term N5 = oz_pairAA("gecos" ,p->pw_gecos );
-    OZ_Term N6 = oz_pairAA("dir"   ,p->pw_dir   );
-    OZ_Term N7 = oz_pairAA("shell" ,p->pw_shell );
+    OZ_Term N2 = oz_pairAI("uid"   ,p->pw_uid   );
+    OZ_Term N3 = oz_pairAI("gid"   ,p->pw_gid   );
+    OZ_Term N4 = oz_pairAA("dir"   ,p->pw_dir   );
+    OZ_Term N5 = oz_pairAA("shell" ,p->pw_shell );
     OZ_Term R =
       OZ_recordInit(
         oz_atom("passwd"),
-        oz_cons(N1,oz_cons(N2,oz_cons(N3,oz_cons(N4,oz_cons(N5,
-          oz_cons(N6,oz_cons(N7,oz_nil()))))))));
+        oz_cons(N1,oz_cons(N2,oz_cons(N3,oz_cons(N4,oz_cons(N5,oz_nil()))))));
     return oz_unify(OZ_getCArg(1),R);
   }
 }
