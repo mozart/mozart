@@ -443,7 +443,8 @@ inline BorrowEntry* borrowIndex2borrowEntry(OB_TIndex bi)
 //
 class BorrowTable : public GenDistEntryTable<BorrowEntry> {
 public:
-  BorrowTable(int sz) : GenDistEntryTable<BorrowEntry>(sz) {}
+  BorrowTable(int sizeAsPowerOf2)
+    : GenDistEntryTable<BorrowEntry>(sizeAsPowerOf2) {}
 
   //
   OB_TIndex newBorrow(RRinstance *c, DSite *sd, Ext_OB_TIndex extOTI) {

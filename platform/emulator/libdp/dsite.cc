@@ -47,8 +47,8 @@
 /**********************************************************************/
 
 
-#define PRIMARY_SITE_TABLE_SIZE    10
-#define SECONDARY_SITE_TABLE_SIZE  50
+#define PRIMARY_SITE_TABLE_SIZE    4
+#define SECONDARY_SITE_TABLE_SIZE  6
 
 //
 template class GenDistEntryTable<DSite>;

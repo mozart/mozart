@@ -102,6 +102,8 @@
 #define _cacSuspList             gCollectSuspList
 #define _cacLocalSuspList        gCollectLocalSuspList
 
+#define _cacDictEntry		gCollectDictEntry
+
 #endif
 
 
@@ -142,6 +144,8 @@
 
 #define _cacSuspList             sCloneSuspList
 #define _cacLocalSuspList        sCloneLocalSuspList
+
+#define _cacDictEntry		sCloneDictEntry
 
 #endif
 
@@ -420,7 +424,7 @@ Name *Name::_cacName(void) {
 
   if (cacIsMarked())
     return cacGetFwd();
-  
+
 #ifdef G_COLLECT
   GName * gn = NULL;
 
@@ -429,12 +433,13 @@ Name *Name::_cacName(void) {
   }
 #endif
 
+  if (
 #ifdef G_COLLECT
-  if (isOnHeap()) {
+      isOnHeap()
 #else
-  if (!getBoardInternal()->hasMark()) {
+      !getBoardInternal()->hasMark()
 #endif
-
+      ) {
     Name * aux = (Name *) memcpy(oz_heapDoubleMalloc(sizeof(Name)), 
 				 this, sizeof(Name));
 
@@ -468,7 +473,6 @@ Literal * Literal::_cac(void) {
   return ((Name*) this)->_cacName();
 }
 
-
 /*
  * Dynamic tables
  *
@@ -487,6 +491,154 @@ DynamicTable * DynamicTable::_cac(void) {
   OZ_cacBlock((TaggedRef *) table, (TaggedRef *) to->table, 2 * size);
 
   return to;
+}
+
+//
+// OzDictionary"s tables;
+//
+
+// replicated from dictionary.cc;
+static const double GDT_IDEALENTRIES	= 1.0; // wrt the number of slots;
+static const int GDT_MINFULL		= 4;   // 
+
+//
+void DictHashTable::_cacDictEntry(DictNode *n)
+{
+  DictNode *np = &table[hash(featureHash(n->getKey()))];
+
+  //
+  if (np->isEmpty()) {
+    (void) new (np) DictNode(*n);
+    OZ_cacBlock((TaggedRef *) n, (TaggedRef *) np, 2);
+    return;
+
+    //
+  } else {
+    if (!np->isPointer()) {
+      Assert(!featureEq(np->getKey(), n->getKey())); // unique keys;
+      // a fresh collision - allocate a new block of DictNode"s;
+      DictNode *newA =
+	(DictNode *) CAC_MALLOC(2 * sizeof(DictNode));
+
+      // .. this one must be already GC"ed;
+      (void) new (newA) DictNode(*np);
+      np->setSPtr(newA++);
+      (void) new (newA) DictNode(*n);
+      OZ_cacBlock((TaggedRef *) n, (TaggedRef *) newA, 2);
+      //
+      newA++;
+      np->setEPtr(newA);
+      return;
+
+      //
+    } else {
+      DictNode *sptr = np->getDictNodeSPtr();
+      DictNode *eptr = np->getDictNodeEPtr();
+      int bytes = ((char *) eptr) - ((char *) sptr) + sizeof(DictNode);
+      DictNode *newA = (DictNode *) CAC_MALLOC(bytes);
+
+      //
+      np->setSPtr(newA);
+      do {
+	(void) new (newA++) DictNode(*sptr++);
+      } while (sptr < eptr);
+      (void) new (newA) DictNode(*n);
+      OZ_cacBlock((TaggedRef *) n, (TaggedRef *) newA, 2);
+      //
+      newA++;
+      np->setEPtr(newA);
+      return;
+    }
+  }
+  Assert(0);
+}
+
+inline
+DictHashTable* DictHashTable::_cac(void)
+{
+  int tableSize = dictHTSizes[sizeIndex];
+  DictNode *an;
+
+  //
+  if (entries >= (tableSize / GDT_MINFULL)) {
+    // no compactification - reconstruct it isomorphically;
+    an = (DictNode *) CAC_MALLOC(tableSize * sizeof(DictNode));
+
+    //
+    for (int i = tableSize; i--; ) {
+      DictNode *n = &table[i];
+      if (!n->isEmpty()) {
+	if (!n->isPointer()) {
+	  DictNode *nn = &an[i];
+	  (void) new (nn) DictNode(*n);
+	  OZ_cacBlock((TaggedRef *) n, (TaggedRef *) nn, 2);
+	} else {
+	  DictNode *sptr = n->getDictNodeSPtr();
+	  DictNode *eptr = n->getDictNodeEPtr();
+	  int bytes = ((char *) eptr) - ((char *) sptr);
+	  DictNode *newA = 
+	    (DictNode *) memcpy(CAC_MALLOC(bytes), sptr, bytes);
+	  int size = bytes / sizeof(DictNode);
+	  OZ_cacBlock((TaggedRef *) sptr, (TaggedRef *) newA, 2 * size);
+	  DictNode *nn = &an[i];
+	  nn->setSPtr(newA);
+	  nn->setEPtr((DictNode *) (((char *) newA) + bytes));
+	}
+      } else {
+	(void) new (&an[i]) DictNode; // empty;
+      }
+    }
+
+    //      
+    DictHashTable *dht = new DictHashTable(*this);
+    dht->table = an;
+    return (dht);
+
+    //
+  } else {
+    // construct anew, GC"ing keys/values along;
+    //
+    int oldSize, newSize;
+    DictNode* old;
+
+    //
+    oldSize = dictHTSizes[sizeIndex];
+    old = table;
+
+    // can be zero too:
+    int tableSize = (int) ((double) entries * GDT_IDEALENTRIES);
+    Assert(tableSize < oldSize);
+    sizeIndex--;
+    while (sizeIndex >= 0 && dictHTSizes[sizeIndex] >= tableSize)
+      sizeIndex--;
+    Assert(sizeIndex < 0 || dictHTSizes[sizeIndex] < tableSize);
+    sizeIndex++;
+    Assert(sizeIndex >= 0 && dictHTSizes[sizeIndex] >= tableSize);
+    Assert(dictHTSizes[sizeIndex] < oldSize);	// must not oscillate;
+    // construct the table anew;
+    mkEmpty();
+
+    //
+    for (int i = oldSize; i--; old++) {
+      if (!old->isEmpty()) {
+	if (!old->isPointer()) {
+	  _cacDictEntry(old);
+	} else {
+	  DictNode *sptr = old->getDictNodeSPtr();
+	  DictNode *eptr = old->getDictNodeEPtr();
+	  do {
+	    _cacDictEntry(sptr++);
+	  } while (sptr < eptr);
+	}
+      }
+    }
+
+    //      
+    DictHashTable *dht = new DictHashTable(*this);
+    dht->table = table;
+    return (dht);
+  }
+  Assert(0);
 }
 
 /*

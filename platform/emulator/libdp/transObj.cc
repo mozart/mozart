@@ -130,8 +130,10 @@ void TransController::transObjFreed(ComObj *comObj,TransObj *transObj,
     if (next!=NULL) {
       PD((TCPCACHE,"Reusing a resource"));
 //        fprintf(logfile,"pd_tcpcache Reusing a resource\n");
+//        fprintf(stdout, "refreseh %p (pid %d)\n", transObj, osgetpid());
+//        fflush(stdout);
       transObj->init(); // Refresh!
-      transObjReady(next,transObj);
+      transObjReady(next, transObj);
       return;
     }
     PD((TCPCACHE,"Have a resource, but no one who wants it"));
