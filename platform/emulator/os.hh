@@ -146,6 +146,9 @@ int osaccept(int s, struct sockaddr *addr, int *addrlen);
 int osconnect(int s, struct sockaddr *addr, int namelen);
 int osdup(int fd);
 
+char *osinet_ntoa(char *);
+
+
 /* check for EINTR and make sure everything is written */
 int ossafewrite(int fd, char *buf, unsigned int len);
 int ossaferead(int fd, char *buf, unsigned int len);
