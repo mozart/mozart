@@ -155,18 +155,26 @@ void initFDs()
 // FDInterval -----------------------------------------------------------------
 
 OZ_Boolean FDIntervals::isConsistent(void) const {
-  if (high < 0) 
+  if (high < 0) {
+    printf("high < 0"); fflush(stdout);
     return OZ_FALSE;
+  }
 
   int i;
   for (i = 0; i < high; i++) {
-    if (i_arr[i].left > i_arr[i].right) 
+    if (i_arr[i].left > i_arr[i].right) {
+      printf("i_arr[%d].left > i_arr[%d].right", i, i); fflush(stdout);
       return OZ_FALSE;
+    }
     if ((i + 1 < high) && (i_arr[i].right >= i_arr[i + 1].left))
       return OZ_FALSE;
   }
-  for (i = 0; i < high - 1; i++) 
-    if (! ((i_arr[i].right + 1) < i_arr[i + 1].left)) return OZ_FALSE;
+  for (i = 0; i < high - 1; i++) {
+    if (! ((i_arr[i].right + 1) < i_arr[i + 1].left)) {
+      printf("!((i_arr[%d].right + 1) < i_arr[i%d+1].left)", i, i); fflush(stdout);
+      return OZ_FALSE;
+    }
+  }
   return OZ_TRUE;
 }
 
@@ -1113,6 +1121,9 @@ FDBitVector * OZ_FiniteDomainImpl::asBitVector(void) const
     bv->setEmpty();
     for (int i = 0; i < iv.high && iv.i_arr[i].left <= fd_bv_max_elem; i++) 
       bv->addFromTo(iv.i_arr[i].left, min(iv.i_arr[i].right, fd_bv_max_elem));
+
+    Assert(fd_bv_max_elem < iv.findMaxElem() 
+	   || bv->findSize() == iv.findSize() );
     return bv;
   }
 }
@@ -1435,10 +1446,12 @@ OZ_FiniteDomainImpl OZ_FiniteDomainImpl::operator ~ (void) const
 	y.min_elem = max_elem + 1;
 	y.max_elem = fd_sup;
 	y.size = y.findSize();
+	AssertFD(y.isConsistent());
       } else if (max_elem == fd_sup) {
 	y.max_elem = min_elem - 1;
 	y.min_elem = 0;
 	y.size = y.findSize();
+	AssertFD(y.isConsistent());
       } else {
 	FDIntervals * iv = newIntervals(2);
 	iv->init(fd_inf, min_elem - 1, max_elem + 1, fd_sup);
@@ -1446,6 +1459,7 @@ OZ_FiniteDomainImpl OZ_FiniteDomainImpl::operator ~ (void) const
 	y.min_elem = 0;
 	y.max_elem = fd_sup;
 	y.setType(iv);
+	AssertFD(y.isConsistent());
       }
     } else {      // reserve one interval too many !!!
       FDIntervals * iv;
@@ -1462,11 +1476,18 @@ OZ_FiniteDomainImpl OZ_FiniteDomainImpl::operator ~ (void) const
       y.min_elem = iv->findMinElem();
       y.max_elem = iv->findMaxElem();
       y.setType(iv);
+      
+      if (y.max_elem <= fd_bv_max_elem) {
+	y.setType(y.asBitVector());
+	Assert(y.size == y.get_bv()->findSize());
+      }
+
       if (y.isSingleInterval()) y.setType(fd_descr);
+      AssertFD(y.isConsistent());
     }
   }
 
-  // mm2: AssertFD(y.isConsistent());
+  AssertFD(y.isConsistent());
   DEBUG_FD_IR(OZ_FALSE, y.toString() << endl);
   
   return y;
