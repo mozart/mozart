@@ -1997,7 +1997,7 @@ OZ_Term OZ_makeException(OZ_Term cat,OZ_Term key,char*label,int arity,...)
 
 void OZ_pushCall(OZ_Thread thr,OZ_Term proc,OZ_Term *args,int arity)
 {
-  ((Thread *)thr)->pushCall(proc, args, arity);
+  ((Thread *)thr)->pushCall(proc, RefsArray::make(args, arity));
 }
 
 OZ_Thread OZ_newSuspendedThread()
@@ -2017,7 +2017,7 @@ OZ_Thread OZ_newSuspendedThread()
 OZ_Thread OZ_makeSuspendedThread(OZ_Term proc,OZ_Term *args,int arity)
 {
   Thread *thr=oz_newThreadSuspended();
-  thr->pushCall(proc,args,arity);
+  thr->pushCall(proc,RefsArray::make(args,arity));
   return (OZ_Thread) thr;
 }
 
@@ -2029,7 +2029,7 @@ OZ_Thread OZ_newRunnableThread()
 void OZ_makeRunnableThread(OZ_Term proc, OZ_Term *args,int arity)
 {
   Thread *thr = oz_newThread();
-  thr->pushCall(proc,args,arity);
+  thr->pushCall(proc,RefsArray::make(args,arity));
 }
 
 void OZ_unifyInThread(OZ_Term val1,OZ_Term val2)
@@ -2040,7 +2040,7 @@ void OZ_unifyInThread(OZ_Term val1,OZ_Term val2)
   case SUSPEND:
     {
       Thread *thr = oz_newThreadSuspended();
-      thr->pushCall(BI_Unify,val1,val2);
+      thr->pushCall(BI_Unify,RefsArray::make(val1,val2));
       ret = am.suspendOnVarList(thr);
       if (ret == PROCEED) oz_wakeupThread(thr);
       if (ret != SUSPEND) {
@@ -2058,7 +2058,7 @@ void OZ_unifyInThread(OZ_Term val1,OZ_Term val2)
   default:
     {
       Thread *thr = oz_newThread();
-      thr->pushCall(BI_Unify,val1,val2);
+      thr->pushCall(BI_Unify,RefsArray::make(val1,val2));
       break;
     }
   }

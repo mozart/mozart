@@ -252,18 +252,12 @@ oz_BFlag oz_isBetween(Board * to, Board * varHome) {
 
 inline
 void Board::inject(TaggedRef proc, int arity) {
+  Assert(arity == 0 || arity == 1);
   // thread creation for {proc root}
-  Thread *it = oz_newThreadInject(this);
-
-  if (arity == 1) {
-    RefsArray * args = RefsArray::allocate(1, NO);
-    args->setArg(0,getRootVar());
-
-    it->pushCall(proc, args);
-  } else {
-    Assert(arity == 0);
-    it->pushCall(proc, NULL, 0);
-  }
+  oz_newThreadInject(this)->pushCall(proc,
+                                     (arity == 1) ?
+                                     RefsArray::make(getRootVar()) :
+                                     NULL);
 }
 
 inline

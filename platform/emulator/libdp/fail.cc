@@ -101,7 +101,7 @@ OZ_BI_define(BIdefer,0,0)
 void addDeferElement(DeferElement* e){
   if(DeferdEvents==NULL){
     Thread *tt = oz_newThreadToplevel();
-    tt->pushCall(BI_defer);}
+    tt->pushCall(BI_defer,NULL);}
   e->next = DeferdEvents;
   DeferdEvents = e;
 }
@@ -287,14 +287,19 @@ void dealWithContinue(Tertiary* t,PendThread* pd){
   case Co_Cell:{
     switch(pd->exKind){
     case EXCHANGE:{
-      pd->thread->pushCall(BI_exchangeCell,makeTaggedConst(t),
-                                pd->nw, pd->old);
+      pd->thread->pushCall(BI_exchangeCell,
+                           RefsArray::make(makeTaggedConst(t),
+                                           pd->nw, pd->old));
       return;}
     case ASSIGN:{
-      pd->thread->pushCall(BI_assign,makeTaggedConst(t),pd->old,pd->nw);
+      pd->thread->pushCall(BI_assign,
+                           RefsArray::make(makeTaggedConst(t),
+                                           pd->old,pd->nw));
       return;}
     case AT:{
-      pd->thread->pushCall(BI_atRedo,makeTaggedConst(t),pd->old,pd->nw);
+      pd->thread->pushCall(BI_atRedo,
+                           RefsArray::make(makeTaggedConst(t),
+                                           pd->old,pd->nw));
       return;}
     default: Assert(0);}}
   case Co_Lock:{
@@ -303,7 +308,8 @@ void dealWithContinue(Tertiary* t,PendThread* pd){
     Assert(0);
     return;}
   case Co_Port:
-    pd->thread->pushCall(BI_send, makeTaggedConst(t), pd->old);
+    pd->thread->pushCall(BI_send,
+                         RefsArray::make(makeTaggedConst(t), pd->old));
   default:
     Assert(0);
   }}
@@ -407,13 +413,13 @@ if(!isFired()){
   else{
     lis=listifyWatcherCond(ec);}
   Thread *tt = oz_newThreadToplevel();
-  tt->pushCall(proc,t,lis);}
+  tt->pushCall(proc,RefsArray::make(t,lis));}
 }
 
 void Watcher::varInvokeInjector(TaggedRef t,EntityCond ec,TaggedRef Op){
   Assert(isInjector());
   Assert(oz_currentThread()!=NULL);
-  am.prepareCall(proc, t,listifyWatcherCond(ec),Op);
+  am.prepareCall(proc, RefsArray::make(t,listifyWatcherCond(ec),Op));
 }
 
 void Watcher::invokeInjector(Tertiary* t,EntityCond ec,
@@ -422,7 +428,7 @@ void Watcher::invokeInjector(Tertiary* t,EntityCond ec,
   Assert(!isFired());
   Assert(th!=NULL);
   TaggedRef listified=listifyWatcherCond(ec,t);
-  th->pushCall(proc,makeTaggedConst(t),listified,Op);
+  th->pushCall(proc,RefsArray::make(makeTaggedConst(t),listified,Op));
   ControlVarResume(controlvar);
 }
 
@@ -1382,6 +1388,6 @@ Bool tertiaryFail(Tertiary *t,EntityCond &ec,TaggedRef &proc){
 OZ_Return tertiaryFailHandle(Tertiary* c,TaggedRef proc,EntityCond ec,
                               TaggedRef op){
   Assert(oz_currentThread()!=NULL);
-  am.prepareCall(proc,makeTaggedConst(c),
-                 listifyWatcherCond(ec,c),op);
+  am.prepareCall(proc,RefsArray::make(makeTaggedConst(c),
+                                      listifyWatcherCond(ec,c),op));
   return BI_REPLACEBICALL;}

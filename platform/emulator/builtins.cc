@@ -154,7 +154,7 @@ OZ_BI_define(BIwaitStatus,2,1)
       OZ_Term status = _var_status(cv);                                                 \
       OZ_Term out = oz_newVariable();                                                   \
       OZ_out(0) = out;                                                                  \
-      am.prepareCall(BI_waitStatus,status,statusAtom,out);                                      \
+      am.prepareCall(BI_waitStatus,RefsArray::make(status,statusAtom,out));                                     \
       return BI_REPLACEBICALL;                                                          \
     }                                                                                   \
   default:                                                                              \
@@ -1027,10 +1027,7 @@ OZ_BI_define(BIthreadIs,1,1)
 static void threadRaise(Thread *th,OZ_Term E) {
   Assert(oz_currentThread() != th);
 
-  RefsArray * args = RefsArray::allocate(1, NO);
-  args->setArg(0,E);
-
-  th->pushCall(BI_raise, args);
+  th->pushCall(BI_raise, RefsArray::make(E));
 
   th->unsetStop();
 
@@ -2783,14 +2780,8 @@ void doPortSend(PortWithStream *port,TaggedRef val,Board * home) {
     OZ_Term oldFut = port->exchangeStream(newFut);
 
     Thread * t = oz_newThreadInject(home);
-    RefsArray * args2 = RefsArray::allocate(2, NO);
-    args2->setArg(0,val);
-    args2->setArg(1,oz_head(lt));
-    t->pushCall(BI_Unify,args2);
-    RefsArray * args1 = RefsArray::allocate(2, NO);
-    args1->setArg(0,oldFut);
-    args1->setArg(1,lt);
-    t->pushCall(BI_bindFuture,args1);
+    t->pushCall(BI_Unify,RefsArray::make(val,oz_head(lt)));
+    t->pushCall(BI_bindFuture,RefsArray::make(oldFut,lt));
   } else {
     OZ_Term newFut = oz_newFuture(oz_currentBoard());
     OZ_Term lt     = oz_cons(am.getCurrentOptVar(), newFut);
@@ -2831,12 +2822,7 @@ OZ_Return oz_sendPort(OZ_Term prt, OZ_Term val)
   if (port->isProxy()) {
     if (sc_required) {
       // Fork a thread to redo the send
-      RefsArray * args = RefsArray::allocate(2, NO);
-      args->setArg(0,prt);
-      args->setArg(1,val);
-
-      Thread * t = oz_newThreadInject(prt_home);
-      t->pushCall(BI_send,args);
+      oz_newThreadInject(prt_home)->pushCall(BI_send,RefsArray::make(prt,val));
       return PROCEED;
     } else {
       return (*portSend)(port,val);
@@ -3675,7 +3661,7 @@ OZ_BI_define(BIcomma,2,0)
   TaggedRef fb = tagged2ObjectClass(cl)->getFallbackApply();
   Assert(fb);
 
-  am.prepareCall(fb,OZ_in(0),OZ_in(1));
+  am.prepareCall(fb,RefsArray::make(OZ_in(0),OZ_in(1)));
   am.emptySuspendVarList();
   return BI_REPLACEBICALL;
 } OZ_BI_end
@@ -3700,7 +3686,7 @@ OZ_BI_define(BIsend,3,0)
 
   am.changeSelf(tagged2Object(obj));
 
-  am.prepareCall(fb,OZ_in(1),OZ_in(0));
+  am.prepareCall(fb,RefsArray::make(OZ_in(1),OZ_in(0)));
   am.emptySuspendVarList();
   return BI_REPLACEBICALL;
 } OZ_BI_end
@@ -3823,7 +3809,7 @@ OZ_BI_define(BINew,3,0)
 
   Assert(fb);
 
-  am.prepareCall(fb,OZ_in(0),OZ_in(1),OZ_in(2));
+  am.prepareCall(fb,RefsArray::make(OZ_in(0),OZ_in(1),OZ_in(2)));
   am.emptySuspendVarList();
   return BI_REPLACEBICALL;
 } OZ_BI_end

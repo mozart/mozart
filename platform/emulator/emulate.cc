@@ -266,7 +266,7 @@ OZ_Return oz_bi_wrapper(Builtin *bi) {
         }
         case SUSPEND:
           am.emptySuspendVarList();
-          am.prepareCall(BI_Unify,XREGS_IN[i],XREGS_SAVE[i]);
+          am.prepareCall(BI_Unify,RefsArray::make(XREGS_IN[i],XREGS_SAVE[i]));
           ret1=BI_REPLACEBICALL;
           break;
         case BI_REPLACEBICALL:
@@ -2805,7 +2805,7 @@ Case(GETVOID)
          {
            if (!isTailCall) PushCont(PC);
 
-           CTT->pushCall(makeTaggedConst(bi),XREGS,predArity);
+           CTT->pushCall(makeTaggedConst(bi),RefsArray::make(XREGS,predArity));
            SUSPENDONVARLIST;
          }
 
@@ -3040,7 +3040,7 @@ Case(GETVOID)
       DEREF(taggedPredicate,predPtr);
       if (!oz_isProcedure(taggedPredicate) && !oz_isObject(taggedPredicate)) {
         if (oz_isVar(taggedPredicate)) {
-          CTS->pushCallNoCopy(makeTaggedRef(predPtr),args);
+          CTS->pushCall(makeTaggedRef(predPtr),args);
           tmpRet = oz_var_addSusp(predPtr,CTT);
           MAGIC_RET;
         }
@@ -3362,7 +3362,7 @@ Case(GETVOID)
     }
 
     if (e->defaultExceptionHdl) {
-      ct->pushCall(e->defaultExceptionHdl,e->exception.value);
+      ct->pushCall(e->defaultExceptionHdl,RefsArray::make(e->exception.value));
     } else {
       prefixError();
       fprintf(stderr,

@@ -405,8 +405,6 @@ public:
     addSuspendVarList(makeTaggedRef(t));
   }
   OZ_Return suspendOnVarList(Thread *thr);
-  void prepareCall(TaggedRef pred, TaggedRef arg0=0, TaggedRef arg1=0,
-                   TaggedRef arg2=0, TaggedRef arg3=0, TaggedRef arg4=0);
 
   void prepareCall(TaggedRef pred, RefsArray * args);
 

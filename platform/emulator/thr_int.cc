@@ -82,7 +82,7 @@ Thread * oz_newThreadSuspended(int prio) {
 
 Thread * oz_newThreadPropagate(Board *bb) {
   Thread *tt = _newThread(DEFAULT_PRIORITY,bb);
-  tt->pushCall(BI_skip,0,0);
+  tt->pushCall(BI_skip,NULL);
   return tt;
 }
 

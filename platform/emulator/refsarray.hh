@@ -99,6 +99,38 @@ public:
     return ra;
   }
 
+  static RefsArray * make(TaggedRef a0) {
+    RefsArray * ra = allocate(1,NO);
+    ra->_a[0] = a0;
+    return ra;
+  }
+
+  static RefsArray * make(TaggedRef a0, TaggedRef a1) {
+    RefsArray * ra = allocate(2,NO);
+    ra->_a[0] = a0;
+    ra->_a[1] = a1;
+    return ra;
+  }
+
+  static RefsArray * make(TaggedRef a0, TaggedRef a1, TaggedRef a2) {
+    RefsArray * ra = allocate(3,NO);
+    ra->_a[0] = a0;
+    ra->_a[1] = a1;
+    ra->_a[2] = a2;
+    return ra;
+  }
+
+
+  static RefsArray * make(TaggedRef * x, int n) {
+    if (n>0) {
+      RefsArray * c = allocate(n,NO);
+      (void) memcpy(&(c->_a[0]),x,n*sizeof(TaggedRef));
+      return c;
+    } else {
+      return (RefsArray *) NULL;
+    }
+  }
+
   void dispose(int n) {
     oz_freeListDispose(this, (sizeof(RefsArray) +
                               (n-1)*sizeof(TaggedRef)));
@@ -126,20 +158,6 @@ public:
 
   TaggedRef * getArgsRef(void) {
     return &(_a[0]);
-  }
-
-  static RefsArray * copy(TaggedRef * x, int n) {
-    RefsArray * c = allocate(n,NO);
-    for (int i=n; i--; )
-      c->_a[i] = x[i];
-    return c;
-  }
-
-  static RefsArray * copy(RefsArray * x, int n) {
-    RefsArray * c = allocate(n,NO);
-    for (int i=n; i--; )
-      c->_a[i] = x->_a[i];
-    return c;
   }
 
 };

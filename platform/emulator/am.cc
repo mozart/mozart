@@ -358,13 +358,13 @@ void AM::init(int argc,char **argv)
                     oz_mklist(oz_pair2(AtomBoot,   boot_module)));
 
     // Task3: execute functor's code
-    tt->pushCall(procedure,boot_import,expo);
+    tt->pushCall(procedure,RefsArray::make(boot_import,expo));
 
     // Task2: lookup functor's code
-    tt->pushCall(BI_dot,functor,AtomApply,procedure);
+    tt->pushCall(BI_dot,RefsArray::make(functor,AtomApply,procedure));
 
     // Task1: load functor
-    tt->pushCall(BI_load,oz_atom(initFile),functor);
+    tt->pushCall(BI_load,RefsArray::make(oz_atom(initFile),functor));
   }
 
 #ifdef DEBUG_CHECK
@@ -985,37 +985,15 @@ void AM::prepareCall(TaggedRef pred, RefsArray * args)
   *aux = new CallList(pred,args);
 }
 
-
-void AM::prepareCall(TaggedRef pred, TaggedRef arg0, TaggedRef arg1,
-                     TaggedRef arg2, TaggedRef arg3, TaggedRef arg4)
-{
-  int argno = 0;
-  if (arg0) argno++;
-  if (arg1) argno++;
-  if (arg2) argno++;
-  if (arg3) argno++;
-  if (arg4) argno++;
-
-  RefsArray * a = RefsArray::allocate(argno,NO);
-
-  if (arg0) a->setArg(0,arg0);
-  if (arg1) a->setArg(1,arg1);
-  if (arg2) a->setArg(2,arg2);
-  if (arg3) a->setArg(3,arg3);
-  if (arg4) a->setArg(4,arg4);
-  prepareCall(pred,a);
-}
-
-
 void AM::pushPreparedCalls(Thread *thr)
 {
   Assert(preparedCalls != NULL);
   while(preparedCalls) {
     CallList *aux = preparedCalls;
     if (thr) {
-      thr->pushCallNoCopy(aux->proc,aux->args);
+      thr->pushCall(aux->proc,aux->args);
     } else {
-      cachedStack->pushCallNoCopy(aux->proc,aux->args);
+      cachedStack->pushCall(aux->proc,aux->args);
     }
     preparedCalls = aux->next;
     aux->dispose();

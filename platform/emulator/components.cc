@@ -1065,7 +1065,7 @@ OZ_BI_define(BIload,2,0)
   OZ_Term loader = registry_get(AtomLoad);
   if (loader==0)
     loader = BI_url_load;
-  am.prepareCall(loader,OZ_in(0),OZ_in(1));
+  am.prepareCall(loader,RefsArray::make(OZ_in(0),OZ_in(1)));
   return BI_REPLACEBICALL;
 } OZ_BI_end
 
