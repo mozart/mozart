@@ -72,8 +72,9 @@ support for sockets and a C++ interface for dynamically-linked
 libraries, a distributed garbage collector, infinite precision
 arithmetic, and support for stand-alone applications.  Furthermore,
 there are extensive libraries of constraints (including support for
-scheduling) and search engines including parallel engines.  Performance is competitive with commercial Prolog and Lisp systems and
-is better than emulated Java.
+scheduling) and search engines including parallel engines.  Performance
+is competitive with commercial Prolog and Lisp systems and is better
+than emulated Java.
 
 It is interesting to compare Mozart with JDK 1.2, the current Java
 release.  Mozart distinguishes itself from Java in six ways.  First,
