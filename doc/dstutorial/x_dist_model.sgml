@@ -287,6 +287,7 @@ Oz does not need an explicit
 monitor or signal concept--rather,
 logic variables let threads
 wait for data availability,
+<index id=idx.dataavailability/thread<and>data availability/
 which is 90% of the needs of concurrency.
 A further 9% is provided by reentrant locking,
 which is implemented by logic variables and cells.
@@ -298,6 +299,8 @@ the above numbers too seriously.
 </LIST>
 
 <ITEM> <EM>Future</EM>:
+<index id=idx.future/future/
+<index id=idx.logicvariablereadonly/logic variable<and>read-only (future)/
 A future is a read-only logic variable,
 i.e., it can only be <em>read</em>, not bound.
 Attempting to bind a future will block.
@@ -308,6 +311,7 @@ Futures are also used to distribute constrained variables
 (see <ptr to="sited.entities">).
 
 <ITEM> <EM>Stream</EM>:
+<index id=idx.stream/stream/
 A stream is an asynchronous one-to-many communication channel.
 In fact,
 a stream is just a list whose last element is a logic variable
@@ -319,7 +323,7 @@ Bindings from the same thread appear
 in the stream in the same order
 that they occur in the thread.
 
-<P>A port together with a stream implement an
+<P>A port together with a stream efficiently implement an
 asynchronous many-to-many channel
 that respects the order of messages
 sent from the same thread.
@@ -341,6 +345,14 @@ can exist on a site:
 <LIST>
 
 <ITEM> <EM>Records and numbers</EM>:
+<index id=idx.distributedsemanticsrecord/distributed semantics<and>record/
+<index id=idx.record/record/
+<index id=idx.distributedsemanticsnumber/distributed semantics<and>number/
+<index id=idx.number/number/
+<index id=idx.distributedsemanticslist/distributed semantics<and>list/
+<index id=idx.list/list/
+<index id=idx.distributedsemanticsstring/distributed semantics<and>string/
+<index id=idx.string/string/
 This includes lists and strings, which
 are just particular kinds of records.
 Records and numbers are copied eagerly across the network,
@@ -362,6 +374,7 @@ or a list.
 
 <ITEM> <EM>Procedures, functions, classes, functors,
 chunks, atoms, and names</EM>:
+<index id=idx.distributedsemanticsprocedure/distributed semantics<and>procedure/
 These entities are copied eagerly across the
 network, but can only exist once on a given site.
 For example, an object's class contains the code
