@@ -37,6 +37,7 @@
 <template name="build.tables">
   <call-template name="build.table.id"/>
   <call-template name="build.table.tabspec"/>
+  <call-template name="build.table.picwid"/>
 </template>
 
 <!-- build table mapping id to node -->
@@ -53,6 +54,14 @@
 <template name="build.table.tabspec">
   <for-each select="/BOOK/FRONT/META[@NAME='LATEX.TABLE.SPEC']">
     <if test="meta:latexTableSpecPut((string(@ARG1)),(string(@ARG2)))"/>
+  </for-each>
+</template>
+
+<!-- build table mapping id to requested picture width -->
+
+<template name="build.table.picwid">
+  <for-each select="/BOOK/FRONT/META[@NAME='LATEX.PICTURE.WIDTH']">
+    <if test="meta:pictureWidthPut(string(@ARG1),string(@ARG2))"/>
   </for-each>
 </template>
 
@@ -105,6 +114,7 @@
   <txt:usemap>\begin{document}
 </txt:usemap>
   <apply-templates select="BODY"/>
+  <call-template name="answers.to.exercises"/>
   <apply-templates select="BACK"/>
   <txt:usemap>\end{document}
 </txt:usemap>
@@ -119,13 +129,18 @@
     <txt:usemap>\input{<value-of select="@VALUE"/>}
 </txt:usemap>
   </for-each>
-  <txt:usemap>\title{</txt:usemap>
-  <apply-templates select="TITLE" mode="ok"/>
-  <txt:usemap>}
-\author{</txt:usemap>
-  <apply-templates select="AUTHOR|AUTHOR.EXTERN"/>
-  <txt:usemap>}
+  <if test="TITLE">
+    <txt:usemap>\title{</txt:usemap>
+    <apply-templates select="TITLE" mode="ok"/>
+    <txt:usemap>}
 </txt:usemap>
+  </if>
+  <if test="AUTHOR|AUTHOR.EXTERN">
+    <txt:usemap>\author{</txt:usemap>
+    <apply-templates select="AUTHOR|AUTHOR.EXTERN"/>
+    <txt:usemap>}
+</txt:usemap>
+  </if>
 </template>
 
 <!-- ignore FRONT otherwise -->
@@ -138,7 +153,9 @@
         SYNOPSIS/P.SILENT | TD/P.SILENT | TH/P.SILENT |
         DEF | SPAN | FIGURE/CAPTION/P.SILENT | GRAMMAR.HEAD |
         CHUNK/TITLE | CHUNK/TITLE/P.SILENT | CHUNK.SILENT |
-        NAME | NOTE/P.SILENT">
+        NAME | NOTE/P.SILENT | EXERCISE/P.SILENT | ANSWER/P.SILENT |
+        REWRITE.FROM/P.SILENT | REWRITE.TO/P.SILENT |
+        REWRITE.CONDITION/P.SILENT">
   <apply-templates/>
 </template>
 
@@ -167,13 +184,13 @@
      the period by a space -->
 
 <template match="AUTHOR.EXTERN">
-  <if test="not(position()=1)"><txt:usemap>\\
+  <if test="not(position()=1)"><txt:usemap>\EOLN
 </txt:usemap></if>
   <value-of select="translate((string(@KEY)),'.',' ')"/>
 </template>
 
 <template match="AUTHOR">
-  <if test="not(position()=1)"><txt:usemap>\\
+  <if test="not(position()=1)"><txt:usemap>\EOLN
 </txt:usemap></if>
   <apply-templates/>
 </template>
@@ -211,7 +228,17 @@
   <txt:usemap><text>
 
 </text></txt:usemap>
+  <call-template name="maybe.label"/>
   <apply-templates/>
+</template>
+
+<template name="maybe.label">
+  <if test="@ID">
+    <txt:usemap>\label{</txt:usemap>
+    <value-of select="@ID"/>
+    <txt:usemap>}\ignorespaces
+</txt:usemap>
+  </if>
 </template>
 
 <!-- LIST -->
@@ -222,6 +249,7 @@
   <for-each select="ITEM">
     <txt:usemap><text>
 \item{}</text></txt:usemap>
+    <call-template name="maybe.label"/>
     <apply-templates/>
   </for-each>
   <txt:usemap><text>
@@ -236,6 +264,7 @@
   <for-each select="ITEM">
     <txt:usemap><text>
 \item{}</text></txt:usemap>
+    <call-template name="maybe.label"/>
     <apply-templates/>
   </for-each>
   <txt:usemap><text>
@@ -258,6 +287,7 @@
 
 <template mode="list.enum.entry" match="ENTRY">
   <txt:usemap>\item{}</txt:usemap>
+  <call-template name="maybe.label"/>
   <apply-templates/>
 </template>
 
@@ -383,9 +413,11 @@
 <!-- miscellaneous commands -->
 
 <template match="FILE | SAMP | EM | KBD | KEY">
+  <call-template name="maybe.display.begin"/>
   <txt:usemap>\<value-of select="local-part(.)"/>{</txt:usemap>
   <apply-templates/>
   <txt:usemap>}</txt:usemap>
+  <call-template name="maybe.display.end"/>
 </template>
 
 <template match="Q">`<apply-templates/>'</template>
@@ -501,7 +533,7 @@ A Tutorial Introduction</when>
   <call-template name="ref.to.id"/>
 </template>
 
-<template mode="ptr.ref" match="PARA|ENTRY">
+<template mode="ptr.ref" match="PARA|ENTRY|P|CHUNK">
   <call-template name="pageref.to.id"/>
 </template>
 
@@ -514,6 +546,12 @@ A Tutorial Introduction</when>
   <txt:usemap>\cite{</txt:usemap>
   <value-of select="@KEY"/>
   <txt:usemap>}</txt:usemap>
+</template>
+
+<template mode="ptr.ref" match="ITEM">
+  <txt:usemap name="text">item</txt:usemap>
+  <call-template name="ref.to.id"/>
+  <call-template name="pageref.to.id"/>
 </template>
 
 <template mode="ptr.ref" match="*" priority="-1.0">
@@ -551,7 +589,7 @@ A Tutorial Introduction</when>
 <!-- format tables -->
 
 <template match="TABLE">
-  <call-template name="maybe.display.begin"/>
+  <call-template name="maybe.display.begin.table"/>
   <txt:usemap>\begin{tabular}{</txt:usemap>
   <choose>
     <when test="@ID and meta:latexTableSpecExists((string(@ID)))">
@@ -566,7 +604,19 @@ A Tutorial Introduction</when>
   <txt:usemap>}</txt:usemap>
   <apply-templates/>
   <txt:usemap>\end{tabular}</txt:usemap>
-  <call-template name="maybe.display.end"/>
+  <call-template name="maybe.display.end.table"/>
+</template>
+
+<template name="maybe.display.begin.table">
+  <if test="not(last()=1 and parent::P.SILENT/parent::TD)">
+    <call-template name="maybe.display.begin"/>
+  </if>
+</template>
+
+<template name="maybe.display.end.table">
+  <if test="not(last()=1 and parent::P.SILENT/parent::TD)">
+    <call-template name="maybe.display.end"/>
+  </if>
 </template>
 
 <template name="maybe.display.begin">
@@ -584,7 +634,7 @@ A Tutorial Introduction</when>
 <template match="TR">
   <apply-templates/>
   <if test="not(position()=last())">
-    <txt:usemap>\\
+    <txt:usemap>\EOLN
 </txt:usemap>
   </if>
 </template>
@@ -644,15 +694,10 @@ A Tutorial Introduction</when>
       <txt:usemap><value-of select="PICTURE[@TYPE='LATEX']"/></txt:usemap>
     </when>
     <when test="PICTURE.EXTERN[@TYPE='PS']">
-      <txt:usemap>\PICEXT{</txt:usemap>
-      <value-of select="PICTURE.EXTERN[@TYPE='PS']/@TO"/>
-      <txt:usemap>}</txt:usemap>
+      <apply-templates select="PICTURE.EXTERN[@TYPE='PS'][1]" mode="pic.choice"/>
     </when>
     <when test="PICTURE.EXTERN[@TYPE='GIF']">
-      <!-- for foo.gif, we will create foo.gif.ps -->
-      <txt:usemap>\PICEXT{</txt:usemap>
-      <value-of select="PICTURE.EXTERN[@TYPE='GIF']/@TO"/>
-      <txt:usemap>.ps}</txt:usemap>
+      <apply-templates select="PICTURE.EXTERN[@TYPE='GIF'][1]" mode="pic.choice"/>
     </when>
     <otherwise>
       <if test="msg:saynl('UNMATCHED PICTURE')"/>
@@ -660,6 +705,37 @@ A Tutorial Introduction</when>
     </otherwise>
   </choose>
   <call-template name="maybe.display.end"/>
+</template>
+
+<template match="PICTURE.EXTERN[@TYPE='PS']" mode="pic.choice">
+  <txt:usemap>\PICEXT</txt:usemap>
+  <if test="@ID and meta:pictureWidthExists(string(@ID))">
+    <txt:usemap>[<value-of select="meta:pictureWidthGet(string(@ID))"/>]</txt:usemap>
+  </if>
+  <txt:usemap>{</txt:usemap>
+  <value-of select="@TO"/>
+  <txt:usemap>}</txt:usemap>
+</template>
+
+<template match="PICTURE.EXTERN[@TYPE='GIF']" mode="pic.choice">
+  <!-- for foo.gif, we will create foo.gif.ps -->
+  <txt:usemap>\PICEXTGIF</txt:usemap>
+  <if test="@ID and meta:pictureWidthExists(string(@ID))">
+    <txt:usemap>[<value-of select="meta:pictureWidthGet(string(@ID))"/>]</txt:usemap>
+  </if>
+  <txt:usemap>{</txt:usemap>
+  <value-of select="@TO"/>
+  <txt:usemap>}</txt:usemap>
+</template>
+
+<template match="PICTURE.EXTERN[@DISPLAY='INLINE']|TD/P.SILENT/PICTURE.EXTERN" priority="2.0">
+  <txt:usemap>\PICEXT</txt:usemap>
+  <if test="@ID and meta:pictureWidthExists(string(@ID))">
+    <txt:usemap>[<value-of select="meta:pictureWidthGet(string(@ID))"/>]</txt:usemap>
+  </if>
+  <txt:usemap>{</txt:usemap>
+  <value-of select="@TO"/>
+  <txt:usemap>}</txt:usemap>
 </template>
 
 <template match="PICTURE[@TYPE='LATEX']">
@@ -676,13 +752,17 @@ A Tutorial Introduction</when>
       <value-of select="$to"/>
       <txt:usemap>}</txt:usemap>
     </when>
-    <when test="$type='GIF'">
-      <txt:usemap>\PICEXTFULL{</txt:usemap>
+    <when test="$type='GIF' or $type='PS'">
+      <txt:usemap>\PICEXTFULL</txt:usemap>
+      <if test="@ID and meta:pictureWidthExists(string(@ID))">
+        <txt:usemap>[<value-of select="meta:pictureWidthGet(string(@ID))"/>]</txt:usemap>
+      </if>
+      <txt:usemap>{</txt:usemap>
       <value-of select="$to"/>
       <txt:usemap>}</txt:usemap>
     </when>
     <otherwise>
-      <if test="msg:say('UNMATCHED PICTURE.EXTERN: ') and msg:saynl($to)"/>
+      <if test="msg:say('UNMATCHED PICTURE.EXTERN: ') and msg:saynl(string($to))"/>
       <text>!!!UNMATCHED PICTURE.EXTERN!!!</text>
       <value-of select="$to"/>
       <text>!!!</text>
@@ -704,7 +784,7 @@ A Tutorial Introduction</when>
 </template>
 
 <template match="GRAMMAR/GRAMMAR.RULE" priority="2.0">
-  <if test="position()>1"><txt:usemap>\\
+  <if test="position()>1"><txt:usemap>\EOLN
 </txt:usemap></if>
   <apply-templates/>
 </template>
@@ -724,7 +804,7 @@ A Tutorial Introduction</when>
   <if test="not(child::GRAMMAR.NOTE)">
     <txt:usemap>&amp;</txt:usemap>
   </if>
-  <if test="not(position()=last())"><txt:usemap>\\
+  <if test="not(position()=last())"><txt:usemap>\EOLN
 </txt:usemap></if>
 </template>
 
@@ -762,6 +842,7 @@ A Tutorial Introduction</when>
   <txt:usemap>\begin{CHUNK}{</txt:usemap>
   <apply-templates select="TITLE"/>
   <txt:usemap>}</txt:usemap>
+  <call-template name="maybe.label"/>
   <txt:usemap name="code">
     <apply-templates select="CHUNK.SILENT"/>
   </txt:usemap>
@@ -789,6 +870,60 @@ A Tutorial Introduction</when>
   <apply-templates/>
 </template>
 
+<template match="NOTE.GUI">
+  <txt:usemap>\NOTEGUI{</txt:usemap>
+  <apply-templates/>
+  <txt:usemap>}{</txt:usemap>
+  <choose>
+    <when test="@ICON='note-gui-l1.gif'">mouse-L1</when>
+    <when test="@ICON='note-gui-l2.gif'">mouse-L2</when>
+    <when test="@ICON='note-gui-m1.gif'">mouse-M1</when>
+    <when test="@ICON='note-gui-m2.gif'">mouse-M2</when>
+    <when test="@ICON='note-gui-r1.gif'">mouse-R1</when>
+    <when test="@ICON='note-gui-r2.gif'">mouse-R2</when>
+    <otherwise>
+      <if test="msg:say('UNKNOWN NOTE.GUI ICON: ') and msg:saynl(string(@ICON))"/>
+      <text>!!!UNKNOWN NOTE.GUI ICON!!!</text>
+      <value-of select="@ICON"/>
+      <text>!!!</text>
+    </otherwise>
+  </choose>
+  <txt:usemap>}</txt:usemap>
+</template>
+
+<!-- exercises -->
+
+<template match="EXERCISE[@ID]">
+  <txt:usemap>\begin{EXERCISE}{</txt:usemap>
+  <value-of select="@ID"/>
+  <txt:usemap>}</txt:usemap>
+  <apply-templates/>
+  <txt:usemap>\end{EXERCISE}
+</txt:usemap>
+</template>
+
+<!-- answer to exercises -->
+
+<template match="ANSWER"/>
+
+<template name="answers.to.exercises">
+  <if test="//ANSWER">
+    <txt:usemap><text>
+\APPENDIX{Answers To Exercises}
+</text></txt:usemap>
+    <apply-templates select="//ANSWER" mode="answer"/>
+  </if>
+</template>
+
+<template match="ANSWER" mode="answer">
+  <txt:usemap>\begin{ANSWER}{</txt:usemap>
+    <value-of select="@TO"/>
+    <txt:usemap>}</txt:usemap>
+    <apply-templates/>
+    <txt:usemap>\end{ANSWER}
+</txt:usemap>
+</template>
+
 <!-- back matter -->
 
 <template match="BACK">
@@ -799,6 +934,46 @@ A Tutorial Introduction</when>
     <value-of select="substring-before((string(@TO)),'.bib')"/>
     <txt:usemap>}</txt:usemap>
   </for-each>
+</template>
+
+<!-- rewrite elements -->
+
+<template match="REWRITE">
+  <txt:usemap>\begin{REWRITE}</txt:usemap>
+  <for-each select="VAR">
+    <txt:usemap>\REWRITEVAR{</txt:usemap>
+    <apply-templates/>
+    <txt:usemap>}
+</txt:usemap>
+  </for-each>
+  <for-each select="REWRITE.FROM[1]">
+    <apply-templates/>
+  </for-each>
+  <for-each select="REWRITE.TO[1]">
+    <apply-templates/>
+  </for-each>
+  <for-each select="REWRITE.CONDITION[1]">
+    <apply-templates/>
+  </for-each>
+  <txt:usemap>\end{REWRITE}</txt:usemap>
+</template>
+
+<template match="REWRITE.FROM">
+  <txt:usemap>\REWRITEFROM{</txt:usemap>
+  <apply-templates/>
+  <txt:usemap>}</txt:usemap>
+</template>
+
+<template match="REWRITE.TO">
+  <txt:usemap>\REWRITETO{</txt:usemap>
+  <apply-templates/>
+  <txt:usemap>}</txt:usemap>
+</template>
+
+<template match="REWRITE.CONDITION">
+  <txt:usemap>\REWRITECONDITION{</txt:usemap>
+  <apply-templates/>
+  <txt:usemap>}</txt:usemap>
 </template>
 
 </stylesheet>
