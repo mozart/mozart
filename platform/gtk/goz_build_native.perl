@@ -303,11 +303,16 @@ sub write_oz_bi_definition {
   my $arity_out         = 0;
   my $arity_special_out = 0; # This is the out arity without the normal C return value
 
+  my $out_flag = 0; # for testing if an IN value follows an OUT value
   foreach my $arg (@$in) {
     if (is_return_value($arg)) {
-      $arity_special_out += 1;
+        $arity_special_out += 1;
+        $out_flag = 1 unless $out_flag;
     } else {
-      $arity_in += 1;
+        error("error while processing $meth:\n"
+            . "IN argument following OUT argument. The BI API does not allow this.\n")
+                if $out_flag;
+        $arity_in += 1;
     }
   }
   $arity_out = $arity_special_out;
@@ -461,6 +466,5 @@ my ($opt_cwrappers,
 usage() unless @input != 0;
 usage() unless $opt_cwrappers | $opt_interface;
 
-#init_enumerations()       if $opt_cwrappers;
 gen_c_wrappers   (@input) if $opt_cwrappers;
 gen_oz_interface (@input) if $opt_interface;
