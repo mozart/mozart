@@ -1978,19 +1978,7 @@ Suspendable * Suspendable::_cacSuspendableInline(void) {
 
     to->setBoardInternal(getBoardInternal()->_cacBoard());
 
-  } else if (isThread()) {
 
-    to = (Suspendable *) _cacReallocStatic(this, sizeof(Thread));
-
-    Board * nb = getBoardInternal()->cacGetNotificationBoard()->_cacBoard();
-
-    ((Thread *) to)->setTaskStack(new TaskStack(ozconf.stackMinSize));
-    
-    nb->incSuspCount();
-    
-    ((Thread *) to)->pushCall(BI_skip,0,0);
-
-    to->setBoardInternal(nb);
   } else {
     return NULL;
   }

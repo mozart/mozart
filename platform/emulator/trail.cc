@@ -161,7 +161,7 @@ TaggedRef Trail::unwind(Board * b) {
 
     Thread * t = (Thread *) NULL;
 
-    Bool   hasNoRunnable = (b->getThreads() == 0);
+    int hasNoRunnable = !b->hasRunnableThreads();
 
     do {
 
