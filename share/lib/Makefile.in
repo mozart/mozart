@@ -25,7 +25,16 @@ ENV2TYPE        = @ENV2TYPE@
 
 OZFLAGS         =
 OZBATCH         = @OZBATCH@
-OZBATCH1        = OZPATH=.:compiler:ozcar:$(SRCDIR) OZ_PI=1 $(OZBATCH)
+OZMAINIT        = Init.ozc
+export OZMAINIT
+OZPATH          = .:compiler:ozcar:$(SRCDIR)
+export OZPATH
+OZ_PI           = 1
+export OZ_PI
+OZ_LOAD         = root=.:prefix=http\://www.ps.uni-sb.de/ozhome/lib/=./:prefix=http\://www.ps.uni-sb.de/ozhome/lib/=$(OZLIB)/:root=$(OZLIB)
+export OZ_LOAD
+#OZBATCH1       = OZPATH=.:compiler:ozcar:$(SRCDIR) OZ_PI=1 $(OZBATCH)
+OZBATCH1        = $(OZBATCH)
 COMPILE         = $(OZBATCH1) $(OZFLAGS) --include=$(SRCDIR)/DumpIntro.oz -c
 EXEC            = $(OZBATCH1) $(OZFLAGS)
 EXECWITHSTD     = $(OZBATCH1) $(OZFLAGS) --include=$(SRCDIR)/DumpIntro.oz
@@ -193,7 +202,7 @@ Base.ozc: Standard.ozc
         @$(ECHO) > /dev/null
 
 Standard.ozc: $(STANDARDSRC) $(SRCDIR)/Base.env $(SRCDIR)/Standard.env
-        $(EXEC) $(SRCDIR)/DumpInitial.oz
+        OZMAINIT="" $(EXEC) $(SRCDIR)/DumpInitial.oz
 
 install: all \
         $(OZLIB) $(OZLIBDIRS) $(LIBFILES) $(LIBCOMPONENTS) \
@@ -248,27 +257,28 @@ $(OZBIN)/ozbatch: ozbatch
         $(COMPILE) $*
 
 Init.ozc: $(DUMPINTRO) $(INITSRC)
+        OZMAINIT="" $(COMPILE) Init.oz
 
-OPI.ozc: $(DUMPINTRO) $(SRCDIR)/OPI.oz SP.ozc OP.ozc AP.ozc \
-        $(SRCDIR)/Compiler.env
+OPI.ozc: $(DUMPINTRO) $(SRCDIR)/OPI.oz Init.ozc SP.ozc OP.ozc AP.ozc \
+        $(SRCDIR)/Compiler.env $(TYCS)
 
-SP.ozc: $(DUMPINTRO) $(SPSRC) $(SRCDIR)/SP.env
+SP.ozc: $(DUMPINTRO) $(SPSRC) $(SRCDIR)/SP.env Init.ozc
 
-OP.ozc: $(DUMPINTRO) $(OPSRC) $(SRCDIR)/SP.env $(SRCDIR)/OP.env
+OP.ozc: $(DUMPINTRO) $(OPSRC) $(SRCDIR)/SP.env $(SRCDIR)/OP.env Init.ozc
 
 AP.ozc: $(DUMPINTRO) $(APSRC) $(SRCDIR)/SP.env $(SRCDIR)/OP.env \
-        $(SRCDIR)/AP.env
+        $(SRCDIR)/AP.env Init.ozc
 
-CP.ozc: $(DUMPINTRO) $(CPSRC) $(SRCDIR)/SP.env $(SRCDIR)/CP.env
+CP.ozc: $(DUMPINTRO) $(CPSRC) $(SRCDIR)/SP.env $(SRCDIR)/CP.env Init.ozc
 
 WP.ozc: $(DUMPINTRO) $(WPSRC) $(SRCDIR)/SP.env $(SRCDIR)/OP.env \
-        $(SRCDIR)/WP.env
+        $(SRCDIR)/WP.env Init.ozc
 
 DP.ozc: $(DUMPINTRO) $(DPSRC) $(SRCDIR)/SP.env $(SRCDIR)/OP.env \
-        $(SRCDIR)/AP.env $(SRCDIR)/WP.env $(SRCDIR)/DP.env
+        $(SRCDIR)/AP.env $(SRCDIR)/WP.env $(SRCDIR)/DP.env Init.ozc
 
 Compiler.ozc: $(DUMPINTRO) $(COMPILERSRC) $(SRCDIR)/SP.env \
-        $(SRCDIR)/CP.env $(SRCDIR)/Compiler.env
+        $(SRCDIR)/CP.env $(SRCDIR)/Compiler.env Init.ozc
 
 compiler:
         $(INSTALLDIR) compiler
@@ -285,23 +295,23 @@ compiler/Opcodes.oz: compiler $(SRCDIR)/compiler/Opcodes.m4oz \
 
 CompilerPanel.ozc: $(DUMPINTRO) $(COMPILERPANELSRC) $(SRCDIR)/SP.env \
         $(SRCDIR)/OP.env $(SRCDIR)/WP.env $(SRCDIR)/Compiler.env \
-        $(SRCDIR)/Browser.env $(SRCDIR)/CompilerPanel.env
+        $(SRCDIR)/Browser.env $(SRCDIR)/CompilerPanel.env Init.ozc
 
 Panel.ozc: $(DUMPINTRO) $(PANELSRC) $(SRCDIR)/SP.env $(SRCDIR)/OP.env \
-        $(SRCDIR)/WP.env $(SRCDIR)/Panel.env
+        $(SRCDIR)/WP.env $(SRCDIR)/Panel.env Init.ozc
 
 Browser.ozc: $(DUMPINTRO) $(BROWSERSRC) $(SRCDIR)/SP.env $(SRCDIR)/CP.env \
-        $(SRCDIR)/WP.env $(SRCDIR)/Browser.env
+        $(SRCDIR)/WP.env $(SRCDIR)/Browser.env Init.ozc
 
 Explorer.ozc: $(DUMPINTRO) $(EXPLORERSRC) $(SRCDIR)/SP.env $(SRCDIR)/WP.env \
-        $(SRCDIR)/Browser.env $(SRCDIR)/Explorer.env
+        $(SRCDIR)/Browser.env $(SRCDIR)/Explorer.env Init.ozc
 
 Emacs.ozc: $(DUMPINTRO) $(EMACSSRC) $(SRCDIR)/SP.env $(SRCDIR)/OP.env \
-        $(SRCDIR)/Emacs.env
+        $(SRCDIR)/Emacs.env Init.ozc
 
 Ozcar.ozc: $(DUMPINTRO) $(OZCARSRC) $(SRCDIR)/SP.env $(SRCDIR)/WP.env \
         $(SRCDIR)/Browser.env $(SRCDIR)/Emacs.env $(SRCDIR)/Compiler.env \
-        $(SRCDIR)/Ozcar.env
+        $(SRCDIR)/Ozcar.env Init.ozc
 
 ozcar:
         $(INSTALLDIR) ozcar
@@ -311,7 +321,7 @@ ozcar/version.oz: ozcar $(OZCARSRCNOVER)
 
 Profiler.ozc: $(DUMPINTRO) $(PROFILERSRC) $(SRCDIR)/SP.env $(SRCDIR)/OP.env \
         $(SRCDIR)/WP.env $(SRCDIR)/Browser.env $(SRCDIR)/Emacs.env \
-        $(SRCDIR)/Compiler.env $(SRCDIR)/Profiler.env
+        $(SRCDIR)/Compiler.env $(SRCDIR)/Profiler.env Init.ozc
 
 Makefile: $(SRCDIR)/Makefile.in config.status
         ./config.status
