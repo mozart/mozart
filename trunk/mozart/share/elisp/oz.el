@@ -415,9 +415,18 @@ starts the emulator under gdb")
 (make-face 'scrollbar-runnable)
 (make-face 'scrollbar-blocked)
 (make-face 'scrollbar-stack)
-(modify-face 'scrollbar-runnable "white" "#50a050" nil nil nil nil nil)
-(modify-face 'scrollbar-blocked  "white" "#d05050" nil nil nil nil nil)
-(modify-face 'scrollbar-stack    "white" "#7070c0" nil nil nil nil nil)
+
+(let ((planes (x-display-planes)))
+  (modify-face 'scrollbar-runnable "white"
+	       (if (eq planes 1) "black" "#7070c0") ;; "#50a050"
+	       nil nil nil nil nil)
+  (modify-face 'scrollbar-blocked  "white"
+	       (if (eq planes 1) "black" "#d05050")
+	       nil nil nil nil nil)
+  (modify-face 'scrollbar-stack    "white"
+	       (if (eq planes 1) "black" "#7070c0")
+	       nil nil nil nil nil))
+
 (defvar scrollbar-overlay nil)
 
 (defun oz-scrollbar (file line what)
