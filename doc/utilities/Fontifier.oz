@@ -1,5 +1,5 @@
 %%%
-%%% Author:
+%%% Authors:
 %%%   Leif Kornstaedt <kornstae@ps.uni-sb.de>
 %%%   Denys Duchier <duchier@ps.uni-sb.de>
 %%%
@@ -12,10 +12,10 @@
 %%%   $Revision$
 %%%
 %%% This file is part of Mozart, an implementation of Oz 3:
-%%%   $MOZARTURL$
+%%%    http://mozart.ps.uni-sb.de
 %%%
 %%% See the file "LICENSE" or
-%%%   $LICENSEURL$
+%%%    http://mozart.ps.uni-sb.de/LICENSE.html
 %%% for information on usage and redistribution
 %%% of this file, and for a DISCLAIMER OF ALL
 %%% WARRANTIES.
@@ -24,8 +24,8 @@
 functor
 import
    Property(get)
-   Fontifier @ 'x-oz://contrib/doc/code/Fontifier'
-   HTML(seq:SEQ pcdata:PCDATA)
+   Fontifier at 'x-oz://contrib/doc/code/Fontifier'
+   HTML(seq: SEQ pcdata: PCDATA)
 export
    'class': FontifierClass
    NoProgLang
