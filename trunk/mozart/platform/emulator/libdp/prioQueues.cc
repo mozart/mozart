@@ -347,6 +347,17 @@ void PrioQueues::clearRec() {
   }
 }
 
+void PrioQueues::clearCont() {
+  // Clear continuations from all partly sent messages. These can 
+  // currently only be found in the head of each priority.
+  MsgContainer *cur;
+  for(int i=1;i<=5;i++) {
+    cur=qs[i-1].first;
+    if(cur!=NULL) 
+      cur->resetMarshaling();
+  }
+}
+
 Bool PrioQueues::hasQueued() {
   for(int i=1;i<=5;i++) {
     if(qs[i-1].first!=NULL) {
