@@ -200,7 +200,7 @@ OZ_Term adjoinT(TaggedRef tuple,TaggedRef arg)
 
 
 #define HF_BI                                                           \
-   HF_FAIL(OZ_mkTupleC("hf",2,                                  \
+   HF_FAIL(OZ_mkTupleC("hf",2,                                          \
                        OZ_atom(builtinTab.getName((void *) biFun)),     \
                        makeListOfX(predArity,X)));
 
@@ -2535,10 +2535,11 @@ LBLsuspendThread:
     if (!isAnyVar(tag)) {
       DISPATCH(3);
     }
+    int argsToSave = getPosIntArg(PC+2);
+
     INCFPC(3); /* suspend on NEXT instructions: WeakDET suspensions are
                   woken up always, even if variable is bound to another var */
 
-    int argsToSave = getPosIntArg(PC+2);
     SUSP_PC(termPtr,argsToSave,PC);
   }
 
