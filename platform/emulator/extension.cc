@@ -21,6 +21,10 @@
  *
  */
 
+#if defined(INTERFACE)
+#pragma implementation "extension.hh"
+#endif
+
 #include "extension.hh"
 #include "ozostream.hh"
 #include "am.hh"
