@@ -120,4 +120,18 @@ end>>>
       in <Ptr to="chapter.builder"> that allows for declarative specification
       of user interfaces and obviates the need to know many of the fine
       details of the GTK+ API.
+  <Section proglang=sh>
+    <Title/Building from Sources/
+    <P>
+      The GTK+ language binding is part of the Mozart source tree.
+      To compile it, use the following options to configure:
+      <<<configure --enable-contrib-gtk --with-gtk-canvas-dir=?{DIR}>>>
+      where ?{DIR} is the directory in which the GTK Canvas has been
+      installed.
+    <Para class=apropos><Title/Compiling the GTK Canvas/
+      To compile the GTK Canvas, <Ref.Extern
+      to="ftp://ftp.mozart-oz.org/pub/mozart/extras/gtk-canvas.tgz"/obtain
+      the sources/ and compile them using the standard <<configure; make;
+      make install>> procedure.  The configure prefix used here yields
+      the value of ?{DIR} above.
 </Chapter>
