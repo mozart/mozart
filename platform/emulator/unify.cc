@@ -28,6 +28,7 @@
 
 #ifdef INTERFACE
 #pragma implementation
+#pragma implementation "unify.hh"
 #endif
 
 #include "unify.hh"
@@ -393,21 +394,26 @@ exit:
   Assert(unifyStack.isMark());
   unifyStack.pop(); // pop mark
 
-  
   // Temporary bindings must be restored if unify is
-  // used for equality tests. Erik. 
-  Bool cond = ((result!=PROCEED) || am.inEqEq());
-
-  while (!rebindTrail.isEmpty ()) {
-    PopRebindTrail(value,refPtr);
+  // used for equality tests. Erik.
+  // In a space, the bindings must either be undone or transferred
+  // to the global trail to end up in the script.  For simplicity
+  // we choose to undo them -- Denys&Christian
+  if (result!=PROCEED || !oz_onToplevel() || am.inEqEq())
+    while (!rebindTrail.isEmpty ()) {
+      PopRebindTrail(value,refPtr);
     // kost@ : no need to restore temporary bindings if terms were
     //         successfully unified. Moreover, they should not be
     //         restored: that compactifies store and speeds up
     //         subsequent unifications! 
     //         The credit for this optimization goes to Per (Brand).
-    if (cond)
       doBind(refPtr, value);
-  }
+    }
+  else
+    // Also, in case the rebindTrail can be ignored, it is not
+    // necessary to pop each item: we can simply make the trail
+    // empty directly -- Denys
+    rebindTrail.mkEmpty();
 
   return (result);
 }
