@@ -561,6 +561,7 @@ REGEXCHAR    "["([^\]\\]|\\.)+"]"|\"[^"]+\"|\\.|[^<>"\[\]\\\n]
 
 \\in(s(e(rt?)?)?)?             { BEGIN(INSERT); }
 \\d(e(f(i(ne?)?)?)?)?          { BEGIN(DEFINE); }
+\\u(n(d(ef?)?)?)?              { BEGIN(UNDEF); }
 \\ifd(ef?)?                    { BEGIN(IFDEF); }
 \\ifn(d(ef?)?)?                { BEGIN(IFNDEF); }
 \\el(se?)?                     { toggle_cond();
@@ -569,7 +570,6 @@ REGEXCHAR    "["([^\]\\]|\\.)+"]"|\"[^"]+\"|\\.|[^<>"\[\]\\\n]
 \\e(n(d(if?)?)?)?              { pop_cond();
                                  BEGIN(DIRECTIVE);
                                }
-\\u(n(d(ef?)?)?)?              { BEGIN(UNDEF); }
 
 \\gumpscannerprefix            { BEGIN(SCANNERPREFIX); }
 \\gumpparserexpect             { BEGIN(PARSEREXPECT); }
