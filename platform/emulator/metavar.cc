@@ -332,38 +332,16 @@ if (! OZ_isHeapChunk(T)) {						      \
 
 int OZ_getHeapChunkSize(TaggedRef t)
 {
-  NotHeapChunkWarning(t, OZ_getHeapChunkSize, 0);
+  NotHeapChunkWarning(t, OZ_getHeapChunkSize, NULL);
   
   return ((HeapChunk *) tagged2Const(t))->getChunkSize();
 }
 
-char * OZ_getHeapChunk(TaggedRef t, char * buf)
+char * OZ_getHeapChunkData(TaggedRef t)
 {
   NotHeapChunkWarning(t, OZ_getHeapChunk, NULL);
-
-  HeapChunk * hc = (HeapChunk *) tagged2Const(t);
-  char * hc_data = hc->getChunkData();
-  int hc_size = hc->getChunkSize();
   
-  if (! buf) buf = ::new char[hc_size];
-  
-  for (int i = hc_size; i--; )
-    buf[i] = hc_data[i];
-  
-  return buf;
-}
-
-OZ_Term OZ_putHeapChunk(OZ_Term t, char * buf)
-{
-  NotHeapChunkWarning(t, OZ_putHeapChunk, t);
-  
-  HeapChunk * hc = (HeapChunk *) tagged2Const(t);
-  char * hc_data = hc->getChunkData();
-  
-  for (int i = hc->getChunkSize(); i--; )
-    hc_data[i] = buf[i];
-
-  return t;
+  return ((HeapChunk *) tagged2Const(t))->getChunkData();
 }
 
 int OZ_isHeapChunk(OZ_Term t)
