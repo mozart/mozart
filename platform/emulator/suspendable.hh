@@ -105,23 +105,25 @@ public:
   /*
    * Generic garbage collection part
    */
-  int isGcMarked(void) {
+  int isCacMarked(void) {
     return flags & SF_GcMark;
   }
-  void gcMark(Suspendable * fwd) {
-    Assert(!isGcMarked());
+  void cacMark(Suspendable * fwd) {
+    Assert(!isCacMarked());
     flags = ((int32) fwd) | SF_GcMark ;
   }
-  Suspendable * gcGetFwd() {
-    Assert(isGcMarked());
+  Suspendable * cacGetFwd(void) {
+    Assert(isCacMarked());
     return (Suspendable *) (flags & ~SF_GcMark);
   }
-  void ** gcGetMarkField() {
+  void ** cacGetMarkField(void) {
     return (void **) (void *) &flags;
   };
 
-  Suspendable * gcSuspendableInline(void);
-  Suspendable * gcSuspendable(void);
+  Suspendable * gCollectSuspendableInline(void);
+  Suspendable * gCollectSuspendable(void);
+  Suspendable * sCloneSuspendableInline(void);
+  Suspendable * sCloneSuspendable(void);
 
   /*
    * Board handling
@@ -205,13 +207,13 @@ public:
 
 inline
 Propagator * SuspToPropagator(Suspendable * s) {
-  Assert(!s || s->isGcMarked() || s->isPropagator());
+  Assert(!s || s->isCacMarked() || s->isPropagator());
   return (Propagator *) s;
 }
 
 inline
 Thread * SuspToThread(Suspendable * s) {
-  Assert(!s || s->isGcMarked() || s->isThread());
+  Assert(!s || s->isCacMarked() || s->isThread());
   return (Thread *) s;
 }
 

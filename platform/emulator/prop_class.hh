@@ -64,8 +64,10 @@ public:
     delete _p;
   }
 
-  void gcRecurse(Propagator *);
-  Propagator * gcLocalInline(Board *);
+  void gCollectRecurse(Propagator *);
+  Propagator * gCollectLocalInline(Board *);
+  void sCloneRecurse(Propagator *);
+  Propagator * sCloneLocalInline(Board *);
 
   OZ_NonMonotonic::order_t getOrder(void) {
     return _p->getOrder();

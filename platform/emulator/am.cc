@@ -589,7 +589,7 @@ void AM::checkStatus(Bool block)
   handleAlarm(); // must be done first since it might set other flags
 
   if (isSetSFlag(StartGC))
-    doGC();
+    doGCollect();
 
   if (isSetSFlag(UserAlarm))
     handleUser();

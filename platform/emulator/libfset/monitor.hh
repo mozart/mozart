@@ -40,9 +40,15 @@ public:
 
   virtual size_t sizeOf(void) { return sizeof(MonitorPropagator); }
 
-  virtual void updateHeapRefs(OZ_Boolean) {
-    OZ_updateHeapTerm(_stream);
-    OZ_updateHeapTerm(_fsetvar);
+  virtual void gCollect(void) {
+    OZ_gCollectTerm(_stream);
+    OZ_gCollectTerm(_fsetvar);
+    _present_sofar.copyExtension();
+  }
+
+  virtual void sClone(void) {
+    OZ_sCloneTerm(_stream);
+    OZ_sCloneTerm(_fsetvar);
     _present_sofar.copyExtension();
   }
 

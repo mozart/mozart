@@ -43,7 +43,7 @@
 inline
 void OZ_collectHeapTermUnsafe(TaggedRef & frm, TaggedRef & to) {
   if (frm)
-    OZ_collectHeapTerm(frm,to);
+    oz_gCollectTerm(frm,to);
   else
     to=frm;
 }
@@ -589,7 +589,7 @@ void gcDistCellRecurseImpl(Tertiary *t)
   gcEntityInfoImpl(t);
   switch (t->getTertType()) {
   case Te_Proxy:
-    gcProxyRecurse(t);
+    gCollectProxyRecurse(t);
     break;
   case Te_Frame: {
     CellFrame *cf=(CellFrame*)t;
@@ -629,7 +629,7 @@ void gcDistLockRecurseImpl(Tertiary *t)
     break;}
 
   case Te_Proxy:{
-    gcProxyRecurse(t);
+    gCollectProxyRecurse(t);
     break;}
 
   default:{
@@ -638,7 +638,7 @@ void gcDistLockRecurseImpl(Tertiary *t)
 }
 
 void CellSec::gcCellSec(){
-  gcPendThread(&pending);
+  gCollectPendThread(&pending);
   switch(state){
   case Cell_Lock_Next|Cell_Lock_Requested:{
     next->makeGCMarkSite();}
@@ -655,7 +655,7 @@ void CellSec::gcCellSec(){
 
 void CellFrame::gcCellFrame(){
   Tertiary *t=(Tertiary*)this;
-  gcProxyRecurse(t);
+  gCollectProxyRecurse(t);
   PD((GC,"relocate cellFrame:%d",t->getIndex()));
   getCellSec()->gcCellSec();}
 
@@ -664,12 +664,12 @@ void CellManager::gcCellManager(){
   int i=getIndex();
   PD((GC,"relocate cellManager:%d",i));
   OwnerEntry* oe=OT->getOwner(i);
-  Assert(oe->getTertiary()->gcIsMarked()?
-         oe->getTertiary()->gcGetFwd()->getType() == Co_Cell:
+  Assert(oe->getTertiary()->cacIsMarked()?
+         oe->getTertiary()->cacGetFwd()->getType() == Co_Cell:
          oe->getTertiary()->getType() == Co_Cell );
   oe->gcPO(this);
-  Assert(oe->getTertiary()->gcIsMarked()?
-         oe->getTertiary()->gcGetFwd()->getType() == Co_Cell:
+  Assert(oe->getTertiary()->cacIsMarked()?
+         oe->getTertiary()->cacGetFwd()->getType() == Co_Cell:
          oe->getTertiary()->getType() == Co_Cell );
   getCellSec()->gcCellSec();}
 
@@ -678,14 +678,14 @@ void LockSec::gcLockSec(){
     getNext()->makeGCMarkSite();}
   PD((GC,"relocate Lock in state %d",state));
   if(state & Cell_Lock_Valid)
-    locker=SuspToThread(locker->gcSuspendable());
+    locker=SuspToThread(locker->gCollectSuspendable());
   if(pending!=NULL)
-    gcPendThread(&pending);
+    gCollectPendThread(&pending);
   return;}
 
 void LockFrame::gcLockFrame(){
   Tertiary *t=(Tertiary*)this;
-  gcProxyRecurse(t);
+  gCollectProxyRecurse(t);
   PD((GC,"relocate lockFrame:%d",t->getIndex()));
   getLockSec()->gcLockSec();}
 

@@ -41,8 +41,10 @@ class ExtVar : public OzVariable {
 public:
   ExtVar(Board *bb) : OzVariable(OZ_VAR_EXT,bb) {}
   virtual int           getIdV() = 0;
-  virtual OzVariable*   gcV() = 0;
-  virtual void          gcRecurseV() = 0;
+  virtual OzVariable*   gCollectV() = 0;
+  virtual void          gCollectRecurseV() = 0;
+  virtual OzVariable*   sCloneV() = 0;
+  virtual void          sCloneRecurseV() = 0;
   virtual OZ_Return     unifyV(TaggedRef*, TaggedRef*) = 0;
   virtual OZ_Return     bindV(TaggedRef*, TaggedRef) = 0;
   virtual Bool          validV(TaggedRef) = 0;

@@ -320,7 +320,6 @@ public:
   void printDebug(void) const;
   void printDebugLong(void) const;
 
-  void gc(void);
   void copyExtensionInline(void);
   void copyExtension(void);
 };

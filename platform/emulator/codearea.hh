@@ -62,7 +62,8 @@ public:
   int getArity()          { return arity; };
   void setPred(Abstraction *abs);
 
-  void gcAbstractionEntry();
+  void gCollectAbstractionEntry(void);
+
   static void freeUnusedEntries();
 };
 
@@ -240,9 +241,9 @@ public:
   static Opcode getOpcode(ProgramCounter PC) {
     return adressToOpcode(getOP(PC)); }
 
-  void gcCodeBlock();
-  static void gcCodeAreaStart();
-  static void gcCollectCodeBlocks();
+  void gCollectCodeBlock(void);
+  static void gCollectCodeAreaStart(void);
+  static void gCollectCollectCodeBlocks(void);
 
 #ifdef RECINSTRFETCH
   static void writeInstr(void);

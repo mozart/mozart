@@ -258,21 +258,21 @@ OZ_BI_define(BIinterDistHandlerDeInstall,2,0){
 
 DeferWatcher* deferWatchers;
 
-void gcDeferWatchers(){
+void gCollectDeferWatchers(){
   DeferWatcher *newW,**base;
   if(deferWatchers==NULL) return;
   base=&(deferWatchers);
   while((*base)!=NULL){
     newW= (DeferWatcher*) oz_hrealloc((*base),sizeof(DeferWatcher));
-    newW->gc();
+    newW->gCollect();
     *base=newW;
     base= &(newW->next);}
   newW->next=NULL;}
 
-void DeferWatcher::gc(){
-  OZ_collectHeapTerm(proc,proc);
-  thread=SuspToThread(thread->gcSuspendable());
-  OZ_collectHeapTerm(entity,entity);}
+void DeferWatcher::gCollect(){
+  oz_gCollectTerm(proc,proc);
+  thread=SuspToThread(thread->gCollectSuspendable());
+  oz_gCollectTerm(entity,entity);}
 
 
 Bool addDeferWatcher(short kind,EntityCond ec,Thread* th,TaggedRef entity,

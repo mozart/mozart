@@ -106,7 +106,8 @@ public:
   virtual OZ_Return eqV(OZ_Term);
   virtual int marshalV(void*);
   virtual OZ_Term printV(int depth = 10);
-  virtual OZ_Extension* gcV() { return clone(); }
+  virtual OZ_Extension* gCollectV() { return clone(); }
+  virtual OZ_Extension* sCloneV() { return clone(); }
   BitString operator=(const BitString&);
   BitString() : OZ_Extension() {}
   BitString(int w) : OZ_Extension(), BitData(w) {}
@@ -190,7 +191,8 @@ public:
   virtual OZ_Return eqV(OZ_Term);
   virtual int marshalV(void*);
   virtual OZ_Term printV(int depth = 10);
-  virtual OZ_Extension* gcV() { return clone(); }
+  virtual OZ_Extension* gCollectV() { return clone(); }
+  virtual OZ_Extension* sCloneV() { return clone(); }
   ByteString operator=(const ByteString&);
   ByteString() : OZ_Extension() {}
   ByteString(int w) : OZ_Extension(), ByteData(w) {}

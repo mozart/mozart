@@ -58,7 +58,9 @@ public:
       fsSuspList[i] = NULL;
   }
 
-  void gc(void);
+  void gCollect(void);
+  void sClone(void);
+
   void dispose(void);
 
   // methods for trailing

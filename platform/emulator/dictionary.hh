@@ -186,8 +186,6 @@ private:
 //   Literal* tagged2Literal(TaggedRef ref)                     (tagged.hh)
 //   Bool isLiteral(TaggedRef term)                             (tagged.hh)
 //   void* heapMalloc(size_t chunk_size)                        (mem.hh)
-//   void* gcRealloc(void* ptr, size_t sz)                      (gc.cc)
-//   void gcTagged(TaggedRef &fromTerm, TaggedRef &toTerm)      (gc.cc)
 
 class DynamicTable {
 friend class HashElement;
@@ -220,31 +218,33 @@ public:
 
   ostream &newprint(ostream &, int depth);
 
-    // Copy the dynamictable from 'from' to 'to' space:
-    DynamicTable * gc(void); // See definition in gc.cc
+  // Copy the dynamictable from 'from' to 'to' space:
+  DynamicTable * gCollect(void);
+  DynamicTable * sClone(void);
 
-    // Create an initially empty dynamictable of size s
-    static DynamicTable* newDynamicTable(dt_index s=4);
 
-    // Initialize an elsewhere-allocated dynamictable of size s
-    void init(dt_index s);
+  // Create an initially empty dynamictable of size s
+  static DynamicTable* newDynamicTable(dt_index s=4);
 
-    // True if the hash table is considered full:
-    // Test whether the current table has too little room for one new element:
-    // ATTENTION: Calls to insert should be preceded by fullTest.
-    Bool fullTest() {
-      Assert(isPwrTwo(size));
-      return (numelem>=fullFunc(size));
-    }
+  // Initialize an elsewhere-allocated dynamictable of size s
+  void init(dt_index s);
 
-    DynamicTable* copyDynamicTable(dt_index newSize=(dt_index)(-1L));
+  // True if the hash table is considered full:
+  // Test whether the current table has too little room for one new element:
+  // ATTENTION: Calls to insert should be preceded by fullTest.
+  Bool fullTest() {
+    Assert(isPwrTwo(size));
+    return (numelem>=fullFunc(size));
+  }
 
-    // Return a table that is double the size of the current table and
-    // that contains the same elements:
-    // ATTENTION: Should be called before insert if the table is full.
-    DynamicTable* doubleDynamicTable() {
-      return copyDynamicTable(size?(size<<1):1);
-    }
+  DynamicTable* copyDynamicTable(dt_index newSize=(dt_index)(-1L));
+
+  // Return a table that is double the size of the current table and
+  // that contains the same elements:
+  // ATTENTION: Should be called before insert if the table is full.
+  DynamicTable* doubleDynamicTable() {
+    return copyDynamicTable(size?(size<<1):1);
+  }
 
   static
   size_t DTBlockSize(int s)
@@ -355,7 +355,8 @@ void inplace_quicksort(TaggedRef* first, TaggedRef* last);
 #define DictSafeFlag  1
 
 class OzDictionary: public ConstTermWithHome {
-  friend void ConstTerm::gcConstRecurse(void);
+  friend void ConstTerm::gCollectConstRecurse(void);
+  friend void ConstTerm::sCloneConstRecurse(void);
 private:
   DynamicTable *table;
   int dictFlags;

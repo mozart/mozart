@@ -82,11 +82,16 @@ OZ_BI_end
 //////////
 // COPYING
 //////////
-void DisjunctivePropagatorStream::updateHeapRefs(OZ_Boolean duplicate)
-{
-  OZ_updateHeapTerm(stream);
+void DisjunctivePropagatorStream::gCollect(void) {
+  OZ_gCollectTerm(stream);
   reg_durs = OZ_copyCInts(reg_size, reg_durs);
-  reg_fds = OZ_copyOzTerms(reg_size, reg_fds);
+  reg_fds  = OZ_gCollectAllocBlock(reg_size, reg_fds);
+}
+
+void DisjunctivePropagatorStream::sClone(void) {
+  OZ_sCloneTerm(stream);
+  reg_durs = OZ_copyCInts(reg_size, reg_durs);
+  reg_fds  = OZ_sCloneAllocBlock(reg_size, reg_fds);
 }
 
 
@@ -293,10 +298,14 @@ OZ_BI_end
 //////////
 // COPYING
 //////////
-void DistinctPropagatorStream::updateHeapRefs(OZ_Boolean duplicate)
-{
-  OZ_updateHeapTerm(stream);
-  reg_fds = OZ_copyOzTerms(reg_size, reg_fds);
+void DistinctPropagatorStream::gCollect(void) {
+  OZ_gCollectTerm(stream);
+  reg_fds = OZ_gCollectAllocBlock(reg_size, reg_fds);
+}
+
+void DistinctPropagatorStream::sClone(void) {
+  OZ_sCloneTerm(stream);
+  reg_fds = OZ_sCloneAllocBlock(reg_size, reg_fds);
 }
 
 

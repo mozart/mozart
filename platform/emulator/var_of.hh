@@ -97,8 +97,9 @@ public:
     dynamictable=DynamicTable::newDynamicTable(size);
   }
 
-  // Methods relevant for term copying (gc and solve)
-  void gcRecurse(void);
+
+  void gCollectRecurse(void);
+  void sCloneRecurse(void);
 
   // methods for trailing
   OzVariable * copyForTrail(void);

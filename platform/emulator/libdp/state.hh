@@ -82,7 +82,8 @@ public:
 };
 
 class CellProxy : public Tertiary {
-friend void ConstTerm::gcConstRecurse(void);
+  friend void ConstTerm::gCollectConstRecurse(void);
+  friend void ConstTerm::sCloneConstRecurse(void);
 private:
   int holder; // mm2: on alpha sizeof(int) != sizeof(void *)
   void *dummy; // mm2
@@ -96,7 +97,8 @@ public:
 //
 // "Real" cell manager - handles cells' access structures;
 class CellManager : public  CellManagerEmul {
-  friend void ConstTerm::gcConstRecurse(void);
+  friend void ConstTerm::gCollectConstRecurse(void);
+  friend void ConstTerm::sCloneConstRecurse(void);
 public:
   CellSec* getCellSec(){return (CellSec*) getSec();}
   NO_DEFAULT_CONSTRUCTORS2(CellManager)
@@ -127,7 +129,8 @@ public:
 
 
 class CellFrame : public CellFrameEmul {
-friend void ConstTerm::gcConstRecurse(void);
+  friend void ConstTerm::gCollectConstRecurse(void);
+  friend void ConstTerm::sCloneConstRecurse(void);
 public:
   CellSec* getCellSec(){return (CellSec*) getSec();}
   void setCellSec(CellSec* cs){sec=(CellSecEmul*) cs;}
@@ -196,7 +199,8 @@ public:
 };
 
 class LockFrame : public LockFrameEmul {
-friend void ConstTerm::gcConstRecurse(void);
+  friend void ConstTerm::gCollectConstRecurse(void);
+  friend void ConstTerm::sCloneConstRecurse(void);
 public:
   LockSec* getLockSec(){return (LockSec*) getSec();}
   void setLockSec(LockSec* cs){sec=(LockSecEmul*)cs;}
@@ -222,7 +226,8 @@ public:
 };
 
 class LockManager : public LockManagerEmul {
-friend void ConstTerm::gcConstRecurse(void);
+  friend void ConstTerm::gCollectConstRecurse(void);
+  friend void ConstTerm::sCloneConstRecurse(void);
 public:
   LockSec* getLockSec(){return (LockSec*) getSec();}
   NO_DEFAULT_CONSTRUCTORS2(LockManager);
@@ -248,7 +253,8 @@ public:
 };
 
 class LockProxy:public OzLock{
-friend void ConstTerm::gcConstRecurse(void);
+  friend void ConstTerm::gCollectConstRecurse(void);
+  friend void ConstTerm::sCloneConstRecurse(void);
 private:
   int holder; // mm2: on alpha sizeof(int) != sizeof(void *)
   void *dummy; // mm2

@@ -42,9 +42,11 @@ public:
   virtual size_t sizeOf(void) {
     return sizeof(Propagator_S_I_D);
   }
-  virtual void updateHeapRefs(OZ_Boolean) {
-    OZ_updateHeapTerm(_v);
-    OZ_updateHeapTerm(_b);
+  virtual void gCollect(void) {
+    OZ_gCollectBlock(&_v, &_v, 2);
+  }
+  virtual void sClone(void) {
+    OZ_sCloneBlock(&_v, &_v, 2);
   }
   virtual OZ_Term getParameters(void) const {
     return OZ_cons(_v,
@@ -66,10 +68,11 @@ public:
   virtual size_t sizeOf(void) {
     return sizeof(Propagator_S_S_D);
   }
-  virtual void updateHeapRefs(OZ_Boolean) {
-    OZ_updateHeapTerm(_v1);
-    OZ_updateHeapTerm(_v2);
-    OZ_updateHeapTerm(_b);
+  virtual void gCollect(void) {
+    OZ_gCollectBlock(&_v1, &_v1, 3);
+  }
+  virtual void sClone(void) {
+    OZ_sCloneBlock(&_v1, &_v1, 3);
   }
   virtual OZ_Term getParameters(void) const {
     return OZ_cons(_v1,
@@ -91,8 +94,11 @@ public:
   virtual size_t sizeOf(void) {
     return sizeof(Propagator_S_I);
   }
-  virtual void updateHeapRefs(OZ_Boolean) {
-    OZ_updateHeapTerm(_v);
+  virtual void gCollect(void) {
+    OZ_gCollectTerm(_v);
+  }
+  virtual void sClone(void) {
+    OZ_sCloneTerm(_v);
   }
   virtual OZ_Term getParameters(void) const {
     return OZ_cons(_v,
@@ -112,9 +118,11 @@ public:
   virtual size_t sizeOf(void) {
     return sizeof(Propagator_S_S);
   }
-  virtual void updateHeapRefs(OZ_Boolean) {
-    OZ_updateHeapTerm(_x);
-    OZ_updateHeapTerm(_y);
+  virtual void gCollect(void) {
+    OZ_gCollectBlock(&_x,&_x,2);
+  }
+  virtual void sClone(void) {
+    OZ_sCloneBlock(&_x,&_x,2);
   }
   virtual OZ_Term getParameters(void) const {
     return OZ_cons(_x, OZ_cons(_y, OZ_nil()));
@@ -133,10 +141,11 @@ public:
   virtual size_t sizeOf(void) {
     return sizeof(Propagator_S_S_S);
   }
-  virtual void updateHeapRefs(OZ_Boolean) {
-    OZ_updateHeapTerm(_x);
-    OZ_updateHeapTerm(_y);
-    OZ_updateHeapTerm(_z);
+  virtual void gCollect(void) {
+    OZ_gCollectBlock(&_x, &_x, 3);
+  }
+  virtual void sClone(void) {
+    OZ_sCloneBlock(&_x, &_x, 3);
   }
   virtual OZ_Term getParameters(void) const {
     return OZ_cons(_x,
@@ -157,9 +166,11 @@ public:
   virtual size_t sizeOf(void) {
     return sizeof(Propagator_S_D);
   }
-  virtual void updateHeapRefs(OZ_Boolean) {
-    OZ_updateHeapTerm(_s);
-    OZ_updateHeapTerm(_d);
+  virtual void gCollect(void) {
+    OZ_gCollectBlock(&_s,&_s,2);
+  }
+  virtual void sClone(void) {
+    OZ_sCloneBlock(&_s,&_s,2);
   }
   virtual OZ_Term getParameters(void) const {
     return OZ_cons(_s, OZ_cons(_d, OZ_nil()));
@@ -178,9 +189,13 @@ public:
   virtual size_t sizeOf(void) {
     return sizeof(Propagator_S_D_D);
   }
-  virtual void updateHeapRefs(OZ_Boolean _d) {
-    OZ_updateHeapTerm(_r);
-    Propagator_S_D::updateHeapRefs(_d);
+  virtual void gCollect(void) {
+    OZ_gCollectTerm(_r);
+    Propagator_S_D::gCollect();
+  }
+  virtual void sClone(void) {
+    OZ_sCloneTerm(_r);
+    Propagator_S_D::sClone();
   }
   virtual OZ_Term getParameters(void) const {
     return OZ_cons(_s, OZ_cons(_d, OZ_cons(_r, OZ_nil())));
@@ -198,7 +213,8 @@ public:
   ~Propagator_S_VD(void);
 
   virtual size_t sizeOf(void) { return sizeof(Propagator_S_VD); }
-  virtual void updateHeapRefs(OZ_Boolean);
+  virtual void gCollect(void);
+  virtual void sClone(void);
   virtual OZ_Term getParameters(void) const;
 };
 
@@ -213,7 +229,8 @@ public:
   ~Propagator_VS(void);
 
   virtual size_t sizeOf(void) { return sizeof(Propagator_VS); }
-  virtual void updateHeapRefs(OZ_Boolean);
+  virtual void gCollect(void);
+  virtual void sClone(void);
   virtual OZ_Term getParameters(void) const;
 
   OZ_Boolean hasEqualVars(void);
@@ -242,7 +259,8 @@ public:
   Propagator_VS_S(OZ_Term vs, OZ_Term s);
 
   virtual size_t sizeOf(void) { return sizeof(Propagator_VS_S); }
-  virtual void updateHeapRefs(OZ_Boolean);
+  virtual void gCollect(void);
+  virtual void sClone(void);
   virtual OZ_Term getParameters(void) const;
 };
 

@@ -102,11 +102,20 @@ public:
     freeListDispose(this, sizeof(BaseDistributor));
   }
 
-  virtual Distributor * BaseDistributor::gc(void) {
+  virtual Distributor * BaseDistributor::gCollect(void) {
     BaseDistributor * t =
       (BaseDistributor *) oz_hrealloc(this,sizeof(BaseDistributor));
 
-    OZ_collectHeapTerm(var, t->var);
+    oz_gCollectTerm(var, t->var);
+
+    return (Distributor *) t;
+  }
+
+  virtual Distributor * BaseDistributor::sClone(void) {
+    BaseDistributor * t =
+      (BaseDistributor *) oz_hrealloc(this,sizeof(BaseDistributor));
+
+    oz_sCloneTerm(var, t->var);
 
     return (Distributor *) t;
   }

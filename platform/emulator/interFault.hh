@@ -90,14 +90,15 @@ public:
 
   Bool preventAdd(short,Thread *,TaggedRef);
 
-  void gc();
+  void gCollect(void);
+
 };
 
 
 extern DeferWatcher* deferWatchers;
 extern Bool perdioInitialized;
 
-void gcDeferWatchers();
+void gCollectDeferWatchers(void);
 
 Bool addDeferWatcher(short, EntityCond, Thread*,
                      TaggedRef, TaggedRef);

@@ -65,7 +65,7 @@ public:
   static void *operator new(size_t chunk_size, OzFDVariable *fdv) {
     return fdv;
   }
-  // methods relevant for term copying (gc and solve)
+
   inline void dispose(void);
 
   // is X=val still valid, i.e. is val an smallint and either 0 or 1.

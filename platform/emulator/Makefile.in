@@ -115,7 +115,7 @@ SPACESRCS=\
         board.cc distributor.cc space.cc
 
 MEMSRCS=\
-        gc.cc mem.cc liveness.cc
+        g-collect.cc s-clone.cc mem.cc liveness.cc
 
 PICKLESRCS=\
         gname.cc components.cc marshaler.cc site.cc

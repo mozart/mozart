@@ -47,7 +47,7 @@
 inline
 void OZ_collectHeapTermUnsafe(TaggedRef & frm, TaggedRef & to) {
   if (frm)
-    OZ_collectHeapTerm(frm,to);
+    oz_gCollectTerm(frm,to);
   else
     to=frm;
 }
@@ -120,7 +120,7 @@ void gcDistPortRecurseImpl(Tertiary *p)
   gcEntityInfoImpl(p);
   if (p->isProxy()) {
     gcProxyRecurseImpl(p);
-    gcPendThread(&(((PortProxy*)p)->pending));
+    gCollectPendThread(&(((PortProxy*)p)->pending));
   } else {
     gcManagerRecurseImpl(p);
     PortWithStream *pws = (PortWithStream *) p;

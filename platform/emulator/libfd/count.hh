@@ -51,9 +51,13 @@ public:
   ExactlyPropagator(OZ_Term n, OZ_Term l, OZ_Term v)
     //    : Propagator_D_VD_I(n, l, v) {}
     : Propagator_D_VD_I(n, l, v) {init_l_u();}
-  virtual void updateHeapRefs(OZ_Boolean d)
-  {
-    Propagator_D_VD_I::updateHeapRefs(d);
+
+  virtual void gCollect(void) {
+    Propagator_D_VD_I::gCollect();
+    reg_oldDomSizes = OZ_copyCInts(reg_l_sz, reg_oldDomSizes);
+  }
+  virtual void sClone(void) {
+    Propagator_D_VD_I::sClone();
     reg_oldDomSizes = OZ_copyCInts(reg_l_sz, reg_oldDomSizes);
   }
 
@@ -85,11 +89,16 @@ public:
   AtLeastPropagator(OZ_Term n, OZ_Term l, OZ_Term v)
    //    : Propagator_D_VD_I(n, l, v) {}
     : Propagator_D_VD_I(n, l, v) {init_l_u();}
-  virtual void updateHeapRefs(OZ_Boolean d)
-  {
-    Propagator_D_VD_I::updateHeapRefs(d);
+
+  virtual void gCollect(void) {
+    Propagator_D_VD_I::gCollect();
     reg_oldDomSizes = OZ_copyCInts(reg_l_sz, reg_oldDomSizes);
   }
+  virtual void sClone(void) {
+    Propagator_D_VD_I::sClone();
+    reg_oldDomSizes = OZ_copyCInts(reg_l_sz, reg_oldDomSizes);
+  }
+
   virtual ~AtLeastPropagator(void);
   virtual size_t sizeOf(void) { return sizeof(*this); }
   virtual OZ_Return propagate(void);
@@ -117,9 +126,12 @@ static OZ_PropagatorProfile profile;
 public:
   AtMostPropagator(OZ_Term n, OZ_Term l, OZ_Term v)
     : Propagator_D_VD_I(n, l, v) {init_l_u();}
-  virtual void updateHeapRefs(OZ_Boolean d)
-  {
-    Propagator_D_VD_I::updateHeapRefs(d);
+  virtual void gCollect(void) {
+    Propagator_D_VD_I::gCollect();
+    reg_oldDomSizes = OZ_copyCInts(reg_l_sz, reg_oldDomSizes);
+  }
+  virtual void sClone(void) {
+    Propagator_D_VD_I::sClone();
     reg_oldDomSizes = OZ_copyCInts(reg_l_sz, reg_oldDomSizes);
   }
   virtual ~AtMostPropagator(void);

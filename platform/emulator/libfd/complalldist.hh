@@ -1087,8 +1087,12 @@ public:
     return Propagator_VD::getParameters();
   }
 
-  virtual void updateHeapRefs(OZ_Boolean duplicate =0) {
-    Propagator_VD::updateHeapRefs(duplicate);
+  virtual void gCollect(void) {
+    Propagator_VD::gCollect();
+  }
+
+  virtual void sClone(void) {
+    Propagator_VD::sClone();
   }
 
   virtual size_t sizeOf(void) {

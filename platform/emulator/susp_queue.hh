@@ -61,7 +61,8 @@ public:
 
   void reset(void);
 
-  void gc(void);
+  void gCollect(void);
+  void sClone(void);
 
 
   /*

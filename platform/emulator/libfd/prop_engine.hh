@@ -46,17 +46,22 @@
 class HeapAlloc {
 protected:
   void * alloc(int n) { return OZ_hallocChars(n); }
-  virtual void _gc(void) = 0;
+  virtual void _gCollect(void) = 0;
+  virtual void _sClone(void) = 0;
 public:
-  void gc(void) {
-    _gc();
+  void gCollect(void) {
+    _gCollect();
+  }
+  void sClone(void) {
+    _sClone();
   }
 };
 
 class PropAlloc {
 public:
   void * alloc(int n) { return OZ_FDIntVar::operator new(sizeof(char) * n); }
-  void gc(void) { OZ_error("Unexpected call of `PropAlloc::gc()'."); }
+  void gCollect(void) { OZ_error("Unexpected call of `PropAlloc::gCollect()'."); }
+  void sClone(void) { OZ_error("Unexpected call of `PropAlloc::sClone()'."); }
 };
 
 static const int _EnlargeableArray_margin = 10;
@@ -66,7 +71,13 @@ class EnlargeableArray : public M {
 
 protected:
 private:
-  virtual void _gc(void) {
+  virtual void _gCollect(void) {
+    T * new_array = (T *) alloc(_size * sizeof(T));
+    for (int i = _size; i--; )
+      new_array[i] = _array[i];
+    _array = new_array;
+  }
+  virtual void _sClone(void) {
     T * new_array = (T *) alloc(_size * sizeof(T));
     for (int i = _size; i--; )
       new_array[i] = _array[i];
@@ -345,10 +356,15 @@ public:
   PEL_EventList &getLowerBound(void) { return _lowerBound; }
   PEL_EventList &getUpperBound(void) { return _upperBound; }
   PEL_EventList &getSingleValue(void) { return _singleValue; }
-  void gc(void) {
-    _lowerBound.gc();
-    _upperBound.gc();
-    _singleValue.gc();
+  void gCollect(void) {
+    _lowerBound.gCollect();
+    _upperBound.gCollect();
+    _singleValue.gCollect();
+  }
+  void sClone(void) {
+    _lowerBound.sClone();
+    _upperBound.sClone();
+    _singleValue.sClone();
   }
 };
 
@@ -394,9 +410,13 @@ private:
 public:
   PEL_EventList &getBounds(void) { return _bounds; }
   PEL_EventList &getSingleValue(void) { return _singleValue; }
-  void gc(void) {
-    _bounds.gc();
-    _singleValue.gc();
+  void gCollect(void) {
+    _bounds.gCollect();
+    _singleValue.gCollect();
+  }
+  void sClone(void) {
+    _bounds.sClone();
+    _singleValue.sClone();
   }
 };
 

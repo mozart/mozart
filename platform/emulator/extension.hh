@@ -55,8 +55,10 @@ public:
   void* operator        new(size_t n) { return _OZ_new_OZ_Extension(n); }
   void operator         delete(void*,size_t);
   virtual int           getIdV() = 0;
-  virtual OZ_Extension* gcV() = 0;
-  virtual void          gcRecurseV() {}
+  virtual OZ_Extension* gCollectV() = 0;
+  virtual void          gCollectRecurseV() {}
+  virtual OZ_Extension* sCloneV() = 0;
+  virtual void          sCloneRecurseV() {}
   virtual OZ_Term       printV(int = 10) { return typeV(); }
   virtual OZ_Term       printLongV(int depth = 10, int offset = 0);
   virtual OZ_Term       typeV();

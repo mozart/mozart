@@ -129,9 +129,11 @@ public:
     return _constraint->unify(val);
   }
 
-  void gc(void);
+  void gCollect(void);
+  void gCollectRecurse(void);
 
-  void gcRecurse(void);
+  void sClone(void);
+  void sCloneRecurse(void);
 
   // methods for trailing
   OzVariable * copyForTrail(void);

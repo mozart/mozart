@@ -5,14 +5,14 @@
 #include "dictionary.hh"
 #include "extension.hh"
 
-extern void gcWeakDictionaries();
+extern void gCollectWeakDictionaries(void);
 
 class WeakDictionary : public OZ_SituatedExtension {
 private:
   DynamicTable *table;
   OZ_Term stream;
   WeakDictionary* next;
-  friend void gcWeakDictionaries();
+  friend void gCollectWeakDictionaries(void);
 public:
   WeakDictionary();
   WeakDictionary(DynamicTable*t,OZ_Term s)
@@ -24,8 +24,10 @@ public:
     }
   virtual int getIdV() { return OZ_E_WEAKDICTIONARY; }
   virtual OZ_Term typeV() { return OZ_atom("weakDictionary"); }
-  virtual OZ_Extension* gcV();
-  virtual void gcRecurseV(void);
+  virtual OZ_Extension* gCollectV();
+  virtual void gCollectRecurseV(void);
+  virtual OZ_Extension* sCloneV();
+  virtual void sCloneRecurseV(void);
   virtual OZ_Term printV(int = 10);
   void close();
   void put(OZ_Term,OZ_Term);

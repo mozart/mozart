@@ -63,21 +63,26 @@ void warn_inexact(double v)
 
 //-----------------------------------------------------------------------------
 
-void Propagator_D_D::updateHeapRefs(OZ_Boolean)
-{
-  OZ_updateHeapBlock(&reg_x, &reg_x, 2);
+void Propagator_D_D::gCollect(void) {
+  OZ_gCollectBlock(&reg_x, &reg_x, 2);
 }
 
-OZ_Term Propagator_D_D::getParameters(void) const
-{
+void Propagator_D_D::sClone(void) {
+  OZ_sCloneBlock(&reg_x, &reg_x, 2);
+}
+
+OZ_Term Propagator_D_D::getParameters(void) const {
   RETURN_LIST2(reg_x, reg_y);
 }
 
 //-----------------------------------------------------------------------------
 
-void Propagator_D_D_D::updateHeapRefs(OZ_Boolean)
-{
-  OZ_updateHeapBlock(&reg_x, &reg_x, 3);
+void Propagator_D_D_D::gCollect(void) {
+  OZ_gCollectBlock(&reg_x, &reg_x, 3);
+}
+
+void Propagator_D_D_D::sClone(void) {
+  OZ_sCloneBlock(&reg_x, &reg_x, 3);
 }
 
 OZ_Term Propagator_D_D_D::getParameters(void) const
@@ -88,9 +93,12 @@ OZ_Term Propagator_D_D_D::getParameters(void) const
 
 //-----------------------------------------------------------------------------
 
-void Propagator_D_D_D_I::updateHeapRefs(OZ_Boolean)
-{
-  OZ_updateHeapBlock(&reg_x, &reg_x, 3);
+void Propagator_D_D_D_I::gCollect(void) {
+  OZ_gCollectBlock(&reg_x, &reg_x, 3);
+}
+
+void Propagator_D_D_D_I::sClone(void) {
+  OZ_sCloneBlock(&reg_x, &reg_x, 3);
 }
 
 OZ_Term Propagator_D_D_D_I::getParameters(void) const
@@ -105,9 +113,12 @@ OZ_Term Propagator_D_D_D_I::getParametersC(char * lit) const
 
 //-----------------------------------------------------------------------------
 
-void Propagator_D_I_D::updateHeapRefs(OZ_Boolean)
-{
-  OZ_updateHeapBlock(&reg_x, &reg_x, 2);
+void Propagator_D_I_D::gCollect(void) {
+  OZ_gCollectBlock(&reg_x, &reg_x, 2);
+}
+
+void Propagator_D_I_D::sClone(void) {
+  OZ_sCloneBlock(&reg_x, &reg_x, 2);
 }
 
 OZ_Term Propagator_D_I_D::getParameters(void) const
@@ -117,9 +128,12 @@ OZ_Term Propagator_D_I_D::getParameters(void) const
 
 //-----------------------------------------------------------------------------
 
-void Propagator_D_D_I::updateHeapRefs(OZ_Boolean)
-{
-  OZ_updateHeapBlock(&reg_x, &reg_x, 2);
+void Propagator_D_D_I::gCollect(void) {
+  OZ_gCollectBlock(&reg_x, &reg_x, 2);
+}
+
+void Propagator_D_D_I::sClone(void) {
+  OZ_sCloneBlock(&reg_x, &reg_x, 2);
 }
 
 OZ_Term Propagator_D_D_I::getParameters(void) const
@@ -146,12 +160,14 @@ Propagator_D_VD_I::~Propagator_D_VD_I(void)
   OZ_hfreeOzTerms(reg_l, reg_l_sz);
 }
 
-void Propagator_D_VD_I::updateHeapRefs(OZ_Boolean)
-{
-  OZ_updateHeapTerm(reg_n);
+void Propagator_D_VD_I::gCollect(void) {
+  OZ_gCollectTerm(reg_n);
+  reg_l = OZ_gCollectAllocBlock(reg_l_sz, reg_l);
+}
 
-  reg_l = OZ_copyOzTerms(reg_l_sz, reg_l);
-
+void Propagator_D_VD_I::sClone(void) {
+  OZ_sCloneTerm(reg_n);
+  reg_l = OZ_sCloneAllocBlock(reg_l_sz, reg_l);
 }
 
 OZ_Term Propagator_D_VD_I::getParameters(void) const
@@ -174,12 +190,14 @@ Propagator_D_VI_D::~Propagator_D_VI_D(void)
   OZ_hfreeCInts(reg_l, reg_l_sz);
 }
 
-void Propagator_D_VI_D::updateHeapRefs(OZ_Boolean)
-{
-  OZ_updateHeapBlock(&reg_n, &reg_n, 2);
-
+void Propagator_D_VI_D::gCollect(void) {
+  OZ_gCollectBlock(&reg_n, &reg_n, 2);
   reg_l = OZ_copyCInts(reg_l_sz, reg_l);
+}
 
+void Propagator_D_VI_D::sClone(void) {
+  OZ_sCloneBlock(&reg_n, &reg_n, 2);
+  reg_l = OZ_copyCInts(reg_l_sz, reg_l);
 }
 
 OZ_Term Propagator_D_VI_D::getParameters(void) const
@@ -336,11 +354,14 @@ Propagator_VI_VD_I::~Propagator_VI_VD_I(void)
   OZ_hfreeOzTerms(reg_x, reg_sz);
 }
 
-void Propagator_VI_VD_I::updateHeapRefs(OZ_Boolean)
-{
+void Propagator_VI_VD_I::gCollect(void) {
   reg_a = OZ_copyCInts(reg_sz, reg_a);
-  reg_x = OZ_copyOzTerms(reg_sz, reg_x);
+  reg_x = OZ_gCollectAllocBlock(reg_sz, reg_x);
+}
 
+void Propagator_VI_VD_I::sClone(void) {
+  reg_a = OZ_copyCInts(reg_sz, reg_a);
+  reg_x = OZ_sCloneAllocBlock(reg_sz, reg_x);
 }
 
 OZ_Term Propagator_VI_VD_I::getParametersC(char * lit) const
@@ -353,10 +374,14 @@ OZ_Term Propagator_VI_VD_I::getParametersC(char * lit) const
 
 //-----------------------------------------------------------------------------
 
-void Propagator_VI_VD_I_D::updateHeapRefs(OZ_Boolean)
-{
-  Propagator_VI_VD_I::updateHeapRefs();
-  OZ_updateHeapTerm(reg_b);
+void Propagator_VI_VD_I_D::gCollect(void) {
+  Propagator_VI_VD_I::gCollect();
+  OZ_gCollectTerm(reg_b);
+}
+
+void Propagator_VI_VD_I_D::sClone(void) {
+  Propagator_VI_VD_I::sClone();
+  OZ_sCloneTerm(reg_b);
 }
 
 OZ_Term Propagator_VI_VD_I_D::getParametersC(char * lit) const
@@ -379,10 +404,12 @@ Propagator_VD::~Propagator_VD(void)
   OZ_hfreeOzTerms(reg_l, reg_l_sz);
 }
 
-void Propagator_VD::updateHeapRefs(OZ_Boolean)
-{
-  reg_l = OZ_copyOzTerms(reg_l_sz, reg_l);
+void Propagator_VD::gCollect(void) {
+  reg_l = OZ_gCollectAllocBlock(reg_l_sz, reg_l);
+}
 
+void Propagator_VD::sClone(void) {
+  reg_l = OZ_sCloneAllocBlock(reg_l_sz, reg_l);
 }
 
 OZ_Term Propagator_VD::getParameters(void) const
@@ -411,11 +438,14 @@ Propagator_VD_VI::~Propagator_VD_VI(void)
   OZ_hfreeOzTerms(reg_l, reg_sz);
 }
 
-void Propagator_VD_VI::updateHeapRefs(OZ_Boolean)
-{
-  reg_l      = OZ_copyOzTerms(reg_sz, reg_l);
+void Propagator_VD_VI::gCollect(void) {
+  reg_l      = OZ_gCollectAllocBlock(reg_sz, reg_l);
   reg_offset = OZ_copyCInts(reg_sz, reg_offset);
+}
 
+void Propagator_VD_VI::sClone(void) {
+  reg_l      = OZ_sCloneAllocBlock(reg_sz, reg_l);
+  reg_offset = OZ_copyCInts(reg_sz, reg_offset);
 }
 
 OZ_Term Propagator_VD_VI::getParameters(void) const
@@ -451,9 +481,14 @@ Propagator_VD_VI_VI_I::~Propagator_VD_VI_VI_I(void)
 
 }
 
-void Propagator_VD_VI_VI_I::updateHeapRefs(OZ_Boolean)
-{
-  reg_l      = OZ_copyOzTerms(reg_sz, reg_l);
+void Propagator_VD_VI_VI_I::gCollect(void) {
+  reg_l      = OZ_gCollectAllocBlock(reg_sz, reg_l);
+  reg_offset = OZ_copyCInts(reg_sz, reg_offset);
+  reg_use    = OZ_copyCInts(reg_sz, reg_use);
+}
+
+void Propagator_VD_VI_VI_I::sClone(void) {
+  reg_l      = OZ_sCloneAllocBlock(reg_sz, reg_l);
   reg_offset = OZ_copyCInts(reg_sz, reg_offset);
   reg_use    = OZ_copyCInts(reg_sz, reg_use);
 }
@@ -564,12 +599,16 @@ Propagator_VI_VVD_I::~Propagator_VI_VVD_I(void)
   OZ_hfreeOzTerms(reg_x, reg_x_sz);
 }
 
-void Propagator_VI_VVD_I::updateHeapRefs(OZ_Boolean)
-{
-  reg_x      = OZ_copyOzTerms(reg_x_sz, reg_x);
+void Propagator_VI_VVD_I::gCollect(void) {
+  reg_x      = OZ_gCollectAllocBlock(reg_x_sz, reg_x);
   reg_a      = OZ_copyCInts(reg_sz, reg_a);
   reg_smd_sz = OZ_copyCInts(reg_sz, reg_smd_sz);
+}
 
+void Propagator_VI_VVD_I::sClone(void) {
+  reg_x      = OZ_sCloneAllocBlock(reg_x_sz, reg_x);
+  reg_a      = OZ_copyCInts(reg_sz, reg_a);
+  reg_smd_sz = OZ_copyCInts(reg_sz, reg_smd_sz);
 }
 
 OZ_Term Propagator_VI_VVD_I::getParametersC(char * lit) const
@@ -596,10 +635,15 @@ Propagator_D_FD_D::Propagator_D_FD_D(OZ_Term v, OZ_Term d, OZ_Term b)
   reg_domain.initDescr(d);
 }
 
-void Propagator_D_FD_D::updateHeapRefs(OZ_Boolean)
-{
-  OZ_updateHeapTerm(reg_v);
-  OZ_updateHeapTerm(reg_b);
+void Propagator_D_FD_D::gCollect(void) {
+  OZ_gCollectTerm(reg_v);
+  OZ_gCollectTerm(reg_b);
+  reg_domain.copyExtension();
+}
+
+void Propagator_D_FD_D::sClone(void) {
+  OZ_sCloneTerm(reg_v);
+  OZ_sCloneTerm(reg_b);
   reg_domain.copyExtension();
 }
 
@@ -620,10 +664,14 @@ Propagator_VD_D_D_D::Propagator_VD_D_D_D(OZ_Term v, OZ_Term l,
   reg_v = vectorToOzTerms(v, reg_v_sz);
 }
 
-void Propagator_VD_D_D_D::updateHeapRefs(OZ_Boolean)
-{
-  OZ_updateHeapBlock(&reg_low, &reg_low, 3);
-  reg_v = OZ_copyOzTerms(reg_v_sz, reg_v);
+void Propagator_VD_D_D_D::gCollect(void) {
+  OZ_gCollectBlock(&reg_low, &reg_low, 3);
+  reg_v = OZ_gCollectAllocBlock(reg_v_sz, reg_v);
+}
+
+void Propagator_VD_D_D_D::sClone(void) {
+  OZ_sCloneBlock(&reg_low, &reg_low, 3);
+  reg_v = OZ_sCloneAllocBlock(reg_v_sz, reg_v);
 }
 
 Propagator_VD_D_D_D::~Propagator_VD_D_D_D(void)
@@ -639,9 +687,12 @@ OZ_Term Propagator_VD_D_D_D::getParameters(void) const
 
 //-----------------------------------------------------------------------------
 
-void Propagator_D_I_D_I::updateHeapRefs(OZ_Boolean)
-{
-  OZ_updateHeapBlock(&reg_x, &reg_x, 2);
+void Propagator_D_I_D_I::gCollect(void) {
+  OZ_gCollectBlock(&reg_x, &reg_x, 2);
+}
+
+void Propagator_D_I_D_I::sClone(void) {
+  OZ_sCloneBlock(&reg_x, &reg_x, 2);
 }
 
 OZ_Term Propagator_D_I_D_I::getParameters(void) const
@@ -651,10 +702,14 @@ OZ_Term Propagator_D_I_D_I::getParameters(void) const
 
 //-----------------------------------------------------------------------------
 
-void Propagator_D_I_D_I_D::updateHeapRefs(OZ_Boolean)
-{
-  Propagator_D_I_D_I::updateHeapRefs();
-  OZ_updateHeapTerm(reg_b);
+void Propagator_D_I_D_I_D::gCollect(void)  {
+  Propagator_D_I_D_I::gCollect();
+  OZ_gCollectTerm(reg_b);
+}
+
+void Propagator_D_I_D_I_D::sClone(void)  {
+  Propagator_D_I_D_I::sClone();
+  OZ_sCloneTerm(reg_b);
 }
 
 OZ_Term Propagator_D_I_D_I_D::getParameters(void) const
@@ -687,10 +742,15 @@ Propagator_VI_VD_D::~Propagator_VI_VD_D(void)
   OZ_hfreeOzTerms(reg_x, reg_sz);
 }
 
-void Propagator_VI_VD_D::updateHeapRefs(OZ_Boolean)
-{
-  OZ_updateHeapTerm(reg_d);
-  reg_x = OZ_copyOzTerms(reg_sz, reg_x);
+void Propagator_VI_VD_D::gCollect(void) {
+  OZ_gCollectTerm(reg_d);
+  reg_x = OZ_gCollectAllocBlock(reg_sz, reg_x);
+  reg_a = OZ_copyCInts(reg_sz, reg_a);
+}
+
+void Propagator_VI_VD_D::sClone(void) {
+  OZ_sCloneTerm(reg_d);
+  reg_x = OZ_sCloneAllocBlock(reg_sz, reg_x);
   reg_a = OZ_copyCInts(reg_sz, reg_a);
 }
 

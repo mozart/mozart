@@ -143,7 +143,7 @@ void SiteHashTable::cleanup(){
 }
 
 //
-void gcSiteTable() {
+void gCollectSiteTable() {
   siteTable->cleanup();
 }
 

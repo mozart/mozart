@@ -400,7 +400,7 @@ enum OZ_FDPropState {fd_prop_singl = 0, fd_prop_bounds, fd_prop_any};
 class OZ_Propagator {
   friend class Propagator;
 private:
-  OZ_Propagator * gc(void);
+  OZ_Propagator * cac(void);
 public:
   OZ_Propagator(void) {}
   virtual ~OZ_Propagator(void) {}
@@ -418,7 +418,8 @@ public:
   OZ_Boolean addImpose(OZ_FSetPropState s, OZ_Term v);
   void impose(OZ_Propagator *);
   virtual size_t sizeOf(void) = 0;
-  virtual void updateHeapRefs(OZ_Boolean duplicate) = 0;
+  virtual void sClone(void) = 0;
+  virtual void gCollect(void) = 0;
   virtual OZ_Return propagate(void) = 0;
   virtual OZ_Term getParameters(void) const = 0;
   virtual OZ_PropagatorProfile * getProfile(void) const = 0;
@@ -548,30 +549,41 @@ public:
 //-----------------------------------------------------------------------------
 // Miscellaneous
 
-inline
-void OZ_updateHeapTerm(OZ_Term &t) {
-  OZ_collectHeapBlock(&t,&t,1);
-}
-
-inline
-void OZ_updateHeapBlock(OZ_Term *f, OZ_Term *t, int n) {
-  OZ_collectHeapBlock(f,t,n);
-}
-
-OZ_Boolean OZ_isPosSmallInt(OZ_Term val);
-
+// Allocation
 OZ_Term * OZ_hallocOzTerms(int);
 int *     OZ_hallocCInts(int);
 char *    OZ_hallocChars(int);
-OZ_Term * OZ_copyOzTerms(int, OZ_Term *);
-inline int * OZ_copyCInts(int n, int * frm) {
+
+// Copying
+inline
+int * OZ_copyCInts(int n, int * frm) {
   if (n>0) {
     return (int *) memcpy(OZ_hallocCInts(n), frm, n*sizeof(int));
   } else {
     return ((int *) 0);
   }
 }
-char *    OZ_copyChars(int, char *);
+char * OZ_copyChars(int, char *);
+
+// Garbage collection
+inline
+void OZ_gCollectTerm(OZ_Term &t) {
+  OZ_gCollectBlock(&t, &t, 1);
+}
+OZ_Term * OZ_gCollectAllocBlock(int, OZ_Term *);
+
+// Cloning
+inline
+void OZ_sCloneTerm(OZ_Term &t) {
+  OZ_sCloneBlock(&t, &t, 1);
+}
+OZ_Term * OZ_sCloneAllocBlock(int, OZ_Term *);
+
+
+OZ_Boolean OZ_isPosSmallInt(OZ_Term val);
+
+// Free
+
 void      OZ_hfreeOzTerms(OZ_Term *, int);
 void      OZ_hfreeCInts(int *, int);
 void      OZ_hfreeChars(char *, int);

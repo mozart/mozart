@@ -68,22 +68,22 @@ extern void (*marshalObject)(ConstTerm *t, MsgBuffer *bs, GenTraverser *gt);
 extern void (*marshalSPP)(TaggedRef term, MsgBuffer *bs,Bool trail);
 
 //
-extern void (*gcProxyRecurse)(Tertiary *t);
-extern void (*gcManagerRecurse)(Tertiary *t);
-extern ConstTerm* (*gcDistResource)(ConstTerm*);
-extern void (*gcDistCellRecurse)(Tertiary *t);
-extern void (*gcDistLockRecurse)(Tertiary *t);
-extern void (*gcDistPortRecurse)(Tertiary *t);
+extern void (*gCollectProxyRecurse)(Tertiary *t);
+extern void (*gCollectManagerRecurse)(Tertiary *t);
+extern ConstTerm* (*gCollectDistResource)(ConstTerm*);
+extern void (*gCollectDistCellRecurse)(Tertiary *t);
+extern void (*gCollectDistLockRecurse)(Tertiary *t);
+extern void (*gCollectDistPortRecurse)(Tertiary *t);
 //
 //
 //
-extern void (*gcBorrowTableUnusedFrames)();
-extern void (*gcFrameToProxy)();
+extern void (*gCollectBorrowTableUnusedFrames)();
+extern void (*gCollectFrameToProxy)();
 
 //
-extern void (*gcPerdioFinal)();
-extern void (*gcPerdioRoots)();
-extern void (*gcEntityInfo)(Tertiary*);
+extern void (*gCollectPerdioFinal)();
+extern void (*gCollectPerdioRoots)();
+extern void (*gCollectEntityInfo)(Tertiary*);
 
 // exit hook;
 extern void (*dpExit)();

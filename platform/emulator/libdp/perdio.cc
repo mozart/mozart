@@ -62,7 +62,7 @@
 inline
 void OZ_collectHeapTermUnsafe(TaggedRef & frm, TaggedRef & to) {
   if (frm)
-    OZ_collectHeapTerm(frm,to);
+    oz_gCollectTerm(frm,to);
   else
     to=frm;
 }
@@ -272,10 +272,10 @@ void gcManagerRecurseImpl(Tertiary *t) {
   oe->gcPO(t);
 }
 
-void gcPendThread(PendThread **pt){
+void gCollectPendThread(PendThread **pt){
   PendThread *tmp;
   while(*pt!=NULL){
-    tmp=new PendThread(SuspToThread((*pt)->thread->gcSuspendable()),(*pt)->next);
+    tmp=new PendThread(SuspToThread((*pt)->thread->gCollectSuspendable()),(*pt)->next);
     tmp->exKind = (*pt)->exKind;
     if(tmp->exKind==REMOTEACCESS) {
       tmp->nw = (*pt)->nw;
@@ -1045,17 +1045,17 @@ void initDPCore()
   triggerVariable = triggerVariableImpl;
   marshalObject = marshalObjectImpl;
   marshalSPP = marshalSPPImpl;
-  gcProxyRecurse = gcProxyRecurseImpl;
-  gcManagerRecurse = gcManagerRecurseImpl;
-  gcDistResource = gcDistResourceImpl;
-  gcDistCellRecurse = gcDistCellRecurseImpl;
-  gcDistLockRecurse = gcDistLockRecurseImpl;
-  gcDistPortRecurse = gcDistPortRecurseImpl;
-  gcBorrowTableUnusedFrames = gcBorrowTableUnusedFramesImpl;
-  gcFrameToProxy = gcFrameToProxyImpl;
-  gcPerdioFinal = gcPerdioFinalImpl;
-  gcPerdioRoots = gcPerdioRootsImpl;
-  gcEntityInfo = gcEntityInfoImpl;
+  gCollectProxyRecurse = gcProxyRecurseImpl;
+  gCollectManagerRecurse = gcManagerRecurseImpl;
+  gCollectDistResource = gcDistResourceImpl;
+  gCollectDistCellRecurse = gcDistCellRecurseImpl;
+  gCollectDistLockRecurse = gcDistLockRecurseImpl;
+  gCollectDistPortRecurse = gcDistPortRecurseImpl;
+  gCollectBorrowTableUnusedFrames = gcBorrowTableUnusedFramesImpl;
+  gCollectFrameToProxy = gcFrameToProxyImpl;
+  gCollectPerdioFinal = gcPerdioFinalImpl;
+  gCollectPerdioRoots = gcPerdioRootsImpl;
+  gCollectEntityInfo = gcEntityInfoImpl;
   dpExit = dpExitImpl;
 #ifdef DEBUG_CHECK
   maybeDebugBufferGet = maybeDebugBufferGetImpl;

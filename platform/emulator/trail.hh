@@ -52,7 +52,8 @@ public:
   Script(void) : size(0) {}
   ~Script() {}
 
-  void gc(void);
+  void gCollect(void);
+  void sClone(void);
 
   void allocate(int n) {
     Assert(n > 0);

@@ -49,8 +49,10 @@ public:
   VarStatus checkStatusV() = 0;
   Bool validV(TaggedRef v) { return TRUE; }
   virtual int getIdV() = 0;
-  virtual OzVariable *gcV(void) = 0;
-  virtual void gcRecurseV(void) = 0;
+  virtual OzVariable *gCollectV(void) = 0;
+  virtual void gCollectRecurseV(void) = 0;
+  virtual OzVariable *sCloneV(void) { Assert(0); }
+  virtual void sCloneRecurseV(void) { Assert(0); }
   virtual void disposeV(void) = 0;
   virtual void printStreamV(ostream &out,int depth = 10) = 0;
   virtual OZ_Return bindV(TaggedRef *vptr, TaggedRef t) = 0;
@@ -86,8 +88,10 @@ public:
   int getIdV() { return OZ_EVAR_PROXY; }
   OZ_Term statusV();
   VarStatus checkStatusV();
-  OzVariable *gcV() { return new ProxyVar(*this); }
-  void gcRecurseV(void);
+  OzVariable *gCollectV() { return new ProxyVar(*this); }
+  OzVariable *sCloneV() { Assert(0); return NULL; }
+  void gCollectRecurseV(void);
+  void sCloneRecurseV(void) { Assert(0); }
   void disposeV(void) { // PER-LOOK when is this used
     disposeS();
     freeListDispose(this,sizeof(ProxyVar));
@@ -172,8 +176,10 @@ public:
   int getIdV() { return OZ_EVAR_MANAGER; }
   OZ_Term statusV();
   VarStatus checkStatusV();
-  OzVariable *gcV() { return new ManagerVar(*this); }
-  void gcRecurseV(void);
+  OzVariable *gCollectV() { return new ManagerVar(*this); }
+  OzVariable *sCloneV() { Assert(0); return NULL; }
+  void gCollectRecurseV(void);
+  void sCloneRecurseV(void) { Assert(0); }
   void printStreamV(ostream &out,int depth = 10) { out << "<dist:mgr>"; }
   OZ_Return bindV(TaggedRef *vptr, TaggedRef t);
   OZ_Return bindVInternal(TaggedRef *vptr, TaggedRef t,DSite* );

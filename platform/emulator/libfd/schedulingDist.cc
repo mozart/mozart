@@ -205,16 +205,23 @@ OZ_BI_end
 // COPYING
 //////////
 
-void TaskIntervalsProof::updateHeapRefs(OZ_Boolean duplicate)
-{
+void TaskIntervalsProof::gCollect(void) {
+  OZ_gCollectTerm(stream);
 
-  if (!duplicate)
-    reg_durs[-1] = (int *) int(reg_durs[-1]) + 1;
+  reg_fds          = OZ_gCollectAllocBlock(reg_fds_size, reg_fds);
+  reg_pe           = OZ_gCollectAllocBlock(1, reg_pe);
+  reg_nb_tasks     = OZ_copyCInts(reg_nb_tasks_size, reg_nb_tasks);
+  reg_order_vector = OZ_copyCInts(reg_order_vector_size, reg_order_vector);
 
-  OZ_updateHeapTerm(stream);
+}
 
-  reg_fds          = OZ_copyOzTerms(reg_fds_size, reg_fds);
-  reg_pe           = OZ_copyOzTerms(1, reg_pe);
+void TaskIntervalsProof::sClone(void) {
+  reg_durs[-1] = (int *) int(reg_durs[-1]) + 1;
+
+  OZ_sCloneTerm(stream);
+
+  reg_fds          = OZ_sCloneAllocBlock(reg_fds_size, reg_fds);
+  reg_pe           = OZ_sCloneAllocBlock(1, reg_pe);
   reg_nb_tasks     = OZ_copyCInts(reg_nb_tasks_size, reg_nb_tasks);
   reg_order_vector = OZ_copyCInts(reg_order_vector_size, reg_order_vector);
 
