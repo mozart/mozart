@@ -77,12 +77,20 @@ fun instantiate {$ IMPORT}
       else skip end
    end
 
-   proc {MagicEmacsBar File Line Column State}
-      C = case Column == unit then 0 else Column end
+   local
+      BarLock = {NewLock}
    in
-      {Delay 5}
-      {Print {VS2A 'oz-bar ' # File # ' ' # Line # ' ' # C # ' ' # State}}
-      {Delay 5}
+      proc {MagicEmacsBar File Line Column State}
+	 C = case Column == unit then 0 else Column end
+	 S = {VS2A 'oz-bar ' # File # ' ' # Line # ' ' # C # ' ' # State}
+      in
+	 lock BarLock then
+	    {Print S}
+	    %% enforce a thread preemption to win some time --
+	    %% this is needed for Emacs to always match the regex correctly...
+	    {Delay 1}
+	 end
+      end
    end
 
    fun {UnknownFile F}
