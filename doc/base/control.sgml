@@ -207,7 +207,7 @@
           <Synopsis>
             <<Time.repeat>>
           <Item>
-            is a class inheriting from <<BaseObject>> which allows to
+            is a class which allows to
             <List>
               <Item>
                 repeat an action infinitely often, or a fixed number of times
@@ -240,10 +240,8 @@
                 iterations (default: constant <<1000>>), and the maximal
                 number ?_{NumI} of iterations (default: infinitely many).
               <P>
-                The methods <<dummyRep>> and <<finalRep>> do nothing.  When
-                both <<delay>> and <<delayFun>> parameters are given, the
-                value of ?_{DelayFunP} takes priority over that one of
-                ?_{DelayI}.  The default actions ?_{ActionPR} and ?_{FinalPR}
+                The methods <<dummyRep>> and <<finalRep>> do nothing.  Only
+                one of the <<delay>> and <<delayFun>> parameters can be given.  The default actions ?_{ActionPR} and ?_{FinalPR}
                 can be changed by inheritance.
               <P>
                 The loop is started on the calling thread.
