@@ -878,6 +878,8 @@ REGEXCHAR    "["([^\]\\]|\\.)+"]"|\"[^"]+\"|\\.|[^<>"\[\]\\\n]
 
 "[]"                           { return T_CHOICE; }
 "..."                          { return T_LDOTS; }
+".."                           { return T_2DOTS; }
+"<--"                          { return T_ITER; }
 "<-"                           { return T_OOASSIGN; }
 "<="                           { return T_DEFAULT; }
 "=>"                           { return T_REDUCE; }
@@ -912,6 +914,7 @@ REGEXCHAR    "["([^\]\\]|\\.)+"]"|\"[^"]+\"|\\.|[^<>"\[\]\\\n]
 
 {OZINT}                        { return T_OZINT; }
 
+~?{INT}/\.\.                   { return T_OZINT; }
 ~?{INT}\.{DIGIT}*((e|E)~?{INT})? { return T_OZFLOAT; }
 
 "unit"/\(                      { return T_UNIT_LABEL; }
@@ -1040,7 +1043,7 @@ REGEXCHAR    "["([^\]\\]|\\.)+"]"|\"[^"]+\"|\\.|[^<>"\[\]\\\n]
                                  return T_AMPER;
                                }
 
-"{"|"}"|"("|")"|"["|"]"|"|"|"#"|":"|"="|"."|"^"|"@"|"$"|"!"|"~"|"_"|"," {
+"{"|"}"|"("|")"|"["|"]"|"|"|"#"|":"|"="|"."|"^"|"@"|"$"|"!"|"~"|"_"|","|";" {
                                  return xytext[0];
                                }
 
