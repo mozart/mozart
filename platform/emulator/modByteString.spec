@@ -60,6 +60,10 @@
 
      'strchr'	=> { in  => ['+byteString','+int','+int'],
 		     out => ['+value'],
-		     bi  => BIByteString_strchr}
+		     bi  => BIByteString_strchr},
+
+     'cmp'	=> { in  => ['+byteString','+byteString'],
+		     out => ['+int'],
+		     bi  => BIByteString_cmp}
      );
 1;;
