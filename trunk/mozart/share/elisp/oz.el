@@ -532,7 +532,7 @@ the GDB commands `cd DIR' and `directory'."
    (concat
     (oz-make-keywords-for-match
      '(
-       "pred" "proc" "fun"
+       "proc" "fun"
        "local" "declare"
        "if" "or" "OR" "case" "then" "else" "elseif" "of" "elseof" "end" "fi" "ro" "RO"
        "class" "create" "meth" "extern" "from" "with" "attr" "feat" "self"
@@ -540,7 +540,7 @@ the GDB commands `cd DIR' and `directory'."
        "div" "mod"
        "not" "thread" "in"
        ))
-    "\\|\\.\\|\\[\\]\\|#\\|!\\|\\^\\|:\\|\\@"
+    "\\|\\.\\|\\[\\]\\|#\\|!\\|:\\|\\@"
     ))
 
 
@@ -549,7 +549,7 @@ the GDB commands `cd DIR' and `directory'."
 (defconst oz-begin-pattern
       (oz-make-keywords-for-match 
 	         '(
-		   "pred" "proc" "fun"
+		   "proc" "fun"
 		   "local"
 		   "if" "or" "OR" "case"
 		   "class" "create" "meth" "extern"
@@ -695,7 +695,7 @@ the GDB commands `cd DIR' and `directory'."
 		 (current-column)
 	       (+ (current-column) oz-indent-chars)))
 	    ((looking-at oz-begin-pattern)
-	     ;; we are the first token after 'if' 'pred' ...
+	     ;; we are the first token after 'if' 'proc' ...
 	     (+ (current-column) oz-indent-chars))
 	    ((looking-at oz-left-pattern)
 	     ;; we are the first token after '(' '{' ...
