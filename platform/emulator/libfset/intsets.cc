@@ -802,7 +802,7 @@ OZ_CFunHeader FSetSeqPropagator::header = fsp_seq;
 
 OZ_Return FSetSeqPropagator::propagate(void)
 {
-  _OZ_DEBUGPRINTTHIS("in ");
+  OZ_DEBUGPRINTTHIS("in ");
 
   DECL_DYN_ARRAY(OZ_FSetVar, vs, _vs_size);
   PropagatorController_VS P(_vs_size, vs);
@@ -819,7 +819,7 @@ OZ_Return FSetSeqPropagator::propagate(void)
 
       lb_max = max(lb_max, lb_max_tmp);
 
-      _OZ_DEBUGPRINT(("%d", lb_max));
+      OZ_DEBUGPRINT(("%d", lb_max));
 
       // there is no maximal element in the lower bound so far
       if (lb_max == -1)
@@ -827,10 +827,10 @@ OZ_Return FSetSeqPropagator::propagate(void)
 
       FailOnInvalid(*vs[i+1] >= (lb_max + 1));
 
-      _OZ_DEBUGPRINT(("%d %s > %d\n", i, vs[i]->toString(), lb_max));
+      OZ_DEBUGPRINT(("%d %s > %d\n", i, vs[i]->toString(), lb_max));
     }
 
-    _OZ_DEBUGPRINTTHIS("after #1 ");
+    OZ_DEBUGPRINTTHIS("after #1 ");
   }
 
   {
@@ -844,7 +844,7 @@ OZ_Return FSetSeqPropagator::propagate(void)
 
       lb_min = min(lb_min, lb_min_tmp);
 
-      _OZ_DEBUGPRINT(("%d", lb_min));
+      OZ_DEBUGPRINT(("%d", lb_min));
 
       // there is no minimal element in the lower bound so far
       if (lb_min == sup1)
@@ -852,16 +852,16 @@ OZ_Return FSetSeqPropagator::propagate(void)
 
       FailOnInvalid(*vs[i-1] <= (lb_min - 1));
 
-     _OZ_DEBUGPRINT(("#2 %d %s < %d\n", i, vs[i]->toString(), lb_min));
+     OZ_DEBUGPRINT(("#2 %d %s < %d\n", i, vs[i]->toString(), lb_min));
     }
   }
 
-  _OZ_DEBUGPRINTTHIS("out ");
+  OZ_DEBUGPRINTTHIS("out ");
 
   return P.leave();
 
 failure:
-  _OZ_DEBUGPRINTTHIS("failed");
+  OZ_DEBUGPRINTTHIS("failed");
   return P.fail();
 }
 

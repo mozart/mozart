@@ -2201,8 +2201,9 @@ void ConstTerm::gcConstRecurse()
       Space *s = (Space *) this;
       s->gcEntityInfo();
       if (!s->isProxy()) {
-        if (s->solve != (Board *) 1)
-        s->solve = s->solve->gcBoard();
+        if (s->solve != (Board *) 1) {
+          s->solve = s->solve->gcBoard();
+        }
         if (s->isLocal()) {
           s->setBoard(GETBOARD(s)->gcBoard());
         }
@@ -2414,6 +2415,11 @@ ConstTerm *ConstTerm::gcConstTerm() {
     {
       Space *sp = (Space *) this;
       CheckLocal(sp);
+
+      Board *bb=GETBOARD(sp);
+      Assert(isInGc || bb->isInTree());
+      Assert(!isInGc || !inToSpace(bb));
+
       ret = (ConstTerm *) gcReallocStatic(this,sizeof(Space));
       break;
     }
@@ -2604,7 +2610,7 @@ void TaskStack::gc(TaskStack *newstack) {
     } else if (PC == C_XCONT_Ptr) {
       // mm2: opt: only the top task can/should be xcont!!
       ProgramCounter pc   = (ProgramCounter) *(oldtop-1);
-      if (isInGc)
+      // if (isInGc)
         (void)CodeArea::livenessX(pc,Y,getRefsArraySize(Y));
       Y = gcRefsArray(Y); // X
     } else if (PC == C_LOCK_Ptr) {
