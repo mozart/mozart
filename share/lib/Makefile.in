@@ -455,7 +455,7 @@ bootstrap:
 #    make check
 #  test a new emulator with
 #    make check OZEMULATOR=$(HOME)/Oz/Emulator/oz.emulator.bin
-.PHONY: stage1 stage1-bootstrap stage2 stage3 check
+.PHONY: stage1 stage2 stage3 check
 
 STAGE1=./stage1
 STAGE2=./stage2
