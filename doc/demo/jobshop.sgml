@@ -25,9 +25,16 @@
   <Title/Job-Shop Scheduling/
 
   <P>
-    The scheduler allows to edit (<Ptr to="section.jobshop.edit">)
+    <List>
+      <Item><Ref.Extern to="applets/JobShop.oza"/[Start Applet]/
+      <Item><Ref to="appendix.enable"/[How to enable Applets]/
+    </List>
+  </P>
+
+  <P>
+    The scheduler allows to <Ref to="section.jobshop.edit"/edit/
     job-shop scheduling problems and to compute
-    schedules (<Ptr to="section.jobshop.schedule">)
+    <Ref to="section.jobshop.schedule"/schedules/
     for the edited problem.
   </P>
 

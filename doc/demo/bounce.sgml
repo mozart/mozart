@@ -24,6 +24,13 @@
 <Chapter id="chapter.bounce">
   <Title/Bounce/
 
+  <P>
+    <List>
+      <Item><Ref.Extern to="applets/Bounce.oza"/[Start Applet]/
+      <Item><Ref to="appendix.enable"/[How to enable Applets]/
+    </List>
+  </P>
+
   <Section class=unnumbered>
     <Title/Creating a Ball/
 

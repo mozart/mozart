@@ -25,6 +25,13 @@
   <Title/Lift/
 
   <P>
+    <List>
+      <Item><Ref.Extern to="applets/Lift.oza"/[Start Applet]/
+      <Item><Ref to="appendix.enable"/[How to enable Applets]/
+    </List>
+  </P>
+
+  <P>
     This demo performs a simple simulation of lifts. It can be operated
     both in an interactive (<Ptr to="section.lift.interactive">) mode
     or fully automatically (<Ptr to="section.lift.automatic">).

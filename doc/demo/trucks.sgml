@@ -23,4 +23,18 @@
 
 <Chapter id="chapter.trucks">
     <Title/Truck Race/
+
+  <P>
+    <List>
+      <Item><Ref.Extern to="applets/Trucks.oza"/[Start Applet]/
+      <Item><Ref to="appendix.enable"/[How to enable Applets]/
+    </List>
+  </P>
+
+    <P>
+      Clicking on a truck with the left mouse button starts or stops
+      it. The truck can be speeded up by clicking with the middle
+      mouse button or slowed down with the rightmost mouse button.
+    </P>
+
 </Chapter>
