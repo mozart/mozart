@@ -36,7 +36,9 @@
 void main(int argc, char **argv)
 {
   char buffer[5000];
-  GetModuleFileName(NULL, buffer, sizeof(buffer));
+  buffer[0] = '"';
+  GetModuleFileName(NULL, &buffer[1], sizeof(buffer) - 2);
+  strcat(buffer, "\"");
 
   char **newargs = new char*[argc+1];
 
