@@ -331,7 +331,7 @@ Thread *AM::mkRunnableThread(int prio, Board *bb, Bool inSolve, Bool link)
 inline
 Thread *AM::mkWakeupThread(Board *bb) 
 {
-  return new Thread(S_WAKEUP,bb->getActor()->getPriority(),bb,0);
+  return new Thread(S_WAKEUP,DEFAULT_PRIORITY,bb,0);
 }
 
 //
