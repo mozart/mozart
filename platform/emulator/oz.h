@@ -410,11 +410,9 @@ extern OZ_Return _FUNDECL(OZ_suspendOnInternal3,(OZ_Term,OZ_Term,OZ_Term));
    */
 
 #ifdef __cplusplus
-#define _OZ_BI_proto(Name) OZ_Return _FUNDECL(Name,(OZ_Term [],int []))
-#define OZ_BI_proto(Name)  extern "C" _OZ_BI_proto(Name);
+#define OZ_BI_proto(Name)  extern "C" OZ_Return (ozcdecl Name)(OZ_Term [],int [])
 #else
-#define _OZ_BI_proto(Name) OZ_Return _FUNDECL(Name,(OZ_Term [],int []))
-#define OZ_BI_proto(Name) _OZ_BI_proto(Name);
+#define OZ_BI_proto(Name)  extern OZ_Return (ozcdecl Name)()
 #endif
 
 #define OZ_ID_MAP 0
@@ -424,7 +422,7 @@ extern OZ_Return _FUNDECL(OZ_suspendOnInternal3,(OZ_Term,OZ_Term,OZ_Term));
 
 #define OZ_BI_define(Name,Arity_IN,Arity_OUT)                   \
 OZ_BI_proto(Name);                                              \
-OZ_Return FUNDECL(Name,(OZ_Term _OZ_ARGS[],int _OZ_LOC[])) {    \
+OZ_Return (ozcdecl Name)(OZ_Term _OZ_ARGS[],int _OZ_LOC[]) {    \
     const int _OZ_arity = Arity_IN;
 
 #define OZ_BI_end }
