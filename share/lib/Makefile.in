@@ -130,7 +130,7 @@ BASESRC1 = \
         VirtualString Object Loop Port \
         Time Thread Space Array Dictionary \
         Exception Functor BitArray BitString \
-        ByteString ForeignPointer Base InterFault \
+        ByteString ForeignPointer Base \
         Combinators
 BASESRC = $(BASESRC1:%=base/%.oz)
 
@@ -248,7 +248,7 @@ compiler-Opcodes.oz: compiler/Opcodes.m4oz $(EMUSRCDIR)/instrDefs.m4
 
 FUNFUNCTORS = PrintName.ozf Builtins.ozf Unnester.ozf Core.ozf \
         StaticAnalysis.ozf CodeGen.ozf Assembler.ozf \
-        Main.ozf RunTime.ozf Annotate.ozf
+        Main.ozf RunTime.ozf Annotate.ozf GroundZip.ozf
 
 PrintName.ozf: compiler/PrintName.oz
 
