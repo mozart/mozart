@@ -62,10 +62,6 @@ OZ_BI_define(BIchunkWidth, 1,1)
   case CVAR:
     oz_suspendOn(makeTaggedRef(chPtr));
 
-  case EXT:
-    if (!oz_isChunk(ch)) oz_typeError(0,"Chunk");
-    OZ_RETURN(makeTaggedSmallInt (0));
-
   case OZCONST:
     if (!oz_isChunk(ch)) oz_typeError(0,"Chunk");
     //
@@ -176,10 +172,6 @@ OZ_BI_define(BIchunkArity,1,1)
     // FUT
   case CVAR:
     oz_suspendOn(makeTaggedRef(chPtr));
-
-  case EXT:
-    if (!oz_isChunk(ch)) oz_typeError(0,"Chunk");
-    OZ_RETURN(oz_nil());
 
   case OZCONST:
     if (!oz_isChunk(ch)) oz_typeError(0,"Chunk");
