@@ -57,7 +57,7 @@ mozart.el: mozart.el.in ../config.status
 mozart.elc: oz.elc
 
 oz.elc mozart.elc oz-extra.elc: %.elc : %.el
-	$(EMACS) -L $(SRCDIR) -q -batch -f batch-byte-compile $< && \
+	$(EMACS) --eval "(setq load-path (cons \"$(SRCDIR)\" load-path))" -q -batch -f batch-byte-compile $< && \
 	if [ $<c != $@ ]; then mv $<c $@; fi
 
 install: all $(ELISPDIR) $(LIBFILES)
