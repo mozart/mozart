@@ -1,7 +1,17 @@
 functor
+   %% ACTIONS
+   %%     1. write a package entry either using the makefile or a given package
+   %%     2. write contact entries
+   %%     3. list mogul info using makefile or given package
+   %%     4. list mogul database
+   %%     5. write section entries for current database
+   %%     6. delete entries in current database
+   %% ozmake --mogul-update
+   %% ozmake -M update
 export
    'class' : PubMogul
 prepare
+   IsPrefix = List.isPrefix
    fun {Return X} X end
    fun {List2VSX Accu X} Accu#X end
    fun {List2VS L} {FoldL L List2VSX nil} end
@@ -23,6 +33,8 @@ define
    class PubMogul
       attr
 	 DB : unit
+	 Dashes : unit
+	 EntryFiles : unit
 
       meth pubmogul_read()
 	 if @DB==unit then
@@ -70,49 +82,182 @@ define
 	 DB.(PKG.mogul) := {Dictionary.toRecord package PKG}
       end
 
-      meth ToMogulEntry(R VS)
+      meth ToMogulPackageEntry(R VS)
 	 Q={NewQueue}
       in
-	 {Q.put 'type:         package\n'}
+	 {Q.put 'type:           package\n'}
+	 {Q.put 'id:             '#R.mogul#'\n'}
 	 for A in {CondSelect R author nil} do
-	    {Q.put 'author:       '#A#'\n'}
+	    {Q.put 'author:         '#A#'\n'}
 	 end
-	 if {HasFeature R blurb} then {Q.put 'blurb:        '#R.blurb#'\n'} end
-	 {Q.put 'url-pkg:      '#
+	 if {HasFeature R blurb} then {Q.put 'blurb:          '#R.blurb#'\n'} end
+	 {Q.put 'url-pkg:        '#
 	  {Path.resolve {self get_mogulpkgurl($)}
-	   {Utils.mogulToPackagename {self get_mogul($)}}}#'\n'}
+	   {Utils.mogulToPackagename R.mogul}}#'\n'}
 	 case {CondSelect R doc unit} of F|_ then
-	    {Q.put 'url-doc:      '#
+	    {Q.put 'url-doc:        '#
 	     {Path.resolve {self get_moguldocurl($)}
-	      {Utils.mogulToPackagename {self get_mogul($)}}#'/'#F}#'\n'}
+	      {Utils.mogulToPackagename R.mogul}#'/'#F}#'\n'}
+	 else skip end
+	 for T in R.lib do %{self get_lib_targets($)} do
+	    {Q.put 'provides:       '#
+	     {Path.resolve R.uri T}#'\n'}
 	 end
-	 for T in {self get_lib_targets($)} do
-	    {Q.put 'provides:     '#
-	     {Path.resolve {self get_uri($)} T}#'\n'}
-	 end
-	 for T in {self get_bin_targets($)} do
-	    {Q.put 'provides:     '#T#'\n'}
+	 for T in R.bin do
+	    {Q.put 'provides:       '#T#'\n'}
 	 end
 	 if {HasFeature R info_html} then
-	    {Q.put 'content-type: text/html\n\n'}
+	    {Q.put 'content-type:   text/html\n\n'}
 	    {Q.put R.info_html}
 	 elseif {HasFeature R info_text} then
-	    {Q.put 'content-type: text/plain'}
+	    {Q.put 'content-type:   text/plain'}
 	    {Q.put R.info_text}
 	 end
 	 {List2VS {Q.toList} VS}
-	 {self print(VS)}
       end
 
-      meth mogul()
+      meth ToMogulContactEntry(R VS)
+	 Q={NewQueue}
+      in
+	 {Q.put 'type:           contact\n'}
+	 {Q.put 'id:             '#R.mogul}
+	 {Q.put '\nname:           '#R.name}
+	 if {HasFeature R name_for_index} then
+	    {Q.put '\nname-for-index: '#R.name_for_index}
+	 end
+	 if {HasFeature R email} then
+	    {Q.put '\nemail:          '#R.email}
+	 end
+	 if {HasFeature R www} then
+	    {Q.put '\nwww:            '#R.www}
+	 end
+	 {List2VS {Q.toList} VS}
+      end
+
+      meth HasPackageContribs(R $)
+	 {CondSelect R lib nil}\=nil orelse
+	 {CondSelect R bin nil}\=nil orelse
+	 {CondSelect R doc nil}\=nil
+      end
+
+      meth HasContactContribs(R $)
+	 {CondSelect R contact nil}\=nil
+      end
+
+      meth mogul_put()
 	 %% here we update the MOGUL entry for this package
 	 {self makefile_read_maybe_from_package}
+	 R  = {self makefile_to_record($)}
+	 PkgB = {self HasPackageContribs(R $)}
+	 ConB = {self HasContactContribs(R $)}
+      in
+	 if PkgB then {self mogul_put_package(R)} end
+	 if ConB then {self mogul_put_contact(R)} end
+	 if {Not (PkgB orelse ConB)} then
+	    {self trace('package contributes no MOGUL entries')}
+	 end
+      end
+
+      meth mogul_put_package(R)
+	 VS = {self ToMogulPackageEntry(R $)}
+	 F  = {Utils.mogulToFilename R.mogul}#'.mogul'
 	 D  = {self get_moguldbdir($)}
-	 VS = {self ToMogulEntry({self makefile_to_record($)} $)}
-	 F  = {Utils.mogulToFilename {self get_mogul($)}}#'.mogul'
 	 FF = {Path.resolve D F}
       in
 	 {self exec_write_to_file(VS FF)}
+	 {self trace({self format_title(' [ '#F#' ] ' $)})}
+	 {self trace(VS)}
+	 {self trace({self format_dashes($)})}
+      end
+
+      meth mogul_put_contact(R)
+	 D  = {self get_moguldbdir($)}
+      in
+	 for C in R.contact do
+	    VS = {self ToMogulContactEntry(C $)}
+	    F  = {Utils.mogulToFilename C.mogul}#'.mogul'
+	    FF = {Path.resolve D F}
+	 in
+	    {self exec_write_to_file(VS FF)}
+	    {self trace({self format_title(' [ '#F#' ] ' $)})}
+	    {self trace(VS)}
+	    {self trace({self format_dashes($)})}
+	 end
+      end
+
+      meth mogul()
+	 case {self get_mogul_action($)}
+	 of put then {self mogul_put}
+	 [] db  then {self mogul_db_list}
+	 end
+      end
+
+      meth mogul_validate_action(S $)
+	 case for A in [put delete print db fix] collect:C do
+		 if {IsPrefix S {AtomToString A}} then {C A} end
+	      end
+	 of nil then raise ozmake(mogul:unknownaction(S)) end
+	 [] [A] then A
+	 []  L  then raise ozmake(mogul:ambiguousaction(S L)) end
+	 end
+      end
+
+      meth format_title(T $)
+	 N  = {self get_linewidth($)} - {VirtualString.length T}
+	 N1 = N div 2
+	 N2 = N - N1
+      in
+	 for I in 1..N1 collect:COL do {COL &-} end#T#
+	 for I in 1..N2 collect:COL do {COL &-} end
+      end
+
+      meth format_dashes($)
+	 if @Dashes==unit then
+	    Dashes <-
+	    for I in 1..{self get_linewidth($)} collect:C do {C &-} end
+	 end
+	 @Dashes
+      end
+
+      meth mogul_db_readfiles()
+	 if @EntryFiles==unit then
+	    %% sections are deduced from the existing contact and package entries
+	    %% which can be indentified by their .mogul extension
+	    D = {self get_moguldbdir($)}
+	    L =
+	    for F in {Path.dir D} collect:Collect do
+	       case {Reverse F}
+	       of &l|&u|&g|&o|&m|&.|_ then {Collect {StringToAtom F}}
+	       else skip end
+	    end
+	 in
+	    EntryFiles <- {Sort L Value.'<'}
+	 end
+      end
+
+      meth mogul_db_list()
+	 {self mogul_db_readfiles}
+	 D = {self get_moguldbdir($)}
+      in
+	 for E in @EntryFiles B in false;true do
+	    if B then {self print(nil)} end
+	    {self print({self format_title(' [ '#E#' ] ' $)})}
+	    {self print({Utils.slurpFile {Path.resolve D E}})}
+	 end
+	 if @EntryFiles\=nil then
+	    {self print({self format_dashes($)})}
+	 end
+      end
+
+      meth CollectMogulIds()
+	 {self mogul_db_readfiles}
+	 EntryIds <-
+	 for F in @EntryFiles collect:COL do
+	    {COL for L in {String.tokens {Utils.slurpFile F} &\n} return:R do
+		    case {String.token L &:}
+		    of 
+		 end}
+	 end
       end
    end
 end

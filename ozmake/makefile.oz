@@ -1,5 +1,5 @@
 makefile(
-   uri   : 'x-oz://duchier/tool'
+   uri   : 'x-ozlib://duchier/tool'
    mogul : 'mogul:/duchier/ozmake'
    author: 'mogul:/duchier/denys'
    lib   : ['ozmake.ozf']
@@ -23,7 +23,25 @@ makefile(
 	 'Help.ozf' :
 	    ['Utils.ozf' 'Path.ozf' 'Windows.ozf'
 	     'Shell.ozf' 'HELP.txt'])
-   blurb : "foo bar baz"
+   blurb : "a tool for project building and package management"
+   categories : [tool]
+   version: "0.72"
+   contact :
+      o(
+	 mogul : 'mogul:/duchier/denys'
+	 name  : 'Denys Duchier'
+	 email : 'duchier@ps.uni-sb.de'
+	 www   : 'http://www.ps.uni-sb.de/~duchier/')
    info_html:
-      "ozmake is a great thing bla bla bla
-   and more stuff")
+      "<P>
+<SPAN CLASS='TOOL'>ozmake</SPAN> is a tool for building Mozart-based projects
+and for creating and installing Mozart packages.  It was inspired by
+the Unix tools <SPAN CLASS='TOOL'>make</SPAN> and <SPAN CLASS='TOOL'>rpm</SPAN>, but is much,
+much simpler and specialized for Mozart-based software development and
+deployment.
+<SPAN CLASS='TOOL'>ozmake</SPAN> must currently be invoked from a shell, but it
+will eventually acquire additionally an optional, user-friendly
+graphical interface.
+Precompiled versions for both Unix and Windows can be downloaded from the documentation
+page</P>")
+
