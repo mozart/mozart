@@ -2049,7 +2049,12 @@ LBLdispatcher:
       }
 
       if (!isLock(aux)) {
-        (void) typeErrorT(0,"Lock");
+        /* arghhhhhhhhhh! fucking exceptions (RS) */
+        (void) oz_raise(E_ERROR,E_KERNEL,
+                  "type",5,NameUnit,NameUnit,
+                  OZ_atom("Lock"),
+                  OZ_int(1),
+                  OZ_string(""));
         RAISE_TYPE1("lock",cons(aux,nil()));
         goto LBLraise;
       }
