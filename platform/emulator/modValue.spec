@@ -140,6 +140,10 @@
 			     out => ['value'],
 			     BI  => BIbyNeedFail},
 
+     'failedValue'	=> { in  => ['value'],
+			     out => ['value'],
+			     BI  => BIfailedValue},
+
      'future'		=> { in  => ['value'],
 			     out => ['value'],
 			     BI  => BIfuture},
@@ -147,6 +151,10 @@
      '!!'		=> { in  => ['value'],
 			     out => ['value'],
 			     BI  => BIfuture},
+
+     'readOnly'		=> { in  => ['value'],
+			     out => ['value'],
+			     BI  => BIreadOnly},
 
      'newReadOnly'	=> { in  => [],
 			     out => ['value'],

@@ -104,8 +104,8 @@ STORESRCS=\
 	dictionary.cc extension.cc bitarray.cc word.cc \
 	ozthread.cc heapchunk.cc bytedata.cc bits.cc \
 	susplist.cc \
-	var_base.cc var_ext.cc var_simple.cc var_quiet.cc \
-	var_future.cc var_readonly.cc var_readonly_quiet.cc var_opt.cc \
+	var_base.cc var_ext.cc var_simple.cc \
+	var_future.cc var_readonly.cc var_failed.cc var_opt.cc \
 	namer.cc \
 	weakdict.cc $(SITE_PROPERTY_SRCS)
 

@@ -269,7 +269,9 @@ loop:
 
     //
     // Make the variable to which the binding is done fit!
-    int res = oz_var_cast(termPtr2, tb2, v1->getType());
+    int res = oz_var_cast(termPtr2, tb2, tagged2Var(*termPtr1)->getType());
+    // was: int res = oz_var_cast(termPtr2, tb2, v1->getType());
+    //
     // *termPtr2 can be changed!
 
     if (res != PROCEED) {

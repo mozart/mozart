@@ -6,9 +6,9 @@
  *    Tobias Mueller (tmueller@ps.uni-sb.de)
  *
  *  Contributors:
- *    Christian Schulte <schulte@ps.uni-sb.de>
- *    Raphael Collet <raph@info.ucl.ac.be>
- *    Alfred Spiessens <fsp@info.ucl.ac.be>
+ *    Christian Schulte (schulte@ps.uni-sb.de)
+ *    Raphael Collet (raph@info.ucl.ac.be)
+ *    Alfred Spiessens (fsp@info.ucl.ac.be)
  *
  *  Copyright:
  *    Organization or Person (Year(s))
@@ -102,17 +102,18 @@ enum TypeOfVariable {
   //          be bound to a future since that means that the future
   //          has to be converted to an FD variable, which is not
   //          possible.
-  OZ_VAR_FUTURE         = 5,
-  OZ_VAR_READONLY       = 6,
-  OZ_VAR_READONLY_QUIET = 7,
+  OZ_VAR_FAILED         = 5,
+  OZ_VAR_FUTURE         = 6,
+  OZ_VAR_READONLY       = 7,
+  OZ_VAR_READONLY_QUIET = 8,
   // group 2:  extensions, notably the distributed variables;
-  OZ_VAR_EXT            = 8,
+  OZ_VAR_EXT            = 9,
   // group 3:  simple variables;
-  OZ_VAR_SIMPLE         = 9,
-  OZ_VAR_QUIET          = 10,
+  OZ_VAR_SIMPLE         = 10,
+  OZ_VAR_SIMPLE_QUIET   = 11,
   // group 4:  optimized variables are bound to anything else anyway
   //           whenever possible (since they are optimized);
-  OZ_VAR_OPT            = 11
+  OZ_VAR_OPT            = 12
 };
 
 
@@ -377,6 +378,7 @@ OZ_Return oz_var_bind(OzVariable*,TaggedRef*,TaggedRef);
 OZ_Return oz_var_forceBind(OzVariable*,TaggedRef*,TaggedRef);
 OZ_Return oz_var_addSusp(TaggedRef*, Suspendable *);
 OZ_Return oz_var_addQuietSusp(TaggedRef*, Suspendable *);
+OZ_Return oz_var_need(TaggedRef *);
 void oz_var_dispose(OzVariable*);
 void oz_var_printStream(ostream&, const char*, OzVariable*, int = 10);
 int oz_var_getSuspListLength(OzVariable*);
@@ -401,7 +403,8 @@ Future *tagged2Future(TaggedRef t) {
 inline
 SimpleVar *tagged2SimpleVar(TaggedRef t)
 {
-  Assert(oz_isVar(t) && (tagged2Var(t)->getType() == OZ_VAR_SIMPLE));
+  Assert(oz_isVar(t) && ((tagged2Var(t)->getType() == OZ_VAR_SIMPLE) ||
+			 (tagged2Var(t)->getType() == OZ_VAR_SIMPLE_QUIET)));
   return ((SimpleVar *) tagged2Var(t));
 }
 
@@ -443,13 +446,15 @@ VarStatus oz_check_var_status(OzVariable *cv)
     return EVAR_STATUS_KINDED;
   case OZ_VAR_EXT:
     return _var_check_status(cv);
-  case OZ_VAR_QUIET:
+  case OZ_VAR_SIMPLE_QUIET:
   case OZ_VAR_SIMPLE:
     return EVAR_STATUS_FREE;
 //    case OZ_VAR_READONLY_QUIET:
 //    case OZ_VAR_READONLY:
   case OZ_VAR_FUTURE:
     return EVAR_STATUS_FUTURE;
+//    case OZ_VAR_FAILED:
+//      return EVAR_STATUS_DET;   // special value here
   case OZ_VAR_OPT:
     return EVAR_STATUS_FREE;
   ExhaustiveSwitch();
@@ -512,6 +517,26 @@ int oz_isNonKinded(TaggedRef r)
 ((oz_isVar(r) && !oz_isKindedVar(r)))
 
 #endif
+
+
+// raph: to know whether an entity is needed
+inline
+int oz_isNeeded(TaggedRef r) {
+  if (oz_isVar(r)) {
+    switch (tagged2Var(r)->getType()) {
+    case OZ_VAR_OPT:
+    case OZ_VAR_SIMPLE_QUIET:
+    case OZ_VAR_READONLY_QUIET:
+      return FALSE;
+    default:
+      // every other type of variable is needed
+      return TRUE;
+    }
+  }
+  // values are needed
+  return TRUE;
+}
+
 
 /* -------------------------------------------------------------------------
  *

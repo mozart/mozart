@@ -10,6 +10,8 @@
  *    Peter van Roy (pvr@info.ucl.ac.be)
  *    Denys Duchier (duchier@ps.uni-sb.de)
  *    Leif Kornstaedt (kornstae@ps.uni-sb.de)
+ *    Fred Spiessens (fsp@info.ucl.ac.be)
+ *    Raphael Collet (raph@info.ucl.ac.be)
  * 
  *  Copyright:
  *    Michael Mehl, 1997,1998
@@ -68,6 +70,31 @@ OZ_BI_define(BIwait,1,0)
 {
   oz_declareNonvarIN(0, val);
   return PROCEED;
+} OZ_BI_end
+
+OZ_BI_define(BIwaitNeeded,1,0)
+{
+  oz_declareDerefIN(0,v);
+  Assert(!oz_isRef(v));
+
+  if (oz_isNeeded(v)) {
+    return PROCEED;
+  } else {
+    return oz_var_addQuietSusp(vPtr, oz_currentThread());
+  }
+} OZ_BI_end
+
+// this built-in makes the argument (variable or value) needed
+OZ_BI_define(BIneed,1,0)
+{
+  oz_declareDerefIN(0,v);
+  Assert(!oz_isRef(v));
+
+  if (oz_isVar(v)) {
+    return oz_var_need(vPtr);
+  } else {
+    return PROCEED;
+  }
 } OZ_BI_end
 
 OZ_BI_define(BIwaitOr,2,0)
@@ -216,6 +243,19 @@ OZ_BI_define(BIisDet,1,1)
     }
   } else {
     OZ_RETURN(oz_true());
+  }
+} OZ_BI_end
+
+// this built-in returns true if the argument is needed
+OZ_BI_define(BIisNeeded,1,1)
+{
+  oz_declareDerefIN(0,var);
+  Assert(!oz_isRef(var));
+
+  if (oz_isNeeded(var)) {
+    OZ_RETURN(oz_true());
+  } else {
+    OZ_RETURN(oz_false());
   }
 } OZ_BI_end
 

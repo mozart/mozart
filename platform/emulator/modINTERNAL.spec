@@ -72,6 +72,14 @@
 			      out => [],
 			      BI  => BIvarToFuture},
 
+     'varToReadOnly'	 => { in  => ['value', 'value'],
+			      out => [],
+			      BI  => BIvarToReadOnly},
+
+     'readOnlyToVar'	 => { in  => ['value', 'value'],
+			      out => [],
+			      BI  => BIreadOnlyToVar},
+
      );
 
 1;;

@@ -34,35 +34,53 @@
 #endif
 
 #include "var_base.hh"
-#include "value.hh"
+
+/*
+ * fred+raph:
+ * A ReadOnly object implements a read-only variable.
+ * An attempt to bind by unification such a variable blocks.
+ * The variable object has two possible types: OZ_VAR_READONLY_QUIET
+ * when it is not needed, and OZ_VAR_READONLY when it becomes needed.
+ */
 
 class ReadOnly: public OzVariable {
 public:
-  ReadOnly(Board *bb) : OzVariable(OZ_VAR_READONLY,bb) {}
+  // raph: read-only variables are not needed by default
+  ReadOnly(Board *bb) : OzVariable(OZ_VAR_READONLY_QUIET,bb) {}
 
   OZ_Return bind(TaggedRef* vPtr,TaggedRef t);
   OZ_Return unify(TaggedRef* vPtr,TaggedRef* tPtr);
   OZ_Return forceBind(TaggedRef* vPtr,TaggedRef v);
-  OZ_Return valid(TaggedRef /* val */) {
-    return TRUE;
-  }
-  // void gCollectRecurse(void);
-  // void sCloneRecurse(void);
-  // OZ_Return addSusp(TaggedRef*, Suspendable *);
+
+  // raph: the variable must be quiet; makes it needed
+  OZ_Return becomeNeeded();
+
+  // raph: use this method for adding demanding suspensions only
+  OZ_Return addSusp(TaggedRef*, Suspendable *);
+
+  OZ_Return valid(TaggedRef /* val */) { return TRUE; }
   void dispose(void) {
     disposeS();
-    // DebugCode(function=0);
     oz_freeListDispose(this, sizeof(ReadOnly));
   }
-  void printStream(ostream &out,int depth = 10);
+  void printStream(ostream &out,int depth = 10) {
+    if (getType() == OZ_VAR_READONLY_QUIET) {
+      out << "<readonly quiet>";
+    } else {
+      out << "<readonly>";
+    }
+  }
   void printLongStream(ostream &out,int depth = 10,
 				int offset = 0) {
     printStream(out,depth); out << endl;
   }
-  // OZ_Term inspect();
-  // OZ_Return kick(TaggedRef *);
-  // Bool isFailed();
 };
+
+// create a new ReadOnly
+inline
+OZ_Term oz_newReadOnly(Board *bb) {
+  return makeTaggedRef(newTaggedVar(new ReadOnly(bb)));
+}
 
 // bind a ReadOnly, don't care about the variable
 inline
