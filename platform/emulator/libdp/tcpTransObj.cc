@@ -90,9 +90,24 @@ void TCPTransObj::deliver() {
   Assert(fd!=-1);
   OZ_registerWriteHandler(fd,tcpTransObj_writeHandler,(void *) this);
 }
-
+/*
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <netinet/tcp.h>
+*/
 void TCPTransObj::readyToReceive() {
   OZ_registerReadHandler(fd,tcpTransObj_readHandler,(void *) this);
+  /*
+  int tmp, len;
+  len=sizeof(tmp);
+  if(getsockopt(fd,IPPROTO_TCP,TCP_MAXSEG,(char *) &tmp, (socklen_t *) &len)<0) 
+    printf("TCP_MAXSEG getsockopt error\n");
+  printf("TCP_MAXSEG = %d\n", tmp);
+  if(getsockopt(fd,IPPROTO_TCP,TCP_NODELAY,(char *) &tmp, (socklen_t *) &len)<0) 
+    printf("TCP_NODELAY getsockopt error\n");
+  printf("TCP_NODELAY = %d\n", tmp);
+  */
 }
 
 void TCPTransObj::setSite(DSite *site) {
@@ -418,3 +433,7 @@ void TCPTransController::deleteTransObj(TransObj* transObj) {
   return;
 }
 
+int TCPTransController::getInfo(int &size) {
+  size = sizeof(TCPTransObj)+2*BYTE_DEF_SIZE;
+  return getCTR();
+}
