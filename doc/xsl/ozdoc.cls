@@ -406,8 +406,10 @@
   \clearpage
   \pagestyle{empty}\thispagestyle{empty}%
   \begin{FULLWIDTH}%
-    \begin{center}\mozart@section@font\Large Abstract\end{center}%
-    \begin{mozart@quote}\@abstract\end{mozart@quote}%
+    \ifx\@abstract\long@empty\else
+      \begin{center}\mozart@section@font\Large Abstract\end{center}%
+      \begin{mozart@quote}\@abstract\end{mozart@quote}%
+    \fi
     \vspace*{\fill}%
     \begin{center}\mozart@section@font
       \Large License Agreement%
@@ -446,6 +448,7 @@
     \end{mozart@quote}%
   \end{FULLWIDTH}}
 
+\long\def\@abstract{}
 \newcommand{\mozAbstract}[1]{%
   \long\def\@abstract{#1}}
 \newcommand{\long@empty}{}
