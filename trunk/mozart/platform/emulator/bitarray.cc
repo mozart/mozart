@@ -51,18 +51,17 @@ public:
   int getIdV() { return OZ_E_BITARRAY; }
 
   virtual
-  void printStreamV(ostream &out,int depth = 10) {
-    out << "<BitArray>";
-  }
+  OZ_Term printV(int depth = 10) { return typeV(); }
 
   virtual
   OZ_Term typeV() { return oz_atom("bitArray"); }
 
   virtual
-  void printLongStreamV(ostream &out,int depth = 10,
-					 int offset = 0) {
-    out << "bit array: " << upperBound - lowerBound - 1
-	<< " bits at " << this << '.' << endl;
+  OZ_Term printLongV(int depth = 10, int offset = 0) {
+    return 
+      OZ_mkTupleC("#",4,
+		  oz_atom("bit array: "), oz_int(upperBound - lowerBound - 1),
+		  oz_atom(" bits at "),   oz_int((int)this));
   }
 
   virtual
