@@ -2,12 +2,14 @@ dnl -*- sh -*-
 dnl
 dnl  Authors:
 dnl    Michael Mehl (mehl@dfki.de)
+dnl    Denys Duchier (duchier@ps.uni-sb.de)
 dnl 
 dnl  Contributors:
 dnl    optional, Contributor's name (Contributor's email address)
 dnl 
 dnl  Copyright:
 dnl    Michael Mehl (1997)
+dnl    Denys Duchier (1998)
 dnl 
 dnl  Last change:
 dnl    $Date$ by $Author$
@@ -202,6 +204,7 @@ if test "${GXX}" = yes; then
     DEPEND="$CXX -MM"
 
     OZ_CXX_OPTIONS(-fno-exceptions -fno-rtti,oz_a)
+    CXXAVOID=$oz_a
     CXXFLAGS="$CXXFLAGS $oz_a"
 
     # Note: use $(CC) for linking, not $(CXX): 
@@ -618,13 +621,20 @@ OZ_ENABLE(miscbuiltins,[   include misc builtins],no,
 	,
 	)
 
+dnl ------------------------------------------------------------------
+dnl Configure oztool.sh
+dnl ------------------------------------------------------------------
+
+OZTOOL_CXX="$CXX${CXXAVOID:+ }$CXXAVOID"
+AC_SUBST(OZTOOL_CXX)
+
 dnl *****************************************************************
 dnl FINALIZE
 dnl *****************************************************************
 
 AC_CONFIG_HEADER(conf.h)
 
-AC_OUTPUT(Makefile.vars Makefile Makefile.rules libdp/Makefile libfd/Makefile libfset/Makefile OZCONF.h:OZCONF.in)
+AC_OUTPUT(Makefile.vars Makefile Makefile.rules libdp/Makefile libfd/Makefile libfset/Makefile OZCONF.h:OZCONF.in oztool.sh:oztool.in)
 
 errprint(ifdef([OZ_INIT],
  [autoconf succeeded
