@@ -419,7 +419,6 @@ void string2buffer(TaggedRef list) {
 }
 
 
-inline
 void vs2buffer(TaggedRef vs) {
   DEREF(vs, vs_ptr, vs_tag);
 
@@ -479,7 +478,6 @@ void protect_string2buffer(TaggedRef list) {
 }
 
 
-inline
 void protect_vs2buffer(TaggedRef vs) {
   DEREF(vs, vs_ptr, vs_tag);
 
@@ -520,7 +518,6 @@ void feature2buffer(SRecord *st, OZ_Term a) {
   }
 }
 
-//inline
 void tuple2buffer(SRecord *st, int start = 0) {
   if (st->isTuple()) {
     if (start < st->getWidth()) {
