@@ -1881,7 +1881,8 @@ void AM::stopThread(Thread *th)
     if (th==currentThread) {
       setSFlag(StopThread);
     }
-    th->setStop(OK);
+    if (!debugmode())
+      th->setStop(OK);
     if (th->isRunnable())
       th->unmarkRunnable();
   }
@@ -1890,7 +1891,8 @@ void AM::stopThread(Thread *th)
 void AM::resumeThread(Thread *th)
 {
   if (th->pCont()==0) {
-    th->setStop(NO);
+    if (!debugmode())
+      th->setStop(NO);
 
     if (!th->isDeadThread()) {
       if (th == currentThread) {
