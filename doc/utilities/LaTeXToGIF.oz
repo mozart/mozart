@@ -87,7 +87,7 @@ define
              end}
             {File write(vs: ('\\pagestyle{empty}\n'#
                              '\\begin{document}\n'#
-                             '\\vsize=100cm\n'))}
+                             '\\vsize=100cm\n\\textheight=\\vsize\n'))}
             Outs = {FoldR @Keys
                     fun {$ X#N In}
                        {File write(vs: X#'\n\\clearpage\n')}
