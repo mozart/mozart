@@ -41,6 +41,7 @@
 \RequirePackage{color}
 \RequirePackage{theorem}
 \RequirePackage{pstricks}
+\RequirePackage{xspace}
 
 % mozart info
 \RequirePackage{ozdoc-info}
@@ -496,7 +497,7 @@
 \DeclareRobustCommand\mozart@text@DOLLAR{\$}
 \DeclareRobustCommand\mozart@text@PERCENT{\%}
 \DeclareRobustCommand\mozart@text@AMPERSAND{\&}
-\DeclareRobustCommand\mozart@text@TILDE{\~}
+\DeclareRobustCommand\mozart@text@TILDE{\char`\~}
 \DeclareRobustCommand\mozart@text@UNDERSCORE{\_}
 \DeclareRobustCommand\mozart@text@CARET{\char`\^}
 \DeclareRobustCommand\mozart@text@BSLASH{\ensuremath{\backslash}}
@@ -648,14 +649,14 @@
   \@ifundefined{usepi@#1}{%
     \@latex@error{unknown processing instruction: #1}\@ehc}%
     {\@nameuse{usepi@#1}}}
-\newcommand{\usepi@eg}{e.g.\ }
-\newcommand{\usepi@ie}{i.e.\ }
+\newcommand{\usepi@eg}{e.g.\@\xspace}
+\newcommand{\usepi@ie}{i.e.\@\xspace}
 \newcommand{\usepi@nbsp}{~}
 \newcommand{\usepi@LaTeX}{\LaTeX{}}
 \newcommand{\usepi@LATEX}{\LaTeX{}}
 \newcommand{\usepi@ellipsis}{\ldots}
 \newcommand{\usepi@etc}{etc.}
-\newcommand{\usepi@resp}{resp.\ }
+\newcommand{\usepi@resp}{resp.\@\xspace}
 \newcommand{\usepi@slash}{/}
 \newcommand{\usepi@cdots}{\ensuremath{\cdots}}
 % existing &emdash; should probably be changed to &endash;
@@ -663,7 +664,7 @@
 \newcommand{\usepi@emdash}{--}
 \newcommand{\usepi@endash}{--}
 \newcommand{\usepi@EG}{\usepi@eg}
-\newcommand{\usepi@wrt}{wrt.\ }
+\newcommand{\usepi@wrt}{wrt.\@\xspace}
 
 % sectioning commands
 
@@ -884,6 +885,11 @@
 
 % (entry,synopsis*)+,item
 
+%% for the documentation of the OPI it looks like the space
+%% between the command and the keychord that invokes it has
+%% disappeared, but in fact it is there; it is just very small
+%% because the interword spacing in times in very small.
+
 \newenvironment{DESCRIPTION}
   {\begin{list}{}{%
      \leftmargin\z@\rightmargin\z@
@@ -909,6 +915,12 @@
 \newcommand{\ENTRY@@MBOX}{%
   \mbox{}\vspace{-\parsep}\vspace{-\itemsep}}
 \newcommand{\ENTRY}[1]{\ENTRY@MBOX\item[{\let\par\relax#1}]\let\ENTRY@MBOX\ENTRY@@MBOX}
+\newcommand{\ENTRYWITHCATEGORY}[2]{%
+  \ENTRY{\llap{\CATEGORY{#1}}#2}%
+}
+
+\definecolor{category}{rgb}{0.415686,0.352941,0.80392}
+\newcommand{\CATEGORY}[1]{{\normalfont\footnotesize\color{category}\textsf{#1}\quad}}
 
 \newcommand{\ENTRYHASCODE}{%
   \let\ITEM\ITEM@MBOX}
@@ -1046,3 +1058,8 @@
 %% table headings
 
 \newcommand{\mozartTH}{\mozart@section@font\large}
+
+%% opi support
+
+\newcommand{\OPINAMEBUFFER}[1]{%
+  {\mozart@code@font\mozart@specials@code@inline#1}}
