@@ -117,6 +117,19 @@ Arities of records are not cloned. This is typically correct.
 Only if the arity contains names that are local to a subordinated
 space this is incorrect.
 
+<section class=unnumbered><title/Choice Points/
+
+<p>
+The number of alternatives of a choice point must be
+less than <math/2^{27}-2/ (i.e., 134217726).
+
+<section class=unnumbered><title/Record Arities/
+
+<p>
+Arities of records are not cloned. This is typically correct.
+Only if the arity contains names that are local to a subordinated
+space this is incorrect.
+
 <section class=unnumbered><title/Procedures/
 
 <p>
@@ -161,3 +174,5 @@ for a list of
 limitations related to distribution and fault tolerance.
 
 </Book>
+
+
