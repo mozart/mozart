@@ -313,7 +313,7 @@ one has to define a function <<oz_init_module>>.
 <Code.Extern display proglang=cc to="programs/ex_a.interface.cc">
 
 The line <<AddProp::profile = "addition/3";>> assigns explixitly the
-name <<"addition/3">> to the propagator. The default name is <<"<anonymous propagator>">>.
+name <<"addition/3">> to the propagator. The default name is <<"&lt;anonymous propagator&gt;">>.
 <P>
 Before a native functor can be loaded it be compiled according to
 <Ptr.Extern to="ozdoc:apptut"
