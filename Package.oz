@@ -16,6 +16,7 @@ define
    %% !!! there should be a `validate' method to make sure that
    %% all slots have ok values
    class Package from GS XT EntryClass HTMLClass
+      feat type : package
       attr id pid url blurb provides requires content_type
 	 url_pkg url_doc body author contact keywords
 	 categories url_doc_extra title version:unit

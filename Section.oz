@@ -11,6 +11,7 @@ export
    'class' : Section
 define
    class Section from GS XT HTMLClass
+      feat type : section
       attr id pid url email toc body:unit
       meth init(Msg Id Url Pid Prev)
 	 {Manager incTrace('--> init Section '#Id)}

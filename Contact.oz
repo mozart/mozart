@@ -11,6 +11,7 @@ export
    'class' : Contact
 define
    class Contact from GS XT EntryClass HTMLClass
+      feat type : contact
       attr id pid url email www name name_for_index
       meth init(Msg Id Url Pid Prev)
 	 {Msg check_keys(['name'])}
