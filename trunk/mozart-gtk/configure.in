@@ -69,6 +69,37 @@ if test -z $GTKCONFIG; then
     AC_MSG_ERROR(The gtk-config script, which is part of the GTK+ library, could no be found. Please make sure you have a working installation of GTK+ on your system, otherwise GTK+ support can not be enabled. GTK+ can be found at http://www.gtk.org)
 fi
 
+AC_MSG_CHECKING(gtk c flags)
+if test -z "`${GTKCONFIG} --cflags 2>&1 1>/dev/null`"; then
+   GTK_CFLAGS=`${GTKCONFIG} --cflags`
+fi
+AC_MSG_RESULT($GTK_CFLAGS)
+AC_SUBST(GTK_CFLAGS)
+
+AC_MSG_CHECKING(gtk lib flags)
+if test -z "`${GTKCONFIG} --libs 2>&1 1>/dev/null`"; then
+   GTK_LIBS=`${GTKCONFIG} --libs`
+fi
+AC_MSG_RESULT($GTK_LIBS)
+AC_SUBST(GTK_LIBS)
+
+dnl check for imlib-config
+AC_PATH_PROG(IMLIB_CONFIG, imlib-config)
+if test -n "$IMLIB_CONFIG"; then
+   AC_MSG_CHECKING(imlib c flags)
+   if test -z "`${IMLIB_CONFIG} --cflags 2>&1 1>/dev/null`"; then
+     IMLIB_CFLAGS=`${IMLIB_CONFIG} --cflags`
+   fi
+   AC_MSG_RESULT($IMLIB_CFLAGS)
+   AC_MSG_CHECKING(imlib lib flags)
+   if test -z "`${IMLIB_CONFIG} --libs 2>&1 1>/dev/null`"; then
+     IMLIB_LIBS=`${IMLIB_CONFIG} --libs`
+   fi
+   AC_MSG_RESULT($IMLIB_LIBS)
+fi
+AC_SUBST(IMLIB_CFLAGS)
+AC_SUBST(IMLIB_LIBS)
+
 dnl Check for the right GTK+ version
 AC_MSG_CHECKING(for GTK+ version)
 GTKVERSION=`$GTKCONFIG --version`
