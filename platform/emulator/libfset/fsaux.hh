@@ -100,6 +100,9 @@ public:
   OZ_expect_t expectVectorIntVarMinMax(OZ_Term t) {
     return expectVector(t, &PropagatorExpect::expectIntVarMinMax);
   }
+  OZ_expect_t expectVectorFSetVarBounds(OZ_Term t) {
+    return expectVector(t, &PropagatorExpect::expectFSetVarBounds);
+  }
 };
 
 //-----------------------------------------------------------------------------
@@ -211,6 +214,29 @@ public:
    OZ_Return fail(void) {
     _s.fail();
     for (int i = _vd_size; i--; _vd[i].fail());
+    return OZ_FAILED;
+  }
+};
+
+class PropagatorController_VS {
+protected:
+  OZ_FSetVar * _vs;
+  int _vs_size;
+public:
+  PropagatorController_VS(int vs_size, OZ_FSetVar vs[]) 
+    : _vs_size(vs_size), _vs(vs){}
+
+  OZ_Return leave(void) {
+    OZ_Boolean vars_left = OZ_FALSE;
+    for (int i = _vs_size; i--; vars_left |= _vs[i].leave());
+    return vars_left ? OZ_SLEEP : OZ_ENTAILED;
+  }
+  OZ_Return vanish(void) {
+    for (int i = _vs_size; i--; _vs[i].leave());
+    return OZ_ENTAILED;
+  }
+   OZ_Return fail(void) {
+    for (int i = _vs_size; i--; _vs[i].fail());
     return OZ_FAILED;
   }
 };

@@ -41,7 +41,6 @@ OZ_C_proc_begin(BIfsSet, 3)
 {
   ExpectedTypes(OZ_EM_FSETDESCR "," OZ_EM_FSETDESCR "," OZ_EM_FSET);
   
-  
   ExpectOnly pe;
   
   EXPECT_BLOCK(pe, 0, expectFSetDescr);
@@ -68,6 +67,8 @@ OZ_C_proc_end
 
 OZ_C_proc_begin(BIfsGetKnownIn, 2) 
 {
+  ExpectedTypes(OZ_EM_FSET ","  OZ_EM_FSETDESCR);
+  
   OZ_Term v = OZ_getCArg(0);
   DEREF(v, vptr, vtag);
 
@@ -80,12 +81,14 @@ OZ_C_proc_begin(BIfsGetKnownIn, 2)
   } else if (isNotCVar(vtag)) {
     return constraintsSuspendOnVar(OZ_self, OZ_arity, OZ_args, vptr);
   } 
-    return FAILED;
+  TypeError(0, "");
 }
 OZ_C_proc_end
 
 OZ_C_proc_begin(BIfsGetNumOfKnownIn, 2) 
 {
+  ExpectedTypes(OZ_EM_FSET "," OZ_EM_INT);
+  
   OZ_Term v = OZ_getCArg(0);
   DEREF(v, vptr, vtag);
 
@@ -98,7 +101,7 @@ OZ_C_proc_begin(BIfsGetNumOfKnownIn, 2)
   } else if (isNotCVar(vtag)) {
     return constraintsSuspendOnVar(OZ_self, OZ_arity, OZ_args, vptr);
   } 
-    return FAILED;
+  TypeError(0, "");
 }
 OZ_C_proc_end
 
@@ -106,6 +109,8 @@ OZ_C_proc_end
 
 OZ_C_proc_begin(BIfsGetKnownNotIn, 2) 
 {
+  ExpectedTypes(OZ_EM_FSET ","  OZ_EM_FSETDESCR);
+  
   OZ_Term v = OZ_getCArg(0);
   DEREF(v, vptr, vtag);
 
@@ -118,12 +123,14 @@ OZ_C_proc_begin(BIfsGetKnownNotIn, 2)
   } else if (isNotCVar(vtag)) {
     return constraintsSuspendOnVar(OZ_self, OZ_arity, OZ_args, vptr);
   } 
-    return FAILED;
+  TypeError(0, "");
 }
 OZ_C_proc_end
 
 OZ_C_proc_begin(BIfsGetNumOfKnownNotIn, 2) 
 {
+  ExpectedTypes(OZ_EM_FSET "," OZ_EM_INT);
+  
   OZ_Term v = OZ_getCArg(0);
   DEREF(v, vptr, vtag);
 
@@ -136,7 +143,7 @@ OZ_C_proc_begin(BIfsGetNumOfKnownNotIn, 2)
   } else if (isNotCVar(vtag)) {
     return constraintsSuspendOnVar(OZ_self, OZ_arity, OZ_args, vptr);
   } 
-    return FAILED;
+  TypeError(0, "");
 }
 OZ_C_proc_end
 
@@ -144,6 +151,8 @@ OZ_C_proc_end
 
 OZ_C_proc_begin(BIfsGetUnknown, 2) 
 {
+  ExpectedTypes(OZ_EM_FSET "," OZ_EM_FSETDESCR);
+  
   OZ_Term v = OZ_getCArg(0);
   DEREF(v, vptr, vtag);
 
@@ -155,12 +164,14 @@ OZ_C_proc_begin(BIfsGetUnknown, 2)
   } else if (isNotCVar(vtag)) {
     return constraintsSuspendOnVar(OZ_self, OZ_arity, OZ_args, vptr);
   } 
-    return FAILED;
+  TypeError(0, "");
 }
 OZ_C_proc_end
 
 OZ_C_proc_begin(BIfsGetNumOfUnknown, 2) 
 {
+  ExpectedTypes(OZ_EM_FSET "," OZ_EM_INT);
+  
   OZ_Term v = OZ_getCArg(0);
   DEREF(v, vptr, vtag);
 
@@ -172,7 +183,7 @@ OZ_C_proc_begin(BIfsGetNumOfUnknown, 2)
   } else if (isNotCVar(vtag)) {
     return constraintsSuspendOnVar(OZ_self, OZ_arity, OZ_args, vptr);
   } 
-    return FAILED;
+  TypeError(0, "");
 }
 OZ_C_proc_end
 
@@ -180,6 +191,8 @@ OZ_C_proc_end
 
 OZ_C_proc_begin(BIfsGetLub, 2) 
 {
+  ExpectedTypes(OZ_EM_FSET "," OZ_EM_FSETDESCR);
+  
   OZ_Term v = OZ_getCArg(0);
   DEREF(v, vptr, vtag);
 
@@ -192,12 +205,14 @@ OZ_C_proc_begin(BIfsGetLub, 2)
   } else if (isNotCVar(vtag)) {
     return constraintsSuspendOnVar(OZ_self, OZ_arity, OZ_args, vptr);
   } 
-    return FAILED;
+  TypeError(0, "");
 }
 OZ_C_proc_end
 
 OZ_C_proc_begin(BIfsGetCard, 2) 
 {
+  ExpectedTypes(OZ_EM_FSET "," OZ_EM_INT);
+  
   OZ_Term v = OZ_getCArg(0);
   DEREF(v, vptr, vtag);
 
@@ -210,12 +225,14 @@ OZ_C_proc_begin(BIfsGetCard, 2)
   } else if (isNotCVar(vtag)) {
     return constraintsSuspendOnVar(OZ_self, OZ_arity, OZ_args, vptr);
   } 
-    return FAILED;
+  TypeError(0, "");
 }
 OZ_C_proc_end
 
 OZ_C_proc_begin(BIfsCardRange, 3) 
 {
+  ExpectedTypes(OZ_EM_INT "," OZ_EM_INT "," OZ_EM_FSET);
+  
   int l = -1;
   {
     OZ_Term lt = OZ_getCArg(0);
@@ -226,7 +243,7 @@ OZ_C_proc_begin(BIfsCardRange, 3)
     } else if (isAnyVar(lttag)) {
       return constraintsSuspendOnVar(OZ_self, OZ_arity, OZ_args, ltptr);
     } else {
-      return FAILED;
+      TypeError(0, "");
     }
   }
 
@@ -240,7 +257,7 @@ OZ_C_proc_begin(BIfsCardRange, 3)
     } else if (isAnyVar(uttag)) {
       return constraintsSuspendOnVar(OZ_self, OZ_arity, OZ_args, utptr);
     } else {
-      return FAILED;
+      TypeError(1, "");
     }
   }
 
@@ -267,7 +284,7 @@ OZ_C_proc_begin(BIfsCardRange, 3)
       return constraintsSuspendOnVar(OZ_self, OZ_arity, OZ_args, vptr);
     } 
   }
-  return FAILED;
+  TypeError(2, "");
 }
 OZ_C_proc_end
 
@@ -309,6 +326,7 @@ BIspec fdSpec[] = {
   {"fsp_include",      2, fsp_include},
   {"fsp_exclude",      2, fsp_exclude},
   {"fsp_match",        2, fsp_match},
+  {"fsp_seq",          1, fsp_seq},
   {"fsp_minN",         2, fsp_minN},
   {"fsp_maxN",         2, fsp_maxN},
   {"fsp_card",         2, fsp_card},
