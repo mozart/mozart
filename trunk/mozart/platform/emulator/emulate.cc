@@ -259,11 +259,7 @@ Bool AM::emulateHookOutline(ProgramCounter PC, Abstraction *def, TaggedRef *argu
   if (def && debugmode() && 
       (currentThread->stepMode() || def->getPred()->getSpyFlag())) {
     
-    // this finds the debuginfo _after_ the call
-    ProgramCounter debugPC = CodeArea::nextDebugInfo(PC);
-    
-    debugStreamCall(debugPC, def->getPrintName(), def->getArity(), 
-		    arguments, 0);
+    debugStreamCall(PC, def->getPrintName(), def->getArity(), arguments, 0);
     
     OZ_Term dinfo = nil();
     for (int i=def->getArity()-1; i>=0; i--) {
@@ -2349,17 +2345,14 @@ LBLdispatcher:
        }
 
        if (e->debugmode() && e->currentThread->stepMode()) {
-	 ProgramCounter debugPC = CodeArea::nextDebugInfo(PC);
 
-	 if (debugPC != NOCODE) {
-	   char *name = builtinTab.getName((void *) bi->getFun());
-	   debugStreamCall(debugPC, name, predArity, X, 1);
+	 char *name = builtinTab.getName((void *) bi->getFun());
+	 debugStreamCall(PC, name, predArity, X, 1);
       
-	   if (!isTailCall) e->pushTask(PC,Y,G);
-	   e->pushCFun(bi->getFun(),X,predArity);     
+	 if (!isTailCall) e->pushTask(PC,Y,G);
+	 e->pushCFun(bi->getFun(),X,predArity);     
 
-	   goto LBLpreemption;
-	 }
+	 goto LBLpreemption;
        }
 
        biFun=bi->getFun();
