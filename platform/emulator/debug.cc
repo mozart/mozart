@@ -102,7 +102,7 @@ void debugStreamCont(Thread *tt) {
   TaggedRef tail    = am.threadStreamTail;
   TaggedRef newTail = OZ_newVariable();
 
-  tt->stop();
+  //tt->stop();
 
   TaggedRef pairlist =
     cons(OZ_pairA("thr",
@@ -270,6 +270,14 @@ OZ_C_proc_begin(BItaskStack,3)
 OZ_C_proc_end
 
 // ------------------
+
+OZ_C_proc_begin(BIcheckStopped,2)
+{
+  oz_declareThreadArg(0,th);
+  oz_declareArg(1,out);
+  return OZ_unify(out,th->stopped() ? OZ_true() : OZ_false());
+}
+OZ_C_proc_end
 
 OZ_C_proc_begin(BIdebugmode,1)
 {
