@@ -82,25 +82,24 @@ GUMPSCANNERSRC = $(GUMPSCANNERSRC1:%=gump/%) GumpScanner.oz
 GUMPPARSERSRC1 = GumpParserClass.oz
 GUMPPARSERSRC = $(GUMPPARSERSRC1:%=gump/%) GumpParser.oz
 
+PRODUCTIONTEMPLATESSRC1 = ProductionTemplates.ozg
+PRODUCTIONTEMPLATESSRC = $(PRODUCTIONTEMPLATESSRC1:%=gump/%) \
+	ProductionTemplates.oz
+
 GUMPEXAMPLES = \
 	Examples.oz Lambda.in LambdaParser.ozg LambdaScanner.ozg \
 	OzParser.ozg OzScanner.ozg
-
-ALLSRCS = \
-	$(COMPILERPANELSRC) $(PANELSRC) $(BROWSERSRC) \
-	$(EXPLORERSRC) $(EMACSSRC) $(OZCARSRC) $(PROFILERSRC) \
-	$(GUMPSRC) $(GUMPSCANNERSRC) $(GUMPPARSERSRC)
 
 TOOLSDIRS1 = gump gump/examples
 TOOLSDIRS = $(TOOLSDIRS1:%=$(OZTOOLS)/%)
 
 TOOLSFILES = \
-	$(GUMPEXAMPLES:%=$(OZTOOLS)/gump/examples/%) \
-	$(OZTOOLS)/gump/ProductionTemplates.oz
+	$(GUMPEXAMPLES:%=$(OZTOOLS)/gump/examples/%)
 
 FUNCTORS = \
 	CompilerPanel.ozf Panel.ozf Browser.ozf Explorer.ozf Emacs.ozf \
-	Ozcar.ozf Profiler.ozf Gump.ozf GumpScanner.ozf GumpParser.ozf
+	Ozcar.ozf Profiler.ozf Gump.ozf GumpScanner.ozf GumpParser.ozf \
+	ProductionTemplates.ozf
 
 TOOLSFUNCTORS = $(FUNCTORS:%=$(OZTOOLS)/%)
 
@@ -157,6 +156,9 @@ Gump.ozf: $(GUMPSRC) $(SRCTOP)/share/lib/compiler/TupleSyntax.oz \
 GumpScanner.ozf: $(GUMPSCANNERSRC)
 
 GumpParser.ozf: $(GUMPPARSERSRC)
+
+ProductionTemplates.ozf: $(PRODUCTIONTEMPLATESSRC)
+	$(COMPILE) -l Compiler ProductionTemplates.oz -o $@
 
 
 #---------------------------------------------------------------------
@@ -224,14 +226,6 @@ veryclean: clean
 
 distclean: veryclean
 	rm -f Makefile
-
-tags:
-	etags --language=none \
-	--regex='/[ \t]*proc\>[^{\n]*{!?\([A-Z][A-Za-z0-9_]*\|`.+`\)/\1/' \
-	--regex='/[ \t]*fun\>[^{\n]*{!?\([A-Z][A-Za-z0-9_]*\|`.+`\)/\1/' \
-	--regex='/[ \t]*class[ \t]+!?\([A-Z][A-Za-z0-9_]*\|`.+`\)/\1/' \
-	--regex='/[ \t]*meth\([ \t]+\|[ \t]*![ \t]*\)\([A-Za-z0-9][A-Za-z0-9_]*\|`.+`|'\''.+'\''\)/\2/' \
-	$(ALLSRCS)
 
 #---------------------------------------------------------------------
 # Testing Components Locally
