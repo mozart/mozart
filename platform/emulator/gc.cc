@@ -654,6 +654,9 @@ Name *Name::gcName() {
 }
 
 inline
+Bool Name::gcIsMarked() { return GCISMARKED(homeOrGName); }
+
+inline
 Literal *Literal::gc() {
   if (isAtom()) return this;
   return ((Name*) this)->gcName();
@@ -1296,14 +1299,62 @@ void WeakStack::recurse(void)
   }
 }
 
+// isNowMarked(t) returns true iff
+//      t is a marked name, extension, ltuple, srecord, const, var
+// the logic is adapted from gcTagged(TaggedRef&,TaggedRef&)
 inline int isNowMarked(OZ_Term t)
 {
   switch (tagTypeOf(t)) {
-  case EXT    : return ((*(int32*)oz_tagged2Extension(t))&1);
-  case OZCONST: return (tagged2Const(t)->gcIsMarked());
-  default     : Assert(0);
+  case REF:
+  case REFTAG2:
+  case REFTAG3:
+  case REFTAG4:
+    {
+      TaggedRef * ptr;
+      do {
+        ptr = tagged2Ref(t);
+        t   = *ptr;
+      } while (oz_isRef(t));
+      switch (tagTypeOf(t)) {
+      case REF: case REFTAG2: case REFTAG3: case REFTAG4: {}
+      case GCTAG     : goto RETURN_YES;
+      case SMALLINT  : goto RETURN_NO;
+      case FSETVALUE : goto RETURN_NO;
+      case LITERAL   : goto DO_LITERAL;
+      case EXT       : goto DO_EXT;
+      case LTUPLE    : goto RETURN_NO;
+      case SRECORD   : goto RETURN_NO;
+      case OZFLOAT   : goto RETURN_NO;
+      case OZCONST   : goto DO_OZCONST;
+      case UNUSED_VAR: goto IMPOSSIBLE;
+      case UVAR      : goto IMPOSSIBLE;
+      case CVAR      : goto DO_CVAR;
+      }
+      Assert(NO);
+    }
+  case GCTAG     : goto RETURN_YES;
+  case SMALLINT  : goto RETURN_NO;
+  case FSETVALUE : goto RETURN_NO;
+  case LITERAL   : DO_LITERAL:
+    {
+      Literal * lit = tagged2Literal(t);
+      if (lit->isAtom()) return 1;
+      else return ((Name*)lit)->gcIsMarked();
+    }
+  case EXT       : DO_EXT: return ((*(int32*)oz_tagged2Extension(t))&1);
+  case LTUPLE    : goto RETURN_NO;
+  case SRECORD   : goto RETURN_NO;
+  case OZFLOAT   : goto RETURN_NO;
+  case OZCONST   : DO_OZCONST: return (tagged2Const(t)->gcIsMarked());
+  case UNUSED_VAR: goto IMPOSSIBLE;
+  case UVAR      : goto IMPOSSIBLE;
+  case CVAR      : DO_CVAR: return tagged2CVar(t)->gcIsMarked();
+  default        : Assert(0);
   }
   return 0;
+ RETURN_YES: return 1;
+ IMPOSSIBLE: Assert(0);
+ RETURN_NO : return 0;
 }
 
 void WeakDictionary::gcRecurseV(void) {
@@ -1342,7 +1393,7 @@ void WeakDictionary::weakGC()
   // finally collect the table
   DynamicTable * frm = table;
   table = DynamicTable::newDynamicTable(numelem);
-  for (dt_index i=table->size;i--;) {
+  for (dt_index i=frm->size;i--;) {
     OZ_Term v = frm->getValue(i);
     if (v!=0) {
       OZ_Term k = frm->getKey(i);
