@@ -443,7 +443,7 @@ void (*oz_child_handle)() = 0;
 #ifdef WINDOWS
 jmp_buf wake_jmp;
 #define sigsetjmp(X,Y) setjmp(X)
-#define siglongjmp(X,Y) longjmp(X)
+#define siglongjmp(X,Y) longjmp(X,Y)
 #else /* !WINDOWS */
 sigjmp_buf wake_jmp;
 #endif
