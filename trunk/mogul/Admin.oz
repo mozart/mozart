@@ -392,7 +392,7 @@ define
 		  {Raise mogul('update-ozmake'(no_db_is_opened))}
 	       end
 	       {Pickle.saveCompressed
-		{@db get_ozpm_info($)}
+		{@db get_ozmake_info($)}
 		{RelativeTo @mogulDIR 'pkg/database.ozf'}
 		9}
 	    catch mogul(...)=E then
