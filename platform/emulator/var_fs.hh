@@ -60,7 +60,6 @@ public:
   }
 
   void gc(void);
-  size_t getSize(void){return sizeof(GenFSetVariable);}
   void dispose(void);
 
   Bool unifyFSet(OZ_Term *, OZ_Term, OZ_Term *, OZ_Term,
