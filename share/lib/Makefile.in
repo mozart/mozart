@@ -247,7 +247,7 @@ $(OZBIN)/ozbatch: ozbatch
 %.typ: $(SRCDIR)/%.env
         $(ENV2TYPE) $< > $@
 
-tyc/%.tyc: %.typ $(DUMPINTRO)
+tyc/%.tyc: %.typ tyc $(DUMPINTRO)
         $(COMPILE) $< -o $@
 
 %.ozc:
