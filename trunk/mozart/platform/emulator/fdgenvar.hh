@@ -55,7 +55,8 @@ public:
   size_t getSize(void){return sizeof(GenFDVariable);}
   void dispose(void);
   
-  Bool unifyFD(TaggedRef *, TaggedRef, TaggedRef *, TaggedRef, Bool);
+  Bool unifyFD(TaggedRef *, TaggedRef, TaggedRef *, TaggedRef,
+	       Bool, Bool = TRUE);
 
   void becomesSmallIntAndPropagate(TaggedRef * trPtr);
    

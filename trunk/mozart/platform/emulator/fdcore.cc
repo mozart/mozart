@@ -161,6 +161,8 @@ OZ_C_proc_end
 
 OZ_C_proc_begin(BIfdPutLe, 2)
 {
+  Assert(!FDcurrentTaskSusp);
+  
   ExpectedTypes("FiniteDomain,SmallInt");
   
   OZ_getCArgDeref(1, n, nptr, ntag);
@@ -199,6 +201,8 @@ OZ_C_proc_end // BIfdPutLe
 
 OZ_C_proc_begin(BIfdPutGe, 2)
 {
+  Assert(!FDcurrentTaskSusp);
+  
   ExpectedTypes("FiniteDomain,SmallInt");
   
   OZ_getCArgDeref(1, n, nptr, ntag);
@@ -237,6 +241,8 @@ OZ_C_proc_end // BIfdPutGe
 
 OZ_C_proc_begin(BIfdPutList, 3)
 {
+  Assert(!FDcurrentTaskSusp);
+  
   ExpectedTypes("FiniteDomain,List of SmallInts or Tuples,SmallInt");
   
   OZ_getCArgDeref(2, s, sptr, stag); // sign
@@ -323,7 +329,7 @@ OZ_C_proc_begin(BIfdPutList, 3)
 
   if (len_arr >= MAXFDBIARGS)
     warning("BIfdPutList: Probably elements of description are ignored");
-  
+
   OZ_getCArgDeref(0, var, varptr, vartag);
 
   if (! (isGenFDVar(var,vartag) || isNotCVar(vartag) || isSmallInt(vartag))) {
@@ -345,8 +351,54 @@ OZ_C_proc_begin(BIfdPutList, 3)
 OZ_C_proc_end // BIfdPutList
 
 
+OZ_C_proc_begin(BIfdPutInterval, 3)
+{
+  Assert(!FDcurrentTaskSusp);
+  
+  ExpectedTypes("FiniteDomain,SmallInt,SmallInt");
+  
+  OZ_getCArgDeref(1, l, lptr, ltag); // lower bound
+
+  if (isAnyVar(ltag)) {
+    return addNonResSuspForDet(l, lptr, ltag,
+			       createNonResSusp(OZ_self, OZ_args, OZ_arity));
+  } else if (! isSmallInt(ltag)) {
+    TypeError(1, "");
+  }
+
+  OZ_getCArgDeref(1, u, uptr, utag); // upper bound
+
+  if (isAnyVar(utag)) {
+    return addNonResSuspForDet(u, uptr, utag,
+			       createNonResSusp(OZ_self, OZ_args, OZ_arity));
+  } else if (! isSmallInt(utag)) {
+    TypeError(2, "");
+  }
+
+  OZ_getCArgDeref(0, var, varptr, vartag);
+
+  if (! (isGenFDVar(var,vartag) || isNotCVar(vartag) || isSmallInt(vartag))) {
+    TypeError(0, "");
+  }
+
+  BIfdBodyManager x;
+
+  if (! x.introduce(OZ_getCArg(0))) return FAILED;
+
+  LocalFD aux;
+
+  FailOnEmpty(aux.init(smallIntValue(l), smallIntValue(u)));
+  FailOnEmpty(*x &= aux);
+
+  return x.releaseNonRes();
+}
+OZ_C_proc_end // BIfdPutInterval
+
+
 OZ_C_proc_begin(BIfdPutNot, 2)
 {
+  Assert(!FDcurrentTaskSusp);
+  
   ExpectedTypes("FiniteDomain,SmallInt");
   
   OZ_getCArgDeref(1, n, nptr, ntag);

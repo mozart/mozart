@@ -623,8 +623,11 @@ SuspList * AM::checkSuspensionList(SVariable * var, TaggedRef taggedvar,
   // see the reduction of solve actor by the enumeration; 
   DebugCheck(dontPropagate == OK, return (suspList));
 
-  
+  PROFILE_CODE1(FDProfiles.inc_item(no_calls_checksusplist);)
+    
   while (suspList) {
+    PROFILE_CODE1(FDProfiles.inc_item(susps_per_checksusplist);)
+
     Suspension * susp = suspList->getElem();
 
     if (susp->isDead()) {
