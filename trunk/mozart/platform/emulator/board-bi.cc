@@ -295,6 +295,12 @@ OZ_BI_define(BImergeSpace, 1,1) {
 } OZ_BI_end
 
 
+#ifdef CS_PROFILE
+extern int32 * cs_copy_start;
+extern int32 * cs_orig_start;
+extern int     cs_copy_size;
+#endif
+
 OZ_BI_define(BIcloneSpace, 1,1) {
   declareSpace;
 
