@@ -63,8 +63,8 @@ OZ_Return BIarityInline(TaggedRef, TaggedRef &);
 OZ_Return adjoinPropList(TaggedRef t0, TaggedRef list, TaggedRef &out,
                              Bool recordFlag);
 
-OZ_C_proc_proto(BIatWithState);
-OZ_C_proc_proto(BIassignWithState);
+OZ_C_proc_proto(BIatWithState)
+OZ_C_proc_proto(BIassignWithState)
 
 // -----------------------------------------------------------------------
 // propagators
