@@ -35,8 +35,8 @@ PREFIX=`pwd`
 packageroot="$PREFIX/packages/$PLAT"
 build=$PREFIX/build-$PLAT
 dst=$PREFIX
-
 PATH=$packageroot/bin:$PATH
+LD_LIBRARY_PATH=$packageroot/lib:$LD_LIBRARY_PATH
 
 echo "Packages in: $packageroot"
 
@@ -60,18 +60,19 @@ CXXFLAGS="$CFLAGS"
 with_lib_dir="$packageroot/lib"
 with_inc_dir="$packageroot/include"
 with_tcl="$packageroot/lib"
+with_tclinclude="$packageroot/include"
 with_tk="$packageroot/lib"
+with_tkinclude="$packageroot/include"
 with_gmp="$packageroot"
 with_zlib="$packageroot"
 with_gdbm="$packageroot"
 with_regex="$packageroot"
 
-# echo $CFLAGS $CXXFLAGS $LDFLAGS
-# echo $with_lib_dir $with_inc_dir $with_tcl $with_tk
-export PATH CFLAGS CXXFLAGS LDFLAGS
+export PATH LD_LIBRARY_PATH CFLAGS CXXFLAGS LDFLAGS
 unset CONFIG_SITE 
 export with_lib_dir with_inc_dir
-export with_tcl with_tk with_gmp with_zlib with_gdbm with_regex
+export with_tcl with_tclinclude with_tk with_tkinclude 
+export with_gmp with_zlib with_gdbm with_regex
 
 #
 set -x
