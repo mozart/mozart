@@ -607,10 +607,6 @@ failure:
 }
 
 
-#ifdef ALLDIFF
-#include "_alldiff.cc"
-#endif
-
 //-----------------------------------------------------------------------------
 
 OZ_C_proc_begin(fdtest_gensum, 2)
@@ -770,6 +766,18 @@ failure:
   OZ_DEBUGPRINTTHIS("failed");
   return P.fail();  
 }
+
+//-----------------------------------------------------------------------------
+// propagator by our hiwis
+
+#ifdef ALLDIFF
+#include "_alldiff.cc"
+#endif
+
+#ifdef INPROP
+#include "_inprop.cc"
+#endif
+
 
 //-----------------------------------------------------------------------------
 
