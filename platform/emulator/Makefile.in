@@ -146,18 +146,16 @@ libwif.a: wif.o
 win: ozlib.lnk $(CREATEDFILES)
 
 
-PRGDEP=$(CREATEDFILES) $(SRCS) $(OBJS) $(OZMALIB)
+PRGDEP=$(CREATEDFILES) $(SRCS) $(OBJS) $(OZMALIB) \
+	$(FDTARGETS) $(FSETTARGETS) $(WIFTARGETS) \
+	$(PARSERTARGETS) $(OZMATARGETS) 
 
 first: $(CREATEDFILES) $(SRCS)
 
 @PROGRAMNAME@: $(PRGDEP)
-	$(MAKE) $(FDTARGETS) $(FSETTARGETS) $(WIFTARGETS) \
-	$(PARSERTARGETS) $(OZMATARGETS) 
 	$(LD) $(LDFLAGS) $(LDOPT) -o $@ $(OBJS) $(LIBS)
 
 @oz_tmphack_programname@: $(PRGDEP)
-	$(MAKE) $(FDTARGETS) $(FSETTARGETS) $(WIFTARGETS) \
-	$(PARSERTARGETS) $(OZMATARGETS)
 	tmp=/tmp/ozemu$$$$; \
 	trap "rm -f $$tmp; exit 1" 1 2 15; \
 	 $(LD) $(LDFLAGS) $(LDOPT) -o $$tmp $(OBJS) $(LIBS) && \
