@@ -25,7 +25,7 @@
 %%%
 
 defaults(lib:
-	    ['Application' 'GetArgs' 'Applet' 'Syslet' 'Servlet'
+	    ['Application'
 	     'Search' 'FD' 'Schedule' 'FS'
 	     'Error' 'ErrorRegistry' 'Finalize'
 	     'Fault' 'Connection' 'Remote' 'VirtualSite' 'URL'
