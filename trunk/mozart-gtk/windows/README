@@ -7,4 +7,8 @@ steps:
 3. Create a build directory <build>
 4. cd <build>
 5. <MozartGTK-Sources/configure --with-gtk-canvas-dir=<dir>/build
-6. make all install
+6. make all install PREFIX=<oz-install-dir>
+7. Copy all the *.dll and *.exe files to <oz-install-dir>/platform/win32-i486
+8. Test your setup:
+   cd <MozartGTK>/examples && ozc -c CanvasScramble.oz && ozengine CanvasScramble
+   In case a windows pops up, click on the scramble button and enjoy the game!
