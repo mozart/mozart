@@ -228,20 +228,9 @@ Bool AM::emulateHookOutline(Abstraction *def,
       return TRUE;
     }
   }
-  if (isSetSFlag(StartGC)) {
+  if (isSetSFlag((StatusBit)(StartGC|UserAlarm|IOReady))) {
     return TRUE;
   }
-
-  osBlockSignals();
-  // & with blocking of signals;
-  if (isSetSFlag(UserAlarm)) {
-    handleUser();
-  }
-  if (isSetSFlag(IOReady)) {
-    handleIO();
-  }
-  
-  osUnblockSignals();
   
   if (def && isSetSFlag(DebugMode)) {
     enterCall(currentBoard,def,arity,arguments);
@@ -1077,17 +1066,26 @@ void engine() {
 
  LBLerror:
  LBLstart:
+  
+  e->deinstallPath(e->rootBoard);
 
-// ------------------------------------------------------------------------
-// *** gc
-// ------------------------------------------------------------------------
+  /* GC */
   if (e->isSetSFlag(StartGC)) {
     e->doGC();
   }
 
-// ------------------------------------------------------------------------
-// *** process switch
-// ------------------------------------------------------------------------
+  osBlockSignals();
+
+  if (e->isSetSFlag(UserAlarm)) {
+    e->handleUser();
+  }
+  if (e->isSetSFlag(IOReady)) {
+    e->handleIO();
+  }
+  
+  osUnblockSignals();
+  
+  /* process switch */
   if (e->threadQueueIsEmpty()) {
     e->suspendEngine();
   }
@@ -2770,6 +2768,8 @@ void engine() {
   Case(ENDDEFINITION):
 
   Case(SWITCHCOMPMODE):
+    /* brute force: don't know exactly, when to mark Y as dirty (RS) */
+    markDirtyRefsArray(Y);
     e->currentThread->switchCompMode();
     DISPATCH(1);
 
