@@ -217,7 +217,7 @@ expression package, data base interfaces, and so on.
 : \${CFLAGS="\$RPM_OPT_FLAGS"}
 : \${CXXFLAGS="\$RPM_OPT_FLAGS"}
 export CFLAGS CXXFLAGS
-./configure --prefix=\$RPM_BUILD_ROOT$OZHOME --enable-opt=yes --with-documents=all --enable-index --enable-chm
+./configure --prefix=\$RPM_BUILD_ROOT$OZHOME --enable-opt=yes --disable-doc
 make
 
 %install
