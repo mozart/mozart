@@ -154,7 +154,7 @@ OZ_C_proc_begin(BIfdConstrDisj, 3)
   EXPECT(pe, 1, expectVectorIntVarAny);
 
   return pe.spawn(new CDPropagator(OZ_args[0], OZ_args[1], OZ_args[2]),
-                  MAX_PRIORITY - 1);
+                  OZMAX_PRIORITY - 1);
 }
 OZ_C_proc_end
 
