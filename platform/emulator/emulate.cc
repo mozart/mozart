@@ -2765,7 +2765,7 @@ LBLdispatcher:
         if (ozdebugPC==C_DEBUG_CONT_Ptr) {
           // inherit ozdebug from parent thread
           OzDebug *dbg = (OzDebug*) Y;
-          tt->pushDebug(dbg);
+          tt->pushDebug(dbg->copy());
         }
       }
 

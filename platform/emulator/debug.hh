@@ -23,6 +23,11 @@ public:
     info = i;
   }
   OzDebug *gcOzDebug();
+  OzDebug *copy()
+  {
+    return new OzDebug(dothis,info);
+  }
+
   void printCall();
 };
 

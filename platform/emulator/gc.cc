@@ -501,12 +501,8 @@ void storeForward (int32* fromPtr, void *newValue, Bool domark=OK)
   if (opMode == IN_TC) {
     savedPtrStack.pushPtr(fromPtr);
   }
-  DebugGC(opMode == IN_GC
-          && MemChunks::list->inChunkChain((void *)fromPtr),
-          error("storing marked value in 'TO' space"));
-  DebugGC(opMode == IN_GC
-          && from->inChunkChain(newValue),
-          error("storing (marked) ref in to FROM-space"));
+  Assert(inFromSpace(fromPtr));
+  //  Assert(inToSpace(newValue));
   *fromPtr = domark ? GCMARK(newValue) : ToInt32(newValue);
 }
 
