@@ -54,7 +54,7 @@ private:
     Board *board;
   } u;
   int priority;
-  Board *notificationBoard;
+  Board *notificationBoard; // SOLVE
 public:
   Thread(int prio);
 
