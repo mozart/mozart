@@ -239,7 +239,14 @@ void GenCVariable::dispose(void)
   case FSetVariable:
     ((GenFSetVariable *)this)->dispose();
     break;
+  case PROMISE:
+    ((Promise *)this)->dispose();
+    break;
+  case LazyVariable:
+    ((GenLazyVariable *)this)->dispose();
+    break;
   default:
+    // mm2: why not handle other cases?
     break;
   }
 }
