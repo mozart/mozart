@@ -218,16 +218,15 @@ changequote([,])
 dnl ==================================================================
 dnl CHOOSE C++ COMPILER
 dnl
-dnl choose only if the choice is not already in the cache.
-dnl WE DONT DO THIS ANYMORE
-dnl -- note that CXXFLAGS is set to the empty string to avoid that it be
-dnl -- set by AC_PROG_CXX (we take care of our own defaults)
+dnl choose only if the choice is not already in the cache.  At
+dnl Christian's request, CXXFLAGS is set to -O by default if it is not
+dnl already set in the environment
 dnl ==================================================================
 
 AC_DEFUN(OZ_VERSION_GXX,[2.7])
 AC_DEFUN(OZ_CXX_CHOOSE,[
   if test -z "$oz_cv_cxx__chosen"; then
-dnl    CXXFLAGS=
+    : ${CXXFLAGS="-O"}
     OZ_ARG_WITH_CXX
     AC_PROG_CXX
     if test "${GXX}" = yes; then
@@ -336,12 +335,15 @@ AC_DEFUN(OZ_ARG_WITH_CXX,[
 
 dnl ==================================================================
 dnl CHOOSE C COMPILER
+dnl
+dnl At Christian's request CFLAGS is set to -O by default if it is not
+dnl already set in the environment.
 dnl ==================================================================
 
 AC_DEFUN(OZ_VERSION_GCC,[2.7])
 AC_DEFUN(OZ_CC_CHOOSE,[
   if test -z "$oz_cv_cc__chosen"; then
-dnl    CFLAGS=
+    : ${CFLAGS="-O"}
     AC_PROG_CC
     if test "$GCC" = yes; then
       if oz_tmp=`$CC --version 2>/dev/null`; then
