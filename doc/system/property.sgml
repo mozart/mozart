@@ -26,6 +26,237 @@
   -->
 
 
-  <Chapter id="Chapter.Property">
-    <Title/Emulator Properties: <<Property>>/
-  </Chapter>
+<Chapter id="Chapter.Property" proglang=oz>
+  <Title/Emulator Properties: <<Property>>/
+
+  <Section class=unnumbered id="section.property.threads">  
+    <Title/Threads: <<threads>>/
+
+    <P>
+      <Table>
+        <Tr><Th/Field/ <Th/Mutable/ <Th/Type/ <Th/Explanation/</Tr>
+        <Tr>
+          <Td/created/
+          <Td/no/
+          <Td/<<Int>>/
+          <Td/Total number of threads created./
+        </Tr>
+        <Tr>
+          <Td/runnable/
+          <Td/no/
+          <Td/<<Int>>/
+          <Td/Number of currently runnable threads./
+        </Tr>
+        <Tr>
+          <Td/min/
+          <Td/no/
+          <Td/<<Int>>/
+          <Td/Minimal size of a thread stack in number of tasks./
+        </Tr>
+        <Tr>
+          <Td/max/
+          <Td/no/
+          <Td/<<Int>>/
+          <Td/Maximal size of a thread stack in number of tasks. If
+          this limit is exceeded the user is prompted to increase the
+          limit./
+        </Tr>
+      </Table>
+    </P>
+
+  </Section>
+
+  <Section class=unnumbered id="section.property.priority">  
+    <Title/Thread Priorities: <<priorities>>/
+
+    <P>
+      <Table>
+        <Tr><Th/Field/ <Th/Mutable/ <Th/Type/ <Th/Explanation/</Tr>
+        <Tr>
+          <Td/high/
+          <Td/yes/
+          <Td/1&ellipsis;100/
+          <Td/Relation between time slices available for threads of
+        priorities <<medium>> and <<low>>./
+        </Tr>
+        <Tr>
+          <Td/medium/
+          <Td/yes/
+          <Td/1&ellipsis;100/
+          <Td/Relation between time slices available for threads of
+        priorities <<high>> and <<medium>>./
+        </Tr>
+      </Table>
+    </P>
+
+  </Section>
+
+  <Section class=unnumbered id="section.property.time">  
+    <Title/Time Usage: <<time>>/
+
+    <P>
+      <Table>
+        <Tr><Th/Field/ <Th/Mutable/ <Th/Type/ <Th/Explanation/</Tr>
+        <Tr>
+          <Td/user/
+          <Td/no/
+          <Td/<<Int>>/
+          <Td/Operating system user time of the Oz Emulator process in
+              milliseconds./
+        </Tr>
+        <Tr>
+          <Td/system/
+          <Td/no/
+          <Td/<<Int>>/
+          <Td/Operating system system time of the Oz Emulator process in
+        milliseconds./
+        </Tr>
+        <Tr>
+          <Td/total/
+          <Td/no/
+          <Td/<<Int>>/
+          <Td/Elapsed real time in milli seconds from an arbitrary point in
+        the past (for example, system start-up time). Can be used to
+        determine the wall time elapsed between two successive
+        applications of <<{Property.get 'time.total'}>>./
+        </Tr>
+        <Tr>
+          <Td/run/
+          <Td/no/
+          <Td/<<Int>>/
+          <Td/Run time in milliseconds./
+        </Tr>
+        <Tr>
+          <Td/copy/
+          <Td/no/
+          <Td/<<Int>>/
+          <Td/Time spent on copying (that is, on cloning of spaces) in
+        milliseconds./
+        </Tr>
+        <Tr>
+          <Td/propagate/
+          <Td/no/
+          <Td/<<Int>>/
+          <Td/Time spent on executing propagators in
+        milliseconds./
+        </Tr>
+        <Tr>
+          <Td/gc/
+          <Td/no/
+          <Td/<<Int>>/
+          <Td/Time spent on garbage collection in
+          milliseconds./
+        </Tr>
+        <Tr>
+          <Td/detailed/
+          <Td/yes/
+          <Td/<<Bool>>/
+          <Td/Only if <<true>>, the fields <<time.copy>>, <<time.gc>>,
+          and <<time.propagate>> are updated accordingly./
+        </Tr>
+      </Table>
+    </P>
+
+  </Section>
+
+  <Section class=unnumbered id="section.property.gc">  
+    <Title/Garbage Collection: <<gc>>/
+
+    <P>
+      <Table>
+        <Tr><Th/Field/ <Th/Mutable/ <Th/Type/ <Th/Explanation/</Tr>
+        <Tr>
+          <Td/size/
+          <Td/no/
+          <Td/<<Int>>/
+          <Td/Current heap size in bytes/
+        </Tr>
+        <Tr>
+          <Td/threshold/
+          <Td/no/
+          <Td/<<Int>>/
+          <Td/Heap size in bytes when next automatic garbage collection takes
+        place. Gets recomputed after every garbage collection./
+        </Tr>
+        <Tr>
+          <Td/active/
+          <Td/no/
+          <Td/<<Int>>/
+          <Td/Heap size in bytes after last garbage collection./
+        </Tr>
+        <Tr>
+          <Td/max/
+          <Td/yes/
+          <Td/<<Int>>/
+          <Td/Maximal allowed heap size in bytes. If the heap size exceeds this
+        limit by a percentage of <<tolerance>> before garbage collection
+        can take place, the user is prompted to increase the limit./
+        </Tr>
+        <Tr>
+          <Td/min/
+          <Td/yes/
+          <Td/<<Int>>/
+          <Td/Minimal heap size in bytes./
+        </Tr>
+        <Tr>
+          <Td/free/
+          <Td/yes/
+          <Td/<<1>>&ellipsis;<<100>>/
+          <Td>Gives the percentage of free heap memory after garbage
+        collection. For example, a value of 75 means that 
+        <<threshold>> is set to approximately: 
+        <<active>>*100/(100-75)=<<active>>*4.</Td>
+        </Tr>
+        <Tr>
+          <Td/tolerance/
+          <Td/yes/
+          <Td/<<1>>&ellipsis;<<100>>/
+          <Td/Gives the percentage by which the emulator is allowed for
+        purposes of better memory allocation to exceed
+        the maximal heap size <<max>> or to increase <<threshold>>./
+        </Tr>
+        <Tr>
+          <Td/on/
+          <Td/yes/
+          <Td/<<Bool>>/
+          <Td/Whether garbage collection is invoked automatically./
+        </Tr>
+      </Table>
+    </P>
+
+  </Section>
+
+  <Section class=unnumbered id="section.property.print">  
+    <Title/Printing Values: <<print>>/
+  </Section>
+
+  <Section class=unnumbered id="section.property.fd">  
+    <Title/Finite Domains: <<fd>>/
+  </Section>
+
+  <Section class=unnumbered id="section.property.spaces">  
+    <Title/Computation Spaces: <<space>>/
+  </Section>
+
+  <Section class=unnumbered id="section.property.errors">  
+    <Title/Printing Errors: <<errors>>/
+  </Section>
+
+  <Section class=unnumbered id="section.property.messages">  
+    <Title/Printing Messages: <<messages>>/
+  </Section>
+
+  <Section class=unnumbered id="section.property.memory">  
+    <Title/Memory Usage: <<memory>>/
+  </Section>
+
+  <Section class=unnumbered id="section.property.limits">  
+    <Title/Implementation Limits: <<limits>>/
+  </Section>
+
+  <Section class=unnumbered id="section.property.misc">  
+    <Title/Miscellaneous: <<misc>>/
+  </Section>
+
+
+</Chapter>
