@@ -204,10 +204,12 @@ public:
                    TaggedRef *termPtr, TaggedRef term);
   void bind(TaggedRef *varPtr, TaggedRef var, TaggedRef *termPtr);
   void checkSuspensionList(TaggedRef taggedvar, TaggedRef term,
-                           SVariable * rightVar, Bool calledByUnify = FALSE);
+                           SVariable * rightVar,
+                           PropCaller calledByUnify = pc_propagator);
   SuspList * checkSuspensionList(SVariable * var, TaggedRef taggedvar,
                                  SuspList * suspList, TaggedRef term,
-                                 SVariable * rightVar, Bool calledByUnify);
+                                 SVariable * rightVar,
+                                 PropCaller calledByUnify);
   Bool isBetween(Board * to, Board * varHome);
   void setExtSuspension (Board *varHome, Suspension *susp);
   Bool checkExtSuspension (Suspension *susp);

@@ -573,7 +573,7 @@ void AM::decSolveThreads (Board *bb)
 SuspList * AM::checkSuspensionList(SVariable * var, TaggedRef taggedvar,
                                    SuspList * suspList,
                                    TaggedRef term, SVariable * rightVar,
-                                   Bool calledByUnify)
+                                   PropCaller calledByUnify)
 {
   SuspList * retSuspList = NULL;
 
@@ -662,7 +662,7 @@ void AM::genericBind(TaggedRef *varPtr, TaggedRef var,
       (taggedBecomesSuspVar(termPtr)) : NULL;
     // variables are passed as references
     checkSuspensionList(var, svar ? makeTaggedRef(termPtr) : term,
-                        svar, TRUE);
+                        svar, pc_std_unif);
 
 #ifdef DEBUG_CHECK
     Board *hb = (tagged2SuspVar(var)->getHome ())->getBoardDeref ();
