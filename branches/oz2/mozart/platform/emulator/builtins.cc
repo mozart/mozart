@@ -5821,17 +5821,30 @@ OZ_C_proc_begin(BISystemGetTime,1) {
   GetRecord;
   unsigned int timeNow = osUserTime();
 
-  SetIntArg(AtomCopy,      ozstat.timeForCopy.total);
-  SetIntArg(AtomGC,        ozstat.timeForGC.total);
-  SetIntArg(AtomLoad,      ozstat.timeForLoading.total);
-  SetIntArg(AtomPropagate, ozstat.timeForPropagation.total);
-  SetIntArg(AtomRun,       timeNow-(ozstat.timeForGC.total +
-				    ozstat.timeForLoading.total +
-				    ozstat.timeForPropagation.total +
-				    ozstat.timeForCopy.total));
+  unsigned int copy = 0;
+  unsigned int gc   = 0;
+  unsigned int load = 0;
+  unsigned int prop = 0;
+  unsigned int run  = 0;
+
+  if (ozconf.timeDetailed) {
+    copy = ozstat.timeForCopy.total;
+    gc   = ozstat.timeForGC.total;
+    load = ozstat.timeForLoading.total;
+    prop = ozstat.timeForPropagation.total;
+    run  = timeNow-(copy + gc + load + prop);
+  }
+
+  SetIntArg(AtomCopy,      copy);
+  SetIntArg(AtomGC,        gc);
+  SetIntArg(AtomLoad,      load);
+  SetIntArg(AtomPropagate, prop);
+  SetIntArg(AtomRun,       run);
+
   SetIntArg(AtomSystem,    osSystemTime());
   SetIntArg(AtomTotal,     osTotalTime());
   SetIntArg(AtomUser,      timeNow);
+  SetBoolArg(AtomDetailed, ozconf.timeDetailed);
 
   return PROCEED;
 }
@@ -6050,6 +6063,17 @@ OZ_C_proc_begin(BISystemSetPriorities,1) {
   SetIfPos(ozconf.hiMidRatio,  high,   1);
   SetIfPos(ozconf.midLowRatio, medium, 1);
   
+  return PROCEED;
+}
+OZ_C_proc_end
+
+OZ_C_proc_begin(BISystemSetTime,1) {
+  LookRecord(t);
+
+  DoBoolFeature(detailed, t, AtomDetailed);
+
+  ozconf.timeDetailed = detailed;
+
   return PROCEED;
 }
 OZ_C_proc_end
@@ -6932,6 +6956,7 @@ BIspec allSpec[] = {
   {"SystemGetPlatform",   1, BISystemGetPlatform},
 
   {"SystemSetThreads",    1, BISystemSetThreads},
+  {"SystemSetTime",       1, BISystemSetTime},
   {"SystemSetPriorities", 1, BISystemSetPriorities},
   {"SystemSetPrint",      1, BISystemSetPrint},
   {"SystemSetFD",         1, BISystemSetFD},
