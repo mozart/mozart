@@ -35,14 +35,24 @@ define
    end
    %%
    local
-      PAT = {Regex.compile '^[[:space:]]*(.*[^[:space:]])[[:space:]]*$' [extended]}
+      %% the following doesn't work on RedHat 8.0 when the TXT contains only spaces
+      %% PAT = {Regex.compile '^[[:space:]]*(.*[^[:space:]])[[:space:]]*$' [extended]}
+      %% in any case, it would not have stripped in that case
+      PREFIX = {Regex.compile '^[[:space:]]+' [extended]}
+      SUFFIX = {Regex.compile '[[:space:]]+$' [extended]}
    in
       fun {Strip TXT}
 	 S = {MakeBS TXT}
-      in
-	 case {Regex.search PAT S}
+	 S1 =
+	 case {Regex.search PREFIX S}
 	 of false then S
-	 [] M then {Regex.group 1 M S} end
+	 [] M then {ByteString.slice S M.0.2 {ByteString.width S}}
+	 end
+      in
+	 case {Regex.search SUFFIX S1}
+	 of false then S1
+	 [] M then {ByteString.slice S1 0 M.0.1}
+	 end
       end
    end
    %%
