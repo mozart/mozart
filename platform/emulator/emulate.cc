@@ -337,7 +337,7 @@ Bool AM::hookCheckNeeded()
 #define INCFPC(N) PC += N
 
 #define WANT_INSTRPROFILE
-#if defined(WANT_INSTRPROFILE)
+#if defined(WANT_INSTRPROFILE) && defined(__GNUC__)
 #define asmLbl(INSTR) asm(" " #INSTR ":");
 #else
 #define asmLbl(INSTR)
@@ -1132,7 +1132,7 @@ void engine()
 
     CBB->unsetNervous();
 
-    LOCAL_PROPAGATION (Assert (localPropStore.isEmpty ()));
+    LOCAL_PROPAGATION(Assert(localPropStore.isEmpty ()););
 
     Assert (biFun);
     switch (biFun (predArity, tmpX)) {
@@ -1143,13 +1143,13 @@ void engine()
         //  but it's still "in solve";
       }
       e->currentThread = (Thread *) NULL;
-      LOCAL_PROPAGATION (if (!(localPropStore.do_propagation ()))
+      LOCAL_PROPAGATION(if (!(localPropStore.do_propagation ()))
                          goto localhack0;);
       goto LBLstart;
 
     case PROCEED:
       // Note: e->currentThread must be reset in 'LBLkillXXX';
-      LOCAL_PROPAGATION (if (!(localPropStore.do_propagation ()))
+      LOCAL_PROPAGATION(if (!(localPropStore.do_propagation ()))
                          goto localhack0;);
       if (e->isToplevel ()) {
         goto LBLkillToplevelThread;
@@ -1159,7 +1159,7 @@ void engine()
 
       //  Note that *propagators* never yield 'SUSPEND';
     case FAILED:
-      LOCAL_PROPAGATION (localPropStore.reset ());
+      LOCAL_PROPAGATION(localPropStore.reset());
 
     localhack0:
       HF_FAIL(INFO_BI);

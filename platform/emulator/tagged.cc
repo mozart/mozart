@@ -81,8 +81,8 @@ void Continuation::setY(RefsArray Y) {
 #endif
 }
 
-void Continuation::init(ProgramCounter p, RefsArray y, RefsArray g=0,
-                        RefsArray x=0, int i=0)
+void Continuation::init(ProgramCounter p, RefsArray y, RefsArray g,
+                        RefsArray x, int i)
 {
   pc = p;
   yRegs = y;
@@ -101,8 +101,8 @@ void Continuation::init(ProgramCounter p, RefsArray y, RefsArray g=0,
 #endif
 }
 
-Continuation::Continuation(ProgramCounter p, RefsArray y, RefsArray g=0,
-                           RefsArray x=0, int i=0)
+Continuation::Continuation(ProgramCounter p, RefsArray y, RefsArray g,
+                           RefsArray x, int i)
   : pc(p), yRegs(y), gRegs(g)
 {
   setX (x, i);

@@ -290,7 +290,7 @@ unsigned __stdcall readerThread(void *arg)
 static
 void deleteReader(int fd)
 {
-  TerminateThread(readers[fd].thrd,0);
+  //  TerminateThread(readers[fd].thrd,0); !!!!!
   readers[fd].thrd = 0;
 
 }
