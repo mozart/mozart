@@ -882,9 +882,6 @@ void sendGate(OZ_Term t) {
   }
 }
 
-
-extern Site *findRemoteSite(ip_address a,int port,time_t stamp);
-
 OZ_C_proc_begin(BISendGate,2)
 {
   oz_declareVirtualStringArg(0,url);
@@ -923,7 +920,7 @@ OZ_C_proc_begin(BISendGate,2)
   }
 
   Site *site;
-  site = findRemoteSite(addr,port,stamp);
+  site = findSite(addr,port,stamp);
 
   if (!site) goto bomb;
 
