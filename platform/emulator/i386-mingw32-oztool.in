@@ -18,8 +18,8 @@ cmd=$1
 shift
 
 case "$cmd" in
-  c++)      exec ${plat}-g++ -I@srcdir@ "$@" ;;
-  cc)       exec ${plat}-gcc -I@srcdir@ "$@" ;;
+  c++)      exec ${plat}-g++ -I@srcdir@ -I@srcdir@/../tools/gump "$@" ;;
+  cc)       exec ${plat}-gcc -I@srcdir@ -I@srcdir@/../tools/gump "$@" ;;
   platform) echo "win32-i486"; exit 0;;
 
   ld) ;;  # see below
