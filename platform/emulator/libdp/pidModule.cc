@@ -44,18 +44,13 @@
 #include <netdb.h>
 
 
-OZ_BI_define(BIgetCRC,1,1) {
+OZ_BI_define(BIgetCRC,1,1) 
+{
   oz_declareVirtualStringIN(0,s);
 
-  unsigned long crc = update_crc(init_crc(),(unsigned char *) s, strlen(s));
-  
-  int hi = (int) ((crc & 0xffff0000L) >> 16);
-  int lo = (int) (crc & 0x0000ffffL);
-  
-  OZ_out(0) = oz_int(lo);
-  OZ_out(1) = oz_int(hi);
+  crc_t crc = update_crc(init_crc(),(unsigned char *) s, strlen(s));
     
-  OZ_RETURN(oz_ulong(crc));
+  OZ_RETURN(oz_unsignedInt(crc));
 } OZ_BI_end
 
 //
