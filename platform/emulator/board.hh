@@ -57,7 +57,7 @@ enum BoardTags {
 #define BoTag_AllMask    15
 
 class Board {
-friend int engine(Bool init);
+  friend int engine(Bool init);
 public:
   NO_DEFAULT_CONSTRUCTORS(Board);
   Board(void);
@@ -212,7 +212,8 @@ public:
     return threads;
   }
 
-  // Script
+  //
+  // Script and script installation
   //
 private:
   Script script;
@@ -221,7 +222,6 @@ public:
   Script & getScript(void) {
     return script;
   }
-
 
   //
   // Suspension list
@@ -340,6 +340,20 @@ private:
 public:
   TaggedRef getRootVar() {
     return makeTaggedRef(&rootVar);
+  }
+
+  //
+  // Installation control
+  //
+private:
+  static Bool _isInstalling;
+
+public:
+  static Bool isInstalling(void) {
+    return Board::_isInstalling;
+  }
+  static void setInstalling(Bool ii) {
+    Board::_isInstalling = ii;
   }
 
   //
