@@ -2378,14 +2378,19 @@ LBLkillThread:
            (Board *) tagValueOf ((((SolvedBuiltin *) bi)->getGRegs ())[0]);
          // VERBMSG("solved",((void *) bi),((void *) solveBB));
          Assert(solveBB->isSolve());
-         DebugCheck((solveBB->isCommitted () == OK ||
-                     solveBB->isFailed () == OK),
+         DebugCheck((solveBB->isCommitted() == OK ||
+                     solveBB->isFailed() == OK),
                     error ("Solve board in solve continuation builtin is gone"));
+         Board *saveBoard
+           = SolveActor::Cast(solveBB->getActor())->getBoardFast();
 
-         SolveActor::Cast (solveBB->getActor ())->setBoard (CBB);
+         SolveActor::Cast(solveBB->getActor())->setBoard(CBB);
 
          Bool isGround;
-         Board *newSolveBB = (Board *) e->copyTree (solveBB, &isGround);
+         Board *newSolveBB = (Board *) e->copyTree(solveBB, &isGround);
+
+         SolveActor::Cast(solveBB->getActor())->setBoard(saveBoard);
+
          SolveActor *solveAA = SolveActor::Cast (newSolveBB->getActor ());
 
          if (isGround == OK) {
