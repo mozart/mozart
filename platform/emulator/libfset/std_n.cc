@@ -522,6 +522,7 @@ SERVICE &filter_intersectN(SERVICE &s,
   DSP(("filter_intersect\n"));
   //
   int n = xs.getHigh();
+  int i;
   //
   DECL_DYN_ARRAY(OZ_FSetValue, a, n);
   DECL_DYN_ARRAY(OZ_FSetValue, b, n);
@@ -532,7 +533,7 @@ SERVICE &filter_intersectN(SERVICE &s,
     }
   }
   //
-  for (int i = n; i--; ) {
+  for (i = n; i--; ) {
     if (xs[i]->isEmpty()) {
       FailOnInvalid(z->putCard(0, 0));
       return s.entail();
@@ -543,7 +544,7 @@ SERVICE &filter_intersectN(SERVICE &s,
     int replace = 0;
     int * e = xs.find_equals();
     //
-    for (int i = n; i--; ) {
+    for (i = n; i--; ) {
       if (xs[i]->isFull() || (e[i] != i && e[i] >= 0)) {
 	xs[i].dropParameter();
 	replace = 1;
@@ -564,21 +565,21 @@ SERVICE &filter_intersectN(SERVICE &s,
     a[0].init(fs_full);
     b[n-1].init(fs_full);
     //
-    for (int i = n; i-- ; ) {
+    for (i = n; i-- ; ) {
       FailOnInvalidTouched(redo, z, *z <= *xs[i]);
       FailOnInvalidTouched(redo, xs[i], *xs[i] >= *z);
     }
     //
-    for (int i = 1; i < n; i += 1) {
+    for (i = 1; i < n; i += 1) {
       a[i] = a[i-1] & xs[i-1]->getGlbSet();
     }
-    for (int i = n; i > 1; i -= 1) {
+    for (i = n; i > 1; i -= 1) {
       b[i-2] = b[i-1] & xs[i-1]->getGlbSet();
     }
     //
     FailOnInvalidTouched(redo, z, *z >= (a[n-1] & xs[n-1]->getGlbSet()));
     //
-    for (int i = 1; i <= n; i += 1) {
+    for (i = 1; i <= n; i += 1) {
       FailOnInvalidTouched(redo, xs[i-1],
 			   *xs[i-1] <= -((a[i-1] & b[i-1]) - z->getLubSet()));
     }
