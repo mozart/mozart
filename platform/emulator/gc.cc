@@ -36,9 +36,6 @@
 // space, because threads are not sited
 #define DEEP_GARBAGE
 
-// loeckelt (for big fsets)
-#include "mozart_cpi.hh"
-
 #include "gc.hh"
 #include "var_base.hh"
 #include "fdomn.hh"
@@ -60,6 +57,9 @@
 #include "pointer-marks.hh"
 #include "dpInterface.hh"
 #include "gname.hh"
+
+// loeckelt (for big fsets)
+#include "mozart_cpi.hh"
 
 // hack alert: usage #pragma interface requires this
 #ifdef OUTLINE
@@ -1434,8 +1434,10 @@ void gc_finalize()
 
 inline
 void gcTagged(TaggedRef & frm, TaggedRef & to) {
+#ifdef DEBUG_GC
   Assert(!isInGc || !fromSpace->inChunkChain(&to));
-  
+#endif
+
   TaggedRef aux = frm;
 
   switch (tagTypeOf(aux)) {

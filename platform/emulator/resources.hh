@@ -24,6 +24,10 @@
  *
  */
 
+#ifdef Assert
+error include resources.hh before mozart.h
+#endif
+
 /*
  *
  * ### #     # ######   #####  ######  #######    #    #     # #######
