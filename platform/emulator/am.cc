@@ -1653,6 +1653,11 @@ void AM::stopThread(Thread *th) {
 void AM::resumeThread(Thread *th) {
   if (th->pCont()==0) {
     th->cont();
+
+    if (am.debugmode() && th->isTraced()) {
+      debugStreamCont(th);
+    }
+
     if (!th->isDeadThread() && !am.isScheduled(th)) {
       if (!th->isRunnable()) th->markRunnable();
       am.scheduleThread(th);
