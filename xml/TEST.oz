@@ -156,3 +156,24 @@ end
 {TRY2 init(url:'/home/denys/src/ozstuff/xml/apptut.xml' fast:true)} %% 150 ms
 {TRY2 init(url:'/home/denys/src/ozstuff/xml/apptut.xml' namespaces:false)} %% 170 ms
 {TRY2 init(url:'/home/denys/src/ozstuff/xml/apptut.xml' namespaces:false fast:true)} %% 120 ms
+
+%%====================================================================
+
+declare [PARSER]={Link ['NewParser.ozf']}
+proc {TRY Init}
+   T1={Property.get 'time.total'}
+   {PARSER.new Init _}
+   T2={Property.get 'time.total'}
+in
+   {Show T2-T1}
+end
+
+{TRY o(url:'/home/denys/src/ozstuff/xml/apptut.xml')} %% 190, 210 ms
+{TRY o(url:'/home/denys/src/ozstuff/xml/apptut.xml' namespaces:false)} %% 170 ms
+{TRY o(url:'/home/denys/src/ozstuff/xml/apptut.xml' fast:true)} %% 130, 140, 150 ms
+{TRY o(url:'/home/denys/src/ozstuff/xml/apptut.xml' fast:true namespaces:false)} %% 100, 120 ms
+
+{TRY o(url:'/home/denys/src/ozstuff/xml/apptut.xml' makeNode:min)} %% 200 ms
+{TRY o(url:'/home/denys/src/ozstuff/xml/apptut.xml' namespaces:false makeNode:min)} %% 160 ms
+{TRY o(url:'/home/denys/src/ozstuff/xml/apptut.xml' fast:true makeNode:min)} %% 140 ms
+{TRY o(url:'/home/denys/src/ozstuff/xml/apptut.xml' fast:true namespaces:false makeNode:max)} %% 100, 120 ms
