@@ -171,7 +171,7 @@ void AbstractionEntry::setPred(Abstraction *ab)
   g     = abstr->getGRegs();
   
   // indexing on X[0] optimized !!!
-  if (CodeArea::adressToOpcode((AdressOpcode) *pc) == SWITCHONTERMX &&
+  if (CodeArea::getOpcode(pc) == SWITCHONTERMX &&
       getRegArg(pc+1) == 0) {
     indexTable = (IHashTable *) getAdressArg(pc+2);
   } else {
@@ -269,12 +269,12 @@ TaggedRef CodeArea::dbgGetDef(ProgramCounter PC, RefsArray G, RefsArray Y)
 TaggedRef CodeArea::globalVars(ProgramCounter PC, RefsArray G)
 {
   ProgramCounter aux = definitionEnd(PC);
-  aux += sizeOf(getOP(aux));
+  aux += sizeOf(getOpcode(aux));
   TaggedRef ret = nil();
-  for (int i=0; adressToOpcode(getOP(aux)) == GLOBALVARNAME; i++) {
+  for (int i=0; getOpcode(aux) == GLOBALVARNAME; i++) {
     TaggedRef aux1 = getLiteralArg(aux+1);
     ret = cons(OZ_mkTupleC("#", 2, aux1, G[i]), ret);
-    aux += sizeOf(getOP(aux));
+    aux += sizeOf(getOpcode(aux));
   }
   return reverseC(ret);
 }
@@ -305,7 +305,7 @@ ProgramCounter CodeArea::nextDebugInfo(ProgramCounter from)
   while (1) {
     if (PC>=end)
       return NOCODE;
-    Opcode op = adressToOpcode(getOP(PC));
+    Opcode op = getOpcode(PC);
     switch (op) {
     case OZERROR:   return NOCODE;
     case DEBUGINFO: return PC;
@@ -325,7 +325,7 @@ ProgramCounter CodeArea::definitionEnd(ProgramCounter from)
   ProgramCounter PC = from;
 
   while (1) {
-    Opcode op = adressToOpcode(getOP(PC));
+    Opcode op = getOpcode(PC);
     switch (op) {
     case CREATENAMEDVARIABLEX: 
     case CREATENAMEDVARIABLEY: 
@@ -370,7 +370,7 @@ void CodeArea::getDefinitionArgs(ProgramCounter PC,
 				 Reg &reg, ProgramCounter &next, TaggedRef &file,
 				 int &line, PrTabEntry *& pred)
 {
-  Assert(adressToOpcode(getOP(PC)) == DEFINITION);
+  Assert(getOpcode(PC) == DEFINITION);
   reg  = regToInt(getRegArg(PC+1));
   next = getLabelArg(PC+2);
   file = getLiteralArg(PC+3);
@@ -382,7 +382,7 @@ void CodeArea::getDebugInfoArgs(ProgramCounter PC,
 				TaggedRef &file, int &line, int &abspos,
 				TaggedRef &comment)
 {
-  Assert(adressToOpcode(getOP(PC)) == DEBUGINFO);
+  Assert(getOpcode(PC) == DEBUGINFO);
   file    = getLiteralArg(PC+1);
   line    = smallIntValue(getNumberArg(PC+2));
   abspos  = smallIntValue(getNumberArg(PC+3));
@@ -402,7 +402,7 @@ void CodeArea::display (ProgramCounter from, int sz, FILE* ofile)
     if (sz > 0 && i >= sz)
       isEnd = OK;
     fprintf(ofile, "0x%08x:  ", PC);
-    op = adressToOpcode(getOP(PC));
+    op = getOpcode(PC);
     if (op <= OZERROR) {
       fprintf(ofile, "%03d %s", op,opToString[(int)op]);
     }
