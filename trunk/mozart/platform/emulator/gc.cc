@@ -31,10 +31,6 @@
 /****************************************************************************
  ****************************************************************************/
 
-#define NO_REALLOC_VARS
-
-#undef TURNED_OFF
-// #define TURNED_OFF
 
 #ifdef LINUX
 /* FD_ISSET missing */
@@ -346,21 +342,11 @@ OZ_C_proc_end
  *    variables, names, cells & abstractions
  */
 
-// #define COPY_ON_GROUND
-#undef COPY_ON_GROUND
-
-#ifdef COPY_ON_GROUND
-
-#define setVarCopied
-
-#else
-
 static Bool varCopied;
 
 #define setVarCopied \
  varCopied = OK;
 
-#endif
 
 /*
  * TC: the copy board in from-space and to-space
@@ -1524,8 +1510,7 @@ GenCVariable * GenCVariable::gc(void) {
   
   bb = bb->gcBoard();
 
-  if (!bb)
-    return 0;
+  Assert(bb);
   
   setVarCopied;
 
@@ -1602,8 +1587,7 @@ SVariable * SVariable::gc() {
   
   bb = bb->gcBoard();
     
-  if (!bb) 
-    return 0;
+  Assert(bb);
     
   setVarCopied;
 
@@ -1620,11 +1604,7 @@ SVariable * SVariable::gc() {
   return to;
 }
 
-/*
- * This procedure collects the entry points into heap provided by variables, 
- * without copying the tagged reference of the variable itself.
- * NOTE: there is maybe junk in X/Y registers, so home node may be dead
- */
+
 inline
 TaggedRef gcUVar(TaggedRef var) {
   GCPROCMSG("gcUVar");
@@ -1638,8 +1618,7 @@ TaggedRef gcUVar(TaggedRef var) {
     
   bb = bb->gcBoard();
 
-  if (!bb) 
-    return makeTaggedNULL();
+  Assert(bb);
     
   setVarCopied;
 
@@ -1653,6 +1632,8 @@ TaggedRef gcDirectVar(TaggedRef var) {
   GCPROCMSG("gcDirectVar");
   GCOLDADDRMSG(var);
 
+  Assert(isDirectVar(var));
+  
   switch (tagTypeOf(var)) {
   case CVAR:
     return makeTaggedCVar(tagged2CVar(var)->gc());
@@ -1819,47 +1800,12 @@ update:
     break;
 
   case SVAR:
-#ifdef NO_REALLOC_VARS
     (void) tagged2SVar(aux)->gc();
     updateStack.push(&to);
     to = makeTaggedRefToFromSpace(aux_ptr);
     break;
-#else
-    {
-      Assert(aux_ptr);
-      
-      SVariable * sv = tagged2SVar(aux)->gc();
 
-      if (!sv)
-	to = makeTaggedNULL();
-      else
-	to = makeTaggedRef(newTaggedSVar(sv));
-
-      storeForward(aux_ptr, ToPointer(to));
-      break;
-    }
-#endif
   case CVAR:
-#ifdef NO_REALLOC_VARS
-    (void) tagged2CVar(aux)->gc();
-    updateStack.push(&to);
-    to = makeTaggedRefToFromSpace(aux_ptr);
-    break;
-#else
-    {
-      Assert(aux_ptr);
-      
-      GenCVariable * cv = tagged2CVar(aux)->gc();
-
-      if (!cv)
-	to = makeTaggedNULL();
-      else
-	to = makeTaggedRef(newTaggedCVar(cv));
-
-      storeForward(aux_ptr, ToPointer(to));
-      break;
-    }
-#endif
     (void) tagged2CVar(aux)->gc();
     updateStack.push(&to);
     to = makeTaggedRefToFromSpace(aux_ptr);
@@ -1876,8 +1822,6 @@ update:
 	return;
       
       (void) bb->gcBoard();
-      
-      setVarCopied;
       
       updateStack.push(&to);
       
@@ -2042,35 +1986,31 @@ void processUpdateStack(void) {
 
     case UVAR:
       {
-	TaggedRef nv = gcUVar(aux);
-	  
-	if (nv == makeTaggedNULL()) {
-	  *tt      = nv;
-	  *aux_ptr = nv;
-	} else {
-	  *tt = makeTaggedRef(newTaggedUVar(tagged2VarHome(nv)));
-	}
+	TaggedRef uv = gcUVar(aux);
+	
+	Assert(uv);
+
+	*tt = makeTaggedRef(newTaggedUVar(tagged2VarHome(uv)));
 	
 	COUNT(uvar);
+	break;
       }
-    break;
-
-#ifdef NO_REALLOC_VARS
     
     case SVAR:
       { 
 	SVariable *sv = tagged2SVar(aux);
+	
 	INFROMSPACE(sv);
   
 	Assert(GCISMARKED(ToInt32(sv->suspList)));
 	  
 	*tt = makeTaggedRef(newTaggedSVar((SVariable *) 
 					  GCUNMARK(ToInt32(sv->suspList))));
-      }
       
-    COUNT(svar);
-    break;
-	
+	COUNT(svar);
+	break;
+      }
+
     case CVAR:
       {
 	GenCVariable *cv = tagged2CVar(aux);
@@ -2079,12 +2019,10 @@ void processUpdateStack(void) {
 	
 	*tt = makeTaggedRef(newTaggedCVar((GenCVariable *) 
 					  GCUNMARK(ToInt32(cv->suspList))));
+    
+	COUNT(cvar);
+	break;
       }
-    
-    COUNT(cvar);
-    break;
-    
-#endif
 
     case GCTAG:
       *tt = makeTaggedRef((TaggedRef *) GCUNMARK(aux));
@@ -2093,8 +2031,11 @@ void processUpdateStack(void) {
     default:
       Assert(NO);
     }
+    
     INFROMSPACE(aux_ptr);
-    storeForward((int *) aux_ptr,ToPointer(*tt));
+    
+    storeForward((int *) aux_ptr, ToPointer(*tt));
+    
   } // while
 
   Assert(updateStack.isEmpty());
@@ -2132,9 +2073,9 @@ Board* AM::copyTree(Board* bb, Bool *isGround)
   }
   opMode = IN_TC;
   gcing = 0;
-#ifndef COPY_ON_GROUND
+
   varCopied = NO;
-#endif
+
   unsigned int starttime = 0;
 
   if (ozconf.timeDetailed)
@@ -2205,16 +2146,8 @@ redo:
   // Note that parent, right&leftSibling must be set in this subtree -
   // for instance, with "setParent"
 
-  if (isGround != (Bool *) NULL) {
-#ifdef COPY_ON_GROUND
-    *isGround = NO;
-#else
-    if (varCopied == NO)
-      *isGround = OK;
-    else
-      *isGround = NO;
-#endif
-  }
+  if (isGround != (Bool *) NULL)
+    *isGround = (varCopied == NO) ? OK : NO;
 
   PROFILE_CODE1(FDProfiles.setBoard(toCopyBoard);)
 
@@ -3276,5 +3209,10 @@ TaggedRef gcTagged1(TaggedRef in) {
   Assert(GCISMARKED(x));
   return makeTaggedRef((TaggedRef*)GCUNMARK(x));
 }
+
+
+
+
+
 
 
