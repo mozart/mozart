@@ -282,10 +282,16 @@ public:
   }
 
 
-  void setException(TaggedRef val, TaggedRef inf, Bool d) {
+  void setException(TaggedRef val,Bool d) {
     exception.value = val;
-    exception.info = inf;
+    exception.info = NameUnit;
     exception.debug = d;
+  }
+  void setExceptionInfo(TaggedRef inf) {
+    if (exception.info == NameUnit) {
+      exception.info=nil();
+    }
+    exception.info = cons(inf,exception.info);
   }
   TaggedRef getExceptionValue() { return exception.value; }
   Bool hf_raise_failure();
