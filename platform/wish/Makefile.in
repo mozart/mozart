@@ -43,28 +43,28 @@ distclean: veryclean
         -rm -f ozwish80.mk ozwish.mk1 ozwish.lk1 ozwish.imp ozwish.map ozwish.sym
 
 install: $(PREFIX)/platform/$(PLATFORM) $(OZWISH) \
-        $(PROVIDETCLLIBS) $(PREFIX)/lib/wish
+        $(PROVIDETCLLIBS) $(PREFIX)/share/wish
         $(INSTALL_BIN) $(OZWISH) $(PREFIX)/platform/$(PLATFORM)
 
 $(PREFIX)/platform/$(PLATFORM):
         $(INSTALL_DIR) $@
 
 provide-link:
-        rm -rf $(PREFIX)/lib/wish
-        $(INSTALL_DIR) $(PREFIX)/lib/wish
-        (cd $(PREFIX)/lib/wish; rm -rf tcl)
-        (cd $(PREFIX)/lib/wish; $(LN_S) $(TCLLIBTCLDIR) tcl)
-        (cd $(PREFIX)/lib/wish; rm -rf tk)
-        (cd $(PREFIX)/lib/wish; $(LN_S) $(TKLIBTCLDIR) tk)
+        rm -rf $(PREFIX)/share/wish
+        $(INSTALL_DIR) $(PREFIX)/share/wish
+        (cd $(PREFIX)/share/wish; rm -rf tcl)
+        (cd $(PREFIX)/share/wish; $(LN_S) $(TCLLIBTCLDIR) tcl)
+        (cd $(PREFIX)/share/wish; rm -rf tk)
+        (cd $(PREFIX)/share/wish; $(LN_S) $(TKLIBTCLDIR) tk)
 
 provide-copy:
-        rm -rf $(PREFIX)/lib/wish
-        $(INSTALL_DIR) $(PREFIX)/lib/wish
-        (cd $(PREFIX)/lib/wish; rm -rf tcl)
-        (cd $(PREFIX)/lib/wish; cp -r $(TCLLIBTCLDIR) .)
-        (cd $(PREFIX)/lib/wish; $(LN_S) tcl8.0 tcl)
-        (cd $(PREFIX)/lib/wish; rm -rf tk)
-        (cd $(PREFIX)/lib/wish; cp -r $(TKLIBTCLDIR) .)
-        (cd $(PREFIX)/lib/wish; $(LN_S) tk8.0 tk)
+        rm -rf $(PREFIX)/share/wish
+        $(INSTALL_DIR) $(PREFIX)/share/wish
+        (cd $(PREFIX)/share/wish; rm -rf tcl)
+        (cd $(PREFIX)/share/wish; cp -r $(TCLLIBTCLDIR) .)
+        (cd $(PREFIX)/share/wish; $(LN_S) tcl8.0 tcl)
+        (cd $(PREFIX)/share/wish; rm -rf tk)
+        (cd $(PREFIX)/share/wish; cp -r $(TKLIBTCLDIR) .)
+        (cd $(PREFIX)/share/wish; $(LN_S) tk8.0 tk)
 
 check:
