@@ -53,6 +53,7 @@
 <!ENTITY chapter.lift           SYSTEM "lift.sgml">
 <!ENTITY chapter.transportation SYSTEM "transportation.sgml">
 
+<!ENTITY chapter.flowers        SYSTEM "flowers.sgml">
 <!ENTITY chapter.board          SYSTEM "board.sgml">
 <!ENTITY chapter.flights        SYSTEM "flights.sgml">
 <!ENTITY chapter.corpus         SYSTEM "corpus.sgml">
@@ -77,6 +78,7 @@
     <Meta name="html.split"       value="chapter.lift">
     <Meta name="html.split"       value="chapter.transportation">
 
+    <Meta name="html.split"       value="chapter.flowers">
     <Meta name="html.split"       value="chapter.board">
     <Meta name="html.split"       value="chapter.flights">
     <Meta name="html.split"       value="chapter.corpus">
@@ -91,6 +93,8 @@
     <Author.Extern to="author.db" key="Christian.Schulte">
     <Author.Extern to="author.db" key="Gert.Smolka">
     <Author.Extern to="author.db" key="Joerg.Wuertz">
+    <Author.Extern to="author.db" key="Tobias.Mueller">
+
     <Abstract>
       <P.silent><!--**-->
       This document offers a number of demo applets that can be run
@@ -109,6 +113,7 @@
 
     <Part id="part.concurrent">
       <Title/Multi Agent and Concurrent Applications/
+      &chapter.flowers;
       &chapter.trucks;
       &chapter.bounce;
       &chapter.lift;

@@ -21,12 +21,19 @@
   -
   -->
 
-<Chapter id="chapter.college">
-    <Title/College Timetabling/
+<Chapter id="chapter.flowers">
+    <Title/Flowers/
 
   <P>
     <List class=linkmenu>
-      <Item><Ref.Extern to="applets/College.oza"/Start Applet/
+      <Item><Ref.Extern to="applets/Flowers.oza"/Start Applet for Flowers/
+      <Item><Ref to="appendix.enable"/How to enable Applets/
+    </List>
+  </P>
+
+  <P>
+    <List class=linkmenu>
+      <Item><Ref.Extern to="applets/Flowers3d.oza"/Start Applet for 3D Flowers/
       <Item><Ref to="appendix.enable"/How to enable Applets/
     </List>
   </P>
