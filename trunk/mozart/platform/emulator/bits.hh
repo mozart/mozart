@@ -27,7 +27,9 @@
 
 extern const char bits_in_byte[];
 
+#if defined(INTERFACE)
 #pragma interface
+#endif
 
 inline
 int get_num_of_bits(const int m, const int * ia) {
