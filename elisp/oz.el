@@ -1192,7 +1192,7 @@ OZ compiler, machine and error window")
 (defun oz-previous-buffer()
   (interactive)
   (oz-hide-errors)
-;;  (bury-buffer)
+  (bury-buffer)
   (oz-walk-trough-buffers (buffer-list)))
 
 
