@@ -2,9 +2,8 @@ SRCDIR =	@srcdir@
 TOPDIR =	@srcdir@
 
 INSTALL=	@INSTALL@
-INSTALL_BIN=	$(INSTALL) -m 555
 INSTALL_OTHER=	$(INSTALL) -m 444
-INSTALL_DIR=	@MKINSTALLDIRS@
+MKINSTALLDIRS=	@MKINSTALLDIRS@
 
 OZHOME=		@prefix@
 OZVERSION=	$(TOPDIR)/OZVERSION
@@ -19,8 +18,6 @@ DISTDIR=	dist
 
 FILES=		README* LICENSE BUGS
 ALLFILES=	$(FILES:%=$(OZHOME)/%)
-
-INSTALLDIR=	$(INSTALL) -d -g ps-soft -m 775
 
 DIRS=		bin demo include lib platform tools man
 LIBDIRS=	elisp browser panel explorer bitmaps compiler wish
@@ -53,10 +50,10 @@ bootstrap:
 	(cd lib; make bootstrap)
 
 $(ALLFILES):
-	$(INSTALL) -m 444 $(FILES) $(OZHOME)
+	$(INSTALL_OTHER) $(FILES) $(OZHOME)
 
 $(ALLDIRS) $(DISTDIR):
-	$(INSTALLDIR) $@
+	$(MKINSTALLDIRS) $@
 
 pack-all: common $(PLATFORMS)
 
