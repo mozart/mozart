@@ -2858,6 +2858,16 @@ void engine() {
     /* brute force: don't know exactly, when to mark Y as dirty (RS) */
     markDirtyRefsArray(Y);
     e->currentThread->switchCompMode();
+    /*
+     * quick bug fix to handle toplevel blocking (mm2)
+     *  problem: optimization in setCompMode removes all mode switches from
+     *  task stack, so that the detection of toplevel blocking doesn't work.
+     */
+    if (e->currentThread==e->rootThread &&
+        e->currentThread->getCompMode() == PARMODE &&
+        e->currentThread->taskStack.isEmpty()) {
+      e->currentThread->taskStack.pushCompMode(ALLSEQMODE);
+    }
     DISPATCH(1);
 
 #ifndef THREADED
