@@ -698,13 +698,12 @@ void const2buffer(ostream &out, ConstTerm *c)
       }
     }
     break;
-  case Co_Chunk:
-  case Co_Array:
-  case Co_Dictionary:
-    out << "<Chunk>";
-    break;
   default:
-    Assert(0);
+    if (c->isChunk()) {
+      out << "<Chunk>";
+    } else {
+      out << "<UNKNKOWN>";
+    }
     break;
   }
 }
@@ -771,7 +770,7 @@ void list2buffer(ostream &out, LTuple *list,int depth)
     out << '|';
     OZ_Term t=deref(list->getTail());
     if (!isCons(t)) {
-      value2buffer(out,t,depth);
+      value2buffer(out,list->getTail(),depth);
       return;
     }
     list = tagged2LTuple(t);
