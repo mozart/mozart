@@ -10,7 +10,7 @@ HTMLEXTRAFILES=DSframe.gif  MSframe.gif          RCframeGCbar.gif  UxpctExports.
 
 WHAT    = dpanel
 MAIN    = main.sgml
-SGMLSRCS = chapter1.sgml chapter2.sgml
+SGMLSRCS = chapter1.sgml chapter2.sgml remote.sgml
 
 
 

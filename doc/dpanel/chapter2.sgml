@@ -1,9 +1,10 @@
-<chapter id="chapter.chapter2"><title/How to use the Distribtion Panel/
+<chapter id="chapter.chapter2"><title/Interpretations of the Distribtion Panel output/
 
-<p>Here we give a couple of examples of how the Distribution Panel can be used. We describe a program with a special property and then we show how it is possible to see that property in the Distribution Panel.
+<p>Here we give a couple of examples of the output of the Distribution
+Panel. We describe a program with a special property and then we show
+how it is possible to see that property in the Distribution Panel.
 
-
-<section><title/Unknown/
+<section><title/RTT fluctuations/
 
 <p>In a client server application where the clients and the servers are involved in heavy comunication even the smallest RTT fluctuations can totaly ruin the performance. We monitor the server and observe strange transients in the RTT graph. The transients seem to come with regular intervals. An intelligent guess is that garbage collection at the clients and the server causes inaccessablity and thus raises the RTT.
 
