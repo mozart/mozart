@@ -142,7 +142,7 @@ in
 					   padx:        5
 					   pady:        3
 					   font:        ButtonFont
-					   borderwidth: 1
+					   borderwidth: SmallBorderSize
 					   action:      self # action(B))}
 		  end}
 	 in
@@ -203,14 +203,15 @@ in
 	     case CV orelse {Atom.toString V.1}.1 \= 96 then
 		case CP orelse AT \= ProcedureType then
 		   case AT == MagicAtom then
-		      {Widget tk(insert 'end' {PrintF ' '#V.1 18} # V.2 # NL)}
+		      {Widget tk(insert 'end'
+				 {PrintF ' '#V.1 EnvVarWidth} # V.2 # NL)}
 		   else
 		      T = {TagCounter get($)}
 		      Ac = {New Tk.action
 			    tkInit(parent: Widget
 				   action: proc {$} {Browse V.2} end)}
 		   in
-		      {ForAll [tk(insert 'end' {PrintF ' ' # V.1 18})
+		      {ForAll [tk(insert 'end' {PrintF ' ' # V.1 EnvVarWidth})
 			       tk(insert 'end' AT # NL T)
 			       tk(tag bind T '<1>' Ac)
 			       tk(tag conf T font:BoldFont)] Widget}

@@ -9,6 +9,7 @@ local
    TkStepRecordBuiltin   = {New Tk.variable tkInit(ConfigStepRecordBuiltin)}
    TkStepDotBuiltin      = {New Tk.variable tkInit(ConfigStepDotBuiltin)}
    TkStepWidthBuiltin    = {New Tk.variable tkInit(ConfigStepWidthBuiltin)}
+   TkStepNewNameBuiltin  = {New Tk.variable tkInit(ConfigStepNewNameBuiltin)}
    
    TkEnvSystemVariables  = {New Tk.variable tkInit(ConfigEnvSystemVariables)}
    TkEnvProcedures       = {New Tk.variable tkInit(ConfigEnvProcedures)}
@@ -56,7 +57,11 @@ in
 			 CB(label:    '\'width\''
 			    variable: TkStepWidthBuiltin
 			    action:   Config # toggle(stepWidthBuiltin)
-			    feature:  stepWidthBuiltin)]
+			    feature:  stepWidthBuiltin)
+			 CB(label:    '\'NewName\''
+			    variable: TkStepNewNameBuiltin
+			    action:   Config # toggle(stepNewNameBuiltin)
+			    feature:  stepNewNameBuiltin)]
 		     feature:  stepOnBuiltin)
 		  separator
 		  CB(label:   'Filter System Variables'
