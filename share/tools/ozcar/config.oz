@@ -117,7 +117,7 @@ ThreadTreeOffset       = 4
 StackTextWidth         = 0
 EnvTextWidth           = 24
 EnvVarWidth            = fun {$}
-			    case {Cget envPrintTypes} then 14 else 2 end
+			    case {Cget envPrintTypes} then 14 else 6 end
 			 end
 
 ScrollbarWidth         = 10
