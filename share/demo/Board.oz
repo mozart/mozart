@@ -82,9 +82,9 @@ local
       end
    end
    
-   fun {NewBoardFunctor Ticket User}
+   fun {NewBoardFunctor IsMaster Ticket User}
       
-      ArgSpec = record(master(single type:bool default:true)
+      ArgSpec = record(master(single type:bool default:IsMaster)
 		       ticket(single type:atom default:Ticket)
 		       user(single type:atom   default:User))
 
@@ -103,7 +103,7 @@ local
       define
    
 	 Args = {Application.getCmdArgs ArgSpec}
-      
+
 	 proc {SendApplet FileName Subject To}
 	    case
 	       {OS.system ('metasend -b -e base64 -f '#FileName#
@@ -563,7 +563,7 @@ local
 	    {Wait To}
 	 
 	    {Pickle.saveCompressed
-	     {NewBoardFunctor Ticket To} FN PickleCompressionLevel}
+	     {NewBoardFunctor false Ticket To} FN PickleCompressionLevel}
 	    
 	    try
 	       {SendApplet FN 'Oz Drawing Board' To}
@@ -612,6 +612,6 @@ local
 
 in
 
-   {NewBoardFunctor '' master}
+   {NewBoardFunctor true '' master}
 
 end
