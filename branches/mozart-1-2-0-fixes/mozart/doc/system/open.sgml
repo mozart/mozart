@@ -113,8 +113,8 @@ the following atoms:
 <<append>>,
 <<create>>,
 <<truncate>>,
-<<exclude>>
-<<text>>
+<<exclude>>,
+<<text>>,
 <<binary>>
 <p>
 For reading a file, the atom <<read>> must be
