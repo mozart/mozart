@@ -35,13 +35,9 @@
 const char SYSLETHEADER = 2;
 
 
-#define PERDIOVERSION     "1#5" /* PERDIOMAJOR "#" PERDIOMINOR */
-#define PERDIOMAJOR          1
-#define PERDIOMINOR          5
-
-#define NEWMARSHALER_PV   "2#0" /* PERDIOMAJOR "#" PERDIOMINOR */
-#define NEWMARSHALER_PMAJOR  2
-#define NEWMARSHALER_PMINOR  0
+#define PERDIOVERSION     "2#0" /* PERDIOMAJOR "#" PERDIOMINOR */
+#define PERDIOMAJOR          2
+#define PERDIOMINOR          0
 
 // the DIFs
 // the protocol layer needs to know about some of these 
@@ -187,6 +183,17 @@ void marshalLabel(int start, int lbl, MsgBuffer *bs);
 void marshalLabelDef(char *lbl, MsgBuffer *bs);
 void marshalTermDef(int lbl, MsgBuffer *bs);
 void marshalTermRef(int lbl, MsgBuffer *bs);
+
+
+void marshalShort(unsigned short,MsgBuffer*);
+void marshalDIF(MsgBuffer *bs, MarshalTag tag) ;
+void marshalFloat(double d, MsgBuffer *bs);
+
+unsigned short unmarshalShort(MsgBuffer*);
+char *unmarshalVersionString(MsgBuffer *);
+double unmarshalFloat(MsgBuffer *bs);
+char *unmarshalString(MsgBuffer *);
+
 
 typedef unsigned int32 crc_t;
 

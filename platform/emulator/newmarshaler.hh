@@ -32,9 +32,39 @@
 
 #include "base.hh"
 
-#ifdef NEWMARSHALER
-
 #include "gentraverser.hh"
+
+
+OZ_Return export(OZ_Term t);
+GName* unmarshalGName(TaggedRef*,MsgBuffer*);
+void marshalGName(GName *gname, MsgBuffer *bs);
+
+class SendRecvCounter {
+private:
+  long c[2];
+public:
+  SendRecvCounter() { c[0]=0; c[1]=0; }
+  void send() { c[0]++; }
+  long getSend() { return c[0]; }
+  void recv() { c[1]++; }
+  long getRecv() { return c[1]; }
+};
+
+//
+extern SendRecvCounter dif_counter[];
+extern SendRecvCounter misc_counter[];
+//
+extern char *misc_names[];
+
+// the names of the difs for statistics 
+enum {
+  MISC_STRING,
+  MISC_GNAME,
+  MISC_SITE,
+  //
+  MISC_LAST
+};
+
 
 //
 // init stuff - must be called;
@@ -202,5 +232,3 @@ void newMarshalerFinishBatch()
 OZ_Term newUnmarshalTerm(MsgBuffer *);
 
 #endif
-
-#endif /* NEWMARSHALER */

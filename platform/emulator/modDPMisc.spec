@@ -42,10 +42,5 @@
      'slowNet'           => { in  => ['+int', '+int'],
 			      out => [],
 			      bi  => BIslowNet},
-
-     'marshalerPerf'    => { in  => ['+value', '+int'],
-			     out => [],
-			     bi  => BImarshalerPerf,
-                             ifdef => NEWMARSHALER },
      );
 
