@@ -458,7 +458,7 @@ OZ_Term OZ_mkByteString(char*s,int n) {
   return oz_makeTaggedExtension(bs);
 }
 
-inline char* find_char(char*s,int c,int n)
+inline unsigned char* find_char(unsigned char*s,int c,int n)
 {
   while (n-- > 0) {
     if (*s==c) return s;
@@ -479,8 +479,8 @@ OZ_BI_define(BIByteString_strchr,3,1)
                     OZ_in(0),OZ_in(1));
   n -= OFF;
   if (c<0 || c>255) oz_typeError(2,"char");
-  char* s1 = (char*) bs->getData();
-  char* s2 = find_char(s1+OFF,c,n);
+  unsigned char* s1 = (unsigned char*) bs->getData();
+  unsigned char* s2 = find_char(s1+OFF,c,n);
   if (s2==NULL) OZ_RETURN(OZ_false());
   else OZ_RETURN_INT(s2-s1);
 } OZ_BI_end
