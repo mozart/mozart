@@ -19,6 +19,7 @@
 <!ENTITY x_dist         SYSTEM  "x_dist_model.sgml">
 <!ENTITY x_examples     SYSTEM  "x_examples.sgml">
 <!ENTITY x_failure      SYSTEM  "x_failure.sgml">
+<!ENTITY x_ft_examples  SYSTEM  "x_ft_examples.sgml">
 
 <!-- Abbreviations -->
 <!ENTITY dot "." -- to distinguish it from periods -->
@@ -38,6 +39,7 @@
     <Meta name="html.split" value="chapter.distmodel">
     <Meta name="html.split" value="chapter.examples">
     <Meta name="html.split" value="chapter.failure">
+    <Meta name="html.split" value="chapter.ft_examples">
 
     <Meta name="html.split.bib" value="">
 
@@ -60,6 +62,7 @@
    &x_dist;
    &x_examples;
    &x_failure;
+   &x_ft_examples;
   </BODY>
   <!-- Hallo -->
   <BACK>

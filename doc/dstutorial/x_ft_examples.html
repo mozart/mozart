@@ -1,0 +1,325 @@
+<CHAPTER ID="chapter.ft_examples">
+  <TITLE>Fault-Tolerant Examples</TITLE>
+
+<P>This chapter shows how to use the failure model
+to build robust distributed applications.
+We first present
+basic fault-tolerant versions of
+common language operations.
+Then we present
+fault-tolerant versions of the server examples.
+We conclude with a bigger example:
+reliable objects with recovery.
+
+<SECTION><TITLE>A fault-tolerant hello server</TITLE>
+
+<P>Let's take a fresh look at the hello server.
+How can we make it resistant to distribution faults?
+First we specify the client and server behavior.
+The server should
+continue working even though there is a
+problem with a particular client.
+The client should
+be informed in finite time of a server problem
+by means of a new exception, <<serverError>>.
+
+<P>The system raises exceptions
+when it tries to do operations
+on entities that have problems.
+All distributed exceptions are of the
+form <<system(dp(C) ...)>> where <<C>> is any fault state
+as defined before except <<ok>>.
+
+<P>Assume that we have two new abstractions.
+<<{SafeSend Prt X}>> sends to a port
+and raises the exception <<serverError>>
+if this is permanently impossible.
+<<{SafeWait X T}>> waits until <<X>> is
+instantiated, raises the exception
+<<serverError>> if this is permanently impossible
+or if the time <<T>> is exceeded.
+We first show how to use these abstractions
+before defining them in our failure model.
+
+<P>With <<SafeSend>> and <<SafeWait>>, we can
+write the client and the server almost exactly
+as before.
+Let's first write the server:
+<<<
+declare Str Prt Srv in
+{NewPort Str Prt}
+thread
+   {ForAll Str
+    proc {$ S}
+       try
+          S="Hello world"
+       catch system(dp(C) ...) then skip end
+    end}
+end
+
+proc {Srv X}
+   {SafeSend Prt X}
+end
+
+{Pickle.save
+ {Connection_many Srv}
+ "http://www.sics.se/~pvr/hw"}
+>>>
+
+<P>This server does one distributed operation,
+namely the binding <<S="Hello world">>.
+We wrap this binding
+to catch any distributed exception that occurs.
+This allows the server to ignore clients
+with problems and to continue working.
+
+<P>Here's the client:
+<<<
+declare Srv
+
+try X in
+   try
+      Srv={Connection.take {Pickle.load "http://www.sics.se/~pvr/hw"}}
+   catch _ then raise serverError end
+   end
+
+   {Srv X}
+   {SafeWait X infinity}
+   {Browse X}
+catch serverError then
+   {Browse 'Server down'}
+end
+>>>
+
+<P>This client does two distributed operations,
+namely a send (inside <<Srv>>), which is replaced by <<SafeSend>>,
+and a wait, which is replaced by <<SafeWait>>.
+If there is a problem sending the
+message or receiving the reply,
+then the exception <<serverError>> is raised.
+Note that we also catch exceptions during the
+<<Connection.take>> and the <<Pickle.load>>.
+
+<P><<SafeSend>> is defined as follows:
+
+<<<
+proc {SafeSend Prt X}
+   try
+      {Send Prt X}
+   catch system(dp(C) ...) then
+      case C
+      of permFail(...) then
+         raise serverError end
+      [] tempFail(...) then
+         {Delay 100} {SafeSend Prt X}
+      else
+         skip
+      end
+   end
+end
+>>>
+
+<P>This raises a <<serverError>> if there is
+a permanent server failure
+and retries indefinitely each 100 ms if there
+is a temporary failure.
+
+<P><<SafeWait>> is defined as follows:
+
+<<<
+declare
+local
+   proc {InnerSafeWait X Time}
+      try
+         cond {Wait X} then skip
+         [] {Wait Time} then raise serverError end
+         end
+      catch system(dp(C) ...) then
+         case C
+         of permFail(...) then
+            raise serverError end
+         [] remoteProblem(permFail:_ ...) then
+            raise serverError end
+         [] tempFail(...) then
+            {Delay 100} {InnerSafeWait X Time}
+         [] remoteProblem(tempFail:_ ...) then
+            {Delay 100} {InnerSafeWait X Time}
+         else
+            skip
+         end
+      end
+   end
+in
+   proc {SafeWait X TimeOut}
+   Time in
+      if TimeOut\=infinity then
+         thread {Delay TimeOut} Time=done end
+      end
+      {InnerSafeWait X Time}
+   end
+end
+>>>
+
+<P>This raises a <<serverError>> if there is
+a permanent server failure
+and retries each 100 ms if there is a
+temporary failure.
+The client and the server
+are the only two sites on which <<X>> exists.
+Therefore <<remoteProblem(permFail:_ ...)>> means
+that the server has crashed.
+
+<P>To keep the client from blocking
+indefinitely, it must time out.
+We need a time-out since otherwise a client
+will be stuck when the server drops it like a hot potato.
+The time-out is an argument to <<SafeWait>>.
+
+<SECTION><TITLE>Fault-tolerant stationary objects</TITLE>
+
+<P>To be useful in practice,
+stationary objects must have well-defined behavior when
+there are faults.
+We propose the following specification for the
+stationary object (the "server")
+and a caller (the "client"):
+<LIST>
+<ITEM> The call <<C={NewSafeStat Class Init}>>
+creates a new server <<C>>.
+<ITEM> If there is no problem in the distributed execution
+then the call <<{C Msg}>> has identical language semantics
+to a centralized execution of the object,
+including raising the same exceptions.
+<ITEM> If there is a problem in the distributed execution preventing
+its successful completion, then the call <<{C Msg}>> will raise
+the exception <<remoteObjectError>>.
+<ITEM> If there is a problem communicating with the client,
+then the server tries repeatedly during a short period to communicate
+with the client and then gives up.
+This does not affect the continued execution of the server.
+</LIST>
+
+<P>We present the implementation of <<NewStat>>.
+First <<New>> makes
+an instance of the object
+and then <<MakeStat>> makes it stationary.
+In <<MakeStat>>, we distinguish four parts.
+The first two implement the client interface
+to the server.
+
+<chunk><title/Making stationary objects/
+declare
+proc {NewStat Class Init Object}
+   Object={MakeStat {New Class Init}}
+end
+
+declare
+proc {MakeStat PO ?StatP}
+   S P={NewPort S}
+   N={NewName}
+   EndLoop TryToBind
+in
+   % Client interface to server:
+   <chunk.ref/Client call to the server/
+   <chunk.ref/Client synchronizes with the server/
+   % Server implementation:
+   <chunk.ref/Main server loop/
+   <chunk.ref/Server synchronizes with the client/
+end
+</chunk>
+
+<P>First the client sends its message to the
+server together with a synchronizing variable.
+This variable is used to signal
+to the client that the server has
+finished the object call.
+The variable passes an exception
+back to the client if there was one.
+If there is a permanent failure of
+the send, then raise <<remoteObjectError>>.
+If there is a temporary failure of the
+send, then wait 100 ms and try again.
+<chunk><title/Client call to the server/
+   proc {StatP M}
+      R in
+      try
+         {Send P M#R}
+      catch system(dp(C)) then
+         case C
+         of permFail(...) then
+            raise remoteObjectError end
+         [] tempFail(...) then
+            {Delay 100}
+            {StatP M}
+         else skip end
+      end
+      {EndLoop R}
+   end
+</chunk>
+
+<P>Then the client waits for the server
+to bind the synchronizing variable.
+If there is a permanent failure, then
+raise the exception.
+If there is a temporary failure, then
+wait 100 ms and try again.
+<chunk><title/Client synchronizes with the server/
+   proc {EndLoop R}
+      try
+         if R==N then skip else raise R end end
+      catch system(dp(C)) then
+         case C
+         of permFail(...) then
+            raise remoteObjectError end
+         [] remoteProblem(permFail:_ ...) then
+            raise remoteObjectError end
+         [] tempFail(...) then
+            {Delay 100} {EndLoop R}
+         [] remoteProblem(tempFail:_ ...) then
+            {Delay 100} {EndLoop R}
+         else skip end
+      end
+   end
+</chunk>
+
+<P>The following two parts implement the server.
+The server runs in its own thread and
+creates a new thread for each client call.
+The server is less tenacious on
+temporary failures than the client:
+it tries once every 2000 ms and gives
+up after 10 tries.
+<chunk><title/Main server loop/
+   thread
+      {ForAll S
+       proc {$ M#R}
+          thread
+             try
+                {PO M}
+                {TryToBind 10 R N}
+             catch X then
+                try
+                   {TryToBind 10 R X}
+                catch Y then skip end
+             end
+          end
+       end}
+   end
+</chunk>
+
+<chunk><title/Server synchronizes with the client/
+   proc {TryToBind Count R N}
+      if Count==0 then skip
+      else
+         try
+            R=N
+         catch system(dp(tempFail(...))) then
+            {Delay 2000}
+            {TryToBind Count-1 R N}
+         end
+      end
+   end
+</chunk>
+
+
+</CHAPTER>
