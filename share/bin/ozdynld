@@ -5,28 +5,28 @@ elif [ -x /usr/bin/uname ]; then uname=/usr/bin/uname
 else echo "Cannot find uname" 1>&2 ; exit 1
 fi
 
-system="`$uname -s`-`$uname -r`"
+system="`$uname -s`_`$uname -r`"
 
 case $system in
-   SunOS-4.1*)
+   SunOS_4.1*)
 	DYNLD="ld"
    	;;
-   SunOS-5*)
+   SunOS_5*)
 	DYNLD="ld -G"
 	;;
-   Linux-*)
+   Linux_*)
 	DYNLD="ld -shared"
    	;;
-   HP-UX-*)
+   HP-UX_*)
 	DYNLD="ld -b"
 	;;
-   IRIX-5*)
+   IRIX_5*)
 	DYNLD="ld -shared -check_registry /dev/null"
    	;;
-   *alpha*OSF1*)
+   OSF1_*)
 	DYNLD="ld -shared -expect_unresolved '*'"
    	;;
-   FreeBSD-*|NetBSD-*)
+   FreeBSD_*|NetBSD_*)
 	DYNLD="ld -Bshareable"
    	;;
    *)
