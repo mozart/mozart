@@ -144,12 +144,12 @@ Bool Thread::discardLocalTasks()
     case C_LOCAL:
       ts->setTop(tos);
       if (obj) {
-	ts->pushSetCurObject(obj);
+	ts->pushSelf(obj);
       }
       return (OK);
 
-    /* have to take care that currentObject is set correctly after resuming thread! */
-    case C_SET_CUROBJECT:
+    /* have to take care that 'self' is set correctly after resuming thread! */
+    case C_SET_SELF:
       obj = (Object*) *(--tos);
       break;
 
@@ -213,8 +213,8 @@ int Thread::findExceptionHandler(TaggedRef &chunk, TaskStackEntry *&oldTos)
       }
       break;
 
-    case C_SET_CUROBJECT:
-      am.setCurrentObject((Object*) *(tos-2));
+    case C_SET_SELF:
+      am.setSelf((Object*) *(tos-2));
       break;
 
     default:

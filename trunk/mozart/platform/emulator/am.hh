@@ -82,10 +82,11 @@ public:
 
   Board *currentBoard;
 private:
-  Object *currentObject;
+  Object *cachedSelf;
 public:
-  void setCurrentObject(Object *o) { Assert(!o || o->getType()==Co_Object); currentObject = o; };
-  Object *getCurrentObject()       { return currentObject; };
+  void setSelf(Object *o) { Assert(!o || o->getType()==Co_Object); cachedSelf = o; }
+  Object *getSelf()       { return cachedSelf; }
+
   TaggedRef currentUVarPrototype; // opt: cache
   Board *rootBoard;
 

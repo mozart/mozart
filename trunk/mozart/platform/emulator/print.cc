@@ -1476,10 +1476,10 @@ void TaskStack::printTaskStack(ProgramCounter pc, Bool verbose, int depth)
 	break;
       }
 
-    case C_SET_CUROBJECT:
+    case C_SET_SELF:
       { 
 	Object *obj = (Object *) pop();
-	message("\tSET_CUROBJECT: 0x%x\n", obj);
+	message("\tSET_SELF: 0x%x\n", obj);
 	break;
       }
 

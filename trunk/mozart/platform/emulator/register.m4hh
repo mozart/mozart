@@ -139,7 +139,7 @@ define(CaseTwoRegs,``''
 
 Case(GETSELF)
      {
-       XPC(1) = makeTaggedConst(e->getCurrentObject());
+       XPC(1) = makeTaggedConst(e->getSelf());
        DISPATCH(2);
      }
 
