@@ -99,10 +99,10 @@ MagicAtom              = 'noActionPlease'
 %% Geometry
 %%
 ToplevelGeometry       = '580x400+7+50'
-SourceWindowGeometry   = '496x564+600+50'   %% I really hate hardcoding this
+SourceWindowGeometry   = '511x564+600+50'   %% I really hate hardcoding this
                                             %% but window managers seem
                                             %% to be f*cking stupid :-((
-SourceWindowTextSize   = 85 # 40
+SourceWindowTextSize   = 82 # 40
 
 ThreadTreeWidth        = 120
 ThreadTreeStretchX     = 11
