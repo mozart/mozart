@@ -301,6 +301,10 @@ prepare
 	 error(kind : TITLE_UNINSTALL
 	       msg  : 'no package or makefile'
 	       items: [line('use either --package=PKG or --makefile=FILE in your command')])
+      [] ozmake(uninstall:bizarrepackage(MOG)) then
+	 error(kind : TITLE_UNINSTALL
+	       msg  : '--package argument is neither a mogul id nor an existing file or URL'
+	       items: [hint(l:'Package' m:MOG)])
       [] ozmake(uninstall:packagenotfound(MOG)) then
 	 error(kind : TITLE_UNINSTALL
 	       msg  : 'package not found in database'
