@@ -794,17 +794,6 @@ OZ_C_proc_begin(BIload,2)
 OZ_C_proc_end
 
 
-OZ_BI_define(BIWget,2,0)
-{
-  OZ_declareVirtualStringIN(0,url);
-  OZ_declareIN(1,out);
-
-  getURL(url,out,URL_LOCALIZE,am.currentThread());
-
-  return BI_PREEMPT;
-}
-
-
 OZ_Return OZ_valueToDatum(OZ_Term t, OZ_Datum* d)
 {
   return saveDatum(t,*d,OZ_nil());
@@ -1036,8 +1025,6 @@ void sendGate(OZ_Term t) {
 BIspec componentsSpec[] = {
   {"smartSave",    3, BIsmartSave, 0},
   {"load",         2, BIload, 0},
-
-  {"Wget",         2, BIWget, 0},    
 
 #ifdef OZ_GATE
   {"GateId",       1, BIGateId},
