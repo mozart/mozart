@@ -453,18 +453,21 @@ in
       end
 
       meth rebuildCurrentStack
-	 Stack = @currentStack
+	 S = @currentStack
+	 T = @currentThread
       in
-	 case Stack == unit then
-%	    Gui,doStatus(FirstSelectThread)
-	    skip
+	 case S == unit then
+	    Gui,doStatus(NoThreads)
+	 elsecase {CheckState T} == running then
+	    Gui,doStatus('Cannot recalculate stack while thread is running')
 	 else
-%	    Gui,doStatus('Re-calculating stack of thread #' #
-%			 {Thread.id @currentThread} # '...')
-	    {Stack rebuild(true)}
-	    {Stack print}
-	    {Stack emacsBarToTop}
-%	    Gui,doStatus(' done' append)
+	    Gui,doStatus('Recalculating stack of thread #' #
+			 {Thread.id T} # '...')
+	    {S rebuild(true)}
+	    {S print}
+	    {S emacsBarToTop}
+	    {Delay TimeoutToLookNice}
+	    Gui,doStatus(' done' append)
 	 end
       end
 

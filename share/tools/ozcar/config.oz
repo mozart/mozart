@@ -183,6 +183,7 @@ TimeoutToUpdateEnv     = 0
 TimeoutToMark          = 100
 TimeoutToStatus        = TimeoutToMark
 TimeoutToCalcTree      = 250
+TimeoutToLookNice      = 200
 
 HelpEvent              = '<3>'
 

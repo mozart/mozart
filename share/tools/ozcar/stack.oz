@@ -207,7 +207,10 @@ in
       end
 
       meth print
-	 case @Rebuild then
+	 State = {CheckState self.T}
+      in
+	 case @Rebuild andthen State \= running then
+	    {OzcarMessage 'stack,print: rebuild flag detected'}
 	    StackManager,ReCalculate
 	 else
 	    Frames = {Dictionary.items self.D}
@@ -218,7 +221,7 @@ in
 	 in
 	    {Ozcar PrivateSend(printStack(id:self.I frames:Frames
 					  depth:Depth last:Last))}
-	    case {CheckState self.T} == running then
+	    case State == running then
 	       {Ozcar PrivateSend(markStack(inactive))}
 	    else
 	       {Ozcar PrivateSend(markStack(active))}
@@ -244,6 +247,7 @@ in
 
       meth printTop
 	 case @Rebuild then
+	    {OzcarMessage 'stack,printTop: rebuild flag detected'}
 	    StackManager,ReCalculate
 	 else
 	    S = @Size
