@@ -1789,7 +1789,7 @@ of the procedure Browse."
 (defun oz-feed-file (file)
   "Feed a file to the Oz Compiler."
   (interactive "FFeed file: ")
-  (oz-send-string (concat "\\feed '" file "'")))
+  (oz-send-string (concat "\\threadedfeed '" file "'")))
 
 (defun oz-precompile-file (file)
   "Precompile an Oz file."
