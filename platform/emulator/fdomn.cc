@@ -1576,7 +1576,6 @@ int OZ_FiniteDomainImpl::initDescr(OZ_Term d)
     } // for
     return initList(len_arr, left_arr, right_arr, min_arr, max_arr);
   }
- error:
   OZ_error("Unexpected term in finite description list.");
   return -1;
 }

@@ -62,7 +62,7 @@ OZ_BI_define(fsp_card, 2, 0)
 
   PropagatorExpect pe;
 
-  int dummy;
+  int dummy = 0;
 
   OZ_EXPECT_SUSPEND(pe, 0, expectFSetVarAny, dummy);
   OZ_EXPECT_SUSPEND(pe, 1, expectIntVarMinMax, dummy);

@@ -195,7 +195,7 @@ void Statistics::printGcMsg(int level)
   gcCollected.incf(gc_mem);
 
   /* do not count amount of memory copied */
-  heapUsed.incf(-getUsedMemory());
+  heapUsed.incf(- ((int) getUsedMemory()));
   gcLastActive = getUsedMemory();
 
   if (level > 0) {

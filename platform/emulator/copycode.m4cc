@@ -294,7 +294,6 @@ ProgramCounter copyCode(ProgramCounter start, TaggedRef list)
 
   Reg reg;
   int nxt,line,colum;
-  PrTabEntry *pred;
   TaggedRef file,predName;
   CodeArea::getDefinitionArgs(start,reg,nxt,file,line,colum,predName);
 

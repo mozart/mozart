@@ -155,12 +155,14 @@ OZ_BI_define(BIperdioStatistics,0,1)
 
   OZ_Term misc_send_ar=oz_nil();
   OZ_Term misc_recv_ar=oz_nil();
+  /*
   for (i=0; i<MISC_LAST; i++) {
     misc_send_ar=oz_cons(oz_pairAI(misc_names[i],misc_counter[i].getSend()),
                          misc_send_ar);
     misc_recv_ar=oz_cons(oz_pairAI(misc_names[i],misc_counter[i].getRecv()),
                          misc_recv_ar);
   }
+  */
   OZ_Term misc_send=OZ_recordInit(oz_atom("misc"),misc_send_ar);
   OZ_Term misc_recv=OZ_recordInit(oz_atom("misc"),misc_recv_ar);
 

@@ -73,8 +73,10 @@ int NetHashTable::findNA(NetAddress *na){
 
 void NetHashTable::add(NetAddress *na,int bindex){
   int hvalue=hashFunc(na);
+#ifdef DEBUG_CHECK
   GenHashNode *ghn;
   Assert(!findPlace(hvalue,na,ghn));
+#endif
   PD((HASH,"adding hvalue=%d net=%d:%d bindex=%d",
                hvalue,na->site,na->index,bindex));
   GenHashBaseKey* ghn_bk;
