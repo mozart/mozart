@@ -546,6 +546,38 @@ void ByteStream::dumpByteBuffers(){
   removeSingle();
 }
 
+ByteStream *ByteStream::makeByteStream(OZ_Datum *d)
+{
+  ByteStream *ret = bufferManager->getByteStream();
+  ret->getSingle();
+
+  int max;
+  BYTE *pos = ret->initForRead(max);
+
+  int total = 0;
+  while (TRUE) {
+    for (int i=0; i < max; i++) {
+      pos[i] = d->data[total++];
+      if (total >= d->size) {
+        ret->afterRead(i);
+        break;
+      }
+    }
+
+    ret->afterRead(max);
+    pos = ret->beginRead(max);
+  }
+
+  return ret;
+}
+
+
+void ByteStream::getDatum(OZ_Datum *d)
+{
+}
+
+
+
 /* BufferManager */
 
 ByteStream* BufferManager::getByteStream(){
@@ -2281,7 +2313,7 @@ void PerdioVar::addSuspPerdioVar(Thread *el)
   }
 
   if (isURL()) {
-    int ret=loadURL(getURL(),oz_newVariable());
+    OZ_Return ret = loadURL(getURL(),oz_newVariable());
     if (ret != PROCEED) {
       warning("mm2: load URL %s failed not impl",toC(getURL()));
     }
@@ -5570,9 +5602,9 @@ void saveHeader(ByteStream *bs)
 }
 
 
-int saveFile(OZ_Term in,char *filename,OZ_Term url,
-             OZ_Term dosave, OZ_Term urls,
-             OZ_Term resources)
+OZ_Return saveFile(OZ_Term in,char *filename,OZ_Term url,
+                   OZ_Term dosave, OZ_Term urls,
+                   OZ_Term resources)
 {
   INIT_IP(0);
 
@@ -5657,7 +5689,7 @@ int loadURL(TaggedRef url, OZ_Term out)
 }
 
 
-int loadFD(int fd, OZ_Term out)
+OZ_Return loadFD(int fd, OZ_Term out)
 {
   if (skipHeader(fd)==NO) {
     return oz_raise(E_ERROR,OZ_atom("perdio"),"load",1,
@@ -5722,7 +5754,7 @@ int loadFD(int fd, OZ_Term out)
   return PROCEED;
 }
 
-int loadFile(char *filename,OZ_Term out)
+OZ_Return loadFile(char *filename,OZ_Term out)
 {
   int fd = strcmp(filename,"-")==0 ? STDIN_FILENO : open(filename,O_RDONLY);
   if (fd < 0) {
@@ -5987,6 +6019,18 @@ OZ_C_proc_begin(BIperdioStatistics,1)
   return OZ_unify(out,OZ_recordInit(oz_atom("perdioStatistics"),ar));
 }
 OZ_C_proc_end
+
+
+OZ_Return OZ_valueToDatum(OZ_Term t, OZ_Datum *d)
+{
+  return FAILED;
+}
+
+
+OZ_Return OZ_datumToValue(OZ_Datum *d,OZ_Term *t)
+{
+  return FAILED;
+}
 
 
 BIspec perdioSpec[] = {
