@@ -332,7 +332,7 @@ urlc::tcpip_open(const char* h, int p)
 #if __GLIBC__ == 2
     unsigned int lin_len = sizeof(lin);
 #else
-    int lin_len = sizeof(lin);
+    socklen_t lin_len = sizeof(lin);
 #endif
     if(-1 == getsockname(fd, (struct sockaddr*) &lin, &lin_len))
 	return (URLC_ESOCK);
@@ -994,7 +994,7 @@ urlc::get_ftp(char *file)
 #if __GLIBC__ == 2
     unsigned int local_addr_len = sizeof(local_addr);
 #else
-    int local_addr_len = sizeof(local_addr);    
+    socklen_t local_addr_len = sizeof(local_addr);    
 #endif
     int rem_addr_len = sizeof(rem_addr);
 
@@ -1050,7 +1050,7 @@ urlc::get_ftp(char *file)
 #if __GLIBC__ == 2
     unsigned int pcin_len = sizeof(pcin);
 #else
-    int pcin_len = sizeof(pcin);
+    socklen_t pcin_len = sizeof(pcin);
 #endif
     // fills from control connection
     n = getpeername(sockfd, (struct sockaddr*) &pcin, &pcin_len);

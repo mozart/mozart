@@ -182,13 +182,44 @@ while ((RET = CALL) < 0) {				\
 // specification of returning
 // -------------------------------------------------
 
+// Use this rather han OZ_unixError to get a platform independent errno
+// interpretation.
+// The string returned must be used immediately.
+// The definition relies on the following errors being defined for all 
+// platforms directly or as done in wsock.hh
+char *errnoToString(int aErrno) {
+  switch(aErrno) {
+  case ECONNREFUSED:
+    return "Connection refused";
+  case EPIPE:
+    return "Broken pipe";
+  case EINPROGRESS:
+    return "In progress";
+  case EINTR:
+    return "Interrupted";
+  case EHOSTUNREACH:
+    return "Host unreacheable";
+  case EAGAIN:
+    return "Try again";
+  case ETIMEDOUT:
+    return "Timed out";
+  case ECONNRESET:
+    return "Connection reset";
+  case EBADF:
+    return "Bad filedescriptor";
+
+  default:
+    return "Unknown error";
+  }
+}
+
 int raiseUnixError(char *f,int n, char * e, char * g) {
   return oz_raise(E_SYSTEM,E_OS, g, 3, OZ_string(f), OZ_int(n), OZ_string(e)); 
 }
 
 // return upon unix-error
 #define RETURN_UNIX_ERROR(f) \
-{ return raiseUnixError(f,ossockerrno(), OZ_unixError(ossockerrno()), "os"); }
+{ return raiseUnixError(f,ossockerrno(), errnoToString(ossockerrno()), "os"); }
 
 
 #if defined(ULTRIX_MIPS) || defined(OS2_I486)

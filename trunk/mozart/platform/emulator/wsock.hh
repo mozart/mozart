@@ -57,7 +57,10 @@
 #define EADDRNOTAVAIL          WSAEADDRNOTAVAIL
 #define EWOULDBLOCK            WSAEWOULDBLOCK
 #define ECONNREFUSED           WSAECONNREFUSED
+#define ETIMEDOUT              WSAETIMEDOUT
+#define EHOSTUNREACH           WSAEHOSTUNREACH
 
 #endif
 
 #endif
+
