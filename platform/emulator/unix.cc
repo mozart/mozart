@@ -1083,16 +1083,14 @@ OZ_BI_define(unix_connectInet,3,0)
 
   struct sockaddr_in addr;
 
-  void *junk;
-
   if(OZ_isInt(host)) {
     addr.sin_addr.s_addr=htonl(OZ_intToC(host));
     addr.sin_family = AF_INET;
     addr.sin_port = htons ((unsigned short) port);
   }
-  else if(OZ_isVirtualString(host,(OZ_Term *) junk)){
+  else if(OZ_isVirtualString(host,0)){
     struct hostent *hostaddr;
-    if ((hostaddr = gethostbyname(OZ_virtualStringToC(host,(int *) junk))) == NULL) {
+    if ((hostaddr = gethostbyname(OZ_virtualStringToC(host,0))) == NULL) {
       RETURN_NET_ERROR("gethostbyname");
     }
 
@@ -1131,16 +1129,14 @@ OZ_BI_define(unix_connect_nonblocking,3,0)
 
   struct sockaddr_in addr;
 
-  void *junk;
-
   if(OZ_isInt(host)) {
     addr.sin_addr.s_addr=htonl(OZ_intToC(host));
     addr.sin_family = AF_INET;
     addr.sin_port = htons ((unsigned short) port);
   }
-  else if(OZ_isVirtualString(host,(OZ_Term *) junk)){
+  else if(OZ_isVirtualString(host,0)){
     struct hostent *hostaddr;
-    if ((hostaddr = gethostbyname(OZ_virtualStringToC(host,(int *) junk))) == NULL) {
+    if ((hostaddr = gethostbyname(OZ_virtualStringToC(host,0))) == NULL) {
       RETURN_NET_ERROR("gethostbyname");
     }
 
