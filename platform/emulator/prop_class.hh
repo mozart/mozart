@@ -29,9 +29,7 @@
 
 #include "suspendable.hh"
 
-#ifndef WINDOWS
 extern int __OZ_rp_isUnify;
-#endif
 
 class Propagator : public Suspendable {
 private:
@@ -59,9 +57,7 @@ public:
 
   static void setRunningPropagator(Propagator * p) {
     _runningPropagator = p;
-#ifndef WINDOWS
     __OZ_rp_isUnify = p->isUnify();
-#endif
   }
   static Propagator * getRunningPropagator(void) {
     return _runningPropagator;
