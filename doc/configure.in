@@ -37,10 +37,11 @@ AC_ARG_WITH(java-bin,
   oz_java_bin=${with_java_bin})
 : ${oz_java_bin=}
 AC_MSG_RESULT($oz_java_bin)
-if test -n "${oz_java_bin}" &&
-   ! expr "${oz_java_bin}" : '.*/$'
-then
+if test -n "${oz_java_bin}" ; then
+  if expr "${oz_java_bin}" : '.*/$' ; then
+  else
     oz_java_bin=${oz_java_bin}/
+  fi
 fi
 JAVA_BIN=${oz_java_bin}
 AC_SUBST(JAVA_BIN)
