@@ -5,6 +5,14 @@ import
    URL Resolve
    Utils at 'Utils.ozf'
    Path  at 'Path.ozf'
+prepare
+   fun {UnByteStringify V}
+      if {ByteString.is V} then {ByteString.toString V}
+      elseif {IsString V} then V
+      elseif {IsRecord V} then
+	 {Record.map V UnByteStringify}
+      else V end
+   end
 define
    class Extractor
 
@@ -68,7 +76,8 @@ define
       meth WriteMakefile(DIR R)
 	 {self exec_write_to_file(
 		  {Value.toVirtualString
-		   {Record.subtract R submakefiles}
+		   {UnByteStringify
+		    {Record.subtract R submakefiles}}
 		   1000000 1000000}
 		  {Path.resolve DIR "makefile.oz"})}
 	 for DD#RR in {Record.toListInd {CondSelect R submakefiles o}} do
