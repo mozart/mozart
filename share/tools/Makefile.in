@@ -172,7 +172,7 @@ GumpScanner.ozf: $(GUMPSCANNERSRC)
 GumpParser.ozf: $(GUMPPARSERSRC)
 
 ProductionTemplates.ozf: $(PRODUCTIONTEMPLATESSRC)
-	$(COMPILE) -l Compiler ProductionTemplates.oz -o $@
+	$(COMPILE) -l Compiler $(SRCDIR)/ProductionTemplates.oz -o $@
 
 Inspector.ozf: $(INSPECTOROBJS)
 	$(OZAR) --verbose --nosequential --in=InspectorMain.ozf --out=$@
