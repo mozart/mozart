@@ -1,6 +1,6 @@
 
-/*  A Bison parser, made from /home/kornstae/mozart/platform/emulator/parser.yy
- by  GNU Bison version 1.25
+/*  A Bison parser, made from /home/chris/devel/mozart/platform/emulator/parser.yy
+ by  GNU Bison version 1.27
   */
 
 #define YYBISON 1  /* Identify Bison output.  */
@@ -12,91 +12,91 @@
 #define yychar xychar
 #define yydebug xydebug
 #define yynerrs xynerrs
-#define	SWITCH	258
-#define	SWITCHNAME	259
-#define	LOCALSWITCHES	260
-#define	PUSHSWITCHES	261
-#define	POPSWITCHES	262
-#define	OZATOM	263
-#define	ATOM_LABEL	264
-#define	OZFLOAT	265
-#define	OZINT	266
-#define	AMPER	267
-#define	DOTINT	268
-#define	STRING	269
-#define	VARIABLE	270
-#define	VARIABLE_LABEL	271
-#define	DEFAULT	272
-#define	CHOICE	273
-#define	LDOTS	274
-#define	attr	275
-#define	at	276
-#define	_case_	277
-#define	catch	278
-#define	choice	279
-#define	_class_	280
-#define	cond	281
-#define	declare	282
-#define	define	283
-#define	dis	284
-#define	_else_	285
-#define	elsecase	286
-#define	elseif	287
-#define	elseof	288
-#define	end	289
-#define	export	290
-#define	fail	291
-#define	false	292
-#define	FALSE_LABEL	293
-#define	feat	294
-#define	finally	295
-#define	_from_	296
-#define	_fun_	297
-#define	functor	298
-#define	_if_	299
-#define	import	300
-#define	_in_	301
-#define	local	302
-#define	_lock_	303
-#define	_meth_	304
-#define	not	305
-#define	of	306
-#define	or	307
-#define	prepare	308
-#define	proc	309
-#define	prop	310
-#define	_raise_	311
-#define	require	312
-#define	self	313
-#define	skip	314
-#define	then	315
-#define	thread	316
-#define	true	317
-#define	TRUE_LABEL	318
-#define	try	319
-#define	unit	320
-#define	UNIT_LABEL	321
-#define	ENDOFFILE	322
-#define	REGEX	323
-#define	lex	324
-#define	_mode_	325
-#define	_parser_	326
-#define	prod	327
-#define	_scanner_	328
-#define	syn	329
-#define	token	330
-#define	REDUCE	331
-#define	SEP	332
-#define	OOASSIGN	333
-#define	orelse	334
-#define	andthen	335
-#define	COMPARE	336
-#define	FDCOMPARE	337
-#define	FDIN	338
-#define	ADD	339
-#define	FDMUL	340
-#define	OTHERMUL	341
-#define	DEREFF	342
+#define	T_SWITCH	257
+#define	T_SWITCHNAME	258
+#define	T_LOCALSWITCHES	259
+#define	T_PUSHSWITCHES	260
+#define	T_POPSWITCHES	261
+#define	T_OZATOM	262
+#define	T_ATOM_LABEL	263
+#define	T_OZFLOAT	264
+#define	T_OZINT	265
+#define	T_AMPER	266
+#define	T_DOTINT	267
+#define	T_STRING	268
+#define	T_VARIABLE	269
+#define	T_VARIABLE_LABEL	270
+#define	T_DEFAULT	271
+#define	T_CHOICE	272
+#define	T_LDOTS	273
+#define	T_attr	274
+#define	T_at	275
+#define	T_case	276
+#define	T_catch	277
+#define	T_choice	278
+#define	T_class	279
+#define	T_cond	280
+#define	T_declare	281
+#define	T_define	282
+#define	T_dis	283
+#define	T_else	284
+#define	T_elsecase	285
+#define	T_elseif	286
+#define	T_elseof	287
+#define	T_end	288
+#define	T_export	289
+#define	T_fail	290
+#define	T_false	291
+#define	T_FALSE_LABEL	292
+#define	T_feat	293
+#define	T_finally	294
+#define	T_from	295
+#define	T_fun	296
+#define	T_functor	297
+#define	T_if	298
+#define	T_import	299
+#define	T_in	300
+#define	T_local	301
+#define	T_lock	302
+#define	T_meth	303
+#define	T_not	304
+#define	T_of	305
+#define	T_or	306
+#define	T_prepare	307
+#define	T_proc	308
+#define	T_prop	309
+#define	T_raise	310
+#define	T_require	311
+#define	T_self	312
+#define	T_skip	313
+#define	T_then	314
+#define	T_thread	315
+#define	T_true	316
+#define	T_TRUE_LABEL	317
+#define	T_try	318
+#define	T_unit	319
+#define	T_UNIT_LABEL	320
+#define	T_ENDOFFILE	321
+#define	T_REGEX	322
+#define	T_lex	323
+#define	T_mode	324
+#define	T_parser	325
+#define	T_prod	326
+#define	T_scanner	327
+#define	T_syn	328
+#define	T_token	329
+#define	T_REDUCE	330
+#define	T_SEP	331
+#define	T_OOASSIGN	332
+#define	T_orelse	333
+#define	T_andthen	334
+#define	T_COMPARE	335
+#define	T_FDCOMPARE	336
+#define	T_FDIN	337
+#define	T_ADD	338
+#define	T_FDMUL	339
+#define	T_OTHERMUL	340
+#define	T_DEREFF	341
 
 
 //
@@ -118,6 +118,7 @@
 #endif
 
 #include "base.hh"
+#include "value.hh"
 
 
 //----------------------
@@ -143,7 +144,8 @@ void xy_exit();
 
 int xylex();
 
-static inline int xycharno() {
+inline 
+int xycharno(void) {
   int n = xytext - xylastline;
   if (n > 0)
     return n;
@@ -165,11 +167,236 @@ void xyreportError(char *kind, char *msg,
 #define YYMAXDEPTH 1000000
 #define YYERROR_VERBOSE
 
-static OZ_Term nilAtom;
 static OZ_Term yyoutput;
 
 static void xyerror(char *);
 
+//-----------------
+// Atom definitions
+//-----------------
+
+OZ_Term _PA_AtomTab[106];
+
+#define PA_allowdeprecated			_PA_AtomTab[0]
+#define PA_coord				_PA_AtomTab[1]
+#define PA_defines				_PA_AtomTab[2]
+#define PA_deprecation_error			_PA_AtomTab[3]
+#define PA_deprecation_warning			_PA_AtomTab[4]
+#define PA_dirLocalSwitches			_PA_AtomTab[5]
+#define PA_dirPopSwitches			_PA_AtomTab[6]
+#define PA_dirPushSwitches			_PA_AtomTab[7]
+#define PA_dirSwitch				_PA_AtomTab[8]
+#define PA_error				_PA_AtomTab[9]
+#define PA_fAnd					_PA_AtomTab[10]
+#define PA_fAndThen				_PA_AtomTab[11]
+#define PA_fApply				_PA_AtomTab[12]
+#define PA_fAssign				_PA_AtomTab[13]
+#define PA_fAt					_PA_AtomTab[14]
+#define PA_fAtom				_PA_AtomTab[15]
+#define PA_fAttr				_PA_AtomTab[16]
+#define PA_fBoolCase				_PA_AtomTab[17]
+#define PA_fCase				_PA_AtomTab[18]
+#define PA_fCaseClause				_PA_AtomTab[19]
+#define PA_fCatch				_PA_AtomTab[20]
+#define PA_fChoice				_PA_AtomTab[21]
+#define PA_fClass				_PA_AtomTab[22]
+#define PA_fClause				_PA_AtomTab[23]
+#define PA_fColon				_PA_AtomTab[24]
+#define PA_fCond				_PA_AtomTab[25]
+#define PA_fDeclare				_PA_AtomTab[26]
+#define PA_fDefault				_PA_AtomTab[27]
+#define PA_fDefine				_PA_AtomTab[28]
+#define PA_fDis					_PA_AtomTab[29]
+#define PA_fDollar				_PA_AtomTab[30]
+#define PA_fEq					_PA_AtomTab[31]
+#define PA_fEscape				_PA_AtomTab[32]
+#define PA_fExport				_PA_AtomTab[33]
+#define PA_fExportItem				_PA_AtomTab[34]
+#define PA_fFail				_PA_AtomTab[35]
+#define PA_fFdCompare				_PA_AtomTab[36]
+#define PA_fFdIn				_PA_AtomTab[37]
+#define PA_fFeat				_PA_AtomTab[38]
+#define PA_fFloat				_PA_AtomTab[39]
+#define PA_fFrom				_PA_AtomTab[40]
+#define PA_fFun					_PA_AtomTab[41]
+#define PA_fFunctor				_PA_AtomTab[42]
+#define PA_fImport				_PA_AtomTab[43]
+#define PA_fImportAt				_PA_AtomTab[44]
+#define PA_fImportItem				_PA_AtomTab[45]
+#define PA_fInheritedModes			_PA_AtomTab[46]
+#define PA_fInt					_PA_AtomTab[47]
+#define PA_fLexicalAbbreviation			_PA_AtomTab[48]
+#define PA_fLexicalRule				_PA_AtomTab[49]
+#define PA_fLocal				_PA_AtomTab[50]
+#define PA_fLock				_PA_AtomTab[51]
+#define PA_fLockThen				_PA_AtomTab[52]
+#define PA_fMeth				_PA_AtomTab[53]
+#define PA_fMethArg				_PA_AtomTab[54]
+#define PA_fMethColonArg			_PA_AtomTab[55]
+#define PA_fMode				_PA_AtomTab[56]
+#define PA_fNoCatch				_PA_AtomTab[57]
+#define PA_fNoDefault				_PA_AtomTab[58]
+#define PA_fNoElse				_PA_AtomTab[59]
+#define PA_fNoFinally				_PA_AtomTab[60]
+#define PA_fNoImportAt				_PA_AtomTab[61]
+#define PA_fNoThen				_PA_AtomTab[62]
+#define PA_fNot					_PA_AtomTab[63]
+#define PA_fObjApply				_PA_AtomTab[64]
+#define PA_fOpApply				_PA_AtomTab[65]
+#define PA_fOpenRecord				_PA_AtomTab[66]
+#define PA_fOr					_PA_AtomTab[67]
+#define PA_fOrElse				_PA_AtomTab[68]
+#define PA_fParser				_PA_AtomTab[69]
+#define PA_fPrepare				_PA_AtomTab[70]
+#define PA_fProc				_PA_AtomTab[71]
+#define PA_fProductionTemplate			_PA_AtomTab[72]
+#define PA_fProp				_PA_AtomTab[73]
+#define PA_fRaise				_PA_AtomTab[74]
+#define PA_fRecord				_PA_AtomTab[75]
+#define PA_fRequire				_PA_AtomTab[76]
+#define PA_fScanner				_PA_AtomTab[77]
+#define PA_fSelf				_PA_AtomTab[78]
+#define PA_fSideCondition			_PA_AtomTab[79]
+#define PA_fSkip				_PA_AtomTab[80]
+#define PA_fSynAction				_PA_AtomTab[81]
+#define PA_fSynAlternative			_PA_AtomTab[82]
+#define PA_fSynApplication			_PA_AtomTab[83]
+#define PA_fSynAssignment			_PA_AtomTab[84]
+#define PA_fSynSequence				_PA_AtomTab[85]
+#define PA_fSynTemplateInstantiation		_PA_AtomTab[86]
+#define PA_fSynTopLevelProductionTemplates	_PA_AtomTab[87]
+#define PA_fSyntaxRule				_PA_AtomTab[88]
+#define PA_fThread				_PA_AtomTab[89]
+#define PA_fToken				_PA_AtomTab[90]
+#define PA_fTry					_PA_AtomTab[91]
+#define PA_fVar					_PA_AtomTab[92]
+#define PA_fWildcard				_PA_AtomTab[93]
+#define PA_fileNotFound				_PA_AtomTab[94]
+#define PA_gump					_PA_AtomTab[95]
+#define PA_kind					_PA_AtomTab[96]
+#define PA_msg					_PA_AtomTab[97]
+#define PA_none					_PA_AtomTab[98]
+#define PA_off					_PA_AtomTab[99]
+#define PA_on					_PA_AtomTab[100]
+#define PA_parse				_PA_AtomTab[101]
+#define PA_parseError				_PA_AtomTab[102]
+#define PA_pos					_PA_AtomTab[103]
+#define PA_warn					_PA_AtomTab[104]
+#define PA_zy					_PA_AtomTab[105]
+
+const char * _PA_CharTab[] = {
+	"allowdeprecated",			//0
+	"coord",				//1
+	"defines",				//2
+	"deprecation error",			//3
+	"deprecation warning",			//4
+	"dirLocalSwitches",			//5
+	"dirPopSwitches",			//6
+	"dirPushSwitches",			//7
+	"dirSwitch",				//8
+	"error",				//9
+	"fAnd",					//10
+	"fAndThen",				//11
+	"fApply",				//12
+	"fAssign",				//13
+	"fAt",					//14
+	"fAtom",				//15
+	"fAttr",				//16
+	"fBoolCase",				//17
+	"fCase",				//18
+	"fCaseClause",				//19
+	"fCatch",				//20
+	"fChoice",				//21
+	"fClass",				//22
+	"fClause",				//23
+	"fColon",				//24
+	"fCond",				//25
+	"fDeclare",				//26
+	"fDefault",				//27
+	"fDefine",				//28
+	"fDis",					//29
+	"fDollar",				//30
+	"fEq",					//31
+	"fEscape",				//32
+	"fExport",				//33
+	"fExportItem",				//34
+	"fFail",				//35
+	"fFdCompare",				//36
+	"fFdIn",				//37
+	"fFeat",				//38
+	"fFloat",				//39
+	"fFrom",				//40
+	"fFun",					//41
+	"fFunctor",				//42
+	"fImport",				//43
+	"fImportAt",				//44
+	"fImportItem",				//45
+	"fInheritedModes",			//46
+	"fInt",					//47
+	"fLexicalAbbreviation",			//48
+	"fLexicalRule",				//49
+	"fLocal",				//50
+	"fLock",				//51
+	"fLockThen",				//52
+	"fMeth",				//53
+	"fMethArg",				//54
+	"fMethColonArg",			//55
+	"fMode",				//56
+	"fNoCatch",				//57
+	"fNoDefault",				//58
+	"fNoElse",				//59
+	"fNoFinally",				//60
+	"fNoImportAt",				//61
+	"fNoThen",				//62
+	"fNot",					//63
+	"fObjApply",				//64
+	"fOpApply",				//65
+	"fOpenRecord",				//66
+	"fOr",					//67
+	"fOrElse",				//68
+	"fParser",				//69
+	"fPrepare",				//70
+	"fProc",				//71
+	"fProductionTemplate",			//72
+	"fProp",				//73
+	"fRaise",				//74
+	"fRecord",				//75
+	"fRequire",				//76
+	"fScanner",				//77
+	"fSelf",				//78
+	"fSideCondition",			//79
+	"fSkip",				//80
+	"fSynAction",				//81
+	"fSynAlternative",			//82
+	"fSynApplication",			//83
+	"fSynAssignment",			//84
+	"fSynSequence",				//85
+	"fSynTemplateInstantiation",		//86
+	"fSynTopLevelProductionTemplates",	//87
+	"fSyntaxRule",				//88
+	"fThread",				//89
+	"fToken",				//90
+	"fTry",					//91
+	"fVar",					//92
+	"fWildcard",				//93
+	"fileNotFound",				//94
+	"gump",					//95
+	"kind",					//96
+	"msg",					//97
+	"none",					//98
+	"off",					//99
+	"on",					//100
+	"parse",				//101
+	"parseError",				//102
+	"pos",					//103
+	"warn",					//104
+	"zy",					//105
+};
+
+void parser_init(void) {
+   for (int i = 106; i--; )
+     _PA_AtomTab[i] = oz_atomNoDup(_PA_CharTab[i]);
+}
 
 // Gump Extensions
 
@@ -194,78 +421,151 @@ static OZ_Term decls[DEPTH];
 // Operations on Terms
 //---------------------
 
-#define pair(left,right) OZ_pair2(left,right)
-#define consList(head,tail) OZ_cons(head,tail)
-
-inline OZ_Term newCTerm(char *l) {
-  return OZ_atom(l);
+inline
+OZ_Term newCTerm(OZ_Term l, OZ_Term t1) {
+  SRecord * t = SRecord::newSRecord(l, 1);
+  t->setArg(0, t1);
+  return makeTaggedSRecord(t);
 }
 
-inline OZ_Term newCTerm(char *l, OZ_Term t1) {
-  return OZ_mkTupleC(l,1,t1);
+inline
+OZ_Term newCTerm(OZ_Term l, OZ_Term t1, OZ_Term t2) {
+  SRecord * t = SRecord::newSRecord(l, 2);
+  t->setArg(0, t1);
+  t->setArg(1, t2);
+  return makeTaggedSRecord(t);
 }
 
-inline OZ_Term newCTerm(char *l, OZ_Term t1, OZ_Term t2) {
-  return OZ_mkTupleC(l,2,t1,t2);
+inline
+OZ_Term newCTerm(OZ_Term l, OZ_Term t1, OZ_Term t2, OZ_Term t3) {
+  SRecord * t = SRecord::newSRecord(l, 3);
+  t->setArg(0, t1);
+  t->setArg(1, t2);
+  t->setArg(2, t3);
+  return makeTaggedSRecord(t);
 }
 
-inline OZ_Term newCTerm(char *l, OZ_Term t1, OZ_Term t2, OZ_Term t3) {
-  return OZ_mkTupleC(l,3,t1,t2,t3);
+inline
+OZ_Term newCTerm(OZ_Term l, OZ_Term t1, OZ_Term t2, OZ_Term t3, OZ_Term t4) {
+  SRecord * t = SRecord::newSRecord(l, 4);
+  t->setArg(0, t1);
+  t->setArg(1, t2);
+  t->setArg(2, t3);
+  t->setArg(3, t4);
+  return makeTaggedSRecord(t);
 }
 
-inline OZ_Term newCTerm(char *l, OZ_Term t1, OZ_Term t2, OZ_Term t3, OZ_Term t4) {
-  return OZ_mkTupleC(l,4,t1,t2,t3,t4);
+inline
+OZ_Term newCTerm(OZ_Term l, OZ_Term t1, OZ_Term t2, OZ_Term t3, OZ_Term t4, OZ_Term t5) {
+  SRecord * t = SRecord::newSRecord(l, 5);
+  t->setArg(0, t1);
+  t->setArg(1, t2);
+  t->setArg(2, t3);
+  t->setArg(3, t4);
+  t->setArg(4, t5);
+  return makeTaggedSRecord(t);
 }
 
-inline OZ_Term newCTerm(char *l, OZ_Term t1, OZ_Term t2, OZ_Term t3, OZ_Term t4, OZ_Term t5) {
-  return OZ_mkTupleC(l,5,t1,t2,t3,t4,t5);
+inline
+OZ_Term newCTerm(OZ_Term l, OZ_Term t1, OZ_Term t2, OZ_Term t3, OZ_Term t4, OZ_Term t5, OZ_Term t6) {
+  SRecord * t = SRecord::newSRecord(l, 6);
+  t->setArg(0, t1);
+  t->setArg(1, t2);
+  t->setArg(2, t3);
+  t->setArg(3, t4);
+  t->setArg(4, t5);
+  t->setArg(5, t6);
+  return makeTaggedSRecord(t);
 }
 
-inline OZ_Term newCTerm(char *l, OZ_Term t1, OZ_Term t2, OZ_Term t3, OZ_Term t4, OZ_Term t5, OZ_Term t6) {
-  return OZ_mkTupleC(l,6,t1,t2,t3,t4,t5,t6);
+inline
+OZ_Term newCTerm(OZ_Term l, OZ_Term t1, OZ_Term t2, OZ_Term t3, OZ_Term t4, OZ_Term t5, OZ_Term t6, OZ_Term t7) {
+  SRecord * t = SRecord::newSRecord(l, 7);
+  t->setArg(0, t1);
+  t->setArg(1, t2);
+  t->setArg(2, t3);
+  t->setArg(3, t4);
+  t->setArg(4, t5);
+  t->setArg(5, t6);
+  t->setArg(6, t7);
+  return makeTaggedSRecord(t);
 }
 
-inline OZ_Term newCTerm(char *l, OZ_Term t1, OZ_Term t2, OZ_Term t3, OZ_Term t4, OZ_Term t5, OZ_Term t6, OZ_Term t7) {
-  return OZ_mkTupleC(l,7,t1,t2,t3,t4,t5,t6,t7);
+static 
+OZ_Term makeLongPos(OZ_Term pos1, OZ_Term pos2) {
+  return 
+    newCTerm(PA_pos,
+	     OZ_subtree(pos1,newSmallInt(1)),OZ_subtree(pos1,newSmallInt(2)),
+	     OZ_subtree(pos1,newSmallInt(3)),OZ_subtree(pos2,newSmallInt(1)),
+	     OZ_subtree(pos2,newSmallInt(2)),OZ_subtree(pos2,newSmallInt(3)));
 }
 
-static OZ_Term makeLongPos(OZ_Term pos1, OZ_Term pos2) {
-  return newCTerm("pos",OZ_subtree(pos1,OZ_int(1)),OZ_subtree(pos1,OZ_int(2)),
-		  OZ_subtree(pos1,OZ_int(3)),OZ_subtree(pos2,OZ_int(1)),
-		  OZ_subtree(pos2,OZ_int(2)),OZ_subtree(pos2,OZ_int(3)));
+static
+OZ_Term pos(void) {
+  SRecord * t = SRecord::newSRecord(PA_pos, 3);
+  t->setArg(0, xyFileNameAtom);
+  t->setArg(1, oz_int(xylino));
+  t->setArg(2, oz_int(xycharno()));
+  return makeTaggedSRecord(t);
 }
 
-inline OZ_Term pos() {
-  return newCTerm("pos",xyFileNameAtom,OZ_int(xylino),OZ_int(xycharno()));
+inline 
+OZ_Term makeVar(OZ_Term printName, OZ_Term pos) {
+  SRecord * t = SRecord::newSRecord(PA_fVar, 2);
+  t->setArg(0, printName);
+  t->setArg(1, pos);
+  return makeTaggedSRecord(t);
 }
 
-inline OZ_Term makeVar(OZ_Term printName, OZ_Term pos) {
-  return newCTerm("fVar",printName,pos);
-}
-
-inline OZ_Term makeVar(char *printName) {
+inline 
+OZ_Term makeVar(char *printName) {
   return makeVar(OZ_atom(printName),pos());
 }
 
-inline OZ_Term makeCons(OZ_Term first, OZ_Term second, OZ_Term pos) {
-   return newCTerm("fRecord",
-		   newCTerm("fAtom",OZ_atom("|"),pos),
-		   consList(first,consList(second,nilAtom)));
+inline 
+OZ_Term makeCons(OZ_Term first, OZ_Term second, OZ_Term pos) {
+  SRecord * t1 = SRecord::newSRecord(PA_fRecord, 2);
+  SRecord * t2 = SRecord::newSRecord(PA_fAtom,   2);
+
+  t2->setArg(0, AtomCons);
+  t2->setArg(1, pos);
+  
+  t1->setArg(0, makeTaggedSRecord(t2));
+  t1->setArg(1, oz_mklist(first,second));
+
+  return makeTaggedSRecord(t1);
 }
 
-static OZ_Term makeInt(char *chars, OZ_Term pos) {
-  return newCTerm("fInt",OZ_CStringToInt(chars),pos);
+inline
+OZ_Term makeInt(char * chars, OZ_Term pos) {
+  SRecord * t = SRecord::newSRecord(PA_fInt, 2);
+  t->setArg(0, OZ_CStringToInt(chars));
+  t->setArg(1, pos);
+  return makeTaggedSRecord(t);
 }
 
-static OZ_Term makeInt(char c, OZ_Term pos) {
-  return newCTerm("fInt",OZ_int((unsigned char) c),pos);
+inline
+OZ_Term makeInt(const char c, OZ_Term pos) {
+  SRecord * t = SRecord::newSRecord(PA_fInt, 2);
+  t->setArg(0, newSmallInt((unsigned char) c));
+  t->setArg(1, pos);
+  return makeTaggedSRecord(t);
 }
 
-static OZ_Term makeString(char *chars, OZ_Term pos) {
-  if (chars[0] == '\0')
-    return newCTerm("fAtom",nilAtom,pos);
-  else
-    return makeCons(makeInt(chars[0],pos),makeString(&chars[1],pos),pos);
+static 
+OZ_Term makeString(const char * chars, OZ_Term pos) {
+  int l = strlen(chars);
+
+  SRecord * t = SRecord::newSRecord(PA_fAtom, 2);
+  t->setArg(0, AtomNil);
+  t->setArg(1, pos);
+  
+  OZ_Term s = makeTaggedSRecord(t);
+
+  while (l--)
+    s = makeCons(makeInt(chars[l],pos),s,pos);
+
+  return s;
 }
 
 
@@ -303,7 +603,7 @@ typedef union {
 #define	YYFLAG		-32768
 #define	YYNTBASE	108
 
-#define YYTRANSLATE(x) ((unsigned)(x) <= 342 ? yytranslate[x] : 244)
+#define YYTRANSLATE(x) ((unsigned)(x) <= 341 ? yytranslate[x] : 244)
 
 static const char yytranslate[] = {     0,
      2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
@@ -331,16 +631,16 @@ static const char yytranslate[] = {     0,
      2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
      2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
      2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
-     2,     2,     2,     2,     2,     1,     2,     3,     4,     5,
-     6,     7,     8,     9,    10,    11,    12,    13,    14,    15,
-    16,    17,    18,    19,    20,    21,    22,    23,    24,    25,
-    26,    27,    28,    29,    30,    31,    32,    33,    34,    35,
-    36,    37,    38,    39,    40,    41,    42,    43,    44,    45,
-    46,    47,    48,    49,    50,    51,    52,    53,    54,    55,
-    56,    57,    58,    59,    60,    61,    62,    63,    64,    65,
-    66,    67,    68,    69,    70,    71,    72,    73,    74,    75,
-    76,    77,    79,    80,    81,    82,    83,    84,    87,    88,
-    89,    95
+     2,     2,     2,     2,     2,     1,     3,     4,     5,     6,
+     7,     8,     9,    10,    11,    12,    13,    14,    15,    16,
+    17,    18,    19,    20,    21,    22,    23,    24,    25,    26,
+    27,    28,    29,    30,    31,    32,    33,    34,    35,    36,
+    37,    38,    39,    40,    41,    42,    43,    44,    45,    46,
+    47,    48,    49,    50,    51,    52,    53,    54,    55,    56,
+    57,    58,    59,    60,    61,    62,    63,    64,    65,    66,
+    67,    68,    69,    70,    71,    72,    73,    74,    75,    76,
+    77,    79,    80,    81,    82,    83,    84,    87,    88,    89,
+    95
 };
 
 #if YYDEBUG != 0
@@ -509,62 +809,64 @@ static const short yyrhs[] = {   109,
 
 #if YYDEBUG != 0
 static const short yyrline[] = { 0,
-   367,   369,   373,   375,   378,   380,   385,   387,   390,   392,
-   395,   399,   401,   403,   405,   409,   411,   415,   422,   431,
-   433,   437,   439,   441,   443,   445,   448,   450,   452,   454,
-   456,   462,   464,   468,   471,   474,   477,   479,   482,   485,
-   489,   492,   494,   497,   499,   501,   503,   505,   507,   509,
-   511,   513,   515,   517,   519,   521,   523,   527,   529,   532,
-   535,   537,   539,   541,   543,   545,   547,   549,   551,   553,
-   555,   557,   559,   561,   563,   565,   567,   569,   571,   575,
-   577,   582,   584,   589,   591,   593,   596,   598,   600,   602,
-   607,   609,   611,   615,   619,   621,   623,   625,   629,   631,
-   635,   637,   639,   644,   648,   652,   656,   660,   664,   668,
-   670,   674,   676,   680,   682,   688,   690,   694,   696,   700,
-   705,   712,   714,   716,   718,   722,   726,   728,   730,   734,
-   736,   740,   742,   744,   746,   748,   750,   754,   756,   760,
-   764,   766,   768,   770,   774,   778,   782,   784,   786,   788,
-   792,   794,   796,   800,   802,   806,   810,   812,   815,   819,
-   821,   823,   825,   831,   836,   838,   843,   845,   849,   851,
-   853,   855,   859,   861,   865,   867,   871,   873,   875,   877,
-   879,   881,   885,   887,   891,   895,   897,   901,   903,   905,
-   907,   909,   911,   913,   917,   919,   921,   923,   925,   927,
-   931,   933,   937,   939,   943,   945,   947,   952,   954,   958,
-   962,   964,   968,   970,   974,   976,   980,   982,   986,   990,
-   992,   995,   999,  1001,  1005,  1009,  1013,  1015,  1019,  1023,
-  1025,  1029,  1033,  1037,  1047,  1055,  1057,  1059,  1061,  1063,
-  1065,  1069,  1071,  1075,  1079,  1081,  1085,  1089,  1091,  1095,
-  1097,  1099,  1105,  1113,  1115,  1117,  1119,  1123,  1125,  1129,
-  1131,  1135,  1137,  1141,  1143,  1147,  1149,  1153,  1155,  1157,
-  1158,  1159,  1161,  1165,  1167,  1169,  1173,  1174,  1177,  1181,
-  1182,  1182,  1183,  1184,  1184,  1185,  1186,  1186,  1189,  1191,
-  1195,  1196,  1199,  1203,  1204,  1207,  1208,  1211,  1219,  1221,
-  1225,  1227,  1231,  1233,  1235,  1239,  1241,  1245,  1247,  1249,
-  1253,  1257,  1259,  1263,  1272,  1276,  1278,  1282,  1284,  1294,
-  1299,  1306,  1308,  1312,  1316,  1318,  1322,  1324,  1328,  1330,
-  1336,  1340,  1343,  1348,  1350,  1354,  1358,  1359,  1360,  1362,
-  1363,  1364,  1366,  1367,  1368,  1372,  1374,  1378,  1380,  1385,
-  1387
+   668,   670,   674,   676,   679,   681,   686,   688,   691,   693,
+   696,   700,   702,   704,   706,   710,   712,   716,   723,   732,
+   734,   738,   740,   742,   744,   746,   749,   751,   753,   755,
+   757,   763,   765,   769,   772,   775,   778,   780,   783,   786,
+   789,   792,   794,   797,   799,   801,   803,   805,   807,   809,
+   811,   813,   815,   817,   819,   821,   823,   827,   829,   832,
+   835,   837,   839,   841,   843,   845,   847,   849,   851,   853,
+   855,   857,   859,   861,   863,   865,   867,   869,   871,   875,
+   877,   882,   884,   889,   891,   893,   896,   898,   900,   902,
+   907,   909,   911,   915,   919,   921,   923,   925,   929,   931,
+   935,   937,   939,   944,   948,   952,   956,   960,   964,   968,
+   970,   974,   976,   980,   982,   988,   990,   994,   996,  1000,
+  1005,  1012,  1014,  1016,  1018,  1022,  1026,  1028,  1030,  1034,
+  1036,  1040,  1042,  1044,  1046,  1048,  1050,  1054,  1056,  1060,
+  1064,  1066,  1068,  1070,  1074,  1078,  1082,  1084,  1086,  1088,
+  1092,  1094,  1096,  1100,  1102,  1106,  1110,  1112,  1115,  1119,
+  1121,  1123,  1125,  1131,  1136,  1138,  1143,  1145,  1149,  1151,
+  1153,  1155,  1159,  1161,  1165,  1167,  1171,  1173,  1175,  1177,
+  1179,  1181,  1185,  1187,  1191,  1195,  1197,  1201,  1203,  1205,
+  1207,  1209,  1211,  1213,  1217,  1219,  1221,  1223,  1225,  1227,
+  1231,  1233,  1237,  1239,  1243,  1245,  1247,  1252,  1254,  1258,
+  1262,  1264,  1268,  1270,  1274,  1276,  1280,  1282,  1286,  1290,
+  1292,  1295,  1299,  1301,  1305,  1309,  1313,  1315,  1319,  1323,
+  1325,  1329,  1333,  1337,  1347,  1355,  1357,  1359,  1361,  1363,
+  1365,  1369,  1371,  1375,  1379,  1381,  1385,  1389,  1391,  1395,
+  1397,  1399,  1405,  1413,  1415,  1417,  1419,  1423,  1425,  1429,
+  1431,  1435,  1437,  1441,  1443,  1447,  1449,  1453,  1455,  1457,
+  1458,  1459,  1461,  1465,  1467,  1469,  1473,  1474,  1477,  1481,
+  1482,  1482,  1483,  1484,  1484,  1485,  1486,  1486,  1489,  1491,
+  1495,  1496,  1499,  1503,  1504,  1507,  1508,  1511,  1519,  1521,
+  1525,  1527,  1531,  1533,  1535,  1539,  1541,  1545,  1547,  1549,
+  1553,  1557,  1559,  1563,  1572,  1576,  1578,  1582,  1584,  1594,
+  1599,  1606,  1608,  1612,  1616,  1618,  1622,  1624,  1628,  1630,
+  1636,  1640,  1643,  1648,  1650,  1654,  1658,  1659,  1660,  1662,
+  1663,  1664,  1666,  1667,  1668,  1672,  1674,  1678,  1680,  1685,
+  1687
 };
 #endif
 
 
 #if YYDEBUG != 0 || defined (YYERROR_VERBOSE)
 
-static const char * const yytname[] = {   "$","error","$undefined.","SWITCH",
-"SWITCHNAME","LOCALSWITCHES","PUSHSWITCHES","POPSWITCHES","OZATOM","ATOM_LABEL",
-"OZFLOAT","OZINT","AMPER","DOTINT","STRING","VARIABLE","VARIABLE_LABEL","DEFAULT",
-"CHOICE","LDOTS","attr","at","_case_","catch","choice","_class_","cond","declare",
-"define","dis","_else_","elsecase","elseif","elseof","end","export","fail","false",
-"FALSE_LABEL","feat","finally","_from_","_fun_","functor","_if_","import","_in_",
-"local","_lock_","_meth_","not","of","or","prepare","proc","prop","_raise_",
-"require","self","skip","then","thread","true","TRUE_LABEL","try","unit","UNIT_LABEL",
-"ENDOFFILE","REGEX","lex","_mode_","_parser_","prod","_scanner_","syn","token",
-"REDUCE","SEP","'='","OOASSIGN","orelse","andthen","COMPARE","FDCOMPARE","FDIN",
-"'|'","'#'","ADD","FDMUL","OTHERMUL","','","'~'","'.'","'^'","'@'","DEREFF",
-"'+'","'-'","'('","')'","'_'","'$'","'['","']'","'{'","'}'","':'","'!'","file",
-"queries","queries1","directive","switchList","switch","sequence","phrase","hashes",
-"phrase2","procFlags","optFunctorDescriptorList","functorDescriptorList","importDecls",
+static const char * const yytname[] = {   "$","error","$undefined.","T_SWITCH",
+"T_SWITCHNAME","T_LOCALSWITCHES","T_PUSHSWITCHES","T_POPSWITCHES","T_OZATOM",
+"T_ATOM_LABEL","T_OZFLOAT","T_OZINT","T_AMPER","T_DOTINT","T_STRING","T_VARIABLE",
+"T_VARIABLE_LABEL","T_DEFAULT","T_CHOICE","T_LDOTS","T_attr","T_at","T_case",
+"T_catch","T_choice","T_class","T_cond","T_declare","T_define","T_dis","T_else",
+"T_elsecase","T_elseif","T_elseof","T_end","T_export","T_fail","T_false","T_FALSE_LABEL",
+"T_feat","T_finally","T_from","T_fun","T_functor","T_if","T_import","T_in","T_local",
+"T_lock","T_meth","T_not","T_of","T_or","T_prepare","T_proc","T_prop","T_raise",
+"T_require","T_self","T_skip","T_then","T_thread","T_true","T_TRUE_LABEL","T_try",
+"T_unit","T_UNIT_LABEL","T_ENDOFFILE","T_REGEX","T_lex","T_mode","T_parser",
+"T_prod","T_scanner","T_syn","T_token","T_REDUCE","T_SEP","'='","T_OOASSIGN",
+"T_orelse","T_andthen","T_COMPARE","T_FDCOMPARE","T_FDIN","'|'","'#'","T_ADD",
+"T_FDMUL","T_OTHERMUL","','","'~'","'.'","'^'","'@'","T_DEREFF","'+'","'-'",
+"'('","')'","'_'","'$'","'['","']'","'{'","'}'","':'","'!'","file","queries",
+"queries1","directive","switchList","switch","sequence","phrase","hashes","phrase2",
+"procFlags","optFunctorDescriptorList","functorDescriptorList","importDecls",
 "variableLabel","featureList","optImportAt","exportDecls","compare","fdCompare",
 "fdIn","add","fdMul","otherMul","inSequence","phraseList","fixedListArgs","optCatch",
 "optFinally","record","recordAtomLabel","recordVarLabel","recordArguments","optDots",
@@ -1228,6 +1530,7 @@ static const short yycheck[] = {    15,
 };
 /* -*-C-*-  Note some compilers choke on comments on `#line' lines.  */
 
+/* This file comes from bison-1.27.  */
 
 /* Skeleton output parser for bison,
    Copyright (C) 1984, 1989, 1990 Free Software Foundation, Inc.
@@ -1244,46 +1547,66 @@ static const short yycheck[] = {    15,
 
    You should have received a copy of the GNU General Public License
    along with this program; if not, write to the Free Software
-   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.  */
+   Foundation, Inc., 59 Temple Place - Suite 330,
+   Boston, MA 02111-1307, USA.  */
 
 /* As a special exception, when this file is copied by Bison into a
    Bison output file, you may use that output file without restriction.
    This special exception was added by the Free Software Foundation
    in version 1.24 of Bison.  */
 
-#ifndef alloca
-#ifdef __GNUC__
-#define alloca __builtin_alloca
-#else /* not GNU C.  */
-#if (!defined (__STDC__) && defined (sparc)) || defined (__sparc__) || defined (__sparc) || defined (__sgi)
-#include <alloca.h>
-#else /* not sparc */
-#if defined (MSDOS) && !defined (__TURBOC__)
-#include <malloc.h>
-#else /* not MSDOS, or __TURBOC__ */
-#if defined(_AIX)
-#include <malloc.h>
- #pragma alloca
-#else /* not MSDOS, __TURBOC__, or _AIX */
-#ifdef __hpux
-#ifdef __cplusplus
-extern "C" {
-void *alloca (unsigned int);
-};
-#else /* not __cplusplus */
-void *alloca ();
-#endif /* not __cplusplus */
-#endif /* __hpux */
-#endif /* not _AIX */
-#endif /* not MSDOS, or __TURBOC__ */
-#endif /* not sparc.  */
-#endif /* not GNU C.  */
-#endif /* alloca not defined.  */
-
 /* This is the parser code that is written into each bison parser
   when the %semantic_parser declaration is not specified in the grammar.
   It was written by Richard Stallman by simplifying the hairy parser
   used when %semantic_parser is specified.  */
+
+#ifndef YYSTACK_USE_ALLOCA
+#ifdef alloca
+#define YYSTACK_USE_ALLOCA
+#else /* alloca not defined */
+#ifdef __GNUC__
+#define YYSTACK_USE_ALLOCA
+#define alloca __builtin_alloca
+#else /* not GNU C.  */
+#if (!defined (__STDC__) && defined (sparc)) || defined (__sparc__) || defined (__sparc) || defined (__sgi) || (defined (__sun) && defined (__i386))
+#define YYSTACK_USE_ALLOCA
+#include <alloca.h>
+#else /* not sparc */
+/* We think this test detects Watcom and Microsoft C.  */
+/* This used to test MSDOS, but that is a bad idea
+   since that symbol is in the user namespace.  */
+#if (defined (_MSDOS) || defined (_MSDOS_)) && !defined (__TURBOC__)
+#if 0 /* No need for malloc.h, which pollutes the namespace;
+	 instead, just don't use alloca.  */
+#include <malloc.h>
+#endif
+#else /* not MSDOS, or __TURBOC__ */
+#if defined(_AIX)
+/* I don't know what this was needed for, but it pollutes the namespace.
+   So I turned it off.   rms, 2 May 1997.  */
+/* #include <malloc.h>  */
+ #pragma alloca
+#define YYSTACK_USE_ALLOCA
+#else /* not MSDOS, or __TURBOC__, or _AIX */
+#if 0
+#ifdef __hpux /* haible@ilog.fr says this works for HPUX 9.05 and up,
+		 and on HPUX 10.  Eventually we can turn this on.  */
+#define YYSTACK_USE_ALLOCA
+#define alloca __builtin_alloca
+#endif /* __hpux */
+#endif
+#endif /* not _AIX */
+#endif /* not MSDOS, or __TURBOC__ */
+#endif /* not sparc */
+#endif /* not GNU C */
+#endif /* alloca not defined */
+#endif /* YYSTACK_USE_ALLOCA not defined */
+
+#ifdef YYSTACK_USE_ALLOCA
+#define YYSTACK_ALLOC alloca
+#else
+#define YYSTACK_ALLOC malloc
+#endif
 
 /* Note: there must be only one dollar sign in this file.
    It is replaced by the list of actions, each action
@@ -1293,8 +1616,8 @@ void *alloca ();
 #define yyclearin	(yychar = YYEMPTY)
 #define YYEMPTY		-2
 #define YYEOF		0
-#define YYACCEPT	return(0)
-#define YYABORT 	return(1)
+#define YYACCEPT	goto yyacceptlab
+#define YYABORT 	goto yyabortlab
 #define YYERROR		goto yyerrlab1
 /* Like YYERROR except do call yyerror.
    This remains here temporarily to ease the
@@ -1375,12 +1698,12 @@ int yydebug;			/*  nonzero means print parse trace	*/
 #ifndef YYMAXDEPTH
 #define YYMAXDEPTH 10000
 #endif
-
-/* Prevent warning if -Wstrict-prototypes.  */
-#ifdef __GNUC__
-int yyparse (void);
-#endif
 
+/* Define __yy_memcpy.  Note that the size argument
+   should be passed with type unsigned int, because that is what the non-GCC
+   definitions require.  With GCC, __builtin_memcpy takes an arg
+   of type size_t, but it can handle unsigned int.  */
+
 #if __GNUC__ > 1		/* GNU C and GNU C++ define this.  */
 #define __yy_memcpy(TO,FROM,COUNT)	__builtin_memcpy(TO,FROM,COUNT)
 #else				/* not GNU C or C++ */
@@ -1392,7 +1715,7 @@ static void
 __yy_memcpy (to, from, count)
      char *to;
      char *from;
-     int count;
+     unsigned int count;
 {
   register char *f = from;
   register char *t = to;
@@ -1407,10 +1730,10 @@ __yy_memcpy (to, from, count)
 /* This is the most reliable way to avoid incompatibilities
    in available built-in functions on various systems.  */
 static void
-__yy_memcpy (char *to, char *from, int count)
+__yy_memcpy (char *to, char *from, unsigned int count)
 {
-  register char *f = from;
   register char *t = to;
+  register char *f = from;
   register int i = count;
 
   while (i-- > 0)
@@ -1441,6 +1764,15 @@ __yy_memcpy (char *to, char *from, int count)
 #define YYPARSE_PARAM_DECL
 #endif /* not YYPARSE_PARAM */
 
+/* Prevent warning if -Wstrict-prototypes.  */
+#ifdef __GNUC__
+#ifdef YYPARSE_PARAM
+int yyparse (void *);
+#else
+int yyparse (void);
+#endif
+#endif
+
 int
 yyparse(YYPARSE_PARAM_ARG)
      YYPARSE_PARAM_DECL
@@ -1469,6 +1801,7 @@ yyparse(YYPARSE_PARAM_ARG)
 #endif
 
   int yystacksize = YYINITDEPTH;
+  int yyfree_stacks = 0;
 
 #ifdef YYPURE
   int yychar;
@@ -1553,18 +1886,32 @@ yynewstate:
       if (yystacksize >= YYMAXDEPTH)
 	{
 	  yyerror("parser stack overflow");
+	  if (yyfree_stacks)
+	    {
+	      free (yyss);
+	      free (yyvs);
+#ifdef YYLSP_NEEDED
+	      free (yyls);
+#endif
+	    }
 	  return 2;
 	}
       yystacksize *= 2;
       if (yystacksize > YYMAXDEPTH)
 	yystacksize = YYMAXDEPTH;
-      yyss = (short *) alloca (yystacksize * sizeof (*yyssp));
-      __yy_memcpy ((char *)yyss, (char *)yyss1, size * sizeof (*yyssp));
-      yyvs = (YYSTYPE *) alloca (yystacksize * sizeof (*yyvsp));
-      __yy_memcpy ((char *)yyvs, (char *)yyvs1, size * sizeof (*yyvsp));
+#ifndef YYSTACK_USE_ALLOCA
+      yyfree_stacks = 1;
+#endif
+      yyss = (short *) YYSTACK_ALLOC (yystacksize * sizeof (*yyssp));
+      __yy_memcpy ((char *)yyss, (char *)yyss1,
+		   size * (unsigned int) sizeof (*yyssp));
+      yyvs = (YYSTYPE *) YYSTACK_ALLOC (yystacksize * sizeof (*yyvsp));
+      __yy_memcpy ((char *)yyvs, (char *)yyvs1,
+		   size * (unsigned int) sizeof (*yyvsp));
 #ifdef YYLSP_NEEDED
-      yyls = (YYLTYPE *) alloca (yystacksize * sizeof (*yylsp));
-      __yy_memcpy ((char *)yyls, (char *)yyls1, size * sizeof (*yylsp));
+      yyls = (YYLTYPE *) YYSTACK_ALLOC (yystacksize * sizeof (*yylsp));
+      __yy_memcpy ((char *)yyls, (char *)yyls1,
+		   size * (unsigned int) sizeof (*yylsp));
 #endif
 #endif /* no yyoverflow */
 
@@ -1728,63 +2075,63 @@ case 1:
 { yyoutput = yyvsp[-1].t; YYACCEPT; ;
     break;}
 case 2:
-{ yyoutput = OZ_atom("parseError"); YYABORT; ;
+{ yyoutput = PA_parseError; YYABORT; ;
     break;}
 case 3:
-{ yyval.t = consList(yyvsp[-1].t,yyvsp[0].t); ;
+{ yyval.t = oz_cons(yyvsp[-1].t,yyvsp[0].t); ;
     break;}
 case 4:
-{ yyval.t = consList(newCTerm("fSynTopLevelProductionTemplates",
+{ yyval.t = oz_cons(newCTerm(PA_fSynTopLevelProductionTemplates,
 					   yyvsp[-1].t),yyvsp[0].t); ;
     break;}
 case 5:
 { yyval.t = yyvsp[0].t; ;
     break;}
 case 6:
-{ yyval.t = consList(newCTerm("fFunctor",newCTerm("fDollar",yyvsp[-2].t),
+{ yyval.t = oz_cons(newCTerm(PA_fFunctor,newCTerm(PA_fDollar,yyvsp[-2].t),
 					   yyvsp[-1].t,yyvsp[-2].t),yyvsp[0].t); ;
     break;}
 case 7:
-{ yyval.t = consList(yyvsp[-1].t,yyvsp[0].t); ;
+{ yyval.t = oz_cons(yyvsp[-1].t,yyvsp[0].t); ;
     break;}
 case 8:
-{ yyval.t = consList(newCTerm("fDeclare",yyvsp[-3].t,newCTerm("fSkip",yyvsp[-1].t),
+{ yyval.t = oz_cons(newCTerm(PA_fDeclare,yyvsp[-3].t,newCTerm(PA_fSkip,yyvsp[-1].t),
 					   yyvsp[-4].t),yyvsp[0].t); ;
     break;}
 case 9:
-{ yyval.t = consList(newCTerm("fDeclare",yyvsp[-3].t,yyvsp[-1].t,yyvsp[-4].t),yyvsp[0].t); ;
+{ yyval.t = oz_cons(newCTerm(PA_fDeclare,yyvsp[-3].t,yyvsp[-1].t,yyvsp[-4].t),yyvsp[0].t); ;
     break;}
 case 10:
-{ yyval.t = consList(newCTerm("fDeclare",yyvsp[-2].t,
-					   newCTerm("fSkip",yyvsp[-1].t),yyvsp[-3].t),yyvsp[0].t); ;
+{ yyval.t = oz_cons(newCTerm(PA_fDeclare,yyvsp[-2].t,
+					   newCTerm(PA_fSkip,yyvsp[-1].t),yyvsp[-3].t),yyvsp[0].t); ;
     break;}
 case 11:
-{ yyval.t = nilAtom; ;
+{ yyval.t = AtomNil; ;
     break;}
 case 12:
-{ yyval.t = newCTerm("dirSwitch",yyvsp[0].t); ;
+{ yyval.t = newCTerm(PA_dirSwitch,yyvsp[0].t); ;
     break;}
 case 13:
-{ yyval.t = newCTerm("dirLocalSwitches"); ;
+{ yyval.t = PA_dirLocalSwitches; ;
     break;}
 case 14:
-{ yyval.t = newCTerm("dirPushSwitches"); ;
+{ yyval.t = PA_dirPushSwitches; ;
     break;}
 case 15:
-{ yyval.t = newCTerm("dirPopSwitches"); ;
+{ yyval.t = PA_dirPopSwitches; ;
     break;}
 case 16:
-{ yyval.t = nilAtom; ;
+{ yyval.t = AtomNil; ;
     break;}
 case 17:
-{ yyval.t = consList(yyvsp[-1].t,yyvsp[0].t); ;
+{ yyval.t = oz_cons(yyvsp[-1].t,yyvsp[0].t); ;
     break;}
 case 18:
 { if (!strcmp(xytext,"gump"))
 		      xy_gumpSyntax = 1;
 		    if (!strcmp(xytext,"allowdeprecated"))
 		      xy_allowDeprecated = 1;
-		    yyval.t = newCTerm("on",newCTerm(xytext),pos());
+		    yyval.t = newCTerm(PA_on,OZ_atom(xytext),pos());
 		  ;
     break;}
 case 19:
@@ -1792,36 +2139,36 @@ case 19:
 		      xy_gumpSyntax = 0;
 		    if (!strcmp(xytext,"allowdeprecated"))
 		      xy_allowDeprecated = 0;
-		    yyval.t = newCTerm("off",newCTerm(xytext),pos());
+		    yyval.t = newCTerm(PA_off,OZ_atom(xytext),pos());
 		  ;
     break;}
 case 20:
 { yyval.t = yyvsp[0].t; ;
     break;}
 case 21:
-{ yyval.t = newCTerm("fAnd",yyvsp[-1].t,yyvsp[0].t); ;
+{ yyval.t = newCTerm(PA_fAnd,yyvsp[-1].t,yyvsp[0].t); ;
     break;}
 case 22:
-{ yyval.t = newCTerm("fEq",yyvsp[-3].t,yyvsp[0].t,yyvsp[-1].t); ;
+{ yyval.t = newCTerm(PA_fEq,yyvsp[-3].t,yyvsp[0].t,yyvsp[-1].t); ;
     break;}
 case 23:
-{ yyval.t = newCTerm("fAssign",yyvsp[-3].t,yyvsp[0].t,yyvsp[-1].t); ;
+{ yyval.t = newCTerm(PA_fAssign,yyvsp[-3].t,yyvsp[0].t,yyvsp[-1].t); ;
     break;}
 case 24:
-{ yyval.t = newCTerm("fOrElse",yyvsp[-3].t,yyvsp[0].t,yyvsp[-1].t); ;
+{ yyval.t = newCTerm(PA_fOrElse,yyvsp[-3].t,yyvsp[0].t,yyvsp[-1].t); ;
     break;}
 case 25:
-{ yyval.t = newCTerm("fAndThen",yyvsp[-3].t,yyvsp[0].t,yyvsp[-1].t); ;
+{ yyval.t = newCTerm(PA_fAndThen,yyvsp[-3].t,yyvsp[0].t,yyvsp[-1].t); ;
     break;}
 case 26:
-{ yyval.t = newCTerm("fOpApply",yyvsp[-2].t,
-				  consList(yyvsp[-3].t,consList(yyvsp[0].t,nilAtom)),yyvsp[-1].t); ;
+{ yyval.t = newCTerm(PA_fOpApply,yyvsp[-2].t,
+				  oz_mklist(yyvsp[-3].t,yyvsp[0].t),yyvsp[-1].t); ;
     break;}
 case 27:
-{ yyval.t = newCTerm("fFdCompare",yyvsp[-2].t,yyvsp[-3].t,yyvsp[0].t,yyvsp[-1].t); ;
+{ yyval.t = newCTerm(PA_fFdCompare,yyvsp[-2].t,yyvsp[-3].t,yyvsp[0].t,yyvsp[-1].t); ;
     break;}
 case 28:
-{ yyval.t = newCTerm("fFdIn",yyvsp[-2].t,yyvsp[-3].t,yyvsp[0].t,yyvsp[-1].t); ;
+{ yyval.t = newCTerm(PA_fFdIn,yyvsp[-2].t,yyvsp[-3].t,yyvsp[0].t,yyvsp[-1].t); ;
     break;}
 case 29:
 { yyval.t = makeCons(yyvsp[-3].t,yyvsp[0].t,yyvsp[-1].t); ;
@@ -1830,54 +2177,53 @@ case 30:
 { yyval.t = yyvsp[0].t; ;
     break;}
 case 31:
-{ yyval.t = newCTerm("fRecord",
-				  newCTerm("fAtom",newCTerm("#"),yyvsp[-1].t),
-				  consList(yyvsp[-3].t,yyvsp[0].t)); ;
+{ yyval.t = newCTerm(PA_fRecord,
+				  newCTerm(PA_fAtom,AtomPair,yyvsp[-1].t),
+				  oz_cons(yyvsp[-3].t,yyvsp[0].t)); ;
     break;}
 case 32:
-{ yyval.t = consList(yyvsp[0].t,nilAtom); ;
+{ yyval.t = oz_mklist(yyvsp[0].t); ;
     break;}
 case 33:
-{ yyval.t = consList(yyvsp[-2].t,yyvsp[0].t); ;
+{ yyval.t = oz_cons(yyvsp[-2].t,yyvsp[0].t); ;
     break;}
 case 34:
-{ yyval.t = newCTerm("fOpApply",yyvsp[-2].t,
-				  consList(yyvsp[-3].t,consList(yyvsp[0].t,nilAtom)),yyvsp[-1].t); ;
+{ yyval.t = newCTerm(PA_fOpApply,yyvsp[-2].t,
+				  oz_mklist(yyvsp[-3].t,yyvsp[0].t),yyvsp[-1].t); ;
     break;}
 case 35:
-{ yyval.t = newCTerm("fOpApply",yyvsp[-2].t,
-				  consList(yyvsp[-3].t,consList(yyvsp[0].t,nilAtom)),yyvsp[-1].t); ;
+{ yyval.t = newCTerm(PA_fOpApply,yyvsp[-2].t,
+				  oz_mklist(yyvsp[-3].t,yyvsp[0].t),yyvsp[-1].t); ;
     break;}
 case 36:
-{ yyval.t = newCTerm("fOpApply",yyvsp[-2].t,
-				  consList(yyvsp[-3].t,consList(yyvsp[0].t,nilAtom)),yyvsp[-1].t); ;
+{ yyval.t = newCTerm(PA_fOpApply,yyvsp[-2].t,
+				  oz_mklist(yyvsp[-3].t,yyvsp[0].t),yyvsp[-1].t); ;
     break;}
 case 37:
-{ yyval.t = newCTerm("fObjApply",yyvsp[-3].t,yyvsp[0].t,yyvsp[-1].t); ;
+{ yyval.t = newCTerm(PA_fObjApply,yyvsp[-3].t,yyvsp[0].t,yyvsp[-1].t); ;
     break;}
 case 38:
-{ yyval.t = newCTerm("fOpApply",newCTerm("~"),
-				  consList(yyvsp[0].t,nilAtom),yyvsp[-1].t); ;
+{ yyval.t = newCTerm(PA_fOpApply,AtomTilde,
+				  oz_mklist(yyvsp[0].t),yyvsp[-1].t); ;
     break;}
 case 39:
-{ yyval.t = newCTerm("fOpApply",newCTerm("."),
-				  consList(yyvsp[-3].t,consList(yyvsp[0].t,nilAtom)),yyvsp[-1].t); ;
+{ yyval.t = newCTerm(PA_fOpApply,AtomDot,
+				  oz_mklist(yyvsp[-3].t,yyvsp[0].t),yyvsp[-1].t); ;
     break;}
 case 40:
-{ yyval.t = newCTerm("fOpApply",newCTerm("."),
-				  consList(yyvsp[-1].t,consList(makeInt(xytext,pos()),
-						       nilAtom)),pos()); ;
+{ yyval.t = newCTerm(PA_fOpApply,AtomDot,
+				  oz_mklist(yyvsp[-1].t,makeInt(xytext,pos())),pos()); ;
     break;}
 case 41:
-{ yyval.t = newCTerm("fOpApply",newCTerm("^"),
-				  consList(yyvsp[-3].t,consList(yyvsp[0].t,nilAtom)),yyvsp[-1].t); ;
+{ yyval.t = newCTerm(PA_fOpApply,AtomHat,
+				  oz_mklist(yyvsp[-3].t,yyvsp[0].t),yyvsp[-1].t); ;
     break;}
 case 42:
-{ yyval.t = newCTerm("fAt",yyvsp[0].t,yyvsp[-1].t); ;
+{ yyval.t = newCTerm(PA_fAt,yyvsp[0].t,yyvsp[-1].t); ;
     break;}
 case 43:
-{ yyval.t = newCTerm("fOpApply",newCTerm("!!"),
-				  consList(yyvsp[0].t,nilAtom),yyvsp[-1].t); ;
+{ yyval.t = newCTerm(PA_fOpApply,AtomDExcl,
+				  oz_mklist(yyvsp[0].t),yyvsp[-1].t); ;
     break;}
 case 44:
 { yyval.t = yyvsp[-1].t; ;
@@ -1889,22 +2235,22 @@ case 46:
 { yyval.t = yyvsp[0].t; ;
     break;}
 case 47:
-{ yyval.t = newCTerm("fWildcard",pos()); ;
+{ yyval.t = newCTerm(PA_fWildcard,pos()); ;
     break;}
 case 48:
-{ yyval.t = newCTerm("fAtom",OZ_unit(),pos()); ;
+{ yyval.t = newCTerm(PA_fAtom,NameUnit,pos()); ;
     break;}
 case 49:
-{ yyval.t = newCTerm("fAtom",OZ_true(),pos()); ;
+{ yyval.t = newCTerm(PA_fAtom,NameTrue,pos()); ;
     break;}
 case 50:
-{ yyval.t = newCTerm("fAtom",OZ_false(),pos()); ;
+{ yyval.t = newCTerm(PA_fAtom,NameFalse,pos()); ;
     break;}
 case 51:
-{ yyval.t = newCTerm("fSelf",pos()); ;
+{ yyval.t = newCTerm(PA_fSelf,pos()); ;
     break;}
 case 52:
-{ yyval.t = newCTerm("fDollar",pos()); ;
+{ yyval.t = newCTerm(PA_fDollar,pos()); ;
     break;}
 case 53:
 { yyval.t = yyvsp[0].t; ;
@@ -1919,27 +2265,27 @@ case 56:
 { yyval.t = yyvsp[0].t; ;
     break;}
 case 57:
-{ yyval.t = newCTerm("fRecord",newCTerm("fAtom",newCTerm("|"),
+{ yyval.t = newCTerm(PA_fRecord,newCTerm(PA_fAtom,AtomCons,
 						     makeLongPos(yyvsp[-4].t,yyvsp[0].t)),
-				  consList(yyvsp[-3].t,consList(yyvsp[-2].t,nilAtom))); ;
+				  oz_mklist(yyvsp[-3].t,yyvsp[-2].t)); ;
     break;}
 case 58:
-{ yyval.t = newCTerm("fApply",yyvsp[-3].t,yyvsp[-2].t,makeLongPos(yyvsp[-4].t,yyvsp[0].t)); ;
+{ yyval.t = newCTerm(PA_fApply,yyvsp[-3].t,yyvsp[-2].t,makeLongPos(yyvsp[-4].t,yyvsp[0].t)); ;
     break;}
 case 59:
-{ yyval.t = newCTerm("fProc",yyvsp[-5].t,yyvsp[-4].t,yyvsp[-2].t,yyvsp[-7].t,makeLongPos(yyvsp[-8].t,yyvsp[0].t)); ;
+{ yyval.t = newCTerm(PA_fProc,yyvsp[-5].t,yyvsp[-4].t,yyvsp[-2].t,yyvsp[-7].t,makeLongPos(yyvsp[-8].t,yyvsp[0].t)); ;
     break;}
 case 60:
-{ yyval.t = newCTerm("fFun",yyvsp[-5].t,yyvsp[-4].t,yyvsp[-2].t,yyvsp[-7].t,makeLongPos(yyvsp[-8].t,yyvsp[0].t)); ;
+{ yyval.t = newCTerm(PA_fFun,yyvsp[-5].t,yyvsp[-4].t,yyvsp[-2].t,yyvsp[-7].t,makeLongPos(yyvsp[-8].t,yyvsp[0].t)); ;
     break;}
 case 61:
-{ yyval.t = newCTerm("fFunctor",yyvsp[-3].t,yyvsp[-2].t,makeLongPos(yyvsp[-4].t,yyvsp[0].t)); ;
+{ yyval.t = newCTerm(PA_fFunctor,yyvsp[-3].t,yyvsp[-2].t,makeLongPos(yyvsp[-4].t,yyvsp[0].t)); ;
     break;}
 case 62:
 { yyval.t = yyvsp[0].t; ;
     break;}
 case 63:
-{ yyval.t = newCTerm("fLocal",yyvsp[-3].t,yyvsp[-1].t,yyvsp[-4].t); ;
+{ yyval.t = newCTerm(PA_fLocal,yyvsp[-3].t,yyvsp[-1].t,yyvsp[-4].t); ;
     break;}
 case 64:
 { yyval.t = yyvsp[0].t; ;
@@ -1948,40 +2294,40 @@ case 65:
 { yyval.t = yyvsp[0].t; ;
     break;}
 case 66:
-{ yyval.t = newCTerm("fLock",yyvsp[-2].t,makeLongPos(yyvsp[-3].t,yyvsp[0].t)); ;
+{ yyval.t = newCTerm(PA_fLock,yyvsp[-2].t,makeLongPos(yyvsp[-3].t,yyvsp[0].t)); ;
     break;}
 case 67:
-{ yyval.t = newCTerm("fLockThen",yyvsp[-4].t,yyvsp[-2].t,makeLongPos(yyvsp[-5].t,yyvsp[0].t)); ;
+{ yyval.t = newCTerm(PA_fLockThen,yyvsp[-4].t,yyvsp[-2].t,makeLongPos(yyvsp[-5].t,yyvsp[0].t)); ;
     break;}
 case 68:
-{ yyval.t = newCTerm("fThread",yyvsp[-2].t,makeLongPos(yyvsp[-3].t,yyvsp[0].t)); ;
+{ yyval.t = newCTerm(PA_fThread,yyvsp[-2].t,makeLongPos(yyvsp[-3].t,yyvsp[0].t)); ;
     break;}
 case 69:
-{ yyval.t = newCTerm("fTry",yyvsp[-4].t,yyvsp[-3].t,yyvsp[-2].t,makeLongPos(yyvsp[-5].t,yyvsp[0].t)); ;
+{ yyval.t = newCTerm(PA_fTry,yyvsp[-4].t,yyvsp[-3].t,yyvsp[-2].t,makeLongPos(yyvsp[-5].t,yyvsp[0].t)); ;
     break;}
 case 70:
-{ yyval.t = newCTerm("fRaise",yyvsp[-2].t,makeLongPos(yyvsp[-3].t,yyvsp[0].t)); ;
+{ yyval.t = newCTerm(PA_fRaise,yyvsp[-2].t,makeLongPos(yyvsp[-3].t,yyvsp[0].t)); ;
     break;}
 case 71:
-{ yyval.t = newCTerm("fSkip",pos()); ;
+{ yyval.t = newCTerm(PA_fSkip,pos()); ;
     break;}
 case 72:
-{ yyval.t = newCTerm("fFail",pos()); ;
+{ yyval.t = newCTerm(PA_fFail,pos()); ;
     break;}
 case 73:
-{ yyval.t = newCTerm("fNot",yyvsp[-2].t,makeLongPos(yyvsp[-3].t,yyvsp[0].t)); ;
+{ yyval.t = newCTerm(PA_fNot,yyvsp[-2].t,makeLongPos(yyvsp[-3].t,yyvsp[0].t)); ;
     break;}
 case 74:
 { yyval.t = yyvsp[0].t; ;
     break;}
 case 75:
-{ yyval.t = newCTerm("fOr",yyvsp[-2].t,makeLongPos(yyvsp[-3].t,yyvsp[0].t)); ;
+{ yyval.t = newCTerm(PA_fOr,yyvsp[-2].t,makeLongPos(yyvsp[-3].t,yyvsp[0].t)); ;
     break;}
 case 76:
-{ yyval.t = newCTerm("fDis",yyvsp[-2].t,makeLongPos(yyvsp[-3].t,yyvsp[0].t)); ;
+{ yyval.t = newCTerm(PA_fDis,yyvsp[-2].t,makeLongPos(yyvsp[-3].t,yyvsp[0].t)); ;
     break;}
 case 77:
-{ yyval.t = newCTerm("fChoice",yyvsp[-2].t,makeLongPos(yyvsp[-3].t,yyvsp[0].t)); ;
+{ yyval.t = newCTerm(PA_fChoice,yyvsp[-2].t,makeLongPos(yyvsp[-3].t,yyvsp[0].t)); ;
     break;}
 case 78:
 { yyval.t = yyvsp[0].t; ;
@@ -1990,139 +2336,139 @@ case 79:
 { yyval.t = yyvsp[0].t; ;
     break;}
 case 80:
-{ yyval.t = nilAtom; ;
+{ yyval.t = AtomNil; ;
     break;}
 case 81:
-{ yyval.t = consList(yyvsp[-1].t,yyvsp[0].t); ;
+{ yyval.t = oz_cons(yyvsp[-1].t,yyvsp[0].t); ;
     break;}
 case 82:
-{ yyval.t = nilAtom; ;
+{ yyval.t = AtomNil; ;
     break;}
 case 83:
 { yyval.t = yyvsp[0].t; ;
     break;}
 case 84:
-{ yyval.t = consList(newCTerm("fRequire",yyvsp[-1].t,yyvsp[-2].t),yyvsp[0].t); ;
+{ yyval.t = oz_cons(newCTerm(PA_fRequire,yyvsp[-1].t,yyvsp[-2].t),yyvsp[0].t); ;
     break;}
 case 85:
-{ yyval.t = consList(newCTerm("fPrepare",yyvsp[-3].t,yyvsp[-1].t,yyvsp[-4].t),yyvsp[0].t); ;
+{ yyval.t = oz_cons(newCTerm(PA_fPrepare,yyvsp[-3].t,yyvsp[-1].t,yyvsp[-4].t),yyvsp[0].t); ;
     break;}
 case 86:
-{ yyval.t = consList(newCTerm("fPrepare",yyvsp[-1].t,
-					   newCTerm("fSkip",yyvsp[-2].t),yyvsp[-2].t),yyvsp[0].t); ;
+{ yyval.t = oz_cons(newCTerm(PA_fPrepare,yyvsp[-1].t,
+					   newCTerm(PA_fSkip,yyvsp[-2].t),yyvsp[-2].t),yyvsp[0].t); ;
     break;}
 case 87:
-{ yyval.t = consList(newCTerm("fImport",yyvsp[-1].t,yyvsp[-2].t),yyvsp[0].t); ;
+{ yyval.t = oz_cons(newCTerm(PA_fImport,yyvsp[-1].t,yyvsp[-2].t),yyvsp[0].t); ;
     break;}
 case 88:
-{ yyval.t = consList(newCTerm("fExport",yyvsp[-1].t,yyvsp[-2].t),yyvsp[0].t); ;
+{ yyval.t = oz_cons(newCTerm(PA_fExport,yyvsp[-1].t,yyvsp[-2].t),yyvsp[0].t); ;
     break;}
 case 89:
-{ yyval.t = consList(newCTerm("fDefine",yyvsp[-3].t,yyvsp[-1].t,yyvsp[-4].t),yyvsp[0].t); ;
+{ yyval.t = oz_cons(newCTerm(PA_fDefine,yyvsp[-3].t,yyvsp[-1].t,yyvsp[-4].t),yyvsp[0].t); ;
     break;}
 case 90:
-{ yyval.t = consList(newCTerm("fDefine",yyvsp[-1].t,
-					   newCTerm("fSkip",yyvsp[-2].t),yyvsp[-2].t),yyvsp[0].t); ;
+{ yyval.t = oz_cons(newCTerm(PA_fDefine,yyvsp[-1].t,
+					   newCTerm(PA_fSkip,yyvsp[-2].t),yyvsp[-2].t),yyvsp[0].t); ;
     break;}
 case 91:
-{ yyval.t = nilAtom; ;
+{ yyval.t = AtomNil; ;
     break;}
 case 92:
-{ yyval.t = consList(newCTerm("fImportItem",yyvsp[-2].t,nilAtom,yyvsp[-1].t),yyvsp[0].t); ;
+{ yyval.t = oz_cons(newCTerm(PA_fImportItem,yyvsp[-2].t,AtomNil,yyvsp[-1].t),yyvsp[0].t); ;
     break;}
 case 93:
-{ yyval.t = consList(newCTerm("fImportItem",yyvsp[-5].t,yyvsp[-3].t,yyvsp[-1].t),yyvsp[0].t); ;
+{ yyval.t = oz_cons(newCTerm(PA_fImportItem,yyvsp[-5].t,yyvsp[-3].t,yyvsp[-1].t),yyvsp[0].t); ;
     break;}
 case 94:
-{ yyval.t = newCTerm("fVar",OZ_atom(xytext),yyvsp[0].t); ;
+{ yyval.t = newCTerm(PA_fVar,OZ_atom(xytext),yyvsp[0].t); ;
     break;}
 case 95:
-{ yyval.t = consList(yyvsp[0].t,nilAtom); ;
+{ yyval.t = oz_mklist(yyvsp[0].t); ;
     break;}
 case 96:
-{ yyval.t = consList(pair(yyvsp[0].t,yyvsp[-2].t),nilAtom); ;
+{ yyval.t = oz_mklist(oz_pair2(yyvsp[0].t,yyvsp[-2].t)); ;
     break;}
 case 97:
-{ yyval.t = consList(yyvsp[-1].t,yyvsp[0].t); ;
+{ yyval.t = oz_cons(yyvsp[-1].t,yyvsp[0].t); ;
     break;}
 case 98:
-{ yyval.t = consList(pair(yyvsp[-1].t,yyvsp[-3].t),yyvsp[0].t); ;
+{ yyval.t = oz_cons(oz_pair2(yyvsp[-1].t,yyvsp[-3].t),yyvsp[0].t); ;
     break;}
 case 99:
-{ yyval.t = newCTerm("fNoImportAt"); ;
+{ yyval.t = PA_fNoImportAt; ;
     break;}
 case 100:
-{ yyval.t = newCTerm("fImportAt",yyvsp[0].t); ;
+{ yyval.t = newCTerm(PA_fImportAt,yyvsp[0].t); ;
     break;}
 case 101:
-{ yyval.t = nilAtom; ;
+{ yyval.t = AtomNil; ;
     break;}
 case 102:
-{ yyval.t = consList(newCTerm("fExportItem",yyvsp[-1].t),yyvsp[0].t); ;
+{ yyval.t = oz_cons(newCTerm(PA_fExportItem,yyvsp[-1].t),yyvsp[0].t); ;
     break;}
 case 103:
-{ yyval.t = consList(newCTerm("fExportItem",
-					   newCTerm("fColon",yyvsp[-3].t,yyvsp[-1].t)),yyvsp[0].t); ;
+{ yyval.t = oz_cons(newCTerm(PA_fExportItem,
+					   newCTerm(PA_fColon,yyvsp[-3].t,yyvsp[-1].t)),yyvsp[0].t); ;
     break;}
 case 104:
-{ yyval.t = newCTerm(xytext); ;
+{ yyval.t = OZ_atom(xytext); ;
     break;}
 case 105:
-{ yyval.t = newCTerm(xytext); ;
+{ yyval.t = OZ_atom(xytext); ;
     break;}
 case 106:
-{ yyval.t = newCTerm(xytext); ;
+{ yyval.t = OZ_atom(xytext); ;
     break;}
 case 107:
-{ yyval.t = newCTerm(xytext); ;
+{ yyval.t = OZ_atom(xytext); ;
     break;}
 case 108:
-{ yyval.t = newCTerm(xytext); ;
+{ yyval.t = OZ_atom(xytext); ;
     break;}
 case 109:
-{ yyval.t = newCTerm(xytext); ;
+{ yyval.t = OZ_atom(xytext); ;
     break;}
 case 110:
-{ yyval.t = newCTerm("fLocal",yyvsp[-3].t,yyvsp[0].t,yyvsp[-1].t); ;
+{ yyval.t = newCTerm(PA_fLocal,yyvsp[-3].t,yyvsp[0].t,yyvsp[-1].t); ;
     break;}
 case 111:
 { yyval.t = yyvsp[0].t; ;
     break;}
 case 112:
-{ yyval.t = nilAtom; ;
+{ yyval.t = AtomNil; ;
     break;}
 case 113:
-{ yyval.t = consList(yyvsp[-1].t,yyvsp[0].t); ;
+{ yyval.t = oz_cons(yyvsp[-1].t,yyvsp[0].t); ;
     break;}
 case 114:
-{ yyval.t = newCTerm("fAtom",nilAtom,yyvsp[0].t); ;
+{ yyval.t = newCTerm(PA_fAtom,AtomNil,yyvsp[0].t); ;
     break;}
 case 115:
-{ yyval.t = newCTerm("fRecord",
-				  newCTerm("fAtom",newCTerm("|"),yyvsp[-2].t),
-				  consList(yyvsp[-1].t,consList(yyvsp[0].t,nilAtom))); ;
+{ yyval.t = newCTerm(PA_fRecord,
+				  newCTerm(PA_fAtom,AtomCons,yyvsp[-2].t),
+				  oz_mklist(yyvsp[-1].t,yyvsp[0].t)); ;
     break;}
 case 116:
-{ yyval.t = newCTerm("fNoCatch"); ;
+{ yyval.t = PA_fNoCatch; ;
     break;}
 case 117:
-{ yyval.t = newCTerm("fCatch",yyvsp[0].t,yyvsp[-1].t); ;
+{ yyval.t = newCTerm(PA_fCatch,yyvsp[0].t,yyvsp[-1].t); ;
     break;}
 case 118:
-{ yyval.t = newCTerm("fNoFinally"); ;
+{ yyval.t = PA_fNoFinally; ;
     break;}
 case 119:
 { yyval.t = yyvsp[0].t; ;
     break;}
 case 120:
 {
-		    yyval.t = newCTerm(OZ_isTrue(yyvsp[-2].t)? "fOpenRecord": "fRecord",
-				  newCTerm("fAtom",yyvsp[-6].t,makeLongPos(yyvsp[-5].t,yyvsp[0].t)),yyvsp[-3].t);
+		    yyval.t = newCTerm(OZ_isTrue(yyvsp[-2].t)? PA_fOpenRecord : PA_fRecord,
+				  newCTerm(PA_fAtom,yyvsp[-6].t,makeLongPos(yyvsp[-5].t,yyvsp[0].t)),yyvsp[-3].t);
 		  ;
     break;}
 case 121:
 {
-		    yyval.t = newCTerm(OZ_isTrue(yyvsp[-2].t)? "fOpenRecord": "fRecord",
+		    yyval.t = newCTerm(OZ_isTrue(yyvsp[-2].t)? PA_fOpenRecord : PA_fRecord,
 				  makeVar(yyvsp[-6].t,makeLongPos(yyvsp[-5].t,yyvsp[0].t)),yyvsp[-3].t);
 		  ;
     break;}
@@ -2130,31 +2476,31 @@ case 122:
 { yyval.t = OZ_atom(xytext); ;
     break;}
 case 123:
-{ yyval.t = OZ_unit(); ;
+{ yyval.t = NameUnit; ;
     break;}
 case 124:
-{ yyval.t = OZ_true(); ;
+{ yyval.t = NameTrue; ;
     break;}
 case 125:
-{ yyval.t = OZ_false(); ;
+{ yyval.t = NameFalse; ;
     break;}
 case 126:
 { yyval.t = OZ_atom(xytext); ;
     break;}
 case 127:
-{ yyval.t = nilAtom; ;
+{ yyval.t = AtomNil; ;
     break;}
 case 128:
-{ yyval.t = consList(yyvsp[-1].t,yyvsp[0].t); ;
+{ yyval.t = oz_cons(yyvsp[-1].t,yyvsp[0].t); ;
     break;}
 case 129:
-{ yyval.t = consList(newCTerm("fColon",yyvsp[-3].t,yyvsp[-1].t),yyvsp[0].t); ;
+{ yyval.t = oz_cons(newCTerm(PA_fColon,yyvsp[-3].t,yyvsp[-1].t),yyvsp[0].t); ;
     break;}
 case 130:
-{ yyval.t = OZ_false(); ;
+{ yyval.t = NameFalse; ;
     break;}
 case 131:
-{ yyval.t = OZ_true(); ;
+{ yyval.t = NameTrue; ;
     break;}
 case 132:
 { yyval.t = yyvsp[0].t; ;
@@ -2166,13 +2512,13 @@ case 134:
 { yyval.t = yyvsp[0].t; ;
     break;}
 case 135:
-{ yyval.t = newCTerm("fAtom",OZ_unit(),pos()); ;
+{ yyval.t = newCTerm(PA_fAtom,NameUnit,pos()); ;
     break;}
 case 136:
-{ yyval.t = newCTerm("fAtom",OZ_true(),pos()); ;
+{ yyval.t = newCTerm(PA_fAtom,NameTrue,pos()); ;
     break;}
 case 137:
-{ yyval.t = newCTerm("fAtom",OZ_false(),pos()); ;
+{ yyval.t = newCTerm(PA_fAtom,NameFalse,pos()); ;
     break;}
 case 138:
 { yyval.t = yyvsp[0].t; ;
@@ -2181,7 +2527,7 @@ case 139:
 { yyval.t = yyvsp[0].t; ;
     break;}
 case 140:
-{ yyval.t = newCTerm("fBoolCase",yyvsp[-4].t,yyvsp[-2].t,yyvsp[-1].t,makeLongPos(yyvsp[-5].t,yyvsp[0].t)); ;
+{ yyval.t = newCTerm(PA_fBoolCase,yyvsp[-4].t,yyvsp[-2].t,yyvsp[-1].t,makeLongPos(yyvsp[-5].t,yyvsp[0].t)); ;
     break;}
 case 141:
 { yyval.t = yyvsp[0].t; ;
@@ -2193,15 +2539,15 @@ case 143:
 { yyval.t = yyvsp[-1].t; ;
     break;}
 case 144:
-{ yyval.t = newCTerm("fSkip",pos()); ;
+{ yyval.t = newCTerm(PA_fSkip,pos()); ;
     break;}
 case 145:
 { checkDeprecation(yyvsp[-3].t);
-		    yyval.t = newCTerm("fBoolCase",yyvsp[-5].t,yyvsp[-2].t,yyvsp[-1].t,makeLongPos(yyvsp[-6].t,yyvsp[0].t));
+		    yyval.t = newCTerm(PA_fBoolCase,yyvsp[-5].t,yyvsp[-2].t,yyvsp[-1].t,makeLongPos(yyvsp[-6].t,yyvsp[0].t));
 		  ;
     break;}
 case 146:
-{ yyval.t = newCTerm("fCase",yyvsp[-4].t,yyvsp[-2].t,yyvsp[-1].t,makeLongPos(yyvsp[-5].t,yyvsp[0].t)); ;
+{ yyval.t = newCTerm(PA_fCase,yyvsp[-4].t,yyvsp[-2].t,yyvsp[-1].t,makeLongPos(yyvsp[-5].t,yyvsp[0].t)); ;
     break;}
 case 147:
 { yyval.t = yyvsp[0].t; ;
@@ -2213,38 +2559,38 @@ case 149:
 { yyval.t = yyvsp[-1].t; ;
     break;}
 case 150:
-{ yyval.t = newCTerm("fNoElse",pos()); ;
+{ yyval.t = newCTerm(PA_fNoElse,pos()); ;
     break;}
 case 151:
-{ yyval.t = consList(yyvsp[0].t,nilAtom); ;
+{ yyval.t = oz_mklist(yyvsp[0].t); ;
     break;}
 case 152:
-{ yyval.t = consList(yyvsp[-2].t,yyvsp[0].t); ;
+{ yyval.t = oz_cons(yyvsp[-2].t,yyvsp[0].t); ;
     break;}
 case 153:
-{ yyval.t = consList(yyvsp[-2].t,yyvsp[0].t); ;
+{ yyval.t = oz_cons(yyvsp[-2].t,yyvsp[0].t); ;
     break;}
 case 154:
-{ yyval.t = consList(yyvsp[0].t,nilAtom); ;
+{ yyval.t = oz_mklist(yyvsp[0].t); ;
     break;}
 case 155:
-{ yyval.t = consList(yyvsp[-2].t,yyvsp[0].t); ;
+{ yyval.t = oz_cons(yyvsp[-2].t,yyvsp[0].t); ;
     break;}
 case 156:
-{ yyval.t = newCTerm("fCaseClause",yyvsp[-2].t,yyvsp[0].t); ;
+{ yyval.t = newCTerm(PA_fCaseClause,yyvsp[-2].t,yyvsp[0].t); ;
     break;}
 case 157:
 { yyval.t = yyvsp[0].t; ;
     break;}
 case 158:
-{ yyval.t = newCTerm("fSideCondition",yyvsp[-3].t,
-				  newCTerm("fSkip",yyvsp[-1].t),yyvsp[0].t,yyvsp[-1].t); ;
+{ yyval.t = newCTerm(PA_fSideCondition,yyvsp[-3].t,
+				  newCTerm(PA_fSkip,yyvsp[-1].t),yyvsp[0].t,yyvsp[-1].t); ;
     break;}
 case 159:
-{ yyval.t = newCTerm("fSideCondition",yyvsp[-5].t,yyvsp[-2].t,yyvsp[0].t,yyvsp[-3].t); ;
+{ yyval.t = newCTerm(PA_fSideCondition,yyvsp[-5].t,yyvsp[-2].t,yyvsp[0].t,yyvsp[-3].t); ;
     break;}
 case 160:
-{ yyval.t = newCTerm("fEq",yyvsp[-3].t,yyvsp[0].t,yyvsp[-1].t); ;
+{ yyval.t = newCTerm(PA_fEq,yyvsp[-3].t,yyvsp[0].t,yyvsp[-1].t); ;
     break;}
 case 161:
 { yyval.t = makeCons(yyvsp[-3].t,yyvsp[0].t,yyvsp[-1].t); ;
@@ -2253,45 +2599,45 @@ case 162:
 { yyval.t = yyvsp[0].t; ;
     break;}
 case 163:
-{ yyval.t = newCTerm("fRecord",
-				  newCTerm("fAtom",newCTerm("#"),yyvsp[-1].t),
-				  consList(yyvsp[-3].t,yyvsp[0].t)); ;
+{ yyval.t = newCTerm(PA_fRecord,
+				  newCTerm(PA_fAtom,AtomPair,yyvsp[-1].t),
+				  oz_cons(yyvsp[-3].t,yyvsp[0].t)); ;
     break;}
 case 164:
-{ yyval.t = newCTerm("fClass",yyvsp[-4].t,yyvsp[-3].t,yyvsp[-2].t,makeLongPos(yyvsp[-5].t,yyvsp[0].t)); ;
+{ yyval.t = newCTerm(PA_fClass,yyvsp[-4].t,yyvsp[-3].t,yyvsp[-2].t,makeLongPos(yyvsp[-5].t,yyvsp[0].t)); ;
     break;}
 case 165:
 { yyval.t = yyvsp[0].t; ;
     break;}
 case 166:
-{ yyval.t = newCTerm("fDollar",yyvsp[0].t); ;
+{ yyval.t = newCTerm(PA_fDollar,yyvsp[0].t); ;
     break;}
 case 167:
-{ yyval.t = nilAtom; ;
+{ yyval.t = AtomNil; ;
     break;}
 case 168:
-{ yyval.t = consList(yyvsp[-1].t,yyvsp[0].t); ;
+{ yyval.t = oz_cons(yyvsp[-1].t,yyvsp[0].t); ;
     break;}
 case 169:
-{ yyval.t = newCTerm("fFrom",consList(yyvsp[-1].t,yyvsp[0].t),yyvsp[-2].t); ;
+{ yyval.t = newCTerm(PA_fFrom,oz_cons(yyvsp[-1].t,yyvsp[0].t),yyvsp[-2].t); ;
     break;}
 case 170:
-{ yyval.t = newCTerm("fAttr",consList(yyvsp[-1].t,yyvsp[0].t),yyvsp[-2].t); ;
+{ yyval.t = newCTerm(PA_fAttr,oz_cons(yyvsp[-1].t,yyvsp[0].t),yyvsp[-2].t); ;
     break;}
 case 171:
-{ yyval.t = newCTerm("fFeat",consList(yyvsp[-1].t,yyvsp[0].t),yyvsp[-2].t); ;
+{ yyval.t = newCTerm(PA_fFeat,oz_cons(yyvsp[-1].t,yyvsp[0].t),yyvsp[-2].t); ;
     break;}
 case 172:
-{ yyval.t = newCTerm("fProp",consList(yyvsp[-1].t,yyvsp[0].t),yyvsp[-2].t); ;
+{ yyval.t = newCTerm(PA_fProp,oz_cons(yyvsp[-1].t,yyvsp[0].t),yyvsp[-2].t); ;
     break;}
 case 173:
-{ yyval.t = nilAtom; ;
+{ yyval.t = AtomNil; ;
     break;}
 case 174:
-{ yyval.t = consList(yyvsp[-1].t,yyvsp[0].t); ;
+{ yyval.t = oz_cons(yyvsp[-1].t,yyvsp[0].t); ;
     break;}
 case 175:
-{ yyval.t = pair(yyvsp[-2].t,yyvsp[0].t); ;
+{ yyval.t = oz_pair2(yyvsp[-2].t,yyvsp[0].t); ;
     break;}
 case 176:
 { yyval.t = yyvsp[0].t; ;
@@ -2306,28 +2652,28 @@ case 179:
 { yyval.t = yyvsp[0].t; ;
     break;}
 case 180:
-{ yyval.t = newCTerm("fAtom",OZ_unit(),pos()); ;
+{ yyval.t = newCTerm(PA_fAtom,NameUnit,pos()); ;
     break;}
 case 181:
-{ yyval.t = newCTerm("fAtom",OZ_true(),pos()); ;
+{ yyval.t = newCTerm(PA_fAtom,NameTrue,pos()); ;
     break;}
 case 182:
-{ yyval.t = newCTerm("fAtom",OZ_false(),pos()); ;
+{ yyval.t = newCTerm(PA_fAtom,NameFalse,pos()); ;
     break;}
 case 183:
-{ yyval.t = nilAtom; ;
+{ yyval.t = AtomNil; ;
     break;}
 case 184:
-{ yyval.t = consList(yyvsp[-1].t,yyvsp[0].t); ;
+{ yyval.t = oz_cons(yyvsp[-1].t,yyvsp[0].t); ;
     break;}
 case 185:
-{ yyval.t = newCTerm("fMeth",yyvsp[-2].t,yyvsp[-1].t,yyvsp[-3].t); ;
+{ yyval.t = newCTerm(PA_fMeth,yyvsp[-2].t,yyvsp[-1].t,yyvsp[-3].t); ;
     break;}
 case 186:
 { yyval.t = yyvsp[0].t; ;
     break;}
 case 187:
-{ yyval.t = newCTerm("fEq",yyvsp[-3].t,yyvsp[0].t,yyvsp[-1].t); ;
+{ yyval.t = newCTerm(PA_fEq,yyvsp[-3].t,yyvsp[0].t,yyvsp[-1].t); ;
     break;}
 case 188:
 { yyval.t = yyvsp[0].t; ;
@@ -2336,115 +2682,115 @@ case 189:
 { yyval.t = yyvsp[0].t; ;
     break;}
 case 190:
-{ yyval.t = newCTerm("fAtom",OZ_unit(),pos()); ;
+{ yyval.t = newCTerm(PA_fAtom,NameUnit,pos()); ;
     break;}
 case 191:
-{ yyval.t = newCTerm("fAtom",OZ_true(),pos()); ;
+{ yyval.t = newCTerm(PA_fAtom,NameTrue,pos()); ;
     break;}
 case 192:
-{ yyval.t = newCTerm("fAtom",OZ_false(),pos()); ;
+{ yyval.t = newCTerm(PA_fAtom,NameFalse,pos()); ;
     break;}
 case 193:
-{ yyval.t = newCTerm("fRecord",yyvsp[-3].t,yyvsp[-1].t); ;
+{ yyval.t = newCTerm(PA_fRecord,yyvsp[-3].t,yyvsp[-1].t); ;
     break;}
 case 194:
-{ yyval.t = newCTerm("fOpenRecord",yyvsp[-4].t,yyvsp[-2].t); ;
+{ yyval.t = newCTerm(PA_fOpenRecord,yyvsp[-4].t,yyvsp[-2].t); ;
     break;}
 case 195:
-{ yyval.t = newCTerm("fAtom",newCTerm(xytext),pos()); ;
+{ yyval.t = newCTerm(PA_fAtom,OZ_atom(xytext),pos()); ;
     break;}
 case 196:
 { yyval.t = makeVar(xytext); ;
     break;}
 case 197:
-{ yyval.t = newCTerm("fEscape",makeVar(xytext),yyvsp[-1].t); ;
+{ yyval.t = newCTerm(PA_fEscape,makeVar(xytext),yyvsp[-1].t); ;
     break;}
 case 198:
-{ yyval.t = newCTerm("fAtom",OZ_unit(),pos()); ;
+{ yyval.t = newCTerm(PA_fAtom,NameUnit,pos()); ;
     break;}
 case 199:
-{ yyval.t = newCTerm("fAtom",OZ_true(),pos()); ;
+{ yyval.t = newCTerm(PA_fAtom,NameTrue,pos()); ;
     break;}
 case 200:
-{ yyval.t = newCTerm("fAtom",OZ_false(),pos()); ;
+{ yyval.t = newCTerm(PA_fAtom,NameFalse,pos()); ;
     break;}
 case 201:
-{ yyval.t = consList(yyvsp[-1].t,yyvsp[0].t); ;
+{ yyval.t = oz_cons(yyvsp[-1].t,yyvsp[0].t); ;
     break;}
 case 202:
-{ yyval.t = nilAtom; ;
+{ yyval.t = AtomNil; ;
     break;}
 case 203:
-{ yyval.t = newCTerm("fMethArg",yyvsp[-1].t,yyvsp[0].t); ;
+{ yyval.t = newCTerm(PA_fMethArg,yyvsp[-1].t,yyvsp[0].t); ;
     break;}
 case 204:
-{ yyval.t = newCTerm("fMethColonArg",yyvsp[-3].t,yyvsp[-1].t,yyvsp[0].t); ;
+{ yyval.t = newCTerm(PA_fMethColonArg,yyvsp[-3].t,yyvsp[-1].t,yyvsp[0].t); ;
     break;}
 case 205:
 { yyval.t = yyvsp[0].t; ;
     break;}
 case 206:
-{ yyval.t = newCTerm("fDollar",pos()); ;
+{ yyval.t = newCTerm(PA_fDollar,pos()); ;
     break;}
 case 207:
-{ yyval.t = newCTerm("fWildcard",pos()); ;
+{ yyval.t = newCTerm(PA_fWildcard,pos()); ;
     break;}
 case 208:
-{ yyval.t = newCTerm("fDefault",yyvsp[0].t,yyvsp[-1].t); ;
+{ yyval.t = newCTerm(PA_fDefault,yyvsp[0].t,yyvsp[-1].t); ;
     break;}
 case 209:
-{ yyval.t = newCTerm("fNoDefault"); ;
+{ yyval.t = PA_fNoDefault; ;
     break;}
 case 210:
-{ yyval.t = newCTerm("fCond",yyvsp[-3].t,yyvsp[-2].t,makeLongPos(yyvsp[-4].t,yyvsp[0].t)); ;
+{ yyval.t = newCTerm(PA_fCond,yyvsp[-3].t,yyvsp[-2].t,makeLongPos(yyvsp[-4].t,yyvsp[0].t)); ;
     break;}
 case 211:
 { yyval.t = yyvsp[0].t; ;
     break;}
 case 212:
-{ yyval.t = newCTerm("fNoElse",pos()); ;
+{ yyval.t = newCTerm(PA_fNoElse,pos()); ;
     break;}
 case 213:
-{ yyval.t = consList(yyvsp[0].t,nilAtom); ;
+{ yyval.t = oz_mklist(yyvsp[0].t); ;
     break;}
 case 214:
-{ yyval.t = consList(yyvsp[-2].t,yyvsp[0].t); ;
+{ yyval.t = oz_cons(yyvsp[-2].t,yyvsp[0].t); ;
     break;}
 case 215:
-{ yyval.t = newCTerm("fClause",newCTerm("fSkip",yyvsp[-1].t),yyvsp[-3].t,yyvsp[0].t); ;
+{ yyval.t = newCTerm(PA_fClause,newCTerm(PA_fSkip,yyvsp[-1].t),yyvsp[-3].t,yyvsp[0].t); ;
     break;}
 case 216:
-{ yyval.t = newCTerm("fClause",yyvsp[-4].t,yyvsp[-2].t,yyvsp[0].t); ;
+{ yyval.t = newCTerm(PA_fClause,yyvsp[-4].t,yyvsp[-2].t,yyvsp[0].t); ;
     break;}
 case 217:
-{ yyval.t = consList(yyvsp[-2].t,consList(yyvsp[0].t,nilAtom)); ;
+{ yyval.t = oz_mklist(yyvsp[-2].t,yyvsp[0].t); ;
     break;}
 case 218:
-{ yyval.t = consList(yyvsp[-2].t,yyvsp[0].t); ;
+{ yyval.t = oz_cons(yyvsp[-2].t,yyvsp[0].t); ;
     break;}
 case 219:
-{ yyval.t = newCTerm("fClause",
-				  newCTerm("fSkip",yyvsp[0].t),
-				  yyvsp[-1].t,newCTerm("fNoThen",yyvsp[0].t)); ;
+{ yyval.t = newCTerm(PA_fClause,
+				  newCTerm(PA_fSkip,yyvsp[0].t),
+				  yyvsp[-1].t,newCTerm(PA_fNoThen,yyvsp[0].t)); ;
     break;}
 case 220:
-{ yyval.t = newCTerm("fClause",yyvsp[-3].t,yyvsp[-1].t,newCTerm("fNoThen",yyvsp[0].t)); ;
+{ yyval.t = newCTerm(PA_fClause,yyvsp[-3].t,yyvsp[-1].t,newCTerm(PA_fNoThen,yyvsp[0].t)); ;
     break;}
 case 221:
-{ yyval.t = newCTerm("fClause",
-				  newCTerm("fSkip",yyvsp[-2].t),yyvsp[-3].t,yyvsp[0].t); ;
+{ yyval.t = newCTerm(PA_fClause,
+				  newCTerm(PA_fSkip,yyvsp[-2].t),yyvsp[-3].t,yyvsp[0].t); ;
     break;}
 case 222:
-{ yyval.t = newCTerm("fClause",yyvsp[-4].t,yyvsp[-2].t,yyvsp[0].t); ;
+{ yyval.t = newCTerm(PA_fClause,yyvsp[-4].t,yyvsp[-2].t,yyvsp[0].t); ;
     break;}
 case 223:
-{ yyval.t = consList(yyvsp[0].t,nilAtom); ;
+{ yyval.t = oz_mklist(yyvsp[0].t); ;
     break;}
 case 224:
-{ yyval.t = consList(yyvsp[-2].t,yyvsp[0].t); ;
+{ yyval.t = oz_cons(yyvsp[-2].t,yyvsp[0].t); ;
     break;}
 case 225:
-{ yyval.t = newCTerm("fAtom",newCTerm(xytext),pos()); ;
+{ yyval.t = newCTerm(PA_fAtom,OZ_atom(xytext),pos()); ;
     break;}
 case 226:
 { yyval.t = makeVar(xytext); ;
@@ -2453,7 +2799,7 @@ case 227:
 { yyval.t = yyvsp[0].t; ;
     break;}
 case 228:
-{ yyval.t = newCTerm("fEscape",yyvsp[0].t,yyvsp[-1].t); ;
+{ yyval.t = newCTerm(PA_fEscape,yyvsp[0].t,yyvsp[-1].t); ;
     break;}
 case 229:
 { yyval.t = makeString(xytext,pos()); ;
@@ -2465,7 +2811,7 @@ case 231:
 { yyval.t = makeInt(xytext[0],pos()); ;
     break;}
 case 232:
-{ yyval.t = newCTerm("fFloat",OZ_CStringToFloat(xytext),pos()); ;
+{ yyval.t = newCTerm(PA_fFloat,OZ_CStringToFloat(xytext),pos()); ;
     break;}
 case 233:
 { yyval.t = pos(); ;
@@ -2475,36 +2821,36 @@ case 234:
     break;}
 case 235:
 { OZ_Term prefix =
-		      scannerPrefix? scannerPrefix: OZ_atom("zy");
-		    yyval.t = newCTerm("fScanner",yyvsp[-5].t,yyvsp[-4].t,yyvsp[-3].t,yyvsp[-2].t,prefix,
+		      scannerPrefix? scannerPrefix: PA_zy;
+		    yyval.t = newCTerm(PA_fScanner,yyvsp[-5].t,yyvsp[-4].t,yyvsp[-3].t,yyvsp[-2].t,prefix,
 				  makeLongPos(yyvsp[-6].t,yyvsp[0].t)); ;
     break;}
 case 236:
-{ yyval.t = consList(yyvsp[0].t,nilAtom); ;
+{ yyval.t = oz_mklist(yyvsp[0].t); ;
     break;}
 case 237:
-{ yyval.t = consList(yyvsp[0].t,nilAtom); ;
+{ yyval.t = oz_mklist(yyvsp[0].t); ;
     break;}
 case 238:
-{ yyval.t = consList(yyvsp[0].t,nilAtom); ;
+{ yyval.t = oz_mklist(yyvsp[0].t); ;
     break;}
 case 239:
-{ yyval.t = consList(yyvsp[-1].t,yyvsp[0].t); ;
+{ yyval.t = oz_cons(yyvsp[-1].t,yyvsp[0].t); ;
     break;}
 case 240:
-{ yyval.t = consList(yyvsp[-1].t,yyvsp[0].t); ;
+{ yyval.t = oz_cons(yyvsp[-1].t,yyvsp[0].t); ;
     break;}
 case 241:
-{ yyval.t = consList(yyvsp[-1].t,yyvsp[0].t); ;
+{ yyval.t = oz_cons(yyvsp[-1].t,yyvsp[0].t); ;
     break;}
 case 242:
-{ yyval.t = newCTerm("fLexicalAbbreviation",yyvsp[-3].t,yyvsp[-1].t); ;
+{ yyval.t = newCTerm(PA_fLexicalAbbreviation,yyvsp[-3].t,yyvsp[-1].t); ;
     break;}
 case 243:
-{ yyval.t = newCTerm("fLexicalAbbreviation",yyvsp[-3].t,yyvsp[-1].t); ;
+{ yyval.t = newCTerm(PA_fLexicalAbbreviation,yyvsp[-3].t,yyvsp[-1].t); ;
     break;}
 case 244:
-{ yyval.t = newCTerm("fLexicalRule",yyvsp[-2].t,yyvsp[-1].t); ;
+{ yyval.t = newCTerm(PA_fLexicalRule,yyvsp[-2].t,yyvsp[-1].t); ;
     break;}
 case 245:
 { yyval.t = OZ_string(xytext); ;
@@ -2513,16 +2859,16 @@ case 246:
 { yyval.t = OZ_string(xytext); ;
     break;}
 case 247:
-{ yyval.t = newCTerm("fMode",yyvsp[-2].t,yyvsp[-1].t); ;
+{ yyval.t = newCTerm(PA_fMode,yyvsp[-2].t,yyvsp[-1].t); ;
     break;}
 case 248:
-{ yyval.t = nilAtom; ;
+{ yyval.t = AtomNil; ;
     break;}
 case 249:
-{ yyval.t = consList(yyvsp[-1].t,yyvsp[0].t); ;
+{ yyval.t = oz_cons(yyvsp[-1].t,yyvsp[0].t); ;
     break;}
 case 250:
-{ yyval.t = newCTerm("fInheritedModes",yyvsp[0].t); ;
+{ yyval.t = newCTerm(PA_fInheritedModes,yyvsp[0].t); ;
     break;}
 case 251:
 { yyval.t = yyvsp[0].t; ;
@@ -2531,75 +2877,75 @@ case 252:
 { yyval.t = yyvsp[0].t; ;
     break;}
 case 253:
-{ OZ_Term expect = parserExpect? parserExpect: OZ_int(0);
-		    yyval.t = newCTerm("fParser",yyvsp[-6].t,yyvsp[-5].t,yyvsp[-4].t,yyvsp[-3].t,yyvsp[-2].t,expect,
+{ OZ_Term expect = parserExpect? parserExpect: newSmallInt(0);
+		    yyval.t = newCTerm(PA_fParser,yyvsp[-6].t,yyvsp[-5].t,yyvsp[-4].t,yyvsp[-3].t,yyvsp[-2].t,expect,
 				  makeLongPos(yyvsp[-7].t,yyvsp[0].t)); ;
     break;}
 case 254:
-{ yyval.t = consList(yyvsp[0].t,nilAtom); ;
+{ yyval.t = oz_mklist(yyvsp[0].t); ;
     break;}
 case 255:
-{ yyval.t = consList(yyvsp[0].t,nilAtom); ;
+{ yyval.t = oz_mklist(yyvsp[0].t); ;
     break;}
 case 256:
-{ yyval.t = consList(yyvsp[-1].t,yyvsp[0].t); ;
+{ yyval.t = oz_cons(yyvsp[-1].t,yyvsp[0].t); ;
     break;}
 case 257:
-{ yyval.t = consList(yyvsp[-1].t,yyvsp[0].t); ;
+{ yyval.t = oz_cons(yyvsp[-1].t,yyvsp[0].t); ;
     break;}
 case 258:
-{ yyval.t = newCTerm("fToken",nilAtom); ;
+{ yyval.t = newCTerm(PA_fToken,AtomNil); ;
     break;}
 case 259:
-{ yyval.t = newCTerm("fToken",yyvsp[0].t); ;
+{ yyval.t = newCTerm(PA_fToken,yyvsp[0].t); ;
     break;}
 case 260:
-{ yyval.t = consList(yyvsp[0].t,nilAtom); ;
+{ yyval.t = oz_mklist(yyvsp[0].t); ;
     break;}
 case 261:
-{ yyval.t = consList(yyvsp[-1].t,yyvsp[0].t); ;
+{ yyval.t = oz_cons(yyvsp[-1].t,yyvsp[0].t); ;
     break;}
 case 262:
 { yyval.t = yyvsp[0].t; ;
     break;}
 case 263:
-{ yyval.t = pair(yyvsp[-2].t,yyvsp[0].t); ;
+{ yyval.t = oz_pair2(yyvsp[-2].t,yyvsp[0].t); ;
     break;}
 case 264:
-{ yyval.t = consList(yyvsp[0].t,nilAtom); ;
+{ yyval.t = oz_mklist(yyvsp[0].t); ;
     break;}
 case 265:
-{ yyval.t = consList(yyvsp[-1].t,yyvsp[0].t); ;
+{ yyval.t = oz_cons(yyvsp[-1].t,yyvsp[0].t); ;
     break;}
 case 266:
-{ yyval.t = consList(yyvsp[0].t,nilAtom); ;
+{ yyval.t = oz_mklist(yyvsp[0].t); ;
     break;}
 case 267:
-{ yyval.t = consList(yyvsp[-1].t,yyvsp[0].t); ;
+{ yyval.t = oz_cons(yyvsp[-1].t,yyvsp[0].t); ;
     break;}
 case 268:
 { *prodKey[depth]++ = '='; ;
     break;}
 case 269:
-{ yyval.t = newCTerm("fProductionTemplate",yyvsp[-3].t,yyvsp[-4].t,yyvsp[-2].t,yyvsp[-1].t,yyvsp[-7].t); ;
+{ yyval.t = newCTerm(PA_fProductionTemplate,yyvsp[-3].t,yyvsp[-4].t,yyvsp[-2].t,yyvsp[-1].t,yyvsp[-7].t); ;
     break;}
 case 270:
-{ yyval.t = newCTerm("fDollar",pos()); ;
+{ yyval.t = newCTerm(PA_fDollar,pos()); ;
     break;}
 case 271:
 { *prodKey[depth]++ = '='; ;
     break;}
 case 272:
-{ yyval.t = newCTerm("fProductionTemplate",yyvsp[-3].t,yyvsp[-4].t,yyvsp[-2].t,yyvsp[-1].t,yyvsp[-7].t); ;
+{ yyval.t = newCTerm(PA_fProductionTemplate,yyvsp[-3].t,yyvsp[-4].t,yyvsp[-2].t,yyvsp[-1].t,yyvsp[-7].t); ;
     break;}
 case 273:
-{ yyval.t = newCTerm("fProductionTemplate",yyvsp[-3].t,yyvsp[-4].t,yyvsp[-2].t,yyvsp[-1].t,newCTerm("none")); ;
+{ yyval.t = newCTerm(PA_fProductionTemplate,yyvsp[-3].t,yyvsp[-4].t,yyvsp[-2].t,yyvsp[-1].t,PA_none); ;
     break;}
 case 274:
-{ yyval.t = consList(yyvsp[-1].t,nilAtom); ;
+{ yyval.t = oz_mklist(yyvsp[-1].t); ;
     break;}
 case 275:
-{ yyval.t = consList(yyvsp[-1].t,nilAtom); ;
+{ yyval.t = oz_mklist(yyvsp[-1].t); ;
     break;}
 case 276:
 { yyval.t = yyvsp[0].t; ;
@@ -2635,16 +2981,16 @@ case 288:
 { yyval.t = yyvsp[-3].t; ;
     break;}
 case 289:
-{ yyval.t = consList(yyvsp[0].t,nilAtom); ;
+{ yyval.t = oz_mklist(yyvsp[0].t); ;
     break;}
 case 290:
-{ yyval.t = consList(yyvsp[-2].t,yyvsp[0].t); ;
+{ yyval.t = oz_cons(yyvsp[-2].t,yyvsp[0].t); ;
     break;}
 case 291:
 { yyval.t = yyvsp[0].t; ;
     break;}
 case 292:
-{ yyval.t = newCTerm("fWildcard",pos()); ;
+{ yyval.t = newCTerm(PA_fWildcard,pos()); ;
     break;}
 case 293:
 { *prodKey[depth - 1]++ = '/'; *prodKey[depth - 1]++ = '/'; ;
@@ -2657,105 +3003,105 @@ case 297:
     break;}
 case 298:
 { *prodKey[depth] = '\0';
-		    yyval.t = pair(prodName[depth],OZ_string(prodKeyBuffer[depth]));
-		    prodName[depth] = newCTerm("none");
+		    yyval.t = oz_pair2(prodName[depth],OZ_string(prodKeyBuffer[depth]));
+		    prodName[depth] = PA_none;
 		    prodKey[depth] = prodKeyBuffer[depth];
 		  ;
     break;}
 case 299:
-{ yyval.t = nilAtom; ;
+{ yyval.t = AtomNil; ;
     break;}
 case 300:
 { yyval.t = yyvsp[-1].t; ;
     break;}
 case 301:
-{ yyval.t = consList(yyvsp[0].t,nilAtom); ;
+{ yyval.t = oz_mklist(yyvsp[0].t); ;
     break;}
 case 302:
-{ yyval.t = consList(yyvsp[-1].t,yyvsp[0].t); ;
+{ yyval.t = oz_cons(yyvsp[-1].t,yyvsp[0].t); ;
     break;}
 case 303:
-{ yyval.t = newCTerm("fSyntaxRule",yyvsp[-2].t,nilAtom,yyvsp[-1].t); ;
+{ yyval.t = newCTerm(PA_fSyntaxRule,yyvsp[-2].t,AtomNil,yyvsp[-1].t); ;
     break;}
 case 304:
-{ yyval.t = newCTerm("fSyntaxRule",yyvsp[-2].t,nilAtom,yyvsp[-1].t); ;
+{ yyval.t = newCTerm(PA_fSyntaxRule,yyvsp[-2].t,AtomNil,yyvsp[-1].t); ;
     break;}
 case 305:
-{ yyval.t = newCTerm("fSyntaxRule",yyvsp[-5].t,yyvsp[-3].t,yyvsp[-1].t); ;
+{ yyval.t = newCTerm(PA_fSyntaxRule,yyvsp[-5].t,yyvsp[-3].t,yyvsp[-1].t); ;
     break;}
 case 306:
-{ yyval.t = nilAtom; ;
+{ yyval.t = AtomNil; ;
     break;}
 case 307:
-{ yyval.t = consList(yyvsp[-1].t,yyvsp[0].t); ;
+{ yyval.t = oz_cons(yyvsp[-1].t,yyvsp[0].t); ;
     break;}
 case 308:
 { yyval.t = yyvsp[0].t; ;
     break;}
 case 309:
-{ yyval.t = newCTerm("fDollar",pos()); ;
+{ yyval.t = newCTerm(PA_fDollar,pos()); ;
     break;}
 case 310:
-{ yyval.t = newCTerm("fWildcard",pos()); ;
+{ yyval.t = newCTerm(PA_fWildcard,pos()); ;
     break;}
 case 311:
-{ yyval.t = newCTerm("fSynAlternative", yyvsp[0].t); ;
+{ yyval.t = newCTerm(PA_fSynAlternative, yyvsp[0].t); ;
     break;}
 case 312:
-{ yyval.t = consList(yyvsp[0].t,nilAtom); ;
+{ yyval.t = oz_mklist(yyvsp[0].t); ;
     break;}
 case 313:
-{ yyval.t = consList(yyvsp[-2].t,yyvsp[0].t); ;
+{ yyval.t = oz_cons(yyvsp[-2].t,yyvsp[0].t); ;
     break;}
 case 314:
 { OZ_Term t = yyvsp[0].t;
 		    while (terms[depth]) {
-		      t = consList(newCTerm("fSynApplication", terms[depth]->term, nilAtom), t);
+		      t = oz_cons(newCTerm(PA_fSynApplication, terms[depth]->term, AtomNil), t);
 		      TermNode *tmp = terms[depth]; terms[depth] = terms[depth]->next; delete tmp;
 		    }
-		    yyval.t = newCTerm("fSynSequence", decls[depth], t, yyvsp[-1].t);
-		    decls[depth] = nilAtom;
+		    yyval.t = newCTerm(PA_fSynSequence, decls[depth], t, yyvsp[-1].t);
+		    decls[depth] = AtomNil;
 		  ;
     break;}
 case 315:
-{ yyval.t = newCTerm("fSynSequence", nilAtom, yyvsp[0].t, yyvsp[-1].t); ;
+{ yyval.t = newCTerm(PA_fSynSequence, AtomNil, yyvsp[0].t, yyvsp[-1].t); ;
     break;}
 case 316:
-{ yyval.t = nilAtom; ;
+{ yyval.t = AtomNil; ;
     break;}
 case 317:
-{ yyval.t = consList(newCTerm("fSynAction",yyvsp[0].t),nilAtom); ;
+{ yyval.t = oz_mklist(newCTerm(PA_fSynAction,yyvsp[0].t)); ;
     break;}
 case 318:
 { yyval.t = yyvsp[0].t; ;
     break;}
 case 319:
-{ yyval.t = consList(newCTerm("fSynTemplateInstantiation", yyvsp[0].t,
-					   consList(newCTerm("fSynApplication",
+{ yyval.t = oz_cons(newCTerm(PA_fSynTemplateInstantiation, yyvsp[0].t,
+					   oz_cons(newCTerm(PA_fSynApplication,
 							     terms[depth]->term,
-							     nilAtom),
-						    nilAtom),
+							     AtomNil),
+						    AtomNil),
 					   yyvsp[-2].t),
 				  yyvsp[-1].t);
 		    TermNode *tmp = terms[depth]; terms[depth] = terms[depth]->next; delete tmp;
 		  ;
     break;}
 case 320:
-{ yyval.t = consList(newCTerm("fSynAssignment", terms[depth]->term, yyvsp[-1].t),
+{ yyval.t = oz_cons(newCTerm(PA_fSynAssignment, terms[depth]->term, yyvsp[-1].t),
 				  yyvsp[0].t);
 		    TermNode *tmp = terms[depth]; terms[depth] = terms[depth]->next; delete tmp;
 		  ;
     break;}
 case 321:
 { while (terms[depth]) {
-		      decls[depth] = consList(terms[depth]->term, decls[depth]);
+		      decls[depth] = oz_cons(terms[depth]->term, decls[depth]);
 		      TermNode *tmp = terms[depth]; terms[depth] = terms[depth]->next; delete tmp;
 		    }
 		    yyval.t = yyvsp[0].t;
 		  ;
     break;}
 case 322:
-{ yyval.t = consList(yyvsp[-1].t,yyvsp[0].t); ;
+{ yyval.t = oz_cons(yyvsp[-1].t,yyvsp[0].t); ;
     break;}
 case 323:
 { yyval.t = yyvsp[0].t; ;
@@ -2767,30 +3113,30 @@ case 325:
 { yyval.t = yyvsp[0].t; ;
     break;}
 case 326:
-{ yyval.t = consList(yyvsp[-1].t,yyvsp[0].t); ;
+{ yyval.t = oz_cons(yyvsp[-1].t,yyvsp[0].t); ;
     break;}
 case 327:
-{ yyval.t = newCTerm("fSynAssignment",yyvsp[-2].t,yyvsp[0].t); ;
+{ yyval.t = newCTerm(PA_fSynAssignment,yyvsp[-2].t,yyvsp[0].t); ;
     break;}
 case 328:
 { yyval.t = yyvsp[0].t; ;
     break;}
 case 329:
-{ yyval.t = newCTerm("fSynApplication",yyvsp[0].t,nilAtom); ;
+{ yyval.t = newCTerm(PA_fSynApplication,yyvsp[0].t,AtomNil); ;
     break;}
 case 330:
-{ yyval.t = newCTerm("fSynTemplateInstantiation",yyvsp[0].t,
-				  consList(newCTerm("fSynApplication",yyvsp[-3].t,
-						    nilAtom),
-					   nilAtom),yyvsp[-1].t);
+{ yyval.t = newCTerm(PA_fSynTemplateInstantiation,yyvsp[0].t,
+				  oz_cons(newCTerm(PA_fSynApplication,yyvsp[-3].t,
+						    AtomNil),
+					   AtomNil),yyvsp[-1].t);
 		  ;
     break;}
 case 331:
 { yyval.t = yyvsp[0].t; ;
     break;}
 case 332:
-{ yyval.t = newCTerm("fSynAssignment",
-				  newCTerm("fEscape",yyvsp[-2].t,yyvsp[-3].t),yyvsp[0].t); ;
+{ yyval.t = newCTerm(PA_fSynAssignment,
+				  newCTerm(PA_fEscape,yyvsp[-2].t,yyvsp[-3].t),yyvsp[0].t); ;
     break;}
 case 333:
 { yyval.t = yyvsp[0].t; ;
@@ -2799,13 +3145,13 @@ case 334:
 { yyval.t = yyvsp[0].t; ;
     break;}
 case 335:
-{ yyval.t = newCTerm("fSynTemplateInstantiation",yyvsp[0].t,
-				  consList(yyvsp[-2].t,nilAtom),yyvsp[-3].t);
+{ yyval.t = newCTerm(PA_fSynTemplateInstantiation,yyvsp[0].t,
+				  oz_mklist(yyvsp[-2].t),yyvsp[-3].t);
 		  ;
     break;}
 case 336:
-{ yyval.t = newCTerm("fSynTemplateInstantiation",yyvsp[0].t,
-				  consList(yyvsp[-3].t,nilAtom),yyvsp[-1].t);
+{ yyval.t = newCTerm(PA_fSynTemplateInstantiation,yyvsp[0].t,
+				  oz_mklist(yyvsp[-3].t),yyvsp[-1].t);
 		  ;
     break;}
 case 337:
@@ -2815,7 +3161,7 @@ case 338:
 { depth--; ;
     break;}
 case 339:
-{ yyval.t = newCTerm("fSynTemplateInstantiation",yyvsp[0].t,yyvsp[-4].t,yyvsp[-7].t); ;
+{ yyval.t = newCTerm(PA_fSynTemplateInstantiation,yyvsp[0].t,yyvsp[-4].t,yyvsp[-7].t); ;
     break;}
 case 340:
 { *prodKey[depth]++ = '['; depth++; ;
@@ -2824,7 +3170,7 @@ case 341:
 { depth--; ;
     break;}
 case 342:
-{ yyval.t = newCTerm("fSynTemplateInstantiation",yyvsp[0].t,yyvsp[-4].t,yyvsp[-7].t); ;
+{ yyval.t = newCTerm(PA_fSynTemplateInstantiation,yyvsp[0].t,yyvsp[-4].t,yyvsp[-7].t); ;
     break;}
 case 343:
 { *prodKey[depth]++ = '{'; depth++; ;
@@ -2833,25 +3179,25 @@ case 344:
 { depth--; ;
     break;}
 case 345:
-{ yyval.t = newCTerm("fSynTemplateInstantiation",yyvsp[0].t,yyvsp[-4].t,yyvsp[-7].t); ;
+{ yyval.t = newCTerm(PA_fSynTemplateInstantiation,yyvsp[0].t,yyvsp[-4].t,yyvsp[-7].t); ;
     break;}
 case 346:
-{ yyval.t = newCTerm("fSynApplication",yyvsp[0].t,nilAtom); ;
+{ yyval.t = newCTerm(PA_fSynApplication,yyvsp[0].t,AtomNil); ;
     break;}
 case 347:
-{ yyval.t = newCTerm("fSynApplication",yyvsp[-4].t,yyvsp[-1].t); ;
+{ yyval.t = newCTerm(PA_fSynApplication,yyvsp[-4].t,yyvsp[-1].t); ;
     break;}
 case 348:
-{ yyval.t = newCTerm("fAtom",newCTerm(xytext),pos()); ;
+{ yyval.t = newCTerm(PA_fAtom,OZ_atom(xytext),pos()); ;
     break;}
 case 349:
 { yyval.t = makeVar(xytext); ;
     break;}
 case 350:
-{ yyval.t = consList(yyvsp[0].t,nilAtom); ;
+{ yyval.t = oz_mklist(yyvsp[0].t); ;
     break;}
 case 351:
-{ yyval.t = consList(yyvsp[-2].t,yyvsp[0].t); ;
+{ yyval.t = oz_cons(yyvsp[-2].t,yyvsp[0].t); ;
     break;}
 }
    /* the action file gets copied in in place of this dollarsign */
@@ -3050,6 +3396,30 @@ yyerrhandle:
 
   yystate = yyn;
   goto yynewstate;
+
+ yyacceptlab:
+  /* YYACCEPT comes here.  */
+  if (yyfree_stacks)
+    {
+      free (yyss);
+      free (yyvs);
+#ifdef YYLSP_NEEDED
+      free (yyls);
+#endif
+    }
+  return 0;
+
+ yyabortlab:
+  /* YYABORT comes here.  */
+  if (yyfree_stacks)
+    {
+      free (yyss);
+      free (yyvs);
+#ifdef YYLSP_NEEDED
+      free (yyls);
+#endif
+    }
+  return 1;
 }
 
 
@@ -3063,25 +3433,25 @@ void checkDeprecation(OZ_Term coord) {
 }
 
 void xyreportWarning(char *kind, char *msg, OZ_Term coord) {
-  OZ_Term args = OZ_cons(OZ_pairA("coord",coord),
-			 OZ_cons(OZ_pairAA("kind",kind),
-				 OZ_cons(OZ_pairAA("msg",msg),OZ_nil())));
-  xy_errorMessages = OZ_cons(OZ_recordInit(OZ_atom("warn"),args),
+  OZ_Term args = oz_mklist(oz_pair2(PA_coord, coord),
+			   oz_pair2(PA_kind,  OZ_atom(kind)),
+			   oz_pair2(PA_msg,   OZ_atom(msg)));
+  xy_errorMessages = OZ_cons(OZ_recordInit(PA_warn,args),
 			     xy_errorMessages);
 }
 
 void xyreportError(char *kind, char *msg, OZ_Term coord) {
-  OZ_Term args = OZ_cons(OZ_pairA("coord",coord),
-			 OZ_cons(OZ_pairAA("kind",kind),
-				 OZ_cons(OZ_pairAA("msg",msg),OZ_nil())));
-  xy_errorMessages = OZ_cons(OZ_recordInit(OZ_atom("error"),args),
+  OZ_Term args = oz_mklist(oz_pair2(PA_coord, coord),
+			   oz_pair2(PA_kind,  OZ_atom(kind)),
+			   oz_pair2(PA_msg,   OZ_atom(msg)));
+  xy_errorMessages = OZ_cons(OZ_recordInit(PA_error,args),
 			     xy_errorMessages);
 }
 
 void xyreportError(char *kind, char *msg, const char *file,
 		   int line, int column) {
   xyreportError(kind,msg,OZ_mkTupleC("pos",3,OZ_atom((char*)file),
-				     OZ_int(line),OZ_int(column)));
+				     oz_int(line),oz_int(column)));
 }
 
 static void xyerror(char *s) {
@@ -3106,25 +3476,23 @@ static void xyerror(char *s) {
 static OZ_Term init_options(OZ_Term optRec) {
   OZ_Term x;
 
-  x = OZ_subtree(optRec, OZ_atom("gump"));
-  xy_gumpSyntax = x == 0? 0: OZ_eq(x, OZ_true());
+  x = OZ_subtree(optRec, PA_gump);
+  xy_gumpSyntax = x == 0? 0: OZ_eq(x, NameTrue);
 
-  x = OZ_subtree(optRec, OZ_atom("allowdeprecated"));
-  xy_allowDeprecated = x == 0? 1: OZ_eq(x, OZ_true());
+  x = OZ_subtree(optRec, PA_allowdeprecated);
+  xy_allowDeprecated = x == 0? 1: OZ_eq(x, NameTrue);
 
-  OZ_Term defines = OZ_subtree(optRec, OZ_atom("defines"));
+  OZ_Term defines = OZ_subtree(optRec, PA_defines);
   return defines;
 }
 
 static OZ_Term parse() {
-  nilAtom = OZ_nil();
-
   int i;
   for (i = 0; i < DEPTH; i++) {
     prodKey[i] = prodKeyBuffer[i];
-    prodName[i] = OZ_atom("none");
+    prodName[i] = PA_none;
     terms[i] = 0;
-    decls[i] = nilAtom;
+    decls[i] = AtomNil;
   }
   depth = 0;
   for (i = 0; i < DEPTH; i++)
@@ -3153,7 +3521,7 @@ OZ_BI_define(parser_parseFile, 2, 1)
   if (defines == 0 || !OZ_isDictionary(defines))
     return OZ_typeError(1, "ParseOptions");
   if (!xy_init_from_file(file, defines))
-    OZ_RETURN(OZ_pair2(OZ_atom("fileNotFound"), OZ_nil()));
+    OZ_RETURN(OZ_pair2(PA_fileNotFound, AtomNil));
   else
     OZ_RETURN(parse());
 }
@@ -3178,6 +3546,6 @@ OZ_BI_define(parser_expandFileName, 1, 1)
 {
   OZ_declareVirtualString(0, in);
   char *out = xy_expand_file_name(in);
-  OZ_RETURN(out == NULL? OZ_false(): OZ_atom(out));
+  OZ_RETURN(out == NULL? NameFalse: OZ_atom(out));
 }
 OZ_BI_end
