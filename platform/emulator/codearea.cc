@@ -272,26 +272,30 @@ TaggedRef CodeArea::dbgGetDef(ProgramCounter PC, RefsArray G, RefsArray Y)
 
 TaggedRef CodeArea::varNames(ProgramCounter PC, RefsArray G, RefsArray Y)
 {
-  ProgramCounter aux = definitionEnd(PC);
-  aux += sizeOf(getOpcode(aux));
-  
   TaggedRef locals = nil();
-  for (int i=0; getOpcode(aux) == LOCALVARNAME; i++) {
-    if (Y) {
-      TaggedRef aux1 = getLiteralArg(aux+1);
-      locals = cons(OZ_mkTupleC("#", 2,	aux1, 
-				Y[i] ? Y[i] : OZ_atom("unallocated")), 
-		    locals);
-    }
-    aux += sizeOf(getOpcode(aux));
-  }
-
   TaggedRef globals = nil();
-  if (G) {
-    for (int i=0; getOpcode(aux) == GLOBALVARNAME; i++) {
-      TaggedRef aux1 = getLiteralArg(aux+1);
-      globals = cons(OZ_mkTupleC("#", 2, aux1, G[i]), globals);
+
+  ProgramCounter aux = definitionEnd(PC);
+
+  if (aux != NOCODE && aux != NOCODE_GLOBALVARNAME) {
+    aux += sizeOf(getOpcode(aux));
+  
+    for (int i=0; getOpcode(aux) == LOCALVARNAME; i++) {
+      if (Y) {
+	TaggedRef aux1 = getLiteralArg(aux+1);
+	locals = cons(OZ_mkTupleC("#", 2,	aux1, 
+				  Y[i] ? Y[i] : OZ_atom("unallocated")), 
+		      locals);
+      }
       aux += sizeOf(getOpcode(aux));
+    }
+    
+    if (G) {
+      for (int i=0; getOpcode(aux) == GLOBALVARNAME; i++) {
+	TaggedRef aux1 = getLiteralArg(aux+1);
+	globals = cons(OZ_mkTupleC("#", 2, aux1, G[i]), globals);
+	aux += sizeOf(getOpcode(aux));
+      }
     }
   }
 
