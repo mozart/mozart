@@ -386,6 +386,8 @@ TT VAR;						\
 #define oz_AtomToC(v) OZ_atomToC(v)
 #define oz_ThreadToC(v) tagged2Thread(v)
 #define oz_DictionaryToC(v) tagged2Dictionary(v)
+#define oz_SRecordToC(v) tagged2SRecord(v)
+#define oz_STupleToC(v) tagged2SRecord(v)
 
 #define oz_declareIntArg(ARG,VAR) oz_declareTypeArg(ARG,VAR,int,Int)
 #define oz_declareFloatArg(ARG,VAR) oz_declareTypeArg(ARG,VAR,double,Float)
@@ -402,6 +404,10 @@ TT VAR;						\
  oz_declareTypeIN(ARG,VAR,Thread*,Thread)
 #define oz_declareDictionaryIN(ARG,VAR) \
  oz_declareTypeIN(ARG,VAR,OzDictionary*,Dictionary)
+#define oz_declareSRecordIN(ARG,VAR) \
+ oz_declareTypeIN(ARG,VAR,SRecord*,SRecord)
+#define oz_declareSTupleIN(ARG,VAR) \
+ oz_declareTypeIN(ARG,VAR,SRecord*,STuple)
 
 
 #define oz_declareProperStringArg(ARG,VAR)			\
