@@ -35,7 +35,7 @@ It provides the salient features of logic and
 constraint programming including logic variables, constraints,
 disjunction constructs, and programmable search mechanisms.
 It allows users to dynamically create any number of sequential threads.
-The threads are data-flow threads in the sense that
+The threads are dataflow threads in the sense that
 a thread executing an operation will suspend until
 all operands needed have a well-defined value.
 
@@ -50,7 +50,7 @@ developed by researchers from
 DFKI (the German Research Center for Artificial Intelligence),
 SICS (the Swedish Institute of Computer Science),
 the University of the Saarland,
-UCL (the Universite catholique de Louvain),
+UCL (the Université catholique de Louvain),
 and others.
 
 <P CLASS=WARNING>The material in this document is still incomplete and

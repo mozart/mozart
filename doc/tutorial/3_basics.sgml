@@ -26,26 +26,26 @@
   <TITLE>Basics</TITLE>
   <P>We will initially restrict ourselves to the sequential
   programming style of Oz. At this stage you may think of Oz
-  computations as performed by one sequential process that executes one
+  computations as performed by a sequential process that executes one
   statement after the other. We call this process a
   <EM>thread</EM>. This thread has access to the <EM>store</EM>. It is
   able to manipulate the store by reading, adding, and updating
   information stored in the store. Information is accessed through the
   notion of <EM>variables</EM>. A thread can access information only
   through the variables visible to it, directly or indirectly. Oz
-  variables are <EM>single-assignment </EM>variables or more
+  variables are <EM>single-assignment</EM> variables or more
   appropriately logic variables. In imperative languages like C and
   Java, a variable can be assigned multiple times. In contrast, single
   assignment variables can be assigned only once. This notion is known
-  from many languages including data-flow, and concurrent logic
+  from many languages including dataflow languages and concurrent logic
   programming languages. A single assignment variable has a number of
   phases in its lifetime. Initially it is introduced with unknown value,
   and later it might be assigned a value, in which case the variable
   becomes <EM>bound</EM>. Once a variable is bound, it cannot itself be
-  changed. A <EM>Logic variable</EM> is single assignment variable that
-  can also be equated with another variable. Using logic variables do
+  changed. A <EM>logic variable</EM> is a single assignment variable that
+  can also be equated with another variable. Using logic variables does
   not mean that you cannot model state-change because a variable, as you
-  will see later, could be bound to a cell, which is stateful, i.e. the
+  will see later, could be bound to a cell, which is stateful, i.e., the
   content of a cell can be changed.</P>
 
   <P>A thread executing the statement: <<<local X Y Z in S end>>>
@@ -92,23 +92,24 @@
   constraint satisfaction. <EM>Name</EM> introduces anonymous unique
   unforgeable tokens.
 
-  <P>The language is dynamically typed in the sense that when a variable
-  is introduced its type, as well as its value, is unknown. Only when
-  the variable is bound to an Oz value, its type becomes determined.
+  <P>The language is dynamically-typed in the sense that when a variable
+  is introduced, its type as well as its value are unknown. Only when
+  the variable is bound to an Oz value, does its type become determined.
 
 <!--
   <SECTION><TITLE>Hello World</TITLE>
   <P>Let us do like everybody else. If you are unfamiliar with Oz, here
   is your first Oz program. Start your Mozart system. You typically
   start it by typing the command <FILE>mozart</FILE> and pressing
-  <KEY>RETURN</KEY>. This will start the Mozart Programming Interface
+  <KEY>RETURN</KEY>. This will start the Oz Programming Interface
   OPI having the <NAME TYPE=TOOL>EMACS</NAME> editor as your
   interface. You will see two buffers. The upper buffer is called
   <EM>Oz</EM>, where you can enter programs and the lower buffer is
   called <EM>Oz Compiler</EM> where you can see the result of compiling
   Oz programs. There is also a third buffer <EM>Oz Emulator</EM> showing
-  the status of the emulator. This buffer is your standard input, and
-  standard output. You may switch between the compiler and the emulator
+  the status of the emulator. This buffer is the standard input and
+  standard output of the emulator.
+  You may switch between the compiler and the emulator
   buffer through the Oz pull-down menu that appears in your
   <NAME TYPE=TOOL>EMACS menu</NAME> bar. Use the entry
   <EM>Show/Hide</EM> to switch between the compiler
@@ -126,11 +127,11 @@
   global variable in your initial environment that got bound to the
   printing procedure when the <<System>> module was loaded at the start
   of the Oz system. Procedure application in Oz syntactically follows
-  other functional languages, e.g. SCHEME, with the exception of using
+  other functional languages, e.g. Scheme, with the exception of using
   braces instead of parentheses.
 
   <P>The Mozart system provides a number of interesting tools that are
-  accessible through the Oz menu, or can be called from your Oz
+  accessible through the Oz menu, or that can be called from your Oz
   Program. Instead of using <<Show>> try <<Browse>>.
 
   <P CLASS=WARNING>You can learn about the Mozart programming system, its
