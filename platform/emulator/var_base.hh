@@ -36,7 +36,7 @@
 #pragma interface
 #endif
 
-//#define CORRECT_UNIFY
+#define CORRECT_UNIFY
 
 #if defined(DEBUG_CHECK) && defined(CORRECT_UNIFY)
 
@@ -472,7 +472,7 @@ void bindGlobalVarToValue(OZ_Term *, OZ_Term);
 void castGlobalVar(OZ_Term *, OZ_Term *);
 void constrainGlobalVar(OZ_Term *, OZ_FiniteDomain &);
 void constrainGlobalVar(OZ_Term *, OZ_FSetConstraint &);
-void constrainGlobalVar(OZ_Term *, OZ_Ct *, OZ_CtDefinition *);
+void constrainGlobalVar(OZ_Term *, OZ_Ct *);
 
 // dealing with local variables
 void bindLocalVar(OZ_Term *, OZ_Term *);
