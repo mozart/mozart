@@ -107,7 +107,8 @@ ThreadType             = '<thread>'
 CellType               = '<cell>'
 ClassType              = '<class>'
 DictionaryType         = '<dict>'
-FloatType              = '<float>'
+BigFloatType           = '<bigfloat>'
+BigIntType             = '<bigint>'
 ListType               = '<list>'
 UnitType               = 'unit'
 NameType               = '<name>'
@@ -120,16 +121,7 @@ RecordType             = '<record>'
 ChunkType              = '<chunk>'
 UnknownType            = '<???>'
 UnboundType            = '_'
-UnAllocatedType        = 'unalloc'
-
-NilAtom                = "'nil'"
-ConsAtom               = "'|'"
-HashAtom               = "'#'"
-
-TrueName               = 'true'
-FalseName              = 'false'
-
-NoAction               = {NewName}
+UnAllocatedType        = {NewName}
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -251,8 +243,8 @@ TimeoutToStatus        = 210
 
 HelpEvent              = '<3>'
 
-PrintDepth             = 2  % for System.valueToVirtualString
-PrintWidth             = 3
+BigFloat               = {Int.toFloat 10 * 1000}
+BigInt                 = 1000 * 1000 * 1000
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
