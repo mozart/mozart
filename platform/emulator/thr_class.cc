@@ -106,18 +106,18 @@ void Thread::Init()
 /*
  * the mode is 3, if all tasks on the thread have seq mode
  */
-void Thread::switchMode(int newMode) {
-  Assert((mode&1) != newMode);
+void Thread::setCompMode(int newMode) {
+  Assert((compMode&1) != newMode);
   Assert(SEQMODE==1 && PARMODE==0);
   if (taskStack.isEmpty()) {
     if (newMode == SEQMODE) {
-      mode=ALLSEQMODE;
+      compMode=ALLSEQMODE;
     } else {
-      mode=newMode;
+      compMode=newMode;
     }
   } else {
-    taskStack.pushMode(mode&1);
-    mode=newMode;
+    taskStack.pushCompMode(compMode);
+    compMode=newMode;
   }
 }
 
