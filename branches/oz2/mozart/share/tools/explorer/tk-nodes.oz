@@ -473,7 +473,7 @@ local
 	    
 	    meth drawTree(Break MomTree MomX MyY Scale Font)
 	       SucceededNode,drawTree(MomTree MomX MyY Scale Font
-				      EntailedColor NodeBorderWidth)
+				      EntailedColor ThickNodeBorderWidth)
 	    end
 	    
 	 end
@@ -484,7 +484,7 @@ local
 
 	    meth drawTree(Break MomTree MomX MyY Scale Font)
 	       SucceededNode,drawTree(MomTree MomX MyY Scale Font
-				      SuspendedColor ThickNodeBorderWidth)
+				      SuspendedColor NodeBorderWidth)
 	    end
 	    
 	 end
