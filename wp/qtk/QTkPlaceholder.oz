@@ -130,13 +130,13 @@ define
 %		  if {HasFeature B handle} andthen {IsFree B.handle} then
 %		     B.handle=NC
 %		  end
-		  Pack<-r(obj:NC
+		  Pack<-r(obj:NC.Redirector
 			  sticky:{CondSelect B glue ""}
 			  padx:{CondSelect B padx 0}
 			  pady:{CondSelect B pady 0})|@Pack
 	       end
 	       if {IsFree NC} then {Exception.raiseError qtk(badParameter 1 self.widgetType M)} end
-	       {ForAll @Pack proc{$ R} if R.obj==NC then P=R end end}
+	       {ForAll @Pack proc{$ R} if R.obj==NC.Redirector then P=R end end}
 	       if @Child\=empty then {Tk.send grid(forget @Child)} end
 	       if NC\=empty then
 		  if {IsFree P} then {Exception.raiseError qtk(badParameter 1 self.widgetType M)} end
