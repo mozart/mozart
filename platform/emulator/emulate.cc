@@ -249,12 +249,9 @@ Bool AM::emulateHookOutline(ProgramCounter PC, Abstraction *def, TaggedRef *argu
   if (isSetSFlag((StatusBit)(StartGC|UserAlarm|IOReady|StopThread))) {
     return TRUE;
   }
-  if (breakflag) {
-    currentThread->startStepMode();
-    currentThread->traced();
-    breakflag = NO;
-    debugStreamThread(currentThread);
-  }
+
+  if (breakflag)
+    setBreakpoint(currentThread);
 
   if (def && debugmode() && currentThread->isTraced()) {
     OzDebug *dbg;
@@ -2376,12 +2373,8 @@ LBLdispatcher:
 
        CheckArity(bi->getArity(),makeTaggedConst(bi));
 
-       if (e->breakflag) {
-         e->currentThread->startStepMode();
-         e->currentThread->traced();
-         e->breakflag = NO;
-         debugStreamThread(e->currentThread);
-       }
+       if (e->breakflag)
+         setBreakpoint(e->currentThread);
 
        if (e->debugmode() && e->currentThread->stepMode()) {
 

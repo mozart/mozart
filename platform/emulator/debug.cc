@@ -32,6 +32,14 @@ void dbgPrint(TaggedRef t)
   taggedPrint(t,ozconf.printDepth);
 }
 
+void setBreakpoint(Thread *t) {
+  t->startStepMode();
+  t->deleteContFlag();
+  t->traced();
+  am.breakflag = NO;
+  debugStreamThread(t);
+}
+
 static Board* gotoRootBoard() {
   Board *b = am.currentBoard;
   am.currentBoard = am.rootBoard;
