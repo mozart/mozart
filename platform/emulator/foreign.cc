@@ -718,8 +718,7 @@ OZ_Term OZ_tuple(OZ_Term label, int width)
     return label;
   }
 
-  Arity *ar = aritytable.find(makeTupleArityList(width));
-  return makeTaggedSRecord(SRecord::newSRecord(label,ar));
+  return makeTaggedSRecord(SRecord::newSRecord(label,width));
 }
 
 #include <stdarg.h>
