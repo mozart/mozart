@@ -440,6 +440,19 @@ void OwnerEntry::extend(){
   addFlags(PO_EXTENDED|PO_BIGCREDIT);
   setOwnerCreditExtension(oce);}
 
+void OwnerEntry::requestCredit(Credit req){
+  if(isExtended()){
+    getOwnerCreditExtension()->requestCreditE(req);
+    return;}
+  Credit credit=getCreditOB();
+  if(credit<=req){
+    extend();
+    requestCredit(req);
+    return;}
+  setCreditOB(credit-req);
+  return;
+}
+
 void OwnerEntry::removeExtension(){
   OwnerCreditExtension *oce=getOwnerCreditExtension();
   setCreditOB(oce->reduceSingle());

@@ -179,21 +179,6 @@ public:
   ~NodeProcessor() {}
 
   //
-  // Define the first node & start the action. Returns 'TRUE' when
-  // we are done (i.e. the stack is empty);
-  Bool start(OZ_Term t, ProcessNodeProc p, Opaque* o) {
-    clear();
-    put(t);
-    proc = p;
-    opaque = o;
-    //
-    keepRunning = OK;
-    doit();
-    // if 'keepRunning' is true when the stack is empty:
-    return (keepRunning);
-  }
-
-  //
   // If 'suspend()' is called (by 'ProcessNodeProc') then 'start(...)'
   // will return; it can be later resumed by using 'resume()';
   void suspend() { keepRunning = NO; }
@@ -208,6 +193,21 @@ public:
 
   //
   Opaque* getOpaque() { return (opaque); }
+  //
+  // Define the first node & start the action. Returns 'TRUE' when
+  // we are done (i.e. the stack is empty);
+  Bool start(OZ_Term t, ProcessNodeProc p, Opaque* o) {
+    clear();
+    put(t);
+    proc = p;
+    opaque = o;
+    //
+    keepRunning = OK;
+    doit();
+    // if 'keepRunning' is true when the stack is empty:
+    return (keepRunning);
+  }
+
 };
 
 //
@@ -1099,17 +1099,6 @@ public:
     array    = new OZ_Term[size];
   }
 
-  //
-  OZ_Term get(int i) {
-    return (i>=size) ? makeTaggedNULL() : array[i];
-  }
-  void set(OZ_Term val, int pos) {
-    Assert(pos >= 0);
-    if (pos>=size)
-      resize(pos);
-    array[pos] = val;
-  }
-
   void resize(int newsize) {
     int oldsize = size;
     OZ_Term  *oldarray = array;
@@ -1122,6 +1111,18 @@ public:
     }
     delete oldarray;
   }
+
+  //
+  OZ_Term get(int i) {
+    return (i>=size) ? makeTaggedNULL() : array[i];
+  }
+  void set(OZ_Term val, int pos) {
+    Assert(pos >= 0);
+    if (pos>=size)
+      resize(pos);
+    array[pos] = val;
+  }
+
 };
 
 //

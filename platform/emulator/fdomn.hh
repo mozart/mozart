@@ -53,7 +53,7 @@ class FDIntervals {
 friend class OZ_FiniteDomainImpl;
 private:
   int high;
-  OZ_Boolean isConsistent(void) const;
+  DebugCodeFD(OZ_Boolean isConsistent(void) const;)
 #if defined(DEBUG_CHECK) && defined(DEBUG_FD)
   struct _i_arr_type {
     i_arr_type _i_arr[1];
@@ -258,7 +258,7 @@ protected:
   FDBitVector * asBitVector(void) const;
   FDIntervals * asIntervals(void) const;
 
-  OZ_Boolean isConsistent(void) const;
+  DebugCodeFD(OZ_Boolean isConsistent(void) const;)
 public:
   void disposeExtension(void);
   void FiniteDomainInit(void * d);

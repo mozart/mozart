@@ -168,6 +168,7 @@ if test "${GXX}" = yes; then
         oz_warn="-Wall -W -Wpointer-arith -Wbad-function-cast -Wcast-qual \
             -Wstrict-prototypes -Wmissing-prototypes -Wmissing-declarations \
             -Wnested-externs -Wsynth \
+            -Winline \
             -Wno-unused -Wno-reorder -Wno-uninitialized -Wno-sign-compare"
         test "$enable_errors" != no && \
         oz_warn_error="-Werror"

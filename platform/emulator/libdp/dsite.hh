@@ -112,6 +112,10 @@ private:
   } u;
 
   //
+protected:
+
+  unsigned short getType(){ return flags;}
+
 private:
   //
   int hashWOTimestamp();
@@ -145,6 +149,26 @@ private:
     flags |= CONNECTED;
     return OK;}
 
+public:
+  RemoteSite* getRemoteSite() {
+    if(!connect()) {PD((SITE,"getRemoteSite not connected"));return NULL;}
+    Assert(getType() & CONNECTED);
+    Assert(getType() & REMOTE_SITE);
+    RemoteSite *rs = u.rsite;
+    PD((SITE,"getRemoteSite returning the remote %d",rs));
+    Assert(rs!=NULL);
+    return  rs;}
+
+  // provided to virtual-comm
+  VirtualSite* getVirtualSite(){
+    if(!connect()) {return NULL;}
+    Assert(getType() & CONNECTED);
+    Assert(getType() & VIRTUAL_SITE);
+    Assert(!(getType() & REMOTE_SITE));
+    return u.vsite;}
+
+
+private:
 // hopefully this is used to tell comm layer that the site is garbage for closing connection early
   void zeroActive(){
     if(getType() & CONNECTED){
@@ -164,10 +188,6 @@ private:
   void makePerm(){
     flags |= PERM_SITE;}
 
-
-protected:
-
-  unsigned short getType(){ return flags;}
 
 public:
   //
@@ -360,28 +380,11 @@ public:
   }
 
   // provided to network-comm
-  RemoteSite* getRemoteSite() {
-    if(!connect()) {PD((SITE,"getRemoteSite not connected"));return NULL;}
-    Assert(getType() & CONNECTED);
-    Assert(getType() & REMOTE_SITE);
-    RemoteSite *rs = u.rsite;
-    PD((SITE,"getRemoteSite returning the remote %d",rs));
-    Assert(rs!=NULL);
-    return  rs;}
-
   void dumpRemoteSite(int readCtr){
     Assert(getType() & CONNECTED);
     Assert(getType() & REMOTE_SITE);
     disconnect();
     u.readCtr=readCtr;}
-
-  // provided to virtual-comm
-  VirtualSite* getVirtualSite(){
-    if(!connect()) {return NULL;}
-    Assert(getType() & CONNECTED);
-    Assert(getType() & VIRTUAL_SITE);
-    Assert(!(getType() & REMOTE_SITE));
-    return u.vsite;}
 
   // Actually not used now...
   void dumpVirtualSite(void) {

@@ -473,11 +473,19 @@ BigInt *newBigInt(char *s)         { return new BigInt(s); }
  *=================================================================== */
 
 
-void SRecord::initArgs()
-{
+void SRecord::initArgs(void) {
   for (int i = getWidth(); i--; )
     args[i] = oz_newVariable();
 }
+
+TaggedRef SRecord::normalize(void) {
+  if (isTuple() && label == AtomCons && getWidth()==2) {
+    return makeTaggedLTuple(new LTuple(getArg(0),getArg(1)));
+  }
+  return makeTaggedSRecord(this);
+}
+
+
 
 /************************************************************************/
 /*                      Useful Stuff: Lists                             */

@@ -47,13 +47,13 @@ class HashNode {
   public:
   HtKey key;
   void * value;
+  void setEmpty() { key.fint = (intlong) htEmpty; }
   HashNode() : value(NULL)
   {
     setEmpty();
   };
 
   Bool isEmpty()  { return (key.fint == (intlong) htEmpty); }
-  void setEmpty() { key.fint = (intlong) htEmpty; }
 };
 
 class HashTable {

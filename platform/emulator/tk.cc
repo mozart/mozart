@@ -251,9 +251,12 @@ public:
     (void) oz_protect(&tk_dict);
   }
 
-  ~TK() {
-    dispose();
+  void dispose(void) {
+    if (start!=static_buffer)
+      delete start;
   }
+
+  ~TK() {}
 
   void reset(void) {
     dispose();
@@ -269,11 +272,6 @@ public:
   OZ_Return write(void);
 
   void resize(void);
-
-  void dispose(void) {
-    if (start!=static_buffer)
-      delete start;
-  }
 
   void put(char c) {
     *buffer++ = c;

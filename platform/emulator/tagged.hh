@@ -962,10 +962,6 @@ public:
   uint32  getData() { return tagged>>tagged2Bits; }
   void*   getPtr()  { return (void*)(tagged&~tagged2Mask); }
 
-  Tagged2()                   { tagged = 0; }
-  Tagged2(void* ptr,int tag)  { set(ptr,tag); }
-  Tagged2(uint32 val,int tag) { set(val,tag); }
-
   void set(void* ptr,int tag) {
     checkPointer(ptr);
     checkTag(tag);
@@ -984,6 +980,10 @@ public:
     checkVal(val);
     tagged = (val<<tagged2Bits) | getTag();
   }
+
+  Tagged2()                   { tagged = 0; }
+  Tagged2(void* ptr,int tag)  { set(ptr,tag); }
+  Tagged2(uint32 val,int tag) { set(val,tag); }
 
 };
 
@@ -1009,10 +1009,6 @@ private:
     Assert((val&((tagged4Mask>>2)<<(32-(tagged4Bits-2))))==mallocBase);
   }
 public:
-  Tagged4()                   { tagged = 0; }
-  Tagged4(void* ptr,int tag)  { set(ptr,tag); }
-  Tagged4(uint32 val,int tag) { set(val,tag); }
-
   void set(void* ptr,int tag) {
     checkPtr(ptr);
     checkTag(tag);
@@ -1043,6 +1039,11 @@ public:
   void*   getPtr() {
     return (void*)(mallocBase|((tagged>>(tagged4Bits-2))&~(tagged4Mask>>2)));
   }
+
+  Tagged4()                   { tagged = 0; }
+  Tagged4(void* ptr,int tag)  { set(ptr,tag); }
+  Tagged4(uint32 val,int tag) { set(val,tag); }
+
 };
 
 /*===================================================================

@@ -112,8 +112,6 @@ private:
 #endif
 
 
-  unsigned char * initNumOfBitsInHalfWord(void);
-
   int findCard(void);
 
   int updateCard(void);
@@ -139,43 +137,20 @@ public:
 };
 
 inline
-unsigned char * IndexSet::initNumOfBitsInHalfWord(void)
-{
-  const unsigned int maxHalfWord = 0xffff;
-  unsigned char * r = new unsigned char[maxHalfWord+1];
-  OZ_ASSERT(r!=NULL);
-  for(unsigned int i = 0; i <= maxHalfWord; i++) {
-    r[i] = 0;
-    int j = i;
-    while (j>0) {
-      if (j&1)
-        r[i]++;
-      j>>=1;
-    }
-  }
-  return r;
-}
-
-inline
 int IndexSet::getHigh(void) const
 {
   return _high;
 }
 
-inline
-int IndexSet::findCard(void)
-{
-  static unsigned char * numOfBitsInHalfWord = initNumOfBitsInHalfWord();
-  int s, i;
-  int high = getHigh();
-  for (s = 0, i = high; i--; ) {
-    if (_elems[i]) {
-      s += numOfBitsInHalfWord[unsigned(_elems[i]) & 0xffff];
-      s += numOfBitsInHalfWord[unsigned(_elems[i]) >> 16];
-    }
-  }
+extern get_num_of_bits(const int m, const int * ia);
 
-  return s;
+inline
+int IndexSet::findCard(void) {
+#ifdef OZ_DEBUG
+  return get_num_of_bits(getHigh(), (int *) _elems);
+#else
+  return get_num_of_bits(getHigh(), _elems);
+#endif
 }
 
 inline

@@ -1128,15 +1128,15 @@ public:
   void fastfixerik2()
   {Connection();}
 
-  void receivedNewSize(int size){
-    recSizeAck +=  size;
-    PD((ACK_QUEUE,"SizeReceived s: %d l: %d",recSizeAck ,maxSizeAck));
-    if(recSizeAck >= maxSizeAck)  sendAck();}
-
   void sendAck(){
     if(tcpAckReader(this,remoteSite->getRecMsgCtr())){
       PD((ACK_QUEUE,"Ack, limit reached...."));
       recSizeAck = 0;}}
+
+  void receivedNewSize(int size){
+    recSizeAck +=  size;
+    PD((ACK_QUEUE,"SizeReceived s: %d l: %d",recSizeAck ,maxSizeAck));
+    if(recSizeAck >= maxSizeAck)  sendAck();}
 
   void messageSent(){recSizeAck=0;}
 
@@ -1236,20 +1236,6 @@ public:
 
   void ackReceived(int);
 
-
-  Bool goodCloseCand(){
-    return (canbeClosed() && (!isWritePending()));}
-
-  void opened(){
-    Assert(isOpening());
-    PD((TCP_INTERFACE,"opened site:%s",remoteSite->site->stringrep()));
-    expireTime = 0;
-    clearOpening();
-    remoteSite->setSiteStatus(SITE_OK);
-    remoteSite->incTmpSessionNr();
-    if(isProbingOK()){
-      remoteSite->site->probeFault(PROBE_OK);
-      clearProbingOK();}}
 
   Bool addByteToInt(BYTE msg){
     if(!testFlag(ACK_MSG_INCOMMING))
@@ -1363,6 +1349,22 @@ public:
     setReference();
     remoteSite=s;
     bytePtr = intBuffer + INT_IN_BYTES_LEN;}
+
+  Bool goodCloseCand(){
+    return (canbeClosed() && (!isWritePending()));}
+
+  void opened(){
+    Assert(isOpening());
+    PD((TCP_INTERFACE,"opened site:%s",remoteSite->site->stringrep()));
+    expireTime = 0;
+    clearOpening();
+    remoteSite->setSiteStatus(SITE_OK);
+    remoteSite->incTmpSessionNr();
+    if(isProbingOK()){
+      remoteSite->site->probeFault(PROBE_OK);
+      clearProbingOK();}}
+
+
 };
 
 /************************************************************/
@@ -1741,12 +1743,6 @@ public:
       cl = cl->next;}
     return open + closed;}
 
-  int shutDwnTcpCache(){
-    shutDwn = TRUE;
-    closeConnections();
-    return shutDwnTcpCacheProgres();}
-
-
   void closeConnections(){
     PD((TCPCACHE,"ClosingConnections fakingTmp"));
     Connection *c=currentHead, *cc;
@@ -1770,6 +1766,11 @@ public:
         }
       c = cc;}
     openCon = FALSE;}
+
+  int shutDwnTcpCache(){
+    shutDwn = TRUE;
+    closeConnections();
+    return shutDwnTcpCacheProgres();}
 
 
   void openConnections(){

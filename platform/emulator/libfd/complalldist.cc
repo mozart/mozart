@@ -69,6 +69,71 @@ int CompleteAllDistProp::init_memory_management;
 
 //=============================================================================
 
+edge graph::find_next_augmenting_path(node s, node t,
+                                             node_array<edge>& pred,
+                                             edge_array<int>& layered) {
+  node w = NULL;
+  edge e = NULL;
+  edge f = NULL;
+
+  s->edgeiterator = NULL;
+  while ((f == NULL) && (next_adj_edge(e, s))) {
+
+    if (layered[e] == mark)               // e is edge of layered network
+      if ((w = e->dst) == t) f = e;       // t is reached
+      else
+        if (pred[w] == 0) {               // w not reached before
+          pred[w] = e;
+          f = find_next_augmenting_path(w, t, pred, layered);
+        }
+  }
+  return f;
+}
+
+
+void graph::dfs_visit(node n, int &time, int direction, int component) {
+  // direction = 0 means forward, = 1 backward edges.
+  // (this is useful for 'strong components' dfs)
+
+  n->colour = 1; // grey (being processed)
+  n->dtime  = ++time;
+
+  // traverse n's adjacency list (this version only forward)
+
+  dlink<edge> *i;
+
+  if (direction) { // transponed graph?
+    forall(i, n->in) {
+      node m = (i->e)->src;
+      if (!m->colour) { // m is new?
+        // maybe mark daddy
+        dfs_visit(m, time, direction, component);
+      }
+    }
+  }
+  else {
+    n->component = component;
+    forall(i, n->out) {
+      node m = (i->e)->dst;
+      if (!m->colour) { // m is new?
+        // maybe mark daddy
+        dfs_visit(m, time, direction, component);
+      }
+    }
+  }
+
+  n->colour = 2;
+  time++;
+  n->ftime = time;
+
+  // for the strong components search:
+  // this is a bit awkward, but allows to tell the first dfs from the second
+
+  if (direction) order_for_second_dfs.push(n);
+  return;
+}
+
+
 void CompleteAllDistProp::buildGraph(graph &g, OZ_FDIntVar *l,
                               list<node> &A, list<node> &B) {
   // A and B contain the "left" and "right" portions of the bipartite

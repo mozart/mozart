@@ -1768,7 +1768,7 @@ void OZ_sClone(OZ_Term * to) {
  * -----------------------------------------------------------------*/
 
 
-inline
+static
 int oz_isVirtualString(OZ_Term vs, OZ_Term *var)
 {
   if (oz_isRef(vs)) {

@@ -157,7 +157,6 @@ unsigned scanInt(FILE *in)
 char *buf = 0;
 int bufSize = -1;
 
-inline
 void setBuf(int i,char c)
 {
   if (buf==0) {

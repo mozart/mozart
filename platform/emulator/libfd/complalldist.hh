@@ -591,14 +591,7 @@ public:
     // waste();
   }
 
-  inline void waste() {
-    // delete all nodes (and all edges with it).
-    // can not be called from within destructor for some strange reason.
-    int j = N.size();
-    for(int i = j; i--;)
-      del_node(N.first()->e);
-  }
-
+  inline void waste();
   inline node new_node(int _val, bool _free = true);
   edge new_edge(node n1, node n2);
   inline void del_edge(edge d);
@@ -716,6 +709,15 @@ inline void graph::del_node(node n) {
   delete n;
 }
 
+inline void graph::waste() {
+  // delete all nodes (and all edges with it).
+  // can not be called from within destructor for some strange reason.
+  int j = N.size();
+  for(int i = j; i--;)
+    del_node(N.first()->e);
+}
+
+
 inline void graph::rev_edge(edge e) {
   // change the edge
   node temp = e->dst;
@@ -746,49 +748,6 @@ inline void graph::rev_all_edges() {
   // change node in/out lists
   forall(j, N)
     (j->e)->out.swap((j->e)->in);
-}
-
-inline
-void graph::dfs_visit(node n, int &time, int direction, int component) {
-  // direction = 0 means forward, = 1 backward edges.
-  // (this is useful for 'strong components' dfs)
-
-  n->colour = 1; // grey (being processed)
-  n->dtime  = ++time;
-
-  // traverse n's adjacency list (this version only forward)
-
-  dlink<edge> *i;
-
-  if (direction) { // transponed graph?
-    forall(i, n->in) {
-      node m = (i->e)->src;
-      if (!m->colour) { // m is new?
-        // maybe mark daddy
-        dfs_visit(m, time, direction, component);
-      }
-    }
-  }
-  else {
-    n->component = component;
-    forall(i, n->out) {
-      node m = (i->e)->dst;
-      if (!m->colour) { // m is new?
-        // maybe mark daddy
-        dfs_visit(m, time, direction, component);
-      }
-    }
-  }
-
-  n->colour = 2;
-  time++;
-  n->ftime = time;
-
-  // for the strong components search:
-  // this is a bit awkward, but allows to tell the first dfs from the second
-
-  if (direction) order_for_second_dfs.push(n);
-  return;
 }
 
 inline
@@ -873,28 +832,6 @@ public:
     DEBUG(("node_array, size=%d\r\n", size));
   }
 };
-
-inline
-edge graph::find_next_augmenting_path(node s, node t,
-                                             node_array<edge>& pred,
-                                             edge_array<int>& layered) {
-  node w = NULL;
-  edge e = NULL;
-  edge f = NULL;
-
-  s->edgeiterator = NULL;
-  while ((f == NULL) && (next_adj_edge(e, s))) {
-
-    if (layered[e] == mark)               // e is edge of layered network
-      if ((w = e->dst) == t) f = e;       // t is reached
-      else
-        if (pred[w] == 0) {               // w not reached before
-          pred[w] = e;
-          f = find_next_augmenting_path(w, t, pred, layered);
-        }
-  }
-  return f;
-}
 
 inline
 bool graph::bfs(node s, node t, edge_array<int>& layered) {
