@@ -593,7 +593,7 @@ OZ_Term BorrowEntry::extract_info(int index) {
   OZ_Term primCred, secCred;
   OZ_Term na=
     OZ_recordInit(oz_atom("netAddress"),
-      oz_cons(oz_pairA("site", oz_atom(netaddr.site->stringrep())),
+      oz_cons(oz_pairA("site", oz_atom(netaddr.site->stringrep_notype())),
       oz_cons(oz_pairAI("index",(int)netaddr.index), oz_nil())));
 /*
   OZ_Term na=

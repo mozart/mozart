@@ -233,6 +233,7 @@ public:
   int hashSecondary();
 
   char* stringrep();
+  char* stringrep_notype();
 
   void marshalBaseSite(MsgBuffer* buf){
     PD((MARSHAL,"base site =>"));

@@ -422,6 +422,19 @@ char *BaseSite::stringrep()
   return buf;
 }
 
+char *BaseSite::stringrep_notype()
+{
+  static char buf[100];
+  ip_address a=getAddress();
+  sprintf(buf,"%ld.%ld.%ld.%ld:%d:%ld/%d",
+	  (a/(256*256*256))%256,
+	  (a/(256*256))%256,
+	  (a/256)%256,
+	  a%256,
+	  getPort(), getTimeStamp()->start,getTimeStamp()->pid);
+  return buf;
+}
+
 char *oz_site2String(Site *s) { return s->stringrep(); }
 
 int BaseSite::hashSecondary(){
