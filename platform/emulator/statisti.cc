@@ -91,6 +91,10 @@ int Statistics::getNameMemory() {
 
 Statistics::Statistics()
 {
+}
+
+void Statistics::init()
+{
   reset();
   timeUtime.total = osUserTime();
   timeUtime.idle();

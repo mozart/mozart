@@ -86,6 +86,7 @@ public:
   void printIdle(FILE *fd);
   void printRunning(FILE *fd);
 
+  void init();
   void reset();
 
   int getAtomMemory();
