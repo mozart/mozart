@@ -95,7 +95,7 @@ public:
     Stack::push((StackEntry) Te_Bind,        NO);
   }
 
-  void pushVariable(TaggedRef var) {
+  void pushVariable(TaggedRef * var) {
     ensureFree(3);
     Stack::push((StackEntry) Te_Variable, NO);
   }
