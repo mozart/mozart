@@ -50,6 +50,12 @@ fun {V2VS X}
    {System.valueToVirtualString X PrintDepth PrintWidth}
 end
  
+fun {T2VS X}
+   P = {System.get errors}
+in
+   {System.valueToVirtualString X P.depth P.width}
+end
+
 BreakpointStaticHelp   = {NewName}
 BreakpointDynamicHelp  = {NewName}
 StatusHelp             = {NewName}
@@ -71,40 +77,6 @@ in
    end
 end
 
-%% exception handling
-
-fun {T2VS X}
-   P = {System.get errors}
-in
-   {System.valueToVirtualString X P.depth P.width}
-end
-
-fun {Spec2Out X OzOut}
-   case {IsDet X} then
-      case {IsRecord X} then
-	 case X
-	 of oz(M) then {OzOut M}
-	 elsecase {Label X} == '#'
-	 then
-	    {Record.map X fun {$ XX}
-			     {Spec2Out XX OzOut}
-			  end}
-	 else
-	    X
-	 end
-      else {OzOut X} end
-   else {OzOut X} end
-end
-
-fun {Line X}
-   ' / ' # {Spec2Out X OzOutput}
-end
-fun {Lines Xs}
-   {VS2A {List.toTuple '#' {Map Xs Line}}}
-end
-
-OzOutput = T2VS 
-Output   = fun {$ X} {VS2A X} end
 
 %% file lookup
 
