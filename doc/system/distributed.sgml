@@ -25,14 +25,14 @@
   -
   -->
 
-<Chapter id="Chapter.Distributed">
+<Part id="Part.Distributed">
   <Title/Distributed Programming/
 
   <P>
   </P>
 
 
-  <Section id="Section.Distributed.Connection">
+  <Chapter id="Chapter.Connection">
     <Title/Connecting Computations: <<Connection>>/
 
     <P>
@@ -86,8 +86,7 @@
       connections.
     </P>
 
-    <Subsection id="Section.Distributed.Connection.One"
-                class=unnumbered>
+    <Section id="Section.Connection.One">
       <Title/One-to-one Connections/
 
       <P>
@@ -123,10 +122,9 @@
             be raised if the same ticket is used more than once.
         </List>
       </P>
-    </Subsection>
+    </Section>
 
-    <Subsection id="Section.Distributed.Connection.Multiple"
-                class=unnumbered>
+    <Section id="Section.Connection.Many">
       <Title/Many-to-one Connections/
 
       <P>
@@ -175,29 +173,29 @@
         </List>
       </P>
 
-    </Subsection>
+    </Section>
 
-  </Section>
+  </Chapter>
 
 
-  <Section id="Section.Distributed.Remote">
+  <Chapter id="Chapter.Remote">
     <Title/Spawning Computations Remotely: <<Remote>>/
-  </Section>
+  </Chapter>
 
 
-  <Section id="Section.Distributed.Fault">
+  <Chapter id="Chapter.Fault">
     <Title/Detecting and Handling Failure: <<Fault>>/
-  </Section>
+  </Chapter>
 
 
-  <Section id="Section.Distributed.URL">
+  <Chapter id="Chapter.URL">
     <Title/Refering Distributed Entities: <<URL>>/
-  </Section>
+  </Chapter>
 
 
-  <Section id="Section.Distributed.Resolve">
+  <Chapter id="Chapter.Resolve">
     <Title/Resolving URLs: <<Resolve>>/
-  </Section>
+  </Chapter>
 
 
-</Chapter>
+</Part>

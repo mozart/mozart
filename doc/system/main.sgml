@@ -48,23 +48,23 @@
 
 
 
-<!ENTITY chapter.application SYSTEM "application.sgml">
-<!ENTITY chapter.constraints SYSTEM "constraints.sgml">
-<!ENTITY chapter.distributed SYSTEM "distributed.sgml">
-<!ENTITY chapter.open        SYSTEM "open.sgml">
-<!ENTITY chapter.system      SYSTEM "system.sgml">
-<!ENTITY chapter.window      SYSTEM "window.sgml">
+<!ENTITY part.application SYSTEM "application.sgml">
+<!ENTITY part.constraints SYSTEM "constraints.sgml">
+<!ENTITY part.distributed SYSTEM "distributed.sgml">
+<!ENTITY part.open        SYSTEM "open.sgml">
+<!ENTITY part.system      SYSTEM "system.sgml">
+<!ENTITY part.window      SYSTEM "window.sgml">
 ]>
 
 <BOOK>
 <Title/System Modules/
     <!-- Splitting the document into different HTML nodes -->
-    <Meta name="html.split"       value="chapter.application">
-    <Meta name="html.split"       value="chapter.constraints">
-    <Meta name="html.split"       value="chapter.distributed">
-    <Meta name="html.split"       value="chapter.open">
-    <Meta name="html.split"       value="chapter.system">
-    <Meta name="html.split"       value="chapter.window">
+    <Meta name="html.split"       value="part.application">
+    <Meta name="html.split"       value="part.constraints">
+    <Meta name="html.split"       value="part.distributed">
+    <Meta name="html.split"       value="part.open">
+    <Meta name="html.split"       value="part.system">
+    <Meta name="html.split"       value="part.window">
     <Meta name="html.split.bib"   value="">
     <Meta name="html.split.index" value="">
     <Author.Extern to="author.db" key="Denys.Duchier">
@@ -76,10 +76,10 @@
       <P.silent><!--**-->
       Cool stuff.
     </Abstract>
-  &chapter.application;
-  &chapter.constraints;
-  &chapter.distributed;
-  &chapter.open;
-  &chapter.system;
-  &chapter.window;
+  &part.application;
+  &part.constraints;
+  &part.distributed;
+  &part.open;
+  &part.system;
+  &part.window;
 </BOOK>

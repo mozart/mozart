@@ -25,31 +25,31 @@
   -
   -->
 
-<Chapter id="Chapter.System">
+<Part id="Part.System">
   <Title/System Programming/
 
-  <Section id="Section.System.Pickle">
+  <Chapter id="Chapter.Pickle">
     <Title/Persistent Values: <<Pickle>>/
-  </Section>
+  </Chapter>
 
-  <Section id="Section.System.Property">
+  <Chapter id="Chapter.Property">
     <Title/Emulator Properties: <<Property>>/
-  </Section>
+  </Chapter>
 
-  <Section id="Section.System.Error">
+  <Chapter id="Chapter.Error">
     <Title/Error Routines: <<Error>>/
-  </Section>
+  </Chapter>
 
-  <Section id="Section.System.ErrorRegistry">
+  <Chapter id="Chapter.ErrorRegistry">
     <Title/Registering Error Handlers: <<ErrorRegistry>>/
-  </Section>
+  </Chapter>
 
-  <Section id="Section.System.Finalize">
+  <Chapter id="Chapter.Finalize">
     <Title/Memory Managment: <<Finalize>>/
-  </Section>
+  </Chapter>
 
-  <Section id="Section.System.System">
+  <Chapter id="Chapter.System">
     <Title/Miscelleanous System Support: <<System>>/
-  </Section>
+  </Chapter>
 
-</Chapter>
+</Part>
