@@ -367,6 +367,7 @@ $(BOOTOZCTXT):
         rm -f boot-ozc.linked
 
 new-boot:
+        -rm -f $(BOOTINITTXT) $(BOOTOZCTXT)
         $(MAKE) $(BOOTINITTXT) $(BOOTOZCTXT)
         $(GZIP) < $(BOOTINITTXT) > $(SRCDIR)/$(BOOTINITTXT).gz
         $(GZIP) < $(BOOTOZCTXT) > $(SRCDIR)/$(BOOTOZCTXT).gz
