@@ -3049,6 +3049,9 @@ LBLdispatcher:
          CTT->pushCFun(biFun,X,predArity,OK);
          SUSPENDONVARLIST;
 
+      case BI_PREEMPT:
+        goto LBLpreemption;
+
        case SLEEP:
        default:
          Assert(0);
