@@ -54,7 +54,9 @@ bootstrap:
 ifeq ($(MSWIN),yes)
 
 install: $(WINEXES)
-        $(INSTALL_BIN) $(WINEXES) oz.ico setup.ico $(PREFIX)
+        $(INSTALL_BIN) oz.exe oz.ico setup.exe setup.ico $(PREFIX)
+        $(INSTALL_BIN) ozengine.exe $(PREFIX)/platform/win32-i486
+        $(INSTALL_BIN) ozc.bat $(PREFIX)/bin
 
 all: $(WINEXES)
 
@@ -99,6 +101,8 @@ depend:
 # Windows
 #
 
+ifeq ($(MSWIN),yes)
+
 setup.cc oz.cc ozengine.cc: version.h
 
 ozengine.exe: ozengine.o
@@ -113,3 +117,6 @@ setup.exe: setup.o
 
 version.h: $(SRCTOP)/OZVERSION
         echo "#define OZVERSION \"`$<`\"" > $@
+
+
+endif

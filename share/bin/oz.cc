@@ -13,7 +13,7 @@ char *splitFirstArg(char *s)
 }
 
 
-#ifdef CONSOLEAPP
+#ifdef OZENGINE
 int main(int argc, char **argv)
 #else
 int PASCAL
@@ -26,7 +26,12 @@ WinMain(HANDLE /*hInstance*/, HANDLE /*hPrevInstance*/,
   GetModuleFileName(NULL, buffer, sizeof(buffer));
   char *progname = getProgname(buffer);
 
-  char *ozhome   = getOzHome(buffer);
+#ifdef OZENGINE
+  const int depth = 3;
+#else
+  const int depth = 1;
+#endif
+  char *ozhome   = getOzHome(buffer,depth);
 
   ozSetenv("OZPLATFORM",ozplatform);
   ozSetenv("OZHOME",ozhome);
@@ -57,14 +62,14 @@ WinMain(HANDLE /*hInstance*/, HANDLE /*hPrevInstance*/,
       char *url = lpszCmdLine;
       sprintf(buffer,"%s -u \"%s\" -- %s", ozemulator,url,rest);
       */
-#ifdef CONSOLEAPP
+#ifdef OZENGINE
     if (argc < 2) {
       fprintf(stderr,"usage: ozengine url <args>\n");
       exit(1);
     }
     char *ozemulator = getenv("OZEMULATOR");
     if (ozemulator == NULL) {
-      sprintf(buffer,"%s/platform/%s/ozemulator.exe",ozhome,ozplatform);
+      sprintf(buffer,"%s/platform/%s/emulator.exe",ozhome,ozplatform);
       ozemulator = strdup(buffer);
     }
 
@@ -89,7 +94,7 @@ WinMain(HANDLE /*hInstance*/, HANDLE /*hPrevInstance*/,
   if (ret!=TRUE) {
     OzPanic(1,"Cannot start Oz.\nError = %d.\nDid you run setup?",errno);
   }
-#ifdef CONSOLEAPP
+#ifdef OZENGINE
   WaitForSingleObject(pinf.hProcess,INFINITE);
   fprintf(stdout,"\n");
   fflush(stdout);

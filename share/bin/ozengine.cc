@@ -1,3 +1,3 @@
-#define CONSOLEAPP
+#define OZENGINE
 
 #include "oz.cc"
