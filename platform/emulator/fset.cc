@@ -628,17 +628,19 @@ void FSetValue::init(const OZ_FiniteDomain &fd)
 {
   FSDEBUG(printf("fsv::init(fd)..."); printf("FD: %s\n", fd.toString()));
 #ifdef BIGFSET
+  _card = fd.getSize();
 
-  //_IN.initDescr(fd.getDescr());
-  // well...
-  _IN = fd;
+  if (_card == 0) {
+    init(fs_empty);
+  } else {
+    //_IN.initDescr(fd.getDescr());
+    // well...
+    _IN = fd;
 
-  _card = _IN.getSize();
+    _normal = false;
 
-  _normal = false;
-
-  maybeToNormal();
-
+    maybeToNormal();
+  }
 #else
   if (fd.getMaxElem() >= fsethigh32) // TMUELLER
     OZ_warning("Max elem of `fd' is to big (%s:%s)", __FILE__, __LINE__);

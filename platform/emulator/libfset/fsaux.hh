@@ -40,8 +40,8 @@
 #define OZ_DEBUGCODE(C) C
 #define OZ_NONDEBUGCODE(C)
 extern "C" void oz_fsetdebugprint(char *format ...);
-#define _OZ_DEBUGPRINT(C) oz_fsetdebugprint C
-#define OZ_DEBUGPRINT(C) _OZ_DEBUGPRINT(C)
+#define _OZ_DEBUGPRINT(C) printf C; printf("\n"); fflush(stdout)
+#define OZ_DEBUGPRINT(C) /*_OZ_DEBUGPRINT(C)*/
 #define OZ_ASSERT(C)                                    \
   if (! (C)) {                                          \
     fprintf(stderr,"OZ_ASSERT %s failed (%s:%d).\n",    \
@@ -49,8 +49,27 @@ extern "C" void oz_fsetdebugprint(char *format ...);
     fflush(stderr);                                     \
     abort();                                            \
   }
-#define _OZ_DEBUGRETURNPRINT(X) __debugReturnPrint(X)
-#define OZ_DEBUGRETURNPRINT(X)  X /* _OZ_DEBUGRETURNPRINT(X) */
+#define _OZ_DEBUGRETURNPRINT(X)                 \
+{                                               \
+  OZ_Return ret = X;                            \
+                                                \
+  switch ret {                                  \
+    case OZ_ENTAILED;                           \
+    printf("OZ_ENTAILED\n"); fflush(stdout);    \
+    break;                                      \
+    case OZ_SCHEDULED;                          \
+    printf("OZ_SCHEDULED\n"); fflush(stdout);   \
+    break;                                      \
+    case OZ_FAILED;                             \
+    printf("OZ_FAILED\n"); fflush(stdout);      \
+    break;                                      \
+    case OZ_SLEEP;                              \
+    printf("OZ_SLEEP\n"); fflush(stdout);       \
+    break;                                      \
+  }                                             \
+  return ret;                                   \
+}
+#define OZ_DEBUGRETURNPRINT(X)  X /*_OZ_DEBUGRETURNPRINT(X) */
 inline
 OZ_Return __debugReturnPrint(OZ_Return r)
 {
@@ -66,6 +85,10 @@ OZ_Return __debugReturnPrint(OZ_Return r)
   oz_fsetdebugprint("returning: %s",aux);
   return r;
 }
+#define _OZ_DEBUGPRINTTHIS(string)              \
+   _OZ_DEBUGPRINT(("%s%s",string,this->toString()))
+
+#define OZ_DEBUGPRINTTHIS(string) /* _OZ_DEBUGPRINTTHIS(string) */
 #else
 #define OZ_DEBUGCODE(C)
 #define OZ_NONDEBUGCODE(C) C
@@ -74,12 +97,10 @@ OZ_Return __debugReturnPrint(OZ_Return r)
 #define OZ_ASSERT(C)
 #define OZ_DEBUGRETURNPRINT(X) X
 #define _OZ_DEBUGRETURNPRINT(X) X
+#define _OZ_DEBUGPRINTTHIS(string)
+#define OZ_DEBUGPRINTTHIS(string)
 #endif
 
-#define _OZ_DEBUGPRINTTHIS(string)              \
-   _OZ_DEBUGPRINT(("%s%s",string,this->toString()))
-
-#define OZ_DEBUGPRINTTHIS(string) _OZ_DEBUGPRINTTHIS(string)
 
 //-----------------------------------------------------------------------------
 

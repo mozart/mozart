@@ -173,20 +173,20 @@ OZ_C_proc_end
 
 OZ_Return FSetsConvexPropagator::propagate(void)
 {
-  _OZ_DEBUGPRINTTHIS("in: ");
+  OZ_DEBUGPRINTTHIS("in: ");
 
   OZ_FSetVar s(_s);
 
   // an empty set is convex (per definition)
   if (!s->isEmpty()) {
 
-    _OZ_DEBUGPRINT(("a"));
+    OZ_DEBUGPRINT(("a"));
 
     // find minimal and maximal element in glb and fill it up
     int min_in = s->getGlbMinElem();
     // lower bound is not empty
 
-    _OZ_DEBUGPRINT(("min_in=%d", min_in));
+    OZ_DEBUGPRINT(("min_in=%d", min_in));
 
     if (min_in != -1) {
       int max_in = s->getGlbMaxElem();
@@ -195,7 +195,7 @@ OZ_Return FSetsConvexPropagator::propagate(void)
       OZ_FSetValue fillup(min_in, max_in);
       FailOnInvalid(*s <<= *s | fillup);
 
-      _OZ_DEBUGPRINT(("b"));
+      OZ_DEBUGPRINT(("b"));
 
       // find next smaller element to minimal element in glb not contained
       // and remove all elements starting from this element to `inf'
@@ -204,7 +204,7 @@ OZ_Return FSetsConvexPropagator::propagate(void)
         FailOnInvalid(*s >= next_smaller);
       }
 
-      _OZ_DEBUGPRINT(("c"));
+      OZ_DEBUGPRINT(("c"));
 
       // find next larger element to maximal element in glb not contained
       // and remove all elements starting from this element to `sup'
@@ -214,15 +214,15 @@ OZ_Return FSetsConvexPropagator::propagate(void)
       }
     }
 
-    _OZ_DEBUGPRINT(("d"));
+    OZ_DEBUGPRINT(("d"));
   }
 
-  _OZ_DEBUGPRINTTHIS("out: ");
+  OZ_DEBUGPRINTTHIS("out: ");
 
   return s.leave() ? OZ_SLEEP : OZ_ENTAILED;
 
 failure:
-  _OZ_DEBUGPRINTTHIS("fail: ");
+  OZ_DEBUGPRINTTHIS("fail: ");
 
   s.fail();
   return FAILED;

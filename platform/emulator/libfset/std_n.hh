@@ -57,7 +57,7 @@ public:
 };
 
 //-----------------------------------------------------------------------------
-#define EXPERIMENT
+//#define EXPERIMENT
 
 class FSetUnionNPropagator : public Propagator_VS_S {
   friend INIT_FUNC(fsp_init);

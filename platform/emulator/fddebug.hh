@@ -26,12 +26,12 @@
 
 #ifndef __FDDEBUG_HH__
 #define __FDDEBUG_HH__
-/*
-#define DEBUG_FD_CONSTRREP
-#define DEBUG_FD
-#define DEBUG_FSET
-#define DEBUG_FSET_CONSTRREP
-*/
+
+//#define DEBUG_FD_CONSTRREP
+//#define DEBUG_FD
+//#define DEBUG_FSET
+//#define DEBUG_FSET_CONSTRREP
+
 extern ostream * cpi_cout;
 
 
@@ -60,7 +60,7 @@ if (!(C)) OZ_error("FD assertion '%s' failed at %s:%d.", #C, __FILE__, __LINE__)
 
 #define _DEBUG_FSETIR(CODE) (*cpi_cout) << CODE << flush;
 #define DEBUG_FSETIR(CODE) _DEBUG_FSETIR(CODE)
-#define FSDEBUG(X) { X; }
+#define FSDEBUG(X) //{ X; }
 
 #else
 
