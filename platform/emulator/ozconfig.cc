@@ -96,7 +96,14 @@ void ConfigData::init() {
   tcpPacketSize = TCP_PACKET_SIZE;
 
   perdioSeifHandler = 1;
-  
+
+  dpTableDefaultOwnerTableSize = DEFAULT_OWNER_TABLE_SIZE;
+  dpTableDefaultBorrowTableSize = DEFAULT_BORROW_TABLE_SIZE;
+  dpTableLowLimit = DP_TABLE_LOW_LIMIT;
+  dpTableExpandFactor = DP_TABLE_EXPAND_FACTOR;
+  dpTableBuffer = DP_TABLE_BUFFER;
+  dpTableWorthwhileRealloc = DP_TABLE_WORTHWHILE_REALLOC;
+
   closetime = DEFAULT_CLOSE_TIME;
 
   /* set osname and cpu */
