@@ -2896,6 +2896,8 @@ inline OZ_Return eqeqWrapper(TaggedRef Ain, TaggedRef Bin)
   if (isLiteral(tagA))  return literalEq(A,B)  ? PROCEED : FAILED;
 
   if (A == B && !isAnyVar(A)) return PROCEED;
+
+  if (isConst(tagA))    return tagged2Const(A)->unify(B,NO) ? PROCEED : FAILED;
   
  dontknow:
   am.trail.pushMark();
