@@ -371,7 +371,7 @@ void showCall(DBGPort port, Board *b, Chunk *def, int arity, TaggedRef *args,
 
   if (port == PORT_ENTER &&
       isAbstraction(def)) {
-    am.pushDebug(b,def,arity,args);
+    am.pushDebug(def,arity,args);
   }
 }
 

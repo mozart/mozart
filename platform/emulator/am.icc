@@ -211,28 +211,40 @@ Bool AM::isEmptyTrailChunk ()
 }
 
 inline
-void AM::pushCall(Board *b, Chunk *def, int arity, RefsArray args)
+void AM::pushCall(Chunk *def, int arity, RefsArray args)
 {
-  currentThread->pushCall(b,def,args,arity);
+  currentThread->pushCall(def,args,arity);
 }
 
 inline
-void AM::pushTask(Board *n,ProgramCounter pc,
+void AM::pushTask(ProgramCounter pc,
 		  RefsArray y,RefsArray g,RefsArray x,int i)
 {
-  currentThread->pushCont(n,pc,y,g,x,i,OK);
+  currentThread->pushCont(pc,y,g,x,i,OK);
 }
 
 inline
-void AM::pushCFun(Board *n, OZ_CFun f, RefsArray x, int i)
+void AM::pushCFun(OZ_CFun f, RefsArray x, int i)
 {
-  currentThread->pushCFunCont(n, f, (Suspension *) NULL, x, i, OK);
+  currentThread->pushCFunCont(f, (Suspension *) NULL, x, i, OK);
 }
  
 inline
-void AM::pushNervous(Board *n)
+void AM::pushNervous()
 {
-  currentThread->pushNervous(n);
+  currentThread->pushNervous();
+}
+
+inline
+void AM::pushSolve()
+{
+  currentThread->pushSolve();
+}
+
+inline
+void AM::pushLocal()
+{
+  currentThread->pushLocal();
 }
 
 /* ------------------------------------------------------------------------
