@@ -112,7 +112,11 @@ public:
     sync = oz_newVar(bb);
   }
 
-  TaggedRef getSync() {
+  void dispose(void) {
+    freeListDispose(this, sizeof(FdDistributor));
+  }
+
+  TaggedRef getSync(void) {
     return sync;
   }
 
@@ -128,30 +132,26 @@ public:
   void selectValSplitMin(void);
   void selectValSplitMax(void);
 
-  virtual int commit(Board * bb, int l, int r) {
+  virtual int commit(Board * bb, int n) {
+    if (n > 2)
+      return -2;
+
     if (size > 0) {
-      if (l==r) {
-	TaggedRef dom;
-	if (l == 1) {
-	  dom = sel_val;
-	} else {
-	  SRecord * st = SRecord::newSRecord(AtomCompl, 1);
-	  st->setArg(0, sel_val);
-	  dom = makeTaggedSRecord(st);
-	}
-	tell_dom(bb,vars[sel_var],dom);
-	return 1;
+      TaggedRef dom;
+      if (n == 1) {
+	dom = sel_val;
       } else {
-	return 2;
+	SRecord * st = SRecord::newSRecord(AtomCompl, 1);
+	st->setArg(0, sel_val);
+	dom = makeTaggedSRecord(st);
       }
+      tell_dom(bb,vars[sel_var],dom);
+      return 1;
     } else {
       tell_dom(bb,sync,makeTaggedSmallInt(0));
+      dispose();
       return 0;
     }
-  }
-
-  virtual void dispose(void) {
-    freeListDispose(this, sizeof(FdDistributor));
   }
 
   virtual Distributor * gCollect(void) {
@@ -180,13 +180,13 @@ public:
   FdAssigner(Board * b, TaggedRef * v, int s) :
     FdDistributor(b,v,s) {}
 
-  virtual int commit(Board * bb, int l, int r) {
+  virtual int commit(Board * bb, int n) {
     if (size > 0) {
-      Assert(l==1 && r==1);
       tell_eq(bb,vars[sel_var],sel_val);
       return 1;
     } else {
       tell_eq(bb,sync,makeTaggedSmallInt(0));
+      dispose();
       return 0;
     }
   }

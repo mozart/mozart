@@ -382,7 +382,8 @@ void Board::checkStability(void) {
 	int n = d->getAlternatives();
       
 	if (n == 1) {
-	  commit(1,1);
+	  if (d->commit(this,1) == 0)
+	    setDistributor(NULL);
 	} else {
 	  trail.popMark();
 	  Assert(!oz_onToplevel() || trail.isEmptyChunk());

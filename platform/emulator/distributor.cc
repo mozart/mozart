@@ -27,3 +27,6 @@
 
 #include "distributor.hh"
 
+int Distributor::commit(Board *, int, int r) {
+  return (r > 2) ? -2 : 2;
+}

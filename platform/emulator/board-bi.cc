@@ -75,6 +75,10 @@ public:
     var    = oz_newVar(bb);
   }
   
+  void dispose(void) {
+    freeListDispose(this, sizeof(BaseDistributor));
+  }
+  
   TaggedRef getVar(void) {
     return var;
   }
@@ -83,31 +87,31 @@ public:
     return num;
   }
 
-  virtual int BaseDistributor::commit(Board * bb, int l, int r) {
-    
-    if (num==1 && l==1 && r==1) {
-      int ret = oz_unify(var,makeTaggedSmallInt(1));
-      Assert(ret==PROCEED);
-      return 0;
+  virtual int BaseDistributor::commit(Board * bb, int n) {
+    if (n > offset+num) {
+      return -num;
     }
-  
-    if (l > num+1) {
-      num = 0;
+
+    if (num==1 && n==1) {
+      (void) oz_unify(var,makeTaggedSmallInt(1));
     } else {
-      offset += l-1;
-      num     = min(num,min(r,num+1)-l+1);
-      
-      if (num == 1) {
-	num = 0;
-	
-	telleq(bb,var,makeTaggedSmallInt(offset + 1));
-      }
+      telleq(bb,var,makeTaggedSmallInt(offset + n));
     }
-    return num;
+    
+    dispose();
+    return 0;
   }
   
-  virtual void dispose(void) {
-    freeListDispose(this, sizeof(BaseDistributor));
+  virtual int BaseDistributor::commit(Board * bb, int l, int r) {
+    if (r > offset+num) {
+      return -num;
+    }
+
+    offset += l-1;
+    num     = r-l+1;
+    
+    Assert(num>1);
+    return num;
   }
   
   virtual Distributor * BaseDistributor::gCollect(void) {
@@ -325,6 +329,63 @@ OZ_BI_define(BIcloneSpace, 1,1) {
 } OZ_BI_end
 
 
+OZ_BI_define(BIcommit1Space, 2, 0) {
+  declareSpace;
+  oz_declareIntIN(1,n);
+
+  if (space->isMarkedMerged())
+    return oz_raise(E_ERROR,E_KERNEL,"spaceMerged",1,tagged_space);
+
+  if (isFailedSpace)
+    return PROCEED;
+  
+  Board * sb = space->getSpace();
+
+  if (!sb->isAdmissible())
+    return oz_raise(E_ERROR,E_KERNEL,"spaceAdmissible",1,tagged_space);
+
+  TaggedRef status = space->getSpace()->getStatus();
+  
+  DEREF(status, status_ptr, status_tag);
+  if (isVariableTag(status_tag)) 
+    oz_suspendOn(makeTaggedRef(status_ptr));
+
+  if (!sb->getDistributor())
+    return oz_raise(E_ERROR,E_KERNEL,"spaceNoChoice",1,tagged_space);
+
+  return sb->commit(tagged_space,n); 
+} OZ_BI_end
+
+
+OZ_BI_define(BIcommit2Space, 3,0) {
+  declareSpace;
+  oz_declareIntIN(1,l);
+  oz_declareIntIN(2,r);
+
+  if (space->isMarkedMerged())
+    return oz_raise(E_ERROR,E_KERNEL,"spaceMerged",1,tagged_space);
+
+  if (isFailedSpace)
+    return PROCEED;
+  
+  Board * sb = space->getSpace();
+
+  if (!sb->isAdmissible())
+    return oz_raise(E_ERROR,E_KERNEL,"spaceAdmissible",1,tagged_space);
+
+  TaggedRef status = space->getSpace()->getStatus();
+  
+  DEREF(status, status_ptr, status_tag);
+  if (isVariableTag(status_tag)) 
+    oz_suspendOn(makeTaggedRef(status_ptr));
+
+  if (!sb->getDistributor())
+    return oz_raise(E_ERROR,E_KERNEL,"spaceNoChoice",1,tagged_space);
+
+  return sb->commit(tagged_space, l, r);
+} OZ_BI_end
+
+
 OZ_BI_define(BIcommitSpace, 2,0) {
   declareSpace;
   oz_declareIN(1,choice);
@@ -379,17 +440,9 @@ OZ_BI_define(BIcommitSpace, 2,0) {
   if (!sb->getDistributor())
     return oz_raise(E_ERROR,E_KERNEL,"spaceNoChoice",1,tagged_space);
 
-  int n = sb->commit(tagged2SmallInt(left),tagged2SmallInt(right));
-    
-  if (n>1) {
-    sb->patchAltStatus(n);
-
-    return PROCEED;
-  }
-    
-  sb->clearStatus();
-
-  return BI_PREEMPT;
+  return sb->commit(tagged_space, 
+		    tagged2SmallInt(left),
+		    tagged2SmallInt(right));
 } OZ_BI_end
 
 
