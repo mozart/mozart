@@ -147,14 +147,15 @@ Bool FDIntervals::next(int i, int &n) const
   }
 }
 
-static
-LTuple * mkListEl(LTuple * h, LTuple * a, TaggedRef el)
+inline
+LTuple * mkListEl(LTuple * &h, LTuple * a, TaggedRef el)
 {
   if (h == NULL) {
     return h = new LTuple(el, AtomNil);
   } else {
-    a->setTail(makeTaggedLTuple(a = new LTuple(el, AtomNil)));
-    return a;
+    LTuple * aux = new LTuple(el, AtomNil);
+    a->setTail(makeTaggedLTuple(aux));
+    return aux;
   }
 }   
 
@@ -699,7 +700,7 @@ TaggedRef FDBitVector::getAsList(void) const
   int len = mkRaw(fd_bv_left_conv, fd_bv_right_conv);
   
   for (int i = 0; i < len; i += 1) 
-    if (fd_bv_left_conv[i] == fd_bv_left_conv[i])
+    if (fd_bv_left_conv[i] == fd_bv_right_conv[i])
       l_ptr = mkListEl(hd, l_ptr, newSmallInt(fd_bv_left_conv[i]));
     else
       l_ptr = mkListEl(hd, l_ptr, mkTuple(fd_bv_left_conv[i],
