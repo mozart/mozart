@@ -1,2 +1,2 @@
 makefile(
-   lib : ['Path.ozf' 'Shell.ozf' 'Misc.ozf'])
+   lib : ['Path.ozf' 'Shell.ozf'])
