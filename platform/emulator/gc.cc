@@ -34,6 +34,7 @@
 #include "fdprofil.hh"
 
 #include "verbose.hh"
+#include "fdomn.hh"
 
 #ifdef OUTLINE
 #define inline
@@ -1301,7 +1302,7 @@ TaggedRef gcVariable(TaggedRef var)
 
 
 inline
-void OZ_FiniteDomain::gc(void)
+void OZ_FiniteDomainImpl::gc(void)
 {
 #if defined(DEBUG_CHECK) && defined(DEBUG_FD)
   Assert(isConsistent());
@@ -1315,12 +1316,11 @@ void OZ_FiniteDomain::gc(void)
 void GenFDVariable::gc(void)
 {
   GCMETHMSG("GenFDVariable::gc");
-  finiteDomain.gc();
+  ((OZ_FiniteDomainImpl *) &finiteDomain)->gc();
 
   int i;
   for (i = fd_any; i--; )
     fdSuspList[i] = fdSuspList[i]->gc();
-
 }
 
 

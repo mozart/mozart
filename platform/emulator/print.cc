@@ -20,7 +20,6 @@
 
 #include "genvar.hh"
 #include "fdomn.hh"
-#include "fdomn1.hh"
 
 class Indent {
 public:
@@ -211,10 +210,7 @@ void GenCVariable::print(ostream &stream, int depth, int offset, TaggedRef v)
                << '/'
                << me->fdSuspList[fd_bounds]->lengthProp()
                << ')';
-      stream << ' ';
-      me->getDom().print(stream, 0);
-
-      stream << ">";
+      stream << ' ' <<  me->getDom() << ">";
       break;
     }
 
@@ -1138,7 +1134,7 @@ void GenCVariable::printLong(ostream &stream, int depth, int offset,
     stream << indent(offset) << "FD Bounds SuspList:\n";
     ((GenFDVariable*)this)->fdSuspList[fd_bounds]->print(stream, depth, offset+3);
     stream << indent(offset) << "FD Domain:\n";
-    ((GenFDVariable*)this)->getDom().printLong(stream, offset+3);
+    ((OZ_FiniteDomainImpl *) &((GenFDVariable*)this)->getDom())->printLong(stream, offset+3);
     break;
 
   case BoolVariable:
@@ -1590,7 +1586,7 @@ void FDBitVector::printDebugLong(void) const
   cerr.flush();
 }
 
-void OZ_FiniteDomain::print(ostream &ofile, int idnt) const
+void OZ_FiniteDomainImpl::print(ostream &ofile, int idnt) const
 {
   if (getSize() == 0)
     ofile << indent(idnt) << "{ empty }";
@@ -1613,7 +1609,7 @@ void OZ_FiniteDomain::print(ostream &ofile, int idnt) const
               (getType() == bv_descr ? 'b' : 'i')) << '#' << size);
 }
 
-void OZ_FiniteDomain::printLong(ostream &ofile, int idnt) const
+void OZ_FiniteDomainImpl::printLong(ostream &ofile, int idnt) const
 {
   static char * descr_type_text[3] = {"bv_descr", "iv_descr", "fd_descr"};
 
@@ -1638,14 +1634,14 @@ void OZ_FiniteDomain::printLong(ostream &ofile, int idnt) const
   }
 }
 
-void OZ_FiniteDomain::printDebug(void) const
+void OZ_FiniteDomainImpl::printDebug(void) const
 {
   print(cerr, 0);
   cerr << endl;
   cerr.flush();
 }
 
-void OZ_FiniteDomain::printDebugLong(void) const
+void OZ_FiniteDomainImpl::printDebugLong(void) const
 {
   printLong(cerr, 0);
   cerr << endl;

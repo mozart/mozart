@@ -279,7 +279,7 @@ OZ_C_proc_begin(BIfdPutList, 3)
 
   if (! x.introduce(OZ_getCArg(0))) return FAILED;
 
-  OZ_FiniteDomain aux; aux.init(OZ_getCArg(1));
+  OZ_FiniteDomain aux(OZ_getCArg(1));
 
   if (OZ_intToC(s) != 0) aux = ~aux;
 

@@ -32,8 +32,8 @@ class GenFDVariable: public GenCVariable {
 
 friend class GenCVariable;
 friend class GenBoolVariable;
-friend inline void addSuspFDVar(TaggedRef, SuspList *, FDPropState);
-friend inline void addSuspFDVar(TaggedRef, Thread *, FDPropState);
+friend inline void addSuspFDVar(TaggedRef, SuspList *, OZ_FDPropState);
+friend inline void addSuspFDVar(TaggedRef, Thread *, OZ_FDPropState);
 
 private:
   OZ_FiniteDomain finiteDomain;
@@ -49,7 +49,7 @@ public:
   }
 
   GenFDVariable() : GenCVariable(FDVariable) {
-    finiteDomain.setFull();
+    finiteDomain.initFull();
     fdSuspList[fd_det] = fdSuspList[fd_bounds] = NULL;
   }
 
@@ -64,7 +64,7 @@ public:
   void becomesSmallIntAndPropagate(TaggedRef * trPtr);
   void becomesBoolVarAndPropagate(TaggedRef * trPtr);
 
-  int intersectWithBool(void) {return finiteDomain.intersectWithBool();}
+  int intersectWithBool(void);
 
   // is X=val still valid, i.e. is val a smallint and is it still in the domain
   Bool valid(TaggedRef val);
@@ -79,7 +79,7 @@ public:
   void relinkSuspListTo(GenFDVariable * lv, Bool reset_local = FALSE);
   void relinkSuspListTo(GenBoolVariable * lv, Bool reset_local = FALSE);
 
-  void propagate(TaggedRef var, FDPropState state,
+  void propagate(TaggedRef var, OZ_FDPropState state,
                  PropCaller prop_eq = pc_propagator);
 
   void propagateUnify(TaggedRef var);
@@ -101,8 +101,8 @@ public:
 inline Bool isGenFDVar(TaggedRef term);
 inline Bool isGenFDVar(TaggedRef term, TypeOfTerm tag);
 inline GenFDVariable * tagged2GenFDVar(TaggedRef term);
-inline void addSuspFDVar(TaggedRef, SuspList *, FDPropState = fd_any);
-inline void addSuspFDVar(TaggedRef, Thread *, FDPropState = fd_any);
+inline void addSuspFDVar(TaggedRef, SuspList *, OZ_FDPropState = fd_any);
+inline void addSuspFDVar(TaggedRef, Thread *, OZ_FDPropState = fd_any);
 
 #if !defined(OUTLINE) && !defined(FDOUTLINE)
 #include "fdgenvar.icc"

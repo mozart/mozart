@@ -38,7 +38,7 @@ void GenFDVariable::dispose(void) {
 }
 
 inline
-void GenFDVariable::propagate(TaggedRef var, FDPropState state,
+void GenFDVariable::propagate(TaggedRef var, OZ_FDPropState state,
                               PropCaller prop_eq)
 {
   if (prop_eq == pc_propagator) {
@@ -121,7 +121,7 @@ GenFDVariable * tagged2GenFDVar(TaggedRef term)
 }
 
 inline
-void addSuspFDVar(TaggedRef v, SuspList * el, FDPropState list_index)
+void addSuspFDVar(TaggedRef v, SuspList * el, OZ_FDPropState list_index)
 {
   GenFDVariable * fv = tagged2GenFDVar(v);
 
@@ -144,7 +144,7 @@ void addSuspFDVar(TaggedRef v, SuspList * el, FDPropState list_index)
 }
 
 inline
-void addSuspFDVar(TaggedRef v, Thread * el, FDPropState list_index)
+void addSuspFDVar(TaggedRef v, Thread * el, OZ_FDPropState list_index)
 {
   GenFDVariable * fv = tagged2GenFDVar(v);
 

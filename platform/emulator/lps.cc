@@ -181,7 +181,6 @@ Bool LocalPropagationStore::propagate_locally () {
     }
 
   }
-
   in_local_propagation = FALSE;
   am.currentThread = savedCurrentThread;
   return (TRUE);

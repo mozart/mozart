@@ -46,6 +46,9 @@ enum Recalc_e {lower, upper};
 //-----------------------------------------------------------------------------
 // Macros
 
+// TMUELLER: MAXFDBIARGS twice
+#define MAXFDBIARGS 1000 // maximum number of arguments of fd built-ins
+
 #if PROFILE_FD == 1
 #define FailFD (_PROFILE_CODE1(FDProfiles.inc_item(no_failed_props)), FAILED)
 #define SuspendFD (_PROFILE_CODE1(FDProfiles.inc_item(no_susp_props)), SLEEP)
@@ -161,8 +164,8 @@ private:
 
   int global_vars;
 
-  void addPropagator (int i, Thread *thr, FDPropState target);
-  void addPropagators (Thread *thr, FDPropState target);
+  void addPropagator (int i, Thread *thr, OZ_FDPropState target);
+  void addPropagators (Thread *thr, OZ_FDPropState target);
 
 public:
   BIfdHeadManager(int s);
@@ -186,10 +189,10 @@ public:
 
   int getCurrNumOfItems(void) {return curr_num_of_items;}
 
-  OZ_Bool spawnPropagator(FDPropState, OZ_CFun, int, OZ_Term *);
-  OZ_Bool spawnPropagator(FDPropState, FDPropState, OZ_CFun, int, OZ_Term *);
-  OZ_Bool spawnPropagator(FDPropState, OZ_CFun, int, OZ_Term, ...);
-  OZ_Bool spawnPropagatorStabil(FDPropState, OZ_CFun, int, OZ_Term, ...);
+  OZ_Bool spawnPropagator(OZ_FDPropState, OZ_CFun, int, OZ_Term *);
+  OZ_Bool spawnPropagator(OZ_FDPropState, OZ_FDPropState, OZ_CFun, int, OZ_Term *);
+  OZ_Bool spawnPropagator(OZ_FDPropState, OZ_CFun, int, OZ_Term, ...);
+  OZ_Bool spawnPropagatorStabil(OZ_FDPropState, OZ_CFun, int, OZ_Term, ...);
   static OZ_Bool suspendOnVar(OZ_CFun, int, OZ_Term *, OZ_Term *);
   static OZ_Bool suspendOnVar(OZ_CFun, int, OZ_Term *, OZ_Term *, OZ_Term *);
   static OZ_Bool suspendOnVar(OZ_CFun, int, OZ_Term *, OZ_Term *, OZ_Term *, OZ_Term *);
@@ -234,7 +237,7 @@ private:
   static OZ_Term ** bifdbm_varptr;
   static pm_term_type * bifdbm_vartag;
 
-  static OZ_FiniteDomainPtr * bifdbm_dom;
+  static OZ_FiniteDomain ** bifdbm_dom;
   static OZ_FiniteDomain * bifdbm_domain;
 
   static int curr_num_of_vars;
@@ -348,7 +351,7 @@ public:
 
   OZ_Boolean areIdentVar(int a, int b);
 
-  OZ_FiniteDomainPtr * getDoms(void) {return bifdbm_dom;}
+  OZ_FiniteDomain ** getDoms(void) {return bifdbm_dom;}
 
 // exactly one variable is regarded
   BIfdBodyManager(void) {backup_count = 0; curr_num_of_vars = 1;}

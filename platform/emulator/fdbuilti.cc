@@ -293,7 +293,7 @@ OZ_Boolean BIfdHeadManager::expectNonLin(int i, SRecord &at, SRecord &xt,
   }
 }
 
-void BIfdHeadManager::addPropagators (Thread *thr, FDPropState target) {
+void BIfdHeadManager::addPropagators (Thread *thr, OZ_FDPropState target) {
   for (int i = curr_num_of_items; i--; )
     addPropagator (i, thr, target);
 
@@ -382,7 +382,7 @@ Bool BIfdHeadManager::addSuspXorYdet(OZ_CFun f, OZ_Term * x, int a)
 #endif
 
 
-void BIfdHeadManager::addPropagator (int i, Thread *thr, FDPropState target)
+void BIfdHeadManager::addPropagator (int i, Thread *thr, OZ_FDPropState target)
 {
   DebugCheck(i < 0 || i >= curr_num_of_items, error("index overflow"));
 
@@ -452,7 +452,7 @@ void BIfdBodyManager::saveDomainOnTopLevel(int i) {
   }
 }
 
-OZ_Bool BIfdHeadManager::spawnPropagator (FDPropState t,
+OZ_Bool BIfdHeadManager::spawnPropagator (OZ_FDPropState t,
                                           OZ_CFun f, int a, OZ_Term * x)
 {
 #ifndef TM_LP
@@ -517,7 +517,7 @@ OZ_Bool BIfdHeadManager::spawnPropagator (FDPropState t,
 #endif
 }
 
-OZ_Bool BIfdHeadManager::spawnPropagator (FDPropState t1, FDPropState t2,
+OZ_Bool BIfdHeadManager::spawnPropagator (OZ_FDPropState t1, OZ_FDPropState t2,
                                           OZ_CFun f, int a, OZ_Term * x)
 {
 #ifndef TM_LP
@@ -579,7 +579,7 @@ OZ_Bool BIfdHeadManager::spawnPropagator (FDPropState t1, FDPropState t2,
 #endif
 }
 
-OZ_Bool BIfdHeadManager::spawnPropagator (FDPropState t,
+OZ_Bool BIfdHeadManager::spawnPropagator (OZ_FDPropState t,
                                           OZ_CFun f, int a, OZ_Term t1, ...)
 {
   OZ_Term * x = (OZ_Term *) heapMalloc (a * sizeof (OZ_Term));
@@ -650,7 +650,7 @@ OZ_Bool BIfdHeadManager::spawnPropagator (FDPropState t,
 #endif
 }
 
-OZ_Bool BIfdHeadManager::spawnPropagatorStabil(FDPropState t,
+OZ_Bool BIfdHeadManager::spawnPropagatorStabil(OZ_FDPropState t,
                                                OZ_CFun f, int a,
                                                OZ_Term t1, ...)
 {
@@ -854,7 +854,7 @@ OZ_Bool checkDomDescr(OZ_Term descr,
 OZ_Term * BIfdBodyManager::bifdbm_var;
 OZ_Term ** BIfdBodyManager::bifdbm_varptr;
 pm_term_type * BIfdBodyManager::bifdbm_vartag;
-OZ_FiniteDomainPtr * BIfdBodyManager::bifdbm_dom;
+OZ_FiniteDomain ** BIfdBodyManager::bifdbm_dom;
 OZ_FiniteDomain * BIfdBodyManager::bifdbm_domain;
 int * BIfdBodyManager::bifdbm_init_dom_size;
 fdbm_var_state * BIfdBodyManager::bifdbm_var_state;
@@ -874,7 +874,7 @@ void BIfdBodyManager::initStaticData(void) {
   index_offset = static_index_offset;
   index_size = static_index_size;
 
-  bifdbm_dom = new OZ_FiniteDomainPtr[MAXFDBIARGS];
+  bifdbm_dom = new OZ_FiniteDomain *[MAXFDBIARGS];
   bifdbm_domain = new OZ_FiniteDomain[MAXFDBIARGS];
   bifdbm_init_dom_size = new int[MAXFDBIARGS];
   bifdbm_var_state = new fdbm_var_state[MAXFDBIARGS];
@@ -1156,10 +1156,10 @@ void BIfdBodyManager::introduceLocal(int i, OZ_Term v)
 
   bifdbm_var_state[i] = fdbm_local;
   if (vartag == pm_singl) {
-    bifdbm_init_dom_size[i]=bifdbm_domain[i].setSingleton(OZ_intToC(var));
+    bifdbm_init_dom_size[i]=bifdbm_domain[i].initSingleton(OZ_intToC(var));
     bifdbm_dom[i] = &bifdbm_domain[i];
   } else if (vartag == pm_bool) {
-    bifdbm_init_dom_size[i] = bifdbm_domain[i].setBool();
+    bifdbm_init_dom_size[i] = bifdbm_domain[i].initBool();
     bifdbm_dom[i] = &bifdbm_domain[i];
   } else if (vartag == pm_fd) {
     bifdbm_dom[i] = &tagged2GenFDVar(var)->getDom();
@@ -1224,11 +1224,11 @@ void BIfdBodyManager::_introduce(int i, OZ_Term v)
   deref(v, vptr, vtag);
 
   if (vtag == pm_singl) {
-    bifdbm_init_dom_size[i] = bifdbm_domain[i].setSingleton(OZ_intToC(v));
+    bifdbm_init_dom_size[i] = bifdbm_domain[i].initSingleton(OZ_intToC(v));
     bifdbm_dom[i] = &bifdbm_domain[i];
     bifdbm_var_state[i] = fdbm_local;
   } else if (vtag == pm_bool) {
-    bifdbm_init_dom_size[i] = bifdbm_domain[i].setBool();
+    bifdbm_init_dom_size[i] = bifdbm_domain[i].initBool();
     bifdbm_dom[i] = &bifdbm_domain[i];
     bifdbm_var_state[i] = (am.isLocalCVar(v) ? fdbm_local : fdbm_global);
   } else if (vtag == pm_fd) {
@@ -1244,7 +1244,7 @@ void BIfdBodyManager::_introduce(int i, OZ_Term v)
     bifdbm_init_dom_size[i] = bifdbm_dom[i]->getSize();
     Assert(bifdbm_init_dom_size[i] > 1 && *bifdbm_dom[i] != fd_bool);
   } else if (vtag == pm_svar) {
-    bifdbm_domain[i].setFull();
+    bifdbm_domain[i].initFull();
     bifdbm_dom[i] = &bifdbm_domain[i];
     bifdbm_var_state[i] = (am.isLocalSVar(v) ? fdbm_local : fdbm_global);
   } else {
@@ -1453,7 +1453,7 @@ OZ_Boolean BIfdBodyManager::introduce(OZ_Term v)
   if (vtag == pm_singl) {
     int i_val = OZ_intToC(v);
     if (i_val >= 0) {
-      bifdbm_init_dom_size[0] = bifdbm_domain[0].setSingleton(i_val);
+      bifdbm_init_dom_size[0] = bifdbm_domain[0].initSingleton(i_val);
       bifdbm_dom[0] = &bifdbm_domain[0];
       bifdbm_var_state[0] = fdbm_local;
       bifdbm_var[0] = v;
@@ -1463,7 +1463,7 @@ OZ_Boolean BIfdBodyManager::introduce(OZ_Term v)
       return OZ_FALSE;
     }
   } else if (vtag == pm_bool) {
-    bifdbm_init_dom_size[0] = bifdbm_domain[0].setBool();
+    bifdbm_init_dom_size[0] = bifdbm_domain[0].initBool();
     bifdbm_dom[0] = &bifdbm_domain[0];
     bifdbm_var_state[0] = (am.isLocalCVar(v) ? fdbm_local : fdbm_global);
     bifdbm_var[0] = v;
@@ -1499,7 +1499,7 @@ OZ_Boolean BIfdBodyManager::introduce(OZ_Term v)
       bifdbm_var[0] = *(bifdbm_varptr[0] = taggedfdvar);
       bifdbm_vartag[0] = pm_fd;
     } else {
-      bifdbm_domain[0].setFull();
+      bifdbm_domain[0].initFull();
       bifdbm_dom[0] = &bifdbm_domain[0];
       bifdbm_var[0] = v;
       bifdbm_varptr[0] = vptr;
@@ -1519,7 +1519,7 @@ OZ_Boolean BIfdBodyManager::introduce(OZ_Term v)
       bifdbm_var[0] = *(bifdbm_varptr[0] = taggedfdvar);
       bifdbm_vartag[0] = pm_fd;
     } else {
-      bifdbm_domain[0].setFull();
+      bifdbm_domain[0].initFull();
       bifdbm_dom[0] = &bifdbm_domain[0];
       *vptr = bifdbm_var[0] = makeTaggedSVar(new SVariable(tagged2VarHome(v)));
       bifdbm_varptr[0] = vptr;
