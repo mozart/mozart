@@ -46,6 +46,7 @@
 #include "thread.hh"
 #include "tracer.hh"
 #include "ozdebug.hh"
+#include "fdAddOn.hh"
 
 // -----------------------------------------------------------------------
 // TOPLEVEL FAILURE
@@ -601,15 +602,17 @@ void engine() {
   LBLTaskCFuncCont:
 
     tmpBB->removeSuspension();
+
+    if (currentTaskSusp != NULL && currentTaskSusp->isDead() == OK) {
+      currentTaskSusp = NULL;
+      goto LBLfindWork;
+    }
+
     INSTALLPATH(tmpBB);
 
     switch (biFun(XSize, X)) {
     case FAILED:
-      if (currentTaskSusp != NULL &&
-          currentTaskSusp->isPropagated() == OK) {
-        currentTaskSusp->markDead();
-      }
-      currentTaskSusp = NULL;
+      killPropagatedCurrentTaskSusp();
       HANDLE_FAILURE(0,
                      message("call of (*0x%x)(int, TaggedRef[]) failed",
                              biFun); biFun = NULL;
@@ -617,12 +620,7 @@ void engine() {
                         message("\nArg %d: %s",i+1,tagged2String(X[i]));
                      );
     case PROCEED:
-      DebugCheckT(biFun = NULL);
-      if (currentTaskSusp != NULL &&
-          currentTaskSusp->isPropagated() == OK) {
-        currentTaskSusp->markDead();
-      }
-      currentTaskSusp = NULL;
+      killPropagatedCurrentTaskSusp();
       goto LBLreduce;
     default:
       error("Unexpected return value by c-function.");
@@ -742,7 +740,8 @@ void engine() {
       int arity = entry->getArity();
 
       if (arity != arityExp && VarArity != arity) {
-        warning("call: %s/%d with %d args", entry->getPrintName(), arity,arityExp);
+        warning("call: %s/%d with %d args", entry->getPrintName(),
+                arity, arityExp);
         HANDLE_FAILURE(PC+3, ;);
       }
 
@@ -751,6 +750,7 @@ void engine() {
         warning("call builtin: SUSPEND unexpected\n");
         // no break here
       case FAILED:
+        killPropagatedCurrentTaskSusp();
         HANDLE_FAILURE(PC+3,
                        message("call: builtin %s/%d failed",
                                entry->getPrintName(),
@@ -759,6 +759,7 @@ void engine() {
                        { message("\nArg %d: %s",i+1,tagged2String(X[i])); }
                        );
       case PROCEED:
+        killPropagatedCurrentTaskSusp();
       default:
         DISPATCH(3);
       }
