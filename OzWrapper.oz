@@ -865,8 +865,10 @@ define
       end
       meth prepareArgs(InArgs I OutArgs $)
 	 case InArgs
-	 of arg(type(Base Ptrs) _)|Ar then
-	    TStr = {Util.toString Base#Ptrs}
+	 of arg(type("gchar" "*[]") _)|Ar then
+	    GtkClasses, prepareArgs(Ar (I + 1) (I#'IN'#'NONE')|OutArgs $)
+	 [] arg(type(Base Ptrs) _)|Ar then
+	    TStr = {Util.toString Base#{Util.cleanPointers Ptrs}}
 	    Type = case TStr
 		   of "int*"     then 'OUT'('Int')
 		   [] "gint*"    then 'OUT'('Int')

@@ -28,6 +28,7 @@ export
    checkPrefix       : CheckPrefix
    stripPrefix       : StripPrefix
    cutPrefix         : CutPrefix
+   cleanPointers     : CleanPointers
    translateName     : TranslateName
    downTranslate     : MakeClassPrefix
    firstLower        : FirstLower
@@ -110,6 +111,18 @@ define
 	 [] nil  then nil
 	 end
       [] nil  then Ys
+      end
+   end
+
+   %%
+   %% Pointer Transformation
+   %%
+
+   fun {CleanPointers Ps}
+      case Ps
+      of &[|&]|Pr then &*|{CleanPointers Pr}
+      [] P|Pr     then P|{CleanPointers Pr}
+      [] nil      then nil
       end
    end
    
