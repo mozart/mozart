@@ -1,0 +1,318 @@
+% Copyright: Michael Mehl (1996)
+
+\chapter{Instructions of the Oz abstract machine}
+
+A code chunk is a sequence of abstract machine instructions.
+All instructions are n tuples with an op code and arguments.
+The op codes and their arguments are listed below.
+
+The types of arguments are:
+
+r ::  register with type and index
+  t ::  register type: X,Y
+  i ::  register index
+  [ encoding: bits 0,1: type X,Y,G,T; bits 1,..,15: index. ]
+  Usually only X,Y indexing allowed. Other types are explicitly mentioned.
+
+u ::  unsigned int
+  [ sequence of bytes, all but last byte with MSB set. ]
+
+s ::  string
+  [ 0 terminated sequence of bytes. ]
+
+l ::  code address relative to beginning of code chunk
+  [ see <u> ]
+
+lit :: atom or toplevel name.
+
+int :: signed integer value.
+
+arity :: record arity: width or list of <lit>
+
+
+\section{node instructions}
+
+This section contains the instructions to access/unify/create values
+and variables.
+
+Move(r1,r2)
+  Move value from register 'r1' to register 'r2'.
+  'r1' may be a G register, but no moves from G to Y registers.
+
+MoveMoveXYXY(i1,i2,i3,i4)
+MoveMoveYXYX(i1,i2,i3,i4)
+MoveMoveXYYX(i1,i2,i3,i4)
+
+  Optimization for two move instructions:
+    XYXY	save args (X) in environment (Y)
+       Move X-i1 to Y-i2 and X-i3 to Y-i4.
+    YXYX	move args from environment into arguments for call
+       Move Y-i1 to X-i2 and Y-i3 to X-i4.
+    XYYX	save and put args combined
+       Move X-i1 to Y-i2 and Y-i3 to X-i4.
+
+CreateVariable(r1)
+  Create a new variable 
+
+CreateVariableMove(i1,i2)
+  Optimization: create variable in Y register 'i1'
+   and move it into X register 'i2'.
+
+CreateToplevelVariable(i,s)
+  Create a toplevel variable, with name 's' for debugging purposes.
+
+DestroyToplevelVariable(i)
+  Deallocate a toplevel variable, to allow its garbage collection.
+
+Unify(r1,r2)
+  Unify the values in register 'r1' and 'r2'.
+  'r1' and 'r2' may be a G registers.
+
+PutRecord(lit,arity,r)
+  Create a record with label 's' and arity 'a' in register 'r'.
+  Initializes the 's pointer' to the first argument of the record.
+
+PutList(r)
+  Create a cons cell in register r.
+  Initializes the 's pointer' to the head of the cons.
+
+PutConstant(lit,i)
+  Move the literal lit into the X register i.
+
+PutInt(s,i)
+  Move the interger '' into the X register i.
+
+SetVariable(r)
+  Create a variable in record argument, move it to register r and
+  increment s pointer.
+
+SetConstant(lit)
+  Put literal 'lit' in record argument and increment s pointer.
+
+SetVoid(n)
+  Create 'n' variables in record arguments and increment s pointer.
+
+SetValue(r)
+  Move register 'r' in record argument and increment s pointer.
+
+SetInt(int)
+  Put integer 'int' in record argument and increment s pointer.
+
+GetRecord(lit,arity,r)
+  If register r contains a variable, then set r/w mode to write and
+  create a record with label 'lit' and arity 'arity' and
+  bind the variable to the record and
+  set  s pointer to the first record argument.
+  If register 'r' contains a record with arity 'arity' and label
+  'lit', set r/w mode to read and set s pointer to the first record
+  argument.
+  Else execute 'Failure'.
+
+GetList(r)
+  Analogous to GetRecord for cons cells.
+
+GetListValVar(i1,r2,i3)
+  == GetList(x-i1) UnifyVal(r2) UnifyVar(x-i3)
+
+GetConstant(lit,r)
+  If register 'r' contains a variable, then bind it to the literal
+  'lit'.
+  If register 'r' contains the literal 'lit', then do nothing.
+  Else execute 'Failure'.
+  [ used with arguments 'nil', `True`, `False` and for X={NewName} ]
+
+GetInt(int,r)
+  Analogous to GetConstant for integer 'int'.
+
+UnifyVariable(r)
+  If r/w mode is read, then move the record argument to the register 'r'
+  Else create a new variable in the record argument and move it
+  into register 'r'.
+  Always increment the s pointer.
+
+UnifyConstant(lit)
+UnifyInt(int)
+UnifyVoid(n)
+UnifyValue(r)
+UnifyValVar(r1,r2)
+
+GetVariable(r)
+GetVarVar(r1,r2)
+GetVoid(n)
+  Optimized UnifyVariable for case statements.
+
+Failure
+  Makes the constraint store inconsistent, i.e. fail the current space.
+
+Succeed
+  Does nothing.
+
+\section{control}
+
+This section contains the instructions for implementing conditionals
+and disjunctions.
+
+Branch(l)
+  Unconditional jump to the code address 'l'.
+
+CreateOr(n)
+  Create a disjunctive actor and save 'n' X registers
+  and create the first space.
+
+CreateEnumOr(n)
+  Create a disjunctive actor and save 'n' X registers
+  and push this actor on the choice point stack
+  and create the first space.
+
+CreateCond(l,n)
+  Create a conditional actor and save 'n' X registers and
+  the code address 'l' for the else
+  and create the first space.
+
+CreateChoice(n)
+  Create a choice actor and save 'n' X registers and
+  push this actor on the choice point stack
+  and create the first space.
+
+Space(l)
+  First instruction in guard.
+  Save the start address 'l' of the next space in the actor.
+  'l' is zero if there is no further space.
+
+EndGuard
+  Last instruction in guard.
+  [ Decrements thread counter in space. ]
+
+ShallowGuard(l,n)
+  Optimized conditional.
+  'l' on failure.
+  'n' is number of X registers to save.
+
+ShallowThen
+  End of guard of optimized conditional.
+
+TestConst(r,lit,l,n)
+  Optimized conditional.
+  'l' on failure.
+  'n' is number of X registers to save.
+
+TestNumber(r,int_float,l,n)
+  Optimized conditional.
+  'l' on failure.
+  'n' is number of X registers to save.
+
+TestBool(r,l1,l2,n)
+  Optimized conditional.
+  'l1' on 'False'.
+  'l2' on failure.
+  'n' is number of X registers to save.
+
+ShallowTest1(bi,i,l,n)
+  Optimized conditional.
+  'l' on else.
+  'n' is number of X registers to save.
+
+ShallowTest2(bi,i1,i2,l,n)
+  Optimized conditional. 'l' on failure.
+  'n' is number of X registers to save.
+
+SwitchOnTerm(r,hashtable,n)
+  Optimized conditional.
+  Includes suspension on weakDet.
+  'n' is number of X registers to save.
+
+\section{procedure definition}
+
+Definition(r,l,sName,nArity,sFile,nLine,nG,r_1,...,r_n3)
+  Create a new procedure in register 'r'.
+  'l' is the address of the next instruction after the body of the procedure.
+  'sName' is the name of the procedure (debugging).
+  'nArity' is the number of arguments.
+  'sFile' is the filename (debugging).
+  'nLine' is line number in file (debugging).
+  'nG' is the number of G registers.
+  'r_i' value for global register [including g and t].
+
+EndDefinition(l)
+  End of a procedure definition (debugging).
+  'l' is the address of the start of the definition.
+
+\section{procedure application}
+
+GenCall(gci,n)
+  
+Call(r,n)
+  Higher order application.
+
+TailCall(i,n)
+
+CallBuiltin(s,n)
+  Only internally.
+  Why limitation to built ins with suspension handler?
+
+FastCall(s,n)
+  Only internally.
+
+FastTailCall(s,n)
+  Only internally.
+
+InlineFun1(s,i1,i1,n)
+  Optimized builtin call.
+
+InlineFun2(s,i1,i2,i2,n)
+  Optimized builtin call.
+
+InlineEqEq(s,i1,i2,i3,n)
+  Optimized builtin call.
+
+InlineRel1(s,i,n)
+  Optimized builtin call.
+
+InlineRel2(s,i1,i2,n)
+  Optimized builtin call.
+
+InlineRel3(s,i1,i2,i3,n)
+  Optimized builtin call.
+
+InlineDot(i1,s,i2,n)
+  Optimized subtree ask.
+
+InlineUpArrow(i1,i2,i3,n)
+  Optimized subtree tell.
+
+\section{objects}
+
+SendMsg(s,i,a)
+TailSendMsg(s,i,a)
+ApplMeth(ami,i)
+TailApplMeth(ami,i)
+GetSelf(i)
+SetModeToDeep
+ReleaseObject
+InlineAt(s,i,n)
+InlineAssign(s,i,n)
+
+
+More Control
+============
+
+Thread(l)
+Return
+
+
+others
+======
+
+EndOfFile
+DebugInfo(...)
+  debugging ....
+
+
+WeakDet obsolete -> extend SwitchOnTerm usual pattern is
+                    SwitchOnTerm,WeakDet,Branch
+   Exception or!
+
+Det(r,n) obsolete
+Allocate in already definition
+Deallocate obsolete, because Y regs on stack.
+MoveMoveYXXY(i1,i2,i3,i4) obsolete: use MoveMoveXYYX(i3,i4,i1,i2)

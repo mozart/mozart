@@ -1,0 +1,42 @@
+% Copyright: Michael Mehl (1996)
+Machine Level Debugger
+======================
+
+Ctrl-C enters debugger or '-d' option
+
+displaying:
+	{x,y,g} <Reg>	: display X/Y/G Register (error, if unused register)
+	a		: display atom/symbol table
+	b		: display builtin table
+	d [<n>]		: display code area of size <n>
+	D <from> [<n>]	: display code area of size <n> from address <from>
+	M <from> [<n>]  : display memory
+	n		: display current node
+	t [<depth>]	: display tree from current node
+	T		: Show timing infos
+
+exiting oz:
+	e		: exit ham
+	^D		: same as 'e'
+
+continue debugging:
+	s		: execute one step
+	S               : execute until call
+	c		: continue
+	 cf		: continue until failure
+	 cr		: continue until reduce
+	f		: fail
+	q		: continue until next query
+
+unsupported things:
+	C               : restart compiler
+	l <file>	: load a ham-file
+	Q		: start a query
+help:
+	?		: this info
+
+moving in computation state:
+	[2468]          : move in tree
+	5               : goto current node
+	0               : goto root node
+
