@@ -498,10 +498,12 @@ DynamicTable * DynamicTable::_cac(void) {
 //
 
 // replicated from dictionary.cc;
+static const double GDT_MAXENTRIES	= 0.9;
 static const double GDT_IDEALENTRIES	= 0.7;
 static const int GDT_MINFULL		= 4;   // 
 
-//
+// This one does not change the 'entries' counter (nor calls
+// 'resize()', of course);
 void DictHashTable::_cacDictEntry(DictNode *n)
 {
   DictNode *np = &table[hash(featureHash(n->getKey()))];
@@ -560,6 +562,7 @@ DictHashTable* DictHashTable::_cac(void)
   DictNode *an;
 
   //
+  Assert(entries >= 0);
   if (entries >= (tableSize / GDT_MINFULL)) {
     // no compactification - reconstruct it isomorphically;
     an = (DictNode *) CAC_MALLOC(tableSize * sizeof(DictNode));
@@ -631,8 +634,13 @@ DictHashTable* DictHashTable::_cac(void)
     Assert(dictHTSizes[sizeIndex] < oldSize);
     // Next GC should not attempt compactification:
     Assert(entries >= (dictHTSizes[sizeIndex] / GDT_MINFULL));
-    // construct the table anew;
-    mkEmpty();
+
+    // construct the table anew (keep the 'entries' counter);
+    tableSize = dictHTSizes[sizeIndex];
+    maxEntries = (int) (GDT_MAXENTRIES * tableSize);
+    table = (DictNode *) oz_heapMalloc(tableSize * sizeof(DictNode));
+    for (int i = tableSize; i--; )
+      (void) new (&table[i]) DictNode;
 
     //
     for (int i = oldSize; i--; old++) {

@@ -172,6 +172,7 @@ void DictHashTable::resize()
   int oldEntries = entries;
 
   //
+  Assert(entries >= 0);
   sizeIndex++;
   mkEmpty();
   entries = oldEntries;
@@ -203,6 +204,7 @@ void DictHashTable::compactify()
   int oldEntries;
 
   //
+  Assert(entries >= 0);
   oldSize = dictHTSizes[sizeIndex];
   if (entries >= (oldSize / GDT_MINFULL))
     return;
@@ -400,6 +402,7 @@ public:
 // Takes optional tail as input argument.
 OZ_Term DictHashTable::getArityList(OZ_Term tail)
 {
+  Assert(entries >= 0);
   if (entries > 0) {
     int i, ai;
 
@@ -442,6 +445,7 @@ OZ_Term DictHashTable::getArityList(OZ_Term tail)
 // Convert dynamic table to Literal, SRecord, or LTuple:
 OZ_Term DictHashTable::toRecord(OZ_Term lbl)
 {
+  Assert(entries >= 0);
   if (entries == 0) {
     return (lbl);
   } else {
