@@ -30,6 +30,10 @@
 #pragma interface
 #endif
 
+#include "base.hh"
+#include "genhashtbl.hh"
+#include "vs_lock.hh"
+
 #ifdef VIRTUALSITES
 #include <sys/ipc.h>
 #include <sys/shm.h>
@@ -37,9 +41,6 @@
 #define key_t int
 #endif
 
-#include "base.hh"
-#include "genhashtbl.hh"
-#include "vs_lock.hh"
 
 //
 #define VS_MAILBOX_KEY       0x2
