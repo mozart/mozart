@@ -1585,8 +1585,7 @@ local
 				   fMethArg(@stackX fNoDefault)
 				   fMethArg(@newStackX fNoDefault)
 				   fMethArg(Dollar fNoDefault)])
-			  fCase(X [CaseClauses]
-				fNoElse(unit) unit) unit)]
+			  fCase(X CaseClauses fNoElse(unit) unit) unit)]
 	    Grammar = (ParseTableGenerator, ConvertSymbol(@start $)#@tokens#
 		       @assocs#@rules)
 	    try
