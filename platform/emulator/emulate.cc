@@ -485,7 +485,7 @@ void AM::suspendOnVarList(Suspension *susp)
   suspendVarList=makeTaggedNULL();
 }
 
-inline
+//inline
 Suspension *AM::mkSuspension(Board *b, int prio, ProgramCounter PC,
 			     RefsArray Y, RefsArray G,
 			     RefsArray X, int argsToSave)
@@ -512,7 +512,7 @@ Suspension *AM::mkSuspension(Board *b, int prio, ProgramCounter PC,
   }
 }
 
-inline
+//inline
 Suspension *AM::mkSuspension(Board *b, int prio, OZ_CFun bi,
 			     RefsArray X, int argsToSave)
 {
@@ -869,8 +869,7 @@ void engine() {
 	  goto LBLpopTask;
 	}
 
-	Assert((fsb = tmpBB->getSolveBoard())==0 ||
-	       !fsb->isReflected ());
+	Assert((fsb = tmpBB->getSolveBoard())==0 || !fsb->isReflected ());
 	INSTALLPATH(tmpBB);
 #ifndef NEWCOUNTER
 	tmpBB->decSuspCount();
@@ -932,7 +931,7 @@ void engine() {
 
  LBLemulateHook:
   if (emulateHook0(e)) {
-    e->pushTask(CBB,PC,Y,G,X,XSize);
+    e->pushTaskOutline(CBB,PC,Y,G,X,XSize);
     goto LBLschedule;
   }
   goto LBLemulate;
@@ -1050,7 +1049,7 @@ void engine() {
       switch (fun(arity, X)){
       case SUSPEND:
 	{
-	  e->pushTask(CBB,PC+3,Y,G,0,0);
+	  e->pushTaskOutline(CBB,PC+3,Y,G,0,0);
 	  Suspension *susp = e->mkSuspension(CBB,CPP,fun,X,arity);
 	  e->suspendOnVarList(susp);
 	  CHECKSEQ;
@@ -1085,7 +1084,7 @@ void engine() {
 	  e->trail.pushIfVar(XPC(2));
 	  DISPATCH(4);
 	}
-	e->pushTask(CBB,PC+4,Y,G,X,getPosIntArg(PC+3));
+	e->pushTaskOutline(CBB,PC+4,Y,G,X,getPosIntArg(PC+3));
 	e->suspendInline(CBB,CPP,entry->getFun(),1,XPC(2));
 	CHECKSEQ;
       case FAILED:
@@ -1111,7 +1110,7 @@ void engine() {
 	    DISPATCH(5);
 	  }
 
-	  e->pushTask(CBB,PC+5,Y,G,X,getPosIntArg(PC+4));
+	  e->pushTaskOutline(CBB,PC+5,Y,G,X,getPosIntArg(PC+4));
 	  e->suspendInline(CBB,CPP,entry->getFun(),2,XPC(2),XPC(3));
 	  CHECKSEQ;
 	}
@@ -1139,7 +1138,7 @@ void engine() {
 	    e->trail.pushIfVar(A);
 	    DISPATCH(5);
 	  }
-	  e->pushTask(CBB,PC+5,Y,G,X,getPosIntArg(PC+4));
+	  e->pushTaskOutline(CBB,PC+5,Y,G,X,getPosIntArg(PC+4));
 	  e->suspendInline(CBB,CPP,entry->getFun(),2,A,B);
 	  CHECKSEQ;
 	}
@@ -1170,7 +1169,7 @@ void engine() {
 	    e->trail.pushIfVar(B);
 	    DISPATCH(6);
 	  }
-	  e->pushTask(CBB,PC+6,Y,G,X,getPosIntArg(PC+5));
+	  e->pushTaskOutline(CBB,PC+6,Y,G,X,getPosIntArg(PC+5));
 	  e->suspendInline(CBB,CPP,entry->getFun(),3,A,B,C);
 	  CHECKSEQ;
 	}
@@ -1204,7 +1203,7 @@ void engine() {
 	    e->trail.pushIfVar(C);
 	    DISPATCH(7);
 	  }
-	  e->pushTask(CBB,PC+7,Y,G,X,getPosIntArg(PC+6));
+	  e->pushTaskOutline(CBB,PC+7,Y,G,X,getPosIntArg(PC+6));
 	  e->suspendInline(CBB,CPP,entry->getFun(),4,A,B,C,D);
 	  CHECKSEQ;
 	}
@@ -1230,7 +1229,7 @@ void engine() {
 	  TaggedRef A=XPC(2);
 	  TaggedRef B=XPC(3);
 	  TaggedRef C=XPC(4) = makeTaggedRef(newTaggedUVar(CBB));
-	  e->pushTask(CBB,PC+6,Y,G,X,getPosIntArg(PC+5));
+	  e->pushTaskOutline(CBB,PC+6,Y,G,X,getPosIntArg(PC+5));
 	  e->suspendInline(CBB,CPP,entry->getFun(),3,A,B,C);
 	  CHECKSEQ;
 	}
@@ -1422,28 +1421,52 @@ void engine() {
   Case(BRANCH):
     JUMP( getLabelArg(PC+1) );
 
+  
+  /* weakDet(X) woken up, WHENEVER something happens to X 
+   *            (important if X is a FD var) */
+  Case(WEAKDETX): ONREG(WeakDet,X);
+  Case(WEAKDETY): ONREG(WeakDet,Y);
+  Case(WEAKDETG): ONREG(WeakDet,G);
+  WeakDet:
+  {
+    TaggedRef term = RegAccess(HelpReg,getRegArg(PC+1));
+    DEREF(term,termPtr,tag);
+
+    if (!isAnyVar(tag)) {
+      DISPATCH(3);
+    }
+    /* INCFPC(3); do NOT suspend on next instructions: DET suspensions are
+                  woken up always, even if variable is bound to another var */
+
+    int argsToSave = getPosIntArg(PC+2);
+    Suspension *susp = e->mkSuspension(CBB,CPP,PC,Y,G,X,argsToSave);
+    addSusp(makeTaggedRef(termPtr),susp);
+    CHECKSEQ;
+  };
+
+
+  /* det(X) wait until X will be ground */
   Case(DETX): ONREG(Det,X);
   Case(DETY): ONREG(Det,Y);
   Case(DETG): ONREG(Det,G);
-
   Det:
   {
-    TaggedRef origTerm = RegAccess(HelpReg,getRegArg(PC+1));
-    TaggedRef term = origTerm;
+    TaggedRef term = RegAccess(HelpReg,getRegArg(PC+1));
     DEREF(term,termPtr,tag);
 
-    if (isAnyVar(tag)) {
-      /* INCFPC(3); do NOT suspend on next instructions: DET suspensions are
-                    now woken up always, even if variable is bound to another var */
-
-      int argsToSave = getPosIntArg(PC+2);
-      Suspension *susp = e->mkSuspension(CBB,CPP,PC,Y,G,X,argsToSave);
-      addSusp(makeTaggedRef(termPtr),susp);
-      CHECKSEQ;
-    } else {
+    if (!isAnyVar(tag)) {
       DISPATCH(3);
     }
-  };
+    int argsToSave = getPosIntArg(PC+2);
+    INCFPC(3); /* suspend on next instruction! */
+    Suspension *susp = e->mkSuspension(CBB,CPP,PC,Y,G,X,argsToSave);
+    if (isCVar(tag)) {
+      tagged2CVar(term)->addDetSusp(susp);
+    } else {
+      addSusp(makeTaggedRef(termPtr),susp);
+    }
+    CHECKSEQ;
+  }
 
 
   Case(TAILSENDMSGX): isTailCall = OK; ONREG(SendMethod,X);
@@ -1752,7 +1775,7 @@ void engine() {
 
        // put continuation if any;
        if (isTailCall == NO)
-	 e->pushTask(CBB, PC, Y, G);
+	 e->pushTaskOutline(CBB, PC, Y, G);
 
        // create solve actor(x1);
        // Note: don't perform any derefencing on X[1];
@@ -1851,7 +1874,7 @@ void engine() {
 	 // get continuation of 'board-to-install' if any;
 	 if (boardToInstall->isWaitTop () == NO) {
 	   if (isTailCall == NO)
-	     e->pushTask(CBB,PC,Y,G);
+	     e->pushTaskOutline(CBB,PC,Y,G);
 	   else
 	     isTailCall = NO;
 	   LOADCONT(boardToInstall->getBodyPtr ());
@@ -2075,7 +2098,6 @@ void engine() {
       CAA = new AskActor(CBB,CPP,
 			 elsePC ? elsePC : NOCODE,
 			 NOCODE, Y, G, X, argsToSave);
-
       DISPATCH(3);
     }
 
@@ -2083,9 +2105,7 @@ void engine() {
     {
       ProgramCounter elsePC = getLabelArg (PC+1);
       int argsToSave = getPosIntArg (PC+2);
-
-      CAA = new WaitActor(CBB,CPP,
-			  NOCODE, Y, G, X, argsToSave);
+      CAA = new WaitActor(CBB,CPP,NOCODE,Y,G,X,argsToSave);
       DISPATCH(3);
     }
 
@@ -2146,34 +2166,27 @@ void engine() {
 	tt->setNotificationBoard (e->currentSolveBoard);
       }
       IncfProfCounter(procCounter,sizeof(Thread));
-      tt->pushCont(CBB,newPC,Y,G);
+      tt->pushCont(CBB,newPC,Y,G,NULL,0,OK);
       e->scheduleThread(tt);
       JUMP(contPC);
     }
 
 
   Case(NEXTCLAUSE):
-    {
       CAA->nextClause(getLabelArg(PC+1));
       DISPATCH(2);
-    }
-
 
   Case(LASTCLAUSE):
-    {
       CAA->lastClause();
       DISPATCH(1);
-    }
 
 // -------------------------------------------------------------------------
 // CLASS: MISC: ERROR/NOOP/default
 // -------------------------------------------------------------------------
 
   Case(ERROR):
-    {
       error("Emulate: ERROR command executed");
       goto LBLerror;
-    }
 
 
   Case(DEBUGINFO):
@@ -2331,7 +2344,7 @@ void engine() {
 	  Bool stableWait = (wa->getChildCount() == 2 &&
 			     (wa->getChildRefAt(1))->isFailureInBody() == OK);
 
-	  if (stableWait == OK && solveAA->isEatWaits) {
+	  if (stableWait == OK && solveAA->isEatWaits()) {
 	    Board *waitBoard = wa->getChildRef();
 
 	    waitBoard->setCommitted(solveBB);
