@@ -341,23 +341,21 @@ public:
   // see builtins.cc
   inline OZ_Return eqeq(TaggedRef Ain,TaggedRef Bin);
 
-  void changeSelf(Object *o) {
+  void setSelf(Object *o) { 
+    cachedSelf = o; 
+  }
+
+  Object *getSelf() { 
+    return cachedSelf; 
+  }
+
+  void changeSelf(Object * o) {
     Object *oldSelf = cachedSelf;
     if(o != oldSelf) {
       cachedStack->pushSelf(oldSelf);
       cachedSelf = o;
     }
   }
-
-  void saveSelf() {
-    if (cachedSelf != 0) {
-      am.threadsPool.currentThread()->setSelf(cachedSelf);
-      cachedSelf = 0;
-    }
-  }
-
-  void setSelf(Object *o) { cachedSelf = o; }
-  Object *getSelf() { return cachedSelf; }
 
   int currentUVarPrototypeEq(TaggedRef t) {
     return _currentUVarPrototype == t;
