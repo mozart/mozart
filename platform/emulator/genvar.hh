@@ -57,6 +57,7 @@ enum TypeOfGenCVariable {
   FSetVariable,
   PerdioVariable,
   LazyVariable,
+  PROMISE,
   NonGenCVariable
 };
 
@@ -64,7 +65,7 @@ enum TypeOfGenCVariable {
     Assert(t == FDVariable || t == OFSVariable ||       \
            t == MetaVariable || t == BoolVariable ||    \
            t==PerdioVariable || t == FSetVariable || \
-           t ==LazyVariable )
+           t ==LazyVariable || t == PROMISE)
 
 class GenCVariable: public SVariable {
 
@@ -109,9 +110,8 @@ public:
   // unifies a generic variable with another generic variable
   // or a non-variable
   // invariant: left term == *this
-  // mm_u
-  Bool unify(TaggedRef *, TaggedRef, TaggedRef *, TaggedRef, ByteCode *);
-  Bool unifyOutline(TaggedRef *, TaggedRef, TaggedRef *, TaggedRef, ByteCode *);
+  OZ_Return unify(TaggedRef *, TaggedRef, TaggedRef *, TaggedRef, ByteCode *);
+  OZ_Return unifyOutline(TaggedRef *, TaggedRef, TaggedRef *, TaggedRef, ByteCode *);
 
   int getSuspListLength(void);
 
@@ -233,6 +233,7 @@ void addSuspCVarOutline(TaggedRef *v, Thread *el, int unstable=TRUE);
 #include "metavar.hh"
 #include "perdiovar.hh"
 #include "lazyvar.hh"
+#include "promise.hh"
 
 #ifdef OUTLINE
 void addSuspCVar(TaggedRef *v, Thread *el, int unstable=TRUE);

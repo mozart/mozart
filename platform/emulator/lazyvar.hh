@@ -47,7 +47,7 @@ public:
   GenLazyVariable(OZ_Term fun,OZ_Term res)
     :GenCVariable(LazyVariable),function(fun),result(res){}
   void gcRecurse(void);
-  Bool unifyLazy(TaggedRef*,TaggedRef*,ByteCode*);
+  Bool unifyLazy(TaggedRef*,TaggedRef,ByteCode*);
   // int hasFeature(TaggedRef fea,TaggedRef *out);
   Bool valid(TaggedRef /* val */) { return TRUE; }
   OZ_Term getFunction() { return function; }

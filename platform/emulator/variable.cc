@@ -46,6 +46,19 @@
 #include "variable.hh"
 #include "genvar.hh"
 
+
+void SVariable::wakeupAll()
+{
+  while (suspList) {
+    Thread *tt = suspList->getElem();
+
+    if (!tt->isDeadThread()) {
+      am.wakeupAny(tt,GETBOARD(this));
+    }
+    suspList = suspList->dispose();
+  }
+}
+
 /*
  * Class VariableNamer: assign names to variables
  */

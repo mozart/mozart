@@ -141,3 +141,13 @@ int checkBIArity(OZ_CFun fn) {
   return !bi || bi->getOutArity()==0;
 }
 #endif
+
+/*
+ * Control Vars
+ */
+
+OZ_Return suspendOnControlVar()
+{
+  am.prepareCall(BI_controlVarHandler,am.emptySuspendVarList());
+  return BI_REPLACEBICALL;
+}

@@ -1459,6 +1459,29 @@ $builtins = {
 
     ##* Diffent Kinds of Special Variables
 
+    ###* Promise
+
+    'Promise.new'       => { in  => [],
+                             out => ['value'],
+                             BI  => BIPromiseNew,
+                             module=>'promise',
+                             native => false},
+
+    'Promise.is'        => { in  => ['value'],
+                             out => ['+bool'],
+                             BI  => BIPromiseIs,
+                             module=>'promise',
+                             native => false},
+    'Promise.bind'      => { in  => ['value','value'],
+                             out => [],
+                             BI  => BIPromiseBind,
+                             module=>'promise',
+                             native => false},
+    'Promise.waitRequest'=> { in  => ['value'],
+                             out => [],
+                             BI  => BIPromiseWaitRequest,
+                             module=>'promise',
+                             native => false},
     ###* Lazy
 
     'Lazy.new'          => { in  => ['value','value'],
