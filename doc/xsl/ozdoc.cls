@@ -520,11 +520,14 @@
 
 \newcommand{\PART}{\part}
 \newcommand{\CHAPTER}{\chapter}
-\newcommand{\APPENDIX}{\appendix}
+\newcommand{\APPENDIX}{\mozart@appendix\chapter}
 \newcommand{\SECTION}{\section}
 \newcommand{\SUBSECTION}{\subsection}
 \newcommand{\SUBSUBSECTION}{\subsubsection}
 \newcommand{\PARA}{\paragraph}
+
+\newcommand{\mozart@appendix}{%
+  \appendix\global\let\mozart@appendix\relax}
 
 % display
 
