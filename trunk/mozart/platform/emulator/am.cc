@@ -286,8 +286,6 @@ Bool AM::performUnify(TaggedRef *termPtr1, TaggedRef *termPtr2)
 {
   int argSize;
   RefsArray args1, args2;
-  Bool istl = isToplevel();
-  Bool ret = OK;
 
 start:
 
@@ -297,7 +295,7 @@ start:
   // identical terms ?
   if (term1 == term2 &&
       (!isUVar(term1) || termPtr1 == termPtr2)) {
-    return ret;
+    return OK;
   }
 
   if (isAnyVar(term1)) {
@@ -322,15 +320,15 @@ start:
  var_nonvar:
 
   if (isCVar(tag1)) {
-    return ret && tagged2CVar(term1)->unify(termPtr1, term1, tag1,
-					    termPtr2, term2, tag2);
+    return tagged2CVar(term1)->unify(termPtr1, term1, tag1,
+				     termPtr2, term2, tag2);
   } 
 
   LOCAL_PROPAGATION(if (localPropStore.isEnabled)
 		    return localPropStore.do_propagation());
 
   bindToNonvar(termPtr1, term1, term2);
-  return ret;
+  return OK;
 
 
   
@@ -347,19 +345,19 @@ start:
     }
     LOCAL_PROPAGATION(if (localPropStore.isEnabled)
 		      return localPropStore.do_propagation());    
-    return ret;
+    return OK;
   }
   
   if (isNotCVar(tag2)) {
     bind(termPtr2, term2, termPtr1);
     LOCAL_PROPAGATION(if (localPropStore.isEnabled)
 		      return localPropStore.do_propagation());
-    return ret;
+    return OK;
   }
 
   Assert(isCVar(tag1) && isCVar(tag2));
-  return ret && tagged2CVar(term1)->unify(termPtr1, term1, tag1,
-					  termPtr2, term2, tag2);
+  return tagged2CVar(term1)->unify(termPtr1, term1, tag1,
+				   termPtr2, term2, tag2);
 
 
 
@@ -373,7 +371,7 @@ start:
   switch ( tag1 ) {
 
   case CONST:
-    return ret && tagged2Const(term1)->unify(term2);
+    return tagged2Const(term1)->unify(term2);
 
   case LTUPLE:
     {
@@ -422,7 +420,7 @@ start:
   case FLOAT:
   case BIGINT:
   case SMALLINT:
-    return ret && numberEq(term1,term2);
+    return numberEq(term1,term2);
     
   default:
     return NO;
@@ -435,8 +433,7 @@ start:
   rebind (termPtr2, term1);
 
   for (int i = 0; i < argSize-1; i++ ) {
-    ret = ret && performUnify(args1+i,args2+i);
-    if (!ret && !istl) {
+    if (!performUnify(args1+i,args2+i)) {
       return NO;
     }
   }
