@@ -34,13 +34,13 @@ include(constData.5.cc)
     OZ_gCollectTerm(_x);
     OZ_gCollectTerm(_y);
     OZ_gCollectTerm(_z);
-    _constData->getRef();
+include(constData.2b.cc)
   }
   virtual void sClone(void) {
     OZ_sCloneTerm(_x);
     OZ_sCloneTerm(_y);
     OZ_sCloneTerm(_z);
-    _constData->copy();
+include(constData.2a.cc)
   }
   virtual OZ_Term getParameters(void) const {
     return OZ_cons(_x,
