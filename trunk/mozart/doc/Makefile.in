@@ -50,9 +50,9 @@ EMACS		= emacs
 
 SUBDIRS		= @SUBDIRS@
 
-.PHONY: all quick bootstrap bootquick boot-quick check install clean veryclean distclean depend ps pdf installps $(DOCDIR)/idx xref clean-xref bootidx THEINDEX
+.PHONY: all 1st 2nd bootstrap boot1st boot2nd boot-1st boot-2nd check install clean veryclean distclean depend ps pdf installps $(DOCDIR)/idx xref clean-xref bootidx THEINDEX
 
-Makefile: Makefile.in config.status
+Makefile: Makefile.in Makefile.common.in config.status
 	./config.status
 
 Makefile.vars: Makefile.vars.in config.status
@@ -88,7 +88,7 @@ $(LIBFILES): $(SHDOCDIR)/% : %
 $(ADDONSDIR)/README.html: README.html
 	$(INSTALL_FILE) $< $@
 
-all quick check install clean veryclean distclean installps depend clean-xref::
+all 1st 2nd check install clean veryclean distclean installps depend clean-xref::
 	dirs="$(SUBDIRS)"; \
 	for i in $$dirs; do (cd $$i && $(MAKE) $@) || exit 1; done
 
@@ -97,12 +97,22 @@ all quick check install clean veryclean distclean installps depend clean-xref::
 
 bootstrap::
 	dirs="$(SUBDIRS)"; \
-	for i in $$dirs; do (cd $$i && $(MAKE) bootstrap) || exit 1; done; \
-	for i in $$dirs; do (cd $$i && $(MAKE) bootquick) || exit 1; done
+	for i in $$dirs; do (cd $$i && $(MAKE) boot1st) || exit 1; done; \
+	for i in $$dirs; do (cd $$i && $(MAKE) boot2nd) || exit 1; done
 
-boot-quick bootquick:
+boot-1st boot1st:
+	-rm -f xref.db index.db
 	dirs="$(SUBDIRS)"; \
-	for i in $$dirs; do (cd $$i && $(MAKE) bootquick) || exit 1; done
+	for i in $$dirs; do (cd $$i && $(MAKE) boot1st) || exit 1; done
+
+boot-2nd boot2nd:
+	dirs="$(SUBDIRS)"; \
+	for i in $$dirs; do (cd $$i && $(MAKE) boot2nd) || exit 1; done
+
+# kost@ : still missing: inspect the index/x-ref files after
+# recompiling of some subtargets due to modified sources: if those
+# index/x-ref files got changed, the 2nd stage needs to run again
+# COMPLETELY.
 
 bootstrap:: boot-THEINDEX
 all:: THEINDEX
