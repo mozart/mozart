@@ -95,9 +95,8 @@ unsigned int getMemoryInFreeList() {
 
   for (int i=0; i<freeListMaxSize; i++) {
     ptr = FreeList[i];
-    int incr = i<<2;
     while(ptr != NULL) {
-      sum += incr;
+      sum += i;
       ptr = *(void **)ptr;
     }
   }
@@ -126,7 +125,7 @@ void freeListChop(void * addr, size_t size) {
     nextChopSize += 4;
 
   register size_t s     = size;
-  register void ** fl   = &(FreeList[cs>>2]);
+  register void ** fl   = &(FreeList[cs]);
   register void * prev  = *fl;
   register void * small = addr;
 
