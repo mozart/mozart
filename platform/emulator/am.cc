@@ -366,7 +366,6 @@ Bool AM::fastUnifyOutline(TaggedRef ref1, TaggedRef ref2, Bool prop)
 Bool AM::unify(TaggedRef t1, TaggedRef t2, Bool prop)
 {
   CHECK_NONVAR(t1); CHECK_NONVAR(t2);
-  rebindTrail.init(isToplevel() && prop);
   Bool result = performUnify(&t1, &t2, prop);
 
   // unwindRebindTrail

@@ -77,18 +77,14 @@ public:
 
 
 class RebindTrail: public Trail {
-private:
-  Bool toplevel; /* rebinds must not be trailed on toplevel */
 public:
   RebindTrail(int sizeInit = 5000): Trail(sizeInit) {};
 
   void gc();
 
-  void init(Bool tl) { toplevel = tl; }
-
   void pushCouple(TaggedRef *reference, TaggedRef oldValue)
   {
-    if (!toplevel) Trail::pushRef(reference,oldValue);
+    Trail::pushRef(reference,oldValue);
   }
 
   void popCouple(TaggedRef * &reference, TaggedRef &value)
