@@ -42,8 +42,10 @@ local
 	    DiffTotal = R.total - PR.total
 	 in
 	    {OT.load    display([{IntToFloat T.runnable}])}
-	    {OR.curLoad display([{IntToFloat DiffUsed} /
-				 {IntToFloat DiffTotal}])}
+	    {OR.curLoad display([case DiffTotal==0 then 0.0 else
+				    {IntToFloat DiffUsed} /
+				    {IntToFloat DiffTotal}
+				 end])}
 	    PrevRuntime <- R
 	 end
 	 case What==sample then skip else
