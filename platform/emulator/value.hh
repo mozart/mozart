@@ -47,7 +47,7 @@ extern TaggedRef AtomNil, AtomCons, AtomPair, AtomVoid,
        AtomHeap, AtomDebugIP, AtomDebugPerdio,
   RecordFailure,
   E_ERROR, E_KERNEL, E_OBJECT, E_TK, E_OS, E_SYSTEM,
-BI_send;
+  BI_Unify,BI_Show,BI_send;
 
 /*===================================================================
  * Literal
