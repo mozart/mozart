@@ -246,6 +246,26 @@ to="ozdoc:dstutorial" key="section.distmodel.shutdown">).
         </List>
        </P>         
 
+   <section>
+     <title/Process Termination and Remote Managers/
+     <p>Here are some tentative explanations of what happens to the
+     children of a process when the latter is terminated.
+     <list>
+       <item>if a process is properly shutdown, then detached children
+       survive and non-detached children are terminated.</item>
+       <item>if a process is killed with <code proglang=sh/kill -INT/,
+       then its children are terminated whether they are detached or
+       not.</item>
+       <item>if a process is killed with <code proglang=sh/kill -KILL/,
+       then no child is terminated because the proper shutdown
+       sequence is not executed.</item>
+       <item>if a process is killed by typing <key/C-c/, then the
+       <code proglang=sh/INT/ signal is sent to the <em/process group/
+       to which both parent and children belong.<note foot>This is the case
+       in the current regime, but could be changed if desired</note>
+       Thus all are terminated.</item>
+     </list>
+   </section>
      
   </Chapter>
 
