@@ -30,4 +30,4 @@
 
 
 (load "oz")
-(oz-start)
+(run-oz)
