@@ -161,6 +161,7 @@ void gcDistPortRecurseStub(Tertiary *t)
 {
   OZ_error("'gcDistPortRecurse' called without DP library?");
 }
+
 //
 // (Only) gc method - for cells & locks (because we have to know
 // whether they are accessible locally or not);
@@ -237,7 +238,6 @@ void (*lockLockFrameOutline)(LockFrameEmul *lfu, Thread *thr)
   = lockLockFrameOutlineStub;
 void (*unlockLockFrameOutline)(LockFrameEmul *lfu, Thread *thr)
   = unlockLockFrameOutlineStub;
-
 //
 Bool (*marshalTertiary)(Tertiary *t, MarshalTag tag, MsgBuffer *bs)
   = marshalTertiaryStub;
@@ -268,6 +268,7 @@ void (*gcDistLockRecurse)(Tertiary *t)
   = gcDistLockRecurseStub;
 void (*gcDistPortRecurse)(Tertiary *t)
   = gcDistPortRecurseStub;
+
 //
 //
 //

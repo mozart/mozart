@@ -1427,6 +1427,14 @@ void LockLocal::lockComplex(Thread *t){
   // mm2: ignoring the return is badly wrong
   (void) pendThreadAddToEndEmul(getPendBase(),t,getBoardInternal());}
 
+void LockSecEmul::unlockPending(Thread* th){
+  Assert(th!=NULL);
+  PendThread** pt=&pending;
+  while((*pt)->thread!=th){
+    pt= &((*pt)->next);
+    if((*pt)==NULL) return;}
+  *pt=(*pt)->next;}
+
 /*===================================================================
  * PendThread
  *=================================================================== */
