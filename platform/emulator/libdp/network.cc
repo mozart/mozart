@@ -109,19 +109,19 @@
 /* free list sizes */
 
 #define SITE_CUTOFF    100
-#define MESSAGE_CUTOFF 10
+#define MESSAGE_CUTOFF 1000
 #define READ_CONNECTION_CUTOFF  30
 #define WRITE_CONNECTION_CUTOFF  30
 #define NO_MSG_NUM -1
 
-#define TCP_MSG_SIGN_BITS 3
-#define INT_IN_BYTES_LEN 7
+#define TCP_MSG_SIGN_BITS   3
+#define INT_IN_BYTES_LEN    7
 #define CONNECTION REMOTE
 #define REMOTESITE SITE
 
-#define BYTEBUFFER_SIZE 2048
-#define BYTEBUFFER_CUTOFF 100
-#define NetMsgBuffer_CUTOFF 50
+#define NetByteBuffer_SIZE     128
+#define NetByteBuffer_CUTOFF   2000
+#define NetMsgBuffer_CUTOFF 1000
 
 #define OZReadPortNumber  9000
 #define OZStartUpTries    490
@@ -231,7 +231,7 @@ class WriteConnectionManager;
 class ReadConnectionManager;
 class NetMsgBufferManager;
 class RemoteSiteManager;
-class ByteBufferManager;
+class NetByteBufferManager;
 class MessageManager;
 class TcpCache;
 class TcpOpenMsgBuffer;
@@ -262,7 +262,7 @@ WriteConnectionManager *writeConnectionManager;
 ReadConnectionManager *readConnectionManager;
 NetMsgBufferManager *netMsgBufferManager;
 RemoteSiteManager *remoteSiteManager;
-ByteBufferManager *byteBufferManager;
+NetByteBufferManager *netByteBufferManager;
 MessageManager *messageManager;
 TcpCache *tcpCache;
 #ifdef SLOWNET
@@ -471,41 +471,48 @@ public:
 /*  SECTION 4:  Network MsgBuffer and friends                                       */
 /* ************************************************************************ */
 
-class ByteBuffer{
-  friend class ByteBufferManager;
+class NetByteBuffer{
+  friend class NetByteBufferManager;
   friend class NetMsgBuffer;
   friend class NetMsgBufferManager;
   
 protected:
-  BYTE buf[BYTEBUFFER_SIZE];
-  ByteBuffer *next;
+  BYTE buf[NetByteBuffer_SIZE];
+  NetByteBuffer *next;
   
 public: 
-  ByteBuffer(){}
+  NetByteBuffer(){}
   
   BYTE *head(){return buf;}
-  BYTE *tail(){return buf+BYTEBUFFER_SIZE-1;}
-  void init() {next=NULL;}
+  BYTE *tail(){return buf+NetByteBuffer_SIZE-1;}
+  void init() {
+    next=NULL;
+#ifdef DEBUG_CHECK
+    /*    for(int i=0;i<NetByteBuffer_SIZE;i++)
+      buf[i]=0x44;
+      Assert(*this->head()==0x44); */
+#endif
+  }
 };
 
-class ByteBufferManager: public FreeListManager {
+class NetByteBufferManager: public FreeListManager {
 public:
-  ByteBufferManager():FreeListManager(BYTEBUFFER_CUTOFF){wc = 0;}
+  NetByteBufferManager():FreeListManager(NetByteBuffer_CUTOFF){wc = 0;}
   int wc;
 
-  ByteBuffer*newByteBuffer(){
+  NetByteBuffer*newNetByteBuffer(){
     FreeListEntry *f=getOne();
-    ByteBuffer *bb;
-    if(f==NULL) {bb=new ByteBuffer();}
-    else{GenCast(f,FreeListEntry*,bb,ByteBuffer*);}
+    NetByteBuffer *bb;
+    if(f==NULL) {bb=new NetByteBuffer();}
+    else{GenCast(f,FreeListEntry*,bb,NetByteBuffer*);}
     bb->init();
-    PD((BUFFER,"New ByteBuffer %d %d nr:%d",bb, bb->next, ++wc));
+    //printf("BB take nr:%d \n", ++wc);
     return bb;}
   
-  void deleteByteBuffer(ByteBuffer* bb){
+  void deleteNetByteBuffer(NetByteBuffer* bb){
     FreeListEntry *f;
-     PD((BUFFER,"DeAllocating ByteBuffer nr:%d",--wc));
-    GenCast(bb,ByteBuffer*,f,FreeListEntry*);
+    //printf("BB return %d\n",--wc);
+    GenCast(bb,NetByteBuffer*,f,FreeListEntry*);
     if(putOne(f)) return;
     delete bb;
     return;}
@@ -521,10 +528,10 @@ class NetMsgBuffer:public MsgBuffer{
   friend ipReturn interpret(NetMsgBuffer *bs,tcpMessageType type, Bool ValidMsg);
 #endif
 protected:
-  ByteBuffer *first; 
-  ByteBuffer *start;
-  ByteBuffer *stop;
-  ByteBuffer *last;
+  NetByteBuffer *first; 
+  NetByteBuffer *start;
+  NetByteBuffer *stop;
+  NetByteBuffer *last;
   BYTE *pos; 
   BYTE *curpos;
   BYTE *endpos; 
@@ -537,13 +544,13 @@ protected:
   RemoteSite *remotesite;
   int availableSpace();
   
-  ByteBuffer *beforeLast(){
+  NetByteBuffer *beforeLast(){
     Assert(first!=last);
-    ByteBuffer *bb=first;
+    NetByteBuffer *bb=first;
     while(bb->next!=last){bb=bb->next;}
     return bb;}
 
-  Bool within(BYTE*,ByteBuffer*);
+  Bool within(BYTE*,NetByteBuffer*);
   
 public:
   NetMsgBuffer() {}
@@ -583,9 +590,9 @@ public:
   
   void removeFirst(){
     Assert(first!=last);
-    ByteBuffer *bb=first;
+    NetByteBuffer *bb=first;
     first=bb->next;
-    byteBufferManager->deleteByteBuffer(bb);
+    netByteBufferManager->deleteNetByteBuffer(bb);
   }
 
   void   constructMsg(RemoteSite*,tcpMessageType);
@@ -593,10 +600,10 @@ public:
   void removeSingle(){
     Assert(first==last);    
     Assert(first!=NULL);
-    byteBufferManager->deleteByteBuffer(first);
+    netByteBufferManager->deleteNetByteBuffer(first);
     last=first=NULL;}
       
-  ByteBuffer* getAnother();
+  NetByteBuffer* getAnother();
   void getSingle();
 
   void marshalBegin(){
@@ -611,20 +618,23 @@ public:
     totlen= 0;
     type=BS_Marshal;
     posMB=first->head()+tcpHeaderSize;
+    //    Assert(*posMB == 0x44);
     endMB=first->tail();
+    Assert(posMB<endMB);
     pos=NULL;}
 
   void putNext(BYTE b){
     Assert(type==BS_Marshal);
     Assert(posMB==endMB+1);
-    PD((BUFFER,"bytebuffer alloc Marshal: %d",no_bufs()));
-    ByteBuffer *bb=getAnother();
+    PD((BUFFER,"NetByteBuffer alloc Marshal: %d",no_bufs()));
+    NetByteBuffer *bb=getAnother();
     last->next=bb;
     last=bb;
     stop=bb;
-    totlen += BYTEBUFFER_SIZE;
+    totlen += NetByteBuffer_SIZE;
     posMB=bb->head();
     endMB=bb->tail();
+    // Assert(*posMB == 0x44);
     *posMB++=b;
     return;}
 
@@ -632,7 +642,7 @@ public:
     Assert(type==BS_Marshal);
     endpos=posMB;
     pos=first->head();
-    if(endpos==NULL) {totlen +=BYTEBUFFER_SIZE;}
+    if(endpos==NULL) {totlen +=NetByteBuffer_SIZE;}
     else {totlen +=endpos-last->head();}
     type=BS_None;}
   
@@ -712,24 +722,24 @@ public:
 
   int no_bufs();
 
-  void dumpByteBuffers(){
+  void dumpNetByteBuffers(){
     if(type == BS_Write){
       Assert(start != NULL);
       while(start!=stop) {
-	ByteBuffer *bb=start;
+	NetByteBuffer *bb=start;
 	start=bb->next;
-	byteBufferManager->deleteByteBuffer(bb);
+	netByteBufferManager->deleteNetByteBuffer(bb);
       }
-      byteBufferManager->deleteByteBuffer(start);
+      netByteBufferManager->deleteNetByteBuffer(start);
       start=stop=NULL;}
     else{
       Assert(first != NULL);
       while(first!=last) {
-	ByteBuffer *bb=first;
+	NetByteBuffer *bb=first;
 	first=bb->next;
-	byteBufferManager->deleteByteBuffer(bb);
+	netByteBufferManager->deleteNetByteBuffer(bb);
       }
-      byteBufferManager->deleteByteBuffer(first);
+      netByteBufferManager->deleteNetByteBuffer(first);
       first=last=NULL;}}
   
 };
@@ -751,14 +761,14 @@ int NetMsgBuffer::availableSpace(){
   Assert(within(endpos,last));
   return last->tail()-endpos+1;}
 
-Bool NetMsgBuffer::within(BYTE *p,ByteBuffer *bb){
+Bool NetMsgBuffer::within(BYTE *p,NetByteBuffer *bb){
   if(p<bb->head()) return FALSE;
   if(p>bb->tail()) return FALSE;  
   return TRUE;}
 
 int NetMsgBuffer::no_bufs(){
   int i=0;
-  ByteBuffer *bb=first;
+  NetByteBuffer *bb=first;
   while(bb!=NULL){
     i++;
     bb=bb->next;}
@@ -772,7 +782,7 @@ void NetMsgBuffer::writeCheck(){
 
 void NetMsgBuffer::sentFirst(){
   Assert(type==BS_Write);
-  PD((BUFFER,"bytebuffer sent: %d",no_bufs()));
+  PD((BUFFER,"NetByteBuffer sent: %d",no_bufs()));
   if(first==last){
     first=last=NULL;
     return;}
@@ -787,12 +797,12 @@ int NetMsgBuffer::calcTotLen(){
     return first->tail()-pos+1;}
   else{
     int i=first->tail()-pos+1;
-    ByteBuffer *bb=first->next;
+    NetByteBuffer *bb=first->next;
     while(bb->next!=NULL){
-      i+=BYTEBUFFER_SIZE;
+      i+=NetByteBuffer_SIZE;
       bb=bb->next;}
     Assert(bb==last);
-    if(endpos==NULL){return i+BYTEBUFFER_SIZE;}
+    if(endpos==NULL){return i+NetByteBuffer_SIZE;}
     return i+endpos-last->head();}}
 
 
@@ -806,7 +816,7 @@ void NetMsgBuffer::incPosAfterWrite(int i){
 void NetMsgBuffer::getSingle(){
   Assert(first==NULL);
   Assert(last==NULL);
-  ByteBuffer *bb=getAnother();
+  NetByteBuffer *bb=getAnother();
   
   if(type == BS_Write){
     // EK 
@@ -854,7 +864,7 @@ public:
     if(nb->start!=NULL && nb->first==NULL)
       nb->reset();
     if(nb->first!=NULL)
-      nb->dumpByteBuffers();
+      nb->dumpNetByteBuffers();
     deleteNetMsgBuffer(nb);}
 
   NetMsgBuffer *getNetMsgBuffer(DSite *s) {
@@ -867,8 +877,12 @@ public:
     deleteNetMsgBuffer(bs);}
 };
 
-ByteBuffer *NetMsgBuffer::getAnother(){
-  return(byteBufferManager->newByteBuffer());}
+NetByteBuffer *NetMsgBuffer::getAnother(){
+  NetByteBuffer* bb = netByteBufferManager->newNetByteBuffer();
+  Assert(bb->next == NULL);
+  /* Assert(*bb->tail() == 0x44);
+     Assert(*bb->head() == 0x44); */
+  return bb;}
 
 /* *********************************************************************/
 /*   SECTION 5: RemoteSite                                          */
@@ -1167,8 +1181,6 @@ protected:
   BYTE *bytePtr;
   int sentMsgCtr;
   Message *sentMsg;      // non-acknowledge msgs
-  int probeCtrPrm;
-  int probeCtrTmp;
 public:
   unsigned long expireTime;   
   
@@ -1186,7 +1198,7 @@ public:
   Bool isReadReading(){
     ReadConnection *rr = remoteSite->getReadConnection();
     return (rr && rr->isReading()) ;}
-  void tmpDwn();
+
   Bool shouldSendFromUser();
     
   void informSiteResendAckQueue();
@@ -1238,18 +1250,7 @@ public:
   void clearInWriteQueue(){
     PD((TCP_INTERFACE,"Removed from writequeue  s:%s",	remoteSite->site->stringrep()));
     clearFlag(WRITE_QUEUE);}
-  /*
-  void setWantsToProbe(){
-    Assert(!testFlag(WANTS_TO_PROBE));    
-    PD((TCP_INTERFACE,"setWantsToPROBE site:%s",remoteSite->site->stringrep()));
-    setFlag(WANTS_TO_PROBE);}
-  Bool isWantsToProbe(){
-    return testFlag(WANTS_TO_PROBE);}
-  void clearWantsToProbe(){ 
-    Assert(testFlag(WANTS_TO_PROBE));
-    PD((TCP_INTERFACE,"clearWantsToProbe site:%s",remoteSite->site->stringrep()));
-    clearFlag(WANTS_TO_PROBE);}
-    */
+
   Bool isProbingPrm(){
     return testFlag(TMP_PROBE | PRM_PROBE);}
   Bool isProbingTMP(){
@@ -1257,7 +1258,7 @@ public:
   void setProbingPrm(){
     setFlag(PRM_PROBE);}
   void setProbingTmp(){
-    setFlag(TMP_PROBE|PRM_PROBE);}
+    setFlag(TMP_PROBE);}
   void clearProbingPrm(){
     clearFlag(PRM_PROBE);}
   void clearProbingTmp(){
@@ -1342,41 +1343,21 @@ public:
     sentMsgCtr =0;
     flags=WRITE_CON;
     remoteSite=s;
-    bytePtr = intBuffer + INT_IN_BYTES_LEN;
-    probeCtrTmp = 0;
-    probeCtrPrm = 0;}
-
+    bytePtr = intBuffer + INT_IN_BYTES_LEN;}
+  
   void installProbe(ProbeType pt){
-    PD((PROBES,"Probe Installed to Tmp: %d Prm: %d  site: %s",
-	probeCtrTmp, probeCtrPrm, 
-	remoteSite->site->stringrep()));
-    Assert(probeCtrPrm >=0 && probeCtrTmp >= 0);
-    if(pt == PROBE_TYPE_PERM)
-      {if(probeCtrPrm==0)
-	setProbingPrm();
-      probeCtrPrm++;}
-    else
-      {if(probeCtrTmp==0)
-	setProbingTmp();
-      probeCtrTmp++;}}
+    if(pt == PROBE_TYPE_PERM && !isProbingPrm()){
+      setProbingPrm();
+      return;}
+    if(pt== PROBE_TYPE_ALL && !isProbingTMP()){
+      setProbingTmp();}}
   
   void deInstallProbe(ProbeType pt){
-    PD((PROBES,"Probe DeInstalled to  Tmp: %d Prm: %d site: %s",
-	probeCtrTmp, probeCtrPrm,
-	remoteSite->site->stringrep()));
-    if(pt == PROBE_TYPE_PERM){
-      Assert(probeCtrPrm>0);
-      probeCtrPrm--;
-      if(probeCtrPrm==0 && probeCtrPrm==0)
-	clearProbingPrm();
+    if(pt == PROBE_TYPE_PERM && isProbingPrm()){
+      clearProbingPrm();
       return;}
-    Assert(probeCtrTmp>0);
-    probeCtrTmp--;
-    if(probeCtrTmp==0){
-      clearProbingTmp();
-      if(probeCtrPrm==0)
-	clearProbingPrm();}}
-  
+    if(pt == PROBE_TYPE_PERM && isProbingTMP()){
+      clearProbingTmp();}}
 };
   
 /************************************************************/
@@ -1494,10 +1475,11 @@ public:
 /************************************************************/
 
 void RemoteSite::zeroReferences(){
-  return; //EK fix this!!!
   PD((SITE,"Zero references to site %s",site->stringrep()));
   if(writeConnection == NULL)  return;
-  if(writeConnection -> goodCloseCand())
+  writeConnection->clearProbingTmp();
+  writeConnection->clearProbingPrm();
+  if(writeConnection->goodCloseCand() && !writeConnection->isTmpDwn() && !writeConnection->isProbing())
     writeConnection->closeConnection();
   else
     writeConnection -> setCanClose();}
@@ -2161,10 +2143,10 @@ int WriteConnection::discardUnsentMessage(int msgNum){
 
 BYTE* NetMsgBuffer::initForRead(int &len){
   Assert(type==BS_None);
-  PD((BUFFER,"bytebuffer alloc Read: %d",no_bufs()));
+  PD((BUFFER,"NetByteBuffer alloc Read: %d",no_bufs()));
   pos=first->head();
   endpos=first->head();
-  len=BYTEBUFFER_SIZE;
+  len=NetByteBuffer_SIZE;
   type=BS_Read;
   return endpos;}
 
@@ -2175,25 +2157,25 @@ BYTE* NetMsgBuffer::beginRead(int &len){
     if(pos==NULL){
       pos=first->head();
       endpos=first->head();
-      len=BYTEBUFFER_SIZE;
+      len=NetByteBuffer_SIZE;
       return endpos;}
     Assert(within(pos,first));    
-    PD((BUFFER,"bytebuffer alloc Read: %d",no_bufs()));
-    ByteBuffer *bb=byteBufferManager->newByteBuffer();
+    PD((BUFFER,"NetByteBuffer alloc Read: %d",no_bufs()));
+    NetByteBuffer *bb=netByteBufferManager->newNetByteBuffer();
     last->next=bb;
     last=bb;
-    len=BYTEBUFFER_SIZE;
+    len=NetByteBuffer_SIZE;
     endpos=last->head();
     return endpos;}
   if(pos==NULL){pos=endpos;}
   else{Assert(within(pos,first));}
   len=last->tail()-endpos+1;
-  Assert(len<BYTEBUFFER_SIZE);
+  Assert(len<NetByteBuffer_SIZE);
   return endpos;}
 
 void NetMsgBuffer::afterRead(int len){
   Assert(type==BS_Read);
-  Assert(len<=BYTEBUFFER_SIZE);
+  Assert(len<=NetByteBuffer_SIZE);
   Assert(availableSpace()>=len);
   Assert(within(endpos,last));  
   type=BS_None;
@@ -2223,8 +2205,8 @@ BYTE NetMsgBuffer::getInRead(){
     if(first==last){
       pos=NULL;
       return ch;}
-    PD((BUFFER,"bytebuffer dumped read (SPEC):%d",no_bufs())); 
-    byteBufferManager->deleteByteBuffer(first);
+    PD((BUFFER,"NetByteBuffer dumped read (SPEC):%d",no_bufs())); 
+    netByteBufferManager->deleteNetByteBuffer(first);
     first=last;
     pos=first->head();
     return ch;}
@@ -2233,8 +2215,8 @@ BYTE NetMsgBuffer::getInRead(){
 int NetMsgBuffer::interLen(){
   if(first==last){return curpos-pos+1+tcpHeaderSize;}
   int i=first->tail()-pos+1+tcpHeaderSize;
-  ByteBuffer *bb=first->next;
-  while(bb!=last){bb=bb->next;i+=BYTEBUFFER_SIZE;}
+  NetByteBuffer *bb=first->next;
+  while(bb!=last){bb=bb->next;i+=NetByteBuffer_SIZE;}
   return i+curpos-last->head()+1;}
   
 /* *****************************************************************
@@ -2506,7 +2488,6 @@ ipReturn tcpSend(int fd,Message *m, Bool flag)
       Assert(ret<0);
       if(ossockerrno()==EINTR) continue;
       if(!((ossockerrno()==EWOULDBLOCK) || (ossockerrno()==EAGAIN)))
-       
 	return tcpError();
       break;}
     PD((WRITE,"wr:%d try:%d error:%d",ret,len,errno));
@@ -2792,7 +2773,6 @@ static int acceptHandler(int fd,void *unused)
   int newFD=osaccept(fd,(struct sockaddr *) &from, &fromlen);
 
   if (newFD < 0) {
-    OZ_warning("acceptHandler:accept");
     return 0;}
 
   if (!tcpCache->Accept()|| !tcpCache->CanOpen()){
@@ -2864,9 +2844,7 @@ int tcpPreReadHandler(int fd,void *r0){
   
     
   old = si->getRemoteSite()->getReadConnection();
-  if(old!=NULL){
-    PD((TCP,"ReadConnection has been disconnected, not discovered"));
-    old->close();}
+  if(old!=NULL){old->close();}
   
   si->getRemoteSite()->setReadConnection(r);
   
@@ -2877,11 +2855,11 @@ int tcpPreReadHandler(int fd,void *r0){
   r->setMaxSizeAck(maxNrSize);
   r->clearOpening();
     
-OZ_registerReadHandler(fd,tcpReadHandler,(void *)r);  
-return 0;
+  OZ_registerReadHandler(fd,tcpReadHandler,(void *)r);  
+  return 0;
 
 tcpPreFailure:
-  osclose(fd);
+  if(fd!=LOST) osclose(fd);
   tcpCache->remove(r);
   readConnectionManager->freeConnection(r);
   return 1;  
@@ -3044,7 +3022,7 @@ fin:
     if(m==NULL){
       // EK check this out...
       // ATTENTION
-      // Here we must dump all the ByteBuffers, they should
+      // Here we must dump all the NetByteBuffers, they should
       // have been removed dynamicly during marshaling.
       // ATTENTION
       netMsgBufferManager->dumpNetMsgBuffer(bs);
@@ -3240,6 +3218,9 @@ int tcpConnectionHandler(int fd,void *r0){
   r->opened();
   delete buf1; 
   if(buf2)delete buf2;
+  if(r->isCanClose()){
+    r->clearCanClose();
+    r->closeConnection();}
   return 0;
   
  tcpConClosed:
@@ -3541,6 +3522,7 @@ void ReadConnection::prmDwn(){
   OZ_unregisterRead(fd);
   fd =  -1;
   tcpCache->remove(this);
+  //EK possible mem leak
   if(isIncomplete()) 
     messageManager->freeMessage(getCurQueue());}
 
@@ -3549,24 +3531,22 @@ void WriteConnection::prmDwn(){
   //fprintf(stderr,"WriteConDead %s %s \n",this->remoteSite->site->stringrep(),myDSite->stringrep());
   PD((TCP,"WriteConnection is taken down fd: %d %d",fd,getFD()));
   tcpCache->remove(this);
-  if(isProbingPrm()){
+  if(isProbingPrm()||isProbingTMP()){
     remoteSite->site->probeFault(PROBE_PERM);
+    clearProbingTmp();
     clearProbingPrm();}
-  else{
-    //ERIK_LOOK hack... Probing is goingaway....
-    remoteSite->site->probeFault(PROBE_PERM);
-  }
+  
   Message *m = sentMsg;
   sentMsg = NULL;
   while(m != NULL){
     PD((ACK_QUEUE,"Emptying ackqueue m:%x bs: %x",m, m->bs)); 
     m->bs->resend();
-      remoteSite->site->communicationProblem(m->msgType, m->site, m->storeIndx,
-					     COMM_FAULT_PERM_MAYBE_SENT,(FaultInfo) m->bs);
-      Message *tmp = m;
-      m = m->next;
-      
-      messageManager->freeMessageAndMsgBuffer(tmp);}
+    remoteSite->site->communicationProblem(m->msgType, m->site, m->storeIndx,
+					   COMM_FAULT_PERM_MAYBE_SENT,(FaultInfo) m->bs);
+    Message *tmp = m;
+    m = m->next;
+    
+    messageManager->freeMessageAndMsgBuffer(tmp);}
   if(fd!=LOST)
     OZ_unregisterRead(fd);
   
@@ -3581,6 +3561,7 @@ void WriteConnection::prmDwn(){
       remoteSite->site->communicationProblem(current->msgType, current->site,
 					     current->storeIndx,COMM_FAULT_PERM_NOT_SENT,
 					     (FaultInfo) current->bs);
+      //EK possible mem leak....
       messageManager->freeMessage(current);
       current = NULL;}
   if(isInWriteQueue())
@@ -3702,9 +3683,10 @@ void ReadConnection::closeConnection(){
 
 void ReadConnection::close(){
   PD((TCP_CONNECTIONH,"close ReadConnection r:%x fd:%d",this,fd));
-  OZ_unregisterRead(fd);
-  osclose(fd);
-  clearFD();
+  if(fd!=LOST){
+    OZ_unregisterRead(fd);
+    osclose(fd);
+    clearFD();}
   tcpCache->remove(this);
   informSiteRemove();
   if(isIncomplete())
@@ -4015,7 +3997,7 @@ void initNetwork()
   readConnectionManager = new ReadConnectionManager();
   netMsgBufferManager = new NetMsgBufferManager();
   remoteSiteManager = new RemoteSiteManager();
-  byteBufferManager = new ByteBufferManager();
+  netByteBufferManager = new NetByteBufferManager();
   messageManager = new MessageManager();
   tcpCache = new TcpCache();
   tcpOpenMsgBuffer= new TcpOpenMsgBuffer();
