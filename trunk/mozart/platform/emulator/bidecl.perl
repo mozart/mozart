@@ -2647,6 +2647,36 @@ $builtins = {
 			     module => fd,
 			     native => true},
 
+    'fdd_select_naive'	=> { in     => ['+tuple'],
+			     out    => ['*int'],
+			     bi     => BIfdd_select_naive,
+			     module => fd,
+			     native => true},
+
+    'fdd_select_size'	=> { in     => ['+tuple'],
+			     out    => ['*int'],
+			     bi     => BIfdd_select_size,
+			     module => fd,
+			     native => true},
+
+    'fdd_select_min'	=> { in     => ['+tuple'],
+			     out    => ['*int'],
+			     bi     => BIfdd_select_min,
+			     module => fd,
+			     native => true},
+
+    'fdd_select_max'	=> { in     => ['+tuple'],
+			     out    => ['*int'],
+			     bi     => BIfdd_select_max,
+			     module => fd,
+			     native => true},
+
+    'fdd_select_nbSusps'=> { in     => ['+tuple'],
+			     out    => ['*int'],
+			     bi     => BIfdd_select_nbSusps,
+			     module => fd,
+			     native => true},
+
     # External stuff (might be loaded dynamically)
     'fdp_sum'		=> { in  => ['+value','+atom','int'],
 			     out => [],
