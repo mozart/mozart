@@ -192,10 +192,10 @@ define
                                         elseif {Label X.2}==size then
                                            {SetSize X.2.1}
                                         end
-                                     else Ss={ByteString.toString X.1} in
-                                        {SaveData Ss}
+                                     else %Ss={ByteString.toString X.1} in
+                                        {SaveData X.1} %Ss}
                                         X.2=unit
-                                        {Progress {Length Ss}}
+                                        {Progress {ByteString.length X.1}} %{Length Ss}}
                                      end
                                   end}
          catch done then skip end
@@ -280,6 +280,7 @@ define
       S P A={New ServerSide init(user:User)}
    in
       {NewPort S P}
+      %_={New Connection.gate init(P Ticket)}
       {Connection.offerUnlimited P Ticket}
 
       thread
