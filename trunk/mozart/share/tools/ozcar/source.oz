@@ -152,9 +152,10 @@ in
       feat
 	 NoteBook
       attr
-	 WindowList    : nil
-	 CurrentWindow : window(appl:undef stack:undef)
-	 WithDrawn     : true
+	 WindowList      : nil
+	 CurrentWindow   : window(appl:undef stack:undef)
+	 WithDrawn       : true
+
       prop
 	 locking
       
@@ -181,6 +182,30 @@ in
 	 CurrentWindow <- {Record.adjoinAt @CurrentWindow What Which}
       end
 
+      meth bpAt(File Line YesNo)
+	 Ok   = {Debug.breakpointAt File Line YesNo}
+	 FL   = {StripPath File} # ', line ' # Line
+	 D1   = 'Deleted b'
+	 D2   = 'delete b'
+	 Set  = 'set b'
+	 Br   = 'reakpoint at '
+	 Err  = 'Failed to '
+      in
+	 case YesNo then
+	    case Ok then
+	       {Ozcar rawStatus('B'#Br#FL)}
+	    else
+	       {Ozcar rawStatus(Err#Set#Br#FL)}
+	    end
+	 else
+	    case Ok then
+	       {Ozcar rawStatus(D1#Br#FL)}
+	    else
+	       {Ozcar rawStatus(Err#D2#Br#FL)}
+	    end
+	 end
+      end
+  
       meth EraseScrollbar(What)
 	 case What == both then
 	    {ForAll [appl stack]
@@ -203,17 +228,19 @@ in
       end
 
       meth scrollbar(file:F line:L color:C what:What<=appl ack:Ack<=unit)
-	 SourceManager,EmacsScrollbar(file:F line:L color:C what:What ack:Ack)
+	 M = {Cget scrollbar}
+      in
+	 SourceManager,M(file:F line:L color:C what:What ack:Ack)
       end
       
-      meth EmacsScrollbar(file:F line:L color:C what:What ack:Ack)
+      meth emacsScrollbar(file:F line:L color:C what:What ack:Ack)
 	 case {IsDet Ack} then skip else Ack = unit end
          case {UnknownFile F} then skip else
             {Print {VS2A 'oz-arrow ' # {LookupFile F} # ' ' # L}}
          end
       end
       
-      meth OzScrollbar(file:F line:L color:C what:What ack:Ack)
+      meth ozScrollbar(file:F line:L color:C what:What ack:Ack)
 	 case {UnknownFile F} then
 	    SourceManager,EraseScrollbar(What)
 	 else
