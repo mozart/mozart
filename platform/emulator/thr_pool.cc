@@ -27,7 +27,7 @@ void ThreadsPool::initThreads ()
 
   // public part;
   currentThread = (Thread *) NULL;
-  rootThread = newThread (ozconf.defaultPriority, am.rootBoard);
+  rootThread = newThread (ozconf.defaultPriority, am.rootBoard,PARMODE);
 }
 
 void ThreadsPool::scheduleThreadOutline (Thread *th, int pri)

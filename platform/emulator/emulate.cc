@@ -443,12 +443,11 @@ Bool AM::hookCheckNeeded()
 // ------------------------------------------------------------------------
 
 // free the memory of the thread (there are no references to it anymore)
-inline
 void ThreadsPool::disposeThread(Thread *th)
 {
   Verbose((VERB_THREAD,"Thread::dispose = 0x%x\n",this));
   if (th == rootThread) {
-    rootThread->init(th->getPriority(),am.rootBoard);
+    rootThread->init(th->getPriority(),am.rootBoard,PARMODE);
     am.checkToplevel();
   } else {
     /* dispose thread: */
@@ -467,7 +466,7 @@ void AM::handleToplevelBlocking()
   message("\n");
   currentThread->printDebug(NOCODE);
   message("******************************************\n");
-  rootThread=newThread(currentThread->getPriority(),rootBoard);
+  rootThread=newThread(currentThread->getPriority(),rootBoard,PARMODE);
   checkToplevel();
   currentThread=0;
 }
@@ -477,8 +476,7 @@ if (e->currentThread->compMode == ALLSEQMODE) { \
   if (e->currentThread==e->rootThread) {        \
     e->handleToplevelBlocking();                \
   }                                             \
-  e->currentThread=0;                           \
-  goto LBLstart;                                \
+  goto LBLkillThread;                           \
 }                                               \
 goto LBLpopTask;
 
@@ -532,7 +530,7 @@ Suspension *AM::mkSuspension(Board *b, int prio, ProgramCounter PC,
   case SEQMODE:
     {
       pushTask(b,PC,Y,G,X,argsToSave);
-      Thread *th=newThread(currentThread->getPriority(),currentBoard);
+      Thread *th=newThread(currentThread->getPriority(),currentBoard,SEQMODE);
       th->getSeqFrom(currentThread);
       return new Suspension(th);
     }
@@ -558,7 +556,7 @@ Suspension *AM::mkSuspension(Board *b, int prio, OZ_CFun bi,
   case SEQMODE:
     {
       pushCFun(b,bi,X,argsToSave);
-      Thread *th=newThread(currentThread->getPriority(),currentBoard);
+      Thread *th=newThread(currentThread->getPriority(),currentBoard,SEQMODE);
       th->getSeqFrom(currentThread);
       return new Suspension(th);
     }
@@ -636,7 +634,7 @@ enum CE_RET {
   CE_FAIL
 };
 
-int AM::checkEntailment(Continuation *&contAfter, int &prio)
+int AM::checkEntailment(Continuation *&contAfter, Actor *&aa)
 {
 
 loop:
@@ -646,7 +644,7 @@ loop:
 
   if (currentBoard->isAsk()) {
     if ( entailment() ) {
-      prio = currentBoard->getActor()->getPriority();
+      aa = currentBoard->getActor();
       contAfter=currentBoard->getBodyPtr();
 
       trail.popMark();
@@ -727,10 +725,10 @@ loop:
 	if (solveAA->stable_wake()) {
 	  LOCAL_PROPAGATION(if (! localPropStore.do_propagation())
 			    return CE_FAIL;);
+	  if (!isStableSolve(solveAA))
+	    return CE_NOTHING;
+	  goto loop;
 	}
- 
-	if (isStableSolve(solveAA) == NO)
-	  return CE_NOTHING;
  
 	WaitActor *wa = solveAA->getDisWaitActor ();
 	
@@ -772,7 +770,7 @@ loop:
 	      goto loop;
 	    }
 
-	    prio=solveAA->getPriority();
+	    aa=wa;
 	    contAfter=waitBoard->getBodyPtr();
 	    return CE_SOLVE_CONT;
 	  }
@@ -830,7 +828,7 @@ loop:
 		  goto loop;
 		}
 
-		prio=solveAA->getPriority();
+		aa=wa;
 		contAfter=waitBoard->getBodyPtr();
 		return CE_SOLVE_CONT;
 		
@@ -873,7 +871,7 @@ loop:
 
 	      waitBoard->setActor (wa);
 	      ((AWActor *) wa)->addChild (waitBoard);
-	      solveAA->setBoardToInstall (waitBoard);
+	      solveAA->setBoardToInstall (waitBoard,wa->getCompMode());
 	      DebugCheckT (solveBB->setReflected ());
 	      // statistics
 	      ozstat.incSolveDistributed();
@@ -893,7 +891,7 @@ loop:
 	      waitBoard->setActor (nwa);
 	      ((AWActor *) nwa)->addChild (waitBoard);
 	      wa->unsetBoard ();  // may not copy the actor and rest of boards too;
-	      solveAA->setBoardToInstall (waitBoard);
+	      solveAA->setBoardToInstall (waitBoard,wa->getCompMode());
 
 	      //  Now, the following state has been reached:
 	      // The waitActor with the 'rest' of actors is unlinked from the 
@@ -908,9 +906,9 @@ loop:
 	      // the subtrees (new and old ones) are still linked to the
 	      // computation tree; 
 	      if (wa->hasOneChild () == OK) {
-		solveAA->setBoardToInstall (wa->getChild ());
+		solveAA->setBoardToInstall (wa->getChild (),wa->getCompMode());
 	      } else {
-		solveAA->setBoardToInstall ((Board *) NULL);
+		solveAA->setBoardToInstall ((Board *) NULL,0);
 		// ... since we have set previously board-to-install for copy;
 		solveAA->pushWaitActor (wa);
 		//  If this waitActor has yet more than one clause, it can be
@@ -1129,7 +1127,6 @@ void engine()
       }
       Assert((fsb = auxBoard->getSolveBoard())==0 ||
 	     !fsb->isReflected ());
-      DebugTrace(trace("c cont",auxBoard));
       INSTALLPATH(auxBoard);
 #ifndef NEWCOUNTER
       auxBoard->decSuspCount();
@@ -1145,7 +1142,7 @@ void engine()
     if (cFlag == C_COMP_MODE) {
       taskstack->setTop(topCache);
       e->currentThread->compMode=TaskStack::getCompMode(topElem);
-      goto LBLpopTask;;
+      goto LBLpopTask;
     }
     tmpBB = getBoard(tb,cFlag)->getBoardFast();
     switch (cFlag){
@@ -1166,7 +1163,6 @@ void engine()
 
       Assert((fsb = tmpBB->getSolveBoard())==0 ||
 	     !fsb->isReflected ());
-      DebugTrace(trace("c xcont",tmpBB));
       INSTALLPATH(tmpBB);
 #ifndef NEWCOUNTER
       tmpBB->decSuspCount();
@@ -1279,8 +1275,8 @@ void engine()
 	  CBB->decSuspCount();
 
 	  Continuation *cont;
-	  int prio;
-	  switch (e->checkEntailment(cont,prio)) {
+	  Actor *aa;
+	  switch (e->checkEntailment(cont,aa)) {
 	  case CE_FAIL:
 	    HF_NOMSG;
 	  case CE_SOLVE_CONT:
@@ -1291,8 +1287,10 @@ void engine()
 	    CBB->incSuspCount();
 #endif
 	    e->pushCFun(CBB, &AM::SolveActorWaker);    // no args;
+	    e->createTask();
 	    // fall through
 	  case CE_CONT:
+	    e->currentThread->checkCompMode(aa->getCompMode());
 	    LOADCONT(cont);
 	    goto LBLemulateHook;
 	  case CE_NOTHING:
@@ -1345,7 +1343,7 @@ void engine()
 #ifdef NEWCOUNTER
 	e->currentThread=(Thread *) NULL;
 	Board *bb=tmpThread->getBoardFast();
-	if (!bb->isFailed()) {
+	if (!tmpThread->isSuspended() && !bb->isFailed()) {
 	  bb->decSuspCount();
 	}
 	Board *nb=0;
@@ -1368,7 +1366,9 @@ void engine()
 	    nb=sa->getBoardFast();
 	  }
 	}
-	e->disposeThread(tmpThread);
+	if (!tmpThread->isSuspended()) {
+	  e->disposeThread(tmpThread);
+	}
 	tmpThread=0;
       loop:
 	if (CBB != bb) {
@@ -1388,14 +1388,15 @@ void engine()
 	}
 
 	Continuation *cont;
-	int prio;
-	switch (e->checkEntailment(cont,prio)) {
+	Actor *aa;
+	switch (e->checkEntailment(cont,aa)) {
 	case CE_FAIL:
 	  if (nb) e->decSolveThreads(nb);
 	  HF_NOMSG;
 	case CE_SOLVE_CONT: /* no special case */
 	case CE_CONT:
-	  e->currentThread = e->newThread(prio,CBB);
+	  e->currentThread = e->newThread(aa->getPriority(),CBB,
+					  aa->getCompMode());
 	  LOADCONT(cont);
 	  CBB->incSuspCount();
 	  /* optimization for:
@@ -2245,6 +2246,7 @@ void engine()
 
    LBLBIsolve:
      {
+       DebugTrace(trace("solve",CBB));
        TaggedRef x0 = X[0];
        DEREF (x0, _0, x0Tag);
 
@@ -2337,6 +2339,7 @@ void engine()
        // create solve actor(x1);
        // Note: don't perform any derefencing on X[1];
        SolveActor *sa = new SolveActor (CBB,CPP,
+					e->currentThread->getCompMode(),
 					output, guidance);
 
        if (isSolveGuided) sa->setGuided();
@@ -2351,6 +2354,7 @@ void engine()
        // put ~'solve actor';
        // Note that CBB is already the 'solve' board; 
        e->pushCFun(CBB, &AM::SolveActorWaker);    // no args;
+       e->createTask();
        
        // apply the predicate;
        predArity = 1;
@@ -2366,6 +2370,7 @@ void engine()
 
    LBLBIsolveCont:
      {
+       DebugTrace(trace("solve cont",CBB));
        if (((OneCallBuiltin *)bi)->isSeen () == OK) {
 	 HF_FAIL(,
 		 message("once-only abstraction applied more than once\n"));
@@ -2398,7 +2403,8 @@ void engine()
        }
 
        // install (i.e. perform 'unit commit') 'board-to-install' if any;
-       Board *boardToInstall = solveAA->getBoardToInstall ();
+       int compMode;
+       Board *boardToInstall = solveAA->getBoardToInstall (compMode);
        if (boardToInstall != (Board *) NULL) {
 	 DebugCheck ((boardToInstall->isCommitted () == OK ||
 		      boardToInstall->isFailed () == OK),
@@ -2432,6 +2438,7 @@ void engine()
 	     e->pushTaskOutline(CBB,PC,Y,G);
 	   else
 	     isTailCall = NO;
+	   e->currentThread->checkCompMode(compMode);
 	   LOADCONT(boardToInstall->getBodyPtr ());
 	 }
        }
@@ -2463,6 +2470,7 @@ void engine()
 
    LBLBIsolved:
      {
+       DebugTrace(trace("solved",CBB));
        TaggedRef valueIn = (((SolvedBuiltin *) bi)->getGRegs ())[0]; 
        Assert(!isRef(valueIn));
 
@@ -2578,8 +2586,8 @@ void engine()
 	CBB->decSuspCount();
 #ifdef NEWCOUNTER
 	Continuation *cont;
-	int prio;
-	switch (e->checkEntailment(cont,prio)) {
+	Actor *aa;
+	switch (e->checkEntailment(cont,aa)) {
 	case CE_FAIL:
 	  HF_NOMSG;
 	case CE_SOLVE_CONT:
@@ -2590,8 +2598,10 @@ void engine()
 	  CBB->incSuspCount();
 #endif
 	  e->pushCFun(CBB, &AM::SolveActorWaker);    // no args;
+	  e->createTask();
 	  // fall through
 	case CE_CONT:
+	  e->currentThread->checkCompMode(aa->getCompMode());
 	  LOADCONT(cont);
 	  goto LBLemulateHook;
 	case CE_NOTHING:
@@ -2619,8 +2629,8 @@ void engine()
 	CBB->incSuspCount(bb->getSuspCount()-1);
 #ifdef NEWCOUNTER
 	Continuation *cont;
-	int prio;
-	switch (e->checkEntailment(cont,prio)) {
+	Actor *aa;
+	switch (e->checkEntailment(cont,aa)) {
 	case CE_FAIL:
 	  HF_NOMSG;
 	case CE_SOLVE_CONT:
@@ -2631,8 +2641,10 @@ void engine()
 	  CBB->incSuspCount();
 #endif
 	  e->pushCFun(CBB, &AM::SolveActorWaker);    // no args;
+	  e->createTask();
 	  // fall through
 	case CE_CONT:
+	  e->currentThread->checkCompMode(aa->getCompMode());
 	  LOADCONT(cont);
 	  goto LBLemulateHook;
 	case CE_NOTHING:
@@ -2702,7 +2714,7 @@ void engine()
       ProgramCounter elsePC = getLabelArg(PC+1);
       int argsToSave = getPosIntArg(PC+2);
 
-      CAA = new AskActor(CBB,CPP,
+      CAA = new AskActor(CBB,CPP,e->currentThread->getCompMode(),
 			 elsePC ? elsePC : NOCODE,
 			 NOCODE, Y, G, X, argsToSave);
       DISPATCH(3);
@@ -2712,7 +2724,8 @@ void engine()
     {
       ProgramCounter elsePC = getLabelArg (PC+1);
       int argsToSave = getPosIntArg (PC+2);
-      CAA = new WaitActor(CBB,CPP,NOCODE,Y,G,X,argsToSave);
+      CAA = new WaitActor(CBB,CPP,e->currentThread->getCompMode(),
+			  NOCODE,Y,G,X,argsToSave);
       DISPATCH(3);
     }
 
@@ -2721,7 +2734,7 @@ void engine()
       ProgramCounter elsePC = getLabelArg (PC+1);
       int argsToSave = getPosIntArg (PC+2);
 
-      CAA = new WaitActor(CBB,CPP,
+      CAA = new WaitActor(CBB,CPP,e->currentThread->getCompMode(),
 			  NOCODE, Y, G, X, argsToSave);
       if (e->currentSolveBoard != (Board *) NULL) {
 	SolveActor *sa= SolveActor::Cast (e->currentSolveBoard->getActor ());
@@ -2734,6 +2747,7 @@ void engine()
     {
       // create a node
       e->setCurrent(new Board(CAA,Bo_Wait),OK);
+      e->createTask();
       CBB->setInstalled();
       e->trail.pushMark();
       DebugCheckT(CAA=NULL);
@@ -2744,6 +2758,7 @@ void engine()
   Case(ASKCLAUSE)
     {
       e->setCurrent(new Board(CAA,Bo_Ask),OK);
+      e->createTask();
       CBB->setInstalled();
       e->trail.pushMark();
       DebugCheckT(CAA=NULL);
@@ -2767,11 +2782,7 @@ void engine()
 	prio = defPrio;
       }
 
-      Thread *tt = e->createThread(prio);
-
-      /* 'thread .. end' in seqmode creates a new sequential thread */
-      Assert(tt->getCompMode()==PARMODE);
-      if (e->currentThread->getCompMode()!=PARMODE) tt->switchCompMode();
+      Thread *tt = e->createThread(prio,e->currentThread->getCompMode());
 
       tt->pushCont(CBB,newPC,Y,G,NULL,0,OK);
       JUMP(contPC);
@@ -2875,8 +2886,8 @@ LBLcheckEntailment:
     }
 
     Continuation *cont;
-    int prio;
-    switch (e->checkEntailment(cont,prio)) {
+    Actor *aa;
+    switch (e->checkEntailment(cont,aa)) {
     case CE_FAIL:
       HF_NOMSG;
     case CE_SOLVE_CONT:
@@ -2992,8 +3003,8 @@ LBLcheckEntailment:
 	  if (waitBoard->isWaitTop()) {
 #ifdef NEWCOUNTER
 	    Continuation *cont;
-	    int prio;
-	    switch (e->checkEntailment(cont,prio)) {
+	    Actor *aa;
+	    switch (e->checkEntailment(cont,aa)) {
 	    case CE_FAIL:
 	      HF_NOMSG;
 	    case CE_SOLVE_CONT:
@@ -3002,8 +3013,10 @@ LBLcheckEntailment:
 	      SolveActor::Cast(CBB->getActor())->incThreads();
 	      CBB->incSuspCount();
 	      e->pushCFun(CBB, &AM::SolveActorWaker);    // no args;
+	      e->createTask();
 	      // fall through
 	    case CE_CONT:
+	      e->currentThread->checkCompMode(aa->getCompMode());
 	      LOADCONT(cont);
 	      goto LBLemulateHook;
 	    case CE_NOTHING:

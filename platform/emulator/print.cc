@@ -610,15 +610,25 @@ PRINT(Suspension)
   if (isTagged()) stream << 'T';
   stream << "] -> ";
   
-  if (getCont())
+  if (flag & S_thread) {
+    item.thread->print(stream,depth);
+    stream << ", ";
+  } else switch (flag & (S_cont|S_cfun)) {
+  case S_null:
+    stream << "board ";
+    break;
+  case S_cont:
     stream << "cont ";
-  else if (getCCont()) {
+    break;
+  case S_cont|S_cfun:
     stream  << "ccont = "
 	    << builtinTab.getName((void *)getCCont()->getCFunc())
 	    << '(' << getCCont()->getXSize() << ", "
 	    << (void *) getCCont()->getX() << "[]), ";
-  } else {
-    stream << "board ";
+    break;
+  default:
+    Assert(0);
+    break;
   }
   getBoardFast()->print(stream, DEC(depth));
 }
