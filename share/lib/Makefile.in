@@ -63,7 +63,7 @@ FUNCTORS = \
         $(WPSRC:%=%.ozf) \
         $(SUPPSRC:%=%.ozf) \
         $(MISCSRC:%=%.ozf) \
-        Compiler.ozf
+        RunTimeLibrary.ozf Compiler.ozf
 
 SYSLETS = ozc ozserver ozvsserver
 
@@ -105,6 +105,9 @@ STANDARDSRC1 = \
         Time.oz Thread.oz Space.oz Array.oz Dictionary.oz \
         Exception.oz Functor.oz BitArray.oz
 STANDARDSRC = $(STANDARDSRC1:%=standard/%) Standard.oz
+
+RunTimeLibrary.ozf: Standard.ozf
+        @true
 
 Standard.ozf: $(STANDARDSRC)
         $(EXEC) -l Pickle Standard.oz
@@ -267,6 +270,9 @@ $(OZLIB)/%.ozf: %.ozf
         $(INSTALL_FILE) $< $@
 
 $(OZLIB)/%.ozm: %.ozm
+        $(INSTALL_FILE) $< $@
+
+$(OZLIB)/%.ozp: %.ozp
         $(INSTALL_FILE) $< $@
 
 $(IMAGESDIR)/%: images/%
