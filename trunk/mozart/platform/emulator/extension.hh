@@ -64,7 +64,9 @@ public:
   virtual OZ_Term       typeV(void);
   virtual OZ_Term       inspectV(void) { return typeV(); }
   virtual OZ_Boolean    isChunkV(void) { return OZ_TRUE; }
-  virtual OZ_Term       getFeatureV(OZ_Term)       { return 0; }
+  virtual OZ_Term       getFeatureV(OZ_Term);
+  virtual OZ_Return	getFeatureV(OZ_Term,OZ_Term&) { return OZ_FAILED; }
+  virtual OZ_Return	putFeatureV(OZ_Term,OZ_Term ) { return OZ_FAILED; }
   virtual OZ_Return     eqV(OZ_Term)               { return OZ_FAILED; }
   virtual OZ_Boolean    marshalV(void *)           { return OZ_FALSE; }
   virtual void *        __getSpaceInternal()       { return 0; }

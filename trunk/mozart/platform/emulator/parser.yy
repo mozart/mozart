@@ -98,7 +98,7 @@ static void xyerror(char *);
 // Atom definitions
 //-----------------
 
-OZ_Term _PA_AtomTab[108];
+OZ_Term _PA_AtomTab[109];
 
 #define PA_allowdeprecated			_PA_AtomTab[0]
 #define PA_coord				_PA_AtomTab[1]
@@ -208,6 +208,7 @@ OZ_Term _PA_AtomTab[108];
 #define PA_zy					_PA_AtomTab[105]
 #define PA_fLoop				_PA_AtomTab[106]
 #define PA_fMacro				_PA_AtomTab[107]
+#define PA_fDotAssign				_PA_AtomTab[108]
 
 const char * _PA_CharTab[] = {
 	"allowdeprecated",			//0
@@ -318,10 +319,11 @@ const char * _PA_CharTab[] = {
 	"zy",					//105
 	"fLoop",				//106
 	"fMacro",				//107
+	"fDotAssign",				//108
 };
 
 void parser_init(void) {
-   for (int i = 108; i--; )
+   for (int i = 109; i--; )
      _PA_AtomTab[i] = oz_atomNoDup(_PA_CharTab[i]);
 }
 
@@ -537,6 +539,7 @@ void xy_setParserExpect() {
 %nonassoc T_ITER
 %right    '='
 %right    T_OOASSIGN
+%nonassoc T_DOTASSIGN
 %right    T_orelse
 %right    T_andthen
 %nonassoc T_COMPARE T_FDCOMPARE T_LMACRO T_RMACRO
@@ -745,6 +748,8 @@ sequence	: phrase
 
 phrase		: phrase '=' coord phrase
 		  { $$ = newCTerm(PA_fEq,$1,$4,$3); }
+		| phrase T_DOTASSIGN coord phrase
+		  { $$ = newCTerm(PA_fDotAssign,$1,$4,$3); }
 		| phrase T_OOASSIGN coord phrase
 		  { $$ = newCTerm(PA_fAssign,$1,$4,$3); }
 		| phrase T_orelse coord phrase
