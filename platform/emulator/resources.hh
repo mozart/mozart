@@ -109,7 +109,10 @@
 
 #define NumberOfXRegisters	10000
 
-#define MAX_ID                  (1<<15)
+/* threads */
+#define THREAD_ID_SIZE		16
+#define THREAD_ID_MAX           ((1 << THREAD_ID_SIZE) - 1)
+#define THREAD_ID_MASK          THREAD_ID_MAX
 
 #define OzCompiler	"oz.compiler"
 
