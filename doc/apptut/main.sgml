@@ -52,8 +52,6 @@
 <!entity chapter.concurrency.patterns system "conc-patterns.sgml">
 
 <!ENTITY % proglang.values.local "|sh|makefile|java|fundamental">
-<!ENTITY % p.mix.local "|em">
-<!ELEMENT em - - (#PCDATA)>
 <!ENTITY % author.class "author|author.extern|comic">
 <!ENTITY % picture.element "picture|picture.extern|picture.choice">
 <!ELEMENT comic - O (%picture.element;)>
