@@ -307,14 +307,14 @@ TaggedRef oz_valueType(OZ_Term term) {
     return AtomTuple;
   case TAG_SRECORD:
     return tagged2SRecord(term)->isTuple() ? AtomTuple : AtomRecord;
-  case TAG_FSETVALUE:
-    return AtomFSet;
   case TAG_EXT:
     return tagged2Extension(term)->typeV();
   case TAG_CONST:
     switch (tagged2Const(term)->getType()) {
     case Co_BigInt:
       return AtomInt;
+    case Co_FSetValue:
+      return AtomFSet;
     case Co_Foreign_Pointer:
       return AtomForeignPointer;
     case Co_Abstraction:
@@ -836,6 +836,13 @@ void name2buffer(ostream &out, Literal *a) {
   }
 }
 
+static
+void fset2buffer(ostream &out, OZ_FSetValue * fs) 
+{
+  out << ((const OZ_FSetValue *) fs)->toString();
+}
+
+
 inline
 void const2buffer(ostream &out, ConstTerm *c,const char sign)
 {
@@ -844,6 +851,9 @@ void const2buffer(ostream &out, ConstTerm *c,const char sign)
   switch (c->getType()) {
   case Co_BigInt:
     bigInt2buffer(out,(BigInt *)c,sign);
+    break;
+  case Co_FSetValue:
+    fset2buffer(out, ((ConstFSetValue *) c)->getValue());
     break;
   case Co_Abstraction:
   case Co_Builtin:
@@ -1026,12 +1036,6 @@ void list2buffer(ostream &out, LTuple *list,int depth) {
   out << ",,,|,,,";
 }
 
-static
-void fset2buffer(ostream &out, OZ_FSetValue * fs) 
-{
-  out << ((const OZ_FSetValue *) fs)->toString();
-}
-
 // genvar.cc
 void oz_var_printStream(ostream &out, const char *s, OzVariable *cv,
 			int depth);
@@ -1088,9 +1092,6 @@ void term2Buffer(ostream &out, OZ_Term term, int depth)
       }
       break;
     }
-  case TAG_FSETVALUE:
-    fset2buffer(out, tagged2FSetValue(term));
-    break;
   case TAG_SRECORD:
     record2buffer(out,tagged2SRecord(term),depth);
     break;

@@ -81,12 +81,13 @@ static void outputArgsList(ostream& o, OZ_Term args, Bool not_top)
       }
       break;
 
-    case TAG_SMALLINT:
-      o << tagged2SmallInt(h);
+    case TAG_CONST:
+      if (oz_isFSetValue(h))
+	o << tagged2FSetValue(h)->toString();
       break;
 
-    case TAG_FSETVALUE:
-      o << tagged2FSetValue(h)->toString();
+    case TAG_SMALLINT:
+      o << tagged2SmallInt(h);
       break;
 
     case TAG_VAR:
