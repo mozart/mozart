@@ -29,11 +29,11 @@
 
 #include "ri.hh"
 
-extern "C" INIT_FUNC(oz_init_module);
+//-----------------------------------------------------------------------------
 
 class RILessEq : public Propagator_RI_RI {
 
-  friend INIT_FUNC(oz_init_module);
+  friend INIT_FUNC_RI;
 
 private:
 
@@ -52,7 +52,7 @@ public:
 
 class RIGreater : public Propagator_RI_RI {
 
-  friend INIT_FUNC(oz_init_module);
+  friend INIT_FUNC_RI;
 
 private:
 
@@ -71,7 +71,7 @@ public:
 
 class RIPlus : public Propagator_RI_RI_RI {
 
-  friend INIT_FUNC(oz_init_module);
+  friend INIT_FUNC_RI;
 
 private:
 
@@ -91,7 +91,7 @@ public:
 
 class RITimes : public Propagator_RI_RI_RI {
 
-  friend INIT_FUNC(oz_init_module);
+  friend INIT_FUNC_RI;
 
 private:
 
@@ -111,7 +111,7 @@ public:
 
 class RIIntBounds : public Propagator_RI_D {
 
-  friend INIT_FUNC(oz_init_module);
+  friend INIT_FUNC_RI;
 
 private:
 
@@ -130,7 +130,7 @@ public:
 
 class RIIntBoundsSPP : public Propagator_RI_D {
 
-  friend INIT_FUNC(oz_init_module);
+  friend INIT_FUNC_RI;
 
 private:
 

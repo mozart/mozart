@@ -52,62 +52,43 @@ void RIProfile::init(OZ_Ct * c)
 
 //-----------------------------------------------------------------------------
 
-extern "C" 
+void module_init_ri(void)
 {
-  OZ_C_proc_interface * oz_init_module(void)
-  {
-    static OZ_C_proc_interface i_table [] = {
-      {"newVar",        3, 0, ri_newVar},
-      {"declVar",       1, 0, ri_declVar},
-      {"setPrecision",  1, 0, ri_setPrecision},
-      {"lessEq",        2, 0, ri_lessEq},
-      {"greater",       2, 0, ri_greater},
-      {"getLowerBound", 2, 0, ri_getLowerBound},
-      {"getUpperBound", 2, 0, ri_getUpperBound},
-      {"getWidth",      2, 0, ri_getWidth},
-      {"getInf",        1, 0, ri_getInf},
-      {"getSup",        1, 0, ri_getSup},
-      {"intBounds",     2, 0, ri_intBounds},
-      {"intBoundsSPP",  2, 0, ri_intBoundsSPP},
-      {"plus",          3, 0, ri_plus},
-      {"times",         3, 0, ri_times},
-      {0,0,0,0}
-    };
-    
 #ifdef LINUX_IEEE
-    fp_except m = fpsetmask(~FP_X_INV);
-    sigfpe(FPE_FLTINV, exception_handler);
+  fp_except m = fpsetmask(~FP_X_INV);
+  sigfpe(FPE_FLTINV, exception_handler);
 #endif
-    
-    static RIDefinition ri_def;
-    ri_definition = &ri_def;
-    
-    RILessEq::profile       = "ri_lessEq";
-    RIGreater::profile      = "ri_greater";
-    RIPlus::profile         = "ri_plus";
-    RITimes::profile        = "ri_times";
-    RIIntBounds::profile    = "ri_intBounds";
-    RIIntBoundsSPP::profile = "ri_intBoundsSPP";
-    
+  
+  static RIDefinition ri_def;
+  ri_definition = &ri_def;
+  
+  RILessEq::profile       = "ri_lessEq";
+  RIGreater::profile      = "ri_greater";
+  RIPlus::profile         = "ri_plus";
+  RITimes::profile        = "ri_times";
+  RIIntBounds::profile    = "ri_intBounds";
+  RIIntBoundsSPP::profile = "ri_intBoundsSPP";
+  
 #ifndef ALLWAYS_CLOSE_CPLEX
 #ifdef CPLEX
-    int status;
-    CPLEX_env = CPXopenCPLEXdevelop(&status);
-    
-    if (CPLEX_env == NULL) {
-      char  errmsg[1024];
-      fprintf (stderr, "Could not open CPLEX environment.\n");
-      CPXgeterrorstring (CPLEX_env, status, errmsg);
-      fprintf (stderr, "%s", errmsg);
-    }
-#endif
-#endif
-
-    RIDefinition::_kind = OZ_getUniqueId();
-    
-    return i_table;
+  int status;
+  CPLEX_env = CPXopenCPLEXdevelop(&status);
+  
+  if (CPLEX_env == NULL) {
+    char  errmsg[1024];
+    fprintf (stderr, "Could not open CPLEX environment.\n");
+    CPXgeterrorstring (CPLEX_env, status, errmsg);
+    fprintf (stderr, "%s", errmsg);
   }
-} /* extern "C" */
+#endif
+#endif
+  
+  RIDefinition::_kind = OZ_getUniqueId();
+
+} // module_init_ri(void)
+
+
+#include "modRI-table.cc"
 
 // End of File
 //-----------------------------------------------------------------------------
