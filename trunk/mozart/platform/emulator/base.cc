@@ -91,6 +91,9 @@ void OZ_error(OZ_CONST char *format, ...)
 
   DebugCheckT(osUnblockSignals());
 
+  // fprintf(stderr, "\n(going to report an error in pid %d)", osgetpid());
+  // while (OK) {}
+
   //
   // send a signal to all forked processes, including the emulator itself
   DebugCode(ossleep(30));

@@ -462,8 +462,10 @@ void OwnerTable::print() { printf("OwnerTable::print\n"); }
 void OwnerTable::gcOwnerTableRoots()
 {
   for (int i = tableSize; i--; )
-    if (!table[i].isFree())
-      (table[i].getOE())->gcPO();
+    if (!table[i].isFree()) {
+      OwnerEntry *oe = table[i].getOE();
+      oe->gcPO();
+    }
 } 
 
 void OwnerTable::gcOwnerTableFinal()
@@ -496,6 +498,22 @@ int OwnerTable::notGCMarked()
     }
   }
   return (TRUE);
+}
+#endif
+
+#if defined(DEBUG_CHECK)
+void OwnerTable::checkEntries()
+{
+  for (int i = tableSize; i--; ) {
+    if (!table[i].isFree()) {
+      OwnerEntry *oe = table[i].getOE();
+      if (oe->isVar()) {
+	TaggedRef *ptr = oe->getPtr();
+	if (!oz_isVar(*ptr))
+	  OZ_error("bang!");
+      }
+    }
+  }
 }
 #endif
 
