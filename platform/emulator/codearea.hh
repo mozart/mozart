@@ -130,20 +130,15 @@ public:
 
   CodeGCList *add(void *ptr, GCListTag tag)
   {
-    if (this==NULL) {
-      CodeGCList *aux = new CodeGCList(NULL);
-      return aux->add(ptr,tag);
-    }
-
-    if (nextFree < codeGCListBlockSize) {
-      block[nextFree].tag     = tag;
-      block[nextFree].u.cache = (InlineCache*) ptr;
-      nextFree++;
-      return this;
-    } else {
+    if (this==NULL || nextFree >= codeGCListBlockSize) {
       CodeGCList *aux = new CodeGCList(this);
       return aux->add(ptr,tag);
     }
+
+    block[nextFree].tag     = tag;
+    block[nextFree].u.cache = (InlineCache*) ptr;
+    nextFree++;
+    return this;
   }
 
   CodeGCList *add(InlineCache *ptr)       { return add(ptr,C_INLINECACHE); }
@@ -248,7 +243,8 @@ public:
   static Opcode getOpcode(ProgramCounter PC) { 
     return adressToOpcode(getOP(PC)); }
 
-  static void gcReferenced(ProgramCounter PC);
+  void gcCodeBlock();
+  static void gcCodeAreaStart();
   static void gcCollectCodeBlocks();
 
 #ifdef RECINSTRFETCH  
