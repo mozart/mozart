@@ -5,7 +5,7 @@
 -->
 
 <Chapter id="chapter.records">
-  <Title/Records/
+  <Title/Records, Tuples, and Lists/
   <P>
     This chapter describes procedures to be used with records in general and
     special kinds of records, namely tuples and lists.
