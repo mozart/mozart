@@ -129,6 +129,10 @@
     <!-- Constraint programming -->
 
     <Meta name="html.split"       value="chapter.search">
+    <Meta name="html.split"       value="vanillasearch">
+    <Meta name="html.split"       value="generalsearch">
+    <Meta name="html.split"       value="sec.search.object">
+    <Meta name="html.split"       value="section.search.parallel">
     <Meta name="html.split"       value="chapter.types_modes_constr">
     <Meta name="html.split"       value="chapter.fd">
     <Meta name="html.split"       value="chapter.schedule">
