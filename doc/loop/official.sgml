@@ -49,7 +49,8 @@ next value.  The iterator runs out when ?{E2} evaluates to <code/false/./
       <entry/<code/X in ?{E1}..?{E2};?{E3}//
       <item/iterate over the integers from ?{E1} up to ?{E2} inclusive, by
 increment of ?{E3}.  ?{E1}, ?{E2} and ?{E3} are evaluated only once prior
-to starting the loop.
+to starting the loop.  Whether the loop is intended to count upward or
+downward is determined by the sign of ?{E3}./
       <entry/<code/X in ?{E1}..?{E2}//
       <item/same as above, but with increment of 1./
       <entry/<code/X in ?{E1};?{E2}//
