@@ -74,6 +74,14 @@ public:
   void deleteByteBuffer(ByteBuffer*);
 };
 
+enum ByteStreamType{
+  BS_None,
+  BS_Marshal,
+  BS_Write,
+  BS_Read,
+  BS_Unmarshal
+};
+
 class ByteStream {
   friend class ByteStreamManager;
   friend class BufferManager;
@@ -84,6 +92,7 @@ class ByteStream {
   BYTE *curpos;
   BYTE *endpos; 
   int totlen;  /* include header */
+  int type;
 
   int availableSpace(){
     Assert(last!=NULL);
@@ -106,9 +115,9 @@ public:
   /* init */
 
   int refCounter;
-  ByteStream():first(NULL),last(NULL),pos(NULL){}
+  ByteStream():first(NULL),last(NULL),pos(NULL),type(BS_None){}
 
-  void init(){first=NULL;last=NULL;refCounter=0;}
+  void init(){type=BS_None;first=NULL;last=NULL;refCounter=0;}
 
   /* basic */
 
@@ -127,6 +136,7 @@ public:
   void marshalBegin();
 
   void put(BYTE b){
+    Assert(type==BS_Marshal);
     if(pos==NULL){
       PERDIO_DEBUG1(BUFFER,"BUFFER bytebuffer alloc Marshal: %d",no_bufs());
       ByteBuffer *bb=getAnother();
@@ -146,11 +156,13 @@ public:
   /* INTERFACE  pos=first->head()  endpos= first free slot */
 
   void marshalEnd(){
+    Assert(type==BS_Marshal);
     PERDIO_DEBUG(MARSHALL_BE,"MARSHAL_BE marshal end");
     endpos=pos;
     pos=first->head();
     if(endpos==NULL) {totlen +=BYTEBUFFER_SIZE;}
-    else {totlen +=endpos-last->head();}}
+    else {totlen +=endpos-last->head();}
+    type=BS_None;}
 
   /* write  pos=first to write  endpos= first free slot */
 
@@ -159,6 +171,7 @@ public:
   int getTotLen(){return totlen;}  
 
   void sentFirst(){
+    Assert(type==BS_Write);
     PERDIO_DEBUG1(BUFFER,"BUFFER bytebuffer dumped sent: %d",no_bufs());
     if(first==last){
       removeSingle();
@@ -167,20 +180,23 @@ public:
     pos=first->head();}
   
   int getWriteLen(){
+    Assert(type==BS_Write);
     Assert(first!=NULL);
     if(first==last){
       if(endpos!=NULL) {return endpos-pos;}
       return first->tail()-pos+1;}
     return first->tail()-pos+1;}
 
-  BYTE* getWritePos() {return pos;}
+  BYTE* getWritePos() {Assert(type==BS_Write);return pos;}
 
   void incPosAfterWrite(int i){
+    Assert(type==BS_Write);
     Assert(within(pos,first));
     Assert(pos+i<=first->tail());
     pos +=i;}
 
   int calcTotLen(){
+    Assert(type==BS_Write);
     if(first==last){
       if(endpos!=NULL){return endpos-pos;}
       return first->tail()-pos+1;}
@@ -195,6 +211,7 @@ public:
       return i+endpos-last->head();}}
 
   void writeCheck(){
+    Assert(type==BS_Write);
     Assert(first==NULL);
     Assert(last==NULL); 
     return;}
@@ -221,6 +238,7 @@ public:
   /* unmarshall pos=first unread BYTE curpos last unread BYTE */
 
   void unmarshalBegin(){
+    type=BS_Unmarshal;
     PERDIO_DEBUG(MARSHALL_BE,"MARSHALL_BE unmarshal begin");
     Assert(within(pos,first));
     if(first==last) {
@@ -229,6 +247,7 @@ public:
     else {Assert(within(curpos,last));}}
 
   BYTE get(){
+    Assert(type==BS_Unmarshal);
     Assert(pos!=NULL);
     if(pos==curpos){
       pos=NULL;
@@ -245,7 +264,9 @@ public:
     return *pos++;}
 
   void unmarshalEnd(){
+    Assert(type==BS_Unmarshal);    
     PERDIO_DEBUG(MARSHALL_BE,"MARSHALL_BE unmarshal end");
+    type=BS_None;
     Assert(pos==NULL);}
   
   int no_bufs(){
@@ -256,8 +277,7 @@ public:
       bb=bb->next;}
     return i;}
 
-
-
+  void dumpByteBuffers();
 };
 
 class ByteStreamManager: public FreeListManager {
@@ -280,6 +300,7 @@ public:
   void freeByteStream(ByteStream *bs);
   ByteBuffer* getByteBuffer();
   void freeByteBuffer(ByteBuffer *bb);
+  void dumpByteStream(ByteStream *bs);
 };
 
 extern BufferManager *bufferManager;
