@@ -289,7 +289,7 @@ public:
 
 class BuiltinTab : public HashTable {
 public:
-  BuiltinTab(int sz) : HashTable(sz) {};
+  BuiltinTab(int sz) : HashTable(CHARTYPE,sz) {};
   ~BuiltinTab() {};
   unsigned memRequired(void) {
      return HashTable::memRequired(sizeof(BuiltinTabEntry));
