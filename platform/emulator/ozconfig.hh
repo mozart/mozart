@@ -90,6 +90,10 @@ public:
   int dpCloseTimeout;
   int dpWFRemoteTimeout;
   int dpFirewallReopenTimeout;
+  int dpDefaultBufferSize;
+  int dpDefaultMaxBufferSize;
+  int dpBufferSize;
+  int dpMaxBufferSize;
 
   int dpTableDefaultOwnerTableSize;
   int dpTableDefaultBorrowTableSize;

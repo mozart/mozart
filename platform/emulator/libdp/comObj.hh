@@ -105,7 +105,7 @@ private:
   void open();
   void closeTemp();
   inline TaggedRef createCI(int);
-  inline void extractCI(TaggedRef,int&);
+  inline void extractCI(TaggedRef, int &bufferSize, int &maxBufferSize);
   void errorRec(int);
   Bool hasNeed();
   void adoptCI(OZ_Term channelinfo);
