@@ -62,9 +62,11 @@ DENYS_EVENTS=no
 ifeq ($(DENYS_EVENTS),yes)
 DENYS_SPECS= Event
 DENYS_SRCS= event.cc
+DENYS_CPPFLAGS= -DDENYS_EVENTS
 else
 DENYS_SPECS=
 DENYS_SRCS=
+DENYS_CPPFLAGS=
 endif
 
 # these are the builtin modules: non-sited primitives
