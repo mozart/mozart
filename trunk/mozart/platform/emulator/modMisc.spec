@@ -44,6 +44,10 @@
 			     out => ['+[value]'],
 			     BI  => BIsiteStatistics},
 
+    'getTablesInfo'	=> { in  => [],
+			     out => ['+[value]'],
+			     BI  => BItablesExtract},
+
     'printBorrowTable'	=> { in  => [],
 			     out => [],
 			     BI  => BIprintBorrowTable},
