@@ -538,10 +538,10 @@ PRINT(Arity)
     stream << "Slot: "
 	   << i
 	   << " Entry: ";
-    if (keytable[i] == NULL) {
+    if (keytable[i] == makeTaggedNULL()) {
       stream << "<empty>\n";
     } else { 
-      keytable[i]->print(stream,depth,offset);
+      tagged2Stream(keytable[i],stream,depth,offset);
       stream << " Value: " << indextable[i] << endl;
     }
   }

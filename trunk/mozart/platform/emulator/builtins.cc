@@ -1307,7 +1307,7 @@ LBLagain:
       if (tagged2CVar(term)->getType() == AVAR) return SUSPEND;
       goto typeError0;
     case LITERAL:
-      return FAILED;
+      goto typeError0;
     default:
       if (isChunk(term)) return SUSPEND;
       goto typeError0;
@@ -1318,7 +1318,7 @@ LBLagain:
   case STUPLE:
     {
       if (!isSmallInt(fea)) {
-	if (isBigInt(fea)) { return FAILED; }
+	if (!dot && isBigInt(fea)) { return FAILED; }
 	goto typeError1t;
       }
       int i = smallIntValue(fea);
@@ -1333,7 +1333,7 @@ LBLagain:
   case LTUPLE:
     {
       if (!isSmallInt(fea)) {
-	if (isBigInt(fea)) return FAILED;
+	if (!dot && isBigInt(fea)) return FAILED;
 	goto typeError1t;
       }
       int i2 = smallIntValue(fea);
@@ -1352,7 +1352,7 @@ LBLagain:
     
   case SRECORD:
     {
-      if ( ! isLiteral(feaTag) ) goto typeError1r;
+      if ( ! isFeature(feaTag) ) goto typeError1r;
 
       TaggedRef t = tagged2SRecord(term)->getFeature(fea);
       if (t == makeTaggedNULL()) {
@@ -1365,15 +1365,21 @@ LBLagain:
     
   case UVAR:
   case SVAR:
-    if (!isLiteral(feaTag) && !isInt(fea)) {
-      TypeError2("subtree",1,"Literal or Int",term,fea);
+    if (!isFeature(feaTag)) {
+      TypeError2("subtree",1,"Feature",term,fea);
     }
     return SUSPEND;
 
   case CVAR:
-    if (tagged2CVar(term)->getType() != OFSVariable) goto typeError0;
-    if (!isLiteral(feaTag)) goto typeError1r;
-    return SUSPEND;
+    {
+      if (tagged2CVar(term)->getType() != OFSVariable) goto typeError0;
+      if (!isFeature(feaTag)) goto typeError1r;
+      GenOFSVariable *ofs=(GenOFSVariable *)tagged2CVar(term);
+      TaggedRef t = ofs->getFeatureValue(fea);
+      if (t == makeTaggedNULL()) return SUSPEND;
+      if (out) *out = t;
+      return PROCEED;
+    }
 
   case LITERAL:
     if (dot) goto typeError0;
@@ -1381,13 +1387,13 @@ LBLagain:
 
   default:
     if (isChunk(term)) {
-      if (! isLiteral(feaTag)) { goto typeError1r; }
+      if (! isFeature(feaTag)) { goto typeError1r; }
       TaggedRef t;
       if (isSChunk(term)) {
 	t = tagged2SChunk(term)->getFeature(fea);
       } else {
 	Assert(isObject(term));
-	t = tagged2Object(term)->getFeature(tagged2Literal(fea));
+	t = tagged2Object(term)->getFeature(fea);
       }
       if (t == makeTaggedNULL()) {
 	if (dot) { goto typeError1r; }
@@ -1412,8 +1418,8 @@ typeError1t:
   if (dot) TypeError2(".",1,"Int (and in range [1 .. width])",term,fea);
   TypeError2("subtree",1,"Int",term,fea);
 typeError1r:
-  if (dot) TypeError2(".",1,"Literal (and the name of a field)",term,fea);
-  TypeError2("subtree",1,"Literal",term,fea);
+  if (dot) TypeError2(".",1,"Feature (and the name of a field)",term,fea);
+  TypeError2("subtree",1,"Feature",term,fea);
 }
 
 
@@ -1431,7 +1437,7 @@ DECLAREBI_USEINLINEFUN2(BIdot,dotInline)
  */
 State atOptimizedInline(TaggedRef term, TaggedRef fea, TaggedRef &out)
 {
-  Assert(!isRef(fea) && isLiteral(fea));
+  Assert(!isRef(fea) && isFeature(fea));
   DEREF(term, _2, termTag);
 
   Assert(isSRecord(term) || isLiteral(term));
@@ -1442,7 +1448,7 @@ State atOptimizedInline(TaggedRef term, TaggedRef fea, TaggedRef &out)
       return PROCEED;
     }
   }
-  TypeError2("@ (optimized)",1,"Literal (and the name of a field)",term,fea);
+  TypeError2("@ (optimized)",1,"Feature (and the name of a field)",term,fea);
 }
 DECLAREBI_USEINLINEFUN2(BIatOptimized,atOptimizedInline)
 
@@ -1454,7 +1460,7 @@ State atInline(TaggedRef term, TaggedRef fea, TaggedRef &out)
 
   Assert(isSRecord(term) || isLiteral(term));
   if (isSRecord(term)) {
-    if (!isLiteral(fea)) {
+    if (!isFeature(fea)) {
       if (isAnyVar(fea)) {
 	return SUSPEND;
       }
@@ -1468,7 +1474,7 @@ State atInline(TaggedRef term, TaggedRef fea, TaggedRef &out)
   }
 
 bomb:
-  TypeError2("@",1,"Literal (and the name of a field)",term,fea);
+  TypeError2("@",1,"Feature (and the name of a field)",term,fea);
 }
 DECLAREBI_USEINLINEFUN2(BIat,atInline)
 
@@ -2341,9 +2347,6 @@ OZ_C_proc_begin(BIcharToUpper,2) {
  *	Construct a new SRecord to be a copy of old.
  *	This is the functionality of adjoin(old,newlabel).
  */
-
-
-
 OZ_C_proc_begin(BIcopyRecord,2)
 {
   OZ_Term in = OZ_getCArg(0);
@@ -2460,54 +2463,51 @@ OZ_C_proc_begin(BIadjoinAt,4)
   
   switch (tag0) {
   case LITERAL:
-    switch (tag1) {
-    case LITERAL:
-      {
-	SRecord *newrec = SRecord::newSRecord(rec,aritytable.find(cons(fea,nil())));
-	newrec->setArg(0,value);
-	return OZ_unify(out, makeTaggedSRecord(newrec));
-      }
-    case UVAR:
-    case SVAR:
+    if (isFeature(fea)) {
+      SRecord *newrec = SRecord::newSRecord(rec,aritytable.find(cons(fea,nil())));
+      newrec->setArg(0,value);
+      return OZ_unify(out, makeTaggedSRecord(newrec));
+    }
+    if (isNotCVar(fea)) {
       return OZ_suspendOnVar(makeTaggedRef(feaPtr));
-    case CVAR:
+    }
+    if (isCVar(fea)) {
       if (tagged2CVar(fea)->getType()!=OFSVariable ||
           tagged2GenOFSVar(fea)->getWidth()>0)
-          TypeError3("adjoinAt",1,"Literal",rec,fea,value);
+	TypeError3("adjoinAt",1,"Literal",rec,fea,value);
       return OZ_suspendOnVar(makeTaggedRef(feaPtr));;
-    default:
-      TypeError3("adjoinAt",1,"Literal",rec,fea,value);
     }
+    TypeError3("adjoinAt",1,"Literal",rec,fea,value);
+
   case SRECORD:
     {
       SRecord *rec1 = tagged2SRecord(rec);
       if (isAnyVar(tag1)) {
-	  return OZ_suspendOnVar(makeTaggedRef(feaPtr));
+	return OZ_suspendOnVar(makeTaggedRef(feaPtr));
       }
-      if (!isLiteral(tag1)) {
+      if (!isFeature(tag1)) {
 	TypeError3("adjoinAt",1,"Literal",rec,fea,value);
       }
       SRecord *newrec = rec1->adjoinAt(fea,value);
       return OZ_unify(out,makeTaggedSRecord(newrec));
     }
+
   case UVAR:
   case SVAR:
   case CVAR:
     if (tag0==CVAR && tagged2CVar(rec)->getType()!=OFSVariable)
         TypeError3("adjoinAt",0,"Record",rec,fea,value);
-    switch (tag1) {
-    case UVAR:
-    case SVAR:
-    case LITERAL:
+    if (isLiteral(fea) || isNotCVar(fea)) {
       return OZ_suspendOnVar(makeTaggedRef(recPtr));
-    case CVAR:
+    }
+    if (isCVar(fea)) {
       if (tagged2CVar(fea)->getType()!=OFSVariable ||
           tagged2GenOFSVar(fea)->getWidth()>0)
-          TypeError3("adjoinAt",1,"Literal",rec,fea,value);
+	TypeError3("adjoinAt",1,"Literal",rec,fea,value);
       return OZ_suspendOnVar(makeTaggedRef(recPtr));
-    default:
-      TypeError3("adjoinAt",1,"Literal",rec,fea,value);
     }
+    TypeError3("adjoinAt",1,"Literal",rec,fea,value);
+
   default:
     TypeError3("adjoinAt",0,"Record",rec,fea,value);
   }
@@ -2530,7 +2530,7 @@ loop:
     DEREF(fea,feaPtr,_f1);
 
     if (isAnyVar(fea)) return makeTaggedRef(feaPtr);
-    if (!isLiteral(fea)) goto bomb;
+    if (!isFeature(fea)) goto bomb;
 
     LTuple *lt=new LTuple;
     *next=makeTaggedLTuple(lt);
@@ -2585,9 +2585,6 @@ State adjoinPropListInline(TaggedRef t0, TaggedRef list, TaggedRef &out,
     default:
       goto typeError0;
     }
-  }
-  if (arity == 0) { // no pairlist
-    TypeError2(recordFlag?"adjoinList":"makeRecord",1,"Property List",t0,list);
   }
   
   if (isNil(arity)) { // adjoin nothing
@@ -2672,13 +2669,10 @@ OZ_C_proc_begin(BIadjoinList,3)
   switch (state) {
   case SUSPEND:
     return OZ_suspendOnVar(help);
-  case FAILED:
-    return state;
   case PROCEED:
     return(OZ_unify(help,OZ_getCArg(2)));
   default:
-    Assert(0);
-    return FAILED;
+    return state;
   }
 }
 OZ_C_proc_end
@@ -2693,13 +2687,10 @@ OZ_C_proc_begin(BImakeRecord,3)
   case SUSPEND:
     return OZ_suspendOnVar(help);
     return PROCEED;
-  case FAILED:
-    return state;
   case PROCEED:
     return(OZ_unify(help,OZ_getCArg(2)));
   default:
-    Assert(0);
-    return FAILED;
+    return state;
   }
 }
 OZ_C_proc_end
@@ -2739,7 +2730,7 @@ State BIatConcurrentInline(TaggedRef inState, TaggedRef attr, TaggedRef value,
   DEREF(attr,_2,attrTag);
 
   if (isSRecord(inStateTag)) {
-    if (isLiteral(attrTag)) {
+    if (isFeature(attrTag)) {
       TaggedRef t = tagged2SRecord(inState)->getFeature(attr);
       if (t == makeTaggedNULL()) {
 	goto bomb;
@@ -2756,7 +2747,7 @@ State BIatConcurrentInline(TaggedRef inState, TaggedRef attr, TaggedRef value,
   }
 
   if (isAnyVar(inStateTag)) {
-    if (isAnyVar(attrTag) || isLiteral(attrTag)) {
+    if (isAnyVar(attrTag) || isFeature(attrTag)) {
       return SUSPEND;
     }
     goto bomb;
@@ -2800,7 +2791,7 @@ State BIassignConcurInline(TaggedRef rec, TaggedRef fea, TaggedRef value, Tagged
   DEREF(rec,_1,recTag);
   DEREF(fea,_2,feaTag);
 
-  if ( isLiteral(feaTag) ) {
+  if ( isFeature(feaTag) ) {
  
     if ( isSRecord(recTag) ) {
       SRecord *recOut = tagged2SRecord(rec)->replaceFeature(fea,value);
@@ -2847,7 +2838,7 @@ OZ_C_proc_begin(BIassignOptimized,3)
   OZ_Term fea   = OZ_getCArg(1);
   OZ_Term value = OZ_getCArg(2);
 
-  Assert(!isRef(fea) && isLiteral(fea));
+  Assert(!isRef(fea) && isFeature(fea));
   DEREF(rec,_1,recTag);
 
   if (isSRecord(recTag)) {
@@ -2874,7 +2865,7 @@ OZ_C_proc_begin(BIassign,3)
   DEREF(fea, _2, feaTag);
 
   if (isSRecord(recTag)) {
-    if (!isLiteral(fea)) {
+    if (!isFeature(fea)) {
       if (isAnyVar(fea)) {
 	return SUSPEND;
       }
@@ -5377,10 +5368,10 @@ OZ_C_proc_begin(BIshowStatistics,0)
 }
 OZ_C_proc_end   
 
-OZ_C_proc_begin(BIgetStatistics,2)
+OZ_C_proc_begin(BIgetStatistics,1)
 {
-  ozstat.getStatistics(OZ_getCArg(0),OZ_getCArg(1));
-  return PROCEED;
+  OZ_Term out=OZ_getCArg(0);
+  return OZ_unify(out,ozstat.getStatistics());
 }
 OZ_C_proc_end   
 
@@ -6031,7 +6022,7 @@ BIspec allSpec[] = {
   {"displayCode", 2, BIdisplayCode},
 
   {"showStatistics",0,BIshowStatistics},
-  {"getStatistics",2,BIgetStatistics},
+  {"getStatistics",1,BIgetStatistics},
   {"resetStatistics",0,BIresetStatistics},
   {"System_getPrintName",2,BIgetPrintName},
   {"traceBack",1,BItraceBack},

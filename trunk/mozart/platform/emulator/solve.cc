@@ -128,6 +128,7 @@ TaggedRef SolveActor::genChoice(int noOfClauses)
 
   contGRegs    = allocateRefsArray(1);
   contGRegs[0] = makeTaggedConst(solveBoard);
+  Assert(!solveBoard->isCommitted());
   stuple->setArg(0, makeTaggedConst
 		 (new OneCallBuiltin(solveContBITabEntry, contGRegs)));
   stuple->setArg(1, makeTaggedSmallInt(noOfClauses));

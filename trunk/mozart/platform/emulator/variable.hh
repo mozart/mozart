@@ -42,6 +42,12 @@ public:
 
   // get home node without deref, for faster isLocal
   Board *getHome1() { return home; }
+  Board *getHomeUpdate() {
+    if (home->isCommitted()) {
+      home=home->getBoardFast();
+    }
+    return home;
+  }
   Board *getBoardFast() { return home->getBoardFast (); }
   SuspList *getSuspList() { return suspList; }
   void setSuspList(SuspList *inSuspList) { suspList = inSuspList; }
