@@ -272,8 +272,7 @@ local
 	 X = fVar({Fresh} unit)
 	 Meth = [fMeth(fRecord(fAtom('lexExecuteAction' unit)
 			       [fMethArg(X fNoDefault)])
-		       fCase(X [CaseClauses]
-			     fNoElse(unit) unit) unit)]
+		       fCase(X CaseClauses fNoElse(unit) unit) unit)]
       end
 
       meth GetGrammarSymbol(GrammarSymbols S $)
