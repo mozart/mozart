@@ -113,6 +113,7 @@ in
       
       %% completely re-print the stack
       meth print
+	 skip /*
 	 StackManager,Reset
 	 local
 	    S = @Size
@@ -126,7 +127,7 @@ in
 	    else
 	       StackManager,clear
 	    end
-	 end
+	 end */
       end
       
       meth Clear
