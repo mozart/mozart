@@ -36,6 +36,17 @@
 
 ConfigData ozconf;
 
+Bool getDefaultPropertyBool(char *p,Bool def)
+{
+  char *str=getenv(p);
+  if (!str) return def;
+  char *rest;
+  long l = strtol(str, &rest, 10);
+  if (*rest!=0) return def;
+  return l != 0;
+}
+
+
 void ConfigData::init() {
   printDepth		= PRINT_DEPTH;
   printWidth		= PRINT_WIDTH;
@@ -48,7 +59,7 @@ void ConfigData::init() {
 
   showIdleMessage	= SHOW_IDLE_MESSAGE;
   showSuspension	= SHOW_SUSPENSION;
-  onlyFutures		= ONLY_FUTURES;
+  useFutures		= getDefaultPropertyBool("oz.style.useFutures",NO);
 
   stopOnToplevelFailure = STOP_ON_TOPLEVEL_FAILURE;
 
