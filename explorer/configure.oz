@@ -151,8 +151,3 @@ CursorColor          = case Tk.isColor then
                           black # % DepthColor
                           black   % CursorColor
                        end
-
-
-NodePrefix = {String.toAtom {Tk.getPrefix}}
-TreePrefix = {String.toAtom {Tk.getPrefix}}
-LinkPrefix = {String.toAtom {Tk.getPrefix}}
