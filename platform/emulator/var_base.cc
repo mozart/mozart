@@ -196,7 +196,7 @@ OzVariable * oz_var_copyForTrail(OzVariable * v) {
   }
 }
 
-void oz_var_restoreFromCopy(OzVariable * c, OzVariable * o) {
+void oz_var_restoreFromCopy(OzVariable * o, OzVariable * c) {
   Assert(c->getType() == o->getType());
 
   switch (o->getType()){
