@@ -42,17 +42,33 @@ static void gotoBoard(Board *b) {
   am.currentBoard = b;
 }
 
-void debugStreamSuspend(Thread *tt) {
+void debugStreamSuspend(ProgramCounter PC, Thread *tt) {
   Board *bb = gotoRootBoard();
 
   TaggedRef tail    = am.threadStreamTail;
   TaggedRef newTail = OZ_newVariable();
 
+  ProgramCounter debugPC = CodeArea::nextDebugInfo(PC);
+
+  TaggedRef file, comment;
+  int line, abspos;
+  
+  if (debugPC == NOCODE) {
+    file    = OZ_atom("noDebugInfo");
+    comment = OZ_atom("");
+    line    = 1;
+    abspos  = 1;
+  }
+  else
+    CodeArea::getDebugInfoArgs(debugPC,file,line,abspos,comment);
+  
   TaggedRef pairlist = 
     cons(OZ_pairA("thr",
 		  OZ_mkTupleC("#",2,makeTaggedConst(tt),
 			      OZ_int(tt->getID()))),
-	 nil());
+	 cons(OZ_pairA("file", file),
+	      cons(OZ_pairAI("line", line),
+		   nil())));
   
   TaggedRef entry = OZ_recordInit(OZ_atom("susp"), pairlist);
   OZ_unify(tail, OZ_cons(entry, newTail));
