@@ -1,4 +1,5 @@
-template <class SERVICE, class FDVAR, class FD, class P_PFDVAR, class PFDVAR, class ENGINE>
+template <class SERVICE, 
+  class FDVAR, class FDM, class P_PFDVAR, class PFDVAR, class ENGINE>
 class FilterTasksOverlap : public OZ_StatefulFilter {
 private:
   P_PFDVAR _cl1_t1, _cl1_t2, _cl1_o;
