@@ -42,7 +42,7 @@ void sendAskError(BorrowEntry* be,EntityCond ec){
   NetAddress* na=be->getNetAddress();
 
   MsgContainer *msgC = msgContainerManager->newMsgContainer(na->site);
-  msgC->put_M_UNASK_ERROR(na->index,myDSite,ec);
+  msgC->put_M_ASK_ERROR(na->index,myDSite,ec);
   msgC->setImplicitMessageCredit(be->getOneMsgCredit());
 
   send(msgC,3);
