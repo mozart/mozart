@@ -212,7 +212,7 @@ OZ_Bool fdDomainConstrain(TaggedRef &var, TaggedRef* &varPtr,
 {
   if (domain == empty) return FAILED;
 
-  TaggedRef vName;
+  TaggedRef vName = 0;
 
   switch (tagTypeOf(var)) {
   case SMALLINT:
