@@ -1186,6 +1186,7 @@ Bool AM::loadQuery(CompStream *fd)
 
 void AM::select(int fd, int mode, OZ_IOHandler fun, void *val)
 {
+  Assert(fd<osOpenMax());
   if (!isToplevel()) {
     warning("select only on toplevel");
     return;
@@ -1239,18 +1240,13 @@ void AM::acceptSelect(int fd,TaggedRef l,TaggedRef r)
 
 void AM::deSelect(int fd)
 {
-  osClrWatchedFD(fd,SEL_READ);
-  osClrWatchedFD(fd,SEL_WRITE);
-  ioNodes[fd].readwritepair[SEL_READ]  = 0;
-  ioNodes[fd].readwritepair[SEL_WRITE] = 0;
-  (void) gcUnprotect((TaggedRef *) &ioNodes[fd].readwritepair[SEL_READ]);
-  (void) gcUnprotect((TaggedRef *) &ioNodes[fd].readwritepair[SEL_WRITE]);
-  ioNodes[fd].handler[SEL_READ]  = 0;
-  ioNodes[fd].handler[SEL_WRITE]  = 0;
+  deSelect(fd,SEL_READ);
+  deSelect(fd,SEL_WRITE);
 }
 
 void AM::deSelect(int fd,int mode)
 {
+  Assert(fd<osOpenMax());
   osClrWatchedFD(fd,mode);
   ioNodes[fd].readwritepair[mode]  = 0;
   (void) gcUnprotect((TaggedRef *) &ioNodes[fd].readwritepair[mode]);
