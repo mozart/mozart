@@ -412,6 +412,7 @@ OZ_Term unmarshalTertiaryImpl(MsgBuffer *bs, MarshalTag tag)
   }
   val=makeTaggedConst(tert);
   ob->changeToTertiary(tert); 
+  (void)((BorrowEntry*)ob)->getSite()->installProbe(PROBE_TYPE_ALL, 0);
   if(((BorrowEntry*)ob)->getSite()->siteStatus()!=SITE_OK){
     deferEntityProblem(tert);}
   return val;
