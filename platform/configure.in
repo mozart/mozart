@@ -28,7 +28,6 @@ AC_INIT(emulator)
 OZ_INIT
 BUILDTOP=`cd .. && pwd`
 AC_SUBST(BUILDTOP)
-AC_PROG_MAKE_SET
 
 : ${oz_enable_wish=yes}
 AC_MSG_CHECKING(for --enable-wish)
@@ -50,7 +49,6 @@ else
 fi
 AC_SUBST(PLATFORMDIRS)
 
-AC_CHECK_PROGS(RM,rm,rm)
 AC_CONFIG_SUBDIRS($PLATFORMDIRS)
 AC_OUTPUT(Makefile)
 errprint(ifdef([OZ_INIT],

@@ -1,23 +1,45 @@
+#  Authors:
+#    Michael Mehl (mehl@dfki.de)
+# 
+#  Contributors:
+#    optional, Contributor's name (Contributor's email address)
+# 
+#  Copyright:
+#    Michael Mehl, 1998
+# 
+#  Last change:
+#    $Date$ by $Author$
+#    $Revision$
+# 
+#  This file is part of Mozart, an implementation 
+#  of Oz 3:
+#     $MOZARTURL$
+# 
+#  See the file "LICENSE" or
+#     $LICENSEURL$
+#  for information on usage and redistribution 
+#  of this file, and for a DISCLAIMER OF ALL 
+#  WARRANTIES.
+
 BUILDTOP=	@BUILDTOP@
 PREFIX=		@prefix@
 
+VPATH		= @srcdir@
 SRCDIR		= @srcdir@
 ELISPDIR	= $(PREFIX)/lib/elisp
 
 EMACS		= @THEEMACS@
-ECHO		= @ECHO@
-RM		= @RM@ -f
 
 INSTALL		= @INSTALL@
-INSTALLFILE	= $(INSTALL) -m 444
-INSTALLSRC	= @INSTALLSRC@
-MKINSTALLDIRS	= @MKINSTALLDIRS@
+INSTALL_FILE	= $(INSTALL) -m 444
+INSTALL_SRC	= @INSTALL_SRC@
+INSTALL_DIR	= @INSTALL_DIR@
 
 LIBFILES = $(ELISPDIR)/oz.el $(ELISPDIR)/oz.elc
 
-.PHONY: bootstrap all install clean veryclean realclean distclean tags
+.PHONY: bootstrap all install clean veryclean distclean tags
 
-all: Makefile oz.elc
+all: oz.elc
 
 bootstrap: all
 
@@ -31,32 +53,31 @@ Makefile: Makefile.in ../config.status
 	cd .. && ./config.status --recheck
 
 oz.elc: oz.el
-	@$(ECHO) "(setq byte-compile-compatibility t) \
+	@echo "(setq byte-compile-compatibility t) \
 	(byte-compile-file \"$<\")" > compile.el
 	$(EMACS) -q -batch -l compile.el
-	@$(RM) compile.el
+	@rm -f compile.el
 
 install: all $(ELISPDIR) $(LIBFILES)
 
 $(ELISPDIR):
-	$(MKINSTALLDIRS) $@
+	$(INSTALL_DIR) $@
 
 $(ELISPDIR)/%.el: $(SRCDIR)/%.el
-	$(INSTALLSRC) $< $@
+	$(INSTALL_SRC) $< $@
 
 $(ELISPDIR)/%.elc: %.elc
-	$(INSTALLFILE) $< $@
+	$(INSTALL_FILE) $< $@
 
 clean:
-	$(RM) *.elc *~ TAGS
+	-rm -f *.elc *~ TAGS
 
 veryclean: clean
 
-realclean: clean
-
 distclean: clean
-	$(RM) Makefile oz.el
+	-rm -f Makefile oz.el
 
 tags:
 	etags oz.el
 
+check:

@@ -2,15 +2,17 @@
 # Makefile for ozbison
 #
 
+VPATH=		@srcdir@
+
 BUILDTOP	= @BUILDTOP@
-TOPDIR		= @TOPDIRA@
+SRCTOP		= @SRCTOP@
 
 RM		= @RM@ -f
 DYNLD		= @DYNLD@
 
 CC		= @CC@
 CFLAGS		= @CFLAGS@ -O6
-INCLUDES	= -I$(TOPDIR)/platform/emulator @CPPFLAGS@
+INCLUDES	= -I$(SRCTOP)/platform/emulator @CPPFLAGS@
 LDFLAGS		= @LDFLAGS@
 LIBS		= @LIBS@ -lc
 
