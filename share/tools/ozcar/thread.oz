@@ -175,17 +175,18 @@ in
 	    case ThreadManager,Exists(I $) then
 	       ThreadManager,remove(T I noKill)
 	    else
-	       {OzcarMessage 'term message of unattached thread -- ignoring'}
+	       {OzcarMessage
+		'`term\' message of unattached thread -- ignoring'}
 	    end
 
 	 [] blocked(thr:T) then
 	    I = {Thread.id T}
 	 in
 	    case ThreadManager,Exists(I $) then
-	       {OzcarMessage 'blocking of attached thread'}
 	       ThreadManager,blocked(thr:T id:I)
 	    else
-	       {OzcarError 'Unknown suspending thread'}
+	       {OzcarMessage
+		'`blocked\' message of unattached thread -- ignoring'}
 	    end
 
 	 [] ready(thr:T) then
@@ -202,7 +203,8 @@ in
 		  Gui,markNode(I running)
 	       end
 	    else
-	       {OzcarMessage 'ready message of unattached thread -- ignoring'}
+	       {OzcarMessage
+		'`ready\' message of unattached thread -- ignoring'}
 	    end
 
 	 [] exception(thr:T exc:X) then
