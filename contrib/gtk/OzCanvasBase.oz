@@ -27,8 +27,8 @@ in
       meth !MakePoints(Points I Ps $)
          case Ps
          of (X#Y)|Pr then
-            {GOZCore.pointsPut Points I X _}
-            {GOZCore.pointsPut Points (I + 1) Y _}
+            {GOZCore.pointsPut Points I X}
+            {GOZCore.pointsPut Points (I + 1) Y}
             OzCanvasBase, MakePoints(Points (I + 2) Pr $)
          [] nil then Points
          end

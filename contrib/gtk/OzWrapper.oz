@@ -69,8 +69,7 @@ define
     "   GdkNative                             at 'GdkNative.so{native}'"
     "   GdkFieldNative                        at 'GdkFieldNative.so{native}'"
     "   GOZCoreComponent('GOZCore' : GOZCore) at 'GOZCore.ozf'"
-    "export"
-    "   GetEvent"]
+    "export"]
 
    CanvasFilePrepend =
    ["%%"
@@ -94,7 +93,6 @@ define
     "   O2P        = GOZCore.objectToPointer"
     "   ExportList = GOZCore.exportList"
     "   ImportList = GOZCore.importList"
-    "   GetEvent   = GOZCore.getGdkEvent"
     "   class OzColorBase from OzBase"
     "      meth new(R G B)"
     "         object <- {GOZCore.allocColor R G B}"
@@ -185,12 +183,21 @@ define
     "      meth setColor(Cols)"
     "         Array = {GOZCore.makeColorArr Cols}"
     "      in"
-    "         {GtkNative.gtkColorSelectionGetColor @object Array}"
+    "         {GtkNative.gtkColorSelectionSetColor @object Array}"
     "      end"
    ]
 
-   fun {MakeClassName Prefix Name}
-      {Util.toAtom {Util.firstLower {Util.cutPrefix Prefix Name}}}
+   fun {MakeClassName Name}
+      NameS = {Util.toString Name}
+      Label  = if {Util.checkPrefix "GtkCanvas" NameS}
+               then "GtkCanvas"
+               elseif {Util.checkPrefix "Gtk" NameS}
+               then "Gtk"
+               else "Gdk"
+               end
+   in
+      {List.toTuple {Util.toAtom Label}
+       [{Util.toAtom {Util.firstLower {Util.cutPrefix Label NameS}}}]}
    end
 
    class ClassRegistry
@@ -201,8 +208,8 @@ define
          @classes   = {Dictionary.new}
          @classList = nil
       end
-      meth addEntry(Class)
-         classList <- Class|@classList
+      meth addEntry(Parent Class)
+         classList <- (Parent#Class)|@classList
       end
       meth add(ClassKey ClassName)
          {Dictionary.put @classes {Util.toAtom ClassKey} ClassName}
@@ -243,19 +250,11 @@ define
          end
       end
       meth saveClassNames
-         ClassList = {Map @classList
-                      fun {$ Name}
-                         NameS  = {Util.toString Name}
-                         Label  = if {Util.checkPrefix "GtkCanvas" NameS}
-                                  then "GtkCanvas"
-                                  elseif {Util.checkPrefix "Gtk" NameS}
-                                  then "Gtk"
-                                  else "Gdk"
-                                  end
-                      in
-                         {List.toTuple {Util.toAtom Label}
-                          [{MakeClassName Label NameS}]}
-                      end}
+         ClassList =
+         {Map @classList
+          fun {$ Parent#Name}
+             'class'({MakeClassName Parent} {MakeClassName Name})
+          end}
       in
          {Pickle.save ClassList {ToS {OS.getCWD}#"/ClassNames.ozp"}}
       end
@@ -547,7 +546,7 @@ define
          {ClassReg add({Util.toString ClassS#"*"}
                        {Util.cutPrefix @stdPrefix ClassS})}
          {Dictionary.put @classes Class ClassValue}
-         {ClassReg addEntry(Class)}
+         {ClassReg addEntry(Parent Class)}
       end
       meth searchAnchor(Keys $)
          case Keys
@@ -822,6 +821,7 @@ define
             Type = case TStr
                    of "int*"     then 'OUT'('Int')
                    [] "gint*"    then 'OUT'('Int')
+                   [] "guint*"   then 'OUT'('Int')
                    [] "double*"  then 'OUT'('Double')
                    [] "gdouble*" then 'OUT'('Double')
                    [] _          then 'IN'
