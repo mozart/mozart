@@ -24,6 +24,8 @@
  *
  */
 
+#include "perdio_debug.hh"
+
 #ifdef DEBUG_PERDIO
 
 DebugVector *DV = NULL;

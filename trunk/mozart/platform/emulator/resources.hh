@@ -267,4 +267,5 @@
  * appropriate handbook chapter: system/system.raw!!!!!!!!
  */
 
+// mm2: what is this
 #define PICKLE2TEXTHACK 1
