@@ -6638,8 +6638,7 @@ OZ_Return BIisObjectInline(TaggedRef t)
   if (!isObject(t)) {
     return FAILED;
   }
-  Object *obj = (Object *) tagged2Const(t);
-  return obj->isClass() ? FAILED : PROCEED;
+  return tagged2Object(t)->isClass() ? FAILED : PROCEED;
 }
 
 DECLAREBI_USEINLINEREL1(BIisObject,BIisObjectInline)
@@ -6657,7 +6656,7 @@ OZ_Return getClassInline(TaggedRef t, TaggedRef &out)
     out = t;
     return PROCEED;
   }
-  out = makeTaggedConst(((Object *)tagged2Const(t))->getOzClass());
+  out = makeTaggedConst(tagged2Object(t)->getOzClass());
   return PROCEED;
 }
 
@@ -6727,7 +6726,7 @@ OZ_Return newObjectInline(TaggedRef cla, TaggedRef &out)
     oz_typeError(0,"Class");
   }
 
-  Object *obj = (Object *)tagged2Const(cla);
+  Object *obj = tagged2Object(cla);
   Object *realclass = obj->getOzClass();
   TaggedRef attr = realclass->getFeature(NameOoAttr);
   { DEREF(attr,_1,_2); }
