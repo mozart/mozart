@@ -1,6 +1,7 @@
 makefile(
    mogul  : 'mogul:/mozart/stdlib'
    uri    : 'x-oz://system'
+   lib : ['String.ozf']
    subdirs: [
 	     %%'adt' 'os' 'op'
 	     'adt'
