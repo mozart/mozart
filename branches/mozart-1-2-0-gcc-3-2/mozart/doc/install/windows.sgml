@@ -1,0 +1,106 @@
+<!--
+  - Authors:
+  -   Ralf Scheidhauer <Ralf.Scheidhauer@ps.uni-sb.de>
+  -   Leif Kornstaedt <kornstae@ps.uni-sb.de>
+  -
+  - Copyright:
+  -   Ralf Scheidhauer, 1998
+  -   Leif Kornstaedt, 2002
+  -
+  - Last change:
+  -   $Date$ by $Author$
+  -   $Revision$
+  -
+  - This file is part of Mozart, an implementation of Oz 3:
+  -   http://www.mozart-oz.org
+  -
+  - See the file "LICENSE" or
+  -   http://www.mozart-oz.org/LICENSE.html
+  - for information on usage and redistribution
+  - of this file, and for a DISCLAIMER OF ALL
+  - WARRANTIES.
+  -
+  -->
+
+<Chapter id="chapter.windows">
+  <Title/Microsoft Windows/
+  <P>
+    Get the self-extracting executable from the
+    <Ref.Extern to="http://www.mozart-oz.org/download/ftp.cgi?action=windows"
+    /download page/, execute it, and follow the on-screen instructions.
+    You should glance over the following section to see if there are any
+    caveats or additional requirements for your system.
+  <Section>
+    <Title/Installation Caveats/
+    <Para class=apropos><Title/Previous Versions/
+      Uninstall any previous release of Mozart you have on your system.
+      If your previous version was pre-1.1.0-RC1, reboot your machine after
+      uninstalling.
+    <Para class=apropos><Title/Online Help/
+      Documentation is distributed in CHM format.  To read it, you need
+      Microsoft's HTML Help, bundled with newer versions of Microsoft
+      Windows.  HTML Help can also be downloaded <Ref.Extern
+      to="ftp://ftp.mozart-oz.org/pub/mozart/extras/hhupd.exe"/here/.
+    <Para class=apropos><Title/Windows Installer/
+      Mozart setup uses the Windows Installer, which also comes with
+      Office 2000 and Windows 2000 or newer.  If you do not have Windows
+      Installer on your system, download the Mozart setup <File/exe/
+      provided on the download page and Windows Installer will be installed
+      automatically.  On some systems, this requires a reboot.
+    <P>
+      We have received reports where Mozart setup failed to install Windows
+      Installer on NT4.  If you are running NT4, please perform the following
+      steps <Em/before/ running Mozart setup:
+      <List enum>
+	<Item>Download the Windows Installer redistributable, <Ref.Extern
+	  to="ftp://ftp.mozart-oz.org/pub/mozart/extras/instmsiW.exe"
+	  /<File/instmsiW.exe// for Windows NT4 or <Ref.Extern
+	  to="ftp://ftp.mozart-oz.org/pub/mozart/extras/instmsiA.exe"
+	  /<File/instmsiA.exe// for Windows 95/98.
+	<Item>Run this file and reboot your machine.
+	<Item>Run Mozart setup.  Should you get the error message
+	   <Q/The Windows Installer service failed to start/,
+	   then please perform <Ref.Extern
+	   to="http://support.microsoft.com/support/kb/articles/Q251/2/74.ASP"
+	   /this workaround/ described by Microsoft before running Mozart
+	   setup again.
+      </List>
+    <Para class=apropos><Title/Windows 98/
+      Due to a bug in the Windows Installer service, the <File/AUTOEXEC.BAT/
+      file may be modified in the wrong way, resulting in boot problems.
+      You should either:
+      <List>
+	<Item>make sure before installing that your <File/AUTOEXEC.BAT/
+	  uses the <Samp/set PATH=/&ellipsis; syntax and <Em/not/ the
+	  <Samp/PATH=/&ellipsis; syntax; or
+	<Item>review the changes made to <File/AUTOEXEC.BAT/ after
+	  installation and before rebooting.
+      </List>
+  <Section>
+    <Title/Obtaining and Installing GNU Emacs/
+    <P>
+      If you want to develop applications yourself using the Oz Programming
+      Interface, then you need GNU Emacs or XEmacs.  From the <Ref.Extern
+      to="http://www.mozart-oz.org/download/ftp.cgi?action=windows"
+      /Mozart download page/, you can also obtain an installer for
+      GNU Emacs.  Execute it and follow the instructions.
+    <P>
+      If you obtained GNU Emacs from somewhere else in <File/.tgz/ or
+      <File/.tar.gz/ format, then make sure you run <File/addpm.exe/ from
+      Emacs' <File/bin/ directory before starting the Oz Programming
+      Interface.
+    <P>
+      More information on GNU Emacs for Windows can be found at
+      <Ref.Extern to="http://www.gnu.org/software/emacs/windows/ntemacs.html"
+      >http://www.gnu.org/software/emacs/windows/ntemacs.html</Ref.Extern>.
+</Chapter>
+
+<!--
+Local Variables:
+mode: sgml
+mode: auto-fill
+sgml-default-dtd-file: "chapter.ced"
+sgml-auto-activate-dtd: t
+adaptive-fill-mode: nil
+End:
+-->

@@ -1,0 +1,64 @@
+<!--
+  - Authors:
+  -   Denys Duchier     <duchier@ps.uni-sb.de>
+  -
+  - Copyright:
+  -   Denys Duchier, 1999
+  -
+  - Last change:
+  -   $Date$ by $Author$
+  -   $Revision$
+  -
+  - This file is part of Mozart, an implementation
+  - of Oz 3
+  -    http://www.mozart-oz.org
+  -
+  - See the file "LICENSE" or
+  -    http://www.mozart-oz.org/LICENSE.html
+  - for information on usage and redistribution
+  - of this file, and for a DISCLAIMER OF ALL
+  - WARRANTIES.
+  -
+  -->
+
+<!DOCTYPE BOOK SYSTEM "ozdoc.dtd" [
+
+<!ENTITY nbsp PI "nbsp">
+<!ENTITY ellipsis PI "ellipsis">
+<!ENTITY ie PI "ie">
+<!ENTITY eg PI "eg">
+<!ENTITY le "<">
+<!ENTITY gt ">">
+<!entity amp "&">
+<!entity etc PI "ellipsis">
+<!ENTITY % proglang.values.local "|sh">
+
+<!ENTITY chap.official SYSTEM "official.sgml">
+<!ENTITY chap.extensions SYSTEM "extensions.sgml">
+]>
+<book proglang=oz>
+    <meta name="html.split" value="chapter.official">
+    <meta name="html.split" value="chapter.extensions">
+    <title/Loop Support/
+    <author.Extern to="author.db" key="Denys.Duchier">
+    <Abstract>
+Starting in Mozart 1.1.0, there is now convenient syntactic support
+for loops.  This document is divided in two chapters: the first one
+describes what is officially supported in Mozart 1.1.1, the second one
+documents the experimental extensions which are not supported, and are
+subject to change or removal without notice.  However, we would
+appreciate feedback from the user community to help us shape the
+future of these extensions should they be found useful.
+    </Abstract>
+    &chap.official;
+    &chap.extensions;
+</book>
+<!--
+Local Variables:
+mode: sgml
+mode: auto-fill
+sgml-default-dtd-file: "book.ced"
+sgml-auto-activate-dtd: t
+adaptive-fill-mode: nil
+End:
+-->

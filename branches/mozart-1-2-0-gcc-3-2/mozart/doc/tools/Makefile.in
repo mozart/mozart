@@ -1,0 +1,19 @@
+VPATH		= @srcdir@
+SRCDIR		= @srcdir@
+
+WHAT = tools
+MAIN = main.sgml
+WHATCLASS=tools
+PRINTNAME=ShellTools
+
+SGMLSRCS0 = \
+	linker compiler debugger profiler oztool ozengine convert
+
+SGMLSRCS = $(SGMLSRCS0:%=%.sgml)
+
+HTMLEXTRASUPPORTFILES = \
+	danger.gif
+
+OZDOCHTMLFLAGS = --autoindex
+
+include ../Makefile.common

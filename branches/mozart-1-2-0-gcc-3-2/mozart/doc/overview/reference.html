@@ -1,0 +1,148 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+  <head>
+    <title>Mozart Documentation: Reference</title>
+    <link rel=stylesheet type="text/css" href="ozdoc.css">
+<style>
+p { font-size:10pt; margin-top:0pt; }
+h2 { text-align:center; font-size:14pt; color:steelblue;}
+a.section { font-weight:bold; color:#FF9933; }
+</style>
+  </head>
+  <body>
+    <h1 class=title>Mozart Documentation: Reference</h1>
+    <h2><a name=module>Programming Modules and Libraries</a></h2>
+    <dl>
+      <dt><a href="base/index.html" class=section name=base>The Oz Base Environment</a></dt>
+      <dd><p>documents all built-in modules of the system.  These are part
+of the language definition and implement the basic operations on the
+values of the Oz universe.  The base modules are typically organized
+by type, for example the <code>Record</code> module contains all operations
+on record values.</p>
+
+      <dt><a href="system/index.html" class=section name=system>System Modules</a></dt>
+      <dd><p>documents all library modules that are delivered with the
+system.  They implement higher-level facilities and can be classified
+into six thematic collections:
+Application,
+Constraint,
+Distributed,
+Open,
+System, and
+Window Programming.</p>
+
+      <dt><a href="compiler/index.html" class=section name=compiler>The Mozart Compiler</a></dt>
+      <dd><p>
+      documents the application programmer's interface to the
+      compiler.
+</p>
+    </dl>
+
+    <h2><a name=env>Programming Environment and Tools</a></h2>
+
+    <dl>
+      <dt><a href="opi/index.html" class=section name=opi>The Oz Programming
+Interface</a></dt>
+      <dd><p>aka the OPI, is implemented as an Emacs package which permits
+convenient interactive sessions with a running Mozart system.  It also
+provides <code>oz-mode</code>, with <code>font-lock</code> support, for editing
+files of Oz code.</p>
+
+      <dt><a href="tools/index.html" class=section name=tools>Oz Shell Utilities</a></dt>
+      <dd><p>documents the command line tools (compiler, linker, debugger, profiler)
+supplied with the system.</p>
+
+
+      <dt><a href="ozcar/index.html" class=section name=debugger>The Mozart Debugger</a></dt>
+      <dd><p>aka
+<code>ozcar</code>, supports all the traditional features we have come to
+expect from debuggers, such as the ability to single step, to set
+break points, to inspect values, etc...  Additionally it fully
+supports the debugging of concurrent programs with multiple threads;
+their concurrent behaviour can be observed and manipulated. Source
+code debugging is made available through the OPI with highlighting of
+the current source line.</p>
+
+      <dt><a href="explorer/index.html" class=section name=explorer>Oz Explorer - Visual Constraint Programming Support</a></dt>
+      <dd><p>The Explorer is a graphical and interactive tool to
+             visualize and analyze search trees. It eases development
+             and debugging of constraint based applications.</p> 
+
+      <dt><a href="panel/index.html" class=section name=panel>Oz Panel</a></dt>
+      <dd><p>The Panel is a graphical tool to visualize and control
+             the most important parameters of a running Mozart system.</p>
+
+      <dt><a href="browser/index.html" class=section name=browser>The Oz Browser</a></dt>
+      <dd><p>The Browser is a concurrent output tool for displaying
+             information about the values of variables.</p>
+
+      <dt><a href="inspector/index.html" class=section name=inspector>The Oz Inspector</a></dt>
+      <dd><p>The Inspector is a graphical and interactive tool for
+             displaying and examining Oz values.  It combines fast display
+             with powerful interactive in-place manipulation of
+             datastructures.</p>
+
+      <dt><a href="profiler/index.html" class=section name=profiler>The Mozart Profiler</a></dt>
+      <dd><p>makes it
+possible to gather data about procedure calls, time spent, and memory
+allocation.  Such information may reveal bottlenecks in your
+application which it may be worthwhile to optimize.</p>
+
+      <dt><a href="gump/index.html" class=section name=gump>Gump - A Front-End Generator for Oz</a></dt>
+      <dd><p>documents Gump, a front-end generator for Oz. Gump reads
+Oz files with embedded scanner or parser definitions and translates
+the definitions
+to Oz code.</p>
+
+</dl>
+
+
+    <h2><a name=interface>Interfaces</a></h2>
+
+    <dl>
+      <dt><a href="cpiref/index.html" class=section name=cpiref>Constraint
+              Extensions Reference</a></dt>
+      <dd><p>
+         explains abstractions provided to
+         extend Mozart constraint capabilities.</p>
+      <dt><a href="foreign/index.html" class=section name=cpiref>Interfacing
+		to C and C++</a></dt>
+      <dd><p>
+describes the  simple yet powerful interface to dynamically link
+native C and C++ code to Mozart.</p>
+    </dl>
+
+    <h2><a name=definition>Definitions</a></h2>
+
+    <dl>
+      <dt><a href="notation/index.html" class=section name=notation>The Oz
+        	Notation</a></dt> 
+      <dd><p>
+defines the Oz syntax and how Oz program text
+      is transformed into Oz Core programs.  Oz Core is a sublanguage of Oz
+      designed to minimize syntactic complexity.</p>
+
+    </dl>
+
+    <h2><a name=other>Other</a></h2>
+
+    <dl>
+      <dt><a href="limitations/index.html" class=section name=contrib>Limitations</a></dt> 
+      <dd><p>In general, Mozart has very few system limitations. The few remaining ones are described in this document.</p>
+
+      <dt><a href="contrib/index.html" class=section name=contrib>Contributed
+       Libraries</a></dt> 
+      <dd><p>describes contributed software packages that come with Mozart. Currently a regular expression and a gdbm (gnu database) library are described.</p>
+
+      <dt><a href="ozdoc/index.html" class=section name=ozdoc>Oz
+       Documentation DTD</a></dt> 
+      <dd><p>describes the Oz documentation format.</p>
+
+      <dt><a href="ds_white_paper/index.html" class=section name=ds_white_paper>Oz
+       Distribution Subsystem</a></dt> 
+      <dd><p>describes how distribution in Mozart is realized and what features Mozart offers to deal with distribution.</p>
+
+    </dl>
+
+  </body>
+</html>

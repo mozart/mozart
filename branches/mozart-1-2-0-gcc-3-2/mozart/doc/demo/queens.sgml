@@ -1,0 +1,80 @@
+<!--
+  - Authors:
+  -   Christian Schulte <schulte@ps.uni-sb.de>
+  -
+  - Copyright:
+  -   Christian Schulte, 1998
+  -
+  - Last change:
+  -   $Date$ by $Author$
+  -   $Revision$
+  -
+  - This file is part of Mozart, an implementation
+  - of Oz 3
+  -    http://www.mozart-oz.org
+  -
+  - See the file "LICENSE" or
+  -    http://www.mozart-oz.org/LICENSE.html
+  - for information on usage and redistribution
+  - of this file, and for a DISCLAIMER OF ALL
+  - WARRANTIES.
+  -
+  -->
+
+<Chapter id="chapter.queens">
+  <Title/Animated Queens/
+  <Author.Extern to="author.db" key="Christian.Schulte">
+
+  <P>
+    <List class=linkmenu>
+      <Item><Ref.Extern to="applets/AnimatedQueens.oza"/Start Applet/
+      <Item>
+	<Ref.extern to="ozdoc:install" key="applets"/How to enable Applets/
+    </List>
+
+  <p>
+    This demo shows finite domain constraints and search to solve the
+    <math/n/-Queens problem: how to place <math/n/-Queens on a
+    <math/n\times n/ chess-board such that the queens do not attack
+    each other.
+
+  <p>
+    The problem is solved with finite domain constraints, for a
+    discussion see <ptr.extern to="ozdoc:fdt" 
+    key="section.scripts.queens">. The demo visualizes constraint
+    propagation and different distribution heuristics.
+
+  <p>
+    Note that the size of the board as well as the following
+    heuristics to place a queen can be selected:
+    <list enum>
+      <entry><em/Brute Force/
+      <item> Try fields in a top-down, left-right fashion.
+      <entry><em/First Fail/ 
+      <item> Choose the row with the least remaining possibilities
+       first, and place the queen leftmost in this row.
+      <entry><em/Middle Out/ 
+      <item>
+      Choose the row as above, where rows near to the center
+      of the board are preferred. Place the queen in the middle of
+      this row.
+      <entry><em/Up First/ 
+      <item>
+      Choose the row with the least remaining possibilities first,
+      where rows where it is possible to place the queen left most are
+      chosen first. Place the queen left most.  
+    </list>
+
+  <section class=unnumbered id="section.queens.implementation">
+    <title/Implementation/
+
+    <subsection class=unnumbered id=code.queens>
+      <title>Root functor: <file/AnimateQueens.oz/</title>
+      <para><title><ref.extern to="AnimatedQueens.oz">Source
+File</ref.extern></title>
+<code.extern display to="AnimatedQueens.oz" proglang=oz></para>
+    </subsection>
+
+
+
+</Chapter>

@@ -1,0 +1,464 @@
+<!--
+  - Authors:
+  -   Leif Kornstaedt <kornstae@ps.uni-sb.de>
+  -
+  - Copyright:
+  -   Leif Kornstaedt, 1998-2002
+  -
+  - Last change:
+  -   $Date$ by $Author$
+  -   $Revision$
+  -
+  - This file is part of Mozart, an implementation of Oz 3:
+  -    http://www.mozart-oz.org
+  -
+  - See the file "LICENSE" or
+  -    http://www.mozart-oz.org/LICENSE.html
+  - for information on usage and redistribution
+  - of this file, and for a DISCLAIMER OF ALL
+  - WARRANTIES.
+  -
+  -->
+
+  <Chapter id="Chapter.Application">
+    <Title/Application Support: <<Application>>/
+
+    <Section id="section.application.module">
+      <Title/The <<Application>> Module/
+      <P>
+	The <<Application>> module provides procedures for accessing the
+	application's arguments, and for terminating applications.
+	<List>
+	  <Entry><<getCgiArgs>>
+	    <Index class=tails/<<Application>><And><<getCgiArgs>>/
+	  <Synopsis>
+	    <<{Application.getCgiArgs ?+{Spec} ??{R}}>>
+	  <Item>
+	    acquires the arguments (both <Samp/GET/ and <Samp/POST/ methods
+	    supported) and parses them according to ?_{Spec} as described in
+	    <Ptr to="section.application.specifications">.  Returns the
+	    options in&nbsp;?_{R}.
+
+	  <Entry><<getCmdArgs>>
+	    <Index class=tails/<<Application>><And><<getCmdArgs>>/
+	  <Synopsis>
+	    <<{Application.getCmdArgs ?+{Spec} ??{R}}>>
+	  <Item>
+	    acquires the arguments from the system property
+	    <<'application.args'>> and parses them according to ?_{Spec}
+	    as described in <Ptr to="section.application.specifications">.
+	    Returns the options in&nbsp;?_{R}.
+
+          <Entry><<getGuiArgs>>
+	    <Index class=tails/<<Application>><And><<getGuiArgs>>/
+          <Synopsis>
+            <<{Application.getGuiArgs ?+{Spec} ??{R}}>>
+          <Item>
+            pops up a graphical interface with which the user can interactively
+	    and comfortably edit the possible options described by ?_{Spec}
+	    as described in <Ptr to="section.application.specifications">.
+	    Returns the options in&nbsp;?_{R}.
+
+          <Entry><<getArgs>>
+	    <Index class=tails/<<Application>><And><<getArgs>>/
+          <Synopsis>
+            <<{Application.getArgs ?+{Spec} ??{R}}>>
+          <Item>
+            This is the recommended way of acquiring an application's
+            arguments.  It invokes either <<Application.getCmdArgs>>
+            or <<Application.getGuiArgs>> depending on the value
+            of boolean property <<'application.gui'>>.  The latter is
+            set to <<true>> when the <code proglang=sh/ozengine/ is
+            invoked with option <code proglang=sh/--gui/.
+
+	  <Entry><<processArgv>>
+	    <Index class=tails/<<Application>><And><<processArgv>>/
+	  <Synopsis>
+	    <<{Application.processArgv ?+{Spec} ??{Ss}}>>
+	  <Item>
+	    performs argument parsing on the explicitly given list of
+	    strings&nbsp;?_{Ss} according to specification ?_{Spec}.
+
+	  <Entry><<processCgiString>>
+	    <Index class=tails/<<Application>><And><<processCgiString>>/
+	  <Synopsis>
+	    <<{Application.processCgiString ?+{Spec} ??{S}}>>
+	  <Item>
+	    performs argument parsing on the explicitly given CGI query
+	    string&nbsp;?_{S} according to specification ?_{Spec}.
+
+	</List>
+      <Para class=apropos><Title/Error Handling/
+	If an error is encountered in the input, an error exception of the
+	form <<ap(usage ?_{VS})>> is raised.  ?_{VS} describes the error
+	in textual form.
+      <P>
+	<List>
+	  <Entry><<exit>>
+	    <Index class=tails/<<Application>><And><<exit>>/
+	  <Synopsis>
+	    <<{Application.exit ?+{I}}>>
+	  <Item>
+	    terminates the application with return status&nbsp;?_{I},
+	    <<0>>&nbsp;indicating success and non-<<0>> indicating failure
+	    of some kind.
+	</List>
+
+    <Section proglang=sh id="section.application.parsingconventions">
+      <Title/Parsing Conventions/
+      <P>
+	This section describes how the arguments are acquired and what basic
+	syntax is used for parsing them.
+      <Subsection>
+	<Title/Parsing of CGI Arguments/
+	<P>
+	  The CGI always passes arguments as name&slash;value pairs, where
+	  the name is separated from the value by an equals sign and the
+	  individual pairs are separated by ampersands.
+	<P>
+	  Boolean options ?{option} may be given as <<?{option}=yes>> or
+	  <<?{option}=no>>.  Option names may be abbreviated, as long as
+	  they remain unambiguous.
+      <Subsection id="section.application.cmdparsing">
+	<Title/Parsing of Command Lines/
+	<P>
+	  We distinguish between long option names and single character
+	  options.  Long options are given as <<--?{option}>> or
+	  <<--?{option}=?{value}>>; option names may be abbreviated as
+	  long as they remain unambiguous.  Single-character options
+	  are given as <<-?{x}>>, eventually followed by a value.
+	  Several single-character options may be combined, &eg;,
+	  <<-xy>> means <<-x -y>> (provided <<x>> does not take an
+	  argument).  The argument to a single-character option may
+	  be attached to the option character, &ie;, you can write
+	  <<-?{x}?{value}>> or <<-?{x} ?{value}>>.
+	<P>
+	  Boolean options ?{option} may be given as <<--?{option}>> (meaning
+	  <Code proglang=oz/true/) or <<--no?{option}>> (meaning <Code
+	  proglang=oz/false/).  A single hyphen&nbsp;<<->> by itself is not
+	  considered to be an option and thus is returned unchanged.  Parsing
+	  stops at a double hyphen&nbsp;<<-->> appearing by itself; the double
+	  hyphen itself does not appear in the output.
+	<P>
+	  In the case of an unrecognized long option name or single-character
+	  option, or of an ambiguous long option prefix, an error is raised.
+
+    <Section id="section.application.specifications">
+      <Title/Option Specifications/
+      <P>
+	There are several ways to specify the way the arguments are parsed;
+	we present them in order of increasing processing power.
+
+      <Subsection>
+	<Title/Plain/
+	<Para class=apropos><Title/Syntax Specification/
+	  The <<plain>> way of command line processing actually involves
+	  no processing at all.  In CGI parsing, not even escaped characters
+	  are translated.
+	  <Grammar.Rule>?={spec}
+	    <Grammar.Alt/<<plain>>/
+	  </Grammar.Rule>
+	<Para class=apropos><Title/Returned Result/
+	  For CGI scripts, the result consists of a list of pairs of strings
+	  (the name&slash;value pairs), whereas for command lines, it consists
+	  of a list of strings.
+
+      <Subsection>
+	<Title/List/
+	<Para class=apropos><Title/Syntax Specification/
+	  The <<list>> way of processing command line arguments takes care
+	  of determining what is a command line option, whether it takes a
+	  value, how its value to be interpreted, &etc;
+	  <Grammar.Rule>?={spec}
+	    <Grammar.Alt add/<<list(>>[<<mode: ?={mode}>>] ?={option}
+	      &ellipsis; ?={option})/
+	  </Grammar.Rule>
+	  Using the <<mode>> specification, the command line parser can either
+	  be instructed to stop at the first non-option argument it encounters
+	  (<<start>>) or it can look for options on the whole command line
+	  (<<anywhere>>).  The latter is the default if no <<mode>> is given.
+	  <Grammar.Rule>?={mode}
+	    <Grammar.Alt/<<start>> | <<anywhere>>/
+	  </Grammar.Rule>
+	<P>
+	  The integer fields of the option specification describe the
+	  individual options.  An option must as least have an ?={option name}.
+	  Furthermore, it may either be an alias for another option (if
+	  <<alias>> is given) or it may be a <Q class=quasi/real/ option
+	  actually visible to the application.  Aliases are never returned
+	  to the application; they are always replaced by the option they
+	  stand for.
+	  <Grammar.Rule>?={option}
+	    <Grammar.Alt/?={option name}<<(>>[<<char:>> ?={char or chars}]
+	      [<<type: ?={type}>>]<<)>>/
+	    <Grammar.Alt or/?={option name}<<(>>[<<char: ?={char or chars}>>]
+	      <<alias: ?={alias})>>/
+	  </Grammar.Rule>
+	  <Grammar.Rule>?={option name}
+	    <Grammar.Alt/?={atom}/
+	  </Grammar.Rule>
+	  As mentioned in <Ptr to="section.application.cmdparsing">, options
+	  may be notated using single-character short forms.  With the <<char>>
+	  specification one or several single-character short forms may be
+	  assigned to an option.
+	  <Grammar.Rule>?={char or chars}
+	    <Grammar.Alt/?={char} | <<[>>?={char}<<]>>/
+	  </Grammar.Rule>
+	<P>
+	  If no <<type>> is given, then the option does not take an argument.
+	  (Note that <<true>> will be used as the associated value in this
+	  case.)  Boolean options have a special status, as has already been
+	  described in <Ptr to="section.application.parsingconventions">.
+	  The remaining type specifications, however, require an additional
+	  argument.  The <<list(?={primary type})>> annotation interprets its
+	  argument as a comma-separated list of elements of a specific type.
+	  <Grammar.Rule>?={type}
+	    <Grammar.Alt/<<bool>>/
+	    <Grammar.Alt/?={primary type}/
+	    <Grammar.Alt/<<list(?={primary type})>>/
+	  </Grammar.Rule>
+	<P>
+	  There are four supported basic types and a <Q class=quasi/generic/
+	  type.  Integer and float arguments have to be given in Oz concrete
+	  syntax (with the exception that the unary minus sign may be notated
+	  as&nbsp;<<->>); minimum and maximum values may also be specified.
+	  For arguments to be returned as atoms, a set of allowed values may
+	  be specified.  Strings are returned as-is.
+	<P>
+	  The generic type simply consists of a binary procedure with the
+	  signature <<{P ?+{S} ?_{X}}>> which may arbitrarily transform the
+	  argument, given as a string.
+	  <Grammar.Rule>?={primary type}
+	    <Grammar.Alt/<<int(>>[<<min: ?={int}>>] [<<max: ?={int}>>]<<)>>/
+	    <Grammar.Alt/<<float(>>[<<min: ?={float}>>]
+	      [<<max: ?={float}>>]<<)>>/
+	    <Grammar.Alt/<<atom(>>[?={atom} &ellipsis; ?={atom}]<<)>>/
+	    <Grammar.Alt/<<string>>/
+	    <Grammar.Alt/?={procedure}/
+	  </Grammar.Rule>
+	<P>
+	  Two different forms of alias are supported.  Option name aliases
+	  simply state that this option name is equivalent to some other
+	  option name; the other option's argument description will be used
+	  for parsing this option as well.  The second kind of alias states
+	  that this option is equivalent to another option used with the
+	  supplied value (or a combination of several options).  In the
+	  latter case, the value will be transferred to the output without
+	  any additional transformations.
+	  <Grammar.Rule>?={alias}
+	    <Grammar.Alt/?={option name}/
+	    <Grammar.Alt/?={option name}<<#>>?={value}/
+	    <Grammar.Alt/<<[>>?={option name}<<#>>?={value}<<]>>/
+	  </Grammar.Rule>
+	<Para class=apropos><Title/Returned Result/
+	  The result of this processing step is a list of parsed options,
+	  interspersed with non-parsed arguments, a so-called ?={option list}.
+	  All option names in this list are the canonical (&ie;, not aliased
+	  and unabbreviated) forms.  The list respects the order in which the
+	  arguments were given.
+	  <Grammar.Rule>?={option list}
+	    <Grammar.Alt/<<[>>?={arg or option}<<]>>/
+	  </Grammar.Rule>
+	  <Grammar.Rule>?={arg or option}
+	    <Grammar.Alt/?={option name}<<#>>?={value}/
+	    <Grammar.Alt/?={string}/
+	  </Grammar.Rule>
+
+	<Subsection class=unnumbered id="section.application.list.examples">
+	  <Title/List Examples/
+	  <P>
+	    The following will give some examples taken from the <File/ozc/
+	    program, which is the Oz command-line compiler.
+	  <Para class=apropos><Title/Basics/
+	    The <File/ozc/ program has a command line option to tell it to
+	    output usage information.  The easiest way to specify such an
+	    option is:
+	    <<<help>>>
+	    Furthermore, we want to support a popular single-character
+	    abbreviation for it:
+	    <<<help(char: &amp;h)>>>
+	    We might even support several single-character abbreviations for
+	    convenience.
+	    <<<help(char: [&amp;h &amp;?])>>>
+	    We can now write any of <Samp/--help/, <Samp/-h/, or <Samp/-?/
+	    for this option.  (We might also abbreviate the long form to
+	    one of <Samp/--h/, <Samp/--he/, or <Samp/--hel/, provided that
+	    this would still be unambiguous.)  The returned option list
+	    would be <<[help#true]>>.
+	  <Para class=apropos><Title/Boolean Options/
+	    There is another option to tell <File/ozc/ to be verbose about
+	    what it is doing.  Say we specified it as follows:
+	    <<<verbose(char: &amp;v)>>>
+	    This means that we can write <Samp/--verbose/ or <Samp/-v/.
+	    In contrast, the following specification additionally allows for
+	    <Samp/--noverbose/:
+	    <<<verbose(char: &amp;v type: bool)>>>
+	  <Para class=apropos><Title/Aliases/
+	    Some people prefer to write <Samp/--noverbose/ as <Samp/--quiet/,
+	    so we introduce an alias for it:
+	    <<<quiet(char: &amp;q alias: verbose#false)>>>
+	    This is an alias with associated value.  In contrast, the following
+	    option (not supported by <File/ozc/, by the way) would be an alias
+	    without value:
+	    <<<gossipy(alias: verbose)>>>
+	    This would allow us to write <Samp/--gossipy/ for <Samp/--verbose/
+	    and <Samp/--nogossipy/ for <Samp/--noverbose/.
+	  <Para class=apropos><Title/String Arguments/
+	    The following example illustrates another type of argument than
+	    boolean:
+	    <<<include(type: string)>>>
+	    Saying <Samp/--include=x.oz/ for instance would tell <File/ozc/
+	    to load and compile this file before tackling its <Q class=quasi
+	    /real/ job.  Together with the following option, we get an example
+	    for when the order beween different arguments may matter:
+	    <<<'define'(char: &amp;D type: atom)>>>
+	    Saying
+	    <Code display proglang=sh
+	    /--define=MYMACRO1 --include=x.oz --include=y.oz/
+	    for instance would mean that <<MYMACRO1>> would be defined for both
+	    <File/x.oz/ and <File/y.oz/, whereas in
+	    <Code display proglang=sh
+	    /--include=x.oz --define=MYMACRO1 --include=y.oz/
+	    it is only defined for <File/y.oz/.
+	  <P>
+	    By the way, this option has a single-character abbreviation
+	    <Em/and/ an explicit argument (in contrast to the implicit boolean
+	    arguments above):  We can thus write either <Samp/-D MYMACRO1/ or
+	    <Samp/-DMYMACRO1/ instead of <Samp/--define=MYMACRO1/.
+	  <Para class=apropos><Title/List Arguments/
+	    In <File/ozc/, actually, a list of macro names is allowed for this
+	    option:
+	    <<<'define'(char: &amp;D type: list(atom))>>>
+	    This also supports, &eg;, <Samp/-DMYMACRO1,YOURMACRO17 x.oz/.
+	    This would return the option list
+	    <<['define'#['MYMACRO1' 'YOURMACRO17'] "x.oz"]>>.
+	  <Para class=apropos><Title/Range Limitations/
+	    Sometimes one wants to limit the range of allowed values:
+	    <<<compress(char: &amp;z type: int(min: 0 max: 9))>>>
+	    This would allow us to write <Samp/-z9/, but not <Samp/-z17/.
+	    For atom arguments, sometimes only a limited set of values is
+	    sensible:
+<<<mode(type: atom(help core outputcode
+		feedtoemulator dump executable)>>>
+	    For these, <File/ozc/ also provides the better known aliases
+	    such as:
+	    <<<dump(char: &amp;c alias: mode#dump)>>>
+
+      <Subsection>
+	<Title/Record/
+	<Para class=apropos><Title/Syntax Specification/
+	  The additional processing step involved in <<record>> kind
+	  specifications is that additional contextual conditions may
+	  be checked, and the result is returned in a different form.
+	<P>
+	  Basically, the <<record>> specification is a strict extension
+	  of the <<list>> specification.
+	  <Grammar.Rule>?={spec}
+	    <Grammar.Alt add/<<record(>>[<<mode: ?={mode}>>] ?={option}
+	      &ellipsis; ?={option})/
+	  </Grammar.Rule>
+	  The specifications for <Q class=quasi/real/ (&ie;, non-alias)
+	  options take some more information into consideration, namely how
+	  often the option may appear and how several occurrences combine
+	  (?={occ}), and whether it is a required option (<<optional>>;
+	  the default is <<true>>) or whether it takes a default value
+	  (<<default>>), which it does not by default.  At most one of
+	  <<default>> and <<optional>> may be given.
+	  <Grammar.Rule>?={option}
+	    <Grammar.Alt add/?={option name}<<(>>/
+	    <Grammar.Alt space/<<   1: ?={occ}>>/
+	    <Grammar.Alt space/<<   >>[<<char: ?={char or chars}>>]/
+	    <Grammar.Alt space/<<   >>[<<type: ?={type}>>]/
+	    <Grammar.Alt space
+	      /<<   >>[<<default: ?={value}>> | <<optional: ?={bool}>>]<<)>>/
+	  </Grammar.Rule>
+	  An option may be allowed to occur at most once (<<single>>) or
+	  any number of times.  In the latter case, the result may either
+	  respect all occurrences (<<multiple>>), or it may ignore all but
+	  the first (<<leftmost>>) or last (<<rightmost>>) occurrence.
+	  When all occurrences are respected, a list of them (preserving
+	  the order) is returned.
+	  <Grammar.Rule>?={occ}
+	    <Grammar.Alt/<<single>> | <<multiple>>
+	      | <<leftmost>> | <<rightmost>> | <<accumulate(P)>>/
+	  </Grammar.Rule>
+          When <<accumulate(P)>> is specified, procedure <<P>> is called
+          for each occurrence of the option.  It takes two arguments: the
+          option (as an atom) and the parsed value.  This can be used to
+          accumulate multiple occurrences of related options into one list.
+          See, for example, options <<--include>> and <<--exclude>> of
+          <ref.extern to="ozdoc:tools" key="chapter.linker"
+		      /the Oz linker <<ozl>>/.
+	<Para class=apropos><Title/Returned Result/
+	  The result consists of an option record.  All options which had
+	  an explicit ?={occ} given in their specification are moved from
+	  the option list into this record, the feature being the option
+	  name, the subtree the associated value.  Defaulted options that
+	  have not been overridden by the argument list appear in this
+	  record with their default value.  Only optional options may be
+	  missing from this record, namely when they have not been specified
+	  in the argument list.  Those options which did not have an explicit
+	  ?={occ} given in their specification are found, interspersed with
+	  non-parsed arguments, in an option list under feature&nbsp;<<1>>
+	  of the option record.
+	  <Grammar.Rule>?={option record}
+	    <Grammar.Alt/<<optRec(1: ?={option list}>>/
+	    <Grammar.Alt space
+	      /<<       ?={option name}: ?={value}>> &ellipsis;/
+	    <Grammar.Alt space/<<       ?={option name}: ?={value})>>/
+	  </Grammar.Rule>
+	<SubSection class=unnumbered id="section.application.record.examples">
+	  <Title/Record Examples/
+	  <P>
+	    Naturally, all examples given for <<list>> are also valid for
+	    <<record>>, but in order to make them appear in the resulting
+	    option record, we have to specify some additional things.  This
+	    section illustrates this.
+	  <Para class=apropos><Title/Basics/
+	    For example, with the <<mode>> as specified earlier, the argument
+	    list <Samp/--mode=dump/ would result in the following option
+	    record:
+	    <<<optRec(1: [mode#dump])>>>
+	    In order to make it appear, we add the keyword <<single>> to the
+	    specification, stating at the same time that this option can be
+	    given at most once:
+<<<mode(single
+     type: atom(help core outputcode
+		feedtoemulator dump executable))>>>
+	    Then the option record for <Samp/--mode=dump/ would look like this:
+	    <<<optRec(1: nil mode: dump)>>>
+	  <Para class=apropos><Title/Default or Required/
+	    Since the <<mode>> gives the basic mode of operation for <File
+	    /ozc/, we would be lost if was not given in the arguments, because
+	    it would not appear in the option record.  To enforce its presence,
+	    we can either supply a default:
+	    <<<mode(single type: atom(&ellipsis;) default: feedtoemulator)>>>
+	    or make it a required option:
+	    <<<mode(single type: atom(&ellipsis;) optional: false)>>>
+	  <Para class=apropos><Title/Multiple Occurrences/
+	    The keyword <<single>> stated that an option may appear at most
+	    once in the option record.  For some options, this in inadequate.
+	    If we want an option to be allowed to occur multiply in the
+	    argument list, we have to specify what this means.  For instance,
+	    <<<verbose(rightmost char: &amp;v type: bool)>>>
+	    means that all but the last occurrences of <<verbose>> are ignored.
+	    By the way, in <File/ozc/, <<verbose>> actually has a non-boolean
+	    default:
+	    <<<verbose(rightmost char: &amp;v type: bool default: auto)>>>
+	    This allows for three modes of operation:  The default is to only
+	    output messages if they are <Q/interesting/.  When being <Samp
+	    /--verbose/, also uninteresting messages are output, whereas
+	    being <Samp/--quiet/, even the interesting messages are
+	    suppressed.
+	  <Para class=apropos><Title/Collecting in Lists/
+	    It is also possible to state that one wished all occurrences
+	    of the same option to be collected in a list.  This does not
+	    occur in <File/ozc/, so we give a fictitious example here:
+	    <<<cattle(multiple type: list(atom) default: nil)>>>
+	    Giving this argument several times, say, <Samp
+	    /--cattle=angus,belgianred/, <Samp/--cattle=charolais/, and
+	    <Samp/--cattle=dexter,highland/ on one command line would
+	    result in the following option record:
+<<<optRec(1: nil
+       cattle: [angus belgianred charolais dexter highland])>>>
+  </Chapter>

@@ -1,0 +1,296 @@
+# -*- Makefile -*-
+
+PREFIX		= @prefix@
+SRCTOP		= @SRCTOP@
+BUILDTOP	= @BUILDTOP@
+OZENGINE	= @OZENGINE@
+OZDOC		= @OZDOC@
+HOMEURL         = @HOMEURL@
+PLATFORM	= @PLATFORM@
+
+OZDOCFLAGS	=
+DOCIFY		= $(OZENGINE) $(OZDOC) $(OZDOCFLAGS)
+
+DOCDIR		= $(PREFIX)/doc/$(WHAT)
+PRINTDOCDIR     = $(PREFIX)/print/$(WHATCLASS)
+
+PRINTLINK	= http://www.mozart-oz.org/download/print.cgi
+
+INSTALL		= @INSTALL@
+INSTALL_FILE	= $(INSTALL) -m 444
+INSTALL_BIN	= $(INSTALL) -m 555
+INSTALL_DIR	= @INSTALL_DIR@
+
+JAVA		= @JAVA@ @JAVA_THREADS@
+JAVAC		= @JAVAC@ @JAVA_THREADS@
+JAR		= @JAR@ @JAVA_THREADS@
+JAVACP		= @JAVACP@
+
+EMACS		= @THEEMACS@
+EMACS_OPTIONS	= @EMACS_OPTIONS@
+
+HTMLSUPPORTFILES0 = \
+	ozdoc.css page.gif $(HTMLEXTRASUPPORTFILES)
+HTMLSUPPORTFILES = \
+	$(addprefix $(SRCTOP)/doc/utilities/,$(HTMLSUPPORTFILES0))
+
+.PHONY: all bootstrap bootquick quick validate verify install clean veryclean distclean clean-xref xref
+
+all:: Makefile ../Makefile.common $(WHAT)-html/index.html
+
+-include $(BUILDTOP)/share/Makefile.boot
+
+bootstrap: boot-all
+
+bootquick: boot-quick
+
+depend:
+
+Makefile: $(SRCDIR)/Makefile.in ../config.status
+	cd .. && ./config.status
+
+../Makefile.common: $(SRCTOP)/doc/Makefile.common.in ../config.status
+	cd .. && ./config.status
+
+$(WHAT)-html/index.html: $(MAIN) $(SGMLSRCS) $(HTMLEXTRAFILES)
+	rm -f latex.db && \
+	if [ $(PRINTNAME) ]; then opt=--link=Print,$(PRINTLINK)\?class=$(WHATCLASS)\&name=$(PRINTNAME); \
+	else opt=; fi; \
+	$(DOCIFY) $(OZDOCHTMLFLAGS) --in=$< --out=$(WHAT)-html \
+	--type=html-stylesheets --stylesheet=ozdoc.css \
+	--link=Top,../index.html $$opt \
+	--bib-path=$(SRCDIR):$(SRCTOP)/doc \
+	--bst-path=$(SRCTOP)/doc/utilities \
+	--latexdb=latex.db \
+	--xrefdb=../xref.db --xrefdir=$(WHAT) --indexdb=../index.db \
+	--make-hhc=$(WHAT).hhc && \
+	if [ "$(HTMLSUPPORTFILES)" ]; then \
+	cp -p $(HTMLSUPPORTFILES) $(WHAT)-html; fi && \
+	for i in $(addprefix $(SRCTOP)/doc/$(WHAT)/,$(HTMLEXTRAFILES)) NONE; \
+	do { test $$i = NONE || cp -p $$i $(WHAT)-html; } done
+
+$(WHAT)-tex/$(WHAT).ps: $(MAIN) $(SGMLSRCS) $(TEXEXTRAFILES)
+	$(DOCIFY) $(OZDOCTEXFLAGS) --in=$< --out=$(WHAT)-tex \
+	--type=latex \
+	--bib-path=$(SRCDIR):$(SRCTOP)/doc \
+	--bst-path=$(SRCTOP)/doc/utilities && \
+	for i in $(addprefix $(SRCTOP)/doc/$(WHAT)/,$(TEXEXTRAFILES)) NONE; \
+	do { test $$i = NONE || cp -p $$i $(WHAT)-tex; } done
+
+quick:: $(MAIN) $(SGMLSRCS) $(HTMLEXTRAFILES)
+	if [ $(PRINTNAME) ]; then opt=--link=Print,$(PRINTLINK)\?class=$(WHATCLASS)\&name=$(PRINTNAME); \
+	else opt=; fi; \
+	$(DOCIFY) $(OZDOCHTMLFLAGS) --in=$< --out=$(WHAT)-html \
+	--type=html-stylesheets --stylesheet=ozdoc.css \
+	--link=Top,../index.html $$opt \
+	--bib-path=$(SRCDIR):$(SRCTOP)/doc \
+	--bst-path=$(SRCTOP)/doc/utilities \
+	--latexdb=latex.db --keeppictures \
+	--xrefdb=../xref.db --xrefdir=$(WHAT)  --indexdb=../index.db && \
+	if [ "$(HTMLSUPPORTFILES)" ]; then \
+	cp -p $(HTMLSUPPORTFILES) $(WHAT)-html; fi && \
+	for i in $(addprefix $(SRCTOP)/doc/$(WHAT)/,$(HTMLEXTRAFILES)) NONE; \
+	do { test $$i = NONE || cp -p $$i $(WHAT)-html; } done
+
+verify: $(MAIN)
+	nsgmls -s -c$(PREFIX)/share/doc/catalog $<
+
+validate: $(WHAT)-html/index.html
+	nsgmls -cHTML4.soc -sB $(WHAT)-html/*.html
+
+install:: $(WHAT)-html/index.html $(DOCDIR)
+	for i in $(WHAT)-html/*; do $(INSTALL_FILE) $$i $(DOCDIR); done
+
+installps:: $(WHAT).ps $(WHAT).pdf $(PRINTDOCDIR)
+	if [ $(PRINTNAME) ]; then \
+		$(INSTALL_FILE) $(WHAT).ps  $(PRINTDOCDIR)/$(PRINTNAME).ps; \
+		$(INSTALL_FILE) $(WHAT).pdf $(PRINTDOCDIR)/$(PRINTNAME).pdf; \
+	fi
+
+$(DOCDIR):
+	$(INSTALL_DIR) $@
+$(PRINTDOCDIR):
+	$(INSTALL_DIR) $@
+
+clean::
+	-rm -rf $(WHAT)-html
+	-rm -rf $(WHAT).{xml,tex,aux,dvi,ps,toc,log,idx,bbl,blg,ind,ilg,stamp,pics,hhc}
+	-rm -rf $(WHAT)-*.xml
+
+veryclean: clean
+	-rm -f latex.db
+
+distclean: veryclean
+	-rm -f Makefile
+
+OZDOC2XML	= $(SRCTOP)/doc/xsl/ozdoc2xml
+CLASSPATH	= $(SRCTOP)/doc/xsl/oz.jar
+
+$(WHAT).xml: $(MAIN) $(SGMLSRCS) $(TEXEXTRAFILES)
+	( nsgmls -c../bootcatalog $< | $(OZDOC2XML) > $@ ) || { rm -f $@; exit -1; }
+$(WHAT).tex: $(WHAT)-ready.xml
+	$(JAVA) $(JAVACP) $(CLASSPATH) com.jclark.xsl.sax.Driver $< $(SRCTOP)/doc/xsl/ozdoc-new.xsl $@ \
+	|| { rm -f $@; exit -1; }
+
+export TEXINPUTS = $(SRCDIR):$(SRCTOP)/doc/xsl:../xsl:$(shell echo $$TEXINPUTS)
+export BSTINPUTS = .:$(SRCDIR):$(shell echo $$BSTINPUTS)
+export BIBINPUTS = .:$(SRCDIR):$(shell echo $$BIBINPUTS)
+
+WARN_REF= 'There were undefined references'
+WARN_LTX= 'Rerun to get cross-references right|There were undefined references'
+
+$(WHAT).dvi: $(WHAT).tex $(WHAT).pics
+	latex $< || { rm $@; exit -1; }
+	if egrep -s $(WARN_REF) $*.log; then echo > $*.stamp; fi
+	if egrep -s '\\bibdata\{' $*.aux && \
+	   egrep -s '\\citation\{' $*.aux ; \
+	then make $*.bbl; fi
+	if test -r $*.idx; then $(MAKE) $*.ind; fi
+	latex $< || { rm $@; exit -1; }
+	if egrep -s $(WARN_REF) $*.log; then echo > $*.stamp; fi
+	if egrep -s '\\bibdata\{' $*.aux && \
+	   egrep -s '\\citation\{' $*.aux ; \
+	then make $*.bbl; fi
+	if test -r $*.idx; then $(MAKE) $*.ind; fi
+	if egrep -s $(WARN_LTX) $*.log || \
+	   egrep -s "AGAIN" $*.ind-log; \
+	then latex $< || { rm $@; exit -1; } fi
+	if egrep -s $(WARN_REF) $*.log; then echo > $*.stamp; fi
+	if egrep -s '\\bibdata\{' $*.aux && \
+	   egrep -s '\\citation\{' $*.aux ; \
+	then make $*.bbl; fi
+	if test -r $*.idx; then $(MAKE) $*.ind; fi
+	if egrep -s $(WARN_LTX) $*.log || \
+	   egrep -s "AGAIN" $*.ind-log; \
+	then latex $< || { rm $@; exit -1; } fi
+
+%.ind: %.idx
+	makeindex $*
+	if test -r $*.ind-old && diff -q $*.ind $*.ind-old >/dev/null; then \
+	  echo "STOP" > $*.ind-log; \
+	else \
+	  echo "AGAIN" > $*.ind-log; \
+	  cp $*.ind $*.ind-old; \
+	fi
+
+%.bbl:	%.aux
+	bibtex $*
+$(WHAT).ps: $(WHAT).dvi
+	dvips $< -o $@
+ps: $(WHAT).ps
+pdf: $(WHAT).pdf
+$(WHAT)-z.ps: $(WHAT).dvi
+	dvips -z $< -o $@
+$(WHAT).pdf: $(WHAT)-z.ps
+	ps2pdf $< $@
+$(WHAT).pics: $(WHAT).xml
+	$(JAVA) $(JAVACP) $(CLASSPATH) com.jclark.xsl.sax.Driver $< $(SRCTOP)/doc/xsl/ozdoc-picture.xsl $@
+	for f in `cat $(WHAT).pics`; do $(MAKE) $$f.ps; done
+%.gif.ps: %.gif
+	giftopnm $< | pnmtops -rle -noturn > $@
+%.gif.ps: pictures/%.gif
+	giftopnm $< | pnmtops -rle -noturn > $@
+
+$(WHAT).code: $(WHAT).xml
+	$(JAVA) $(JAVACP) $(CLASSPATH) com.jclark.xsl.sax.Driver $< $(SRCTOP)/doc/xsl/codereq.xsl $@
+
+# create an annotated version of the input
+
+$(WHAT)-annotated.xml: $(WHAT).xml
+	$(JAVA) $(JAVACP) $(CLASSPATH) com.jclark.xsl.sax.Driver $< $(SRCTOP)/doc/xsl/ozdoc-annotate.xsl $@ || { rm -f $@; exit -1; }
+
+# extract file of elisp for performing hiliting
+
+$(WHAT)-hilite.el: $(WHAT)-annotated.xml
+	$(JAVA) $(JAVACP) $(CLASSPATH) com.jclark.xsl.sax.Driver $< $(SRCTOP)/doc/xsl/ozdoc-hilite.xsl $@ || { rm -f $@; exit -1; }
+
+# generate hilited code
+
+EMACSDO1= "(setq load-path (cons \"$(PREFIX)/share/elisp\" load-path))"
+EMACSDO2= "(setq load-path (cons \"$(SRCDIR)/../xsl\" load-path))"
+EMACSDO2b="(setq load-path (cons \"$(SRCDIR)\" load-path))"
+EMACSDO3= "(setq load-path (cons \"../xsl\" load-path))"
+EMACSDO4= "(setq load-path (cons \"$(BUILDTOP)/share/elisp\" load-path))"
+EMACSDO5= "(load \"ozdoc-fontify\")"
+
+EMACSDIR1= "(defvar ozdoc-file-path nil)"
+EMACSDIR2= "(setq ozdoc-file-path (cons \"$(SRCDIR)\" ozdoc-file-path))"
+EMACSDIR3= "(setq ozdoc-file-path (cons \".\" ozdoc-file-path))"
+
+$(WHAT)-hilite.xml: $(WHAT)-hilite.el
+	$(EMACS) $(EMACS_OPTIONS) --batch \
+		--eval $(EMACSDIR1) \
+		--eval $(EMACSDIR2) \
+		--eval $(EMACSDIR3) \
+		--eval $(EMACSDO1) \
+		--eval $(EMACSDO2) \
+		--eval $(EMACSDO2b) \
+		--eval $(EMACSDO3) \
+		--eval $(EMACSDO4) \
+		--eval $(EMACSDO5) \
+		--load $(WHAT)-hilite.el > $@ || { rm -f $@; exit -1; }
+
+# create document with preface of hilited code
+
+$(WHAT)-prefaced.xml: $(WHAT)-hilite.xml $(WHAT)-annotated.xml
+	echo '<HILITE.BOOK><HILITE.PREFACE>'	> $@
+	cat $(WHAT)-hilite.xml			>> $@
+	echo '</HILITE.PREFACE>'		>> $@
+	cat $(WHAT)-annotated.xml		>> $@
+	echo '</HILITE.BOOK>'			>> $@
+
+# now replace code with hilited code
+
+$(WHAT)-defaced.xml: $(WHAT)-prefaced.xml
+	$(JAVA) $(JAVACP) $(CLASSPATH) com.jclark.xsl.sax.Driver $< $(SRCTOP)/doc/xsl/ozdoc-deface.xsl $@ || { rm -f $@; exit -1; }
+
+# extract db for cross doc refs
+
+$(WHAT)-xref-db.xml: $(WHAT).xml
+	$(JAVA) $(JAVACP) $(CLASSPATH) com.jclark.xsl.sax.Driver $< $(SRCTOP)/doc/xsl/ozdoc-xref.xsl $@ || { rm -f $@; exit -1; }
+
+#
+
+$(WHAT)-with-db.xml: $(WHAT)-defaced.xml ../global-xref-db.xml
+	echo "<OZDOC.READY>" > $@
+	cat $(WHAT)-defaced.xml >> $@
+	cat ../global-xref-db.xml >> $@
+	echo "</OZDOC.READY>" >> $@
+
+$(WHAT)-ready.xml: $(WHAT)-with-db.xml
+	$(JAVA) $(JAVACP) $(CLASSPATH) com.jclark.xsl.sax.Driver $< $(SRCTOP)/doc/xsl/ozdoc-ready.xsl $@ || { rm -f $@; exit -1; }
+
+clean::
+	-rm -f $(WHAT).xml $(WHAT)-annotated.xml $(WHAT)-hilite.el
+	-rm -f $(WHAT)-hilite.xml $(WHAT)-prefaced.xml $(WHAT)-defaced.xml
+
+NEWCLASSPATH	= $(SRCTOP)/doc/xsl/oz-new.jar
+FILES_ONE	= $(WHAT)-new.pics $(WHAT)-new.el $(WHAT)-new.xml
+
+$(FILES_ONE): $(WHAT).xml
+	$(JAVA) $(JAVACP) $(NEWCLASSPATH) com.jclark.xsl.sax.Driver \
+		$< $(SRCTOP)/doc/xsl/ozdoc-one.xsl $(WHAT)-new.xml basename=$(WHAT)-new \
+	|| { rm -f $(FILES_ONE); exit -1; }
+
+clean::
+	-rm -f $(FILES_ONE)
+
+$(WHAT)-new-hilite.xml: $(WHAT)-new.el
+	$(EMACS) $(EMACS_OPTIONS) --batch \
+		--eval $(EMACSDIR1) \
+		--eval $(EMACSDIR2) \
+		--eval $(EMACSDIR3) \
+		--eval $(EMACSDO1) \
+		--eval $(EMACSDO2) \
+		--eval $(EMACSDO2b) \
+		--eval $(EMACSDO3) \
+		--eval $(EMACSDO4) \
+		--eval $(EMACSDO5) \
+		--load $(WHAT)-new.el > $@ || { rm -f $@; exit -1; }
+
+../global-xref-db.xml:
+	cd .. && $(MAKE) global-xref-db.xml
+
+clean-xref::
+	-rm -rf $(WHAT)-xref-db.xml
+xref:: $(WHAT)-xref-db.xml

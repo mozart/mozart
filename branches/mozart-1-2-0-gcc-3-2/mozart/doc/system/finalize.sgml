@@ -1,0 +1,133 @@
+<!--
+  - Authors:
+  -   Denys Duchier     <duchier@ps.uni-sb.de>
+  -   Leif Kornstaedt <kornstae@ps.uni-sb.de>
+  -   Christian Schulte <schulte@ps.uni-sb.de>
+  -
+  - Copyright:
+  -   Denys Duchier, 1998
+  -   Leif Kornstaedt, 1998
+  -   Christian Schulte, 1998
+  -
+  - Last change:
+  -   $Date$ by $Author$
+  -   $Revision$
+  -
+  - This file is part of Mozart, an implementation
+  - of Oz 3
+  -    http://www.mozart-oz.org
+  -
+  - See the file "LICENSE" or
+  -    http://www.mozart-oz.org/LICENSE.html
+  - for information on usage and redistribution
+  - of this file, and for a DISCLAIMER OF ALL
+  - WARRANTIES.
+  -
+  -->
+
+<Chapter id="Chapter.Finalize">
+  <Title/Memory Management: <<Finalize>>/
+  <p>The finalization facility gives the programmer the ability to
+process an Oz value when it is discovered (during garbage collection)
+that it has otherwise become unreachable.  This is often used to
+release native resources held or encapsulated by said value.</p>
+  <p>Native functors and extension classes make it very easy to extend
+Oz with new interfaces to arbitrary resources.  Typically, the access
+to a resource will be encapsulated into a data-structure that is an
+instance of an extension class and we would like the resource to be
+automatically released when the data-structure is no longer being
+referenced and can be garbage collected.  For example:
+<list>
+      <item>we may encapsulate a handle to access a database:
+when the handle is garbage collected, we would like the connection to
+the database to be automatically closed.
+      <item>we may encapsulate a pointer to malloc'ed memory,
+e.g. for a large bitmap to be manipulated by native DLLs: when this is
+no longer referenced, we would like the memory to be automatically
+freed.
+    </list>
+This is the purpose of <em/finalization/: to execute a cleanup action
+when a computational object is no longer referenced. The Oz
+finalization facility was inspired by the article <ref.extern to=
+"ftp://ftp.cs.indiana.edu/pub/scheme-repository/doc/pubs/guardians.ps.gz"
+>Guardians in a Generation-Based Garbage Collector</ref.extern>
+(R. Kent Dybvig, Carl Bruggeman, David Eby, June 1993).  It is built
+on top of weak dictionaries (<ptr.extern to="ozdoc:base"
+key="section.chunks.weakdictionaries">): each weak dictionary is
+associated with a <em/finalization stream/ on which pairs
+<code/Key#Value/ appear when <code/Value/ becomes unreachable except
+through one or more weak dictionaries.
+  <p>Note that since instances of the same stateless value are
+indistinguishable, we cannot
+tell the difference between one instance of the integer 7 and another one.
+Thus, the question of whether such an instance is unreachable or whether
+it is an identical copy of it which is unreachable can usually not be
+answered.  Also, since these values are indistinguishable, the engine
+is in principle licensed to either duplicate or merge them at its discretion
+(duplication
+actually occurs when such values are distributed to other sites).  For this
+reason,
+finalization only makes sense for datatypes with token equality, &ie; where
+the identity of an instance is unique.  Stateless values with structural
+equality are treated by the finalization mechanism as if they were
+unreachable (&ie; as if the weak dictionary contained a copy) and will be
+subjected to finalization at the very next garbage collection.  One exception
+are atoms: since they remain in the global atom table, they are currently
+considered to
+always be reachable.  This might change if we implement garbage collection
+of the atom table.
+<list>
+      <entry/<code/Finalize.guardian/
+      <index/<code/Finalize/<and><code/guardian///
+      <synopsis/<code/{Finalize.guardian ?+{Finalizer} ??{Register}}//
+      <item>This takes as input a 1-ary procedure <code/Finalizer/ and
+returns a 1-ary procedure <code/Register/
+representing a new guardian.  A value <code/X/ can be
+registered in the guardian using:
+<code display/{Register X}/
+Thereafter, when <code/X/ becomes unreachable except through a weak
+dictionary (&eg; a guardian), at the next garbage collection <code/X/
+is removed from the guardian and the following is eventually executed:
+<code display/{Finalizer X}/
+We say eventually because the finalization thread is subject to the
+same fair scheduling as any other thread.  Note that the value ?_{X}
+has still not been garbage collected; only at the next
+garbage collection after the call to ?_{Finalizer} has returned, and
+assuming ?_{Value} is no longer referenced at all, not even by the
+guardian, will it really be garbage collected.
+      <entry/<code/Finalize.register/
+<index/<code/Finalize/<and><code/register///
+      <synopsis/<code/{Finalize.register ?+{Value} ?+{Handler}}//
+      <item>This is a slightly different interface that allows to
+register simultaneously a ?_{Value} and a corresponding finalizer
+procedure ?_{Handler}.  After ?_{Value} becomes otherwise unreachable,
+<code/{?_{Handler} ?_{Value}}/ is eventually executed.
+      <entry/<code/Finalize.everyGC/
+<index/<code/Finalize/<and><code/everyGC///
+      <synopsis><code>{Finalize.everyGC ?+{P/0}}</code></synopsis>
+      <item>This simply registers a 0-ary procedure to be invoked
+after each garbage collection.  Note that you cannot rely on how soon
+after the garbage collection this procedure will really be invoked: it
+is in principle possible that the call may only be scheduled several
+garbage collections later if the system has an incredibly large number
+of live threads and generates tons of garbage.  It is instructive to
+look at the definition of <code/EveryGC/:
+<code display>
+proc {EveryGC P}
+   proc {DO _} {P} {Finalize.register DO DO} end
+in {Finalize.register DO DO} end
+</code>
+in other words, we create a procedure <code/DO/ and register it using
+itself as its own handler.  When invoked, it calls <code/P/ and
+registers itself again.
+      </list>
+</Chapter>
+<!--
+Local Variables:
+mode: sgml
+mode: auto-fill
+sgml-default-dtd-file: "chapter.ced"
+sgml-auto-activate-dtd: t
+adaptive-fill-mode: nil
+End:
+-->

@@ -1,0 +1,54 @@
+<!-- ********************************************************************** -->
+
+<Chapter id="fset.examples.hamming"> <Title/Generating Hamming Codes/
+
+<Para><Title/Problem Specification/ Generate a Hamming code that fits
+in <Math>b</Math>-bit words to code <Math>n</Math> symbols where the
+Hamming distance between every two symbol codes is at least
+<Math>d</Math>. The Hamming distance between to words is the number of
+bit positions where they differ.
+
+<Para><Title/Model/ A <Math>b</Math>-bit word is modeled by a set
+<Math> s \subseteq \{1,\ldots,b\}</Math> where <Math>e \in s</Math>
+means that the bit at position <Math>e</Math> is set (&resp; unset
+otherwise). The <Em>Hamming distance</Em> <Math>h(a,b)</Math> between
+two words <Math>a</Math> and <Math>b</Math> represented as sets
+<Math>s_a</Math> and <Math>s_b</Math> can be computed by subtracting
+from the word size <Math>b</Math> the number of elements that is
+contained (<Math>\#(s_a \cap s_b)</Math>) &resp; is not contained
+(<Math>\#(\{1,\ldots,b\}\backslash (s_a \cup s_b))</Math>) in both
+sets.  Thus, the Hamming distance results in <Math display type=latex>
+h(a,b) = b - \#(s_a \cap s_b) - \#(\{1,\ldots,b\}\backslash (s_a \cup
+s_b)).</Math>
+
+<Para><Title/Solver/ The function <<Hamming>> returns a solver to
+generate a Hamming code for <<NumSymbols>> symbols in words with
+<<Bits>> bits and a Hamming distance of <<Distance>>. The procedure
+<<MinDist>> implements the constraint that the Hamming distance does
+not exceed the value of <<Distance>>. The list <<Xs>> holds the sets
+representing the single codes. The nested loop (<<ForAllTail>> and
+<<ForAll>>) imposes <<MinDist>> on all pairwise distinct elements of
+<<Xs>>. The distribution employs straightforwardly a naive strategy.
+
+<P>
+<Code.Extern display to="fset_hamming.oz" class=linenumbers>
+
+<P> The following code generates a Hamming code for <Math>16</Math> symbols using <Math>7</Math> bit words and ensures a Hamming distance of <Math>2</Math>.
+
+<<<
+{Browse
+ {Map {SearchOne {Hamming 7 2 16}}.1
+  fun {$ X} 
+     {ForThread 7 1 ~1 fun {$ Is I} 
+                          {FS.reified.isIn I X}|Is 
+                       end nil} 
+  end}}
+>>>
+
+Further, the code is nicely formatted displayed in the Oz Browser.
+
+<PICTURE.extern display to="hamming_browser.gif" id="hamming_browser.pic" 
+                type=GIF>
+
+
+</Chapter>
