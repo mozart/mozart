@@ -105,6 +105,7 @@ define
       feat sd
       attr
 	 clients:nil
+	 
       meth getClient(S $)
 	 {Filter @clients fun{$ CS} CS.site == S end}.1
       end
@@ -112,9 +113,13 @@ define
       meth memberClient(S $)
 	 {Filter @clients fun{$ CS} CS.site == S end} \= nil
       end
+
+      meth getOpenClients($)
+	 {Filter @clients fun{$ CS} {Label {CS getState($)}} == start end} 
+      end
+
       meth init(SD)  self.sd = SD end
       meth connecting(P S Id)
-	 {System.show ccccc#P#S#Id}
 	 if {Not {self memberClient(S $)}} then
 	    {Send P connected}
 	    clients<-{New ClientClass init(S P)}|@clients 
@@ -148,7 +153,6 @@ define
 
       
       meth open(Site)
-	 {System.show open(Site)}
 	 if {self memberClient(Site $)} then
 	    Client = {self getClient(Site $)}
 	 in
@@ -181,6 +185,21 @@ define
 	    end
 	 end
       end
+
+      meth selectSite(key:Key) 
+	 {ForAll {self getOpenClients($)}
+	  proc{$ S}
+	     {{S getGui($)}.ssites select( key:Key)}
+	  end}
+      end
+
+      meth deselectSite(key:Key) 
+	 {ForAll {self getOpenClients($)}
+	  proc{$ S}
+	     {{S getGui($)}.ssites deselect( key:Key)}
+	  end}
+      end
+      
    end
    proc {Start} O N 
       proc{GCLineDraw}
@@ -208,7 +227,7 @@ define
 	 N=O
       else ST OT BT NI SD MI
 	 ClientControler
-	 SelectedSite = {NewCell proc{$ _} skip end}
+	 SelectedSite = {NewCell none}
       in
 	 {GUI.open RunSync}
 	 
@@ -233,10 +252,16 @@ define
 				  {Exchange SelectedSite O S}
 				  if O \= S then 
 				     {S select}
+				     {GUI.ssites select( key:S.key)}
+				     {ClientControler selectSite(key:S.key)}
 				  else
-				     {Assign SelectedSite proc{$ _} skip end}
+				     {Assign SelectedSite none}
 				  end
-				  {O deselect}
+				  if O \= none then 
+				     {O deselect}
+				     {GUI.ssites deselect(key:O.key )}
+				     {ClientControler deselectSite(key:O.key)}
+				  end
 			       end)}
 	 {GCLineDraw}
 	 ClientControler = {New ClientCntrler init(SD)}

@@ -3,6 +3,7 @@ export
    AdvancedListBox      
 import
    Tk
+   System
 define
    class AdvancedListBox  from Tk.frame
       prop
@@ -90,6 +91,7 @@ define
 			       fg:{CondSelect K fg black}
 			       bg:{CondSelect K bg white}
 			       line: Line 
+			       bgtag:{New Tk.canvasTag tkInit(parent:DC)}
 			       fgtag:{New Tk.canvasTag tkInit(parent:DC)})
 		     in
 			self.entryDict.(K.key):=S
@@ -137,6 +139,22 @@ define
 	    S = self.entryDict.K in
 	    {self.listbox tk(itemconfig S.fgtag fill:FG)}
 	    self.entryDict.K:={Record.adjoinAt S fg FG}
+	 end
+      end
+
+      meth select(key:K)
+	 if {Dictionary.member self.entryDict  K} then
+	    S = self.entryDict.K
+	    [X0 Y0 X1 Y1]={self.listbox tkReturnListInt(bbox S.fgtag $)}
+	 in
+	    {self.listbox tk(crea rect X0-3 Y0-1 X1+3 Y1 fill:lightgrey tags:S.bgtag outline:lightgrey )}
+	    {self.listbox tk('raise' S.fgtag)}
+	 end
+      end
+      meth deselect(key:K)
+	 if {Dictionary.member self.entryDict  K} then
+	    S = self.entryDict.K in
+	    {self.listbox tk(delete S.bgtag)}
 	 end
       end
    end 
