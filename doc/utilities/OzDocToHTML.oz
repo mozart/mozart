@@ -43,9 +43,8 @@ define
    EntryClasses = [private#'private' protected#'protected' public#'public'
 		   datatype#'data type' enumtype#'enum type'
 		   static#'static' virtual#'virtual' purevirtual#'pure virtual'
-		   member#'member'
 		   constructor#'constructor' destructor#'destructor'
-		   operator#'operator' function#'function'
+		   operator#'operator' member#'member' function#'function'
 		   macro#'macro'
 		   variable#'variable' command#'command']
 
@@ -720,7 +719,7 @@ define
 			      [] 'in' then '+'
 			      [] out then '?'
 			      [] cin then '*'
-			      [] cnin then '*'
+			      [] cnin then '$'
 			      end
 		  OzDocToHTML, Batch(M 1)
 		  Out <- @Out#"</CODE>"
