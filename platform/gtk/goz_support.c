@@ -32,6 +32,7 @@ OZ_BI_define (ozgtk_initialize_signal_port, 1, 0)
 {
   OZ_declareTerm (0, port);
   signal_port = port;
+  OZ_protect(&signal_port); /* bruni: prevent GC of port anchor */
   return OZ_ENTAILED;
 } OZ_BI_end
 
@@ -55,8 +56,8 @@ signal_marshal (GtkObject * object,
                 guint       n_args,
                 GtkArg *    args)
 {
-  /* OZ_warning ("Marshaller: object: %p, n_args: %i; oz_id: %i, args: %p",
-     object, n_args, (guint) oz_id, args); */
+  /*  OZ_warning ("Marshaller: object: %p, n_args: %i; oz_id: %i, args: %p",
+      object, n_args, (guint) oz_id, args); */
   /* insert signal into the Oz signal queue */
   OZ_send (signal_port, OZ_int ((guint) oz_id));
   /*  OZ_warning ("Marshaller sent signal %i to port", (guint) oz_id); */
