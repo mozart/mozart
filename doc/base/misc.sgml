@@ -73,7 +73,7 @@ set./
 ?_{BitString}./
       </list></p>
   </section>
-  <section id="section.misc.foreign.pointers">
+  <section id="section.misc.foreignpointers">
     <title/Foreign Pointers/
     <p>Module <span class=index/<<ForeignPointer>>/ provides an
     interface to encapsulated <em/raw/ pointers to foreign data.  This
