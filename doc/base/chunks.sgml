@@ -382,54 +382,48 @@ negated implication)./
 	<Item>
 	  tests whether ?_{X} is a class.
 
-	<Entry><Span class=index/<<IsInstanceOf>>/
-	  <Index/<<Class>><And><<isInstanceOf>>/
+	<Entry><<new>>
+	  <Index class=tails/<<Class>><And><<new>>/
 	<Synopsis>
-	  <<{Class.isInstanceOf ?+{O} ?+{K} ??{B}}>>
+	  <<{Class.new ?+{ParentKs} ?+{AttrR} ?+{FeatR} ??{K}}>>
 	<Item>
-	  The object&nbsp;?_{O} is an instance of the class&nbsp;?_{K},
-	  &ie;, ?_{K}&nbsp;is above the class of&nbsp;?_{O} in the inheritance
-	  hierarchy.
+	  creates a new class by inheriting from ?_{ParentKs} with new
+	  attributes ?_{AttrR} and new features ?_{FeatR}. The fields
+	  with integer features in ?_{AttrR} define the free
+	  attributes. The fields with literal features define
+	  attributes with initial values, where the feature is the
+	  attribute name and the field its initial value. The
+	  semantics for ?_{FeatR} is accordingly.
+        <p>
+          For example, the statement
+<<<C={Class.new [D E] a(a:1 b) f(f:2 g)}>>>
+          is equivalent to
+<<<class C from D E
+   attr a:1 b
+   feat f:2 g
+end>>>
+     
 
-	<Entry><<get>>
-	  <Index class=tails/<<Class>><And><<get>>/
+	<Entry><<extendFeatures>>
+	  <Index class=tails/<<Class>><And><<extendFeatures>>/
 	<Synopsis>
-	  <<{Class.get ?+{O} ??{K}}>>
+	  <<{Class.extendFeatures ?+{K1} ?+{FeatR} ??{K2}}>>
 	<Item>
-	  binds ?_{K} to the class of&nbsp;?_{O}.
+	  returns a class ?_{K2} which has been created by extending
+	  ?_{K1} with the 
+	  features as defined by ?_{FeatR}, where the specification is
+	  as for <<Class.new>>. The class ?_{K1} can also be final,
+	  the created class ?_{K2} is always final.
+        <P>
+          For example, provided that the class <<D>> is not final, the
+	  statement
+<<<C={Class.extendFeatures D f(f:2 g)}>>>
+          is equivalent to
+<<<class C from D
+   prop final
+   feat f:2 g
+end>>>
 
-	<Entry><<methodNames>>
-	  <Index class=tails/<<Class>><And><<methodNames>>/
-	<Synopsis>
-	  <<{Class.methodNames ?+{K} ??{Ls}}>>
-	<Item>
-	  returns the alphabetically sorted list of public (atomic) method
-	  names that the instances of the class&nbsp;?_{K} can serve.
-	  <!--** this is not true currently, names are also returned -->
-
-	<!--** attrNames, featNames, propNames, extendFeatures, hasProperty -->
-
-	<Entry><<parents>>
-	  <Index class=tails/<<Class>><And><<parents>>/
-	<Synopsis>
-	  <<{Class.parents ?+{K} ??{Ks}}>>
-	<Item>
-	  binds ?_{Ks} to the list of direct parents of&nbsp;?_{K} in the
-	  order of increasing priority.
-
-	<Entry><<getFeature>>
-	  <Index class=tails/<<Class>><And><<getFeature>>/
-	<Synopsis>
-	  <<{Class.getFeature ?+{K} ?+{LI} ??{X}}>>
-	<Item>
-	  returns the class feature&nbsp;?_{X} of&nbsp;?_{K} at&nbsp;?_{LI}.
-
-	<Entry><<hasFeature>>
-	  <Index class=tails/<<Class>><And><<hasFeature>>/
-	<Synopsis>
-	  <<{Class.hasFeature ?+{K} ?+{LI} ??{B}}>>
-	<Item>
-	  tests whether ?_{K} has class feature at&nbsp;?_{LI}.
       </List>
 
   <Section id="section.chunks.objects">
@@ -456,7 +450,6 @@ negated implication)./
 	  Creates a new object from class&nbsp;?_{K} with initial message
 	  ?_{InitMessageR}.
 
-	<!--** ',', '@', '<-', exchange, send, 'class', meta -->
       </List>
     <SubSection class=unnumbered>
       <Title/The <<BaseObject>> Class/
@@ -472,6 +465,8 @@ negated implication)./
 	  <Item>
 	    does nothing.  It is defined as <<meth noop() skip end>>.
 	</List>
+
+<!-- Do not delete, I still need it Christian!
     <SubSection class=unnumbered>
       <Title/Classes for Master&slash;Slave Behaviour/
       <P>
@@ -527,7 +522,7 @@ negated implication)./
 	    else the error exception <<object(slaveAlreadyFree)>> is
 	    raised.
 	</List>
-
+-->
   <Section id="section.chunks.functors">
     <Title/Functors/
     <P>
@@ -569,3 +564,4 @@ sgml-auto-activate-dtd: t
 adaptive-fill-mode: nil
 End:
 -->
+
