@@ -58,6 +58,10 @@ extern "C" int _fmode;
 #include "os.hh"
 
 
+#ifdef SUNOS_SPARC
+static long emulatorStartTime = 0;
+#endif
+
 fd_set isSocket;
 static long openMax;
 
@@ -127,9 +131,26 @@ unsigned int osTotalTime()
   return fileTimeToMS(&kt);
 
 #else
+
+
+#ifdef SUNOS_SPARC
+
+  struct timeval tp;
+
+  (void) gettimeofday(&tp, NULL);
+
+  return (unsigned int) ((tp.tv_sec - emulatorStartTime) * 1000 +
+                         tp.tv_usec / 1000);
+
+
+#else
+
   struct tms buffer;
 
   return (unsigned int) (times(&buffer)*1000.0/(double)sysconf(_SC_CLK_TCK));
+
+#endif
+
 #endif
 }
 
@@ -584,6 +605,7 @@ void watchParent()
 
 #endif
 
+
 void osInit()
 {
   DebugCheck(CLOCK_TICK < 1000, error("CLOCK_TICK must be greater than 1 ms"));
@@ -595,6 +617,16 @@ void osInit()
   FD_ZERO(&globalFDs[SEL_WRITE]);
 
   FD_ZERO(&isSocket);
+
+#ifdef SUNOS_SPARC
+
+  struct timeval tp;
+
+  (void) gettimeofday(&tp, NULL);
+
+  emulatorStartTime = tp.tv_sec;
+
+#endif
 
 #ifdef WINDOWS
   OSVERSIONINFO vi;

@@ -60,6 +60,8 @@ extern "C" {
              fd_set *readfds, fd_set *writefds, fd_set *exceptfds,
              struct timeval *timeout);
 
+  int gettimeofday(struct timeval *, void *);
+
   /* missing prototypes from libc */
   int getopt(int argc, char *const *argv, const char *optstring);
   void bzero(char *b, int length);

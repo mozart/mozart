@@ -4148,20 +4148,19 @@ double ozround(double in) {
   return ff;
 }
 
-OZ_Return BIfloatToIntInline(TaggedRef A, TaggedRef &out)
-{
-  A=OZ_deref(A);
-  if (OZ_isFloat(A)) {
-    double ff = ozround(OZ_floatToC(A));
+OZ_Return BIfloatToIntInline(TaggedRef A, TaggedRef &out) {
+  A=deref(A);
+
+  if (isAnyVar(A))
+    return SUSPEND;
+
+  if (isFloat(A)) {
+    double ff = ozround(floatValue(A));
     if (ff > INT_MAX || ff < INT_MIN) {
       OZ_warning("float to int: truncated to signed 32 Bit\n");
     }
     out = makeInt((int) ff);
     return PROCEED;
-  }
-
-  if (OZ_isVariable(A)) {
-    return SUSPEND;
   }
 
   TypeErrorT(-1,"Float");
