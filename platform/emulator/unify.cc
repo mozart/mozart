@@ -48,7 +48,7 @@ Bool wakeup_Thread(Thread * tt, Board *home, PropCaller calledBy)
   Assert (tt->isSuspended());
   Assert (tt->isRThread());
 
-  switch (oz_isBetween(GETBOARD(tt), home)) {
+  switch (oz_isBetween(tt->getBoardInternal(), home)) {
   case B_BETWEEN:
     oz_wakeupThread(tt);
     return TRUE;
@@ -223,7 +223,7 @@ SuspList * oz_checkAnySuspensionList(SuspList *suspList,Board *home,
         Propagator * prop = susp.getPropagator();
 
         if (calledBy && !prop->isUnifyPropagator()) {
-          switch (oz_isBetween(GETBOARD(prop), home)) {
+          switch (oz_isBetween(prop->getBoardInternal(), home)) {
           case B_BETWEEN:
             prop->markUnifyPropagator();
             break;
@@ -401,7 +401,7 @@ inline
 static
 Bool isMoreLocal(TaggedRef var1, TaggedRef var2)
 {
-  Board *board1 = getVarBoard(var1)->derefBoard();
+  Board *board1 = getVarBoard(var1);
   Board *board2 = getVarBoard(var2)->derefBoard();
   return oz_isBelow(board1,board2);
 }

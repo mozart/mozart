@@ -69,7 +69,7 @@ enum oz_BFlag {
   B_DEAD
 };
 
-oz_BFlag oz_isBetween(Board *to, Board *varHome);
+oz_BFlag oz_isBetween(Board * to, Board * varHome);
 
 /*===================================================================
  * see preparedCalls

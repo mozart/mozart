@@ -69,40 +69,6 @@ Bool oz_installScript(Script &script)
   return ret;
 }
 
-Bool oz_isBelow(Board *below, Board *above)
-{
-  while (1) {
-    if (below == above) return OK;
-    if (oz_isRootBoard(below)) return NO;
-    below = below->getParent();
-  }
-}
-
-/*
-  This function checks if the current board is between "varHome" and "to"
-  resp. equal to "to".
-  */
-
-oz_BFlag oz_isBetween(Board *to, Board *varHome)
-{
-  while (1) {
-
-    if (oz_isCurrentBoard(to))
-      return B_BETWEEN;
-
-    if (to == varHome)
-      return B_NOT_BETWEEN;
-
-    Assert(!oz_isRootBoard(to));
-
-    if (to->isFailed())
-      return B_DEAD;
-
-    to = to->getParent();
-
-  }
-}
-
 /*
  *
  *  Install every board from the currentBoard to 'n'

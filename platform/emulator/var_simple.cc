@@ -50,7 +50,7 @@ OZ_Return SimpleVar::unify(TaggedRef* vPtr, TaggedRef *tPtr, ByteCode* scp)
 
   OzVariable *tv=tagged2CVar(*tPtr);
   if (tv->getType()==OZ_VAR_SIMPLE
-      && oz_isBelow(GETBOARD(tv),GETBOARD(this))
+      && oz_isBelow(tv->getBoardInternal(),GETBOARD(this))
 #ifdef VAR_BIND_NEWER
       // if both are local, then check heap
       && (!oz_isLocalVar(this) || heapNewer(tPtr,vPtr))

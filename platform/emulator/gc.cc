@@ -550,17 +550,25 @@ Bool Board::gcIsMarked(void) {
 
 inline
 Bool Board::gcIsAlive() {
-  Board *bb = this->derefBoard();
+  Board * s = this;
 
-  while (1) {
-    if (bb->isFailed())
-      return NO;
+  do {
+    int t = s->getTag();
 
-    if (bb->isRoot() || bb->hasMarkOne() || bb->hasMarkTwo())
+    if (t & (BoTag_MarkOne | BoTag_MarkOne))
       return OK;
 
-    bb = bb->getParent();
-  }
+    if (t == BoTag_Root) {
+      return OK;
+    }
+
+    if (t == BoTag_Failed) {
+      return NO;
+    }
+
+    s = s->getParentInternal();
+  } while (1);
+
 }
 
 

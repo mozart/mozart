@@ -137,6 +137,64 @@ TaggedRef Board::genFailed() {
   return AtomFailed;
 }
 
+inline
+Bool oz_isBelow(Board * below, Board * above) {
+  // Above _MUST_ be deref'd, it does not matter for below
+  Assert(!above->isCommitted());
+  register Board * s = below;
+  register Board * r = oz_rootBoard();
+
+  do {
+    // Just treat committed boards as ordinary boards, they
+    // are not very common!
+    if (s == above)
+      return OK;
+    if (s == r)
+      return NO;
+    s = s->getParentInternal();
+  } while (1);
+
+}
+
+/*
+  This function checks if the current board is between "varHome" and "to"
+  resp. equal to "to".
+  */
+
+inline
+oz_BFlag oz_isBetween(Board * to, Board * varHome) {
+  // varHome _MUST_ be deref'd, it does not matter for to
+
+  Assert(!varHome->isCommitted());
+
+  register Board * s = to;
+  register Board * c = oz_currentBoard();
+
+  do {
+    // Just treat committed boards as ordinary boards, they
+    // are not very common!
+
+    if (s == c)
+      return B_BETWEEN;
+
+    if (s == varHome)
+      return B_NOT_BETWEEN;
+
+    Assert(!s->hasMarkOne() && !s->hasMarkTwo());
+
+    register int t = s->getTag();
+
+    if (t == BoTag_Failed)
+      return B_DEAD;
+
+    Assert(t != BoTag_Root);
+
+    s = s->getParentInternal();
+
+  } while (1);
+
+}
+
 
 #ifdef OUTLINE
 #undef inline

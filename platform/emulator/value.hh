@@ -223,7 +223,11 @@ int atomcmp(Literal *a, Literal *b)
 }
 
 // see codearea.cc
-extern TaggedRef oz_atom(const char *s);
+extern TaggedRef OZ_atom(const char *s);
+inline
+TaggedRef oz_atom(const char *s) {
+  return OZ_atom(s);
+}
 extern TaggedRef oz_uniqueName(const char *s);
 
 
