@@ -22,13 +22,16 @@
  *  of this file, and for a DISCLAIMER OF ALL
  *  WARRANTIES.
  *
- */
+  */
 
 #ifndef __FDCD_H__
 #define __FDCD_H__
 
 //-----------------------------------------------------------------------------
 
+#include "base.hh"
+
+#ifdef FDCD
 
 #include <stdarg.h>
 #include <math.h>
@@ -475,4 +478,5 @@ void BIfdBodyManager::introduceSpeculative(int i, OZ_Term v) {
 
 //-----------------------------------------------------------------------------
 
+#endif
 #endif

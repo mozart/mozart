@@ -98,14 +98,17 @@
 
     'constrDisjSetUp'   => { in  => ['+value','+value','+value','+value'],
                              out => [],
+                             ifdef => FDCD,
                              bi  => BIfdConstrDisjSetUp},
 
     'constrDisj'        => { in  => ['+value','+value','+value'],
                              out => [],
+                             ifdef => FDCD,
                              bi  => BIfdConstrDisj},
 
     'tellConstraintCD'=> { in  => ['value','value','value'],
                              out => [],
+                             ifdef => FDCD,
                              bi  => BIfdTellConstraintCD},
 
     'debugStable'       => { in  => [],

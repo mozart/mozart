@@ -95,7 +95,9 @@ void reInitFDs(int threshold)
   }
 }
 
+#ifdef FDCD
 void initFDCD(void);
+#endif
 
 void initFDs()
 {
@@ -128,7 +130,9 @@ void initFDs()
     numOfBitsInHalfWord[i] = numOfBitsInByte[i&0xff] + numOfBitsInByte[i>>8];
   }
 
+#ifdef FDCD
   initFDCD();
+#endif
 }
 
 //-----------------------------------------------------------------------------
