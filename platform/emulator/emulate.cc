@@ -1750,7 +1750,7 @@ Case(GETVOID)
 
       IHashTable *table = entry->getIndexTable();
       PC = entry->getPC();
-      if (table && oz_isLTuple(XREGS[0])) {
+      if (table && tagTypeOf(XREGS[0])==TAG_LTUPLE) {
 	sPointer = tagged2LTuple(XREGS[0])->getRef();
 	JUMPRELATIVE(table->lookupLTuple());
       } else {
@@ -1767,7 +1767,7 @@ Case(GETVOID)
 
       IHashTable *table = entry->getIndexTable();
       PC = entry->getPC();
-      if (table && oz_isLTuple(XREGS[0])) {
+      if (table && tagTypeOf(XREGS[0])==TAG_LTUPLE) {
 	sPointer = tagged2LTuple(XREGS[0])->getRef();
 	JUMPRELATIVE(table->lookupLTuple());
       } else {
