@@ -14,18 +14,28 @@ local
       fun {FindNext I D}
 	 case {Dictionary.member D I} then I else {FindNext I-1 D} end
       end
+      proc {DeleteAll Ks D}
+	 case Ks of nil then true
+	 [] K|Kr then
+	    case K<2 then true else
+	       {{Dictionary.get D K}.2 close}
+	       {Dictionary.remove D K}
+	    end
+	    {DeleteAll Kr D}
+	 end
+      end
    in
       class Actions
 	 from Tk.variable
 	 feat menu dict
-	 attr max:0 cur
+	 attr separators:nil max:0 cur:0
 	 meth init(menu: Menu)
 	    <<Tk.variable tkInit(0)>>
 	    self.menu = Menu
 	    self.dict = {Dictionary.new}
 	 end
 	 
-	 meth add(label:Label value:Value)
+	 meth add(label:Label value:Value type:Type)
 	    Num   = @max
 	    Entry = {New Tk.menuentry.radiobutton
 		     tkInit(parent:   self.menu
@@ -36,27 +46,41 @@ local
 	 in
 	    max <- Num + 1
 	    cur <- Num
-	    {Dictionary.put self.dict Num Label#Entry#Value}
+	    {Dictionary.put self.dict Num Label#Entry#Value#Type}
 	    <<Tk.variable tkSet(Num)>>
+	 end
+
+	 meth addSeparator
+	    separators <- {New Tk.menuentry.separator
+			   tkInit(parent:self.menu)}|@separators
 	 end
 
 	 meth set(Num)
 	    cur <- Num
 	 end
 	 
-	 meth delete(value:Value)
-	    Num = {FindKey {Dictionary.keys self.dict} self.dict Value}
-	    _ # Entry # _ = {Dictionary.get self.dict Num}
+	 meth delete(Value)
+	    Num   = {FindKey {Dictionary.keys self.dict} self.dict Value}
+	    Entry = {Dictionary.get self.dict Num}.2
 	 in
 	    {Dictionary.remove self.dict Num}
 	    {Entry close}
 	    case Num==@cur then
 	       cur <- {FindNext Num-1 self.dict}
+	       <<Tk.variable tkSet(@cur)>>
 	    else true end
 	 end
 
+	 meth deleteAll
+	    {DeleteAll {Dictionary.keys self.dict} self.dict}
+	    cur <- 1 % The second of the default entries
+	    <<Tk.variable tkSet(@cur)>>
+	    {ForAll @separators proc {$ O} {O close} end}
+	    separators <- nil
+	 end
+	 
 	 meth get($)
-	    {Dictionary.get self.dict @cur}.3
+	    {Dictionary.get self.dict @cur}
 	 end
       end
    end
@@ -84,7 +108,7 @@ in
 	 Menu =
 	 {TkTools.menubar self.toplevel self.toplevel
 	  [menubutton(text: 'Explorer'
-		      menu: [command(label:   'About'
+		      menu: [command(label:   'About...'
 				     action:  self # about
 				     feature: about)
 			     separator
@@ -114,7 +138,7 @@ in
 				     state:   disabled
 				     feature: clear)
 			     separator
-			     command(label:   'Export Postscript ...'
+			     command(label:   'Export Postscript...'
 				     action:  self # postscript
 				     state:   disabled
 				     feature: postscript)
@@ -127,18 +151,15 @@ in
 				     feature: quit)]
 		      feature: explorer)
 	   menubutton(text: 'Options'
-		      menu: [command(label:   'Search ...'
-				     action:  self # searchOptions
+		      menu: [command(label:   'Search...'
+				     action:  self # guiOptions(search)
 				     feature: search)
-			     command(label:   'Information ...'
-				     action:  self # infoOptions
-				     feature: info)
-			     command(label:   'Drawing ...'
-				     action:  self # layoutOptions
-				     feature: layout)
-			     command(label:   'Postscript ...'
-				     action:  self # postscriptOptions
-				     feature:postscript)]
+			     command(label:   'Drawing...'
+				     action:  self # guiOptions(drawing)
+				     feature: drawing)
+			     command(label:   'Postscript...'
+				     action:  self # guiOptions(postscript)
+				     feature: postscript)]
 		      feature: options)
 	   menubutton(text: 'Move'
 		      menu: [command(label:   'Center'
@@ -228,8 +249,7 @@ in
 			     command(label:   'Compare'
 				     action:  self # nodesCmp
 				     state:   disabled
-				     key:     '='
-				     event:   '<KeyPress-equal>'
+				     key:     2
 				     feature: cmp)
 			     separator
 			     cascade(label:   'Statistics Action'
@@ -272,6 +292,9 @@ in
 	 {Menu.move.menu     tk(conf tearoff:False)}
 	 {Menu.search.menu   tk(conf tearoff:False)}
 	 {Menu.nodes.menu    tk(conf tearoff:False)}
+	 {Menu.nodes.statAction.menu tk(conf tearoff:False)}
+	 {Menu.nodes.infoAction.menu tk(conf tearoff:False)}
+	 {Menu.nodes.cmpAction.menu  tk(conf tearoff:False)}
 	 {Menu.hide.menu     tk(conf tearoff:False)}
 	 self.infoAction = {New Actions init(menu:Menu.nodes.infoAction.menu)}
 	 self.cmpAction  = {New Actions init(menu:Menu.nodes.cmpAction.menu)}
@@ -279,7 +302,7 @@ in
       end
       
       meth clear
-	 {DoEntries self.menu [explorer([clear postscript halt reset])
+	 {DoEntries self.menu [explorer([clear postscript break halt reset])
 			       move([cur leftMost rightMost
 				     nextSol prevSol top back])
 			       search([all next step])
@@ -295,14 +318,16 @@ in
 			       search([all next step])
 			       nodes([cmp info selCmp deselCmp stat])
 			       hide([toggle all failed butfailed])
-			       options([search layout info postscript])]
+			       options([search drawing postscript])]
 	  tk(entryconf state:disabled)}
       end
 
       meth idle
 	 {DoEntries self.menu [explorer([about postscript])
-			       options([search layout info postscript])]
+			       options([search drawing postscript])]
 	  tk(entryconf state:normal)}
+	 {DoEntries self.menu explorer([break halt])
+	  tk(entryconf state:disabled)}
       end
       
       meth normal(Es)
@@ -322,3 +347,4 @@ in
    end
 
 end
+

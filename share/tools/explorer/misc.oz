@@ -41,8 +41,7 @@ local
 	    case {ComputeCM RW} of !False then False
 	    elseof W then
 	       case {ComputeCM RH} of !False then False
-	       elseof H then
-		  o(width:W height:H)
+	       elseof H then o(width:W height:H)
 	       end
 	    end
 	 else False

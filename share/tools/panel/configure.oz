@@ -73,8 +73,7 @@ TitleName = 'Oz Panel'
 
 BitMap = BitMapDir # 'panel.xbm'
 
-UpdateTimes         = [250   # '250ms'
-		       500   # '500ms'
+UpdateTimes         = [500   # '500ms'
 		       1000  # '1s'
 		       5000  # '5s'
 		       10000 # '10s']
@@ -83,9 +82,8 @@ DefaultUpdateTime   = 1000
 HistoryRanges       = [10000  # '10s'
 		       30000  # '30s'
 		       60000  # '1m'
-		       120000 # '2m'
-		       360000 # '6m']
-DefaultHistoryRange = 120000
+		       120000 # '2m']
+DefaultHistoryRange = 60000
 
 LoadWidth           = 240
 
