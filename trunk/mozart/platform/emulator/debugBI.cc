@@ -156,8 +156,7 @@ OZ_BI_define(BIprocedureCoord, 1,1)
 
 OZ_BI_define(BIthreadID,1,1)
 {
-  oz_declareThread(0,th);
-
+  oz_declareThreadIN(0,th);
   OZ_RETURN_INT(th->getID() & THREAD_ID_MASK);
 } OZ_BI_end
 

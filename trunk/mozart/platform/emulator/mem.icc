@@ -108,12 +108,3 @@ unsigned int getUsedMemoryBytes(void)
 }
 
 #endif //__mem_icc__
-
-
-
-
-
-
-
-
-

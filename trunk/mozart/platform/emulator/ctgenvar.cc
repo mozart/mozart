@@ -395,10 +395,6 @@ void GenCtVariable::installPropagators(GenCtVariable * glob_var)
 //-----------------------------------------------------------------------------
 // built-ins
 
-#define OZ_getINDeref(N, V, VPTR, VTAG)		\
-  OZ_Term V = OZ_in(N);				\
-  DEREF(V, VPTR, VTAG);
-
 OZ_BI_define(BIIsGenCtVarB, 1,1)
 {
   OZ_getINDeref(0, v, vptr, vtag);
