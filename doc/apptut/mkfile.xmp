@@ -3,6 +3,6 @@ NATIVES  = counter
 TARGETS  = $(addsuffix .so-$(PLATFORM),$(NATIVES))
 all: $(TARGETS)
 %.so-$(PLATFORM): %.o
-        ozdynld $< -o $@
+        oztool ld $< -o $@
 %.o: %.cc
-        c++ -I${OZHOME}/include -c $< -o $@
+        oztool c++ -I${OZHOME}/include -c $< -o $@

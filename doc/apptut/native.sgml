@@ -74,12 +74,29 @@ all zero.</p>
         <p>We must now make this native module available as a
 <em/shared object library/.  First we must compile it and create
 <file/counter.o/:
-<code display proglang=sh>c++ -I${OZHOME}/include -c counter.cc</code>
+<code display proglang=sh>oztool c++ -I${OZHOME}/include -c counter.cc</code>
 Then we must produce a platform specific shared object library:
-<code display proglang=sh>ozdynld counter.o -o counter.so-`ozplatform`</code>
+<code display proglang=sh>oztool ld counter.o -o counter.so-`ozplatform`</code>
 You may find it useful to create a <file/Makefile/ of the form:
 <code.extern display proglang=makefile to="mkfile.xmp">
 </p>
+        <p><code display proglang=sh/oztool/ is a script that invokes
+the facility named as its first argument with appropriate options.
+For example, it is essential to invoke the same C++ compiler and with
+the same &eg; code generation options as were used for building the Oz
+emulator; otherwise it will not be possible to dynamically link your
+library into a running Oz process.  Normally, the Oz emulator is
+compiled without <EM/run time information/ (option <code display
+proglang=sh/-fno-rtti/ for g++) and without support for C++ exceptions
+(option <code display proglang=sh/-fno-exceptions/ for g++).
+<code display proglang=sh/oztool c++/ automatically invokes the right
+compiler with the right options.</p>
+        <p>Even more complicated is how to create a DLL from a
+compiled object file: it varies depending on the system, compiler and
+linker used.  Under Windows, the sequence of necessary incantations is
+so arcane and highly magical, it could well endanger your sanity.
+Fortunately <code display proglang=sh/oztool ld/ automatically takes
+care of the details.</p>
       </subsection>
       <subsection>
         <title/Deployment/
@@ -101,6 +118,10 @@ the basename) and makes available the module it defines as the
 value of <code proglang=oz/Cnt/.  The body of your functor can invoke
 <code proglang=oz/{Cnt.next}/ to get the next value of the global
 counter.</p>
+        <p>In the emacs OPI, you can try this out immediately:
+<code display proglang=oz
+>declare [M] = {Module.link ['?{install}/counter.so{native}']}</code>
+</p>
       </subsection>
 
 </PART>
