@@ -272,4 +272,7 @@ GOZ_GSLIST_TO_OZTERM (GSList * gslist) {
 #define GOZ_RETURN_GCHAR2(val)               OZ_RETURN (OZ_nil ()) /* TODO */
 #define GOZ_RETURN_GNODE(val)                OZ_RETURN (OZ_nil ()) /* TODO */
 
+#define GOZ_BOOL(val)                        (val)?OZ_true():OZ_false()
+
+
 #endif /* __GOZ_SUPPORT_H__ */
