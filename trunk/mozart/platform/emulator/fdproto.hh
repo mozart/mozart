@@ -144,6 +144,7 @@ OZ_C_proc_proto(BIfdDivIntervalCons_body)
 OZ_C_proc_proto(BIgetCopyStat)
 
 // fdwatch.cc
+OZ_C_proc_proto(BIfdWatchDomB)
 OZ_C_proc_proto(BIfdWatchDom1)
 OZ_C_proc_proto(BIfdWatchDom2)
 OZ_C_proc_proto(BIfdWatchDom3)
