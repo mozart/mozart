@@ -61,7 +61,7 @@ static long openMax;
 // return current usertime in milliseconds
 unsigned int osUserTime()
 {
-#if defined(WINDOWS) && !defined(GNUWIN32)
+#if defined(WINDOWS)
   FILETIME ct,et,kt,ut;
   /* only NT supports this */
   if (GetProcessTimes(GetCurrentProcess(),&ct,&et,&kt,&ut) == FALSE) {
@@ -81,7 +81,7 @@ unsigned int osUserTime()
 // return current systemtime in milliseconds
 unsigned int osSystemTime()
 {
-#if defined(WINDOWS) && !defined(GNUWIN32)
+#if defined(WINDOWS)
   return 0;
 #else
   struct tms buffer;
@@ -153,13 +153,14 @@ void osUnblockSignals()
     Linux & Solaris are not POSIX compatible:
      therefor we need casts to (OsSigFun *). look at HERE.
     */
+
+typedef void OsSigFun(void);
+
 static
 OsSigFun *osSignal(int signo, OsSigFun *fun)
 {
 #ifdef WINDOWS
-#if !defined(_MSC_VER) && !defined(GNUWIN32)
-  signal(signo,(__sig_func)fun);
-#endif
+  signal(signo,(_sig_func_ptr)fun);
   return NULL;
 #else
   struct sigaction act, oact;
@@ -433,7 +434,7 @@ int osSelect(int nfds, fd_set *readfds, fd_set *writefds, int *timeout)
 {
 #ifdef WINDOWS
 
-  return win32Select(nfds,readfds,timeout);
+  return win32Select(readfds,timeout);
 
 #else
 
@@ -607,17 +608,9 @@ int osTestSelect(int fd, int mode)
     return 1;
 
   /* for a disk file hopefully input will not block */
-#ifndef GNUWIN32
-  HANDLE h = (HANDLE)_os_handle(fd);
-#endif
   IOChannel *ch = findChannel(fd);
   //  fprintf(stderr,"before GFT(%d,%d)\n",h,fd); fflush(stderr);
-  if (!FD_ISSET(fd,&isSocket) && 
-      ch == NULL
-#ifndef GNUWIN32
-       && GetFileType(h) != FILE_TYPE_PIPE
-#endif
-      ) {
+  if (!FD_ISSET(fd,&isSocket) && ch == NULL) {
     //    fprintf(stderr,"after GFT(%d), success\n",h); fflush(stderr);
     return 1;
   }
@@ -674,7 +667,10 @@ int osFirstSelect()
 
 Bool osNextSelect(int fd, int mode)
 {
+#ifndef WINDOWS
+  /* socket numbers may grow larger on win32 */
   Assert(fd<openMax);
+#endif
   CheckMode(mode);
 
   if (FD_ISSET(fd,&tmpFDs[mode])) {

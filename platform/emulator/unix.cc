@@ -42,21 +42,28 @@ extern int h_errno;
 #include <sys/time.h>
 #include <sys/times.h>
 #include <sys/resource.h>
-#include <sys/wait.h>
 #include <netinet/in.h>
 #endif
 
 #include <signal.h>
 
-#ifndef WINDOWS
+#if !defined(WINDOWS) || defined(GNUWIN32)
+#include <sys/wait.h>
 #include <sys/utsname.h>
 #endif
+
+#ifdef GNUWIN32
+#define CHARCAST (char *)
+#else
+#define CHARCAST
+#endif
+
 
 #ifdef IRIX5_MIPS
 #include <bstring.h>
 #endif
 
-#ifndef _MSC_VER
+#if !defined(_MSC_VER) && !defined(GNUWIN32)
 extern "C" char *inet_ntoa(struct in_addr in);
 #endif
 
@@ -547,7 +554,7 @@ OZ_C_proc_begin(unix_stat,2)
 }
 OZ_C_proc_end
 
-#ifndef WINDOWS
+#if !defined(WINDOWS) || defined(GNUWIN32)
 OZ_C_proc_begin(unix_uName,1)
 {
   OZ_declareArg(0, out);
@@ -851,8 +858,6 @@ OZ_C_proc_end
 // -------------------------------------------------
 // sockets
 // -------------------------------------------------
-#ifndef GNUWIN32
-
 OZ_C_ioproc_begin(unix_socket,4)
 {
   OZ_declareAtomArg(0, OzDomain);
@@ -1342,9 +1347,9 @@ OZ_C_ioproc_begin(unix_receiveFromInet,8)
 
   return (OZ_unify(localhead, hd) == PROCEED
           && OZ_unifyInt(port, ntohs(from.sin_port)) == PROCEED
-          && OZ_unify(host, OZ_string(gethost ?
+          && OZ_unify(host, OZ_string(CHARCAST (gethost ?
                                         gethost->h_name :
-                                        inet_ntoa(from.sin_addr))) == PROCEED
+                                        inet_ntoa(from.sin_addr)))) == PROCEED
           && OZ_unifyInt(outN, ret) == PROCEED) ? PROCEED : FAILED;
     
 }
@@ -1390,9 +1395,6 @@ OZ_C_proc_end
 
 #endif   /* WINDOWS */
 #endif   /* OS2 */
-
-
-#endif /* GNUWIN32 */
 
 
 const int maxArgv = 100;
@@ -1563,7 +1565,6 @@ static OZ_Term mkAliasList(char **alias)
   return ret;
 }
 
-#ifndef GNUWIN32
 static OZ_Term mkAddressList(char **lstptr)
 {
   OZ_Term ret = OZ_nil();
@@ -1586,7 +1587,7 @@ OZ_C_ioproc_begin(unix_getHostByName, 2)
     RETURN_NET_ERROR(out);
   }
 
-  OZ_Term t1=OZ_pairAS("name",hostaddr->h_name);
+  OZ_Term t1=OZ_pairAS("name",CHARCAST hostaddr->h_name);
   OZ_Term t2=OZ_pairA("aliases",mkAliasList(hostaddr->h_aliases));
   OZ_Term t3=OZ_pairA("addrList",mkAddressList(hostaddr->h_addr_list));
   OZ_Term pairlist= OZ_cons(t1,OZ_cons(t2,OZ_cons(t3,OZ_nil())));
@@ -1594,7 +1595,6 @@ OZ_C_ioproc_begin(unix_getHostByName, 2)
   return OZ_unify(out,OZ_recordInit(OZ_atom("hostent"),pairlist));
 }
 OZ_C_proc_end
-#endif
 
 
 // Misc stuff
@@ -1621,7 +1621,7 @@ OZ_C_ioproc_begin(unix_system,2)
 }
 OZ_C_proc_end
 
-#ifndef WINDOWS
+#if !defined(WINDOWS) || defined(GNUWIN32)
 OZ_C_ioproc_begin(unix_wait,2)
 {
   OZ_declareArg(0, rpid);
@@ -1812,32 +1812,20 @@ OZ_C_ioproc_begin(Fun,Arity)					\
 OZ_C_proc_end
 
 
-NotAvail("Unix.bind",            3, unix_bindUnix);
+NotAvail("Unix.bindUnix",        3, unix_bindUnix);
 NotAvail("Unix.sendToUnix",      5, unix_sendToUnix);
 NotAvail("Unix.connectUnix",     3, unix_connectUnix);
 NotAvail("Unix.acceptUnix",      3, unix_acceptUnix);
 NotAvail("Unix.receiveFromUnix", 7, unix_receiveFromUnix);
-NotAvail("Unix.wait",            2, unix_wait);
+#ifndef GNUWIN32
 NotAvail("Unix.getServByName",   3, unix_getServByName);
+NotAvail("Unix.wait",            2, unix_wait);
 NotAvail("Unix.uName",           1, unix_uName);
+#endif
 
 #ifdef _MSC_VER
 NotAvail("Unix.getDir",          2, unix_getDir);
 NotAvail("Unix.fileDesc",        2, unix_fileDesc);
-#endif
-
-#ifdef GNUWIN32
-NotAvail("Unix.socket",4,unix_socket);
-NotAvail("Unix.bindInet",3,unix_bindInet);
-NotAvail("Unix.listen",3,unix_listen);
-NotAvail("Unix.connectInet",4,unix_connectInet);
-NotAvail("Unix.acceptInet",4,unix_acceptInet);
-NotAvail("Unix.shutDown",3,unix_shutDown);
-NotAvail("Unix.send",4,unix_send);
-NotAvail("Unix.sendToInet",6,unix_sendToInet);
-NotAvail("Unix.receiveFromInet",8,unix_receiveFromInet);
-NotAvail("Unix.getSockName",2,unix_getSockName);
-NotAvail("Unix.getHostByName",2,unix_getHostByName);
 #endif
 
 #endif
@@ -1893,7 +1881,7 @@ void BIinitUnix()
 {
   OZ_addBISpec(spec);
 
-#if defined(WINDOWS) && !defined(GNUWIN32)
+#ifdef WINDOWS
   WSADATA wsa_data;
   WORD req_version = MAKEWORD(1,1);
 
