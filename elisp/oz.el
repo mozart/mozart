@@ -330,6 +330,11 @@
 	      ["buffer"      oz-print-buffer t]
 	      ["region"      oz-print-region t]
 	      )
+	     ("Kernel Code"
+	      ["buffer"      oz-pi-buffer t]
+	      ["region"      oz-pi-region t]
+	      ["line"        oz-pi-line   t]
+	      )
 	     ("Indent"
 	      ["line" oz-indent-line t]
 	      ["region" oz-indent-region t]
@@ -339,7 +344,7 @@
 	      ["errors"       oz-toggle-errors t]
 	      ["compiler"     oz-toggle-compiler-window t]
 	      ["machine"      oz-toggle-machine-window t]
-			  )
+	      )
 	     ["Browse"   oz-feed-region-browse t]
 	     "-----"
 	     ["Start Oz" run-oz t]
@@ -370,6 +375,9 @@
 		(Show/hide\ compiler  . oz-toggle-compiler-window)
 		(Show/hide\ machine   . oz-toggle-machine-window)
 		(Show/hide\ errors    . oz-toggle-errors)
+		(Kernel\ Code\ Buffer . oz-pi-buffer)
+		(Kernel\ Code\ Region . oz-pi-region)
+		(Kernel\ Code\ Line   . oz-pi-line)
 		(Show\ Documentation  . oz-doc)
 		(Start\ Oz            . run-oz)
 		(Halt\ Oz             . halt-oz)
@@ -490,11 +498,46 @@ if that value is non-nil."
   "Consults one line."
    (interactive)
    (save-excursion
-     (let (beg end)
-       (beginning-of-line)
-       (setq beg (point))
-       (end-of-line)
-       (oz-feed-region beg (point)))))
+     (let ((line (oz-line-pos)))
+       (oz-feed-region (car line) (cdr line)))))
+
+
+(defun oz-line-pos()
+  (let (beg end)
+    (beginning-of-line)
+    (setq beg (point))
+    (end-of-line)
+    (setq end (point))
+    (cons beg end)))
+
+(defvar oz-pretty-file (oz-make-temp-name "/tmp/ozpretty") "")
+
+(defun oz-pi-buffer()
+  (interactive)
+  (oz-pi-region (point-min) (point-max)))
+
+(defun oz-pi-line()
+  (interactive)
+  (let ((line (oz-line-pos)))
+    (oz-pi-region (car line) (cdr line))))
+
+
+(defun oz-pi-region (start end)
+  "Consults the region."
+   (interactive "r")
+   (oz-hide-errors)
+   (shell-command-on-region start end (concat "cat > " oz-pretty-file))
+   (message "")
+   (oz-pi-file oz-pretty-file)
+   (let ((buf (generate-new-buffer "*Oz intermediate*")))
+     (save-excursion
+       (set-buffer buf)
+       (insert-file-contents (concat oz-pretty-file ".i"))
+       (display-buffer buf t))))
+
+
+
+
 
 (defun oz-feed-region-browse (start end)
   "Consults the region."
@@ -509,6 +552,10 @@ if that value is non-nil."
   (interactive "FInclude file: ")
   (oz-hide-errors)
   (oz-send-string (concat "!include '" file "'\n"))) 
+
+(defun oz-pi-file(file)
+  (oz-hide-errors)
+  (oz-send-string (concat "!pi '" file "'\n")))
 
 (defun oz-load-file(file)
   (interactive "FLoad file: ")
@@ -525,7 +572,9 @@ if that value is non-nil."
 (defun oz-hide-errors()
   (interactive)
   (if (get-buffer "*Oz Errors*")
-      (let ((show-machine (get-buffer-window "*Oz Machine*")))
+      (let ((show-machine (or (get-buffer-window "*Oz Machine*")
+			      (get-buffer-window "*Oz Compiler*")
+			      (get-buffer-window "*Oz Errors*"))))
 	(delete-windows-on "*Oz Errors*")
 	(if (and oz-machine-visible show-machine)
 	    (oz-show-buffer "*Oz Machine*")))))
