@@ -12,7 +12,7 @@ export
    GetPropAllIds
 
 import
-   Aux(counterClass varEq propEq)
+   Misc(counterClass varEq propEq)
 
 define   
    proc {MakeItemTable ItemEq ?Table}
@@ -33,7 +33,7 @@ define
       Table = table(make:
 		       fun {$}
 			  table(Key:    {NewDictionary}
-				MakeId: {New Aux.counterClass init})
+				MakeId: {New Misc.counterClass init})
 		       end
 		    getItemId:
 		       fun {$ ItemTable Item}
@@ -60,10 +60,10 @@ define
    table(make:      MakeVarTable
 	 getItemId: GetVarId
 	 getItem:   GetVar
-	 getAllIds: GetVarAllIds) = {MakeItemTable Aux.varEq}
+	 getAllIds: GetVarAllIds) = {MakeItemTable Misc.varEq}
 
    table(make:      MakePropTable
 	 getItemId: GetPropId
 	 getItem:   GetProp
-	 getAllIds: GetPropAllIds) = {MakeItemTable Aux.propEq}
+	 getAllIds: GetPropAllIds) = {MakeItemTable Misc.propEq}
 end
