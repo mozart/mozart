@@ -84,7 +84,7 @@ export BUILDTOP
 export SRCDIR
 export OZPREFIX
 export OZLIB
-export OZPATH = .$(OZLOADSEP)`$(CYGPATH) $(SRCDIR)`
+export OZPATH = .$(OZLOADSEP)$(shell $(CYGPATH) $(SRCDIR))
 export OZ_PI = 1
 export OZ_LIB = $(OZLIB)
 export OZ_LOAD = $(subst :,'$(OZLOADSEP)',root=.:prefix=`$(CYGPATH) $(SRCDIR)`/=`$(CYGPATH) $(BUILDDIR)`/:cache=`$(CYGPATH) $(PREFIX)`/cache:prefix=/=/:=)
