@@ -1200,7 +1200,7 @@ void AM::gc(int msgLevel)
   Thread::GC();
 
   GCPROCMSG("ioNodes");
-  for(int i = 0; i < FD_SETSIZE; i++)
+  for(int i = 0; i < IO::openMax; i++)
     if(FD_ISSET(i,&IO::globalReadFDs)) {
       if (i != fileno(IO::QueryFILE)) {
 	IO::ioNodes[i] = IO::ioNodes[i]->gcBoard();
