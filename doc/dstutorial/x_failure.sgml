@@ -200,7 +200,8 @@ do not have the correct type.
 where the four arguments are defined as follows:
 <LIST>
 <ITEM> <<E>> is the entity on which the operation was attempted.
-See below, Limitations of Current Release.
+A temporary limitation of the current release is that
+if the entity is an object, then <<E>> is undefined.
 <ITEM> <<T>> is the type of the entity, which is one
 of <<variable>>, <<cell>>, <<lock>>, <<port>>, or <<object>>.
 <ITEM> <<FS>> is the list of actual fault states occurring
@@ -215,6 +216,8 @@ currently the following:
 <LIST>
 <ITEM> <<tempFail(info:I)>> or <<permFail(info:I)>>,
 where <<I>> is in {<<state>>, <<owner>>}.
+The <<info:>> field only exists for
+objects, cells, and locks.
 <ITEM> <<remoteProblem(tempSome)>>, <<remoteProblem(permSome)>>,
 <<remoteProblem(tempAll)>>, or
 <<remoteProblem(permAll)>>.
@@ -244,7 +247,14 @@ where <<Attr>> is the name of the object attribute,
 and <<New>> is the attribute value after the attempted operation.
 The <<objectFetch>> operation exists because object-records
 are copied lazily: the first time the object is used, the
-object-record is fetched, which might fail.
+object-record is fetched over the network, which might fail.
+<ITEM> For any probed entity: <<probe>>.
+The operation <<{Probe Entity}>> can be done on all
+entities and will block forever until a distribution fault
+causes an exception to be raised or a handler to be called.
+Watchers (see below) are implemented by means of <<Probe>>.
+A temporary limitation of the current release is that
+the <<Probe>> operation is not available to users.
 </LIST>
 
 </LIST>
@@ -304,8 +314,7 @@ If the entity is working again later
 and <<remoteProblem>>) then the
 handler can just try the operation again.
 
-<P>In exactly the same way as is done for
-exceptions in the basic model,
+<P>In an exact analogy to the basic model,
 a fault handler can be installed to be called
 on a given entity at a given level
 for a given set of fault states.
@@ -326,18 +335,40 @@ disable was successful, i.e., the entity was already
 enabled for that level.
 Both functions raise a type error exception if their arguments
 do not have the correct type.
+A temporary limitation of the current release is that
+one cannot install global handlers.
 
 <P>A handler <<HandlerProc>> is a three-argument
 procedure that is called as <<{HandlerProc E FS OP}>>.
 The arguments <<E>>, <<FS>>, and <<OP>>,
 are exactly the same arguments as given
-in the exception, if exceptions are enabled.
+in a distribution exception.
 
 <SUBSECTION><TITLE>Eager failure detection</TITLE>
 
 <P>Fault handlers detect failure when an operation is attempted.
-One often wants to be informed as soon as the site finds out
-about the failure.
+One often wants to be informed earlier.
+The advanced model allows the application to be informed
+as soon as the site finds out about the failure.
+Two operations are provided:
+<LIST>
+<ITEM> <<proc {Fault.installWatcher Entity FStates WatcherProc}>>
+<ITEM> <<proc {Fault.deinstallWatcher Entity}>>
+</LIST>
+<P>The procedure <<Fault.installWatcher>> creates a new thread
+on the current site, in which <<WatcherProc>> will be invoked
+as soon as the site detects that
+a fault state in <<FStates>> occurs.
+The procedure <<Fault.deinstallWatcher>> removes all watchers
+on the current site.
+
+<P>A watcher <<WatcherProc>> is a three-argument
+procedure with exactly the same argument list as a handler.
+It is called as <<{WatcherProc E FS OP}>>.
+The arguments <<E>> and <<FS>>
+are exactly the same arguments as given
+in a distribution exception.
+The argument <<OP>> always has the value <<probe>>.
 
 
 <SECTION><TITLE>Fault states for language entities</TITLE>
@@ -523,9 +554,11 @@ to be instances of <<permFail>> and <<tempFail>>.
 <ITEM>If an exception is raised or a handler invoked
 due to a distribution fault of an object,
 then the entity argument <<E>> is undefined.
-<ITEM>The <<global>> level is not implemented for handlers.
+<ITEM>The <<global>> level is not implemented for handler installation,
+i.e., the call <<{Fault.install global _ _}>> is not implemented.
 If an attempt is made to install a global handler,
 then a <<notImplemented>> exception is given.
+<ITEM>The operation <<Probe>> is not available to the user.
 </LIST>
 
 </CHAPTER>
