@@ -209,7 +209,9 @@ Note that this variable is only checked once when oz.el is loaded."
 ;;{{{ Faces
 
 (defvar oz-is-color
-  (and (eq window-system 'x) (x-display-color-p)))
+  (and (or (eq window-system 'x)
+	   (eq window-system 'w32))
+       (x-display-color-p)))
 
 (make-face 'oz-space-face)
 (put 'oz-space-face 'face-documentation
