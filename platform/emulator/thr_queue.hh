@@ -82,8 +82,7 @@ private:
   // needed when merging spaces to unpack threads in local thread queue
   Thread * ltq_thr;
 public:
-//   USEFREELISTMEMORY;
-  USEHEAPMEMORY;		// should be? (kost@)
+  USEFREELISTMEMORY;
 
   void allocate (int initsize) {
     maxsize = initsize;
@@ -106,9 +105,10 @@ public:
   ~LocalThreadQueue() { error("never destroy LTQ"); }
 
   LocalThreadQueue * gc(void);
-//   void dispose () {
-//     freeListDispose (this, sizeof(LocalThreadQueue));
-//   }
+  void dispose () {
+    freeListDispose (queue, (size_t) (maxsize * sizeof (Thread *)));
+    freeListDispose (this, sizeof(LocalThreadQueue));
+  }
 
   void resize();
 
