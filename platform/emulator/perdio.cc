@@ -1987,21 +1987,21 @@ inline void pendThreadAddToEnd(PendThread **pt,Thread *t){
   oz_stop(t);
   PD((THREAD_D,"stop thread addToEnd %x",t));
   while(*pt!=NULL){pt= &((*pt)->next);}
-  *pt=new PendThread(t);
+  *pt=new PendThread(t,NULL);
   return;}
 
 inline void pendThreadAddDummyToEnd(PendThread **pt){
   while(*pt!=NULL){
     Assert((*pt)->thread!=NULL); // only one dummy per chain
     pt= &((*pt)->next);}
-  *pt=new PendThread((Thread*)NULL);
+  *pt=new PendThread(NULL,NULL);
   return;}
 
 inline void pendThreadAddToNonFirst(PendThread **pt,Thread *t){
   oz_stop(t);
   PD((THREAD_D,"stop thread addToNonFirst %x",t));
   if(*pt!=NULL){pt= &((*pt)->next);}
-  *pt=new PendThread(t);
+  *pt=new PendThread(t,NULL);
   return;}
 
 void CellFrame::gcCellFrameSec(){
@@ -5016,7 +5016,7 @@ inline void e_invalid(CellFrame *cf,TaggedRef old,TaggedRef nw,Thread* th){
   if (th) {
     oz_stop(th);
     PD((THREAD_D,"stop thread invalid exchange %x",th));
-    PendThread* pt=new PendThread(th);
+    PendThread* pt=new PendThread(th,NULL);
     cf->setPending(pt);}}
 
 void cellDoExchange(Tertiary *c,TaggedRef old,TaggedRef nw,Thread* th){
@@ -5319,9 +5319,12 @@ void LockFrame::lockComplex(Thread *t){
 
 void LockLocal::unlockComplex(){
   setLocker(pendThreadResumeFirst(getPendBase()));
+  Assert(getLocker());
+  getLocker()->suspThreadToRunnable();
   return;}
 
 void LockLocal::lockComplex(Thread *t){
+  t->updateExtThread(getBoard());
   pendThreadAddToEnd(getPendBase(),t);}
 
 void LockFrame::unlockComplex(){
