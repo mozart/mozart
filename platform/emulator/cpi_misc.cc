@@ -90,29 +90,6 @@ int *OZ_hallocCInts(int n)
   return n == 0 ? (int *) NULL : OZMALLOC(int, n);
 }
 
-int * OZ_copyCInts(int n, int * frm) {
-  if (n==0)
-    return (int *) NULL;
-
-  int * to  = OZMALLOC(int, n);
-
-  int * ret = to;
-
-  while (n > 4) {
-    to[0] = frm[0]; to[1] = frm[1]; to[2] = frm[2]; to[3] = frm[3];
-    to += 4; frm += 4; n -= 4;
-  }
-
-  switch (n) {
-  case 4: to[3] = frm[3];
-  case 3: to[2] = frm[2];
-  case 2: to[1] = frm[1];
-  case 1: to[0] = frm[0];
-  }
-
-  return ret;
-}
-
 void OZ_hfreeCInts(int * is, int n)
 {
   if (n) OZDISPOSE(int, n, is);
