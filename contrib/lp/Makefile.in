@@ -27,8 +27,8 @@ INSTALL_DLL     = $(INSTALL) -m 555
 
 OZDEPEND        = ozc -c -M
 
-USECPLEX =
-#USECPLEX = 1
+#USECPLEX =
+USECPLEX = 1
 
 
 CFLAGS          =  -O3
@@ -43,8 +43,9 @@ CFLAGS          += -Wall -Wno-unused -Wno-reorder -Wno-uninitialized
 ifdef USECPLEX
 CFLAGS          += -DINCLUDE_CPLEX -DALLWAYS_CLOSE_CPLEX
 CFLAGS          += -I/linux/CPLEX
-LDFLAGS         += -L/linux/CPLEX
-LIBS            += -lcplex
+#LDFLAGS        += -L/home/tmueller/Programming/CPLEX
+LDFLAGS         += -L/linux/CPLEX.6
+LIBS            +=  -lcplex
 endif
 
 CXX             = $(OZTOOL) c++
