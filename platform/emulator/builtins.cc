@@ -5568,9 +5568,20 @@ OZ_Return printInline(TaggedRef term)
 
 DECLAREBI_USEINLINEREL1(BIprint,printInline)
 
-OZ_C_proc_begin(BIprintVS,1)
+OZ_C_proc_begin(BIprintInfo,1)
 {
   oz_declareArg(0,t);
+  OZ_printVirtualString(t);
+  fflush(stdout);
+  return PROCEED;
+}
+OZ_C_proc_end
+
+OZ_C_proc_begin(BIprintError,1)
+{
+  oz_declareArg(0,t);
+  // print popup code for opi
+  if (!am.isStandalone()) printf("\021");
   OZ_printVirtualString(t);
   fflush(stdout);
   return PROCEED;
@@ -7089,8 +7100,9 @@ BIspec allSpec2[] = {
   {"ozparser_init",0,ozparser_init},
   {"ozparser_exit",0,ozparser_exit},
 
-  {"printVS",1,BIprintVS},
-  {"termToVS",4,BItermToVS},
+  {"System.printInfo",1,BIprintInfo},
+  {"System.printError",1,BIprintError},
+  {"System.valueToVirtualString",4,BItermToVS},
   {"getTermSize",4,BIgetTermSize},
 
   {"dumpThreads",0,BIdumpThreads},
