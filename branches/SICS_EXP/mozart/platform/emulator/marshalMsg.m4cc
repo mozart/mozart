@@ -1,6 +1,6 @@
 define(message,`
 	void marshal_$1(MsgBuffer * buf,arg($2,$3)arg($3,$4) arg($4,$5) arg($5,$6)) {
-	PD((MARSHAL_BE,"marshal begin %s  kind:%s","$1",buf->getSite()->stringrep()));
+	PD((MARSHAL_BE,"marshal begin %s  kind:%s","$1",buf->siteStringrep()));
 	mess_counter[$1].send();
 	buf->marshalBegin();
 	Assert(refTrail->isEmpty());
@@ -17,7 +17,7 @@ define(message,`
 	argEnc($5)
 	refTrail->unwind();
 	buf->marshalEnd();
-	PD((MARSHAL_BE,"marshal end %s  kind:%s","$1",buf->getSite()->stringrep()));
+	PD((MARSHAL_BE,"marshal end %s  kind:%s","$1",buf->siteStringrep()));
 	return;}')
 
 
@@ -50,15 +50,19 @@ undefine(`message')
 
 define(message,`
 	void unmarshal_$1(MsgBuffer* buf,arg($2,$3)arg($3,$4) arg($4,$5) arg($5,$6) arg($6 $7)) {
-	PD((MARSHAL_BE,"unmarshal begin: %s s:%s","$1",buf->getSite()->stringrep()));
+	PD((MARSHAL_BE,"unmarshal begin: %s s:%s","$1",buf->siteStringrep()));
 	refTable->reset();
+        Assert(creditSite==NULL);	
+	if(buf->get()==DIF_SECONDARY){
+	  creditSite==unmarshalSite(buf); }
+	Assert(refTrail->isEmpty());
 	argEnc($2)
 	argEnc($3)
 	argEnc($4)
 	argEnc($5)
 	buf->unmarshalEnd();
 	refTrail->unwind();
-	PD((MARSHAL_BE,"unmarshal end: %s s:%s","$1",buf->getSite()->stringrep()));
+	PD((MARSHAL_BE,"unmarshal end: %s s:%s","$1",buf->siteStringrep()));
 	return;}')
 
 
@@ -90,41 +94,44 @@ undefine(`arg')
 undefine(`message')
 
 define(message,`
-	void unmarshalUnsent_$1(MsgBuffer* buf) {
-	PD((MARSHAL_BE,"unmarshal unsent msg begin %s  site:%s","$1",buf->getSite()->stringrep()));
+	void unmarshalUnsent_$1(MsgBuffer* buf arg($2,$3) arg($3,$4) arg($4,$5) arg($5,$6) arg($6 $7)) {
+	PD((MARSHAL_BE,"unmarshal unsent msg begin %s  site:%s","$1",buf->siteStringrep()));
 	refTable->reset();
+	Assert(refTrail->isEmpty());
+        Assert(creditSite==NULL);	
+	if(buf->get()==DIF_SECONDARY){
+	  creditSite==unmarshalSite(buf); }
 	argEnc($2)
 	argEnc($3)
 	argEnc($4)
 	argEnc($5)
 	buf->unmarshalEnd();
 	refTrail->unwind();
-	PD((MARSHAL_BE,"unmarshal unsent msg end %s  site:%s","$1",buf->getSite()->stringrep()));
+	PD((MARSHAL_BE,"unmarshal unsent msg end %s  site:%s","$1",buf->siteStringrep()));
 	return;}')
 
 
-define(arg,`ifelse($1,Index,int i1,
-	           $1,Index2,int i2,
-                   $1,Term,TaggedRef t,
-                   $1,String,char* str,
-                   $1,Credit,Credit &c,
-		   $1,Object,ObjectFields* o,
-		   $1,ObjectAndClass,ObjectFields* o,
-                   $1,Site,Site* s1,
-	           $1,Site2,Site* s2)'
-            `ifelse($2,`',`',`,')')
+define(arg,`ifelse($1,Index,,
+	           $1,Index2,,
+                   $1,Term,,
+                   $1,String,,
+                   $1,Credit,`,Credit &c',
+		   $1,Object,,
+		   $1,ObjectAndClass,,
+                   $1,Site,`,Site* s1',
+	           $1,Site2,`,Site* s2')')
 
 define(argEnc,`ifelse($1,Index,unmarshalUnsentNumber(buf);,
 		   $1,Index2,unmarshalUnsentNumber(buf);,
 	           $1,Term,unmarshalUnsentTerm(buf);,
 	           $1,String,unmarshalUnsentString(buf);,		
-		   $1,Object,unmarshalUnsentObject(o,buf);,
-		   $1,ObjectAndClass,unmarshalUnsentObjectAndClass(o,buf);,
+		   $1,Object,unmarshalUnsentObject(buf);,
+		   $1,ObjectAndClass,unmarshalUnsentObjectAndClass(buf);,
 	           $1,Credit,c=unmarshalCredit(buf);,
-                   $1,Site,unmarshalUnsentSite(buf);,
-                   $1,Site2,unmarshalUnsentSite(buf);,)')
+                   $1,Site,s1=unmarshalSite(buf);,
+                   $1,Site2,s2=unmarshalSite(buf);,)')
 
-include(`format.m4')
+include(`msgFormat.m4')
 
 
 
