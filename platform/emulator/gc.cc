@@ -684,20 +684,12 @@ SRecord *SRecord::gcSRecord()
   switch(getType()) {
 
   case R_ABSTRACTION:
-    if (opMode == IN_TC &&
-	isLocalBoard (((Abstraction *) this)->getBoard ()) == NO) {
-      return (this);
-    }
     size = sizeof(Abstraction);
     break;
   case R_OBJECT:
     size = sizeof(Object);
     break;
   case R_CELL:
-    if (opMode == IN_TC &&
-	isLocalBoard(((Cell*)this)->getBoard()) == NO) {
-      return (this);
-    }
     size = sizeof(Cell);
     break;
   case R_CHUNK:
@@ -1091,14 +1083,6 @@ void gcTagged(TaggedRef &fromTerm, TaggedRef &toTerm)
     // put address of ref cell to be updated onto update stack    
     if (updateVar(auxTerm)) {
       updateStack.push(&toTerm);
-#ifdef DEBUG_GC
-      TaggedRef aux = toTerm;
-      while (IsRef (aux) == OK) {
-	if (GCISMARKED(aux) == OK)
-	  break;
-	aux = *(tagged2Ref (aux));
-      }
-#endif
       DebugGCT(updateStackCount++);
       gcVariable(auxTerm);
       toTerm = (TaggedRef) auxTermPtr;
@@ -1745,12 +1729,11 @@ void SRecord::gcRecurse()
 
   case R_ABSTRACTION:
     {
-      varCount++; 
       Abstraction *a = (Abstraction *) this;
       DebugCheck (isFreedRefsArray (a->gRegs),
 		  error ("freed 'g' refs (abs) array in SRecord::gcRecurse ()"));
       a->gRegs = gcRefsArray(a->gRegs);
-      a->home = a->home->gcBoard ();
+      a->name = a->name->gc ();
       break;
     }
     
@@ -1768,9 +1751,8 @@ void SRecord::gcRecurse()
     
   case R_CELL:
     {
-      varCount++;
       Cell *c = (Cell *) this;
-      c->home = c->home->gcBoard();
+      c->name = c->name->gc ();
       gcTagged(c->val,c->val);
       break;
     }
