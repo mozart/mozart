@@ -63,8 +63,16 @@ local
 	 end
       end
    in
-      fun {MakeFileName fVar(X _) Ext}
-	 {String.toAtom {MakeFileNameSub {Atom.toString X} Ext}}
+      fun {MakeFileName fVar(X _) Ext Dir} FN in
+	 FN = {MakeFileNameSub {Atom.toString X} Ext}
+	 case Dir of unit then {String.toAtom FN}
+	 else S in
+	    S = {VirtualString.toString Dir}
+	    case {Reverse S} of &/|_ then {VirtualString.toAtom Dir#FN}
+	    [] &\\|_ then {VirtualString.toAtom Dir#FN}
+	    else {VirtualString.toAtom Dir#'/'#FN}
+	    end
+	 end
       end
    end
 

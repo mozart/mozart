@@ -3,7 +3,7 @@
 %%%   Leif Kornstaedt <kornstae@ps.uni-sb.de>
 %%%
 %%% Copyright:
-%%%   Leif Kornstaedt, 1998
+%%%   Leif Kornstaedt, 1998-2001
 %%%
 %%% Last change:
 %%%   $Date$ by $Author$
@@ -22,7 +22,7 @@
 functor
 import
    Module
-   Property(get)
+   Property(get put)
    System(printInfo printError)
    Error(messageToVirtualString)
    OS(putEnv getEnv system)
@@ -51,12 +51,12 @@ prepare
 		     verbose(rightmost char: &v type: bool default: auto)
 		     quiet(rightmost char: &q alias: verbose#false)
 		     makedepend(rightmost char: &M default: false)
-		     target(rightmost type:atom(unix windows) default:unit)
-		     unix(alias:target#unix)
-		     windows(alias:target#windows)
 
 		     %% options for individual modes
 		     outputfile(single char: &o type: string default: unit)
+		     target(rightmost type: atom(unix windows) default: unit)
+		     unix(alias: target#unix)
+		     windows(alias: target#windows)
 		     execheader(single type: string
 				validate:
 				   alt(when(disj(execpath execfile execwrapper)
@@ -124,7 +124,8 @@ prepare
 
 		     %% compiler options
 		     maxerrors(type: int)
-		     baseurl(char: &b type: string))
+		     baseurl(char: &b type: string)
+		     gumpdirectory(single type: string default: unit))
 
    Usage =
    'You have to choose one of the following modes of operation:\n'#
@@ -198,20 +199,24 @@ prepare
    'The following compiler options can be set:\n'#
    '--maxerrors=N                 Limit the number of errors reported to N.\n'#
    '--baseurl=STRING              Set the base URL to resolve imports of\n'#
-   '                              computed functors to STRING.\n'
+   '                              computed functors to STRING.\n'#
+   '--gumpdirectory=STRING        Set the directory where Gump will create\n'#
+   '                              its output files to STRING.\n'
 define
+   Platform = {Property.get 'platform.os'}
+
    fun {MakeExecHeader Path}
       '#!/bin/sh\nexec '#Path#' $0 "$@"\n'
    end
    fun {MakeExecFile File}
       {Property.get 'oz.home'}#'/bin/'#File
    end
+
    DefaultExecWindows = file({MakeExecFile 'ozwrapper.bin'})
-   DefaultExecUnix    = string({MakeExecHeader 'ozengine'})
-   DefaultExec = case {Property.get 'platform.os'} of win32 then
-		    DefaultExecWindows
-		 else
-		    DefaultExecUnix
+   DefaultExecUnix = string({MakeExecHeader 'ozengine'})
+
+   DefaultExec = case Platform of win32 then DefaultExecWindows
+		 else DefaultExecUnix
 		 end
 
    local
@@ -269,6 +274,10 @@ define
    end
 
    local
+      fun {NotIsDirSep C}
+	 C \= &/ andthen (Platform \= win32 orelse C \= &\\)
+      end
+
       fun {ChangeExtensionSub S NewExt}
 	 case S of ".oz" then NewExt
 	 elseof ".ozg" then NewExt
@@ -280,7 +289,13 @@ define
    in
       fun {ChangeExtension S NewExt}
 	 {ChangeExtensionSub
-	  {Reverse {List.takeWhile {Reverse S} fun {$ C} C \= &/ end}} NewExt}
+	  {Reverse {List.takeWhile {Reverse S} NotIsDirSep}} NewExt}
+      end
+
+      fun {Dirname S}
+	 case S of stdout then unit
+	 else {Reverse {List.dropWhile {Reverse S} NotIsDirSep}}
+	 end
       end
    end
 
@@ -354,9 +369,7 @@ in
       {OS.putEnv 'OZPATH'
        {FoldL {Access IncDir}
 	fun {$ In S}
-	   {Append S case {Property.get 'platform.os'} of win32 then &;
-		     else &:
-		     end|In}
+	   {Append S case Platform of win32 then &; else &: end|In}
 	end
 	case {OS.getEnv 'OZPATH'} of false then "."
 	elseof S then S
@@ -376,7 +389,7 @@ in
 			     'an output file name is given'))}
       else
 	 {ForAll FileNames
-	  proc {$ Arg} OFN R in
+	  proc {$ Arg} OFN GumpDir R in
 	     {UI reset()}
 	     case OptRec.outputfile of unit then
 		case OptRec.mode of core then
@@ -395,14 +408,13 @@ in
 		   OFN = unit
 		[] dump then
 		   OFN = {ChangeExtension Arg ".ozf"}
-		[] executable then EXT in
-		   case OptRec.target
-		   of unix then EXT=""
-		   [] windows then EXT=".exe"
-		   elsecase {Property.get 'platform.os'}
-		   of win32 then EXT=".exe"
-		   else EXT="" end
-		   OFN={ChangeExtension Arg EXT}
+		[] executable then ExeExt in
+		   ExeExt = case OptRec.target of unix then ""
+			    [] windows then ".exe"
+			    elsecase Platform of win32 then ".exe"
+			    else ""
+			    end
+		   OFN = {ChangeExtension Arg ExeExt}
 		end
 	     elseof "-" then
 		if OptRec.mode == dump orelse OptRec.mode == executable
@@ -423,6 +435,13 @@ in
 		   OFN = OptRec.outputfile
 		end
 	     end
+	     GumpDir = case OptRec.gumpdirectory of unit then
+			  case {Dirname OFN} of "" then unit
+			  elseof Dir then Dir
+			  end
+		       elseof Dir then Dir
+		       end
+	     {BatchCompiler enqueue(setGumpDirectory(GumpDir))}
 	     {BatchCompiler enqueue(pushSwitches())}
 	     if OptRec.makedepend then
 		{BatchCompiler enqueue(setSwitch(unnest false))}
@@ -498,7 +517,7 @@ in
 			   [] string(S) then S
 			   end
 		   {Pickle.saveWithHeader R OFN Exec2 OptRec.compress}
-		   case {Property.get 'platform.os'} of win32 then skip
+		   case Platform of win32 then skip
 		   elsecase {OS.system 'chmod +x '#OFN} of 0 then skip
 		   elseof N then
 		      {Report
