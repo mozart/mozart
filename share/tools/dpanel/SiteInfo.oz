@@ -24,7 +24,7 @@
 
 functor
 import
-   DPPane(siteStatistics) at 'x-oz://boot/DPPane'
+   DPStatistics(siteStatistics) at 'x-oz://boot/DPStatistics'
    DPB at 'x-oz://boot/DPB'
 export
    sitesDict:SitesDict
@@ -263,7 +263,7 @@ define
 	 lock
 	    Generation<-(@Generation + 1) mod 100
 	    if I == none then
-	       SST = {DPPane.siteStatistics}
+	       SST = {DPStatistics.siteStatistics}
 	    else
 	       SST = I
 	    end

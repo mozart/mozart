@@ -25,7 +25,7 @@
 functor
 import
    Colour(list)
-   DPPane(getNetInfo) at 'x-oz://boot/DPPane'
+   DPStatistics(getNetInfo) at 'x-oz://boot/DPStatistics'
    DPB at 'x-oz://boot/DPB'
 export
    netInfo:NetInfo
@@ -123,7 +123,7 @@ define
 	    end
 	 end
       in
-	 {DPPane.getNetInfo Data}
+	 {DPStatistics.getNetInfo Data}
 	 {List.forAll Data Store}
       end
 

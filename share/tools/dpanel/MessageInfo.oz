@@ -22,7 +22,7 @@
 
 functor
 import
-   DPPane(perdioStatistics) at 'x-oz://boot/DPPane'
+   DPStatistics(perdioStatistics) at 'x-oz://boot/DPStatistics'
 export
    MessageDiffInfoClass
 define
@@ -40,7 +40,7 @@ define
       end
 
       meth display
-	 S={DPPane.perdioStatistics}
+	 S={DPStatistics.perdioStatistics}
       in
 	 {self.messageReceive update(S.recv.messages)}
 	 {self.messageSend update(S.send.messages)}
