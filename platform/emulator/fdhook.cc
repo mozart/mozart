@@ -21,6 +21,7 @@
 #include "suspension.hh"
 #include "trail.hh"
 #include "thread.hh"
+#include "fdhook.hh"
 
 Suspension* FDcurrentTaskSusp = NULL;
 
@@ -79,9 +80,43 @@ Suspension * makeHeadSuspension(OZ_Bool (*fun)(int,OZ_Term[]),
 }
 
 
+
 SuspList * addSuspToList(SuspList * list, SuspList * elem, Board * home)
 {
+#ifdef DEBUG_STABLE
+  static Suspension * board_constraints_susp = NULL;
+  if (board_constraints_susp != elem->getSusp()) {
+    board_constraints_susp = elem->getSusp();
+    board_constraints = new SuspList(board_constraints_susp,board_constraints);
+  }
+#endif
+
   updateExtSuspension (home->getBoardDeref(), elem->getSusp());
   elem->setNext(list);
   return elem;
 }
+
+#ifdef DEBUG_STABLE
+SuspList * board_constraints = NULL;
+
+void printBC(ostream &ofile, Board * b)
+{
+  for (SuspList * sl = board_constraints; sl != NULL; sl = sl->getNext()) {
+    Suspension * s = sl->getSusp();
+    if (s->isDead())
+      continue;
+    if (s->getNode()->getBoardDeref() == NULL)
+      continue;
+
+    if (sl->isCondSusp())
+      ofile << ((CondSuspList*)sl)->getCondNum() << " conds";
+    else
+      ofile << "true";
+
+    s->print(ofile);
+    ofile << "  " << (void *) b << endl;
+
+  }
+  ofile.flush();
+}
+#endif
