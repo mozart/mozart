@@ -30,6 +30,8 @@ X();  \
 (X&); 
 
 OZ_Return remoteSend(Tertiary *p, char *biName, TaggedRef msg);
+void portSend(Tertiary *p, TaggedRef msg);
+
 void cellDoExchange(Tertiary*,TaggedRef,TaggedRef,Thread*);
 void cellDoAccess(Tertiary*,TaggedRef);
 
