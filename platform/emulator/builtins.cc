@@ -5854,8 +5854,7 @@ OZ_C_proc_end
 OZ_C_proc_begin(BIprintError,1)
 {
   oz_declareArg(0,t);
-  // print popup code for opi
-  if (ozconf.runningUnderEmacs) printf("\021");
+  prefixError(); // print popup code for opi
   OZ_printVirtualString(t);
   fflush(stdout);
   return PROCEED;
