@@ -28,7 +28,7 @@
       <Item>
 	<Ref.extern to="applets/DictClient.oza"/Start Applet/
       <Item>
-	<Ref.extern to="ozdoc:install" key="applets"/How to enable Applets/
+	<Ref.extern to="ozdoc:install" key="appendix.applets"/How to enable Applets/
     </List>
   <Para class=apropos><Title/The Protocol/
     The Dictionary Server Protocol (DICT) is a TCP transaction based
