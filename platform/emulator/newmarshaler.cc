@@ -35,6 +35,8 @@
 #include "newmarshaler.hh"
 #include "boot-manager.hh"
 
+// Exception handling for robust unmarshaler
+jmp_buf unmarshal_error_jmp;
 
 GName *globalizeConst(ConstTerm *t, MsgBuffer *bs)
 {
@@ -487,12 +489,675 @@ void Marshaler::processSync()
 Marshaler marshaler;
 Builder builder;
 
-// for newUnmarshalTerm see unmarshaling.cc
+//
+//
+OZ_Term newUnmarshalTermInternal(MsgBuffer *bs)
+{
+  Assert(isInitialized);
+  Assert(oz_onToplevel());
+  builder.build();
+  Builder *b;
+
 #ifndef USE_FAST_UNMARSHALER
-#include "robust_unmarshaling.cc"
-#else
-#include "fast_unmarshaling.cc"
+  TRY_UNMARSHAL_ERROR {
 #endif
+    while(1) {
+      b = &builder;
+      MarshalTag tag = (MarshalTag) bs->get();
+      dif_counter[tag].recv();  // kost@ : TODO: needed?
+      //      printf("tag: %d\n", tag);
+
+      switch (tag) {
+
+      case DIF_SMALLINT:
+        {
+#ifndef USE_FAST_UNMARSHALER
+          int e;
+          OZ_Term ozInt = OZ_int(unmarshalNumberRobust(bs, &e));
+          if(e || !OZ_isSmallInt(ozInt)) {
+            (void) b->finish();
+            return 0;
+          }
+#else
+          OZ_Term ozInt = OZ_int(unmarshalNumber(bs));
+#endif
+          b->buildValue(ozInt);
+          break;
+        }
+
+      case DIF_FLOAT:
+        {
+#ifndef USE_FAST_UNMARSHALER
+          int e;
+          double f = unmarshalFloatRobust(bs, &e);
+          if(e) {
+            (void) b->finish();
+            return 0;
+          }
+#else
+          double f = unmarshalFloat(bs);
+#endif
+          b->buildValue(OZ_float(f));
+          break;
+        }
+
+      case DIF_NAME:
+        {
+#ifndef USE_FAST_UNMARSHALER
+          int e1,e2,e3;
+          int refTag = unmarshalRefTagRobust(bs, b, &e1);
+          char *printname = unmarshalStringRobust(bs, &e2);
+          OZ_Term value;
+          GName *gname    = unmarshalGNameRobust(&value, bs, &e3);
+          if(e1 || e2 || e3) {
+            (void) b->finish();
+            return 0;
+          }
+#else
+          int refTag = unmarshalRefTag(bs);
+          char *printname = unmarshalString(bs);
+          OZ_Term value;
+          GName *gname    = unmarshalGName(&value, bs);
+#endif
+
+          if (gname) {
+            Name *aux;
+            if (strcmp("", printname) == 0) {
+              aux = Name::newName(am.currentBoard());
+            } else {
+              aux = NamedName::newNamedName(strdup(printname));
+            }
+            aux->import(gname);
+            value = makeTaggedLiteral(aux);
+            b->buildValue(value);
+            addGName(gname, value);
+          } else {
+            b->buildValue(value);
+          }
+
+          //
+          b->set(value, refTag);
+          delete printname;
+          break;
+        }
+
+      case DIF_COPYABLENAME:
+        {
+#ifndef USE_FAST_UNMARSHALER
+          int e1,e2;
+          int refTag      = unmarshalRefTagRobust(bs, b, &e1);
+          char *printname = unmarshalStringRobust(bs, &e2);
+          if(e1 || e2 || (printname == NULL)) {
+            (void) b->finish();
+            return 0;
+          }
+#else
+          int refTag      = unmarshalRefTag(bs);
+          char *printname = unmarshalString(bs);
+#endif
+          OZ_Term value;
+
+          NamedName *aux = NamedName::newCopyableName(strdup(printname));
+          value = makeTaggedLiteral(aux);
+          b->buildValue(value);
+          b->set(value, refTag);
+          delete printname;
+          break;
+        }
+
+      case DIF_UNIQUENAME:
+        {
+#ifndef USE_FAST_UNMARSHALER
+          int e1,e2;
+          int refTag      = unmarshalRefTagRobust(bs, b, &e1);
+          char *printname = unmarshalStringRobust(bs, &e2);
+          if(e1 || e2 || (printname == NULL)) {
+            (void) b->finish();
+            return 0;
+          }
+#else
+          int refTag      = unmarshalRefTag(bs);
+          char *printname = unmarshalString(bs);
+#endif
+          OZ_Term value;
+
+          value = oz_uniqueName(printname);
+          b->buildValue(value);
+          b->set(value, refTag);
+          delete printname;
+          break;
+        }
+
+      case DIF_ATOM:
+        {
+#ifndef USE_FAST_UNMARSHALER
+          int e1,e2;
+          int refTag = unmarshalRefTagRobust(bs, b, &e1);
+          char *aux  = unmarshalStringRobust(bs, &e2);
+          if(e1 || e2) {
+            (void) b->finish();
+            return 0;
+          }
+#else
+          int refTag = unmarshalRefTag(bs);
+          char *aux  = unmarshalString(bs);
+#endif
+          OZ_Term value = OZ_atom(aux);
+          b->buildValue(value);
+          b->set(value, refTag);
+          delete aux;
+          break;
+        }
+
+      case DIF_BIGINT:
+        {
+#ifndef USE_FAST_UNMARSHALER
+          int e;
+          char *aux  = unmarshalStringRobust(bs, &e);
+          if(e || (aux == NULL)) {
+            (void) b->finish();
+            return 0;
+          }
+#else
+          char *aux  = unmarshalString(bs);
+#endif
+          b->buildValue(OZ_CStringToNumber(aux));
+          delete aux;
+          break;
+        }
+
+      case DIF_LIST:
+        {
+#ifndef USE_FAST_UNMARSHALER
+          int e;
+          int refTag = unmarshalRefTagRobust(bs, b, &e);
+          if(e) {
+            (void) b->finish();
+            return 0;
+          }
+#else
+          int refTag = unmarshalRefTag(bs);
+#endif
+          b->buildListRemember(refTag);
+          break;
+        }
+
+      case DIF_TUPLE:
+        {
+#ifndef USE_FAST_UNMARSHALER
+          int e1,e2;
+          int refTag = unmarshalRefTagRobust(bs, b, &e1);
+          int argno  = unmarshalNumberRobust(bs, &e2);
+          if(e1 || e2) {
+            (void) b->finish();
+            return 0;
+          }
+#else
+          int refTag = unmarshalRefTag(bs);
+          int argno  = unmarshalNumber(bs);
+#endif
+          b->buildTupleRemember(argno, refTag);
+          break;
+        }
+
+      case DIF_RECORD:
+        {
+#ifndef USE_FAST_UNMARSHALER
+          int e;
+          int refTag = unmarshalRefTagRobust(bs, b, &e);
+          if(e) {
+            (void) b->finish();
+            return 0;
+          }
+#else
+          int refTag = unmarshalRefTag(bs);
+#endif
+          b->buildRecordRemember(refTag);
+          break;
+        }
+
+      case DIF_REF:
+        {
+#ifndef USE_FAST_UNMARSHALER
+          int e;
+          int i = unmarshalNumberRobust(bs, &e);
+          if(e || !b->checkIndexFound(i)) {
+            (void) b->finish();
+            return 0;
+          }
+#else
+          int i = unmarshalNumber(bs);
+#endif
+          b->buildValue(b->get(i));
+          break;
+        }
+
+        //
+        // kost@ : remember that either all DIF_OBJECT, DIF_VAR_OBJECT and
+        // DIF_OWNER are remembered, or none of them is remembered. That's
+        // because both 'marshalVariable' and 'marshalObject' could yield
+        // 'DIF_OWNER' (see also dpInterface.hh);
+      case DIF_OWNER:
+      case DIF_OWNER_SEC:
+        {
+#ifndef USE_FAST_UNMARSHALER
+          int e1,e2;
+          OZ_Term tert = (*unmarshalOwnerRobust)(bs, tag, &e1);
+          int refTag = unmarshalRefTagRobust(bs, b, &e2);
+          if(e1 || e2) {
+            (void) b->finish();
+            return 0;
+          }
+#else
+          OZ_Term tert = (*unmarshalOwner)(bs, tag);
+          int refTag = unmarshalRefTag(bs);
+#endif
+          b->buildValueRemember(tert, refTag);
+          break;
+        }
+
+      case DIF_RESOURCE_T:
+      case DIF_PORT:
+      case DIF_THREAD_UNUSED:
+      case DIF_SPACE:
+      case DIF_CELL:
+      case DIF_LOCK:
+      case DIF_OBJECT:
+        {
+#ifndef USE_FAST_UNMARSHALER
+          int e1,e2;
+          OZ_Term tert = (*unmarshalTertiaryRobust)(bs, tag, &e1);
+          int refTag = unmarshalRefTagRobust(bs, b, &e2);
+          if(e1 || e2) {
+            (void) b->finish();
+            return 0;
+          }
+#else
+          OZ_Term tert = (*unmarshalTertiary)(bs, tag);
+          int refTag = unmarshalRefTag(bs);
+#endif
+          b->buildValueRemember(tert, refTag);
+          break;
+        }
+
+      case DIF_RESOURCE_N:
+        {
+#ifndef USE_FAST_UNMARSHALER
+          int e;
+          OZ_Term tert = (*unmarshalTertiaryRobust)(bs, tag, &e);
+          if(e) {
+            (void) b->finish();
+            return 0;
+          }
+#else
+          OZ_Term tert = (*unmarshalTertiary)(bs, tag);
+#endif
+          b->buildValue(tert);
+          break;
+        }
+
+      case DIF_CHUNK:
+        {
+#ifndef USE_FAST_UNMARSHALER
+          int e1,e2;
+          int refTag = unmarshalRefTagRobust(bs, b, &e1);
+          OZ_Term value;
+          GName *gname = unmarshalGNameRobust(&value, bs, &e2);
+          if(e1 || e2) {
+            (void) b->finish();
+            return 0;
+          }
+#else
+          int refTag = unmarshalRefTag(bs);
+          OZ_Term value;
+          GName *gname = unmarshalGName(&value, bs);
+#endif
+
+          if (gname) {
+            b->buildChunkRemember(gname,refTag);
+          } else {
+            b->knownChunk(value);
+            b->set(value,refTag);
+          }
+          break;
+        }
+
+      case DIF_CLASS:
+        {
+          OZ_Term value;
+#ifndef USE_FAST_UNMARSHALER
+          int e1,e2,e3;
+          int refTag = unmarshalRefTagRobust(bs, b, &e1);
+          GName *gname = unmarshalGNameRobust(&value, bs, &e2);
+          int flags = unmarshalNumberRobust(bs, &e3);
+          if(e1 || e2 || e3 || (flags > CLASS_FLAGS_MAX)) {
+            (void) b->finish();
+            return 0;
+          }
+#else
+          int refTag = unmarshalRefTag(bs);
+          GName *gname = unmarshalGName(&value, bs);
+          int flags = unmarshalNumber(bs);
+#endif
+
+          if (gname) {
+            b->buildClassRemember(gname,flags,refTag);
+          } else {
+            b->knownClass(value);
+            b->set(value,refTag);
+          }
+          break;
+        }
+
+      case DIF_VAR:
+        {
+#ifndef USE_FAST_UNMARSHALER
+          int e;
+          OZ_Term v = (*unmarshalVarRobust)(bs, FALSE, FALSE, &e);
+          if(e) {
+            (void) b->finish();
+            return 0;
+          }
+          int refTag = unmarshalRefTagRobust(bs, b, &e);
+          if(e) {
+            (void) b->finish();
+            return 0;
+          }
+#else
+          OZ_Term v = (*unmarshalVar)(bs, FALSE, FALSE);
+          int refTag = unmarshalRefTag(bs);
+#endif
+          b->buildValueRemember(v, refTag);
+          break;
+        }
+
+      case DIF_FUTURE:
+        {
+#ifndef USE_FAST_UNMARSHALER
+          int e1,e2;
+          OZ_Term f = (*unmarshalVarRobust)(bs, TRUE, FALSE, &e1);
+          int refTag = unmarshalRefTagRobust(bs, b, &e2);
+          if(e1 || e2) {
+            (void) b->finish();
+            return 0;
+          }
+#else
+          OZ_Term f = (*unmarshalVar)(bs, TRUE, FALSE);
+          int refTag = unmarshalRefTag(bs);
+#endif
+          b->buildValueRemember(f, refTag);
+          break;
+        }
+
+      case DIF_VAR_AUTO:
+        {
+#ifndef USE_FAST_UNMARSHALER
+          int e1,e2;
+          OZ_Term va = (*unmarshalVarRobust)(bs, FALSE, TRUE, &e1);
+          int refTag = unmarshalRefTagRobust(bs, b, &e2);
+          if(e1 || e2) {
+            (void) b->finish();
+            return 0;
+          }
+#else
+          OZ_Term va = (*unmarshalVar)(bs, FALSE, TRUE);
+          int refTag = unmarshalRefTag(bs);
+#endif
+          b->buildValueRemember(va, refTag);
+          break;
+        }
+
+      case DIF_FUTURE_AUTO:
+        {
+#ifndef USE_FAST_UNMARSHALER
+          int e1,e2;
+          OZ_Term fa = (*unmarshalVarRobust)(bs, TRUE, TRUE, &e1);
+          int refTag = unmarshalRefTagRobust(bs, b, &e2);
+          if(e1 || e2) {
+            (void) b->finish();
+            return 0;
+          }
+#else
+          OZ_Term fa = (*unmarshalVar)(bs, TRUE, TRUE);
+          int refTag = unmarshalRefTag(bs);
+#endif
+          b->buildValueRemember(fa, refTag);
+          break;
+        }
+
+      case DIF_VAR_OBJECT:
+        {
+#ifndef USE_FAST_UNMARSHALER
+          int e1,e2;
+          OZ_Term obj = (*unmarshalTertiaryRobust)(bs, tag, &e1);
+          int refTag = unmarshalRefTagRobust(bs, b, &e2);
+          if(e1 || e2) {
+            (void) b->finish();
+            return 0;
+          }
+#else
+          OZ_Term obj = (*unmarshalTertiary)(bs, tag);
+          int refTag = unmarshalRefTag(bs);
+#endif
+          b->buildValueRemember(obj, refTag);
+          break;
+        }
+
+      case DIF_PROC:
+        {
+          OZ_Term value;
+#ifndef USE_FAST_UNMARSHALER
+          int e1,e2,e3,e4,e5,e6,e7,e8;
+          int refTag    = unmarshalRefTagRobust(bs, b, &e1);
+          GName *gname  = unmarshalGNameRobust(&value, bs, &e2);
+          int arity     = unmarshalNumberRobust(bs, &e3);
+          int gsize     = unmarshalNumberRobust(bs, &e4);
+          int maxX      = unmarshalNumberRobust(bs, &e5);
+          int line      = unmarshalNumberRobust(bs, &e6);
+          int column    = unmarshalNumberRobust(bs, &e7);
+          int codesize  = unmarshalNumberRobust(bs, &e8); // in ByteCode"s;
+          if(e1 || e2 || e3 || e4 || e5 || e6 || e7 || e8) {
+            (void) b->finish();
+            return 0;
+          }
+          if (maxX < 0 || maxX >= NumberOfXRegisters) {
+            (void) b->finish();
+            return 0;
+          }
+#else
+          int refTag    = unmarshalRefTag(bs);
+          GName *gname  = unmarshalGName(&value, bs);
+          int arity     = unmarshalNumber(bs);
+          int gsize     = unmarshalNumber(bs);
+          int maxX      = unmarshalNumber(bs);
+          int line      = unmarshalNumber(bs);
+          int column    = unmarshalNumber(bs);
+          int codesize  = unmarshalNumber(bs); // in ByteCode"s;
+#endif
+
+          //
+          if (gname) {
+            //
+            CodeArea *code = new CodeArea(codesize);
+            ProgramCounter start = code->getStart();
+            ProgramCounter pc = start + sizeOf(DEFINITION);
+            //
+            BuilderCodeAreaDescriptor *desc =
+              new BuilderCodeAreaDescriptor(start, start+codesize, code);
+            b->buildBinary(desc);
+
+            //
+            b->buildProcRemember(gname, arity, gsize, maxX, line, column,
+                                 pc, refTag);
+          } else {
+            Assert(oz_isAbstraction(oz_deref(value)));
+            // ('zero' descriptions are not allowed;)
+            BuilderCodeAreaDescriptor *desc =
+              new BuilderCodeAreaDescriptor(0, 0, 0);
+            b->buildBinary(desc);
+
+            //
+            b->knownProcRemember(value, refTag);
+          }
+          break;
+        }
+
+        //
+        // 'DIF_CODEAREA' is an artifact due to the non-recursive
+        // unmarshaling of code areas: in order to unmarshal an Oz term
+        // that occurs in an instruction, unmarshaling of instructions
+        // must be interrupted and later resumed; 'DIF_CODEAREA' tells the
+        // unmarshaler that a new code area chunk begins;
+      case DIF_CODEAREA:
+        {
+          BuilderOpaqueBA opaque;
+          BuilderCodeAreaDescriptor *desc =
+            (BuilderCodeAreaDescriptor *) b->fillBinary(opaque);
+          //
+#ifndef USE_FAST_UNMARSHALER
+          switch (unmarshalCodeRobust(bs, b, desc)) {
+          case ERR:
+            (void) b->finish();
+            return 0;
+          case OK:
+            b->finishFillBinary(opaque);
+            break;
+          case NO:
+            b->suspendFillBinary(opaque);
+            break;
+          }
+#else
+          if (unmarshalCode(bs, b, desc))
+            b->finishFillBinary(opaque);
+          else
+            b->suspendFillBinary(opaque);
+#endif
+          break;
+        }
+
+      case DIF_DICT:
+        {
+#ifndef USE_FAST_UNMARSHALER
+          int e1,e2;
+          int refTag = unmarshalRefTagRobust(bs, b, &e1);
+          int size   = unmarshalNumberRobust(bs, &e2);
+          if(e1 || e2) {
+            (void) b->finish();
+            return 0;
+          }
+#else
+          int refTag = unmarshalRefTag(bs);
+          int size   = unmarshalNumber(bs);
+#endif
+          Assert(oz_onToplevel());
+          b->buildDictionaryRemember(size,refTag);
+          break;
+        }
+
+      case DIF_BUILTIN:
+        {
+#ifndef USE_FAST_UNMARSHALER
+          int e1,e2;
+          int refTag = unmarshalRefTagRobust(bs, b, &e1);
+          char *name = unmarshalStringRobust(bs, &e2);
+          if(e1 || e2 || (name == NULL)) {
+            (void) b->finish();
+            return 0;
+          }
+#else
+          int refTag = unmarshalRefTag(bs);
+          char *name = unmarshalString(bs);
+#endif
+          Builtin * found = string2CBuiltin(name);
+
+          OZ_Term value;
+          if (!found) {
+            OZ_warning("Builtin '%s' not in table.", name);
+            value = oz_nil();
+            delete name;
+          } else {
+            if (found->isSited()) {
+              OZ_warning("Unpickling sited builtin: '%s'", name);
+            }
+
+            delete name;
+            value = makeTaggedConst(found);
+          }
+          b->buildValue(value);
+          b->set(value, refTag);
+          break;
+        }
+
+      case DIF_EXTENSION:
+        {
+#ifndef USE_FAST_UNMARSHALER
+          int e;
+          int type = unmarshalNumberRobust(bs, &e);
+          if(e) {
+            (void) b->finish();
+            return 0;
+          }
+#else
+          int type = unmarshalNumber(bs);
+#endif
+          OZ_Term value = oz_extension_unmarshal(type,bs);
+          if(value == 0) {
+            break;  // next value is nogood
+          }
+          b->buildValue(value);
+          break;
+        }
+
+      case DIF_FSETVALUE:
+        b->buildFSETValue();
+        break;
+
+      case DIF_REF_DEBUG:
+#ifndef USE_FAST_UNMARSHALER
+        (void) b->finish();
+        return 0;
+#else
+        OZD_error("not implemented!");
+#endif
+
+      case DIF_ARRAY:
+#ifndef USE_FAST_UNMARSHALER
+        (void) b->finish();
+        return 0;
+#else
+        OZD_error("not implemented!");
+        break;
+#endif
+
+        //
+        // 'DIF_SYNC' and its handling is a part of the interfaca
+        // between the builder object and the unmarshaler itself:
+      case DIF_SYNC:
+        b->processSync();
+        break;
+
+      case DIF_EOF:
+        return (b->finish());
+
+      default:
+#ifndef USE_FAST_UNMARSHALER
+        (void) b->finish();
+        return 0;
+#else
+        DebugCode(OZ_error("unmarshal: unexpected tag: %d\n",tag);)
+        Assert(0);
+        b->buildValue(oz_nil());
+#endif
+      }
+    }
+#ifndef USE_FAST_UNMARSHALER
+  }
+  CATCH_UNMARSHAL_ERROR {
+    (void) b->finish();
+    return 0;
+  }
+#endif
+}
 
 SendRecvCounter dif_counter[DIF_LAST];
 SendRecvCounter misc_counter[MISC_LAST];

@@ -260,11 +260,7 @@ void newMarshalerFinishBatch()
 }
 
 //
-#ifdef USE_FAST_UNMARSHALER
 OZ_Term newUnmarshalTermInternal(MsgBuffer *);
-#else
-OZ_Term newUnmarshalTermRobustInternal(MsgBuffer *);
-#endif
 
 //
 // Interface procedures.
@@ -279,7 +275,7 @@ inline
 OZ_Term newUnmarshalTermRobust(MsgBuffer *bs)
 {
   builder.resetIndexChecker();
-  OZ_Term n = newUnmarshalTermRobustInternal(bs);
+  OZ_Term n = newUnmarshalTermInternal(bs);
   return n;
 }
 #endif
