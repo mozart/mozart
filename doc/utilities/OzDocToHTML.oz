@@ -207,36 +207,34 @@ define
    end
 
    local
-      fun {GetNext Ts}
+      fun {GetNext Ts N}
          case Ts of T|Tr then
-            case T of up then {GetNext Tr}
-            [] down(_) then {GetNext Tr}
-            else T
+            case T of nav(_) then
+               if N == 0 then sect(Node Label)|_ = Tr in Node#"#"#Label
+               elseif N < 0 then unit
+               else {GetNext Tr N}
+               end
+            [] sect(_ _) then {GetNext Tr N}
+            [] up then
+               {GetNext Tr N - 1}
+            [] down(_) then {GetNext Tr N + 1}
             end
          [] nil then unit
          end
       end
    in
-      proc {DoThreading Ts Prev1 Prev2 Ups}
+      proc {DoThreading Ts Prev Ups}
          case Ts of T|Rest then
-            case T of sect(Node Label) then
-               case {GetNext Rest} of nav(_) then
-                  {DoThreading Rest Prev2 Node#"#"#Label Ups}
-               else
-                  {DoThreading Rest Prev1 Prev2 Ups}
-               end
-            [] nav(HTML) then Navs in
-               Navs = [case Prev1 of unit then EMPTY
-                       else
-                          td(a(href: Prev1 PCDATA('<< Prev')))
+            case T of nav(HTML) then Navs in
+               Navs = [case Prev of unit then EMPTY
+                       else td(a(href: Prev PCDATA('<< Prev')))
                        end
-                       case Ups of Node|_ then
+                       case Ups of nil then EMPTY
+                       elseof Node#_|_ then
                           td(a(href: Node VERBATIM('- Up -')))
-                       [] nil then EMPTY
                        end
-                       case {GetNext Rest} of sect(Node Label) then
-                          td(a(href: Node#"#"#Label PCDATA('Next >>')))
-                       else EMPTY
+                       case {GetNext Rest 0} of unit then EMPTY
+                       elseof To then td(a(href: To PCDATA('Next >>')))
                        end]
                HTML = if {All Navs fun {$ Nav} Nav == EMPTY end} then EMPTY
                       else
@@ -244,11 +242,20 @@ define
                                cellpadding: 6 cellspacing: 6
                                tr(bgcolor: '#DDDDDD' SEQ(Navs)))
                       end
-               {DoThreading Rest Prev1 Prev2 Ups}
+               {DoThreading Rest unit Ups}
+            [] sect(Node Label) then NewPrev in
+               NewPrev = case Prev of unit then Node#"#"#Label
+                         else Prev
+                         end
+               {DoThreading Rest NewPrev Ups}
             [] down(Node) then
-               {DoThreading Rest Prev1 Prev2 Node|Ups}
-            [] up then _|Upr = Ups in
-               {DoThreading Rest Prev1 Prev2 Upr}
+               {DoThreading Rest unit Node#Prev|Ups}
+            [] up then
+               case Rest of down(Node)|Rest2 then
+                  {DoThreading Rest2 Prev Ups}
+               else _#OldPrev|Upr = Ups in
+                  {DoThreading Rest OldPrev Upr}
+               end
             end
          elseof nil then skip
          end
@@ -262,7 +269,8 @@ define
          FontifyMode: unit
          MyFontifier: unit
          % constructing the output:
-         OutputDirectory: unit CurrentNode: unit NodeCounter: unit
+         OutputDirectory: unit
+         CurrentNode: unit NavigationPanel: unit NodeCounter: unit
          ToWrite: unit
          Split: unit
          MakeAbstract: unit
@@ -329,7 +337,7 @@ define
          try
             SGMLNode = {SGML.parse Args.'in' @Reporter}
             if {@Reporter hasSeenError($)} then skip
-            else
+            else N in
                FontifyMode <- Mode
                StyleSheet <- {Property.get 'ozdoc.stylesheet'}
                MyFontifier <- {New Fontifier.'class' init(@Meta)}
@@ -348,12 +356,13 @@ define
                                      init(Args.'xrefdir' Args.'xreftree'
                                           Args.'xrefdb' @Reporter)}
                CurrentNode <- 'index.html'
+               NavigationPanel <- N
                NodeCounter <- 0
                ToWrite <- nil
                Split <- Args.'split'
                MakeAbstract <- Args.'abstract'
                SomeSplit <- false
-               Threading <- nil
+               Threading <- [nav(N)]
                ProgLang <- Fontifier.noProgLang
                Labels <- {NewDictionary}
                ToGenerate <- nil
@@ -364,7 +373,7 @@ define
             if {@Reporter hasSeenError($)} then skip
             else
                {@Reporter startSubPhase('adding navigation panels')}
-               {DoThreading {Reverse @Threading} unit 'index.html' nil}
+               {DoThreading {Reverse @Threading} unit nil}
                {@Reporter startSubPhase('generating cross-reference labels')}
                OzDocToHTML, GenerateLabels()
                {ForAll {Dictionary.items @Labels}
@@ -1524,11 +1533,12 @@ define
             HTML = if @TOCMode then hr()
                    else EMPTY
                    end
-         elseof Node then
+         elseof Node then N in
             SomeSplit <- true
-            X = @CurrentNode#@TOC#@TOCMode
-            Threading <- down(@CurrentNode)|@Threading
+            X = @NavigationPanel#@CurrentNode#@TOC#@TOCMode
+            Threading <- nav(N)|down(@CurrentNode)|@Threading
             CurrentNode <- Node
+            NavigationPanel <- N
             TOC <- nil
             HTML = EMPTY
          end
@@ -1556,11 +1566,12 @@ define
          [] nil then unit
          end
       end
-      meth PrepareTOCNode(?X ?HTML)
+      meth PrepareTOCNode(?X ?HTML) N in
          SomeSplit <- true
-         X = @CurrentNode#@TOC#@TOCMode
-         Threading <- down(@CurrentNode)|@Threading
+         X = @NavigationPanel#@CurrentNode#@TOC#@TOCMode
+         Threading <- nav(N)|down(@CurrentNode)|@Threading
          CurrentNode <- 'toc.html'
+         NavigationPanel <- N
          TOC <- nil
          HTML = EMPTY
          TOCMode <- false
@@ -1578,11 +1589,12 @@ define
                                         X HTML)
       end
       meth PrepareBackMatter(SplitMeta NodeName ?X ?HTML)
-         if @Split andthen {Dictionary.member @Meta SplitMeta} then
+         if @Split andthen {Dictionary.member @Meta SplitMeta} then N in
             SomeSplit <- true
-            X = @CurrentNode#@TOC#@TOCMode
-            Threading <- down(@CurrentNode)|@Threading
+            X = @NavigationPanel#@CurrentNode#@TOC#@TOCMode
+            Threading <- nav(N)|down(@CurrentNode)|@Threading
             CurrentNode <- NodeName
+            NavigationPanel <- N
             TOC <- nil
             HTML = EMPTY
          else
@@ -1595,9 +1607,10 @@ define
       end
       meth FinishNode(Title X HTML $)
          case X of unit then HTML
-         [] C#T#M then Depth Res in
+         [] N#C#T#M then Depth Res in
             OzDocToHTML, MakeNode(Title HTML)
             Threading <- up|@Threading
+            NavigationPanel <- N
             CurrentNode <- C
             Depth = if C == 'index.html' andthen {IsFree @WholeTOC} then 1
                     else ~1
@@ -1610,12 +1623,7 @@ define
             Res
          end
       end
-      meth MakeNode(Title BodyContents) NextHTML Node in
-         if @TOCMode then
-            NextHTML = EMPTY
-         else
-            Threading <- nav(NextHTML)|@Threading
-         end
+      meth MakeNode(Title BodyContents) Node in
          Node = html(head(title(thread {HTML.clean Title} end)
                           link(rel: stylesheet
                                type: 'text/css'
@@ -1623,7 +1631,7 @@ define
                      'body'(COMMON: @BodyCommon
                             BodyContents
                             OzDocToHTML, FlushFloats($)
-                            NextHTML
+                            @NavigationPanel
                             OzDocToHTML, FlushFootNotes(1 $)
                             hr()
                             address(case @Authors of nil then EMPTY
