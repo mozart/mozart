@@ -568,19 +568,10 @@ OZ_BI_define(BImergeSpace, 1,1) {
   if (OZ_isVariable(result)) {
     
     if (isSibling) {
-      switch (oz_installPath(SBP)) {
-      case INST_FAILED: case INST_REJECTED: return FAILED;
-      case INST_OK: break;
-      }
 
-      if (oz_unify(result, AtomMerged) == FAILED)
-	return FAILED;
-
-      switch (oz_installPath(CBB)) {
-      case INST_FAILED: case INST_REJECTED: return FAILED;
-      case INST_OK: break;
-      }
-
+      // Inject a thread to SBP to make the tell
+      telleq(SBP,result,AtomMerged);
+      
     } else {
       if (oz_unify(result, AtomMerged) == FAILED)
 	return FAILED;

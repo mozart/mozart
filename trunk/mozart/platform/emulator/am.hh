@@ -300,7 +300,6 @@ public:
   AM() {};
 
   Board *currentBoard()             { return _currentBoard; }
-  Board *rootBoardGC()              { return _rootBoard; }
   Board *rootBoard()                { return _rootBoard; }
 
   Bool inShallowGuard()             { return _shallowHeapTop!=0; }
