@@ -367,6 +367,11 @@ static Board* fromCopyBoard;
 static Board* toCopyBoard;
 
 
+inline Bool isDirectVar(TaggedRef t)
+{
+  return (!isRef(t) && isAnyVar(t));
+}
+
 /****************************************************************************
  * copy from from-space to to-space
  ****************************************************************************/
@@ -964,8 +969,10 @@ RefsArray gcRefsArray(RefsArray r)
 
   refsArrayMark(r,aux);
 
-  for (int i = sz; i--; )
+  for (int i = sz; i--; ) {
+    Assert(!isDirectVar(r[i]));
     gcTagged(r[i],aux[i]);
+  }
 
   return aux;
 }
@@ -1047,11 +1054,6 @@ Continuation *Continuation::gc()
 }
 
 /* collect LTuple, SRecord */
-
-inline Bool isDirectVar(TaggedRef t)
-{
-  return (!isRef(t) && isAnyVar(t));
-}
 
 inline
 void gcTaggedBlock(TaggedRef *oldBlock, TaggedRef *newBlock,int sz)
@@ -2317,6 +2319,7 @@ void ConstTerm::gcConstRecurse()
         TaggedRef *newargs = (TaggedRef*) gcRealloc(oldargs,
                                                     sizeof(TaggedRef)*a->getWidth());
         for (int i=a->getWidth(); i--; ) {
+          Assert(!isDirectVar(oldargs[i]));
           gcTagged(oldargs[i],newargs[i]);
         }
 
