@@ -590,7 +590,7 @@ REGEXCHAR    "["([^\]\\]|\\.)+"]"|\"[^"]+\"|\\.|[^<>"\[\]\\\n]
 
 %x COMMENT
 %x IGNOREDIRECTIVE DIRECTIVE
-%x LINE SWITCHDIR INPUTFILE INSERT DEFINE IFDEF IFNDEF UNDEF
+%x LINE SWITCHDIR INSERT DEFINE IFDEF IFNDEF UNDEF
 %x SCANNERPREFIX PARSEREXPECT
 
 %s LEX
@@ -628,16 +628,11 @@ REGEXCHAR    "["([^\]\\]|\\.)+"]"|\"[^"]+\"|\\.|[^<>"\[\]\\\n]
 			       }
 
 
-\\he(lp?)?                     { BEGIN(DIRECTIVE); return HELP; }
 \\l(i(ne?)?)?                  { if (cond()) BEGIN(LINE); }
 \\s(w(i(t(ch?)?)?)?)?          { BEGIN(SWITCHDIR); return SWITCH; }
-\\sh(o(w(Switches)?)?)?        { BEGIN(DIRECTIVE); return SHOWSWITCHES; }
+\\lo(c(a(l(Switches)?)?)?)?    { BEGIN(DIRECTIVE); return LOCALSWITCHES; }
 \\pu(s(h(Switches)?)?)?        { BEGIN(DIRECTIVE); return PUSHSWITCHES; }
 \\po(p(Switches)?)?            { BEGIN(DIRECTIVE); return POPSWITCHES; }
-\\f(e(ed?)?)?                  { BEGIN(INPUTFILE); return FEED; }
-\\threadedfeed                 { BEGIN(INPUTFILE); return THREADEDFEED; }
-\\c(o(re?)?)?                  { BEGIN(INPUTFILE); return CORE; }
-\\m(a(c(h(i(ne?)?)?)?)?)?      { BEGIN(INPUTFILE); return OZMACHINE; }
 
 \\in(s(e(rt?)?)?)?             { BEGIN(INSERT); }
 \\d(e(f(i(ne?)?)?)?)?          { BEGIN(DEFINE); }
@@ -743,41 +738,6 @@ REGEXCHAR    "["([^\]\\]|\\.)+"]"|\"[^"]+\"|\\.|[^<>"\[\]\\\n]
 				 BEGIN(INITIAL);
 			       }
   <<EOF>>                      { BEGIN(DIRECTIVE);
-				 if (pop_insert())
-				   return ENDOFFILE;
-			       }
-}
-<INPUTFILE>{
-  {FILENAME}                   { if (cond()) {
-				   strip('\'');
-				   char *help = scExpndFileName(xytext,xyFileName);
-				   if (help != NULL) {
-				     strncpy(xyhelpFileName, help, 99);
-				     delete[] help;
-				   } else
-				     strncpy(xyhelpFileName, xytext, 99);
-				   xyhelpFileName[99] = '\0';
-				   BEGIN(DIRECTIVE);
-				   return FILENAME;
-				 } else
-				   BEGIN(DIRECTIVE);
-			       }
-  {BLANK}                      ;
-  .                            { errorFlag = 1; }
-  \n                           { if (errorFlag) {
-				   xyreportError("directive error",
-						 "illegal directive syntax",
-						 xyFileName,xylino,xycharno());
-				   errorFlag = 0;
-				 }
-				 xylino++;
-				 xylastline = xytext + 1;
-				 BEGIN(INITIAL);
-			       }
-  <<EOF>>                      { xyreportError("directive error",
-					       "unterminated directive",
-					       xyFileName,xylino,xycharno());
-				 BEGIN(DIRECTIVE);
 				 if (pop_insert())
 				   return ENDOFFILE;
 			       }
