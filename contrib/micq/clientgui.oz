@@ -25,29 +25,13 @@
 functor
 require
    DefaultSettings(pictureUrl:PicturesURL) at 'defaultsettings.ozf'
-   Meths(%getApplicationInfo:S_getApplicationInfo
-         %getapplication:S_getapplication
-         message:S_message
-         %logout:S_logout
+   Meths(message:S_message
          addFriends:S_addFriends
          removeFriend:S_removeFriend
-         %getFriends:S_getFriends
-         %searchFriends:S_searchFriends
-         %login:S_login
          updateSettings:S_updateSettings
-         %addApplication:S_addApplication
-         %editApplication:S_editApplication
-         %inviteUser:S_inviteUser
-         %addUser:S_addUser
-         %removeUser:S_removeUser
-         %getInfo:S_getInfo
-         %updateUser:S_updateUser
          messageAck:S_messageAck
-         %removeMessage:S_removeMessage
          getUserName:S_getUserName
-         getUserInfo:S_getUserInfo
-         %removeApplication:S_removeApplication
-        ) at 'methods.ozf'
+         getUserInfo:S_getUserInfo) at 'methods.ozf'
 import
    DP(open) at 'x-oz://contrib/tools/DistPanel'
    Tk TkTools(dialog error)
@@ -83,6 +67,8 @@ export
    removeApp:RemoveApp
    updateApp:UpdateApp
 define
+   SysAdm_Broadcast={NewName}
+
    GUIisStarted
    Server  Client  ClientID
    DB={Dictionary.new}
@@ -94,6 +80,8 @@ define
    FontLabel={New Tk.font tkInit(size:8 family:helvetica)}
    FontSeparator={New Tk.font tkInit(size:8 family:courier)}
    FontSystem={New Tk.font tkInit(size:10 family:times)}
+
+   UsingBrowser % A cell containing info if the client have netscape!
 
    ClientGUISettings={NewCell ui(fontsize:8
                                  foreground:nil
@@ -111,7 +99,7 @@ define
       proc{NewEntry Title Value} O N
          L={New Tk.label tkInit(parent:T text:Title)}
          V={New Tk.label tkInit(parent:T text:Value)}
-        in
+      in
          {Exchange Index O N} N=O+1
          {Tk.batch [grid(L row:N column:0 sticky:e)
                     grid(V row:N column:1 sticky:w)]}
@@ -135,6 +123,7 @@ define
       if S.foreground\=nil andthen S.background\=nil then
          {Tk.send tk_setPalette(background(S.background) foreground(S.foreground))}
       end
+      {Assign UsingBrowser S.browser}
       thread {Server S_updateSettings(id:ClientID settings:S)} end
    end
 
@@ -145,11 +134,11 @@ define
       {Animate}
    end
 
-   LetterImage={New Tk.image tkInit(type:photo format:gif url:PicturesURL#'letter.gif')}
-   AwayImage={New Tk.image tkInit(type:photo format:gif url:PicturesURL#'away_t.gif')}
-   OnlineImage={New Tk.image tkInit(type:photo format:gif url:PicturesURL#'online_t.gif')}
-   OfflineImage={New Tk.image tkInit(type:photo format:gif url:PicturesURL#'offline_t.gif')}
-   UnreadSentMailImage={New Tk.image tkInit(type:photo format:gif url:PicturesURL#'eyes_t.gif')}
+   LetterImage
+   AwayImage
+   OnlineImage
+   OfflineImage
+   UnreadSentMailImage
 
    class DDLabel from Tk.label DragAndDrop
       prop locking
@@ -296,29 +285,31 @@ define
 
       meth writeNewMessage(ID message:Mess<=nil reply_to:RPT<=nil) E={Dictionary.get DB ID} in
          {ComposeMess message(user:user(id:E.id name:E.name)
-                                 send:proc{$ IDs X} MID D in
-                                         {Server S_message(sender:ClientID
-                                                         receiver:IDs
-                                                         message:X
-                                                         reply_to:RPT
-                                                         mid:MID
-                                                         date:D)}
+                              browser:{Access UsingBrowser}
+                              send:proc{$ IDs X} MID D in
+                                      {Server S_message(sender:ClientID
+                                                        receiver:IDs
+                                                        message:X
+                                                        reply_to:RPT
+                                                        mid:MID
+                                                        date:D)}
 
-                                         lock CLock then
-                                            %% Store the message
-                                            {ForAll IDs proc{$ I}  E={Dictionary.get DB I} in
-                                                           {E.widget saveSent(message:X
-                                                                              reply_to:RPT mid:MID
-                                                                              date:D incCount:true)}
-                                                        end}
-                                         end
+                                      lock CLock then
+                                         %% Store the message
+                                         {ForAll IDs proc{$ I}  E={Dictionary.get DB I} in
+                                                        {E.widget saveSent(message:X
+                                                                           reply_to:RPT mid:MID
+                                                                           date:D incCount:true)}
+                                                     end}
                                       end
+                                   end
                               message:Mess)}
       end
 
       meth readMessage(entry:E message:M)
          {ReadMess {Record.adjoin M
                     read(user:used(name:E.name id:E.id)
+                         browser:{Access UsingBrowser}
                          send:proc{$ X} {self writeNewMessage(E.id message:X reply_to:M.mid)} end)}}
       end
 
@@ -582,7 +573,7 @@ define
    end
 
    proc{Kill}
-      {Thread.terminate AnimateThread}
+      try {Thread.terminate AnimateThread} catch _ then skip end
       {Client logout}
    end
 
@@ -598,7 +589,7 @@ define
 
    fun{DlgBox M}
       E= {New DialogBox init(master:T text:M button: 'Abort and logout!'
-                            title: "Connection trouble")}
+                             title: "Connection trouble")}
    in
       {Tk.send bell}
       E
@@ -633,7 +624,10 @@ define
       end
    end
 
-   proc{Shutdown} if {IsDet GUIisStarted} then {Delay 500} {T tkClose} end end
+   proc{Shutdown}
+      try {Thread.terminate AnimateThread} catch _ then skip end
+      if {IsDet GUIisStarted} then {Delay 500} {T tkClose} end % Delay to let eventual popup to close!
+   end
 
  %   fun {GetAllMessages} E Tmp in
 %       {Dictionary.items DB E}
@@ -766,9 +760,18 @@ define
    proc{Friends F}
       lock CLock then
          {ForAll F.online proc{$ X}
-                             if  {Dictionary.member DB X.id} then
+                             E={Dictionary.condGet DB X.id unit}
+                          in
+                             if E\=unit andthen E.online\=others then
                                 M=notify(id:X.id online:X.online)
                              in
+                                {ChangeStatus M}
+                             elseif E\=unit andthen E.online==others then
+                                M=notify(id:X.id online:X.online)
+                             in
+                                {Browse X#{Dictionary.entries DB}}
+                                {Others remove(id:E.id)}
+                                {Online move(id:M.id entry:E)}
                                 {ChangeStatus M}
                              else
                                 {Online add(id:X.id name:X.name)}
@@ -778,10 +781,19 @@ define
                              end
                           end}
          {ForAll F.offline proc{$ X}
-                              if  {Dictionary.member DB X.id} then
+                              E={Dictionary.condGet DB X.id unit}
+                           in
+                              if E\=unit andthen E.online\=others then
                                  M=notify(id:X.id online:X.online)
                               in
-                                {ChangeStatus M}
+                                 {ChangeStatus M}
+                              elseif E\=unit andthen E.online==others then
+                                 M=notify(id:X.id online:X.online)
+                              in
+                                 {Browse X#{Dictionary.entries DB}}
+                                 {Others remove(id:E.id)}
+                                 {Online move(id:M.id entry:E)}
+                                 {ChangeStatus M}
                               else
                                  {Offline add(id:X.id name:X.name)}
                               end
@@ -790,58 +802,43 @@ define
    end
 
    proc{UpdateUser M}
-      %% How about messages here?!? /Nils 17/11-98
-      lock CLock then
-         E = {Dictionary.get DB M.id}
-%        N = changeStatus( id: M.id online: M.online )
-      in
-         {E.widget updateName(M.name)}
-         /*
-         if E.online==false then
-            {Offline remove(id:E.id)}
-            {Offline add(id:M.id name:M.name)}
-         else
-            {Online remove(id:E.id)}
-            {Online add(id:E.id name:M.name)}
-         end
-         {ChangeStatus N}
-         */
-      end
+      lock CLock then E = {Dictionary.get DB M.id} in {E.widget updateName(M.name)} end
    end
 
    proc{ChangeStatus M}
       if {Dictionary.member DB M.id}==false then
-         {Delay 2000}
-         {ChangeStatus M}
-      end
-
-      try
-         lock CLock then E={Dictionary.get DB M.id} in
-            if M.online==online then
-               if E.online==false then
-                  {Offline remove(id:M.id)}
-                  {Online move(id:M.id entry:E)}
-               end
-               local E={Dictionary.get DB M.id} in
-                  {E.widget available()}
-               end
-            elseif M.online==away then
-               if E.online==false then
-                  {Offline remove(id:M.id)}
-                  {Online move(id:M.id entry:E)}
-               end
-               local E={Dictionary.get DB M.id} in
-                  {E.widget away()}
-               end
-            else
-               {Online remove(id:M.id)}
-               {Offline move(id:M.id entry:E)}
-               local E={Dictionary.get DB M.id} in
-                  {E.widget available()}
+         thread {Delay 2000} {ChangeStatus M} end
+      else
+         try
+            lock CLock then
+               E={Dictionary.get DB M.id}
+            in
+               if M.online==online then
+                  if E.online==false then
+                     {Offline remove(id:M.id)}
+                     {Online move(id:M.id entry:E)}
+                  end
+                  local E={Dictionary.get DB M.id} in
+                     {E.widget available()}
+                  end
+               elseif M.online==away then
+                  if E.online==false then
+                     {Offline remove(id:M.id)}
+                     {Online move(id:M.id entry:E)}
+                  end
+                  local E={Dictionary.get DB M.id} in
+                     {E.widget away()}
+                  end
+               else
+                  {Online remove(id:M.id)}
+                  {Offline move(id:M.id entry:E)}
+                  local E={Dictionary.get DB M.id} in
+                     {E.widget available()}
+                  end
                end
             end
-         end
-      catch X then {Browse X} {System.show clienterror(X)} end
+         catch X then {Browse X} {System.show clienterror(X)} end
+      end
    end
 
    proc{MessageAck M} E={Dictionary.get DB M.id} in
@@ -866,7 +863,14 @@ define
          {Assign ClientGUISettings Settings}
          {FontLabel tk(config size:Settings.fontsize)}
          {Tk.send tk_setPalette(background(Settings.background) foreground(Settings.foreground))}
+         UsingBrowser={NewCell {CondSelect Settings browser false}}
       end
+
+      LetterImage={New Tk.image tkInit(type:photo format:gif url:PicturesURL#'letter.gif')}
+      AwayImage={New Tk.image tkInit(type:photo format:gif url:PicturesURL#'away_t.gif')}
+      OnlineImage={New Tk.image tkInit(type:photo format:gif url:PicturesURL#'online_t.gif')}
+      OfflineImage={New Tk.image tkInit(type:photo format:gif url:PicturesURL#'offline_t.gif')}
+      UnreadSentMailImage={New Tk.image tkInit(type:photo format:gif url:PicturesURL#'eyes_t.gif')}
 
       %% Start Graphics
       T={New Tk.toplevel tkInit(title:"Client" delete:Kill)}
@@ -910,8 +914,44 @@ define
               Aps={Filter {Access Applications} fun {$ X} X.author==ClientID end}
               Aps1={Map Aps fun{$ X} (X.name#" ("#X.id#")")#proc{$} {Client removeApplication(aid:X.id)} end end}
               Aps2={Map Aps fun{$ X} (X.name#" ("#X.id#")")#proc{$} {EditApp X.id Server} end end}
+              SU=({Access MyData}.userlevel==sysadm)
            in
-              {Popup ["Add Friends"#proc{$}
+              {Popup ["Broadcast Message"#proc{$}
+                                             {ComposeMessage
+                                              message(user:user(id:SysAdm_Broadcast name:"Broadcast")
+                                                      browser:false
+                                                      send:proc{$ IDs X} MID D in
+                                                              IDs2=if {Member IDs SysAdm_Broadcast} then
+                                                                      {Dictionary.keys DB}
+                                                                   else
+                                                                      IDs
+                                                                   end
+                                                           in
+                                                              {Server S_message(sender:ClientID
+                                                                                receiver:IDs2
+                                                                                message:X
+                                                                                reply_to:nil
+                                                                                mid:MID
+                                                                                date:D)}
+                                                              lock CLock then
+                                                                 %% Store the message
+                                                                 {ForAll IDs2 proc{$ I}
+                                                                                 E={Dictionary.get DB I}
+                                                                              in
+                                                                                 {E.widget saveSent(message:X
+                                                                                                    reply_to:RPT
+                                                                                                       mid:MID
+                                                                                                    date:D
+                                                                                                    incCount:true
+                                                                                                   )}
+                                                                              end}
+                                                              end
+                                                           end
+                                                     end
+                                              message:Mess)}
+                                          end
+                      separator
+                      "Add Friends"#proc{$}
                                        {AddFriends addfriends(server:Server
                                                               id:ClientID
                                                               friends:{Dictionary.keys DB})}
@@ -928,18 +968,24 @@ define
                       "Applications"#["Start Application"#{Map {Access Applications}
                                                            fun{$ X} (X.name#" ("#X.id#")")#
                                                               proc{$} {Client startapplication(id:X.id)} end end}
-                                      separator
-                                      "Add Application"#proc {$} {AddApplicationGUI.start ClientID Server} end
+                                      if SU then separator else ignore end
+                                      if SU then
+                                         "Add Application"#proc {$} {AddApplicationGUI.start ClientID Server} end
+                                      else
+                                         ignore
+                                      end
                                       if Aps1==nil then ignore else "Remove Application"#Aps1 end
                                       if Aps2==nil then ignore else "Edit Application"#Aps2 end
                                      ]
                       separator
-                      "Debugging"#["Start Distribution Panel"#proc{$} skip {DP.open}
-                                                              end
-                                   "Start Panel"#proc{$} {Panel.object open} end
-                                   "Browse DB"#proc{$} {Browse {Dictionary.entries DB}} end
-                                  ]
-                      separator
+                      if SU then
+                         "Debugging"#["Start Distribution Panel"#proc{$} skip {DP.open} end
+                                      "Start Panel"#proc{$} {Panel.object open} end
+                                      "Browse DB"#proc{$} {Browse {Dictionary.entries DB}} end
+                                     ]
+                      else ignore end
+
+                      if SU then separator else ignore end
                       "Help"#proc{$}
                                 {DisplayMess.display "Help"
                                  "This help will improve someday:)!\n\n"#
@@ -950,6 +996,8 @@ define
                                  "\nEnjoy!\n\nSend feedback (and bug-reports) to nilsf@sics.se or simon@sics.se"
                                  "Close Help Window"}
                              end
+                      if SU then
+                         "GetAll Users"#
                       separator
                       "Logout"#Kill
                      ] T}
