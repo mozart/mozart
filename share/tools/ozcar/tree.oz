@@ -121,7 +121,7 @@ local
    WC =
    {New class
 	   attr w
-	   meth init w <- 0 end
+	   meth init w <- 1 end
 	   meth inc($) w <- @w + 1 @w end
 	   meth get($) @w end
 	end init}
@@ -334,7 +334,7 @@ in
 	     {self tk(crea line X*SFX-OS Y*SFY (X-1)*SFX-OS Y*SFY
 		      width:1 fill:TrunkColor)}
 	     case R then
-		case Y \= 1 andthen DY == 1 then
+		case Y > 2 andthen DY == 1 then
 		   {self tk(crea line SFX (Y-DY+1)*SFY-7 10*SFX (Y-DY+1)*SFY-7
 			    stipple: LocalBitMapDir # 'line.xbm')}
 		else skip
