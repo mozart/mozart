@@ -64,7 +64,7 @@
 <Book proglang="oz">
   <Front>
 
-    <!-- Splitting the document into different HTML nodes -->
+    <!-- Defining width of tables and pictures -->
 
     <Meta name="latex.picture.width" arg1="propagatorstates.pic" 
                                      arg2="1.0\linewidth">
