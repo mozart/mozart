@@ -179,6 +179,7 @@ int OwnerTable::newOwner(OwnerEntry *&oe){
   nextfree = array[index].uOB.nextfree;
   oe = (OwnerEntry *)&(array[index]);
   oe->setCreditOB(START_CREDIT_SIZE);
+  oe->setFlags(PO_NONE);
   PD((TABLE,"owner insert: o:%d",index));
   no_used++;
   return index;}

@@ -640,11 +640,13 @@ public:
     Assert(isFree());
     setCreditOB(c);
     unsetFree();
-    removeFlags(PO_PERSISTENT);
-    /* It seems as the flags are never reset.
-       This is a hack to avoid leak of the property
+    setFlags(PO_NONE);
+    /*
+      removeFlags(PO_PERSISTENT);
+      It seems as the flags are never reset.
+      This is a hack to avoid leak of the property
        Persistent. EK
-       */
+    */
     netaddr.set(s,i);
     return;}
 
