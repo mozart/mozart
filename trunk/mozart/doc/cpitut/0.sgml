@@ -3,25 +3,18 @@
 <!-- Extension to the DTD -->
 <!ENTITY % p.mix.local "|Em">
 <!ELEMENT Em - - (#PCDATA)>
-<!ENTITY % proglang.values.local "|lambda">
+<!ENTITY % proglang.values.local "|sh|makefile">
 
 <!-- Include Files -->
+<!ENTITY u_abstract SYSTEM "u_abstract.sgml">
 <!ENTITY ip_tutorial SYSTEM "ip_tutorial.sgml">
 <!ENTITY u_basic_concepts SYSTEM "u_basic_concepts.sgml">
 <!ENTITY u_getting_started SYSTEM "u_getting_started.sgml">
 <!ENTITY u_replacing SYSTEM "u_replacing.sgml">
 <!ENTITY u_nesting SYSTEM "u_nesting.sgml">
 <!ENTITY u_vectors SYSTEM "u_vectors.sgml">
+<!ENTITY u_connect SYSTEM "u_connect.sgml">
 <!ENTITY u_advanced SYSTEM "u_advanced.sgml">
-
-<!ENTITY r_overview SYSTEM "r_overview.sgml">
-<!ENTITY r_expect SYSTEM "r_expect.sgml">
-<!ENTITY r_prop SYSTEM "r_prop.sgml">
-<!ENTITY r_fdint SYSTEM "r_fdint.sgml">
-<!ENTITY r_fd SYSTEM "r_fd.sgml">
-<!ENTITY r_fs SYSTEM "r_fs.sgml">
-<!ENTITY r_fsc SYSTEM "r_fsc.sgml">
-<!ENTITY r_aux SYSTEM "r_aux.sgml">
 
 <!ENTITY ct_cpi_tutorial SYSTEM "ct_cpi_tutorial.sgml">
 <!ENTITY ct_cpi_reference SYSTEM "ct_cpi_reference.sgml">
@@ -83,6 +76,7 @@
     <Meta name="html.split" value="u_replacing">
     <Meta name="html.split" value="u_nesting">
     <Meta name="html.split" value="u_vectors">
+    <Meta name="html.split" value="u_connect">
     <Meta name="html.split" value="u_advanced">
 
         
@@ -130,63 +124,8 @@
     <Meta name=status value="revised">
     <Title/Constraint Extensions Tutorial/
     <Author.Extern to="author.db" key="Tobias.Mueller">
-
-    <Abstract>
-      <P.silent>
-      This manual gives the information needed to implement finite domain
-      propagators by the &cpi; (constraint propagator interface) of DFKI Oz.
-
-      <Para class=apropos><Title/Motivation/
-      A major design goal of Oz is to provide for a
-      wide range of applications the right level of programming
-      abstractions. Though Oz features a full-fledged finite domain solver
-      providing for the functionality required to solve combinatorial 
-      problems
-      efficiently, it is often desirable to implement constraints in
-      &cpp;. There may be several reasons to do so, as for example, that a
-      given algorithm requires destructively updateable data structures or an
-      already existing &cpp; library shall be used.  Consequently,
-      we opened
-      the constraint solver of Oz by adding a &ccpp; interface for
-      implementing so-called <Em/constraint propagators/. Hereby, a
-      constraint propagator is the implementation of a constraint.
-
-      <Para class=apropos><Title/Structure of the Manual/
-      The user manual explains how to
-      implement various propagators. It starts with a propagator for the
-      constraint <Math>x+y=z</Math> and introduces the tools and techniques
-      needed. This
-      propagator will be refined such that it is able to detect equal
-      variables and reduces to a more specialised propagator. Then a
-      functionally nestable version of the addition propagator will be
-      derived. We go on with a propagator that can deal with vectors of
-      variables. As example serves the so-called <Em/element/
-      constraint. 
-      Finally
-      more advanced topics, like the implementation of reified constraints,
-      are discussed. <Em/Note that it is not the intention of this manual to
-      provide sophisticated algorithms/.
-      <p>
-      The second part of this document is the reference manual for the
-      &cpi . It explains the functionality of all interface
-      abstractions and is
-      intended to be next to the keyboard when actually implementing
-      propagators.
-      <p>
-      <Para class=apropos><Title/Prerequisites/
-      The reader is supposed to have a working
-      knowledge in the &ccpp; programming language and to be familiar with
-      constraint-based problem solving techniques in Oz. An excellent
-      supplementary text book on &cpp; is <ptr to="murray">.
-      Problem solving 
-      techniques with finite domain constraints in Oz are explained in
-      Section 10
-      of <Em/An Oz Primer/ [cite fixme]. The &cpi is built on top of
-      the &sci (standard &ccpp; interface) of DFKI Oz. A
-      description of the 
-      interface can be found in
-      Section 10 of the DFKI Oz User's Manual <ptr to="system">
-    </Abstract>
+ 
+    &u_abstract
 
   <Body>
 
@@ -200,11 +139,12 @@
 
   <Back>
   
-  <bib.extern id="system"     to="cpi.bib" key="system">
+  <bib.extern id="cplex"     to="cpi.bib" key="cplex">
+  <bib.extern id="lp_solve"  to="cpi.bib" key="lp_solve">
+  <Bib.Extern id="stallman91" to="cpi.bib" key="stallman91">
+
   <bib.extern id="murray"     to="cpi.bib" key="murray">
-  <bib.extern id="primer"     to="cpi.bib" key="primer">
   <bib.extern id="absmachine" to="cpi.bib" key="absmachine">
-  <bib.extern id="modules"    to="cpi.bib" key="modules">
   <bib.extern id="gdb"        to="cpi.bib" key="gdb">
 
   <Bib.Extern id="BeringerDeBacker:95a" to ="cpi.bib" 

@@ -4,7 +4,8 @@
 <p>
 This chapter explains the basic concepts of computation with finite
 domain constraints in Oz. Further, it explains the implementation of
-constraints by propagators. For more details see <ptr to="primer">
+constraints by propagators. For more details see <Ptr.Extern
+to="ozdoc:fdt">.
 
 <SubSection id="u_basic_concepts.computation">
 <Title/Computation with Constraints in Oz/
