@@ -43,7 +43,7 @@ public:
   Actor(Actor &);
   Actor(int typ,Board *bb);
 
-  ~Actor();
+  //  ~Actor();
 
   USEHEAPMEMORY;
   Actor *gcActor();
@@ -80,7 +80,7 @@ protected:
   int childCount;
 public:
   AWActor();
-  ~AWActor();
+  //~AWActor();
   AWActor(AWActor&);
   AWActor(int type,Board *s,Thread *tt,
           ProgramCounter p=NOCODE,RefsArray y=0,RefsArray g=0,
