@@ -1,0 +1,54 @@
+PREFIX		= @prefix@
+VPATH		= @srcdir@
+SRCDIR		= @srcdir@
+BUILDTOP	= @BUILDTOP@
+SRCTOP		= @SRCTOP@
+OZENGINE	= @OZENGINE@
+OZDOC		= @OZDOC@
+OZDOCFLAGS	=
+DOCIFY		= $(OZENGINE) $(OZDOC) $(OZDOCFLAGS)
+
+DOCDIR		= /www/mozart/contrib
+
+INSTALL		= @INSTALL@
+INSTALL_FILE	= $(INSTALL) -m 444
+INSTALL_BIN	= $(INSTALL) -m 555
+INSTALL_DIR	= @INSTALL_DIR@
+
+SGMLSRCS	= contrib.sgml
+
+.PHONY: all validate install clean veryclean distclean
+
+all: contrib-html
+
+include $(SRCTOP)/share/Makefile.boot
+
+bootstrap: boot-all
+
+Makefile: Makefile.in ../config.status
+	cd .. && ./config.status
+
+contrib-html: $(SGMLSRCS)
+	$(DOCIFY) --in=$(SRCDIR)/contrib.sgml --out=$@ --type=html-stylesheets
+
+contrib-tex:  $(SGMLSRCS)
+	$(DOCIFY) --in=$(SRCDIR)/contrib.sgml --out=$@ --type=latex
+
+validate: contrib-html
+	nsgmls -cHTML4.soc -sB contrib-html/*.html
+
+install: contrib-html $(DOCDIR)
+	for i in *; do $(INSTALL_FILE) $$i $(DOCDIR); done
+
+$(DOCDIR):
+	$(INSTALL_DIR) $@
+
+clean:
+	-rm -rf contrib-html
+	-rm -rf contrib-tex
+	-rm -f *~
+
+veryclean: clean
+
+distclean: veryclean
+	-rm -f Makefile config.status config.cache config.log
