@@ -390,8 +390,6 @@ loop:
  /*************/
  nonvar_nonvar:
 
-  COUNT(nonvarNonvarUnify);
-
   if (tag1 != tag2)
     goto fail;
 
@@ -404,7 +402,6 @@ loop:
 
   case LTUPLE:
     {
-      COUNT(recRecUnify);
       LTuple *lt1 = tagged2LTuple(term1);
       LTuple *lt2 = tagged2LTuple(term2);
 
@@ -417,7 +414,6 @@ loop:
 
   case SRECORD:
     {
-      COUNT(recRecUnify);
       SRecord *sr1 = tagged2SRecord(term1);
       SRecord *sr2 = tagged2SRecord(term2);
 

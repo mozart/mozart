@@ -24,7 +24,6 @@
 #include "builtins.hh"
 #include "os.hh"
 #include "am.hh"
-#include "gc.hh"
 #include "dictionary.hh"
 #include "bytedata.hh"
 

@@ -94,8 +94,6 @@ Atom *Atom::newAtom(const char *str)
 
 Name *Name::newName(Board *home)
 {
-  COUNT(numNewName);
-
   Name *ret = (Name*) heapMalloc(sizeof(Name));
   ret->init();
   ret->homeOrGName = ToInt32(home);
@@ -106,8 +104,6 @@ Name *Name::newName(Board *home)
 
 NamedName *NamedName::newNamedName(const char *pn)
 {
-  COUNT(numNewNamedName);
-
   NamedName *ret = (NamedName*) malloc(sizeof(NamedName));
   ret->init();
   Assert(oz_onToplevel());
@@ -128,8 +124,6 @@ NamedName *NamedName::newCopyableName(const char *pn)
 
 NamedName *NamedName::generateCopy()
 {
-  COUNT(numNewNamedName);
-
   NamedName *ret = (NamedName*) malloc(sizeof(NamedName));
   ret->init();
   Assert(oz_onToplevel() && isCopyableName());

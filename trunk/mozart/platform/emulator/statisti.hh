@@ -34,20 +34,6 @@
 #include "base.hh"
 #include "mozart_cpi.hh"
 
-#ifdef HEAP_PROFILE
-# define ProfileCode(Code) Code
-#else
-# define ProfileCode(Code)
-#endif
-
-#define COUNTIT(WHAT,n) ozstat.WHAT += n
-#define COUNT1(WHAT,n) ProfileCode(if (!isCollecting) {COUNTIT(WHAT,n);})
-#define COUNT(WHAT)    COUNT1(WHAT,1) 
-#define CountMax(What,Value) ProfileCode(ozstat.What = max(ozstat.What,Value))
-
-// also count during GC
-#define CountGC(What,n) COUNTIT(WHAT,n)
-
 #ifdef PROFILE_INSTR
 #define PROFILE_INSTR_MAX 256
 #endif
@@ -134,58 +120,6 @@ public:
   void printInstrReset();
 #endif
 
-#ifdef HEAP_PROFILE
-  long literal;
-  long ozfloat;
-  long bigInt;
-  long scriptLen; // length of all scripts
-  long refsArray;
-  long refsArrayLen; // length of all refsArrays
-  long suspCFun;
-  long suspCont;
-  long sTuple;
-  long sTupleLen;
-  long lTuple;
-  long sRecord;
-  long sRecordLen;
-  long suspList;
-  long uvar;
-  long svar;
-  long cvar;
-  long dynamicTable, dynamicTableLen;
-  long taskStack,taskStackLen;
-  long cSolve,cACont,cCatch,cLocal,cCont,cXCont,cSetCaa,cDebugCont,cExceptHandler;
-  long cCallCont;
-  long abstraction,flatObject,cell,space,chunk;
-  long heapChunk,thread;
-  long board,objectClass;
-
-
-  // RS
-  long freeListAllocated, freeListDisposed;
-  long totalAllocated;
-  long varVarUnify, nonvarNonvarUnify, varOptUnify, recRecUnify, varNonvarUnify;
-  long maxStackDepth;
-  long sizeClosures, numClosures, sizeGs;
-  long sizeObjects,sizeRecords,sizeLists,sizeFloats,sizeFreeListObjs;
-  long sizeStackVars;
-  long sizeHeapChunks, sizeBitArrays;
-  long sizeEnvs, numEnvAllocs, maxEnvSize;
-
-  long fastcalls,optbicalls,nonoptcalls,inlinecalls,inlinedots,
-    sendmsg,nonoptbicalls,nonoptsendmsg;
-  
-  long numNewName, numNewNamedName;
-  long numThreads;
-
-  // those are also counted during GC
-  long lenDeref, numDerefs, longestDeref;
-#define maxDerefLength 10
-  long lengthDerefs[maxDerefLength+1];
-
-  void derefChain(int n);
-  void printDeref(FILE *out);
-#endif
 };
 
 extern Statistics ozstat;
