@@ -1459,7 +1459,7 @@ OZ_BI_define(parser_parseFile, 2, 1)
     return OZ_typeError(1, "Record");
   OZ_Term defines = init_options(optRec);
   if (!xy_init_from_file(file, defines))
-    OZ_RETURN_ATOM("fileNotFound");
+    OZ_RETURN(OZ_pair2(OZ_atom("fileNotFound"), OZ_nil()));
   else
     OZ_RETURN(parse());
 }
