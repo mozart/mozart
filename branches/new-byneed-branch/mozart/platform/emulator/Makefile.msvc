@@ -1,0 +1,125 @@
+WINDIR=C:/cygwin/home/bruni/devel/mozart/packages
+
+# at SICS use
+#WINDIR=Y:/.root/home/scheidhr/build/packages/win32-i486
+
+# code with debugging infos
+#COPT = -Zi #-W3
+
+# for fast code
+#COPT = -O2 -W0
+COPT = -W2
+CXX  = cl
+
+
+######################################################################
+
+
+DEFS = -DWINDOWS -DWINDOWS_EMULATOR -DHAVE_CONFIG_H
+INCS =  -Ic:\programme\micros~2\vc98\include -I$(WINDIR)/msvc/include -I$(WINDIR)/include -I.
+LHOME = $(WINDIR)/msvc/lib
+LIBS = $(LHOME)/zlib.lib $(LHOME)/gmp.lib
+
+
+
+
+.SUFFIXES: .obj .cc .hh .s
+
+SRCS= \
+	main.cc board-bi.cc ct-bi.cc version.cc \
+	statisti.cc cmem.cc \
+	print.cc base.cc ozconfig.cc \
+	foreign.cc dpInterface.cc boot-manager.cc \
+	builtins.cc vprops.cc debug.cc interFault.cc \
+	tk.cc compiler.cc compat.cc browser.cc debugBI.cc \
+	parser.cc winscanner.cc \
+	system.cc profile.cc \
+	stack.cc ozostream.cc hashtbl.cc \
+	iso-ctype.cc weakdict.cc word.cc alice.cc \
+	os.cc unix.cc urlc.cc ioHandler.cc\
+	tagged.cc value.cc atoms.cc \
+	dictionary.cc extension.cc bits.cc bitarray.cc \
+	ozthread.cc heapchunk.cc bytedata.cc\
+	susplist.cc susp_queue.cc suspendable.cc\
+	var_base.cc var_ext.cc var_simple.cc var_future.cc var_opt.cc \
+	namer.cc \
+	am.cc unify.cc indexing.cc codearea.cc \
+	trail.cc emulate.cc scheduler.cc \
+	copycode.cc opcodes.cc controlvar.cc \
+	prop_int.cc prop_class.cc \
+	thr_stack.cc thr_class.cc thr_pool.cc \
+	thr_int.cc\
+	board.cc distributor.obj \
+	g-collect.cc s-clone.cc mem.cc liveness.cc\
+	gname.cc site.cc\
+	var_of.cc ofs-bi.cc\
+	fdomn.cc fdcore.cc \
+	var_fd.cc var_bool.cc\
+	cpi.cc cpi_fd.cc cpi_prop.cc cpi_filter.cc \
+	cpi_fs.cc cpi_expect.cc cpi_misc.cc \
+	cpi_stream.cc cpi_profile.cc cpi_ct.cc \
+	var_ct.cc \
+	fset.cc fsetcore.cc var_fs.cc\
+        gentraverser.cc \
+        marshalerBase.cc pickleBase.cc \
+        components.cc componentBuffer.cc pickle.cc \
+	sit-check.cc ostime.cc \
+	libdp/chain.cc        libdp/table.cc \
+	libdp/dpDebug.cc         libdp/msgType.cc         libdp/var.cc \
+	libdp/connection.cc libdp/tcpTransObj.cc libdp/comObj.cc \
+	libdp/msgContainer.cc \
+	libfset/standard.cc libfset/telling.cc \
+	libfset/testing.cc libfset/fsaux.cc \
+	libfset/intsets.cc libfset/monitor.cc \
+	libfset/reified.cc libfset/fsstd.cc \
+	libfset/std_n.cc libfset/table.cc \
+	libfset/fsinit.cc\
+	\
+	libfd/arith.cc libfd/fdaux.cc libfd/bool.cc \
+	libfd/card.cc libfd/count.cc \
+	libfd/rel.cc libfd/disjoint.cc  \
+	libfd/boundsalldist.cc \
+	libfd/std.cc \
+	libfd/sum.cc libfd/sumequal.cc \
+	libfd/distance.cc libfd/streamProps.cc \
+	libfd/sumd.cc libfd/sumabs.cc libfd/complalldist.cc libfd/diffn.cc \
+	libfd/distribute.cc libfd/fdtable.cc libfd/fdinit.cc\
+	\
+	libfd/scheduling.cc libfd/schedulingDist.cc \
+	libfd/schedulingDistAux.cc libfd/taskintervals.cc  \
+	libfd/taskoverlap.cc libfd/pel_engine.cc \
+	libfd/schedtable.cc libfd/schedinit.cc \
+	libdp/dpMarshaler.cc     libdp/network.cc         libdp/var_obj.cc \
+	libdp/var_class.cc libdp/var_emanager.cc libdp/var_lazy.cc \
+	libdp/var_eproxy.cc libdp/var_gcstub.cc libdp/timers.cc \
+	libdp/dpMiscModule.cc    libdp/perdio.cc          libdp/virtual.cc \
+	libdp/tcpConnection.cc libdp/transObj.cc \
+	libdp/dpStatisticsModule.cc    libdp/pidModule.cc       libdp/vs_comm.cc\
+	libdp/dpResource.cc      libdp/port.cc            libdp/vs_interface.cc\
+	libdp/dsite.cc           libdp/vs_mailbox.cc\
+	libdp/fail.cc            libdp/protocolFail.cc    libdp/vs_msgbuffer.cc\
+	libdp/faultModule.cc     libdp/protocolState.cc\
+	libdp/state.cc \
+	libdp/prioQueues.cc \
+        libdp/timeLease.cc \
+        libdp/fracWRC.cc \
+        libdp/referenceConsistency.cc \
+	byteBuffer.cc win32.cc
+
+OBJS=   $(SRCS:.cc=.obj)
+
+
+.cc.obj:
+	$(CXX) $(COPT) $(DEFS) $(INCS) -c -Fo$@ -nologo -Tp $<
+
+.cc.s:
+	$(CXX) $(COPT) $(DEFS) $(INCS) -c -Fa$@ -nologo -Tp $<
+
+
+all: emulator.dll
+
+emulator.dll: $(OBJS)
+	$(CXX) $(COPT) $(OBJS) $(LIBS) -LD wsock32.lib advapi32.lib -Feemulator.dll
+
+#dependencies
+-include Makefile.deps

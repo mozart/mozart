@@ -1,0 +1,1 @@
+find -name '*.eps.gz' | sed 's|./\(.*\)/\(.*\).eps.gz|<meta name="latex.picture.width" arg1="pict.ext.\1.\2" arg2="">|g' > ! test

@@ -1,0 +1,63 @@
+<!--
+  - Authors:
+  -   Thorsten Brunklaus <brunklaus@ps.uni-sb.de>
+  -
+  - Copyright:
+  -   Thorsten Brunklaus, 2001
+  -
+  - Last change:
+  -   $Date$ by $Author$
+  -   $Revision$
+  -
+  - This file is part of Mozart, an implementation
+  - of Oz 3
+  -    http://www.mozart-oz.org
+  -
+  - See the file "LICENSE" or
+  -    http://www.mozart-oz.org/LICENSE.html
+  - for information on usage and redistribution
+  - of this file, and for a DISCLAIMER OF ALL
+  - WARRANTIES.
+  -
+  -->
+
+<!DOCTYPE Book SYSTEM "ozdoc.dtd" [
+
+<!-- Include Files -->
+<!ENTITY introduction SYSTEM "introduction.sgml">
+<!ENTITY basic        SYSTEM "basic.sgml">
+<!ENTITY interactive  SYSTEM "interactive.sgml">
+<!ENTITY gui          SYSTEM "gui.sgml">
+<!ENTITY config       SYSTEM "config.sgml">
+
+<!ENTITY ie PI "ie">
+<!ENTITY ellipsis PI "ellipsis">
+
+]>
+
+<BOOK proglang=oz>
+  <FRONT>
+    <!-- Split the Document into different HTML files -->
+    <META name="html.split.toc" value="">
+    <META name="html.split" value="chapter.introduction">
+    <META name="html.split" value="chapter.basic">
+    <META name="html.split" value="chapter.interactive">
+    <META name="html.split" value="chapter.gui">
+    <META name="html.split" value="chapter.configure">
+
+    <TITLE/The Oz Inspector/
+    <AUTHOR.EXTERN to="author.db" key="Thorsten.Brunklaus">
+    <ABSTRACT>
+      The Inspector is a graphical and interactive tool for displaying and
+      examining Oz values.  It combines fast display services with powerful
+      interactive in-place manipulation of the datastructures.
+    </ABSTRACT>
+  </FRONT>
+  <BODY>
+    &introduction;
+    &basic;
+    &interactive;
+    &gui;
+    &config;
+  </BODY>
+</BOOK>

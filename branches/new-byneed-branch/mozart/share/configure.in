@@ -1,0 +1,164 @@
+dnl -*- sh -*-
+dnl
+dnl  Authors:
+dnl    Michael Mehl (mehl@dfki.de)
+dnl 
+dnl  Contributors:
+dnl    optional, Contributor's name (Contributor's email address)
+dnl 
+dnl  Copyright:
+dnl    Michael Mehl (1997)
+dnl 
+dnl  Last change:
+dnl    $Date$ by $Author$
+dnl    $Revision$
+dnl 
+dnl  This file is part of Mozart, an implementation 
+dnl  of Oz 3:
+dnl     http://www.mozart-oz.org
+dnl 
+dnl  See the file "LICENSE" or
+dnl     http://www.mozart-oz.org/LICENSE.html
+dnl  for information on usage and redistribution 
+dnl  of this file, and for a DISCLAIMER OF ALL 
+dnl  WARRANTIES.
+dnl
+
+dnl Process this file with autoconf to produce a configure script.
+
+dnl *****************************************************************
+dnl INITIALIZE
+dnl *****************************************************************
+
+dnl This will check that we are in the Oz directory and initiate
+AC_INIT(lib)
+
+OZ_INIT
+OZ_DENYS_EVENTS
+OZ_SITE_PROPERTY
+OZ_COMPILE_ELISP
+
+dnl *****************************************************************
+dnl locations
+dnl *****************************************************************
+
+srcdira=`(cd $srcdir; pwd)`
+AC_SUBST(srcdira)
+
+dnl *****************************************************************
+dnl platform
+dnl *****************************************************************
+
+# PLATFORM is defined by OZ_INIT
+: ${platform=$PLATFORM}
+
+case $platform in
+win32*)
+    oztmp=`${SRCTOP}/share/lib/cygpath.sh "${SRCTOP}/platform/mswindows/ozwrapper.bin"`
+    OZEXECFILE="--execfile=\"$oztmp\""
+    EMULATOR_EXE=emulator.dll
+    BOOTOZTOOL='$(shell $(CYG_PATH) "$(BUILDTOP)/platform/mswindows/oztool.exe")'
+    WINOZTOOLCXXFLAGS='$(BOOTOZTOOLINC)'
+    WINOZTOOLLDFLAGS='-inc $(BUILDTOP)/platform/emulator'
+    EXE_EXT='.exe'
+    ;;
+*)
+    EMULATOR_EXE=emulator.exe
+    BOOTOZTOOL='"/bin/sh $(BUILDTOP)/platform/emulator/oztool.sh"'
+    EXE_EXT=''
+    ;;
+esac
+AC_SUBST(OZEXECFILE)
+AC_SUBST(EMULATOR_EXE)
+AC_SUBST(BOOTOZTOOL)
+AC_SUBST(WINOZTOOLCXXFLAGS)
+AC_SUBST(WINOZTOOLLDFLAGS)
+AC_SUBST(EXE_EXT)
+
+dnl *****************************************************************
+dnl Checks for programs.
+dnl *****************************************************************
+
+AC_PROG_LN_S
+
+AC_CHECK_PROGS(M4, gm4 m4, m4)
+AC_CHECK_PROGS(PERL, perl, perl)
+AC_CHECK_PROGS(THEGZIP, gzip, gzip)
+AC_CHECK_PROGS(THEEMACS, emacs xemacs, emacs)
+
+OZ_PATH_PROG(OZPLATFORM, ozplatform)
+OZ_PATH_PROG(OZC, ozc,  OZC=`pwd`/lib/ozc)
+OZ_PATH_PROG(OZL, ozl, OZL=`pwd`/lib/ozl)
+OZ_PATH_PROG(OZENGINE, ozengine, OZENGINE=$srcdira/lib/oze.sh)
+OZ_PATH_PROG(OZTOOL, oztool, OZTOOL="sh $BUILDTOP/platform/emulator/oztool.sh")
+OZ_PATH_PROG(OZPLATFORM,ozplatform,OZPLATFORM=$SRCTOP/share/bin/ozplatform)
+PLATFORM=`$OZPLATFORM`
+AC_SUBST(PLATFORM)
+
+OZLOADCACHE=`expr "$OZC" : "\(.*\)/bin/ozc"`
+AC_SUBST(OZLOADCACHE)
+
+AC_SUBST(OZL)
+
+: ${oz_picklecompression=9}
+
+AC_MSG_CHECKING(for --enable-picklecompression)
+AC_ARG_ENABLE(picklecompression,
+    [--enable-picklecompression=0..9,no
+	choose pickle compression level (0 is uncompressed, default: $oz_picklecompression)])
+
+case $enable_picklecompression in
+	0|1|2|3|4|5|6|7|8|9)
+	    oz_picklecompression=${enable_picklecompression}
+	    ;;
+	no)
+	    oz_picklecompression=0
+	    ;;
+esac
+
+AC_MSG_RESULT($oz_picklecompression)
+
+AC_SUBST(oz_picklecompression)
+
+dnl ******************************************************************
+dnl set list of directories to build
+dnl ******************************************************************
+
+SHAREDIRS="lib tools elisp test demo examples"
+case $platform in
+    win32*)
+	OZWSOCKLIB=-lwsock32
+	;;
+    *)
+	SHAREDIRS="bin $SHAREDIRS"
+	;;
+esac
+AC_SUBST(SHAREDIRS)
+AC_SUBST(OZWSOCKLIB)
+
+dnl ******************************************************************
+dnl need GMP for test
+dnl ******************************************************************
+
+OZ_LIB_GMP
+AC_SUBST(CPPFLAGS)
+AC_SUBST(LDFLAGS)
+
+dnl *****************************************************************
+dnl FINALIZE
+dnl *****************************************************************
+
+AC_OUTPUT(lib/Makefile lib/support/DefaultURL.oz \
+    tools/Makefile \
+    demo/Makefile test/Makefile test/dp-bench/Makefile \
+    examples/Makefile elisp/Makefile elisp/mozart.el \
+    bin/Makefile \
+    Makefile Makefile.boot ozengine.sh,[
+  chmod +x ozengine.sh])
+
+
+errprint(ifdef([OZ_INIT],
+ [autoconf succeeded
+],
+ [autoconf failed: use 'autoconf -l ..' to include ../aclocal.m4.
+]))

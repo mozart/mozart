@@ -1,0 +1,178 @@
+<!--
+  - Authors:
+  -   Denys Duchier <duchier@ps.uni-sb.de>
+  -   Leif Kornstaedt <kornstae@ps.uni-sb.de>
+  -   Christian Schulte <schulte@ps.uni-sb.de>
+  -
+  - Contributors:
+  -   Daniel Simon <dansim@ps.uni-sb.de> (SGML Translation)
+  -
+  - Copyright:
+  -   Denys Duchier, Leif Kornstaedt, and Christian Schulte, 1998
+  -
+  - Last change:
+  -   $Date$ by $Author$
+  -   $Revision$
+  -
+  - This file is part of Mozart, an implementation of Oz 3:
+  -   http://www.mozart-oz.org
+  -
+  - See the file "LICENSE" or
+  -   http://www.mozart-oz.org/LICENSE.html
+  - for information on usage and redistribution
+  - of this file, and for a DISCLAIMER OF ALL
+  - WARRANTIES.
+  -
+  -->
+
+<!DOCTYPE Book SYSTEM "ozdoc.dtd" [
+
+<!-- Extension to the DTD -->
+<!ENTITY % proglang.values.local "|lambda">
+<!ENTITY % author.class "author|author.extern|comic">
+<!ENTITY % picture.element "picture|picture.extern|picture.choice">
+<!ELEMENT comic - O (%picture.element;)>
+
+<!-- Include Files -->
+<!ENTITY introduction SYSTEM "introduction.sgml">
+<!ENTITY typestruct SYSTEM "typestruct.sgml">
+<!ENTITY values SYSTEM "values.sgml">
+<!ENTITY numbers SYSTEM "numbers.sgml">
+<!ENTITY literals SYSTEM "literals.sgml">
+<!ENTITY records SYSTEM "records.sgml">
+<!ENTITY text SYSTEM "text.sgml">
+<!ENTITY proccells SYSTEM "proccells.sgml">
+<!ENTITY chunks SYSTEM "chunks.sgml">
+<!ENTITY control SYSTEM "control.sgml">
+<!ENTITY infix SYSTEM "infix.sgml">
+<!ENTITY misc SYSTEM "misc.sgml">
+
+<!-- Abbreviations -->
+<!ENTITY lt "<">
+<!ENTITY gt ">">
+<!ENTITY Oz "Oz">
+
+<!-- Processing Instructions -->
+<!ENTITY nbsp PI "nbsp">
+<!ENTITY ellipsis PI "ellipsis">
+<!ENTITY slash PI "slash">
+<!ENTITY ie PI "ie">
+<!ENTITY resp PI "resp">
+<!ENTITY eg PI "eg">
+<!ENTITY etc PI "etc">
+<!ENTITY LaTeX PI "LaTeX">
+
+]>
+
+<Book proglang=oz>
+  <Front>
+    <Meta name="latex.package" value="pstricks">
+    <Meta name="latex.package" value="pst-node">
+
+    <Meta name="html.split" value="chapter.introduction">
+
+    <Meta name="html.split" value="chapter.typestruct">
+
+    <Meta name="html.split" arg1="chapter.values" arg2="value.html">
+    <Meta name="html.split" value="section.values.general">
+    <Meta name="html.split" value="section.values.status">
+    <Meta name="html.split" value="section.values.comparison">
+
+    <Meta name="html.split" value="chapter.numbers">
+    <Meta name="html.split" arg1="section.numbers.general" arg2="number.html">
+    <Meta name="html.split" arg1="section.numbers.integers" arg2="int.html">
+    <Meta name="html.split" arg1="section.numbers.floats" arg2="float.html">
+
+    <Meta name="html.split" value="chapter.literals">
+    <Meta name="html.split" arg1="section.literals.general" arg2="literal.html">
+    <Meta name="html.split" arg1="section.literals.atoms" arg2="atom.html">
+    <Meta name="html.split" arg1="section.literals.names" arg2="name.html">
+    <Meta name="html.split" arg1="section.literals.bool" arg2="bool.html">
+    <Meta name="html.split" arg1="section.literals.unit" arg2="unit.html">
+
+    <Meta name="html.split" value="chapter.records">
+    <Meta name="html.split" arg1="section.records.records" arg2="record.html">
+    <Meta name="html.split" arg1="section.records.tuples" arg2="tuple.html">
+    <Meta name="html.split" arg1="section.records.lists" arg2="list.html">
+
+    <Meta name="html.split" value="chapter.text">
+    <Meta name="html.split" arg1="section.text.characters" arg2="char.html">
+    <Meta name="html.split" arg1="section.text.strings" arg2="string.html">
+    <Meta name="html.split" arg1="section.text.bytestrings" arg2="bytestring.html">
+    <Meta name="html.split" arg1="section.text.virtualstrings" arg2="virtualstring.html">
+
+    <Meta name="html.split" value="chapter.proccells">
+    <Meta name="html.split" arg1="section.proccells.procedures" arg2="procedure.html">
+    <Meta name="html.split" arg1="section.proccells.cells" arg2="cell.html">
+
+    <Meta name="html.split" value="chapter.chunks">
+    <Meta name="html.split" arg1="section.chunks.general" arg2="chunk.html">
+    <Meta name="html.split" arg1="section.chunks.arrays" arg2="array.html">
+    <Meta name="html.split" arg1="section.chunks.dictionaries" arg2="dictionary.html">
+    <Meta name="html.split" arg1="section.chunks.weakdictionaries" arg2="weakdictionary.html">
+    <Meta name="html.split" arg1="section.chunks.bitarrays" arg2="bitarray.html">
+    <Meta name="html.split" arg1="section.chunks.ports" arg2="port.html">
+    <Meta name="html.split" arg1="section.chunks.locks" arg2="lock.html">
+    <Meta name="html.split" arg1="section.chunks.classes" arg2="class.html">
+    <Meta name="html.split" arg1="section.chunks.objects" arg2="object.html">
+    <Meta name="html.split" arg1="section.chunks.functors" arg2="functor.html">
+
+    <Meta name="html.split" value="chapter.control">
+    <Meta name="html.split" value="section.control.general">
+    <Meta name="html.split" arg1="section.control.loops" arg2="loop.html">
+    <Meta name="html.split" arg1="section.control.time" arg2="time.html">
+    <Meta name="html.split" arg1="section.control.exceptions" arg2="exception.html">
+    <Meta name="html.split" arg1="section.control.threads" arg2="thread.html">
+
+    <Meta name="html.split" value="chapter.infix">
+
+    <Meta name="html.split" value="chapter.misc">
+    <Meta name="html.split" arg1="section.misc.bitstrings" arg2="bitstring.html">
+    <Meta name="html.split" arg1="section.misc.foreignpointers" arg2="foreignpointer.html">
+
+    <Meta name="html.split.toc"   value="">
+    <Meta name="html.split.bib"   value="">
+    <Meta name="html.split.index" value="">
+
+    <Meta name=ozversion value="3.0">
+    <Meta name=status value=revised>
+
+    <Title/The &Oz; Base Environment/
+    <Author.Extern to="author.db" key="Denys.Duchier">
+    <Author.Extern to="author.db" key="Leif.Kornstaedt">
+    <Author.Extern to="author.db" key="Christian.Schulte">
+    <Comic>
+      <Picture.Choice>
+	<Picture.Extern to="base.gif" type=gif>
+      </Picture.Choice>
+    <Abstract>
+      &Oz; is a concurrent language providing for functional,
+      object-oriented, and constraint programming.  The &Oz; Base
+      Environment is part of the &Oz; language specification and contains
+      procedures that are made generally available to the programmer.
+      A thorough knowledge of the &Oz; Base Environment is highly
+      recommended for effective programming in &Oz;.
+    <P>
+      The &Oz; Base Environment provides the basic operations on the values
+      of the &Oz; universe and a set of procedures whose use makes for more
+      elegant and readable programs.  It provides high-level access to
+      programming with threads, to real-time programming and to data
+      structures such as arrays and dictionaries.
+    </Abstract>
+  <Body proglang=oz>
+    &introduction;
+    &typestruct;
+    &values;
+    &numbers;
+    &literals;
+    &records;
+    &text;
+    &proccells;
+    &chunks;
+    &control;
+    &infix;
+    &misc;
+  <Back>
+    <Bib.Extern id="kernighan88" to="base.bib" key="kernighan88">
+    <Bib.Extern id="ISO_8859_1" to="base.bib" key="ISO_8859_1">
+</Book>

@@ -1,0 +1,83 @@
+@SET_MAKE@
+BUILDTOP	= @BUILDTOP@
+SRCTOP		= @SRCTOP@
+SRCDIR		= @srcdir@
+VPATH		= @srcdir@
+PREFIX		= @prefix@
+PLATFORM	= @PLATFORM@
+PLATFORMDIR     = $(PREFIX)/platform/$(PLATFORM)
+LIB_DIR		= $(PREFIX)/contrib
+HOMEURL         = @HOMEURL@
+NEWCACHEDIR	= $(PREFIX)/cache/x-oz/contrib
+
+OZC		= @OZC@
+COMPILE		= $(OZC) -z 9 -c
+OZTOOL		= @OZTOOL@
+CPPFLAGS	= -I$(SRCTOP)/platform/emulator \
+		  -I$(BUILDTOP)/platform/emulator \
+		  -I$(PREFIX)/include @CPPFLAGS@
+CXXFLAGS	= @CXXFLAGS@
+LDFLAGS		= @LDFLAGS@
+LIBS		= @LIBS@
+
+INSTALL		= @INSTALL@
+INSTALL_DIR	= @INSTALL_DIR@
+INSTALL_LIB	= $(INSTALL) -m 444
+INSTALL_DLL	= $(INSTALL) -m 555
+
+TARGETS		= gdbm.ozf gdbm.so-$(PLATFORM)
+LIB_TARGETS	= $(LIB_DIR)/gdbm.ozf $(LIB_DIR)/gdbm.so-$(PLATFORM)
+NEW_TARGETS	= $(TARGETS:%=$(NEWCACHEDIR)/%)
+
+CYGPATH		= $(SRCTOP)/share/lib/cygpath.sh
+
+.PHONY: all install clean veryclean distclean bootstrap depend
+
+all:		$(TARGETS)
+install:	$(NEWCACHEDIR) $(NEW_TARGETS)
+
+$(LIB_DIR) $(NEWCACHEDIR):
+	$(INSTALL_DIR) $@
+
+$(LIB_DIR)/gdbm.ozf: gdbm.ozf
+	$(INSTALL_LIB) $< $@
+
+$(LIB_DIR)/gdbm.so-$(PLATFORM): gdbm.so-$(PLATFORM)
+	$(INSTALL_DLL) $< $@
+
+$(NEWCACHEDIR)/gdbm.ozf: gdbm.ozf
+	$(INSTALL_LIB) $< $@
+
+$(NEWCACHEDIR)/gdbm.so-$(PLATFORM): gdbm.so-$(PLATFORM)
+	$(INSTALL_DLL) $< $@
+
+gdbm.ozf: gdbm.oz
+	$(COMPILE) $(shell $(CYGPATH) "$<") -o $@
+
+gdbm.o: gdbm.cc
+	OZTOOL_CXX="@CXX@" \
+	$(OZTOOL) c++ $(WINOZTOOLCXXFLAGS) $(CPPFLAGS) $(CXXFLAGS) -c $<
+
+gdbm.so-$(PLATFORM): gdbm.o
+	OZTOOL_LD="@CXX@" \
+	$(OZTOOL) ld $(WINOZTOOLLDFLAGS) -o $@ $< $(LDFLAGS) $(LIBS)
+
+clean veryclean:
+	-$(RM) *~ *.bak *.o *.so-* *.ozf
+
+distclean: clean
+	-$(RM) config.* Makefile
+
+include $(BUILDTOP)/share/Makefile.boot
+
+bootstrap: boot-all
+
+#---------------------------------------------------------------------
+# Automatic Makefile update
+#---------------------------------------------------------------------
+
+Makefile: Makefile.in config.status
+	./config.status
+
+config.status: configure
+	./config.status --recheck
