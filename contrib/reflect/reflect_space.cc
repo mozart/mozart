@@ -28,6 +28,70 @@
 
 //-----------------------------------------------------------------------------
 
+void _reflect_space_params(ReflectStack &rec_stack,
+                           VarTable     &vtable,
+                           OZ_Term      params,
+                           OZ_Term      &term_params)
+{
+  DEREF(params, paramsptr, paramstag);
+
+  if (isUVar(paramstag) || isCVar(paramstag)) {
+
+    Bool is_reflected;
+    int id = vtable.add(paramsptr, is_reflected);
+    if (!is_reflected)
+      rec_stack.push(paramsptr);
+
+    ADD_TO_LIST(term_params, OZ_int(id));
+
+  } else if (OZ_isLiteral(params)) {
+
+  } else if (OZ_isCons(params)) {
+
+    int sz = OZ_length(params);
+
+    for (int i = 0; OZ_isCons(params); params = OZ_tail(params))
+      _reflect_space_params(rec_stack,
+                            vtable,
+                            OZ_head(params),
+                            term_params);
+
+  } else if (OZ_isTuple(params)) {
+
+    int sz = OZ_width(params);
+
+    for (int i = 0; i < sz; i += 1)
+      _reflect_space_params(rec_stack,
+                            vtable,
+                            OZ_getArg(params, i),
+                            term_params);
+
+  } else if (OZ_isRecord(params)) {
+
+    OZ_Term al = OZ_arityList(params);
+    int sz = OZ_width(params);
+
+    for (int i = 0; OZ_isCons(al); al = OZ_tail(al))
+      _reflect_space_params(rec_stack,
+                            vtable,
+                            OZ_subtree(params, OZ_head(al)),
+                            term_params);
+  }
+}
+
+OZ_Term reflect_space_params(ReflectStack &rec_stack,
+                             VarTable     &vtable,
+                             OZ_Term      params)
+{
+  OZ_Term term_params = OZ_nil();
+
+  _reflect_space_params(rec_stack, vtable, params, term_params);
+
+  return term_params;
+}
+
+//-----------------------------------------------------------------------------
+
 // returns an integer (ident of propagator)
 OZ_Term reflect_space_prop(ReflectStack &rec_stack,
                            OZ_Term      &prop_list,
@@ -46,7 +110,9 @@ OZ_Term reflect_space_prop(ReflectStack &rec_stack,
 
   OZ_Term arity_def[] = {
     {OZ_pair2(atom_ref,    propagator2Term(prop))},
-    {OZ_pair2(atom_params, p->getParameters())},
+    {OZ_pair2(atom_params, reflect_space_params(rec_stack,
+                                                vtable,
+                                                p->getParameters()))},
     {OZ_pair2(atom_name,   prop_name(p->getProfile()->getPropagatorName()))},
     {OZ_pair2(atom_loc,    oz_propGetName(prop))},
     {(OZ_Term) 0}
@@ -125,6 +191,7 @@ OZ_Term reflect_space_variable(ReflectStack &rec_stack,
     MKARITY(susp_arity, susp_arity_def);
 
     term_susplist = OZ_recordInit(atom_susplists, susp_arity);
+
   } else if (isGenFDVar(var,vartag)) {
 
     Bool is_reflected;
@@ -154,6 +221,7 @@ OZ_Term reflect_space_variable(ReflectStack &rec_stack,
     MKARITY(susp_arity, susp_arity_def);
 
     term_susplist = OZ_recordInit(atom_susplists, susp_arity);
+
   } else if (isGenBoolVar(var,vartag)) {
 
     Bool is_reflected;
@@ -174,6 +242,7 @@ OZ_Term reflect_space_variable(ReflectStack &rec_stack,
     MKARITY(susp_arity, susp_arity_def);
 
     term_susplist = OZ_recordInit(atom_susplists, susp_arity);
+
   } else if (isGenFSetVar(var,vartag)) {
 
     Bool is_reflected;
@@ -206,6 +275,7 @@ OZ_Term reflect_space_variable(ReflectStack &rec_stack,
     MKARITY(susp_arity, susp_arity_def);
 
     term_susplist = OZ_recordInit(atom_susplists, susp_arity);
+
   } else if (isGenCtVar(var, vartag)) {
 
     Bool is_reflected;
