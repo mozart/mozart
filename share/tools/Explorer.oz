@@ -8,30 +8,24 @@
 
 declare
 
-Explorer
+Explorer ExplorerClass
 
 ExploreOne ExploreAll ExploreBest
 
 in
 
-local
+\insert 'explorer/main.oz'
 
-   \insert 'explorer/main.oz'
+Explorer = {New ExplorerClass noop}
 
-in
+proc {ExploreOne P}
+   {Explorer one(P)}
+end
 
-   Explorer = {New ExplorerClass noop}
+proc {ExploreAll P}
+   {Explorer all(P)}
+end
 
-   proc {ExploreOne P}
-      {Explorer one(P)}
-   end
-
-   proc {ExploreAll P}
-      {Explorer all(P)}
-   end
-
-   proc {ExploreBest P O}
-      {Explorer all(P O)}
-   end
-
+proc {ExploreBest P O}
+   {Explorer all(P O)}
 end
