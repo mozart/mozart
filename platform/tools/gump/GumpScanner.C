@@ -156,6 +156,8 @@ OZ_BI_end
 
 extern "C" OZ_C_proc_interface *oz_init_module(void);
 
+char oz_module_name[] = "GumpScanner";
+
 OZ_C_proc_interface *oz_init_module(void) {
   static OZ_C_proc_interface oz_interface[] = {
     {"createFromFile",1,1,gump_createFromFile},
