@@ -1504,10 +1504,21 @@ void xyreportError(char *kind, char *msg, const char *file,
 
 static void xyerror(char *s) {
   char *news;
-  if (!strncmp(s, "parse error", 11) && strlen(s) > 13)
-    xyreportError("parse error", s + 13, xyFileName, xylino, xycharno());
-  else
+  if (!strncmp(s, "parse error", 11)) {
+    if (strlen(s) > 13) {
+      xyreportError("parse error", s + 13, xyFileName, xylino, xycharno());
+    } else if (yychar != YYEMPTY) {
+      int yychar1 = YYTRANSLATE(yychar);
+      char *s2 = new char[30 + strlen(yytname[yychar1])];
+      sprintf(s2, "unexpected token `%s'", yytname[yychar1]);
+      xyreportError("parse error", s2, xyFileName, xylino, xycharno());
+      delete[] s2;
+    } else {
+      xyreportError("parse error", s, xyFileName, xylino, xycharno());
+    }
+  } else {
     xyreportError("parse error", s, xyFileName, xylino, xycharno());
+  }
 }
 
 static OZ_Term init_options(OZ_Term optRec) {
