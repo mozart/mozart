@@ -1,8 +1,9 @@
 VPATH		= @srcdir@
-OZHOME		= @prefix@
 SRCDIR		= @srcdir@
-SRCDIRA		= @srcdira@
+export SRCDIR
 TOPDIR		= @TOPDIR@
+
+OZHOME		= @prefix@
 
 OZBIN		= $(OZHOME)/bin
 OZLIB		= $(OZHOME)/lib
@@ -30,6 +31,7 @@ OZMAINIT	= Init.ozc
 export OZMAINIT
 
 OZ_EMULATOR_DIR = @OZ_EMULATOR_DIR@
+export OZ_EMULATOR_DIR
 
 OZPATH		= .:compiler:ozcar:$(SRCDIR)
 export OZPATH
@@ -90,9 +92,9 @@ COMPILERSRC1 = \
 	CodeEmitter.oz BindingAnalysis.oz TupleSyntax.oz Unnester.oz \
 	UnnestFD.oz Assembler.oz Interface.oz \
 	GenericInterface.oz QuietInterface.oz
-COMPILERSRCNOVER = $(COMPILERSRC1:%=$(SRCDIR)/compiler/%) compiler/Opcodes.oz \
+COMPILERSRCNOVER = $(COMPILERSRC1:%=$(SRCDIR)/compiler/%) compiler-Opcodes.oz \
 	$(SRCDIR)/Compiler.oz
-COMPILERSRC = $(COMPILERSRCNOVER) compiler/Version.oz
+COMPILERSRC = $(COMPILERSRCNOVER) compiler-Version.oz
 
 COMPILERPANELSRC1 = CompilerPanelClass.oz
 COMPILERPANELSRC = $(COMPILERPANELSRC1:%=$(SRCDIR)/compiler/%) \
@@ -126,7 +128,7 @@ OZCARSRC1 = \
 	prelude.oz string.oz tk.oz config.oz help.oz tree.oz thread.oz \
 	stack.oz source.oz menu.oz dialog.oz gui.oz ozcar.oz
 OZCARSRCNOVER = $(OZCARSRC1:%=$(SRCDIR)/ozcar/%) $(SRCDIR)/Ozcar.oz
-OZCARSRC = $(OZCARSRCNOVER) ozcar/version.oz
+OZCARSRC = $(OZCARSRCNOVER) ozcar-version.oz
 
 PROFILERSRC1 = \
 	prof-gui.oz prof-prelude.oz prof-tk.oz \
@@ -199,7 +201,7 @@ OZCARBITMAPS = $(OZCARBITMAPS1:%=$(OZCARBITMAPDIR)/%)
 
 all: Makefile $(TYPS) $(TYCS) $(COMPONENTS) ozbatch
 
-ozbatch.ozm: $(SRCDIR)/MakeAssembly.oz \
+ozbatch.ozm: MakeAssembly.oz \
 	$(STANDARDSRC) $(SRCDIR)/Base.env $(SRCDIR)/Standard.env \
 	$(SPSRC) $(SRCDIR)/SP.env $(CPSRC) $(SRCDIR)/CP.env \
 	$(OPSRC) $(SRCDIR)/OP.env $(GUMPSRC) $(SRCDIR)/Gump.env \
@@ -225,16 +227,16 @@ install: all \
 
 clean:
 	$(RM) *~ *.bak
-	$(RM) compiler/Version.oz compiler/Opcodes.oz ozcar/version.oz
+	$(RM) compiler-Version.oz compiler-Opcodes.oz ozcar-version.oz
 	$(RM) $(TYPS) $(TYCS) $(HELPCOMPONENTS) $(COMPONENTS) ozbatch
 	$(RM) TAGS
-	$(RMDIR) tyc 2> /dev/null || $(TRUE)
+	$(RM) -r tyc
 
 realclean: clean
 
 veryclean: clean
 
-distclean:
+distclean: veryclean
 	$(RM) confdefs.h config.cache config.status config.log
 	$(RM) Makefile
 
@@ -265,14 +267,12 @@ $(OZBIN)/ozbatch: ozbatch
 %.typ: $(SRCDIR)/%.env
 	$(ENV2TYPE) $< > $@
 
-tyc/%.tyc: %.typ tyc $(DUMPINTRO)
+tyc/%.tyc: %.typ $(DUMPINTRO)
+	@if test ! -d tyc; then $(MKDIR) tyc; fi
 	$(COMPILE) $< -o $@
 
 %.ozc:
 	$(COMPILE) $*
-
-tyc compiler ozcar:
-	$(MKDIR) $@
 
 Init.ozc: $(DUMPINTRO) $(INITSRC)
 	OZMAINIT="" $(COMPILE) Init.oz
@@ -298,12 +298,12 @@ DP.ozc: $(DUMPINTRO) $(DPSRC) $(SRCDIR)/SP.env $(SRCDIR)/OP.env \
 Compiler.ozc: $(DUMPINTRO) $(COMPILERSRC) $(SRCDIR)/SP.env \
 	$(SRCDIR)/CP.env $(SRCDIR)/Gump.env $(SRCDIR)/Compiler.env Init.ozc
 
-compiler/Version.oz: compiler $(COMPILERSRCNOVER) $(OZVERSION) \
+compiler-Version.oz: $(COMPILERSRCNOVER) $(OZVERSION) \
 	$(SRCDIR)/compiler/Opcodes.m4oz
 	($(ECHO) 'OZVERSION = '\'`$(OZVERSION)`\'; \
 	$(ECHO) 'DATE = '\'`date '+%h %d 19%y (%T)'`\') > $@
 
-compiler/Opcodes.oz: compiler $(SRCDIR)/compiler/Opcodes.m4oz \
+compiler-Opcodes.oz: $(SRCDIR)/compiler/Opcodes.m4oz \
 	$(TOPDIR)/Emulator/instrDefs.m4
 	$(M4) -DEMUDIR=$(TOPDIR)/Emulator \
 	< $(SRCDIR)/compiler/Opcodes.m4oz > $@
@@ -328,8 +328,8 @@ Ozcar.ozc: $(DUMPINTRO) $(OZCARSRC) $(SRCDIR)/SP.env $(SRCDIR)/WP.env \
 	$(SRCDIR)/Browser.env $(SRCDIR)/Emacs.env $(SRCDIR)/Compiler.env \
 	$(SRCDIR)/Ozcar.env Init.ozc
 
-ozcar/version.oz: ozcar $(OZCARSRCNOVER)
-	cd ozcar && $(SRCDIRA)/ozcar/version.sh
+ozcar-version.oz: $(OZCARSRCNOVER)
+	echo \'`date '+%b %d'`\' > $@
 
 Profiler.ozc: $(DUMPINTRO) $(PROFILERSRC) $(SRCDIR)/SP.env $(SRCDIR)/OP.env \
 	$(SRCDIR)/WP.env $(SRCDIR)/Browser.env $(SRCDIR)/Emacs.env \
@@ -359,6 +359,5 @@ tags:
 	$(ALLSRCS)
 
 bootstrap: ${OZMA_LIB}
-	make Init.ozc all \
-	 OZBATCH="OZ_EMULATOR_DIR=$(OZ_EMULATOR_DIR) $(SRCDIR)/ozbatch.sh" 
+	make Init.ozc all OZBATCH=$(SRCDIR)/ozbatch.sh
 
