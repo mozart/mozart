@@ -124,7 +124,8 @@ MEMSRCS=\
 	gc.cc mem.cc liveness.cc
 
 PICKLESRCS=\
-	gname.cc components.cc marshaler.cc site.cc
+	gname.cc components.cc marshaler.cc site.cc \
+	gentraverser.cc newmarshaler.cc
 
 OFSRCS=	var_of.cc ofbi.cc
 

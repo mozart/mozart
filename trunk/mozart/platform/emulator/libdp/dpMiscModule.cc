@@ -34,6 +34,15 @@
 
 #include "builtins.hh"
 #include "os.hh"
+#include "space.hh"
+#include "newmarshaler.hh"
+
+#define USE_VS_MSGBUFFERS
+
+// 
+#ifdef USE_VS_MSGBUFFERS
+#include "virtual.hh"
+#endif
 
 OZ_BI_define(BIcrash,0,0)   /* only for debugging */
 {
@@ -226,6 +235,191 @@ OZ_BI_define(BIclose,1,0)
   dpExitWithTimer((unsigned int) time);
   osExit(0);
   return PROCEED;
+} OZ_BI_end
+
+//
+// kost@: temporary (?) builtin for comparing performances of
+// marshalling/unmarshalling stuff. It takes a data structure to be
+// tested and a number of times to repeat. Before loop it does it once
+// and checks correctness of the operation;
+// 
+// Here is essentially a copy of builtin's 'oz_eqeq()':
+inline 
+Bool oz_eqeq(TaggedRef Ain,TaggedRef Bin)
+{
+  // simulate a shallow guard
+  am.trail.pushMark();
+  am.setShallowHeapTop(heapTop);
+  OZ_Return ret = oz_unify(Ain,Bin,(ByteCode*)1);
+  am.setShallowHeapTop(NULL);
+
+  if (ret == PROCEED) {
+    if (am.trail.isEmptyChunk()) {
+      am.trail.popMark();
+      return (OK);
+    }
+
+    oz_reduceTrailOnEqEq();
+    return (NO);
+  }
+
+  oz_reduceTrailOnFail();
+  return (NO);
+}
+
+//
+OZ_BI_define(BImarshalerPerf,2,0)
+{
+  initDP();
+
+  oz_declareIN(0, value);
+  oz_declareIntIN(1, count);
+  OZ_Term result;
+  MsgBuffer *buf;
+  unsigned int timeNow;
+  int heapNow;
+
+  // check marshaler (old one);
+#ifdef USE_VS_MSGBUFFERS
+  buf = getCoreVirtualMsgBuffer((DSite *) 0);
+#else
+  buf = getRemoteMsgBuffer((DSite *) 0);
+#endif
+  buf->marshalBegin();
+  marshalTermRT(value, buf);
+  buf->marshalEnd();
+  buf->unmarshalBegin();
+  result = unmarshalTermRT(buf);
+  buf->unmarshalEnd();
+#ifdef USE_VS_MSGBUFFERS
+  dumpVirtualMsgBufferImpl(buf);
+#else
+  dumpRemoteMsgBuffer(buf);
+#endif
+  if (!oz_eqeq(value, result))
+    return (oz_raise(E_ERROR, E_SYSTEM, "odd old marshaler", 0));
+  // ... new one:
+#ifdef USE_VS_MSGBUFFERS
+  buf = getCoreVirtualMsgBuffer((DSite *) 0);
+#else
+  buf = getRemoteMsgBuffer((DSite *) 0);
+#endif
+  buf->marshalBegin();
+  newMarshalTerm(value, buf);
+  buf->marshalEnd();
+  buf->unmarshalBegin();
+  result = newUnmarshalTerm(buf);
+  buf->unmarshalEnd();
+#ifdef USE_VS_MSGBUFFERS
+  dumpVirtualMsgBufferImpl(buf);
+#else
+  dumpRemoteMsgBuffer(buf);
+#endif
+  if (!oz_eqeq(value, result))
+    return (oz_raise(E_ERROR, E_SYSTEM, "odd new marshaler", 0));
+
+  // Now let's spin for a while. First, do marshaling speed:
+  timeNow = osUserTime();
+  heapNow = getUsedMemory();
+  for (int i = 0; i < count; i++) {
+#ifdef USE_VS_MSGBUFFERS
+    buf = getCoreVirtualMsgBuffer((DSite *) 0);
+#else
+    buf = getRemoteMsgBuffer((DSite *) 0);
+#endif
+    buf->marshalBegin();
+    marshalTermRT(value, buf);
+    buf->marshalEnd();
+#ifdef USE_VS_MSGBUFFERS
+    dumpVirtualMsgBufferImpl(buf);
+#else
+    dumpRemoteMsgBuffer(buf);
+#endif
+  }
+  fprintf(stdout, "old marshaler/marshaling:");
+  printTime(stdout, "r: ", (osUserTime() - timeNow));
+  printMem(stdout, ", h: ", (getUsedMemory() - heapNow)*KB);
+  fprintf(stdout, "\n"); fflush(stdout);
+
+  // ... new marshaler:
+  timeNow = osUserTime();
+  heapNow = getUsedMemory();
+  for (int i = 0; i < count; i++) {
+#ifdef USE_VS_MSGBUFFERS
+    buf = getCoreVirtualMsgBuffer((DSite *) 0);
+#else
+    buf = getRemoteMsgBuffer((DSite *) 0);
+#endif
+    buf->marshalBegin();
+    newMarshalTerm(value, buf);
+    buf->marshalEnd();
+#ifdef USE_VS_MSGBUFFERS
+    dumpVirtualMsgBufferImpl(buf);
+#else
+    dumpRemoteMsgBuffer(buf);
+#endif
+  }
+  fprintf(stdout, "new marshaler/marshaling:");
+  printTime(stdout, "r: ", (osUserTime() - timeNow));
+  printMem(stdout, ", h: ", (getUsedMemory() - heapNow)*KB);
+  fprintf(stdout, "\n"); fflush(stdout);
+
+  // unmarshalling:
+#ifdef USE_VS_MSGBUFFERS
+  buf = getCoreVirtualMsgBuffer((DSite *) 0);
+#else
+  buf = getRemoteMsgBuffer((DSite *) 0);
+#endif
+  buf->marshalBegin();
+  marshalTermRT(value, buf);
+  buf->marshalEnd();
+  //
+  timeNow = osUserTime();
+  heapNow = getUsedMemory();
+  for (int i = 0; i < count; i++) {
+    buf->unmarshalBegin();
+    result = unmarshalTermRT(buf);
+    buf->unmarshalEnd();
+  }
+  fprintf(stdout, "old marshaler/unmarshaling:");
+  printTime(stdout, "r: ", (osUserTime() - timeNow));
+  printMem(stdout,", h: ", (getUsedMemory() - heapNow)*KB);
+  fprintf(stdout, "\n"); fflush(stdout);
+#ifdef USE_VS_MSGBUFFERS
+  dumpVirtualMsgBufferImpl(buf);
+#else
+  dumpRemoteMsgBuffer(buf);
+#endif
+
+#ifdef USE_VS_MSGBUFFERS
+  buf = getCoreVirtualMsgBuffer((DSite *) 0);
+#else
+  buf = getRemoteMsgBuffer((DSite *) 0);
+#endif
+  buf->marshalBegin();
+  newMarshalTerm(value, buf);
+  buf->marshalEnd();
+  //
+  timeNow = osUserTime();
+  heapNow = getUsedMemory();
+  for (int i = 0; i < count; i++) {
+    buf->unmarshalBegin();
+    result = newUnmarshalTerm(buf);
+    buf->unmarshalEnd();
+  }
+  fprintf(stdout, "new marshaler/unmarshaling:");
+  printTime(stdout, "r: ", (osUserTime() - timeNow));
+  printMem(stdout, ", h: ", (getUsedMemory() - heapNow)*KB);
+  fprintf(stdout, "\n"); fflush(stdout);
+  //
+#ifdef USE_VS_MSGBUFFERS
+  dumpVirtualMsgBufferImpl(buf);
+#else
+  dumpRemoteMsgBuffer(buf);
+#endif
+
+  //
+  return (PROCEED);
 } OZ_BI_end
 
 /*
