@@ -1,9 +1,9 @@
 functor
 import
    Global(args             : Args
-	  ozpmmanifest     : OZPMMANIFEST
-	  ozpmmanifesttext : OZPMMANIFESTTEXT
-	  ozpmInfo         : OzpmInfo)
+	  fileMftPkl       : FILEMFTPKL
+	  fileMftTxt       : FILEMFTTXT
+	  localDB          : LocalDB)
    Archive('class')
    OS(tmpnam unlink)
    Pickle(load)
@@ -39,7 +39,7 @@ define
       {Print "Contains the following files :"}
       {ForAll L
        proc{$ R}
-	  if R.path\=OZPMMANIFEST andthen R.path\=OZPMMANIFESTTEXT then 
+	  if R.path\=FILEMFTPKL andthen R.path\=FILEMFTTXT then 
 	     {Print {RAlign R.size 10}#" "#R.path}
 	  end
        end}
@@ -62,7 +62,7 @@ define
       Tmp = {OS.tmpnam}
    in
       try
-	 {A extract(OZPMMANIFEST Tmp)}
+	 {A extract(FILEMFTPKL Tmp)}
 	 {Pickle.load Tmp} # {A lsla($)}
       finally
 	 try {OS.unlink Tmp} catch _ then skip end
@@ -73,7 +73,7 @@ define
       Id = {ByteString.make Id1}
    in
       try
-	 for Entry in OzpmInfo do
+	 for Entry in LocalDB do
 	    if Entry.id==id then raise found(Entry) end end
 	 end
 	 notFound
