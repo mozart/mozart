@@ -52,7 +52,8 @@ $(WHAT)-html/index.html: $(MAIN) $(SGMLSRCS) $(HTMLEXTRAFILES)
         --bib-path=$(SRCDIR):$(SRCTOP)/doc \
         --bst-path=$(SRCTOP)/doc/utilities \
         --latexdb=latex.db \
-        --xrefdb=../xref.db --xrefdir=$(WHAT) --indexdb=../index.db && \
+        --xrefdb=../xref.db --xrefdir=$(WHAT) --indexdb=../index.db \
+        --make-hhc=$(WHAT).hhc && \
         cp -p $(HTMLSUPPORTFILES) $(WHAT)-html && \
         for i in $(addprefix $(SRCTOP)/doc/$(WHAT)/,$(HTMLEXTRAFILES)) NONE; \
         do { test $$i = NONE || cp -p $$i $(WHAT)-html; } done
