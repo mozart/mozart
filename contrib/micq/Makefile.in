@@ -2,13 +2,14 @@
 BUILDTOP	= @BUILDTOP@
 SRCTOP		= @SRCTOP@
 PREFIX		= @prefix@
-SRCDIR		= @srcdir@
-VPATH		= @srcdir@
+SRCDIR          = @srcdir@
+VPATH           = @srcdir@
+PLATFORM	= @PLATFORM@
 HOMEURL		= @HOMEURL@
 LIB_DIR		= $(PREFIX)/contrib/micq
+DEMO_DIR	= $(PREFIX)/doc/demo/applets
 OZC		= @OZC@ 
-OZC_FLAGS	= --baseurl=$(BUILDTOP)/contrib/micq/
-COMPILE		= $(OZC) $(OZC_FLAGS)
+COMPILE	        = $(OZC) -b $(BUILDTOP)/contrib/micq/
 OZL		= @OZL@
 INSTALL		= @INSTALL@
 INSTALL_DIR	= @INSTALL_DIR@
@@ -16,18 +17,25 @@ INSTALL_LIB	= $(INSTALL) -m 444
 APPLETS		= server.oza client.oza
 
 all:		$(APPLETS)
-%.ozf: %.oz
-	$(COMPILE) -c $< -o $@
-install:	$(LIB_DIR) $(addprefix $(LIB_DIR)/,$(APPLETS))
-$(LIB_DIR):
+
+install:: $(LIB_DIR) $(DEMO_DIR) \
+	$(addprefix $(LIB_DIR)/,$(APPLETS)) \
+	$(DEMO_DIR)/MIM.oza
+
+$(LIB_DIR) $(DEMO_DIR):
 	$(INSTALL_DIR) $@
 $(LIB_DIR)/%.oza: %.oza
 	$(INSTALL_LIB) $< $@
+$(DEMO_DIR)/MIM.oza: client.oza
+	$(INSTALL_LIB) $< $@
+
+%.ozf: %.oz
+	$(COMPILE) -c $< -o $@
 
 server.oza: micq
-	$(OZL) $< -o $@
+	$(OZL) -z 9 $< -o $@
 client.oza: client
-	$(OZL) $< -o $@
+	$(OZL) -z 9 $< -o $@
 
 micq: startserver.oz server.ozf defaultsettings.ozf
 	$(COMPILE) -x $< -o $@
@@ -35,15 +43,20 @@ micq: startserver.oz server.ozf defaultsettings.ozf
 client: startclient.oz client.ozf 
 	$(COMPILE) -x $< -o $@
 
-server.ozf: server.oz methods.ozf database.ozf mobility.ozf newaccountgui.ozf \
+BMETH = $(BUILDTOP)/contrib/micq/methods.ozf
+
+$(BMETH): $(SRCDIR)/methods.ozf
+	cp $< $@
+	
+server.ozf: server.oz $(BMETH) database.ozf mobility.ozf newaccountgui.ozf \
 	log.ozf  sysadm.ozf
 	$(COMPILE) -c $< -o $@
 
-addapplicationgui.ozf: addapplicationgui.oz methods.ozf
+addapplicationgui.ozf: addapplicationgui.oz $(BMETH)
 	$(COMPILE) -c $< -o $@
 sysadm.ozf: sysadm.oz addapplicationgui.ozf editapplicationgui.ozf
 	$(COMPILE) -c $< -o $@
-client.ozf : client.oz methods.ozf clientgui.ozf newfriendsgui.ozf \
+client.ozf : client.oz $(BMETH) clientgui.ozf newfriendsgui.ozf \
 	defaultsettings.ozf dialoggui.ozf mobility.ozf
 	$(COMPILE) -c $< -o $@
 clientgui.ozf : clientgui.oz messagedisplay.ozf manager.ozf \
@@ -55,10 +68,10 @@ messagegui.ozf : messagegui.oz popup.ozf
 	$(COMPILE) -c $< -o $@
 
 clean veryclean:
-	-rm *~ *.ozf *.oza micq client
+	-rm -f *~ *.ozf *.oza micq client
 
 distclean: veryclean
-	-rm Makefile config.*
+	-rm -f Makefile config.*
 
 include $(SRCTOP)/share/Makefile.boot
 
