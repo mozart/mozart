@@ -177,7 +177,7 @@ void Statistics::printIdle(FILE *fd)
   heapAllocated += mem;
 
   if (am.conf.showIdleMessage) {
-    message("idle (", timeNow-timeSinceLastIdle);
+    printf("idle (", timeNow-timeSinceLastIdle);
     printTime(fd,"r: ",
 	      (timeNow-timeSinceLastIdle)-timeForGC
 	      -timeForCopy-timeForLoading);
@@ -201,7 +201,7 @@ int Statistics::Statistics_gcSoFar = 0;
 void Statistics::initGcMsg(int level)
 {
   if (level > 0) 
-    message("\nHeap garbage collection");
+    message("Heap garbage collection\n");
 
   gc_level = level;
   gc_utime = usertime();
