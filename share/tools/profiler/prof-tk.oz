@@ -24,7 +24,7 @@ class TitleFrame from Tk.frame
    feat Label
    meth tkInit(title:T<='' ...)=M
       Tk.frame,{Record.subtract M title}
-      case T == '' then skip
+      if T == '' then skip
       else
 	 self.Label = {New Tk.label tkInit(parent: self
 					   text:   T
@@ -35,9 +35,9 @@ class TitleFrame from Tk.frame
       end
    end
    meth title(S)
-      case {IsDet self.Label} then
+      if {IsDet self.Label} then
 	 {self.Label tk(conf text:S)}
-      else skip end
+      end
    end
 end
 

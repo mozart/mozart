@@ -50,14 +50,14 @@ end
 
 %% send a warning/error message
 proc {OzcarShow X}
-   case {Cget verbose} then
+   if {Cget verbose} then
       {System.show X}
-   else skip end
+   end
 end
 proc {OzcarMessage M}
-   case {Cget verbose} then
+   if {Cget verbose} then
       {System.showInfo {OzcarMessagePrefix} # M}
-   else skip end
+   end
 end
 proc {OzcarError M}
    {System.showError OzcarErrorPrefix # M}
@@ -91,7 +91,7 @@ end
 
 local
    fun {MakeSpace N}
-      case N < 1 then nil else 32 | {MakeSpace N-1} end
+      if N < 1 then nil else 32 | {MakeSpace N-1} end
    end
 in
    fun {PrintF S N}
@@ -99,7 +99,7 @@ in
       %% line if S is too long
       SpaceCount = N - {VirtualString.length S}
    in
-      case SpaceCount < 1 then
+      if SpaceCount < 1 then
 	 S # '\n' # {MakeSpace N}
       else
 	 S # {MakeSpace SpaceCount}

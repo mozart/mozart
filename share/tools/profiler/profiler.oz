@@ -41,9 +41,9 @@ Profiler =
 	   {EnqueueCompilerQuery setSwitch(profile true)}
 	   {Profile.mode true}
 	   {Profile.reset}
-	   case {Cget update} > 0 then
+	   if {Cget update} > 0 then
 	      Time.repeat,go
-	   else skip end
+	   end
 	end
 
      end init}

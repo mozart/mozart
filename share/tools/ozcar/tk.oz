@@ -23,7 +23,7 @@ class TitleFrame from Tk.frame
    feat Label
    meth tkInit(title:T<=unit ...)=M
       Tk.frame,{Record.subtract M title}
-      case T == unit then skip else
+      if T \= unit then
 	 self.Label = {New Tk.label
 		       tkInit(parent: self
 			      text:   T
@@ -34,9 +34,9 @@ class TitleFrame from Tk.frame
       end
    end
    meth title(S)
-      case {IsDet self.Label} then
+      if {IsDet self.Label} then
 	 {self.Label tk(conf text:S)}
-      else skip end
+      end
    end
 end
 
@@ -94,7 +94,7 @@ class ScrolledTitleText from Tk.text TkTools.smoother
    end
    meth resetTags
       proc {DoIt N}
-	 case N >= self.TagBase then skip else N1 = N + 1 in
+	 if N < self.TagBase then N1 = N + 1 in
 	    {self tk(tag delete N1)}
 	    {DoIt N1}
 	 end
@@ -113,11 +113,11 @@ class StatusDisplay from Tk.text TkTools.smoother
    end
    meth DoIt(Message Clear Color)
       {self tk(conf state:normal)}
-      case Clear then
+      if Clear then
 	 {self tk(delete p(0 0) 'end')}
-      else skip end
+      end
       {self tk(insert 'end' Message)}
-      case Color == unit then skip else
+      if Color \= unit then
 	 {self tk(conf fg:Color)}
       end
       {self tk(conf state:disabled)}

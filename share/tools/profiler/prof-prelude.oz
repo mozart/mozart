@@ -33,12 +33,12 @@ fun {UnknownFile F}
 end
 
 fun {StripPath File}
-   case {UnknownFile File} then
+   if {UnknownFile File} then
       '???'
    else
       S = {Str.rchr {Atom.toString File} &/}
    in
-      case {List.length S} > 1 then
+      if {List.length S} > 1 then
 	 {S2A S.2}
       else
 	 '???'
