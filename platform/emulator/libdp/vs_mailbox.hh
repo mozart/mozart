@@ -93,7 +93,7 @@ protected:
   // array);
   int maxSize;
   int size, head, tail;
-  VSMailboxMsg msgs[1];		// ... but more in the reallity;
+  VSMailboxMsg msgs[0];		// ... but more in the reallity;
 
   //
 public:

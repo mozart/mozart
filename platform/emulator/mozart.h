@@ -671,8 +671,10 @@ VAR = OZ_vsToC(OZ_in(ARG),&LEN);
   if (! (Cond)) {							\
     OZ_error("%s:%d assertion '%s' failed",__FILE__,__LINE__,#Cond);	\
   }
+#define DebugArg(C) , C
 #else 
 #define Assert(Cond)
+#define DebugArg(C)
 #endif
 
 /* ------------------------------------------------------------------------ *
