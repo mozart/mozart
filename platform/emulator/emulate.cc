@@ -718,6 +718,17 @@ TaggedRef AM::createNamedVariable(int regIndex, TaggedRef name)
   return ret;
 }
 
+
+inline
+Bool AM::entailment()
+{
+  return (!currentBoard->hasSuspension()
+          // First test: no subtrees;
+          && trail.isEmptyChunk()
+          // second test: is this node stable?
+          );
+}
+
 /*
  * check stability after thread is finished
  */
@@ -866,7 +877,6 @@ void engine(Bool init)
   /* shallow choice pointer */
   ByteCode *shallowCP = NULL;
 
-  OZ_CFun biFun = NULL;     NoReg(biFun);
   ConstTerm *predicate;     NoReg(predicate);
   int predArity;            NoReg(predArity);
 
@@ -879,7 +889,7 @@ void engine(Bool init)
 #ifdef CATCH_SEGV
   //
   //  In the case of an error, the control is passed either to
-  // LBLkillToplevelThread or LBLfailure; Note that both require
+  // LBLfailure; Note that both require
   // the presence of a runnable thread;
   switch (e->catchError()) {
   case 0:
@@ -930,7 +940,7 @@ LBLpreemption:
   e->scheduleThreadInline(CTT, CPP);
   CTT=0;
 
-
+  // fall through
 
 // ------------------------------------------------------------------------
 // *** execute runnable thread
@@ -1043,22 +1053,6 @@ LBLstart:
 
   goto LBLerror;
 
-// ------------------------------------------------------------------------
-// *** Thread on toplevel is terminated
-// ------------------------------------------------------------------------
-
-LBLkillToplevelThread:
-  {
-    Assert(CTT);
-    Assert(e->isToplevel());
-    asmLbl(killToplevelThread);
-
-    CBB->decSuspCount();
-
-    CTT->disposeRunnableThread();
-    CTT = 0;
-    goto LBLstart;
-  }
 
 // ------------------------------------------------------------------------
 // *** Thread is terminated
@@ -1070,6 +1064,8 @@ LBLkillToplevelThread:
    */
 LBLterminateThread:
   {
+    asmLbl(terminateThread);
+
     DebugTrace(trace("kill thread", CBB));
     Assert(CTT);
     Assert(!CTT->isDeadThread());
@@ -1086,8 +1082,6 @@ LBLterminateThread:
     Assert(e->isToplevel() ||
            ((CTT->isInSolve() || !e->currentSolveBoard) &&
             (e->currentSolveBoard || !CTT->isInSolve())));
-
-    asmLbl(terminateThread);
 
     if (CTT == e->rootThread) {
       e->rootThread->reInit(e->rootThread->getPriority(), e->rootBoard);
@@ -1214,11 +1208,11 @@ LBLcheckEntailmentAndStability:
    */
 LBLdiscardThread:
   {
+    asmLbl(discardThread);
+
     Assert(CTT);
     Assert(!CTT->isDeadThread());
     Assert(CTT->isRunnable ());
-
-    asmLbl(discardThread);
 
     //
     //  Note that we may not use the 'currentSolveBoard' test here,
@@ -1262,7 +1256,7 @@ LBLdiscardThread:
    */
 LBLsuspendThread:
   {
-    Board *nb = 0;
+    asmLbl(suspendThread);
 
     DebugTrace (trace("suspend runnable thread", CBB));
 
@@ -1274,8 +1268,6 @@ LBLsuspendThread:
     //  see the note for the 'LBLterminateThread';
     Assert(CTT->isInSolve() || !e->currentSolveBoard);
     Assert(e->currentSolveBoard || !CTT->isInSolve());
-
-    asmLbl(suspendThread);
 
     //
     //  First, set the board and self, and perform special action for
@@ -1408,7 +1400,7 @@ LBLdispatcher:
     {
       COUNT(bicalls);
       BuiltinTabEntry* entry = GetBI(PC+1);
-      biFun = entry->getFun();
+      OZ_CFun biFun = entry->getFun();
       predArity = getPosIntArg(PC+2);
 
       CheckArity(entry->getArity(),makeTaggedConst(entry));
@@ -2395,7 +2387,7 @@ LBLdispatcher:
          }
        }
 
-       biFun=bi->getFun();
+       OZ_CFun biFun = bi->getFun();
        OZ_Return res = biFun(predArity, X);
 
        //if (e->isSetSFlag(DebugMode)) {
@@ -2743,7 +2735,7 @@ LBLdispatcher:
   Case(TASKEMPTYSTACK)
     {
       Assert(Y==0 && G==0);
-      CTS->pushEmpty();
+      CTS->pushEmpty();   // mm2?
       goto LBLterminateThread;
     }
 
@@ -2861,7 +2853,7 @@ if (CTT->isTraced() && CTT->stepMode()) {
      {
        //
        // by kost@ : 'solve actors' are represented via a c-function;
-       biFun = (OZ_CFun) (void*) Y;
+       OZ_CFun biFun = (OZ_CFun) (void*) Y;
        RefsArray tmpX = G;
        G = Y = NULL;
        if (tmpX != NULL) {
@@ -2901,7 +2893,6 @@ if (CTT->isTraced() && CTT->stepMode()) {
   Case(TASKLTQ)
      {
        Y = NULL;  // sa here unused
-       asmLbl(ltq);
        Assert(e->currentBoard->isSolve());
        Assert(!e->isToplevel());
        Assert(CTS->isEmpty()); // approximates one LTQ task
@@ -3203,8 +3194,9 @@ if (CTT->isTraced() && CTT->stepMode()) {
 // *** FAILURE
 // ------------------------------------------------------------------------
 
- LBLshallowFail:
+LBLshallowFail:
   {
+    asmLbl(shallowFail);
     if (e->trail.isEmptyChunk()) {
       e->trail.popMark();
     } else {
@@ -3221,7 +3213,8 @@ if (CTT->isTraced() && CTT->stepMode()) {
    *  - Can be entered only in a deep guard;
    *  - current thread must be runnable.
    */
- LBLfailure:
+LBLfailure:
+  asmLbl(failure);
   DebugTrace(trace("fail",CBB));
 
   Assert(!e->isToplevel());
