@@ -215,7 +215,23 @@ public:
   virtual size_t sizeOf(void) { return sizeof(Propagator_VS); }
   virtual void updateHeapRefs(OZ_Boolean);
   virtual OZ_Term getParameters(void) const;
+
+  OZ_Boolean hasEqualVars(void);
 };
+
+inline
+OZ_Boolean Propagator_VS::hasEqualVars(void) 
+{
+  if (mayBeEqualVars()) {
+    int * is = OZ_findEqualVars(_vs_size, _vs);
+    
+    for (int i = _vs_size; i--; )
+      if (is[i] != -1 && is[i] != i) 
+	return OZ_TRUE;
+  }    
+  return OZ_FALSE;
+}
+
 
 //-----------------------------------------------------------------------------
 class Propagator_VS_S : public Propagator_VS {
