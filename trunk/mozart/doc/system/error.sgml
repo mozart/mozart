@@ -157,7 +157,36 @@
   <Section>
     <Title/Example Error Formatter/
     <P>
-      <!--** still missing -->
+      The following piece of code illustrates how an error formatter might
+      be registered and how it could behave.  Assume a system component
+      called <<compiler>>, which is given <Q/queries/ to process.  If any
+      query is ill-typed, an exception is raised, containing the query,
+      the number of the ill-typed argument, and the expected argument type.
+      Furthermore, an <<internal>> exception is raised when an internal
+      programming assertion is violated.  For robustness, an <<else>> case
+      is included to handle any other exceptions.  The formatter simply
+      prints out the exception record, since this might help more than no
+      output at all.
+<<<{Error.registerFormatter compiler
+ fun {$ E} T in
+    T = 'compiler engine error'
+    case E of compiler(internal X) then
+       error(kind: T
+	     msg: 'Internal compiler error'
+	     items: [hint(l: 'Additional information' m: oz(X))
+		     line('please send a bug report to oz-bugs@ps.uni-sb.de')])
+    elseof compiler(invalidQuery M I A) then
+       error(kind: T
+	     msg: 'Ill-typed query argument'
+	     items: [hint(l: 'Query' m: oz(M))
+		     hint(l: 'At argument' m: I)
+		     hint(l: 'Expected type' m: A)])
+    &ellipsis;
+    else
+       error(kind: T
+	     items: [line(oz(E))])
+    end
+ end}>>>
   <Section>
     <Title/The Module/
     <P>
