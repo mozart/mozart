@@ -12,7 +12,7 @@ HOMEURL         = @HOMEURL@
 
 all bootstrap:: TeX.class
 
-%.java: %.class
+%.class: %.java
 	java $<
 
 Makefile: Makefile.in ../config.status
