@@ -565,7 +565,10 @@ OZ_BI_define(BIVSremoveMailbox,1,0)
 ///
 void virtualSitesExit()
 {
+  am.removeTask((void *) &vsSiteQueue, checkMessageQueue);
   if (myVSMailboxManager) {
+    am.removeTask((void *) myVSMailboxManager->getMailbox(),
+                  checkVSMessages);
     myVSMailboxManager->destroy();
     delete myVSMailboxManager;
     myVSMailboxManager = (VSMailboxManagerOwned *) 0;
