@@ -32,6 +32,8 @@ in
       File Process
    define
 
+      proc {NOOP _} skip end
+
       class IOBase
          prop native locking
          attr
@@ -68,8 +70,12 @@ in
                         ReadFD <- unit
                      elseif Avail==0 then
                         Buffer <- More
+                        Offset <- 0
                         IOBase,FillBuffer(N)
                      else
+                        %% the forced record construction is here
+                        %% necessary
+                        {NOOP see(foo)} %% <-- WEIRD BUG FIX
                         if @Offset\=0 then
                            Buffer <- {ByteString.append
                                       {ByteString.slice
@@ -91,8 +97,7 @@ in
          meth getc(C)
             lock @ReadLock then
                IOBase,FillBuffer(1)
-               if @Buffer==unit then
-                  {OpenExc alreadyClosed self getc(C)}
+               if @Buffer==unit then C=false
                else
                   C = {ByteString.get @Buffer @Offset}
                   Offset <- @Offset + 1
@@ -105,8 +110,7 @@ in
          meth getn(N Bytes)
             lock @ReadLock then
                IOBase,FillBuffer(N)
-               if @Buffer==unit then
-                  {OpenExc alreadyClosed self getn(N Bytes)}
+               if @Buffer==unit then Bytes=false
                else
                   Length = {ByteString.length @Buffer}
                   Avail  = Length - @Offset
@@ -142,9 +146,11 @@ in
          %%
          meth !FillLine(ATLEAST)
             IOBase,FillBuffer(ATLEAST)
-            if @Buffer==unit orelse
-               {ByteString.length @Buffer}<ATLEAST orelse
-               {ByteString.strchr @Buffer @Offset &\n}\=false
+            BUFFER = @Buffer
+         in
+            if BUFFER==unit orelse
+               {ByteString.length BUFFER}<ATLEAST orelse
+               {ByteString.strchr BUFFER @Offset &\n}\=false
             then skip else
                IOBase,FillLine(ATLEAST+READSIZE)
             end
@@ -155,19 +161,21 @@ in
          meth gets(Line)
             lock @ReadLock then
                IOBase,FillLine(1)
-               if @Buffer==unit then
-                  {OpenExc alreadyClosed self gets(Line)}
+               BUFFER = @Buffer
+            in
+               if BUFFER==unit then Line=false
                else
-                  I = {ByteString.strchr @Buffer @Offset &\n}
-                  Length = {ByteString.length @Buffer}
+                  OFFSET = @Offset
+                  I = {ByteString.strchr BUFFER OFFSET &\n}
+                  Length = {ByteString.length BUFFER}
                in
                   if I==false then
-                     if @Offset==0 then Line=@Buffer
-                     else Line={ByteString.slice @Buffer @Offset Length} end
+                     if OFFSET==0 then Line=BUFFER
+                     else Line={ByteString.slice BUFFER OFFSET Length} end
                      Buffer <- unit
                      Offset <- 0
                   else
-                     Line={ByteString.slice @Buffer @Offset @I}
+                     Line={ByteString.slice BUFFER OFFSET I}
                      if I+1==Length then
                         Buffer <- EmptyBuffer
                         Offset <- 0
@@ -181,11 +189,9 @@ in
          %%
          %% get 1 line as a string
          %%
-         meth getS(Line)
-            try B={self gets($)} in
+         meth getS(Line) B={self gets($)} in
+            if B==false then Line=false else
                {ByteString.toString B Line}
-            catch system(open(alreadyClosed _ _) debug:_) then
-               Line=false
             end
          end
          %%
@@ -226,6 +232,20 @@ in
             end
          end
          %%
+         meth close
+            lock @ReadLock then
+               lock @WriteLock then
+                  if @ReadFD\=unit then
+                     try {IO.close @ReadFD} catch _ then skip end
+                     ReadFD <- unit
+                  end
+                  if @WriteFD\=unit then
+                     try {IO.close @WriteFD} catch _ then skip end
+                     WriteFD <- unit
+                  end
+               end
+            end
+         end
       end
 
       class File from IOBase
@@ -242,10 +262,13 @@ in
             ReadFD  <- FD
             WriteFD <- FD
          end
-         meth !Init(read:RD<=unit write:WR<=unit)
+         meth !Init(Which FD)
             IOBase,InitBase
-            ReadFD  <- RD
-            WriteFD <- WR
+            case Which
+            of stdin  then WriteFD <- FD
+            [] stdout then ReadFD <- FD
+            [] stderr then ReadFD <- FD
+            end
          end
       end
 
@@ -262,21 +285,31 @@ in
       %% (4) `open(OBJ)' indicates that a new File object should be
       %%     created and that OBJ should be bound to it
       %%
+      %% FROM is one of stdin, stdout, or stderr and indicates the
+      %%        stream to be redirected
+      %% TO is a spec as described above that specifies the redirection
+      %% PROC_FD is the descriptor to use for spec (2) `true' and
+      %%        corresponds to a redirection to the process object
+      %% the result is a pair USE#CLOSE of descriptors. USE is the
+      %% descriptor to be used for redirection by the child process and
+      %% CLOSE is a boolean that indicates whether the parent should
+      %% close USE after spawning off the child.  USE may also be unit
+      %% to indicate that no redirection should take place.
 
       fun {ProcessFD FROM TO PROC_FD}
          %% FROM is one of stdin, stdout, or stderr
-         if FROM==TO then unit
+         if FROM==TO then unit#false
          elsecase TO
-         of true   then PROC_FD
-         [] false  then {IO.devNull}
-         [] stdin  then IO.stdin
-         [] stdout then IO.stdout
-         [] stderr then IO.stderr
+         of true   then PROC_FD#false
+         [] false  then FD={IO.devNull} in FD#true
+         [] stdin  then IO.stdin#false
+         [] stdout then IO.stdout#false
+         [] stderr then IO.stderr#false
          [] io(FD) then L R in
-            {IO.socketPair L R} FD=L R
+            {IO.socketpair L R} FD=L R#true
          [] open(OBJ) then L R in
-            {IO.socketPair L R}
-            {New File Init(FROM:L) OBJ} R
+            {IO.socketpair L R}
+            {New File Init(FROM L) OBJ} R#true
          end
       end
 
@@ -293,39 +326,28 @@ in
             %%
             SELF_FD PROC_FD
             if IN==true orelse OUT==true orelse ERR==true
-            then {IO.socketPair SELF_FD PROC_FD}
+            then {IO.socketpair SELF_FD PROC_FD}
             else SELF_FD=unit PROC_FD=unit end
             ReadFD  <- SELF_FD
             WriteFD <- SELF_FD
             %%
-            STDIN  = {ProcessFD stdin  IN  PROC_FD}
-            STDOUT = {ProcessFD stdout OUT PROC_FD}
-            STDERR = {ProcessFD stderr ERR PROC_FD}
+            STDIN  # CLOSE1 = {ProcessFD stdin  IN  PROC_FD}
+            STDOUT # CLOSE2 = {ProcessFD stdout OUT PROC_FD}
+            STDERR # CLOSE3 = {ProcessFD stderr ERR PROC_FD}
          in
             %%
             {IO.run process(Cmd Args
                             stdin : STDIN
                             stdout: STDOUT
-                            stderr: STDERR
-                            pid   : @process)}
+                            stderr: STDERR)
+             @process}
             if PROC_FD\=unit then {IO.close PROC_FD} end
+            if CLOSE1 then {IO.close STDIN } end
+            if CLOSE2 then {IO.close STDOUT} end
+            if CLOSE3 then {IO.close STDERR} end
          end
          meth status($) {PROC.status @process} end
          meth kill(1:N<=9) {PROC.kill @process N} end
-         meth close
-            lock @ReadLock then
-               lock @WriteLock then
-                  if @ReadFD\=unit then
-                     try {IO.close @ReadFD} catch _ then skip end
-                     ReadFD <- unit
-                  end
-                  if @WriteFD\=unit then
-                     try {IO.close @WriteFD} catch _ then skip end
-                     WriteFD <- unit
-                  end
-               end
-            end
-         end
       end
    end
 end
