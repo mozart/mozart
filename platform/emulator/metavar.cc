@@ -1,4 +1,4 @@
- /*
+/*
   Hydra Project, DFKI Saarbruecken,
   Stuhlsatzenhausweg 3, D-66123 Saarbruecken, Phone (+49) 681 302-5312
   Author: tmueller
@@ -476,7 +476,7 @@ OZ_C_proc_end
 
 
 static
-BIspec biSpec[] = {
+BIspec metaSpec[] = {
   {"metaIsVar", 1, BImetaIsVar},
   {"metaWatchVar", 2, BImetaWatchVar},
   {"metaGetDataAsAtom", 2, BImetaGetDataAsAtom},
@@ -488,7 +488,7 @@ BIspec biSpec[] = {
 
 void BIinitMeta(void)
 {
-  BIaddSpec(biSpec);
+  BIaddSpec(metaSpec);
 }
 
 #if defined(OUTLINE)
