@@ -31,7 +31,8 @@ require
          updateSettings:S_updateSettings
          messageAck:S_messageAck
          getUserName:S_getUserName
-         getUserInfo:S_getUserInfo) at 'methods.ozf'
+         getUserInfo:S_getUserInfo
+         dumpDB:S_dumpDB) at 'methods.ozf'
 import
    Open(file)
    DP(open) at 'x-oz://contrib/tools/DistPanel'
@@ -288,13 +289,13 @@ define
          {ComposeMess message(user:user(id:E.id name:E.name)
                               faq:FAQ
                               browser:{Access UsingBrowser}
-                              send:proc{$ IDs X} MID D in
+                              send:proc{$ IDs X Mess2} MID D in
                                       {Server S_message(sender:ClientID
                                                         receiver:IDs
                                                         message:X
                                                         reply_to:RPT
                                                         mid:MID
-                                                        faq:if FAQ then X else unit end
+                                                        faq:if FAQ then Mess2 else unit end
                                                         date:D)}
 
                                       lock CLock then
@@ -924,7 +925,7 @@ define
                                              {ComposeMess
                                               message(user:user(id:SysAdm_Broadcast name:"All Buddies")
                                                       browser:false
-                                                      send:proc{$ IDs X} MID D
+                                                      send:proc{$ IDs X _} MID D
                                                               IDs2=if {Member SysAdm_Broadcast IDs} then
                                                                       {Dictionary.keys DB}
                                                                    else
@@ -983,9 +984,9 @@ define
                                                                       {ComposeMess
                                                                        message(user:user(id:SysAdm_Broadcast name:"Everyone in the system")
                                                                                browser:false
-                                                                               send:proc{$ IDs X} MID D
+                                                                               send:proc{$ IDs X _} MID D
                                                                                        IDs2=if {Member SysAdm_Broadcast IDs} then
-                                                                                               D={Server dumpDB(uid:ClientID $)}.members
+                                                                                               D={Server S_dumpDB(uid:ClientID $)}.members
                                                                                             in
                                                                                          {Map D fun{$ X} X.id end}
                                                                                             else
@@ -1018,7 +1019,7 @@ define
                                                                    end
                                          separator
                                          "Get All Users (txt-file)"#proc{$}
-                                                                       D={Server dumpDB(uid:ClientID $)}.members
+                                                                       D={Server S_dumpDB(uid:ClientID $)}.members
                                                                        Str={FoldR D fun{$ N O}
                                                                                        N.firstname#" "#N.lastname#"\t"#
                                                                                        if N.extra==nil then "-" else N.extra end#"\t"#N.email#"\n"#O
@@ -1046,7 +1047,7 @@ define
                                          "Start Panel"#proc{$} {Panel.object open} end
                                          separator
                                          "Browse Client DB"#proc{$} {Browse {Dictionary.entries DB}} end
-                                         "Browse Server DB"#proc{$} {Browse {Server dumpDB(uid:ClientID $)}} end
+                                         "Browse Server DB"#proc{$} {Browse {Server S_dumpDB(uid:ClientID $)}} end
                                         ]
                       else ignore end
 
