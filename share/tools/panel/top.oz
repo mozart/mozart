@@ -407,9 +407,13 @@ in
 			      action:  proc {$ N}
 					  S = Memory.options.parameter.maxSize
 				       in
-					  case {S get($)}<N then {S set(N)}
-					  else skip end
-					  {System.set gc(min: N * MegaByteI)}
+					  case {S get($)}<N then
+					     {S set(N)}
+					     {System.set gc(min:N * MegaByteI
+							    max:N * MegaByteI)}
+					  else
+					     {System.set gc(min:N * MegaByteI)}
+					  end
 				       end)
 			entry(text:    'Free:'
 			      feature: free
@@ -433,9 +437,13 @@ in
 			      action:  proc {$ N}
 					  S = Memory.options.parameter.minSize
 				       in
-					  case {S get($)}>N then {S set(N)}
-					  else skip end
-					  {System.set gc(max: N * MegaByteI)}
+					  case {S get($)}>N then
+					     {S set(N)}
+					     {System.set gc(min:N * MegaByteI
+							    max:N * MegaByteI)}
+					  else
+					     {System.set gc(max:N * MegaByteI)}
+					  end
 				       end)
 			entry(text:    'Tolerance:'
 			      feature: tolerance
