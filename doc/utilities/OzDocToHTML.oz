@@ -300,8 +300,8 @@ define
          %--** interpret <Span class=ignore>...</Span> differently
          if {HasFeature M I} then
             case M.I of S=_|_ then VS in
-               {@MyFontifier enqueueVirtualString(@ProgLang S '<BR>' ?VS)}
-               code(COMMON: @Common VERBATIM(VS))|   %--** VERBATIM?
+               {@MyFontifier enqueueVirtualString(@ProgLang S ?VS)}
+               code(VERBATIM(VS))|   %--** VERBATIM?
                OzDocToHTML, BatchCodeSub(M I + 1 $)
             [] nil then
                OzDocToHTML, BatchCodeSub(M I + 1 $)
@@ -709,13 +709,13 @@ define
             [] code then HTML in
                OzDocToHTML, BatchCode(M 1 ?HTML)
                case M.display of display then
-                  BLOCK(blockquote('class': [codedisplay] p(HTML)))
-               [] inline then HTML
+                  BLOCK(blockquote(COMMON: @Common pre(HTML)))
+               [] inline then span(COMMON: @Common HTML)
                end
             [] 'code.extern' then HTML in
                %--** class=linenumbers
                HTML = VERBATIM({@MyFontifier   %--** VERBATIM?
-                                enqueueFile(@ProgLang M.to '\n' $)})
+                                enqueueFile(@ProgLang M.to $)})
                case M.display of display then
                   BLOCK(blockquote(COMMON: @Common pre(HTML)))
                [] inline then code(COMMON: @Common HTML)

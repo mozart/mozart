@@ -41,7 +41,7 @@ define
       class TextFile from Open.file Open.text
          prop final
          attr Buffered: unit
-         meth readResult(NL ?Res) Res0 Rest in
+         meth readResult(?Res) Res0 Rest in
             case @Buffered of unit then
                Buffered <- TextFile, getS($)
             else skip
@@ -49,8 +49,8 @@ define
             {List.takeDropWhile @Buffered NotIsEOF ?Res0 ?Rest}
             case Rest of "" then Res1 in
                Buffered <- unit
-               Res = Res0#NL#Res1
-               TextFile, readResult(NL Res1)
+               Res = Res0#'\n'#Res1
+               TextFile, readResult(Res1)
             elseof 4|Rest2 then
                Buffered <- Rest2
                Res = Res0
@@ -95,12 +95,12 @@ define
             Hd <- X
             Tl <- X
          end
-         meth enqueueFile(ProgLang FileName NL ?Res) NewTl in
-            @Tl = file(ProgLang FileName NL Res)|NewTl
+         meth enqueueFile(ProgLang FileName ?Res) NewTl in
+            @Tl = file(ProgLang FileName Res)|NewTl
             Tl <- NewTl
          end
-         meth enqueueVirtualString(ProgLang VS NL ?Res) NewTl in
-            @Tl = virtualString(ProgLang VS NL Res)|NewTl
+         meth enqueueVirtualString(ProgLang VS ?Res) NewTl in
+            @Tl = virtualString(ProgLang VS Res)|NewTl
             Tl <- NewTl
          end
          meth process(OutputType)
@@ -112,10 +112,10 @@ define
                                          flags: [write create truncate])}
             {ForAll @Hd
              proc {$ Task}
-                case Task of file(ProgLang FileName _ _) then Mode in
+                case Task of file(ProgLang FileName _) then Mode in
                    Mode = {ProgLangToMode ProgLang}
                    {InFile write(vs: Mode#[4]#{ReadFile FileName}#[4])}
-                [] virtualString(ProgLang VS _ _) then Mode in
+                [] virtualString(ProgLang VS _) then Mode in
                    Mode = {ProgLangToMode ProgLang}
                    {InFile write(vs: Mode#[4]#VS#[4])}
                 end
@@ -130,7 +130,7 @@ define
             {OS.unlink InFileName}
             OutFile = {New TextFile init(name: OutFileName flags: [read])}
             {ForAll @Hd
-             proc {$ Task} {OutFile readResult(Task.3 ?Task.4)} end}
+             proc {$ Task} {OutFile readResult(?Task.3)} end}
             {OutFile close()}
             {OS.unlink OutFileName}
             Hd <- X
