@@ -851,10 +851,10 @@ If FORCE is non-nil, kill it immediately."
 	      (setq filter
 		    (process-filter (get-buffer-process oz-emulator-buffer))))
 	  (setq oz-emulator-buffer "*Oz Emulator*")
-	  (if oz-win32
-	      (make-comint "Oz Emulator" "ozemulator" nil "-u"
-			   "http://www.ps.uni-sb.de/ozhome/bin/opi")
-	    (make-comint "Oz Emulator" "~/xx/Oz/lib/stage1/bin/opi" nil))
+	  (let ((opi "http://www.ps.uni-sb.de/ozhome/bin/opi"))
+	    (if oz-win32
+		(make-comint "Oz Emulator" "ozemulator" nil "-u" opi)
+	      (make-comint "Oz Emulator" opi nil)))
 	  (oz-create-buffer oz-emulator-buffer 'emulator))
 
 	(let ((proc (get-buffer-process oz-emulator-buffer)))
