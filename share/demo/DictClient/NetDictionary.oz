@@ -405,16 +405,23 @@ define
 	    end
 	 end
       end
-      meth 'define'(Word db: DB <= '*' $)
+      meth 'define'(Word db: DB <= '*' count: Count <= _ $)
 	 %% Query for definitions for Word in database DB.
 	 lock
 	    case @socket of unit then
 	       {Exception.raiseError netdict(notConnected)} unit
-	    elseof Socket then
+	    elseof Socket then Rest in
 	       {Socket writeLine('DEFINE '#DB#' '#{Escape Word})}
-	       case {Socket expect([150 552] $ _)} of 150 then
+	       case {Socket expect([150 552] $ ?Rest)} of 150 then
+		  try
+		     Count = {String.toInt {Argify Rest}.1}
+		  catch error(...) then
+		     {Exception.raiseError netdict(malformedResponse 150 Rest)}
+		  end
 		  NetDictionary, GetDefinitions($)
-	       [] 552 then unit
+	       [] 552 then
+		  Count = 0
+		  unit
 	       end
 	    end
 	 end
@@ -433,16 +440,24 @@ define
 	    Ds = nil
 	 end
       end
-      meth match(Word db: DB <= '*' strategy: Strategy <= '.' $)
+      meth match(Word db: DB <= '*' strategy: Strategy <= '.'
+		 count: Count <= _ $)
 	 %% Query for matches for Word in database DB using Strategy.
 	 lock
 	    case @socket of unit then
 	       {Exception.raiseError netdict(notConnected)} unit
-	    elseof Socket then
+	    elseof Socket then Rest in
 	       {Socket writeLine('MATCH '#DB#' '#Strategy#' '#{Escape Word})}
-	       case {Socket expect([152 552] $ _)} of 152 then
+	       case {Socket expect([152 552] $ ?Rest)} of 152 then
+		  try
+		     Count = {String.toInt {Argify Rest}.1}
+		  catch error(...) then
+		     {Exception.raiseError netdict(malformedResponse 152 Rest)}
+		  end
 		  NetDictionary, GetPairList($)
-	       [] 552 then unit
+	       [] 552 then
+		  Count = 0
+		  unit
 	       end
 	    end
 	 end
@@ -525,6 +540,11 @@ define
 			hint(l: 'Response' m: case N of unit then Response
 					      else N#' '#Response
 					      end)])
+       elseof netdict(malformedResponse Code Rest) then
+	  error(kind: T
+		msg: 'Malformed response'
+		items: [hint(l: 'Response code' m: Code)
+			hint(l: 'Response text' m: Rest)])
        elseof netdict(malformedDefinition Rest) then
 	  error(kind: T
 		msg: 'Malformed definition response'
