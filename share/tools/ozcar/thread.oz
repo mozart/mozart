@@ -90,7 +90,12 @@ in
 	    S = {Thread.state T}
 	    N = {Length {Dictionary.items self.ThreadDic}}
 	 in
-	    Gui,doStatus(N # ' attached threads, currently selected: #' #
+	    Gui,doStatus(N # ' attached thread' #
+			 case N > 1 then
+			    's, currently selected: #'
+			 else
+			    ': #'
+			 end #
 			 I # '/' # {Thread.parentId T} #
 			 ' (' # R # ', ' # S # ')')
 	 end
