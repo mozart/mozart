@@ -58,6 +58,11 @@ void GTIndexTable::gCollectGTIT()
       }
 #endif
       oz_gCollectTerm(t, t);
+      // Now, the GC occasionaly adds (is free to!) references, so:
+      DEREF(t, tp, _tagt);
+      if (oz_isVariable(t))
+        t = makeTaggedRef(tp);
+      // ... otherwise just leave it dereferenced;
 #ifdef DEBUG_CHECK
       Assert((isVar && oz_isRef(t) && !oz_isRef(*tagged2Ref(t))) ||
              (!isVar && !oz_isRef(t)));
