@@ -302,12 +302,12 @@ collapsed into a single red triangle <math/\triangle/.
 \mbox{}\hfill
 \begin{minipage}{\dumpwidth}
 \epsfxsize=\dumpwidth
-\epsffile{/home/ps-home/hydra/handbook/dumps/Primer/explorer-one.ps}
+\epsffile{pictures/explorer-one.ps}
 \end{minipage}
 \hfill
 \begin{minipage}{\dumpwidth}
 \epsfxsize=\dumpwidth
-\epsffile{/home/ps-home/hydra/handbook/dumps/Primer/explorer-two.ps}
+\epsffile{pictures/explorer-two.ps}
 \end{minipage}
 \hfill
 \mbox{}
