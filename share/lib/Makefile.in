@@ -66,7 +66,7 @@ export OZMAKE_VERBOSE		= no
 SPSRC   = Error ErrorFormatters Finalize $(DENYS_SPSRCS)
 OPSRC   = Open
 APSRC   = Application
-CPSRC1  = Search FD FS Combinators
+CPSRC1  = Search FD FS Combinators Space
 CPSRC2  = Schedule ParSearch ParWorker ParLogging
 DPSRC   = Connection Remote RemoteServer Fault URL $(DENYS_DPSRCS)
 WPSRC   = Tk TkTools
@@ -128,10 +128,10 @@ BASESRC1 = \
 	Int Float Number Bool List Chunk \
 	Literal Value Cell Lock Char String \
 	VirtualString Object Loop Port \
-	Time Thread Space Array Dictionary \
+	Time Thread Array Dictionary \
 	Exception Functor BitArray BitString \
-	ByteString ForeignPointer Base \
-	Combinators
+	ByteString ForeignPointer Base
+
 BASESRC = $(BASESRC1:%=base/%.oz)
 
 new-base: $(BASESRC)
@@ -229,9 +229,9 @@ COMPILERSRCNOVER = \
 BIMODSPECS = \
 	Array Atom BitArray Bool Cell Char Chunk Class \
 	Dictionary Exception Float ForeignPointer Int List Literal \
-	Lock Name Number Object Port Procedure Record Space \
+	Lock Name Number Object Port Procedure Record \
 	String Thread Time Tuple Unit Value VirtualString \
-	BitString ByteString InterFault Combinators
+	BitString ByteString InterFault
 
 EMUSRCDIR=$(SRCDIR)/../../platform/emulator
 BIDECL=$(EMUSRCDIR)/bidecl.perl

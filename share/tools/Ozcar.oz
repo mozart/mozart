@@ -32,6 +32,7 @@ prepare
    BitmapUrl = {URL.toAtom {URL.resolve DefaultURL.homeUrl
 			    {URL.make 'images/ozcar/'}}}
 import
+   Space
    Browser(browse)
    Debug at 'x-oz://boot/Debug'
    Emacs(getOPI condSend)

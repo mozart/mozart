@@ -26,8 +26,6 @@ local
 
    \insert 'explorer/misc.oz'
 
-   \insert 'explorer/combine-nodes.oz'
-
 in
 
    functor
@@ -46,6 +44,8 @@ in
 
       Browser(browse)
 
+      Space
+
    export
       'class':  ExplorerClass
       'object': Explorer
@@ -58,6 +58,17 @@ in
 
    define
 
+      fun {SpaceToProcedure S}
+	 fun {$}
+	    {Space.merge {Space.clone S}}
+	 end
+      end
+      
+      fun {SpaceToSpace S} S end
+      
+      SpaceToRoot = Space.merge
+      
+      \insert 'explorer/combine-nodes.oz'
       \insert 'explorer/errors.oz'
       \insert 'explorer/main.oz'
 
