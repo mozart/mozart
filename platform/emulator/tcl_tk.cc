@@ -417,9 +417,14 @@ void tuple2buffer(SRecord *st, int start = 0) {
       }
     }
   } else {
-    Assert(start==0);
     TaggedRef as = st->getArityList();
-    Assert(isCons(as));
+
+    if (start==1 && isCons(as))
+      as=tail(as);
+
+    if (!isCons(as))
+      return;
+
     feature2buffer(st,head(as));
     as = tail(as);
 
