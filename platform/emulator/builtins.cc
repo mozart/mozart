@@ -520,21 +520,25 @@ OZ_C_proc_begin(BIprocedureEnvironment,2)
   oz_declareNonvarArg(0,p);
   oz_declareArg(1,out);
 
-  if (!isAbstraction(p)) {
-    oz_typeError(0,"Procedure (no builtin)");
+  if (!isProcedure(p)) {
+    oz_typeError(0,"Procedure");
   }
 
-  Abstraction *a=tagged2Abstraction(p);
-
   OZ_Term t;
-  RefsArray &g=a->getGRegs();
-  if (g) {
-    int len=a->getGSize();
-    t = OZ_tuple(OZ_atom("environment"),len);
-    for (int i=0; i<len; i++)
-      OZ_putArg(t,i,g[i]);
-  } else {
+
+  if (isBuiltin(p)) {
     t = OZ_atom("environment");
+  } else {
+    Abstraction *a=tagged2Abstraction(p);
+
+    RefsArray &g=a->getGRegs();
+    if (g) {
+      int len=a->getGSize();
+      t = OZ_tuple(OZ_atom("environment"),len);
+      for (int i=0; i<len; i++) OZ_putArg(t,i,g[i]);
+    } else {
+      t = OZ_atom("environment");
+    }
   }
   return oz_unify(out,t);
 }
@@ -6172,32 +6176,6 @@ OZ_C_proc_begin(BIsuspensions,2)
 }
 OZ_C_proc_end
 
-OZ_C_proc_begin(BIglobals,2)
-{
-  oz_declareNonvarArg(0,proc);
-  oz_declareArg(1,out);
-
-redo:
-  DEREF(proc,ptr,tag);
-  if (isConst(proc)) {
-    ConstTerm *cc = tagged2Const(proc);
-    switch (cc->getType()) {
-    case Co_Builtin:
-      return oz_unify(out,nil());
-    case Co_Abstraction:
-      return oz_unify(out, ((Abstraction *) cc)->DBGgetGlobals());
-    case Co_Object:
-      proc = am.sendHdl; // mm2
-      goto redo;
-
-    default:
-      break;
-    }
-  }
-  oz_typeError(1,"Procedure or Object");
-}
-OZ_C_proc_end
-
 
 // ---------------------------------------------------------------------------
 // Debugging: special builtins for Benni
@@ -7234,7 +7212,6 @@ BIspec allSpec[] = {
   {"onToplevel",1,BIonToplevel},
   {"addr",2,BIaddr},
   {"suspensions",2,BIsuspensions},
-  {"globals",2,BIglobals},
 
   // Debugging
   {"globalThreadStream",1,BIglobalThreadStream},
