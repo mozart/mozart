@@ -67,6 +67,7 @@ in
 {Browse N11}
 
 
+
 declare X = {FD.int 1#4} in thread cond Y = {FD.int 1#3} in Y = X {Show X} then {Show a} else {Show b} end end
 {Show X}
 
