@@ -695,7 +695,8 @@ public:
     return;}
 
   void dumpNetMsgBuffer(NetMsgBuffer* nb) {
-    nb->dumpByteBuffers();
+    if(nb->first!=NULL)
+      nb->dumpByteBuffers();
     deleteNetMsgBuffer(nb);}
 
   NetMsgBuffer *getNetMsgBuffer(Site *s) {
@@ -1705,6 +1706,7 @@ void WriteConnection::prmDwn(){
                                  COMM_FAULT_PERM_MAYBE_SENT,(FaultInfo) m->bs);
       Message *tmp = m;
       m = m->next;
+      tmp->bs->resend();
       messageManager->freeMessageAndMsgBuffer(tmp);}
 
     if(!isWritePending())
@@ -3107,6 +3109,7 @@ void WriteConnection::ackReceived(int nr){
             old = ptr;
             ptr=ptr->next;
             remoteSite->deQueueMessage(old->getMsgBuffer()->getTotLen());
+            old->bs->resend();
             messageManager->freeMessageAndMsgBuffer(old);}}}
 
 
