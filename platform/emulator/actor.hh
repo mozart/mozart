@@ -148,6 +148,8 @@ public:
   void decThreads ();
   void addSuspension (SuspList *l);
   Bool isStable ();  // so simple!
+  void addSuspension (Suspension *susp); 
+  Bool areNoExtSuspensions (); 
   TaggedRef* getSolveVarRef ();
   TaggedRef getSolveVar ();
   TaggedRef getResult ();
@@ -166,7 +168,7 @@ private:
   WaitActor* getTopWaitActor ();
   WaitActor* getNextWaitActor ();
   void unlinkLastWaitActor (); 
-  Bool areNoExtSuspensions ();
+  Bool checkExtSuspList ();
 };
 
 SolveActor *CastSolveActor (Actor *a);

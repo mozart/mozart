@@ -1094,6 +1094,11 @@ void engine() {
 						  PC, Y, G, X, argsToSave));
 	    SVariable *cvar = taggedBecomesSuspVar(APtr);
 	    CBB->addSuspension();
+	    if (e->currentSolveBoard != (Board *) NULL &&
+		e->isInScope (e->currentSolveBoard, cvar->getHome ()) == NO) {
+	      susp->setExtSusp ();
+	      e->currentSolveBoard->addSuspension (susp);
+	    }
 	    cvar->addSuspension(susp);
 	  }
 	  goto LBLreduce;
@@ -1136,10 +1141,20 @@ void engine() {
 
 	  if (isAnyVar(ATag)) {
 	    acvar = taggedBecomesSuspVar(APtr);
+	    if (e->currentSolveBoard != (Board *) NULL &&
+		e->isInScope (e->currentSolveBoard, acvar->getHome ()) == NO) {
+	      susp->setExtSusp ();
+	      e->currentSolveBoard->addSuspension (susp);
+	    }
 	    acvar->addSuspension(susp);
 	  }
 	  if (isAnyVar(BTag)) {
 	    bcvar = taggedBecomesSuspVar(BPtr);
+	    if (e->currentSolveBoard != (Board *) NULL &&
+		e->isInScope (e->currentSolveBoard, bcvar->getHome ()) == NO) {
+	      susp->setExtSusp ();
+	      e->currentSolveBoard->addSuspension (susp);
+	    }
 	    bcvar->addSuspension(susp);
 	  }
 	  goto LBLreduce;
@@ -1324,6 +1339,11 @@ void engine() {
 	new Suspension(new SuspContinuation(CBB,
 					    GET_CURRENT_PRIORITY(),
 					    PC, Y, G, X, argsToSave));
+      if (e->currentSolveBoard != (Board *) NULL &&
+	  e->isInScope (e->currentSolveBoard, cvar->getHome ()) == NO) {
+	susp->setExtSusp ();
+	e->currentSolveBoard->addSuspension (susp);
+      }
       cvar->addSuspension (susp);
       CBB->addSuspension();
       goto LBLreduce; // mm2 ???
@@ -1877,13 +1897,14 @@ void engine() {
 #else
 	 (void) e->installScript (boardToInstall->getScriptRef ());
 #endif
+	 // add the suspensions of the committed board and remove
+	 // its suspension itself;
+	 CBB->addSuspension (boardToInstall->getSuspCount () - 1); 
 	 // get continuation of 'board-to-install' if any;
 	 if (boardToInstall->isWaitTop () == NO) {
 	   Continuation *bodyOf = boardToInstall->getBodyPtr ();
 	   e->pushTask (CBB, bodyOf->getPC (), bodyOf->getY (),
 			bodyOf->getG (), bodyOf->getX (), bodyOf->getXSize ());
-	 } else if (boardToInstall->hasSuspension () == NO) {
-	   CBB->removeSuspension ();   // former suspension of solve blackboard; 
 	 }
        }
        // NB: 
@@ -1891,7 +1912,9 @@ void engine() {
        //    and not only for copy of, but for an original subtree too. 
        //    Otherwise we would get a long chain of already-commited blackboards 
        //    of former solve-actors; 
-
+       // NB2:
+       //    CBB can not become reducible after the applying of solveCont,
+       //    since its childCount can not become smaller. 
        if ( !e->fastUnify (solveAA->getSolveVar (), X[0]) ) {
 	 warning ("unification of variable in solveCont failed");
 	 HANDLE_FAILURE (NULL, ;);
@@ -2293,17 +2316,16 @@ void engine() {
       // all possible reduction steps require this; 
       e->trail.popMark ();
       CBB->unsetInstalled ();
-      // CBB->setCommitted ();  // may not be committed! (check in solveCont);
       SolveActor *solveAA = CastSolveActor (CBB->getActor ());
       Board *solveBB = CBB; 
-      solveAA->unsetBoard ();   // unlink from the computation tree; 
       Board::SetCurrent ((CBB->getParentBoard ())->getBoardDeref ());
       CBB->removeSuspension ();
+      solveAA->unsetBoard ();   // unlink from the computation tree; 
 
       if (solveBB->hasSuspension () == NO) {
 	// 'solved';
 	if ( !e->fastUnify (solveAA->getResult (), solveAA->genSolved ()) ) {
-	  warning ("unification of solved tuple with variable failed");
+	  warning ("unification of solved tuple with variable has failed");
 	  HANDLE_FAILURE (NULL, ;);
 	}
       } else {
@@ -2329,7 +2351,7 @@ void engine() {
 	  // The waitActor with the 'rest' of actors is unlinked from the 
 	  // computation space; instead, a new waitActor (*nwa) is linked to it, 
 	  // and all the tree from solve blackboard (*solveBB) will be now copied.
-	  // Moreover, the copy has already 'boardToInstall' setted properly;
+	  // Moreover, the copy has already the 'boardToInstall' setted properly;
 	  Board *newSolveBB = e->copyTree (solveBB, (Bool *) NULL);
 	  // ... and now set the original waitActor backward;
 	  nwa->setCommitted ();     // this subtree is discarded;
