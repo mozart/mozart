@@ -23,7 +23,7 @@ application.
 
 </list>
 
-<p>In the Distribution Panel of the server, a asterix (<<*>>) will appear
+<p>In the Distribution Panel of the server, an asterix (<<*>>) will appear
 next to the site of connected clients. By right clicking such a site,
 the communication frame of that client will be opened in a seperate
 window at the server and the client will be told to start sending
