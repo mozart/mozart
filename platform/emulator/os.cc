@@ -45,7 +45,8 @@
 #include "os.hh"
 
 
-Bool *isSocket;
+fd_set isSocket;
+static long openMax;
 
 
 // return current usertime in milliseconds
@@ -75,7 +76,17 @@ unsigned int osSystemTime()
 }
 
 #ifdef WINDOWS
-static HANDLE timerthread = NULL;
+class TimerThread {
+public:
+  HANDLE thrd;
+  Bool die;
+  int wait;
+  TimerThread(int w);
+};
+
+
+static TimerThread *timerthread = NULL;
+
 #endif
 
 
@@ -83,7 +94,7 @@ void osBlockSignals(Bool check)
 {
 #ifdef WINDOWS
   if (timerthread)
-    SuspendThread(timerthread);
+    SuspendThread(timerthread->thrd);
 #else
   sigset_t s,sOld;
   sigfillset(&s);
@@ -110,7 +121,7 @@ void osUnblockSignals()
 {
 #ifdef WINDOWS
   if (timerthread)
-    ResumeThread(timerthread);
+    ResumeThread(timerthread->thrd);
 #else
   sigset_t s;
   sigemptyset(&s);
@@ -231,222 +242,54 @@ extern "C" void __builtin_delete (void *ptr)
 
 
 
-
-/* abstract timeout values */
-#define WAIT_INFINITE (int*) -1
-#define WAIT_NULL     (int*) -2
-
+#define EMULATOR
+#include "winselect.cc"
+#undef EMULATOR
 
 
 #ifdef WINDOWS
 
-/* select(2) emulation under windows:
- *
- *    - currently only works for read fds
- *    - spawn a thread for each fd: it reads one single character and 
- *      then sets event "char_avail" and waits for
- *      event "char_consumed" to continue
- *    - read(2) is wrapped by osread and reads in the rest
- *     --> WILL NOT WORK IF ONLY EXACTLY ONE CHAR IS AVAILABLE
- */
-
-class StreamReader {
-public:
-  int fd;
-  HANDLE char_avail;      /* set iff char has been read*/
-  HANDLE char_consumed;   /* used to restart reader thread*/
-  char chr;               /* this is the char, that was read */
-  Bool status;            /* true iff input is available */
-  unsigned long thrd;     /* reader thread */
-};
-
-
-static StreamReader *readers;
-
-
-unsigned __stdcall readerThread(void *arg)
+unsigned __stdcall timerFun(void *p)
 {
-  StreamReader *sr = (StreamReader *)arg;
-  
+  TimerThread *ti = (TimerThread*) p;
   while(1) {
-    sr->status=NO;
-    int ret;
-    if (isSocket[sr->fd])
-      ret = recv(sr->fd, &sr->chr, sizeof(char),0);
-    else
-      ret = read(sr->fd, &sr->chr, sizeof(char));
-    sr->status = (ret == sizeof(char));
-    if (ret<0) {
-      perror("readerThread: read");
+    Sleep(ti->wait);
+    if (ti->die)
       break;
-    }
-    SetEvent(sr->char_avail);
-
-    /* Wait until our input is acknowledged before reading again */
-    if (WaitForSingleObject(sr->char_consumed, INFINITE) != WAIT_OBJECT_0)
-      break;
-  }
-  sr->status = NO;
-  sr->thrd = NULL;
-  _endthreadex(0);
-  return 0;
-}
-
-unsigned __stdcall acceptThread(void *arg)
-{
-  StreamReader *sr = (StreamReader *)arg;
-  
-  sr->status=NO;
-  fd_set readfds;
-  FD_ZERO(&readfds);
-  FD_SET(sr->fd,&readfds);
-
-  int ret = select(1,&readfds,NULL,NULL,NULL);
-  if (ret<=0) {
-    warning("acceptThread(%d) failed, error=%d\n",
-	    sr->fd,WSAGetLastError());
-  } else {
-    sr->status = OK;
-    SetEvent(sr->char_avail);
-  }
-  sr->thrd = NULL;
-  _endthreadex(0);
-  return 0;
-}
-
-static 
-void deleteReader(int fd)
-{
-  //  TerminateThread(readers[fd].thrd,0); !!!!!
-  readers[fd].thrd = 0;
-}
-
-Bool createReader(int fd, Bool doAcceptSelect)
-{
-  StreamReader *sr = &readers[fd];
-
-  if (sr->thrd != NULL)
-    return OK;
-
-  sr->char_avail    = CreateEvent(NULL, FALSE, FALSE, NULL);
-  sr->char_consumed = CreateEvent(NULL, FALSE, FALSE, NULL);
-
-  if ((sr->char_consumed==NULL) || (sr->char_avail == NULL)) {
-    goto err;
-  }
-  
-  unsigned thrid;
-  sr->thrd = _beginthreadex(NULL,0,
-			    doAcceptSelect ? &acceptThread : &readerThread,
-			    sr,0,&thrid);
-  if (sr->thrd == NULL) {
-    goto err;
-  }
-  
-  return OK;
-  
-err:
-  int id = GetLastError();
-  warning("createReader(%d) failed: %d\n",fd,id);
-  CloseHandle(sr->char_consumed);
-  CloseHandle(sr->char_avail);
-  
-  return NO;
-}
-
-
-static 
-int getAvailFDs(int nfds, fd_set *readfds)
-{
-  int ret=0, i;
-  for (i=0; i<nfds; i++) {
-    if (FD_ISSET(i,readfds)) {
-      if (readers[i].status==OK) {
-	FD_SET(i,readfds);
-	ret++;
-      } else {
-	FD_CLR(i,readfds);
-      }
-    }
-  }
-  return ret;
-}
-
-
-static
-int win32Select(int maxfd, fd_set *fds, int *timeout)
-{
-  if (timeout == WAIT_NULL)
-    return getAvailFDs(maxfd,fds);
-  
-  int wait = (timeout==WAIT_INFINITE || *timeout==0) ? INFINITE : *timeout;
-
-  HANDLE wait_hnd[OPEN_MAX+FD_SETSIZE];
-  
-  int nh = 0;
-  int i;
-  for (i=0; i< maxfd; i++) {
-    if (FD_ISSET(i,fds) && readers[i].thrd!=NULL) {
-      wait_hnd[nh++] = readers[i].char_avail;
-    }
-  }
-
-  if (nh == 0) {
-    /* Nothing to wait on, so fail */
-    errno = ECHILD;
-    return -1;
-  }
-  
-  time_t startTime = time(NULL);
-  DWORD active = WaitForMultipleObjects(nh, wait_hnd, FALSE, wait);
-
-  if (active == WAIT_FAILED) {
-    errno = EBADF;
-    return -1;
-  } 
-
-  if (active == WAIT_TIMEOUT) {
-    *timeout = 0;
-    return 0;
-  }
-   
-  time_t endTime = time(NULL);
-  double d = difftime(endTime,startTime);
-  *timeout = wait - (int)(d*1000.0);
-
-  return getAvailFDs(maxfd, fds);
-}
-
-
-unsigned __stdcall timerThread(void *p)
-{
-  int wait = (int)p;
-  while(1) {
-    Sleep(wait);
     handlerALRM();
   }
+  delete ti;
+  _endthreadex(1);
   return 1;
 }
 
+TimerThread::TimerThread(int w)
+{
+  wait = w;
+  die = NO; 
+  unsigned tid;
+  thrd = (HANDLE) _beginthreadex(NULL,0,&timerFun,this,0,&tid);
+  if (thrd==NULL) {
+    ozpwarning("osSetAlarmTimer(start thread)");
+  }
+}
+#endif
 
-#endif /* WINDOWS */
 
 void osSetAlarmTimer(int t, Bool interval)
 {
 #ifdef DEBUG_DET
   return;
 #elif defined(WINDOWS)
-  if (timerthread!=NULL) {
-    TerminateThread(timerthread,0);
-    timerthread = NULL;
-  }
-  if (t>0) {
+
+  Assert(t>0);
+  if (timerthread==NULL) {
     unsigned tid;
-    timerthread =(HANDLE) _beginthreadex(NULL,0,&timerThread,(void*)t,0,&tid);
-    if (timerthread==NULL) {
-      ozpwarning("osSetAlarmTimer(start thread)");
-    }
+    timerthread = new TimerThread(t);
   }
+  //  timerthread->die = OK;
+  timerthread->wait = t;
+  ResumeThread(timerthread->thrd);
 #else
   struct itimerval newT;
 
@@ -494,9 +337,7 @@ int osSelect(int nfds, fd_set *readfds, fd_set *writefds, int *timeout)
 #else
 
   struct timeval timeoutstruct, *timeoutptr;
-  if (timeout == WAIT_INFINITE) {
-    timeoutptr=NULL;
-  } else if (timeout == WAIT_NULL) {
+  if (timeout == WAIT_NULL) {
     timeoutstruct.tv_sec = 0;
     timeoutstruct.tv_usec = 0;
     timeoutptr = &timeoutstruct;
@@ -513,7 +354,7 @@ int osSelect(int nfds, fd_set *readfds, fd_set *writefds, int *timeout)
   int ret = select(nfds,readfds,writefds,NULL,timeoutptr);
 #endif
   
-  if (timeout!=WAIT_INFINITE && timeout!=WAIT_NULL) {
+  if (timeout!=WAIT_NULL) {
     *timeout = osGetAlarmTimer();
     osBlockSignals();
   }
@@ -544,7 +385,6 @@ void osInitSignals()
  *********************************************************/
 
 static fd_set globalFDs[2];     // mask of active read/write FDs
-static long openMax;
 
 int osOpenMax()
 {
@@ -577,19 +417,7 @@ void osInit()
   FD_ZERO(&globalFDs[SEL_READ]);
   FD_ZERO(&globalFDs[SEL_WRITE]);
 
-  isSocket = new Bool[openMax];
-  for(int k=0; k<openMax; k++) {
-    isSocket[k] = NO;
-  }
-
-#ifdef WINDOWS
-  readers = new StreamReader[openMax];
-  for(int i=0; i<=openMax; i++) {
-    readers[i].fd     = i;
-    readers[i].thrd   = NULL;
-    readers[i].status = NO;
-  }
-#endif
+  FD_ZERO(&isSocket);
 }
 
 #define CheckMode(mode) Assert(mode==SEL_READ || mode==SEL_WRITE)
@@ -677,12 +505,10 @@ int osTestSelect(int fd, int mode)
 
   /* for a disk file hopefully input will not block */
   HANDLE h = (HANDLE)_os_handle(fd);
-  if (!isSocket[fd] && GetFileType(h) != FILE_TYPE_PIPE)
+  if (!FD_ISSET(fd,&isSocket) && GetFileType(h) != FILE_TYPE_PIPE)
     return 1;
 
-  //  if (readers[fd].thrd==NULL)
-  //  return -1;
-  return (readers[fd].status==OK) ? 1 : 0;
+  return findChannel(fd)->status==OK;
 #else
   while(1) {
     fd_set fdset, *readFDs=NULL, *writeFDs=NULL;
@@ -812,41 +638,42 @@ void osExit()
 }
 
 
+
+void registerSocket(int fd)
+{
+  FD_SET(fd,&isSocket);
+}
+
+
 int osread(int fd, void *buf, unsigned int len)
 {
 #ifdef WINDOWS
-  if (readers[fd].thrd) {
-    if (readers[fd].status==NO) {
-      WaitForSingleObject(readers[fd].char_avail, INFINITE);
-    }
-    *(char*)buf = readers[fd].chr;
+  IOChannel *ch = lookupChannel(fd);
+  if (ch!=NULL && ch->thrd) {
+    WaitForSingleObject(ch->char_avail, INFINITE);
+
+    *(char*)buf = ch->chr;
     int ret;
-      if (isSocket[fd])
+      if (FD_ISSET(fd,&isSocket))
 	ret = recv(fd,((char*)buf)+1,len-1,0);
       else
 	ret = read(fd,((char*)buf)+1,len-1);
     if (ret<0)
       return ret;
-    readers[fd].status=NO;
-    ResetEvent(readers[fd].char_avail);
-    PulseEvent(readers[fd].char_consumed);
+    ch->status=NO;
+    ResetEvent(ch->char_avail);
+    SetEvent(ch->char_consumed);
     return ret+1;
   }
 #endif
   return read(fd, buf, len);
 }
 
-void registerSocket(int fd)
-{
-  isSocket[fd] = OK;
-}
-
-
 
 /* currently no wrapping for write */
 int oswrite(int fd, void *buf, unsigned int len)
 {
-  if (isSocket[fd])
+  if (FD_ISSET(fd,&isSocket))
     return send(fd, (char *)buf, len, 0);
   return write(fd, buf, len);
 }
@@ -854,10 +681,10 @@ int oswrite(int fd, void *buf, unsigned int len)
 int osclose(int fd)
 {
 #ifdef WINDOWS
-  if (isSocket[fd])
+  if (FD_ISSET(fd,&isSocket))
     return closesocket(fd);
 #endif
-  isSocket[fd] = NO;
+  FD_CLR(fd,&isSocket);
   return close(fd);
 }
 
@@ -865,7 +692,7 @@ int osopen(const char *path, int flags, int mode)
 {
   int ret = open(path,flags,mode);
   if (ret >= 0)
-    isSocket[ret] = NO;
+    FD_CLR(ret,&isSocket);
   return ret;
 }
 
@@ -873,6 +700,6 @@ int ossocket(int domain, int type, int protocol)
 {
   int ret = socket(domain,type,protocol);
   if (ret >= 0)
-    isSocket[ret] = OK;
+    FD_SET(ret,&isSocket);
   return ret;
 }
