@@ -181,23 +181,23 @@ OZ_BI_define(BIvarToFuture,2,0)
 
 OZ_BI_define(BIfuture,1,1)
 {
-  OZ_Term v = OZ_in(0);
+  TaggedRef v = OZ_in(0);
   v = oz_safeDeref(v);
   if (oz_isRef(v)) {
     OZ_Term *vPtr = tagged2Ref(v);
     if (oz_isFuture(*vPtr)) OZ_RETURN(v);
     OzVariable *ov = tagged2Var(*vPtr);
     Board *bb = GETBOARD(ov);
-    OZ_Term f = oz_newFuture(bb);
-    RefsArray args = allocateRefsArray(2, NO);
-    args[0] = v;
-    args[1] = f;
+    TaggedRef f = oz_newFuture(bb);
+    RefsArray * args = RefsArray::allocate(2, NO);
+    args->setArg(0,v);
+    args->setArg(1,f);
     if (bb != oz_currentBoard()) {
       Thread *thr = oz_newThreadInject(bb);
-      thr->pushCall(BI_varToFuture, args, 2);
+      thr->pushCall(BI_varToFuture, args);
     } else { // optimize: immediately suspend thread
       Thread *thr = oz_newThreadSuspended();
-      thr->pushCall(BI_varToFuture, args, 2);
+      thr->pushCall(BI_varToFuture, args);
       OZ_Return ret = oz_var_addSusp(vPtr, thr);
       Assert(ret==SUSPEND);
     }

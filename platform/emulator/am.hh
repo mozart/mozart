@@ -73,10 +73,10 @@ class CallList {
 public:
   USEFREELISTMEMORY;
   TaggedRef proc;
-  RefsArray args;
+  RefsArray * args;
 
-  CallList *next;
-  CallList(TaggedRef p, RefsArray a) : proc(p), args(a), next(NULL) {}
+  CallList * next;
+  CallList(TaggedRef p, RefsArray * a) : proc(p), args(a), next(NULL) {}
   void dispose() { oz_freeListDispose(this,sizeof(*this)); }
 };
 
@@ -257,7 +257,7 @@ private:
     TaggedRef value;
     TaggedRef info;
     ProgramCounter pc;
-    RefsArray y;
+    RefsArray * y;
     Abstraction *cap;
   } exception;
 
@@ -408,7 +408,7 @@ public:
   void prepareCall(TaggedRef pred, TaggedRef arg0=0, TaggedRef arg1=0, 
 		   TaggedRef arg2=0, TaggedRef arg3=0, TaggedRef arg4=0);
 
-  void prepareCall(TaggedRef pred, RefsArray args);
+  void prepareCall(TaggedRef pred, RefsArray * args);
 
   void pushPreparedCalls(Thread *thr=0);
   void emptyPreparedCalls();
