@@ -20,6 +20,7 @@ Bool gcUnprotect(TaggedRef *);
 void protectInlineCache(ProgramCounter);
 
 OZ_C_proc_proto(BIdumpThreads)
+OZ_C_proc_proto(BIlistThreads)
 
 #endif //__GC_H__
 
