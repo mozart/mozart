@@ -582,7 +582,7 @@ OZ_Return ModIPropagator::propagate(void)
       }
       
       if (ceil((xl-zu)/double(y)) > floor((xu-zu)/double(y))) {
-	FailOnEmpty(*z <= y-1);
+	FailOnEmpty(*z <= zu-1);
 	zu = z->getMaxElem();
       touched = OZ_TRUE;
       }
