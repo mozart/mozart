@@ -368,9 +368,9 @@ proc {SafeSend Prt X}
       {Send Prt X}
    catch system(dp(C) ...) then
       case C
-      of permFail then
+      of permFail(...) then
          raise server_error end
-      [] tempFail then
+      [] tempFail(...) then
          {Delay 100} {SafeSend Prt X}
       else
          skip
@@ -425,7 +425,7 @@ and retries each 100 ms if there is a
 temporary failure.
 The client and the server
 are the only two sites on which <<X>> exists.
-Therefore <<remoteProblem(permFail:_)>> means
+Therefore <<remoteProblem(permFail:_ ...)>> means
 that the server has crashed.
 
 <P> To keep the client from blocking 
@@ -439,8 +439,10 @@ The time-out is an argument to <<SafeWait>>.
 <P> To be useful in practice, 
 stationary objects must have well-defined behavior when
 there are faults.
-
-<P> We propose the following specification:
+We propose the following specification for the 
+stationary object (called the "server")
+and a called (called the "client"):
+:
 <LIST>
 <ITEM> The call <<C={NewSafeStat Class Init}>>
 creates a new stationary object <<C>>.
@@ -451,7 +453,9 @@ in addition to the exceptions raised in the object.
 <ITEM> The call <<{C Msg T}>> adds a time-out <<T>> (in ms).
 If there is no result after this time,
 then the distribution exception <<timeOut>> is raised.
+<ITEM> If there 
 </LIST>
+<P> 
 
 </CHAPTER>
 
