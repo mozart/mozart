@@ -57,7 +57,7 @@ extern TaggedRef AtomNil, AtomCons, AtomPair, AtomVoid,
        NameOoPrintName,NameOoLocking,NameOoFallback,NameOoId,
        AtomNew, AtomSend, AtomApply, AtomApplyList,
 
-       NameUnit,
+       NameUnit, NameGroupVoid,
        NameNonExportable,
        AtomKinded, AtomDet, AtomRecord, AtomFSet, 
        // Atoms for System.get and System.set
