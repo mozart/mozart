@@ -22,7 +22,7 @@
   -->
 
 <part id=part.foreign.extensions proglang=cc>
-  <title/Foreign Extensions/
+  <title>Native C/C++ Extensions</title>
   &native.counter.global;
   &native.counter.object;
   &native.celloid;
