@@ -3977,9 +3977,7 @@ OZ_BI_define(BIconstraints,1,1)
    */
 OZ_Return printInline(TaggedRef term)
 {
-  osBlockSignals(NO);
   oz_printStream(term,cout,ozconf.printDepth,ozconf.printWidth);
-  osUnblockSignals();
   return PROCEED;
 }
 
@@ -3992,28 +3990,11 @@ OZ_Return printTerm(OZ_Term t, int fd, Bool newline)
   int n;
   char * s = OZ_virtualStringToC(t,&n);
 
- loop:
-  int written = write(fd,s,n);
-  if (written < 0) {
-    if (ossockerrno()==EINTR) goto loop;
+  char c = '\n';
+  if ((ossafewrite(fd,s,n) < 0) ||
+      (newline && (ossafewrite(fd,&c,1) < 0))) {
     return oz_raise(E_ERROR,E_KERNEL,"writeFailed",1,OZ_unixError(ossockerrno()));
   }
-  if (written<n) {
-    s += written;
-    n -= written;
-    goto loop;
-  }
-
-  if (newline) {
-    char c = '\n';
-  loop2:
-    if (write(fd,&c,1) < 0) {
-      if (ossockerrno()==EINTR) goto loop2;
-      return oz_raise(E_ERROR,E_KERNEL,"writeFailed",1,
-		      OZ_unixError(ossockerrno()));
-    }
-  }
-
   return PROCEED;
 }
 
