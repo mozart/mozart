@@ -201,28 +201,17 @@ void Statistics::printGcMsg(int level)
   }
 }
 
-void Statistics::initCount() {
-
-#ifdef PROFILE_INSTR
-  for (int i = 0; i < PROFILE_INSTR_MAX; i++) instr[i] = 0;
-#endif
-
-  currAbstr = NULL;
-  PrTabEntry::profileReset();
-  OZ_PropagatorProfile::profileReset();
-}
-
-
 void Statistics::leaveCall(PrTabEntry  *newp)
 {
   unsigned int usedHeap = getUsedMemoryBytes();
   if (currAbstr) {
-    Assert(currAbstr->lastHeap>0);
-    currAbstr->heapUsed += usedHeap - currAbstr->lastHeap;
-    currAbstr->lastHeap = 0;
+    PrTabEntryProfile * prf = currAbstr->getProfile();
+    Assert(prf->lastHeap>0);
+    prf->heapUsed += usedHeap - prf->lastHeap;
+    prf->lastHeap = 0;
   }
   if (newp)
-    newp->lastHeap = usedHeap;
+    newp->getProfile()->lastHeap = usedHeap;
 
   currAbstr = newp;
 }

@@ -35,18 +35,6 @@
 OZ_PropagatorProfile * OZ_PropagatorProfile::_all_headers = NULL;
 
 
-void OZ_PropagatorProfile::profileReset()
-{
-  OZ_PropagatorProfile * aux = getFirst();
-  while(aux) {
-    aux->_calls   = 0;
-    aux->_samples = 0;
-    aux->_heap = 0;
-    aux = aux->getNext();
-  }
-}
-
-
 OZ_PropagatorProfile::OZ_PropagatorProfile(char * propagator_name)
   : _calls(0), _samples(0), _heap(0),
     _propagator_name(strdup(propagator_name))

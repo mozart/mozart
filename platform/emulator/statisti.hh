@@ -101,15 +101,15 @@ public:
   void incSolveFailed(void)  { solveFailed.incf(); }
 
   PrTabEntry *currAbstr;
+
+  void initProfile(void);
+
   void leaveCall(PrTabEntry *newproc);
   void heapAlloced(int sz);
 
   OZ_PropagatorProfile *currPropagator;
   void enterProp(OZ_PropagatorProfile *p) { currPropagator = p; p->incCalls(); }
   void leaveProp()                 { currPropagator = 0; }
-
-  void initCount();
-  void printCount(char *file);
 
 #ifdef PROFILE_INSTR
   unsigned long instr[PROFILE_INSTR_MAX];

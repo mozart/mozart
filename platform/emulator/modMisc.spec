@@ -28,14 +28,6 @@
     ### Statistics
     ###
 
-    'statisticsPrint'   => { in  => ['+virtualString'],
-                             out => [],
-                             BI  => BIstatisticsPrint},
-
-    'statisticsPrintProcs'=> { in  => [],
-                               out => [],
-                               BI  => BIstatisticsPrintProcs},
-
     'instructionsPrint' => { in  => [],
                              out => [],
                              BI  => BIinstructionsPrint,
