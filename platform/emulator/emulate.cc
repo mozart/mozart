@@ -373,7 +373,8 @@ Bool genCallInfo(GenCallInfoClass *gci, TaggedRef pred, ProgramCounter PC,
 
   {
     /* ok abstr points to an abstraction */
-    AbstractionEntry *entry = AbstractionTable::add(abstr);
+    AbstractionEntry *entry = new AbstractionEntry(NO);
+    entry->setPred(abstr);
     CodeArea::writeAddress(entry, PC+1);
     CodeArea::writeOpcode(gci->isTailCall ? FASTTAILCALL : FASTCALL, PC);
     return OK;
@@ -404,7 +405,8 @@ Bool changeMarshaledFastCall(ProgramCounter PC,TaggedRef pred,
 {
   if (isAbstraction(pred)) {
     Abstraction *abstr = tagged2Abstraction(pred);
-    AbstractionEntry *entry = AbstractionTable::add(abstr);
+    AbstractionEntry *entry = new AbstractionEntry(NO);
+    entry->setPred(abstr);
     CodeArea::writeOpcode((tailcallAndArity&1) ? FASTTAILCALL : FASTCALL, PC);
     CodeArea::writeAddress(entry, PC+1);
     return OK;
