@@ -8,7 +8,8 @@ URL=http\\://www.ps.uni-sb.de/ozhome
 BUILDSHARE=$(BUILDTOP)/share
 BUILDLIB=$(BUILDSHARE)/lib
 BUILDTOOLS=$(BUILDSHARE)/tools
-BUILDDOC=$(BUILDTOP)/contrib/doc
+BUILDCONTRIB=$(BUILDTOP)/contrib
+BUILDGDBM=$(BUILDCONTRIB)/gdbm
 
 SOURCELIB=$(SRCTOP)/share/lib
 SOURCETOOLS=$(SRCTOP)/share/tools
@@ -73,7 +74,7 @@ boot-%:
 	OZC="$(BOOTCOM)" \
 	OZINIT=$(BUILDLIB)/Init.ozf \
 	OZPATH=.:$(BUILDLIB):$(BUILDTOOLS):$(SOURCELIB):$(SOURCETOOLS) \
-	OZ_LOAD=root=.:prefix=/=/:prefix=./=./:prefix=$(URL)/share/=$(BUILDLIB)/:prefix=$(URL)/share/=$(BUILDTOOLS)/:prefix=$(URL)/contrib/doc/=$(BUILDDOC)/:= \
+	OZ_LOAD=root=.:prefix=/=/:prefix=./=./:prefix=$(URL)/share/=$(BUILDLIB)/:prefix=$(URL)/share/=$(BUILDTOOLS)/:prefix=$(URL)/contrib/=$(BUILDCONTRIB)/:prefix=$(URL)/contrib/=$(BUILDGDBM)/:= \
 	OZL="$(BOOTOZL)" \
 	OZDOC_HOME="$(SRCTOP)/doc/utilities" \
 	OZDOC_AUTHOR_PATH="$(SRCDIR):$(SRCTOP)/doc" \
