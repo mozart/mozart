@@ -212,10 +212,12 @@ and in how many copies of the entity
 can exist on a site:
 <LIST>
 
-<ITEM> <EM>Records, lists, and numbers</EM>:
-These entities are copied eagerly across the network,
+<ITEM> <EM>Records and numbers</EM>:
+This includes lists and strings, which
+are just particular kinds of records.
+Records and numbers are copied eagerly across the network,
 in the message that references them.
-The same record, list, and number may occur many
+The same record and number may occur many
 times on a site, once per copy
 (remember that integers in Mozart
 may have any number of digits).
@@ -268,18 +270,43 @@ References to these entities can be passed to other
 sites, but they do not work there.
 They work only on their home site.
 
-<P> In Mozart, a module is a chunk that
+<P> In Mozart, a module is a record that
 encapsulates related operations and
 that possibly has some internal state.
 The modules that are available in a Mozart
-process when it starts up are called system modules.
+process when it starts up are called <EM>base modules</EM>.
+The base modules contain all operations on
+all basic Oz types.
+There are additional modules, called <EM>system modules</EM>,
+that are part of the system but loaded only when needed.
+Furthermore, an application can define more
+modules by means of functors that
+importing from other modules.
 
-<P> System modules can be either sited or unsited.
-A sited system module is called a <EM>resource</EM>.
-A system module is sited if it refers to
-anything whose access is considered limited
-to the machine hosting the Mozart process.
-Most system modules are sited, including
+<P> All base modules are unsited.
+For example, a procedure that does additions
+can be used on another site,
+since the addition operation is 
+part of the base module <<Number>>.
+Due to limitations of the current release,
+threads, dictionaries, arrays, and spaces are sited,
+even though they are in base modules.
+Many of these entities will become
+unsited in future releases.
+
+<P> All system modules are sited.
+The reason is that
+they contain state, which is
+either part of the emulator or
+external to the Mozart process.
+Access to this state 
+is limited to the machine hosting
+the Mozart process.
+We call <EM>resource</EM> any module
+that is either a system module
+or that imports directly or
+indirectly from a system module.
+Some of the commonly-used system modules are
 <<Tk>> and <<Browser>> (access to system graphics),
 <<Connection>> and <<Remote>> (access to site-specific distributed operations),
 <<Application>> and <<Module>> (access to application management),
@@ -288,20 +315,6 @@ Most system modules are sited, including
 <<OS>> and <<Property>> (access to the OS and emulator),
 and so forth.
 
-<P> A few system modules are unsited, namely those containing
-basic system built-in operations (see Standard Modules).
-For example, a procedure that does additions
-can be copied to another site,
-whereas a procedure that accesses <<Tk>> cannot.
-
-<P> There are a few other entities that are sited
-due to limitations of the current release.
-For example, threads, dictionaries, arrays, and spaces are sited.
-In the current release, any entity
-that has state and that could
-be implemented as an object is sited.
-Many of these entities will become
-unsited in future releases.
 
 <SUBSECTION><TITLE>Bringing it all together</TITLE>
 
@@ -353,7 +366,7 @@ a file across the network.
 The string follows the standard URL syntax.
 In Mozart the file can be a <EM>pickle</EM>, in which case
 it can hold any kind of stateless data--procedures,
-classes, records, strings, etc.
+classes, functors, records, strings, etc.
 <ITEM> A <EM>hostname</EM> is a string that
 refers to a host (another machine) across the network.
 The string follows the standard DNS syntax.
@@ -589,6 +602,22 @@ those using client resources.
 
 <SUBSECTION><TITLE>A dynamically-extensible server</TITLE>
 
+Sometimes a server has to be upgraded,
+to add extra functionality or to fix a bug.
+We show how to upgrade the server
+without stopping it.
+In practice, one can even do it interactively,
+where a person using the OPI
+(interactive development environment)
+can upgrade a server on another site
+while it is running.
+
+Let's first define a generic upgradable server
+on top of stationary objects:
+<<<
+declare
+proc {NewUpgradableStat Class Init ?Cell ?SObj}
+  Obj={NewStat Class Init}
 
 </CHAPTER>
 
