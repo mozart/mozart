@@ -9,9 +9,11 @@ INSTALL_FILE	= $(INSTALL) -m 444
 INSTALL_DIR	= @INSTALL_DIR@
 HOMEURL         = @HOMEURL@
 
-.PHONY: all quick bootstrap check install clean veryclean distclean depend
+.PHONY: all quick bootstrap check install clean veryclean distclean depend bootquick
 
 all bootstrap:: TeX.class
+
+bootquick::
 
 %.class: %.java
 	javac -d . $<
