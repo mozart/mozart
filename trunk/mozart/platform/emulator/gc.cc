@@ -451,13 +451,24 @@ if (GCISMARKED(elem)) {return (Type) GCUNMARK(elem);}
  *
  */
 inline
-void storeFwd (int32* fromPtr, void *newValue, Bool domark=OK) {
+void storeFwdMode(Bool isInGc, int32* fromPtr, void *newValue, 
+		  Bool domark=OK) {
   if (!isInGc)
     cpTrail.save(fromPtr);
 
   Assert(inFromSpace(fromPtr));
 
   *fromPtr = domark ? GCMARK(newValue) : ToInt32(newValue);
+}
+
+inline
+void storeFwdMode(Bool isInGc, void* fromPtr, void *newValue) {
+  storeFwdMode(isInGc, (int32*) fromPtr, newValue);
+}
+
+inline
+void storeFwd(int32* fromPtr, void *newValue, Bool domark=OK) {
+  storeFwdMode(isInGc, fromPtr, newValue, domark);
 }
 
 inline
@@ -1025,9 +1036,8 @@ SVariable * SVariable::gc() {
   
   Board * bb = home->gcBoard();
     
-  if (!bb)
-    return (SVariable *) 0;
-  
+  Assert(bb);
+
   SVariable * to = (SVariable *) heapMalloc(sizeof(SVariable));
   
   Assert(!isInGc || to->home != bb);
@@ -1159,9 +1169,8 @@ GenCVariable * GenCVariable::gc(void) {
     
   Board * bb = home->gcBoard();
   
-  if (!bb)
-    return (GenCVariable *) 0;
-  
+  Assert(bb);
+
   SuspList * sl = suspList;
   
   GenCVariable * to;
@@ -1527,7 +1536,7 @@ void gc_finalize()
 
 
 inline
-void gcTagged(TaggedRef & frm, TaggedRef & to) {
+void gcTagged(TaggedRef & frm, TaggedRef & to, Bool isInGc) {
   Assert(!isInGc || !fromSpace->inChunkChain(&to));
   
   TaggedRef aux = frm;
@@ -1590,11 +1599,8 @@ void gcTagged(TaggedRef & frm, TaggedRef & to) {
 	    return;
 	  }
 	  
-	  if (!bb->gcBoard()) {
-	    to = makeTaggedNULL();
-	    return;
-	  }
-	    
+	  (void) bb->gcBoard();
+	  
 	  break;
 	}
 
@@ -1689,9 +1695,8 @@ void gcTagged(TaggedRef & frm, TaggedRef & to) {
 
       if (!sv->gcIsMarked()) {
 	if (isInGc || !(GETBOARD(sv))->isMarkedGlobal()) {
-	  SVariable * sv_gc = sv->gc();
 	  isGround = NO;
-	  to = sv_gc ? makeTaggedSVar(sv_gc) : makeTaggedNULL();
+	  to = makeTaggedSVar(sv->gc());
 	} else {
 	  // We cannot copy the variable, but we have already copied
 	  // their taggedref, so we change the original variable to a ref 
@@ -1704,7 +1709,7 @@ void gcTagged(TaggedRef & frm, TaggedRef & to) {
       } else {
 	to = makeTaggedSVar(sv->gcGetFwd());
       }
-      storeFwd(&frm, &to);
+      storeFwdMode(isInGc, &frm, &to);
       return;
     }
 
@@ -1716,13 +1721,14 @@ void gcTagged(TaggedRef & frm, TaggedRef & to) {
 
       if (isInGc || !bb->isMarkedGlobal()) {
 	bb = bb->gcBoard();
+	Assert(bb);
 	isGround = NO;
-	to = bb ? makeTaggedUVar(bb) : makeTaggedNULL();
+	to = makeTaggedUVar(bb);
       } else {
 	frm = makeTaggedRef(&to);
 	to  = aux;
       }
-      storeFwd(&frm, &to);
+      storeFwdMode(isInGc, &frm, &to);
       return;
     }
 
@@ -1732,9 +1738,8 @@ void gcTagged(TaggedRef & frm, TaggedRef & to) {
 
       if (!cv->gcIsMarked()) {
 	if (isInGc || !(GETBOARD(cv))->isMarkedGlobal()) {
-	  SVariable * cv_gc = cv->gc();
 	  isGround = NO;
-	  to = cv_gc ? makeTaggedSVar(cv_gc) : makeTaggedNULL();
+	  to = makeTaggedSVar(cv->gc());
 	} else {
 	  frm = makeTaggedRef(&to);
 	  to  = aux;
@@ -1742,7 +1747,7 @@ void gcTagged(TaggedRef & frm, TaggedRef & to) {
       } else {
 	to = makeTaggedSVar(cv->gcGetFwd());
       }
-      storeFwd(&frm, &to);
+      storeFwdMode(isInGc, &frm, &to);
       return;
     }
     
@@ -1753,12 +1758,17 @@ void gcTagged(TaggedRef & frm, TaggedRef & to) {
 
 
 void OZ_collectHeapTerm(TaggedRef & frm, TaggedRef & to) {
-  gcTagged(frm, to);
+  gcTagged(frm, to, isInGc);
 }
 
 void OZ_collectHeapBlock(TaggedRef * frm, TaggedRef * to, int sz) {
-  for (int i=sz; i--; )
-    gcTagged(frm[i], to[i]);
+  if (isInGc) {
+    for (int i=sz; i--; )
+      gcTagged(frm[i], to[i], OK);
+  } else {
+    for (int i=sz; i--; )
+      gcTagged(frm[i], to[i], NO);
+  }
 }
 
 
