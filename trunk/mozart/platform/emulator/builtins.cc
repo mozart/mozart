@@ -6278,17 +6278,18 @@ OZ_C_proc_begin(BImakeClass,9)
   OZ_Term send      = OZ_getCArg(4); { DEREF(send,_1,_2); }
   OZ_Term features  = OZ_getCArg(5); { DEREF(features,_1,_2); }
   OZ_Term ufeatures = OZ_getCArg(6); { DEREF(ufeatures,_1,_2); }
-  OZ_Term defaultMethodDescription = OZ_getCArg(7);
+  OZ_Term defmethods = OZ_getCArg(7);{ DEREF(defmethods,_1,_2); }
   OZ_Term out       = OZ_getCArg(8);
 
   SRecord *methods = NULL;
 
-  if (!isDictionary(fastmeth)) { TypeErrorT(0,"dictionary"); }
-  if (!isLiteral(printname))   { TypeErrorT(1,"literal"); }
-  if (!isDictionary(slowmeth)) { TypeErrorT(2,"dictionary"); }
-  if (!isAbstraction(send))    { TypeErrorT(4,"abstraction"); }
-  if (!isRecord(features))     { TypeErrorT(5,"record"); }
-  if (!isRecord(ufeatures))    { TypeErrorT(6,"record"); }
+  if (!isDictionary(fastmeth))   { TypeErrorT(0,"dictionary"); }
+  if (!isLiteral(printname))     { TypeErrorT(1,"literal"); }
+  if (!isDictionary(slowmeth))   { TypeErrorT(2,"dictionary"); }
+  if (!isAbstraction(send))      { TypeErrorT(4,"abstraction"); }
+  if (!isRecord(features))       { TypeErrorT(5,"record"); }
+  if (!isRecord(ufeatures))      { TypeErrorT(6,"record"); }
+  if (!isDictionary(defmethods)) { TypeErrorT(7,"dictionary"); }
 
   SRecord *uf = isSRecord(ufeatures) ? tagged2SRecord(ufeatures) : (SRecord*)NULL;
 
@@ -6297,7 +6298,8 @@ OZ_C_proc_begin(BImakeClass,9)
 				    tagged2Dictionary(slowmeth),
 				    tagged2Abstraction(send),
 				    literalEq(hfb,NameTrue),
-				    uf);
+				    uf,
+				    tagged2Dictionary(defmethods));
 
   Object *reto = newObject(tagged2SRecord(features),
 			   NULL, // initState
