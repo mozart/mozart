@@ -8,6 +8,9 @@
   State: $State$
 
   $Log$
+  Revision 1.362  1996/09/04 09:36:05  mehl
+  new parameter internal(moreInfo:True/False) for execeptions
+
   Revision 1.361  1996/09/03 22:39:45  lorenz
   misc debugger stuff
 
@@ -2768,13 +2771,15 @@ LBLdispatcher:
        DebugCheck(ozconf.stopOnToplevelFailure, tracerOn();trace("raise"));
 
        shallowCP = 0; // failure in shallow guard can never be handled
-       TaggedRef traceBack = nil();
+       TaggedRef traceBack = NameUnit;
        TaggedRef pred = 0;
        if (CTT && !CTT->isPropagator()) {
 	 pred = CTT->findCatch(traceBack);
-	 traceBack = reverseC(traceBack);
-	 if (PC != NOCODE) {
-	   traceBack = cons(CodeArea::dbgGetDef(PC),traceBack);
+	 if (traceBack != NameUnit) {
+	   traceBack = reverseC(traceBack);
+	   if (PC != NOCODE) {
+	     traceBack = cons(CodeArea::dbgGetDef(PC),traceBack);
+	   }
 	 }
        } else {
 	 CTT = e->mkRunnableThread(PROPAGATOR_PRIORITY, CBB, 0);
@@ -3167,13 +3172,17 @@ LBLfailureCatch:
     Assert(CTT->hasCatchFlag);
     if (CTT->isPropagator()) goto LBLfailure;
 
-    TaggedRef traceBack = nil();
+    if (CBB!=CTT->getBoardFast()) goto LBLfailure;
+
+    TaggedRef traceBack = NameUnit;
     TaggedRef pred = 0;
     pred = CTT->findCatch(traceBack);
     if (!pred) goto LBLfailure;
-    traceBack = reverseC(traceBack);
-    if (PC != NOCODE) {
-      traceBack = cons(CodeArea::dbgGetDef(PC),traceBack);
+    if (traceBack!=NameUnit) {
+      traceBack = reverseC(traceBack);
+      if (PC != NOCODE) {
+	traceBack = cons(CodeArea::dbgGetDef(PC),traceBack);
+      }
     }
 
     if (!OZ_isProcedure(pred) || tagged2Const(pred)->getArity() != 1) {
