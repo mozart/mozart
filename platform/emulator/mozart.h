@@ -138,9 +138,9 @@ extern int OZ_unprotect       _PROTOTYPE((OZ_Term *));
 
 /* Suspending builtins */
 
-OZ_Suspension OZ_makeSuspension(OZ_CFun, OZ_Term *, int);
+OZ_Suspension OZ_makeSuspension _PROTOTYPE((OZ_CFun, OZ_Term *, int));
 
-void OZ_addSuspension(OZ_Term, OZ_Suspension);
+void OZ_addSuspension _PROTOTYPE((OZ_Term, OZ_Suspension));
 
 /* for example
    OZ_Suspension s = OZ_makeSuspension(BIplus,OZ_args,OZ_arity);
@@ -158,6 +158,13 @@ void OZ_addSuspension(OZ_Term, OZ_Suspension);
 /* variable arity is marked as follows: */
 #define VarArity -1
 
+#ifdef __GNUC__
+#define OZStringify(Name) #Name
+#else
+#define OZStringify(Name) "Name"
+#endif
+
+
 #ifdef __cplusplus
 
 
@@ -170,8 +177,8 @@ void OZ_addSuspension(OZ_Term, OZ_Suspension);
        OZ_CFun OZ_self = Name;                                                \
        if (OZ_arity != Arity && Arity != VarArity) {                          \
          OZ_warning("Wrong arity in C proc. '%s' Expected: %d, got %d",       \
-                    #Name,Arity, OZ_arity);                                   \
-           return FAILED;\
+                    OZStringify(Name),Arity, OZ_arity);                       \
+           return FAILED;                                                     \
          }
 
 #else
@@ -185,18 +192,18 @@ void OZ_addSuspension(OZ_Term, OZ_Suspension);
 OZ_C_proc_proto(Name)                                                         \
   {                                                                           \
     if (OZ_arity != Arity) {                                                  \
-      OZ_warning("Wrong arity in C proc. '%s' Expected: %d, got %d",          \
-                 #Name,Arity, OZ_arity);                                      \
+        OZ_warning("Wrong arity in C proc. '%s' Expected: %d, got %d",        \
+                   OZStringify(Name),Arity, OZ_arity);                        \
       return FAILED;                                                          \
     }
 
 #endif // __cplusplus
 
-#define OZ_C_ioproc_begin(Name,Arity)                                         \
-        OZ_C_proc_begin(Name,Arity)                                           \
-      if (!OZ_onToplevel()) {                                                 \
-         OZ_warning("Procedure '%s' only allowed on toplevel",#Name);         \
-           return FAILED;                                                     \
+#define OZ_C_ioproc_begin(Name,Arity)                                             \
+        OZ_C_proc_begin(Name,Arity)                                               \
+      if (!OZ_onToplevel()) {                                                     \
+         OZ_warning("Procedure '%s' only allowed on toplevel",OZStringify(Name)); \
+           return FAILED;                                                         \
          }
 
 #define OZ_C_proc_end }
@@ -252,5 +259,6 @@ OZ_C_proc_proto(Name)                                                         \
 #ifdef __cplusplus
 }
 #endif
+
 
 #endif // __FOREIGN_H
