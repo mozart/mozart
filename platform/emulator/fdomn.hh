@@ -266,6 +266,13 @@ public:
 
 
 inline
+ostream &operator << (ostream &ofile, FiniteDomain &fd) {
+  fd.print(ofile);
+  return ofile;
+}
+
+
+inline
 TaggedRef mkTuple(int from, int to){
   OZ_Term s = OZ_tuple(OZ_CToAtom("#"), 2);
   OZ_putArg(s, 1, OZ_CToInt(from));

@@ -821,11 +821,6 @@ void FiniteDomain::print(ostream &ofile, int idnt) const
               (getType() == bv_descr ? 'b' : 'i')) << '#' << size);
 }
 
-ostream &operator << (ostream &ofile, FiniteDomain &fd) {
-  fd.print(ofile);
-  return ofile;
-}
-
 char * FiniteDomain::descr_type_text[3] = {"bv_descr", "iv_descr", "fd_descr"};
 
 void FiniteDomain::printLong(ostream &ofile, int idnt) const
