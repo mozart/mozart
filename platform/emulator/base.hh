@@ -33,7 +33,10 @@
 #endif
 
 #include "conf.h"
+
+#define STATIC_FUNCTIONS
 #include "mozart.h"
+
 #include "machine.hh"
 #include "resources.hh"
 #include "config.h"
