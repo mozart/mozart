@@ -238,6 +238,5 @@ instruction(taskLPQ)
 instruction(taskCatch)
 instruction(taskEmptyStack)
 instruction(taskProfileCall)
-instruction(taskActor)
 
 divert
