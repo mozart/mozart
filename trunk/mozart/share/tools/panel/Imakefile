@@ -9,7 +9,7 @@ LOCALFILES = \
 
 BITMAPS = \
 	panel.xbm zig-zag.xbm lines-lr.xbm lines-rl.xbm \
-	grid-25.xbm grid-50.xbm dash-line.xbm
+	grid-25.xbm grid-50.xbm
 
 
 LOCALBITMAPFILES = ${BITMAPS:%=../bitmaps/%}
