@@ -54,7 +54,7 @@ define
    %% Setup canvas with Image Support
    %% This yields implicit pushVisual call
    MyCanvas = {New Canvas.canvas new(true)}
-   Root     = {MyCanvas root($)}
+   Root     = {MyCanvas rootItem($)}
 
    %% Setup appropriate Canvas Dimensions
    {MyCanvas setUsize(ImageX ImageY)}
@@ -66,8 +66,13 @@ define
    {Toplevel add(MyCanvas)}
    %% Create our item (member of root group); ignore item object
    %% Note: The canvas is able to scale the image
-   _ = {MyCanvas newImageItem(Root Image
-			      0 0 ImageX ImageY GTK.'ANCHOR_NORTH_WEST' $)}
+   _ = {MyCanvas newItem(image(parent: Root
+			       image: Image
+			       x: 0
+			       y: 0
+			       width: ImageX
+			       height: ImageY
+			       anchor: GTK.'ANCHOR_NORTH_WEST') $)}
    %% Pop the visual stuff after all image items have been created
    {MyCanvas popVisual}
    
