@@ -209,8 +209,8 @@ void CodeArea::printDef(ProgramCounter PC)
   pc = nextDebugInfo(PC);
   if (pc != NOCODE) {
     getDebugInfoArgs(pc,file,line,abspos,comment);
-    message("\tnext application: file '%s', line %d, offset: %d, comment: %s, PC=%ld)\n",
-	    toC(file),line,abspos,toC(comment),PC);
+    message("\tnext application: in file \"%s\", line %d, column %d, comment: %s, PC=%ld)\n",
+	    OZ_atomToC(file),line,abspos,toC(comment),PC);
     return;  
   }
 #endif
@@ -227,9 +227,20 @@ void CodeArea::printDef(ProgramCounter PC)
   
   getDefinitionArgs(pc,reg,next,file,line,pred);
 
-  message("\tIn procedure '%s' (File %s, line %d, PC=%ld)\n",
-	  pred ? pred->getPrintName() : "???",
-	  toC(file),line,PC);
+  char *predName;
+  if (!pred)
+    predName = "???";
+  else if (*pred->getPrintName())
+    predName = pred->getPrintName();
+  else
+    predName = 0;
+
+  if (predName)
+    message("\tprocedure '%s' in file \"%s\", line %d, PC=%ld\n",
+	    predName,OZ_atomToC(file),line,PC);
+  else
+    message("\tprocedure in file \"%s\", line %d, PC=%ld\n",
+	    predName,OZ_atomToC(file),line,PC);
 }
 
 TaggedRef CodeArea::dbgGetDef(ProgramCounter PC)
