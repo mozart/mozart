@@ -12,6 +12,7 @@
 
 extern TaggedRef tcl_lock;
 extern TaggedRef tcl_rets;
+extern TaggedRef tcl_dict;
 
 #endif //__TCL_TK_H__
 
