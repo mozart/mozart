@@ -12,4 +12,7 @@ SGMLSRCS = 10_classes.sgml 11_objectscc.sgml 12_lp.sgml \
         4_equality.sgml 5_control.sgml 6_functional.sgml \
         7_modules.sgml 8_concurrency.sgml 9_stateful.sgml
 
+HTMLEXTRAFILES = \
+        tutorial.gif
+
 include ../Makefile.common
