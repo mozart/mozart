@@ -394,7 +394,7 @@ extern void oz_forceWakeUp(SuspList **);
  * ---------------------------------------------------------------------------------------------------------------
  * FU    | NOOP  | NOOP  | NOOP  | NOOP  | NOOP  | NOOP  | NOOP  | NOOP  | NOOP  | NOOP  | NOOP  | NOOP  | NOOP  |
  * ---------------------------------------------------------------------------------------------------------------
- * FAIL  | NOOP  | NOOP  | NOOP  | SUSP  | SUSP  | SUSP  | SUSP  | NOOP  | NOOP  | NOOP  | NOOP  | NOOP  | NOOP  |
+ * FAIL  | SUSP  | SUSP  | SUSP  | SUSP  | SUSP  | SUSP  | SUSP  | NOOP  | NOOP  | NOOP  | NOOP  | NOOP  | NOOP  |
  * ---------------------------------------------------------------------------------------------------------------
  * OF    | R->OF | R->OF | R->OF | SUSP  | SUSP  | SUSP  | SUSP  | SUSP  | NOOP  | CLASH | CLASH | CLASH | CLASH |
  * ---------------------------------------------------------------------------------------------------------------
