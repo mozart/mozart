@@ -1,4 +1,4 @@
-/*
+/* -*-m4-*-
  *  Authors:
  *    Ralf Scheidhauer (Ralf.Scheidhauer@ps.uni-sb.de)
  * 
@@ -60,7 +60,7 @@ static void* instrTable[OZERROR+1];
 
 #else /* AS_CAN_INLINE_OPCODE_MAP */
 
-#define INSTR(instr) && instr##LBL,
+#define INSTR(instr) && TRUE_ ##instr,
 #define INSTR_FINISH 0};
 static void *instrTable[OZERROR+1] = {
 
