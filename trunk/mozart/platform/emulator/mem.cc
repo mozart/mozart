@@ -106,6 +106,33 @@ void scanFreeList(void) {
 }
 #endif
 
+void freeListChop(void * addr, size_t size) {
+  // Chop the chunk into pieces of the likely sizes
+  // Likely sizes are between 8 and 32.
+
+  register size_t cs = nextChopSize;
+
+  if (nextChopSize > 32) 
+    nextChopSize = 8;
+  else
+    nextChopSize += 4;
+
+  register size_t s     = size;
+  register void ** fl   = &(FreeList[cs]);
+  register void * prev  = *fl;
+  register void * small = addr;
+
+  do {
+    *((void **) small) = prev;
+    prev = small;
+    small = (void *) ((char *) small + cs);
+    s     -= cs; 
+  } while (s > cs);
+  
+  *fl = prev;
+
+}
+
 // ----------------------------------------------------------------
 // mem from os with 2 alternatives
 //   USESBRK

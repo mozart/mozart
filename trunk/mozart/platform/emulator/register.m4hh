@@ -93,6 +93,9 @@ define(CaseTwoRegs,``''
       )
 
 
+#define SHALLOWFAIL   if (shallowCP) { goto LBLshallowFail; }
+
+
 // -------------------------------------------------------------------------
 // CLASS: TERM: MOVE/UNIFY/CREATEVAR/...
 // -------------------------------------------------------------------------
@@ -136,21 +139,6 @@ define(CaseTwoRegs,``''
       Xreg(getRegArg(PC+4)) = Yreg(getRegArg(PC+3));      
       DISPATCH(5);
     }
-
-  CaseOneRegGImpossible(CREATENAMEDVARIABLE, 
-    ``
-    {
-      int regIndex = getRegArg(PC+1);
-      TaggedRef name   = getLiteralArg(PC+2);
-      Assert(&Reg1(0)== &(e->toplevelVars[0]));
-      TaggedRef newVar = e->createNamedVariable(regIndex,name);
-      Y = e->toplevelVars;
-      Reg1(regIndex) = newVar;
-    }
-    ''
-    DISPATCH(3);
-    )
-
 
   Case(CLEARY)
     {
@@ -244,20 +232,12 @@ CaseOneRegGImpossible(CREATEVARIABLEMOVE,
     DISPATCH(4);
   }
 
-  Case(PUTNUMBERX)
-  Case(PUTLITERALX)
-     Xreg(getRegArg(PC+2)) = getTaggedArg(PC+1); DISPATCH(3);
   Case(PUTCONSTANTX)
      Xreg(getRegArg(PC+2)) = getTaggedArg(PC+1); DISPATCH(3);
 
-  Case(PUTNUMBERY)
-  Case(PUTLITERALY)
-     Yreg(getRegArg(PC+2)) = getTaggedArg(PC+1); DISPATCH(3);
   Case(PUTCONSTANTY)
      Yreg(getRegArg(PC+2)) = getTaggedArg(PC+1); DISPATCH(3);
 
-  Case(PUTNUMBERG)
-  Case(PUTLITERALG)
   Case(PUTCONSTANTG)
      IMPOSSIBLE("PUTNUMBERG/PUTLITERALG/PUTCONSTANTG");
 
@@ -289,12 +269,6 @@ CaseOneRegGImpossible(CREATEVARIABLEMOVE,
 	       )
 
 
-  Case(SETNUMBER)
-  Case(SETLITERAL)
-    {
-      *sPointer++ = getTaggedArg(PC+1);
-      DISPATCH(2);
-    }
   Case(SETCONSTANT)
     {
       *sPointer++ = getTaggedArg(PC+1);
@@ -363,59 +337,6 @@ CaseOneRegGImpossible(CREATEVARIABLEMOVE,
     SHALLOWFAIL;
     HF_TELL(RegAccess(HelpReg,getRegArg(PC+3)),mkRecord(label,ff));
   }
-
-  Case(GETRECORDVARSX) ONREG(GetRecordVars,X);
-  Case(GETRECORDVARSY) ONREG(GetRecordVars,Y);
-  Case(GETRECORDVARSG) ONREG(GetRecordVars,G);
-  {
-  GetRecordVars: asmLbl(GETRECORDVARS);
-    TaggedRef label = getLiteralArg(PC+1);
-    SRecordArity ff = (SRecordArity) getAdressArg(PC+2);
-
-    TaggedRef term = RegAccess(HelpReg,getRegArg(PC+3));
-    DEREF(term,termPtr,tag);
-
-    if (isAnyVar(term)) {
-      SRecord *srecord = SRecord::newSRecord(label,ff,getWidth(ff));
-      srecord->initArgs();
-      XRegisterIndexListClass *xlist = GetXList(PC+4);
-      int *array = xlist->getArray();
-      sPointer = srecord->getRef();
-      for (int i = 0; i < xlist->getLength(); i++) {
-	Xreg(array[i]) = tagged2NonVariable(sPointer);
-	sPointer++;
-      }
-      if (isCVar(term)) {
-	TaggedRef srecordRef=makeTaggedSRecord(srecord);
-	if(tagged2CVar(term)->unifyOutline(termPtr, term, // mm_u
-					   &srecordRef, srecordRef,
-					   NOFLATGUARD)) {
-	  DISPATCH(5);
-	}
-      } else {
-	// mm_u
-	oz_bindToNonvar(termPtr, term,
-			makeTaggedSRecord(srecord), NOFLATGUARD);
-	DISPATCH(5);
-      }
-    }
-
-    if (isSRecord(tag) &&
-	tagged2SRecord(term)->compareSortAndArity(label,ff)) {
-      XRegisterIndexListClass *xlist = GetXList(PC+4);
-      int *array = xlist->getArray();
-      sPointer = tagged2SRecord(term)->getRef();
-      for (int i = 0; i < xlist->getLength(); i++) {
-	Xreg(array[i]) = tagged2NonVariable(sPointer);
-	sPointer++;
-      }
-      DISPATCH(5);
-    }
-
-    SHALLOWFAIL;
-    HF_TELL(RegAccess(HelpReg,getRegArg(PC+3)),mkRecord(label,ff));
-  }
-
 
   CaseOneReg(TESTLITERAL,
     ``{
@@ -504,6 +425,11 @@ CaseOneRegGImpossible(CREATEVARIABLEMOVE,
 	JUMPRELATIVE( getLabelArg(PC+4) );
     }''
     )
+
+
+    CaseOneReg(TESTRECORD, ``error("impossible");'')
+    CaseOneReg(TESTLIST, ``error("impossible");'')
+
 
   CaseOneReg( GETLITERAL,
 	       ``{
@@ -616,52 +542,6 @@ CaseOneRegGImpossible(CREATEVARIABLEMOVE,
 
 		 SHALLOWFAIL;
 		 HF_TELL(Xreg(getRegArg(PC+1)), makeTaggedLTuple(new LTuple(Reg1(getRegArg(PC+2)),e->currentUVarPrototype())));
-
-	       }''
-	       )
-
-
-/* getListVarVar(R,N,M) == getList(R) unifyVar(X[N]) unifyVar(X[M]) */
-  CaseOneReg(GETLISTVARVAR,
-		``{
-		 TaggedRef term = Reg1(getRegArg(PC+1));
-		 DEREF(term,termPtr,tag);
-
-		 if (isAnyVar(term)) {
-		   register LTuple *ltuple = new LTuple();
-		   ltuple->setHead(e->currentUVarPrototype());
-		   ltuple->setTail(e->currentUVarPrototype());
-		   TaggedRef *argg = ltuple->getRef();
-		   Xreg(getRegArg(PC+2)) = tagged2NonVariable(argg);
-		   Xreg(getRegArg(PC+3)) = tagged2NonVariable(argg+1);
-
-		   if (isCVar(term)) {
-		     if (tagged2CVar(term)->unifyOutline(termPtr,  // mm_u
-							 term, NULL,
-							 makeTaggedLTuple(ltuple),
-							 NOFLATGUARD)) {
-		       DISPATCH(4);
-		     }
-		     SHALLOWFAIL;
-		     HF_TELL(Reg1(getRegArg(PC+1)), makeTaggedLTuple(ltuple));
-
-		   } else {
-		     // mm_u
-		     oz_bindToNonvar(termPtr, term,
-				     makeTaggedLTuple(ltuple), NOFLATGUARD);
-		     DISPATCH(4);
-		   }
-		 }
-
-		 if (isLTuple(term)) {
-		   TaggedRef *argg = tagged2LTuple(term)->getRef();
-		   Xreg(getRegArg(PC+2)) = tagged2NonVariable(argg);
-		   Xreg(getRegArg(PC+3)) = tagged2NonVariable(argg+1);
-		   DISPATCH(4);
-		 }
-
-		 SHALLOWFAIL;
-		 HF_TELL(Reg1(getRegArg(PC+1)),makeTaggedLTuple(new LTuple(e->currentUVarPrototype(),e->currentUVarPrototype())));
 
 	       }''
 	       )
@@ -904,31 +784,14 @@ Case(UNIFYLITERAL)
       DISPATCH(2);
     }
 
-  CaseOneReg(SWITCHONTERM,
-    {
-      TaggedRef val     = Reg1(getRegArg(PC+1));
-      IHashTable *table = (IHashTable *) getAdressArg(PC+2);
-
-      DoSwitchOnTerm(val,table,NO);
-    })
-
   CaseOneReg(MATCH,
     {
       TaggedRef val     = Reg1(getRegArg(PC+1));
       IHashTable *table = (IHashTable *) getAdressArg(PC+2);
 
-      DoSwitchOnTerm(val,table,OK);
+      DoSwitchOnTerm(val,table);
     })
 
-  CaseOneReg( BRANCHONNONVAR,
-	       ``
-	       TaggedRef term = Reg1(getRegArg(PC+1));
-	       DEREF(term,_1,_2);
-	       if (!isAnyVar(term)) {
-		 JUMPRELATIVE( getLabelArg(PC+2) );
-	       }
-	       DISPATCH(3);
-	       ''
-	       )
 
+#undef SHALLOWFAIL
 

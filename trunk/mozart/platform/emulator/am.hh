@@ -134,16 +134,7 @@ private:
   int threadSwitchCounter;
   int userCounter;
 
-  RefsArray toplevelVars;
-  int toplevelVarsCount;
-
   Bool wasSolveSet; 
-
-#ifdef OLD_COMPILER
-  CompStream *compStream;
-#endif
-
-  Bool isStandaloneF;
 
   struct {
     int debug;
@@ -162,8 +153,6 @@ private:
   TaggedRef opiCompiler;
 
   unsigned int lastThreadID;
-
-  Toplevel *toplevelQueue;
 
   Bool installingScript;  // ask TM
 
@@ -221,11 +210,6 @@ public:
   void setSelf(Object *o) { cachedSelf = o; }
   Object *getSelf() { return cachedSelf; }
 
-#ifdef OLD_COMPILER
-  CompStream *getCompStream() { return compStream; }
-  Bool loadQuery(CompStream *fd);
-#endif
-
   void setProfileMode(Bool p) { profileMode = p; }
 
   int currentUVarPrototypeEq(TaggedRef t) {
@@ -240,11 +224,11 @@ public:
 #endif
   }
 
-  Bool isStandalone() { return isStandaloneF; }
 
   TaggedRef getSuspendVarList(void) { return _suspendVarList; }
   void emptySuspendVarList(void) { _suspendVarList = nil(); }
   int isEmptySuspendVarList(void) { return _suspendVarList == nil(); }
+
   void addSuspendVarList(TaggedRef t)
   {
     Assert(isAnyVar(deref(t)));
@@ -262,10 +246,6 @@ public:
   void prepareCall(TaggedRef pred, RefsArray args);
 
   void pushPreparedCalls(Thread *thr=0);
-
-  void pushToplevel(ProgramCounter pc);
-  void checkToplevel();
-  void addToplevel(ProgramCounter pc);
 
   void init(int argc,char **argv);
   void checkVersion();
@@ -414,9 +394,6 @@ public:
   SuspList *installPropagators(SuspList *local_list, SuspList *glob_list,
 			       Board *glob_home);
 
-  TaggedRef createNamedVariable(int regIndex, TaggedRef name);
-  void handleToplevelBlocking();
-
   Bool onToplevel() { return _currentBoard == _rootBoard; }
 
   void gc(int msgLevel);  // ###
@@ -509,7 +486,6 @@ extern AM am;
 #include "codearea.hh"
 
 #include "builtins.hh"
-#include "compiler.hh"
 #include "os.hh"
 
 #ifndef OUTLINE

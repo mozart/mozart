@@ -38,13 +38,6 @@
  * appropriate handbook chapter: system/system.raw.
  */
 
-#ifdef OLD_COMPILER
-
-#define COMPILER_TIMEOUT	180 /* seconds */
-
-#define IO_BUF_SIZE		10000
-
-#endif
 
 #define PRINT_DEPTH		2
 #define PRINT_WIDTH		10
@@ -138,8 +131,6 @@
 #define THREAD_ID_SIZE		16
 #define THREAD_ID_MAX           ((1 << THREAD_ID_SIZE) - 1)
 #define THREAD_ID_MASK          THREAD_ID_MAX
-
-#define OzCompiler	"oz.compiler"
 
 #define MAX_TCP_CACHE     5
 #define MAX_UDP_PACKET    100*1024  /* 100k */

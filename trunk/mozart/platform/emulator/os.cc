@@ -890,7 +890,7 @@ int osFirstSelect()
       goto loop;
     }
 
-    if (ossockerrno() != EBADF) {  /* the compiler may have terminated */
+    if (ossockerrno() != EBADF) {  /* some pipes may have been closed */
       ozpwarning("select failed");
     }
     osClearSocketErrors();
@@ -926,7 +926,7 @@ int osCheckIO()
   int numbOfFDs = osSelect(&copyFDs[SEL_READ],&copyFDs[SEL_WRITE],WAIT_NULL);
   if (numbOfFDs < 0) {
     if (ossockerrno() == EINTR) goto loop;
-    if (ossockerrno() != EBADF) { /* the compiler may have terminated (rs) */
+    if (ossockerrno() != EBADF) { /* some pipes may have been closed */
       ozpwarning("checkIO: select failed");
     }
     osClearSocketErrors();

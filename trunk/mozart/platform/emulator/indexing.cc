@@ -169,7 +169,7 @@ Bool IHashTable::disentailed(GenCVariable *cvar, TaggedRef *ptr)
 }
 
 int switchOnTermOutline(TaggedRef term, TaggedRef *termPtr,
-			IHashTable *table, TaggedRef *&sP, Bool isMatch)
+			IHashTable *table, TaggedRef *&sP)
 {
   int offset = table->getElse();
   if (isSRecord(term)) {
@@ -193,7 +193,7 @@ int switchOnTermOutline(TaggedRef term, TaggedRef *termPtr,
   }
 
   if (isNotCVar(term)) {
-    return isMatch? 0: table->varLabel;
+    return 0;
   }
 
   if (isSmallInt(term)) {
@@ -221,7 +221,7 @@ int switchOnTermOutline(TaggedRef term, TaggedRef *termPtr,
   }
 
   if (isCVar(term) && !table->disentailed(tagged2CVar(term),termPtr)) {
-    return isMatch? 0: table->varLabel;
+    return 0;
   }
 
   return offset;
