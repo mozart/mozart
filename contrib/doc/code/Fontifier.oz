@@ -154,24 +154,30 @@ define
                 set :proc {$ X} {Assign ELOAD X} end
                 push:proc {$ X} L in {Exchange ELOAD L X|L} end)
 
-   proc {MakeProcess FileIn FileOut PID} IN={IO.devNull} in
-      {IO.run
-       process(
-          {Access EMACS}
-          '--batch'
-          |{FoldR {Access EPATH}
-            fun {$ DIR L}
-               %% skip empty directories
-               if DIR==nil then L else '-L'|DIR|L end
-            end
-            {FoldR {Access ELOAD}
-             fun {$ FILE L}
-                %% skip empty files
-                if FILE==nil then L else '-l'|FILE|L end
+   proc {MakeProcess FileIn FileOut PID}
+      IN   = {IO.devNull}
+      ARGS = '--batch'|EVAL
+      EVAL = case {Access EPATH} of nil then LOAD
+             elseof DIRS then
+                '--eval'|
+                '(setq load-path (append \'('#
+                {FoldR DIRS
+                 fun {$ DIR L}
+                    %% skip empty directories
+                    if DIR==nil then L
+                    elseif L==nil then '"'#DIR#'"'
+                    else '"'#DIR#'" '#L end
+                 end nil}#
+                ') load-path))'|LOAD
              end
-             ['-f' 'ozdoc-fontify' FileIn FileOut]}}
-          stdin:IN)
-       PID}
+      LOAD = {FoldR {Access ELOAD}
+              fun {$ FILE L}
+                 %% skip empty files
+                 if FILE==nil then L else '-l'|FILE|L end
+              end
+              ['-f' 'ozdoc-fontify' FileIn FileOut]}
+   in
+      {IO.run process({Access EMACS} ARGS stdin:IN) PID}
       {IO.close IN}
    end
 
