@@ -21,7 +21,6 @@ dnl   Pseudo-instruction to mark the end of a code segment
 instruction(endOfFile)
 
 instruction(skip)
-instruction(failure)
 
 dnl   Reg x ContAddr
 dnl       x (PrintName x Arity x FileName x LineNum x Flags x NLiveRegs)
@@ -30,7 +29,12 @@ instruction(definition,writeArg(XRegisterIndex),Label,PredId,PredicateRef,GRegRe
 instruction(definitionCopy,writeArg(XRegisterIndex),Label,PredId,PredicateRef,GRegRef)
 instruction(endDefinition,Label)
 
-instruction(move,readArg(Register),writeArg(Register))
+instruction(moveXX,readArg(XRegisterIndex),writeArg(XRegisterIndex))
+instruction(moveXY,readArg(XRegisterIndex),writeArg(YRegisterIndex))
+instruction(moveYX,readArg(YRegisterIndex),writeArg(XRegisterIndex))
+instruction(moveYY,readArg(YRegisterIndex),writeArg(YRegisterIndex))
+instruction(moveGX,readArg(GRegisterIndex),writeArg(XRegisterIndex))
+instruction(moveGY,readArg(GRegisterIndex),writeArg(YRegisterIndex))
 
 instruction(moveMoveXYXY,readArg(XRegisterIndex),writeArg(YRegisterIndex),
 			 readArg(XRegisterIndex),writeArg(YRegisterIndex))
@@ -41,29 +45,45 @@ instruction(moveMoveXYYX,readArg(XRegisterIndex),writeArg(YRegisterIndex),
 instruction(moveMoveYXXY,readArg(YRegisterIndex),writeArg(XRegisterIndex),
 			 readArg(XRegisterIndex),writeArg(YRegisterIndex))
 
-instruction(createVariable,writeArg(Register))
+instruction(createVariableX,writeArg(XRegisterIndex))
+instruction(createVariableY,writeArg(YRegisterIndex))
 
 dnl   createVariableMove(R X) == createVariable(R) move(R X)
-instruction(createVariableMove,writeArg(Register),writeArg(XRegisterIndex))
+instruction(createVariableMoveX,writeArg(XRegisterIndex),writeArg(XRegisterIndex))
+instruction(createVariableMoveY,writeArg(YRegisterIndex),writeArg(XRegisterIndex))
 
-instruction(unify,readArg(Register),readArg(Register))
+instruction(unifyXX,readArg(XRegisterIndex),readArg(XRegisterIndex))
+instruction(unifyXY,readArg(XRegisterIndex),readArg(YRegisterIndex))
+instruction(unifyXG,readArg(XRegisterIndex),readArg(GRegisterIndex))
 
-instruction(putRecord,Literal,RecordArity,writeArg(Register))
-instruction(putList,writeArg(Register))
-instruction(putConstant,Constant,writeArg(Register))
 
-instruction(setVariable,writeArg(Register))
+instruction(putRecordX,Literal,RecordArity,writeArg(XRegisterIndex))
+instruction(putRecordY,Literal,RecordArity,writeArg(YRegisterIndex))
+instruction(putListX,writeArg(XRegisterIndex))
+instruction(putListY,writeArg(YRegisterIndex))
+instruction(putConstantX,Constant,writeArg(XRegisterIndex))
+instruction(putConstantY,Constant,writeArg(YRegisterIndex))
+
+instruction(setVariableX,writeArg(XRegisterIndex))
+instruction(setVariableY,writeArg(YRegisterIndex))
 instruction(setValue,readArg(Register))
 instruction(setConstant,Constant)
 instruction(setPredicateRef,PredicateRef)
+instruction(setProcedureRef,PredicateRef)
 instruction(setVoid,Count)
 
 instruction(getRecord,Literal,RecordArity,readArg(Register))
 instruction(getList,readArg(Register))
-instruction(getListValVar,readArg(XRegisterIndex),readArg(Register),writeArg(XRegisterIndex))
-instruction(unifyVariable,writeArg(Register))
+instruction(getListValVarX,readArg(XRegisterIndex),readArg(XRegisterIndex),writeArg(XRegisterIndex))
+instruction(unifyVariableX,writeArg(XRegisterIndex))
+instruction(unifyVariableY,writeArg(YRegisterIndex))
 instruction(unifyValue,readArg(Register))
-instruction(unifyValVar,readArg(Register),writeArg(Register))
+instruction(unifyValVarXX,readArg(XRegisterIndex),writeArg(XRegisterIndex))
+instruction(unifyValVarXY,readArg(XRegisterIndex),writeArg(YRegisterIndex))
+instruction(unifyValVarYX,readArg(YRegisterIndex),writeArg(XRegisterIndex))
+instruction(unifyValVarYY,readArg(YRegisterIndex),writeArg(YRegisterIndex))
+instruction(unifyValVarGX,readArg(GRegisterIndex),writeArg(XRegisterIndex))
+instruction(unifyValVarGY,readArg(GRegisterIndex),writeArg(YRegisterIndex))
 instruction(unifyNumber,Number)
 instruction(unifyLiteral,Literal)
 instruction(unifyVoid,Count)
@@ -100,15 +120,20 @@ dnl   NOTE: The instructions genCall, call, tailCall, marshalledFastCall,
 dnl   genFastCall, fastCall and fastTailCall must all have the same size
 dnl   due to self-modifying code.
 
+instruction(callMethod,GenCallInfo,Arity)
 instruction(genCall,GenCallInfo,Arity)
+instruction(callGlobal,readArg(GRegisterIndex),ArityAndIsTail)
 instruction(call,readArg(Register),Arity)
-instruction(tailCall,readArg(Register),Arity)
+instruction(tailCallX,readArg(XRegisterIndex),Arity)
+instruction(tailCallG,readArg(GRegisterIndex),Arity)
 
 dnl   first argument is a TaggedRef pointing to a procedure proxy;
 dnl   second argument is 2 * arity + (is_tailcall? 1: 0)
+instruction(callConstant,Constant,ArityAndIsTail)
 instruction(marshalledFastCall,Constant,ArityAndIsTail)
 
 dnl   second argument is a flag: non-zero iff tailcall
+instruction(callProcedureRef,PredicateRef,ArityAndIsTail)
 instruction(genFastCall,PredicateRef,ArityAndIsTail)
 
 dnl   second argument is dummy argument
@@ -119,29 +144,14 @@ dnl   instructions for objects
 instruction(sendMsg,Literal,readArg(Register),RecordArity,Cache)
 instruction(tailSendMsg,Literal,readArg(Register),RecordArity,Cache)
 
-instruction(applMeth,Dummy,readArg(Register))
-instruction(tailApplMeth,Dummy,readArg(Register))
-
 instruction(getSelf,writeArg(XRegisterIndex))
 instruction(setSelf,readArg(XRegisterIndex))
+instruction(setSelfG,readArg(GRegisterIndex))
 instruction(lockThread,Label,readArg(XRegisterIndex))
 instruction(inlineAt,Feature,writeArg(XRegisterIndex),Cache)
 instruction(inlineAssign,Feature,readArg(XRegisterIndex),Cache)
 
 instruction(branch,Label)
-
-instruction(wait)
-instruction(waitTop)
-instruction(ask)
-
-instruction(createCond,Label)
-instruction(createOr)
-instruction(createEnumOr)
-instruction(createChoice)
-instruction(clause)
-instruction(emptyClause)
-
-instruction(thread,Label)
 
 instruction(exHandler,Label)
 instruction(popEx)
@@ -150,13 +160,7 @@ instruction(return)
 instruction(getReturn,writeArg(Register))
 instruction(funReturn,readArg(Register))
 
-instruction(nextClause,Label)
-instruction(lastClause)
-
 dnl   conditionals
-instruction(shallowGuard,Label)
-instruction(shallowThen)
-
 instruction(testLiteral,readArg(Register),Literal,Label)
 instruction(testNumber,readArg(Register),Number,Label)
 
@@ -166,8 +170,12 @@ instruction(testList,readArg(Register),Label)
 instruction(testBool,readArg(Register),Label,Label)
 
 instruction(match,readArg(Register),HashTableRef)
-instruction(getVariable,writeArg(Register))
-instruction(getVarVar,writeArg(Register),writeArg(Register))
+instruction(getVariableX,writeArg(XRegisterIndex))
+instruction(getVariableY,writeArg(YRegisterIndex))
+instruction(getVarVarXX,writeArg(XRegisterIndex),writeArg(XRegisterIndex))
+instruction(getVarVarXY,writeArg(XRegisterIndex),writeArg(YRegisterIndex))
+instruction(getVarVarYX,writeArg(YRegisterIndex),writeArg(XRegisterIndex))
+instruction(getVarVarYY,writeArg(YRegisterIndex),writeArg(YRegisterIndex))
 instruction(getVoid,Count)
 
 dnl   code annotations for the source-level debugger
@@ -197,8 +205,6 @@ instruction(inlineMinus,readArg(XRegisterIndex),
 			writeArg(XRegisterIndex))
 instruction(inlineDot,readArg(XRegisterIndex),Feature,
 			writeArg(XRegisterIndex),Cache)
-instruction(inlineUparrow,readArg(XRegisterIndex),readArg(XRegisterIndex),
-			writeArg(XRegisterIndex))
 
 instruction(testBI,Builtinname,Location,Label)
 instruction(testLT,readArg(XRegisterIndex),
@@ -214,16 +220,6 @@ dnl   dummy instructions to allow easy testing of new
 dnl   instructions via assembler
 
 instructionsUnneededForNewCompiler
-
-
-instruction(test1,Dummy,Dummy,Dummy)
-instruction(test2,Dummy,Dummy,Dummy)
-instruction(test3,Dummy,Dummy,Dummy)
-instruction(test4,Dummy,Dummy,Dummy)
-instruction(testLabel1,Label,Dummy,Dummy)
-instruction(testLabel2,Label,Dummy,Dummy)
-instruction(testLabel3,Label,Dummy,Dummy)
-instruction(testLabel4,Label,Dummy,Dummy)
 
 dnl   Instruction for efficiently interpreting different tasks on the stack;
 dnl   only used internally by the emulator

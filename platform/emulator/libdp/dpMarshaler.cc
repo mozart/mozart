@@ -38,7 +38,6 @@
 #include "table.hh"
 #include "dpMarshaler.hh"
 #include "dpInterface.hh"
-#include "marshaler.hh"
 #include "newmarshaler.hh"
 #include "var.hh"
 #include "gname.hh"
@@ -173,7 +172,6 @@ OZ_Term unmarshalBorrow(MsgBuffer *bs,OB_Entry *&ob,int &bi){
 /**********************************************************************/
 
 MessageType unmarshalHeader(MsgBuffer *bs){
-  refTable->reset();
   MessageType mt= (MessageType) bs->get();
   mess_counter[mt].recv();
   return mt;}
@@ -250,20 +248,11 @@ void fillInObject(ObjectFields *of, Object *o){
   o->setState(tagged2Tert(of->state));
   o->setLock(oz_isNil(of->lock) ? (LockProxy*)NULL : (LockProxy*)tagged2Tert(of->lock));}
 
-void unmarshalUnsentObject(MsgBuffer *bs){
-  unmarshalUnsentSRecord(bs);
-  unmarshalUnsentTerm(bs);
-  unmarshalUnsentTerm(bs);}
-
 void unmarshalFullObjectAndClass(ObjectFields *o, MsgBuffer *bs)
 {
   unmarshalFullObject(o,bs);
   o->clas = newUnmarshalTerm(bs);
 }
-
-void unmarshalUnsentObjectAndClass(MsgBuffer *bs){
-  unmarshalUnsentObject(bs);
-  unmarshalUnsentTerm(bs);}
 
 void fillInObjectAndClass(ObjectFields *of, Object *o){
   fillInObject(of,o);
@@ -479,21 +468,3 @@ OZ_Term unmarshalOwnerImpl(MsgBuffer *bs,MarshalTag mt){
   sendSecondaryCredit(cs,myDSite,OTI,1);
   return OT->getOwner(OTI)->getValue();
 }
-
-void unmarshalUnsentTerm(MsgBuffer *bs) {
-  (void) unmarshalTerm(bs);}
-
-void unmarshalUnsentSRecord(MsgBuffer *bs){
-  unmarshalUnsentTerm(bs);}
-
-int unmarshalUnsentNumber(MsgBuffer *bs)
-{
-  return unmarshalNumber(bs);
-}
-
-void unmarshalUnsentString(MsgBuffer *bs)
-{
-  char *aux = unmarshalString(bs);
-  delete [] aux;
-}
-

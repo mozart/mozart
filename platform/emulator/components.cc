@@ -34,7 +34,6 @@
 #include "dictionary.hh"
 #include "genhashtbl.hh"
 #include "urlc.hh"
-#include "marshaler.hh"
 #include "site.hh"
 #include "msgbuffer.hh"
 #include "builtins.hh"
@@ -57,9 +56,7 @@
 #include <stdio.h>
 #include <errno.h>
 
-#ifdef NEWMARSHALER
 #include "newmarshaler.hh"
-#endif
 
 #include "zlib.h"
 
@@ -210,32 +207,19 @@ OZ_Return raiseGeneric(char *id, char *msg, OZ_Term arg)
 }
 
 
-#ifdef NEWMARSHALER
-Bool newMarshaler = OK;
-#endif
-
 //
 inline static
-void marshalTermRT0(OZ_Term t, MsgBuffer *bs)
+void marshalTermRT(OZ_Term t, MsgBuffer *bs)
 {
-#ifdef NEWMARSHALER
-  if (newMarshaler)
-    newMarshalTerm(t,bs);
-  else 
-#endif
-    marshalTermRT(t,bs);
+  newMarshalTerm(t,bs);
 }
 
 
 void saveTerm(ByteStream* buf,TaggedRef t) {
   buf->marshalBegin();
-#ifdef NEWMARSHALER
-  char *version  =  newMarshaler ? NEWMARSHALER_PV : PERDIOVERSION;
-#else
   char *version  =  PERDIOVERSION;
-#endif
   marshalString(version, buf);
-  marshalTermRT0(t, buf);
+  marshalTermRT(t, buf);
   buf->marshalEnd();
   return;
 } 
@@ -425,15 +409,6 @@ OZ_BI_define(BIsave,2,0)
   return saveIt(in,filename,"",0,NO);
 } OZ_BI_end
 
-#ifdef NEWMARSHALER
-OZ_BI_define(BInewMarshaler,1,0)
-{
-  OZ_declareInt(0,nm);
-  newMarshaler = nm;
-  return PROCEED;
-} OZ_BI_end
-#endif
-
 
 OZ_BI_define(BIsaveCompressed,3,0)
 {
@@ -486,7 +461,7 @@ OZ_Return export(OZ_Term t)
 {
   if (ozconf.perdioMinimal) {
     Exporter bs;
-    marshalTermRT0(t,&bs);
+    marshalTermRT(t,&bs);
     CheckNogoods(t,(&bs),"export:nogoods","Non-exportables found during export",;);
 
     OZ_Term vars = bs.getVars();
@@ -518,7 +493,7 @@ OZ_Term digOutVars(OZ_Term t)
   int cached=ozconf.perdioMinimal;
   ozconf.perdioMinimal=TRUE;
   Exporter bs;
-  marshalTermRT0(t,&bs);
+  marshalTermRT(t,&bs);
   OZ_Term vars=bs.getVars();
   ozconf.perdioMinimal=cached;
   return vars;
@@ -531,8 +506,6 @@ OZ_Term digOutVars(OZ_Term t)
 static
 Bool loadTerm(ByteStream *buf,char* &vers,OZ_Term &t)
 {
-  refTable->reset();
-  Assert(refTrail->isEmpty());
   vers = unmarshalVersionString(buf);
 
   if (vers==0)
@@ -542,32 +515,14 @@ Bool loadTerm(ByteStream *buf,char* &vers,OZ_Term &t)
   if (sscanf(vers,"%d#%d",&major,&minor) != 2) {
     return NO;
   }
-  
-#ifdef NEWMARSHALER
-  Bool newFormat = NO;
-
-  if (major != PERDIOMAJOR || minor > PERDIOMINOR) {
-    if (major == NEWMARSHALER_PMAJOR && minor == NEWMARSHALER_PMINOR)
-      newFormat = OK;
-    else 
-      return NO;
-  }
-
-  buf->setVersion(major,minor);
-
-  t = newFormat ? newUnmarshalTerm(buf) : unmarshalTerm(buf);
-#else
-  if (major!=PERDIOMAJOR || minor > PERDIOMINOR) {
+  if (major != PERDIOMAJOR || minor != PERDIOMINOR)
     return NO;
-  }
 
   buf->setVersion(major,minor);
 
-  t = unmarshalTerm(buf);
-#endif
+  t = newUnmarshalTerm(buf);
 
   buf->unmarshalEnd();
-  refTrail->unwind();
   return OK;
 }
 

@@ -40,9 +40,7 @@
 #include "fdomn.hh"
 #include "trace.hh"
 #include "space.hh"
-#ifdef NEWMARSHALER
 #include "newmarshaler.hh"
-#endif
 
 AM am;
 
@@ -318,10 +316,7 @@ void AM::init(int argc,char **argv)
 
   //
   initSite();
-  initMarshaler();
-#ifdef NEWMARSHALER
   initNewMarshaler();
-#endif
 
   //
   initExtensions();

@@ -167,6 +167,90 @@ void putComment(char *s,MsgBuffer *bs)
 
 
 
+class DoubleConv {
+public:
+  union {
+    unsigned char c[sizeof(double)];
+    int i[sizeof(double)/sizeof(int)];
+    double d;
+  } u;
+};
+
+Bool isLowEndian()
+{
+  DoubleConv dc;
+  dc.u.i[0] = 1;
+  return dc.u.c[0] == 1;
+}
+
+const Bool lowendian = isLowEndian();
+
+void marshalFloat(double d, MsgBuffer *bs)
+{
+  static DoubleConv dc;
+  dc.u.d = d;
+  if (lowendian) {
+    marshalNumber(dc.u.i[0],bs);
+    marshalNumber(dc.u.i[1],bs);
+  } else {
+    marshalNumber(dc.u.i[1],bs);
+    marshalNumber(dc.u.i[0],bs);
+  }
+}
+
+
+#ifndef TEXT2PICKLE
+double unmarshalFloat(MsgBuffer *bs)
+{
+  static DoubleConv dc;
+  if (lowendian) {
+    dc.u.i[0] = unmarshalNumber(bs);
+    dc.u.i[1] = unmarshalNumber(bs);
+  } else {
+    dc.u.i[1] = unmarshalNumber(bs);
+    dc.u.i[0] = unmarshalNumber(bs);
+  }
+  return dc.u.d;
+}
+
+
+static
+char *getString(MsgBuffer *bs, unsigned int i)
+{
+  char *ret = new char[i+1];
+  if (ret==NULL)
+    return NULL;
+  for (unsigned int k=0; k<i; k++) {
+    if (bs->atEnd()) {
+      delete ret;
+      return NULL;
+    }
+    ret[k] = bs->get();
+  }
+  ret[i] = '\0';
+  return ret;
+}
+
+char *unmarshalString(MsgBuffer *bs)
+{
+  misc_counter[MISC_STRING].recv();
+  unsigned int i = unmarshalNumber(bs);
+
+  return getString(bs,i);
+}
+
+
+/* a version of unmarshalString that is more stable against garbage input */
+char *unmarshalVersionString(MsgBuffer *bs)
+{
+  unsigned int i = bs->get();
+  return getString(bs,i);
+}
+
+
+#endif
+
+
 void marshalDIF(MsgBuffer *bs, MarshalTag tag) 
 {
   EmulatorOnly(dif_counter[tag].send());
@@ -207,6 +291,16 @@ void marshalShort(unsigned short i, MsgBuffer *bs)
     i = i>>8;
   }
 }
+
+
+#ifndef TEXT2PICKLE
+unsigned short unmarshalShort(MsgBuffer *bs){
+  unsigned short sh;
+  unsigned int i1 = bs->get();
+  unsigned int i2 = bs->get();
+  sh= (i1 + (i2<<8));
+  return sh;}
+#endif
 
 
 
