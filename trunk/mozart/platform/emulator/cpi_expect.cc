@@ -779,6 +779,10 @@ OZ_Return OZ_Expect::fail(void)
 //*****************************************************************************
 
 Propagator * imposed_propagator;
+int is_active = 1;
+
+int OZ_CPIVar::_first_run = 0;
+OZ_Term OZ_CPIVar::_vars_removed = OZ_nil();
 
 OZ_Return OZ_Expect::impose(OZ_Propagator * p)
 {
@@ -867,6 +871,14 @@ OZ_Return OZ_Expect::impose(OZ_Propagator * p)
 
     Propagator::setRunningPropagator(prop);
 
+    // if a propagator is to be imposed `inactive' set the appropriate
+    // flag and restore the `isactive' variable. `oz_runPropagator'
+    // takes care of the rest.
+    if (!is_active) {
+      prop->unsetActive();
+      is_active = 1;
+    }
+    OZ_CPIVar::set_vars_removed();
     switch (oz_runPropagator(prop)) {
     case OZ_FAILED:
 
@@ -885,6 +897,7 @@ OZ_Return OZ_Expect::impose(OZ_Propagator * p)
 
       oz_closeDonePropagator(prop);
       staticSpawnVarsNumber = staticSuspendVarsNumber = 0;
+      OZ_CPIVar::reset_vars_removed();
       return FAILED;
     case OZ_SLEEP:
       oz_sleepPropagator(prop);
@@ -895,14 +908,17 @@ OZ_Return OZ_Expect::impose(OZ_Propagator * p)
     case OZ_ENTAILED:
       oz_closeDonePropagator(prop);
       staticSpawnVarsNumber = staticSuspendVarsNumber = 0;
+      OZ_CPIVar::reset_vars_removed();
       return PROCEED;
     default:
       DebugCode(OZ_error("Unexpected return value."));
+      OZ_CPIVar::reset_vars_removed();
       return PROCEED;
     }
   }
+  OZ_CPIVar::reset_vars_removed();
 
-// only if a propagator survives its first run proper suspension are created
+  // only if a propagator survives its first run proper suspension are created
   OZ_Boolean all_local = OZ_TRUE;
 
   // caused by the first run of the run method variables may have
@@ -914,35 +930,40 @@ OZ_Return OZ_Expect::impose(OZ_Propagator * p)
     if (isVariableTag(vtag)) {
       Assert(!isCVarTag(vtag) || (!testStoreFlag(v) && !testReifiedFlag(v)));
 
-	if (isGenFDVar(v)) {
-	  if (oz_isLocalVar(tagged2CVar(v))) {
-	    addSuspFDVar(v, prop, staticSpawnVars[i].state.fd);
-	    continue;
-	  }
-	} else if (isGenFSetVar(v)) {
-	  if (oz_isLocalVar(tagged2CVar(v))) {
-	    addSuspFSetVar(v, prop, staticSpawnVars[i].state.fs);
-	    continue;
-	  }
-	} else if (isGenBoolVar(v)) {
-	  if (oz_isLocalVar(tagged2CVar(v))) {
-	    addSuspBoolVar(v, prop);
-	    continue;
-	  }
-	} else if (isGenCtVar(v)) {
-	  if (oz_isLocalVar(tagged2CVar(v))) {
-	    addSuspCtVar(v, prop, staticSpawnVars[i].state.ct.w);
-	    continue;
-	  }
+      if (OZ_CPIVar::is_in_vars_removed(vptr)) {
+#ifdef DEBUG_REMOVE_PARAMS
+	printf("continuing\n");
+#endif
+	continue;
+      }
+      if (isGenFDVar(v)) {
+	if (oz_isLocalVar(tagged2CVar(v))) {
+	  addSuspFDVar(v, prop, staticSpawnVars[i].state.fd);
+	  continue;
 	}
-
-	oz_var_addSusp(vptr, prop);
-	all_local &= oz_isLocalVar(tagged2CVar(*vptr));
-
+      } else if (isGenFSetVar(v)) {
+	if (oz_isLocalVar(tagged2CVar(v))) {
+	  addSuspFSetVar(v, prop, staticSpawnVars[i].state.fs);
+	  continue;
+	}
+      } else if (isGenBoolVar(v)) {
+	if (oz_isLocalVar(tagged2CVar(v))) {
+	  addSuspBoolVar(v, prop);
+	  continue;
+	}
+      } else if (isGenCtVar(v)) {
+	if (oz_isLocalVar(tagged2CVar(v))) {
+	  addSuspCtVar(v, prop, staticSpawnVars[i].state.ct.w);
+	  continue;
+	}
+      }
+      //    
+      oz_var_addSusp(vptr, prop);
+      all_local &= oz_isLocalVar(tagged2CVar(*vptr));
+      //
     }
-
   }
-
+  //
   // Note all SVARs and UVARs in staticSuspendVars are constrained to FDVARs.
   for (i = staticSuspendVarsNumber; i--; ) {
     OZ_Term v = makeTaggedRef(staticSuspendVars[i].var);

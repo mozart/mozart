@@ -63,7 +63,29 @@
 //  Bool<<FD
 // see int cmpCVar(OzVariable *, OzVariable *)
 
+#ifdef TMUELLER
 enum TypeOfVariable {
+  OZ_VAR_FD      = 0,
+  OZ_VAR_BOOL    = 1,
+  OZ_VAR_FS      = 2,
+  OZ_VAR_CT      = 3,
+  OZ_VAR_EXT     = 4,
+  OZ_VAR_SIMPLE  = 5,
+  OZ_VAR_FUTURE  = 6,
+  OZ_VAR_OF      = 7
+};
+#else
+enum TypeOfVariable {
+  OZ_VAR_FD      = 0,
+  OZ_VAR_BOOL    = 1,
+  OZ_VAR_FS      = 2,
+  OZ_VAR_CT      = 3,
+  OZ_VAR_EXT     = 4,
+  OZ_VAR_SIMPLE  = 5,
+  OZ_VAR_FUTURE  = 6,
+  OZ_VAR_OF      = 7
+
+  /*
   OZ_VAR_EXT     = 0,
   OZ_VAR_SIMPLE  = 1,
   OZ_VAR_FUTURE  = 2,
@@ -72,8 +94,9 @@ enum TypeOfVariable {
   OZ_VAR_OF      = 5,
   OZ_VAR_FS      = 6,
   OZ_VAR_CT      = 7
+  */
 };
-
+#endif
 
 #ifdef DEBUG_CHECK
 #define OZ_VAR_INVALID ((TypeOfVariable) -1)
@@ -96,23 +119,49 @@ enum TypeOfVariable {
 }
 
 class OzVariable {
-friend class OzFDVariable;
-friend class OzFSVariable;
-friend class OzCtVariable;
+  //
+  friend class OzBoolVariable;
+  friend class OzFDVariable;
+  friend class OzFSVariable;
+  friend class OzCtVariable;
+  //
 private:
   union {
     TypeOfVariable      var_type;
     OZ_FiniteDomain   * patchDomain;
     OZ_FSetConstraint * patchFSet;
     OZ_Ct             * patchCt;
+
+    OZ_FDIntVar * cpi_fd_var;
+    OZ_FSetVar  * cpi_fs_var;
+    OZ_CtVar    * cpi_ct_var;
+    void        * cpi_raw;
   } u;
 
+#ifdef TMUELLER
+  // these enumerables have to be comaptible!
+  // tmueller: they have to be unified with TypeOfVariable
+  enum u_mask_t {u_fd   = OZ_VAR_FD, 
+		 u_bool = OZ_VAR_BOOL, 
+		 u_fset = OZ_VAR_FS, 
+		 u_ct   = OZ_VAR_CT, 
+		 u_mask = 3};
+#else
   enum u_mask_t {u_fd = 0, u_bool = 1, u_fset = 2, u_ct = 3, u_mask = 3};
+#endif
+
   unsigned int homeAndFlags;
 protected:
   SuspList * suspList;
 
 public:
+
+#ifdef TMUELLER
+  TypeOfVariable getTypeMasked(void) {
+    return TypeOfVariable(u.var_type & u_mask);
+  }
+#endif
+
   TypeOfVariable getType(void) {
     return u.var_type;
   }
@@ -153,7 +202,6 @@ public:
   void unsetTrailed(void) {
     homeAndFlags &= ~CVAR_TRAILED;
   }
-
 
   void disposeS(void) {
     for (SuspList * l = suspList; l; l = l->dispose());
@@ -205,7 +253,9 @@ public:
   void           sCloneMark(TaggedRef *);
   OzVariable *   sCloneVarInline();
   void           sCloneVarRecurse(void);
-
+  //
+  // tagging and untagging constrained variables
+  //
   void setStoreFlag(void) {
     suspList = (SuspList *) (((long) suspList) | STORE_FLAG);
   }
@@ -216,6 +266,7 @@ public:
     return ((long)suspList) & STORE_FLAG;
   }
   OZ_Boolean testResetStoreFlag(void) {
+    EXPLODE;
     OZ_Boolean r = testStoreFlag();
     resetStoreFlag();
     return r;
@@ -231,11 +282,69 @@ public:
     return ((long)suspList) & REIFIED_FLAG;
   }
   OZ_Boolean testResetReifiedFlag(void) {
+    EXPLODE;
     OZ_Boolean r = testReifiedFlag();
     resetReifiedFlag();
     return r;
   }
+#ifdef TMUELLER
+  //
+  void dropPropagator(Propagator *);
+  //
+  // new tagging scheme
+  //
+  void tagNonEncapParam(OZ_FDIntVar * fd) {
+    setStoreFlag();
+    u.cpi_fd_var = (OZ_FDIntVar *) ToPointer(ToInt32(fd) | getTypeMasked());
+  }
+  void tagNonEncapParam(OZ_FSetVar * fs) {
+    setStoreFlag();
+    u.cpi_fs_var = (OZ_FSetVar *) ToPointer(ToInt32(fs) | getTypeMasked());
+  }
+  void tagNonEncapParam(OZ_CtVar * ct) {
+    setStoreFlag();
+    u.cpi_ct_var = (OZ_CtVar *) ToPointer(ToInt32(ct) | getTypeMasked());
+  }
 
+  void tagEncapParam(OZ_FDIntVar * fd) {
+    setReifiedFlag();
+    u.cpi_fd_var = (OZ_FDIntVar *) ToPointer(ToInt32(fd) | getTypeMasked());
+  }
+  void tagEncapParam(OZ_FSetVar * fs) {
+    setReifiedFlag();
+    u.cpi_fs_var = (OZ_FSetVar *) ToPointer(ToInt32(fs) | getTypeMasked());
+  }
+  void tagEncapParam(OZ_CtVar * ct) {
+    setReifiedFlag();
+    u.cpi_ct_var = (OZ_CtVar *) ToPointer(ToInt32(ct) | getTypeMasked());
+  }
+  int isParamEncapTagged(void) {
+    return testReifiedFlag();
+  }
+  int isParamNonEncapTagged(void) {
+    return testStoreFlag();
+  }
+  int isParamTagged(void) {
+    return isParamNonEncapTagged() || isParamEncapTagged();
+  }
+  void untagParam(void) { 
+    u.var_type = getTypeMasked();
+    resetStoreFlag();
+    resetReifiedFlag();
+  }
+
+  void * getRawAndUntag(void) {
+    void * raw = u.cpi_raw;
+    untagParam();
+    return raw;
+  }
+  void putRawTag(void * raw_tag) {
+    u.cpi_raw = raw_tag;
+  }
+#endif
+  //
+  // end of tagging ...
+  //
   void addSuspSVar(Suspendable * susp) {
     suspList = new SuspList(susp, suspList);
     if (!oz_onToplevel())
@@ -255,6 +364,7 @@ public:
 
   // needed to catch multiply occuring reified vars in propagators
   void patchReified(OZ_FiniteDomain * d, Bool isBool) {
+    EXPLODE;
     u.patchDomain = d;
     if (isBool) {
       u.patchDomain =
@@ -263,15 +373,29 @@ public:
     setReifiedFlag();
   }
   void unpatchReified(Bool isBool) {
+    EXPLODE;
     setType(isBool ? OZ_VAR_BOOL : OZ_VAR_FD);
     resetReifiedFlag();
   }
-  OZ_Boolean isBoolPatched(void) { return (u.var_type & u_mask) == u_bool; }
-  OZ_Boolean isFDPatched(void) { return (u.var_type & u_mask) == u_fd; }
-  OZ_Boolean isFSetPatched(void) { return (u.var_type & u_mask) == u_fset; }
-  OZ_Boolean isCtPatched(void) { return (u.var_type & u_mask) == u_ct; }
+  OZ_Boolean isBoolPatched(void) {     
+    EXPLODE;
+    return (u.var_type & u_mask) == u_bool; 
+  }
+  OZ_Boolean isFDPatched(void) { 
+    EXPLODE;
+    return (u.var_type & u_mask) == u_fd; 
+  }
+  OZ_Boolean isFSetPatched(void) { 
+    EXPLODE;
+    return (u.var_type & u_mask) == u_fset; 
+  }
+  OZ_Boolean isCtPatched(void) { 
+    EXPLODE;
+    return (u.var_type & u_mask) == u_ct; 
+  }
 
   OZ_FiniteDomain * getReifiedPatch(void) {
+    EXPLODE;
     return (OZ_FiniteDomain *)  (u.var_type & ~u_mask);
   }
 };

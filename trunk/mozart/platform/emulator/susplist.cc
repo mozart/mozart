@@ -126,6 +126,55 @@ SuspList * SuspList::appendToAndUnlink(SuspList * &to_list, Bool reset_local)
   return NULL;
 }
 
+#ifdef TMUELLER
+// drop every list entry referring to `prop'
+SuspList *  SuspList::dropPropagator(Propagator * prop) {
+  SuspList * new_list = (SuspList *) NULL; // head of new list
+  SuspList * last_new_list = new_list;     // last of new list 
+  SuspList * old_list = this;              // list to be scanned
+  
+  while (old_list) {
+    Suspendable * susp = old_list->getSuspendable();
+    if (susp->isPropagator() && (SuspToPropagator(susp) == prop)) {
+      //
+      // skip entry
+      //
+      old_list = old_list->getNext();
+      //
+    } else {
+      //
+      // keep entry
+      //
+      SuspList * kept_entry = old_list;
+      //
+      // move on
+      //
+      old_list = old_list->getNext();
+      //
+      // close new list
+      //
+      kept_entry->_next = (SuspList *) NULL;
+      //
+      // append entry to new list
+      //
+      if (NULL != last_new_list) {
+	last_new_list->_next = kept_entry;
+      }
+      //
+      // move last entry 
+      last_new_list = kept_entry;
+      //
+      // init first element of new list
+      //
+      if (NULL == new_list) {
+	new_list = kept_entry;
+      }
+      //
+    }
+  }
+  return new_list;
+}	
+#endif
 
 //-----------------------------------------------------------------------------
 

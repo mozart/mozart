@@ -115,6 +115,24 @@ public:
 		       int offset = 0) {
     printStream(out,depth); out << endl;
   }
+#ifdef TMUELLER
+  //
+  void dropPropagator(Propagator * prop) {
+    for (int i = fs_prop_any; i--; ) {
+      fsSuspList[i] = fsSuspList[i]->dropPropagator(prop);
+    }
+    suspList = suspList->dropPropagator(prop);
+  }
+  //
+  // tagging and untagging constrained variables
+  //
+  OZ_FSetVar * getTag(void) {
+    return (OZ_FSetVar *)  (u.var_type & ~u_mask);
+  }
+  //
+  // end of tagging ...
+  //
+#endif
 };
 
 void addSuspFSetVar(OZ_Term, SuspList *, OZ_FSetPropState = fs_prop_any);
