@@ -28,9 +28,9 @@
 
 %builtins_all =
     (
-     'get'	 => { in  => ['+object'],
+     'new'	 => { in  => ['record','+bool','+bool'],
 		      out => ['+class'],
-		      bi  => BIgetClass},
+		      bi  => BInewClass},
      'is'	 => { in  => ['+value'],
 		      out => ['+bool'],
 		      bi  => BIclassIs},

@@ -197,6 +197,8 @@
           # needed for instances: features
 	  ( NameOoUnFreeFeat,  "ooUnFreeFeat"),
 	  ( NameOoFreeFeatR,   "ooFreeFeatR"),
+	  ( NameOoFreeFeat,    "ooFreeFeat"),
+	  ( NameOoFeat,        "ooFeat"),
 	  ( NameOoFreeFlag,    "ooFreeFlag"),
           # misc stuff
 	  ( NameOoPrintName,   "ooPrintName"),
