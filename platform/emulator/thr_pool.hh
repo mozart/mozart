@@ -109,8 +109,4 @@ public:
   int getRunnableNumber();
 };
 
-#ifndef OUTLINE
-#include "thrspool.icc"
-#endif
-
 #endif

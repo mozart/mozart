@@ -156,9 +156,3 @@ Bool ThreadsPool::threadQueuesAreEmptyOutline()
   }
   return OK;
 }
-
-#ifdef OUTLINE
-#define inline
-#include "thrspool.icc"
-#undef inline
-#endif
