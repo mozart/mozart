@@ -789,6 +789,8 @@ void engine() {
 
     INSTALLPATH(tmpBB);
 
+    LOCAL_PROPAGATION(Assert(localPropStore.isEmpty()));
+
     switch (biFun(XSize, X)) {
     case FAILED:
       killPropagatedCurrentTaskSusp();
@@ -800,9 +802,8 @@ void engine() {
 		        message("\nArg %d: %s",i+1,OZ_toC(X[i]));
 		     );
     case PROCEED:
-      LOCAL_PROPAGATION(if (localPropStore.isEnabled())
-			if (! localPropStore.do_propagation())
-			goto LBLfailure);
+      LOCAL_PROPAGATION(if (! localPropStore.do_propagation())
+			  goto LBLfailure);
       killPropagatedCurrentTaskSusp();
       goto LBLcheckEntailment;
     default:
@@ -932,6 +933,8 @@ void engine() {
 
       CheckArity(arity,arityExp,entry,PC+3);
 
+      LOCAL_PROPAGATION(Assert(localPropStore.isEmpty()));
+
       switch (fun(arity, X)){
       case SUSPEND:
 	warning("call builtin: SUSPEND unexpected\n");
@@ -946,9 +949,8 @@ void engine() {
 		       { message("\nArg %d: %s",i+1,OZ_toC(X[i])); }
 		       );
       case PROCEED:
-	LOCAL_PROPAGATION(if (localPropStore.isEnabled())
-			  if (! localPropStore.do_propagation())
-			  goto LBLfailure);
+	LOCAL_PROPAGATION(if (! localPropStore.do_propagation())
+			     goto LBLfailure);
 	killPropagatedCurrentTaskSusp();
 	DISPATCH(3);
       default:
@@ -1634,9 +1636,12 @@ void engine() {
 
 	case BIDefault:
 	  {
+	    LOCAL_PROPAGATION(Assert(localPropStore.isEmpty()));
+
 	    if (e->isSetSFlag(DebugMode)) {
 	      enterCall(e->currentBoard,bi,predArity,X);
 	    }
+
 	    OZ_Bool res = bi->getFun()(predArity, X);
 	    if (e->isSetSFlag(DebugMode)) {
 	      exitBuiltin(res,bi,predArity,X);
@@ -1647,6 +1652,8 @@ void engine() {
 	    switch (res) {
 	    
 	    case SUSPEND:
+	      LOCAL_PROPAGATION(Assert(localPropStore.isEmpty()));
+
 	      predicate = bi->getSuspHandler();
 	      if (!predicate) {
 		HANDLE_FAILURE1(PC,
@@ -1657,6 +1664,8 @@ void engine() {
 	      }
 	      goto LBLcall;
 	    case FAILED:
+	      LOCAL_PROPAGATION(Assert(localPropStore.isEmpty()));
+
 	      HANDLE_FAILURE(PC,
 			     message("call: builtin %s/%d failed",
 				     bi->getPrintName(),bi->getArity());
@@ -1664,9 +1673,8 @@ void engine() {
 			     { message("\nArg %d: %s",i+1,OZ_toC(X[i])); }
 			     );
 	    case PROCEED:
-	      LOCAL_PROPAGATION(if (localPropStore.isEnabled())
-				if (! localPropStore.do_propagation())
-				goto LBLfailure);
+	      LOCAL_PROPAGATION(if (! localPropStore.do_propagation())
+				   goto LBLfailure);
 	      if (emulateHook0(e)) {
 		if (!isExecute) {
 		  e->pushTaskOutline(CBB,PC,Y,G);
