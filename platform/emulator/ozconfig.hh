@@ -95,6 +95,9 @@ public:
   char **argV;
   int argC;
 
+  // root functor's url
+  char *url;
+
 public:
   ConfigData() {};
   void init();

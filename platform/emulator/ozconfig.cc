@@ -134,4 +134,6 @@ void ConfigData::init() {
     cpu++;
   }
 
+  url="";
+
 }
