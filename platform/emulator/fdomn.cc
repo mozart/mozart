@@ -2052,6 +2052,8 @@ int OZ_FiniteDomainImpl::initFSetValue(const OZ_FSetValue &fs)
     FDIntervals *z = newIntervals(f->high + 1);
     z->union_iv(*f, *other);
     setType(z);
+    min_elem = z->findMinElem();
+    max_elem = z->findMaxElem();
   }
   return size = fs.getCard();
 
