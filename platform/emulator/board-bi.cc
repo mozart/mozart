@@ -515,6 +515,37 @@ OZ_BI_define(BIdiscardSpace, 1, 0) {
 } OZ_BI_end
   
 
+OZ_BI_define(BIcheckSit, 1, 0) {
+  TaggedRef x = OZ_in(0);
+
+  TaggedRef f,b;
+
+  oz_currentBoard()->checkSituatedness(&x,&f,&b);
+
+  if (!oz_eq(b,AtomNil)) {
+    // There is at least a bad guy!
+    return oz_raise(E_ERROR,E_KERNEL,"spaceSituatedness",1,b);
+  }
+
+  if (!oz_eq(f,AtomNil)) {
+    // There is at least a future, suspend!
+    do {
+      Assert(oz_isCons(f));
+      TaggedRef h = oz_head(f);
+      Assert(oz_isRef(h));
+      TaggedRef * f_ptr = tagged2Ref(h);
+      Assert(isCVar(*f_ptr));
+      Assert(tagged2CVar(*f_ptr)->getType() == OZ_VAR_FUTURE);
+      am.addSuspendVarList(f_ptr);
+      f = oz_tail(f);
+    } while (!oz_eq(f,AtomNil));
+    return SUSPEND;
+  }
+
+  return PROCEED;
+} OZ_BI_end
+  
+
 #ifdef CS_PROFILE
 
 TaggedRef Board::getCloneDiff(void) {

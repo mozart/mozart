@@ -365,6 +365,11 @@ public:
   }
 
   //
+  // Checks
+  //
+  int checkSituatedness(TaggedRef*,TaggedRef*,TaggedRef*);
+
+  //
   // Misc
   //
   
