@@ -31,12 +31,13 @@
 (require 'comint)
 (require 'compile)
 
-(defvar oz-old-frame-title
-  (cond (oz-gnu-emacs
-	 (cdr (assoc 'name (frame-parameters (car (visible-frame-list))))))
-	(oz-lucid-emacs
-	 frame-title-format))
-  "Saved Emacs frame title.")
+(eval-and-compile
+  (defvar oz-old-frame-title
+    (cond (oz-gnu-emacs
+	   (cdr (assoc 'name (frame-parameters (car (visible-frame-list))))))
+	  (oz-lucid-emacs
+	   frame-title-format))
+    "Saved Emacs frame title."))
 
 ;;}}}
 ;;{{{ Customization
