@@ -3,6 +3,7 @@
  *    Michael Mehl (mehl@dfki.de)
  *    Kostja Popow (popow@ps.uni-sb.de)
  *    Ralf Scheidhauer (Ralf.Scheidhauer@ps.uni-sb.de)
+ *    Christian Schulte (schulte@dfki.de)
  * 
  *  Contributors:
  *    Peter van Roy (pvr@info.ucl.ac.be)
@@ -10,7 +11,10 @@
  *    Leif Kornstaedt (kornstae@ps.uni-sb.de)
  * 
  *  Copyright:
- *    Organization or Person (Year(s))
+ *    Michael Mehl, 1997
+ *    Kostja Popow, 1997
+ *    Ralf Scheidhauer, 1997
+ *    Christian Schulte, 1997
  * 
  *  Last change:
  *    $Date$ by $Author$
@@ -4963,6 +4967,15 @@ OZ_Return isDictionaryInline(TaggedRef t, TaggedRef &out)
 DECLAREBI_USEINLINEFUN1(BIisDictionary,isDictionaryInline)
 
 
+OZ_Return dictionaryIsMtInline(TaggedRef d, TaggedRef &out) {
+  NONVAR(d,dictaux);
+  if (!isDictionary(dictaux)) { oz_typeError(0,"Dictionary"); }
+  out = tagged2Dictionary(dictaux)->isEmpty() ? NameTrue : NameFalse;
+  return PROCEED;
+}
+DECLAREBI_USEINLINEFUN1(BIdictionaryIsMt,dictionaryIsMtInline)
+
+
 #define GetDictAndKey(d,k,dict,key,checkboard)			\
   NONVAR(d,dictaux);						\
   NONVAR(k,key);						\
@@ -4992,7 +5005,7 @@ OZ_Return dictionaryGetInline(TaggedRef d, TaggedRef k, TaggedRef &out)
 DECLAREBI_USEINLINEFUN2(BIdictionaryGet,dictionaryGetInline)
 
 
-OZ_Return dictionaryGetIfInline(TaggedRef d, TaggedRef k, TaggedRef deflt, TaggedRef &out)
+OZ_Return dictionaryCondGetInline(TaggedRef d, TaggedRef k, TaggedRef deflt, TaggedRef &out)
 {
   GetDictAndKey(d,k,dict,key,NO);
   if (dict->getArg(key,out) != PROCEED) {
@@ -5000,7 +5013,7 @@ OZ_Return dictionaryGetIfInline(TaggedRef d, TaggedRef k, TaggedRef deflt, Tagge
   }
   return PROCEED;
 }
-DECLAREBI_USEINLINEFUN3(BIdictionaryGetIf,dictionaryGetIfInline)
+DECLAREBI_USEINLINEFUN3(BIdictionaryCondGet,dictionaryCondGetInline)
 
 OZ_Return dictionaryPutInline(TaggedRef d, TaggedRef k, TaggedRef value)
 {
@@ -5012,6 +5025,47 @@ OZ_Return dictionaryPutInline(TaggedRef d, TaggedRef k, TaggedRef value)
 DECLAREBI_USEINLINEREL3(BIdictionaryPut,dictionaryPutInline)
 
 
+OZ_Return dictionaryCondPutInline(TaggedRef d, TaggedRef k, TaggedRef value)
+{
+  GetDictAndKey(d,k,dict,key,OK);
+  dict->setCondArg(key,value);
+  return PROCEED;
+}
+
+DECLAREBI_USEINLINEREL3(BIdictionaryCondPut,dictionaryCondPutInline)
+
+
+OZ_C_proc_begin(BIdictionaryExchange,4) {
+  TaggedRef d = OZ_getCArg(0);
+  TaggedRef k = OZ_getCArg(1); 
+  
+  GetDictAndKey(d,k,dict,key,OK);
+
+  TaggedRef ov;
+
+  dict->exchange(key, OZ_getCArg(3), &ov);
+  
+  if (ov == makeTaggedNULL()) {
+    return oz_raise(E_SYSTEM,E_KERNEL,"dict",2,d,k);
+  }
+  return oz_unify(ov,OZ_getCArg(2));
+} OZ_C_proc_end
+
+OZ_C_proc_begin(BIdictionaryCondExchange,5) {
+  TaggedRef d = OZ_getCArg(0);
+  TaggedRef k = OZ_getCArg(1); 
+    
+  GetDictAndKey(d,k,dict,key,OK);
+  
+  TaggedRef ov;
+  
+  dict->exchange(key, OZ_getCArg(3), &ov);
+
+  return oz_unify(OZ_getCArg(2), 
+		  ((ov==makeTaggedNULL()) ? (OZ_getCArg(4)) : ov));
+} OZ_C_proc_end
+
+
 OZ_Return dictionaryRemoveInline(TaggedRef d, TaggedRef k)
 {
   GetDictAndKey(d,k,dict,key,OK);
@@ -5019,24 +5073,6 @@ OZ_Return dictionaryRemoveInline(TaggedRef d, TaggedRef k)
   return PROCEED;
 }
 DECLAREBI_USEINLINEREL2(BIdictionaryRemove,dictionaryRemoveInline)
-
-
-OZ_C_proc_begin(BIdictionaryToRecord,3)
-{
-  oz_declareNonvarArg(1,dict);
-  if (!isDictionary(dict)) {
-    oz_typeError(1,"Dictionary");
-  }
-
-  oz_declareNonvarArg(0,lbl);
-  if (!isLiteral(lbl)) {
-    oz_typeError(0,"Literal");
-  }
-
-  oz_declareArg(2,r);
-  return oz_unify(tagged2Dictionary(dict)->toRecord(lbl),r);
-}
-OZ_C_proc_end
 
 
 OZ_C_proc_begin(BIdictionaryRemoveAll,1)
@@ -7620,23 +7656,28 @@ BIspec allSpec[] = {
 
   {"NewDictionary",        1, BIdictionaryNew,	0},
   {"IsDictionary",         2, BIisDictionary,     
-   (IFOR) isDictionaryInline},
+                              (IFOR) isDictionaryInline},
+  {"Dictionary.isEmpty",   2, BIdictionaryIsMt,     
+                              (IFOR) dictionaryIsMtInline},
   {"Dictionary.get",       3, BIdictionaryGet,    
-   (IFOR) dictionaryGetInline},
-  {"Dictionary.condGet",   4, BIdictionaryGetIf,  
-   (IFOR) dictionaryGetIfInline},
+                              (IFOR) dictionaryGetInline},
+  {"Dictionary.condGet",   4, BIdictionaryCondGet,  
+                              (IFOR) dictionaryCondGetInline},
   {"Dictionary.put",       3, BIdictionaryPut,   
-   (IFOR) dictionaryPutInline},
+                              (IFOR) dictionaryPutInline},
+  {"Dictionary.condPut",   3, BIdictionaryCondPut,   
+                              (IFOR) dictionaryCondPutInline},
+  {"Dictionary.exchange",    4, BIdictionaryExchange, 0},
+  {"Dictionary.condExchange", 5, BIdictionaryCondExchange,   0},
   {"Dictionary.remove",    2, BIdictionaryRemove, 
-   (IFOR) dictionaryRemoveInline},
+                              (IFOR) dictionaryRemoveInline},
   {"Dictionary.removeAll", 1, BIdictionaryRemoveAll, 0},
   {"Dictionary.member",    3, BIdictionaryMember, 
-   (IFOR) dictionaryMemberInline},
+                              (IFOR) dictionaryMemberInline},
   {"Dictionary.keys",      2, BIdictionaryKeys,     0},
   {"Dictionary.entries",   2, BIdictionaryEntries,  0},
   {"Dictionary.items",     2, BIdictionaryItems,    0},
   {"Dictionary.clone",     2, BIdictionaryClone,    0},
-  {"Dictionary.toRecord",  3, BIdictionaryToRecord, 0},
   {"Dictionary.markSafe",  1, BIdictionaryMarkSafe, 0},
 
   {"NewLock",	      1,BInewLock,	 0},
