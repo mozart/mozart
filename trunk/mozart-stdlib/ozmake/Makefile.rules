@@ -23,7 +23,7 @@ Utils.ozf: Utils.oz Path.ozf Windows.ozf Shell.ozf
 Help.ozf: Utils.ozf HELP.txt
 
 clean::
-	-rm -f ozmake
+	-rm -f ozmake ozmake.exe
 
 html: HELP.xml HELP.xsl Makefile.vars
 	case `java -version 2>&1` in \
