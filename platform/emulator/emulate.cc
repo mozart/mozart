@@ -289,7 +289,7 @@ void set_exception_info_call(Builtin *bi, OZ_Location * loc) {
   am.setExceptionInfo(OZ_mkTupleC("fapply",3,
                                   makeTaggedConst(bi),
                                   loc->getInArgs(bi),
-                                  oz_int(bi->getOutArity())));
+                                  makeTaggedSmallInt(bi->getOutArity())));
 }
 
 // -----------------------------------------------------------------------
@@ -3214,7 +3214,7 @@ Case(GETVOID)
 
       (void) oz_raise(E_ERROR,E_KERNEL,"type",5,AtomComma,
                       oz_mklist(cls,makeMessage(cmi->arity,cmi->mn)),
-                      AtomClass,oz_int(1),oz_nil());
+                      AtomClass,makeTaggedSmallInt(1),oz_nil());
       RAISE_THREAD;
 
     }
