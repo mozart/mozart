@@ -234,7 +234,7 @@ define
 	       Id = {MakeId}
 	    in
 	       {Manager register(free Id nil)}
-	       thread {WatchVar Id X} end
+%	       thread {WatchVar Id X} end
 	       Wrapper(Id)
 	    end
 	 end
@@ -247,7 +247,7 @@ define
 	       Id = {MakeId}
 	    in
 	       {Manager register(future Id nil)}
-	       thread {WatchVar Id X} end
+%	       thread {WatchVar Id X} end
 	       Wrapper(Id)
 	    end
 	 end
@@ -260,7 +260,7 @@ define
 	       Id = {MakeId}
 	    in
 	       {Manager register(fd Id {FD.reflect.dom X})}
-	       thread {WatchVar Id X} end
+%	       thread {WatchVar Id X} end
 	       Wrapper(Id)
 	    end
 	 end
@@ -277,7 +277,7 @@ define
 	       {Manager register(fsvar Id
 				 {FS.reflect.lowerBound X}#
 				 {FS.reflect.upperBound X})}
-	       thread {WatchVar Id X} end
+%	       thread {WatchVar Id X} end
 	       Wrapper(Id)
 	    end
 	 end
