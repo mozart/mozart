@@ -91,6 +91,7 @@ static TaggedRef dictionary_of_modules;
 #include "modVirtualString-if.cc"
 #include "modBitString-if.cc"
 #include "modByteString-if.cc"
+#include "modWord-if.cc"
 #include "modInterFault-if.cc"
 #ifdef SITE_PROPERTY
 #include "modSiteProperty-if.cc"
@@ -267,6 +268,7 @@ static ModuleEntry base_module_table[] = {
   {"VirtualString",	mod_int_VirtualString},
   {"BitString",		mod_int_BitString},
   {"ByteString",	mod_int_ByteString},
+  {"Word",		mod_int_Word},
   {"InterFault",	mod_int_InterFault},
 #ifdef SITE_PROPERTY
   {"SiteProperty",	mod_int_SiteProperty},
