@@ -337,6 +337,22 @@ e.g. <meta>PREFIX</meta> or <meta>URI as cache path</meta></p>
   <default><opt>false</opt></default>
   <item>also build the <oz>src</oz> targets</item>
 </optentry>
+<optentry>
+  <option>
+    <opt>--includedir DIR</opt>
+    <opt>-I DIR</opt>
+    <item>tell the C++ compiler to additionally search
+    <file>DIR</file> for include files</item>
+  </option>
+</optentry>
+<optentry>
+  <option>
+    <opt>--librarydir DIR</opt>
+    <opt>-L DIR</opt>
+    <item>tell the C++ linker to additionally search
+    <file>DIR</file> for libraries</item>
+  </option>
+</optentry>
 </optlist>
 
 </subsection>
@@ -743,8 +759,63 @@ compiler), <tool>ld</tool> (C++ linker).  The default rules are:</p>
         'Foo.o'   : cc('Foo.cc')
         'Foo.so'  : ld('Foo.o')
 </oz.display>
-<p>currently <tool>ozc</tool> and <tool>ozl</tool> support option
-<oz>executable</oz>.</p>
+<p>The tools support the following options:</p>
+<dlist>
+  <dentry>
+    <dleft><tool>ozc</tool></dleft>
+    <dright>
+      <dlist>
+        <dentry>
+          <dleft><oz>executable</oz></dleft>
+          <dright>make the result executable</dright>
+        </dentry>
+      </dlist>
+    </dright>
+  </dentry>
+  <dentry>
+    <dleft><tool>ozl</tool></dleft>
+    <dright>
+      <dlist>
+        <dentry>
+          <dleft><oz>executable</oz></dleft>
+          <dright>make the result executable</dright>
+        </dentry>
+      </dlist>
+    </dright>
+  </dentry>
+  <dentry>
+    <dleft><tool>cc</tool></dleft>
+    <dright>
+      <dlist>
+        <dentry>
+          <dleft><oz>include(DIR)</oz></dleft>
+          <dright>Similar to the usual C++ compiler option
+          <code>-IDIR</code>. <oz>DIR</oz> is a virtual
+          string</dright>
+        </dentry>
+        <dentry>
+          <dleft><oz>'define'(MAC)</oz></dleft>
+          <dright>Similar to the usual C++ compiler option
+          <code>-DMAC</code>. <oz>MAC</oz> is a virtual
+          string</dright>
+        </dentry>
+      </dlist>
+    </dright>
+  </dentry>
+  <dentry>
+    <dleft><tool>ld</tool></dleft>
+    <dright>
+      <dlist>
+        <dentry>
+          <dleft><oz>library(DIR)</oz></dleft>
+          <dright>Similar to the usual C++ linker option
+          <code>-lDIR</code>. <oz>DIR</oz> is a virtual
+          string</dright>
+        </dentry>
+      </dlist>
+    </dright>
+  </dentry>
+</dlist>
 
 <p>You might want to specify a rule to create a pre-linked library:</p>
 <oz.display>
