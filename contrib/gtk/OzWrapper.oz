@@ -97,6 +97,7 @@ define
     "   ExportList = GOZCore.exportList"
     "   ImportList = GOZCore.importList"
     "   GC         = GDK.gC"
+    "   Color      = GDK.color"
     "   Font       = GDK.font"
     "   \\insert 'GTKFIELDS.oz'"
    ]
