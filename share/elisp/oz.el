@@ -371,28 +371,15 @@ starts the emulator under gdb")
 ;; Debugger stuff
 ;;------------------------------------------------------------
 
-
-(defvar oz-devel-debugger nil "*Iff true use devel debugger.")
-
 (defun oz-debug-start()
   "Start the debugger."
   (interactive)
-  (oz-insert-file
-   (if oz-devel-debugger 
-       "tools/ozcar-devel/main.oz"
-     "tools/ozcar/main.oz"))
-  (oz-send-string "\\sw -optimize +debuginfo"))
-
-(defun oz-debug-devel-start()
-  (interactive)
-  (setq oz-devel-debugger (not oz-devel-debugger))
-  (message "Now using %s debugger" (if oz-devel-debugger "devel" "stable")))
+  (oz-send-string "{Ozcar unhide}"))
 
 (defun oz-debug-stop()
   "Stop the debugger."
   (interactive)
-  (oz-send-string "{Ozcar exit}")
-  (oz-send-string "\\sw +optimize -debuginfo"))
+  (oz-send-string "{Ozcar hide}"))
   
 
 ;;------------------------------------------------------------
