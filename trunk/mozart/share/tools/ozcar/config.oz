@@ -20,6 +20,9 @@ AltEnvTitle            = 'Environment of Frame  #'
 StatusInitText         = 'No current thread'
 StatusEndText          = 'See you again...'
 
+ApplPrefixText         = 'Current application: '
+ApplLabelInit          = ' none'
+
 InvalidThreadID        = 'Invalid Thread ID in step message'
 NoFileInfo             = 'step message without line number information, ' #
                          'continuing thread #'
@@ -37,18 +40,18 @@ end end end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Geometry
 %%
-ToplevelGeometry       = '600x400+3+100'
+ToplevelGeometry       = '600x420+3+100'
 SourceWindowGeometry   = '501x549+620+100'  %% I really hate hardcoding this
                                             %% but window managers seem
                                             %% to be f*cking stupid :-((
 SourceWindowTextSize   = 80 # 50
 
-ThreadTreeWidth        = 180
+ThreadTreeWidth        = 120
 ThreadTreeStretchX     = 11
 ThreadTreeStretchY     = 13
 ThreadTreeOffset       = 4
 
-TextWidth              = 30
+TextWidth              = 50
 
 SmallBorderSize        = 0
 BorderSize             = 2
@@ -61,6 +64,8 @@ DefaultFont            = '7x13'
 BoldFont               = '7x13bold'
 ThreadTreeFont         = fixed
 ThreadTreeBoldFont     = '6x13bold'
+ButtonFont             = '-adobe-helvetica-medium-r-normal-*-10-*-*-*-*-*-*-*'
+TitleFont              = '-adobe-helvetica-bold-r-normal-*-10-*-*-*-*-*-*-*'
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Files
@@ -80,6 +85,7 @@ TextCursor             = left_ptr
 
 DefaultBackground
 ScrollbarApplColor
+ScrollbarBlockedColor
 ScrollbarStackColor
 RunningThreadColor
 BlockedThreadColor
@@ -97,7 +103,8 @@ case Tk.isColor then
    DefaultBackground       = '#f0f0f0'
 
    %% source window
-   ScrollbarApplColor      = '#f07070'
+   ScrollbarApplColor      = '#00a000'
+   ScrollbarBlockedColor   = BlockedThreadColor
    ScrollbarStackColor     = '#7070f0'
 
    %% thread forest window
@@ -120,6 +127,7 @@ else
 
    %% source window
    ScrollbarApplColor      = black
+   ScrollbarBlockedColor   = black
    ScrollbarStackColor     = black
 
    %% thread forest window
@@ -150,8 +158,11 @@ ScrollbarColors         = colors(appl  : ScrollbarApplColor
 %% the config object to read/write changeable options
 %% first, some initial values... (read from a config file someday?)
 
-ConfigVerbose          = false  %% debug messages in Emulator buffer?
-ConfigSystemProcedures = false  %% step on system procedures (`...`)?
+ConfigVerbose              = false  %% debug messages in Emulator buffer?
+ConfigStepSystemProcedures = false  %% step on all system procedures (`...`)?
+
+ConfigEnvSystemVariables   = true   %% filter system variables in Env Window?
+ConfigEnvProcedures        = false  %% filter procedures in Env Window?
 
 Config =
 {New
@@ -159,7 +170,9 @@ Config =
     
     attr
        verbose :               ConfigVerbose
-       systemProcedures :      ConfigSystemProcedures
+       stepSystemProcedures :  ConfigStepSystemProcedures
+       envSystemVariables :    ConfigEnvSystemVariables
+       envProcedures :         ConfigEnvProcedures
     
     meth init
        skip
