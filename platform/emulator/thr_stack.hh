@@ -61,6 +61,8 @@ int isEmpty(Frame *tos) {
 
 #define frameSz TASKFRAMESIZE
 
+extern unsigned invoc_counter;
+
 class TaskStack: public Stack {
 private:
 
@@ -141,6 +143,7 @@ public:
   void gc(TaskStack *newstack);
 
   TaggedRef frameToRecord(Frame *&frame, Thread *thread, Bool verbose);
+  TaggedRef findAbstrRecord(void);
 
   Bool findCatch(Thread *thr,
 		 ProgramCounter PC=NOCODE, RefsArray Y=NULL,
@@ -209,7 +212,7 @@ public:
 				 { pushFrame(C_DEBUG_CONT_Ptr,dbg,
 					     (void *)dothis); }
   void pushSelf(Object *o)       { pushFrame(C_SET_SELF_Ptr,o,NULL); }
-  void pushAbstr(PrTabEntry  *a) { pushFrame(C_SET_ABSTR_Ptr,a,NULL); }
+  void pushAbstr(PrTabEntry  *a) { pushFrame(C_SET_ABSTR_Ptr,a,(void *) invoc_counter++); }
 
   int tasks();
 };
