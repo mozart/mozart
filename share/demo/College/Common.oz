@@ -15,6 +15,29 @@ export
 
    DemoMode
 
+require
+
+   ErrorRegistry
+
+prepare
+
+   {ErrorRegistry.put college
+    fun {$ E}
+       T = 'error in college timetabling system'
+    in
+       case E
+       of college(A Xs S) then
+          %% expected: A: application Xs:list, S:virtualString
+          error(kind: T
+                items: ([hint(l: 'In statement' m: apply(A Xs))
+                         hint(l: 'Reason      ' m: S)]))
+
+       else
+          error(kind: T
+                items: [line(oz(E))])
+       end
+    end}
+
 define
    %% my favorite editor
    Editor          = "emacs"

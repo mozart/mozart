@@ -3,15 +3,24 @@ functor
 import
 
    Open
+
    FD
+
    OS
+
    Search
+
    Compiler
+
    Browser(browse: Browse)
+
    Graphics(drawSchedule: DrawSchedule)
-   Controller(controllerLabel: ControllerLabel topWindow: TopWindow)
+
+   Controller(topWindow: TopWindow)
    Latex(laTeX: LaTeX)
-   Common(editor: Editor
+   Main(controllerLabel: ControllerLabel)
+
+   Common(editor:          Editor
           monday:          Monday
           tuesday:         Tuesday
           wednesday:       Wednesday
@@ -25,29 +34,30 @@ export
    TimeTable
 
 define
-   HourLimit = 180
-   LecturesStartForDay = 8
-   MaximumRooms = 7
-   Teacher1Off = 3
 
-   Week = [!Monday !Tuesday !Wednesday !Thursday !Friday]
+   HourLimit           = 180
+   LecturesStartForDay = 8
+   MaximumRooms        = 7
+   Teacher1Off         = 3
+
+   Week = [Monday Tuesday Wednesday Thursday Friday]
 
    MorningQuarters = 18
 
-   Morning
-   [MondayM TuesdayM WednesdayM ThursdayM FridayM] = !Morning
-   {Map Week fun {$ S#_} S#S+MorningQuarters-1 end} = !Morning
+   [MondayM TuesdayM WednesdayM ThursdayM FridayM]
+   = {Map Week fun {$ S#_} S#(S + MorningQuarters - 1) end}
 
    Afternoon
-   [MondayA TuesdayA WednesdayA ThursdayA FridayA] = !Afternoon
-   {Map Week fun {$ S#E} S+MorningQuarters#E end} = !Afternoon
+   [MondayA TuesdayA WednesdayA ThursdayA FridayA]
+   = Afternoon
+   = {Map Week fun {$ S#E} (S + MorningQuarters)#E end}
 
 
    fun {DayTimeToQuarters Day FH FQ TH TQ}
       Left Right Offset in
-      Offset = (36*(Day.1 div QuartersPerDay)+1)
-      Left = Offset+(FH-LecturesStartForDay)*QuartersPerHour+FQ-1
-      Right = Offset+(TH-LecturesStartForDay)*QuartersPerHour+TQ-1
+      Offset = (36 * (Day.1 div QuartersPerDay) + 1)
+      Left  = Offset + (FH - LecturesStartForDay) * QuartersPerHour + FQ - 1
+      Right = Offset + (TH-LecturesStartForDay) * QuartersPerHour + TQ - 1
       Left#Right
    end
 
@@ -60,30 +70,28 @@ define
 
    local
 
-      DayMap=map(monday:!Monday
-                 tuesday:!Tuesday
-                 wednesday:!Wednesday
-                 thursday:!Thursday
-                 friday:!Friday)
+      DayMap= map(monday:    Monday
+                  tuesday:   Tuesday
+                  wednesday: Wednesday
+                  thursday:  Thursday
+                  friday:    Friday)
 
       %% Translate the constraint description
       %% into a domain that can stand after /* :: and \:: */
       fun {MakeC Desc}
          case Desc
          of inDays(L) then {Map L fun {$ D} DayMap.D end}
-         [] weekInterval(SH#SM#EH#EM) then {Map Week
-                                            fun {$ Day}
-                                               {DayTimeToQuarters Day
-                                                SH SM div 15 EH EM div 15}
-                                            end}
-         [] dayInterval(Day#SH#SM#EH#EM) then [{DayTimeToQuarters DayMap.Day
-                                                SH SM div 15 EH EM div 15}]
-         [] fix(Day#H#M) then [{DayTimeToQuarters DayMap.Day
-                                H M div 15 H M div 15}]
+         [] weekInterval(SH#SM#EH#EM) then
+            {Map Week
+             fun {$ Day}
+                {DayTimeToQuarters Day SH SM div 15 EH EM div 15}
+             end}
+         [] dayInterval(Day#SH#SM#EH#EM) then
+            [{DayTimeToQuarters DayMap.Day SH (SM div 15) EH (EM div 15)}]
+         [] fix(Day#H#M) then
+            [{DayTimeToQuarters DayMap.Day H (M div 15) H (M div 15)}]
          else {Record.foldR Desc
-               fun {$ D In}
-                  {Append {MakeC D} In}
-               end nil}
+               fun {$ D In} {Append {MakeC D} In} end nil}
          end
       end
 
@@ -100,8 +108,7 @@ define
       %% compute the lectures of a prof
       %% from the lecture list
       fun {ProfToLectures PName Ls}
-         {Filter Ls fun {$ L} L.professor==PName
-                    end}
+         {Filter Ls fun {$ L} L.professor==PName end}
       end
 
    in
@@ -117,10 +124,9 @@ define
                  then {ApplyConstraint L.constraints Start}
                  else skip
                  end
-                 {Adjoin L l(start: Start
+                 {Adjoin L l(start:    Start
                              ordering: Ordering
-                             semester: Semester
-                            )}
+                             semester: Semester)}
               end}
           end}
       end
@@ -133,9 +139,7 @@ define
              PLs={ProfToLectures I Ls}
           in
              {ForAll PLs proc {$ PL} {ApplyConstraint X PL.start} end}
-             professor(lectures:PLs
-                       name:I)
-             | In
+             professor(lectures:PLs name:I) | In
           end
           nil}
       end
@@ -153,8 +157,7 @@ define
 
    %% search for professor in list of profs
    fun {SearchProf Profs Name}
-      {List.dropWhile Profs
-       fun {$ P} P.name\=Name end}.1
+      {List.dropWhile Profs fun {$ P} P.name \= Name end}.1
    end
 
    %% %%%%%%%%%%%
@@ -164,31 +167,34 @@ define
    local
       fun {SkipWait Xs}
          case Xs
-         of X|Xr then case {FD.reflect.size X.start} of 1 then
-                         {SkipWait Xr}
+         of X|Xr then case {FD.reflect.size X.start}
+                      of 1 then {SkipWait Xr}
                       else Xs
                       end
          [] nil then nil
          end
       end
+
       proc {Choose Xs HoleTail HoleHead MinYet SizeYet ?Min ?Ys}
          case Xs
          of X|Xr then
-            SizeX={FD.reflect.size X.start} in
+            SizeX = {FD.reflect.size X.start} in
             case SizeX of 1 then
                {Choose Xr HoleTail HoleHead MinYet SizeYet Min Ys}
-            elseif SizeX<SizeYet then
+            elseif SizeX < SizeYet then
                NewHole in
-               HoleTail=MinYet|HoleHead
+               HoleTail = MinYet | HoleHead
                {Choose Xr Ys NewHole X SizeX Min NewHole}
             else
-               Ys=X|{Choose Xr HoleTail HoleHead MinYet SizeYet Min}
+               Ys=X | {Choose Xr HoleTail HoleHead MinYet SizeYet Min}
             end
-         [] nil then Min=MinYet Ys=nil HoleTail=HoleHead
+         [] nil then Min = MinYet Ys = nil HoleTail = HoleHead
          end
       end
       fun {Cost I Ls C}
-         case Ls of nil then /*{Show 'tragic error'}*/ _
+         case Ls of nil then
+            {Exception.raiseError college(Cost [I Ls C] 'tragic error')}
+            _
          [] A#B|Lr then
             if A =< I andthen I =< B
             then C
@@ -215,12 +221,14 @@ define
                Y Yr Hole Val YDom YVar in
                {Choose Xr Yr Hole X {FD.reflect.size X.start} Y Hole}
                {Wait Y}
-               YVar=Y.start
-               YDom={FD.reflect.domList YVar}
-               Val={GetFirst YDom.2 YDom.1 {Cost YDom.1 Y.ordering 1}
-                    Y.ordering}
-               choice /*{Show Y.name#Val}*/ YVar=Val {Enum Yr}
-               [] YVar\=:Val {Enum Y|Yr}
+               YVar = Y.start
+               YDom = {FD.reflect.domList YVar}
+               Val = {GetFirst YDom.2 YDom.1 {Cost YDom.1 Y.ordering 1}
+                      Y.ordering}
+               choice
+                  YVar=Val {Enum Yr}
+               []
+                  YVar\=:Val {Enum Y|Yr}
                end
             end
          end
@@ -254,46 +262,37 @@ define
    %% Constraint Procedures
    %% %%%%%%%%%%%%%%%%%%%%%
 
-   /*
-   proc {NotOnSpecialDay Lectures Day}
-      {ForAll Lectures proc{$ Lec} Lec.start :: compl(Day) end}
-   end
-   */
    proc {OnSpecialDayOnly Lectures Day}
-      {ForAll Lectures proc{$ Lec} Lec.start :: Day end}
+      {ForAll Lectures proc {$ Lec} Lec.start :: Day end}
    end
    proc {OnSpecialTimeOnly Lectures Time}
-      {ForAll Lectures proc{$ Lec} Lec.start :: Time end}
+      {ForAll Lectures proc {$ Lec} Lec.start :: Time end}
    end
    proc {ForbidAsta Lectures}
-      {ForAll Lectures proc{$ Lec} Lec.start :: compl((AstaTime.1-Lec.dur+1)#AstaTime.2) end}
+      {ForAll Lectures
+       proc {$ Lec} Lec.start :: compl((AstaTime.1-Lec.dur+1)#AstaTime.2) end}
    end
    proc {DayBreak Break Lectures}
-%      {ForAll Lectures proc{$ Lec} Lec.start \:: Break end}
-      {ForAll Lectures proc{$ Lec}
-                          {ForAll Break proc{$ B}
-                                           Left = (B.1-Lec.dur)
-                                        in
-                                           if Left < 0 then
-                                              Lec.start :: compl(0#B.2)
-                                           else
-                                              Lec.start :: compl(Left#B.2)
-                                           end
-                                        end}
-                       end}
+      {ForAll Lectures
+       proc {$ Lec}
+          {ForAll Break proc{$ B}
+                           Left = (B.1-Lec.dur)
+                        in
+                           if Left < 0 then
+                              Lec.start :: compl(0#B.2)
+                           else
+                              Lec.start :: compl(Left#B.2)
+                           end
+                        end}
+       end}
    end
 
    proc {NotParallel Offset Teacher1 Teacher15}
       {ForAll Teacher1.lectures
-       proc{$ FL}
+       proc {$ FL}
           {ForAll Teacher15.lectures
            proc{$ LFL}
               {FD.disjoint FL.start FL.dur+Offset LFL.start LFL.dur+Offset}
-              /*
-              OR FL.start+FL.dur =<: LFL.start
-           [] FL.start >=: LFL.start+LFL.dur
-              RO
-              */
            end}
        end}
    end
@@ -313,28 +312,25 @@ define
       end
    end
    proc {NoOverlap2 L1 L2}
-      {ForAll L1 proc{$ L}
-                    {ForAll L2 proc{$ LP}
-                                  %% After one hour must be a quarter
-                                  %% and after two hours two quarters
-                                  %% recreation time
-                                  LDur LPDur in
-                                  LDur= if L.dur<4
-                                        then L.dur+1
-                                        else L.dur+2
-                                        end
-                                  LPDur= if LP.dur<4
-                                         then LP.dur+1
-                                         else LP.dur+2
-                                         end
-                                  {FD.disjoint L.start LDur LP.start LPDur}
-                                  /*
-                                  OR L.start+L.dur =<: LP.start
-                               [] L.start >=: LP.start+LP.dur
-                                  RO
-                                  */
-                               end}
-                 end}
+      {ForAll L1
+       proc{$ L}
+          {ForAll L2
+           proc {$ LP}
+              %% After one hour must be a quarter
+              %% and after two hours two quarters
+              %% recreation time
+              LDur LPDur in
+              LDur= if L.dur<4
+                    then L.dur+1
+                    else L.dur+2
+                    end
+              LPDur= if LP.dur<4
+                     then LP.dur+1
+                     else LP.dur+2
+                     end
+              {FD.disjoint L.start LDur LP.start LPDur}
+           end}
+       end}
    end
 
    %% The lectures of a professor must not overlap
@@ -344,23 +340,21 @@ define
       then {NoOverlapLecs1 L Lr} {NoOverlapLectures Lr}
       end
    end
+
    proc {NoOverlapLecs1 Lec Lec1}
       case Lec1 of nil then skip
       [] L|Lr
       then {NoOverlapLecs2 Lec L} {NoOverlapLecs1 Lec Lr}
       end
    end
+
    proc {NoOverlapLecs2 L1 L2}
       %% After one hour must be a quarter
       %% and after two hours two quarters
       %% recreation time
       L1Dur L2Dur in
-      L1Dur= if L1.dur<4 then L1.dur+1
-             else L1.dur+2
-             end
-      L2Dur= if L2.dur<4
-             then L2.dur+1
-             else L2.dur+2
+      L1Dur= if L1.dur < 4 then L1.dur + 1 else L1.dur + 2 end
+      L2Dur= if L2.dur < 4 then L2.dur + 1 else L2.dur + 2
              end
       {FD.disjoint L1.start L1Dur L2.start L2Dur}
    end
@@ -375,10 +369,8 @@ define
             %% Rooms are empty for a quarter after each lecture
             Left = Hour-(L.dur+1)+1
          in
-            if Left < 0 then
-               (L.start :: 0#Hour)|{SumUpLectures Lr Hour}
-            else
-               (L.start :: Left#Hour)|{SumUpLectures Lr Hour}
+            if Left < 0 then (L.start :: 0#Hour)|{SumUpLectures Lr Hour}
+            else             (L.start :: Left#Hour)|{SumUpLectures Lr Hour}
             end
          [] nil then nil
          end
@@ -398,8 +390,7 @@ define
       fun {SumUp Lectures Day}
          case Lectures of nil then nil
          [] L|Lr
-         then
-            (L.start :: Day)|{SumUp Lr Day}
+         then (L.start :: Day)|{SumUp Lr Day}
          end
       end
       proc {SumUpDays Lectures BDay Day}
@@ -445,22 +436,23 @@ define
          [] L2|Lr then B={FD.int 0#1} L1Dur L2Dur in
             if L1.name==L2.name then 0|{SumUpOverlaps L1 Lr}
             else L1S L2S in
-               L1Dur= if L1.dur<4
-                      then L1.dur+1
-                      else L1.dur+2
-                      end
-               L2Dur= if L2.dur<4
-                      then L2.dur+1
-                      else L2.dur+2
-                      end
-               L1S=L1.start L2S=L2.start
+               L1Dur= if L1.dur < 4 then L1.dur + 1 else L1.dur + 2 end
+               L2Dur= if L2.dur < 4 then L2.dur + 1 else L2.dur + 2 end
+               L1S = L1.start
+               L2S = L2.start
 
-               condis B=:1 L1S+L1Dur>:L2S L2S+L2Dur>:L1S
-               [] B=:0 L1S+L1Dur=<:L2S
-               [] B=:0 L2S+L2Dur=<:L1S
+               condis
+                  B=:1
+                  L1S + L1Dur >: L2S
+                  L2S + L2Dur >: L1S
+               []
+                  B=:0
+                  L1S + L1Dur =<: L2S
+               []
+                  B=:0
+                  L2S + L2Dur =<: L1S
                end
 
-%           {FD.reified.card 2 [L1S+L1Dur>:L2S L2S+L2Dur>:L1S] 2 B}
                B|{SumUpOverlaps L1 Lr}
             end
          end
@@ -495,15 +487,6 @@ define
          LecturesSecond = {MakeLectures
                            LecturesDescription
                            second
-                           /*
-                           [
-                            MondayA  MondayM
-                            TuesdayM TuesdayA
-                            WednesdayM WednesdayA
-                            FridayM FridayA
-                            ThursdayM ThursdayA
-                           ]
-                           */
                            %% other priorities
 
                            [MondayM MondayA
@@ -512,35 +495,13 @@ define
                             FridayM  FridayA
                             ThursdayM ThursdayA
                            ]
-                           /*
-                           [
-                            TuesdayM TuesdayA
-                            WednesdayM WednesdayA
-                            MondayM MondayA
-                            FridayM FridayA
-                            ThursdayM ThursdayA
-                           ]
-                           */
-
                           }
-         /*
-         FlatLecturesSecond = {List.flatten LecturesSecond}
-         */
          %% Fourth Semester
          %% %%%%%%%%%%%%%%%
 
          LecturesFourth = {MakeLectures
                            LecturesDescription
                            fourth
-                           /*
-                           [
-                            MondayM MondayA
-                            WednesdayM WednesdayA
-                            TuesdayM TuesdayA
-                            FridayM FridayA
-                            ThursdayM ThursdayA
-                           ]
-                           */
                            %% other priorities
 
                            [
@@ -553,9 +514,6 @@ define
 
 
                           }
-         /*
-         FlatLecturesFourth = {List.flatten LecturesFourth}
-         */
          GrundStudiumLectures = {Append LecturesSecond LecturesFourth}
          FlatGrundStudiumLectures = {List.flatten GrundStudiumLectures}
 
@@ -565,15 +523,6 @@ define
          LecturesSixth = {MakeLectures
                           LecturesDescription
                           sixth
-                          /*
-                          [
-                           WednesdayM WednesdayA
-                           MondayM MondayA
-                           TuesdayM TuesdayA
-                           ThursdayM ThursdayA
-                           FridayM FridayA
-                          ]
-                          */
                           %% other priorities
 
                           [ WednesdayM WednesdayA
@@ -582,8 +531,6 @@ define
                             MondayM MondayA
                             TuesdayM TuesdayA
                           ]
-
-
                          }
 
          FlatLecturesSixth = {List.flatten LecturesSixth}
@@ -605,9 +552,6 @@ define
          FlatLecturesEighth = {List.flatten LecturesEighth}
 
          NotOnThursdayLectures = {Append GrundStudiumLectures LecturesSixth}
-         /*
-         FlatNotOnThursdayLectures={List.flatten NotOnThursdayLectures}
-         */
          AllSemesterLectures = {Append NotOnThursdayLectures LecturesEighth}
          FlatAllSemesterLectures={List.flatten AllSemesterLectures}
 
@@ -640,17 +584,6 @@ define
                          FridayM FridayA
                          TuesdayM TuesdayA
                         ]
-
-                        %% other priorities:
-                        /*
-                        [
-                         FridayA FridayM
-                         ThursdayA MondayA
-                         WednesdayA TuesdayA
-                         TuesdayM MondayM
-                         WednesdayM ThursdayM
-                        ]
-                        */
                        }
 
          FlatFakLectures = {List.flatten FakLectures}
@@ -681,8 +614,8 @@ define
 
          {ForAll FlatAllLectures
           proc{$ L}
-             Dur=L.dur
-             fun {AfterHours Day} Day.2+1-Dur#Day.2  end
+             Dur = L.dur
+             fun {AfterHours Day} Day.2 + 1 - Dur#Day.2  end
           in
              L.start :: compl({Map Week AfterHours})
           end}
@@ -690,26 +623,27 @@ define
 
          %% All semesters but the eighth are not scheduled on thursday
          %% seems to be to hard
-%        {NotOnSpecialDay FlatNotOnThursdayLectures Thursday}
 
          {OnSpecialDayOnly FlatLecturesSixth Wednesday}
          %% The break must be lecturefree
 
-         {DayBreak {List.map
-                    [0 1 2 3 4]
-                    fun{$ I} (20+I*36)#(23+I*36) end}
+         {DayBreak
+          {List.map [0 1 2 3 4] fun{$ I} (20+I*36)#(23+I*36) end}
           {Append FlatLecturesEighth FlatGrundStudiumLectures}}
-         {DayBreak {List.map [0 1 2 3 4] fun{$ I}
-                                            (16+I*36)#(19+I*36)
-                                         end}
+
+         {DayBreak {List.map [0 1 2 3 4]
+                    fun{$ I} (16+I*36)#(19+I*36) end}
           FlatLecturesSixth}
 
          %% At Asta time no lectures allowed
          {ForbidAsta FlatAllLectures}
 
          %% The Lectures for a semester must not overlap
-         {NoOverlapSemester [[L.'2.1' L.'2.2' L.'2.3'][L.'2.6'][L.'2.7']
-                             [ L.'2.9'][L.'2.10.1' L.'2.10.2' L.'2.10.3']
+         {NoOverlapSemester [[L.'2.1' L.'2.2' L.'2.3']
+                             [L.'2.6']
+                             [L.'2.7']
+                             [ L.'2.9']
+                             [L.'2.10.1' L.'2.10.2' L.'2.10.3']
                              [L.'2.5.1' L.'2.5.2' L.'2.8.1' L.'2.8.2'
                               L.'2.13.1' L.'2.13.2' L.'2.4.1' L.'2.4.2'
                               L.'2.14.1' L.'2.14.2' L.'2.15.1' L.'2.15.2'
@@ -785,20 +719,20 @@ define
          {AtMostLectures {FilterSize [big small] FlatAllLectures} 5}
 
          %% All professors have a teaching limit of 3 days per week
-         {ForAll Professors proc{$ Professor}
-                               {ThreeDaysOnly Professor.lectures 3}
-                            end}
+         {ForAll Professors
+          proc{$ Professor} {ThreeDaysOnly Professor.lectures 3} end}
 
          %% At most 6 hours per day
-         {ForAll Professors proc{$ Professor}
-                               {ForAll [Monday Tuesday Wednesday Thursday Friday]
-                                proc{$ Day}
-                                   {FoldL Professor.lectures
-                                    fun{$ I L}
-                                       {FD.plus {FD.times L.dur (L.start::Day)} I}
-                                    end 0} =<: 6*4
-                                end}
-                            end}
+         {ForAll Professors
+          proc{$ Professor}
+             {ForAll [Monday Tuesday Wednesday Thursday Friday]
+              proc{$ Day}
+                 {FoldL Professor.lectures
+                  fun{$ I L}
+                     {FD.plus {FD.times L.dur (L.start::Day)} I}
+                  end 0} =<: 6*4
+              end}
+          end}
 
          %% Teacher1/Teacher15 couple cannot teach at the same time (+offset)
          {NotParallel
@@ -832,19 +766,6 @@ define
          %% Special constraint for Teacher32
          {OnSameDay [L.'F.2.1' L.'F.2.2']}
 
-         /*
-         {NoOverlapSemester [[L.'F.1'] FlatLecturesSixth]}
-         {NoOverlapSemester [[L.'F.2.1' L.'F.2.2'] FlatGrundStudiumLectures]}
-                 % to be added: Kelly's constraint, F21 and F22 on same day
-         {NoOverlapSemester [[L.'F.4'] FlatGrundStudiumLectures]}
-         {NoOverlapSemester [[L.'F.6'] FlatAllSemesterLectures]}
-         {NoOverlapSemester [[L.'F.10'] FlatAllSemesterLectures]}
-
-         {OnSpecialTimeOnly [L.'F.6'] {DayTimeToQuarters Tuesday 15 0 15 0}}
-         {OnSpecialTimeOnly [L.'F.4'] {DayTimeToQuarters Wednesday 15 0 15 0}}
-         {OnSpecialTimeOnly [L.'F.10'] {DayTimeToQuarters Friday 15 0 15 0}}
-         */
-
          %% %%%%%%%%%%%%%%%
          %% The Enumeration
          %% %%%%%%%%%%%%%%%
@@ -861,6 +782,7 @@ define
          dir
          first: true
          solver
+
       meth readProblem(InputFileName)
          if InputFileName==false then skip
          else
@@ -871,21 +793,27 @@ define
             problemDescription <- {Compiler.virtualStringToValue Read}
          end
       end
+
       meth setDir(D)
          dir <- D
       end
+
       meth getDir(?D)
          D = @dir
       end
+
       meth setProblem(P)
          problemDescription <- P
       end
+
       meth browseProblem
          {Browse @problemDescription}
       end
+
       meth constrainProblem
          solution <- {{MakeProblem @problemDescription}}
       end
+
       meth solveProblem
          PD = @problemDescription
       in
@@ -919,10 +847,8 @@ define
          thread
             if Sol==nil then
                {ControllerLabel tk(configure text:'No solution')}
-               /*{Show failed}*/
             elseif Sol==stopped then
                {ControllerLabel tk(configure text:'Stopped')}
-               /*{Show stopped}*/
             else
                {self help(Sol)}
             end

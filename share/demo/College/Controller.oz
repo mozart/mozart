@@ -26,27 +26,25 @@ export
 
    Controller
 
-   ControllerLabel
-
    TopWindow
 
 define
 
-   TopWindow
+   TopWindow = {New Tk.toplevel tkInit(title:'College Time-Tabling'
+                                       delete: proc{$}
+                                                  {TopWindow tkClose}
+                                                  {Application.exit 0}
+                                               end)}
 
-   ControllerLabel
 
    Images = {TkTools.images ImageNames}
 
-   proc {Controller}
-      !TopWindow = {New Tk.toplevel tkInit(title:'College Time-Tabling'
-                                           delete: proc{$}
-                                                      {TopWindow tkClose}
-                                                      {Application.exit 0}
-                                                   end)}
+   fun {Controller}
 
       Menu = {New Tk.frame
               tkInit(parent:TopWindow relief:raised borderwidth:2)}
+      ControllerLabel = {New Tk.label tkInit(parent: Menu text: "")}
+
       {Tk.send pack(Menu side:top fill:x)}
 
       MB0 MB1 MB2 MB3
@@ -66,10 +64,14 @@ define
       ADispTextual
 
       fun {TkAction What Parent P1 P2}
-         case P2 of none then
-            {New Tk.action tkInit(parent:Parent action:proc{$}{What P1}end)}
-         else {New Tk.action tkInit(parent:Parent action:proc{$}{What P1 P2}end)}
-         end
+         {New Tk.action tkInit(parent: Parent
+                               action: proc {$}
+                                          if P2 == none then
+                                             {What P1}
+                                          else
+                                             {What P1 P2}
+                                          end
+                                       end)}
       end
 
       proc {DoFileOp MessageName Flag}
@@ -78,14 +80,12 @@ define
          if Flag == read then
             {Tk.return tk_getOpenFile(title: 'Select file'
                                       filetypes:  q(q('Data files' q('.ozt'))
-                                                    q('Oz Files  ' q('.oz')))
-                                     )
+                                                    q('Oz Files  ' q('.oz'))))
              File}
          else
             {Tk.return tk_getSaveFile(title: 'Select file'
                                       filetypes:  q(q('Data files' q('.ozt'))
-                                                    q('Oz Files  ' q('.oz')))
-                                     )
+                                                    q('Oz Files  ' q('.oz'))))
              File}
          end
 
@@ -129,23 +129,22 @@ define
 
       % -------------------------------------------------
 
-      !ControllerLabel = {New Tk.label tkInit(parent:Menu text:"")}
-      {Tk.send pack(ControllerLabel side:right)}
+      {Tk.send pack(ControllerLabel side: right)}
 
       proc {Compute Message Display}
-         {ControllerLabel tk(configure text:"Computing...")}
+         {ControllerLabel tk(configure text: "Computing...")}
          {TimeTable Message}
          thread
             {Wait {TimeTable get($)}}
-            {ControllerLabel tk(configure text:"done")}
+            {ControllerLabel tk(configure text: "done")}
             {TimeTable Display}
          end
       end
 
       % -------------------------------------------------
 
-      TitleCanvas = {New Tk.canvas tkInit(parent:TopWindow
-                                          height:130 width:340)}
+      TitleCanvas = {New Tk.canvas tkInit(parent: TopWindow
+                                          height: 130 width: 340)}
       {TitleCanvas tk(crea image 0 0
                       image: Images.'title'
                       anchor:nw)}
@@ -168,8 +167,8 @@ define
       {ForAll [ [M0 MB0] [M1 MB1] [M2 MB2] [M3 MB3] ]
        proc {$ M} M.1 = {New Tk.menu tkInit(parent:M.2.1)} end}
 
-      AAbout = {New Tk.action tkInit(parent:Menu action:About)}
-      AExit = {New Tk.action tkInit(parent:Menu
+      AAbout = {New Tk.action tkInit(parent: Menu action: About)}
+      AExit = {New Tk.action tkInit(parent: Menu
                                     action: proc{$}
                                                {TopWindow tkClose}
                                                {Application.exit 0}
@@ -216,7 +215,7 @@ define
         proc{$ C}
            case C.1
            of "--------------" then {M1 tk(add sep)}
-           else {M1 tk(add command label:C.1 command:C.2.1)}
+           else {M1 tk(add command label: C.1 command: C.2.1)}
            end
         end}
        {ForAll [ ["  First Solution " AFirstSol]
@@ -228,7 +227,7 @@ define
         proc{$ C}
            case C.1
            of "--------------" then {M2 tk(add(sep))}
-           else {M2 tk(add(command(label:C.1 command:C.2.1)))}
+           else {M2 tk(add(command(label: C.1 command: C.2.1)))}
            end
         end}
        {ForAll [ ["  Display graphical " ADispGraphical]
@@ -238,17 +237,19 @@ define
         proc{$ C}
            case C.1
            of "--------------" then {M3 tk(add(sep))}
-           else {M3 tk(add command label:C.1 command:C.2.1)}
+           else {M3 tk(add command label: C.1 command: C.2.1)}
            end
         end}
 
-       {MB0 tk(conf menu:M0)}
-       {MB1 tk(conf menu:M1)}
-       {MB2 tk(conf menu:M2)}
-       {MB3 tk(conf menu:M3)}
+       {MB0 tk(conf menu: M0)}
+       {MB1 tk(conf menu: M1)}
+       {MB2 tk(conf menu: M2)}
+       {MB3 tk(conf menu: M3)}
 
-       {Tk.send pack(MB0 MB1 MB2 MB3 side:left)}
+       {Tk.send pack(MB0 MB1 MB2 MB3 side: left)}
        {Tk.send tk_menuBar(Menu MB0 MB1 MB2 MB3)}
-      end
 
+       ControllerLabel
    end
+
+end

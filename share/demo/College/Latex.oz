@@ -49,18 +49,18 @@ define
          of nil then nil
          else Back in
             case S.1
-            of &M then Back=S.2 10
-            [] &F then Back=S.2 12
+            of &M then Back = S.2 10
+            [] &F then Back = S.2 12
             else {String.toInt {TakeDigits S $ Back}}
             end
             |{Split {List.dropWhile Back Char.isPunct}}
          end
       end
       fun {Compare X1|X2|Xr Y1|Y2|Yr}
-         X1 < Y1 orelse (X1 == Y1
-                         andthen
-                         (X2 < Y2 orelse (X2 == Y2
-                                          andthen (Xr==Yr orelse Xr.1 =< Yr.1))))
+         X1 < Y1 orelse
+         (X1 == Y1
+          andthen
+          (X2 < Y2 orelse (X2 == Y2 andthen (Xr == Yr orelse Xr.1 =< Yr.1))))
       end
    in
       fun {NameOrdering X Y}
