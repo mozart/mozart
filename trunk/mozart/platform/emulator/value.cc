@@ -206,6 +206,19 @@ TaggedRef Object::getArityList()
   return ret;
 }
 
+int Object::getWidth () 
+{
+  int ret = 0;
+  SRecord *feat=getFreeRecord();
+  if (feat) ret = feat->getWidth ();
+
+  if (!isClass()) {
+    SRecord *rec=getClass()->getUnfreeRecord();
+    if (rec) ret += rec->getWidth ();
+  }
+  return ret;
+}
+
 
 TaggedRef Object::attachThread()
 {
@@ -270,7 +283,7 @@ Bool Object::lookupDefault(TaggedRef label, SRecordArity arity, RefsArray X)
   TaggedRef arityList = getRecordArity(arity)->getList();
 
   TaggedRef auxX[100];
-  if (getWidth(arity)>=100)
+  if (::getWidth(arity)>=100)
     return NO;
     
   def = rec->getArityList();
