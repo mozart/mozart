@@ -1377,9 +1377,9 @@ DECLAREBI_USEINLINEFUN2(BIdot,dotInline)
 
 
 // !!! second assertion deactivated because of bug in state threading
-#define CheckCurObj                             \
-     Assert(am.getCurrentObject() != NULL);     \
-     { Object *o = am.getCurrentObject();       \
+#define CheckSelf                               \
+     Assert(am.getSelf() != NULL);              \
+     { Object *o = am.getSelf();                \
        Assert(1 || o->getDeepness()>=1);        \
      }
 
@@ -1388,7 +1388,7 @@ State atInline(TaggedRef fea, TaggedRef &out)
 {
   DEREF(fea, _1, feaTag);
 
-  SRecord *rec = am.getCurrentObject()->getState();
+  SRecord *rec = am.getSelf()->getState();
   if (rec) {
     if (!isFeature(fea)) {
       if (isAnyVar(fea)) {
@@ -1396,7 +1396,7 @@ State atInline(TaggedRef fea, TaggedRef &out)
       }
       goto bomb;
     }
-    CheckCurObj;
+    CheckSelf;
     TaggedRef t = rec->getFeature(fea);
     if (t) {
       out = t;
@@ -2658,9 +2658,9 @@ State assignInline(TaggedRef fea, TaggedRef value)
 {
   DEREF(fea, _2, feaTag);
 
-  SRecord *r = am.getCurrentObject()->getState();
+  SRecord *r = am.getSelf()->getState();
   if (r) {
-    CheckCurObj;
+    CheckSelf;
     if (!isFeature(fea)) {
       if (isAnyVar(fea)) {
         return SUSPEND;
@@ -5483,7 +5483,7 @@ DECLAREBI_USEINLINEFUN1(BIobjectIsFree,objectIsFreeInline)
 /* is sometimes explicitely called within Object.oz */
 OZ_C_proc_begin(BIreleaseObject,0)
 {
-  am.getCurrentObject()->release();
+  am.getSelf()->release();
   return PROCEED;
 }
 OZ_C_proc_end
@@ -5491,7 +5491,7 @@ OZ_C_proc_end
 
 OZ_C_proc_begin(BIgetSelf,1)
 {
-  return OZ_unify(makeTaggedConst(am.getCurrentObject()),
+  return OZ_unify(makeTaggedConst(am.getSelf()),
                   OZ_getCArg(0));
 }
 OZ_C_proc_end
@@ -5508,9 +5508,9 @@ OZ_C_proc_begin(BIsetSelf,1)
 
   Object *obj = (Object *) tagged2Const(o);
   /* same code as in emulate.cc !!!!! */
-  if (am.getCurrentObject()!=obj) {
-    am.currentThread->pushSetCurObject(am.getCurrentObject());
-    am.setCurrentObject(obj);
+  if (am.getSelf()!=obj) {
+    am.currentThread->pushSelf(am.getSelf());
+    am.setSelf(obj);
   }
 
   return PROCEED;
