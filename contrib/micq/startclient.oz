@@ -58,21 +58,26 @@ define
          raise quit end
       end
 
-      proc{NewEntry Title Value V}
+      proc{NewEntry Title Value Secret V}
          O N E L={New Tk.label tkInit(parent:T text:Title)}
       in
          {Exchange Index O N} N=O+1
          V={New Tk.variable tkInit(Value)}
-         E={New Tk.entry tkInit(parent:T width:50 textvariable:V)}
+         if Secret then
+            E={New Tk.entry tkInit(parent:T width:50 show:'*' textvariable:V)}
+         else
+            E={New Tk.entry tkInit(parent:T width:50 textvariable:V)}
+         end
+
          {Tk.batch [grid(L row:N column:0 sticky:e)
                     grid(E row:N column:1 sticky:w)]}
          {E tkBind(event:'<Return>' action:proc{$} GO=unit end)}
          if N==1 then {Tk.send focus(E)} else skip end
       end
    in
-      V2={NewEntry "URL:" Args.url}
-      V1={NewEntry "Login:" Args.login}
-      V3={NewEntry "Password:" Args.passwd}
+      V2={NewEntry "URL:" Args.url false}
+      V1={NewEntry "Login:" Args.login false}
+      V3={NewEntry "Password:" Args.passwd true}
       B1={New Tk.button tkInit(parent:BF text:"New User" action:proc{$} GO=newuser end)}
       B2={New Tk.button tkInit(parent:BF text:"Login" action:proc{$} GO=unit end)}
       {Tk.batch [grid(BF row:20 column:0 columnspan:2 sticky:we)
