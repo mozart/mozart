@@ -124,7 +124,7 @@ Bool Thread::isBelowFailed (Board *top)
 /*
  * remove local tasks
  * return OK, if done
- * return NO, if no C_LOCAL/C_SOLVE found
+ * return NO, if no C_LOCAL found
  */
 Bool Thread::discardLocalTasks()
 {
@@ -145,7 +145,6 @@ Bool Thread::discardLocalTasks()
 
     switch (cFlag) {
     case C_LOCAL:
-    case C_SOLVE:
       ts->setTop (tos);
       return (OK);
 
@@ -199,7 +198,6 @@ int Thread::findExceptionHandler(TaggedRef &chunk, TaskStackEntry *&oldTos)
       ts->setTop (tos-2);
       return spaceCount;
     case C_LOCAL:
-    case C_SOLVE:
       spaceCount++;
       break;
     case C_JOB:

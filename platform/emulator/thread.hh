@@ -250,9 +250,15 @@ public:
 
   void headInit (void) {
     state.flags = T_G_p_thr | T_G_prop | T_S_unif | S_CFUN;
+#ifndef TM_LP
+    state.pri = OZMAX_PRIORITY;
+#endif
   }
   void anyGlobalInit (void) {
     state.flags = T_G_p_thr | T_G_prop;
+#ifndef TM_LP
+    state.pri = OZMAX_PRIORITY;
+#endif
   }
 
   int getThrType () { return (state.flags & S_TYPE_MASK); }
@@ -485,7 +491,8 @@ private:
 
   //
   //  ... with furhter assertions;
-  DebugCode (void markDeadThread ();)
+  DebugCode (void markDeadThread (););
+  DebugCode (void createHook (););
 public:
   USEHEAPMEMORY;
   OZPRINT;
@@ -511,6 +518,7 @@ public:
   //  First - it inherits all the methods of 'ThreadState';
   //  Second - get/set the home board;
   Board *getBoardFast ();
+  DebugCode (Board *getBoard () { return (board); })
   void setBoard (Board *bp) { board = bp; }
 
   //  Third - transactions between states;
@@ -577,7 +585,7 @@ public:
   void pushDebug (OzDebug *d);
   void pushCall (TaggedRef pred, RefsArray  x, int n);
   void pushJob ();
-  void pushSolve ();
+  void pushSetCaa (AskActor *aa);
   void pushLocal ();
   void pushCFunCont (OZ_CFun f, RefsArray  x, int n, Bool copyF);
   void pushCont (ProgramCounter pc,

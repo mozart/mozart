@@ -69,7 +69,7 @@ int TaskStack::getSeqSize()
     if (cFlag == C_JOB) {
       return oldTos-tos-1;
     }
-    Assert(cFlag != C_LOCAL && cFlag != C_SOLVE);
+    Assert(cFlag != C_LOCAL);
     tos = tos - frameSize(cFlag) + 1;
   }
 }
@@ -113,7 +113,6 @@ int TaskStack::frameSize(ContFlag cFlag)
 {
   switch (cFlag){
   case C_JOB:
-  case C_SOLVE:
   case C_LOCAL:
     return 1;
   case C_CONT:
@@ -122,6 +121,7 @@ int TaskStack::frameSize(ContFlag cFlag)
     return 4;
   case C_DEBUG_CONT:
   case C_EXCEPT_HANDLER:
+  case C_SET_CAA:
     return 2;
   case C_CALL_CONT:
     return 3;

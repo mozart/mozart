@@ -150,10 +150,8 @@ extern LocalPropagationStore localPropStore;
 
 #ifdef TM_LP
 #  define LOCAL_PROPAGATION(CODE) CODE
-#  define NO_LOCAL_PROPAGATION(CODE)
 #else
 #  define LOCAL_PROPAGATION(CODE)
-#  define NO_LOCAL_PROPAGATION(CODE) CODE
 #endif
 
 #ifdef OUTLINE

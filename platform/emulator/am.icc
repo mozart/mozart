@@ -231,12 +231,6 @@ void AM::pushCFun(OZ_CFun f, RefsArray x, int i)
 }
 
 inline
-void AM::pushSolve()
-{
-  currentThread->pushSolve();
-}
-
-inline
 void AM::pushLocal()
 {
   currentThread->pushLocal();

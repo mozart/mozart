@@ -270,7 +270,7 @@ void Statistics::initCount() {
   cvar=0;
   dynamicTable= dynamicTableLen=0;
   taskStack=taskStackLen=0;
-  cNervous=cSolve=cLocal=cJob=cCont=cXCont=cDebugCont=cExceptHandler=0;
+  cSolve=cLocal=cJob=cCont=cXCont=cACont=cDebugCont=cExceptHandler=0;
   cCallCont= cCFuncCont=0;
   abstraction=deepObject=flatObject=cell=chunk=0;
   oneCallBuiltin=solvedBuiltin=builtin=0;
@@ -325,12 +325,11 @@ void Statistics::printCount() {
   printf("thread          %d (%dB)\n",thread,sizeof(Thread));
   printf("taskStack       %d (%dB)\n",taskStack,sizeof(TaskStack));
   printf("taskStackLen    %d (%dB)\n",taskStackLen,0);
-  printf("cNervous        %d (%dB)\n",cNervous,4);
-  printf("cSolve          %d (%dB)\n",cSolve,4);
   printf("cLocal          %d (%dB)\n",cLocal,4);
   printf("cJob            %d (%dB)\n",cJob,4);
   printf("cCont           %d (%dB)\n",cCont,12);
   printf("cXCont          %d (%dB)\n",cXCont,16);
+  printf("cSetCaa         %d (%dB)\n",cSetCaa,8);
   printf("cDebugCont      %d (%dB)\n",cDebugCont,8);
   printf("cExceptHandler  %d (%dB)\n",cExceptHandler,8);
   printf("cCallCont       %d (%dB)\n",cCallCont,12);
