@@ -139,7 +139,7 @@ MinGraphRep          = {NewName}
 Expanded             = {NewName}
 Filled               = {NewName}
 %% Types of arity listing:
-AtomicArity          = {NewName}
+NoArity              = {NewName}
 TrueArity            = {NewName}
 
 %%%
@@ -322,7 +322,7 @@ IMWYOffset    = 50
 IDepth            = 15
 IWidth            = 50
 IFillStyle        = !Expanded
-IArityType        = !AtomicArity
+IArityType        = !NoArity
 ISmallNames       = true
 IAreStrings       = false
 IAreVSs           = false
