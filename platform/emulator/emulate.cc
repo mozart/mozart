@@ -380,7 +380,7 @@ Bool genCallInfo(GenCallInfoClass *gci, TaggedRef pred, ProgramCounter PC,
 
     Bool defaultsUsed;
     abstr = tagged2ObjectClass(pred)->getMethod(gci->mn,gci->arity,
-                                                X,defaultsUsed);
+                                                0,defaultsUsed);
     /* fill cache and try again later */
     if (abstr==NULL) return NO;
     if (defaultsUsed) goto insertMethApply;
@@ -1917,6 +1917,7 @@ LBLdispatcher:
 // -----------------------------------------------------------------------
        if (typ==Co_Object) {
          COUNT(nonoptsendmsg);
+         CheckArity(1, makeTaggedConst(predicate));
          Object *o = (Object*) predicate;
          Assert(o->getClass()->getFallbackApply());
          Abstraction *def =
