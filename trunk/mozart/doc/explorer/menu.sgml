@@ -257,54 +257,65 @@
     <P>
     <Figure id="figure.hidestar">
       <Caption/Example for hiding and unhiding subtrees./
-      <Table class=dyptic>
+      <Table class=dyptic id="fig.hidestar.table">
         <Tr>
           <Td><p.silent>&nbsp;
           </Td>
           <Td>
-            <Picture.Extern to="pictures/hide-1.ps" 
+            <Picture.Extern id="pic.hide-1.a"
+			    to="pictures/hide-1.ps" 
                             type=ps info="-width 70">
           </Td>
           <Td>
             Hide/Unhide
-            <Picture.Extern to="arrow-r.gif" type=gif> 
+            <Picture.Extern id="pic.arrow-r.a"
+			    to="arrow-r.gif" type=gif> 
           </Td>
           <Td>
-            <Picture.Extern to="pictures/hide-2.ps" 
+            <Picture.Extern id="pic.hide-2"
+			    to="pictures/hide-2.ps" 
                             type=ps info="-width 40">
           </Td>
           <Td>
             Hide/Unhide
-            <Picture.Extern to="arrow-r.gif" type=gif> 
+            <Picture.Extern id="pic.arrow-r.b"
+			    to="arrow-r.gif" type=gif> 
           </Td>
           <Td>
-            <Picture.Extern to="pictures/hide-1.ps" 
+            <Picture.Extern id="pic.hide-1.b"
+			    to="pictures/hide-1.ps" 
                             type=ps info="-width 70">
           </Td>
         </Tr>
         <Tr>
           <Td>
             Hide Failed
-            <Picture.Extern to="arrow-r.gif" type=gif> 
+            <Picture.Extern id="pic.arrow-r.c"
+			    to="arrow-r.gif" type=gif> 
           </Td>
           <Td>
-            <Picture.Extern to="pictures/hide-3.ps" 
+            <Picture.Extern id="pic.hide-3"
+			    to="pictures/hide-3.ps" 
                             type=ps info="-width 70">
           </Td>
           <Td>
             Unhide But Failed
-            <Picture.Extern to="arrow-r.gif" type=gif> 
+            <Picture.Extern id="pic.arrow-r.d"
+			    to="arrow-r.gif" type=gif> 
           </Td>
           <Td>
-            <Picture.Extern to="pictures/hide-4.ps" 
+            <Picture.Extern id="pic.hide-4"
+			    to="pictures/hide-4.ps" 
                             type=ps info="-width 70">
           </Td>
           <Td>
             Unhide All
-            <Picture.Extern to="arrow-r.gif" type=gif> 
+            <Picture.Extern id="pic.arrow-r.e"
+			    to="arrow-r.gif" type=gif> 
           </Td>
           <Td>
-            <Picture.Extern to="pictures/hide-5.ps" 
+            <Picture.Extern id="pic.hide-5"
+			    to="pictures/hide-5.ps" 
                             type=ps info="-width 70">
           </Td>
         </Tr>

@@ -78,6 +78,43 @@
     <Meta name="html.split.index" value="">
     <Meta name="html.split.toc"   value="">
 
+    <Meta name="latex.table.spec" arg1="figure.nodes.table" arg2="llllll">
+    <Meta name="latex.table.spec" arg1="figure.trees.table" arg2="llll">
+
+    <Meta name="latex.picture.width" arg1="pic.c-open"      arg2="1cm">
+    <Meta name="latex.picture.width" arg1="pic.b-open"      arg2="1cm">
+    <Meta name="latex.picture.width" arg1="pic.c-closed"    arg2="1cm">
+    <Meta name="latex.picture.width" arg1="pic.b-closed"    arg2="1cm">
+    <Meta name="latex.picture.width" arg1="pic.c-suspended" arg2="1cm">
+    <Meta name="latex.picture.width" arg1="pic.b-suspended" arg2="1cm">
+    <Meta name="latex.picture.width" arg1="pic.c-entailed"  arg2="1cm">
+    <Meta name="latex.picture.width" arg1="pic.b-entailed"  arg2="1cm">
+    <Meta name="latex.picture.width" arg1="pic.c-failed"    arg2="1cm">
+    <Meta name="latex.picture.width" arg1="pic.b-failed"    arg2="1cm">
+    <Meta name="latex.picture.width" arg1="pic.c-blocked"   arg2="1cm">
+    <Meta name="latex.picture.width" arg1="pic.b-blocked"
+	  arg2="1cm">
+
+    <Meta name="latex.picture.width" arg1="pic.c-h-part-solved" arg2="1cm">
+    <Meta name="latex.picture.width" arg1="pic.c-h-part-failed" arg2="1cm">
+    <Meta name="latex.picture.width" arg1="pic.c-h-solved"      arg2="1cm">
+    <Meta name="latex.picture.width" arg1="pic.c-h-failed"      arg2="1cm">
+
+    <Meta name="latex.picture.width" arg1="pic.hide-1.a" arg2="2.5cm">
+    <Meta name="latex.picture.width" arg1="pic.arrow-r.a" arg2="1cm">
+    <Meta name="latex.picture.width" arg1="pic.hide-2" arg2="2.5cm">
+    <Meta name="latex.picture.width" arg1="pic.arrow-r.b" arg2="1cm">
+    <Meta name="latex.picture.width" arg1="pic.hide-1.b" arg2="2.5cm">
+    <Meta name="latex.picture.width" arg1="pic.arrow-r.c" arg2="1cm">
+    <Meta name="latex.picture.width" arg1="pic.hide-3" arg2="2.5cm">
+    <Meta name="latex.picture.width" arg1="pic.arrow-r.d" arg2="1cm">
+    <Meta name="latex.picture.width" arg1="pic.hide-4" arg2="2.5cm">
+    <Meta name="latex.picture.width" arg1="pic.arrow-r.e" arg2="1cm">
+    <Meta name="latex.picture.width" arg1="pic.hide-5" arg2="2.5cm">
+
+    <Meta name="latex.table.spec" arg1="fig.hidestar.table" arg2="@{}p{18mm}lp{27mm}lp{19mm}l@{}">
+    <Meta name="latex.picture.width" arg1="pic.stat-ex" arg2="2.5cm">
+
     <Meta name=ozversion value="3.0">
     <Meta name=status value=revised>
     <Title/Oz Explorer &emdash; Visual Constraint Programming Support/
