@@ -514,8 +514,7 @@
               <Q class=terminal/<<|>>/ ?={expression}/
             <Grammar.Alt/?={expression}
               { <Q class=terminal/<<#>>/ ?={expression} }+/
-            <Grammar.Alt/[ <Q class=terminal/<<!>>/ ] ?={variable} |
-              <Q class=terminal/<<_>>//
+            <Grammar.Alt/?={escaped variable} | <Q class=terminal/<<_>>//
             <Grammar.Alt/?={atom} | ?={int} | ?={float}/
             <Grammar.Alt/<<unit>> | <<true>> | <<false>>/
             <Grammar.Alt/?={label} <Q class=terminal/<<(>>/
@@ -538,6 +537,8 @@
               ?={case expression clause} }/
             <Grammar.Alt type=space/[ ?={else expression} ]/
             <Grammar.Alt/<<else>> ?={in expression}//
+          <Grammar.Rule/?={escaped variable}
+            <Grammar.Alt/[ <Q class=terminal/<<!>>/ ] ?={variable}//
           <Grammar.Rule/?={monop}
             <Grammar.Alt/<Q class=terminal/<<~>>/ |
               <Q class=terminal/<<!!>>//
@@ -580,8 +581,7 @@
             <Grammar.Alt/?={pattern} <Q class=terminal/<<=>>/ ?={pattern}/
             <Grammar.Alt/?={pattern} <Q class=terminal/<<|>>/ ?={pattern}/
             <Grammar.Alt/?={pattern} { <Q class=terminal/<<#>>/ ?={pattern} }+/
-            <Grammar.Alt/[ <Q class=terminal/<<!>>/ ] ?={variable} |
-              <Q class=terminal/<<_>>//
+            <Grammar.Alt/?={escaped variable} | <Q class=terminal/<<_>>//
             <Grammar.Alt/?={atom} | ?={int} | ?={float}/
             <Grammar.Alt/<<unit>> | <<true>> | <<false>>/
             <Grammar.Alt/?={label} <Q class=terminal/<<(>>/
@@ -621,8 +621,8 @@
             <Grammar.Alt/<<attr>> { ?={attr or feat} }+/
             <Grammar.Alt/<<feat>> { ?={attr or feat} }+//
           <Grammar.Rule/?={attr or feat}
-            <Grammar.Alt/[ <Q class=terminal/<<!>>/ ] ?={variable} | ?={atom} |
-              ?={int}/
+            <Grammar.Alt/[ <Q class=terminal/<<!>>/ ] ?={variable} |
+              ?={atom} | ?={int}/
             <Grammar.Alt/<<unit>> | <<true>> | <<false>>//
         <Para class=apropos><Title/Methods/
           <Grammar.Rule/?={method}
@@ -972,7 +972,7 @@
             <TD/?{S}/
             <TD/?={statement}/
           <TR>
-            <TD/?{E}, ?{E1}, &ellipsis;, ?{En}/
+            <TD/?{E}, ?{E1}, &ellipsis;, ?{Ek}, ?{En}/
             <TD/?={expression}/
           <TR>
             <TD/?{SE}/
@@ -987,6 +987,7 @@
             <TD/?{L}, ?{L1}, &ellipsis;, ?{Ln}/
             <TD/?={cond statement clause} or ?={cond expression clause}/
         </Table>
+        <!--** missing: define pattern variables and positions -->
       <Section>
         <Title/The Base Language/
         <SubSection class=unnumbered>
@@ -1069,6 +1070,18 @@ end>>/
                 ?{P1} &ellipsis; ?{Pn}./
             </Rewrite>
         <SubSection class=unnumbered>
+          <Title/Applications/
+          <P>
+            <Rewrite>?={statement}
+              <Rewrite.From/<<{?{E1} &ellipsis; ?{Ek} &ellipsis; ?{En}}>>/
+              <Rewrite.To
+/<<local X in
+   X = ?{Ek}
+   {?{E1} &ellipsis; X &ellipsis; ?{En}}
+end>>/
+              <Rewrite.Condition/if ?{Ek} is no variable./
+            </Rewrite>
+        <SubSection class=unnumbered>
           <Title/Boolean and Pattern-Matching Conditionals/
           <P>
             <Rewrite>?={else statement} ?={else expression}
@@ -1099,7 +1112,7 @@ end>>/
 else
    raise error(kernel(boolCaseType &ellipsis;) &ellipsis;) end
 end>>/
-              <Rewrite.Condition/where the left-out parts of the exception
+              <Rewrite.Condition/where the omitted parts of the exception
                 are implementation-dependent./
             </Rewrite>
             <Rewrite>?={statement} ?={expression}
@@ -1120,20 +1133,52 @@ end>>/
 else
    raise error(kernel(noElse &ellipsis;) &ellipsis;) end
 end>>/
-              <Rewrite.Condition/where the left-out parts of the exception
+              <Rewrite.Condition/where the omitted parts of the exception
                 are implementation-dependent./
             </Rewrite>
-            <!--** missing: expansion of case statement to conds -->
-            <!--** missing: case expressions -->
+            <!--** missing: expansion of case statement/expression to cond -->
+        <SubSection class=unnumbered>
+          <Title/Locks/
+          <P>
+            <Rewrite>?={statement} ?={expression}
+              <Rewrite.From/<<lock ?{E} then ?{S} end>>/
+              <Rewrite.To
+/<<local X in
+   X = ?{E}
+   lock X then ?{S} end
+end>>/
+              <Rewrite.Condition/if ?{E} is no variable./
+            </Rewrite>
+            <Rewrite>?={expression}
+              <Rewrite.From/<<lock ?{E} then ?{E} end>>/
+              <Rewrite.To
+/<<local X in
+   lock ?{E} then X = ?{E} end
+   X
+end>>/
+            </Rewrite>
+        <SubSection class=unnumbered>
+          <Title/Threads/
+          <P>
+            <Rewrite>?={expression}
+              <Rewrite.From/<<thread ?{E} end>>/
+              <Rewrite.To
+/<<local X in
+   thread X = ?{E} end
+   X
+end>>/
+            </Rewrite>
         <SubSection class=unnumbered>
           <Title/Exception Handling/
           <P>
             <Rewrite>?={statement} ?={expression}
+              <!--** fix this: -->
               <Rewrite.From
 /<<try ?{SE}
 catch ?{C1} [] &ellipsis; [] ?{Cn}
 <Span/[ /finally ?{S1}<Span/ ]/
 end>>/
+              <!--** fix this: -->
               <Rewrite.To
 /<<try ?{SE}
 catch X then
@@ -1162,6 +1207,7 @@ end>>/
    <Span/[ /catch ?{x} then X = ?{E}<Span/ ]/
    <Span/[ /finally ?{S}<Span/ ]/
    end
+   X
 end>>/
             </Rewrite>
             <Rewrite>?={statement}
@@ -1214,9 +1260,69 @@ end>>/
             </Rewrite>
             <!--** missing: definitions of `RaiseDebug{Check,Extend}` -->
         <SubSection class=unnumbered>
+          <Title/Equations/
+          <P>
+            <Rewrite>?={statement}
+              <Rewrite.From/?{E1} = ?{E2}/
+              <Rewrite.To
+/<<local X in
+   X = ?{E1}
+   X = ?{E2}
+end>>/
+              <Rewrite.Condition/if ?{E1} is no variable./
+            </Rewrite>
+            <Rewrite>?={statement}
+              <Rewrite.From/<<?{x} = local ?{D} in >>[ ?{S} ]<< ?{E} end>>/
+              <Rewrite.To
+/<<local X in
+   X = ?{x}
+   local ?{D} in >>[ ?{S} ]<< X = ?{E} end
+end>>/
+            </Rewrite>
+            <Rewrite>?={statement}
+              <Rewrite.From/<<?{x} = proc {$ &ellipsis;} ?{SE} end>>/
+              <Rewrite.To/<<proc {?{x} &ellipsis;} ?{SE} end>>/
+            </Rewrite>
+            <Rewrite>?={statement}
+              <Rewrite.From
+/<<?{x} = {?{E} ?{E1} &ellipsis; ?{En}}>>/
+              <Rewrite.To/<<{?{E} ?{E1} &ellipsis; ?{En} X}>>/
+              <Rewrite.Condition/if no <<$>> occurs in ?{E1} &ellipsis; ?{En}
+                in pattern position./
+            </Rewrite>
+            <Rewrite>?={statement}
+              <Rewrite.From
+/<<?{x} = {?{E} ?{E1} &ellipsis; ?{Ek} &ellipsis; ?{En}}>>/
+              <Rewrite.To/<<{?{E} ?{E1} &ellipsis; ?{Ek'} &ellipsis; ?{En}}>>/
+              <Rewrite.Condition/if <<$>> occurs in&nbsp;?{Ek} in
+                pattern position and no other&nbsp;<<$>> occurs in
+                ?{E1} &ellipsis; ?{En} in pattern position.
+                ?{Ek'} is the result of replacing the&nbsp;<<$>>
+                in pattern position in&nbsp;?{Ek} by&nbsp;<<X>>./
+            </Rewrite>
+        <SubSection class=unnumbered>
           <Title/Operators/
         <SubSection class=unnumbered>
           <Title/Records/
+        <SubSection class=unnumbered>
+          <Title/Simple Expressions/
+          <P>
+            <Rewrite>?={expression}
+              <Rewrite.From/<<_>>/
+              <Rewrite.To/<<local X in X end>>/
+            </Rewrite>
+            <Rewrite>?={expression}
+              <Rewrite.From/<<unit>>/
+              <Rewrite.To/<<`unit`>>/
+            </Rewrite>
+            <Rewrite>?={expression}
+              <Rewrite.From/<<true>>/
+              <Rewrite.To/<<`true`>>/
+            </Rewrite>
+            <Rewrite>?={expression}
+              <Rewrite.From/<<false>>/
+              <Rewrite.To/<<`false`>>/
+            </Rewrite>
       <Section>
         <Title/Class Extensions/
       <Section>
@@ -1229,7 +1335,7 @@ end>>/
             <Rewrite>?={statement} ?={expression}
               <Rewrite.From/<<fail>>/
               <Rewrite.To/<<raise failure(&ellipsis;) end>>/
-              <Rewrite.Condition/where the left-out parts of the exception
+              <Rewrite.Condition/where the omitted parts of the exception
                 are implementation-dependent./
             </Rewrite>
         <SubSection class=unnumbered>
@@ -1256,9 +1362,10 @@ end>>/
 else
    raise error(kernel(noElse &ellipsis;) &ellipsis;) end
 end>>/
-              <Rewrite.Condition/where the left-out parts of the exception
+              <Rewrite.Condition/where the omitted parts of the exception
                 are implementation-dependent./
             </Rewrite>
+            <!--** missing: clauses -->
   <Back>
     <Bib.Extern id="ISO_8859_1" to="notation.bib" key="ISO_8859_1">
 </Book>
