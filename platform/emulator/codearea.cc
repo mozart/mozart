@@ -632,10 +632,11 @@ void CodeArea::display (ProgramCounter from, int sz, FILE* ofile)
       {
         TaggedRef literal = getLiteralArg(PC+2);
         fprintf (ofile,
-                 "(x(%d) %s x(%d))\n",
+                 "(x(%d) %s x(%d) %d)\n",
                  regToInt(getRegArg(PC+1)),
                  toC(literal),
-                 regToInt(getRegArg(PC+3)));
+                 regToInt(getRegArg(PC+3)),
+                 getPosIntArg(PC+4));
       }
       DISPATCH();
 
@@ -644,9 +645,10 @@ void CodeArea::display (ProgramCounter from, int sz, FILE* ofile)
       {
         TaggedRef literal = getLiteralArg(PC+1);
         fprintf (ofile,
-                 "(%s x(%d))\n",
+                 "(%s x(%d) %d)\n",
                  toC(literal),
-                 regToInt(getRegArg(PC+2)));
+                 regToInt(getRegArg(PC+2)),
+                 getPosIntArg(PC+3));
       }
       DISPATCH();
 
@@ -673,8 +675,10 @@ void CodeArea::display (ProgramCounter from, int sz, FILE* ofile)
     case FASTTAILCALL:
       {
         AbstractionEntry *entry = (AbstractionEntry *) getAdressArg(PC+1);
-        int dummy = getPosIntArg(PC+5);
-        fprintf(ofile,"(%p %d)\n",entry,dummy);
+        int dummy = getPosIntArg(PC+2);
+        fprintf(ofile,"(%p[pc:%p n:%d] %d)\n",entry,
+                entry->getPC(),entry->getArity(),
+                dummy);
         DISPATCH();
       }
 
@@ -890,7 +894,7 @@ void CodeArea::display (ProgramCounter from, int sz, FILE* ofile)
 
     case ENDDEFINITION:
       fprintf(ofile, "(%p)\n", getLabelArg (PC+1));
-      if (sz<=0 && defCount==0) return;
+      if (sz<=0 && defCount<=1) return;
       defCount--;
       DISPATCH();
 
@@ -943,7 +947,10 @@ void CodeArea::display (ProgramCounter from, int sz, FILE* ofile)
 
     case GENCALL:
       {
-        fprintf(ofile, "(%p %d)\n", getAdressArg(PC+1),getPosIntArg(PC+2));
+        GenCallInfoClass *gci = (GenCallInfoClass*)getAdressArg(PC+1);
+        fprintf(ofile, "(%p[ri:%d l:%s", gci,gci->regIndex, toC(gci->mn));
+        fprintf(ofile, " a:%s] %d)\n", toC(sraGetArityList(gci->arity)),
+                getPosIntArg(PC+2));
         DISPATCH();
       }
 
