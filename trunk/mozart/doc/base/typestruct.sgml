@@ -126,23 +126,23 @@
 	which indicates that the integer represents a lower bound.
     <SubSection class=unnumbered>
       <Title/Modes/
-      <Para class=apropos><Title/Modes <<+>>,<<?>>, none/
+      <Para class=apropos><Title/Modes ?+{}, ??{}, none/
 	The arguments of procedures can have one of four modes which are
-	indicated by a symbol (<<+>>, <<?>>, none) attached to the arguments
+	indicated by a symbol (?+{}, ??{}, none) attached to the arguments
 	in the signature.
       <P>
 	Modes indicate the synchronisation behaviour of a procedure.  The
-	application of a procedure&nbsp;<<P>> waits until its inputs (<<+>>)
+	application of a procedure&nbsp;<<P>> waits until its inputs (?+{})
 	are determined.  If the input arguments are well-typed, <<P>> will
-	return outputs (<<?>>) of the specified types.  Ill-typed input
+	return outputs (??{}) of the specified types.  Ill-typed input
 	arguments will raise a type error exception.  Types may be incompletely
 	checked, especially those of of output arguments:  This happens when
 	a value needs not be completely processed to perform an operation,
 	&eg;, in <<List.dropWhile>>.
       <P>
 	Occasionally, signatures of the base language will use the input
-	mode&nbsp;<<*>>.  Unless one uses any primitives from the constraint
-	extensions, this is identical with&nbsp;<<+>>.
+	mode&nbsp;?*{}.  Unless one uses any primitives from the constraint
+	extensions, this is identical with&nbsp;?+{}.
     <SubSection class=unnumbered>
       <Title/Naming Conventions/
       <Para class=apropos><Title/Aliases/
