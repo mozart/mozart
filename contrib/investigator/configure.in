@@ -1,5 +1,5 @@
 dnl -*-sh-*-
-AC_INIT(Investigator.oz)
+AC_INIT(ConstraintGraph.oz)
 OZ_CONTRIB_INIT_CXX
 OZ_LIB_GMP
 
