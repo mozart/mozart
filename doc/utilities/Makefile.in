@@ -36,14 +36,16 @@ OZAR            = ozar
 EMACS           = emacs
 
 FUNCTORS = \
-        SGML.ozf AuthorDB.ozf BibliographyDB.ozf Fontifier.ozf MathToGIF.ozf \
-        OzDocToHTML.ozf Main.ozf
+        SGML.ozf AuthorDB.ozf BibliographyDB.ozf Fontifier.ozf Thumbnails.ozf \
+        MathToGIF.ozf OzDocToHTML.ozf Main.ozf
 SYSLETS = ozdoc
-ELCS = ozdoc.elc
+ELS = ozdoc.el
+ELCS = $(ELS:%.el=%.elc)
+SHELLSCRIPTS = fontify latex2gif gif2thumbnail
 
 BINFILES = $(SYSLETS:%=$(BINDIR)/%)
-DOCFILES = $(DOCDIR)/fontify $(DOCDIR)/latex2gif
-ELISPFILES = $(ELCS:%=$(ELISPDIR)/%)
+DOCFILES = $(SHELLSCRIPTS:%=$(DOCDIR)/%)
+ELISPFILES = $(ELS:%=$(ELISPDIR)/%) $(ELCS:%=$(ELISPDIR)/%)
 
 .PHONY: bootstrap all clean veryclean distclean
 
