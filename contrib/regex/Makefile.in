@@ -6,7 +6,8 @@ PROTOCOL	= @PROTOCOL@
 DIR_LOAD	= $(prefix)/cache/$(PROTOCOL)/$(PACKAGE)
 DIR_DLOAD	= $(prefix)/platform/$(PLATFORM)/cache/$(PACKAGE)
 
-OZBATCH		= @OZBATCH@
+OZC		= @OZC@
+COMPILE		= $(OZC) -c
 OZDYNLD		= @OZDYNLD@
 MKINSTALLDIRS	= @MKINSTALLDIRS@
 
@@ -22,7 +23,7 @@ INSTALL_DIR	= $(MKINSTALLDIRS)
 INSTALL_BIN	= $(INSTALL) -m 555
 INSTALL_LIB	= $(INSTALL) -m 444
 
-POSIX_LOAD	= posix.ozc
+POSIX_LOAD	= posix.ozf
 POSIX_DLOAD	= posix.so
 
 ALL_LOAD	= $(POSIX_LOAD)
@@ -57,8 +58,8 @@ $(subst %,\%,$(DIR_LOAD))/%: %
 $(subst %,\%,$(DIR_DLOAD))/%: %
 	$(INSTALL_LIB) $< $@
 
-$(ALL_LOAD): %.ozc : %.oz
-	$(OZBATCH) -c $<
+$(ALL_LOAD): %.ozf : %.oz
+	$(COMPILE) $< -o $@
 
 $(ALL_DLOAD): %.so : %.o
 	$(OZDYNLD) -o $@ $< $(LDFLAGS) $(LIBS)
@@ -67,7 +68,7 @@ $(ALL_DLOAD): %.so : %.o
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $<
 
 clean veryclean:
-	-$(RM) *~ *.ozc *.o *.so
+	-$(RM) *~ *.ozf *.o *.so
 
 distclean: clean
 	-$(RM) config.* Makefile posix.oz
