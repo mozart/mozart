@@ -105,7 +105,7 @@ public:
   virtual OZ_Term typeV();
   virtual Bool isChunkV() { return NO; }
   virtual OZ_Return eqV(OZ_Term);
-  virtual int marshalV(MsgBuffer*);
+  virtual int marshalV(void*);
   virtual void printStreamV(ostream &out,int depth = 10);
   virtual void printLongStreamV(ostream &out,
 				int depth=10,int offset=0);
@@ -192,7 +192,7 @@ public:
   virtual OZ_Term typeV();
   virtual Bool isChunkV() { return NO; }
   virtual OZ_Return eqV(OZ_Term);
-  virtual int marshalV(MsgBuffer*);
+  virtual int marshalV(void*);
   virtual void printStreamV(ostream &out,int depth = 10);
   virtual void printLongStreamV(ostream &out,
 				int depth=10,int offset=0);
