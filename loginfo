@@ -26,7 +26,7 @@ Oz/FDLib	mail -s "I have changed %s" scheidhr,tmueller,wuertz
 Oz/Compiler	mail -s "I have changed %s" henz,scheidhr
 Oz/Toto		mail -s "I have changed %s" henz,reiter
 Oz/include	mail -s "I have changed %s" scheidhr,tmueller,henz,erik
-Oz/lib		mail -s "I have changed %s" henz,wuertz,popow,tmueller,nilsf
+Oz/lib		mail -s "I have changed %s" henz,wuertz,tmueller,nilsf
 Oz/demo		mail -s "I have changed %s" wuertz
 Oz/elisp	mail -s "I have changed %s" scheidhr
 Oz/plugin	mail -s "I have changed %s" paralic
