@@ -13,6 +13,7 @@ SGMLSRCS =      0.sgml \
                 ip_tutorial.sgml \
                 u_basic_concepts.sgml \
                 u_vectors.sgml \
+                u_connect.sgml \
                 lp_tutorial.sgml \
                 u_getting_started.sgml \
                 r_anhang.sgml
