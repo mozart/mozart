@@ -35,7 +35,6 @@
 #include "debug.hh"
 #include "var_ext.hh"
 #include "table.hh"
-#include "controlvar.hh"
 
 class ObjectFields;
 
@@ -53,24 +52,6 @@ public:
     freeListDispose(this,sizeof(ProxyList));
   }
   ProxyList *gcProxyList();
-};
-
-class PendBinding {
-public:
-  TaggedRef val;
-  TaggedRef controlvar;
-  PendBinding *next;
-public:
-  PendBinding() { DebugCheckT(val=4711; controlvar=0; next=this;) }
-  PendBinding(TaggedRef v,TaggedRef cv,PendBinding *nxt)
-    : val(v), controlvar(cv), next(nxt) {}
-  USEFREELISTMEMORY;
-
-  void dispose()
-  {
-    freeListDispose(this,sizeof(PendBinding));
-  }
-  PendBinding *gcPendBinding();
 };
 
 class PerdioVar: public ExtVar {
@@ -95,8 +76,10 @@ public:
 class ProxyManagerVar : public PerdioVar {
 protected:
   int index;
+  TaggedRef binding;
 public:
-  ProxyManagerVar(Board *bb,int i) : PerdioVar(bb), index(i) { }
+  ProxyManagerVar(Board *bb,int i)
+    : PerdioVar(bb), index(i), binding(0) { }
 
   VariableStatus statusV() { return OZ_FREE; }
   Bool validV(TaggedRef v) { return TRUE; }
@@ -114,12 +97,8 @@ public:
 };
 
 class ProxyVar : public ProxyManagerVar {
-protected:
-  PendBinding *bindings;
-protected:
-  void redirect(OZ_Term val);
 public:
-  ProxyVar(Board *bb, int i) : ProxyManagerVar(bb,i), bindings(0) { }
+  ProxyVar(Board *bb, int i) : ProxyManagerVar(bb,i) { }
 
   int getIdV() { return OZ_EVAR_PROXY; }
   VariableStatus statusV() { return OZ_FREE; }
@@ -129,25 +108,7 @@ public:
   void printStreamV(ostream &out,int depth = 10) { out << "<dist:pxy>"; }
   OZ_Return bindV(TaggedRef *vptr, TaggedRef t);
 
-  Bool gcIsAliveV() { return getSuspList()!=0 || hasVal(); }
-
-  int hasVal() { return bindings!=0; }
-
-  OZ_Return setVal(OZ_Term t) {
-    Assert(bindings==0);
-    ControlVarNew(controlvar,GETBOARD(this));
-    PD((THREAD_D,"stop thread setVal %x",oz_currentThread()));
-    bindings=new PendBinding(t,controlvar,0);
-    SuspendOnControlVar;
-  }
-
-  OZ_Return pushVal(OZ_Term t) {
-    Assert(bindings!=0);
-    ControlVarNew(controlvar,GETBOARD(this));
-    PD((THREAD_D,"stop thread pushVal %x",oz_currentThread()));
-    bindings->next=new PendBinding(t,controlvar,bindings->next);
-    SuspendOnControlVar;
-  }
+  Bool gcIsAliveV() { return getSuspList()!=0 || binding!=0; }
 
   void proxyBind(TaggedRef *vPtr,TaggedRef val, BorrowEntry *be);
   void proxyAck(TaggedRef *vPtr, BorrowEntry *be);
@@ -165,6 +126,7 @@ ProxyVar *oz_getProxyVar(TaggedRef v) {
   return (ProxyVar*) oz_getExtVar(v);
 }
 
+// #define ORIG
 class ManagerVar : public ProxyManagerVar {
 private:
   ProxyList *proxies;
@@ -183,8 +145,11 @@ public:
   void printStreamV(ostream &out,int depth = 10) { out << "<dist:mgr>"; }
   OZ_Return bindV(TaggedRef *vptr, TaggedRef t);
 
+#ifdef ORIG
+  Bool gcIsAliveV() { return origVar->getSuspList()!=0; }
+#else
   Bool gcIsAliveV() { return getSuspList()!=0; }
-
+#endif
   void registerSite(DSite* sd) {
     // test if already registered
     for (ProxyList *pl = proxies; pl != 0; pl=pl->next) {
