@@ -488,6 +488,9 @@ that are part of the system but loaded only when needed.
 Furthermore, an application can define more
 modules by means of functors that are
 imported from other modules.
+A <em>functor</em> is a module specification
+that makes explicit the resources needed
+by the module.
 
 <P>All base modules are unsited.
 For example, a procedure that does additions
