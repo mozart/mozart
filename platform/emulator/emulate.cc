@@ -462,7 +462,7 @@ void ThreadsPool::disposeThread(Thread *th)
   }
 }
 
-void AM::handleToplevelBlocking()
+void AM::handleToplevelBlocking(ProgramCounter PC)
 {
   prefixError();
   message("******************************************\n");
@@ -470,17 +470,17 @@ void AM::handleToplevelBlocking()
   message("\n");
   message("(Hint: don't forget to use task ... end)\n");
   message("\n");
-  currentThread->printDebug(NOCODE,NO,10000);
+  currentThread->printDebug(PC,NO,10000);
   message("******************************************\n");
   rootThread=newThread(currentThread->getPriority(),rootBoard);
   checkToplevel();
   currentThread=0;
 }
 
-#define CHECKTOPLEVELSEQ			 \
+#define CHECKTOPLEVELSEQ(PC)			 \
   if (e->currentThread->compMode == ALLSEQMODE && \
       e->currentThread==e->rootThread) {	\
-    e->handleToplevelBlocking();		\
+    e->handleToplevelBlocking(PC);		\
     goto LBLstart;				\
   }
 
@@ -1346,7 +1346,7 @@ void engine() {
 	    killPropagatedCurrentTaskSusp();
 	    LOCAL_PROPAGATION(if (! localPropStore.do_propagation())
 			      goto localhack0;);
-	    CHECKTOPLEVELSEQ;
+	    CHECKTOPLEVELSEQ(NOCODE);
 	    Suspension *susp = e->mkSuspension(CBB,CPP,biFun,X,XSize);
 	    e->suspendOnVarList(susp);
 	    CHECKSEQ;
@@ -1553,7 +1553,7 @@ void engine() {
       switch (fun(arity, X)){
       case SUSPEND:
 	{
-	  CHECKTOPLEVELSEQ;
+	  CHECKTOPLEVELSEQ(PC);
 	  e->pushTaskOutline(CBB,PC+3,Y,G,0,0);
 	  Suspension *susp = e->mkSuspension(CBB,CPP,fun,X,arity);
 	  e->suspendOnVarList(susp);
@@ -1591,7 +1591,7 @@ void engine() {
 	  e->trail.pushIfVar(XPC(2));
 	  DISPATCH(4);
 	}
-	CHECKTOPLEVELSEQ;
+	CHECKTOPLEVELSEQ(PC);
 	e->pushTaskOutline(CBB,PC+4,Y,G,X,getPosIntArg(PC+3));
 	e->suspendInline(CBB,CPP,entry->getFun(),1,XPC(2));
 	CHECKSEQ;
@@ -1619,7 +1619,7 @@ void engine() {
 	    DISPATCH(5);
 	  }
 
-	  CHECKTOPLEVELSEQ;
+	  CHECKTOPLEVELSEQ(PC);
 	  e->pushTaskOutline(CBB,PC+5,Y,G,X,getPosIntArg(PC+4));
 	  e->suspendInline(CBB,CPP,entry->getFun(),2,XPC(2),XPC(3));
 	  CHECKSEQ;
@@ -1649,7 +1649,7 @@ void engine() {
 	    e->trail.pushIfVar(A);
 	    DISPATCH(5);
 	  }
-	  CHECKTOPLEVELSEQ;
+	  CHECKTOPLEVELSEQ(PC);
 	  e->pushTaskOutline(CBB,PC+5,Y,G,X,getPosIntArg(PC+4));
 	  e->suspendInline(CBB,CPP,entry->getFun(),2,A,B);
 	  CHECKSEQ;
@@ -1683,7 +1683,7 @@ void engine() {
 	    e->trail.pushIfVar(B);
 	    DISPATCH(6);
 	  }
-	  CHECKTOPLEVELSEQ;
+	  CHECKTOPLEVELSEQ(PC);
 	  e->pushTaskOutline(CBB,PC+6,Y,G,X,getPosIntArg(PC+5));
 	  e->suspendInline(CBB,CPP,entry->getFun(),3,A,B,C);
 	  CHECKSEQ;
@@ -1719,7 +1719,7 @@ void engine() {
 	    e->trail.pushIfVar(C);
 	    DISPATCH(7);
 	  }
-	  CHECKTOPLEVELSEQ;
+	  CHECKTOPLEVELSEQ(PC);
 	  e->pushTaskOutline(CBB,PC+7,Y,G,X,getPosIntArg(PC+6));
 	  e->suspendInline(CBB,CPP,entry->getFun(),4,A,B,C,D);
 	  CHECKSEQ;
@@ -1746,7 +1746,7 @@ void engine() {
 	  TaggedRef A=XPC(2);
 	  TaggedRef B=XPC(3);
 	  TaggedRef C=XPC(4) = makeTaggedRef(newTaggedUVar(CBB));
-	  CHECKTOPLEVELSEQ;
+	  CHECKTOPLEVELSEQ(PC);
 	  e->pushTaskOutline(CBB,PC+6,Y,G,X,getPosIntArg(PC+5));
 	  e->suspendInline(CBB,CPP,entry->getFun(),3,A,B,C);
 	  CHECKSEQ;
@@ -1780,7 +1780,7 @@ void engine() {
       case FAILED:  JUMP( getLabelArg(PC+3) );
 
       case SUSPEND:
-	CHECKTOPLEVELSEQ;
+	CHECKTOPLEVELSEQ(PC);
 	{
 	  Suspension *susp = e->mkSuspension(CBB,CPP,
 					     PC,Y,G,X,getPosIntArg(PC+4));
@@ -1803,7 +1803,7 @@ void engine() {
 
       case SUSPEND:
 	{
-	  CHECKTOPLEVELSEQ;
+	  CHECKTOPLEVELSEQ(PC);
 	  Suspension *susp=e->mkSuspension(CBB,CPP,
 					   PC,Y,G,X,getPosIntArg(PC+5));
 	  OZ_Term A=XPC(2);
@@ -1834,7 +1834,7 @@ void engine() {
 	printSuspension(PC);
       }
 
-      CHECKTOPLEVELSEQ;
+      CHECKTOPLEVELSEQ(shallowCP);
       int argsToSave = getPosIntArg(shallowCP+2);
       Suspension *susp = e->mkSuspension(CBB,CPP,
 					 shallowCP,Y,G,X,argsToSave);
@@ -1963,7 +1963,7 @@ void engine() {
     /* INCFPC(3); do NOT suspend on next instructions: DET suspensions are
                   woken up always, even if variable is bound to another var */
 
-    CHECKTOPLEVELSEQ;
+    CHECKTOPLEVELSEQ(PC);
     int argsToSave = getPosIntArg(PC+2);
     Suspension *susp = e->mkSuspension(CBB,CPP,PC,Y,G,X,argsToSave);
     addSusp(makeTaggedRef(termPtr),susp);
@@ -1989,7 +1989,7 @@ void engine() {
     if (!isAnyVar(tag)) {
       DISPATCH(3);
     }
-    CHECKTOPLEVELSEQ;
+    CHECKTOPLEVELSEQ(PC);
     int argsToSave = getPosIntArg(PC+2);
     /* INCFPC(3); // suspend on next instruction!
      * mm: bug fixed: do not suspend on next instruktion (var - var binding)
@@ -2241,7 +2241,7 @@ void engine() {
 
 	      predicate = bi->getSuspHandler();
 	      if (!predicate) {
-		CHECKTOPLEVELSEQ;
+		CHECKTOPLEVELSEQ(PC);
 		if (!isTailCall) e->pushTaskOutline(CBB,PC,Y,G);
 		Suspension *susp=e->mkSuspension(CBB,CPP,
 						 bi->getFun(),X,predArity);
