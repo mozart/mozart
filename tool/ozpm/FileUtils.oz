@@ -1,7 +1,7 @@
 functor
 export
    Expand FileTree Mkdir Rmtree Exists WithSlash FullName
-   Dirname Basename AddToPath
+   Dirname Basename AddToPath CreatePath
 import
    URL(toVirtualStringExtended isAbsolute make toBase toVirtualStringExtended resolve) Resolve(expand)
    OS(getDir stat system unlink)
@@ -103,16 +103,6 @@ define
    %%
    %% adds a trailing slash if not present
    %%
-%   fun{WithSlash N}
-%      V={VirtualString.toString N}
-%   in
-%      if (Windows andthen {List.last V}\=&\\)
-%	 orelse ((Windows==false) andthen {List.last V}\=&/) then
-%	 {VirtualString.toString V#if Windows then "\\" else "/" end}
-%      else
-%	 V
-%      end
-%  end
    fun{WithSlash N}
       {VirtualString.toString {URL.toVirtualStringExtended {URL.toBase N} o(full:true raw:true)}}
    end
@@ -155,5 +145,18 @@ define
       U = {URL.make {Encode F}}
    in
       case {Reverse U.path} of H|_ then H end
+   end
+   %%
+   %%
+   proc{CreatePath P}
+      if {Exists P} then skip else
+	 if {Exists {Dirname P}}==false then
+	    {CreatePath {Dirname P}}
+	 end
+	 {Mkdir P}
+      end
+      if {OS.stat P}.type\=dir then
+	 raise error(unableToCreateDirectory P) end
+      end
    end
 end

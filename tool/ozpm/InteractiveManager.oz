@@ -3,8 +3,8 @@ export 'class' : InteractiveManager
 import
    Application
    QTk at 'http://www.info.ucl.ac.be/people/ned/qtk/QTk.ozf'
+   Global(ozpmInfo)
    System(show:Show)
-   
 define
 
    ArchiveManager
@@ -50,6 +50,8 @@ define
       feat dataPlace dataLabel infoPlace infoLabel
 
       attr data info
+
+      meth run InteractiveManager,init(Global.ozpmInfo thereIsNotArchiveManager) end
 	 
       meth init(OI AM)
 	 Look={QTk.newLook}
