@@ -663,8 +663,8 @@ The ticket is available through a publicly-accessible URL.
 local
    S={NewStat ChannelServer init(S)}
 in
-  {Pickle.save {Connection.offerUnlimited S}
-               "/usr/staff/pvr/public_html/chat"}
+   {Pickle.save {Connection.offerUnlimited S}
+                "/usr/staff/pvr/public_html/chat"}
 end
 >>>
 
@@ -725,18 +725,22 @@ class ChannelClient
    <chunk.ref/Client interface to server/
 end
 
-class ChannelServer
-   prop locking
-   feat SelfStatic
-   attr clientList
-   meth init(S)
-      lock
-         self.SelfStatic=S
-         clientList<-nil
+local
+   <chunk.ref/Concurrent ForAll procedure/
+in
+   class ChannelServer
+      prop locking
+      feat SelfStatic
+      attr clientList
+      meth init(S)
+         lock
+            self.SelfStatic=S
+            clientList<-nil
+         end
       end
+      <chunk.ref/Server's getMakeClient method/
+      <chunk.ref/Server interface to client/
    end
-   <chunk.ref/Server's getMakeClient method/
-   <chunk.ref/Server interface to client/
 end
 </chunk>
 
@@ -775,7 +779,7 @@ meth sendMessage(Msg)
 end
 
 meth close
-   {self.server unregister(self.selfStatic)}
+   {self.server unregister(self.selfStatic self.userID)}
 end
 </chunk>
 
@@ -795,6 +799,34 @@ meth getMakeNewClient(MakeNewClient)
 end
 </chunk>
 
+<P>The server needs a concurrent ForAll procedure that
+invokes all commands concurrently and waits until
+they are all finished.  This is important for implementing
+broadcasts.  With the concurrent ForAll, the
+time for the broadcast is the <em>maximum</em> of
+all client round-trip times, instead of the <em>sum</em>,
+if the broadcast would sequentially send to each client
+and wait for an acknowledgement before continuing.
+<chunk><title/Concurrent ForAll procedure/
+proc {ConcurrentForAll Ls P}
+   Sync
+   proc {LoopConcurrentForAll Ls PrevSync FinalSync}
+      case Ls
+      of L|Ls2 then
+      NewSync in
+         thread {P L} PrevSync=NewSync end
+         {LoopConcurrentForAll Ls2 NewSync FinalSync}
+      [] nil then
+         PrevSync=FinalSync
+      end
+   end
+in
+   {LoopConcurrentForAll Ls unit Sync}
+   {Wait Sync}
+end
+</chunk>
+
+
 <P>The server provides three methods for the client,
 namely <<register>>, <<unregister>>, and <<broadcast>>.
 A client can register to the broadcast channel by calling the
@@ -808,41 +840,30 @@ The broadcast call will block until the message has
 reached all the clients.
 <chunk><title/Server interface to client/
 meth register(Client UserID)
+CL in
    lock
+      CL=@clientList
       clientList <- c(ref:Client id:UserID)|@clientList
    end
+   {ConcurrentForAll CL
+      proc {$ Element} {Element.ref put(registered(UserID))} end}
 end
 
-meth unregister(Client)
+meth unregister(Client UserID)
+CL in
    lock
       clientList <-
          {List.filter @clientList
             fun {$ Element} Element.ref\=Client end}
+      CL=@clientList
    end
+   {ConcurrentForAll CL
+      proc {$ Element} {Element.ref put(unregistered(UserID))} end}
 end
 
 meth broadcast(SenderID Msg)
-  proc {ConcurrentForAll Ls P}
-    Sync
-    proc {DoConcurrentForAll Ls PrevSync FinalSync}
-       case Ls
-       of L|Ls2 then
-       NewSync in
-          thread {P L} PrevSync=NewSync end
-          {DoConcurrentForAll Ls2 NewSync FinalSync}
-       [] nil then
-          PrevSync=FinalSync
-       end
-    end
-  in
-    {DoConcurrentForAll Ls unit Sync}
-    {Wait Sync}
-  end
-in
-  {ConcurrentForAll @clientList
-     proc {$ Element}
-       {Element.ref put(message(SenderID Msg))}
-     end}
+   {ConcurrentForAll @clientList
+      proc {$ Element} {Element.ref put(message(SenderID Msg))} end}
 end
 </chunk>
 
@@ -912,7 +933,7 @@ meth init(Server SelfReference UsrMsgHandler UserID)
          try
             {SelfReference Msg}
          catch remoteObjectError then
-            {Server unregister(Client)}
+            {Server unregister(self.selfStatic self.userId)}
             {Server broadcastCrashEvent(UserID)}
          end
       end
