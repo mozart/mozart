@@ -1,0 +1,15 @@
+#! /usr/local/bin/perl
+
+# this script is invoked by commitinfo and checks if a user
+# has the permission to check into /CVS (mm 980311)
+
+$unwantedPattern="(nobody|ozcvs)";
+
+$login = getlogin || (getpwuid($<))[0] || "nobody";
+
+if ("$login" =~ $unwantedPattern) {
+  print "user $login: is not allowd to check into /CVS\n";
+  exit 1;
+}
+
+exit 0;
