@@ -388,3 +388,9 @@ Suspension *Thread::popSuspension()
   flags = T_Normal;
   return ret;
 }
+
+#ifdef OUTLINE
+#define inline
+#include "thread.icc"
+#undef inline
+#endif

@@ -22,6 +22,17 @@
 
 // ------------------------------------------------------------------------
 
+enum ActorFlags {
+  Ac_None	= 0,
+  Ac_Ask	= 1<<0,
+  Ac_Wait	= 1<<1,
+  Ac_Committed	= 1<<2,
+  Ac_WaitTop	= 1<<3,
+  Ac_DisWait	= 1<<4,
+};
+
+// ------------------------------------------------------------------------
+
 class Actor : public ConstTerm {
 protected:
   int flags;
@@ -43,19 +54,20 @@ public:
 
   void addChild(Board *n);
   void failChild(Board *n);
-  Continuation *getNext();
-  int getPriority();
-  Board *getBoard();
-  Bool hasNext();
-  Bool isCommitted();
-  Bool isAsk();
-  Bool isLeaf();
-  Bool isWait();
-  Bool isDisWait();
-  void lastClause();
-  void nextClause(ProgramCounter pc);
-  void setCommitted();
-  void setDisWait();
+  Continuation *getNext() { return &next;}
+  int getPriority() { return priority; }
+  Board *getBoard() { return board; }
+  Bool hasNext() { return next.getPC() == NOCODE ? NO : OK; }
+  Bool isCommitted() { return flags & Ac_Committed ? OK : NO; }
+  Bool isAsk() { return flags & Ac_Ask ? OK : NO; }
+  Bool isLeaf() { return childCount == 0 && next.getPC() == NOCODE ? OK : NO; }
+  Bool isWait() { return flags & Ac_Wait ? OK : NO; }
+  Bool isDisWait() { return flags & Ac_DisWait ? OK : NO; }
+  void lastClause() { next.setPC(NOCODE); }
+  void nextClause(ProgramCounter pc) { next.setPC(pc); }
+  void setCommitted() { flags |= Ac_Committed; }
+  void setDisWait() { flags |= Ac_DisWait; }
+
 };
 
 // ------------------------------------------------------------------------
@@ -69,7 +81,8 @@ public:
 	   ProgramCounter p, RefsArray y,RefsArray g, RefsArray x, int i);
   ~AskActor();
 
-  ProgramCounter getElsePC();
+  ProgramCounter getElsePC() { return elsePC; }
+
 };
 
 AskActor *CastAskActor(Actor *a);

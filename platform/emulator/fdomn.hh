@@ -20,10 +20,6 @@
 #include "term.hh"
 #include "bignum.hh"
 
-#ifdef OUTLINE
-#define inline
-#endif
-
 // CAUTION:
 // Make sure that only references to LocalFD are returned otherwise
 // you can get in big trouble!
@@ -305,9 +301,7 @@ inline TaggedRef makeRangeTuple(int from, int to){
 } // makeRangeTupel
 
 
-#ifdef OUTLINE
-#undef inline
-#else
+#ifndef OUTLINE
 #include "fdomn.icc"
 #endif
 

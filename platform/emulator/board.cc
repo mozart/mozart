@@ -20,10 +20,6 @@
 #include "board.hh"
 #include "actor.hh"
 
-#ifdef OUTLINE
-#define inline
-#endif
-
 /* some random comments:
    flags:
      type:
@@ -75,19 +71,6 @@
     Bo_Discarded
     */    
 
-enum BoardFlags {
-  Bo_Ask	= 1<<0,
-  Bo_Wait	= 1<<1,
-  Bo_Root	= 1<<2,
-  Bo_Installed	= 1<<3,
-  Bo_Nervous	= 1<<4,
-  Bo_WaitTop	= 1<<5,
-  Bo_PathMark	= 1<<6,
-  Bo_Failed	= 1<<7,
-  Bo_Committed	= 1<<8,
-  Bo_Discarded	= 1<<9,
-  Bo_Waiting    = 1<<10
-};
 
 void Board::Init()
 {
@@ -142,119 +125,6 @@ Board::~Board() {
   error("mm2: not yet impl");
 }
 
-inline Actor *Board::getActor()
-{
-  DebugCheck(isCommitted(),error("Board::getActor"));
-  return u.actor;
-}
-
-inline Continuation *Board::getBodyPtr()
-{
-  return &body;
-}
-
-inline Board *Board::getParentBoard()
-{
-  DebugCheck(isCommitted(),error("Board::getParentBoard"));
-  return u.actor->getBoard();
-}
-
-inline ConsList &Board::getScriptRef()
-{
-  return script;
-}
-
-inline Board *Board::getBoard()
-{
-  return u.board;
-}
-
-inline Bool Board::hasSuspension()
-{
-  return suspCount == 0 ? NO : OK;
-}
-
-inline Bool Board::isAsk()
-{
-  return flags & Bo_Ask ? OK : NO;
-}
-
-inline Bool Board::isCommitted()
-{
-  return flags & Bo_Committed ? OK : NO;
-}
-
-/* are we a sibling of a committed board ?
-   NOTE: handle root node correctly
-         only looks at immediate parent */
-inline Bool Board::isDiscarded()
-{
-  Bool ret=NO;
-  if (flags & Bo_Discarded) {
-    ret = OK;
-  } else if (!isCommitted() && u.actor && u.actor->isCommitted()) {
-    DebugCheck(isInstalled(),error("Board: discarded & installed"));
-    flags |= Bo_Discarded;
-    ret = OK;
-  }
-  return ret;
-}
-
-inline Bool Board::isFailed()
-{
-  return flags & Bo_Failed ? OK : NO;
-}
-
-inline Bool Board::isInstalled()
-{
-  return flags & Bo_Installed ? OK : NO;
-}
-
-inline Bool Board::isNervous()
-{
-  return flags & Bo_Nervous ? OK : NO;
-}
-
-inline Bool Board::isWaiting()
-{
-  return flags & Bo_Waiting ? OK : NO;
-}
-
-inline Bool Board::isPathMark()
-{
-  return flags & Bo_PathMark ? OK : NO;
-}
-
-inline Bool Board::isWaitTop()
-{
-  return flags & Bo_WaitTop ? OK : NO;
-}
-
-inline Bool Board::isWait()
-{
-  return flags & Bo_Wait ? OK : NO;
-}
-
-inline Bool Board::isRoot()
-{
-  return flags & Bo_Root ? OK : NO;
-}
-
-inline void Board::newScript(int size)
-{
-  script.allocate(size);
-}
-
-
-inline void Board::setBody(ProgramCounter p,RefsArray y,
-			    RefsArray g,RefsArray x,int i)
-{
-  body.setPC(p);
-  body.setY(y);
-  body.setG(g);
-  body.setX(x,i);
-}
-
 Actor *Board::FailCurrent()
 {
   Board *bb = am.currentBoard;
@@ -268,64 +138,10 @@ Actor *Board::FailCurrent()
   return ret;
 }
 
-inline void Board::setInstalled()
-{
-  flags |= Bo_Installed;
-}
-
-inline void Board::setNervous()
-{
-  flags |= Bo_Nervous;
-}
-
-inline void Board::setWaiting()
-{
-  flags |= Bo_Waiting;
-}
-
-inline void Board::setPathMark()
-{
-  flags |= Bo_PathMark;
-}
-
-inline void Board::setScript(int i,TaggedRef *v,TaggedRef r)
-{ 
-  script[i].setLeft(v);
-  script[i].setRight(r);
-}
-
-inline void Board::setCommitted(Board *s)
-{
-  DebugCheck(isInstalled(),error("setCommitted"));
-  flags |= Bo_Committed;
-  u.actor->setCommitted();
-  u.board = s;
-}
-
-inline void Board::setWaitTop()
-{
-  flags |= Bo_WaitTop;
-}
-
-inline void Board::unsetInstalled()
-{
-  flags &= ~Bo_Installed;
-}
-
-inline void Board::unsetNervous()
-{
-  flags &= ~Bo_Nervous;
-}
-
-inline void Board::unsetPathMark()
-{
-  flags &= ~Bo_PathMark;
-}
-
 // -------------------------------------------------------------------------
 
-
 #ifdef OUTLINE
+#define inline
 #include "board.icc"
 #undef inline
 #endif
