@@ -42,10 +42,13 @@
 #undef IRIX
 #undef OS2
 #undef RHAPSODY
+#undef POWERMAC
 
 #undef ARCH_I486
 #undef ARCH_SPARC
 #undef ARCH_MIPS
+#undef ARCH_PPC
+#undef ARCH_DARWIN
 
 #undef SUNPRO
 
