@@ -1591,8 +1591,18 @@ OZ_BI_define(unix_exec,3,1){
         RETURN_UNIX_ERROR("setrlimit");
       }
 
-      for (int i = max(STDIN_FILENO,max(STDOUT_FILENO,STDERR_FILENO))+1; i < FD_SETSIZE; i++)
-        close(i);
+      if (do_kill) {
+        for (int i=2; i<FD_SETSIZE; i++)
+          close(i);
+      } else {
+        for (int i=FD_SETSIZE; i--; )
+          close(i);
+
+        WRAPCALL("open",open("/dev/null", O_RDWR),dn);
+
+        osdup(dn);
+        osdup(dn);
+      }
 
       if (execvp(s,argv)  < 0) {
         RETURN_UNIX_ERROR("execvp");
@@ -1614,7 +1624,6 @@ OZ_BI_define(unix_exec,3,1){
     free(argv[i]);
 
   if (do_kill) {
-    message("Adding %d\n",pid);
     addChildProc(pid);
   }
 
