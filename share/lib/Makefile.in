@@ -3,6 +3,9 @@ BUILDDIR        = $(BUILDTOP)/share/lib
 VPATH           = @srcdir@
 SRCDIR          = @srcdir@
 HOMEURL         = @HOMEURL@
+BOOTURL         = x-oz://boot
+SYSTEMURL       = x-oz://system
+PLATFORM        = @PLATFORM@
 
 PREFIX          = @prefix@
 OZPREFIX        = @prefix@
@@ -89,22 +92,23 @@ GTKSRC  = GTK GDK Glade GnomeCanvas GTKSimpleBuilder
 SUPPSRC = Type Narrator Listener ErrorListener DefaultURL ObjectSupport
 MACSRC  = Macro BackquoteMacro LoopMacro
 
-RUNFUNCTORS = \
+RUNFUNCTORS1 = \
         $(SPSRC:%=%.ozf) \
         $(OPSRC:%=%.ozf) \
         $(APSRC:%=%.ozf) \
         $(CPSRC1:%=%.ozf) \
-        $(MACSRC:%=%.ozf) \
-        Init.ozf
+        $(MACSRC:%=%.ozf)
+RUNFUNCTORS = $(RUNFUNCTORS1) Init.ozf
 
-FUNCTORS = \
-        $(RUNFUNCTORS) \
+FUNCTORS1 = \
+        $(RUNFUNCTORS1) \
         $(DPSRC:%=%.ozf) \
         $(WPSRC:%=%.ozf) \
         $(GTKSRC:%=%.ozf) \
         $(SUPPSRC:%=%.ozf) \
         $(CPSRC2:%=%.ozf) \
         Compiler.ozf
+FUNCTORS = $(FUNCTORS1) Init.ozf
 
 SYSLETS = ozc ozl
 
@@ -359,6 +363,7 @@ ozl: Base.ozf DefaultURL.ozf linker/Print.oz linker/Main.oz linker/Link.oz
 
 LIBFUNCTORS = \
         $(FUNCTORS:%=$(OZLIB)/%)
+
 BINFILES = \
         $(SYSLETS:%=$(OZBIN)/%)
 
@@ -367,21 +372,34 @@ BOOTOZCTXT      = boot-ozc.ozt
 
 install: install-main install-images install-cache
 
-install-main: all \
-        $(OZLIB) $(LIBFUNCTORS) \
-        $(OZBIN) $(BINFILES)
+install-main: all $(OZBIN) $(BINFILES)
 
+NEWCACHEDIR = $(PREFIX)/cache/x-oz/system
 IMAGES1 = mini-dec.xbm mini-inc.xbm
 IMAGES = $(IMAGES1:%=$(IMAGESDIR)/%)
+NEWIMAGESDIR = $(NEWCACHEDIR)/images
+NEWIMAGES = $(IMAGES1:%=$(NEWIMAGESDIR)/%)
 
-install-images: \
-        $(IMAGESDIR) $(IMAGES)
+install-images:
+
+#install-images: \
+#       $(IMAGESDIR) $(IMAGES)
 
 HOMECACHE = @HOMECACHE@
 CACHEDIR  = $(PREFIX)/cache/$(HOMECACHE)
 
-install-cache: \
-        $(CACHEDIR)
+NEWFUNCTORS = $(FUNCTORS1:%=$(NEWCACHEDIR)/%)
+NEWINIT = $(OZLIB)/Init.ozf
+
+install-cache: $(NEWCACHEDIR) $(NEWFUNCTORS) \
+        $(OZLIB) $(NEWINIT) \
+        $(NEWIMAGESDIR) $(NEWIMAGES)
+
+$(NEWCACHEDIR) $(NEWIMAGESDIR):
+        $(INSTALL_DIR) $@
+
+$(NEWCACHEDIR)/%: %
+        $(INSTALL_FILE) $< $@
 
 $(CACHEDIR):
         $(INSTALL_DIR) $(CACHEDIR)
@@ -440,7 +458,7 @@ boot-all:
                 OZENGINE=$(SRCDIR)/oze.sh \
                 OZINIT=Init.ozf \
                 OZ_LIB=. \
-                OZ_LOAD=root=.:prefix=$(SRCDIR)=$(BUILDDIR):prefix=/=/:prefix=./=./:prefix=$(HOMEURL)/share/=./:=
+                OZ_LOAD=root=.:prefix=$(SRCDIR)=$(BUILDDIR):prefix=/=/:prefix=./=./:prefix=$(HOMEURL)/share/=./:prefix=$(BOOTURL)/=./:prefix=$(SYSTEMURL)/=./:pattern=x-oz://boot/?{x}.so-$(PLATFORM)=$(BUILDTOP)/platform/emulator/?{x}.so:=
 
 boot--%:
         $(MAKE) $* \
@@ -448,7 +466,7 @@ boot--%:
                 OZENGINE=$(SRCDIR)/oze.sh \
                 OZINIT=Init.ozf \
                 OZ_LIB=. \
-                OZ_LOAD=root=.:prefix=$(SRCDIR)=$(BUILDDIR):prefix=/=/:prefix=./=./:prefix=$(HOMEURL)/share/=./:=
+                OZ_LOAD=root=.:prefix=$(SRCDIR)=$(BUILDDIR):prefix=/=/:prefix=./=./:prefix=$(HOMEURL)/share/=./:prefix=$(BOOTURL)/=./:prefix=$(SYSTEMURL)/=./:pattern=x-oz://boot/?{x}.so-$(PLATFORM)=$(BUILDTOP)/platform/emulator/?{x}.so:=
 
 check:
 
@@ -497,7 +515,7 @@ boot-init: $(BOOTINITTXTFROM)
         || (rm -f $@; exit 1)
 
 boot-ozc.linked: ozc ozl Compiler.ozf $(SUPPSRC:%=%.ozf)
-        OZINIT=Init.ozf OZ_LOAD=root=.:prefix=/=/:prefix=./=./:prefix=$(HOMEURL)/share/=./:pattern=x-oz\\://system/\?\{x\}.ozf=./\?\{x\}.ozf:pattern=x-oz\\://system/\?\{x\}=./\?\{x\}.ozf:pattern=x-oz\\://system/\?\{x\}.ozf=../tools/\?\{x\}.ozf:pattern=x-oz\\://system/\?\{x\}=../tools/\?\{x\}.ozf:= $(SRCDIR)/oze.sh ozl --verbose --include=x-oz://system --exclude=x-oz://boot,x-oz://system/Module,x-oz://system/Property,x-oz://system/System,x-oz://system/Space,x-oz://system/OS,x-oz://system/Resolve,x-oz://system/Pickle,x-oz://system/Gump,x-oz://system/ProductionTemplates $< -o $@
+        OZINIT=Init.ozf OZ_LOAD=root=.:prefix=/=/:prefix=./=./:prefix=$(HOMEURL)/share/=./:pattern=x-oz\\://system/\?\{x\}.ozf=./\?\{x\}.ozf:pattern=x-oz\\://system/\?\{x\}=./\?\{x\}.ozf:pattern=x-oz\\://system/\?\{x\}.ozf=../tools/\?\{x\}.ozf:pattern=x-oz\\://system/\?\{x\}=../tools/\?\{x\}.ozf:pattern=x-oz://boot/?{x}.so-$(PLATFORM)=$(BUILDTOP)/platform/emulator/?{x}.so:= $(SRCDIR)/oze.sh ozl --verbose --include=x-oz://system --exclude=x-oz://boot,x-oz://system/Module,x-oz://system/Property,x-oz://system/System,x-oz://system/Space,x-oz://system/OS,x-oz://system/Resolve,x-oz://system/Pickle,x-oz://system/Gump,x-oz://system/ProductionTemplates $< -o $@
 
 boot-init.linked: Init.ozf
         cp $< $@
