@@ -50,6 +50,12 @@
         explain in detail which keys and
         values are valid parameters.
         <!--** missing: description of keys and values -->
+      <ENTRY><<configureN>>
+      <SYNOPSIS>
+        <<{Inspector.configureN ?+{I} ?+{Key} ?_{X}}>>
+      <ITEM>
+        behaves like <<configure>> but directly addresses
+        the widget number&nbsp;?_{I} which must be existing already.
       <ENTRY><<close>>
       <SYNOPSIS>
         <<{Inspector.close}>>
@@ -67,7 +73,7 @@
       <ITEM>
         is the default instance of class <<Inspector.'class'>> which
         is implicitly used by <<Inspect>>, <<Inspector.inspectN>>,
-        <<Inspector.configure>> and <<Inspector.close>>. Note that this object is not
+        <<Inspector.configure>>, <<Inspector.configureN>> and <<Inspector.close>>. Note that this object is not
         thread safe. Use the wrappers provided or a server abstraction.
     </LIST>
   <SECTION id="section.configure.methods"><TITLE/Inspector class methods/
