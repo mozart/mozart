@@ -297,18 +297,37 @@ Site* unmarshalSiteInternal(MsgBuffer *buf, Site *tryS, MarshalTag mt)
       s->discoveryPerm();
       return s;}
 
+#ifdef VIRTUALSITES
     //
     if(mt == DIF_SITE_VI) {
-      unmarshalUselessVirtualInfo(buf);
-      if(!s->remoteComm()) {
-	s->makeActiveRemote();
+      // Noote: that can be GName, in which case we have to fetch
+      // virtual info as well;
+      if (s != mySite) {
+	//
+
+	// "remote"/"virtual" can be either active or down,
+	// in both cases there is no need for virtual info:
+	if (s->remoteComm() || s->virtualComm()) {
+	  unmarshalUselessVirtualInfo(buf);
+	} else {
+	  // passive (GName);
+	  VirtualInfo *vi = unmarshalVirtualInfo(buf);
+
+	  //
+	  if (mySite->isInMyVSGroup(vi))
+	    s->makeActiveVirtual(vi);
+	  else 
+	    s->makeActiveRemoteVirtual(vi);      
+	}
       } else {
-	Assert(s->virtualComm());
-	if (s != mySite)
-	  s->makeActiveVirtual();
+	// my site is my site... already initialized;
+	unmarshalUselessVirtualInfo(buf);
       }
-      return s;
+
+      //
+      return (s);
     }
+#endif // VIRTUALSITES
 
     //
     Assert(mt == DIF_SITE);
@@ -343,10 +362,14 @@ Site* unmarshalSiteInternal(MsgBuffer *buf, Site *tryS, MarshalTag mt)
 
   s=siteManager.allocSite(tryS);    
   primarySiteTable->insertPrimary(s,hvalue);
+
+  //
   if(mt==DIF_SITE_PERM){
     PD((SITE,"initsite DIF_SITE_PERM"));
     s->initPerm();
     return s;}
+
+#ifdef VIRTUALSITES
   if(mt == DIF_SITE_VI) {
     PD((SITE,"initsite DIF_SITE_VI"));
 
@@ -360,6 +383,7 @@ Site* unmarshalSiteInternal(MsgBuffer *buf, Site *tryS, MarshalTag mt)
       s->initRemoteVirtual(vi);      
     return (s);
   }
+#endif // VIRTUALSITES
 
   Assert(mt == DIF_SITE);
   PD((SITE,"initsite DIF_SITE"));
@@ -456,6 +480,7 @@ void Site :: marshalPSite(MsgBuffer *buf){
   buf->put((flags & PERM_SITE)? DIF_SITE_PERM: DIF_PASSIVE);
   marshalBaseSite(buf);}
 
+#ifdef VIRTUALSITES
 //
 // Modifies the 'VirtualInfo'! 
 void Site::initVirtualInfoArg(VirtualInfo *vi)
@@ -468,16 +493,16 @@ void Site::initVirtualInfoArg(VirtualInfo *vi)
 //
 Bool Site::isInMyVSGroup(VirtualInfo *vi)
 {
-  VirtualInfo *myVI = getVirtualInfo();
+  if (getType() & VIRTUAL_INFO) {
+    VirtualInfo *myVI = getVirtualInfo();
 
-  //
-  if (myVI->getAddress() == vi->getAddress() &&
-      myVI->getPort() == vi->getPort() &&
-      myVI->getTimeStamp() == vi->getTimeStamp())
-    return (TRUE);
-  else 
+    //
+    return (myVI->cmpVirtualInfos(vi));
+  } else {
     return (FALSE);
+  }
 }
+#endif
 
 void Site::marshalSite(MsgBuffer *buf){
   PD((MARSHAL,"Site"));

@@ -139,6 +139,11 @@
 //
 // Distributed Oz - virtual sites
 #define PERDIO_ID	0xa3
+#define VS_MAILBOX_SIZE (1024*1024)
+#define VS_CHUNK_SIZE   1024
+#define VS_CHUNKS_NUM   4096
+// 12,5% fill-up for 32 sites?
+#define VS_REGISTER_HT_SIZE   256
 
 /*
  * Switches

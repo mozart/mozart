@@ -35,22 +35,31 @@
 #include "comm.hh"
 
 class MsgBuffer {
-public: 
+private:
   OZ_Term resources, nogoods;
 
+  //
+protected:
   BYTE* posMB;
   BYTE* endMB;
+
+  virtual BYTE getNext()=0;
+  virtual void putNext(BYTE)=0;
+
+  //
+public: 
   virtual void marshalBegin() = 0;	
   virtual void marshalEnd()=0;
   virtual void unmarshalBegin()=0;
   virtual void unmarshalEnd()=0;
-  virtual BYTE getNext()=0;
-  virtual void putNext(BYTE)=0;
 
   void init() { 
     resources = nil(); 
     nogoods   = nil();
   }
+
+  //
+  // NON-virtual!
   BYTE get(){
     if(posMB==endMB){
       return getNext();}
@@ -65,13 +74,14 @@ public:
     PD((MARSHAL_CT,"one char put c:%d p:%d",b,*posMB));    
   }
       
-
+  //
   virtual char* siteStringrep()=0;
   virtual Site* getSite()=0;                    // overrided for network/vsite comm
   virtual Bool isPersistentBuffer()=0;
   virtual void unmarshalReset()                 {} // only for network receovery
 
   void addRes(OZ_Term t)    { resources = cons(t,resources); }
+  OZ_Term getResources()    { return (resources); }
   void addNogood(OZ_Term t) { nogoods = cons(t,nogoods); }
   OZ_Term getNoGoods() { return nogoods; }
 };
