@@ -284,7 +284,7 @@ fi
 
 AC_ARG_WITH(tk_lib,
     [--with-tk-lib=<dir>
-    search tk library in <dir> (default: oz_tcl_lib_dir)])
+    search tk library in <dir> (default: oz_tk_lib_dir)])
 
 if test -n "${with_tk_lib}"
 then
@@ -293,7 +293,7 @@ fi
 
 AC_ARG_WITH(tk_include,
     [--with-tk-include=<dir>
-    search tk header in <dir> (default: oz_tcl_inc_dir)])
+    search tk header in <dir> (default: oz_tk_inc_dir)])
 
 if test -n "${with_tk_include}"
 then
@@ -313,7 +313,7 @@ fi
 # S.u.S.E. puts tk.tcl in a strange place
 if test "${OZSUSE}" = "yes"
 then
-    : ${oz_tk_lib_tcl_dir=/usr/X11R6/lib/tk8.0}
+    : ${oz_tk_lib_tcl_dir=${oz_tk_lib_dir:-/usr/lib:-/usr/X11R6/lib}/tk8.0}
 else
     : ${oz_tk_lib_tcl_dir=${oz_tk_lib_dir:-/usr/lib}/tk8.0}
 fi
