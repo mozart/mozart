@@ -791,3 +791,35 @@
 \newcommand{\REWRITECONDITION}[1]{\multicolumn{2}{|@{\qqad}p{0.7\linewidth}|}{#1}\\\hline}
 
 \newcommand{\EOLN}{\\\mozartEMPTY}
+
+% ozdoc external cross references
+
+\newcommand{\OZDOCREF}[3]{%
+  \def\mozart@temp{#3}%
+  \ifx\mozart@temp\@empty
+    \@latex@error{unknown cross ref: to=#1 key=#2}\@ehc
+  \else
+    \@OZDOCREF#3%
+  \fi}
+
+\newcommand{\mozart@SECNAME@PART}{Part}
+\newcommand{\mozart@SECNAME@CHAPTER}{Chapter}
+\newcommand{\mozart@SECNAME@APPENDIX}{Appendix}
+\newcommand{\mozart@SECNAME@SECTION}{Section}
+\newcommand{\mozart@SECNAME@SUBSECTION}{Section}
+\newcommand{\mozart@SECNAME@SUBSUBSECTION}{Section}
+
+\newcommand{\@OZDOCREF}[3]{%
+  \@nameuse{mozart@SECNAME@#1}%
+  {\normalfont\space\textsl{#2}, \textsl{(#3)}}}
+
+\newcommand{\OZDOCREFTOP}[2]{%
+  \def\mozart@temp{#2}%
+  \ifx\mozart@temp\@empty
+    \@latex@error{unknown cross ref: to=#1}\@ehc
+  \else
+    \@OZDOCREFTOP{#2}%
+  \fi}
+
+\newcommand{\@OZDOCREFTOP}[1]{%
+  {\normalfont\textsl{``#1''}}}
