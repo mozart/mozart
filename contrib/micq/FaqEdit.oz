@@ -20,15 +20,15 @@
 %%% WARRANTIES.
 %%%
 
-declare AA=
-
 functor
+require
+   Meths(updateFAQ:S_updateFAQ) at 'methods.ozf'
 import
    Tk
 export
    Start
 define
-   proc{EditPost X}
+   proc{EditPost X Server}
       T={New Tk.toplevel tkInit(title:"Edit FAQ")}
       L0={New Tk.label tkInit(parent:T text:"Question:")}
       L1={New Tk.label tkInit(parent:T text:"Answer:")}
@@ -41,9 +41,11 @@ define
       B0={New Tk.button tkInit(parent:T text:"Submit Change" action:proc{$}
                                                                        Q={TB0 tkReturnString(get p(1 0) 'end' $)}
                                                                        A={TB1 tkReturnString(get p(1 0) 'end' $)}
-                                                                       X1=store(id:X.id data:{Adjoin X.data faq(answer:A question:Q)})
+                                                                       X1=S_updateFAQ(id:X.id
+                                                                                      data:{Adjoin X.data faq(answer:A question:Q)})
                                                                     in
-                                                                       {Browse submit(X1)}
+                                                                       {T tkClose}
+                                                                       {Server X1}
                                                                     end)}
       B1={New Tk.button tkInit(parent:T text:"Cancel" action:T#tkClose)}
    in
@@ -63,7 +65,7 @@ define
                 ]}
       skip
    end
-   proc{Start Fs1}
+   proc{Start Fs1 Server}
       class MyListBox from Tk.listbox
          prop final
          attr list:nil
@@ -90,8 +92,7 @@ define
       F1={New Tk.frame tkInit(parent:T)}
       B0={New Tk.button tkInit(parent:F1 text:"Edit Selected" action:proc{$} I={LB tkReturnInt(curselection $)} in
                                                                         if I\=false then F={LB getN(I $)} in
-                                                                           {Browse edit(F)}
-                                                                           {EditPost F}
+                                                                           {EditPost F Server}
                                                                         else
                                                                            {Tk.send bell}
                                                                         end
@@ -99,7 +100,7 @@ define
       B1={New Tk.button tkInit(parent:F1 text:"Delete Selected" action:proc{$} I={LB tkReturnInt(curselection $)} in
                                                                           if I\=false then F={LB getN(I $)} in
                                                                              {LB delItem(id:F.id)}
-                                                                             {Browse delete(F)}
+                                                                             {Server S_updateFAQ(id:F.id data:unit)}
                                                                           else
                                                                              {Tk.send bell}
                                                                           end
@@ -127,6 +128,9 @@ define
       {ForAll Fs proc{$ X} {LB addItem(X)} end}
    end
 end
+
+
+/*
 Fs1= [store(data:faq(answer:[79 107 44 32 100 111 32 108 105 107 101 32 116 104 105 115 46 46 46 46 10 10]
                      date:date(date:17#[47]#([48]#3) time:15#[58]#19 year:1999)
                      poster:nilsf
@@ -140,3 +144,5 @@ Fs1= [store(data:faq(answer:[79 107 44 32 100 111 32 108 105 107 101 32 116 104 
 [A]={Module.apply [AA]}
 
 {A.start Fs1}
+
+*/
