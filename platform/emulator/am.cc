@@ -1268,6 +1268,12 @@ Thread *AM::createThread(int prio,int compMode)
   return tt;
 }
 
+void AM::wakeUpThread(Thread *tt)
+{
+  scheduleThread(tt);
+  tt->unsetSuspended();
+}
+
 /*
  * Toplevel is a queue of toplevel queries, which must be executed
  * sequentially.

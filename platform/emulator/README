@@ -47,6 +47,23 @@ C-x SPACE
 
 -----------------------------
 
+# Debug functions (usable from gdb)
+
+# Imakefile: -DRECINSTRFETCH=500
+p CodeArea::writeInstr()
+
+
+p displayCode(PC,10,1)
+p CodeArea::printDef(PC)
+
+p am.currentThread->printDebug(PC,0,10)
+p am.currentThread->printDebug((ProgramCounter) -1,0,10)
+
+p board->printDebug()
+p board->printLongDebug()
+
+-----------------------------
+
 Keywords:
 
 class Script:

@@ -19,7 +19,16 @@
 // optimize: inline ....
 
 inline
-Bool AM::isToplevel() { return (currentBoard == rootBoard); }
+Bool AM::isToplevel() {
+  return (currentBoard == rootBoard)
+    || (ozconf.showSolveFailure && currentBoard->isSolve());
+}
+
+inline
+Bool AM::isToplevelFailure() {
+  return isToplevel()
+    || (ozconf.showSolveFailure && currentBoard->isSolve());
+}
 
 inline
 void AM::rebind(TaggedRef *refPtr, TaggedRef newRef)

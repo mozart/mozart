@@ -59,7 +59,14 @@ int TaskStack::getSeqSize()
   TaskStackEntry *oldTos=tos;
 
   while (1) {
-    Assert(!isEmpty());
+    if (isEmpty()) {
+      /*
+       * mm2: hack to fix a bug:
+       *  Thread is in SEQMODE instead of ALLSEQMODE
+       *  don't know why this happens ...
+       */
+      return -(oldTos-tos);
+    }
     TaskStackEntry entry=*(--tos);
     ContFlag cFlag = getContFlag(ToInt32(entry));
 
@@ -106,6 +113,11 @@ int TaskStack::getSeqSize()
 void TaskStack::copySeq(TaskStack *newStack,int len)
 {
   TaskStackEntry *next=newStack->tos+1;
+
+  /*
+   * mm2: hack part II (see above)
+   */
+  if (len < 0) { len=-len; next--; }
   for (;len>0;len--) {
     push(*next++);
   }
