@@ -9,7 +9,6 @@
   ------------------------------------------------------------------------
 */
 
-#include <iostream.h>
 #include <limits.h>
 
 #include "count.hh"

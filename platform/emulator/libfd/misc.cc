@@ -144,7 +144,7 @@ OZ_Return SumACProp::propagate(void)
 
    /****************************************/
 
-   cout << x[dpos]->toString() << ' ' << d->toString() << endl << flush;
+   printf("%s %s\n",x[dpos]->toString(),d->toString());
    *(x[dpos])&=*d;
 
    /****************************************/
@@ -183,12 +183,13 @@ OZ_Return SumACProp::propagate(void)
    (klausel ? d_aux_neg : d_aux_pos)<=summax;
 
  #ifndef NDEBUG
-   cout<<endl;
-   cout<<(klausel ? "negativ:" : "positiv:")<<endl;
-   cout<<"summin="<<summin<<" summax="<<summax<<endl;
-   cout<<summin<<"<=d<="<<summax<<endl;
-   cout<<"d_"<<(klausel ? "neg=" : "pos=")
-       <<(klausel ? d_aux_neg : d_aux_pos).toString()<<endl;
+   printf("\n");
+   printf("%s\n", klausel ? "negativ:" : "positiv:");
+   printf("summin=%d summax=%d\n",summin,summax);
+   printf("%d<=d<=%d\n",summin,summax);
+   printf("d_%s%s\n",
+          (klausel ? "neg=" : "pos="),
+          (klausel ? d_aux_neg : d_aux_pos).toString());
  #endif
 
    changed|=!(dummy==(klausel ? d_aux_neg.getSize() : d_aux_pos.getSize()));
@@ -233,16 +234,13 @@ OZ_Return SumACProp::propagate(void)
       (dummy==(klausel ? x_aux_neg[j].getSize() : x_aux_pos[j].getSize()));
 
  #ifndef NDEBUG
-     cout<<"summin="<<summin<<" summax="<<summax<<endl;
+     printf("summin=%d summax=%d\n",summin,summax);
      if(a[j]<0)
-       cout<<int(ceil (bound2))<<"<=x"<<j<<"<="
-           <<int(floor(bound1))<<endl;
+       printf("%d<=x%d<=%d\n",int(ceil (bound2)),j,int(floor(bound1)));
      if(a[j]>0)
-      cout<<int(ceil (bound1))<<"<=x"<<j<<"<="
-          <<int(floor(bound2))<<endl;
-     cout<<'a'<<j<<'='<<a[j]
-         <<" x"<<j<<(klausel ? "_neg=" : "_pos=")
-         <<(klausel ? x_aux_neg[j] : x_aux_pos[j]).toString()<<endl;
+      printf("%d<=x%d<=%d\n",int(ceil (bound1)),j,int(floor(bound2)));
+     printf("a%d=%d x%d%s%s\n",j,a[j],j,(klausel ? "_neg=" : "_pos="),
+            (klausel ? x_aux_neg[j] : x_aux_pos[j]).toString());
  #endif
 
     }
@@ -272,7 +270,7 @@ OZ_C_proc_begin(fdtest_sumac, 3)
  OZ_EXPECTED_TYPE(OZ_EM_VECT OZ_EM_INT","OZ_EM_VECT OZ_EM_FD","OZ_EM_FD);
 
  #ifndef NDEBUG
-  cout << "fdtest_sumac=" << (void *) fdtest_sumac << endl << flush;
+  printf("fdtest_sumac=0x%x\n",fdtest_sumac);
  #endif
 
  ExtendedExpect pe;
@@ -316,12 +314,12 @@ OZ_CFun SpawnLess::spawner = fdtest_spawnLess;
 
 OZ_Return SpawnLess::propagate(void)
 {
-  cout << "spawn less count down: " << c << endl << flush;
+  printf("spawn less count down: %d\n",c);
 
   c -= 1;
 
   if (!c) {
-    cout << "Spawning less!!!" << endl << flush;
+    printf("Spawning less!!!\n"); fflush(stdout);
     addImpose(fd_prop_bounds, a);
     addImpose(fd_prop_bounds, b);
     impose(new Less(a, b));

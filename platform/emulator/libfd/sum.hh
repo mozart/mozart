@@ -14,8 +14,6 @@
 #ifndef __SUM_HH__
 #define __SUM_HH__
 
-#include <iostream.h>
-
 #include "std.hh"
 
 //-----------------------------------------------------------------------------
