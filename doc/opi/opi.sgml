@@ -235,7 +235,7 @@
             >~/.emacs</File> under Unix and <File >C:\_emacs</File> under
             <Span class=index/Windows/&nbsp;95; under Windows&nbsp;NT, it
             is located in your home directory):
-            <Code.Extern display to="oz.el">
+            <Code.Extern display to="ozdotemacs.el">
             Don't worry if you don't understand all of this (yet).
       <Section>
         <Title/The Oz Major Modes/
