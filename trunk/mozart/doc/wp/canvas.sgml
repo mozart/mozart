@@ -26,7 +26,7 @@
   <Title/Canvas Widgets/
 
   <p> 
-    Canvas widgets allow to create and manipulate graphical
+    <index/canvas/Canvas widgets allow to create and manipulate graphical
     items. In particular, arbitrary widgets can be embedded within
     canvas widgets. Reference information on canvas widgets can be
     found in <ref.extern to="&tkcmd;/canvas.htm"/<kbd/canvas//.
@@ -44,30 +44,31 @@
       following types:
       <list>
         <entry><<arc>>
-        <item> An arc item displays a piece of a circle.
+        <item> <index class=tails/item<and>arc/An arc item displays a piece of a circle.
         <entry><<bitmap>>
-        <item> A bitmap item displays a bitmap with a given name.
+        <item> <index class=tails/item<and>bitmap/A bitmap item displays a bitmap with a given name.
         <entry><<image>>
-        <item> Displays an image.
+        <item> <index class=tails/item<and>image/Displays an image.
         <entry><<line>>
-        <item> A line item consists of several connected segments. It is
+        <item> <index class=tails/item<and>line/A line item consists of several connected segments. It is
         possible to configure line items such that Bézier splines are used.
         <entry><<oval>>
-        <item> An oval can either be a circle or an ellipsis.
+        <item> <index class=tails/item<and>oval/An oval can either be a circle or an ellipsis.
         <entry><<polygon>>
-        <item> A polygon is described by three or more line segments. As
+        <item> <index class=tails/item<and>polygon/A polygon is described by three or more line segments. As
         with line items, it is possible to use Bézier splines.
         <entry><<rectangle>>
-        <item> Displays a rectangle.
+        <item> <index class=tails/item<and>rectangle/Displays a rectangle.
         <entry><<text>>
-        <item> Displays text consisting of a single or several lines.
+        <item> <index class=tails/item<and>text/Displays text consisting of a single or several lines.
         <entry><<window>>
-        <item> Displays a widget in the canvas where the canvas widget
+        <item> <index class=tails/item<and>window/Displays a widget in the canvas where the canvas widget
         serves as geometry manager for the widget.
       </list>
 
     <p>
       For example,
+<index class=tails/<<Tk>><and><<canvas>>/
 <chunk class=anonymous><title/canvas/
 C={New Tk.canvas tkInit(parent:W)}
 {Tk.send pack(C)}
@@ -83,7 +84,7 @@ C={New Tk.canvas tkInit(parent:W)}
     <title/Example: Drawing Bar Charts/
 
     <p>
-      As a more interesting example let us consider a program to draw
+      <index/bar chart/As a more interesting example let us consider a program to draw
       bar charts. The definition of a class to display barcharts is
       shown in <ptr to="figure.canvas.barchart">. Before any item is
       created in the canvas by the method <<bars>>, the canvas widget
@@ -93,6 +94,7 @@ C={New Tk.canvas tkInit(parent:W)}
     <p>
       <figure id="figure.canvas.barchart">
         <caption/A canvas for displaying bar charts./
+<index class=tails/<<Tk>><and><<isColor>>/
 <chunk class=anonymous><title/Definition of BarCanvas/
 local	  
    O=if Tk.isColor then o(fill:wheat)
@@ -145,6 +147,7 @@ end
 	<Caption/Using a canvas for drawing barcharts./
 	<P>
 	  <Picture.Extern to="barchart.gif" type=gif>
+<index class=tails/<<Tk>><and><<scrollbar>>/
 <chunk class=anonymous><title/barchart/
 C={New BarCanvas    tkInit(parent:W bg:white width:300 height:120)}
 H={New Tk.scrollbar tkInit(parent:W orient:horizontal)}
@@ -164,6 +167,7 @@ V={New Tk.scrollbar tkInit(parent:W orient:vertical)}
     <title/Canvas Tags/
 
     <p>
+<index class=tails/canvas<and>tag/
       Each item in a canvas is identified by a unique integer. This
       integer can be returned by using the <<tkReturnInt>> method for
       creating items rather than the <<tk>> method. The returned
@@ -184,6 +188,7 @@ V={New Tk.scrollbar tkInit(parent:W orient:vertical)}
     <p>
       To add an item to a tag, the option <<tags>> is used when
       creating the item. For instance, 
+<index class=tails/<<Tk>><and><<canvasTag>>/
 <chunk class=anonymous><title/tags/
 R={New Tk.canvasTag tkInit(parent:C)}
 {C tk(create rectangle 10 10 40 40 fill:red tags:R)}
@@ -237,6 +242,7 @@ O={New Tk.canvasTag tkInit(parent:C)}
       </figure> 
 
     <para class=apropos><title/configuring items/
+<index class=tails/item<and>configuration/
       Items can be configured by using the command <<itemconfigure>>,
       which is similar to the command <<configure>> for widgets. The
       color of all rectangle and oval items in our previous example
@@ -266,6 +272,7 @@ O={New Tk.canvasTag tkInit(parent:C)}
       tags. Creating an event binding for a tag means to create the
       binding for all items referred to by the tag. The following
       example creates an event binding for all oval items. 
+<index/<<tkBind>>/
 <chunk class=anonymous><title/tags event/
 Colors={New class $ from BaseObject
                attr cs:(Cs=red|green|blue|yellow|orange|Cs 
