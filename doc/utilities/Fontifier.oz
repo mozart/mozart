@@ -41,19 +41,23 @@ define
    FontifierBase = Fontifier.'class'
 
    class FontifierClass from FontifierBase
-      attr q:nil
+      attr q:nil meta:unit
+      meth init(Meta)
+         FontifierBase,init
+         meta <- Meta
+      end
       meth enqueueFile(ProgLang FileName Result)
          lock R DIR={Property.get 'ozdoc.src.dir'} in
             q <- (R#Result)|@q
             FontifierBase,enqueueFile(
-                             {ToMode ProgLang} DIR#'/'#FileName R)
+                             {self toMode(ProgLang $)} DIR#'/'#FileName R)
          end
       end
       meth enqueueVirtualString(ProgLang VS Result)
          lock R in
             q <- (R#Result)|@q
             FontifierBase,enqueueVirtualString(
-                             {ToMode ProgLang} VS R)
+                             {self toMode(ProgLang $)} VS R)
          end
       end
       meth enqueueRequest(ProgLang Result)
@@ -62,7 +66,7 @@ define
          lock
             q <- (Request#Result)|@q
             FontifierBase,enqueueRequest(
-                             {ToMode ProgLang} Request)
+                             {self toMode(ProgLang $)} Request)
          end
       end
       meth process(Type)
@@ -72,8 +76,24 @@ define
                        [] 'html-stylesheets' then ToHtmlCSS
                        end
       in
-         lock L=@q q<-nil FontifierBase,synck end
+         lock
+            L1 = {Fontifier.requires.get}
+            L2 = {Dictionary.condGet @meta 'emacs.package' nil}
+         in
+            try
+               {Fontifier.requires.set {Append L1 L2}}
+               L=@q q<-nil FontifierBase,synck
+            finally
+               {Fontifier.requires.set L1}
+            end
+         end
          {ForAll L proc {$ R#Result} {Transform R Result} end}
+      end
+      meth toMode(ProgLang $)
+         case {Lookup ProgLang
+               {Dictionary.condGet @meta 'proglang.mode' unit}}
+         of unit then {ToMode ProgLang}
+         elseof Mode then Mode end
       end
    end
 
@@ -82,6 +102,14 @@ define
       of simple(In Out) then simple(In _)
       [] complex(L)     then complex({Map L MakeRequest})
       end
+   end
+
+   fun {Lookup Key Alist}
+      case Alist of H|T then
+         case H of K#V then
+            if K==Key then V else {Lookup Key T} end
+         else {Lookup Key T} end
+      else unit end
    end
 
    fun {ToMode ProgLang}

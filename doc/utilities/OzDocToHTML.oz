@@ -312,6 +312,7 @@ define
       meth init()
          Reporter <- Narrator.'class', init($)
          {@Reporter setLogPhases(true)}
+         Meta <- {NewDictionary}
       end
       meth translate(Mode Args) SGMLNode in
          {@Reporter startBatch()}
@@ -322,7 +323,7 @@ define
             else
                FontifyMode <- Mode
                StyleSheet <- {Property.get 'ozdoc.stylesheet'}
-               MyFontifier <- {New Fontifier.'class' init()}
+               MyFontifier <- {New Fontifier.'class' init(@Meta)}
                OutputDirectory <- Args.'out'
                {OS.system "mkdir -p "#@OutputDirectory _}   %--** OS.mkDir
                MyThumbnails <- {New Thumbnails.'class' init(@OutputDirectory)}
@@ -572,7 +573,6 @@ define
             [] front then HTML in
                Authors <- nil
                MyAuthorDB <- {New AuthorDB.'class' init(@Reporter)}
-               Meta <- {NewDictionary}
                OzDocToHTML, Batch(M 1 ?HTML)
                if @MakeAbstract then
                   Node = 'div'(hr()
