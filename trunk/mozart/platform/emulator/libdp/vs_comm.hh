@@ -249,6 +249,9 @@ class VSSiteQueueNode {
 private:
   VSSiteQueueNode *nextVSSiteQueueNode;
   VSSiteQueueNode *prevVSSiteQueueNode;
+  // Cannot cast in general since 'VSSiteQueueNode' can be not a sole
+  // superclass;
+  VirtualSite *vs;
 
   //
 private:
@@ -267,8 +270,11 @@ private:
   }
 
   //
+  VirtualSite *getVS() { return (vs); }
+
+  //
 public:
-  VSSiteQueueNode() {
+  VSSiteQueueNode(VirtualSite *vsIn) : vs(vsIn) {
     DebugCode(nextVSSiteQueueNode = (VSSiteQueueNode *) -1;);
     DebugCode(prevVSSiteQueueNode = (VSSiteQueueNode *) -1;);
   }
@@ -295,6 +301,9 @@ class VSRegisterNode {
   friend class VirtualSite;
 private:
   VSRegisterNode *nextVSRegisterNode, *prevVSRegisterNode;
+  // Cannot cast in general since 'VSRegisterNode' can be not a sole
+  // superclass;
+  VirtualSite *vs;
 
   //
 protected:
@@ -312,8 +321,11 @@ protected:
   }
 
   //
+  VirtualSite *getVS() { return (vs); }
+
+  //
 public:
-  VSRegisterNode() {
+  VSRegisterNode(VirtualSite *vsIn) : vs(vsIn) {
     DebugCode(nextVSRegisterNode = (VSRegisterNode *) -1;);
     DebugCode(prevVSRegisterNode = (VSRegisterNode *) -1;);
   }
@@ -466,8 +478,11 @@ public:
 			FreeListDataManager<VSMsgBufferOwned> *freeMBs);
 
   //
-  // The mailbox is mapped/unmapped on these events:
-  void zeroReferences() { disconnect(); }
+  // We don't do anything in this case. We could 'disconnect()' but
+  // then we would need (a) check for connection every time doing
+  // 'sendTo', and (b) do it carefully with site registers (probing,
+  // etc.);
+  void zeroReferences() {}
 
   //
   // If 'sendTo' could say "unsent, stored as #msgNum", then with this
@@ -521,7 +536,8 @@ private:
 
   //
 public:
-  VSSiteQueue() : next((VSSiteQueueNode *) 0) {
+  VSSiteQueue()
+    : VSSiteQueueNode((VirtualSite *) -1), next((VSSiteQueueNode *) 0) {
     setNextVSSiteQueueNode(this); setPrevVSSiteQueueNode(this);
   }
   ~VSSiteQueue() {}
@@ -554,35 +570,35 @@ public:
       DebugCode(n->setPrevVSSiteQueueNode((VSSiteQueueNode *) -1););
 
       //
-      return ((VirtualSite *) n); // safe by 'enqueue()';
+      return (n->getVS());
     }
   }
 
   //
   VirtualSite* getFirst() {
-    VSSiteQueueNode *vs;
+    VSSiteQueueNode *n;
 
     //
-    vs = getNextVSSiteQueueNode();
-    if (vs == this) {
+    n = getNextVSSiteQueueNode();
+    if (n == this) {
       DebugCode(next = (VSSiteQueueNode *) 0);
       return ((VirtualSite *) 0);
     } else {
-      next = vs->getNextVSSiteQueueNode();
-      return ((VirtualSite *) vs);
+      next = n->getNextVSSiteQueueNode();
+      return (n->getVS());
     }
   }
   VirtualSite* getNext() {
-    VSSiteQueueNode *vs;
+    VSSiteQueueNode *n;
 
     //
-    vs = next;
-    if (vs == this) {
+    n = next;
+    if (n == this) {
       DebugCode(next = (VSSiteQueueNode *) 0);
       return ((VirtualSite *) 0);
     } else {
-      next = vs->getNextVSSiteQueueNode();
-      return ((VirtualSite *) vs);
+      next = n->getNextVSSiteQueueNode();
+      return (n->getVS());
     }
   }
 };
@@ -594,7 +610,8 @@ private:
 
   //
 public:
-  VSRegister() : next((VSRegisterNode *) 0) {
+  VSRegister()
+    : VSRegisterNode((VirtualSite *) -1), next((VSRegisterNode *) 0) {
     setNextVSRegisterNode(this), setPrevVSRegisterNode(this);
   }
   ~VSRegister() {}
@@ -617,29 +634,29 @@ public:
 
   //
   VirtualSite* getFirst() {
-    VSRegisterNode *vs;
+    VSRegisterNode *n;
 
     //
-    vs = getNextVSRegisterNode();
-    if (vs == this) {
+    n = getNextVSRegisterNode();
+    if (n == this) {
       DebugCode(next = (VSRegisterNode *) 0);
       return ((VirtualSite *) 0);
     } else {
-      next = vs->getNextVSRegisterNode();
-      return ((VirtualSite *) vs);
+      next = n->getNextVSRegisterNode();
+      return (n->getVS());
     }
   }
   VirtualSite* getNext() {
-    VSRegisterNode *vs;
+    VSRegisterNode *n;
 
     //
-    vs = next;
-    if (vs == this) {
+    n = next;
+    if (n == this) {
       DebugCode(next = (VSRegisterNode *) 0);
       return ((VirtualSite *) 0);
     } else {
-      next = vs->getNextVSRegisterNode();
-      return ((VirtualSite *) vs);
+      next = n->getNextVSRegisterNode();
+      return (n->getVS());
     }
   }
 };
