@@ -454,16 +454,17 @@ void dpMarshalLitCont(GenTraverser *gt, GTAbstractEntity *arg)
 //
 #define MarshalRHTentry(entity, index)					\
 {									\
-  OB_TIndex rhtIndex = RHT->find(entity);				\
-  if (rhtIndex == (OB_TIndex) RESOURCE_NOT_IN_TABLE) {			\
+  Ext_OB_TIndex rhtIndex = RHT->find(entity);				\
+  if (rhtIndex == (Ext_OB_TIndex) RESOURCE_NOT_IN_TABLE) {		\
     OwnerEntry *oe_manager;						\
-    rhtIndex = ownerTable->newOwner(oe_manager);			\
+    (void) ownerTable->newOwner(oe_manager);				\
+    rhtIndex = oe_manager->getExtOTI();					\
     PD((GLOBALIZING,"GLOBALIZING Resource index:%d", rhtIndex));	\
     oe_manager->mkRef(entity);						\
     RHT->add(entity, rhtIndex);						\
   }									\
   marshalDIFcounted(bs, index ? DIF_RESOURCE_DEF : DIF_RESOURCE);	\
-  marshalOwnHead(bs, rhtIndex);						\
+  marshalOwnHead(bs, OT->extOTI2ownerEntry(rhtIndex));			\
   if (index) marshalTermDef(bs, index);					\
 }
 
