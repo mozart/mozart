@@ -23,12 +23,13 @@
       fashion: it is possible to collapse a hierarchy of functors into
       a single equivalent one. The model that should be kept in mind,
       is that the newly created functor employs an internal, private
-      module manager (see also ???) that excutes the toplevel
+      module manager that excutes the toplevel
       application functor together with all included functors.
     </P>
 
     <P>
-      A short introduction by means of examples can be found ???.
+      A short introduction by means of examples can be found in
+      <ptr.extern to="ozdoc:apptut" key="section.deployment.linker">.
     </P>
 
   <Section id="Section.Linker.Basic">
@@ -71,8 +72,6 @@ Include:
    A.ozf, B.ozf, subdir/C.ozf.
 Import:
    x-oz://system/Application.
-Scheduling:
-   B.ozf, subdir/C.ozf, A.ozf.
 </Code>
      </P>
      
@@ -87,14 +86,12 @@ Include:
    D.ozf.
 Import:
    x-oz://system/Application.
-Scheduling:
-   D.ozf.
 </Code>
      </P>
      
      <P>
        By default, the linker includes (or links) all functors that
-       are refered to by relative URLs as in our previous example. How
+       are referred to by relative urls as in our previous example. How
        to change this behaviour is discussed in <Ptr
        to="Section.Linker.Include">.
      </P>      
@@ -109,20 +106,20 @@ Scheduling:
         <Entry><<--relative>>
         <Synopsis><<--relative>> (default), <<--norelative>>
         <Item>
-           All functors that are referred to by relative URLs are
+           All functors that are referred to by relative urlss are
            included.
 
         <Entry><<--include>>
         <Synopsis><<--include=<Var/URL/,&ellipsis,<Var/URL/>>
         <Item>
-           Include all functors whose URL matches one of the comma
-           separated URL prefices.
+           Include all functors whose url matches one of the comma
+           separated url prefixes.
         
         <Entry><<--exclude>>
         <Synopsis><<--exclude=<Var/URL/,&ellipsis,<Var/URL/>>
         <Item>
-           Exclude all functors whose URL matches one of the comma
-           separated URL prefices.
+           Exclude all functors whose url matches one of the comma
+           separated url prefixes.
       </List>
     <P>
 
@@ -132,7 +129,7 @@ Scheduling:
       with the policy that later directives take precedence over earlier
       ones.  For example:
 <code display proglang=sh>
-% ozl --include=/foo/ --exclude=/foo/bar/ ...
+ozl --include=/foo/ --exclude=/foo/bar/ ...
 </code>
       causes all imports from files below directory <file>/foo</file> to
       be included except those under directory <file>/foo/bar</file>.  We
@@ -140,7 +137,7 @@ Scheduling:
       last exclusion pattern and request inclusion of modules imported
       from below directory <file>/foo/bar/baz</file>:
 <code display proglang=sh>
-% ozl --include=/foo/ --exclude=/foo/bar/ --include=/foo/bar/baz/ ...
+ozl --include=/foo/ --exclude=/foo/bar/ --include=/foo/bar/baz/ ...
 </code>
     </P>
 
