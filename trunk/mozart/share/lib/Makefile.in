@@ -227,10 +227,25 @@ Tk.ozf: wp/TkInit.oz wp/TkOptions.oz
 TkTools.ozf: DefaultURL.ozf
 
 # gtk dependencies
-GTK.ozf: constdeclarations.oz
+# gtk dependencies and rules
+GTKSPECS = $(VPATH)/gtk/gtk/*.spec
+GDKSPECS = $(VPATH)/gtk/gdk/*.spec
+BUILDER  = $(PERL) $(VPATH)/gtk/builder.perl
 
-constdeclarations.oz constdefinitions.oz: gtk/genconstants.pl
-	 $(PERL) $(VPATH)/gtk/genconstants.pl
+GTK.ozf: gtkclasses.oz gtkexports.oz
+#GDK.ozf: gdkclasses.oz gdkexports.oz
+
+gtkclasses.oz: $(GTKSPECS)
+	$(BUILDER) --oz-classes $(GTKSPECS) > $@
+
+gdkclasses.oz: $(GDKSPECS)
+	$(BUILDER) --oz-classes $(GDKSPECS) > $@
+
+gtkexports.oz: $(GTKSPECS)
+	$(BUILDER) --oz-exportlist $(GTKSPECS) > $@
+
+gdkexports.oz: $(GDKSPECS)
+	$(BUILDER) --oz-exportlist $(GDKSPECS) > $@
 
 # compiler dependencies
 COMPILERSRC1 = \
@@ -380,7 +395,7 @@ CLEANFILES = \
 	CpSupport.ozf ParWorkerTmp.ozf ParLoggingTmp.ozf ParSearchTmp.ozf \
 	$(FUNCTORS) $(FUNFUNCTORS) $(PARSEARCHFUNCTORS) \
 	$(SYSLETS) $(BOOTINITTXT) $(BOOTOZCTXT) boot-init boot-ozc \
-	constdefinitions.oz constdeclarations.oz
+	gtkclasses.oz gtkexports.oz
 
 clean:
 	-rm -f $(CLEANFILES)
