@@ -68,18 +68,15 @@ OZ_Term Celloid::printV(int depth = 10)
 OZ_Extension* Celloid::gcV() { return new Celloid(content); }
 void Celloid::gcRecurseV() { OZ_collect(content); }
 
-extern "C"
+OZ_C_proc_interface * oz_init_module(void)
 {
-  OZ_C_proc_interface * oz_init_module(void)
-  {
-    static OZ_C_proc_interface table[] = {
-      {"new",1,1,celloid_new},
-      {"is",1,1,celloid_is},
-      {"access",1,1,celloid_access},
-      {"assign",2,0,celloid_assign},
-      {0,0,0,0}
-    };
-    Celloid::id = OZ_getUniqueId();
-    return table;
-  }
+  static OZ_C_proc_interface table[] = {
+    {"new",1,1,celloid_new},
+    {"is",1,1,celloid_is},
+    {"access",1,1,celloid_access},
+    {"assign",2,0,celloid_assign},
+    {0,0,0,0}
+  };
+  Celloid::id = OZ_getUniqueId();
+  return table;
 }
