@@ -29,9 +29,14 @@ export OZPLATFORM
 
 : ${OZWINDOWMANAGER=$OZHOME/platform/$OZPLATFORM/ozwindowmanager}
 
+if [ ${OZWISH-xx} = xx ]
+then
+  OZWISH=blt_wish
+  export OZWISH
+fi
+
 # set OZPATH & PATH
 if [ ${OZ_PI-xx} = xx ]; then
-
         # where Oz searches for files:
         : ${OZPATH=.}
         OZPATH=${OZPATH}:${OZHOME}/lib:${OZHOME}/platform/${OZPLATFORM}:${OZHOME}/demo
