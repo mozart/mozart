@@ -25,10 +25,12 @@ LIBDIRS=        elisp browser panel explorer bitmaps compiler wish
 ALLDIRS=        $(PREFIX) $(DIRS:%=$(PREFIX)/%) $(LIBDIRS:%=$(PREFIX)/lib/%) \
                 $(PLATFORMS:%=$(PREFIX)/platform/%)
 
-COMMONFILES = oz/bin oz/demo oz/include oz/lib \
+COMMONFILES = oz/bin oz/include oz/lib \
                 oz/README* oz/LICENSE oz/BUGS \
                 oz/man oz/tools \
                 oz/cache
+
+DEMOFILES = oz/demo
 
 COMPRESS = compress
 ZIP      = gzip -9
@@ -78,6 +80,11 @@ mini-common: $(DISTDIR)
 common: $(DISTDIR)
         (cd $(PREFIX)/..; \
         tar -cf - $(COMMONFILES)) | \
+        $(ZIP) > $(DISTDIR)/oz-`$(OZVERSION)`-$@.tar.gz
+
+demo: $(DISTDIR)
+        (cd $(PREFIX)/..; \
+        tar -cf - $(DEMOFILES)) | \
         $(ZIP) > $(DISTDIR)/oz-`$(OZVERSION)`-$@.tar.gz
 
 $(PLATFORMS): $(DISTDIR)
