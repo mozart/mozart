@@ -663,7 +663,8 @@ OZ_Return TaskIntervalsProof::run(void)
 		  side = 0; v = v2;
 		}
 	      }
-	      if (v < g_costs) {
+	      if (v <= g_costs) {
+		g_costs = v;
 		if (side == 1) {
 		  p1 = best_left;
 		  p2 = firsts_l;
@@ -758,7 +759,8 @@ OZ_Return TaskIntervalsProof::run(void)
 		  side = 0; v = v2;
 		}
 	      }
-	      if (v < g_costs) {
+	      if (v <= g_costs) {
+		g_costs = v;
 		if (side == 1) {
 		  p1 = lasts_l;
 		  p2 = best_right;
