@@ -43,7 +43,7 @@ public:
       (*_cl3_o).initSingleton(0);
     }
   }
-  virtual void sClone(void) {
+  virtual void gCollect(void) {
     _engine_cl1.gCollect();
     _engine_cl2.gCollect();
     _engine_cl3.gCollect();
@@ -57,7 +57,7 @@ public:
     _cl3_t2.gCollect();
     _cl3_o.gCollect();
   }
-  virtual void gCollect(void) {
+  virtual void sClone(void) {
     _engine_cl1.sClone();
     _engine_cl2.sClone();
     _engine_cl3.sClone();
