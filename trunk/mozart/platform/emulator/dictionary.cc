@@ -11,5 +11,5 @@
 #endif
 
 #include "am.hh"
-#include "ofgenvar.hh"
+#include "genvar.hh"
 #include "dictionary.hh"

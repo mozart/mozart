@@ -70,6 +70,7 @@ void Thread::setExtThreadOutlined (Board *varHome)
     if (isPropagator () || isNewPropagator()) {
       warning ("'External' propagator thread: "
 	       "stability check is implemented *partially*!");
+      warning ("(Explanation: no global variables may occur in propagators within a search problem)");
     }
   }
 }
