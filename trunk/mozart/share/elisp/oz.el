@@ -1007,7 +1007,8 @@ compiled using a default set of switches."
 	  (comint-send-string
 	   proc
 	   (concat "\\pushSwitches\n"
-		   "\\switch -expression +threadedqueries -runwithdebugger\n"
+		   "\\switch +threadedqueries -verbose "
+		   "-expression -runwithdebugger\n"
 		   eof))
 	  (comint-send-string proc string)
 	  (comint-send-string proc "\n\\popSwitches\n")
