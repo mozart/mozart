@@ -1630,24 +1630,6 @@ OZ_C_proc_begin(BIcloneSpace, 2) {
 } OZ_C_proc_end
 
 
-OZ_C_proc_begin(contChooseInternal, 2) {
-  int left  = smallIntValue(OZ_getCArg(0)) - 1;
-  int right = smallIntValue(OZ_getCArg(1)) - 1;
-
-  int status = 
-    SolveActor::Cast(am.currentBoard()->getActor())->choose(left,right);
-
-  if (status==-1) {
-    return oz_raise(E_ERROR,E_KERNEL,"spaceNoChoices",0);
-  } else if (status==0) {
-    return FAILED;
-  } 
-
-  return PROCEED;
-} OZ_C_proc_end
-
-
-
 OZ_C_proc_begin(BIchooseSpace, 2) {
   declareSpace();
   oz_declareArg(1,choice);
@@ -1700,18 +1682,22 @@ OZ_C_proc_begin(BIchooseSpace, 2) {
 
   if (!am.isCurrentBoard(space->getSolveBoard()->getParent()))
     return oz_raise(E_ERROR,E_KERNEL,"spaceParent",1,tagged_space);
-    
-  space->getSolveActor()->unsetGround();
-  space->getSolveActor()->clearResult(GETBOARD(space));
 
-  RefsArray args = allocateRefsArray(2, NO);
-  args[0] = left;
-  args[1] = right;
+  SolveActor *sa = space->getSolveActor();
+  sa->unsetGround();
+  sa->clearResult(GETBOARD(space));
 
-  Thread *it = am.mkRunnableThread(am.currentThread()->getPriority(), 
-				   space->getSolveBoard());
-  it->pushCFun(contChooseInternal, args, 2, NO);
-  am.scheduleThread(it);
+  int l = smallIntValue(left) - 1;
+  int r = smallIntValue(right) - 1;
+
+  Thread *tt = sa->select(l,r);
+  // printf("Space.choose: "); taggedPrintLong(makeTaggedConst(tt),10,0);
+  if (!tt) {
+    return oz_raise(E_ERROR,E_KERNEL,"no thread",0);
+    // todo
+  }
+  am.suspThreadToRunnable(tt);
+  am.scheduleThread(tt);
 
   return PROCEED;
 } OZ_C_proc_end
