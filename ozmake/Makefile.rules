@@ -26,45 +26,44 @@ Help.ozf: Utils.ozf HELP.txt
 clean::
 	-rm -f ozmake ozmake.exe
 
-have.xsltproc:
-	@if xsltproc -V 1>/dev/null 2>&1; then \
-	    : ; \
-	else \
-	    echo >&2 "xsltproc not found, but necessary to build the (html) documentation"; \
-	    echo >&2 "(see http://xmlsoft.org/XSLT/xsltproc2.html)"; \
-	    exit -1; \
-	fi
+doc:
+	$(MAKE) doc.html
+	$(MAKE) doc.text
 
-have.lynx:
-	@if lynx -version 1>/dev/null 2>&1; then \
-	    : ; \
-	else \
-	    echo >&2 "lynx not found, but necessary to build the (text) documentation"; \
-	    echo >&2 "(see http://lynx.browser.org/)"; \
-	fi
-
-html: HELP.xml HELP.xsl Makefile.vars
-	@$(MAKE) have.xsltproc
-	xsltproc -o index.html \
-		--stringparam OZMAKEOUTPUT html \
-		--stringparam OZMAKEVERSION $(VERSION) \
-		HELP.xsl HELP.xml
-
-HELP.html: HELP.xml HELP.xsl Makefile.vars
-	@$(MAKE) have.xsltproc
-	xsltproc -o HELP.html \
+ifeq ($(XSLTPROC),UNDEFINED)
+doc.html:
+	echo >&2 "xsltproc not found, but necessary to build the (html) documentation"
+	echo >&2 "(see http://xmlsoft.org/XSLT/xsltproc2.html)"
+	exit -1
+else
+doc.html:
+	$(XSLTPROC) -o $(SRCDIR)/HELP.html \
 		--stringparam OZMAKEOUTPUT text \
 		--stringparam OZMAKEVERSION $(VERSION) \
-		HELP.xsl HELP.xml
+		$(SRCDIR)/HELP.xsl $(SRCDIR)/HELP.xml
+	cp $(SRCDIR)/HELP.html $(SRCDIR)/index.html
+endif
 
-HELP.txt: HELP.html Makefile.vars
-	@$(MAKE) have.lynx
-	lynx -dump HELP.html > HELP.txt
+ifeq ($(HTML_TO_TEXT),lynx)
+doc.text:
+	$(LYNX) -dump $(SRCDIR)/HELP.html > $(SRCDIR)/HELP.txt
+endif
 
-txt: HELP.txt
+ifeq ($(HTML_TO_TEXT),elinks)
+doc.text:
+	$(ELINKS) -dump $(SRCDIR)/HELP.html > $(SRCDIR)/HELP.txt
+endif
 
-doc: have.xsltproc ozmake.xml ozmake.xsl
-	xsltproc -o ozmake.html \
+ifeq ($(HTML_TO_TEXT),UNDEFINED)
+doc.text:
+	echo >&2 "neither lynx nor elinks were found"
+	echo >&2 "but one of them is necessary to build the (text) documentation"
+	echo >&2 "(see http://lynx.browser.org/)"
+	exit -1
+endif
+
+other.doc: have.xsltproc ozmake.xml ozmake.xsl
+	$(XSLTPROC) -o ozmake.html \
 		ozmake.xsl ozmake.xml
 
 #publish: duchier-ozmake-$(VERSION).pkg
