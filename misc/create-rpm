@@ -213,14 +213,24 @@ applications that can directly be started from the pages.
 %setup -q -D -T -b 3
 
 %build
+# configure and build mozart core distro
 : \${CFLAGS="\$RPM_OPT_FLAGS"}
 : \${CXXFLAGS="\$RPM_OPT_FLAGS"}
 export CFLAGS CXXFLAGS
-./configure --prefix=\$RPM_BUILD_ROOT$OZHOME --with-ozhome=$OZHOME --enable-opt=yes --with-stdlib=\$RPM_BUILD_ROOT$OZHOME-std
+./configure --prefix=\$RPM_BUILD_ROOT$OZHOME --with-ozhome=$OZHOME --enable-opt=yes
 make
+# perform an install to a temporary fake root
+# so that the rest of the distro can use it for
+# purposes of compilation
+rm -rf \$RPM_BUILD_ROOT
+make install
+# configure and build the standard library
+( cd \$RPM_BUILD_DIR/\$RPM_PACKAGE_NAME-\$RPM_PACKAGE_VERSION-std; \
+  ./configure --prefix=\$RPM_BUILD_ROOT$OZHOME; \
+  make )
 
 %install
-rm -rf \$RPM_BUILD_ROOT
+### rm -rf \$RPM_BUILD_ROOT
 PREFIX=\$RPM_BUILD_ROOT$OZHOME
 # config files
 mkdir -p \$RPM_BUILD_ROOT/etc/profile.d
@@ -243,7 +253,8 @@ make install
 find \$PREFIX -type f -name '*.so*' -exec strip '{}' ';'
 find \$PREFIX -type f -name '*.exe' -exec strip '{}' ';'
 # standard library
-(cd \$RPM_BUILD_DIR/\$RPM_PACKAGE_NAME-\$RPM_PACKAGE_VERSION-std; \$PREFIX/bin/ozengine ./ozmake.ozf --prefix=\$PREFIX --install --package=mozart-stdlib.pkg --nosavedb)
+(cd \$RPM_BUILD_DIR/\$RPM_PACKAGE_NAME-\$RPM_PACKAGE_VERSION-std; \
+ make install )
 
 # Create file lists
 PLTFRM=\`\$PREFIX/bin/ozplatform\`
