@@ -300,8 +300,6 @@ OZ_Return Board::merge(Board *bb, Bool sibling) {
 
   DEBUG_CONSTRAIN_CVAR(("\n==== Stop Merging ===="));
 
-  if (ret != PROCEED) return FAILED;
-
   // Merge propagators (must be after script installation, since script
   //                    installation might wake some propagators!!!!)
   (bb->lpq).merge(lpq);
@@ -324,7 +322,7 @@ OZ_Return Board::merge(Board *bb, Bool sibling) {
 
   }
 
-  return PROCEED;
+  return ret;
 }
 
 inline
