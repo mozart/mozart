@@ -8,8 +8,6 @@ OZPREFIX	= $(PREFIX)
 OZBIN		= $(PREFIX)/bin
 OZLIB		= $(PREFIX)/lib
 IMAGESDIR	= $(OZLIB)/images
-CACHEDIR	= $(PREFIX)/cache/http/www.ps.uni-sb.de/ozhome/lib
-
 SHELL		= /bin/sh
 LN_S		= @LN_S@
 M4		= @M4@
@@ -20,17 +18,14 @@ INSTALL_BIN	= $(INSTALL) -m 555
 INSTALL_SRC	= @INSTALL_SRC@
 INSTALL_DIR	= @INSTALL_DIR@
 
-PERL		= @PERL@
-ENV2TYPE	= $(PERL) $(SRCDIR)/env2type
+OZFLAGS		= -DLILO
+OZC		= @OZC@
 
-OZFLAGS		=
-OZBATCH		= @OZBATCH@
-OZFC            = $(OZBATCH) -DLILO --include=DumpIntro.oz -c
-
-COMPILE		= $(OZBATCH) $(OZFLAGS) --include=DumpIntro.oz -c
-EXEC		= $(OZBATCH) $(OZFLAGS)
-EXECWITHSTD	= $(OZBATCH) $(OZFLAGS) -l AP --include=DumpIntro.oz
-OZMA		= $(OZBATCH) $(OZFLAGS) -DOZM --ozma
+SCOMPILE	= $(OZC) $(OZFLAGS) -c
+COMPILE		= $(OZC) $(OZFLAGS) -l ./Standard.ozf -c
+EXEC		= $(OZC) $(OZFLAGS)
+EXECWITHSTD	= $(OZC) $(OZFLAGS) -l ./Standard.ozf,Application
+OZMA		= $(OZC) $(OZFLAGS) -DOZM --ozma
 
 # exports
 export BUILDTOP
@@ -38,11 +33,51 @@ export SRCDIR
 export OZPREFIX
 export OZLIB
 export OZMAINIT = Init.ozc
-export OZMAFILE = -u ozbatch.ozc
+export OZMAFILE = -u ozc.ozc
 export OZPATH = .:$(SRCDIR)
 export OZ_PI = 1
 export OZ_LIB = $(OZLIB)
-export OZ_LOAD = root=.:prefix=http\://www.ps.uni-sb.de/ozhome/lib/=tyc/:prefix=http\://www.ps.uni-sb.de/ozhome/lib/=$(OZ_LIB)/
+export OZ_LOAD = root=.:prefix=http\://www.ps.uni-sb.de/ozhome/lib/=$(OZ_LIB)/
+
+SPSRC = System Debug Foreign Error Finalize
+OPSRC = OS Open Component
+APSRC = Application
+CPSRC = Search FD FS
+DPSRC = Connection Remote
+WPSRC = Tk TkTools
+MISCSRC = Misc
+
+FUNCTORS = \
+	$(SPSRC:%=%.ozf) \
+	$(OPSRC:%=%.ozf) \
+	$(APSRC:%=%.ozf) \
+	$(CPSRC:%=%.ozf) \
+	$(DPSRC:%=%.ozf) \
+	$(WPSRC:%=%.ozf) \
+	$(MISCSRC:%=%.ozf) \
+	Compiler.ozf 
+
+SYSLETS = \
+	ozc ozserver # ozvsserver
+
+.PHONY: all install clean
+
+all: $(FUNCTORS) $(SYSLETS)
+
+
+#---------------------------------------------------------------------
+# Init
+#---------------------------------------------------------------------
+
+INITSRC1 = URL.oz Prop.oz
+INITSRC = $(INITSRC1:%=init/%) Init.oz
+
+Init.ozc: $(INITSRC)
+	OZMAINIT="" $(SCOMPILE) Init.oz -o Init.ozc
+
+#---------------------------------------------------------------------
+# Standard
+#---------------------------------------------------------------------
 
 STANDARDSRC1 = \
 	Forward.oz \
@@ -53,31 +88,49 @@ STANDARDSRC1 = \
 	Time.oz Thread.oz Match.oz Type.oz Space.oz \
 	Array.oz Dictionary.oz Exception.oz Lazy.oz Promise.oz \
 	Functor.oz BitArray.oz
-
 STANDARDSRC = $(STANDARDSRC1:%=standard/%) Standard.oz
 
-INITSRC1 = URL.oz Prop.oz
-INITSRC = $(INITSRC1:%=init/%) Init.oz
+Standard.ozf: $(STANDARDSRC)
+	$(EXEC) Standard.oz
 
-SPSRC1 = System.oz Debug.oz Foreign.oz Error.oz Finalize.oz
-SPSRC = $(SPSRC1:%=sp/%) SP.oz
 
-OPSRC1 = OS.oz Open.oz Component.oz HtmlTable.oz
-OPSRC = $(OPSRC1:%.oz=op/%.oz) OP.oz
 
-APSRC1 = Application.oz StandardModules.oz StandardSubModules.oz \
-	ArgParser.oz
-APSRC = $(APSRC1:%.oz=ap/%.oz) AP.oz
+#---------------------------------------------------------------------
+# Remaining functors
+#---------------------------------------------------------------------
 
-CPSRC1 = Search.oz FD.oz FS.oz
-CPSRC = $(CPSRC1:%=cp/%) CP.oz
+$(FUNCTORS): Standard.ozf Init.ozc
 
-DPSRC1 = Connection.oz Remote.oz RemoteServer.oz MakeAllLoader.oz
-DPSRC = $(DPSRC1:%=dp/%) DP.oz
+Standard.ozf: Init.ozc
 
-WPSRC1 = Tk.oz TkOptions.oz TkTools.oz TkInit.oz
-WPSRC = $(WPSRC1:%=wp/%) WP.oz
+%.ozf: sp/%.oz
+	$(COMPILE) $< -o $@
+%.ozf: op/%.oz
+	$(COMPILE) $< -o $@
+%.ozf: ap/%.oz
+	$(COMPILE) $< -o $@
+%.ozf: cp/%.oz
+	$(COMPILE) $< -o $@
+%.ozf: dp/%.oz
+	$(COMPILE) $< -o $@
+%.ozf: wp/%.oz
+	$(COMPILE) $< -o $@
+%.ozf: misc/%.oz
+	$(COMPILE) $< -o $@
+%.ozf: %.oz
+	$(COMPILE) $< -o $@
 
+# ap dependencies
+Application.ozf: ap/ArgParser.oz
+
+# op dependencies
+Open.ozf: op/HtmlTable.oz
+
+# wp dependencies
+Tk.ozf: wp/TkInit.oz
+TkTools.ozf: wp/TkOptions.oz
+
+# compiler dependencies
 COMPILERSRC1 = \
 	InsertAll.oz CompilerClass.oz Misc.oz Reporter.oz ParseOz.oz \
 	FormatStrings.oz Builtins.oz CoreLanguage.oz Annotate.oz \
@@ -85,214 +138,12 @@ COMPILERSRC1 = \
 	CodeEmitter.oz BindingAnalysis.oz TupleSyntax.oz Unnester.oz \
 	UnnestFD.oz Assembler.oz Interface.oz \
 	GenericInterface.oz QuietInterface.oz
-COMPILERSRCNOVER = $(COMPILERSRC1:%=compiler/%) compiler-Builtins.oz \
-	compiler-Opcodes.oz Compiler.oz
+
+COMPILERSRCNOVER = \
+	$(COMPILERSRC1:%=compiler/%) \
+	compiler-Builtins.oz compiler-Opcodes.oz Compiler.oz
+
 COMPILERSRC = $(COMPILERSRCNOVER) compiler-Version.oz
-
-MISCSRC1 = Agenda.oz Server.oz
-MISCSRC = $(MISCSRC1:%=misc/%) Misc.oz
-
-ENVS = SP.env OP.env AP.env CP.env WP.env DP.env Compiler.env Misc.env
-TOOLENVS = Browser.env CompilerPanel.env Emacs.env Explorer.env Gump.env \
-	GumpParser.env GumpScanner.env Ozcar.env Panel.env Profiler.env
-LOCAL_TOOLENVS = $(TOOLENVS:%.env=tyc/tools/%.env)
-LOCAL_TOOLTYPS = $(TOOLENVS:%.env=tyc/tools/%.typ)
-LOCAL_TOOLTYCS = $(TOOLENVS:%.env=tyc/tools/%.tyc)
-ENVS1 = Base.env Standard.env $(ENVS)
-LOCAL_LIBTYPS = $(ENVS:%.env=tyc/lib/%.typ)
-LOCAL_LIBTYCS = $(ENVS:%.env=tyc/lib/%.tyc)
-TYCS = $(LOCAL_LIBTYCS) $(LOCAL_TOOLTYCS)
-
-# This ensures that the $(TYCS) are not removed after, e.g., `make stage2',
-# so that we can `make install' directly afterwards.
-.PRECIOUS: $(TYCS)
-
-ALLSRCS = \
-	$(STANDARDSRC) $(INITSRC) \
-	$(SPSRC) $(OPSRC) $(APSRC) $(CPSRC) $(DPSRC) $(WPSRC) \
-	$(COMPILERSRC) $(MISCSRC)
-
-LIBFILES = \
-	$(ENVS1:%=$(OZLIB)/%) \
-	$(LOCAL_LIBTYCS:tyc/lib/%=$(OZLIB)/%)
-
-COMPONENTS = \
-	Init.ozc SP.ozc OP.ozc AP.ozc CP.ozc WP.ozc DP.ozc \
-	Compiler.ozc Misc.ozc StandardModules.ozc StandardSubModules.ozc \
-	Tools.ozc
-
-FUNCTORS = \
-	SP.ozf OP.ozf AP.ozf CP.ozf WP.ozf DP.ozf \
-	Compiler.ozf Misc.ozf
-
-LIBCOMPONENTS = $(COMPONENTS:%=$(OZLIB)/%)
-CACHECOMPONENTS = $(COMPONENTS:%=$(CACHEDIR)/%)
-CACHETYCS	= $(ENVS:%.env=$(CACHEDIR)/%.tyc)
-
-LIBFUNCTORS   = $(FUNCTORS:%=$(OZLIB)/%)
-CACHEFUNCTORS = $(FUNCTORS:%=$(CACHEDIR)/%)
-
-SYSLETS = ozbatch ozserver ozvsserver
-BINFILES = $(SYSLETS:%=$(OZBIN)/%)
-
-IMAGES1 = mini-dec.xbm mini-inc.xbm
-IMAGES = $(IMAGES1:%=$(IMAGESDIR)/%)
-
-STANDARD = Base.ozc Standard.ozc Base.env Standard.env
-DUMPINTRO = DumpIntro.oz $(STANDARD)
-
-.PHONY: all lilo
-
-all: $(COMPONENTS) $(SYSLETS)
-
-lilo: $(FUNCTORS)
-
-Makefile: Makefile.in ../config.status
-	cd .. && ./config.status
-
-../config.status: ../configure
-	cd .. && ./config.status --recheck
-
-#---------------------------------------------------------------------
-# Components
-#---------------------------------------------------------------------
-
-$(LOCAL_TOOLENVS): tyc/tools/%.env : ../tools/%.env
-	@mkdir tyc 2> /dev/null || true
-	@mkdir tyc/tools 2> /dev/null || true
-	cp $< $@
-
-$(LOCAL_TOOLTYPS): %.typ : %.env
-	$(ENV2TYPE) $< > $@
-
-$(LOCAL_TOOLTYCS): %.tyc : %.typ Init.ozc
-	$(COMPILE) $< -o $@
-
-$(LOCAL_LIBTYPS): tyc/lib/%.typ : %.env
-	@mkdir tyc 2> /dev/null || true
-	@mkdir tyc/lib 2> /dev/null || true
-	$(ENV2TYPE) $< > $@
-
-$(LOCAL_LIBTYCS): %.tyc : %.typ Init.ozc
-	$(COMPILE) $< -o $@
-
-%.ozc: %.oz
-	$(COMPILE) $< -o $@
-
-%.ozc: ap/%.oz
-	$(COMPILE) $< -o $@
-
-%.ozc: compiler/%.oz
-	$(COMPILE) $< -o $@
-
-Init.ozc: $(DUMPINTRO) $(INITSRC)
-	OZMAINIT="" $(COMPILE) Init.oz
-
-Base.ozc: Standard.ozc
-	@echo > /dev/null
-
-Standard.ozc: $(STANDARDSRC) Base.env Standard.env
-	OZMAINIT="" $(EXEC) DumpInitial.oz
-
-SP.ozc: $(DUMPINTRO) $(SPSRC) SP.env Init.ozc
-
-OP.ozc: $(DUMPINTRO) $(OPSRC) SP.env OP.env Init.ozc
-
-AP.ozc: $(DUMPINTRO) $(APSRC) SP.env OP.env AP.env Init.ozc
-
-DP.ozc: $(DUMPINTRO) $(DPSRC) OP.env Init.ozc
-
-CP.ozc: $(DUMPINTRO) $(CPSRC) SP.env CP.env Init.ozc
-
-WP.ozc: $(DUMPINTRO) $(WPSRC) SP.env OP.env WP.env Init.ozc
-
-Misc.ozc: $(DUMPINTRO) $(MISCSRC) Misc.env Init.ozc
-
-%.ozf: %.oz
-	$(OZFC) $< -o $@
-
-SP.ozf: $(DUMPINTRO) $(SPSRC) Init.ozc
-
-OP.ozf: $(DUMPINTRO) $(OPSRC) Init.ozc
-
-AP.ozf: $(DUMPINTRO) $(APSRC) Init.ozc
-
-DP.ozf: $(DUMPINTRO) $(DPSRC) Init.ozc
-
-CP.ozf: $(DUMPINTRO) $(CPSRC) Init.ozc
-
-WP.ozf: $(DUMPINTRO) $(WPSRC) Init.ozc
-
-Misc.ozf: $(DUMPINTRO) $(MISCSRC) Init.ozc
-
-Compiler.ozf: $(DUMPINTRO) $(COMPILERSRC) Init.ozc
-
-# dependencies removed to avoid automatic recreation
-#ozbatch.ozm: MakeAssembly.oz \
-#	$(STANDARDSRC) Base.env Standard.env \
-#	$(SPSRC) SP.env $(CPSRC) CP.env \
-#	$(OPSRC) OP.env $(COMPILERSRC) Compiler.env BatchCompile.oz
-
-ozbatch.ozm: 
-	$(OZMA) -o /tmp/$$$$.ozm MakeAssembly.oz && \
-	mv -f /tmp/$$$$.ozm $@
-
-ozbatch.ozc: ozbatch.ozm
-	OZMAINIT="" OZMAFILE="-b $<" $(SRCDIR)/ozbatch.sh
-
-ozbatch: MakeBatch.oz BatchCompile.oz $(DUMPINTRO) \
-	Init.ozc SP.ozc SP.env OP.ozc OP.env AP.ozc AP.env $(TYCS)
-	$(EXECWITHSTD) $<
-
-ozserver: MakeOzServer.oz $(DPSRC) $(DUMPINTRO) \
-	Init.ozc AP.ozc SP.ozc OP.ozc $(TYCS)
-	$(EXECWITHSTD) $<
-
-ozvsserver: MakeOzVSServer.oz $(DPSRC) $(DUMPINTRO) \
-	Init.ozc AP.ozc SP.ozc OP.ozc $(TYCS)
-	$(EXECWITHSTD) $<
-
-#---------------------------------------------------------------------
-# Compiler
-
-FunMisc.ozc: compiler/Misc.oz $(STANDARD)
-
-FunBuiltins.ozc: compiler/Builtins.oz compiler-Builtins.oz $(STANDARD)
-
-FunSA.ozc: SP-new.env CP-new.env compiler/Misc-new.env \
-	compiler/POTypes.oz compiler/StaticAnalysis.oz $(STANDARD)
-
-FunCode.ozc: SP-new.env compiler/Misc-new.env compiler/CodeStore.oz \
-	compiler/CodeEmitter.oz compiler/CodeGen.oz $(STANDARD)
-
-FunCore.ozc: SP-new.env compiler/Misc-new.env compiler/Annotate.oz \
-	compiler/CoreLanguage.oz $(STANDARD)
-
-FunUnnest.ozc: CP-new.env compiler/Misc-new.env compiler/TupleSyntax.oz \
-	compiler/BindingAnalysis.oz compiler/UnnestFD.oz compiler/Unnester.oz \
-	$(STANDARD)
-
-FunAssembler.ozc: SP-new.env compiler/Assembler.oz compiler-Opcodes.oz \
-	$(STANDARD)
-
-FunCompiler.ozc: SP-new.env compiler/Misc-new.env \
-	compiler/FormatStrings.oz compiler/Reporter.oz compiler/ParseOz.oz \
-	compiler/Interface.oz compiler/CompilerClass.oz \
-	compiler/GenericInterface.oz compiler/QuietInterface.oz \
-	compiler-Version.oz $(STANDARD)
-
-COMPILER_BIG = @COMPILER_BIG@
-COMPILER_FUN = @COMPILER_FUN@
-
-$(COMPILER_BIG): $(DUMPINTRO) $(COMPILERSRC) SP.env CP.env \
-	../tools/Gump.env Compiler.env Init.ozc
-
-$(COMPILER_FUN): $(DUMPINTRO) SP.env CP.env ../tools/Gump.env Compiler.env \
-	Init.ozc FunMisc.ozc FunBuiltins.ozc FunSA.ozc FunCode.ozc \
-	FunCore.ozc FunUnnest.ozc FunAssembler.ozc FunCompiler.ozc \
-	compiler/FunMake.oz $(TYCS)
-	$(OZBATCH) $(OZFLAGS) --include=DumpIntro.oz -l OP \
-	-c compiler/FunMake.oz -o Compiler.ozc
 
 compiler-Version.oz: $(COMPILERSRCNOVER) compiler/Opcodes.m4oz
 	echo 'DATE = '\'`date '+%h %d 19%y (%T)'`\' > $@ \
@@ -306,44 +157,82 @@ compiler-Opcodes.oz: compiler/Opcodes.m4oz ../../platform/emulator/instrDefs.m4
 	$(M4) -DEMUDIR=$(SRCDIR)/../../platform/emulator < $< > $@ \
 	|| (rm -f $@; exit 1)
 
+Compiler.ozf: $(COMPILERSRC)
+
+
+
+#---------------------------------------------------------------------
+# Syslets
+#---------------------------------------------------------------------
+
+ozc: Standard.ozf MakeBatch.oz BatchCompile.oz
+	$(EXECWITHSTD) MakeBatch.oz
+
+ozserver: Standard.ozf MakeOzServer.oz dp/RemoteServer.oz
+	$(EXECWITHSTD) MakeOzServer.oz
+
+ozvsserver: Standard.ozf MakeOzVSServer.oz dp/RemoteServer
+	$(EXECWITHSTD) MakeOzVSServer.oz
+
+#---------------------------------------------------------------------
+# Boot compiler
+#---------------------------------------------------------------------
+
+ozc.ozm: 
+	$(OZMA) -o /tmp/$$$$.ozm MakeAssembly.oz && \
+	mv -f /tmp/$$$$.ozm $@
+
+ozc.ozc: ozc.ozm
+	OZMAINIT="" OZMAFILE="-b $<" $(SRCDIR)/ozc.sh
+
 #---------------------------------------------------------------------
 # Installation
 #---------------------------------------------------------------------
+
+LIBFUNCTORS = \
+	$(FUNCTORS:%=$(OZLIB)/%) $(OZLIB)/Init.ozc
+BINFILES = \
+	$(SYSLETS:%=$(OZBIN)/%)
+STAGEEXTRAFILES = \
+	$(OZLIB)/Standard.ozf $(OZLIB)/ozc.ozm \
+	$(OZLIB)/ozc.ozc
 
 .PHONY: install install-stage install-main install-images install-cache
 
 install: install-main install-images install-cache
 
-install-lilo: $(LIBFUNCTORS)
-	
-STAGEEXTRAFILES = \
-	$(OZLIB)/Base.ozc $(OZLIB)/Standard.ozc \
-	$(OZLIB)/ozbatch.ozm $(OZLIB)/ozbatch.ozc
 
 install-stage: install-main $(STAGEEXTRAFILES)
 
 install-main: all \
-	$(OZLIB) $(LIBFILES) $(LIBCOMPONENTS) \
+	$(OZLIB) $(LIBFUNCTORS) \
 	$(OZBIN) $(BINFILES)
+
+IMAGES1 = mini-dec.xbm mini-inc.xbm
+IMAGES = $(IMAGES1:%=$(IMAGESDIR)/%)
 
 install-images: \
 	$(IMAGESDIR) $(IMAGES)
 
-install-cache: $(CACHEDIR) $(CACHECOMPONENTS) $(CACHETYCS)
+CACHEDIR  = $(PREFIX)/cache/http/www.ps.uni-sb.de
+CACHELINK = $(CACHEDIR)/ozhome
+
+install-cache: \
+	$(CACHEDIR) $(CACHELINK)
+
 $(CACHEDIR):
 	$(INSTALL_DIR) $(CACHEDIR)
-$(CACHECOMPONENTS): $(CACHEDIR)/%.ozc : %.ozc
-	$(INSTALL_FILE) $< $@
-$(CACHETYCS): $(CACHEDIR)/%.tyc : tyc/lib/%.tyc
-	$(INSTALL_FILE) $< $@
+
+$(CACHELINK): $(CACHEDIR)
+	$(LN_S)  $(PREFIX) $(CACHELINK)
 
 $(OZLIB) $(IMAGESDIR) $(OZBIN):
 	$(INSTALL_DIR) $@
 
-$(OZLIB)/%.ozc: %.ozc
+$(OZLIB)/%.ozf: %.ozf
 	$(INSTALL_FILE) $< $@
 
-$(OZLIB)/%.ozf: %.ozf
+$(OZLIB)/%.ozc: %.ozc
 	$(INSTALL_FILE) $< $@
 
 $(OZLIB)/%.ozm: %.ozm
@@ -352,14 +241,19 @@ $(OZLIB)/%.ozm: %.ozm
 $(IMAGESDIR)/%: images/%
 	$(INSTALL_FILE) $< $@
 
-$(OZLIB)/%.env: %.env
-	$(INSTALL_SRC) $< $@
-
-$(OZLIB)/%.tyc: tyc/lib/%.tyc
-	$(INSTALL_FILE) $< $@
-
 $(OZBIN)/%: %
 	$(INSTALL_BIN) $< $@
+
+#---------------------------------------------------------------------
+# Automatic Makefile update
+#---------------------------------------------------------------------
+ 
+Makefile: Makefile.in ../config.status
+	cd .. && ./config.status
+
+../config.status: ../configure
+	cd .. && ./config.status --recheck
+
 
 #---------------------------------------------------------------------
 # Cleaning up
@@ -370,9 +264,8 @@ $(OZBIN)/%: %
 clean:
 	-rm -f *~ *.bak
 	-rm -f compiler-Version.oz compiler-Builtins.oz compiler-Opcodes.oz
-	-rm -f -r tyc
-	-rm -f Base.ozc Standard.ozc $(COMPONENTS) Fun*.ozc ozbatch.ozc
-	-rm -f ozbatch ozserver ozvsserver
+	-rm -f $(FUNCTORS) Standard.ozf
+	-rm -f $(SYSLETS)
 
 veryclean: clean
 	-rm -f -r TAGS $(STAGE1) $(STAGE2) $(STAGE2B) $(STAGE3) $(STAGE3B)
@@ -401,11 +294,11 @@ URL=http\\://www.ps.uni-sb.de/ozhome
 
 # use Ozma to create the components
 bootstrap:
-	$(MAKE) ozbatch.ozc all \
-	OZBATCH=$(SRCDIR)/ozbatch.sh \
+	$(MAKE) ozc.ozc all \
+	OZC=$(SRCDIR)/ozc.sh \
 	OZINIT=Init.ozc \
 	OZ_LIB=. \
-	OZ_LOAD=root=.:prefix=$(URL)/=./tyc/:prefix=$(URL)/lib/=./:=
+	OZ_LOAD=root=.:prefix=$(URL)/lib/=./:=
 
 STAGE1=./stage1
 STAGE2=./stage2
@@ -419,49 +312,49 @@ stage1:
 
 # stage2: recreate the components and Ozma file using the stage1 components
 stage2:
-	mv $(SRCDIR)/ozbatch.ozm ozbatch.ozm.save
-	trap "s=$$?;mv ozbatch.ozm.save $(SRCDIR)/ozbatch.ozm; trap 0 1 2 15; exit $$s" 0 1 2 15; \
+	mv $(SRCDIR)/ozc.ozm ozc.ozm.save
+	trap "s=$$?;mv ozc.ozm.save $(SRCDIR)/ozc.ozm; trap 0 1 2 15; exit $$s" 0 1 2 15; \
 	$(MAKE) install-stage PREFIX=$(STAGE2) \
-	OZ_LOAD=prefix=$(URL)/lib/=$(STAGE1)/lib/:prefix=$(URL)/tools/=$(URL)/tools/:.:=\
-	OZBATCH=$(STAGE1)/bin/ozbatch \
+	OZ_LOAD=prefix=$(URL)/lib/=$(STAGE1)/lib/:.:=\
+	OZC=$(STAGE1)/bin/ozc \
 	OZINIT=$(STAGE1)/lib/Init.ozc
 
 
 # stage2b: recreate the components and Ozma file using the stage2 components
 stage2b:
-	mv $(SRCDIR)/ozbatch.ozm ozbatch.ozm.save
-	trap "s=$$?;mv ozbatch.ozm.save $(SRCDIR)/ozbatch.ozm; trap 0 1 2 15; exit $$s" 0 1 2 15; \
+	mv $(SRCDIR)/ozc.ozm ozc.ozm.save
+	trap "s=$$?;mv ozc.ozm.save $(SRCDIR)/ozc.ozm; trap 0 1 2 15; exit $$s" 0 1 2 15; \
 	$(MAKE) install-stage PREFIX=$(STAGE2B) \
 	OZ_LOAD=prefix=$(URL)/lib/=$(STAGE2)/lib/:prefix=$(URL)/tools/=$(URL)/tools/:.:=\
-	OZBATCH=$(STAGE2)/bin/ozbatch \
+	OZC=$(STAGE2)/bin/ozc \
 	OZINIT=$(STAGE2)/lib/Init.ozc
 
 # stage3: recreate the components and Ozma file using the stage2 Ozma file
 stage3:
-	$(MAKE) ozbatch.ozc install-stage PREFIX=$(STAGE3) \
+	$(MAKE) ozc.ozc install-stage PREFIX=$(STAGE3) \
 	OZ_LOAD=all=.:all=tyc/lib:all=tyc/tools:prefix=$(URL)/tools/=$(URL)/tools/:= \
-	OZBATCH=$(SRCDIR)/ozbatch.sh \
+	OZC=$(SRCDIR)/ozc.sh \
 	OZINIT=$(STAGE2)/lib/Init.ozc \
 	OZMAINIT=$(STAGE2)/lib/Init.ozc \
-	OZMAFILE="-u $(STAGE2)/lib/ozbatch.ozc"
+	OZMAFILE="-u $(STAGE2)/lib/ozc.ozc"
 
 # stage3b: recreate the components and Ozma file using the stage3 components
 stage3b:
 	$(MAKE) install-stage PREFIX=$(STAGE3B) \
 	OZ_LOAD=prefix=$(URL)/lib/=$(STAGE3)/lib/:prefix=$(URL)/tools/=$(URL)/tools/:.:=\
-	OZBATCH=$(STAGE3)/bin/ozbatch \
+	OZC=$(STAGE3)/bin/ozc \
 	OZINIT=$(STAGE3)/lib/Init.ozc
 
 # for making incompatible changes to instructions
-#  1. make newozma                 # create new ozbatch.ozm with old emulator
+#  1. make newozma                 # create new ozc.ozm with old emulator
 #  2. make bootstrap OZEMULATOR=.. # bootstrap again with new emulator
 newozma:
 	$(MAKE) clean
 	$(MAKE) stage1 OZFLAGS="-DNO_ASSEMBLER"
 	$(MAKE) clean
-	$(MAKE) ozbatch.ozm \
-	 OZ_LOAD=prefix=$(URL)/lib/=$(STAGE1)/lib/:prefix=$(URL)/tools/=$(URL)/tools/:.:=\
-	 OZBATCH=$(STAGE1)/bin/ozbatch \
+	$(MAKE) ozc.ozm \
+	 OZ_LOAD=prefix=$(URL)/lib/=$(STAGE1)/lib/:.:=\
+	 OZC=$(STAGE1)/bin/ozc \
 	 OZINIT=$(STAGE1)/lib/Init.ozc
 
 check:
@@ -478,3 +371,59 @@ thorough-check:
 
 # no suffixes needed
 .SUFFIXES:
+
+	
+#
+# Currently unused
+#
+
+#---------------------------------------------------------------------
+# Compiler
+
+#FunMisc.ozc: compiler/Misc.oz $(STANDARD)
+#
+#FunBuiltins.ozc: compiler/Builtins.oz compiler-Builtins.oz $(STANDARD)
+#
+#FunSA.ozc: SP-new.env CP-new.env compiler/Misc-new.env \
+#	compiler/POTypes.oz compiler/StaticAnalysis.oz $(STANDARD)
+#
+#FunCode.ozc: SP-new.env compiler/Misc-new.env compiler/CodeStore.oz \
+#	compiler/CodeEmitter.oz compiler/CodeGen.oz $(STANDARD)
+#
+#FunCore.ozc: SP-new.env compiler/Misc-new.env compiler/Annotate.oz \
+#	compiler/CoreLanguage.oz $(STANDARD)
+#
+#FunUnnest.ozc: CP-new.env compiler/Misc-new.env compiler/TupleSyntax.oz \
+#	compiler/BindingAnalysis.oz compiler/UnnestFD.oz compiler/Unnester.oz \
+#	$(STANDARD)
+#
+#FunAssembler.ozc: SP-new.env compiler/Assembler.oz compiler-Opcodes.oz \
+#	$(STANDARD)
+#
+#FunCompiler.ozc: SP-new.env compiler/Misc-new.env \
+#	compiler/FormatStrings.oz compiler/Reporter.oz compiler/ParseOz.oz \
+#	compiler/Interface.oz compiler/CompilerClass.oz \
+#	compiler/GenericInterface.oz compiler/QuietInterface.oz \
+#	compiler-Version.oz $(STANDARD)
+#
+#COMPILER_BIG = @COMPILER_BIG@
+#COMPILER_FUN = @COMPILER_FUN@
+#
+#$(COMPILER_BIG): $(DUMPINTRO) $(COMPILERSRC) SP.env CP.env \
+#	../tools/Gump.env Compiler.env Init.ozc
+#
+#$(COMPILER_FUN): $(DUMPINTRO) SP.env CP.env ../tools/Gump.env Compiler.env \
+#	Init.ozc FunMisc.ozc FunBuiltins.ozc FunSA.ozc FunCode.ozc \
+#	FunCore.ozc FunUnnest.ozc FunAssembler.ozc FunCompiler.ozc \
+#	compiler/FunMake.oz $(TYCS)
+#	$(OZC) $(OZFLAGS) --include=DumpIntro.oz -l OP \
+#	-c compiler/FunMake.oz -o Compiler.ozc
+#
+
+
+
+
+
+
+
+
