@@ -31,6 +31,7 @@
 # oztool cc  ...        same for the c compiler
 # oztool ld  ...        creates DLLs
 # oztool platform       echoes the oz platform
+# oztool version        echoes the oz version 
 
 # determine oztool includes
 if test "${OZTOOL_INCLUDES-NONE}" = NONE; then
@@ -51,6 +52,7 @@ fi
 : ${oztool_cc="@CC@ @OZTOOLDYNOPTCC@ $OZTOOL_INCLUDES"}
 : ${oztool_ld="@TOOLLDCMD@ @LDFLAGS@"}
 : ${oztool_platform="@platform@"}
+: ${oztool_version="@OZVERSION@"}
 
 if test $# -eq 0
 then
@@ -60,6 +62,7 @@ Usage:
 	oztool cc  -c SourceFile
 	oztool ld  -o TargetLib FileList
 	oztool platform [-o file]
+	oztool version
 EOF
   exit 2
 fi
@@ -77,6 +80,8 @@ case "$cmd" in
     * ) echo "$oztool_platform";;
     esac
     exit 0;;
+  version ) echo "$oztool_version";
+            exit 0;;
   *  )
   echo "oztool: unknown command $cmd" 1>&2
   exit 1
