@@ -40,7 +40,11 @@ private:
   Bool isConsistent(void) const;
   struct _i_arr_type {
     i_arr_type _i_arr[fd_iv_max_high];
-    i_arr_type &operator [] (int i) const {
+    i_arr_type &operator [] (int i) /*const*/ {
+      Assert(0 <= i && i < *(((int *)this) - 1));
+      return _i_arr[i];
+    }
+    i_arr_type operator [] (int i) const {
       Assert(0 <= i && i < *(((int *)this) - 1));
       return _i_arr[i];
     }
@@ -107,7 +111,11 @@ private:
 #if defined(DEBUG_CHECK) && defined(DEBUG_FD)
   struct {
     int _b_arr[fd_bv_max_high];
-    int &operator [] (int i) const {
+    int &operator [] (int i) /*const*/ {
+      Assert(0 <= i && i < fd_bv_max_high);
+      return _b_arr[i];
+    }
+    int operator [] (int i) const {
       Assert(0 <= i && i < fd_bv_max_high);
       return _b_arr[i];
     }
@@ -296,7 +304,7 @@ public:
 
 
 inline
-ostream &operator << (ostream &ofile, FiniteDomain &fd) {
+ostream &operator << (ostream &ofile, const FiniteDomain &fd) {
   fd.print(ofile);
   return ofile;
 }

@@ -89,7 +89,7 @@ if (FORCE_ALL || COND) { \
 //-----------------------------------------------------------------------------
 // Macros
 
-#define FailOnEmpty(X) if((X) == 0) return FAILED;
+#define FailOnEmpty(X) {if((X) == 0) return FAILED;}
 
 #define SimplifyOnUnify(EQ01, EQ02, EQ12) \
   if (isUnifyCurrentTaskSusp()) { \
@@ -218,6 +218,8 @@ OZ_C_proc_proto(BIfdGenLinLessEqB);
 OZ_C_proc_proto(BIfdGenNonLinLessEqB);
 OZ_C_proc_proto(BIfdCardBI);
 OZ_C_proc_proto(BIfdInB);
+OZ_C_proc_proto(BIfdCardBIKill);
+OZ_C_proc_proto(BIfdInKillB);
 OZ_C_proc_proto(BIfdNotInB);
 OZ_C_proc_proto(BIfdIsIntB);
 OZ_C_proc_proto(BIfdCardBIBin);
@@ -289,8 +291,10 @@ OZ_C_proc_proto(BIfdGenNonLinNotEqB_body);
 OZ_C_proc_proto(BIfdGenLinLessEqB_body);
 OZ_C_proc_proto(BIfdGenNonLinLessEqB_body);
 OZ_C_proc_proto(BIfdCardBI_body);
+OZ_C_proc_proto(BIfdCardBIKill_body);
 OZ_C_proc_proto(BIfdCardBIBin_body);
 OZ_C_proc_proto(BIfdInB_body);
+OZ_C_proc_proto(BIfdInKillB_body);
 OZ_C_proc_proto(BIfdNotInB_body);
 OZ_C_proc_proto(BIfdIsIntB_body);
 
