@@ -1412,7 +1412,8 @@ to handle lines like 'attr a:'."
 	(if (not (pos-visible-in-window-p start2 window))
 	    (let ((old-window (selected-window)))
 	      (select-window window)
-	      (recenter)))))))
+	      (recenter)
+	      (select-window old-window)))))))
 
 (defun oz-bar-configure (state)
   "Change color of bar while not moving it."
