@@ -2032,10 +2032,10 @@ LBLkillThread:
 	  /* {Obj Msg} --> {Obj Msg Methods Self} */
 	  Object *o = (Object*) predicate;
 	  if (o->getIsClass()) {
-	    HF_FAIL(message("classes cannot be applied "),);
+	    HF_WARN(message("classes cannot be applied "),);
 	  }
 	  if (predArity != 1) {
-	    HF_FAIL(message("Object application: expect one argument, got: %d",predArity),);
+	    HF_WARN(message("Object application: expect one argument, got: %d",predArity),);
 	  }
 	  def = o->getAbstraction();
 	  X[predArity++] = o->getSlowMethods();
