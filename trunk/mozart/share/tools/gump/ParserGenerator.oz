@@ -1566,10 +1566,10 @@ local
 	       Tables0 = {Bison {Length @symbols} Grammar VerboseFile Rep}
 	       StartSymbols = {AdjoinList synStartSymbols @startSymbols}
 	       Tables = {AdjoinAt Tables0 synStartSymbols StartSymbols}
-	    catch ozbison(I) then
+	    catch ozbison(VS) then
 	       {Rep error(kind: ParserGeneratorError
 			  msg: 'parse table generator exited abnormally'
-			  items: [hint(l: 'Exit code' m: I)])}
+			  items: [hint(l: 'Fatal error' m: VS)])}
 	    end
 	 end
       end
