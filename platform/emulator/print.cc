@@ -74,12 +74,14 @@ void printWhere(ostream &cout,ProgramCounter PC);
 inline Bool isEffectiveSusp(SuspList* sl)
 {
   return OK;
+#if 0
   Thread *thr = sl->getElem ();
   if (thr->isDeadThread ())
     return NO;
   if (!(thr->getBoard()))
     return NO;
   return OK;
+#endif
 }
 
 // returns OK if sl contains at least one alive suspension element
@@ -647,7 +649,7 @@ PRINT(SuspList)
   }
 
   for (SuspList* sl = this; sl != NULL; sl = sl->getNext()) {
-    if (isEffectiveSusp(sl) ) {
+    if (isEffectiveSusp(sl)) {
       stream << indent(offset);
       (sl->getElem ())->print (stream);
       stream << endl;
@@ -1536,7 +1538,7 @@ void TaskStack::printTaskStack(ProgramCounter pc, Bool verbose, int depth)
 TaggedRef TaskStack::dbgFrameVariables(int frameId)
 {
   int     depth = 10000;
-  bool    match = NO;
+  Bool    match = NO;
 
   Frame *auxtos = getTop();
   

@@ -32,7 +32,7 @@ void dbgPrint(TaggedRef t)
   taggedPrint(t,ozconf.printDepth);
 }
 
-void execBreakpoint(Thread *t, bool message) {
+void execBreakpoint(Thread *t, Bool message) {
   t->startStepMode();
   t->deleteContFlag();
   t->traced();
@@ -51,7 +51,7 @@ static void gotoBoard(Board *b) {
 }
 
 void debugStreamSuspend(ProgramCounter PC, Thread *tt,
-			TaggedRef name, TaggedRef args, bool builtin) {
+			TaggedRef name, TaggedRef args, Bool builtin) {
   Board *bb = gotoRootBoard();
 
   TaggedRef tail    = am.threadStreamTail;
@@ -215,7 +215,7 @@ void debugStreamRaise(Thread *tt, TaggedRef exc) {
 }
 
 void debugStreamCall(ProgramCounter debugPC, char *name, int arity, 
-		     TaggedRef *arguments, bool builtin, int frameId) {
+		     TaggedRef *arguments, Bool builtin, int frameId) {
   Board *bb = gotoRootBoard();
   
   TaggedRef tail    = am.threadStreamTail;
