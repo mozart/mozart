@@ -26,7 +26,6 @@
 
 #include "rel.hh"
 #include "auxcomp.hh"
-//#include "../libfset/filter.hh"
 #include "rel_filter.hh"
 
 //-----------------------------------------------------------------------------

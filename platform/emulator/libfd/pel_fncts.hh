@@ -27,65 +27,66 @@
 #ifndef __PEL_FNCTS_HH__
 #define __PEL_FNCTS_HH__
 
-#include "std.hh"
 #include "pel_engine.hh"
 
 //-----------------------------------------------------------------------------
 
 // X + C <= Y
+template <class ENGINE, class FDVAR, class PFDVAR>
 class PEL_LessEqOffset : public PEL_Propagator {
 protected:
   int _x, _y, _c;
 public:
-  PEL_LessEqOffset(PEL_PersistentFDIntVar &x, int c,
-                   PEL_PersistentFDIntVar &y)
+  PEL_LessEqOffset(PFDVAR &x, int c,
+                   PFDVAR &y)
     :  _c(-c) {
     _x = x.newId(*_pe);
     _y = y.newId(*_pe);
     CDM(("constr lesseqoff _x=%d _y=%d _c=%d\n", _x, _y, _c));
   }
   //
-  void print(PEL_Engine &e) {
+  void print(ENGINE &e) {
     printf("LessEqOffset x(%s,%d) + c(%d) <= ",
-           (*(PEL_FDIntVar *) e[_x])->toString(), _x, _c);
-    printf("y(%s,%d)\n", (*(PEL_FDIntVar *) e[_y])->toString(), _y);
+           (*(FDVAR *) e[_x])->toString(), _x, _c);
+    printf("y(%s,%d)\n", (*(FDVAR *) e[_y])->toString(), _y);
   }
   //
   virtual pf_return_t propagate(PEL_Engine &e);
 };
 
-inline
-void make_PEL_LessEqOffset(PEL_PersistentEngine &engine,
-                           PEL_PersistentFDIntVar &x, int c,
-                           PEL_PersistentFDIntVar &y)
+template <class ENGINE, class PFDVAR, class FDVAR>
+void make_PEL_LessEqOffset(ENGINE &engine,
+                           PFDVAR &x, int c,
+                           PFDVAR &y, FDVAR * dummy)
 {
   engine.expectIntVarBounds(x);
   engine.expectIntVarBounds(y);
-  engine.impose(new PEL_LessEqOffset(x, c, y));
+  engine.impose(new PEL_LessEqOffset<ENGINE,FDVAR,PFDVAR>(x, c, y));
 }
 
 // X + C > Y == Y - C - 1 <= X
-class PEL_GreaterOffset : public PEL_LessEqOffset {
+template <class ENGINE, class FDVAR, class PFDVAR>
+class PEL_GreaterOffset : public PEL_LessEqOffset<ENGINE,FDVAR,PFDVAR> {
 public:
-  PEL_GreaterOffset(PEL_PersistentFDIntVar &x, int c,
-                    PEL_PersistentFDIntVar &y)
-    : PEL_LessEqOffset(y, -c+1, x) {}
+  PEL_GreaterOffset(PFDVAR &x, int c,
+                    PFDVAR &y)
+    : PEL_LessEqOffset<ENGINE,FDVAR,PFDVAR>(y, -c+1, x) {}
   //
-  void print(PEL_Engine &e) {
+  void print(ENGINE &e) {
     printf("GreaterOffset x(%s,%d) + c(%d) > ",
-           (*(PEL_FDIntVar *) e[_y])->toString(), _y, -_c+1);
-    printf("y(%s,%d)\n", (*(PEL_FDIntVar *) e[_x])->toString(), _x);
+           (*(FDVAR *) e[_y])->toString(), _y, -_c+1);
+    printf("y(%s,%d)\n", (*(FDVAR *) e[_x])->toString(), _x);
   }
 };
 
-inline
-void make_PEL_GreaterOffset(PEL_PersistentEngine &engine,
-                           PEL_PersistentFDIntVar &x, int c,
-                           PEL_PersistentFDIntVar &y)
+template <class ENGINE, class PFDVAR, class FDVAR>
+void make_PEL_GreaterOffset(ENGINE &engine,
+                            PFDVAR &x, int c,
+                            PFDVAR &y, FDVAR * dummy)
 {
   engine.expectIntVarBounds(x);
   engine.expectIntVarBounds(y);
-  engine.impose(new PEL_GreaterOffset(x, c, y));
+  engine.impose(new PEL_GreaterOffset<ENGINE,FDVAR,PFDVAR>(x, c, y));
 }
 
 #endif /* __PEL_FNCTS_HH__ */

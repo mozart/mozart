@@ -24,22 +24,30 @@
  *
  */
 
-#ifndef __TASKOVERLAP_FILTER_HH__
-#define __TASKOVERLAP_FILTER_HH__
+#ifndef __TASKSOVERLAP_FILTER_HH__
+#define __TASKSOVERLAP_FILTER_HH__
 
 #include "rel_filter.hh"
 
-template  <class SERVICE, class FDVAR>
-SERVICE &FilterTasksOverlap<SERVICE, FDVAR>::filter(SERVICE & s,
-                                                    FDVAR &x,
-                                                    int xd,
-                                                    FDVAR &y,
-                                                    int yd,
-                                                    FDVAR &o)
+#ifndef CMD
+#define CMD
+#endif
+
+#ifndef OZ_DEBUGPRINTTHIS
+#define OZ_DEBUGPRINTTHIS
+#endif
+
+template  <class SERVICE, class FDVAR, class FD, class P_PFDVAR, class PFDVAR, class ENGINE>
+SERVICE &FilterTasksOverlap<SERVICE, FDVAR, FD, P_PFDVAR, PFDVAR, ENGINE>::filter(SERVICE & s,
+                                                        FDVAR &x,
+                                                        int xd,
+                                                        FDVAR &y,
+                                                        int yd,
+                                                        FDVAR &o)
 {
-  PEL_FDIntVar cl1_t1, cl1_t2, cl1_o;
-  PEL_FDIntVar cl2_t1, cl2_t2, cl2_o;
-  PEL_FDIntVar cl3_t1, cl3_t2, cl3_o;
+  PFDVAR cl1_t1, cl1_t2, cl1_o;
+  PFDVAR cl2_t1, cl2_t2, cl2_o;
+  PFDVAR cl3_t1, cl3_t2, cl3_o;
   //
   PEL_Engine engine_cl1(_engine_cl1, "DDD",
                         &_cl1_t1, &cl1_t1,
@@ -76,7 +84,7 @@ SERVICE &FilterTasksOverlap<SERVICE, FDVAR>::filter(SERVICE & s,
     //--------------------------------------------------
     // 1. step
     if (not_first_iteration) {
-      OZ_FiniteDomain u_t1(fd_empty), u_t2(fd_empty), u_o(fd_empty);
+      FD u_t1(fd_empty), u_t2(fd_empty), u_o(fd_empty);
       if (!engine_cl1.isFailed()) {
         u_t1 = u_t1 | *cl1_t1;
         u_t2 = u_t2 | *cl1_t2;
@@ -259,7 +267,7 @@ RETURN make_tasksoverlap(RETURN r, EXPECT &pe,
   EXPECT(pe, expectInt, yd, r);
   EXPECT_SUSPEND(pe, expectBoolVar, o, r, _d);
   //
-  return pe.impose(new TasksOverlapPropagator(x, xd, y, yd, o));
+  return pe.impose(new TasksOverlap(x, xd, y, yd, o));
 }
 
 #endif
