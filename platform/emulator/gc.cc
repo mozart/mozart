@@ -706,6 +706,12 @@ void Literal::gcRecurse ()
   DebugCode (if (!home) home = (Board *) 0xfeeffeef;);
 }
 
+inline
+Object *Object::gcObject()
+{
+  return (Object *) gcConstTerm();
+}
+
 
 /*
  * Float
@@ -874,6 +880,8 @@ RunnableThreadBody *RunnableThreadBody::gcRTBody ()
   //  ... also see above;
   // ptrStack.push (ret, PTR_RTBODY);
   storeForward ((int *) &taskStack, ret);
+
+  obj = obj->gcObject();
 
   return (ret);
 }
@@ -1079,8 +1087,8 @@ void Thread::gcRecurse ()
     if (hasStack ()) {
       //
       //  ... it means that the thread is actually dead:
-      //  it should happen only if this thread thread was local
-      // to some (deep) guard, and that guard was killed or cancelled;
+      //  it should happen only if this thread was local
+      //  to some (deep) guard, and that guard was killed or cancelled;
       newBoard=board->gcGetNotificationBoard();
       Bool newHome=NO;
 
@@ -1519,7 +1527,7 @@ void AM::gc(int msgLevel)
   rebindTrail.gc();
 
   rootBoard = rootBoard->gcBoard();   // must go first!
-  setCurrentObject((Object *) getCurrentObject()->gcConstTerm());
+  setCurrentObject(getCurrentObject()->gcObject());
   Assert(rootBoard);
   setCurrent(currentBoard->gcBoard(),NO);
 
@@ -1876,7 +1884,7 @@ void TaskStack::gcRecurse()
       break;
 
     case C_SET_CUROBJECT:
-      gcQueue(((Object *)oldstack->pop())->gcConstTerm());
+      gcQueue(((Object *)oldstack->pop())->gcObject());
       break;
 
     default:

@@ -126,6 +126,7 @@ Bool Thread::discardLocalTasks()
 {
   TaskStack *ts;
   TaskStackEntry *tos;
+  Object *obj = NULL;
   Assert (hasStack ());
 
   ts = &(item.threadBody->taskStack);
@@ -133,7 +134,7 @@ Bool Thread::discardLocalTasks()
   while (TRUE) {
     TaskStackEntry entry=*(--tos);
     if (ts->isEmpty (entry)) {
-      ts->setTop (tos+1);
+      ts->setTop(tos+1);
       return (NO);
     }
 
@@ -141,8 +142,16 @@ Bool Thread::discardLocalTasks()
 
     switch (cFlag) {
     case C_LOCAL:
-      ts->setTop (tos);
+      ts->setTop(tos);
+      if (obj) {
+        ts->pushSetCurObject(obj);
+      }
       return (OK);
+
+    /* have to take care that currentObject is set correctly after resuming thread! */
+    case C_SET_CUROBJECT:
+      obj = (Object*) *(--tos);
+      break;
 
     case C_JOB:
       {
@@ -203,6 +212,11 @@ int Thread::findExceptionHandler(TaggedRef &chunk, TaskStackEntry *&oldTos)
         if (!hasJobs) unsetHasJobs();
       }
       break;
+
+    case C_SET_CUROBJECT:
+      am.setCurrentObject((Object*) *(tos-1));
+      break;
+
     default:
       break;
     }
