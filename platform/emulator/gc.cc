@@ -1954,9 +1954,9 @@ void Arity::gc()
   while(aux) {
     GCMETHMSG("Arity::gc");
     if (!aux->isTuple()) {
-      for (int i = 0; i < aux->size; i++) {
-	if (aux->keytable[i] != makeTaggedNULL()) {
-	  gcTagged(aux->keytable[i],aux->keytable[i]);
+      for (int i = 0; i < aux->getSize(); i++) {
+	if (aux->table[i].key) {
+	  gcTagged(aux->table[i].key,aux->table[i].key);
 	}
       }
     }
