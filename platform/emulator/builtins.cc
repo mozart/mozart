@@ -5227,29 +5227,6 @@ OZ_BI_define(BIgetReturn,0,1)
 /********************************************************************
  * Exceptions
  ******************************************************************** */
-OZ_BI_define(BIsetDefaultExceptionHandler,1,0)
-{
-  oz_declareNonvarIN(0,hdl);
-  if (!oz_isProcedure(hdl) || tagged2Const(hdl)->getArity()!=1) {
-    oz_typeError(0,"Procedure/1");
-  }
-
-  am.setDefaultExceptionHdl(hdl);
-  return PROCEED;
-} OZ_BI_end
-
-OZ_BI_define(BIgetDefaultExceptionHandler,0,1)
-{
-  OZ_Term hdl = am.getDefaultExceptionHdl();
-
-  if (hdl==makeTaggedNULL()) {
-    return oz_raise(E_ERROR,E_SYSTEM,"fallbackNotInstalled",1,
-                    oz_atom("setDefaultExceptionHandler"));
-  }
-
-  OZ_RETURN(hdl);
-} OZ_BI_end
-
 OZ_BI_define(BIraise,1,0)
 {
   oz_declareIN(0,exc);
