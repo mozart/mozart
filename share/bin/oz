@@ -22,7 +22,7 @@ cmd=`basename $howcalled`
 
 # keep quiet on emacs and standalone systems
 case "$cmd" in
-   ozemacs|ozsa|ozdo|ozdemo|ozcs) doecho=true ;;
+   ozdo|ozcs|ozengine|ozapplet) doecho=true ;;
    *)                 doecho=echo ;;
 esac
 
@@ -48,14 +48,11 @@ else
 fi
 
 
-# set OZCOMPILER
-: ${OZCOMPILER=$OZHOME/platform/$OZPLATFORM/oz.compiler.bin}
-
 # set OZPATH & PATH
-if [ X$cmd = Xoze -o X${OZ_PI-xx} = Xxx ]; then
+if [ X${OZ_PI-xx} = Xxx ]; then
   # where Oz searches for files:
   : ${OZPATH=.}
-  OZPATH=${OZPATH}:${OZHOME}:${OZHOME}/lib:${OZHOME}/platform/${OZPLATFORM}:${OZHOME}/demo
+  OZPATH=${OZPATH}:${OZHOME}:${OZHOME}/lib:${OZHOME}/platform/${OZPLATFORM}
   export OZPATH
   # increment path
   PATH=${OZHOME}/bin:${OZHOME}/platform/${OZPLATFORM}:${PATH}
@@ -67,61 +64,33 @@ if [ X$cmd = Xoze -o X${OZ_PI-xx} = Xxx ]; then
 fi
 
 # where is Emacs?
-if [ \( "$cmd" = "oz" -o "$cmd" = "ozemacs" \) -a "${OZEMACS-0}" = 0 ]; then
+if [ "$cmd" = "oz" -a "${OZEMACS-0}" = 0 ]; then
 
-  CHECKEMACS=${OZHOME}/ozemacs/bin/emacs
-  if [ -f $CHECKEMACS -a -f ${OZHOME}/ozemacs/platform/${OZPLATFORM}/bin/emacs ]; then
-    OZEMACS=$CHECKEMACS
-
-  # Backward compatibility for older ozemacs (19.28)
-  elif [ -f ${OZHOME}/ozemacs/bin/$OZPLATFORM/emacs ]; then
-
-    OZEMACS=${OZHOME}/ozemacs/bin/$OZPLATFORM/emacs
-    EHOME=$OZHOME/ozemacs
-    EMACSLOADPATH=$EHOME/common/lisp:$EHOME/common/site-lisp
-    EMACSDATA=$EHOME/common/data
-    EMACSDOC=$EMACSDATA
-    INFOPATH=$EHOME/info
-    EMACSLOCKDIR=$EHOME/common/lock
-    EMACSPATH=$EHOME/bin/$OZPLATFORM/etc
-    export EMACSLOADPATH EMACSDATA EMACSDOC
-    export INFOPATH EMACSLOCKDIR EMACSPATH
-
-  else
-     IFS="${IFS=   }"; saveifs="$IFS"; IFS="$IFS:"
-     for name in emacs lemacs xemacs; do
+    IFS="${IFS=   }"; saveifs="$IFS"; IFS="$IFS:"
+    for name in emacs lemacs xemacs; do
        for dir in $PATH; do
          test -z "$dir" && dir=.
-         if test -f $dir/$name; then
-           # Not all systems have dirname.
-           OZEMACS=$dir/$name
-           break 2
-         fi
-       done
-     done
-     IFS="$saveifs"
-     if [ ${OZEMACS-0} = 0 ]; then
-        echo "Cannot find emacs" 1>&2
-        echo "Try setting environment variable OZEMACS" 1>&2
-        exit 1
-     fi
-  fi
+            if test -f $dir/$name; then
+            # Not all systems have dirname.
+                OZEMACS=$dir/$name
+                break 2
+            fi
+        done
+        done
+        IFS="$saveifs"
+        if [ ${OZEMACS-0} = 0 ]; then
+            echo "Cannot find emacs" 1>&2
+            echo "Try setting environment variable OZEMACS" 1>&2
+            exit 1
+        fi
+    fi
 
-  export OZEMACS
-fi
+    export OZEMACS
 
 
 case "$cmd" in
 
-   ozdemo)  exec $OZHOME/demo/rundemo "$@" ;;
-
-   ozemacs) exec $OZEMACS "$@" ;;
-
-   ozsa)    exec $OZEMULATOR "$@" ;;
-
    ozdo)    exec "$@" ;;
-
-   oznc)    exec $OZEMULATOR "$@" -a $OZARGV ;;
 
    oz)
         echo "Using emacs '${OZEMACS}'"
@@ -143,39 +112,13 @@ case "$cmd" in
            esac
         done
         export OZARGV
-        exec $OZEMACS -l $OZHOME/lib/elisp/oz.elc -f run-oz $EMACSARGV
+        exec  $OZEMACS -l $OZHOME/lib/elisp/oz.elc -f run-oz $EMACSARGV
    ;;
 
-   oz.compiler)
-        if [ X$OZCOMPNW = "Xnone" ]; then
-          exec $OZCOMPILER `echo $* |  sed -e 's/-/+/g'`
-        elif [ X$1 = X"-emacs" ]; then
-          shift
-          exec $OZCOMPILER +E `echo $* |  sed -e 's/-/+/g'`
-        else
-          exec xterm -name "OzCompiler" \
-               -T "Oz Compiler Input Window" \
-               -e $OZCOMPILER `echo $* |  sed -e 's/-/+/g'`
-        fi
-   ;;
-
-   oz.emulator)
-        if [ X$OZEMULNW = "Xnone" ]; then
-                exec $OZEMULATOR "$@" -a $OZARGV
-        elif [ X$1 = X"-emacs" ]; then
-                shift
-                exec $OZEMULATOR -E "$@" -a $OZARGV
-        else
-                xterm -title 'Oz Emulator' -e $OZEMULATOR "$@" -a $OZARGV \
-                        > /dev/null 2>&1 &
-        fi
-        exit 0
-   ;;
-
-   ozcs)  # compute server
+   ozcs|ozengine)  # that is the real thing
         if [ $# -lt 1 ]
         then
-            echo "usage: ozcs <url> <args>";
+            echo "usage: ozengine <url> <args>" 1>&2;
             exit 1;
         fi
         url=$1
@@ -186,43 +129,13 @@ case "$cmd" in
    ozapplet)  # compute server
         if [ $# -lt 1 ]
         then
-            echo "usage: ozapplet <url> <args>";
+            echo "usage: ozapplet <url> <args>" 1>&2;
             exit 1;
         fi
         url=$1
         shift
         exec $OZEMULATOR -quiet -browser -u $url -a "$@"
    ;;
-
-   ozc)
-        set -e
-        for file in $@; do
-            # +p /dev/null --> do not load ~/.ozrc
-            $OZCOMPILER +p /dev/null +c $file
-        done
-        exit $?
-   ;;
-
-   ozsac)
-        if [ $# -ne 2 ]; then
-           echo "Usage: $0 infile outfile"
-           exit 1
-        fi
-        infile=$1; outfile=$2
-        $OZCOMPILER +p /dev/null +c $infile +dn $outfile
-        if [ $? -ne 0 ]; then rm -f $outfile; exit 1; fi
-        chmod +x $outfile
-        echo ""
-   ;;
-
-   oze)
-        OZEMULNW=none
-        OZCOMPNW=none
-        export OZEMULNW
-        export OZCOMPNW
-        exec $OZEMULATOR "$@" -a $OZARGV
-   ;;
-
 
    *)
        echo "Unknown invocation of Oz via '$cmd'" 1>&2
