@@ -486,24 +486,6 @@ OZ_BI_define (native_free_data, 1, 0) {
   return OZ_ENTAILED;
 } OZ_BI_end
 
-/*
- * Lowlevel Gtk Canvas Helper
- */
-
-/* Hack Alert */
-typedef struct {
-  int num_points;
-  double *coords;
-  int ref_count;
-} GtkCanvasPoints;
-
-OZ_BI_define(native_points_put, 3, 0) {
-  OZ_declareForeignType(0, val, GtkCanvasPoints *);
-  OZ_declareInt(1, i);
-  OZ_declareInt(2, x);
-  val->coords[i] = x;
-  return OZ_ENTAILED;
-} OZ_BI_end
 
 /* 
  * Lowlevel GtkArg Handling
@@ -662,7 +644,6 @@ static OZ_C_proc_interface oz_interface[] = {
   {"getStr", 0, 1, native_get_str},
   {"null", 0, 1, native_null},
   {"freeData", 1, 0, native_free_data},
-  {"pointsPut", 3, 0, native_points_put},
   {"makeEmptyArg", 1, 1, native_make_empty_arg},
   {"makeArg", 2, 1, native_make_arg},
   {"getArg", 1, 1, native_get_arg},

@@ -5,13 +5,14 @@ SRCS = HelloGTK.oz \
        HelloText.oz \
        HelloCanvas.oz \
        HelloArgs.oz \
+       HelloImage.oz \
        CanvasEvents.oz \
        CanvasMove.oz \
        CanvasScramble.oz \
        List.oz \
        CList.oz \
        CTree.oz \
-       FileSelection.oz
+       FileSelection.oz \
 
 OBJS = $(SRCS:%.oz=%.ozf)
 
