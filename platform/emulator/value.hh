@@ -533,6 +533,7 @@ enum TypeOfConst {
   Co_Builtin,
   Co_Cell,
   Co_Space,
+  Co_Port,
 
   /* chunks must stay together and the first one
    * must be Co_Object
@@ -1731,7 +1732,6 @@ public:
   }
 };
 
-
 inline Bool isCell(TaggedRef term)
 {
   return isConst(term) && tagged2Const(term)->getType() == Co_Cell;
@@ -1743,6 +1743,47 @@ Cell *tagged2Cell(TaggedRef term)
   Assert(isCell(term));
   return (Cell *) tagged2Const(term);
 }
+
+
+/*===================================================================
+ * Ports
+ *=================================================================== */
+
+class Port: public DistObject {
+friend void ConstTerm::gcConstRecurse(void);
+private:
+  TaggedRef strm;
+public:
+  Port();
+  ~Port();
+  Port(Port&);
+
+  Port(Board *b,TaggedRef s) : DistObject(b, Co_Port), strm(s) {}
+
+  TaggedRef exchangeStream(TaggedRef newStream)
+  {
+    TaggedRef ret = strm;
+    strm = newStream;
+    return ret;
+  }
+
+  OZPRINT;
+  OZPRINTLONG;
+};
+
+
+inline Bool isPort(TaggedRef term)
+{
+  return isConst(term) && tagged2Const(term)->getType() == Co_Port;
+}
+
+inline
+Port *tagged2Port(TaggedRef term)
+{
+  Assert(isPort(term));
+  return (Port *) tagged2Const(term);
+}
+
 
 /*===================================================================
  * Space

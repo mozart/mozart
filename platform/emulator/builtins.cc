@@ -4693,6 +4693,46 @@ DECLAREBI_USEINLINEFUN1(BIadd1,BIadd1Inline)
 DECLAREBI_USEINLINEFUN1(BIsub1,BIsub1Inline)
 
 // ---------------------------------------------------------------------
+// Ports
+// ---------------------------------------------------------------------
+
+OZ_C_proc_begin(BInewPort,2)
+{
+  OZ_Term val = OZ_getCArg(0);
+  OZ_Term out = OZ_getCArg(1);
+
+  OZ_Term ret = makeTaggedConst(new Port(am.currentBoard, val));
+  return OZ_unify(out,ret);
+}
+OZ_C_proc_end
+
+
+OZ_C_proc_begin(BIputPort,2)
+{
+  OZ_Term prt1 = OZ_getCArg(0);
+  OZ_Term msg = OZ_getCArg(1);
+
+  NONVAR(prt1,prt,_1);
+
+  if (!isPort(prt)) {
+    TypeErrorT(0,"Port");
+  }
+
+  Port *port = tagged2Port(prt);
+  CheckLocalBoard(port,"port");
+
+  TaggedRef newStream = OZ_newVariable();
+  TaggedRef old = port->exchangeStream(newStream);
+
+  if (OZ_isList(old,NULL)) {
+    return (OZ_unify(OZ_head(old),msg) == PROCEED &&
+            OZ_unify(OZ_tail(old),newStream) == PROCEED) ? PROCEED : FAILED;
+  }
+  return OZ_unify(cons(msg,newStream),old);
+}
+OZ_C_proc_end
+
+// ---------------------------------------------------------------------
 // Cell
 // ---------------------------------------------------------------------
 
@@ -7177,6 +7217,9 @@ BIspec allSpec1[] = {
   {"Dictionary.member", 3, BIdictionaryMember, (IFOR) dictionaryMemberInline},
   {"Dictionary.keys",   2, BIdictionaryKeys,    0},
 
+  {"Port.new",        2,BInewPort,       0},
+  {"Port.put",        2,BIputPort,       0},
+
   {"NewCell",         2,BInewCell,       0},
   {"Exchange",        3,BIexchangeCell, (IFOR) BIexchangeCellInline},
 
@@ -7476,6 +7519,7 @@ extern void BIinitDVar(void);
 extern void BIinitUnix();
 extern void BIinitAssembler();
 extern void BIinitTclTk();
+extern void BIinitPerdio();
 
 BuiltinTabEntry *BIinit()
 {
@@ -7501,6 +7545,7 @@ BuiltinTabEntry *BIinit()
   BIinitDVar();
   BIinitUnix();
   BIinitTclTk();
+  BIinitPerdio();
 
   return bi;
 }
