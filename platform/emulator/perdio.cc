@@ -5530,6 +5530,23 @@ OZ_C_proc_begin(BInewGate,2)
 }
 OZ_C_proc_end
 
+Bool skipHeader(int fd)
+{
+  while(1) {
+    char c;
+    int ret = osread(fd,&c,1);
+    if (ret<=0) return NO;
+    if (c==PERDIOMAGICSTART)
+      return OK;
+  }
+}
+
+
+void saveHeader(ByteStream *bs)
+{
+  bs->put(PERDIOMAGICSTART);
+}
+
 
 int saveFile(OZ_Term in,char *filename,OZ_Term url, 
 	     OZ_Term dosave, OZ_Term urls,
@@ -5546,6 +5563,7 @@ int saveFile(OZ_Term in,char *filename,OZ_Term url,
   }
 
   ByteStream *bs = bufferManager->getByteStreamMarshal();
+  saveHeader(bs);
 
   MarshallInfo mi(dosave,urls);
   marshallString(PERDIOVERSION,bs);
@@ -5616,43 +5634,21 @@ int loadURL(TaggedRef url, OZ_Term out)
   return loadURL(s,out);
 }
 
-char *fdfgets(char *buf, int sz, int fd)
-{
-  char *aux = buf;
-  do {
-    int ret = osread(fd,aux,1);
-    if (ret<=0) return NULL;
-  } while(*(aux++)!='\n' && --sz>0);
-
-  *aux=0;
-  return buf;
-}
-
 
 int loadFile(char *filename,OZ_Term out)
 {
-  int fd;
-  if (strcmp(filename,"-")==0) {
-    fd = STDIN_FILENO;
-    char car[100];
-    char *s;
-    do {
-      s = fdfgets(car,100,fd);
-    } while(s != NULL && strcmp(s,"###\n")!=0);
-    if (s == NULL) {
-      fprintf(stderr,"*** Header for standalone component must be terminated by \"###\"\n");
-      ossleep(3);
-      exit(1);
-    }
+  int fd = strcmp(filename,"-")==0 ? STDIN_FILENO : open(filename,O_RDONLY);
+  if (fd < 0) {
+    return oz_raise(E_ERROR,OZ_atom("perdio"),"load",3,
+		    oz_atom("open"),
+		    oz_atom(OZ_unixError(errno)),
+		    oz_atom(filename));
+  }
 
-  } else {
-    fd = open(filename,O_RDONLY);
-    if (fd < 0) {
-      return oz_raise(E_ERROR,OZ_atom("perdio"),"load",3,
-		      oz_atom("open"),
-		      oz_atom(OZ_unixError(errno)),
-		      oz_atom(filename));
-    }
+  if (skipHeader(fd)==NO) {
+    return oz_raise(E_ERROR,OZ_atom("perdio"),"load",2,
+		    oz_atom("magicHeaderNotFound"),
+		    oz_atom(filename));
   }
 
   ByteStream *bs=bufferManager->getByteStream();
@@ -5693,11 +5689,12 @@ int loadFile(char *filename,OZ_Term out)
 
   char *versiongot = unmarshallString(bs);
   if (strcmp(PERDIOVERSION,versiongot)!=0) {
+    OZ_Term vergot = oz_atom(versiongot);
     delete versiongot;
     return oz_raise(E_ERROR,OZ_atom("perdio"),"load",3,
 		    oz_atom("versionMismatch"),
 		    oz_atom(PERDIOVERSION),
-		    oz_atom(versiongot));
+		    vergot);
   }
 
   delete versiongot;
