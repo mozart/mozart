@@ -35,11 +35,12 @@ local
 	 in
 	    N = TakeNumber
 	    number <- TakeNumber
-	    self,getCenterAbove(X Y Above)
+	    {self getCenterAbove(X Y Above)}
 	    case Font==false then skip else
 	       {Canvas tk(crea text
 			  Scale * {IntToFloat X}
-			  Scale * {IntToFloat case self,isHidden($) then
+			  Scale * {IntToFloat case {self isHidden($)}
+					      then
 						 Y + UpperSpaceI div 2
 					      else Y
 					      end}
@@ -58,10 +59,10 @@ local
 	 Actions = Canvas.actions
 	 X Y Above
       in
-	 self,getCenterAbove(X Y Above)
+	 {self getCenterAbove(X Y Above)}
 	 {Canvas tk(crea text
 		    Scale * {IntToFloat X}
-		    Scale * {IntToFloat case self,isHidden($) then
+		    Scale * {IntToFloat case {self isHidden($)} then
 					   Y + UpperSpaceI div 2
 					else Y
 					end}
@@ -88,7 +89,7 @@ local
       end
 	 
       meth getCenterAbove(?X ?Y ?Above)
-	 self,GetCenterAbove(0 0 nil ?X ?Y ?Above)
+	 {self GetCenterAbove(0 0 nil ?X ?Y ?Above)}
       end
 
       meth !GetCenter(X1 Y1 ?X2 ?Y2)
@@ -154,7 +155,7 @@ local
 	    case Ks of nil then skip
 	    [] K|Kr then
 	       {K drawTree(Break MomTree MomX MyY Scale Font)}
-	       self,DrawKids(Kr Break MomTree MomX MyY Scale Font)
+	       {self DrawKids(Kr Break MomTree MomX MyY Scale Font)}
 	    end
 	 end
 	 

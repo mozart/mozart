@@ -386,7 +386,7 @@ local
 	    in
 	       Choose,findDepthAndCopy(?CurDepth ?CurSearchDist
 				       ?CurNs ?CurCopy)
-	             ,Add(PrevSol CurDepth InfoDist CurSearchDist
+	       Choose,Add(PrevSol CurDepth InfoDist CurSearchDist
 			  CurNs CurCopy
 			  _ _ _
 			  ?Info ?NewNode)

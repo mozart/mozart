@@ -40,8 +40,8 @@ local
 	    Y3 = Y2 + 1
 	 in
 	    TickCanvas,tk(crea rectangle X0 Y0 X3 Y3 outline:BrightColor)
-	              ,tk(crea rectangle X1 Y1 X2 Y2 outline:DarkColor)
-	              ,drawTicks(Xr)
+	    TickCanvas,tk(crea rectangle X1 Y1 X2 Y2 outline:DarkColor)
+	    TickCanvas,drawTicks(Xr)
 	 end
       end
       

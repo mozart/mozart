@@ -71,7 +71,7 @@ local
 	 
 	 meth init(parent:Parent tcl:Tcl)
 	    Image,tkInit(parent:Parent width:ImageSize height:ImageSize)
-	         ,tk(crea Tcl)
+	    Image,tk(crea Tcl)
 	 end
       
       end
