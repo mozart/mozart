@@ -49,7 +49,6 @@ extern ProgramCounter
   C_SET_ABSTR_Ptr      ,
   C_LPQ_Ptr            , // local propagator queue
   C_CATCH_Ptr          , // exception handler
-  C_ACTOR_Ptr          , // actor
   C_EMPTY_STACK        ;
 
 
@@ -211,9 +210,6 @@ public:
 					     (void *)dothis); }
   void pushSelf(Object *o)       { pushFrame(C_SET_SELF_Ptr,o,NULL); }
   void pushAbstr(PrTabEntry  *a) { pushFrame(C_SET_ABSTR_Ptr,a,NULL); }
-  void pushActor(Actor *ac, ProgramCounter PC)
-				 { pushFrame(C_ACTOR_Ptr,ac,PC); }
-  void discardActor()            { discardFrame(C_ACTOR_Ptr); }
 
   int tasks();
 };

@@ -239,7 +239,6 @@ void Statistics::initCount() {
   abstraction=flatObject=cell=chunk=0;
   heapChunk=thread=0;
   board=objectClass=0;
-  askActor=waitActor=solveActor=waitChild=0;
 
   freeListAllocated = 0;
   freeListDisposed = 0;
@@ -334,9 +333,6 @@ void Statistics::printCount(char *file) {
   fprintf(out,"\nLocal spaces\n");
   fprintf(out,"scriptLen       %ld (%dB)\n",scriptLen,sizeof(Equation));
   fprintf(out,"board           %ld (%dB)\n",board,sizeof(Board));
-  fprintf(out,"askActor        %ld (%dB)\n",askActor,sizeof(AskActor));
-  fprintf(out,"waitActor       %ld (%dB)\n",waitActor,sizeof(WaitActor));
-  fprintf(out,"waitChild       %ld (%dB)\n",waitChild,sizeof(Board *));
 
   fprintf(out,"\nThreads\n");
   fprintf(out,"thread          %ld (%dB)\n",thread,sizeof(Thread));
@@ -351,7 +347,6 @@ void Statistics::printCount(char *file) {
   fprintf(out,"cExceptHandler  %ld (%dB)\n",cExceptHandler,8);
   fprintf(out,"cCallCont       %ld (%dB)\n",cCallCont,12);
 
-  fprintf(out,"continuation    %ld (%dB)\n",continuation,sizeof(Continuation));
   fprintf(out,"suspList        %ld (%dB)\n",suspList,sizeof(SuspList));
 
   fprintf(out,"\nOFS\n");
