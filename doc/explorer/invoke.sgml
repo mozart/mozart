@@ -76,7 +76,7 @@
       <Entry><<one>>
         <Index/<<Explorer>><AND><<one>>/
       <Synopsis>
-        <<{Explorer.one ?+{ScriptP}}>>
+        <<<{Explorer.one ?+{ScriptP}}>>>
       <Item>
         Initializes the Explorer with the script <<?{ScriptP}>> (a
         unary procedure) and starts exploration of the search tree up
@@ -85,7 +85,7 @@
       <Entry><<all>>
         <Index/<<Explorer>><AND><<all>>/
       <Synopsis>
-        <<{Explorer.all ?+{ScriptP}}>>
+        <<<{Explorer.all ?+{ScriptP}}>>>
       <Item>
         Initializes the Explorer with the script <<?{ScriptP}>> (a
         unary procedure) and starts exploration of the entire search
@@ -94,7 +94,7 @@
       <Entry><<best>>
         <Index/<<Explorer>><AND><<best>>/
       <Synopsis>
-        <<{Explorer.best ?+{ScriptP} ?+{OrderP}}>>
+        <<<{Explorer.best ?+{ScriptP} ?+{OrderP}}>>>
       <Item>
         Initializes the Explorer with the script <<?{ScriptP}>> (a
         unary procedure) and starts exploration of the entire search
