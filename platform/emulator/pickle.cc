@@ -341,7 +341,7 @@ void marshalTermRef(int lbl, MsgBuffer *bs)
 }
 
 
-char *makeHeader(unsigned long crc, int *headerSize)
+char *makeHeader(crc_t crc, int *headerSize)
 {
   static char buf[20];
   unsigned int crc32 = (unsigned int) crc;
@@ -362,16 +362,16 @@ char *makeHeader(unsigned long crc, int *headerSize)
 
 
 /* Table of CRCs of all 8-bit messages. */
-unsigned long crc_table[256];
+crc_t crc_table[256];
 
 /* Make the table for a fast CRC. */
 void make_crc_table(void)
 {
-  unsigned long c;
+  crc_t c;
   int n, k;
 
   for (n = 0; n < 256; n++) {
-    c = (unsigned long) n;
+    c = (crc_t) n;
     for (k = 0; k < 8; k++) {
       if (c & 1)
         c = 0xedb88320L ^ (c >> 1);
@@ -388,7 +388,7 @@ void make_crc_table(void)
    is the 1's complement of the final running CRC (see the
    crc() routine below)). */
 
-unsigned long update_crc(unsigned long crc, unsigned char *buf, int len)
+crc_t update_crc(crc_t crc, unsigned char *buf, int len)
 {
   static int tablemade = 0;
   if (!tablemade) {
@@ -396,7 +396,7 @@ unsigned long update_crc(unsigned long crc, unsigned char *buf, int len)
     tablemade = 1;
   }
 
-  unsigned long c = crc;
+  crc_t c = crc;
   int n;
 
   for (n = 0; n < len; n++) {
