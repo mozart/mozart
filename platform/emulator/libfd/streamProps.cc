@@ -64,7 +64,7 @@ DisjunctivePropagatorStream::~DisjunctivePropagatorStream()
 //////////
 // BUILTIN
 //////////
-OZ_C_proc_begin(sched_disjunctiveStream, 3)
+OZ_BI_define(sched_disjunctiveStream, 3, 0)
 {
   OZ_EXPECTED_TYPE(OZ_EM_VECT OZ_EM_FD "," OZ_EM_VECT OZ_EM_INT "," OZ_EM_STREAM);
 
@@ -74,9 +74,9 @@ OZ_C_proc_begin(sched_disjunctiveStream, 3)
   OZ_EXPECT(pe, 1, expectVectorInt);
   OZ_EXPECT(pe, 2, expectStream);
 
-  return pe.impose(new DisjunctivePropagatorStream(OZ_args[0], OZ_args[1], OZ_args[2]));
+  return pe.impose(new DisjunctivePropagatorStream(OZ_in(0), OZ_in(1), OZ_in(2)));
 }
-OZ_C_proc_end
+OZ_BI_end
 
 
 //////////
@@ -276,7 +276,7 @@ DistinctPropagatorStream::~DistinctPropagatorStream()
 //////////
 // BUILTIN
 //////////
-OZ_C_proc_begin(fdp_distinctStream, 2)
+OZ_BI_define(fdp_distinctStream, 2, 0)
 {
   OZ_EXPECTED_TYPE(OZ_EM_VECT OZ_EM_FD "," OZ_EM_STREAM);
 
@@ -285,9 +285,9 @@ OZ_C_proc_begin(fdp_distinctStream, 2)
   OZ_EXPECT(pe, 0, expectVectorIntVarAny);
   OZ_EXPECT(pe, 1, expectStream);
 
-  return pe.impose(new DistinctPropagatorStream(OZ_args[0], OZ_args[1]));
+  return pe.impose(new DistinctPropagatorStream(OZ_in(0), OZ_in(1)));
 }
-OZ_C_proc_end
+OZ_BI_end
 
 
 //////////

@@ -28,7 +28,7 @@
 
 //-----------------------------------------------------------------------------
 
-OZ_C_proc_begin(fdp_sumAC, 4)
+OZ_BI_define(fdp_sumAC, 4, 0)
 {
   OZ_EXPECTED_TYPE(OZ_EM_VECT OZ_EM_INT","OZ_EM_VECT OZ_EM_FD","
 		   OZ_EM_LIT","OZ_EM_FD);
@@ -38,49 +38,49 @@ OZ_C_proc_begin(fdp_sumAC, 4)
   OZ_EXPECT(pe, 2, expectLiteral); 
   SAMELENGTH_VECTORS(0,1);
   
-  const char * op = OZ_atomToC(OZ_args[2]);
+  const char * op = OZ_atomToC(OZ_in(2));
   
   if (!strcmp(SUM_OP_EQ, op)) {
     OZ_EXPECT(pe, 1, expectVectorIntVarMinMax);
     OZ_EXPECT(pe, 3, expectIntVarMinMax); 
-    return pe.impose(new SumACEqPropagator(OZ_args[0],
-					   OZ_args[1],
-					   OZ_args[3]));
+    return pe.impose(new SumACEqPropagator(OZ_in(0),
+					   OZ_in(1),
+					   OZ_in(3)));
   } else if (!strcmp(SUM_OP_LEQ, op)) {
     OZ_EXPECT(pe, 1, expectVectorIntVarMinMax);
     OZ_EXPECT(pe, 3, expectIntVarMinMax); 
-    return pe.impose(new SumACLessEqPropagator(OZ_args[0],
-					       OZ_args[1],
-					       OZ_args[3]));
+    return pe.impose(new SumACLessEqPropagator(OZ_in(0),
+					       OZ_in(1),
+					       OZ_in(3)));
   } else if (!strcmp(SUM_OP_LT, op)) {
     OZ_EXPECT(pe, 1, expectVectorIntVarMinMax);
     OZ_EXPECT(pe, 3, expectIntVarMinMax); 
-    return pe.impose(new SumACLessPropagator(OZ_args[0],
-					     OZ_args[1],
-					     OZ_args[3]));
+    return pe.impose(new SumACLessPropagator(OZ_in(0),
+					     OZ_in(1),
+					     OZ_in(3)));
   } else if (!strcmp(SUM_OP_GEQ, op)) {
     OZ_EXPECT(pe, 1, expectVectorIntVarMinMax);
     OZ_EXPECT(pe, 3, expectIntVarMinMax); 
-    return pe.impose(new SumACGreaterEqPropagator(OZ_args[0],
-						  OZ_args[1],
-						  OZ_args[3]));
+    return pe.impose(new SumACGreaterEqPropagator(OZ_in(0),
+						  OZ_in(1),
+						  OZ_in(3)));
   } else if (!strcmp(SUM_OP_GT, op)) {
     OZ_EXPECT(pe, 1, expectVectorIntVarMinMax);
     OZ_EXPECT(pe, 3, expectIntVarMinMax); 
-    return pe.impose(new SumACGreaterPropagator(OZ_args[0],
-						OZ_args[1],
-						OZ_args[3]));
+    return pe.impose(new SumACGreaterPropagator(OZ_in(0),
+						OZ_in(1),
+						OZ_in(3)));
   } else if (!strcmp(SUM_OP_NEQ, op)) {
     OZ_EXPECT(pe, 1, expectVectorIntVarSingl);
     OZ_EXPECT(pe, 3, expectIntVarSingl); 
-    return pe.impose(new SumACNotEqPropagator(OZ_args[0],
-					      OZ_args[1],
-					      OZ_args[3]));
+    return pe.impose(new SumACNotEqPropagator(OZ_in(0),
+					      OZ_in(1),
+					      OZ_in(3)));
   }
   
   ERROR_UNEXPECTED_OPERATOR(2);
 }
-OZ_C_proc_end
+OZ_BI_end
 
 //-----------------------------------------------------------------------------
 

@@ -29,13 +29,6 @@
 
 //-----------------------------------------------------------------------------
 
-OZ_C_proc_begin(fdp_notEqOff, 3)
-{
-  OZ_warning("This foreign function must never be called.");
-  return FAILED;
-}
-OZ_C_proc_end
-
 OZ_Return NotEqOffPropagator::propagate(void)
 {
   int &c = reg_c;
@@ -61,7 +54,7 @@ failure:
 
 //-----------------------------------------------------------------------------
 
-OZ_C_proc_begin(fdp_lessEqOff, 3)
+OZ_BI_define(fdp_lessEqOff, 3, 0)
 {
   OZ_EXPECTED_TYPE(OZ_EM_FD "," OZ_EM_FD "," OZ_EM_INT);
 
@@ -71,10 +64,10 @@ OZ_C_proc_begin(fdp_lessEqOff, 3)
   OZ_EXPECT(pe, 1, expectIntVarMinMax);
   OZ_EXPECT(pe, 2, expectInt);
 
-  return pe.impose(new LessEqOffPropagator(OZ_args[0], OZ_args[1], 
-					   OZ_intToC(OZ_args[2])));
+  return pe.impose(new LessEqOffPropagator(OZ_in(0), OZ_in(1), 
+					   OZ_intToC(OZ_in(2))));
 }
-OZ_C_proc_end
+OZ_BI_end
 
 OZ_Return LessEqOffPropagator::propagate(void)
 {
@@ -106,7 +99,7 @@ failure:
 
 //-----------------------------------------------------------------------------
 
-OZ_C_proc_begin(fdp_minimum, 3)
+OZ_BI_define(fdp_minimum, 3, 0)
 {
   OZ_EXPECTED_TYPE(OZ_EM_FD "," OZ_EM_FD "," OZ_EM_FD);
   
@@ -120,9 +113,9 @@ OZ_C_proc_begin(fdp_minimum, 3)
   if (susp_count > 1) 
     return pe.suspend();
 
-  return pe.impose(new MinimumPropagator(OZ_args[0], OZ_args[1], OZ_args[2]));
+  return pe.impose(new MinimumPropagator(OZ_in(0), OZ_in(1), OZ_in(2)));
 }
-OZ_C_proc_end
+OZ_BI_end
 
 OZ_Return MinimumPropagator::propagate(void)
 {
@@ -148,7 +141,7 @@ failure:
 
 //-----------------------------------------------------------------------------
 
-OZ_C_proc_begin(fdp_maximum, 3)
+OZ_BI_define(fdp_maximum, 3, 0)
 {
   OZ_EXPECTED_TYPE(OZ_EM_FD "," OZ_EM_FD "," OZ_EM_FD);
   
@@ -162,9 +155,9 @@ OZ_C_proc_begin(fdp_maximum, 3)
   if (susp_count > 1) 
     return pe.suspend();
 
-  return pe.impose(new MaximumPropagator(OZ_args[0], OZ_args[1], OZ_args[2]));
+  return pe.impose(new MaximumPropagator(OZ_in(0), OZ_in(1), OZ_in(2)));
 }
-OZ_C_proc_end
+OZ_BI_end
 
 OZ_Return MaximumPropagator::propagate(void)
 {
@@ -190,7 +183,7 @@ failure:
 
 //-----------------------------------------------------------------------------
 
-OZ_C_proc_begin(fdp_inter, 3)
+OZ_BI_define(fdp_inter, 3, 0)
 {
   OZ_EXPECTED_TYPE(OZ_EM_FD "," OZ_EM_FD "," OZ_EM_FD);
   
@@ -204,10 +197,10 @@ OZ_C_proc_begin(fdp_inter, 3)
   if (susp_count > 1) 
     return pe.suspend();
 
-  return pe.impose(new IntersectionPropagator(OZ_args[0], OZ_args[1], 
-					      OZ_args[2]));
+  return pe.impose(new IntersectionPropagator(OZ_in(0), OZ_in(1), 
+					      OZ_in(2)));
 }
-OZ_C_proc_end
+OZ_BI_end
 
 OZ_Return IntersectionPropagator::propagate(void)
 {
@@ -228,7 +221,7 @@ failure:
 
 //-----------------------------------------------------------------------------
 
-OZ_C_proc_begin(fdp_union, 3)
+OZ_BI_define(fdp_union, 3, 0)
 {
   OZ_EXPECTED_TYPE(OZ_EM_FD "," OZ_EM_FD "," OZ_EM_FD);
   
@@ -242,9 +235,9 @@ OZ_C_proc_begin(fdp_union, 3)
   if (susp_count > 1) 
     return pe.suspend();
 
-  return pe.impose(new UnionPropagator(OZ_args[0], OZ_args[1], OZ_args[2]));
+  return pe.impose(new UnionPropagator(OZ_in(0), OZ_in(1), OZ_in(2)));
 }
-OZ_C_proc_end
+OZ_BI_end
 
 OZ_Return UnionPropagator::propagate(void)
 {
@@ -264,13 +257,6 @@ failure:
 
 //-----------------------------------------------------------------------------
 
-OZ_C_proc_begin(fdp_subset, 2)
-{
-  OZ_warning("This foreign function must never be called.");
-  return FAILED;
-}
-OZ_C_proc_end
-
 OZ_Return SubSetPropagator::propagate(void)
 {
   OZ_FDIntVar x(reg_x), y(reg_y);
@@ -289,7 +275,7 @@ failure:
 
 //-----------------------------------------------------------------------------
 
-OZ_C_proc_begin(fdp_distinct, 1)
+OZ_BI_define(fdp_distinct, 1, 0)
 {
   OZ_EXPECTED_TYPE(OZ_EM_VECT OZ_EM_FD);
   
@@ -297,9 +283,9 @@ OZ_C_proc_begin(fdp_distinct, 1)
 
   OZ_EXPECT(pe, 0, expectVectorIntVarSingl);
 
-  return pe.impose(new DistinctPropagator(OZ_args[0]));
+  return pe.impose(new DistinctPropagator(OZ_in(0)));
 }
-OZ_C_proc_end
+OZ_BI_end
  
 OZ_Return DistinctPropagator::propagate(void)
 {
@@ -424,7 +410,7 @@ failure:
 
 //-----------------------------------------------------------------------------
 
-OZ_C_proc_begin(fdp_distinctOffset, 2)
+OZ_BI_define(fdp_distinctOffset, 2, 0)
 {
   OZ_EXPECTED_TYPE(OZ_EM_VECT OZ_EM_FD "," OZ_EM_VECT OZ_EM_INT);
   
@@ -434,9 +420,9 @@ OZ_C_proc_begin(fdp_distinctOffset, 2)
   OZ_EXPECT(pe, 1, expectVectorInt);
   SAMELENGTH_VECTORS(0, 1);
 
-  return pe.impose(new DistinctOffsetPropagator(OZ_args[0], OZ_args[1]));
+  return pe.impose(new DistinctOffsetPropagator(OZ_in(0), OZ_in(1)));
 }
-OZ_C_proc_end
+OZ_BI_end
 
 OZ_Return DistinctOffsetPropagator::propagate(void)
 {

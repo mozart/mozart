@@ -33,7 +33,7 @@
 
 //-----------------------------------------------------------------------------
 
-OZ_C_proc_begin(fdp_disjoint, 4)
+OZ_BI_define(fdp_disjoint, 4, 0)
 {
   OZ_EXPECTED_TYPE(OZ_EM_FD "," OZ_EM_INT "," OZ_EM_FD "," OZ_EM_INT);
 
@@ -44,10 +44,10 @@ OZ_C_proc_begin(fdp_disjoint, 4)
   OZ_EXPECT(pe, 2, expectIntVarMinMax);
   OZ_EXPECT(pe, 3, expectInt);
 
-  return pe.impose(new SchedCDPropagator(OZ_args[0], OZ_args[1],
-					OZ_args[2], OZ_args[3]));
+  return pe.impose(new SchedCDPropagator(OZ_in(0), OZ_in(1),
+					OZ_in(2), OZ_in(3)));
 }
-OZ_C_proc_end
+OZ_BI_end
 
 OZ_Return SchedCDPropagator::propagate(void)
 {
@@ -98,7 +98,7 @@ failure:
 
 //-----------------------------------------------------------------------------
 
-OZ_C_proc_begin(fdp_disjointC, 5)
+OZ_BI_define(fdp_disjointC, 5, 0)
 {
   OZ_EXPECTED_TYPE(OZ_EM_FD "," OZ_EM_INT "," OZ_EM_FD "," OZ_EM_INT "," OZ_EM_FDBOOL);
 
@@ -111,13 +111,13 @@ OZ_C_proc_begin(fdp_disjointC, 5)
   OZ_EXPECT(pe, 3, expectInt);
   OZ_EXPECT_SUSPEND(pe, 4, expectBoolVar, dummy);
 
-  return pe.impose(new SchedCDBPropagator(OZ_args[0],
-					  OZ_args[1],
-					  OZ_args[2],
-					  OZ_args[3],
-					  OZ_args[4]));
+  return pe.impose(new SchedCDBPropagator(OZ_in(0),
+					  OZ_in(1),
+					  OZ_in(2),
+					  OZ_in(3),
+					  OZ_in(4)));
 }
-OZ_C_proc_end
+OZ_BI_end
 
 OZ_Return SchedCDBPropagator::propagate(void)
 {
@@ -458,7 +458,7 @@ OZ_Return TasksOverlapPropagator::propagate(void)
 
 //-----------------------------------------------------------------------------
 
-OZ_C_proc_begin(fdp_tasksOverlap, 5)
+OZ_BI_define(fdp_tasksOverlap, 5, 0)
 {
   OZ_EXPECTED_TYPE(OZ_EM_FD "," OZ_EM_INT "," OZ_EM_FD ","
 		   OZ_EM_INT "," OZ_EM_FDBOOL);
@@ -472,13 +472,13 @@ OZ_C_proc_begin(fdp_tasksOverlap, 5)
   OZ_EXPECT(pe, 3, expectInt);
   OZ_EXPECT_SUSPEND(pe, 4, expectBoolVar, dummy);
 
-  return pe.impose(new TasksOverlapPropagator(OZ_args[0],
-					      OZ_args[1],
-					      OZ_args[2],
-					      OZ_args[3],
-					      OZ_args[4]));
+  return pe.impose(new TasksOverlapPropagator(OZ_in(0),
+					      OZ_in(1),
+					      OZ_in(2),
+					      OZ_in(3),
+					      OZ_in(4)));
 }
-OZ_C_proc_end
+OZ_BI_end
 
 //-----------------------------------------------------------------------------
 // static member

@@ -28,7 +28,7 @@
 
 // FSP_MIN WAS WRITTEN BY TOBIAS AS AN EXAMPLE
 
-OZ_C_proc_begin(fsp_min, 2)
+OZ_BI_define(fsp_min, 2, 0)
 {
   OZ_EXPECTED_TYPE(OZ_EM_FSET "," OZ_EM_FD);
 
@@ -39,10 +39,10 @@ OZ_C_proc_begin(fsp_min, 2)
   int susp_count_dummy;
   OZ_EXPECT_SUSPEND(pe, 1, expectIntVarMinMax, susp_count_dummy);
   
-  return pe.impose(new FSetsMinPropagator(OZ_args[0],
-					  OZ_args[1]));
+  return pe.impose(new FSetsMinPropagator(OZ_in(0),
+					  OZ_in(1)));
 } 
-OZ_C_proc_end
+OZ_BI_end
 
 
 OZ_Return FSetsMinPropagator::propagate(void)
@@ -98,7 +98,7 @@ failure:
 // -------------------------------------------------------------------
 // Max Propagator
 
-OZ_C_proc_begin(fsp_max, 2)
+OZ_BI_define(fsp_max, 2, 0)
 {
   OZ_EXPECTED_TYPE(OZ_EM_FSET "," OZ_EM_FD);
 
@@ -109,10 +109,10 @@ OZ_C_proc_begin(fsp_max, 2)
   int susp_count_dummy;
   OZ_EXPECT_SUSPEND(pe, 1, expectIntVarMinMax, susp_count_dummy);
   
-  return pe.impose(new FSetsMaxPropagator(OZ_args[0],
-					  OZ_args[1]));
+  return pe.impose(new FSetsMaxPropagator(OZ_in(0),
+					  OZ_in(1)));
 } 
-OZ_C_proc_end
+OZ_BI_end
 
 
 OZ_Return FSetsMaxPropagator::propagate(void)
@@ -164,15 +164,15 @@ failure:
 //--------------------------------------------------------------------
 // Convex Propagator
 
-OZ_C_proc_begin(fsp_convex, 1)
+OZ_BI_define(fsp_convex, 1, 0)
 {
   OZ_EXPECTED_TYPE(OZ_EM_FSET);
 
   PropagatorExpect pe;
   OZ_EXPECT(pe,0,expectFSetVarAny);
-  return pe.impose(new FSetsConvexPropagator(OZ_args[0]));
+  return pe.impose(new FSetsConvexPropagator(OZ_in(0)));
 }
-OZ_C_proc_end
+OZ_BI_end
 
 
 OZ_Return FSetsConvexPropagator::propagate(void)
@@ -235,7 +235,7 @@ failure:
 //-----------------------------------------------------------------------------
 // match propagator
 
-OZ_C_proc_begin(fsp_match, 2)
+OZ_BI_define(fsp_match, 2, 0)
 {
   OZ_EXPECTED_TYPE(OZ_EM_FSET "," OZ_EM_VECT OZ_EM_FD);
 
@@ -244,10 +244,10 @@ OZ_C_proc_begin(fsp_match, 2)
   OZ_EXPECT(pe, 0, expectFSetVarAny);
   OZ_EXPECT(pe, 1, expectVectorIntVarMinMax);
   
-  return pe.impose(new FSetMatchPropagator(OZ_args[0],
-					   OZ_args[1]));
+  return pe.impose(new FSetMatchPropagator(OZ_in(0),
+					   OZ_in(1)));
 } 
-OZ_C_proc_end
+OZ_BI_end
 
 
 // effects match, minN, and maxN
@@ -402,7 +402,7 @@ failure:
 //-----------------------------------------------------------------------------
 // minN propagator
 
-OZ_C_proc_begin(fsp_minN, 2)
+OZ_BI_define(fsp_minN, 2, 0)
 {
   OZ_EXPECTED_TYPE(OZ_EM_FSET "," OZ_EM_VECT OZ_EM_FD);
 
@@ -411,10 +411,10 @@ OZ_C_proc_begin(fsp_minN, 2)
   OZ_EXPECT(pe, 0, expectFSetVarAny);
   OZ_EXPECT(pe, 1, expectVectorIntVarMinMax);
   
-  return pe.impose(new FSetMinNPropagator(OZ_args[0],
-					  OZ_args[1]));
+  return pe.impose(new FSetMinNPropagator(OZ_in(0),
+					  OZ_in(1)));
 } 
-OZ_C_proc_end
+OZ_BI_end
 
 
 OZ_Return FSetMinNPropagator::propagate(void)
@@ -554,7 +554,7 @@ failure:
 //-----------------------------------------------------------------------------
 // maxN propagator
 
-OZ_C_proc_begin(fsp_maxN, 2)
+OZ_BI_define(fsp_maxN, 2, 0)
 {
   OZ_EXPECTED_TYPE(OZ_EM_FSET "," OZ_EM_VECT OZ_EM_FD);
 
@@ -563,10 +563,10 @@ OZ_C_proc_begin(fsp_maxN, 2)
   OZ_EXPECT(pe, 0, expectFSetVarAny);
   OZ_EXPECT(pe, 1, expectVectorIntVarMinMax);
   
-  return pe.impose(new FSetMaxNPropagator(OZ_args[0],
-					  OZ_args[1]));
+  return pe.impose(new FSetMaxNPropagator(OZ_in(0),
+					  OZ_in(1)));
 } 
-OZ_C_proc_end
+OZ_BI_end
 
 
 #define MATCH_NOLOOP
@@ -701,7 +701,7 @@ failure:
 //-----------------------------------------------------------------------------
 // seq propagator
 
-OZ_C_proc_begin(fsp_seq, 1)
+OZ_BI_define(fsp_seq, 1, 0)
 {
   OZ_EXPECTED_TYPE(OZ_EM_VECT OZ_EM_FSET);
 
@@ -709,9 +709,9 @@ OZ_C_proc_begin(fsp_seq, 1)
 
   OZ_EXPECT(pe, 0, expectVectorFSetVarBounds);
   
-  return pe.impose(new FSetSeqPropagator(OZ_args[0]));
+  return pe.impose(new FSetSeqPropagator(OZ_in(0)));
 } 
-OZ_C_proc_end
+OZ_BI_end
 
 
 OZ_Return FSetSeqPropagator::propagate(void)
