@@ -45,8 +45,8 @@
 	("   M:  " (-25 . oz-machine-state))))
 
 
-(setq oz-compiler-state "not running")
-(setq oz-machine-state  "not running")
+(defvar oz-compiler-state "not running")
+(defvar oz-machine-state  "not running")
 
 
 
@@ -99,6 +99,10 @@
 
 (defvar oz-status-string (format "%c" 19)
   "how compiler and engine signal status changes")
+
+
+(defvar oz-machine-screen nil
+  "screen to display Oz machine output")
 
 
 (if (not lucid-emacs)
@@ -170,10 +174,10 @@
 
 (oz-mode-commands oz-mode-map)
 
-(setq oz-small-font    '("-*-courier-" . "-*-*-*-100-*-*-*-*-iso8859-*"))
-(setq oz-normal-font   '("-*-courier-" . "-*-*-*-120-*-*-*-*-iso8859-*"))
-(setq oz-large-font    '("-*-courier-" . "-*-*-*-140-*-*-*-*-iso8859-*"))
-(setq oz-very-large-font '("-*-courier-" . "-*-*-*-180-*-*-*-*-iso8859-*"))
+(defvar oz-small-font    '("-*-courier-" . "-*-*-*-100-*-*-*-*-iso8859-*"))
+(defvar oz-normal-font   '("-*-courier-" . "-*-*-*-120-*-*-*-*-iso8859-*"))
+(defvar oz-large-font    '("-*-courier-" . "-*-*-*-140-*-*-*-*-iso8859-*"))
+(defvar oz-very-large-font '("-*-courier-" . "-*-*-*-180-*-*-*-*-iso8859-*"))
 
 (defun oz-small-font()
   (interactive)
@@ -205,8 +209,7 @@
 
 ;;; OZ MODE
 (if lucid-emacs
-;(defvar oz-menubar 
-(setq oz-menubar 
+(defvar oz-menubar 
   (append default-menubar
 	  '(("Oz"     
 	     ["Feed buffer"            oz-feed-buffer t]
@@ -422,16 +425,12 @@ if that value is non-nil."
   (process-send-string "Oz Compiler" string)
   (process-send-eof "Oz Compiler"))
 
-(defvar oz-machine-screen nil
-  "screen to display Oz machine output")
-
-(setq oz-machine-screen nil)
-
 
 (defun oz-show-buffer (buffer)
   (if (equal (get-buffer buffer) (get-buffer "*Oz Machine*"))
 	(oz-show-machine-window)
     (let ((cur (current-buffer))
+	  win
 	  (old-win (selected-window)))
       (pop-to-buffer buffer t)
       (setq win (get-buffer-window buffer))
@@ -1009,14 +1008,14 @@ Meta-Return sends current input.
 	(goto-char end)  ;; now we are at the "("
 	(forward-sexp)   ;; search corresponding ")"
 	(delete-char -1) ;; we delete the ")" (it is to the left of point)
-	(insert-string "}")
+	(insert "}")
 	(goto-char end)  ;; back to the "("
 	(delete-char 1)
 	;; "Bla()" should go to "{Bla}" and not "{Bla }"
 	(if (not (looking-at "}")) 
-	    (insert-string " "))
+	    (insert " "))
 	(goto-char start)
-	(insert-string "{")
+	(insert "{")
 	(setq case-fold-search old)
 	t))))
 
@@ -1026,7 +1025,7 @@ Meta-Return sends current input.
   (if (not (re-search-forward "," (point-max) t))
       nil
       (progn (delete-char -1)
-       (insert-string " ")
+       (insert " ")
        t)))
   
 
@@ -1037,7 +1036,7 @@ Meta-Return sends current input.
       nil
     (progn (backward-char 1) 
 	   (delete-char -1)
-	   (insert-string "|")
+	   (insert "|")
 	   t)))
   
 (defun oz-replace-opensquare()
@@ -1045,7 +1044,7 @@ Meta-Return sends current input.
   (interactive)
   (if (not (re-search-forward "[[][^]]" (point-max) t))
       nil
-    (progn (backward-char 1) (delete-char -1) (insert-string ".(") t)))
+    (progn (backward-char 1) (delete-char -1) (insert ".(") t)))
 
   
 (defun oz-replace-closesquare()
@@ -1054,7 +1053,7 @@ Meta-Return sends current input.
   (if (not (re-search-forward "[^[][]]" (point-max) t))
       nil
       (progn (delete-char -1)
-       (insert-string ")") t)))
+       (insert ")") t)))
   
 
 (if lucid-emacs (global-set-key [(f10)] 'oz-convert-one-application))
@@ -1101,7 +1100,7 @@ Meta-Return sends current input.
 
 
 
-(setq oz-temp-counter 0)
+(defvar oz-temp-counter 0)
 
 (defun oz-make-temp-name(name)
   (setq oz-temp-counter (+ 1 oz-temp-counter))
