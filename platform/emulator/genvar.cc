@@ -41,6 +41,14 @@ void GenCVariable::propagate(TaggedRef var, SuspList * &sl, TaggedRef term,
 }
 
 
+Bool GenCVariable::unifyOutline(TaggedRef *tptr1, TaggedRef term1,
+				TaggedRef *tptr2, TaggedRef term2,
+				Bool prop)
+{
+  return unify(tptr1,term1,tptr2,term2,prop);
+}
+
+
 #ifdef OUTLINE
 #define inline
 #include "genvar.icc"
