@@ -1,25 +1,25 @@
 /*
  *  Authors:
  *    Tobias Mueller (tmueller@ps.uni-sb.de)
- * 
+ *
  *  Contributors:
  *    Christian Schulte <schulte@ps.uni-sb.de>
- * 
+ *
  *  Copyright:
  *    Organization or Person (Year(s))
- * 
+ *
  *  Last change:
  *    $Date$ by $Author$
  *    $Revision$
- * 
- *  This file is part of Mozart, an implementation 
+ *
+ *  This file is part of Mozart, an implementation
  *  of Oz 3:
  *     http://www.mozart-oz.org
- * 
+ *
  *  See the file "LICENSE" or
  *     http://www.mozart-oz.org/LICENSE.html
- *  for information on usage and redistribution 
- *  of this file, and for a DISCLAIMER OF ALL 
+ *  for information on usage and redistribution
+ *  of this file, and for a DISCLAIMER OF ALL
  *  WARRANTIES.
  *
  */
@@ -34,12 +34,12 @@
 FILE *cpi_fileout = NULL;
 
 ostream * init_cpi_cout(char * n) {
-  cerr << endl << "CPI debug output goes to '" << n << "'." 
+  cerr << endl << "CPI debug output goes to '" << n << "'."
        << endl << flush;
 
   cpi_fileout = fopen(n,"w");
   if (cpi_fileout==NULL )
-    cerr << endl << "Cannot open '" << n << "' for output." 
+    cerr << endl << "Cannot open '" << n << "' for output."
 	 << endl << flush;
 
   return new ostream(cpi_fileout);
@@ -74,7 +74,7 @@ OZ_Term * OZ_hallocOzTerms(int n)
 OZ_Term * OZ_copyOzTerms(int n, OZ_Term * frm) {
   if (n==0)
     return (OZ_Term *) NULL;
-  
+
   OZ_Term * to = OZMALLOC(OZ_Term, n);
 
   OZ_collectHeapBlock(frm, to, n);
@@ -105,7 +105,7 @@ char * OZ_hallocChars(int n)
 char * OZ_copyChars(int n, char * frm) {
   if (n==0)
     return (char *) NULL;
-  
+
   char * to = OZMALLOC(char, n);
 
   memcpy(to, frm, n);
@@ -118,7 +118,7 @@ void OZ_hfreeChars(char * is, int n)
   if (n) OZDISPOSE(char, n, is);
 }
 
-#define FDTAG 		    OZCONST
+#define FDTAG               OZCONST
 #define MAKETAGGEDINDEX(I)  makeTaggedRef2i(FDTAG,(int32) (I<<2))
 #define GETINDEX(T)         (ToInt32(tagValueOfVerbatim(T))>>2);
 
@@ -151,11 +151,11 @@ int * OZ_findEqualVars(int sz, OZ_Term * ts)
 	_ts[i] = t;
 	is[i] = i;
 	*tptr = MAKETAGGEDINDEX(i);
-      } 
+      }
     }
   }
-    
-  for (i = sz; i--; ) 
+
+  for (i = sz; i--; )
     if (is[i] == i) {
       *_ts_ptr[i] = _ts[i];
       Assert(OZ_isVariable(makeTaggedRef(_ts_ptr[i])));
@@ -186,7 +186,7 @@ int * OZ_findSingletons(int sz, OZ_Term * ts)
       sgl[i] = -1;
     }
   }
- 
+
   return sgl;
 }
 
@@ -197,19 +197,19 @@ OZ_Boolean OZ_isEqualVars(OZ_Term v1, OZ_Term v2)
   return isVariableTag(vtag1) && (vptr1 == vptr2);
 }
 
-OZ_Return OZ_typeErrorCPI(char * typeString, int pos, char * comment) 
+OZ_Return OZ_typeErrorCPI(char * typeString, int pos, char * comment)
 {
   return typeError(pos, comment, typeString);
 }
 
-int OZ_getFDInf(void) 
-{ 
-  return fd_inf; 
+int OZ_getFDInf(void)
+{
+  return fd_inf;
 }
 
-int OZ_getFDSup(void) 
-{ 
-  return fd_sup; 
+int OZ_getFDSup(void)
+{
+  return fd_sup;
 }
 
 int OZ_vectorSize(OZ_Term t) {
@@ -220,7 +220,7 @@ int OZ_vectorSize(OZ_Term t) {
     return tagged2SRecord(t)->getWidth();
   } else if (oz_isLiteral(t)) {
     return 0;
-  } 
+  }
   return -1;
 }
 
@@ -229,12 +229,12 @@ OZ_Term * OZ_getOzTermVector(OZ_Term t, OZ_Term * v)
   int i = 0;
 
   t=oz_deref(t);
-  
+
   if (oz_isLiteral(t)) {
 
     ;
 
-  } if (oz_isCons(t)) {
+  } else if (oz_isCons(t)) {
 
     do {
       v[i++] = oz_head(t);
@@ -243,14 +243,14 @@ OZ_Term * OZ_getOzTermVector(OZ_Term t, OZ_Term * v)
 
   } else if (oz_isTuple(t)) {
 
-    for (int sz = tagged2SRecord(t)->getWidth(); i < sz; i += 1) 
+    for (int sz = tagged2SRecord(t)->getWidth(); i < sz; i += 1)
       v[i] = tagged2SRecord(t)->getArg(i);
 
   } else if (oz_isRecord(t)) {
 
     OZ_Term al = OZ_arityList(t);
 
-    for (; oz_isCons(al); al = oz_tail(al)) 
+    for (; oz_isCons(al); al = oz_tail(al))
       v[i++] = tagged2SRecord(t)->getFeature(oz_head(al));
 
   } else {
@@ -265,7 +265,7 @@ int * OZ_getCIntVector(OZ_Term t, int * v)
   int i = 0;
 
   t = oz_deref(t);
-  
+
   if (oz_isLiteral(t)) {
 
     ;
@@ -276,19 +276,19 @@ int * OZ_getCIntVector(OZ_Term t, int * v)
       v[i++] = smallIntValue(oz_deref((oz_head(t))));
       t = oz_deref(oz_tail(t));
     } while (oz_isCons(t));
-    
+
   } else if (oz_isTuple(t)) {
 
-    for (int sz = tagged2SRecord(t)->getWidth(); i < sz; i += 1) 
+    for (int sz = tagged2SRecord(t)->getWidth(); i < sz; i += 1)
       v[i] = smallIntValue(oz_deref((tagged2SRecord(t)->getArg(i))));
 
   } else if (oz_isRecord(t)) {
 
     OZ_Term al = OZ_arityList(t);
 
-    for (; oz_isCons(al); al = oz_tail(al)) 
+    for (; oz_isCons(al); al = oz_tail(al))
       v[i++] = smallIntValue(oz_deref((tagged2SRecord(t)->getFeature(al))));
-    
+
   } else {
     OZ_warning("OZ_getCIntVector: Unexpected term, expected vector.");
     return NULL;
