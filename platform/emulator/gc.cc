@@ -976,7 +976,7 @@ void OzFSVariable::gc(OzFSVariable * frm) {
   _fset = frm->_fset;
 
 #ifdef BIGFSET
-  _fset.copyExtensions();
+  _fset.copyExtension();
 #endif
 
   for (int i = fs_prop_any; i--; )

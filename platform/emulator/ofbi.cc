@@ -36,6 +36,8 @@
  * OF builtins
  *********************************************************************/
 
+// global variable in cpi_expect.cc
+extern Propagator * imposed_propagator;
 
 // -----------------------------------------------------------------------
 // propagators
@@ -662,10 +664,10 @@ OZ_C_proc_begin(BImonitorArity, 3)
         OZ_EXPECT(pe, 1, expectVar);
 
         TaggedRef uvar=oz_newVar(home);
-        return pe.impose(
-            new MonitorArityPropagator(rec,kill,feattail,uvar,uvar),
-	    OZ_getMediumPrio(),
-            OFS_flag);
+        OZ_Return r = 
+	  pe.impose(new MonitorArityPropagator(rec,kill,feattail,uvar,uvar));
+	imposed_propagator->markOFSPropagator();
+	return r;
     }
 
     return PROCEED;

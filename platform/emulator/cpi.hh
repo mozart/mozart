@@ -68,11 +68,6 @@ extern int staticSuspendVarsNumber;
 
 
 class ExpectOnly : public OZ_Expect {
-private:
-  OZ_Return spawn(OZ_Propagator *, int , OZ_PropagatorFlags ) { return PROCEED;}
-  OZ_Return spawn(OZ_Propagator *, OZ_PropagatorFlags) { return PROCEED;}
-  OZ_Return suspend(OZ_Thread) { return PROCEED; }
-  OZ_Return fail(void) { return PROCEED; }
 public:
   ExpectOnly(void) : OZ_Expect() {}
   OZ_Term * getSuspVar(void) {

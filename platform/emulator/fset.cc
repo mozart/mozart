@@ -352,6 +352,15 @@ void FSetValue::copyExtension() {
 #endif
 }
 
+inline
+void FSetValue::disposeExtension() {
+#ifdef BIGFSET
+  if (!_normal) {
+    _IN.disposeExtension();
+  }
+#endif
+}
+
 
 inline
 void FSetValue::DP(const char *s = NULL) const {
@@ -1425,6 +1434,27 @@ int FSetValue::getNextSmallerElem(int v) const
 
 // ----------------------------------------------------------------------------
 // FSETCONSTRAINT
+
+inline
+void FSetConstraint::copyExtension() {
+#ifdef BIGFSET
+  if (!_normal) {
+    _IN.copyExtension();
+    _OUT.copyExtension();
+  }
+#endif
+}
+
+inline
+void FSetConstraint::disposeExtension() {
+#ifdef BIGFSET
+  if (!_normal) {
+    _IN.disposeExtension();
+    _OUT.disposeExtension();
+  }
+#endif
+}
+
 
 inline
 void FSetConstraint::DP(const char *s = NULL) const {
@@ -3133,14 +3163,6 @@ OZ_Boolean FSetConstraint::operator <= (const int ii)
   return retval;
 }
 
-void FSetConstraint::copyExtensions() {
-#ifdef BIGFSET
-  if (!_normal) {
-    _IN.copyExtension();
-    _OUT.copyExtension();
-  }
-#endif
-}
 
 // the following could maybe be improved
 
@@ -3416,18 +3438,12 @@ char * OZ_FSetValue::toString()
   return str.str();
 }
 
-void * OZ_FSetValue::operator new(size_t s)
-{
-  return heapMalloc(s);
-}
-
-void OZ_FSetValue::operator delete(void *, size_t)
-{
-  OZ_error("deleting heap mem");
-}
-
 void OZ_FSetValue::copyExtension() {
   CASTTHIS->copyExtension();
+}
+
+void OZ_FSetValue::disposeExtension() {
+  CASTTHIS->disposeExtension();
 }
 
 //-----------------------------------------------------------------------------
@@ -3755,8 +3771,12 @@ OZ_Boolean OZ_FSetConstraint::operator >= (const int i)
   return CASTTHIS->operator >= (i);
 }
 
-void OZ_FSetConstraint::copyExtensions() {
-  CASTTHIS->copyExtensions();
+void OZ_FSetConstraint::copyExtension() {
+  CASTTHIS->copyExtension();
+}
+
+void OZ_FSetConstraint::disposeExtension() {
+  CASTTHIS->disposeExtension();
 }
 
 // eof 

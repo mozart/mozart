@@ -1551,8 +1551,7 @@ OZ_C_proc_begin(BIfdConstrDisj, 3)
   PropagatorExpect pe;
   OZ_EXPECT(pe, 1, expectVectorIntVarAny);
 
-  return pe.impose(new CDPropagator(OZ_args[0], OZ_args[1], OZ_args[2]),
-		   OZMAX_PRIORITY - 1);
+  return pe.impose(new CDPropagator(OZ_args[0], OZ_args[1], OZ_args[2]));
 }
 OZ_C_proc_end
 
@@ -1560,7 +1559,7 @@ OZ_PropagatorProfile CDPropagator::spawner = "BIfdConstrDisj";
 
 CDSuppl::CDSuppl(OZ_Propagator * p, OZ_Term b) : reg_b(b) 
 {
-  prop = (void *) oz_newPropagator(OZ_getHighPrio(), p);
+  prop = (void *) oz_newPropagator(p);
   // cd threads,  are expected to be suspended
   ((Propagator *) prop)->unmarkRunnable();
 }
