@@ -5388,36 +5388,23 @@ OZ_C_proc_end
 #include <sys/types.h>
 #include <sys/stat.h>
 
-OZ_C_proc_begin(BIFindFile,3)
+int find_file(OZ_Term R,char* Name,char* Fullpath)
 {
-  OZ_declareNonvarArg(0,R);
-  OZ_declareVirtualStringArg(1,N);
-  OZ_Term Fullpath = OZ_getCArg(2);
 #define NAMESIZE 256
-  char Name[NAMESIZE];
-  if (!OZ_isTuple(R)) return OZ_typeError(0,"Tuple");
-  int NameLen = strlen(N);
-  if (NameLen>=NAMESIZE)
-    return OZ_raiseErrorC("FindFile",2,OZ_atom("bufferOverflow"),
-                          OZ_getCArg(1));
-  strcpy(Name,N);
+  if (!OZ_isTuple(R)) return -1;
+  int NameLen = strlen(Name);
+  if (NameLen>=NAMESIZE) return -2;
   // Each element of the tuple must be a virtual string
   // and is interpreted as naming a directory
   int width = OZ_width(R);
   char buffer[NAMESIZE];
   for(int i=0;i<width;i++) {
     OZ_Term term = OZ_getArg(R,i);
-    if (!OZ_isVirtualString(term,0))
-      return OZ_raiseErrorC("FindFile",2,
-                            OZ_atom("notVirtualString"),
-                            term);
+    if (!OZ_isVirtualString(term,0)) return -3;
     char * Dir = OZ_virtualStringToC(term);
     int DirLen = strlen(Dir);
     // 1 is for possible additional / to insert
-    if ((NameLen + DirLen + 1)>=NAMESIZE)
-      return OZ_raiseErrorC("FindFile",2,
-                            OZ_atom("bufferOverflow"),
-                            OZ_pair2(term,OZ_getCArg(1)));
+    if ((NameLen + DirLen + 1)>=NAMESIZE) return -2;
     memcpy(buffer,Dir,DirLen);
     if (buffer[DirLen-1]!='/') {
       buffer[DirLen] = '/';
@@ -5425,26 +5412,46 @@ OZ_C_proc_begin(BIFindFile,3)
     }
     memcpy(buffer+DirLen,Name,NameLen+1);
     struct stat buf;
-    if (stat(buffer,&buf)==0)
-      return OZ_unify(Fullpath,OZ_atom(buffer));
+    if (stat(buffer,&buf)==0) {
+      strcpy(Fullpath,buffer);
+      return 0;
+    }
   }
-  return OZ_unify(Fullpath,OZ_false());
+  return 1;
+}
+
+OZ_C_proc_begin(BIFindFile,3)
+{
+  OZ_declareNonvarArg(0,R);
+  OZ_declareVirtualStringArg(1,N);
+  OZ_Term Fullpath = OZ_getCArg(2);
+  char Name[NAMESIZE];
+  char Path[NAMESIZE];
+  strcpy(Name,N);
+  switch (find_file(R,Name,Path)) {
+  case  1: return OZ_unify(Fullpath,OZ_false());
+  case  0: return OZ_unify(Fullpath,OZ_atom(Path));
+  case -1: return OZ_typeError(0,"Tuple");
+  case -2: return OZ_raiseErrorC("FindFile",2,OZ_atom("bufferOverflow"),
+                                 OZ_getCArg(1));
+  case -3: return  OZ_raiseErrorC("FindFile",2,
+                                  OZ_atom("nonVirtualStringIn"),
+                                  R);
+  default: Assert(0); return FAILED;
+  }
 }
 OZ_C_proc_end
 
 // {EnvToTuple "PATH" ?Tuple}
 // looks up an environment variable that is supposed to be a list
-// os pathnames separated by ':' and turns it into a tuple appropriate
+// of pathnames separated by ':' and turns it into a tuple appropriate
 // as an argument to FindFile.  If the environment variable does not
 // exist, `false' is returned instead.
 
-OZ_C_proc_begin(BIEnvToTuple,2)
+int env_to_tuple(char*var,OZ_Term* tup)
 {
-  OZ_declareVirtualStringArg(0,V);
-  OZ_Term result = OZ_getCArg(1);
-  char * S = getenv(V);
-  if (S==NULL)
-    return OZ_unify(OZ_false(),result);
+  char * S = getenv(var);
+  if (S==NULL) return 1;
   // S is a list of pathnames separated by ':'
 #ifndef NAMESIZE
 #define NAMESIZE 256
@@ -5455,9 +5462,7 @@ OZ_C_proc_begin(BIEnvToTuple,2)
   if (argidx<NAMESIZE) {                                \
     arg[argidx++] = T;                                  \
   } else {                                              \
-    return OZ_raiseErrorC("EnvToTuple",2,               \
-                          OZ_atom("tooManyPathnames"),  \
-                          OZ_getCArg(0));               \
+    return -1;                                          \
   }
   char buffer[NAMESIZE];
   int index;
@@ -5488,10 +5493,25 @@ splitx:
     goto splitx;
   }
 finish:
-  OZ_Term tuple = OZ_tuple(OZ_atom("env"),argidx);
+  *tup = OZ_tuple(OZ_atom("env"),argidx);
   for(int i=0;i<argidx;i++)
-    OZ_putArg(tuple,i,arg[i]);
-  return OZ_unify(result,tuple);
+    OZ_putArg(*tup,i,arg[i]);
+  return 0;
+}
+
+OZ_C_proc_begin(BIEnvToTuple,2)
+{
+  OZ_declareVirtualStringArg(0,V);
+  OZ_Term result = OZ_getCArg(1);
+  OZ_Term tuple;
+  switch (env_to_tuple(V,&tuple)) {
+  case -1: return OZ_raiseErrorC("EnvToTuple",2,
+                                 OZ_atom("tooManyPathnames"),
+                                 OZ_getCArg(0));
+  case  0: return OZ_unify(result,tuple);
+  case  1: return OZ_unify(result,OZ_false());
+  default: Assert(0); return FAILED;
+  }
 }
 OZ_C_proc_end
 
@@ -6051,6 +6071,8 @@ OZ_C_proc_begin(BISystemGetMessages,1) {
   SetBoolArg(AtomIdle,    ozconf.showIdleMessage);
   SetBoolArg(AtomFeed,    ozconf.showFastLoad);
   SetBoolArg(AtomForeign, ozconf.showForeignLoad);
+  SetBoolArg(AtomLoad,    ozconf.showLoad);
+  SetBoolArg(AtomCache,   ozconf.showCacheLoad);
 
   return PROCEED;
 }
@@ -6281,11 +6303,15 @@ OZ_C_proc_begin(BISystemSetMessages,1) {
   DoBoolFeature(idle,    t, AtomIdle);
   DoBoolFeature(feed,    t, AtomFeed);
   DoBoolFeature(foreign, t, AtomForeign);
+  DoBoolFeature(load,    t, AtomLoad);
+  DoBoolFeature(cache,   t, AtomCache);
 
   SetIfPos(ozconf.gcVerbosity,     gc,      1);
   SetIfPos(ozconf.showIdleMessage, idle,    1);
   SetIfPos(ozconf.showFastLoad,    feed,    1);
   SetIfPos(ozconf.showForeignLoad, foreign, 1);
+  SetIfPos(ozconf.showLoad,        load,    1);
+  SetIfPos(ozconf.showCacheLoad,   cache,   1);
 
   return PROCEED;
 }
