@@ -64,7 +64,7 @@ are related to the <<Remote>> module and virtual sites
 <list>
 <item>On Windows, the <<Remote>> module has limited functionality.
 Only a single option is possible for <<fork>>, namely <<sh>>.
-Future release will add more options.
+Future releases will add more options.
 
 <item>On Solaris, the <<Remote>> module can only create
 a limited number of virtual sites.
