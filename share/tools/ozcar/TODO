@@ -20,3 +20,15 @@ Exception-Typ in die Statuszeile
 
 Mon Mar 17 16:46:54 MET 1997
 stack fenster muss nach oben scrollen bei stack > 12...
+
+Fri Mar 21 16:46:59 MET 1997
+Verzoegerte Anzeige des Environments mit bekannter Technik (siehe
+Klasse Tree) erst nach 2 Sekunden Ruhe (kein step/next click)
+
+Thu Mar 27 15:02:53 MET 1997
+leif special: blocks < x ms sollen ignoriert werden!!
+              running... anzeige (irgendwie) realisieren!
+              (z.B. blinkende(?) thread nummern im thread tree :-))
+
+Thu Mar 27 18:36:34 MET 1997
+leif special: key shortcuts (insb. C-r !!!!!)

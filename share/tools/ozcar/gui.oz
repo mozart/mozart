@@ -130,9 +130,9 @@ in
 
 	 {ForAll [self.ButtonFrame self.StatusFrame]
 	  proc{$ F}
-	     F = {New Tk.frame tkInit(parent:self.toplevel
-				      bd:BorderSize
-				      relief:ridge)}
+	     F = {New Tk.frame tkInit(parent: self.toplevel
+				      bd:     SmallBorderSize
+				      relief: ridge)}
 	  end}
       
 	 {Tk.batch [grid(self.menuBar       row:0 column:0
@@ -181,22 +181,34 @@ in
 	    {Tk.batch [pack(b(Bs) side:left  padx:1)
 		       pack(Susp RunChildren side:right padx:2)]}
 	 end
-      
+
+	 %% border line
+         local
+	    F = {New Tk.frame tkInit(parent: self.toplevel
+				     height: SmallBorderSize
+				     bd:     NoBorderSize
+				     relief: flat)}
+	 in
+	    {Tk.send grid(F row:2 column:0 sticky:we columnspan:3)}
+	 end
+ 
 	 %% status line
 	 self.StatusText =
 	 {New Tk.text tkInit(parent: self.StatusFrame
 			     state:  disabled
 			     height: 1
 			     width:  0
-			     bd:     0
+			     bd:     NoBorderSize
 			     cursor: TextCursor
-			     font:   BoldFont)}
+			     font:   StatusFont)}
 	 {Tk.send pack(self.StatusText side:left padx:2 fill:x expand:yes)}
 
 	 %% create the thread tree object...
 	 self.ThreadTree =
 	 {New Tree tkInit(parent: self.toplevel
 			  title:  TreeTitle
+			  bd:     SmallBorderSize
+			  relief: sunken
 			  width:  ThreadTreeWidth
 			  bg:     DefaultBackground)}
 	 %% ...and the text widgets for stack and environment
@@ -408,7 +420,7 @@ in
       meth printStack(id:I frames:Frames depth:Depth last:LastFrame<=nil)
 	 W = self.StackText
       in
-	 {OzcarMessage 'printing complete stack of size ' # Depth}
+	 {OzcarMessage 'printing complete stack (#' # I # '/' # Depth # ')'}
 	 case I == 0 then
 	    {W title(StackTitle)}
 	    Gui,Clear(W)
@@ -509,6 +521,8 @@ in
 	    N in
 	    Gui,rawStatus(ResetStatus)
 	    ThreadManager,killAll(N)
+	    {self.StackText title(StackTitle)}
+	    {Delay 200} %% just to look nice... ;)
 	    Gui,rawStatus(case N == 1 then
 			     ' (1 thread has been killed)'
 			  else
@@ -547,6 +561,7 @@ in
 		  
 	       elseof ' forget' then
 		  ThreadManager,forget(T I)
+		  {self.StackText title(StackTitle)}
 		  Gui,rawStatus('I don\'t care anymore about thread #' # I)
 	  
 	       elseof ' term' then

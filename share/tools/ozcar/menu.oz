@@ -98,7 +98,7 @@ in
 	      feature: help)
 	  ]}
 %	 {self.menuBar.help tk(conf tearoff:false)}
-	 %{self.menuBar tk(conf borderwidth:2)}
+	 {self.menuBar tk(conf borderwidth:1)}
       end
    end
 end
