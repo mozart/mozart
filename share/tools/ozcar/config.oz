@@ -165,6 +165,7 @@ MaxStackSize           = 40
 MaxStackBrowseSize     = 15
 
 TimeoutToMessage       = 350   % ms
+TimeoutToCalc          =  90
 TimeoutToRedraw        = 180
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
