@@ -651,7 +651,8 @@ If ARG is given, reindent that many lines above and below point as well."
 		  (if (or (progn (beginning-of-line)
 				 (not (looking-at "\t* ? ? ? ? ? ? ?")))
 			  (progn (goto-char (match-end 0))
-				 (/= (current-column) col)))
+				 (or (looking-at "[\t ]")
+				     (/= (current-column) col))))
 		      (progn
 			(delete-horizontal-space)
 			(indent-to col)))))))
