@@ -224,7 +224,7 @@ void Statistics::initCount() {
   freeListAllocated = 0;
   freeListDisposed = 0;
   totalAllocated = 0;  
-  varVarUnify = recRecUnify = totalUnify = 0;
+  nonvarNonvarUnify = varNonvarUnify = varVarUnify = recRecUnify = totalUnify = 0;
   maxStackDepth = 0;
   maxEnvSize = 0;
   sizeClosures = numClosures = sizeGs = 0;
@@ -312,6 +312,8 @@ void Statistics::printCount() {
   PrintVar(totalAllocated);
   PrintVar(totalUnify);
   PrintVarPercent(varVarUnify,totalUnify);
+  PrintVarPercent(varNonvarUnify,totalUnify);
+  PrintVarPercent(nonvarNonvarUnify,totalUnify);
   PrintVarPercent(recRecUnify,totalUnify);
   PrintVar(maxStackDepth);
   PrintVar(maxEnvSize);
@@ -342,20 +344,20 @@ void Statistics::printCount() {
 
   printDeref();
 
-  int totCalls = fastcalls+bicalls+nonoptcalls+inlinecalls
-                +inlinedots+sendmsg+applmeth;
+  //int totCalls = fastcalls+bicalls+nonoptcalls+inlinecalls+inlinedots+sendmsg+applmeth;
+  int totCalls = fastcalls+bicalls+nonoptcalls+inlinecalls+sendmsg+applmeth;
 
   printf("\nCalls\n");
   PrintVar(totCalls);
   PrintVarPercent(fastcalls,totCalls);
-  PrintVarPercent(bicalls,totCalls);
-  PrintVarPercent(inlinecalls,totCalls);
-  PrintVarPercent(inlinedots,totCalls);
-  PrintVarPercent(sendmsg,totCalls);
-  PrintVarPercent(applmeth,totCalls);
   PrintVarPercent(nonoptcalls,totCalls);
   PrintVar(nonoptbicalls);
   PrintVar(nonoptsendmsg);
+  PrintVarPercent(bicalls,totCalls);
+  PrintVarPercent(inlinecalls,totCalls);
+  PrintVarPercent(sendmsg,totCalls);
+  PrintVarPercent(applmeth,totCalls);
+  PrintVar(inlinedots);
 
   int userCalls = fastcalls+sendmsg+nonoptcalls-nonoptbicalls;
   int envsPerUserCall = numEnvAllocs;
