@@ -162,7 +162,7 @@ public:
 
   void setCurrent(Board *c, Bool checkNotGC=OK);
   InstType installPath(Board *to); // ###
-  Bool installScript(Script &script);
+  inline Bool installScript(Script &script);
   Bool install(Board *bb);
   void deinstallPath(Board *top);
   void deinstallCurrent();
