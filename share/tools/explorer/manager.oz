@@ -33,11 +33,11 @@ in
 	 explorer
 
       attr
-	 IsBAB:   False
-	 root:    False
-	 query:   False
-	 order:   False
-	 PrevSol: False
+	 IsBAB:   false
+	 root:    false
+	 query:   false
+	 order:   false
+	 PrevSol: false
 	 ToClose: nil
 
       
@@ -57,8 +57,8 @@ in
 	 MenuManager,clear
 	 StatusManager,clear
 	 ToplevelManager,clear
-	 root    <- False
-	 PrevSol <- False
+	 root    <- false
+	 PrevSol <- false
       end
 
       meth clearDialogs
@@ -80,12 +80,12 @@ in
       end
 
       meth reset
-	 case @query of !False then skip elseof Query then
+	 case @query of false then skip elseof Query then
 	    Manager,query(Query @order)
 	 end
       end
 
-      meth setCursor(CurNode IsVisible <= False)
+      meth setCursor(CurNode IsVisible <= false)
 	 %% Might only be invoked if root is not false
 	 MenuManager,normal(explorer([clear postscript reset]))
 	 case {@root isFinished($)} then
@@ -97,13 +97,13 @@ in
 	 else
 	    %% Move: Top, Current, and stat are always possible
 	    MenuManager,normal([move([top cur]) nodes(stat)])
-	               ,state({CurNode back($)}\=False move(back))
+	               ,state({CurNode back($)}\=false move(back))
 	    %% Move: Previous Solution, Next Solution
 	               ,state({CurNode leftMost($)}\=CurNode move(leftMost))
 	               ,state({CurNode rightMost($)}\=CurNode move(rightMost))
 	    case {@root hasSolutions($)} then
-	       MenuManager,state({CurNode nextSol($)}\=False move(nextSol))
-	                  ,state({CurNode prevSol($)}\=False move(prevSol))
+	       MenuManager,state({CurNode nextSol($)}\=false move(nextSol))
+	                  ,state({CurNode prevSol($)}\=false move(prevSol))
 	    else
 	       MenuManager,disable(move([prevSol nextSol]))
 	    end
@@ -123,8 +123,8 @@ in
 				    hide(failed)])
 	    else
 	       MenuManager,normal(nodes(info))
-	                  ,state(@cmpNode==False nodes(selCmp))
-	                  ,state(@cmpNode\=False nodes([deselCmp cmp]))
+	                  ,state(@cmpNode==false nodes(selCmp))
+	                  ,state(@cmpNode\=false nodes([deselCmp cmp]))
 	                  ,state({CurNode isUnhidable($)}     hide(all))
 	                  ,state({CurNode isFailedHidable($)} hide(failed))
 	                  ,state({CurNode isButFailedUnhidable($)}
@@ -178,11 +178,11 @@ in
 
       meth query(Query Order)
 	 Manager,clear
-	 IsBAB   <- (Order\=False)
+	 IsBAB   <- (Order\=false)
 	 query   <- Query
 	 order   <- Order
-	 curNode <- False
-	 PrevSol <- False
+	 curNode <- false
+	 PrevSol <- false
 	 {self.status setBAB(@IsBAB)}
 	 StatusManager,start(_)
 	 root <- {MakeRoot self Query Order}
@@ -206,12 +206,12 @@ in
       meth moveCurrent
 	 CurNode = @curNode
       in
-	 curNode <- False
+	 curNode <- false
 	 Manager,setCursor(CurNode)
       end
       
       meth moveFrom(What)
-	 case {@curNode What($)} of !False then skip elseof Dest then
+	 case {@curNode What($)} of false then skip elseof Dest then
 	    Manager,setCursor(Dest)
 	 end
       end
@@ -226,7 +226,7 @@ in
       %%
 
       meth getPrevSol($)
-	 case @PrevSol of !False then False
+	 case @PrevSol of false then false
 	 elseof Sol then {Sol getOriginalSpace($)}
 	 end
       end
@@ -238,10 +238,10 @@ in
 	 StatusManager,start($)
       end
 
-      meth stopSearch(Sol Cursor <= False)
+      meth stopSearch(Sol Cursor <= false)
 	 case @root==nil then skip else
-	    TryCursor = case Cursor==False then
-			   case Sol==False then @curNode
+	    TryCursor = case Cursor==false then
+			   case Sol==false then @curNode
 			   else
 			      case @IsBAB then PrevSol <- Sol
 			      else skip
@@ -284,7 +284,7 @@ in
 				 {Dictionary.get O search}
 				 {Dictionary.get O information} $)}
       in
-	 case Sol\=False andthen StatusManager,getBreakStatus($)==none then
+	 case Sol\=false andthen StatusManager,getBreakStatus($)==none then
 	    case @IsBAB then PrevSol <- Sol
 	    else skip
 	    end
@@ -318,17 +318,17 @@ in
 	 Manager,hideCursor
 	 {@curNode ToDo}
 	 Manager,Layout
-	        ,setCursor(@curNode False)
+	        ,setCursor(@curNode false)
 	        ,idle
       end
       
       meth stat
 	 StatNode = case @curNode
-		    of !False then @root
+		    of false then @root
 		    elseof CurNode then CurNode
 		    end
       in
-	 case StatNode==False then skip else
+	 case StatNode==false then skip else
 	    Number  = Manager,getNumber(StatNode $)
 	    Handler = {self.statAction get($)}.3
 	    Stat    = {StatNode stat($)}
@@ -343,16 +343,16 @@ in
       end
 
       meth setByXY(X Y)
-	 Manager,setCursor(ToplevelManager,findByXY(X Y $) True)
+	 Manager,setCursor(ToplevelManager,findByXY(X Y $) true)
       end
       
       meth nodesByXY(What X Y)
-	 Manager,setCursor(ToplevelManager,findByXY(X Y $) False)
+	 Manager,setCursor(ToplevelManager,findByXY(X Y $) false)
 	        ,nodes(What)
       end
       
       meth doByXY(What X Y)
-	 Manager,setCursor(ToplevelManager,findByXY(X Y $) False)
+	 Manager,setCursor(ToplevelManager,findByXY(X Y $) false)
 	        ,What
       end
       
@@ -364,10 +364,10 @@ in
 	 end
       end
       
-      meth nodesInfo(Node <= False)
-	 RealNode = case Node==False then @curNode else Node end
+      meth nodesInfo(Node <= false)
+	 RealNode = case Node==false then @curNode else Node end
       in
-	 case RealNode of !False then skip elseof CurNode then
+	 case RealNode of false then skip elseof CurNode then
 	    MenuManager,busy
 	    Action  = {self.infoAction get($)}
 	    Handler = Action.3
@@ -375,7 +375,7 @@ in
 	    Number  = Manager,getNumber(RealNode $)
 	    Info    = {RealNode findSpace($)}
 	 in
-	    case Info==False then
+	    case Info==false then
 	       DialogManager,error('Recomputation of information failed.')
 	    elsecase {Procedure.arity Handler}
 	    of 2 then thread {Handler Number {Cast Info}} end
@@ -399,7 +399,7 @@ in
       end
 
       meth nodesDeselCmp
-	 cmpNode <- False
+	 cmpNode <- false
 	 MenuManager,disable(nodes([deselCmp cmp]))
 	 Manager,setCursor(@curNode)
       end
@@ -418,7 +418,7 @@ in
 	    CurInfo   = {CurNode findSpace($)}
 	    CmpInfo   = {CmpNode findSpace($)}
 	 in
-	    case CmpInfo==False orelse CurInfo==False then
+	    case CmpInfo==false orelse CurInfo==false then
 	       DialogManager,error('Recomputation of information failed.')
 	    elsecase {Procedure.arity Handler}
 	    of 4 then
@@ -464,8 +464,8 @@ in
 	 DialogManager,guiOptions(What)
 	 Manager,updateAfterOption
 	        ,idle
-	 case @curNode\=False then
-	    Manager,setCursor(@curNode False)
+	 case @curNode\=false then
+	    Manager,setCursor(@curNode false)
 	 else skip
 	 end
       end
@@ -477,8 +477,8 @@ in
 	 DialogManager,postscript
 	 ToplevelManager,unhideNumbers
 	 Manager,idle
-	 case @curNode\=False then
-	    Manager,setCursor(@curNode False)
+	 case @curNode\=false then
+	    Manager,setCursor(@curNode false)
 	 else skip
 	 end
       end
@@ -486,7 +486,7 @@ in
       meth close
 	 UrObject,close
 	 {self.explorer ManagerClosed}
-	 case @root of !False then skip elseof Root then
+	 case @root of false then skip elseof Root then
 	    {Root close}
 	 end
 	 Manager,clearDialogs

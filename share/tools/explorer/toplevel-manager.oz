@@ -16,7 +16,7 @@ local
       
       meth init(Manager Menu Canvas Status ?PackMe)
 	 Tk.toplevel,tkInit(title:              TitleName
-			    withdraw:           True
+			    withdraw:           true
 			    highlightthickness: 0)
 	 ScrX  = {New Tk.scrollbar tkInit(parent: self
 					  relief: sunken
@@ -30,7 +30,7 @@ local
 	 Scale = {New Tk.scale tkInit(parent:     self
 				      'from':     MinScale
 				      to:         MaxScale
-				      showvalue:  False
+				      showvalue:  false
 				      width:      ScrollerWidth
 				      resolution: 0.001 / FloatScaleBase
 				      action:     Manager # scale
@@ -117,7 +117,7 @@ local
 	          ,tkBind(event:  '<Configure>'
 			  action: self # Resized
 			  args:   [float(h) float(w)]
-			  append: True)
+			  append: true)
 	 ActionTag = {New Tk.canvasTag tkInit(parent:self)}
 	 FloatXY   = [float(x) float(y)]
       in
@@ -254,7 +254,7 @@ local
 
 
    fun {PickFont Fs Scale}
-      case Fs of nil then False
+      case Fs of nil then false
       [] F|Fr then
 	 case F.scale=<Scale then F.name else {PickFont Fr Scale} end
       end
@@ -263,7 +263,7 @@ local
    proc {MakeDirty Ns}
       case Ns of nil then skip
       [] N|Nr then
-	 case N.mom of !False then skip elseof Mom then {Mom dirtyUp} end
+	 case N.mom of false then skip elseof Mom then {Mom dirtyUp} end
 	 {MakeDirty Nr}
       end
    end
@@ -279,8 +279,8 @@ in
 	 CurNumber:     1
 	 curFont:       {PickFont NumberFonts DefScale}
 	 NumberNodes:   nil
-	 curNode:       False
-	 cmpNode:       False
+	 curNode:       false
+	 cmpNode:       false
 	 scale:         DefScale
 
       meth init(?PackMe)
@@ -292,8 +292,8 @@ in
 
       meth clear
 	 {self.canvas tk(delete all)}
-	 curNode       <- False
-	 cmpNode       <- False
+	 curNode       <- false
+	 cmpNode       <- false
 	 {self.canvas.numbers tk(delete)}
 	 {ForAll @NumberNodes proc {$ N} {N clearNumber} end}
 	 CurNumber   <- 1
@@ -319,8 +319,8 @@ in
 	 {Canvas scale(Scale)}
 	 case @curFont of !Font then skip elseof CF then
 	    case @NumberNodes==nil then skip else
-	       case Font==False then {Numbers tk(delete)}
-	       elsecase CF==False then
+	       case Font==false then {Numbers tk(delete)}
+	       elsecase CF==false then
 		  {ForAll @NumberNodes
 		   proc {$ Node}
 		      {Node redrawNumber(Scale Font)}
@@ -333,7 +333,7 @@ in
       end
 
       meth scaleToFit
-	 case {self.canvas scaleToFit($)} of !False then skip
+	 case {self.canvas scaleToFit($)} of false then skip
 	 elseof NewScale then
 	    ToplevelManager,scale(NewScale)
 	 end
@@ -375,7 +375,7 @@ in
 	    {Canvas scrollTo(X Y)}
 	 end
 	 curNode <- CurNode
-	 case @cmpNode of !False then
+	 case @cmpNode of false then
 	    {Connection tk(delete)}
 	 elseof CmpNode then
 	    case CmpNode==CurNode then skip else
@@ -420,7 +420,7 @@ in
       end
 
       meth hideNumbers
-	 case @curFont\=False andthen @NumberNodes\=nil then
+	 case @curFont\=false andthen @NumberNodes\=nil then
 	    {self.canvas.numbers tk(delete)}
 	 else skip
 	 end
@@ -431,7 +431,7 @@ in
 	 Scale   = @scale
 	 Numbers = @NumberNodes
       in
-	 case Font\=False andthen Numbers\=nil then
+	 case Font\=false andthen Numbers\=nil then
 	    {ForAll @NumberNodes
 	     proc {$ Node}
 		{Node redrawNumber(Scale Font)}

@@ -41,10 +41,10 @@ local
 	 TkTools.dialog,tkInit(master:  Master
 			       title:   TitleName#': Shutdown'
 			       buttons: ['Okay'#close(proc {$}
-							 Done = True
+							 Done = true
 						      end)
 					 'Cancel'#close(proc {$}
-							   Done = False
+							   Done = false
 							end)]
 			       focus:   1
 			       default: 1)
@@ -76,7 +76,7 @@ local
       
       class UpdateDialog
 	 from TkTools.dialog
-	 attr NextMouse: True
+	 attr NextMouse: true
 	 meth init(master: Master
 		   prev:   Prev
 		   next:   Next)

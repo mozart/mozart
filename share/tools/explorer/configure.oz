@@ -12,17 +12,17 @@ FactorsToCm      =cTo(i: 2.54
 		      m: 10.0
 		      p: 0.035277778)
 
-Options = o(drawing:    o(hide:   !True
-			  scale:  !False
+Options = o(drawing:    o(hide:   true
+			  scale:  false
 			  update: 10)
 	    search:     o(search:      1
 			  information: 5
-			  failed:      !True)
+			  failed:      true)
 	    postscript: o(color:       case Tk.isColor then color else mono end
 			  width:       6.5 * FactorsToCm.i
 			  height:      9.5 * FactorsToCm.i
 			  size:        '6.5ix9i'
-			  orientation: !False))
+			  orientation: false))
 
 ErrorAspect     = 250
 StatusUpdateCnt = 50

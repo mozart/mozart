@@ -21,7 +21,7 @@ local
 	 
    class ThreadPage from UpdatePage
       attr
-	 InfoVisible:  False
+	 InfoVisible:  false
 
       meth update(What)
 	 O   = self.options
@@ -81,7 +81,7 @@ local
    class MemoryPage
       from UpdatePage
       attr
-	 InfoVisible:  False
+	 InfoVisible:  false
       
       meth update(What)
 	 O   = self.options
@@ -214,15 +214,15 @@ in
       attr
 	 UpdateTime:    DefaultUpdateTime
 	 HistoryRange:  DefaultHistoryRange
-	 RequireMouse:  True
-	 MouseInside:   True
+	 RequireMouse:  true
+	 MouseInside:   true
 	 DelayStamp:    0
-	 InfoVisible:   False
+	 InfoVisible:   false
       
       meth init(manager:Manager)
 	 Tk.toplevel,tkInit(title:              TitleName
 			    highlightthickness: 0
-			    withdraw:           True)
+			    withdraw:           true)
 	 {Tk.batch [wm(iconname   self TitleName)
 		    wm(iconbitmap self BitMap)
 		    wm(resizable self 0 0)]}
@@ -248,7 +248,7 @@ in
 			      feature: options
 			      menu: [checkbutton(label: 'Configurable'
 						 variable: {New Tk.variable
-							    tkInit(False)}
+							    tkInit(false)}
 						 action: self # toggleInfo)
 				     separator
 				     command(label:  'Update...'
@@ -259,14 +259,14 @@ in
 					     feature: history)])
 		  ]
 		  nil}
-	 {Menu.panel.menu   tk(conf tearoff:False)}
-	 {Menu.options.menu tk(conf tearoff:False)}
+	 {Menu.panel.menu   tk(conf tearoff:false)}
+	 {Menu.options.menu tk(conf tearoff:false)}
 	 Frame = {New Tk.frame tkInit(parent: EventFrame
 				      highlightthickness: 0
 				      bd:                 4)}
 	 Book  = {New TkTools.notebook tkInit(parent: Frame)}
 	 Threads =
-	 {MakePage ThreadPage 'Threads' Book True
+	 {MakePage ThreadPage 'Threads' Book true
 	  [frame(text:    'Threads'
 		 left:    [number(text:    'Created:')
 			   number(text:    'Runnable:'
@@ -276,7 +276,7 @@ in
 				colors:  [RunnableColor]
 				stipple: [RunnableStipple])])
 	   frame(text:    'Priorities'
-		 pack:    False
+		 pack:    false
 		 left:    [scale(text:    'High / Medium:'
 				 state:   {System.get priorities}.high
 				 feature: high
@@ -317,7 +317,7 @@ in
 				stipple: TimeStipple.load)]
 		 right:   [timebar(feature: timebar)])]}
 	 Memory =
-	 {MakePage MemoryPage 'Memory' Book True
+	 {MakePage MemoryPage 'Memory' Book true
 	  [frame(text:    'Heap Usage'
 		 feature: usage
 		 left:    [size(text:    'Threshold:'
@@ -338,7 +338,7 @@ in
 				dim:     'MB')])
 	   frame(text:    'Heap Parameters'
 		 feature: parameter
-		 pack:    False
+		 pack:    false
 		 left:    [scale(text:    'Maximal size limit:'
 				 range:   1#1024
 				 dim:     'MB'
@@ -424,7 +424,7 @@ in
 		 right:   nil)
 	   frame(text:    'Garbage Collector'
 		 feature: gc
-		 pack:    False
+		 pack:    false
 		 left:    [checkbutton(text:   'Active'
 				       state:  {System.get gc}.on
 				       action: proc {$ OnOff}
@@ -435,7 +435,7 @@ in
 					     {System.gcDo}
 					  end)])]}
 	 PS =
-	 {MakePage PsPage 'Problem Solving' Book True
+	 {MakePage PsPage 'Problem Solving' Book true
 	  [frame(text:    'Finite Domain Constraints'
 		 feature: fd
 		 left:    [number(text: 'Variables created:'
@@ -458,7 +458,7 @@ in
 				  feature: chosen)]
 		 right:   nil)]}
 	 OPI =
-	 {MakePage OpiPage 'Programming Interface' Book False
+	 {MakePage OpiPage 'Programming Interface' Book false
 	  [frame(text:    'Errors'
 		 left:    [checkbutton(text:    'Show location'
 				       feature: location
@@ -496,8 +496,8 @@ in
 				  action: proc {$}
 					     {System.set
 					      errors('thread': 10
-					             location: True
-						     hints:    True
+					             location: true
+						     hints:    true
 					             width:    10
 						     depth:    2)}
 					     {OPI update}
@@ -540,8 +540,8 @@ in
 		 right:   [button(text:  'Default'
 				  action: proc {$}
 					     {System.set
-					      messages(idle: False
-						       gc:   True)}
+					      messages(idle: false
+						       gc:   true)}
 					     {OPI update}
 					  end)])]}
 	  
@@ -627,7 +627,7 @@ in
       end
       
       meth enter
-	 MouseInside <- True
+	 MouseInside <- true
 	 case @RequireMouse then
 	    PanelTop,stop
 	            ,delay
@@ -636,7 +636,7 @@ in
       end
 
       meth leave
-	 MouseInside <- False
+	 MouseInside <- false
 	 case @RequireMouse then
 	    PanelTop,stop
 	 else skip
@@ -645,22 +645,22 @@ in
       
       meth setUpdate(time:T mouse:M)
 	 case
-	    {Or case @RequireMouse==M then False
+	    {Or case @RequireMouse==M then false
 		else
 		   RequireMouse <- M
 		   case M then
-		      case @MouseInside then True
-		      else PanelTop,stop False
+		      case @MouseInside then true
+		      else PanelTop,stop false
 		      end
-		   else PanelTop,stop True
+		   else PanelTop,stop true
 		   end
 		end
-	        case @UpdateTime==T then False
+	        case @UpdateTime==T then false
 		else
 		   UpdateTime <- T
 		   PanelTop,stop
 		   PanelTop,setSlice
-		   True
+		   true
 		end}
 	 then PanelTop,delay
 	 else skip

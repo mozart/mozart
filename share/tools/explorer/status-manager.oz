@@ -42,9 +42,9 @@ local
 	 BreakFlag:       nil
 	 BreakStatus:     none
 	 BrokenNodes:     nil
-	 KillFlag:        True
+	 KillFlag:        true
 	 KillId:          0
-	 IsPackedBlocked: False
+	 IsPackedBlocked: false
 
       feat
 	 Time
@@ -133,16 +133,16 @@ local
 	 CurSolutions  <- 0
 	 CurFailures   <- 0
 	 CurBlocked    <- 0
-	 @KillFlag     = True
+	 @KillFlag     = true
 	 KillFlag      <- _
 	 KillId        <- @KillId + 1
 	 case @IsPackedBlocked then
 	    {Tk.send pack(forget self.Blocked self.BlockedImage)}
-	    IsPackedBlocked <- False 
+	    IsPackedBlocked <- false 
 	 else skip end
 	 Status,update
 	       ,start
-	       ,setBAB(False)
+	       ,setBAB(false)
 	 {self.ChooseImage clear}
       end
 
@@ -212,10 +212,10 @@ local
       in
 	 case (GetBlocked==0) == (@IsPackedBlocked) then
 	    case @IsPackedBlocked then
-	       IsPackedBlocked <- False
+	       IsPackedBlocked <- false
 	       {Tk.send pack(forget self.Blocked self.BlockedImage)}
 	    else
-	       IsPackedBlocked <- True
+	       IsPackedBlocked <- true
 	       {Tk.send pack(self.BlockedImage self.Blocked side:left)}
 	    end
 	 else skip end

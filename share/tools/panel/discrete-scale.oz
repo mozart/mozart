@@ -60,7 +60,7 @@ local
 			  length:             W
 			  width:              ScaleHeight
 			  resolution:         1
-			  showvalue:          False
+			  showvalue:          false
 			  orient:             horizontal)
 	 self.Ticks = N
 	 TickScale,tkBind(event:  '<Configure>'
