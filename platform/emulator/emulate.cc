@@ -452,6 +452,9 @@ Suspension *mkSuspension(Board *b, int prio, ProgramCounter PC,
 			 RefsArray Y, RefsArray G,
 			 RefsArray X, int argsToSave)
 {
+#ifndef NEWCOUNTER
+  b->incSuspCount();
+#endif
   switch (am.currentThread->getCompMode()) {
   case ALLSEQMODE:
     am.pushTask(b,PC,Y,G,X,argsToSave);
@@ -471,6 +474,9 @@ inline
 Suspension *mkSuspension(Board *b, int prio, OZ_CFun bi,
 			 RefsArray X, int argsToSave)
 {
+#ifndef NEWCOUNTER
+  b->incSuspCount();
+#endif
   switch (am.currentThread->getCompMode()) {
   case ALLSEQMODE:
     am.pushCFun(b,bi,X,argsToSave);
@@ -493,7 +499,6 @@ void suspendOnVar(TaggedRef A, int argsToSave, Board *b, ProgramCounter PC,
   DEREF(A,APtr,ATag);
   Assert(isAnyVar(ATag));
   Suspension *susp=mkSuspension(b,prio,PC,Y,G,X,argsToSave);
-  b->incSuspCount();
   taggedBecomesSuspVar(APtr)->addSuspension(susp);
 
   /* Bug fix:
@@ -578,7 +583,6 @@ void suspendShallowTest2(TaggedRef A, TaggedRef B, int argsToSave, Board *b,
 {
   DEREF(A,APtr,ATag); DEREF(B,BPtr,BTag);
   Suspension *susp=mkSuspension(b,prio,PC,Y,G,X,argsToSave);
-  b->incSuspCount();
 
   Assert(isAnyVar(ATag) || isAnyVar(BTag));
   
@@ -949,6 +953,9 @@ void engine() {
 			    goto localhack0;);
 	  goto LBLcheckEntailment;
 	case SUSPEND:
+	  killPropagatedCurrentTaskSusp();
+	  LOCAL_PROPAGATION(if (! localPropStore.do_propagation())
+			    goto localhack0;);
 	  extern TaggedRef *globalSeqSuspendHack;
 	  if (globalSeqSuspendHack) {
 	    Suspension *susp =
@@ -1325,7 +1332,6 @@ void engine() {
       int argsToSave = getPosIntArg(shallowCP+2);
       Suspension *susp=mkSuspension(CBB,GET_CURRENT_PRIORITY(),
 				    shallowCP,Y,G,X,argsToSave);
-      CBB->incSuspCount();
       e->reduceTrailOnShallow(susp,numbOfCons);
       inShallowGuard = NO;
       shallowCP = NULL;
