@@ -82,12 +82,15 @@ public:
     setIndex(i);
   }
 
-  PerdioVar(Object *o, TaggedRef cl) : GenCVariable(PerdioVariable) {
+  PerdioVar(Object *o) : GenCVariable(PerdioVariable) {
     tagged.setType(PV_OBJECT);
     tagged.setPtr(o);
-    u.aclass=cl;
   }
 
+  void setClass(TaggedRef cl) {
+    Assert(isObject());
+    u.aclass=cl;
+  }
   PerdioVar(GName *gname, TaggedRef url) : GenCVariable(PerdioVariable) {
     u.url = url;
     tagged.setType(PV_URL);
@@ -103,7 +106,7 @@ public:
 
   int getIndex() { return tagged.getIndex(); }
 
-  GName *getGName() { Assert(isURL()); return (GName *) tagged.getPtr(); }
+  GName *getGName() { return isURL() ? (GName *) tagged.getPtr() : getObject()->getGName(); }
   TaggedRef getURL() { Assert(isURL()); return u.url; }
   void setIndex(int i) {
     Assert(!isURL() && !isObject());

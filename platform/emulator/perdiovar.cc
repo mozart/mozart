@@ -129,7 +129,6 @@ Bool PerdioVar::valid(TaggedRef *varPtr, TaggedRef v)
 
   if (isObject() || isURL()) {
     if (getGName() != getGNameForUnify(v)) {
-      warning("mm2:gname mismatch (var-val)");
       return FALSE;
     }
   }
