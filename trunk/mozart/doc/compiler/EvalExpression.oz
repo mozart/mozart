@@ -1,4 +1,4 @@
-proc {EvalExpression VS Env ?Kill ?Result} E I S in
+proc {Compiler.evalExpression VS Env ?Kill ?Result} E I S in
    E = {New Compiler.engine init()}
    I = {New Compiler.quietInterface init(E)}
    {E enqueue(mergeEnv(Env))}

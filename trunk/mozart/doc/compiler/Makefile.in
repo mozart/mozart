@@ -16,8 +16,10 @@ INSTALL_BIN	= $(INSTALL) -m 555
 INSTALL_DIR	= @INSTALL_DIR@
 
 SGMLSRCS = \
-	compiler.sgml engines.sgml interfaces.sgml switches.sgml \
-	queries.sgml notifications.sgml abstractions.sgml
+	compiler.sgml \
+	directives.sgml ozbatch.sgml panel.sgml \
+	api.sgml engines.sgml interfaces.sgml \
+	switches.sgml queries.sgml notifications.sgml
 OZSRCS = \
 	QuietInterface.oz EmacsInterface.oz CompilerPanel.oz
 

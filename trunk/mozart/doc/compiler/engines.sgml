@@ -1,22 +1,23 @@
-<Chapter id="chapter.engines">
+<Section id="section.api.engines">
   <Title/Compiler Engines/
   <P>
     A compiler engine is an instance of the final class <<Compiler.engine>>:
-    <Code display>E = {New Compiler.engine init()}</Code>
+    <<<E = {New Compiler.engine init()}>>>
     Each instance of this class is an active object encapsulating the
     state of a compiler, consisting of a list of defined macro names,
     the state of a number of boolean compiler switches, an environment,
     and the query queue.  These are described in the following sections.
-  <Section>
+  <SubSection>
     <Title/Macro Definitions/
     <P>
-      The list of macro names currently defined is used by the parser to
-      resolve macro directives such as <<\ifdef>>.
+      The list of macro names currently defined is used by the
+      parser to resolve macro directives such as <<\ifdef>> (see
+      <Ptr to="section.directives.macro">.
     <P>
       Initially, this list only consists of macro names describing the
       Oz version number, &eg;, when running Oz&nbsp;3.0.10, the list is
       <<['Oz_3' 'Oz_3_0' 'Oz_3_0_10']>>.
-  <Section>
+  <SubSection>
     <Title/Compiler Switches/
     <P>
       The current state of the compiler switches is given by a mapping
@@ -27,8 +28,8 @@
       saved state.
     <P>
       The available switches and their effects on the compilation process
-      are described in detail in <Ptr to="section.reference.switches">.
-  <Section>
+      are described in detail in <Ptr to="appendix.switches">.
+  <SubSection>
     <Title/The Environment/
     <P>
       An environment is a mapping from variable print names to arbitrary
@@ -44,7 +45,7 @@
       Environments are first class; that is, they may be enquired,
       set or extended by records whose features are valid variable
       print names, &eg;, <<env('Show': System.show)>>.
-  <Section>
+  <SubSection>
     <Title/The Query Queue/
     <P>
       The entries in the query queue are executed sequentially by
@@ -73,8 +74,8 @@
       The corresponding output variables only become bound when the query
       is actually executed.  If binding an output variable raises an
       exception, an error is reported through the registered interfaces
-      (see <Ptr to="chapter.interfaces">).
+      (see <Ptr to="section.api.interfaces">).
     <P>
       The queries understood by the compiler are listed in <Ptr
-      to="section.reference.queries">.
-</Chapter>
+      to="appendix.queries">.
+</Section>
