@@ -119,22 +119,22 @@ void getIntCoeff(int i, OZ_Term v) {
 //-----------------------------------------------------------------------------
 // Global data which are shared between different pieces of code
 
-OZ_Term static_var[MAXFDBIARGS];
-OZ_Term * static_varptr[MAXFDBIARGS];
-pm_term_type static_vartag[MAXFDBIARGS];
-double static_coeff_double[MAXFDBIARGS];
-int static_coeff_int[MAXFDBIARGS];
-OZ_Boolean static_sign_bit[MAXFDBIARGS];
+OZ_Term * static_var = new OZ_Term[MAXFDBIARGS];
+OZ_Term ** static_varptr = new OZ_Term *[MAXFDBIARGS];
+pm_term_type * static_vartag = new pm_term_type[MAXFDBIARGS];
+double * static_coeff_double = new double[MAXFDBIARGS];
+int * static_coeff_int = new int[MAXFDBIARGS];
+OZ_Boolean * static_sign_bit = new OZ_Boolean[MAXFDBIARGS];
 
-OZ_Boolean static_bool_a[MAXFDBIARGS];
-OZ_Boolean static_bool_b[MAXFDBIARGS];
-int static_int_a[MAXFDBIARGS];
-int static_int_b[MAXFDBIARGS];
-double static_double_a[MAXFDBIARGS];
-double static_double_b[MAXFDBIARGS];
+OZ_Boolean * static_bool_a = new OZ_Boolean[MAXFDBIARGS];
+OZ_Boolean * static_bool_b = new OZ_Boolean[MAXFDBIARGS];
+int * static_int_a = new int[MAXFDBIARGS];
+int * static_int_b = new int[MAXFDBIARGS];
+double * static_double_a = new double[MAXFDBIARGS];
+double * static_double_b = new double[MAXFDBIARGS];
 
-int static_index_offset[MAXFDBIARGS];
-int static_index_size[MAXFDBIARGS];
+int * static_index_offset = new int[MAXFDBIARGS];
+int * static_index_size = new int[MAXFDBIARGS];
 
 OZ_FiniteDomain __CDVoidFiniteDomain;
 
