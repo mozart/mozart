@@ -86,7 +86,7 @@ define
             Outs = {FoldR @Keys
                     fun {$ X#N In}
                        {File write(vs: X#'\n\\clearpage\n')}
-                       ' '#N#In
+                       In#' '#N
                     end ""}
             {File write(vs: '\\end{document}\n')}
             {File close()}
