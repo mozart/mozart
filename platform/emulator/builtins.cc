@@ -12,6 +12,7 @@
 #pragma implementation "builtins.hh"
 #endif
 
+#include "am.hh"
 #include "assemble.hh"
 #include "builtins.hh"
 
@@ -54,9 +55,8 @@ OZ_C_proc_begin(BIbuiltin,3)
   DEREF(hdl,_3,tag);
   if (!isProcedure(hdl)) {
     if (!isXAtom(hdl) || !OZ_unifyString(hdl,"noHandler")) {
-      warning("builtin: '%s' second arg '%s' must be a predicate or noHandler",
-              str, OZ_toC(hdl)
-              );
+      TypeError2("builtin",1,"Procedure or Atom \"noHandler\"",
+                 OZ_getCArg(0),hdl);
     }
     hdl = makeTaggedNULL();
   }
