@@ -140,7 +140,7 @@ void AM::init(int argc,char **argv)
 
   installingScript = FALSE;
 
-  defaultExceptionHdl     = makeTaggedNULL();
+  defaultExceptionHdl = taggedVoidValue;
 
   preparedCalls = NULL;
 
@@ -311,6 +311,11 @@ void AM::init(int argc,char **argv)
   //
   initExtensions();
 
+  // init x args
+  {
+    for (int i=NumberOfXRegisters; i--; )
+      xRegs[i] = taggedVoidValue;
+  }
 #ifdef PICKLE2TEXTHACK
   if (p2t) {
     extern int pickle2text();
