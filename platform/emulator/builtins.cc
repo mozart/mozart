@@ -7278,6 +7278,7 @@ BIspec allSpec[] = {
 
   {"taskstack",      3, BItaskStack},
   {"suspendDebug",   1, BIsuspendDebug},
+  {"runChildren",    1, BIrunChildren},
   {"frameVariables", 3, BIframeVariables},
   {"location",       2, BIlocation},
 
