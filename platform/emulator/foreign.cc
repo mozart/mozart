@@ -446,7 +446,7 @@ char *OZ_toC(OZ_Term term)
   case SRECORD:
   case LTUPLE:
   case CONST:
-    return tagged2String(term,am.conf.printDepth);
+    return tagged2String(term,ozconf.printDepth);
   case LITERAL:
     return OZ_literalToC(term);
   case FLOAT:
@@ -918,6 +918,14 @@ void OZ_free(char *s)
   delete [] s;
 }
 
+/* -----------------------------------------------------------------
+ * names
+ * -----------------------------------------------------------------*/
+
+OZ_Term OZ_newName()
+{
+  return makeTaggedLiteral(new Name(am.currentBoard));
+}
 /* -----------------------------------------------------------------
  * 
  * -----------------------------------------------------------------*/

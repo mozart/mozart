@@ -265,17 +265,17 @@ void osInit()
   // create a new process group, so that we can
   // easily terminate all our children
   if (setpgrp(getpid(),getpid()) < 0) {
-    ozperror("setpgid");
+    ozperror("setpgrp");
   }
 #endif
 
   if (osHasJobControl()) {
     /* start a new process group */
     if (setpgid(0,0)<0) {
-      ozpwarning("setpgid(0,0)");
+      DebugCheckT(ozpwarning("setpgid(0,0)"));
     }
   } else {
-    warning("OS does not support POSIX job control\n");
+    DebugCheckT(warning("OS does not support POSIX job control\n"));
   }
   
   DebugCheck(CLOCK_TICK < 1000, error("CLOCK_TICK must be greater than 1 ms"));
