@@ -14,8 +14,13 @@ The distribution layer of Mozart is dynamicly loaded when used. Some parameters 
 
 <list>
  
-<entry/<code/init(ip:IpString <= SystemIp port:IpPort <= 9000 acceptproc:AccProc <= DefaultAccProc connectProc:ConProc <= DefaultConProc firewall:FW <= false) //
-
+<entry/<code/
+init(ip:IpString <= SystemIp 
+     port:IpPort <= 9000 
+     acceptproc:AccProc <= DefaultAccProc 
+     connectProc:ConProc <= DefaultConProc 
+     firewall:FW <= false) 
+//
 <item> All entries in the ?_{Spec} record are optional, if <code/DPInit.init/ is called with just the atom <code/init/ as parameter the system will start with all values as default values. The fields and their implication on the system is defined here: 
 
 <p><list>
@@ -28,7 +33,7 @@ number should only be set if the operating system by some reason
 returns a faulty ip number. 
 
 <entry/<code/IpPort //
-<item> Sets the port number that should be used for listening on incomming connection atempts. If the choosen port number is unavailable a higher port number will be tired. The default value is 900. 
+<item> Sets the port number that should be used for listening on incomming connection atempts. If the choosen port number is unavailable a higher port number will be tired. The default value is 9000. 
 <entry/<code/AccProc //
 <item> Connection atempts comming in to the Site are handled by a piece of Mozart code called the AcceptProcedure. The AcceptProcedure defines a handshaking prototcol that the connecter must follow to be accepted. It can be replaced if other needs are present than what the default AcceptProcedure can give. 
 <entry/<code/ConProc //

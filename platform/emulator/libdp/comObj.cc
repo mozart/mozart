@@ -32,13 +32,10 @@
 #include <sys/time.h>
 #include <unistd.h> // AN! only for debug
 
-#define OPEN_TIMEOUT		(ozconf.dpProbeTimeout / 10) // Has to be this
-                                                             // short to begin
-                                                             // with for
-                                                             // Connection.take
-#define CLOSE_TIMEOUT		(ozconf.dpProbeTimeout * 10)
-#define WF_REMOTE_TIMEOUT	(ozconf.dpProbeTimeout * 100)
-#define WF_REOPEN_TIMEOUT	(ozconf.dpProbeTimeout / 10)
+#define OPEN_TIMEOUT		ozconf.dpOpenTimeout
+#define CLOSE_TIMEOUT		ozconf.dpCloseTimeout
+#define WF_REMOTE_TIMEOUT	ozconf.dpWFRemoteTimeout
+#define WF_REOPEN_TIMEOUT	ozconf.dpFirewallReopenTimeout
 
 #define MSG_ACK_TIMEOUT 1000
 #define MSG_ACK_LENGTH 50
