@@ -1569,10 +1569,14 @@ void AM::suspendEngine()
     }
     Assert(!compStream || compStream->bufEmpty());
 
+    // mm2: test if system is idle (not yet working: perdio test is missing)
+#ifdef TEST_IDLE
     if (!nextUser() && !hasPendingSelect()) {
       fprintf(stderr,"System is idle: terminating\n");
       exitOz(-1);
     }
+#endif
+
     int msleft = osBlockSelect(nextUser());
     setSFlag(IOReady);
 
