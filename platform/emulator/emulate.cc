@@ -438,14 +438,13 @@ TaggedRef makeMethod(int arity, TaggedRef label, TaggedRef *X)
 }
 
 static
-TaggedRef createNamedVariable(int regIndex, TaggedRef name, AM *e, RefsArray Y)
+TaggedRef createNamedVariable(int regIndex, TaggedRef name, AM *e)
 {
   int size = getRefsArraySize(e->toplevelVars);
   if (LessIndex(size,regIndex)) {
     int newSize = int(size*1.5);
     message("resizing store for toplevel vars from %d to %d\n",size,newSize);
     e->toplevelVars = resize(e->toplevelVars,newSize);
-    Y = e->toplevelVars;
     // no deletion of old array --> GC does it
   }
   SVariable *svar = new SVariable(e->currentBoard, name);
