@@ -363,7 +363,7 @@ in
 		  tk(tag add  LineTag LineEnd) % extend tag to whole line
 		  tk(tag bind LineTag '<1>' LineAction)] W}
 	 
-	 case Size == 1 andthen FrameNr == 1 orelse FrameNr == Size - 1 then
+	 case Size == 1 andthen FrameNr == 1 orelse FrameNr == 2 then
 	    %LastSelectedFrame <- undef
 	    Gui,SelectStackFrame(LineTag)
 	    Gui,printEnv(frame:FrameNr vars:Frame.env)
@@ -475,7 +475,7 @@ in
       end
 
       meth getStackText($)
-	 {self.StackText w($)}
+	 self.StackText
       end
       
       meth status(I S<=nil)
@@ -558,7 +558,7 @@ in
 	       ThreadManager,forget(T I)
 	    
 	    elseof ' stack' then  %% will go away, someday...
-	       {Browse {Reverse {Dbg.taskstack T MaxStackBrowseSize}}}
+	       {Browse {Dbg.taskstack T MaxStackBrowseSize}}
 	    end
 	 
 	 else skip end
