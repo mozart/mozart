@@ -1541,6 +1541,8 @@ switch(ossockerrno()){
   case EBADF:{
     PD((TCP_HERROR,"Connection socket lost: EBADF"));
     return IP_PERM_BLOCK;}
+ case EHOSTUNREACH:
+   return IP_TEMP_BLOCK;
 #ifndef WINDOWS
 case ETIMEDOUT:{
   PD((TCP_HERROR,"Connection socket temp: ETIMEDOUT"));
@@ -1549,7 +1551,7 @@ case ETIMEDOUT:{
 default:{
   PD((TCP_HERROR,"Unhandled error: %d please inform erik@sics.se",
       ossockerrno()));
-  DebugCode(fprintf(stderr,"default interpreted as perm:%d \n",ossockerrno()));
+  fprintf(stderr,"default interpreted as perm:%d \n",ossockerrno());
   return IP_PERM_BLOCK;}}
 return IP_TEMP_BLOCK;
 }
@@ -3243,7 +3245,6 @@ retry:
 #endif
   r->setFD(fd);
     OZ_registerReadHandler(fd,tcpConnectionHandler,(void *)r);
-    PD((OS,"register READ %d - tcpConnectionHandler",fd));
     return IP_OK;}
 
   tries--;
@@ -3285,11 +3286,15 @@ int tcpConnectionHandler(int fd,void *r0){
   ret = smallMustRead(fd,pos,bufSize,CONNECTION_HANDLER_TRIES);
   if(ret == IP_PERM_BLOCK) goto tcpConPermLost;
   if(ret == IP_CLOSE) {goto tcpConClosed;}
-  if(ret){goto tcpConFailure;}
+  // I dont realy know. A firewall might
+  // close the connection in an ungrasefull manner.
+  // The Site will be defined as TEMP later.
+  if(ret){goto tcpConClosed;}
+
 
   pos = buf1;
   if(*pos!=TCP_CONNECTION)
-    {goto tcpConFailure;}
+    {goto tcpConPermLost;}
 
   pos++;
   timestamp=net2int(pos);
