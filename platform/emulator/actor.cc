@@ -11,7 +11,7 @@
 */
 
 
-#if defined(INTERFACE)
+#if defined(INTERFACE) && !defined(PEANUTS)
 #pragma implementation "actor.hh"
 #endif
 

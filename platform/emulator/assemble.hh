@@ -11,6 +11,10 @@
 #ifndef __ASSEMBLERH
 #define __ASSEMBLERH
 
+#ifdef INTERFACE
+#pragma interface
+#endif
+
 void BIinitAssembler();
 
 #endif

@@ -9,6 +9,11 @@
   ------------------------------------------------------------------------
 */
 
+
+#if defined(INTERFACE) && !defined(PEANUTS)
+#pragma implementation "codearea.hh"
+#endif
+
 #include "am.hh"
 #include "indexing.hh"
 #include "optostr.hh"
