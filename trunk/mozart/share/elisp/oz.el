@@ -1143,10 +1143,10 @@ the GDB commands `cd DIR' and `directory'."
 
   (define-key map "\M-\C-x"	'oz-feed-paragraph)
   (define-key map "\C-c\C-c"    'oz-toggle-compiler)
-  (if oz-lucid
-      ;; otherwise this looks in the menubar like "C-TAB" "C-BS" "C_RET"
-      (define-key map [(control c) (control h)] 'oz-halt)
-    (define-key map "\C-c\C-h"    'oz-halt))
+
+  (define-key map [(control c) (control h)] 'oz-halt)
+  (define-key map "\C-c\C-h"    'oz-halt)
+
   (define-key map "\C-c\C-e"    'oz-toggle-emulator)
   (define-key map "\C-c\C-n"    'oz-new-buffer)
   (define-key map "\C-c\C-l"    'oz-fontify)
@@ -1163,11 +1163,9 @@ the GDB commands `cd DIR' and `directory'."
   (define-key map "\M-\C-b" 'backward-oz-expr)
   (define-key map "\M-\C-k" 'kill-oz-expr)
   (define-key map "\M-\C-@" 'mark-oz-expr)
-  ;;  (define-key oz-mode-map [C-M-SPC] 'mark-oz-expr)
-  (if oz-lucid
-      t
-    (define-key map [C-M-backspace] 'backward-kill-oz-expr)
-    (define-key map [C-M-delete] 'backward-kill-oz-expr))
+  (define-key map [(meta control space)] 'mark-oz-expr)
+  (define-key map [(meta control backspace)] 'backward-kill-oz-expr)
+  (define-key map [(meta control delete)] 'backward-kill-oz-expr)
   (define-key map "\M-\C-t" 'transpose-oz-exprs)
 
   ;; error location
@@ -1825,7 +1823,9 @@ Negative arg -N means kill N OZ expressions after the cursor."
 (defun oz-set-mouse-error-key ()
   (let ((map (current-local-map)))
     (if map
-	(define-key map [mouse-2] 'oz-mouse-goto-error))))
+	(if oz-lucid
+	    (define-key map [(shift button2)] 'oz-mouse-goto-error)
+	  (define-key map [(shift mouse-2)] 'oz-mouse-goto-error)))))
 
 
 (defun fetch-next-error-data ()
@@ -1981,12 +1981,17 @@ line."
 
 (defun oz-mouse-goto-error (event)
   (interactive "e")
-  (let ((buf (window-buffer (posn-window (event-end event)))))
+  (setq xxx event)
+  (let ((buf (if oz-lucid
+		 (event-buffer event) 
+	       (window-buffer (posn-window (event-end event))))))
     (or (eq buf (current-buffer))
 	;; click not in current buffer -> need other window, so that 
 	;; window switching in oz-goto-next-error comes out right
 	(switch-to-buffer-other-window buf)))
-  (goto-char (posn-point (event-end event)))
+  (goto-char (if oz-lucid 
+		 (event-closest-point event)
+	       (posn-point (event-end event))))
   (or (eq (current-buffer) (get-buffer oz-compiler-buffer))
       (eq (current-buffer) (get-buffer oz-emulator-buffer))
       (error "Not in compiler nor in emulator buffer"))
