@@ -84,8 +84,66 @@
 #define TCP_PACKET_SIZE   1*1024    /* 1k */
 
 
+/*
+ * Switches
+ */
+
 /* if defined: variables are stored directly in structure */
 #define OPT_VAR_IN_STRUCTURE
+
+/* if defined the builtin print long is available to print detailed
+ * informations about values */
+#ifndef PRINT_LONG
+#define PRINT_LONG
+#endif
+
+/* all debug switches for the emulator */
+#ifdef DEBUG_EMULATOR
+
+#define DEBUG_CHECK	// enable assertions
+#define DEBUG_TRACE	// MM: enable low level debugging: step instructions
+#define INTERFACE	// enable interface, implemenation pragmas
+
+//#define SLOW_DEBUG_CHECK
+//#define DEBUG_GC
+//#define DEBUG_VERBOSE
+//#define RECINSTRFETCH=500
+
+#define DEBUG_FD
+//#define DEBUG_FDCD
+
+#define DEBUG_DET	// use counter instead of alarm timer for scheduling
+
+//#define PROFILE_FD
+#define DEBUG_MEM
+
+#define OUTLINE		// do not inline functions
+
+//#define DEBUG_META
+//#define DEBUG_STACK
+//#define DEBUG_STABLE
+//#define DEBUG_THREADS
+#define DEBUG_FSET
+//#define DEBUG_LTQ
+//#define DEBUG_INDICES
+//#define DEBUG_PROPAGATORS
+//#define ALLDIFF
+
+//#define MM_DEBUG
+
+#define DEBUG_PERDIO
+#endif
+
+#ifdef PROFILE_EMULATOR
+
+#define WANT_INSTRPROFILE
+#define DEBUG_DET
+// #define HEAP_PROFILE
+// #define PROFILE_INSTR
+// #define PROFILE_BI
+
+#endif
+
 
 /*
  *
