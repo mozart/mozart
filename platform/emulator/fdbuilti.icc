@@ -86,7 +86,10 @@ void BIfdBodyManager::processLocalFromTo(int from, int to)
 
   for (int i = from; i < to; i += 1) {
     Assert(isCVar(bifdbm_vartag[i]) || isSmallInt(bifdbm_vartag[i]));
-    
+
+    if (bifdbm_var_state[i] == fdbm_speculative)
+      continue;
+
     if (bifdbm_vartag[i] == SMALLINT || isSmallInt(*bifdbm_varptr[i])) {
       continue;
     } else {
@@ -163,6 +166,18 @@ void BIfdBodyManager::propagateIfTouched(int i)
 }
 
 inline
+void BIfdBodyManager::setSpeculative(int i) {
+  Assert(0 <= i && i <= curr_num_of_vars);
+
+  if (bifdbm_var_state[i] == fdbm_local) {
+    bifdbm_domain[i] = *bifdbm_dom[i];
+    bifdbm_dom[i] = &bifdbm_domain[i];
+  }
+  bifdbm_var_state[i] = fdbm_speculative;
+}
+  
+
+inline
 void BIfdBodyManager::introduceLocal(int i, TaggedRef v)
 {
   DebugCheck(i < 0 || i >= curr_num_of_vars, error("index overflow"));
@@ -173,6 +188,7 @@ void BIfdBodyManager::introduceLocal(int i, TaggedRef v)
   deref(var, bifdbm_varptr[i], vartag);
   Assert(isCVar(vartag) || isSmallInt(vartag) || isLiteral(vartag));
 
+  bifdbm_var_state[i] = fdbm_local; 
   if (vartag == SMALLINT) {
     bifdbm_domain[i].setSingleton(smallIntValue(var));
     bifdbm_dom[i] = &bifdbm_domain[i];

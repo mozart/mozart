@@ -775,6 +775,8 @@ private:
   void _propagate_unify_cd(int clauses, int variables, STuple &st);
 
   enum {cache_slot_size = 4};
+
+  void setSpeculative(int i);
 public:
   BIfdBodyManager(int s) {
     if (s == -1) {
@@ -855,6 +857,15 @@ public:
     saveDomainOnTopLevel(i);
   }
 
+  void introduceSpeculative(int i, TaggedRef v) {
+    if (only_local_vars) {
+      introduceLocal(i, v);
+    } else {
+      _introduce(i, v);
+    }
+    setSpeculative(i);
+  }
+  
   OZ_Bool checkAndIntroduce(int i, TaggedRef v);
   
   void reintroduce(int i, TaggedRef v) {
