@@ -114,8 +114,6 @@ void staticAddSpawn(OZ_CtDefinition * def,
 #undef inline
 #endif
 
-OZ_Return constraintsSuspendOnVar(OZ_CFun, int, OZ_Term *, OZ_Term *);
-
 #endif /* __CPI__H__ */
 
 // End of File
