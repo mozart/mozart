@@ -104,6 +104,7 @@ enum EmulatorPropertyIndex {
   PROP_STANDALONE,
   PROP_HOME,
   PROP_OZ_CONFIGURE_HOME,
+  PROP_OZ_EMULATOR_HOME,
   PROP_OZ_VERSION,
   PROP_OZ_DATE,
   PROP_OS_NAME,
@@ -361,6 +362,7 @@ OZ_Term GetEmulatorProperty(EmulatorPropertyIndex prop) {
   CASE_BOOL(PROP_STANDALONE,!ozconf.runningUnderEmacs);
   CASE_ATOM(PROP_HOME,ozconf.ozHome);
   CASE_ATOM(PROP_OZ_CONFIGURE_HOME,OZ_CONFIGURE_PREFIX);
+  CASE_ATOM(PROP_OZ_EMULATOR_HOME,ozconf.emuhome);
   CASE_ATOM(PROP_OZ_VERSION,AMVersion);
   CASE_ATOM(PROP_OZ_DATE,AMDate);
   CASE_ATOM(PROP_OS_NAME,ozconf.osname);
@@ -850,6 +852,7 @@ void initVirtualProperties()
   VirtualProperty::add("oz.standalone",PROP_STANDALONE);
   VirtualProperty::add("oz.conf.home",PROP_HOME);
   VirtualProperty::add("oz.configure.home",PROP_OZ_CONFIGURE_HOME);
+  VirtualProperty::add("oz.emulator.home",PROP_OZ_EMULATOR_HOME);
   VirtualProperty::add("oz.version",PROP_OZ_VERSION);
   VirtualProperty::add("oz.date",PROP_OZ_DATE);
   VirtualProperty::add("os.name",PROP_OS_NAME);
