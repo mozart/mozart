@@ -734,16 +734,6 @@ loop:
   PD((MARSHAL,"tag:%d",tTag));
   switch(tTag) {
 
-  case PROMISE:
-    {
-      PD((MARSHAL,"small promise"));
-      marshalDIF(bs,DIF_PROMISE);
-      Promise *p = tagged2Promise(t);
-      marshalGName(p->globalize(),bs);
-      marshalTerm(p->getFuture(),bs);
-      break;
-    }
-
   case SMALLINT:
     PD((MARSHAL,"small int: %d",smallIntValue(t)));
     marshalDIF(bs,DIF_SMALLINT);
@@ -857,7 +847,7 @@ loop:
   case SVAR:
   case CVAR:
     {
-      PerdioVar *pvar = var2PerdioVar(tPtr,NO);
+      PerdioVar *pvar = var2PerdioVar(tPtr);
       if (pvar==NULL) {
 	t = makeTaggedRef(tPtr);
 	goto bomb;
@@ -977,21 +967,6 @@ loop:
 
   dif_counter[tag].recv();
   switch(tag) {
-
-  case DIF_PROMISE:
-    {
-      GName *gname     = unmarshalGName(ret,bs);
-      TaggedRef future = unmarshalTerm(bs);
-
-      PD((UNMARSHAL,"promise"));
-
-      if (gname) {
-	Promise *aux = new Promise(future,gname);
-	*ret = makeTaggedPromise(aux);
-	addGName(gname,*ret);
-      }
-      return;
-    }
 
   case DIF_SMALLINT: 
     *ret = OZ_int(unmarshalNumber(bs)); 

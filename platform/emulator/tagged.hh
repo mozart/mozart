@@ -71,7 +71,7 @@ enum TypeOfTerm {
   OZCONST          = 10,   // 1010
 
   SMALLINT         =  6,   // 0110
-  PROMISE          =  7,   // 0111
+  UNUSED7          =  7,   // 0111
   OZFLOAT          = 11    // 1011
 };  
 
@@ -338,17 +338,6 @@ Bool oz_isLiteral(TaggedRef term) {
 }
 
 inline
-Bool isPromiseTag(TypeOfTerm tag) {
-  return tag == PROMISE;
-}
-
-inline
-Bool oz_isPromise(TaggedRef term) {
-  GCDEBUG(term);
-  return isPromiseTag(tagTypeOf(term));
-}
-
-inline
 Bool isSRecordTag(TypeOfTerm tag) {
   return tag == SRECORD;
 }
@@ -464,13 +453,6 @@ TaggedRef makeTaggedLiteral(Literal *s)
 }
 
 inline
-TaggedRef makeTaggedPromise(Promise *p)
-{
-  CHECK_POINTER_N(p);
-  return makeTaggedRef2p(PROMISE,p);
-}
-
-inline
 TaggedRef makeTaggedSmallInt(int32 s)
 {
 #ifdef LARGEADRESSES
@@ -516,7 +498,6 @@ TaggedRef makeTaggedTert(Tertiary *s)
 #define makeTaggedLTuple(s)    makeTaggedRef2p(LTUPLE,s)
 #define makeTaggedSRecord(s)   makeTaggedRef2p(SRECORD,s)
 #define makeTaggedLiteral(s)   makeTaggedRef2p(LITERAL,s)
-#define makeTaggedPromise(s)   makeTaggedRef2p(PROMISE,s)
 #define makeTaggedFloat(s)     makeTaggedRef2p(OZFLOAT,s)
 #define makeTaggedConst(s)     makeTaggedRef2p(OZCONST,s)
 #define makeTaggedTert(s)      makeTaggedRef2p(OZCONST,s)
@@ -668,14 +649,6 @@ Literal *tagged2Literal(TaggedRef ref)
   GCDEBUG(ref);
   CHECKTAG(LITERAL);
   return (Literal *) tagValueOf2(LITERAL,ref);
-}
-
-inline
-Promise *tagged2Promise(TaggedRef ref)
-{
-  GCDEBUG(ref);
-  CHECKTAG(PROMISE);
-  return (Promise *) tagValueOf2(PROMISE,ref);
 }
 
 inline
