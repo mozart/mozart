@@ -27,7 +27,7 @@ case "$cmd" in
 esac
 
 
-if [ ${OZHOME-xx} = xx ]
+if test -z "${OZHOME}"
 then
   dir=`dirname $howcalled`
   OZHOME=`(cd $dir; cd ..; /bin/pwd)`
@@ -38,10 +38,14 @@ fi
 export OZHOME
 
 # determine machine architecture and OS version
-: ${OZPLATFORM=`$OZHOME/bin/ozplatform`}
+if test -z "${OZPLATFORM}"
+then
+  OZPLATFORM=`$OZHOME/bin/ozplatform`
+fi
 export OZPLATFORM
 
-if [ ${OZEMULATOR-xx} = xx ]; then
+if test -z "${OZEMULATOR}"
+then
     OZEMULATOR=$OZHOME/platform/$OZPLATFORM/oz.emulator.bin
 else
     $doecho "Using $OZEMULATOR" >&2
@@ -49,9 +53,13 @@ fi
 
 
 # set OZPATH & PATH
-if [ X${OZ_PI-xx} = Xxx ]; then
+if test -z "${OZ_PI}"
+then
   # where Oz searches for files:
-  : ${OZPATH=.}
+  if test -z "${OZPATH}"
+  then
+     OZPATH=.
+  fi
   OZPATH=${OZPATH}:${OZHOME}:${OZHOME}/lib:${OZHOME}/tools:${OZHOME}/platform/${OZPLATFORM}
   export OZPATH
   # increment path
@@ -64,7 +72,8 @@ if [ X${OZ_PI-xx} = Xxx ]; then
 fi
 
 # where is Emacs?
-if [ "$cmd" = "oz" -a "${OZEMACS-0}" = 0 ]; then
+if test "$cmd" = "oz" -a -z "${OZEMACS}"
+then
 
     IFS="${IFS=   }"; saveifs="$IFS"; IFS="$IFS:"
     for name in emacs lemacs xemacs; do
@@ -78,7 +87,8 @@ if [ "$cmd" = "oz" -a "${OZEMACS-0}" = 0 ]; then
         done
         done
         IFS="$saveifs"
-        if [ ${OZEMACS-0} = 0 ]; then
+        if test -z "${OZEMACS}"
+        then
             echo "Cannot find emacs" 1>&2
             echo "Try setting environment variable OZEMACS" 1>&2
             exit 1
@@ -97,11 +107,12 @@ case "$cmd" in
         # store cmd line args starting from "-a" in $OZARGV
         OZARGV=""
         EMACSARGV=""
-        while [ $# -gt 0 ]
+        while test $# -gt 0
         do
            case "$1" in
             -a|--)  shift
-                 while [ $# -gt 0 ]; do
+                 while test $# -gt 0
+                 do
                     OZARGV="$OZARGV $1"
                     shift
                  done
@@ -116,7 +127,7 @@ case "$cmd" in
    ;;
 
    ozengine)  # that is the real thing
-        if [ $# -lt 1 ]
+        if test $# -lt 1
         then
             echo "usage: ozengine <url> <args>" 1>&2;
             exit 1;
@@ -127,7 +138,7 @@ case "$cmd" in
    ;;
 
    ozapplet)  # compute server
-        if [ $# -lt 1 ]
+        if test $# -lt 1
         then
             echo "usage: ozapplet <url> <args>" 1>&2;
             exit 1;
