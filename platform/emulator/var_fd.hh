@@ -81,27 +81,11 @@ public:
 };
 
 
-Bool isGenFDVar(TaggedRef term);
-GenFDVariable * tagged2GenFDVar(TaggedRef term);
-
-
-void addSuspFDVar(TaggedRef v, SuspList * el, FDPropState l)
-{
-  DebugCheck(l > fd_eqvar, error("list index out of range."));
-
-  GenFDVariable * fv = tagged2GenFDVar(v);
-  fv->fdSuspList[l] = addSuspToList(fv->fdSuspList[l], el, fv->home);
-}
-
-void addSuspFDVar(TaggedRef v, SuspList * el)
-{
-  GenFDVariable * fv = tagged2GenFDVar(v);
-  fv->suspList = addSuspToList(fv->suspList, el, fv->home);
-}
-
-
 #if !defined(OUTLINE) && !defined(FDOUTLINE)
 #include "fdgenvar.icc"
+#else
+Bool isGenFDVar(TaggedRef term);
+GenFDVariable *tagged2GenFDVar(TaggedRef term);
 #endif
 
 #endif
