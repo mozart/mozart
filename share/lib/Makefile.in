@@ -30,6 +30,8 @@ OZENGINE        = @OZENGINE@
 COMPRESSLEVEL   = @oz_picklecompression@
 COMPRESSFLAGS   = -z $(COMPRESSLEVEL)
 
+EXE_EXT		= @EXE_EXT@
+
 DENYS_EVENTS	= @DENYS_EVENTS@
 ifeq ($(DENYS_EVENTS),yes)
 DENYS_FLAGS	= -DDENYS_EVENTS
@@ -140,7 +142,8 @@ FUNCTORS1 = \
 
 FUNCTORS = $(FUNCTORS1) Init.ozf
 
-SYSLETS = ozc ozl
+SYSLETS0 = ozc ozl
+SYSLETS = $(SYSLETS0:%=%$(EXE_EXT))
 
 .PHONY: all
 
@@ -229,12 +232,12 @@ ParWorkerTmp.ozf: cp/par/ParWorker.oz \
 	$(COMPILE) $(shell $(CYGPATH) "$<") -o $@
 ParLoggingTmp.ozf: cp/par/ParLogging.oz
 	$(COMPILE) $(shell $(CYGPATH) "$<") -o $@
-ParWorker.ozf: ParWorkerTmp.ozf ozl
-	$(OZENGINE) ozl $(COMPRESSFLAGS) $< -o $@
-ParLogging.ozf: ParLoggingTmp.ozf ParStatistics.ozf ozl
-	$(OZENGINE) ozl $(COMPRESSFLAGS) $< -o $@
-ParSearch.ozf: ParSearchTmp.ozf ParProcess.ozf ParManager.ozf ozl
-	$(OZENGINE) ozl $(COMPRESSFLAGS) $< -o $@
+ParWorker.ozf: ParWorkerTmp.ozf ozl$(EXE_EXT)
+	$(OZENGINE) ozl$(EXE_EXT) $(COMPRESSFLAGS) $< -o $@
+ParLogging.ozf: ParLoggingTmp.ozf ParStatistics.ozf ozl$(EXE_EXT)
+	$(OZENGINE) ozl$(EXE_EXT) $(COMPRESSFLAGS) $< -o $@
+ParSearch.ozf: ParSearchTmp.ozf ParProcess.ozf ParManager.ozf ozl$(EXE_EXT)
+	$(OZENGINE) ozl$(EXE_EXT) $(COMPRESSFLAGS) $< -o $@
 %.ozf: cp/par/%.oz Base.ozf
 	$(COMPILE) $(shell $(CYGPATH) "$<") -o $@
 
@@ -361,8 +364,8 @@ QTkNumberentry_bitmap.ozf: \
 
 QTkNumberentry.ozf: QTkNumberentry_bitmap.ozf
 
-QTk.ozf: QTkBare.ozf $(QTKDEPS3)
-	$(OZENGINE) ozl $(COMPRESSFLAGS) $< -o $@
+QTk.ozf: QTkBare.ozf $(QTKDEPS3) ozl$(EXE_EXT)
+	$(OZENGINE) ozl$(EXE_EXT) $(COMPRESSFLAGS) $< -o $@
 
 
 # compiler dependencies
@@ -433,8 +436,8 @@ Main.ozf: compiler/Main.oz compiler/FormatStrings.oz \
 RunTime.ozf: compiler/RunTime.oz Base.ozf
 	$(COMPILE) $(shell $(CYGPATH) "$<") -o $@
 
-Compiler.ozf: $(FUNFUNCTORS) ozl
-	$(OZENGINE) ozl $(COMPRESSFLAGS) Main.ozf -o Compiler.ozf
+Compiler.ozf: $(FUNFUNCTORS) ozl$(EXE_EXT)
+	$(OZENGINE) ozl$(EXE_EXT) $(COMPRESSFLAGS) Main.ozf -o Compiler.ozf
 
 #---------------------------------------------------------------------
 # Syslets
@@ -442,10 +445,11 @@ Compiler.ozf: $(FUNFUNCTORS) ozl
 
 $(SYSLETS): $(RUNFUNCTORS)
 
-ozc: Base.ozf ozbatch/Compile.oz
+ozc$(EXE_EXT): Base.ozf ozbatch/Compile.oz
 	$(COMPILEEXEC) ozbatch/Compile.oz -o $@
 
-ozl: Base.ozf DefaultURL.ozf linker/Print.oz linker/Main.oz linker/Link.oz
+ozl$(EXE_EXT): Base.ozf DefaultURL.ozf \
+	linker/Print.oz linker/Main.oz linker/Link.oz
 	$(COMPILEEXEC) linker/Main.oz -o $@
 
 #---------------------------------------------------------------------
@@ -607,8 +611,8 @@ boot-init: $(BOOTINITTXTFROM)
 	$(T2P) -o $@ < $< \
 	|| (rm -f $@; exit 1)
 
-boot-ozc.linked: ozc ozl Compiler.ozf $(SUPPSRC:%=%.ozf)
-	OZINIT=Init.ozf OZ_LOAD="$(subst %,$(OZLOADSEP),root=.%prefix=/=/%prefix=./=./$(OZLOADWIN)%prefix=x-oz://system/=./%pattern=x-oz://system/?{x}=./?{x}.ozf%prefix=x-oz://system/=../tools/%pattern=x-oz://system/?{x}=../tools/?{x}.ozf%prefix=x-oz://boot/=$(CYG_BUILDEMU)/%=)" $(SRCDIR)/oze.sh ozl --verbose --include=x-oz://system --exclude=x-oz://boot,x-oz://system/Module,x-oz://system/Property,x-oz://system/System,x-oz://system/Space,x-oz://system/OS,x-oz://system/Resolve,x-oz://system/Pickle,x-oz://system/Gump,x-oz://system/ProductionTemplates $< -o $@
+boot-ozc.linked: ozc$(EXE_EXT) ozl$(EXE_EXT) Compiler.ozf $(SUPPSRC:%=%.ozf)
+	OZINIT=Init.ozf OZ_LOAD="$(subst %,$(OZLOADSEP),root=.%prefix=/=/%prefix=./=./$(OZLOADWIN)%prefix=x-oz://system/=./%pattern=x-oz://system/?{x}=./?{x}.ozf%prefix=x-oz://system/=../tools/%pattern=x-oz://system/?{x}=../tools/?{x}.ozf%prefix=x-oz://boot/=$(CYG_BUILDEMU)/%=)" $(SRCDIR)/oze.sh ozl$(EXE_EXT) --verbose --include=x-oz://system --exclude=x-oz://boot,x-oz://system/Module,x-oz://system/Property,x-oz://system/System,x-oz://system/Space,x-oz://system/OS,x-oz://system/Resolve,x-oz://system/Pickle,x-oz://system/Gump,x-oz://system/ProductionTemplates $< -o $@
 
 boot-init.linked: Init.ozf
 	cp $< $@
