@@ -269,10 +269,12 @@ It then executes statement <<S2>>.
 <<S1>> should never raise distribution exceptions.
 The application is responsible
 for cleaning up from the partial work done in <<S1>>.
+Guards are defined in <ptr to="guards">.
 </LIST>
 <P>With the above procedure, we define <<NewSafeStat>> as follows:
 
 
+<SUBSUBSECTION id="guards"><TITLE>Guards</TITLE>
 
 <SUBSECTION><TITLE>Exception-based stationary objects</TITLE>
 
