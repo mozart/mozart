@@ -504,6 +504,7 @@ enum TypeOfConst {
   Co_Builtin,
   Co_Cell,
   Co_Space,
+  Co_Resource,
 
   /* chunks must stay together and the first one must be Co_Object
    * otherwise you'll have to change the "isChunk" test
@@ -2534,7 +2535,6 @@ Bool oz_isLock(TaggedRef term)
 {
   return oz_isConst(term) && tagged2Const(term)->getType() == Co_Lock;
 }
-
 /*===================================================================
  * 
  *=================================================================== */
