@@ -35,17 +35,23 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <unistd.h>
-#if defined(__MINGW32__)
-#include <direct.h>
-#else
 #include <dirent.h>
 #include <netdb.h>
-#endif
+
 
 #if defined(LINUX) || defined(HPUX_700)
 extern int h_errno;
 #endif
 
+
+#ifdef __MINGW32__
+#define S_IWGRP 0
+#define S_IXGRP 0
+#define S_IROTH 0
+#define S_IWOTH 0
+#define S_IXOTH 0
+#define S_IRGRP 0
+#endif
 
 #include <time.h>
 #include <sys/stat.h>
@@ -526,7 +532,6 @@ inline OZ_Return buffer_vs(OZ_Term vs, char *write_buff, int *len,
 // unix IO
 // -------------------------------------------------
 
-#if !defined(_MSC_VER) && !defined(__MINGW32__)
 OZ_BI_iodefine(unix_fileDesc,1,1)
 {
   OZ_declareAtomIN( 0, OzFileDesc);
@@ -573,7 +578,6 @@ OZ_BI_iodefine(unix_getDir,1,1)
 
   OZ_RETURN(dirValue);
 } OZ_BI_ioend
-#endif
 
 
 OZ_BI_iodefine(unix_stat,1,1)
@@ -674,7 +678,6 @@ OZ_BI_iodefine(unix_getCWD,0,1)
 #ifdef __MINGW32__
 #define O_NOCTTY   0
 #define O_NONBLOCK 0
-#define O_SYNC     0
 #endif
 
 #ifndef O_SYNC
@@ -740,7 +743,6 @@ OZ_BI_iodefine(unix_open,3,1)
 #ifdef OS2_I486
     return OZ_typeError(2,"enum openMode");
 #else
-#if !defined(_MSC_VER) && !defined(__MINGW32__)
     if (OZ_eqAtom(hd,"S_IRUSR") == PROCEED) { mode |= S_IRUSR; }
     else if (OZ_eqAtom(hd,"S_IWUSR") == PROCEED) { mode |= S_IWUSR; }
     else if (OZ_eqAtom(hd,"S_IXUSR") == PROCEED) { mode |= S_IXUSR; }
@@ -751,7 +753,6 @@ OZ_BI_iodefine(unix_open,3,1)
     else if (OZ_eqAtom(hd,"S_IWOTH") == PROCEED) { mode |= S_IWOTH; }
     else if (OZ_eqAtom(hd,"S_IXOTH") == PROCEED) { mode |= S_IXOTH; }
     else
-#endif
       return OZ_typeError(2,"enum openMode");
 #endif
     OzMode = tl;
@@ -1576,6 +1577,7 @@ OZ_BI_iodefine(unix_wait,0,2)
   OZ_out(1) = OZ_int(status);
   return PROCEED;
 } OZ_BI_ioend
+#endif
 
 
 OZ_BI_iodefine(unix_getServByName, 2,1)
@@ -1590,7 +1592,6 @@ OZ_BI_iodefine(unix_getServByName, 2,1)
 
   OZ_RETURN_INT(ntohs(serv->s_port));
 } OZ_BI_ioend
-#endif
 
 OZ_BI_iodefine(unix_tmpnam,0,1) {
   char *filename; 
@@ -1750,23 +1751,6 @@ OZ_BI_define(unix_srandom, 1,0)
 #endif
 
 
-#ifdef WINDOWS
-
-#define NotAvail(Name,InArity,OutArity,Fun)		\
-OZ_BI_define(Fun,InArity,OutArity)			\
-{							\
-  return oz_raise(E_SYSTEM,E_SYSTEM,"limitExternal",1,	\
-		   OZ_atom(Name));			\
-} OZ_BI_end
-
-
-#if defined(_MSC_VER) || defined(__MINGW32__)
-NotAvail("OS.getDir",          1,1, unix_getDir);
-NotAvail("OS.fileDesc",        1,1, unix_fileDesc);
-#endif
-
-#endif
-
 #ifndef __MINGW32__
 #include <pwd.h>
 
@@ -1796,8 +1780,15 @@ retry:
 } OZ_BI_end
 #endif
 
-#if defined(__MINGW32__)
-NotAvail("OS.getServByName",   2,1, unix_getServByName);
+#ifdef __MINGW32__
+#define NotAvail(Name,InArity,OutArity,Fun)		\
+OZ_BI_define(Fun,InArity,OutArity)			\
+{							\
+  return oz_raise(E_SYSTEM,E_SYSTEM,"limitExternal",1,	\
+		   OZ_atom(Name));			\
+} OZ_BI_end
+
+
 NotAvail("OS.wait",            0,2, unix_wait);
 NotAvail("OS.getpwnam",        1,1, unix_getpwnam);
 #endif
