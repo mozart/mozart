@@ -29,9 +29,6 @@ then
     exit 1
 fi
 
-OZINIT=${OZMAINIT}
-export OZINIT
-
 if test "x$OZMAKE_VERBOSE" = xyes
 then
     echo "Using OZEMULATOR: $OZEMULATOR"
