@@ -45,6 +45,8 @@ case $system in
    ;;
    *i586*CYGWIN*)       OZARCH=win32-i486
    ;;
+   *Power*Mac*Rhapsody*) OZARCH=powermac-rhapsody
+   ;;
    *)  	                OZARCH=unknown-unknown
    ;;
 esac

@@ -1686,6 +1686,8 @@ void *osDlsym(void *h, const char *name)
   }
   return ret;
 }
+#else
+void *osDlsym(void *h, const char *name) {}
 #endif
 
 /* readdir and friends for MSVC++:
