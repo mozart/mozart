@@ -370,7 +370,7 @@ void Board::checkStability(void) {
 
     if (getNonMono()) {
       scheduleNonMono();
-    } else if (d = getDistributor()) {
+    } else if ((d = getDistributor()) != 0) {
       int n = d->getAlternatives();
       
       if (n == 1) {
@@ -430,10 +430,8 @@ void Board::fail(void) {
  *
  */
 
-OZ_Return Board::installScript(Bool isMerging) {
-
-  OZ_Return ret = PROCEED;
-
+OZ_Return Board::installScript(Bool isMerging)
+{
   TaggedRef xys = oz_deref(script);
 
   setScript(oz_nil());
@@ -468,25 +466,30 @@ OZ_Return Board::installScript(Bool isMerging) {
 
     Board::ignoreWakeUp(NO);
 
-    if (res == PROCEED)
-      continue;
-
-    if (res == FAILED) {
-      ret = FAILED;
-      if (!oz_onToplevel()) {
-	break;
+    if (res != PROCEED) {
+#undef BUG_FIX_FUTURE_MERGE
+#ifdef BUG_FIX_FUTURE_MERGE
+      if (!oz_isCons(xys)) {
+	// hack alert: ensure that preparedCalls != empty
+	am.prepareCall(BI_Unify,oz_unit(),oz_unit());
+      } else {
+	while (oz_isCons(xys)) {
+	  TaggedRef xy = oz_deref(oz_head(xys));
+	  Assert(oz_isCons(xy));
+	  TaggedRef x = oz_head(xy);
+	  TaggedRef y = oz_tail(xy);
+	  xys = oz_deref(oz_tail(xys));
+	  am.prepareCall(BI_Unify,x,y);
+	}
       }
-    } else {
-      // mm2: instead of failing, this should corrupt the space
+      return BI_REPLACEBICALL;
+#else
       (void) am.emptySuspendVarList();
-      ret = FAILED;
-      if (!oz_onToplevel()) {
-	break;
-      }
+      return FAILED;
+#endif
     }
   }
-
-  return ret;
+  return PROCEED;
 }
 
 
