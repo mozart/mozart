@@ -88,6 +88,7 @@ define
       fun lazy {Sanitize Tokens}
 	 case Tokens
 	 of nil then nil
+	 [] "__declspec"|"("|"dllimport"|")"|T then {Sanitize T}
 	 [] H|T then
 	    case H
 	    of "__extension__" then {Sanitize T}
@@ -95,6 +96,7 @@ define
 	    [] "__inline"      then {Sanitize T}
 	    [] "__volatile"    then "volatile"|{Sanitize T}
 	    [] "__const"       then "const"|{Sanitize T}
+	    [] "__cdecl"       then {Sanitize T}
 	    [] "__restrict"    then {Sanitize T}
 	    [] "__attribute__" then {Sanitize {SkipAttribute T}}
 	    [] "dllimport"     then {Sanitize T}

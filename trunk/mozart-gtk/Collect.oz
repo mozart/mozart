@@ -95,6 +95,7 @@ define
       case N
       of 'type_spec/decl_spec'(A B) then {CollectName A}#' '#{CollectName B}
       [] 'stor_spec/decl_spec'(A B) then {CollectName A}#' '#{CollectName B}
+      [] 'func_spec/decl_spec'(A B) then {CollectName A}#' '#{CollectName B}
       [] 'named struct/union'(A B)  then A#' '#B
       [] Id                         then Id
       end
@@ -112,6 +113,7 @@ define
 	 case Is
 	 of 'pointer decl'(S SB) then {CollectStars S}#{CollectPtrs SB}
 	 [] 'decla[ass]'(...)    then '*'
+	 [] '[ass]'(...)         then '*'
 	 [] '*'                  then Is
 	 [] _                    then ''
 	 end
