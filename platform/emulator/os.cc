@@ -561,7 +561,78 @@ int oskill(int pid, int sig)
 int osSystem(char *cmd)
 {
 #ifdef WINDOWS
-  return system(cmd);
+
+  /*
+    Dragan@, Sameh@: 
+    To Accomplish the system() behavior under WinXX:
+    
+    I- On Windows 9x:
+       We use the int system(char *cmdline);
+        
+    II-On Windows NT/2000
+         The "int system(char *cmdline);" does not work
+         from the OPI. The alternative in v1.1 was to use 
+	 CreateProcess() but this lacked the functionality
+	 of executing shell commands such as cd, dir, etc..
+	 
+	 So the alternative implemented here is as follows:
+       
+	 1- We still use CreateProcess but We must have cmd 
+	 as the image name and the desired commandline is passed
+	 to it as a parameter. 
+	 
+	 2- WE must use the  STARTF_USESTDHANDLES flag to enable
+         the usage of the handles of the parent process.
+
+	 3- We must inherit the handles of the  parent process 
+	 to let the child write the output in the emulator window.
+	 
+	 4- We have to supply to the child process the STDOUT and
+	 STDERR BUT NOT STDIN or else the parent process will block it.
+  */
+
+
+  if (!runningUnderNT())
+    return system(cmd);
+  
+  //Get the cmd.exe path
+  char sysdir[MAX_PATH];
+  GetSystemDirectory(sysdir, MAX_PATH);
+  
+  //prepare the command to be executed to be passed
+  //as an argument to cmd.exe via the /c switch
+  char* buf = (char*) malloc(sizeof(strlen(cmd)+5));
+  sprintf(buf, "/c %s",cmd);
+
+
+  
+  STARTUPINFO si;
+  memset(&si,0,sizeof(si));
+  si.cb = sizeof(si);
+  si.dwFlags = STARTF_FORCEOFFFEEDBACK|STARTF_USESTDHANDLES;
+  si.hStdOutput = GetStdHandle(STD_OUTPUT_HANDLE);
+  si.hStdError = GetStdHandle(STD_ERROR_HANDLE);
+  PROCESS_INFORMATION pinf;
+ 
+  //CreateProcess() alone fails to run the cmd internals
+  //such as copy, dir, etc .. 
+  //So, we are providing the %sysdir%\cmd.exe as image name
+  BOOL success = CreateProcess(strcat(sysdir,"\\cmd.exe"),buf,NULL,NULL,TRUE,0,NULL,NULL,&si,&pinf);
+  free(buf);  
+
+  if (!success)
+    return 1;
+ 
+  DWORD ret = WaitForSingleObject(pinf.hProcess,INFINITE);
+
+  if (ret == WAIT_FAILED || GetExitCodeProcess(pinf.hProcess,&ret) == FALSE)
+    ret = 1;
+
+  CloseHandle(pinf.hThread);
+  CloseHandle(pinf.hProcess);
+
+  return ret;
+
 #else
   if (cmd == NULL) {
     return 1;
