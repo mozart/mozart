@@ -77,13 +77,13 @@ public:
   PerdioVar(int i) : GenCVariable(PerdioVariable) {
     u.bindings=0;
     tagged.setType(PV_PROXY);
-    tagged.setIndex(i);
+    setIndex(i);
   }
 
   PerdioVar(Tertiary *t, int i) : GenCVariable(PerdioVariable) {
     u.tert = t;
     tagged.setType(PV_TERTPROXY);
-    tagged.setIndex(i);
+    setIndex(i);
   }
 
   void globalize(int i) { tagged.setType(PV_MANAGER); tagged.setIndex(i); }
@@ -93,7 +93,7 @@ public:
   Bool isTertProxy() { return tagged.getType()==PV_TERTPROXY; }
 
   int getIndex() { return tagged.getIndex(); }
-  void setIndex(int i) { tagged.setIndex(i); }
+  void setIndex(int i) { tagged.setIndex(i); if (isTertProxy()) u.tert->setIndex(i); }
 
   Bool valid(TaggedRef *varPtr, TaggedRef v);
 
