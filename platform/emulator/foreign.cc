@@ -1225,10 +1225,20 @@ char *OZ_stringToC(OZ_Term list)
   return tmpStr;
 }
 
-void OZ_printString(OZ_Term term)
-{
-  string2buffer(cout,term);
-  cout << flush;
+void OZ_printString(OZ_Term term) {
+  static char *tmpStr = 0;
+  if (tmpStr) {
+    delete tmpStr;
+    tmpStr = 0;
+  }
+
+  ostrstream out;
+
+  string2buffer(out,term);
+
+  out << ends;
+  tmpStr = out.str();
+  printf("%s",tmpStr);
 }
 
 void OZ_printAtom(OZ_Term t)
