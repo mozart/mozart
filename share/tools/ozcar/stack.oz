@@ -26,14 +26,18 @@ local
    local
       proc {DoStackForAllInd Xs I P}
 	 case Xs of nil then skip
-	 [] X|nil then {P I nil X}
-	 [] X|Y|Z then {P I X Y} {DoStackForAllInd Z I+1 P}
+	 [] X|Y|Z then
+	    case X == toplevel then skip else
+	       {P I X Y}
+	       {DoStackForAllInd Z I+1 P}
+	    end
 	 end
       end
    in
       proc {StackForAllInd Xs P}
-	 case {Label Xs.2.1} == toplevel then
-	    {DoStackForAllInd Xs.2.2 1 P}
+	 case {Label Xs.1} == builtin then
+	    {P 1 Xs.1 nil}
+	    {DoStackForAllInd Xs.2 2 P}
 	 else
 	    {DoStackForAllInd Xs 1 P}
 	 end
@@ -65,7 +69,7 @@ in
       end
 
       meth GetStack($)
-	 {Reverse {Dbg.taskstack self.T MaxStackSize}}
+	 {Dbg.taskstack self.T MaxStackSize}
       end
       
       meth Reset
@@ -76,7 +80,7 @@ in
 	    {ForAll OldKeys proc {$ K} {Dremove self.D K} end}
 	    case CurrentStack \= nil then
 	       {StackForAllInd CurrentStack
-		proc {$ Ind Debug Proc}
+		proc {$ Ind Proc Debug}
 		   case Debug == nil then  % builtin
 		      {Dput self.D 0         {B2F Ind Proc}}
 		   else                    % procedure
@@ -88,6 +92,7 @@ in
 	       Size <- 0
 	    end
 	 end
+	 %{Browse {Dentries self.D}}
       end
 
       %% only print changed frames of stack
@@ -132,6 +137,7 @@ in
 	 %% clear stack widget
 	 StackManager,Clear
 	 StackManager,Disable
+	 {self.W title(StackTitle)}
 	 %% clear env widgets
 	 {Ozcar printEnv(frame:0)}
       end
