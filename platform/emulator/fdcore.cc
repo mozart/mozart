@@ -27,7 +27,7 @@ OZ_C_proc_end
 OZ_C_proc_begin(BIgetFDLimits,2)
 {
   return (OZ_unify(newSmallInt(0), OZ_getCArg(0)) &&
-    OZ_unify(newSmallInt(fd_iv_max_elem), OZ_getCArg(1))) ? PROCEED : FAILED;
+    OZ_unify(newSmallInt(fd_sup), OZ_getCArg(1))) ? PROCEED : FAILED;
 }
 OZ_C_proc_end
 
@@ -55,8 +55,7 @@ OZ_C_proc_begin(BIfdMin, 2)
   } else if (isGenBoolVar(var,vartag)) {
     return OZ_unify(newSmallInt(0), OZ_getCArg(1));
   } else if (isNotCVar(vartag)) {
-    return addNonResSuspForCon(var, varptr, vartag,
-                               createNonResSusp(OZ_self, OZ_args, OZ_arity));
+    return OZ_suspendOnVar(TaggedRef(varptr));
   } else {
     TypeError(0, "");
   }
@@ -78,8 +77,7 @@ OZ_C_proc_begin(BIfdMax,2)
   } else if (isGenBoolVar(var,vartag)) {
     return OZ_unify(newSmallInt(1), OZ_getCArg(1));
   } else if (isNotCVar(vartag)) {
-    return addNonResSuspForCon(var, varptr, vartag,
-                               createNonResSusp(OZ_self, OZ_args, OZ_arity));
+    return OZ_suspendOnVar(TaggedRef(varptr));
   } else {
     TypeError(0, "");
   }
@@ -103,8 +101,7 @@ OZ_C_proc_begin(BIfdGetAsList, 2)
     return OZ_unify(makeTaggedLTuple(new LTuple(mkTuple(0, 1), AtomNil)),
                     OZ_getCArg(1));
   } else if (isNotCVar(vartag)) {
-    return addNonResSuspForCon(var, varptr, vartag,
-                               createNonResSusp(OZ_self, OZ_args, OZ_arity));
+    return OZ_suspendOnVar(TaggedRef(varptr));
   } else {
     TypeError(0, "");
   }
@@ -126,8 +123,7 @@ OZ_C_proc_begin(BIfdGetCardinality,2)
   } else if (isGenBoolVar(var,vartag)) {
     return OZ_unify(newSmallInt(2), OZ_getCArg(1));
   } else if (isNotCVar(vartag)) {
-    return addNonResSuspForCon(var, varptr, vartag,
-                               createNonResSusp(OZ_self, OZ_args, OZ_arity));
+    return OZ_suspendOnVar(TaggedRef(varptr));
   } else {
     TypeError(0, "");
   }
@@ -143,8 +139,7 @@ OZ_C_proc_begin(BIfdNextTo, 3)
   OZ_getCArgDeref(1, n, nptr, ntag);
 
   if (isAnyVar(ntag)) {
-    return addNonResSuspForDet(n, nptr, ntag,
-                               createNonResSusp(OZ_self, OZ_args, OZ_arity));
+    return OZ_suspendOnVar(TaggedRef(nptr));
   } else if (! isSmallInt(ntag)) {
     TypeError(1, "");
   }
@@ -162,8 +157,7 @@ OZ_C_proc_begin(BIfdNextTo, 3)
     int val = smallIntValue(n);
     return OZ_unify(OZ_getCArg(2), newSmallInt(val >= 1 ? 1 : 0));
   } else if (isNotCVar(vartag)) {
-    return addNonResSuspForCon(var, varptr, vartag,
-                               createNonResSusp(OZ_self, OZ_args, OZ_arity));
+    return OZ_suspendOnVar(TaggedRef(varptr));
   } else {
     TypeError(0, "");
   }
@@ -180,8 +174,7 @@ OZ_C_proc_begin(BIfdPutLe, 2)
   OZ_getCArgDeref(1, n, nptr, ntag);
 
   if (isAnyVar(ntag)) {
-    return addNonResSuspForDet(n, nptr, ntag,
-                               createNonResSusp(OZ_self, OZ_args, OZ_arity));
+    return OZ_suspendOnVar(TaggedRef(nptr));
   } else if (! isSmallInt(ntag)) {
     TypeError(1, "");
   }
@@ -191,8 +184,7 @@ OZ_C_proc_begin(BIfdPutLe, 2)
   if (! (isGenFDVar(var,vartag) || isGenBoolVar(var,vartag) ||
          isSmallInt(vartag))) {
     if (isNotCVar(vartag)) {
-      return addNonResSuspForCon(var, varptr, vartag,
-                                 createNonResSusp(OZ_self, OZ_args, OZ_arity));
+      return OZ_suspendOnVar(TaggedRef(varptr));
     } else {
       TypeError(0, "");
     }
@@ -221,8 +213,7 @@ OZ_C_proc_begin(BIfdPutGe, 2)
   OZ_getCArgDeref(1, n, nptr, ntag);
 
   if (isAnyVar(ntag)) {
-    return addNonResSuspForDet(n, nptr, ntag,
-                               createNonResSusp(OZ_self, OZ_args, OZ_arity));
+    return OZ_suspendOnVar(TaggedRef(nptr));
   } else if (! isSmallInt(ntag)) {
     TypeError(1, "");
   }
@@ -232,8 +223,7 @@ OZ_C_proc_begin(BIfdPutGe, 2)
   if (! (isGenFDVar(var,vartag) || isGenBoolVar(var,vartag) ||
          isSmallInt(vartag))) {
     if (isNotCVar(vartag)) {
-      return addNonResSuspForCon(var, varptr, vartag,
-                                 createNonResSusp(OZ_self, OZ_args, OZ_arity));
+      return OZ_suspendOnVar(TaggedRef(varptr));
     } else {
       TypeError(0, "");
     }
@@ -262,8 +252,7 @@ OZ_C_proc_begin(BIfdPutList, 3)
   OZ_getCArgDeref(2, s, sptr, stag); // sign
 
   if (isAnyVar(stag)) {
-    return addNonResSuspForDet(s, sptr, stag,
-                               createNonResSusp(OZ_self, OZ_args, OZ_arity));
+    return OZ_suspendOnVar(TaggedRef(sptr));
   } else if (! isSmallInt(stag)) {
     TypeError(2, "");
   }
@@ -299,8 +288,7 @@ OZ_C_proc_begin(BIfdPutInterval, 3)
   OZ_getCArgDeref(1, l, lptr, ltag); // lower bound
 
   if (isAnyVar(ltag)) {
-    return addNonResSuspForDet(l, lptr, ltag,
-                               createNonResSusp(OZ_self, OZ_args, OZ_arity));
+    return OZ_suspendOnVar(TaggedRef(lptr));
   } else if (! isSmallInt(ltag)) {
     TypeError(1, "");
   }
@@ -308,8 +296,7 @@ OZ_C_proc_begin(BIfdPutInterval, 3)
   OZ_getCArgDeref(2, u, uptr, utag); // upper bound
 
   if (isAnyVar(utag)) {
-    return addNonResSuspForDet(u, uptr, utag,
-                               createNonResSusp(OZ_self, OZ_args, OZ_arity));
+    return OZ_suspendOnVar(TaggedRef(uptr));
   } else if (! isSmallInt(utag)) {
     TypeError(2, "");
   }
@@ -344,8 +331,7 @@ OZ_C_proc_begin(BIfdPutNot, 2)
   OZ_getCArgDeref(1, n, nptr, ntag);
 
   if (isAnyVar(ntag)) {
-    return addNonResSuspForDet(n, nptr, ntag,
-                               createNonResSusp(OZ_self, OZ_args, OZ_arity));
+    return OZ_suspendOnVar(TaggedRef(nptr));
   } else if (! isSmallInt(ntag)) {
     TypeError(1, "");
   }
@@ -355,8 +341,7 @@ OZ_C_proc_begin(BIfdPutNot, 2)
   if (! (isGenFDVar(var, vartag) || isGenBoolVar(var, vartag) ||
          isSmallInt(vartag))) {
     if (isNotCVar(vartag)) {
-      return addNonResSuspForCon(var, varptr, vartag,
-                                 createNonResSusp(OZ_self, OZ_args, OZ_arity));
+      return OZ_suspendOnVar(TaggedRef(varptr));
     } else {
       TypeError(0, "");
     }
