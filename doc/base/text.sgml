@@ -295,7 +295,7 @@
 	<Entry><<make>>
 	  <Index class=tails/<<ByteString>><And><<make>>/
 	<Synopsis>
-	  <<{ByteString.new ?+{V} ??{ByteString}}>>
+	  <<{ByteString.make ?+{V} ??{ByteString}}>>
 	<Item>
 	  returns a new byte string created from the virtual string&nbsp;?_{V}.
 
