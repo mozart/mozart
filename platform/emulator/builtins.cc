@@ -1638,39 +1638,6 @@ OZ_Return dotInline(TaggedRef term, TaggedRef fea, TaggedRef &out)
 DECLAREBI_USEINLINEFUN2(BIdot,dotInline)
 
 
-#define CheckSelf				\
-     Assert(am.getSelf() != NULL);		\
-     { Object *o = am.getSelf();		\
-       Assert(o->getDeepness()>=1);		\
-     }
-
-
-OZ_Return atInline(TaggedRef fea, TaggedRef &out)
-{
-  DEREF(fea, _1, feaTag);
-
-  SRecord *rec = am.getSelf()->getState();
-  if (rec) {
-    if (!isFeature(fea)) {
-      if (isAnyVar(fea)) {
-	return SUSPEND;
-      }
-      goto bomb;
-    }
-    CheckSelf;
-    TaggedRef t = rec->getFeature(fea);
-    if (t) {
-      out = t;
-      return PROCEED;
-    }
-  }
-
-bomb:
-  TypeError2("@",1,"(valid) Feature",
-	     rec?makeTaggedSRecord(rec):OZ_atom("noattributes"),
-	     fea);
-}
-DECLAREBI_USEINLINEFUN1(BIat,atInline)
 
 
 OZ_Return subtreeInline(TaggedRef term, TaggedRef fea, TaggedRef &out)
@@ -2572,7 +2539,9 @@ OZ_C_proc_begin(BIisString,2)
 }
 OZ_C_proc_end
 
+#endif /* BUILTINS2 */
 
+#ifdef BUILTINS1
 
 
 #define FirstCharArg(NAME)                       \
@@ -3058,6 +3027,39 @@ void assignError(TaggedRef rec, TaggedRef fea, char *name)
   message("state found      : %s\n", toC(rec));
 }
 
+#define CheckSelf				\
+     Assert(am.getSelf() != NULL);		\
+     { Object *o = am.getSelf();		\
+       Assert(o->getDeepness()>=1);		\
+     }
+
+
+OZ_Return atInline(TaggedRef fea, TaggedRef &out)
+{
+  DEREF(fea, _1, feaTag);
+
+  SRecord *rec = am.getSelf()->getState();
+  if (rec) {
+    if (!isFeature(fea)) {
+      if (isAnyVar(fea)) {
+	return SUSPEND;
+      }
+      goto bomb;
+    }
+    CheckSelf;
+    TaggedRef t = rec->getFeature(fea);
+    if (t) {
+      out = t;
+      return PROCEED;
+    }
+  }
+
+bomb:
+  TypeError2("@",1,"(valid) Feature",
+	     rec?makeTaggedSRecord(rec):OZ_atom("noattributes"),
+	     fea);
+}
+DECLAREBI_USEINLINEFUN1(BIat,atInline)
 
 OZ_Return assignInline(TaggedRef fea, TaggedRef value)
 {
@@ -3086,7 +3088,7 @@ OZ_Return assignInline(TaggedRef fea, TaggedRef value)
 
 DECLAREBI_USEINLINEREL2(BIassign,assignInline)
 
-#endif /* BUILTINS2 */
+#endif /* BUILTINS1 */
 
 
 /* -----------------------------------------------------------------------
@@ -4351,6 +4353,12 @@ DECLAREBI_USEINLINEREL2(BIdictionaryRemove,dictionaryRemoveInline)
 
 #ifdef BUILTINS2
 
+#ifdef WINDOWS
+#define PATHSEP ';'
+#else
+#define PATHSEP ':'
+#endif
+
 char *expandFileName(char *fileName,char *path) {
 
   char *ret;
@@ -4371,7 +4379,7 @@ char *expandFileName(char *fileName,char *path) {
   char *tmp = new char[strlen(path)+strlen(fileName)+2];
   char *last = tmp;
   while (1) {
-    if (*path == ':' || *path == 0) {
+    if (*path == PATHSEP || *path == 0) {
 
       if (last == tmp && *path == 0) { // path empty ??
 	return NULL;
@@ -4625,7 +4633,7 @@ OZ_C_proc_begin(BIlinkObjectFiles,2)
 
   void *handle = (void *)LoadLibrary(ofiles[0]);
   if (handle==NULL) {
-    OZ_warning("failed in linkObjectFiles: %s",GetLastError());
+    OZ_warning("failed in linkObjectFiles: %d",GetLastError());
     return FAILED;
   }
   return OZ_unifyInt(out,ToInt32(handle));
@@ -4685,7 +4693,20 @@ void *ozdlsym(void *handle,char *name)
 #define Link(handle,name) ozdlsym(handle,name)
 
 #elif defined(WINDOWS)
-#define Link(handle,name) GetProcAddress(handle,name)
+
+FARPROC winLink(HMODULE handle, char *name)
+{
+  FARPROC ret = GetProcAddress(handle,name);
+  if (ret == NULL) {
+    // try prepending a "_"
+    char buf[1000];
+    sprintf(buf,"_%s",name);
+    ret = GetProcAddress(handle,buf);
+  }
+  return ret;
+}
+
+#define Link(handle,name) winLink(handle,name)
 
 #endif
 
@@ -6289,6 +6310,33 @@ BIspec allSpec1[] = {
   {"newCell",	      2,BInewCell,	0},
   {"exchangeCell",    3,BIexchangeCell, (IFOR) BIexchangeCellInline},
 
+  {"IsChar",        2, BIcharIs,	0},
+  {"Char.isAlNum",  2, BIcharIsAlNum,	0},
+  {"Char.isAlpha",  2, BIcharIsAlpha,	0},
+  {"Char.isCntrl",  2, BIcharIsCntrl,	0},
+  {"Char.isDigit",  2, BIcharIsDigit,	0},
+  {"Char.isGraph",  2, BIcharIsGraph,	0},
+  {"Char.isLower",  2, BIcharIsLower,	0},
+  {"Char.isPrint",  2, BIcharIsPrint,	0},
+  {"Char.isPunct",  2, BIcharIsPunct,	0},
+  {"Char.isSpace",  2, BIcharIsSpace,	0},
+  {"Char.isUpper",  2, BIcharIsUpper,	0},
+  {"Char.isXDigit", 2, BIcharIsXDigit,	0},
+  {"Char.toLower",  2, BIcharToLower,	0},
+  {"Char.toUpper",  2, BIcharToUpper,	0},
+  {"Char.toAtom",   2, BIcharToAtom,	0},
+  {"Char.type",     2, BIcharType,	0},
+
+  {"adjoin",          3,BIadjoin,           (IFOR) BIadjoinInline},
+  {"adjoinList",      3,BIadjoinList,       0},
+  {"record",          3,BImakeRecord,       0},
+  {"makeRecord",      3,BImakeRecord,       0},
+  {"arity",           2,BIarity,            (IFOR) BIarityInline},
+  {"adjoinAt",        4,BIadjoinAt,         0},
+  {"@",               2,BIat,               (IFOR) atInline},
+  {"<-",              2,BIassign,           (IFOR) assignInline},
+  {"copyRecord",      2,BIcopyRecord,       0},
+
   {0,0,0,0}
 };
 #endif
@@ -6376,33 +6424,6 @@ BIspec allSpec2[] = {
   {"\\=B", 3,BIneqB,   (IFOR) neqInline},
   {"==",   2,BIeq,     0},
   {"\\=",  2,BIneq,    0},
-
-  {"IsChar",        2, BIcharIs,	0},
-  {"Char.isAlNum",  2, BIcharIsAlNum,	0},
-  {"Char.isAlpha",  2, BIcharIsAlpha,	0},
-  {"Char.isCntrl",  2, BIcharIsCntrl,	0},
-  {"Char.isDigit",  2, BIcharIsDigit,	0},
-  {"Char.isGraph",  2, BIcharIsGraph,	0},
-  {"Char.isLower",  2, BIcharIsLower,	0},
-  {"Char.isPrint",  2, BIcharIsPrint,	0},
-  {"Char.isPunct",  2, BIcharIsPunct,	0},
-  {"Char.isSpace",  2, BIcharIsSpace,	0},
-  {"Char.isUpper",  2, BIcharIsUpper,	0},
-  {"Char.isXDigit", 2, BIcharIsXDigit,	0},
-  {"Char.toLower",  2, BIcharToLower,	0},
-  {"Char.toUpper",  2, BIcharToUpper,	0},
-  {"Char.toAtom",   2, BIcharToAtom,	0},
-  {"Char.type",     2, BIcharType,	0},
-
-  {"adjoin",          3,BIadjoin,           (IFOR) BIadjoinInline},
-  {"adjoinList",      3,BIadjoinList,       0},
-  {"record",          3,BImakeRecord,       0},
-  {"makeRecord",      3,BImakeRecord,       0},
-  {"arity",           2,BIarity,            (IFOR) BIarityInline},
-  {"adjoinAt",        4,BIadjoinAt,         0},
-  {"@",               2,BIat,               (IFOR) atInline},
-  {"<-",              2,BIassign,           (IFOR) assignInline},
-  {"copyRecord",      2,BIcopyRecord,       0},
 
   {"loadFile",       1, BIloadFile,		0},
   {"linkObjectFiles",2, BIlinkObjectFiles,	0},
