@@ -149,10 +149,13 @@ private:
 public:
   // If this site allready has a comObj that one is returned,
   // else the incoming is used and the state is set to connected.
-  // PERM should not be possible in the presence of a comObj.
   ComObj *setComObj(ComObj *comObj) {
     unsigned int t=getType();
-    Assert(!(t & PERM_SITE));
+    if(t & PERM_SITE) {
+      // This site is already discovered perm. Due to a late
+      // message delivery, a comObj appears. Refuse it by returning -1.
+      return (ComObj *) -1;
+    }
     if(t & CONNECTED)
       return this->comObj;
     else {

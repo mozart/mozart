@@ -231,7 +231,6 @@ Bool ComObj::openTimerExpired() {
     }
   }
   else if(state==ANONYMOUS_WF_NEGOTIATE) {// Never a problem, anonymous
-    close(CLOSED,TRUE);//Use close with true not to be reopened
     comController->deleteComObj(this);
     return FALSE;
   }
@@ -518,7 +517,16 @@ Bool ComObj::msgReceived(MsgContainer *msgC) {
       else {
         // Tell the site about this comObj
         ComObj *other=s1->setComObj(this);
-        if (other!=NULL) {
+        if (other==(ComObj *) -1) {
+          // The comObj is refused since the site is already marked perm.
+          // abort the channel and return false meaning closed - don't
+          // continue reading.
+          msgContainerManager->deleteMsgContainer(msgC);
+          comController->deleteComObj(this);
+
+          return FALSE;
+        }
+        else if (other!=NULL) {
           // This object is an anonymous object and the other
           // is to be used. What transObj to use needs to be
           // decided on.
@@ -939,7 +947,6 @@ void ComObj::connectionLost() {
       close(CLOSED);
     break;
   case ANONYMOUS_WF_NEGOTIATE:
-    close(CLOSED,TRUE); // use close with true not to be reopened
     comController->deleteComObj(this); // Anonymous, can do no more
     return;
   case CLOSING_HARD:
