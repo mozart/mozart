@@ -286,12 +286,6 @@ Bool GenBoolVariable::unifyBool(TaggedRef * vPtr, TaggedRef var,
             } // switch
         }
         return TRUE;
-      case LazyVariable:
-        {
-          return
-            ((GenLazyVariable*)
-             tagged2CVar(term))->unifyLazy(tPtr,vPtr,scp);
-        }
       default:
         break;
       }

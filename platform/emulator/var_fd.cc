@@ -263,12 +263,6 @@ Bool GenFDVariable::unifyFD(TaggedRef * vPtr, TaggedRef var,
                                                     vPtr, var,
                                                     scp, disp);
         }
-      case LazyVariable:
-        {
-          return
-            ((GenLazyVariable*)
-             tagged2CVar(term))->unifyLazy(tPtr,vPtr,scp);
-        }
       default:
         return FALSE;
       } // switch(tagged2CVar(term)->getType())
