@@ -54,6 +54,8 @@ public:
 //-----------------------------------------------------------------------------
 class CPIteratePropagatorCap : public Propagator_VD_VI_VI_I {
 private:
+  // signals whether edge finding is used (1) or not (0)
+  int reg_flag;
   static OZ_CFun spawner;
 public:
   CPIteratePropagatorCap(OZ_Term x, OZ_Term durations, OZ_Term use, 
@@ -61,7 +63,7 @@ public:
     : Propagator_VD_VI_VI_I(x, durations, use, cap) {}
 
   CPIteratePropagatorCap(OZ_Term tasks, OZ_Term starts, OZ_Term durs,
-			 OZ_Term use, OZ_Term cap);
+			 OZ_Term use, OZ_Term cap, int flag);
   
   virtual OZ_Return propagate(void);
   virtual OZ_CFun getHeaderFunc(void) const { return spawner; }
