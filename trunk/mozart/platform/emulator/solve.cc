@@ -211,8 +211,6 @@ SolveActor::SolveActor(Board *bb)
   bb->decSuspCount();         // don't count this actor!
 }
 
-// ------------------------------------------------------------------------
-
 //-----------------------------------------------------------------------------
 // support for nonmonotonic propagators
 

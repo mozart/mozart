@@ -11,7 +11,7 @@
 
 #include "telling.hh"
 
-OZ_C_proc_begin(fsp_tellIsIn, 2)
+OZ_C_proc_begin(fsp_include, 2)
 {
   OZ_EXPECTED_TYPE(OZ_EM_FD "," OZ_EM_FSET);
 
@@ -20,14 +20,14 @@ OZ_C_proc_begin(fsp_tellIsIn, 2)
   OZ_EXPECT(pe, 0, expectIntVarAny);
   OZ_EXPECT(pe, 1, expectFSetVarBounds);
   
-  return pe.impose(new TellIsInPropagator(OZ_args[1],
-					  OZ_args[0]));
+  return pe.impose(new IncludePropagator(OZ_args[1],
+					 OZ_args[0]));
 } 
 OZ_C_proc_end
 
-OZ_CFun TellIsInPropagator::spawner = fsp_tellIsIn;
+OZ_CFun IncludePropagator::header = fsp_include;
 
-OZ_C_proc_begin(fsp_tellIsNotIn, 2)
+OZ_C_proc_begin(fsp_exclude, 2)
 {
   OZ_EXPECTED_TYPE(OZ_EM_FD "," OZ_EM_FSET );
 
@@ -36,12 +36,12 @@ OZ_C_proc_begin(fsp_tellIsNotIn, 2)
   OZ_EXPECT(pe, 0, expectIntVarAny);
   OZ_EXPECT(pe, 1, expectFSetVarBounds);
   
-  return pe.impose(new TellIsNotInPropagator(OZ_args[1],
-					     OZ_args[0]));
+  return pe.impose(new ExcludePropagator(OZ_args[1],
+					 OZ_args[0]));
 } 
 OZ_C_proc_end
 
-OZ_CFun TellIsNotInPropagator::spawner = fsp_tellIsNotIn;
+OZ_CFun ExcludePropagator::header = fsp_exclude;
 
 OZ_C_proc_begin(fsp_card, 2)
 {
@@ -61,11 +61,11 @@ OZ_C_proc_begin(fsp_card, 2)
 } 
 OZ_C_proc_end
 
-OZ_CFun FSetCardPropagator::spawner = fsp_card;
+OZ_CFun FSetCardPropagator::header = fsp_card;
 
 //*****************************************************************************
 
-OZ_Return TellIsInPropagator::propagate(void)
+OZ_Return IncludePropagator::propagate(void)
 {
   OZ_DEBUGPRINT("in: " << *this);
   
@@ -96,7 +96,7 @@ failure:
   return P.fail();
 }
 
-OZ_Return TellIsNotInPropagator::propagate(void)
+OZ_Return ExcludePropagator::propagate(void)
 {
   OZ_DEBUGPRINT("in: " << *this);
   
