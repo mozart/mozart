@@ -315,7 +315,7 @@ void initBuiltins() {
     makeTaggedConst(new Builtin("BootManager", 1, 1, BIBootManager, OK));
 
 
-  bi_raise      = string2Builtin("raise");
-  bi_raiseError = string2Builtin("raiseError");
-  bi_raiseDebug = string2Builtin("raiseDebug");
+  bi_raise      = string2Builtin("Exception.raise");
+  bi_raiseError = string2Builtin("Exception.raiseError");
+  bi_raiseDebug = string2Builtin("Exception.raiseDebug");
 }

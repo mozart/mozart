@@ -327,17 +327,17 @@
  ## Module: Exception
  ##
 
- 'raise'                     => { in  => ['value'],
+ 'Exception.raise'           => { in  => ['value'],
                                   out => [],
                                   BI  => BIraise,
                                   doesNotReturn => 1},
 
- 'raiseError'                => { in  => ['value'],
+ 'Exception.raiseError'      => { in  => ['value'],
                                   out => [],
                                   BI  => BIraiseError,
                                   doesNotReturn => 1},
 
- 'raiseDebug'                => { in  => ['value'],
+ 'Exception.raiseDebug'      => { in  => ['value'],
                                   out => [],
                                   BI  => BIraiseDebug,
                                   doesNotReturn => 1},
@@ -346,9 +346,13 @@
                                   out => ['+bool'],
                                   BI  => BIraiseDebugCheck},
 
- 'Thread.taskStackError'     => { in  => ['+thread','+bool'],
+ 'Exception.taskStackError'  => { in  => [],
                                   out => ['+[record]'],
-                                  BI  => BIthreadTaskStackError},
+                                  BI  => BIexceptionTaskStackError},
+
+ 'Exception.location'        => { in  => [],
+                                  out => ['+[atom]'],
+                                  BI  => BIexceptionLocation},
 
 
 
@@ -776,18 +780,6 @@
                                out => ['+bool'],
                                BI  => BIthreadIs},
 
- 'Thread.id'              => { in  => ['+thread'],
-                               out => ['+int'],
-                               BI  => BIthreadID},
-
- 'Thread.setId'           => { in  => ['+thread','+int'],
-                               out => [],
-                               BI  => BIsetThreadID},
-
- 'Thread.parentId'        => { in  => ['+thread'],
-                               out => ['+int'],
-                               BI  => BIparentThreadID},
-
  'Thread.this'            => { in  => [],
                                out => ['+thread'],
                                BI  => BIthreadThis},
@@ -824,30 +816,9 @@
                                out => ['+atom'],
                                BI  => BIthreadState},
 
- 'Thread.setRaiseOnBlock' => { in  => ['+thread','+bool'],
+ 'Thread.create'          => { in  => ['+procedure'],
                                out => [],
-                               BI  => BIthreadSetRaiseOnBlock},
-
- 'Thread.getRaiseOnBlock' => { in  => ['+thread'],
-                               out => ['+bool'],
-                               BI  => BIthreadGetRaiseOnBlock},
-
- 'Thread.taskStack'      => { in  => ['+thread','+int','+bool'],
-                              out => ['+[record]'],
-                              BI  => BIthreadTaskStack},
-
- 'Thread.frameVariables' => { in  => ['+thread','+int'],
-                              out => ['+record'],
-                              BI  => BIthreadFrameVariables},
-
- 'Thread.location'       => { in  => ['+thread'],
-                              out => ['+[atom]'],
-                              BI  => BIthreadLocation},
-
- 'Thread.create'         => { in  => ['+procedure'],
-                              out => [],
-                              BI  => BIthreadCreate},
-
+                               BI  => BIthreadCreate},
 
 
  ##
