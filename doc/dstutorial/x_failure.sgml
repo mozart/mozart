@@ -202,12 +202,18 @@ sites (e.g., <<remoteProblem(permSome)>>).
 
 <P>We present the failure model in two steps:
 the basic model and the advanced model.
-In the basic model,
-attempting to perform operations
+The basic model allows to enable or disable
+<EM>exceptions</EM> on language entities.
+That is, attempting to perform operations
 on entities with problems will
 either block or raise an exception without doing the operation.
 The simplest way to start writing fault-tolerant
 applications is to use the basic model.
+
+<P>The advanced model allows to install or
+deinstall <EM>handlers</EM>, i.e., fault handling procedures,
+on entities.  This model is explained in the next
+section.
 
 <SUBSECTION><TITLE>Enabling exceptions on faults</TITLE>
 
@@ -369,6 +375,20 @@ All other threads will raise the exception <<tempFail>>.
 Thread <<T1>> will continue the operation when and
 if the <<tempFail>> state goes away.
 
+<SUBSUBSECTION><TITLE>Levels and sitedness</TITLE>
+
+<P>The act of enabling or installing on <<global>> or <<site>> levels
+is <EM>sited</EM>.
+(Enabling or installing on the <<thread>> level is sited.)
+In other words, the calls
+<<{Fault.enable E L ...}>> or <<{Fault.install E L ...}>>,
+where <<L>> is either <<global>> or <<site>>,
+will only work on the home site of the <<Fault>> module.
+A procedure containing these calls may be passed around
+the network at will, and executed anywhere.
+However, any attempt to execute either of the
+above two calls on another site will raise an exception.
+
 <SECTION><TITLE>Advanced model</TITLE>
 
 <P>The basic model lets you set up the system to do
@@ -420,7 +440,6 @@ A modification of the current release with respect
 to handler semantics is that
 handlers installed on <EM>variables</EM> always retry
 the operation after they return.
-
 
 <SUBSECTION><TITLE>Eager failure detection</TITLE>
 
