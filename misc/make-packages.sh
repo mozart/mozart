@@ -124,23 +124,6 @@ case $PLAT in
          GMP_TARGET=
          ;;
 
-    freebsd-i486)
-	 CFLAGS=
-	 CXXFLAGS=
-	 GCC=gcc-2.95.3
-	 zcat $GCC.tar.gz | tar xf -
-	 mkdir $GCC-build
-	 (cd $GCC-build; \
-	  ../$GCC/configure --prefix=$PREFIX --enable-languages=c,c++; \
-	  make CFLAGS="$CFLAGS" LIBCFLAGS="$CFLAGS" \
-	       LIBCXXFLAGS="$CXXFLAGS" bootstrap; \
-	  make install)
-	 rm -rf $GCC-build
-	 CFLAGS="-O3 -fomit-frame-pointer -mcpu=pentium"
-	 CXXFLAGS="$CFLAGS"
-         GMP_TARGET=
-         ;;
-
     freebsdelf-i486)
 	 CFLAGS=
 	 CXXFLAGS=

@@ -49,7 +49,7 @@ case $PLAT in
         LDFLAGS=-s
 	moreargs="--enable-opt=yes"
     ;;
-    freebsd-i486)
+    freebsdelf-i486)
         LDFLAGS=-s
 	moreargs="--enable-opt=yes"
     ;;
