@@ -37,9 +37,12 @@
 #include "sum.hh"
 #include "sumabs.hh"
 #include "sumd.hh"
+#include "distribute.hh"
 
 void fdp_init(void) 
 {
+  fd_dist_init();
+
 #ifdef OZ_DEBUG
   oz_fsetdebugprint("*** DEBUG-FDLIB ***");
 #elif OZ_PROFILE
