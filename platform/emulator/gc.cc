@@ -1607,10 +1607,11 @@ void AM::gc(int msgLevel)
   PROFILE_CODE1(FDProfiles.gc());
 
 #ifdef PERDIO
-  performCopying();
+  performCopying();  /* perb - this should not be necessary */
   gcBorrowTable2();
   gcGNameTable();
 #endif
+  performCopying();
 
 // -----------------------------------------------------------------------
 // ** second phase: the reference update stack has to checked now
