@@ -3,7 +3,11 @@
 
 declare
 
-fun {NewEmacs IMPORT}
+fun
+\ifdef NEWCOMPILER
+   instantiate
+\endif
+   {NewEmacs IMPORT}
    \insert 'Standard.env'
        = IMPORT.'Standard'
    \insert 'SP.env'
