@@ -16,6 +16,7 @@
 
 #include "susplist.hh"
 #include "board.hh"
+#include "thread.hh"
 
 #ifdef OUTLINE
 #define inline
