@@ -317,7 +317,7 @@ void ozFree(void *p)
 
 void deleteChunkChain(char *oldChain) {
   while (oldChain){
-    char **aux1 = ((char**) &oldChain[heapMaxSize]) - 1;
+    char **aux1 = ((char**) (void*)&oldChain[heapMaxSize]) - 1;
     char *aux2  =  *aux1;
 #ifdef DEBUG_GC
 //    memset(oldChain,0x14,heapMaxSize);
@@ -333,7 +333,7 @@ int inChunkChain(void *Chain, void *value)
 {
   char *Chain1 = (char*) Chain;
   while (Chain1){
-    char **aux1 = ((char**) &Chain1[heapMaxSize]) - 1;
+    char **aux1 = ((char**) (void*)&Chain1[heapMaxSize]) - 1;
     char *aux2  =  *aux1;
     if ((Chain1 <= (char *) value) && ((char*) value <= Chain1 + heapMaxSize))
       return 1;
@@ -346,7 +346,7 @@ void printChunkChain(void *Chain)
 {
   char *Chain1 = (char*) Chain;
   while (Chain1){
-    char **aux1 = ((char**) &Chain1[heapMaxSize]) - 1;
+    char **aux1 = ((char**) (void*)&Chain1[heapMaxSize]) - 1;
     char *aux2  =  *aux1;
     printf("chunk( from: 0x%x, to: 0x%x )\n", Chain1, Chain1 + heapMaxSize);
     Chain1 = aux2;
@@ -388,7 +388,7 @@ void getMemFromOS(size_t sz)
   }
 
   heapEnd -= sizeof(char *);
-  *(char **)heapEnd = oldStart;
+  *(char **)(void*)heapEnd = oldStart;
 
   MemBlocks::list = new MemBlocks(heapStart,MemBlocks::list);
 
