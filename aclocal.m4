@@ -841,7 +841,7 @@ EOF
     oz_tmp=`$CXXCPP $CPPFLAGS conftest.$ac_ext | egrep TheVersion`;
     rm -f conftest.$ac_ext 2>/dev/null
     OZ_GMP_MAJOR=`expr "$oz_tmp" : 'TheVersion +\([^ ]+\) '`
-    OZ_GMP_MINOR=`expr "$oz_tmp" : 'TheVersion .* +\([^ ]+\)$'`
+    OZ_GMP_MINOR=`expr "$oz_tmp" : 'TheVersion .* \([^ ]+\) *$'`
     if oz_tmp=`expr "$oz_tmp" : 'TheVersion \(.*\)$'`; then
       OZ_CHECK_VERSION(oz_tmp_ok,$oz_tmp,OZ_VERSION_GMP)
       test "$oz_tmp_ok" = yes && oz_cv_gmp_version_ok=$oz_tmp_ok
