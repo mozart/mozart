@@ -525,6 +525,7 @@ Bool triggerVariable(TaggedRef *tPtr){
       // this part as well.
     case RAISE: return (FALSE);
     }
+    return (FALSE);
   } else {
     return (FALSE);
   }
