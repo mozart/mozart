@@ -16,6 +16,12 @@
 #include "fdomn.hh"
 #include "misc.hh"
 
+#ifdef BETA
+
+#include "fdomn_beta.cc"
+
+#else
+
 #if defined(OUTLINE) || defined(FDOUTLINE)
 #define inline
 #include "fdomn.icc"
@@ -189,7 +195,7 @@ void BitArray::printLong(ostream &ofile, int offset) const
 void FiniteDomain::print(ostream &ofile, int offset) const
 {
   if (isRange()) {
-    if (*this == empty)
+    if (*this == fd_empty)
       ofile << indent(offset) <<"{ - empty - }";
     else
       ofile << indent(offset) << "{ " << lower << ".." << upper << " }";
@@ -220,3 +226,6 @@ void  FiniteDomain::printLong(ostream &ofile, int offset) const
     bitArray->printLong(ofile, offset);
   }
 }
+
+
+#endif
