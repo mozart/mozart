@@ -72,10 +72,6 @@ $boot_module_name     = "FDP";
                              out => [],
                              bi  => fdp_plus},
 
- 'minus'                => { in  => ['int','int','int'],
-                             out => [],
-                             bi  => fdp_minus},
-
  'times'                => { in  => ['int','int','int'],
                              out => [],
                              bi  => fdp_times},
@@ -83,10 +79,6 @@ $boot_module_name     = "FDP";
  'plusD'                => { in  => ['int','int','int'],
                              out => [],
                              bi  => fdp_plusD},
-
- 'minusD'               => { in  => ['int','int','int'],
-                             out => [],
-                             bi  => fdp_minusD},
 
  'timesD'               => { in  => ['int','int','int'],
                              out => [],
