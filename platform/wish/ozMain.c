@@ -138,7 +138,7 @@ main(argc, argv)
 
     if (Tk_ParseArgv(interp, (Tk_Window) NULL, &argc, argv, argTable, 0)
             != TCL_OK) {
-        fprintf(stderr, "w %s\n", interp->result);
+        fprintf(stdout, "w %s\n.\n", interp->result);
         fflush(stdout); /* added mm */
         exit(1);
     }
@@ -172,8 +172,8 @@ main(argc, argv)
 
     mainWindow = Tk_CreateMainWindow(interp, display, name, "Tk");
     if (mainWindow == NULL) {
-        fprintf(stderr, "w %s\n", interp->result);
-        fprintf(stderr, "s stop\n");
+        fprintf(stdout, "w %s\n.\n", interp->result);
+        fprintf(stdout, "s stop\n");
         fflush(stdout); /* added mm */
         exit(1);
     }
@@ -213,7 +213,7 @@ main(argc, argv)
      */
 
     if (Tcl_AppInit(interp) != TCL_OK) {
-        fprintf(stderr, "w Tcl_AppInit failed: %s\n", interp->result);
+        fprintf(stdout, "w Tcl_AppInit failed: %s\n.\n", interp->result);
         fflush(stdout); /* added mm */
     }
 
@@ -224,7 +224,7 @@ main(argc, argv)
     if (geometry != NULL) {
         code = Tcl_VarEval(interp, "wm geometry . ", geometry, (char *) NULL);
         if (code != TCL_OK) {
-            fprintf(stderr, "w %s\n", interp->result);
+            fprintf(stdout, "w %s\n.\n", interp->result);
             fflush(stdout); /* added mm */
         }
     }
@@ -232,7 +232,7 @@ main(argc, argv)
     /* mm: do not show the main window */
     code = Tcl_Eval(interp, "wm withdraw . ");
     if (code != TCL_OK) {
-      fprintf(stderr, "w %s\n", interp->result);
+      fprintf(stdout, "w %s\n.\n", interp->result);
       fflush(stdout); /* added mm */
     }
 
@@ -262,14 +262,14 @@ main(argc, argv)
 
             fullName = Tcl_TildeSubst(interp, tcl_RcFileName, &buffer);
             if (fullName == NULL) {
-                fprintf(stderr, "w %s\n", interp->result);
+                fprintf(stdout, "w %s\n.\n", interp->result);
                 fflush(stdout); /* added mm */
             } else {
                 f = fopen(fullName, "r");
                 if (f != NULL) {
                     code = Tcl_EvalFile(interp, fullName);
                     if (code != TCL_OK) {
-                        fprintf(stderr, "w %s\n", interp->result);
+                        fprintf(stdout, "w %s\n.\n", interp->result);
                         fflush(stdout); /* added mm */
                     }
                     fclose(f);
@@ -306,10 +306,10 @@ error:
     if (msg == NULL) {
         msg = interp->result;
     }
-    fprintf(stderr, "w %s\n", msg);
+    fprintf(stdout, "w %s\n.\n", msg);
     fflush(stdout);  /* added mm */
     Tcl_Eval(interp, errorExitCmd);
-    fprintf(stderr, "s stop\n");
+    fprintf(stdout, "s stop\n");
     fflush(stdout);  /* added mm */
     return 1;                   /* Needed only to prevent compiler warnings. */
 }
@@ -351,7 +351,7 @@ StdinProc(clientData, mask)
         if (!gotPartial) {
             if (tty) {
               Tcl_Eval(interp, "exit");
-              fprintf(stderr, "s stop\n");
+              fprintf(stdout, "s stop\n");
               fflush(stdout); /* added mm */
               exit(1);
             } else {
@@ -384,14 +384,16 @@ StdinProc(clientData, mask)
      */
 
     Tk_CreateFileHandler(0, 0, StdinProc, (ClientData) 0);
-    code = Tcl_RecordAndEval(interp, cmd, 0);
+    code = Tcl_Eval(interp, cmd);
     Tk_CreateFileHandler(0, TK_READABLE, StdinProc, (ClientData) 0);
-    Tcl_DStringFree(&command);
     if (*interp->result != 0) {
         if ((code != TCL_OK) || (tty)) {
-            printf("%s\n", interp->result);
+          fprintf(stdout,"w --- %s", cmd);
+          fprintf(stdout,"---  %s\n---\n.\n", interp->result);
+          fflush(stdout); /* by mm */
         }
     }
+    Tcl_DStringFree(&command);
 
     /*
      * Output a prompt.
@@ -443,7 +445,7 @@ Prompt(interp, partial)
         if (code != TCL_OK) {
             Tcl_AddErrorInfo(interp,
                     "\n    (script that generates prompt)");
-            fprintf(stderr, "w %s\n", interp->result);
+            fprintf(stdout, "w %s\n.\n", interp->result);
             fflush(stdout); /* added mm */
             goto defaultPrompt;
         }
