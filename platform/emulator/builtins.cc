@@ -71,17 +71,26 @@ OZ_BI_define(BIwait,1,0)
 OZ_BI_define(BIwaitOr,2,0)
 {
   oz_declareDerefIN(0,a);
-
-  if (!oz_isVariable(a)) return PROCEED;
-  
   oz_declareDerefIN(1,b);
 
-  if (!oz_isVariable(b)) return PROCEED;
+  if (!oz_isVariable(a)) {
+    if (oz_isVariable(b))
+      tagged2Var(b)->removeFromSuspList(oz_currentThread());
+    return PROCEED;
+  }
+
+  if (!oz_isVariable(b)) {
+    if (oz_isVariable(a))
+      tagged2Var(a)->removeFromSuspList(oz_currentThread());
+    return PROCEED;
+  }
   
   Assert(oz_isVariable(a) && oz_isVariable(b));
 
-  am.addSuspendVarList(aPtr);
-  am.addSuspendVarList(bPtr);
+  if (!tagged2Var(a)->isInSuspList(oz_currentThread()))
+    am.addSuspendVarList(aPtr);
+  if (!tagged2Var(b)->isInSuspList(oz_currentThread()))
+    am.addSuspendVarList(bPtr);
   return SUSPEND;
 } OZ_BI_end
 
@@ -89,10 +98,14 @@ OZ_BI_define(BIwaitOrF,1,1)
 {
   oz_declareNonvarIN(0,a);
 
-  if (!oz_isRecord(a)) oz_typeError(0,"Record");
-  if (oz_isLiteral(a)) oz_typeError(0,"ProperRecord");
+  if (!oz_isRecord(a)) 
+    oz_typeError(0,"Record");
+
+  if (oz_isLiteral(a)) 
+    oz_typeError(0,"ProperRecord");
 
   TaggedRef arity=OZ_arityList(a);
+  
   while (!OZ_isNil(arity)) {
     TaggedRef v=OZ_subtree(a,OZ_head(arity));
     DEREF(v,vPtr,_);
@@ -100,7 +113,8 @@ OZ_BI_define(BIwaitOrF,1,1)
       am.emptySuspendVarList();
       OZ_RETURN(OZ_head(arity));
     }
-    am.addSuspendVarList(vPtr);
+    if (!tagged2Var(v)->isInSuspList(oz_currentThread())) 
+      am.addSuspendVarList(vPtr);
     arity=OZ_tail(arity);
   }
   
