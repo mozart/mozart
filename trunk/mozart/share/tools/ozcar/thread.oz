@@ -318,6 +318,7 @@ in
       meth block(thr:T id:I file:F line:L name:N args:A builtin:B time:Time)
 	 Stack = {Dget self.ThreadDic I}
       in
+	 {Stack rebuild(true)}
 	 Gui,markNode(I blocked)
 	 case T == @currentThread andthen
 	    {self.tkRunChildren tkReturnInt($)} == 0 then
@@ -334,7 +335,7 @@ in
 	       end
 	       thread Gui,loadStatus(F Ack) end
 	    end
-	    thread {ForAll [rebuild(true) printTop] Stack} end
+	    thread {Stack printTop} end
 	 else skip end
       end
       
@@ -349,7 +350,6 @@ in
 	    S     = {Thread.state T}
 	 in
 	    currentThread <- T
-	    {Stack getPos(file:F line:L)}
 	    
 	    Gui,status(I S)
 	    Gui,selectNode(I)
@@ -359,6 +359,7 @@ in
 	       SourceManager,scrollbar(file:'' line:0 color:undef what:appl)
 	       Gui,printStack(id:I frames:nil depth:0)
 	    else Ack in
+	       {ForAll [print getPos(file:F line:L)] Stack}
 	       thread
 		  SourceManager,
 		  scrollbar(file:F line:L ack:Ack
@@ -370,7 +371,6 @@ in
 			    what:appl)
 	       end
 	       thread Gui,loadStatus(F Ack) end
-	       thread {Stack print} end
 	    end
 	    SourceManager,scrollbar(file:'' line:0 color:undef what:stack)
 	 end
