@@ -74,6 +74,18 @@ WinMain(HANDLE /*hInstance*/, HANDLE /*hPrevInstance*/,
 	LPSTR lpszCmdLine, int /*nCmdShow*/)
 #endif
 {
+  /* win32 does not support process groups,
+   * so we set OZPPID such that subprocess can check whether
+   * its father still lives
+   */
+  {
+    char auxbuf[100];
+    int ppid = GetCurrentProcessId();
+    sprintf(auxbuf,"%d",ppid);
+    SetEnvironmentVariable("OZPPID",strdup(auxbuf));
+  }
+
+
   char buffer[5000];
 
   GetModuleFileName(NULL, buffer, sizeof(buffer));
