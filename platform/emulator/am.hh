@@ -236,6 +236,7 @@ public:
   Bool isEmptyTrailChunk();
   int checkEntailment(Continuation *&contAfter,Actor *&aa);
   int checkStable(Continuation *&contAfter,int &prio);  // mm2 todo
+  int handleFailure(Continuation *&cont, AWActor *&aa);
 
   // Unification
   Bool unify(TaggedRef ref1, TaggedRef ref2, Bool prop = OK);
