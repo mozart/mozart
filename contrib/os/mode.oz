@@ -27,7 +27,7 @@ local
 in
    functor
    export
-      Make
+      Make Owner Group Other
    define
 
       None  = Bits.none
@@ -79,16 +79,33 @@ in
             {FoldL Spec
              fun {$ B V} {BitString.disj B {Encode V}} end None}
          elseif {IsAtom      Spec} then Bits.Spec.all
-         elseif {IsRecord    Spec} then
+         elseif {IsTuple     Spec} then
             Tab = Bits.{Label Spec}
          in
             {Record.foldL Spec
              fun {$ B X} {BitString.disj B Tab.X} end None}
+         elseif {IsRecord    Spec} andthen mode=={Label Spec} then
+            {Record.foldLInd Spec
+             fun {$ B F X}
+                Tab = Bits.F
+             in {BitString.disj B Tab.X} end None}
          else raise bad end end
       end
 
       fun {Make Spec}
          {BitsToInt {Encode Spec}}
       end
+
+      fun {GET M I} {BitString.get {Encode M} I} end
+
+      Owner = owner(read        :fun {$ M} {GET M 8} end
+                    write       :fun {$ M} {GET M 7} end
+                    execute     :fun {$ M} {GET M 6} end)
+      Group = group(read        :fun {$ M} {GET M 5} end
+                    write       :fun {$ M} {GET M 4} end
+                    execute     :fun {$ M} {GET M 3} end)
+      Other = other(read        :fun {$ M} {GET M 2} end
+                    write       :fun {$ M} {GET M 1} end
+                    execute     :fun {$ M} {GET M 0} end)
    end
 end
