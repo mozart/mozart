@@ -1669,6 +1669,7 @@ public:
   char *getPrintName () { return tagged2Literal(printname)->getPrintName(); }
   TaggedRef getName () { return printname; }
   ProgramCounter getPC() { return PC; }
+  void setPC(ProgramCounter pc) { PC = pc; }
   Bool getSpyFlag()   { return (Bool) spyFlag; }
   void setSpyFlag()   { spyFlag = OK; }
   void unsetSpyFlag() { spyFlag = NO; }
@@ -1679,7 +1680,6 @@ public:
 class Abstraction: public ConstTermWithHome {
   friend void ConstTerm::gcConstRecurse(void);
 protected:
-// DATA
   RefsArray gRegs;
   PrTabEntry *pred;
 public:
@@ -1691,14 +1691,14 @@ public:
   OZPRINT;
   OZPRINTLONG;
 
-  RefsArray &getGRegs()  { return gRegs; }
-  ProgramCounter getPC() { return pred->getPC(); }
-  int getArity()         { return pred->getArity(); }
-  SRecordArity getMethodArity()   { return pred->getMethodArity(); }
-  int getGSize()         { return getRefsArraySize(gRegs); }
-  char *getPrintName()   { return pred->getPrintName(); }
   PrTabEntry *getPred()  { return pred; }
-  TaggedRef getName()    { return pred->getName(); }
+  RefsArray &getGRegs()  { return gRegs; }
+  ProgramCounter getPC() { return getPred()->getPC(); }
+  int getArity()         { return getPred()->getArity(); }
+  SRecordArity getMethodArity()   { return getPred()->getMethodArity(); }
+  int getGSize()         { return getRefsArraySize(gRegs); }
+  char *getPrintName()   { return getPred()->getPrintName(); }
+  TaggedRef getName()    { return getPred()->getName(); }
 
   TaggedRef DBGgetGlobals();
 
@@ -1710,7 +1710,7 @@ public:
   void import(RefsArray g, ProgramCounter pc) {
     gRegs = g;
     if (pc!=NOCODE) {
-      pred->PC = pc;
+      getPred()->setPC(pc);
     }
   }
 };
