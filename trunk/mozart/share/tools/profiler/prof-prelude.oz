@@ -78,10 +78,14 @@ local
    end
 in
    fun {LookupFile F}
-      S = {Atom.toString F}
+      S   = {Atom.toString F}
+      Abs = case S
+	    of     &/|_   then true  % absolute path (Unix...
+	    elseof _|&:|_ then true  %               ...Windows)
+	    else false end
    in
-      case S.1 == &/ then
-	 try                   % absolute path
+      case Abs then
+	 try                         % absolute path
 	    {OS.stat F _}
 	    {ProfilerMessage LS # F # ' found'}
 	    F
