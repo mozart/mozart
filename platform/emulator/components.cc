@@ -191,7 +191,7 @@ ByteSink::putTerm(OZ_Term in, char *filename)
   ByteStream* bs=bufferManager->getByteStream();
   marshal_M_FILE(bs,PERDIOVERSION,in);
 
-  CheckNogoods(bs,"save",bufferManager->freeByteStream(bs));
+  CheckNogoods(in,bs,"save",bufferManager->freeByteStream(bs));
 
   bs->beginWrite();
   bs->incPosAfterWrite(tcpHeaderSize);
@@ -333,7 +333,7 @@ OZ_BI_define(BIexport,1,0)
   ByteStream* bs=bufferManager->getByteStream();
   marshal_M_EXPORT(bs,in);
 
-  CheckNogoods(bs,"export",bufferManager->freeByteStream(bs));
+  CheckNogoods(in,bs,"export",bufferManager->freeByteStream(bs));
 
   bufferManager->freeByteStream(bs);
 
@@ -905,7 +905,7 @@ OZ_BI_define(BISendPID,4,0)
   MsgBuffer *bs = msgBufferManager->getMsgBuffer(site);
   marshal_M_SEND_GATE(bs,val);
   
-  CheckNogoods(bs,"send",);
+  CheckNogoods(val,bs,"send",);
   SendTo(site,bs,M_SEND_GATE,0,0);
   return PROCEED;
 } OZ_BI_end
