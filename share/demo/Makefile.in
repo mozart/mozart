@@ -48,7 +48,9 @@ OZC		= @OZC@
 OZLFLAGS        = 
 OZL		= @OZL@
 
-COMPILE         = $(OZC) $(OZCFLAGS) -b $(BUILDDIR)/ -c
+CYG_BUILDDIR	= $(shell $(SRCTOP)/share/lib/cygpath.sh "$(BUILDDIR)")
+
+COMPILE         = $(OZC) $(OZCFLAGS) -b $(CYG_BUILDDIR)/ -c
 ZCOMPILE        = $(COMPILE) -z $(COMPRESSLEVEL)
 
 LINK            = $(OZL) $(OZLFLAGS) -z $(COMPRESSLEVEL)
@@ -106,7 +108,7 @@ ChatClient.oza: Chat/chat-client.ozf Chat/chat-gui.ozf
 
 # JobShop application
 JobShop/%.ozf: JobShop/%.oz
-	$(COMPILE) -b $(BUILDDIR)/JobShop/ $< -o $@
+	$(COMPILE) -b $(CYG_BUILDDIR)/JobShop/ $< -o $@
 
 JOBSHOP1 = \
 	Examples
@@ -124,7 +126,7 @@ JobShop.oza: $(JOBSHOPFUN2)
 
 # JobShop application
 Cutting/%.ozf: Cutting/%.oz
-	$(COMPILE) -b $(BUILDDIR)/Cutting/ $< -o $@
+	$(COMPILE) -b $(CYG_BUILDDIR)/Cutting/ $< -o $@
 
 CUTTING = \
 	Configure Script Edit Compute Main
@@ -137,7 +139,7 @@ Cutting.oza: $(CUTTINGFUN)
 
 # Transport application
 Transport/%.ozf: Transport/%.oz
-	$(COMPILE)  -b $(BUILDDIR)/Transport/ $< -o $@
+	$(COMPILE)  -b $(CYG_BUILDDIR)/Transport/ $< -o $@
 
 TRANSPORT = \
 	AgentAbstractions Agents Configure Country \
@@ -152,7 +154,7 @@ Transport.oza: $(TRANSPORTFUN)
 
 # Dict Client application
 DictClient/%.ozf: DictClient/%.oz
-	$(COMPILE) -b $(BUILDDIR)/DictClient/ $< -o $@
+	$(COMPILE) -b $(CYG_BUILDDIR)/DictClient/ $< -o $@
 
 DICTCLIENT = Main NetDictionary TkDictionary
 DICTCLIENTFUN = $(DICTCLIENT:%=DictClient/%.ozf)
@@ -163,7 +165,7 @@ DictClient.oza: $(DICTCLIENTFUN)
 
 # JobShop application
 College/%.ozf: College/%.oz
-	$(COMPILE) -DALONEDEMO -b $(BUILDDIR)/College/ $< -o $@
+	$(COMPILE) -DALONEDEMO -b $(CYG_BUILDDIR)/College/ $< -o $@
 
 COLLEGE = \
 	Main Common Controller Graphics Latex Scheduler
@@ -175,7 +177,7 @@ College.oza: $(COLLEGEFUN)
 
 # Flowers
 Flowers/%.ozf: Flowers/%.oz
-	$(COMPILE) -DALONEDEMO -b $(BUILDDIR)/College/ $< -o $@
+	$(COMPILE) -DALONEDEMO -b $(CYG_BUILDDIR)/College/ $< -o $@
 
 COLLEGE = \
 	Main Common Controller Graphics Latex Scheduler
@@ -205,7 +207,7 @@ $(APPLETS) Transport/Configure.ozf DictClient/TkDictionary.ozf: DemoUrls.ozf
 # Last Minute Flights
 
 LMF/%.ozf: LMF/%.oz
-	$(COMPILE) -b $(BUILDDIR)/LMF/ $< -o $@
+	$(COMPILE) -b $(CYG_BUILDDIR)/LMF/ $< -o $@
 
 LMF1 = \
 	Abstractions HTML Server Book ProcessBook
