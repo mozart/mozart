@@ -49,14 +49,19 @@ WinMain(HANDLE hInstance, HANDLE hPrevInstance,
 	      "Cannot find '%s'!",buffer);
   }
 
-  sprintf(buffer,
-	  "Setting up Oz version %s under directory:\n"
-	  "\t %s",
-	  OZVERSION,ozhome);
-  MessageBeep(MB_ICONEXCLAMATION);
-  MessageBox(NULL, buffer, "DFKI Oz Installation",
-	     MB_ICONINFORMATION | MB_OK | MB_TASKMODAL | MB_SETFOREGROUND);
-  
+
+  int quiet = strncmp(lpszCmdLine,"-q",2)==0 ? 1 : 0;
+
+  if (!quiet) {
+    sprintf(buffer,
+	    "Setting up Oz version %s under directory:\n"
+	    "\t %s",
+	    OZVERSION,ozhome);
+    MessageBeep(MB_ICONEXCLAMATION);
+    MessageBox(NULL, buffer, "DFKI Oz Installation",
+	       MB_ICONINFORMATION | MB_OK | MB_TASKMODAL | MB_SETFOREGROUND);
+  }
+
   DWORD idDde = 0;
   HCONV HConversation;
   HSZ ProgMan;
@@ -88,11 +93,14 @@ WinMain(HANDLE hInstance, HANDLE hPrevInstance,
   setRegistry("OZHOME",ozhome);
   setRegistry("EMACSHOME",ehome);
   Sleep(2000);
-  MessageBeep(MB_ICONEXCLAMATION);
-  MessageBox(NULL, 
-	     "Finished installation of DFKI Oz.",
-	     "DFKI Oz Installation",
-	     MB_ICONINFORMATION | MB_OK | MB_TASKMODAL | MB_SETFOREGROUND);
+
+  if (!quiet) {
+    MessageBeep(MB_ICONEXCLAMATION);
+    MessageBox(NULL, 
+	       "Finished installation of DFKI Oz.",
+	       "DFKI Oz Installation",
+	       MB_ICONINFORMATION | MB_OK | MB_TASKMODAL | MB_SETFOREGROUND);
+  }
 
   return 0;
 }
