@@ -25,7 +25,8 @@ extern TaggedRef AtomNil, AtomCons, AtomPair, AtomVoid,
        AtomCharSpace, AtomPunct, AtomOther,
        NameTrue, NameFalse, AtomBool, AtomSup, AtomCompl, AtomUnknown,
        AtomMin, AtomMax, AtomMid,
-       AtomNaive, AtomSize, AtomConstraints;
+       AtomNaive, AtomSize, AtomConstraints,
+       AtomDistributed, AtomMobile, AtomFetched;
 
 /*===================================================================
  * Literal
@@ -1398,15 +1399,48 @@ public:
   void unsetSpyFlag() { spyFlag = NO; }
 };
 
-class Abstraction: public ConstTermWithHome {
+
+
+#define Mobile      0x1
+#define Distributed 0x2    /* exported to some other site */
+#define Fetched     0x4    /* was already brought to local site */
+
+class DistObject: public ConstTermWithHome {
+private:
+  int type;
+public:
+  DistObject(Board *b, TypeOfConst tc) : ConstTermWithHome(b,tc), type(0) {}
+
+  void setDistFlag(int f)   { type |= f;  }
+  void unsetDistFlag(int f) { type &= ~f; }
+
+  Bool getDistFlag(int f) { return (type&f); }
+
+  Bool isMobile()         { return getDistFlag(Mobile); }
+  Bool isDistributed()    { return getDistFlag(Distributed); }
+  Bool isFetched()        { return getDistFlag(Fetched); }
+
+  void distribute() { setDistFlag(Distributed); }
+};
+
+
+class Abstraction: public DistObject {
   friend void ConstTerm::gcConstRecurse(void);
 private:
 // DATA
   RefsArray gRegs;
   PrTabEntry *pred;
 public:
-  Abstraction(PrTabEntry *prd, RefsArray gregs, Board *b)
-  : ConstTermWithHome(b,Co_Abstraction), gRegs(gregs), pred(prd) { }
+  Abstraction(PrTabEntry *prd, RefsArray gregs, Board *b, Bool mobile=OK)
+  : DistObject(b,Co_Abstraction), gRegs(gregs), pred(prd) 
+  {
+    setDistFlag(Fetched);
+    if (mobile)
+      setDistFlag(Mobile);
+  }
+
+  /* receiving a distributed procedure: */
+  Abstraction(Bool mobile);
 
   OZPRINT;
   OZPRINTLONG;
@@ -1419,6 +1453,14 @@ public:
   char *getPrintName()   { return pred->getPrintName(); }
   PrTabEntry *getPred()  { return pred; }
   TaggedRef getName()    { return pred->getName(); }
+
+  void makeStationary() { unsetDistFlag(Mobile); }
+  void nowFetched(RefsArray g, PrTabEntry *pte) 
+  {
+    setDistFlag(Fetched);
+    gRegs = g;
+    pred  = pte;
+  }
 
   TaggedRef DBGgetGlobals();
 };
@@ -1479,20 +1521,20 @@ public:
   {
     Assert(isAtom(printname));
   }
-  BuiltinTabEntry (char *s,int arty,CFun fn,
+  BuiltinTabEntry (char *s,int arty,OZ_CFun fn,
 		   IFOR infun=NULL)
   : arity(arty),fun(fn), inlineFun(infun), type(BIDefault)
   {
     printname = makeTaggedAtom(s);
     Assert(isAtom(printname));
   }
-  BuiltinTabEntry (char *s,int arty,CFun fn,BIType t,
+  BuiltinTabEntry (char *s,int arty,OZ_CFun fn,BIType t,
 		   IFOR infun=NULL)
     : arity(arty),fun(fn), inlineFun(infun), type(t) {
       printname = makeTaggedAtom(s);
     }
   BuiltinTabEntry (char *s,int arty,BIType t, IFOR infun=(IFOR)NULL)
-    : arity(arty),fun((CFun)NULL), inlineFun(infun), type(t)
+    : arity(arty),fun(NULL), inlineFun(infun), type(t)
   {
     printname = makeTaggedAtom(s);
     Assert(isAtom(printname));
@@ -1501,7 +1543,7 @@ public:
   ~BuiltinTabEntry () {}
 
   OZPRINT;
-  CFun getFun() { return fun; }
+  OZ_CFun getFun() { return fun; }
   int getArity() { return arity; }
   char *getPrintName() { return tagged2Literal(printname)->getPrintName(); }
   TaggedRef getName() { return printname; }
@@ -1512,7 +1554,7 @@ private:
 
   TaggedRef printname; //must be atom
   int arity;
-  CFun fun;
+  OZ_CFun fun;
   IFOR inlineFun;
   BIType type;
 };
@@ -1533,7 +1575,7 @@ public:
   OZPRINTLONG;
 
   int getArity()                    { return fun->getArity(); }
-  CFun getFun()                     { return fun->getFun(); }
+  OZ_CFun getFun()                  { return fun->getFun(); }
   char *getPrintName()              { return fun->getPrintName(); }
   TaggedRef getName()               { return fun->getName(); }
   BIType getType()                  { return fun->getType(); } 
@@ -1564,12 +1606,20 @@ Builtin *tagged2Builtin(TaggedRef term)
  * Cell
  *=================================================================== */
 
-class Cell: public ConstTermWithHome {
+class Cell: public DistObject {
 friend void ConstTerm::gcConstRecurse(void);
 private:
   TaggedRef val;
 public:
-  Cell(Board *b,TaggedRef v) : ConstTermWithHome(b,Co_Cell), val(v) {};
+  Cell(Board *b,TaggedRef v, Bool mobile=NO) : 
+    DistObject(b, Co_Cell), val(v) 
+  {
+    if (mobile)
+      setDistFlag(Mobile);
+  }
+
+  /* receiving a cell */
+  Cell(TaggedRef v, Bool mobile);
 
   OZPRINT;
   OZPRINTLONG;
@@ -1579,6 +1629,11 @@ public:
     TaggedRef ret = val;
     val = v;
     return ret;
+  }
+  TaggedRef distribute(TaggedRef v)
+  {
+    DistObject::distribute();
+    return exchangeValue(v);
   }
 };
 
