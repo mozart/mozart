@@ -779,10 +779,9 @@ url_remote:
   out = oz_newVariable();
   return getURL(url,out,act);
 kaboom:
-  return raiseGeneric("URL get: system call failed",
-                      mklist(OZ_pairA("Message",oz_atom(OZ_unixError(errno))),
-                             OZ_pairA("Action",oz_atom(ACTION_STRING(act))),
-                             OZ_pairA("URL",oz_atom(url))));
+  return oz_raise(E_SYSTEM,oz_atom("url"),ACTION_STRING(act),2,
+                  oz_atom(OZ_unixError(errno)),
+                  oz_atom(url));
 }
 
 OZ_BI_define(BIurl_localize,1,1)
