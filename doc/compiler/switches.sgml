@@ -164,6 +164,10 @@
           (default: <<false>>)
         <Item>
           Output the generated code as human-readable assembly code.
+        <Entry><Code><Span class=ignore/\switch +/recordhoist</Code>
+          (default: <<true>>)
+        <Item>
+          Perform the record hoisting optimization.
       </List>
   <Section class=unnumbered>
     <Title/V&dot; Feeding to the Emulator/
