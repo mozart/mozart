@@ -33,7 +33,6 @@
 
 #include "fdomn.hh"
 
-#include "fdproto.hh"
 
 enum Recalc_e {lower, upper};
 
