@@ -329,7 +329,7 @@ int TCPTransObj::readHandler(int fd) {
 	goto done_reading;
       case PERM:
 	// Inform comObj which will close us
-	// Here some information that was read could be lost AN!
+	// Here a couple of frames that were read could be lost
 	comObj->connectionLost();
 	// This object is now reused or removed. No fields may be altered
 	return 0; // Don't unregister with 1 here since a new

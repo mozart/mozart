@@ -43,7 +43,6 @@ void sendAskError(BorrowEntry* be,EntityCond ec){
 
   MsgContainer *msgC = msgContainerManager->newMsgContainer(na->site);
   msgC->put_M_ASK_ERROR(na->index,myDSite,ec);
-  msgC->setImplicitMessageCredit(be->getOneMsgCredit());
 
   send(msgC,3);
 }
@@ -53,7 +52,6 @@ void sendUnAskError(BorrowEntry *be,EntityCond ec){
 
   MsgContainer *msgC = msgContainerManager->newMsgContainer(na->site);
   msgC->put_M_UNASK_ERROR(na->index,myDSite,ec);
-  msgC->setImplicitMessageCredit(be->getOneMsgCredit());
 
   send(msgC,3);
 }
@@ -140,7 +138,6 @@ void sendTellError(OwnerEntry *oe,DSite* toS,int mI,EntityCond ec,Bool set){
     receiveTellErrorTert(oe->getTertiary(),ec,set);
     return;}
   if(SEND_SHORT(toS)) {return;}
-  oe->getOneCreditOwner();
 
   MsgContainer *msgC = msgContainerManager->newMsgContainer(toS);
   msgC->put_M_TELL_ERROR(myDSite,mI,ec,set);

@@ -46,10 +46,10 @@ ExportedProxyVar::ExportedProxyVar(ProxyVar *pv, DSite *dest)
   ms = borrowTable->getOriginSite(bi);
   if (dest && ms == dest) {
     isToOwner = OK;
-    saveMarshalToOwner(bi, oti, ct, credit, scm);
+    saveMarshalToOwner(bi, oti, credit);
   } else {
     isToOwner = NO;
-    saveMarshalBorrowHead(bi, ms, oti, ct, credit, scm);
+    saveMarshalBorrowHead(bi, ms, oti, credit);
   }
 }
 
@@ -61,10 +61,10 @@ void ExportedProxyVar::marshal(ByteBuffer *bs)
   isMarshaled = OK;
   //
   if (isToOwner)
-    marshalToOwnerSaved(bs, oti, ct, scm);
+    marshalToOwnerSaved(bs, credit, oti);
   else
     marshalBorrowHeadSaved(bs, (isFuture ? DIF_FUTURE : DIF_VAR),
-			   ms, oti, ct, credit, scm);
+			   ms, oti, credit);
 }
 
 //
@@ -72,7 +72,7 @@ void ExportedProxyVar::gCollectRecurseV()
 {
   DebugCode(PD((GC, "ExportedProxyVar b:%d", bti)););
   ms->makeGCMarkSite();
-  if (scm) scm->makeGCMarkSite();
+  if (credit.owner) credit.owner->makeGCMarkSite();
 }
 
 //
@@ -82,10 +82,11 @@ void ExportedProxyVar::disposeV()
   //
   if (!isMarshaled) {
     if (isToOwner) {
-      discardToOwnerSaved(ms, oti, ct, scm);
+      discardToOwnerSaved(ms, oti, credit);
     } else {
-      discardBorrowHeadSaved(ms, oti, ct, credit, scm);
+      discardBorrowHeadSaved(ms, oti, credit);
     }
   }
   freeListDispose(this, sizeof(ExportedProxyVar));
 }
+

@@ -34,24 +34,6 @@ void MsgContainer::marshal(ByteBuffer *bb,
 			   TransController *transController) {
   if(!checkFlag(MSG_HAS_MARSHALCONT)) {
     mess_counter[mt].send();
-    if(creditSite==NULL) {
-      if(bb->availableSpace() >= 1) {
-	PD((CREDIT,"Message carries primary creds"));
-	bb->put(DIF_PRIMARY);
-      }
-      else
-	setFlag(MSG_HAS_MARSHALCONT);
-    }
-    else {
-      if(bb->availableSpace() >= 1+MDSiteMaxSize) {
-	PD((CREDIT,"Message carries secondary creds %s",
-	    creditSite->stringrep()));
-	bb->put(DIF_SECONDARY);
-	marshalDSite(bb, creditSite);
-      }
-      else
-	setFlag(MSG_HAS_MARSHALCONT);
-    }
   }
   else
     clearFlag(MSG_HAS_MARSHALCONT);
@@ -74,7 +56,7 @@ void MsgContainer::marshal(ByteBuffer *bb,
 
     case FT_CREDIT:
       if(bb->availableSpace() >= MNumberMaxSize) {
-	marshalCredit(bb, (Credit) msgFields[i].arg);
+	marshalNumber(bb, (int) msgFields[i].arg);
 	msgFields[i].ft=FT_NONE;
       }
       else
@@ -157,7 +139,7 @@ define(mcarg,`ifelse($1,Index,int i1,
                      $1,Term,TaggedRef t,
                      $1,FullTopTerm,TaggedRef t,
 		     $1,String,char *str,
-                     $1,Credit,Credit c,
+                     $1,Credit,int c,
                      $1,Site,DSite *s1,
 	             $1,Site2,DSite *s2,)'
               `ifelse($2,`',`',`,')')
@@ -211,23 +193,6 @@ Bool MsgContainer::unmarshal(ByteBuffer *bb,
 			     TransController *transController)
 {
   if(!checkFlag(MSG_HAS_UNMARSHALCONT)) {
-    if(bb->get()==DIF_SECONDARY) {
-#ifdef USE_FAST_UNMARSHALER
-      creditSite = unmarshalDSite(bb);
-#else
-      {
-	int e;
-	creditSite = unmarshalDSiteRobust(bb, &e);
-	if (e) {
-	  messageError(mt, "MsgContainer::unmarshal: bad DSite");
-	  return (FALSE);
-	}
-      }
-#endif
-      //      creditSiteIn = creditSite;
-      PD((TCP_INTERFACE,"Found sec creds %s",creditSite->stringrep()));
-    }
-
     switch(mt) {
       include(EMUDIR/msgFormat.m4)
 	default:
@@ -262,12 +227,12 @@ Bool MsgContainer::unmarshal(ByteBuffer *bb,
 
       case FT_CREDIT:
 #ifdef USE_FAST_UNMARSHALER   
-        msgFields[i].arg = (void *) unmarshalCredit(bb);
+        msgFields[i].arg = (void *) unmarshalNumber(bb);
 	msgFields[i].ft=FT_NONE;
 #else
 	{
 	  int e;
-	  msgFields[i].arg = (void *) unmarshalCreditRobust(bb, &e);
+	  msgFields[i].arg = (void *) unmarshalNumberRobust(bb, &e);
 	  if (e) {
 	    messageError(mt, "MsgContainer::unmarshal: bad Credit");
 	    return (FALSE);
@@ -371,7 +336,7 @@ define(mcarg,`ifelse($1,Index,int &i1,
                    $1,Term,TaggedRef &t,
                    $1,FullTopTerm,TaggedRef &t,
 		   $1,String,char *&str,
-                   $1,Credit,Credit &c,
+                   $1,Credit,int &c,
                    $1,Site,DSite *&s1,
 	           $1,Site2,DSite *&s2,)'
             `ifelse($2,`',`',`,')')
@@ -381,7 +346,7 @@ define(argEnc,`ifelse($1,Index,i1=(int),
 		      $1,Index3,i3=(int),
 	              $1,Term,t=(TaggedRef),
 	              $1,FullTopTerm,t=(TaggedRef),
-	              $1,Credit,c=(Credit),
+	              $1,Credit,c=(int),
 	              $1,String,str=(char*),
                       $1,Site,s1=(DSite*),
                       $1,Site2,s2=(DSite*),
@@ -419,7 +384,7 @@ define(argEnc,`ifelse($1,Index,,
 			                         (TaggedRef &) $2);,
 	              $1,FullTopTerm,if(!checkFlag(MSG_HAS_UNMARSHALCONT) || $3==FT_NONE)
                                  oz_gCollectTerm((TaggedRef &) $2, (TaggedRef &) $2);,
-	              $1,Credit,,
+	              $1,int,,
 	              $1,String,,
                       $1,Site,if(!checkFlag(MSG_HAS_UNMARSHALCONT) || $3==FT_NONE)
 ((DSite*) $2)->makeGCMarkSite();,
@@ -432,8 +397,6 @@ void MsgContainer::gcMsgC() {
 //    	 (msgFields[1]).arg);
   if(destination!=NULL) 
     destination->makeGCMarkSite();
-  if(creditSite!=NULL)
-    creditSite->makeGCMarkSite();
   if(checkFlag(MSG_HAS_MARSHALCONT) && cont != 0)
     ((DPMarshaler *) cont)->gCollect();
   else if(checkFlag(MSG_HAS_UNMARSHALCONT) && cont != 0){

@@ -36,7 +36,6 @@ char *mess_names[M_LAST] = {
   "none",
 
   "port_send",
-  "remote_send",
   "ask_for_credit",
   "owner_credit",
   "owner_sec_credit",

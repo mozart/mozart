@@ -583,7 +583,7 @@ void Chain::shortcutCrashLock(LockManager* lm){
   if(ce->site==myDSite){
     lockReceiveTokenManager(OT->getOwner(OTI),OTI);
     return;}
-  lockSendToken(myDSite,OTI,ce->site,NULL);}
+  lockSendToken(myDSite,OTI,ce->site);}
 
 void Chain::shortcutCrashCell(CellManager* cm,TaggedRef val){
   establish_PERM_SOME(cm);
@@ -604,8 +604,7 @@ void Chain::shortcutCrashCell(CellManager* cm,TaggedRef val){
   if(ce->site==myDSite){
     cellReceiveContentsManager(OT->getOwner(index),val,index);
     return;}
-  OT->getOwner(index)->getOneCreditOwner();
-  cellSendContents(val,ce->site,myDSite,index,NULL);}
+  cellSendContents(val,ce->site,myDSite,index);}
 
 void Chain::handleTokenLost(Tertiary* t,OwnerEntry *oe,int OTI){
   establish_TOKEN_LOST(t);

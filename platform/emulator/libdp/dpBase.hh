@@ -58,13 +58,6 @@ class DPMarshaler;
 class MsgTermSnapshot;
 
 //
-typedef int Credit;  
-typedef enum {
-  CT_Primary,
-  CT_Secondary
-} CreditType;
-
-//
 typedef unsigned int FaultInfo;
 
 //
@@ -74,7 +67,7 @@ typedef enum {
   VAR_LAZY,
   VAR_FREE,
   VAR_FUTURE,    
-  VAR_KINDED,
+  VAR_KINDED
 } VarKind;
 
 //

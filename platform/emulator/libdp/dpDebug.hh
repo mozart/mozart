@@ -88,7 +88,8 @@ enum DEBUGType {
   PORT,
   TCP_HERROR,
   TCP_CONNECTIONH,
-  LAST
+  CREDIT_NEW,
+  LAST          // 50
 
 };
 
