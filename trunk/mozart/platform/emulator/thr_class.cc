@@ -93,11 +93,18 @@ Bool Thread::discardLocalTasks()
 
     ContFlag cFlag = getContFlag(ToInt32(entry));
 
-    switch (cFlag){
+    switch (cFlag) {
     case C_LOCAL:
     case C_SOLVE:
       TaskStack::setTop(tos);
       return OK;
+    case C_JOB:
+      {
+	DebugCheckT(TaskStack::setTop(tos));
+	Bool hasJobs = TaskStack::getJobFlagFromEntry(entry);
+	if (!hasJobs) unsetHasJobs();
+      }
+      break;
     default:
       tos = tos - TaskStack::frameSize(cFlag) + 1;
       break;
@@ -105,3 +112,40 @@ Bool Thread::discardLocalTasks()
   }
 }
 
+int Thread::findExceptionHandler(Chunk *&chunk, TaskStackEntry *&oldTos)
+{
+  int spaceCount=0;
+  TaskStackEntry *tos = TaskStack::getTop();
+  oldTos=tos;
+  while (1) {
+    TaskStackEntry entry=*(tos-1);
+    if (TaskStack::isEmpty(entry)) {
+      TaskStack::setTop(tos);
+      chunk=0;
+      return spaceCount;
+    }
+
+    ContFlag cFlag = getContFlag(ToInt32(entry));
+
+    switch (cFlag) {
+    case C_EXCEPT_HANDLER:
+      chunk = (Chunk*) *(tos-2);
+      TaskStack::setTop(tos-2);
+      return spaceCount;
+    case C_LOCAL:
+    case C_SOLVE:
+      spaceCount++;
+      break;
+    case C_JOB:
+      {
+	DebugCheckT(TaskStack::setTop(tos-1));
+	Bool hasJobs = TaskStack::getJobFlagFromEntry(entry);
+	if (!hasJobs) unsetHasJobs();
+      }
+      break;
+    default:
+      break;
+    }
+    tos = tos - TaskStack::frameSize(cFlag);
+  }
+}
