@@ -79,7 +79,7 @@ void initMemoryManagement(void) {
   (void) getMemFromOS(0);
 
   // init free memory list
-  FLM.init();
+  FL_Manager::init();
 
 }
 
@@ -771,7 +771,8 @@ char *getMemFromOS(size_t sz) {
  *
  */
 
-FL_Manager FLM;
+FL_Small * FL_Manager::small[FL_SizeToIndex(FL_MaxSize) + 1];
+FL_Large * FL_Manager::large;
 
 void FL_Manager::init(void) {
   large    = (FL_Large *) NULL;
