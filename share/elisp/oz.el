@@ -1423,7 +1423,7 @@ The first subexpression matches the keyword proper (for fontification).")
   (concat "\\<\\(proc\\|fun\\)\\>\\([^{\n]*\\){!?"
 	  "\\([A-Z\300-\326\330-\336]"
 	  "[" oz-atom-or-variable-char ".]*\\|\\$"
-	  "\\|`[^`\n]*`\\)")
+	  "\\|`[^`\n]*`\\|\\)")
   "Regular expression matching proc or fun definitions.
 The second subexpression matches optional flags, the third subexpression
 matches the definition's identifier (if it is a variable) and is used for
