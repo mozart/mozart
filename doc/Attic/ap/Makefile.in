@@ -1,0 +1,55 @@
+PREFIX          = @prefix@
+VPATH           = @srcdir@
+SRCDIR          = @srcdir@
+BUILDTOP        = @BUILDTOP@
+SRCTOP          = @SRCTOP@
+OZENGINE        = @OZENGINE@
+OZDOC           = @OZDOC@
+OZDOCFLAGS      =
+DOCIFY          = $(OZENGINE) $(OZDOC) $(OZDOCFLAGS)
+
+DOCDIR          = /www/mozart/documentation/ap
+
+INSTALL         = @INSTALL@
+INSTALL_FILE    = $(INSTALL) -m 444
+INSTALL_BIN     = $(INSTALL) -m 555
+INSTALL_DIR     = @INSTALL_DIR@
+
+SGMLSRCS = \
+        ap.sgml
+
+.PHONY: all validate install clean veryclean distclean
+
+all: ap-html
+
+include $(SRCDIR)/../../share/Makefile.boot
+
+bootstrap: boot-all
+
+Makefile: Makefile.in ../config.status
+        cd .. && ./config.status
+
+ap-html: $(SGMLSRCS)
+        $(DOCIFY) --in=$(SRCDIR)/ap.sgml --out=$@ --type=html-stylesheets
+
+ap-tex: $(SGMLSRCS)
+        $(DOCIFY) --in=$(SRCDIR)/ap.sgml --out=$@ --type=latex
+
+validate: ap-html
+        nsgmls -cHTML4.soc -sB ap-html/*.html
+
+install: ap-html $(DOCDIR)
+        for i in ap-html/*; do $(INSTALL_FILE) $$i $(DOCDIR); done
+
+$(DOCDIR):
+        $(INSTALL_DIR) $@
+
+clean:
+        -rm -rf ap-html
+        -rm -rf ap-tex
+        -rm -f *~
+
+veryclean: clean
+
+distclean: veryclean
+        -rm -f Makefile
