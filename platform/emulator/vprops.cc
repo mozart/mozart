@@ -15,7 +15,7 @@
 #include "am.hh"
 #include "os.hh"
 #include "codearea.hh"
-#include "CONF.h"
+#include "OZCONF.h"
 #include "builtins.hh"
 
 #include <stdarg.h>
