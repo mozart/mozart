@@ -19,7 +19,7 @@ end
 %% Text
 %%
 
-Version                = 'Jul 6 1997'
+Version                = 'Jul 8 1997'
 TitleName              = 'Oz Profiler'
 IconName               = 'Profiler'
 
