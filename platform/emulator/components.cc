@@ -806,7 +806,6 @@ OZ_Return OZ_datumToValue(OZ_Datum d,OZ_Term t)
 /*************************************************************/
 /* Port interface to Gate                                    */
 /*************************************************************/
-extern int sendPort(OZ_Term port, OZ_Term val);
 
 OZ_BI_define(BIGetPID,0,1)
 {
