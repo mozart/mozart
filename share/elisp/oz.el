@@ -394,6 +394,37 @@ STRING should be given if the last search was by `string-match' on STRING."
           (substring string (match-beginning num) (match-end num))
         (buffer-substring (match-beginning num) (match-end num)))))
 
+(defun oz-remove-annoying-spaces ()
+  "Remove all ill-placed whitespace from the current buffer.
+This is all the whitespace that is highlighted in oz-space-face when
+the variable `oz-pedantic-spaces' is non-nil."
+  (interactive)
+  (save-excursion
+    (goto-char (point-min))
+    (let ((current-line (count-lines 1 (point))))
+      (while (< (point) (point-max))
+	(message "Removing annoying spaces from line %s ..." current-line)
+	(if (looking-at "\t* ? ? ? ? ? ? ?\\($\\|[^ \t]\\)")
+	    (goto-char (match-end 0))
+	  (skip-chars-forward " \t")
+	  (let ((col (current-column)))
+	    (delete-horizontal-space)
+	    (indent-to col)))
+	(while (progn (skip-chars-forward "^\t\n")
+		      (looking-at "\t"))
+	  (let ((col1 (save-excursion
+			(goto-char (match-beginning 0))
+			(current-column)))
+		(col2 (save-excursion
+			(goto-char (match-end 0))
+			(current-column))))
+	    (replace-match "" nil t)
+	    (insert-char ?  (- col2 col1))))
+	(end-of-line)
+	(delete-horizontal-space)
+	(forward-line)
+	(setq current-line (1+ current-line))))))
+
 
 ;;------------------------------------------------------------
 ;; Menus
