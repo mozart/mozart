@@ -56,60 +56,65 @@ both a language entity and a particular site.
 For example, one would like to send a message
 to a port from a given site.
 The site may or may not be able to send the message.
-In general, a language entity can be in four states
+A language entity can be in three fault states
 on a given site:
 <LIST>
 <ITEM> The entity works normally (local fault state <<ok>>).
 <ITEM> The entity is temporarily not working
 (local fault state <<tempFail>>).
-This is because a site crucial to the entity
+This is because a remote site crucial to the entity
 is currently unreachable due to a network problem.
 This fault state can go away.
-The network layer actively tries
-to reestablish another connection.
 <ITEM> The entity is permanently not working
 (local fault state <<permFail>>).
 This is because a site crucial to the entity
 has crashed.
 This fault state is permanent.
-<ITEM> The entity works normally on the given site
-(local fault state <<remoteProblem(I)>>, where <<I>>
-identifies the remote problem),
-but there are some remote problems that might
-have a bearing on the application's use of the entity.
-For example, a given site waits for a variable binding,
-but the site that will do the binding has crashed.
-This fault state can go away if the
-remote problems are temporary.
 </LIST>
 <P>The system cannot always determine
 whether a fault is temporary or permanent.
 In particular, a <<tempFail>> may hide
 a crash on the other side.
+However, network failures can always
+be considered temporary since the
+system actively tries
+to reestablish another connection.
+In addition to these three states,
+the entity can contain other information:
+<LIST>
+<ITEM> On at least one remote site,
+the entity is not working
+(local fault state <<remoteProblem(I)>>, where <<I>>
+identifies the remote problem).
+For example, the current site waits for a variable binding,
+but the remote site that will do the binding has crashed.
+The current site can know about the remote problem.
+A remote problem can go away if it is temporary.
+</LIST>
 
 <P>The fault state <<remoteProblem(I)>>
 identifies four different remote problems:
 <LIST>
 <ITEM> <<I=permSome>>: At least one of the other sites
-referencing the entity is failed.
+referencing the entity has crashed.
 <ITEM> <<I=permAll>>: All of the other sites referencing
-the entity are failed.
+the entity have crashed.
 <ITEM> <<I=tempSome>>: At least one of the other sites
 referencing the entity is currently unreachable.
 <ITEM> <<I=tempAll>>: All of the other sites
 referencing the entity are currently unreachable.
 </LIST>
 
-<P>There are six fault states in all, namely
-<<tempFail>>,
-<<permFail>>,
+<P>The complete fault state of an
+entity is a subset of
+{<<tempFail>>, <<permFail>>,
 <<remoteProblem(permSome)>>,
 <<remoteProblem(permAll)>>,
-<<remoteProblem(tempSome)>>, and
-<<remoteProblem(tempAll)>>.
-All fault detection primitives
-are triggered on
-some subset of these fault states.
+<<remoteProblem(tempSome)>>,
+<<remoteProblem(tempAll)>>}.
+Not all subsets are possible since
+at most one of <<tempFail>> and <<permFail>>
+can be in the fault state.
 
 
 <SUBSECTION><TITLE>Temporary faults</TITLE>
