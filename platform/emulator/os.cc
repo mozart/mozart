@@ -1241,7 +1241,7 @@ void *osDlsym(void *handle,const char *name)
   return symaddr;
 }
 #elif defined(WINDOWS)
-void *osDlsym(void *handle, const char *name)
+void *osDlsym(void *h, const char *name)
 {
   HMODULE handle = (HMODULE) h;
   FARPROC ret = GetProcAddress(handle,name);
