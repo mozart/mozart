@@ -118,7 +118,7 @@ OZ_BI_define(BIgetsBoundB, 2, 0)
 
     Thread *thr =
       (Thread *) OZ_makeSuspendedThread(BI_GetsBoundDummy, args->getArgsRef(),1);
-    OZ_Return ret = oz_var_addSusp(vPtr, thr);
+    OZ_Return ret = oz_var_addQuietSusp(vPtr, thr);
     if (ret == PROCEED) oz_wakeupThread(thr);
     if (ret != SUSPEND) return ret;
   }

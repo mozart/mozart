@@ -116,7 +116,7 @@ public:
   OZ_Return bind(OZ_Term * vPtr, OZ_Term t);
   OZ_Return unify(OZ_Term *, OZ_Term *);
 
-  OZ_Return valid(OZ_Term val) {
+  Bool valid(OZ_Term val) {
     return _constraint->isInDomain(val);
   }
 

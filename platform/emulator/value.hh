@@ -53,10 +53,10 @@ extern TaggedRef
   BI_exchangeCell,BI_assign,BI_atRedo,
   BI_controlVarHandler,
   BI_PROP_LPQ,
-  BI_bindFuture,
   BI_waitStatus,
   BI_unknown,
-  BI_varToFuture,
+  BI_bindReadOnly,
+  BI_varToReadOnly,
   BI_raise,
 
   __UNUSED_DUMMY_END_MARKER;

@@ -611,13 +611,11 @@ void DPMARSHALERCLASS::processVar(OZ_Term v, OZ_Term *vRef)
       //
     } else if (oz_isFree(v) || oz_isFuture(v)) {
       Assert(perdioInitialized);
+
       //
       ManagerVar *mvp = globalizeFreeVariable(vRef);
       mvp->marshal(bs, index);
       expVars = new MVarPatch(vrt, expVars);
-      //
-      Assert(oz_isVar(*vRef));
-      (void) triggerVariable(vRef);
 
       //
       if (index) marshalTermDef(bs, index);

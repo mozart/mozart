@@ -28,7 +28,7 @@ export
 define
    AuthorDBError = 'author database error'
 
-   DBPath = {ByNeed
+   DBPath = {ByNeedFuture
              fun {$}
                 {String.tokens
                  {VirtualString.toString

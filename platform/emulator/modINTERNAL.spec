@@ -60,17 +60,17 @@
                               out => [],
                               BI  => BI_prop_lpq},
 
-     'bindFuture'        => { in  => ['value', 'value'],
-                              out => [],
-                              BI  => BIbindFuture},
-
      'waitStatus'        => { in  => ['value', 'value'],
                               out => ['value'],
                               BI  => BIwaitStatus},
 
-     'varToFuture'       => { in  => ['value', 'value'],
+     'bindReadOnly'      => { in  => ['value', 'value'],
                               out => [],
-                              BI  => BIvarToFuture},
+                              BI  => BIbindReadOnly},
+
+     'varToReadOnly'     => { in  => ['value', 'value'],
+                              out => [],
+                              BI  => BIvarToReadOnly},
 
      );
 

@@ -43,7 +43,8 @@
 #include "var_bool.hh"
 #include "var_of.hh"
 #include "var_ct.hh"
-#include "var_future.hh"
+#include "var_failed.hh"
+#include "var_readonly.hh"
 #include "var_simple.hh"
 #include "var_opt.hh"
 #include "var_ext.hh"
@@ -876,6 +877,7 @@ OzVariable * OzVariable::_cacVarInline(void) {
   switch (getType()) {
   case OZ_VAR_OPT:
     Assert(0);
+  case OZ_VAR_SIMPLE_QUIET:
   case OZ_VAR_SIMPLE:
     cacReallocStatic(OzVariable,this,to,sizeof(SimpleVar));
     break;
@@ -885,8 +887,12 @@ OzVariable * OzVariable::_cacVarInline(void) {
     GCDBG_INTOSPACE(to);
     cacStack.push(to, PTR_VAR);
     break;
-  case OZ_VAR_FUTURE:
-    cacReallocStatic(OzVariable,this,to,sizeof(Future));
+  case OZ_VAR_READONLY_QUIET:
+  case OZ_VAR_READONLY:
+    cacReallocStatic(OzVariable,this,to,sizeof(ReadOnly));
+    break;
+  case OZ_VAR_FAILED:
+    cacReallocStatic(OzVariable,this,to,sizeof(Failed));
     cacStack.push(to, PTR_VAR);
     break;
   case OZ_VAR_BOOL:
@@ -926,16 +932,16 @@ void OzOFVariable::_cacRecurse(void) {
 }
 
 inline
-void Future::_cacRecurse(void) {
-  oz_cacTerm(function,function);
+void Failed::_cacRecurse(void) {
+  oz_cacTerm(exception,exception);
 }
 
 inline
 void OzVariable::_cacVarRecurse(void) {
 
   switch (getType()) {
-  case OZ_VAR_FUTURE:
-    ((Future *)      this)->_cacRecurse();
+  case OZ_VAR_FAILED:
+    ((Failed *)      this)->_cacRecurse();
     break;
   case OZ_VAR_OF:
     ((OzOFVariable*) this)->_cacRecurse();
@@ -1094,7 +1100,7 @@ void WeakStack::recurse(void)
   while (!isEmpty()) {
     pop(fut,val);
     DEREF(fut,ptr);
-    oz_bindFuture(ptr,val);
+    oz_bindReadOnly(ptr,val);
   }
 }
 
@@ -1171,7 +1177,7 @@ void WeakDictionary::weakGC()
     if (t!=0 && !isGCMarkedTerm(t)) {
       numelem--;
       if (stream) {
-        if (!list) newstream=list=oz_newFuture(oz_rootBoard());
+        if (!list) newstream=list=oz_newReadOnly(oz_rootBoard());
         // schedule key and value for later collection
         OZ_Term p = oz_pair2(table->getKey(i),t);
         weakReviveStack.push(p);

@@ -24,6 +24,11 @@
  *
  */
 
+// fred+raph: An OptVar object models a variable with no suspension.
+// In particular, the value of that variable is not demanded.
+// When a suspension is added, the OptVar object should be "converted"
+// into either a SimpleVar.
+
 #ifndef __OPTVAR__H__
 #define __OPTVAR__H__
 
@@ -53,7 +58,7 @@ public:
   }
 
 
-  OZ_Return valid(TaggedRef /* val */) { return OK; }
+  Bool valid(TaggedRef /* val */) { return TRUE; }
 
   // disposing of opt var"s is done only when its space is gone.
   void dispose(void) {}

@@ -35,7 +35,7 @@ export
 define
    NoProgLang = {NewName}
    {Fontifier.loadpath.set
-    {ByNeed
+    {ByNeedFuture
      fun {$}
         {String.tokens
          {VirtualString.toString {Property.get 'ozdoc.elisp.path'}} &:}

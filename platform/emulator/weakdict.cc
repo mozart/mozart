@@ -1,5 +1,5 @@
 #include "weakdict.hh"
-#include "var_future.hh"
+#include "var_readonly.hh"
 #include "atoms.hh"
 #include "tagged.hh"
 #include "am.hh"
@@ -169,7 +169,7 @@ OZ_Return WeakDictionary::putFeatureV(OZ_Term f,OZ_Term  v)
 
 OZ_BI_define(weakdict_new,0,2)
 {
-  OZ_Term srm = oz_newFuture(oz_currentBoard());
+  OZ_Term srm = oz_newReadOnly(oz_currentBoard());
   WeakDictionary* wd = new WeakDictionary(srm);
   OZ_out(0) = srm;
   OZ_out(1) = OZ_extension(wd);
@@ -244,7 +244,7 @@ void WeakDictionary::close()
 {
   if (stream) {
     DEREF(stream,ptr);
-    oz_bindFuture(ptr,oz_nil());
+    oz_bindReadOnly(ptr,oz_nil());
     stream=0;
   }
 }

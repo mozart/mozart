@@ -97,7 +97,7 @@
         <Synopsis>
           <<{Value.isFailed ?_{X} ??{B}}>>
         <Item>
-          tests whether ?_{X} is a failed future.
+          tests whether ?_{X} is a failed value.
 
         <Entry><Span class=index/<<IsKinded>>/
           <Index/<<Value>><And><<isKinded>>/
@@ -116,11 +116,13 @@
         <Synopsis>
           <<{Value.status ?_{X} ??{T}}>>
         <Item>
-          returns status and type information on&nbsp;?_{X}.  If ?_{X} is
-          a future, the atom <<future>> is returned.  If ?_{X} is free,
-          the atom <<free>> is returned.  If ?_{X} is kinded, the tuple
-          <<kinded(?{Y})>> is returned, where ?{Y} is bound to either the
-          atoms <<int>>, <<fset>> or <<record>>, depending on the type of&nbsp;?_{X}.
+          returns status and type information on&nbsp;?_{X}.
+          If ?_{X} is free, the atom <<free>> is returned.
+          If ?_{X} is a future, the atom <<future>> is returned.
+          If ?_{X} is a failed value, the atom <<failed>> is returned.
+          If ?_{X} is kinded, the tuple <<kinded(?{Y})>> is returned,
+          where ?{Y} is bound to either the atoms <<int>>, <<fset>> or
+          <<record>>, depending on the type of&nbsp;?_{X}.
           If ?_{X} is determined, the tuple <<det(?{Y})>> is returned, where
           ?{Y} is bound to the atom as returned by <<{Value.type ?_{X}}>>.
 

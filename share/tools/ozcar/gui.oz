@@ -42,6 +42,7 @@ local
       [] Approx(fsvar)        then FSVarType
       [] Approx(recordc)      then KindedRecordType
       [] Approx(future)       then FutureType
+      [] Approx(failed)       then FailedType
       [] Approx(free)         then UnboundType
       [] Approx(A)            then '<'#A#'>'
       else                         UnknownType
@@ -79,6 +80,7 @@ local
       [] kinded(fset)                     then FSVarType
       [] kinded(record)                   then KindedRecordType
       [] future                           then FutureType
+      [] failed                           then FailedType
       [] free                             then UnboundType
       else                                     UnknownType
       end

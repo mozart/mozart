@@ -34,17 +34,19 @@
   <Section id="section.control.general">
     <Title/General/
     <P>
-      The module <Span class=index/<<Value>>/ contains two general control
-      procedures.
+      The module <Span class=index/<<Value>>/ contains the following general
+      control procedures.
       <List>
         <Entry><Span class=index/<<Wait>>/
           <Index/<<Value>><And><<wait>>/
         <Synopsis>
           <<{Value.wait ?+{X}}>>
         <Item>
-          blocks until ?_{X} is determined.  If ?_{X} is a future, it
-          is requested.  If ?_{X} is or becomes bound to a failed future,
-          then its encapsulated exception is raised.
+          blocks until ?_{X} is determined.  This statement makes&nbsp;?_{X}
+          needed, causing all by-need computations on&nbsp;?_{X} to be
+          triggered.
+          If&nbsp;?_{X} is or becomes bound to a failed value, then its
+          encapsulated exception is raised.
 
         <Entry><Span class=index/<<WaitOr>>/
           <Index/<<Value>><And><<waitOr>>/
@@ -59,9 +61,9 @@
           <<{Value.waitQuiet ?+{X}}>>
         <Item>
           blocks until ?_{X} is determined or failed.  Contrary to <code/Wait/,
-          if ?_{X} is a future, <code/Value.waitQuiet/ does not request it.
-          Also, if ?_{X} is or becomes bound to a failed future, no exception
-          is raised.
+          <code/Value.waitQuiet/ does not make&nbsp;?_{X} needed.
+          Also, if&nbsp;?_{X} is or becomes bound to a failed value, no
+          exception is raised.
 
         <Entry><Span class=index/<<!!>>/
           <Index/<<Value>><And><<'!!'>>/
@@ -70,36 +72,83 @@
         <Item>
           returns a <Def/future/&nbsp;?_{Y} for&nbsp;?_{X}, &ie;, a read-only
           placeholder for&nbsp;?_{X}.
+          If&nbsp;?_{Y} becomes needed, ?_{X} is made needed too.
 
-        <Entry><<byNeed>>
-          <Index class=tails/<<Value>><And><<byNeed>>/
+        <Entry><Span class=index/<<WaitNeeded>>/
+          <Index/<<Value>><And><<waitNeeded>>/
         <Synopsis>
-          <<{Value.byNeed ?+{P} ?_{X}}>>
+          <<{Value.waitNeeded ?_{X}}>>
         <Item>
-          creates a future&nbsp;?_{X}.  When ?_{X} is <Span class=index
-          /requested/ (&ie;, some thread blocks on&nbsp;?_{X}), the unary
-          procedure&nbsp;?_{P} is applied to a fresh variable&nbsp;?_{Y}
-          in a new thread.  When the application of&nbsp;?_{P} is fully
-          reduced, the variable associated with&nbsp;?_{X} is bound
-          to&nbsp;?_{Y}.
+          blocks until ?_{X} is <Span class=index/needed/.
+          This operation is the <Span class=index/by-need synchronization/.
 
-        <Entry><<byNeedFail>>
-          <Index class=tails/<<Value>><And><<byNeedFail>>/
+        <Entry><Span class=index/<<IsNeeded>>/
+          <Index/<<Value>><And><<isNeeded>>/
         <Synopsis>
-          <<{Value.byNeedFail ?+{E} ?_{X}}>>
+          <<{Value.isNeeded ?_{X} ??{B}}>>
         <Item>
-          creates a failed future&nbsp;?_{X} encapsulating exception
-          ?_{E}.  Whenever ?_{X} is <Span
-          class=index/requested/ (see above), in particular, whenever
-          a thread synchronizes on ?_{X}, exception term ?_{E} is
-          raised.  This is convenient in concurrent designs: if a
+          tests whether ?_{X} is needed.
+
+        <Entry><<makeNeeded>>
+          <Index class=tails/<<Value>><And><<makeNeeded>>/
+        <Synopsis>
+          <<{Value.makeNeeded ?_{X}}>>
+        <Item>
+          makes ?_{X} needed.  This statement is useful for triggering
+          by-need computations on&nbsp;?_{X} with having to suspend
+          on&nbsp;?_{X}.
+
+        <Entry><Span class=index/<<ByNeed>>/
+          <Index/<<Value>><And><<byNeed>>/
+        <Synopsis>
+          <<{Value.byNeed ?_{P} ?_{X}}>>
+        <Item>
+          concurrently evaluates <<{P X}>> as soon as&nbsp;?_{X} becomes
+          needed.  It can be defined as follows:
+<<<proc {ByNeed P X}
+   thread {WaitNeeded X} {P X} end
+end>>>
+
+        <Entry><Span class=index/<<ByNeedFuture>>/
+          <Index/<<Value>><And><<byNeedFuture>>/
+        <Synopsis>
+          <<{Value.byNeedFuture ?_{P} ?_{X}}>>
+        <Item>
+          creates a by-need computation that evaluates the expression
+          <<{P}>>, and returns a future&nbsp;?_{X} of its result.
+          If the call to&nbsp;?_{P} raises an exception&nbsp;?_{E},
+          then&nbsp;?_{X} is bound to a failed value (see below) that
+          encapsulates&nbsp;?_{E}.
+          It can be defined as follows:
+<<<fun {ByNeedFuture P}
+   !!{ByNeed fun {$}
+                try {P} catch E then {Value.failed E} end
+             end}
+end>>>
+
+        <Entry><<failed>>
+          <Index class=tails/<<Value>><And><<failed>>/
+        <Synopsis>
+          <<{Value.failed ?_{E} ?_{X}}>>
+        <Item>
+          creates a <Span class=index/failed value/&nbsp;?_{X} encapsulating
+          exception&nbsp;?_{E}.
+          Whenever a statement needs&nbsp;?_{X}, in particular, whenever
+          a thread synchronizes on&nbsp;?_{X}, exception term&nbsp;?_{E}
+          is raised.  This is convenient in concurrent designs: if a
           concurrent generator encounters a problem while computing a
           value, it may catch the corresponding exception, package it
-          as a failed future and return the latter instead.  Thus each
+          as a failed value and return the latter instead.  Thus each
           consumer will be able to synchronously handle the exception
-          when it attempts to use the <q/failed/ future.  For example,
+          when it attempts to use the <q/failed/ value.  For example,
           the module manager returns failed futures for modules that
           cannot be found or linked.
+        <P>
+          The failed value&nbsp;?_{X} can only unify to itself.
+          An attempt to unify&nbsp;?_{X} to any other value results in
+          exception&nbsp;?_{E} to be raised.
+          Unifying two distinct failed values causes one of them to raise
+          its exception, the choice of which being nondeterministic.
       </List>
 
   <Section id="section.control.loops">

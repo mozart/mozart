@@ -105,10 +105,47 @@ particular, it lists the changes from
     <p>Mozart 1.3.0 is still under development.
     <list>
       <item>The Ozcar manual has been largely reworked to be more precise
-and readable.  Ozcar itself has been extended by an (experimental)
-feature to debug threads remotely, which can also be used for
-debugging of distributed applications.</item>
+        and readable.  Ozcar itself has been extended by an (experimental)
+        feature to debug threads remotely, which can also be used for
+        debugging of distributed applications.
     </list>
+
+    <section id="sec.m130.byneed">
+      <title/Redesign of by-need synchronization/
+      <p>The by-need synchronization mechanism has been completely
+      redesigned and reimplemented.  It now applies to all kinds of
+      variables, and does not make use of futures.  The term <q/future/
+      now only refers to read-only views of logic variables.
+      Here is a summary of the changes in the language.
+      <list>
+        <item>Each variable has a <Def/need/ status: it can be <q/needed/
+          or <q/not needed/.  A needed variable triggers all by-need
+          computations associated to it (see below).  The need status of
+          a variable can be queried with the function <<IsNeeded>>.</item>
+        <item>The status of a variable changes monotonically: it can
+          only go from <q/not needed/ to <q/needed/.  This change is
+          triggered by a demanding statement, such as <<{Wait ?_{X}}>>.
+          Currently only free variables and futures can be <q/not needed/.
+          Kinded variables are needed by default.  All values are needed
+          by convention.</item>
+        <item>A by-need computation is simply a computation that
+          synchronizes on the need of a variable.  This is provided by the
+          statement <<{WaitNeeded ?_{X}}>>, which blocks until&nbsp;?_{X} is
+          needed.  The procedure <<ByNeed>> has been redefined in terms of
+          <<WaitNeeded>> and no longer uses futures.  Lazy functions use
+          the new <<ByNeed>>.</item>
+        <item>As before, futures are created with the statement
+          <<?_{X}=!!?_{Y}>>, which makes ?_{X} a read-only view of&nbsp;?_{Y}.
+          If ?_{X} becomes needed, ?_{Y} is automatically made needed.
+          This allows to protect a by-need computation from binding attempts.
+          The procedure <<ByNeedFuture>> provides this combination, together
+          with failed values (see below) for reporting exceptions.</item>
+        <item>Failed values are no longer considered futures, hence the term
+          <q/failed future/ should be avoided.  They are created with the
+          primitive <<Value.failed>>, and have the status <<failed>>
+          (returned by <<Value.status>>).</item>
+      </list>
+
   </chapter>
 
   <chapter id="chapter.m125">

@@ -97,6 +97,7 @@ SpaceType              = '<space>'
 FSVarType              = '<fs var>'
 FDVarType              = '<fd var>'
 FutureType             = '<future>'
+FailedType             = '<failed>'
 UnboundType            = '_'
 UnknownType            = '<???>'
 
