@@ -968,13 +968,9 @@ AC_DEFUN(OZ_CONTRIB_INIT,[
 
 AC_DEFUN(OZ_CONTRIB_INIT_CXX,[
     OZ_CONTRIB_INIT
-    OZ_CXX_CHOOSE
-    if test "${GXX}" = yes; then
-      OZ_CXX_OPTIONS(-fno-rtti -fno-exceptions,CXXAVOID)
-    else
-      CXXAVOID=
-    fi
-    AC_SUBST(CXXAVOID)
+    : ${CXXFLAGS="-O"}
+    AC_SUBST(CPPFLAGS)
+    AC_SUBST(CXXFLAGS)
     AC_LANG_CPLUSPLUS
-    OZ_PATH_PROG(OZDYNLD,ozdynld)
+    OZ_PATH_PROG(OZTOOL,oztool)
 ])
