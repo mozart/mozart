@@ -34,7 +34,8 @@
 #include "perdio.hh"
 #include "comm.hh"
 
-#define MSGFLAG_TEXTMODE 0x1
+#define MSGFLAG_TEXTMODE  0x1
+#define MSGFLAG_OLDFORMAT 0x2
 
 class MsgBuffer {
 private:
@@ -63,8 +64,11 @@ public:
   }
 
   void setTextmode() { flags |= MSGFLAG_TEXTMODE; }
-  Bool textmode() { return (flags&MSGFLAG_TEXTMODE); }
-  //
+  Bool textmode()    { return (flags&MSGFLAG_TEXTMODE); }
+
+  void setOldFormat() { flags |= MSGFLAG_OLDFORMAT; }
+  Bool oldFormat()    { return (flags&MSGFLAG_OLDFORMAT); }
+
   // NON-virtual!
   BYTE get(){
     if(posMB==endMB){

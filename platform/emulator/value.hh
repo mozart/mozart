@@ -2323,8 +2323,6 @@ public:
   TaggedRef *getGRef() { return globals; }
 
   PrTabEntry *getPred()  { return pred; }
-  // RefsArray &getGRegs()  { return gRegs; }
-  // int getGSize()         { return getRefsArraySize(gRegs); }
   ProgramCounter getPC() { return getPred()->getPC(); }
   int getArity()         { return getPred()->getArity(); }
   SRecordArity getMethodArity()   { return getPred()->getMethodArity(); }

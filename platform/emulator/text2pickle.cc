@@ -249,8 +249,60 @@ public:
 };
 
 
+
 /************************************************************/
 
+class TermTag {
+public:
+  char *label;
+  int value;
+  TermTag *next;
+
+  static int tagCounter;
+
+  TermTag(char *lbl, TermTag *nxt): label(strdup(lbl)), next(nxt)
+  {
+    value = tagCounter++;
+  }
+};
+
+int TermTag::tagCounter = 0;
+
+
+class TermTagTable {
+  const int tableSize = 1024;  /* fixed size, cannot grow :-( */
+  TermTag *table[tableSize];
+public:
+  TermTagTable()
+  {
+    for (int i=0; i<tableSize; i++) {
+      table[i] = NULL;
+    }
+  }
+
+  TermTag *find(char *lbl)
+  {
+    int key = hash(lbl)%tableSize;
+    TermTag *aux = table[key];
+    while(aux) {
+      if (strcmp(lbl,aux->label)==0)
+        return aux;
+      aux = aux->next;
+    }
+    return NULL;
+  }
+
+  TermTag *add(char *lbl)
+  {
+    Assert(!find(lbl));
+    int key = hash(lbl)%tableSize;
+    table[key] = new TermTag(lbl,table[key]);
+    return table[key];
+  }
+};
+
+
+/************************************************************/
 
 typedef
 union {
@@ -264,6 +316,7 @@ union {
   Label *labelDef;
   Opcode opcode;
   MarshalTag mtag;
+  TermTag *ttag;
 } Tagvalue;
 
 
@@ -327,6 +380,8 @@ void pickle(TaggedPair *aux, MsgBuffer *out)
     case TAG_STRING:    marshalString(aux->val.string,out); break;
     case TAG_COMMENT:   putComment(aux->val.string,out); break;
     case TAG_DIF:       marshalDIF(out,aux->val.mtag); break;
+    case TAG_TERMDEF:   marshalTermDef(aux->val.ttag->value,out); break;
+    case TAG_TERMREF:   marshalTermRef(aux->val.ttag->value,out); break;
     default:            Assert(0);
     }
     aux = aux->next;
@@ -376,6 +431,7 @@ TaggedPair *unpickle(FILE *in)
   TaggedPair *ret = NULL;
   TaggedPair **lastPair = &ret; /* pointer to the end for adding new items */
 
+  TermTagTable termTags;
   Tagvalue val;
 
   int tag    = TAG_STRING;
@@ -387,6 +443,13 @@ TaggedPair *unpickle(FILE *in)
   Assert(tag==TAG_STRING);
   val.string = strdup(scanString(in));
   AddPair(lastPair,tag,val);
+
+  char *major;
+  int minordiff;
+  splitversion(val.string,major,minordiff);
+  if (minordiff < 0) {
+    error("Version too new. Got: '%s', expected: '%s'.\n",val.string,PERDIOVERSION);
+  }
 
   ProgramCounter PC = 0;
   ProgramCounter lastPC;
@@ -423,6 +486,8 @@ TaggedPair *unpickle(FILE *in)
     case TAG_DIF:       val.mtag = char2Tag(scanString(in)); break;
     case TAG_LABELDEF:  val.labelDef = stack->labels.defLabel(scanString(in),PC); break;
     case TAG_EOF:       goto end;
+    case TAG_TERMDEF:   val.ttag = termTags.add(scanString(in)); break;
+    case TAG_TERMREF:   val.ttag = termTags.find(scanString(in)); Assert(val.ttag); break;
 
     default:
       error("unknown tag: '%c'\n",tag);
