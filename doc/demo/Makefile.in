@@ -37,11 +37,16 @@ SRC_COLLEGE = \
         KathHochWS9596Sol.ozt \
         Scheduler.oz
 
+SRC_FLOWERS = \
+        Flowers.oz \
+        Flowers3d.oz \
+
 SUBDIRS = \
-        Cutting JobShop Transport College
+        Cutting JobShop Transport College Flowers
 
 SRCFILES = \
         $(ALL_SRC) \
+        $(addprefix Flowers/,$(SRC_FLOWERS)) \
         $(addprefix College/,$(SRC_COLLEGE)) \
         $(addprefix Cutting/,$(SRC_CUTTING)) \
         $(addprefix Transport/,$(SRC_TRANSPORT)) \
@@ -61,6 +66,8 @@ $(WHAT)-html/index.html: $(SRCFILES)
 
 Cutting/%.oz: $(SRCTOP)/share/demo/Cutting/%.oz
         $(PERL) $(SRCDIR)/offwithhishead $< > $@
+Flowers/%.oz: $(SRCTOP)/share/demo/Flowers/%.oz
+        $(PERL) $(SRCDIR)/offwithhishead $< > $@
 College/%.oz: $(SRCTOP)/share/demo/College/%.oz
         $(PERL) $(SRCDIR)/offwithhishead $< > $@
 College/%.ozt: $(SRCTOP)/share/demo/College/%.ozt
@@ -77,6 +84,8 @@ $(SUBDIRS):
 install:: $(SUBDIRS:%=$(DOCDIR)/%) $(SRCFILES:%=$(DOCDIR)/%)
 
 
+$(DOCDIR)/Flowers/%.oz: $(SRCTOP)/share/demo/Flowers/%.oz
+        $(INSTALL_FILE) $< $@
 $(DOCDIR)/Cutting/%.oz: $(SRCTOP)/share/demo/Cutting/%.oz
         $(INSTALL_FILE) $< $@
 $(DOCDIR)/College/%.oz: $(SRCTOP)/share/demo/College/%.oz
@@ -95,3 +104,4 @@ $(DOCDIR)/%:
 clean::
         -rm -rf Cutting
         -rm -rf College
+        -rm -rf Flowers
