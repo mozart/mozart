@@ -120,12 +120,13 @@ For example
 
 (defun oz-line-pos()
   "get the position of line start and end (changes point!)"
-  (let (beg end)
-    (beginning-of-line)
-    (setq beg (point))
-    (end-of-line)
-    (setq end (point))
-    (cons beg end)))
+  (save-excursion
+    (let (beg end)
+      (beginning-of-line)
+      (setq beg (point))
+      (end-of-line)
+      (setq end (point))
+      (cons beg end))))
 
 
 ;;------------------------------------------------------------
@@ -242,7 +243,6 @@ For example
     (cons
      (let* ((entry (car list))
 	    (name (car entry))
-	    (aname (intern name))
 	    (rest (cdr entry)))
        (if (null rest)
 	   (vector name nil nil)
@@ -305,7 +305,10 @@ For example
      ("region" . oz-indent-region)
      ("buffer" . oz-indent-buffer)
      )
-    ("Browse"   . oz-feed-region-browse)
+    ("Browse"
+     ("browse" . oz-feed-region-browse)
+     ("memory" . oz-feed-region-browse-memory)
+     )
     ("Panel"   . oz-feed-panel)
     ("-----")
     ("Next Oz buffer"         . oz-next-buffer)
@@ -385,9 +388,11 @@ For example
   (define-key map "\C-c\C-e"    'oz-toggle-errors)
   (define-key map "\C-c\C-c"    'oz-toggle-compiler)
   (if oz-lucid
-   (define-key map [(control button1)]       'oz-feed-region-browse))
+   (define-key map [(control button1)]       'oz-feed-region-browse)
+   (define-key map [(control button3)]       'oz-feed-region-browse-memory))
   (if oz-gnu19
-   (define-key map [C-down-mouse-1]        'oz-feed-region-browse))
+   (define-key map [C-down-mouse-1]        'oz-feed-region-browse)
+   (define-key map [C-down-mouse-3]        'oz-feed-region-browse-memory))
   
   (if oz-lucid
       (progn
@@ -578,7 +583,7 @@ the GDB commands `cd DIR' and `directory'."
       )
     (set-process-filter (get-process "Oz Machine") 'gdb-filter)
     (set-process-sentinel (get-process "Oz Machine") 'gdb-sentinel)
-    (process-send-string (get-process "Oz Machine")
+    (comint-send-string (get-process "Oz Machine")
 			 (concat "run -S " tmpfile "\n"))
     (setq current-gdb-buffer (get-buffer "*Oz Machine*"))
     )
@@ -599,35 +604,25 @@ the GDB commands `cd DIR' and `directory'."
     (switch-to-buffer cur)))
 
 
-(defvar feed-tmpfile   (oz-make-temp-name "/tmp/ozbuffer") "")
-
 (defun oz-feed-region (start end)
   "Consults the region."
-   (interactive "r")
-   
-   (if (< 100 (- end start))
-       (progn (message "oz-feed-region is buggy !!!")(sleep-for 1)))
+   (interactive "r")   
    (oz-hide-errors)
-;   (let ((contents (buffer-substring start end)))
-;     (oz-send-string (concat contents "\n"))
-;     ) 
-   (write-region start end feed-tmpfile)
-   (oz-feed-file feed-tmpfile)
+   (let ((contents (buffer-substring start end)))
+     (oz-send-string (concat contents "\n"))
+     ) 
    )
 
 (defun oz-feed-line ()
   "Consults one line."
    (interactive)
-   (save-excursion
-     (let* ((line (oz-line-pos))
-	    (contents (buffer-substring (car line) (cdr line))))
-       (oz-send-string (concat contents "\n"))
-       )))
+   (let* ((line (oz-line-pos)))
+     (oz-feed-region (car line) (cdr line))))
 
 (defun oz-send-string(string)
   (oz-check-running)
   (start-oz-process)
-  (process-send-string "Oz Compiler" string)
+  (comint-send-string "Oz Compiler" string)
   (process-send-eof "Oz Compiler"))
 
 
@@ -638,7 +633,7 @@ the GDB commands `cd DIR' and `directory'."
 (defun oz-continue()
   "continue the Oz Machine after an error"
   (interactive)
-  (process-send-string "Oz Machine" "c\n"))
+  (comint-send-string "Oz Machine" "c\n"))
 
 ;;------------------------------------------------------------
 ;;Indent
@@ -897,8 +892,7 @@ the GDB commands `cd DIR' and `directory'."
 (defun oz-find-paren()
   (interactive)
   (beginning-of-line)
-  (let* ((bool t)
-	 (point (point))
+  (let* ((point (point))
 	 (middle-pat (looking-at oz-middle-pattern))
 	 (counter 0))
 
@@ -1308,7 +1302,7 @@ OZ compiler, machine and error window")
   (setq oz-lpr "oz2lpr -"))
 
 
-(defvar oz-temp-file (oz-make-temp-name "/tmp/oztemp") "")
+(defvar oz-temp-file (oz-make-temp-name "/tmp/ozemacs") "")
 
 
 (defun oz-to-coresyntax-buffer()
@@ -1344,24 +1338,28 @@ OZ compiler, machine and error window")
 (defun oz-directive-on-region (start end directive suffix mode)
   "Applies a directive to the region."
    (oz-hide-errors)
-   (shell-command-on-region start end (concat "/bin/sh -c 'cat > " oz-temp-file "'"))
-   (message "")
-   (oz-hide-errors)
-   (oz-send-string (concat directive " '" oz-temp-file "'\n"))
-   (sleep-for 2)
-   (if (not (get-buffer-window "*Oz Errors*"))
-       (let ((buf (get-buffer-create "*Oz Temp*")))
-	 (save-excursion
-	   (set-buffer buf)
-	   (delete-region (point-min) (point-max))
-	   (insert-file-contents (concat oz-temp-file suffix))
-	   (display-buffer buf t)
-	   (oz-mode)
-	   (if mode (oz-fontify-buffer))))))
-
-
-
-
+   (let ((file-1 (concat oz-temp-file ".oz"))
+	 (file-2 (concat oz-temp-file suffix)))
+     (if (file-exists-p file-2)
+	 (shell-command (concat "rm -f " file-2)))
+     (write-region start end file-1)
+     (message "")
+     (oz-hide-errors)
+     (oz-send-string (concat directive " '" file-1 "'\n"))
+     (sleep-for 2)
+     (while (not (file-exists-p file-2))
+       (sleep-for 2)
+       )
+     (if (not (get-buffer-window "*Oz Errors*"))
+	 (let ((buf (get-buffer-create "*Oz Temp*")))
+	   (save-excursion
+	     (set-buffer buf)
+	     (delete-region (point-min) (point-max))
+	     (insert-file-contents file-2)
+	     (shell-command (concat "rm -f " file-1 " " file-2))
+	     (display-buffer buf t)
+	     (oz-mode)
+	     (if mode (oz-fontify-buffer)))))))
 
 
 (defun oz-feed-region-browse (start end)
@@ -1370,6 +1368,14 @@ OZ compiler, machine and error window")
   (oz-hide-errors)
   (let ((contents (buffer-substring start end)))
     (oz-send-string (concat "{Browse " contents "}\n"))))
+
+
+(defun oz-feed-region-browse-memory (start end)
+  "Feed the current region into the Oz Compiler"
+  (interactive "r")
+  (oz-hide-errors)
+  (let ((contents (buffer-substring start end)))
+    (oz-send-string (concat "{Browse.memory " contents "}\n"))))
 
 
 (defun oz-feed-panel ()
