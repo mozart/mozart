@@ -12,5 +12,5 @@ char *ozplatform = "OZPLATFORM";
 #endif
 
 void version() {
-  printf("DFKI Oz Emulator %s (%s) of %s\n",AMVersion,ozplatform,AMDate);
+  printf("PS Oz Emulator %s (%s) of %s\n",AMVersion,ozplatform,AMDate);
 }
