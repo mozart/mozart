@@ -54,11 +54,12 @@ public:
   {
     ObjectClass *cla = obj->getClass();
     if (ToInt32(cla)!=cl) {
-      cl    = ToInt32(cla);
       Bool defaultsUsed;
       Abstraction *ret = obj->getMethod(meth,arity,X,defaultsUsed);
-      if (!defaultsUsed)
+      if (!defaultsUsed) {
+	cl    = ToInt32(cla);
 	abstr = ToInt32(ret);
+      }
       return ret;
     }
     return (Abstraction*) ToPointer(abstr);
