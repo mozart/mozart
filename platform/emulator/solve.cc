@@ -227,14 +227,18 @@ void SolveActor::mergeNonMonoSuspListWith(OrderedSuspList * p)
 void SolveActor::scheduleNonMonoSuspList(void)
 {
 #ifdef DEBUG_NONMONOTONIC
-  cout << "SolveActor::scheduleNonMonoSuspList" << endl << flush;
+  printf("------------------------------------------------------------------"
+         "\nSolveActor::scheduleNonMonoSuspList\n"); fflush(stdout);
 #endif
 
   for (OrderedSuspList * p = nonMonoSuspList; p != NULL; p = p->getNext()) {
     Thread * thr = p->getThread();
 
 #ifdef DEBUG_NONMONOTONIC
-    cout << "   "; thr->printDebug();
+    OZ_CFunHeader * header = thr->getPropagator()->getHeader();
+    OZ_CFun headerfunc = header->getHeaderFunc();
+    printf("<%s %d>\n", builtinTab.getName((void *) headerfunc),
+           thr->getPropagator()->getOrder());
 #endif
 
     am.updateSolveBoardPropagatorToRunnable(thr);
@@ -244,7 +248,7 @@ void SolveActor::scheduleNonMonoSuspList(void)
   nonMonoSuspList = NULL;
 
 #ifdef DEBUG_NONMONOTONIC
-  cout << "Done" << endl << flush;
+  printf("Done\n"); fflush(stdout);
 #endif
 }
 

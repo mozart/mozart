@@ -150,33 +150,62 @@ void GenCVariable::installPropagators(GenCVariable * glob_var)
                                    glob_home);
 
   switch (glob_var->getType()) {
+
   case FDVariable:
+    {
+      switch (getType()){
 
-    switch (getType()){
-
-    case FDVariable:
-      ((GenFDVariable *)this)->installPropagators((GenFDVariable *) glob_var,
-                                                  glob_home);
-      break;
-
-    case BoolVariable:
-      ((GenBoolVariable *)this)->installPropagators((GenFDVariable *) glob_var,
+      case FDVariable:
+        ((GenFDVariable *)this)->installPropagators((GenFDVariable *) glob_var,
                                                     glob_home);
-      break;
+        break;
 
-    case FSetVariable:
-      ((GenFSetVariable *)this)->installPropagators((GenFSetVariable *) glob_var,
+      case BoolVariable:
+        ((GenBoolVariable *)this)->installPropagators((GenFDVariable *) glob_var,
+                                                      glob_home);
+        break;
+
+
+      default:
+        Assert(0);
+        break;
+      }
+      break;
+    } // case FDVariable
+
+  case BoolVariable:
+    {
+      switch (getType()){
+
+      case FDVariable:
+        ((GenFDVariable *)this)->installPropagators((GenFDVariable *) glob_var,
                                                     glob_home);
-      break;
+        break;
 
-    case OFSVariable: case MetaVariable: case AVAR: case PerdioVariable:
+      default:
+        Assert(0);
+        break;
+      }
       break;
+    } // case BoolVariable
 
-    default:
-      Assert(0);
-    }
-    break;
+  case FSetVariable:
+    {
+      switch (getType()){
+
+      case FSetVariable:
+        ((GenFSetVariable *)this)->installPropagators((GenFSetVariable *) glob_var,
+                                                      glob_home);
+        break;
+
+      default:
+        Assert(0);
+        break;
+      }
+    } // case FSetVariable
+
   default:
+    Assert(0);
     break;
   }
 }

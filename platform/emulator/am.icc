@@ -391,8 +391,12 @@ Bool AM::wakeUpPropagator(Thread *tt, Board *home, PropCaller calledBy)
 
   if (tt->isNonMonotonicPropagatorThread() && currentSolveBoard) {
 #ifdef DEBUG_NONMONOTONIC
-    cout << "wakeUpPropagator: found nonmonotonic propagator "
-         << *tt->getPropagator() << endl << flush;
+    OZ_CFunHeader * header = tt->getPropagator()->getHeader();
+    OZ_CFun headerfunc = header->getHeaderFunc();
+    printf("wakeUpPropagator: nonmono prop <%s %d>\n",
+           builtinTab.getName((void *) headerfunc),
+           tt->getPropagator()->getOrder());
+    fflush(stdout);
 #endif
 
     Assert(!tt->getPropagator()->isMonotonic());
