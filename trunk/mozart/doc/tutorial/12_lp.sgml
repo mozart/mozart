@@ -21,30 +21,39 @@ For more advanced constraint solving techniques, the reader may
 look to the companion tutorial on constraint programming in Oz.
 
 
-<SECTION><TITLE/Constraint Store/
+<SECTION><TITLE/Constraint Stores/
 <P>Oz threads share a store where variable bindings are stored in the
 form of equalities: <MATH>X_1=U_1, \ldots, X_n=U_n</MATH> where
 <MATH/X_i/ are variables and <MATH/U_i/ are either Oz entities or
-variables. If we restrict the Oz values to records, numbers, names or
-variables, the store can be considered as a conjunctive logical
-formula: <MATH>X_1=U_1 \wedge \ldots \wedge X_n=U_n</MATH>. The store is
-said to be a <EM>constraint store</EM>.
+variables. The constraint store
+contains the the Oz values corresponding to records, numbers, names or
+variables, and the names that uniquely idententifies the procedures, cells
+and the various types of chunks (classes, objects, functors, etc.).
+Conceptually the  store is modeled as a conjunctive logical
+formula: <MATH>X_1=U_1 \wedge \ldots \wedge X_n=U_n</MATH>,
+where the <MATH>X_i</MATH> are the variables and <MATH>U_i</MATH>
+are Oz values or variables. The store is
+said to be a <EM>constraint store</EM>. An Oz <EM> computation store</EM>
+consists a constraint store, a procedure store where procedures reside, and
+a cell store where cells and object states reside.
 
 
 <SECTION><TITLE/Computation Spaces/
-<P>A computation space consists in general of a constraint store and a
-number of threads executing in the space. This is what we have seen so
-far. When we are dealing with search we will need a more general
-structure where threads may have their own local computation
-spaces. This will result in a nested form of computation spaces. The
-general rules for computation spaces are as follows.
+<P>A computation space consists in general of a computation store and a
+a set of executing threads. What we have seen so
+far is a single computation space. 
+When dealing with logic programming a more
+elaborate structure will arise with multiple nested computation spaces. The
+general rules for the structure of computation spaces are as follows.
 
 <LIST>
 
-<ITEM>There is always a topmost computation space where threads can
-interact with the external world. Failure of a thread due to trying to
-add constraints (bindings) inconsistent with store of the space will
-lead to failure exception being raised.
+<ITEM>There is always a topmost computation space where threads may
+interact with the external world. A thread trying to add inconsistent
+constraints (bindings) to the store of the top space will raise
+failure exception in the thread. The addition of the inconsistent
+constraints will be aborted and the constraint store remains always
+consistent.
 
 <ITEM>A thread may create a local computation space either directly or
 indirectly as will be shown in this section. The new computation space
@@ -63,29 +72,32 @@ the parent space. The space merge operation may occur due to an
 explicit operation, or indirectly due to a language construct as will
 be seen in this section.
 
-<ITEM>A Thread in a child space my add constraints on variable visible
-to it. This means that it may bind variables belonging to its space or
-to its ancestor spaces. The binding will only be visible in the
-current space and all its children spaces if any.
+<ITEM>A Thread in a child space my add constraints (bindings) on
+variables visible to it. This means that it may bind variables
+belonging to its space or to its ancestor spaces. The binding will
+only be visible in the current space and all its children spaces if
+any.
 
 </LIST>
 
 
-<SECTION><TITLE/Constraint Entailment and Disentailment/
-<P>A condition ?{C} is entailed by the store if ?{C}, considered as a
-logical formula, is logically implied by the information in the
-store. Entailment of ?{C} means that adding ?{C} in the store does
-increase the information already there.
+<SECTION><TITLE/Constraint Entailment and Disentailment/ <P>A
+condition <MATH/C/ is entailed by the store <MATH/\sigma/ if <MATH/C/,
+considered as a logical formula, is logically implied by the store
+<MATH/\sigma/, again considered as a logical formula.  Intuitively
+entailment of <MATH/C/ means that adding <MATH/C/ to the store does
+not increase the information already there. Everything is already there.
 
-<P>A condition ?{C} is disentailed by the store if the negation of
-?{C} is logically implied by the information in the store.
+<P>A condition <MATH/C/ is disentailed by the store if the negation of
+<MATH/C/ is logically implied by the store <MATH/\sigma/. A disentailed
+constraint is inconsistent with the information already in the store.
 
 
 <SUBSECTION><TITLE/Examples/
 
 <P>Consider the store: 
-<MATH/\sigma \equiv X = 1 \wedge \ldots \wedge Y = f(X Y)/
-, the conditions:
+<MATH/\sigma \equiv X = 1 \wedge \ldots \wedge Y = f(X \ Y)/.
+the conditions:
 
 <LIST>
 
