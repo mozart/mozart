@@ -129,13 +129,16 @@ void OwnerTable::init(int beg,int end){
 
 void OwnerTable::compactify()  /* TODO - not tested */
 {
-  return; // mm2
+  return;
 
+  Assert(size>=no_used);
   Assert(size>=DEFAULT_OWNER_TABLE_SIZE);
+  int nou = no_used;
   if(size==DEFAULT_OWNER_TABLE_SIZE) return;
   if(no_used/size >= TABLE_LOW_LIMIT) return;
   PD((TABLE,"TABLE:owner compactify enter: size:%d no_used:%d",
 	       size,no_used));
+  printf("TABLE:owner compactify enter: size:%d no_used:%d\n",size,no_used);
   int i=0;
   int used_slot= -1;
   int* base = &nextfree;
@@ -149,13 +152,21 @@ void OwnerTable::compactify()  /* TODO - not tested */
   *base=END_FREE;
   int first_free=used_slot+1;
   int newsize= first_free-no_used < TABLE_BUFFER ? 
-    first_free-no_used+TABLE_BUFFER : used_slot+1;
+    first_free+TABLE_BUFFER : used_slot+1;
   if(size - newsize > TABLE_WORTHWHILE_REALLOC){
     PD((TABLE,"TABLE:owner compactify free slots: new%d",newsize));
+    printf("TABLE:owner compactify free slots: new%d\n",newsize);
     array = (OwnerEntry*) realloc(array,newsize*sizeof(OwnerEntry));
     size=newsize;
+    Assert(size>=no_used);
+    Assert(size>=DEFAULT_OWNER_TABLE_SIZE);
+    Assert(nou == no_used);
     return;}
-  PD((TABLE,"TABLE:owner compactify no realloc"));}
+  PD((TABLE,"TABLE:owner compactify no realloc\n"));
+  printf("TABLE:owner compactify no realloc");
+  Assert(size>=no_used);
+  Assert(size>=DEFAULT_OWNER_TABLE_SIZE);
+  Assert(nou == no_used);}
 
 void OwnerTable::resize(){
 #ifdef BTRESIZE_CRITICAL
