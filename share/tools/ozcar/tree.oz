@@ -220,6 +220,8 @@ local
       end
    end
 
+   QueueLock = {NewLock}
+
 in
 
    class Tree from BaseTree ScrolledTitleCanvas
@@ -394,19 +396,21 @@ in
       end
 
       meth Enqueue(Ticklet)
-	 case Ticklet
-	 of nil  then skip
-	 [] T|Tr then
-	    Gui,Enqueue(T)
-	    Gui,Enqueue(Tr)
-	 else NewTl in
-	    case {IsDet @MsgListTl} then
-	       MsgList <- Ticklet|NewTl
-	    else
-	       @MsgListTl = Ticklet|NewTl
+	 lock QueueLock then
+	    case Ticklet
+	    of nil  then skip
+	    [] T|Tr then
+	       Gui,Enqueue(T)
+	       Gui,Enqueue(Tr)
+	    else NewTl in
+	       case {IsDet @MsgListTl} then
+		  MsgList <- Ticklet|NewTl
+	       else
+		  @MsgListTl = Ticklet|NewTl
+	       end
+	       MsgListTl <- NewTl
+	       Tree,ClearQueue
 	    end
-	    MsgListTl <- NewTl
-	    Tree,ClearQueue
 	 end
       end
 
@@ -422,9 +426,11 @@ in
       end
 
       meth DoClearQueue
-	 @MsgListTl = nil
-	 {Tk.batch @MsgList}
-	 MsgList <- nil
+	 lock QueueLock then
+	    @MsgListTl = nil
+	    {Tk.batch @MsgList}
+	    MsgList <- nil
+	 end
       end
 
    end
