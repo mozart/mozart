@@ -699,7 +699,6 @@ void Literal::gcRecurse ()
   // clause has it's own 'Y' register set. Therefore, a guard
   // may create a local variable, bind it to something, fail itself
   // and leave the variable visible outside!
-  DebugCode (if (!home) home = (Board *) 0xfeeffeef;);
 }
 
 inline
@@ -1002,6 +1001,7 @@ Thread *Thread::gcThread ()
   if (isRunnable () || hasStack ()) {
     ThreadList::add (newThread);
   }
+  gcTagged(group,newThread->group);
   ptrStack.push (newThread, PTR_THREAD);
 
   FDPROFILE_GC(cp_size_susp, sizeof(*this));
@@ -1813,16 +1813,6 @@ void TaskStack::gc(TaskStack *newstack)
       *(--newtop) = ((OzDebug *) *(--oldtop))->gcOzDebug();
       break;
 
-    case C_EXCEPT_HANDLER:
-      {
-        COUNT(cExceptHandler);
-        TaggedRef tt=deref((TaggedRef) ToInt32(*(--oldtop)));
-        Assert(!isAnyVar(tt));
-        gcTagged(tt,tt);
-        *(--newtop) = ToPointer(tt);
-      }
-      break;
-
     case C_CALL_CONT:
       {
         COUNT(cCallCont);
@@ -1958,6 +1948,14 @@ void ConstTerm::gcConstRecurse()
       break;
     }
 
+  case Co_Group:
+    {
+      Group *gr = (Group *) this;
+      gcTagged(gr->parent, gr->parent);
+      gcTagged(gr->exceptionHandler, gr->exceptionHandler);
+      break;
+    }
+
   case Co_Builtin:
     {
       Builtin *bi = (Builtin *) this;
@@ -2031,6 +2029,10 @@ ConstTerm *ConstTerm::gcConstTerm()
   case Co_Dictionary:
     CheckLocal((Cell *) this);
     sz = sizeof(OzDictionary);
+    break;
+
+  case Co_Group:
+    sz = sizeof(Group);
     break;
 
   case Co_Builtin:

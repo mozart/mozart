@@ -401,7 +401,7 @@ OZ_Term VAR = OZ_getCArg(ARG);                  \
    OZ_Term OZ_avar;                                     \
    if (!OZ_isString(OZ_getCArg(ARG),&OZ_avar)) {        \
      if (OZ_avar == 0) {                                \
-       return OZ_typeError(ARG,"Atom");                 \
+       return OZ_typeError(ARG,"String");               \
      } else {                                           \
        OZ_suspendOn(OZ_avar);                           \
      }                                                  \

@@ -71,6 +71,9 @@ public:
   StatCounter propagatorsInvoked;
   StatCounter fdvarsCreated;
 
+  StatCounter createdThreads;
+  StatCounter runableThreads;
+
   Statistics();
   void print(FILE *fd);
   void printIdle(FILE *fd);

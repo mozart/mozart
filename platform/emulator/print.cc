@@ -1311,7 +1311,7 @@ void TaskStack::printTaskStack(ProgramCounter pc, Bool verbose, int depth)
     ContFlag flag = getContFlag(topElem);
     switch (flag){
     case C_JOB:
-      message("\tJOB\n");
+      message("\tIn job\n");
       break;
 
     case C_CONT:
@@ -1343,7 +1343,7 @@ void TaskStack::printTaskStack(ProgramCounter pc, Bool verbose, int depth)
       }
 
     case C_LOCAL:
-      message("\tLOCAL\n");
+      message("\tIn local space\n");
       break;
 
     case C_CFUNC_CONT:
@@ -1356,13 +1356,6 @@ void TaskStack::printTaskStack(ProgramCounter pc, Bool verbose, int depth)
           printf(toC(X[i]));
         }
         printf("}\n");
-        break;
-      }
-
-    case C_EXCEPT_HANDLER:
-      {
-        TaggedRef pred = (TaggedRef) pop();
-        message("\tException handler: %s\n",toC(pred));
         break;
       }
 
