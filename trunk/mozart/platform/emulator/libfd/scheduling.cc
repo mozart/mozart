@@ -16,6 +16,8 @@
 
 //-----------------------------------------------------------------------------
 
+static inline int intMin(int a, int b) { return a < b ? a : b; }
+static inline int intMax(int a, int b) { return a > b ? a : b; }
 
 OZ_C_proc_begin(sched_disjoint_card, 4)
 {
@@ -351,7 +353,8 @@ cploop:
     set0Size = 0;
     compSet0Size = 0;
     outSideSize = 0;
-    int maxEst = 0;
+    int maxEct = 0;
+    int overlap = 0;
 
     //////////  
     // compute set S0 
@@ -363,14 +366,18 @@ cploop:
       int xlMaxDL = MinMax[l].max + dl;
       if (( kDown <= xlMin) && ( xlMaxDL <= kUp)) {
 	dur0 = dur0 + dl;
-	maxEst = max(maxEst,xlMin+dl); 
+	maxEct = max(maxEct,xlMin+dl); 
 	mSi = min( mSi, xlMin+dl );
 	maxSi = max( maxSi, MinMax[l].max );
 	set0[set0Size++] = l;
       }
       else {
+	int overlapTmp = intMin(intMax(0,xlMin+dl-kDown),
+				intMin(intMax(0,kUp-xlMaxDL+dl),
+				       intMin(dl,kUp-kDown)));
+	overlap += overlapTmp;
 	if (xlMaxDL > kUp) {
-	  outSide[outSideSize++] = l;
+	  outSide[outSideSize++] = l; 
 	}
       }
     }
@@ -381,11 +388,10 @@ cploop:
 	compSet0[compSet0Size++] = realL;
     }
 
-    if (kUp-kDown < dur0) goto failure;
+    if (kUp-kDown < dur0+overlap) goto failure;
     
     struct Set *oset = &Sets[0];	
-//    oset ->cSi = kDown +dur0;
-    oset ->cSi = max(kDown +dur0, maxEst);
+    oset ->cSi = max(kDown +dur0, maxEct);
     oset->dSi = dur0;
     oset->mSi = mSi;
     oset->min = mSi;
@@ -412,7 +418,8 @@ cploop:
 	setSize++;
 	int dSi = bset->dSi + dur[realL];
 	int minL = MinMax[realL].min;
-	int newCSi = max( bset->cSi, minL+dSi);
+	maxEct = intMax(maxEct, minL+dur[realL]);
+	int newCSi = intMax(bset->cSi, intMax(minL+dSi, maxEct));
 	if (newCSi > kUp) 
 	  goto failure;
 	else {
@@ -561,6 +568,7 @@ cploop:
     compSet0Size = 0;
     outSideSize = 0;
     int minLst =  mysup;
+    int overlap = 0;
     
     //////////  
     // compute set S0 
@@ -579,6 +587,10 @@ cploop:
 	     set0[set0Size++] = l;
 	   }
 	   else {
+	     int overlapTmp = intMin(intMax(0,xlMin+dl-kDown),
+				     intMin(intMax(0,kUp-xlMaxDL+dl),
+					    intMin(dl,kUp-kDown)));
+	     overlap += overlapTmp;
 	     if (xlMin < kDown) {
 	       outSide[outSideSize++] = l;
 	     }
@@ -592,11 +604,10 @@ cploop:
 	compSet0[compSet0Size++] = realL;
     }
 
-    if (kUp-kDown < dur0) goto failure;
+    if (kUp-kDown < dur0+overlap) goto failure;
 
     struct Set *oset = &Sets[0];
     oset->cSi = min(kUp - dur0,minLst);
-//    oset->cSi = kUp - dur0;
     oset->dSi = dur0;
     oset->mSi = mSi;
     oset->max = mSi;
@@ -626,7 +637,8 @@ cploop:
 	  setSize++;
 	  int dSi = bset->dSi + durL;
 	  int maxL = MinMax[realL].max+durL;
-	  int newCSi = min( bset->cSi, maxL-dSi);
+	  minLst = intMin(minLst, maxL-durL);
+	  int newCSi = intMin(bset->cSi, intMin(maxL-dSi, minLst));
 	  if (newCSi < kDown) 
 	    goto failure;
 	  else {
@@ -1069,7 +1081,7 @@ OZ_C_proc_end
 
 
 struct Set2 {
-  int dSi, sUp, sLow, extSize;
+  int dSi, sUp, sLow, extSize, overlap;
   int * ext;
 };
 
@@ -1259,6 +1271,7 @@ cploop:
     set0Size = 0;
     compSet0Size = 0;
     outSideSize = 0;
+    int overlap=0;
 
     // compute set S0 
     int l;
@@ -1271,6 +1284,10 @@ cploop:
 	set0[set0Size++] = l;
       }
       else {
+	int overlapTmp = intMin(intMax(0,xlMin+dl-kDown),
+				intMin(intMax(0,kUp-xlMaxDL+dl),
+				       intMin(dl,kUp-kDown)));
+	overlap += overlapTmp*use[l];
 	if (xlMaxDL > kUp) {
 	  outSide[outSideSize++] = l;
 	}
@@ -1283,8 +1300,7 @@ cploop:
 	compSet0[compSet0Size++] = realL;
     }
 
-
-    if ((kUp-kDown)*capacity < use0) {
+    if ((kUp-kDown)*capacity < use0+overlap) {
       goto failure;
     }
 
@@ -1294,6 +1310,7 @@ cploop:
     oset->sUp = kUp;
     oset->sLow = kDown;
     oset->extSize = set0Size;
+    oset->overlap = overlap;
     {
       for (int k = 0; k < ts; k++) {
 	oset->ext[k] = set0[k];
@@ -1340,10 +1357,12 @@ cploop:
       int durL = dur[l];
       int useL = use[l];
 
+      int sizeAll = s->dSi + durL*useL;
+
       if (maxL+durL > s->sUp) {
-	if ( (s->sUp - s->sLow)*capacity >= s->dSi + durL*useL) {
+	if ( (s->sUp - s->sLow)*capacity >= sizeAll) {
 	  // case 4: l may be inside
-          if ( (s->sUp - minL)*capacity >= s->dSi + durL*useL) {
+          if ( (s->sUp - minL)*capacity >= sizeAll) {
 	    // case 5: L may be first
 	    lCount++; 
 	    setCount--;
@@ -1354,7 +1373,7 @@ cploop:
 	  }
 	}
 	else {
-	  if ( (s->sUp - minL)*capacity >= s->dSi + durL*useL) {
+	  if ( (s->sUp - minL)*capacity >= sizeAll) {
 	    // case 5: L may be first
 	    lCount++;
 	  }
@@ -1405,7 +1424,8 @@ cploop:
     set0Size = 0;
     compSet0Size = 0;
     outSideSize = 0;
-    
+    int overlap=0;
+
     //////////
     // compute set S0 
     //////////
@@ -1419,6 +1439,10 @@ cploop:
 	set0[set0Size++] = l;
       }
       else {
+	int overlapTmp = intMin(intMax(0,xlMin+dl-kDown),
+				intMin(intMax(0,kUp-xlMaxDL+dl),
+				       intMin(dl,kUp-kDown)));
+	overlap += overlapTmp*use[l];
 	if (xlMin < kDown) {
 	  outSide[outSideSize++] = l;
 	}
@@ -1432,7 +1456,7 @@ cploop:
 	compSet0[compSet0Size++] = realL;
     }
     
-    if ( (kUp-kDown)*capacity < use0) {
+    if ( (kUp-kDown)*capacity < use0+overlap) {
       goto failure;
     }
 
@@ -1490,14 +1514,15 @@ cploop:
       int maxL = MinMax[l].max;
       int durL = dur[l];
       int useL = use[l];
-
+      int sizeAll = s->dSi + durL*useL;
+      
 //      cout << "setCount: " << setCount << "\n";
 //      cout << "lCount: " << lCount << "\n";
 
       if (minL < s->sLow) {
-	if ( (s->sUp - s->sLow)*capacity >= s->dSi + durL*useL) {
+	if ( (s->sUp - s->sLow)*capacity >= sizeAll) {
 	  // case 4: l may be inside
-	    if ( (maxL + durL - s->sLow)*capacity >= s->dSi + durL*useL) {
+	    if ( (maxL + durL - s->sLow)*capacity >= sizeAll) {
 	    // case 5: L may be last
 	    lCount++; 
 	    setCount--;
@@ -1508,7 +1533,7 @@ cploop:
 	  }
 	}
 	else {
-	  if ((maxL + durL - s->sLow) * capacity >= s->dSi + durL*useL) {
+	  if ((maxL + durL - s->sLow) * capacity >= sizeAll) {
 	    // case 5: L may be last
 	    lCount++;
 	  }
@@ -1688,6 +1713,7 @@ capLoop:
 	  cum = cum + (right_val - left_val) * Intervals[i].use;
 	}
       }
+
       if (cum > (right_val - left_val) * capacity) {
 	goto failure;
       }
