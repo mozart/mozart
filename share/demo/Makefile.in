@@ -136,11 +136,11 @@ APPLETS = \
 all:: $(APPLETS)
 
 constraints/%.oza: constraints/%.oz
-	(cd constraints && $(OZCA) -c ../$< -o ../$@)
+	$(OZCA) -c $< -o $@
 concurrent/%.oza: concurrent/%.oz
-	(cd concurrent && $(OZCA) -c ../$< -o ../$@)
+	$(OZCA) -c $< -o $@
 distributed/%.oza: distributed/%.oz
-	(cd distributed && $(OZCA) -c ../$< -o ../$@)
+	$(OZCA) -c $< -o $@
 
 JOBSHOP = \
 	compiler configure duration-tool examples job \
@@ -245,10 +245,7 @@ Makefile: Makefile.in ../config.status
 
 include $(SRCDIR)/../Makefile.boot
 
-# disabled because this file is a hack (mm)
 bootstrap:
-
-bootstrap-maybe:
 	@mkdir constraints 2> /dev/null || true
 	@mkdir concurrent 2> /dev/null || true
 	@mkdir distributed 2> /dev/null || true
