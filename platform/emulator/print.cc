@@ -83,7 +83,7 @@ inline Bool isEffectiveSusp(SuspList* sl)
   Suspension* s = sl->getSusp();
   if (s->isDead())
     return NO;
-  if (!s->getBoard()->getBoardDeref())
+  if (!s->getBoardFast())
     return NO;
   return OK;
 }
@@ -591,7 +591,7 @@ PRINT(Suspension)
   } else {
     stream << "board ";
   }
-  getBoard()->print(stream, 0);
+  getBoardFast()->print(stream, 0);
 }
 
 
@@ -629,7 +629,7 @@ static void tagged2StreamLong(TaggedRef ref,ostream &stream = cout,
              << endl
              << indent(offset)
              << "HomeNode: ";
-      tagged2VarHome(ref)->getBoardDeref()->print(stream,0);
+      tagged2VarHome(ref)->getBoardFast()->print(stream,0);
       stream << endl;
     }
     break;
@@ -834,7 +834,6 @@ PRINT(Board)
   if (isPathMark())  stream << 'P';
   if (isFailed())    stream << 'F';
   if (isCommitted()) stream << 'C';
-  if (isDiscarded()) stream << 'D';
   if (isWaiting())   stream << 'W';
   if (isReflected()) stream << 'R';
 
@@ -849,25 +848,24 @@ PRINTLONG(Board)
   stream << indent(offset) << "Flags: " << (void *) flags << endl;
   stream << indent(offset) << "Script: " << endl;
   script.printLong(stream,DEC(depth),offset+2);
-  if (u.board) {
-    if (isCommitted()) {
-      stream << indent(offset) << "Board:" << endl;
-      u.board->printLong(stream,DEC(depth),offset+2);
-    } else {
-      stream << indent(offset) << "Actor:" << endl;
-      u.actor->printLong(stream,DEC(depth),offset+2);
-    }
+  if (isRoot()) return;
+  if (isCommitted()) {
+    stream << indent(offset) << "Board:" << endl;
+    u.ref->printLong(stream,DEC(depth),offset+2);
+  } else {
+    stream << indent(offset) << "Actor:" << endl;
+    u.actor->printLong(stream,DEC(depth),offset+2);
   }
 }
 
-void Board::Print()
+void AM::printBoards()
 {
   cout << "class Board" << endl
        << "  currentBoard: ";
-  am.currentBoard->print(cout,0,0);
+  currentBoard->print(cout,0,0);
   cout << endl
        << "  rootBoard:    ";
-  am.rootBoard->print(cout,0,0);
+  rootBoard->print(cout,0,0);
   cout << endl;
 }
 
@@ -1044,7 +1042,7 @@ void SVariable::printLong(ostream &stream, int depth, int offset, TaggedRef v)
 
   stream << indent(offset)
          << "HomeNode: ";
-  home->getBoardDeref()->print(stream,0);
+  home->getBoardFast()->print(stream,0);
   stream << endl;
 }
 
@@ -1064,7 +1062,7 @@ void GenCVariable::printLong(ostream &stream, int depth, int offset,
   suspList->print(stream, depth, offset+3);
 
   stream << indent(offset) << "HomeNode: ";
-  home->getBoardDeref()->print(stream,depth);
+  home->getBoardFast()->print(stream,depth);
   stream << endl;
 
   switch(getType()){
@@ -1259,7 +1257,7 @@ PRINT(TaskStack)
     while (!isEmpty()) {
       TaggedBoard tb = (TaggedBoard) ToInt32(pop());
       ContFlag flag = getContFlag(tb);
-      Board* n = getBoard(tb,flag);
+      Board* n = getBoard(tb,flag)->getBoardFast();
       switch (flag){
       case C_CONT:
         {
@@ -1350,7 +1348,7 @@ PRINTLONG(TaskStack)
   while (!isEmpty() && (depth=DEC(depth)) != 0) {
     TaggedBoard tb = (TaggedBoard) ToInt32(pop());
     ContFlag flag = getContFlag(tb);
-    Board* n = getBoard(tb,flag);
+    Board* n = getBoard(tb,flag)->getBoardFast();
     switch (flag){
     case C_CONT:
       {
@@ -1442,7 +1440,7 @@ void TaskStack::printDebug(ProgramCounter pc, Bool verbose, int depth)
   while (isEmpty() == NO && depth-- > 0) {
     TaggedBoard tb = (TaggedBoard) ToInt32(pop());
     ContFlag flag = getContFlag(tb);
-    Board* n = getBoard(tb,flag);
+    Board* n = getBoard(tb,flag)->getBoardFast();
     switch (flag){
     case C_CONT:
       {
@@ -1731,16 +1729,13 @@ void Board::printTree()
   while (bb!=am.rootBoard) {
     bb->print(cout,1,off);
     cout << endl;
-    if (bb->isCommitted()) {
-      bb=bb->u.board;
-    } else {
-      off++;
-      aa = bb->u.actor;
-      aa->print(cout,1,off);
-      cout << endl;
-      off++;
-      bb = aa->getBoard();
-    }
+    Assert(!bb->isCommitted());
+    off++;
+    aa = bb->u.actor;
+    aa->print(cout,1,off);
+    cout << endl;
+    off++;
+    bb = aa->getBoardFast();
   }
 }
 

@@ -89,15 +89,11 @@ void AM::bindToNonvar(TaggedRef *varPtr, TaggedRef var, TaggedRef a, Bool prop)
 inline
 void AM::deinstallPath(Board *top)
 {
-  DebugCheck(top->isCommitted(),
-             error("AM::deinstallPath: top already commited");
-             return;);
+  Assert(!top->isCommitted() && !top->isFailed());
 
   while (currentBoard != top) {
     deinstallCurrent();
-    DebugCheck(currentBoard == rootBoard
-               && top != rootBoard,
-               error("AM::deinstallPath: root node reached"));
+    Assert(currentBoard != rootBoard || top == rootBoard);
   }
 }
 
@@ -106,7 +102,7 @@ void AM::deinstallCurrent()
 {
   reduceTrailOnSuspend();
   currentBoard->unsetInstalled();
-  setCurrent(currentBoard->getParentBoard()->getBoardDeref());
+  setCurrent(currentBoard->getParentFast());
 }
 
 inline
@@ -146,28 +142,13 @@ void AM::bind(TaggedRef *varPtr, TaggedRef var, TaggedRef *termPtr, Bool prop)
   genericBind(varPtr,var,termPtr, *termPtr, prop);
 }
 
-/*
- *   Procedure what checks whether one node is in subtree of another;
- *
- */
-inline
-Bool AM::isInScope (Board *above, Board* node) {
-  while (node != rootBoard) {
-    if (node == above)
-      return (OK);
-    node = node->getParentBoard()->getBoardDeref();
-  }
-  return (NO);
-}
-
-
 inline
 Bool AM::isLocalUVar(TaggedRef var)
 {
   return (var == currentUVarPrototype ||
           // variables are usually bound
           // in the node where they are created
-          tagged2VarHome(var)->getBoardDeref() == currentBoard );
+          tagged2VarHome(var)->getBoardFast() == currentBoard );
 }
 
 inline
@@ -175,7 +156,7 @@ Bool AM::isLocalSVar(TaggedRef var) {
   Board *home = tagged2SVar(var)->getHome1();
 
   return (home == currentBoard ||
-          home->getBoardDeref() == currentBoard );
+          home->getBoardFast() == currentBoard );
 }
 
 inline
@@ -183,7 +164,7 @@ Bool AM::isLocalSVar(SVariable *var) {
   Board *home = var->getHome1();
 
   return (home == currentBoard ||
-          home->getBoardDeref() == currentBoard );
+          home->getBoardFast() == currentBoard );
 }
 
 inline
@@ -191,7 +172,7 @@ Bool AM::isLocalCVar(TaggedRef var) {
   Board *home = taggedCVar2SVar(var)->getHome1();
 
   return (home == currentBoard ||
-          home->getBoardDeref() == currentBoard );
+          home->getBoardFast() == currentBoard );
 }
 
 inline
@@ -210,7 +191,7 @@ Bool AM::isLocalVariable(TaggedRef var)
 inline
 void updateExtSuspension(Board *varHome, Suspension *susp)
 {
-  if (am.currentSolveBoard != (Board *) NULL) {
+  if (am.currentSolveBoard) {
     am.setExtSuspension (varHome, susp);
   }
 }
@@ -270,10 +251,10 @@ void AM::restartThread()
 }
 
 inline
-Thread *AM::newThread(int p,Board *h)
+Thread *AM::newThread(int p,Board *bb)
 {
 #ifdef NEWCOUNTER
-  h->incSuspCount();
+  bb->incSuspCount();
 #endif
   Thread *th = threadsFreeList;
   if (th) {
@@ -281,7 +262,7 @@ Thread *AM::newThread(int p,Board *h)
   } else {
     th=new Thread(ozconf.taskStackSize);
   }
-  th->init(p,h);
+  th->init(p,bb);
   return th;
 }
 
@@ -291,7 +272,7 @@ void AM::disposeThread(Thread *th)
 {
   Verbose((VERB_THREAD,"Thread::dispose = 0x%x\n",this));
   if (th == rootThread) {
-    rootThread->init(ozconf.defaultPriority,rootBoard);
+    rootThread->init(th->getPriority(),rootBoard);
     checkToplevel();
   } else {
     /* dispose thread: */
@@ -329,31 +310,45 @@ Bool AM::threadQueueIsEmpty()
   return threadsHead ? NO : OK;
 }
 
+inline
+void AM::checkThreadsAssertion()
+{
+#ifdef DEBUG_CHECK
+  if (threadsHead==0) {
+    Assert(threadsTail==0);
+    return;
+  }
+  Assert(threadsTail!=0);
+  Thread *th=threadsHead;
+  Assert(th->prev==0);
+  while (th->next != 0) {
+    Assert(th->next->getPriority() <= th->getPriority());
+    Assert(th->next->prev==th);
+    th=th->next;
+  }
+  Assert(th==threadsTail);
+#endif
+}
+
 /* only usage in emulate */
 inline
 Thread *AM::getFirstThread()
 {
+  checkThreadsAssertion();
   Assert(threadsHead!=0);
   Thread *tt = threadsHead;
   Verbose((VERB_THREAD,"Thread::GetFirst = 0x%x\n",tt));
   threadsHead=tt->next;
   if (threadsHead) {
-    Assert(threadsHead->prev==tt);
-    threadsHead->prev= (Thread *) NULL;
+    Assert(threadsHead->prev == tt);
+    threadsHead->prev = 0;
   } else {
-    Assert(threadsTail==tt);
-    threadsTail=threadsHead;
+    Assert(threadsTail == tt);
+    threadsTail = 0;
   }
   tt->prev=tt->next=(Thread *) NULL;
 
-#ifdef DEBUG_CHECK
-  Thread *tmp = threadsHead;
-  while (tmp != (Thread *) NULL) {
-    if (tmp->getPriority() > tt->getPriority())
-      error ("Thread::GetFirst (): wrong task is got");
-    tmp = tmp->next;
-  }
-#endif
+  checkThreadsAssertion();
   return tt;
 }
 
@@ -361,21 +356,23 @@ Thread *AM::getFirstThread()
 inline
 Thread *AM::unlinkThread(Thread *th)
 {
+  checkThreadsAssertion();
   if (th->prev) {
-    Assert(th->prev->next==th);
+    Assert(th->prev->next == th);
     th->prev->next=th->next;
   } else {
     Assert(threadsHead==th);
     threadsHead=th->next;
   }
   if (th->next) {
-    Assert(th->next->prev==th);
+    Assert(th->next->prev == th);
     th->next->prev=th->prev;
   } else {
-    Assert(threadsTail==th);
+    Assert(threadsTail == th);
     threadsTail=th->prev;
   }
-  th->prev=th->next=(Thread *) NULL;
+  th->prev=th->next=0;
+  checkThreadsAssertion();
   return th;
 }
 
@@ -384,6 +381,7 @@ Thread *AM::unlinkThread(Thread *th)
 inline
 void AM::insertFromHead(Thread *th)
 {
+  checkThreadsAssertion();
   Thread *here;
   for (here = threadsHead; here; here=here->prev) {
     if (here->getPriority() < th->getPriority()) {
@@ -391,6 +389,7 @@ void AM::insertFromHead(Thread *th)
     }
   }
   insertBefore(th,here);
+  checkThreadsAssertion();
 }
 
 // insert 'this' after 'here', if here = 0 then at head
@@ -402,20 +401,20 @@ void AM::insertAfter(Thread *th,Thread *here)
     th->next=here->next;
     here->next=th;
     if (th->next) {
-      Assert(th->next->prev==here);
+      Assert(th->next->prev == here);
       th->next->prev=th;
     } else {
-      Assert(threadsTail==here);
+      Assert(threadsTail == here);
       threadsTail=th;
     }
   } else {
     th->next=threadsHead;
     threadsHead=th;
     if (th->next) {
-      Assert(th->next->prev==0);
+      Assert(th->next->prev == 0);
       th->next->prev=th;
     } else {
-      Assert(threadsTail==0);
+      Assert(threadsTail == 0);
       threadsTail=th;
     }
   }
@@ -426,6 +425,7 @@ void AM::insertAfter(Thread *th,Thread *here)
 inline
 void AM::insertFromTail(Thread *th)
 {
+  checkThreadsAssertion();
   Thread *here;
   for (here = threadsTail; here; here=here->prev) {
     if (here->getPriority() >= th->getPriority()) {
@@ -433,6 +433,7 @@ void AM::insertFromTail(Thread *th)
     }
   }
   insertAfter(th,here);
+  checkThreadsAssertion();
 }
 
 // insert 'this' before 'here', if here = 0 then at tail
@@ -462,5 +463,29 @@ void AM::insertBefore(Thread *th, Thread *here)
     }
   }
 }
+
+/*
+ * MISC
+ */
+
+inline
+Board *Literal::getBoardFast()
+{
+  return home->getBoardFast();
+}
+
+inline
+Board *Abstraction::getBoardFast()
+{
+  return home->getBoardFast();
+}
+
+/*
+inline
+Board *Cell::getBoardFast()
+{
+  return name->getBoardFast();
+}
+*/
 
 #endif  // __AM_ICC

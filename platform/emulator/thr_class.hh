@@ -39,8 +39,8 @@ public:
   USEFREELISTMEMORY;
   OZPRINT;
   OZPRINTLONG;
-  Thread *gc();
-  void gcRecurse();
+  Thread *gcThread();
+  void gcThreadRecurse();
 
   Thread(int size);
   void init(int prio,Board *home);
@@ -48,7 +48,6 @@ public:
   // isSolve() replace by hasNotificationBoard()
   Bool hasNotificationBoard () { return notificationBoard!=NULL; }
   void setNotificationBoard (Board *b) { notificationBoard = b; }
-  Board* getNotificationBoard () { return (notificationBoard); }
 
   void pushDebug(Board *b, OzDebug *d)
   {
@@ -101,8 +100,7 @@ public:
   }
 
   void setPriority(int prio);
-  Board *getHome() { return home->getBoardDeref(); }
-  void setHome(Board *b) { home=b; }
+  Board *getBoardFast() { return home->getBoardFast(); }
   int getCompMode() { return compMode; }
   void checkCompMode(int newMode);
   void setCompMode(int newMode);

@@ -114,24 +114,25 @@ void Script::dealloc()
     Bo_Discarded
     */
 
+/*
+ * return solve board of this
+ *   0, if no solve board found
+ *      or discard or fail detected below a solve board
+ */
 Board* Board::getSolveBoard ()
 {
-  Board *b = this;
-  b = b->getBoardDeref ();
-  while (b != (Board *) NULL) {
-    if (b->isSolve () == OK)
-      return (b);
-    if (!b->getActor()) /* root board reached */
-      return 0;
-    b = (b->getParentBoard ())->getBoardDeref ();
-  }
-  return ((Board *) NULL);
+  Assert(!isCommitted());
+  Board *bb;
+  for (bb=this;
+       bb!=0 && !bb->isSolve();
+       bb=bb->getParentAndTest()) {}
+  return bb;
 }
 
 Bool Board::underReflected()
 {
-  Board *tmp = this ? getSolveBoard() : 0;
-  return tmp && tmp->isReflected();
+  Board *bb=this ? getSolveBoard() : 0;
+  return bb && bb->isReflected();
 }
 
 Board::Board(Actor *a,int typ)
@@ -152,7 +153,7 @@ Board::Board(Actor *a,int typ)
 }
 
 Board::~Board() {
-  error("mm2: not yet impl");
+  error("Board::~Board");
 }
 
 

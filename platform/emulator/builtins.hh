@@ -269,7 +269,8 @@ public:
   Builtin(BuiltinTabEntry *fn, TaggedRef handler, RefsArray gregs = NULL)
     : suspHandler(handler), fun(fn), Chunk(C_BUILTIN),
     gRegs (gregs) {}
-  Builtin(BuiltinTabEntry *fn, TaggedRef handler, RefsArray gregs, Arity *arity)
+  Builtin(BuiltinTabEntry *fn, TaggedRef handler, RefsArray gregs,
+          Arity *arity)
     : suspHandler(handler), fun(fn), Chunk(C_BUILTIN,arity),
     gRegs (gregs) {}
   OZPRINT;
@@ -282,7 +283,8 @@ public:
   BIType getType()     { return fun->getType(); }
 
   Chunk *getSuspHandler() {
-    return suspHandler == makeTaggedNULL() ? (Chunk*) NULL : chunkCast(suspHandler);
+    return suspHandler == makeTaggedNULL() ?
+      (Chunk*) NULL : chunkCast(suspHandler);
   }
   TaggedRef getDBGHandler() {
     return suspHandler == makeTaggedNULL() ? nil() : suspHandler;
@@ -291,10 +293,6 @@ public:
     return (fun == r->fun &&
             suspHandler == r->suspHandler &&
             gRegs == r->gRegs);
-  }
-  // mm: this is a hack: the id is not always unique
-  int getId() {
-    return ToInt32(fun)^((int32) suspHandler)^ToInt32(gRegs);
   }
 
   BuiltinTabEntry *getBITabEntry() {return fun;}
