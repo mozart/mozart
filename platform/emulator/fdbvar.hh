@@ -59,9 +59,7 @@ public:
   void propagate(TaggedRef var, PropCaller prop_eq = pc_propagator) {
     if (suspList) GenCVariable::propagate(var, suspList, prop_eq);
   }
-  void propagateUnify(TaggedRef var) {
-    propagate(var, pc_cv_unif);
-  }
+  void propagateUnify(TaggedRef var) { propagate(var, pc_cv_unif); }
 
   // needed to catch multiply occuring bool vars in propagators
   void patchStoreBool(OZ_FiniteDomain * d) { store_patch = d; }
