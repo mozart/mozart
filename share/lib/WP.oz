@@ -30,10 +30,15 @@ fun
    \insert 'SP.env'
        = IMPORT.'SP'
    \insert WP/Tk
-   Tk      = {NewTk Open}
+   Tk      = {NewTk}
    \insert WP/TkOptions
    \insert WP/TkTools
    TkTools = {NewTkTools Tk}
 in
    \insert 'WP.env'
 end
+
+
+
+
+
