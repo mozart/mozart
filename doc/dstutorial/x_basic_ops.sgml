@@ -290,6 +290,17 @@ Chunks exist to make it easy to introduce
 laziness into large data structures when needed.
 
 </LIST>
+<P> In terms of the language semantics,
+there are only two different language
+entities: procedures and records.
+All others entities are derived.
+Functions are syntactic sugar for procedures.
+Chunks are a particular kind of record.
+Classes are chunks that contain object methods,
+which are themselves procedures.
+Functors are chunks that contain a function
+taking modules as arguments and returning a module,
+where a module is a record.
 
 <SUBSECTION><TITLE>Sited entities</TITLE>
 
