@@ -9,11 +9,15 @@ AC_DEFUN(OZ_INIT, [
         if test ! -r $TOPDIR/OZVERSION
         then
             TOPDIR=$srcdir/..
-        fi
+            if test ! -r $TOPDIR/OZVERSION
+            then
+               TOPDIR=$srcdir/../..
+            fi
+       fi
     fi
     if test ! -r $TOPDIR/OZVERSION
     then
-        AC_MSG_ERROR([can't find TOPDIR])
+        AC_MSG_ERROR([can't find TOPDIR in $TOPDIR])
     fi
     AC_SUBST(TOPDIR)
     oz_topdira=`cd $TOPDIR; pwd`

@@ -35,7 +35,7 @@ FDTARGETS       = @FDTARGETS@
 FSETTARGETS     = @FSETTARGETS@
 TARGETS         = @TARGETS@
 OZMALIB         = @OZMALIB@
-SUBDIRS         = FDLib FSetLib
+SUBDIRS         = libfd libfset
 OZVERSION       = $(TOPDIR)/OZVERSION
 
 CREATEDOTHERS = \
@@ -102,10 +102,10 @@ OBJS = $(SRCS:.cc=.o)
 all: $(TARGETS)
 
 $(FDTARGETS):
-        cd FDLib; $(MAKE) $@
+        cd libfd; $(MAKE) $@
 
 $(FSETTARGETS):
-        cd FSetLib; $(MAKE) $@
+        cd libfset; $(MAKE) $@
 
 win: ozlib.lnk $(CREATEDFILES)
 

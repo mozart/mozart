@@ -452,7 +452,7 @@ OZ_C_proc_end
 #undef FailOnEmpty
 #undef SimplifyOnUnify
 
-#include "FDLib/cd.hh"
+#include "libfd/cd.hh"
 
 OZ_C_proc_begin(BIfdConstrDisj, 3)
 {
