@@ -81,7 +81,7 @@
 ;; Variables/Initialization
 ;;------------------------------------------------------------
 
-(defvar oz-use-new-compiler nil
+(defvar oz-use-new-compiler (not (eq (getenv "OZUSENEWCOMPILER") nil))
   "*If non-nil, use the new Oz Compiler.
 This has the effect of not opening the *Oz Compiler* buffer and feeding
 everything into the *Oz Emulator* buffer.")
