@@ -418,12 +418,10 @@ OZ_Return genericDot(TaggedRef term, TaggedRef fea, TaggedRef *out, Bool dot) {
         break;
       case Co_Array:
         {
-          TaggedRef t = (oz_isSmallInt(fea))?
-            tagged2Array(term)->getArg(smallIntValue(fea))
-            :0;
-          if (!t) {
-            if (dot) goto raise; else return FAILED;
-          }
+          TaggedRef t;
+          OZ_Return arrayGetInline(TaggedRef,TaggedRef,TaggedRef&);
+          OZ_Return r = arrayGetInline(term,fea,t);
+          if (r!=PROCEED) return (dot)?r:FAILED;
           if (out) *out = t;
           return PROCEED;
         }
@@ -431,9 +429,8 @@ OZ_Return genericDot(TaggedRef term, TaggedRef fea, TaggedRef *out, Bool dot) {
         {
           TaggedRef t;
           extern OZ_Return dictionaryGetInline(TaggedRef,TaggedRef,TaggedRef&);
-          if (dictionaryGetInline(term,fea,t)!=PROCEED) {
-            if (dot) goto raise; else return FAILED;
-          }
+          OZ_Return r = dictionaryGetInline(term,fea,t);
+          if (r!=PROCEED) return (dot)?r:FAILED;
           if (out) *out = t;
           return PROCEED;
         }
