@@ -44,11 +44,14 @@
 ]>
 <book>
   <front>
+    <meta name="html.split" value="chapter.general.info">
+    <meta name="html.split" value="chapter.programming">
+    <meta name="html.split" value="chapter.language">
     <title/The Mozart FAQ/
     <author.Extern to="author.db" key="Denys.Duchier">
   </front>
   <body>
-    <chapter>
+    <chapter id=chapter.general.info>
 	<title/General Information/
 
       <section>
@@ -136,7 +139,7 @@ Mozart?/
 	<p>Yes, there is.  All our sources are accessible through our
 anonymous CVS server.  First you need to login with CVS password
 <code proglang=sh/anoncvs/:
-<code display proglang=sh>
+<code display proglang=fundamental>
 % cvs -d :pserver:anoncvs@ps.uni-sb.de:/CVS login
 (Logging in to anoncvs@ps.uni-sb.de)
 CVS password: anoncvs
@@ -202,6 +205,151 @@ is written in Oz.
       </section>
 
     </chapter>
+
+    <chapter id=chapter.programming>
+	<title/Programming with Mozart/
+
+      <section>
+	  <title/Is there a source code level debugger with
+breakpoints, etc?/
+	<p>Yes, the debugger is called ozcar and is documented in
+<ptr.extern to="ozdoc:ozcar">.  It has a graphical interface and
+uses the Emacs editor to display and highlight the source code that is
+being executed.</p>
+      </section>
+
+      <section>
+	  <title/What GUI toolkits are available?/
+	<p>Mozart comes with a high-level object-oriented interface to
+Tcl/Tk.</p>
+      </section>
+
+      <section>
+	  <title/Can modules mutually import each others?/
+	<p>Yes, there is no problem.  Modules are loaded by need
+concurrently.</p>
+      </section>
+
+      <section>
+	  <title/Are there database interfaces?/
+	<p>Yes, so far we offer two interfaces as <q/contributions/:
+(1) a GDBM interface and (2) a PostgresSQL interface.  Feel free to
+contribute more or better interfaces.</p>
+      </section>
+    </chapter>
+
+    <chapter id=chapter.language>
+	<title/Language and design issues/
+
+      <section>
+	  <title/Why is the syntax so weird?/
+	<p>The most unusual thing about the syntax is the choice of
+curly braces for procedure application. Once you get used to that you
+can be rather comfortably puzzled by other things.</p>
+      </section>
+
+      <section>
+	  <title/Does Oz have garbage collection?/
+	<p>Yes, Oz has automatic garbage collection (2 space copying
+GC).  For open distributed computing applications, it also implements
+automatic distributed GC, but, at present, not all distributed cyclic
+datastructures can be collected successfully.</p>
+      </section>
+
+      <section>
+	  <title/What is constraint programming?/
+	<p></p>
+      </section>
+
+      <section>
+	  <title/Can I also have state?/
+	<p></p>
+      </section>
+
+      <section>
+	  <title/Does Oz support object-oriented programming?/
+	<p></p>
+      </section>
+
+      <section>
+	  <title/Does Oz support functional programming?/
+	<p></p>
+      </section>
+
+      <section>
+	  <title/Does Oz support logic programming?/
+	<p></p>
+      </section>
+
+      <section>
+	  <title/Does Oz support modular programming?/
+	<p></p>
+      </section>
+
+      <section>
+	  <title/Does Oz support concurrent programming?/
+	<p></p>
+      </section>
+
+      <section>
+	  <title/Does Oz support distributed programming?/
+	<p></p>
+      </section>
+
+      <section>
+	  <title/Can I do backtracking?/
+	<p></p>
+      </section>
+
+      <section>
+	  <title/What is a computation space?/
+	<p></p>
+      </section>
+
+      <section>
+	  <title/How do I program a search problem?/
+	<p></p>
+      </section>
+
+      <section>
+	<title/Why is <code proglang=oz/[]/ not the empty list/
+	<p></p>
+      </section>
+
+      <section>
+	  <title/What is the meaning of the <code proglang=oz/$/
+marker/
+	<p></p>
+      </section>
+
+      <section>
+	  <title/What is the meaning of the <code proglang=oz/,/
+marker/
+	<p></p>
+      </section>
+
+      <section>
+	  <title/What datatypes does Oz provide?/
+	<p></p>
+      </section>
+
+      <section>
+	  <title/What is a basic constraint?/
+	<p></p>
+      </section>
+
+      <section>
+	  <title/What is a non-basic constraint?/
+	<p></p>
+      </section>
+
+      <section>
+	  <title/What is a propagator?/
+	<p></p>
+      </section>
+
+    </chapter>
+
   </body>
 </book>
 <!--
