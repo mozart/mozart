@@ -408,6 +408,11 @@ void siteZeroActiveRef(Site *s){
   return;}
 
 Site* initMySite(ip_address a,port_t p,time_t t){
-  return new Site(a,p,t);}
+  //EK adding mySite to the hashtable. So we can recognize
+  // our own site when it is sent to us as a GName...
+  Site *s =new Site(a,p,t);
+  int hvalue = s->hashPrimary();
+  primarySiteTable->insertPrimary(s,hvalue);
+  return s;}
 
 

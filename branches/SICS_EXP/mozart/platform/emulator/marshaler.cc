@@ -415,7 +415,14 @@ GName *unmarshalGName(TaggedRef *ret, MsgBuffer *bs)
     return 0;
   }
   GName *gn=new GName(gname);
-  bs->gnameMark(gn);
+  
+  OZ_warning("gnameMark not invoked");
+  // EK
+  // Per, the info field in the bs is not set yet. 
+  // bs->setMarshalInfo has not been done yet.
+  //bs->gnameMark(gn);
+  
+
   return gn;
 }
 
@@ -910,7 +917,7 @@ loop:
 
   case DIF_SMALLINT: 
     *ret = OZ_int(unmarshalNumber(bs)); 
-    PD((UNMARSHAL,"small int"));
+    PD((UNMARSHAL,"small int %d",smallIntValue(*ret)));
     return;
 
   case DIF_FLOAT:
