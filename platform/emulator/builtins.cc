@@ -5723,14 +5723,14 @@ BIspec allSpec[] = {
 };
 
 
-extern void BIinitFD(void);
-extern void BIinitFSet(void);
-extern void BIinitCtVar(void);
 extern void BIinitPerdioVar(void);
 extern void BIinitUnix();
 extern void BIinitAssembler();
 extern void BIinitPerdio();
 extern void initVirtualProperties();
+
+OZ_C_proc_proto(BIurl_load);
+OZ_C_proc_proto(BIload);
 
 Builtin *BIinit()
 {
@@ -5741,15 +5741,10 @@ Builtin *BIinit()
 
   BIaddSpec(allSpec);
   BI_Unify=makeTaggedConst(builtinTab.find("="));
-  BI_Show=makeTaggedConst(builtinTab.find("Show"));
   BI_send=makeTaggedConst(builtinTab.find("Send"));
   BI_controlVarHandler=makeTaggedConst(builtinTab.find("controlVarHandler"));
 
   // BIinitAssembler();
-
-  BIinitFD();
-  BIinitFSet();
-  BIinitCtVar();
 
   // BIinitPerdioVar();
   BIinitUnix();
@@ -5765,13 +5760,14 @@ Builtin *BIinit()
   BI_assign   = makeTaggedConst(builtinTab.find("<-"));
   BI_atRedo = makeTaggedConst(builtinTab.find("atRedo"));
   BI_lockLock = makeTaggedConst(builtinTab.find("Lock"));
-
-  BI_load=makeTaggedConst(builtinTab.find("load"));
-  BI_fail=makeTaggedConst(builtinTab.find("fail"));
-  BI_url_load=makeTaggedConst(builtinTab.find("URL.load"));
+  BI_fail     = makeTaggedConst(builtinTab.find("fail"));
 
   // to execute boot functor in am.cc
   BI_dot=makeTaggedConst(builtinTab.find("."));
+
+  BI_load     = makeTaggedConst(new Builtin("load",     2, 0, BIload,     OK));
+  BI_url_load = makeTaggedConst(new Builtin("URL.load", 1, 1, BIurl_load, OK));
+
 
   bi_raise = builtinTab.find("raise");
   bi_raiseError = builtinTab.find("raiseError");

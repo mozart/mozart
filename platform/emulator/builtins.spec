@@ -153,6 +153,22 @@ $cmode='stat';
                              bi  => BItermType,
                              native => false},
 
+    'fdIs'              => { in  => ['*value','bool'],
+                             out => [],
+                             bi  => BIfdIs,
+                             native => false},
+
+    'fsIsVarB'          => { in  => ['value'],
+                             out => ['+bool'],
+                             BI  => BIfsIsVarB,
+                             native => false},
+
+    'fsIsValueB'        => { in  => ['+value','bool'],
+                             out => [],
+                             bi  => BIfsIsValueB,
+                             native => false},
+
+
     ##* Type Conversion
 
     'AtomToString'      => { in  => ['+atom'],
@@ -1155,40 +1171,9 @@ $cmode='stat';
                                         BI  => BIraiseDebugCheck,
                                         native => false},
 
-    ##* Finalization
-
-    'Finalize.register' => { in  => ['+value','+value'],
-                             out => [],
-                             BI  => BIfinalize_register,
-                             native => true},
-
-    'Finalize.setHandler'=> { in  => ['+value'],
-                              out => [],
-                              BI  => BIfinalize_setHandler,
-                              native => true},
-
     ##* Diffent Kinds of Special Variables
 
-    #* System Stuff
-
-    ##* Printing
-
-    'Print'             => { in  => ['value'],
-                             out => [],
-                             bi  => BIprint,
-                             native => true},
-
-    'Show'              => { in  => ['value'],
-                             out => [],
-                             bi  => BIshow,
-                             native => true},
-
     ##* Statistics
-
-    'statisticsReset'   => { in  => [],
-                             out => [],
-                             BI  => BIstatisticsReset,
-                             native => true},
 
     'statisticsPrint'   => { in  => ['+virtualString'],
                              out => [],
@@ -1199,16 +1184,6 @@ $cmode='stat';
                                out => [],
                                BI  => BIstatisticsPrintProcs,
                                native => true},
-
-    'statisticsGetProcs'=> { in  => [],
-                             out => ['+value'],
-                             BI  => BIstatisticsGetProcs,
-                             native => true},
-
-    'setProfileMode'    => { in  => ['+bool'],
-                             out => [],
-                             BI  => BIsetProfileMode,
-                             native => true},
 
     'instructionsPrint' => { in  => [],
                              out => [],
@@ -1242,44 +1217,9 @@ $cmode='stat';
 
     ##* System Printing Primitives
 
-    'System.printName'  => { in  => ['value'],
-                             out => ['+atom'],
-                             BI  => BIgetPrintName,
-                             native => true},
-
     'UnSitedPrintName'  => { in  => ['value'],
                              out => ['+atom'],
                              BI  => BIgetPrintName,
-                             native => false},
-
-    'System.printInfo'  => { in  => ['virtualString'],
-                             out => [],
-                             BI  => BIprintInfo,
-                             native => true},
-
-    'System.printError' => { in  => ['virtualString'],
-                             out => [],
-                             BI  => BIprintError,
-                             native => true},
-
-    'System.showInfo'   => { in  => ['virtualString'],
-                             out => [],
-                             BI  => BIshowInfo,
-                             native => true},
-
-    'System.showError'  => { in  => ['virtualString'],
-                             out => [],
-                             BI  => BIshowError,
-                             native => true},
-
-    'System.valueToVirtualString'=> { in  => ['value','+int','+int'],
-                                      out => ['+string'],
-                                      BI  => BItermToVS,
-                                      native => false},
-
-    'getTermSize'       => { in  => ['value','+int','+int'],
-                             out => ['+int'],
-                             BI  => BIgetTermSize,
                              native => false},
 
     ##* Browser Support
@@ -1309,13 +1249,12 @@ $cmode='stat';
                              BI  => BIchunkWidth,
                              native => false},
 
-    ##* Misc. System Procs
+    'getTermSize'       => { in  => ['value','+int','+int'],
+                             out => ['+int'],
+                             BI  => BIgetTermSize,
+                             native => false},
 
-    'shutdown'          => { in  => ['+int'],
-                             out => [],
-                             BI  => BIshutdown,
-                             doesNotReturn => 1,
-                             native => true},
+    ##* Misc. System Procs
 
     'Alarm'             => { in  => ['+int','unit'],
                              out => [],
@@ -1332,20 +1271,6 @@ $cmode='stat';
                              BI  => BItimeTime,
                              native => false},
 
-    'System.gcDo'       => { in  => [],
-                             out => [],
-                             BI  => BIgarbageCollection,
-                             native => true},
-
-    'System.apply'      => { in  => ['+procedureOrObject','+[value]'],
-                             out => [],
-                             BI  => BIapply,
-                             native => false},
-
-    'System.eq'         => { in  => ['value','value'],
-                             out => ['+bool'],
-                             BI  => BIsystemEq,
-                             native => false},
 
     '='                 => { in  => ['value','value'],
                              out => [],
@@ -1519,72 +1444,6 @@ $cmode='stat';
                              native => true},
 
 
-    #* Pickles
-
-    'save'              => { in  => ['value','+virtualString'],
-                             out => [],
-                             BI  => BIsave,
-                             module=>components,
-                             native => false},
-
-    'load'              => { in  => ['value','value'],
-                             out => [],
-                             BI  => BIload,
-                             module=>components,
-                             native => false},
-
-    #* Connection
-
-    'PID.get'           => { in  => [],
-                             out => ['+record'],
-                             BI  => BIGetPID,
-                             module=>components,
-                             native => false},
-
-    'PID.received'      => { in  => ['value'],
-                             out => [],
-                             BI  => BIReceivedPID,
-                             module=>components,
-                             native => false},
-
-    'PID.close'         => { in  => [],
-                             out => [],
-                             BI  => BIClosePID,
-                             module=>components,
-                             native => false},
-
-    'PID.send'          => { in  => ['+virtualString','+int','+int','+int','+int','value'],
-                             out => [],
-                             BI  => BISendPID,
-                             module=>components,
-                             native => false},
-
-    'PID.toPort'        => { in  => ['+virtualString','+int','+int','+int'],
-                             out => ['+port'],
-                             BI  => BITicket2Port,
-                             module=>components,
-                             native => false},
-
-    #* URL
-
-    'URL.localize'      => { in  => ['+virtualString'],
-                             out => ['+record'],
-                             BI  => BIurl_localize,
-                             module=>components,
-                             native => true},
-
-    'URL.open'          => { in  => ['+virtualString'],
-                             out => ['+int'],
-                             BI  => BIurl_open,
-                             module=>components,
-                             native => true},
-
-    'URL.load'          => { in  => ['+virtualString'],
-                             out => ['value'],
-                             BI  => BIurl_load,
-                             module=>components,
-                             native => true},
-
     #* Virtual Sites
 
     'VirtualSite.newMailbox' => { in     => [],
@@ -1713,218 +1572,7 @@ $cmode='stat';
                              native => true},
 
 
-    ##* Compiler
-
-    ###* Misc
-
-    'Compiler.concatenateAtomAndInt' => { in  => ['+atom','+int'],
-                                          out => ['+atom'],
-                                          BI  => BIconcatenateAtomAndInt,
-                                          native => false},
-
-    'Compiler.isBuiltin' => { in  => ['+value'],
-                              out => ['+bool'],
-                              BI  => BIisBuiltin,
-                              native => false},
-
-    'Compiler.nameVariable' => { in  => ['value','+atom'],
-                                 out => [],
-                                 BI  => BInameVariable,
-                                 native => true},
-
-    'Compiler.newNamedName' => { in  => ['+atom'],
-                                 out => ['+literal'],
-                                 BI  => BInewNamedName,
-                                 native => true},
-
-    'Compiler.newCopyableName' => { in  => ['+atom'],
-                                    out => ['+literal'],
-                                    BI  => BInewCopyableName,
-                                    native => true},
-
-    'Compiler.isCopyableName' => { in  => ['+value'],
-                                   out => ['+bool'],
-                                   BI  => BIisCopyableName,
-                                   native => true},
-
-    'Compiler.isUniqueName' => { in  => ['+value'],
-                                 out => ['+bool'],
-                                 BI  => BIisUniqueName,
-                                 native => true},
-
-    'Compiler.newPredicateRef' => { in  => [],
-                                    out => ['+foreignPointer'],
-                                    BI  => BInewPredicateRef,
-                                    native => true},
-
-    'Compiler.newCopyablePredicateRef' => { in  => [],
-                                            out => ['+foreignPointer'],
-                                            BI  => BInewCopyablePredicateRef,
-                                            native => true},
-
-    'Compiler.isCopyablePredicateRef' => { in  => ['+foreignPointer'],
-                                           out => ['+bool'],
-                                           BI  => BIisCopyablePredicateRef,
-                                           native => true},
-
-    ###* Assembler
-
-    'Assembler.newCodeBlock'            => { in  => ['+int'],
-                                             out => ['+foreignPointer'],
-                                             BI  => BInewCodeBlock,
-                                             native => true},
-
-    'Assembler.getOpcode'               => { in  => ['+atom'],
-                                             out => ['+int'],
-                                             BI  => BIgetOpcode,
-                                             native => true},
-
-    'Assembler.getInstructionSize'      => { in  => ['+atom'],
-                                             out => ['+int'],
-                                             BI  => BIgetInstructionSize,
-                                             native => true},
-
-    'Assembler.makeProc'                => { in  => ['+foreignPointer',
-                                                     '+[value]'],
-                                             out => ['+procedure/0'],
-                                             BI  => BImakeProc,
-                                             native => true},
-
-    'Assembler.addDebugInfo'            => { in  => ['+foreignPointer',
-                                                     '+atom','+int'],
-                                             out => [],
-                                             BI  => BIaddDebugInfo,
-                                             native => true},
-
-    'Assembler.storeOpcode'             => { in  => ['+foreignPointer','+int'],
-                                             out => [],
-                                             BI  => BIstoreOpcode,
-                                             native => true},
-
-    'Assembler.storeNumber'             => { in  => ['+foreignPointer',
-                                                     '+number'],
-                                             out => [],
-                                             BI  => BIstoreNumber,
-                                             native => true},
-
-    'Assembler.storeLiteral'            => { in  => ['+foreignPointer',
-                                                     '+literal'],
-                                             out => [],
-                                             BI  => BIstoreLiteral,
-                                             native => true},
-
-    'Assembler.storeFeature'            => { in  => ['+foreignPointer',
-                                                     '+feature'],
-                                             out => [],
-                                             BI  => BIstoreFeature,
-                                             native => true},
-
-    'Assembler.storeConstant'           => { in  => ['+foreignPointer',
-                                                     'value'],
-                                             out => [],
-                                             BI  => BIstoreConstant,
-                                             native => true},
-
-    'Assembler.storeBuiltinname'        => { in  => ['+foreignPointer',
-                                                     '+procedure'],
-                                             out => [],
-                                             BI  => BIstoreBuiltinname,
-                                             native => true},
-
-    'Assembler.storeRegisterIndex'      => { in  => ['+foreignPointer','+int'],
-                                             out => [],
-                                             BI  => BIstoreRegisterIndex,
-                                             native => true},
-
-    'Assembler.storeInt'                => { in  => ['+foreignPointer','+int'],
-                                             out => [],
-                                             BI  => BIstoreInt,
-                                             native => true},
-
-    'Assembler.storeLabel'              => { in  => ['+foreignPointer','+int'],
-                                             out => [],
-                                             BI  => BIstoreLabel,
-                                             native => true},
-
-    'Assembler.storePredicateRef'       => { in  => ['+foreignPointer',
-                                                     '+value'],
-                                             out => [],
-                                             BI  => BIstorePredicateRef,
-                                             native => true},
-
-    'Assembler.storePredId'             => { in  => ['+foreignPointer','+atom',
-                                                     '+value','+record',
-                                                     '+value','+int'],
-                                             out => [],
-                                             BI  => BIstorePredId,
-                                             native => true},
-
-    'Assembler.newHashTable'            => { in  => ['+foreignPointer','+int',
-                                                     '+int'],
-                                             out => ['+foreignPointer'],
-                                             BI  => BInewHashTable,
-                                             native => true},
-
-    'Assembler.storeHTScalar'           => { in  => ['+foreignPointer',
-                                                     '+foreignPointer',
-                                                     '+value','+int'],
-                                             out => [],
-                                             BI  => BIstoreHTScalar,
-                                             native => true},
-
-    'Assembler.storeHTRecord'           => { in  => ['+foreignPointer',
-                                                     '+foreignPointer',
-                                                     '+literal','+value',
-                                                     '+int'],
-                                             out => [],
-                                             BI  => BIstoreHTRecord,
-                                             native => true},
-
-    'Assembler.storeRecordArity'        => { in  => ['+foreignPointer',
-                                                     '+value'],
-                                             out => [],
-                                             BI  => BIstoreRecordArity,
-                                             native => true},
-
-    'Assembler.storeGenCallInfo'        => { in  => ['+foreignPointer','+int',
-                                                     '+bool','+literal',
-                                                     '+bool','+value'],
-                                             out => [],
-                                             BI  => BIstoreGenCallInfo,
-                                             native => true},
-
-    'Assembler.storeApplMethInfo'       => { in  => ['+foreignPointer',
-                                                     '+literal','+value'],
-                                             out => [],
-                                             BI  => BIstoreApplMethInfo,
-                                             native => true},
-
-    'Assembler.storeGRegRef'            => { in  => ['+foreignPointer',
-                                                     '+[tuple]'],
-                                             out => [],
-                                             BI  => BIstoreGRegRef,
-                                             native => true},
-
-    'Assembler.storeLocation'           => { in  => ['+foreignPointer',
-                                                     '+list#list'],
-                                             out => [],
-                                             BI  => BIstoreLocation,
-                                             native => true},
-
-    'Assembler.storeCache'              => { in  => ['+foreignPointer',
-                                                     'value'],
-                                             out => [],
-                                             BI  => BIstoreCache,
-                                             native => true},
-
     #* Unclassified
-
-    ##* Constraints
-
-    'System.nbSusps'    => { in  => ['value'],
-                             out => ['+int'],
-                             BI  => BIconstraints,
-                             native => true},
 
     ##* Ozma
 

@@ -309,9 +309,7 @@ void SiteUnify(TaggedRef val1,TaggedRef val2)
   Thread *th=am.mkRunnableThread(DEFAULT_PRIORITY,am.currentBoard());
 #ifdef PERDIO_DEBUG
   PD((SITE_OP,"SITE_OP: site unify called %d %d",val1, val2));
-  if(DV->on(SITE_OP)){
-    th->pushCall(BI_Show,oz_atom("SITE_OP: site unify complete"));
-  }
+
   Assert(MemChunks::isInHeap(val1) && MemChunks::isInHeap(val1));
 #endif
   pushUnify(th,val1,val2);
