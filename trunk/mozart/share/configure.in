@@ -66,10 +66,10 @@ AC_ARG_ENABLE(fun,
 if test "${enable_fun}" = no; then
     AC_MSG_RESULT(no)
     COMPILER_FUN=Compiler.fun
-    COMPILER_BIG=Compiler.ozc
+    COMPILER_BIG=Compiler.ozf
 else
     AC_MSG_RESULT(yes)
-    COMPILER_FUN=Compiler.ozc
+    COMPILER_FUN=Compiler.ozf
     COMPILER_BIG=Compiler.big
 fi
 AC_SUBST(COMPILER_FUN)
