@@ -1,5 +1,5 @@
 <CHAPTER ID="chapter.stddialog">
-  <TITLE>QTk Standard Dialog Boxes</TITLE>
+  <TITLE>QTk standard dialog boxes</TITLE>
 <p>
 QTk offers the following standard dialog boxes:
 <list>
@@ -119,7 +119,7 @@ The parameters are:
 <item> <<zoom>>: a real specifying a zoom factor to apply to the area to print. If not specified, <<1.0>> is assumed.
 <item> <<rotate>>: a boolean specifying the canvas must be rotated 90 degrees when printed or not. If not specified, <<false>> is assumed.
 <item> <<fit>>: a boolean specifying if the area to print must be stretched to fit the whole page or not. If not specified, <<false>> is assumed.
-<item> <<pagewidth>>: a virtual string representing the page width. Valid strings are composed of an integer value followed by one of these characters : <<c>>, <<m>>, <<i>>, <<p>>. <<c>> stands for centimers, <<m>> for millimeters, <<i>> for inches and <<p>> for picas. If not specified, the string <<"210m">> is assumed.
+<item> <<pagewidth>>: a virtual string representing the page width. Valid strings are composed of an integer value followed by one of these letters: <<c>>, <<m>>, <<i>>, <<p>>. <<c>> stands for centimers, <<m>> for millimeters, <<i>> for inches and <<p>> for picas. If not specified, the string <<"210m">> is assumed.
 <item> <<pageheight>>: a virtual string representing the page height. Valid strings are valid strings for the <<pagewidth>> parameter. If not specified, the string <<"297m">> is assumed.
 <item> <<pagex>>: a virtual string representing the left margin of the page. Valid strings are valid strings for the <<pagewidth>> parameter. If not specified, the string <<"10m">> is assumed.
 <item> <<pagey>>: a virtual string representing the top margin of the page. Valid strings are valid strings for the <<pagewidth>> parameter. If not specified, the string <<"10m">> is assumed.
@@ -128,7 +128,7 @@ The parameters are:
 <item> <<colormode>>: an atom specifying if the page must be printed in color, shades of gray or pure black and white. Valid values are <<color>>, <<gray>> and <<mono>>. If not specified, <<mono>> is assumed.
 <item> <<x>>:  an integer specifying the horizontal origin of the area of the canvas to print. If not specified, 0 is assumed.
 <item> <<y>>:  an integer specifying the horizontal origin of the area of the canvas to print. If not specified, 0 is assumed.
-<item> <<1>>: a free variable that is bound to <<nil>> if the user cancelled, or that is bound to a record containing a feature for each parameters described here. Note that the semantics of the parameters <<width>>, <<height>>, <<x>> and <<y>> are slightly different from those of the <<postscript>> method of canvases. Consequently, the returned record of <<printcanvas>> also has the features <<tkwidth>>, <<tkheight>>, <<tkx>> and <<tky>> that contain the values that should be given to the <<width>>, <<height>>, <<x>> and <<y>> parameters of the <<postscript>> method of canvases (see example).
+<item> <<1>>: a free variable that is bound to <<nil>> if the user cancelled, or that is bound to a record containing a feature for each parameter described here. Note that the semantics of the parameters <<width>>, <<height>>, <<x>> and <<y>> are slightly different from those of the <<postscript>> method of canvases. Consequently, the returned record of <<printcanvas>> also has the features <<tkwidth>>, <<tkheight>>, <<tkx>> and <<tky>> that contain the values that should be given to the <<width>>, <<height>>, <<x>> and <<y>> parameters of the <<postscript>> method of canvases (see example).
 </list>
 
 

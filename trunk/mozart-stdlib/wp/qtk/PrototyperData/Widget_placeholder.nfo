@@ -1,0 +1,8 @@
+This example shows the placeholder widget.
+
+A placeholder is a rectangular area where you can dynamically place different widgets. Normally, once a window is created, you can't change the organization of the widgets that are inside (replacing a label by a button for example). Most of the time this is not a problem, and if ever you have to do such things you can use a placeholder.
+
+- the handle parameter of the placeholder widget allows to gain access over the object controlling the widget. This access is necessary to send the commands to create and switch what is displayed inside the placeholder.
+- you can change what is displayed inside the placeholder by setting a new record.
+- you can also set back widgets that have already been placed inside the placeholder. Use the handle parameter to get a reference to the widgets that are displayed inside the placeholder.
+- you can clear the placeholder by set(empty).

@@ -1,5 +1,5 @@
 <CHAPTER ID="chapter.basics">
-  <TITLE>Building a window</TITLE>
+  <TITLE>QTk basics</TITLE>
 <p>
 The tutorial example shows the building of a simple application and how its GUI is expressed in QTk. This chapter details all the information needed to start working with QTk. The geometry management and the different principles of QTk are described.
 
@@ -88,7 +88,7 @@ As the text labels aren't the same width, the buttons are not vertically centere
 
 <<newline>> introduces a new line (or column for the <<td>> widget) using a grid structure, such that widgets are aligned on several lines.
 </P><P>
-Another uselful command is <<empty>> which leaves an empty space :
+Another uselful command is <<empty>> which leaves an empty space:
 
 </P> <P>
 <<lr(button(text:"One") button(text:"Two") button(text:"Three")     newline
@@ -131,8 +131,8 @@ end
 While building the window, all <<handle>> variables are bound to objects that grant control over the corresponding widgets. These objects have interfaces depending on the nature of the widget they are controlling. However these interfaces were made as uniform as possible and contain at least the following methods:
 
 <LIST>
-<ITEM> <<set(parameter:value)>> : changes the value of the parameter of the widget.
-<ITEM> <<get(parameter:free_variable)>> : binds the variable to the contents of the parameter of the widget.
+<ITEM> <<set(parameter:value)>>: changes the value of the parameter of the widget.
+<ITEM> <<get(parameter:free_variable)>>: binds the variable to the contents of the parameter of the widget.
 </LIST>
 
 Several parameters can be set or get in a single command:
@@ -178,11 +178,11 @@ See the widget reference documentation for specific widget support of the <<retu
 <section> <TITLE> Events and actions </TITLE>
 
 <P>
-So far we are still unable to dynamically interact with the user, as we don't now what he is doing. Actions can be associated to user events. Many widgets have a main event corresponding to the most obvious use of the widget. All other events can be finely defined using the <<bind>> method.
+So far we are still unable to dynamically interact with the user, as we don't know what he is doing. Actions can be associated to user events. Many widgets have a main event corresponding to the most obvious use of the widget. All other events can be finely defined using the <<bind>> method.
 
 <subsection id=basics.events> <TITLE>Main events</TITLE>
 <P>
-Most widgets raises an event just after the user has interacted with them:
+Most widgets raise an event just after the user has interacted with them:
 <LIST>
 <ITEM> After the user clicks on a button.
 <ITEM> After the user selects an item in a list.
@@ -195,13 +195,13 @@ These are called main events. Most simple uses are covered by these events. Thes
 
 <LIST>
 <ITEM> A zero parameter procedure.
-<ITEM> A pair objet_variable#method.
+<ITEM> A pair object_variable#method.
 <ITEM> A pair port_variable#message.
 <ITEM> A pair <<toplevel>>#method.
 <ITEM> A pair <<widget>>#method.
 </LIST>
 
-Where the last two are just shortcuts to objet_variable#method with objet_variable being a reference respectively to the window or the widget itself. A frequent use is <<button(text:"Close" action:toplevel#close)>>.
+Where the last two are just shortcuts to object_variable#method with object_variable being a reference respectively to the window or the widget itself. A frequent use is <<button(text:"Close" action:toplevel#close)>>.
 <CODE DISPLAY>local
 
   class C

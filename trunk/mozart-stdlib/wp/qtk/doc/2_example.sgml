@@ -1,5 +1,5 @@
 <CHAPTER ID="chapter.example">
-  <TITLE>Tutorial Example: a simple word processing application</TITLE>
+  <TITLE>Tutorial example: a notepad application</TITLE>
 <p>
 This chapter describes by an example how a GUI (graphical user interface) is built using the QTk module. The creation of widgets, their geometry inside the window and their interaction with Mozart are described.
 
@@ -20,8 +20,8 @@ The example application consists of a window composed by
 The construction of the window is completely described by a record. This record defines the widgets that compose the window, how these widgets must be placed and what is their behavior upon window resizing. The label of the record defines the widget type while the features define its parameters. Some widgets act as containers for other widgets. The two main containers are:
 
 <LIST>
-<ITEM> <<td>> : all widgets contained in this one are placed top to down
-<ITEM> <<lr>> : all widgets contained in this one are placed left to right
+<ITEM> <<td>>: all widgets contained in this one are placed top to down
+<ITEM> <<lr>>: all widgets contained in this one are placed left to right
 </LIST>
 
 In this application, the toolbar is composed of <<button>> widgets. The <<text>> parameter defines the text inside the button. 
@@ -34,12 +34,12 @@ The toolbar is described by:
            button(text:"Load")
            button(text:"Quit"))</CODE>
 
-which means : place these three buttons respectively from left to right, each button taking the size it needs to display itself.
+which means: place these three buttons respectively from left to right, each button taking the size it needs to display itself.
 
 Combining with the text widget, we obtain:
 <CODE DISPLAY>Description=td(Toolbar
                text)</CODE>
-which means : place the toolbar and the text respectively from top to bottom, each widget taking the size it needs to display itself.
+which means: place the toolbar and the text respectively from top to bottom, each widget taking the size it needs to display itself.
 </P>
 <P>
 Now we can build a window from this description by the command:
@@ -64,7 +64,7 @@ Using the glue parameter we define:
 Description=td(Toolbar
                text(glue:nswe))</CODE>
 Note that the very first <<td>> or <<lr>> widget is always implicitly <<glue:nswe>>.
-Building and showing the window again, we obtain an application that has a complete graphical user interface, except that it is an empty shell : there is no interaction defined between the application and the user.
+Building and showing the window again, we obtain an application that has a complete graphical user interface, except that it is an empty shell: there is no interaction defined between the application and the user.
 </P>
 
 <section> <TITLE>Interaction with the user</TITLE>
@@ -80,7 +80,7 @@ button(text:"Load" glue:w action:LoadText)</CODE>
 Where <<LoadText>> and <<SaveText>> do these:
 
 <LIST>
-<ITEM> Ask a filename. Standard dialog boxes are provided in QTk : <<{QTk.dialogbox load(...)}>> and <<{QTk.dialogbox save(...)}>>
+<ITEM> Ask a filename. Standard dialog boxes are provided in QTk: <<{QTk.dialogbox load(...)}>> and <<{QTk.dialogbox save(...)}>>
 <ITEM> Get the contents of the text widget and save it to the file or get the contents of the file and change the contents of the text widget accordingly.
 </LIST>
 

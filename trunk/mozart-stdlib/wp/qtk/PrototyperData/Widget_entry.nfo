@@ -1,0 +1,9 @@
+This example shows the entry widget.
+
+An entry widget is a place where the user can type one line of text.
+
+- The init parameter allows to specify a text to place in the entry when the window is created.
+- The handle parameter allows to specify a variable that can control the entry.
+- The return parameter allows to specify a variable that will be binded to the text in the entry when the window is closed.
+- The action parameter allows to specify a command to be executed each time the user modifies the entry.
+

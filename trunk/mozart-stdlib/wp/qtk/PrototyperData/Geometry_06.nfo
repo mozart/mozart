@@ -1,0 +1,8 @@
+This example shows extensions of the grid structure.
+
+Run the example below.
+
+The empty keyword leaves a blank space.
+The continue keyword allow a widget to spread over more than just one column (or line in case of a lr widget).
+
+Note that empty, continue and newline are NOT widgets (they can't be glued for example).
