@@ -1486,7 +1486,6 @@ static OZ_Term parse() {
   for (i = 0; i < DEPTH; i++)
     terms[i] = 0;
 
-  xy_errorMessages = OZ_nil();
   xyparse();
 
   // in case there was a syntax error during the parse, delete garbage:
