@@ -948,11 +948,6 @@ $builtins = {
                              bi  => BINew,
                              native => false},
 
-    'setSelf'           => { in  => ['+object'],
-                             out => [],
-                             BI  => BIsetSelf,
-                             native => false},
-
     ###* Spaces
 
     'Space.new'         => { in  => ['+procedure/1'],
