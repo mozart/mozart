@@ -13,8 +13,7 @@ where
    Grammar = Atom#                  % start symbol
              [Atom]#                % token declarations
              [Assoc]#
-             [Rule]#
-             Int.                   % expected s/r conflicts
+             [Rule].
    Assoc = Atom#'leftAssoc'#Int
          | Atom#'rightAssoc'#Int
          | Atom#'nonAssoc'#Int.
