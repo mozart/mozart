@@ -157,6 +157,7 @@ void printBanner(char*initFile)
           " RECINSTRFETCH=%d", RECINSTRFETCH
 #endif
          );
+  fprintf(stderr, "\n");
 #endif
 
 #ifdef PROFILE_EMULATOR
