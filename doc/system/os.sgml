@@ -72,7 +72,7 @@ operating system or <<net>> for network layer).
 <item> The integer ?_{I} gives an operating system dependent error
 number.
 <item> The string ?_{S} describes the exception by some text.
-<item> The value ?_{D} might contain some additional debug information.
+<item> The value ?_{X} might contain some additional debug information.
 </list>
 </section>
 
