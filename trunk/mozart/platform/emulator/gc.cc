@@ -1975,11 +1975,12 @@ void ConstTerm::gcConstRecurse()
   case Co_Object:
     {
       Object *o = (Object *) this;
+      o->gcTertiary();
+      if (o->isLocal()) {
+	o->setBoard(o->getBoard()->gcBoard());
+      }
       o->setClass(o->getClass()->gcClass());
       o->setFreeRecord(o->getFreeRecord()->gcSRecord());
-      if (o->isDeep()){
-	((DeepObject*)o)->home = o->getBoard()->gcBoard();
-      }
       o->setState(o->getState()->gcSRecord());
       int oldFlags = o->flagsAndLock&(~ObjFlagMask);
       o->flagsAndLock = ToInt32(o->getLock()->gcConstTerm())|oldFlags;
@@ -2067,13 +2068,11 @@ void ConstTerm::gcConstRecurse()
   case Co_Chunk:
     {
       SChunk *c = (SChunk *) this;
-
       c->gcTertiary();
       gcTagged(c->value,c->value);
       if (c->isLocal()) {
 	c->setBoard(c->getBoard()->gcBoard());
       }
-
       break;
     }
     
@@ -2161,9 +2160,8 @@ ConstTerm *ConstTerm::gcConstTerm()
     {
       Object *o = (Object *) this;
       CheckLocal(o);
-      sz = o->isDeep() ? sizeof(DeepObject): sizeof(Object);
-      COUNT1(deepObject,o->isDeep()?1:0);
-      COUNT1(flatObject,o->isDeep()?0:1);
+      sz = sizeof(Object);
+      dogcGName(o->getGName());
       break;
     }
   case Co_Cell:
@@ -2417,9 +2415,8 @@ ObjectClass *ObjectClass::gcClass()
   storeForward(&fastMethods, ret);
   ret->fastMethods    = (OzDictionary*) fastm->gcConstTerm();
   ret->defaultMethods = (OzDictionary*) defaultMethods->gcConstTerm();
-  ret->printName      = printName->gc();
   ret->unfreeFeatures = ret->unfreeFeatures->gcSRecord();
-  gcTagged(ozclass,ret->ozclass);
+  ret->ozclass        = ozclass->gcObject();
   return ret;
 }
 

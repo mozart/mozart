@@ -368,11 +368,13 @@ public:
     ObjectClass *cla = obj->getClass();
     if (ToInt32(cla) != key) {
       Bool defaultsUsed;
-      Abstraction *ret = obj->getMethod(meth,arity,X,defaultsUsed);
+      Abstraction *ret = obj->getMethod(meth,arity,X,defaultsUsed);      
       if (!defaultsUsed) {
 	key   = ToInt32(cla);
 	value = ToInt32(ret);
       }
+      if (ret && ret->isProxy()) 
+	return NULL;
       return ret;
     }
     return (Abstraction*) ToPointer(value);
