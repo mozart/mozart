@@ -29,45 +29,17 @@
 
 #include "fsstd.hh"
 
-#ifdef FSET_HIGH
-class BitVector {
-private:
-  int _bits[fset_high];
-public:
-  BitVector(void) {
-    for (int i = fset_high; i --; )
-      _bits[i] = 0;
-  }
-  int isIn(const int i) {
-    return (i < 0 || i >= fsethigh32)
-      ? 0
-      : (_bits[i >> 5] & (1 << (i & 0x1f)));
-  }
-  BitVector &operator += (const int i) {
-    if (0 <= i && i < fsethigh32)
-      _bits[i >> 5] |= (1 << (i & 0x1f));
-    return *this;
-  }
-};
-#endif
-
+/*
 class MonitorInPropagator : public OZ_Propagator {
   friend INIT_FUNC(fsp_init);
 private:
-#ifdef FSET_HIGH
-  BitVector _in_sofar;
-#else
   OZ_FSetValue _in_sofar;
-#endif
   OZ_Term _fsetvar, _stream;
   static OZ_PropagatorProfile profile;
 public:
   MonitorInPropagator(OZ_Term fsetvar, OZ_Term stream)
-#ifdef FSET_HIGH
-    : _fsetvar(fsetvar) , _stream(stream) { }
-#else
     : _fsetvar(fsetvar) , _stream(stream), _in_sofar(fs_empty) { }
-#endif
+
   virtual size_t sizeOf(void) { return sizeof(MonitorInPropagator); }
   virtual void updateHeapRefs(OZ_Boolean) {
     OZ_updateHeapTerm(_stream);
@@ -76,6 +48,65 @@ public:
   virtual OZ_Return propagate(void);
   virtual OZ_Term getParameters(void) const {
     return OZ_cons(_fsetvar, OZ_cons(_stream, OZ_nil()));
+  }
+  virtual OZ_PropagatorProfile * getProfile(void) const { return &profile; }
+};
+*/
+
+class MonitorPropagator : public OZ_Propagator {
+private:
+  OZ_FSetValue _present_sofar;
+  OZ_Term _fsetvar, _stream;
+
+public:
+  MonitorPropagator(OZ_Term fsetvar, OZ_Term stream)
+    : _fsetvar(fsetvar) , _stream(stream), _present_sofar(fs_empty) { }
+
+  virtual size_t sizeOf(void) { return sizeof(MonitorPropagator); }
+
+  virtual void updateHeapRefs(OZ_Boolean) {
+    OZ_updateHeapTerm(_stream);
+    OZ_updateHeapTerm(_fsetvar);
+  }
+
+  virtual OZ_Return propagate(OZ_Boolean is_inprop);
+
+  virtual OZ_Term getParameters(void) const {
+    return OZ_cons(_fsetvar, OZ_cons(_stream, OZ_nil()));
+  }
+};
+
+//-----------------------------------------------------------------------------
+
+class MonitorInPropagator : public MonitorPropagator {
+  friend INIT_FUNC(fsp_init);
+
+private:
+  static OZ_PropagatorProfile profile;
+
+public:
+  MonitorInPropagator(OZ_Term fsetvar, OZ_Term stream)
+    : MonitorPropagator(fsetvar, stream) { }
+
+  virtual OZ_Return propagate(void) {
+    return MonitorPropagator::propagate(OZ_TRUE);
+  }
+
+  virtual OZ_PropagatorProfile * getProfile(void) const { return &profile; }
+};
+
+class MonitorOutPropagator : public MonitorPropagator {
+  friend INIT_FUNC(fsp_init);
+
+private:
+  static OZ_PropagatorProfile profile;
+
+public:
+  MonitorOutPropagator(OZ_Term fsetvar, OZ_Term stream)
+    : MonitorPropagator(fsetvar, stream) { }
+
+  virtual OZ_Return propagate(void) {
+    return MonitorPropagator::propagate(OZ_FALSE);
   }
   virtual OZ_PropagatorProfile * getProfile(void) const { return &profile; }
 };

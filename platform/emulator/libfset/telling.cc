@@ -92,14 +92,8 @@ OZ_Return IncludePropagator::propagate(void)
   } else {
 
     // all elements which are known _not_ to be in `s' are not in `d'
-#ifdef FSET_HIGH
-    for (int i = fsethigh32; i --; )
-      if (s->isNotIn(i))
-        FailOnEmpty(*d -= i);
-#else
     OZ_FiniteDomain not_in(s->getNotInSet());
     FailOnEmpty(*d -= not_in);
-#endif
 
     if (*d == fd_singl)
       FailOnInvalid(*s += d->getSingleElem());
@@ -131,14 +125,8 @@ OZ_Return ExcludePropagator::propagate(void)
   } else {
 
     // all elements which are known to be in `s' are not in `d'
-#ifdef FSET_HIGH
-    for (int i = fsethigh32; i --; )
-      if (s->isIn(i))
-        FailOnEmpty(*d -= i);
-#else
     OZ_FiniteDomain lb(s->getGlbSet());
     FailOnEmpty(*d -= lb);
-#endif
 
     if (*d == fd_singl)
       FailOnInvalid(*s -= d->getSingleElem());

@@ -59,25 +59,6 @@ OZ_Return FSetsMinPropagator::propagate(void)
   // card(s) > 0
   FailOnInvalid(s->putCard(1, fsethigh32));
 
-#ifdef FSET_HIGH
-  for (int i = 0; i < fsethigh32; i += 1) {
-    // i < min(d) ==> i not in s remove all elements from `s' that are
-    // less than the minimal element of `d'
-    if (i < d->getMinElem())
-      FailOnInvalid(*s -= i);
-
-    // i in s ==> min(d) <= i
-    // `d' is less or equal to the smallest element of `glb(s)'
-    if (s->isIn(i)) {
-      FailOnEmpty(*d <= i);
-    }
-    // DENYS: i not in s ==> d=/=i
-    // all elements being _not_ in `s' are not in `d'
-    else if (s->isNotIn(i)) {
-      FailOnEmpty(*d -= i);
-    }
-  }
-#else
   {
     // i < min(d) ==> i not in s
     // remove all elements from `s' that are less than the minimal
@@ -93,7 +74,7 @@ OZ_Return FSetsMinPropagator::propagate(void)
     OZ_FiniteDomain not_in(s->getNotInSet());
     FailOnEmpty(*d -= not_in);
   }
-#endif
+
   // d is in s
   {
     int i = d->getSingleElem();
@@ -144,26 +125,6 @@ OZ_Return FSetsMaxPropagator::propagate(void)
   // card(s) > 0
   FailOnInvalid(s->putCard(1, fsethigh32));
 
-#ifdef FSET_HIGH
-  for (int i = 0; i < fsethigh32; i += 1) {
-    // i > max(d) ==> i not in s
-    // remove all elements from `s' that are greater than the maximal
-    // element of `d'
-    if (i > d->getMaxElem())
-      FailOnInvalid(*s -= i);
-
-    // i in s ==> max(d) >= i
-    // `d' is greater or equal to the largest element of `glb(s)'
-    if (s->isIn(i)) {
-      FailOnEmpty(*d >= i);
-    }
-    // i not in s ==> d=/=i
-    // all elements being _not_ in `s' are not in `d'
-    else if (s->isNotIn(i)) {
-      FailOnEmpty(*d -= i);
-    }
-  }
-#else
   {
     // i > max(d) ==> i not in s
     // remove all elements from `s' that are greater than the maximal
@@ -179,7 +140,7 @@ OZ_Return FSetsMaxPropagator::propagate(void)
     OZ_FiniteDomain not_in(s->getNotInSet());
     FailOnEmpty(*d -= not_in);
   }
-#endif
+
   // d is in s
   {
     int i = d->getSingleElem();
@@ -219,41 +180,6 @@ OZ_Return FSetsConvexPropagator::propagate(void)
   // an empty set is convex (per definition)
   if (!s->isEmpty()) {
 
-#ifdef FSET_HIGH
-    int minelem, maxelem;
-
-    for (int i = 0; i < fsethigh32; i++) {
-      if (s->isIn(i)) {
-        minelem = maxelem = i;
-        for(i++; i < fsethigh32; i++)
-          if (s->isIn(i))
-            maxelem = i;
-
-        // all ints between the smallest and largest known elements
-        // must also be in
-        for(int k = minelem + 1; k < maxelem; k++)
-          FailOnInvalid(*s += k);
-
-        // find a non-element below minelem: all ints below are out
-        for(i = minelem - 1; i >= 0; i--)
-          if (s->isNotIn(i)) {
-            while (i--)
-              FailOnInvalid(*s -= i);
-            break;
-          }
-
-        // find a non-element above maxelem: all ints above are out
-        for(i = maxelem + 1; i < fsethigh32; i++)
-          if (s->isNotIn(i)) {
-            while (++i < fsethigh32)
-              FailOnInvalid(*s -= i);
-            break;
-          }
-
-        break;
-      } // if
-    } // for
-#else
     _OZ_DEBUGPRINT(("a"));
 
     // find minimal and maximal element in glb and fill it up
@@ -289,8 +215,6 @@ OZ_Return FSetsConvexPropagator::propagate(void)
     }
 
     _OZ_DEBUGPRINT(("d"));
-
-#endif
   }
 
   _OZ_DEBUGPRINTTHIS("out: ");
@@ -389,23 +313,6 @@ loop:
     // (3)
     OZ_DEBUGPRINT(("_k=%d _l=%d",_k, _l));
 
-#ifdef FSET_HIGH
-    if (_k == 0) { // TMUELLER
-      for (i = OZ_getFSetInf(); i < vd[0]->getMinElem(); i += 1)
-        FailOnInvalid(*s -= i);
-    } else {
-      for (i = vd[_k - 1]->getMaxElem() + 1; i < vd[_k]->getMinElem(); i += 1)
-        FailOnInvalid(*s -= i);
-    }
-
-    if (_l == _vd_size - 1) { // TMUELLER
-      for (i = OZ_getFSetSup(); i > vd[_l]->getMaxElem(); i -= 1)
-        FailOnInvalid(*s -= i);
-    } else {
-      for (i = vd[_l + 1]->getMinElem() - 1; i > vd[_l]->getMaxElem(); i -= 1)
-        FailOnInvalid(*s -= i);
-    }
-#else
     if (_k == 0) {
       OZ_FSetValue remove_elems(OZ_getFSetInf(), vd[0]->getMinElem() - 1);
       FailOnInvalid(*s <<= (*s - remove_elems));
@@ -423,7 +330,6 @@ loop:
                                 vd[_l + 1]->getMinElem() - 1);
       FailOnInvalid(*s <<= (*s - remove_elems));
     }
-#endif
 
     OZ_DEBUGPRINTTHIS("(3) ");
   }
@@ -725,15 +631,6 @@ loop:
     // (3)
     OZ_DEBUGPRINT(("_k=%d _l=%d",_k, _l));
 
-#ifdef FSET_HIGH
-    if (_l == _vd_size - 1) { // TMUELLER
-      for (i = OZ_getFSetSup(); i > vd[_l]->getMaxElem(); i -= 1)
-        FailOnInvalid(*s -= i);
-    } else {
-      for (i = vd[_l + 1]->getMinElem() - 1; i > vd[_l]->getMaxElem(); i -= 1)
-        FailOnInvalid(*s -= i);
-    }
-#else
     if (_l == _vd_size - 1) {
       OZ_FSetValue remove_elems(vd[_l]->getMaxElem() + 1, OZ_getFSetSup());
       FailOnInvalid(*s <<= *s - remove_elems);
@@ -742,7 +639,6 @@ loop:
                                 vd[_l + 1]->getMinElem() - 1);
       FailOnInvalid(*s <<= *s = remove_elems);
     }
-#endif
 
     OZ_DEBUGPRINTTHIS("(3) ");
   }
