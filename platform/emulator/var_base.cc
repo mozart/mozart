@@ -81,7 +81,14 @@ Bool oz_var_valid(OzVariable *ov,TaggedRef val) {
   return NO;
 }
 
-OZ_Return oz_var_unify(OzVariable *ov,TaggedRef *ptr,TaggedRef *val) {
+OZ_Return oz_var_unify(OzVariable *ov, TaggedRef *ptr, TaggedRef *val) {
+  Assert(oz_isVar(*val));
+  Assert(ov == tagged2Var(*ptr));
+  DebugCode(OzVariable *rv = tagged2Var(*val));
+  DebugCode(Board* tb1 = ov->getBoardInternal()->derefBoard());
+  DebugCode(Board* tb2 = rv->getBoardInternal()->derefBoard());
+  Assert(oz_isBelow(tb1, tb2) || ov->getType() >= rv->getType());
+  //
   switch (ov->getType()){
   case OZ_VAR_OPT:     return ((OptVar *) ov)->unify(ptr,val);
   case OZ_VAR_SIMPLE:  return ((SimpleVar *) ov)->unify(ptr,val);

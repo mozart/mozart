@@ -31,6 +31,7 @@
 #include "var_simple.hh"
 #include "unify.hh"
 
+/*
 OZ_Return SimpleVar::bind(TaggedRef* vPtr, TaggedRef t)
 {
   oz_bindVar(this,vPtr, t);
@@ -39,22 +40,22 @@ OZ_Return SimpleVar::bind(TaggedRef* vPtr, TaggedRef t)
 
 OZ_Return SimpleVar::unify(TaggedRef* vPtr, TaggedRef *tPtr)
 {
-  OzVariable *tv=tagged2Var(*tPtr);
-  // kost@ : OZ_VAR_OPT"s are yet simpler than OZ_VAR_SIMPLE"s;
-  if (tv->getType() >= OZ_VAR_SIMPLE
-      && oz_isBelow(tv->getBoardInternal(), GETBOARD(this))
-#ifdef VAR_BIND_NEWER
-      // if both are local, then check heap
-      && (!oz_isLocalVar(this) || heapNewer(tPtr,vPtr))
-#endif
-      ) {
-
-    oz_bindVar(tv,tPtr, makeTaggedRef(vPtr));
-  } else {
-    oz_bindVar(this,vPtr, makeTaggedRef(tPtr));
-  }
-  return PROCEED;
+//    OzVariable *tv=tagged2Var(*tPtr);
+//    // kost@ : OZ_VAR_OPT"s are yet simpler than OZ_VAR_SIMPLE"s;
+//    if (tv->getType() >= OZ_VAR_SIMPLE
+//        && oz_isBelow(tv->getBoardInternal(), GETBOARD(this))
+//  #ifdef VAR_BIND_NEWER
+//        // if both are local, then check heap
+//        && (!oz_isLocalVar(this) || heapNewer(tPtr,vPtr))
+//  #endif
+//        ) {
+//      oz_bindVar(tv,tPtr, makeTaggedRef(vPtr));
+//    } else {
+  oz_bindVar(this,vPtr, makeTaggedRef(tPtr));
+//    }
+  return (PROCEED);
 }
+*/
 
 OzVariable *oz_newSimpleVar(Board *bb)
 {
