@@ -7,22 +7,6 @@
   Version: $Revision$
   State: $State$
 
-  $Log$
-  Revision 1.8  1996/08/06 13:30:38  mehl
-  bug fixes and ports
-
-  Revision 1.7  1996/08/05 08:23:46  mehl
-  not using -DPERDIO works now
-
-  Revision 1.6  1996/08/02 16:25:50  scheidhr
-  more Perdio work: send Ports over the net
-
-  Revision 1.4  1996/08/02  11:14:17  mehl
-  perdio uses tcp now
-
-  Revision 1.2  1996/07/26 15:17:43  mehl
-  perdio communication: see ~mehl/perdio.oz
-
   network layer
   ------------------------------------------------------------------------
 */
