@@ -26,8 +26,9 @@ define
 	       {self formatHeaderEnum(
 			'entries'
 			{Map {Arity @toc}
-			 fun {$ ID}
-			  a(href:{Manager id_to_href(ID $)}
+			 fun {$ ID} L = {Manager id_to_href(ID $)} in
+			    {Manager trace('creating link to '#ID#' '#L)}
+			  a(href:L
 			    tt({HtmlQuote ID}))
 			 end}
 			$)}

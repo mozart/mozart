@@ -42,6 +42,8 @@ define
 		   'update-categories-html'(type:bool)
 		   'update-package-list'(type:bool)
 		   'update-package-list-html'(type:bool)
+		   %%
+		   'mogul-top'(type:string)
 		  )}
    catch error(ap(usage Msg) ...) then
       {System.showError Msg}

@@ -3,6 +3,7 @@ import
    Open(file html)
    Admin(manager:Manager)
    Text(htmlQuote:HtmlQuote)
+   Directory(mkDirForFile)
 export
    UpdateCatPages UpdatePkgListPage
 define
@@ -12,10 +13,7 @@ define
       html(
 	 head(
 	    title(Title)
-	    link(
-	       rel : 'stylesheet'
-	       type: 'text/css'
-	       href: 'mogul.css'))
+	    {Manager getCssLink($)})
 	 body(
 	    h1('class':'title' Title)
 	    'div'(
@@ -72,6 +70,7 @@ define
    end
    %%
    proc {WriteHtmlPage Page File}
+      {Directory.mkDirForFile File}
       Out = {New HTML_File init(name:File flags:[write create truncate])}
    in
       {Out tag(Page)}

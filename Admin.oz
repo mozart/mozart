@@ -2,14 +2,15 @@ functor
 import
    Application(exit)
    System(showError printError)
-   OS(getCWD)
+   OS(getCWD getEnv)
    Except('raise':Raise)
    Database('class')
    Open(file)
-   URL(toAtom resolve toBase toString)
+   URL(toAtom resolve toBase toString make)
    Category(updateCatPages updatePkgListPage)
+   MogulID(normalizeID:NormalizeID)
 export
-   Manager Trace Indent Dedent
+   Manager Trace Indent Dedent RelativeTo
 define
    fun {RelativeTo Base Rel}
       {URL.toString {URL.resolve {URL.toBase Base} Rel}}
@@ -19,10 +20,10 @@ define
       prop final
       attr db rootID rootURL reports verbose nerrors
 	 indent wget css mogulDIR mogulURL provided
-	 categories categoriesURL packages
+	 categories categoriesURL packages mogulTOP
       meth init
 	 db      <- unit
-	 rootID  <- 'mogul'
+	 rootID  <- {NormalizeID 'mogul' 'mogul:'}
 	 rootURL <- 'mogul.mogul'
 	 reports <- nil
 	 verbose <- false
@@ -36,6 +37,7 @@ define
 	 categories<-unit
 	 categoriesURL<-'mogul-categories.mogul'
 	 packages<-unit
+	 mogulTOP<- '/~'#{OS.getEnv 'USER'}#'/mogul'
       end
       meth indent indent<-'  '#@indent end
       meth dedent
@@ -67,7 +69,7 @@ define
       %%
       meth 'verbose'(V) verbose<-V end
       meth 'quiet'(V) verbose<-{Not V} end
-      meth 'root-id'(V) rootID<-V end
+      meth 'root-id'(V) rootID<-{NormalizeID V 'mogul:'} end
       meth 'root-url'(V) rootURL<-V end
       meth 'open-db'(V)
 	 if @db\=unit then
@@ -143,7 +145,11 @@ define
       end
       meth get_css($) @css end
       meth 'css'(V) css<-V end
-      meth id_to_href(ID $) ID#'.html' end
+      meth id_to_href(ID $)
+	 S = {URL.toString {AdjoinAt {URL.make ID} scheme unit}}
+      in
+	 @mogulTOP#'/info/'#S#'.html'
+      end
       meth condGetId(ID D $)
 	 if @db==unit then D else {@db condGet(ID D $)} end
       end
@@ -156,7 +162,9 @@ define
 	 end
       end
       meth id_to_html_filename(ID $)
-	 {RelativeTo @mogulDIR 'info/'#ID#'.html'}
+	 S = {URL.toString {AdjoinAt {URL.make ID} scheme unit}}
+      in
+	 {RelativeTo @mogulDIR 'info/'#S#'.html'}
       end
       meth 'mogul-dir'(V) mogulDIR<-V end
       meth 'mogul-url'(V) mogulURL<-V end
@@ -269,6 +277,13 @@ define
 	       Admin,addReport(M E)
 	    end
 	 end
+      end
+      meth 'mogul-top'(V) mogulTOP<-V end
+      meth getTop($) @mogulTOP end
+      meth getCssLink($)
+	 link(rel : 'stylesheet'
+	      type: 'text/css'
+	      href: @mogulTOP#'/mogul.css')
       end
    end
 

@@ -6,6 +6,7 @@ import
    Externalizable('class':XT)
    GetSlot('class':GS)
    HTML_Section('class':HTMLClass)
+   MogulID(normalizeID:NormalizeID)
 export
    'class' : Section
 define
@@ -14,7 +15,7 @@ define
       meth init(Msg Id Url Pid Prev)
 	 {Manager incTrace('--> init Section '#Id)}
 	 try
-	    id    <- Id
+	    id    <- {NormalizeID Id Pid}
 	    url   <- Url
 	    pid   <- Pid
 	    email <- {Msg condGet1('email' unit $)}
@@ -25,12 +26,12 @@ define
 	       {Manager trace('Parsing message body')}
 	       Toc = {ParseNodup Body}
 	    in
-	       for E in {Toc entries($)} do
-		  case E of K#[V] then
-		     {Msg check_id_prefix(K Id)}
-		     toc <- {AdjoinAt @toc K {URL.toAtom {URL.resolve Url V}}}
-		  end
-	       end
+	       toc <- {List.toRecord toc
+		       {Map {Toc entries($)}
+			fun {$ K#[V]}
+			   {NormalizeID K @id} #
+			   {URL.toAtom {URL.resolve Url V}}
+			end}}
 	    end
 	 finally
 	    {Manager decTrace('<-- init Section '#Id)}
