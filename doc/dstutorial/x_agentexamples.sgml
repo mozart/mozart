@@ -3,7 +3,7 @@
   <TITLE>Mobile Agents</TITLE>
 
 <P>This chapter shows how to program mobile agents in Mozart.
-We assume that an <EM>agent</EM> is any distributed
+We call <EM>agent</EM> any distributed
 computation that is organized as a set of tasks.
 A <EM>task</EM> is a computation that uses the
 resources of a single site.
@@ -53,7 +53,7 @@ by exactly one network message.
 is a set of fixed places, the agent servers,
 and a set of evolving computational ``webs'',
 each potentially covering many places at once.
-Such a web is what we call an ``agent''.
+A web is what we call an ``agent''.
 
 <SECTION><TITLE>An example agent</TITLE>
 
@@ -83,8 +83,8 @@ where <<F>> is a functor that
 specifies the calculation and the resources it needs.
 <ITEM>The operation <<{AS.publishserver FN}>>, which when executed
 creates a file <<FN>> that contains a ticket to the site's agent server.
-<ITEM>The operation <<{AS.getserver FN ?AS}>>, which when inputted
-an URL or file name <<FN>> to any agent server
+<ITEM>The operation <<{AS.getserver UFN ?AS}>>, which when inputted
+an URL or file name <<UFN>> to any agent server
 (even on other sites), gives as output a reference to that agent server <<AS>>.
 </LIST>
 
@@ -261,16 +261,16 @@ define
    proc {AS F} {Send P F} end
    T={Connection.offerUnlimited AS}
 
-      % Make agent server available through file/URL FN:
+      % Make agent server available through file FN:
       % Note that the agent server is asynchronous.
    proc {PublishServer FN}
       {Pickle.save T FN}
    end
 
-      % Get access to a server that is at file/URL FN:
-   proc {GetServer FN AS}
+      % Get access to a server that is at file/URL UFN:
+   proc {GetServer UFN AS}
       try
-         T={Pickle.load FN}
+         T={Pickle.load UFN}
       in
          AS={Connection.take T}
       catch _ then
