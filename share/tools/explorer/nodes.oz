@@ -341,7 +341,7 @@ in
       of failed then
 	 {New Classes.failed init(False 1)}
       [] solved then
-	 LocalClasses = Classes.(Info.1.status)
+	 LocalClasses = Classes.(Info.2)
       in
 	 create $
 	    attr solution:False
