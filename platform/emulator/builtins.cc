@@ -4792,6 +4792,15 @@ OZ_C_proc_begin(BIdictionaryKeys,2)
 OZ_C_proc_end
 
 
+OZ_C_proc_begin(BIdictionaryMarkSafe,1)
+{
+  oz_declareDictionaryArg(0,dict);
+  dict->markSafe();
+  return PROCEED;
+}
+OZ_C_proc_end
+
+
 OZ_C_proc_begin(BIdictionaryEntries,2)
 {
   oz_declareDictionaryArg(0,dict);
@@ -7403,6 +7412,7 @@ BIspec allSpec[] = {
   {"Dictionary.entries", 2, BIdictionaryEntries, 0},
   {"Dictionary.items",   2, BIdictionaryItems,   0},
   {"Dictionary.clone",   2, BIdictionaryClone,   0},
+  {"Dictionary.markSafe",1, BIdictionaryMarkSafe,   0},
 
   {"NewLock",	      1,BInewLock,	 0},
   {"Lock",	      1,BIlockLock,	 0},
