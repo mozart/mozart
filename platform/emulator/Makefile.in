@@ -41,6 +41,9 @@ LD              = @LD@
 DYNLD           = @DYNLD@
 
 INSTALL         = @INSTALL@
+INSTALL_DIR     = $(INSTALL) -m 775 -d
+INSTALL_BIN     = $(INSTALL) -m 555
+INSTALL_OTHER   = $(INSTALL) -m 444
 LIBS            = @LIBS@
 LDFLAGS         = @LDFLAGS@
 
@@ -157,12 +160,12 @@ PROPOBJS = @PROPOBJS@
 
 .NOEXPORT: emulate.o $(PROGRAMNAME) peanuts.o
 
-all:: $(TARGETS)
+all: $(TARGETS)
 
-win:: ozlib.lnk $(M4FILES)
+win: ozlib.lnk $(M4FILES)
 
-win-install::
-        $(INSTALL) -m 775 ozemulator.exe $bindir
+win-install:
+        $(INSTALL_BIN) ozemulator.exe $(bindir)
 
 first: version $(M4FILES) $(SRCS)
 
@@ -180,19 +183,19 @@ $(PROGRAMNAME): first main.o $(OBJS) $(PROPOBJS)
            main.o $(OBJS) $(PROPOBJS) $(LIBS); \
         echo 'moving ...'; mv /tmp/$@.$$$$ $@
 
-install:: install-dir install-bin install-inc
+install: install-dir install-bin install-inc
 
 install-bin: $(TARGETS)
-        $(INSTALL) -m 555 $(TARGETS) $(bindir)
+        $(INSTALL_BIN) $(TARGETS) $(bindir)
 
 install-inc:
-        $(INSTALL) -m 444 oz.h $(indir)
-        $(INSTALL) -m 444 oz_cpi.hh $(incdir)
+        $(INSTALL_OTHER) oz.h $(incdir)
+        $(INSTALL_OTHER) oz_cpi.hh $(incdir)
 
 install-dir:
-        $(INSTALL) -d $(platformdir)
-        $(INSTALL) -d $(bindir)
-        $(INSTALL) -d $(incdir)
+        if test ! -d $(platformdir) ; then $(INSTALL_DIR) $(platformdir) ; fi
+        if test ! -d $(bindir); then $(INSTALL_DIR) $(bindir) ; fi
+        if test ! -d $(incdir); then $(INSTALL_DIR) $(incdir) ; fi
 
 
 version.cc: version
@@ -202,13 +205,13 @@ emulate.cc:: register.hh
 initffuns.cc oz.c: oz.h
         ./makeffuns
 
-version::
+version:
         $(SED) -e "s/HEREGOESDATE/`date '+%a %h, %d, 19%y \(%T\)'`/" \
              -e "s/OZPLATFORM/$(platform)/" \
              $(srcdir)/version.sed > version.cc
 
 
-depend:: $(M4FILES) $(SRCS) $(FDLIBSRCS) $(SCHEDLIBSRCS) $(FSETLIBSRCS)
+depend: $(M4FILES) $(SRCS) $(FDLIBSRCS) $(SCHEDLIBSRCS) $(FSETLIBSRCS)
         $(DEPEND) $(SRCS) $(FDLIBSRCS) $(SCHEDLIBSRCS) $(FSETLIBSRCS) \
                 >> Makefile
 
@@ -221,11 +224,11 @@ tags:   $(M4FILES) version.cc
 clean+: clean
         $(RM) $(TARGETS)
 
-clean::
+clean:
         $(RM) *.o *~  *.bak *.obj gmon.out  fetchedInstr.dump verb_out.txt \
                 $(FDLIBOBJS) $(SCHEDLIBOBJS) $(FSETLIBOBJS)
 
-realclean::
+realclean: clean
         $(RM) version.cc scanner.cc parser.cc parser.hh $(TARGETS) \
                 ozma-s.cc ozma-p.cc ozma.hh \
                 ozlib.lnk *.exe *.map *.imp *.sym *.so \
@@ -234,7 +237,7 @@ realclean::
                 conf.h Makefile config.cache \
                 $(FDLIB) $(SCHEDLIB) $(FSETLIB)
 
-veryclean:: realclean
+veryclean: realclean
 
 # create a separate directory of links
 # for compiling the emulator

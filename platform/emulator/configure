@@ -1470,7 +1470,7 @@ done
 
 platform=`$PLATFORMSCRIPT`
 PROGRAMNAME=oz.emulator.bin
-TARGETS="$PROGRAM"
+TARGETS="$PROGRAMNAME"
 psdir=/project/ps
 libs="$psdir/lib/$platform $HOME/lib/$platform"
 
