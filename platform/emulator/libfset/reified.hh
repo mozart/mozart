@@ -30,6 +30,7 @@
 #include "fsstd.hh"
 #include "telling.hh"
 #include "indexset.hh"
+#include <string.h>
 
 class IncludeRPropagator : public Propagator_S_D_D {
 private:

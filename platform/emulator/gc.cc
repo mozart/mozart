@@ -1826,8 +1826,8 @@ void gc_finalize()
     LTuple *t = tagged2LTuple(l);
     OZ_updateHeapTerm(*t->getRefHead());
   }
-  for (OZ_Term l=finalize_list;!isNil(l);l=tail(l)) {
-    LTuple *t = tagged2LTuple(l);
+  for (OZ_Term l1=finalize_list;!isNil(l1);l1=tail(l1)) {
+    LTuple *t = tagged2LTuple(l1);
     OZ_updateHeapTerm(*t->getRefHead());
   }
   // if the finalize_list is not empty, we must create a new

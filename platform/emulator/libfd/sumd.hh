@@ -61,7 +61,7 @@ public:
 
   virtual OZ_Return propagate(void);
   virtual OZ_Term getParameters(void) const
-    { return Propagator_VI_VD_I::getParameters(SUM_OP_EQ); }
+    { return Propagator_VI_VD_I::getParametersC(SUM_OP_EQ); }
 };
 
 
@@ -85,7 +85,7 @@ public:
 
   virtual OZ_Return propagate(void);
   virtual OZ_Term getParameters(void) const
-    { return Propagator_VI_VD_I::getParameters(SUM_OP_LEQ); }
+    { return Propagator_VI_VD_I::getParametersC(SUM_OP_LEQ); }
 };
 
 //-----------------------------------------------------------------------------
@@ -115,7 +115,7 @@ public:
 
   virtual OZ_Return propagate(void);
   virtual OZ_Term getParameters(void) const
-    { return Propagator_VI_VD_I::getParameters(SUM_OP_NEQ); }
+    { return Propagator_VI_VD_I::getParametersC(SUM_OP_NEQ); }
 };
 
 

@@ -279,21 +279,21 @@ public:
   OZ_Return leave(void) {
     OZ_Boolean vars_left = OZ_FALSE;
     for (int i = _vs_size; i--; vars_left |= _v1[i].leave());
-    for (int i = _vs_size; i--; vars_left |= _v2[i].leave());
-    for (int i = _vs_size; i--; vars_left |= _v3[i].leave());
+    for (int i1 = _vs_size; i1--; vars_left |= _v2[i1].leave());
+    for (int i2 = _vs_size; i2--; vars_left |= _v3[i2].leave());
 
     return vars_left ? OZ_SLEEP : OZ_ENTAILED;
   }
   OZ_Return vanish(void) {
-    for (int i = _vs_size; i--; _v1[i].leave());
-    for (int i = _vs_size; i--; _v2[i].leave());
-    for (int i = _vs_size; i--; _v3[i].leave());
+    for (int i3 = _vs_size; i3--; _v1[i3].leave());
+    for (int i4 = _vs_size; i4--; _v2[i4].leave());
+    for (int i5 = _vs_size; i5--; _v3[i5].leave());
     return OZ_ENTAILED;
   }
   OZ_Return fail(void) {
-    for (int i = _vs_size; i--; _v1[i].fail());
-    for (int i = _vs_size; i--; _v2[i].fail());
-    for (int i = _vs_size; i--; _v3[i].fail());
+    for (int i6 = _vs_size; i6--; _v1[i6].fail());
+    for (int i7 = _vs_size; i7--; _v2[i7].fail());
+    for (int i8 = _vs_size; i8--; _v3[i8].fail());
     return OZ_FAILED;
   }
 };

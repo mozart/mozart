@@ -146,8 +146,8 @@ public:
   Thread(const Thread &tt); // fake compiler
   Thread &operator = (const Thread& tt); // fake compiler
 
-  Thread(int flags, int prio, Board *bb, int id)
-    : Tertiary(bb,Co_Thread,Te_Local), id(id)
+  Thread(int flags, int prio, Board *bb, int id1)
+    : Tertiary(bb,Co_Thread,Te_Local), id(id1)
   {
     state.flags = flags;
     state.pri = prio;

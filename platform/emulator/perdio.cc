@@ -3838,14 +3838,14 @@ void Chain::informHandleTempOnAdd(OwnerEntry* oe,Tertiary *t,Site *s){
     if(ie->site==s){
       EntityCond ec=ie->wouldTrigger(TEMP_BLOCKED|TEMP_SOME|TEMP_ME);
       if(ec!=ENTITY_NORMAL){
-        sendTellError(oe,s,t->getIndex(),ec,true);}}
+        sendTellError(oe,s,t->getIndex(),ec,TRUE);}}
     ie=ie->next;}}
 
 void cellLockReceiveGet(OwnerEntry* oe,Site* toS){
   Tertiary* t=oe->getTertiary();
   Chain *ch=getChainFromTertiary(t);
   if(ch->hasFlag(TOKEN_LOST)){
-    sendTellError(oe,toS,t->getIndex(),PERM_BLOCKED|PERM_SOME|PERM_ME,true);
+    sendTellError(oe,toS,t->getIndex(),PERM_BLOCKED|PERM_SOME|PERM_ME,TRUE);
     return;}
   if(t->getType()==Co_Cell){
     cellReceiveGet(oe,(CellManager*) t,toS);}
@@ -4723,13 +4723,13 @@ void receiveAskError(OwnerEntry *oe,Site *toS,EntityCond ec){
   if(ch->hasFlag(TOKEN_LOST)){
     EntityCond tmp=ec & (PERM_SOME|PERM_ME);
     if(tmp != ENTITY_NORMAL){
-      sendTellError(oe,toS,t->getIndex(),tmp,true);}
+      sendTellError(oe,toS,t->getIndex(),tmp,TRUE);}
     ch->newInform(toS,ec);
     ch->dealWithTokenLostBySite(oe,t->getIndex(),toS);
     return;}
   Assert(!(ec & TEMP_ALL));
   if((ch->hasFlag(TOKEN_PERM_SOME)) && (ec & PERM_SOME)){
-    sendTellError(oe,toS,t->getIndex(),PERM_SOME,true);
+    sendTellError(oe,toS,t->getIndex(),PERM_SOME,TRUE);
     return;}
   ch->newInform(toS,ec);
   if(someTempCondition(ec)){
@@ -4935,7 +4935,7 @@ void Chain::informHandle(OwnerEntry* oe,int OTI,EntityCond ec){
   InformElem *cur=*base;
   while(cur!=NULL){
     if(cur->watchcond & ec){
-      sendTellError(oe,cur->site,OTI,cur->watchcond & ec,true);
+      sendTellError(oe,cur->site,OTI,cur->watchcond & ec,TRUE);
       *base=cur->next;
       freeInformElem(cur);
       cur=*base;
@@ -4949,7 +4949,7 @@ void Chain::dealWithTokenLostBySite(OwnerEntry*oe,int OTI,Site *s){ // ATTENTION
   while(cur!=NULL){
     if((cur->site==s) & (cur->watchcond & PERM_BLOCKED)){
       Assert((cur->watchcond == PERM_BLOCKED) || (cur->watchcond == TEMP_BLOCKED|PERM_BLOCKED));
-      sendTellError(oe,cur->site,OTI,PERM_BLOCKED,true);
+      sendTellError(oe,cur->site,OTI,PERM_BLOCKED,TRUE);
       *base=cur->next;
       freeInformElem(cur);
       cur=*base;}
@@ -5013,7 +5013,7 @@ void Chain::handleTokenLost(OwnerEntry *oe,int OTI){
   releaseChainElem(first);
   while(ce){
     if(!ce->flagIsSet(CHAIN_GHOST)){
-      sendTellError(oe,ce->site,OTI,PERM_SOME|PERM_BLOCKED|PERM_ME,true);}
+      sendTellError(oe,ce->site,OTI,PERM_SOME|PERM_BLOCKED|PERM_ME,TRUE);}
     back=ce;
     ce=ce->next;
     releaseChainElem(back);}
@@ -5091,7 +5091,7 @@ void Chain::managerSeesSiteTemp(Tertiary *t,Site *s){
     if(ec != ENTITY_NORMAL){
       change=OK;
       index=t->getIndex();
-      sendTellError(OT->getOwner(index),cur->site,index,ec,true);}
+      sendTellError(OT->getOwner(index),cur->site,index,ec,TRUE);}
     cur=cur->next;}
 
   ChainElem *ce=findAfter(s); // deal with TEMP_BLOCKED handlers
@@ -5103,7 +5103,7 @@ void Chain::managerSeesSiteTemp(Tertiary *t,Site *s){
         if(ec!= ENTITY_NORMAL){
           change=OK;
           index=t->getIndex();
-          sendTellError(OT->getOwner(index),cur->site,index,ec,true);}}
+          sendTellError(OT->getOwner(index),cur->site,index,ec,TRUE);}}
       cur=cur->next;}
     ce=ce->next;}
   if(change){
@@ -5123,7 +5123,7 @@ void Chain::managerSeesSiteOK(Tertiary *t,Site *s){
     if(ec!=ENTITY_NORMAL){
       change=OK;
       index=t->getIndex();
-      sendTellError(OT->getOwner(index),cur->site,index,ec,false);}
+      sendTellError(OT->getOwner(index),cur->site,index,ec,FALSE);}
     cur=cur->next;}
 
   ChainElem *ce=findAfter(s); // deal with TEMP_BLOCKED handlers
@@ -5135,7 +5135,7 @@ void Chain::managerSeesSiteOK(Tertiary *t,Site *s){
         if(ec!= ENTITY_NORMAL){
           change=OK;
           index=t->getIndex();
-          sendTellError(OT->getOwner(index),cur->site,index,ec,false);}}
+          sendTellError(OT->getOwner(index),cur->site,index,ec,FALSE);}}
       cur=cur->next;}
     ce=ce->next;}
 
@@ -5257,8 +5257,8 @@ void Site::probeFault(ProbeReturn pr){
       tr->managerProbeFault(this,pr);}} // TO_BE_IMPLEMENTED vars
 
   limit=BT->getSize();
-  for(int ctr = 0; ctr<limit;ctr++){
-    BorrowEntry *be = BT->getEntry(ctr);
+  for(int ctr1 = 0; ctr1<limit;ctr1++){
+    BorrowEntry *be = BT->getEntry(ctr1);
     if(be==NULL){continue;}
     Assert(be!=NULL);
     if(be->isTertiary()){
