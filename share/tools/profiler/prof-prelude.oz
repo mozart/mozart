@@ -22,11 +22,6 @@
 \insert prof-string
 \insert prof-tk
 
-%% some builtins...
-Profile = profile(mode:    {`Builtin` setProfileMode 1}
-		  getInfo: {`Builtin` statisticsGetProcs 1}
-		  reset:   {`Builtin` statisticsReset 0} )
-
 StatusHelp = {NewName}
 
 proc {EnqueueCompilerQuery M}
