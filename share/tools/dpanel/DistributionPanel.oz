@@ -1,10 +1,11 @@
 functor
 import
-   Main(server:Mserver open:Mopen openNetInfo:MnetInfo)  at 'DistributionPanelSrc.ozf'
+   Main(server:Mserver open:Mopen openManualUpdate:MopenM openNetInfo:MnetInfo)  at 'DistributionPanelSrc.ozf'
    DPStatistics(siteStatistics)
    Error
 export
    Open
+   OpenManualUpdate
    OpenNetInfo
    Client
    Server
@@ -80,6 +81,7 @@ define
    
    
    Open=Mopen
+   OpenManualUpdate=MopenM
    OpenNetInfo=MnetInfo
    Server=Mserver
 end
