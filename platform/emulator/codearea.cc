@@ -513,6 +513,18 @@ void CodeArea::display (ProgramCounter from, int sz, FILE* ofile)
                getPosIntArg(PC+5));
       DISPATCH();
 
+    case INLINEUPARROW:
+      {
+        TaggedRef literal = getLiteralArg(PC+2);
+        fprintf (ofile,
+                 "(X[%d],X[%d],X[%d],%d)\n",
+                 regToInt(getRegArg(PC+1)),
+                 regToInt(getRegArg(PC+2)),
+                 regToInt(getRegArg(PC+3)),
+                 getPosIntArg(PC+4));
+      }
+      DISPATCH();
+
     case INLINEDOT:
       {
         TaggedRef literal = getLiteralArg(PC+2);
