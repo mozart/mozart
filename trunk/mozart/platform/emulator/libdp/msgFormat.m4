@@ -80,4 +80,4 @@ message(C_CLOSE_WEAK,5)
 message(C_CLOSE_ACCEPT,5)
 message(C_CLOSE_REJECT,5)
 
-message(C_CLEAR_REFERENCE,4)
+message(C_CLEAR_REFERENCE,5)
