@@ -16,7 +16,7 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Text
 %%
-Version                = '1.5.2 (Apr 97)'
+Version                = '3.0.0-1 (Apr 97)'
 TitleName              = 'Oz Debugger Interface'
 IconName               = 'Ozcar'
 
@@ -63,6 +63,10 @@ IgnoreNoFileStep       = 'Ignoring new thread as there\'s' # /* end */
                          ' no line information available. ' #
                          ' Hint: save your Emacs buffer!'
 
+DoneMessage            = ' done'
+
+SwitchMessage          = 'You have selected thread #' /* end */
+RebuildMessage         = 'Re-calculating stack of thread #' /* end */
 ForgetMessage          = 'Thread #'
 ForgetMessage2         = ' is not traced anymore'
 TerminateMessage       = 'Thread #'
