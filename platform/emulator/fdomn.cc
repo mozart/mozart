@@ -71,7 +71,7 @@ int toTheUpperEnd[32] = {
 
 int fd_bv_max_high, fd_bv_max_elem, fd_bv_conv_max_high;
 int * fd_bv_left_conv, * fd_bv_right_conv;
-intptr fd_iv_left_sort[MAXFDBIARGS], fd_iv_right_sort[MAXFDBIARGS];
+intptr fd_iv_left_sort[FDOMNINITSIZE], fd_iv_right_sort[FDOMNINITSIZE];
 
 const unsigned int maxByte     = 0xff;
 const unsigned int maxHalfWord = 0xffff;
@@ -1325,8 +1325,6 @@ int OZ_FiniteDomainImpl::initSingleton(int n)
   return size = 1;
 }
 
-extern int static_int_a[MAXFDBIARGS], static_int_b[MAXFDBIARGS];
-
 /* gcc-2.6.3 on solaris has problems ...*/
 int intcompare(const void * ii, const void  * jj) {
   int **i = (int **) ii;
@@ -1335,7 +1333,9 @@ int intcompare(const void * ii, const void  * jj) {
 }
 
 inline
-int OZ_FiniteDomainImpl::simplify(int list_len, int * list_left, int * list_right)
+int OZ_FiniteDomainImpl::simplify(int list_len,
+                                  int * list_left,
+                                  int * list_right)
 {
   // producing list of sorted pointers in terms of this list
   int i;
@@ -1359,14 +1359,10 @@ int OZ_FiniteDomainImpl::simplify(int list_len, int * list_left, int * list_righ
         *fd_iv_right_sort[len] = *fd_iv_right_sort[p];
   }
 
-  // writing sorted and collapsed intervals back to list_{left,right}
-  static int aux[MAXFDBIARGS];
-
-  for (i = 0; i < len; i++) aux[i] = *fd_iv_left_sort[i];
-  for (i = 0; i < len; i++) list_left[i] = aux[i];
-
-  for (i = 0; i < len; i++) aux[i] = *fd_iv_right_sort[i];
-  for (i = 0; i < len; i++) list_right[i] = aux[i];
+  for (i = 0; i < len; i++) {
+    list_left[i]  = *fd_iv_left_sort[i];
+    list_right[i] = *fd_iv_right_sort[i];
+  }
 
   return len;
 }
@@ -1482,11 +1478,12 @@ int OZ_FiniteDomainImpl::initDescr(OZ_Term d)
   } else if (isNil(d)) {
     return initEmpty();
   } else if (isLTuple(d_tag)) {
-    int * left_arr = static_int_a, * right_arr = static_int_b;
+    EnlargeableArray<int> left_arr(FDOMNINITSIZE), right_arr(FDOMNINITSIZE);
+
     int min_arr = fd_sup, max_arr = 0;
 
-    int len_arr;
-    for (len_arr = 0; isLTuple(d) && len_arr < MAXFDBIARGS; ) {
+    int len_arr = 0;
+    while (isLTuple(d)) {
       LTuple &list = *tagged2LTuple(d);
       OZ_Term val = list.getHead();
 
@@ -1532,13 +1529,11 @@ int OZ_FiniteDomainImpl::initDescr(OZ_Term d)
       } else {
         error("Unexpected case when creating finite domain.");
       }
+      left_arr.request(len_arr);
+      right_arr.request(len_arr);
     for_loop:
       d = deref(list.getTail());
     } // for
-    if (len_arr >= MAXFDBIARGS) {
-      warning("OZ_FiniteDomainImpl::init: "
-              "Probably elements of description are ignored");
-    }
     return initList(len_arr, left_arr, right_arr, min_arr, max_arr);
   }
  error:

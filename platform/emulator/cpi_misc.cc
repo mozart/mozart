@@ -11,7 +11,6 @@
 
 #include "cpi.hh"
 
-
 //-----------------------------------------------------------------------------
 
 #ifdef CPI_FILE_PRINT
@@ -81,13 +80,17 @@ void OZ_hfreeChars(char * is, int n)
 #define MAKETAGGEDINDEX(I)  makeTaggedRef(FDTAG,(int32) (I<<2))
 #define GETINDEX(T)         (ToInt32(tagValueOfVerbatim(T))>>2);
 
+#ifdef GAGA
+static EnlargeableArray<int> is(1024);
+#else
 static int _is_size = 1024;
 static int * is = (int *) malloc(_is_size * sizeof(int));
+#endif
 
 int * OZ_findEqualVars(int sz, OZ_Term * ts)
 {
 #ifdef __GNUC__
-  /* gcc supports dynamic array suzes */
+  /* gcc supports dynamic array sizes */
   OZ_Term * _ts_ptr[sz], _ts[sz];
 #else
 #if defined(__WATCOMC__) || defined(_MSC_VER)
@@ -97,8 +100,13 @@ int * OZ_findEqualVars(int sz, OZ_Term * ts)
 #endif
   int i;
 
+#ifdef GAGA
+  is.request(sz);
+#else
   if (sz > _is_size)
     is = (int *) realloc(is, sizeof(int) * (_is_size = sz));
+#endif
+
   for (i = 0; i < sz; i += 1) {
     OZ_Term t = ts[i];
     DEREF(t, tptr, ttag);
@@ -126,15 +134,23 @@ int * OZ_findEqualVars(int sz, OZ_Term * ts)
   return is;
 }
 
+#ifdef GAGA
+static EnlargeableArray<int> sgl(1024);
+#else
 static int _sgl_size = 1024;
 static int * sgl = (int *) malloc(_sgl_size * sizeof(int));
+#endif
 
 int * OZ_findSingletons(int sz, OZ_Term * ts)
 {
   int i;
 
+#ifdef GAGA
+  sgl.request(sz);
+#else
   if (sz > _sgl_size)
     sgl = (int *) realloc(is, sizeof(int) * (_sgl_size = sz));
+#endif
   for (i = 0; i < sz; i += 1) {
     OZ_Term t = ts[i];
     DEREF(t, tptr, ttag);
