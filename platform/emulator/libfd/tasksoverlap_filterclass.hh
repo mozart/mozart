@@ -18,8 +18,8 @@ public:
     // clause 1
     {
       _engine_cl1.init();
-      make_PEL_GreaterOffset(_engine_cl1, _cl1_t1, xd, _cl1_t2, (PFDVAR *) NULL);
-      make_PEL_GreaterOffset(_engine_cl1, _cl1_t2, yd, _cl1_t1, (PFDVAR *) NULL);
+      make_PEL_GreaterOffset<ENGINE,P_PFDVAR,PFDVAR>(_engine_cl1, _cl1_t1, xd, _cl1_t2);
+      make_PEL_GreaterOffset<ENGINE,P_PFDVAR,PFDVAR>(_engine_cl1, _cl1_t2, yd, _cl1_t1);
       //      
       (*_cl1_t1).initFull();
       (*_cl1_t2).initFull();
@@ -28,7 +28,7 @@ public:
     // clause 2
     {
       _engine_cl2.init();
-      make_PEL_LessEqOffset(_engine_cl2, _cl2_t1, xd, _cl2_t2, (PFDVAR *) NULL);
+      make_PEL_LessEqOffset<ENGINE,P_PFDVAR,PFDVAR>(_engine_cl2, _cl2_t1, xd, _cl2_t2);
       (*_cl2_t1).initFull();
       (*_cl2_t2).initFull();
       (*_cl2_o).initSingleton(0);
@@ -36,7 +36,7 @@ public:
     // clause 3
     {
       _engine_cl3.init();
-      make_PEL_LessEqOffset(_engine_cl3, _cl3_t2, yd, _cl3_t1, (PFDVAR *) NULL);
+      make_PEL_LessEqOffset<ENGINE,P_PFDVAR,PFDVAR>(_engine_cl3, _cl3_t2, yd, _cl3_t1);
       //
       (*_cl3_t1).initFull();
       (*_cl3_t2).initFull();
