@@ -4899,11 +4899,14 @@ else
   HAVE_LIBART=yes
   echo $ac_n "checking for libart libs flags""... $ac_c" 1>&6
 echo "configure:4902: checking for libart libs flags" >&5
+  ART_CFLAGS=`${LIBART_CONFIG} --cflags`
   ART_LIBS=`${LIBART_CONFIG} --libs`
   echo "$ac_t""$ART_LIBS" 1>&6
 fi
 export HAVE_LIBART
 export ARTS_LIBS
+export ART_CFLAGS
+
 
 
 
@@ -5136,6 +5139,7 @@ s%@IMLIB_CONFIG@%$IMLIB_CONFIG%g
 s%@GDK_IMLIB_CFLAGS@%$GDK_IMLIB_CFLAGS%g
 s%@GDK_IMLIB_LIBS@%$GDK_IMLIB_LIBS%g
 s%@LIBART_CONFIG@%$LIBART_CONFIG%g
+s%@ART_CFLAGS@%$ART_CFLAGS%g
 s%@ART_LIBS@%$ART_LIBS%g
 s%@HAVE_LIBART@%$HAVE_LIBART%g
 s%@LIBART_SUBDIR@%$LIBART_SUBDIR%g
