@@ -23,25 +23,18 @@
 
 %%
 %% TODO:
-%% -- synchronize environment of created compiler with Ozcar's stack display
-%% -- closing Ozcar should terminate the application
-%% -- map Application.exit of the debugged application to the following
-%%    actions:
-%%     * remove emacs bar
-%%     * ask `Exit Emacs?' in Emacs
 %% -- is it possible to attach to a running Emacs instead of starting
-%%    a new one?  Alternatively, provide for a means to start ozd from
-%%    the OPI
-%% -- attach Emacs queries does not work with the Emacs sub-process
-%%    (the created Emacs interface is not entered as opi.compiler property)
+%%    a new one?
+%% -- provide for a means to start ozd from the OPI
+%% -- synchronize environment of created compiler with Ozcar's stack display
 %% -- the environment of the created compiler should be richer (cf. OPI),
-%%    especially, it is not yet possible to set breakpoints since Ozcar is
-%%    not in there
+%%    especially, it is not yet possible to set breakpoints since this
+%%    requires the variable `Ozcar'
 %%
 
 functor
 import
-   Application(getCmdArgs exit)
+   Application
    Compiler(engine)
    Debug(breakpoint) at 'x-oz://boot/Debug'
    Emacs(interface)
@@ -72,14 +65,27 @@ define
       {Application.exit Status}
    end
 
+   local
+      Application =
+      'export'(exit:
+		  proc {$ Status}
+		     %--** display this in a dialog box indicating Status
+		     {System.printError
+		      'Application exited with status '#Status#'.\n'}
+		  end)
+   in
+      MyApplication = Application
+   end
+
    try Args in
       Args = {Application.getCmdArgs ArgSpec}
       if Args.help then
 	 {Usage "" 0}
       end
-      case Args.1 of AppName|AppArgs then AppFunc MM in
-	 {Property.put 'ozd.args' AppArgs}
+      case Args.1 of AppName|AppArgs then CloseAction MM F in
 	 {Ozcar.object on()}
+	 {Property.put 'errors.toplevel' proc {$} skip end}
+	 {Property.put 'errors.subordinate' proc {$} fail end}
 	 if Args.useemacs then Socket Port E EMACS I in
 	    thread
 	       Socket = {New Open.socket server(port: ?Port)}
@@ -99,24 +105,31 @@ define
 		      proc {$ V}
 			 {Socket write(vs: V)}
 		      end)}
+	    {Property.put 'opi.compiler' I}
 	    {Ozcar.object conf(emacsInterface: I)}
 	    thread {I readQueries()} end
+	    proc {CloseAction}
+	       {I exit()}
+	       {Application.exit 0}
+	    end
+	 else
+	    proc {CloseAction}
+	       {Application.exit 0}
+	    end
 	 end
-	 local
-	    F = {Pickle.load AppName}
-	 in
-	    AppFunc = {Functor.new F.'import' F.'export'
-		       fun {$ IMPORT}
-			  thread
-			     {Debug.breakpoint}
-			     {F.apply IMPORT}
-			  end
-		       end}
-	 end
-	 {Property.put 'errors.toplevel' proc {$} skip end}
-	 {Property.put 'errors.subordinate' proc {$} fail end}
+	 {Ozcar.object conf(closeAction: CloseAction)}
+	 {Property.put 'ozd.args' AppArgs}
+	 F = {Pickle.load AppName}
 	 MM = {New Module.manager init()}
-	 {Wait {MM apply(url: AppName AppFunc $)}}
+	 {MM enter(name: 'Application' {Adjoin Application MyApplication})}
+	 {Wait {MM apply(url: AppName
+			 {Functor.new F.'import' F.'export'
+			  fun {$ IMPORT}
+			     thread
+				{Debug.breakpoint}
+				{F.apply IMPORT}
+			     end
+			  end} $)}}
       [] nil then
 	 {Exception.raiseError ap(usage 'missing application argument')}
       end
