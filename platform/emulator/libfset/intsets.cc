@@ -47,7 +47,7 @@
 int FSetGetLowerBoundOfMax(OZ_FSetConstraint& c)
 {
   // just in case we _know_ that there are no elements
-  if (c.getCardMax()=<0) return -1;
+  if (c.getCardMax()<=0) return -1;
   // else: the set must contain at least i elements
   int i = c.getCardMin();
   // if i==0: we don't know anything about cardinality.
@@ -71,7 +71,7 @@ int FSetGetLowerBoundOfMax(OZ_FSetConstraint& c)
 int FSetGetUpperBoundOfMin(OZ_FSetConstraint& c)
 {
   // just in case there can be no elements
-  if (c.getCardMax()=<0) return -1;
+  if (c.getCardMax()<=0) return -1;
   // else the set must contain at least i elements
   int i = c.getCardMin();
   // if i==0: we know nothing about cardinality. the set
@@ -153,7 +153,7 @@ OZ_Return FSetsMinPropagator::propagate(void)
       }
     else
       {
-	// d =< upper_bound_of_min(s)
+	// d <= upper_bound_of_min(s)
 	// s is not empty, thus upper_bound_of_min(s) is not -1
 	FailOnEmpty(*d <= FSetGetUpperBoundOfMin(*s));
       }
