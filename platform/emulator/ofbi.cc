@@ -389,7 +389,7 @@ OZ_BI_define(BIisRecordCB,1,1)
  * a record and W to a finite domain.  This built-in installs a
  * WidthPropagator.
  */
-// this really belongs in oz_cpi.hh
+// this really belongs in mozart_cpi.hh
 
 OZ_C_proc_begin(BIwidthC, 2)
 {
