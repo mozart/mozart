@@ -21,9 +21,10 @@
 // Inlined member functions of class BIfdHeadManager
 
 
+#ifdef FDBISTUCK
 
 inline
-OZ_Bool BIfdHeadManager::addSuspFDish(void) {
+OZ_Bool BIfdHeadManager::addSuspFDish(OZ_CFun, RefsArray, int) {
   am.emptySuspendVarList();
 
   for (int i = curr_num_of_items; i--; )
@@ -38,7 +39,7 @@ OZ_Bool BIfdHeadManager::addSuspFDish(void) {
 }
 
 inline
-OZ_Bool BIfdHeadManager::addSuspSingl(void) {
+OZ_Bool BIfdHeadManager::addSuspSingl(OZ_CFun, RefsArray, int) {
   am.emptySuspendVarList();
 
   for (int i = curr_num_of_items; i--; )
@@ -54,7 +55,7 @@ OZ_Bool BIfdHeadManager::addSuspSingl(void) {
 
 
 inline
-Bool BIfdHeadManager::addSuspXorYdet(void)
+Bool BIfdHeadManager::addSuspXorYdet(OZ_CFun, RefsArray, int)
 {
   if (pm_is_var(bifdhm_vartag[0]) && pm_is_var(bifdhm_vartag[1])) {
     am.addSuspendVarList(bifdhm_varptr[0]);
@@ -64,6 +65,48 @@ Bool BIfdHeadManager::addSuspXorYdet(void)
   return TRUE;
 }
 
+#else
+
+inline
+OZ_Bool BIfdHeadManager::addSuspFDish(OZ_CFun f, RefsArray x, int a) {
+  OZ_Thread th = OZ_makeSuspension(f, x, a);
+
+  for (int i = curr_num_of_items; i--; )
+    if (pm_is_noncvar(bifdhm_vartag[i])) {
+      Assert(isAnyVar(*bifdhm_varptr[i]));
+      OZ_addSuspension(makeTaggedRef(bifdhm_varptr[i]), th);
+    }
+
+  return PROCEED;
+}
+
+inline
+OZ_Bool BIfdHeadManager::addSuspSingl(OZ_CFun f, RefsArray x, int a) {
+  OZ_Thread th = OZ_makeSuspension(f, x, a);
+
+  for (int i = curr_num_of_items; i--; )
+    if (pm_is_var(bifdhm_vartag[i])) {
+      Assert(isAnyVar(*bifdhm_varptr[i]));
+      OZ_addSuspension(makeTaggedRef(bifdhm_varptr[i]), th);
+    }
+
+  return PROCEED;
+}
+
+
+inline
+Bool BIfdHeadManager::addSuspXorYdet(OZ_CFun f, RefsArray x, int a)
+{
+  if (pm_is_var(bifdhm_vartag[0]) && pm_is_var(bifdhm_vartag[1])) {
+    OZ_Thread th = OZ_makeSuspension(f, x, a);
+    OZ_addSuspension(makeTaggedRef(bifdhm_varptr[0]), th);
+    OZ_addSuspension(makeTaggedRef(bifdhm_varptr[1]), th);
+    return FALSE;
+  }
+  return TRUE;
+}
+
+#endif
 
 inline
 void BIfdHeadManager::addResSusps(Suspension * susp, FDPropState target) {

@@ -137,7 +137,7 @@ OZ_C_proc_begin(BIfdConstrDisj, 3)
       TypeError(1, "");
 
   if (suspend > 0) {
-    return x_items.addSuspFDish();
+    return x_items.addSuspFDish(OZ_self, OZ_args, OZ_arity);
   }
 
   return x_items.spawnPropagator(fd_any, BIfdConstrDisj_body, 3,
