@@ -16,6 +16,7 @@
 //      1#P     ==> thread {P ME} end
 //      2#X     ==> force request of X
 //      3#URL   ==> thread {Load URL ME} end
+//      4#call(P X1 ... Xn) ==> thread {P X1 ... Xn ME} end
 
 OZ_C_proc_proto(BIload);
 
@@ -40,7 +41,7 @@ GenLazyVariable::kickLazy()
             // 1#P ==> thread {P ME} end
             {
               Thread* thr = am.mkRunnableThread(DEFAULT_PRIORITY,home);
-              thr->pushCall(function,&result,1);
+              thr->pushCall(snd,&result,1);
               am.scheduleThread(thr);
               break;
             }
@@ -57,6 +58,23 @@ GenLazyVariable::kickLazy()
               Thread* thr = am.mkRunnableThread(DEFAULT_PRIORITY,home);
               TaggedRef args[] = { snd , result };
               thr->pushCFun(BIload,args,2,TRUE);
+              am.scheduleThread(thr);
+              break;
+            }
+          case 4:
+            // 4#call(P X1 ... Xn) ==> thread {P X1 ... Xn ME} end
+            if (OZ_isTuple(snd)) {
+              Thread* thr = am.mkRunnableThread(DEFAULT_PRIORITY,home);
+              TaggedRef args[20];
+              int w = OZ_width(snd);
+              if (w>20) {
+                OZ_warning("Lazy call has more than 20 args");
+                function = 0;
+                return;
+              }
+              for(int i=1;i<w;i++) args[i-1]=OZ_getArg(snd,i);
+              args[w-1] = result;
+              thr->pushCall(OZ_getArg(snd,0),args,w);
               am.scheduleThread(thr);
               break;
             }
