@@ -60,7 +60,7 @@ define
 	 end
       end
       meth get_id_as_rel_path($)
-	 {AdjoinAt {URL.make @id} scheme unit}
+	 {Adjoin {URL.make @id} url(scheme:unit absolute:false)}
       end
       meth UpdatePkg(U DB)
 	 {Manager trace('Downloading pkg '#U)}
