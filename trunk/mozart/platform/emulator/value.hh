@@ -597,8 +597,6 @@ public:
     return (ConstTerm *) (tag&~1);
   }
 
-  ConstTerm *gCollectConstTerm(void);
-  ConstTerm *sCloneConstTerm(void);
   ConstTerm *gCollectConstTermInline(void);
   ConstTerm *sCloneConstTermInline(void);
   void gCollectConstRecurse(void);
@@ -1986,12 +1984,10 @@ extern DbgInfo *allDbgInfos;
 
 class PrTabEntry {
 private:
-  TaggedRef printname;
   unsigned short arity;
   SRecordArity methodArity;
-  TaggedRef file;
+  TaggedRef printname, file, info; // Never change: garbage collection
   int line, colum;
-  TaggedRef info;
   int flags;
   int gSize;
   int maxX;

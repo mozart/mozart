@@ -2814,7 +2814,7 @@ Case(GETVOID)
 
   Case(TASKPROFILECALL)
     {
-      ozstat.leaveCall((PrTabEntry*)Y);
+      ozstat.leaveCall((PrTabEntry*) Y);
       goto LBLpopTaskNoPreempt;
     }
 
@@ -2852,8 +2852,8 @@ Case(GETVOID)
 
   Case(TASKLOCK)
     {
-      OzLock *lck = (OzLock *) Y;
-      Y = NULL;
+      OzLock *lck = (OzLock *) CAP;
+      CAP = (Abstraction *) NULL;
       switch(lck->getTertType()){
       case Te_Local:
 	((LockLocal*)lck)->unlock();
@@ -2884,26 +2884,21 @@ Case(GETVOID)
 
   Case(TASKSETSELF)
     {
-      e->setSelf((Object*)Y);
-      Y = NULL;
+      e->setSelf((Object *) CAP);
+      CAP = NULL;
       goto LBLpopTaskNoPreempt;
     }
 
   Case(TASKDEBUGCONT)
     {
-      OZ_warning("\n      TASKDEBUGCONT instruction executed -- "
-		 "this should not happen.\n      "
-                 "Please send a bug report to <support@mozart-oz.org>.");
-      if (e->debugmode() && CTT->isTrace())
-	debugStreamUpdate(CTT);
-      ((OzDebug *) Y)->dispose();
+      Assert(0);
       goto LBLpopTaskNoPreempt;
     }
 
   Case(TASKCFUNCONT)
      {
-       OZ_CFun biFun = (OZ_CFun) (void*) Y;
-       RefsArray tmpX = (RefsArray) CAP;
+       OZ_CFun biFun = (OZ_CFun) (void*) CAP;
+       RefsArray tmpX = (RefsArray) Y;
        CAP = 0;
        Y = 0;
        if (tmpX != NULL) {
@@ -3114,7 +3109,9 @@ Case(GETVOID)
 
       if (dbg != (OzDebug *) NULL) {
 	Assert(oz_eq(getLiteralArg(dbg->PC+4),getLiteralArg(PC+4)));
-	Assert(e->isPropagatorLocation() || (dbg->Y == Y && dbg->CAP == CAP));
+	Assert(e->isPropagatorLocation() || 
+	       (dbg->Y == Y && 
+		((Abstraction *) tagged2Const(dbg->CAP)) == CAP));
 
 	if (dothis != DBG_EXIT
 	    && (oz_eq(getLiteralArg(PC+4),AtomDebugCallC) ||

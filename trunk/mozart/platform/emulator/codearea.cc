@@ -143,9 +143,10 @@ void AbstractionEntry::setPred(Abstraction *ab)
 {
   Assert(!copyable && !abstr);
 
-  abstr = ab;
-  pc    = abstr->getPC();
-  arity = abstr->getArity();
+  Assert(ab);
+  abstr = makeTaggedConst(ab);
+  pc    = ab->getPC();
+  arity = ab->getArity();
 
   // indexing on X[0] optimized !!!
   if (pc != NOCODE &&
@@ -901,7 +902,6 @@ ProgramCounter
   C_DEBUG_CONT_Ptr,
   C_CALL_CONT_Ptr,
   C_LOCK_Ptr,
-  C_COMMIT_Ptr,
   C_SET_SELF_Ptr,
   C_SET_ABSTR_Ptr,
   C_CATCH_Ptr,
