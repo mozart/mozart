@@ -671,7 +671,7 @@ TaggedRef AM::createNamedVariable(int regIndex, TaggedRef name)
     toplevelVars = resize(toplevelVars,newSize);
     // no deletion of old array --> GC does it
   }
-  TaggedRef ret = makeTaggedRef(newTaggedUVar(currentBoard));
+  TaggedRef ret = oz_newVariable();
   VariableNamer::addName(ret,tagged2Literal(name)->getPrintName());
   return ret;
 }
@@ -786,7 +786,7 @@ void AM::checkEntailment()
 
     deinstallCurrent();
 
-    TaggedRef newVar = makeTaggedRef(newTaggedUVar(currentBoard));
+    TaggedRef newVar = oz_newVariable();
     TaggedRef result = solveAA->getResult();
 
     solveAA->setResult(newVar);
