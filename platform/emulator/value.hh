@@ -1565,7 +1565,8 @@ Abstraction *tagged2Abstraction(TaggedRef term)
 // special builtins known in emulate
 enum BIType {
   BIDefault,
-  BIraise
+  BIraise,
+  BIraiseError
 };
 
 class BuiltinTabEntry {
