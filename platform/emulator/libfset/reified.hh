@@ -29,6 +29,23 @@ public:
   }
 };
 
+//-----------------------------------------------------------------------------
+
+class IsInRPropagator : public Propagator_S_I_D {
+private:
+  static OZ_CFun spawner;
+public:
+  IsInRPropagator(OZ_Term v, OZ_Term i, OZ_Term b)
+    : Propagator_S_I_D(v, i, b) { }
+
+  virtual OZ_Return propagate(void);
+  
+  virtual OZ_CFun getHeaderFunc(void) const {
+    return spawner;
+  }
+};
+
+
 #endif /* __REIFIED_HH__ */
 
 //-----------------------------------------------------------------------------

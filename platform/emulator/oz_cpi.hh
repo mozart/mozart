@@ -128,7 +128,7 @@ public:
   void copyExtension(void);
   void disposeExtension(void);
 
-  char *toString() const;
+  char * toString() const;
 };   
 
 
@@ -159,7 +159,7 @@ public:
   int getNextSmallerElem(int) const;
   OZ_Term getKnownInList(void) const;
   OZ_Term getKnownNotInList(void) const;
-  char *toString() const;
+  char * toString() const;
 };
 
 
@@ -218,7 +218,7 @@ public:
   OZ_Boolean operator >= (const OZ_FSetConstraint &);
   OZ_Boolean operator != (const OZ_FSetConstraint &);
   OZ_Boolean operator == (const OZ_FSetConstraint &);
-  char *toString() const;
+  char * toString() const;
 };   
 
 
@@ -271,7 +271,7 @@ public:
     return 0; 
   }
 
-  char *toString() const;
+  char * toString() const;
 };
 
 //-----------------------------------------------------------------------------
