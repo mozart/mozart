@@ -441,7 +441,7 @@ Atom *Atom::gc()
   }
   if (isLocalBoard(home)) {
     varCount++;
-    return new Atom(home->gcBoard(), name.string());
+    return new Atom(home->gcBoard(), printName);
   }
   return this;
 }
