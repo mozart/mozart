@@ -26,6 +26,7 @@
 #include <string.h>
 #include <io.h>
 #include <process.h>
+#include <unistd.h>
 
 #include "startup.hh"
 
@@ -37,12 +38,10 @@
 // oztool -gnu cc -c <files>
 //    gcc -I"$OZHOME/include" -c <files>
 // oztool -gnu ld -o <target> <file1> ... <filen>
-//    dlltool --def emulator.def --output-lib <tmpfile1>.a
-//    dlltool --dllname <target> --output-exp <tmpfile2>.a \
-//       <file1> ... <filen>
+//    dlltool --def $OZHOME/include/emulator.def --output-lib <tmpfile>.a
 //    dllwrap -s -o <target> --dllname <target> <file1> ... <filen> \
-//       <tmpfile2>.a <tmpfile1>.a
-//    rm tmpfile1.a tmpfile2.a
+//       <tmpfile>.a -lmsvcrt
+//    rm <tmpfile>.a
 //
 // oztool -msvc c++ -c <files> -o <outfile>
 //    cl -nologo -TP -I"$OZHOME\include" -c <files>
@@ -112,7 +111,16 @@ char *commaList(char **argv, int from, int to)
 
 char *ostmpnam()
 {
+  //--** take oztmpnam from emulator/os.cc?
   return tmpnam(NULL);
+}
+
+char *toUnix(char *s)
+{
+  for (char *t = s; *t; t++)
+    if (*t == '/')
+      *t = '\\';
+  return s;
 }
 
 void doexit(int n)
@@ -200,46 +208,45 @@ int main(int argc, char** argv)
     argv++; argc--;
   }
 
-  char *ozhome = getOzHome(false);
   if ((!strcmp(argv[1],"cc") || !strcmp(argv[1],"c++")) && argc > 2) {
     int cxx = !strcmp(argv[1],"c++");
     int r = 0;
-    char **wc = new char*[argc + 5];
+    char **ccCmd = new char*[argc + 5];
     switch (sys) {
     case SYS_GNU:
       if (cxx)
-        wc[r++] = "g++";
+        ccCmd[r++] = "g++";
       else
-        wc[r++] = "gcc";
+        ccCmd[r++] = "gcc";
       break;
     case SYS_MSVC:
-      wc[r++] = "cl.exe";
-      wc[r++] = "-nologo";
+      ccCmd[r++] = "cl.exe";
+      ccCmd[r++] = "-nologo";
       if (cxx)
-        wc[r++] = "-TP";
+        ccCmd[r++] = "-TP";
       else
-        wc[r++] = "-TC";
+        ccCmd[r++] = "-TC";
       break;
     case SYS_WATCOM:
       if (cxx)
-        wc[r++] = "wpp386";
+        ccCmd[r++] = "wpp386";
       else
-        wc[r++] = "wcc386";
-      wc[r++] = "-zq";
-      wc[r++] = "-bd";
+        ccCmd[r++] = "wcc386";
+      ccCmd[r++] = "-zq";
+      ccCmd[r++] = "-bd";
       break;
     }
-    wc[r++] = concat("-I",concat(ozhome,"\\include"));
-    wc[r++] = "-DWINDOWS";
+    ccCmd[r++] = concat("-I",concat(getOzHome(false),"\\include"));
+    ccCmd[r++] = "-DWINDOWS";
     for (int i = 2; i < argc; i++) {
       if (sys == SYS_MSVC && !strcmp(argv[i],"-o")) {
-        wc[r++] = concat("-Fo",argv[++i]);
+        ccCmd[r++] = concat("-Fo",argv[++i]);
       } else {
-        wc[r++] = argv[i];
+        ccCmd[r++] = argv[i];
       }
     }
-    wc[r] = NULL;
-    r = execute(wc);
+    ccCmd[r] = NULL;
+    r = execute(ccCmd);
     doexit(r);
   } else if (!strcmp(argv[1],"ld") && argc >= 4 && !strcmp(argv[2],"-o")) {
     if (argc == 4) {
@@ -249,65 +256,41 @@ int main(int argc, char** argv)
     switch (sys) {
     case SYS_GNU:
       {
-        //--** implementation still missing
-        char *libname  = argv[3];
-        char *defname  = concat(libname,".def");
-        char *aname    = concat("lib",concat(libname,".a"));
-        char *tempfile = concat(ostmpnam(),".o");
-
-        char **gcc     = new char*[7];
-        gcc[0]="gcc";
-        gcc[1]="-I.";//oz_include();
-        gcc[3]="mozart.c";//get_mozart_c();
-        gcc[2]="-c";
-        gcc[4]="-o";
-        gcc[5]=tempfile;
-        gcc[6]=NULL;
-        int r = execute(gcc);
+        char *tmpfile = concat(ostmpnam(),".a");
+        char **dlltoolCmd = new char*[6];
+        dlltoolCmd[0] = "dlltool";
+        dlltoolCmd[1] = "--def";
+        dlltoolCmd[2] = concat(getOzHome(true),"/include/emulator.def");
+        dlltoolCmd[3] = "--output-lib";
+        dlltoolCmd[4] = tmpfile;
+        dlltoolCmd[5] = NULL;
+        int r = execute(dlltoolCmd);
         if (!r) {
-          char **dlltool = new char*[argc+4];
-          dlltool[r++]="dlltool";
-          dlltool[r++]="--output-def";
-          dlltool[r++]=defname;
-          dlltool[r++]="--dllname";
-          dlltool[r++]=libname;
-          dlltool[r++]="--output-lib";
-          dlltool[r++]=aname;
-          dlltool[r++]=tempfile;
-          for (int i=4; i<argc; i++) dlltool[r++]=argv[i];
-          dlltool[r]=NULL;
-          r = execute(dlltool);
-          if (!r) {
-            char **dllwrap = new char*[argc+9];
-            dllwrap[r++]="dllwrap";
-            dllwrap[r++]="-s";
-            dllwrap[r++]="-o";
-            dllwrap[r++]=libname;
-            dllwrap[r++]="--def";
-            dllwrap[r++]=defname;
-            dllwrap[r++]="--dllname";
-            dllwrap[r++]=libname;
-            dllwrap[r++]=tempfile;
-            for (int i=4; i<argc; i++) dllwrap[r++]=argv[i];
-            dllwrap[r]=NULL;
-            r = execute(dllwrap);
-          }
+          char **dllwrapCmd = new char*[argc+4];
+          dllwrapCmd[r++] = "dllwrap";
+          dllwrapCmd[r++] = "-s";
+          dllwrapCmd[r++] = "-o";
+          dllwrapCmd[r++] = target;
+          for (int i = 4; i < argc; i++)
+            dllwrapCmd[r++] = argv[i];
+          dllwrapCmd[r++] = tmpfile;
+          dllwrapCmd[r++] = "-lmsvcrt";
+          dllwrapCmd[r] = NULL;
+          r = execute(dllwrapCmd);
         }
-        unlink(tempfile);
-        unlink(aname);
-        unlink(defname);
+        unlink(tmpfile);
         doexit(r);
       }
     case SYS_MSVC:
       {
-        char *tmpfile1 = "emulator";//--**ostmpnam();
+        char *tmpfile1 = toUnix(ostmpnam());
         char *tmpfile1lib = concat(tmpfile1,".lib");
         char *tmpfile1exp = concat(tmpfile1,".exp");
         char **libCmd = new char *[6];
         libCmd[0] = "lib.exe";
         libCmd[1] = "/nologo";
         libCmd[2] =
-          concat("/def:",concat(ozhome,"\\include\\emulator.def"));
+          concat("/def:",concat(getOzHome(false),"\\include\\emulator.def"));
         libCmd[3] = "/machine:ix86";
         libCmd[4] = concat("/out:",tmpfile1lib);
         libCmd[5] = NULL;
