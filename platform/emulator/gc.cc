@@ -869,8 +869,9 @@ TaggedRef gcVariable(TaggedRef var)
       INFROMSPACE(home);
       home = home->gcBoard();
       TOSPACE (home);
-      GCNEWADDRMSG((home ? makeTaggedUVar(home) : makeTaggedNULL()));
-      return home ? makeTaggedUVar(home) : makeTaggedNULL();
+      GCNEWADDRMSG((home ? makeTaggedUVar(home) : makeTaggedUVar(am.rootBoard)));
+      // kludge: if its board is not alive, lets its board to be the root...
+      return home ? makeTaggedUVar(home) : makeTaggedUVar(am.rootBoard);
     }
     
   case SVAR:
@@ -884,8 +885,8 @@ TaggedRef gcVariable(TaggedRef var)
 
       Board *newBoard = cv->home->gcBoard();
       if (!newBoard) {
-	GCNEWADDRMSG(makeTaggedNULL());
-	return makeTaggedNULL();
+	GCNEWADDRMSG(makeTaggedUVar(am.rootBoard));
+	return makeTaggedUVar(am.rootBoard);
       }
 
       int cv_size;
@@ -919,8 +920,8 @@ TaggedRef gcVariable(TaggedRef var)
       
       Board *newBoard = gv->home->gcBoard();
       if (!newBoard) {
-	GCNEWADDRMSG(makeTaggedNULL());
-	return makeTaggedNULL();
+	GCNEWADDRMSG(makeTaggedUVar(am.rootBoard));
+	return makeTaggedUVar(am.rootBoard);
       }
 
       int gv_size = gv->getSize();
@@ -1164,11 +1165,12 @@ void AM::gc(int msgLevel)
   trail.gc();
   rebindTrail.gc();
 
+  rootBoard=rootBoard->gcBoard();   // must go first!
+  setCurrent(currentBoard->gcBoard(),NO);
+
   GCPROCMSG("Predicate table");
   CodeArea::gc();
 
-  rootBoard=rootBoard->gcBoard();
-  setCurrent(currentBoard->gcBoard(),NO);
   SRecord::aritytable.gc ();
 
   GCREF(currentThread);
