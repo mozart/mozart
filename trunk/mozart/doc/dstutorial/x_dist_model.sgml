@@ -492,6 +492,8 @@ of the application--they are
 passed between sites when needed.
 Logic variables and locks are
 used to manage dataflow and concurrency.
+See <ptr to="practical.tips"> for more
+information on how to organize an application.
 
 <P>Functors and resources are the key players
 in distributed component-based programming.
