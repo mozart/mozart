@@ -4,7 +4,7 @@
 %%%   Benjamin Lorenz <lorenz@ps.uni-sb.de>
 %%%
 %%% Copyright:
-%%%   Leif Kornstaedt, 1998-2001
+%%%   Leif Kornstaedt, 1998-2003
 %%%   Benjamin Lorenz, 1998
 %%%
 %%% Last change:
@@ -138,6 +138,32 @@ define
 		   end)}
 	 {Property.put 'opi.compiler' I}
 	 {Target conf(emacsInterface: I)}
+
+	 %% Try to load some ozrc file
+	 local
+	    fun {FileExists FileName}
+	       try F in
+		  F = {New Open.file init(name: FileName flags: [read])}
+		  {F close()}
+		  true
+	       catch _ then false
+	       end
+	    end
+	 in
+	    case {OS.getEnv 'HOME'} of false then skip
+	    elseof HOME then
+	       OZRC = {OS.getEnv 'OZRC'}
+	    in
+	       if OZRC \= false andthen {FileExists OZRC} then
+		  {E enqueue(feedFile(OZRC))}
+	       elseif {FileExists HOME#'/.oz/ozrc'} then
+		  {E enqueue(feedFile(HOME#'/.oz/ozrc'))}
+	       elseif {FileExists HOME#'/.ozrc'} then   % note: deprecated
+		  {E enqueue(feedFile(HOME#'/.ozrc'))}
+	       end
+	    end
+	 end
+
 	 thread {I readQueries()} end
 	 proc {CloseAction}
 	    if Args.opi then skip
