@@ -22,6 +22,23 @@
 
 #include "types.hh"
 
+/* enum ThreadFlags:
+   Normal: thread has a taskStack and is scheduled
+   SuspCont: thread has no taskStack,
+             but 'suspCont' contains a SuspContinuation
+   SuspCCont: thread has no taskStack,
+             but 'suspCCont' contains a CFuncContinuation
+   Nervous: thread has no taskStack, but 'board' contains the board to visit
+   */
+
+enum ThreadFlags
+{
+  T_Normal =      0x01,
+  T_SuspCont =    0x02,
+  T_SuspCCont =   0x04,
+  T_Nervous =     0x08
+};
+
 class Thread : public ConstTerm
 {
 friend void engine();
