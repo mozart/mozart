@@ -401,7 +401,6 @@ OZ_Return TaskIntervalsProof::propagate(void)
               cset->extSize = csize;
 
               if ( (csize > 0) && (cset->up - cset->low < cdur) ) {
-//              printf("csize failed\n");
                 goto failure;
               }
             }
@@ -419,7 +418,6 @@ OZ_Return TaskIntervalsProof::propagate(void)
               if (constraintsSize + reg_max_nb_tasks*4
                   > constraintLimit) {
                 int newLimit = constraintsSize + reg_max_nb_tasks*4;
-//              printf("limit reached %d\n",constraintLimit);
                 if (constraintLimit > INITIALSIZE)
                   ::delete [] constraintsExtension;
                 constraintsExtension = ::new int[newLimit];
@@ -615,9 +613,7 @@ OZ_Return TaskIntervalsProof::propagate(void)
           int test;
           if (reg_flag == 0) test = (count_firsts < count_lasts);
           else test = (count_firsts <= count_lasts);
-//        if (count_firsts <= count_lasts) {
-//  if (count_firsts < count_lasts) {
-  if (test) {
+          if (test) {
             int deltaS = OZ_getFDSup();
             for (l=0; l < count_firsts; l++)
               deltaS = intMin(deltaS, all_vars[best_resource][firsts[l]].min);
@@ -668,17 +664,6 @@ OZ_Return TaskIntervalsProof::propagate(void)
                 g_costs = v;
                 p1 = best_left;
                 p2 = firsts_l;
-                /*
-                  // Caseau original code
-                  if (side == 1) {
-                  p1 = best_left;
-                  p2 = firsts_l;
-                  }
-                  else {
-                  p1 = firsts_l;
-                  p2 = best_left;
-                  }
-                  */
               }
             }
 
@@ -769,17 +754,6 @@ OZ_Return TaskIntervalsProof::propagate(void)
                 g_costs = v;
                 p1 = lasts_l;
                 p2 = best_right;
-                /*
-                  // Caseau original code
-                  if (side == 1) {
-                  p1 = lasts_l;
-                  p2 = best_right;
-                  }
-                  else {
-                  p1 = best_right;
-                  p2 = lasts_l;
-                  }
-                  */
               }
             }
 
