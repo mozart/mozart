@@ -2242,10 +2242,11 @@ ObjectClass *ObjectClass::gcClass()
   GCNEWADDRMSG(ret);
   OzDictionary *fastm = fastMethods;
   storeForward(&fastMethods, ret);
-  ret->fastMethods = (OzDictionary*) fastm->gcConstTerm();
-  ret->slowMethods = (OzDictionary*) slowMethods->gcConstTerm();
-  ret->printName   = printName->gc();
-  ret->send = (Abstraction *) send->gcConstTerm();
+  ret->fastMethods    = (OzDictionary*) fastm->gcConstTerm();
+  ret->slowMethods    = (OzDictionary*) slowMethods->gcConstTerm();
+  ret->defaultMethods = (OzDictionary*) defaultMethods->gcConstTerm();
+  ret->printName      = printName->gc();
+  ret->send           = (Abstraction *) send->gcConstTerm();
   ret->unfreeFeatures = ret->unfreeFeatures->gcSRecord();
   gcTagged(ozclass,ret->ozclass);
   return ret;
