@@ -1,0 +1,185 @@
+This patch fixes some bugs in the tk81a2 distribution.
+$Id$
+
+Index: generic/tkMenu.h
+===================================================================
+RCS file: /home/benni/CVS/tk/generic/tkMenu.h,v
+retrieving revision 1.1.1.1
+diff -p -u -d -r1.1.1.1 tkMenu.h
+--- tkMenu.h    1998/03/15 19:32:28     1.1.1.1
++++ tkMenu.h    1998/03/15 21:25:56
+@@ -467,7 +467,7 @@ typedef struct TkMenuOptionTables {
+
+ #define CASCADE_ARROW_HEIGHT 10
+ #define CASCADE_ARROW_WIDTH 8
+-#define DECORATION_BORDER_WIDTH 2
++#define DECORATION_BORDER_WIDTH 1
+
+ /*
+  * Menu-related procedures that are shared among Tk modules but not exported
+Index: library/menu.tcl
+===================================================================
+RCS file: /home/benni/CVS/tk/library/menu.tcl,v
+retrieving revision 1.1.1.1
+diff -p -u -d -r1.1.1.1 menu.tcl
+--- menu.tcl    1998/03/15 19:32:32     1.1.1.1
++++ menu.tcl    1998/03/15 21:14:21
+@@ -752,12 +752,7 @@ proc tkMenuNextMenu {menu direction} {
+                $menu activate none
+                tkGenerateMenuSelect $menu
+                tk_menuSetFocus $m2
+-
+-               # This code unposts any posted submenu in the parent.
+-
+-               set tmp [$m2 index active]
+-               $m2 activate none
+-               $m2 activate $tmp
++               $m2 postcascade none
+                return
+            }
+        }
+@@ -854,13 +849,6 @@ proc tkMenuNextEntry {menu count} {
+     }
+     $menu activate $i
+     tkGenerateMenuSelect $menu
+-    if {[$menu type $i] == "cascade"} {
+-       set cascade [$menu entrycget $i -menu]
+-       if {[string compare $cascade ""] != 0} {
+-           $menu postcascade $i
+-           tkMenuFirstEntry $cascade
+-       }
+-    }
+ }
+
+ # tkMenuFind --
+@@ -1071,13 +1059,6 @@ proc tkMenuFirstEntry menu {
+                && ($state != "disabled") && ([$menu type $i] != "tearoff")} {
+            $menu activate $i
+            tkGenerateMenuSelect $menu
+-           if {[$menu type $i] == "cascade"} {
+-               set cascade [$menu entrycget $i -menu]
+-               if {[string compare $cascade ""] != 0} {
+-                   $menu postcascade $i
+-                   tkMenuFirstEntry $cascade
+-               }
+-           }
+            return
+        }
+     }
+Index: library/optMenu.tcl
+===================================================================
+RCS file: /home/benni/CVS/tk/library/optMenu.tcl,v
+retrieving revision 1.1.1.1
+diff -p -u -d -r1.1.1.1 optMenu.tcl
+--- optMenu.tcl 1998/03/15 19:32:33     1.1.1.1
++++ optMenu.tcl 1998/03/15 21:22:27
+@@ -34,8 +34,7 @@ proc tk_optionMenu {w varName firstValue
+        set var $firstValue
+     }
+     menubutton $w -textvariable $varName -indicatoron 1 -menu $w.menu \
+-           -relief raised -bd 2 -highlightthickness 2 -anchor c \
+-           -direction flush
++           -relief raised -anchor c -direction flush
+     menu $w.menu -tearoff 0
+     $w.menu add radiobutton -label $firstValue -variable $varName
+     foreach i $args {
+Index: library/tkfbox.tcl
+===================================================================
+RCS file: /home/benni/CVS/tk/library/tkfbox.tcl,v
+retrieving revision 1.1.1.1
+diff -p -u -d -r1.1.1.1 tkfbox.tcl
+--- tkfbox.tcl  1998/03/15 19:32:39     1.1.1.1
++++ tkfbox.tcl  1998/03/15 21:24:13
+@@ -71,7 +71,7 @@ proc tkIconList_Create {w} {
+     frame $w
+     set data(sbar)   [scrollbar $w.sbar -orient horizontal \
+        -highlightthickness 0 -takefocus 0]
+-    set data(canvas) [canvas $w.canvas -bd 2 -relief sunken \
++    set data(canvas) [canvas $w.canvas -bd 1 -relief sunken \
+        -width 400 -height 120 -takefocus 1]
+     pack $data(sbar) -side bottom -fill x -padx 2
+     pack $data(canvas) -expand yes -fill both
+@@ -872,7 +872,7 @@ static char updir_bits[] = {
+     set data(typeMenuBtn) [menubutton $f3.menu -indicatoron 1 -menu $f3.menu.m]
+     set data(typeMenu) [menu $data(typeMenuBtn).m -tearoff 0]
+     $data(typeMenuBtn) config -takefocus 1 -highlightthickness 2 \
+-       -relief raised -bd 2 -anchor w
++       -relief raised -anchor w
+
+     # the okBtn is created after the typeMenu so that the keyboard traversal
+     # is in the right order
+Index: unix/tkUnixMenu.c
+===================================================================
+RCS file: /home/benni/CVS/tk/unix/tkUnixMenu.c,v
+retrieving revision 1.1.1.1
+diff -p -u -d -r1.1.1.1 tkUnixMenu.c
+--- tkUnixMenu.c        1998/03/15 19:32:22     1.1.1.1
++++ tkUnixMenu.c        1998/03/20 00:29:08
+@@ -680,14 +680,12 @@ DrawMenuSeparator(menuPtr, mePtr, d, gc,
+     int height;
+ {
+     XPoint points[2];
+-    int margin;
+     Tk_3DBorder border;
+
+     if (menuPtr->menuType == MENUBAR) {
+        return;
+     }
+
+-    margin = (fmPtr->ascent + fmPtr->descent)/2;
+     points[0].x = x;
+     points[0].y = y + height/2;
+     points[1].x = width - 1;
+@@ -895,7 +893,8 @@ GetMenuSeparatorGeometry(menuPtr, mePtr,
+     int *heightPtr;                    /* The resulting height */
+ {
+     *widthPtr = 0;
+-    *heightPtr = fmPtr->linespace;
++//    *heightPtr = fmPtr->linespace / 2;
++    *heightPtr = 2;
+ }
+ 
+ /*
+Index: unix/tkUnixScale.c
+===================================================================
+RCS file: /home/benni/CVS/tk/unix/tkUnixScale.c,v
+retrieving revision 1.1.1.1
+diff -p -u -d -r1.1.1.1 tkUnixScale.c
+--- tkUnixScale.c       1998/03/15 19:32:22     1.1.1.1
++++ tkUnixScale.c       1998/03/15 21:05:06
+@@ -186,16 +186,9 @@ DisplayVerticalScale(scalePtr, drawable,
+     height = scalePtr->sliderLength/2;
+     x = scalePtr->vertTroughX + scalePtr->borderWidth;
+     y = TkpValueToPixel(scalePtr, scalePtr->value) - height;
+-    shadowWidth = scalePtr->borderWidth/2;
+-    if (shadowWidth == 0) {
+-       shadowWidth = 1;
+-    }
++    shadowWidth = scalePtr->borderWidth/2 + 1;
+     Tk_Draw3DRectangle(tkwin, drawable, sliderBorder, x, y, width,
+            2*height, shadowWidth, scalePtr->sliderRelief);
+-    x += shadowWidth;
+-    y += shadowWidth;
+-    width -= 2*shadowWidth;
+-    height -= shadowWidth;
+     Tk_Fill3DRectangle(tkwin, drawable, sliderBorder, x, y, width,
+            height, shadowWidth, scalePtr->sliderRelief);
+     Tk_Fill3DRectangle(tkwin, drawable, sliderBorder, x, y+height,
+@@ -385,16 +378,9 @@ DisplayHorizontalScale(scalePtr, drawabl
+     height = scalePtr->width;
+     x = TkpValueToPixel(scalePtr, scalePtr->value) - width;
+     y += scalePtr->borderWidth;
+-    shadowWidth = scalePtr->borderWidth/2;
+-    if (shadowWidth == 0) {
+-       shadowWidth = 1;
+-    }
++    shadowWidth = scalePtr->borderWidth/2 + 1;
+     Tk_Draw3DRectangle(tkwin, drawable, sliderBorder,
+            x, y, 2*width, height, shadowWidth, scalePtr->sliderRelief);
+-    x += shadowWidth;
+-    y += shadowWidth;
+-    width -= shadowWidth;
+-    height -= 2*shadowWidth;
+     Tk_Fill3DRectangle(tkwin, drawable, sliderBorder, x, y, width, height,
+            shadowWidth, scalePtr->sliderRelief);
+     Tk_Fill3DRectangle(tkwin, drawable, sliderBorder, x+width, y,
