@@ -268,7 +268,7 @@ libFSP.a FSP.so-$(PLATFORM):
 ZlibIO.so-$(PLATFORM): $(ZLIBIOOBJS)
 	$(DYNLD) -o $@ $(ZLIBIOOBJS)
 
-ZlibIO.a: $(ZLIBIOOBJS)
+libZlibIO.a: $(ZLIBIOOBJS)
 	$(AR) -rc $@ $(ZLIBIOOBJS) && $(RANLIB) $@
 
 zlibio.o: modZlibIO-if.cc
