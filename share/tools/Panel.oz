@@ -30,7 +30,7 @@ import
 
    Application(exit)
 
-   ErrorRegistry(put)
+   Error(registerFormatter)
 
    Open(file)
 

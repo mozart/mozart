@@ -22,7 +22,7 @@
 %%% WARRANTIES.
 %%%
 
-{ErrorRegistry.put gump
+{Error.registerFormatter gump
  fun {$ E} T in
     T = 'Gump Scanner error'
     case E of gump(fileNotFound FileName) then

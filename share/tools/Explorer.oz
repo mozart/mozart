@@ -38,7 +38,7 @@ in
       System(show
 	     printName)
 
-      ErrorRegistry(put)
+      Error(registerFormatter)
 
       Tk
 

@@ -2,7 +2,7 @@ functor
 import
    Celloid(new:New is:Is access:Access assign:Assign)
    at 'native-celloid.so{native}'
-   ErrorRegistry(put)
+   Error(registerFormatter)
 export
    New Is Access Assign
 define
@@ -20,5 +20,5 @@ define
 	       items: [line(oz(E))])
       end
    end
-   {ErrorRegistry.put celloid CelloidFormatter}
+   {Error.registerFormatter celloid CelloidFormatter}
 end
