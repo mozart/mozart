@@ -5416,7 +5416,7 @@ OZ_C_proc_begin(BIlinkObjectFiles,2)
 #endif
   strCat(command, commandUsed, tempfile);
 
-  const numOfiles = 100;
+  const int numOfiles = 100;
   char *ofiles[numOfiles];
   if (arrayFromList(list,ofiles,numOfiles) == NULL) {
     unlink(tempfile);
