@@ -141,11 +141,11 @@ Bool oz_eqeq(TaggedRef Ain,TaggedRef Bin)
       return (OK);
     }
 
-    oz_reduceTrailOnEqEq();
+    am.trail.unwindEqEq();
     return (NO);
   }
 
-  oz_reduceTrailOnFail();
+  am.trail.unwindFailed();
   return (NO);
 }
 
