@@ -1,3 +1,4 @@
+\define DEBUG
 functor
 
 export
@@ -169,38 +170,35 @@ define
       PropTable = {Tables.makePropTable}
    in
 \ifdef DEBUG
-      {System.show 'Collecting space'}
+      {System.showInfo '\tCollecting space ...'}
 \endif
 
       {CC collect(Root)}
-\ifdef DEBUG
-      {System.show 'Getting vars'}
-\endif
 
       AllVars = {CC get_vars($)}
 \ifdef DEBUG
-      {System.show 'Getting constraints'}
+      {System.showInfo '\tGetting '#{Length AllVars}#' variables.'}
 \endif
 
       AllConstrs = {CC get_props($)}
 \ifdef DEBUG
-      {System.show 'Adding action'}
+      {System.showInfo '\tGetting '#{Length AllConstrs}#' constraints.'}
 \endif
 
       {Hist add_action(ConstrGraph.make AllConstrs)}
 \ifdef DEBUG
-      {System.show 'Constructing Graph'}
+      {System.showInfo '\tConstructing Graph ...'}
 \endif
 
       Result = {ConstrGraph.make VarTable PropTable Hist AllConstrs}
 %      Result = {ParamGraph.make VarTable PropTable Hist AllVars}
 \ifdef DEBUG
-      {System.show 'Drawing graph'}
+      {System.showInfo '\tDrawing graph.'}
 \endif
 
       {DaVin graph(Result.graph)}
 \ifdef DEBUG
-      {System.show 'Done and looping'}
+      {System.showInfo '\tDone and looping.'}
 \endif
 
       {Loop VarTable PropTable Hist DaVin Stream AllVars AllConstrs Result}
