@@ -13,10 +13,10 @@ OZ_PATH_PROG(DYNLD, ozdynld)
 OZ_PATH_PROG(INSTALLSRC, ozinstallsrc)
 OZ_PATH_PROG(PLATFORMSCRIPT, ozplatform)
 OZ_PATH_PROG(MKINSTALLDIRS, mkinstalldirs)
- : ${platform=`$PLATFORMSCRIPT`}
+: ${platform=`$PLATFORMSCRIPT`}
 AC_SUBST(platform)
 if test "${GXX}" = yes; then
-  : ${oz_copt_disable_extension="-fno-exceptions -fno-rtti"}
+    : ${oz_copt_disable_extension="-fno-exceptions -fno-rtti"}
 fi
 AC_DEFUN(OZ_CXX_OPTIONS, [
 	ozm_out=
@@ -53,5 +53,5 @@ AC_OUTPUT(Makefile ozbison/Makefile)
 
 errprint(ifdef([OZ_INIT],
  [],
- [autoconf failed: use 'autoconf -l ..' to include ../aclocal.m4.
+ [autoconf failed: use 'autoconf -l ../../..' to include ../../../aclocal.m4.
 ]))
