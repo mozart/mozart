@@ -82,5 +82,12 @@ void freeListDispose(void * addr, size_t chunk_size)
   }
 }
 
+// return free used kilo bytes on the heap
+inline 
+unsigned int getUsedMemory(void)
+{
+  return heapTotalSize - (heapTop - heapEnd)/KB;
+}
+
 #endif //__mem_icc__
 

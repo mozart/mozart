@@ -86,6 +86,8 @@ public:
   //  misc;
   int getNextThPri () { return (currentPriority); }
   Bool isScheduled (Thread *thr);
+
+  Board * getHighestSolveDebug(void); // TMUELLER
 };
 
 #ifndef OUTLINE
