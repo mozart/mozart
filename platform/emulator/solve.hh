@@ -17,7 +17,7 @@
 #pragma interface
 #endif
 
-#include "cpstack.hh"
+#include "cpbag.hh"
 
 // ------------------------------------------------------------------------
 
@@ -32,7 +32,7 @@ public:
   }
 private:
   Board     *solveBoard;
-  CpStack   *cps;
+  CpBag     *cpb;
   TaggedRef solveVar;
   TaggedRef result;
   SuspList  *suspList;
@@ -67,20 +67,21 @@ public:
   TaggedRef getResult() { return result; }
   void setResult(TaggedRef v) { result = v; }
 
-  void pushChoice(WaitActor *wa) {
-    if (cps) { cps->push(wa); } else { cps = new CpStack(wa); }
+  void addChoice(WaitActor *wa) {
+    cpb = cpb->add(wa);
   }
-  void pushChoices(CpStack *pcps) {
-    if (cps) { cps->push(pcps); } else { cps = pcps; }
+  void mergeChoices(CpBag *pcpb) {
+    cpb = cpb->merge(pcpb);
   }
-  Bool hasChoices() {
-    return (cps ? !cps->isEmpty() : NO);
-  }
-  CpStack *getCps() { return cps; } 
+  CpBag *getCpb() { return cpb; } 
 
-  void popChoice() { Assert(cps); cps->pop(); }
-  WaitActor *topChoice() {
-    return (cps ? cps->getTop() : (WaitActor *) 0);
+  WaitActor *getChoice() {
+    WaitActor * wa;
+    cpb = cpb->get(&wa);
+    return wa;
+  } 
+  void removeChoice() {
+    cpb = cpb->remove();
   } 
 
   void setBoard(Board *bb) { board = bb; }

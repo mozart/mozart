@@ -16,7 +16,7 @@
 
 #include "am.hh"
 
-#include "cpstack.hh"
+#include "cpbag.hh"
 #include "solve.hh"
 
 /*
@@ -127,7 +127,7 @@ void SolveActor::clearSuspList(Thread *killThr) {
 }  
 
 SolveActor::SolveActor(Board *bb, int prio)
- : Actor (Ac_Solve, bb, prio), suspList (NULL), threads (0), cps(NULL), 
+ : Actor (Ac_Solve, bb, prio), suspList (NULL), threads (0), cpb(NULL), 
    localThreadQueue(NULL) {
   result     = makeTaggedRef(newTaggedUVar(bb));
   solveBoard = new Board(this, Bo_Solve);

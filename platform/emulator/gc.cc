@@ -2416,17 +2416,8 @@ void WaitActor::gcRecurse()
       newChildren[i] = (Board *) NULL;
     }
   }
-  children=newChildren;
-  if (cps) {
-    if (cps->isEmpty()) {
-      cps = (CpStack *) 0;
-    } else {
-      cps->purgeCommitted();
-      CpStack *new_cps = new CpStack(cps);
-      new_cps->gc(cps);
-      cps = new_cps;
-    }
-  }
+  children = newChildren;
+  cpb      = cpb->gc();
 }
 
 void AskActor::gcRecurse () {
@@ -2449,46 +2440,34 @@ void SolveActor::gcRecurse () {
     gcTagged(solveVar, solveVar);
   
   gcTagged(result, result);
-  suspList  = suspList->gc();
-  if (cps) {
-    if (cps->isEmpty()) {
-      cps = (CpStack *) 0;
-    } else {
-      cps->purgeCommitted();
-      CpStack *new_cps = new CpStack(cps);
-      new_cps->gc(cps);
-      cps = new_cps;
-    }
-  }
+  suspList         = suspList->gc();
+  cpb              = cpb->gc();
   localThreadQueue = localThreadQueue->gc();
 }
 
-void CpStack::gc(CpStack *cps) {
-  if (size == 0) {
-    WaitActor *wa = cps->u.choice;
-    Assert(wa && !wa->isCommitted());
+CpBag * CpBag::gc(void) {
+  GCMETHMSG("CpBag::gc");
   
-    Board *b = wa->getBoard();
-    if (!b->gcIsAlive()) {
-      u.choice = (WaitActor *) 0;
-    } else {
-      Assert(!(opMode == IN_TC && !isInTree(b)));
-      u.choice = (WaitActor *) wa->gcActor();
+  CpBag *  copy = (CpBag *) 0;
+  CpBag ** cur  = &copy;
+  CpBag *  old  = this;
+  
+  while (old) {
+    WaitActor * wa = old->choice;
+    
+    if (wa && wa->isAliveUpToSolve() && wa->getBoard()->gcIsAlive()) {
+      Assert(!(opMode == IN_TC && !isInTree(wa->getBoard())));
+      
+      CpBag * one = new CpBag((WaitActor *) wa->gcActor());
+      *cur = one;
+      cur  = &(one->next);
     }
-  } else {
-    Assert(cps->top);
-    top = 0;
-
-    for (int i = 0; i < cps->top; i++) {
-      WaitActor *wa = cps->u.choices[i];
-      Assert(wa && !wa->isCommitted());
-
-      Board *b = wa->getBoard();
-      if (b->gcIsAlive())
-	u.choices[top++] = (WaitActor *) wa->gcActor();
-    }
+    old = old->next;
   }
+ 
+  return copy;
 }
+
 
 
 //*****************************************************************************
