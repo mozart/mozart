@@ -21,33 +21,48 @@
  **********************************************************************/
 
 
-class AbstractionEntry;
-
 class AbstractionEntry {
 private:
   Abstraction *abstr;
   ProgramCounter pc;
   RefsArray g;
+
+  /* all entries are linked for GC */
+  AbstractionEntry *next;
+  static AbstractionEntry* allEntries;
+
+  static AbstractionEntry defaultEntry;
+
 public:
+  static void setDefaultEntry(Abstraction *a) { defaultEntry.setPred(a); }
+
   IHashTable *indexTable;
 
+  AbstractionEntry() {
+    *this = defaultEntry;
+    next = allEntries;
+    allEntries = this;
+  }
   Abstraction *getAbstr() { return abstr; };
   RefsArray getGRegs()    { return g; };
   ProgramCounter getPC()  { return pc; };
   void setPred(Abstraction *abs);
 
-  void gcAbstractionEntry();
+  static void gcAbstractionEntries();
 };
 
 
 class AbstractionTable: public HashTable {
-  static AbstractionEntry defaultEntry;
 public:
-  static void setDefaultEntry(Abstraction *a) { defaultEntry.setPred(a); }
   AbstractionTable(int s) : HashTable(INTTYPE,s) {};
 
   static AbstractionEntry *add(int id);
-  void gcAbstractionTable();
+  static AbstractionEntry *add(Abstraction *abstr);
+  void gcAbstractionTable()
+  {
+    AbstractionEntry::gcAbstractionEntries();
+  }
+
 };
 
 
@@ -147,20 +162,23 @@ private:
 #endif
 
 // functions
-  static int scanChar (CompStream *fd);
+  static int scanChar(CompStream *fd);
   static char *scanString (CompStream *fd);
-  static int scanUInt (CompStream *fd);
+  static int scanUInt(CompStream *fd);
+  static Bool scanBool(CompStream *fd);
   void scanVariablename (CompStream *fd);
   void scanLiteral(CompStream *fd);
   TaggedRef parseLiteral(CompStream *fd);
-  void scanRegister (CompStream *fd, int &regAdd);
+  void scanRegister(CompStream *fd, int &regAdd);
   void scanRegisterIndex (CompStream *fd);
-  void scanArity (CompStream *fd);
-  void scanNumber (CompStream *fd);
-  void scanPosint (CompStream *fd);
+  void scanArity(CompStream *fd);
+  void scanNumber(CompStream *fd);
+  void scanPosint(CompStream *fd);
   void scanPredicateRef(CompStream *fd);
-  void scanLabel (CompStream *fd, ProgramCounter start);
-  void scanRecordArity (CompStream *fd);
+  void scanGenCallInfo(CompStream *fd);
+  void scanApplMethInfo(CompStream *fd);
+  void scanLabel(CompStream *fd, ProgramCounter start);
+  void scanRecordArity(CompStream *fd);
   TaggedRef parseRecordArity (CompStream *fd, int length);
   void scanBuiltinname(CompStream *fd);
   BuiltinTabEntry *scanFun(CompStream *fd);
@@ -239,6 +257,11 @@ public:
     AbstractionEntry *entry = AbstractionTable::add(i);
     return writeWord(entry, ptr);
   }
+
+  static ProgramCounter writeAddress(void *p, ProgramCounter ptr)
+  {
+    return writeWord(p, ptr);
+  }
 };
 
 
@@ -303,5 +326,40 @@ inline ProgramCounter getLabelArg(ProgramCounter PC)
 
 
 void displayCode(ProgramCounter from, int ssize);
+
+
+
+class GenCallInfoClass {
+public:
+  int regIndex;
+  Bool isMethAppl, isTailCall;
+  TaggedRef lit;
+
+  GenCallInfoClass(int ri, Bool ism, TaggedRef l, Bool ist)
+  {
+    regIndex   = ri;
+    isMethAppl = ism;
+    lit = l;
+    gcProtect(&lit);
+    isTailCall = ist;
+  }
+
+  void dispose()
+  {
+    gcUnprotect(&lit);
+    delete this;
+  }
+};
+
+class ApplMethInfoClass {
+public:
+  TaggedRef methName;
+  int arity;
+  ApplMethInfoClass(TaggedRef m, int i) {
+    methName = m;
+    arity = i;
+    gcProtect(&methName);
+  }
+};
 
 #endif

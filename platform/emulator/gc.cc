@@ -1599,28 +1599,14 @@ void ArityTable::gc()
   }
 }
 
-inline void AbstractionEntry::gcAbstractionEntry()
-{
-  abstr = (Abstraction *) abstr->gcConstTerm();
-  if (abstr == NULL) {
-    // DebugCheckT(warning("abstraction entry dead\n")); // mm2;
-    g = 0;
-    return;
-  }
-  g = gcRefsArray(g);
-}
-
-inline void AbstractionTable::gcAbstractionTable()
+inline void AbstractionEntry::gcAbstractionEntries()
 {
   // there may be NULL entries in the table during gc
-
-  GCMETHMSG("AbstractionTable::gc");
-
-  defaultEntry.gcAbstractionEntry();
-
-  HashNode *hn = getFirst();
-  for (; hn != NULL; hn = getNext(hn)) {
-    ((AbstractionEntry*) hn->value)->gcAbstractionEntry();
+  AbstractionEntry *aux = allEntries;
+  while(aux) {
+    aux->abstr = (Abstraction *) aux->abstr->gcConstTerm();
+    aux->g = (aux->abstr == NULL) ? (RefsArray) NULL : gcRefsArray(aux->g);
+    aux = aux->next;
   }
 }
 
