@@ -24,3 +24,6 @@ HTMLEXTRAFILES = \
 OZDOCHTMLFLAGS = --autoindex
 
 include ../Makefile.common
+
+WindowProgramming.oz: $(MAIN) $(SGMLSRCS)
+	$(DOCIFY) --in=$< --type=chunk --out=EXAMPLES --include=EXTRA > $@ 

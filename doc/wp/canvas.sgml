@@ -29,7 +29,7 @@
 
 
 <Chapter id="chapter.canvas">
-  <Title/The Canvas Widget/
+  <Title/Canvas Widgets/
 
 <p> A canvas widget allows to create and manipulate graphical
 items. In particular, arbitrary widgets can be embedded within canvas
