@@ -376,7 +376,7 @@
         %extern.attr;
         type (%picture.notation;)       #IMPLIED
 >
-<!ELEMENT picture.choice - - (picture|picture.extern)>
+<!ELEMENT picture.choice - - (picture|picture.extern)+>
 <!ATTLIST picture.choice
         %common.attr;
         %display.attr;
