@@ -286,7 +286,7 @@ TaggedRef CodeArea::dbgGetDef(ProgramCounter PC, RefsArray G, RefsArray Y)
 
   TaggedRef pairlist =
     OZ_cons(OZ_pairA("vars", vars),
-            OZ_cons(OZ_pairA("PC", OZ_int((unsigned int) PC)),
+            OZ_cons(OZ_pairA("PC", OZ_int((int)PC)),
     OZ_cons(OZ_pairA("name", OZ_atom(pred ? pred->getPrintName() : "???")),
             OZ_cons(OZ_pairA("file", file),
                     OZ_cons(OZ_pairA("line", OZ_int(line)),
