@@ -911,7 +911,7 @@ void CodeArea::display(ProgramCounter from, int sz, FILE* ofile,
     case UNIFYVALVARYX:
       {
 	YReg reg = YRegToInt(getYRegArg(PC+1));
-	fprintf(ofile, "(%d %d)\n", reg, YRegToInt(getYRegArg(PC+2)));
+	fprintf(ofile, "(%d %d)\n", reg, XRegToInt(getXRegArg(PC+2)));
       }
       DISPATCH();
 
