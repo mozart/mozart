@@ -252,7 +252,7 @@ ByteSink::putTerm(OZ_Term in, char *filename, char *header, Bool textmode)
     return ret;
   }
 
-  CheckNogoods(in,bs,"save:nogoods","Non-exportables found during save",
+  CheckNogoods(in,bs,"pickle:nogoods","Non-exportables found during pickling",
 	       bufferManager->dumpByteStream(bs));
 
   bs->beginWrite();
@@ -374,7 +374,7 @@ OZ_Return
 saveDatum(OZ_Term in,OZ_Datum& dat)
 {
   ByteSinkDatum sink;
-  OZ_Return result = sink.putTerm(in,"filename unknown","",NO);
+  OZ_Return result = sink.putTerm(in,"UNKNOWN FILENAME","",NO);
   if (result==PROCEED) {
     dat=sink.dat;
   } else {
@@ -1036,7 +1036,11 @@ OZ_Return OZ_datumToValue(OZ_Datum d,OZ_Term t)
 OZ_BI_define(BIpicklePack, 1, 1) {
   OZ_declareDetTerm(0,term);
   OZ_Datum d;
-  OZ_valueToDatum(term, &d);
+  OZ_Return r = OZ_valueToDatum(term, &d);
+
+  if (r != PROCEED)
+    return r;
+
   OZ_RETURN(OZ_mkByteString(d.data,d.size));
 } OZ_BI_end 
 
