@@ -3,7 +3,7 @@
   -   Leif Kornstaedt <kornstae@ps.uni-sb.de>
   -
   - Copyright:
-  -   Leif Kornstaedt, 1998
+  -   Leif Kornstaedt, 1998-2003
   -
   - Last change:
   -   $Date$ by $Author$
@@ -44,9 +44,9 @@
     in <Ptr to="appendix.narrator">; familiarity with this is
     assumed.
   <P>
-    Finally, serving the purpose of examples, the provided abstractions
-    are explained in terms of compiler engines and interfaces in <Ptr
-    to="section.api.abstractions">.
+    Finally, examples are presented in <Ptr to="section.api.examples">;
+    in particular, the provided abstractions are explained in terms of
+    compiler engines and interfaces.
   <Section id="section.api.types">
     <Title/Additional Secondary Types/
     <P>
@@ -162,42 +162,5 @@
       </List>
   &engines;
   &interfaces;
-  <Section id="section.api.abstractions">
-    <Title/A Look into the Provided Abstractions/
-    <P>
-      The implementation of the <<Compiler.evalExpression>> procedure
-      is a good example of how to use compiler engines and interfaces.
-      <<evalExpression>> causes compilation of an expression within
-      a speciied environment.  It is synchronous, &ie;, only returns
-      after the compilation has finished.  Compiler error messages are
-      raised as exceptions, and the compilation may be interrupted using
-      the nullary procedure returned in <<Kill>>.
-    <Para class=apropos><Title/Startup/
-      Since we both want to control a compilation (done by a new compiler
-      engine) and to observe the compilation process (to synchronize and
-      to determine whether it produced errors), we first instantiate both
-      an engine and an interface which we register with the engine.
-      A number of queries are enqueued to the engine:  We need to set
-      the environment and appropriate compiler switches for compilation
-      of an expression and to cause synchronous execution of the compiled
-      program.  When we're done configuring the compiler, we can start
-      compilation of the source proper, expecting a result to be
-      returned in variable <<Result>>.
-    <Para class=apropos><Title/Killing/
-      We then define the <<Kill>> procedure.  The rest of the observation
-      is performed in a new thread, because we want to kill the observation
-      as well when <<Kill>> is invoked.  <<Kill>> will clear any non-processed
-      queries from the queue and interrupt the current one, then kill the
-      observation thread (unless it had been already dead).
-    <Para class=apropos><Title/Observing/
-      Next we'll observe the running compiler, and for this we need to make
-      use of the interface we created earlier.  When the compiler becomes
-      idle, we check whether it has output any error messages, in which
-      case we record the faulty condition, else we report success.  The main
-      thread waits until the condition becomes known and reacts upon it.
-      <Code.Extern display to="EvalExpression.oz">
-    <Para class=apropos><Title/virtualStringToValue/
-      The <<Compiler.virtualStringToValue>> is trivial to implement on
-      top of the functionality provided by <<evalExpression>>.
-      <Code.Extern display to="VirtualStringToValue.oz">
+  &examples;
 </Chapter>
