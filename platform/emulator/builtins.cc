@@ -4419,18 +4419,18 @@ OZ_Return isDictionaryInline(TaggedRef t, TaggedRef &out)
 DECLAREBI_USEINLINEFUN1(BIisDictionary,isDictionaryInline)
 
 
-#define GetDictAndKey(d,k,dict,key)				\
+#define GetDictAndKey(d,k,dict,key,checkboard)			\
   NONVAR(d,dictaux,_1);						\
   NONVAR(k,key, _2);						\
   if (!isDictionary(dictaux)) { TypeErrorT(0,"Dictionary"); }	\
   if (!isFeature(key))        { TypeErrorT(1,"feature"); }	\
   OzDictionary *dict = tagged2Dictionary(dictaux);		\
-  CheckFuckingBoard(dict);
+  if (checkboard) { CheckFuckingBoard(dict); }
 
 
 OZ_Return dictionaryMemberInline(TaggedRef d, TaggedRef k, TaggedRef &out)
 {
-  GetDictAndKey(d,k,dict,key);
+  GetDictAndKey(d,k,dict,key,OK);
   out = dict->member(key);
   return PROCEED;
 }
@@ -4439,7 +4439,7 @@ DECLAREBI_USEINLINEFUN2(BIdictionaryMember,dictionaryMemberInline)
 
 OZ_Return dictionaryGetInline(TaggedRef d, TaggedRef k, TaggedRef &out)
 {
-  GetDictAndKey(d,k,dict,key);
+  GetDictAndKey(d,k,dict,key,OK);
   if (dict->getArg(key,out) != PROCEED) {
     TypeErrorM("invalid key");
   }
@@ -4450,7 +4450,7 @@ DECLAREBI_USEINLINEFUN2(BIdictionaryGet,dictionaryGetInline)
 
 OZ_Return dictionaryGetIfInline(TaggedRef d, TaggedRef k, TaggedRef deflt, TaggedRef &out)
 {
-  GetDictAndKey(d,k,dict,key);
+  GetDictAndKey(d,k,dict,key,OK);
   if (dict->getArg(key,out) != PROCEED) {
     out = deflt;
   }
@@ -4458,10 +4458,20 @@ OZ_Return dictionaryGetIfInline(TaggedRef d, TaggedRef k, TaggedRef deflt, Tagge
 }
 DECLAREBI_USEINLINEFUN3(BIdictionaryGetIf,dictionaryGetIfInline)
 
+OZ_Return dictionaryDeepGetIfInline(TaggedRef d, TaggedRef k, TaggedRef deflt, TaggedRef &out)
+{
+  GetDictAndKey(d,k,dict,key,NO);
+  if (dict->getArg(key,out) != PROCEED) {
+    out = deflt;
+  }
+  return PROCEED;
+}
+DECLAREBI_USEINLINEFUN3(BIdictionaryDeepGetIf,dictionaryDeepGetIfInline)
+
 
 OZ_Return dictionaryPutInline(TaggedRef d, TaggedRef k, TaggedRef value)
 {
-  GetDictAndKey(d,k,dict,key);
+  GetDictAndKey(d,k,dict,key,OK);
   dict->setArg(key,value);
   return PROCEED;
 }
@@ -4471,7 +4481,7 @@ DECLAREBI_USEINLINEREL3(BIdictionaryPut,dictionaryPutInline)
 
 OZ_Return dictionaryRemoveInline(TaggedRef d, TaggedRef k)
 {
-  GetDictAndKey(d,k,dict,key);
+  GetDictAndKey(d,k,dict,key,OK);
   dict->remove(key);
   return PROCEED;
 }
@@ -6103,50 +6113,20 @@ OZ_C_proc_begin(BImakeClass,9)
   OZ_Term defaultMethodDescription = OZ_getCArg(7);
   OZ_Term out       = OZ_getCArg(8);
 
-  /* only isRecord, not isSRecord: fast methods may be empty */
-  if (!isRecord(fastmeth)) {
-    TypeErrorT(0,"record");
-  }
-
   SRecord *methods = NULL;
 
-  /* fastmethods may be empty! */
-  if (isSRecord(fastmeth)) {
-    methods = tagged2SRecord(fastmeth);
-    int width = methods->getWidth();
-    for (int i=0; i < width; i++) {
-      TaggedRef abstr = methods->getArg(i);
-      DEREF(abstr,_11,_12);
-      if (!isAbstraction(abstr)) {
-	warning("makeClass: %s should be an abstraction",
-		toC(abstr));
-	return FAILED;
-      }
-      methods->setArg(i,abstr);
-    }
-  }
-
-  if (!isLiteral(printname)) {
-    TypeErrorT(1,"literal");
-  }
-
-  if (!isAbstraction(send)) {
-    TypeErrorT(4,"abstraction");
-  }
-
-  if (!isRecord(features)) {
-    TypeErrorT(5,"record");
-  }
-
-  if (!isRecord(ufeatures)) {
-    TypeErrorT(6,"record");
-  }
+  if (!isDictionary(fastmeth)) { TypeErrorT(0,"dictionary"); }
+  if (!isLiteral(printname))   { TypeErrorT(1,"literal"); }
+  if (!isDictionary(slowmeth)) { TypeErrorT(2,"dictionary"); }
+  if (!isAbstraction(send))    { TypeErrorT(4,"abstraction"); }
+  if (!isRecord(features))     { TypeErrorT(5,"record"); }
+  if (!isRecord(ufeatures))    { TypeErrorT(6,"record"); }
 
   SRecord *uf = isSRecord(ufeatures) ? tagged2SRecord(ufeatures) : (SRecord*)NULL;
 
-  ObjectClass *cl = new ObjectClass(methods,
+  ObjectClass *cl = new ObjectClass(tagged2Dictionary(fastmeth),
 				    tagged2Literal(printname),
-				    slowmeth,
+				    tagged2Dictionary(slowmeth),
 				    tagged2Abstraction(send),
 				    literalEq(hfb,NameTrue),
 				    uf);
@@ -6661,6 +6641,7 @@ BIspec allSpec1[] = {
   {"IsDictionary",      2, BIisDictionary,     (IFOR) isDictionaryInline},
   {"Dictionary.get",    3, BIdictionaryGet,    (IFOR) dictionaryGetInline},
   {"Dictionary.getIf",  4, BIdictionaryGetIf,  (IFOR) dictionaryGetIfInline},
+  {"Dictionary.deepGetIf",  4, BIdictionaryDeepGetIf,  (IFOR) dictionaryDeepGetIfInline},
   {"Dictionary.put",    3, BIdictionaryPut,    (IFOR) dictionaryPutInline},
   {"Dictionary.remove", 2, BIdictionaryRemove, (IFOR) dictionaryRemoveInline},
   {"Dictionary.member", 3, BIdictionaryMember, (IFOR) dictionaryMemberInline},
