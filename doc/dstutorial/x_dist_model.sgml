@@ -249,7 +249,9 @@ the above numbers too seriously.
 </LIST>
 
 <ITEM> <EM>Future</EM>:
-A future is a logic variable that can only be <em>read</em>, not bound.
+A future is a read-only logic variable,
+i.e., it can only be <em>read</em>, not bound.
+Attempting to bind a future will block.
 A future can be created explicitly from a logic variable.
 Futures are useful to protect logic variables from being
 bound by unauthorized sites.
