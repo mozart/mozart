@@ -7,7 +7,7 @@ MAIN = main.sgml
 SGMLSRCS = \
 	main.sgml application.sgml constraints.sgml \
 	distributed.sgml open.sgml system.sgml \
-	window.sgml
+	window.sgml tk.sgml
 
 
 HTMLEXTRAFILES = 
