@@ -1,0 +1,115 @@
+/* config.h.in.  Generated automatically from configure.in by autoheader.  */
+
+/* Define if you have a working `mmap' system call.  */
+#undef HAVE_MMAP
+
+/* Define if you need to in order for stat and other things to work.  */
+#undef _POSIX_SOURCE
+
+/* Define if you have the ANSI C header files.  */
+#undef STDC_HEADERS
+
+#undef ENABLE_NLS
+#undef HAVE_CATGETS
+#undef HAVE_GETTEXT
+#undef HAVE_LC_MESSAGES
+#undef HAVE_STPCPY
+#undef HAVE_STRUCT_OSOCKADDR
+#undef HAVE_LIBSM
+#undef HAVE_LIBINTL_H
+#undef HAVE_GTK_SIGNAL_HANDLER_PENDING
+#undef HAVE_PROGRAM_INVOCATION_SHORT_NAME
+#undef HAVE_PROGRAM_INVOCATION_NAME
+#undef HAVE_SYS_ERRLIST
+#undef HAVE_LIBUTIL
+#undef HAVE_LIBJPEG
+#undef HAVE_LIBGIF
+#undef HAVE_LIBTIFF
+#undef HAVE_LIBZ
+#undef HAVE_LIBPNG
+#undef GNOME_ENABLE_DEBUG
+#undef NEED_DECLARATION_GETHOSTNAME
+#undef HAVE_SOCKET
+#undef HAVE_STRUCT_LINGER
+#undef USE_EXT2FSLIB
+#undef USE_NETCODE
+#undef USE_TERMNET
+#undef USE_VFS
+#undef HAVE_ESD
+#undef PACKAGE
+#undef VERSION
+#undef USE_POPT
+#undef HAVE_LIBAUDIOFILE
+#undef umode_t
+#undef HAVE_OPENPTY
+#undef HAVE_LOGIN_TTY
+#undef HAVE_SENDMSG
+#undef NEED_DECLARATION_SCANDIR
+#undef HAVE_IMLIB_1_9
+
+#undef HAVE_STROPTS_H
+#undef HAVE_DLFCN_H
+
+/* Define if you have the dlerror function.  */
+#undef HAVE_DLERROR
+
+/* Define if you have the dlopen function.  */
+#undef HAVE_DLOPEN
+
+/* Define if you have the gethostbyname function.  */
+#undef HAVE_GETHOSTBYNAME
+
+/* Define if you have the getpagesize function.  */
+#undef HAVE_GETPAGESIZE
+
+/* Define if you have the gtk_signal_handler_pending function.  */
+#undef HAVE_GTK_SIGNAL_HANDLER_PENDING
+
+/* Define if you have the putenv function.  */
+#undef HAVE_PUTENV
+
+/* Define if you have the setenv function.  */
+#undef HAVE_SETENV
+
+/* Define if you have the setfsgid function.  */
+#undef HAVE_SETFSGID
+
+/* Define if you have the strdup function.  */
+#undef HAVE_STRDUP
+
+/* Define if you have the strerror function.  */
+#undef HAVE_STRERROR
+
+/* Define if you have the <dl.h> header file.  */
+#undef HAVE_DL_H
+
+/* Define if you have the <dlfcn.h> header file.  */
+#undef HAVE_DLFCN_H
+
+/* Define if you have the <locale.h> header file.  */
+#undef HAVE_LOCALE_H
+
+/* Define if you have the <unistd.h> header file.  */
+#undef HAVE_UNISTD_H
+
+/* Define if you have the <utime.h> header file.  */
+#undef HAVE_UTIME_H
+
+/* Define if you have the m library (-lm).  */
+#undef HAVE_LIBM
+
+/* Define if you have the pt library (-lpt).  */
+#undef HAVE_LIBPT
+
+/* Define if you have the resolv library (-lresolv).  */
+#undef HAVE_LIBRESOLV
+
+/* Define if you have the z library (-lz).  */
+#undef HAVE_LIBZ
+
+/* Name of package */
+#undef PACKAGE
+
+/* Version number of package */
+#undef VERSION
+
