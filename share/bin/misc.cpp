@@ -22,7 +22,7 @@ OzPanic(int quit, char *format,...)
   va_start(argList, format);
   vsprintf(buf, format, argList);
   
-#ifdef CONSOLEAPP
+#ifdef OZENGINE
   fprintf(stderr,"Fatal Error in Oz: ");
   fprintf(stderr,buf);
 #else
@@ -132,11 +132,11 @@ int setRegistry(char *var, const char *value)
 
 const char *ozplatform = "win32-i486";
 
-char *getOzHome(char *path)
+char *getOzHome(char *path, int depth)
 {
   char *ret = getenv("OZHOME");
   if (ret==NULL) {
-    ret = getParent(path,1);
+    ret = getParent(path,depth);
     if (ret == NULL) {
       OzPanic(1,"Cannot determine Oz installation directory.\nTry setting OZHOME environment variable.");
     }
