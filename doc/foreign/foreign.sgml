@@ -382,7 +382,7 @@ Creating DLLs with <Ref.Extern
 to="http://sourceware.cygnus.com/cygwin/"/cygwin/ has not been tested
 but should be possible in principle. However the cygwin.dll has to be
 initialized first. The document <Ref.Extern
-to="http://www.xraylith.wisc.edu/~khan/software/gnu-win32/README.jni.txt/"/README.jni.txt/
+to="http://www.xraylith.wisc.edu/~khan/software/gnu-win32/README.jni.txt"/README.jni.txt/
 might give some more help under <code /"Cygwin notes"/.
 </list>
 
