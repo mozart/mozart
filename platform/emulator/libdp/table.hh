@@ -835,6 +835,8 @@ public:
 
   void copyBorrowTable(BorrowEntry *,int);
 
+  void closeFrameToProxy(unsigned int ms);
+  int closeProxyToFree(unsigned int ms);
 };
 
 extern BorrowTable *borrowTable;

@@ -158,6 +158,8 @@ enum EmulatorPropertyIndex {
   PROP_PERDIO_MINIMAL,
   PROP_PERDIO,
 
+  PROP_CLOSE_TIME,
+
   PROP_OZ_SUSPEND_ONLY_FUTURES,
   // this must remain last
   PROP__LAST
@@ -437,6 +439,7 @@ OZ_Term GetEmulatorProperty(EmulatorPropertyIndex prop) {
 	   SET_INT(oz_atom("flowbuffersize"), ozconf.perdioFlowBufferSize);
 	   SET_INT(oz_atom("flowbuffertime"), ozconf.perdioFlowBufferTime);
 	   );
+  CASE_INT(PROP_CLOSE_TIME,ozconf.closetime);
   CASE_BOOL(PROP_OZ_SUSPEND_ONLY_FUTURES,ozconf.onlyFutures);
   default:
     return 0; // not readable. 0 ok because no OZ_Term==0
@@ -713,9 +716,10 @@ OZ_Return SetEmulatorProperty(EmulatorPropertyIndex prop,OZ_Term val) {
 		   return OZ_raise(OZ_makeException(E_ERROR,OZ_atom("dp"),
 						    "modelChoose",0));
 		 ozconf.perdioMinimal=INT__));
+    CASE_NAT(PROP_CLOSE_TIME,ozconf.closetime);
     CASE_BOOL_DO(PROP_STANDALONE,ozconf.runningUnderEmacs=!INT__);
     CASE_BOOL(PROP_OZ_SUSPEND_ONLY_FUTURES,ozconf.onlyFutures);
-  default:
+default:
     return PROP__NOT__WRITABLE;
   }
 }
@@ -957,5 +961,7 @@ void initVirtualProperties()
   VirtualProperty::add("perdio.flowbuffersize",PROP_PERDIO_FLOWBUFFERTIME);
   VirtualProperty::add("perdio.flowbuffertime",PROP_PERDIO_FLOWBUFFERSIZE);
   VirtualProperty::add("perdio",PROP_PERDIO);
+  //CLOSE
+  VirtualProperty::add("close.time",PROP_CLOSE_TIME);
 }
 
