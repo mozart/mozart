@@ -90,7 +90,6 @@ public:
 
   int getAtomMemory();
   int getNameMemory();
-  int getCodeMemory();
 
   void initGcMsg(int level);
   void printGcMsg(int level);
