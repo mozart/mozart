@@ -53,7 +53,7 @@ import
    Pickle(save load)
    DP(open) at 'x-oz://contrib/tools/DistPanel'
    Panel
-%   Fault
+   Fault
    Browser(browse:Browse)
    Database(db:DB getID:GetID) at 'database.ozf'
    Mobility(stationaryClass:StationaryClass newStationary:NewStationary) at 'mobility.ozf'
@@ -133,7 +133,7 @@ define
 	 lock P={Dictionary.condGet self.watchers ID nil} in
 	    if P\=nil then
 	       {Dictionary.remove self.watchers ID}
-%	       {Fault.removeSiteWatcher P.port P.procedure}
+	       {Fault.deInstallWatcher P.port P.procedure _}
 	    end
 	    {self Notify(id:ID online:offline)}
 	    {WriteLog "Logged out "#ID}
@@ -196,10 +196,6 @@ define
 	       {WriteLog "Networkfailure ["#{Label X}#"]: "#Log#" ("#ID#" on host "#H#")"}
 	       {Autologout ID}
 	       raise networkFailure(X) end
-	    [] error(distribution(3:X ...)) then
-	       {WriteLog "Networkfailure ["#{Label X}#"]: "#Log#" ("#ID#" on host "#H#")"}
-	       {Autologout ID}
-	       raise networkFailure(distribution(X)) end
 	    end
 	 end
 	 fun{NewFun Mess}
@@ -288,8 +284,7 @@ define
 	    if PW == E.passwd then
 	       %% Add handlers and watchers on the client
 	       {C1 'GETPORT'(CP)}
-%	       {Fault.injector CP proc{$ X E} raise networkFailure(X E) end end}
-%	       {Fault.siteWatcher CP WatcherProc }
+	       {Fault.installWatcher CP [permFail] WatcherProc _}
 
 	       %% Check if client is allready logged in...
 	       if {DB isOnline(id:ID online:$)} \= false then OldC in
