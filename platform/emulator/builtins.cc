@@ -6899,16 +6899,7 @@ OZ_C_proc_begin(BIraiseError,1)
 {
   oz_declareArg(0,exc);
 
-  OZ_Term ret = OZ_record(oz_atom("error"),
-			  cons(oz_int(1),
-			       cons(oz_atom("debug"),nil())));
-  OZ_putSubtree(ret,oz_int(1),exc);
-  OZ_putSubtree(ret,oz_atom("debug"),NameUnit);
-
-  am.exception.info = NameUnit;
-  am.exception.value = ret;
-  am.exception.debug = TRUE;
-  return RAISE;
+  return OZ_raiseError(exc);
 }
 OZ_C_proc_end
 
