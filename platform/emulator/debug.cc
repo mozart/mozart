@@ -76,7 +76,7 @@ OZ_C_proc_begin(BIspy, 1)
     return FAILED;
   }
 
-  ((Abstraction *)tagged2SRecord(predd))->getPred()->setSpyFlag();
+  ((Abstraction *)tagged2Const(predd))->getPred()->setSpyFlag();
   return PROCEED;
 }
 OZ_C_proc_end
@@ -97,7 +97,7 @@ OZ_C_proc_end
 
 
 
-static Bool isSpied(SRecord *def)
+static Bool isSpied(Chunk *def)
 {
   if (isAbstraction(def)) {
     return ((Abstraction*)def)->getPred()->getSpyFlag();
@@ -105,7 +105,7 @@ static Bool isSpied(SRecord *def)
   return NO;
 }
 
-static char *getPrintName(SRecord *def)
+static char *getPrintName(Chunk *def)
 {
   if (isAbstraction(def)) {
     return ((Abstraction*)def)->getPrintName();
@@ -115,7 +115,7 @@ static char *getPrintName(SRecord *def)
 }
 
 
-static void setSpyFlag(SRecord *def)
+static void setSpyFlag(Chunk *def)
 {
   if (isAbstraction(def)) {
     ((Abstraction*)def)->getPred()->setSpyFlag();
@@ -124,7 +124,7 @@ static void setSpyFlag(SRecord *def)
   }
 }
 
-static void unsetSpyFlag(SRecord *def)
+static void unsetSpyFlag(Chunk *def)
 {
   if (isAbstraction(def)) {
     ((Abstraction*)def)->getPred()->unsetSpyFlag();
@@ -143,7 +143,7 @@ char *binaryInfixes [] = {
   };
 
 
-Bool isInTable(SRecord *def, char **table)
+Bool isInTable(Chunk *def, char **table)
 {
   char *pn = getPrintName(def);
   for (char **i=table; *i; i++) {
@@ -182,7 +182,7 @@ static int initPortMap()
 static int dummy = initPortMap();
 
 
-void printCall(DBGPort port, SRecord *def, int arity, TaggedRef *argss,
+void printCall(DBGPort port, Chunk *def, int arity, TaggedRef *argss,
 	       unsigned long goal)
 {
 //  prefixError(); // to show up emulator buffer in emacs
@@ -290,7 +290,7 @@ dbgOption dbgReadInput(int &helpArg)
   return DBG_NONE;
 }
 
-void showCall(DBGPort port, Board *b, SRecord *def, int arity, TaggedRef *args,
+void showCall(DBGPort port, Board *b, Chunk *def, int arity, TaggedRef *args,
 	      unsigned long goal)
 {
   Bool goon = OK;
@@ -377,7 +377,7 @@ void showCall(DBGPort port, Board *b, SRecord *def, int arity, TaggedRef *args,
 }
 
 
-void enterCall(Board *b, SRecord *def, int arity, TaggedRef *args)
+void enterCall(Board *b, Chunk *def, int arity, TaggedRef *args)
 {
   if (skipMode ||
       stepMode == NO && isSpied(def) == NO) {

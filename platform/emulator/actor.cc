@@ -219,64 +219,54 @@ WaitActor* SolveActor::getDisWaitActor ()
 TaggedRef SolveActor::genSolved ()
 {
   RefsArray contGRegs = allocateRefsArray (1);
-  RefsArray status = allocateRefsArray (1);
   STuple *stuple = STuple::newSTuple (solvedAtom, 1);
 
   // statistic
   am.stat.incSolveSolved();
 
+  Assert(solveBoard->isSolve());
   contGRegs[0] = makeTaggedConst (solveBoard);
-  status[0] = entailedAtom;
-  stuple->setArg (0, makeTaggedSRecord
+  stuple->setArg (0, makeTaggedConst
 		  (new SolvedBuiltin (solvedBITabEntry, contGRegs,
-				      SolveContArity, status)));
+				      SolveContArity, entailedAtom)));
   return (makeTaggedSTuple (stuple));
 }
 
 TaggedRef SolveActor::genStuck ()
 {
   RefsArray contGRegs = allocateRefsArray (1);
-  RefsArray status = allocateRefsArray (1);
   STuple *stuple = STuple::newSTuple (solvedAtom, 1);
 
+  Assert(solveBoard->isSolve());
   contGRegs[0] = makeTaggedConst (solveBoard);
-  status[0] = stableAtom;
-  stuple->setArg (0, makeTaggedSRecord
+  stuple->setArg (0, makeTaggedConst
 		  (new SolvedBuiltin (solvedBITabEntry, contGRegs,
-				      SolveContArity, status)));
+				      SolveContArity, stableAtom)));
   return (makeTaggedSTuple (stuple));
 }
 
 TaggedRef SolveActor::genEnumed (Board *newSolveBB)
 {
   STuple *stuple = STuple::newSTuple (enumedAtom, 2);
-  RefsArray status;
   RefsArray contGRegs;
 
   // statistics
   am.stat.incSolveDistributed();
 
   // left side: 
-  status = allocateRefsArray (1);
   contGRegs = allocateRefsArray (1);
-  status[0] = lastAtom;
   contGRegs[0] = makeTaggedConst (newSolveBB);
-  stuple->setArg (0, makeTaggedSRecord
+  stuple->setArg (0, makeTaggedConst
 		  (new OneCallBuiltin (solveContBITabEntry, contGRegs,
-				       SolveContArity, status)));
+				       SolveContArity, lastAtom)));
 
   // right side - the rest: 
-  status = allocateRefsArray (1);
   contGRegs = allocateRefsArray (1);
-  if (boardToInstall == (Board *) NULL) {
-    status[0] = moreAtom;
-  } else {
-    status[0] = lastAtom;
-  }
+  TaggedRef fea = (boardToInstall==NULL) ? moreAtom : lastAtom;
   contGRegs[0] = makeTaggedConst (solveBoard);
-  stuple->setArg (1, makeTaggedSRecord
+  stuple->setArg (1, makeTaggedConst
 		  (new OneCallBuiltin (solveContBITabEntry, contGRegs,
-				       SolveContArity, status)));
+				       SolveContArity, fea)));
 
   return (makeTaggedSTuple (stuple));
 }
@@ -284,36 +274,31 @@ TaggedRef SolveActor::genEnumed (Board *newSolveBB)
 TaggedRef SolveActor::genEnumedFail ()
 {
   STuple *stuple = STuple::newSTuple (enumedAtom, 2);
-  RefsArray status;
   RefsArray contGRegs;
 
   // statistics
   am.stat.incSolveDistributed();
 
   // left side: 
-  status = allocateRefsArray (1);
   contGRegs = allocateRefsArray (1);
-  status[0] = lastAtom;
   contGRegs[0] = makeTaggedConst (solveBoard);
-  stuple->setArg (0, makeTaggedSRecord
+  stuple->setArg (0, makeTaggedConst
 		  (new OneCallBuiltin (solveContBITabEntry, contGRegs,
-				       SolveContArity, status)));
+				       SolveContArity, lastAtom)));
 
   // right side - the rest: 
-  status = allocateRefsArray (1);
   //: kost@ 21.12.94: not necessary any more;
   //: Moreover, because the new implementation of OneCallBuiltin, 
   //: it MUST BE NULL!
   //: contGRegs = allocateRefsArray (1);
   contGRegs = (RefsArray) NULL;
-  status[0] = lastAtom;
-  //: contGRegs[0] = makeTaggedConst (solveBoard);  // but it has no impact;
+  //: contGRegs[0] = makeTaggedConst(solveBoard);  // but it has no impact;
   OneCallBuiltin *bi = new OneCallBuiltin (solveContBITabEntry, contGRegs,
-					   SolveContArity, status);
+					   SolveContArity, lastAtom);
   //: kost@ 22.12.94: contGRegs == NULL means now "already seen";
   //: so, it's not necessary (although quite correct);
   //: bi->hasSeen ();
-  stuple->setArg (1, makeTaggedSRecord (bi));
+  stuple->setArg (1, makeTaggedConst(bi));
 
   return (makeTaggedSTuple (stuple));
 }

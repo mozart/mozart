@@ -18,10 +18,10 @@
 class OzDebug {
 public:
   static unsigned long goalCounter;
-  SRecord *pred;   // really a Abstraction* or a Builtin*
+  Chunk *pred;   // really a Abstraction* or a Builtin*
   TaggedRef *args;
   unsigned long goalNum;
-  OzDebug(SRecord *p, int arity, TaggedRef *a)
+  OzDebug(Chunk *p, int arity, TaggedRef *a)
   {
     pred = p;
     args = arity==0 ? (RefsArray) NULL : copyRefsArray(a,arity);
@@ -33,7 +33,7 @@ public:
 };
 
 
-void enterCall(Board *b, SRecord *def,int arity, TaggedRef *args);
+void enterCall(Board *b, Chunk *def,int arity, TaggedRef *args);
 void exitCall(OZ_Bool,OzDebug *);
 void exitBuiltin(OZ_Bool,Builtin *bi, int arity, TaggedRef *args);
 

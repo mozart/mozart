@@ -23,6 +23,7 @@
 #include <ctype.h>
 
 #include "gc.hh"
+#include "records.hh"
 #include "builtins.hh"
 #include "actor.hh"
 #include "am.hh"
@@ -283,7 +284,8 @@ enum TypeOfPtr {
   PTR_CONT,
   PTR_CFUNCONT,
   PTR_SUSPCONT,
-  PTR_DYNTAB
+  PTR_DYNTAB,
+  PTR_CONSTTERM
 };
 
 
@@ -369,8 +371,8 @@ inline Bool GCISMARKED(int32 S)  { return GCTAG==tagTypeOf((TaggedRef)S); }
  * Check if object in from-space (elem) is already collected.
  *   Then return the forward pointer to to-space.
  */
-#define CHECKCOLLECTED(elem,type)  \
-  if (GCISMARKED(elem)) return (type) GCUNMARK(elem);
+#define CHECKCOLLECTED(elem,Type)  \
+if (GCISMARKED(elem)) {return (Type) GCUNMARK(elem);}
 
 
 /*
@@ -824,7 +826,7 @@ void SuspContinuation::gcRecurse(){
 }
 
 
-/* collect STuple, LTuple */
+/* collect STuple, LTuple, SRecord */
 
 inline
 void gcTaggedBlock(TaggedRef *oldBlock, TaggedRef *newBlock,int sz)
@@ -883,60 +885,20 @@ inline
 SRecord *SRecord::gcSRecord()
 {
   GCMETHMSG("SRecord::gcSRecord");
-  if (this == NULL) return NULL; /* objects may contain an empty record */
-
-  CHECKCOLLECTED(u.type, SRecord *);
+  if (this==NULL) return NULL;
+  CHECKCOLLECTED(label, SRecord *);
   
-  size_t sz;
+  int len = (getWidth()-1)*sizeof(TaggedRef)+sizeof(SRecord);
 
-  switch(getType()) {
-
-  case R_ABSTRACTION:
-    if (opMode == IN_TC && isLocalBoard (((Abstraction *) this)->getBoard ()) == NO)
-      return this;
-    sz = sizeof(Abstraction);
-    DebugGCT(if (opMode == IN_GC)
-	     NOTINTOSPACE(((Abstraction *) this)->name););
-    break;
-  case R_OBJECT:
-    sz = sizeof(Object);
-    break;
-  case R_CELL:
-    if (opMode == IN_TC && isLocalBoard (((Cell *) this)->getBoard ()) == NO)
-      return this;
-    sz = sizeof(Cell);
-    break;
-  case R_RECORD:
-    sz = sizeof(SRecord);
-    break;
-  case R_BUILTIN:
-    switch (((Builtin *) this)->getType()) {
-    case BIsolveCont:
-      sz = sizeof(OneCallBuiltin);
-      //: kost@ 21.12.94: not necessary any more;
-      //: if (((OneCallBuiltin *) this)->isSeen())
-      //:	((Builtin *) this)->gRegs = NULL;
-      break;
-    case BIsolved:
-      sz = sizeof(SolvedBuiltin);
-      break;
-    default:
-      sz = sizeof(Builtin);
-    }
-    break;
-  default:
-    sz = 0;
-    error("SRecord::gc: unknown type");
-  }
-
-  SRecord *ret = (SRecord*) gcRealloc(this,sz);
+  SRecord *ret = (SRecord*) gcRealloc(this,len);
   GCNEWADDRMSG(ret);
   ptrStack.push(ret,PTR_SRECORD);
-  storeForward(&u.type, ret);
+  storeForward(&label, ret);
+  gcTaggedBlock(getRef(),ret->getRef(),getWidth());
 
   PROFILE_CODE1(if (opMode == IN_TC) {
-		  FDProfiles.inc_item(cp_no_record);
-		  FDProfiles.inc_item(cp_size_record, sz);
+                  FDProfiles.inc_item(cp_no_record);
+		  FDProfiles.inc_item(cp_size_record, sizeof(SRecord));
 		})
 
   return ret;
@@ -1409,7 +1371,7 @@ void gcTagged(TaggedRef &fromTerm, TaggedRef &toTerm)
     return;
 
   case LITERAL:
-    toTerm = makeTaggedLiteral (tagged2Literal (auxTerm)->gc ());
+    toTerm = makeTaggedLiteral(tagged2Literal(auxTerm)->gc());
     return;
   
   case LTUPLE:
@@ -1454,15 +1416,6 @@ void gcTagged(TaggedRef &fromTerm, TaggedRef &toTerm)
       return;
     }
 
-#ifdef RS
-    if (updateVar(auxTerm) && auxTermTag == CVAR) {
-      TaggedRef *ref = (TaggedRef *) heapMalloc(sizeof(TaggedRef));
-      *ref = gcVariable(auxTerm);
-      storeForward(auxTermPtr, ref);
-      return;
-    }
-#endif
-    
     // put address of ref cell to be updated onto update stack    
     if (updateVar(auxTerm)) {
       updateStack.push(&toTerm);
@@ -1475,7 +1428,7 @@ void gcTagged(TaggedRef &fromTerm, TaggedRef &toTerm)
     return;
   
   default:
-    error("Unknown tag in term: %0x",auxTermTag);
+    Assert(NO);
   }
 }
 
@@ -1578,7 +1531,7 @@ void AM::gc(int msgLevel)
 // ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //                garbage collection is finished here
 
-  stat.printGcMsg();
+  stat.printGcMsg(msgLevel);
   
   gcing = 1;
 } // AM::gc
@@ -1631,13 +1584,11 @@ void processUpdateStack(void)
 	  *Term = makeTaggedRef(newTaggedSVar(tagged2SVar(newVar)));
 	  break;
 	case CVAR:
-#ifndef RS
 	  *Term = makeTaggedRef(newTaggedCVar(tagged2CVar(newVar)));
 	  break;
-#endif
 	default:
-	  error("processUpdateStack: variable expected here.");
-	} // switch
+	  Assert(NO);
+	}
 	INFROMSPACE(auxTermPtr);
 	storeForward((int *) auxTermPtr,ToPointer(*Term));
       }
@@ -1671,7 +1622,7 @@ Board* AM::copyTree (Board* bb, Bool *isGround)
   opMode = IN_TC;
   gcing = 0;
   varCount = 0;
-  stat.timeForCopy -= usertime();
+  unsigned int starttime = usertime();
 
   DebugGC ((bb->isCommitted () == OK), error ("committed board to be copied"));
   fromCopyBoard = bb;
@@ -1696,7 +1647,7 @@ Board* AM::copyTree (Board* bb, Bool *isGround)
   fromCopyBoard = NULL;
   gcing = 1;
 
-  stat.timeForCopy += usertime();
+  stat.timeForCopy.incf(usertime()-starttime);
   // Note that parent, right&leftSibling must be set in this subtree -
   // for instance, with "setParent"
 
@@ -1714,36 +1665,7 @@ Board* AM::copyTree (Board* bb, Bool *isGround)
 //                                GC-METHODS
 //*****************************************************************************
 
-inline void AbstractionEntry::gc()
-{
-  abstr = (Abstraction *) abstr->gcSRecord();
-  g     = gcRefsArray(g);
-}
-
-void AbstractionTable::gc()
-{
-  // there may be NULL entries in the table during gc
-
-  GCMETHMSG("AbstractionTable::gc");
-
-  HashNode * hn = getFirst();
-  for (; hn != NULL; hn = getNext(hn)) {
-    ((AbstractionEntry*) hn->value)->gc();
-  }
-}
-
-void ArityTable::gc ()
-{
-  GCMETHMSG("ArityTable::gc");
-
-  for (int i = 0; i < size; i++) {
-    if (table[i] == (Arity *) NULL)
-      continue;
-    (table[i])->gc ();
-  }
-}
-
-void Arity::gc ()
+inline void Arity::gc()
 {
   Arity *aux = this;
   while(aux) {
@@ -1755,6 +1677,35 @@ void Arity::gc ()
     }
     gcTagged(aux->list, aux->list);
     aux = aux->next;
+  }
+}
+
+void ArityTable::gc()
+{
+  GCMETHMSG("ArityTable::gc");
+
+  for (int i = 0; i < size; i++) {
+    if (table[i] != NULL) {
+      (table[i])->gc();
+    }
+  }
+}
+
+inline void AbstractionEntry::gc()
+{
+  abstr = (Abstraction *) abstr->gcConstTerm();
+  g     = gcRefsArray(g);
+}
+
+inline void AbstractionTable::gc()
+{
+  // there may be NULL entries in the table during gc
+
+  GCMETHMSG("AbstractionTable::gc");
+
+  HashNode * hn = getFirst();
+  for (; hn != NULL; hn = getNext(hn)) {
+    ((AbstractionEntry*) hn->value)->gc();
   }
 }
 
@@ -1857,9 +1808,74 @@ void TaskStack::gcRecurse()
 //                           NODEs
 //*********************************************************************
 
+void Chunk::gcRecurse()
+{
+  record = getRecord()->gcSRecord();
+  switch(getCType()) {
+	      
+  case C_ABSTRACTION:
+    {
+      Abstraction *a = (Abstraction *) this;
+      Assert(!isFreedRefsArray (a->gRegs));
+      a->gRegs = gcRefsArray(a->gRegs);
+      a->name = a->name->gc ();
+      DebugGC((a->name->getHome () == (Board *) ToPointer(ALLBITS) ||
+		   a->name->getHome () == (Board *) NULL),
+	      error ("non-dynamic name is met in Abstraction::gcRecurse"));
+      INTOSPACE(a->name);
+      break;
+    }
+    
+  case C_OBJECT:
+    {
+      Object *o      = (Object *) this;
+      Assert(!isFreedRefsArray (o->gRegs));
+      o->gRegs       = gcRefsArray(o->gRegs);
+      o->cell        = (Cell*)o->cell->gcConstTerm();
+      o->fastMethods = o->fastMethods->gcSRecord();
+      // "Literal *printName" needs no collection
+      break;
+    }
+    
+  case C_CELL:
+    {
+      Cell *c = (Cell *) this;
+      c->name = c->name->gc ();
+      gcTagged(c->val,c->val);
+      break;
+    }
+    
+  case C_BUILTIN:
+    {
+      Builtin *bi = (Builtin *) this;
+      gcTagged(bi->suspHandler,bi->suspHandler);
+      Assert(!isFreedRefsArray (bi->gRegs));
+      bi->gRegs = gcRefsArray(bi->gRegs);
+      break;
+    }
+	
+  default:
+    Assert(NO);
+  }
+}
+
+
+void ConstTerm::gcRecurse()
+{
+  switch (typeOf()) {
+  case Co_Chunk:
+    ((Chunk *) this)->gcRecurse();
+    break;
+  default:
+    Assert(NO);
+  }
+}
+
+
 ConstTerm *ConstTerm::gcConstTerm()
 {
   GCMETHMSG("ConstTerm::gcConstTerm");
+  if (this == NULL) return NULL;
   CHECKCOLLECTED(type, ConstTerm *);
 
   switch (typeOf()) {
@@ -1879,11 +1895,51 @@ ConstTerm *ConstTerm::gcConstTerm()
   case Co_Thread:
     return ((Thread *) this)->gc();
 
-  case Co_Chunk:
+  case Co_HeapChunk:
     return ((HeapChunk *) this)->gc();
     
+  case Co_Chunk:
+    {
+      size_t sz;
+      switch(((Chunk*) this)->getCType()) {
+      case C_ABSTRACTION:
+	if (opMode == IN_TC && isLocalBoard (((Abstraction *) this)->getBoard ()) == NO)
+	  return this;
+	sz = sizeof(Abstraction);
+//	DebugGCT(if (opMode == IN_GC) NOTINTOSPACE(((Abstraction *) this)->name););
+	break;
+      case C_OBJECT:
+	sz = sizeof(Object);
+	break;
+      case C_CELL:
+	if (opMode == IN_TC && isLocalBoard(((Cell *) this)->getBoard()) == NO)
+	  return this;
+	sz = sizeof(Cell);
+	break;
+      case C_BUILTIN:
+	switch (((Builtin *) this)->getType()) {
+	case BIsolveCont:
+	  sz = sizeof(OneCallBuiltin);
+	  //: kost@ 21.12.94: not necessary any more;
+	  //: if (((OneCallBuiltin *) this)->isSeen())
+	  //:	((Builtin *) this)->gRegs = NULL;
+	  break;
+	case BIsolved:
+	  sz = sizeof(SolvedBuiltin);
+	  break;
+	default:
+	  sz = sizeof(Builtin);
+	}
+	break;
+      }
+      Chunk *ret = (Chunk*) gcRealloc(this,sz);
+      GCNEWADDRMSG(ret);
+      ptrStack.push(ret,PTR_CONSTTERM);
+      storeForward(getGCField(), ret);
+      return ret;
+    }
   default:
-    error("ConstTerm::gcConstTerm: unknown tag 0x%x", typeOf());
+    Assert(NO);
     return NULL;
   }
 }
@@ -2183,68 +2239,6 @@ void DLLStack::gc (DLLStackEntry (*f)(DLLStackEntry))
 #define ERROR(Fun, Msg)                                                       \
         error("%s in %s at %s:%d", Msg, Fun, __FILE__, __LINE__);
 
-void SRecord::gcRecurse()
-{
-  GCMETHMSG("SRecord::gcRecurse");
-  switch (getType()) {
-
-  case R_ABSTRACTION:
-    {
-      Abstraction *a = (Abstraction *) this;
-      DebugCheck (isFreedRefsArray (a->gRegs),
-		  error ("freed 'g' refs (abs) array in SRecord::gcRecurse ()"));
-      a->gRegs = gcRefsArray(a->gRegs);
-      a->name = a->name->gc ();
-      DebugGC((a->name->getHome () == (Board *) ToPointer(ALLBITS) ||
-	       a->name->getHome () == (Board *) NULL),
-	      error ("non-dynamic name is met in Abstraction::gcRecurse"));
-      INTOSPACE(a->name);
-      break;
-    }
-    
-  case R_OBJECT:
-    {
-      Object *o      = (Object *) this;
-      DebugCheck (isFreedRefsArray (o->gRegs),
-		  error ("freed 'g' refs (obj) array in SRecord::gcRecurse ()"));
-      o->gRegs       = gcRefsArray(o->gRegs);
-      o->cell        = (Cell*)o->cell->gcSRecord();
-      o->fastMethods = o->fastMethods->gcSRecord();
-      // "Literal *printName" needs no collection
-      break;
-    }
-    
-  case R_CELL:
-    {
-      Cell *c = (Cell *) this;
-      c->name = c->name->gc ();
-      gcTagged(c->val,c->val);
-      break;
-    }
-
-  case R_BUILTIN:
-    {
-      Builtin *bi = (Builtin *) this;
-      gcTagged(bi->suspHandler,bi->suspHandler);
-      DebugCheck (isFreedRefsArray (bi->gRegs),
-		  error ("freed 'g' refs (bi) array in SRecord::gcRecurse ()"));
-      bi->gRegs = gcRefsArray(bi->gRegs);
-      break;
-    }
-
-  case R_RECORD:
-    gcTagged(u.label, u.label);
-    break;
-
-  default:
-    error("SRecord::gcRecurse:: unknown type");
-  }
-  
-  DebugCheck (isFreedRefsArray (args),
-	      error ("freed 'g' refs (args) array in SRecord::gcRecurse ()"));
-  args = gcRefsArray(args);
-}
-
 /* collect STuple, LTuple */
 
 inline
@@ -2267,6 +2261,15 @@ void STuple::gcRecurse()
 
 
 inline
+void SRecord::gcRecurse()
+{
+  GCMETHMSG("SRecord::gcRecurse");
+  gcTagged(label,label);
+  gcTaggedBlockRecurse(getRef(),getWidth());
+}
+
+
+inline
 void LTuple::gcRecurse()
 {
   GCMETHMSG("LTuple::gcRecurse");
@@ -2275,62 +2278,32 @@ void LTuple::gcRecurse()
 
 
 
-void performCopying(void){
+void performCopying(void)
+{
   while (!ptrStack.isEmpty()) {
-    TypedPtr tptr    = ptrStack.pop();  
+    TypedPtr tptr     = ptrStack.pop();  
     void *ptr         = getPtr(tptr);
     TypeOfPtr ptrType = getType(tptr);
     
     switch(ptrType) {
       
-    case PTR_LTUPLE:
-      ((LTuple *) ptr)->gcRecurse();
-      break;
-      
-    case PTR_STUPLE:
-      ((STuple *) ptr)->gcRecurse();
-      break;      
-      
-    case PTR_SRECORD:
-      ((SRecord *) ptr)->gcRecurse();
-      break;
-
-    case PTR_DYNTAB:
-      ((DynamicTable *) ptr)->gcRecurse();
-      break;
-
-    case PTR_NAME:
-      ((Literal *) ptr)->gcRecurse ();
-      break;
-      
-    case PTR_CONT:
-      ((Continuation*) ptr)->gcRecurse();
-      break;
-
-    case PTR_SUSPCONT:
-      ((SuspContinuation*) ptr)->gcRecurse();
-      break;
-
-    case PTR_CFUNCONT:
-      ((CFuncContinuation*) ptr)->gcRecurse();
-      break;      
-      
-    case PTR_ACTOR:
-       ((Actor *) ptr)->gcRecurse();
-       break;
+    case PTR_LTUPLE:    ((LTuple *) ptr)->gcRecurse(); break;      
+    case PTR_STUPLE:    ((STuple *) ptr)->gcRecurse(); break;      
+    case PTR_SRECORD:   ((SRecord *) ptr)->gcRecurse(); break;
+    case PTR_DYNTAB:    ((DynamicTable *) ptr)->gcRecurse(); break;
+    case PTR_NAME:      ((Literal *) ptr)->gcRecurse (); break;
+    case PTR_CONT:      ((Continuation*) ptr)->gcRecurse(); break;
+    case PTR_SUSPCONT:  ((SuspContinuation*) ptr)->gcRecurse(); break;
+    case PTR_CFUNCONT:  ((CFuncContinuation*) ptr)->gcRecurse(); break;      
+    case PTR_ACTOR:     ((Actor *) ptr)->gcRecurse(); break;
+    case PTR_THREAD:    ((Thread *) ptr)->gcRecurse(); break;
+    case PTR_BOARD:     ((Board *) ptr)->gcRecurse(); break;
+    case PTR_CONSTTERM: ((ConstTerm *) ptr)->gcRecurse(); break;
        
-    case PTR_THREAD:
-       ((Thread *) ptr)->gcRecurse();
-       break;
-       
-    case PTR_BOARD:
-       ((Board *) ptr)->gcRecurse();
-       break;
-       
-     default:
-       error("Unknown type tag on pointer stack: 0x%d",ptrType);
+    default:
+      Assert(NO);
      }
-   } // while
+   }
 }
   
 
@@ -2400,7 +2373,7 @@ Bool AM::idleGC()
 
 OzDebug *OzDebug::gcOzDebug()
 {
-  pred = pred->gcSRecord();
+  pred = (Chunk *) pred->gcConstTerm();
   args = gcRefsArray(args);
   return this;
 }
