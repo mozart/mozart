@@ -250,7 +250,7 @@ BOOTINITTXT	= boot-init.ozt
 BOOTOZCTXT	= boot-ozc.ozt
 
 STAGEEXTRAFILES = \
-	$(OZLIB)/Standard.ozf $(OZLIB)/$(BOOTINITTXT) $(OZLIB)/$(BOOOZCTXT)
+	$(OZLIB)/Standard.ozf $(OZLIB)/$(BOOTINITTXT) $(OZLIB)/$(BOOTOZCTXT)
 
 install: install-main install-images install-cache
 
@@ -371,7 +371,7 @@ stage3:
 	OZC=$(SRCDIR)/boot-ozc.sh \
 	OZINIT=Init.ozf \
 	OZAR=ozar \
-	BOOTINITFROM=$(STAGE2)/share/$(BOOTINITTXT) \
+	BOOTINITTXTFROM=$(STAGE2)/share/$(BOOTINITTXT) \
 	BOOTOZCTXTFROM=$(STAGE2)/share/$(BOOTOZCTXT)
 
 SAVE=./save
