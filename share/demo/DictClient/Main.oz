@@ -33,17 +33,21 @@ import
    System(printError)
    Property(get)
    TkDictionary('class')
+   GtkDictionary('class')
 prepare
    ArgSpec = record(help(rightmost char: [&? &h] default: false)
 		    server(single char: &s type: string default: 'dict.org')
 		    host(alias: server)
-		    port(single char: &p type: int default: 2628))
+		    port(single char: &p type: int default: 2628)
+		    mode(single type: atom(tk gtk) default: tk))
 
    UsageString =
    '--help, -?, -h  Display this message.\n'#
    '--server=HOST, --host=HOST, -s HOST\n'#
    '--port=PORT, -p PORT\n'#
-   '                Initially try to connect to HOST on PORT.\n'
+   '                Initially try to connect to HOST on PORT.\n'#
+   '--mode=tk, --mode=gtk\n'#
+   '                Widget toolkit to use (default: tk).\n'
 define
    proc {Usage VS N}
       {System.printError
@@ -57,7 +61,9 @@ define
       if Args.help then
 	 {Usage "" 0}
       end
-      {Wait {New TkDictionary.'class' init(Args.server Args.port)}.closed}
+      {Wait {New case Args.mode of tk then TkDictionary.'class'
+		 [] gtk then GtkDictionary.'class'
+		 end init(Args.server Args.port)}.closed}
       {Application.exit 0}
    catch error(ap(usage VS) ...) then
       {Usage 'Usage error: '#VS#'\n' 2}
