@@ -195,9 +195,8 @@ ozma-s.ll: ozma-s.m4ll
 ozma-p.yy: ozma-p.m4yy
 	$(M4) $< > $@
 
-config.h: $(TOPDIR)/include/config.m4h $(OZVERSION)
-	$(M4) -DOZVERSION=\"`$(OZVERSION)`\" \
-		-DOZINCDIR=$(TOPDIR)/include $< > $@
+config.h: config.m4h $(OZVERSION)
+	$(M4) -DOZVERSION=\"`$(OZVERSION)`\" $< > $@
 
 #/usr/include/signal.h is broken on Linux:
 #os.cc: In function `void osBlockSignals(int = 0)':
@@ -220,5 +219,32 @@ distclean::
 		Makefile.rules Makefile.vars Makefile
 
 # dependencies
-marshaler.hh marshalMsg.cc: $(SRCDIR)/msgFormat.m4
-scancode.cc ozma-s.ll ozma-p.yy optostr.hh marshalcode.cc opcodes.hh opcodes.cc instrtab.hh: $(TOPDIR)/include/instrDefs.m4
+marshaler.hh marshalMsg.cc: msgFormat.m4
+scancode.cc ozma-s.ll ozma-p.yy optostr.hh marshalcode.cc opcodes.hh opcodes.cc instrtab.hh: instrDefs.m4
+
+# automatic configure
+${srcdir}/configure: configure.in
+	cd ${srcdir} && autoconf
+
+# autoheader might not change config.h.in, so touch a stamp file.
+#${srcdir}/config.h.in: stamp-h.in
+#${srcdir}/stamp-h.in: configure.in aclocal.m4 acconfig.h \
+#    config.h.top config.h.bot
+#        cd ${srcdir} && autoheader
+#        echo timestamp > ${srcdir}/stamp-h.in
+
+conf.h: conf.h.in config.status
+	./config.status
+
+Makefile: Makefile.in config.status
+	./config.status
+
+Makefile.vars: Makefile.vars.in config.status
+	./config.status
+
+Makefile.rules: Makefile.rules.in config.status
+	./config.status
+
+config.status: configure
+	./config.status --recheck
+
