@@ -352,7 +352,7 @@ in
 	    from LocalClasses
 	    with init
 	    meth init
-	       <<LocalClasses init(False 1 S A)>>
+	       <<LocalClasses init(False 1 S)>>
 	       solution <- S
 	    end
 	    meth getSol($)
