@@ -101,7 +101,7 @@ public:
   void print(ostream &stream, int depth, int offset, TaggedRef v);
   void printLong(ostream &stream, int depth, int offset, TaggedRef v);
 
-  void installPropagators(GenCVariable *, ByteCode *);
+  void installPropagators(GenCVariable *);
 
   void addDetSusp (Thread *thr, TaggedRef *tptr);
 

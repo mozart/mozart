@@ -474,7 +474,7 @@ Bool GenOFSVariable::unifyOFS(TaggedRef *vPtr, TaggedRef var,
         if (getWidth()>0) return FALSE;
 
         // Get local/global flag:
-        Bool vLoc=(scp==0 && am.isLocalSVar(this));
+        Bool vLoc=am.isLocalSVar(this);
 
         // Bind OFSVar to the Literal:
         if (vLoc) doBind(vPtr, term);
@@ -506,7 +506,7 @@ Bool GenOFSVariable::unifyOFS(TaggedRef *vPtr, TaggedRef var,
         LTuple* termLTup=tagged2LTuple(term);
 
         // Get local/global flag:
-        Bool vLoc=(scp==0 && am.isLocalSVar(this));
+        Bool vLoc=am.isLocalSVar(this);
 
         // Check that var features are subset of {1,2}
         TaggedRef arg1=getFeatureValue(makeTaggedSmallInt(1));
@@ -558,7 +558,7 @@ Bool GenOFSVariable::unifyOFS(TaggedRef *vPtr, TaggedRef var,
         Assert(termSRec!=NULL);
 
         // Get local/global flag:
-        Bool vLoc=(scp==0 && am.isLocalSVar(this));
+        Bool vLoc=am.isLocalSVar(this);
   
         // Check that all features of the OFSVar exist in the SRecord:
         // (During the check, calculate the list of feature pairs that correspond.)
@@ -630,8 +630,8 @@ Bool GenOFSVariable::unifyOFS(TaggedRef *vPtr, TaggedRef var,
         Assert(termVar!=NULL);
 
         // Get local/global flags:
-        Bool vLoc=(scp==0 && am.isLocalSVar(this));
-        Bool tLoc=(scp==0 && am.isLocalSVar(termVar));
+        Bool vLoc=am.isLocalSVar(this);
+        Bool tLoc=am.isLocalSVar(termVar);
   
         GenOFSVariable* newVar=NULL;
         GenOFSVariable* otherVar=NULL;
@@ -724,22 +724,22 @@ Bool GenOFSVariable::unifyOFS(TaggedRef *vPtr, TaggedRef var,
             // Global term is constrained if result has more features than term:
             if (mergeWidth>termWidth)
                 am.doBindAndTrailAndIP(term, tPtr, makeTaggedRef(vPtr),
-				    newVar, otherVar,scp);
+				    newVar, otherVar);
             else
                 doBind(vPtr, makeTaggedRef(tPtr));
         } else if (!vLoc && tLoc) {
             // Global var is constrained if result has more features than var:
 	    if (mergeWidth>varWidth)
                 am.doBindAndTrailAndIP(var, vPtr, makeTaggedRef(tPtr),
-				    newVar, otherVar,scp);
+				    newVar, otherVar);
 	    else
 		doBind(tPtr, makeTaggedRef(vPtr));
         } else if (!vLoc && !tLoc) {
             // bind to new term with trailing:
             am.doBindAndTrailAndIP(var, vPtr, makeTaggedRef(nvRefPtr),
-				newVar, this, scp);
+				newVar, this);
             am.doBindAndTrailAndIP(term, tPtr, makeTaggedRef(nvRefPtr),
-				newVar, termVar, scp);
+				newVar, termVar);
         } else Assert(FALSE);
 
         // Unify the labels:

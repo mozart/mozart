@@ -2935,7 +2935,9 @@ inline OZ_Return eqeqWrapper(TaggedRef Ain, TaggedRef Bin)
   
  dontknow:
   am.trail.pushMark();
+  am.shallowHeapTop = heapTop;
   Bool ret = am.unify(Ain,Bin,(ByteCode*)1);
+  am.shallowHeapTop = NULL;
   if (ret == NO) {
     am.reduceTrailOnFail();
     return FAILED;
