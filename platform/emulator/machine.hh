@@ -13,9 +13,6 @@
 #ifndef __MACHINEHH
 #define __MACHINEHH
 
-#include <stdlib.h>
-
-
 /*
  * This file contains machine specific settings
  */
@@ -28,23 +25,33 @@
 
 
 #ifdef MIPS
-const int mallocBase = 0x10000000;
+const intlong mallocBase = 0x10000000;
 #else
 #ifdef AIX3_RS6000
-const int mallocBase = 0x20000000;
+const intlong mallocBase = 0x20000000;
 #else
 #ifdef HPUX_700
-const int mallocBase = 0x40000000;
+const intlong mallocBase = 0x40000000;
 #else
 #ifdef OSF1_ALPHA
-const long int mallocBase = 0x140000000;
+const intlong mallocBase = 0x140000000;
 #else
-const int mallocBase = 0x0;
+const intlong mallocBase = 0x0;
 #endif
 #endif
 #endif
 #endif
 
+
+/* where does the text segment start
+ * needed for threaded code
+ */
+
+#ifdef OSF1_ALPHA
+const intlong textBase = 0x100000000;
+#else
+const intlong textBase = 0x0;
+#endif
 
 /* convert an int32 to a pointer and vice versa */
 inline void* ToPointer(int32 i) {
@@ -55,20 +62,15 @@ inline void* ToPointer(int32 i) {
 #endif
 }
 
-
-inline void *orPointer(void *p, int i)
-{
-  return (void*) ((long)p|(long)i);
-}
+inline int32 ToInt32(void *p) { return (int32)(p); }
 
 
-inline void *andPointer(void *p, int i)
-{
-  return (void*) ((long)p&(long)i);
-}
+/* (un)set bits in a pointer */
+inline void *orPointer(void *p, int i)  { return (void*) ((intlong)p|(intlong)i); }
+inline void *andPointer(void *p, int i) { return (void*) ((intlong)p&(intlong)i); }
 
-inline int32 ToInt32(void *p)   { return (int32)(p); } ;
 
+/* consistency check */
 inline int isPointer(void *p) { return (((intlong)p) & mallocBase) != 0;}
 
 #endif
