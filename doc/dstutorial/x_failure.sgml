@@ -531,9 +531,9 @@ Any number of watchers can be installed on an entity.
 The function always returns <<true>>, since it is always
 possible to install a watcher.
 <ENTRY> <<fun {Fault.deInstallWatcher Entity WatcherProc}>>
-<ITEM>removes one instance of
+<ITEM>deinstalls (i.e., removes) one instance of
 the given watcher from the entity on the current site.
-If no instance of <<WatcherProc>> was installed as a watcher, then
+If no instance of <<WatcherProc>> is there to deinstall, then
 the function returns <<false>>.  Otherwise, it returns <<true>>.
 </LIST>
 <P>A watcher <<WatcherProc>> is a two-argument

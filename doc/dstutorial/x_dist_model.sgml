@@ -510,7 +510,7 @@ We are confident that it is basically correct.
 two independent parts.
 First, the application is written without
 explicitly partitioning the computation among sites.
-One can in fact check the the correctness
+One can in fact check the correctness
 and termination properties of the
 application by running it on one site.
 
@@ -518,7 +518,7 @@ application by running it on one site.
 to satisfy the geographic constraints
 (placement of resources, dependencies between sites)
 and the performance constraints
-(network bandwidth, machine memory and speed).
+(network bandwidth and latency, machine memory and speed).
 The large-scale structure
 of an application consists of a graph
 of threads and objects, which access resources.
