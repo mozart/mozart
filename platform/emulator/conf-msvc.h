@@ -80,3 +80,7 @@
 
 /* type check */
 #undef HAVE_SOCKLEN_T
+
+#ifndef HAVE_SOCKLEN_T
+typedef int socklen_t;
+#endif

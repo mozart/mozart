@@ -35,26 +35,26 @@
 #include "tagged.hh"
 
 /*
- * The variable copying stack: VarFix
+ * The variable copying stack: VarFixStack
  *
  * When during garbage collection or during copying a variable V is
  * encountered that has not been collected so far and V is not direct,
  * that is, V has been reached by a reference chain, V cannot be copied
  * directly.
  *
- * So, push the location of the reference on VarFix and replace its content
+ * So, push the location of the reference on VarFixStack and replace its content
  * by a reference to the old variable, as to shorten the ref-chain.
  *
  * Later V might be reached directly, that fixes V's location. After
- * collection has finished, VarFix tracks this new location to
- * and fixes the occurence on VarFix.
+ * collection has finished, VarFixStack tracks this new location to
+ * and fixes the occurence on VarFixStack.
  *
  */
 
-class VarFix: public FastStack {
+class VarFixStack: public FastStack {
 public:
-  VarFix() : FastStack() {}
-  ~VarFix() {}
+  VarFixStack() : FastStack() {}
+  ~VarFixStack() {}
 
   void defer(TaggedRef * var, TaggedRef * ref) {
     Assert(var);
@@ -67,7 +67,7 @@ public:
 
 };
 
-extern VarFix vf;
+extern VarFixStack vf;
 
 
 /*

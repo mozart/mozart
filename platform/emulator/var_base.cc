@@ -49,10 +49,18 @@ int oz_raise(OZ_Term cat, OZ_Term key, const char *label, int arity, ...);
 void OzVariable::dropPropagator(Propagator * prop)
 {
   switch (getType()){
-  case OZ_VAR_BOOL:    return ((OzBoolVariable*) this)->dropPropagator(prop);
-  case OZ_VAR_FD:      return ((OzFDVariable*) this)->dropPropagator(prop);
-  case OZ_VAR_FS:      return ((OzFSVariable*) this)->dropPropagator(prop);
-  case OZ_VAR_CT:      return ((OzCtVariable*) this)->dropPropagator(prop);
+  case OZ_VAR_BOOL:
+    ((OzBoolVariable*) this)->dropPropagator(prop);
+    return;
+  case OZ_VAR_FD:
+    ((OzFDVariable*) this)->dropPropagator(prop);
+    return;
+  case OZ_VAR_FS:
+    ((OzFSVariable*) this)->dropPropagator(prop);
+    return;
+  case OZ_VAR_CT:
+    ((OzCtVariable*) this)->dropPropagator(prop);
+    return;
   ExhaustiveSwitch();
   }
 }

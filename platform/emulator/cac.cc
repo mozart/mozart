@@ -887,7 +887,7 @@ void WeakDictionary::weakGC()
  * After collection has finished, update variable references
  *
  */
-void VarFix::_cacFix(void)
+void VarFixStack::_cacFix(void)
 {
   if (isEmpty())
     return;

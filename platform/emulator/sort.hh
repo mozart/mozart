@@ -46,10 +46,11 @@ void sort_exchange(T &a, T &b) {
     sort_swap(a,b);
 }
 
+const int QuickSortStack_maxsize = 32;
+
 class QuickSortStack {
 private:
-  static const int maxsize = 32;
-  int stack[2*maxsize];
+  int stack[2*QuickSortStack_maxsize];
   int tos;
 public:
   QuickSortStack() : tos(0) {};

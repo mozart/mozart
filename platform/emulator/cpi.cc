@@ -144,13 +144,13 @@ void OZ_CPIVar::operator delete[](void * p, size_t s)
   // deliberately left empty
 }
 
+#endif
 
 OZ_CPIVar * _getCPIVar(OZ_Term v)
 {
   OzVariable *ov = tagged2Var(oz_deref(v));
   return (OZ_CPIVar *) ov->getRaw();
 }
-#endif
 
 // End of File
 //-----------------------------------------------------------------------------
