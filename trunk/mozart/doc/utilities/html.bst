@@ -109,7 +109,7 @@ FUNCTION {output.bibitem}
 { newline$
   "%" write$
   cite$ write$
-  ":[" write$
+  quote$ "[" * write$
   label write$
   "]" write$
   newline$
@@ -119,7 +119,7 @@ FUNCTION {output.bibitem}
   label write$
   "]</A>" write$
   newline$
-  "<DD><P>" write$
+  "<DD><P align=justify>" write$
   ""
   before.all 'output.state :=
 }
