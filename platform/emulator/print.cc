@@ -1322,10 +1322,10 @@ PRINTLONG(PrTabEntry)
   CHECKDEPTHLONG;
   stream << indent(offset)
          <<  "Name: " << getPrintName()
-         << "/" << arity << endl
+         << "/" << (int) arity << endl
          << indent(offset)
          <<  "ProgramCounter: " << (void *) PC << endl
-         << indent(offset) <<  "Arity: " << arity << endl;
+         << indent(offset) <<  "Arity: " << (int) arity << endl;
 }
 
 PRINTLONG(BuiltinTabEntry)
