@@ -45,7 +45,7 @@ case $system in
    ;;
    *i586*CYGWIN*)       OZARCH=win32-i486
    ;;
-   *)  echo "Cannot determine machine type and OS version for '$system'" 1>&2 ; exit 1
+   *)                   OZARCH=unknown-unknown
    ;;
 esac
 
