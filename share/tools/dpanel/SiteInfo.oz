@@ -26,7 +26,6 @@ functor
 import
    DPPane(siteStatistics) at 'x-oz://boot/DPPane'
    DPB at 'x-oz://boot/DPB'
-   System
 export
    sitesDict:SitesDict
    sites:SiteInfo
@@ -89,11 +88,9 @@ define
 	 key 
 	 GUI
 	 sd
+	 color
+	 index
       attr
-	 col
-	 own
-	 bor
-	 act
 	 gen
 	 sent
 	 received
@@ -104,15 +101,13 @@ define
 	 state
 	 paneClient:false
 	 selected:false
-      meth init(S G SD)
+      meth init(S G SD Color Index)
 	 self.key = S.siteid
 	 self.info = S
 	 self.GUI = G
 	 self.sd = SD
-	 own <- false
-	 bor <- false
-	 act <- false
-	 col <- none
+	 self.index=Index
+	 self.color=Color
 	 gen <- 0
 	 sent <- S.sent
 	 received <- S.received
@@ -122,29 +117,14 @@ define
 	 state <- S.state
       end
 
-      meth getCol(who:W $)
-	 if @col == none then
-	    col <- {self.sd getACol($)}
-	    {self.GUI.ssites setColour(key:self.key fg:@col bg:lightgrey)}
-	 else skip end
-	 W <- true
-	 @col
+      meth getColor($)
+	 self.color
       end
 
       meth select selected <- true end
       meth deselect selected <- false end
       meth isSelected($) @selected  end
       
-      
-      meth retCol(who:W)
-	 @W = true
-	 W <- false
-	 if @own andthen @bor andthen @act then
-	    {self.GUI.ssites setColour(key:self.key fg:black bg:lightgrey)}
-	    {self.sd retACol(@col)}
-	    col <- none
-	 else skip end
-      end
       meth paneClient paneClient <- true end 
       meth getGen($) @gen end
       meth setGen(G) gen<-G end
@@ -158,7 +138,14 @@ define
       meth getLastRTT($) @lastRTT end
       meth setGraphKey(K) graphKey<-K end
       meth getGraphKey($) @graphKey end
-      meth getText($) if @paneClient then "*" else "" end#self.info.ip#":"#self.info.port#"\t"#@state#if @state==connected then "("#{self getLastRTT($)}#")" else "" end
+      meth getText($)
+	 ClientIndicator = if @paneClient then "* " else "  " end
+	 Id = self.index#"\t" %self.info.ip#":"#self.info.port#"\t"
+	 State = @state#if @state==connected then
+			   "("#{self getLastRTT($)}#")"
+			else "" end
+      in
+	 ClientIndicator#Id#State
       end
       meth updateState(NewS ?Updated)
 	 Updated = NewS \= (state<-NewS)
@@ -166,16 +153,26 @@ define
    end
    
    class SitesDict
+      prop
+	 locking
       feat
+	 GlobalDict:{NewDictionary} % 'Global' dictionary for use of same
+	                            % color and index in server and clients
+	 Colours:{NewCell unit}     % 'Global' color list
+	 Index:{NewCell 0}          
+
 	 Sites
 	 GUI
       attr
 	 NrOfSites
-	 Colours 
       meth init(C G)
 	 self.Sites = {NewDictionary}
 	 NrOfSites <- 0
-	 Colours <- C
+	 lock
+	    if {Access self.Colours}==unit then
+	       {Assign self.Colours C}
+	    end
+	 end
 	 self.GUI = G
       end
 
@@ -184,10 +181,13 @@ define
       end
 
       meth newSite(S AS)
-	 SS={New Site init(S self.GUI self)}in
+	 Color Index SS
+      in
+	 {self getColorAndIndex(S.siteid Color Index)}
+	 SS={New Site init(S self.GUI self Color Index)}
 	 {Dictionary.put self.Sites S.siteid SS}
 	 NrOfSites <- @NrOfSites + 1
-	 AS = site(key:S.siteid text:{SS getText($)}) 
+	 AS = entry(key:S.siteid text:{SS getText($)} fg:Color) 
       end
       
       meth removeSite(S AS)
@@ -200,13 +200,28 @@ define
       meth getKeys($) {Dictionary.keys self.Sites} end
       meth member(S A) A = {Dictionary.member self.Sites S} end
 
-      meth getACol($)
-	 S = @Colours in
-	 Colours <- S.2
-	 S.1
-      end
+      meth getColorAndIndex(Key ?C ?I)
+	 lock
+	    E={Dictionary.condGet self.GlobalDict Key createnew}
+	 in
+	    if E ==createnew then
+	       S = {Access self.Colours}
+	       O
+	    in
+	       % Color
+	       {Assign self.Colours S.2}
+	       C=S.1
+	       
+	       % Index
+	       {Exchange self.Index O I}
+	       I=O+1
 
-      meth retACol(C) Colours <- C|@Colours  end
+	       self.GlobalDict.Key:=C#I
+	    else
+	       C#I=E
+	    end
+	 end
+      end
    end
 	 
    class SiteInfo
@@ -233,10 +248,10 @@ define
 	 !ActiveEntries = {FilterActive SiteStats self.sd}
 	 DeleteEntries = {FilterOld SiteStats NewEntries self.sd}
       in      
-	 {self.GUI.ssites deleteSite(DeleteEntries)}
-	 {self.GUI.ssites addSite({Map NewEntries proc{$ X Y}
-						     {self.sd newSite(X Y)}
-						  end})}
+	 {self.GUI.ssites deleteEntries(DeleteEntries)}
+	 {self.GUI.ssites addEntries({Map NewEntries proc{$ X Y}
+							{self.sd newSite(X Y)}
+						     end})}
 	 {UpdateStates self.GUI.ssites SiteStats self.sd}
 	 {Map DeleteEntries proc{$ X Y} {self.sd removeSite(X Y)} end _}
       end
@@ -273,7 +288,7 @@ define
 	     {Si setLastRTT(S.lastRTT)}
 	     if {Not {Dictionary.member self.ActiveSites S.siteid}} then
 		Id  = {NewName}
-		Col= {Si getCol(who:act $)} 
+		Col= {Si getColor($)} 
 	     in
 		self.ActiveSites.(S.siteid):=Si
 		{Si setGraphKey(Id)}
@@ -288,7 +303,6 @@ define
 	  proc{$ K#SS}
 	     if {SS getGen($)} == GG then
 		{Dictionary.remove self.ActiveSites K}
-		{SS retCol(who:act)}
 		{self.GUI.sactivity
 		 rmGraph(key:{SS getGraphKey($)})}
 	     end

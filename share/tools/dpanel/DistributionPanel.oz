@@ -3,7 +3,6 @@ import
    Main(server:Mserver open:Mopen openNetInfo:MnetInfo)  at 'x-oz://system/DistributionPanelSrc.ozf'
    DPPane(siteStatistics) at 'x-oz://boot/DPPane'
    Connection
-   System
 export
    Open
    OpenNetInfo
