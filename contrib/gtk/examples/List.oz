@@ -35,9 +35,10 @@ define
       in
          GTK.list, new
          GTK.list, appendItems(Items)
-         GTK.list, signalConnect('select-child' proc {$ Args}
-                                                   {System.show 'handler'#Args}
-                                                end [pointer] _)
+         GTK.list, signalConnect('select-child'
+                                 proc {$ [Item]}
+                                    {System.show 'handler'#GTK.list, childPosition(Item $)}
+                                 end [obj(GTK.listItem)] _)
       end
    end
 
