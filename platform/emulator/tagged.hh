@@ -542,7 +542,7 @@ TaggedRef tagged2NonVariable(TaggedRef *term)
 inline
 TaggedRef *newTaggedSVar(SVariable *c)
 {
-  TaggedRef *ref = (TaggedRef *) heapMalloc(sizeof(TaggedRef));
+  TaggedRef *ref = (TaggedRef *) int32Malloc(sizeof(TaggedRef));
   *ref = makeTaggedSVar(c);
   return ref;
 }
@@ -550,7 +550,7 @@ TaggedRef *newTaggedSVar(SVariable *c)
 inline
 TaggedRef *newTaggedUVar(TaggedRef proto)
 {
-  TaggedRef *ref = (TaggedRef *) heapMalloc(sizeof(TaggedRef));
+  TaggedRef *ref = (TaggedRef *) int32Malloc(sizeof(TaggedRef));
   *ref = proto;
   return ref;
 }
@@ -563,7 +563,7 @@ TaggedRef *newTaggedUVar(Board *c)
 
 inline
 TaggedRef *newTaggedCVar(GenCVariable *c) {
-  TaggedRef *ref = (TaggedRef *) heapMalloc(sizeof(TaggedRef));
+  TaggedRef *ref = (TaggedRef *) int32Malloc(sizeof(TaggedRef));
   *ref = makeTaggedCVar(c);
   return ref;
 }
