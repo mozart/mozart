@@ -411,6 +411,19 @@ OZ_BI_define (native_alloc_double, 1, 1) {
   return OZ_ENTAILED;
 } OZ_BI_end
 
+static char *use_str = NULL;
+
+OZ_BI_define (native_alloc_str, 1, 1) {
+  OZ_declareInt(0, len);
+
+  if (use_str != NULL) {
+    free(use_str);
+  }
+  use_str = (char *) malloc(len);
+  OZ_out(0) = OZ_makeForeignPointer(&use_str);
+  return OZ_ENTAILED;
+} OZ_BI_end
+
 OZ_BI_define (native_alloc_color, 3, 1) {
   GdkColor *ret = (GdkColor *) malloc(sizeof(GdkColor));
   
@@ -444,7 +457,12 @@ OZ_BI_define (native_get_double, 1, 1) {
   return OZ_ENTAILED;
 } OZ_BI_end
 
-OZ_BI_define(native_null, 0, 1) {
+OZ_BI_define (native_get_str, 0, 1) {
+  OZ_out(0) = OZ_string(use_str);
+  return OZ_ENTAILED;
+} OZ_BI_end
+
+OZ_BI_define (native_null, 0, 1) {
   OZ_out(0) = OZ_makeForeignPointer((void *) NULL);
   return OZ_ENTAILED;
 } OZ_BI_end
@@ -528,12 +546,7 @@ OZ_BI_define (native_get_arg, 1, 1) {
     OZ_out(0) = OZ_float(val->d.double_data);
     break;
   case GTK_TYPE_BOOL:
-    if (val->d.bool_data) {
-      OZ_out(0) = OZ_true();
-    }
-    else {
-      OZ_out(0) = OZ_false();
-    }
+    OZ_out(0) = OZ_int(val->d.bool_data);
     break;
   case GTK_TYPE_STRING:
     OZ_out(0) = OZ_string(val->d.string_data);
@@ -545,6 +558,48 @@ OZ_BI_define (native_get_arg, 1, 1) {
     OZ_out(0) = OZ_atom("unit");
     break;
   }
+  return OZ_ENTAILED;
+} OZ_BI_end
+
+/*
+ * Lowlevel String Array Handling
+ */
+
+OZ_BI_define (native_alloc_str_arr, 1, 1) {
+  OZ_declareInt(0, len);
+  char **arr = (char **) malloc(sizeof(char *) * len);
+  for (;len--;) {
+    arr[len] = NULL;
+  }
+  OZ_out(0) = OZ_makeForeignPointer(arr);
+  return OZ_ENTAILED;
+} OZ_BI_end
+
+OZ_BI_define (native_make_str_arr, 2, 1) {
+  OZ_declareInt(0, len);
+  OZ_declareTerm(1, t);
+  char **arr = (char **) malloc(sizeof(char *) * (len + 1));
+  arr[len] = NULL;
+  len = 0;
+  while (OZ_isCons(t)) {
+    arr[len++] = strdup(OZ_virtualStringToC(OZ_head(t), NULL));
+    t = OZ_tail(t);
+  }
+  OZ_out(0) = OZ_makeForeignPointer(arr);
+  return OZ_ENTAILED;
+} OZ_BI_end
+
+OZ_BI_define (native_get_str_arr, 1, 1) {
+  GOZ_declareForeignType(char **, 0, arr);
+  int i = 0;
+  OZ_Term t = OZ_atom("nil");
+  if (i > 0) {
+    i--;
+  }
+  while (i >= 0) {
+    t = OZ_cons(OZ_string(arr[i--]), t);
+  }
+  OZ_out(0) = t;
   return OZ_ENTAILED;
 } OZ_BI_end
 
@@ -563,13 +618,18 @@ static OZ_C_proc_interface oz_interface[] = {
   {"allocInt", 1, 1, native_alloc_int},
   {"allocDouble", 1, 1, native_alloc_double},
   {"allocColor", 3, 1, native_alloc_color},
+  {"allocStr", 1, 1, native_alloc_str},
   {"getInt", 1, 1, native_get_int},
   {"getDouble", 1, 1, native_get_double},
+  {"getStr", 0, 1, native_get_str},
   {"null", 0, 1, native_null},
   {"freeData", 1, 0, native_free_data},
   {"pointsPut", 3, 0, native_points_put},
   {"makeArg", 2, 1, native_make_arg},
   {"getArg", 1, 1, native_get_arg},
+  {"allocStrArr", 1, 1, native_alloc_str_arr},
+  {"getStrArr", 1, 1, native_get_str_arr},
+  {"makeStrArr", 2, 1, native_make_str_arr},
   {0, 0, 0, 0}
 };
 
