@@ -238,7 +238,7 @@ local
 	    end
 	 end
 	 {ReDo UseCopy UseNs}
-	 Information = job {Space.askVerbose UseCopy} end
+	 Information = thread {Space.askVerbose UseCopy} end
 	 <<Choose Create(PrevSol CurDepth+1 UseCopy Information
 			 AllocateCopy ?NewNode)>> 
 	 isDirty <- True
