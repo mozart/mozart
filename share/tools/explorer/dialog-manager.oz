@@ -183,15 +183,15 @@ local
       fun {DistS2I S}
 	 FS={Map {Filter S Char.isGraph} Char.toLower}
       in
-	 case FS=="none" then 1
-	 elsecase FS=="full" then 0
+	 if FS=="none" then 1
+	 elseif FS=="full" then 0
 	 else {Tk.string.toInt FS}
 	 end
       end
 
       fun {DistI2VS I}
-	 case I<1 then full
-	 elsecase I==1 then none
+	 if I<1 then full
+	 elseif I==1 then none
 	 else I
 	 end
       end
@@ -208,12 +208,11 @@ local
 	       SD={DistS2I {Search tkReturn(get $)}}
 	       ID={DistS2I {Info   tkReturn(get $)}}
 	    in
-	       case {IsInt SD} andthen {IsInt ID} then
+	       if {IsInt SD} andthen {IsInt ID} then
 		  {Dictionary.put O search      SD}
 		  {Dictionary.put O information ID}
 		  {Dictionary.put O failed      {FailedVar tkReturnInt($)}==1}
 		  {self tkClose}
-	       else skip
 	       end
 	    end
 

@@ -39,7 +39,7 @@ local
       %% item is refernced by the tag n#@number
 
       meth getNumber(Scale Font TakeNumber ?N)
-	 case @number==0 then
+	 if @number==0 then
 	    Canvas  = self.canvas
 	    Numbers = Canvas.numbers
 	    Actions = Canvas.actions
@@ -48,10 +48,10 @@ local
 	    N      = TakeNumber
 	    number <- TakeNumber
 	    {self getCenter(X Y)}
-	    case Font==false then skip else
+	    if Font\=false then
 	       {Canvas
 		tkCreate(text(Scale * {IntToFloat X}
-			      Scale * {IntToFloat case {self isHidden($)}
+			      Scale * {IntToFloat if {self isHidden($)}
 						  then
 						     Y + UpperSpaceI div 2
 						  else Y
@@ -74,7 +74,7 @@ local
 	 {self getCenter(?X ?Y)}
 	 {Canvas
 	  tkCreate(text(Scale * {IntToFloat X}
-			Scale * {IntToFloat case {self isHidden($)} then
+			Scale * {IntToFloat if {self isHidden($)} then
 					       Y + UpperSpaceI div 2
 					    else Y
 					    end}
@@ -129,10 +129,10 @@ local
 		       Scale*{IntToFloat MyX}
 		       Scale*{IntToFloat (MyY - CircleWidthI)})}
 	    {Canvas tk(mo NodeItem Scale*{IntToFloat MyByX} 0)}
-	    case Number==0 then skip else
+	    if Number\=0 then
 	       {Canvas tk(mo n#Number Scale*{IntToFloat MyByX} 0)}
 	    end
-	    case @toDo\=nil orelse @isHidden then skip else
+	    if @toDo\=nil orelse @isHidden then skip else
 	       {Canvas tk(itemco NodeItem
 			  fi: ChooseTermColor
 			  wi: ThickNodeBorderWidth)}
@@ -151,7 +151,7 @@ local
 		       Scale*{IntToFloat MyX}
 		       Scale*{IntToFloat (MyY - RectangleWidthI)})}
 	    {MoveTree Canvas ScaledByX
-	     ChooseNode,GetMoveIds(@kids Item+1|case Number==0 then nil
+	     ChooseNode,GetMoveIds(@kids Item+1|if Number==0 then nil
 						else [n#Number]
 						end $)}
 	 end
@@ -166,10 +166,10 @@ local
 	 meth getMoveIds(Is $)
 	    Item   = @item
 	 in
-	    case Item==0 then Is else
+	    if Item==0 then Is else
 	       Number = @number
 	    in
-	       ChooseNode,GetMoveIds(@kids Item|Item+1|case Number==0 then Is
+	       ChooseNode,GetMoveIds(@kids Item|Item+1|if Number==0 then Is
 						       else n#Number|Is
 						       end $)
 	    end
@@ -190,7 +190,7 @@ local
 	 end
 	 
 	 meth drawTree(Break MomX MyY Scale Font)
-	    case {IsFree Break} then
+	    if {IsFree Break} then
 	       NewOffset   = @offset.1
 	       MyX         = MomX + NewOffset
 	       ScaledWidth = Scale * CircleWidthF
@@ -207,7 +207,7 @@ local
 					    ScaledMyX
 					    ScaledMyY - ScaledWidth
 					    width: LinkWidth) $)}
-	       case @isHidden then
+	       if @isHidden then
 		  ScaledVerSpace = Scale * VerSpaceF
 		  ScaledHorSpace = Scale * HalfHorSpaceF
 	       in
@@ -219,18 +219,20 @@ local
 				    ScaledMyX + ScaledHorSpace
 				    ScaledMyY + ScaledVerSpace
 				    tags:    Actions
-				    fill:    case @isSolBelow then
-						case @choices>0 then
+				    fill:    if @isSolBelow then
+						if @choices>0 then
 						   SuspendedColor
-						else EntailedColor end
+						else EntailedColor
+						end
 					     else
-						case @choices>0 then
+						if @choices>0 then
 						   PartialFailedColor
-						else FailedColor end
+						else FailedColor
+						end
 					     end
 				    width:   NodeBorderWidth
 				    outline: LineColor))}
-		  case Number==0 orelse Font==false then skip else
+		  if Number\=0 andthen Font\=false then
 		     {Canvas
 		      tkCreate(te(ScaledMyX
 				  ScaledMyY +
@@ -246,7 +248,7 @@ local
 			       ScaledMyY - ScaledWidth
 			       ScaledMyX + ScaledWidth
 			       ScaledMyY + ScaledWidth
-			       case @toDo==nil then
+			       if @toDo==nil then
 				  o(fi:  ChooseTermColor
 				    wi: ThickNodeBorderWidth)
 			       else
@@ -254,7 +256,7 @@ local
 				    wi: NodeBorderWidth)
 			       end
 			       ta: Actions))}
-		  case Number==0 orelse Font==false then skip else
+		  if Number\=0 andthen Font\=false then
 		     {Canvas
 		      tkCreate(te(ScaledMyX ScaledMyY
 				  fo: Font
@@ -267,7 +269,7 @@ local
 	       end
 	       isDirty <- false
 	    else
-	       case @kids\=nil then
+	       if @kids\=nil then
 		  isHidden <- true
 		  ChooseNode,purge
 	       end
@@ -279,12 +281,12 @@ local
 	    Item   = @item
 	    Number = @number
 	 in
-	    case Item==0 then skip else
+	    if Item\=0 then
 	       item <- 0
 	       {self.canvas
 		tk(delete Item Item+1
 		   b(ChooseNode,GetDelIds(@kids
-					  case Number==nil then nil
+					  if Number==nil then nil
 					  else [n#Number]
 					  end $)))}
 	    end
@@ -300,11 +302,11 @@ local
 	 meth getDelIds(Is $)
 	    Item   = @item
 	 in
-	    case Item==0 then Is else
+	    if Item==0 then Is else
 	       Number = @number
 	    in
 	       item <- 0
-	       ChooseNode,GetDelIds(@kids Item|Item+1|case Number==0 then Is
+	       ChooseNode,GetDelIds(@kids Item|Item+1|if Number==0 then Is
 						      else n#Number|Is
 						      end $)
 	    end
@@ -325,7 +327,7 @@ local
 	 meth deleteTree
 	    Item = @item
 	 in
-	    case Item==0 then skip else
+	    if Item\=0 then
 	       {self.canvas tk(de Item Item+1)}
 	       item <- 0
 	    end
@@ -377,13 +379,13 @@ local
 	 meth getMoveIds(Is $)
 	    Item = @item
 	 in
-	    case Item==0 then Is else Item|Item+1|Is end
+	    if Item==0 then Is else Item|Item+1|Is end
 	 end
 	 
 	 meth getDelIds(Is $)
 	    Item = @item
 	 in
-	    case Item==0 then Is else item <-0 Item|Item+1|Is end
+	    if Item==0 then Is else item <-0 Item|Item+1|Is end
 	 end
 	 
       end
@@ -394,13 +396,13 @@ local
 	 meth getMoveIds(Is $)
 	    Item = @item
 	 in
-	    case Item==0 then Is else Item|Item+1|Is end
+	    if Item==0 then Is else Item|Item+1|Is end
 	 end
 	 
 	 meth getDelIds(Is $)
 	    Item = @item
 	 in
-	    case Item==0 then Is else item <- 0  Item|Item+1|Is end
+	    if Item==0 then Is else item <- 0  Item|Item+1|Is end
 	 end
 	 
 	 meth drawTree(Break MomX MyY Scale Font)
@@ -457,21 +459,21 @@ local
 	    meth getMoveIds(Is $)
 	       Item   = @item
 	    in
-	       case Item==0 then Is else
+	       if Item==0 then Is else
 		  Number = @number
 	       in
-		  Item|Item+1|case Number==0 then Is else n#Number|Is end
+		  Item|Item+1|if Number==0 then Is else n#Number|Is end
 	       end
 	    end
 	 
 	    meth getDelIds(Is $)
 	       Item   = @item
 	    in
-	       case Item==0 then Is else
+	       if Item==0 then Is else
 		  Number = @number
 	       in
 		  item <- 0
-		  Item|Item+1|case Number==0 then Is else n#Number|Is end
+		  Item|Item+1|if Number==0 then Is else n#Number|Is end
 	       end
 	    end
 	 
@@ -504,7 +506,7 @@ local
 			    wi: Width
 			    ou: LineColor
 			    ta: Actions))}
-	       case Number==0 orelse Font==false then skip else
+	       if Number\=0 andthen Font\=false then
 		  {Canvas tkCreate(te(ScaledMyX ScaledMyY
 				      fo: Font
 				      te: Number
@@ -524,7 +526,7 @@ local
 			  Scale*{IntToFloat MyX}
 			  Scale*{IntToFloat (MyY - RhombeWidthI)})}
 	       {Canvas tk(mo Item+1 Scale*{IntToFloat MyByX} 0)}
-	       case Number==0 then skip else
+	       if Number\=0 then
 		  {Canvas tk(mo n#Number Scale*{IntToFloat MyByX} 0)}
 	       end
 	    end

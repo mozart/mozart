@@ -195,7 +195,7 @@ local
       meth !Adjust(Break MomX MomByX MyY Scale Font)
 	 NewOffset|OldOffset = @offset
       in
-	 case @item>0 then
+	 if @item>0 then
 	    MyX                 = MomX   + NewOffset
 	    MyByX               = MomByX + NewOffset - OldOffset
 	 in
@@ -240,9 +240,10 @@ local
       end
 
       meth !Layout(?Shape Offset)
-	 Shape = case @isDirty then SubShapes SubOffsets in
+	 Shape = if @isDirty then SubShapes SubOffsets in
 		    shape <- Shape
-		    case @isHidden then HiddenShape else
+		    if @isHidden then HiddenShape
+		    else
 		       {LayoutKids @kids SubOffsets SubShapes}
 		       RootExtent|{ComputeLayout SubShapes $ ?SubOffsets}
 		    end
@@ -256,19 +257,19 @@ local
 	 MyX                 = MomX + NewOffset
 	 MyByX               = MomByX + NewOffset - OldOffset
       in
-	 case @isDirty then
-	    case @item>0 then
+	 if @isDirty then
+	    if @item>0 then
 	       isDirty <- false
 	       offset  <- NewOffset
 	       {self moveNode(MomX MyX MyByX MyY Scale)}
-	       case @isHidden then skip else
+	       if @isHidden then skip else
 		  {AdjustKids @kids Break MyX MyByX MyY+VerSpaceI Scale Font}
 	       end
 	    else {self drawTree(Break MomX MyY Scale Font)}
 	    end
 	 else
 	    offset <- NewOffset
-	    case MyByX==0 then skip else
+	    if MyByX\=0 then
 	       {self moveTree(MomX MyX MyByX MyY Scale)}
 	    end
 	 end

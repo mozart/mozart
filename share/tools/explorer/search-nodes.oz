@@ -28,7 +28,7 @@ local
 
       fun {Replace Xs Y Z}
 	 case Xs of nil then nil
-	 [] X|Xr then case X==Y then Z|Xr else X|{Replace Xr Y Z} end
+	 [] X|Xr then if X==Y then Z|Xr else X|{Replace Xr Y Z} end
 	 end
       end
    
@@ -39,7 +39,7 @@ local
       end
 
       fun {GetIndex Xs Y N}
-	 X|Xr=Xs in case X==Y then N else {GetIndex Xr Y N+1} end
+	 X|Xr=Xs in if X==Y then N else {GetIndex Xr Y N+1} end
       end
       
    in
@@ -53,9 +53,9 @@ local
 	 meth leaveNode(IsSolBelow IsDirty DecChoices)
 	    ChoicesReachZero
 	 in
-	    case IsSolBelow  then isSolBelow <- true else skip end
-	    case IsDirty     then isDirty    <- true else skip end
-	    case DecChoices  then
+	    if IsSolBelow  then isSolBelow <- true end
+	    if IsDirty     then isDirty    <- true end
+	    if DecChoices then
 	       case @choices of 1 then
 		  ChoicesReachZero = true
 		  choices <- 0
@@ -63,8 +63,8 @@ local
 		  of transient(_) then
 		     copy <- false
 		  [] flushable(_) then
-		     case IsSolBelow then skip
-		     elsecase
+		     if IsSolBelow then skip
+		     elseif
 			{Dictionary.get self.manager.options.search failed}
 		     then
 			copy <- false
@@ -122,15 +122,17 @@ local
 		       elseof TaggedCopy then {Space.clone TaggedCopy.1}
 		       end
 	 in
-	    case FindCopy==false then false
-	    elsecase {Space.ask FindCopy}
-	    of alternatives(N) then
-	       I={GetIndex @kids Node 1}
-	    in
-	       case I>N then false
-	       else {Space.commit FindCopy I} FindCopy
+	    if FindCopy==false then false
+	    else
+	       case {Space.ask FindCopy}
+	       of alternatives(N) then
+		  I={GetIndex @kids Node 1}
+	       in
+		  if I>N then false
+		  else {Space.commit FindCopy I} FindCopy
+		  end
+	       else false
 	       end
-	    else false
 	    end
 	 end
 	 
@@ -169,7 +171,7 @@ local
 	    [] blocked(Ctrl) then
 	       %% Count the possibility of a choice below _and_
 	       %% the case where toDo is already nil
-	       choices <- @choices + case @toDo==nil then 2 else 1 end
+	       choices <- @choices + if @toDo==nil then 2 else 1 end
 	       {self.status halt}
 	       {New self.classes.blocked init(self NextDepth Ctrl)}
 	    end
@@ -187,18 +189,19 @@ local
 	       UseCopy       = S
 	       NextDist      = CurSearchDist - 1
 	       NextNs        = 1|CurNs
-	       AllocateCopy  = case InfoDist>0 andthen CurDepth mod InfoDist
-			       of 1 then flushable
-			       elsecase NextDist of 0 then transient
+	       AllocateCopy  = if InfoDist>0
+				  andthen CurDepth mod InfoDist==1 then
+				  flushable
+			       elseif NextDist==0 then transient
 			       else false
 			       end
 	       NextCopy      = CurCopy
 	    [] Sol#NextAlt#MaxAlt then
-	       case PrevSol==Sol then
-		  case NextAlt==MaxAlt then
+	       if PrevSol==Sol then
+		  if NextAlt==MaxAlt then
 		     toDo    <- nil
 		     choices <- @choices - 1
-		     case @choices==0 andthen @copy\=false then
+		     if @choices==0 andthen @copy\=false then
 			NextDist = 0 % force allocation of a copy below!
 			UseCopy  = case @copy of transient(_) then
 				      copy <- false
@@ -215,9 +218,10 @@ local
 		     NextDist = CurSearchDist - 1
 		  end
 		  UseNs = NextNs = NextAlt|CurNs
-		  AllocateCopy  = case InfoDist>0 andthen CurDepth mod InfoDist
-				  of 1 then flushable
-				  elsecase NextDist of 0 then transient
+		  AllocateCopy  = if InfoDist>0 andthen
+				     CurDepth mod InfoDist==0 then
+				     flushable
+				  elseif NextDist==0 then transient
 				  else false
 				  end
 		  NextCopy      = CurCopy
@@ -252,15 +256,15 @@ local
 		       CurSearchDist SearchDist CurNs CurCopy Ks N $)
 	    case Ks of nil then false
 	    [] K|Kr then 
-	       case K.kind==choose then
+	       if K.kind==choose then
 		  SolBelow IsDirtyBelow DecChoices
 	       in
 		  {K Next(Break PrevSol CurDepth InfoDist
 			  CurSearchDist SearchDist N|CurNs CurCopy
 			  ?SolBelow ?IsDirtyBelow ?DecChoices)}
-		  case DecChoices   then choices  <- @choices-1  else skip end
-		  case IsDirtyBelow then isDirty  <- true        else skip end
-		  case SolBelow of false then
+		  if DecChoices   then choices  <- @choices-1  end
+		  if IsDirtyBelow then isDirty  <- true        end
+		  if SolBelow==false then
 		     Choose,NextKids(Break PrevSol CurDepth InfoDist
 				     CurSearchDist SearchDist CurNs CurCopy
 				     Kr N+1 $)
@@ -279,7 +283,7 @@ local
 	 meth NextLocal(Break PrevSol CurDepth InfoDist
 			CurSearchDist SearchDist CurNs CurCopy
 			?Sol ?IsDirty ?DecChoices)
-	    case @toDo\=nil andthen {IsFree Break} then
+	    if @toDo\=nil andthen {IsFree Break} then
 	       NewNode Information
 	       NextDist NextNs NextCopy
 	    in
@@ -300,9 +304,8 @@ local
 				NextNs NextCopy
 				?SolBelow _
 				?DecChoicesBelow)}
-		  case DecChoicesBelow  then choices <- @choices - 1
-		  else skip end
-		  case SolBelow of false then
+		  if DecChoicesBelow  then choices <- @choices - 1 end
+		  if SolBelow==false then
 		     Choose,NextLocal(Break PrevSol CurDepth InfoDist
 				      CurSearchDist SearchDist
 				      CurNs CurCopy
@@ -326,16 +329,16 @@ local
 	       Sol         = false
 	       IsDirty     = @isDirty
 	       DecChoices  = @choices==0
-	       case DecChoices then
-		  case @isSolBelow then skip
-		  elsecase @copy of flushable(_) then
-		     case {Dictionary.get self.manager.options.search failed}
-		     then copy <- false
+	       if DecChoices then
+		  if @isSolBelow then skip
+		  else
+		     case @copy of flushable(_) then
+			if {Dictionary.get self.manager.options.search failed}
+			then copy <- false
+			end
 		     else skip
 		     end
-		  else skip
 		  end
-	       else skip
 	       end
 	    end
 	 end
@@ -345,7 +348,7 @@ local
 		   CurNs CurCopy
 		   ?Sol ?IsDirty ?DecChoices)
 	    %% Check the existing kids
-	    case @isHidden orelse @choices==0 then
+	    if @isHidden orelse @choices==0 then
 	       %% In this node and below everything is done
 	       Sol         = false
 	       IsDirty     = false
@@ -387,7 +390,7 @@ local
 	 in
 	    Choose,findDepthAndCopy(?CurDepth ?CurSearchDist
 				    ?CurNs ?CurCopy)
-	    case @choices==0 then Sol=false
+	    if @choices==0 then Sol=false
 	    else IsDirty DecChoices in
 	       Choose,Next(Break PrevSol CurDepth InfoDist
 			   SearchDist-CurSearchDist SearchDist
@@ -398,7 +401,7 @@ local
 	 end
 	 
 	 meth step(PrevSol InfoDist ?Sol)
-	    case @toDo==nil then Sol=false
+	    if @toDo==nil then Sol=false
 	    else
 	       Info NewNode CurDepth CurNs CurSearchDist CurCopy
 	    in
@@ -408,7 +411,7 @@ local
 			  CurNs CurCopy
 			  _ _ _
 			  ?Info ?NewNode)
-	       Sol = case {Label Info}==succeeded then NewNode else false end
+	       Sol = if {Label Info}==succeeded then NewNode else false end
 	       {self.mom leaveNode(Sol\=false true @choices==0)}
 	    end
 	 end

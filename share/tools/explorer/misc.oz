@@ -25,9 +25,9 @@ local
       case {Reverse Is}
       of Unit|RevNum then
 	 Num = {Reverse RevNum}
-	 N   = case {String.isInt Num} then
+	 N   = if {String.isInt Num} then
 		  {Int.toFloat {String.toInt Num}}
-	       elsecase {String.isFloat Num} then
+	       elseif {String.isFloat Num} then
 		  {String.toFloat Num}
 	       else false
 	       end
@@ -39,7 +39,7 @@ local
 	       else false
 	       end
       in
-	 case N==false orelse F==false then false
+	 if N==false orelse F==false then false
 	 else N*F
 	 end
       end

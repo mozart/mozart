@@ -201,12 +201,12 @@ local
 	 Bottom = Scale * {IntToFloat @bottom}
 	 Width  = Right - Left
 	 Delta  = (Width - @width) / 2.0
-	 ReqLeft # ReqRight = case Delta<0.0 then
+	 ReqLeft # ReqRight = if Delta<0.0 then
 				 (Left+Delta) # (Right-Delta)
 			      else
 				 Left#Right
 			      end
-	 ReqBottom = case Bottom>@height then Bottom
+	 ReqBottom = if Bottom>@height then Bottom
 		     else @height
 		     end
       in
@@ -226,15 +226,15 @@ local
 	 Right  = @right
 	 Bottom = @bottom
       in
-	 case Bottom==0 orelse Left==Right then
+	 if Bottom==0 orelse Left==Right then
 	    DefScale
 	 else
 	    Factor   = {Min @width * FloatScaleBase /
 			{IntToFloat (Right - Left)}
 			@height * FloatScaleBase /
 			{IntToFloat Bottom}} / FloatScaleBase
-	    NewScale = case Factor<MinScale then MinScale
-		       elsecase Factor>MaxScale then MaxScale
+	    NewScale = if Factor<MinScale then MinScale
+		       elseif Factor>MaxScale then MaxScale
 		       else Factor
 		       end
 	 in
@@ -255,7 +255,7 @@ local
 	 Width  = {IntToFloat (@right - @left)} * Scale
       in
 	 {Wait Tk.canvas,tkReturn(postscript
-				  case H/Height > W/Width then
+				  if H/Height > W/Width then
 				     o(pagewidth: W#c)
 				  else o(pageheight: H#c)
 				  end
@@ -275,7 +275,7 @@ local
    fun {PickFont Fs Scale}
       case Fs of nil then false
       [] F|Fr then
-	 case F.scale=<Scale then F.name else {PickFont Fr Scale} end
+	 if F.scale=<Scale then F.name else {PickFont Fr Scale} end
       end
    end
 
@@ -337,9 +337,9 @@ in
 	    scale <- Scale
 	    {Canvas scale(Scale)}
 	    case @curFont of !Font then skip elseof CF then
-	       case @NumberNodes==nil then skip else
-		  case Font==false then {Numbers tk(delete)}
-		  elsecase CF==false then
+	       if @NumberNodes\=nil then
+		  if Font==false then {Numbers tk(delete)}
+		  elseif CF==false then
 		     {ForAll @NumberNodes
 		      proc {$ Node}
 			 {Node redrawNumber(Scale Font)}
@@ -384,7 +384,7 @@ in
 	 {Cursor tk(delete)}
 	 {Connection tk(delete)}
 	 {CurNode getCenter(?X ?Y)}
-	 {Canvas tkCreate(o({Shapes.(case
+	 {Canvas tkCreate(o({Shapes.(if
 					CurNode.kind==choose andthen
 					{CurNode isHidden($)} then hidden
 				     else CurNode.kind end)
@@ -395,14 +395,14 @@ in
 			    ou:''
 			    ta:Cursor))}
 	 {Cursor tk(lower)}
-	 case CurNode==@curNode orelse IsVisible then skip else
+	 if CurNode==@curNode orelse IsVisible then skip else
 	    {Canvas scrollTo(X Y)}
 	 end
 	 curNode <- CurNode
 	 case @cmpNode of false then
 	    {Connection tk(delete)}
 	 elseof CmpNode then
-	    case CmpNode==CurNode then skip else
+	    if CmpNode\=CurNode then
 	       CmpX CmpY
 	    in
 	       {CmpNode getCenter(?CmpX ?CmpY)}
@@ -429,10 +429,9 @@ in
 	 NewNumber = @CurNumber
       in
 	 {Node getNumber(@scale @curFont NewNumber ?N)}
-	 case NewNumber==N then
+	 if NewNumber==N then
 	    CurNumber   <- NewNumber + 1
 	    NumberNodes <- Node|@NumberNodes
-	 else skip
 	 end
       end
       
@@ -444,9 +443,8 @@ in
       end
 
       meth hideNumbers
-	 case @curFont\=false andthen @NumberNodes\=nil then
+	 if @curFont\=false andthen @NumberNodes\=nil then
 	    {self.canvas.numbers tk(delete)}
-	 else skip
 	 end
       end
 
@@ -455,12 +453,11 @@ in
 	 Scale   = @scale
 	 Numbers = @NumberNodes
       in
-	 case Font\=false andthen Numbers\=nil then
+	 if Font\=false andthen Numbers\=nil then
 	    {ForAll @NumberNodes
 	     proc {$ Node}
 		{Node redrawNumber(Scale Font)}
 	     end}
-	 else skip
 	 end
       end
       

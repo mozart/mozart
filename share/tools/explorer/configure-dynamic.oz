@@ -26,7 +26,7 @@ DefOptions = o(drawing:    o(hide:   true
 	       search:     o(search:      1
 			     information: 5
 			     failed:      true)
-	       postscript: o(color:       case Tk.isColor then color
+	       postscript: o(color:       if Tk.isColor then color
 					  else mono
 					  end
 			     width:       6.5 * FactorsToCm.i
@@ -35,12 +35,12 @@ DefOptions = o(drawing:    o(hide:   true
 			     orientation: false))
 
 NodeBorderWidth      #
-ThickNodeBorderWidth = case Tk.isColor then 1#1 else 1#2 end
+ThickNodeBorderWidth = if Tk.isColor then 1#1 else 1#2 end
 LinkWidth            = 1
 
 %% How big and how far removed should the cursor shade be?
-ShadeWidth          = case Tk.isColor then 4 else 5 end * IntScaleBase
-ShadeScale          = case Tk.isColor then 1.05 else 1.10 end
+ShadeWidth          = if Tk.isColor then 4 else 5 end * IntScaleBase
+ShadeScale          = if Tk.isColor then 1.05 else 1.10 end
 
 %% Set up some colors
 ChooseColor          #
@@ -53,7 +53,7 @@ PartialFailedColor   #
 LineColor            #
 BackColor            #
 CursorColor          #
-PopupBgColor         = case Tk.isColor then
+PopupBgColor         = if Tk.isColor then
 			  'lightskyblue3'   # % ChooseColor
 			  'LightSlateBlue'  # % ChooseTermColor
 			  'MediumSeaGreen'  # % EntailedColor
