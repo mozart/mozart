@@ -650,6 +650,48 @@ inheriting from client classes.
 The only expressions not allowed are
 those using client resources.
 
+<SUBSECTION><TITLE>A compute server with functors</TITLE>
+
+The solution of the previous section
+is reasonable when the client and server
+are independent computations that connect.
+Let's now think of the case when the
+client itself wants to start up a compute
+server on a remote site.
+The client first creates a new Mozart process
+that is ready to accept new computations:
+<<<
+declare
+R={New Remote.manager init(host:"sinuhe.sics.se")}
+>>>
+
+<P> Then the client sends a functor
+to this process that, when evaluated,
+creates a compute server:
+<<<
+declare F C
+F=functor
+  export cs:CS
+  define
+     class ComputeServer
+        meth init skip end
+        meth run(P) {P} end
+     end
+     CS={NewStat ComputeServer init}
+  end
+
+C={R apply(url:'./' F $)}.cs  % Set up the compute server
+>>>
+
+<P> The client can use the compute server as before:
+<<<
+local F in
+   {C run(proc {$} F={Fibo 30} end)}
+   {Browse F}
+end
+>>>
+
+
 <SUBSECTION><TITLE>A dynamically-extensible server</TITLE>
 
 <P> Sometimes a server has to be upgraded,
