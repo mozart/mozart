@@ -358,11 +358,11 @@ extern OZ_Return _FUNDECL(OZ_suspendOnInternal3,(OZ_Term,OZ_Term,OZ_Term));
 
 #else
 
-#define OZ_C_proc_proto(Name) 						      \
+#define OZ_C_proc_proto(Name)			\
   OZ_Return ozcdecl Name(OZ_arityArg, OZ_args);
 
-#define OZ_C_proc_header(Name)						      \
-  OZ_Return ozcdecl Name(OZ_arityArg, OZ_args)
+#define OZ_C_proc_header(Name)			\
+  OZ_Return ozcdecl Name(OZ_arityArg, OZ_args)	\
   int OZ_arityArg; OZ_Term OZ_args[]; {
 
 #endif
