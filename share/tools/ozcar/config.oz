@@ -347,6 +347,9 @@ Config =
 
     meth toggle(What)
        What <- {Not @What}
+       case What == verbose then
+	  {Emacs setVerbose(@What)}
+       else skip end
     end
 
     meth get(What $)

@@ -205,13 +205,13 @@ in
       meth getTop($)
 	 S = @Size
       in
-	 case S == 0 then nil else {Dictionary.get self.D S} end
+	 case S == 0 then unit else {Dictionary.get self.D S} end
       end
 
       meth emacsBarToTop
 	 F = StackManager,getTop($)
       in
-	 case F == nil then skip else
+	 case F == unit then skip else
 	    S = {CheckState self.T}
 	 in
 	    {Emacs bar(file:F.file line:F.line column:F.column state:S)}
