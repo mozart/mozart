@@ -158,7 +158,7 @@ AC_DEFUN(OZ_INIT, [
   AC_SUBST(HOMEURL)
   AC_SUBST(HOMECACHE)
   case "$target" in
-    i386-mingw32)
+    i386-mingw32|i386-mingw32msvc)
         PLATFORM=win32-i486
         platform="win32-i486"
         ozplatform=$platform
