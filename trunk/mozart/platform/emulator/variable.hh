@@ -1,3 +1,12 @@
+/*
+  Hydra Project, DFKI Saarbruecken,
+  Stuhlsatzenhausweg 3, D-66123 Saarbruecken, Phone (+49) 681 302-5312
+  Author: many
+
+  Variables
+  ------------------------------------------------------------------------
+*/
+
 #ifndef __VARIABLEH
 #define __VARIABLEH
 
@@ -15,7 +24,6 @@ SuspList * addSuspToList(SuspList * list, Thread * elem, Board * home);
 #define REIFIED_FLAG 2
 
 class SVariable {
-  
 friend TaggedRef gcVariable(TaggedRef);
 protected:
   SuspList *suspList;
