@@ -22,7 +22,6 @@ define
       attr
 	 freeIndexList
 	 nextIndex
-	 
       meth init(retCol:RC getCol:GC guiActive:GuiActive guiNumber:GuiNumber)
 	 self.retCol = RC
 	 self.getCol = GC
@@ -73,6 +72,7 @@ define
 	 guiNumber
 	 colorAlloc
 	 table
+	 usedCounter
 	 counter
 	 diff
 	 makeKey
@@ -85,12 +85,14 @@ define
 	 remove
 	 temp1
 	 temp2
+	 updates 
 	 
       meth initialize
 	 size <- 0
 	 self.table = {NewDictionary}
 	 self.counter = {NewDictionary}
 	 self.diff = {NewDictionary}
+	 self.usedCounter = {NewDictionary}
       end
 
       meth setGui(Sites Active Number)
@@ -128,22 +130,33 @@ define
 	  end}
       end
       
-      meth updateEntity(Data Key) Site Col Index in
+      meth updateEntity(Data Key) Site Col Index Used in
 	 Key =  {self.makeKey Data}
 	 Site = {self.makeSite Data}
+	 {System.show updatingEntity(Data)}
 	 if {Dictionary.member self.table Key} then
 	    OldCredit = {self.getCredit {Dictionary.get self.table Key}}
 	 in
+	    {System.show wasMember#Data}
 	    if OldCredit \= {self.getCredit Data} then
+	       {System.show foundUsed(Key#Data)}
+	       Used = self.usedCounter.Key + 1
 	       Table, increment(self.diff Site)
+	       updates <- Key|@updates 
+	    else
+	       Used = self.usedCounter.Key
 	    end
 	 else
+	    {System.show wasNEw#Data}
+	    Used = 1
 	    {self.colorAlloc get(Site Col Index)}
 	    new <- site(key:Key fg:Col
-		  text:{VirtualString.toAtom Data.index#'   '#Data.type})|@new 
+			text: Data.index#'   '#Data.type#' used:'#1)|@new 
+	    self.usedCounter.Key:=Used
 	    Table, increment(self.diff Site)
 	 end 
 	 Table, increment(self.counter Site)
+	 self.usedCounter.Key:=Used
 	 {Dictionary.put self.table Key Data}
       end
       
@@ -152,8 +165,8 @@ define
 	 Table, resetDictionary(self.counter)
 	 Table, resetDictionary(self.diff)
 	 new <- nil
+	 updates <- nil
 	 CurrentKeys={Map Data.list proc{$ E K} Table,updateEntity(E K) end}
-	 {System.show curKeys#CurrentKeys}
 	 {self removeObsolete(CurrentKeys)}
       end
       
@@ -178,7 +191,6 @@ define
 				  I = {Dictionary.get self.table K}.index
 				  {Dictionary.remove self.table K}
 			       end @remove}
-	 {System.show removeObs#@remove}
 	 Table, removeDictObsolete(self.diff)
 	 Table, removeDictObsolete(self.counter)
       end
@@ -187,10 +199,20 @@ define
       meth display
 	 if @new \= nil then
 	    {self.guiSites addSite(@new)}
-	 else skip end
+	 end
 	 if @remove \= nil then
 	    {self.guiSites deleteSite(@remove)}
-	 else skip end
+	 end
+	 {System.show @updates}
+	 {ForAll @updates
+	  proc{$ K}
+	     Data = self.table.K
+	     Us = self.usedCounter.K
+	  in
+	     {self.guiSites update(K Data.index#'   '#Data.type#' used:'#Us)}
+	  end}
+	 
+	 
 	 Table, displayGraph(self.counter self.guiNumber)
 	 Table, displayGraph(self.diff self.guiActive)
       end
