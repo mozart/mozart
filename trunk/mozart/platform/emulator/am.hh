@@ -140,6 +140,7 @@ public:
 				SuspList* suspList,
 				TaggedRef term, SVariable* rightVar = NULL);
   Bool isBetween(Board *to, Board *varHome); // ###
+  Bool checkExtSuspension (Suspension *susp);
 
 // debugging --> see file ../builtins/debug.C
   State getValue(TaggedRef feature, TaggedRef out);

@@ -72,6 +72,8 @@ public:
   void printTree();
 
   void addSuspension(int n=1) { suspCount += n; }
+  void addSuspension (Suspension *susp);
+  // should be applied only for 'solve' boards;
   Board *gcGetBoardDeref();
   Actor *getActor();
   Board *getBoard() { return u.board; }
