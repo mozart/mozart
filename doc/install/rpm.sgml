@@ -82,6 +82,8 @@
     <p> 
       The webpage for downloading also gives additional information on
       which system the rpm packages were build.
+    <p>
+After installation you should make your web browser Mozart application enabled, which is described in <ptr to="applets">.
        
   <section id="section.rpm.src">
     <title/Source Packages/
