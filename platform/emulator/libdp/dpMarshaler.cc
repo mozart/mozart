@@ -432,6 +432,7 @@ static char *tagToComment(MarshalTag tag)
   case DIF_LOCK:
     return "lock";
   case DIF_OBJECT:
+  case DIF_VAR_OBJECT:
     return "object";
   case DIF_RESOURCE_T:
   case DIF_RESOURCE_N:
@@ -515,6 +516,7 @@ OZ_Term unmarshalTertiaryImpl(MsgBuffer *bs, MarshalTag tag)
     tert = new LockProxy(bi); 
     break;
   case DIF_OBJECT:
+  case DIF_VAR_OBJECT:
     {
       TaggedRef obj;
       TaggedRef clas;
