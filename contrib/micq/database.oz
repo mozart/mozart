@@ -158,7 +158,7 @@ define
       meth init
 	 self.DB={Dictionary.new}
       end
-      
+
       meth toRecord( record: $ )
 	 {Dictionary.toRecord self.type self.DB $}
       end
@@ -264,8 +264,8 @@ define
    class Online from StorageClass
       feat
 	 type: onlineStatus
-      meth store(id:ID online: S client: C)
-	 StorageClass, store(id:ID online: S client: C)
+      meth store(id:ID online: S client: C history: H<=nil)
+	 StorageClass, store(id:ID online: S client: C  history:H )
       end	      
    end
 
@@ -303,6 +303,15 @@ define
       end
    end
 
+   class History from StorageClass
+      feat
+	 type: history
+      meth store( friend: F mid: Mid message: M  type: T reply_to: R date:D id: _<=nil)
+	 StorageClass, store(id: {VirtualString.toAtom F#Mid} friend:F mid: Mid
+			     message: M  type: T reply_to: R date: D)
+      end
+   end
+
    MembersDB={New Members init()}
    OnlineDB={New Online init()}
    FriendsDB={New Friends init()}
@@ -318,7 +327,10 @@ define
 	 notifyDB
 	 messageDB
 	 applicationDB
-	 
+
+      attr
+	 path
+
       meth init()
 	 self.membersDB = proc{$ X} {MembersDB X} end
 	 self.onlineDB = proc{$ X} {OnlineDB X} end 
@@ -328,6 +340,11 @@ define
 	 self.applicationDB= proc{$ X} {ApplicationDB X} end
       end
 
+      meth setDBdir( dir: D )
+	 path <- D
+      end
+     
+      
       meth toRecord( record: $ )
 	 db( membersDB: {self.membersDB toRecord( record:$ )}
 	     onlineDB: {self.onlineDB toRecord( record:$)}
@@ -504,23 +521,40 @@ define
 	 end
       end
 	    
-      meth setOnline( id:ID online: O client: C)
+      meth setOnline( id:ID online: O)
 	 if {self  isOnline( id: ID online: $ )} == false then
-	    {self.onlineDB store(id: ID online: O client: C )}
+	    raise notLoggedIn( ID ) end 
 	 else
-	    {self.onlineDB update(id: ID online: O client: C )}
+	    {self.onlineDB update(id: ID online: O )}
 	 end
       end
       
       meth online( id:ID client: C )
-	 {self setOnline(id: ID online: online client: C )}
+	 {self setOnline(id: ID online: online  )}
       end
 
       meth offline( id: ID client: C)
-	 {self setOnline( id:ID online: offline client: C)}
+	 {self setOnline( id:ID online: offline)}
       end
 
-      meth logout( id: ID )
+      meth login( id: ID client:C )
+	 if {self  isOnline( id: ID online: $ )} \= false then
+	    raise allreadyLoggedIn( ID ) end 
+	 else H in
+	    H = {New History init}
+	    try 
+	       {H loadFromDisk( file: @path#'mess_'#ID)}
+	    catch X then {System.printError "Couldn't load history for "#ID#" reason: "#X} end
+	    {self.onlineDB store(id: ID online: online client: C history:H )}
+	 end
+      end
+      
+      meth logout( id: ID ) H in
+	 H = {self.onlineDB get(id: ID entry: $)}.history 
+	 % Spara history databasen här!
+	 thread
+	    {H saveToDisk( file: @path#'mess_'#ID )}
+	 end
 	 {self.onlineDB remove( id:ID )}
       end
 
@@ -540,7 +574,6 @@ define
       meth removeFriend( id: ID friend: F )
 	 lock
 	    if {self.friendsDB isMember( id:ID status: $)} then
-	       {System.show removeFriend(F)}
 	       {self.friendsDB update( id:ID
 				       friends: {List.subtract {self getFriends(id:ID friends: $)} F})}
 	    else
@@ -569,6 +602,70 @@ define
 		       end}
       end
 
+      meth getHistory( id: ID history:History )
+	 fun{MakeHistoryList SortedList}
+	    fun{MakeRecordR Ls Acc}
+	       {System.show Acc}
+	       if Ls == nil then Acc
+	       else
+		  L|Lx = Ls Old Sent F=L.friend
+		  R = {CondSelect Acc L.friend m(old: nil sent: nil)}
+	       in
+		  {System.show foo1}
+		  {System.show foo2}
+		  if L.type == sent then
+		     {System.show foo4}
+		     Old = R.old
+		     {System.show foo5}
+		     Sent = {List.append [message(mid: L.mid date: L.date
+						  message: L.message
+						  reply_to: L.reply_to)] R.sent }
+		     {System.show foo6}
+		  else
+		     {System.show foo7}
+		     Sent = R.sent
+		     {System.show foo8}
+		     Old = {List.append [receiveMessage(mid: L.mid date: L.date
+							      message: L.message reply_to: L.reply_to
+							sender: L.friend)] R.old }
+		     {System.show foo9}
+		  end
+		  {System.show foo10}
+		  {System.show foo11}
+		  {MakeRecordR Lx {Record.adjoinAt Acc F
+				   m(old: Old sent: Sent)}}
+	       end
+	    end
+	    Tmp = {NewCell nil}
+	 in
+	    
+	    {Record.forAllInd {MakeRecordR SortedList msg()}
+	     proc{$ I X}
+		{Assign Tmp {Append 
+			     [messages(id: I
+				       old: X.old
+				       sent: X.sent)] {Access Tmp}}}
+	     end}
+	    {Access Tmp}
+	 end
+	 
+	 H = {self.onlineDB get(id: ID entry: $)}.history
+	 E = {H items($)} 
+      in
+	 History = {MakeHistoryList E}
+      end
+
+      meth clearHistory( id: ID friend: F )
+	 H = {self.onlineDB get(id: ID entry: $)}.history
+	 E = {H items($)}
+      in
+	 {ForAll E proc{$ X}
+		      if X.friend == F then
+			 {H remove(id: X.id )}
+		      end
+		   end}
+      end
+      
       meth setNotify( id:ID notify: Notify )
 	 if {self.notifyDB isMember( id:ID status: $)} then
 	    lock
@@ -612,13 +709,22 @@ define
 
       meth storeMessage(id: MID receiver: R sender: S message: M date: D reply_to: Re)
 	 {self.messageDB store( id: MID receiver: R sender: S message: M date:D reply_to: Re)}
+	 thread H = {self.onlineDB get(id: S entry: $)}.history in
+	    {ForAll R proc{$ O}
+			 {H store( friend: O message:M mid: MID date: D reply_to: Re type: sent)}
+		      end}
+	 end
       end
 
       meth messageAck( id: Id mid: Mid read: $)
 	 lock MsgLock then R in
-	    try
-	       R = {List.subtract {self.messageDB get(id: Mid entry:$)}.receiver Id}
+	    try M = {self.messageDB get(id: Mid entry:$)}
+	        H = {self.onlineDB get(id: Id entry: $)}.history 
+	    in
+	       R = {List.subtract M.receiver Id}
 	       {self.messageDB update( id: Mid receiver: R )}
+	       {H store( friend: M.sender type: received date: M.date reply_to: M.reply_to
+			 mid: Mid message: M.message)}
 	       if R==nil then true else false end
 	    catch _ then false end
 	 end
@@ -653,15 +759,19 @@ define
 							    end}
       end
 
-      meth saveAll( dir: PATH)
+      meth saveAll( dir: _) % The directory is set earlier, just here for backward comp.
 	 lock
 	    {self makeBackup}
-	    {self.membersDB saveToDisk( file: PATH#members) }
-	    {self.friendsDB saveToDisk( file: PATH#friends) }
-	    {self.messageDB saveToDisk( file: PATH#message) }
-	    {self.applicationDB saveToDisk( file: PATH#application)}
-	    {SaveMessID PATH#id }
-	    {SaveAppID PATH#appid }
+	    {self.membersDB saveToDisk( file: @path#members) }
+	    {self.friendsDB saveToDisk( file: @path#friends) }
+	    {self.messageDB saveToDisk( file: @path#message) }
+	    {self.applicationDB saveToDisk( file: @path#application)}
+	    {SaveMessID @path#id }
+	    {SaveAppID @path#appid }
+	    
+	    {ForAll {self.onlineDB items($)} proc{$ X} H = X.history in
+						{H saveToDisk( file: @path#"mess_"#X.id )}
+					     end}
 	 end
       end
 
@@ -683,14 +793,14 @@ define
 	 T = {List.length {self.membersDB entries($)}}
       end
       
-      meth loadAll( dir: PATH)
+      meth loadAll( dir: _) % The directory is set earlier, just here for backward comp.
 	 lock
-	    {self.membersDB loadFromDisk( file: PATH#members ) } 
-	    {self.friendsDB loadFromDisk( file: PATH#friends ) }
-	    {self.messageDB loadFromDisk( file: PATH#message ) }
-	    {self.applicationDB loadFromDisk( file: PATH#application)}
-	    {LoadMessID PATH#id}
-	    {LoadAppID PATH#appid}
+	    {self.membersDB loadFromDisk( file: @path#members ) } 
+	    {self.friendsDB loadFromDisk( file: @path#friends ) }
+	    {self.messageDB loadFromDisk( file: @path#message ) }
+	    {self.applicationDB loadFromDisk( file: @path#application)}
+	    {LoadMessID @path#id}
+	    {LoadAppID @path#appid}
 	    {self buildNotifyTable}
 	 end
       end

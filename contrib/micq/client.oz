@@ -29,13 +29,15 @@ require
 	 logout:S_logout
 	 login:S_login
 	 inviteUser:S_inviteUser
-	 removeApplication:S_removeApplication) at 'methods.ozf'
+	 removeApplication:S_removeApplication
+	 getHistory: S_getHistory
+	 clearHistory: S_clearHistory) at 'methods.ozf'
 import
    Browser(browse:Browse)
    System
    OS(uName)
    Connection(take)
-   Pickle(save load)
+   Pickle(load)
    Module
    DisplayMess at 'messagedisplay.ozf'
    MManager(newSecureManager:NewSecureManager) at 'manager.ozf'
@@ -52,7 +54,6 @@ import
 	setInfo:SetInfo
 	messageAck:MessageAck
 	receiveMessage:ReceiveMessage
-	getAllMessages:GetAllMessages
 	changeStatus:ChangeStatus
 	insertMess:InsertMessFromFile
 	errorBox:ErrorBox
@@ -60,17 +61,12 @@ import
 	updateApp:UpdateApp) at 'clientgui.ozf'
 
 export
-   save: Save
    start: StartClient
 
 define
    
    WaitQuit
    
-   proc{Save File} {Pickle.save {GetAllMessages} File} end
-
-   proc{Load File $} try {Pickle.load File} catch _ then [messages(id:nil old:nil sent:nil)] end end
-
    class ClientClass from StationaryClass
       feat
 	 args  ticketDB
@@ -118,13 +114,23 @@ define
       meth newAccount(A)
 	 {NewAccountGui.start {Adjoin A newaccount(id:A.login server:@server client:self.this)}}
       end
+
+      meth clearHistory( friend: F )
+	 {@server S_clearHistory( id: @id friend: F)}
+      end
       
-      meth startgui(settings:S<=nil)
+      meth startgui(settings:S<=nil) H in
+	 H = {self load($)}
+	 {System.show H}
 	 try
-	    {StartGUI self.this @server @id {Load @args.file} S}
+	    {StartGUI self.this @server @id H S}
 	 catch X then {Browse exception(startgui X)} end
       end
 
+      meth load($)
+	 {@server S_getHistory(id: @id history: $)}
+      end
+      
       meth haltApplication( application: Instance )
 	 if {Dictionary.member self.ticketDB Instance} then
 	    thread
