@@ -114,7 +114,7 @@
 
     <Meta name=latex.input   value="fdt.tex">
 
-    <Title/Finite Domain Constraints in DFKI &Oz;/
+    <Title/Finite Domain Constraint Programming in &Oz;. A Tutorial./
       <Author.Extern to="author.db" key="Gert.Smolka">
       <Author.Extern to="author.db" key="Christian.Schulte">
       <Author.Extern to="author.db" key="Joerg.Wuertz">
