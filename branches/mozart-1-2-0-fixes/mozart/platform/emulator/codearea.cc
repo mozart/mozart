@@ -1626,7 +1626,8 @@ OZ_Location * OZ_Location::getLocation(int n) {
     
     fp = 0;
 
-    for (int i = n; i--; )
+    int i;
+    for (i = n; i--; )
       fp = (fp << 1) + getNewIndex(i);
     
     sfp = fp % MAX_LOC_HASH;
@@ -1643,7 +1644,7 @@ OZ_Location * OZ_Location::getLocation(int n) {
       if ((ll->loc->fingerprint & LOC_FP_MASK) < n)
 	goto next;
 
-      for (int i = n; i--; )
+      for (i = n; i--; )
 	if (ll->loc->map[i] != new_map[i])
 	  goto next;
 
