@@ -21,10 +21,10 @@ local
       from Tk.canvas
       
       meth init(parent:P width:W ticks:N) = M
-	 <<TickCanvas tkInit(parent:             P
-			     width:              W
-			     highlightthickness: 0
-			     height:             TickSize+1)>>
+	 TickCanvas,tkInit(parent:             P
+			   width:              W
+			   highlightthickness: 0
+			   height:             TickSize+1)
       end
       
       meth drawTicks(Xs)
@@ -39,9 +39,9 @@ local
 	    Y2 = !TickSize - 2
 	    Y3 = Y2 + 1
 	 in
-	    <<TickCanvas tk(crea rectangle X0 Y0 X3 Y3 outline:BrightColor)>>
-	    <<TickCanvas tk(crea rectangle X1 Y1 X2 Y2 outline:DarkColor)>>
-	    <<TickCanvas drawTicks(Xr)>>
+	    TickCanvas,tk(crea rectangle X0 Y0 X3 Y3 outline:BrightColor)
+	              ,tk(crea rectangle X1 Y1 X2 Y2 outline:DarkColor)
+	              ,drawTicks(Xr)
 	 end
       end
       
@@ -51,30 +51,30 @@ local
       from Tk.scale
       feat Ticks
       meth init(parent:P ticks:N width:W action: A)
-	 <<TickScale tkInit(parent:             P
-			    highlightthickness: 0
-			    sliderlength:       SliderWidth
-			    action:             A
-			    'from':             0
-			    to:                 N
-			    length:             W
-			    width:              ScaleHeight
-			    resolution:         1
-			    showvalue:          False
-			    orient:             horizontal)>>
+	 TickScale,tkInit(parent:             P
+			  highlightthickness: 0
+			  sliderlength:       SliderWidth
+			  action:             A
+			  'from':             0
+			  to:                 N
+			  length:             W
+			  width:              ScaleHeight
+			  resolution:         1
+			  showvalue:          False
+			  orient:             horizontal)
 	 self.Ticks = N
-	 <<TickScale tkBind(event:  '<Configure>'
-			    action: P # drawTicks)>>
+	 TickScale,tkBind(event:  '<Configure>'
+			  action: P # drawTicks)
       end
 
       meth getCoords($)
-	 <<TickScale GetCoords(0 self.Ticks $)>>
+	 TickScale,GetCoords(0 self.Ticks $)
       end
       
       meth GetCoords(I N $)
 	 case I>N then nil else
 	    {Tk.returnInt lindex(l(self coords I) 0)} |
-	    <<TickScale GetCoords(I+1 N $)>>
+	    TickScale,GetCoords(I+1 N $)
 	 end
       end
    end
@@ -98,7 +98,7 @@ in
 		width:   Width
 		values:  Vs
 		initpos: N)
-	 <<DiscreteScale tkInit(parent:P highlightthickness:0)>>
+	 DiscreteScale,tkInit(parent:P highlightthickness:0)
 	 NoTicks   = {Length Vs} - 1
       in
 	 self.Value = {New Tk.canvas tkInit(parent: self

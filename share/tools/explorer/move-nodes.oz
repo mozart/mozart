@@ -88,7 +88,7 @@ local
       meth nextSol($)
 	 case @isSolBelow then
 	    case @isHidden then self
-	    else <<ChooseNode NextSolBelow($)>>
+	    else ChooseNode,NextSolBelow($)
 	    end
 	 else {self.mom NextSol(self $)}
 	 end
@@ -152,7 +152,7 @@ local
 	    end
 	 of !False then
 	    case @toDo\=nil then self
-	    else <<back($)>>
+	    else self,back($)
 	    end
 	 elseof N then N
 	 end

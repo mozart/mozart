@@ -35,11 +35,11 @@ local
 	 in
 	    N = TakeNumber
 	    number <- TakeNumber
-	    <<getCenterAbove(X Y Above)>>
+	    self,getCenterAbove(X Y Above)
 	    case Font==False then skip else
 	       {Canvas tk(crea text
 			  Scale * {IntToFloat X}
-			  Scale * {IntToFloat case <<isHidden($)>> then
+			  Scale * {IntToFloat case self,isHidden($) then
 						 Y + UpperSpaceI div 2
 					      else Y
 					      end}
@@ -58,10 +58,10 @@ local
 	 Actions = Canvas.actions
 	 X Y Above
       in
-	 <<getCenterAbove(X Y Above)>>
+	 self,getCenterAbove(X Y Above)
 	 {Canvas tk(crea text
 		    Scale * {IntToFloat X}
-		    Scale * {IntToFloat case <<isHidden($)>> then
+		    Scale * {IntToFloat case self,isHidden($) then
 					   Y + UpperSpaceI div 2
 					else Y
 					end}
@@ -88,7 +88,7 @@ local
       end
 	 
       meth getCenterAbove(?X ?Y ?Above)
-	 <<GetCenterAbove(0 0 nil ?X ?Y ?Above)>>
+	 self,GetCenterAbove(0 0 nil ?X ?Y ?Above)
       end
 
       meth !GetCenter(X1 Y1 ?X2 ?Y2)
@@ -96,7 +96,7 @@ local
       end
 	    
       meth getCenter(?X ?Y)
-	 <<TkNode GetCenter(0 0 ?X ?Y)>>
+	 TkNode,GetCenter(0 0 ?X ?Y)
       end
 
       meth close
@@ -154,7 +154,7 @@ local
 	    case Ks of nil then skip
 	    [] K|Kr then
 	       {K drawTree(Break MomTree MomX MyY Scale Font)}
-	       <<DrawKids(Kr Break MomTree MomX MyY Scale Font)>>
+	       self,DrawKids(Kr Break MomTree MomX MyY Scale Font)
 	    end
 	 end
 	 
@@ -243,8 +243,8 @@ local
 				   tags: q(Node Tree Actions Canvas.numbers))}
 		     end
 		  end
-		  <<ChooseNode DrawKids(@kids Break Tree MyX MyY+VerSpaceI
-					Scale Font)>>
+		  ChooseNode,DrawKids(@kids Break Tree MyX MyY+VerSpaceI
+				      Scale Font)
 	       end
 	       {Canvas tk(addtag MomTree withtag Tree)}
 	       isDrawn <- True
@@ -252,7 +252,7 @@ local
 	    else
 	       case @kids\=nil then
 		  isHidden <- True
-		  <<ChooseNode purge>>
+		  ChooseNode,purge
 	       end
 	       {Break broken(self)}
 	    end
@@ -471,8 +471,8 @@ local
 	    from SucceededNode
 	    
 	    meth drawTree(Break MomTree MomX MyY Scale Font)
-	       <<SucceededNode drawTree(MomTree MomX MyY Scale Font
-					EntailedColor NodeBorderWidth)>>
+	       SucceededNode,drawTree(MomTree MomX MyY Scale Font
+				      EntailedColor NodeBorderWidth)
 	    end
 	    
 	 end
@@ -482,8 +482,8 @@ local
 	    from SucceededNode
 
 	    meth drawTree(Break MomTree MomX MyY Scale Font)
-	       <<SucceededNode drawTree(MomTree MomX MyY Scale Font
-					SuspendedColor ThickNodeBorderWidth)>>
+	       SucceededNode,drawTree(MomTree MomX MyY Scale Font
+				      SuspendedColor ThickNodeBorderWidth)
 	    end
 	    
 	 end

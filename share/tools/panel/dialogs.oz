@@ -12,13 +12,13 @@ local
       from TkTools.dialog
 
       meth init(master:Master done:Done)
-	 <<TkTools.dialog tkInit(master:  Master
-				 title:   TitleName#': About'
-				 buttons: ['Okay'#close(proc {$}
-							   Done = Unit
-							end)]
-				 focus:   1
-				 default: 1)>>
+	 TkTools.dialog,tkInit(master:  Master
+			       title:   TitleName#': About'
+			       buttons: ['Okay'#close(proc {$}
+							 Done = Unit
+						      end)]
+			       focus:   1
+			       default: 1)
 	 Title = {New Tk.label tkInit(parent:     self
 				      font:       AboutFont
 				      text:       TitleName
@@ -38,16 +38,16 @@ local
       from TkTools.dialog
 
       meth init(master:Master done:Done)
-	 <<TkTools.dialog tkInit(master:  Master
-				 title:   TitleName#': Shutdown'
-				 buttons: ['Okay'#close(proc {$}
-							   Done = True
-							end)
-					   'Cancel'#close(proc {$}
+	 TkTools.dialog,tkInit(master:  Master
+			       title:   TitleName#': Shutdown'
+			       buttons: ['Okay'#close(proc {$}
+							 Done = True
+						      end)
+					 'Cancel'#close(proc {$}
 							   Done = False
 							end)]
-				 focus:   1
-				 default: 1)>>
+			       focus:   1
+			       default: 1)
 	 Bitmap  = {New Tk.label   tkInit(parent: self
 					  bitmap: question)}
 	 Message = {New Tk.message tkInit(parent: self
@@ -80,23 +80,23 @@ local
 	 meth init(master: Master
 		   prev:   Prev
 		   next:   Next)
-	    <<TkTools.dialog tkInit(master:  Master
-				    title:   TitleName#': Update'
-				    buttons: ['Okay'   #
-					      close(proc {$}
-						       Next =
-						       {AdjoinAt
-							{AdjoinAt Prev
-							 time
-							 {TimeScale get($)}}
-							mouse
-							{self GetMouse($)}}
-						    end)
-					      'Cancel' # close(proc {$}
-								  Next = Prev
+	    TkTools.dialog,tkInit(master:  Master
+				  title:   TitleName#': Update'
+				  buttons: ['Okay'   #
+					    close(proc {$}
+						     Next =
+						     {AdjoinAt
+						      {AdjoinAt Prev
+						       time
+						       {TimeScale get($)}}
+						      mouse
+						      {self GetMouse($)}}
+						  end)
+					    'Cancel' # close(proc {$}
+								Next = Prev
 							       end)]
-				    focus:   1
-				    default: 1)>>
+				  focus:   1
+				  default: 1)
 	    TimeOuter = {New TkTools.textframe tkInit(parent: self
 						      text:   'Update Time')}
 	    TimeLabel = {New Tk.label tkInit(parent: TimeOuter.inner
@@ -138,18 +138,18 @@ local
 	 meth init(master: Master
 		   prev:   Prev
 		   next:   Next)
-	    <<TkTools.dialog tkInit(master:  Master
-				    title:   TitleName#': History'
-				    buttons: ['Okay'   #
-					      close(proc {$}
-						       Next = 
-						       {RangeScale get($)}
-						    end)
-					      'Cancel' # close(proc {$}
-								  Next = Prev
-							       end)]
-				    focus:   1
-				    default: 1)>>
+	    TkTools.dialog,tkInit(master:  Master
+				  title:   TitleName#': History'
+				  buttons: ['Okay'   #
+					    close(proc {$}
+						     Next = 
+						     {RangeScale get($)}
+						  end)
+					    'Cancel' # close(proc {$}
+								Next = Prev
+							     end)]
+				  focus:   1
+				  default: 1)
 	    RangeOuter = {New TkTools.textframe tkInit(parent: self
 						       text:   'History Range')}
 	    RangeLabel = {New Tk.label tkInit(parent: RangeOuter.inner
