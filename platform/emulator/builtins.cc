@@ -5338,12 +5338,13 @@ OZ_BI_define(BIfindFunction,3,0)
   return PROCEED;
 } OZ_BI_end
 
-OZ_BI_define(BIdlLoad,1,2)
+OZ_BI_define(BIdlLoad,1,1)
 {
   oz_declareVirtualStringIN(0,filename);
-  OZ_Return res = osDlopen(filename,OZ_out(0));
+  TaggedRef hdl;
+  OZ_Return res = osDlopen(filename,hdl);
   if (res!=PROCEED) return res;
-  void* handle = OZ_getForeignPointer(OZ_out(0));
+  void* handle = OZ_getForeignPointer(hdl);
   OZ_C_proc_interface * I;
   I = (OZ_C_proc_interface *) osDlsym(handle,"oz_interface");
   if (I==0)
@@ -5362,8 +5363,7 @@ OZ_BI_define(BIdlLoad,1,2)
     l = cons(oz_pairA(I->name,makeTaggedConst(bi)),l);
     I++;
   }
-  OZ_out(1)=OZ_recordInit(AtomForeign,l);
-  return PROCEED;
+  OZ_RETURN(oz_pair2(hdl,OZ_recordInit(AtomForeign,l)));
 } OZ_BI_end
 
 /* ------------------------------------------------------------
@@ -6785,10 +6785,10 @@ BuiltinTabEntry *BIinit()
 
   BIinitFD();
   BIinitFSet();
-  BIinitMeta();
+  // BIinitMeta();
 
-  BIinitAVar();
-  BIinitPerdioVar();
+  // BIinitAVar();
+  // BIinitPerdioVar();
   BIinitUnix();
   BIinitTclTk();
 
@@ -6799,7 +6799,7 @@ BuiltinTabEntry *BIinit()
   BI_Delay=makeTaggedConst(builtinTab.find("Delay"));
   BI_startTmp=makeTaggedConst(builtinTab.find("startTmp"));
 
-  BIinitLazy();
+  // BIinitLazy();
 
   dummyRecord = makeTaggedNULL();
   OZ_protect(&dummyRecord);
