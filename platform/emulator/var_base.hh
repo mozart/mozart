@@ -96,6 +96,12 @@ public:
   void setSuspList(SuspList *inSuspList) { suspList = inSuspList; }
   void unlinkSuspList() { suspList = NULL; }
 
+  // takes the suspensionlist of var and  appends it to the
+  // suspensionlist of leftVar
+  void relinkSuspListTo(SVariable * lv, Bool reset_local = FALSE) {
+    suspList = suspList->appendToAndUnlink(lv->suspList, reset_local);
+  }
+
   Bool gcIsMarked(void);
   void gcMark(Bool, TaggedRef *);
   TaggedRef * gcGetFwd(void);

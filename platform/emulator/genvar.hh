@@ -84,12 +84,6 @@ protected:
 
   void propagate(TaggedRef, SuspList * &, PropCaller);
 
-  // takes the suspensionlist of var and  appends it to the
-  // suspensionlist of leftVar
-  void relinkSuspListTo(GenCVariable * lv, Bool reset_local = FALSE) {
-    suspList = suspList->appendToAndUnlink(lv->suspList, reset_local);
-  }
-
 public:
   USEFREELISTMEMORY;
   NO_DEFAULT_CONSTRUCTORS(GenCVariable);
