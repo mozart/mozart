@@ -793,7 +793,7 @@ $1(),$2,$3)])
 AC_DEFUN(OZ_CHECK_LIB, [
   oz_saved_LIBS=$LIBS
   OZ_TRY_LINK($2,$3,
-   [if test "${enable_link_static}" = yes; then
+   [if test "${oz_enable_link_static}" = yes; then
       oz_add_libs="-Xlinker -Bstatic -l$1 -Xlinker -Bdynamic"
       LIBS="$oz_add_libs${oz_saved_LIBS:+ }$oz_saved_LIBS"
       OZ_TRY_LINK($2, $3,
@@ -974,3 +974,28 @@ AC_DEFUN(OZ_CONTRIB_INIT_CXX,[
     AC_LANG_CPLUSPLUS
     OZ_PATH_PROG(OZTOOL,oztool)
 ])
+
+
+dnl ------------------------------------------------------------------
+dnl OZ_ENABLE
+dnl
+dnl a canonical macro to check for enable options
+dnl  OZ_ENABLE(name,comment,default, on_yes, on_no)
+dnl   tests for the option --enable/disable-name
+dnl   the 'default' can be either 'yes' or 'no'
+dnl   if the option is enabled 'on_yes' is executed, else 'on_no'
+dnl ------------------------------------------------------------------
+
+AC_DEFUN(OZ_ENABLE, [
+    AC_MSG_CHECKING(for --enable-$1)
+    AC_ARG_ENABLE($1, [--enable-$1 $2 (default=$3)])
+    : ${[oz_enable_]translit($1,-,_)=$3}
+    if test -n "${[enable_]translit($1,-,_)}"; then
+        [oz_enable_]translit($1,-,_)=$[enable_]translit($1,-,_)
+    fi
+    if test "${[oz_enable_]translit($1,-,_)}" != no; then
+        ifelse($4,[],AC_MSG_RESULT(yes),$4)
+    else
+        ifelse($5,[],AC_MSG_RESULT(no),$5)
+    fi
+    ])
