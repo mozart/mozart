@@ -312,7 +312,7 @@ unsigned __stdcall selectThread(void *arg)
 static
 int win32Select(fd_set *rfds, fd_set *wfds, unsigned int *timeout)
 {
-  if (timeout == WAIT_NULL)
+  if (timeout == (unsigned int *) WAIT_NULL)
     return getAvailFDs(rfds,wfds);
   
   int wait = (*timeout==0) ? INFINITE : *timeout;
