@@ -26,7 +26,7 @@ MegaByteF      = 1024.0 * 1024.0
 KiloByteI      = 1024
 MegaByteI      = KiloByteI * KiloByteI
 
-BitMapDir      = '@' # {System.get home} # '/lib/images/'
+BitMapDir      = '@' # {System.get home} # '/tools/images/'
 
 LineColor        #
 RunnableColor    # RunnableStipple  #
