@@ -130,7 +130,6 @@ public:
 
   static void printDef(ProgramCounter PC);
   static TaggedRef dbgGetDef(ProgramCounter PC);
-  static Bool existVarNames(ProgramCounter PC);
   static TaggedRef varNames(ProgramCounter PC, RefsArray G, RefsArray Y);
   static TaggedRef argumentList(RefsArray X, int arity);
   static void getDefinitionArgs(ProgramCounter PC,
@@ -138,7 +137,7 @@ public:
 				int &line, PrTabEntry *&pred);
 
   static void getDebugInfoArgs(ProgramCounter PC, TaggedRef &file, int &line, 
-			       int &abspos, TaggedRef &comment);
+			       int &column, TaggedRef &comment);
   /* with one argument it means that we need the code till the "query"  */
   static void display (ProgramCounter from, int size = 1, FILE* = stderr);
 
@@ -205,7 +204,6 @@ private:
   void scanRecordArity(CompStream *fd);
   TaggedRef parseRecordArity (CompStream *fd, int length);
   void scanBuiltinname(CompStream *fd);
-  BuiltinTabEntry *scanFun(CompStream *fd);
 
   static ProgramCounter writeWord(ByteCode c, ProgramCounter ptr)  
   { 

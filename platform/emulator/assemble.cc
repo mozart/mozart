@@ -118,11 +118,9 @@ OZ_C_proc_end
 OZ_C_proc_begin(BIstoreTagged,2)
 {
   declareCodeBlock(0,code);
-  OZ_declareNonvarArg(1,literalOrNumber);
-  literalOrNumber = deref(literalOrNumber);
-  Assert(OZ_isLiteral(literalOrNumber) || OZ_isInt(literalOrNumber) || 
-	 OZ_isFloat(literalOrNumber) || OZ_isProcedure(literalOrNumber));
-  code->writeTagged(literalOrNumber);
+  OZ_declareNonvarArg(1,arg);
+  arg = deref(arg);
+  code->writeTagged(arg);
   return PROCEED;
 }
 OZ_C_proc_end

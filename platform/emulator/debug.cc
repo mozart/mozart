@@ -41,7 +41,7 @@ void debugStreamSuspend(ProgramCounter PC, Thread *tt,
   ProgramCounter debugPC = CodeArea::nextDebugInfo(PC);
 
   TaggedRef file, comment;
-  int line, abspos;
+  int line, column;
   time_t feedtime;
 
   if (debugPC == NOCODE) {
@@ -51,10 +51,10 @@ void debugStreamSuspend(ProgramCounter PC, Thread *tt,
     file    = OZ_atom("noDebugInfo");
     comment = OZ_atom("");
     line    = 1;
-    abspos  = 1;
+    column  = 1;
   }
   else
-    CodeArea::getDebugInfoArgs(debugPC,file,line,abspos,comment);
+    CodeArea::getDebugInfoArgs(debugPC,file,line,column,comment);
 
   feedtime = CodeArea::findTimeStamp(debugPC);
   
@@ -198,12 +198,12 @@ void debugStreamCall(ProgramCounter debugPC, const char *name, int arity,
   TaggedRef newTail = OZ_newVariable();
   
   TaggedRef file, comment;
-  int line, abspos;
+  int line, column;
   time_t feedtime;
   
   am.currentThread->setStop(OK);
   
-  CodeArea::getDebugInfoArgs(debugPC,file,line,abspos,comment);
+  CodeArea::getDebugInfoArgs(debugPC,file,line,column,comment);
   TaggedRef arglist = CodeArea::argumentList(arguments, arity);
   
   feedtime = CodeArea::findTimeStamp(debugPC);
