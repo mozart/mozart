@@ -6919,9 +6919,9 @@ OZ_C_proc_begin(BIisBuiltin,2)
   oz_declareArg(1,res);
 
   if (isConst(val) && tagged2Const(val)->getType() == Co_Builtin)
-    return OZ_unify(res,OZ_true());
+    return oz_unify(res,NameTrue);
   else
-    return OZ_unify(res,OZ_false());
+    return oz_unify(res,NameFalse);
 }
 OZ_C_proc_end
 
@@ -6931,14 +6931,31 @@ OZ_C_proc_begin(BIgetBuiltinName,2)
   oz_declareArg(1,res);
 
   if (!isConst(val))
-    return OZ_typeError(0,"builtin");
+    oz_typeError(0,"builtin");
   ConstTerm *cnst = tagged2Const(val);
   if (cnst->getType() != Co_Builtin)
-    return OZ_typeError(0,"builtin");
-  return OZ_unify(res,((BuiltinTabEntry *) cnst)->getName());
+    oz_typeError(0,"builtin");
+  return oz_unify(res,((BuiltinTabEntry *) cnst)->getName());
 }
 OZ_C_proc_end
 
+OZ_C_proc_begin(BIgetAbstractionTableID,2)
+{
+  oz_declareNonvarArg(0,val);
+  oz_declareArg(1,res);
+  if (!isAbstraction(val))
+    oz_typeError(0,"Procedure (no builtin)");
+  Abstraction *abstr = tagged2Abstraction(val);
+
+  HashNode *n = CodeArea::abstractionTab.getFirst();
+  while (n != NULL) {
+    if (((AbstractionEntry *) n->value)->getAbstr() == abstr)
+      return oz_unify(res,oz_int(n->key.fint));
+    n = CodeArea::abstractionTab.getNext(n);
+  }
+  return oz_unify(res,oz_int(0));
+}
+OZ_C_proc_end
 
 
 /********************************************************************
@@ -7320,6 +7337,7 @@ BIspec allSpec[] = {
   // for the new compiler to optimize relative to an existing environment:
   {"isBuiltin",             2, BIisBuiltin,             0},
   {"getBuiltinName",        2, BIgetBuiltinName,        0},
+  {"getAbstractionTableID", 2, BIgetAbstractionTableID, 0},
 
   {0,0,0,0}
 };
