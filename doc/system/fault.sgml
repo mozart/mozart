@@ -24,12 +24,17 @@
   - WARRANTIES.
   -
   -->
+  <Chapter id="Chapter.Fault">
+    <Title/Detecting and Handling Failure: <<Fault>>/
+  </Chapter>
 
-<Part id="Part.Open">
-  <Title/Open Programming/
 
-  &chapter.open;
-
-  &chapter.os;
-
-</Part>
+<!--
+Local Variables:
+mode: sgml
+mode: auto-fill
+sgml-default-dtd-file: "part.ced"
+sgml-auto-activate-dtd: t
+adaptive-fill-mode: nil
+End:
+-->
