@@ -26,6 +26,24 @@ enum BIType {
   BIraise
 };
 
+// specification for builtins
+struct BIspec {
+  char *name;
+  int arity;
+  OZ_CFun fun;
+  Bool yps;
+  IFOR ifun;
+};
+
+
+// add specification to builtin table
+#define BIaddSpec(spec)					\
+{							\
+  for (int i=0; spec[i].name; i++) {			\
+    BIadd(spec[i].name,spec[i].arity,spec[i].fun,	\
+	  spec[i].yps,spec[i].ifun);			\
+  }							\
+}
 
 #define NONVAR(X,term,tag)  					              \
 TaggedRef term = X;							      \
@@ -183,7 +201,7 @@ DECLAREBI_USEINLINEFUN2(BIfun,BIifun)
 
 BuiltinTabEntry *BIinit();
 BuiltinTabEntry *BIadd(char *name,int arity,OZ_CFun fun,
-		       Bool replace = NO, InlineFunOrRel infun=(InlineFunOrRel) NULL);
+		       Bool replace = NO, IFOR infun=(IFOR) NULL);
 BuiltinTabEntry *BIaddSpecial(char *name,int arity,BIType t,
 			      Bool replace = NO);
 
@@ -191,25 +209,25 @@ class BuiltinTabEntry {
   friend class Debugger;
 public:
   BuiltinTabEntry (Literal *name,int arty,OZ_CFun fn,
-		   InlineFunOrRel infun=NULL)
+		   IFOR infun=NULL)
   : printname(makeTaggedLiteral(name)), arity(arty),fun(fn),
     inlineFun(infun), type(BIDefault)
   {
     Assert(isAtom(printname));
   }
   BuiltinTabEntry (char *s,int arty,OZ_CFun fn,
-		   InlineFunOrRel infun=NULL)
+		   IFOR infun=NULL)
   : arity(arty),fun(fn), inlineFun(infun), type(BIDefault)
   {
     printname = makeTaggedAtom(s);
     Assert(isAtom(printname));
   }
   BuiltinTabEntry (char *s,int arty,OZ_CFun fn,BIType t,
-		   InlineFunOrRel infun=NULL)
+		   IFOR infun=NULL)
     : arity(arty),fun(fn), inlineFun(infun), type(t) {
       printname = makeTaggedAtom(s);
     }
-  BuiltinTabEntry (char *s,int arty,BIType t, InlineFunOrRel infun=(InlineFunOrRel)NULL)
+  BuiltinTabEntry (char *s,int arty,BIType t, IFOR infun=(IFOR)NULL)
     : arity(arty),fun((OZ_CFun)NULL), inlineFun(infun), type(t)
   {
     printname = makeTaggedAtom(s);
@@ -223,7 +241,7 @@ public:
   int getArity() { return arity; }
   char *getPrintName() { return tagged2Literal(printname)->getPrintName(); }
   TaggedRef getName() { return printname; }
-  InlineFunOrRel getInlineFun() { return inlineFun; } 
+  IFOR getInlineFun() { return inlineFun; } 
   BIType getType() { return type; } 
 
 private:
@@ -231,7 +249,7 @@ private:
   TaggedRef printname; //must be atom
   int arity;
   OZ_CFun fun;
-  InlineFunOrRel inlineFun;
+  IFOR inlineFun;
   BIType type;
 };
 
@@ -289,7 +307,7 @@ public:
     HashNode * hn = getFirst();
     for (; hn != NULL; hn = getNext(hn)) {
       BuiltinTabEntry * abit = (BuiltinTabEntry *) hn->value;
-      if (abit->getInlineFun() == (InlineFunOrRel) fp ||
+      if (abit->getInlineFun() == (IFOR) fp ||
 	  abit->getFun() == (OZ_CFun) fp)
 	return hn->key.fstr;
     }
