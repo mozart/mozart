@@ -37,8 +37,8 @@ M4		= @M4@
 M4_S		= @M4_S@
 RM		= @RM@ -f
 CXX		= @CXX@
-CC		= @CC@
 LD		= @LD@
+DYNLD		= @DYNLD@
 
 INSTALL		= @INSTALL@
 LIBS            = @LIBS@
@@ -49,14 +49,16 @@ DEFS		= @DEFS@
 CWARN		= @CWARN@
 CFLAGS		= $(COPT) $(DEFS) $(CWARN) $(CUSR)
 CXXFLAGS	= $(CFLAGS)
-DEPEND		= @DEPEND@ $(CXXFLAGS)
+DEPEND		= @DEPEND@ $(DEFS)
 
-PROGRAM		= @PROGRAM@
+PROGRAMNAME	= @PROGRAMNAME@
+TARGETS		= @TARGETS@
 
 prefix		= @prefix@
-bindir		= $(prefix)/platform/@platform@
-libdir		= $(prefix)/lib
-includedir	= $(prefix)/include
+platform	= @platform@
+platformdir	= $(prefix)/platform
+bindir		= $(platformdir)/$(platform)
+incdir		= $(prefix)/include
 
 
 MOREWARNINGS  =   -Wall -pedantic-errors -W -Wtraditional -Wshadow \
@@ -119,6 +121,8 @@ OBJS = $(SRCS:.cc=.o)
 
 FDDIR = $(srcdir)/FDLib
 
+FDLIB = fdlib.so
+
 FDLIBSRCS = $(FDDIR)/arith.cc $(FDDIR)/fdaux.cc $(FDDIR)/bool.cc \
 	    $(FDDIR)/card.cc $(FDDIR)/cd.cc $(FDDIR)/count.cc \
 	    $(FDDIR)/rel.cc $(FDDIR)/disjoint.cc $(FDDIR)/std.cc \
@@ -128,10 +132,14 @@ FDLIBSRCS = $(FDDIR)/arith.cc $(FDDIR)/fdaux.cc $(FDDIR)/bool.cc \
 
 FDLIBOBJS = $(FDLIBSRCS:.cc=.o)
 
+SCHEDLIB = schedlib.so
+
 SCHEDLIBSRCS = $(FDDIR)/scheduling.cc $(FDDIR)/schedulingDist.cc \
 	       $(FDDIR)/schedulingDistAux.cc $(FDDIR)/taskintervals.cc 
 
 SCHEDLIBOBJS = $(SCHEDLIBSRCS:.cc=.o)
+
+FSETLIB = fdsetlib.so
 
 FSETDIR = $(srcdir)/FSetLib
 
@@ -147,9 +155,9 @@ ALLPROPOBJS = $(FDLIBOBJS) $(SCHEDLIBOBJS) $(FSETLIBOBJS)
 
 PROPOBJS = @PROPOBJS@
 
-.NOEXPORT: emulate.o $(PROGRAM) peanuts.o
+.NOEXPORT: emulate.o $(PROGRAMNAME) peanuts.o
 
-all:: $(PROGRAM)
+all:: $(TARGETS)
 
 win:: ozlib.lnk $(M4FILES)
 
@@ -158,18 +166,33 @@ win-install::
 
 first: version $(M4FILES) $(SRCS)
 
+$(FDLIB): $(FDLIBOBJS)
+	$(DYNLD) -o $@ $(FDLIBOBJS)
 
-fd: $(FDLIB) $(SCHEDLIB)
+$(SCHEDLIB): $(SCHEDLIBOBJS)
+	$(DYNLD) -o $@ $(SCHEDLIBOBJS)
 
-$(PROGRAM): first main.o $(OBJS) $(PROPOBJS) $(FDLIB) $(SCHEDLIB)
+$(FSETLIB): $(FSETLIBOBJS)
+	$(DYNLD) -o $@ $(FSETLIBOBJS)
+
+$(PROGRAMNAME): first main.o $(OBJS) $(PROPOBJS)
 	$(LD) $(LDFLAGS) $(LDOPT) -o /tmp/$@.$$$$ \
 	   main.o $(OBJS) $(PROPOBJS) $(LIBS); \
 	echo 'moving ...'; mv /tmp/$@.$$$$ $@
 
-install:: oz.emulator.bin oz.h oz_cpi.hh
-	$(INSTALL) -m 555 oz.emulator.bin $(bindir)
-	$(INSTALL) -m 444 oz.h $(includedir)
-	$(INSTALL) -m 444 oz_cpi.hh $(includedir)
+install:: install-dir install-bin install-inc
+
+install-bin: $(TARGETS)
+	$(INSTALL) -m 555 $(TARGETS) $(bindir)
+
+install-inc:
+	$(INSTALL) -m 444 oz.h $(indir)
+	$(INSTALL) -m 444 oz_cpi.hh $(incdir)
+
+install-dir:
+	$(INSTALL) -d $(platformdir)
+	$(INSTALL) -d $(bindir)
+	$(INSTALL) -d $(incdir)
 
 
 version.cc: version 
@@ -181,7 +204,7 @@ initffuns.cc oz.c: oz.h
 
 version::
 	$(SED) -e "s/HEREGOESDATE/`date '+%a %h, %d, 19%y \(%T\)'`/" \
-	     -e "s/OZPLATFORM/@platform@/" \
+	     -e "s/OZPLATFORM/$(platform)/" \
 	     $(srcdir)/version.sed > version.cc
 
 
@@ -196,14 +219,14 @@ tags:	$(M4FILES) version.cc
 	*c *h *//**/*c *//**/*h
 
 clean+:	clean
-	$(RM) $(PROGRAM)
+	$(RM) $(TARGETS)
 
 clean::
 	$(RM) *.o *~  *.bak *.obj gmon.out  fetchedInstr.dump verb_out.txt \
 		$(FDLIBOBJS) $(SCHEDLIBOBJS) $(FSETLIBOBJS)
 
 realclean::
-	$(RM) version.cc scanner.cc parser.cc parser.hh $(PROGRAM) \
+	$(RM) version.cc scanner.cc parser.cc parser.hh $(TARGETS) \
 		ozma-s.cc ozma-p.cc ozma.hh \
 		ozlib.lnk *.exe *.map *.imp *.sym *.so \
 		$(M4FILES) \
@@ -212,6 +235,26 @@ realclean::
 		$(FDLIB) $(SCHEDLIB) $(FSETLIB)
 
 veryclean:: realclean
+
+# create a separate directory of links
+# for compiling the emulator
+linkdir:
+	dir=../Emulator-$(platform); \
+	mkdir $$dir; cd $$dir; \
+	ln -s ../Emulator/version.sed \
+	      ../Emulator/?*c ../Emulator/?*h \
+	      ../Emulator/?*ll ../Emulator/?*yy \
+	      ../Emulator/configure ../Emulator/Makefile.in \
+	      ../Emulator/conf.h.in ../Emulator/?*.m4 \
+	      ../Emulator/Imakefile ../Emulator/makefuns \
+	   .; \
+	mkdir $$dir/$(FDDIR); cd $$dir/$(FDDIR); \
+	ln -s ../../Emulator/$(FDDIR)/?*c ../../Emulator/$(FDDIR)/?*h .; \
+	mkdir ../$$dir/$(FSETDIR); cd ../$$dir/$(FSETDIR); \
+	ln -s ../../Emulator/$(FSETDIR)/?*c ../../Emulator/$(FSETDIR)/?*h .;
+	rm -f version.cc; make version
+
+
 
 ozlib.lnk: oz.h
 	grep FUNDECL oz.h | grep -v typedef | grep -v define | \

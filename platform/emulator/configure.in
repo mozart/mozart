@@ -26,11 +26,10 @@ dnl
 
 dnl Process this file with autoconf to produce a configure script.
 
-dnl Known Problems and Bugs
+dnl mm2: Known Problems and Bugs
 dnl  SunPro feature
 dnl  Warnings pedwarn
 dnl  Windows support
-dnl  dynamic linking of propagators
 dnl  PS-LAB: prefix and rcp/mv
 dnl  VPATH
 dnl  pmake support
@@ -66,6 +65,11 @@ AC_CHECK_PROGS(ECHO, echo true)
 AC_CHECK_PROGS(SED, gnused sed)
 AC_CHECK_PROGS(PGXX, pg++)
 AC_CHECK_PROGS(PLATFORMSCRIPT, ozplatform ../bin/ozplatform)
+AC_CHECK_PROGS(DYNLD, ozdynld ../bin/ozdynld)
+
+M4_S="$M4"
+
+AC_CHECK_PROGS(DEPEND, makedepend)
 
 dnl *****************************************************************
 dnl configurable variables
@@ -76,21 +80,23 @@ AC_SUBST(PROPOBJS)
 AC_SUBST(platform)
 AC_SUBST(PLATFORM)
 AC_SUBST(PEANUTS)
-AC_SUBST(PROGRAM)
+AC_SUBST(PROGRAMNAME)
+AC_SUBST(TARGETS)
 AC_SUBST(COPT)
 AC_SUBST(LD)
 AC_SUBST(M4_S)
 AC_SUBST(DEPEND)
-AC_SUBST(LD_DYN)
+AC_SUBST(DYNLD)
+
+dnl *****************************************************************
+dnl platform
+dnl *****************************************************************
 
 platform=`$PLATFORMSCRIPT`
-PROGRAM=oz.emulator.bin
+PROGRAMNAME=oz.emulator.bin
+TARGETS="$PROGRAM"
 psdir=/project/ps
 libs="$psdir/lib/$platform $HOME/lib/$platform"
-COPT="-O"
-G_OPT="-g"
-M4_S="$M4 -s"
-DEPEND="$CXX -MM"
 
 PLATFORM="`echo $platform|sed -e s/-/_/|tr a-z A-Z`"
 AC_DEFINE_UNQUOTED($PLATFORM)
@@ -101,43 +107,41 @@ AC_DEFINE_UNQUOTED($OS)
 ARCH=`echo $PLATFORM|sed -e 's/_.*//'`
 AC_DEFINE_UNQUOTED($ARCH)
 
-if test "x$GXX" = xyes; then
-    COPT="-O6"
-fi
+dnl *****************************************************************
+dnl Compiler and Linker options
+dnl *****************************************************************
+
+COPT="-O"
+G_OPT="-g"
 
 dnl mm2: test for SunPro
 if test "x$SunPro" = xyes; then
     COPT="-fast"
-    M4_S="$M4"
     DEPEND="$CXX -xM"
 fi
 
 if test "x$GXX" = xyes; then
+    COPT="-O6"
     G_OPT="-g3"
+    M4_S="$M4 -s"
+    DEPEND="$CXX -MM"
 fi
 
-case $host_os in
+case $platform in
     sunos*)
-	LDFLAGS="$LDFLAGS -Wl"
-	LD_DYN=""
 	;;
     linux*)
-	COPT="$COPT -rdynamic"
-	LD_DYN="-shared"
+	LDFLAGS="$LDFLAGS -Wl,-export-dynamic"
 	;;
     solaris*)
-	LD_DYN="-G -lsocket -lnsl -lintl"
 	;;
     irix*)
-	LD_DYN="-shared -check_registry /dev/null"
 	;;
     osf1*)
 	dnl dont change LDFLAGS, see machine.hh !!!
 	LDFLAGS="$LDFLAGS -Wl,-D -Wl,0x30000000 -Wl,-T -Wl,0x20000000"
-	LD_DYN="-shared -expect_unresolved '*'"
 	;;
     hpux*)
-	LD_DYN="-b"
 	;;
 esac
 
@@ -329,6 +333,7 @@ if test "x$enable_linkprop" != xno; then
 	PROPOBJS="\$(ALLPROPOBJS)"
 else
 	PROPOBJS=""
+	TARGETS="$TARGETS \$(FDLIB) \$(SCHEDLIB) \$(FSETLIB)"
 	AC_DEFINE(FOREIGNFDPROPS)
         AC_MSG_RESULT(no)
 fi
