@@ -42,23 +42,6 @@ local
    TestText           = {String.toAtom {Filter {List.number 0 255 1}
 					Char.isGraph}}
 
-   local
-      fun {Part Is Js Jr}
-	 case Is of nil then Jr=nil [{Tk.string.toInt Js}]
-	 [] I|Ir then
-	    case I==&  then NewJs in
-	       Jr=nil {Tk.string.toInt Js}|{Part Ir NewJs NewJs}
-	    else NewJr in
-	       Jr=I|NewJr {Part Ir Js NewJr}
-	    end
-	 end
-      end
-   in
-      fun {Partition Is}
-	 Js in {Part Is Js Js}
-      end
-   end
-
    fun {GetNote Ns M ?Os}
       case Ns of nil then Os=nil False
       [] N|Nr then
@@ -96,8 +79,7 @@ in
 			tags:    TestTextTag)>>
 	 FontHeight  = local
 			  _|Y1|_|Y2|_ =
-			  {Partition <<Tk.canvas
-			               tkReturn(bbox(TestTextTag) $)>>}
+			  <<Tk.canvas tkReturnListInt(bbox(TestTextTag) $)>>
 		       in
 			  Y2 - Y1
 		       end
@@ -340,8 +322,7 @@ in
 		    tags:   q(ThisTextTag ThisEventTag))}
 	 self.TextWidth = local
 			     X1|_|X2|_ =
-			     {Partition
-			      {Parent tkReturn(bbox(ThisTextTag) $)}}
+			      {Parent tkReturnListInt(bbox(ThisTextTag) $)}
 			  in X2 - X1
 			  end
 	 <<Tk.frame tkInit(parent:             Parent
