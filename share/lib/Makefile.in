@@ -1,5 +1,6 @@
 BUILDTOP        = @BUILDTOP@
 BUILDDIR        = $(BUILDTOP)/share/lib
+BUILDEMU        = $(BUILDTOP)/platform/emulator
 VPATH           = @srcdir@
 SRCDIR          = @srcdir@
 HOMEURL         = @HOMEURL@
@@ -76,7 +77,7 @@ export OZLIB
 export OZPATH = .:$(SRCDIR)
 export OZ_PI = 1
 export OZ_LIB = $(OZLIB)
-export OZ_LOAD = root=.:prefix=$(SRCDIR)=$(BUILDDIR):prefix=$(HOMEURL)/share/=$(OZ_LIB)/:prefix=/=/:=
+export OZ_LOAD = root=.:prefix=$(SRCDIR)=$(BUILDDIR):cache=$(PREFIX)/cache:prefix=/=/:=
 
 export OZMAKE_COPYALWAYS        = no
 export OZMAKE_VERBOSE           = no
@@ -458,7 +459,7 @@ boot-all:
                 OZENGINE=$(SRCDIR)/oze.sh \
                 OZINIT=Init.ozf \
                 OZ_LIB=. \
-                OZ_LOAD=root=.:prefix=$(SRCDIR)=$(BUILDDIR):prefix=/=/:prefix=./=./:prefix=$(HOMEURL)/share/=./:prefix=$(BOOTURL)/=./:prefix=$(SYSTEMURL)/=./:pattern=x-oz://boot/?{x}.so-$(PLATFORM)=$(BUILDTOP)/platform/emulator/?{x}.so:=
+                OZ_LOAD=root=.:prefix=$(SRCDIR)=$(BUILDDIR):prefix=/=/:prefix=./=./:all=.:all=$(BUILDEMU)/:=
 
 boot--%:
         $(MAKE) $* \
@@ -466,7 +467,7 @@ boot--%:
                 OZENGINE=$(SRCDIR)/oze.sh \
                 OZINIT=Init.ozf \
                 OZ_LIB=. \
-                OZ_LOAD=root=.:prefix=$(SRCDIR)=$(BUILDDIR):prefix=/=/:prefix=./=./:prefix=$(HOMEURL)/share/=./:prefix=$(BOOTURL)/=./:prefix=$(SYSTEMURL)/=./:pattern=x-oz://boot/?{x}.so-$(PLATFORM)=$(BUILDTOP)/platform/emulator/?{x}.so:=
+                OZ_LOAD=root=.:prefix=$(SRCDIR)=$(BUILDDIR):prefix=/=/:prefix=./=./:all=.:all=$(BUILDEMU)/:=
 
 check:
 
@@ -515,7 +516,7 @@ boot-init: $(BOOTINITTXTFROM)
         || (rm -f $@; exit 1)
 
 boot-ozc.linked: ozc ozl Compiler.ozf $(SUPPSRC:%=%.ozf)
-        OZINIT=Init.ozf OZ_LOAD=root=.:prefix=/=/:prefix=./=./:prefix=$(HOMEURL)/share/=./:pattern=x-oz\\://system/\?\{x\}.ozf=./\?\{x\}.ozf:pattern=x-oz\\://system/\?\{x\}=./\?\{x\}.ozf:pattern=x-oz\\://system/\?\{x\}.ozf=../tools/\?\{x\}.ozf:pattern=x-oz\\://system/\?\{x\}=../tools/\?\{x\}.ozf:pattern=x-oz://boot/?{x}.so-$(PLATFORM)=$(BUILDTOP)/platform/emulator/?{x}.so:= $(SRCDIR)/oze.sh ozl --verbose --include=x-oz://system --exclude=x-oz://boot,x-oz://system/Module,x-oz://system/Property,x-oz://system/System,x-oz://system/Space,x-oz://system/OS,x-oz://system/Resolve,x-oz://system/Pickle,x-oz://system/Gump,x-oz://system/ProductionTemplates $< -o $@
+        OZINIT=Init.ozf OZ_LOAD=root=.:prefix=/=/:prefix=./=./:prefix=x-oz://system/=./:pattern=x-oz://system/?{x}=./?{x}.ozf:prefix=x-oz://system/=../tools/:pattern=x-oz://system/?{x}=../tools/?{x}.ozf:prefix=x-oz://boot/=$(BUILDEMU)/:= $(SRCDIR)/oze.sh ozl --verbose --include=x-oz://system --exclude=x-oz://boot,x-oz://system/Module,x-oz://system/Property,x-oz://system/System,x-oz://system/Space,x-oz://system/OS,x-oz://system/Resolve,x-oz://system/Pickle,x-oz://system/Gump,x-oz://system/ProductionTemplates $< -o $@
 
 boot-init.linked: Init.ozf
         cp $< $@

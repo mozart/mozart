@@ -6,6 +6,7 @@ VPATH=          @srcdir@
 
 BUILDTOP        = @BUILDTOP@
 SRCTOP          = @SRCTOP@
+PLATFORM        = @PLATFORM@
 
 RM              = @RM@ -f
 
@@ -19,7 +20,7 @@ OBJS =  LR0.o allocate.o closure.o conflicts.o derives.o gram.o \
         lalr.o main.o nullable.o output.o print.o reader.o reduce.o \
         symtab.o warshall.o version.o alloca.o
 
-all: Bison.so
+all: Bison.so-$(PLATFORM)
 
 include $(SRCTOP)/share/Makefile.boot
 bootstrap: cboot-all
@@ -27,11 +28,11 @@ bootstrap: cboot-all
 %.o: %.c
         $(CC) $(CFLAGS) $(CDYNOPT) $(INCLUDES) -c $< -o $*.o
 
-Bison.so: $(OBJS)
-        $(DYNLD) -o Bison.so $(OBJS)
+Bison.so-$(PLATFORM): $(OBJS)
+        $(DYNLD) -o $@ $(OBJS)
 
 clean veryclean realclean:
-        $(RM) *~ *.o *.so
+        $(RM) *~ *.o *.so-$(PLATFORM)
 
 distclean:
         $(RM) Makefile config.*

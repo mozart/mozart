@@ -52,13 +52,13 @@ all:
 
 # NOTE: $(SRCDIR) added to the dependencies, because in ../Makefile.in the libs
 #       depend also on this dir
-../FDP.so: $(FDLIBOBJS)
+../FDP.so-$(PLATFORM): $(FDLIBOBJS)
         $(DYNLD) -o $@ $(FDLIBOBJS)
 
 ../libFDP.a: $(FDLIBOBJS)
         $(AR) -rc $@ $(FDLIBOBJS) && $(RANLIB) $@
 
-../Schedule.so: $(SCHEDLIBOBJS)
+../Schedule.so-$(PLATFORM): $(SCHEDLIBOBJS)
         $(DYNLD) -o $@ $(SCHEDLIBOBJS)
 
 ../libSchedule.a: $(SCHEDLIBOBJS)
@@ -80,10 +80,10 @@ distclean::
         -rm -f Makefile makefile
 
 veryclean::
-        -rm -f *.a *.so TAGS Makefile.deps
+        -rm -f *.a *.so-$(PLATFORM) TAGS Makefile.deps
 
 cleaner::
-        -rm -f *.a *.so
+        -rm -f *.a *.so-$(PLATFORM)
 
 BUILDDIR=$(shell pwd)
 tags:   $(CREATEDFILES)

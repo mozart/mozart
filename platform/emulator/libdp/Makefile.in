@@ -64,7 +64,7 @@ CREATEDFILES = $(CREATEDCOREFILES)
 all:
 
 #
-../DPB.so: $(CREATEDFILES) $(COREOBJS)
+../DPB.so-$(PLATFORM): $(CREATEDFILES) $(COREOBJS)
         $(DYNLD) -o $@ $(COREOBJS)
 
 ../libDPB.a: $(COREOBJS)
@@ -73,7 +73,7 @@ all:
 #
 pidModule.lo: ../modPID-if.cc $(CREATEDFILES)
 
-../PID.so: pidModule.lo
+../PID.so-$(PLATFORM): pidModule.lo
         $(DYNLD) -o $@ $<
 
 ../libPID.a: pidModule.lo
@@ -82,7 +82,7 @@ pidModule.lo: ../modPID-if.cc $(CREATEDFILES)
 #
 faultModule.lo: ../modFault-if.cc
 
-../Fault.so: faultModule.lo
+../Fault.so-$(PLATFORM): faultModule.lo
         $(DYNLD) -o $@ $<
 
 ../libFault.a: faultModule.lo
@@ -91,7 +91,7 @@ faultModule.lo: ../modFault-if.cc
 #
 dpMiscModule.lo: ../modDPMisc-if.cc
 
-../DPMisc.so: dpMiscModule.lo
+../DPMisc.so-$(PLATFORM): dpMiscModule.lo
         $(DYNLD) -o $@ $<
 
 ../libDPMisc.a: dpMiscModule.lo
@@ -101,14 +101,14 @@ dpMiscModule.lo: ../modDPMisc-if.cc
 
 dpStatisticsModule.lo: ../modDPStatistics-if.cc $(CREATEDFILES)
 
-../DPStatistics.so: dpStatisticsModule.lo
+../DPStatistics.so-$(PLATFORM): dpStatisticsModule.lo
         $(DYNLD) -o $@ $<
 
 ../libDPStatistics.a: dpStatisticsModule.lo
         $(AR) -rc $@ $< && $(RANLIB) $@
 
 #
-../VirtualSite.so: $(VSOBJS)
+../VirtualSite.so-$(PLATFORM): $(VSOBJS)
         $(DYNLD) -o $@ $(VSOBJS)
 
 ../libVirtualSite.a: $(VSOBJS)
@@ -131,10 +131,10 @@ distclean::
         -rm -f Makefile makefile
 
 cleaner::
-        -rm -f *.a *.so $(CREATEDFILES)
+        -rm -f *.a *.so-$(PLATFORM) $(CREATEDFILES)
 
 veryclean::
-        -rm -f *.a *.so Makefile.deps TAGS $(CREATEDFILES)
+        -rm -f *.a *.so-$(PLATFORM) Makefile.deps TAGS $(CREATEDFILES)
 
 #
 # special dependencies...

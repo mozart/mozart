@@ -49,7 +49,7 @@ EMACS           = emacs
 
 SUBDIRS         = @SUBDIRS@
 
-.PHONY: all quick bootstrap check install clean veryclean distclean depend ps installps $(DOCDIR)/idx xref clean-xref bootidx THEINDEX
+.PHONY: all quick bootstrap bootquick boot-quick check install clean veryclean distclean depend ps installps $(DOCDIR)/idx xref clean-xref bootidx THEINDEX
 
 Makefile: Makefile.in config.status
         ./config.status
@@ -86,6 +86,10 @@ include $(SRCTOP)/share/Makefile.boot
 bootstrap::
         dirs="$(SUBDIRS)"; \
         for i in $$dirs; do (cd $$i && $(MAKE) bootstrap) || exit 1; done; \
+        for i in $$dirs; do (cd $$i && $(MAKE) bootquick) || exit 1; done
+
+boot-quick bootquick:
+        dirs="$(SUBDIRS)"; \
         for i in $$dirs; do (cd $$i && $(MAKE) bootquick) || exit 1; done
 
 bootstrap:: boot-THEINDEX

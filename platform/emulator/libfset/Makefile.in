@@ -39,7 +39,7 @@ FSETLIBOBJS = $(FSETLIBSRCS:.cc=.lo)
 
 all: $(FSETTARGETS)
 
-../FSP.so: $(FSETLIBOBJS)
+../FSP.so-$(PLATFORM): $(FSETLIBOBJS)
         $(DYNLD) -o $@ $(FSETLIBOBJS)
 
 ../libFSP.a: $(FSETLIBOBJS)
@@ -57,10 +57,10 @@ Makefile: Makefile.in
 first:
 
 cleaner::
-        -rm -f *.a *.so
+        -rm -f *.a *.so-$(PLATFORM)
 
 veryclean::
-        -rm -f *.a *.so TAGS Makefile.deps
+        -rm -f *.a *.so-$(PLATFORM) TAGS Makefile.deps
 
 include ../Makefile.rules
 
