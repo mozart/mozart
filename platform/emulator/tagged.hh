@@ -47,14 +47,14 @@ enum TypeOfTerm {
   GCTAG            =  13,  // 1101
 
   LTUPLE           =  2,   // 0010
-  STUPLE           =  6,   // 0110
+  STUPLE           =  3,   // 0011
   SRECORD          = 14,   // 1110
 
   LITERAL          = 15,   // 1111
 
   CONST            = 10,   // 1010
 
-  SMALLINT         =  3,   // 0011
+  SMALLINT         =  6,   // 0110
   BIGINT           =  7,   // 0111
   FLOAT            = 11    // 1011
 // 12 = 1100 unusable \
