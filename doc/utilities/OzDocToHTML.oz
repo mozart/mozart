@@ -297,7 +297,7 @@ define
          SEQ(OzDocToHTML, BatchCodeSub(M I $))
       end
       meth BatchCodeSub(M I $)
-         %--** interpret <Span class=ignore>...</Span> differently
+         %--** interpret <Span class=ignore>...</Span>
          if {HasFeature M I} then
             case M.I of S=_|_ then VS in
                {@MyFontifier enqueueVirtualString(@ProgLang S ?VS)}
@@ -558,12 +558,13 @@ define
                  else EMPTY
                  end
                  OzDocToHTML, Batch(M 1 $))
-            [] para then
-               %--** copy common attributes from title element to the p element
-               SEQ([p('class': [margin]
-                      OzDocToHTML, Batch(M.1=title(...) 1 $))
-                    p(COMMON: @Common
-                      OzDocToHTML, Batch(M 2 $))])
+            [] para then Title in
+               Title = M.1=title(...)
+               'div'(COMMON: @Common
+                     p(COMMON: COMMON(id: {CondSelect Title id unit}
+                                      'class': {CondSelect Title 'class' nil})
+                       'class': [margin] OzDocToHTML, Batch(Title 1 $))
+                     p(OzDocToHTML, Batch(M 2 $)))
             [] 'div' then
                'div'(COMMON: @Common
                      OzDocToHTML, Batch(M 1 $))
@@ -698,11 +699,10 @@ define
                    ozDoc(sgmlToHTML unsupportedPictureNotation M)} unit   %--**
                end
             [] 'picture.choice' then HTML in
-               %--** propagate common attributes
                PictureDisplay <- M.display
                OzDocToHTML, Process(M.1 ?HTML)   %--** make better choice
                PictureDisplay <- unit
-               HTML
+               BLOCK('div'(COMMON: @Common HTML))
             %-----------------------------------------------------------
             % Code
             %-----------------------------------------------------------
@@ -744,9 +744,10 @@ define
             %-----------------------------------------------------------
             % Cross References
             %-----------------------------------------------------------
-            [] ref then
-               {Exception.raiseError
-                ozDoc(sgmlToHTML unsupported M)} unit   %--**
+            [] ref then Node in
+               OzDocToHTML, ID(M.to ?Node _)
+               a(COMMON: @Common href: Node#"#"#M.to
+                 OzDocToHTML, Batch(M 1 $))
             [] 'ref.extern' then
                %--** key attribute?
                a(COMMON: @Common href: M.to OzDocToHTML, Batch(M 1 $))
@@ -754,6 +755,7 @@ define
                OzDocToHTML, ID(M.to ?Node ?HTML)
                a(COMMON: @Common href: Node#"#"#M.to HTML)
             [] 'ptr.extern' then
+               %--** use an icon as content
                {Exception.raiseError
                 ozDoc(sgmlToHTML unsupported M)} unit   %--**
             %-----------------------------------------------------------
@@ -764,8 +766,7 @@ define
             [] kbd then
                kbd(COMMON: @Common OzDocToHTML, Batch(M 1 $))
             [] key then
-               {Exception.raiseError
-                ozDoc(sgmlToHTML unsupported M)} unit   %--**
+               span(COMMON: @Common 'class': [key] OzDocToHTML, Batch(M 1 $))
             [] samp then
                code(COMMON: @Common OzDocToHTML, Batch(M 1 $))
             [] name then
@@ -803,8 +804,9 @@ define
             %-----------------------------------------------------------
             [] note then
                case {CondSelect M foot unit} of unit then
-                  {Exception.raiseError
-                   ozDoc(sgmlToHTML unsupported M)} unit   %--**
+                  %--** shouldn't stay here!  Where should the note float to?
+                  BLOCK('div'(COMMON: @Common 'class': [note]
+                              OzDocToHTML, Batch(M 1 $)))
                else HTML in
                   FootNotes <- {Append @FootNotes [M#HTML]}
                   HTML
@@ -1098,7 +1100,7 @@ define
       end
       meth OutputFootNote(N M T ?HTML) Label in
          ToGenerate <- Label|@ToGenerate
-         T = a(href: @CurrentNode#"#"#Label sup(PCDATA(N)))
+         T = a(href: @CurrentNode#"#"#Label sup(PCDATA(N)))   %--** use [1]
          HTML = 'div'(COMMON: @Common 'class': [footnote]
                       SEQ([a(name: Label PCDATA(N#'. '))
                            OzDocToHTML, Batch(M.1 1 $)]))
