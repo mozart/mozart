@@ -154,12 +154,7 @@ in
 	    in
 	       case S == AttachText orelse
 		  {Not ThreadManager,Exists(Q $)} then
-		  case {UnknownFile M.file} then %% don't attach!
-		     {OzcarMessage 'ignoring new thread'}
-		     {Detach T}
-		  else %% yes, do attach!
-		     ThreadManager,add(T I Q)
-		  end
+		  ThreadManager,add(T I Q)
 	       elsecase S
 	       of !IgnoreText then
 		  {OzcarMessage 'ignoring new subthread'}
@@ -440,19 +435,11 @@ in
 	 {Stack entry(Frame)}
 	 case T == @currentThread then
 	    F = {CondSelect Frame file ''}
+	    L = {CondSelect Frame line unit}
+	    C = {CondSelect Frame column unit}
 	 in
-	    case {UnknownFile F} then
-	       {OzcarMessage
-		'no position information -- continuing thread #' # I}
-	       {SendEmacs removeBar}
-	       {Thread.resume T}
-	    else
-	       L = {CondSelect Frame line unit}
-	       C = {CondSelect Frame column unit}
-	    in
-	       {SendEmacs bar(file:F line:L column:C state:runnable)}
-	       {Stack printTop}
-	    end
+	    {SendEmacs bar(file:F line:L column:C state:runnable)}
+	    {Stack printTop}
 	 else skip end
       end
 
