@@ -669,10 +669,10 @@ end
 >>>
 
 <P>A client can be created on another site.
-We first define
+We first define on the client's site
 a procedure <<HandleIncomingMessage>>
-that will handle incoming messages from a broadcast channel.
-Then we get access to the server by its URL.
+that will handle incoming messages from the broadcast channel.
+Then we access to the channel by its URL.
 Finally, we create a local client and give it
 our handler procedure. 
 <<<
@@ -702,6 +702,21 @@ end
 of the form <<'hello'#I>>, where <<I>> takes successive values from
 1 to 1000.
 Then we close the client.
+
+<P>A nice property of this channel abstraction is that
+the client site only needs to know
+the channel's URL and its interface.
+All this can be stored in Ascii form
+and transmitted to the client at any time.
+In particular, the syntax of the interfaces, i.e.,
+the messages understood by user, client, and server,
+is defined completely by a simple Ascii list of the
+message names and their number of arguments.
+The client site does not need to
+know any program code.
+When a client is created through a call
+to <<MakeNewClient>>, then at that time the client code
+is transferred from the channel server to the client site.
 
 <SUBSECTION id="channel.definition"><TITLE>Definition (no fault tolerance)</TITLE>
 
@@ -885,7 +900,7 @@ procedure now has to handle error messages as well:
 proc {UserMessageHandler Msg}
    {Show {VirtualString.toString
       case Msg
-      of permClient(UID)       then UID#' has crashed'
+      of permClient(UserID)    then UserID#' has crashed'
       [] message(From Content) then From#' : '#Content
       [] permServer            then 'Server has crashed'
       [] registered(UserID)    then UserID#' joined us'
