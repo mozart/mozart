@@ -23,6 +23,8 @@ in
 
       attr
 	 currentThread : undef
+	 SkippedProc   : nil
+	 SkippedThread : nil
       
       meth init
 	 self.Stream    = {Dbg.stream}
@@ -69,11 +71,16 @@ in
 		     {Atom.toString Name}.1 \= 96)
 	    in
 	       case Ok then
+		  case {Dmember self.ThreadDic I} then skip else
+		     {OzcarMessage WaitForThread}
+		     {Delay 700} % thread should soon be added
+		  end
 		  ThreadManager,step(file:File line:Line thr:T id:I
 				     name:Name args:Args frame:FrameId
 				     builtin:IsBuiltin time:Time)
 	       else
 		  {OzcarMessage 'Skipping procedure \'' # Name # '\''}
+		  SkippedProc <- T
 		  {Thread.resume T}
 	       end
 	    else
@@ -81,16 +88,29 @@ in
 	    end
 
 	 [] exit then
+	    T       = M.thr.1
 	    I       = M.thr.2
 	    FrameId = M.frame
-	    Stack   = {Dget self.ThreadDic I}
-	    F L
 	 in
-	    {ForAll [exit(FrameId) printTop getPos(file:F line:L)] Stack}
-	    SourceManager,scrollbar(file:'' line:0 color:undef what:stack)
-	    SourceManager,scrollbar(file:F line:L
-				    color:ScrollbarApplColor what:appl)
-
+	    case @SkippedProc == T orelse @SkippedThread == T then
+	       {OzcarMessage 'ignoring exit message'}
+	       SkippedProc   <- nil
+	       SkippedThread <- nil
+	       {Thread.resume T}
+	    else
+	       Ack F L
+	       Stack   = {Dget self.ThreadDic I}
+	    in
+	       {ForAll [exit(FrameId) getPos(file:F line:L)] Stack}
+	       SourceManager,scrollbar(file:'' line:0 color:undef what:stack)
+	       thread
+		  SourceManager,scrollbar(file:F line:L ack:Ack
+					  color:ScrollbarApplColor what:appl)
+	       end
+	       thread Gui,loadStatus(F Ack) end
+	       thread {Stack printTop} end
+	    end
+	    
 	 [] thr then
 	    T = M.thr.1
 	    I = M.thr.2
@@ -109,14 +129,19 @@ in
 	    else
 	       {OzcarMessage NewThread   # {ID I}}
 	       case Q == 1 then      %% toplevel query?
-		  {Thread.resume T}  %% yes, so we want T to make
-	                             %% the first step automatically
-		  {Delay 200}        %% short living threads which produce
-	                             %% no step messages are uninteresting...
-	       else skip end
-	       case
-		  {Thread.state T} == terminated then
-		  {OzcarMessage EarlyThreadDeath}
+		  thread
+		     SkippedThread <- T %% yes, so we want T to make
+		     {Thread.resume T}  %% the first step automatically
+		     {Delay 500}        %% short living threads which produce
+		                        %% no step messages are uninteresting
+		     SkippedThread <- nil
+		     case
+			{Thread.state T} == terminated then
+			{OzcarMessage EarlyThreadDeath}
+		     else
+			ThreadManager,add(T I Q)
+		     end
+		  end
 	       else
 		  ThreadManager,add(T I Q)
 	       end
