@@ -85,13 +85,13 @@
           <!--** it also will allow to invoke online documentation -->
         </List>
       <Para class=apropos><Title/The Manual's Structure/
-        This manual is structured as follows.  First, <Ptr to="chapter.start">
-        will give an overview about the general integration of the &OPI;
+        This manual is structured as follows.  <Ptr to="chapter.start">
+        gives an overview of the &OPI;'s general integration
         into the standard framework provided by Emacsen<Note foot><Q/Emacsen/
-        is the plural of <Q/Emacs/.  This term is used in this manual when the
-        described feature applies to both GNU Emacs and XEmacs.</Note>.
-        The next three chapters (<Ptr to="chapter.editing">,
-        <Ptr to="chapter.running">, and <Ptr to="chapter.tools">) are
+        is the plural of <Q/Emacs/.  In this manual, we use the term when the
+        feature being described applies to both GNU Emacs and XEmacs.</Note>.
+        <Ptr to="chapter.editing">,
+        <Ptr to="chapter.running">, and <Ptr to="chapter.tools"> are
         dedicated to the three main features mentioned above respectively.
       <P>
         Three appendices provide information for advanced users.  <Ptr
@@ -102,8 +102,8 @@
         Finally, <Ptr to="appendix.limitations"> lists the known limitations
         of the &OPI; with workarounds.
       <Para class=apropos><Title/Learning Emacs/
-        This manual will assume some familiarity with the general editing
-        commands of Emacsen and will use standard Emacs terminology.
+        This manual assumes some familiarity with the general editing
+        commands of Emacsen and uses standard Emacs terminology.
         If you want to exploit the full power of the &OPI; you should get
         some acquaintance with Emacs.  A good place to start is the Emacs
         on-line tutorial&nbsp;<Ptr to="stallman91">, available from the Emacs
