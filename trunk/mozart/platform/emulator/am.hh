@@ -212,14 +212,14 @@ public:
   Bool hookCheckNeeded();
   Bool isNotPreemtiveScheduling(void);
 
-  RunnableThreadBody* allocateBody();
-  Thread *mkRunnableThread(int prio, Board *bb,
-			   TaggedRef val,
-			   Bool inSolve=NO);
+  inline RunnableThreadBody* allocateBody();
+  inline Thread *mkRunnableThread(int prio, Board *bb,
+				  TaggedRef val,
+				  Bool inSolve=NO);
   Thread *mkLTQ(Board *bb, int prio, SolveActor * sa);
   Thread *mkWakeupThread(Board *bb);
   Thread *mkPropagator(Board *bb, int prio, OZ_Propagator *pro);
-  Thread *mkSuspendedThread(Board *bb, int prio, TaggedRef val);
+  inline Thread *mkSuspendedThread(Board *bb, int prio, TaggedRef val);
 
 
   Thread *mkSuspThread ();
