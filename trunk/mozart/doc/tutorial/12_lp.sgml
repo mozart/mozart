@@ -18,8 +18,7 @@ We will also discuss the relation between Oz and Prolog, and how
 most Prolog programs have a straight forward translation to Oz programs.
 
 For more advanced constraint solving techniques, the reader may
-look to the companion tutorial on 
-<ref.extern to="ozdoc:fdt" /constraint programming in Oz/.
+look to the companion tutorial on constraint programming in Oz.
 
 
 <SECTION><TITLE/Constraint Store/
