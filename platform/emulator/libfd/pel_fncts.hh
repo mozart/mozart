@@ -46,8 +46,8 @@ public:
   }
   //
   void print(ENGINE &e) {
-    // kost@ : this code does NOT insntatiate!
-    // I've simpliefied it (below);
+    // kost@ : this code does NOT instantiate!
+    // I've simplified it (below);
     /*
     printf("LessEqOffset x(%s,%d) + c(%d) <= ",
 	   (*(FDVAR *) e[_x])->toString(), _x, _c);
@@ -79,15 +79,15 @@ public:
     : PEL_LessEqOffset<ENGINE,FDVAR,PFDVAR>(y, -c+1, x) {}
   //
   void print(ENGINE &e) {
-    // kost@ : this code does NOT insntatiate!
-    // I've simpliefied it (below);
+    // kost@ : this code does NOT instantiate!
+    // I've simplified it (below);
     /*
     printf("GreaterOffset x(%s,%d) + c(%d) > ",
 	   (*(FDVAR *) e[_y])->toString(), _y, -_c+1);
     printf("y(%s,%d)\n", (*(FDVAR *) e[_x])->toString(), _x);
     */
-    printf("GreaterOffset x(,%d) + c(%d) > ", _y, -_c+1);
-    printf("y(,%d)\n", _x);
+    printf("GreaterOffset x(,%d) + c(%d) > ", this->_y, -(this->_c)+1);
+    printf("y(,%d)\n", this->_x);
   }
 };
 
@@ -132,9 +132,9 @@ template <class ENGINE, class FDVAR, class PFDVAR>
 pf_return_t PEL_LessEqOffset<ENGINE, FDVAR, PFDVAR>::propagate(PEL_Engine &e)
 {
   //
-  FDVAR &x = *(FDVAR *) e[_x];
-  int c = _c;
-  FDVAR &y = *(FDVAR *) e[_y];
+  FDVAR &x = *(FDVAR *) e[this->_x];
+  int c = this->_c;
+  FDVAR &y = *(FDVAR *) e[this->_y];
   //
   _PropagatorController_V_V<int,
     FDVAR,pf_entailed,pf_failed,pf_sleep> iter(x, y);
