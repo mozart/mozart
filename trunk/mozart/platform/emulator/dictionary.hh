@@ -327,6 +327,9 @@ void inplace_quicksort(TaggedRef* first, TaggedRef* last);
  * Dictionaries
  *=================================================================== */
 
+
+#define DictDefaultSize 4
+
 class OzDictionary: public ConstTermWithHome {
   friend void ConstTerm::gcConstRecurse(void);
 private:
@@ -338,10 +341,14 @@ public:
   OzDictionary();
   ~OzDictionary();
   OzDictionary(OzDictionary&);
-  OzDictionary(Board *b, int sz=4) : ConstTermWithHome(b,Co_Dictionary) 
+  void init(int sz = DictDefaultSize)
   {
     table = DynamicTable::newDynamicTable(sz);
     isSafe = NO;
+  }
+  OzDictionary(Board *b, int sz=DictDefaultSize) : ConstTermWithHome(b,Co_Dictionary) 
+  {
+    init(sz);
   }
   OzDictionary(Board *b, DynamicTable *t) : ConstTermWithHome(b,Co_Dictionary)
   {
@@ -375,7 +382,15 @@ public:
     Assert(valid);
   }
 
-  void remove(TaggedRef key) { table = table->remove(key); }
+  void remove(TaggedRef key) 
+  { 
+    DynamicTable *aux = table->remove(key); 
+    if (aux!=table) {
+      table->dispose();
+      table = aux;
+    }
+  }
+  void removeAll()           { table->dispose(); init(); }
 
   TaggedRef keys()  { return table->getKeys(); }
   TaggedRef pairs() { return table->getPairs(); }
