@@ -158,6 +158,7 @@ public:
   int wc;
 
   MsgContainer*newMsgContainer(DSite* site);
+  MsgContainer*newMsgContainer(DSite* site,int priority);
   void deleteMsgContainer(MsgContainer* msgC);
   void deleteMsgContainer(MsgContainer* msgC,FaultCode fc);
 

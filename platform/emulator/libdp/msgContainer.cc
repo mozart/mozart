@@ -101,6 +101,15 @@ MsgContainerManager::~MsgContainerManager() {
   Assert(length()==0);
 }
 
+
+MsgContainer *MsgContainerManager::newMsgContainer(DSite* site,int priority) {
+  MsgContainer *ret = newMsgContainer(site);
+  //  printf("msgCprio %d\n",priority + 1);
+  ret->setPriority(priority+1);
+  //printf("prioSet %d\n",ret->getPriority());
+  return ret;
+}
+
 MsgContainer *MsgContainerManager::newMsgContainer(DSite* site) {
   FreeListEntry *f=getOne();
   MsgContainer *msgC;
@@ -110,6 +119,7 @@ MsgContainer *MsgContainerManager::newMsgContainer(DSite* site) {
     GenCast(f,FreeListEntry*,msgC,MsgContainer*);
   msgC->init(site);
   ++wc;
+  msgC->setPriority(MSG_PRIO_MEDIUM);
   return msgC;
 }
 
