@@ -72,7 +72,8 @@ in
    import
       HTML(empty: EMPTY
 	   seq: SEQ
-	   pcdata: PCDATA)
+	   pcdata: PCDATA
+	   clean toVirtualString)
    export
       'class': IndexerClass
    define
@@ -161,23 +162,30 @@ in
 	 meth empty($)
 	    @Entries == nil
 	 end
-	 meth process(?HTML)
+	 meth process(?IndexHTML)
 	    thread Es SortedEs Groups in
 	       Es = {Map @Entries
-		     fun {$ Ands#HTML}
-			{Map Ands MakeSortKey}#Ands#HTML
+		     fun {$ Ands0#EntryHTML} Ands in
+			%--** remove any id attributes
+			Ands = {Map Ands0
+				fun {$ X}
+				   case X of _#_ then X
+				   else {HTML.toVirtualString {HTML.clean X}}#X
+				   end
+				end}
+			{Map Ands MakeSortKey}#Ands#EntryHTML
 		     end}
 	       SortedEs = {Sort Es fun {$ X Y} {KeyLess X.1 Y.1} end}
 	       Groups = {Group SortedEs}
-	       HTML = SEQ({Map Groups
-			   fun {$ G#Es}
-			      'div'(h3('class': [margin]
-				       PCDATA(case G of &* then 'Symbols'
-					      [] &0 then 'Numbers'
-					      else [G]
-					      end))
-				    SEQ({MakeHierarchy Es}))
-			   end})
+	       IndexHTML = SEQ({Map Groups
+				fun {$ G#Es}
+				   'div'(h3('class': [margin]
+					    PCDATA(case G of &* then 'Symbols'
+						   [] &0 then 'Numbers'
+						   else [G]
+						   end))
+					 SEQ({MakeHierarchy Es}))
+				end})
 	    end
 	 end
       end
