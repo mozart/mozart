@@ -69,7 +69,7 @@ duplicated ones.
 For completeness sake the auxiliary functions <<SelectVar>> and
 <<DuplicateRIs>> are presented here.
 
-<Table class=dyptic>
+<Table class=dyptic id="table.mks.lp.a.b">
 <Tr><Td><Code.Extern display to="mks_lp_a.oz" class=linenumbers></Td>
 <Td><Code.Extern display to="mks_lp_b.oz" class=linenumbers></Td>
 </Table>

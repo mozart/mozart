@@ -119,6 +119,8 @@
     <Meta name="html.split.index" value="">
     <Meta name="html.split.toc" value="">
 
+    <Meta name="latex.table.spec" arg1="table.mks.lp.a.b" arg2="p{0.45\linewidth}p{0.45\linewidth}">
+
     <Meta name=ozversion value="3.0">
     <Meta name=status value="revised">
     <Title/The Mozart Constraint Extensions Tutorial/
