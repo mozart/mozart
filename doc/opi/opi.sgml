@@ -966,7 +966,7 @@
 	    <TD/previous Oz buffer//
 	  <TR/<TD/<Ptr to="key.oz-new-buffer">/
 	    <TD/new Oz buffer//
-	  <TR/<TH colspan=2/Interacting With a Mozart Subprocess//
+	  <TR/<TH colspan=2/Interacting With a Mozart Sub-Process//
 	  <TR/<TD/<Ptr to="key.oz-toggle-emulator">/
 	    <TD/toggle emulator buffer//
 	  <TR/<TD/<Ptr to="key.oz-toggle-compiler">/
@@ -974,11 +974,11 @@
 	  <TR/<TD/<Ptr to="key.oz-toggle-temp">/
 	    <TD/toggle temporary buffer//
 	  <TR/<TD/<Ptr to="key.run-oz">/
-	    <TD/start Mozart subprocess//
+	    <TD/start Mozart sub-process//
 	  <TR/<TD/<Ptr to="key.oz-halt">/
-	    <TD/halt Mozart subprocess//
+	    <TD/halt Mozart sub-process//
 	  <TR/<TD/<Ref to="key.oz-halt"/<Key/C-u C-. h///
-	    <TD/halt Mozart subprocess (forced)//
+	    <TD/halt Mozart sub-process (forced)//
 	  <TR/<TH colspan=2/Executing Code//
 	  <TR/<TD/<Ptr to="key.oz-feed-buffer">/
 	    <TD/feed buffer//
