@@ -141,7 +141,7 @@ void maybeDebugBufferGetImpl(BYTE b){
   PD((MARSHAL_CT,"one char got c:%d",b));}
 
 void maybeDebugBufferPutImpl(BYTE b){
-  PD((MARSHAL_CT,"one char pub c:%d",b));}
+  PD((MARSHAL_CT,"one char put c:%d",b));}
 #endif
 
 #else
