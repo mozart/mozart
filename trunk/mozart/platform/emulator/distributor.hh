@@ -64,7 +64,7 @@ public:
     return num;
   }
 
-  virtual int commit(Board * bb, const int l, const int r);
+  virtual int commit(Board * bb, int l, int r);
   
   virtual int sizeOf(void) {
     return sizeof(BaseDistributor);
