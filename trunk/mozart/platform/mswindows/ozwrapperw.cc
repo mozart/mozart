@@ -29,7 +29,5 @@ int WINAPI
 WinMain(HINSTANCE /*hInstance*/, HINSTANCE /*hPrevInstance*/,
 	LPSTR /*lpszCmdLine*/, int /*nCmdShow*/)
 {
-  publishPid();
-
   return createProcess(makeCmdLine(true));
 }
