@@ -305,10 +305,10 @@ TaggedRef oz_valueType(OZ_Term term) {
     return AtomTuple;
   case TAG_SRECORD:
     return tagged2SRecord(term)->isTuple() ? AtomTuple : AtomRecord;
-  case TAG_EXT:
-    return tagged2Extension(term)->typeV();
   case TAG_CONST:
     switch (tagged2Const(term)->getType()) {
+    case Co_Extension:
+      return tagged2Extension(term)->typeV();
     case Co_Float:    
       return AtomFloat;
     case Co_BigInt:
@@ -844,11 +844,19 @@ void fset2buffer(ostream &out, OZ_FSetValue * fs)
 
 
 inline
-void const2buffer(ostream &out, ConstTerm *c,const char sign)
+void const2buffer(ostream &out, ConstTerm *c,const char sign,int depth)
 {
   const char *s = c->getPrintName();
 
   switch (c->getType()) {
+  case Co_Extension:
+    {
+      int n;
+      char * s = OZ_virtualStringToC(((OZ_Extension *) c)->printV(depth),
+				     &n);
+      while (n--) out << *s++;
+    }
+    break;
   case Co_BigInt:
     bigInt2buffer(out,(BigInt *)c,sign);
     break;
@@ -1101,16 +1109,8 @@ void term2Buffer(ostream &out, OZ_Term term, int depth)
   case TAG_LTUPLE:
     list2buffer(out,tagged2LTuple(term),depth);
     break;
-  case TAG_EXT:
-    {
-      int n;
-      char * s = OZ_virtualStringToC(tagged2Extension(term)->printV(depth),
-				     &n);
-      while (n--) out << *s++;
-    }
-    break;
   case TAG_CONST:
-    const2buffer(out,tagged2Const(term),'~');
+    const2buffer(out,tagged2Const(term),'~',depth);
     break;
   case TAG_LITERAL:
     {
@@ -1652,15 +1652,12 @@ OZ_Term OZ_subtree(OZ_Term term, OZ_Term fea)
   case TAG_SRECORD:
     return tagged2SRecord(term)->getFeature(fea);
 
-  case TAG_EXT:
-    {
-      return tagged2Extension(term)->getFeatureV(fea);
-    }
-
   case TAG_CONST:
     {
       ConstTerm *ct = tagged2Const(term);
       switch (ct->getType()) {
+      case Co_Extension:
+	return tagged2Extension(term)->getFeatureV(fea);
       case Co_Object:
 	return ((Object *) ct)->getFeature(fea);
       case Co_Chunk:

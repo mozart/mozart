@@ -165,20 +165,9 @@ void ozd_printStream(OZ_Term val, ostream &stream, int depth)
   case TAG_LITERAL:
     tagged2Literal(ref)->printStream(stream,depth);
     break;
-  case TAG_FLOAT:
-    tagged2Float(ref)->printStream(stream,depth);
-    break;
   case TAG_SMALLINT:
     stream << "<SmallInt @" << &ref << ": " << toC(ref) << ">";
     break;
-  case TAG_EXT:
-    {
-      int n;
-      char * s = OZ_virtualStringToC(tagged2Extension(ref)->printV(depth),
-				     &n);
-      stream << s;
-      break;
-    }
   case TAG_CONST:
     tagged2Const(ref)->printStream(stream,depth);
     break;
@@ -231,21 +220,11 @@ void ozd_printLongStream(OZ_Term val, ostream &stream, int depth, int offset)
   case TAG_LITERAL:
     tagged2Literal(ref)->printLongStream(stream,depth,offset);
     break;
-  case TAG_FLOAT:
-    tagged2Float(ref)->printLongStream(stream,depth,offset);
-    break;
   case TAG_SMALLINT:
     stream << indent(offset);
     ozd_printStream(val,stream,depth);
     stream << endl;
     break;
-  case TAG_EXT:
-    {
-      int n;
-      char* s = OZ_virtualStringToC(tagged2Extension(ref)->printLongV(depth,offset),&n);
-      stream << s;
-      break;
-    }
   case TAG_CONST:
     tagged2Const(ref)->printLongStream(stream,depth,offset);
     break;
@@ -675,6 +654,16 @@ void SuspList::printLongStream(ostream &stream, int depth, int offset)
 void ConstTerm::printLongStream(ostream &stream, int depth, int offset)
 {
   switch (getType()) {
+  case Co_Float:
+    ((Float *) this)->printLongStream(stream,depth,offset);
+    break;
+  case Co_Extension:
+    {
+      int n;
+      char * s = OZ_virtualStringToC(((OZ_Extension *) this)->printV(depth),&n);
+      stream << s;
+      break;
+    }
   case Co_BigInt:
     ((BigInt *) this)->printLongStream(stream, depth, offset);
     break;
@@ -765,6 +754,16 @@ void ConstTerm::printLongStream(ostream &stream, int depth, int offset)
 void ConstTerm::printStream(ostream &stream, int depth)
 {
   switch (getType()) {
+  case Co_Float:
+    ((Float *) this)->printStream(stream,depth);
+    break;
+  case Co_Extension:
+    {
+      int n;
+      char * s = OZ_virtualStringToC(((OZ_Extension *) this)->printV(depth),&n);
+      stream << s;
+      break;
+    }
   case Co_BigInt:      ((BigInt *) this)->printStream(stream, depth);
     break;
   case Co_FSetValue:

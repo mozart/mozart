@@ -659,11 +659,11 @@ void CellManager::gcCellManager(){
   PD((GC,"relocate cellManager:%d",i));
   OwnerEntry* oe=OT->getOwner(i);
   Assert(oe->getTertiary()->cacIsMarked()?
-	 oe->getTertiary()->cacGetFwd()->getType() == Co_Cell:
+	 ((ConstTerm *) oe->getTertiary()->cacGetFwd())->getType() == Co_Cell:
 	 oe->getTertiary()->getType() == Co_Cell );
   oe->gcPO(this);
   Assert(oe->getTertiary()->cacIsMarked()?
-	 oe->getTertiary()->cacGetFwd()->getType() == Co_Cell:
+	 ((ConstTerm *) oe->getTertiary()->cacGetFwd())->getType() == Co_Cell:
 	 oe->getTertiary()->getType() == Co_Cell );
   getCellSec()->gcCellSec();}
 

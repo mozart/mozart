@@ -374,19 +374,19 @@ OZ_Return genericDot(TaggedRef term, TaggedRef fea, TaggedRef *out, Bool dot) {
   case TAG_LITERAL:
     if (dot) goto raise; else return FAILED;
 
-  case TAG_EXT:
-    {
-      TaggedRef t = tagged2Extension(term)->getFeatureV(fea);
-      if (t == makeTaggedNULL()) {
-	if (dot) goto raise; else return FAILED;
-      }
-      if (out) *out = t;
-      return PROCEED;
-    }
   default:
     if (oz_isChunk(term)) {
       TaggedRef t;
       switch (tagged2Const(term)->getType()) {
+      case Co_Extension:
+	{
+	  TaggedRef t = tagged2Extension(term)->getFeatureV(fea);
+	  if (t == makeTaggedNULL()) {
+	    if (dot) goto raise; else return FAILED;
+	  }
+	  if (out) *out = t;
+	  return PROCEED;
+	}
       case Co_Chunk:
 	t = tagged2SChunk(term)->getFeature(fea);
 	break;
@@ -566,13 +566,11 @@ OZ_Return genericSet(TaggedRef term, TaggedRef fea, TaggedRef val) {
 
   case TAG_LITERAL: goto raise;
 
-  case TAG_EXT:
-    {
-      return tagged2Extension(term)->putFeatureV(fea,val);
-    }
   default:
     if (oz_isChunk(term)) {
       switch (tagged2Const(term)->getType()) {
+      case Co_Extension:
+	return tagged2Extension(term)->putFeatureV(fea,val);
       case Co_Chunk:
       case Co_Object:
       case Co_Class:
