@@ -175,6 +175,9 @@ void GenCVariable::installPropagators(GenCVariable * glob_var)
                                                     glob_home);
         break;
 
+      case BoolVariable:
+        break;
+
       default:
         Assert(0);
         break;
