@@ -9,8 +9,6 @@ OZBIN		= $(PREFIX)/bin
 OZTOOLS		= $(PREFIX)/tools
 OZPATH		= .:$(PREFIX)/lib:$(PREFIX)/tools
 IMAGESDIR	= $(OZTOOLS)/images
-CACHEDIR	= $(PREFIX)/cache/http/www.ps.uni-sb.de/ozhome/tools
-CACHEBINDIR	= $(PREFIX)/cache/http/www.ps.uni-sb.de/ozhome/bin
 
 SHELL		= /bin/sh
 
@@ -107,7 +105,6 @@ FUNCTORS = \
 	Ozcar.ozf Profiler.ozf Gump.ozf GumpScanner.ozf GumpParser.ozf
 
 TOOLSFUNCTORS = $(FUNCTORS:%=$(OZTOOLS)/%)
-CACHEFUNCTORS = $(FUNCTORS:%=$(CACHEDIR)/%)
 
 SYSLETS = opi
 BINFILES = $(SYSLETS:%=$(OZBIN)/%)
@@ -200,12 +197,17 @@ $(OZCARIMAGESDIR)/%: ozcar/images/%
 $(OZBIN)/%: %
 	$(INSTALL_BIN) $< $@
 
-install-cache: $(CACHEDIR) $(CACHEFUNCTORS)
-$(CACHEDIR) $(CACHEBINDIR):
-	$(INSTALL_DIR) $@
-$(CACHEDIR)/%.ozf : %.ozf
-	$(INSTALL_FILE) $< $@
+CACHEDIR  = $(PREFIX)/cache/http/www.ps.uni-sb.de
+CACHELINK = $(CACHEDIR)/ozhome
 
+install-cache: \
+	$(CACHEDIR) $(CACHELINK)
+
+$(CACHEDIR):
+	$(INSTALL_DIR) $(CACHEDIR)
+
+$(CACHELINK): $(CACHEDIR)
+	$(LN_S)  $(PREFIX) $(CACHELINK)
 
 #---------------------------------------------------------------------
 # Cleaning up
