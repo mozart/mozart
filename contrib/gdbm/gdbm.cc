@@ -186,10 +186,7 @@ OZ_BI_define(cgdbm_put,3,0)
   key.dsize = oz_size;
   int ret;
   ret = term2datum(oz_val,val);
-  if (ret!=PROCEED) {
-    if (val.dptr) free(val.dptr);
-    return ret;
-  }
+  if (ret!=PROCEED) return ret;
   ret = gdbm_store(oz_db->db,key,val,GDBM_REPLACE);
   free(val.dptr);
   return (ret==0) ? PROCEED :
