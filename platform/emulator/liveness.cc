@@ -52,11 +52,11 @@
   {for (int _j=0;_j<bi->getOutArity(); _j++) { ISWRITE(loc->out(_j));}}	\
 }
 
-#define BREAK           current->pcEnd = PC; goto outerLoop;
+#define BREAK           goto outerLoop;
 
-#define PUSH(offset)     todo = new Segment(PC+offset,todo,current->writer);
+#define PUSH(offset)    todo = new Segment(PC+offset,todo,current->writer);
 
-#define CONTINUE(newpc) PUSH(newpc); current->pcEnd = PC; goto outerLoop2;
+#define CONTINUE(newpc) PUSH(newpc); goto outerLoop2;
 
 
 class Writer {
@@ -69,7 +69,6 @@ public:
 class Segment {
 public:
   ProgramCounter pc;
-  ProgramCounter pcEnd;
   Writer *writer;
   Segment *next;
   Segment(ProgramCounter pc,Segment *next, Writer *w);
@@ -184,28 +183,25 @@ outerLoop2:
       Segment **prev = &seen;
       Segment *next = *prev;
       while (next) {
-	if (PC >= next->pc) {
-	  if (PC <= next->pcEnd) {
-	    delete current;
-	    goto outerLoop2;
-	  } else {
-	    prev = &next->next;
-	    next = *prev;
-	  }
+	if (PC == next->pc) {
+	  delete current;
+	  goto outerLoop2;
+	} else if (PC > next->pc) {
+	  prev = &next->next;
+	  next = *prev;
 	} else {
 	  break;
 	}
       }
-
-      current->next=next;
+      current->next = next;
       *prev = current;
+    }
 
-      // install writer flags
-      for (Writer *w = current->writer; w;) {
-	Writer *n = w->next;
-	xUsage[w->i]=-1;
-	w=n;
-      }
+    // install writer flags
+    for (Writer *w = current->writer; w;) {
+      Writer *n = w->next;
+      xUsage[w->i]=-1;
+      w=n;
     }
 
   innerLoop:
