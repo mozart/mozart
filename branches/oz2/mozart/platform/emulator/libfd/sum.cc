@@ -170,8 +170,8 @@ OZ_Return LinEqPropagator::run(void)
   int cache_slot_num = find_cache_slot_num(sz);
   DECL_DYN_ARRAY(int, cache_slot_from, cache_slot_num);
   DECL_DYN_ARRAY(int, cache_slot_to, cache_slot_num);
-  DECL_DYN_ARRAY(int, tx_pos_cache, cache_slot_num);
-  DECL_DYN_ARRAY(int, tx_neg_cache, cache_slot_num);
+  DECL_DYN_ARRAY(double, tx_pos_cache, cache_slot_num);
+  DECL_DYN_ARRAY(double, tx_neg_cache, cache_slot_num);
   
   init_cache_slot_index(sz, cache_slot_num, cache_slot_from, cache_slot_to);
 
@@ -186,8 +186,8 @@ OZ_Return LinEqPropagator::run(void)
 
     for (int slot = cache_slot_num; slot--; ) {
       int cache_to = cache_slot_to[slot];
-      int tx_neg_cache_v = precalc_lin(cache_slot_num, slot, tx_neg_cache, c);
-      int tx_pos_cache_v = precalc_lin(cache_slot_num, slot, tx_pos_cache, c);
+      double tx_neg_cache_v = precalc_lin(cache_slot_num, slot, tx_neg_cache, c);
+      double tx_pos_cache_v = precalc_lin(cache_slot_num, slot, tx_pos_cache, c);
     loop1:      
       for (i = cache_slot_from[slot]; i < cache_to; i += 1) {
 	OZ_Boolean repeat_inner = OZ_FALSE;
