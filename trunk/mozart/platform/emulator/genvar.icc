@@ -204,6 +204,13 @@ void GenCVariable::installPropagators(GenCVariable * glob_var)
       }
     } // case FSetVariable
 
+  // the following types of variable do not have extra suspension
+  // lists which have to be installed
+
+  case OFSVariable:
+  case AVAR:
+    break;
+
   default:
     Assert(0);
     break;
