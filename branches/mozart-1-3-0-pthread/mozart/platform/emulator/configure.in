@@ -458,6 +458,7 @@ irix6*)
     AC_CHECK_LIB(m, fabs)
     OZ_NEEDS_FUNC(fabs)
     AC_CHECK_LIB(dl, dlopen)
+    AC_CHECK_LIB(pthread,pthread_create)
 
 esac
 
