@@ -1453,8 +1453,6 @@ static int CompareLasts(min_max_dur_setFL *Int1, min_max_dur_setFL *Int2) {
 }
 
   
-inline static int abs(int a) { return a < 0 ? -a : a; }
-
 OZ_C_proc_begin(BIfdGetCandidates, 5) { 
   TaggedRef tagged_vector       = deref(OZ_getCArg(0));
   TaggedRef tagged_start_record = deref(OZ_getCArg(1));
@@ -1607,9 +1605,9 @@ OZ_C_proc_begin(BIfdGetCandidates, 5) {
   else if (number_of_firsts == 1) goto imposeFirsts;
   else if (number_of_lasts == 1) goto imposeLasts;
   else {
-    int diff1 = abs(firsts[1].min - firsts[2].min);
-    int diff2 = abs(lasts[1].max + lasts[1].dur - 
-		    lasts[2].max - lasts[2].dur);
+    int diff1 = ozabs(firsts[1].min - firsts[2].min);
+    int diff2 = ozabs(lasts[1].max + lasts[1].dur - 
+		      lasts[2].max - lasts[2].dur);
     if (diff1 > diff2)
       goto imposeFirsts;
     else goto imposeLasts;
