@@ -1784,8 +1784,9 @@ OZ_BI_define(unix_exec,3,1){
   char buf[10000];
   buf[0] = '\0';
   for (k=0 ; k<argno; k++) {
+    strcat(buf, "\"");
     strcat(buf,argv[k]);
-    strcat(buf," ");
+    strcat(buf, "\" ");
   }
 
   STARTUPINFO si;
