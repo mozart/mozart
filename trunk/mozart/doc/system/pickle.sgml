@@ -97,6 +97,25 @@ header and ?_{Value} the value that was retrieved.
 <p>
 This is just a shortcut for <<<{Pickle.loadWithHeader ?_{UrlV} _#?_{Value}}>>>
 
+<Entry> <<pack>> <Synopsis>
+<<<
+{Pickle.pack ?+{X} ??{ByteString}}
+>>>
+<item>
+<Index class=module/Pickle<and>pack/
+<p>
+Takes a value ?_{X} and pickles it to a bytestring.
+
+<Entry> <<unpack>> <Synopsis>
+<<<
+{Pickle.unpack ?+{PickleV} ??{Value}}
+>>>
+<item>
+<Index class=module/Pickle<and>unpack/
+<p>
+Unpacks a virtual string ?_{PickleV} that has
+created by pickling (e.g., by <<Pickle.pack>>).
+
 </list>
 
   </Chapter>
