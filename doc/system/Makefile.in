@@ -8,7 +8,7 @@ SGMLSRCS0 = \
     # Application programming \
     application module \
     # Constraint programming \
-    search fd schedule fs \
+    search fd schedule fs types_modes_constr \
     # Distributed programming \
     connection remote fault url resolve \
     # Open programming \
