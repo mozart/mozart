@@ -1403,13 +1403,21 @@ typedef OZ_Return (*make_prop_fn_2)(OZ_Term, OZ_Term);
 typedef OZ_Return (*make_prop_fn_3)(OZ_Term, OZ_Term, OZ_Term);
 typedef OZ_Return (*make_prop_fn_4)(OZ_Term, OZ_Term, OZ_Term, OZ_Term);
 
+
+/*
+ * This is not as the Microsoft Visual C++ compiler
+ * is buggy in that it mistakes this inside a class
+ * as something being pure virtual...
+ *
+ */
+const int OZ_Filter_max_actions = 10;
+
 template <class PROPAGATOR>
 class OZ_Filter {
 private:
   int _closed;
   PROPAGATOR * _prop;
   OZ_ParamIterator * _iter;
-  static const int _max_actions = 10;
   struct _actions_t {
     enum {
       _serv_failed = 0,
@@ -1422,7 +1430,7 @@ private:
       PROPAGATOR * _replacement;
       struct { OZ_Term _x, _y; } _equat;
     } _action_params;
-  } _actions[_max_actions];
+  } _actions[OZ_Filter_max_actions];
   int _nb_actions;
   OZ_Return update_return(OZ_Return  o, OZ_Return n) {
     if (o == OZ_ENTAILED) {
