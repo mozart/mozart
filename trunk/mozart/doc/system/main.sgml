@@ -60,11 +60,32 @@
 <Title/System Modules/
     <!-- Splitting the document into different HTML nodes -->
     <Meta name="html.split"       value="part.application">
+    <Meta name="html.split"       value="chapter.application">
+    <Meta name="html.split"       value="chapter.module">
     <Meta name="html.split"       value="part.constraints">
+    <Meta name="html.split"       value="chapter.search">
+    <Meta name="html.split"       value="chapter.fd">
+    <Meta name="html.split"       value="chapter.schedule">
+    <Meta name="html.split"       value="chapter.fs">
     <Meta name="html.split"       value="part.distributed">
+    <Meta name="html.split"       value="chapter.connection">
+    <Meta name="html.split"       value="chapter.remote">
+    <Meta name="html.split"       value="chapter.fault">
+    <Meta name="html.split"       value="chapter.url">
+    <Meta name="html.split"       value="chapter.resolve">
     <Meta name="html.split"       value="part.open">
+    <Meta name="html.split"       value="chapter.os">
+    <Meta name="html.split"       value="chapter.open">
     <Meta name="html.split"       value="part.system">
+    <Meta name="html.split"       value="chapter.pickle">
+    <Meta name="html.split"       value="chapter.property">
+    <Meta name="html.split"       value="chapter.error">
+    <Meta name="html.split"       value="chapter.errorregistry">
+    <Meta name="html.split"       value="chapter.finalize">
+    <Meta name="html.split"       value="chapter.system">
     <Meta name="html.split"       value="part.window">
+    <Meta name="html.split"       value="chapter.tk">
+    <Meta name="html.split"       value="chapter.tktools">
     <Meta name="html.split.bib"   value="">
     <Meta name="html.split.index" value="">
     <Author.Extern to="author.db" key="Denys.Duchier">
