@@ -133,6 +133,11 @@ public:
 
   void gcRecurse(void);
   
+  // methods for trailing
+  OzVariable * copyForTrail(void);
+  void restoreFromCopy(OzCtVariable *);
+  
+
   void dispose(void) {
     // dispose suspension lists
     freeListDispose(_susp_lists, getNoOfSuspLists() * sizeof(SuspList *));

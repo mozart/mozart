@@ -180,6 +180,44 @@ int oz_var_getSuspListLength(OzVariable *cv)
   }
 }
 
+OzVariable * oz_var_copyForTrail(OzVariable * v) {
+  switch (v->getType()){
+  case OZ_VAR_FD: 
+    return ((OzFDVariable *) v)->copyForTrail();
+  case OZ_VAR_OF: 
+    return ((OzOFVariable *) v)->copyForTrail();
+  case OZ_VAR_FS: 
+    return ((OzFSVariable *) v)->copyForTrail();
+  case OZ_VAR_CT: 
+    return ((OzCtVariable *) v)->copyForTrail();
+  default:
+    Assert(0);
+    return NULL;
+  }
+}
+
+void oz_var_restoreFromCopy(OzVariable * c, OzVariable * o) {
+  Assert(c->getType() == o->getType());
+
+  switch (o->getType()){
+  case OZ_VAR_FD: 
+    ((OzFDVariable *) o)->restoreFromCopy((OzFDVariable *) c);
+    break;
+  case OZ_VAR_OF: 
+    ((OzOFVariable *) o)->restoreFromCopy((OzOFVariable *) c);
+    break;
+  case OZ_VAR_FS: 
+    ((OzFSVariable *) o)->restoreFromCopy((OzFSVariable *) c);
+    break;
+  case OZ_VAR_CT: 
+    ((OzCtVariable *) o)->restoreFromCopy((OzCtVariable *) c);
+    break;
+  default:
+    Assert(0);
+    break;
+  }  
+}
+
 OZ_Term _var_status(OzVariable *cv) {
   Assert(cv->getType()==OZ_VAR_EXT);
   return ((ExtVar*)cv)->statusV();
