@@ -13,7 +13,6 @@
 #include "genvar.hh"
 #include "fdbuilti.hh"
 #include "builtins.hh"
-#include "ip.hh"
 
 AM am;
 
@@ -1425,9 +1424,13 @@ void AM::handleIO()
       if (osNextSelect(index, mode) ) {
 
 	numbOfFDs--;
+	
+	
+	//  EKS 
+	//  Assert(ioNodes[index].handler[mode]);
 
-	Assert(ioNodes[index].handler[mode]);
-	if ((ioNodes[index].handler[mode])
+	if (ioNodes[index].handler[mode] &&
+	    (ioNodes[index].handler[mode])
 	    (index, ioNodes[index].readwritepair[mode])) {
 	  ioNodes[index].readwritepair[mode] = 0;
 	  (void) gcUnprotect((TaggedRef *)&ioNodes[index].readwritepair[mode]);

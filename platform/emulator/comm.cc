@@ -197,27 +197,52 @@ SiteHashTable* secondarySiteTable=new SiteHashTable(SECONDARY_SITE_TABLE_SIZE);
 /*   SECTION ::  General unmarshaling routines                        */
 /**********************************************************************/
 
-Site *unmarshalPSite(MsgBuffer *buf){
-  PD((UNMARSHAL,"Psite"));
-  MarshalTag mt= (MarshalTag) buf->get();
-  Site tryS;
-  tryS.unmarshalBaseSite(buf);
-  int hvalue=tryS.hashSecondary();
-  Site *s=secondarySiteTable->findSecondary(&tryS,hvalue);    
-  if(s) {
-    if(mt==DIF_PERM){
-      s->passiveToPerm();}
-    return s;}
-  if(mt==DIF_PERM){
-    return siteManager.allocSite(&tryS,PERM_SITE);}
-  return siteManager.allocSite(&tryS);}
-
-void primaryToSecondary(Site *s,int hvalue){
+inline void primaryToSecondary(Site *s,int hvalue){
   primarySiteTable->removePrimary(s,hvalue);
   int hvalue2=s->hashSecondary();
   s->discoveryPerm();
   s->putInSecondary();
   secondarySiteTable->insertSecondary(s,hvalue2);}
+
+Site *unmarshalPSite(MsgBuffer *buf){
+  PD((UNMARSHAL,"Psite"));
+  MarshalTag mt= (MarshalTag) buf->get();
+  Site tryS;
+  Site *s;
+  tryS.unmarshalBaseSite(buf);
+  int hvalue=tryS.hashPrimary();  
+  FindType rc=primarySiteTable->findPrimary(&tryS,hvalue,s);    
+  switch(rc) {
+  case SAME:
+    if((mt==DIF_PERM) && (!s->isPerm())) {
+      s->discoveryPerm();}
+    return s;
+  case NONE:
+    break;
+  case I_AM_YOUNGER:{
+    PD((SITE,"unmarshalPsite I_AM_YOUNGER"));
+    int hvalue=tryS.hashSecondary();
+    s=secondarySiteTable->findSecondary(&tryS,hvalue);
+    if(s){return s;}
+    s=siteManager.allocSite(&tryS,PERM_SITE);
+    secondarySiteTable->insertSecondary(s,hvalue);
+    return s;}
+  case I_AM_OLDER:{
+    PD((SITE,"unmarshalPsite I_AM_OLDER"));
+    primaryToSecondary(s,hvalue);
+    break;}}
+  
+  s=siteManager.allocSite(&tryS);    
+  primarySiteTable->insertPrimary(s,hvalue);
+  if(mt==DIF_PERM){
+    PD((SITE,"initPsite DIF_PERM"));
+    s->initPerm();
+    return s;}
+  Assert(mt==DIF_PASSIVE);
+  PD((SITE,"initPsite DIF_PASSIVE"));
+  s->initPassive();
+  return s;}
+
 
 Site* unmarshalSite(MsgBuffer *buf){
   PD((UNMARSHAL,"site"));
