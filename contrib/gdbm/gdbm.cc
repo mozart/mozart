@@ -98,7 +98,7 @@ OZ_BI_define(cgdbm_open,4,1)
   file = gdbm_open(c_name,c_block,z_flags,c_mode,NULL);
   free(c_name);
   if (file==NULL)
-    return OZ_raiseC("gdbm",1,gdbm_errno);
+    return OZ_raiseC("gdbm",1,OZ_int(gdbm_errno));
   else {
     OZ_Term chunk = OZ_makeHeapChunk(sizeof(GDBM_FILE));
     char* s       = (char*) OZ_getHeapChunkData(chunk);
