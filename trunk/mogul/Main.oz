@@ -19,6 +19,8 @@ define
 		   'open-db'(      type:string)
 		   'save-db'(      type:bool)
 		   'close-db'(     type:bool)
+		   'export-db'(    type:string)
+		   'import-db'(    type:string)
 		   %%
 		   'update-info'(  type:bool)
 		   'print-db'(     type:bool)

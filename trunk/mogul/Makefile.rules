@@ -8,7 +8,8 @@ MAIN_DEPS = Text.ozf Message.ozf Admin.ozf \
 	Section.ozf Externalizable.ozf GetSlot.ozf Wget.ozf \
 	ContactName.ozf Entry.ozf HTML_Entry.ozf HTML_Contact.ozf \
 	HTML_Section.ozf Author.ozf HTML_Package.ozf Category.ozf \
-	MogulID.ozf Directory.ozf HTML_ByAuthor.ozf HTML_Navigation.ozf
+	MogulID.ozf Directory.ozf HTML_ByAuthor.ozf HTML_Navigation.ozf \
+	Pickler.ozf
 
 Librarian.exe: Main.ozf $(MAIN_DEPS)
 	$(OZL) $(OZLFLAGS) -x $< -o $@
@@ -42,6 +43,9 @@ MOGUL_LIBRARIAN	= $(OZE) $(PKG_URI)/Librarian.exe	\
 	--mogul-top=$(MOGUL_TOP)			\
 	$(MOGUL_IGNORE)
 
+MOGUL_EXPORT_OPTIONS	=	\
+	--export-db=$(MOGUL_DATABASE)-EXPORT
+
 MOGUL_DATABASE_OPTIONS	=	\
 	--update-info		\
 	--update-provided	\
@@ -65,6 +69,9 @@ mogul-update: mogul-database mogul-archive mogul-html
 
 mogul-database:
 	$(MOGUL_LIBRARIAN) $(MOGUL_DATABASE_OPTIONS) --print-reports
+
+mogul-export:
+	$(MOGUL_LIBRARIAN) $(MOGUL_EXPORT_OPTIONS) --print-reports
 
 MOGUL_ARCHIVE_DIRS = $(addprefix $(MOGUL_DIRECTORY)/,pkg doc)
 MOGUL_HTML_DIRS    = $(addprefix $(MOGUL_DIRECTORY)/,info info/category)

@@ -14,6 +14,7 @@ import
    Contact('class')
    Package('class')
    Except('raise':Raise)
+   Pickler(toFile fromFile) at 'Pickler.ozf'
 export
    'class' : Database
 define
@@ -59,6 +60,32 @@ define
 	       {Manager trace('Writing back entry '#K)}
 	       Database,Put(K Database,Extern(V $))
 	    end
+	 end
+      end
+      meth export_db(F)
+	 {Manager incTrace('--> export_db')}
+	 try
+	    D = {NewDictionary}
+	 in
+	    {Gdbm.forAllInd @db
+	     proc {$ Key Val}
+		{Dictionary.put D Key Val}
+	     end}
+	    {Manager trace('pickling to file '#F)}
+	    {Pickler.toFile D F}
+	    {Manager trace('...done')}
+	 finally
+	    {Manager decTrace('<-- export_db')}
+	 end
+      end
+      meth import_db(F)
+	 {Manager incTrace('--> import_db')}
+	 try
+	    {Manager trace('unpickling from file '#F)}
+	    cache <- {Pickler.fromFile F}
+	    {Manager trace('...done')}
+	 finally
+	    {Manager decTrace('<-- import_db')}
 	 end
       end
       meth close {Gdbm.close @db} end
