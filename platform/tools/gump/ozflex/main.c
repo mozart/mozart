@@ -330,6 +330,7 @@ void check_options()
 #define GEN_PREFIX(name) out_str3( "#define yy%s %s%s\n", name, prefix, name )
                 if ( C_plus_plus )
                         {
+                        out_str( "#define yy_PREFIX \"%s\"\n", prefix );
                         GEN_PREFIX( "FlexLexer" );
                         GEN_PREFIX( "_lexer_create" );
                         GEN_PREFIX( "_lexer_delete" );
