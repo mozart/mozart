@@ -25,7 +25,7 @@
 
 functor
 import
-   Syslet(spec args exit)
+   Applocation(getCmdArgs exit)
    Property(get put)
    System(printError)
    Error(printExc)
@@ -33,28 +33,29 @@ import
    OS(getEnv putEnv)
    URL
 define
-   Syslet.spec = single('in'(         type:string optional:false default:unit)
-			'type'(       type:string optional:false default:unit)
-			'out'(        type:string optional:false default:unit)
-			'autoindex'(  type:bool                  default:false)
-			% HTML options
-			'stylesheet'( type:string optional:false default:unit)
-			'latexmath'(  type:bool                  default:true)
-			'split'(      type:bool                  default:true)
-			% Path names
-			'ozdoc-home'( type:string optional:false default:unit)
-			'author-path'(type:string optional:false default:unit)
-			'bib-path'(   type:string optional:false default:unit)
-			'bst-path'(   type:string optional:false default:unit)
-			'elisp-path'( type:string optional:false default:unit)
-			'sbin-path'(  type:string optional:false default:unit)
-			'catalog'(    type:string optional:false default:unit)
-		       )
+   Args = {Application.getCmdArgs
+	   single('in'(         type:string optional:false default:unit)
+		  'type'(       type:string optional:false default:unit)
+		  'out'(        type:string optional:false default:unit)
+		  'autoindex'(  type:bool                  default:false)
+		  % HTML options
+		  'stylesheet'( type:string optional:false default:unit)
+		  'latexmath'(  type:bool                  default:true)
+		  'split'(      type:bool                  default:true)
+		  % Path names
+		  'ozdoc-home'( type:string optional:false default:unit)
+		  'author-path'(type:string optional:false default:unit)
+		  'bib-path'(   type:string optional:false default:unit)
+		  'bst-path'(   type:string optional:false default:unit)
+		  'elisp-path'( type:string optional:false default:unit)
+		  'sbin-path'(  type:string optional:false default:unit)
+		  'catalog'(    type:string optional:false default:unit)
+		 )
    % Process path name options and store results in ozdoc.* properties
    local
       % Determine the directory in which document source files are located:
       SRC_DIR =
-      case Syslet.args.'in' of unit then '.'
+      case Args.'in' of unit then '.'
       elseof X then
 	 Url  = {URL.make X}
 	 Path = {CondSelect Url path unit}
@@ -77,56 +78,56 @@ define
       end
       {Property.put 'ozdoc.src.dir' SRC_DIR}
       OZDOC_HOME =
-      case Syslet.args.'ozdoc-home' of unit then
+      case Args.'ozdoc-home' of unit then
 	 case {OS.getEnv 'OZDOC_HOME'} of false then
 	    {Property.get 'oz.home'}#'/share/doc'
 	 elseof X then X end
       elseof X then X end
       {Property.put 'ozdoc.home' OZDOC_HOME}
       AUTHOR_PATH =
-      case Syslet.args.'author-path' of unit then
+      case Args.'author-path' of unit then
 	 case {OS.getEnv 'OZDOC_AUTHOR_PATH'} of false then
 	    SRC_DIR#':'#OZDOC_HOME
 	 elseof X then X end
       elseof X then X end
       {Property.put 'ozdoc.author.path' AUTHOR_PATH}
       BIB_PATH =
-      case Syslet.args.'bib-path' of unit then
+      case Args.'bib-path' of unit then
 	 case {OS.getEnv 'OZDOC_BIB_PATH'} of false then
 	    SRC_DIR#':'#OZDOC_HOME
 	 elseof X then X end
       elseof X then X end
       {Property.put 'ozdoc.bib.path' BIB_PATH}
       BST_PATH =
-      case Syslet.args.'bst-path' of unit then
+      case Args.'bst-path' of unit then
 	 case {OS.getEnv 'OZDOC_BST_PATH'} of false then
 	    BIB_PATH
 	 elseof X then X end
       elseof X then X end
       {Property.put 'ozdoc.bst.path' BST_PATH}
       ELISP_PATH =
-      case Syslet.args.'elisp-path' of unit then
+      case Args.'elisp-path' of unit then
 	 case {OS.getEnv 'OZDOC_ELISP_PATH'} of false then
 	    {Property.get 'oz.home'}#'/share/elisp'
 	 elseof X then X end
       elseof X then X end
       {Property.put 'ozdoc.elisp.path' ELISP_PATH}
       SBIN_PATH =
-      case Syslet.args.'sbin-path' of unit then
+      case Args.'sbin-path' of unit then
 	 case {OS.getEnv 'OZDOC_SBIN_PATH'} of false then
 	    OZDOC_HOME
 	 elseof X then X end
       elseof X then X end
       {Property.put 'ozdoc.sbin.path' SBIN_PATH}
       CSS =
-      case Syslet.args.'stylesheet' of unit then
+      case Args.'stylesheet' of unit then
 	 case {OS.getEnv 'OZDOC_STYLESHEET'} of false then
 	    'http://www.ps.uni-sb.de/css/ozdoc.css'
 	 elseof X then X end
       elseof X then X end
       {Property.put 'ozdoc.stylesheet' CSS}
       CATALOG =
-      case Syslet.args.'catalog' of unit then
+      case Args.'catalog' of unit then
 	 case {OS.getEnv 'OZDOC_CATALOG'} of false then
 	    OZDOC_HOME#'/catalog'
 	 elseof X then X end
@@ -138,22 +139,22 @@ define
    end
    % The actual translation
    try
-      case Syslet.args.'in' of unit then
+      case Args.'in' of unit then
 	 {Raise usage('no input file name specified')}
-      elsecase Syslet.args.'out' of unit then
+      elsecase Args.'out' of unit then
 	 {Raise usage('no output directory name specified')}
-      elsecase Syslet.args.2 of _|_ then
+      elsecase Args.2 of _|_ then
 	 {Raise usage('unrecognized command line arguments')}
-      elsecase Syslet.args.'type' of "html-color" then
-	 {OzDocToHTML.translate color Syslet.args}
+      elsecase Args.'type' of "html-color" then
+	 {OzDocToHTML.translate color Args}
       elseof "html-mono" then
-	 {OzDocToHTML.translate mono Syslet.args}
+	 {OzDocToHTML.translate mono Args}
       elseof "html-stylesheets" then
-	 {OzDocToHTML.translate stylesheets Syslet.args}
+	 {OzDocToHTML.translate stylesheets Args}
       else
 	 {Raise usage('illegal output type specified')}
       end
-      {Syslet.exit 0}
+      {Application.exit 0}
    catch E then
       case E of usage(M) then
 	 {System.printError
@@ -179,12 +180,12 @@ define
 	  '--sbin-path=<Search Path>\n'#
 	  '                    Where to look for author databases,\n'#
 	  '                    bib files, bst files, and ozdoc scripts.\n'}
-	 {Syslet.exit 2}
+	 {Application.exit 2}
       [] error then
-	 {Syslet.exit 1}
+	 {Application.exit 1}
       else
 	 {Error.printExc E}
-	 {Syslet.exit 1}
+	 {Application.exit 1}
       end
    end
 end
