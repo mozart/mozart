@@ -1031,7 +1031,7 @@ AC_DEFUN(OZ_PATH_PROG, [
       done
     fi
     dummy_PWD=`pwd | sed 's/\//\\\\\//g'`
-    dummy_PATH=`echo $dummy_PATH | sed -e 's/:://g' | sed -e 's/:$//g'`
+    dummy_PATH=`echo $dummy_PATH | sed -e 's/::/:/g' | sed -e 's/:$//g'`
     dummy_PATH=`echo $dummy_PATH | sed -e "s/^\.:/$dummy_PWD:/g"`
     dummy_PATH=`echo $dummy_PATH | sed -e "s/^\.\//$dummy_PWD\//g"`
     dummy_PATH=`echo $dummy_PATH | sed -e "s/:\.\$/:$dummy_PWD/g"`
