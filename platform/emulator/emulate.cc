@@ -1914,18 +1914,18 @@ Case(GETVOID)
   Case(INLINEMINUS)
     {
 
-#if defined(ASSEM_ARITH) && defined(__GNUC__) && defined(__i386__) && defined(REGOPT) && defined(FASTERREGACCESS)
+#if defined(FASTARITH) && defined(__GNUC__) && defined(__i386__) && defined(REGOPT) && defined(FASTERREGACCESS)
 
       {
 	register TaggedRef A, B;
 	
         asm volatile("movl   4(%2),%0
                       movl   8(%2),%1
+                      movl   (%0),%0
+                      movl   (%1),%1
                            
                      "
-                     : "=r" (A),
-                       "=r" (B)
-                     : "r" (PC));
+                     : "=r" (A), "=r" (B) : "r" (PC));
 	
       retryINLINEMINUSAF:
 	A = A ^ SMALLINT;
@@ -1936,9 +1936,10 @@ Case(GETVOID)
 
 	    asm volatile("   subl %2,%1
                              jo   0f
+                             movl 12(%3),%2
                              addl $16,%3
                              orl  %0,%1
-                             movl %1,-4(%3)
+                             movl %1,(%2)
                              jmp *(%3)
                           0:
                        "
@@ -2023,13 +2024,15 @@ Case(GETVOID)
   Case(INLINEPLUS)
     {
 
-#if defined(ASSEM_ARITH) && defined(__GNUC__) && defined(__i386__) && defined(REGOPT) && defined(FASTERREGACCESS)
+#if defined(FASTARITH) && defined(__GNUC__) && defined(__i386__) && defined(REGOPT) && defined(FASTERREGACCESS)
 
       {
 	register TaggedRef A, B;
 	
         asm volatile("movl   4(%2),%0
                       movl   8(%2),%1
+                      movl   (%0),%0
+                      movl   (%1),%1
                            
                      "
                      : "=r" (A),
@@ -2043,11 +2046,13 @@ Case(GETVOID)
 	  B = B ^ SMALLINT;
 	  if (!(B & tagMask)) {
 
-	    asm volatile("   addl %2,%1
+	    asm volatile("   
+                             addl %2,%1
                              jo   0f
-                             orl  %0,%1
-                             movl %1,12(%3)
+                             movl 12(%3),%2
                              addl $16,%3
+                             orl  %0,%1
+                             movl %1,(%2)
                              jmp *(%3)
                           0:
                        "
@@ -2130,6 +2135,47 @@ Case(GETVOID)
 
   Case(INLINEMINUS1)
     {
+#if defined(FASTARITH) && defined(__GNUC__) && defined(__i386__) && defined(REGOPT) && defined(FASTERREGACCESS)
+
+      {
+	register TaggedRef A, T;
+	
+        asm volatile("    movl   4(%1),%0
+                          movl   (%0),%0
+                     "
+		     : "=r" (A) : "r" (PC)); 
+	
+      retryINLINEMINUS1:
+	A = A ^ SMALLINT;
+	if (!(A & tagMask)) {
+	  asm volatile("   addl $12,%3
+                           movl -4(%3),%2
+                           addl %0,%1
+                           jo   0f
+                           movl %1,(%2)
+                           jmp *(%3)
+                        0: movl %4,%1
+                           movl %1,(%2)
+                           jmp *(%3)
+                       "
+                       :  
+                       : "i" (SMALLINT - (1 << tagSize)),
+		         "r" (A),
+                         "r" (T),
+		         "r" (PC),
+		         "m" (TaggedOzOverMinInt)
+                       );
+	} else {
+	  A = A ^ SMALLINT;
+	  if (oz_isRef(A)) {
+	    A = oz_derefOne(A);
+	    goto retryINLINEMINUS1;
+	  }
+	}
+      }
+      
+#else
+
       TaggedRef A = XPC(1);
 
     retryINLINEMINUS1:
@@ -2150,6 +2196,8 @@ Case(GETVOID)
 	goto retryINLINEMINUS1;
       }
 
+#endif
+
       auxTaggedA = XPC(1);
       auxTaggedB = makeTaggedSmallInt(1);
       auxInt     = 3;
@@ -2162,33 +2210,35 @@ Case(GETVOID)
   Case(INLINEPLUS1)
     {
 
-#if defined(ASSEM_ARITH) && defined(__GNUC__) && defined(__i386__) && defined(REGOPT) && defined(FASTERREGACCESS)
+#if defined(FASTARITH) && defined(__GNUC__) && defined(__i386__) && defined(REGOPT) && defined(FASTERREGACCESS)
 
       {
-	register TaggedRef A;
+	register TaggedRef A, T;
 	
-        asm volatile("movl   4(%1),%0
-                           
+        asm volatile("    movl   4(%1),%0
+                          movl   (%0),%0
                      "
-                     : "=r" (A)
-                     : "r" (PC));
+		     : "=r" (A) : "r" (PC)); 
 	
       retryINLINEPLUS1:
 	A = A ^ SMALLINT;
 	if (!(A & tagMask)) {
-	  asm volatile("   addl %0,%1
+	  asm volatile("   addl $12,%3
+                           movl -4(%3),%2
+                           addl %0,%1
                            jo   0f
-                           movl %3,%1
-                        0: movl %1,8(%2)
-                           addl $12,%2
-                           jmp *(%2)
+                           movl %1,(%2)
+                           jmp *(%3)
+                        0: movl %4,%1
+                           movl %1,(%2)
+                           jmp *(%3)
                        "
-                       :  /* OUTPUT */
-                       :  /* INPUT  */
-		       "i" (SMALLINT + (1 << tagSize)),
-		       "r" (A),
-		       "r" (PC),
-		       "m" (TaggedOzOverMaxInt)
+                       :  
+                       : "i" ((1 << tagSize) + SMALLINT),
+		         "r" (A),
+                         "r" (T),
+		         "r" (PC),
+		         "m" (TaggedOzOverMaxInt)
                        );
 	} else {
 	  A = A ^ SMALLINT;
