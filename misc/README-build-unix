@@ -34,16 +34,18 @@ its virtual computer.
   Have the Mozart source tree, e.g. as ${HOME}/mozart
 
 . Copy the following sources into $BUILD:
--r--r--r--    1 kost     sics      7284401 Feb 14 19:06 binutils-2.10.1.tar.gz
--r--r--r--    1 kost     sics     12911721 Apr 12 15:40 gcc-2.95.3.tar.gz
--r--r--r--    1 kost     sics       134080 Feb 14 19:06 gdbm-1.8.0.tar.gz
--r--r--r--    1 kost     sics      1033780 Feb 14 19:06 gmp-3.1.1.tar.gz
--rw-r--r--    1 kost     sics       317588 Feb 19 19:32 m4-1.4.tar.gz
--rw-r--r--    1 kost     sics      3679040 Feb 19 17:59 perl5.005_03.tar.gz
--r--r--r--    1 kost     sics       297790 Feb 14 19:06 regex-0.12.tar.gz
--r--r--r--    1 kost     sics      2502194 Feb 14 19:06 tcl8.2.3.tar.gz
--r--r--r--    1 kost     sics      2336472 Feb 14 19:06 tk8.2.3.tar.gz
--r--r--r--    1 kost     sics       168463 Feb 14 19:06 zlib-1.1.3.tar.gz
+-r--r--r--    1 kost     dsl       7284401 May 10 14:42 binutils-2.10.1.tar.gz
+-r--r--r--    1 kost     dsl        420341 May 11 12:00 bison-1.28.tar.gz
+-r--r--r--    1 kost     dsl        380995 May 11 12:06 flex-2.5.4a.tar.gz
+-r--r--r--    1 kost     dsl      12911721 May 10 14:42 gcc-2.95.3.tar.gz
+-r--r--r--    1 kost     dsl        134080 May 10 14:42 gdbm-1.8.0.tar.gz
+-r--r--r--    1 kost     dsl       1033780 May 10 14:42 gmp-3.1.1.tar.gz
+-r--r--r--    1 kost     dsl        317588 May 10 14:42 m4-1.4.tar.gz
+-r--r--r--    1 kost     dsl       3679040 May 10 14:42 perl5.005_03.tar.gz
+-r--r--r--    1 kost     dsl        297790 May 10 14:42 regex-0.12.tar.gz
+-r--r--r--    1 kost     dsl       2502194 May 10 14:42 tcl8.2.3.tar.gz
+-r--r--r--    1 kost     dsl       2336472 May 10 14:42 tk8.2.3.tar.gz
+-r--r--r--    1 kost     dsl        168463 May 10 14:42 zlib-1.1.3.tar.gz
 
 . Copy mozart source tree into the $BUILD, e.g.:
 
@@ -118,8 +120,8 @@ my updates):
         Do not use (the code is incorrect):
                 -ffastmath
                 -march=i686 (or its equivalents), instead: -march=i586 -mcpu=i
-        Note that '-fstrict-aliasing' does work for Mozart now;
+        Note that on Intel"s '-fstrict-aliasing' does work for Mozart now;
 
 NOTE: the official 1.2.0 Release RPM"s for RedHat 7.0 are made on
 RedHat 6.2 using rpm-4.0 (installation of which, in turn, required
-manuall installation of the db3 package) and gcc-2.95.2/glibc-2.1.3-21.
+manuall installation of the db3 package) and gcc-2.95.3/glibc-2.1.3-21.
