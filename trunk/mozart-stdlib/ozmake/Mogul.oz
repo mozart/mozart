@@ -124,12 +124,12 @@ define
 	     {Path.resolve {self get_moguldocurl($)}
 	      {Utils.mogulToFilename R.mogul}#'/'#F}#'\n'}
 	 else skip end
+	 for T in {CondSelect R bin nil} do
+	    {Q.put 'provides:       '#T#'\n'}
+	 end
 	 for T in {CondSelect R lib nil} do
 	    {Q.put 'provides:       '#
 	     {Path.resolve R.uri T}#'\n'}
-	 end
-	 for T in {CondSelect R bin nil} do
-	    {Q.put 'provides:       '#T#'\n'}
 	 end
 	 if {HasFeature R info_html} then
 	    {Q.put 'content-type:   text/html\n\n'}
