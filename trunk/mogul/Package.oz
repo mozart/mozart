@@ -18,7 +18,7 @@ define
    class Package from GS XT EntryClass HTMLClass
       attr id pid url blurb provides requires content_type
 	 url_pkg url_doc body author contact keywords
-	 categories url_doc_extra title
+	 categories url_doc_extra title version
       meth init(Msg Id Url Pid Prev)
 	 {Manager incTrace('--> init Package '#Id)}
 	 try
@@ -38,6 +38,7 @@ define
 	    categories   <- {self getCategories($)}
 	    url_doc_extra<- {Msg condGet('url-doc-extra' nil $)}
 	    title        <- {Msg condGet1('title' unit $)}
+	    version      <- {Msg condGet1('version' unit $)}
 	    %% !!! here we should copy the persistent info from Prev
 	 finally
 	    {Manager decTrace('<-- init Package '#Id)}
