@@ -7167,6 +7167,18 @@ OZ_C_proc_begin(BInewNamedName,2)
 }
 OZ_C_proc_end
 
+OZ_C_proc_begin(BIisUniqueName,2)
+{
+  oz_declareNonvarArg(0,val);
+  oz_declareArg(1,res);
+
+  if (isLiteral(val) && tagged2Literal(val)->isUniqueName())
+    return oz_unify(res,NameTrue);
+  else
+    return oz_unify(res,NameFalse);
+}
+OZ_C_proc_end
+
 OZ_C_proc_begin(BIgenerateAbstractionTableID,2)
 {
   oz_declareNonvarArg(0,forComponent);
@@ -7914,6 +7926,7 @@ BIspec allSpec[] = {
   {"getBuiltinName",             2, BIgetBuiltinName,             0},
   {"nameVariable",               2, BInameVariable,               0},
   {"newNamedName",               2, BInewNamedName,               0},
+  {"isUniqueName",               2, BIisUniqueName,               0},
   {"generateAbstractionTableID", 2, BIgenerateAbstractionTableID, 0},
   {"concatenateAtomAndInt",      3, BIconcatenateAtomAndInt,      0},
   {"RegSet.new",                 3, BIregSet_new,                 0},

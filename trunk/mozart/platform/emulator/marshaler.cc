@@ -704,7 +704,7 @@ loop:
 	PD((MARSHAL_CT,"tag DIF_ATOM  BYTES:1"));
 	marshalString(lit->getPrintName(),bs);
 	PD((MARSHAL,"atom: %s",lit->getPrintName()));
-      } else if (lit->getFlags()&Lit_isUniqueName) {
+      } else if (lit->isUniqueName()) {
 	marshalDIF(bs,DIF_UNIQUENAME);
 	marshalString(lit->getPrintName(),bs);	
 	PD((MARSHAL,"unique name: %s",lit->getPrintName()));
