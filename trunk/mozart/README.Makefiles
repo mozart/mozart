@@ -46,12 +46,12 @@ TOOLSDIR=	$(LIBDIR)/tools
 ELISPDIR=	$(LIBDIR)/elisp
 IMAGESDIR=	$(LIBDIR)/images
 
-CACHEDIR= 	$(PREFIX)/cache/http/www.ps.uni-sb.de/ozhome
+CACHEDIR= 	$(PREFIX)/cache/http/mozart.ps.uni-sb.de/home
 CACHETOOLS= 	$(CACHEDIR)/tools
 CACHEBIN=	$(CACHEDIR)/bin
 LIBCACHE=	$(CACHEDIR)/lib
 
-URL=		http\\://www.ps.uni-sb.de/ozhome
+URL=		http\\://mozart.ps.uni-sb.de/home
 
 ######################################################################
 # programs
