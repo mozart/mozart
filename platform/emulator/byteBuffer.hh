@@ -107,6 +107,8 @@ public:
   }
   int getInt();
   BYTE getNext();
+  // getCommit may never be called when no data has been read, that
+  // case looks equivalent to the case of all data being read.
   void getCommit();
   void getEnd();
 
@@ -124,6 +126,12 @@ public:
   DSite *fixsite;
 // End of development fixes
 //
+
+  //
+  DebugCode(BYTE* getGetptr() { return (getptr); })
+  DebugCode(BYTE* getPutptr() { return (putptr); })
+  DebugCode(BYTE* getPosMB() { return (posMB); })
+  DebugCode(BYTE* getEndMB() { return (endMB); })
 };
 
 
