@@ -1155,6 +1155,26 @@ define
 	    [] em then
 	       em(COMMON: @Common OzDocToHTML, Batch(M 1 $))
 	    %-----------------------------------------------------------
+	    %--** explorer.sgml Specials
+	    %-----------------------------------------------------------
+	    [] 'note.gui' then
+	       if {HasFeature M mouse} then
+		  BLOCK('div'(COMMON: @Common
+			      p('class': [margin]
+				OzDocToHTML,Batch(M 1 $)
+				img(src: 'note-gui-'#M.mouse#'.gif'
+				    alt: case M.mouse
+					 of l1 then 'Left mouse click'
+					 [] l2 then 'Left mouse double-click'
+					 [] r1 then 'Right mouse click'
+					 [] r2 then 'Right mouse double-click'
+					 [] m1 then 'Middle mouse click'
+					 [] m2 then 'Middle mouse double-click'
+					 end))))
+	       else
+		  EMPTY	       
+	       end
+	    %-----------------------------------------------------------
 	    %--** ozdoc.sgml Specials
 	    %-----------------------------------------------------------
 	    [] tag then
