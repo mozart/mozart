@@ -233,6 +233,8 @@ OZ_BI_define(BIbreakpoint, 0,0)
   return PROCEED;
 } OZ_BI_end
 
+#ifdef MISC_BUILTINS
+
 OZ_BI_define(BIdisplayDef, 2,0)
 {
   OZ_declareIntIN(0,pc);
@@ -262,6 +264,8 @@ OZ_BI_define(BIprocedureCode, 1,1)
   Abstraction *a=tagged2Abstraction(proc);
   OZ_RETURN_INT(ToInt32(a->getPred()->getPC()));
 } OZ_BI_end
+
+#endif
 
 OZ_BI_define(BIprocedureCoord, 1,1)
 {
