@@ -52,13 +52,15 @@ typedef unsigned int OZ_Term;
 
 typedef unsigned int OZ_Return;
 
-#define FAILED    0
-#define PROCEED   1
-#define ENTAILED  PROCEED
-#define SUSPEND   2
-#define SLEEP     3
-#define SCHEDULED 4
-#define RAISE     5
+#define FAILED      0
+#define PROCEED     1
+#define ENTAILED    PROCEED
+#define SUSPEND     2
+#define SLEEP       3
+#define SCHEDULED   4
+#define RAISE       5
+#define RAISE_USER  6
+#define RAISE_BIERROR 7
 
 
 typedef void *OZ_Thread;

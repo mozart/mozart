@@ -1515,11 +1515,9 @@ LBLdispatcher:
     {
       BuiltinTabEntry* entry = (BuiltinTabEntry*) getAdressArg(PC+1);
       biFun = entry->getFun();
-      Assert(biFun); // NOTE: special builtin need suspension handler
       predArity = getPosIntArg(PC+2);
 
-      CheckArity(entry->getArity(),
-		 OZ_findBuiltin(entry->getPrintName(), OZ_atom("noHandler")));
+      CheckArity(entry->getArity(),makeTaggedConst(entry));
 
       switch (biFun(predArity, X)){
 
@@ -1528,7 +1526,13 @@ LBLdispatcher:
       case RAISE:	  RAISE_BI;
       case BI_TYPE_ERROR: RAISE_TYPE;
       case BI_TERMINATE:  goto LBLpopTask;
+      case RAISE_BIERROR: RAISE_ERROR(X[0]);
 
+       case RAISE_USER:
+	 exceptionType=E_USER;
+	 exceptionValue=X[0];
+	 goto LBLraise;
+	 
       case SUSPEND:
 	e->pushTask(PC,Y,G,X,predArity);
 	e->suspendOnVarList(CTT);
@@ -2344,7 +2348,7 @@ LBLdispatcher:
 // -----------------------------------------------------------------------
 
   LBLcall:
-     Builtin *bi;
+     BuiltinTabEntry *bi;
 
 // -----------------------------------------------------------------------
 // --- Call: Abstraction
@@ -2353,174 +2357,139 @@ LBLdispatcher:
      {
        TypeOfConst typ = predicate->getType();
 
-       switch (typ) {
-       case Co_Abstraction:
-       case Co_Object:
-	 {
-	   Abstraction *def;
-	   if (typ==Co_Object) {
-	     Object *o = (Object*) predicate;
-	     if (o->isClass()) {
-	       RAISE_APPLY(makeTaggedConst(predicate),
-			   OZ_toList(predArity,X));
-	     }
-	     CheckArity(1,makeTaggedConst(o));
-	     def = o->getAbstraction();
-	     /* {Obj Msg} --> {Send Msg Methods Obj} */
-	     X[predArity++] = makeTaggedConst(o->getSlowMethods());
-	     X[predArity++] = makeTaggedConst(o);
-	     if (!isTailCall) { 
-	       CallPushCont(PC);
-	     }
-	     ChangeSelf(o); 
-	   } else {
-	     def = (Abstraction *) predicate;
-	     CheckArity(def->getArity(), makeTaggedConst(def));
-	     if (!isTailCall) { CallPushCont(PC); }
+       if (typ==Co_Abstraction || typ==Co_Object) {
+	 Abstraction *def;
+	 if (typ==Co_Object) {
+	   Object *o = (Object*) predicate;
+	   if (o->isClass()) {
+	     RAISE_APPLY(makeTaggedConst(predicate),
+			 OZ_toList(predArity,X));
 	   }
-	   if (def->isProxy()) {
-	     CTS->pushCall(makeTaggedConst(def),X,def->getArity());
-	     TaggedRef var = ((ProcProxy*)def)->getSuspvar();
-	     addSusp(var,CTT);
-	     goto LBLsuspendThread;
+	   CheckArity(1,makeTaggedConst(o));
+	   def = o->getAbstraction();
+	   /* {Obj Msg} --> {Send Msg Methods Obj} */
+	   X[predArity++] = makeTaggedConst(o->getSlowMethods());
+	   X[predArity++] = makeTaggedConst(o);
+	   if (!isTailCall) { 
+	     CallPushCont(PC);
 	   }
-       
-	   CallDoChecks(def,def->getGRegs(),def->getArity());
-	   JUMP(def->getPC());
+	   ChangeSelf(o); 
+	 } else {
+	   def = (Abstraction *) predicate;
+	   CheckArity(def->getArity(), makeTaggedConst(def));
+	   if (!isTailCall) { CallPushCont(PC); }
 	 }
+	 if (def->isProxy()) {
+	   CTS->pushCall(makeTaggedConst(def),X,def->getArity());
+	   TaggedRef var = ((ProcProxy*)def)->getSuspvar();
+	   addSusp(var,CTT);
+	   goto LBLsuspendThread;
+	 }
+       
+	 CallDoChecks(def,def->getGRegs(),def->getArity());
+	 JUMP(def->getPC());
+       }
 
 
 // -----------------------------------------------------------------------
 // --- Call: Builtin
 // -----------------------------------------------------------------------
-       case Co_Builtin:
-	 {
-	   bi = (Builtin *) predicate;
-	   
-	   CheckArity(bi->getArity(),makeTaggedConst(bi));
-	   
-	   switch (bi->getType()) {
-	     
-	   case BIraise:
-	     exceptionType=E_USER;
-	     exceptionValue=X[0];
-	     goto LBLraise;
+       Assert(typ==Co_Builtin);
 
-	   case BIraiseError:
-	     RAISE_ERROR(X[0]);
-	     
-	   case BIDefault:
-	     {
-	       if (e->breakflag) {
-		 e->currentThread->startStepMode();
-		 e->breakflag = NO;
-		 debugStreamThread(e->currentThread);
-	       }
+       bi = (BuiltinTabEntry *) predicate;
+	   
+       CheckArity(bi->getArity(),makeTaggedConst(bi));
+	   
+       if (e->breakflag) {
+	 e->currentThread->startStepMode();
+	 e->breakflag = NO;
+	 debugStreamThread(e->currentThread);
+       }
 
-	       if (e->debugmode() && e->currentThread->stepMode()) {
-		 //enterCall(CBB,makeTaggedConst(bi),predArity,X);
+       if (e->debugmode() && e->currentThread->stepMode()) {
+	 //enterCall(CBB,makeTaggedConst(bi),predArity,X);
 #ifndef STEPWITHDEBUGINFO
-		 //Board *b = e->currentBoard; 
-		 //e->currentBoard = e->rootBoard;
+	 //Board *b = e->currentBoard; 
+	 //e->currentBoard = e->rootBoard;
       
-		 ProgramCounter dbg = CodeArea::nextDebugInfo(PC);
-		 if (dbg != NOCODE) {
+	 ProgramCounter dbg = CodeArea::nextDebugInfo(PC);
+	 if (dbg != NOCODE) {
 
-		   TaggedRef tail    = e->threadStreamTail;
-		   TaggedRef newTail = OZ_newVariable();
+	   TaggedRef tail    = e->threadStreamTail;
+	   TaggedRef newTail = OZ_newVariable();
+	   
+	   TaggedRef file, comment;
+	   int line, abspos;
 		   
-		   TaggedRef file, comment;
-		   int line, abspos;
-		   
-		   e->currentThread->stop();
-		   CodeArea::getDebugInfoArgs(dbg,file,line,abspos,comment);
+	   e->currentThread->stop();
+	   CodeArea::getDebugInfoArgs(dbg,file,line,abspos,comment);
       
-		   TaggedRef pairlist = 
-		     OZ_cons(OZ_pairA("thr",
-				      OZ_mkTupleC("#",2,makeTaggedConst(CTT),
-						  OZ_int(CTT->getID()))),
-			     OZ_cons(OZ_pairA("file", file),
-				     OZ_cons(OZ_pairAI("line", line),
-					     OZ_nil())));
-		   
-		   TaggedRef entry = OZ_recordInit(OZ_atom("step"), pairlist);
-		   OZ_unify(tail, OZ_cons(entry, newTail));
-		   e->threadStreamTail = newTail;
+	   TaggedRef pairlist = 
+	     OZ_cons(OZ_pairA("thr",
+			      OZ_mkTupleC("#",2,makeTaggedConst(CTT),
+					  OZ_int(CTT->getID()))),
+		     OZ_cons(OZ_pairA("file", file),
+			     OZ_cons(OZ_pairAI("line", line),
+				     OZ_nil())));
+	   
+	   TaggedRef entry = OZ_recordInit(OZ_atom("step"), pairlist);
+	   OZ_unify(tail, OZ_cons(entry, newTail));
+	   e->threadStreamTail = newTail;
+	   
+	   //e->currentBoard = b;
+	   
+	   if (!isTailCall) e->pushTask(PC,Y,G);
+	   e->pushCFun(bi->getFun(),X,predArity);     
 
-		   //e->currentBoard = b;
-
-		   if (!isTailCall) e->pushTask(PC,Y,G);
-		   e->pushCFun(bi->getFun(),X,predArity);     
-
-		   goto LBLpreemption;
-		 }
+	   goto LBLpreemption;
+	 }
 #endif
-	       }
+       }
 
-	       biFun=bi->getFun();
-	       OZ_Return res = biFun(predArity, X);
+       biFun=bi->getFun();
+       OZ_Return res = biFun(predArity, X);
+	     
+       //if (e->isSetSFlag(DebugMode)) {
+       //exitBuiltin(res,makeTaggedConst(bi),predArity,X);
+       //}
 
-	       //if (e->isSetSFlag(DebugMode)) {
-	       //exitBuiltin(res,makeTaggedConst(bi),predArity,X);
-	       //}
-
-	       switch (res) {
+       switch (res) {
 	    
-	       case SUSPEND:
-		 {
-		   TaggedRef sh = bi->getSuspHandler();
-		   if (sh==makeTaggedNULL()) {
-		     if (!isTailCall) e->pushTask(PC,Y,G);
-		     e->pushCFun(biFun,X,predArity);
-		     e->suspendOnVarList(CTT);
-		     goto LBLsuspendThread;
-		   }
-		   predicate = tagged2Const(sh);
-		 }
-		 goto LBLcall; 
-	       case FAILED:
-		 HF_BI;
+       case SUSPEND:
+	 {
+	   if (!isTailCall) e->pushTask(PC,Y,G);
+	   e->pushCFun(biFun,X,predArity);
+	   e->suspendOnVarList(CTT);
+	   goto LBLsuspendThread;
+	 }
 
-	       case SLEEP: // no break
-		 Assert(0);
-	       case PROCEED:
-		 if (isTailCall) {
-		   goto LBLpopTask;
-		 }
-		 JUMP(PC);
+       case PROCEED:
+	 if (isTailCall) {
+	   goto LBLpopTask;
+	 }
+	 JUMP(PC);
+	 
+       case SLEEP:         Assert(0);
+       case RAISE:         RAISE_BI;
+       case RAISE_BIERROR: RAISE_ERROR(X[0]);
+       case BI_TYPE_ERROR: RAISE_TYPE;
+       case BI_TERMINATE:  goto LBLpopTask;
+       case FAILED:        HF_BI;
 
-	       case RAISE:
-		 RAISE_BI;
+       case RAISE_USER:
+	 exceptionType=E_USER;
+	 exceptionValue=X[0];
+	 goto LBLraise;
 
-	       case BI_TYPE_ERROR:
-		 RAISE_TYPE;
-
-	       case BI_PREEMPT:
-		 if (!isTailCall) {
-		   e->pushTask(PC,Y,G);
-		 }
-		 goto LBLpreemption;
-
-	       case BI_TERMINATE:
-		 goto LBLpopTask;
-
-	       default:
-		 Assert(0);
-		 goto LBLerror;
-	       }
-	     }
-	   default:
-	     break;
-	   }
-	   error("emulate: call: builtin %s not correctly specified",
-		 bi->getPrintName());
-	   goto LBLerror;
-	 } // end builtin
-       default:
-	 error("unknown procedure type: %d",typ);
-       } // end switch on type of predicate
+       case BI_PREEMPT:
+	 if (!isTailCall) {
+	   e->pushTask(PC,Y,G);
+	 }
+	 goto LBLpreemption;
+	 
+       default: Assert(0);
+       }
      }
-
 // ------------------------------------------------------------------------
 // --- Call: Builtin: raise
 // ------------------------------------------------------------------------

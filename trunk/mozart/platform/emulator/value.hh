@@ -1635,85 +1635,41 @@ public:
  * Builtin (incl. BuiltinTabEntry)
  *=================================================================== */
 
-// special builtins known in emulate
-enum BIType {
-  BIDefault,
-  BIraise,
-  BIraiseError
-};
-
-class BuiltinTabEntry {
+class BuiltinTabEntry: public ConstTerm {
+friend void ConstTerm::gcConstRecurse(void);
   friend class Debugger;
+private:
+  TaggedRef printname; //must be atom
+  int arity;
+  OZ_CFun fun;
+  IFOR inlineFun;
+
 public:
-  BuiltinTabEntry (Literal *name,int arty,OZ_CFun fn,
-		   IFOR infun=NULL)
-  : printname(makeTaggedLiteral(name)), arity(arty),fun(fn),
-    inlineFun(infun), type(BIDefault)
-  {
-    Assert(isAtom(printname));
-  }
-  BuiltinTabEntry (char *s,int arty,OZ_CFun fn,
-		   IFOR infun=NULL)
-  : arity(arty),fun(fn), inlineFun(infun), type(BIDefault)
+
+  /* use malloc to allocate memory */
+  static void *operator new(size_t chunk_size)
+  { return ::new char[chunk_size]; }
+  
+  BuiltinTabEntry(char *s,int arty,OZ_CFun fn,IFOR infun)
+  : arity(arty),fun(fn), inlineFun(infun), ConstTerm(Co_Builtin)
   {
     printname = makeTaggedAtom(s);
-    Assert(isAtom(printname));
-  }
-  BuiltinTabEntry (char *s,int arty,OZ_CFun fn,BIType t,
-		   IFOR infun=NULL)
-    : arity(arty),fun(fn), inlineFun(infun), type(t) {
-      printname = makeTaggedAtom(s);
-    }
-  BuiltinTabEntry (char *s,int arty,BIType t, IFOR infun=(IFOR)NULL)
-    : arity(arty),fun(NULL), inlineFun(infun), type(t)
-  {
-    printname = makeTaggedAtom(s);
-    Assert(isAtom(printname));
   }
 
   ~BuiltinTabEntry () {}
 
   OZPRINT;
+  OZPRINTLONG;
+
   OZ_CFun getFun() { return fun; }
   int getArity() { return arity; }
   char *getPrintName() { return tagged2Literal(printname)->getPrintName(); }
   TaggedRef getName() { return printname; }
   IFOR getInlineFun() { return inlineFun; } 
-  BIType getType() { return type; } 
 
-private:
-
-  TaggedRef printname; //must be atom
-  int arity;
-  OZ_CFun fun;
-  IFOR inlineFun;
-  BIType type;
 };
 
 
-
-class Builtin: public ConstTerm {
-friend void ConstTerm::gcConstRecurse(void);
-private:
-  BuiltinTabEntry *fun;
-  TaggedRef suspHandler; // this one is called, when it must suspend
-public:
-
-  Builtin(BuiltinTabEntry *fn, TaggedRef handler)
-    : fun(fn), suspHandler(handler), ConstTerm(Co_Builtin)
-    {}
-
-  OZPRINT;
-  OZPRINTLONG;
-
-  int getArity()                    { return fun->getArity(); }
-  OZ_CFun getFun()                  { return fun->getFun(); }
-  char *getPrintName()              { return fun->getPrintName(); }
-  TaggedRef getName()               { return fun->getName(); }
-  BIType getType()                  { return fun->getType(); } 
-  TaggedRef getSuspHandler()        { return suspHandler; }
-  BuiltinTabEntry *getBITabEntry()  { return fun; }
-};
 
 inline
 Bool isBuiltin(ConstTerm *s)
@@ -1728,10 +1684,10 @@ Bool isBuiltin(TaggedRef term)
 }
 
 inline
-Builtin *tagged2Builtin(TaggedRef term)
+BuiltinTabEntry *tagged2Builtin(TaggedRef term)
 {
   Assert(isBuiltin(term));
-  return (Builtin *)tagged2Const(term);
+  return (BuiltinTabEntry *)tagged2Const(term);
 }
 
 /*===================================================================

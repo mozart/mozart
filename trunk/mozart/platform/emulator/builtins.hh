@@ -29,7 +29,6 @@ OZ_Term OZ_findBuiltin(char *name, OZ_Term handler);
 
 BuiltinTabEntry *BIinit();
 BuiltinTabEntry *BIadd(char *name,int arity,OZ_CFun fun,IFOR infun=(IFOR) NULL);
-BuiltinTabEntry *BIaddSpecial(char *name,int arity,BIType t);
 
 OZ_Return sendPort(OZ_Term port, OZ_Term val);
 
@@ -53,6 +52,8 @@ public:
     }
     return "???";
   }
+
+  BuiltinTabEntry *find(char *name) { return (BuiltinTabEntry*) htFind(name); }
 };
 
 extern BuiltinTab builtinTab;
