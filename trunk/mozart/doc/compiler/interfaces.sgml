@@ -63,15 +63,15 @@
       <List>
 	<Entry><<info(?_{V})>>
 	<Item>
-	  An information message&nbsp;?_{V} is to be output.
+	  An information message&nbsp;?_{V} is to be printed out.
 	<Entry><<info(?_{V} ?_{Coord})>>
 	<Item>
 	  An information message&nbsp;?_{V}, related to the source coordinates
-	  ?_{Coord}, is to be output.
+	  ?_{Coord}, is to be printed out.
 	<Entry><<message(?_{R} ?_{Coord})>>
 	<Item>
 	  An error or warning message&nbsp;?_{R}, related to the source
-	  coordinates ?_{Coord}, is to be output.  ?_{R}&nbsp;has the
+	  coordinates ?_{Coord}, is to be printed out.  ?_{R}&nbsp;has the
 	  standard error message format, described in
 	  <File>mozart/share/lib/sp/Error.oz</File>.<!--**-->
 	<Entry><<insert(?_{V} ?_{Coord})>>
