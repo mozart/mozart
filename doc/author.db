@@ -1,4 +1,4 @@
-key:            denys.duchier
+key:            Denys.Duchier
 lastname:       Duchier
 firstname:      Denys
 www:            http://www.ps.uni-sb.de/~duchier/
@@ -20,27 +20,23 @@ email:          tmueller@ps.uni-sb.de
 key:            Martin.Henz
 lastname:       Henz
 firstname:      Martin
-middlename:
 www:            http://www.ps.uni-sb.de/~henz/
 email:          henz@ps.uni-sb.de
 
 key:            Martin.Mueller
 lastname:       Müller
 firstname:      Martin
-middlename:
 www:            http://www.ps.uni-sb.de/~mmueller/
 email:          mmueller@ps.uni-sb.de
 
 key:            Christian.Schulte
 lastname:       Schulte
 firstname:      Christian
-middlename:
 www:            http://www.ps.uni-sb.de/~schulte/
 email:          schulte@ps.uni-sb.de
 
 key:            Joerg.Wuertz
 lastname:       Würtz
 firstname:      Jörg
-middlename:
 www:            http://www.ps.uni-sb.de/~wuertz/
 email:          wuertz@ps.uni-sb.de
