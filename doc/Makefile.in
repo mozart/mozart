@@ -35,8 +35,7 @@ CED             = @CED@
 HOMEURL         = @HOMEURL@
 
 
-FILES           = ozdoc.dcl ozdoc.dtd ozdoc.doc catalog $(CED) author.db \
-                  mozart.bib
+FILES           = ozdoc.dcl ozdoc.dtd ozdoc.doc catalog $(CED) author.db
 LIBFILES        = $(addprefix $(SHDOCDIR)/,$(FILES))
 
 EMACS           = emacs

@@ -26,7 +26,6 @@ SRCTOP          = @SRCTOP@
 BUILDTOP        = @BUILDTOP@
 BINDIR          = $(PREFIX)/bin
 DOCDIR          = $(PREFIX)/share/doc
-ELISPDIR        = $(PREFIX)/share/elisp
 HOMEURL         = @HOMEURL@
 
 INSTALL         = @INSTALL@
@@ -46,14 +45,11 @@ FUNCTORS = \
         File.ozf HTML.ozf OzDocToHTML.ozf Main.ozf Chunk.ozf
 
 SYSLETS = ozdoc
-ELS = ozdoc.el
-ELCS = $(ELS:%.el=%.elc)
-SHELLSCRIPTS = fontify latex2gif gif2thumbnail
+SHELLSCRIPTS = latex2gif gif2thumbnail
 
 BINFILES = $(SYSLETS:%=$(BINDIR)/%)
 DOCBINFILES = $(SHELLSCRIPTS:%=$(DOCDIR)/%)
 DOCFILES = $(DOCDIR)/html.bst
-ELISPFILES = $(ELS:%=$(ELISPDIR)/%) $(ELCS:%=$(ELISPDIR)/%)
 
 .PHONY: bootstrap all clean veryclean distclean quick boot-quick
 
@@ -83,9 +79,8 @@ ozdoc: $(FUNCTORS)
 
 install: $(BINDIR) $(BINFILES)
 install: $(DOCDIR) $(DOCBINFILES) $(DOCFILES)
-install: $(ELISPDIR) $(ELISPFILES)
 
-$(BINDIR) $(DOCDIR) $(ELISPDIR):
+$(BINDIR) $(DOCDIR):
         $(INSTALL_DIR) $@
 
 $(BINFILES): $(BINDIR)/% : %
@@ -95,9 +90,6 @@ $(DOCBINFILES): $(DOCDIR)/% : %
         $(INSTALL_BIN) $< $@
 
 $(DOCFILES): $(DOCDIR)/% : %
-        $(INSTALL_FILE) $< $@
-
-$(ELISPFILES): $(ELISPDIR)/% : %
         $(INSTALL_FILE) $< $@
 
 clean:
