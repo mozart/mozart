@@ -170,9 +170,6 @@ public:
   TaggedRef threadStream;
   TaggedRef threadStreamTail;
   Bool breakflag;
-#ifdef THREADARRAY
-  TaggedRef *threadArray;
-#endif
   Toplevel *toplevelQueue;
 
 
@@ -263,12 +260,11 @@ public:
   Bool isNotPreemtiveScheduling(void);
 
   inline RunnableThreadBody* allocateBody();
-  inline Thread *mkRunnableThread(int prio, Board *bb,
-				  Bool inSolve=NO, Bool link=NO);
+  inline Thread *mkRunnableThread(int prio, Board *bb, Bool inSolve=NO);
   Thread *mkLTQ(Board *bb, int prio, SolveActor * sa);
   Thread *mkWakeupThread(Board *bb);
   Thread *mkPropagator(Board *bb, int prio, OZ_Propagator *pro);
-  INLINE Thread *mkSuspendedThread(Board *bb, int prio, TaggedRef val);
+  INLINE Thread *mkSuspendedThread(Board *bb, int prio);
 
   TaggedRef createNamedVariable(int regIndex, TaggedRef name);
   void handleToplevelBlocking();
@@ -317,8 +313,6 @@ public:
   Bool isMoreLocal(TaggedRef var1, TaggedRef var2);
 
   INLINE void pushCall(TaggedRef def, int arity, RefsArray args);
-
-  void pushDebug(TaggedRef def, int arity, RefsArray args);
 
   INLINE void pushTaskInline(ProgramCounter pc,RefsArray y,RefsArray g);
 
@@ -386,6 +380,8 @@ extern AM am;
 
 #include "lps.hh"
 
+#include "debug.hh"
+
 #include "thread.hh"
 #include "susplist.hh"
 #include "variable.hh"
@@ -397,7 +393,6 @@ extern AM am;
 
 #include "builtins.hh"
 #include "compiler.hh"
-#include "debug.hh"
 #include "os.hh"
 #include "verbose.hh"
 
