@@ -1397,7 +1397,9 @@ to handle lines like 'attr a:'."
 	      (goto-char oldpos)
 	    (widen)
 	    (goto-char start2)))
-	(set-window-point window start2)))))
+	(set-window-point window start2)
+	(if (not (pos-visible-in-window-p))
+	    (recenter))))))
 
 (defun oz-bar-configure (state)
   "Change color of bar while not moving it."
@@ -2353,7 +2355,9 @@ The ARG is interpreted just as with \\[recenter]."
 	(setq start (match-beginning 0))
 	(setq string (concat (substring string 0 start)
 			     (substring string (match-end 0))))
-	(oz-bar file line column state))))
+	(save-excursion
+	  (set-buffer (process-buffer proc))
+	  (oz-bar file line column state)))))
   (oz-filter proc string))
 
 (defun oz-filter (proc string)
@@ -2383,8 +2387,11 @@ The ARG is interpreted just as with \\[recenter]."
 
 	  (if errs-found
 	      (progn
-		(goto-char errs-found)
-		(oz-show-buffer (current-buffer)))
+		(oz-show-buffer (current-buffer))
+		(set-window-start (get-buffer-window (current-buffer))
+				  errs-found)
+		(set-window-point (get-buffer-window (current-buffer))
+				  errs-found))
 	    (if moving
 		(goto-char (process-mark proc)))))
       (set-buffer old-buffer))))
