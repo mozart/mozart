@@ -24,6 +24,8 @@
 
 $module_init_fun_name = "fdp_init";
 
+$module_name          = "FD";
+
 %builtins_all =
 (
 

@@ -24,6 +24,8 @@
 
 $module_init_fun_name = "fsp_init";
 
+$module_name          = "FS";
+
 %builtins_all =
 (
     'isIn'              => { in  => ['int','fset','bool'],
