@@ -1,0 +1,105 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<html>
+  <head>
+    <title>Job-Shop Scheduling</title>
+    <link rel=stylesheet type="text/css"
+          href="demo.css">
+  </head>
+<body>
+
+<h1>Job-Shop Scheduling</h1>
+
+<div class=ignore>
+If you can read this, your browser provides insufficient support for style
+sheets.  The visual presentation of this document will suffer.
+</div>
+
+<menu class=margin>
+<li><p><a href="job-shop.oza">Start Applet</a>
+<li><p><a href="../install.html">How to Enable Oz Applets</a>
+<li><p><a href="#edit">Edit Jobs</a>
+<li><p><a href="#schedule">Schedule Jobs</a>
+</menu>
+
+<hr>
+
+<p class=smallmenu>
+<a href="job-shop.oza">[Start Applet]</a>
+<a href="../install.html">[How to Enable Oz Applets]</a>
+</p>
+
+<p>
+The scheduler allows to <a href="#edit">edit</a>
+job-shop scheduling problems and to compute <a
+href="#schedule">schedules</a> for the edited
+problem.
+</p>
+
+
+<h2><a name="edit">Edit Jobs</a></h2>
+
+<dl>
+
+<dt>Resource</dt>
+<dd> Clicking a resource selects it and makes the
+resource tool active.  While the resource tool is
+active, the resource of a task can be changed by
+clicking the task.
+
+<dt>Duration</dt>
+<dd> Clicking a duration value selects this value
+and makes the duration tool active. While the
+duration tool is active, the duration of a task
+can be changed to the selected value by clicking
+the task.
+
+<dt>Create Task</dt>
+<dd> After clicking this tool, new tasks can be
+created. Newly created tasks are created as being
+the last task of a job.  The resource and duration
+of a newly created task is described by the
+setting of the Resource- and Duration-tool.
+
+<dt>Delete Task</dt>
+<dd> After clicking this tool, tasks can be
+deleted by clicking them.
+
+</dl>
+
+
+<h2><a name="schedule">Schedule Jobs</a></h2>
+
+<dl>
+
+<dt>Reset</dt>
+<dd> Resets the scheduling engine.
+
+<dt>Next</dt>
+<dd> Searches for a next schedule and displays the
+schedule found and its maximal span.  Search can
+be interrupted by clicking <code>Stop</code>.
+
+<dt>Best</dt>
+<dd> Searches for a best schedule and displays the
+schedule found and its maximal span. All schedules
+found in between are displayed together with their
+maximal span.  Search can be interrupted by
+clicking <code>Stop</code>.
+
+<dt>Stop</dt>
+<dd> Stops the search for a next or a best
+schedule.
+
+<dt>Search Tree</dt>
+<dd> Displays the search tree of the scheduling
+problem in the Oz Explorer.
+</dl>
+
+<p>
+
+<hr>
+<address>
+<a href="http://www.ps.uni-sb.de/~schulte/">Christian Schulte</a>
+</address>
+</body>
+</html>
