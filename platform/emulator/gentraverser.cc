@@ -45,14 +45,17 @@ void GTIndexTable::gCollectGTIT()
     // a variable (the distribution layer prepares GC by installing a
     // special pseudo-snapshot of a value before gc step begins).
     // Observe that variables are NOT stored directly in hash nodes!
+    // 
+    if (!isGCTaggedInt(t)) {
 #ifdef DEBUG_CHECK
-    if (oz_isRef(t)) {
-      Assert(oz_isVariable(*tagged2Ref(t)));
-    } else {
-      Assert(!oz_isVariable(t));
-    }
+      if (oz_isRef(t)) {
+	Assert(oz_isVariable(*tagged2Ref(t)));
+      } else {
+	Assert(!oz_isVariable(t));
+      }
 #endif
-    oz_gCollectTerm(t, t);
+      oz_gCollectTerm(t, t);
+    }
     //
     n = getNext(n);
   }
