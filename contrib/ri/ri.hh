@@ -1,25 +1,25 @@
 /*
  *  Authors:
  *    Tobias Mueller (tmueller@ps.uni-sb.de)
- * 
+ *
  *  Contributors:
  *    optional, Contributor's name (Contributor's email address)
- * 
+ *
  *  Copyright:
  *    Organization or Person (Year(s))
- * 
+ *
  *  Last change:
  *    $Date$ by $Author$
  *    $Revision$
- * 
- *  This file is part of Mozart, an implementation 
+ *
+ *  This file is part of Mozart, an implementation
  *  of Oz 3:
  *     $MOZARTURL$
- * 
+ *
  *  See the file "LICENSE" or
  *     $LICENSEURL$
- *  for information on usage and redistribution 
- *  of this file, and for a DISCLAIMER OF ALL 
+ *  for information on usage and redistribution
+ *  of this file, and for a DISCLAIMER OF ALL
  *  WARRANTIES.
  *
  */
@@ -59,7 +59,7 @@ OZ_BI_proto(ri_times);
 extern ri_float ri_precision;
 
 inline
-ri_float ri_nextSmaller(ri_float f) 
+ri_float ri_nextSmaller(ri_float f)
 {
   return nextafter(f, f-1.0);
 }
@@ -134,10 +134,10 @@ private:
   ri_float _l, _u;
 
 public:
-  
+
   RIProfile(void) {}
   virtual void init(OZ_Ct *);
-  
+
 };
 
 
@@ -157,10 +157,10 @@ public:
   RI(ri_float f) : _l(f), _u(f) {}
 
   RI(void) {}
-  
+
   void init(ri_float l, ri_float u) {
-    _l = l; 
-    _u = u; 
+    _l = l;
+    _u = u;
   }
 
   void init(OZ_Term t)
@@ -171,12 +171,12 @@ public:
   }
 
   virtual OZ_Ct * copy(void) {
-    RI * ri = new (sizeof(ri_float)) RI(_l, _u);
+    RI * ri = new RI(_l, _u);
     return ri;
   }
 
-  ri_float getWidth(void) { 
-    return _u - _l; 
+  ri_float getWidth(void) {
+    return _u - _l;
   }
 
   virtual OZ_Boolean isValue(void) {
@@ -201,7 +201,7 @@ public:
   virtual OZ_Ct * unify(OZ_Ct * r) {
     RI * x = this;
     RI * y = (RI *) r;
-    static RI z; 
+    static RI z;
 
     z._l = max_ri(x->_l, y->_l);
     z._u = min_ri(x->_u, y->_u);
@@ -212,9 +212,9 @@ public:
   virtual OZ_Boolean unify(OZ_Term rvt) {
     if (OZ_isFloat(rvt)) { // TMUELLER: isValidValue
       double rv = OZ_floatToC(rvt);
-      
+
       return (_l <= rv) && (rv <= _u);
-    } 
+    }
     return 0;
   }
 
@@ -228,12 +228,12 @@ public:
     return &rip;
   }
 
-  virtual 
-  OZ_CtWakeUp getWakeUpDescriptor(OZ_CtProfile * p) 
+  virtual
+  OZ_CtWakeUp getWakeUpDescriptor(OZ_CtProfile * p)
   {
     OZ_CtWakeUp d;
     d.init();
-    
+
     RIProfile * rip = (RIProfile *) p;
 
     if (_l > rip->_l) d.setWakeUp(0);
@@ -243,12 +243,12 @@ public:
     return d;
   }
 
-  virtual char * toString(int) 
+  virtual char * toString(int)
   {
     const unsigned buf_size = 30;
     static char buffer[buf_size];
-    
-    //    snprintf(buffer, buf_size, 
+
+    //    snprintf(buffer, buf_size,
     sprintf(buffer,
 	    "[" RI_FLOAT_FORMAT ", " RI_FLOAT_FORMAT "]", _l, _u);
     /*
@@ -263,14 +263,14 @@ public:
     return buffer;
   }
 
-  static OZ_Ct * leastConstraint(void) 
+  static OZ_Ct * leastConstraint(void)
   {
-    static RI ri; 
+    static RI ri;
     ri.init(RI_FLOAT_MIN, RI_FLOAT_MAX);
     return &ri;
   }
 
-  static OZ_Boolean isValidValue(OZ_Term f) 
+  static OZ_Boolean isValidValue(OZ_Term f)
   {
 #ifdef USE_RI_DOUBLE
     return OZ_isFloat(f);
@@ -287,7 +287,7 @@ public:
   {
     return (rip._l < _l) || (rip._u > _u);
   }
-  
+
   ri_float operator = (ri_float f) {
     if (_l <= f && f <= _u) {
       _l = _u = f;
@@ -295,31 +295,31 @@ public:
     }
     return -1.0;
   }
-  
+
   ri_float operator <= (ri_float f) {
     _u = min_ri(_u, f);
-    
+
     return getWidth();
   }
-  
+
   ri_float operator < (ri_float f) {
     _u = min_ri(_u, ri_nextSmaller(f));
-        
+
     return getWidth();
   }
-  
+
   ri_float operator >= (ri_float f){
     _l = max_ri(_l, f);
-    
+
     return getWidth();
   }
-  
+
   ri_float operator > (ri_float f) {
     _l = max_ri(_l, ri_nextLarger(f));
-    
+
     return getWidth();
   }
-  
+
   ri_float lowerBound(void) { return _l; }
 
   ri_float upperBound(void) { return _u; }
@@ -336,14 +336,14 @@ class RIDefinition : public OZ_CtDefinition {
   friend INIT_FUNC_LP;
 
 private:
-  
-  static int _kind; 
-public: 
+
+  static int _kind;
+public:
   virtual int getKind(void) { return _kind; }
   virtual char * getName(void) { return "real interval"; }
   virtual int getNoOfWakeUpLists(void) { return 2; }
   virtual char ** getNamesOfWakeUpLists(void);
-  
+
   virtual OZ_Ct * leastConstraint(void) {
     return RI::leastConstraint();
   }
@@ -351,7 +351,7 @@ public:
   virtual OZ_Boolean isValidValue(OZ_Term f) {
     return RI::isValidValue(f);
   }
-				  
+
 };
 
 extern RIDefinition * ri_definition;
@@ -359,6 +359,76 @@ extern RIDefinition * ri_definition;
 //-----------------------------------------------------------------------------
 // class RIVar
 
+#ifdef TMUELLER
+class RIVar : public OZ_CtVar {
+private:
+
+  RI * _ref;
+  RI _copy, _encap;
+
+  RIProfile _rip;
+
+protected:
+
+  virtual void ctSetValue(OZ_Term t)
+  {
+    _copy.init(t);
+    _ref = &_copy;
+  }
+
+  virtual OZ_Ct * ctRefConstraint(OZ_Ct * c)
+  {
+    return _ref = (RI *) c;
+  }
+
+  virtual OZ_Ct * ctSaveConstraint(OZ_Ct * c)
+  {
+    _copy = *(RI *) c;
+    return &_copy;
+  }
+
+  virtual OZ_Ct * ctSaveEncapConstraint(OZ_Ct * c)
+  {
+    _encap = *(RI *) c;
+    return &_encap;
+  }
+
+  virtual void ctRestoreConstraint(void)
+  {
+    *_ref = _copy;
+  }
+
+  virtual void ctSetConstraintProfile(void)
+  {
+    _rip = *_ref->getProfile();
+  }
+
+  virtual OZ_CtProfile * ctGetConstraintProfile(void)
+  {
+    return &_rip;
+  }
+
+  virtual OZ_Ct * ctGetConstraint(void)
+  {
+    return _ref;
+  }
+
+public:
+
+  RIVar(void) : OZ_CtVar() { }
+
+  RIVar(OZ_Term t) : OZ_CtVar() { read(t); }
+
+  virtual OZ_Boolean isTouched(void) const
+  {
+    return _ref->isTouched(_rip);
+  }
+
+  RI &operator * (void) { return *_ref; }
+  RI * operator -> (void) { return _ref; }
+
+};
+#else
 class RIVar : public OZ_CtVar {
 private:
 
@@ -390,13 +460,13 @@ protected:
   {
     *_ri_ref = _ri;
   }
- 
-  virtual void ctSetConstraintProfile(void) 
+
+  virtual void ctSetConstraintProfile(void)
   {
     _rip = *_ri_ref->getProfile();
   }
 
-  virtual OZ_CtProfile * ctGetConstraintProfile(void) 
+  virtual OZ_CtProfile * ctGetConstraintProfile(void)
   {
     return &_rip;
   }
@@ -421,7 +491,7 @@ public:
   RI * operator -> (void) { return _ri_ref; }
 
 };
-
+#endif
 
 //-----------------------------------------------------------------------------
 // type-checking parameters
@@ -432,19 +502,19 @@ typedef OZ_expect_t (RIExpect::*PropagatorExpectMeth) (OZ_Term);
 
 class RIExpect : public OZ_Expect {
 public:
-  OZ_expect_t expectRIVarMin(OZ_Term t) { 
-    return expectGenCtVar(t, ri_definition, 
-			  RIWakeUp::wakeupMin()); 
+  OZ_expect_t expectRIVarMin(OZ_Term t) {
+    return expectGenCtVar(t, ri_definition,
+			  RIWakeUp::wakeupMin());
   }
-  OZ_expect_t expectRIVarMax(OZ_Term t) { 
-    return expectGenCtVar(t, ri_definition, 
-			  RIWakeUp::wakeupMax()); 
+  OZ_expect_t expectRIVarMax(OZ_Term t) {
+    return expectGenCtVar(t, ri_definition,
+			  RIWakeUp::wakeupMax());
   }
-  OZ_expect_t expectRIVarMinMax(OZ_Term t) { 
-    return expectGenCtVar(t, ri_definition, 
-			  RIWakeUp::wakeupMinMax()); 
+  OZ_expect_t expectRIVarMinMax(OZ_Term t) {
+    return expectGenCtVar(t, ri_definition,
+			  RIWakeUp::wakeupMinMax());
   }
-  
+
   OZ_expect_t expectVector(OZ_Term t, PropagatorExpectMeth expectf) {
     return OZ_Expect::expectVector(t, (OZ_ExpectMeth) expectf);
   }
@@ -455,7 +525,7 @@ public:
     return expectVector(t,  &expectRIVarMinMax);
   }
   OZ_expect_t expectIntVarMinMax(OZ_Term t) {
-    return expectIntVar(t, fd_prop_bounds); 
+    return expectIntVar(t, fd_prop_bounds);
   }
 };
 
@@ -466,7 +536,7 @@ class PropagatorController_RI_RI {
 protected:
   RIVar &v1, &v2;
 public:
-  PropagatorController_RI_RI(RIVar &i1, RIVar &i2) 
+  PropagatorController_RI_RI(RIVar &i1, RIVar &i2)
     : v1(i1), v2(i2) {}
 
   OZ_Return leave(void) {
@@ -488,9 +558,9 @@ class PropagatorController_RI_RI_RI {
 protected:
   RIVar &v1, &v2, &v3;
 public:
-  PropagatorController_RI_RI_RI(RIVar &i1, 
-				RIVar &i2, 
-				RIVar &i3) 
+  PropagatorController_RI_RI_RI(RIVar &i1,
+				RIVar &i2,
+				RIVar &i3)
     : v1(i1), v2(i2), v3(i3) {}
 
   OZ_Return leave(void) {
@@ -534,10 +604,10 @@ public:
 
 class PropagatorController_RI_D {
 protected:
-  RIVar &_ri; 
+  RIVar &_ri;
   OZ_FDIntVar &_d;
 public:
-  PropagatorController_RI_D(RIVar &ri, OZ_FDIntVar &d) 
+  PropagatorController_RI_D(RIVar &ri, OZ_FDIntVar &d)
     : _ri(ri), _d(d) {}
 
   OZ_Return leave(void) {
@@ -578,7 +648,7 @@ public:
 
   virtual size_t sizeOf(void) { return sizeof(Propagator_RI_RI); }
 
-  virtual OZ_Term getParameters(void) const 
+  virtual OZ_Term getParameters(void) const
   {
     return OZ_cons(_x, OZ_cons(_y, OZ_nil()));
   }
@@ -604,7 +674,7 @@ public:
 
   virtual size_t sizeOf(void) { return sizeof(Propagator_RI_RI_RI); }
 
-  virtual OZ_Term getParameters(void) const 
+  virtual OZ_Term getParameters(void) const
   {
     return OZ_cons(_x, OZ_cons(_y, OZ_cons(_z, OZ_nil())));
   }
@@ -630,7 +700,7 @@ public:
 
   virtual size_t sizeOf(void) { return sizeof(Propagator_RI_D); }
 
-  virtual OZ_Term getParameters(void) const 
+  virtual OZ_Term getParameters(void) const
   {
     return OZ_cons(_ri, OZ_cons(_d, OZ_nil()));
   }
