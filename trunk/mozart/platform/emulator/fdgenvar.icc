@@ -63,6 +63,9 @@ inline
 void GenFDVariable::becomesSmallIntAndPropagate(TaggedRef * trPtr)
 {
   if (isSmallInt(*trPtr)) return;
+
+  Assert(this == tagged2SuspVar(*trPtr));
+
   TaggedRef si_val = newSmallInt(finiteDomain.singl());
   propagate(*trPtr, fd_det, si_val);
   doBind(trPtr, si_val);
