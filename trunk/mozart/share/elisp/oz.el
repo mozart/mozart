@@ -7,21 +7,20 @@
 
 (require 'comint)
 
-
 ;; ---------------------------------------------------------------------
 ;; global effects
 ;; ---------------------------------------------------------------------
 
-(setq completion-ignored-extensions
-      (append '(".ozo" ".ozs")
-	      completion-ignored-extensions))
-
+(or (member ".ozo" completion-ignored-extensions)
+    (setq completion-ignored-extensions
+	  (append '(".ozo" ".ozs")
+		  completion-ignored-extensions)))
 
 ;; automatically switch into Oz-Mode when loading
 ;; files ending in ".oz"
-(setq auto-mode-alist (cons '("\.oz$" . oz-mode)
-			    auto-mode-alist))
-
+(or (assoc "\\.oz$" auto-mode-alist)
+    (setq auto-mode-alist (cons '("\\.oz$" . oz-mode)
+				auto-mode-alist)))
 
 ;; ---------------------------------------------------------------------
 ;; lemacs and gnu19 support
@@ -34,7 +33,6 @@
        (setq oz-lucid t))
       ((string-match "19" emacs-version)
        (setq oz-gnu19 t)))
-
 
 (if oz-gnu19
     (progn
@@ -102,7 +100,6 @@ starts the emulator under gdb")
 (defvar oz-preview "xdvi"
   "The previewer for doc files")
 
-
 (defvar oz-error-string (format "%c" 17)
   "how compiler and engine signal errors")
 
@@ -120,35 +117,33 @@ starts the emulator under gdb")
   "*popup compiler/emulator buffer if error occured")
 
 ;;------------------------------------------------------------
-;; Screen title
+;; Frame title
 ;;------------------------------------------------------------
 
-;; lucid supports screen-title as format string (is better ...)
+;; lucid supports frame-title as format string (is better ...)
 ;;  see function mode-line-format
 ;; gnu19 supports frame-title as constant string
 
-(defvar oz-old-screen-title
+(defvar oz-old-frame-title
   (if oz-lucid
-      (setq oz-old-screen-title
-	    screen-title-format)
+      (setq oz-old-frame-title
+	    frame-title-format)
     (if oz-gnu19
-	(setq oz-old-screen-title
+	(setq oz-old-frame-title
 	      (cdr (assoc 'name (frame-parameters))))))
   "The saved window title")
 
-
-(defun oz-get-title()
+(defun oz-get-title ()
   (if oz-gnu19
       (cdr (assoc 'name (frame-parameters (car (visible-frame-list)))))
       (if oz-lucid
-	screen-title-format
+	frame-title-format
 	"")))
 
 (defvar oz-title-format
   (concat "Oz Programming Interface ("
 	  (oz-get-title) ")")
   "The format string for the window title")
-
 
 (defvar oz-change-title t
   "If non-nil means change the title of the Emacs window")
@@ -160,41 +155,37 @@ starts the emulator under gdb")
 		     (modify-frame-parameters 
 		      scr
 		      (list (cons 'name oz-title-format))))
-		  (visible-screen-list)))
+		  (visible-frame-list)))
     
     (if oz-lucid
-	(setq screen-title-format oz-title-format))))
-
-
+	(setq frame-title-format oz-title-format))))
 
 (defun oz-reset-title ()
   "reset to the initial window title"
   (if oz-change-title
       (if oz-lucid
-	  (setq screen-title-format oz-old-screen-title))
+	  (setq frame-title-format oz-old-frame-title))
     (if oz-gnu19
 	(mapcar '(lambda(scr)
 		   (modify-frame-parameters 
 		    scr
-		    (list (cons 'name oz-old-screen-title))))
-		(visible-screen-list)))))
+		    (list (cons 'name oz-old-frame-title))))
+		(visible-frame-list)))))
 
-(defun oz-window-system()
+(defun oz-window-system ()
   "Non-nil iff we are running under X"
   window-system)
-
 
 ;;------------------------------------------------------------
 ;; Utilities
 ;;------------------------------------------------------------
 
-(defun oz-make-temp-name(name)
+(defun oz-make-temp-name (name)
   "gensym implementation"
   (setq oz-temp-counter (+ 1 oz-temp-counter))
   (format "%s%d" (make-temp-name name) oz-temp-counter))
 
-
-(defun oz-line-pos()
+(defun oz-line-pos ()
   "get the position of line start and end (changes point!)"
   (save-excursion
     (let (beg end)
@@ -204,12 +195,11 @@ starts the emulator under gdb")
       (setq end (point))
       (cons beg end))))
 
-
 ;;------------------------------------------------------------
 ;; Fonts
 ;;------------------------------------------------------------
 
-(defun oz-set-fontlock-keywords()
+(defun oz-set-fontlock-keywords ()
   (setq font-lock-keywords (list oz-keywords)))
 
 ;;------------------------------------------------------------
@@ -221,7 +211,7 @@ starts the emulator under gdb")
 (defvar oz-menubar nil
   "The Oz Menubar for Lucid Emacs")
 
-(defun oz-make-menu(list)
+(defun oz-make-menu (list)
   (if oz-lucid
    (setq oz-menubar (oz-make-menu-lucid list)))
   (if oz-gnu19
@@ -242,12 +232,11 @@ starts the emulator under gdb")
 	   (cons name (oz-make-menu-lucid rest)))))
      (oz-make-menu-lucid (cdr list)))))
 
-(defun oz-dup-list(l)
+(defun oz-dup-list (l)
   (if (or (null l) 
 	  (not (listp l)))
       l
     (cons (oz-dup-list (car l)) (oz-dup-list (cdr l)))))
-
 
 (defun oz-make-menu-gnu19 (map list)
   ;; for some unknown reason Emacs corrupts the input list
@@ -337,7 +326,6 @@ starts the emulator under gdb")
 
 (oz-make-menu oz-menu)
 
-
 ;;------------------------------------------------------------
 ;; Start/Stop debugger
 ;;------------------------------------------------------------
@@ -396,8 +384,7 @@ Input and output via buffers *Oz Compiler* and *Oz Emulator*."
   (message "")
   (oz-reset-title))
 
-
-(defun oz-check-running(start-flag)
+(defun oz-check-running (start-flag)
   (if (and (get-buffer-process oz-compiler-buffer)
 	   (not (get-buffer-process oz-emulator-buffer)))
       (progn
@@ -415,8 +402,20 @@ Input and output via buffers *Oz Compiler* and *Oz Emulator*."
 			(oz-make-temp-name "/tmp/ozpipein"))))
       (if (not start-flag) (message "Oz died. Restarting ..."))
       (make-comint "Oz Compiler" "oz.compiler" nil "-emacs" "-S" file)
-      (setq oz-compiler-buffer "*Oz Compiler*")
+      (setq oz-compiler-buffer "*Oz Compiler*") 
       (oz-create-buffer oz-compiler-buffer t)
+      (save-excursion
+	(set-buffer oz-compiler-buffer)
+	(set (make-local-variable 
+	      'compilation-error-regexp-alist)
+	     '(("at line \\([0-9]+\\) in file \"\\([^ \n]+[^. \n]\\)\\.?\""
+		2 1)))
+	(set (make-local-variable 'compilation-parsing-end)
+	     (point))
+	(set (make-local-variable 'compilation-error-list)
+	     nil)
+	(set (make-local-variable 'compilation-last-buffer)
+	     (current-buffer)))
       (set-process-filter (get-buffer-process oz-compiler-buffer)
 			  'oz-compiler-filter)
       (bury-buffer oz-compiler-buffer)
@@ -452,7 +451,7 @@ Input and output via buffers *Oz Compiler* and *Oz Emulator*."
     (oz-set-emulator)))
 
 
-(defun oz-set-emulator()
+(defun oz-set-emulator ()
   (interactive)
   (setq oz-emulator 
 	(expand-file-name 
@@ -476,7 +475,7 @@ Input and output via buffers *Oz Compiler* and *Oz Emulator*."
   (if (getenv "OZBOOT")
       (setenv "OZBOOT" oz-boot)))
 
-(defun oz-gdb()
+(defun oz-gdb ()
   (interactive)
   (if (getenv "OZ_PI")
       t
@@ -494,7 +493,6 @@ Input and output via buffers *Oz Compiler* and *Oz Emulator*."
 		    (getenv "OZHOME") "/demo"))
     (setenv "PATH"
 	    (concat (getenv "PATH") ":" (getenv "OZHOME") "/bin")))
-
 
   (if oz-emulator-hook
       (setq oz-emulator-hook nil)
@@ -532,7 +530,6 @@ Input and output via buffers *Oz Compiler* and *Oz Emulator*."
       (message "Oz Compiler: %s" oz-boot)
     (message "Oz Compiler: global")))
 
-
 (defun oz-start-gdb-emulator (tmpfile)
   "Run gdb on oz-emulator
 The directory containing FILE becomes the initial working directory
@@ -543,11 +540,11 @@ the GDB commands `cd DIR' and `directory'."
     (if oz-gnu19 (gdb (concat "gdb " oz-emulator)))
     (if oz-lucid (gdb oz-emulator))
     (setq oz-emulator-buffer (buffer-name (current-buffer)))
-    (process-send-string
+    (comint-send-string
      (get-buffer-process oz-emulator-buffer)
      init-str)
     (if oz-gdb-autostart
-	(process-send-string
+	(comint-send-string
 	 (get-buffer-process oz-emulator-buffer)
 	 "run\n"))
     (switch-to-buffer old-buffer)))
@@ -556,7 +553,7 @@ the GDB commands `cd DIR' and `directory'."
 ;; Feeding the compiler
 ;;------------------------------------------------------------
 
-(defun oz-zmacs-stuff()
+(defun oz-zmacs-stuff ()
   (if oz-lucid (setq zmacs-region-stays t)))
 
 (defun oz-feed-buffer ()
@@ -599,28 +596,31 @@ the GDB commands `cd DIR' and `directory'."
 	(let ((end (point)))
 	  (backward-paragraph 1)
 	  (oz-feed-region (point) end)))
-  (oz-zmacs-stuff))
+  )
 
-
-(defun oz-send-string(string)
+(defun oz-send-string (string)
   (oz-check-running nil)
   (let ((proc (get-buffer-process oz-compiler-buffer)))
 ;  (comint-send-string  proc string)
 ;  (comint-send-string proc "\n")
-    (process-send-string proc string)
-    (process-send-string proc "\n")
-    (process-send-eof proc)))
-
+    (comint-send-string proc string)
+    (comint-send-string proc "\n")
+    (save-excursion
+       (set-buffer oz-compiler-buffer)
+       (setq compilation-parsing-end (point))
+       (comint-send-eof)
+       (erase-buffer)
+       (setq compilation-parsing-end (point-min)))
+    ))
 
 ;;------------------------------------------------------------
 ;; Feeding the emulator
 ;;------------------------------------------------------------
 
-(defun oz-continue()
+(defun oz-continue ()
   "continue the Oz Emulator after an error"
   (interactive)
   (comint-send-string (get-buffer-process oz-emulator-buffer) "c\n"))
-
 
 ;;------------------------------------------------------------
 ;; electric
@@ -639,7 +639,7 @@ the GDB commands `cd DIR' and `directory'."
 ;;Indent
 ;;------------------------------------------------------------
 
-(defun oz-make-keywords-for-match(args)
+(defun oz-make-keywords-for-match (args)
   (concat "\\<\\("
 	  (mapconcat 'identity args "\\|")
 	  "\\)\\>"))
@@ -680,7 +680,6 @@ the GDB commands `cd DIR' and `directory'."
 (defconst oz-end-pattern
       (oz-make-keywords-for-match '("end")))
 
-
 (defconst oz-between-pattern 
       (concat (oz-make-keywords-for-match
 	       '("from" "attr" "feat" "with"))))
@@ -700,22 +699,20 @@ the GDB commands `cd DIR' and `directory'."
 	      oz-middle-pattern "\\|" oz-end-pattern
 	      ))
 
-(defun oz-indent-buffer()
+(defun oz-indent-buffer ()
   (interactive)
   (goto-char 0)
   (while (< (point) (point-max))
     (oz-indent-line t)
     (forward-line 1)))
 
-
-(defun oz-indent-region(b e)
+(defun oz-indent-region (b e)
   (interactive "r")
   (let ((end (copy-marker e)))
     (goto-char b)
     (while (< (point) end)
       (oz-indent-line t)
       (forward-line 1))))
-
 
 ;; indent one line
 ;;  no-empty-line arg is delegated to oz-calc-indent
@@ -744,11 +741,10 @@ the GDB commands `cd DIR' and `directory'."
 	  (skip-chars-forward " \t"))
       (setq case-fold-search old-cc))))
 
-
 ;; calculate the indent column (<0 means: don't change)
 ;; pre: point is at beginning of text
 ;; arg: no-empty-line: t = do not indent empty lines and comment lines
-(defun oz-calc-indent(no-empty-line)
+(defun oz-calc-indent (no-empty-line)
   (cond ((and no-empty-line (oz-is-empty))
 	  ;; empty lines are not changed
 	 -1)
@@ -812,7 +808,6 @@ the GDB commands `cd DIR' and `directory'."
 	)
   )
 
-
 ;; the heavy case
 ;; backward search for the next oz-key-pattern
 (defun oz-calc-indent1 ()
@@ -871,7 +866,6 @@ the GDB commands `cd DIR' and `directory'."
     )
   )
 
-
 ;; check for record fields with seperate line for feature and value
 ;;  f( arity:
 ;;        myarity)
@@ -886,7 +880,6 @@ the GDB commands `cd DIR' and `directory'."
       (goto-char old)
       nil)))
 
-
 ;; calculate the start position for features after '('
 (defun oz-indent-after-paren ()
   (let ((col (current-column)))
@@ -895,7 +888,6 @@ the GDB commands `cd DIR' and `directory'."
 	(+ col 2)
       (re-search-forward "[^ \t]")
       (1- (current-column)))))
-
 
 (defun oz-comment-start ()
   (let ((p (point)))
@@ -915,7 +907,7 @@ the GDB commands `cd DIR' and `directory'."
 	t
       nil)))
 
-(defun oz-is-right()
+(defun oz-is-right ()
   (if (looking-at "[ \t]*$")
       t
     nil))
@@ -964,7 +956,7 @@ the GDB commands `cd DIR' and `directory'."
 	  (setq ret -1))))
     ret))
 
-(defun oz-search-matching-paren()
+(defun oz-search-matching-paren ()
   (let ((do-loop t)
 	(nesting 0))
     (while do-loop
@@ -985,7 +977,6 @@ the GDB commands `cd DIR' and `directory'."
 	(message "no matching open paren")
 	(setq do-loop nil))))
   (current-column))
-
 
 ;;------------------------------------------------------------
 ;; oz-mode
@@ -1018,7 +1009,7 @@ the GDB commands `cd DIR' and `directory'."
   (set-syntax-table oz-mode-syntax-table)
   (setq local-abbrev-table oz-mode-abbrev-table)
   (make-local-variable 'paragraph-start)
-  (setq paragraph-start (concat "[ \t]*$\\|" page-delimiter)) ;'%%..'
+  (setq paragraph-start (concat "^$\\|" page-delimiter))
   (make-local-variable 'paragraph-separate)
   (setq paragraph-separate paragraph-start)
   (make-local-variable 'paragraph-ignore-fill-prefix)
@@ -1035,18 +1026,37 @@ the GDB commands `cd DIR' and `directory'."
   (setq comment-end "")
   (make-local-variable 'comment-start-skip)
   (setq comment-start-skip "/\\*+ *\\|% *")
+  (set (make-local-variable 'compilation-last-buffer)
+       (get-buffer-create oz-compiler-buffer))
 )
 
 (defun oz-mode-commands (map)
   (define-key map "\t"       'oz-indent-line)
+
+%   (define-key map "\C-c\C-f\C-b" 	'oz-feed-buffer)
+%   (define-key map "\C-c\C-f\C-r"	'oz-feed-region)
+%   (define-key map "\C-c\C-f\C-l"	'oz-feed-line)
+%   (define-key map "\C-c\C-f\C-f"	'oz-feed-file)
+%   (define-key map "\C-c\C-i"          'oz-feed-file)
+%   (define-key map "\C-c\C-f\C-p"	'oz-feed-paragraph)
+
+%   (define-key map "\C-c\C-p\C-f"	'oz-precompile-file)
+
+%   (define-key map "\C-c\C-b\C-l"	'oz-feed-line-browse)
+%   (define-key map "\C-c\C-b\C-r"    	'oz-feed-region-browse)
+%   (define-key map "\M-n"   		'oz-next-buffer)
+%   (define-key map "\M-p"   		'oz-previous-buffer)
+%   (define-key map "\C-c\C-c"    	'oz-toggle-compiler)
+
   (define-key map "\M-\C-m"  'oz-feed-buffer)
   (define-key map "\M-r"     'oz-feed-region)
   (define-key map "\M-l"     'oz-feed-line)
   (define-key map "\C-c\C-p" 'oz-feed-paragraph)
-  (define-key map "\C-cb" 'oz-feed-line-browse)
+
+  (define-key map "\C-cb"       'oz-feed-line-browse)
   (define-key map "\C-c\C-b"    'oz-feed-region-browse)
-  (define-key map "\M-n"   'oz-next-buffer)
-  (define-key map "\M-p"   'oz-previous-buffer)
+  (define-key map "\M-n"        'oz-next-buffer)
+  (define-key map "\M-p"        'oz-previous-buffer)
   (define-key map "\C-c\C-c"    'oz-toggle-compiler)
   (if oz-lucid
       (progn
@@ -1083,7 +1093,7 @@ if that value is non-nil."
   (setq major-mode 'oz-mode)
   (setq mode-name "Oz")
   (oz-mode-variables)
-  (if oz-lucid
+  (if (and oz-lucid (not (assoc "Oz" current-menubar)))
    (set-buffer-menubar (oz-insert-menu oz-menubar current-menubar)))
 
   ; font lock stuff
@@ -1100,7 +1110,6 @@ if that value is non-nil."
 	(cons (car menu) list)
       (cons (car list)
 	    (oz-insert-menu menu (cdr list))))))
-
 
 ;;;; Lisp paragraph filling commands.
 
@@ -1170,7 +1179,6 @@ and initial semicolons."
 	  (fill-paragraph justify))))
     t))
 
-
 ;; oz auto fill not impl (mm)
 ;(defun oz-auto-fill ()
 ;  (let ((start (oz-comment-start)))
@@ -1182,30 +1190,24 @@ and initial semicolons."
 
 (if (oz-window-system) (require 'font-lock))
 
-
-(defun oz-fontify-buffer()
+(defun oz-fontify-buffer ()
   (interactive)
   (if (oz-window-system) (font-lock-fontify-buffer)))
 
-
-(defun oz-fontify-region(beg end)
+(defun oz-fontify-region (beg end)
   (if (oz-window-system) (font-lock-fontify-region beg end)))
 
-
-(defun oz-fontify(&optional arg)
+(defun oz-fontify (&optional arg)
   (interactive "P")
   (recenter arg)
   (oz-fontify-buffer))
-
 
 ;;------------------------------------------------------------
 ;; Filtering process output
 ;;------------------------------------------------------------
 
-
 (defun oz-emulator-filter (proc string)
   (oz-filter proc string))
-
 
 (defun oz-compiler-filter (proc string)
   (oz-filter proc string))
@@ -1245,7 +1247,6 @@ and initial semicolons."
 
     (if errs-found (oz-show-buffer newbuf))))
 
-
 ;;------------------------------------------------------------
 ;; buffers
 ;;------------------------------------------------------------
@@ -1272,7 +1273,6 @@ OZ compiler, emulator and error window")
 
 	(bury-buffer buffer)))))
 
-
 (defun oz-create-buffer (buf ozmode)
   (save-excursion
     (set-buffer (get-buffer-create buf))
@@ -1289,18 +1289,18 @@ OZ compiler, emulator and error window")
     (delete-region (point-min) (point-max))))
 
 
-(defun oz-toggle-compiler()
+(defun oz-toggle-compiler ()
   (interactive)
   (oz-toggle-window oz-compiler-buffer))
 
 
-(defun oz-toggle-emulator()
+(defun oz-toggle-emulator ()
   (interactive)
   (oz-toggle-window oz-emulator-buffer))
 
 
 
-(defun oz-toggle-window(buffername)
+(defun oz-toggle-window (buffername)
   (let ((buffer (get-buffer buffername)))
     (if buffer
 	(let ((win (get-buffer-window buffername nil)))
@@ -1314,25 +1314,21 @@ OZ compiler, emulator and error window")
 		  (set-window-point win (point-max))))
 	    (oz-show-buffer (get-buffer buffername)))))))
 
-
-(defun oz-new-buffer()
+(defun oz-new-buffer ()
   (interactive)
   (switch-to-buffer (generate-new-buffer "Oz"))
   (oz-mode))
 
-
-(defun oz-previous-buffer()
+(defun oz-previous-buffer ()
   (interactive)
   (bury-buffer)
   (oz-walk-trough-buffers (buffer-list)))
 
-
-(defun oz-next-buffer()
+(defun oz-next-buffer ()
   (interactive)
   (oz-walk-trough-buffers (reverse (buffer-list))))
 
-
-(defun oz-walk-trough-buffers(bufs)
+(defun oz-walk-trough-buffers (bufs)
   (let ((bool t)
 	(cur (current-buffer)))
     (while (and bufs bool)
@@ -1345,7 +1341,6 @@ OZ compiler, emulator and error window")
 	t
       (set-buffer cur)
       (error "No other oz-buffer"))))
-
 
 ;;------------------------------------------------------------
 ;; Misc Goodies
@@ -1365,35 +1360,33 @@ OZ compiler, emulator and error window")
 (defvar oz-lpr-landscape "oz2lpr -landscape -"
   "pretty printer in landscape for oz code")
 
-(defun oz-print-buffer()
+(defun oz-print-buffer ()
   "Print buffer."
   (interactive)
   (oz-print-region (point-min) (point-max)))
 
-(defun oz-print-buffer-landscape()
+(defun oz-print-buffer-landscape ()
   "Print buffer."
   (interactive)
   (oz-print-region-landscape (point-min) (point-max)))
 
-(defun oz-print-region(start end)
+(defun oz-print-region (start end)
   "Print region."
   (interactive "r")
   (shell-command-on-region start end oz-lpr))
 
-(defun oz-print-region-landscape(start end)
+(defun oz-print-region-landscape (start end)
   "Print region."
   (interactive "r")
   (shell-command-on-region start end oz-lpr-landscape))
 
-
 (defvar oz-temp-file (oz-make-temp-name "/tmp/ozemacs") "")
 
-
-(defun oz-to-coresyntax-buffer()
+(defun oz-to-coresyntax-buffer ()
   (interactive)
   (oz-to-coresyntax-region (point-min) (point-max)))
 
-(defun oz-to-coresyntax-line()
+(defun oz-to-coresyntax-line ()
   (interactive)
   (let ((line (oz-line-pos)))
     (oz-to-coresyntax-region (car line) (cdr line))))
@@ -1402,12 +1395,11 @@ OZ compiler, emulator and error window")
    (interactive "r")
    (oz-directive-on-region start end "\\core" ".ozc" t))
 
-
-(defun oz-to-emulatorcode-buffer()
+(defun oz-to-emulatorcode-buffer ()
   (interactive)
   (oz-to-emulatorcode-region (point-min) (point-max)))
 
-(defun oz-to-emulatorcode-line()
+(defun oz-to-emulatorcode-line ()
   (interactive)
   (let ((line (oz-line-pos)))
     (oz-to-emulatorcode-region (car line) (cdr line))))
@@ -1415,9 +1407,6 @@ OZ compiler, emulator and error window")
 (defun oz-to-emulatorcode-region (start end)
    (interactive "r")
    (oz-directive-on-region start end "\\machine" ".ozm" nil))
-
-
-
 
 (defun oz-directive-on-region (start end directive suffix mode)
   "Applies a directive to the region."
@@ -1442,41 +1431,36 @@ OZ compiler, emulator and error window")
 	     (oz-mode)
 	     (oz-fontify-buffer))))))
 
-
 (defun oz-feed-region-browse (start end)
   "Feed the current region into the Oz Compiler"
   (interactive "r")
   (let ((contents (buffer-substring start end)))
     (oz-send-string (concat "{Browse " contents "}"))))
 
-
-(defun oz-feed-line-browse()
+(defun oz-feed-line-browse ()
   "Feed the current line into the Oz Compiler"
   (interactive)
    (let ((line (oz-line-pos)))
      (oz-feed-region-browse (car line) (cdr line))))
-
 
 (defun oz-view-panel ()
   "Feed {System.panel popup} into the Oz Compiler"
   (interactive)
   (oz-send-string "job {System.panel popup} end"))
 
-(defun oz-feed-file(file)
+(defun oz-feed-file (file)
   "Feed an file into the Oz Compiler"
   (interactive "FFeed file: ")
   (oz-send-string (concat "\\feed '" file "'"))) 
 
-(defun oz-insert-file(file)
+(defun oz-insert-file (file)
   "Insert an file into the Oz Compiler"
   (oz-send-string (concat "\\insert '" file "'"))) 
 
-(defun oz-precompile-file(file)
+(defun oz-precompile-file (file)
   "precompile an Oz file"
   (interactive "FPrecompile file: ")
   (oz-send-string (concat "\\precompile '" file "'"))) 
-
-
 
 (defun oz-find-dvi-file ()
   "preview a file from  Oz doc directory"
@@ -1489,33 +1473,31 @@ OZ compiler, emulator and error window")
 	(start-process "OZ Doc" "*Preview*" oz-preview name)
       (error "file %s doesn't exist" name))))
 
-(defun oz-find-docu-file()
+(defun oz-find-docu-file ()
   "find a text in the doc directory"
   (interactive)
   (oz-find-file "Find doc file: " "doc/"))
 
-(defun oz-find-demo-file()
+(defun oz-find-demo-file ()
   "find a Oz file in the demo directory"
   (interactive)
   (oz-find-file "Find demo file: " "demo/"))
 
-(defun oz-find-docdemo-file()
+(defun oz-find-docdemo-file ()
   "find a Oz file in the demo/documentation directory"
   (interactive)
   (oz-find-file "Find demo file: " "demo/documentation/"))
 
-(defun oz-find-modules-file()
+(defun oz-find-modules-file ()
   "find a Oz file in the lib directory"
   (interactive)
   (oz-find-file "Find modules file: " "lib/"))
 
-(defun oz-find-file(prompt file)
+(defun oz-find-file (prompt file)
   (find-file (read-file-name prompt
 			     (concat (oz-home) "/" file)
 			     nil
 			     t
 			     nil)))
 
-
 (provide 'oz)
-
