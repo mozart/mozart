@@ -330,7 +330,7 @@ cploop:
       int xlMin = MinMax[l].min;
       int xlMaxDL = MinMax[l].max + dl;
       if (( kDown <= xlMin) && ( xlMaxDL <= kUp)) {
-	dur0 =+ dl;
+	dur0 = dur0 + dl;
 	maxEst = max(maxEst,xlMin+dl); 
 	mSi = min( mSi, xlMin+dl );
 	maxSi = max( maxSi, MinMax[l].max );
@@ -540,7 +540,7 @@ cploop:
 	   int xlMax = MinMax[l].max;
 	   int xlMaxDL = xlMax + dl;
 	   if (( kDown <= xlMin) && ( xlMaxDL <= kUp)) {
-	     dur0 =+ dl;
+	     dur0 = dur0 + dl;
 	     mSi = max( mSi, xlMax );
 	     minSi = min( minSi, xlMin+dl );
 	     minLst = min(minLst,xlMax);
@@ -1234,7 +1234,7 @@ cploop:
       int xlMin = MinMax[l].min;
       int xlMaxDL = MinMax[l].max + dl;
       if (( kDown <= xlMin) && ( xlMaxDL <= kUp)) {
-	use0 =+ dl*use[l];
+	use0 = use0 + dl*use[l];
 	set0[set0Size++] = l;
       }
       else {
@@ -1382,7 +1382,7 @@ cploop:
       int xlMin = MinMax[l].min;
       int xlMaxDL = MinMax[l].max + dl;
       if (( kDown <= xlMin) && ( xlMaxDL <= kUp)) {
-	use0 =+ dl*use[l];
+	use0 = use0 + dl*use[l];
 	set0[set0Size++] = l;
       }
       else {
@@ -1556,34 +1556,6 @@ reifiedloop:
   }
 
 
-  /*
-// energy from Baptistes thesis
-for (i=0; i<ts; i++) {
-  for (j=0; j<ts; j++) {
-    if (i != j) {
-      int leftBound = x[i]->getMinElem();
-      int rightBound = x[j]->getMaxElem()+dur[j];
-      if (rightBound >= leftBound) {
-	// test for failure; not sufficient space
-	int sum = 0;
-	for (int k = 0; k<ts; k++) {
-	  int energy = EnergyFunct(leftBound, rightBound, dur[k], use[k], 
-				   x[k]->getMinElem(),
-				   x[k]->getMaxElem() + dur[k]);
-	  sum = sum + energy;
-	}
-	if (sum > capacity * (rightBound - leftBound)) {
-	  cout << "left: " << leftBound << " right: " << rightBound << 
-	    " sum: " << sum << " cap: " << capacity* (rightBound - leftBound)
-	       << endl;
-	  goto failure;
-	}
-      }
-    }
-  }
-}
-*/
-
 
 capLoop:
 
@@ -1705,100 +1677,80 @@ capLoop:
     // do not use reg_flag anymore, it is not worth it.
     // the commented region does contain code which avoids the 
     // production of holes in domains
-    /*
-    if (reg_flag == 0)
-      {
-      */
-	// perhaps some tests before generalizing domains could improve
-        for (i=0; i<ts; i++) {
-	  int lst = MinMax[i].max;
-	  int ect = MinMax[i].min + dur[i];
-	  int use_i = use[i];
-	  int dur_i = dur[i];
-	  for (j=0; j<exclusion_nb; j++) {
-	    Interval Exclusion = ExclusionIntervals[j];
-	    int span = Exclusion.right - Exclusion.left;
-	    if (Exclusion.use + span * use_i > span * capacity) {
-	      int left = Exclusion.left;
-	      int right = Exclusion.right;
-	      if (lst < ect) {
-		if ( (lst <= left) && (right <= ect) ) continue;
-		else {
-		  if (Exclusion.use + span * use_i > span * capacity) {
-		    OZ_FiniteDomain la;
-		    la.initRange(left-dur_i+1,right-1);
-		    FailOnEmpty(*x[i] -= la);
-		    
-		    // new
-		    // for capacity > 1 we must count the used resource. 
-		    // But this is too expensive.
-		    if ((left - last < dur_i) && (capacity == 1)) {
-		      OZ_FiniteDomain la;
-		      la.initRange(last,right-1);
-		      FailOnEmpty(*x[i] -= la);
-		    }
-		    last = right;
-		    
-		  }
-		}
-	      }
-	      else {
-		if (Exclusion.use + span * use_i > span * capacity) {
+
+
+    // perhaps some tests before generalizing domains could improve
+    for (i=0; i<ts; i++) {
+      int lst = MinMax[i].max;
+      int ect = MinMax[i].min + dur[i];
+      int use_i = use[i];
+      int dur_i = dur[i];
+      for (j=0; j<exclusion_nb; j++) {
+	Interval Exclusion = ExclusionIntervals[j];
+	int span = Exclusion.right - Exclusion.left;
+	if (Exclusion.use + span * use_i > span * capacity) {
+	  int left = Exclusion.left;
+	  int right = Exclusion.right;
+	  if (lst < ect) {
+	    if ( (lst <= left) && (right <= ect) ) continue;
+	    else {
+	      if (Exclusion.use + span * use_i > span * capacity) {
+		OZ_FiniteDomain la;
+		la.initRange(left-dur_i+1,right-1);
+		FailOnEmpty(*x[i] -= la);
+		
+		// new
+		// for capacity > 1 we must count the used resource. 
+		// But this is too expensive.
+		if ((left - last < dur_i) && (capacity == 1)) {
 		  OZ_FiniteDomain la;
-		  la.initRange(left-dur_i+1,right-1);
+		  la.initRange(last,right-1);
 		  FailOnEmpty(*x[i] -= la);
-		  
-		  // new
- 	          // for capacity > 1 we must count the used resource. 
-                  // But this is too expensive.
-  	          if ((left - last < dur_i) && (capacity == 1)) {
-		    OZ_FiniteDomain la;
-		    la.initRange(last,right-1);
-		    FailOnEmpty(*x[i] -= la);
-		  }
-		  last = right;
-		  
 		}
+		last = right;
+		
 	      }
 	    }
 	  }
-	}
-    /*
-      }
-  
-    else {
-      
-      OZ_FiniteDomain la, lb;
-      for (i=0; i<ts; i++) {
-	int lst = MinMax[i].max;
-	int ect = MinMax[i].min + dur[i];
-	int use_i = use[i];
-	int dur_i = dur[i];
-	lb.initFull();
-	for (j=0; j<exclusion_nb; j++) {
-	  Interval Exclusion = ExclusionIntervals[j];
-	  if (Exclusion.use + use_i > capacity) {
-	    int left = Exclusion.left;
-	    int right = Exclusion.right;
-	    if (lst < ect) {
-	      if ( (lst <= left) && (right <= ect) ) continue;
-	      else {
-		if (Exclusion.use + use_i > capacity) {
-		  la.initRange(left-dur_i+1,right-1);
-		  FailOnEmpty(lb -= la);
-		  
-		  // new
- 	          // for capacity > 1 we must count the used resource. 
-                  // But this is too expensive.
-		  if ((left - last < dur_i) && (capacity == 1)) {
-		    la.initRange(last,right-1);
-		    FailOnEmpty(lb -= la);
-		  }
-		  last = right;
-		  
-		}
+	  else {
+	    if (Exclusion.use + span * use_i > span * capacity) {
+	      OZ_FiniteDomain la;
+	      la.initRange(left-dur_i+1,right-1);
+	      FailOnEmpty(*x[i] -= la);
+	      
+	      // new
+ 	      // for capacity > 1 we must count the used resource. 
+              // But this is too expensive.
+  	      if ((left - last < dur_i) && (capacity == 1)) {
+		OZ_FiniteDomain la;
+		la.initRange(last,right-1);
+		FailOnEmpty(*x[i] -= la);
 	      }
+	      last = right;
+	      
 	    }
+	  }
+	}
+      }
+    }
+
+    
+    /*
+    OZ_FiniteDomain la, lb;
+    for (i=0; i<ts; i++) {
+      int lst = MinMax[i].max;
+      int ect = MinMax[i].min + dur[i];
+      int use_i = use[i];
+      int dur_i = dur[i];
+      lb.initFull();
+      for (j=0; j<exclusion_nb; j++) {
+	Interval Exclusion = ExclusionIntervals[j];
+	int span = Exclusion.right - Exclusion.left;
+	if (Exclusion.use + span * use_i > span * capacity) {
+	  int left = Exclusion.left;
+	  int right = Exclusion.right;
+	  if (lst < ect) {
+	    if ( (lst <= left) && (right <= ect) ) continue;
 	    else {
 	      if (Exclusion.use + use_i > capacity) {
 		la.initRange(left-dur_i+1,right-1);
@@ -1807,7 +1759,7 @@ capLoop:
 		// new
  	        // for capacity > 1 we must count the used resource. 
                 // But this is too expensive.
-  	        if ((left - last < dur_i) && (capacity == 1)) {
+		if ((left - last < dur_i) && (capacity == 1)) {
 		  la.initRange(last,right-1);
 		  FailOnEmpty(lb -= la);
 		}
@@ -1816,12 +1768,28 @@ capLoop:
 	      }
 	    }
 	  }
+	  else {
+	    if (Exclusion.use + span * use_i > span * capacity) {
+	      la.initRange(left-dur_i+1,right-1);
+	      FailOnEmpty(lb -= la);
+	      
+	      // new
+	      // for capacity > 1 we must count the used resource. 
+              // But this is too expensive.
+  	      if ((left - last < dur_i) && (capacity == 1)) {
+		la.initRange(last,right-1);
+		FailOnEmpty(lb -= la);
+	      }
+	      last = right;
+	      
+	    }
+	  }
 	}
-	FailOnEmpty(lb >= x[i]->getMinElem());
-	FailOnEmpty(lb <= x[i]->getMaxElem());
-	FailOnEmpty(*x[i] >= lb.getMinElem());
-	FailOnEmpty(*x[i] <= lb.getMaxElem());
       }
+      FailOnEmpty(lb >= x[i]->getMinElem());
+      FailOnEmpty(lb <= x[i]->getMaxElem());
+      FailOnEmpty(*x[i] >= lb.getMinElem());
+      FailOnEmpty(*x[i] <= lb.getMaxElem());
     }
     */
 
