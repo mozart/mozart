@@ -5,7 +5,7 @@
 %%%  Last modified: $Date$ by $Author$
 %%%  Version: $Revision$
 
-declare Panel in
+declare PanelClass Panel in
 
 local
 
@@ -13,7 +13,7 @@ local
    
 in
 
-   Panel = {New PanelManager noop}
+   Panel = {New PanelClass noop}
 
 end
 
