@@ -318,7 +318,8 @@ public:
   //
   Board * clone(void);
   void fail(void);
-  int commit(int, int);
+  OZ_Return commit(TaggedRef,int);
+  OZ_Return commit(TaggedRef,int,int);
   void inject(TaggedRef, int arity = 1);
   OZ_Return merge(Board *, Bool);
 

@@ -35,12 +35,12 @@ public:
   USEFREELISTMEMORY;
 
   virtual int getAlternatives(void) = 0;
-  virtual int commit(Board *, int, int) = 0;
+
+  virtual int commit(Board *, int) = 0;
+  virtual int commit(Board *, int, int);
 
   virtual Distributor * gCollect(void) = 0;
   virtual Distributor * sClone(void) = 0;
-
-  virtual void dispose(void) = 0;
 
 };
 

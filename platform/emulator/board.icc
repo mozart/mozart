@@ -40,6 +40,7 @@
 #include "value.hh"
 #include "trail.hh"
 #include "var_base.hh"
+#include "builtins.hh"
 
 #ifdef OUTLINE
 #define inline
@@ -323,19 +324,41 @@ OZ_Return Board::merge(Board * dst, Bool isUpward) {
 }
 
 inline
-int Board::commit(int left, int right) {
+OZ_Return Board::commit(TaggedRef ts, int n) {
   ozstat.incSolveAlt();
 
-  Distributor * d = getDistributor();
+  int m = getDistributor()->commit(this,n);
 
-  int n = d->commit(this,left,right);
-
-  if (n == 0) {
-    d->dispose();
-    setDistributor(NULL);
+  if (m < 0) {
+    return oz_raise(E_ERROR,E_KERNEL,"spaceAltRange",3,
+                    ts,
+                    makeTaggedSmallInt(n),
+                    makeTaggedSmallInt(-m));
   }
+  if (m == 0)
+    setDistributor(NULL);
+  clearStatus();
+  return BI_PREEMPT;
+}
 
-  return n;
+
+inline
+OZ_Return Board::commit(TaggedRef ts, int l, int r) {
+  if (l == r)
+    return commit(ts,l);
+  else if (l > r)
+    return oz_raise(E_ERROR,E_KERNEL,"spaceAltOrder",1,ts);
+
+  int m = getDistributor()->commit(this,l,r);
+
+  if (m < 0) {
+    return oz_raise(E_ERROR,E_KERNEL,"spaceAltRange",3,
+                    ts,
+                    makeTaggedSmallInt(r),
+                    makeTaggedSmallInt(-m));
+  }
+  patchAltStatus(m);
+  return PROCEED;
 }
 
 

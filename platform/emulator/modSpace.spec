@@ -52,6 +52,14 @@ $module_init_fun_name = "space_init";
                              out => ['+space'],
                              BI  => BIcloneSpace},
 
+     'commit1'          => { in  => ['+space','+int'],
+                             out => [],
+                             BI  => BIcommit1Space},
+
+     'commit2'          => { in  => ['+space','+int','+int'],
+                             out => [],
+                             BI  => BIcommit2Space},
+
      'commit'           => { in  => ['+space','+value'],
                              out => [],
                              BI  => BIcommitSpace},
