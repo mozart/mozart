@@ -38,6 +38,7 @@
 #include "os.hh"
 #include "threadInterface.hh"
 #include "builtins.hh"
+#include "dictionary.hh"
 
 #include "bytedata.hh"
 
@@ -82,6 +83,12 @@ int OZ_isChunk(OZ_Term term)
 {
   term = oz_deref(term);
   return oz_isChunk(term);
+}
+
+int OZ_isDictionary(OZ_Term term)
+{
+  term = oz_deref(term);
+  return oz_isDictionary(term);
 }
 
 int OZ_isCons(OZ_Term term)

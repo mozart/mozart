@@ -142,6 +142,7 @@ extern int _FUNDECL(OZ_isCell,(OZ_Term));
 extern int _FUNDECL(OZ_isThread,(OZ_Term));
 extern int _FUNDECL(OZ_isPort,(OZ_Term));
 extern int _FUNDECL(OZ_isChunk,(OZ_Term));
+extern int _FUNDECL(OZ_isDictionary,(OZ_Term));
 extern int _FUNDECL(OZ_isCons,(OZ_Term));
 extern int _FUNDECL(OZ_isFalse,(OZ_Term));
 extern int _FUNDECL(OZ_isFeature,(OZ_Term));
