@@ -21,8 +21,11 @@
 #
 
 : ${OZHOME=/usr/local/oz}
-: ${OZ_ELISP_DIR=$OZHOME/share/elisp}
+: ${OZDOC_ELISP_PATH=$OZHOME/share/elisp}
 
-exec emacs --batch \
--L $OZ_ELISP_DIR -l oz.elc -l ozdoc.elc \
--f ozdoc-fontify $*
+ELISP=''
+for w in `echo $OZDOC_ELISP_PATH | sed 's/:/ /g'`; do
+    ELISP="-L $w $ELISP"
+done
+
+exec emacs --batch $ELISP -l oz.elc -l ozdoc.elc -f ozdoc-fontify $*
