@@ -230,7 +230,6 @@ in
 	 MouseInside:   true
 	 DelayStamp:    0
 	 InfoVisible:   false
-	 IsClosed:      false
       
       meth init(manager:Manager)
 	 lock
@@ -258,7 +257,7 @@ in
 				 feature: shutdown)
 			 separator
 			 command(label:   'Close'
-				 action:  self # close)])
+				 action:  self # tkClose)])
 		      menubutton(text:    ' Options '
 				 feature: options
 				 menu:
@@ -585,26 +584,24 @@ in
 
       meth update(Regular)
 	 lock
-	    case @IsClosed then skip else
-	       TopNote = {self.notebook getTop($)}
-	       Threads = self.threads
-	       Memory  = self.memory
-	    in
-	       case Regular then
-		  case TopNote
-		  of !Threads then
-		     {Threads update(both)}
-		     {Memory  update(sample)}
-		  [] !Memory  then
-		     {Threads update(sample)}
-		     {Memory  update(both)}
-		  else
-		     {Threads update(sample)}
-		     {Memory  update(sample)}
-		     {TopNote update}
-		  end
-	       else {TopNote update(nosample)}
+	    TopNote = {self.notebook getTop($)}
+	    Threads = self.threads
+	    Memory  = self.memory
+	 in
+	    case Regular then
+	       case TopNote
+	       of !Threads then
+		  {Threads update(both)}
+		  {Memory  update(sample)}
+	       [] !Memory  then
+		  {Threads update(sample)}
+		  {Memory  update(both)}
+	       else
+		  {Threads update(sample)}
+		  {Memory  update(sample)}
+		  {TopNote update}
 	       end
+	    else {TopNote update(nosample)}
 	    end
 	 end
       end
@@ -655,13 +652,11 @@ in
       meth enter
 	 case
 	    lock
-	       case @IsClosed then ~1 else
-		  MouseInside <- true
-		  case @RequireMouse then
-		     PanelTop,stop
-		     @DelayStamp
-		  else ~1
-		  end
+	       MouseInside <- true
+	       case @RequireMouse then
+		  PanelTop,stop
+		  @DelayStamp
+	       else ~1
 	       end
 	    end
 	 of ~1 then skip
@@ -671,12 +666,9 @@ in
 
       meth leave
 	 lock
-	    case @IsClosed then skip else
-	       MouseInside <- false
-	       case @RequireMouse then
-		  PanelTop,stop
-	       else skip
-	       end
+	    MouseInside <- false
+	    case @RequireMouse then PanelTop,stop
+	    else skip
 	    end
 	 end
       end
@@ -760,10 +752,12 @@ in
 	 end
       end
       
-      meth close
-	 {self.manager PanelTopClosed}
-	 IsClosed <- true
-	 Tk.toplevel, tkClose
+      meth tkClose
+	 lock
+	    {self.manager PanelTopClosed}
+	    Tk.toplevel, tkClose
+	    {Wait _}
+	 end
       end
       
    end
