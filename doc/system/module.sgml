@@ -217,10 +217,12 @@ end>>>
    ModMan = {New Module.manager init}
 in
    {Map UFs fun {$ UF}
-               U#F = if {Functor.is UF} then './'#UF else UF end
-            in
-               {ModMan apply(url:U F $)}
-            end}
+	       case UF of U#F then
+		  {ModMan apply(url:U F $)}
+	       else
+		  {ModMan apply(UF $)}
+	       end
+	    end}
 end>>>
         </List>
        </P>         
