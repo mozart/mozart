@@ -1,10 +1,32 @@
-% crypto arithmetic
-% A/BC + D/EF + G/HI = 1
-% letters must be pairwise digits between 1 and 9
-%
-% Solution: 9/12 + 5/34 + 7/68 = 1
-% Eliminate symmetry by A/BC >= D/EF >= G/HI
-% Yields redundant 2 constraints:  3(A/BC) >= 1,  3(G/HI) =< 1
+%%%
+%%% Authors:
+%%%   Gert Smolka <smolka@ps.uni-sb.de>
+%%%
+%%% Copyright:
+%%%   Gert Smolka, 1998
+%%%
+%%% Last change:
+%%%   $Date$ by $Author$
+%%%   $Revision$
+%%%
+%%% This file is part of Mozart, an implementation
+%%% of Oz 3
+%%%    http://www.mozart-oz.org
+%%%
+%%% See the file "LICENSE" or
+%%%    http://www.mozart-oz.org/LICENSE.html
+%%% for information on usage and redistribution
+%%% of this file, and for a DISCLAIMER OF ALL
+%%% WARRANTIES.
+%%%
+
+%%% crypto arithmetic
+%%% A/BC + D/EF + G/HI = 1
+%%% letters must be pairwise digits between 1 and 9
+%%%
+%%% Solution: 9/12 + 5/34 + 7/68 = 1
+%%% Eliminate symmetry by A/BC >= D/EF >= G/HI
+%%% Yields redundant 2 constraints:  3(A/BC) >= 1,  3(G/HI) =< 1
 
 declare
 proc {Fraction Root}
@@ -19,10 +41,10 @@ in
    EF =: 10*E + F
    HI =: 10*H + I 
    A*EF*HI + D*BC*HI + G*BC*EF =: BC*EF*HI
-   % impose order
+   %% impose order
    A*EF >=: D*BC    
    D*HI >=: G*EF
-   % redundant constraints
+   %% redundant constraints
    3*A >=: BC
    3*G =<: HI
 
@@ -35,8 +57,7 @@ end
 
 
 /*
+
 {SearchAll Fraction _}
 
-Fellini: r: 2.667 sec, c: 400 ms, g: 0 ms, l: 0 ms, h: 2.6 MB
-DFKI Oz Emulator 1.9.9 (sunos-sparc) of Fri Mar, 15, 1996
 */
