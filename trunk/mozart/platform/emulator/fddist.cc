@@ -159,7 +159,7 @@ OZ_C_proc_begin(BIfdDistribute, 5) {
       }
       
     }
-  } else  if (literalEq(order_spec, AtomConstraints)) {
+  } else  if (literalEq(order_spec, AtomNbSusps)) {
     int minsize = getSize(d_variable);
     int mincon  = getConstraints(d_variable);
     int new_cur = 1;
