@@ -39,11 +39,11 @@ Dbg = dbg(on:           proc {$}
 
 IsBuiltin = {`Builtin` 'isBuiltin' 2}
 
-proc {Compile VS}
+proc {EnqueueCompilerQuery M}
    case {Compiler.getOPICompiler} of false then
       skip
    elseof CompilerObject then
-      {CompilerObject feedVirtualString(VS)}
+      {CompilerObject enqueue(M)}
    end
 end
 

@@ -72,7 +72,7 @@ in
 	 Gui,doStatus('Destroying myself -- byebye...')
 	 {Dbg.off}
 	 {Thread.terminate @ReadLoopThread}
-	 {Compile '\\switch -debuginfo'}
+	 {EnqueueCompilerQuery setSwitch(debuginfo false)}
 	 {SendEmacs removeBar}
 	 {Delay 1000}
 	 {self.toplevel tkClose}
@@ -127,16 +127,10 @@ in
 	    else %% this is a (not yet) attached thread
 	       Data = {CondSelect M data unit}
 	       Q    = {Thread.parentId T}
-	       %% The following is not very nice. A better solution
-	       %% will be implemented at some time in the near future...
-	       Ignore = case {Not {IsDet Data}} then false
-			else Data == Ozcar orelse
-			   Data == {Compiler.getOPICompiler}
-			end
 	    in
 	       case {Cget subThreads} orelse
 		  {Not ThreadManager,Exists(Q $)} then
-		  case Ignore orelse {UnknownFile M.file} then %% don't attach!
+		  case {UnknownFile M.file} then %% don't attach!
 		     {OzcarMessage 'Ignoring new thread'}
 		     {Detach T}
 		  else %% yes, do attach!
@@ -473,9 +467,9 @@ in
       meth toggleEmacsThreads
 	 {Ctoggle emacsThreads}
 	 case {Cget emacsThreads} then
-	    {Compile '\\switch +runwithdebugger'}
+	    {EnqueueCompilerQuery setSwitch(runwithdebugger true)}
 	 else
-	    {Compile '\\switch -runwithdebugger'}
+	    {EnqueueCompilerQuery setSwitch(runwithdebugger false)}
 	 end
       end
 

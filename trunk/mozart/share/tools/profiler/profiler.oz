@@ -31,14 +31,14 @@ Profiler =
 	meth off
 	   Time.repeat,stop
 	   {Tk.send wm(withdraw self.toplevel)}
-	   {Compile "\\switch -profile"}
+	   {EnqueueCompilerQuery setSwitch(profile false)}
 	   {Profile.mode false}
 	end
 
 	meth on
 	   {Tk.batch [update(idletasks)
 		      wm(deiconify self.toplevel)]}
-	   {Compile "\\switch +profile"}
+	   {EnqueueCompilerQuery setSwitch(profile true)}
 	   {Profile.mode true}
 	   {Profile.reset}
 	   case {Cget update} > 0 then

@@ -58,101 +58,143 @@ local
    class EvalDialog from TkTools.dialog
       prop
 	 final
+	 locking
       feat
 	 Expr
 	 Result
       attr
 	 CurComp    : unit
+	 CurCompUI  : unit
 	 CurEnv     : unit
 	 EvalThread : unit
 
 	 SlashList  : SL
 
       meth init(master:Master)
-	 fun {EvalInit}
-	    C      = {New Compiler.interface.quiet init}
+	 proc {EvalInit}
+	    C      = {New Compiler.compilerClass init}
+	    CUI    = {New Compiler.quietInterface init(C)}
 	    AuxEnv = {Ozcar PrivateSend(getEnv(unit $))}
 	 in
-	    CurComp <- C
-	    CurEnv  <- {Record.adjoinList env {Append AuxEnv.'G' AuxEnv.'Y'}}
+	    CurComp   <- C
+	    CurCompUI <- CUI
+	    CurEnv    <- {Record.adjoinList env {Append AuxEnv.'G' AuxEnv.'Y'}}
 
-	    {C putEnv({{Compiler.getOPICompiler} getEnv($)})}
-	    {C mergeEnv(@CurEnv)}
-	    {C reset}
+	    {C enqueue(putEnv({{Compiler.getOPICompiler} enqueue(getEnv($))}))}
+	    {C enqueue(mergeEnv(@CurEnv))}
+	    {Wait {C enqueue(ping($))}}
+	    {CUI reset}
 
 	    {self.Result tk(conf
 			    fg:DefaultForeground
 			    text:'')}
-	    C
 	 end
 
-	 proc {Spinner W X}
+	 proc {Spinner W X SpinnerDone}
 	    case {IsFree X} then
 	       S|Sr = @SlashList
 	    in
 	       {Delay 80}
 	       {W tk(conf text:S)}
 	       SlashList <- Sr
-	       {Spinner W X}
-	    else skip end
+	       {Spinner W X SpinnerDone}
+	    else
+	       SpinnerDone = unit
+	    end
 	 end
 
 	 proc {Doit V}
 	    case @EvalThread == unit then
-	       EvalThread <- {Thread.this}
-	       C           = {EvalInit}
-	       Self        = {CondSelect @CurEnv 'self' unit}
+	       Sync SpinnerDone
 	    in
-	       {OzcarMessage 'Doit: ' # V}
-	       case Self of unit then
-		  {C feedVirtualString('declare fun {`result` _}\n' # V #
-				       '\nend')}
-	       else
-		  {C feedVirtualString('\\switch +selfallowedanywhere\n' #
-				       'declare fun {`result` Self}\n' #
-				       '{`ooSetSelf` Self}' # V # '\nend')}
-	       end
-	       case {C hasErrors($)} then
-		  {self.Result tk(conf
-				  fg:BlockedThreadColor
-				  text:'Compile Error')}
-		  {System.printInfo {C getVS($)}}
-	       else R Sync in
+	       try
+		  Self
+	       in
+		  EvalThread <- {Thread.this}
+		  {OzcarMessage 'Doit: ' # V}
 		  thread
-		     EvalThread <- {Thread.this}
-		     try
-			R = {{C getEnv($)}.'`result`' Self}
-		     finally
-			Sync = unit
-		     end
+		     {Thread.setThisPriority high}
+		     {Spinner self.Result Sync SpinnerDone}
 		  end
-		  {Thread.preempt {Thread.this}}
-		  {Spinner self.Result Sync}
-		  {self.Result tk(conf text:{V2VS R})}
+		  {EvalInit}
+		  Self = {CondSelect @CurEnv 'self' unit}
+		  {@CurComp enqueue(setSwitch(threadedqueries false))}
+		  {@CurComp enqueue(setSwitch(debuginfovarnames true))}
+		  {@CurComp enqueue(setSwitch(debuginfocontrol true))}
+		  case Self of unit then
+		     {@CurComp
+		      enqueue(feedVirtualString('declare `result` = (\n' #
+						V # '\n)'))}
+		  else
+		     {@CurComp enqueue(mergeEnv(env('`self`': Self)))}
+		     {@CurComp enqueue(setSwitch(selfallowedanywhere true))}
+		     {@CurComp
+		      enqueue(feedVirtualString('declare `result` = (\n' #
+						'{`ooSetSelf` `self`}\n' #
+						V # '\n)'))}
+		  end
+		  {Wait {@CurComp enqueue(ping($))}}
+		  Sync = unit
+		  {Wait SpinnerDone}
+		  case {@CurCompUI hasErrors($)} then ResultText in
+		     case RunningWithOPI then
+			ResultText = 'Compile Error (see *Oz Compiler* buffer)'
+			{System.printInfo [6]#{@CurCompUI getVS($)}#[5]}
+		     else
+			ResultText = 'Compile Error'
+			{System.printInfo {@CurCompUI getVS($)}}
+		     end
+		     {self.Result tk(conf fg:BlockedThreadColor
+				     text:ResultText)}
+		  else
+		     R = {@CurComp enqueue(getEnv($))}.'`result`'
+		  in
+		     {self.Result tk(conf text:{V2VS R})}
+		  end
+		  EvalThread <- unit
+	       catch E=kernel(terminate) then
+		  case @CurComp \= unit then
+		     {@CurComp clearQueue()}
+		     {@CurComp interrupt()}
+		  else skip
+		  end
+		  raise E end
+	       finally
+		  Sync = unit
 	       end
-	       EvalThread <- unit
 	    else
 	       skip
 	    end
 	 end
 
 	 proc {Eval}
-	    {Doit {self.Expr tkReturn(get $)}}
+	    {Kill}
+	    case {self.Expr tkReturn(get $)} of "" then
+	       {self.Result tk(conf text:'Did you ask something?')}
+	    elseof V then
+	       {Doit V}
+	    end
 	 end
 
 	 proc {Exec}
-	    {Doit {self.Expr tkReturn(get $)} # ' unit'}
+	    {Kill}
+	    case {self.Expr tkReturn(get $)} of "" then
+	       {self.Result tk(conf text:'Did you say something?')}
+	    elseof V then
+	       {Doit V # '\nunit'}
+	    end
 	 end
 
 	 proc {Kill}
-	    case @EvalThread == unit then skip else
-	       {Thread.terminate @EvalThread}
-	       EvalThread <- unit
+	    lock
+	       case @EvalThread == unit then skip else
+		  {Thread.terminate @EvalThread}
+		  EvalThread <- unit
+	       end
+	       {Delay 120}
+	       {self.Result tk(conf fg:DefaultForeground)}
+	       {self.Result tk(conf text:'')}
 	    end
-	    {Delay 120}
-	    {self.Result tk(conf fg:DefaultForeground)}
-	    {self.Result tk(conf text:'')}
-	    %{self.Expr   tk(delete 0 'end')}
 	 end
 
 	 proc {Close}
