@@ -426,7 +426,6 @@ Bool AM::performUnify(TaggedRef *termPtr1, TaggedRef *termPtr2)
   }
 }
 
-
 Bool AM::isBetween(Board *to, Board *varHome)
 {
   for (Board *tmp = to->getBoardDeref();
@@ -441,6 +440,31 @@ Bool AM::isBetween(Board *to, Board *varHome)
     }
   }
   return OK;
+}
+
+Bool AM::checkExtSuspension (Suspension *susp)
+{
+  if (susp->isExtSusp () == OK) {
+    Board *sb = susp->getNode ();
+    DebugCheck ((sb == (Board *) NULL),
+		error ("no board is found in AM::checkExtSuspension"));
+    if (sb->isSolve () == NO)
+      sb = sb->GetSolveBoard ();
+    DebugCheck ((sb == (Board *) NULL || sb->isSolve () == NO),
+		error ("no solve board is found in AM::checkExtSuspension"));
+
+    if (sb->isCommitted () == NO &&
+	sb->isFailed () == NO &&
+	sb->isDiscarded () == NO) {
+      SolveActor *sa = CastSolveActor (sb->getActor ());
+      if (sa->areNoExtSuspensions () == OK) {
+	Thread::ScheduleWakeup (sb, NO);
+      }
+    } 
+    return (OK);
+  } else {
+    return (NO);
+  }
 }
 
 // ------------------------------------------------------------------------
@@ -463,6 +487,7 @@ SuspList* AM::checkSuspensionList(SVariable* var, TaggedRef taggedvar,
     // suspension points to an already reduced branch of the computation tree
     if (!n) {
       susp->markDead();
+      (void) checkExtSuspension (susp);
       suspList = suspList->dispose();
       continue;
     }
@@ -511,7 +536,7 @@ void AM::awakeNode(Board *node)
     return;
 
   node->removeSuspension();
-  Thread::ScheduleWakeup(node);
+  Thread::ScheduleWakeup(node, NO);    // diese scheiss-'meta-logik' Dinge!!!!
 }
 
 // exception from general rule that arguments are never variables!
@@ -655,11 +680,14 @@ void AM::reduceTrailOnSuspend()
   Suspension *susp;
   Board *bb = currentBoard;
 
+  // one single suspension for all
+  
   bb->newScript(numbOfCons);
   if (numbOfCons > 0) {
     susp = new Suspension(bb);
   }
   
+  Bool isOuterSuspMaint = (currentSolveBoard == (Board *) NULL) ? OK : NO;
   for (int index = 0; index < numbOfCons; index++) {
     TaggedRef *refPtr;
     TaggedRef value;
@@ -679,8 +707,22 @@ void AM::reduceTrailOnSuspend()
       DebugCheck (isLocalVariable (oldVal) && isNotCVar(oldVal),
 		  error ("the right var is local  and unconstrained");
 		  return;);
-      if(!isLocalVariable(oldVal)) // add susps to global vars
-	taggedBecomesSuspVar(ptrOldVal)->addSuspension(susp);
+      if(!isLocalVariable(oldVal)) { // add susps to global vars
+	SVariable *svar = taggedBecomesSuspVar (ptrOldVal);
+	if (isOuterSuspMaint == NO &&
+	    isInScope (currentSolveBoard, svar->getHome ()) == NO) {
+	  isOuterSuspMaint = OK;
+	  susp->setExtSusp ();
+	  currentSolveBoard->addSuspension (susp);
+	}
+	svar->addSuspension (susp);
+      }
+    }
+    if (isOuterSuspMaint == NO &&
+	isInScope (currentSolveBoard, tagged2SuspVar (value)->getHome ()) == NO) {
+      isOuterSuspMaint = OK;
+      susp->setExtSusp ();
+      currentSolveBoard->addSuspension (susp);
     }
     tagged2SuspVar(value)->addSuspension(susp);
 
@@ -708,7 +750,7 @@ void AM::reduceTrailOnFail()
 
 void AM::reduceTrailOnShallow(Suspension *susp,int numbOfCons)
 {
-  Bool isOuterSuspMaint = NO;
+  Bool isOuterSuspMaint = (currentSolveBoard == (Board *) NULL) ? OK : NO;
 
   // one single suspension for all
   
@@ -722,6 +764,12 @@ void AM::reduceTrailOnShallow(Suspension *susp,int numbOfCons)
 	       error("Non-variable on trail"));
     
     SVariable *svar = taggedBecomesSuspVar(refPtr);
+    if (isOuterSuspMaint == NO &&
+	isInScope (currentSolveBoard, svar->getHome ()) == NO) {
+      isOuterSuspMaint = OK;
+      susp->setExtSusp ();
+      currentSolveBoard->addSuspension (susp);
+    }
     svar->addSuspension(susp);
   }
 
