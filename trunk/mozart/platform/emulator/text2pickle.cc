@@ -536,7 +536,7 @@ void pickle(TaggedPair *aux, PickleBuffer *out)
   // mean it can compile B...
   Assert(aux->tag==TAG_STRING);
 
-  // marshalString(PERDIOVERSION,out);
+  // marshalString(MARSHALERVERSION,out);
   marshalString(out, aux->val.string);
   aux = aux->next;
 
@@ -648,7 +648,8 @@ TaggedPair *unpickle(FILE *in)
   int major, minor;
   int aux = sscanf(val.string,"%d#%d",&major,&minor);
   if (aux !=2) {
-    OZ_error("Version too new. Got: '%s', expected: '%s'.\n",val.string,PERDIOVERSION);
+    OZ_error("Version too new. Got: '%s', expected: '%s'.\n",
+	     val.string, MARSHALERVERSION);
   }
 
   ProgramCounter PC = 0;

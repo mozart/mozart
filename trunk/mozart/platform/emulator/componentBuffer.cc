@@ -75,8 +75,6 @@ class ByteStream: public PickleBuffer {
   int totlen;  /* include header */
   int type;
 
-  int perdioMajor, perdioMinor;
-
   //
 public:  
   int availableSpace(){
@@ -211,14 +209,14 @@ public:
   void* operator new(size_t, void *place) { return (place); }
 
   ByteStream() {
-    type=BS_None;first=NULL;last=NULL;pos=NULL; 
-    perdioMajor = PERDIOMAJOR;
-    perdioMinor = PERDIOMINOR;
+    type = BS_None;
+    first = last = (ByteBuffer *) 0; 
+    pos = (BYTE *) 0; 
   }
 
   void setVersion(int major, int minor) {
-    perdioMajor = major;
-    perdioMinor = minor;
+    // perdioMajor = major;
+    // perdioMinor = minor;
   }
 
   /* marshal    beg:first->head()  pos=next free slot OR null */

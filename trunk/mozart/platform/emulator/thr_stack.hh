@@ -129,16 +129,18 @@ public:
 
   void checkLiveness(RefsArray * X);
 
-  void pushFrame(ProgramCounter pc, void *y, TaggedRef cap) {
+  // kost@ : Note that 'cap' is stored now as a naked pointer. 
+  // The GC has to derive its type based on the task type;
+  void pushFrame(ProgramCounter pc, void *y, void *cap) {
     Frame *newTop = ensureFree(frameSz);
-    *(newTop)   = ToPointer(cap);
+    *(newTop)   = cap;
     *(newTop+1) = y; 
     *(newTop+2) = pc;
     tos = newTop+frameSz;
   }
 
   void pushEmpty() {
-    pushFrame(C_EMPTY_STACK,0,0);
+    pushFrame(C_EMPTY_STACK, 0, 0);
   }
 
   void init() {
@@ -146,52 +148,50 @@ public:
     pushEmpty();
   }
 
-  void pushCont(ProgramCounter pc,RefsArray *y,Abstraction *cap) {
+  void pushCont(ProgramCounter pc, RefsArray *y, Abstraction *cap) {
 #ifdef DEBUG_MEM
     Assert(!y || MemChunks::areRegsInHeap(y,y->getLen()));
 #endif
-    pushFrame(pc, y, makeTaggedConst((ConstTerm *) cap));
+    Assert(cap);
+    pushFrame(pc, y, cap);
   }
 
   void pushCall(TaggedRef pred, RefsArray * x) {
-    pushFrame(C_CALL_CONT_Ptr, (void *) pred, makeTaggedVerbatim(x));
+    pushFrame(C_CALL_CONT_Ptr, (void *) pred, x);
   }
   void pushX(int i) {
-    Assert(i>=0);
-    if (i>0) {
-      RefsArray * x = RefsArray::make(XREGS,i);
+    Assert(i >= 0);
+    if (i > 0) {
+      RefsArray * x = RefsArray::make(XREGS, i);
 #ifdef DEBUG_LIVENESS
       checkLiveness(x);
 #endif
-      pushFrame(C_XCONT_Ptr,x,makeTaggedNULL());
+      pushFrame(C_XCONT_Ptr, x, 0);
     }
   }
 
   void pushLock(OzLock *lck)     { 
-    pushFrame(C_LOCK_Ptr, NULL, makeTaggedConst((ConstTerm *) lck)); 
+    Assert(lck);
+    pushFrame(C_LOCK_Ptr, 0, lck); 
   }
   void pushCatch()               { 
-    pushFrame(C_CATCH_Ptr, NULL, makeTaggedNULL()); 
+    pushFrame(C_CATCH_Ptr, 0, 0);
   }
   void discardCatch()            { 
     discardFrame(C_CATCH_Ptr); 
   }
-  void pushDebug(OzDebug *dbg, Atom * dothis) { 
-    pushFrame(C_DEBUG_CONT_Ptr, dbg, makeTaggedLiteral(dothis)); 
+  void pushDebug(OzDebug *dbg, Atom *dothis) { 
+    pushFrame(C_DEBUG_CONT_Ptr, dbg, dothis); 
   }
   void pushSelf(Object *o) { 
-    pushFrame(C_SET_SELF_Ptr, 
-	      NULL,
-	      o ? makeTaggedConst((ConstTerm *) o) : makeTaggedNULL()); 
+    pushFrame(C_SET_SELF_Ptr, 0, o);
   }
   void pushAbstr(PrTabEntry  *a) { 
-    pushFrame(C_SET_ABSTR_Ptr,
-	      a,
-	      makeTaggedSmallInt(invoc_counter++)); 
+    pushFrame(C_SET_ABSTR_Ptr, a, ToPointer(invoc_counter++)); 
   }
   int tasks();
 
-  TaskStack(int s): Stack(s,Stack_WithFreelist) { pushEmpty(); }
+  TaskStack(int s): Stack(s, Stack_WithFreelist) { pushEmpty(); }
   TaskStack(TaskStack * f) : Stack(f->suggestNewSize(),Stack_WithFreelist) {
     int used = f->getUsed();
     memcpy(array, f->array, used * sizeof(Frame));
@@ -200,12 +200,12 @@ public:
 
 };
 
-#define GetFrameNoDecl(top,pc,y,cap)		                 \
-{						                 \
-  pc   = (ProgramCounter) *(top-1);		                 \
-  y    = (RefsArray *)    *(top-2);		                 \
-  cap  = (Abstraction *)  tagged2Verbatim((TaggedRef) *(top-3)); \
-  top -= frameSz;				                 \
+#define GetFrameNoDecl(top,pc,y,cap)		\
+{						\
+  pc   = (ProgramCounter) *(top-1);		\
+  y    = (RefsArray *)    *(top-2);		\
+  cap  = (Abstraction *)  *(top-3);		\
+  top -= frameSz;				\
 }
 
 #define ReplaceFrame(frame,pc,y,cap)            \

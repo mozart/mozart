@@ -43,11 +43,7 @@ OZ_BI_define(BIaddr,1,1)
 {
   oz_declareIN(0,val);
 
-  DEREF(val,valPtr);
-
-  OZ_RETURN_INT((oz_isVar(val) && valPtr) ? 
-		ToInt32(valPtr) :
-		ToInt32(tagged2Verbatim(val)));
+  OZ_RETURN_INT(ToInt32(tagged2Addr(val)));
 } OZ_BI_end
 
 

@@ -56,12 +56,6 @@
 #endif
 
 //
-#define MAX_DP_STRING        4
-#define PERDIOVERSION     "3#0" /* PERDIOMAJOR "#" PERDIOMINOR */
-#define PERDIOMAJOR          3
-#define PERDIOMINOR          0
-
-//
 // the DIFs
 // the protocol layer needs to know about some of these 
 typedef enum {

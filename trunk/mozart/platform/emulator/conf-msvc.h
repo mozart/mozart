@@ -62,8 +62,14 @@
 /* Define if you have <dlfcn.h>.  */
 #define HAVE_DLFCN_H 1
 
-/* Define if you have the mmap system call.  */
-#undef HAVE_MMAP
+/* Define if you want to allocate memory with malloc.  */
+#define USE_MALLOC
+
+/* Define if you want to allocate memory via mmap.  */
+#undef USE_MMAP
+
+/* Define if you have the sbrk function.  */
+#undef USE_SBRK
 
 /* do we have setpgid? */
 #undef HAVE_SETPGID
