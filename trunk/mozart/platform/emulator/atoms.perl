@@ -247,32 +247,51 @@ if ("$option" eq "-body") {
 
     print "#include\"value.hh\"\n";
 
-    print "TaggedRef\n";
-    foreach $key (keys %atoms) { print "   $key,\n"; }
-    foreach $key (keys %names) { print "   $key,\n"; }
-    print "dummyend;\n";
+    $atoms = 0;
+    
+    print "const char * _StaticAtomChars[] = {\n";
+    foreach $key (keys %atoms) { 
+	print "   \"$atoms{$key}\",\n"; $atoms++;
+    }
+    print "};\n\n";
+    print "TaggedRef _StaticAtomTable[$atoms];\n\n";
+    $names = 0;
+    
+    print "const char * _StaticNameChars[] = {\n";
+    foreach $key (keys %names) { 
+	print "   \"$names{$key}\",\n"; $names++;
+    }
+    print "};\n\n";
+    print "TaggedRef _StaticNameTable[$names];\n\n";
 
-    print "void initAtomsAndNames() {\n";
-    
-    while (($key,$val) = each %atoms) {
-	printf("   %-20s = oz_atom(\"%s\");\n",$key,$val);
-    }
-    
-    print "\n\n";
-    
-    while (($key,$val) = each %names) {
-	printf("   %-20s = oz_uniqueName(\"%s\");\n",$key,$val);
-    }
-    
-    print "}\n\n";
+    print <<EOF;
+	void initAtomsAndNames() {
+
+	    for (int i = $atoms; i--; )
+		_StaticAtomTable[i] = oz_atom(_StaticAtomChars[i]);
+             
+	    for (int i = $names; i--; )
+		_StaticNameTable[i] = oz_uniqueName(_StaticNameChars[i]);
+             
+	};
+
+EOF
+
 
 } elsif ("$option" eq "-header") {
 
     print "void initAtomsAndNames();\n\n\n";
-    print "extern TaggedRef\n";
-    foreach $key (keys %atoms) { print "   $key,\n"; }
-    foreach $key (keys %names) { print "   $key,\n"; }
-    print "dummyend;\n";
+    print "extern TaggedRef _StaticAtomTable[];\n";
+    print "extern TaggedRef _StaticNameTable[];\n\n\n";
+    $i=0;
+    foreach $key (keys %atoms) { 
+	print "#define $key _StaticAtomTable[$i] \n"; $i++;
+    }	
+    $i=0;
+    foreach $key (keys %names) { 
+	print "#define $key _StaticNameTable[$i] \n"; $i++;
+    }
+    print "\n";
 
 } else {
 
