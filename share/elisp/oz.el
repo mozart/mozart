@@ -284,7 +284,7 @@ starts the emulator under gdb")
      ("Buffer" . oz-indent-buffer)
      )
     ("Browse" . oz-feed-region-browse)
-    ("Panel"   . oz-feed-panel)
+    ("Panel"   . oz-view-panel)
     ("-----")
     ("Next Oz Buffer"         . oz-next-buffer)
     ("Previous Oz Buffer"     . oz-previous-buffer)
@@ -1204,10 +1204,10 @@ OZ compiler, emulator and error window")
     (oz-send-string (concat "{Browse " contents "}"))))
 
 
-(defun oz-feed-panel ()
-  "Feed {Panel popup} into the Oz Compiler"
+(defun oz-view-panel ()
+  "Feed {System.panel popup} into the Oz Compiler"
   (interactive)
-  (oz-send-string "{Panel popup}"))
+  (oz-send-string "{System.panel popup}"))
 
 (defun oz-feed-file(file)
   "Feed an file into the Oz Compiler"
