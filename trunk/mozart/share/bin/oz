@@ -92,7 +92,8 @@ case "$cmd" in
 
    oz.compiler)
 
-       if [ $TERM = "emacs" ]; then
+       if [ $1 = "-emacs" ]; then
+	  shift
           exec $OZCOMPILER +E `echo $* |  sed -e 's/-/+/g'`
        else
           exec xterm -name "OzCompiler" \
@@ -103,7 +104,8 @@ case "$cmd" in
 
    oz.machine)
 
-      if [ $TERM = "emacs" ]; then
+      if [ $1 = "-emacs" ]; then
+	shift
         exec $OZMACHINE -E "$@"
       else
         xterm -title 'Oz Machine' -e $OZMACHINE "$@" > /dev/null 2>&1 &
