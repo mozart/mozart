@@ -187,8 +187,8 @@ class FSetValue;
 
 class OZ_FSetValue {
 
-friend class OZ_FiniteDomainImpl;
-friend class OZ_FiniteDomain;
+  friend class OZ_FiniteDomainImpl;
+  friend class OZ_FiniteDomain;
 
 protected:
   int _card;
@@ -208,7 +208,15 @@ public:
   OZ_FSetValue(const OZ_FSetState);
   OZ_FSetValue(int, int);
   OZ_FSetValue(const OZ_FiniteDomain &);
+  /*
+  static void * operator new(size_t);
+  static void operator delete(void *, size_t);
 
+#ifdef __GNUC__
+  static void * operator new[](size_t);
+  static void operator delete[](void *, size_t);
+#endif
+  */
   void copyExtension(void);
   void disposeExtension(void);
 
@@ -604,6 +612,9 @@ int OZ_vectorSize(OZ_Term);
 
 OZ_Term * OZ_getOzTermVector(OZ_Term, OZ_Term *);
 int * OZ_getCIntVector(OZ_Term, int *);
+
+OZ_Term OZ_setValue(OZ_FSetValue *);
+OZ_FSetValue * OZ_setValueToC(OZ_Term);
 
 //-----------------------------------------------------------------------------
 // Interface to Generic Constraint Systems
