@@ -54,6 +54,7 @@
 #include <arpa/inet.h>
 #include <sys/socket.h>
 #endif
+
 #include <sys/wait.h>
 #include <sys/stat.h>
 #include <sys/utsname.h>
@@ -87,6 +88,9 @@
 /*              BUILTINS                                                  */
 /* ********************************************************************** */
 
+const char SYSLETHEADER = 1;
+
+
 // class ByteSource [Denys Duchier]
 // something to marshal from
 
@@ -94,32 +98,42 @@ class ByteSource {
 public:
   virtual OZ_Return getBytes(BYTE*,int&,int&) = 0;
   virtual OZ_Return getTerm(OZ_Term, const char *compname);
-  virtual OZ_Return makeByteStream(ByteStream*&);
+  OZ_Return makeByteStream(ByteStream*&);
 };
 
 class ByteSourceFD : public ByteSource {
 private:
   gzFile fd;
-  Bool del;
+
 public:
-  ByteSourceFD(int i, Bool d=FALSE):del(d) {
-    fd = gzdopen(i,"r");
-  }
-  virtual ~ByteSourceFD(){ if (del) gzclose(fd); }
+  virtual ~ByteSourceFD() { gzclose(fd); }
   OZ_Return getBytes(BYTE*,int&,int&);
+
+  ByteSourceFD(int i)
+  {
+    while(1) {
+      char c;
+      int ret = read(i,&c,1);
+      if (ret<=0 || c==SYSLETHEADER) break;
+      /* for backward compatibility: */
+      if (c==PERDIOMAGICSTART) {
+        lseek(i,-1,SEEK_CUR);
+        break;
+      }
+    }
+
+    fd = gzdopen(i,"rb");
+  }
 };
+
 
 class ByteSourceDatum : public ByteSource {
 private:
   OZ_Datum dat;
-  Bool     del;
   int      idx;
 public:
-  ByteSourceDatum():del(FALSE),idx(0){}
-  ByteSourceDatum(OZ_Datum d,Bool b):dat(d),del(b),idx(0){}
-  virtual ~ByteSourceDatum() {
-    if (del) free(dat.data);
-  }
+  ByteSourceDatum(OZ_Datum d):dat(d),idx(0) {}
+  virtual ~ByteSourceDatum() { free(dat.data); }
   OZ_Return getBytes(BYTE*,int&,int&);
 };
 
@@ -135,25 +149,18 @@ public:
 };
 
 
-class ByteSinkFD : public ByteSink {
-private:
-  int fd;
-  Bool del;
-public:
-  ByteSinkFD(int f,Bool b=FALSE):fd(f),del(b){}
-  ByteSinkFD():fd(0),del(FALSE){}
-  virtual ~ByteSinkFD() { if (del) close(fd); }
-  OZ_Return allocateBytes(int n) { return PROCEED; }
-  OZ_Return putBytes(BYTE*,int);
-};
-
 class ByteSinkFile : public ByteSink {
 private:
   int fd;
+  gzFile zfd;
   char *filename;
+  int compressionlevel;
 public:
-  ByteSinkFile(char *s):filename(s),fd(-1){};
-  virtual ~ByteSinkFile() { if (fd!=-1) osclose(fd); }
+  ByteSinkFile(char *s,int lvl): filename(s),fd(-1),zfd(0), compressionlevel(lvl) {}
+  virtual ~ByteSinkFile() {
+    if (zfd!=0) { gzclose(zfd); return; }
+    if (fd!=-1) close(fd);
+  }
   OZ_Return allocateBytes(int);
   OZ_Return putBytes(BYTE*,int);
 };
@@ -226,23 +233,6 @@ ByteSink::putTerm(OZ_Term in, char *filename, Bool textmode)
   return PROCEED;
 }
 
-// ===================================================================
-// class ByteSinkFD
-// ===================================================================
-
-OZ_Return
-ByteSinkFD::putBytes(BYTE*pos,int len)
-{
- loop:
-  if (oswrite(fd,pos,len)<0) {
-    if (errno != EINTR)
-      return raiseGeneric("Write failed during save",
-                          oz_cons(OZ_pairA("Error",oz_atom(OZ_unixError(errno))),
-                                oz_nil()));
-    goto loop;
-  }
-  return PROCEED;
-}
 
 // ===================================================================
 // class ByteSinkFile
@@ -252,11 +242,23 @@ OZ_Return
 ByteSinkFile::allocateBytes(int n)
 {
   fd = strcmp(filename,"-")==0 ? STDOUT_FILENO
-                                      : open(filename,O_WRONLY|O_CREAT|O_TRUNC,0666);
+                               : open(filename,O_WRONLY|O_CREAT|O_TRUNC,0666);
   if (fd < 0)
     return raiseGeneric("Open failed during save",
                         oz_mklist(OZ_pairA("File",oz_atom(filename)),
                                   OZ_pairA("Error",oz_atom(OZ_unixError(errno)))));
+
+  /* write syslet header uncompressed */
+  write(fd,&SYSLETHEADER,1);
+
+  /* gzdopen allways spits out the gzip header */
+  if (compressionlevel>0) {
+    char buf[100];
+    sprintf(buf,"w%d",compressionlevel);
+    zfd = gzdopen(fd,buf);
+    Assert(zfd);
+  }
+
   return PROCEED;
 }
 
@@ -264,7 +266,8 @@ OZ_Return
 ByteSinkFile::putBytes(BYTE*pos,int len)
 {
  loop:
-  if (oswrite(fd,pos,len)<0) {
+  if (compressionlevel==0 && write(fd,pos,len)<0 ||
+      compressionlevel>0 && gzwrite(zfd,pos,len)<0) {
     if (errno != EINTR)
       return raiseGeneric("Write failed during save",
                           oz_mklist(OZ_pairA("File",oz_atom(filename)),
@@ -312,9 +315,16 @@ saveDatum(OZ_Term in,OZ_Datum& dat)
 }
 
 static
-OZ_Return saveIt(OZ_Term val, char *filename, Bool textmode)
+OZ_Return saveIt(OZ_Term val, char *filename, int compressionlevel, Bool textmode)
 {
-  ByteSinkFile sink(filename);
+#ifndef USE_ZLIB
+  if (compressionlevel>0) {
+    return raiseGeneric("Save: emulator does not support gzipped pickles",
+                        oz_cons(OZ_pairA("File",oz_atom(filename)),
+                                oz_nil()));
+  }
+#endif
+  ByteSinkFile sink(filename,compressionlevel);
   OZ_Return ret = sink.putTerm(val,filename,textmode);
   if (ret!=PROCEED)
     unlink(filename);
@@ -325,7 +335,16 @@ OZ_BI_define(BIsave,2,0)
 {
   OZ_declareIN(0,in);
   OZ_declareVirtualStringIN(1,filename);
-  return saveIt(in,filename,NO);
+  return saveIt(in,filename,0,NO);
+} OZ_BI_end
+
+
+OZ_BI_define(BIgzsave,3,0)
+{
+  OZ_declareIN(0,in);
+  OZ_declareVirtualStringIN(1,filename);
+  oz_declareIntIN(2,compressionlevel);
+  return saveIt(in,filename,compressionlevel,NO);
 } OZ_BI_end
 
 
@@ -339,7 +358,7 @@ Bool pickle2text()
     fprintf(stderr,"Exception: %s\n",OZ_toC(am.getExceptionValue(),10,100));
     return NO;
   }
-  aux = saveIt(res,"-",OK);
+  aux = saveIt(res,"-",0,OK);
   if (aux==RAISE) {
     fprintf(stderr,"Exception: %s\n",OZ_toC(am.getExceptionValue(),10,100));
     return NO;
@@ -467,13 +486,13 @@ ByteSourceDatum::getBytes(BYTE*pos,int&max,int&got)
 
 OZ_Return loadDatum(OZ_Datum dat,OZ_Term out, const char *compname)
 {
-  ByteSourceDatum src(dat,TRUE);
+  ByteSourceDatum src(dat);
   return src.getTerm(out,compname);
 }
 
 OZ_Return loadFD(int fd, OZ_Term out, const char *compname)
 {
-  ByteSourceFD src(fd,TRUE);
+  ByteSourceFD src(fd);
   return src.getTerm(out,compname);
 }
 
