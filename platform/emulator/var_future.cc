@@ -225,7 +225,9 @@ OZ_BI_define(BIwaitQuiet,1,0)
   Assert(!oz_isRef(fut));
   if (oz_isVarOrRef(fut)) {
     if (oz_isFuture(fut)) {
-      ((Future*)tagged2Var(fut))->addSuspSVar(oz_currentThread());
+      Future* p = (Future*)tagged2Var(fut);
+      if (p->isFailed()) return PROCEED;
+      p->addSuspSVar(oz_currentThread());
       return (SUSPEND);
     }
     oz_suspendOnPtr(futPtr);
