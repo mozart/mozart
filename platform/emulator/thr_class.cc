@@ -117,7 +117,7 @@ void Thread::Init()
 void Thread::checkToplevel()
 {
   if (ToplevelQueue) {
-    verbose(VERB_THREAD,"Thread::checkToplevel: pushNext: 0x%x\n",this);
+    Verbose((VERB_THREAD,"Thread::checkToplevel: pushNext: 0x%x\n",this));
     for (Toplevel **last = &ToplevelQueue;
          ((*last)->next) != NULL;
          last = &((*last)->next)) {
@@ -130,10 +130,10 @@ void Thread::checkToplevel()
 void Thread::addToplevel(ProgramCounter pc)
 {
   if (u.taskStack->isEmpty()) {
-    verbose(VERB_THREAD,"Thread::addToplevel: push\n");
+    Verbose((VERB_THREAD,"Thread::addToplevel: push\n"));
     pushToplevel(pc);
   } else {
-    verbose(VERB_THREAD,"Thread::addToplevel: delay\n");
+    Verbose((VERB_THREAD,"Thread::addToplevel: delay\n"));
     ToplevelQueue = new Toplevel(pc,ToplevelQueue);
   }
 }
