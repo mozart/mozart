@@ -162,6 +162,10 @@ enum EmulatorPropertyIndex {
   PROP_DP_TCPWEAKLIMIT,
   PROP_DP_PROBEINTERVAL,
   PROP_DP_PROBETIMEOUT,
+  PROP_DP_OPENTIMEOUT,
+  PROP_DP_CLOSETIMEOUT,
+  PROP_DP_WFREMOTETIMEOUT,
+  PROP_DP_FIREWALLREOPENTIMEOUT,
   PROP_DP,
   // DPTABLE
   PROP_DPTABLE_DEFAULTOWNERTABLESIZE,
@@ -457,19 +461,26 @@ OZ_Term GetEmulatorProperty(EmulatorPropertyIndex prop) {
   CASE_INT(PROP_DP_TCPWEAKLIMIT,ozconf.dpTCPWeakLimit);
   CASE_INT(PROP_DP_PROBEINTERVAL,ozconf.dpProbeInterval);
   CASE_INT(PROP_DP_PROBETIMEOUT,ozconf.dpProbeTimeout);
+  CASE_INT(PROP_DP_OPENTIMEOUT,ozconf.dpOpenTimeout);
+  CASE_INT(PROP_DP_CLOSETIMEOUT,ozconf.dpCloseTimeout);
+  CASE_INT(PROP_DP_WFREMOTETIMEOUT,ozconf.dpWFRemoteTimeout);
+  CASE_INT(PROP_DP_FIREWALLREOPENTIMEOUT,ozconf.dpFirewallReopenTimeout);
 
   case PROP_DP_VERSION: return OZ_pair2(oz_int(PERDIOMAJOR),
 					    oz_int(PERDIOMINOR));
 
   CASE_BOOL(PROP_DP_USEALTVARPROTOCOL,ozconf.dpUseAltVarProtocol);
   CASE_REC(PROP_DP,"dp",
-	   (13,oz_atomNoDup("useAltVarProtocol"),
+	   (17,oz_atomNoDup("useAltVarProtocol"),
 	    oz_atomNoDup("seifHandler"),oz_atomNoDup("debug"),
 	    oz_atomNoDup("flowBufferSize"),oz_atomNoDup("flowBufferTime"),
 	    oz_atomNoDup("version"),oz_atomNoDup("retryTimeCeiling"),
 	    oz_atomNoDup("retryTimeFloor"),oz_atomNoDup("retryTimeFactor"),
 	    oz_atomNoDup("tcpHardLimit"),oz_atomNoDup("tcpWeakLimit"),
-	    oz_atomNoDup("probeInterval"),oz_atomNoDup("probeTimeout")),
+	    oz_atomNoDup("probeInterval"),oz_atomNoDup("probeTimeout"),
+	    oz_atomNoDup("openTimeout"),oz_atomNoDup("closeTimeout"),
+	    oz_atomNoDup("wfRemoteTimeout"),
+	    oz_atomNoDup("firewallReopenTimeout")),
 	   SET_BOOL(oz_atomNoDup("useAltVarProtocol"),
 		    ozconf.dpUseAltVarProtocol);
 	   SET_BOOL(oz_atomNoDup("seifHandler"), ozconf.dpSeifHandler);
@@ -487,6 +498,14 @@ OZ_Term GetEmulatorProperty(EmulatorPropertyIndex prop) {
 		   ozconf.dpProbeInterval);
 	   SET_INT(oz_atomNoDup("probeTimeout"), 
 		   ozconf.dpProbeTimeout);
+	   SET_INT(oz_atomNoDup("openTimeout"), 
+		   ozconf.dpOpenTimeout);
+	   SET_INT(oz_atomNoDup("closeTimeout"), 
+		   ozconf.dpCloseTimeout);
+	   SET_INT(oz_atomNoDup("wfRemoteTimeout"), 
+		   ozconf.dpWFRemoteTimeout);
+	   SET_INT(oz_atomNoDup("firewallReopenTimeout"), 
+		   ozconf.dpFirewallReopenTimeout);
 	   SET_REC(oz_atomNoDup("version"), OZ_pair2(oz_int(PERDIOMAJOR),
 						oz_int(PERDIOMINOR)));
 	   );
@@ -766,6 +785,10 @@ OZ_Return SetEmulatorProperty(EmulatorPropertyIndex prop,OZ_Term val) {
     });
     CASE_NAT(PROP_DP_PROBEINTERVAL,ozconf.dpProbeInterval);
     CASE_NAT(PROP_DP_PROBETIMEOUT,ozconf.dpProbeTimeout);
+    CASE_NAT(PROP_DP_OPENTIMEOUT,ozconf.dpOpenTimeout);
+    CASE_NAT(PROP_DP_CLOSETIMEOUT,ozconf.dpCloseTimeout);
+    CASE_NAT(PROP_DP_WFREMOTETIMEOUT,ozconf.dpWFRemoteTimeout);
+    CASE_NAT(PROP_DP_FIREWALLREOPENTIMEOUT,ozconf.dpFirewallReopenTimeout);
     // DP    
     CASE_REC(PROP_DP,
 	     SET_NAT(AtomDebugPerdio,ozconf.debugPerdio);
@@ -784,6 +807,14 @@ OZ_Return SetEmulatorProperty(EmulatorPropertyIndex prop,OZ_Term val) {
 		      ozconf.dpProbeInterval);
 	     SET_NAT(oz_atomNoDup("probeTimeout"),
 		      ozconf.dpProbeTimeout);
+	     SET_NAT(oz_atomNoDup("openTimeout"),
+		      ozconf.dpOpenTimeout);
+	     SET_NAT(oz_atomNoDup("closeTimeout"),
+		      ozconf.dpCloseTimeout);
+	     SET_NAT(oz_atomNoDup("wfRemoteTimeout"),
+		      ozconf.dpWFRemoteTimeout);
+	     SET_NAT(oz_atomNoDup("firewallReopenTimeout"),
+		      ozconf.dpFirewallReopenTimeout);
 	     SET_BOOL(oz_atomNoDup("useAltVarProtocol"),
 		      ozconf.dpUseAltVarProtocol););
     // DPTABLE
@@ -1083,6 +1114,10 @@ static const struct prop_entry prop_entries[] = {
   {"dp.tcpWeakLimit",PROP_DP_TCPWEAKLIMIT},
   {"dp.probeInterval",PROP_DP_PROBEINTERVAL},
   {"dp.probeTimeout",PROP_DP_PROBETIMEOUT},
+  {"dp.openTimeout",PROP_DP_OPENTIMEOUT},
+  {"dp.closeTimeout",PROP_DP_CLOSETIMEOUT},
+  {"dp.wfRemoteTimeout",PROP_DP_WFREMOTETIMEOUT},
+  {"dp.firewallReopenTimeout",PROP_DP_FIREWALLREOPENTIMEOUT},
   {"dp",PROP_DP},
   // DPTABLE
   {"dpTable.defaultOwnerTableSize",
