@@ -519,16 +519,13 @@ OZ_BI_end
 OZ_Service &filter_intersectN(OZ_Service& s,
                               OZ_FSetVarVector &xs, OZ_FSetVar &z)
 {
+  printf("gaga\n");
   DSP(("filter_intersect\n"));
   //
   int n = xs.getHigh();
   //
   DECL_DYN_ARRAY(OZ_FSetValue, a, n);
   DECL_DYN_ARRAY(OZ_FSetValue, b, n);
-  //
-  if (z->isEmpty()) {
-    return s.replace_propagator(new FSetDisjointNPropagator(xs.getOzTermVector()));
-  }
   //
   if (z->isFull()) {
     for (int i = n; i-- ; ) {
