@@ -1335,6 +1335,8 @@ int FSetValue::getMaxElem(void) const
 {
 #ifdef BIGFSET
   if (_normal) {
+    if (_other)
+      return fs_sup;
     int v, i;
     for (v = 32 * fset_high - 1, i = fset_high - 1; i >= 0; v -= 32, i--)
       if (_in[i] != 0)
@@ -1360,7 +1362,7 @@ int FSetValue::getMaxElem(void) const
 
       return v;
     }
-    return (_other) ? fs_sup : -1;
+    return  -1;
   }
   else
     return _IN.getMaxElem();

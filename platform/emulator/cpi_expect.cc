@@ -196,7 +196,7 @@ void OZ_Expect::addSuspend(OZ_FSetPropState ps, OZ_Term * v)
 // generic constraints
 inline
 void OZ_Expect::addSuspend(OZ_CtDefinition * def, OZ_CtWakeUp w, OZ_Term * v)
-{;
+{
   if (collect) {
     staticSuspendVars[staticSuspendVarsNumber].var = v;
     staticSuspendVars[staticSuspendVarsNumber].expected_type = OZ_VAR_CT;
@@ -684,6 +684,20 @@ OZ_expect_t OZ_Expect::expectVector(OZ_Term t,
         acc += 1;
       }
     }
+
+#ifdef COUNT_PROP_INVOCS
+    extern int count_prop_invocs_max_len_vec;
+    count_prop_invocs_max_len_vec = max(count_prop_invocs_max_len_vec,
+                                        width);
+    extern int count_prop_invocs_min_len_vec;
+    count_prop_invocs_min_len_vec = min(count_prop_invocs_min_len_vec,
+                                        width);
+    extern int count_prop_invocs_sum_len_vec;
+    count_prop_invocs_sum_len_vec += width;
+    extern int count_prop_invocs_nb_nonempty_vec;
+    count_prop_invocs_nb_nonempty_vec += 1;
+#endif
+
     return expectProceed(width + 1, acc);
 
   } else if (oz_isLTupleOrRef(t)) {
@@ -706,6 +720,20 @@ OZ_expect_t OZ_Expect::expectVector(OZ_Term t,
     } while (oz_isLTupleOrRef(t));
 
     if (oz_isNil(t)) {
+
+#ifdef COUNT_PROP_INVOCS
+    extern int count_prop_invocs_max_len_vec;
+    count_prop_invocs_max_len_vec = max(count_prop_invocs_max_len_vec,
+                                        len);
+    extern int count_prop_invocs_min_len_vec;
+    count_prop_invocs_min_len_vec = min(count_prop_invocs_min_len_vec,
+                                        len);
+    extern int count_prop_invocs_sum_len_vec;
+    count_prop_invocs_sum_len_vec += len;
+    extern int count_prop_invocs_nb_nonempty_vec;
+    count_prop_invocs_nb_nonempty_vec += 1;
+#endif
+
       return expectProceed(len, acc);
     } else if (oz_isFree(t) || oz_isKinded(t)) {
       addSuspend(tptr);
@@ -787,6 +815,41 @@ OZ_Return OZ_Expect::fail(void)
 // member function to spawn a propagator
 //*****************************************************************************
 
+#ifdef COUNT_PROP_INVOCS
+int count_prop_invocs_created         = 0;
+int count_prop_invocs_run             = 0;
+int count_prop_invocs_sleep           = 0;
+int count_prop_invocs_fail            = 0;
+int count_prop_invocs_entail          = 0;
+
+int count_prop_invocs_local_params    = 0;
+int count_prop_invocs_global_params   = 0;
+int count_prop_invocs_det_params      = 0;
+
+int count_prop_invocs_max_runnable    = 0;
+int count_prop_invocs_min_runnable    = INT_MAX;
+double count_prop_invocs_sum_runnable = 0.0;
+int count_prop_invocs_nb_smp_runnable = 0;
+
+int count_prop_invocs_max_len_el      = 0;
+int count_prop_invocs_min_len_el      = INT_MAX;
+int count_prop_invocs_sum_len_el      = 0;
+int count_prop_invocs_nb_nonempty_el  = 0;
+
+int count_prop_invocs_max_len_sl      = 0;
+int count_prop_invocs_min_len_sl      = INT_MAX;
+int count_prop_invocs_sum_len_sl      = 0;
+int count_prop_invocs_nb_nonempty_sl  = 0;
+
+int count_prop_invocs_max_len_vec     = 0;
+int count_prop_invocs_min_len_vec     = INT_MAX;
+int count_prop_invocs_sum_len_vec     = 0;
+int count_prop_invocs_nb_nonempty_vec = 0;
+
+int count_prop_invocs_fdvars_created   = 0;
+
+#endif
+
 Propagator * imposed_propagator;
 int is_active = 1;
 
@@ -797,6 +860,13 @@ OZ_Return OZ_Expect::impose(OZ_Propagator * p)
 {
   OZ_Boolean is_monotonic = p->isMonotonic();
   OZ_Return ret = PROCEED;
+
+#ifdef COUNT_PROP_INVOCS
+      count_prop_invocs_created += 1;
+    count_prop_invocs_sum_runnable += 1;
+    count_prop_invocs_nb_smp_runnable += 1;
+#endif
+
 
   // do initial run with dummy thread
 
@@ -880,6 +950,22 @@ OZ_Return OZ_Expect::impose(OZ_Propagator * p)
 
     Propagator::setRunningPropagator(prop);
 
+#ifdef COUNT_PROP_INVOCS
+    for (i = staticSpawnVarsNumber; i--; ) {
+      OZ_Term v = makeTaggedRef(staticSpawnVars[i].var);
+      DEREF(v, vptr);
+      if (oz_isVar(v)) {
+        if (oz_isLocalVar(tagged2Var(v))) {
+          count_prop_invocs_local_params += 1;
+        } else {
+          count_prop_invocs_global_params += 1;
+        }
+      } else {
+        count_prop_invocs_det_params += 1;
+      }
+    }
+#endif
+
     // if a propagator is to be imposed `inactive' set the appropriate
     // flag and restore the `isactive' variable. `oz_runPropagator'
     // takes care of the rest.
@@ -890,6 +976,10 @@ OZ_Return OZ_Expect::impose(OZ_Propagator * p)
     OZ_CPIVar::set_vars_removed();
     switch (oz_runPropagator(prop)) {
     case OZ_FAILED:
+
+#ifdef COUNT_PROP_INVOCS
+      count_prop_invocs_fail += 1;
+#endif
 
 #ifdef NAME_PROPAGATORS
       // this is experimental: a top-level failure with set
@@ -909,12 +999,18 @@ OZ_Return OZ_Expect::impose(OZ_Propagator * p)
       OZ_CPIVar::reset_vars_removed();
       return FAILED;
     case OZ_SLEEP:
+#ifdef COUNT_PROP_INVOCS
+      count_prop_invocs_sleep += 1;
+#endif
       oz_sleepPropagator(prop);
       break;
     case SCHEDULED:
       oz_preemptedPropagator(prop);
       break;
     case OZ_ENTAILED:
+#ifdef COUNT_PROP_INVOCS
+      count_prop_invocs_entail += 1;
+#endif
       oz_closeDonePropagator(prop);
       staticSpawnVarsNumber = staticSuspendVarsNumber = 0;
       OZ_CPIVar::reset_vars_removed();

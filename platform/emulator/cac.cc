@@ -1685,6 +1685,12 @@ SuspList * SuspList::_cacLocalRecurse(Board * bb) {
   return ret;
 }
 
+void SuspStack::_cac(void) {
+  if (isEmpty())
+    return;
+  cacStack.pushSuspList(&_head);
+}
+
 void SuspQueue::_cac(void) {
   if (isEmpty())
     return;
