@@ -52,10 +52,10 @@ public:
     value = TRUNCATE(v, s);
   }
 
-  Word(const Word &w) {
-    size = w.size;
-    value = w.value;
-  }
+  //  Word(const Word &w) {
+  //    size = w.size;
+  //    value = w.value;
+  //  }
 
   int getIdV(void) {
     return OZ_E_WORD;
