@@ -161,7 +161,7 @@ CaseOneRegGImpossible(CREATEVARIABLEMOVE,
                                     NOFLATGUARD)) {
                    SHALLOWFAIL;
                    /* NOTE: macro must be in *one* line */
-                   HF_FAIL2("INSTR:unify", Reg1(getRegArg(PC+1)), Reg2(getRegArg(PC+2)));
+                   HF_FAIL(mkTuple("instr",3,OZ_CToAtom("unify"),Reg1(getRegArg(PC+1)),Reg2(getRegArg(PC+2))));
                  }
                }''
                DISPATCH(3);
@@ -289,7 +289,7 @@ Case(SETVOID)
                  }
 
                  SHALLOWFAIL;
-                 HF_FAIL2("INSTR:getStructure", getLiteralArg(PC+1), Reg1(getRegArg(PC+3)));
+                 HF_FAIL(mkTuple("instr",3,OZ_CToAtom("getStructure"), getLiteralArg(PC+1), Reg1(getRegArg(PC+3))));
                }''
                )
 
@@ -336,7 +336,7 @@ Case(SETVOID)
            }
 
            SHALLOWFAIL;
-           HF_FAIL2("INSTR:getRecord", getLiteralArg(PC+1), RegAccess(HelpReg,getRegArg(PC+3)));
+           HF_FAIL(mkTuple("instr",3,OZ_CToAtom("getRecord"), getLiteralArg(PC+1), RegAccess(HelpReg,getRegArg(PC+3))));
          }
 
 
@@ -456,7 +456,7 @@ Case(SETVOID)
                  }
 
                  SHALLOWFAIL;
-                 HF_FAIL2("INSTR:getConstant", Reg1(getRegArg(PC+2)), getLiteralArg(PC+1));
+                 HF_FAIL(mkTuple("instr",3,OZ_CToAtom("getConstant"), Reg1(getRegArg(PC+2)), getLiteralArg(PC+1)));
                }''
                )
 
@@ -485,7 +485,7 @@ Case(SETVOID)
                  }
 
                  SHALLOWFAIL;
-                 HF_FAIL2("INSTR:getInt", Reg1(getRegArg(PC+2)), getNumberArg(PC+1));
+                 HF_FAIL(mkTuple("instr",3,OZ_CToAtom("getInt"), Reg1(getRegArg(PC+2)), getNumberArg(PC+1)));
                }''
                )
 
@@ -530,7 +530,7 @@ Case(SETVOID)
                  }
 
                  SHALLOWFAIL;
-                 HF_FAIL2("INSTR:getListValVar", Xreg(getRegArg(PC+1)), Reg1(getRegArg(PC+2)));
+                 HF_FAIL(mkTuple("instr",3,OZ_CToAtom("getListValVar"), Xreg(getRegArg(PC+1)), Reg1(getRegArg(PC+2))));
                }''
                )
 
@@ -569,7 +569,7 @@ Case(SETVOID)
 
 
                  SHALLOWFAIL;
-                 HF_FAIL2("INSTR:getList", Reg1(getRegArg(PC+1)), makeTaggedNULL());
+                 HF_FAIL(mkTuple("instr",2,OZ_CToAtom("getList"), Reg1(getRegArg(PC+1))));
                }''
                )
 
@@ -632,7 +632,7 @@ Case(GETVOID)
                      DISPATCH(2);
                    }
                    SHALLOWFAIL;
-                   HF_FAIL2("INSTR:unifyValue", *(sPointer-1), Reg1(reg));
+                   HF_FAIL(mkTuple("instr",3,OZ_CToAtom("unifyValue"), *(sPointer-1), Reg1(reg)));
                  }
                }''
                )
@@ -665,7 +665,7 @@ Case(GETVOID)
        if ( !e->fastUnify(RegAccess(HelpReg1,reg), makeTaggedRef(sPointer),
                           NOFLATGUARD) ) {
          SHALLOWFAIL;
-         HF_FAIL2("INSTR:unifyValVar", *sPointer, RegAccess(HelpReg1,reg));
+         HF_FAIL(mkTuple("instr",3,OZ_CToAtom("unifyValVar"), *sPointer, RegAccess(HelpReg1,reg)));
        }
 
        RegAccess(HelpReg2,getRegArg(PC+2)) = tagged2NonVariable(sPointer+1);
@@ -709,7 +709,7 @@ Case(UNIFYCONSTANT)
        }
 
        SHALLOWFAIL;
-       HF_FAIL2("INSTR:unifyConstant", getTaggedArg(PC+1), *(sPointer-1) );
+       HF_FAIL(mkTuple("instr",3,OZ_CToAtom("unifyConstant"), getTaggedArg(PC+1), *(sPointer-1) ));
      }
 
   Case(UNIFYINT)
@@ -745,7 +745,7 @@ Case(UNIFYCONSTANT)
       }
 
       SHALLOWFAIL;
-      HF_FAIL2("INSTR:unifyInt", getTaggedArg(PC+1), *(sPointer-1) );
+      HF_FAIL(mkTuple("instr",3,OZ_CToAtom("unifyInt"), getTaggedArg(PC+1), *(sPointer-1) ));
     }
 
 
