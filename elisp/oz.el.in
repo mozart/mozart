@@ -4,7 +4,7 @@
 ;;;   Michael Mehl <mehl@ps.uni-sb.de>
 ;;;   Ralf Scheidhauer <scheihr@ps.uni-sb.de>
 ;;;
-;;; Contributors:
+;;; Contributor:
 ;;;   Benjamin Lorenz <lorenz@ps.uni-sb.de>
 ;;;
 ;;; Copyright:
@@ -251,6 +251,16 @@ run the emulator when you issue the command `run' to gdb."
 (put 'oz-halt-timeout 'variable-interactive
      "nNumber of seconds to wait for shutdown of the Mozart sub-process: ")
 
+(eval-and-compile
+  (eval '(defcustom oz-compile-command "ozc -c %s"
+	   "Default shell command to do a compilation.
+This may contain at most one occurrence of `%s', which is replaced by the
+current buffer's file name."
+	   :type 'string
+	   :group 'oz)))
+(put 'oz-compile-command 'variable-interactive
+     "sShell command to do a compilation: ")
+
 ;;}}}
 ;;{{{ win32 Support
 
@@ -266,10 +276,6 @@ run the emulator when you issue the command `run' to gdb."
 
 (defvar oz-mode-map (make-sparse-keymap)
   "Keymap used in the Oz modes.")
-(defvar oz-compiler-buffer-map nil
-  "Keymap used in the *Oz Compiler* buffer.")
-(defvar oz-emulator-buffer-map nil
-  "Keymap used in the *Oz Emulator* buffer.")
 
 (defvar oz-mode-abbrev-table nil
   "Abbrev table in use in Oz mode.")
@@ -335,9 +341,7 @@ All strings matching this regular expression are removed.")
 
 (defvar oz-compiler-output-start nil
   "Position in the Oz Compiler buffer where the last run's output began.")
-
-(defvar oz-next-error-marker nil
-  "Remembers place of last error message.")
+(make-variable-buffer-local 'oz-compiler-output-start)
 
 (defconst oz-error-intro-pattern "\\(error\\|warning\\) \\*\\*\\*\\*\\*"
   "Regular expression for finding error messages.")
@@ -348,6 +352,67 @@ All strings matching this regular expression are removed.")
 	  "line \\([0-9]+\\)"
 	  "\\(,? *column \\([0-9]+\\)\\)?")
   "Regular expression matching error coordinates.")
+
+(defun oz-compilation-parse-errors (&optional limit-search find-at-least)
+  "Parse the current buffer as Mozart error messages.
+See variable `compilation-parse-errors-function' for the interface it uses."
+  (setq compilation-error-list nil)
+  (message "Parsing error messages...")
+  ;; Don't reparse messages already seen at last parse.
+  (goto-char (max (or oz-compiler-output-start (point-min))
+		  (or compilation-parsing-end 0)))
+  (let ((num-found 0))
+    (while (re-search-forward
+	    oz-error-pattern
+	    (and (or (null find-at-least)
+		     (>= num-found find-at-least)) limit-search) t)
+      (let* ((file-string (oz-match-string 2))
+	     (line (string-to-number (oz-match-string 3)))
+	     (column-string (oz-match-string 5))
+	     (column (and column-string (string-to-number column-string)))
+	     (error-marker (save-excursion
+			     (and (oz-goto-error-start)
+				  (progn (beginning-of-line)
+					 (point-marker)))))
+	     (buffer (and file-string
+			  (oz-find-buffer-or-file file-string nil)))
+	     (error-data
+	      (cond ((not error-marker) nil)
+		    ((not file-string)
+		     (list error-marker))
+		    (buffer
+		     (save-excursion
+		       (set-buffer buffer)
+		       (save-restriction
+			 (widen)
+			 (goto-line line)
+			 (if (and column (> column 0))
+			     (forward-char column))
+			 (cons error-marker (point-marker)))))
+		    (t
+		     (let* ((file (oz-normalize-file-name file-string))
+			    (filedata (list file default-directory))
+			    (error-data (if column
+					    (list filedata line column)
+					  (list filedata line))))
+		       (cons error-marker error-data))))))
+	(if error-data
+	    (setq num-found (1+ num-found)
+		  compilation-error-list
+		  (cons error-data compilation-error-list))))))
+  (setq compilation-error-list (nreverse compilation-error-list))
+  (setq compilation-parsing-end (point))
+  (message "Parsing error messages...done"))
+
+(defun oz-goto-error-start ()
+  ;; if point is in the middle of an error message (in the compiler buffer),
+  ;; then it is moved to the start of the message.
+  (let ((errstart
+	 (save-excursion
+	   (beginning-of-line)
+	   (if (looking-at "%\\*\\*")
+	       (re-search-backward oz-error-intro-pattern nil t)))))
+    (if errstart (goto-char errstart))))
 
 ;;}}}
 ;;{{{ Setting the Frame Title
@@ -429,12 +494,27 @@ All strings matching this regular expression are removed.")
     (buffer-substring start end)))
 
 
-(defun oz-find-buffer-or-file (name)
+(defun oz-normalize-file-name (file)
+  ;; Collapse multiple slashes to one, to handle non-Emacs file names.
+  (save-match-data
+    ;; Use arg 1 so that we don't collapse // at the start of the file name.
+    ;; That is significant on some systems.
+    ;; However, /// at the beginning is supposed to mean just /, not //.
+    (if (string-match "^///+" file)
+	(setq file (replace-match "/" t t file)))
+    (while (string-match "//+" file 1)
+      (setq file (replace-match "/" t t file)))
+    file))
+
+(defun oz-find-buffer-or-file (name visit)
   ;; Try to find a buffer or file named NAME.
+  ;; If VISIT is nil, only return an existing buffer,
+  ;; else try to locate NAME on the file system.
   (or (get-buffer name)
       (find-buffer-visiting name)
-      (let ((find-file-run-dired nil))
-	(find-file-noselect name))))
+      (and visit
+	   (let ((find-file-run-dired nil))
+	     (find-file-noselect (oz-normalize-file-name name))))))
 
 (defun oz-shell-command-to-string (command)
   ;; Execute shell command COMMAND and return its output as a string.
@@ -560,6 +640,7 @@ the variable `oz-pedantic-spaces' is non-nil."
     ("Feed Line"           oz-feed-line t)
     ("Feed Paragraph"      oz-feed-paragraph t)
     ("Feed File"           oz-feed-file t)
+    ("Compile File"        oz-compile-file (buffer-file-name))
     ("-----")
     ("Find" nil
      ("Demo"               oz-find-demo-file t)
@@ -640,14 +721,12 @@ With ARG, delete it instead."
 
 (defun oz-breakpoint-mouse (event flag)
   (save-excursion
-    (set-buffer (cond (oz-gnu-emacs
-		       (window-buffer (posn-window (event-end event))))
-		      (oz-lucid-emacs
-		       (event-buffer event))))
-    (goto-char (cond (oz-gnu-emacs
-		      (posn-point (event-end event)))
-		     (oz-lucid-emacs
-		      (event-closest-point event))))
+    (cond (oz-gnu-emacs
+	   (set-buffer (window-buffer (posn-window (event-end event))))
+	   (goto-char (posn-point (event-end event))))
+	  (oz-lucid-emacs
+	   (set-buffer (event-buffer event))
+	   (goto-char (event-closest-point event))))
     (oz-breakpoint flag)))
 
 (defun oz-breakpoint (flag)
@@ -727,8 +806,9 @@ If FORCE is non-nil, kill it immediately."
 	      (setq filter
 		    (process-filter (get-buffer-process oz-emulator-buffer))))
 	  (setq oz-emulator-buffer "*Oz Emulator*")
-	  (make-comint "Oz Emulator" "ozengine" nil oz-root-functor)
-	  (oz-create-emulator-buffer oz-emulator-buffer))
+	  (if (get-buffer oz-emulator-buffer)
+	      (kill-buffer oz-emulator-buffer))
+	  (make-comint "Oz Emulator" "ozengine" nil oz-root-functor))
 
 	(let ((proc (get-buffer-process oz-emulator-buffer)))
 	  (setq oz-emulator-filter-hook filter)
@@ -746,11 +826,9 @@ If FORCE is non-nil, kill it immediately."
 		 port (string-to-number (car command-line-args-left)))
 	   (setq command-line-args-left (cdr command-line-args-left))))
     (setq oz-emulator-buffer "*Oz Emulator*")
+    (if (get-buffer oz-emulator-buffer)
+	(kill-buffer oz-emulator-buffer))
     (make-comint "Oz Emulator" (cons host port) nil nil)
-    (oz-create-emulator-buffer oz-emulator-buffer)
-    (save-excursion
-      (set-buffer oz-emulator-buffer)
-      (comint-mode))
     (setq oz-emulator-filter-hook 'oz-filter)
     (let ((proc (get-buffer-process oz-emulator-buffer)))
       (process-kill-without-query proc)
@@ -768,10 +846,11 @@ If FORCE is non-nil, kill it immediately."
     (setq oz-compiler-buffers newbs))
   (let ((buffer (generate-new-buffer "*Oz Compiler*")))
     (setq oz-compiler-buffers (cons buffer oz-compiler-buffers))
-    (oz-create-compiler-buffer buffer)
     (save-excursion
       (set-buffer buffer)
-      (comint-mode))
+      (compilation-mode)
+      (set (make-local-variable 'compilation-parse-errors-function)
+	   'oz-compilation-parse-errors))
     (comint-exec buffer (buffer-name buffer) (cons host port) nil nil)
     (let ((proc (get-buffer-process buffer)))
       (process-kill-without-query proc nil)
@@ -904,15 +983,13 @@ The emulator to use for debugging is set via \\[oz-set-emulator]."
 (defun oz-feed-buffer ()
   "Feed the current buffer to the Oz Compiler."
   (interactive)
-  (let ((file (buffer-file-name))
-	(cur (current-buffer)))
+  (let ((file (buffer-file-name)))
     (if (and oz-prepend-line file (buffer-modified-p)
 	     (y-or-n-p (format "Save buffer %s first? " (buffer-name))))
 	(save-buffer))
     (if (and oz-prepend-line file (not (buffer-modified-p)))
 	(oz-feed-file file)
-      (oz-feed-region (point-min) (point-max)))
-    (switch-to-buffer cur))
+      (oz-feed-region (point-min) (point-max))))
   (oz-zmacs-stuff))
 
 (defun oz-feed-region (start end)
@@ -951,8 +1028,10 @@ compiled using a default set of switches."
 	  (eof (concat (char-to-string 4) "\n")))
       (save-excursion
 	(set-buffer oz-compiler-buffer)
-	(setq oz-compiler-output-start (point-max))
-	(setq oz-next-error-marker nil))
+	(setq compilation-last-buffer (current-buffer))
+	(setq oz-compiler-output-start
+	      (marker-position
+	       (process-mark (get-buffer-process (current-buffer))))))
       (if system
 	  (comint-send-string
 	   proc
@@ -1320,7 +1399,7 @@ to handle lines like 'attr a:'."
 	(error "No matching closing parenthesis")))))
 
 ;;}}}
-;;{{{ The oz-bar (used by Compiler, Debugger and Profiler)
+;;{{{ The oz-bar (used by Compiler Panel, Debugger and Profiler)
 
 (make-face 'bar-running)
 (set-face-foreground 'bar-running "white")
@@ -1357,7 +1436,7 @@ to handle lines like 'attr a:'."
 	(call-interactively 'save-buffers-kill-emacs))
     (if (string-equal file "")
 	(oz-bar-remove)
-      (let* ((buffer (oz-find-buffer-or-file file))
+      (let* ((buffer (oz-find-buffer-or-file file t))
 	     (window (display-buffer buffer))
 	     start1 end1 start2 end2)
 	(save-excursion
@@ -1859,8 +1938,8 @@ buffer."
        t)
   (set (make-local-variable 'words-include-escapes)
        t)
-  (set (make-local-variable 'compilation-last-buffer)
-       nil))
+  (set (make-local-variable 'compilation-parse-errors-function)
+       'oz-compilation-parse-errors))
 
 (defmacro oz-kbd (keys)
   (read-kbd-macro keys))
@@ -1903,7 +1982,6 @@ buffer."
     (define-key map (oz-kbd "M-C-a")       'oz-beginning-of-defun)
     (define-key map (oz-kbd "M-C-e")       'oz-end-of-defun)
     (define-key map (oz-kbd "M-C-t")       'transpose-oz-exprs)
-    (define-key map (oz-kbd "C-x `")       'oz-goto-next-error)
 
     (define-key map (oz-kbd "C-c C-d")     'oz-debugger)
     (define-key map (oz-kbd "C-c C-f")     'oz-profiler)
@@ -1960,8 +2038,6 @@ buffer."
     (define-key map [(meta control ?a)]         'oz-beginning-of-defun)
     (define-key map [(meta control ?e)]         'oz-end-of-defun)
     (define-key map [(meta control ?t)]         'transpose-oz-exprs)
-
-    (define-key map [(control ?x) ?\`]          'oz-goto-next-error)
 
     (define-key map [(control ?c) (control ?d)] 'oz-debugger)
     (define-key map [(control ?c) (control ?f)] 'oz-profiler)
@@ -2480,16 +2556,15 @@ The ARG is interpreted just as with \\[recenter]."
   ;; look for oz-show-temp:
   (let ((start 0))
     (while (string-match oz-show-temp-pattern string start)
-      (let ((filename (oz-match-string 1 string)) buf)
+      (let ((filename (oz-normalize-file-name (oz-match-string 1 string))))
 	(setq start (match-beginning 0))
 	(setq string (concat (substring string 0 start)
 			     (substring string (match-end 0))))
 	(save-excursion
-	  (setq buf (get-buffer oz-temp-buffer))
-	  (if (null buf)
-	      (setq buf (generate-new-buffer oz-temp-buffer)))
-	  (oz-show-buffer buf)
-	  (set-buffer buf)
+	  (let ((buf (or (get-buffer oz-temp-buffer)
+			 (generate-new-buffer oz-temp-buffer))))
+	    (oz-show-buffer buf)
+	    (set-buffer buf))
 	  (insert-file-contents filename t nil nil t)
 	  (delete-file filename)
 	  (cond ((string-match "\\.ozi$" filename) (oz-mode))
@@ -2569,38 +2644,6 @@ The ARG is interpreted just as with \\[recenter]."
 	(set-window-point win (point-max))
 	(bury-buffer buffer))))
 
-(defun oz-create-compiler-buffer (buffer)
-  (save-excursion
-    (set-buffer (get-buffer-create buffer))
-    (kill-all-local-variables)
-    (if (not oz-compiler-buffer-map)
-	(setq oz-compiler-buffer-map (copy-keymap oz-mode-map)))
-    (oz-set-mouse-error-key oz-compiler-buffer-map)
-    (define-key oz-compiler-buffer-map "\C-c\C-c" 'oz-goto-next-error)
-    (use-local-map oz-compiler-buffer-map)
-    (setq mode-name "Oz-Output")
-    (setq major-mode 'oz-mode)
-    (set (make-local-variable 'compilation-error-regexp-alist)
-	 '((oz-error-pattern 2 3 5)))
-    (set (make-local-variable 'compilation-parsing-end)
-	 (point))
-    (set (make-local-variable 'compilation-error-list)
-	 nil)
-    (set (make-local-variable 'compilation-last-buffer)
-	 (current-buffer))
-    (oz-set-lucid-menu)
-    (erase-buffer)))
-
-(defun oz-create-emulator-buffer (buffer)
-  (save-excursion
-    (set-buffer (get-buffer-create buffer))
-    (if (not oz-emulator-buffer-map)
-	(setq oz-emulator-buffer-map (copy-keymap comint-mode-map)))
-    (oz-set-mouse-error-key oz-emulator-buffer-map)
-    (use-local-map oz-emulator-buffer-map)
-    (oz-set-lucid-menu)
-    (erase-buffer)))
-
 (defun oz-toggle-compiler ()
   "Toggle visibility of the Oz Compiler window.
 If the compiler buffer is not visible in any window, then display it.
@@ -2673,7 +2716,7 @@ If it is, then delete the corresponding window."
 
 (defun oz-comment-region (start end &optional arg)
   "Comment or uncomment each line in the region.
-With just C-u prefix arg, uncomment each line in region.
+With just \\[universal-argument] prefix arg, uncomment each line in region.
 Numeric prefix arg ARG means use ARG comment characters.
 If ARG is negative, delete that many comment characters instead.
 Blank lines do not get comments."
@@ -2851,123 +2894,24 @@ feed that many preceding paragraphs as well as the current paragraph."
   (find-file (read-file-name prompt (concat (oz-home) "/" file) nil t nil)))
 
 ;;}}}
-;;{{{ Locating Errors
+;;{{{ Application Development Support
 
-(defun oz-set-mouse-error-key (map)
-  (cond (oz-gnu-emacs
-	 (define-key map [(shift mouse-2)] 'oz-mouse-goto-error))
-	(oz-lucid-emacs
-	 (define-key map [(shift button2)] 'oz-mouse-goto-error))))
+(defvar oz-compile-history nil
+  "History of commands used in oz-compile-file.")
 
-(defun oz-mouse-goto-error (event)
-  "Visit the source code associated with the error message clicked on."
-  (interactive "e")
-  (set-buffer (cond (oz-gnu-emacs
-		     (window-buffer (posn-window (event-end event))))
-		    (oz-lucid-emacs
-		     (event-buffer event))))
-  (goto-char (cond (oz-gnu-emacs
-		    (posn-point (event-end event)))
-		   (oz-lucid-emacs
-		    (event-closest-point event))))
-  (or (eq (current-buffer) (get-buffer oz-compiler-buffer))
-      (eq (current-buffer) (get-buffer oz-emulator-buffer))
-      (error "Neither in compiler buffer nor in emulator buffer"))
-  (oz-goto-next-error))
-
-(defun oz-goto-next-error ()
-  "Visit next compilation error message and corresponding source code.
-Applies to most recent compilation, started with one of the feed
-commands.
-
-When in compiler buffer, visit error message surrounding point.
-When in emulator buffer, visit place indicated in next callstack line."
-  (interactive)
-  (let ((old-buffer (current-buffer))
-	(comp-buffer (get-buffer oz-compiler-buffer))
-	(emu-buffer (get-buffer oz-emulator-buffer))
-	error-data)
-    (save-excursion
-      (cond ((eq old-buffer comp-buffer)
-	     (oz-goto-error-start)
-	     (setq error-data (oz-fetch-next-error-data)))
-	    ((eq old-buffer emu-buffer)
-	     (setq error-data (oz-fetch-next-callstack-data)))
-	    ((bufferp comp-buffer)
-	     (set-buffer comp-buffer)
-	     (cond ((and oz-next-error-marker
-			 (eq (marker-buffer oz-next-error-marker) comp-buffer))
-		    (goto-char oz-next-error-marker))
-		   ;; else new compilation
-		   ((and (<= (point-min) oz-compiler-output-start)
-			 (<= oz-compiler-output-start (point-max)))
-		    (goto-char oz-compiler-output-start)
-		    (setq oz-next-error-marker (point-marker)))
-		   (t (error "No compilation found")))
-	     (setq error-data (oz-fetch-next-error-data)))))
-    (if error-data
-	(let* ((error-marker (car error-data))
-	       (file (nth 1 error-data))
-	       (lineno-string (nth 2 error-data))
-	       (lineno (string-to-number lineno-string))
-	       (column-string (nth 3 error-data))
-	       (column (and column-string (string-to-number column-string)))
-	       (buf (if (string-equal file "")
-			(error "Error has no associated source buffer")
-		      (oz-find-buffer-or-file file)))
-	       source-marker)
-	  (if (not buf)
-	      (error "No source buffer found"))
-	  (set-buffer buf)
-	  (save-excursion
-	    (save-restriction
-	      (widen)
-	      (goto-line lineno)
-	      (if (and column (> column 0)) (forward-char column))
-	      (setq source-marker (point-marker))))
-	  (compilation-goto-locus (cons error-marker source-marker)))
-      (message "No next error")
-      (sit-for 1))))
-
-(defun oz-fetch-next-error-data ()
-  (cond ((re-search-forward oz-error-intro-pattern nil t)
-	 (beginning-of-line)
-	 (let ((error-marker (point-marker)))
-	   (if (re-search-forward oz-error-pattern nil t)
-	       (let ((file (or (oz-match-string 2) ""))
-		     (lineno-string (oz-match-string 3))
-		     (column-string (oz-match-string 5)))
-		 (setq oz-next-error-marker (point-marker))
-		 (list error-marker file lineno-string column-string))
-	     (let ((win (get-buffer-window oz-compiler-buffer)))
-	       (if win
-		   (set-window-point win (point-max))))
-	     nil)))
-	(t
-	 (let ((win (get-buffer-window oz-compiler-buffer)))
-	   (if win
-	       (set-window-point win (point-max))))
-	 nil)))
-
-(defun oz-fetch-next-callstack-data ()
-  (beginning-of-line)
-  (if (re-search-forward oz-error-pattern nil t)
-      (let ((file (or (oz-match-string 2) ""))
-	    (lineno-string (oz-match-string 3))
-	    (column-string (oz-match-string 5)))
-	(setq oz-next-error-marker (point-marker))
-	(beginning-of-line)
-	(list (point-marker) file lineno-string column-string))))
-
-(defun oz-goto-error-start ()
-  ;; if point is in the middle of an error message (in the compiler buffer),
-  ;; then it is moved to the start of the message.
-  (let ((errstart
-	 (save-excursion
-	   (beginning-of-line)
-	   (if (looking-at "%\\*\\*")
-	       (re-search-backward oz-error-intro-pattern nil t)))))
-    (if errstart (goto-char errstart))))
+(defun oz-compile-file (command)
+  (interactive (list (if (buffer-file-name)
+			 (read-from-minibuffer "Oz Compilation command: "
+					       oz-compile-command nil nil
+					       '(oz-compile-history . 1))
+		       (error "Buffer has no file name"))))
+  (setq oz-compile-command command)
+  (let* ((file (buffer-file-name))
+	 (real-command (format oz-compile-command (or file ""))))
+    (if (and file (buffer-modified-p)
+	     (y-or-n-p (format "Save buffer %s first? " (buffer-name))))
+	(save-buffer))
+    (compile-internal real-command "No more errors")))
 
 
 (provide 'oz)
