@@ -379,16 +379,17 @@ void * OZ_hrealloc(void * p, size_t sz) {
   int32 * to  = (int32 *) heapMalloc(sz);
   int32 * ret = to;
 
-  register int32 f0, f1;
+  if (sz > 16) {
 
-  while (sz > 16) {
-    f0 = frm[3-0]; f1 = frm[2-0];
-    sz -= 16;
-    to[3-0] = f0;  to[2-0] = f1;
-    frm += 4;
-    f0 = frm[1-4]; f1 = frm[0-4];
-    to += 4;
-    to[1-4] = f0;  to[0-4] = f1;
+    register int32 f0, f1, f2, f3;
+
+    do {
+      f0 = frm[3]; f1 = frm[2]; f2 = frm[1]; f3 = frm[0];
+      sz -= 16; frm += 4;
+      to[3] = f0;  to[2] = f1; to[1] = f2;  to[0] = f3;
+      to += 4;
+    } while (sz>0);
+
   }
 
   switch(sz) {
