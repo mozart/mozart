@@ -229,7 +229,7 @@ TkTools.ozf: DefaultURL.ozf
 # gtk dependencies
 GTK.ozf: constdeclarations.oz
 
-constdeclarations.oz,constdefinitions.oz: gtk/genconstants.pl
+constdeclarations.oz constdefinitions.oz: gtk/genconstants.pl
 	 $(PERL) $(VPATH)/gtk/genconstants.pl
 
 # compiler dependencies
