@@ -42,10 +42,20 @@ HELP.txt: HELP.html Makefile.vars
 	lynx -dump $< > $@
 txt: HELP.txt
 
-install-prebuilt:
+#publish: duchier-ozmake-$(VERSION).pkg
+#duchier-ozmake-$(VERSION).pkg: $(OZMAKE_SOURCES) ./ozmake
+#	./ozmake --publish -v -p duchier-ozmake-$(VERSION).pkg
+
+install-prebuilt:: ozmake.ozf ozmake ozmake.exe
 	$(INSTALL_FILE) ozmake.ozf $(PKGDIR)/ozmake.ozf
 	$(INSTALL_FILE) ozmake $(PKGDIR)/ozmake
 	$(INSTALL_FILE) ozmake.exe $(PKGDIR)/ozmake.exe
 	$(INSTALL_FILE) ozmake.ozf $(PKGDIR)/ozmake-$(VERSION).ozf
 	$(INSTALL_FILE) ozmake $(PKGDIR)/ozmake-$(VERSION)
 	$(INSTALL_FILE) ozmake.exe $(PKGDIR)/ozmake-$(VERSION).exe
+
+%.pkg: ozmake.ozf
+	./ozmake --publish -p $(PKGDIR)/$@
+
+install-prebuilt:: duchier-ozmake-$(VERSION).pkg
+	$(INSTALL_FILE) duchier-ozmake-$(VERSION).pkg  $(PKGDIR)/duchier-ozmake-$(VERSION).pkg
