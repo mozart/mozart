@@ -108,7 +108,7 @@ int skipBlanks(FILE *in)
 }
 
 inline
-char getTag(FILE *in)
+int getTag(FILE *in)
 {
   int tag = skipBlanks(in);
   if (tag==EOF) return TAG_EOF;
