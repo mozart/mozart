@@ -1,8 +1,0 @@
-#! /bin/sh
-
-PATH=/usr/share/dfki/oz/bin:$PATH
-export PATH
-unset OZHOME OZCOMPILER OZEMULATOR OZARCH OZ_PI
-export OZHOME OZCOMPILER OZEMULATOR OZARCH OZ_PI
-
-exec oz "@$"
