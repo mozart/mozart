@@ -190,6 +190,7 @@
 	  ( AtomInt,         "int"),
 	  ( AtomThread,      "thread"),
 	  ( AtomRecord,      "record"),
+	  ( AtomOnRecord,    "onRecord"),
 	  ( AtomFSet,        "fset"),
           ( AtomVariable,    "variable"),
           ( AtomFloat,       "float" ),
