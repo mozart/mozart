@@ -35,9 +35,10 @@
 /* HACK ALERT: */
 #define PERDIOMAGICSTART       31
 
-#define PERDIOMINOR      "15"
-#define PERDIOMAJOR      OZVERSION
-#define PERDIOVERSION    PERDIOMAJOR "#" PERDIOMINOR
+#define PERDIOMAJOR      1
+#define PERDIOMINOR      2
+
+#define PERDIOVERSION     "1#2" /* PERDIOMAJOR "#" PERDIOMINOR */
 
 // the DIFs
 // the protocol layer needs to know about some of these 
@@ -164,7 +165,5 @@ void marshalLabel(int start, int lbl, MsgBuffer *bs);
 void marshalLabelDef(char *lbl, MsgBuffer *bs);
 void marshalTermDef(int lbl, MsgBuffer *bs);
 void marshalTermRef(int lbl, MsgBuffer *bs);
-
-void splitversion(char *vers, char *&major, int &minordiff);
 
 #endif /* __PICKLEH */
