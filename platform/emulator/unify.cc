@@ -31,8 +31,8 @@
 #endif
 
 #include "unify.hh"
-#include "var_all.hh"
 #include "space.hh"
+#include "fset.hh"
 #include "thr_int.hh"
 
 
@@ -235,7 +235,7 @@ loop:
  var_nonvar:
 
   if (isCVar(tag1)) {
-    int res = oz_var_bindINLINE(tagged2CVar(term1),termPtr1, term2);
+    int res = oz_var_bind(tagged2CVar(term1),termPtr1, term2);
     if (res == PROCEED)
       goto next;
     result = res;
@@ -282,7 +282,7 @@ loop:
   }
 
   {
-    int res = oz_var_unifyINLINE(tagged2CVar(term1),termPtr1, termPtr2);
+    int res = oz_var_unify(tagged2CVar(term1),termPtr1, termPtr2);
     if (res == PROCEED)
       goto next;
     result = res;

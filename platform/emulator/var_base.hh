@@ -323,9 +323,7 @@ VarStatus oz_check_var_status(OzVariable *cv)
     return EVAR_STATUS_FUTURE;
   case OZ_VAR_EXT:
     return _var_check_status(cv);
-  default:
-    Assert(0);
-    return EVAR_STATUS_UNKNOWN;
+  ExhaustiveSwitch();
   }
 }
 

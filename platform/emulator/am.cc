@@ -35,7 +35,7 @@
 #include "os.hh"
 #include "board.hh"
 #include "thr_int.hh"
-#include "var_all.hh"
+#include "var_base.hh"
 #include "codearea.hh"
 #include "fdomn.hh"
 #include "trace.hh"
@@ -1030,7 +1030,7 @@ OZ_Return AM::suspendOnVarList(Thread *thr)
     OZ_Term v=oz_head(_suspendVarList);
     Assert(oz_isVariable(*tagged2Ref(v)));
 
-    OZ_Return ret = oz_var_addSuspINLINE(tagged2Ref(v),thr);
+    OZ_Return ret = oz_var_addSusp(tagged2Ref(v),thr);
     if (ret != SUSPEND) {
       am.emptySuspendVarList();
       return ret;
