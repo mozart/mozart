@@ -232,7 +232,7 @@ void displayCode(ProgramCounter from, int ssize) {
 
 void CodeArea::getDefinitionArgs(ProgramCounter PC,
                                  Reg &reg, ProgramCounter &next, TaggedRef &file,
-                                 TaggedRef &line, PrTabEntry *& pred)
+                                 TaggedRef &line, PrTabEntry *& pred, int &mode)
 {
   Assert(adressToOpcode(getOP(PC)) == DEFINITION);
   reg  = regToInt(getRegArg(PC+1));
@@ -240,6 +240,7 @@ void CodeArea::getDefinitionArgs(ProgramCounter PC,
   file = getLiteralArg(PC+3);
   line = getNumberArg(PC+4);
   pred = getPredArg(PC+5);
+  mode = getPosIntArg(PC+7);
 }
 
 
@@ -588,7 +589,8 @@ void CodeArea::display (ProgramCounter from, int sz, FILE* ofile)
         ProgramCounter next;
         TaggedRef file, line;
         PrTabEntry *pred;
-        getDefinitionArgs(PC,reg,next,file,line,pred);
+        int mode;
+        getDefinitionArgs(PC,reg,next,file,line,pred,mode);
 
         fprintf(ofile, "(X%d,0x%x,%s,%s,%s,[",reg,next,
                 pred ? pred->getPrintName() : "(NULL)",
@@ -610,7 +612,7 @@ void CodeArea::display (ProgramCounter from, int sz, FILE* ofile)
           }
         }
 
-        fprintf(ofile, "])\n");
+        fprintf(ofile, "], %s)\n", mode==SEQMODE ? "seq" : "par");
       }
       DISPATCH();
 

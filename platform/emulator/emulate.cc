@@ -1349,6 +1349,8 @@ void engine() {
       ProgramCounter nxt          = getLabelArg(PC+2);
       PrTabEntry *predd           = getPredArg(PC+5);
       AbstractionEntry *predEntry = (AbstractionEntry*) getAdressArg(PC+6);
+      int mode                    = getPosIntArg(PC+7);
+      /* mode is either SEQMODE or PARMODE */
 
       AssRegArray &list = predd->gRegs;
       int size = list.getSize();
@@ -2133,6 +2135,8 @@ void engine() {
 
   INSTRUCTION(ENDOFFILE)
   INSTRUCTION(ENDDEFINITION)
+
+  INSTRUCTION(SWITCHCOMPMODE)
     warning("emulate: Unimplemented command");
     goto LBLcheckEntailment;
 
