@@ -163,12 +163,13 @@ compiler-Version.oz: $(COMPILERSRCNOVER) compiler/Opcodes.m4oz
         echo 'DATE = '\'`date '+%h %d 19%y (%T)'`\' > $@ \
         || (rm -f $@; exit 1)
 
-BIDECL=../../platform/emulator/bidecl.perl
-compiler-Builtins.oz: ../../platform/emulator/modBuiltins.spec
+EMUSRCDIR=$(SRCDIR)/../../platform/emulator
+BIDECL=$(EMUSRCDIR)/bidecl.perl
+compiler-Builtins.oz: $(EMUSRCDIR)/modBuiltins.spec
         perl $(BIDECL) -file $< -oztable > $@
 
-compiler-Opcodes.oz: compiler/Opcodes.m4oz ../../platform/emulator/instrDefs.m4
-        $(M4) -DEMUDIR=$(SRCDIR)/../../platform/emulator < $< > $@ \
+compiler-Opcodes.oz: compiler/Opcodes.m4oz $(EMUSRCDIR)/instrDefs.m4
+        $(M4) -DEMUDIR=$(EMUSRCDIR) < $< > $@ \
         || (rm -f $@; exit 1)
 
 functor2env: $(RUNFUNCTORS) Standard.ozf MakeFunctorToEnv.oz
