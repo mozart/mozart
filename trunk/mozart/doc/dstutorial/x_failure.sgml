@@ -236,11 +236,15 @@ and <<New>> is the cell content after the attempted operation.
 where <<Msg>> is the message attempted to be sent to the port.
 <ITEM> For objects: 
 <<objectExchange(Attr Old New)>>,
-<<objectAssign(Attr New)>>, and
-<<objectAccess(Attr Old)>>,
+<<objectAssign(Attr New)>>, 
+<<objectAccess(Attr Old)>>, and
+<<objectFetch>>,
 where <<Attr>> is the name of the object attribute,
 <<Old>> is the attribute value before the attempted operation,
 and <<New>> is the attribute value after the attempted operation.
+The <<objectFetch>> operation exists because object-records
+are copied lazily: the first time the object is used, the
+object-record is fetched, which might fail.
 </LIST>
 
 </LIST>
