@@ -92,6 +92,15 @@ case "$cmd" in
         exec $OZEMULATOR -u $url -- "$@"
         ;;
 
+   text2pickle)
+        exec $OZHOME/platform/$OZPLATFORM/$cmd "$@"
+        ;;
+
+   pickle2text|oldpickle2text)
+        exec $OZEMULATOR --pickle2text "$@" |
+             $OZHOME/platform/$OZPLATFORM/text2pickle --textmode
+        ;;
+
    *)
         echo "Unknown invocation of Oz via '$cmd'" 1>&2
         exit 1
