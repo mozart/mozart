@@ -152,7 +152,7 @@ local
 	    end
 	 of false then
 	    case @toDo\=nil then self
-	    else self,back($)
+	    else {self back($)}
 	    end
 	 elseof N then N
 	 end
