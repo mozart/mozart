@@ -76,7 +76,7 @@
     <P>
       In the following we will show the two most important geometry managers
       which are provided in Tk.  One is the packer, which can be used for
-      simply arrangements, like placing several widgets in a row or in a
+      simple arrangements, like placing several widgets in a row or in a
       line.  The other geometry manager we will discuss is implemented by
       the <<grid>> command.  As the name suggests, the grid command allows
       for arranging widgets in a gridded fashion.
@@ -101,7 +101,7 @@
     <Title/The Packer/
 
     <P>
-      The packer supports simple arrangemenet of widgets in rows and
+      The packer supports simple arrangements of widgets in rows and
       columns.  Arranging widgets nicely usually also means that some
       vertical and horizontal space has to be inserted, either designed to
       provide for additional space or to fill up space not occupied by the

@@ -229,7 +229,7 @@ L = {New Tk.label tkInit(parent:T text:'A test text.' font:F)}
 
     <P>
       The methods that return a list of strings, atoms, integers, or
-      floats split the string into substrings deparated by space characters.
+      floats split the string into substrings separated by space characters.
       For instance, the return string <<"a b c">> is transformed into the
       list <<[a b c]>> by the method <<tkReturnListAtom>>.  <Ptr
       to="table.widgets-2.return"> lists the return methods and how
@@ -326,7 +326,7 @@ L = {New Tk.label tkInit(parent:T text:'A test text.' font:F)}
       Menu widgets serve as containers for menu entries.  A menu entry can be
       one of the following:
       <Table>
-        <TR/<TD/<<separator>>/<TD/displays a vertical line//
+        <TR/<TD/<<separator>>/<TD/displays a horizontal line//
         <TR/<TD/<<command>>/<TD/similar to button widgets//
         <TR/<TD/<<radiobutton>>/<TD/similar to radiobutton widgets//
         <TR/<TD/<<checkbutton>>/<TD/similar to checkbutton widgets//
