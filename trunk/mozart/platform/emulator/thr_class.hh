@@ -70,11 +70,6 @@ enum ThreadFlag {
 //                    |                               |
 //                    `-------------------------------'
 //
-// memory layout
-// <board>
-// <prio> | <flags>
-// <id>    (debugger)
-// <abstr> (profiler)
 // <stack>
 
 class Thread {
@@ -110,7 +105,7 @@ public:
   void setBoardInternal(Board *bb) { board = bb; }
 
   Thread *gcThread();
-  Thread *gcDeadThread();
+  Thread *gcDead();
   void gcRecurse();
 
   int gcIsMarked() { return ((int)board) & 1; }
@@ -121,110 +116,124 @@ public:
   }
   void ** gcGetMarkField() { return (void **)&board; };
 
-  void markDeadThread() { 
+
+  Bool isDead() { 
+    return state.flags & T_dead; 
+  }
+  void setDead() { 
     state.flags = state.flags | T_dead;
   }
 
   int getFlags() { return state.flags; }
 
-  void markTagged() { 
-    if (isDeadThread ()) return;
+  void setTagged() { 
+    if (isDead()) return;
     state.flags = state.flags | T_tag;
   }
-  void unmarkTagged() { 
+  void unsetTagged() { 
     state.flags = state.flags & ~T_tag;
   }
   Bool isTagged() { 
     return (state.flags & T_tag);
   }
 
-  unsigned int getID() { return id; }
-  void setID(unsigned int newId) { id = newId; }
-  
-  void setAbstr(PrTabEntry *a) { abstr = a; }
-  PrTabEntry *getAbstr()       { return abstr; }
-
   int getPriority() { 
-    Assert(state.pri >= LOW_PRIORITY && state.pri <= HI_PRIORITY);
     return state.pri;
   }
-  void setPriority(int newPri) { 
-    Assert(state.pri >= LOW_PRIORITY && state.pri <= HI_PRIORITY);
-    state.pri = newPri;
+  void setPriority(int p) { 
+    state.pri = p;
   }
 
-  Bool isDeadThread() { return state.flags & T_dead; }
-
-  Bool isSuspended() { 
-    Assert(!isDeadThread());
-    return !(state.flags & T_runnable);
-  }
   Bool isRunnable() { 
-    /* Assert(!isDeadThread()); */ // TMUELLER
     return state.flags & T_runnable;
   }
 
-  //  For reinitialisation; 
-  void setRunnable() { 
-    state.flags = (state.flags & ~T_dead) | T_runnable;
-  }
-
   //  non-runnable threads;
-  void markRunnable() {
-    Assert(isSuspended() && !isDeadThread());
+  void setRunnable() {
+    Assert(isSuspended() && !isDead());
     state.flags = state.flags | T_runnable;
   }
-  void unmarkRunnable() { 
-    Assert((isRunnable () && !isDeadThread ()) || getStop());
+  void unsetRunnable() { 
+    Assert((isRunnable () && !isDead()) || isStop());
     state.flags &= ~T_runnable;
   }
 
-  void setExtThread() { 
-    Assert (!isDeadThread());
-    state.flags = state.flags | T_ext;
-  }
-  Bool isExtThread() { 
-    Assert(isRunnable());
+  Bool isExternal() {
     return state.flags & T_ext;
   }
-  void clearExtThread() {
+  void setExternal() { 
+    state.flags = state.flags | T_ext;
+  }
+  void unsetExternal() {
     state.flags &= ~T_ext;
   }
 
-  Bool wasExtThread() {
-    return state.flags & T_ext;
-  }
 
-  void setNoBlock(Bool yesno) {
-    state.flags = yesno ? state.flags | T_noblock : state.flags & ~T_noblock;
+  void setNoBlock() {
+    state.flags = state.flags | T_noblock;
+  }
+  void unsetNoBlock() {
+    state.flags = state.flags & ~T_noblock;
   }
   Bool getNoBlock() {
     return (state.flags & T_noblock);
   }
 
+
   // source level debugger
   // set/delete some bits...
-  void setTrace(Bool yesno) {
-    state.flags = yesno ? state.flags | T_G_trace : state.flags & ~T_G_trace;
+  void setTrace() {
+    state.flags = state.flags | T_G_trace;
   }
-  void setStep(Bool yesno) {
-    state.flags = yesno ? state.flags | T_G_step  : state.flags & ~T_G_step;
+  void setStep() {
+    state.flags = state.flags | T_G_step;
   }
-  void setStop(Bool yesno) {
-    state.flags = yesno ? state.flags | T_G_stop  : state.flags & ~T_G_stop;
+  void setStop() {
+    state.flags = state.flags | T_G_stop;
+  }
+  void unsetTrace() {
+    state.flags = state.flags & ~T_G_trace;
+  }
+  void unsetStep() {
+    state.flags = state.flags & ~T_G_step;
+  }
+  void unsetStop() {
+    state.flags = state.flags & ~T_G_stop;
   }
 
   // ...and check them
-  Bool getTrace() { return (state.flags & T_G_trace); }
-  Bool getStep()  { return (state.flags & T_G_step); }
-  Bool getStop()  { return (state.flags & T_G_stop); }
+  Bool isTrace() { return (state.flags & T_G_trace); }
+  Bool isStep()  { return (state.flags & T_G_step); }
+  Bool isStop()  { return (state.flags & T_G_stop); }
 
-  TaggedRef getStreamTail();
-  void setStreamTail(TaggedRef v);
+  Bool isCatch() { return (state.flags & T_catch); }
+  void setCatch() { state.flags = state.flags|T_catch; }
+
+  unsigned int getID() { 
+    return id; 
+  }
+  void setID(unsigned int i) { 
+    id = i; 
+  }
+  
+  void setAbstr(PrTabEntry * a) { 
+    abstr = a; 
+  }
+  PrTabEntry *getAbstr(void) { 
+    return abstr; 
+  }
+
+
+  Bool isSuspended() { 
+    Assert(!isDead());
+    return !isRunnable();
+  }
+
 
   void pushDebug(OzDebug *dbg, OzDebugDoit dothis) {
     taskStack->pushDebug(dbg,dothis);
   }
+
   void popDebug(OzDebug *&dbg, OzDebugDoit &dothis) {
     PopFrame(taskStack,pc,y,cap);
     if (pc == C_DEBUG_CONT_Ptr) {
@@ -252,10 +261,8 @@ public:
     taskStack->pushCFun(f, x, n);
   }
 
-  Bool hasCatchFlag() { return (state.flags & T_catch); }
-  void setCatchFlag() { state.flags = state.flags|T_catch; }
   void pushCatch() {
-    setCatchFlag();
+    setCatch();
     taskStack->pushCatch();
   }
 

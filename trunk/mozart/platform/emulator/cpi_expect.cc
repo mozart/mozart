@@ -879,7 +879,7 @@ OZ_Return OZ_Expect::impose(OZ_Propagator * p)
       if (am.isPropagatorLocation()) {
 	if (!am.hf_raise_failure()) {
 	  oz_sleepPropagator(prop);
-	  prop->markFailed();
+	  prop->setFailed();
 	  ret = FAILED;
 	  break;
 	}
@@ -950,7 +950,7 @@ OZ_Return OZ_Expect::impose(OZ_Propagator * p)
   }
   
   if (all_local) 
-    prop->markLocalPropagator();
+    prop->setLocal();
   
   staticSpawnVarsNumber = staticSuspendVarsNumber = 0;
 

@@ -108,7 +108,7 @@ void scheduler() {
 	continue;
       }
 
-      if (!ct->getStop())
+      if (!ct->isStop())
 	break;
 
     } while (1);
@@ -116,7 +116,7 @@ void scheduler() {
     Assert(ct);
 
     // The thread must be alive and kicking, ready to rumble!
-    Assert(!ct->isDeadThread() && ct->isRunnable());
+    Assert(!ct->isDead() && ct->isRunnable());
 
 
     /*
@@ -183,10 +183,10 @@ void scheduler() {
 
       case T_SUSPEND:
 	Assert(!cb->isFailed());
-	ct->unmarkRunnable();
+	ct->unsetRunnable();
 	  
 	if (cb->isRoot()) {
-	  if (e->debugmode() && ct->getTrace())
+	  if (e->debugmode() && ct->isTrace())
 	    debugStreamBlocked(ct);
 	} else {
 	  checkStability(ct,cb);
@@ -195,7 +195,7 @@ void scheduler() {
 	break;
 
       case T_TERMINATE:
-	Assert(!ct->isDeadThread() && ct->isRunnable() && ct->isEmpty());
+	Assert(!ct->isDead() && ct->isRunnable() && ct->isEmpty());
 	cb->decSuspCount();
 	oz_disposeThread(ct);
 	checkStability(ct,cb);
@@ -284,7 +284,7 @@ void scheduler() {
       }
       
       if (foundHdl) {
-	if (e->debugmode() && ct->getTrace())
+	if (e->debugmode() && ct->isTrace())
 	  debugStreamUpdate(ct);
 	e->xRegs[0] = e->exception.value; // mm2: use pushX
 	goto LBLrunThread;  // execute task with no preemption!
@@ -296,8 +296,8 @@ void scheduler() {
       }
 
       if (e->debugmode()) {
-	ct->setTrace(OK);
-	ct->setStep(OK);
+	ct->setTrace();
+	ct->setStep();
 	debugStreamException(ct,e->exception.value);
 	// Preempt thread
 	am.threadsPool.scheduleThread(ct);

@@ -101,7 +101,7 @@ int OZ_FDIntVar::read(OZ_Term v)
   } else {
     Assert(isCVar(vtag));
 
-    if (Propagator::getRunningPropagator()->isLocalPropagator()) {
+    if (Propagator::getRunningPropagator()->isLocal()) {
     // local variable per definition
 
       setState(loc_e);
