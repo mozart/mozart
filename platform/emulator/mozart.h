@@ -203,6 +203,7 @@ _FUNDECL(char *  ,OZ_parseFloat,(char *s));
 _FUNDECL(OZ_Term ,OZ_CStringToNumber,(char *));
 
 _FUNDECL(char *  ,OZ_toC,(OZ_Term, int, int));
+_FUNDECL(char *  ,OZ__toC,(OZ_Term, int, int, int*));
 _FUNDECL(int     ,OZ_termGetSize,(OZ_Term, int, int));
 
 _FUNDECL(OZ_Term ,OZ_string,(OZ_CONST char *));
