@@ -132,9 +132,9 @@ AC_ARG_WITH(tcl,
 
 if test -n "${with_tcl}"
 then
-    oz_tcl_lib_dir=$with_tcl
-    oz_tcl_inc_dir=$with_tcl
-    oz_tcl_lib_tcl_dir=$with_tcl
+    oz_tcl_lib_dir=$with_tcl/lib
+    oz_tcl_inc_dir=$with_tcl/include
+    oz_tcl_lib_tcl_dir=$with_tcl/lib/tcl8.0
 fi
 
 AC_ARG_WITH(tcl_lib,
@@ -175,8 +175,12 @@ AC_CHECK_HEADER(tcl.h,,
 	AC_MSG_ERROR(required tcl.h include file not found))
 
 LDFLAGS="-L$oz_tcl_lib_dir $LDFLAGS"
-AC_CHECK_LIB(tcl, Tcl_Init, ,
-	AC_MSG_ERROR(required lib "-ltcl" not found))
+AC_CHECK_LIB(tcl8.0, Tcl_Init, ,
+	[AC_CHECK_LIB(tcl, Tcl_Init, ,
+            [AC_MSG_ERROR(required lib "-ltcl/tcl8.0" not found)])])
+
+#AC_CHECK_LIB(tcl, Tcl_Init, ,
+#	AC_MSG_ERROR(required lib "-ltcl" not found))
 
 AC_SUBST(oz_tcl_lib_tcl_dir)
 
@@ -186,9 +190,9 @@ AC_ARG_WITH(tk,
         search tk library, header, tk tcl-library in <dir> (default: NONE)])
 if test -n "${with_tk}"
 then
-    oz_tk_lib_dir=$with_tk
-    oz_tk_inc_dir=$with_tk
-    oz_tk_lib_tcl_dir=$with_tk
+    oz_tk_lib_dir=$with_tk/lib
+    oz_tk_inc_dir=$with_tk/include
+    oz_tk_lib_tcl_dir=$with_tk/lib/tk8.0
 fi
 
 AC_ARG_WITH(tk_lib,
@@ -229,8 +233,9 @@ AC_CHECK_HEADER(tk.h,,
 	AC_MSG_ERROR(required tk.h include file not found))
 
 LDFLAGS="-L$oz_tk_lib_dir $LDFLAGS"
-AC_CHECK_LIB(tk, Tk_Init, ,
-	AC_MSG_ERROR(required lib "-ltk" not found))
+AC_CHECK_LIB(tk8.0, Tk_Init, ,
+	[AC_CHECK_LIB(tk, Tk_Init, ,
+            [AC_MSG_ERROR(required lib "-ltk/tk8.0" not found)])])
 
 AC_SUBST(oz_tk_lib_tcl_dir)
 
