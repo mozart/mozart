@@ -46,7 +46,7 @@
 ;;    so its output goes into the compiler buffer
 ;; ---------------------------------------------------------------------
 
-(if (string-match "nt3" (emacs-version))  ;; for now
+(if (string-match "-nt" (emacs-version))  ;; for now
     (setq oz-win32 t)
   (setq oz-win32 nil))
 
@@ -68,9 +68,6 @@ nil:     Don't start emulator (use command 'run').
 
 (defvar oz-indent-chars 3
   "*Indentation of Oz statements with respect to containing block.")
-
-(defvar oz-wait-time nil
-  "*wait for compiler startup (on linux use 15 sec)")
 
 (defvar oz-mode-syntax-table nil)
 (defvar oz-mode-abbrev-table nil)
@@ -439,7 +436,6 @@ Input and output via buffers *Oz Compiler* and *Oz Emulator*."
       (if oz-emulator-hook
 	  (funcall oz-emulator-hook file)
 	(setq oz-emulator-buffer "*Oz Emulator*")
-	(if oz-wait-time (sleep-for oz-wait-time))
 	(if (not oz-win32)
 	    (make-comint "Oz Emulator" "oz.emulator" nil "-emacs" "-S" file))
 	(oz-create-buffer oz-emulator-buffer nil)
