@@ -1195,7 +1195,8 @@ void ossleep(int secs)
 
 int osgetpid()
 {
-  return getpid();
+  int pid = getpid();
+  return pid>0 ? pid : -pid;  // fucking Windows 95 returns negative pids
 }
 
 /* fgets may return NULL under Solaris if 
