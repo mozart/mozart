@@ -687,7 +687,8 @@ Bool checkAtom(const char *s)
   }
   switch (t[0]) {
   case 'a':
-    return strcmp(t, "andthen") && strcmp(t, "attr")? OK: NO;
+    return strcmp(t, "andthen") && strcmp(t, "at")
+	&& strcmp(t, "attr")? OK: NO;
   case 'b':
     return strcmp(t, "body")? OK: NO;
   case 'c':
@@ -695,8 +696,8 @@ Bool checkAtom(const char *s)
 	&& strcmp(t, "choice") && strcmp(t, "class")
 	&& strcmp(t, "condis") && strcmp(t, "condis")? OK: NO;
   case 'd':
-    return strcmp(t, "declare") && strcmp(t, "dis")
-	&& strcmp(t, "div")? OK: NO;
+    return strcmp(t, "declare") && strcmp(t, "define")
+	&& strcmp(t, "dis") && strcmp(t, "div")? OK: NO;
   case 'e':
     return strcmp(t, "else") && strcmp(t, "elsecase")
 	&& strcmp(t, "elseif") && strcmp(t, "elseof")
@@ -719,15 +720,15 @@ Bool checkAtom(const char *s)
     return strcmp(t, "of") && strcmp(t, "or")
 	&& strcmp(t, "orelse")? OK: NO;
   case 'p':
-    return strcmp(t, "proc") && strcmp(t, "prop")? OK: NO;
+    return strcmp(t, "prepare") && strcmp(t, "proc")
+	&& strcmp(t, "prop")? OK: NO;
   case 'r':
-    return strcmp(t, "raise")? OK: NO;
+    return strcmp(t, "raise") && strcmp(t, "require")? OK: NO;
   case 's':
     return strcmp(t, "self") && strcmp(t, "skip")? OK: NO;
   case 't':
     return strcmp(t, "then") && strcmp(t, "thread")
-        && strcmp(t, "true")
-	&& strcmp(t, "try")? OK: NO;
+	&& strcmp(t, "true") && strcmp(t, "try")? OK: NO;
   case 'u':
     return strcmp(t, "unit")? OK: NO;
   case 'w':
