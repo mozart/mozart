@@ -31,7 +31,7 @@ define
 	 Cuts = {Length {URL.make DocUrl}.path} - 1
 	 Cmd  = {Manager get_wget($)}
 	 #if {Manager is_verbose($)} then ' -v' else ' -nv' end
-	 #' -N -nH --cut-dirs='#Cuts#' -r -p -k --no-parent -Q 1m "'#DocUrl#'"'
+	 #' -N -nH --cut-dirs='#Cuts#' -r -p -k --no-parent -Q 2m "'#DocUrl#'"'
       in
 	 {Manager trace(Cmd)}
 	 try

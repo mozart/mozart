@@ -57,6 +57,7 @@ define
 			      {self categoriesToHrefs($)}
 			      $)}
 		  end
+		  /*
 		  if @format==nil then
 		     {self formatHeader(
 			      'format'
@@ -70,6 +71,7 @@ define
 			      'class':'headerdoc'
 			      $)}
 		  end
+		  */
 		  /*
 		  if @keywords==nil then '' else
 		     {self formatHeader(
@@ -146,19 +148,11 @@ define
       end
       %%
       meth pkgHrefs($)
-	 Dir = {Manager id_to_pkgdir_href(@id $)}
+	 U = {Manager id_to_pkgdir_href(@id $)}
       in
-	 {Filter
-	  {Map @url_pkg
-	   fun {$ U}
-	      case {Reverse {URL.make U}.path}
-	      of nil|D|_ then
-		 a(href:Dir#D {HtmlQuote D})
-	      [] D|_ then
-		 a(href:Dir#D {HtmlQuote D})
-	      else unit end
-	   end}
-	  fun {$ X} X\=unit end}
+	 for F in {Manager id_to_pkg_files(@id $)} collect:COL do
+	    {COL a(href:U#'/'#F {HtmlQuote F})}
+	 end
       end
       %%
       meth requiresToHrefs(File $)

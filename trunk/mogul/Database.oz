@@ -248,14 +248,18 @@ define
 	 end
       end
       meth updateAuthorListFor(ID L $)=M
-	 try
-	    case Database,condGet(ID unit $)
-	    of unit then
-	       {Raise mogul(entry_not_found(ID))} unit
-	    [] E then {E updateAuthorList(self L $)} end
-	 catch mogul(...)=E then
-	    {Manager addReport(M E)}
-	    L
+	 if {Manager ignoreID(ID $)} then
+	    {Manager trace('Ignoring ID='#ID)} L
+	 else
+	    try
+	       case Database,condGet(ID unit $)
+	       of unit then
+		  {Raise mogul(entry_not_found(ID))} unit
+	       [] E then {E updateAuthorList(self L $)} end
+	    catch mogul(...)=E then
+	       {Manager addReport(M E)}
+	       L
+	    end
 	 end
       end
       %%
@@ -276,14 +280,18 @@ define
 	 end
       end
       meth updatePkgListFor(ID L $)=M
-	 try
-	    case Database,condGet(ID unit $)
-	    of unit then
-	       {Raise mogul(entry_not_found(ID))} unit
-	    [] E then {E updatePkgList(self L $)} end
-	 catch mogul(...)=E then
-	    {Manager addReport(M E)}
-	    L
+	 if {Manager ignoreID(ID $)} then
+	    {Manager trace('Ignoring ID='#ID)} L
+	 else
+	    try
+	       case Database,condGet(ID unit $)
+	       of unit then
+		  {Raise mogul(entry_not_found(ID))} unit
+	       [] E then {E updatePkgList(self L $)} end
+	    catch mogul(...)=E then
+	       {Manager addReport(M E)}
+	       L
+	    end
 	 end
       end
       %%

@@ -12,7 +12,7 @@ import
    HTML_ByAuthor(updatePage)
    Pickle(saveCompressed)
    Regex(make compile search) at 'x-oz://contrib/regex'
-   Directory(mkDir)
+   Directory(mkDir listRegularFiles)
 export
    Manager Trace Indent Dedent RelativeTo Admin
 define
@@ -141,14 +141,17 @@ define
       meth get_docdir($)
 	 {RelativeTo @mogulDIR 'doc'}
       end
-      meth get_pkgdir($)
-	 {RelativeTo @mogulDIR 'pkg'}
-      end
       meth get_catdir($)
 	 {RelativeTo @mogulDIR 'info/category'}
       end
       meth get_infodir($)
 	 {RelativeTo @mogulDIR 'info'}
+      end
+      meth get_uploaddir($)
+	 {RelativeTo @mogulDIR 'upload'}
+      end
+      meth get_populatedir($)
+	 {RelativeTo @mogulDIR 'populate'}
       end
       meth 'wget'(V) wget<-V end
       meth get_wget($) @wget end
@@ -167,6 +170,25 @@ define
 	 {URL.toString {Adjoin {URL.make ID}
 			url(scheme:unit absolute:false)}}
       end
+      
+      %% given the mogul id of a package return the SECTION-PACKAGE
+      %% string that is used to form the 1st part of a package file
+      %% according to the new naming scheme.  With the old naming
+      %% scheme we only have files SECTION-PACKAGE.pkg.  With the
+      %% new one, we have SECTION-PACKAGE__FORMAT__PLATFORM__VERSION.pkg
+      
+      meth id_to_package_name(ID $)
+	 U = {Adjoin {URL.make ID} url(scheme:unit absolute:false)}
+	 L = case {Reverse U.path}
+	     of nil|L then {Reverse L}
+	     [] L then {Reverse L}
+	     end
+      in
+	 {FoldL L fun {$ Accu X}
+		     if Accu==nil then X else Accu#'-'#X end
+		  end nil}
+      end
+      
       meth id_to_href(ID $)
 	 S = Admin,id_to_relurl(ID $)
       in
@@ -177,11 +199,22 @@ define
       in
 	 @mogulTOP#'/doc/'#S#'/'
       end
+      
       meth id_to_pkgdir_href(ID $)
 	 S = Admin,id_to_relurl(ID $)
       in
-	 @mogulTOP#'/pkg/'#S#'/'
+	 {RelativeTo @mogulTOP 'populate/'#S}
       end
+
+      meth id_to_pkg_files(ID $)
+	 S = Admin,id_to_relurl(ID $)
+	 D = {RelativeTo @mogulDIR 'populate/'#S}
+      in
+	 {Sort {Map {Directory.listRegularFiles D}
+		VirtualString.toAtom}
+	  Value.'<'}
+      end
+
       meth condGetId(ID D $)
 	 if @db==unit then D else {@db condGet(ID D $)} end
       end
