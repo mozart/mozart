@@ -497,16 +497,11 @@ static void transBody(char c, char *text, int &i, int &j) {
         }
         break;
       case '\\':
-        text[i] = '\\';
-        break;
       case '`':
-        text[i] = '`';
-        break;
       case '\"':
-        text[i] = '\"';
-        break;
       case '\'':
-        text[i] = '\'';
+      case '&':
+        text[i] = text[j];
         break;
       default:
         { char octstring[4];
@@ -572,7 +567,7 @@ CHAR         [^\\\x00]
 ATOMCHAR     [^'\\\x00]
 STRINGCHAR   [^\"\\\x00]
 VARIABLECHAR [^`\\\x00]
-ESCAPE       [abfnrtv\\'\"`]
+ESCAPE       [abfnrtv\\'\"`&]
 BIN          [0-1]
 OCT          [0-7]
 HEX          [0-9a-fA-F]
