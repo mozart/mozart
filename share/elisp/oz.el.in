@@ -1023,7 +1023,8 @@ compiled using a default set of switches."
 (defconst oz-middle-pattern
   (concat (oz-make-keywords-for-match
 	   '("in" "then" "else" "of" "elseof" "elsecase" "elseif"
-	     "catch" "finally" "with" "import" "export" "body"))
+	     "catch" "finally" "with" "require" "prepare" "import" "export"
+	     "body" "define"))
 	  "\\|" "\\[\\]"))
 (defconst oz-gump-middle-pattern
   "//")
@@ -1039,19 +1040,21 @@ compiled using a default set of switches."
   "[][(){}]")
 
 (defconst oz-any-pattern
-  (concat "\\<\\(attr\\|body\\|case\\|catch\\|class\\|choice\\|cond\\|"
-	  "condis\\|declare\\|dis\\|else\\|elsecase\\|elseif\\|elseof\\|"
-	  "end\\|export\\|feat\\|finally\\|from\\|fun\\|functor\\|if\\|"
-	  "in\\|import\\|local\\|lock\\|meth\\|not\\|of\\|or\\|proc\\|"
-	  "prop\\|raise\\|then\\|thread\\|try\\|with\\)\\>\\|\\[\\]\\|"
+  (concat "\\<\\(at\\|attr\\|body\\|case\\|catch\\|class\\|choice\\|cond\\|"
+	  "condis\\|declare\\|define\\|dis\\|else\\|elsecase\\|elseif\\|"
+	  "elseof\\|end\\|export\\|feat\\|finally\\|from\\|fun\\|functor\\|"
+	  "if\\|in\\|import\\|local\\|lock\\|meth\\|not\\|of\\|or\\|prepare\\|"
+	  "proc\\|prop\\|raise\\|require\\|then\\|thread\\|try\\|with\\)\\>\\|"
+	  "\\[\\]\\|"
 	  oz-left-or-right-pattern))
 (defconst oz-gump-any-pattern
-  (concat "\\<\\(attr\\|body\\|case\\|catch\\|class\\|choice\\|cond\\|"
-	  "condis\\|declare\\|dis\\|else\\|elsecase\\|elseif\\|elseof\\|"
-	  "end\\|export\\|feat\\|finally\\|from\\|fun\\|functor\\|if\\|"
-	  "in\\|import\\|lex\\|local\\|lock\\|meth\\|mode\\|not\\|of\\|"
-	  "or\\|parser\\|proc\\|prod\\|prop\\|raise\\|scanner\\|syn\\|"
-	  "then\\|thread\\|token\\|try\\|with\\)\\>\\|=>\\|\\[\\]\\|"
+  (concat "\\<\\(at\\|attr\\|body\\|case\\|catch\\|class\\|choice\\|cond\\|"
+	  "condis\\|declare\\|define\\|dis\\|else\\|elsecase\\|elseif\\|"
+	  "elseof\\|end\\|export\\|feat\\|finally\\|from\\|fun\\|functor\\|"
+	  "if\\|in\\|import\\|lex\\|local\\|lock\\|meth\\|mode\\|not\\|of\\|"
+	  "or\\|parser\\|prepare\\|proc\\|prod\\|prop\\|raise\\|require\\|"
+	  "scanner\\|syn\\|then\\|thread\\|token\\|try\\|with\\)\\>\\|=>\\|"
+	  "\\[\\]\\|"
 	  "//\\|" oz-left-or-right-pattern))
 
 ;;}}}
@@ -1997,7 +2000,8 @@ and initial percent signs."
 
 (defconst oz-keywords
   '("declare" "local" "in" "end"
-    "proc" "fun" "functor" "import" "export" "body"
+    "proc" "fun"
+    "functor" "require" "prepare" "import" "export" "body" "define" "at"
     "case" "then" "else" "of" "elseof" "elsecase"
     "if" "elseif"
     "class" "from" "prop" "attr" "feat" "meth" "self"
