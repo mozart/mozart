@@ -366,7 +366,8 @@ public:
 OzVariable *oz_getNonOptVar(TaggedRef *v);
 
 Bool oz_var_valid(OzVariable*,TaggedRef);
-OZ_Return oz_var_unify(OzVariable*,TaggedRef*,TaggedRef*);
+// getBoard(lvp) != getBoard(rvp) || getType(lvp) >= getType(rvp)
+OZ_Return oz_var_unify(OzVariable *v, TaggedRef *lvp, TaggedRef *rvp);
 OZ_Return oz_var_bind(OzVariable*,TaggedRef*,TaggedRef);
 OZ_Return oz_var_forceBind(OzVariable*,TaggedRef*,TaggedRef);
 OZ_Return oz_var_addSusp(TaggedRef*, Suspendable *);

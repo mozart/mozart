@@ -32,14 +32,26 @@
 #endif
 
 #include "var_base.hh"
+#include "unify.hh"
 
 //
 class OptVar: public OzVariable {
 public:
   OptVar(Board *bb) : OzVariable(OZ_VAR_OPT, bb) {}
 
-  OZ_Return bind(TaggedRef* vPtr, TaggedRef t);
-  OZ_Return unify(TaggedRef* vPtr, TaggedRef *tPtr);
+  OZ_Return bind(TaggedRef* vPtr, TaggedRef t) {
+    Assert(suspList == (SuspList *) 0);
+    oz_bindVar(this, vPtr, t);
+    return (PROCEED);
+  }
+
+  // getType(vPtr) == OZ_VAR_OPT
+  // getBoard(lvp) != getBoard(rvp) || getType(vPtr) >= getType(tPtr)
+  OZ_Return unify(TaggedRef* vPtr, TaggedRef *tPtr) {
+    oz_bindVar(this, vPtr, makeTaggedRef(tPtr));
+    return (PROCEED);
+  }
+
 
   OZ_Return valid(TaggedRef /* val */) { return OK; }
 

@@ -32,13 +32,24 @@
 #endif
 
 #include "var_base.hh"
+#include "unify.hh"
 
 class SimpleVar: public OzVariable {
 public:
   SimpleVar(Board *bb) : OzVariable(OZ_VAR_SIMPLE,bb) {}
 
-  OZ_Return bind(TaggedRef* vPtr, TaggedRef t);
-  OZ_Return unify(TaggedRef* vPtr, TaggedRef *tPtr);
+  OZ_Return bind(TaggedRef* vPtr, TaggedRef t) {
+    oz_bindVar(this,vPtr, t);
+    return PROCEED;
+  }
+
+  // getType(vPtr) == OZ_VAR_SIMPLE
+  // getBoard(lvp) != getBoard(rvp) || getType(vPtr) >= getType(tPtr)
+  // in particular (*tPtr) can not be OZ_VAR_OPT [when in the same space]
+  OZ_Return unify(TaggedRef* vPtr, TaggedRef *tPtr) {
+    oz_bindVar(this,vPtr, makeTaggedRef(tPtr));
+    return (PROCEED);
+  }
 
   OZ_Return valid(TaggedRef /* val */) { return OK; }
 
