@@ -94,8 +94,9 @@ in
 	       end
 
 	    else
-	       ForMe = try {Nth Args 3} == self
-		       catch failure(...) then false end
+	       Obj   = try {Nth Args 3}
+		       catch failure(...) then nil end
+	       ForMe = {IsDet Obj} andthen Obj == self
 	    in
 	      case ForMe then
 		 {Dbg.trace T false}
