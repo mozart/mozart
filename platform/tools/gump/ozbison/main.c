@@ -51,8 +51,10 @@ OZ_BI_define(bison_generate, 2, 1)
   int k;
   CONST char *verbosefile = OZ_atomToC(OZ_in(1));
 
-  verboseflag = verbosefile[0] != '\0';
+  if ((k = setjmp(env)) != 0)
+    return OZ_raiseC("ozbison", 1, OZ_int(k));
 
+  verboseflag = verbosefile[0] != '\0';
   if (verboseflag) {
     foutput = fopen(verbosefile, "w");
     if (foutput == NULL) {
@@ -60,9 +62,6 @@ OZ_BI_define(bison_generate, 2, 1)
       done (1);
     }
   }
-
-  if ((k = setjmp(env)) != 0)
-    return OZ_raiseC("ozbison", 1, OZ_int(k));
 
   /* read the input.
      In file reader.c.
