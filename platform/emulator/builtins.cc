@@ -179,6 +179,7 @@ OZ_BI_define(BIfun,1,1)                                 \
   switch (r) {                                          \
   case PROCEED: OZ_RETURN(NameTrue);                    \
   case FAILED : OZ_RETURN(NameFalse);                   \
+  case SUSPEND: oz_suspendOn(OZ_in(0));                 \
   default     : return r;                               \
   }                                                     \
 } OZ_BI_end                                             \
