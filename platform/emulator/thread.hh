@@ -171,6 +171,7 @@ public:
   OZPRINTLONG;
 
   Thread *gcThread();
+  Thread *gcThreadInline();
   Thread *gcDeadThread();
   void gcRecurse();
 
@@ -190,7 +191,19 @@ public:
 
   int getFlags() { return state.flags; }
 
-
+  void markPropagatorThread () { 
+    Assert(!isDeadThread());
+    state.flags = state.flags | T_p_thr;
+  }
+  void unmarkPropagatorThread() { 
+    Assert (!isDeadThread());
+    state.flags &= ~T_p_thr;
+  }
+  Bool isPropagator() { 
+    Assert(!isDeadThread());
+    return state.flags & T_p_thr;
+  }
+  
   void setBody(RunnableThreadBody *rb) { item.threadBody=rb; }
   RunnableThreadBody *getBody()        { return item.threadBody; }
 
@@ -272,19 +285,6 @@ public:
     return state.flags & T_ext;
   }
 
-  void markPropagatorThread () { 
-    Assert(!isDeadThread());
-    state.flags = state.flags | T_p_thr;
-  }
-  void unmarkPropagatorThread() { 
-    Assert (!isDeadThread());
-    state.flags &= ~T_p_thr;
-  }
-  Bool isPropagator() { 
-    Assert(!isDeadThread());
-    return state.flags & T_p_thr;
-  }
-  
   void markNonMonotonicPropagatorThread(void) { 
     Assert(!isDeadThread() && isPropagator());
     state.flags = state.flags | T_nmo;

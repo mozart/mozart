@@ -86,24 +86,27 @@ public:
     return gcField;
   }
 
+  Bool isCommitted() { return flags & Ac_Committed;     }
+  Bool isAsk()       { return flags & Ac_Ask;           }
+  Bool isWait()      { return flags & Ac_Wait;          }
+  Bool isAskWait()   { return flags & (Ac_Ask|Ac_Wait); } 
+  Bool isSolve()     { return flags & Ac_Solve;         }
+  Bool isChoice()    { return flags & Ac_Choice;        }
+  Bool isGround()    { return flags & Ac_Ground;        }
+
+  void setCommitted() { flags |= Ac_Committed; }
+  void setGround()    { flags |= Ac_Ground;    }
+
+  void unsetGround()  { flags &= ~Ac_Ground;   }
+
+  void discardActor() { setCommitted(); }
+
   Actor * gcActor();
   void gcRecurse(void);
   OZPRINT;
   OZPRINTLONG;
 
   Board *getBoardInternal() { return board; }
-  Bool isCommitted() { return flags & Ac_Committed; }
-  Bool isAsk() { return ((flags & Ac_Ask) ? OK : NO); }
-  Bool isWait() { return ((flags & Ac_Wait) ? OK : NO); }
-  Bool isAskWait() { return ((flags & (Ac_Ask|Ac_Wait)) ? OK : NO); } 
-  Bool isSolve() { return ((flags & Ac_Solve) ? OK : NO); }
-  Bool isChoice() { return ((flags & Ac_Choice) ? OK : NO); }
-  Bool isGround() { return ((flags & Ac_Ground) ? OK : NO); }
-  void setCommitted() { flags |= Ac_Committed; }
-  void setGround() { flags |= Ac_Ground; }
-  void unsetGround() { flags &= ~Ac_Ground; }
-
-  void discardActor() { setCommitted(); }
 };
 
 // ------------------------------------------------------------------------
@@ -243,8 +246,8 @@ public:
 
   // maybe in some cpbag...
   void disposeWait(void) {
-    //  freeListDispose(children-1,(ToInt32(children[-1])+1)*sizeof(Board *));
-    //  freeListDispose(this,sizeof(WaitActor));
+    // freeListDispose(children-1,(ToInt32(children[-1])+1)*sizeof(Board *));
+    // freeListDispose(this,sizeof(WaitActor));
   }
 
   Bool isAliveUpToSolve(void);
