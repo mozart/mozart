@@ -7824,6 +7824,7 @@ BIspec allSpec[] = {
 #endif
 
   {"SystemRegistry",             1, BIsystem_registry,            0},
+  {"ServiceRegistry",            1, BIsystem_registry,            0},
 
   {0,0,0,0}
 };
