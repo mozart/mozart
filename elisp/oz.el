@@ -1576,7 +1576,7 @@ and is used for fontification.")
   (set (make-local-variable 'font-lock-defaults)
        '((oz-font-lock-keywords oz-font-lock-keywords-1
 	  oz-font-lock-keywords-2 oz-font-lock-keywords-3)
-	 nil nil (("&" . "/")) beginning-of-line)))
+	 nil nil ((?& . "/")) beginning-of-line)))
 
 ;;------------------------------------------------------------
 ;; Gump Fontification
@@ -1670,7 +1670,7 @@ and is used for fontification.")
   (set (make-local-variable 'font-lock-defaults)
        '((oz-gump-font-lock-keywords oz-gump-font-lock-keywords-1
 	  oz-gump-font-lock-keywords-2 oz-gump-font-lock-keywords-3)
-	 nil nil (("&" . "/")) beginning-of-line)))
+	 nil nil ((?& . "/")) beginning-of-line)))
 
 ;;------------------------------------------------------------
 
