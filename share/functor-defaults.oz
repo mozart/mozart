@@ -27,7 +27,7 @@
 defaults(lib:
 	    ['Application' 'GetArgs' 'Applet' 'Syslet' 'Servlet'
 	     'Search' 'FD' 'Schedule' 'FS'
-	     'Error' 'ErrorRegistry' 'Finalize' 'Foreign'
+	     'Error' 'ErrorRegistry' 'Finalize'
 	     'Fault' 'Connection' 'Remote' 'VirtualSite' 'URL'
 	     'Open'
 	     'Tk' 'TkTools'
