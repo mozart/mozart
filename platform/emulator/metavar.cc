@@ -461,7 +461,7 @@ OZ_C_proc_begin(BImetaWatchVar, 2)
   if(! isAnyVar(vtag)) {
     return PROCEED;
   } else if (isGenMetaVar(v, vtag)) {
-    if (((GenMetaVariable*)tagged2CVar(v))->isStrongerThan(TaggedRef(vptr), 
+    if (((GenMetaVariable*)tagged2CVar(v))->isStrongerThan(makeTaggedRef(vptr), 
 							   deref(OZ_args[1])))
       return PROCEED;
     
