@@ -16,6 +16,7 @@
     <META NAME="html.split" value="chapter.principles">
     <META NAME="html.split" value="chapter.description">
     <META NAME="html.split" value="chapter.extending">
+    <META NAME="html.split" value="chapter.editing">
     <TITLE>Oz Documentation DTD
     <AUTHOR.EXTERN TO="author.db" KEY="Denys.Duchier">
     <CHAPTER ID=chapter.intro>
@@ -1124,11 +1125,84 @@ document should use a <CODE/DOCTYPE/ header of the form:
 <!ENTITY % input.local SYSTEM "myaddons.sgml">
 ]>]]></CODE></P>
 
+    <CHAPTER ID=chapter.editing>
+      <TITLE/Editing SGML Documents/
+
+      <P>The <NAME TYPE=TOOL/PSGML/ package for <NAME TYPE=TOOL/emacs/
+provides a very nice editing environment for SGML documents.  You
+might put the following in your <FILE>~/.emacs</FILE> file:
+<CODE DISPLAY PROGLANG=ELISP>
+(setq load-path (cons "?{PSGML_DIR}" load-path))
+(autoload 'sgml-mode "psgml" "Major mode to edit SGML files." t)
+</CODE>
+where ?{PSGML_DIR} is the directory in which <NAME TYPE=TOOL/PSGML/ is
+installed.  At our lab, this directory is:
+<FILE>/project/ps/emacs/lisp/psgml</FILE></P>
+
+      <P>To turn on fontification of SGML document, also add the
+following:
+<CODE DISPLAY PROGLANG=ELISP>(setq sgml-set-face 't)</CODE>
+You may also specify what font faces to use for highlighting.  Here is
+what I (Denys) am using today:
+<CODE DISPLAY PROGLANG=ELISP>
+(setq sgml-markup-faces
+  '((start-tag . font-lock-reference-face)
+    (end-tag   . font-lock-reference-face)
+    (comment   . font-lock-comment-face  )
+    (pi        . font-lock-keyword-face  )
+    (sgml      . font-lock-type-face     )
+    (doctype   . font-lock-type-face     )
+    (entity    . font-lock-keyword-face  )
+    (shortref  . font-lock-reference-face)))
+</CODE>
+Strangely enough, when you open an SGML file for editing, the
+fontification process always waits for 6 seconds of idleness before it
+actually gets going.  This is annoying, but hard coded.</P>
+
+      <!-- parsed dtd -->
+      <P>For each document, <CODE PROGLANG=ELISP/psgml-mode/ parses
+the DTD and uses this information to help editing (it knows what is
+legal, where).  Normally it uses the <CODE><![ RCDATA
+[<!DOCTYPE ...>]]></CODE> declaration at the top of the document to
+find theDTD.  There are 2 common cases where that doesn't work well:
+when the DTD is in a location that <NAME TYPE=TOOL/PSGML/ cannot find
+and when editing part of a document in a separate file that doesn't
+have the <CODE/DOCTYPE/ declaration.</P>
+
+      <P>In such cases it is easier to load a <Q/parsed DTD/; it is
+also much faster. The easiest way to save a parsed DTD is to create,
+in the directory where the DTD is located, a file containing the
+following line:
+<CODE DISPLAY>&lt;!DOCTYPE ?{ELEM} SYSTEM "?{DTD}"&gt;</CODE>
+and to invoke <Q/Parse DTD/ and then <Q/Save Parsed DTD/ from the DTD
+menu. Then, when editing a partial document, you can manually invoke
+<Q/Load Parsed DTD/ from that same menu.</P>
+
+      <!-- fill mode -->
+      <P><CODE PROGLANG=ELISP>fill-mode</CODE> is also nice to get
+automatic line breaking, but, in my experience, it is better to turn
+<CODE PROGLANG=ELISP/adaptive-fill-mode/ off, otherwise, due to the
+indentation of nested element, you'll soon be writing in a very narrow
+column at the right of the page. For example, you might add the
+following code at the end of and SGML document:
+<CODE DISPLAY PROGLANG=ELISP>
+&lt;!--
+Local Variables:
+mode: sgml
+mode: auto-fill
+adaptive-fill-mode: nil
+End:
+--&gt;
+</CODE>
+as far as SGML is concerned, this is a comment, but is meaningful to
+<NAME TYPE=TOOL/emacs/.
+</P>
 </BOOK>
 <!--
 Local Variables:
 mode: sgml
 mode: auto-fill
-denys:sgml-upcase-end-tag
+sgml-indent-data: nil
+adaptive-fill-mode: nil
 End:
 -->
