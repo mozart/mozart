@@ -72,9 +72,13 @@ Bool Suspendable::_wakeup(Board * home, PropCaller calledBy) {
       switch (between) {
       case B_BETWEEN:
 	oz_wakeupThread(SuspToThread(this));
+	DEBUG_CONSTRAIN_CVAR(("Suspendable::_wakeup_thread [t:%p s:%p c:%p]\n",
+			      SuspToThread(this), 
+			      sb, oz_currentBoard()));
 	return OK;
       case B_NOT_BETWEEN:
 	if (calledBy==pc_all) {
+	  Assert(0);
 	  oz_wakeupThread(SuspToThread(this));
 	  return OK;
 	}
@@ -97,8 +101,9 @@ Bool Suspendable::_wakeup(Board * home, PropCaller calledBy) {
 	  setUnify();
 	setRunnable();
 
-	DEBUG_CONSTRAIN_CVAR(("Suspendable::_wakeup [%p]\n",
-			      SuspToPropagator(this)->getPropagator()));
+	DEBUG_CONSTRAIN_CVAR(("Suspendable::_wakeup_prop [p:%p s:%p c:%p]\n",
+			      SuspToPropagator(this)->getPropagator(), 
+			      sb, oz_currentBoard()));
 
 	if (isNMO() && !oz_onToplevel()) {
 	  Assert(!SuspToPropagator(this)->getPropagator()->isMonotonic());
@@ -205,7 +210,7 @@ void oz_checkLocalSuspensionList(SuspList ** suspList,
 
   Board * sb = sl->getSuspendable()->getBoardInternal()->derefBoard();
 
-  if (sb != am.currentBoard()) 
+  if (sb != am.currentBoard())
     return;
 
   do {

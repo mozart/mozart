@@ -31,7 +31,7 @@
 
 OZ_Return oz_installScript(Script & s)
 {
-  DEBUG_CONSTRAIN_CVAR(("\n ===== oz_installScript start\n"));
+  DEBUG_CONSTRAIN_CVAR(("\n==== oz_installScript start ===="));
 
   OZ_Return ret = PROCEED;
 
@@ -63,7 +63,7 @@ OZ_Return oz_installScript(Script & s)
 
   s.dispose();
 
-  DEBUG_CONSTRAIN_CVAR(("========== oz_installScript stop ======\n"));
+  DEBUG_CONSTRAIN_CVAR(("\n==== oz_installScript stop ===="));
 
   return ret;
 }
@@ -109,7 +109,9 @@ Board * installOnly(Board * frm, Board * to) {
   am.setCurrent(to);
   am.trail.pushMark();
 
+  DEBUG_CONSTRAIN_CVAR(("\n==== Start installOnly %p ====", to));
   OZ_Return ret = oz_installScript(to->getScript());
+  DEBUG_CONSTRAIN_CVAR(("\n==== Stop installOnly ===="));
 
   if (ret != PROCEED) {
     Assert(ret==FAILED);
