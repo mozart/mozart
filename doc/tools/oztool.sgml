@@ -42,7 +42,7 @@ oztool c++ -c foo.cc
 oztool ld -o foo.so-`oztool platform` foo.o
 </code>
 </list>
-<section proglang=sh>
+<section id=section.oztool-env proglang=sh>
   <title/Windows Environment Variables/
   <p>Under Windows, <code/oztool/ supports the use of several compilers
     as described in <ptr.extern to="ozdoc:foreign" key="chapter.windll">.
