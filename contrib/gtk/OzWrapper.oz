@@ -736,7 +736,6 @@ define
 	    elseif {ClassReg member(TypeA $)}
 	    then
 	       ClassHintRaw = {ToS {ClassReg className(TypeA @impPrefix $)}}
-	       {System.show 'ClassHintRaw'#{Util.toAtom ClassHintRaw}}
 	       ClassHint    = {CheckHint @autoDetect ClassHintRaw}
 	    in
 	       "{P2O "#ClassHint#" "
@@ -1027,7 +1026,6 @@ define
 			elseif {ClassReg member(TypeA $)}
 			then
 			   ClassHintRaw = {ToS {ClassReg className(TypeA S $)}}
-			   {System.show 'ClassHintRaw'#{Util.toAtom ClassHintRaw}}
 			   ClassHint    = {CheckHint @autoDetect ClassHintRaw}
 			in
 			   "P2O "#ClassHint#" "

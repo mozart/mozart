@@ -28,9 +28,9 @@ import
    GtkNative       at 'GtkNative.so{native}'
    GtkCanvasNative at 'GtkCanvasNative.so{native}'
    GOZSignal       at 'GOZSignal.so{native}'
-   GDK
-   GTK
-   GTKCANVAS
+   GDK             at 'GDK.ozf'
+   GTK             at 'GTK.ozf'
+   GTKCANVAS       at 'GTKCANVAS.ozf'
 export
    'GOZCore' : GOZCore
 define
