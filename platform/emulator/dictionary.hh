@@ -4,10 +4,11 @@
  *    Peter van Roy (pvr@info.ucl.ac.be)
  *
  *  Contributors:
- *    optional, Contributor's name (Contributor's email address)
+ *    Christian Schulte (schulte@dfki.de)
  *
  *  Copyright:
- *    Organization or Person (Year(s))
+ *    Ralf Scheidhauer, 1997
+ *    Peter Van Roy, 1997
  *
  *  Last change:
  *    $Date$ by $Author$
@@ -269,10 +270,12 @@ public:
     // exist in table
     Bool update(TaggedRef id, TaggedRef val);
 
-    // Destructively update index id with new value val even if id does
-    // not have a value yet
-    // Return TRUE if index id successfully updated, else FALSE
-    Bool add(TaggedRef id, TaggedRef val);
+  // Destructively update index id with new value val even if id does
+  // not have a value yet
+  // Return TRUE if index id successfully updated, else FALSE
+  Bool add(TaggedRef id, TaggedRef val);
+  Bool addCond(TaggedRef id, TaggedRef val);
+  Bool exchange(TaggedRef id, TaggedRef new_val, TaggedRef * old_val);
 
     // Remove index id from table.  To reclaim memory, if the table becomes too sparse then
     // return a smaller table that contains all its entries.  Otherwise, return same table.
@@ -374,8 +377,7 @@ public:
     isSafe = NO;
   }
 
-  OZ_Return getArg(TaggedRef key, TaggedRef &out)
-  {
+  OZ_Return getArg(TaggedRef key, TaggedRef &out) {
     TaggedRef ret = table->lookup(key);
     if (ret == makeTaggedNULL())
       return FAILED;
@@ -383,14 +385,12 @@ public:
     return PROCEED;
   }
 
-  TaggedRef member(TaggedRef key)
-  {
+  TaggedRef member(TaggedRef key) {
     TaggedRef found = table->lookup(key);
     return (found == makeTaggedNULL()) ? NameFalse : NameTrue;
   }
 
-  void setArg(TaggedRef key, TaggedRef value)
-  {
+  void setArg(TaggedRef key, TaggedRef value) {
     if (table->fullTest()) resizeDynamicTable(table);
     Bool valid=table->add(key,value);
     if (!valid) {
@@ -400,8 +400,34 @@ public:
     Assert(valid);
   }
 
-  void remove(TaggedRef key)
-  {
+  void exchange(TaggedRef key, TaggedRef new_val, TaggedRef * old_val) {
+    if (table->fullTest())
+      resizeDynamicTable(table);
+
+    Bool valid=table->exchange(key,new_val,old_val);
+
+    if (!valid) {
+      resizeDynamicTable(table);
+      valid = table->exchange(key,new_val,old_val);
+    }
+
+    Assert(valid);
+  }
+
+  void setCondArg(TaggedRef key, TaggedRef value) {
+    if (table->fullTest())
+      resizeDynamicTable(table);
+
+    Bool valid=table->addCond(key,value);
+
+    if (!valid) {
+      resizeDynamicTable(table);
+      valid = table->addCond(key,value);
+    }
+    Assert(valid);
+  }
+
+  void remove(TaggedRef key) {
     DynamicTable *aux = table->remove(key);
     if (aux!=table) {
       table->dispose();
@@ -417,6 +443,10 @@ public:
   Bool isSafeDict() { return isSafe; }
   void markSafe()   { isSafe=OK; }
   int getSize()     { return table->numelem; }
+
+  Bool isEmpty() {
+    return (table->numelem == 0);
+  }
 
   TaggedRef clone(Board * b) {
     OzDictionary *aux = new OzDictionary(b, table);

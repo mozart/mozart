@@ -4,7 +4,7 @@
  *    Peter van Roy (pvr@info.ucl.ac.be)
  *
  *  Contributors:
- *    optional, Contributor's name (Contributor's email address)
+ *    Christian Schulte (schulte@dfki.de)
  *
  *  Copyright:
  *    Organization or Person (Year(s))
@@ -219,9 +219,52 @@ Bool DynamicTable::add(TaggedRef id, TaggedRef val)
   if (i!=invalidIndex) {
     if (table[i].value==makeTaggedNULL()) {
       numelem++;
+      table[i].ident=id;
     }
-    table[i].ident=id;
+    Assert(table[i].ident == id);
     table[i].value=val;
+    return TRUE;
+  } else {
+    return FALSE;
+  }
+}
+
+Bool DynamicTable::addCond(TaggedRef id, TaggedRef val)
+{
+  Assert(isPwrTwo(size));
+  Assert(isFeature(id));
+  dt_index i=fullhash(id);
+  Assert(i==invalidIndex || i<size);
+  if (i!=invalidIndex) {
+    if (table[i].value==makeTaggedNULL()) {
+      numelem++;
+      table[i].value=val;
+    }
+    Assert(table[i].ident == id);
+    return TRUE;
+  } else {
+    return FALSE;
+  }
+}
+
+Bool DynamicTable::exchange(TaggedRef id, TaggedRef new_val,
+                            TaggedRef * old_val) {
+  Assert(isPwrTwo(size));
+  Assert(isFeature(id));
+  dt_index i=fullhash(id);
+  Assert(i==invalidIndex || i<size);
+  if (i!=invalidIndex) {
+    TaggedRef ov = table[i].value;
+
+    if (ov==makeTaggedNULL()) {
+      numelem++;
+      *old_val = makeTaggedNULL();
+      table[i].ident = id;
+    } else {
+      *old_val = ov;
+    }
+    Assert(table[i].ident == id);
+    table[i].value = new_val;
     return TRUE;
   } else {
     return FALSE;
