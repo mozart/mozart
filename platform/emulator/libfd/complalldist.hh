@@ -333,8 +333,10 @@ public:
     DEBUG(("List(size=%d) [", sz));
     dlink<T> *i = root;
     while(i) {
+      /*
       DEBUG((" %p", (T*)(i->e)));
       i = i->next;
+      */
     }
     DEBUG(("]\r\n"));
   }
