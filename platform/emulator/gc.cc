@@ -1443,13 +1443,6 @@ void gc_finalize()
 }
 
 
-//
-// HYPER_OPTIMIZE_GC blows the codesize and does not seem to be profitable yet,
-// so it is disbaled by now
-//
-
-#undef HYPE_OPTIMIZE_GC
-
 inline
 void gcTagged(TaggedRef & frm, TaggedRef & to,
               Bool isInGc, Bool hasDirectVars, Bool allVarsAreLocal) {
@@ -1680,18 +1673,8 @@ void OZ_collectHeapTerm(TaggedRef & frm, TaggedRef & to) {
 }
 
 void OZ_collectHeapBlock(TaggedRef * frm, TaggedRef * to, int sz) {
-#ifdef HYPER_OPTIMIZE_GC
-  if (isInGc) {
-    for (int i=sz; i--; )
-      gcTagged(frm[i], to[i], OK, OK, NO);
-  } else {
-    for (int i=sz; i--; )
-      gcTagged(frm[i], to[i], NO, OK, NO);
-  }
-#else
   for (int i=sz; i--; )
     gcTagged(frm[i], to[i], isInGc, OK, NO);
-#endif
 }
 
 /*
@@ -1703,18 +1686,8 @@ void OZ_collectHeapBlock(TaggedRef * frm, TaggedRef * to, int sz) {
  */
 
 void OZ_collectLocalHeapBlock(TaggedRef * frm, TaggedRef * to, int sz) {
-#ifdef HYPER_OPTIMIZE_GC
-  if (isInGc) {
-    for (int i=sz; i--; )
-      gcTagged(frm[i], to[i], OK, OK, OK);
-  } else {
-    for (int i=sz; i--; )
-      gcTagged(frm[i], to[i], NO, OK, OK);
-  }
-#else
   for (int i=sz; i--; )
     gcTagged(frm[i], to[i], isInGc, OK, OK);
-#endif
 }
 
 void OZ_updateLocalHeapTerm(TaggedRef & to) {
@@ -1730,12 +1703,8 @@ void OZ_updateLocalHeapTerm(TaggedRef & to) {
 // This method is responsible for the heap garbage collection of the
 // abstract machine, ie that all entry points into heap are properly
 // treated and references to variables are properly updated
-void AM::gc(int msgLevel)
-{
-  //return;
-#ifdef VERBOSE
-  verbReopen ();
-#endif
+void AM::gc(int msgLevel) {
+
   (*gcFrameToProxy)();
 
   isCollecting = OK;
@@ -1862,17 +1831,7 @@ void VarFix::fix(void) {
 static Bool across_redid = NO;
 #endif
 
-Board* AM::copyTree(Board* bb, Bool *getIsGround)
-{
-#ifdef DEBUG_THREADCOUNT_VERBOSE
-  printf("(AM::copyTree LTQs=%d) ", existingLTQs); fflush(stdout);
-  //  if (existingLTQs) Assert(0);
-#endif
-
-#ifdef VERBOSE
-  if (verbOut == (FILE *) NULL)
-    verbReopen ();
-#endif
+Board* AM::copyTree(Board* bb, Bool *getIsGround) {
 
 #ifdef CS_PROFILE
   across_redid  = NO;
