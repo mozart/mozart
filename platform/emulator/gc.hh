@@ -6,7 +6,7 @@
  *    Ralf Scheidhauer (Ralf.Scheidhauer@ps.uni-sb.de)
  * 
  *  Contributors:
- *    optional, Contributor's name (Contributor's email address)
+ *    Christian Schulte (schulte@dfki.de)
  * 
  *  Copyright:
  *    Organization or Person (Year(s))
@@ -48,6 +48,7 @@ Bool gcStaticProtect(TaggedRef *);
 Bool gcProtect(TaggedRef *);
 Bool gcUnprotect(TaggedRef *);
 void OZ_updateHeapTerm(TaggedRef&);
+void OZ_collectHeapBock(TaggedRef *, TaggedRef *, int);
 
 void protectInlineCache(InlineCache *);
 
