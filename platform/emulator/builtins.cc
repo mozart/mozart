@@ -4432,20 +4432,26 @@ OZ_Return sendPort(OZ_Term prt, OZ_Term val)
   LTuple *lt = new LTuple(val,am.currentUVarPrototype());
     
   OZ_Term old = ((PortWithStream*)port)->exchangeStream(lt->getTail());
-    
-  if (oz_unify(makeTaggedLTuple(lt),old)!=PROCEED) {
-    /* respect port semantics:
-     *
-     * fun {NewPort S}
-     *   C={NewCell S}
-     * in
-     *   proc {$ Val}
-     *     {Exchange Cell Old T}
-     *     thread Old=H|T end         %% !!!
-     *   end
-     * end
-     */
-    OZ_unifyInThread(makeTaggedLTuple(lt),old);
+  DEREF(old,oldPtr,_1);
+
+  if(isAnyVar(old) && !isCVar(old)) {
+    am.bindToNonvar(oldPtr,old,makeTaggedLTuple(lt),0);
+  } else {
+    old = makeTaggedRef(oldPtr);
+    if (oz_unify(makeTaggedLTuple(lt),old)!=PROCEED) {
+      /* respect port semantics:
+       *
+       * fun {NewPort S}
+       *   C={NewCell S}
+       * in
+       *   proc {$ Val}
+       *     {Exchange Cell Old T}
+       *     thread Old=H|T end         %% !!!
+       *   end
+       * end
+       */
+      OZ_unifyInThread(makeTaggedLTuple(lt),old);
+    }
   }
   return PROCEED;
 }
