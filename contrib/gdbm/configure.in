@@ -27,7 +27,7 @@ dnl locate gdbm.h
 dnl ------------------------------------------------------------------
 
 oz_saved_inc_path=$oz_inc_path
-oz_inc_path=["/usr/local/include /opt/gnu/include $oz_inc_path"]
+oz_inc_path=["$oz_inc_path /usr/local/include /opt/gnu/include"]
 if test "$oz_cv_with_gdbm_inc" != NONE; then
   oz_inc_path="$oz_cv_with_gdbm_inc $oz_inc_path"
 fi
@@ -40,7 +40,7 @@ dnl ------------------------------------------------------------------
 
 if test "$oz_gdbm_found_inc" = yes; then
   oz_saved_lib_path=oz_lib_path
-  oz_lib_path=["/usr/lib /usr/local/lib /opt/gnu/lib $oz_lib_path"]
+  oz_lib_path=["$oz_lib_path /usr/lib /usr/local/lib /opt/gnu/lib"]
   if test "$oz_cv_with_gdbm_lib" != NONE; then
     oz_lib_path="$oz_cv_with_gdbm_lib $oz_lib_path"
   fi
