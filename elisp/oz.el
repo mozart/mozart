@@ -1820,7 +1820,7 @@ and is used for fontification.")
    "\t\\("
    (mapconcat
     'identity
-    '("move" "moveMoveXYXY" "moveMoveYXYX"
+    '("move" "moveMoveXYXY" "moveMoveYXYX" "allocateL"
       "moveMoveXYYX" "moveMoveYXXY" "createNamedVariable" "createVariable"
       "createVariableMove" "putInt" "putConstant" "putList" "putRecord"
       "setInt" "setConstant" "setValue" "setVariable" "setVoid" "getInt"
@@ -1841,7 +1841,7 @@ and is used for fontification.")
    "\t\\("
    (mapconcat
     'identity
-    '("allocateL" "allocateL[1-9]" "allocateL10" "deAllocateL"
+    '("allocateL[1-9]" "allocateL10" "deAllocateL"
       "deAllocateL[1-9]" "deAllocateL10" "return" "popEx" "createOr"
       "createEnumOr" "createChoice" "clause" "emptyClause" "lastClause"
       "shallowThen" "failure" "succeed" "wait" "waitTop" "ask")
