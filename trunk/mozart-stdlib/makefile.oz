@@ -6,6 +6,8 @@ makefile(
 	     'adt'
 	     'wp'
 	     'xml'
+	     'os'
+	     'net'
 	    ]
    doc    : [
 	     'index.html'
