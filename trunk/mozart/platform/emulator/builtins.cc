@@ -6992,7 +6992,7 @@ OZ_C_proc_begin(BIisClosed,2)
 
   Object *obj = (Object *) tagged2Const(tobj);
 
-  if (obj->isLocked()) {
+  if (obj->isLocked() && !am.isLocked()) {
     OZ_suspendOn(obj->attachThread());
   }
 
