@@ -30,10 +30,6 @@
  */
 
 
-#ifdef INTERFACE
-#pragma interface
-#endif
-
 #include "stack.hh"
 #include "base.hh"
 #include "tagged.hh"
