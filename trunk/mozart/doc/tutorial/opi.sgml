@@ -1,0 +1,49 @@
+<Chapter id="chapter.api">
+  <Title/Oz Programming Interface/
+    <P>
+When you start oz a window, the Oz programming interface, 
+will open. The window is actually a emacs window with an oz
+mode. Emacs is a text editor where you can bla bla, more information can be found
+bla bla. The Oz specific commands you can give to the interface can be found
+under the menu alternative <Def/Oz/. When the interface has just started
+the window show you two text buffers; one bigger and one smaller *see picture*. 
+The bigger text buffer called <Def/Oz/ wich is a space that you can use to write 
+small pieces of Oz code in and then feed to the system. The smaller text buffer 
+will give you feedback from the system. This buffer is called <Def/*Oz Compiler*/
+but when using the system you will toggle between looking at this buffer and
+the buffer called <Def/*Oz Emulator*/
+
+<P><FIGURE ID="CompModel" CLASS="Figure">
+<CAPTION>The Oz computation model</CAPTION>
+<PICTURE.EXTERN TO="opi.gif" TYPE="gif">
+</FIGURE>
+
+Let us start with an example. Write:
+
+<<<{Show 'Tinman'}>>>
+
+in the Oz buffer. Then we will feed this newly written Oz code to the compiler.
+This you can do by using the shortkey M-RET or by chosing Feed Buffer from the Oz
+menu. Now the <Def/*Oz Compiler*/ buffer will echo the code that has been fead and then print
+<<<accepted>>>. The compiler has compiled the code and accepted it as correct Oz code.
+After the compilation the program is fead to the emulator and run. If you give
+the command C-c C-e (or Show/Hide Emulator from th Oz menu) you will see the 
+<Def/*Oz Emulator*/ buffer instead of the <Def/*Oz Compiler*/ buffer. This buffer will have
+printed out <<<'Tinman'>>> which is the result of the program. To get back to the 
+<Def/*Oz Compiler*/ buffer
+use the command C-c C-c
+
+The <Def/*Oz Compiler*/ buffer gives you feedback from the compiler as wich code or files that
+have been fead, weather the code contains error or not and give you help finding the
+error. The <Def/*Oz Emulator*/ buffer gives you, as you may have guesed, feedback from the 
+emulator. That can be runtime errors or output from the program (using for example the
+Show procedure).
+
+You don't have to feed the whole buffer you can also feed lines and regions.
+
+You can use any buffer.
+
+As you may have noticed the OPI gives you indentation and fontification of Oz code to make
+it easier to read. 
+
+</CHAPTER>
