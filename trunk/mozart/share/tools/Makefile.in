@@ -20,6 +20,7 @@ INSTALL_DIR	= @INSTALL_DIR@
 
 OZFLAGS		=
 OZC		= @OZC@
+LN_S		= @LN_S@
 
 COMPILE		= $(OZC) $(OZFLAGS) -c
 EXEC		= $(OZC) $(OZFLAGS)
@@ -196,8 +197,7 @@ $(OZBIN)/%: %
 CACHEDIR  = $(PREFIX)/cache/http/www.ps.uni-sb.de
 CACHELINK = $(CACHEDIR)/ozhome
 
-install-cache: \
-	$(CACHEDIR) $(CACHELINK)
+install-cache: $(CACHEDIR) $(CACHELINK)
 
 $(CACHEDIR):
 	$(INSTALL_DIR) $(CACHEDIR)
