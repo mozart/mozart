@@ -1089,9 +1089,9 @@ void CodeGCList::remove(TaggedRef *t)
 {
   for (CodeGCList *aux = this; aux!=NULL; aux = aux->next) {
     for (int i=0; i<codeGCListBlockSize; i++) {
-      if (aux->block[i].u.tagged == t) {
-        aux->block[i].u.tagged = NULL;
-        aux->block[i].tag      = C_FREE;
+      if ((TaggedRef*)aux->block[i].pc == t) {
+        aux->block[i].pc  = NULL;
+        aux->block[i].tag = C_FREE;
         return;
       }
     }
@@ -1133,7 +1133,7 @@ ProgramCounter CodeArea::writeTagged(TaggedRef t, ProgramCounter ptr)
   TaggedRef *tptr = (TaggedRef *)ptr;
   if (!needsNoCollection(*tptr)) {
     checkPtr(tptr);
-    gclist = gclist->add(tptr);
+    gclist = gclist->addTagged((ProgramCounter)tptr);
   }
   return ret;
 }
@@ -1143,6 +1143,6 @@ ProgramCounter CodeArea::writeAbstractionEntry(AbstractionEntry *p, ProgramCount
 {
   ProgramCounter ret = writeAddress(p,ptr);
   checkPtr(ptr);
-  gclist = gclist->add((AbstractionEntry**)ptr);
+  gclist = gclist->addAbstractionEntry(ptr);
   return ret;
 }
