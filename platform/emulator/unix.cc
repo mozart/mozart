@@ -29,7 +29,9 @@ extern int h_errno;
 
 #include <sys/socket.h>
 #ifndef OS2_I486
+#ifndef LINUX
 #include <sys/uio.h>
+#endif
 #include <sys/un.h>
 #endif
 #include <sys/time.h>
@@ -1064,7 +1066,7 @@ OZ_C_ioproc_begin(unix_acceptInet,4)
 					  fromlen, AF_INET);
   if (gethost) {
     return (OZ_unifyInt(port, ntohs(from.sin_port)) == PROCEED
-	    && OZ_unify(host, OZ_CToString(gethost->h_name)) == PROCEED
+	    && OZ_unify(host, OZ_CToString((char*)gethost->h_name)) == PROCEED
 	    && OZ_unifyInt(out, fd) == PROCEED) ? PROCEED : FAILED;
   } else {
     return (OZ_unifyInt(port, ntohs(from.sin_port)) == PROCEED
