@@ -270,6 +270,7 @@ define
       Hist  = {New History.historyClass init}
       reflect_space(varsTable:  VarTable
                     propTable:  PropTable
+                    procTable:  _
                     failedProp: FailPropId)
 
 \ifdef IGNORE_REFERENCE
@@ -330,6 +331,7 @@ define
          Hist  = {New History.historyClass init}
          reflect_space(varsTable:  VarTable
                        propTable:  PropTable
+                       procTable:  _
                        failedProp: FailPropId)  = {ReflectSpace Root}
       in
          {Hist add_action(SingleParamGraph.make [Root])}

@@ -67,6 +67,7 @@ N31 + N22 + N13 =: Sum
 
 {Browse {R.spaceReflect N11}.varsTable.1}
 {Browse {R.spaceReflect N11}.propTable.1}
+{Browse {R.spaceReflect N11}.procTable}
 
 declare
 ReflectTables = {R.spaceReflect S}
@@ -105,7 +106,7 @@ declare S in {Coins S}
 
 declare
 Tables = {R.spaceReflect S}
-
+{Browse Tables.procTable}
 
 declare
 Tables = {R.spaceReflect S}
