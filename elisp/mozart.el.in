@@ -636,8 +636,8 @@ Used as fallback if the environment variable OZHOME is not set."
 		 (setq f (concat (cadr build-dir) "/share/lib/Init.ozf"))
 		 (if (file-exists-p f)
 		     (setq OZINIT f)
-		   (if build-dir-too
-		       (setq f (concat (cadr build-dir-too) "/share/lib/Init.ozf"))
+		   (when build-dir-too
+		     (setq f (concat (cadr build-dir-too) "/share/lib/Init.ozf"))
 		     (if (file-exists-p f)
 			 (setq OZINIT f))))))
 	   (or LD_LIBRARY_PATH
