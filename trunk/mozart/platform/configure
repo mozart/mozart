@@ -899,8 +899,21 @@ fi
 	
     fi
     
-  HOMEURL="http://www.mozart-oz.org/home"
-  HOMECACHE="http/www.mozart-oz.org/home"
+  
+  echo $ac_n "checking for oz version""... $ac_c" 1>&6
+echo "configure:905: checking for oz version" >&5
+if eval "test \"`echo '$''{'oz_cv_ozversion'+set}'`\" = set"; then
+  echo $ac_n "(cached) $ac_c" 1>&6
+else
+  
+    oz_cv_ozversion=`sh $SRCTOP/OZVERSION`
+fi
+
+echo "$ac_t""$oz_cv_ozversion" 1>&6
+  OZVERSION=$oz_cv_ozversion;
+  
+  HOMEURL="http://www.mozart-oz.org/home-$OZVERSION"
+  HOMECACHE="http/www.mozart-oz.org/home-$OZVERSION"
   
   
   case "$target" in
@@ -940,7 +953,7 @@ fi
     # Extract the first word of "ozplatform", so it can be a program name with args.
 set dummy ozplatform; ac_word=$2
 echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
-echo "configure:944: checking for $ac_word" >&5
+echo "configure:957: checking for $ac_word" >&5
 if eval "test \"`echo '$''{'ac_cv_path_OZPLATFORM'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -995,7 +1008,7 @@ fi
     # Extract the first word of "oztool", so it can be a program name with args.
 set dummy oztool; ac_word=$2
 echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
-echo "configure:999: checking for $ac_word" >&5
+echo "configure:1012: checking for $ac_word" >&5
 if eval "test \"`echo '$''{'ac_cv_path_OZTOOL'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -1041,7 +1054,7 @@ fi
   esac
   
   echo $ac_n "checking for --with-inc-dir""... $ac_c" 1>&6
-echo "configure:1045: checking for --with-inc-dir" >&5
+echo "configure:1058: checking for --with-inc-dir" >&5
   # Check whether --with-inc-dir or --without-inc-dir was given.
 if test "${with_inc_dir+set}" = set; then
   withval="$with_inc_dir"
@@ -1083,7 +1096,7 @@ fi
 
   
   echo $ac_n "checking for --with-lib-dir""... $ac_c" 1>&6
-echo "configure:1087: checking for --with-lib-dir" >&5
+echo "configure:1100: checking for --with-lib-dir" >&5
   # Check whether --with-lib-dir or --without-lib-dir was given.
 if test "${with_lib_dir+set}" = set; then
   withval="$with_lib_dir"
@@ -1124,19 +1137,6 @@ fi
   done
 
   
-  
-  
-  echo $ac_n "checking for oz version""... $ac_c" 1>&6
-echo "configure:1131: checking for oz version" >&5
-if eval "test \"`echo '$''{'oz_cv_ozversion'+set}'`\" = set"; then
-  echo $ac_n "(cached) $ac_c" 1>&6
-else
-  
-    oz_cv_ozversion=`sh $SRCTOP/OZVERSION`
-fi
-
-echo "$ac_t""$oz_cv_ozversion" 1>&6
-  OZVERSION=$oz_cv_ozversion;
   
   
   echo $ac_n "checking for build date""... $ac_c" 1>&6
@@ -1352,11 +1352,11 @@ s%@INSTALL_PROGRAM@%$INSTALL_PROGRAM%g
 s%@INSTALL_SCRIPT@%$INSTALL_SCRIPT%g
 s%@INSTALL_DATA@%$INSTALL_DATA%g
 s%@INSTALL_DIR@%$INSTALL_DIR%g
+s%@OZVERSION@%$OZVERSION%g
 s%@HOMEURL@%$HOMEURL%g
 s%@HOMECACHE@%$HOMECACHE%g
 s%@OZPLATFORM@%$OZPLATFORM%g
 s%@OZTOOL@%$OZTOOL%g
-s%@OZVERSION@%$OZVERSION%g
 s%@OZBUILDDATE@%$OZBUILDDATE%g
 s%@PLATFORM@%$PLATFORM%g
 s%@PLATFORMDIRS@%$PLATFORMDIRS%g

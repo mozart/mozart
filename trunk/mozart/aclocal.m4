@@ -148,8 +148,9 @@ AC_DEFUN(OZ_INIT, [
   OZ_PROG_MAKE
   AC_PROG_MAKE_SET
   OZ_PROG_INSTALL
-  HOMEURL="http://www.mozart-oz.org/home"
-  HOMECACHE="http/www.mozart-oz.org/home"
+  OZ_VERSION
+  HOMEURL="http://www.mozart-oz.org/home-$OZVERSION"
+  HOMECACHE="http/www.mozart-oz.org/home-$OZVERSION"
   AC_SUBST(HOMEURL)
   AC_SUBST(HOMECACHE)
   case "$target" in
@@ -186,7 +187,6 @@ AC_DEFUN(OZ_INIT, [
   OZ_ARG_WITH_LIB_DIR
   AC_SUBST(CPPFLAGS)
   AC_SUBST(LDFLAGS)
-  OZ_VERSION
   OZ_BUILD_DATE
   AC_SUBST(PLATFORM)
 ])
