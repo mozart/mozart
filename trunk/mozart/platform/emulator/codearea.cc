@@ -243,7 +243,7 @@ void CodeArea::printDef(ProgramCounter PC)
 }
 
 TaggedRef CodeArea::dbgGetDef(ProgramCounter PC, ProgramCounter definitionPC,
-			      int frameId)
+			      int frameId, RefsArray Y, RefsArray G)
 {
   Reg reg;
   int next;
@@ -273,6 +273,8 @@ TaggedRef CodeArea::dbgGetDef(ProgramCounter PC, ProgramCounter definitionPC,
 				       pairlist)))))));
   if (frameId != -1)
     pairlist = cons(OZ_pairAI("frameID",frameId),pairlist);
+  else
+    pairlist = cons(OZ_pairA("vars",getFrameVariables(PC,Y,G)),pairlist);
 
   return OZ_recordInit(OZ_atom("entry"), pairlist);
 }
