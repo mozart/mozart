@@ -573,6 +573,7 @@ TimerThread::TimerThread(int w)
 #endif
 
 
+// 't' is in miliseconds;
 void osSetAlarmTimer(int t, Bool interval)
 {
 #ifdef DEBUG_DET
