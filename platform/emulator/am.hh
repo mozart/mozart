@@ -256,8 +256,15 @@ private:
 
   TaggedRef defaultExceptionHdl;
 
+private:
   unsigned int lastThreadID;
+public:
+  unsigned int newId() {
+    lastThreadID = (lastThreadID + 1) & THREAD_ID_MAX;
+    return lastThreadID;
+  }
 
+private:
   // internal clock in 'ms';
   unsigned long emulatorClock;
 
@@ -293,10 +300,12 @@ public:
   Board *currentBoard()             { return _currentBoard; }
   Board *currentSolveBoard()        { return _currentSolveBoard; }
   Board *rootBoardGC()              { return _rootBoard; }
+  Board *rootBoard()                { return _rootBoard; }
   int isBelowSolveBoard()           { return _currentSolveBoard!=0; }
 
   Bool inShallowGuard()             { return _shallowHeapTop!=0; }
   void setShallowHeapTop(char *sht) { _shallowHeapTop=sht; }
+  char* getShallowHeapTop()         { return _shallowHeapTop; }
 #ifdef DEBUG_CHECK
   Bool checkShallow(ByteCode *scp) {
     return inShallowGuard() ? scp!=0 : scp==0;
@@ -337,8 +346,21 @@ public:
   // see builtins.cc
   inline OZ_Return eqeq(TaggedRef Ain,TaggedRef Bin);
 
-  void changeSelf(Object *o);
-  void saveSelf();
+  void changeSelf(Object *o) {
+    Object *oldSelf = cachedSelf;
+    if(o != oldSelf) {
+      cachedStack->pushSelf(oldSelf);
+      cachedSelf = o;
+    }
+  }
+
+  void saveSelf() {
+    if (cachedSelf != 0) {
+      am.threadsPool.currentThread()->setSelf(cachedSelf);
+      cachedSelf = 0;
+    }
+  }
+
   void setSelf(Object *o) { cachedSelf = o; }
   Object *getSelf() { return cachedSelf; }
 
@@ -418,31 +440,10 @@ public:
 
   void setCurrent(Board *c, Bool checkNotGC=OK);
 
-  // in emulate.cc
-  Bool hookCheckNeeded();
-  Bool isNotPreemptiveScheduling(void);
-
-  INLINE int newId();
-
   void gc(int msgLevel);  // ###
   void doGC();
   // coping of trees (and terms);
   Board* copyTree(Board* node, Bool *isGround);
-
-  void doBindAndTrail(TaggedRef * vp, TaggedRef t);
-
-#define DoBindAndTrailAndIP(vp,t,lv,gv) {       \
-  lv->installPropagators(gv);                   \
-  am.doBindAndTrail(vp,t);                      \
-  }
-
-  Bool isLocalUVarOutline(TaggedRef var,TaggedRef *varPtr);
-  Bool isLocalSVarOutline(OzVariable *var);
-  Bool isLocalUVar(TaggedRef var,TaggedRef *varPtr);
-  Bool isLocalSVar(TaggedRef var);
-  Bool isLocalSVar(OzVariable *var);
-  Bool isLocalCVar(TaggedRef var);
-  Bool isLocalVariable(TaggedRef var,TaggedRef *varPtr);
 
   // unset the ThreadSwitch flag and reset the counter
   // only needed in emulate.cc
@@ -491,59 +492,23 @@ public:
 extern AM am;
 
 /* -----------------------------------------------------------------------
- * Unification
- * -----------------------------------------------------------------------*/
-
-OZ_Return oz_unify(OZ_Term t1, OZ_Term t2, ByteCode *scp=0);
-void oz_bind(OZ_Term *varPtr, OZ_Term term);
-void oz_bind_global(OZ_Term var, OZ_Term term);
-
-/* -----------------------------------------------------------------------
  * Abbreviations
  * -----------------------------------------------------------------------*/
 
-inline
-Board *oz_rootBoard() { return am._rootBoard; }
-
-inline
-Board *oz_currentBoard() { return am._currentBoard; }
-
-inline
-int oz_isRootBoard(Board *bb) { return bb==oz_rootBoard(); }
-
-inline
-int oz_isCurrentBoard(Board *bb) { return oz_currentBoard() == bb; }
-
-inline
-int oz_onToplevel() { return oz_currentBoard() == oz_rootBoard(); }
-
-
-inline Thread* oz_currentThread() { return am.threadsPool.currentThread(); }
-
-
-/* -----------------------------------------------------------------------
- * values
- * -----------------------------------------------------------------------*/
+#define oz_rootBoard()        (am.rootBoard())
+#define oz_currentBoard()     (am.currentBoard())
+#define oz_isRootBoard(bb)    (oz_rootBoard()    == (bb))
+#define oz_isCurrentBoard(bb) (oz_currentBoard() == (bb))
+#define oz_onToplevel()       (oz_currentBoard() == oz_rootBoard())
+#define oz_currentThread()    (am.threadsPool.currentThread())
 
 #define oz_newName() makeTaggedLiteral(Name::newName(oz_currentBoard()))
-
 #define oz_newPort(val) \
   makeTaggedConst(new PortWithStream(oz_currentBoard(), (val)))
-
 #define oz_sendPort(p,v) sendPort(p,v)
+#define oz_newCell(val) makeTaggedConst(new CellLocal(oz_currentBoard(),(val)))
+#define oz_string(s)    OZ_string(s)
 
-#define oz_newCell(val) makeTaggedConst(new CellLocal(oz_currentBoard(), (val)))
-  // access, assign
-
-#define oz_string(s)      OZ_string(s)
-
-inline
-OZ_Term oz_newChunk(OZ_Term val)
-{
-  Assert(val==oz_deref(val));
-  Assert(oz_isRecord(val));
-  return makeTaggedConst(new SChunk(oz_currentBoard(), val));
-}
 
 inline
 TaggedRef oz_newVariableOPT()
@@ -560,15 +525,20 @@ TaggedRef oz_newVariableOPT()
  * Debugger
  * -----------------------------------------------------------------------*/
 
+inline
+int oz_newId()
+{
+  unsigned int currentThreadID = oz_currentThread() ?
+    oz_currentThread()->getID() & THREAD_ID_MASK : 1;
+  unsigned int newID=am.newId();
+  return newID | (currentThreadID << THREAD_ID_SIZE);
+}
+
 void oz_checkDebugOutline(Thread *tt);
 
 inline
 void oz_checkDebug(Thread *tt, Board *bb) {
   if (am.debugmode() && oz_isRootBoard(bb)) oz_checkDebugOutline(tt);
 }
-
-#ifndef OUTLINE
-#include "am.icc"
-#endif
 
 #endif

@@ -31,8 +31,7 @@
 #include "var_fs.hh"
 #include "ozostream.hh"
 #include "fddebug.hh"
-#include "am.hh"
-#include "thr_int.hh"
+#include "unify.hh"
 
 Bool OzFSVariable::valid(TaggedRef val)
 {
@@ -68,7 +67,7 @@ OZ_Return OzFSVariable::bind(OZ_Term * vptr, OZ_Term term, ByteCode * scp)
     return FALSE;
   }
 
-  Bool isLocalVar = am.isLocalSVar(this);
+  Bool isLocalVar = oz_isLocalVar(this);
   Bool isNotInstallingScript = !am.isInstallingScript();
 
   if (scp==0 && (isNotInstallingScript || isLocalVar))
@@ -78,7 +77,7 @@ OZ_Return OzFSVariable::bind(OZ_Term * vptr, OZ_Term term, ByteCode * scp)
     doBind(vptr, term);
     dispose();
   } else {
-    am.doBindAndTrail(vptr, term);
+    doBindAndTrail(vptr, term);
   }
 
 #ifdef DEBUG_FSUNIFY
@@ -117,8 +116,8 @@ OZ_Return OzFSVariable::unify(OZ_Term * vptr, OZ_Term *tptr, ByteCode * scp)
   (*cpi_cout) << " -> " << new_fset << " " << new_fset.isValue();
 #endif
 
-  Bool var_is_local  = am.isLocalSVar(this);
-  Bool term_is_local = am.isLocalSVar(term_var);
+  Bool var_is_local  = oz_isLocalVar(this);
+  Bool term_is_local = oz_isLocalVar(term_var);
   Bool is_not_installing_script = !am.isInstallingScript();
   Bool var_is_constrained
     = (is_not_installing_script ||
@@ -168,7 +167,7 @@ OZ_Return OzFSVariable::unify(OZ_Term * vptr, OZ_Term *tptr, ByteCode * scp)
           if (is_not_installing_script) term_var->propagateUnify();
           if (var_is_constrained) propagateUnify();
           doBind(vptr, new_fset_var);
-          am.doBindAndTrail(tptr, new_fset_var);
+          doBindAndTrail(tptr, new_fset_var);
           dispose();
         } else {
           setSet(new_fset);
@@ -196,7 +195,7 @@ OZ_Return OzFSVariable::unify(OZ_Term * vptr, OZ_Term *tptr, ByteCode * scp)
           if (is_not_installing_script) propagateUnify();
           if (term_is_constrained) term_var->propagateUnify();
           doBind(tptr, new_fset_var);
-          am.doBindAndTrail(vptr, new_fset_var);
+          doBindAndTrail(vptr, new_fset_var);
           term_var->dispose();
         } else {
           term_var->setSet(new_fset);
@@ -223,8 +222,8 @@ OZ_Return OzFSVariable::unify(OZ_Term * vptr, OZ_Term *tptr, ByteCode * scp)
           if (var_is_constrained) propagateUnify();
           if (term_is_constrained) term_var->propagateUnify();
         }
-        am.doBindAndTrail(vptr, new_fset_var);
-        am.doBindAndTrail(tptr, new_fset_var);
+        doBindAndTrail(vptr, new_fset_var);
+        doBindAndTrail(tptr, new_fset_var);
       } else {
         OzFSVariable *c_var
           = new OzFSVariable(new_fset,oz_currentBoard());
@@ -272,13 +271,13 @@ OZ_Return tellBasicConstraint(OZ_Term v, OZ_FSetConstraint * fs)
 
     // fs denotes a set value --> v becomes set value
     if (fs->isValue()) {
-      if (am.isLocalVariable(v, vptr)) {
+      if (oz_isLocalVariable(vptr)) {
         if (!isUVar(vtag))
           oz_checkSuspensionListProp(tagged2SVarPlus(v));
         doBind(vptr, makeTaggedFSetValue(new FSetValue(*(FSetConstraint *) fs)));
       } else {
-        am.doBindAndTrail(vptr,
-                          makeTaggedFSetValue(new FSetValue(*(FSetConstraint *) fs)));
+        doBindAndTrail(vptr,
+                       makeTaggedFSetValue(new FSetValue(*(FSetConstraint *) fs)));
       }
       goto proceed;
     }
@@ -291,14 +290,14 @@ OZ_Return tellBasicConstraint(OZ_Term v, OZ_FSetConstraint * fs)
 
     OZ_Term *  tfsv = newTaggedCVar(fsv);
 
-    if (am.isLocalVariable(v, vptr)) {
+    if (oz_isLocalVariable(vptr)) {
       if (!isUVar(vtag)) {
         oz_checkSuspensionListProp(tagged2SVarPlus(v));
         fsv->setSuspList(tagged2SVarPlus(v)->getSuspList());
       }
       doBind(vptr, makeTaggedRef(tfsv));
     } else {
-      am.doBindAndTrail(vptr, makeTaggedRef(tfsv));
+      doBindAndTrail(vptr, makeTaggedRef(tfsv));
     }
 
     goto proceed;
@@ -316,16 +315,16 @@ OZ_Return tellBasicConstraint(OZ_Term v, OZ_FSetConstraint * fs)
       goto proceed;
 
     if (set.isValue()) {
-      if (am.isLocalSVar(v)) {
+      if (oz_isLocalVar(fsvar)) {
         fsvar->getSet() = set;
         fsvar->becomesFSetValueAndPropagate(vptr);
       } else {
         fsvar->propagate(fs_prop_val);
-        am.doBindAndTrail(vptr, makeTaggedFSetValue(new FSetValue(*((FSetConstraint *) &set))));
+        doBindAndTrail(vptr, makeTaggedFSetValue(new FSetValue(*((FSetConstraint *) &set))));
       }
     } else {
       fsvar->propagate(fs_prop_bounds);
-      if (am.isLocalSVar(v)) {
+      if (oz_isLocalVar(fsvar)) {
         fsvar->getSet() = set;
       } else {
         OzFSVariable * locfsvar

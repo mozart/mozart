@@ -35,7 +35,7 @@
 #endif
 
 #include "board.hh"
-#include "am.hh"
+#include "susplist.hh"
 
 #ifdef OUTLINE
 #define inline

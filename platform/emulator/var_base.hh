@@ -213,8 +213,7 @@ public:
     Assert(this->getType() == glob_var->getType() ||
            (this->getType() == OZ_VAR_BOOL &&
             glob_var->getType() == OZ_VAR_FD));
-    Assert(am.inShallowGuard() || am.isLocalSVar(this) &&
-           ! am.isLocalSVar(glob_var));
+    // Assert(am.inShallowGuard() || am.isLocalSVar(this) && ! am.isLocalSVar(glob_var));
     suspList = oz_installPropagators(suspList,
                                      glob_var->getSuspList(),
                                      GETBOARD(glob_var));
@@ -249,10 +248,10 @@ public:
 void addSuspUVar(TaggedRef * v, Suspension susp, int unstable = TRUE);
 
 Bool oz_var_valid(OzVariable*,TaggedRef*,TaggedRef);
-OZ_Return oz_var_unify(OzVariable*,TaggedRef*,TaggedRef*, ByteCode*);
-OZ_Return oz_var_bind(OzVariable*,TaggedRef*,TaggedRef, ByteCode*);
+OZ_Return oz_var_unify(OzVariable*,TaggedRef*,TaggedRef*, ByteCode* = 0);
+OZ_Return oz_var_bind(OzVariable*,TaggedRef*,TaggedRef, ByteCode* = 0);
 void oz_var_addSusp(OzVariable*, TaggedRef*, Suspension, int = TRUE);
-void oz_var_printStream(ostream&, const char*, OzVariable*, int);
+void oz_var_printStream(ostream&, const char*, OzVariable*, int = 10);
 int oz_var_getSuspListLength(OzVariable*);
 
 inline

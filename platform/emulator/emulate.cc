@@ -442,16 +442,16 @@ bombGenCall:
    */
 
 inline
-Bool AM::isNotPreemptiveScheduling(void)
+Bool isNotPreemptiveScheduling(void)
 {
-  if (isSetSFlag()) {
-    if (isSetSFlag(ThreadSwitch)) {
-      if (threadsPool.threadQueuesAreEmpty())
-        restartThread();
+  if (am.isSetSFlag()) {
+    if (am.isSetSFlag(ThreadSwitch)) {
+      if (am.threadsPool.threadQueuesAreEmpty())
+        am.restartThread();
       else
         return FALSE;
     }
-    return !isSetSFlag();
+    return !am.isSetSFlag();
   } else {
     return TRUE;
   }
@@ -459,17 +459,17 @@ Bool AM::isNotPreemptiveScheduling(void)
 
 #define DET_COUNTER 10000
 inline
-Bool AM::hookCheckNeeded()
+Bool hookCheckNeeded()
 {
 #if defined(DEBUG_DET)
   static int counter = DET_COUNTER;
   if (--counter < 0) {
-    handleAlarm(CLOCK_TICK/1000);   // simulate an alarm
+    am.handleAlarm(CLOCK_TICK/1000);   // simulate an alarm
     counter = DET_COUNTER;
   }
 #endif
 
-  return (isSetSFlag());
+  return am.isSetSFlag();
 }
 
 
@@ -510,7 +510,7 @@ Bool oz_emulateHookOutline()
 
 /* macros are faster ! */
 #define emulateHookCall(e,Code)                 \
-   if (e->hookCheckNeeded()) {                  \
+   if (hookCheckNeeded()) {                     \
      if (oz_emulateHookOutline()) {             \
        Code;                                    \
        return T_PREEMPT;                        \
@@ -2431,7 +2431,7 @@ LBLdispatcher:
 
          Thread * backup_currentThread = CTT;
 
-         while (!lpq->isEmpty() && e->isNotPreemptiveScheduling()) {
+         while (!lpq->isEmpty() && isNotPreemptiveScheduling()) {
            Propagator * prop = lpq->dequeue();
            Propagator::setRunningPropagator(prop);
            Assert(!prop->isDeadPropagator());

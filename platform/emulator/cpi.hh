@@ -37,6 +37,7 @@
 #include "var_base.hh"
 #include "cpi_heap.hh"
 #include "fdomn.hh"
+#include "unify.hh"
 
 #if defined(OUTLINE)
 #define inline

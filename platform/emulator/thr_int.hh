@@ -50,23 +50,6 @@ void oz_removeExtThreadOutlined(Thread *tt);
     oz_checkExtSuspensionOutlined(susp);        \
   }
 
-
-/* -------------------------------------------------------------------------
- * Suspension lists
- * ------------------------------------------------------------------------- */
-
-void oz_wakeupAll(OzVariable *sv);
-
-SuspList * oz_checkAnySuspensionList(SuspList *suspList,Board *home,
-                          PropCaller calledBy);
-
-#define oz_checkSuspensionList(var,calledBy)                            \
-  (var)->setSuspList(oz_checkAnySuspensionList((var)->getSuspList(),    \
-                                               GETBOARD(var),calledBy))
-
-#define oz_checkSuspensionListProp(var)         \
-  oz_checkSuspensionList(var,pc_propagator)
-
 /* -------------------------------------------------------------------------
  * Threads
  * ------------------------------------------------------------------------- */

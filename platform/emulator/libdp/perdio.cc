@@ -80,11 +80,7 @@ MsgBufferManager* msgBufferManager = new MsgBufferManager();
 /*   Utility routines                                      */
 /* *********************************************************************/
 
-//
-static inline PerdioVar *getPerdioVar(ProtocolObject *po)
-{
-  return (PerdioVar*) oz_getExtVar(*(po->getPtr()));
-}
+#define GET_VAR(po,T) oz_get##T##Var(*((po)->getPtr()))
 
 void SendTo(DSite* toS,MsgBuffer *bs,MessageType mt,DSite* sS,int sI)
 {
@@ -487,7 +483,7 @@ void msgReceived(MsgBuffer* bs)
       PD((MSG_RECEIVED,"REGISTER index:%d site:%s",OTI,rsite->stringrep()));
       OwnerEntry *oe=receiveAtOwner(OTI);
       if (oe->isVar()) {
-        ((ManagerVar*)getPerdioVar(oe))->registerSite(rsite);
+        (GET_VAR(oe,Manager))->registerSite(rsite);
       } else {
         sendRedirect(rsite,OTI,OT->getOwner(OTI)->getRef());
       }
@@ -520,24 +516,7 @@ void msgReceived(MsgBuffer* bs)
       BorrowEntry *be=receiveAtBorrow(sd,si);
       Assert(be->isVar()); // check for duplicate object requests
 
-      ObjectVar *pv = (ObjectVar *) getPerdioVar(be);
-      Object *o = pv->getObject();
-      Assert(o);
-      GName *gnobj = o->getGName1();
-      Assert(gnobj);
-      gnobj->setValue(makeTaggedConst(o));
-
-      fillInObject(&of,o);
-      ObjectClass *cl;
-      if (pv->isObjectClassAvail()) {cl=pv->getClass();}
-      else {
-        cl=tagged2ObjectClass(oz_deref(oz_findGName(pv->getGNameClass())));}
-      o->setClass(cl);
-
-      pv->primBind(be->getPtr(),makeTaggedConst(o));
-      be->changeToRef();
-      BT->maybeFreeBorrowEntry(o->getIndex());
-      o->localize();
+      GET_VAR(be,Object)->sendObject(sd,si,of,be);
       break;
     }
 
@@ -552,18 +531,7 @@ void msgReceived(MsgBuffer* bs)
       BorrowEntry *be=receiveAtBorrow(sd,si);
       Assert(be->isVar());// check for duplicate object requests
 
-      ObjectVar *pv = (ObjectVar *) getPerdioVar(be);
-      Object *o = pv->getObject();
-      Assert(o);
-      GName *gnobj = o->getGName1();
-      Assert(gnobj);
-      gnobj->setValue(makeTaggedConst(o));
-
-      fillInObjectAndClass(&of,o);
-      pv->primBind(be->getPtr(),makeTaggedConst(o));
-      be->changeToRef();
-      BT->maybeFreeBorrowEntry(o->getIndex());
-      o->localize();
+      GET_VAR(be,Object)->sendObjectAndClass(of,be);
       break;
     }
 
@@ -581,10 +549,7 @@ void msgReceived(MsgBuffer* bs)
         break;
       }
       Assert(be->isVar());
-
-      ProxyVar *pv = (ProxyVar*) getPerdioVar(be);
-      pv->proxyBind(be->getPtr(),val,be);
-
+      GET_VAR(be,Proxy)->proxyBind(be->getPtr(),val,be);
       break;
     }
 
@@ -600,11 +565,10 @@ void msgReceived(MsgBuffer* bs)
 
       if (oe->isVar()) {
         PD((PD_VAR,"SURRENDER do it"));
-        ManagerVar *pv = (ManagerVar*)getPerdioVar(oe);
         // mm2: bug: the new var may no be the correct one wrt.
         //           to variable ordering -> may introduce net cycle.
         // ??: bug fixed: may be bound to a different perdio var
-        pv->managerBind(oe->getPtr(),v,oe,rsite);
+        GET_VAR(oe,Manager)->managerBind(oe->getPtr(),v,oe,rsite);
       } else {
         PD((PD_VAR,"SURRENDER discard"));
         PD((WEIRD,"SURRENDER discard"));
@@ -639,10 +603,8 @@ void msgReceived(MsgBuffer* bs)
       Assert(be);
       be->receiveCredit();
 
-      // mm2: abstraction: pv->proxyAck(varPtr);
       Assert(be->isVar());
-      ProxyVar *pv = (ProxyVar*) getPerdioVar(be);
-      pv->proxyAck(be->getPtr(), be);
+      GET_VAR(be,Proxy)->proxyAck(be->getPtr(), be);
 
       break;
     }

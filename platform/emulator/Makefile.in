@@ -114,7 +114,7 @@ STORESRCS=\
         var_base.cc var_ext.cc var_simple.cc var_future.cc
 
 RUNSRCS=\
-        am.cc indexing.cc codearea.cc lps.cc \
+        am.cc unify.cc indexing.cc codearea.cc lps.cc \
         trail.cc emulate.cc scheduler.cc \
         copycode.cc opcodes.cc controlvar.cc \
         cont.cc prop_int.cc suspension.cc prop_class.cc \

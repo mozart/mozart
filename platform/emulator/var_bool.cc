@@ -31,7 +31,7 @@
 
 #include "var_bool.hh"
 #include "var_fd.hh"
-#include "am.hh"
+#include "unify.hh"
 
 OZ_Return OzBoolVariable::bind(TaggedRef * vPtr, TaggedRef term, ByteCode *scp)
 {
@@ -43,7 +43,7 @@ OZ_Return OzBoolVariable::bind(TaggedRef * vPtr, TaggedRef term, ByteCode *scp)
     return FAILED;
   }
 
-  Bool isLocalVar = am.isLocalSVar(this);
+  Bool isLocalVar = oz_isLocalVar(this);
   Bool isNotInstallingScript = !am.isInstallingScript();
 
 #ifdef SCRIPTDEBUG
@@ -52,11 +52,11 @@ OZ_Return OzBoolVariable::bind(TaggedRef * vPtr, TaggedRef term, ByteCode *scp)
 
   if (scp==0 && (isNotInstallingScript || isLocalVar)) propagate();
 
-  if (am.isLocalSVar(this)) {
+  if (oz_isLocalVar(this)) {
     doBind(vPtr, term);
     dispose();
   } else {
-    am.doBindAndTrail(vPtr, term);
+    doBindAndTrail(vPtr, term);
   }
 
   return PROCEED;
@@ -86,8 +86,8 @@ OZ_Return OzBoolVariable::unify(TaggedRef * vPtr, TaggedRef *tPtr,
       Bool isConstrained = ! am.isInstallingScript();
       OzBoolVariable * termvar = (OzBoolVariable *)cv;
 
-      Bool varIsLocal =  am.isLocalSVar(this);
-      Bool termIsLocal = am.isLocalSVar(termvar);
+      Bool varIsLocal =  oz_isLocalVar(this);
+      Bool termIsLocal = oz_isLocalVar(termvar);
 
       switch (varIsLocal + 2 * termIsLocal) {
       case TRUE + 2 * TRUE: // var and term are local
@@ -182,8 +182,8 @@ OZ_Return OzBoolVariable::unify(TaggedRef * vPtr, TaggedRef *tPtr,
       Bool isConstrainedVar = isNotInstallingScript || (intsct != -1);
       Bool isConstrainedTerm = isNotInstallingScript;
 
-      Bool varIsLocal =  am.isLocalSVar(this);
-      Bool termIsLocal = am.isLocalSVar(termvar);
+      Bool varIsLocal =  oz_isLocalVar(this);
+      Bool termIsLocal = oz_isLocalVar(termvar);
 
       switch (varIsLocal + 2 * termIsLocal) {
       case TRUE + 2 * TRUE: // var and term are local
@@ -227,7 +227,7 @@ OZ_Return OzBoolVariable::unify(TaggedRef * vPtr, TaggedRef *tPtr,
               termvar->propagate(fd_prop_singl, pc_cv_unif);
             if (isConstrainedVar) propagate(pc_cv_unif);
             doBind(vPtr, int_var);
-            am.doBindAndTrail(tPtr, int_var);
+            doBindAndTrail(tPtr, int_var);
             dispose();
           } else {
             if (isNotInstallingScript)
@@ -251,7 +251,7 @@ OZ_Return OzBoolVariable::unify(TaggedRef * vPtr, TaggedRef *tPtr,
             if (isConstrainedTerm)
               termvar->propagate(fd_prop_singl, pc_cv_unif);
             doBind(tPtr, int_term);
-            am.doBindAndTrail(vPtr, int_term);
+            doBindAndTrail(vPtr, int_term);
             termvar->dispose();
           } else {
             if (isConstrainedTerm)
@@ -276,8 +276,8 @@ OZ_Return OzBoolVariable::unify(TaggedRef * vPtr, TaggedRef *tPtr,
               propagate(pc_cv_unif);
               termvar->propagate(fd_prop_singl, pc_cv_unif);
             }
-            am.doBindAndTrail(vPtr, int_val);
-            am.doBindAndTrail(tPtr, int_val);
+            doBindAndTrail(vPtr, int_val);
+            doBindAndTrail(tPtr, int_val);
           } else {
             OzBoolVariable * bool_var
               = new OzBoolVariable(oz_currentBoard());

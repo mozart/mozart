@@ -29,14 +29,16 @@
 #endif
 
 #include "var_simple.hh"
-#include "am.hh"
-#include "marshaler.hh"
+#include "unify.hh"
 
 OZ_Return SimpleVar::bind(TaggedRef* vPtr, TaggedRef t, ByteCode* scp)
 {
   oz_bind(vPtr, t);
   return PROCEED;
 }
+
+// from marshaler.cc
+OZ_Return export(OZ_Term t);
 
 OZ_Return SimpleVar::unify(TaggedRef* vPtr, TaggedRef *tPtr, ByteCode* scp)
 {
@@ -51,7 +53,7 @@ OZ_Return SimpleVar::unify(TaggedRef* vPtr, TaggedRef *tPtr, ByteCode* scp)
       && oz_isBelow(GETBOARD(tv),GETBOARD(this))
 #ifdef VAR_BIND_NEWER
       // if both are local, then check heap
-      && (!am.isLocalSVar(this) || heapNewer(tPtr,vPtr))
+      && (!oz_isLocalVar(this) || heapNewer(tPtr,vPtr))
 #endif
       ) {
 

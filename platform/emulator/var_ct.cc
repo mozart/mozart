@@ -31,7 +31,7 @@
 #include "var_ct.hh"
 #include "am.hh"
 #include "builtins.hh"
-#include "thr_int.hh"
+#include "unify.hh"
 
 OZ_Return OzCtVariable::bind(OZ_Term * vptr, OZ_Term term, ByteCode * scp)
 {
@@ -48,7 +48,7 @@ OZ_Return OzCtVariable::bind(OZ_Term * vptr, OZ_Term term, ByteCode * scp)
     return FAILED;
 
   {
-    Bool isLocalVar = am.isLocalSVar(this);
+    Bool isLocalVar = oz_isLocalVar(this);
     Bool isNotInstallingScript = !am.isInstallingScript();
 
     if (scp == 0 && (isNotInstallingScript || isLocalVar)) {
@@ -58,7 +58,7 @@ OZ_Return OzCtVariable::bind(OZ_Term * vptr, OZ_Term term, ByteCode * scp)
       doBind(vptr, term);
       dispose();
     } else {
-      am.doBindAndTrail(vptr, term);
+      doBindAndTrail(vptr, term);
     }
   }
   return PROCEED;
@@ -93,8 +93,8 @@ OZ_Return OzCtVariable::unify(OZ_Term * vptr, OZ_Term * tptr, ByteCode * scp)
 
   if (! new_constr->isValid()) return FAILED;
 
-  Bool var_is_local  = am.isLocalSVar(this);
-  Bool term_is_local = am.isLocalSVar(term_var);
+  Bool var_is_local  = oz_isLocalVar(this);
+  Bool term_is_local = oz_isLocalVar(term_var);
   Bool is_not_installing_script = !am.isInstallingScript();
   Bool var_is_constrained = (is_not_installing_script ||
                              (constr->isWeakerThan(new_constr)));
@@ -142,7 +142,7 @@ OZ_Return OzCtVariable::unify(OZ_Term * vptr, OZ_Term * tptr, ByteCode * scp)
           if (var_is_constrained)
             propagateUnify();
           doBind(vptr, new_value);
-          am.doBindAndTrail(tptr, new_value);
+          doBindAndTrail(tptr, new_value);
           dispose();
         } else {
           copyConstraint(new_constr);
@@ -176,7 +176,7 @@ OZ_Return OzCtVariable::unify(OZ_Term * vptr, OZ_Term * tptr, ByteCode * scp)
           if (term_is_constrained)
             term_var->propagateUnify();
           doBind(tptr, new_value);
-          am.doBindAndTrail(vptr, new_value);
+          doBindAndTrail(vptr, new_value);
           term_var->dispose();
         } else {
           term_var->copyConstraint(new_constr);
@@ -210,8 +210,8 @@ OZ_Return OzCtVariable::unify(OZ_Term * vptr, OZ_Term * tptr, ByteCode * scp)
           if (term_is_constrained)
             term_var->propagateUnify();
         }
-        am.doBindAndTrail(vptr, new_value);
-        am.doBindAndTrail(tptr, new_value);
+        doBindAndTrail(vptr, new_value);
+        doBindAndTrail(tptr, new_value);
       } else {
         OzCtVariable * cv = new OzCtVariable(new_constr, getDefinition(),
                                              oz_currentBoard());
@@ -252,12 +252,12 @@ OZ_Return tellBasicConstraint(OZ_Term v, OZ_Ct * constr, OZ_CtDefinition * def)
 
     // constr denotes a value --> v becomes value
     if (constr->isValue()) {
-      if (am.isLocalVariable(v, vptr)) {
+      if (oz_isLocalVariable(vptr)) {
         if (!isUVar(vtag))
           oz_checkSuspensionListProp(tagged2SVarPlus(v));
         doBind(vptr, constr->toValue());
       } else {
-        am.doBindAndTrail(vptr, constr->toValue());
+        doBindAndTrail(vptr, constr->toValue());
       }
       goto proceed;
     } else {
@@ -269,14 +269,14 @@ OZ_Return tellBasicConstraint(OZ_Term v, OZ_Ct * constr, OZ_CtDefinition * def)
 
       OZ_Term *  tctv = newTaggedCVar(ctv);
 
-      if (am.isLocalVariable(v, vptr)) {
+      if (oz_isLocalVariable(vptr)) {
         if (!isUVar(vtag)) {
           oz_checkSuspensionListProp(tagged2SVarPlus(v));
           ctv->setSuspList(tagged2SVarPlus(v)->getSuspList());
         }
         doBind(vptr, makeTaggedRef(tctv));
       } else {
-        am.doBindAndTrail(vptr, makeTaggedRef(tctv));
+        doBindAndTrail(vptr, makeTaggedRef(tctv));
       }
       goto proceed;
     }
@@ -300,17 +300,17 @@ OZ_Return tellBasicConstraint(OZ_Term v, OZ_Ct * constr, OZ_CtDefinition * def)
 
       ctvar->propagate(OZ_WAKEUP_ALL, pc_propagator);
 
-      if (am.isLocalSVar(v)) {
+      if (oz_isLocalVar(ctvar)) {
         doBind(vptr, new_constr->toValue());
       } else {
-        am.doBindAndTrail(vptr, new_constr->toValue());
+        doBindAndTrail(vptr, new_constr->toValue());
       }
     } else {
       // `new_constr' does not designate a value
       ctvar->propagate(new_constr->getWakeUpDescriptor(old_constr_prof),
                        pc_propagator);
 
-      if (am.isLocalSVar(v)) {
+      if (oz_isLocalVar(ctvar)) {
         ctvar->copyConstraint(new_constr);
       } else {
         OzCtVariable * locctvar = new OzCtVariable(new_constr, def,

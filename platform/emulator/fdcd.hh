@@ -34,7 +34,7 @@
 #include <math.h>
 
 #include "lps.hh"
-#include "thr_int.hh"
+#include "unify.hh"
 #include "prop_int.hh"
 
 #include "var_fd.hh"

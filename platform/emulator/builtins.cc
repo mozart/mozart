@@ -1474,7 +1474,7 @@ OZ_BI_define(BInewChunk,1,1)
 
   if (!oz_isRecord(val)) oz_typeError(0,"Record");
 
-  OZ_RETURN(oz_newChunk(val));
+  OZ_RETURN(oz_newChunk(oz_currentBoard(),val));
 } OZ_BI_end
 
 /* ---------------------------------------------------------------------

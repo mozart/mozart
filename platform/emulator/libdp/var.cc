@@ -41,58 +41,7 @@
 #include "dpMarshaler.hh"
 #include "perdio.hh"
 #include "gc.hh"
-
-/* --- GC --- */
-
-static inline
-void gcBorrowNow(int i) { BT->getBorrow(i)->gcPO(); }
-
-static
-void gcPendBindingList(PendBinding **last){
-  PendBinding *bl = *last;
-  PendBinding *newBL;
-  for (; bl; bl = bl->next) {
-    newBL = new PendBinding();
-    OZ_collectHeapTerm(bl->val,newBL->val);
-    OZ_collectHeapTerm(bl->controlvar,newBL->controlvar);
-    *last = newBL;
-    last = &newBL->next;}
-  *last=NULL;}
-
-
-void ProxyVar::gcRecurseV(void)
-{
-  PD((GC,"PerdioVar b:%d",getIndex()));
-  gcBorrowNow(getIndex());
-  gcPendBindingList(&bindings);
-}
-
-void ManagerVar::gcRecurseV(void)
-{
-#ifdef ORIG
-  origVar=origVar->gcVar();
-  origVar->gcVarRecurse();
-#endif
-  OT->getOwner(getIndex())->gcPO();
-  PD((GC,"PerdioVar o:%d",getIndex()));
-  ProxyList **last=&proxies;
-  for (ProxyList *pl = proxies; pl; pl = pl->next) {
-    pl->sd->makeGCMarkSite();
-    ProxyList *newPL = new ProxyList(pl->sd,0);
-    *last = newPL;
-    last = &newPL->next;}
-  *last = 0;
-}
-
-/* --- MISC --- */
-
-// mm2
-// extern
-Bool checkExportable(TaggedRef var)
-{
-  Assert(OZ_isVariable(var));
-  return (oz_isProxyVar(var) || oz_isManagerVar(var) || oz_isFree(var));
-}
+#include "unify.hh"
 
 /* --- Common unification --- */
 
@@ -138,14 +87,14 @@ int compareNetAddress(ProxyManagerVar *lVar,ProxyManagerVar *rVar)
 
 
 inline
-OZ_Return PerdioVar::unifyV(TaggedRef *lPtr, TaggedRef *rPtr, ByteCode *scp)
+OZ_Return PerdioVar::unifyV(TaggedRef *lPtr, TaggedRef *rPtr)
 {
   TaggedRef rVal = *rPtr;
-  TaggedRef lVal = *lPtr;
+
   if (!oz_isExtVar(rVal)) {
     // switch binding order
     if (isSimpleVar(rVal) || isFuture(rVal))  {
-      return oz_var_bind(tagged2CVar(rVal),rPtr,makeTaggedRef(lPtr),scp);
+      return oz_var_bind(tagged2CVar(rVal),rPtr,makeTaggedRef(lPtr));
     } else {
       return FAILED;
     }
@@ -163,47 +112,51 @@ OZ_Return PerdioVar::unifyV(TaggedRef *lPtr, TaggedRef *rPtr, ByteCode *scp)
      * bind perdiovar -> proxy
      * bind url proxy -> object proxy
      */
-    return oz_var_bind(tagged2CVar(rVal),rPtr,makeTaggedRef(lPtr),scp);
+    return rVar->bindV(rPtr,makeTaggedRef(lPtr));
   }
 
   Assert(getIdV()==OZ_EVAR_PROXY || getIdV()==OZ_EVAR_MANAGER);
 
-  // Note: for perdio variables: am.isLocal == am.onToplevel
-  if (scp!=0 || !am.isLocalSVar(this)) {
-    // in any kind of guard then bind and trail
-    oz_checkSuspensionList(tagged2SVarPlus(lVal),pc_std_unif);
-    am.doBindAndTrail(lPtr,makeTaggedRef(rPtr));
-    return PROCEED;
-  } else {
-    if ((rVar->getIdV()==OZ_EVAR_PROXY || rVar->getIdV()==OZ_EVAR_PROXY)
-        && compareNetAddress((ProxyManagerVar*)this,(ProxyManagerVar*)rVar)>=0)
-      {
-        return ((ProxyManagerVar*)rVar)->doBindPV(rPtr,makeTaggedRef(lPtr));
-      } else {
-        return doBindPV(lPtr,makeTaggedRef(rPtr));
+  // Note: for perdio variables: isLocal == onToplevel
+  // mm2: moreLocal bug!
+  if (oz_isLocalVar(this)) {
+    int rTag=rVar->getIdV();
+    if (rTag==OZ_EVAR_PROXY || rTag==OZ_EVAR_MANAGER) {
+      int ret = compareNetAddress((ProxyManagerVar*)this,
+                                  (ProxyManagerVar*)rVar);
+      if (ret>=0) {
+        return rVar->bindV(rPtr,makeTaggedRef(lPtr));
       }
+    }
   }
+  return bindV(lPtr,makeTaggedRef(rPtr));
 }
 
-OZ_Return PerdioVar::bindV(TaggedRef *lPtr, TaggedRef r, ByteCode *scp)
+
+OZ_Return ObjectVar::bindV(TaggedRef *lPtr, TaggedRef r)
 {
-  Bool isLocal = am.isLocalSVar(this) && scp==0;  // mm2
-  if (isLocal) {
-    Bool ret = validV(r);
-    if (!ret) return FAILED;
-    // onToplevel: distributed unification
-    return doBindPV(lPtr,r);
-  } else {
-    Bool ret = validV(r);
-    if (!ret) return FAILED;
-    // in guard: bind and trail
-    oz_checkSuspensionList(tagged2SVarPlus(*lPtr),pc_std_unif);
-    am.doBindAndTrail(lPtr,r);
-    return PROCEED;
-  }
+  return FAILED;
 }
 
-/* --- Proxy unification --- */
+
+/* --- ProxyVar --- */
+
+void ProxyVar::gcRecurseV(void)
+{
+  PD((GC,"PerdioVar b:%d",getIndex()));
+  BT->getBorrow(getIndex())->gcPO();
+
+  PendBinding **last=&bindings;
+  PendBinding *bl = *last;
+  PendBinding *newBL;
+  for (; bl; bl = bl->next) {
+    newBL = new PendBinding();
+    OZ_collectHeapTerm(bl->val,newBL->val);
+    OZ_collectHeapTerm(bl->controlvar,newBL->controlvar);
+    *last = newBL;
+    last = &newBL->next;}
+  *last=NULL;
+}
 
 static
 OZ_Return sendSurrender(BorrowEntry *be,OZ_Term val){
@@ -216,19 +169,27 @@ OZ_Return sendSurrender(BorrowEntry *be,OZ_Term val){
   return PROCEED;
 }
 
-OZ_Return ProxyVar::doBindPV(TaggedRef *lPtr, TaggedRef v)
+OZ_Return ProxyVar::bindV(TaggedRef *lPtr, TaggedRef r)
 {
   PD((PD_VAR,"PerdioVar::doBind by thread: %x",oz_currentThread()));
-  PD((PD_VAR,"bind proxy b:%d v:%s",getIndex(),toC(v)));
-  if (hasVal()) {
-    return pushVal(v); // save binding for ack message, ...
-  }
+  PD((PD_VAR,"bind proxy b:%d v:%s",getIndex(),toC(r)));
+  Bool isLocal = oz_isLocalVar(this);
+  if (isLocal) {
+    if (hasVal()) {
+      // mm2: should return suspend: binding list can be removed
+      return pushVal(r); // save binding for ack message, ...
+    }
 
-  BorrowEntry *be=BT->getBorrow(getIndex());
-  OZ_Return aux = sendSurrender(be,v);
-  if (aux!=PROCEED)
-    return aux;
-  return setVal(v); // save binding for ack message, ...
+    BorrowEntry *be=BT->getBorrow(getIndex());
+    OZ_Return aux = sendSurrender(be,r);
+    if (aux!=PROCEED) return aux;
+    return setVal(r); // save binding for ack message, ...
+  } else {
+    // in guard: bind and trail
+    oz_checkSuspensionList(tagged2SVarPlus(*lPtr),pc_std_unif);
+    doBindAndTrail(lPtr,r);
+    return PROCEED;
+  }
 }
 
 //
@@ -275,7 +236,24 @@ void ProxyVar::proxyAck(TaggedRef *vPtr, BorrowEntry *be)
   // dispose();
 }
 
-/* --- Manager unification --- */
+/* --- ManagerVar --- */
+
+void ManagerVar::gcRecurseV(void)
+{
+#ifdef ORIG
+  origVar=origVar->gcVar();
+  origVar->gcVarRecurse();
+#endif
+  OT->getOwner(getIndex())->gcPO();
+  PD((GC,"PerdioVar o:%d",getIndex()));
+  ProxyList **last=&proxies;
+  for (ProxyList *pl = proxies; pl; pl = pl->next) {
+    pl->sd->makeGCMarkSite();
+    ProxyList *newPL = new ProxyList(pl->sd,0);
+    *last = newPL;
+    last = &newPL->next;}
+  *last = 0;
+}
 
 static
 void sendAcknowledge(DSite* sd,int OTI){
@@ -283,27 +261,6 @@ void sendAcknowledge(DSite* sd,int OTI){
   OT->getOwner(OTI)->getOneCreditOwner();
   marshal_M_ACKNOWLEDGE(bs,myDSite,OTI);
   SendTo(sd,bs,M_ACKNOWLEDGE,myDSite,OTI);
-}
-
-OZ_Return ManagerVar::sendRedirectToProxies(OZ_Term val, DSite* ackSite)
-{
-  ProxyList *pl = getProxies();
-  OwnerEntry *oe = OT->getOwner(getIndex());
-  if (pl) { // perdio vars are not yet localized again
-    do {
-      DSite* sd = pl->sd;
-      if (sd==ackSite) {
-        sendAcknowledge(sd,getIndex());
-      } else {
-        OZ_Return ret = sendRedirect(sd,getIndex(),val);
-        if (ret != PROCEED) return ret;
-      }
-      ProxyList *tmp = pl->next;
-      pl->dispose();
-      pl = tmp;
-    } while (pl);
-  }
-  return PROCEED;
 }
 
 // extern
@@ -317,16 +274,41 @@ OZ_Return sendRedirect(DSite* sd,int OTI,TaggedRef val)
   return PROCEED;
 }
 
-OZ_Return ManagerVar::doBindPV(TaggedRef *lPtr, TaggedRef v)
+OZ_Return ManagerVar::sendRedirectToProxies(OZ_Term val, DSite* ackSite)
+{
+  ProxyList *pl = getProxies();
+  while (pl) { // perdio vars are not yet localized again (mm2: ????)
+    DSite* sd = pl->sd;
+    if (sd==ackSite) {
+      sendAcknowledge(sd,getIndex());
+    } else {
+      OZ_Return ret = sendRedirect(sd,getIndex(),val);
+      if (ret != PROCEED) return ret;
+    }
+    ProxyList *tmp = pl->next;
+    pl->dispose();
+    pl = tmp;
+  }
+  return PROCEED;
+}
+
+OZ_Return ManagerVar::bindV(TaggedRef *lPtr, TaggedRef r)
 {
   PD((PD_VAR,"PerdioVar::doBind by thread: %x",oz_currentThread()));
   PD((PD_VAR,"bind manager o:%d v:%s",getIndex(),toC(v)));
-  OZ_Return aux = sendRedirectToProxies(v, myDSite);
-  if (aux == PROCEED) {
+  Bool isLocal = oz_isLocalVar(this);
+  if (isLocal) {
+    OZ_Return aux = sendRedirectToProxies(r, myDSite);
+    if (aux != PROCEED) return aux;
     OT->getOwner(getIndex())->changeToRef();
-    primBind(lPtr,v);
+    primBind(lPtr,r);
+    return PROCEED;
+  } else {
+    // in guard: bind and trail
+    oz_checkSuspensionList(tagged2SVarPlus(*lPtr),pc_std_unif);
+    doBindAndTrail(lPtr,r);
+    return PROCEED;
   }
-  return aux;
 }
 
 // after a surrender message is received
@@ -352,74 +334,70 @@ void ManagerVar::managerBind(TaggedRef *vPtr, TaggedRef val,
 
 /* --- Marshal --- */
 
-static
-PerdioVar *var2PerdioVar(TaggedRef *tPtr)
+void ObjectVar::marshal(MsgBuffer *bs)
 {
-  if (oz_isManagerVar(*tPtr)||oz_isProxyVar(*tPtr)||oz_isObjectVar(*tPtr)) {
-    return (PerdioVar*)oz_getExtVar(*tPtr);
+  PD((MARSHAL,"var objectproxy"));
+  int done=checkCycleOutLine(*(getObject()->getCycleRef()),bs,OZCONST);
+  if (!done) {
+    GName *classgn =  isObjectClassAvail()
+      ? globalizeConst(getClass(),bs) : getGNameClass();
+    marshalObject(getObject(),bs,classgn);
   }
-
-  // mm2: handle futures
-  if (!oz_isFree(*tPtr)) return 0;
-
-  OwnerEntry *oe;
-  int i = ownerTable->newOwner(oe);
-  PD((GLOBALIZING,"globalize var index:%d",i));
-
-  oe->mkVar(makeTaggedRef(tPtr));
-
-  ManagerVar *ret = new ManagerVar(oz_currentBoard(),i);
-
-  if (isCVar(*tPtr))
-    ret->setSuspList(tagged2SVarPlus(*tPtr)->getSuspList());
-  doBindCVar(tPtr,ret);
-  return ret;
 }
 
-// Returning 'NO' means we are going to proceed with 'marshal bomb';
-Bool marshalVariable(TaggedRef *tPtr, MsgBuffer *bs) {
-  if (!bs->globalize())
-    return checkExportable(*tPtr);
-
-  PerdioVar *pvar = var2PerdioVar(tPtr);
-  if (pvar==NULL) {
-    return (NO);
-  }
-  pvar->marshalV(bs);
-  return (OK);
+void ManagerVar::marshal(MsgBuffer *bs)
+{
+  int i=getIndex();
+  PD((MARSHAL,"var manager o:%d",i));
+  marshalOwnHead(DIF_VAR,i,bs);
 }
 
-void ProxyVar::marshalV(MsgBuffer *bs)
+void ProxyVar::marshal(MsgBuffer *bs)
 {
   DSite *sd=bs->getSite();
   int i=getIndex();
   PD((MARSHAL,"var proxy o:%d",i));
   if(sd && borrowTable->getOriginSite(i)==sd) {
     marshalToOwner(i,bs);
-    return;}
-  marshalBorrowHead(DIF_VAR,i,bs);
+  } else {
+    marshalBorrowHead(DIF_VAR,i,bs);
+  }
 }
 
-void ManagerVar::marshalV(MsgBuffer *bs)
-{
-  DSite *sd=bs->getSite();
-  int i=getIndex();
-  PD((MARSHAL,"var manager o:%d",i));
-  marshalOwnHead(DIF_VAR,i,bs);
+// Returning 'NO' means we are going to proceed with 'marshal bomb';
+Bool marshalVariable(TaggedRef *tPtr, MsgBuffer *bs) {
+  const TaggedRef var = *tPtr;
+
+  if (oz_isManagerVar(var)) {
+    if (!bs->globalize()) return TRUE;
+    oz_getManagerVar(var)->marshal(bs);
+  } else if (oz_isProxyVar(var)) {
+    if (!bs->globalize()) return TRUE;
+    oz_getProxyVar(var)->marshal(bs);
+  } else if (oz_isObjectVar(var)) {
+    Assert(bs->globalize());
+    oz_getObjectVar(var)->marshal(bs);
+  } else if (oz_isFree(var)) {
+    if (!bs->globalize()) return TRUE;
+    // globalize free variable
+    OwnerEntry *oe;
+    int i = ownerTable->newOwner(oe);
+    PD((GLOBALIZING,"globalize var index:%d",i));
+    oe->mkVar(makeTaggedRef(tPtr));
+    ManagerVar *mv = new ManagerVar(oz_currentBoard(),i);
+    if (isCVar(var))
+      mv->setSuspList(tagged2SVarPlus(var)->getSuspList());
+    doBindCVar(tPtr,mv);
+    mv->marshal(bs);
+  } else {
+    // mm2: handle futures
+    if (!bs->globalize()) return FALSE;
+    return FALSE;
+  }
+  return TRUE;
 }
 
-void ObjectVar::marshalV(MsgBuffer *bs)
-{
-  PD((MARSHAL,"var objectproxy"));
-
-  if (checkCycleOutLine(*(getObject()->getCycleRef()),bs,OZCONST))
-    return;
-
-  GName *classgn =  isObjectClassAvail()
-    ? globalizeConst(getClass(),bs) : getGNameClass();
-
-  marshalObject(getObject(),bs,classgn);
-}
+/* --- Unmarshal --- */
 
 static
 void sendRegister(BorrowEntry *be) {
@@ -474,20 +452,21 @@ OZ_Term ProxyVar::isDetV()
 TaggedRef newObjectProxy(Object *o, GName *gnobj,
                          GName *gnclass, TaggedRef clas)
 {
-  ObjectVar *pvar = new ObjectVar(o,oz_currentBoard());
+  ObjectVar *pvar;
+  if (gnclass) {
+    pvar = new ObjectVar(oz_currentBoard(),o,gnclass);
+  } else {
+    pvar = new ObjectVar(oz_currentBoard(),o,
+                         tagged2ObjectClass(oz_deref(clas)));
+  }
   TaggedRef val = makeTaggedRef(newTaggedCVar(pvar));
   addGName(gnobj, val);
-  if (gnclass) {
-    pvar->setGNameClass(gnclass);
-  } else {
-    pvar->setClass(tagged2ObjectClass(oz_deref(clas)));
-  }
   return val;
 }
 
 
 static
-void sendHelpX(MessageType mt,BorrowEntry *be)
+void sendRequest(MessageType mt,BorrowEntry *be)
 {
   NetAddress* na=be->getNetAddress();
   MsgBuffer *bs=msgBufferManager->getMsgBuffer(na->site);
@@ -515,17 +494,17 @@ void ObjectVar::addSuspV(TaggedRef * v, Suspension susp, int unstable)
     if(oz_findGName(getGNameClass())==0) {mt=M_GET_OBJECTANDCLASS;}
     else {mt=M_GET_OBJECT;}
     BorrowEntry *be=BT->getBorrow(getObject()->getIndex());
-    sendHelpX(mt,be);
+    sendRequest(mt,be);
   } else {
     Assert(isObjectClassAvail());
     BorrowEntry *be=BT->getBorrow(getObject()->getIndex());
-    sendHelpX(M_GET_OBJECT,be);
+    sendRequest(M_GET_OBJECT,be);
   }
 }
 
 void ObjectVar::gcRecurseV(void)
 {
-  gcBorrowNow(getObject()->getIndex());
+  BT->getBorrow(getObject()->getIndex())->gcPO();
   obj = getObject()->gcObject();
   if (isObjectClassAvail()) {
     u.aclass = u.aclass->gcClass();}
@@ -539,10 +518,40 @@ void ObjectVar::primBind(TaggedRef *lPtr,TaggedRef v)
   }
 }
 
-OZ_Return ObjectVar::doBindPV(TaggedRef *lPtr, TaggedRef v)
+void ObjectVar::sendObject(DSite* sd, int si, ObjectFields& of,
+                                BorrowEntry *be)
 {
-  PD((PD_VAR,"PerdioVar::doBind by thread: %x",oz_currentThread()));
-  PD((PD_VAR,"bind object u:%s",toC(makeTaggedConst(getObject()))));
-  primBind(lPtr,v);
-  return PROCEED;
+  Object *o = getObject();
+  Assert(o);
+  GName *gnobj = o->getGName1();
+  Assert(gnobj);
+  gnobj->setValue(makeTaggedConst(o));
+
+  fillInObject(&of,o);
+  ObjectClass *cl;
+  if (isObjectClassAvail()) {
+    cl=getClass();
+  } else {
+    cl=tagged2ObjectClass(oz_deref(oz_findGName(getGNameClass())));
+  }
+  o->setClass(cl);
+  primBind(be->getPtr(),makeTaggedConst(o));
+  be->changeToRef();
+  BT->maybeFreeBorrowEntry(o->getIndex());
+  o->localize();
+}
+
+void ObjectVar::sendObjectAndClass(ObjectFields& of, BorrowEntry *be)
+{
+  Object *o = getObject();
+  Assert(o);
+  GName *gnobj = o->getGName1();
+  Assert(gnobj);
+  gnobj->setValue(makeTaggedConst(o));
+
+  fillInObjectAndClass(&of,o);
+  primBind(be->getPtr(),makeTaggedConst(o));
+  be->changeToRef();
+  BT->maybeFreeBorrowEntry(o->getIndex());
+  o->localize();
 }

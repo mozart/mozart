@@ -110,7 +110,7 @@ void OZ_FSetVar::read(OZ_Term v)
       // don't know before hand if local or global
 
       OzFSVariable * fsvar = tagged2GenFSetVar(v);
-      setState(am.isLocalSVar(v) ? loc_e : glob_e);
+      setState(oz_isLocalVar(fsvar) ? loc_e : glob_e);
 
       if (isState(glob_e) || oz_onToplevel())
         set = fsvar->getSet();
@@ -199,8 +199,8 @@ OZ_Boolean OZ_FSetVar::tell(void)
         OZ_FSetValue setvalue = *setPtr;
         *setPtr = set;
         tagged2GenFSetVar(var)->propagate(fs_prop_val);
-        am.doBindAndTrail(varPtr,
-                          makeTaggedFSetValue(new OZ_FSetValue(setvalue)));
+        doBindAndTrail(varPtr,
+                       makeTaggedFSetValue(new OZ_FSetValue(setvalue)));
       }
       goto f;
     } else {

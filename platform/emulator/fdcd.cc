@@ -543,10 +543,12 @@ void BIfdBodyManager::_introduce(int i, OZ_Term v)
   } else if (vtag == pm_bool) {
     bifdbm_init_dom_size[i] = bifdbm_domain[i].initBool();
     bifdbm_dom[i] = &bifdbm_domain[i];
-    bifdbm_var_state[i] = (am.isLocalSVar(v) ? fdbm_local : fdbm_global);
+    bifdbm_var_state[i]
+      = (oz_isLocalVar(tagged2CVar(v)) ? fdbm_local : fdbm_global);
   } else if (vtag == pm_fd) {
     OzFDVariable * fdvar = tagged2GenFDVar(v);
-    OZ_Boolean var_state = bifdbm_var_state[i] = (am.isLocalSVar(v) ? fdbm_local : fdbm_global);
+    OZ_Boolean var_state = bifdbm_var_state[i]
+      = (oz_isLocalVar(fdvar) ? fdbm_local : fdbm_global);
     bifdbm_domain[i].initEmpty();
     if (var_state == fdbm_local) {
       bifdbm_dom[i] = &fdvar->getDom();
@@ -559,7 +561,7 @@ void BIfdBodyManager::_introduce(int i, OZ_Term v)
   } else if (vtag == pm_svar) {
     bifdbm_domain[i].initFull();
     bifdbm_dom[i] = &bifdbm_domain[i];
-    bifdbm_var_state[i] = (am.isLocalSVar(v) ? fdbm_local : fdbm_global);
+    bifdbm_var_state[i] = (oz_isLocalVar(tagged2CVar(v)) ? fdbm_local : fdbm_global);
   } else {
     Assert(vtag == pm_literal);
 
@@ -596,8 +598,8 @@ void BIfdBodyManager::processFromTo(int from, int to)
             becomesSmallIntAndPropagate(bifdbm_varptr[i]);
         } else {
           tagged2GenFDVar(bifdbm_var[i])->propagate(fd_prop_singl);
-          am.doBindAndTrail(bifdbm_varptr[i],
-                            OZ_int(bifdbm_dom[i]->getSingleElem()));
+          doBindAndTrail(bifdbm_varptr[i],
+                         OZ_int(bifdbm_dom[i]->getSingleElem()));
         }
       } else if (*bifdbm_dom[i] == fd_bool) {
 
@@ -637,8 +639,8 @@ void BIfdBodyManager::processFromTo(int from, int to)
           becomesSmallIntAndPropagate(bifdbm_varptr[i], *bifdbm_dom[i]);
       } else {
         tagged2GenBoolVar(bifdbm_var[i])->propagate();
-        am.doBindAndTrail(bifdbm_varptr[i],
-                          OZ_int(bifdbm_dom[i]->getSingleElem()));
+        doBindAndTrail(bifdbm_varptr[i],
+                       OZ_int(bifdbm_dom[i]->getSingleElem()));
       }
     } else {
       Assert(vartag == pm_svar && bifdbm_var_state[i] == fdbm_global);
@@ -648,21 +650,21 @@ void BIfdBodyManager::processFromTo(int from, int to)
       if (*bifdbm_dom[i] == fd_singl) {
         OZ_Term smallInt = OZ_int(bifdbm_dom[i]->getSingleElem());
         oz_checkSuspensionListProp(tagged2SVarPlus(bifdbm_var[i]));
-        am.doBindAndTrail(bifdbm_varptr[i], smallInt);
+        doBindAndTrail(bifdbm_varptr[i], smallInt);
       } else if (*bifdbm_dom[i] == fd_bool) {
         OzBoolVariable * newboolvar = new OzBoolVariable(oz_currentBoard());
         OZ_Term * newtaggedboolvar = newTaggedCVar(newboolvar);
         oz_checkSuspensionListProp(tagged2SVarPlus(bifdbm_var[i]));
-        am.doBindAndTrail(bifdbm_varptr[i],
-                          makeTaggedRef(newtaggedboolvar));
+        doBindAndTrail(bifdbm_varptr[i],
+                       makeTaggedRef(newtaggedboolvar));
         vars_left = OZ_TRUE;
       } else {
         OzFDVariable * newfdvar
           = new OzFDVariable(*bifdbm_dom[i],oz_currentBoard());
         OZ_Term * newtaggedfdvar = newTaggedCVar(newfdvar);
         oz_checkSuspensionListProp(tagged2SVarPlus(bifdbm_var[i]));
-        am.doBindAndTrail(bifdbm_varptr[i],
-                          makeTaggedRef(newtaggedfdvar));
+        doBindAndTrail(bifdbm_varptr[i],
+                       makeTaggedRef(newtaggedfdvar));
         vars_left = OZ_TRUE;
       }
     }
@@ -690,8 +692,8 @@ void BIfdBodyManager::processNonRes(void)
           becomesSmallIntAndPropagate(bifdbm_varptr[0]);
       } else {
         tagged2GenFDVar(bifdbm_var[0])->propagate(fd_prop_singl);
-        am.doBindAndTrail(bifdbm_varptr[0],
-                          OZ_int(bifdbm_dom[0]->getSingleElem()));
+        doBindAndTrail(bifdbm_varptr[0],
+                       OZ_int(bifdbm_dom[0]->getSingleElem()));
       }
     } else if (*bifdbm_dom[0] == fd_bool) {
       tagged2GenFDVar(bifdbm_var[0])->propagate(fd_prop_bounds);
@@ -725,8 +727,8 @@ void BIfdBodyManager::processNonRes(void)
         becomesSmallIntAndPropagate(bifdbm_varptr[0], *bifdbm_dom[0]);
     } else {
       tagged2GenBoolVar(bifdbm_var[0])->propagate();
-      am.doBindAndTrail(bifdbm_varptr[0],
-                        OZ_int(bifdbm_dom[0]->getSingleElem()));
+      doBindAndTrail(bifdbm_varptr[0],
+                     OZ_int(bifdbm_dom[0]->getSingleElem()));
     }
   } else {
     Assert(bifdbm_var_state[0] == fdbm_global && vartag == pm_svar);
@@ -736,12 +738,12 @@ void BIfdBodyManager::processNonRes(void)
     if (*bifdbm_dom[0] == fd_singl) {
       OZ_Term smallInt = OZ_int(bifdbm_dom[0]->getSingleElem());
       oz_checkSuspensionListProp(tagged2SVarPlus(bifdbm_var[0]));
-      am.doBindAndTrail(bifdbm_varptr[0], smallInt);
+      doBindAndTrail(bifdbm_varptr[0], smallInt);
     } else if (*bifdbm_dom[0] == fd_bool) {
       OzBoolVariable * newboolvar = new OzBoolVariable(oz_currentBoard());
       OZ_Term * newtaggedboolvar = newTaggedCVar(newboolvar);
       oz_checkSuspensionListProp(tagged2SVarPlus(bifdbm_var[0]));
-      am.doBindAndTrail(bifdbm_varptr[0],
+      doBindAndTrail(bifdbm_varptr[0],
                         makeTaggedRef(newtaggedboolvar));
       vars_left = OZ_TRUE;
     } else {
@@ -749,8 +751,8 @@ void BIfdBodyManager::processNonRes(void)
         = new OzFDVariable(*bifdbm_dom[0],oz_currentBoard());
       OZ_Term * newtaggedfdvar = newTaggedCVar(newfdvar);
       oz_checkSuspensionListProp(tagged2SVarPlus(bifdbm_var[0]));
-      am.doBindAndTrail(bifdbm_varptr[0],
-                        makeTaggedRef(newtaggedfdvar));
+      doBindAndTrail(bifdbm_varptr[0],
+                     makeTaggedRef(newtaggedfdvar));
       vars_left = OZ_TRUE;
     }
 
@@ -779,13 +781,15 @@ OZ_Boolean BIfdBodyManager::introduce(OZ_Term v)
   } else if (vtag == pm_bool) {
     bifdbm_init_dom_size[0] = bifdbm_domain[0].initBool();
     bifdbm_dom[0] = &bifdbm_domain[0];
-    bifdbm_var_state[0] = (am.isLocalSVar(v) ? fdbm_local : fdbm_global);
+    bifdbm_var_state[0]
+      = (oz_isLocalVar(tagged2CVar(v)) ? fdbm_local : fdbm_global);
     bifdbm_var[0] = v;
     bifdbm_varptr[0] = vptr;
     bifdbm_vartag[0] = vtag;
   } else if (vtag == pm_fd) {
     OzFDVariable * fdvar = tagged2GenFDVar(v);
-    fdbm_var_state var_state = bifdbm_var_state[0] = (am.isLocalSVar(v) ? fdbm_local : fdbm_global);
+    fdbm_var_state var_state = bifdbm_var_state[0]
+      = (oz_isLocalVar(fdvar) ? fdbm_local : fdbm_global);
     if (var_state == fdbm_local) {
       bifdbm_dom[0] = &fdvar->getDom();
       if (oz_onToplevel())
@@ -803,7 +807,8 @@ OZ_Boolean BIfdBodyManager::introduce(OZ_Term v)
 
     ozstat.fdvarsCreated.incf();
 
-    bifdbm_var_state[0] = (am.isLocalSVar(v) ? fdbm_local : fdbm_global);
+    bifdbm_var_state[0]
+      = (oz_isLocalVar(tagged2CVar(v)) ? fdbm_local : fdbm_global);
     if (bifdbm_var_state[0] == fdbm_local) {
       OzFDVariable * fdvar = new OzFDVariable(oz_currentBoard());
       OZ_Term * taggedfdvar = newTaggedCVar(fdvar);
@@ -825,7 +830,8 @@ OZ_Boolean BIfdBodyManager::introduce(OZ_Term v)
 
     ozstat.fdvarsCreated.incf();
 
-    bifdbm_var_state[0] = (am.isLocalUVar(v,vptr)? fdbm_local : fdbm_global);
+    bifdbm_var_state[0]
+      = (oz_isLocalUVar(vptr)? fdbm_local : fdbm_global);
     if (bifdbm_var_state[0] == fdbm_local) {
       OzFDVariable * fdvar = new OzFDVariable(oz_currentBoard());
       OZ_Term * taggedfdvar = newTaggedCVar(fdvar);

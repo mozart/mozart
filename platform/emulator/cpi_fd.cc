@@ -144,7 +144,7 @@ int OZ_FDIntVar::read(OZ_Term v)
       // don't know before hand if local or global
 
       OzVariable * cvar = tagged2CVar(v);
-      setState(am.isLocalSVar(v) ? loc_e : glob_e);
+      setState(oz_isLocalVar(cvar) ? loc_e : glob_e);
 
       if (cvar->testReifiedFlag()) {
       // may already be a reified var; then the type is incorrect
@@ -260,7 +260,7 @@ OZ_Boolean OZ_FDIntVar::tell(void)
         int singl = domPtr->getSingleElem();
         *domPtr = dom;
         tagged2GenFDVar(var)->propagate(fd_prop_singl);
-        am.doBindAndTrail(varPtr, OZ_int(singl));
+        doBindAndTrail(varPtr, OZ_int(singl));
       }
     } else if (*domPtr == fd_bool) {
       if (isState(loc_e)) {
@@ -293,7 +293,7 @@ OZ_Boolean OZ_FDIntVar::tell(void)
       tagged2GenBoolVar(var)->becomesSmallIntAndPropagate(varPtr, *domPtr);
     } else {
       tagged2GenBoolVar(var)->propagate();
-      am.doBindAndTrail(varPtr, OZ_int(domPtr->getSingleElem()));
+      doBindAndTrail(varPtr, OZ_int(domPtr->getSingleElem()));
     }
   }
   return OZ_FALSE;
