@@ -28,7 +28,10 @@
   <p> 
     Canvas widgets allow to create and manipulate graphical
     items. In particular, arbitrary widgets can be embedded within
-    canvas widgets.
+    canvas widgets. Reference information on canvas widgets can be
+    found in <ref.extern to="&tkcmd;/canvas.htm"/<kbd/canvas//.
+
+
 
   <section id="section.canvas.widgets">
     <title/Getting Started/
@@ -48,12 +51,12 @@
         <item> Displays an image.
         <entry><<line>>
         <item> A line item consists of several connected segments. It is
-        possible to configure line items such that B\'{e}zier splines are used.
+        possible to configure line items such that Bézier splines are used.
         <entry><<oval>>
         <item> An oval can either be a circle or an ellipsis.
         <entry><<polygon>>
         <item> A polygon is described by three or more line segments. As
-        with line items, it is possible to use B\'{e}zier splines.
+        with line items, it is possible to use Bézier splines.
         <entry><<rectangle>>
         <item> Displays a rectangle.
         <entry><<text>>
@@ -66,7 +69,7 @@
     <p>
       For example,
 <chunk class=anonymous><title/canvas/
-C={New Tk.canvas tkInit(parent:T)}
+C={New Tk.canvas tkInit(parent:W)}
 {Tk.send pack(C)}
 {C tk(create rectangle 10 10 1#c 1#c fill:red outline:blue)}
 </chunk>
@@ -95,24 +98,24 @@ local
    O=if Tk.isColor then o(fill:wheat)
      else               o(stipple:gray50 fill:black)
      end
-   D=10  W=2*D B=10
+   D=10  D2=2*D B=10
 in
    class BarCanvas from Tk.canvas
       meth DrawBars(Ys H X)
 	 case Ys of nil then skip
 	 [] Y|Yr then 
-	    {self tk(create rectangle X H X+D H-Y*W O)}
+	    {self tk(create rectangle X H X+D H-Y*D2 O)}
 	    {self tk(create text      X H+D text:Y anchor:w)}
-	    {self DrawBars(Yr H X+W)}
+	    {self DrawBars(Yr H X+D2)}
 	 end
       end
       meth configure(SX SY)
          {self tk(configure scrollregion:q(B ~B SX+B SY+B))}
       end
       meth bars(Ys)
-	 WY=W*({Length Ys}+1) HY=W*({FoldL Ys Max 0}+1)
+	 WY=D2*({Length Ys}+1) HY=D2*({FoldL Ys Max 0}+1)
       in
-         {self configure(WY HY))}
+         {self configure(WY HY)}
 	 {self DrawBars(Ys HY D)}
       end
    end
@@ -143,9 +146,9 @@ end
 	<P>
 	  <Picture.Extern to="barchart.gif" type=gif>
 <chunk class=anonymous><title/barchart/
-C={New BarCanvas    tkInit(parent:T bg:white width:300 height:120)}
-H={New Tk.scrollbar tkInit(parent:T orient:horizontal)}
-V={New Tk.scrollbar tkInit(parent:T orient:vertical)}
+C={New BarCanvas    tkInit(parent:W bg:white width:300 height:120)}
+H={New Tk.scrollbar tkInit(parent:W orient:horizontal)}
+V={New Tk.scrollbar tkInit(parent:W orient:vertical)}
 {Tk.addXScrollbar C H} {Tk.addYScrollbar C V}
 {Tk.batch [grid(C row:0 column:0)
 	   grid(H row:1 column:0 sticky:we)
@@ -155,44 +158,7 @@ V={New Tk.scrollbar tkInit(parent:T orient:vertical)}
 </chunk>
       </figure>
      
-<!--
-  <section id="section.canvas.region">
-    <title/The Scrollregion: Resizing/
 
-    <p>
-      The previous example made use of the scrollregion of a canvas:
-      the part of the canvas which can be made visible by using the
-      scrollbars. When a canvas widget gets resized, also the
-      scrollregion should be resized in order to utilize the window
-      space as good as possible.
-
-    <p>
-      For this reason let us refine the bar canvas such that it
-      adapts the scrolling region as soon as it gets resized.
-
-    <p>
-      <figure id="figure.canvas.barchart">
-        <caption/A canvas for displaying bar charts./
-<chunk class=anonymous><title/Definition of ResizableBarCanvas/
-local	  
-   O=if Tk.isColor then o(fill:wheat)
-     else               o(stipple:gray50 fill:black)
-     end
-   D=10  W=2*D B=10
-in
-   class ResizableBarCanvas from BarCanvas
-      attr sx:0 sy: cx:0 cy:0
-      meth tkInit(...) = M
-         BarCanvas,M
-      end
-      meth configure(SX SY)
-      end
-   end
-end
-</chunk>
-      </figure>
-
--->
 
   <section id="section.canvas.tags">
     <title/Canvas Tags/
@@ -251,7 +217,7 @@ R={New Tk.canvasTag tkInit(parent:C)}
 	<P>
 	  <Picture.Extern to="tags.gif" type=gif>
 <chunk class=anonymous><title/tags interactive/
-C={New Tk.canvas    tkInit(parent:T width:300 height:200 bg:white)}
+C={New Tk.canvas    tkInit(parent:W width:300 height:200 bg:white)}
 R={New Tk.canvasTag tkInit(parent:C)}
 O={New Tk.canvasTag tkInit(parent:C)}
 {C tkBind(event:  '&lt;1&gt;' 
@@ -385,16 +351,16 @@ end
 	  <Picture.Extern to="waitdone.gif" type=gif>
 <chunk class=anonymous><title/WaitDone/
 proc {WaitDone Done}
-   T={New Tk.toplevel tkInit(withdraw:true)}
-   L={New Tk.label    tkInit(parent:T text:'Computing...')}
-   C={New Tk.canvas   tkInit(parent:T width:50 height:50)}
+   W={New Tk.toplevel tkInit(withdraw:true)}
+   L={New Tk.label    tkInit(parent:W text:'Computing...')}
+   C={New Tk.canvas   tkInit(parent:W width:50 height:50)}
    Stopped
 in
-   {Tk.batch [wm(overrideredirect T true)
+   {Tk.batch [wm(overrideredirect W true)
               pack(L C side:left pady:2#m padx:2#m)
-              wm(deiconify T)]}
+              wm(deiconify W)]}
    _={New RandMag init(parent:C done:Done stopped:Stopped)}
-   thread {Wait Stopped} {T tkClose} end
+   thread {Wait Stopped} {W tkClose} end
 end
 </chunk>
       </figure> 
@@ -423,8 +389,11 @@ Done=unit
 %%
 
 declare
-T={New Tk.toplevel tkInit}
+W={New Tk.toplevel tkInit}
 <chunk.ref/canvas/
+
+
+{W tkClose}
 
 
 
@@ -436,15 +405,8 @@ declare
 <chunk.ref/Definition of BarCanvas/
 
 declare
-T={New Tk.toplevel tkInit}
+W={New Tk.toplevel tkInit}
 <chunk.ref/barchart/
-
-
-
-%%
-%% The Scrollregion: Resizing
-%%
-
 
 
 
@@ -453,8 +415,8 @@ T={New Tk.toplevel tkInit}
 %%
 
 declare
-T={New Tk.toplevel tkInit}
-C={New Tk.canvas tkInit(parent:T)}
+W={New Tk.toplevel tkInit}
+C={New Tk.canvas tkInit(parent:W)}
 {Tk.send pack(C)}
 <chunk.ref/tags/
 
@@ -462,9 +424,11 @@ C={New Tk.canvas tkInit(parent:T)}
 
 <chunk.ref/move/
 
+{W tkClose}
+
 
 declare
-T={New Tk.toplevel tkInit}
+W={New Tk.toplevel tkInit}
 <chunk.ref/tags interactive/
 
 <chunk.ref/itemconfigure/
@@ -491,6 +455,8 @@ declare
 <chunk.ref/Use WaitDone/
 
 <chunk.ref/Is Done/
+
+
 
 
 </chunk>
