@@ -1024,6 +1024,7 @@ Suspension *Suspension::gcSuspension()
 /* we reverse the order of the list,
  * but this should be no problem
  */
+inline
 SuspList * SuspList::gc()
 {
   GCMETHMSG("SuspList::gc");
