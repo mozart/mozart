@@ -38,13 +38,15 @@ enum TypeOfGenCVariable {
   FSetVariable,
   AVAR,
   PerdioVariable,
+  LazyVariable,
   NonGenCVariable
 };
 
 #define GenVarCheckType(t)				\
     Assert(t == FDVariable || t == OFSVariable || 	\
 	   t == MetaVariable || t == BoolVariable || 	\
-	   t==AVAR || t==PerdioVariable || t == FSetVariable )
+	   t==AVAR || t==PerdioVariable || t == FSetVariable || \
+	   t ==LazyVariable )
 
 class GenCVariable: public SVariable {
 
@@ -203,6 +205,7 @@ OZ_FiniteDomain * unpatchReified(OZ_Term t, Bool isBool)
 #include "metavar.hh"
 #include "avar.hh"
 #include "perdiovar.hh"
+#include "lazyvar.hh"
 
 #ifdef OUTLINE
 void addSuspCVar(TaggedRef v, Thread *el);
