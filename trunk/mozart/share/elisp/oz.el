@@ -257,11 +257,9 @@ starts the emulator under gdb")
     ("Compile file"           . oz-precompile-file)
     ("-----")
     ("Find"
-     ("Documentation Demos"      . oz-find-docdemo-file)
-     ("Other Demos"              . oz-find-demo-file)
-     ("Library file"           . oz-find-lib-file)
-;     ("Documentation (Text)"          . oz-find-docu-file)
-;     ("Documentation (DVI)"           . oz-find-dvi-file)
+     ("Documentation Demo"      . oz-find-docdemo-file)
+     ("Other Demo"              . oz-find-demo-file)
+     ("Library Demo"            . oz-find-lib-file)
      )
     ("Print"
      ("region"      . oz-print-region)
@@ -1248,9 +1246,9 @@ OZ compiler, emulator and error window")
   (oz-find-file "Find demo file: " "demo/"))
 
 (defun oz-find-docdemo-file()
-  "find a Oz file in the demo/handbook directory"
+  "find a Oz file in the demo/documentation directory"
   (interactive)
-  (oz-find-file "Find demo file: " "demo/handbook/"))
+  (oz-find-file "Find demo file: " "demo/documentation/"))
 
 (defun oz-find-lib-file()
   "find a Oz file in the lib directory"
