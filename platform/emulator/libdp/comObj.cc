@@ -744,7 +744,7 @@ Bool ComObj::msgReceived(MsgContainer *msgC) {
       ++lastReceived;
       remoteRef=TRUE; // Implicitly known since he is sending a message!
 
-      perdio_msgReceived(msgC);
+      perdio_msgReceived(msgC,site);
 
       if(!msgAckLength || // avoid division with zero
 	 lastReceived%msgAckLength==0)  // Time for explicit acknowledgement
@@ -906,10 +906,9 @@ void ComObj::msgAcked(int num) {
 
 MsgContainer *ComObj::getNextMsgContainer(int &acknum) {
   MsgContainer *msgC=queues.getNext(state==WORKING);
-
-  if(msgC!=NULL && !msgC->checkFlag(MSG_HAS_MARSHALCONT) &&
-     msgC->getMessageType()<C_FIRST) {
-    //    queues.insertUnacked(msgC);
+  
+  if(msgC==NULL) return NULL;
+  if(!msgC->checkFlag(MSG_HAS_MARSHALCONT) && msgC->getMessageType()<C_FIRST) {
     msgC->setMsgNum(++lastSent);
   }
   if(DO_MESSAGE_LOG) {
@@ -922,7 +921,7 @@ MsgContainer *ComObj::getNextMsgContainer(int &acknum) {
 	      am.getEmulatorClock()->toString());
   }
 
-  if(probing && msgC!=NULL && msgC->getMessageType()<C_FIRST) {
+  if(probing && msgC->getMessageType()<C_FIRST) {
     msgC->setSendTime(am.getEmulatorClock());
     timers->setTimer(probeIntervalTimer,probeinterval,
 		     comObj_sendProbePing,(void *) this);
@@ -930,6 +929,9 @@ MsgContainer *ComObj::getNextMsgContainer(int &acknum) {
   if(state==WORKING && timer!=NULL) // Acknowledgement is being sent
     timers->clearTimer(timer);
   acknum=lastReceived;
+
+  // Resume any threads that are suspended due to flowcntrl. 
+  msgC->bindCntrlVar();
   return msgC;
 }
 

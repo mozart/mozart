@@ -399,6 +399,8 @@ void MsgContainer::gcMsgC() {
 //     printf("GC of %x (ucont %d term %x)\n",this,
 //             checkFlag(MSG_HAS_UNMARSHALCONT),
 //    	 (msgFields[1]).arg);
+  if(cntrlVar)
+    oz_gCollectTerm(cntrlVar,cntrlVar);
   if(destination!=NULL) 
     destination->makeGCMarkSite();
   if(checkFlag(MSG_HAS_MARSHALCONT) && cont != 0)
