@@ -70,7 +70,11 @@ _FUNTYPEDECL(OZ_Term,
 //
 class MarshalerBuffer;
 
+#ifdef _MSC_VER
+#define NEEDS_PADDING 1
+#else
 #define NEEDS_PADDING @NEEDS_PADDING@
+#endif
 
 #if NEEDS_PADDING
 class OZ_ContainerPadding {
