@@ -9,8 +9,13 @@
    defined at the end
    */
 
-
 /* defines */
+
+
+#ifdef WINDOWS
+#define EINPROGRESS WSAEINPROGRESS
+#endif
+
 
 #ifndef URL_CLIENT
   #include  "urlc.hh"
@@ -59,6 +64,8 @@
 /* ## HTTP user agent reported to the server */
 #define HTTP_USER_AGENT "tf_client/2.0"
 
+#include "wsock.hh"
+
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -68,15 +75,19 @@
 #include <fcntl.h>
 #include <pwd.h>
 #include <limits.h>
-#include <sys/time.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+#ifndef WINDOWS
+#include <sys/time.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
+#include <sys/uio.h>
+#endif
 #include <netdb.h>
 #include <sys/utsname.h>
-#include <sys/uio.h>
+
+#include "os.hh"
 
 #if 1 <= URLC_RESOLVER
 #include <arpa/nameser.h>
@@ -87,7 +98,7 @@
 int urlc_read_from_socket(int sockfd, char* buf, int len)
 {
     int n = 0;
-    n = read(sockfd, buf, len);
+    n = osread(sockfd, buf, len);
     return (n);
 }
 
@@ -251,8 +262,8 @@ urlc::tmp_file_open(int mode)
     }
     do {
 	errno = 0;
-	lofd = open(tn, O_RDWR | O_CREAT | O_EXCL, 
-		   S_IRUSR | S_IWUSR); // data destination
+	lofd = osopen(tn, O_RDWR | O_CREAT | O_EXCL, 
+		      S_IRUSR | S_IWUSR); // data destination
 	if((-1 == lofd) && (EINTR == errno))
 	    continue;
 	if(0 < lofd)
@@ -303,7 +314,7 @@ urlc::tcpip_open(const char* h, int p)
     memcpy((char*)&serv_addr.sin_addr, 
 	   serv_hostent->h_addr_list[0], 
 	   serv_hostent->h_length);
-    fd = socket(PF_INET, SOCK_STREAM, 0);
+    fd = ossocket(PF_INET, SOCK_STREAM, 0);
     if(0 > fd) {
 	URLC_PERROR("socket");
 	return (URLC_ESOCK);
@@ -339,7 +350,7 @@ urlc::writen(int lsockfd, char* buf, int n)
     int nleft = n;
     while(0 < nleft) {
 	errno = 0;
-	nwritten = write(lsockfd, buf, nleft);
+	nwritten = oswrite(lsockfd, buf, nleft);
 	if(0 >= nwritten) {
 	    switch(errno) {
 	    case EINTR:
@@ -565,7 +576,7 @@ urlc::get_file(void)
 {
     if((NULL == path) || (0 == path[0]))
 	return (URLC_EEMPTY);
-    ofd = open(path, O_RDONLY);
+    ofd = osopen(path, O_RDONLY,0);
     if(-1 == ofd) {
 	URLC_PERROR("open");
 	return (URLC_EFILE);
@@ -573,7 +584,6 @@ urlc::get_file(void)
 
     return (URLC_OK);
 }
-
 
 /* it assumes a partial RFC1738-compliant URL in the format:
    ftp://[user[:password]@]host[/[path[;type={a,i,d}]]]
@@ -725,22 +735,23 @@ urlc::parse_ftp(const char* line)
 	    th1(URLC_EALLOC);
 	strcpy(user, "anonymous"); // hardwired by RFC1738
 	pp = getpwuid(getuid()); 	    
+	char *username = pp ? pp->pw_name : "unknown";
 
 #if 1 <= URLC_RESOLVER
 	extern struct __res_state _res;
 	res_init();
-	pass = (char*)malloc(1 + strlen(pp->pw_name) + 1 
+	pass = (char*)malloc(1 + strlen(username) + 1 
 			     + strlen(_res.defdname));
 	if(NULL == pass) 
 	    th1(URLC_EALLOC);
-	strcpy(pass, pp->pw_name);
+	strcpy(pass, username);
 	strcat(pass, "@");
 	strcat(pass, _res.defdname);
 #else	
-	pass = (char*)malloc(1 + strlen(pp->pw_name) + 1);
+	pass = (char*)malloc(1 + strlen(username) + 1);
 	if(NULL == pass)
 	    th1(URLC_EALLOC);
-	strcpy(pass, pp->pw_name);
+	strcpy(pass, username);
 	strcat(pass, "@");
 #endif
 
@@ -981,7 +992,7 @@ urlc::get_ftp(void)
     int rem_addr_len = sizeof(rem_addr);
 
     // we assume that the kernel is not stupid 
-    sockfd2 = socket(PF_INET, SOCK_STREAM, 0);
+    sockfd2 = ossocket(PF_INET, SOCK_STREAM, 0);
     if(0 > sockfd2)
 	return (URLC_ESOCK);
     memset((char*)&local_addr, 0, sizeof(local_addr));
@@ -1020,8 +1031,8 @@ urlc::get_ftp(void)
 
     // ## blocks on accept
     int newsockfd = -1;
-    newsockfd = accept(sockfd2, (struct sockaddr*) &rem_addr, 
-		       &rem_addr_len);
+    newsockfd = osaccept(sockfd2, (struct sockaddr*) &rem_addr, 
+			 &rem_addr_len);
     if(-1 == newsockfd) {
 	URLC_PERROR("accept");
 	return (URLC_ESOCK);
@@ -1048,15 +1059,15 @@ urlc::get_ftp(void)
 	return (ofd);
 
     while(1) { 
-	n = write(ofd, buf, blen);
+	n = oswrite(ofd, buf, blen);
 	if(-1 == n) {
 	    switch(errno) {
 	    case EINTR:
 		continue;
 	    default:
-		close(ofd);
-		close(sockfd2);
-		close(newsockfd);
+		osclose(ofd);
+		osclose(sockfd2);
+		osclose(newsockfd);
 		ofd = -1;
 		return (URLC_EFILE);
 	    }
@@ -1078,8 +1089,8 @@ urlc::get_ftp(void)
 	}
 	blen = n;
     }
-    close(newsockfd);
-    close(sockfd2);
+    osclose(newsockfd);
+    osclose(sockfd2);
 
     // QUIT. be polite, kid, say bye-bye! to miss.
     n = write3(sockfd, "QUIT ", 5, NULL, 0, NULL, 0);
@@ -1088,7 +1099,7 @@ urlc::get_ftp(void)
     n = ftp_get_reply(buf, &blen);
     if(URLC_OK != n)
 	return (URLC_ERESP); // too late, but to be consistent
-    close(sockfd);
+    osclose(sockfd);
 
     return (URLC_OK);
 }
@@ -1385,19 +1396,19 @@ urlc::get_http(void)
     n = http_get_header(buf, &brem, n2);
     if(URLC_OK != n) {
 	ofd = -1;
-	close(sockfd);
+	osclose(sockfd);
 	return (n);
     }
     ofd = tmp_file_open(unlink_mode);
     if(0 > ofd) {
-	close(sockfd);
+	osclose(sockfd);
 	return (ofd);
     }
 
     while(1) { // start read contents
 	errno = 0;
 	if((0 < n2) && 
-	   (n2 != write(ofd, buf, n2))) {
+	   (n2 != oswrite(ofd, buf, n2))) {
 	    URLC_PERROR("write");
 	    th2(URLC_EFILE);
 	}
@@ -1417,13 +1428,13 @@ urlc::get_http(void)
 	}
     }
 
-    close(sockfd);
+    osclose(sockfd);
     return (URLC_OK);
 
 bomb:
     while(1) {
 	errno = 0;
-	if(-1 == close(sockfd))
+	if(-1 == osclose(sockfd))
 	    if(EINTR == errno)
 		continue;
 	    else 
@@ -1506,7 +1517,7 @@ urlc::localizeURL(const char* line, char** fnp)
     fd = getURL(line, URLC_OK);
     if(0 > fd) // some error
 	return (fd);
-    close(fd);
+    osclose(fd);
     *fnp = temp_file_name;
 
     return (URLC_OK);
