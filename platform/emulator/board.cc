@@ -305,6 +305,7 @@ inline void Board::setCommitted(Board *s)
   flags |= Bo_Committed;
   u.actor->setCommitted();
   u.board = s;
+  s->suspCount += suspCount; // bug fix (kp 31.8.94)
 }
 
 inline void Board::setWaitTop()
