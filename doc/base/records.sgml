@@ -411,7 +411,8 @@
 	<Item>
           blocks until at least one field of ?+{R} is
 	  determined. Returns the feature ?_{LI} of a determined
-	  field. 
+	  field. Raises an exception if ?_{R} is not a proper record,
+	  that is, if ?_{R} is a literal.
         <P>
           For example,
           <<<{Record.waitOr a(_ b:1)}>>
