@@ -29,13 +29,14 @@
 #pragma implementation "value.hh"
 #endif
 
+#include <stdarg.h>
+
 #include "value.hh"
 #include "dictionary.hh"
 #include "am.hh"
 #include "gname.hh"
 #include "controlvar.hh"
 
-#include <stdarg.h>
 #include <string.h>
 #include <ctype.h>
 
