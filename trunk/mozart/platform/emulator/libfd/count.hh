@@ -158,8 +158,10 @@ OZ_Return CountPropagator<atleast,atmost>::propagate(void)
   // the cached size is -1 when the var has been dropped
   // -2 when it it is about to be dropped
 
+  int i;
+
  recheck:
-  for (int i = l_sz; i--; ) {
+  for (i = l_sz; i--; ) {
     int sz = reg_oldDomSizes[i];
     if (sz<0) continue;
     l[i].read(reg_l[i]);
@@ -202,7 +204,7 @@ OZ_Return CountPropagator<atleast,atmost>::propagate(void)
     if (ss_hi <  0) { if (atleast) goto failure; else goto vanish; }
     if (ss_hi == 0) {
       if (atleast) {
-	for (int i = l_sz; i--; )
+	for (i = l_sz; i--; )
 	  if (reg_oldDomSizes[i]>=0 && l[i]->isIn(v))
 	    FailOnEmpty(*l[i] &= v);
       }
@@ -211,7 +213,7 @@ OZ_Return CountPropagator<atleast,atmost>::propagate(void)
     if (ss_lo > 0) { if (atmost) goto failure; else goto vanish; }
     if (ss_lo == 0) {
       if (atmost) {
-	for (int i = l_sz; i--; )
+	for (i = l_sz; i--; )
 	  if (reg_oldDomSizes[i]>=0 && *l[i] != fd_singl)
 	    FailOnEmpty(*l[i] -= v);
       }
@@ -229,7 +231,7 @@ OZ_Return CountPropagator<atleast,atmost>::propagate(void)
 
   // we fall through to here when we need to suspend again
   // we need to update the cached sizes of the domains
-  for (int i=l_sz; i--;)
+  for (i=l_sz; i--;)
     if (reg_oldDomSizes[i] >= 0) {
       reg_oldDomSizes[i] = l[i]->getSize();
     }
