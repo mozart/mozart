@@ -26,7 +26,12 @@
 
 ;; Major mode for editing Oz programs, and for running Oz under Emacs
 ;;
-;; BUGS
+
+(require 'comint)
+(require 'compile)
+
+;;{{{ Known Bugs
+
 ;; - `/*' ... `*/' style comments are ignored for purposes of indentation.
 ;;   (Nesting and line breaks are problematic.)
 ;; - Line breaks inside strings, quotes or backquote variables
@@ -53,12 +58,8 @@
 ;;   `meth lock' the word `lock' should not be font-lock-function-name-face
 ;;   but font-lock-keyword-face.
 
-(require 'comint)
-(require 'compile)
-
-;;------------------------------------------------------------
-;; Global Effects
-;;------------------------------------------------------------
+;;}}}
+;;{{{ Global Effects
 
 (or (member ".ozo" completion-ignored-extensions)
     (setq completion-ignored-extensions
@@ -71,10 +72,8 @@
 		    ("\\.ozg$" . oz-gump-mode))
 		  auto-mode-alist)))
 
-
-;;------------------------------------------------------------
-;; GNU and Lucid Emacsen Support
-;;------------------------------------------------------------
+;;}}}
+;;{{{ GNU and Lucid Emacsen Support
 
 (eval-and-compile
   (defvar oz-gnu-emacs
@@ -91,10 +90,8 @@
 	   frame-title-format))
     "Saved Emacs window title."))
 
-
-;;------------------------------------------------------------
-;; Customization
-;;------------------------------------------------------------
+;;}}}
+;;{{{ Customization
 
 (eval-and-compile
   (condition-case ()
@@ -249,19 +246,15 @@ run the emulator when you issue the command `run' to gdb."
 (put 'oz-previewer 'variable-interactive
      "sViewer command for Oz documentation files: ")
 
-
-;;------------------------------------------------------------
-;; win32 Support
-;;------------------------------------------------------------
+;;}}}
+;;{{{ win32 Support
 
 (defvar oz-win32
   (eq system-type 'windows-nt)
   "Non-nil iff we're running under Windows.")
 
-
-;;------------------------------------------------------------
-;; Variables/Initialization
-;;------------------------------------------------------------
+;;}}}
+;;{{{ Variables/Initialization
 
 (defvar oz-is-color
   (and (eq window-system 'x) (x-display-color-p)))
@@ -312,10 +305,9 @@ Used for popping up the corresponding buffer.")
   (concat oz-error-string "\\|"
 	  (char-to-string 18) "\\|" (char-to-string 19) "\\|"
 	  ;; Irix outputs garbage when sending EOF:
-	  "\\^D" "\\|"
+	  "\\" (char-to-string 4) (char-to-string 8) (char-to-string 8) "\\|"
 	  ;; Under Windows, lines may be terminated by CRLF:
-	  "
-" "\\|"
+	  (char-to-string 13) "\\|"
 	  ;; This is a directive we inserted ourselves:
 	  "\\\\line.*% fromemacs\n")
   "Regex specifying what to remove from Compiler and Emulator output.
@@ -336,10 +328,8 @@ All strings matching this regular expression are removed.")
 (defvar oz-gump-indentation nil
   "Non-nil iff Gump syntax is to be used for indentation.")
 
-
-;;------------------------------------------------------------
-;; Locating Errors
-;;------------------------------------------------------------
+;;}}}
+;;{{{ Locating Errors
 
 (defvar oz-compiler-output-start nil
   "Position in the Oz Compiler buffer where the last run's output began.")
@@ -357,10 +347,8 @@ All strings matching this regular expression are removed.")
 	  "\\(,? *column \\([0-9]+\\)\\)?")
   "Regular expression matching error coordinates.")
 
-
-;;------------------------------------------------------------
-;; Setting the Frame Title
-;;------------------------------------------------------------
+;;}}}
+;;{{{ Setting the Frame Title
 
 (defun oz-set-title (frame-title)
   "Set the title of the Emacs window."
@@ -374,10 +362,8 @@ All strings matching this regular expression are removed.")
 	(oz-lucid-emacs
 	 (setq frame-title-format frame-title))))
 
-
-;;------------------------------------------------------------
-;; Utilities
-;;------------------------------------------------------------
+;;}}}
+;;{{{ Utilities
 
 (defvar oz-temp-counter 0
   "Internal counter for gensym.")
@@ -509,10 +495,9 @@ the variable `oz-pedantic-spaces' is non-nil."
 	(setq current-line (1+ current-line)))
       (message nil))))
 
+;;}}}
+;;{{{ Menus
 
-;;------------------------------------------------------------
-;; Menus
-;;------------------------------------------------------------
 ;; GNU Emacs: a menubar is a usual key sequence with prefix "menu-bar"
 ;; Lucid Emacs: a menubar is a new datastructure
 ;;    (see function set-buffer-menubar)
@@ -617,10 +602,8 @@ the variable `oz-pedantic-spaces' is non-nil."
 
 (oz-make-menu oz-menu)
 
-
-;;------------------------------------------------------------
-;; Interacting with the Oz Debugger
-;;------------------------------------------------------------
+;;}}}
+;;{{{ Interacting with the Oz Debugger
 
 (defun oz-debug-start (arg)
   "Start the Oz debugger.
@@ -677,10 +660,8 @@ With ARG, set it instead."
 	       (or (buffer-file-name) (buffer-name))
 	       "' " line flag ")}") t))))
 
-
-;;------------------------------------------------------------
-;; Interacting with the Oz Profiler
-;;------------------------------------------------------------
+;;}}}
+;;{{{ Interacting with the Oz Profiler
 
 (defun oz-profiler-start (arg)
   "Start the profiler.
@@ -694,10 +675,8 @@ With ARG, start it instead."
   (interactive "P")
   (oz-profiler-start (not arg)))
 
-
-;;------------------------------------------------------------
-;; Start/Stop Oz
-;;------------------------------------------------------------
+;;}}}
+;;{{{ Start/Stop Oz
 
 (defun run-oz ()
   "Start the Oz System.
@@ -791,10 +770,8 @@ If FORCE is non-nil, kill it immediately."
 	(oz-send-string (car (car xs)) (cdr (car xs)))
 	(setq xs (cdr xs))))))
 
-
-;;------------------------------------------------------------
-;; Testing Locally and Support for GDB
-;;------------------------------------------------------------
+;;}}}
+;;{{{ Testing Locally and Support for GDB
 
 (defun oz-set-other (set-components)
   "Set the value of environment variables OZEMULATOR or OZ_LOAD.
@@ -921,10 +898,8 @@ the gdb commands `cd DIR' and `directory'."
   (interactive)
   (comint-send-string (get-buffer-process oz-emulator-buffer) "c\n"))
 
-
-;;------------------------------------------------------------
-;; Feeding to the Compiler
-;;------------------------------------------------------------
+;;}}}
+;;{{{ Feeding to the Compiler
 
 (defun oz-zmacs-stuff ()
   (if (boundp 'zmacs-region-stays) (setq zmacs-region-stays t)))
@@ -993,10 +968,8 @@ compiled using a default set of switches."
       (comint-send-string proc "\n")
       (comint-send-string proc eof))))
 
-
-;;------------------------------------------------------------
-;; Patterns for Indentation and Expression Hopping
-;;------------------------------------------------------------
+;;}}}
+;;{{{ Patterns for Indentation and Expression Hopping
 
 (defun oz-make-keywords-for-match (args)
   (concat "\\<\\(" (if (fboundp 'regexp-opt)
@@ -1070,9 +1043,8 @@ compiled using a default set of switches."
 	  "then\\|thread\\|token\\|try\\|with\\)\\>\\|=>\\|\\[\\]\\|"
 	  "//\\|" oz-left-or-right-pattern))
 
-;;------------------------------------------------------------
-;; Moving Among Oz Expressions
-;;------------------------------------------------------------
+;;}}}
+;;{{{ Moving Among Oz Expressions
 
 (defun oz-forward-keyword ()
   "Search forward for the next keyword or parenthesis following point.
@@ -1231,8 +1203,8 @@ In this case, move point to the first character of this token."
       (goto-char p)
       nil)))
 
-;;------------------------------------------------------------
-;; Moving to Expression Boundaries
+;;}}}
+;;{{{ Moving to Expression Boundaries
 
 (defun oz-backward-begin (&optional is-field-value)
   "Move to the last unmatched begin and return column of point.
@@ -1342,10 +1314,8 @@ to handle lines like 'attr a:'."
 		   (setq nesting (1+ nesting)))))
 	(error "No matching closing parenthesis")))))
 
-
-;;------------------------------------------------------------
-;; The oz-bar (used by Compiler, Debugger and Profiler)
-;;------------------------------------------------------------
+;;}}}
+;;{{{ The oz-bar (used by Compiler, Debugger and Profiler)
 
 (make-face 'bar-running)
 (set-face-foreground 'bar-running "white")
@@ -1453,10 +1423,8 @@ to handle lines like 'attr a:'."
 	 (setq oz-bar-overlay nil)
 	 (setq oz-bar-overlay-here nil))))
 
-
-;;------------------------------------------------------------
-;; Indentation
-;;------------------------------------------------------------
+;;}}}
+;;{{{ Indentation
 
 (defun oz-electric-terminate-line ()
   "Terminate current line.
@@ -1647,10 +1615,8 @@ If there is none until the end of line, return the column of point."
   "Return non-nil iff the current line is empty save for whitespace."
   (and (oz-is-left) (oz-is-right)))
 
-
-;;------------------------------------------------------------
-;; Oz Expression Hopping
-;;------------------------------------------------------------
+;;}}}
+;;{{{ Oz Expression Hopping
 
 (defun forward-oz-expr (&optional arg)
   "Move forward one balanced Oz expression.
@@ -1756,10 +1722,8 @@ Negative arg -N means kill N Oz expressions after the cursor."
     (forward-oz-expr (- arg))
     (kill-region pos (point))))
 
-
-;;------------------------------------------------------------
-;; oz-mode
-;;------------------------------------------------------------
+;;}}}
+;;{{{ oz-mode
 
 (defvar oz-mode-syntax-table
   (make-syntax-table)
@@ -1941,10 +1905,8 @@ Take care not to move it too much to the right."
 	 (cons (car menu) list))
 	(t (cons (car list) (oz-insert-menu menu (cdr list))))))
 
-
-;;------------------------------------------------------------
-;; Lisp Paragraph Filling Commands
-;;------------------------------------------------------------
+;;}}}
+;;{{{ Lisp Paragraph Filling Commands
 
 (defun oz-fill-paragraph (&optional justify)
   "Like \\[fill-paragraph], but handle Oz comments.
@@ -2012,10 +1974,8 @@ and initial percent signs."
 	  (fill-paragraph justify))))
     t))
 
-
-;;------------------------------------------------------------
-;; Fontification
-;;------------------------------------------------------------
+;;}}}
+;;{{{ Fontification
 
 (if window-system
     (require 'font-lock))
@@ -2169,8 +2129,7 @@ and is used for fontification.")
 	  oz-font-lock-keywords-3)
 	 nil nil ((?& . "/")) beginning-of-line)))
 
-;;------------------------------------------------------------
-;; Fontification for Oz-Machine Mode
+;;{{{ Fontification for Oz-Machine Mode
 
 (defconst ozm-keywords-matcher
   "\\<\\(true\\|false\\|unit\\)\\>")
@@ -2250,8 +2209,8 @@ and is used for fontification.")
 	  ozm-font-lock-keywords-2)
 	 nil nil nil beginning-of-line)))
 
-;;------------------------------------------------------------
-;; Fontification for Oz-Gump Mode
+;;}}}
+;;{{{ Fontification for Oz-Gump Mode
 
 (defconst oz-gump-keywords
   '("lex" "mode" "parser" "prod" "scanner" "syn" "token"))
@@ -2349,10 +2308,9 @@ The ARG is interpreted just as with \\[recenter]."
   (recenter arg)
   (if window-system (font-lock-fontify-buffer)))
 
-
-;;------------------------------------------------------------
-;; Filtering Process Output
-;;------------------------------------------------------------
+;;}}}
+;;}}}
+;;{{{ Filtering Process Output
 
 (defun oz-emulator-filter (proc string)
   ;; look for oz-socket:
@@ -2433,10 +2391,8 @@ The ARG is interpreted just as with \\[recenter]."
 		(goto-char (process-mark proc)))))
       (set-buffer old-buffer))))
 
-
-;;------------------------------------------------------------
-;; Buffers
-;;------------------------------------------------------------
+;;}}}
+;;{{{ Buffers
 
 (defun oz-show-buffer (buffer)
   (if (and buffer (not (get-buffer-window buffer)))
@@ -2557,10 +2513,8 @@ If it is, then remove it."
 	  (set-buffer cur)
 	  (error "This is the only Oz buffer")))))
 
-
-;;------------------------------------------------------------
-;; Misc Goodies
-;;------------------------------------------------------------
+;;}}}
+;;{{{ Misc Goodies
 
 (defun oz-comment-region (start end arg)
   (interactive "r\np")
@@ -2677,10 +2631,9 @@ of the procedure Browse."
 (defun oz-find-file (prompt file)
   (find-file (read-file-name prompt (concat (oz-home) "/" file) nil t nil)))
 
+;;}}}
+;;{{{ Locating Errors
 
-;;------------------------------------------------------------
-;; Locating Errors
-;;------------------------------------------------------------
 ;; The compile.el stuff is used only a little bit; it cannot be made
 ;; working, if an error message does not contain file information,
 ;; as is the case with oz-feed-region.
@@ -2813,3 +2766,5 @@ When in emulator buffer, visit place indicated in next callstack line."
 
 
 (provide 'oz)
+
+;;}}}
