@@ -1906,6 +1906,7 @@ OZ_C_proc_begin(BIchooseSpace, 2) {
 
   //  if (am.isBelow(am.currentBoard,space->getSolveBoard()->getBoardFast()))
 
+  space->getSolveActor()->unsetGround();
   space->getSolveActor()->clearResult(space->getBoardFast());
 
   RefsArray args = allocateRefsArray(2, NO);
@@ -1947,6 +1948,7 @@ OZ_C_proc_begin(BIinjectSpace, 2) {
   SolveActor *sa = space->getSolveActor();
 
   // clear status
+  sa->unsetGround();
   sa->clearResult(space->getBoardFast());
 
   // inject

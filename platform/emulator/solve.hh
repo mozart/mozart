@@ -26,8 +26,7 @@ public:
   OZPRINT;
   OZPRINTLONG;
 
-  static SolveActor *Cast(Actor *a)
-  {
+  static SolveActor *Cast(Actor *a) {
     Assert(a->isSolve());
     return ((SolveActor *) a);
   }

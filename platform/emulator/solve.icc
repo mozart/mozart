@@ -115,9 +115,16 @@ TaggedRef SolveActor::merge(Board *bb) {
 inline
 Board *SolveActor::clone(Board *bb) {
   ozstat.incSolveClone();
-  Board *copy = (Board *) am.copyTree(solveBoard, (Bool *) NULL);
+  Bool testGround;
+  Board *copy = (Board *) am.copyTree(solveBoard, &testGround);
+  SolveActor *ca = SolveActor::Cast(copy->getActor());
 
-  SolveActor::Cast(copy->getActor())->setBoard(bb);
+  ca->setBoard(bb);
+
+  if (testGround == OK) {
+    ca->setGround();
+    this->setGround();
+  }
 
   return copy;
 }

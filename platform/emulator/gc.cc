@@ -296,19 +296,19 @@ GcMode opMode;
  *    variables, names, cells & abstractions
  */
 
-#define COPY_ON_GROUND
-// #undef COPY_ON_GROUND
+// #define COPY_ON_GROUND
+#undef COPY_ON_GROUND
 
 #ifdef COPY_ON_GROUND
 
-#define incVarCount
+#define setVarCopied
 
 #else
 
-static int varCount;
+static Bool varCopied;
 
-#define incVarCount \
- varCount++;
+#define setVarCopied \
+ varCopied = OK;
 
 #endif
 
@@ -688,7 +688,7 @@ Literal *Literal::gc()
     GCMETHMSG("Literal::gc");
     CHECKCOLLECTED(ToInt32(printName), Literal *);
     COUNT(literal);
-    incVarCount;
+    setVarCopied;
     Literal *aux = (Literal *) gcRealloc (this,sizeof (*this));
     GCNEWADDRMSG (aux);
     ptrStack.push (aux, PTR_NAME);
@@ -1434,7 +1434,7 @@ void gcTagged(TaggedRef &fromTerm, TaggedRef &toTerm)
   case SVAR:
   case UVAR:
   case CVAR:
-    incVarCount;
+    setVarCopied;
     if (auxTerm == fromTerm) {   // no DEREF needed
 
       DebugGCT(toTerm = fromTerm); // otherwise 'makeTaggedRef' complains
@@ -1648,7 +1648,7 @@ void processUpdateStack(void)
  *
  */
 
-Board* AM::copyTree (Board* bb, Bool *isGround)
+Board* AM::copyTree(Board* bb, Bool *isGround)
 {
 #ifdef VERBOSE
   if (verbOut == (FILE *) NULL)
@@ -1665,7 +1665,7 @@ Board* AM::copyTree (Board* bb, Bool *isGround)
   opMode = IN_TC;
   gcing = 0;
 #ifndef COPY_ON_GROUND
-  varCount = 0;
+  varCopied = NO;
 #endif
   unsigned int starttime = osUserTime();
 
@@ -1699,7 +1699,7 @@ Board* AM::copyTree (Board* bb, Bool *isGround)
 #ifdef COPY_ON_GROUND
     *isGround = NO;
 #else
-    if (varCount == 0)
+    if (varCopied == NO)
       *isGround = OK;
     else
       *isGround = NO;
@@ -1926,7 +1926,7 @@ void TaskStack::gc(TaskStack *newstack)
 
 void ConstTerm::gcConstRecurse()
 {
-  incVarCount;
+  setVarCopied;
   switch(getType()) {
   case Co_Object:
     {
@@ -2337,8 +2337,7 @@ void WaitActor::gcRecurse()
   }
 }
 
-void AskActor::gcRecurse ()
-{
+void AskActor::gcRecurse () {
   GCMETHMSG("AskActor::gcRecurse");
   DebugCheck (isFreedRefsArray(next.getY ()),
               error ("freed 'y' regs in AskActor::gcRecurse ()"));
@@ -2348,8 +2347,7 @@ void AskActor::gcRecurse ()
   Assert(board);
 }
 
-void SolveActor::gcRecurse ()
-{
+void SolveActor::gcRecurse () {
   GCMETHMSG("SolveActor::gcRecurse");
   if (opMode == IN_GC || solveBoard != fromCopyBoard) {
     board = board->gcBoard();
@@ -2358,7 +2356,9 @@ void SolveActor::gcRecurse ()
   solveBoard = solveBoard->gcBoard();
   Assert(solveBoard);
 
-  gcTagged(solveVar, solveVar);
+  if (opMode == IN_GC || !isGround())
+    gcTagged(solveVar, solveVar);
+
   gcTagged(result, result);
   suspList  = suspList->gc();
   if (cps) {
