@@ -34,6 +34,16 @@
         <Item>
           tests whether ?_{X} is not equal to&nbsp;?_{Y}.
           The test may suspend.
+
+        <Entry><<toVirtualString>>
+          <Index class=tails/<<Value>><And><<toVirtualString>>/
+        <Synopsis>
+          <<{Value.toVirtualString ?_{X} ?+{DepthI} ?+{WidthI} ??{VS}}>>
+        <Item>
+          returns a virtual string describing the value of&nbsp;?_{X}.
+          Note that this does not block on&nbsp;?_{X}.  The values of
+          ?_{DepthI} and ?_{WidthI} are used to limit output of records
+          in depth and width respectively.
       </List>
   <Section>
     <Title/Variable Status/
@@ -62,7 +72,7 @@
           tests whether ?_{X} is currently kinded, &ie;, neither determined
           nor free.
 
-        <Entry><<Value.status>>
+        <Entry><<status>>
           <Index class=tails/<<Value>><And><<status>>/
         <Synopsis>
           <<{Value.status ?_{X} ??T}>>
