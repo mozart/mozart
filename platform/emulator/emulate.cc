@@ -1932,6 +1932,14 @@ Case(GETVOID)
     }
 
 
+  //
+  // Temporary fix: seems to be broken for debugging!
+  //
+
+#undef ASM_I386_ARITH
+
+  // #define ASM_I386_ARITH
+
   Case(INLINEMINUS)
     {
       TaggedRef A = XPC(1);
@@ -1944,7 +1952,7 @@ Case(GETVOID)
       retryINLINEMINUSB1:
 
         if (oz_isSmallInt(B)) {
-#if defined(__GNUC__) && defined(__i386__)
+#if defined(ASM_I386_ARITH) && defined(__GNUC__) && defined(__i386__)
           asm volatile("
                        subl %1, %0
                        jno noverflowInlineMinus
@@ -1956,7 +1964,7 @@ Case(GETVOID)
           B = oz_int(smallIntValue(A) - smallIntValue(B));
 #endif
 
-#if defined(__GNUC__) && defined(__i386__)
+#if defined(ASM_I386_ARITH) && defined(__GNUC__) && defined(__i386__)
           asm("noverflowInlineMinus: ");
 #endif
           XPC(3) = B;
@@ -2013,7 +2021,7 @@ Case(GETVOID)
       retryINLINEPLUSB1:
 
         if (oz_isSmallInt(B)) {
-#if defined(__GNUC__) && defined(__i386__)
+#if defined(ASM_I386_ARITH) && defined(__GNUC__) && defined(__i386__)
           asm volatile("
                        addl %1, %0
                        jno noverflowInlinePlus
@@ -2025,7 +2033,7 @@ Case(GETVOID)
           B = oz_int(smallIntValue(A) + smallIntValue(B));
 #endif
 
-#if defined(__GNUC__) && defined(__i386__)
+#if defined(ASM_I386_ARITH) && defined(__GNUC__) && defined(__i386__)
           asm("noverflowInlinePlus: ");
 #endif
           XPC(3) = B;
