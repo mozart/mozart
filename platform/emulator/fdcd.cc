@@ -424,7 +424,7 @@ OZ_Return cd_wrapper_b(int OZ_arity, OZ_Term OZ_args[],
   }
 
   x.backup();
-  OZ_Return ret_val = BI_body(last_index, OZ_args);
+  OZ_Return ret_val = BI_body(OZ_args,OZ_ID_MAP);
   x.restore();
 
   Assert(x[0].getMaxElem() >= 2);

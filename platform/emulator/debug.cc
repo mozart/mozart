@@ -304,39 +304,38 @@ OZ_BI_define(BIlivenessX, 1,1)
 
 static Bool mode=NO;
 
-void tracerOn()
+void ozd_tracerOn()
 {
   mode = OK;
 }
 
-void tracerOff()
+void ozd_tracerOff()
 {
   mode = NO;
 }
 
-Bool trace(char *s,Board *board,Actor *actor,
-	   ProgramCounter PC,RefsArray Y,RefsArray G)
+Bool ozd_trace(char *s, ProgramCounter PC,RefsArray Y,RefsArray G)
 {
   static char command[MaxLine];
+  static int skip=0;
 
   if (!mode) {
     return OK;
   }
-  if (!board) {
-    board = am.currentBoard();
-  }
   if (PC != NOCODE) {
     CodeArea::display(PC, 1);
+  } else {
+    am.currentBoard()->print();
   }
-  board->print();
-  if (actor) {
-    printf(" -- ");
-    actor->print();
+
+  if (skip > 0) {
+    skip--;
+    return OK;
   }
   while (1) {
     printf("\nBREAK");
     if (am.isSetSFlag()) {
-      printf("[S:0x%p=",board);
+      printf("[S:0x%p=",am.currentBoard());
       if (am.isSetSFlag(ThreadSwitch)) {
 	printf("P");
       }
@@ -368,8 +367,11 @@ Bool trace(char *s,Board *board,Actor *actor,
       builtinTab.print();
       break;
     case 'c':
-      mode = NO;
-      return OK;
+      {
+	sscanf(&command[1],"%d",&skip);
+	mode = NO;
+	return OK;
+      }
     case 'd':
       if (PC != NOCODE) {
 	CodeArea::display(CodeArea::definitionStart(PC),1,stdout);
@@ -381,7 +383,7 @@ Bool trace(char *s,Board *board,Actor *actor,
     case 'f':
       return NO;
     case 'p':
-      board->printLong();
+      am.currentBoard()->printLong();
       break;
     case 's':
       mode = OK;

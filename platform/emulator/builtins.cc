@@ -172,34 +172,25 @@ OZ_BI_define(Name,3,1)					\
   }							\
 } OZ_BI_end
 
-#define NEW_DECLAREBOOLFUN1(BIfun,BIifun,BIirel)	\
+#define NEW_DECLAREBOOLFUN1(BIfun,ifun,irel)		\
 OZ_BI_define(BIfun,1,1)					\
 {							\
-  OZ_Return r = BIirel(OZ_in(0));			\
+  OZ_Return r = irel(OZ_in(0));				\
   switch (r) {						\
   case PROCEED: OZ_RETURN(NameTrue);			\
   case FAILED : OZ_RETURN(NameFalse);			\
   default     : return r;				\
   }							\
 } OZ_BI_end						\
-OZ_Return BIifun(TaggedRef val, TaggedRef &out)		\
-{ return BI__##BIfun(&val,&out); }
-
-#define NEW_DECLAREBOOLFUN2(BIfun,BIifun,BIirel)	\
-OZ_BI_define(BIfun,2,1)					\
+OZ_Return ifun(TaggedRef val, TaggedRef &out)		\
 {							\
-  OZ_Return r = BIirel(OZ_in(0),OZ_in(1));		\
+  OZ_Return r = irel(val);				\
   switch (r) {						\
-  case PROCEED: OZ_RETURN(NameTrue);			\
-  case FAILED : OZ_RETURN(NameFalse);			\
+  case PROCEED: out=NameTrue; return PROCEED;		\
+  case FAILED : out=NameFalse; return PROCEED;		\
   default     : return r;				\
   }							\
-} OZ_BI_end						\
-OZ_Return BIifun(TaggedRef val1, TaggedRef val2, TaggedRef &out)	\
-{ TaggedRef __val__[2];					\
-  __val__[0] = val1;					\
-  __val__[1] = val2;					\
-  return BI__##BIfun(__val__,&out); }
+}
 
 #define CheckLocalBoard(Object,Where);					\
   if (!am.onToplevel() && !am.isCurrentBoard(GETBOARD(Object))) {	\
@@ -2020,7 +2011,25 @@ OZ_Return hasFeatureInline(TaggedRef term, TaggedRef fea)
   return genericDot(term,fea,0,FALSE);
 }
 
-NEW_DECLAREBOOLFUN2(BIhasFeatureB,hasFeatureBInline,hasFeatureInline)
+OZ_BI_define(BIhasFeatureB,2,1)
+{
+  OZ_Return r = hasFeatureInline(OZ_in(0),OZ_in(1));
+  switch (r) {
+  case PROCEED: OZ_RETURN(NameTrue);
+  case FAILED : OZ_RETURN(NameFalse);
+  default     : return r;
+  }
+} OZ_BI_end
+
+OZ_Return hasFeatureBInline(TaggedRef val1, TaggedRef val2, TaggedRef &out)
+{
+  OZ_Return r = hasFeatureInline(val1,val2);
+  switch (r) {
+  case PROCEED: out=NameTrue; return PROCEED;
+  case FAILED : out=NameFalse; return PROCEED;
+  default: return r;
+  }
+}
 
 OZ_Return subtreeInline(TaggedRef term, TaggedRef fea, TaggedRef &out)
 {
@@ -3119,10 +3128,6 @@ OZ_BI_define(BIisString,1,1)
 // Char
 // ---------------------------------------------------------------------
 
-#define NEW_INLINE_FUN1(ifun,fun)		\
-OZ_Return ifun(TaggedRef arg1,TaggedRef& out)	\
-{ return fun(&arg1,&out); }
-
 #define NEW_FirstCharArg \
  TaggedRef tc = OZ_in(0);	    \
  int i;				    \
@@ -3173,7 +3178,14 @@ OZ_BI_define(BIcharToLower,1,1) {
   OZ_RETURN_INT(iso_tolower((unsigned char) i));
 } OZ_BI_end
 
-NEW_INLINE_FUN1(INLINE__BIcharToLower,BI__BIcharToLower);
+OZ_Return INLINE__BIcharToLower(TaggedRef arg1,TaggedRef& out)
+{
+  OZ_Term X[2];
+  X[0]=arg1;
+  int ret= BI__BIcharToLower(X,OZ_ID_MAP);
+  out = X[1];
+  return ret;
+}
 
 OZ_BI_define(BIcharToUpper,1,1) {
   NEW_FirstCharArg;
