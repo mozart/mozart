@@ -2324,8 +2324,10 @@ LBLdispatcher:
 
   Case(TASKDEBUGCONT)
     {
-      error("Emulate: TASKDEBUGCONT instruction executed");
-      return T_ERROR;
+      // this should not happen -BL
+      // OZ_warning("Emulate: TASKDEBUGCONT instruction executed");
+      ((OzDebug *) Y)->dispose();
+      goto LBLpopTaskNoPreempt;
     }
   
   Case(TASKCFUNCONT)
