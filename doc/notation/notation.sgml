@@ -1649,20 +1649,12 @@ end
                 are implementation-dependent./
             </Rewrite>
         <SubSection class=unnumbered>
-          <Title/Negation/
-          <P>
-            <Rewrite>?={statement} ?={expression}
-              <Rewrite.From/<<not ?{S} end>>/
-              <Rewrite.To
-/<<thread
-   cond ?{S} then fail
-   else skip
-   end
-end>>/
-            </Rewrite>
-        <SubSection class=unnumbered>
           <Title/Combinators/
           <P>
+            <Rewrite>?={statement}
+              <Rewrite.From/<<not ?{S} end>>/
+              <Rewrite.To/<<{`Combinator.'not'` proc {$} ?{S} end}>>/
+            </Rewrite>
             <Rewrite>?={statement} ?={expression}
               <Rewrite.From
 /<<cond ?{L1} [] &ellipsis; [] ?{Ln}
@@ -1712,18 +1704,18 @@ end>>/
               <Rewrite.From/<<cond ?{L1} [] &ellipsis; [] ?{Ln}
 else ?{S}
 end>>/
-              <Rewrite.To/<<{`Combinators.'cond'` '#'(>>?{Proc}(?{L1})<< &ellipsis; >>?{Proc}(?{Ln})<<)
+              <Rewrite.To/<<{`Combinator.'cond'` '#'(>>?{Proc}(?{L1})<< &ellipsis; >>?{Proc}(?{Ln})<<)
  proc {$} ?{S} end}>>/
             </Rewrite>
             <Rewrite>?={statement}
               <Rewrite.From/<<or ?{L1} [] &ellipsis; [] ?{Ln}
 end>>/
-              <Rewrite.To/<<{`Combinators.'or` '#'(>>?{Proc}(?{L1})<< &ellipsis; >>?{Proc}(?{Ln})<<)>>/
+              <Rewrite.To/<<{`Combinator.'or` '#'(>>?{Proc}(?{L1})<< &ellipsis; >>?{Proc}(?{Ln})<<)>>/
             </Rewrite>
             <Rewrite>?={statement}
               <Rewrite.From/<<dis ?{L1} [] &ellipsis; [] ?{Ln}
 end>>/
-              <Rewrite.To/<<{`Combinators.'dis'` '#'(>>?{Proc}(?{L1})<< &ellipsis; >>?{Proc}(?{Ln})<<)>>/
+              <Rewrite.To/<<{`Combinator.'dis'` '#'(>>?{Proc}(?{L1})<< &ellipsis; >>?{Proc}(?{Ln})<<)>>/
             </Rewrite>
             <Rewrite>?={statement}
               <Rewrite.From/<<choice ?{S1} [] &ellipsis; [] ?{Sn}>>/
