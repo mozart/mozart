@@ -61,7 +61,7 @@ int TaskStack::getSeqSize()
   while (1) {
     if (isEmpty()) {
       tos=oldTos;
-      return 0;
+      return -1;
     }
     TaskStackEntry entry=*(--tos);
     ContFlag cFlag = getContFlag(ToInt32(entry));
