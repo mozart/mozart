@@ -42,7 +42,10 @@ define
 \ifdef DBG
 		     {System.show discovered_perm(FD Address IPPort)}
 \endif
-		     {ConnectionWrapper.connFailed perm}    
+		     {ConnectionWrapper.connFailed perm}
+		  [] system(os(_ _ 115 _) ...) then
+		     % only tells that the socket is in progress
+		     skip
 		  else
 \ifdef DBG
 		     {System.show caught(X)}
