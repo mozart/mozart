@@ -100,8 +100,6 @@
 
 #define _cacPendThreadEmul       gCollectPendThreadEmul
 
-#define _cacReallocStatic        gCollectReallocStatic
-
 #define _cacRefsArray            gCollectRefsArray
 
 #define _cacSuspList             gCollectSuspList
@@ -146,8 +144,6 @@
 #define _cacExtensionRecurse     sCloneExtensionRecurse
 
 #define _cacPendThreadEmul       sClonePendThreadEmul
-
-#define _cacReallocStatic        sCloneReallocStatic
 
 #define _cacRefsArray            sCloneRefsArray
 
@@ -263,44 +259,35 @@ void exitCheckSpace() {
  * 
  */
 
-inline
-void * _cacReallocStatic(void * p, size_t sz) {
-  Assert(sz % sizeof(int) == 0);
-
-  if (sz > 24) {
-    return memcpy(CAC_MALLOC(sz), p, sz);
-  } else {
-    register int32 * frm = (int32 *) p;
-    register int32 * to  = (int32 *) CAC_MALLOC(sz);
-  
-    switch(sz) {
-    case 24:
-      to[0]=frm[0]; to[1]=frm[1]; to[2]=frm[2];
-      to[3]=frm[3]; to[4]=frm[4]; to[5]=frm[5];
-      break;
-    case 20:
-      to[0]=frm[0]; to[1]=frm[1]; to[2]=frm[2];
-      to[3]=frm[3]; to[4]=frm[4];
-      break;
-    case 16:
-      to[0]=frm[0]; to[1]=frm[1]; to[2]=frm[2];
-      to[3]=frm[3];
-      break;
-    case 12:
-      to[0]=frm[0]; to[1]=frm[1]; to[2]=frm[2];
-      break;
-    case 8:
-      to[0]=frm[0]; to[1]=frm[1];
-      break;
-    case 4:
-      to[0]=frm[0];
-      break;
-    default:
-      Assert(0);
-    }
-
-    return to;
-  }
+#define cacReallocStatic(Type,f,t,n) \
+{                                                                            \
+  int _n = (n);                                                              \
+  Assert(_n % sizeof(int) == 0);                                             \
+  int32 * _f = (int32 *) (f);                                                \
+  int32 * _t = (int32 *) CAC_MALLOC(_n);                                     \
+  switch (_n) {                                                              \
+  case 24:                                                                   \
+    _t[0]=_f[0];_t[1]=_f[1];_t[2]=_f[2];_t[3]=_f[3];_t[4]=_f[4];_t[5]=_f[5]; \
+    break;                                                                   \
+  case 20:                                                                   \
+    _t[0]=_f[0];_t[1]=_f[1];_t[2]=_f[2];_t[3]=_f[3];_t[4]=_f[4];             \
+    break;                                                                   \
+  case 16:                                                                   \
+    _t[0]=_f[0];_t[1]=_f[1];_t[2]=_f[2];_t[3]=_f[3];                         \
+    break;                                                                   \
+  case 12:                                                                   \
+    _t[0]=_f[0];_t[1]=_f[1];_t[2]=_f[2];                                     \
+    break;                                                                   \
+  case 8:                                                                    \
+    _t[0]=_f[0];_t[1]=_f[1];                                                 \
+    break;                                                                   \
+  case 4:                                                                    \
+    _t[0]=_f[0];                                                             \
+    break;                                                                   \
+  default:                                                                   \
+    memcpy(_t, _f, _n);                                                      \
+  }                                                                          \
+  t = (Type *) _t;                                                           \
 }
 
 
@@ -419,8 +406,9 @@ Board * Board::_cacBoard(void) {
     return bb->cacGetFwd();
   
   Assert(bb->cacIsAlive());
-  
-  Board *ret = (Board *) _cacReallocStatic(bb, sizeof(Board));
+
+  Board * ret;
+  cacReallocStatic(Board,bb,ret,sizeof(Board));
 
   cacStack.push(ret,PTR_BOARD);
 
@@ -455,7 +443,8 @@ Name *Name::_cacName(void) {
   if (!getBoardInternal()->hasMarkOne()) {
 #endif
 
-    Name *aux = (Name*) _cacReallocStatic(this,sizeof(Name));
+    Name * aux;
+    cacReallocStatic(Name,this,aux,sizeof(Name));
 
     STOREFWDFIELD(this, aux);
     
@@ -577,29 +566,29 @@ OzVariable * OzVariable::_cacVarInline(void) {
     cacStack.push(to, PTR_CVAR);
     break;
   case OZ_VAR_SIMPLE:
-    to = (OzVariable *) _cacReallocStatic(this,sizeof(SimpleVar));
+    cacReallocStatic(OzVariable,this,to,sizeof(SimpleVar));
     break;
   case OZ_VAR_FUTURE:
-    to = (OzVariable *) _cacReallocStatic(this,sizeof(Future));
+    cacReallocStatic(OzVariable,this,to,sizeof(Future));
     cacStack.push(to, PTR_CVAR);
     break;
   case OZ_VAR_BOOL:
-    to = (OzVariable *) _cacReallocStatic(this,sizeof(OzBoolVariable));
+    cacReallocStatic(OzVariable,this,to,sizeof(OzBoolVariable));
     break;
   case OZ_VAR_OF:
-    to = (OzVariable *) _cacReallocStatic(this,sizeof(OzOFVariable));
+    cacReallocStatic(OzVariable,this,to,sizeof(OzOFVariable));
     cacStack.push(to, PTR_CVAR);
     break;
   case OZ_VAR_FD:
-    to = (OzVariable *) _cacReallocStatic(this,sizeof(OzFDVariable));
+    cacReallocStatic(OzVariable,this,to,sizeof(OzFDVariable));
     ((OzFDVariable *) to)->_cac(bb);
     break;
   case OZ_VAR_FS:
-    to = (OzVariable *) _cacReallocStatic(this,sizeof(OzFSVariable));
+    cacReallocStatic(OzVariable,this,to,sizeof(OzFSVariable));
     ((OzFSVariable *) to)->_cac(bb);
     break;
   case OZ_VAR_CT:     
-    to = (OzVariable *) _cacReallocStatic(this,sizeof(OzCtVariable));
+    cacReallocStatic(OzVariable,this,to,sizeof(OzCtVariable));
     ((OzCtVariable*) to)->_cac(bb); 
     cacStack.push(to, PTR_CVAR);
     break;
@@ -1185,8 +1174,8 @@ ConstTerm *ConstTerm::gCollectConstTermInline(void) {
     }
 
   case Co_Foreign_Pointer: {
-      ConstTerm * ret = (ConstTerm *) 
-      gCollectReallocStatic(this,sizeof(ForeignPointer));
+      ConstTerm * ret;
+      cacReallocStatic(ConstTerm,this,ret,sizeof(ForeignPointer));
       STOREFWDFIELD(this, ret);
       return ret;
     }
@@ -1395,7 +1384,8 @@ ConstTerm *ConstTerm::sCloneConstTermInline(void) {
 
 inline
 OzDebug *OzDebug::gCollectOzDebug(void) {
-  OzDebug *ret = (OzDebug*) gCollectReallocStatic(this,sizeof(OzDebug));
+  OzDebug *ret;
+  cacReallocStatic(OzDebug,this,ret,sizeof(OzDebug));
   
   ret->Y   = gCollectRefsArray(ret->Y);
 
