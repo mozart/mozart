@@ -8,9 +8,9 @@ import
 	     expand        : Expand
 	     addToPath     : AddToPath)
    System(showInfo:Print)
-   Global(ozpmmanifest     : OZPMMANIFEST
-	  ozpmmanifesttext : OZPMMANIFESTTEXT
-	  ozpminfo         : OZPMINFO
+   Global(fileMftPkl     : FILEMFTPKL
+	  fileMftTxt     : FILEMFTTXT
+	  filePkgDft     : FILEPKGDFT
 	  args             : Args)
    Pickle(save)
    Open(file)
@@ -34,7 +34,7 @@ define
 	    end
 	 end
       in
-	 Files={List.subtract {List.subtract {List.flatten {Loop FT}} OZPMMANIFEST} OZPMMANIFESTTEXT}
+	 Files={List.subtract {List.subtract {List.flatten {Loop FT}} FILEMFTPKL} FILEMFTTXT}
 	 {ForAll Files Print}
       end
       Info={Record.adjoinAt
@@ -43,8 +43,8 @@ define
 	     List.last}
 	    filelist Files}
       F
-      MFTPKL={Expand {FullName OZPMMANIFEST In}}
-      MFTTXT={Expand {FullName OZPMMANIFESTTEXT In}}
+      MFTPKL={Expand {FullName FILEMFTPKL In}}
+      MFTTXT={Expand {FullName FILEMFTTXT In}}
    in
       try
 	 {Pickle.save Info MFTPKL}
@@ -54,7 +54,7 @@ define
 	 finally
 	    try {F close} catch _ then skip end
 	 end
-	 {Archive.makeFrom Out OZPMMANIFEST|OZPMMANIFESTTEXT|Files In}
+	 {Archive.makeFrom Out FILEMFTPKL|FILEMFTTXT|Files In}
       finally
 	 try {OS.unlink MFTPKL} catch _ then skip end
 	 try {OS.unlink MFTTXT} catch _ then skip end
@@ -63,7 +63,7 @@ define
    %%
    proc {Run}
       {Create {CondSelect Args 'prefix' ""} Args.'out'
-       {CondSelect Args 'in' {AddToPath {CondSelect Args 'prefix' "."} OZPMINFO}}}
+       {CondSelect Args 'in' {AddToPath {CondSelect Args 'prefix' "."} FILEPKGDFT}}}
       {Application.exit 0}
    end
 end

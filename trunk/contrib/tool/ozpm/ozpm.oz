@@ -1,7 +1,7 @@
 functor
 import
    Global(args:Args)
-   InteractiveManager
+   ActionInteractive
    ActionInstall(run)
    ActionList(run)
    ActionInfo(run)
@@ -24,6 +24,6 @@ define
    [] help then % display some help
       {ActionHelp.run}
    [] interactive then % start the application in interactive mode
-      {New InteractiveManager.'class' run _}
+      {New ActionInteractive.'class' run _}
    end
 end

@@ -7,27 +7,35 @@ import
 	     addToPath  : AddToPath)
    URL(resolve toBase)
    Pickle(load save)
+   
 export
    Args
-   ozpminfo         : OZPMINFO
-   ozpmmanifest     : OZPMMANIFEST
-   ozpmmanifesttext : OZPMMANIFESTTEXT
-   ozpmpkg          : OZPMPKG
-   mogul            : MOGUL
-   info             : INFO
-   prefix           : PREFIX
-   ozpmInfo         : OzpmInfo
-   ozpminfofile     : OzpmInfoFile
-define
+   %% file   : file name (no path)
+   %% dir    : directory name (no file)
+   %% path   : path name (directory and file names)
+   %% (none) : Oz data structure
+   fileLocalDB      : FILELOCALDB
+   filePkgDft       : FILEPKGDFT
+   fileMftPkl       : FILEMFTPKL
+   fileMftTxt       : FILEMFTTXT
+   dirPrefixDft     : DIRPREFIXDFT
+   dirPrefix        : DIRPREFIX
+   pathLocalDB      : PATHLOCALDB
+   localDB          : LOCALDB
+   mogulDB          : MOGULDB
    
-   OZPMINFO         = {Expand ".ozpm.info"}
-   OZPMMANIFEST     = 'OZPMMFT.PKL'
-   OZPMMANIFESTTEXT = 'OZPMMFT.TXT'
-   OZPMPKG          = {Expand '~/.oz/'}
+define
+   FILEPKGDFT       = 'ozpm.dsc'
+   FILELOCALDB      = '.ozpm.info'
+   FILEMFTPKL       = 'OZPMMFT.PKL'
+   FILEMFTTXT       = 'OZPMMFT.TXT'
+   DIRPREFIXDFT     = {Expand '~/.oz/'}
    MOGUL            = 'http://www.mozart-oz.org/mogul/' %"./"
    INFO             = 'ozpm.info'
-   MOGULINFO        = try {Pickle.load {URL.resolve {URL.toBase MOGUL} INFO}}
-		      catch _ then nil end
+   MOGULDB          = {ByNeed fun{$}
+				 try {Pickle.load {URL.resolve {URL.toBase MOGUL} INFO}}
+				 catch _ then nil end
+			      end}
 
       
    Args={Application.getArgs
@@ -69,17 +77,17 @@ define
 		'update'(single type:bool default:false)
 	       )}
 
-   PREFIX       = {CondSelect Args prefix OZPMPKG}
-   OzpmInfoFile = {AddToPath PREFIX OZPMINFO}
-   OzpmInfo     = {ByNeed
+   DIRPREFIX       = {CondSelect Args prefix DIRPREFIXDFT}
+   PATHLOCALDB = {AddToPath DIRPREFIX FILELOCALDB}
+   LOCALDB     = {ByNeed
 		   fun {$}
 		      Ret
 		   in
 		      try
-			 Ret={Pickle.load OzpmInfoFile}
+			 Ret={Pickle.load PATHLOCALDB}
 		      catch error(url(load ...) ...) then
-			 {CreatePath {Dirname OzpmInfoFile}}
-			 {Pickle.save nil OzpmInfoFile}
+			 {CreatePath {Dirname PATHLOCALDB}}
+			 {Pickle.save nil PATHLOCALDB}
 			 Ret=nil
 		      end
 		      Ret

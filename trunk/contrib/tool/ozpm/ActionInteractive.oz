@@ -3,7 +3,7 @@ export 'class' : InteractiveManager
 import
    Application
    QTk at 'http://www.info.ucl.ac.be/people/ned/qtk/QTk.ozf'
-   Global(ozpmInfo)
+   Global(lcoalDB mogulDB)
    System(show:Show)
 define
 
@@ -14,18 +14,24 @@ define
       feat
 	 infoPane
 	 setTitle
-	 archiveManager
-	 mogulDB
 	 handle
-      meth init(INFO ST AM OZPM Desc)
+      meth init(INFO ST Desc)
 	 self.infoPane=INFO
 	 self.setTitle=ST
-	 self.archiveManager=AM
-	 self.mogulDB=OZPM
 	 Desc=listbox(glue:nswe
 		      bg:white
-%		      tdscrollbar:true
+		      tdscrollbar:true
+		      action:self#select
 		      handle:self.handle)
+      end
+      meth display(Info)
+	 skip
+      end
+      meth get(Info)
+	 skip
+      end
+      meth selec
+	 skip
       end
    end
 
@@ -37,35 +43,42 @@ define
 	 self.setTitle=ST
 	 Desc=listbox(glue:nswe
 		      bg:white
-%		      tdscrollbar:true
+		      tdscrollbar:true
 		      handle:self.handle)
       end
       meth display(Info)
+	 skip
+      end
+      meth get(Info)
 	 skip
       end
    end
    
    class InteractiveManager
 
-      feat dataPlace dataLabel infoPlace infoLabel
+      feat
+	 dataPlace
+	 dataLabel
+	 infoPlace
+	 infoLabel
 
       attr data info
 
-      meth run InteractiveManager,init(Global.ozpmInfo thereIsNotArchiveManager) end
+      meth run
+	 InteractiveManager,init
+      end
 	 
-      meth init(OI AM)
+      meth init%(OI AM)
 	 Look={QTk.newLook}
 	 TitleLook={QTk.newLook}
 	 InfoMain
 	 DataMain
-	 {TitleLook.set label(text:"Title" glue:nwes bg:darkblue fg:white relief:sunken borderwidth:2)}
+	 {TitleLook.set label(text:"" glue:nwes bg:darkblue fg:white relief:sunken borderwidth:2)}
 	 %%
 	 info<-{New InfoView init(proc{$ Title} {self.infoLabel set(text:Title)} end
 				  InfoMain)}
 	 data<-{New ListDataView init(@info
 				      proc{$ Title} {self.dataLabel set(text:Title)} end
-				      AM
-				      OI
 				      DataMain)}
 	 MenuDesc=
 	 lr(glue:nwe
@@ -82,7 +95,7 @@ define
 	       glue:e
 	       menu:menu(command(text:'Help...')
 			 separator
-			 command(text:"About..."
+			 command(text:'About...'
 				 action:proc{$}
 					   {{QTk.build
 					     td(title:'About this application...'
@@ -97,11 +110,18 @@ define
 					end))))
 	 %%
 	 ToolbarDesc=lr(glue:nwe relief:sunken borderwidth:1
-			tbbutton(text:'Install' glue:w)
-			tbbutton(text:'Remove' glue:w)
-			tdline(glue:nsw)
-			tbbutton(text:'Help' glue:w)
-			tbbutton(text:'Quit' glue:w))
+			tbbutton(text:'Installed'
+				 action:self#displayInstalled
+				 glue:w)
+			tbbutton(text:'Mogul'
+				 action:self#displayMogul
+				 glue:w))
+				 
+%			tbbutton(text:'Install' glue:w)
+%			tbbutton(text:'Remove' glue:w)
+%			tdline(glue:nsw)
+%			tbbutton(text:'Help' glue:w)
+%			tbbutton(text:'Quit' glue:w))
 	 %%
 	 MainWindowDesc=
 	 tdrubberframe(glue:nswe
@@ -137,15 +157,20 @@ define
 		 title:'Mozart Package Installer'
 		 action:toplevel#close
 		 MenuDesc
-%		 ToolbarDesc
+		 ToolbarDesc
 		 MainWindowDesc
 		 StatusBarDesc)
       in
-	 OI=OzpmInfo
-	 {Wait OzpmInfo}
-	 AM=ArchiveManager
 	 {{QTk.build Desc} show(wait:true)}
 	 {Application.exit 0}
+      end
+
+      meth displayInstalled
+	 {@data display({self.archiveManager list($)})}
+      end
+
+      meth displayMogul
+	 {@data display(self.mogulDB)}
       end
    end
 end

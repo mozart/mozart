@@ -4,11 +4,11 @@ import
    Resolve(localize)
    OS(unlink tmpnam)
    Archive('class')
-   Global(ozpmmanifest  : OZPMMANIFEST
-	  ozpmInfo      : OzpmInfo
+   Global(fileMftPkl    : FILEMFTPKL
+	  localDB       : LOCALDB
 	  args          : Args
-	  prefix        : Prefix
-	  ozpminfofile  : OzpmInfoFile)
+	  dirPrefix     : DirPrefix
+	  pathLocalDB   : PATHLOCALDB)
    FileUtils(createPath : CreatePath
 	     addToPath  : AddToPath
 	     dirname    : Dirname)
@@ -27,7 +27,7 @@ define
 	 PInfo Tmp={OS.tmpnam}
       in
 	 try
-	    {A extract(OZPMMANIFEST Tmp)}
+	    {A extract(FILEMFTPKL Tmp)}
 	    {Pickle.load Tmp PInfo}
 	 finally
 	    try {OS.unlink Tmp} catch _ then skip end
@@ -37,7 +37,7 @@ define
 	 %% cross checks with the informations of the local installation is done here
 	 %%
 	 if {Not Force} then
-	    for Entry in OzpmInfo do
+	    for Entry in LOCALDB do
 	       if Entry.id==PInfo.id then
 		  raise ok(alreadyinstalled(loc:Entry pkg:PInfo)) end
 	       else
@@ -54,18 +54,18 @@ define
 	 %%
 	 %% getting this far means the package can be installed
 	 %%
-	 {Print Prefix}
+	 {Print DirPrefix}
 	 for File in PInfo.filelist do
-	    {CreatePath {Dirname {AddToPath Prefix File}}}
-	    {A extract(File {AddToPath Prefix File})}
+	    {CreatePath {Dirname {AddToPath DirPrefix File}}}
+	    {A extract(File {AddToPath DirPrefix File})}
 	 end
 	 %% update ozpminfo
 	 {Pickle.save {Record.adjoinAt PInfo lsla PLS}
-	  |{List.filter OzpmInfo
+	  |{List.filter LOCALDB
 	    fun{$ Entry}
 	       Entry.id\=PInfo.id %% forcing an install keeps only one version
 	    end}
-	  OzpmInfoFile}
+	  PATHLOCALDB}
 	 %% result
 	 success(pkg:PInfo)
       catch ok(E) then E
