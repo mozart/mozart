@@ -1,0 +1,9 @@
+SRCTOP		= @SRCTOP@
+SRCDIR		= @srcdir@
+VPATH		= @srcdir@
+
+WHAT	= install
+MAIN	= main.sgml
+SGMLSRCS =
+
+include ../Makefile.common
