@@ -36,6 +36,7 @@ import
    BibliographyDB('class')
    Indexer('class')
    Fontifier('class' noProgLang)
+   CrossReferencer('class')
    Thumbnails('class')
    LaTeXToGIF('class')
    PostScriptToGIF('class')
@@ -292,6 +293,8 @@ define
          GrammarHead: unit
          GrammarAltType: unit
          GrammarNote: unit
+         % for Ref.Extern and Ptr.Extern:
+         MyCrossReferencer: unit
          % for Table:
          TableCols: unit
          TableRow: unit
@@ -331,6 +334,9 @@ define
                MyPostScriptToGIF <- {New PostScriptToGIF.'class'
                                      init(@OutputDirectory
                                           Args.'keeppictures')}
+               MyCrossReferencer <- {New CrossReferencer.'class'
+                                     init(Args.'xrefdir' Args.'xreftree'
+                                          Args.'xrefdb' @Reporter)}
                CurrentNode <- 'index.html'
                NodeCounter <- 0
                ToWrite <- nil
@@ -366,6 +372,10 @@ define
          catch tooManyErrors then
             {@Reporter
              tell(info('%** Too many errors, aborting compilation\n'))}
+         finally
+            case @MyCrossReferencer of unit then skip
+            elseof O then {O close()}
+            end
          end
          if {@Reporter hasSeenError($)} then
             {@Reporter endBatch(rejected)}
@@ -595,6 +605,8 @@ define
                      end)
             [] title then
                TopTitle <- span(COMMON: @Common OzDocToHTML, Batch(M 1 $))
+               {@MyCrossReferencer
+                putTop(SEQ([VERBATIM('``') @TopTitle VERBATIM('\'\'')]))}
                EMPTY
             [] author then
                Authors <- {Append @Authors
@@ -989,18 +1001,29 @@ define
                OzDocToHTML, ID(M.to ?Node _)
                a(COMMON: @Common href: Node#"#"#M.to
                  OzDocToHTML, Batch(M 1 $))
-            [] 'ref.extern' then
-               %--** key attribute?
-               a(COMMON: @Common href: M.to OzDocToHTML, Batch(M 1 $))
+            [] 'ref.extern' then To in
+               case M.to of &o|&z|&d|&o|&c|&:|R then
+                  {@MyCrossReferencer get(R {CondSelect M key unit} ?To _)}
+               else
+                  %--** key attribute?
+                  To = M.to
+               end
+               a(COMMON: @Common href: To OzDocToHTML, Batch(M 1 $))
             [] ptr then Node HTML in
                OzDocToHTML, ID(M.to ?Node ?HTML)
                a(COMMON: @Common href: Node#"#"#M.to HTML)
             [] 'ptr.extern' then
-               %--** use an icon as content
-               {@Reporter error(kind: OzDocError
-                                msg: 'unsupported element'   %--**
-                                items: [hint(l: 'Node' m: oz(M))])}
-               unit
+               case M.to of &o|&z|&d|&o|&c|&:|R then To HTML in
+                  {@MyCrossReferencer get(R {CondSelect M key unit} ?To ?HTML)}
+                  a(COMMON: @Common href: To HTML)
+               else
+                  %--** use an icon as content
+                  {@Reporter
+                   error(kind: OzDocError
+                         msg: 'unsupported external reference'   %--**
+                         items: [hint(l: 'Node' m: oz(M))])}
+                  unit
+               end
             %-----------------------------------------------------------
             % Phrasal Elements
             %-----------------------------------------------------------
@@ -1357,6 +1380,7 @@ define
          if {Dictionary.member @Labels L} then
             Node#HTML = {Dictionary.get @Labels L}
          else
+            {@MyCrossReferencer put(L Node#"#"#L HTML)}
             {Dictionary.put @Labels L Node#HTML}
          end
       end

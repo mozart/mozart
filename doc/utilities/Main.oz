@@ -44,7 +44,10 @@ prepare
                  'latexdb'(single type: string default: unit)
                  'split'(rightmost type: bool default: true)
                  'abstract'(rightmost type: bool default: false)
-                 'keeppictures'(rightmost type:bool default:false)
+                 'xrefdb'(single type: string default: unit)
+                 'xrefdir'(single type: string default: unit)
+                 'xreftree'(single type: string default: '../')
+                 'keeppictures'(rightmost type: bool default: false)
                  %% Path names
                  'ozdoc-home'(single type: string default: unit)
                  'author-path'(single type: string default: unit)
@@ -174,6 +177,14 @@ define
           '--latexdb=<File>    Reuse GIFs generated from LaTeX code.\n'#
           '--(no)split         Split the document into several nodes.\n'#
           '--(no)abstract      Generate an abstract.html auxiliary file.\n'#
+          '--keeppictures      Do no recreate GIF from PS if already there.\n'#
+          '\n'#
+          'Inter-Document Cross-Referencing\n'#
+          '--xrefdb=<File>     Where to look up resp. store references.\n'#
+          '--xrefdir=<RelURL>  Where this document goes relative to the\n'#
+          '                    whole documentation installation directory.\n'#
+          '--xreftree=<RelURL> How to get to whole doc installation from\n'#
+          '                    the directory where this document goes.\n'#
           '\n'#
           'Parametrization\n'#
           '--ozdoc-home=<DIR>  ozdoc installation directory.\n'#
