@@ -88,7 +88,10 @@
 #pragma implementation "perdio.hh"
 #endif
 
+#include "wsock.hh"
+
 #include <sys/types.h>
+#include <sys/wait.h>
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <time.h>
@@ -228,6 +231,14 @@ OZ_C_proc_proto(BIapply);
 extern TaggedRef BI_Unify;
 extern TaggedRef BI_Show;
 
+void pushUnify(Thread *t, TaggedRef t1, TaggedRef t2)
+{
+  RefsArray args = allocateRefsArray(2,NO); // with default priority
+  args[0]=t1;
+  args[1]=t2;
+  t->pushCall(BI_Unify,args,2);
+}
+
 void SiteUnify(TaggedRef val1,TaggedRef val2)
 {
   TaggedRef aux1 = val1; DEREF(aux1,_1,_2);
@@ -247,10 +258,7 @@ void SiteUnify(TaggedRef val1,TaggedRef val2)
     args[0]=tr;
     th->pushCall(BI_Show,args0,1);}
 #endif
-  RefsArray args = allocateRefsArray(2,NO); // with default priority
-  args[0]=val1;
-  args[1]=val2;
-  th->pushCall(BI_Unify,args,2);
+  pushUnify(th,val1,val2);
   am.scheduleThread(th);
 }
 
@@ -5859,8 +5867,7 @@ ByteSource::emptyMsg()
 OZ_Return
 ByteSource::getTerm(OZ_Term out)
 {
-  OZ_Return result;
-  result = maybeSkipHeader();
+  OZ_Return result = maybeSkipHeader();
   if (result!=PROCEED) return result;
   ByteStream * stream;
   result = makeByteStream(stream);
@@ -6018,6 +6025,187 @@ OZ_C_proc_begin(BIperdioSetURLMap,1)
 }
 OZ_C_proc_end
 
+char *newTempFile()
+{
+  char tn[L_tmpnam] = ""; // I like POSIX!
+  tmpnam(tn);
+  return ozstrdup(tn);  
+}
+
+
+class PipeInfo {
+public:
+  int fd;
+  int pid;
+  char *file;
+  char *url;
+  TaggedRef thread, out;
+  Bool load;
+
+  PipeInfo(int f, int p, char *tmpf, char *u, TaggedRef o, TaggedRef t, Bool ld):
+    fd(f), pid(p), file(tmpf), out(o), thread(t), load(ld)
+  {
+    url = ozstrdup(u);
+    OZ_protect(&thread); 
+    OZ_protect(&out); 
+  }
+  ~PipeInfo() { 
+    OZ_unprotect(&thread); 
+    OZ_unprotect(&out); 
+    delete url;
+  }
+};
+
+
+void doRaise(Thread *th, char *msg, char *url)
+{
+  threadRaise(th,
+	      OZ_mkTuple(E_ERROR,
+			 1,
+			 OZ_mkTupleC("perdio",
+				     3,
+				     oz_atom("load"),
+				     oz_atom(msg),
+				     oz_atom(url))));
+}
+
+int pipeHandler(int,void *p)
+{
+  PipeInfo *pi = (PipeInfo *)p;
+  int retloc;
+  int n = osread(pi->fd,&retloc,sizeof(retloc));
+  osclose(pi->fd);
+  
+  Thread *th = tagged2Thread(pi->thread);
+
+#ifndef WINDOWS
+  int u = waitpid(pi->pid,NULL,0);
+  if (u!=pi->pid) {
+    doRaise(th,OZ_unixError(errno),pi->url);
+    return NO;
+  }
+#endif
+
+  if (retloc!=URLC_OK) {
+    doRaise(th,urlcStrerror(retloc),pi->url);
+    goto exit;
+  }
+
+  {
+    OZ_Term other = oz_atom(pi->file);
+    if (pi->load) {
+      int fd = osopen(pi->file, O_RDONLY,0);
+      if (fd < 0) {
+	doRaise(th,OZ_unixError(errno),pi->url);
+	goto exit;
+      }
+      
+      other = oz_newVariable();
+      OZ_Return aux = loadFD(fd,other);
+      if (aux==RAISE) {
+	threadRaise(th, am.exception.value);
+	goto exit;
+      }
+      unlink(pi->file);
+    }
+    pushUnify(th,pi->out,other);
+    oz_resume(th);
+  }
+
+exit:
+  delete pi->file;
+  delete pi;
+  return OK;
+}
+
+#ifdef WINDOWS
+
+class URLInfo {
+public:
+  char *tmpfile, *url;
+  int fd;
+  URLInfo(char *file, char *u, int f):
+    tmpfile(ozstrdup(file)), url(ozstrdup(u)), fd(f) {}
+  ~URLInfo() {
+    delete tmpfile;
+    delete url;
+  }
+};
+
+unsigned __stdcall fetchThread(void *p)
+{
+  URLInfo *ui = (URLInfo *) p;
+  int ret = localizeUrl(ui->url,ui->tmpfile);
+  // message("fetchthread(%s,%s)=%d\n",ui->url,ui->tmpfile,ret);
+  oswrite(ui->fd,&ret,sizeof(ret));
+  osclose(ui->fd);
+  delete ui;
+  _endthreadex(1);
+  return 1;
+}
+
+#endif
+
+
+
+void getURL(char *url, TaggedRef out, Bool load)
+{
+  char *tmpfile = newTempFile();
+
+#ifdef WINDOWS
+
+  HANDLE rh,wh;
+  CreatePipe(&rh,&wh,0,0);
+  int wfd = _hdopen((int)wh,O_WRONLY|O_BINARY);
+  int rfd = _hdopen((int)rh,O_RDONLY|O_BINARY);
+
+  URLInfo *ui = new URLInfo(tmpfile,url,wfd);
+
+  unsigned tid;
+  HANDLE thrd = (HANDLE) _beginthreadex(NULL,0,&fetchThread,ui,0,&tid);
+  if (thrd==NULL) {
+    ozpwarning("getURL: start thread");
+    return;
+  }
+
+  int pid = 0;
+
+#else
+
+  int fds[2];
+  if (pipe(fds)<0) {
+    perror("pipe");
+    return;
+  }
+
+  pid_t pid = fork();
+  switch(pid) {
+  case 0: /* child */
+    {
+      osclose(fds[0]);
+      int ret = localizeUrl(url,tmpfile);
+      oswrite(fds[1],&ret,sizeof(ret));
+      exit(0);
+    }
+  case -1:
+    perror("fork");
+    return;
+  default:
+    break;
+  }
+
+  osclose(fds[1]);
+
+  int rfd = fds[0];
+#endif
+
+  PipeInfo *pi = new PipeInfo(rfd,pid,tmpfile,url,out,
+			      makeTaggedConst(oz_currentThread),load);
+  oz_stop(oz_currentThread);
+  OZ_registerReadHandler(rfd,pipeHandler,pi);
+}
+
+
 int loadURL(char *url, OZ_Term out)
 {
   // perform translation through url_map:
@@ -6116,18 +6304,12 @@ int loadURL(char *url, OZ_Term out)
       return oz_unify(out,val);
     }
   }
+
 bomb:
-
-  int fd = openUrl(url);
-  if (fd >= 0) {
-    return loadFD(fd,out);
-  }
-
-  return oz_raise(E_ERROR,oz_atom("perdio"),"load",3,
-		  oz_atom("openURL"),
-		  oz_atom(urlcStrerror(fd)),
-		  oz_atom(url));
+  getURL(url,out,OK);
+  return BI_PREEMPT;
 }
+
 
 OZ_C_proc_begin(BIload,2)
 {
@@ -6140,24 +6322,15 @@ OZ_C_proc_begin(BIload,2)
 }
 OZ_C_proc_end
 
+
 OZ_C_proc_begin(BIWget,2)
 {
   OZ_declareVirtualStringArg(0,url);
   OZ_declareArg(1,out);
 
-  char *tmpfile;
-  int ret = localizeUrl(url,&tmpfile);
-  
-  if (ret==URLC_OK) {
-    OZ_Return ret = oz_unify(out,oz_atom(tmpfile));
-    free(tmpfile);
-    return ret;
-  }
+  getURL(url,out,NO);
 
-  return oz_raise(E_ERROR,oz_atom("perdio"),"wget",3,
-		  oz_atom("localizeURL"),
-		  oz_atom(urlcStrerror(ret)),
-		  oz_atom(url));
+  return BI_PREEMPT;
 }
 OZ_C_proc_end
 
