@@ -28,6 +28,7 @@ import
    Open(file pipe text)
    OS(system getEnv)
    Property(get condGet)
+   Error(printException)
    Debug at 'x-oz://boot/Debug'
    BisonModule(generate) at 'Bison.so{native}'
 export
