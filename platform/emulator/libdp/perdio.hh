@@ -36,23 +36,27 @@
 #include "base.hh"
 #include "dpBase.hh"
 #include "dpInterface.hh"
-#include "msgbuffer.hh"
+#include "mbuffer.hh"
 #include "msgType.hh"
 #include "dsite.hh"
+#include "msgContainer.hh"
+#include "byteBuffer.hh"
 
 //
 void initDP();
 
 //
 // Per said it must be here;
-void SendTo(DSite *toS,MsgBuffer *bs,MessageType mt,DSite *sS,int sI);
+//  void SendTo(DSite *toS,MarshalerBuffer *bs,MessageType mt,DSite *sS,int sI);
+void SendTo(DSite* toS,MsgContainer *msgC,int priority);
 
 //
 // kost@ 26.3.98 : 'msgReceived()' is NOT a method of a site object.
 // That's quite natural: we don't know who send us a message (of
 // course, communication layer for remote site do know, but that's
 // another story).
-void msgReceived(MsgBuffer *);
+void msgReceived(MarshalerBuffer *); // Not to be used, only needed during devel
+void msgReceived(MsgContainer *,ByteBuffer *);
 
 // Used by networklayer to do pinging.
 void sendPing(DSite*);
@@ -63,31 +67,32 @@ OZ_Term getGatePort(DSite*);
 
 // 
 //
-MsgBuffer* getRemoteMsgBuffer(DSite *);
-void dumpRemoteMsgBuffer(MsgBuffer*);
+//  MarshalerBuffer* getRemoteMarshalerBuffer(DSite *);
+//  void dumpRemoteMarshalerBuffer(MarshalerBuffer*);
 
-class MsgBufferManager{
-public:
-  MsgBuffer* getMsgBuffer(DSite * s){
-    Assert(s!=myDSite);
-    Assert(s!=NULL);
-    if(s->remoteComm()){
-      return getRemoteMsgBuffer(s);}
-    return (*getVirtualMsgBuffer)(s);}
+//  class MarshalerBufferManager{
+//  public:
+//    MarshalerBuffer* getMarshalerBuffer(DSite * s){
+//      Assert(s!=myDSite);
+//      Assert(s!=NULL);
+//      if(s->remoteComm()){
+//        return NULL;}// getRemoteMarshalerBuffer(s);}
+//      return (*getVirtualMarshalerBuffer)(s);}
 
-  void dumpMsgBuffer(MsgBuffer *m){ // only for marshaled/write stuff (not read)
-    DSite *s=m->getSite();
-    if(s->remoteComm()){
-      dumpRemoteMsgBuffer(m);}
-    else{
-      Assert(s!=NULL);
-      (*dumpVirtualMsgBuffer)(m);}}
-};
+//    void dumpMarshalerBuffer(MarshalerBuffer *m){ // only for marshaled/write stuff (not read)
+//      DSite *s=m->getSite();
+//      if(s->remoteComm()){
+//        printf("DUMPING NETMarshalerBuffer\n");
+//        //  dumpRemoteMarshalerBuffer(m);
+//      }
+//      else{
+//        Assert(s!=NULL);
+//        (*dumpVirtualMarshalerBuffer)(m);}}
+//  };
 
-extern MsgBufferManager *msgBufferManager;
+//  extern MarshalerBufferManager *msgBufferManager;
 
 void globalizeTert(Tertiary *t);
-GName *globalizeConst(ConstTerm *t, MsgBuffer *bs);
 
 inline Bool SEND_SHORT(DSite* s){
   if(s->siteStatus()==PERM_SITE) {return OK;}
@@ -144,9 +149,15 @@ int getIPPort();
 void setFirewallStatus(Bool);
 Bool getFireWallStatus();
 
+// AN
+inline void perdio_msgReceived(MsgContainer *msgC,ByteBuffer *bb) {
+  msgReceived(msgC,bb);
+}
+
 // Message Statistics:
 extern int  globalWriteCounter;
 extern int  globalReadCounter;
+
 /* __PERDIOHH */
 #endif 
 

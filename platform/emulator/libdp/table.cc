@@ -33,8 +33,8 @@
 #include "value.hh"
 #include "var.hh"
 #include "var_obj.hh"
-#include "msgbuffer.hh"
-#include "dpMarshaler.hh"
+#include "mbuffer.hh"
+//#include "dpMarshaler.hh"
 #include "state.hh"
 #include "fail.hh"
 #include "protocolState.hh"
@@ -924,8 +924,8 @@ void BorrowEntry::copyBorrow(BorrowEntry* from,int i){
     if(vk==VAR_PROXY){
       GET_VAR(from,Proxy)->gcSetIndex(i);}
     else{
-      Assert(vk==VAR_OBJECT);
-      GET_VAR(from,Object)->getObject()->setIndex(i);}
+      Assert(vk==VAR_LAZY);
+      GET_VAR(from, Lazy)->setIndex(i);}
   } else{
     Assert(from->isRef());
     mkRef(from->getRef(),from->getFlags());
@@ -936,11 +936,13 @@ void BorrowEntry::copyBorrow(BorrowEntry* from,int i){
 
 void BorrowEntry::moreCredit(){
   NetAddress *na = getNetAddress();
-  MsgBuffer *bs=msgBufferManager->getMsgBuffer(na->site);
   PD((CREDIT,"Asking for more credit %s",na->site->stringrep()));
-  getOneMsgCredit();
-  marshal_M_ASK_FOR_CREDIT(bs,na->index,myDSite);
-  SendTo(na->site,bs,M_ASK_FOR_CREDIT,netaddr.site,netaddr.index); 
+  DSite *cS=getOneMsgCredit();
+
+  MsgContainer *msgC = msgContainerManager->newMsgContainer(na->site);
+  msgC->put_M_ASK_FOR_CREDIT(na->index,myDSite);
+  msgC->setImplicitMessageCredit(cS);
+  SendTo(na->site,msgC,3);
 }
 
 void BorrowEntry::giveBackCredit(Credit c){
@@ -1312,8 +1314,8 @@ void BorrowTable::closeFrameToProxy(unsigned int ms){
 	    NetAddress *na=be->getNetAddress();
 	    LockSec* sec = ((LockFrame*)t)->getLockSec();
 	    DSite* toS = sec->getNext();
-	    be->getOneMsgCredit();
-	    lockSendToken(na->site,na->index,toS);
+	    DSite *cS=be->getOneMsgCredit();
+	    lockSendToken(na->site,na->index,toS,cS);
 	  }
 	  else
 	    Assert(0);
@@ -1373,8 +1375,8 @@ int BorrowTable::closeProxyToFree(unsigned int ms){
 	      NetAddress *na=be->getNetAddress();
 	      LockSec* sec = ((LockFrame*)t)->getLockSec();
 	      DSite* toS = sec->getNext();
-	      be->getOneMsgCredit();
-	      lockSendToken(na->site,na->index,toS);
+	      DSite *cS=be->getOneMsgCredit();
+	      lockSendToken(na->site,na->index,toS,cS);
 	    }
 	    else
 	      Assert(0);

@@ -62,18 +62,8 @@ enum ByteStreamType{
   BS_Unmarshal
 };
 
-inline
-Bool isResource(OZ_Term t)
-{
-  if (oz_isFree(t) || oz_isKinded(t) || oz_isFuture(t) || oz_isPort(t))
-    return OK;
-  return ozconf.perdioMinimal
-    ? NO
-    : oz_isObject(t) || oz_isLock(t) || oz_isCell(t);
-}
 
-
-class ByteStream: public MsgBuffer {
+class ByteStream: public PickleBuffer {
   friend class ByteStreamManager;
   friend class CompBufferManager;
   ByteBuffer *first; 
@@ -85,28 +75,10 @@ class ByteStream: public MsgBuffer {
   int totlen;  /* include header */
   int type;
 
-  OZ_Term  resources;
   int perdioMajor, perdioMinor;
 
+  //
 public:  
-
-  virtual Bool visit(OZ_Term val)
-  {
-    OZ_Term t = val;
-    DEREF(t,_1,_2);
-    if (isResource(t)) {
-      resources = oz_cons(val,resources); 
-      return NO;
-    }
-    return OK;
-  }
-  OZ_Term getResources()    { return resources; }
-
-  DSite *getSite() { return ((DSite*) NULL); }
-  Bool isPersistentBuffer() { return OK; }
-
-  char *siteStringrep() {return "toFile";}
-
   int availableSpace(){
     Assert(last!=NULL);
     if(endpos==NULL) return 0;
@@ -234,24 +206,20 @@ public:
 
   /* init */
 
-  virtual void init() { 
-    MsgBuffer::init(); 
-    resources = oz_nil(); 
+  void *operator new(size_t chunk_size) {
+    return (::new char[chunk_size]); }
+  void* operator new(size_t, void *place) { return (place); }
+
+  ByteStream() {
     type=BS_None;first=NULL;last=NULL;pos=NULL; 
     perdioMajor = PERDIOMAJOR;
     perdioMinor = PERDIOMINOR;
   }
-  ByteStream(){ init(); }
 
   void setVersion(int major, int minor) {
     perdioMajor = major;
     perdioMinor = minor;
   }
-
-  virtual int getMinor() { return perdioMinor; }
-  virtual void getVersion(int *major, int *minor) { 
-    *major = perdioMajor; *minor = perdioMinor; } 
-
 
   /* marshal    beg:first->head()  pos=next free slot OR null */
                    /* INTERFACE  pos=first->head()  endpos= first free slot */
@@ -321,40 +289,6 @@ public:
     Assert(pos==NULL);}
 };
 
-class Exporter: public MsgBuffer {
-  OZ_Term vars;
-
-public:  
-  void marshalBegin()        { Assert(0); }
-  void marshalEnd()          { Assert(0); }
-  void unmarshalBegin()      { Assert(0); }
-  void unmarshalEnd()        { Assert(0); }
-  char* siteStringrep()      { Assert(0); return 0; }
-  DSite* getSite()           { Assert(0); return 0; }
-  virtual BYTE getNext()     { Assert(0); return 0; }
-  virtual void putNext(BYTE) { Assert(0); }
-
-  virtual Bool isPersistentBuffer() { return NO; }
-  virtual Bool globalize()          { return NO; }
-
-  Exporter() {
-    posMB = endMB = 0; // so no data will be written nowhere
-    MsgBuffer::init();
-    vars = oz_nil();
-  }
-
-  OZ_Term getVars() { return vars; }
-
-  virtual Bool visit(OZ_Term val)
-  {
-    OZ_Term t = val;
-    DEREF(t,tPtr,_2);
-    if (oz_isVariable(t))
-      vars = oz_cons(val,vars); 
-    return OK;
-  }
-};
-
 
 class ByteStreamManager: public FreeListManager {
 public:
@@ -386,16 +320,6 @@ public:
 
 CompBufferManager *bufferManager= new CompBufferManager();
 
-// 
-// kost@ : interface methods. The only usage for it is SB-style
-// exporting of variables;
-MsgBuffer* getComponentMsgBuffer(){
-  return (bufferManager->getByteStream());
-}
-void freeComponentMsgBuffer(MsgBuffer *buf) {
-  bufferManager->freeByteStream((ByteStream *) buf);
-}
-
 /* **********************************************************************
  *                  BYTE STREAM
  * ********************************************************************** */
@@ -424,7 +348,7 @@ inline ByteStream* ByteStreamManager::newByteStream(){
   ByteStream *bs;
   if(f==NULL) { return new ByteStream();}
   GenCast(f,FreeListEntry*,bs,ByteStream*);
-  bs->init();
+  bs = new ((void *) bs) ByteStream;
   return bs;}
 
 inline  void ByteStreamManager::deleteByteStream(ByteStream* bs){
@@ -474,7 +398,7 @@ void ByteStream::dumpByteBuffers(){
 
 ByteStream* CompBufferManager::getByteStream(){
   ByteStream *bs=byteStreamM->newByteStream();
-  bs->init();
+  bs = new (bs) ByteStream();
   return bs;}
 
 void CompBufferManager::freeByteStream(ByteStream *bs){

@@ -178,7 +178,7 @@ TaggedRef CellSec::unpendCell(PendThread* pt,TaggedRef val){
 
   case REMOTEACCESS:{
    cellSendReadAns(((DSite*)(pt->old)),((DSite*)(pt->nw)),
-		   (int)(pt->controlvar),val);
+		   (int)(pt->controlvar),val,NULL);
    return val;}
 
   case EXCHANGE:{
@@ -281,8 +281,8 @@ OZ_Return CellSec::exchange(Tertiary* c,TaggedRef old,TaggedRef nw,ExKind exKind
     int index=c->getIndex();
     if(c->isFrame()){
       BorrowEntry* be=BT->getBorrow(index);
-      be->getOneMsgCredit();
-      cellLockSendGet(be);}
+      DSite *cS=be->getOneMsgCredit();
+      cellLockSendGet(be,cS);}
     else{
       Assert(c->isManager());
       if(!((CellManager*)c)->getChain()->hasFlag(TOKEN_LOST)){
@@ -326,15 +326,16 @@ OZ_Return CellSec::access(Tertiary* c,TaggedRef val,TaggedRef fea){
       Assert(c->isFrame());
       PD((CELL,"Sending to mgr read"));
       BorrowEntry *be=BT->getBorrow(index);
-      be->getOneMsgCredit();
-      cellSendRead(be,myDSite);}
+      DSite *cS=be->getOneMsgCredit();
+      cellSendRead(be,myDSite,cS);}
     else{ // ERIK-LOOK 
       Assert(((CellManager*)c)->getChain()->getCurrent() != myDSite);
       sendPrepOwner(index);
       cellSendRemoteRead(((CellManager*)c)->getChain()->getCurrent(),
-			 myDSite,index,myDSite);
+			 myDSite,index,myDSite,NULL);
     }
   }
+
   pendThreadAddToEnd(&pending,val,fea,fea ? DEEPAT : ACCESS);
   if(!errorIgnore(c)){
     if(maybeProblem(c)) deferEntityProblem(c);}
@@ -486,22 +487,22 @@ void secLockToNext(LockSec* sec,Tertiary* t,DSite* toS){
   int index=t->getIndex();
   if(t->isFrame()){
     BorrowEntry *be=BT->getBorrow(index);
-    be->getOneMsgCredit();
+    DSite *cS=be->getOneMsgCredit();
     NetAddress *na=be->getNetAddress();
-    lockSendToken(na->site,na->index,toS);
+    lockSendToken(na->site,na->index,toS,cS);
     return;}
   Assert(t->isManager());
   OwnerEntry *oe=OT->getOwner(index);
   oe->getOneCreditOwner();
-  lockSendToken(myDSite,index,toS);}
+  lockSendToken(myDSite,index,toS,NULL);}
 
 void secLockGet(LockSec* sec,Tertiary* t,Thread* th){
   int index=t->getIndex();
   sec->makeRequested();
   if(t->isFrame()){
     BorrowEntry *be=BT->getBorrow(index);
-    be->getOneMsgCredit();
-    cellLockSendGet(be);
+    DSite *cS=be->getOneMsgCredit();
+    cellLockSendGet(be,cS);
     return;}
   Assert(t->isManager());
   OwnerEntry *oe=OT->getOwner(index);

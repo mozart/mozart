@@ -20,6 +20,8 @@
  *
  */
 
+#include "base.hh"
+#include "am.hh"
 #include "value.hh"
 #include "dictionary.hh"
 #include "gname.hh"

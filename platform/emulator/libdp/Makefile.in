@@ -31,13 +31,17 @@ M4_D=		-DEMUDIR=$(SRCDIR)
 LIBS=		@LIBS@
 LDFLAGS=	@LDFLAGS@
 
-REALCORESRCS = dpMarshaler.cc port.cc dpDebug.cc network.cc		\
+REALCORESRCS = dpMarshaler.cc dpMarshalExt.cc				\
+               port.cc dpDebug.cc network.cc				\
                protocolState.cc dsite.cc perdio.cc state.cc		\
                vs_interface.cc fail.cc protocolCredit.cc table.cc	\
-               protocolFail.cc var.cc var_obj.cc msgType.cc chain.cc	\
-               dpResource.cc flowControl.cc
-CREATEDCOREFILES = marshalMsg.cc dpMarshaler.hh
-CREATEDCORESRCS  = marshalMsg.cc
+               protocolFail.cc var.cc var_obj.cc var_lazy.cc msgType.cc	\
+               chain.cc dpResource.cc flowControl.cc msgContainer.cc	\
+	       byteBuffer.cc comObj.cc connection.cc prioQueues.cc	\
+	       transObj.cc tcpTransObj.cc timers.cc
+CREATEDCOREFILES = msgContainer_marshal.hh msgContainer_marshal.cc \
+                   dpMarshalcode.cc 
+CREATEDCORESRCS  = 
 CORESRCS = $(REALCORESRCS) $(CREATEDCORESRCS)
 COREOBJS = $(CORESRCS:.cc=.lo)
 
@@ -57,14 +61,14 @@ CREATEDFILES = $(CREATEDCOREFILES)
 all:
 
 #
-../DPB.so: $(COREOBJS)
+../DPB.so: $(CREATEDFILES) $(COREOBJS)
 	$(DYNLD) -o $@ $(COREOBJS)
 
 ../libDPB.a: $(COREOBJS)
 	$(AR) -rc $@ $(COREOBJS) && $(RANLIB) $@
 
 #
-pidModule.lo: ../modPID-if.cc
+pidModule.lo: ../modPID-if.cc $(CREATEDFILES)
 
 ../PID.so: pidModule.lo
 	$(DYNLD) -o $@ $<
@@ -92,7 +96,7 @@ dpMiscModule.lo: ../modDPMisc-if.cc
 
 #
 
-dpPaneModule.lo: ../modDPPane-if.cc
+dpPaneModule.lo: ../modDPPane-if.cc $(CREATEDFILES)
 
 ../DPPane.so: dpPaneModule.lo 
 	$(DYNLD) -o $@ $<
@@ -132,8 +136,13 @@ veryclean::
 #
 # special dependencies...
 ALLOBJS=$(COREOBJS) $(VSOBJS) $(MODULEOBJS)
-dpMarshaler.hh marshalMsg.cc: msgFormat.m4
-$(ALLOBJS): dpMarshaler.hh
+
+# m4-files dependencies;
+dpMarshalcode.cc dpMarshaler.o: dpMarshalcode.m4cc
+msgContainer_marshal.hh: msgContainer_marshal.m4hh msgFormat.m4
+msgContainer.o: msgContainer_marshal.m4hh msgFormat.m4
+msgContainer_marshal.cc: msgContainer_marshal.m4cc msgFormat.m4
+msgContainer.o: msgContainer_marshal.m4cc msgFormat.m4
 
 BUILDDIR=$(shell pwd)
 tags:	$(CREATEDFILES)
@@ -144,3 +153,4 @@ tags:	$(CREATEDFILES)
 	-o $(SRCDIR)/TAGS \
 	$(addprefix $(BUILDDIR)/,$(CREATEDFILES)) \
 	$(SRCDIR)/*c $(SRCDIR)/*h $(SRCDIR)/../*c $(SRCDIR)/../*h 
+

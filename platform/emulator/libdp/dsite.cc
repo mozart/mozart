@@ -38,7 +38,7 @@
 #include "os.hh"
 #include "dsite.hh"
 #include "comm.hh"
-#include "msgbuffer.hh"
+#include "mbuffer.hh"
 #include "genhashtbl.hh"
 
 #define SITE_CUTOFF           100
@@ -182,7 +182,7 @@ inline void primaryToSecondary(DSite *s, int hvalue) {
   secondarySiteTable->insertSecondary(s,hvalue2);}
 
 static
-DSite* unmarshalDSiteInternal(MsgBuffer *buf, DSite *tryS, MarshalTag mt)
+DSite* unmarshalDSiteInternal(MarshalerBuffer *buf, DSite *tryS, MarshalTag mt)
 {
   DSite *s;
   int hvalue = tryS->hashPrimary();
@@ -303,7 +303,7 @@ DSite *findDSite(ip_address a,int port,TimeStamp &stamp)
 }
 
 #ifdef USE_FAST_UNMARSHALER
-DSite* unmarshalDSite(MsgBuffer *buf)
+DSite* unmarshalDSite(MarshalerBuffer *buf)
 {
   PD((UNMARSHAL,"site"));
   MarshalTag mt = (MarshalTag) buf->get();
@@ -314,7 +314,7 @@ DSite* unmarshalDSite(MsgBuffer *buf)
   return unmarshalDSiteInternal(buf, &tryS, mt);
 }
 #else
-DSite* unmarshalDSiteRobust(MsgBuffer *buf, int *error)
+DSite* unmarshalDSiteRobust(MarshalerBuffer *buf, int *error)
 {
   PD((UNMARSHAL,"site"));
   MarshalTag mt = (MarshalTag) buf->get();
@@ -408,7 +408,7 @@ Bool DSite::isInMyVSGroup(VirtualInfo *vi)
   }
 }
 
-void DSite::marshalDSite(MsgBuffer *buf){
+void DSite::marshalDSite(MarshalerBuffer *buf){
   PD((MARSHAL,"Site"));
   unsigned int type=getType();
   if(type & PERM_SITE){
@@ -437,7 +437,7 @@ static FreeListDataManager<VirtualInfo> freeVirtualInfoPool(malloc);
 //
 // Throw away the "virtual info" object representation from a message
 // buffer;
-void unmarshalUselessVirtualInfo(MsgBuffer *mb)
+void unmarshalUselessVirtualInfo(MarshalerBuffer *mb)
 {
   Assert(sizeof(ip_address) <= sizeof(unsigned int));
   Assert(sizeof(port_t) <= sizeof(unsigned short));
@@ -458,13 +458,13 @@ void unmarshalUselessVirtualInfo(MsgBuffer *mb)
 }
 
 //
-void marshalVirtualInfo(VirtualInfo *vi, MsgBuffer *mb)
+void marshalVirtualInfo(VirtualInfo *vi, MarshalerBuffer *mb)
 {
   vi->marshal(mb);
 }
 
 //
-VirtualInfo* unmarshalVirtualInfo(MsgBuffer *mb)
+VirtualInfo* unmarshalVirtualInfo(MarshalerBuffer *mb)
 {
   VirtualInfo *voidVI = freeVirtualInfoPool.allocate();
   VirtualInfo *vi = new (voidVI) VirtualInfo(mb);

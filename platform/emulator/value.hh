@@ -595,6 +595,7 @@ public:
   }
 
   ConstTerm *gCollectConstTermInline(void);
+  ConstTerm *gCollectConstTerm(void);
   ConstTerm *sCloneConstTermInline(void);
   void gCollectConstRecurse(void);
   void sCloneConstRecurse(void);
@@ -648,6 +649,10 @@ public:
   }
   GName *getGName1() {
     return hasGName()?(GName *)boardOrGName.getPtr():(GName *)NULL;
+  }
+  GName *getGName() {
+    Assert(hasGName());
+    return ((GName *) boardOrGName.getPtr());
   }
 };
 
@@ -1658,13 +1663,23 @@ public:
   ObjectClass * getClass(void) { 
     return (ObjectClass *) tagged2Const(cl1); 
   }
+  OZ_Term getClassTerm(void) {
+    return (cl1);
+  }
   void setClass(ObjectClass *c) {
     Assert(!c || c->supportsLocking()>=0);
     cl1=makeTaggedConst(c);
   }
-  
-  GName *getGName1(void)       { return objectID; }
-  void setGName(GName *gn) { objectID = gn;}
+  void setClassTerm(OZ_Term cl) {
+    cl1 = cl;
+  }
+
+  GName *getGName1(void)       {
+    return objectID;
+  }
+  void setGName(GName *gn) {
+    objectID = gn;
+  }
     
   OzLock *getLock(void) { 
     return ((lock == makeTaggedNULL()) ? 
@@ -1687,8 +1702,13 @@ public:
   void setState(Tertiary *c) { 
     state = c ? makeTaggedConst(c) : makeTaggedNULL(); 
   }
+  void setState(OZ_Term s) {
+    state = s;
+  }
 
-  OzDictionary *getDefMethods() { return getClass()->getDefMethods(); }
+  OzDictionary *getDefMethods() {
+    return getClass()->getDefMethods();
+  }
 
   SRecord *getFreeRecord(void) { 
     return freeFeatures ? tagged2SRecord(freeFeatures) : (SRecord *) NULL;
@@ -1701,8 +1721,7 @@ public:
   }
 
   /* same functionality is also in instruction inlineDot */
-  TaggedRef getFeature(TaggedRef lit) 
-  {
+  TaggedRef getFeature(TaggedRef lit) {
     SRecord *freefeat = getFreeRecord();
     if (freefeat) {
       TaggedRef ret = freefeat->getFeature(lit);
@@ -1745,8 +1764,8 @@ public:
   GName *globalize();
   void localize();
 
-  Object(Board *bb,SRecord *s,ObjectClass *ac,SRecord *feat, OzLock *lck):
-    Tertiary(bb, Co_Object,Te_Local)
+  Object(Board *bb, SRecord *s, ObjectClass *ac, SRecord *feat, OzLock *lck)
+    : Tertiary(bb, Co_Object,Te_Local)
   {
     setFreeRecord(feat);
     setClass(ac);
@@ -1755,16 +1774,17 @@ public:
     setLock(lck);
   }
 
-  Object(int i): Tertiary(i,Co_Object,Te_Proxy)
+  // kost@ : this is THE constructor to be used by the builder (for
+  // distribution and eventually persistence);
+  Object(Board *bb, GName *gn, OZ_Term s, SRecord *feat, OzLock *lck)
+    : Tertiary(bb, Co_Object, Te_Local)
   {
-    cl1          = makeTaggedNULL();
-    lock         = makeTaggedNULL();
-    freeFeatures = makeTaggedNULL();
-    state        = makeTaggedNULL();
-    setGName(NULL);
+    setFreeRecord(feat);
+    setState(s);
+    setGName(gn);
+    setLock(lck);
+    DebugCode(cl1 = (OZ_Term) 0;);
   }
-
-
 };
 
 SRecord *getState(RecOrCell state, Bool isAssign, OZ_Term fea, OZ_Term &val);

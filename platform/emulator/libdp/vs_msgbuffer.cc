@@ -210,7 +210,7 @@ void VSMsgChunkPoolSegmentManagerOwned::deleteAndBroadcast()
   while (vs) {
     DSite *site = vs->getSite();
     key_t key = getSHMKey(); 
-    VSMsgBufferOwned *mb = composeVSUnusedShmIdMsg(site, key);
+    VSMarshalerBufferOwned *mb = composeVSUnusedShmIdMsg(site, key);
     // 'sendTo' may be noop if the site is already disconnected;
     (void) sendTo_VirtualSiteImpl(vs, mb,  /* messageType */ M_NONE,
 				  /* storeSite */ (DSite *) 0,
@@ -759,21 +759,6 @@ VSChunkPoolRegister::handleVoid(key_t key,
 
   //
   return (aux);
-}
-
-//
-char* VSMsgBufferOwned::siteStringrep()
-{
-  if (site) 
-    return (site->stringrep());
-  else
-    return ("(initializing a new virtual site - it is not yet known)");
-}
-
-//
-char* VSMsgBufferImported::siteStringrep()
-{
-  return ("(an unknown virtual site a message received from)");
 }
 
 #endif // VIRTUALSITES

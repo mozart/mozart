@@ -260,6 +260,7 @@ class RefTable;
 class RefTrail;
 
 class GenTraverser;
+class Builder;
 
 class Site;
 class DSite;
@@ -291,7 +292,8 @@ class CallList;
 class SuspQueue;
 
 class ProxyList;
-class MsgBuffer;
+class MarshalerBuffer;
+class PickleBuffer;
 
 // source level debugger
 class Atom;
@@ -304,7 +306,9 @@ extern AM am; // the one and only engine
 // assem
 class CodeArea;
 class PrTabEntry;
+class AbstractionEntry;
 
+class CallMethodInfo;
 // 
 class BuiltinTab;
 
@@ -335,8 +339,6 @@ class NetAddress;
 class GName;
 
 class IONode;
-
-class MsgBuffer;
 
 class DummyClass {};
 

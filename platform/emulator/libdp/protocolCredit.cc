@@ -28,9 +28,8 @@
 #include "dpBase.hh"
 #include "msgType.hh"
 #include "dpDebug.hh"
-#include "msgbuffer.hh"
+#include "mbuffer.hh"
 #include "protocolCredit.hh"
-#include "dpMarshaler.hh"
 
 /**********************************************************************/
 /*   Credit protocol                                     */
@@ -39,16 +38,22 @@
 
 void sendPrimaryCredit(DSite *sd,int OTI,Credit c){
   PD((CREDIT,"Sending PrimaryCreds c:%d", c));
-  MsgBuffer *bs= msgBufferManager->getMsgBuffer(sd);
   Assert(creditSiteOut==NULL);
-  marshal_M_OWNER_CREDIT(bs,OTI,c); // no msg credit
-  SendTo(sd,bs,M_OWNER_CREDIT,sd,OTI);}
+
+  MsgContainer *msgC = msgContainerManager->newMsgContainer(sd);
+  msgC->put_M_OWNER_CREDIT(OTI,c);
+
+  SendTo(sd,msgC,3);
+}
 
 void sendSecondaryCredit(DSite *cs,DSite *sd,int OTI,Credit c){
   PD((CREDIT,"Sending SecondaryCreds c:%d", c));
-  MsgBuffer *bs= msgBufferManager->getMsgBuffer(cs);
-  marshal_M_OWNER_SEC_CREDIT(bs,sd,OTI,c); // no msg credit
-  SendTo(cs,bs,M_OWNER_SEC_CREDIT,sd,OTI);}
+
+  MsgContainer *msgC = msgContainerManager->newMsgContainer(cs);
+  msgC->put_M_OWNER_SEC_CREDIT(sd,OTI,c); // no msg credit
+
+  SendTo(cs,msgC,3);
+}
 
 void sendCreditBack(DSite* sd,int OTI,Credit c){ 
   if(creditSiteIn==NULL){
