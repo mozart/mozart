@@ -16,8 +16,10 @@
 # functions that are passed through the parameter "ffuns".
 
 
+srcdir=$1
+OZINCDIR=$srcdir/../include
 ozc=oz.c
-in=oz.h
+in=$srcdir/oz.h
 initffuns=initffuns.cc
 
 cat > $ozc << EOF
@@ -30,7 +32,7 @@ EOF
 
 grep _FUNDECL $in | grep -v define | sed -e 's/extern //' >> $ozc
 
-grep OZVERSION ../include/config.h >> $ozc
+grep OZVERSION $OZINCDIR/config.h >> $ozc
 
 cat >> $ozc << EOF
 

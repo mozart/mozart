@@ -21,8 +21,10 @@
 #  of this file, and for a DISCLAIMER OF ALL 
 #  WARRANTIES.
 
+export
 
 # Programs
+SUBDIRS		= FDLib FSetLib
 srcdir		= @srcdir@
 VPATH		= @srcdir@
 SHELL		= @SH@
@@ -33,12 +35,16 @@ YFLAGS		= -d
 MV		= @MV@
 SED		= @SED@
 ECHO		= @@ECHO@
-M4		= @M4@
-M4_S		= @M4_S@
+OZINCDIR	= $(srcdir)/../include
+M4A		= -DOZINCDIR=$(OZINCDIR) -DOZSRCDIR=$(srcdir)
+M4		= @M4@ $(M4A)
+M4_S		= @M4_S@ $(M4A)
 RM		= @RM@ -f
 CXX		= @CXX@
 LD		= @LD@
 DYNLD		= @DYNLD@
+RANLIB		= @RANLIB@
+AR		= @AR@
 
 INSTALL		= @INSTALL@
 INSTALL_DIR	= $(INSTALL) -m 775 -d
@@ -50,9 +56,10 @@ LDFLAGS		= @LDFLAGS@
 COPT		= @COPT@
 DEFS		= @DEFS@
 CWARN		= @CWARN@
-CFLAGS		= $(COPT) $(DEFS) $(CWARN) $(CUSR)
+INCS		= -I. -I$(srcdir) -I$(OZINCDIR)
+CFLAGS		= $(COPT) $(DEFS) $(INCS) $(CWARN) $(CUSR)
 CXXFLAGS	= $(CFLAGS)
-DEPEND		= @DEPEND@ $(DEFS)
+DEPEND		= @DEPEND@ $(DEFS) $(INCS)
 
 PROGRAMNAME	= @PROGRAMNAME@
 TARGETS		= @TARGETS@
@@ -63,6 +70,7 @@ platformdir	= $(prefix)/platform
 bindir		= $(platformdir)/$(platform)
 incdir		= $(prefix)/include
 
+INSTRDEFS = $(OZINCDIR)/instrDefs.m4
 
 MOREWARNINGS  =   -Wall -pedantic-errors -W -Wtraditional -Wshadow \
 	-Wpointer-arith -Wbad-function-cast -Wcast-qual -Wcast-align \
@@ -79,12 +87,10 @@ ERRWARN = -Werr
 WARNLINUXDEBUG = -W -Wswitch -Wreturn-type -Wparentheses -Wimplicit \
 	/*-Wpointer-arithm*/ -Wconversion /*-Wshadow*/ -Wcast-align
 
-INSTRDEFS = ../include/instrDefs.m4
-
 M4FILES = \
 	scancode.cc instrtab.hh opcodes.hh optostr.hh \
 	register.hh opcodes.cc marshalcode.cc marshaler.hh \
-	marshalMsg.cc
+	marshalMsg.cc ozma-p.yy ozma-s.ll
 
 PEANUTS = \
 	am.cc genvar.cc \
@@ -122,45 +128,12 @@ SRCS = $(FDSRCS) $(FSETSRCS) $(CPISRCS) $(CXXSRCS) @PEANUTS@
 
 OBJS = $(SRCS:.cc=.o)
 
-FDDIR = $(srcdir)/FDLib
-
-FDLIB = fdlib.so
-
-FDLIBSRCS = $(FDDIR)/arith.cc $(FDDIR)/fdaux.cc $(FDDIR)/bool.cc \
-	    $(FDDIR)/card.cc $(FDDIR)/cd.cc $(FDDIR)/count.cc \
-	    $(FDDIR)/rel.cc $(FDDIR)/disjoint.cc $(FDDIR)/std.cc \
-	    $(FDDIR)/sum.cc $(FDDIR)/sumequal.cc \
-	    $(FDDIR)/distance.cc $(FDDIR)/misc.cc $(FDDIR)/streamProps.cc \
-	    $(FDDIR)/sumd.cc $(FDDIR)/sumabs.cc $(FDDIR)/complalldist.cc
-
-FDLIBOBJS = $(FDLIBSRCS:.cc=.o)
-
-SCHEDLIB = schedlib.so
-
-SCHEDLIBSRCS = $(FDDIR)/scheduling.cc $(FDDIR)/schedulingDist.cc \
-	       $(FDDIR)/schedulingDistAux.cc $(FDDIR)/taskintervals.cc 
-
-SCHEDLIBOBJS = $(SCHEDLIBSRCS:.cc=.o)
-
-FSETLIB = fdsetlib.so
-
-FSETDIR = $(srcdir)/FSetLib
-
-FSETLIBSRCS =	$(FSETDIR)/standard.cc $(FSETDIR)/telling.cc \
-		$(FSETDIR)/testing.cc $(FSETDIR)/fsaux.cc \
-		$(FSETDIR)/intsets.cc $(FSETDIR)/monitor.cc \
-		$(FSETDIR)/reified.cc $(FSETDIR)/fsstd.cc \
-		$(FSETDIR)/std_n.cc
-
-FSETLIBOBJS = $(FSETLIBSRCS:.cc=.o)
-
-ALLPROPOBJS = $(FDLIBOBJS) $(SCHEDLIBOBJS) $(FSETLIBOBJS)
-
-PROPOBJS = @PROPOBJS@
-
 .NOEXPORT: emulate.o $(PROGRAMNAME) peanuts.o
 
-all: $(TARGETS)
+all: subdirs $(TARGETS)
+
+subdirs:
+	for d in $(SUBDIRS); do (cd $$d; $(MAKE) all); done
 
 win: ozlib.lnk $(M4FILES)
 
@@ -169,7 +142,8 @@ win-install:
 
 first: version $(M4FILES) $(SRCS)
 
-$(FDLIB): $(FDLIBOBJS)
+$(FDLIB):
+	cd FDLib; make
 	$(DYNLD) -o $@ $(FDLIBOBJS)
 
 $(SCHEDLIB): $(SCHEDLIBOBJS)
@@ -181,7 +155,7 @@ $(FSETLIB): $(FSETLIBOBJS)
 $(PROGRAMNAME): first main.o $(OBJS) $(PROPOBJS)
 	$(LD) $(LDFLAGS) $(LDOPT) -o /tmp/$@.$$$$ \
 	   main.o $(OBJS) $(PROPOBJS) $(LIBS); \
-	echo 'moving ...'; mv /tmp/$@.$$$$ $@
+	echo 'moving ...'; $(MV) /tmp/$@.$$$$ $@
 
 install: install-dir install-bin install-inc
 
@@ -203,7 +177,7 @@ version.cc: version
 emulate.cc:: register.hh
 
 initffuns.cc oz.c: oz.h
-	./makeffuns
+	$(srcdir)/makeffuns $(srcdir)
 
 version:
 	$(SED) -e "s/HEREGOESDATE/`date '+%a %h, %d, 19%y \(%T\)'`/" \
@@ -234,42 +208,22 @@ realclean: clean
 		ozlib.lnk *.exe *.map *.imp *.sym *.so \
 		$(M4FILES) \
 		oz.c initffuns.cc TAGS \
-		conf.h Makefile config.cache \
+		conf.h Makefile config.cache config.log config.status \
 		$(FDLIB) $(SCHEDLIB) $(FSETLIB)
 
 veryclean: realclean
-
-# create a separate directory of links
-# for compiling the emulator
-linkdir:
-	dir=../Emulator-$(platform); \
-	mkdir $$dir; cd $$dir; \
-	ln -s ../Emulator/version.sed \
-	      ../Emulator/?*c ../Emulator/?*h \
-	      ../Emulator/?*ll ../Emulator/?*yy \
-	      ../Emulator/configure ../Emulator/Makefile.in \
-	      ../Emulator/conf.h.in ../Emulator/?*.m4 \
-	      ../Emulator/Imakefile ../Emulator/makefuns \
-	   .; \
-	mkdir $$dir/$(FDDIR); cd $$dir/$(FDDIR); \
-	ln -s ../../Emulator/$(FDDIR)/?*c ../../Emulator/$(FDDIR)/?*h .; \
-	mkdir ../$$dir/$(FSETDIR); cd ../$$dir/$(FSETDIR); \
-	ln -s ../../Emulator/$(FSETDIR)/?*c ../../Emulator/$(FSETDIR)/?*h .;
-	rm -f version.cc; make version
-
-
 
 ozlib.lnk: oz.h
 	grep FUNDECL oz.h | grep -v typedef | grep -v define | \
 	sed -e 's/.*_FUNDECL(\([A-Za-z0-9_]*\).*/export _\1/' > $@
 
 scanner.cc: scanner.ll
-	$(LEX) $(LFLAGS) -Pxy -t scanner.ll > scanner.cc
+	$(LEX) $(LFLAGS) -Pxy -t $< > scanner.cc
 
 parser.cc parser.hh: parser.yy
-	$(YACC) $(YFLAGS) -p xy parser.yy
-	@mv y.tab.c parser.cc
-	@mv y.tab.h parser.hh
+	$(YACC) $(YFLAGS) -p xy $<
+	@$(MV) y.tab.c parser.cc
+	@$(MV) y.tab.h parser.hh
 
 # this special rule ensures that warnings issued in bison.simple
 # are not treated as errors:
@@ -277,21 +231,21 @@ parser.o: parser.cc
 	$(CXX) $(CXXFLAGS) -w -c $< -o $@
 
 ozma-s.cc: ozma-s.ll
-	$(LEX) $(LFLAGS) -Pozma -t ozma-s.ll > ozma-s.cc
+	$(LEX) $(LFLAGS) -Pozma -t $< > ozma-s.cc
 
 ozma-p.cc ozma.hh: ozma-p.yy
-	$(YACC) $(YFLAGS) -p ozma ozma-p.yy
-	@mv y.tab.c ozma-p.cc
-	@mv y.tab.h ozma.hh
+	$(YACC) $(YFLAGS) -p ozma $<
+	@$(MV) y.tab.c ozma-p.cc
+	@$(MV) y.tab.h ozma.hh
 
 ozma-p.o: ozma-p.cc
 	$(CXX) $(CXXFLAGS) -w -c $< -o $@
 
 ozma-s.ll: ozma-s.m4ll
-	$(M4) ozma-s.m4ll > $@
+	$(M4) $< > $@
 
 ozma-p.yy: ozma-p.m4yy
-	$(M4) ozma-p.m4yy > $@
+	$(M4) $< > $@
 
 #/usr/include/signal.h is broken on Linux:
 #os.cc: In function `void osBlockSignals(int = 0)':
@@ -302,7 +256,7 @@ ozma-p.yy: ozma-p.m4yy
 .SUFFIXES: .cc .m4cc .hh .m4hh .s .E .sed
 
 .cc.o:
-	$(CXX) $(CXXFLAGS) -c -o /tmp/$$$$.o $< && mv /tmp/$$$$.o $@
+	$(CXX) $(CXXFLAGS) -c -o /tmp/$$$$.o $< && $(MV) /tmp/$$$$.o $@
 
 .cc.s:
 	$(CXX) $(CXXFLAGS) -S -o $@ $<

@@ -315,7 +315,7 @@ int atomcmp(TaggedRef a, TaggedRef b)
 #include <limits.h>
 
 extern "C" {
-#include "../include/gmp.h"
+#include "gmp.h"
 }
 
 
