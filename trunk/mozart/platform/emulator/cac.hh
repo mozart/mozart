@@ -79,39 +79,39 @@ extern VarFix vf;
  *
  */
 
-enum TypeOfPtr {
-  PTR_LTUPLE         =  0,  // 0000
-  PTR_SRECORD        =  1,  // 0001
-  PTR_BOARD          =  2,  // 0010
-  PTR_VAR           =  3,  // 0011
-  PTR_CONSTTERM      =  4,  // 0100
-  PTR_EXTENSION      =  5,  // 0101
-  PTR_SUSPLIST       =  6,  // 0110
-  PTR_UNUSED2        =  7,  // 0111
-  PTR_LOCAL_SUSPLIST =  8,  // 1000
-  // The remaining entries are reserved:
-  //  the lower three bits encode, how many suspenlists are to
-  //  be collected.
+enum ptrtag_t {
+  PTR_LTUPLE         =  0,  // 000
+  PTR_SRECORD        =  1,  // 001
+  PTR_BOARD          =  2,  // 010
+  PTR_SUSPLIST0      =  3,  // 011
+  PTR_VAR            =  4,  // 100
+  PTR_CONSTTERM      =  5,  // 101
+  PTR_EXTENSION      =  6,  // 110
+  PTR_SUSPLIST1      =  7,  // 111
 };
 
-
-typedef TaggedRef TypedPtr;
+#define PTR_SUSPLIST PTR_SUSPLIST0
+#define PTR_MASK     7
 
 class CacStack: public FastStack {
 public:
   CacStack() : FastStack() {}
   ~CacStack() {}
   
-  void push(void * ptr, TypeOfPtr type) {
-    FastStack::push1((StackEntry) makeTaggedRef2p((ltag_t) type, ptr));
+  void push(void * ptr, ptrtag_t tag) {
+    Assert(oz_isHeapAligned(ptr));
+    FastStack::push1((StackEntry) (((unsigned int) ptr) | tag));
+  }
+
+  void pushSuspList(SuspList ** sl) {
+    FastStack::push2((StackEntry) NULL, 
+		     (StackEntry) (((unsigned int) sl) | PTR_SUSPLIST));
   }
 
   void pushLocalSuspList(Board * bb, SuspList ** sl, int n) {
-    Assert(n<8);
-    FastStack::push2((StackEntry) bb, 
-		     (StackEntry) 
-		     makeTaggedRef2p((ltag_t) (PTR_LOCAL_SUSPLIST | n), 
-				     (void *) sl));
+    Assert(oz_isHeapAligned(bb) && n<8);
+    FastStack::push2((StackEntry) (((unsigned int) bb) | n), 
+		     (StackEntry) (((unsigned int) sl) | PTR_SUSPLIST));
   }
 
   void gCollectRecurse(void);
