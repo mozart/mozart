@@ -16,13 +16,25 @@
 #pragma interface
 #endif
 
+/* like malloc(3): return pointer aligned to void* */
+inline
+void *heapMalloc(size_t chunk_size)
+{
+  if (sizeof(int32) != WordSize) {
+    HeapTopAlign(WordSize);
+  }
+  return mallocBody(chunk_size);
+}
+
+
 inline
 void * freeListMalloc(size_t chunk_size)
 {
   Assert(((chunk_size & 3) == 0) && (chunk_size > 0));
 
-  while (chunk_size%WordSize) {
-    chunk_size++;
+  int mod = chunk_size%WordSize;
+  if (mod) {
+    chunk_size += WordSize-mod;
   }
 
   void **freeListCache = FreeList;
@@ -42,8 +54,9 @@ void freeListDispose(void * addr, size_t chunk_size)
 {
   Assert((chunk_size & 3) == 0);
 
-  while (chunk_size%WordSize) {
-    chunk_size++;
+  int mod = chunk_size%WordSize;
+  if (mod) {
+    chunk_size += WordSize-mod;
   }
 
 #ifdef DEBUG_MEM
