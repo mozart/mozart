@@ -62,6 +62,8 @@ SPAN.builtin      { color: #DA70D6; }
 
 DIV.footnote {
   text-indent: 1em;
+  font-family: sans-serif;
+  font-size: 10pt;
 }
 
 A:link {
