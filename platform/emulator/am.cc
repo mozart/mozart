@@ -259,12 +259,10 @@ void AM::init(int argc,char **argv)
   toplevelVars      = allocateRefsArray(ozconf.numToplevelVars);
   toplevelVarsCount = 0;
 
-  Builtin *bi = new Builtin(entry,makeTaggedNULL());
-  toplevelVars[0] = makeTaggedConst(bi);
+  toplevelVars[0] = makeTaggedConst(entry);
 
-  BuiltinTabEntry *biTabEntry =
-    (BuiltinTabEntry *) builtinTab.htFind("biExceptionHandler");
-  defaultExceptionHandler = makeTaggedConst(new Builtin(biTabEntry,0));
+  BuiltinTabEntry *biTabEntry = builtinTab.find("biExceptionHandler");
+  defaultExceptionHandler = makeTaggedConst(biTabEntry);
 
   ioNodes = new IONode[osOpenMax()];
 

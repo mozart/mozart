@@ -299,16 +299,18 @@ Bool MemChunks::inChunkChain(void *value)
  */
 Bool MemChunks::isInHeap(TaggedRef term)
 {
-  if (isRef (term) && term != makeTaggedNULL() &&
+  if (isRef(term) && term != makeTaggedNULL() &&
       !list->inChunkChain(tagged2Ref(term))) {
     return NO;
   }
-  if (!isRef (term)) {
+  if (!isRef(term)) {
     switch (tagTypeOf (term)) {
     case UVAR:
     case SVAR:
     case LTUPLE:
     case OZCONST:
+      if (isBuiltin(term)) return OK;
+      // no break
     case SRECORD:
       if (!list->inChunkChain(tagValueOf(term))) {
         return NO;

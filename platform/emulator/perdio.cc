@@ -2027,7 +2027,7 @@ loop:
   case BUILTINTAG:
     {
       char *name = tagged2Literal(unmarshallTerm(bs))->getPrintName();
-      BuiltinTabEntry *found = (BuiltinTabEntry *) builtinTab.htFind(name);
+      BuiltinTabEntry *found = builtinTab.find(name);
 
       if (found == htEmpty) {
         warning("Builtin '%s' not in table.", name);
@@ -2035,7 +2035,7 @@ loop:
         return;
       }
 
-      *ret = makeTaggedConst(new Builtin(found, 0));
+      *ret = makeTaggedConst(found);
       return;
     }
 

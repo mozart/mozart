@@ -295,9 +295,9 @@ BuiltinTabEntry *BIadd(char *name,int arity, OZ_CFun funn, IFOR infun)
   if (builtinTab.htAdd(name,builtin) == NO) {
     warning("BIadd: failed to add %s/%d\n",name,arity);
     delete builtin;
-    return((BuiltinTabEntry *) NULL);
+    return NULL;
   }
-  return(builtin);
+  return builtin;
 }
 
 // add specification to builtin table
@@ -308,79 +308,29 @@ void BIaddSpec(BIspec *spec)
   }
 }
 
-BuiltinTabEntry *BIaddSpecial(char *name,int arity,BIType t)
-{
-  BuiltinTabEntry *builtin = new BuiltinTabEntry(name,arity,t);
-
-  if (builtinTab.htAdd(name,builtin) == NO) {
-    warning("BIadd: failed to add %s/%d\n",name,arity);
-    delete builtin;
-    return((BuiltinTabEntry *) NULL);
-  }
-  return(builtin);
-}
-
 /********************************************************************
  * `builtin`
  ******************************************************************** */
 
-OZ_Term OZ_findBuiltin(char *name, OZ_Term handler) {
-
-  int arity = -1;
-
-  if (!OZ_isProcedure(handler)) {
-    if (!(OZ_isAtom(handler) && OZ_eq(handler,OZ_atom("noHandler")))
-        && !isSmallInt(handler)) {
-      warning("Builtin '%s' illegal handler.", name,toC(handler));
-      message("Using noHandler as default.\n");
-    }
-    if (isSmallInt(handler))
-      arity = smallIntValue(handler);
-
-    handler = 0;
-  }
-
-  BuiltinTabEntry *found = (BuiltinTabEntry *) builtinTab.htFind(name);
-
-  if (found == htEmpty) {
-    warning("Builtin '%s' not in table.", name);
-    goto fallback;
-  }
-
-  if (arity!=-1 && (arity != found->getArity())) {
-    warning("Builtin '%s' has arity %d (not as suggested %d).",
-            name, found->getArity(), arity);
-    goto fallback;
-  }
-
-  if (!handler && !found->getFun()) {
-    warning("Builtin '%s' is special and needs suspension handler.",
-            name);
-  fallback:
-    message("Using nop as fallback.\n");
-    found = (BuiltinTabEntry *) builtinTab.htFind("nop");
-  } else if (handler && found->getInlineFun()) {
-    warning("Builtin '%s' is compiled inline: suspension handler ignored.",
-            name);
-    handler = 0;
-  }
-
-  Builtin *bi = new Builtin(found, handler);
-  return makeTaggedConst(bi);
-}
 
 OZ_C_proc_begin(BIbuiltin,3)
 {
-  OZ_declareAtomArg(0,str);
-  OZ_nonvarArg(1);
-  OZ_Term hdl = OZ_deref(OZ_getCArg(1));
+  OZ_declareAtomArg(0,name);
+  OZ_declareIntArg(1,arity);
+
   OZ_Term ret = OZ_getCArg(2);
 
-  OZ_Term bi = OZ_findBuiltin(str, hdl);
+  BuiltinTabEntry *found = builtinTab.find(name);
 
-  if (!bi) return PROCEED;
+  if (found == htEmpty) {
+    return raiseKernel("builtinUndefined",1,OZ_getCArg(0));
+  }
 
-  return OZ_unify(ret,bi);
+  if (arity!=-1 && (arity != found->getArity())) {
+    return raiseKernel("builtinArity",1,OZ_getCArg(0));
+  }
+
+  return OZ_unify(ret,makeTaggedConst(found));
 }
 OZ_C_proc_end
 
@@ -618,7 +568,7 @@ OZ_Return procedureArityInline(TaggedRef procedure, TaggedRef &out)
       arity = ((Abstraction *) rec)->getArity();
       break;
     case Co_Builtin:
-      arity = ((Builtin *) rec)->getArity();
+      arity = ((BuiltinTabEntry *) rec)->getArity();
       break;
     default:
       goto typeError;
@@ -5822,7 +5772,7 @@ OZ_C_proc_begin(BIgetPrintName,2)
     if (isConst(term)) {
       ConstTerm *rec = tagged2Const(term);
       switch (rec->getType()) {
-      case Co_Builtin:      return OZ_unify(out, ((Builtin *) rec)->getName());
+      case Co_Builtin:      return OZ_unify(out, ((BuiltinTabEntry *) rec)->getName());
       case Co_Abstraction:  return OZ_unify(out, ((Abstraction *) rec)->getName());
       case Co_Object:       return OZ_unifyAtom(out, ((Object*) rec)->getPrintName());
 
@@ -6793,14 +6743,6 @@ OZ_Return newObjectInline(TaggedRef cla, TaggedRef &out)
 DECLAREBI_USEINLINEFUN1(BInewObject,newObjectInline)
 
 
-OZ_C_proc_begin(BInew,3)
-{
-  /* the suspension handler does the real work */
-  return SUSPEND;
-}
-OZ_C_proc_end
-
-
 
 OZ_C_proc_begin(BIgetOONames,5)
 {
@@ -6897,6 +6839,18 @@ OZ_C_proc_begin(BIbiExceptionHandler,1)
   errorTrailer();
 
   return am.isToplevel() ? PROCEED : FAILED;
+}
+OZ_C_proc_end
+
+OZ_C_proc_begin(BIraise,1)
+{
+  return RAISE_USER;
+}
+OZ_C_proc_end
+
+OZ_C_proc_begin(BIraiseError,1)
+{
+  return RAISE_BIERROR;
 }
 OZ_C_proc_end
 
@@ -7267,7 +7221,6 @@ BIspec allSpec2[] = {
   {"oosetCounterSelf", 1,BIoosetCounterSelf,   0},
   {"getClass",         2,BIgetClass,           (IFOR) getClassInline},
   {"ooGetLock",        1,BIooGetLock,          (IFOR) ooGetLockInline},
-  {"new",              3,BInew,                0},
   {"newObject",        2,BInewObject,          (IFOR) newObjectInline},
   {"getOONames",       5,BIgetOONames,         0},
   {"getSelf",          1,BIgetSelf,            0},
@@ -7284,6 +7237,10 @@ BIspec allSpec2[] = {
 
   {"biExceptionHandler",         1, BIbiExceptionHandler,         0},
   {"setDefaultExceptionHandler", 1, BIsetDefaultExceptionHandler, 0},
+
+  {"raise",      1, BIraise,      0},
+  {"raiseError", 1, BIraiseError, 0},
+
   {0,0,0,0}
 };
 
@@ -7307,10 +7264,6 @@ BuiltinTabEntry *BIinit()
 
   BIaddSpec(allSpec1);
   BIaddSpec(allSpec2);
-
-  /* see emulate.cc */
-  BIaddSpecial("raise",             1, BIraise);
-  BIaddSpecial("raiseError",        1, BIraiseError);
 
 #ifdef ASSEMBLER
   BIinitAssembler();
