@@ -94,7 +94,7 @@ HashTable::~HashTable()
 // M e t h o d s
 
 inline int HashTable::hashFunc(intlong i) {
-  return i % tableSize;
+  return ((unsigned) i) % tableSize;
 }
 
 inline int HashTable::hashFunc(const char *s) {

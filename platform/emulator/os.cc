@@ -740,9 +740,12 @@ int osOpenMax()
 
 char *oslocalhostname()
 {
-  DWORD len;
+  DWORD len = MAX_COMPUTERNAME_LENGTH;
   char buf[MAX_COMPUTERNAME_LENGTH + 1];
-  GetComputerNameA(buf,&len);
+  BOOL aux = GetComputerName(buf,&len);
+  if (aux==FALSE) {
+    return NULL;
+  }
   return strdup(buf);
 }
 
