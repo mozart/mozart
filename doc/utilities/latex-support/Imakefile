@@ -4,13 +4,23 @@
 #
 
 CC=gcc
-CFLAGS=-O
+CFLAGS=-O2
 LEX=flex
 BIN=raw2tex
 C=raw2tex.c
-DESTDIR=/usr/share/gs/bin
 STYDIR=/project/ps/tex/inputs
 STY=ozbook.cls oz2tex.sty
+
+
+#ifdef LINUX
+DESTDIR=/usr/share/gs/bin/linux
+#endif
+#ifdef SUNOS_SPARC
+DESTDIR=/usr/share/gs/bin
+#endif
+#ifdef SOLARIS_SPARC
+DESTDIR=/usr/share/gs/bin/solaris-sparc
+#endif
 
 all:: $(BIN)
 raw2tex: raw2tex.c
@@ -22,6 +32,7 @@ clean::
 install:: install.bin install.sty
 install.bin: $(BIN)
         $(INSTALL) -m 555 raw2tex $(DESTDIR)
+        $(INSTALL) -m 555 raw2oz  $(DESTDIR)
 install.sty: $(STY)
         $(INSTALL) -m 444 ozbook.cls $(STYDIR)
         $(INSTALL) -m 444 oz2tex.sty $(STYDIR)
