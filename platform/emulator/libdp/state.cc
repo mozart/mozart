@@ -452,7 +452,6 @@ LockRet lockLockManagerOutlineImpl(LockManagerEmul *lmu, Thread *thr){
   if((!errorIgnore(lmu))){
     TaggedRef proc;
     EntityCond ec;
-    OZ_Return ret;
     if(tertiaryFail(lmu,ec,proc)){
       TaggedRef op=AtomLock;
       (void) tertiaryFailHandle(lmu,proc,ec,op);
