@@ -35,8 +35,8 @@ then
    exit 1;
 fi
 BUILDDIR=$1
-SRCTAR=`ls ${BUILDDIR}/mozart-*.*-src.tar.gz`
-DOCTAR=`ls ${BUILDDIR}/mozart-*.*-doc.tar.gz`
+SRCTAR=`ls ${BUILDDIR}/mozart-*.*-src.tar.bz2`
+DOCTAR=`ls ${BUILDDIR}/mozart-*.*-doc.tar.bz2`
 DSTDIR=$2
 OZHOME=/usr/lib/mozart
 
@@ -44,7 +44,7 @@ OZHOME=/usr/lib/mozart
 # Find version
 #
 
-VERSION=`(echo ${SRCTAR} | sed 's/.*mozart-\(.*\..*\)-src.tar.gz/\1/')`
+VERSION=`(echo ${SRCTAR} | sed 's/.*mozart-\(.*\..*\)-src.tar.bz2/\1/')`
 BUILD=`(echo $Revision$ | sed 's|.*\.\([1-9][0-9]*\).*|\1|')`
 
 #
@@ -62,7 +62,7 @@ setenv PATH ${OZHOME}/bin:\${PATH}
 EOF
 
 chmod a+x oz.sh oz.csh
-tar cf - oz.csh oz.sh | gzip -9 -c > ${RPMSRC}/mozart-profiles.tar.gz
+tar cf - oz.csh oz.sh | bzip2 -9 -c > ${RPMSRC}/mozart-profiles.tar.bz2
 rm -f oz.sh oz.csh
 
 
@@ -145,7 +145,7 @@ cd $TMPDIR
 cat > ${RPMSPEC}/mozart-$VERSION-$BUILD.spec <<EOF
 # Spec file for Mozart, an efficient and distributed implementation of Oz
 # Author: Christian Schulte, 1998
-# Copyright: Christian Schulte, 1998
+# Copyright: Christian Schulte, 1998, 1999
 Name: mozart
 Version: ${VERSION}
 Release: ${BUILD}
@@ -276,9 +276,9 @@ EOF
 
 rpm -ba --clean ${RPMSPEC}/mozart-$VERSION-$BUILD.spec
 rm -f ${RPMSPEC}/mozart-$VERSION-$BUILD.spec
-rm -f ${RPMSRC}/mozart-$VERSION.tar.gz
-rm -f ${RPMSRC}/mozart-doc-$VERSION.tar.gz
-rm -f ${RPMSRC}/mozart-profiles.tar.gz
+rm -f ${RPMSRC}/mozart-$VERSION.tar.*
+rm -f ${RPMSRC}/mozart-doc-$VERSION.tar.*
+rm -f ${RPMSRC}/mozart-profiles.tar.*
 
 #
 # Move the created rpms to destination
