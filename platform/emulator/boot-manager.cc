@@ -79,12 +79,30 @@ struct ModuleEntry {
 };
 
 
+#include "modProperty.dcl"
+static OZ_C_proc_interface mod_int_Property[] = {
+#include "modProperty.tbl"
+ {0,0,0,0}
+};
+
+
+#include "modOS.dcl"
+static OZ_C_proc_interface mod_int_OS[] = {
+#include "modOS.tbl"
+ {0,0,0,0}
+};
+
+
 static ModuleEntry module_table[] = {
+  {"Property", mod_int_Property},
+  {"OS",       mod_int_OS},
+
   {"Wif",      DYNAMIC_MODULE(mod_int_Wif) },
   {"Parser",   DYNAMIC_MODULE(mod_int_Parser) },
   {"FDP",      DYNAMIC_MODULE(mod_int_FDP) },
   {"Schedule", DYNAMIC_MODULE(mod_int_Schedule) },
   {"FSP",      DYNAMIC_MODULE(mod_int_FSP) },
+
   {0, 0},
 };
 

@@ -44,19 +44,18 @@ MODULEINSTALL   = @MODULEINSTALL@
 SUBDIRS		= libfd libfset
 OZVERSION	= $(SRCTOP)/OZVERSION
 
+MODSPECS = FDP Schedule Wif Parser OS Property
+
 CREATEDOTHERS= \
 	instrtab.hh opcodes.hh optostr.hh marshaler.hh\
 	marshalcode.cc marshalMsg.cc register.hh oz.c \
 	config.h builtins.tbl builtins.dcl \
 	ctgenvar.tbl ctgenvar.dcl \
 	fdbuilti.tbl fdbuilti.dcl \
-	modFDP.tbl modFDP.dcl \
-	modSchedule.tbl modSchedule.dcl \
 	fsetbuilti.tbl fsetbuilti.dcl \
-	modFSP.tbl modFSP.dcl \
-	modWif.tbl modWif.dcl \
-	modParser.tbl modParser.dcl \
-	scanner.cc parser.cc 
+	scanner.cc parser.cc \
+	$(MODSPECS:%=mod%.dcl) \
+	$(MODSPECS:%=mod%.tbl)
 
 CREATEDSRCS= \
 	copycode.cc opcodes.cc \
@@ -232,11 +231,12 @@ wif.o: modWif.tbl modWif.dcl
 
 parsertable.o: modParser.dcl modParser.tbl
 
-builtins.o: \
+bootmanager.o: \
 	modWif.tbl modWif.dcl \
 	modFDP.tbl modFDP.dcl modSchedule.tbl modSchedule.dcl \
 	modFSP.tbl modFSP.dcl \
-	modParser.tbl modParser.dcl
+	modParser.tbl modParser.dcl \
+	modOS.tbl modOS.dcl modProperty.tbl modProperty.dcl
 
 %.tbl: %.spec
 	perl $(SRCDIR)/bidecl.perl -file $< -ctable > $@

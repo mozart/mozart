@@ -29,10 +29,10 @@ defaults(dirs:
 	 lib:
 	    ['Application' 'GetArgs' 'Applet' 'Syslet' 'Servlet'
 	     'Search' 'FD' 'Schedule' 'FS'
-	     'System' 'Property'
+	     'System'
 	     'Error' 'ErrorRegistry' 'Debug' 'Finalize' 'Foreign'
 	     'Fault' 'Connection' 'Remote' 'VirtualSite'
-	     'OS' 'Open' 'Pickle'
+	     'Open' 'Pickle'
 	     'Tk' 'TkTools'
 	     'Compiler'
 	     'Misc']
@@ -43,5 +43,5 @@ defaults(dirs:
 	     'GumpParser']
 
 	 volatile:
-	    ['Module' 'URL']
+	    ['Module' 'URL' 'OS' 'Property']
 	)
