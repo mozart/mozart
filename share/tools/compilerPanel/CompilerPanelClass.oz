@@ -99,8 +99,7 @@ local
    Green = c(0 191 0)
    HotPink = c(255 105 180)
 
-   Colors = ['Undetermined'#Gray 'Unknown'#HotPink
-	     'Int'#Red 'Float'#Red 'Atom'#Red 'Name'#Red
+   Colors = ['Int'#Red 'Float'#Red 'Atom'#Red 'Name'#Red
 	     'Record'#Magenta 'Tuple'#Magenta
 	     'Procedure'#Black
 	     'Cell'#Orange
@@ -110,37 +109,44 @@ local
 	     'Array'#Green 'Bit Array'#Green 'Dictionary'#Green
 	     'Port'#Green 'Lock'#Green
 	     'Thread'#Orange 'Space'#Orange
-	     'Finite Set Value'#Red 'Foreign Pointer'#Red]
+	     'Finite Set Value'#Red 'Foreign Pointer'#Red
+	     'Free'#Gray 'Kinded'#Gray
+	     'Extension'#HotPink 'Chunk Extension'#HotPink
+	     'Unknown'#HotPink]
 
-   fun {SetColor TextWidget PrintName Value ColorDict} C in
-      C = if {IsDet Value} then Type in
-	     if {IsInt Value} then 'Int'
-	     elseif {IsFloat Value} then 'Float'
-	     elseif {IsAtom Value} then 'Atom'
-	     elseif {IsName Value} then 'Name'
-	     elseif {IsTuple Value} then 'Tuple'
-	     elseif {IsRecord Value} then 'Record'
-	     elseif {IsProcedure Value} then 'Procedure'
-	     elseif {IsCell Value} then 'Cell'
-	     elseif {IsArray Value} then 'Array'
-	     elseif {BitArray.is Value} then 'Bit Array'
-	     elseif {IsDictionary Value} then 'Dictionary'
-	     elseif {IsClass Value} then 'Class'
-	     elseif {IsObject Value} then 'Object'
-	     elseif {IsPort Value} then 'Port'
-	     elseif {IsLock Value} then 'Lock'
-	     elseif {IsChunk Value} then 'Chunk'
-	     elseif {IsThread Value} then 'Thread'
-	     elseif {IsSpace Value} then 'Space'
-	     elseif {FS.value.is Value} then 'Finite Set Value'
-	     elseif {ForeignPointer.is Value} then 'Foreign Pointer'
-	     else 'Unknown'
-	     end = Type
-	     {Dictionary.get ColorDict Type}
-	  else
-	     {Dictionary.get ColorDict 'Undetermined'}
+   fun {SetColor TextWidget PrintName X ColorDict} K in
+      K = case {Value.status X} of det(Type) then
+	     case Type of int then 'Int'
+	     [] float then 'Float'
+	     [] atom then 'Atom'
+	     [] name then 'Name'
+	     [] record then 'Record'
+	     [] tuple then 'Tuple'
+	     [] procedure then 'Procedure'
+	     [] cell then 'Cell'
+	     [] chunk then 'Chunk'
+	     [] 'class' then 'Class'
+	     [] object then 'Object'
+	     [] array then 'Array'
+	     [] bitArray then 'Bit Array'
+	     [] dictionary then 'Dictionary'
+	     [] port then 'Port'
+	     [] 'lock' then 'Lock'
+	     [] 'thread' then 'Thread'
+	     [] space then 'Space'
+	     [] fset then 'Finite Set Value'
+	     [] foreignPointer then 'Foreign Pointer'
+	     else
+		if {IsChunk Type} then 'Chunk Extension'
+		else 'Extension'
+		end
+	     end
+	  [] kinded(_) then 'Kinded'
+	  [] free then 'Free'
+	  else 'Unknown'
 	  end
-      o(TextWidget tag configure q(PrintName) foreground: C)
+      o(TextWidget tag configure q(PrintName)
+	foreground: {Dictionary.get ColorDict K})
    end
 
    InstallNewColors    = {NewName}
@@ -644,7 +650,6 @@ in
 		     QueryIdsHd <- {RemoveQuery @QueryIdsHd Id 0 ?Pos}
 		     if {IsFree @QueryIdsHd} then
 			{self.ClearQueueButton tk(configure state: disabled)}
-		     else skip
 		     end
 		     {self.QueryList tk(delete Pos)}
 		     case {self.QueryList tkReturnListInt(curselection $)}
@@ -675,7 +680,6 @@ in
 			if {IsFree @QueryIdsHd} then
 			   {self.ClearQueueButton tk(configure
 						     state: disabled)}
-			else skip
 			end
 		     end
 		  [] busy() then
@@ -690,7 +694,6 @@ in
 		  [] switch(SwitchName B) then
 		     if {HasFeature self.SwitchRec SwitchName} then
 			{self.SwitchRec.SwitchName tkSet(B)}
-		     else skip
 		     end
 		  [] switches(Rec) then
 		     {Record.forAllInd self.SwitchRec
@@ -935,9 +938,6 @@ in
 					  text: 'Unpickle ...'
 					  action:
 					     {MkAction UnpickleVariable()})}
-	 Syslet = {New Tk.button tkInit(parent: EnvOptionsFrame
-					text: 'Create syslet ...'
-					action: {MkAction CreateSyslet()})}
 
 	 Switches = {New TkTools.note tkInit(parent: self.Book
 					     text: 'Switches')}
@@ -1244,7 +1244,7 @@ in
 		    pack(self.Text TextYScrollbar side: left fill: y)
 		    %% "Environment" note:
 		    pack(EnvOptionsFrame side: bottom fill: x)
-		    pack(Syslet Unpickle Pickle Remove side: right)
+		    pack(Unpickle Pickle Remove side: right)
 		    pack(self.EditedVariable side: left fill: x expand: true)
 		    pack(self.EnvDisplay EnvYScrollbar side: left fill: y)
 		    %% "Switches" note:
@@ -1322,7 +1322,7 @@ in
 				   runwithdebugger: RunWithDebugger
 				   debuginfocontrol: DebugInfoControl
 				   debuginfovarnames: DebugInfoVarnames)
-	 self.ToGray = [Remove Pickle Unpickle Syslet
+	 self.ToGray = [Remove Pickle Unpickle
 			self.MaxNumberOfErrors.inc self.MaxNumberOfErrors.dec
 			self.MaxNumberOfErrors.entry DoMaxErrors
 			CompilerPassesSw ShowInsertSw EchoQueriesSw
@@ -1561,13 +1561,12 @@ in
       end
       meth RemoveVariable() PrintName in
 	 {self.EditedVariable tkReturnAtom(get ?PrintName)}
-	 if {HasFeature @CachedEnv PrintName} then
-	    %--** the above is an insufficient test, but workable for now
+	 try
 	    CompilerPanel, enqueue(removeFromEnv(PrintName))
-	 else
+	 catch _ then
 	    {New TkTools.error
 	     tkInit(master: self.TopLevel
-		    text: 'Non-existing variable "'#PrintName#'"') _}
+		    text: '"'#PrintName#'" is not a variable print name') _}
 	 end
       end
       meth PickleVariable() PrintName in
@@ -1617,29 +1616,6 @@ in
 		    text: 'Unpickle failed for URL "'#URL#'"') _}
 	 end
 	 CompilerPanel, enqueue(mergeEnv(env(PrintName: Value)))
-      end
-      meth CreateSyslet() PrintName in
-	 {self.EditedVariable tkReturnAtom(get ?PrintName)}
-	 if {HasFeature @CachedEnv PrintName} then Value in
-	    Value = @CachedEnv.PrintName
-	    {Send Listener.'class', getPort($) DoCreateSyslet(Value)}
-	 else
-	    {New TkTools.error
-	     tkInit(master: self.TopLevel
-		    text: 'Non-existing variable "'#PrintName#'"') _}
-	 end
-      end
-      meth DoCreateSyslet(Value) FileName in
-	 FileName =
-	 {Tk.return tk_getSaveFile(parent: self.TopLevel
-				   title: 'Oz Compiler Panel: Create Syslet'
-				   filetypes:
-				      q(q('Oz Pickles'
-					  q(UrlDefaults.pickle))
-					q('All Files' '*')))}
-	 if FileName == "" then skip
-	 else {Application.save FileName Value}
-	 end
       end
 
       meth Switch(SwitchName)
