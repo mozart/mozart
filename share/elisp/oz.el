@@ -553,7 +553,7 @@ Input and output via buffers *Oz Compiler* and *Oz Machine*."
     (setenv "OZPATH" 
 	    (concat (or (getenv "OZPATH") ".") ":"
 		    (getenv "OZHOME") "/lib:"
-		    (getenv "OZHOME") "/lib/sun4:"
+		    (getenv "OZHOME") "/platform/sunos-sparc:"
 		    (getenv "OZHOME") "/demo"))
     (setenv "PATH"
 	    (concat (getenv "PATH") ":" (getenv "OZHOME") "/bin")))
