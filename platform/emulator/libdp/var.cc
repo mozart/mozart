@@ -38,7 +38,7 @@
 #include "dpMarshaler.hh"
 #include "unify.hh"
 #include "var_simple.hh"
-#include "var_future.hh"
+#include "var_readonly.hh"
 #include "chain.hh"
 
 
@@ -267,12 +267,6 @@ OZ_Return ManagerVar::addSuspV(TaggedRef *vPtr, Suspendable * susp)
   if(!errorIgnore()){
     if(failurePreemption(AtomWait)) return BI_REPLACEBICALL;}
   
-  /*
-  if (origVar->getType()==OZ_VAR_FUTURE) {
-    if (((Future *)origVar)->kick(vPtr))
-      return PROCEED;
-  }
-  */
   extVar2Var(this)->addSuspSVar(susp);
   return SUSPEND;
 }
@@ -440,43 +434,13 @@ ManagerVar* globalizeFreeVariable(TaggedRef *tPtr)
   OB_TIndex i = OT->newOwner(oe);
   PD((GLOBALIZING,"globalize var index:%d",i));
   oe->mkVar(makeTaggedRef(tPtr));
+  // raph: make the variable needed
+  oz_var_makeNeeded(tPtr);
   OzVariable *cv = oz_getNonOptVar(tPtr);
   ManagerVar *mv = new ManagerVar(cv,i);
   extVar2Var(mv)->setSuspList(cv->unlinkSuspList());
   *tPtr = makeTaggedVar(extVar2Var(mv));
   return (mv);
-}
-
-// Return 'TRUE' if successful (that is, the variable is bound)
-Bool triggerVariable(TaggedRef *tPtr)
-{
-  Assert(tPtr!=NULL);
-  const TaggedRef var = *tPtr;
-  if (oz_isFuture(var)) {
-    // kost@ : 'oz_isFuture(var)' does NOT mean that the 'var' is of
-    // type Future: it can be also a manager var keeping a future!
-    Future *fut;
-    if (oz_isManagerVar(var)) {
-      ManagerVar *mv = oz_getManagerVar(var);
-      fut = (Future *) mv->getOrigVar();
-    } else {
-      fut = (Future *) tagged2Var(var);
-    }
-    Assert(fut->getType() == OZ_VAR_FUTURE);
-
-    //
-    switch (fut->kick(tPtr)) {
-    case PROCEED: return (TRUE);
-    case SUSPEND: return (FALSE);
-      // kost@ : I dunno how to handle it. Those who have introduced
-      // 'RAISE' as a return value of 'Future::kick' should have fixed
-      // this part as well.
-    case RAISE: return (FALSE);
-    }
-    return (FALSE);
-  } else {
-    return (FALSE);
-  }
 }
 
 /* --- Unmarshal --- */
@@ -528,7 +492,7 @@ OZ_Term unmarshalVar(MarshalerBuffer* bs, Bool isFuture, Bool isAuto)
     sendRegister((BorrowEntry *)ob);}
   else{
     pvar->makeAuto();}
-   // If the entity carries failure info react to it
+  // If the entity carries failure info react to it
   // othervise check the local environment. The present 
   // representation of the entities site might have information
   // about the failure state.
@@ -565,13 +529,14 @@ void sendGetStatus(BorrowEntry *be){
   msgC->put_M_GETSTATUS(na->index);
   send(msgC);
 }
- 
+
 OZ_Term ProxyVar::statusV()
 {
-  if(status ==0){
+  if (status==0) {
     BorrowEntry *be = borrowIndex2borrowEntry(getIndex());
     sendGetStatus(be);
-    status= oz_newVariable();}
+    status= oz_newVariable();
+  }
   return status;
 }
 
@@ -593,12 +558,11 @@ void ManagerVar::localize(TaggedRef *vPtr)
 }
 
 OZ_Term ManagerVar::statusV() {
-  return getOrigVar()->getType()==OZ_VAR_FUTURE ? AtomFuture : AtomFree;
+  return oz_isFuture(origVar) ? AtomFuture : AtomFree;
 }
 
 VarStatus ManagerVar::checkStatusV(){
-  return getOrigVar()->getType()==OZ_VAR_FUTURE ?  EVAR_STATUS_FUTURE : 
-    EVAR_STATUS_FREE;
+  return oz_isFuture(origVar) ? EVAR_STATUS_FUTURE : EVAR_STATUS_FREE;
 }
 
 void oz_dpvar_localize(TaggedRef *vPtr) {

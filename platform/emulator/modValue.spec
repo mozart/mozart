@@ -70,6 +70,14 @@
 			     out => [],
 			     bi  => BIwaitQuiet},
 
+     'waitNeeded'       => { in  => ['value'],
+			     out => [],
+			     bi  => BIwaitNeeded},
+
+     'makeNeeded'       => { in  => ['value'],
+			     out => [],
+			     bi  => BImakeNeeded},
+
      'waitOr'		=> { in  => ['value','value'],
 			     out => [],
 			     BI  => BIwaitOr},
@@ -99,6 +107,11 @@
 			     bi  => BIisDet,
 			     test => 0},
 
+     'isNeeded'		=> { in  => ['value'],
+			     out => ['+bool'],
+			     bi  => BIisNeeded,
+			     test => 0},
+
      'max'	        => { in  => ['+comparable','+comparable'],
 			     out => ['+comparable'],
 			     bi  => BImax},
@@ -115,25 +128,21 @@
 			     out => ['value'],
 			     bi  => BImatchDefault},
 
-     'byNeed'		=> { in  => ['value'],
+     'failedValue'	=> { in  => ['value'],
 			     out => ['value'],
-			     BI  => BIbyNeed},
+			     BI  => BIfailedValue},
 
-     'byNeedDot'	=> { in  => ['value','+feature'],
+     'readOnly'		=> { in  => ['value'],
 			     out => ['value'],
-			     BI  => BIbyNeedDot},
+			     BI  => BIreadOnly},
 
-     'byNeedFail'	=> { in  => ['value'],
+     'newReadOnly'	=> { in  => [],
 			     out => ['value'],
-			     BI  => BIbyNeedFail},
+			     BI  => BInewReadOnly},
 
-     'future'		=> { in  => ['value'],
-			     out => ['value'],
-			     BI  => BIfuture},
-
-     '!!'		=> { in  => ['value'],
-			     out => ['value'],
-			     BI  => BIfuture},
+     'bindReadOnly'	=> { in  => ['value','value'],
+			     out => [],
+			     BI  => BIbindReadOnly},
 
      '=='		=> { in  => ['*value','*value'],
 			     out => ['+bool'],

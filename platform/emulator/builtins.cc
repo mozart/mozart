@@ -10,6 +10,8 @@
  *    Peter van Roy (pvr@info.ucl.ac.be)
  *    Denys Duchier (duchier@ps.uni-sb.de)
  *    Leif Kornstaedt (kornstae@ps.uni-sb.de)
+ *    Fred Spiessens (fsp@info.ucl.ac.be)
+ *    Raphael Collet (raph@info.ucl.ac.be)
  * 
  *  Copyright:
  *    Michael Mehl, 1997,1998
@@ -46,7 +48,7 @@
 #include "var_base.hh"
 #include "var_ext.hh"
 #include "var_of.hh"
-#include "var_future.hh"
+#include "var_readonly.hh"
 #include "mozart_cpi.hh"
 #include "dictionary.hh"
 #include "dpInterface.hh"
@@ -70,6 +72,44 @@ OZ_BI_define(BIwait,1,0)
   return PROCEED;
 } OZ_BI_end
 
+// suspends quietly until the argument is determined or failed
+OZ_BI_define(BIwaitQuiet,1,0)
+{
+  oz_declareDerefIN(0,v);
+  Assert(!oz_isRef(v));
+  if (oz_isVarOrRef(v)) {
+    if (oz_isFailed(v)) return PROCEED;
+    return oz_var_addQuietSusp(vPtr, oz_currentThread());
+  }
+  return PROCEED;
+} OZ_BI_end
+
+// suspends until the argument becomes needed
+OZ_BI_define(BIwaitNeeded,1,0)
+{
+  oz_declareDerefIN(0,v);
+  Assert(!oz_isRef(v));
+
+  if (oz_isNeeded(v)) {
+    return PROCEED;
+  } else {
+    return oz_var_addQuietSusp(vPtr, oz_currentThread());
+  }
+} OZ_BI_end
+
+// makes the argument needed (if necessary)
+OZ_BI_define(BImakeNeeded,1,0)
+{
+  oz_declareDerefIN(0,v);
+  Assert(!oz_isRef(v));
+
+  if (oz_isVar(v)) {
+    return oz_var_makeNeeded(vPtr);
+  } else {
+    return PROCEED;
+  }
+} OZ_BI_end
+
 OZ_BI_define(BIwaitOr,2,0)
 {
   oz_declareDerefIN(0,a);
@@ -90,6 +130,7 @@ OZ_BI_define(BIwaitOr,2,0)
     (void) am.addSuspendVarListInline(aPtr);
   if (!tagged2Var(b)->isInSuspList(oz_currentThread()))
     (void) am.addSuspendVarListInline(bPtr);
+
   return SUSPEND;
 } OZ_BI_end
 
@@ -204,6 +245,25 @@ OZ_BI_define(BIisDet,1,1)
   } else {
     OZ_RETURN(oz_true());
   }
+} OZ_BI_end
+
+// returns true iff the argument is a failed value
+OZ_BI_define(BIisFailed,1,1)
+{
+  oz_declareDerefIN(0,var);
+  Assert(!oz_isRef(var));
+  if (!oz_isVarOrRef(var))
+    OZ_RETURN(oz_false());
+
+  CheckStatus(var,EVAR_STATUS_FAILED,AtomFailed);
+} OZ_BI_end
+
+// returns true iff the argument is needed
+OZ_BI_define(BIisNeeded,1,1)
+{
+  oz_declareDerefIN(0,var);
+  Assert(!oz_isRef(var));
+  OZ_RETURN(oz_isNeeded(var) ? oz_true() : oz_false());
 } OZ_BI_end
 
 #undef CheckStatus
@@ -1533,6 +1593,8 @@ OZ_Term oz_status(OZ_Term term)
       return AtomFree;
     case EVAR_STATUS_FUTURE:
       return AtomFuture;
+    case EVAR_STATUS_FAILED:
+      return AtomFailed;
     case EVAR_STATUS_DET:
     case EVAR_STATUS_UNKNOWN:
       return _var_status(cv);
@@ -1557,7 +1619,7 @@ OZ_Term oz_status(OZ_Term term)
     }
     return makeTaggedSRecord(t);
   }
-  
+
   SRecord *t = SRecord::newSRecord(AtomDet, 1);
   t->setArg(0, OZ_termType(term));
   return makeTaggedSRecord(t);
@@ -3087,7 +3149,7 @@ void doPortSend(PortWithStream *port,TaggedRef val)
 
 OZ_BI_define(BInewPort,1,1)
 {
-  OZ_Term fut = oz_newFuture(oz_currentBoard());
+  OZ_Term fut = oz_newReadOnly(oz_currentBoard());
   OZ_Term port = oz_newPort(fut);
   
   OZ_out(0)= port;
@@ -3099,11 +3161,11 @@ OZ_BI_define(BInewPort,1,1)
 #ifdef FAST_DOPORTSEND
 void doPortSend(PortWithStream *port,TaggedRef val,Board * home) {
   if (home==(Board*)NULL || home==oz_currentBoard()) {
-    OZ_Term newFut = oz_newFuture(oz_currentBoard());
+    OZ_Term newFut = oz_newReadOnly(oz_currentBoard());
     OZ_Term lt     = oz_cons(val,newFut);
     OZ_Term oldFut = port->exchangeStream(newFut);
     DEREF(oldFut,ptr);
-    oz_bindFuture(ptr,lt);
+    oz_bindReadOnly(ptr,lt);
   } else {
     // I believe this branch is only for sending to a port
     // in a super-ordinated space.  oz_sendPort has already
@@ -3114,7 +3176,7 @@ void doPortSend(PortWithStream *port,TaggedRef val,Board * home) {
     // the stream, we must perform the exchange immediately.
     // *** HOWEVER I SEE NO REASON FOR INTRODUCING A VARIABLE
     // *** AND PERFORMING AN ADDITIONAL UNIFY
-    OZ_Term newFut = oz_newFuture(home);
+    OZ_Term newFut = oz_newReadOnly(home);
 
     // kost@ --> Denys: that's how it looked:
     //   OZ_Term newVar = oz_newVariable(home);
@@ -3133,27 +3195,27 @@ void doPortSend(PortWithStream *port,TaggedRef val,Board * home) {
     Thread * t = oz_newThreadInject(home);
     // kost@ : so, this one goes away as well:
     // t->pushCall(BI_Unify,RefsArray::make(val,newVar));
-    t->pushCall(BI_bindFuture,RefsArray::make(oldFut,lt));
+    t->pushCall(BI_bindReadOnly,RefsArray::make(oldFut,lt));
   }
 }
 #else
 void doPortSend(PortWithStream *port,TaggedRef val,Board * home) {
   if (home != (Board *) NULL) {
-    OZ_Term newFut = oz_newFuture(home);
+    OZ_Term newFut = oz_newReadOnly(home);
     OZ_Term newVar = oz_newVariable(home);
     OZ_Term lt     = oz_cons(newVar,newFut);
     OZ_Term oldFut = port->exchangeStream(newFut);
 
     Thread * t = oz_newThreadInject(home);
     t->pushCall(BI_Unify,RefsArray::make(val,oz_head(lt)));
-    t->pushCall(BI_bindFuture,RefsArray::make(oldFut,lt));
+    t->pushCall(BI_bindReadOnly,RefsArray::make(oldFut,lt));
   } else {
-    OZ_Term newFut = oz_newFuture(oz_currentBoard());
+    OZ_Term newFut = oz_newReadOnly(oz_currentBoard());
     OZ_Term lt     = oz_cons(am.getCurrentOptVar(), newFut);
     OZ_Term oldFut = port->exchangeStream(newFut);
 
     DEREF(oldFut,ptr);
-    oz_bindFuture(ptr,lt);
+    oz_bindReadOnly(ptr,lt);
 
     // might raise exception if val is non exportable
     OZ_unifyInThread(val,oz_head(lt)); 
