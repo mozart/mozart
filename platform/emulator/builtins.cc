@@ -1768,7 +1768,7 @@ OZ_BI_define(BInewName,0,1)
 OZ_BI_define(BInewUniqueName,1,1)
 {
   oz_declareAtomIN(0,name);
-  OZ_RETURN(getUniqueName(name));
+  OZ_RETURN(oz_uniqueName(name));
 } OZ_BI_end
 
 // ---------------------------------------------------------------------
