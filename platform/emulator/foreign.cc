@@ -131,63 +131,37 @@ int OZ_isThread(OZ_Term t)
   return isThread(t);
 }
 
-
-/*
- * list checking
- *   checkChar:
- *     0 = any list
- *     1 = list of char
- *     2 = list of char != 0
- */
-
-inline
-int isList(OZ_Term l, OZ_Term *var, int checkChar)
-{
-  while (1) {
-    DEREF(l,lPtr,lTag);
-    if (isAnyVar(lTag)) {
-      if (var) *var=makeTaggedRef(lPtr);
-      return 0;
-    }
-
-    if (isCons(lTag)) {
-      if (checkChar) {
-	OZ_Term h = head(l);
-	DEREF(h,hPtr,hTag);
-	if (isAnyVar(hTag)) {
-	  if (var) *var=makeTaggedRef(hPtr);
-	  return 0;
-	}
-	if (!isSmallInt(hTag)) return 0;
-	int i=smallIntValue(h);
-	if (i<0 || i>255) return 0;
-	if (checkChar>1 && i==0) return 0;
-      }
-      l = tail(l);
-    } else if (isNil(l)) {
-      return 1;
-    } else {
-      return 0;
-    }
-  }
-}
-
 int OZ_isString(OZ_Term term,OZ_Term *var)
 {
+  OZ_Term ret = oz_isList(term,1);
+  if (isRef(ret)) {
+    if (var) *var = ret;
+    return 0;
+  }
   if (var) *var = 0;
-  return isList(term,var,1);
+  return ret!=NameFalse;
 }
 
 int OZ_isProperString(OZ_Term term,OZ_Term *var)
 {
+  OZ_Term ret = oz_isList(term,2);
+  if (isRef(ret)) {
+    if (var) *var = ret;
+    return 0;
+  }
   if (var) *var = 0;
-  return isList(term,var,2);
+  return ret!=NameFalse;
 }
 
 int OZ_isList(OZ_Term term,OZ_Term *var)
 {
+  OZ_Term ret = oz_isList(term);
+  if (isRef(ret)) {
+    if (var) *var = ret;
+    return 0;
+  }
   if (var) *var = 0;
-  return isList(term,var,0);
+  return ret!=NameFalse;
 }
 
 int OZ_isTrue(OZ_Term term)
@@ -1597,15 +1571,13 @@ OZ_Term OZ_tail(OZ_Term term)
 }
 
 /*
- * Compute the length of a list and check for determination.
- * Returns:
- *  -1, if the list end is not determined (SUSPENDED)
- *  -2, if it is not a proper list (FAILED)
- *  else the length of the list
+ * Compute the length of a list
  */
-int OZ_length(OZ_Term list)
+int OZ_length(OZ_Term l)
 {
-  return length(list);
+  OZ_Term ret=oz_isList(l);
+  if (!isSmallInt(ret)) return -1;
+  return smallIntValue(ret);
 }
 
 
@@ -1638,7 +1610,9 @@ OZ_Term OZ_pair2(OZ_Term t1,OZ_Term t2) {
 
 OZ_Arity OZ_makeArity(OZ_Term list)
 {
-  return (OZ_Arity) mkArity(list);
+  list=packsort(list);
+  if (!list) return 0;
+  return aritytable.find(list);
 }
 
 /* take a label and an arity (as list) and construct a record
@@ -1861,7 +1835,15 @@ int isVirtualString(OZ_Term vs, OZ_Term *var)
     return 1;
   }
 
-  if (isCons(vs)) return isList(vs,var,2);
+  if (isCons(vs)) {
+    OZ_Term ret = oz_isList(vs,2);
+    if (isRef(ret)) {
+      if (var) *var = ret;
+      return 0;
+    }
+    if (var) *var = 0;
+    return ret!=NameFalse;
+  }
 
   return 0;
 }
