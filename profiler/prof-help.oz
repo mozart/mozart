@@ -7,8 +7,8 @@ local
    HelpTitle    = 'Profiler Help'
    OkButtonText = 'Aha'
    NoTopic      = 'No Help Available'
-   NoHelp       = 'Feel free to ask the author.\n' #
-                  'Send a mail to ' # EmailOfBenni
+   NoHelp       = ('Feel free to ask the author.\n' #
+                   'Send a mail to ' # EmailOfBenni)
 
    HelpDict     = {Dictionary.new}
 
@@ -44,7 +44,8 @@ local
      ('Procedure Bar Chart' #
       ('Procedures are presented as annotated bars. You can click ' #
        'on them to get further information in the `' # ProcTextTitle #
-       '\' window.'))
+       '\' window.\n\nIf the option `Use Emacs\' is set, the definition ' #
+       'head of the procedure is highlighted in Emacs.'))
 
      ProcTextTitle #
      ('Procedure Information' #
@@ -57,7 +58,7 @@ local
 
     ]
     proc {$ S}
-       {Dput HelpDict S.1 S.2}
+       {Dictionary.put HelpDict S.1 S.2}
     end}
 
    class HelpDialog from TkTools.dialog
@@ -90,7 +91,8 @@ local
 
    class ProfilerHelp from HelpDialog
       meth init(master:Master topic:Topic)
-         self.topic # self.help = {DcondGet HelpDict Topic NoTopic#NoHelp}
+         self.topic # self.help =
+         {Dictionary.condGet HelpDict Topic NoTopic # NoHelp}
          HelpDialog,init(master:Master)
       end
    end
