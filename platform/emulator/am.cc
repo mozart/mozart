@@ -611,9 +611,7 @@ PROFILE_CODE1
       if ((susp->wakeUp(var->getBoardFast(), calledBy))) {
         // dispose only non-resistant susps
 	if (! susp->isResistant()) {
-#ifdef NEWCOUNTER
 	  Assert(susp->isDead());
-#endif
 	  suspList = suspList->dispose();
 	  continue;
 	} else if (calledBy) {
