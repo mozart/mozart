@@ -43,9 +43,20 @@
   }
 
 #define EXPECT_SAMELENGTH_VECTORS(I, J)                                 \
-if (OZ_width(OZ_args[I]) != OZ_width(OZ_args[J]))                       \
-     return OZ_typeError(OZ_self, OZ_args, OZ_arity, expectedType, J,   \
-                         "Vectors must have same size.");
+  {                                                                     \
+    int i_size = OZ_vectorSize(OZ_args[I]);                             \
+    int j_size = OZ_vectorSize(OZ_args[J]);                             \
+    if ((i_size >= 0) && (j_size >= 0) && (i_size != j_size))           \
+      return OZ_typeError(OZ_self, OZ_args, OZ_arity, expectedType, J,  \
+                          "Vectors must have same size.");              \
+  }
+
+#define EM_LIT     "literal"
+#define EM_INT     "integer"
+#define EM_FD      "finite domain integer"
+#define EM_FDDESCR "finite domain integer description"
+#define EM_VECT    "vector of "
+#define EM_TNAME   "truth name"
 
 //-----------------------------------------------------------------------------
 // OZ_FiniteDomain
@@ -80,7 +91,8 @@ public:
 
   OZ_Boolean isIn(int i) const;
   int next(int i) const;
-  int nextBiggerElem(int v) const;
+  int nextSmallerElem(int v) const;
+  int nextLargerElem(int v) const;
 
   OZ_Boolean operator != (const OZ_FDState) const;
   OZ_Boolean operator != (const int) const;
@@ -158,9 +170,7 @@ enum OZ_PropagatorFlags {
 
 class OZ_PropagatorExpect;
 
-typedef OZ_expect_t ozcdecl (*FDExpectFun) (OZ_PropagatorExpect*,OZ_Term);
-
-extern OZ_expect_t ozcdecl expectIntVarAny(OZ_PropagatorExpect* p,OZ_Term t);
+typedef OZ_expect_t (OZ_PropagatorExpect::*OZ_PropagatorExpectMeth) (OZ_Term);
 
 class OZ_PropagatorExpect {
 private:
@@ -186,16 +196,13 @@ public:
   OZ_expect_t expectVar(OZ_Term t);
   OZ_expect_t expectRecordVar(OZ_Term);
   OZ_expect_t expectIntVar(OZ_Term, OZ_FDPropState);
-  OZ_expect_t expectIntVarAny(OZ_Term t) {return expectIntVar(t, fd_any);}
-  OZ_expect_t expectInt(OZ_Term);
-  OZ_expect_t expectTruthVar(OZ_Term);
-
-  OZ_expect_t expectVector(OZ_Term, FDExpectFun);
-
-  //  by kost@ 9.04.96: usage of fdaux.hh in fdcd.cc is eliminated;
-  OZ_expect_t expectVectorIntVarAny(OZ_Term t) {
-    return expectVector(t, ::expectIntVarAny);
+    OZ_expect_t expectIntVarAny(OZ_Term t) {
+    return expectIntVar(t, fd_any);
   }
+  OZ_expect_t expectInt(OZ_Term);
+  OZ_expect_t expectLiteral(OZ_Term);
+
+  OZ_expect_t expectVector(OZ_Term, OZ_PropagatorExpectMeth);
 
   OZ_Boolean isSuspending(OZ_expect_t r) {
     return (r.accepted == 0 || (0 < r.accepted && r.accepted < r.size));
@@ -276,5 +283,7 @@ OZ_Return OZ_typeError(OZ_CFun, OZ_Term [], int, char *, int, char *);
 
 int OZ_getFDInf(void);
 int OZ_getFDSup(void);
+
+int OZ_vectorSize(OZ_Term);
 
 #endif // __OZ_CPI_HH__

@@ -55,7 +55,7 @@ void printBanner()
 
 #if defined(DEBUG_DET) && !defined(WINDOWS)
   // windows dumps if I activate this
-  warning("DEBUG_DET implies eager weaking of sleep.");
+  warning("DEBUG_DET implies eager waking of sleep.");
 #endif
 
 #ifdef DEBUG_CHECK

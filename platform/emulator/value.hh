@@ -469,6 +469,13 @@ TaggedRef head(TaggedRef list)
 }
 
 inline
+TaggedRef * headRef(TaggedRef list)
+{
+  Assert(isLTuple(list));
+  return tagged2LTuple(list)->getRefHead();
+}
+
+inline
 TaggedRef tail(TaggedRef list)
 {
   Assert(isLTuple(list));

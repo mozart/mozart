@@ -165,7 +165,7 @@ void SolveActor::clearResult(Board* bb) {
 }
 
 inline
-void SolveActor::pushToLocalThreadQueue(Thread * thr, Board * b) {
+void SolveActor::pushToLTQ(Thread * thr, Board * b) {
   if (localThreadQueue) {
     localThreadQueue->enqueue(thr);
   } else {
