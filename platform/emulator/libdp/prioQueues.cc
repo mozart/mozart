@@ -212,10 +212,11 @@ void PrioQueues::init() {
   unackedList=recList=NULL;
   prio_val_4=Q_PRIO_VAL_4;
   prio_val_3=Q_PRIO_VAL_3;
+  noMsgs=0;
 }
 
 void PrioQueues::enqueue(MsgContainer *msgC, int prio) {
-  //  if (prio!=5&&prio!=3) prio = 3;
+  noMsgs++;
   u_enqueue(msgC, qs[prio-1]);
 }
 
@@ -258,6 +259,7 @@ MsgContainer *PrioQueues::getNext(Bool working) {
     }
   }
   curm=ret;
+  if (ret!=NULL) noMsgs--;
   return ret;
 }
 
@@ -267,6 +269,7 @@ void PrioQueues::insertUnacked(MsgContainer *msgC) {
 
 void PrioQueues::requeue(MsgContainer *msgC) {
   Assert(curm==msgC);
+  noMsgs++;
   u_addFirst(msgC,curq);
 }
 
@@ -357,9 +360,11 @@ Bool PrioQueues::hasQueued() {
   for(int i=1;i<=5;i++) {
     if(qs[i-1].first!=NULL) {
       Assert(qs[i-1].last!=NULL);
+      Assert(noMsgs>0);
       return TRUE;
     }
   }
+  Assert(noMsgs==0);
   return FALSE;
 }
 
@@ -371,11 +376,16 @@ Bool PrioQueues::hasNeed() {
   return hasQueued() || unackedList!=NULL;
 }
 
+int PrioQueues::getQueueStatus() {
+  return noMsgs;
+}
+
 void PrioQueues::clear5() {
   MsgContainer *list=qs[5-1].first;
   MsgContainer *tmp;
   qs[5-1].first=qs[5-1].last=NULL;
   while(list!=NULL) {
+    noMsgs--;
     tmp=list;
     list=list->next;
     // Assume for now that prio5 msgs are never in unackedList
@@ -392,6 +402,7 @@ void PrioQueues::clearAll() {
   for(int i=1;i<5;i++) {
     msgC=qs[i-1].first;
     while(msgC!=NULL) {
+      noMsgs--;
       qs[i-1].first=msgC->next;
       msgC->deleteSnapshot();
       msgContainerManager->deleteMsgContainer(msgC,COMM_FAULT_PERM_NOT_SENT);
@@ -402,7 +413,7 @@ void PrioQueues::clearAll() {
   msgC=unackedList;
   while(msgC!=NULL) {
     unackedList=msgC->next;
-    msgC->deleteSnapshot(); // AN! can unacked have snapshot?
+    msgC->deleteSnapshot(); 
     msgContainerManager->deleteMsgContainer(msgC,COMM_FAULT_PERM_MAYBE_SENT);
     msgC=unackedList;
   }

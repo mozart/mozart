@@ -164,7 +164,7 @@ OZ_BI_define(BIhandover,3,0){
     if(OZ_isInt(requestor))
       comObj=(ComObj *) OZ_intToC(requestor);
     else
-      comObj=comController->newComObj(NULL,0);
+      comObj=comController->newComObj(NULL);
     TransObj *transObj=(TransObj *) OZ_intToC(t);
     transObj->setUp(comObj->getSite(),comObj,settings);
     if(OZ_isInt(requestor)) {
@@ -221,8 +221,9 @@ OZ_BI_define(BIconnFailed,2,0) {
     ;
   }
   else { // AN! do sensible stuff! Will work as for temp.
-    printf("connFailed due to");
-    printf(" %s\n",OZ_atomToC(reason));
+//      printf("connFailed due to");
+//      printf(" %s\n",OZ_atomToC(reason));
+    ;
   }
 
   return PROCEED;

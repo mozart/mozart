@@ -77,7 +77,7 @@ ErrorClass classifyError() {
   case EPIPE:
   case ECONNRESET:
   case EBADF:
-    return PERM;
+    return PERM;  // This connection is broken! The site might still be up.
   default: 
     PD((TCP_INTERFACE,"Unhandled error %d",ossockerrno()));
     return PERM;

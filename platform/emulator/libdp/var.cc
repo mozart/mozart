@@ -328,14 +328,14 @@ void sendRedirect(DSite* sd,int OTI,TaggedRef val)
 
 inline Bool queueTrigger(DSite* s){
   int msgs;
-  if(s->getQueueStatus(msgs)>0) return TRUE;
+  if(s->getQueueStatus()>0) return TRUE;
   return FALSE;}
 
 // ERIK-LOOK use antoher ozconf.
 
 static inline Bool canSend(DSite* s){
   int msgs;
-  if(s->getQueueStatus(msgs)>ozconf.perdioFlowBufferSize) return FALSE;
+  if(s->getQueueStatus()>ozconf.perdioFlowBufferSize) return FALSE;
   return TRUE;}
 
 Bool varCanSend(DSite* s){
