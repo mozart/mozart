@@ -30,11 +30,11 @@
     small application.
 
   <section id="section.hello.webget" proglang=sh>
-    <title/Our First Application: <kbd/Webget.oza//
+    <title/Our First Application: <file/Webget.oza//
 
     <p>
       Our first application is a program that copies a file from a
-      url to a local file. The program is called <kbd/Webget.oza/. 
+      url to a local file. The program is called <file/Webget.oza/. 
 
 <figure id="figure.hello.invoke">
   <caption/Get yourself a Mozart license./
@@ -50,7 +50,7 @@
 
     <p>
       In addition to taking arguments from the command line,
-      <kbd/Webget.oza/ should
+      <file/Webget.oza/ should
       report problems by returning an error status to the operating
       system shell. The error status is an integer, where the value
       <<0>> means okay. Any other values signals an error.
