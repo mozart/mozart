@@ -734,21 +734,23 @@ OZ_C_proc_begin(BItclWriteFilter,7) {
 	switch (atomcmp(a,f)) {
 	case 0:
 	  fs = deref(tagged2LTuple(fs)->getTail());
-	  goto skip;
+	  as = deref(tagged2LTuple(as)->getTail());
+	  break;
 	case 1:
 	  fs = deref(tagged2LTuple(fs)->getTail());
+	  break;
 	case -1:
 	  tcl_put('-');
 	  atom2buffer(a);
 	  tcl_put(' ');
 	  tcl2buffer(sr->getFeature(a));
 	  tcl_put(' ');
+	  as = deref(tagged2LTuple(as)->getTail());
+	  break;
 	}
 	
-      skip:
-	as = deref(tagged2LTuple(as)->getTail());
-	
       }
+
     }
     
     while (isLTuple(as)) {
