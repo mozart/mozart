@@ -186,7 +186,6 @@
 
 
           # needed for instances: methods
-          ( NameOoLocking,     "ooLocking"),
           ( NameOoMeth,        "ooMeth"),
           ( NameOoFastMeth,    "ooFastMeth"),
           ( NameOoDefaults,    "ooDefaults"),
