@@ -32,6 +32,8 @@
 #pragma interface
 #endif
 
+#include "types.hh"
+
 #define htEmpty ((void*) -1L)
 
 class HashNode;

@@ -195,13 +195,14 @@ include Makefile.rules
 # all/realclean should be after make in subdirs (see Makefiles.rules)
 all:: $(TARGETS)
 
-clean+:
+realclean::
         $(RM) version.cc scanner.cc parser.cc parser.hh $(TARGETS) \
                 ozlib.lnk *.exe *.map *.imp *.sym \
                 ozma.hh \
                 $(CREATEDFILES) TAGS
 
-realclean:: clean+
+distclean:
+        $(MAKE) realclean
         $(RM) conf.h config.cache config.log config.status \
                 Makefile.rules Makefile.vars
 

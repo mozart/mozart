@@ -836,6 +836,7 @@ OZ_C_proc_begin(BIGateId,1)
   short unsigned int port = mySite->getPort();
   time_t stamp = mySite->getTimeStamp();
 
+  // mm2: use inet_ntoa seems to be a better abstraction
   sprintf(url,"ozgate://%lu.%lu.%lu.%lu:%u/",
           (a/(256*256*256))%256,
           (a/(256*256))%256,

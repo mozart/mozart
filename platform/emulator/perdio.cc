@@ -2958,7 +2958,8 @@ void marshalVar(PerdioVar *pvar,MsgBuffer *bs){
       return;}
     marshalBorrowHead(DIF_VAR,i,bs);
     if (!sd) {
-      warning("mm2: make persistent of proxy not fully impl.");
+      // mm2
+      warning("make persistent of proxy not fully impl.");
       BT->getBorrow(i)->makePersistentBorrowXX();}
     return;
   }
