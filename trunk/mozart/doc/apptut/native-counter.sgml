@@ -90,6 +90,13 @@ properly invoked when the native functor is loaded.  What actually
 happens varies from one system to another.  The only reliable
 technique is to perform all initializations in
 <code/<span class=ignore/ /oz_init_module/.</p>
+    <p>You may also define the variable
+<code/<span class=ignore/ /oz_module_name/ to give your native module a
+name that can be used when printing the builtins which it exports.  This
+is particularly useful for debugging and for interactively looking at
+values.  For example,  you could give it the name <code/"GlobalCounter"/:
+<code display/
+char oz_module_name[] = "GlobalCounter";/
   </section>
 
   <section id=section.counter.global.compilation>
