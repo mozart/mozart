@@ -28,6 +28,9 @@
 
 #include "fdaux.hh"
 
+template _OZ_ParamIterator<OZ_Return>;
+template PropagatorController_V_V;
+
 //-----------------------------------------------------------------------------
 // convert vector to C++ arrays
 

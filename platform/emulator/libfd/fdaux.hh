@@ -284,8 +284,6 @@ public:
   }
 };
 
-template _OZ_ParamIterator<OZ_Return>;
-
 template<class RTYPE, class VAR, int P, int F, int S>
 class _PropagatorController_V_V : public _OZ_ParamIterator<RTYPE> {
 protected:
@@ -311,7 +309,6 @@ public:
 
 typedef _PropagatorController_V_V<OZ_Return,OZ_FDIntVar,PROCEED,FAILED,SLEEP> 
 PropagatorController_V_V;
-template PropagatorController_V_V;
 
 template<class RTYPE, class VAR, int P, int F, int S>
 class _PropagatorController_V_V_V : public _OZ_ParamIterator<RTYPE> {
