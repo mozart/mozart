@@ -281,4 +281,7 @@ test: $(OZTEST)
 
 test-lib:
         (OZEMULATOR=`pwd`/oz.emulator.bin; export OZEMULATOR; \
-         cd $(SRCDIR)/../lib; ./configure; make clean all)
+         OZMA_LIB="-B `pwd`/ozma.so"; export OZMA_LIB; \
+         cd $(SRCDIR)/../lib; \
+         ./configure; \
+         make realclean stage1 clean stage2 cean stage3)
