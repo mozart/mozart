@@ -269,6 +269,12 @@ private:
 
   //
   OzSleep *sleepQueue;
+#ifdef DENYS_EVENTS
+  int requestedTimer;
+public:
+  void setTimer(int i) { requestedTimer=i; }
+private:
+#endif
 
   Bool _profileMode;
 
