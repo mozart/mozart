@@ -28,10 +28,10 @@ FUNCTORS        = mode.ozf
 LIB_FUNCTORS    = $(addprefix $(LIB_DIR)/,$(FUNCTORS))
 IOFUNCTOR       = io.ozf
 LIB_IOFUNCTOR   = $(addprefix $(LIB_DIR1)/,$(IOFUNCTOR))
-NATIVES         = process.so
+NATIVES         = process.so-$(PLATFORM)
 NATIVES1        = $(addsuffix -$(PLATFORM),$(NATIVES))
 LIB_NATIVES     = $(addprefix $(LIB_DIR)/,$(NATIVES1))
-IONATIVE        = io.so
+IONATIVE        = io.so-$(PLATFORM)
 IONATIVE1       = $(addsuffix -$(PLATFORM),$(IONATIVE))
 LIB_IONATIVE    = $(addprefix $(LIB_DIR1)/,$(IONATIVE1))
 
@@ -49,26 +49,26 @@ $(LIB_DIR):
 $(LIB_IOFUNCTOR): $(LIB_DIR1)/% : %
         $(INSTALL_LIB) $< $@
 
-$(LIB_IONATIVE): $(LIB_DIR1)/%.so-$(PLATFORM) : %.so
+$(LIB_IONATIVE): $(LIB_DIR1)/%.so-$(PLATFORM) : %.so-$(PLATFORM)
         $(INSTALL_LIB) $< $@
 
 $(LIB_FUNCTORS): $(LIB_DIR)/% : %
         $(INSTALL_LIB) $< $@
 
-$(LIB_NATIVES): $(LIB_DIR)/%.so-$(PLATFORM): %.so
+$(LIB_NATIVES): $(LIB_DIR)/%.so-$(PLATFORM): %.so-$(PLATFORM)
         $(INSTALL_LIB) $< $@
 
 %.ozf: %.oz
         $(OZC) -c $< -o $@
 
-%.so: %.o
+%.so-$(PLATFORM): %.o
         $(OZDYNLD) $< -o $@ $(LDFLAGS) $(LIBS)
 
 %.o: %.cc
         $(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $< -o $@
 
 clean veryclean:
-        -$(RM) *~ *.ozf *.so *.o
+        -$(RM) *~ *.ozf *.so-* *.o
 
 distclean: veryclean
         -$(RM) config.* Makefile

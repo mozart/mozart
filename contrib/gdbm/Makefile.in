@@ -24,7 +24,7 @@ INSTALL         = @INSTALL@
 INSTALL_DIR     = @INSTALL_DIR@
 INSTALL_LIB     = $(INSTALL) -m 444
 
-TARGETS         = gdbm.ozf gdbm.so
+TARGETS         = gdbm.ozf gdbm.so-$(PLATFORM)
 LIB_TARGETS     = $(LIB_DIR)/gdbm.ozf $(LIB_DIR)/gdbm.so-$(PLATFORM)
 
 .PHONY: all install clean veryclean distclean bootstrap depend
@@ -38,20 +38,20 @@ $(LIB_DIR):
 $(LIB_DIR)/gdbm.ozf: gdbm.ozf
         $(INSTALL_LIB) $< $@
 
-$(LIB_DIR)/gdbm.so-$(PLATFORM): gdbm.so
+$(LIB_DIR)/gdbm.so-$(PLATFORM): gdbm.so-$(PLATFORM)
         $(INSTALL_LIB) $< $@
 
 gdbm.ozf: gdbm.oz
         $(COMPILE) $< -o $@
 
-gdbm.so: gdbm.o
+gdbm.so-$(PLATFORM): gdbm.o
         $(OZDYNLD) -o $@ $< $(LDFLAGS) $(LIBS)
 
 gdbm.o: gdbm.cc
         $(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $<
 
 clean veryclean:
-        -$(RM) *~ *.bak *.o *.so *.ozf
+        -$(RM) *~ *.bak *.o *.so-* *.ozf
 
 distclean: clean
         -$(RM) config.* Makefile
