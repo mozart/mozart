@@ -3,7 +3,7 @@ VPATH           = @srcdir@
 SRCDIR          = @srcdir@
 
 PREFIX          = @prefix@
-OZPREFIX        = $(PREFIX)
+OZPREFIX        = @prefix@
 
 OZBIN           = $(PREFIX)/bin
 OZLIB           = $(PREFIX)/share
