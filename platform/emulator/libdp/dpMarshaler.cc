@@ -833,15 +833,13 @@ void VariableExcavator::copyStack(DPMarshaler *dpm)
   while (copyTop > copyBottom) {
     OZ_Term& t = (OZ_Term&) *(--copyTop);
     OZ_Term tc = t;
-    DEREF(tc, tPtr, tTag);
+    DEREF(tc, tPtr);
 
     //
     *(--top) = (StackEntry) t;
 
     //
-    switch (tTag) {
-    case TAG_GCMARK:
-      //
+    if (oz_isMark(tc)) {
       switch (tc) {
       case taggedBATask:
 	{
@@ -867,10 +865,6 @@ void VariableExcavator::copyStack(DPMarshaler *dpm)
 	}
 	break;
       }
-      break;
-
-    default:
-      break;
     }      
   }
 }
@@ -1888,30 +1882,23 @@ OZ_Term dpUnmarshalTerm(ByteBuffer *bs, Builder *b)
 	    // object protocol, in which case it must be a variable
 	    // that denotes an object (of this class);
 	    OZ_Term vd = oz_deref(value);
-	    switch (tagTypeOf(vd)) {
-	    case TAG_CONST:
+	    if (oz_isConst(vd)) {
 	      Assert(tagged2Const(vd)->getType() == Co_Class);
 	      b->knownClass(value);
 	      b->set(value, refTag);
-	      break;
-
-	    case TAG_VAR:
-	      {
-		OzVariable *var = tagged2Var(vd);
-		Assert(var->getType() == OZ_VAR_EXT);
-		ExtVar *evar = (ExtVar *) var;
-		Assert(evar->getIdV() == OZ_EVAR_LAZY);
-		LazyVar *lvar = (LazyVar *) evar;
-		Assert(lvar->getLazyType() == LT_CLASS);
-		ClassVar *cv = (ClassVar *) lvar;
-		// The binding of a class'es gname is kept until the
-		// construction of a class is finished.
-		gname = cv->getGName();
-		b->buildClassRemember(gname, flags, refTag);
-	      }
-	      break;
-
-	    default:
+	    } else if (oz_isVar(vd)) {
+	      OzVariable *var = tagged2Var(vd);
+	      Assert(var->getType() == OZ_VAR_EXT);
+	      ExtVar *evar = (ExtVar *) var;
+	      Assert(evar->getIdV() == OZ_EVAR_LAZY);
+	      LazyVar *lvar = (LazyVar *) evar;
+	      Assert(lvar->getLazyType() == LT_CLASS);
+	      ClassVar *cv = (ClassVar *) lvar;
+	      // The binding of a class'es gname is kept until the
+	      // construction of a class is finished.
+	      gname = cv->getGName();
+	      b->buildClassRemember(gname, flags, refTag);
+	    } else {
 #ifndef USE_FAST_UNMARSHALER
 	      (void) b->finish();
 	      return 0;
@@ -2010,30 +1997,23 @@ OZ_Term dpUnmarshalTerm(ByteBuffer *bs, Builder *b)
 	    // object (how comes? requested twice??), or that's the
 	    // lazy object protocol;
 	    OZ_Term vd = oz_deref(value);
-	    switch (tagTypeOf(vd)) {
-	    case TAG_CONST:
+	    if (oz_isConst(vd)) {
 	      Assert(tagged2Const(vd)->getType() == Co_Object);
 	      OZ_warning("Full object is received again.");
 	      b->knownObject(value);
 	      b->set(value, refTag);
-	      break;
-
-	    case TAG_VAR:
-	      {
-		OzVariable *var = tagged2Var(vd);
-		Assert(var->getType() == OZ_VAR_EXT);
-		ExtVar *evar = (ExtVar *) var;
-		Assert(evar->getIdV() == OZ_EVAR_LAZY);
-		LazyVar *lvar = (LazyVar *) evar;
-		Assert(lvar->getLazyType() == LT_OBJECT);
-		ObjectVar *ov = (ObjectVar *) lvar;
-		gname = ov->getGName();
-		// Observe: the gname points to the proxy;
-		b->buildObjectRemember(gname, refTag);
-	      }
-	      break;
-
-	    default:
+	    } else if (oz_isVar(vd)) {
+	      OzVariable *var = tagged2Var(vd);
+	      Assert(var->getType() == OZ_VAR_EXT);
+	      ExtVar *evar = (ExtVar *) var;
+	      Assert(evar->getIdV() == OZ_EVAR_LAZY);
+	      LazyVar *lvar = (LazyVar *) evar;
+	      Assert(lvar->getLazyType() == LT_OBJECT);
+	      ObjectVar *ov = (ObjectVar *) lvar;
+	      gname = ov->getGName();
+	      // Observe: the gname points to the proxy;
+	      b->buildObjectRemember(gname, refTag);
+	    } else {
 #ifndef USE_FAST_UNMARSHALER
 	      (void) b->finish();
 	      return 0;

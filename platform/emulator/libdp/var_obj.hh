@@ -58,58 +58,44 @@ public:
 
   virtual void disposeV(void);
 
-  Bool isObjectClassAvail() {
+  Bool isObjectClassAvail(void) {
     OZ_Term cl = oz_deref(aclass);
-    switch (tagTypeOf(cl)) {
-    case TAG_CONST:
-      {
-	DebugCode(ConstTerm *ct = tagged2Const(cl));
-	Assert(ct->getType() == Co_Class);
-	return (OK);
-      }
-
-    case TAG_VAR:
-      {
-	OzVariable *var = tagged2Var(cl);
-	Assert(var->getType() == OZ_VAR_EXT);
-	ExtVar *evar = (ExtVar *) var;
-	Assert(evar->getIdV() == OZ_EVAR_LAZY);
-	LazyVar *lvar = (LazyVar *) evar;
-	Assert(lvar->getLazyType() == LT_CLASS);
-	return (NO);
-      }
-
-    default:
-      Assert(0);
+    if (oz_isConst(cl)) {
+      DebugCode(ConstTerm *ct = tagged2Const(cl));
+      Assert(ct->getType() == Co_Class);
+      return (OK);
+    }
+    if (oz_isVar(cl)) {
+      OzVariable *var = tagged2Var(cl);
+      Assert(var->getType() == OZ_VAR_EXT);
+      ExtVar *evar = (ExtVar *) var;
+      Assert(evar->getIdV() == OZ_EVAR_LAZY);
+      LazyVar *lvar = (LazyVar *) evar;
+      Assert(lvar->getLazyType() == LT_CLASS);
       return (NO);
     }
+    Assert(0);
+    return (NO);
   }
 
   GName *getGNameClass() {
     OZ_Term cl = oz_deref(aclass);
-    switch (tagTypeOf(cl)) {
-    case TAG_CONST:
-      {
-	ConstTerm *ct = tagged2Const(cl);
-	Assert(ct->getType() == Co_Class);
-	return (((ObjectClass *) ct)->getGName());
-      }
-
-    case TAG_VAR:
-      {
-	OzVariable *var = tagged2Var(cl);
-	Assert(var->getType() == OZ_VAR_EXT);
-	ExtVar *evar = (ExtVar *) var;
-	Assert(evar->getIdV() == OZ_EVAR_LAZY);
-	LazyVar *lvar = (LazyVar *) evar;
-	Assert(lvar->getLazyType() == LT_CLASS);
-	return (((ObjectVar *) lvar)->getGName());
-      }
-
-    default:
-      Assert(0);
-      return ((GName *) 0);
+    if (oz_isConst(cl)) {
+      ConstTerm *ct = tagged2Const(cl);
+      Assert(ct->getType() == Co_Class);
+      return (((ObjectClass *) ct)->getGName());
     }
+    if (oz_isVar(cl)) {
+      OzVariable *var = tagged2Var(cl);
+      Assert(var->getType() == OZ_VAR_EXT);
+      ExtVar *evar = (ExtVar *) var;
+      Assert(evar->getIdV() == OZ_EVAR_LAZY);
+      LazyVar *lvar = (LazyVar *) evar;
+      Assert(lvar->getLazyType() == LT_CLASS);
+      return (((ObjectVar *) lvar)->getGName());
+    }
+    Assert(0);
+    return ((GName *) 0);
   }
 
   OZ_Term getClass() { 
