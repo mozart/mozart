@@ -193,6 +193,9 @@ PERDIO_DEBUG_DO(void printTables());
 
 Bool withinBorrowTable(int i); // for assertion
 
+void tokenLost(Chain*, Tertiary *t);
+void tokenRecovery(Chain*, Tertiary *);
+
 /* *********************************************************************/
 /*   SECTION 2: global variables                                       */
 /* *********************************************************************/
@@ -3895,6 +3898,7 @@ void cellLockSendDump(BorrowEntry *be){
 
 void  cellReceiveGet(OwnerEntry* oe,Tertiary* t,int mI,Site* toS,int accessNr){
   CellManager* cm=(CellManager*)(oe->getTertiary());
+  if(t->getEntityCond() & PERM_BLOCKED){return;}
   Assert(cm->getType()==Co_Cell);
   Assert(cm->getTertType()==Te_Manager);
 
@@ -4284,8 +4288,6 @@ void chainReceiveAnswer(OwnerEntry* oe,Site* site,int accessNr,int ans){
       int tn;
       Site *tS=chain->getFirstSite();
       getChainFromTertiary(t)->managerSeesSiteCrash(t,tS);
-      t->entityProblem(PERM_SOME); // ATTENTION
-      chain->informHandle(t,PERM_SOME);
       return;}
     Assert(chain->getFirstSite()->siteStatus()==PERM_SITE);
     chain->removeFirstSite();
@@ -4300,13 +4302,17 @@ void chainReceiveAnswer(OwnerEntry* oe,Site* site,int accessNr,int ans){
     return;}
   Assert(ans==BEFORE_ME);
   if(t->getType()==Co_Cell){
+    tokenLost(chain,t);
+    NOT_IMPLEMENTED;
     t->entityProblem((EntityCond) PERM_BLOCKED|PERM_SOME|PERM_ALL);
     chain->informHandle(t,(EntityCond) PERM_BLOCKED|PERM_SOME|PERM_ALL);
     return;}
   Assert(t->getType()==Co_Lock);
+
                  // ATTENTION not optimal - lock can be recovered
   t->entityProblem((EntityCond) PERM_BLOCKED|PERM_SOME|PERM_ALL);
   chain->informHandle(t,(EntityCond) PERM_BLOCKED|PERM_SOME|PERM_ALL);
+  tokenRecovery(chain,t);
   return;}
 
 void chainSendQuestion(Site* toS,int mI,int accessNr){
@@ -4840,14 +4846,35 @@ void Chain::informHandle(Tertiary* t,EntityCond ec){
 
 /* incorrect lock can recover somewhat */
 
+
+void tokenLost(Chain *ch,Tertiary *t){
+  t->entityProblem(PERM_BLOCKED|PERM_SOME|PERM_ALL);
+  ch->informHandle(t,PERM_BLOCKED|PERM_SOME|PERM_ALL);
+  return;}
+
+void tokenRecovery(Chain *ch,Tertiary *t){
+  t->entityProblem(PERM_SOME);
+  ch->informHandle(t,PERM_SOME);
+  return;}
+
 void Chain::managerSeesSiteCrash(Tertiary *t,Site *s){
   PD((ERROR_DET,"managerSeesSiteCrash site:%s nr:%d",s->stringrep(),t->getIndex()));
   ChainElem *ce=first->next;
   if(first->getSite()==s){
     if(ce==NULL){
+      freeChainElem(first);
       first=ce;
-      t->entityProblem(PERM_BLOCKED|PERM_SOME|PERM_ALL);  // informing this site
-      informHandle(t,PERM_BLOCKED|PERM_SOME|PERM_ALL);  // informing other sites
+      if(t->getType()==Co_Cell){
+        tokenLost(this,t);
+        return;}
+      Assert(t->getType()==Co_Lock);
+      init(mySite,OWNER_ACCESS_NR);
+      tokenRecovery(this,t);
+      return;}
+    if(ce->getSite()->siteStatus()==PERM_SITE){
+      freeChainElem(first);
+      first=ce;
+      tokenRecovery(this,t);
       return;}
     chainSendQuestion(ce->getSite(),t->getIndex(),ce->numId);
     return;}
