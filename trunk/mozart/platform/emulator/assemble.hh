@@ -15,6 +15,4 @@
 #pragma interface
 #endif
 
-void BIinitAssembler();
-
 #endif

@@ -8,8 +8,7 @@
 #include "am.hh"
 #include "genvar.hh"
 #include "tagged.hh"
-#include "term.hh"
-#include "records.hh"
+#include "value.hh"
 #include "mem.hh"
 
 // TODO

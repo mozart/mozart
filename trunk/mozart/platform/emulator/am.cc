@@ -117,10 +117,14 @@ void printBanner()
 #endif
 }
 
+
+extern void bigIntInit(); /* from value.cc */
+
 void AM::init(int argc,char **argv)
 {  
   ozconf.init();
   osInit();
+  bigIntInit();
 
   suspendVarList=makeTaggedNULL();
   aVarUnifyHandler=makeTaggedNULL();
@@ -247,6 +251,7 @@ void AM::init(int argc,char **argv)
     exit(1);
   }
 
+  extern void initTagged();
   initTagged();
   SolveActor::Init();
 

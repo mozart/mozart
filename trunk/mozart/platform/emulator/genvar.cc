@@ -15,16 +15,8 @@
 #endif
 
 
-#include "tagged.hh"
-#include "constter.hh"
-#include "board.hh"
-
-#include "stack.hh"
-#include "taskstk.hh"
 #include "am.hh"
-#include "thread.hh"
-#include "susplist.hh"
-#include "variable.hh"
+
 #include "genvar.hh"
 
 GenCVariable::GenCVariable(TypeOfGenCVariable t, Board * n) :

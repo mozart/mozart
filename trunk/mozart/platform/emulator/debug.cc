@@ -59,13 +59,15 @@ void dbgPrint(TaggedRef t)
 
 OZ_C_proc_begin(BIspy, 1)
 {
-  NONVAR(OZ_getCArg(0),predd,predTag);
+  OZ_nonvarArg(0);
+  OZ_declareArg(0,predd);
+  DEREF(predd,_1,_2);
   if (!isAbstraction(predd)) {
     OZ_warning("spy: abstraction expected, got: %s",OZ_toC(predd));
     return FAILED;
   }
 
-  ((Abstraction *)tagged2Const(predd))->getPred()->setSpyFlag();
+  tagged2Abstraction(predd)->getPred()->setSpyFlag();
   return PROCEED;
 }
 OZ_C_proc_end
@@ -73,8 +75,8 @@ OZ_C_proc_end
 
 OZ_C_proc_begin(BIdisplayCode, 2)
 {
-  OZ_declareIntArg("displayCode",0,pc);
-  OZ_declareIntArg("displayCode",1,size);
+  OZ_declareIntArg(0,pc);
+  OZ_declareIntArg(1,size);
   displayCode((ProgramCounter)ToPointer(pc),size);
   return PROCEED;
 }
@@ -83,13 +85,15 @@ OZ_C_proc_end
 
 OZ_C_proc_begin(BInospy, 1)
 {
-  NONVAR(OZ_getCArg(0),predd,predTag);
+  OZ_nonvarArg(0);
+  OZ_declareArg(0,predd);
+  DEREF(predd,_1,_2);
   if (!isAbstraction(predd)) {
     OZ_warning("nospy: abstraction expected, got: %s",OZ_toC(predd));
     return FAILED;
   }
 
-  ((Abstraction *)tagged2SRecord(predd))->getPred()->unsetSpyFlag();
+  tagged2Abstraction(predd)->getPred()->unsetSpyFlag();
   return PROCEED;
 }
 OZ_C_proc_end
