@@ -180,7 +180,7 @@ public:
 		   TaggedRef *termPtr, TaggedRef term);
   void bind(TaggedRef *varPtr, TaggedRef var, TaggedRef *termPtr);
   void checkSuspensionList(TaggedRef taggedvar, TaggedRef term,
-			   SVariable *rightVar = NULL);
+			   SVariable *rightVar);
   SuspList* checkSuspensionList(SVariable* var, TaggedRef taggedvar,
 				SuspList* suspList,
 				TaggedRef term, SVariable* rightVar = NULL);

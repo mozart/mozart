@@ -343,7 +343,7 @@ Bool SolveActor::checkExtSuspList ()
   while (tmpSuspList) {
     Suspension *susp = tmpSuspList->getElem();
 
-    if (susp->isDead () == OK) {
+    if (susp->isDead ()) {
       tmpSuspList = tmpSuspList->dispose ();
       continue;
     }
