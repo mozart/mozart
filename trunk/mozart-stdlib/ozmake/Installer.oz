@@ -75,7 +75,7 @@ define
 	 if {self get_package_given($)} then Installer,install_from_package
 	 elseif Targets==nil then Installer,install_all
 	 else
-	    {self build_targets(Targets)}
+	    {self build(Targets)}
 	    ITriples = Installer,targets_to_installation_triples(Targets $)
 	 in
 	    Installer,install_itriples(ITriples)

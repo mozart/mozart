@@ -453,6 +453,18 @@ define
 	 end
       end
 
+      meth makefile_read_maybe_from_package
+	 if @Target2Section==unit then S={self get_superman($)} in
+	    if S\=unit andthen {S has_submakefiles({self get_assubdir($)} $)} then
+	       Makefile,makefile_from_record({S get_submakefile({self get_assubdir($)} $)})
+	    elseif {Not {self get_makefile_given($)}} andthen {self get_package_given($)} then
+	       {self extract_makefile(_)}
+	    else
+	       {self makefile_read}
+	    end
+	 end
+      end
+
       %% is this target included in src? we need to know this to avoid
       %% build src targets unless during a fullbuild
 
