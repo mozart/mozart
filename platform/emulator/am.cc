@@ -86,7 +86,7 @@ ConfigData::ConfigData() {
   defaultPriority	= DEFAULT_PRIORITY;
   systemPriority	= SYSTEM_PRIORITY;
   taskStackSize		= TASK_STACK_SIZE;
-  typeErrorVerbosity    = TYPE_ERROR_VERBOSITY;
+  errorVerbosity          = ERROR_VERBOSITY;
 }
 extern "C" int runningUnderEmacs; // mm2
 extern void version(); // mm2

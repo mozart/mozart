@@ -84,7 +84,7 @@ public:
 
   int taskStackSize;
 
-  int typeErrorVerbosity;
+  int errorVerbosity;
 public:
   ConfigData();
 };
