@@ -212,18 +212,6 @@ global handler with condition <<permFail>>.
 
 <SUBSUBSECTION><TITLE>Limitations of the current release</TITLE>
 
-<P>There are two ways to make this state
-known to an application:
-eagerly, i.e., as soon as possible, or lazily,
-i.e., only when it needs the language entity.
-
-<P>To be informed of a fault state,
-the application has to install a <EM>distribution handler</EM>
-on the entity.
-A handler can be installed to trigger on a particular
-set of fault states.
-A handler can be installed at each of three levels, namely
-<<global>>, <<site>>, and <<thread(T)>>.
 
 
 <P>A fault state <<F>> different from <<ok>> will
