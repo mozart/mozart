@@ -509,7 +509,7 @@ Input and output via buffers *Oz Compiler* and *Oz Machine*."
     (setq oz-machine-visible (get-buffer-window oz-machine-buffer))
 
     (oz-set-state 'oz-compiler-state "booting")
-    (make-comint "Oz Compiler" "oz.compiler" nil "-S" file)
+    (make-comint "Oz Compiler" "oz.compiler" nil "-emacs" "-S" file)
     (oz-create-buffer "*Oz Compiler*")
     (set-process-filter (get-process "Oz Compiler") 'oz-compiler-filter)
     (bury-buffer "*Oz Compiler*")
@@ -519,7 +519,7 @@ Input and output via buffers *Oz Compiler* and *Oz Machine*."
 	(funcall oz-machine-hook file)
       (oz-set-state 'oz-machine-state "booting")
       (setq oz-machine-buffer "*Oz Machine*")
-      (make-comint "Oz Machine" "oz.machine" nil "-S" file)
+      (make-comint "Oz Machine" "oz.machine" nil "-emacs" "-S" file)
       (set-process-filter (get-buffer-process oz-machine-buffer)
 			  'oz-machine-filter)
       (oz-create-buffer oz-machine-buffer)
