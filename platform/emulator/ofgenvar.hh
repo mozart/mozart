@@ -111,7 +111,9 @@ public:
 // Full emptiness check: table[i].value==makeTaggedNULL()
 // Hash termination condition: table[i].ident==makeTaggedNULL() || table[i].ident==id || s==0
 
-typedef unsigned long dt_index;
+typedef long dt_index;
+
+const dt_index invalidIndex = -1L;
 
 // Maximum size of completely full table
 #define FILLLIMIT 4
@@ -131,6 +133,17 @@ private:
     TaggedRef ident;
     TaggedRef value;
 };
+
+
+// Maximum number of elements in hash table:
+/* Full/Max: 0/0, 1/1, 2/2, 4/4, 6/8, 12/16, 24/32 (limit:75%) */
+/* !!! DOING +2 instead of +1 goes into INFINITE LOOP.  CHECK IT OUT! */
+// #define fullFunc(size) (((size)+((size)>>1)+1)>>1)
+#define fullFunc(size) ((size)<=FILLLIMIT?(size):( (size) - ((size)>>2) ))
+
+// Fill factor at which the hash table is considered sparse enough to halve in size:
+/* Empty/Max: 0/0, 0/1, 1/2, 2/4, 3/8, 6/16, ... (limit:37.5%) */
+#define emptyFunc(size) (((size)+((size)>>1)+2)>>2)
 
 
 // class DynamicTable uses:
@@ -168,14 +181,22 @@ public:
     // Initialize an elsewhere-allocated dynamictable of size s
     void init(dt_index s);
 
+    // True if the hash table is considered full:
     // Test whether the current table has too little room for one new element:
     // ATTENTION: Calls to insert should be preceded by fullTest.
-    Bool fullTest();
+    Bool fullTest() {
+      Assert(isPwrTwo(size));
+      return (numelem>=fullFunc(size));
+    }
+
 
     // Return a table that is double the size of the current table and
     // that contains the same elements:
     // ATTENTION: Should be called before insert if the table is full.
-    DynamicTable* doubleDynamicTable();
+    DynamicTable* doubleDynamicTable() {
+      return copyDynamicTable(size?(size<<1):1);
+    }
+
 
     // Return a copy of the current table that has size newSize and all contents
     // of the current table.  The current table's contents MUST fit in the copy!
@@ -198,6 +219,11 @@ public:
     // Return TRUE if index id successfully updated, else FALSE if index id does not
     // exist in table
     Bool update(TaggedRef id, TaggedRef val);
+
+    // Destructively update index id with new value val even if id does
+    // not have a value yet
+    // Return TRUE if index id successfully updated, else FALSE
+    Bool add(TaggedRef id, TaggedRef val);
 
     // Remove index id from table.  To reclaim memory, if the table becomes too sparse then
     // return a smaller table that contains all its entries.  Otherwise, return same table.
@@ -238,8 +264,11 @@ public:
     // Return sorted list (with given tail) containing all features
     TaggedRef getArityList(TaggedRef tail=AtomNil);
 
+    // Allocate & return _unsorted_ list containing all features:
+    TaggedRef getKeys();
+
 private:
-    dt_index fullhash(TaggedRef id, Bool *valid);
+    dt_index fullhash(TaggedRef id);
 };
 
 
