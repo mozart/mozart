@@ -142,7 +142,7 @@ local
       [] fOpApply(O Ts _) then
 	 case O of '~' then [T] = Ts in
 	    {DoOutput '~'#{Oz T 1201} P 1200}
-	 else [T1 T2] = Ts in
+	 elsecase Ts of [T1 T2] then
 	    case O of '==' then {DoOutput {Oz T1 501}#' == '#{Oz T2 501} P 500}
 	    [] '<' then {DoOutput {Oz T1 501}#' < '#{Oz T2 501} P 500}
 	    [] '>' then {DoOutput {Oz T1 501}#' > '#{Oz T2 501} P 500}
@@ -158,7 +158,17 @@ local
 	    [] '.' then {DoOutput {Oz T1 1300}#'.'#{Oz T2 1301} P 1300}
 	    [] '^' then {DoOutput {Oz T1 1300}#'^'#{Oz T2 1301} P 1300}
 	    end
+	 else
+	    '{'#PU#'`'#O#'`'#
+	    case Ts of _|_ then GL#{LI {Map Ts OutputOz} GL}
+	    [] nil then ""
+	    end#'}'#PO
 	 end
+      [] fOpApplyStatement(O Ts _) then
+	 '{'#PU#'`'#O#'`'#
+	 case Ts of _|_ then GL#{LI {Map Ts OutputOz} GL}
+	 [] nil then ""
+	 end#'}'#PO
       [] fFdCompare(O S T _) then
 	 {DoOutput {Oz S 501}#' '#O#' '#{Oz T 501} P 500}
       [] fFdIn(O S T _) then
