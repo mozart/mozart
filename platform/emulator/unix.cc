@@ -686,7 +686,7 @@ OZ_C_ioproc_begin(unix_open,4)
     return FAILED;
   }
 
-  WRAPCALL(open(filename, flags, mode),desc,out);
+  WRAPCALL(osopen(filename, flags, mode),desc,out);
 
   return OZ_unifyInt(out,desc);
 }
@@ -699,7 +699,7 @@ OZ_C_ioproc_begin(unix_close,2)
   OZ_declareIntArg(0,fd);
   OZ_declareArg(1,out);
 
-  WRAPCALL(close(fd),ret,out);
+  WRAPCALL(osclose(fd),ret,out);
 
   return OZ_unifyInt(out,ret);
 }
@@ -749,7 +749,7 @@ OZ_C_ioproc_begin(unix_write, 3)
   if (status == FAILED)
     return FAILED;
   
-  WRAPCALL(write(fd, write_buff, len), ret, out);
+  WRAPCALL(oswrite(fd, write_buff, len), ret, out);
     
   if (len==ret && status != SUSPEND) {
     return OZ_unifyInt(out, len);
@@ -828,6 +828,17 @@ OZ_C_proc_begin(unix_writeSelect,2)
 OZ_C_proc_end
 
 
+OZ_C_proc_begin(unix_acceptSelect,2)
+{
+  OZ_declareIntArg(0,fd);
+  OZ_declareArg(1, out);
+
+  return OZ_acceptSelect(fd,OZ_int(0),out);
+}
+OZ_C_proc_end
+
+
+
 
 OZ_C_proc_begin(unix_deSelect,1)
 {
@@ -892,7 +903,7 @@ OZ_C_ioproc_begin(unix_socket,4)
     return FAILED;
   }
 
-  WRAPCALL(socket(domain, type, protocol), sock, out);
+  WRAPCALL(ossocket(domain, type, protocol), sock, out);
 
   return OZ_unifyInt(out, sock);
 }
@@ -1054,8 +1065,6 @@ OZ_C_ioproc_begin(unix_connectInet,4)
 }
 OZ_C_proc_end
 
-
-
 OZ_C_ioproc_begin(unix_acceptInet,4)
 {
   OZ_declareIntArg(0, sock);
@@ -1067,6 +1076,8 @@ OZ_C_ioproc_begin(unix_acceptInet,4)
   int fromlen = sizeof from;
 
   WRAPCALL(accept(sock,(struct sockaddr *)&from, &fromlen),fd,out);
+
+  registerSocket(fd);
 
   struct hostent *gethost = gethostbyaddr((char *) &from.sin_addr,
                                           fromlen, AF_INET);
@@ -1824,6 +1835,7 @@ OZ_BIspec spec[] = {
   {"Unix.unlink",2,unix_unlink},
   {"Unix.readSelect",2,unix_readSelect},
   {"Unix.writeSelect",2,unix_writeSelect},
+  {"Unix.acceptSelect",2,unix_acceptSelect},
   {"Unix.deSelect",1,unix_deSelect},
   {"Unix.system",2,unix_system},
   {"Unix.getEnv",2,unix_getEnv},
