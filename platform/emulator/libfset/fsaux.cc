@@ -2,14 +2,11 @@
 
 OZ_C_proc_begin(fsp_init, 0)
 {
-  cout << "Finite Set Propagator Module of "
-       << __DATE__ << " (" << __TIME__ << ')'
 #ifdef OZ_DEBUG
-       << " (DEBUG)"
+  cout << "*** DEBUG-FSETLIB ***" << endl << flush;
 #elif OZ_PROFILE
-       << " (PROFILE)"
+  cout << "*** PROFILE-FSETLIB ***" << endl << flush;
 #endif
-       << '.' << endl << flush;
   return PROCEED;
 }
 OZ_C_proc_end
