@@ -36,6 +36,7 @@
 #include "perdio.hh"
 #include "table.hh"
 #include "marshalerBase.hh"
+#include "gname.hh"
 
 #ifdef INTERFACE
 #pragma interface

@@ -6,6 +6,7 @@
  *    Per Brand (perbrand@sics.se)
  *    Ralf Scheidhauer (Ralf.Scheidhauer@ps.uni-sb.de)
  *    Erik Klintskog (erik@sics.se)
+ *    Konstantin Popov <kost@sics.se>
  *
  *  Copyright:
  *    Michael Mehl (1997,1998)
@@ -42,29 +43,14 @@
 void ObjectVar::marshal(ByteBuffer *bs)
 {
   PD((MARSHAL,"var objectproxy"));
-  GName *classgn = isObjectClassAvail()
-    ? ((ObjectClass *) tagged2Const(getClass()))->getGName()
-    : getGNameClass();
+  GName *classgn = getGNameClass();
   marshalVarObject(bs, index, gname, classgn);
 }
 
-/* --- ObjectProxis --- */
-
 //
-TaggedRef newObjectProxy(int bi, GName *gnobj, GName *gnclass)
+TaggedRef newObjectProxy(int bi, GName *gnobj, TaggedRef cl)
 {
-  ObjectVar *pvar;
-  pvar = new ObjectVar(oz_currentBoard(), bi, gnobj, gnclass);
-  TaggedRef val = makeTaggedRef(newTaggedCVar(pvar));
-  return (val);
-}
-
-//
-TaggedRef newObjectProxy(int bi, GName *gnobj, TaggedRef clas)
-{
-  ObjectVar *pvar;
-  pvar = new ObjectVar(oz_currentBoard(), bi, gnobj,
-                       tagged2ObjectClass(oz_deref(clas)));
+  ObjectVar *pvar = new ObjectVar(oz_currentBoard(), bi, gnobj, cl);
   TaggedRef val = makeTaggedRef(newTaggedCVar(pvar));
   return (val);
 }
@@ -78,7 +64,7 @@ void ObjectVar::sendRequest()
 {
   // There could be an optimization: avoiding retrieving the same
   // class twice from different objects (not done);
-  LazyFlag sendClass = isObjectClassNotAvail() ? OBJECT_AND_CLASS : OBJECT;
+  LazyFlag sendClass = isObjectClassAvail() ? OBJECT : OBJECT_AND_CLASS;
   BorrowEntry *be=BT->getBorrow(index);
 
   NetAddress* na=be->getNetAddress();
@@ -96,12 +82,7 @@ void ObjectVar::sendRequest()
 void ObjectVar::gCollectRecurseV(void)
 {
   BT->getBorrow(index)->gcPO();
-  if (isObjectClassAvail()) {
-    oz_gCollectTerm(u.aclass, u.aclass);
-  } else {
-    Assert(u.gnameClass);
-    gCollectGName(u.gnameClass);
-  }
+  oz_gCollectTerm(aclass, aclass);
   Assert(gname);
   gCollectGName(gname);
   setInfo(gcEntityInfoInternal(getInfo()));
@@ -112,18 +93,16 @@ void ObjectVar::disposeV()
   disposeS();
   // PER-LOOK
   // kost@ : ... so what? found something?
-  if (isObjectClassNotAvail())
-    deleteGName(u.gnameClass);
   // Don't touch gname, since it appears in the object itself!!!
-  freeListDispose(this,sizeof(ObjectVar));
+  freeListDispose(this, sizeof(ObjectVar));
 }
 
 void ObjectVar::transfer(Object *o, BorrowEntry *be)
 {
   Assert(o);
   Assert(isObjectClassAvail());
-  GName *gnobj = getGName();
-  gnobj->setValue(makeTaggedConst(o));
+  DebugCode(GName *gnobj = getGName());
+  Assert(gnobj->getValue() == makeTaggedConst(o));
 
   //
   EntityInfo *savedInfo = info; // bind disposes this!

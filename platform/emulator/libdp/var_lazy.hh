@@ -36,9 +36,16 @@
 #include "var_ext.hh"
 #include "var.hh"
 
+// The protocol flag;
+typedef enum {
+  OBJECT,
+  OBJECT_AND_CLASS
+} LazyFlag ;
+
 //
 typedef enum {
-  LT_OBJECT
+  LT_OBJECT,
+  LT_CLASS
 } LazyType;
 
 class LazyVar : public ExtVar {
@@ -60,21 +67,23 @@ public:
   void setIndex(int indexIn) { index = indexIn; }
 
   //
-  int getIdV() { return OZ_EVAR_LAZY; }
-  OZ_Term statusV();
-  VarStatus checkStatusV();
-  OZ_Return addSuspV(TaggedRef *v, Suspendable * susp);
+  virtual int getIdV() { return OZ_EVAR_LAZY; }
+  virtual OZ_Term statusV();
+  virtual VarStatus checkStatusV();
+  virtual OZ_Return addSuspV(TaggedRef *v, Suspendable * susp);
   virtual LazyType getLazyType() = 0;
   virtual void sendRequest() = 0;
-  Bool validV(TaggedRef v) { return FALSE; }
-  OzVariable* gCollectV() { Assert(0); return NULL; }
-  OzVariable* sCloneV() { Assert(0); return NULL; }
-  void gCollectRecurseV(void);
-  void sCloneRecurseV(void) { Assert(0); }
-  void printStreamV(ostream &out,int depth = 10) { out << "<dist:lazy>"; }
-  OZ_Return bindV(TaggedRef *vptr, TaggedRef t);
-  OZ_Return unifyV(TaggedRef *vptr, TaggedRef *tPtr);
-  void disposeV(void);
+  virtual Bool validV(TaggedRef v) { return FALSE; }
+  virtual OzVariable* gCollectV() { Assert(0); return NULL; }
+  virtual OzVariable* sCloneV() { Assert(0); return NULL; }
+  virtual void gCollectRecurseV(void);
+  virtual void sCloneRecurseV(void) { Assert(0); }
+  virtual void printStreamV(ostream &out,int depth = 10) {
+    out << "<dist:lazy>";
+  }
+  virtual OZ_Return bindV(TaggedRef *vptr, TaggedRef t);
+  virtual OZ_Return unifyV(TaggedRef *vptr, TaggedRef *tPtr);
+  virtual void disposeV(void);
 
   //
 public:

@@ -4,7 +4,7 @@
  *    Per Brand (perbrand@sics.se)
  *
  *  Contributors:
- *    optional, Contributor's name (Contributor's email address)
+ *    Konstantin Popov <kost@sics.se>
  *
  *  Copyright:
  *    Michael Mehl (1997,1998)
@@ -34,41 +34,18 @@
 
 #include "var_lazy.hh"
 
-typedef enum {
-  OBJECT,
-  OBJECT_AND_CLASS
-} LazyFlag ;
-
-enum PV_TYPES {
-  PV_OBJECTCLASSAVAIL,     // class available
-  PV_OBJECTCLASSNOTAVAIL   // only the class's gname known
-};
-
 class ObjectVar : public LazyVar {
 protected:
-  short pvtype;                 // object class types (from above);
-  union {
-    TaggedRef aclass;
-    GName *gnameClass;
-  } u;
-
-protected:
-  void setpvType(PV_TYPES t) { pvtype = (short) t; }
-  PV_TYPES getpvType()       { return (PV_TYPES) pvtype; }
+  TaggedRef aclass;             // either class or its lazy proxy;
 
 public:
-  ObjectVar(Board *bb, int indexIn, GName *gobjIn, ObjectClass *cl)
+  ObjectVar(Board *bb, int indexIn, GName *gobjIn, OZ_Term cl)
     : LazyVar(bb, indexIn, gobjIn)
   {
-    setpvType(PV_OBJECTCLASSAVAIL);
     Assert(cl);
-    u.aclass= makeTaggedConst(cl);
-  }
-  ObjectVar(Board *bb, int indexIn, GName *gobjIn, GName *gn)
-    : LazyVar(bb, indexIn, gobjIn)
-  {
-    setpvType(PV_OBJECTCLASSNOTAVAIL);
-    u.gnameClass=gn;
+    aclass = cl;
+    // check whether 'cl' is fine:
+    DebugCode(GName *_cl = getGNameClass());
   }
 
   virtual LazyType getLazyType();
@@ -76,34 +53,75 @@ public:
   // var type:
   virtual void sendRequest();
   // New (extended) format;
-  OzVariable * gCollectV() { return new ObjectVar(*this); }
-  void gCollectRecurseV(void);
+  virtual OzVariable * gCollectV() { return new ObjectVar(*this); }
+  virtual void gCollectRecurseV(void);
 
-  void disposeV(void);
+  virtual void disposeV(void);
 
   Bool isObjectClassAvail() {
-    return getpvType()==PV_OBJECTCLASSAVAIL;
-  }
-  Bool isObjectClassNotAvail() {
-    return getpvType()==PV_OBJECTCLASSNOTAVAIL;
-  }
+    OZ_Term cl = oz_deref(aclass);
+    switch (tagTypeOf(cl)) {
+    case TAG_CONST:
+      {
+        DebugCode(ConstTerm *ct = tagged2Const(cl));
+        Assert(ct->getType() == Co_Class);
+        return (OK);
+      }
 
-  void setClassTerm(OZ_Term cl) {
-    Assert(isObjectClassNotAvail());
-    Assert(cl);
-    setpvType(PV_OBJECTCLASSAVAIL);
-    u.aclass = cl;
+    case TAG_CVAR:
+      {
+        OzVariable *cvar = tagged2CVar(cl);
+        Assert(cvar->getType() == OZ_VAR_EXT);
+        ExtVar *evar = (ExtVar *) cvar;
+        Assert(evar->getIdV() == OZ_EVAR_LAZY);
+        LazyVar *lvar = (LazyVar *) evar;
+        Assert(lvar->getLazyType() == LT_CLASS);
+        return (NO);
+      }
+
+    default:
+      Assert(0);
+      return (NO);
+    }
   }
 
   GName *getGNameClass() {
-    Assert(isObjectClassNotAvail());
-    return u.gnameClass;
+    OZ_Term cl = oz_deref(aclass);
+    switch (tagTypeOf(cl)) {
+    case TAG_CONST:
+      {
+        ConstTerm *ct = tagged2Const(cl);
+        Assert(ct->getType() == Co_Class);
+        return (((ObjectClass *) ct)->getGName());
+      }
+
+    case TAG_CVAR:
+      {
+        OzVariable *cvar = tagged2CVar(cl);
+        Assert(cvar->getType() == OZ_VAR_EXT);
+        ExtVar *evar = (ExtVar *) cvar;
+        Assert(evar->getIdV() == OZ_EVAR_LAZY);
+        LazyVar *lvar = (LazyVar *) evar;
+        Assert(lvar->getLazyType() == LT_CLASS);
+        return (((ObjectVar *) lvar)->getGName());
+      }
+
+    default:
+      Assert(0);
+      return ((GName *) 0);
+    }
   }
 
   OZ_Term getClass() {
     Assert(isObjectClassAvail());
-    Assert(u.aclass);
-    return (u.aclass);
+    Assert(aclass);
+    return (aclass);
+  }
+
+  OZ_Term getClassProxy() {
+    Assert(!isObjectClassAvail());
+    Assert(aclass);
+    return (aclass);
   }
 
 public:
@@ -113,7 +131,6 @@ public:
 };
 
 //
-TaggedRef newObjectProxy(int bi, GName *gnobj, GName *gnclass);
 TaggedRef newObjectProxy(int bi, GName *gnobj, TaggedRef clas);
 
 #endif

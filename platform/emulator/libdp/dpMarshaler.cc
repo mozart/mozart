@@ -43,6 +43,7 @@
 #include "dpInterface.hh"
 #include "var.hh"
 #include "var_obj.hh"
+#include "var_class.hh"
 #include "gname.hh"
 #include "state.hh"
 #include "port.hh"
@@ -1116,7 +1117,7 @@ OZ_Term unmarshalTertiary(MarshalerBuffer *bs, MarshalTag tag)
       break;
     case DIF_CELL:{
       Tertiary *t=ob->getTertiary(); // mm2: bug: ob is 0 if I am the owner
-      // '!'
+      // kost@ : i'm the f$ck really puzzled by this comment!
       DebugCode((void) ((ConstTerm *) t)->getType());
       break;}
     case DIF_LOCK:{
@@ -1195,46 +1196,17 @@ OZ_Term unmarshalTertiary(MarshalerBuffer *bs, MarshalTag tag)
 
       //
       if (gnclass) {
-        val = newObjectProxy(bi, gnobj, gnclass);
-        // we have to connect the gnclass to the object proxy such
-        // that when another stub for an object of the same class
-        // arrives (see below), then we could obtain the gnclass and
-        // construct a new proxy:
-        addGName(gnclass, val);
+        // A new proxy for the class (borrow index is not there since
+        // we do not run the lazy class protocol here);
+        clas = newClassProxy((int) -1, gnclass);
+        addGName(gnclass, clas);
       } else {
-        // There are two cases: either we've got the class (in which
-        // case it is just used), or we've got an object proxy (in
-        // which case we haven't got the class but just its gname):
-        clas = oz_deref(clas);
-        switch (tagTypeOf(clas)) {
-        case TAG_CONST:
-          {
-            DebugCode(ConstTerm *ct = tagged2Const(clas));
-            Assert(ct->getType() == Co_Class);
-            val = newObjectProxy(bi, gnobj, clas);
-            break;
-          }
-
-        case TAG_CVAR:
-          {
-            OzVariable *cvar = tagged2CVar(clas);
-            Assert(cvar->getType() == OZ_VAR_EXT);
-            ExtVar *evar = (ExtVar *) cvar;
-            Assert(evar->getIdV() == OZ_EVAR_LAZY);
-            LazyVar *lvar = (LazyVar *) evar;
-            Assert(lvar->getLazyType() == LT_OBJECT);
-            ObjectVar *ovar = (ObjectVar *) lvar;
-            Assert(ovar->isObjectClassNotAvail());
-            gnclass = ovar->getGNameClass();
-            // Now we have gnclass back, so let's make the proxy:
-            val = newObjectProxy(bi, gnobj, gnclass);
-            break;
-          }
-
-        default:
-          Assert(0);
-        }
+        // There are two cases: we've got either the class or its
+        // proxy. In either case, it's used for the new object proxy:
       }
+
+      //
+      val = newObjectProxy(bi, gnobj, clas);
       addGName(gnobj, val);
       ob->changeToVar(val);
 
@@ -1858,12 +1830,16 @@ OZ_Term dpUnmarshalTerm(ByteBuffer *bs, Builder *b)
 
             case TAG_CVAR:
               {
-                Assert(oz_isLazyVar(vd));
-                ObjectVar *ov = (ObjectVar *) oz_getLazyVar(vd);
-                Assert(ov->isObjectClassNotAvail());
-                // Pretend it as no value were bound to the gname:
-                gname = ov->getGNameClass();
-                GT.remove(gname);
+                OzVariable *cvar = tagged2CVar(vd);
+                Assert(cvar->getType() == OZ_VAR_EXT);
+                ExtVar *evar = (ExtVar *) cvar;
+                Assert(evar->getIdV() == OZ_EVAR_LAZY);
+                LazyVar *lvar = (LazyVar *) evar;
+                Assert(lvar->getLazyType() == LT_CLASS);
+                ClassVar *cv = (ClassVar *) lvar;
+                // The binding of a class'es gname is kept until the
+                // construction of a class is finished.
+                gname = cv->getGName();
                 b->buildClassRemember(gname, flags, refTag);
               }
               break;
@@ -1958,6 +1934,9 @@ OZ_Term dpUnmarshalTerm(ByteBuffer *bs, Builder *b)
           GName *gname = unmarshalGName(&value, bs);
 #endif
           if (gname) {
+            // If objects are distributed only using the lazy
+            // protocol, this shouldn't happen: There must be a proxy
+            // already;
             b->buildObjectRemember(gname, refTag);
           } else {
             // The same as for classes: either we have already the
@@ -1974,10 +1953,15 @@ OZ_Term dpUnmarshalTerm(ByteBuffer *bs, Builder *b)
 
             case TAG_CVAR:
               {
-                Assert(oz_isLazyVar(vd));
-                ObjectVar *ov = (ObjectVar *) oz_getLazyVar(vd);
+                OzVariable *cvar = tagged2CVar(vd);
+                Assert(cvar->getType() == OZ_VAR_EXT);
+                ExtVar *evar = (ExtVar *) cvar;
+                Assert(evar->getIdV() == OZ_EVAR_LAZY);
+                LazyVar *lvar = (LazyVar *) evar;
+                Assert(lvar->getLazyType() == LT_OBJECT);
+                ObjectVar *ov = (ObjectVar *) lvar;
                 gname = ov->getGName();
-                GT.remove(gname);
+                // Observe: the gname points to the proxy;
                 b->buildObjectRemember(gname, refTag);
               }
               break;

@@ -1671,6 +1671,7 @@ public:
     cl1=makeTaggedConst(c);
   }
   void setClassTerm(OZ_Term cl) {
+    Assert(oz_isConst(cl) && tagged2Const(cl)->getType()==Co_Class);
     cl1 = cl;
   }
 

@@ -44,19 +44,17 @@ void LazyVar::marshal(ByteBuffer *bs)
   Assert(0);
 }
 
-/* --- ObjectProxis --- */
-
 // mm2: deep as future!
+// kost@ : a masterpiece comment...
 OZ_Return LazyVar::bindV(TaggedRef *lPtr, TaggedRef r)
 {
-  // '!' (kostja-look (c) by Per)
   // PER-LOOK
+  // kost@ : found anything?
   am.addSuspendVarList(lPtr);
   return SUSPEND;
 }
 
 // mm2: deep as future!
-// ... and as deep as trouble ((c) kost@)
 OZ_Return LazyVar::unifyV(TaggedRef *lPtr, TaggedRef *rPtr)
 {
   return oz_var_bind(tagged2CVar(*rPtr),rPtr,makeTaggedRef(lPtr));

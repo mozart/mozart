@@ -43,10 +43,10 @@
 #include "indexing.hh"
 #include "tagged.hh"
 #include "value.hh"
+#include "gname.hh"
 #include "codearea.hh"
 #include "am.hh"
 #include "dictionary.hh"
-#include "gname.hh"
 
 //
 #define GT_STACKSIZE    4096
@@ -1607,8 +1607,10 @@ public:
                                       makeTaggedNULL(), NO, NO,
                                       am.currentBoard());
     cl->setGName(gname);
+    gname->gcMaybeOff();        // of not in the table right now;;
     OZ_Term classTerm = makeTaggedConst(cl);
-    addGName(gname, classTerm);
+    // Note: no gname"s are assigned globally until the construction
+    // of the class is *completely* finished;
 
     //
     putTask(BT_classFeatures, cl, flags);
@@ -1625,8 +1627,8 @@ public:
                                       makeTaggedNULL(), NO, NO,
                                       am.currentBoard());
     cl->setGName(gname);
+    gname->gcMaybeOff();
     OZ_Term classTerm = makeTaggedConst(cl);
-    addGName(gname, classTerm);
     //
     set(classTerm, n);
 

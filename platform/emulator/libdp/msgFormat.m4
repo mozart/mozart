@@ -60,7 +60,7 @@ message(M_ASK_ERROR,Index,Site,Index2);
 message(M_TELL_ERROR,Site,Index,Index2,Index3);
 
 message(M_GET_LAZY,Index,Index2,Site)
-message(M_SEND_LAZY,Site,Index,FullTopTerm)
+message(M_SEND_LAZY,Site,Index,Index2,FullTopTerm)
 
 message(M_UNASK_ERROR,Index,Site,Index2)
 

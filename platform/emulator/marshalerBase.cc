@@ -39,6 +39,7 @@
 #include "mbuffer.hh"
 #include "site.hh"
 #include "pickle.hh"
+#include "gname.hh"
 #endif
 
 //

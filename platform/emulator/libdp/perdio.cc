@@ -42,6 +42,7 @@
 #include "controlvar.hh"
 
 #include "var_obj.hh"
+#include "var_class.hh"
 #include "chain.hh"
 #include "state.hh"
 #include "fail.hh"
@@ -653,36 +654,48 @@ void msgReceived(MsgContainer* msgC,ByteBuffer *bs) //BS temp AN
       OwnerEntry *oe = receiveAtOwner(OTI);
       //
       OZ_Term t = oe->getTertTerm();
-      Assert(oz_isObject(t));
 
       //
-      if (lazyFlag == OBJECT_AND_CLASS) {
-        Object *o = (Object *) tagged2Const(t);
-        // kost@: 'SEND_LAZY' message with the class is associated
-        // with the object itself, so object's credits will be handed
-        // back when borrow entry is freed by 'ObjectVar::transfer()';
-        oe->getOneCreditOwner();
-        //
-        MsgContainer *newmsgC = msgContainerManager->newMsgContainer(rsite);
+      switch (lazyFlag) {
+      case OBJECT_AND_CLASS:
+        {
+          Assert(oz_isObject(t));
+          Object *o = (Object *) tagged2Const(t);
+          // kost@: 'SEND_LAZY' message with the class is associated
+          // with the object itself, so object's credits will be
+          // handed back when borrow entry is freed by
+          // 'ObjectVar::transfer()';
+          oe->getOneCreditOwner();
+          //
+          MsgContainer *msgC = msgContainerManager->newMsgContainer(rsite);
 
-        //
-        newmsgC->put_M_SEND_LAZY(myDSite, OTI, o->getClassTerm());
+          //
+          msgC->put_M_SEND_LAZY(myDSite, OTI, OBJECT_AND_CLASS,
+                                o->getClassTerm());
+          // printf("Class: %s\n",toC(o->getClassTerm()));
+          SendTo(rsite, msgC, 3);
+        }
+        // no break here! - proceed with the 'OBJECT' case;
 
-//      printf("Class: %s\n",toC(o->getClassTerm()));
-        // here - accounted to the same OTI;
-        //      SendTo(rsite, newmsgC, M_SEND_LAZY, myDSite, OTI);
-        SendTo(rsite, newmsgC, 3);
+      case OBJECT:
+        {
+          Assert(oz_isObject(t));
+          oe->getOneCreditOwner();
+          //
+          MsgContainer *msgC = msgContainerManager->newMsgContainer(rsite);
+
+          //
+          msgC->put_M_SEND_LAZY(myDSite, OTI, OBJECT, t);
+          SendTo(rsite, msgC, 3);
+        }
+        break;
+
+      default:
+        OZ_error("undefined/unimplemented lazy protocol!");
+        break;
       }
 
       //
-      oe->getOneCreditOwner();
-      //
-      MsgContainer *msgC = msgContainerManager->newMsgContainer(rsite);
-
-      //
-      msgC->put_M_SEND_LAZY(myDSite, OTI, t);
-      //      SendTo(rsite, msgC, M_SEND_LAZY, myDSite, OTI);
-      SendTo(rsite, msgC, 3);
       break;
     }
 
@@ -690,45 +703,52 @@ void msgReceived(MsgContainer* msgC,ByteBuffer *bs) //BS temp AN
     {
       DSite* sd;
       int si;
+      int lazyFlag;
       OZ_Term t;
 
-      msgC->get_M_SEND_LAZY(sd, si, t);
+      msgC->get_M_SEND_LAZY(sd, si, lazyFlag, t);
       PD((MSG_RECEIVED,"M_SEND_LAZY site:%s index:%d", sd->stringrep(), si));
       BorrowEntry *be = receiveAtBorrow(sd, si);
       Assert(be->isVar()); // check for duplicate requests;
 
-
       //
-      // Currently, there is only "lazy object" protocol, but later
-      // there will be other types of lazy structures and, therefore,
-      // we'll need to distinguish between different types of
-      // LazyVar"s:
-      ObjectVar *ov = (ObjectVar *) GET_VAR(be, Lazy);
-      Assert(ov->getType() == OZ_VAR_EXT);
-      Assert(ov->getIdV() == OZ_EVAR_LAZY);
-      Assert(ov->getLazyType() == LT_OBJECT);
-
-      //
-      Assert(oz_isConst(t));
-      ConstTerm *ct = tagged2Const(t);
-      //
-      switch (ct->getType()) {
-      case Co_Object:
+      switch (lazyFlag) {
+      case OBJECT_AND_CLASS:
         {
-          Assert(oz_isObject(t));
-          Object *o = (Object *) ct;
-          Assert(o->getGName1() == ov->getGName());
-          o->setClassTerm(ov->getClass());
-          ov->transfer(o, be);
-          break;
-        }
+          ObjectVar *ov = (ObjectVar *) GET_VAR(be, Lazy);
+          Assert(ov->getType() == OZ_VAR_EXT);
+          Assert(ov->getIdV() == OZ_EVAR_LAZY);
+          Assert(ov->getLazyType() == LT_OBJECT);
 
-      case Co_Class:
-        {
+          //
           Assert(oz_isClass(t));
-          ov->setClassTerm(t);
-          break;
+          Assert(!ov->isObjectClassAvail());
+          OZ_Term cvt = ov->getClassProxy();
+          DEREF(cvt, cvtp, _cptt);
+          Assert(cvtp);
+          ClassVar *cv = (ClassVar *) tagged2CVar(cvt);
+          Assert(cv->getType() == OZ_VAR_EXT);
+          Assert(cv->getIdV() == OZ_EVAR_LAZY);
+          Assert(cv->getLazyType() == LT_CLASS);
+          cv->transfer(t, cvtp);
         }
+        break;
+
+      case OBJECT:
+        {
+          ObjectVar *ov = (ObjectVar *) GET_VAR(be, Lazy);
+          Assert(ov->getType() == OZ_VAR_EXT);
+          Assert(ov->getIdV() == OZ_EVAR_LAZY);
+          Assert(ov->getLazyType() == LT_OBJECT);
+
+          //
+          Assert(oz_isObject(t));
+          Object *o = (Object *) tagged2Const(t);
+          Assert(o->getGName1() == ov->getGName());
+          o->setClassTerm(oz_deref(ov->getClass()));
+          ov->transfer(o, be);
+        }
+        break;
 
       default:
         Assert(0);
