@@ -203,6 +203,9 @@ run the emulator when you issue the command `run' to gdb."
 ;; Variables/Initialization
 ;;------------------------------------------------------------
 
+(defvar oz-is-color
+  (and (eq window-system 'x) (x-display-color-p)))
+
 (defvar oz-using-new-compiler nil
   "If non-nil, indicates that the new Oz Compiler is currently running.
 This variable should not be changed by the user.")
@@ -611,17 +614,16 @@ With ARG, start it instead."
 ;;------------------------------------------------------------
 
 (make-face 'bar-running)
+(set-face-foreground 'bar-running "white")
+(set-face-background 'bar-running (if oz-is-color "#b0b0b0" "black"))
+
 (make-face 'bar-runnable)
+(set-face-foreground 'bar-runnable "white")
+(set-face-background 'bar-runnable (if oz-is-color "#7070c0" "black"))
+
 (make-face 'bar-blocked)
-
-(defun oz-set-face (face background)
-  (set-face-foreground face "white")
-  (set-face-background face background))
-
-(let ((color (and (eq window-system 'x) (x-display-color-p))))
-  (oz-set-face 'bar-running  (if color "#b0b0b0" "black"))
-  (oz-set-face 'bar-runnable (if color "#7070c0" "black"))
-  (oz-set-face 'bar-blocked  (if color "#d05050" "black")))
+(set-face-foreground 'bar-blocked "white")
+(set-face-background 'bar-blocked (if oz-is-color "#d05050" "black"))
 
 (defvar oz-bar-overlay nil)
 
@@ -1956,7 +1958,7 @@ The second subexpression matches the definition's identifier
 and is used for fontification.")
 
 (make-face 'oz-space-face)
-(set-face-background 'oz-space-face "hotpink")
+(set-face-background 'oz-space-face (if oz-is-color "hotpink" "black"))
 (defvar oz-space-face 'oz-space-face
   "Face to use for highlighting spaces at the end of a line.")
 
