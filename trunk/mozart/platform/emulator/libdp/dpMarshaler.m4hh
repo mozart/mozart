@@ -102,8 +102,13 @@ void marshalFullObject(Object *o, MsgBuffer* bs);
 MessageType unmarshalHeader(MsgBuffer *bs);
 void unmarshalFullObject(ObjectFields *o, MsgBuffer *bs);
 void unmarshalFullObjectRobust(ObjectFields *o, MsgBuffer *bs, int *error);
+void unmarshalFullObjectRobustInternal(ObjectFields *o, MsgBuffer *bs, 
+				       int *error);
 void unmarshalFullObjectAndClass(ObjectFields *o, MsgBuffer *bs);
-void unmarshalFullObjectAndClassRobust(ObjectFields *o,MsgBuffer *bs,int *error);
+void unmarshalFullObjectAndClassRobust(ObjectFields *o,MsgBuffer *bs,
+				       int *error);
+void unmarshalFullObjectAndClassRobustInternal(ObjectFields *o,MsgBuffer *bs,
+					       int *error);
 
 inline void marshalCredit(Credit credit,MsgBuffer *bs){  
   Assert(sizeof(Credit)==sizeof(int));

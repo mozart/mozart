@@ -253,7 +253,29 @@ void newMarshalerFinishBatch()
 }
 
 //
-OZ_Term newUnmarshalTerm(MsgBuffer *);
-OZ_Term newUnmarshalTermRobust(MsgBuffer *);
+OZ_Term newUnmarshalTermInternal(MsgBuffer *);
+OZ_Term newUnmarshalTermRobustInternal(MsgBuffer *);
+
+//
+// Interface procedures. 
+inline
+OZ_Term newUnmarshalTerm(MsgBuffer *bs)
+{
+  return newUnmarshalTermInternal(bs);
+}
+
+inline
+OZ_Term newUnmarshalTermRobust(MsgBuffer *bs)
+{
+  builder.resetIndexChecker();
+  OZ_Term n = newUnmarshalTermRobustInternal(bs);
+  return n;
+}
+
+inline
+void newUnmarshalerStartBatch()
+{
+  builder.resetIndexChecker();
+}
 
 #endif

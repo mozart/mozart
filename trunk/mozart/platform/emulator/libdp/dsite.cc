@@ -215,10 +215,10 @@ DSite* unmarshalDSiteRobust(MsgBuffer *buf, int *error)
   MarshalTag mt = (MarshalTag) buf->get();
   Assert(mt == DIF_SITE || mt == DIF_SITE_VI || mt == DIF_SITE_PERM);
   DSite tryS;
-  int e1,e2;
 
-  tryS.unmarshalBaseSiteRobust(buf, &e1);
-  return unmarshalDSiteInternalRobust(buf, &tryS, mt, &e2);
+  tryS.unmarshalBaseSiteRobust(buf, error);
+  if(*error) return &tryS;
+  return unmarshalDSiteInternalRobust(buf, &tryS, mt, error);
 }
 
 /**********************************************************************/
