@@ -78,6 +78,7 @@ in
       meth init
 	 %% create the main window, but delay showing it
 	 self.toplevel = {New Tk.toplevel tkInit(title:    TitleName
+						 'class':  'OzTools'
 						 delete:   self # off
 						 withdraw: true)}
 	 {Tk.batch [wm(iconname   self.toplevel IconName)
@@ -93,7 +94,6 @@ in
 	 {ForAll [self.ButtonFrame self.StatusFrame]
 	  proc{$ F}
 	     F = {New Tk.frame tkInit(parent: self.toplevel
-				      bd:     SmallBorderSize
 				      relief: ridge)}
 	  end}
 
@@ -115,7 +115,6 @@ in
 				 padx:   PadXButton
 				 pady:   PadYButton
 				 font:   ButtonFont
-				 borderwidth: SmallBorderSize
 				 action: self # action(S))}
 		  in
 		     {B tkBind(event:  HelpEvent
@@ -125,8 +124,7 @@ in
 	    SortLabel = {New Tk.label tkInit(parent: self.ButtonFrame
 					     text:   SortButtonText
 					     pady:   PadYButton
-					     font:   ButtonFont
-					     borderwidth: SmallBorderSize)}
+					     font:   ButtonFont)}
 	    self.SortBox = {New Tk.label tkInit(parent: self.ButtonFrame
 						text:   @SortBy
 						relief: raised
@@ -134,8 +132,6 @@ in
 						pady:   2
 						font:   ButtonFont
 						width:  7
-						%bg:     DefaultBackground
-						borderwidth: SmallBorderSize
 					       )}
 	 in
 	    {ForAll [tkBind(event:  '<1>'
@@ -149,12 +145,12 @@ in
 
 	 %% sort menu
 	 self.SortMenu =
-	 {New Tk.menu tkInit(parent:      self.toplevel
-			     font:        ButtonFont
-			     borderwidth: SmallBorderSize
-			     activeborderwidth: SmallBorderSize
-			     transient:   yes
-			     tearoff:     no)}
+	 {New Tk.menu tkInit(parent:    self.toplevel
+			     font:      ButtonFont
+			     %% tearoff _must_ be false, otherwise
+			     %% we get wrong offsets when popping up
+			     tearoff:   false
+			     transient: true)}
 	 {ForAll @SortList
 	  proc {$ S}
 	     {New Tk.menuentry.command tkInit(parent: self.SortMenu
@@ -165,8 +161,8 @@ in
 	 %% border line
 	 local
 	    F = {New Tk.frame tkInit(parent: self.toplevel
-				     height: SmallBorderSize
-				     bd:     NoBorderSize
+				     height: 1
+				     bd:     0
 				     relief: flat)}
 	 in
 	    {Tk.send grid(F row:2 column:0 sticky:we columnspan:3)}
@@ -178,7 +174,7 @@ in
 			     state:  disabled
 			     height: 1
 			     width:  0
-			     bd:     NoBorderSize
+			     bd:     0
 			     cursor: TextCursor
 			     font:   StatusFont)}
 	 {self.StatusText tkBind(event:  HelpEvent
@@ -189,7 +185,6 @@ in
 	 self.BarCanvas =
 	 {New YScrolledTitleCanvas tkInit(parent: self.toplevel
 					  title:  BarCanvasTitle
-					  bd:     SmallBorderSize
 					  relief: sunken
 					  width:  BarCanvasWidth
 					  bg:     DefaultBackground)}
@@ -204,7 +199,6 @@ in
 			       state:  disabled
 			       width:  ProcTextWidth
 			       height: ProcTextHeight
-			       bd:     SmallBorderSize
 			       cursor: TextCursor
 			       font:   DefaultFont
 			       bg:     DefaultBackground)}
@@ -219,7 +213,6 @@ in
 			       state:  disabled
 			       width:  SumTextWidth
 			       height: SumTextHeight
-			       bd:     SmallBorderSize
 			       cursor: TextCursor
 			       font:   DefaultFont
 			       bg:     DefaultBackground)}
