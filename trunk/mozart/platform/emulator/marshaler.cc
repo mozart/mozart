@@ -110,7 +110,8 @@ SRecord *unmarshalSRecord(MsgBuffer *);
 void unmarshalTerm(MsgBuffer *, OZ_Term *);
 
 #define CheckD0Compatibility \
-   if (ozconf.perdiod0Compatiblity) goto bomb;
+   if (ozconf.perdioMinimal) goto bomb;
+
 
 
 RefTrail *refTrail;
