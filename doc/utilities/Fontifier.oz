@@ -27,7 +27,7 @@ import
    Fontifier at 'x-oz://contrib/doc/code/Fontifier'
    HTML(seq: SEQ pcdata: PCDATA verbatim: VERBATIM)
    URL(toVirtualString)
-   Resolve(localize)
+   Resolve(localize pickle handler make)
    OS(unlink)
 export
    'class': FontifierClass
@@ -44,17 +44,19 @@ define
    FontifierBase = Fontifier.'class'
 
    class FontifierClass from FontifierBase
-      attr q:nil meta:unit
+      attr q:nil meta:unit resolver:unit
       meth init(Meta)
          FontifierBase,init
          meta <- Meta
+         resolver <- {Resolve.make ozdoc init({Resolve.pickle.getHandlers})}
+         {@resolver.addHandler back({Resolve.handler.root {Property.get 'ozdoc.src.dir'}})}
+         for D in {Property.get 'ozdoc.include'} do
+            {@resolver.addHandler back({Resolve.handler.root D})}
+         end
       end
       meth enqueueFile(ProgLang FileName Result)
-         lock R DIR={Property.get 'ozdoc.src.dir'}
-            FILE = try {Resolve.localize FileName}
-                   catch _ then
-                      {Resolve.localize DIR#'/'#FileName}
-                   end
+         lock R
+            FILE = {@resolver.localize FileName}
             case FILE of new(PATH) then
                thread {Wait Result} {OS.unlink PATH} end
             else skip end
