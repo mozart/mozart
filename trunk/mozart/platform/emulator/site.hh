@@ -41,7 +41,7 @@
 // Broadcast IP-addresses starts with zero-byte
 #define NON_BROADCAST_MIN 16777215
 
-typedef unsigned short port_t;
+typedef unsigned short oz_port_t;
 typedef unsigned int ip_address;
 
 //
@@ -76,21 +76,21 @@ friend class DSite;
   //
 protected:
   ip_address address;
-  port_t port;
+  oz_port_t port;
   TimeStamp timestamp;
 
 public:
   BaseSite() {}			// ... just allocating space for it;
-  BaseSite(ip_address a, port_t p, TimeStamp &t)
+  BaseSite(ip_address a, oz_port_t p, TimeStamp &t)
     : address(a), port(p), timestamp(t) {}
-  BaseSite(ip_address a, port_t p, TimeStamp *t)
+  BaseSite(ip_address a, oz_port_t p, TimeStamp *t)
     : address(a), port(p), timestamp(*t) {}
 
   //
   // These should be used for unmarshalling, debugging/output, and -
   // for creating of tickets;
   ip_address getAddress() { return (address); }
-  port_t getPort() { return (port); }
+  oz_port_t getPort() { return (port); }
   TimeStamp *getTimeStamp() { return (&timestamp); }
 
   //
@@ -113,7 +113,7 @@ private:
   //
 public:
   Site() {}
-  Site(ip_address a, port_t p, TimeStamp &t)
+  Site(ip_address a, oz_port_t p, TimeStamp &t)
     : BaseSite (a, p, t) {}
   Site(Site *s)
     : BaseSite(s->address, s->port, s->timestamp) {}
