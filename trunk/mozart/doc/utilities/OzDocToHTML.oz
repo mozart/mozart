@@ -1653,21 +1653,24 @@ define
       meth FormatAuthors($)
 	 case @Authors of nil then ""
 	 [] A|Ar then
-	    fun {FormatAuthor A} N H in
-	       N = {FoldLTail [{CondSelect A firstname unit}
-			       {CondSelect A middlename unit}
-			       {CondSelect A lastname unit}]
-		    fun {$ In X|Xr}
-		       case X of unit then In
-		       else In#X#case Xr of nil then "" else '&nbsp;' end
-		       end
-		    end ""}
+	    fun {FormatAuthor A} N1 N2 H in
+	       N1 = {FoldLTail [{CondSelect A firstname unit}
+				{CondSelect A middlename unit}
+				{CondSelect A lastname unit}]
+		     fun {$ In X|Xr}
+			case X of unit then In
+			else In#X#case Xr of nil then "" else '&nbsp;' end
+			end
+		     end ""}
+	       N2 = case N1 of "" then {CondSelect A name ""}
+		    else VERBATIM(N1)
+		    end
 	       H = if {HasFeature A www} then A.www
 		   elseif {HasFeature A email} then 'email:'#A.email
 		   else unit
 		   end
-	       case H of unit then VERBATIM(N)
-	       else a(href: H VERBATIM(N))
+	       case H of unit then N2
+	       else a(href: H N2)
 	       end
 	    end
 	 in
