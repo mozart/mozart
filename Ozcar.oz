@@ -10,8 +10,6 @@ fun
    instantiate
 \endif
    {NewOzcar IMPORT}
-   \insert 'Standard.env'
-      = IMPORT.'Standard'
    \insert 'SP.env'
       = IMPORT.'SP'
    \insert 'WP.env'
