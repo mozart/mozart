@@ -7,7 +7,8 @@ import
 	  packageMogulDB
 	  authorMogulDB
 	  background       : Background
-	  getLabel         : GetLabel)
+	  getLabel         : GetLabel
+	  getImage         : GetImage)
    ActionInstall(install:Install)
    ActionRemove(remove:Remove)
    ActionInfo(view)
@@ -137,40 +138,60 @@ define
 					end))))
 	 %%
 	 ToolbarLook={QTk.newLook}
-	 {ToolbarLook.set tbradiobutton(glue:w pady:2)}
+	 {ToolbarLook.set tbradiobutton(glue:sw pady:2 padx:2
+					highlightborderwidth:1
+					selectedborderwidth:1
+					borderwidth:1
+					disabledborderwidth:1
+				       )}
 	 {ToolbarLook.set tdline(glue:nsw)}
+	 {ToolbarLook.set tdspace(glue:nsw)}
 	 ToolbarDesc=lr(glue:nwe relief:sunken borderwidth:1
 			look:ToolbarLook
-			tbradiobutton(text:'Installed'
+			tbradiobutton(%text:'Installed'
+				      image:{GetImage 'installed_package_small'}
+				      tooltips:'Display installed packages'
 				      init:true
 				      action:self#displayInstalled
 				      handle:self.installTbButton
 				      group:viewmode)
-			tbradiobutton(text:'Mogul'
+			tbradiobutton(%text:'Mogul'
+				      image:{GetImage 'mogul_icon'}
+				      tooltips:'Display mogul entries'
 				      action:self#displayMogul
 				      handle:self.mogulTbButton
 				      group:viewmode)
-			tbradiobutton(text:'File...'
+			tbradiobutton(%text:'File...'
+				      image:{GetImage 'open_icon'}
+				      tooltips:'Display the contents of a file package'
 				      action:self#displayFile
 				      handle:self.fileTbButton
 				      group:viewmode)
-			tdline
-			tbradiobutton(text:'Tree'
+			tdspace
+			tbradiobutton(%text:'Tree'
+				      image:{GetImage 'tree_icon'}
+				      tooltips:'Display packages as a tree'
 				      init:true
 				      group:dataview
 				      handle:self.treeTbButton
 				      action:self#displayDataAs(TreeDataView))
-			tbradiobutton(text:'List'
+			tbradiobutton(%text:'List'
+				      image:{GetImage 'list_icon'}
+				      tooltips:'Display packages as a list'
 				      group:dataview
 				      handle:self.listTbButton
 				      action:self#displayDataAs(ListDataView))
-			tdline
-			tbradiobutton(text:'Nice'
+			tdspace
+			tbradiobutton(%text:'Nice'
+				      image:{GetImage 'formated_icon'}
+				      tooltips:'Display package informations in a formatted way'
 				      init:true
 				      group:infoview
 				      handle:self.niceTbButton
 				      action:self#displayInfoAs(NiceInfoView))
-			tbradiobutton(text:'All'
+			tbradiobutton(%text:'All'
+				      image:{GetImage 'unformated_icon'}
+				      tooltips:'Display all package informations as a list'
 				      group:infoview
 				      handle:self.allTbButton
 				      action:self#displayInfoAs(InfoView))
