@@ -34,7 +34,7 @@ WPSRC1 = Tk.oz TkOptions.oz TkTools.oz TkInit.oz
 WPSRC = $(WPSRC1:%=$(SRCDIR)/WP/%) $(SRCDIR)/WP.oz
 
 COMPILERSRC1 = \
-	InsertAll.oz Compiler.oz Misc.oz Reporter.oz ParseOz.oz \
+	InsertAll.oz CompilerClass.oz Misc.oz Reporter.oz ParseOz.oz \
 	FormatStrings.oz Builtins.oz CoreLanguage.oz Annotate.oz \
 	StaticAnalysis.oz POTypes.oz RegSet.oz CodeGen.oz CodeStore.oz \
 	CodeEmitter.oz BindingAnalysis.oz TupleSyntax.oz Unnester.oz \
@@ -160,9 +160,9 @@ install:: \
 clean::
 	$(RM) compiler/Version.oz compiler/Opcodes.oz ozcar/version.oz
 	$(RM) $(TYPS) $(COMPONENTS) ozbatch $(SRCDIR)/Makefile.bak
-	$(RM) Assembly.ozm
+	$(RM) Assembly.ozm TAGS
 
-realclean::
+distclean::
 	$(RM) confdefs.h config.cache config.status config.log
 	$(RM) Makefile Makefile.vars
 
