@@ -103,7 +103,7 @@ TaggedRef SolveActor::genUnstable(TaggedRef arg) {
 }
 
 SolveActor::SolveActor(Board *bb)
- : Actor (Ac_Solve, bb), cpb(NULL), suspList (NULL), threads (0),
+ : Actor (Ac_Solve, bb), cpb(NULL), bag(NULL), suspList (NULL), threads (0),
    nonMonoSuspList(NULL) {
   result     = oz_newVar(bb);
   solveBoard = new Board(this, Bo_Solve);
@@ -241,6 +241,10 @@ OZ_Term oz_solve_merge(SolveActor *solveActor, Board *bb, int sibling)
 
   Assert(oz_isCurrentBoard(bb));
 
+  if (bb->isSolve()) {
+    SolveActor *sa = SolveActor::Cast(bb->getActor());
+    sa->mergeDistributors(solveActor->getBag());
+  }
   solveActor->mergeCPB(bb,sibling);
   solveActor->mergeNonMono(am.currentSolveBoard());
   return solveActor->getSolveVar();
@@ -545,12 +549,27 @@ OZ_BI_define(BIcommitSpace, 2,0) {
   if (!oz_isCurrentBoard(space->getSolveBoard()->getParent()))
     return oz_raise(E_ERROR,E_KERNEL,"spaceParent",1,tagged_space);
 
-  int l = smallIntValue(left) - 1;
-  int r = smallIntValue(right) - 1;
-
   SolveActor *sa = space->getSolveActor();
 
-  WaitActor *wa = sa->select(l,r);
+  Distributor * d = sa->getDistributor();
+
+  if (d) {
+    int n = d->commit(sa->getSolveBoard(),
+                      smallIntValue(left),
+                      smallIntValue(right));
+
+    if (n>1) {
+      sa->patchChoiceResult(n);
+
+      return PROCEED;
+    }
+
+    sa->clearResult(GETBOARD(space));
+
+    return BI_PREEMPT;
+  }
+
+  WaitActor *wa = sa->select(smallIntValue(left)-1,smallIntValue(right)-1);
 
   if (!wa)
     return oz_raise(E_ERROR,E_KERNEL,"spaceNoChoice",1,tagged_space);
@@ -610,6 +629,27 @@ OZ_BI_define(BIinjectSpace, 2,0)
   // inject
   oz_solve_inject(sa->getSolveVar(),DEFAULT_PRIORITY, proc,
                   sa->getSolveBoard());
+
+  return BI_PREEMPT;
+} OZ_BI_end
+
+
+OZ_BI_define(BIregisterSpace, 1, 1) {
+  oz_declareIntIN(0, i);
+
+  Board * bb = oz_currentBoard();
+
+  if (bb->isSolve()) {
+    SolveActor * sa = (SolveActor *) bb->getActor();
+
+    BaseDistributor * bd = new BaseDistributor(bb,i);
+
+    sa->addDistributor(bd);
+
+    OZ_out(0) = bd->getVar();
+  } else {
+    OZ_out(0) = oz_newVar(bb);
+  }
 
   return BI_PREEMPT;
 } OZ_BI_end

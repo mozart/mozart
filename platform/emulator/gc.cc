@@ -2573,6 +2573,33 @@ void WaitActor::gcRecurse() {
   cpb      = cpb->gc();
 }
 
+Distributor * BaseDistributor::gc(void) {
+  BaseDistributor * t =
+    (BaseDistributor *) oz_hrealloc(this,sizeof(BaseDistributor));
+
+  OZ_collectHeapTerm(t->var, var);
+
+  return (Distributor *) t;
+}
+
+inline
+DistBag * DistBag::gc(void) {
+  DistBag *  copy = (DistBag *) 0;
+  DistBag ** cur  = &copy;
+  DistBag *  old  = this;
+
+  while (old) {
+    if (old->getDist()->isAlive()) {
+      DistBag * one = new DistBag(old->getDist()->gc());
+      *cur = one;
+      cur  = &(one->next);
+    }
+    old = old->next;
+  }
+
+  return copy;
+}
+
 inline
 void SolveActor::gcRecurse () {
   if (isInGc || solveBoard != fromCopyBoard) {
@@ -2586,6 +2613,7 @@ void SolveActor::gcRecurse () {
 
   OZ_collectHeapTerm(result,result);
   suspList         = suspList->gc();
+  bag              = bag->gc();
   cpb              = cpb->gc();
   nonMonoSuspList  = nonMonoSuspList->gc();
 #ifdef CS_PROFILE

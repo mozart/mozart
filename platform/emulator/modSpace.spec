@@ -61,5 +61,9 @@
      'inject'           => { in  => ['+space','+procedure/1'],
                              out => [],
                              BI  => BIinjectSpace},
+
+     'register'         => { in  => ['+int'],
+                             out => ['value'],
+                             BI  => BIregisterSpace},
      );
 1;;

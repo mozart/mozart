@@ -39,9 +39,11 @@ class Distributor {
 public:
   USEFREELISTMEMORY;
 
+  virtual int isAlive(void);
+
   virtual int getAlternatives(void);
 
-  virtual void commit(int, int);
+  virtual int commit(Board *, int, int);
 
   void dispose(void) {
     freeListDispose(this, sizeOf());
@@ -63,38 +65,53 @@ void telleq(Board * bb, const TaggedRef a, const TaggedRef b) {
   t->pushCall(BI_Unify,args,2);
 }
 
-class BaseDistributor : virtual Distributor {
+
+class BaseDistributor : public Distributor {
+protected:
   int offset, num;
   TaggedRef var;
 public:
 
-  BaseDistributor(const int n, const TaggedRef x) {
-    offset = 0; num = n; var = x;
+  BaseDistributor(Board * bb, const int n) {
+    offset = 0;
+    num    = n;
+    var    = oz_newVar(bb);
   }
 
-  int getAlternatives(void) {
+  TaggedRef getVar(void) {
+    return var;
+  }
+
+  virtual int isAlive(void) {
+    return num > 0;
+  }
+
+  virtual int getAlternatives(void) {
     return num;
   }
 
-  void commit(Board * bb, const int l, const int r) {
-    int tl = max(l,offset+1);
-    int tr = min(r,offset+num);
-    offset = tl-1;
-    num    = tr-tl+1;
-
-    if (num == 1) {
+  virtual int commit(Board * bb, const int l, const int r) {
+    if (l > num+1) {
       num = 0;
+    } else {
+      offset += l-1;
+      num     = min(num,min(r,num+1)-l+1);
 
-      telleq(bb,var,makeTaggedSmallInt(offset + 1));
+      if (num == 1) {
+        num = 0;
+
+        telleq(bb,var,makeTaggedSmallInt(offset + 1));
+        return 1;
+      }
     }
-
+    return num;
   }
 
-  int sizeOf(void) {
+  virtual int sizeOf(void) {
     return sizeof(BaseDistributor);
   }
 
-  Distributor * gc(void);
+  virtual Distributor * gc(void);
 };
 
 
@@ -111,9 +128,17 @@ public:
     dist = d; next = (DistBag *) 0;
   }
 
-  Distributor * access(void) {
+  Distributor * getDist(void) {
     return dist;
   }
+  DistBag * getNext(void) {
+    return next;
+  }
+  void setNext(DistBag * d) {
+    next = d;
+  }
+
+  DistBag * clean(void);
 
   void dispose(void) {
     freeListDispose(this, sizeof(DistBag));

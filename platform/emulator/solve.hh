@@ -37,6 +37,7 @@
 
 #include "actor.hh"
 #include "cpbag.hh"
+#include "distributor.hh"
 #include "value.hh"
 
 // ------------------------------------------------------------------------
@@ -52,6 +53,7 @@ public:
   }
 private:
   Board     *solveBoard;
+  DistBag   *bag;
   CpBag     *cpb;
   TaggedRef solveVar;
   TaggedRef result;
@@ -100,6 +102,7 @@ public:
     suspList=0;
     return sl;
   }
+  int commit(int left, int right);
   WaitActor * select(int left, int right);
 
   void mergeCPB(Board *bb, int siblings);
@@ -116,6 +119,19 @@ public:
 
   TaggedRef getResult() { return result; }
   void setResult(TaggedRef v) { result = v; }
+
+  void addDistributor(Distributor * d) {
+    bag = bag->add(d);
+  }
+  void mergeDistributors(DistBag * db) {
+    bag = bag->merge(db);
+  }
+  DistBag * getBag() {
+    return bag;
+  }
+
+  void cleanDistributors(void);
+  Distributor * getDistributor(void);
 
   void addChoice(WaitActor *wa) {
     cpb = cpb->add(wa);
