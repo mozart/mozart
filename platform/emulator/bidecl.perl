@@ -2762,19 +2762,19 @@ $builtins = {
 			     out => [],
 			     bi  => BIfdIs,
 			     module=>fd,
-			     native => true},
+			     native => false},
 
     'fdIsVar'		=> { in  => ['value'],
 			     out => [],
 			     BI  => BIisFdVar,
 			     module=>fd,
-			     native => true},
+			     native => false},
 
     'fdIsVarB'		=> { in  => ['value'],
 			     out => ['+bool'],
 			     BI  => BIisFdVarB,
 			     module=>fd,
-			     native => true},
+			     native => false},
 
     'fdGetLimits'	=> { in  => [],
 			     out => ['+int','+int'],
@@ -3401,7 +3401,7 @@ $builtins = {
 			     out => [],
 			     bi  => BIfsIsValueB,
 			     module=>fset ,
-			     native => true},
+			     native => false},
 
     'fsSetValue'	=> { in  => ['+value','fset'],
 			     out => [],
