@@ -1,3 +1,9 @@
+*mozart-base-1.2.5-r3 (10 Apr 2003)
+
+  10 Apr 2003; Denzs Duchier (denys.duchier@loria.fr)
+  figured out the right way to automatically put ~/.oz/bin
+  in the user's PATH: don't use $HOME, just use ~
+	
 *mozart-base-1.2.5-r2 (08 Apr 2003)
 
   08 Apr 2003; Denys Duchier (denys.duchier@loria.fr):

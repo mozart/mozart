@@ -1,1 +1,1 @@
-PATH=/opt/mozart/bin
+PATH="~/.oz/bin:/opt/mozart/bin"
