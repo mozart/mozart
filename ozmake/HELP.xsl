@@ -130,6 +130,8 @@ SPAN.BUILTIN      { color: #DA70D6; }
   <P CLASS="WARNING">this is an alpha-release -  feedback is welcome<BR/>
 ozmake support for automated publication in MOGUL is still under development
 </P>
+<P>see <A HREF="CHANGES">CHANGES</A> for a list of changes between
+successive versions of <FILE>ozmake</FILE>.</P>
 </xsl:if>
   <xsl:apply-templates/>
 <xsl:if test="$OZMAKEOUTPUT='html'">

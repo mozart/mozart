@@ -59,6 +59,13 @@ define
 	 %% of the makefile except for those in src which must be
 	 %% prebuilt
 	 Needed = {NewDictionary}
+	 %% make sure we also grab the makefile
+	 local F={self get_makefile($)} in
+	    if {Path.exists F} then
+	       Needed.{Path.toAtom F} := true
+	    end
+	 end
+	 %% now track dependencies starting from install targets
 	 Stack  = {Utils.newStackFromList {self get_install_targets($)}}
       in
 	 try

@@ -4,7 +4,7 @@ makefile(
    author: 'mogul:/duchier/denys'
    lib   : ['ozmake.ozf']
    bin   : ['ozmake.exe']
-   doc   : ['index.html']
+   doc   : ['index.html' 'CHANGES']
    rules :
       o(
 	 'ozmake.ozf' : ozl('Main.ozf')
@@ -18,7 +18,8 @@ makefile(
 	     'Database.ozf' 'Cleaner.ozf' 'Creator.ozf'
 	     'Extractor.ozf' 'Lister.ozf' 'Help.ozf'
 	     'Uninstaller.ozf' 'Errors.ozf' 'Windows.ozf'
-	     'MakeGUI.ozf' 'Fixes.ozf']
+	     'MakeGUI.ozf' 'Fixes.ozf' 'DatabaseLib.ozf'
+	     'Config.ozf']
 	 'Help.ozf' :
 	    ['Utils.ozf' 'Path.ozf' 'Windows.ozf'
 	     'Shell.ozf' 'HELP.txt']))

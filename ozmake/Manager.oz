@@ -7,6 +7,7 @@ import
    Attribs     at 'Attribs.ozf'
    Builder     at 'Builder.ozf'
    Installer   at 'Installer.ozf'
+   DatabaseLib at 'DatabaseLib.ozf'
    Database    at 'Database.ozf'
    Cleaner     at 'Cleaner.ozf'
    Creator     at 'Creator.ozf'
@@ -14,6 +15,7 @@ import
    Lister      at 'Lister.ozf'
    Uninstaller at 'Uninstaller.ozf'
    MakeGUI     at 'MakeGUI.ozf'
+   Config      at 'Config.ozf'
 define
    class Manager
       from
@@ -22,6 +24,7 @@ define
 	 Executor   .'class'
 	 Builder    .'class'
 	 Installer  .'class'
+	 DatabaseLib.'class'
 	 Database   .'class'
 	 Cleaner    .'class'
 	 Creator    .'class'
@@ -29,6 +32,7 @@ define
 	 Lister     .'class'
 	 Uninstaller.'class'
 	 MakeGUI    .'class'
+	 Config     .'class'
 
       meth init
 	 {self exec_init}

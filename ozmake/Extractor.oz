@@ -85,7 +85,7 @@ define
 		   {UnByteStringify
 		    {Record.subtract R submakefiles}}
 		   1000000 1000000}
-		  {Path.resolve DIR "makefile.oz"})}
+		  {Path.resolve DIR "MAKEPKG.oz"})}
 	 for DD#RR in {Record.toListInd {CondSelect R submakefiles o}} do
 	    Extractor,WriteMakefile({Path.resolve DIR DD} RR)
 	 end
