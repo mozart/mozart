@@ -34,53 +34,6 @@ int main (int argc,char **argv)
   return 0;  // to make CC quiet
 }
 
-/*
- * read an integer environment variable or use a default
- */
-static
-int getenvDefault(char *envvar, int def)
-{
-  char *s = getenv(envvar);
-  if (s) {
-    int ret = atoi(s);
-    message("Using %s=%d\n", envvar, ret);
-    return ret;
-  }
-  return def;
-}
-
-void ConfigData::init() {
-  ozPath                = OZ_PATH;
-  linkPath              = OZ_PATH;
-  printDepth            = PRINT_DEPTH;
-  DebugCheckT(printDepth=10);
-  showFastLoad          = SHOW_FAST_LOAD;
-  showForeignLoad       = SHOW_FOREIGN_LOAD;
-  showIdleMessage       = SHOW_IDLE_MESSAGE;
-  DebugCheckT(showIdleMessage=1);
-  showSuspension        = SHOW_SUSPENSION;
-
-  stopOnToplevelFailure = STOP_ON_TOPLEVEL_FAILURE;
-
-  gcFlag                = GC_FLAG;
-  gcVerbosity           = GC_VERBOSITY;
-  heapMaxSize           = getenvDefault("OZHEAPMAXSIZE",HEAPMAXSIZE);
-  heapMargin            = HEAPMARGIN;
-  heapIncrement         = HEAPINCREMENT;
-  heapIdleMargin        = HEAPIDLEMARGIN;
-
-
-  timeSlice             = TIME_SLICE;
-  defaultPriority       = DEFAULT_PRIORITY;
-  systemPriority        = SYSTEM_PRIORITY;
-  taskStackSize         = TASK_STACK_SIZE;
-  errorVerbosity        = ERROR_VERBOSITY;
-  DebugCheckT(errorVerbosity=2);
-  dumpCore              = 0;
-  cellHack              = 0;
-  runningUnderEmacs     = 0;
-}
-
 static
 void usage(int /* argc */,char **argv) {
   fprintf(stderr,
@@ -159,7 +112,7 @@ void printBanner()
 
 void AM::init(int argc,char **argv)
 {
-  conf.init();
+  ozconf.init();
 
   suspCallHandler=makeTaggedNULL();
   suspendVar=0;
@@ -173,12 +126,12 @@ void AM::init(int argc,char **argv)
 
   char *tmp;
   if ((tmp = getenv("OZPATH"))) {
-    conf.ozPath = tmp;
-    conf.linkPath = tmp;
+    ozconf.ozPath = tmp;
+    ozconf.linkPath = tmp;
   }
 
   if ((tmp = getenv("OZLINKPATH"))) {
-    conf.linkPath = tmp;
+    ozconf.linkPath = tmp;
   }
 
   char *compilerFIFO = NULL;  // path name where to connect to
@@ -186,11 +139,11 @@ void AM::init(int argc,char **argv)
   Bool quiet = FALSE;
 
   /* process command line arguments */
-  conf.argV = NULL;
-  conf.argC = 0;
+  ozconf.argV = NULL;
+  ozconf.argC = 0;
   for (int i=1; i<argc; i++) {
     if (strcmp(argv[i],"-E")==0) {
-      conf.runningUnderEmacs = 1;
+      ozconf.runningUnderEmacs = 1;
       continue;
     }
     if (strcmp(argv[i],"-d")==0) {
@@ -215,8 +168,8 @@ void AM::init(int argc,char **argv)
     }
 
     if (strcmp(argv[i],"-a")==0) {
-      conf.argC = argc-i-1;
-      conf.argV = argv+i+1;
+      ozconf.argC = argc-i-1;
+      ozconf.argV = argv+i+1;
       break;
     }
 
@@ -289,8 +242,7 @@ void AM::init(int argc,char **argv)
   initTagged();
   SolveActor::Init();
 
-  int numToplevelVars = getenvDefault("OZTOPLEVELVARS",NUM_TOPLEVEL_VARS);
-  toplevelVars = allocateRefsArray(numToplevelVars);
+  toplevelVars = allocateRefsArray(ozconf.numToplevelVars);
 
   Builtin *bi = new Builtin(entry,makeTaggedNULL());
   toplevelVars[0] = makeTaggedConst(bi);
@@ -341,7 +293,7 @@ void AM::suspendEngine()
  // ******** GC **********
   idleGC();
 
-  stat.printIdle(stdout);
+  ozstat.printIdle(stdout);
 
   if (osBlockSignals() == NO) {
     DebugCheckT(warning("suspendEngine: there are blocked signals"));
@@ -377,7 +329,7 @@ void AM::suspendEngine()
     setSFlag(IOReady);
   }
 
-  if (DebugCheckT(1||) am.conf.showIdleMessage) {
+  if (DebugCheckT(1||) ozconf.showIdleMessage) {
     printf("running...\n");
   }
 
@@ -1068,7 +1020,7 @@ Bool AM::loadQuery(CompStream *fd)
     addToplevel(pc);
   }
 
-  stat.timeForLoading.incf(osUserTime()-starttime);
+  ozstat.timeForLoading.incf(osUserTime()-starttime);
 
   return ret;
 }
@@ -1287,7 +1239,7 @@ void AM::initThreads()
 
   currentThread = (Thread *) NULL;
 
-  rootThread = newThread(conf.defaultPriority,rootBoard);
+  rootThread = newThread(ozconf.defaultPriority,rootBoard);
   toplevelQueue = (Toplevel *) NULL;
 }
 

@@ -58,9 +58,6 @@
      Tail: pointer to the tail of the thread queue
      am.currentThread: pointer to the current thread
      am.rootThread: pointer to the root thread
-     am.conf.timeSlice: the overall time slice of a thread in msec
-     am.conf.defaultPriority: the user priority
-     am.conf.systemPriority: the system priority
    member data
      next: the next thread in the thread queue
      prev: the prev thread in the thread queue

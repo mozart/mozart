@@ -15,13 +15,20 @@
 
 #include <stdio.h>
 
+#include "tagged.hh"
+#include "config.hh"
+#include "statisti.hh"
+
 #include "am.hh"
+
 #include "fdomn.hh"
 
 
 #ifndef OSF1_ALPHA
 extern "C" void *sbrk(int incr);
 #endif
+
+Statistics ozstat;
 
 static
 void printTime(FILE *fd,char *s,unsigned int t)
@@ -177,7 +184,7 @@ void Statistics::printIdle(FILE *fd)
   timeUtime.incf(timeNow-timeUtime.sinceIdle);
   int totalHeap = getUsedMemory()+heapUsed.total;
 
-  if (am.conf.showIdleMessage) {
+  if (ozconf.showIdleMessage) {
     fprintf(fd,"idle (");
     printTime(fd,"r: ",
               timeUtime.sinceidle()-

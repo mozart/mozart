@@ -1752,7 +1752,7 @@ void printSuspension(ProgramCounter pc)
   cout << "Suspension in ";
   printWhere(cout,pc);
   cout << endl;
-  if (am.conf.showSuspension > 1) {
+  if (ozconf.showSuspension > 1) {
     am.currentThread->printSuspension(cout);
   }
 }

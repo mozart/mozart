@@ -53,7 +53,7 @@ void dbgMessage(char *s)
 
 void dbgPrint(TaggedRef t)
 {
-  taggedPrint(t,am.conf.printDepth);
+  taggedPrint(t,ozconf.printDepth);
 }
 
 
@@ -305,7 +305,7 @@ void showCall(DBGPort port, Board *b, Chunk *def, int arity, TaggedRef *args,
 
     case DBG_DEPTH:
       fprintf(stderr,"   Switching print depth to %d\n",help);
-      am.conf.printDepth = help;
+      ozconf.printDepth = help;
       break;
 
     case DBG_STACK:

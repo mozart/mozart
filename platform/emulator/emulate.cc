@@ -30,10 +30,10 @@
 
 #define HF_BODY(MSG_SHORT,MSG_LONG)                                           \
   if (allowTopLevelFailureMsg) {                                              \
-    if (e->conf.errorVerbosity > 0) {                                         \
+    if (ozconf.errorVerbosity > 0) {                                         \
       toplevelErrorHeader();                                                  \
       {MSG_SHORT;}                                                            \
-      if (e->conf.errorVerbosity > 1) {                                       \
+      if (ozconf.errorVerbosity > 1) {                                       \
         message("\n");                                                        \
         {MSG_LONG;}                                                           \
         e->currentThread->printDebug(PC,NO,10000);                    \
@@ -45,7 +45,7 @@
   } else {                                                                    \
     allowTopLevelFailureMsg = TRUE;                                           \
   }                                                                           \
-  DebugCheck(e->conf.stopOnToplevelFailure, tracerOn();trace("toplevel failed"));
+  DebugCheck(ozconf.stopOnToplevelFailure, tracerOn();trace("toplevel failed"));
 
 
 
@@ -83,10 +83,10 @@ void failureNomsg(AM *e, ProgramCounter PC) { HF_BODY(,); }
 
 // always issue the message
 #define HF_WARN(MSG_SHORT,MSG_LONG)                                           \
-  if (e->conf.errorVerbosity > 0) {                                           \
+  if (ozconf.errorVerbosity > 0) {                                            \
     warningHeader();                                                          \
     { MSG_SHORT; }                                                            \
-    if (e->conf.errorVerbosity > 1) {                                         \
+    if (ozconf.errorVerbosity > 1) {                                          \
        message("\n");                                                         \
        { MSG_LONG; }                                                          \
     }                                                                         \
@@ -1351,7 +1351,7 @@ void engine() {
       int numbOfCons = e->trail.chunkSize();
       Assert(numbOfCons>0);
 
-      if (e->conf.showSuspension) {
+      if (ozconf.showSuspension) {
         printSuspension(PC);
       }
 
@@ -2053,7 +2053,7 @@ void engine() {
         DISPATCH(1);
       }
 
-      if (e->conf.showSuspension) {
+      if (ozconf.showSuspension) {
         printSuspension(PC);
       }
 
@@ -2158,7 +2158,7 @@ void engine() {
       ProgramCounter contPC = getLabelArg(PC+1);
 
       int prio = GET_CURRENT_PRIORITY();
-      int defPrio = e->conf.defaultPriority;
+      int defPrio = ozconf.defaultPriority;
       if (prio > defPrio) {
         prio = defPrio;
       }
@@ -2320,7 +2320,7 @@ void engine() {
 
         DebugCheckT (solveBB->setReflected ());
         // statistic
-        e->stat.incSolveSolved();
+        ozstat.incSolveSolved();
         if ( !e->fastUnifyOutline(solveAA->getResult(), solveAA->genSolved(), OK) ) {
           HF_NOMSG;
         }
@@ -2393,7 +2393,7 @@ void engine() {
               solveAA->setBoardToInstall (waitBoard);
               DebugCheckT (solveBB->setReflected ());
               // statistics
-              am.stat.incSolveDistributed();
+              ozstat.incSolveDistributed();
               if ( !e->fastUnifyOutline(solveAA->getResult(), solveAA->genEnumedFail() ,OK)) {
                 HF_NOMSG;
               }
@@ -2461,7 +2461,7 @@ void engine() {
             // ... and now there are two proper branches of search problem;
 
             // statistics
-            e->stat.incSolveDistributed();
+            ozstat.incSolveDistributed();
             if ( !e->fastUnifyOutline(solveAA->getResult(),
                                       solveAA->genEnumed(newSolveBB),
                                       OK)) {
@@ -2580,7 +2580,7 @@ void engine() {
       aa->setCommitted();
       CBB->decSuspCount();
       // for statistic purposes
-      am.stat.incSolveFailed();
+      ozstat.incSolveFailed();
       if ( !e->fastUnifyOutline(SolveActor::Cast(aa)->getResult(),
                                 SolveActor::Cast(aa)->genFailed(),
                                 OK) ) {

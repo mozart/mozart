@@ -266,7 +266,7 @@ inline
 void AM::restartThread()
 {
   unsetSFlag(ThreadSwitch);
-  threadSwitchCounter=osMsToClockTick(conf.timeSlice);
+  threadSwitchCounter=osMsToClockTick(ozconf.timeSlice);
 }
 
 inline
@@ -279,7 +279,7 @@ Thread *AM::newThread(int p,Board *h)
   if (th) {
     threadsFreeList = th->next;
   } else {
-    th=new Thread(conf.taskStackSize);
+    th=new Thread(ozconf.taskStackSize);
   }
   th->init(p,h);
   return th;
@@ -291,7 +291,7 @@ void AM::disposeThread(Thread *th)
 {
   Verbose((VERB_THREAD,"Thread::dispose = 0x%x\n",this));
   if (th == rootThread) {
-    rootThread->init(conf.defaultPriority,rootBoard);
+    rootThread->init(ozconf.defaultPriority,rootBoard);
     checkToplevel();
   } else {
     /* dispose thread: */

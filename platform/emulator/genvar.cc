@@ -26,7 +26,6 @@
 GenCVariable::GenCVariable(TypeOfGenCVariable t, Board * n) :
 SVariable(n == NULL ? am.currentBoard : n)
 {
-  Assert(n!=0);
   setType(t);
 }
 
