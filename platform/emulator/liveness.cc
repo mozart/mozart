@@ -166,7 +166,14 @@ Segment::~Segment()
 }
 typedef uint32 bitVec;
 
-const int xMaxSize = sizeof(bitVec)*8;
+// xMaxSize is the maximum number of registers we can cache. If the
+// max live register is greater than this value then we quietly don't
+// cache it.
+// It is currently set to 32 - 1 = 31. If we set it to 32 and all registers are
+// live we will add an entry with 0xffffffff to the cache, and the cache uses
+// that value to represent empty slots. Setting xMaxSize to 31 ensures there
+// is at least one 0 in the cached value.
+const int xMaxSize = (sizeof(bitVec)*8) - 1;
 
 class LivenessCache : public AddressHashTable{
 public:
