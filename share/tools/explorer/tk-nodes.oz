@@ -7,47 +7,43 @@
 
 local
 
-   GetCenterAbove = {NewName}
    GetCenter      = {NewName}
    UpperSpaceI    = VerSpaceI - CircleWidthI
    UpperSpaceF    = {IntToFloat UpperSpaceI}
 
    class Sentinel
-      meth !GetCenterAbove(X1 Y1 A1 ?X2 ?Y2 ?A2)
-	 X2 = X1 + SentinelX
-	 Y2 = Y1 + SentinelY
-	 A2 = A1
-      end
       meth !GetCenter(X1 Y1 ?X2 ?Y2)
 	 X2=X1+SentinelX Y2=Y1+SentinelY
       end
    end
    
    class NumberNode
-      attr number: false
+      attr number:0
+      %% If @number==0, the node is not tagged with a number,
+      %% otherwise it is tagged with that number and the number
+      %% item is refernced by the tag n#@number
 
       meth getNumber(Scale Font TakeNumber ?N)
-	 case @number==false then
+	 case @number==0 then
 	    Canvas  = self.canvas
 	    Numbers = Canvas.numbers
 	    Actions = Canvas.actions
-	    X Y Above
+	    X Y
 	 in
-	    N = TakeNumber
+	    N      = TakeNumber
 	    number <- TakeNumber
-	    {self getCenterAbove(X Y Above)}
+	    {self getCenter(X Y)}
 	    case Font==false then skip else
-	       {Canvas tk(crea text
-			  Scale * {IntToFloat X}
-			  Scale * {IntToFloat case {self isHidden($)}
-					      then
-						 Y + UpperSpaceI div 2
-					      else Y
-					      end}
-			  font: Font
-			  text: N
-			  tags: q(NodePrefix#self.suffix
-				  Actions Numbers b(Above)))}
+	       {Canvas
+		tkCreate(text(Scale * {IntToFloat X}
+			      Scale * {IntToFloat case {self isHidden($)}
+						  then
+						     Y + UpperSpaceI div 2
+						  else Y
+						  end}
+			      font: Font
+			      text: N
+			      tags: q(Actions Numbers n#N)))}
 	    end
 	 else N = @number
 	 end
@@ -57,40 +53,32 @@ local
 	 Canvas  = self.canvas
 	 Numbers = Canvas.numbers
 	 Actions = Canvas.actions
-	 X Y Above
+	 N       = @number
+	 X Y
       in
-	 {self getCenterAbove(X Y Above)}
-	 {Canvas tk(crea text
-		    Scale * {IntToFloat X}
-		    Scale * {IntToFloat case {self isHidden($)} then
-					   Y + UpperSpaceI div 2
-					else Y
-					end}
-		    font: Font
-		    text: @number
-		    tags: q(NodePrefix#self.suffix Numbers Actions
-			    b(Above)))}
+	 {self getCenter(?X ?Y)}
+	 {Canvas
+	  tkCreate(text(Scale * {IntToFloat X}
+			Scale * {IntToFloat case {self isHidden($)} then
+					       Y + UpperSpaceI div 2
+					    else Y
+					    end}
+			font: Font
+			text: N
+			tags: q(Numbers Actions n#N)))}
       end
 
       meth clearNumber
-	 number <- false
+	 number <- 0
       end
    end
 
    
    class TkNode
       attr
-	 isDrawn: false
-      feat
-	 suffix
-
-      meth init
-	 self.suffix = {self.canvas.genTagId get($)}
-      end
-	 
-      meth getCenterAbove(?X ?Y ?Above)
-	 {self GetCenterAbove(0 0 nil ?X ?Y ?Above)}
-      end
+	 item:0
+         %% If @item==0 then the node hasn't been drawn yet, otherwise
+         %% @item gives the itemnumber in the canvas
 
       meth !GetCenter(X1 Y1 ?X2 ?Y2)
 	 {self.mom GetCenter(X1+@offset Y1+VerSpaceI ?X2 ?Y2)}
@@ -98,12 +86,6 @@ local
 	    
       meth getCenter(?X ?Y)
 	 TkNode,GetCenter(0 0 ?X ?Y)
-      end
-
-      meth close
-	 Suffix = self.suffix
-      in
-	 {self.canvas tk(delete NodePrefix#Suffix LinkPrefix#Suffix)}
       end
 
    end
@@ -121,41 +103,68 @@ local
 	 from TkNode NumberNode
 	 	 
 	 meth moveNode(MomX MyX MyByX MyY Scale)
-	    Canvas = self.canvas
-	    Suffix = self.suffix
-	    Node   = NodePrefix#Suffix
+	    Canvas   = self.canvas
+	    Item     = @item
+	    NodeItem = Item+1
+	    Number   = @number
 	 in
-	    {Canvas tk(coords LinkPrefix#Suffix
+	    {Canvas tk(coo Item
 		       Scale*{IntToFloat MomX}
 		       Scale*{IntToFloat (MyY - UpperSpaceI)}
 		       Scale*{IntToFloat MyX}
 		       Scale*{IntToFloat (MyY - CircleWidthI)})}
-	    {Canvas tk(move Node Scale*{IntToFloat MyByX} 0)}
+	    {Canvas tk(mo NodeItem Scale*{IntToFloat MyByX} 0)}
+	    case Number==0 then skip else
+	       {Canvas tk(mo n#Number Scale*{IntToFloat MyByX} 0)}
+	    end
 	    case @toDo\=nil orelse @isHidden then skip else
-	       {Canvas tk(itemconfigure Node
-			  fill:  ChooseTermColor
-			  width: ThickNodeBorderWidth)}
+	       {Canvas tk(itemco NodeItem
+			  fi: ChooseTermColor
+			  wi: ThickNodeBorderWidth)}
 	    end
 	 end
 
 	 meth moveTree(MomX MyX MyByX MyY Scale)
-	    Canvas = self.canvas
-	    Suffix = self.suffix
+	    Canvas    = self.canvas
+	    Item      = @item
+	    Number    = @number
+	    ScaledByX = Scale * {IntToFloat MyByX}
 	 in
-	    {Canvas tk(coords LinkPrefix#Suffix
+	    {Canvas tk(coo Item
 		       Scale*{IntToFloat MomX}
 		       Scale*{IntToFloat (MyY - UpperSpaceI)}
 		       Scale*{IntToFloat MyX}
 		       Scale*{IntToFloat (MyY - RectangleWidthI)})}
-	    {Canvas tk(move TreePrefix#Suffix Scale*{IntToFloat MyByX} 0)}
+	    {MoveTree Canvas ScaledByX
+	     ChooseNode,GetMoveIds(@kids Item+1|case Number==0 then nil
+						else [n#Number]
+						end $)}
 	 end
 
-      
-	 meth DrawKids(Ks Break MomTree MomX MyY Scale Font)
+	 meth GetMoveIds(Ks Is $)
+	    case Ks of nil then Is
+	    [] K|Kr then
+	       ChooseNode,GetMoveIds(Kr {K getMoveIds(Is $)} $)
+	    end
+	 end
+
+	 meth getMoveIds(Is $)
+	    Item   = @item
+	 in
+	    case Item==0 then Is else
+	       Number = @number
+	    in
+	       ChooseNode,GetMoveIds(@kids Item|Item+1|case Number==0 then Is
+						       else n#Number|Is
+						       end $)
+	    end
+	 end
+	 
+	 meth DrawKids(Ks Break MomX MyY Scale Font)
 	    case Ks of nil then skip
 	    [] K|Kr then
-	       {K drawTree(Break MomTree MomX MyY Scale Font)}
-	       {self DrawKids(Kr Break MomTree MomX MyY Scale Font)}
+	       {K drawTree(Break MomX MyY Scale Font)}
+	       {self DrawKids(Kr Break MomX MyY Scale Font)}
 	    end
 	 end
 	 
@@ -165,7 +174,7 @@ local
 	    {Purge @kids}
 	 end
 	 
-	 meth drawTree(Break MomTree MomX MyY Scale Font)
+	 meth drawTree(Break MomX MyY Scale Font)
 	    case {IsFree Break} then
 	       NewOffset   = @offset.1
 	       MyX         = MomX + NewOffset
@@ -174,81 +183,74 @@ local
 	       ScaledMyX   = Scale * {IntToFloat MyX}
 	       ScaledMyY   = Scale * {IntToFloat MyY}
 	       Canvas      = self.canvas
-	       Suffix      = self.suffix
-	       Node        = NodePrefix#Suffix
-	       Tree        = TreePrefix#Suffix
 	       Actions     = Canvas.actions
+	       Number      = @number
 	    in
 	       offset <- NewOffset
-	       {Canvas tk(crea line
-			  ScaledMomX
-			  ScaledMyY - Scale * UpperSpaceF
-			  ScaledMyX
-			  ScaledMyY - ScaledWidth
-			  tag:   q(LinkPrefix#Suffix MomTree)
-			  width: LinkWidth)}
+	       item   <- {Canvas tkGet(line(ScaledMomX
+					    ScaledMyY - Scale * UpperSpaceF
+					    ScaledMyX
+					    ScaledMyY - ScaledWidth
+					    width: LinkWidth) $)}
 	       case @isHidden then
 		  ScaledVerSpace = Scale * VerSpaceF
 		  BottomY        = ScaledMyY + ScaledVerSpace
 		  ScaledHorSpace = Scale * HalfHorSpaceF
 	       in
-		  {Canvas tk(crea polygon
-			     ScaledMyX
-			     ScaledMyY - ScaledWidth
-			     ScaledMyX - ScaledHorSpace
-			     ScaledMyY + ScaledVerSpace
-			     ScaledMyX + ScaledHorSpace
-			     ScaledMyY + ScaledVerSpace
-			     tags:    q(Node Tree Actions)
-			     fill:    case @isSolBelow then
-					 case @choices>0 then
-					    SuspendedColor
-					 else EntailedColor end
-				      else
-					 case @choices>0 then
-					    PartialFailedColor
-					 else FailedColor end
-				      end
-			     width:   NodeBorderWidth
-			     outline: LineColor)}
-		  case @number of false then skip elseof N then
-		     case Font==false then skip else
-			{Canvas tk(crea text
-				   ScaledMyX
-				   ScaledMyY +
-				   (ScaledVerSpace - ScaledWidth) / 2.0
-				   font: Font
-				   text: N
-				   tags: q(Node Actions Tree Canvas.numbers))}
-		     end
+		  {Canvas
+		   tkCreate(polygon(ScaledMyX
+				    ScaledMyY - ScaledWidth
+				    ScaledMyX - ScaledHorSpace
+				    ScaledMyY + ScaledVerSpace
+				    ScaledMyX + ScaledHorSpace
+				    ScaledMyY + ScaledVerSpace
+				    tags:    Actions
+				    fill:    case @isSolBelow then
+						case @choices>0 then
+						   SuspendedColor
+						else EntailedColor end
+					     else
+						case @choices>0 then
+						   PartialFailedColor
+						else FailedColor end
+					     end
+				    width:   NodeBorderWidth
+				    outline: LineColor))}
+		  case Number==0 orelse Font==false then skip else
+		     {Canvas
+		      tkCreate(te(ScaledMyX
+				  ScaledMyY +
+				  (ScaledVerSpace - ScaledWidth) / 2.0
+				  fo: Font
+				  te: Number
+				  ta: q(Actions Canvas.numbers
+					n#Number)))}
 		  end
 	       else
-		  {Canvas tk(crea oval
-			     ScaledMyX - ScaledWidth
-			     ScaledMyY - ScaledWidth
-			     ScaledMyX + ScaledWidth
-			     ScaledMyY + ScaledWidth
-			     case @toDo==nil then
-				o(fill:  ChooseTermColor
-				  width: ThickNodeBorderWidth)
-			     else
-				o(fill:  ChooseColor
-				  width: NodeBorderWidth)
-			     end
-			     tags: q(Node Tree Actions))}
-		  case @number of false then skip elseof N then
-		     case Font==false then skip else
-			{Canvas tk(crea text ScaledMyX ScaledMyY
-				   font: Font
-				   text: N
-				   tags: q(Node Tree Actions Canvas.numbers))}
-		     end
+		  {Canvas
+		   tkCreate(ov(ScaledMyX - ScaledWidth
+			       ScaledMyY - ScaledWidth
+			       ScaledMyX + ScaledWidth
+			       ScaledMyY + ScaledWidth
+			       case @toDo==nil then
+				  o(fi:  ChooseTermColor
+				    wi: ThickNodeBorderWidth)
+			       else
+				  o(fi:  ChooseColor
+				    wi: NodeBorderWidth)
+			       end
+			       ta: Actions))}
+		  case Number==0 orelse Font==false then skip else
+		     {Canvas
+		      tkCreate(te(ScaledMyX ScaledMyY
+				  fo: Font
+				  te: Number
+				  ta: q(Actions Canvas.numbers
+					n#Number)))}
 		  end
-		  ChooseNode,DrawKids(@kids Break Tree MyX MyY+VerSpaceI
+		  ChooseNode,DrawKids(@kids Break MyX MyY+VerSpaceI
 				      Scale Font)
 	       end
-	       {Canvas tk(addtag MomTree withtag Tree)}
-	       isDrawn <- true
 	       isDirty <- false
 	    else
 	       case @kids\=nil then
@@ -259,17 +261,39 @@ local
 	    end
 	 end
 	 
-	 meth !GetCenterAbove(X1 Y1 A1 ?X2 ?Y2 ?A2)
-	    {self.mom GetCenterAbove(X1+@offset Y1+VerSpaceI
-				     TreePrefix#self.suffix|A1
-				     ?X2 ?Y2 ?A2)}
+	 meth deleteTree
+	    Item   = @item
+	    Number = @number
+	 in
+	    case Item==0 then skip else
+	       item <- 0
+	       {self.canvas
+		tk(delete Item Item+1
+		   b(ChooseNode,GetDelIds(@kids
+					  case Number==nil then nil
+					  else [n#Number]
+					  end $)))}
+	    end
 	 end
 
-	 meth deleteTree
-	    Suffix = self.suffix
+	 meth GetDelIds(Ks Is $)
+	    case Ks of nil then Is
+	    [] K|Kr then
+	       ChooseNode,GetDelIds(Kr {K getDelIds(Is $)} $)
+	    end
+	 end
+
+	 meth getDelIds(Is $)
+	    Item   = @item
 	 in
-	    {self.canvas tk(delete TreePrefix#Suffix NodePrefix#Suffix
-			    LinkPrefix#Suffix)}
+	    case Item==0 then Is else
+	       Number = @number
+	    in
+	       item <- 0
+	       ChooseNode,GetDelIds(@kids Item|Item+1|case Number==0 then Is
+						      else n#Number|Is
+						      end $)
+	    end
 	 end
 	 
       end
@@ -280,18 +304,17 @@ local
       class LeafNode
 	 from TkNode
 
-	 meth !GetCenterAbove(X1 Y1 A1 ?X2 ?Y2 ?A2)
-	    {self.mom GetCenterAbove(X1+@offset Y1+VerSpaceI A1 ?X2 ?Y2 ?A2)}
-	 end
-	 
 	 meth purge
 	    offset <- 0
 	 end
 	 
 	 meth deleteTree
-	    Suffix = self.suffix
+	    Item = @item
 	 in
-	    {self.canvas tk(delete NodePrefix#Suffix LinkPrefix#Suffix)}
+	    case Item==0 then skip else
+	       {self.canvas tk(de Item Item+1)}
+	       item <- 0
+	    end
 	 end      
 	 
       end
@@ -301,7 +324,7 @@ local
       class FailedNode
 	 from LeafNode
 	 
-	 meth drawTree(Break MomTree MomX MyY Scale Font)
+	 meth drawTree(Break MomX MyY Scale Font)
 	    NewOffset   = @offset.1
 	    MyX         = MomX + NewOffset
 	    ScaledWidth = Scale * RectangleWidthF
@@ -309,48 +332,64 @@ local
 	    ScaledMyX   = Scale * {IntToFloat MyX}
 	    ScaledMyY   = Scale * {IntToFloat MyY}
 	    Canvas      = self.canvas
-	    Suffix      = self.suffix
-	    Node        = NodePrefix#Suffix
-	    Tree        = TreePrefix#Suffix
 	 in
 	    offset <- NewOffset
-	    {Canvas tk(crea line
-		       ScaledMomX
-		       ScaledMyY - Scale * UpperSpaceF
-		       ScaledMyX
-		       ScaledMyY - ScaledWidth
-		       tag: q(LinkPrefix#Suffix MomTree)
-		       width: LinkWidth)}
-	    {Canvas tk(crea rectangle
-		       ScaledMyX - ScaledWidth
-		       ScaledMyY - ScaledWidth
-		       ScaledMyX + ScaledWidth
-		       ScaledMyY + ScaledWidth      
-		       fill:    FailedColor
-		       width:   NodeBorderWidth
-		       outline: LineColor
-		       tags:    q(Node Tree MomTree))}
-	    isDrawn <- true
+	    item   <- {Canvas tkGet(li(ScaledMomX
+				       ScaledMyY - Scale * UpperSpaceF
+				       ScaledMyX
+				       ScaledMyY - ScaledWidth
+				       wi: LinkWidth) $)}
+	    {Canvas tkCreate(re(ScaledMyX - ScaledWidth
+				ScaledMyY - ScaledWidth
+				ScaledMyX + ScaledWidth
+				ScaledMyY + ScaledWidth      
+				fi: FailedColor
+				wi: NodeBorderWidth
+				ou: LineColor))}
 	 end
 	 
 	 meth moveNode(MomX MyX MyByX MyY Scale)
 	    Canvas = self.canvas
-	    Suffix = self.suffix
+	    Item   = @item
 	 in
-	    {Canvas tk(coords LinkPrefix#Suffix
+	    {Canvas tk(coo Item
 		       Scale*{IntToFloat MomX}
 		       Scale*{IntToFloat (MyY - UpperSpaceI)}
 		       Scale*{IntToFloat MyX}
 		       Scale*{IntToFloat (MyY - RectangleWidthI)})}
-	    {Canvas tk(move NodePrefix#Suffix Scale*{IntToFloat MyByX} 0)}
+	    {Canvas tk(mo Item+1 Scale*{IntToFloat MyByX} 0)}
 	 end
       
+	 meth getMoveIds(Is $)
+	    Item = @item
+	 in
+	    case Item==0 then Is else Item|Item+1|Is end
+	 end
+	 
+	 meth getDelIds(Is $)
+	    Item = @item
+	 in
+	    case Item==0 then Is else item <-0 Item|Item+1|Is end
+	 end
+	 
       end
 
       class BlockedNode
 	 from LeafNode
 	 
-	 meth drawTree(Break MomTree MomX MyY Scale Font)
+	 meth getMoveIds(Is $)
+	    Item = @item
+	 in
+	    case Item==0 then Is else Item|Item+1|Is end
+	 end
+	 
+	 meth getDelIds(Is $)
+	    Item = @item
+	 in
+	    case Item==0 then Is else item <- 0  Item|Item+1|Is end
+	 end
+	 
+	 meth drawTree(Break MomX MyY Scale Font)
 	    NewOffset       = @offset.1
 	    MyX             = MomX + NewOffset
 	    ScaledHalfWidth = Scale * SmallRectangleWidthF
@@ -369,37 +408,30 @@ local
 	    Y3              = ScaledMyY + ScaledHalfWidth
 	    Y4              = ScaledMyY + ScaledFullWidth
 	    Canvas          = self.canvas
-	    Suffix          = self.suffix
-	    Node            = NodePrefix#Suffix
-	    Tree            = TreePrefix#Suffix
 	 in
 	    offset <- NewOffset
-	    {Canvas tk(crea line
-		       ScaledMomX
-		       ScaledMyY - Scale * UpperSpaceF
-		       ScaledMyX
-		       ScaledMyY - ScaledHalfWidth
-		       tag:   q(LinkPrefix#Suffix MomTree)
-		       width: LinkWidth)}
-	    {Canvas tk(crea polygon
-		       X0 Y0 X2 Y1 X4 Y0 X3 Y2 X4 Y4 X2 Y3 X0 Y4 X1 Y2
-		       fill:    BlockedColor
-		       width:   NodeBorderWidth
-		       outline: LineColor
-		       tags:    q(Node Tree MomTree))}
-	    isDrawn <- true
+	    item   <- {Canvas tkGet(li(ScaledMomX
+				       ScaledMyY - Scale * UpperSpaceF
+				       ScaledMyX
+				       ScaledMyY - ScaledHalfWidth
+				       wi:LinkWidth) $)}
+	    {Canvas
+	     tkCreate(po(X0 Y0 X2 Y1 X4 Y0 X3 Y2 X4 Y4 X2 Y3 X0 Y4 X1 Y2
+			 fi: BlockedColor
+			 wi: NodeBorderWidth
+			 ou: LineColor))}
 	 end
 	 
 	 meth moveNode(MomX MyX MyByX MyY Scale)
 	    Canvas = self.canvas
-	    Suffix = self.suffix
+	    Item   = @item
 	 in
-	    {Canvas tk(coords LinkPrefix#Suffix
+	    {Canvas tk(coo Item
 		       Scale*{IntToFloat MomX}
 		       Scale*{IntToFloat (MyY - UpperSpaceI)}
 		       Scale*{IntToFloat MyX}
 		       Scale*{IntToFloat (MyY - RectangleWidthI)})}
-	    {Canvas tk(move NodePrefix#Suffix Scale*{IntToFloat MyByX} 0)}
+	    {Canvas tk(mo Item+1 Scale*{IntToFloat MyByX} 0)}
 	 end
       
       end
@@ -408,7 +440,28 @@ local
 	 class SucceededNode
 	    from LeafNode NumberNode
 	    
-	    meth drawTree(MomTree MomX MyY Scale Font Color Width)
+	    meth getMoveIds(Is $)
+	       Item   = @item
+	    in
+	       case Item==0 then Is else
+		  Number = @number
+	       in
+		  Item|Item+1|case Number==0 then Is else n#Number|Is end
+	       end
+	    end
+	 
+	    meth getDelIds(Is $)
+	       Item   = @item
+	    in
+	       case Item==0 then Is else
+		  Number = @number
+	       in
+		  item <- 0
+		  Item|Item+1|case Number==0 then Is else n#Number|Is end
+	       end
+	    end
+	 
+	    meth drawTree(MomX MyY Scale Font Color Width)
 	       NewOffset   = @offset.1
 	       MyX         = MomX + NewOffset
 	       ScaledWidth = Scale * RhombeWidthF
@@ -416,10 +469,8 @@ local
 	       ScaledMyX   = Scale * {IntToFloat MyX}
 	       ScaledMyY   = Scale * {IntToFloat MyY}
 	       Canvas      = self.canvas
-	       Suffix      = self.suffix
-	       Node        = NodePrefix#Suffix
-	       Tree        = TreePrefix#Suffix
 	       Actions     = Canvas.actions
+	       Number      = @number
 	       X0          = ScaledMyX - ScaledWidth
 	       X1          = ScaledMyX
 	       X2          = ScaledMyX + ScaledWidth
@@ -428,40 +479,40 @@ local
 	       Y2          = ScaledMyY + ScaledWidth
 	    in
 	       offset <- NewOffset
-	       {Canvas tk(crea line
-			  ScaledMomX
-			  ScaledMyY - Scale * UpperSpaceF
-			  ScaledMyX
-			  ScaledMyY - ScaledWidth
-			  tag:   q(LinkPrefix#Suffix MomTree)
-			  width: LinkWidth)}
-	       {Canvas tk(crea polygon X0 Y1 X1 Y0 X2 Y1 X1 Y2 X0 Y1
-			  fill:    Color
-			  width:   Width
-			  outline: LineColor
-			  tags:    q(Node Tree MomTree Actions))}
-	       case @number of false then skip elseof N then
-		  case Font==false then skip else
-		     {Canvas tk(crea text ScaledMyX ScaledMyY
-				font: Font
-				text: N
-				tags: q(Node Tree MomTree Actions
-					Canvas.numbers))}
-		  end
+	       item   <- {Canvas tkGet(li(ScaledMomX
+					  ScaledMyY - Scale * UpperSpaceF
+					  ScaledMyX
+					  ScaledMyY - ScaledWidth
+					  wi: LinkWidth) $)}
+	       {Canvas
+		tkCreate(po(X0 Y1 X1 Y0 X2 Y1 X1 Y2 X0 Y1
+			    fi: Color
+			    wi: Width
+			    ou: LineColor
+			    ta: Actions))}
+	       case Number==0 orelse Font==false then skip else
+		  {Canvas tkCreate(te(ScaledMyX ScaledMyY
+				      fo: Font
+				      te: Number
+				      ta: q(Actions Canvas.numbers
+					    n#Number)))}
 	       end
-	       isDrawn <- true
 	    end
 
 	    meth moveNode(MomX MyX MyByX MyY Scale)
 	       Canvas = self.canvas
-	       Suffix = self.suffix
+	       Item   = @item
+	       Number = @number
 	    in
-	       {Canvas tk(coords LinkPrefix#Suffix
+	       {Canvas tk(coo Item
 			  Scale*{IntToFloat MomX}
 			  Scale*{IntToFloat (MyY - UpperSpaceI)}
 			  Scale*{IntToFloat MyX}
 			  Scale*{IntToFloat (MyY - RhombeWidthI)})}
-	       {Canvas tk(move NodePrefix#Suffix Scale*{IntToFloat MyByX} 0)}
+	       {Canvas tk(mo Item+1 Scale*{IntToFloat MyByX} 0)}
+	       case Number==0 then skip else
+		  {Canvas tk(mo n#Number Scale*{IntToFloat MyByX} 0)}
+	       end
 	    end
 	    
 	 end
@@ -471,8 +522,8 @@ local
 	 class EntailedNode
 	    from SucceededNode
 	    
-	    meth drawTree(Break MomTree MomX MyY Scale Font)
-	       SucceededNode,drawTree(MomTree MomX MyY Scale Font
+	    meth drawTree(Break MomX MyY Scale Font)
+	       SucceededNode,drawTree(MomX MyY Scale Font
 				      EntailedColor ThickNodeBorderWidth)
 	    end
 	    
@@ -482,8 +533,8 @@ local
 	 class SuspendedNode
 	    from SucceededNode
 
-	    meth drawTree(Break MomTree MomX MyY Scale Font)
-	       SucceededNode,drawTree(MomTree MomX MyY Scale Font
+	    meth drawTree(Break MomX MyY Scale Font)
+	       SucceededNode,drawTree(MomX MyY Scale Font
 				      SuspendedColor NodeBorderWidth)
 	    end
 	    
