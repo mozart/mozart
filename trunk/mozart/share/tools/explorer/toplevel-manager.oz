@@ -30,31 +30,31 @@ local
 	 
 	 ScaleFrame = {New Tk.frame tkInit(parent:Frame highlightthickness:0)}
 	 
-	 Scale = {New Tk.scale [tkInit(parent:    ScaleFrame
-				       'from':    MinScale
-				       to:        MaxScale
-				       showvalue: 0
-				       width:     ScrollerWidth
-				       resolution: 0.001 / FloatScaleBase
-				       action: proc {$ S}
-						  {Manager
-						   scale({Tk.string.toFloat S})}
-					       end)
-				tk(set DefScale)
-				tkBind(event:  '<2>'
-				       action: proc {$}
-						  {Manager scaleToFit}
-					       end)]}
-
+	 Scale = {New Tk.scale
+		  [tkInit(parent:     ScaleFrame
+			  'from':     MinScale
+			  to:         MaxScale
+			  showvalue:  False
+		          width:      ScrollerWidth
+		          resolution: 0.001 / FloatScaleBase
+			  action:     proc {$ S}
+					 {Manager
+					  scale({Tk.string.toFloat S})}
+				      end)
+		   tk(set DefScale)
+		   tkBind(event:  '<2>'
+			  action: Manager # scaleToFit)]}
       in
 	 Canvas = {New ScrollCanvas init(self CanFrame Manager)}
+
 	 self.manager = Manager
 	 self.scale   = Scale
+
 	 proc {PackMe}
 	    {Tk.batch [pack(Scale       o(expand:yes fill:y))
 		       pack(CanFrame    o(side:left fill:both expand:yes))
 		       pack(ScaleFrame  o(side:left fill:y))
-		       pack(Menu.'self' o(side:top fill:x))
+		       pack(Menu        o(side:top fill:x))
 		       pack(Status      o(side:bottom anchor:w fill:x))
 		       pack(Frame       o(side:bottom fill:both expand:yes))
 		       wm(deiconify self)]}
@@ -71,6 +71,7 @@ local
 
    end
 
+   
    class TagCounter
       from UrObject
       attr n:0
@@ -79,6 +80,7 @@ local
       meth get($) N=@n in n<-N+1 N end
    end
 
+   
    class ScrollCanvas
       from Tk.canvas
 
@@ -95,11 +97,10 @@ local
       feat
 	 manager
 	 genTagId
-	 tagsVar
-	 initTags
-	 addTag
-	 skipTag
-	 actionTag
+	 actions
+	 numbers
+	 cursor
+	 connection
 
       meth init(Toplevel Parent Manager)
 	 CanScrY = {New Tk.frame tkInit(parent:Parent bd:0
@@ -128,14 +129,6 @@ local
 					width:  ScrollerWidth + 2*Border
 					height: ScrollerWidth + 2*Border
 					highlightthickness:0)}
-	 TagsVar      = {Tk.server tkGet($)}
-	 AddTagPrefix = v({String.toAtom
-			   {VirtualString.toString
-			    TagsVar#' [linsert $'#TagsVar#' 0'}})
-	 AddTagSuffix = v(']')
-	 SkipTag      = v({String.toAtom
-			   {VirtualString.toString
-			    'set '#TagsVar#' [lreplace $'#TagsVar#' 0 0]'}})
       in
 	 {Tk.addYScrollbar self ScrY}
 	 {Tk.addXScrollbar self ScrX}
@@ -156,50 +149,42 @@ local
 			    append: True)>>
 	 self.manager   = Manager
 	 self.genTagId  = {New TagCounter clear}
-	 self.tagsVar   = v({String.toAtom
-			     {VirtualString.toString
-			      '[linsert $'#TagsVar#' 0'}})
-	 self.initTags  = proc {$ Tags}
-			     {Tk.send set(v(TagsVar) q(b(Tags)))}
-			  end
-	 self.addTag    = proc {$ Tag}
-			     {Tk.send set(AddTagPrefix Tag AddTagSuffix)}
-			  end
-	 self.skipTag   = proc {$}
-			     {Tk.send SkipTag}
-			  end
-	 self.actionTag = {New Tk.canvasTag
-			   [tkInit(parent:self)
-			    tkBind(event:  '<1>'
-				   args:   [x y]
-				   action: proc {$ X Y}
-					      {Manager 
-					       setByXY({Tk.string.toFloat X}
-						       {Tk.string.toFloat Y})}
-					   end)
-			    tkBind(event:  '<Double-1>'
-				   args:   [x y]
-				   action: proc {$ X Y}
-					      {Manager
-					       selInfo({Tk.string.toFloat X}
-						       {Tk.string.toFloat Y})}
-					   end)
-			    tkBind(event: '<2>'
-				   args:  [x y]
-				   action: proc {$ X Y}
-					      {Manager
-					       nodesByXY(hide
-							 {Tk.string.toFloat X}
-							 {Tk.string.toFloat Y})}
-					   end)
-			    tkBind(event:  '<Double-2>'
-				   args:   [x y]
-				   action: proc {$ X Y}
-					      {Manager
-					       nodesByXY(hideFailed
-							 {Tk.string.toFloat X}
-							 {Tk.string.toFloat Y})}
-					   end)]}
+	 %% Get some tags
+	 self.cursor     = {New Tk.canvasTag tkInit(parent:self)}
+	 self.connection = {New Tk.canvasTag tkInit(parent:self)}
+	 self.numbers    = {New Tk.canvasTag tkInit(parent:self)}
+	 self.actions    = {New Tk.canvasTag
+			    [tkInit(parent:self)
+			     tkBind(event:  '<1>'
+				    args:   [x y]
+				    action: proc {$ X Y}
+					       {Manager 
+						setByXY({Tk.string.toFloat X}
+							{Tk.string.toFloat Y})}
+					    end)
+			     tkBind(event:  '<Double-1>'
+				    args:   [x y]
+				    action: proc {$ X Y}
+					       {Manager
+						selInfo({Tk.string.toFloat X}
+							{Tk.string.toFloat Y})}
+					    end)
+			     tkBind(event: '<2>'
+				    args:  [x y]
+				    action: proc {$ X Y}
+					       {Manager
+						nodesByXY(hide
+							  {Tk.string.toFloat X}
+							  {Tk.string.toFloat Y})}
+					    end)
+			     tkBind(event:  '<Double-2>'
+				    args:   [x y]
+				    action: proc {$ X Y}
+					       {Manager
+						nodesByXY(hideFailed
+							  {Tk.string.toFloat X}
+							  {Tk.string.toFloat Y})}
+					    end)]}
       end
 
       meth clear
@@ -218,7 +203,8 @@ local
 	 Bottom = Scale * {IntToFloat @bottom}
       in 
 	 <<Tk.canvas tk(xview moveto
-			({IntToFloat X}*Scale - Left - @width/2.0)/(Right-Left))>>
+			({IntToFloat X}*Scale - Left - @width/2.0)/
+			(Right-Left))>>
 	 <<Tk.canvas tk(yview moveto
 			({IntToFloat Y}*Scale - @height/2.0)/Bottom)>>
       end
@@ -330,9 +316,6 @@ in
       feat
 	 toplevel
 	 canvas
-	 cursor
-	 connection
-	 numbers
       
       attr
 	 CurNumber:     1
@@ -347,49 +330,45 @@ in
 					     self.menu
 					     self.canvas
 					     self.status ?PackMe)}
-	 self.cursor     = {Tk.server tkGet($)}
-	 self.connection = {Tk.server tkGet($)}
-	 self.numbers    = {Tk.server tkGet($)}
       end
 
       meth clear
 	 {self.canvas tk(delete all)}
 	 curNode       <- False
 	 cmpNode       <- False
-	 <<ToplevelManager clearNumbers>>
+	 {self.canvas.numbers tk(delete)}
+	 {ForAll @NumberNodes proc {$ N} {N clearNumber} end}
+	 CurNumber   <- 1
+	 NumberNodes <- nil
       end
       
       meth configurePointer(Status)
-	 case {Det {self.canvas
-		    tkReturn(conf(cursor:case Status
-					 of drawing   then pencil
-					 [] searching then watch
-					 [] idle      then top_left_arrow
-					 end) $)}} then
-	    scale <- @scale
-	 end
+	 {Wait {self.canvas
+		tkReturn(conf(cursor:case Status
+				     of drawing   then pencil
+				     [] searching then watch
+				     [] idle      then top_left_arrow
+				     end) $)}}
+	 <<UrObject nil>>
       end
 
       meth scale(Scale)
 	 Font     = {PickFont NumberFonts Scale}
 	 FontName = case Font==False then False else Font.name end
 	 Canvas   = self.canvas
+	 Numbers  = Canvas.numbers
       in
 	 scale <- Scale
 	 {Canvas scale(Scale)}
 	 case @curFont of !Font then true elseof CF then
 	    case @NumberNodes==nil then true else
-	       case Font==False then
-		  {Canvas tk(delete self.numbers)}
-	       else
-		  case CF==False then
-		     {ForAll @NumberNodes
-		      proc {$ Node}
-			 {Node redrawNumber(Scale FontName)}
-		      end}
-		  else
-		    {Canvas tk(itemconfigure self.numbers o(font:FontName))}
-		  end
+	       case Font==False then {Numbers tk(delete)}
+	       elsecase CF==False then
+		  {ForAll @NumberNodes
+		   proc {$ Node}
+		      {Node redrawNumber(Scale FontName)}
+		   end}
+	       else {Numbers tk(itemconfigure o(font:FontName))}
 	       end
 	    end
 	    curFont <- Font
@@ -404,22 +383,27 @@ in
       end
 
       meth findByXY(ScaledX ScaledY $)
-	 CanvasX = job {self.canvas tkReturnFloat(canvasx(ScaledX) $)} end
-	 CanvasY = job {self.canvas tkReturnFloat(canvasy(ScaledY) $)} end
+	 Canvas  = self.canvas
+	 CanvasX = {Canvas tkReturnFloat(canvasx(ScaledX) $)}
+	 CanvasY = {Canvas tkReturnFloat(canvasy(ScaledY) $)}
 	 Scale   = @scale
 	 FindX   = {FloatToInt CanvasX / Scale - MaxExtent}
 	 Depth   = {FloatToInt
-		    {Float.round (CanvasY / Scale - HalfVerSpaceF) / VerSpaceF}}
+		    {Float.round (CanvasY / Scale - HalfVerSpaceF)
+		     / VerSpaceF}}
       in
 	 {@root findByX(Depth RootX FindX $)}
       end
       
       meth setCursor(CurNode IsVisible)
 	 X Y
-	 Scale  = @scale
-	 Canvas = self.canvas
+	 Scale      = @scale
+	 Canvas     = self.canvas
+	 Cursor     = Canvas.cursor
+	 Connection = Canvas.connection
       in
-	 {Canvas tk(delete self.cursor self.connection)}
+	 {Cursor tk(delete)}
+	 {Connection tk(delete)}
 	 {CurNode getCenter(?X ?Y)}
 	 {Canvas tk(crea {Shapes.(case
 				     CurNode.kind==choice andthen
@@ -428,44 +412,38 @@ in
 			  {IntToFloat (X + ShadeWidth)} * Scale
 			  {IntToFloat (Y + ShadeWidth)} * Scale
 			  Scale}
-		    o(fill:CursorColor outline: '' tags:self.cursor))}
-	 {Canvas tk(lower self.cursor NodePrefix#CurNode.suffix)}
+		    o(fill:CursorColor outline: '' tags:Cursor))}
+	 {Cursor tk(lower)}
 	 case CurNode==@curNode orelse IsVisible then true else
 	    {Canvas scrollTo(X Y)}
 	 end
 	 curNode <- CurNode
 	 case @cmpNode of !False then
-	    {Canvas tk(delete self.connection)}
+	    {Connection tk(delete)}
 	 elseof CmpNode then
 	    case CmpNode==CurNode then true else
 	       CmpX CmpY
 	    in
 	       {CmpNode getCenter(?CmpX ?CmpY)}
-	       {self.canvas [tk(delete self.connection)
-			     tk(crea line
-				Scale*{IntToFloat X} Scale*{IntToFloat Y}
-				Scale*{IntToFloat CmpX} Scale*{IntToFloat CmpY}
-				o(arrow: last
-				  fill:  CursorColor
-				  width: LinkWidth
-				  tags:  self.connection))
-			  tk(raise self.connection NodePrefix#CmpNode.suffix)
-			  tk(raise self.connection NodePrefix#CurNode.suffix)]}
+	       {Canvas tk(crea line
+			  Scale*{IntToFloat X} Scale*{IntToFloat Y}
+			  Scale*{IntToFloat CmpX} Scale*{IntToFloat CmpY}
+			  o(arrow: last
+			    fill:  CursorColor
+			    width: LinkWidth
+			    tags:  Connection))}
+	       {Connection tk(raise)}
 	    end
 	 end
       end
 
       meth hideCursor
-	 {self.canvas tk(delete self.cursor self.connection)}
+	 Canvas = self.canvas
+      in
+	 {Canvas.cursor tk(delete)}
+	 {Canvas.connection tk(delete)}
       end
 
-      meth clearNumbers
-	 {self.canvas tk(delete self.numbers)}
-	 {ForAll @NumberNodes proc {$ N} {N clearNumber} end}
-	 CurNumber   <- 1
-	 NumberNodes <- nil
-      end
-      
       meth getNumber(Node ?N)
 	 NewNumber = @CurNumber
       in
@@ -481,7 +459,10 @@ in
       end
       
       meth refreshNumbers
-	 {self.canvas tk(itemconfigure self.numbers o(fill:LineColor))}
+	 Numbers = self.canvas.numbers
+      in
+	 {Numbers tk(itemconfigure o(fill:LineColor))}
+	 {Numbers tk(raise)}
       end
 
       meth makeDirty(Ns)

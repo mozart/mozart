@@ -11,8 +11,6 @@ local
    
    \insert configure.oz
 
-   \insert menues.oz
-   
    \insert manager.oz
 
    NoLabel       = {NewName}
@@ -27,16 +25,6 @@ local
 
    Options = {Sort [search information drawing postscript] Value.'<'}
 
-   fun {GetMenu Manager Action}
-      Menu = Manager.menu
-   in
-      case Action
-      of information then Menu.nodes.chooseInfo
-      [] compare then Menu.nodes.chooseCmp
-      [] statistics then Menu.nodes.chooseStat
-      end
-   end
-		       
    proc {MethodError O M}
       {`ooMethodError` _ M O _}
    end
@@ -49,17 +37,6 @@ local
       else False end
    end
 
-   InitialActions = {MakeRecord actions Actions}
-
-   {Record.forAll InitialActions fun {$} nil end}
-   
-   fun {DeleteAction AEs B}
-      case AEs of nil then nil
-      [] AE|AEr then
-	 case AE.1==B then {AE.2 close} AEr else AE|{DeleteAction AEr B} end
-      end
-   end
-
    fun {IfAtThen T F P}
       case {HasSubtreeAt T F} then {P T.F} else True end
    end
@@ -70,7 +47,6 @@ in
       from UrObject
 
       attr
-	 Actions:    InitialActions
 	 Stacked:    nil
          MyManager:  False
 
@@ -104,7 +80,6 @@ in
       end
 
       meth !ManagerClosed()
-	 Actions   <- InitialActions
 	 MyManager <- False
       end
       
@@ -123,8 +98,13 @@ in
 	    elseof ActionKind then
 	       case Add.ActionKind
 	       of separator then
-		  {New Menues.separator
-		   init(parent:{GetMenu @MyManager ActionKind}.menu) _}
+		  {New Tk.menuentry.separator
+		   tkInit(parent: @MyManager.menu.nodes.
+			  case ActionKind
+			  of information then infoAction
+			  [] compare then cmpAction
+			  [] statistics then statAction
+			  end.menu) _}
 	       elseof Action then
 		  case
 		     {Procedure.is Action} andthen
@@ -135,16 +115,13 @@ in
 				    {Procedure.printName Action}
 				 else Label
 				 end
-		     Menu      = {GetMenu @MyManager ActionKind}
-		     Entry     = {New Menues.radiobutton
-				  init(parent: Menu.menu
-				       label:  MenuLabel
-				       value:  Action
-				       group:  Menu.group.'self')}
 		  in
-		     {Menu.group.'self' setValue(Action)}
-		     Actions <- {AdjoinAt @Actions ActionKind
-				 Action#Entry|@Actions.ActionKind}
+		     {@MyManager.case ActionKind
+				 of information then infoAction
+				 [] statistics  then statAction
+				 [] compare     then cmpAction
+				 end
+		      add(label:MenuLabel value:Action)} 
 		  else
 		     {MethodError self Add}
 		  end
@@ -160,9 +137,12 @@ in
 	    case {GetAction Del 1} of !False then
 	       {MethodError self Del}
 	    elseof ActionKind then
-	       Actions <- {AdjoinAt @Actions ActionKind
-			   {DeleteAction @Actions.ActionKind
-			    Del.ActionKind}}
+	       {@MyManager.case ActionKind
+			   of information then infoAction
+			   [] statistics  then statAction
+			   [] compare     then cmpAction
+			   end
+		delete(value:Del.ActionKind)}
 	    end
 	 end
       end
@@ -203,11 +183,11 @@ in
       end
       
       meth Next
-	 {@MyManager.menu.search.next invoke}
+	 {@MyManager.menu.search.next tk(invoke)}
       end
 
       meth All
-	 {@MyManager.menu.search.all  invoke}
+	 {@MyManager.menu.search.all  tk(invoke)}
       end
 
       meth close
