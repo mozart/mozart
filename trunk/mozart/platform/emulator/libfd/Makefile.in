@@ -64,10 +64,10 @@ install-prop:
 depend:: $(FDLIBSRCS) $(SCHEDLIBSRCS)
 	$(DEPEND) `for f in $(FDLIBSRCS) $(SCHEDLIBSRCS) ; do echo $(FDDIR)/$$f; done` >> Makefile
 
-realclean::
-	$(RM) *.a *.so
+include ../Makefile.rules
 
 distclean::
 	$(RM) Makefile
 
-include ../Makefile.rules
+realclean::
+	$(RM) *.a *.so
