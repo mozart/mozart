@@ -338,7 +338,7 @@ public:
   }
 
   // debugger
-  Bool traceMode() {
+  Bool isTraced() {
     return (state.flags & T_G_trace);
   }
   Bool stepMode() {
@@ -348,11 +348,8 @@ public:
     return (state.flags & T_G_stop);
   }
 
-  void startTraceMode() {
+  void traced() {
     state.flags = state.flags | T_G_trace;
-  }
-  void stopTraceMode() {
-    state.flags = state.flags & ~T_G_trace;
   }
 
   void startStepMode() {

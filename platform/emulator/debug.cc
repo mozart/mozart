@@ -71,6 +71,23 @@ void debugStreamThread(Thread *tt) {
   am.threadStreamTail = newTail;
 }
 
+void debugStreamTerm(Thread *tt, TaggedRef p) {
+  TaggedRef tail    = am.threadStreamTail;
+  TaggedRef newTail = OZ_newVariable();
+  Thread *par = (Thread*)tagged2Const(OZ_deref(p));
+
+  TaggedRef pairlist =
+    OZ_cons(OZ_pairA("thr",
+                     OZ_mkTupleC("#",2,makeTaggedConst(tt),
+                                 OZ_int(tt->getID()))),
+            OZ_cons(OZ_pairA("par", OZ_mkTupleC("#",2,p,OZ_int(par->getID()))),
+                    OZ_nil()));
+
+  TaggedRef entry = OZ_recordInit(OZ_atom("term"), pairlist);
+  OZ_unify(tail, OZ_cons(entry, newTail));
+  am.threadStreamTail = newTail;
+}
+
 // ------------------ explore a thread's taskstack ---------------------------
 
 OZ_C_proc_begin(BItaskStack,2)
