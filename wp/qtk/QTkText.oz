@@ -35,6 +35,7 @@ import
 	    subtracts:          Subtracts
 	    returnTk:           ReturnTk
 	    mapLabelToObject:   MapLabelToObject
+	    builder:            Builder
 	    qTkClass:           QTkClass
 	    qTkAction:          QTkAction
 	    globalInitType:     GlobalInitType
@@ -522,12 +523,12 @@ define
 		  Window
 		  
 	       from QTkClass
-	       meth init(...)=M
+	       meth !Init(...)=M
 		  lock
 		     self.parent=Self
 		     self.toplevel=Self.toplevel
 		     {Assert self.widgetType self.typeInfo M}
-		     self.Window={MapLabelToObject {Record.adjoinAt M.2 parent Self}}
+		     self.Window={Self.toplevel.Builder MapLabelToObject({Record.adjoinAt M.2 parent Self} $)}
 		  in
 		     {TExecTk Self window(create M.1
 					  d({Record.adjoinAt
@@ -558,7 +559,7 @@ define
 	       end
 	    end
 	 in
-	    Win={New TextWindow {Record.adjoin {Record.subtract M Last} init}}
+	    Win={New TextWindow {Record.adjoin {Record.subtract M Last} Init}}
 	    Windows<-Win|@Windows
 	 end
       end
