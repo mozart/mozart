@@ -36,93 +36,64 @@ static CTerm nilAtom;
 extern int xy_showInsert, xy_gumpSyntax, xy_systemVariables;
 extern CTerm xy_errorMessages;
 
-static int initialized = 0;
-
-OZ_C_proc_begin(ozparser_init, 0)
-{
+static void init(OZ_Term optRec) {
   nilAtom = OZ_nil();
-  xy_showInsert = xy_gumpSyntax = 0;
-  xy_systemVariables = 1;
   parserInit();
-  initialized = 1;
-  return PROCEED;
-}
-OZ_C_proc_end
 
-OZ_C_proc_begin(ozparser_setShowInsert, 1)
-{
-  OZ_declareNonvarArg(0, showInsert);
-  xy_showInsert = OZ_isTrue(showInsert);
-  return PROCEED;
-}
-OZ_C_proc_end
+  OZ_Term x;
 
-OZ_C_proc_begin(ozparser_setGumpSyntax, 1)
-{
-  OZ_declareNonvarArg(0, gumpSyntax);
-  xy_gumpSyntax = OZ_isTrue(gumpSyntax);
-  return PROCEED;
-}
-OZ_C_proc_end
+  x = OZ_subtree(optRec, OZ_atom("showInsert"));
+  xy_showInsert = x == 0? 0: OZ_eq(x, OZ_true());
 
-OZ_C_proc_begin(ozparser_parseFile, 2)
+  x = OZ_subtree(optRec, OZ_atom("gumpSyntax"));
+  xy_gumpSyntax = x == 0? 0: OZ_eq(x, OZ_true());
+
+  x = OZ_subtree(optRec, OZ_atom("systemVariables"));
+  xy_systemVariables = x == 0? 1: OZ_eq(x, OZ_true());
+}
+
+OZ_C_proc_begin(ozparser_parseFile, 3)
 {
+  // {ParseFile FileName OptRec ?AST}
   OZ_declareVirtualStringArg(0, str);
+  OZ_declareNonvarArg(1, optRec);
+  if (!OZ_isRecord(optRec))
+    return OZ_typeError(1, "Record");
+  init(optRec);
   xy_errorMessages = OZ_nil();
-  CTerm res = parseFile(str);
-  if (xy_errorMessages != OZ_nil())
-    printf("%s%c",OZ_virtualStringToC(xy_errorMessages),MSG_ERROR);
-  return OZ_unify(OZ_getCArg(1), res);
-}
-OZ_C_proc_end
-
-OZ_C_proc_begin(ozparser_parseVirtualString, 2)
-{
-  OZ_declareVirtualStringArg(0, str);
-  xy_errorMessages = OZ_nil();
-  CTerm res = parseVirtualString(str);
-  if (xy_errorMessages != OZ_nil())
-    printf("%s%c",OZ_virtualStringToC(xy_errorMessages),MSG_ERROR);
-  return OZ_unify(OZ_getCArg(1), res);
-}
-OZ_C_proc_end
-
-OZ_C_proc_begin(ozparser_parseFileAtomic, 6)
-{
-  // {ParseFile FileName ShowInsert GumpSyntax SystemVariables ?AST ?VS}
-  OZ_declareVirtualStringArg(0, str);
-  OZ_declareNonvarArg(1, showInsert);
-  OZ_declareNonvarArg(2, gumpSyntax);
-  OZ_declareNonvarArg(3, systemVariables);
-  xy_showInsert = OZ_isTrue(showInsert);
-  xy_gumpSyntax = OZ_isTrue(gumpSyntax);
-  xy_systemVariables = OZ_isTrue(systemVariables);
-
-  xy_errorMessages = OZ_nil();
-  OZ_Return res = OZ_unify(OZ_getCArg(4), parseFile(str));
-  if (res == PROCEED)
-    return OZ_unify(OZ_getCArg(5), xy_errorMessages);
-  else
+  OZ_Return res = OZ_unify(OZ_getCArg(2), parseFile(str));
+  if (res == PROCEED) {
+    OZ_Term x = OZ_subtree(optRec, OZ_atom("errorOutput"));
+    if (x == 0) {
+      if (xy_errorMessages != OZ_nil())
+	printf("%s%c", OZ_virtualStringToC(xy_errorMessages), MSG_ERROR);
+      return PROCEED;
+    } else
+      return OZ_unify(x, xy_errorMessages);
+  } else
     return res;
 }
 OZ_C_proc_end
 
-OZ_C_proc_begin(ozparser_parseVirtualStringAtomic, 6)
+OZ_C_proc_begin(ozparser_parseVirtualString, 3)
 {
-  // {ParseVirtualString VS1 ShowInsert GumpSyntax SystemVariables ?AST ?VS2}
+  // {ParseVirtualString VS OptRec ?AST}
   OZ_declareVirtualStringArg(0, str);
-  OZ_declareNonvarArg(1, showInsert);
-  OZ_declareNonvarArg(2, gumpSyntax);
-  OZ_declareNonvarArg(3, systemVariables);
-  xy_showInsert = OZ_isTrue(showInsert);
-  xy_gumpSyntax = OZ_isTrue(gumpSyntax);
-  xy_systemVariables = OZ_isTrue(systemVariables);
-
+  OZ_declareNonvarArg(1, optRec);
+  if (!OZ_isRecord(optRec))
+    return OZ_typeError(1, "Record");
+  init(optRec);
   xy_errorMessages = OZ_nil();
-  OZ_Return res = OZ_unify(OZ_getCArg(4), parseVirtualString(str));
-  if (res == PROCEED)
-    return OZ_unify(OZ_getCArg(5), xy_errorMessages);
-  else
+  OZ_Return res = OZ_unify(OZ_getCArg(2), parseVirtualString(str));
+  if (res == PROCEED) {
+    OZ_Term x = OZ_subtree(optRec, OZ_atom("errorOutput"));
+    if (x == 0) {
+      if (xy_errorMessages != OZ_nil())
+	printf("%s%c", OZ_virtualStringToC(xy_errorMessages), MSG_ERROR);
+      return PROCEED;
+    } else
+      return OZ_unify(x, xy_errorMessages);
+  } else
     return res;
 }
 OZ_C_proc_end
@@ -476,6 +447,9 @@ queries		: sequence queries1
 
 queries1	: directive queries
 		  { $$ = consList($1,$2); }
+		| declare coord sequence _in_ thisCoord queries1
+		  { $$ = consList(newCTerm("fDeclare",$3,newCTerm("fSkip",$5),
+					   $2),$6); }
 		| declare coord sequence _in_ sequence queries1
 		  { $$ = consList(newCTerm("fDeclare",$3,$5,$2),$6); }
 		| declare coord sequence thisCoord queries1
@@ -1482,8 +1456,6 @@ static void parserInit() {
 }
 
 static CTerm parse() {
-  Assert(initialized);
-
   // in case there was a syntax error during the last parse, delete garbage:
   for (int i = 0; i < DEPTH; i++) {
     prodKey[i] = prodKeyBuffer[i];
