@@ -87,8 +87,10 @@ prepare
 		  in
 		     thread
 			{WaitNeeded R}
-			try Y in
-			   {P Y} {Boot_Value.bindReadOnly R Y}
+			try Y=!!{P} in
+			   % necessary if R has no demanding suspension
+			   {Boot_Value.makeNeeded Y}
+			   {Boot_Value.bindReadOnly R Y}
 			catch E then
 			   {Boot_Value.bindReadOnly R {FailedValue E}}
 			end

@@ -143,8 +143,12 @@ OZ_BI_define(BIreadOnly,1,1)
   oz_declareSafeDerefIN(0,v);
 
   if (oz_isRef(v)) {
-    // create the read-only variable in the same space as v
     OZ_Term *vPtr = tagged2Ref(v);
+
+    // special case: failed values immediately return
+    if (oz_isFailed(*vPtr)) OZ_RETURN(v);
+
+    // create the read-only variable in the same space as v
     OzVariable *ov = tagged2Var(*vPtr);
     Board *bb = GETBOARD(ov);
     TaggedRef r = oz_newReadOnly(bb);
@@ -154,7 +158,7 @@ OZ_BI_define(BIreadOnly,1,1)
       Thread *thr = oz_newThreadInject(bb);
       thr->pushCall(BI_varToReadOnly, RefsArray::make(v,r));
 
-    } else { // optimization: immediately suspend threads
+    } else { // optimization: immediately suspend thread
       Thread *thr = oz_newThreadSuspended();
       thr->pushCall(BI_varToReadOnly, RefsArray::make(v,r));
 
