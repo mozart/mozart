@@ -79,7 +79,7 @@ S,M\neq0
 (no leading zeros) and the equation
 <math>  SEND\;+\;MORE\;=\;MONEY </math>
 is satisfied.  The unique solution of the problem
-is <math/9567+1085=10652/.
+is 9567+1085=10652.
 
 <para><title/Safe./
 The code of Professor Smart's safe is
@@ -132,34 +132,12 @@ since there are just too many possible
 combinations.
 
 
-<para><title/The Demos./
-<p>
-This paper contains quite a number of examples and exercises. It is
-recommended to read this paper and try the examples and exercises while
-reading. For this purpose, the Oz system is shipped with two files.
-<p>
-The file <file/FDTutorial.oz/ contains all demos, and
-<file/FDTutorialSolutions.oz/ contains the solutions to the exercises. The files
-can be found in the directory
-<p><file>${OZHOME}/demos/documentation/</file>,
-<p>where
-<file/${OZHOME}/ is the directory where the Oz system has been
-installed<note foot/For more information on this topic,
-see&nbsp;<!--**<Ptr to="oz.doc.system">-->./. For convenience you can choose the
-appropriate submenu entry of the menu entry <span class=menu/Find/ in your
-Oz Programming Interface to find the files.
-<p>
-In the presentation of the paper the necessary declarations of variables
-are left out for readability. In the demo file you find the
-declarations in place.
-
 <para><title/More Information/
 While this tutorial tries to be as self-contained as possible for
 constraint programming in Oz, it is
 expected that the reader has already a working knowledge of functional
 Oz programming. As an introduction for functional and object-oriented
-programming in Oz we suggest&nbsp;<Ptr to="ozdoc.tutorial">. For a brief overview
-over the concepts of Oz see&nbsp;<Ptr to="ozdoc.tips">. The full functionality of
+programming in Oz we suggest&nbsp;<Ptr.extern to="ozdoc:tutorial">.  The full functionality of
 Oz provided for constraint programming is included in the
-document&nbsp;<ptr to="ozdoc.modules">.
+document&nbsp;<ptr.extern to="ozdoc:system" key="part.constraints">.
 </chapter>

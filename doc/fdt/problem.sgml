@@ -96,7 +96,10 @@ otherwise, the empty list is returned.
 We will now write a script for the Send
 More Money Puzzle.
 
-<para><title/Problem Specification./
+<subsection class=unnumbered>
+  <title/Problem Specification/
+
+<P>
 The Send More Money Puzzle consists in finding
 distinct digits for the letters ?{D}, ?{E}, ?{M}, ?{N},
 ?{O}, ?{R}, ?{S}, ?{Y} such that&fsp;<math/S,M\neq0/ (no leading
@@ -105,14 +108,20 @@ zeros) and the equation
 is satisfied.  The unique solution of the puzzle
 is <math/9567+1085=10652/.
 
-<para><title/Model./
+<subsection class=unnumbered>
+  <title/Model/
+
+<P>
 We model the problem by having a variable for
 every letter, where the variable stands for the
 digit associated with the letter.  The
 constraints are obvious from the problem
 specification.
 
-<para><title/Distribution Strategy./
+<subsection class=unnumbered>
+  <title/Distribution Strategy/
+
+<P>
 We distribute on the variables for the letters
 with a first-fail strategy.  The variables are
 ordered according to the alphabetic order of the
@@ -138,7 +147,10 @@ end
 >>>
 </figure>
 
-<para><title/Script./
+<subsection class=unnumbered>
+  <title/Script/
+
+<P>
 <Ptr to="ProgMoney"> shows a script realizing the
 model and distribution strategy just discussed.  The
 script first declares a local variable for every
@@ -164,7 +176,10 @@ The digits for the letters satisfy the equation
 <math/SEND+MORE=MONEY/.  This constraint is nonbasic.
 </list>
 
-<para><title/Posting of constraints/
+<subsection class=unnumbered>
+  <title/Posting of constraints/
+
+<P>
 <def/posting of constraints/ is defined
 differently for basic and nonbasic constraints.
 Basic constraints are posted by telling them to
@@ -258,7 +273,7 @@ e:[6\#7]\ m:1\ n:[7\#8]\ o:0\ r:[2\#8]\ s:9\ y:[2\#8])}}
 
 <section><title/The Explorer/<p>
 
-The Explorer is a graphical tool of the DFKI Oz
+The Explorer is a graphical tool of the Mozart
 programming environment.  It can run scripts and
 display the explored search trees.  It can also
 display the information in the constraint stores
@@ -273,9 +288,9 @@ explore the entire search tree.  The Explorer
 will pop up a window and display the explored
 nodes of the search tree (see left part of
 <Ptr to="figConOzSolver">).  Choice nodes
-appear as blue circles <math/\circ/, failure
-nodes as red boxes <!--**<math/\Box/-->, and solution nodes as
-green diamonds <!--**<math/\Diamond/-->.  Fully explored
+appear as blue circles, failure
+nodes as red boxes, and solution nodes as
+green diamonds.  Fully explored
 subtrees not containing solution nodes are
 collapsed into a single red triangle <math/\triangle/.
 
@@ -350,6 +365,7 @@ already.  While closed choice nodes are displayed
 in dark blue, open choice nodes are displayed in
 light blue.  Not yet explored descendents of an
 open choice node are not displayed.
+
 <p>
 To check whether there are further solutions, you
 can resume the search process by selecting the
@@ -357,9 +373,11 @@ root node and typing the command ?{n} (next).
 This will resume the search until either the next
 solution is found or all nodes of the search tree
 are explored.
+
 <para><title/stopping exploration/
 You can stop the exploring Explorer at any time
 by typing the command <kbd/C-g/.
+
 <para><title/resuming exploration/
 You can resume the exploration of a partial
 search tree by
@@ -370,6 +388,7 @@ until a further solution is found or the subtree
 is fully explored.  The command ?{a}  (all) will
 resume the exploration of the selected subtree
 until it is fully explored.
+
 <para><title/resetting the Explorer/
 The command <kbd/C-r/ will reset the Explorer and
 show only the
@@ -378,6 +397,7 @@ you can see in the Browser what is known about the
 solution before the first distribution step.  You
 can request the exploration of the seach tree by
 typing ?{n} or ?{a}.
+
 <para><title/hand-guided exploration/
 You can guide the search of the Explorer by
 hand.  Reset
@@ -390,6 +410,7 @@ second and final descendent of the root.  Note
 that the root has now changed from light blue
 indicating an open choice node to dark blue
 indicating a closed choice node.
+
 <para><title/zooming the search tree/
 The right vertical scroll bar of the Explorer's
 window zooms
@@ -397,7 +418,8 @@ the size of the displayed search tree.  You can
 zoom the tree to fit the size of the window by
 clicking the zoom bar with the right mouse button.
 <p>
-\begin{exercise}
+
+<Exercise id="problem.ex.a">
 With the Explorer it is easy to observe the
 effect of different distribution strategies.
 Replace the first-fail distribution strategy in
@@ -410,13 +432,13 @@ variable and its least possible value.  Draw the
 new search tree with the Explorer and observe
 that it is twice as large as the tree obtained
 with first-fail distribution.
-\end{exercise}
+</Exercise>
 
-\begin{exercise}
+<Exercise id="problem.ex.b">
 Write a script that finds distinct digits for the
 letters ?{A}, ?{B}, ?{D}, ?{E}, ?{G}, ?{L}, ?{N}, ?{O},
 ?{R}, and ?{T} such that the equation
-<math/
+<math display/
 DONALD+GERALD=ROBERT
 /
 holds without leading zeros.  Run the script with
@@ -425,11 +447,10 @@ first-fail and naive distribution.  Observe that
 first-fail distribution yields a search tree that
 is by one order of magnitude smaller than the
 search tree obtained with naive distribution.
-\end{exercise}
+</Exercise>
 
-\begin{solution}
+<Answer to="problem.ex.b">
 <<<
-
 proc {Donald Root}
    sol(a:A b:B d:D e:E g:G l:L n:N  o:O r:R t:T) = Root
 in
@@ -442,7 +463,8 @@ in
    {FD.distribute split Root}
 end
 >>>
-\end{solution}
+</Answer>
+
 </section>
 
 <section><title/New Primitives/<p>
@@ -450,6 +472,7 @@ end
 This section gives you an idea of the new Oz
 primitives needed to express search engines
 and finite domain scripts.
+
 <p>
 The new primitives come in two orthogonal groups.
 The first group provides the ability to create
@@ -460,6 +483,7 @@ propagate and distribute paradigm.  As was
 mentioned before, this paradigm is general and
 applies also to constraints other than finite
 domain constraints.
+
 <p>
 The second group of primitives provides the
 ability to create finite domain propagators and
@@ -468,6 +492,7 @@ store.  It also provides the ability to access
 the domain of a variable in the current
 constraint store, an expressivity needed for
 programming distribution strategies.
+
 <p>
 <para><title/first-class spaces/
 Oz provides spaces as first-class citizens that can be created,
@@ -482,6 +507,7 @@ top-level and first-class spaces is the treatment
 of failure, which is considered an error at the
 top level and a regular event in first-class
 spaces (<q/this space has no solution/).
+
 <para><title/attributes of global objects cannot be assigned/
 The <def/parent/ of a first-class space is the
 space that created it.  The constraint and the
@@ -494,6 +520,7 @@ first-class space attributes of objects that
 belong to an ancestor space.  On the other hand, a
 first-class space can create its own objects and
 apply them freely.
+
 <p>
 The details of first-class spaces need only concern
 programmers who want to implement new search
@@ -501,6 +528,7 @@ engines.  For finite domain problems, the necessary
 search engines are already available as
 predefined functionality (&eg;, ?{SearchOne} and
 ?{SearchAll}).
+
 <p>
 All functionality related to finite domain
 constraints is provided through the procedures of
@@ -509,6 +537,7 @@ the module ?{FD}.  We have already seen
 \?FD.distribute?  (creates a distributor) in the
 script for the Send More Money Puzzle (see
 <Ptr to="SecConMoney">).
+
 <para><title/infix notations/
 For some of the procedures of the module ?{FD},
 Oz provides special
@@ -522,6 +551,7 @@ You have already seen examples of the use of
 An equivalent version of Money not using these
 notational conveniences appears in
 <Ptr to="ProgMoneyNoGadgets">
+
 <p>
 <figure class="Figure" id="ProgMoneyNoGadgets">
 <caption/A script for Money that does not use the
@@ -570,19 +600,22 @@ domain propagation.
 
 <section><title/Example: Safe/<p>
 
-<para><title/Problem Specification./
+<subsection class=unnumbered>
+  <title/Problem Specification/
+
+<P>
 The code of Professor Smart's safe is a sequence of
 ?{9} distinct nonzero digits <math/C_1,\ldots,C_9/ such that&fsp;the
 following equations and inequations are satisfied:
 <p>
 <p><math/
-~$\begin{eqnarray*}
+\begin{array}{rcl}
 &   C_4 - C_6 = C_7\\
 &   C_1 * C_2 * C_3 = C_8 + C_9\\
 &   C_2 + C_3 + C_6 < C_8\\
 &   C_9 < C_8\\
 &   C_1\neq1,\ldots, C_9\neq9
-\end{eqnarray*}$~
+\end{array}
 /<p>
 Can you determine the code?
 

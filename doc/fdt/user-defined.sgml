@@ -25,12 +25,15 @@
   -
   -->
 
-<chapter id="chapter.user-defined"><title/User-Defined Distributors/
+<chapter id="chapter.user-defined">
+  <title/User-Defined Distributors/
+
 <p>
 In this section we show how the user can program his or her own
 distributors.
 
 <section><title/A Naive Distribution Strategy/
+
 <p>
 The distributor we program in this section implements a rather naive
 strategy. It has
@@ -57,6 +60,7 @@ proc {NaiveDistributor Xs}
    end
 end
 >>>
+
 <para><title/choice-statements/
 To maximize the information available for distribution we have to wait
 on stability of a computation space.
@@ -152,7 +156,7 @@ should be smaller than or equal to <<Mid>>.
 <section id="sec.BAB.align">
 <title/Example: Aligning for a Photo, Revisited/<p>
 
-In <Ptr to="sec.reified.photo"> we have searched for a solution of
+In <Ptr to="section.reified.photo"> we have searched for a solution of
 the alignment problem which satisfies the maximal number of
 preferences. To this aim we have introduced a variable which counts the
 number of satisfied preferences. By distributing this variable with its
@@ -205,7 +209,7 @@ The optimal solution can be found with the statement
 We obtain the same solution as in
 <Ptr to="page.reified.photoSol">. But now only 141 choice nodes are
 needed to find the optimal solution whereas 219 choice nodes were needed
-in <Ptr to="sec.reified.photo">. Furthermore, branch and bound allows
+in <Ptr to="section.reified.photo">. Furthermore, branch and bound allows
 us to prove in an efficient way that the last solution found is really
 the optimal one. The full search tree (including the proof of
 optimality) contains 169 choice nodes; still less than for the search
