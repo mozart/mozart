@@ -2640,11 +2640,11 @@ OZ_Return InlineName(TaggedRef AA, TaggedRef &out)	\
 {							\
   DEREF(AA,_,tag);					\
 							\
-  if (isVariableTag(tag)) {					\
+  if (isVariableTag(tag)) {				\
     return SUSPEND;					\
   }							\
 							\
-  if (isFloatTag(tag)) {					\
+  if (isFloatTag(tag)) {				\
     out = oz_float(Fun(floatValue(AA)));		\
     return PROCEED;					\
   }							\
@@ -2686,6 +2686,18 @@ OZ_Return BIfPowInline(TaggedRef A, TaggedRef B, TaggedRef &out)
   return suspendOnFloats(A,B);
 }
 
+OZ_Return BIfModInline(TaggedRef A, TaggedRef B, TaggedRef &out)
+{
+  DEREF(A,_1,tagA);
+  DEREF(B,_2,tagB);
+
+  if (isFloatTag(tagA) && isFloatTag(tagB)) {
+    out = oz_float(fmod(floatValue(A),floatValue(B)));
+    return PROCEED;
+  }
+  return suspendOnFloats(A,B);
+}
+
 OZ_Return BIatan2Inline(TaggedRef A, TaggedRef B, TaggedRef &out)
 {
   DEREF(A,_1,tagA);
@@ -2712,6 +2724,7 @@ OZ_DECLAREBI_USEINLINEFUN2(BIfdiv,BIfdivInline)
 OZ_DECLAREBI_USEINLINEFUN2(BImod,BImodInline)
 
 OZ_DECLAREBI_USEINLINEFUN2(BIfPow,BIfPowInline)
+OZ_DECLAREBI_USEINLINEFUN2(BIfMod,BIfModInline)
 OZ_DECLAREBI_USEINLINEFUN2(BIatan2,BIatan2Inline)
 
 OZ_DECLAREBI_USEINLINEFUN2(BImax,BImaxInline)
