@@ -1,4 +1,0 @@
-<ITEM> <<bitmap:B>> : Specifies a bitmap to display in the widget. The exact way in which the bitmap is
-    displayed may be affected by other options such as anchor or justify. Typically, if this option is specified then it overrides other
-    options that specify a textual value to display in the widget; the bitmap option may be reset to an empty string to re-enable a text
-    display. In widgets that support both bitmap and image options, image will usually override bitmap. This parameter can't be get at runtime, however it can be set. <<B>> must be a valid bitmap (see <ptr to="misc.bitmap">)

@@ -1,3 +1,0 @@
-<ITEM> <<disabledforeground:C>> : Specifies foreground color to use when drawing a disabled element. If the option is specified as an empty string (which is typically
-    the case on monochrome displays), disabled elements are drawn with the normal foreground color but they are dimmed by drawing
-    them with a stippled fill pattern. <<C>> must be a valid color (see <ptr to="misc.color">)

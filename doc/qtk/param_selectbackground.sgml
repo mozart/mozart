@@ -1,1 +1,0 @@
-<ITEM> <<selectbackground:C>> : Specifies the background color to use when displaying selected items. <<C>> must be a valid color (see <ptr to="misc.color">).

@@ -1,2 +1,0 @@
-<ITEM> <<insertontime:I>> : Specifies a non-negative integer value indicating the number of milliseconds the insertion cursor should
-    remain ``on'' in each blink cycle. <<I>> must be a positive integer value.

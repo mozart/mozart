@@ -1,3 +1,0 @@
-<ITEM> <<relief:A>> : Specifies the 3-D effect desired for the widget.  Must be one of these atoms : <<raised>>, <<sunken>>, <<flat>>, <<ridge>>, <<solid>> or <<groove>>. The value
-    indicates how the interior of the widget should appear relative to its exterior; for example, <<raised>> means the interior of the widget
-    should appear to protrude from the screen, relative to the exterior of the widget.

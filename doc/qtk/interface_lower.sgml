@@ -1,6 +1,0 @@
-<ITEM> <<lower(1:W)>> : If the <<W>> argument is omitted then the command lowers the widget so that it is below all of its siblings in
-the stacking order (it will be obscured by any siblings and will not obscure any siblings that overlap it). If
-<<W>> is specified then it must be an handle to another widget that is either a sibling of this widget or the
-descendant of a sibling of this widget. In this case the <<lower>> command will insert this widget into the stacking order
-just below <<W>>; this could end up either raising
-or lowering window.
