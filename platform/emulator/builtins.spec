@@ -1303,14 +1303,8 @@ $cmode='stat';
 
 
 
-    #* Distribution
-
-    'export'		=> { in  => ['value'],
-			     out => [],
-			     BI  => BIexport,
-			     module=>components,
-			     native => false},
     # all these are needed within emulator 
+
     'controlVarHandler'	=> { in  => ['+value'],
 			     out => [],
 			     BI  => BIcontrolVarHandler,
@@ -1340,14 +1334,6 @@ $cmode='stat';
     
 
 
-
-    ##* Ozma
-
-    'ozma_readProc'	=> { in     => ['+virtualString'],
-			     out    => ['+value'],
-			     BI     => ozma_readProc,
-			     ifdef  => MODULES_LINK_STATIC,
-			     native => true},
 
 
 );
