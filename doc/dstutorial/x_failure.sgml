@@ -280,11 +280,10 @@ object-record or state pointer not present
 (<<tempFail(type:object info:state)>>).
 </LIST>
 There are two new failure modes that
-occur when the object-record is absent.
-These prevent the object
-from being used, so we consider
-these to be simply extra
-cases of <<permFail>> and <<tempFail>>.
+occur because the object-record can be absent.
+Since in both cases the object
+cannot be used, we simply consider the new failure modes
+to be instances of <<permFail>> and <<tempFail>>.
 
 <SECTION><TITLE>Fault-tolerant examples</TITLE>
 
@@ -469,13 +468,19 @@ including raising the same exceptions.
 <ITEM> If there is a problem in the distributed execution preventing
 its successful completion, then the call <<{C Msg}>> will raise
 the exception <<remoteObjectError>>.
-<ITEM> If there is no result after a delay <<T>> (in ms)
-then the call <<{C Msg T}>> aborts
-and the exception <<remoteObjectError>> is raised.
 <ITEM> If there is a problem communicating with the client,
-then the server gives up attempting to communicate with it.
+then the server tries repeatedly during a short period to communicate
+with the client and then gives up.
 This does not affect the continued execution of the server.
 </LIST>
+
+<P> We present the implementation of <<NewStat>>.
+First <<New>> makes
+an instance of the object
+and then <<MakeStat>> makes it stationary.
+In <<MakeStat>>, we distinguish four parts.
+The first two implement the client interface
+to the server.
 
 <chunk><title/Making stationary objects/
 declare
@@ -487,33 +492,28 @@ declare
 proc {MakeStat PO ?StatP}
    S P={NewPort S}
    N={NewName}
+   EndLoop TryToBind
 in
-   <chunk.ref/Synchronize with the server/
+   % Client interface to server:
    <chunk.ref/Client call to the server/
-   <chunk.ref/Communicate with the client/
+   <chunk.ref/Client synchronizes with the server/
+   % Server implementation:
    <chunk.ref/Main server loop/
+   <chunk.ref/Server synchronizes with the client/
 end
 </chunk>
 
-<chunk><title/Synchronize with the server/
-   proc {EndLoop R}
-      try
-         if R==N then skip else raise R end end
-      catch system(dp(C)) then
-         case C
-         of permFail(...) then
-            raise server_error end
-         [] remoteProblem(permFail:_ ...) then
-            raise server_error end
-         [] tempFail(...) then
-            {Delay 100} {EndLoop R}
-         [] remoteProblem(tempFail:_ ...) then
-            {Delay 100} {EndLoop R}
-         else skip end
-      end
-   end
-</chunk>
-
+<P> First the client sends its message to the
+server together with a synchronizing variable.
+This variable is used to signal
+to the client that the server has
+finished the object call.
+The variable passes an exception
+back to the client if there was one.
+<P> If there is a permanent failure of
+the send, then raise <<remoteObjectError>>.
+If there is a temporary failure of the
+send, then wait 100 ms and try again.
 <chunk><title/Client call to the server/
    proc {StatP M}
       R in
@@ -522,7 +522,7 @@ end
       catch system(dp(C)) then
          case C
          of permFail(...) then
-            raise server_error end
+            raise remoteObjectError end
          [] tempFail(...) then
             {Delay 100}
             {StatP M}
@@ -532,20 +532,38 @@ end
    end
 </chunk>
 
-<chunk><title/Communicate with the client/
-   proc {TryToBind Count R N}
-      if Count==0 then skip
-      else
-         try
-            R=N
-         catch system(dp(tempFail(...))) then
-            {Delay 2000}
-            {TryToBind Count-1 R N}
-         end
+<P> Then the client waits for the server
+to bind the synchronizing variable.
+If there is a permanent failure, then
+raise the exception.
+If there is a temporary failure, then
+wait 100 ms and try again.
+<chunk><title/Client synchronizes with the server/
+   proc {EndLoop R}
+      try
+         if R==N then skip else raise R end end
+      catch system(dp(C)) then
+         case C
+         of permFail(...) then
+            raise remoteObjectError end
+         [] remoteProblem(permFail:_ ...) then
+            raise remoteObjectError end
+         [] tempFail(...) then
+            {Delay 100} {EndLoop R}
+         [] remoteProblem(tempFail:_ ...) then
+            {Delay 100} {EndLoop R}
+         else skip end
       end
    end
 </chunk>
 
+<P> The following two parts implement the server.
+The server runs in its own thread and
+creates a new thread for each client call.
+The server is less tenacious on
+temporary failures than the client:
+it tries once every 2000 ms and gives
+up after 10 tries.
 <chunk><title/Main server loop/
    thread
       {ForAll S
@@ -561,6 +579,20 @@ end
              end
           end
        end}
+   end
+</chunk>
+
+<chunk><title/Server synchronizes with the client/
+   proc {TryToBind Count R N}
+      if Count==0 then skip
+      else
+         try
+            R=N
+         catch system(dp(tempFail(...))) then
+            {Delay 2000}
+            {TryToBind Count-1 R N}
+         end
+      end
    end
 </chunk>
 
