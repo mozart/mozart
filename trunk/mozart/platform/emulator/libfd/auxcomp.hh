@@ -27,6 +27,7 @@
 #ifndef __AUXCOMP_HH__
 #define __AUXCOMP_HH__
 
+#include "base.hh"
 #include <stdio.h>
 #include <math.h>
 #include <limits.h>
@@ -64,8 +65,6 @@ inline int doubleToInt(double d) {
   return (d > INT_MAX) ? INT_MAX : ((d < INT_MIN) ? INT_MIN : int(d));
 }
 inline int square(int a) { return truncToIntMax(double(a) * double(a)); }
-inline int min(int a, int b) { return a < b ? a : b; }
-inline int max(int a, int b) { return a > b ? a : b; }
 
 #define OPTIMIZED_ONES
 #ifdef OPTIMIZED_ONES

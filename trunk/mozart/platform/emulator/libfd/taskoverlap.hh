@@ -34,10 +34,6 @@
 
 #include "tasksoverlap_filterclass.hh"
 
-template class PEL_LessEqOffset<PEL_PersistentEngine, PEL_FDIntVar, PEL_PersistentFDIntVar>;
-template class PEL_GreaterOffset<PEL_PersistentEngine, PEL_FDIntVar, PEL_PersistentFDIntVar>;
-template class FilterTasksOverlap<OZ_Filter<OZ_Propagator>, OZ_FDIntVar, OZ_FiniteDomain, PEL_PersistentFDIntVar, PEL_FDIntVar, PEL_PersistentEngine>;
-
 class TasksOverlapPropagator : public Propagator_D_I_D_I_D {
   friend INIT_FUNC(fdp_init);
   //

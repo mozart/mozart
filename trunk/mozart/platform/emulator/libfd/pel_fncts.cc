@@ -25,3 +25,11 @@
  *
  */
 
+#include "rel.hh"
+#include "pel_fncts.hh"
+
+template class _OZ_ParamIterator<int>;
+template class _PropagatorController_V_V<int, PEL_FDIntVar, 1, 0, 2>;
+template class _PropagatorController_V_V_V<unsigned int, OZ_FDIntVar, 1, 0, 3>;
+
+template PEL_Filter<PEL_FDIntVar> & filter_lessEqOffset<PEL_Filter<PEL_FDIntVar>, PEL_FDIntVar>(PEL_Filter<PEL_FDIntVar> &, PEL_FDIntVar &, PEL_FDIntVar &, int);

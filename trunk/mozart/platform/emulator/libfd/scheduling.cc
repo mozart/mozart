@@ -24,12 +24,16 @@
  *
  */
 
+#include "base.hh"
 #include "scheduling.hh"
 #include "rel.hh"
 #include "auxcomp.hh"
 #include <stdlib.h>
 
 //-----------------------------------------------------------------------------
+#if !defined(MODULES_LINK_STATIC)
+template PropagatorController_V_V;
+#endif
 
 static inline int intMin(int a, int b) { return a < b ? a : b; }
 static inline int intMax(int a, int b) { return a > b ? a : b; }
