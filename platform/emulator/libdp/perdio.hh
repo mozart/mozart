@@ -132,5 +132,13 @@ Bool localizeTertiary(Tertiary*);
 Bool isTertiaryPending(Tertiary*);
 void dpExitWithTimer(unsigned int);
 
+//Stuff for seting values in Networklayer
+void setIPAddress(int);
+int  getIPAddress();
+void setIPPort(int);
+int getIPPort();
+void setFirewallStatus(Bool);
+Bool getFireWallStatus();
+
 /* __PERDIOHH */
 #endif

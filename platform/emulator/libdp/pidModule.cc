@@ -62,7 +62,7 @@ extern OZ_Term GateStream;
 OZ_BI_define(BIGetPID,0,1)
 {
   initDP();
-
+  /*
   // pid = pid(host:String port:Int time:Int#Int)
   char *nodename = oslocalhostname();
   if(nodename==NULL) { return oz_raise(E_ERROR,E_SYSTEM,"getPidUname",0); }
@@ -73,7 +73,11 @@ OZ_BI_define(BIGetPID,0,1)
     hostaddr=gethostbyname(nodename);
     OZ_warning("Unable to reach the net, using localhost instead\n");
   }
-  OZ_Term host = oz_pairA("host",OZ_string(osinet_ntoa(hostaddr->h_addr_list[0])));
+  */
+
+  unsigned int addr = ntohl(myDSite->getAddress());
+  unsigned int *paddr = &addr;
+  OZ_Term host = oz_pairA("host",OZ_string(osinet_ntoa((char *) paddr)));
   OZ_Term port = oz_pairA("port",oz_int(myDSite->getPort()));
   OZ_Term time =
     oz_pairA("time",
