@@ -43,9 +43,13 @@ char *debugTypeStr[LAST] = {
     "HASH",
     "HASH2",    // 35
 
-    "USER",
+  "USER",
   "SPECIAL",
-  "ERROR_DET"    //38
+  "ERROR_DET",    //38
+  "WRITE_QUEUE",
+  "ACK_QUEUE",    //40
+  "CELL_MGR",      //41
+  "PROBES"
 };
 
 #endif
