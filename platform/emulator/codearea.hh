@@ -154,7 +154,7 @@ public:
 
   static void printDef(ProgramCounter PC);
   static TaggedRef dbgGetDef(ProgramCounter PC, ProgramCounter definitionPC,
-                             int frameId = -1);
+                             int frameId, RefsArray Y, RefsArray G);
   static TaggedRef getFrameVariables(ProgramCounter, RefsArray, RefsArray);
   static void getDefinitionArgs(ProgramCounter PC, Reg &reg,
                                 int &next, TaggedRef &file,

@@ -588,6 +588,7 @@ LBLraise:
       OZ_Term traceBack;
       foundHdl =
         CTT->getTaskStackRef()->findCatch(CTT,e->exception.pc,
+                                          e->exception.y, e->exception.g,
                                           &traceBack,e->debugmode());
 
       OZ_Term loc = oz_getLocation(CBB);

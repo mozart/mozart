@@ -365,6 +365,8 @@ Bool AM::hookCheckNeeded()
 
 #define RAISE_THREAD                            \
   e->exception.pc=PC;                           \
+  e->exception.y=Y;                             \
+  e->exception.g=G;                             \
   e->shallowHeapTop = 0;                        \
   return T_RAISE;
 

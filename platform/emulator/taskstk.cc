@@ -206,12 +206,13 @@ TaggedRef TaskStack::frameToRecord(Frame *&frame, Thread *thread, Bool verbose)
     return makeTaggedNULL();
   } else {
     frame = lastframe;
-    return CodeArea::dbgGetDef(PC,definitionPC,frameId);
+    return CodeArea::dbgGetDef(PC,definitionPC,frameId,Y,G);
   }
 }
 
-Bool TaskStack::findCatch(Thread *thr,
-                          ProgramCounter PC, TaggedRef *out, Bool verbose)
+Bool TaskStack::findCatch(Thread *thr, ProgramCounter PC,
+                          RefsArray Y, RefsArray G,
+                          TaggedRef *out, Bool verbose)
 {
   Assert(this);
 
@@ -225,7 +226,8 @@ Bool TaskStack::findCatch(Thread *thr,
       if (auxPC != C_DEBUG_CONT_Ptr) {
         ProgramCounter definitionPC = CodeArea::definitionStart(PC);
         if (definitionPC != NOCODE) {
-          TaggedRef frameRec = CodeArea::dbgGetDef(PC,definitionPC);
+          TaggedRef frameRec =
+            CodeArea::dbgGetDef(PC,definitionPC,-1,Y,G);
           if (frameRec != makeTaggedNULL())
             *out = cons(frameRec,*out);
         }
@@ -328,8 +330,8 @@ TaggedRef TaskStack::getFrameVariables(int frameId) {
   if (frame > tos)   // the frame does not exist any longer
     return NameUnit;
   GetFrame(frame,PC,Y,G);
-  if (PC != C_DEBUG_CONT_Ptr)   // inconsistency detected
-    return NameUnit;
+  if (PC != C_DEBUG_CONT_Ptr)
+    return CodeArea::getFrameVariables(PC,Y,G);
   OzDebug *dbg = (OzDebug *) Y;
   return dbg->getFrameVariables();
 }

@@ -138,6 +138,8 @@ private:
     TaggedRef value;
     TaggedRef info;
     ProgramCounter pc;
+    RefsArray y;
+    RefsArray g;
   } exception;
 
   Bool criticalFlag;  // if this is true we will NOT set Sflags
