@@ -46,6 +46,8 @@
 #include "actor.hh"
 #include "board.hh"
 
+#include "os.hh"
+
 // more includes at end!
 
 #ifdef DEBUG_THREADCOUNT
@@ -664,8 +666,6 @@ void oz_checkSuspensionList(SVariable *var,
 
 #include "opcodes.hh"
 #include "codearea.hh"
-
-#include "os.hh"
 
 #ifndef OUTLINE
 #include "am.icc"
