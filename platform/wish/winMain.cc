@@ -124,10 +124,21 @@ void watchParent()
   }
 }
 
-
+// 2000.08.14 dragan: lock the readHandler so that it cannot be
+// executed concurrently. The reason why it was executed concurrently
+// is that 'Tcl_GlobalEval' blocks on certain requests, e.g. showing a
+// message dialog.
+volatile static int tkLock = 0;
 
 void readHandler(ClientData clientData, int mask)
 {
+  // 2000.08.14 dragan: no race conditions here, since we *assume*
+  // that the I/O manager calls a readHandler exactly once for each
+  // channel. That is, it cannot happen that two 'readHandlers' are
+  // started simultaneously.
+  if (tkLock == 1) return;
+  else tkLock = 1;
+
   static int bufSize  = 1000;
   static char *buffer = NULL;
   if (buffer == NULL) {
@@ -155,6 +166,7 @@ void readHandler(ClientData clientData, int mask)
     if (Tcl_Eof(in)) {
       WishPanic("Eof on input stream");
     } else {
+      tkLock = 0;
       return;
     }
   }
@@ -166,8 +178,10 @@ void readHandler(ClientData clientData, int mask)
 
   if ((buffer[used-1] != '\n') && (buffer[used-1] != ';') ||
       !Tcl_CommandComplete(buffer) ||
-      used >=2 && buffer[used-2] == '\\')
+      used >=2 && buffer[used-2] == '\\') {
+    tkLock = 0;
     return;
+  }
 
   int code = Tcl_GlobalEval(interp, buffer);
   if (code != TCL_OK) {
@@ -179,6 +193,8 @@ void readHandler(ClientData clientData, int mask)
   }
 
   used = 0;
+  // dragan: no race conditions here either:
+  tkLock = 0;
 }
 
 
