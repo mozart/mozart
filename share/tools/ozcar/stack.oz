@@ -122,7 +122,7 @@ in
 	       thread
 		  {Ozcar printStack(id:self.I size:S stack:self.D ack:Ack)}
 	       end
-	       thread {Ozcar stackStatus(S Ack)} end
+	       {Ozcar stackStatus(S Ack)}
 	    else
 	       StackManager,clear
 	    end
