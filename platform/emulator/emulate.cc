@@ -2120,6 +2120,7 @@ void engine() {
       TaggedRef filename = getLiteralArg(PC+1);
       int line           = smallIntValue(getNumberArg(PC+2));
       int absPos         = smallIntValue(getNumberArg(PC+3));
+      printf("Executing line %d in file: %s\n",line,OZ_toC(filename));
       DISPATCH(4);
     }
 
