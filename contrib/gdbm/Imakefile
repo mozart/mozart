@@ -54,7 +54,7 @@ $(GDBM_HOME)/gdbm.ozc: gdbm.ozc
 	Install($<,444,$(GDBM_HOME))
 
 gdbm.o: gdbm.cc
-	$(CC) $(CFLAGS) $(INCLUDES) -c gdbm.cc
+	$(CC) $(CPPFLAGS) $(CFLAGS) $(INCLUDES) -c gdbm.cc
 
 gdbm.dl: gdbm.o
 	$(DYNLD) gdbm.dl gdbm.o $(LIBRARIES)
