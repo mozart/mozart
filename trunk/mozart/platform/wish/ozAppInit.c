@@ -60,8 +60,6 @@ int *tclDummyMainPtr = (int *) main;
  *----------------------------------------------------------------------
  */
 
-extern int Blt_Init();
-
 int
 Tcl_AppInit(interp)
     Tcl_Interp *interp;		/* Interpreter for application. */
@@ -80,10 +78,6 @@ Tcl_AppInit(interp)
      *
      * where "Mod" is the name of the module.
      */
-
-    if (Blt_Init(interp) == TCL_ERROR) {
-        return TCL_ERROR;
-    }
 
     if (Tcl_Init(interp) == TCL_ERROR) {
 	return TCL_ERROR;
