@@ -3,9 +3,9 @@ DRAFT DRAFT DRAFT DRAFT DRAFT DRAFT DRAFT DRAFT DRAFT DRAFT DRAFT DRAFT DRAFT
 INSTALLATION INSTRUCTIONS FOR THE MOZART ENGINE
 ===============================================
 
-- To install on a single platform
+- Single platform
 
-../configure <configure-options>
+./configure [<Configure options>]
 make
 make install
 
@@ -14,11 +14,13 @@ make install
 # for every platform
 mkdir <platformdir>
 cd <platformdir>
-../configure <configure-options>
+$(SRCDIR)/configure <configure-options>
 make
 make install
 
-- Additional configure options
+- Configure options
+
+The default is such that an optimized system is generated
 
   --enable-opt
      default is to compile with maximal optimization
@@ -29,23 +31,25 @@ make install
      --enable-opt=p
         compile with profiling switches (-pg)
 
-- Environment variables read by configure
+- Environment variables used by configure
 
- - CC the C compiler
+ - CC: the C compiler
 
- - CXX the C++ compiler
+ - CXX: the C++ compiler
 
- - LDFLAGS for additional linker options (e.g. -L<libdir>)
+ - LDFLAGS: additional linker options (e.g. -L<libdir>)
 
- - CPPFLAGS for preprocessor options (e.g. -DDEBUG_P)
+ - CPPFLAGS: additional preprocessor options (e.g. -DDEBUG_P)
 
- - CFLAGS for compiler options
+ - CFLAGS: additional compiler options
 
-- at compile time 'make CUSR=...' can be used to set additional
+ - OZHOME: if it is defined this is used as the default prefix
+
+
+- At compile time 'make CUSR=...' can be used to set additional
   compiler switches (e.g. make CUSR="-DMM").
 
-
-- Installation structure
+- Installation structure created when doing 'make install'
 
    $prefix/bin/
           /lib/
@@ -53,7 +57,20 @@ make install
           /platform/<platform>/
 
 
-Basic Installation
+- Hacks:
+
+   $(HOME)/lib/<platform>/
+
+- Hints:
+   run ./config.status to recreate the Makefile when changing Makefile.in
+
+   
+The rest of the text is a copy of the generic installation
+instructions from the autoconf package.
+
+------------------------------------------------------------------------------
+
+Basic Installation 
 ==================
 
    These are generic installation instructions.
