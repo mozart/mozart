@@ -71,7 +71,7 @@ consists in finding distinct digits for the letters
 <math>~$~
 \newcommand{\showqueen}[2]{
 \rput(#1,#2){\rput(.5,.5){\mbox{\epsfxsize=1.4em
-\epsffile{/home/ps-home/hydra/handbook/dumps/Primer/large-queen.ps}}
+\epsffile{pictures/large-queen.ps}}
 }}}
 ~$~
 S,M\neq0
