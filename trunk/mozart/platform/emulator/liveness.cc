@@ -153,7 +153,7 @@ outerLoop2:
 	  if (xUsage[i]==1) {
 	    nextI=max(nextI,i+1);
 	  } else {
-	    X[i]=0;
+	    X[i]= taggedVoidValue;
 	  }
 	}
       } else {
