@@ -106,36 +106,38 @@ inline unsigned int getAllocatedMemory() {
 void *heapMallocOutline(size_t chunk_size);
 
 
-inline void *mallocBody(size_t chunk_size)
+/* Assert: heapTop grows to LOWER address */
+#define HeapTopAlign(align) heapTop = (char *)((long)heapTop & (-align));
+
+
+inline void *mallocBody(size_t chunk_size, int align)
 {
   Assert(ToInt32(heapTop)%sizeof(int32) == 0);
 
+ retry:
   heapTop -= chunk_size;
-  if (heapEnd > heapTop) {
-    getMemFromOS(chunk_size);
-    return heapMallocOutline(chunk_size);
+  if (heapEnd <= heapTop) {
+    if (sizeof(int32) != align) {
+      HeapTopAlign(align);
+    }
+    return heapTop;
   }
-
-  return heapTop;
+  getMemFromOS(chunk_size);
+  goto retry;
 }
-
-
-/* Assert: heapTop grows to LOWER address */
-#define HeapTopAlign(align) heapTop = (char *)((long)heapTop & (-align));
 
 
 /* return pointer aligned to sizeof(int32) */
 inline int32 *int32Malloc(size_t chunk_size)
 {
-  return (int32 *) mallocBody(chunk_size);
+  return (int32 *) mallocBody(chunk_size,sizeof(int32));
 }
 
 
 /* return "chunk_size" aligned to "align" */
 inline void *alignedMalloc(size_t chunk_size, int align)
 {
-  HeapTopAlign(align);
-  return (int32 *) mallocBody(chunk_size);
+  return mallocBody(chunk_size,align);
 }
 
 
