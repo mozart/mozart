@@ -124,7 +124,33 @@
         Values for many-to-one connections can be offered through
         <Def/gates/. Values offered through gates can be taken with
         <Span class=index/<<Connection.take>>/ as described for
-        one-to-one connections.
+        one-to-one connections. Gates can be closed which implies that
+        the associated ticket becomes invalid. 
+      </P>
+
+      <p>
+        The special case and frequently occuring case that the gate
+        never gets closed is supported by the procedure
+        <<Connection.offerUnlimited>> which is as follows:
+      </p>
+
+      <P>
+        <List>
+          <Entry><Span class=index/<<offerUnlimited>>/
+	    <Index/<<Connection>><And><<offerUnlimited>>/
+          <Synopsis>
+	    <<{Connection.offerUnlimited ?_{X} ??{TicketA}}>>
+          <Item>
+            offers the value ?_{X} under the returned many-shot ticket
+            ?_{TicketA} (an atom).
+          <P>
+            The value ?_{X} is exported immediately. An exception is
+            raised, if exportation of ?_{X} fails, because ?_{X} might
+            refer to sited entities.
+          <p>
+            The ticket remains valid until the current Oz process
+            terminates.
+        </List>
       </P>
 
       <P>
