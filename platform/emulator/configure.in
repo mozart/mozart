@@ -263,7 +263,6 @@ case $platform in
 esac
 
 AC_SUBST(TOOLLDCMD)
-AC_SUBST(EMULDFLAGS)
 
 # compiler options
 : ${oz_copt_optimize="-O"}
@@ -507,6 +506,7 @@ case $enable_opt in
 	;;
 esac
 AC_SUBST(COPT)
+AC_SUBST(EMULDFLAGS)
 
 
 OZ_ENABLE(threaded,[ threaded code emulator],yes,
@@ -738,7 +738,7 @@ dnl *****************************************************************
 dnl Include new (non-recursive) marshaler
 dnl *****************************************************************
 
-OZ_ENABLE(newmarshaler,[   include new marshaler],no,
+OZ_ENABLE(newmarshaler,[   include new marshaler],yes,
 	AC_DEFINE(NEWMARSHALER)
         AC_MSG_RESULT(yes)
 	,

@@ -80,12 +80,13 @@ define(opAction,
         $1,Cache,PC += CacheSize;)]])
 
 
-inline
+inline static
 void marshalBuiltin(Builtin *entry,MsgBuffer *bs)
 {
   marshalTerm(makeTaggedConst(entry),bs);
 }
 
+static
 void marshalGRegRef(AssRegArray *gregs,MsgBuffer *bs) 
 { 
   int nGRegs = gregs->getSize();
@@ -97,6 +98,7 @@ void marshalGRegRef(AssRegArray *gregs,MsgBuffer *bs)
   }
 }
 
+static
 void marshalLocation(OZ_Location *loc,MsgBuffer *bs) 
 { 
   int inAr = loc->getInArity();
@@ -110,6 +112,7 @@ void marshalLocation(OZ_Location *loc,MsgBuffer *bs)
   }
 }
 
+static
 void marshalRecordArity(SRecordArity ar,MsgBuffer *bs)
 {
   if (sraIsTuple(ar)) {
@@ -121,7 +124,7 @@ void marshalRecordArity(SRecordArity ar,MsgBuffer *bs)
   }
 }
 
-
+static
 void marshalPredId(PrTabEntry *p,MsgBuffer *bs) 
 { 
   marshalTerm(p->getName(),bs);
@@ -133,6 +136,7 @@ void marshalPredId(PrTabEntry *p,MsgBuffer *bs)
   marshalNumber(p->getMaxX(),bs);
 }
 
+static
 void marshalGenCallInfo(GenCallInfoClass *gci,MsgBuffer *bs)
 {
   int compact = (gci->regIndex<<2) | (gci->isMethAppl<<1) | gci->isTailCall;
@@ -141,15 +145,13 @@ void marshalGenCallInfo(GenCallInfoClass *gci,MsgBuffer *bs)
   marshalRecordArity(gci->arity,bs);
 }
 
-
-inline
+inline static
 ProgramCounter writeAddress(void *ptr,ProgramCounter PC)
 {
    return (PC) ? CodeArea::writeAddress(ptr,PC) : PC;
 }
 
-
-
+static
 void marshalPredicateRef(AbstractionEntry *entry,MsgBuffer *bs)
 {
   Bool copyable = entry && entry->copyable;
@@ -163,7 +165,7 @@ void marshalPredicateRef(AbstractionEntry *entry,MsgBuffer *bs)
   }
 }
 
-
+static
 ProgramCounter unmarshalPredicateRef(ProgramCounter PC,MsgBuffer *bs, CodeArea *code)
 {
   AbstractionEntry *entry = 0;
@@ -183,11 +185,8 @@ ProgramCounter unmarshalPredicateRef(ProgramCounter PC,MsgBuffer *bs, CodeArea *
   return PC ? code->writeAbstractionEntry(entry,PC) : PC;
 }
 
-
-
+static
 void marshalHashTableRef(int start, IHashTable *table,MsgBuffer *bs);
-
-
 
 void marshalCode(ProgramCounter start, MsgBuffer *bs)
 {
@@ -248,6 +247,7 @@ void marshalCode(ProgramCounter start, MsgBuffer *bs)
 
 enum { ATOMTAG, NUMBERTAG, RECORDTAG};
 
+static
 void marshalHashTableRef(int start, IHashTable *table,MsgBuffer *bs)
 {
   int sz = table->size;
@@ -332,28 +332,28 @@ define(opAction,
         $1,Cache,PC=unmarshalCache(PC,code);)]])
 
 
-inline
+inline static
 ProgramCounter unmarshalNum(ProgramCounter PC, MsgBuffer *bs)
 {
   int num = unmarshalNumber(bs);
   return PC ? CodeArea::writeInt(num,PC) : 0;
 }
 
-inline
+inline static
 ProgramCounter unmarshalReg(ProgramCounter PC, MsgBuffer *bs)
 {
   int idx = unmarshalNumber(bs);
   return PC ? CodeArea::writeRegIndex(idx,PC) : 0;
 }
 
-inline
+inline static
 ProgramCounter unmarshalTagged(ProgramCounter PC, MsgBuffer *bs, CodeArea *code)
 {
   TaggedRef ret = unmarshalTerm(bs);
   return PC ? code->writeTagged(ret,PC) : 0;
 }
 
-
+static
 ProgramCounter unmarshalBuiltin(ProgramCounter PC, MsgBuffer *bs)
 {
   TaggedRef builtin = unmarshalTerm(bs);
@@ -364,22 +364,20 @@ ProgramCounter unmarshalBuiltin(ProgramCounter PC, MsgBuffer *bs)
   return writeAddress(tagged2Builtin(builtin),PC);
 }
 
-inline
+inline static
 ProgramCounter unmarshalLabel(ProgramCounter PC, MsgBuffer *bs)
 {
   int offset = unmarshalNumber(bs);
   return PC ? CodeArea::writeLabel(offset,0,PC) : 0;
 }
 
-
-inline
+inline static
 ProgramCounter unmarshalCache(ProgramCounter PC, CodeArea *code)
 {
   return PC ? code->writeCache(PC) : 0;
 }
 
-
-
+static
 ProgramCounter unmarshalGRegRef(ProgramCounter PC,MsgBuffer *bs) 
 { 
   int nGRegs = unmarshalNumber(bs);
@@ -396,6 +394,7 @@ ProgramCounter unmarshalGRegRef(ProgramCounter PC,MsgBuffer *bs)
   return writeAddress(gregs,PC);
 }
 
+static
 ProgramCounter unmarshalLocation(ProgramCounter PC,MsgBuffer *bs) 
 { 
   int inAr = unmarshalNumber(bs);
@@ -410,6 +409,7 @@ ProgramCounter unmarshalLocation(ProgramCounter PC,MsgBuffer *bs)
   return writeAddress(loc,PC);
 }
 
+static
 SRecordArity unmarshalRecordArity(MsgBuffer *bs) 
 {
   int prefix = unmarshalNumber(bs);
@@ -426,13 +426,14 @@ SRecordArity unmarshalRecordArity(MsgBuffer *bs)
   }
 }
 
-
+static
 ProgramCounter unmarshalRecordArity(ProgramCounter PC,MsgBuffer *bs) 
 {
   SRecordArity sra = unmarshalRecordArity(bs);
   return PC ? CodeArea::writeInt(sra,PC) : 0;
 }
 
+static
 ProgramCounter unmarshalPredId(ProgramCounter PC,ProgramCounter lastPC,
 				MsgBuffer *bs) 
 { 
@@ -448,7 +449,7 @@ ProgramCounter unmarshalPredId(ProgramCounter PC,ProgramCounter lastPC,
   return writeAddress(pred,PC);
 }
 
-
+static
 ProgramCounter unmarshalGenCallInfo(ProgramCounter PC,MsgBuffer *bs) 
 {
   int compact = unmarshalNumber(bs);
@@ -461,7 +462,7 @@ ProgramCounter unmarshalGenCallInfo(ProgramCounter PC,MsgBuffer *bs)
   return writeAddress(gci,PC);
 }
 
-
+static
 ProgramCounter unmarshalHashTableRef(ProgramCounter PC, int start, MsgBuffer *bs) 
 {
   int sz               = unmarshalNumber(bs);
@@ -496,7 +497,6 @@ ProgramCounter unmarshalHashTableRef(ProgramCounter PC, int start, MsgBuffer *bs
 
   return PC ? CodeArea::writeIHashTable(table, PC) : 0;
 }
-
 
 ProgramCounter unmarshalCode(MsgBuffer *bs, Bool discard)
 {

@@ -39,7 +39,6 @@ OZ_Return export(OZ_Term t);
 
 void marshalTerm(OZ_Term,MsgBuffer*);
 void marshalTermRT(OZ_Term t, MsgBuffer *bs);
-void marshalSRecord(SRecord *sr, MsgBuffer *bs);
 void marshalClass(ObjectClass *cl, MsgBuffer *bs);
 void marshalNumber(unsigned int,MsgBuffer*);
 void marshalFloat(double d, MsgBuffer *bs);
@@ -56,7 +55,6 @@ char *unmarshalString(MsgBuffer *);
 char *unmarshalVersionString(MsgBuffer *);
 unsigned short unmarshalShort(MsgBuffer*);
 GName* unmarshalGName(TaggedRef*,MsgBuffer*);
-SRecord* unmarshalSRecord(MsgBuffer*);
 
 GName *globalizeConst(ConstTerm *t, MsgBuffer *bs);
 
@@ -65,16 +63,7 @@ extern RefTrail *refTrail;
 
 void initMarshaler();
 
-// the names of the difs for statistics 
-
-enum {
-  MISC_STRING,
-  MISC_GNAME,
-  MISC_SITE,
-
-  MISC_LAST
-};
-
+//
 class SendRecvCounter {
 private:
   long c[2];
@@ -86,9 +75,20 @@ public:
   long getRecv() { return c[1]; }
 };
 
+//
 extern SendRecvCounter dif_counter[];
 extern SendRecvCounter misc_counter[];
+//
 extern char *misc_names[];
+
+// the names of the difs for statistics 
+enum {
+  MISC_STRING,
+  MISC_GNAME,
+  MISC_SITE,
+  //
+  MISC_LAST
+};
 
 /* *********************************************************************/
 /*   classes RefTable RefTrail                              */

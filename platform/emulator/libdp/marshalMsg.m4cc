@@ -27,7 +27,7 @@
 
 #include "base.hh"
 #include "dpBase.hh"
-#include "marshaler.hh"
+#include "newmarshaler.hh"
 #include "dpMarshaler.hh"
 
 define(message,`
@@ -71,9 +71,9 @@ define(argEnc,`ifelse($1,Index,marshalNumber(i1,buf);,
 	           $1,Index3,marshalNumber(i3,buf);,
 	           $1,String,marshalString(str,buf);,			
 	           $1,Credit,marshalCredit(c,buf);,			
-		   $1,Object,marshalFullObjectRT(o,buf);,
-		   $1,ObjectAndClass,marshalFullObjectAndClassRT(o,buf);,
-	           $1,Term,marshalTermRT(t,buf);,
+		   $1,Object,marshalFullObject(o,buf);,
+		   $1,ObjectAndClass,marshalFullObjectAndClass(o,buf);,
+	           $1,Term,newMarshalTerm(t,buf);,
                    $1,Site,marshalDSite(s1,buf);,
                    $1,Site2,marshalDSite(s2,buf);,)')
 
@@ -115,10 +115,10 @@ define(arg,`ifelse($1,Index,int &i1,
 define(argEnc,`ifelse($1,Index,i1=unmarshalNumber(buf);,
 		   $1,Index2,i2=unmarshalNumber(buf);,
 		   $1,Index3,i3=unmarshalNumber(buf);,
-	           $1,Term,t=unmarshalTermRT(buf);,
+	           $1,Term,t=newUnmarshalTerm(buf);,
 	           $1,Credit,c=unmarshalCredit(buf);,	     
-		   $1,Object,unmarshalObjectRT(o,buf);,
-		   $1,ObjectAndClass,unmarshalObjectAndClassRT(o,buf);,
+		   $1,Object,unmarshalFullObject(o,buf);,
+		   $1,ObjectAndClass,unmarshalFullObjectAndClass(o,buf);,
 	           $1,String,str=unmarshalString(buf);,	     
                    $1,Site,s1=unmarshalDSite(buf);,
                    $1,Site2,s2=unmarshalDSite(buf);,)')

@@ -68,6 +68,7 @@ SRCS= \
 	cpi_stream.cc cpi_profile.cc cpi_ct.cc \
 	var_ct.cc\
 	fset.cc fsetcore.cc var_fs.cc\
+        newmarshaler.cc gentraverser.cc \
 	\
 	libfset/standard.cc libfset/telling.cc \
 	libfset/testing.cc libfset/fsaux.cc \

@@ -57,14 +57,20 @@ extern LockRet (*lockLockFrameOutline)(LockFrameEmul *lfu, Thread *thr);
 extern void (*unlockLockFrameOutline)(LockFrameEmul *lfu, Thread *thr);
 
 //
-extern Bool (*marshalTertiary)(Tertiary *t, MarshalTag tag, MsgBuffer *bs);
+// An invariant is that all the 'marshal*' procedures build a
+// representation with a corresponding 'DIF' tag, e.g. 'marshalObject'
+// puts 'DIF_OBJECT' into stream.  In the current implementation,
+// however, there is a limitation: marshaling tertiaries/object
+// variables could yield 'DIF_OWNER*'.  This means that those entries
+// must either be all remembered or not remembered;
+extern void (*marshalTertiary)(Tertiary *t, MarshalTag tag, MsgBuffer *bs);
 extern OZ_Term (*unmarshalTertiary)(MsgBuffer *bs, MarshalTag tag);
 extern OZ_Term (*unmarshalOwner)(MsgBuffer *bs,MarshalTag mt);
 //
 extern OZ_Term (*unmarshalVar)(MsgBuffer*,Bool,Bool);
-extern Bool (*marshalVariable)(TaggedRef*, MsgBuffer*, GenTraverser *gt);
+extern Bool (*marshalVariable)(TaggedRef*, MsgBuffer*);
 extern Bool (*triggerVariable)(TaggedRef*);
-extern void (*marshalObject)(ConstTerm *t, MsgBuffer *bs, GenTraverser *gt);
+extern void (*marshalObject)(ConstTerm *t, MsgBuffer *bs);
 extern void (*marshalSPP)(TaggedRef term, MsgBuffer *bs,Bool trail);
 
 //
