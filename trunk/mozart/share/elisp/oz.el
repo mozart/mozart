@@ -116,6 +116,8 @@
   "Run Mozart as a sub-process." t)
 (autoload 'oz-halt "mozart"
   "Halt the Mozart sub-process." t)
+(autoload 'oz-attach "mozart"
+  "" t)
 (autoload 'oz-breakpoint-at-point "mozart"
   "Set breakpoint at current line." t)
 (autoload 'oz-set-other "mozart"
