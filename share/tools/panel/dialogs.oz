@@ -71,7 +71,6 @@ local
       end
       
       ScaleWidth  = 100
-      FrameWidth  = ScaleWidth + 120
 
    in
       
@@ -98,38 +97,28 @@ local
 							       end)]
 				    focus:   1
 				    default: 1)>>
-	    TimeOuter = {New Labelframe tkInit(parent: self
-					       text:   'Update Time'
-					       width:  FrameWidth
-					       height: 40)}
-	    TimeInner = {New Tk.frame tkInit(parent:             TimeOuter
-					     highlightthickness: 0)}
-	    TimeLabel = {New Tk.label tkInit(parent: TimeInner
+	    TimeOuter = {New TkTools.textframe tkInit(parent: self
+						      text:   'Update Time')}
+	    TimeLabel = {New Tk.label tkInit(parent: TimeOuter.inner
 					     text:   'Update every: ')}
-	    TimeScale = {New DiscreteScale init(parent: TimeInner
+	    TimeScale = {New DiscreteScale init(parent: TimeOuter.inner
 						width:  ScaleWidth
 						values: UpdateTimes
 						initpos: {FindPos UpdateTimes
 							  Prev.time 1})}
-	    MouseOuter = {New Labelframe tkInit(parent: self
-						text:   'Update Requirement'
-						width:  FrameWidth
-						height: 30)}
-	    MouseInner = {New Tk.frame tkInit(parent:             MouseOuter
-					      highlightthickness: 0)}
+	    MouseOuter = {New TkTools.textframe tkInit(parent: self
+						       text:   'Update Requirement')}
 	    MouseVar   = {New Tk.variable tkInit(Prev.mouse)}
 	    MouseButton = {New Tk.checkbutton
-			   tkInit(parent:   MouseInner
+			   tkInit(parent:   MouseOuter.inner
 				  variable: MouseVar
 				  text:     'Require mouse over panel'
 				  action:   self # ToggleMouse)}
 	 in
 	    NextMouse <- Prev.mouse
-	    {TimeOuter  add(TimeInner)}
-	    {MouseOuter add(MouseInner)}
-	    {Tk.batch [pack(TimeLabel TimeScale side:left)
-		       pack(MouseButton side:left)
-		       pack(TimeOuter MouseOuter pady:Pad)]}
+	    {Tk.batch [pack(TimeLabel TimeScale side:left fill:x)
+		       pack(MouseButton side:left fill:x)
+		       pack(TimeOuter MouseOuter fill:x)]}
 	 end
 
 	 meth ToggleMouse
@@ -161,24 +150,19 @@ local
 							       end)]
 				    focus:   1
 				    default: 1)>>
-	    RangeOuter = {New Labelframe tkInit(parent: self
-					       text:   'History Range'
-					       width:  FrameWidth
-					       height: 40)}
-	    RangeInner = {New Tk.frame tkInit(parent:             RangeOuter
-					      highlightthickness: 0)}
-	    RangeLabel = {New Tk.label tkInit(parent: RangeInner
+	    RangeOuter = {New TkTools.textframe tkInit(parent: self
+						       text:   'History Range')}
+	    RangeLabel = {New Tk.label tkInit(parent: RangeOuter.inner
 					     text:   'Range covers: ')}
-	    RangeScale = {New DiscreteScale init(parent:  RangeInner
+	    RangeScale = {New DiscreteScale init(parent:  RangeOuter.inner
 						 width:   ScaleWidth
 						 values:  HistoryRanges
 						 initpos: {FindPos
 							   HistoryRanges
 							   Prev 1})}
 	 in
-	    {RangeOuter add(RangeInner)}
-	    {Tk.batch [pack(RangeLabel RangeScale side:left)
-		       pack(RangeOuter pady:Pad)]}
+	    {Tk.batch [pack(RangeLabel RangeScale side:left fill:x)
+		       pack(RangeOuter)]}
 	 end
 
       end

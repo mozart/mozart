@@ -7,11 +7,11 @@
 
 local
 
-   class UpdatePage from Note
+   class UpdatePage from TkTools.note
       feat
 	 options
       meth init(parent:P options:O text:T)
-	 <<Note tkInit(parent:P text:T)>>
+	 <<TkTools.note tkInit(parent:P text:T)>>
 	 self.options = O
       end
       meth toTop
@@ -72,7 +72,7 @@ local
       in
 	 {Tk.send case @InfoVisible then pack(forget O.priorities.frame)
 		  else pack(O.priorities.frame
-			    after:O.threads.frame side:top padx:Pad pady:Pad)
+			    after:O.threads.frame side:top fill:x)
 		  end}
 	 InfoVisible <- {Not @InfoVisible}
       end
@@ -126,11 +126,11 @@ local
 	 {Tk.batch case @InfoVisible then
 		      [pack(forget O.parameter.frame O.gc.frame)
 		       pack(O.showParameter.frame 
-			    after:O.usage.frame side:top pady:Pad padx:Pad)]
+			    after:O.usage.frame side:top fill:x)]
 		   else
 		      [pack(forget O.showParameter)
 		       pack(O.parameter.frame O.gc.frame
-			    after:O.usage.frame side:top pady:Pad padx:Pad)]
+			    after:O.usage.frame side:top fill:x)]
 		   end}
 	 InfoVisible <- {Not @InfoVisible}
 	 <<MemoryPage update(nosample)>>
@@ -219,7 +219,8 @@ in
       
       meth init(manager:Manager)
 	 <<Tk.toplevel tkInit(title:              TitleName
-			      highlightthickness: 0)>>
+			      highlightthickness: 0
+			      withdraw:           True)>>
 	 {Tk.batch [wm(iconname   self TitleName)
 		    wm(iconbitmap self BitMap)
 		    wm(resizable self 0 0)]}
@@ -259,13 +260,10 @@ in
 	 Frame = {New Tk.frame tkInit(parent: EventFrame
 				      highlightthickness: 0
 				      bd:                 4)}
-	 Book  = {New Notebook tkInit(parent: Frame
-				      width:  PanelWidth
-				      height: PartPanelHeight)}
+	 Book  = {New TkTools.notebook tkInit(parent: Frame)}
 	 Threads =
 	 {MakePage ThreadPage 'Threads' Book True
 	  [frame(text:    'Threads'
-		 height:  70
 		 left:    [number(text:    'Created:')
 			   number(text:    'Runnable:'
 				  color:   RunnableColor
@@ -274,7 +272,6 @@ in
 				colors:  [RunnableColor]
 				stipple: [RunnableStipple])])
 	   frame(text:    'Priorities'
-		 height:  64
 		 pack:    False
 		 left:    [scale(text:    'High / Middle:'
 				 state:   {System.get priorities}.high
@@ -298,7 +295,6 @@ in
 					     {Threads update(nosample)}
 					  end)])
 	   frame(text:    'Runtime'
-		 height:  100
 		 left:    [time(text:    'Run:'
 				color:   TimeColors.run
 				stipple: TimeStipple.run)
@@ -320,7 +316,6 @@ in
 	 {MakePage MemoryPage 'Memory' Book True
 	  [frame(text:    'Heap Usage'
 		 feature: usage
-		 height:  70
 		 left:    [size(text:    'Threshold:'
 				color:   ThresholdColor
 				stipple: ThresholdStipple)
@@ -340,7 +335,6 @@ in
 	   frame(text:    'Heap Parameters'
 		 feature: parameter
 		 pack:    False
-		 height:  125
 		 left:    [scale(text:    'Maximal size limit:'
 				 range:   1#1024
 				 dim:     'MB'
@@ -417,7 +411,6 @@ in
 					  end)])
 	   frame(text:    'Heap Parameters'
 		 feature: showParameter
-		 height:  40
 		 left:    [size(text:    'Maximal size limit:'
 				feature: maxSize
 				dim:     'MB')
@@ -428,7 +421,6 @@ in
 	   frame(text:    'Garbage Collector'
 		 feature: gc
 		 pack:    False
-		 height:  30
 		 left:    [checkbutton(text:   'Active'
 				       state:  {System.get gc}.on
 				       action: proc {$ OnOff}
@@ -442,7 +434,6 @@ in
 	 {MakePage PsPage 'Problem Solving' Book True
 	  [frame(text:    'Finite Domain Constraints'
 		 feature: fd
-		 height:  60
 		 left:    [number(text: 'Variables created:'
 				  feature: var)
 			   number(text:    'Propagators created:'
@@ -451,7 +442,6 @@ in
 				  feature: propi)]
 		 right:   nil)
 	   frame(text:    'Spaces'
-		 height:  100
 		 left:    [number(text:    'Spaces created:'
 				  feature: created)
 			   number(text:    'Spaces cloned:'
@@ -466,7 +456,6 @@ in
 	 OPI =
 	 {MakePage OpiPage 'Programming Interface' Book False
 	  [frame(text:    'Errors'
-		 height:  60
 		 left:    [checkbutton(text:    'Show thread'
 				       feature: 'thread'
 				       state:  {System.get errors}.'thread'
@@ -497,7 +486,6 @@ in
 					     {OPI update}
 					  end)])
 	   frame(text:    'Output'
-		 height:  50
 		 left:    [entry(text:    'Maximal print width:'
 				 feature: width
 				 action:  proc {$ N}
@@ -518,7 +506,6 @@ in
 					  end)])
 	   frame(text:    'Status Messages'
 		 feature: messages
-		 height:  45
 		 left:    [checkbutton(text:    'Idle'
 				       feature: time
 				       state:  {System.get messages}.idle
@@ -557,6 +544,7 @@ in
 			    action:self # enter)}
 	 {EventFrame tkBind(event:'<Leave>'
 			    action:self # leave)}
+	 <<PanelTop tkWM(deiconify)>>
 	 <<PanelTop update(@DelayStamp)>>
       end
 
@@ -603,12 +591,8 @@ in
 
       meth toggleInfo
 	 InfoVisible <- {Not @InfoVisible}
-	 case @InfoVisible then
-	    {self.notebook confHeight(FullPanelHeight)}
-	    {self.notebook add(note:self.opi)}
-	 else
-	    {self.notebook confHeight(PartPanelHeight)}
-	    {self.notebook remove(note:self.opi)}
+	 case @InfoVisible then {self.notebook add(self.opi)}
+	 else {self.notebook remove(self.opi)}
 	 end
 	 {self.threads toggleInfo}
 	 {self.memory  toggleInfo}
