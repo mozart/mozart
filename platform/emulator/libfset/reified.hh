@@ -207,6 +207,40 @@ public:
 
 };
 
+//-----------------------------------------------------------------------------
+
+class PartitionReified1Propagator : public PartitionReifiedPropagator {
+protected:
+  static OZ_CFunHeader header;
+
+  OZ_Term _cost;
+
+  int * _min_cost_per_elem;
+public:
+  PartitionReified1Propagator(OZ_Term vs, OZ_Term s, OZ_Term vd, OZ_Term cost);
+
+  virtual OZ_Return propagate(void);
+
+  virtual size_t sizeOf(void) { return sizeof(PartitionReified1Propagator); }
+
+  virtual OZ_CFunHeader * getHeader(void) const {
+    return &header;
+  }
+
+  virtual void updateHeapRefs(OZ_Boolean gc) {
+    PartitionReifiedPropagator::updateHeapRefs(gc);
+
+    OZ_updateHeapTerm(_cost);
+
+    int * tmp_min_cost_per_elem = OZ_hallocCInts(_u_max_elem+1);
+    for (int i = _u_max_elem+1; i--; )
+      tmp_min_cost_per_elem[i] = _min_cost_per_elem[i];
+    _min_cost_per_elem = tmp_min_cost_per_elem;
+  }
+
+};
+
+
 #endif /* __REIFIED_HH__ */
 
 //-----------------------------------------------------------------------------

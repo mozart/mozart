@@ -9,6 +9,7 @@
   ------------------------------------------------------------------------
 */
 
+#include <limits.h>
 #include "reified.hh"
 
 #ifdef PROFILE
@@ -412,7 +413,7 @@ OZ_Return PartitionReifiedPropagator::propagate(void)
             if (card == 0) {
               goto failure;
             } else if (card == 1) {
-              int k = tmp_j.nextLargerElem(-1);
+              int k = tmp_j.smallestElem();
               if (! _i_sets->resetAllBut(ist, u, k))
                 goto failure;
               FailOnEmpty(*vd[k] -= 0);
@@ -425,7 +426,7 @@ OZ_Return PartitionReifiedPropagator::propagate(void)
   //_i_sets->print();
 
   while (!ist.isEmpty()) {
-    int k = (*_i_sets)[ist.pop()].nextLargerElem(-1);
+    int k = (*_i_sets)[ist.pop()].smallestElem();
     //printf("<%d>", k);
     if (! _i_sets->resetAllBut(ist, u, k))
       goto failure;
@@ -439,7 +440,7 @@ OZ_Return PartitionReifiedPropagator::propagate(void)
   for (i = _u_max_elem+1; i--; ) {
     IndexSet &tmp_i = (*_i_sets)[i];
     if (! tmp_i.isIgnore() && tmp_i.getCard() == 1)
-      FailOnEmpty(*vd[tmp_i.nextLargerElem(-1)] -= 0);
+      FailOnEmpty(*vd[tmp_i.smallestElem()] -= 0);
   }
   //printf("c\n");
 
@@ -475,7 +476,7 @@ PartitionReifiedPropagator::PartitionReifiedPropagator(OZ_Term vs, OZ_Term s, OZ
 {
   _first = 1;
   // init ground set
-  OZ_FSetVar aux(s);
+  OZ_FSetVar aux(s); // ought to be ask
   OZ_FSetValue u = aux->getGlbSet();
   _u_max_elem = u.getMaxElem();
 
@@ -488,7 +489,7 @@ PartitionReifiedPropagator::PartitionReifiedPropagator(OZ_Term vs, OZ_Term s, OZ
   OZ_getOzTermVector(vs, vs_terms);
 
   for (i = _size; i--; ) {
-    OZ_FSetVar aux(vs_terms[i]);
+    OZ_FSetVar aux(vs_terms[i]); // ought to ask!
     _vs[i] = aux->getGlbSet();
   }
 
@@ -512,6 +513,229 @@ PartitionReifiedPropagator::PartitionReifiedPropagator(OZ_Term vs, OZ_Term s, OZ
     }
   }
   //  _i_sets->print();
+
+}
+
+//-----------------------------------------------------------------------------
+
+OZ_C_proc_begin(fsp_partitionReified1, 4)
+{
+  OZ_EXPECTED_TYPE(OZ_EM_VECT OZ_EM_FSET "," OZ_EM_FSET ","
+                   OZ_EM_VECT OZ_EM_FD "," OZ_EM_FD);
+
+  PropagatorExpect pe;
+
+  OZ_EXPECT(pe, 0, expectVectorFSetValue);
+  OZ_EXPECT(pe, 1, expectFSetValue);
+  OZ_EXPECT(pe, 2, expectVectorIntVarMinMax);
+  OZ_EXPECT(pe, 3, expectIntVarMinMax);
+
+  return pe.impose(new PartitionReified1Propagator(OZ_args[0],
+                                                   OZ_args[1],
+                                                   OZ_args[2],
+                                                   OZ_args[3]));
+}
+OZ_C_proc_end
+
+OZ_CFunHeader PartitionReified1Propagator::header = fsp_partitionReified1;
+
+OZ_Return PartitionReified1Propagator::propagate(void)
+{
+  OZ_DEBUGPRINTTHIS("in ");
+
+  //_i_sets->print();
+
+  DECL_DYN_ARRAY(OZ_FDIntVar, vd, _size);
+  DECL_DYN_ARRAY(int, stack, _u_max_elem+1);
+  ItStack ist(_u_max_elem+1, stack);
+  OZ_FDIntVar cost(_cost);
+
+  PropagatorController_VD_D P(_size, vd, cost);
+  int i;
+
+  int i_high = _i_sets->getHigh();
+  DECL_DYN_ARRAY(int, elems, i_high);
+  IndexSet u(i_high, elems);
+
+  for (i = _size; i--; )
+    vd[i].read(_vd[i]);
+
+  if (_first) {
+    for (i = _u_max_elem+1; i--; ) {
+      IndexSet &tmp_i = (*_i_sets)[i];
+      if (! tmp_i.isIgnore() && tmp_i.getCard() == 1)
+        ist.push(i);
+    }
+
+    int sum = 0;
+    for (i = _u_max_elem+1; i--; ) {
+      IndexSet &tmp_i = (*_i_sets)[i];
+
+      if (! tmp_i.isIgnore())
+        sum += _min_cost_per_elem[i];
+    }
+#ifdef OZ_DEBUG
+    printf("__cost >= %d\n", sum); fflush(stdout);
+#endif
+
+    FailOnEmpty(*cost >= sum);
+
+    _first = 0;
+  }
+
+  {
+    IndexSet &det_vars = (*_i_sets)[_u_max_elem+1];
+
+    for (i = _size; i--; )
+      if (!det_vars.isIn(i) && *vd[i] == fd_singl) {
+        int s = vd[i]->getSingleElem();
+        if (s > 0) {
+          if (! _i_sets->resetAllBut(ist, u, i))
+            goto failure;
+        } else {
+          OZ_ASSERT(s == 0);
+
+          for (int j = _u_max_elem+1; j--; ) {
+            IndexSet &tmp_j = (*_i_sets)[j];
+            if (! tmp_j.isIgnore()) {
+              int card = tmp_j.reset(i);
+              if (card == 0) {
+                goto failure;
+              } else if (card == 1) {
+                int k = tmp_j.smallestElem();
+                if (! _i_sets->resetAllBut(ist, u, k))
+                  goto failure;
+              FailOnEmpty(*vd[k] -= 0);
+              }
+            }
+          }
+        }
+      }
+
+    //_i_sets->print();
+
+    while (!ist.isEmpty()) {
+      int k = (*_i_sets)[ist.pop()].smallestElem();
+      //printf("<%d>", k);
+      if (! _i_sets->resetAllBut(ist, u, k))
+        goto failure;
+
+      //_i_sets->print();
+    }
+
+
+    //printf("b\n");
+
+    for (i = _u_max_elem+1; i--; ) {
+      IndexSet &tmp_i = (*_i_sets)[i];
+      if (! tmp_i.isIgnore() && tmp_i.getCard() == 1)
+        FailOnEmpty(*vd[tmp_i.smallestElem()] -= 0);
+    }
+    //printf("c\n");
+
+    //printf("a\n");
+
+    _i_sets->unionAll(u);
+    for (i = _size; i--; ) {
+      if (!u.isIn(i))
+        FailOnEmpty(*vd[i] &= 0);
+      if (*vd[i] == fd_singl)
+        det_vars.set(i);
+    }
+  }
+
+#ifdef OZ_DEBUG
+  for (i = _u_max_elem+1; i--; )
+    if (!(*_i_sets)[i].getCard())
+      abort();
+#endif
+
+  // check if better solution is still possible
+
+  {
+    int sum = 0;
+    DECL_DYN_ARRAY(int, stack_flags, _u_max_elem+1);
+    ItStack ist_flags(_u_max_elem+1, stack_flags);
+
+    for (i = _u_max_elem+1; i--; ) {
+      IndexSet &tmp_i = (*_i_sets)[i];
+
+      if (! tmp_i.isIgnore()) {
+        if (tmp_i.getCard() == 1) {
+          int ind = tmp_i.smallestElem();
+          if (!ist_flags.isIn(ind)) {
+            sum += vd[ind]->getSingleElem();
+            ist_flags.push(ind);
+          }
+        } else {
+          sum += _min_cost_per_elem[i];
+        }
+      }
+    }
+
+    if (sum > cost->getMaxElem()) {
+#ifdef OZ_DEBUG
+      printf("failing because of sum (%d) > cost_max(%d)\n",
+             sum, cost->getMaxElem());
+      fflush(stdout);
+#endif
+      goto failure;
+    }
+  }
+
+  OZ_DEBUGPRINTTHIS("out ");
+  {
+    OZ_Return r = P.leave();
+    //    if (r == OZ_ENTAILED)
+    //  _i_sets->print();
+    return r;
+  }
+  failure:
+  OZ_DEBUGPRINTTHIS("failed");
+  return P.fail();
+}
+
+PartitionReified1Propagator::PartitionReified1Propagator(OZ_Term vs,
+                                                         OZ_Term s,
+                                                         OZ_Term vd,
+                                                         OZ_Term cost)
+: _cost(cost), PartitionReifiedPropagator(vs, s, vd)
+{
+  _min_cost_per_elem = OZ_hallocCInts(_u_max_elem+1);
+
+  OZ_FSetVar aux;
+  aux.ask(s);
+  OZ_FSetValue u = aux->getGlbSet();
+
+  int i;
+
+  for (i = _u_max_elem; i-- ; )
+    _min_cost_per_elem[i] = INT_MAX;
+
+  for (i = _u_max_elem+1; i--; ) {
+    if (u.isIn(i)) {
+      for (int j = _size; j--; ) {
+        OZ_FDIntVar aux2;
+        aux2.ask(_vd[j]);
+
+        if (_vs[j].isIn(i)) {
+
+          _min_cost_per_elem[i] = min(_min_cost_per_elem[i],
+                                      aux2->getMaxElem() / _vs[j].getCard());
+
+        }
+      }
+    }
+  }
+
+#ifdef OZ_DEBUG
+  for (i = _u_max_elem+1; i--; ) {
+    if (u.isIn(i)) {
+      printf("_min_cost_per_elem[%d]=%d\n", i, _min_cost_per_elem[i]);
+      fflush(stdout);
+    }
+  }
+#endif
 
 }
 

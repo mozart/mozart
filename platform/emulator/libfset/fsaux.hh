@@ -379,6 +379,32 @@ public:
   }
 };
 
+class PropagatorController_VD_D {
+protected:
+  OZ_FDIntVar &v;
+  OZ_FDIntVar * vv;
+  int size;
+public:
+  PropagatorController_VD_D(int s, OZ_FDIntVar i1[], OZ_FDIntVar &i2)
+    : size(s), vv(i1), v(i2) {}
+
+  OZ_Return leave(void) {
+    OZ_Boolean vars_left = v.leave();
+    for (int i = size; i--; vars_left |= vv[i].leave());
+    return vars_left ? SLEEP : PROCEED;
+  }
+  OZ_Return vanish(void) {
+    v.leave();
+    for (int i = size; i--; vv[i].leave());
+    return PROCEED;
+  }
+  OZ_Return fail(void) {
+    v.fail();
+    for (int i = size; i--; vv[i].fail());
+    return FAILED;
+  }
+};
+
 //-----------------------------------------------------------------------------
 // Dynamically sized arrays for compilers which do not provide alloca
 

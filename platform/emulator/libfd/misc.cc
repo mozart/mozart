@@ -801,6 +801,7 @@ OZ_Return TestSum::propagate(void)
   int sum = 0;
   int det_vars = 0;
 
+  // sum up singletons and find number of determined variables
   for (i = vd_size; i--; ) {
     vd[i].read(_vd[i]);
 
@@ -810,7 +811,7 @@ OZ_Return TestSum::propagate(void)
     }
   }
 
-  if (vd_size == det_vars) {
+  if (vd_size == det_vars) { // all variables are determined
     FailOnEmpty(*s &= sum);
   } else if (sum < s_ub) {
     int diff = 0;
@@ -821,18 +822,24 @@ OZ_Return TestSum::propagate(void)
 
         if (sum + max_elem > s_ub) {
           FailOnEmpty(*vd[i] &= 0);
+          det_vars += 1;
         } else {
           diff += max_elem;
         }
-        if (sum + diff < s_lb) {
-          goto failure;
-        } else if (sum + diff == s_lb) {
-          FailOnEmpty(*s &= s_lb);
-          for (int j = vd_size; j--; )
-            if (*vd[j] != fd_singl)
-              FailOnEmpty(*vd[j] -= 0);
-        }
       }
+    }
+    if (sum + diff < s_lb) {
+      goto failure;
+    } else if (sum + diff == s_lb) {
+      FailOnEmpty(*s &= s_lb);
+      for (int j = vd_size; j--; )
+        if (*vd[j] != fd_singl) {
+          FailOnEmpty(*vd[j] -= 0);
+          det_vars += 1;
+        }
+    }
+    if (vd_size == det_vars) { // all variables are determined
+      FailOnEmpty(*s &= sum);
     }
   } else if (sum > s_ub) {
     goto failure;
@@ -889,5 +896,4 @@ failure:
 
 
 //-----------------------------------------------------------------------------
-
 // eof
