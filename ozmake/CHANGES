@@ -1,5 +1,9 @@
 -*-outline-*-
 
+* version 0.85
+  for autodepend to work as expected, the build rule for ozl needs to
+  consider all the recursive dependencies.
+
 * version 0.84
   fixed a bug introduced by 0.83.  The explicit "depends" in the makefile.oz
   were being ignored.
