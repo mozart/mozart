@@ -14,6 +14,7 @@
 #pragma implementation "genvar.hh"
 #endif
 
+
 #include "fdgenvar.hh"
 #include "am.hh"
 
@@ -70,6 +71,49 @@ SuspList * GenCVariable::propagate(TaggedRef var, SuspList * &sl,
 				   TaggedRef term)
 {
   sl = am.checkSuspensionList(tagged2SuspVar(var), var, sl, term);
+}
+
+
+Bool GenCVariable::unify(TaggedRef * tptr1, TaggedRef term1, TypeOfTerm ttag1,
+			 TaggedRef * tptr2, TaggedRef term2, TypeOfTerm ttag2)
+{
+  switch (type){
+  case FDVariable:
+    return ((GenFDVariable *)this)->unifyFD(tptr1, term1, ttag1,
+					    tptr2, term2, ttag2);
+  default:
+    error("Unexpected type generic variable at %s:%d.",
+	  __FILE__, __LINE__);
+    break;
+  }
+  return NO;
+} 
+
+
+size_t GenCVariable::getSize(void){
+  switch (type){
+  case FDVariable:
+    return ((GenFDVariable*)this)->getSize();
+  default:
+    error("Unexpected type generic variable at %s:%d.",
+	  __FILE__, __LINE__);
+    break;
+  }
+  return 0;
+} 
+
+
+ProgramCounter GenCVariable::index(ProgramCounter elseLabel, 
+				   IHashTable * table)
+{
+  switch (type){
+  case FDVariable:
+    return ((GenFDVariable*)this)->index(elseLabel, table);
+  default:
+    error("Unexpected type generic variable at %s:%d.",
+	  __FILE__, __LINE__);
+    return NOCODE;
+  }  
 }
 
 
