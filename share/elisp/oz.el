@@ -289,7 +289,7 @@ starts the emulator under gdb")
     ("New Oz Buffer"          . oz-new-buffer)
     ("Fontify Buffer"         . oz-fontify)
     ("Show/Hide"
-     ("Compiler"     . oz-toggle-compiler)
+     ("Compiler"      . oz-toggle-compiler)
      ("Emulator"      . oz-toggle-emulator)
      )
     ("-----")
@@ -308,7 +308,8 @@ Input and output via buffers *Oz Compiler* and *Oz Emulator*."
   (interactive)
   (oz-check-running t)
   (if (not (equal mode-name "Oz"))
-      (oz-new-buffer)))
+      (oz-new-buffer))
+  (oz-toggle-compiler))
 
 (defvar oz-halt-timeout 15
   "How long to wait in oz-halt after sending the directive halt")
