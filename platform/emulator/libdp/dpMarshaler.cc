@@ -838,8 +838,6 @@ void VSnapshotBuilder::processVar(OZ_Term v, OZ_Term *vRef)
     switch (evt) {
     case OZ_EVAR_MANAGER:
       {
-	// make the variable needed first
-	oz_var_makeNeeded(vRef);
 	// make&save an "exported" manager;
 	ManagerVar *mvp = oz_getManagerVar(v);
 	expVars = new MgrVarPatch(vrt, expVars, mvp, dest);
@@ -869,8 +867,6 @@ void VSnapshotBuilder::processVar(OZ_Term v, OZ_Term *vRef)
   } else if (oz_isFree(v) || oz_isFuture(v)) {
     Assert(perdioInitialized);
 
-    // make the variable needed first
-    oz_var_makeNeeded(vRef);
     //
     ManagerVar *mvp = globalizeFreeVariable(vRef);
     expVars = new MgrVarPatch(vrt, expVars, mvp, dest);

@@ -440,41 +440,13 @@ ManagerVar* globalizeFreeVariable(TaggedRef *tPtr)
   OB_TIndex i = OT->newOwner(oe);
   PD((GLOBALIZING,"globalize var index:%d",i));
   oe->mkVar(makeTaggedRef(tPtr));
+  // raph: make the variable needed
+  oz_var_makeNeeded(tPtr);
   OzVariable *cv = oz_getNonOptVar(tPtr);
   ManagerVar *mv = new ManagerVar(cv,i);
   extVar2Var(mv)->setSuspList(cv->unlinkSuspList());
   *tPtr = makeTaggedVar(extVar2Var(mv));
   return (mv);
-}
-
-// Return 'TRUE' if successful (that is, the variable is bound)
-//
-// raph: this function is no longer used
-Bool triggerVariable(TaggedRef *tPtr)
-{
-  Assert(tPtr!=NULL);
-  const TaggedRef var = *tPtr;
-  if (oz_isFuture(var)) {
-    // kost@ : 'oz_isFuture(var)' does NOT mean that the 'var' is of
-    // type Future: it can be also a manager var keeping a future!
-    //
-    // raph: futures are now implemented by ReadOnly
-    ReadOnly *fut;
-    if (oz_isManagerVar(var)) {
-      ManagerVar *mv = oz_getManagerVar(var);
-      fut = (ReadOnly *) mv->getOrigVar();
-    } else {
-      fut = (ReadOnly *) tagged2Var(var);
-    }
-    Assert(fut->getType() == OZ_VAR_READONLY ||
-	   fut->getType() == OZ_VAR_READONLY_QUIET);
-
-    fut->becomeNeeded();
-    return (TRUE);
-
-  } else {
-    return (FALSE);
-  }
 }
 
 /* --- Unmarshal --- */

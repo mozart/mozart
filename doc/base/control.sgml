@@ -143,6 +143,12 @@ end>>>
           when it attempts to use the <q/failed/ value.  For example,
           the module manager returns failed futures for modules that
           cannot be found or linked.
+	<P>
+	  The failed value&nbsp;?_{X} can only unify to itself.
+	  An attempt to unify&nbsp;?_{X} to any other value results in
+	  exception&nbsp;?_{E} to be raised.
+	  Unifying two distinct failed values causes one of them to raise
+	  its exception, the choice of which being nondeterministic.
       </List>
 
   <Section id="section.control.loops">

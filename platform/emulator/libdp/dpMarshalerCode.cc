@@ -612,8 +612,6 @@ void DPMARSHALERCLASS::processVar(OZ_Term v, OZ_Term *vRef)
     } else if (oz_isFree(v) || oz_isFuture(v)) {
       Assert(perdioInitialized);
 
-      // make the variable needed first
-      oz_var_makeNeeded(vRef);
       //
       ManagerVar *mvp = globalizeFreeVariable(vRef);
       mvp->marshal(bs, index);
