@@ -36,178 +36,48 @@
 #pragma interface
 #endif
 
+#include "suspendable.hh"
 #include "thr_stack.hh"
 
-//
-// (kp) On Sparc (v8), most efficient flags are (strictly) between 0x0 and 
-// 0x1000. Flags up to 0x1000 and above 0x1000 should not be mixed, 
-// because then three instructions are required (for testing, i mean);
-enum ThreadFlag {
-  T_dead     = 0x001,  // the thread is dead;
-  T_runnable = 0x002,  // the thread is runnable;
-  T_catch    = 0x004,  // has or has had an exception handler
-  T_ext      = 0x008,  // an external suspension wrt current search problem
-  T_tag      = 0x010,  // used to avoid duplication of threads
-  T_noblock  = 0x040,  // if this thread blocks, raise an exception
-  // debugger
-  T_G_trace  = 0x080,   // thread is being traced
-  T_G_step   = 0x100,   // step mode turned on
-  T_G_stop   = 0x200,   // no permission to run
-};
+
+/*  Every thread can be in the following states - 
+ * suspended, runnable, running and dead:
+ *
+ *  Moreover, only the following transactions are possible:
+ *
+ *                    .------------> dead <-----------.
+ *                    |                               |
+ *                    |                               |
+ *  (create) ---> suspended -----> runnable <----> running
+ *                    ^                               |
+ *                    |                               |
+ *                    `-------------------------------'
+ *
+ */
 
 
-
-//  Every thread can be in the following states - 
-// suspended, runnable, running and dead:
-//
-//  Moreover, only the following transactions are possible:
-//
-//                    .------------> dead <-----------.
-//                    |                               |
-//                    |                               |
-//  (create) ---> suspended -----> runnable <----> running
-//                    ^                               |
-//                    |                               |
-//                    `-------------------------------'
-//
-// <stack>
-
-class Thread {
-  friend int engine(Bool);
-  friend void scheduler();
+class Thread : public Suspendable {
+  friend void scheduler(void);
 private:
-  //  Sparc, for instance, has a ldsb/stb instructions - 
-  // so, this is exactly as efficient as just two integers;
-  Board *board;
-  struct {
-    int pri:    sizeof(char) * 8;
-    int flags:  (sizeof(int) - sizeof(char)) * sizeof(char) * 8;
-  } state;
-
   unsigned int id;              // unique identity for debugging
   PrTabEntry *abstr;            // for profiler
   TaskStack *taskStack;
+
 public:
-  NO_DEFAULT_CONSTRUCTORS(Thread)
-  Thread(int flags, int prio, Board *bb, int id)
-    : board(bb), id(id), abstr(0)
-  {
-    state.flags = flags;
-    state.pri   = prio;
+  NO_DEFAULT_CONSTRUCTORS(Thread);
+  USEFREELISTMEMORY;
+
+  Thread(int flags, int prio, Board * bb, int i)
+    : Suspendable(flags | prio, bb), id(i), abstr(0) {
+    taskStack = new TaskStack(ozconf.stackMinSize); 
     ozstat.createdThreads.incf();
-    taskStack   = new TaskStack(ozconf.stackMinSize); 
   }
 
-  USEHEAPMEMORY;
   OZPRINTLONG;
-
-  Board *getBoardInternal()        { return board; }
-  void setBoardInternal(Board *bb) { board = bb; }
 
   Thread *gcThread();
   Thread *gcDead();
   void gcRecurse();
-
-  int gcIsMarked() { return ((int)board) & 1; }
-  void gcMark(Thread * fwd) { board = (Board *)(((int)fwd)|1); }
-  Thread * gcGetFwd() {
-    Assert(gcIsMarked());
-    return (Thread *) (((int)board)&~1);
-  }
-  void ** gcGetMarkField() { return (void **)&board; };
-
-
-  Bool isDead() { 
-    return state.flags & T_dead; 
-  }
-  void setDead() { 
-    state.flags = state.flags | T_dead;
-  }
-
-  int getFlags() { return state.flags; }
-
-  void setTagged() { 
-    if (isDead()) return;
-    state.flags = state.flags | T_tag;
-  }
-  void unsetTagged() { 
-    state.flags = state.flags & ~T_tag;
-  }
-  Bool isTagged() { 
-    return (state.flags & T_tag);
-  }
-
-  int getPriority() { 
-    return state.pri;
-  }
-  void setPriority(int p) { 
-    state.pri = p;
-  }
-
-  Bool isRunnable() { 
-    return state.flags & T_runnable;
-  }
-
-  //  non-runnable threads;
-  void setRunnable() {
-    Assert(isSuspended() && !isDead());
-    state.flags = state.flags | T_runnable;
-  }
-  void unsetRunnable() { 
-    Assert((isRunnable () && !isDead()) || isStop());
-    state.flags &= ~T_runnable;
-  }
-
-  Bool isExternal() {
-    return state.flags & T_ext;
-  }
-  void setExternal() { 
-    state.flags = state.flags | T_ext;
-  }
-  void unsetExternal() {
-    state.flags &= ~T_ext;
-  }
-
-
-  void setNoBlock() {
-    state.flags = state.flags | T_noblock;
-  }
-  void unsetNoBlock() {
-    state.flags = state.flags & ~T_noblock;
-  }
-  Bool getNoBlock() {
-    return (state.flags & T_noblock);
-  }
-
-
-  // source level debugger
-  // set/delete some bits...
-  void setTrace() {
-    state.flags = state.flags | T_G_trace;
-  }
-  void setStep() {
-    state.flags = state.flags | T_G_step;
-  }
-  void setStop() {
-    state.flags = state.flags | T_G_stop;
-  }
-  void unsetTrace() {
-    state.flags = state.flags & ~T_G_trace;
-  }
-  void unsetStep() {
-    state.flags = state.flags & ~T_G_step;
-  }
-  void unsetStop() {
-    state.flags = state.flags & ~T_G_stop;
-  }
-
-  // ...and check them
-  Bool isTrace() { return (state.flags & T_G_trace); }
-  Bool isStep()  { return (state.flags & T_G_step); }
-  Bool isStop()  { return (state.flags & T_G_stop); }
-
-  Bool isCatch() { return (state.flags & T_catch); }
-  void setCatch() { state.flags = state.flags|T_catch; }
 
   unsigned int getID() { 
     return id; 
@@ -222,7 +92,6 @@ public:
   PrTabEntry *getAbstr(void) { 
     return abstr; 
   }
-
 
   Bool isSuspended() { 
     Assert(!isDead());

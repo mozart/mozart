@@ -88,9 +88,12 @@ error include resources.hh before mozart.h
 
 /* thread priorities */
 
-#define HI_PRIORITY             2
-#define MID_PRIORITY            1
-#define LOW_PRIORITY            0
+// Must be different from zero and in between 1 and 3,
+// Suspendable relies on that!
+
+#define HI_PRIORITY             3
+#define MID_PRIORITY            2
+#define LOW_PRIORITY            1
 
 #define DEFAULT_PRIORITY	MID_PRIORITY
 
