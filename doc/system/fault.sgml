@@ -229,15 +229,6 @@ listed here will be removed in future releases.
 
 <P>The limitations are:
 <list>
-<item>The code of functions, procedures, classes, and functors
-(but not objects) is always inserted in messages,
-even if the code is already present at the destination.
-In future releases, the code will be copied
-across the network only
-if it is not present on the destination site.
-In both current and future releases, at most a single copy
-of the code can exist per site.
-
 <item>The fault state <<tempFail>> is indicated only after
 a long delay.
 In future releases, the delay will be very short and
@@ -253,7 +244,6 @@ a reference to the object.
 <item>If an exception is raised or a handler is invoked
 for an <EM>object</EM>,
 then the attempted object operation cannot be retried.
-
 </list>
 
 <SECTION><TITLE>Modifications</TITLE>
