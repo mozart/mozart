@@ -6872,7 +6872,7 @@ OZ_C_proc_end
 
 
 /********************************************************************
- * for the new compiler to optimize relative to an existing environment
+ * builtins for the new compiler's environment handling
  ******************************************************************** */
 
 OZ_C_proc_begin(BIisBuiltin,2)
@@ -6916,6 +6916,15 @@ OZ_C_proc_begin(BIgetAbstractionTableID,2)
     n = CodeArea::abstractionTab.getNext(n);
   }
   return oz_unify(res,oz_int(0));
+}
+OZ_C_proc_end
+
+OZ_C_proc_begin(BInameVariable,2)
+{
+  oz_declareArg(0,var);
+  oz_declareAtomArg(1,name);
+  VariableNamer::addName(var,name);
+  return PROCEED;
 }
 OZ_C_proc_end
 
@@ -7298,10 +7307,11 @@ BIspec allSpec[] = {
   {"raise",      1, BIraise,      0},
   {"raiseError", 1, BIraiseError, 0},
 
-  // for the new compiler to optimize relative to an existing environment:
+  // builtins for the new compiler's environment handling:
   {"isBuiltin",             2, BIisBuiltin,             0},
   {"getBuiltinName",        2, BIgetBuiltinName,        0},
   {"getAbstractionTableID", 2, BIgetAbstractionTableID, 0},
+  {"nameVariable",          2, BInameVariable,          0},
 
   {0,0,0,0}
 };
