@@ -185,47 +185,42 @@ void debugStreamExit(TaggedRef frameId) {
   gotoBoard(bb);
 }
 
-void debugStreamCall(ProgramCounter PC, char *name, int arity,
+void debugStreamCall(ProgramCounter debugPC, char *name, int arity,
                      TaggedRef *arguments, bool builtin, int frameId) {
+  Board *bb = gotoRootBoard();
 
-  ProgramCounter debugPC = CodeArea::nextDebugInfo(PC);
+  TaggedRef tail    = am.threadStreamTail;
+  TaggedRef newTail = OZ_newVariable();
 
-  if (debugPC != NOCODE) {
-    Board *bb = gotoRootBoard();
+  TaggedRef file, comment;
+  int line, abspos;
+  time_t feedtime;
 
-    TaggedRef tail    = am.threadStreamTail;
-    TaggedRef newTail = OZ_newVariable();
+  am.currentThread->stop();
 
-    TaggedRef file, comment;
-    int line, abspos;
-    time_t feedtime;
+  CodeArea::getDebugInfoArgs(debugPC,file,line,abspos,comment);
+  TaggedRef arglist = CodeArea::argumentList(arguments, arity);
 
-    am.currentThread->stop();
+  feedtime = CodeArea::findTimeStamp(debugPC);
 
-    CodeArea::getDebugInfoArgs(debugPC,file,line,abspos,comment);
-    TaggedRef arglist = CodeArea::argumentList(arguments, arity);
+  TaggedRef pairlist =
+    cons(OZ_pairA("thr",
+                  OZ_mkTupleC("#",2,makeTaggedConst(am.currentThread),
+                              OZ_int(am.currentThread->getID()))),
+         cons(OZ_pairA("file", file),
+              cons(OZ_pairAI("line", line),
+                   cons(OZ_pairAA("name", name),
+                        cons(OZ_pairA("args", arglist),
+                             cons(OZ_pairA("builtin",
+                                           builtin ? OZ_true() : OZ_false()),
+                                  cons(OZ_pairAI("time", feedtime),
+                                       cons(OZ_pairAI("frame",frameId),
+                                            nil()))))))));
 
-    feedtime = CodeArea::findTimeStamp(debugPC);
-
-    TaggedRef pairlist =
-      cons(OZ_pairA("thr",
-                    OZ_mkTupleC("#",2,makeTaggedConst(am.currentThread),
-                                OZ_int(am.currentThread->getID()))),
-           cons(OZ_pairA("file", file),
-                cons(OZ_pairAI("line", line),
-                     cons(OZ_pairAA("name", name),
-                          cons(OZ_pairA("args", arglist),
-                               cons(OZ_pairA("builtin",
-                                             builtin ? OZ_true() : OZ_false()),
-                                    cons(OZ_pairAI("time", feedtime),
-                                         cons(OZ_pairAI("frame",frameId),
-                                              nil()))))))));
-
-    TaggedRef entry = OZ_recordInit(OZ_atom("step"), pairlist);
-    OZ_unify(tail, OZ_cons(entry, newTail));
-    am.threadStreamTail = newTail;
-    gotoBoard(bb);
-  }
+  TaggedRef entry = OZ_recordInit(OZ_atom("step"), pairlist);
+  OZ_unify(tail, OZ_cons(entry, newTail));
+  am.threadStreamTail = newTail;
+  gotoBoard(bb);
 }
 
 // ------------------ explore a thread's taskstack ---------------------------
