@@ -253,7 +253,6 @@
   <Section>
     <Title/Byte Strings/
     <P>
-      <!--** add byte strings to type structure diagram -->
       Module <Span class=index/<<ByteString>>/ provides an interface to a more
       economical representation for textual data: a simple array of bytes.
       In terms of memory, the economy is at least a factor of&nbsp;8, which
