@@ -126,8 +126,8 @@ starts the emulator under gdb")
 ")
   "")
 
-(defconst oz-arrow-pattern
-  "\'oz-arrow \\([^ ]*\\) \\([^ ]*\\)\'")
+(defconst oz-scrollbar-pattern
+  "\'oz-scrollbar \\([^ ]*\\) \\([^ ]*\\) \\([^ ]*\\)\'")
 
 (defvar oz-want-font-lock t
   "*If t means that font-lock mode is switched on")
@@ -412,12 +412,15 @@ starts the emulator under gdb")
       )))
 
 
-;; scrollbar stuff
-(make-face 'scrollbar)
-(modify-face 'scrollbar "white" "#7070c0" nil nil nil nil nil)
+(make-face 'scrollbar-runnable)
+(make-face 'scrollbar-blocked)
+(make-face 'scrollbar-stack)
+(modify-face 'scrollbar-runnable "white" "#50a050" nil nil nil nil nil)
+(modify-face 'scrollbar-blocked  "white" "#d05050" nil nil nil nil nil)
+(modify-face 'scrollbar-stack    "white" "#7070c0" nil nil nil nil nil)
 (defvar scrollbar-overlay nil)
 
-(defun oz-scrollbar (file line)
+(defun oz-scrollbar (file line what)
   "Display scrollbar at given line, load file if necessary."
   (interactive)
   (let* ((last-nonmenu-event t)
@@ -435,13 +438,20 @@ starts the emulator under gdb")
 
 	(or scrollbar-overlay (setq scrollbar-overlay (make-overlay beg end)))
 	(move-overlay scrollbar-overlay beg end (current-buffer))
-	(overlay-put scrollbar-overlay 'face 'scrollbar))
+	
+	(overlay-put scrollbar-overlay 'face
+		     (cond ((string-equal what "runnable")
+			    'scrollbar-runnable)
+			   ((string-equal what "blocked")
+			    'scrollbar-blocked)
+			   ((string-equal what "stack")
+			    'scrollbar-stack))))
 
-	(if (or (< beg (window-start)) (> beg (window-end)))
-	    (progn
-	      (widen)
-	      (goto-char beg))
-	  (goto-char oldpos)))
+      (if (or (< beg (window-start)) (> beg (window-end)))
+	  (progn
+	    (widen)
+	    (goto-char beg))
+	(goto-char oldpos)))
     (set-window-point window beg)))
 
 
@@ -1420,12 +1430,15 @@ and initial semicolons."
               (replace-match "" nil t))
 
             ;; oz-scrollbar information?
-            (while (search-forward-regexp oz-arrow-pattern nil t)
-              (let ((file (match-string 1))
-                    (line (string-to-number (match-string 2))))
+            (while (search-forward-regexp oz-scrollbar-pattern nil t)
+              (let ((file  (match-string 1))
+		    (line  (string-to-number (match-string 2)))
+		    (what (match-string 3)))
                 (replace-match "" nil t)
-                (oz-scrollbar file line))))
-
+		(if (string-equal what "hide")
+		    (overlay-put scrollbar-overlay 'face 'default)
+		  (oz-scrollbar file line what)))))
+	  
 	  (if (or moving errs-found) (goto-char (process-mark proc))))
       (set-buffer old-buffer))
 
