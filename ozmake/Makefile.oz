@@ -170,13 +170,16 @@ define
 	 end
 
 	 %% process requires feature
-	 if {HasFeature R requires} then
-	    if {IsVirtualString R.requires} then
-	       {self set_requires([R.requires])}
-	    elseif {IsList R.requires} andthen {All R.requires IsVirtualString} then
-	       {self set_requires(R.requires)}
+
+	 case {CondSelect R requires nil}
+	 of nil then skip
+	 [] S then
+	    if {IsVirtualString S} then
+	       {self set_requires([S])}
+	    elseif {IsList S} andthen {All S IsVirtualString} then
+	       {self set_requires(S)}
 	    else
-	       raise ozmake(makefile:badrequires(R.requires)) end
+	       raise ozmake(makefile:badrequires(S)) end
 	    end
 	 end
 
