@@ -63,7 +63,7 @@ void banner() {
 #define FLUSHECHOIDENT { FLUSH; ECHOIDENT(yytext); }
 %}
 IDENT		[a-zA-Z0-9_]+
-KEYWORD		(proc|fun|local|declare|"if"|or|dis|choice|"case"|then|"else"|elseif|of|elseof|elsecase|end|"class"|create|meth|"extern"|from|with|attr|feat|self|true|false|touch|div|mod|andthen|orelse|thread|job|conc|in|condis|not)
+KEYWORD		(proc|fun|local|declare|"if"|or|dis|choice|"case"|then|"else"|elseif|of|elseof|elsecase|end|"class"|meth|from|with|attr|feat|self|true|false|touch|div|mod|andthen|orelse|thread|in|condis|not|try|catch|raise|lock|skip|fail|unit)
 CKEYWORD	("asm"|"auto"|"break"|"char"|"case"|"const"|"continue"|"default"|"do"|"double"|"else"|"enum"|"extern"|"float"|"for"|"goto"|"if"|"inline"|"int"|"long"|"register"|"return"|"short"|"signed"|"sizeof"|"static"|"struct"|"switch"|"typedef"|"typeof"|"union"|"unsigned"|"void"|"volatile"|"while"|"all"|"except"|"exception"|"raise"|"raises"|"reraise"|"throw"|"try"|"catch"|"class"|"classof"|"delete"|"dynamic"|"friend"|"headof"|"new"|"operator"|"overload"|"private"|"protected"|"public"|"this"|"template"|"virtual")
 COPERATOR	("->"|"<<"|">>"|"<="|">="|"!="|"||"|"..."|"*="|"<<="|">>="|"^="|"|="|"~"|"*"|"^"|"|"|"->*"|"/"|"<"|">"|"&&"|"%="|"&="|"{"|"}"|"&"|"%"|"--"|".*"|"?"|":"|"="|","|"."|";"|"!"|"-"|"+"|"/="|"=="|"++"|"+="|"-="|"("|")"|"["|"]"|"::")
 BLANKLINES	([ \t]*\n)*
