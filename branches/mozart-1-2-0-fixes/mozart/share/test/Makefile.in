@@ -12,7 +12,10 @@ INSTALL_DIR	= @INSTALL_DIR@
 CPPFLAGS	= @CPPFLAGS@
 LDFLAGS		= @LDFLAGS@
 
-export OZPATH = .:$(SRCDIR)
+OZLOADSEP	= @OZLOADSEP@
+CYG_SRCDIR	= $(shell $(SRCTOP)/share/lib/cygpath.sh "$(SRCDIR)")
+
+export OZPATH = .$(OZLOADSEP)$(CYG_SRCDIR)
 
 # Test for spaces
 SPACELOCAL = \
@@ -76,6 +79,8 @@ TOOLS = $(FTOOLS:%=./tools/%.ozf)
 
 FNATIVES = \
 	base/smallbuf base/gcsusplist
+
+.PRECIOUS: $(FNATIVES:%=%.o)
 
 SONATIVES = $(FNATIVES:%=%.so-$(OZPLATFORM))
 
@@ -160,7 +165,7 @@ make-test: lib/make-test.oz
 
 BENCHSRCS=make-bench engine compute-tests help-bench
 ozbench: dirs $(BENCHSRCS:%=./lib/%.oz) $(BENCHCOMPONENTS) $(OTHERS)
-	$(OZC) $(OZFLAGS) -x $(OZEXECFILE) $(SRCDIR)/lib/make-bench.oz -o make-bench
+	$(OZC) $(OZFLAGS) -x $(OZEXECFILE) lib/make-bench.oz -o make-bench
 	$(OZENGINE) ./make-bench --verbose $(BENCHCOMPONENTS)
 	chmod +x ozbench
 	-rm -f ./make-bench
@@ -184,4 +189,3 @@ gump-examples:
 %.o: %.cc
 	$(OZTOOL) c++ -I$(SRCTOP)/platform/emulator \
 	-I$(BUILDTOP)/platform/emulator $(CPPFLAGS) -c $< -o $@
-
