@@ -297,4 +297,38 @@ end
 \secmtion{Events and Actions}
 
 
+<![ %EXTRA; [
+<section><title/Examples/
+<p>
+<chunk><title/EXAMPLES/
+%%%
+%%% Chapter: Geometry Managers
+%%%
+
+
+
+%%%
+%%% Chapter: More Widgets
+%%%
+
+
+
+%%%
+%%% Chapter: Canvas Widgets
+%%%
+
+
+
+%%%
+%%% Chapter: Text Widgets
+%%%
+
+
+
+%%%
+%%% Chapter: Tools for Tk
+%%%
+</chunk>
+]]>
+
 </Chapter>
