@@ -1045,10 +1045,7 @@ public:
       : makeTaggedNULL();
   }
 
-  SRecord *getUnfreeRecord()
-  {
-    return unfreeFeatures;
-  }
+  SRecord *getUnfreeRecord() { return unfreeFeatures; }
 
   ObjectClass *gcClass();
   OZPRINT;
@@ -1119,12 +1116,16 @@ public:
   TaggedRef getOzClass()        { return getClass()->getOzClass(); }
   Board *getBoardFast();
   SRecord *getFreeRecord()          { return (SRecord *) getPtr(); }
+  SRecord *getUnfreeRecord() {
+    return isClass() ? NULL : getClass()->getUnfreeRecord();
+  }
   void setFreeRecord(SRecord *aRec) { setPtr(aRec); }
 
+  /* same functionality is also in instruction inlineDot */
   TaggedRef getFeature(TaggedRef lit)
   {
     TaggedRef ret = getFreeRecord()->getFeature(lit);
-    return (!ret && !isClass()) ? getClass()->getFeature(lit) : ret;
+    return (!ret) ?  getUnfreeRecord()->getFeature(lit) : ret;
   }
 
   TaggedRef getArityList();
