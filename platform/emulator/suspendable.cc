@@ -135,7 +135,9 @@ void oz_checkAnySuspensionList(SuspList ** suspList,
 			       Board * home,
 			       PropCaller calledBy) {
 
-  if (am.inEqEq() || Board::mustIgnoreWakeUp()) {
+  // raph: Do not return when calledBy == pc_all, otherwise by-need
+  // futures aren't kicked properly by '=='.
+  if ((calledBy != pc_all && am.inEqEq()) || Board::mustIgnoreWakeUp()) {
     return;
   }
 
