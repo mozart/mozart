@@ -273,7 +273,7 @@ in
 			       search([all next step])
 			       nodes([cmp info selCmp deselCmp stat])
 			       hide([toggle all failed])]
-	  tk(entryconf o(state:disabled))}
+	  tk(entryconf state:disabled)}
       end
 
       meth busy
@@ -284,26 +284,26 @@ in
 			       nodes([cmp info selCmp deselCmp stat])
 			       hide([toggle all failed])
 			       options([search layout info postscript])]
-	  tk(entryconf o(state:disabled))}
+	  tk(entryconf state:disabled)}
       end
 
       meth idle
 	 {DoEntries self.menu [explorer([about postscript])
 			       options([search layout info postscript])]
-	  tk(entryconf o(state:normal))}
+	  tk(entryconf state:normal)}
       end
       
       meth normal(Es)
-	 {DoEntries self.menu Es tk(entryconf o(state:normal))}
+	 {DoEntries self.menu Es tk(entryconf state:normal)}
       end
    
       meth disable(Es)
-	 {DoEntries self.menu Es tk(entryconf o(state:disabled))}
+	 {DoEntries self.menu Es tk(entryconf state:disabled)}
       end
       
       meth state(B Es)
-	 case B then {DoEntries self.menu Es tk(entryconf o(state:normal))}
-	 else {DoEntries self.menu Es tk(entryconf o(state:disabled))}
+	 case B then {DoEntries self.menu Es tk(entryconf state:normal)}
+	 else {DoEntries self.menu Es tk(entryconf state:disabled)}
 	 end
       end
 
