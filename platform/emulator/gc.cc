@@ -1664,6 +1664,49 @@ Board* Board::gcGetNotificationBoard ()
   }
 }
 
+// #define  OUR_SPECS
+#undef   OUR_SPECS
+#ifdef   OUR_SPECS
+//  The idea:
+//  In canonical version of the Board::gcGetBoardDeref a node can be determined
+// as living, though among its parents there is a dead one. It means, that
+// gcGetBoardDeref is sound but not complete. There is an attempt to eliminate
+// this problem.
+Board *Board::gcGetBoardDeref()
+{
+  GCMETHMSG("Board::gcGetBoardDeref");
+  Board *bb = this;
+  while (OK) {
+    if (!bb || GCISMARKED(bb->suspCount)) {
+      return bb;
+    }
+    if (bb->isDiscarded() || bb->isFailed()) {
+      return NULL;
+    } else if (bb->isCommitted()) {
+      bb = bb->u.board;
+    } else {
+      Board *retB = bb;
+      while (OK) {
+        if (!bb || GCISMARKED(bb->suspCount)) {
+          return retB;
+        }
+        if (bb->isDiscarded() || bb->isFailed()) {
+          return NULL;
+        } else if (bb->isCommitted()) {
+          bb = bb->u.board;
+        } else {
+          if (bb->isRoot () == OK) {
+            return retB;
+          } else {
+            bb = bb->getParentBoard ();
+          }
+        }
+      }
+    }
+  }
+  error("Board::gcGetBoardDeref");
+}
+#else
 Board *Board::gcGetBoardDeref()
 {
   GCMETHMSG("Board::gcGetBoardDeref");
@@ -1682,6 +1725,7 @@ Board *Board::gcGetBoardDeref()
   }
   error("Board::gcGetBoardDeref");
 }
+#endif
 
 // This procedure derefences cluster chains and collects only the object at
 // the end of such a chain.
