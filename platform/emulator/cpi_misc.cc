@@ -287,7 +287,7 @@ int * OZ_getCIntVector(OZ_Term t, int * v)
 
 void * OZ_FSetValue::operator new(size_t s)
 {
-  return freeListMalloc(s); 
+  return freeListMalloc(s);
 }
 
 void OZ_FSetValue::operator delete(void * p, size_t s)
@@ -308,6 +308,50 @@ void OZ_FSetValue::operator delete[](void * p, size_t s)
 #endif
 
 
+void * OZ_FSetConstraint::operator new(size_t s)
+{
+  return freeListMalloc(s);
+}
+
+void OZ_FSetConstraint::operator delete(void * p, size_t s)
+{
+  // deliberately left empty
+}
+
+#ifdef __GNUC__
+void * OZ_FSetConstraint::operator new[](size_t s)
+{
+  return freeListMalloc(s);
+}
+
+void OZ_FSetConstraint::operator delete[](void * p, size_t s)
+{
+  // deliberately left empty
+}
+#endif
+
+void * OZ_FiniteDomain::operator new(size_t s)
+{
+  return freeListMalloc(s);
+}
+
+void OZ_FiniteDomain::operator delete(void * p, size_t s)
+{
+  // deliberately left empty
+}
+
+#ifdef __GNUC__
+void * OZ_FiniteDomain::operator new[](size_t s)
+{
+  return freeListMalloc(s);
+}
+
+void OZ_FiniteDomain::operator delete[](void * p, size_t s)
+{
+  // deliberately left empty
+}
+#endif
+
 OZ_Term OZ_fsetValue(OZ_FSetValue * s)
 {
   return makeTaggedFSetValue(s);
@@ -317,6 +361,7 @@ OZ_FSetValue * OZ_fsetValueToC(OZ_Term t)
 {
   return  tagged2FSetValue(oz_deref(t));
 }
+
 
 // End of File
 //-----------------------------------------------------------------------------
