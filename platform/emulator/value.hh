@@ -2327,6 +2327,10 @@ public:
 
   CodeArea *getCodeBlock();
 
+  // retain the particular entry;
+  void gCollect(void);
+  void sClone(void);            // empty;
+  // the whole list;
   static void gCollectPrTabEntries(void);
   static void gCollectDispose(void);
 };
