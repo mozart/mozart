@@ -517,9 +517,10 @@ Input and output via buffers *Oz Compiler* and *Oz Machine*."
       (set-process-filter (get-buffer-process oz-machine-buffer)
 			  'oz-machine-filter)
       (oz-create-buffer oz-machine-buffer)
-      (save-excursion
-	(set-buffer oz-machine-buffer)
-	(define-key (current-local-map) "\C-m" 'comint-send-input)))
+;;      (save-excursion
+;;	(set-buffer oz-machine-buffer)
+;;	(define-key (current-local-map) "\C-m" 'comint-send-input))
+   )
 
     (bury-buffer oz-machine-buffer)
 
