@@ -47,11 +47,7 @@ public:
   OZ_Return valid(TaggedRef /* val */) {
     return TRUE;
   }
-  void gcRecurse()   {
-    if (function) {
-      OZ_collectHeapTerm(function,function);
-    }
-  }
+  void gcRecurse(void);
   OZ_Return addSusp(TaggedRef*, Suspendable *, int);
   void dispose(void) {
     disposeS();
