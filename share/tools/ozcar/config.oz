@@ -275,7 +275,7 @@ ProcColor
 BuiltinColor
 OldStackColor
 
-UseColors = Tk.isColor andthen Platform \= WindowsPlatform
+UseColors = {And Tk.isColor Platform \= WindowsPlatform}
 
 case UseColors then
    %% main window
