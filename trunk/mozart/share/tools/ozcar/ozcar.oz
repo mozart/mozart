@@ -23,20 +23,8 @@ Ozcar =
 	meth on
 	   {Tk.send wm(deiconify self.toplevel)}
 	   {Compile "\\sw -optimize +debuginfo"}
-	   
-	   %% still searching for the gc bug... :-(
-	   %% found it (Tue Mar 11 1997)
-	   %{System.set gc(on:false)}
-	   
 	   {Debug.on}
-	   Gui,rawStatus(TitleName # ' initialized')
+	   Gui,rawStatus(InitStatus)
 	end
 	
-	meth exit
-	   {Debug.off}
-	   ThreadManager,close
-	   SourceManager,close
-	   Gui,status(~1) {Delay 1500}
-	   {self.toplevel tkClose}
-	end
      end init}
