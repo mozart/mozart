@@ -886,31 +886,13 @@ Bool bigIntEq(TaggedRef a, TaggedRef b)
 
 inline
 Bool oz_numberEq(TaggedRef a, TaggedRef b) {
-  TypeOfTerm tag = tagTypeOf(a);
-  if (tag != tagTypeOf(b))
-    return NO;
-  switch (tag) {
-  case TAG_SMALLINT:
+  if (oz_isSmallInt(a) && oz_isSmallInt(b))
     return smallIntEq(a,b);
-  case TAG_CONST:
-    {
-      TypeOfConst cta = tagged2Const(a)->getType();
-      TypeOfConst ctb = tagged2Const(b)->getType();
-      if (cta != ctb)
-        return NO;
-      switch (cta) {
-      Co_Float:
-        return (((Float *) tagged2Const(a))->getValue() ==
-                ((Float *) tagged2Const(b))->getValue());
-      Co_BigInt:
-        return ((BigInt *) tagged2Const(a))->equal((BigInt *) tagged2Const(b));
-      default:
-        break;
-      }
-    }
-  default:
-    break;
-  }
+  if (oz_isFloat(a) && oz_isFloat(b))
+    return (((Float *) tagged2Const(a))->getValue() ==
+            ((Float *) tagged2Const(b))->getValue());
+  if (oz_isBigInt(a) && oz_isBigInt(b))
+    return ((BigInt *) tagged2Const(a))->equal((BigInt *) tagged2Const(b));
   return NO;
 }
 

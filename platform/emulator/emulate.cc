@@ -1731,7 +1731,7 @@ Case(GETVOID)
       PushCont(PC+3);
       AbstractionEntry *entry = (AbstractionEntry *)getAdressArg(PC+1);
       CallDoChecks(entry->getAbstr());
-      if (tagTypeOf(XREGS[0])==TAG_LTUPLE) {
+      if (oz_isLTuple(XREGS[0])) {
         sPointer = tagged2LTuple(XREGS[0])->getRef();
         JUMPABSOLUTE(entry->getListPC());
       } else {
@@ -1744,7 +1744,7 @@ Case(GETVOID)
     {
       AbstractionEntry *entry = (AbstractionEntry *)getAdressArg(PC+1);
       CallDoChecks(entry->getAbstr());
-      if (tagTypeOf(XREGS[0])==TAG_LTUPLE) {
+      if (oz_isLTuple(XREGS[0])) {
         sPointer = tagged2LTuple(XREGS[0])->getRef();
         JUMPABSOLUTE(entry->getListPC());
       } else {
