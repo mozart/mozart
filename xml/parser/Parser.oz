@@ -837,7 +837,6 @@ prepare
 			      uri    : unit
 			      coord  : Coord)
 			   ValueA)}
-		  Parser,PreProcessAlist(IN)
 	       end
 	    elseif {HasFeature XMLNS PrefixA} then
 	       %% namespace declaration
@@ -854,8 +853,8 @@ prepare
 	       TAGS<-Tag|@TAGS
 	       %% qualified attribute
 	       {self onAttribute(Tag ValueA)}
-	       Parser,PreProcessAlist(IN)
 	    end
+	    Parser,PreProcessAlist(IN)
 	 end
       end
 
