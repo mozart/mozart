@@ -15,7 +15,6 @@ BITMAPS = \
 	explorer.xbm
 
 
-BITMAPFILES = ${BITMAPS:%=$(BITMAPDIR)/%}
 LOCALBITMAPFILES = ${BITMAPS:%=../bitmaps/%}
 
 LIBFILES = ${LOCALFILES:%.oz=$(OZEXPLORER)/%.oz}
@@ -31,7 +30,7 @@ clean::
 install:: $(OZEXPLORER) $(LIBFILES) bitmaps
 
 
-bitmaps: $(BITMAPFILES)
+bitmaps: $(LOCALBITMAPFILES)
 	$(INSTALL) -m 444 $(LOCALBITMAPFILES) $(OZLIB)/bitmaps
 
 $(OZEXPLORER):
