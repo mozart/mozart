@@ -72,6 +72,8 @@ Makefile: Makefile.in
 -include Makefile.deps
 include ../Makefile.rules
 
+first:
+
 distclean::
         -rm -f Makefile
 
