@@ -27,6 +27,7 @@
 #include "susplist.hh"
 
 #include "variable.hh"
+#include "genvar.hh"
 
 void addSuspAnyVar(TaggedRefPtr v, Thread *thr)
 {
@@ -44,8 +45,6 @@ void addSuspAnyVar(TaggedRefPtr v, Thread *thr)
   *v = makeTaggedSVar(sv);
   addSuspSVar(*v,thr);
 }
-
-
 
 /*
  * Class VariableNamer: assign names to variables
