@@ -58,8 +58,8 @@ class MonitorArityPropagator : public OZ_Propagator {
 private:
   static OZ_PropagatorProfile profile;
 protected:
-  OZ_Term X, K, L, FH, FT; // Never change this order!
 public:
+  OZ_Term X, K, L, FH, FT; // Never change this order!
   MonitorArityPropagator(OZ_Term X1, OZ_Term K1, OZ_Term L1,
                          OZ_Term FH1, OZ_Term FT1)
     : X(X1), K(K1), L(L1), FH(FH1), FT(FT1) {}
@@ -70,12 +70,6 @@ public:
   virtual OZ_Return propagate(void);
   virtual OZ_PropagatorProfile * getProfile(void) const {return &profile; }
   virtual OZ_Term getParameters(void) const { return OZ_nil(); }
-
-  TaggedRef getX(void);
-  TaggedRef getK(void);
-  TaggedRef getFH(void);
-  TaggedRef getFT(void);
-  void setFH(TaggedRef FH1);
 };
 
 #endif
