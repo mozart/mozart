@@ -120,9 +120,9 @@ void freeListChop(void * addr, size_t size) {
   register size_t cs = nextChopSize;
 
   if (nextChopSize > 32) 
-    nextChopSize = 8;
+    nextChopSize = 2*sizeof(void*);
   else
-    nextChopSize += 4;
+    nextChopSize += sizeof(void*);
 
   register size_t s     = size;
   register void ** fl   = &(FreeList[cs]);
