@@ -81,6 +81,7 @@ public:
   RefsArray toplevelVars;
 
   Board *currentBoard;
+  TaskStack *cachedStack;
 private:
   Object *cachedSelf;
 public:
@@ -181,7 +182,6 @@ public:
   void handleToplevelBlocking();
 
   Bool isToplevel();
-  Bool isToplevelFailure();
 
   void gc(int msgLevel);  // ###
   void doGC();
@@ -224,10 +224,9 @@ public:
 
   void pushCall(TaggedRef def, int arity, RefsArray args);
   void pushDebug(TaggedRef def, int arity, RefsArray args);
-  void pushTask(ProgramCounter pc,
-                RefsArray y,RefsArray g,RefsArray x=0,int i=0);
-  void pushTaskOutline(ProgramCounter pc,
-                       RefsArray y,RefsArray g,RefsArray x=0,int i=0);
+  void pushTaskInline(ProgramCounter pc,
+                      RefsArray y,RefsArray g,RefsArray x,int i);
+  void pushTask(ProgramCounter pc,RefsArray y,RefsArray g,RefsArray x=0,int i=0);
   void pushCFun(OZ_CFun f, RefsArray x=0, int i=0);
   void pushLocal();
 

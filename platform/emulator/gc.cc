@@ -869,8 +869,6 @@ RunnableThreadBody *RunnableThreadBody::gcRTBody ()
 {
   GCMETHMSG ("RunnableThreadBody::gcRTBody");
 
-  CHECKCOLLECTED (ToInt32 ((int *) &taskStack), RunnableThreadBody *);
-
   RunnableThreadBody *ret =
     (RunnableThreadBody *) gcRealloc (this, sizeof (*this));
   GCNEWADDRMSG (ret);
@@ -878,11 +876,7 @@ RunnableThreadBody *RunnableThreadBody::gcRTBody ()
   //  see above ('RunnableThreadBody::gcRecurse ()');
   ret->taskStack.gcRecurse ();
 
-  //  ... also see above;
-  // ptrStack.push (ret, PTR_RTBODY);
-  storeForward ((int *) &taskStack, ret);
-
-  ret->self = ret->self->gcObject();
+  ret->u.self = ret->u.self->gcObject();
   gcTagged(ret->debugVar,ret->debugVar);
 
   return (ret);
@@ -1588,6 +1582,9 @@ void AM::gc(int msgLevel)
 // ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //                garbage collection is finished here
 
+  Assert(currentThread==NULL);
+  cachedStack = NULL;
+
   ozstat.printGcMsg(msgLevel);
 
   gcing = 1;
@@ -1768,15 +1765,13 @@ void CodeArea::gc()
 
 void ThreadsPool::doGC ()
 {
-  int pri, prioInd = nextPrioInd;
-  ThreadQueue *thq;
-
-  currentThread = currentThread->gcThread ();
-  rootThread = rootThread->gcThread ();
+  Assert(currentThread==NULL);
+  rootThread         = rootThread->gcThread();
   threadBodyFreeList = (RunnableThreadBody *) NULL;
 
-  thq = currentQueue;
-  pri = currentPriority;
+  ThreadQueue *thq = currentQueue;
+  int pri = currentPriority;
+  int prioInd = nextPrioInd;
   while (thq) {
     thq->doGC ();
 
