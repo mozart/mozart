@@ -78,10 +78,10 @@ define
                                                                       end)}
       FontL={New Tk.label tkInit(parent:FF text:"Font Size:")}
       ColorL={New Tk.label tkInit(parent:T bd:1 font:ColorF relief:groove
-                                  text:"This will be your color selection!")}
+                                  text:"This will be your font and color selection!")}
       CF={New Tk.frame tkInit(parent:T bd:2 relief:sunken)}
-      FgL={New Tk.label tkInit(parent:CF text:"Foreground:")}
-      BgL={New Tk.label tkInit(parent:CF text:"Background:")}
+      FgL={New Tk.label tkInit(parent:CF text:"Foreground: "#{Access UICell}.foreground)}
+      BgL={New Tk.label tkInit(parent:CF text:"Background: "#{Access UICell}.background)}
       FgLB={New Tk.listbox tkInit(parent:CF
                                   setgrid:true
                                   width:20
@@ -133,6 +133,7 @@ define
                     {FgLB tk(insert 'end' X)}
                     {BgLB tk(insert 'end' X)}
                  end}
+
       {FgLB tkBind(event:'<1>'
                    action: proc {$} I={FgLB tkReturnInt(curselection $)} in
                               if I\=false andthen I\=nil then
@@ -151,12 +152,20 @@ define
                                  {Assign BgC C}
                               end
                            end)}
+      local
+         C={Access UICell}
+      in
+         {List.forAllInd Cs proc{$ I X}
+                               if X==C.foreground then
+                                  {FgLB tk(see I-1)}
+                               end
+                               if X==C.background then
+                                  {BgLB tk(see I-1)}
+                                  {BgLB tk(selection set I-1 I-1)}
+                               end
+                            end}
+      end
+
+
    end
 end
-
-/* Test
-
-declare [A]={Module.link ['configureclient.ozf']}
-{A.start}
-
-*/
