@@ -312,6 +312,30 @@ Builtin * cfunc2Builtin(void * f) {
   return tagged2Builtin(BI_unknown);
 }
 
+inline
+void link_module(ModuleEntry * E, Bool isSited) {
+  tagged2Dictionary(dictionary_of_modules)
+    ->setArg(oz_atomNoDup(E->name), 
+	     ozInterfaceToRecord((E->init_function)(),
+				 E->name,
+				 isSited));
+}
+
+inline
+ModuleEntry * find_module(ModuleEntry * mt, const char * mn) {
+  for (ModuleEntry * E = mt; (E && E->name); E++)
+    if (!strcmp(E->name,mn))
+      return E;
+  return NULL;
+}
+
+inline
+void link_modules(ModuleEntry * mt, Bool isSited) {
+
+  for (ModuleEntry * E = mt; (E && E->name); E++)
+    link_module(E,isSited);
+  
+}
 
 
 
@@ -320,9 +344,18 @@ TaggedRef string2Builtin(const char * mn, const char * bn) {
 
   TaggedRef mod; 
   
-  if (d->getArg(oz_atom(mn), mod) != PROCEED) {
-    OZ_warning("[BUILTIN NOT FOUND: Unknown module %s]\n", mn);
-    return BI_unknown;
+  TaggedRef mn_a = oz_atom(mn);
+
+ retry:
+
+  if (d->getArg(mn_a, mod) != PROCEED) {
+    ModuleEntry * E = find_module(base_module_table, mn);
+    if (!E) {
+      OZ_warning("[BUILTIN NOT FOUND: Unknown module %s]\n", mn);
+      return BI_unknown;
+    }
+    link_module(E,NO);
+    goto retry;
   }
 
   mod = oz_deref(mod);
@@ -384,19 +417,6 @@ TaggedRef string2Builtin(const char * cs) {
 
 Builtin * string2CBuiltin(const char * Name) {
   return tagged2Builtin(string2Builtin(Name));
-}
-
-void link_module(ModuleEntry * mt, Bool isSited) {
-
-  for (ModuleEntry * E = mt; (E && E->name); E++) {
-
-    tagged2Dictionary(dictionary_of_modules)
-      ->setArg(oz_atomNoDup(E->name), 
-	       ozInterfaceToRecord((E->init_function)(),
-				   E->name,
-				   isSited));
-  }
-  
 }
 
 
@@ -510,8 +530,7 @@ void initBuiltins() {
   //
   // populate it
   //
-  link_module(base_module_table, NO);
-  link_module(ext_module_table,  OK);
+  link_modules(ext_module_table,  OK);
 
   // General stuff
   BI_wait         = string2Builtin("Value","wait");
