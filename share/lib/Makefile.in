@@ -364,7 +364,7 @@ tags:
 # Test a new emulator with
 #    make check OZEMULATOR=$(HOME)/Oz/Emulator/oz.emulator.bin
 
-.PHONY: bootstrap stage1 stage2 stage2b stage3 stage3b check thorough-check
+.PHONY: bootstrap stage1 stage2 stage2b stage3 stage3b check thorough-check newozma
 
 URL=http\\://www.ps.uni-sb.de/ozhome
 
@@ -403,7 +403,7 @@ stage2b:
 # stage3: recreate the components and Ozma file using the stage2 Ozma file
 stage3:
 	$(MAKE) install-stage PREFIX=$(STAGE3) \
-	OZ_LOAD=all=.:all=tyc:prefix=$(URL)/tools/=$(URL)/tools/:= \
+	OZ_LOAD=all=.:all=tyc/lib:all=tyc/tools:prefix=$(URL)/tools/=$(URL)/tools/:= \
 	OZBATCH=$(SRCDIR)/ozbatch.sh \
 	OZINIT=$(STAGE2)/lib/Init.ozc \
 	OZMAFILE=$(STAGE2)/lib/ozbatch.ozm
@@ -414,6 +414,18 @@ stage3b:
 	OZ_LOAD=prefix=$(URL)/lib/=$(STAGE3)/lib/:prefix=$(URL)/tools/=$(URL)/tools/:.:=\
 	OZBATCH=$(STAGE3)/bin/ozbatch \
 	OZINIT=$(STAGE3)/lib/Init.ozc
+
+# for making incompatible changes to instructions
+#  1. make newozma                 # create new ozbatch.ozm with old emulator
+#  2. make bootstrap OZEMULATOR=.. # bootstrap again with new emulator
+newozma:
+	$(MAKE) clean
+	$(MAKE) stage1 OZFLAGS="-DNO_ASSEMBLER"
+	$(MAKE) clean
+	$(MAKE) ozbatch.ozm \
+	 OZ_LOAD=prefix=$(URL)/lib/=$(STAGE1)/lib/:prefix=$(URL)/tools/=$(URL)/tools/:.:=\
+	 OZBATCH=$(STAGE1)/bin/ozbatch \
+	 OZINIT=$(STAGE1)/lib/Init.ozc
 
 check:
 	$(MAKE) clean bootstrap stage1
