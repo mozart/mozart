@@ -6,7 +6,7 @@
 %%%  Version: $Revision$
 
 local
- 
+
    proc {OpiError V M}
       E = {System.get errors}
    in
@@ -48,13 +48,24 @@ in
       from BaseObject
       prop locking final
 
+      feat
+	 Options: {Record.map DefOptions fun {$ O}
+					    D = {Dictionary.new}
+					 in
+					    {Record.forAllInd O
+					     proc {$ F V}
+						{Dictionary.put D F V}
+					     end}
+					    D
+					 end}
+
       attr
 	 Stacked:   nil
          MyManager: unit
 
       meth Init()
 	 case @MyManager\=unit then skip else
-	    MyManager <- {New Manager init(self)}
+	    MyManager <- {New Manager init(self self.Options)}
 	    %% Include the standard actions
                \insert default-actions.oz
 	    {ForAll @Stacked proc {$ M} {self M} end}
@@ -161,12 +172,11 @@ in
 
       meth option(What ...) = OM
 	 lock
-	    case @MyManager==unit then Stacked <- OM|@Stacked
-	    elsecase
+	    case
 	       case
 		  What==postscript andthen
 		  {List.sub {Arity OM} [1 color orientation size]}
-	       then O=@MyManager.options.postscript in
+	       then O=self.Options.postscript in
 		  case {HasFeature OM size} then
 		     case {CheckSize {VirtualString.toString OM.size}}
 		     of false then false
@@ -197,7 +207,7 @@ in
 	       elsecase
 		  What==search andthen
 		  {List.sub {Arity OM} [1 information search failed]}
-	       then O=@MyManager.options.search in
+	       then O=self.Options.search in
 		  case {HasFeature OM search} then S=OM.search in
 		     case S
 		     of none then {Dictionary.put O search 1} true
@@ -225,7 +235,7 @@ in
 	       elsecase
 		  What==drawing andthen
 		  {List.sub {Arity OM} [1 hide scale update]}
-	       then O=@MyManager.options.drawing in
+	       then O=self.Options.drawing in
 		  case {HasFeature OM hide} then H=OM.hide in
 		     case {IsBool H} then {Dictionary.put O hide H} true
 		     else false
@@ -246,7 +256,10 @@ in
 		  else true end
 	       else false
 	       end
-	    then {@MyManager updateAfterOption}
+	    then
+	       case @MyManager of unit then skip elseof M then
+		  {M updateAfterOption}
+	       end
 	    else {OpiError 'Option configuration' OM}
 	    end
 	 end
