@@ -3,6 +3,7 @@ SRCDIR		= @srcdir@
 TOPDIR		= @TOPDIR@
 
 PREFIX		= @prefix@
+OZPREFIX	= $(PREFIX)
 
 OZBIN		= $(PREFIX)/bin
 OZLIB		= $(PREFIX)/lib
@@ -38,6 +39,7 @@ OZMA		= $(OZBATCH) $(OZFLAGS) -DOZM --ozma
 
 # exports
 export SRCDIR
+export OZPREFIX
 export OZLIB
 export OZMAINIT = Init.ozc
 export OZMAFILE = $(SRCDIR)/ozbatch.ozm
@@ -385,7 +387,8 @@ $(COMPILER_BIG): $(DUMPINTRO) $(COMPILERSRC) SP.env \
 
 $(COMPILER_FUN): $(DUMPINTRO) SP.env CP.env Gump.env Compiler.env Init.ozc \
 	FunMisc.ozc FunBuiltins.ozc FunSA.ozc FunCode.ozc FunCore.ozc \
-	FunUnnest.ozc FunAssembler.ozc FunCompiler.ozc compiler/FunMake.oz
+	FunUnnest.ozc FunAssembler.ozc FunCompiler.ozc compiler/FunMake.oz \
+	$(TYCS)
 	$(OZBATCH) $(OZFLAGS) --include=DumpIntro.oz -l OP \
 	-c compiler/FunMake.oz -o Compiler.ozc
 
