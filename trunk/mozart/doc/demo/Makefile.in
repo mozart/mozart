@@ -18,6 +18,7 @@ HTMLEXTRAFILES = \
 OZDOCHTMLFLAGS = --autoindex
 
 all:: cutting.code
+quick:: cutting.code
 
 include ../Makefile.common
 
