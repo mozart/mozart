@@ -333,7 +333,7 @@ void AM::init(int argc,char **argv)
     }
 
     OZ_Term v=oz_newVariable();
-    OZ_Return ret = loadURL(url,v);
+    OZ_Return ret = loadURL(url,v,makeTaggedNULL());
     if (ret!=PROCEED) {
       char *aux = (ret==RAISE) ? toC(exception.value) : "unknown error";
       fprintf(stderr,"Loading from URL '%s' failed: %s\n",url,aux);
