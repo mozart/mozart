@@ -19,7 +19,7 @@ define
    L3 = {QTk.newLook}
    {L3.set label(fg:darkred bg:ivory)}
    L4 = {QTk.newLook}
-   {L4.set label(font: bg:ivory)}
+   {L4.set label(bg:ivory)}
    %%
    proc {GuiPkg P}
       {Browse P}
