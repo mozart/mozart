@@ -3,7 +3,7 @@
 : ${OZWISH=$OZWISHHOME/platform/$OZPLATFORM/ozwish}
 if [ -f  $OZWISH ]
 then
-  if [ ${TK4-xx} = "-xx" ]; then
+  if [ ${OZTK4-xx} = "xx" ]; then
      TCL_LIBRARY=$OZWISHHOME/tcl/lib/tcl
      TK_LIBRARY=$OZWISHHOME/tcl/lib/tk
   else
