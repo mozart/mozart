@@ -8,7 +8,7 @@
 ;;;   Benjamin Lorenz <lorenz@ps.uni-sb.de>
 ;;;
 ;;; Copyright:
-;;;   Leif Kornstaedt, Michael Mehl and Ralf Scheidhauer, 1993-1997
+;;;   Leif Kornstaedt, Michael Mehl and Ralf Scheidhauer, 1993-1998
 ;;;
 ;;; Last change:
 ;;;   $Date$ by $Author$
@@ -1021,8 +1021,9 @@ compiled using a default set of switches."
 ;;------------------------------------------------------------
 
 (defun oz-make-keywords-for-match (args)
-  (concat "\\<\\("
-	  (mapconcat 'identity args "\\|")
+  (concat "\\<\\(" (if (fboundp 'regexp-opt)
+		       (regexp-opt args)
+		     (mapconcat 'regexp-quote args "\\|"))
 	  "\\)\\>"))
 
 (defconst oz-declare-pattern
