@@ -8,6 +8,9 @@
   State: $State$
 
   $Log$
+  Revision 1.351  1996/07/29 15:37:40  mehl
+  more perdio work
+
   Revision 1.350  1996/07/26 15:17:33  mehl
   perdio communication: see ~mehl/perdio.oz
 
@@ -2016,7 +2019,8 @@ LBLdispatcher:
         SHALLOWFAIL;
         HF_FAIL(OZ_mkTupleC("fail",2,
                             OZ_atom(entry->getPrintName()),
-                            cons(XPC(2),cons(XPC(3),cons(XPC(4),nil())))));
+                            cons(XPC(2),cons(XPC(3),cons(OZ_newVariable(),
+                                                         nil())))));
         //      error("inlinefun2 fail");
 
       case RAISE:

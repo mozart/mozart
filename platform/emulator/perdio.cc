@@ -7,6 +7,9 @@
   Version: $Revision$
   State: $State$
   Log: $Log$
+  Log: Revision 1.3  1996/07/29 15:37:45  mehl
+  Log: more perdio work
+  Log:
   Log: Revision 1.2  1996/07/26 15:17:43  mehl
   Log: perdio communication: see ~mehl/perdio.oz
   Log:
@@ -47,56 +50,62 @@ public:
 int mySocket;
 Site *mySite;
 
-int siteInit()
+int siteInit(int p)
 {
   udpInit();
-  mySocket=createUdpPort();
+  mySocket=createUdpPort(p);
 
   mySite             = new Site();
   mySite->hostname   = hostName();
-  mySite->port       = portNumber(mySocket);
+  mySite->port       = p;
   mySite->time_stamp = time(0);
   return mySocket;
 }
 
-void siteReceive()
+int siteReceive(int fd,OZ_Term ozport)
 {
-  char *msg;
-  int len;
-  if (!udpReceive(mySocket,msg,len)) {
-    error("siteReceive: error\n");
-    return;
-  }
-  if (len==0) {
-    error("siteReceive: zero message\n");
-    return;
-  }
-
-  switch (msg[0]) {
-  case GSEND:
-    {
-      OZ_Term t = unmarshal(msg+1,len-1);
-      printf("siteReceive: GSEND '%s'\n",OZ_toC(t,10,10));
+  while (osTestSelect(fd,SEL_READ)==1) {
+    char *msg;
+    int len;
+    if (udpReceive(mySocket,msg,len) < 0) {
+      error("siteReceive: error\n");
+      break;
     }
-    break;
-  default:
-    printf("siteReceive: %d bytes\n",len);
-    printf("\n--\n%s\n--\n",msg);
-  }
-}
+    if (len==0) {
+      error("siteReceive: zero message\n");
+      break;
+    }
 
-int sendToSite(char *msg, int len, Site *site)
-{
-  return sendToPort(msg,len,site->hostname,site->port);
+    printf("siteReceive: %d bytes\n",len);
+
+    switch (msg[0]) {
+    case GSEND:
+      {
+        OZ_Term t = unmarshal(msg+1,len-1);
+        printf("siteReceive: GSEND '%s'\n",OZ_toC(t,10,10));
+        ozport = deref(ozport);
+        Assert(isPort(ozport));
+        OZ_Term newTail = OZ_newVariable();
+        OZ_Term old=tagged2Port(ozport)->exchangeStream(newTail);
+        if (OZ_unify(OZ_cons(t,newTail),old)!=PROCEED) {
+          printf("siteReceive: Port.send failed\n");
+        }
+        break;
+      }
+    default:
+      printf("siteReceive: data\n");
+      printf("\n--\n%s\n--\n",msg);
+      break;
+    }
+  }
+  return 0;
 }
 
 int sendToPort(char *msg, int len, char *hostname, int port)
 {
+  printf("sendToPort: %d bytes\n",len);
   return udpSend(mySocket,msg,len,hostname,port);
 }
-
-int myPort() { return mySite->port; }
-
 
 /*
  * Marshal
@@ -155,7 +164,7 @@ void ByteStream::resize()
   size = (size*3)/2;
   array = new char[size];
   pos = array;
-  for (char *s=oldarray; s<pos;) {
+  for (char *s=oldarray; s<oldpos;) {
     *pos++ = *s++;
   }
   delete oldarray;
@@ -468,7 +477,7 @@ loop:
     }
 
   default:
-    error("Unexpected tag: %d",tag);
+    printf("unmarshal: unexpected tag: %d\n",tag);
     *ret = nil();
     return;
   }
@@ -495,14 +504,6 @@ OZ_Term unmarshal(char *buf, int len)
  * TEST BUILTINS
  */
 
-OZ_C_proc_begin(BImyPort,1)
-{
-  OZ_declareArg(0,out);
-
-  return OZ_unifyInt(out,myPort());
-}
-OZ_C_proc_end
-
 OZ_C_proc_begin(BIgSend,3)
 {
   OZ_declareArg(0,value);
@@ -527,6 +528,20 @@ OZ_C_proc_begin(BIgSend,3)
 }
 OZ_C_proc_end
 
+
+OZ_C_proc_begin(BIstartSite,2)
+{
+  OZ_declareIntArg(0,p);
+  OZ_declareArg(1,stream);
+
+  int fd = siteInit(p);
+  if (fd<0) { return OZ_raise(OZ_atom("startSite")); }
+  OZ_Term ozport = makeTaggedConst(new Port(am.rootBoard, stream));
+  am.select(fd,SEL_READ,siteReceive,ozport);
+  return PROCEED;
+}
+OZ_C_proc_end
+
 OZ_C_proc_begin(BIeximportTerm,2)
 {
   OZ_Term out = OZ_getCArg(0);
@@ -548,8 +563,8 @@ OZ_C_proc_end
 
 
 BIspec perdioSpec[] = {
-  {"myPort",   1, BImyPort, 0},
   {"gSend",    3, BIgSend, 0},
+  {"startSite", 2, BIstartSite, 0},
   {"eximportTerm", 2, BIeximportTerm, 0},
   {0,0,0,0}
 };
