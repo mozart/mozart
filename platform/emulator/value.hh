@@ -662,7 +662,8 @@ private:
 public:
   USEHEAPMEMORY;
   OZPRINTLONG;
-  ~ConstTerm() {} // needed for Extension class
+  ConstTerm() { Assert(0); }
+  ~ConstTerm() { Assert(0); } // needed for Extension class
   ConstTerm(TypeOfConst t) { init(t); }
   void init(TypeOfConst t) { tag = t<<1; }
   Bool gcIsMarked(void)        { return tag&1; }
@@ -706,6 +707,7 @@ protected:
     boardOrGName.setType(CWH_Board);
   }
 public:
+  ConstTermWithHome() { Assert(0); }
   ConstTermWithHome(Board *bb, TypeOfConst tt) : ConstTerm(tt) { setBoard(bb);}
 
   void init(Board *bb, TypeOfConst tt) { ConstTerm::init(tt); setBoard(bb); }
