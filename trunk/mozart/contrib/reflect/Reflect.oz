@@ -195,7 +195,7 @@ define
 		     {Filter
 		      {Map PropList
 		       fun {$ P}
-			  if P.location == unit
+			  if P.location.propInvoc == unit
 			  then unit
 			   else P.location.propInvoc.invoc
 			  end
@@ -211,14 +211,14 @@ define
 \endif
 	 {ForAll PropList
 	  proc {$ P}
-	     if P.location == unit then skip
+	     if P.location.propInvoc == unit then skip
 	     else
 		Proc = P.location.propInvoc
 		Id = Proc.invoc
 	     in
 		ProcTable.Id
 		= procedure(id:
-			       Proc.invoc
+			       if Proc == unit then unit else Proc.invoc end
 			    name:
 			       Proc.name
 			    location:
