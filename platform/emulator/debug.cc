@@ -62,11 +62,11 @@ void debugStreamSuspend(ProgramCounter PC, Thread *tt,
   int line, abspos;
   time_t feedtime;
 
-  if (!am.runChildren) {
+  am.currentThread->deleteContFlag();
+  
+  if (!am.runChildren)
     am.currentThread->startStepMode();
-    am.currentThread->deleteContFlag();
-  }
-
+  
   if (debugPC == NOCODE) {
     file    = OZ_atom("noDebugInfo");
     comment = OZ_atom("");
