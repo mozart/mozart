@@ -406,6 +406,7 @@ proc {MMerge STs L}
 	 {MM STs2 M E} 
       end
    end
+   E
 in
    thread {MM  STs unit E} end
    thread if E==unit then L = nil end end
