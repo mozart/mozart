@@ -78,6 +78,7 @@ define
 	 OzL        : unit
 	 OzTool     : unit
 	 ResolverExtended : false
+	 SubResolverStack : nil
 
       meth set_prefix(D) Prefix<-{Path.expand D} end
       meth get_prefix($)
@@ -634,6 +635,23 @@ define
 	       {Resolve.addHandler
 		{Resolve.handler.root BLD}}
 	    end
+	 end
+      end
+
+      meth subresolver_push(DST SRC)
+	 PATH = {OS.getEnv 'OZ_SEARCH_LOAD'}
+	 SEP  = [{Property.get 'path.separator'}]
+      in
+	 SubResolverStack <- PATH|@SubResolverStack
+	 {OS.putEnv 'OZ_SEARCH_LOAD'
+	  {Path.dirname DST}#SEP#
+	  {Path.dirname SRC}#SEP#PATH}
+      end
+
+      meth subresolver_pop()
+	 case @SubResolverStack of PATH|L then
+	    SubResolverStack<-L
+	    {OS.putEnv 'OZ_SEARCH_LOAD' PATH}
 	 end
       end
    end
