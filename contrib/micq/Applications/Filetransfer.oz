@@ -1,5 +1,5 @@
 %%%
-%%% Authors:
+%%% Author:
 %%%
 %%%   Nils Franzen   (nilsf@sics.se)
 %%%
@@ -209,7 +209,7 @@ define
    %% ServerSide Class
    %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
    class ServerSide
-      feat cont
+      feat cont user
       attr cs:nil
       meth init(user:U)
          T={New Tk.toplevel tkInit(title:"File Transfer ("#U.name#")")}
@@ -224,6 +224,7 @@ define
       in
          {Tk.send pack(F1 Q fill:x)}
          self.cont=F1
+         self.user=U
       end
 
       meth addUser(user:U port:P)
@@ -237,18 +238,23 @@ define
                                                                                       q('Oz Files' q('.oz'))
                                                                                      )
                                                                          )}
-                                           Sync P1 Done
                                         in
-                                           {Wait SrcF}
-                                           {Send P filetransfer(Sync port:P1 done:Done)}
-                                           {B tk(configure text:"Waiting for client response... ("#U.name#")")}
-                                           {Wait Sync}
-                                           if Sync==true then
-                                              thread
-                                                 {SendFile SrcF P1 Done}
+                                           if SrcF\=nil then
+                                              Sync P1 Done
+                                              F={Reverse {List.takeWhile {Reverse SrcF}
+                                                          fun{$ C} C\=&/ andthen C\=&\\ end}}
+                                              N=self.user.name
+                                           in
+                                              {Send P filetransfer(Sync port:P1 done:Done file:F sender:N)}
+                                              {B tk(configure text:"Waiting for client response... ("#U.name#")")}
+                                              {Wait Sync}
+                                              if Sync==true then
+                                                 thread
+                                                    {SendFile SrcF P1 Done}
+                                                 end
                                               end
+                                              {B tk(configure text:Str)}
                                            end
-                                           {B tk(configure text:Str)}
                                            {B tk(config state:normal)}
                                         end)}
          O N
@@ -290,7 +296,8 @@ define
       thread
          {ForAll S proc{$ X}
                       case {Label X} of filetransfer then
-                         DestF={Tk.return tk_getSaveFile(title:"Save File..."
+                         DestF={Tk.return tk_getSaveFile(title:"Save File from "#X.sender#"..."
+                                                         initialfile:X.file
                                                          filetypes:q(q('All Files' '*')
                                                                      q('Text Files' q('.txt'))
                                                                      q('Oz Files' q('.oz'))
