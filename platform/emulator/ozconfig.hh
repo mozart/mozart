@@ -109,6 +109,7 @@ public:
 
   // root functor's url
   char *url;
+  int gui;
   
 public:
   ConfigData() {};

@@ -189,6 +189,12 @@ void AM::init(int argc,char **argv)
     }
 #endif
 
+    if (strcmp(argv[i],"--gui")==0 ||
+	strcmp(argv[i], "-gui")==0) {
+      ozconf.gui=1;
+      continue;
+    }
+
     if (strcmp(argv[i],"-d")==0) {
 #ifdef DEBUG_TRACE
       ozd_tracerOn();

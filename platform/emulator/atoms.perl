@@ -111,6 +111,7 @@
 	  ( AtomApplet,      "applet"),
 	  ( AtomArgs,        "args"),
 	  ( AtomURL,         "url"),
+	  ( AtomGUI,	     "gui"),
 	  ( AtomOs,          "os"),
 	  ( AtomArch,        "arch"),
 
