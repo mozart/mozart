@@ -143,9 +143,9 @@ public:
 //protected:
 	virtual int LexerInput( char* buf, int max_size );
 	virtual void LexerOutput( const char* buf, int size );
-	virtual void LexerError( const char* msg );
+	virtual int LexerError( const char* msg );
 
-	void yyunput( int c, char* buf_ptr );
+	int yyunput( int c, char* buf_ptr );
 	int yyinput();
 
 	void do_yymore();
@@ -209,6 +209,8 @@ public:
 	int yy_more_len;
 	int yy_more_offset;
 	int yy_prev_more_offset;
+
+	const char* yy_last_error_msg;
 };
 
 #endif
