@@ -1154,6 +1154,16 @@ $builtins = {
                              BI  => BIbitArray_and,
                              native => false},
 
+    'BitArray.card'     => { in  => ['+bitArray'],
+                             out => ['+int'],
+                             BI  => BIbitArray_card,
+                             native => false},
+
+    'BitArray.disjoint' => { in  => ['+bitArray','+bitArray'],
+                             out => ['+bool'],
+                             BI  => BIbitArray_disjoint,
+                             native => false},
+
     'BitArray.nimpl'    => { in  => ['+bitArray','+bitArray'],
                              out => [],
                              BI  => BIbitArray_nimpl,

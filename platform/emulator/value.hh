@@ -1175,6 +1175,8 @@ public:
   int getUpper(void) { return upperBound; }
   void or(const BitArray *);
   void and(const BitArray *);
+  Bool disjoint(const BitArray *);
+  int card();
   void nimpl(const BitArray *);
   TaggedRef toList(void);
   TaggedRef complementToList(void);
