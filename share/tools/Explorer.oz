@@ -38,6 +38,12 @@ in
               get
               printName}
 
+      Error.{formatGeneric
+             format
+             dispatch}
+
+      ErrorRegistry.{put}
+
       Tk
 
       TkTools
@@ -59,6 +65,7 @@ in
 
    body
 
+      \insert 'explorer/errors.oz'
       \insert 'explorer/main.oz'
 
       Explorer = {New ExplorerClass init}
