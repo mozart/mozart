@@ -171,7 +171,7 @@ local
 	 <<LayoutLeaf Adjust(Break TreePrefix#Suffix RootX 0 RootY Scale Font)>>
 	 %% move away root link
 	 {Canvas tk(move LinkPrefix#Suffix 0 ~VerSpaceF * MaxScale)}
-	 {Canvas bounding(~HalfHorSpaceI HalfHorSpaceI HalfVerSpaceI)}
+	 {Canvas bounding(~HalfHorSpaceI HalfHorSpaceI VerSpaceI)}
       end
 
       meth !Layout(?Shape Offset)
