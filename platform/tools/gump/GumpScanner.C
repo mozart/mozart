@@ -64,7 +64,9 @@ OZ_BI_define(gump_createFromFile, 1,1)
   OZ_declareVirtualString(0, file);
 
   FILE *f = fopen(file, "rb");
-  if (f == NULL) OZ_RETURN_INT(0);
+  if (f == NULL) {
+    return OZ_raiseErrorC("gump", 2, OZ_atom("fileNotFound"), OZ_in(0));
+  }
 
   yy_buffer_state *p = new yy_buffer_state;
   p->yy_input_file = f;
