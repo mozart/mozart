@@ -7,6 +7,7 @@
 %% some builtins...
 Dbg = dbg( taskstack   : {`Builtin` taskstack 3}
 	   stream      : {`Builtin` globalThreadStream 1}
+	   contflag    : {`Builtin` setContFlag 2}
 	   stepmode    : {`Builtin` setStepMode 2}
 	   trace       : {`Builtin` traceThread 2}
 	   state       : {`Builtin` queryDebugState 2}
