@@ -56,7 +56,7 @@ local
 	       SizeString={SizeEntry tkReturn(get $)}
 	    in
 	       case {Misc.check SizeString}
-	       of !False then Options=Prev
+	       of !False then true
 	       elseof Size then
 		  {self close}
 		  Options = {Adjoin Size
