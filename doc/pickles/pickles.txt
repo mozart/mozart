@@ -37,16 +37,13 @@ Below is the full grammar. Non-terminals are enclosed into <...>
 everything else are terminals.
 
 MAJORVERSION = 1
-MINORVERSION = 2
+MINORVERSION = 4
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %  grammar for pickles
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-<pickle> ::=  <nonquoted-string>       % header (any sequence of characters
-				       % terminated by 2 times PERDIOVERSION,
-				       % see pickle.hh)
-	      <tstring>		       % version number "MAJOR#MINOR"
+<pickle> ::=  <tstring>		       % version number "MAJOR#MINOR"
 	      <value>		       % the value contained in the pickle
 
 
