@@ -126,6 +126,8 @@ starts the emulator under gdb")
 ")
   "")
 
+(defconst oz-arrow-pattern
+  "\'oz-arrow \\([^ ]*\\) \\([^ ]*\\)\'")
 
 (defvar oz-want-font-lock t
   "*If t means that font-lock mode is switched on")
@@ -1384,8 +1386,7 @@ and initial semicolons."
               (replace-match "" nil t))
 
             ;; oz-arrow information?
-            (while (search-forward-regexp
-                    "^\'oz-arrow \\([^ ]*\\) \\([^ ]*\\)\'\n" nil t)
+            (while (search-forward-regexp oz-arrow-pattern nil t)
               (let ((file (match-string 1))
                     (line (string-to-number (match-string 2))))
                 (replace-match "" nil t)
