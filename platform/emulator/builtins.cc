@@ -2641,7 +2641,7 @@ OZ_BI_define(BInewPort,1,1)
   return oz_unify(OZ_in(0),fut);
 } OZ_BI_end
 
-inline
+
 void doPortSend(PortWithStream *port,TaggedRef val,Board * home) {
   if (home != (Board *) NULL) {
     OZ_Term newFut = oz_newFuture(home);
