@@ -31,6 +31,8 @@ import
    System
 prepare
 
+   Url = "/usr/standalone/ozdemo/LMF/ticket.ozp"
+   
    ArgSpec = list(url(single type:string default:"/usr/standalone/ozdemo/LMF/ticket.ozp"))
 
    fun {ParseHelp Args}
@@ -57,7 +59,7 @@ define
 		     td(input(type:text name:email))))
 	    h2('Available Flights')
 	    local
-	       SE = {Abstractions.connect Argv.url}
+	       SE = {Abstractions.connect Url}
 	       
 	       Fs = {SE request({OS.getEnv 'REMOTE_HOST'} $)}
 	       N  = {Length Fs} div 2
