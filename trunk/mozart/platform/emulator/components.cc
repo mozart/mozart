@@ -97,7 +97,7 @@ static int zlibDummy = checkzlibversion();
 /*              BUILTINS                                                  */
 /* ********************************************************************** */
 
-const char SYSLETHEADER = 1;
+static char SYSLETHEADER = 1;
 
 
 // class ByteSource [Denys Duchier]
@@ -315,16 +315,13 @@ ByteSinkFile::allocateBytes(int n,char *header)
   
   /* write syslet header uncompressed */
   int len = strlen(header);
-
-
- loop:
-  int written = write(fd,header,len);
-  if (written < len) {
-    len -= written;
-    header += written;
-    goto loop;
+  if (ossafewrite(fd,header,len) < 0 ||
+      ossafewrite(fd,&SYSLETHEADER,1) < 0) {
+    return raiseGeneric("save:write",
+			"Write failed during save",
+			oz_mklist(OZ_pairA("File",oz_atom(filename)),
+				  OZ_pairA("Error",oz_atom(OZ_unixError(errno)))));
   }
-  write(fd,&SYSLETHEADER,1);
 
   /* gzdopen allways spits out the gzip header */
   if (compressionlevel>0) {
@@ -341,7 +338,7 @@ OZ_Return
 ByteSinkFile::putBytes(BYTE*pos,int len)
 {
  loop:
-  if (compressionlevel==0 && write(fd,pos,len)<0 ||
+  if (compressionlevel==0 && ossafewrite(fd,(char*)pos,len)<0 ||
       compressionlevel>0 && gzwrite(zfd,pos,len)<0) {
     if (errno != EINTR)
       return raiseGeneric("save:write",
@@ -756,7 +753,7 @@ unsigned __stdcall fetchThread(void *p)
   char buf[2];
   buf[0] = ret;
   buf[1] = '\n';
-  oswrite(ui->fd,buf,2);
+  ossafewrite(ui->fd,buf,2);
   osclose(ui->fd);
   delete ui;
   ExitThread(1);
@@ -805,7 +802,7 @@ OZ_Return getURL(const char *url, TaggedRef out, URLAction act)
     {
       osclose(fds[0]);
       char ret = (char) localizeUrl(url,tmpfile);
-      oswrite(fds[1],&ret,sizeof(ret));
+      ossafewrite(fds[1],&ret,sizeof(ret));
       exit(0);
     }
   case -1:
