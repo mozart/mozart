@@ -35,15 +35,13 @@ void addSuspAnyVar(TaggedRefPtr v, Thread *thr)
   TaggedRef t = *v;
   if (isSVar(t)) { 
     addSuspSVar(t,thr);
-    return;
-  }
-  if (isCVar(t)) {
+  } else if (isCVar(t)) {
     addSuspCVar(t,thr);
-    return;
+  } else {
+    sv = new SVariable(tagged2VarHome(t));
+    *v = makeTaggedSVar(sv);
+    addSuspSVar(*v,thr);
   }
-  sv = new SVariable(tagged2VarHome(t));
-  *v = makeTaggedSVar(sv);
-  addSuspSVar(*v,thr);
 }
 
 /*

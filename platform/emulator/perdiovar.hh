@@ -23,7 +23,7 @@
 enum PV_TYPES {
   PV_MANAGER,
   PV_PROXY,
-  PV_TERTPROXY,
+  PV_OBJECT,
   PV_URL,
 };
 
@@ -67,7 +67,7 @@ class PerdioVar: public GenCVariable {
   union {
     PendBinding *bindings;
     ProxyList *proxies;
-    Tertiary *tert;
+    TaggedRef aclass;
     TaggedRef url;
   } u;
 public:
@@ -82,11 +82,10 @@ public:
     setIndex(i);
   }
 
-  PerdioVar(Tertiary *t, int i) : GenCVariable(PerdioVariable) {
-    u.tert = t;
-    tagged.setType(PV_TERTPROXY);
-    // mm2: do you use i
-    setIndex(i);
+  PerdioVar(Object *o, TaggedRef cl) : GenCVariable(PerdioVariable) {
+    tagged.setType(PV_OBJECT);
+    tagged.setPtr(o);
+    u.aclass=cl;
   }
 
   PerdioVar(GName *gname, TaggedRef url) : GenCVariable(PerdioVariable) {
@@ -99,7 +98,7 @@ public:
 
   Bool isManager()   { return tagged.getType()==PV_MANAGER; }
   Bool isProxy()     { return tagged.getType()==PV_PROXY; }
-  Bool isTertProxy() { return tagged.getType()==PV_TERTPROXY; }
+  Bool isObject()    { return tagged.getType()==PV_OBJECT; }
   Bool isURL()       { return tagged.getType()==PV_URL; }
 
   int getIndex() { return tagged.getIndex(); }
@@ -107,15 +106,16 @@ public:
   GName *getGName() { Assert(isURL()); return (GName *) tagged.getPtr(); }
   TaggedRef getURL() { Assert(isURL()); return u.url; }
   void setIndex(int i) {
+    Assert(!isURL() && !isObject());
     tagged.setIndex(i);
-    if (isTertProxy()) u.tert->setIndex(i);
   }
 
   Bool valid(TaggedRef *varPtr, TaggedRef v);
   
   size_t getSize(void) { return sizeof(PerdioVar); }
   
-  Tertiary *getTertiary() { Assert(isTertProxy()); return u.tert; };
+  Object *getObject() { Assert(isObject()); return (Object*)tagged.getPtr(); }
+  TaggedRef getClass() { Assert(isObject()); return u.aclass; }
 
   void registerSite(Site* sd) {
     Assert(isManager());
@@ -151,7 +151,7 @@ public:
 
   ProxyList *getProxies() { Assert(isManager()); return u.proxies; }
 
-  void addSuspPerdioVar();
+  void addSuspPerdioVar(Thread *el);
 
   void gcPerdioVar(void);
 };
