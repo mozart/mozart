@@ -1350,7 +1350,7 @@ and is used for fontification.")
   (setq font-lock-defaults
 	'((oz-font-lock-keywords oz-font-lock-keywords-1
 	   oz-font-lock-keywords-2 oz-font-lock-keywords-3)
-	  nil nil (("&" . "/")) beginning-of-line)))
+	  nil nil ((?& . "/")) beginning-of-line)))
 
 ;;------------------------------------------------------------
 
