@@ -30,7 +30,7 @@ Bool GenFDVariable::unifyFD(TaggedRef *vPtr, TaggedRef var,
 {
   TypeOfTerm tTag = tagTypeOf(term);
   
-  switch (tTag){
+  switch (tTag) {
   case SMALLINT:
     {
       if (! finiteDomain.isIn(OZ_intToC(term))) {
@@ -59,8 +59,8 @@ Bool GenFDVariable::unifyFD(TaggedRef *vPtr, TaggedRef var,
 	{
 	  // compute intersection of domains ...
 	  GenFDVariable * termVar = tagged2GenFDVar(term);
-	  FiniteDomain &termDom = termVar->finiteDomain;
-	  LocalFD intsct;
+	  OZ_FiniteDomain &termDom = termVar->finiteDomain;
+	  OZ_FiniteDomain intsct;
 	  
 	  if ((intsct = finiteDomain & termDom) == fd_empty) {
 	    PROFILE_CODE1(FDProfiles.inc_item(no_failed_fdunify_vars);)
@@ -81,18 +81,34 @@ Bool GenFDVariable::unifyFD(TaggedRef *vPtr, TaggedRef var,
 		doBind(tPtr, int_var);
 		if (disp) { dispose(); termVar->dispose(); }
 	      } else if (heapNewer(vPtr, tPtr)) { // bind var to term
-		termVar->setDom(intsct);
-		propagateUnify(var);
-		termVar->propagateUnify(term);
-		relinkSuspListTo(termVar);
-		doBind(vPtr, makeTaggedRef(tPtr));
+		if (intsct == fd_bool) {
+		  GenBoolVariable * tbvar = termVar->becomesBool();
+		  propagateUnify(var);
+		  tbvar->propagateUnify(term);
+		  relinkSuspListTo(tbvar);
+		  doBind(vPtr, makeTaggedRef(tPtr));
+		} else {
+		  termVar->setDom(intsct);
+		  propagateUnify(var);
+		  termVar->propagateUnify(term);
+		  relinkSuspListTo(termVar);
+		  doBind(vPtr, makeTaggedRef(tPtr));
+		}
 		if (disp) dispose();
 	      } else { // bind term to var
-		setDom(intsct);
-		termVar->propagateUnify(term);
-		propagateUnify(var);
-		termVar->relinkSuspListTo(this);
-		doBind(tPtr, makeTaggedRef(vPtr));
+		if (intsct == fd_bool) {
+		  GenBoolVariable * bvar = becomesBool();
+		  termVar->propagateUnify(term);
+		  bvar->propagateUnify(var);
+		  termVar->relinkSuspListTo(bvar);
+		  doBind(tPtr, makeTaggedRef(vPtr));
+		} else {
+		  setDom(intsct);
+		  termVar->propagateUnify(term);
+		  propagateUnify(var);
+		  termVar->relinkSuspListTo(this);
+		  doBind(tPtr, makeTaggedRef(vPtr));
+		}
 		if (disp) termVar->dispose();
 	      }
 	      break;
@@ -108,11 +124,19 @@ Bool GenFDVariable::unifyFD(TaggedRef *vPtr, TaggedRef var,
 		  am.doBindAndTrail(term, tPtr, int_var);
 		  if (disp) dispose();
 		} else {
-		  setDom(intsct);
-		  termVar->propagateUnify(term);
-		  propagateUnify(var);
-		  am.doBindAndTrailAndIP(term, tPtr, makeTaggedRef(vPtr),
-					 this, termVar, prop);
+		  if (intsct == fd_bool) {
+		    GenBoolVariable * bvar = becomesBool();
+		    termVar->propagateUnify(term);
+		    bvar->propagateUnify(var);
+		    am.doBindAndTrailAndIP(term, tPtr, makeTaggedRef(vPtr),
+					   bvar, termVar, prop);
+		  } else {
+		    setDom(intsct);
+		    termVar->propagateUnify(term);
+		    propagateUnify(var);
+		    am.doBindAndTrailAndIP(term, tPtr, makeTaggedRef(vPtr),
+					   this, termVar, prop);
+		  }
 		}
 	      } else {
 		termVar->propagateUnify(term);
@@ -134,11 +158,19 @@ Bool GenFDVariable::unifyFD(TaggedRef *vPtr, TaggedRef var,
 		  am.doBindAndTrail(var, vPtr, int_term);
 		  if (disp) termVar->dispose();
 		} else {
-		  termVar->setDom(intsct);
-		  propagateUnify(var);
-		  termVar->propagateUnify(term);
-		  am.doBindAndTrailAndIP(var, vPtr, makeTaggedRef(tPtr),
-					 termVar, this, prop);
+		  if (intsct == fd_bool) {
+		    GenBoolVariable * tbvar = termVar->becomesBool();
+		    propagateUnify(var);
+		    tbvar->propagateUnify(term);
+		    am.doBindAndTrailAndIP(var, vPtr, makeTaggedRef(tPtr),
+					   tbvar, this, prop);
+		  } else {
+		    termVar->setDom(intsct);
+		    propagateUnify(var);
+		    termVar->propagateUnify(term);
+		    am.doBindAndTrailAndIP(var, vPtr, makeTaggedRef(tPtr),
+					   termVar, this, prop);
+		  }
 		}
 	      } else {
 		termVar->propagateUnify(term);
@@ -168,17 +200,28 @@ Bool GenFDVariable::unifyFD(TaggedRef *vPtr, TaggedRef var,
 		  propagateUnify(var);
 		  termVar->propagateUnify(term);
 		}
-		am.doBindAndTrailAndIP(var, vPtr, makeTaggedRef(var_val),
-				       c_var, this, prop);
-		am.doBindAndTrailAndIP(term, tPtr, makeTaggedRef(var_val),
-				       c_var, termVar, prop);
+		if (intsct == fd_bool) {
+		  am.doBindAndTrailAndIP(var, vPtr, makeTaggedRef(var_val),
+					 (GenBoolVariable *) c_var, 
+					 this, prop);
+		  am.doBindAndTrailAndIP(term, tPtr, makeTaggedRef(var_val),
+					 (GenBoolVariable *) c_var, 
+					 termVar, prop);
+		} else {
+		  am.doBindAndTrailAndIP(var, vPtr, makeTaggedRef(var_val),
+					 (GenFDVariable *) c_var, 
+					 this, prop);
+		  am.doBindAndTrailAndIP(term, tPtr, makeTaggedRef(var_val),
+					 (GenFDVariable *) c_var, 
+					 termVar, prop);
+		}
 	      }
 	      break;
 	    }
 	  default:
 	    error("unexpected case in unifyFD");
 	    break;
-	  } // switch
+	  } // switch (varIsLocal + 2 * termIsLocal) {
 	  return TRUE;
 	} 
       case BoolVariable:
@@ -189,11 +232,11 @@ Bool GenFDVariable::unifyFD(TaggedRef *vPtr, TaggedRef var,
 	}
       default:
 	return FALSE;
-      }
+      } // switch(tagged2CVar(term)->getType())
     default:
       break;
-    }
-  } // switch
+    } // case CVAR
+  } // switch( (tTag)
   return FALSE;  
 } // GenFDVariable::unify
 

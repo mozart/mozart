@@ -603,6 +603,7 @@ PRINT(Suspension)
   if (isDead()) stream << 'D';
   if (isPropagated()) stream << 'P';
   if (isResistant()) stream << 'R';
+  if (isPropagator()) stream << 'G';
   if (isExtSusp()) stream << 'E';
   if (isUnifySusp()) stream << 'U';
   if (isLocalSusp()) stream << 'L';
@@ -1518,7 +1519,7 @@ void FDBitVector::printDebugLong(void) const
   cerr.flush();
 }
 
-void FiniteDomain::print(ostream &ofile, int idnt) const
+void OZ_FiniteDomain::print(ostream &ofile, int idnt) const
 {
   if (getSize() == 0)
     ofile << indent(idnt) << "{ - empty - }";
@@ -1541,7 +1542,7 @@ void FiniteDomain::print(ostream &ofile, int idnt) const
 	      (getType() == bv_descr ? 'b' : 'i')) << '#' << size);
 }
 
-void FiniteDomain::printLong(ostream &ofile, int idnt) const
+void OZ_FiniteDomain::printLong(ostream &ofile, int idnt) const
 {
   static char * descr_type_text[3] = {"bv_descr", "iv_descr", "fd_descr"};
 
@@ -1566,14 +1567,14 @@ void FiniteDomain::printLong(ostream &ofile, int idnt) const
   }
 }
 
-void FiniteDomain::printDebug(void) const
+void OZ_FiniteDomain::printDebug(void) const
 {
   print(cerr, 0);
   cerr << endl;
   cerr.flush();
 }
 
-void FiniteDomain::printDebugLong(void) const
+void OZ_FiniteDomain::printDebugLong(void) const
 {
   printLong(cerr, 0);
   cerr << endl;
