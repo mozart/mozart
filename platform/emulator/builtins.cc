@@ -204,7 +204,7 @@ OZ_Return BIifun(TaggedRef val1, TaggedRef val2, TaggedRef &out)        \
 DECLAREBI_USEINLINEFUN2(BIfun,BIifun)
 
 #define CheckLocalBoard(Object,Where);                                  \
-  if (!am.isToplevel() && am.currentBoard != Object->getBoard()) {      \
+  if (!am.isToplevel() && am.currentBoard != GETBOARD(Object)) {        \
     return oz_raise(E_ERROR,E_KERNEL,"globalState",1,oz_atom(Where));   \
   }
 
@@ -1202,7 +1202,7 @@ OZ_Return genericUparrowInline(TaggedRef term, TaggedRef fea, TaggedRef &out, Bo
           return PROCEED;
         }
 
-        if (am.currentBoard == ofsvar->getBoard()) {
+        if (am.currentBoard == GETBOARD(ofsvar)) {
           TaggedRef uvar=oz_newVariable();
           Bool ok=ofsvar->addFeatureValue(fea,uvar);
           Assert(ok);
@@ -1266,7 +1266,7 @@ OZ_Return genericUparrowInline(TaggedRef term, TaggedRef fea, TaggedRef &out, Bo
             // Feature does not yet exist
             // Add feature by (1) creating new ofsvar with one feature,
             // (2) unifying the new ofsvar with the old.
-            if (am.currentBoard == ofsvar->getBoard()) {
+            if (am.currentBoard == GETBOARD(ofsvar)) {
                 // Optimization:
                 // If current board is same as ofsvar board then can add feature directly
                 TaggedRef uvar=oz_newVariable();
@@ -1657,7 +1657,7 @@ OZ_C_proc_begin(BIchooseSpace, 2) {
     return oz_raise(E_ERROR,E_KERNEL,"spaceParent",1,tagged_space);
 
   space->getSolveActor()->unsetGround();
-  space->getSolveActor()->clearResult(space->getBoard());
+  space->getSolveActor()->clearResult(GETBOARD(space));
 
   RefsArray args = allocateRefsArray(2, NO);
   args[0] = left;
@@ -1705,7 +1705,7 @@ OZ_C_proc_begin(BIinjectSpace, 2)
 
   // clear status
   sa->unsetGround();
-  sa->clearResult(space->getBoard());
+  sa->clearResult(GETBOARD(space));
 
   // inject
   sa->inject(DEFAULT_PRIORITY, proc);
@@ -4531,7 +4531,7 @@ OZ_C_proc_begin(BIlockLock,1)
   case Te_Local:{
     LockLocal *ll=(LockLocal*)t;
     if (!am.isToplevel()) {
-      if (am.currentBoard != ll->getBoard()) {
+      if (am.currentBoard != GETBOARD(ll)) {
         return oz_raise(E_ERROR,E_KERNEL,"globalState",1,oz_atom("lock"));
       }}
     ll->lock(am.currentThread);
@@ -5683,7 +5683,7 @@ OZ_C_proc_begin(BIdeepFeed,2)
   CellLocal *cell = (CellLocal*)tagged2Tert(c);
 
   Board *savedNode = am.currentBoard;
-  Board *home1 = cell->getBoard();
+  Board *home1 = GETBOARD(cell);
 
   switch (am.installPath(home1)) {
   case INST_FAILED:
@@ -5957,7 +5957,7 @@ TaggedRef SuspList::DBGmakeList() {
   }
 
   Thread *t = getElem();
-  Board *b = t->getBoard();
+  Board *b = GETBOARD(t);
   return cons(makeTaggedConst(b),getNext()->DBGmakeList());
 }
 

@@ -8,9 +8,7 @@
 #endif
 
 #include "runtime.hh"
-#include "genvar.hh"
 #include "dictionary.hh"
-#include "ip.hh"
 
 /*===================================================================
  * global names and atoms
@@ -247,7 +245,7 @@ NamedName *NamedName::newNamedName(char *pn)
 GName *Name::globalize()
 {
   if (!hasGName()) {
-    Assert(getBoard()==am.rootBoard);
+    Assert(GETBOARD(this)==am.rootBoard);
     homeOrGName = ToInt32(newGName(makeTaggedLiteral(this),GNT_NAME));
     setFlag(Lit_hasGName);
   }
@@ -256,7 +254,7 @@ GName *Name::globalize()
 
 void Name::import(GName *name)
 {
-  Assert(getBoard()==am.rootBoard);
+  Assert(GETBOARD(this)==am.rootBoard);
   homeOrGName = ToInt32(name);
   setFlag(Lit_hasGName);
 }

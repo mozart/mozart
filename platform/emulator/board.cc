@@ -2,14 +2,11 @@
   Hydra Project, DFKI Saarbruecken,
   Stuhlsatzenhausweg 3, D-66123 Saarbruecken, Phone (+49) 681 302-5312
   Author: mehl
-  Last modified: $Date$ from $Author$
-  Version: $Revision$
-  State: $State$
 
   ------------------------------------------------------------------------
 */
 
-#if defined(INTERFACE) && !defined(PEANUTS)
+#if defined(INTERFACE)
 #pragma implementation "board.hh"
 #endif
 
@@ -139,12 +136,10 @@ Board::Board(Actor *a,int typ)
   Assert (typ==Bo_Root || typ==Bo_Ask || typ==Bo_Wait || typ==Bo_Solve
           || typ==(Bo_Wait | Bo_Waiting));
   flags=typ;
-  if (a != (Actor *) NULL && a->isAskWait () == OK) {
-    (AWActor::Cast (a))->addChild(this);
-  }
   suspCount=0;
   u.actor=a;
 }
+
 
 Board::~Board() {
   error("Board::~Board");
@@ -164,7 +159,7 @@ loop:
   if (bb->isRoot()) return OK;
   Actor *aa=bb->getActor();
   if (aa->isCommitted()) return NO;
-  bb=aa->getBoard();
+  bb=GETBOARD(aa);
   goto loop;
 }
 #endif
@@ -181,9 +176,3 @@ Board * Board::getHighestSolveDebug(void)
 }
 
 // -------------------------------------------------------------------------
-
-#ifdef OUTLINE
-#define inline
-#include "board.icc"
-#undef inline
-#endif

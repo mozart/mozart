@@ -2,9 +2,6 @@
   Hydra Project, DFKI Saarbruecken,
   Stuhlsatzenhausweg 3, D-66123 Saarbruecken, Phone (+49) 681 302-5312
   Author: mehl
-  Last modified: $Date$ from $Author$
-  Version: $Revision$
-  State: $State$
 
   ------------------------------------------------------------------------
 */
@@ -16,9 +13,10 @@
 #pragma interface
 #endif
 
-#ifdef OUTLINE
-#define inline
-#endif
+#include "actor.hh"
+
+#define GETBOARD(v) ((v)->getBoardInternal()->derefBoard())
+
 
 struct Equation {
 friend class Script;
@@ -46,10 +44,10 @@ public:
   void allocate(int sizeInit);
   void dealloc();
 
-  inline int getSize() { return numbOfCons; }
-  inline Equation* getRef()  { return (first); }
+  int getSize() { return numbOfCons; }
+  Equation* getRef()  { return (first); }
 
-  inline Equation &operator[] (int elem)  { return ( *(first + elem) ); }
+  Equation &operator[] (int elem)  { return ( *(first + elem) ); }
   /* no bounds checking;    */
 
 private:
@@ -105,19 +103,55 @@ public:
   void printTree();
   Board * getHighestSolveDebug(void); // TMUELLER
 
-  inline void incSuspCount(int n=1);
-  void decSuspCount();
-  inline Board *derefBoard();
-  Board *getParentAndTest();
-  Board *getParent();
+  void incSuspCount(int n=1) {
+    Assert(!isCommitted() && !isFailed());
+    suspCount += n;
+    Assert(suspCount >= 0);
+  }
+  void decSuspCount() {
+    Assert(!isCommitted() && !isFailed());
+    Assert(suspCount > 0);
+    suspCount--;
+  }
 
-  Actor *getActor();
+  Board *derefBoard() {
+    Board *bb;
+    for (bb=this; bb->isCommitted(); bb=bb->u.ref)
+      ;
+    return bb;
+  }
+
+  Board *getParent() {
+    Assert(!isCommitted());
+    return GETBOARD(u.actor);
+  }
+
+  Board *getParentAndTest() {
+    Assert(!isCommitted());
+    if (isFailed() || isRoot() || u.actor->isCommitted()) return 0;
+    return getParent();
+  }
+
+  Actor *getActor() {
+    Assert(!isCommitted());
+    return u.actor;
+  }
+
 //  Board *getRef() { return u.ref; }
   Continuation *getBodyPtr() { return &body; }
   Board* getSolveBoard ();
   Script &getScriptRef() { return script; }
-  int getSuspCount(void);
-  Bool hasSuspension(void);
+  int getSuspCount(void) {
+    Assert(!isFailed());
+    Assert(suspCount >= 0);
+    return suspCount;
+  }
+
+  Bool hasSuspension(void) {
+    Assert(!isFailed());
+    Assert(suspCount >= 0);
+    return suspCount != 0;
+  }
   Bool isAsk() { return flags & Bo_Ask ? OK : NO; }
   Bool isCommitted() { return flags & Bo_Committed ? OK : NO; }
   Bool isFailed() { return flags & Bo_Failed ? OK : NO; }
@@ -130,16 +164,35 @@ public:
   Bool isRoot() { return flags & Bo_Root ? OK : NO; }
   Bool isSolve () { return ((flags & Bo_Solve) ? OK : NO); }
 
-  void newScript(int size);
+  void newScript(int size) {
+    script.allocate(size);
+  }
+
   void setBody(ProgramCounter p,RefsArray y,
-               RefsArray g,RefsArray x,int i);
+               RefsArray g,RefsArray x,int i){
+    body.setPC(p);
+    body.setY(y);
+    body.setG(g);
+    body.setX(x,i);
+  }
+
   void setInstalled() { flags |= Bo_Installed; }
   void setNervous() { flags |= Bo_Nervous; }
   void setFailed() { flags |= Bo_Failed; }
   void setPathMark() { flags |= Bo_PathMark; }
 
-  void setScript(int i,TaggedRef *v,TaggedRef r);
-  void setCommitted(Board *s);
+  void setScript(int i,TaggedRef *v,TaggedRef r) {
+    script[i].setLeft(v);
+    script[i].setRight(r);
+  }
+
+  void setCommitted(Board *s) {
+    Assert(!isInstalled() && !isCommitted());
+    flags |= Bo_Committed;
+    u.actor->setCommitted();
+    u.ref = s;
+  }
+
   void setWaitTop() { flags |= Bo_WaitTop; }
   void setWaiting() { flags |= Bo_Waiting; }
   void setActor (Actor *aa) { u.actor = aa; }   // needed for the solve combinator;
@@ -147,12 +200,5 @@ public:
   void unsetNervous() { flags &= ~Bo_Nervous; }
   void unsetPathMark() { flags &= ~Bo_PathMark; }
 };
-
-#ifdef OUTLINE
-#undef inline
-#else
-#include "actor.hh"
-#include "board.icc"
-#endif
 
 #endif

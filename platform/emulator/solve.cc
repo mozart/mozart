@@ -97,9 +97,9 @@ Bool extParameters(OZ_Term list, Board * solve_board)
 
       Assert(!isUVar(htag));
 
-      Board  * home = (isSVar(htag)
-                       ? tagged2SVar(h)
-                       : taggedCVar2SVar(h))->getBoard();
+      Board  * home = GETBOARD(isSVar(htag)
+                                ? tagged2SVar(h)
+                               : taggedCVar2SVar(h));
       Board * tmp = solve_board;
 
       // from solve board go up to root; if you step over home
@@ -152,7 +152,7 @@ void SolveActor::clearSuspList(Thread *killThr) {
       continue;
     }
 
-    Board *bb = thr->getBoard();
+    Board *bb = GETBOARD(thr);
 
     // find threads, which occured in a failed nested search space
     while (1) {
@@ -208,7 +208,6 @@ SolveActor::SolveActor(Board *bb)
   result     = makeTaggedRef(newTaggedUVar(bb));
   solveBoard = new Board(this, Bo_Solve);
   solveVar   = makeTaggedRef(newTaggedUVar(solveBoard));
-  bb->decSuspCount();         // don't count this actor!
 }
 
 //-----------------------------------------------------------------------------

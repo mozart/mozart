@@ -45,7 +45,7 @@ public:
     }
     return home;
   }
-  Board *getBoard() { return home->derefBoard(); }
+  Board *getBoardInternal() { return home; }
   SuspList *getSuspList() { return suspList; }
   void setSuspList(SuspList *inSuspList) { suspList = inSuspList; }
   void unlinkSuspList() { suspList = NULL; }

@@ -8,7 +8,7 @@
 */
 
 
-#if defined(INTERFACE) && !defined(PEANUTS)
+#if defined(INTERFACE)
 #pragma implementation "actor.hh"
 #endif
 
@@ -46,8 +46,9 @@
    class WaitActor
    ------------------------------------------------------------------------ */
 
-void WaitActor::addChildInternal(Board *bb)
+void WaitActor::addWaitChild(Board *bb)
 {
+  addChild();
   if (!children) {
     children=(Board **) freeListMalloc(3*sizeof(Board *));
     *children++ = (Board *) 2;
@@ -77,8 +78,9 @@ void WaitActor::addChildInternal(Board *bb)
   }
 }
 
-void WaitActor::failChildInternal(Board *bb)
+void WaitActor::failWaitChild(Board *bb)
 {
+  failChild();
   int32 maxx = ToInt32(children[-1]);
   for (int i = 0; i < maxx; i++) {
     if (children[i] == bb) {
@@ -115,7 +117,7 @@ Bool WaitActor::isAliveUpToSolve(void) {
   if (isCommitted())
     return NO;
 
-  Board *bb = this->getBoard();
+  Board *bb = GETBOARD(this);
   Actor *aa;
 
 loop:
@@ -131,15 +133,9 @@ loop:
   if (aa->isCommitted())
     return NO;
 
-  bb = aa->getBoard();
+  bb = GETBOARD(aa);
 
   goto loop;
   // should never come here
   return NO;
 }
-
-#ifdef OUTLINE
-#define inline
-#include "actor.icc"
-#undef inline
-#endif

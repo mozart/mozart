@@ -493,7 +493,6 @@ void rebind(TaggedRef *refPtr, TaggedRef *ptr2)
   doBind(refPtr,makeTaggedRef(ptr2));
 }
 
-
 #define PopRebindTrail(value,refPtr)                    \
     TaggedRef value   = ToInt32(rebindTrail.pop());     \
     TaggedRef *refPtr = (TaggedRef*) rebindTrail.pop();
@@ -754,16 +753,16 @@ SuspList * AM::checkSuspensionList(SVariable * var,
 
 PROFILE_CODE1
   (
-   if (var->getBoard() == am.currentBoard) {
-     if (thr->getBoard() == am.currentBoard)
+   if (GETBOARD(var) == am.currentBoard) {
+     if (GETBOARD(thr) == am.currentBoard)
        FDProfiles.inc_item(from_home_to_home_hits);
      else
        FDProfiles.inc_item(from_home_to_deep_hits);
    } else {
-     Board * b = thr->getBoard();
-     if (b == var->getBoard())
+     Board * b = GETBOARD(thr);
+     if (b == GETBOARD(var))
        FDProfiles.inc_item(from_deep_to_home_misses);
-     else if (am.isBetween(b, var->getBoard())==B_BETWEEN)
+     else if (am.isBetween(b, GETBOARD(var))==B_BETWEEN)
        FDProfiles.inc_item(from_deep_to_deep_hits);
      else
        FDProfiles.inc_item(from_deep_to_deep_misses);
@@ -774,7 +773,7 @@ PROFILE_CODE1
     if (thr->isRunnable ()) {
       if (thr->isPropagator ()) {
         if (calledBy && !(thr->isUnifyThread ())) {
-          switch (isBetween(thr->getBoard(), var->getBoard())) {
+          switch (isBetween(GETBOARD(thr), GETBOARD(var))) {
           case B_BETWEEN:
             thr->markUnifyThread ();
             break;
@@ -793,7 +792,7 @@ PROFILE_CODE1
         continue;
       }
     } else {
-      if (thr->wakeUp(var->getBoard(), calledBy)) {
+      if (thr->wakeUp(GETBOARD(var), calledBy)) {
         Assert (thr->isDeadThread () || thr->isRunnable ());
         suspList = suspList->dispose ();
         continue;
@@ -815,9 +814,9 @@ Board *varHome(TaggedRef val) {
   if (isUVar(val)) {
     return tagged2VarHome(val);
   } else if (isSVar(val)) {
-    return tagged2SVar(val)->getBoard();
+    return GETBOARD(tagged2SVar(val));
   } else {
-    return taggedCVar2SVar(val)->getBoard();
+    return GETBOARD(taggedCVar2SVar(val));
   }
 }
 
@@ -1769,6 +1768,9 @@ void AM::resumeThread(Thread *th) {
     }
   }
 }
+
+
+Board *rootBoard() { return am.rootBoard; }
 
 #ifdef OUTLINE
 #define inline

@@ -73,7 +73,7 @@ Board * ThreadQueueImpl::getHighestSolveDebug(void)
   int mod = maxsize - 1;
 
   while (asize) {
-    Board * c = queue[ahead]->getBoard()->getHighestSolveDebug();
+    Board * c = GETBOARD(queue[ahead])->getHighestSolveDebug();
     if (c)
       return c;
     INC(ahead);

@@ -338,7 +338,7 @@ OZ_C_proc_begin(BIlocation,2)
     return OZ_unify(out, nil());
   }
 
-  return OZ_unify(out, am.dbgGetLoc(thread->getBoard()));
+  return OZ_unify(out, am.dbgGetLoc(GETBOARD(thread)));
 }
 OZ_C_proc_end
 
