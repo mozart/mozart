@@ -11,10 +11,10 @@
   -
   - This file is part of Mozart, an implementation
   - of Oz 3
-  -    http://mozart.ps.uni-sb.de
+  -    http://www.mozart-oz.org
   -
   - See the file "LICENSE" or
-  -    http://mozart.ps.uni-sb.de/LICENSE.html
+  -    http://www.mozart-oz.org/LICENSE.html
   - for information on usage and redistribution
   - of this file, and for a DISCLAIMER OF ALL
   - WARRANTIES.
@@ -40,7 +40,7 @@
       Our goal is to have an application that can be started like any
       other application from the
       operating system shell. For example, 
-<<<ozengine Webget.oza --in http://mozart.ps.uni-sb.de/LICENSE --out LICENSE>>>
+<<<ozengine Webget.oza --in http://www.mozart-oz.org/LICENSE --out LICENSE>>>
       gets us a local copy of the Mozart license file.
 
     <p>
@@ -272,10 +272,10 @@ end
       applying the program <file/ozengine/ to the functor and the
       application arguments. For example, to copy the Mozart license
       file at url
-      <file>http://mozart.ps.uni-sb.de/LICENSE</file> to the local
+      <file>http://www.mozart-oz.org/LICENSE</file> to the local
       file <file/LICENSE/, simply enter the command line below at your
       shell promt:
-<<<ozengine Webget.oza --in http://mozart.ps.uni-sb.de/LICENSE --out LICENSE>>>
+<<<ozengine Webget.oza --in http://www.mozart-oz.org/LICENSE --out LICENSE>>>
 
     <p>
       Execution of an application proceeds as follows:

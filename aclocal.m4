@@ -13,10 +13,10 @@ dnl    $Revision$
 dnl 
 dnl  This file is part of Mozart, an implementation 
 dnl  of Oz 3:
-dnl     http://mozart.ps.uni-sb.de
+dnl     http://www.mozart-oz.org
 dnl 
 dnl  See the file "LICENSE" or
-dnl     http://mozart.ps.uni-sb.de/LICENSE.html
+dnl     http://www.mozart-oz.org/LICENSE.html
 dnl  for information on usage and redistribution 
 dnl  of this file, and for a DISCLAIMER OF ALL 
 dnl  WARRANTIES.
@@ -132,8 +132,8 @@ AC_DEFUN(OZ_INIT, [
   OZ_PROG_MAKE
   AC_PROG_MAKE_SET
   OZ_PROG_INSTALL
-  HOMEURL="http://mozart.ps.uni-sb.de/home"
-  HOMECACHE="http/mozart.ps.uni-sb.de/home"
+  HOMEURL="http://www.mozart-oz.org/home"
+  HOMECACHE="http/www.mozart-oz.org/home"
   AC_SUBST(HOMEURL)
   AC_SUBST(HOMECACHE)
   OZ_ARG_WITH_INC_DIR

@@ -14,10 +14,10 @@
 %%%   $Revision$
 %%%
 %%% This file is part of Mozart, an implementation of Oz 3:
-%%%    http://mozart.ps.uni-sb.de
+%%%    http://www.mozart-oz.org
 %%%
 %%% See the file "LICENSE" or
-%%%    http://mozart.ps.uni-sb.de/LICENSE.html
+%%%    http://www.mozart-oz.org/LICENSE.html
 %%% for information on usage and redistribution
 %%% of this file, and for a DISCLAIMER OF ALL
 %%% WARRANTIES.
@@ -134,7 +134,7 @@ define
 	 CSS =
 	 case Args.'stylesheet' of unit then
 	    case {OS.getEnv 'OZDOC_STYLESHEET'} of false then
-	       'http://www.ps.uni-sb.de/css/ozdoc.css'
+	       'http://www.mozart-oz.org/home/doc/ozdoc.css'
 	    elseof X then X end
 	 elseof X then X end
 	 {Property.put 'ozdoc.stylesheet' CSS}
