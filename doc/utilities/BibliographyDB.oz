@@ -83,7 +83,8 @@ define
 	 {@AuxFile write(vs: '\\citation{'#Key#'}\n')}
       end
       meth process(?VS)
-	 case @AuxFile of unit then skip
+	 case @AuxFile of unit then
+	    VS = unit
 	 else File in
 	    {@AuxFile write(vs: {FoldLTail @Tos
 				 fun {$ In To|Tor}
