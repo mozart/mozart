@@ -1,0 +1,39 @@
+<!DOCTYPE Book SYSTEM "ozdoc.dtd" [
+<!-- $Id$ -->
+
+<!-- Extension to the DTD -->
+<!-- Abbreviations -->
+<!-- Processing Instructions -->
+
+]>
+
+<Book>
+  <Front>
+    <Meta name=ozversion value="3.0">
+    <Meta name=status value=draft>
+    <Title/The Mozart Debugger/
+    <Author.Extern to="author.db" key="Benjamin.Lorenz">
+    <Abstract>
+
+      This manual describes Ozcar, a symbolic debugger which provides
+      well known features like single stepping, breakpoints, and
+      environment inspectation.  Moreover, it supports debugging of
+      multiple threads; their concurrent behaviour can be observed and
+      manipulated.
+
+      Ozcar has been smoothly integrated into the Oz Programming
+      Interface: It can be started and stopped from within Emacs,
+      which, additionally, shows the current position in a debugged
+      program by highlightening the corresponding source line, loading
+      files where neccessary, and serves as a means to set
+      breakpoints.
+
+      Finally, the application ozd is provided to debug standalone
+      programs.
+
+    </Abstract>
+  <Body>
+    <Chapter id="chapter.intro">
+      <Title/Introduction/
+      <P>
+</Book>
