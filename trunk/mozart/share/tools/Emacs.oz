@@ -18,11 +18,7 @@
 %%% of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 %%%
 
-fun
-\ifdef NEWCOMPILER
-   instantiate
-\endif
-   {$ IMPORT}
+fun instantiate {$ IMPORT}
    \insert 'SP.env'
        = IMPORT.'SP'
    \insert 'OP.env'
