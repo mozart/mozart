@@ -16,7 +16,7 @@ We will talk about logic programming and concurrent
 constraint programming where each procedure can be 
 interpreted as a relation expressed by a logical statement.
 We will also discuss the relation between Oz and Prolog, and how
-many Prolog programs have a direct translation to Oz programs.
+most Prolog programs have a straight forward translation to Oz programs.
 
 
 
