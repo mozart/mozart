@@ -1152,7 +1152,7 @@ OZ_Term OZ_string(const char *s)
   return oz_string(s);
 }
 
-void string2buffer(ostream &out,OZ_Term list)
+void string2buffer(ostream &out,OZ_Term list,int nulok)
 {
   OZ_Term tmp = oz_deref(list);
   for (; oz_isCons(tmp); tmp=oz_deref(oz_tail(tmp))) {
@@ -1163,7 +1163,7 @@ void string2buffer(ostream &out,OZ_Term list)
       return;
     }
     int i = smallIntValue(hh);
-    if (i <= 0 || i > 255) {
+    if (i < 0 || i > 255 || (i==0 && !nulok)) {
       message("no small int %d",i);
       printf(" in string %s\n",toC(list));
       return;
@@ -1189,7 +1189,7 @@ char *OZ_stringToC(OZ_Term list,int*len)
 
   ostrstream *out = new ostrstream;
 
-  string2buffer(*out,list);
+  string2buffer(*out,list,0);
 
   if (len!=0) { *len = out->pcount(); }
   tmpString = strAndDelete(out);
@@ -1214,11 +1214,11 @@ void byteString2buffer(ostream &out,OZ_Term term)
   for (int i=0;i<n;i++) out << bs->get(i);
 }
 
-void virtualString2buffer(ostream &out,OZ_Term term)
+void virtualString2buffer(ostream &out,OZ_Term term,int nulok)
 {
   OZ_Term t=oz_deref(term);
   if (oz_isCons(t)) {
-    string2buffer(out,t);
+    string2buffer(out,t,nulok);
     return;
   }
   if (oz_isAtom(t)) {
@@ -1251,7 +1251,7 @@ void virtualString2buffer(ostream &out,OZ_Term term)
   SRecord *sr=tagged2SRecord(t);
   int len=sr->getWidth();
   for (int i=0; i < len; i++) {
-    virtualString2buffer(out,sr->getArg(i));
+    virtualString2buffer(out,sr->getArg(i),nulok);
   }
 }
 
@@ -1270,7 +1270,7 @@ char *OZ_virtualStringToC(OZ_Term t,int*len)
 
   ostrstream *out = new ostrstream;
 
-  virtualString2buffer(*out,t);
+  virtualString2buffer(*out,t,1);
 
   if (len!=0) { *len = out->pcount(); }
   tmpString = strAndDelete(out);
