@@ -1100,37 +1100,44 @@
 	  One part of the support is concerned with testing system functors
 	  locally.
 	  <List>
+	    <Entry class=useroption><Span class=index/<<oz-build-dir>>/
+	      (default: <File>~/mozart</File>)
+	    <Item>
+	      Path to the build directory, &ie;, the directory in which
+	      <Code proglang=sh>configure</Code> was invoked.  You should
+	      set this before the OPI is loaded into Emacs for the
+	      following user options to be initialized correctly.
 	    <Entry class=useroption><Span class=index/<<oz-emulator>>/
 	      (default: see below)
 	    <Item>
 	      <Index/emulator<And>local/
 	      File name of the Oz Emulator binary.  This is used when running
-	      the Emulator under gdb and by the <<oz-other>> command.
+	      the Emulator under <Code proglang=sh>gdb</Code>, and by the
+	      <<oz-other>> command.
 	    <P proglang=sh>
 	      The default value of this variable is taken from the
 	      environment variable <Var type=env/OZEMULATOR/ if it is set,
 	      else it is set to
-	      <<<$HOME/mozart/platform/emulator/oz.emulator.bin>>>
-	      where <<$HOME>> stands for the value of the environment
-	      variable <Var type=env/HOME/.
+	      <<<?{oz-build-dir}/platform/emulator/emulator.exe>>>
 	    <Entry class=useroption><Span class=index/<<oz-functor-path>>/
 	      (default: see below)
 	    <Item>
 	      <Index/functor<And>system/
 	      Search path for the Oz system functors.  This is used by the
 	      <<oz-other>> command.  By default, this specifies rules to
-	      look for functors in the <File>~/mozart/share/lib</File> and
-	      <File>~/mozart/share/tools</File> directories.  This is useful
-	      for first testing changes before installing the modified
-	      functors globally.
+	      look for functors in the <File>?{oz-build-dir}/share/lib</File>
+	      and <File>?{oz-build-dir}/share/tools</File> directories.
+	      This is useful for first testing changes before installing
+	      the modified functors globally.
 	    <P proglang=sh>
 	      The default value of this variable is taken from the
 	      environment variable <Var type=env/OZ_LOAD/ if it is set,
 	      else it is set to
-<<<prefix=http\\://www.mozart-oz.org/home-1.1.0/share/=~/mozart/share/lib/:
-prefix=http\\://www.mozart-oz.org/home-1.1.0/share/=~/mozart/share/tools/:
-cache=~/.oz/cache:cache=$OZHOME/cache>>>
-	      where <<$OZHOME>> stands for the value of the environment
+<<<prefix=x-oz\\://system/=?{oz-build-dir}/share/lib/:
+prefix=x-oz\\://system/=?{oz-build-dir}/share/tools/:
+prefix=x-oz\\://boot/=?{oz-build-dir}/platform/emulator/:
+cache=~/.oz/cache:cache=?{oz-home}/cache>>>
+	      where ?{oz-home} stands for the value of the environment
 	      variable <Var type=env/OZHOME/.
 	    <Entry class=useroption><Span class=index/<<oz-root-functor>>/
 	      (default: <<"x-oz://system/OPI.ozf">>)
