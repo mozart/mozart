@@ -228,7 +228,97 @@ OZ_Return LinNotEqPropagator::propagate(void)
 }
 
 //-----------------------------------------------------------------------------
+#define TMUELLER
 
+#ifdef TMUELLER
+OZ_Return LinLessEqPropagator::propagate(void)
+{
+  OZ_DEBUGPRINTTHIS("in ");
+  //
+  int &c = reg_c, &sz = reg_sz, * a = reg_a;
+  //
+  simplify_on_equality();
+  //
+  if (sz == 0) {
+    return (c <= 0) ? PROCEED: FAILED;
+  }
+  // if possible reduce to ternary propagator
+  if (sz == 2 && mayBeEqualVars()) {
+    if ((a[0] == 1) && (a[1] == -1)) {
+      return replaceBy(new LessEqOffPropagator(reg_x[0], reg_x[1], -c));
+    } else if ((a[0] == -1) && (a[1] == 1)) {
+      return replaceBy(new LessEqOffPropagator(reg_x[1], reg_x[0], -c));
+    }
+  }
+  //
+  DECL_DYN_ARRAY(OZ_FDIntVar, x, sz);
+  PropagatorController_VV P(sz, x);
+  int i;
+  //
+  for (i = sz; i--; )
+    x[i].read(reg_x[i]);
+  //
+  DECL_DYN_ARRAY(double, v, sz);
+  DECL_DYN_ARRAY(double, w, sz);
+  v[0] = 0;
+  OZ_DEBUGCODE(printf("v[%d]=%f\n", 0, v[0]);)
+  for (i = 1; i < sz; i += 1) {
+    v[i] = v[i-1] + a[i-1] * (a[i-1] > 0
+                              ? x[i-1]->getMinElem()
+                              : x[i-1]->getMaxElem());
+    OZ_DEBUGCODE(printf("v[%d]=%f\n", i, v[i]);)
+  }
+  //
+  w[sz-1] = 0;
+  OZ_DEBUGCODE(printf("w[%d]=%f\n", sz-1, w[sz-1]);)
+  for (i = sz; i > 1; i -= 1) {
+    w[i-2] = w[i-1] + a[i-1]* (a[i-1] > 0
+                               ? x[i-1]->getMinElem()
+                               : x[i-1]->getMaxElem());
+    OZ_DEBUGCODE(printf("w[%d]=%f\n", i-2, w[i-2]);)
+  }
+  //
+  OZ_DEBUGCODE(
+                DECL_DYN_ARRAY(double, tx, sz);
+                for (i = sz; i--; ) tx[i] = calc_tx_lin(i, sz, a, x, c);
+                );
+  double sum = c;
+  //
+  for (i = 0; i < sz; i += 1) {
+    if (a[i] > 0) {
+      int ub = doubleToInt(floor(double(v[i]+w[i]+c)/-a[i]));
+      OZ_DEBUGCODE(
+                   if (ub != doubleToInt(floor(tx[i]))) {
+                     printf("--> ub %d != %d\n", ub, doubleToInt(floor(tx[i])));
+                     printf("error %s\n", this->toString());
+                   }
+                   printf("ub=%d\n", ub);
+                   );
+      FailOnEmpty(*x[i] <= ub);
+      sum += a[i] * x[i]->getMaxElem();
+    } else {
+      int lb = doubleToInt(ceil(double(v[i]+w[i]+c)/-a[i]));
+      OZ_DEBUGCODE(
+                   if (lb != doubleToInt(ceil(tx[i]))) {
+                     printf("--> lb %d != %d\n", lb, doubleToInt(ceil(tx[i])));
+                     printf("error %s\n", this->toString());
+                   }
+                   printf("lb=%d\n", lb);
+                   );
+      FailOnEmpty(*x[i] >= lb);
+      sum += a[i] * x[i]->getMinElem();
+    }
+  }
+  //
+  OZ_DEBUGPRINTTHIS("out ");
+  //
+  return sum <= 0 ? P.vanish() : P.leave();
+  //
+failure:
+  OZ_DEBUGPRINT(("fail \n"));
+  return P.fail();
+}
+#else
 OZ_Return LinLessEqPropagator::propagate(void)
 {
   OZ_DEBUGPRINTTHIS("in ");
@@ -279,6 +369,7 @@ failure:
 
   return P.fail();
 }
+#endif
 
 //-----------------------------------------------------------------------------
 
