@@ -1880,11 +1880,26 @@ int OZ_FiniteDomainImpl::operator -= (const OZ_FiniteDomainImpl &y)
 	  size = findSize();
 	}
       } else if (y_type == bv_descr) {
-	FDBitVector * bv = asBitVector();
-	size = (*bv -= *y.get_bv());
-	min_elem = bv->findMinElem();
-	max_elem = bv->findMaxElem();
-	setType(bv);
+        // error if x_type == fd_descr and has elements above fd_bv_max_elem
+        if (max_elem > fd_bv_max_elem) {
+          FDIntervals *iv = asIntervals();
+          FDIntervals *y_iv = y.asIntervals();
+          FDIntervals *z_iv = provideIntervals(iv->high + y_iv->high);
+          size=iv->subtract_iv(*z_iv, *y_iv);
+          min_elem = z_iv->findMinElem();
+          max_elem = z_iv->findMaxElem();
+          setType(z_iv);
+          if (max_elem <= fd_bv_max_elem) {
+            setType(asBitVector());
+            z_iv->dispose();
+          }
+        } else {
+          FDBitVector * bv = asBitVector();
+          size = (*bv -= *y.get_bv());
+          min_elem = bv->findMinElem();
+          max_elem = bv->findMaxElem();
+          setType(bv);
+        }
       } else { // y_type == iv_descr
 	FDIntervals * iv = newIntervals(1 + y.get_iv()->high);
 	size = asIntervals()->subtract_iv(*iv, *y.get_iv());
