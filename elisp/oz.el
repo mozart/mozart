@@ -95,7 +95,7 @@ starts the emulator under gdb")
 (defvar oz-temp-counter 0
   "gensym counter")
 
-(defvar oz-title-format "Oz Console"
+(defvar oz-title-format "Oz Programming Interface"
   "The format string for the window title" )
 
 (defvar oz-old-screen-title
@@ -250,11 +250,11 @@ starts the emulator under gdb")
 
 (oz-make-menu
  '(("Oz"
-    ("Feed buffer"            . oz-feed-buffer)
-    ("Feed region"            . oz-feed-region)
-    ("Feed line"              . oz-feed-line)
-    ("Feed file"              . oz-feed-file)
-    ("Compile file"           . oz-precompile-file)
+    ("Feed Buffer"            . oz-feed-buffer)
+    ("Feed Region"            . oz-feed-region)
+    ("Feed Line"              . oz-feed-line)
+    ("Feed File"              . oz-feed-file)
+    ("Compile File"           . oz-precompile-file)
     ("-----")
     ("Find"
      ("Documentation Demo"      . oz-find-docdemo-file)
@@ -262,46 +262,40 @@ starts the emulator under gdb")
      ("Library Demo"            . oz-find-lib-file)
      )
     ("Print"
-     ("region"      . oz-print-region)
-     ("buffer (portrait)"	. oz-print-buffer)
-     ("buffer (landscape)"	. oz-print-buffer-landscape)
+     ("Region"                  . oz-print-region)
+     ("Buffer (Portrait)"	. oz-print-buffer)
+     ("Buffer (Landscape)"	. oz-print-buffer-landscape)
      )
     ("Core Syntax"
-     ("buffer"      . oz-to-coresyntax-buffer)
-     ("region"      . oz-to-coresyntax-region)
-     ("line"        . oz-to-coresyntax-line  )
+     ("Buffer"      . oz-to-coresyntax-buffer)
+     ("Region"      . oz-to-coresyntax-region)
+     ("Line"        . oz-to-coresyntax-line  )
      )
     ("Emulator Code"
-     ("buffer"      . oz-to-emulatorcode-buffer)
-     ("region"      . oz-to-emulatorcode-region)
-     ("line"        . oz-to-emulatorcode-line  )
+     ("Buffer"      . oz-to-emulatorcode-buffer)
+     ("Region"      . oz-to-emulatorcode-region)
+     ("Line"        . oz-to-emulatorcode-line  )
      )
     ("Indent"
-     ("line"   . oz-indent-line)
-     ("region" . oz-indent-region)
-     ("buffer" . oz-indent-buffer)
+     ("Line"   . oz-indent-line)
+     ("Region" . oz-indent-region)
+     ("Buffer" . oz-indent-buffer)
      )
     ("Browse" . oz-feed-region-browse)
     ("Panel"   . oz-feed-panel)
     ("-----")
-    ("Next Oz buffer"         . oz-next-buffer)
-    ("Previous Oz buffer"     . oz-previous-buffer)
-    ("New Oz buffer"          . oz-new-buffer)
-    ("Fontify buffer"         . oz-fontify)
-    ("Show/hide"
-     ("compiler"     . oz-toggle-compiler)
-     ("emulator"      . oz-toggle-emulator)
+    ("Next Oz Buffer"         . oz-next-buffer)
+    ("Previous Oz Buffer"     . oz-previous-buffer)
+    ("New Oz Buffer"          . oz-new-buffer)
+    ("Fontify Buffer"         . oz-fontify)
+    ("Show/Hide"
+     ("Compiler"     . oz-toggle-compiler)
+     ("Emulator"      . oz-toggle-emulator)
      )
     ("-----")
     ("Start Oz" . run-oz)
     ("Halt Oz"  . oz-halt)
     ("-----")    
-;    ("Font"
-;     ("Small"      . oz-small-font)
-;     ("Normal"     . oz-std-font)
-;     ("Large"      . oz-large-font)
-;     ("Very Large" . oz-very-large-font)
-;     )
     )))
 
 ;;------------------------------------------------------------
