@@ -522,17 +522,17 @@ phrase2         : phrase2 add coord phrase2 %prec ADD
                   { $$ = newCTerm("fOpenRecord",$1,$3); }
                 | '[' fixedListArgs ']'
                   { $$ = $2; }
-                | '{' coord phrase phraseList '}'
-                  { $$ = newCTerm("fApply",$3,$4,$2); }
+                | '{' coord phrase phraseList '}' coord
+                  { $$ = newCTerm("fApply",$3,$4,makeLongPos($2,$6)); }
                 | proc coord procFlags '{' phrase phraseList '}'
-                  inSequence end
-                  { $$ = newCTerm("fProc",$5,$6,$8,$3,$2); }
+                  inSequence end coord
+                  { $$ = newCTerm("fProc",$5,$6,$8,$3,makeLongPos($2,$10)); }
                 | _fun_ coord procFlags '{' phrase phraseList '}'
-                  inSequence end
-                  { $$ = newCTerm("fFun",$5,$6,$8,$3,$2); }
+                  inSequence end coord
+                  { $$ = newCTerm("fFun",$5,$6,$8,$3,makeLongPos($2,$10)); }
                 | functor coord phraseOpt functorDescriptorList
-                  body inSequence end
-                  { $$ = newCTerm("fFunctor",$3,$4,$6,$2); }
+                  body inSequence end coord
+                  { $$ = newCTerm("fFunctor",$3,$4,$6,makeLongPos($2,$8)); }
                 | class
                   { $$ = $1; }
                 | local coord sequence _in_ sequence end
@@ -543,30 +543,33 @@ phrase2         : phrase2 add coord phrase2 %prec ADD
                   { $$ = newCTerm("fLock",$3,makeLongPos($2,$5)); }
                 | _lock_ coord phrase then inSequence end coord
                   { $$ = newCTerm("fLockThen",$3,$5,makeLongPos($2,$7)); }
-                | thread coord inSequence end
-                  { $$ = newCTerm("fThread",$3,$2); }
+                | thread coord inSequence end coord
+                  { $$ = newCTerm("fThread",$3,makeLongPos($2,$5)); }
                 | try coord inSequence optCatch optFinally end coord
                   { $$ = newCTerm("fTry",$3,$4,$5,makeLongPos($2,$7)); }
-                | ozraise coord inSequence end
-                  { $$ = newCTerm("fRaise",$3,$2); }
-                | ozraise coord inSequence with inSequence end
-                  { $$ = newCTerm("fRaiseWith",$3,$5,$2); }
+                | ozraise coord inSequence end coord
+                  { $$ = newCTerm("fRaise",$3,makeLongPos($2,$5)); }
+                | ozraise coord inSequence with inSequence end coord
+                  { $$ = newCTerm("fRaiseWith",$3,$5,makeLongPos($2,$7)); }
                 | skip
                   { $$ = newCTerm("fSkip",pos()); }
                 | fail
                   { $$ = newCTerm("fFail",pos()); }
-                | not coord inSequence end
-                  { $$ = newCTerm("fNot",$3,$2); }
+                | not coord inSequence end coord
+                  { $$ = newCTerm("fNot",$3,makeLongPos($2,$5)); }
                 | _if_ ifMain
                   { $$ = $2; }
-                | or coord orClauseList end
-                  { $$ = newCTerm("fOr",$3,newCTerm("for"),$2); }
-                | dis coord orClauseList end
-                  { $$ = newCTerm("fOr",$3,newCTerm("fdis"),$2); }
-                | choice coord choiceClauseList end
-                  { $$ = newCTerm("fOr",$3,newCTerm("fchoice"),$2); }
-                | _condis_ coord condisClauseList end
-                  { $$ = newCTerm("fCondis",$3,$2); }
+                | or coord orClauseList end coord
+                  { $$ = newCTerm("fOr",$3,newCTerm("for"),
+                                  makeLongPos($2,$5)); }
+                | dis coord orClauseList end coord
+                  { $$ = newCTerm("fOr",$3,newCTerm("fdis"),
+                                  makeLongPos($2,$5)); }
+                | choice coord choiceClauseList end coord
+                  { $$ = newCTerm("fOr",$3,newCTerm("fchoice"),
+                                  makeLongPos($2,$5)); }
+                | _condis_ coord condisClauseList end coord
+                  { $$ = newCTerm("fCondis",$3,makeLongPos($2,$5)); }
                 | scannerSpecification
                   { $$ = $1; }
                 | parserSpecification
@@ -756,8 +759,9 @@ caseClause      : inSequence then inSequence
                   { $$ = newCTerm("fCaseClause",$1,$3); }
                 ;
 
-class           : _class_ coord phraseOpt classDescriptorList methList end
-                  { $$ = newCTerm("fClass",$3,$4,$5,$2); }
+class           : _class_ coord phraseOpt classDescriptorList methList
+                  end coord
+                  { $$ = newCTerm("fClass",$3,$4,$5,makeLongPos($2,$7)); }
                 ;
 
 phraseOpt       : phrase
@@ -1025,10 +1029,11 @@ coord           : /* empty */
 
 scannerSpecification
                 : _scanner_ coord nakedVariable
-                  classDescriptorList methList scannerRules end
+                  classDescriptorList methList scannerRules end coord
                   { OZ_Term prefix =
                       scannerPrefix? scannerPrefix: OZ_atom("zy");
-                    $$ = newCTerm("fScanner",$3,$4,$5,$6,prefix,$2); }
+                    $$ = newCTerm("fScanner",$3,$4,$5,$6,prefix,
+                                  makeLongPos($2,$8)); }
                 ;
 
 scannerRules    : lexAbbrev
@@ -1083,9 +1088,10 @@ modeDescr       : _from_ modeFromList
 parserSpecification
                 : _parser_ coord nakedVariable
                   classDescriptorList methList
-                  tokenClause parserRules end
+                  tokenClause parserRules end coord
                   { OZ_Term expect = parserExpect? parserExpect: OZ_int(0);
-                    $$ = newCTerm("fParser",$3,$4,$5,$6,$7,expect,$2); }
+                    $$ = newCTerm("fParser",$3,$4,$5,$6,$7,expect,
+                                  makeLongPos($2,$9)); }
                 ;
 
 parserRules     : synClause
