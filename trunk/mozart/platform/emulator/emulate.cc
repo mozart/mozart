@@ -737,13 +737,16 @@ LBLdispatcher:
   /*
    * Currently unused
    */
-  Case(GETRETURNX) 
-  Case(GETRETURNY) 
-  Case(GETRETURNG) 
-  Case(FUNRETURNX) 
-  Case(FUNRETURNY) 
-  Case(FUNRETURNG) 
-    OZ_error("Impossible.");
+  Case(GETRETURNX) { goto currently_unused; }
+  Case(GETRETURNY) { goto currently_unused; }
+  Case(GETRETURNG) { goto currently_unused; }
+  Case(FUNRETURNX) { goto currently_unused; }
+  Case(FUNRETURNY) { goto currently_unused; }
+  Case(FUNRETURNG) { goto currently_unused; }
+
+  currently_unused:
+  OZ_error("Impossible (opcode should be unused)");
+
   
   Case(CREATEVARIABLEX)
     {
@@ -1403,7 +1406,7 @@ LBLdispatcher:
 
 
   /* a unify void in read case mode */
-Case(GETVOID)
+  Case(GETVOID)
     {
       sPointer += getPosIntArg(PC+1);
       DISPATCH(2);
@@ -3046,16 +3049,18 @@ Case(GETVOID)
       RAISE_APPLY(taggedPredicate,OZ_toList(callerArity,XREGS));
     }
 #else
-  Case(DECONSCALLX)
-  Case(DECONSCALLY)
-  Case(DECONSCALLG)
-  Case(TAILDECONSCALLX)
-  Case(TAILDECONSCALLG)
-  Case(CONSCALLX)
-  Case(CONSCALLY)
-  Case(CONSCALLG)
-  Case(TAILCONSCALLX)
-  Case(TAILCONSCALLG)
+    Case(DECONSCALLX)     { goto no_alicecalls; }
+    Case(DECONSCALLY)     { goto no_alicecalls; }
+    Case(DECONSCALLG)     { goto no_alicecalls; }
+    Case(TAILDECONSCALLX) { goto no_alicecalls; }
+    Case(TAILDECONSCALLG) { goto no_alicecalls; }
+    Case(CONSCALLX)       { goto no_alicecalls; }
+    Case(CONSCALLY)       { goto no_alicecalls; }
+    Case(CONSCALLG)       { goto no_alicecalls; }
+    Case(TAILCONSCALLX)   { goto no_alicecalls; }
+    Case(TAILCONSCALLG)   { goto no_alicecalls; }
+
+  no_alicecalls:
     {
       Assert(0);
       return T_ERROR;
