@@ -6502,12 +6502,22 @@ bomb:
 }
 DECLAREBI_USEINLINEFUN2(BIooExch,ooExchInline)
 
+
+int sizeOf(SRecord *sr)
+{
+  return sr ? sr->sizeOf() : 0;
+}
+
 Object *newObject(SRecord *feat, SRecord *st, ObjectClass *cla, 
 		  Bool iscl, Board *b)
 {
-  OzLock *lck = cla->supportsLocking()
-    ? new LockLocal(am.currentBoard)
-    : (LockLocal*) NULL;
+  COUNT1(sizeObjects,sizeof(Object)+sizeOf(feat)+sizeOf(st));
+  COUNT1(sizeRecords,-sizeOf(feat)-sizeOf(st));
+  OzLock *lck=NULL;
+  if (cla->supportsLocking()) {
+    lck = new LockLocal(am.currentBoard);
+    COUNT1(sizeObjects,sizeof(LockLocal));
+  }
   return new Object(b,st,cla,feat,iscl,lck);
 }
 
