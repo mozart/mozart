@@ -572,7 +572,6 @@ OZ_Term VAR = OZ_getCArg(ARG);			\
  OZ_nonvarArg(ARG);				\
  if (! OZ_isFloat(OZ_getCArg(ARG))) {		\
    return OZ_typeError(ARG,"Float");		\
-   return FAILED;				\
  } else {					\
    VAR = OZ_floatToC(OZ_getCArg(ARG));		\
  }
