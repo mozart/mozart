@@ -291,7 +291,7 @@ dbgOption dbgReadInput(int &helpArg)
   return DBG_NONE;
 }
 
-void showCall(DBGPort port, Board *b, TaggedRef def,
+void showCall(DBGPort port, Board * /* b */, TaggedRef def,
               int arity, TaggedRef *args,
               unsigned long goal)
 {

@@ -393,7 +393,7 @@ public:
   void dispose ();
 
   CFuncContinuation (OZ_CFun f, RefsArray x, int i);
-  void init (OZ_CFun f, RefsArray x, int i) { error(""); };
+  void init (OZ_CFun /* f */, RefsArray /* x */, int /* i */) { error(""); };
 
   OZ_CFun getCFunc () { return (cFunc); }
 

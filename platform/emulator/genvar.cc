@@ -37,7 +37,7 @@ SVariable(n == NULL ? am.currentBoard : n)
 void GenCVariable::propagate(TaggedRef var, SuspList * &sl,
                              PropCaller unifyVars)
 {
-  sl = am.checkSuspensionList(tagged2SuspVar(var), var, sl, unifyVars);
+  sl = am.checkSuspensionList(tagged2SuspVar(var), sl, unifyVars);
 }
 
 

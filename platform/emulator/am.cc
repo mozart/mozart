@@ -126,8 +126,6 @@ void AM::init(int argc,char **argv)
   aVarUnifyHandler=makeTaggedNULL();
   aVarBindHandler=makeTaggedNULL();
 
-  int c;
-
   char *compilerName;
   if (!(compilerName = getenv("OZCOMPILER"))) {
     compilerName = OzCompiler;
@@ -577,7 +575,7 @@ BFlag AM::isBetween(Board *to, Board *varHome)
 //  X = Y
 // --> if det Y then ... fi
 
-SuspList * AM::checkSuspensionList(SVariable * var, TaggedRef taggedvar,
+SuspList * AM::checkSuspensionList(SVariable * var,
                                    SuspList * suspList,
                                    PropCaller calledBy)
 {

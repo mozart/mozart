@@ -17,6 +17,6 @@
 Bool gcProtect(TaggedRef *);
 Bool gcUnprotect(TaggedRef *);
 
-OZ_C_proc_proto(BIdumpThreads);
+OZ_C_proc_proto(BIdumpThreads)
 
 #endif //__GC_H__

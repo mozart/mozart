@@ -201,7 +201,7 @@ inline
 void AM::checkSuspensionList(TaggedRef taggedvar, PropCaller calledBy)
 {
   SVariable * var = tagged2SuspVar(taggedvar);
-  var->setSuspList(checkSuspensionList(var, taggedvar, var->getSuspList(),
+  var->setSuspList(checkSuspensionList(var, var->getSuspList(),
                                        calledBy));
 }
 
