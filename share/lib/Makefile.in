@@ -72,7 +72,7 @@ APSRC = $(APSRC1:%.oz=$(SRCDIR)/AP/%.oz) $(SRCDIR)/AP.oz
 CPSRC1 = Search.oz FD.oz FS.oz
 CPSRC = $(CPSRC1:%=$(SRCDIR)/CP/%) $(SRCDIR)/CP.oz
 
-DPSRC1 = Site.oz agenda.oz netscape.oz remote.oz server.oz
+DPSRC1 = Site.oz agenda.oz remote.oz server.oz
 DPSRC = $(DPSRC1:%=$(SRCDIR)/DP/%) $(SRCDIR)/DP.oz
 
 WPSRC1 = Tk.oz TkOptions.oz TkTools.oz TkInit.oz
