@@ -759,10 +759,26 @@ extern ArityTable aritytable;
 
 TaggedRef makeTupleArityList(int i);
 
+
+/*
+ * Abstract data type SRecordArity for records and tuples:
+ * either an Arity* or an int
+ */
+
+typedef int32 SRecordArity; /* do not want to use a pointer on the Alpha! */
+
+inline Bool sraIsTuple(SRecordArity a)      { return a&1; }
+inline SRecordArity mkTupleWidth(int w)     { return (SRecordArity) ((w<<1)|1);}
+inline int getTupleWidth(SRecordArity a)    { return a>>1; }
+inline SRecordArity mkRecordArity(Arity *a) { return ToInt32(a); }
+inline Arity *getRecordArity(SRecordArity a){ return (Arity*) ToPointer(a); }
+inline Bool sameSRecordArity(SRecordArity a, SRecordArity b) { return a==b; }
+
+
 class SRecord {
 private:
   TaggedRef label;
-  void *recordArity;
+  SRecordArity recordArity;
   TaggedRef args[1];   // really maybe more
 
 public:
@@ -772,7 +788,21 @@ public:
 
   SRecord() { error("do not use SRecord"); }
 
-  Bool isTuple() { return ((int)recordArity)&1; }
+  Bool isTuple() { return sraIsTuple(recordArity); }
+
+  void setTupleWidth(int w) { recordArity = mkTupleWidth(w); }
+  int getTupleWidth() {
+    Assert(isTuple());
+    return ::getTupleWidth(recordArity);
+  }
+
+  SRecordArity getSRecordArity() { return recordArity; }
+
+  void setRecordArity(Arity *a) { recordArity = mkRecordArity(a);}
+  Arity *getRecordArity() {
+    Assert(!isTuple());
+    return ::getRecordArity(recordArity);
+  }
 
   TaggedRef normalize()
   {
@@ -789,12 +819,11 @@ public:
   }
 
   int getWidth() {
-    return ((int)recordArity)&1
-      ? ((int) recordArity)>>1
-      : ((Arity *) recordArity)->getWidth(); }
+    return isTuple() ? getTupleWidth() : getRecordArity()->getWidth();
+  }
   void downSize(unsigned int s) { // TMUELLER
     Assert(isTuple());
-    recordArity = (void *) ((s<<1)|1);
+    setTupleWidth(s);
   } // FD
 
   static SRecord *newSRecord(TaggedRef lab, Arity *f)
@@ -807,7 +836,7 @@ public:
     int memSize = sizeof(SRecord) + sizeof(TaggedRef) * (sz - 1);
     SRecord *ret = (SRecord *) heapMalloc(memSize);
     ret->label = lab;
-    ret->recordArity = f;
+    ret->setRecordArity(f);
     return ret;
   }
 
@@ -818,7 +847,7 @@ public:
     int memSize = sizeof(SRecord) + sizeof(TaggedRef) * (w - 1);
     SRecord *ret = (SRecord *) heapMalloc(memSize);
     ret->label = lab;
-    ret->recordArity = (void *) ((w<<1)|1);
+    ret->setTupleWidth(w);
     return ret;
   }
 
@@ -865,9 +894,7 @@ public:
   }
 
   Arity* getArity () {
-    return isTuple()
-      ? aritytable.find(getArityList())
-      : ((Arity *) recordArity);
+    return isTuple() ? aritytable.find(getArityList()) : getRecordArity();
   }
 
   int getIndex(TaggedRef feature)
@@ -910,7 +937,7 @@ public:
   }
   Bool compareFunctor(SRecord* str) {
     return sameLiteral(getLabel(),str->getLabel()) &&
-      recordArity == str->recordArity;
+      sameSRecordArity(recordArity,str->recordArity);
   }
 };
 
@@ -1068,18 +1095,20 @@ typedef enum {
 class Object: public ConstTerm {
   friend void ConstTerm::gcConstRecurse(void);
 protected:
-  SRecord *state;
-  ObjectClass *aclass;
+  int32 state;  // was: SRecord *state, but saves memory on the Alpha
+  int32 aclass; // was: ObjectClass *aclass
   TaggedRef threads;  /* list of variables with threads attached to them */
-  int deepness;       /* deepnes plus OFlag */
+  int32 deepness;     /* deepnes plus OFlag */
 public:
 
   Object(SRecord *s,ObjectClass *ac,SRecord *feat,Bool iscl):
-    ConstTerm(Co_Object), state(s), aclass(ac)
+    ConstTerm(Co_Object)
   {
     setFreeRecord(feat);
     deepness = 0;
     threads = AtomNil;
+    setClass(ac);
+    setState(s);
     if (iscl) setClass();
   };
 
@@ -1098,19 +1127,20 @@ public:
   Bool isClosed()       { return (deepness)&OFlagClosed; }
   void close()          { setFlag(OFlagClosed); }
 
-  void setClass(ObjectClass *c) { aclass = c; }
+  void setClass(ObjectClass *c) { aclass = ToInt32(c); }
 
   TaggedRef attachThread();
   inline void release();
 
-  ObjectClass *getClass() { return aclass; }
+  ObjectClass *getClass() { return (ObjectClass*) ToPointer(aclass); }
 
   Bool getFastBatch()     { return getClass()->hasFastBatch; }
 
   char *getPrintName()          { return getClass()->getPrintName(); }
   SRecord *getMethods()         { return getClass()->getfastMethods(); }
   Abstraction *getMethod(TaggedRef label, int arity);
-  SRecord *getState()           { return state; }
+  SRecord *getState()           { return (SRecord*) ToPointer(state); }
+  void setState(SRecord *s)     { state = ToInt32(s); }
   Abstraction *getAbstraction() { return getClass()->getAbstraction(); }
   TaggedRef getSlowMethods()    { return getClass()->getslowMethods(); }
   TaggedRef getOzClass()        { return getClass()->getOzClass(); }

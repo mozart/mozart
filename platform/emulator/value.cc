@@ -713,7 +713,7 @@ TaggedRef SRecord::adjoin(SRecord* hrecord)
 
   SRecord *newrec = newSRecord(hrecord->getLabel(),newArity);
 
-  if (newArity != hrecord->recordArity) {
+  if (newArity != hrecord->getRecordArity()) {
     TaggedRef ar = list1;
     CHECK_DEREF(ar);
     while (isCons(ar)) {

@@ -25,7 +25,7 @@ class HTEntry {
     TaggedRef number;
     struct {
       Literal *fname;
-      int arity;
+      SRecordArity arity;
     } functor;
   };
 
@@ -41,7 +41,7 @@ class HTEntry {
     OZ_protect(&number);
   };
 
-  HTEntry(Literal *name, int arity, ProgramCounter lbl, HTEntry *nxt)
+  HTEntry(Literal *name, SRecordArity arity, ProgramCounter lbl, HTEntry *nxt)
     : label(lbl), next(nxt) {
     functor.fname = name;
     functor.arity = arity;
@@ -53,46 +53,47 @@ class HTEntry {
 
   /* look up an literal */
   ProgramCounter lookup(Literal *name, ProgramCounter elseLabel)
-    {
-      ProgramCounter  ret = elseLabel;
+  {
+    ProgramCounter  ret = elseLabel;
 
-      for (HTEntry *help = this; help != NULL; help = help->next) {
-        if (help->literal == name) {
-          ret = help->label;
-          break;
-        }
+    for (HTEntry *help = this; help != NULL; help = help->next) {
+      if (help->literal == name) {
+        ret = help->label;
+        break;
       }
-      return ret;
     }
+    return ret;
+  }
 
   /* look up functor/arity */
-  ProgramCounter lookup(Literal *name, int arity, ProgramCounter elseLabel)
-    {
-      ProgramCounter ret = elseLabel;
+  ProgramCounter lookup(Literal *name, SRecordArity arity, ProgramCounter elseLabel)
+  {
+    ProgramCounter ret = elseLabel;
 
-      for (HTEntry *help = this; help != NULL; help = help->next) {
-        if ( (help->functor.fname == name) &&
-             (help->functor.arity == arity) ) {
-          ret = help->label;
-          break;
-        }
+    for (HTEntry *help = this; help != NULL; help = help->next) {
+      if ( (help->functor.fname == name) &&
+           sameSRecordArity(help->functor.arity,arity) ) {
+        ret = help->label;
+        break;
       }
-      return ret;
     }
+    return ret;
+  }
 
   /* look a number */
-  ProgramCounter lookup(TaggedRef term /* actually a number*/ , ProgramCounter elseLabel)
-    {
-      ProgramCounter ret = elseLabel;
+  ProgramCounter lookup(TaggedRef term, ProgramCounter elseLabel)
+  {
+    Assert(isNumber(term));
+    ProgramCounter ret = elseLabel;
 
-      for (HTEntry *help = this; help != NULL; help = help->next) {
-        if (numberEq(help->number,term)) {
-          ret = help->label;
-          break;
-        }
+    for (HTEntry *help = this; help != NULL; help = help->next) {
+      if (numberEq(help->number,term)) {
+        ret = help->label;
+        break;
       }
-      return ret;
     }
+    return ret;
+  }
 };
 
 inline int nextPowerOf2(int n)
@@ -129,7 +130,7 @@ class IHashTable {
 
   void add(TaggedRef number, ProgramCounter label);
   void add(Literal *constant, ProgramCounter label);
-  void add(Literal *functor, int arity, ProgramCounter label);
+  void add(Literal *functor, SRecordArity arity, ProgramCounter label);
   void addVar(/* no arg means list structure*/ ProgramCounter label) {
     varLabel = label;
   }
