@@ -150,6 +150,9 @@ public:
   // Unification
   Bool unify(TaggedRef ref1, TaggedRef ref2);
   Bool fastUnify(TaggedRef ref1, TaggedRef ref2);
+#ifdef FASTSS
+  Bool fastUnifyOutline(TaggedRef term1, TaggedRef *term1Ptr, TaggedRef term2);
+#endif
   Bool unify(TaggedRef *ref1, TaggedRef ref2);
   Bool unify(TaggedRef *ref1, TaggedRef *ref2);
   Bool performUnify(TaggedRef *ref1, TaggedRef *ref2);
