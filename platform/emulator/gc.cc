@@ -485,13 +485,13 @@ TaggedRef makeTaggedRefToFromSpace(TaggedRef *s)
 
 enum TypeOfPtr {
   PTR_LTUPLE,
+  PTR_LTUPLE_TAIL,
   PTR_SRECORD,
   PTR_NAME,
   PTR_BOARD,
   PTR_ACTOR,
   PTR_THREAD,
   PTR_CONT,
-  PTR_CFUNCONT,
   PTR_PROPAGATOR,
   PTR_DYNTAB,
   PTR_CONSTTERM
@@ -1106,9 +1106,8 @@ inline
 LTuple * LTuple::gc() {
   GCMETHMSG("LTuple::gc");
 
-  Bool isInGc = (opMode != IN_TC);
-  
   LTuple * l = this;
+
   TaggedRef start;
   TaggedRef * p = &start;
 
@@ -1116,18 +1115,22 @@ LTuple * LTuple::gc() {
 
   while (1) {
     TaggedRef h = l->args[0];
-    TaggedRef t = l->args[1];
 
     // Check wether already collected
     if (GCISMARKED(h)) {
-      *p = makeTaggedLTuple((LTuple *) GCUNMARK(h));
-      // Make n negative, since this element is not allowed
-      // to be garbage collected!
-      n = -n;
-      goto finish;
-    }
+      if (n > 0) {
+	*p = makeTaggedLTuple((LTuple *) GCUNMARK(h));
 
-    Assert(!GCISMARKED(t));
+	LTuple * ret = tagged2LTuple(start);
+
+	ptrStack.pushInt(n);
+	ptrStack.push(ret, PTR_LTUPLE);
+
+	return ret;
+      } else {
+	return ((LTuple *) GCUNMARK(h));
+      }
+    }
 
     n++;
 
@@ -1137,7 +1140,8 @@ LTuple * LTuple::gc() {
     p  = &(c->args[1]);
     
     // Process list element
-    if (isDirectVar(h) && (isInGc || isLocalBoard(gcGetVarHome(h)))) {
+    if (isDirectVar(h) && 
+	((opMode == IN_GC) || isLocalBoard(gcGetVarHome(h)))) {
       setVarCopied;
       // Not storeForward, its done anyway!
       c->args[0] = gcVariable(h);
@@ -1148,19 +1152,24 @@ LTuple * LTuple::gc() {
     // Store forward
     storeForward(&(l->args[0]), &(c->args[0]));
     
+    TaggedRef t = l->args[1];
+
     // Process list tail
     if (isDirectVar(t)) {
       Assert(!GCISMARKED(t));
-      if (isInGc || isLocalBoard(gcGetVarHome(t))) {
+      if ((opMode == IN_GC) || isLocalBoard(gcGetVarHome(t))) {
 	setVarCopied;
 	storeForward(&(l->args[1]), &(c->args[1]));
-	// Make n negative, since this tail does not need collection
-	n = -n;
 	c->args[1] = gcVariable(t);
       } else {
 	c->args[1] = t;
       }
-      goto finish;
+      LTuple * ret = tagged2LTuple(start);
+
+      ptrStack.pushInt(n);
+      ptrStack.push(ret, PTR_LTUPLE);
+      
+      return ret;
     }
 
     TaggedRef not_deref = t;
@@ -1168,67 +1177,26 @@ LTuple * LTuple::gc() {
     DEREF(t, t_ptr, t_tag);
 
     if (!isLTuple(t_tag)) {
-      c->args[1] = not_deref;
-      goto finish;
+      LTuple * ret = tagged2LTuple(start);
+
+      ptrStack.pushInt(n);
+
+      if (isNil(t)) {
+	c->args[1] = t;
+	ptrStack.push(ret, PTR_LTUPLE);
+      } else {
+	c->args[1] = not_deref;
+	ptrStack.push(ret, PTR_LTUPLE_TAIL);
+      }
+      return ret;
     }
     
     l = tagged2LTuple(t);
 
   } 
-
-finish:
-
-  LTuple * ret = tagged2LTuple(start);
-
-  if (n != 0) {
-    ptrStack.pushInt(n);
-    ptrStack.push(ret, PTR_LTUPLE);
-  }
-
-  return ret;
-}
-
-/*
-  CHECKCOLLECTED(args[0], LTuple *);
-      
-  COUNT(lTuple);
-  LTuple *ret = (LTuple*) heapMalloc(sizeof(LTuple));
-  GCNEWADDRMSG(ret);
-
-  FDPROFILE_GC(cp_size_ltuple, sizeof(*this));
-
-  Bool isInGc = (opMode != IN_TC);
   
-  TaggedRef a = args[0];
-  
-  if (isDirectVar(a) && (isInGc || isLocalBoard(gcGetVarHome(a)))) {
-    setVarCopied;
-    
-    // Not storeForward, its done anyway!
-    ret->args[0] = gcVariable(a);
-  } else {
-    ret->args[0] = a;
-  }
-
-  a = args[1];
-
-  if (isDirectVar(a) && (isInGc || isLocalBoard(gcGetVarHome(a)))) {
-    setVarCopied;
-	
-    storeForward((int *) &(args[1]), &(ret->args[1]));
-	
-    ret->args[1] = gcVariable(a);
-  } else {
-    ret->args[1] = a;
-  }
-
-  ptrStack.push(ret,PTR_LTUPLE);
-  storeForward((int *) &args[0], ret);
-
-  return ret;
+  Assert(0);
 }
-
-*/
 
 inline
 SRecord *SRecord::gcSRecord()
@@ -3099,29 +3067,22 @@ void SRecord::gcRecurse() {
 
 
 inline
-void LTuple::gcRecurse(int n) {
-
-  // If n is less than zero, the last tail does not need
-  // garbage collection: either a direct variable
-  // or an already updated list cell
-
+void LTuple::gcRecurse(int n, Bool tail) {
   GCMETHMSG("LTuple::gcRecurse");
   
   LTuple * l = this;
 
-  int i = (n > 0) ? n : -n;
-
-  while (i > 1) {
+  while (n > 1) {
     if (!isDirectVar(l->args[0]))
       OZ_updateHeapTerm(l->args[0]);
     l = tagged2LTuple(l->args[1]);
-    i--;
+    n--;
   }
 
   if (!isDirectVar(l->args[0]))
     OZ_updateHeapTerm(l->args[0]);
 
-  if (n > 0) {
+  if (tail) {
     Assert(!isDirectVar(l->args[1]));
     OZ_updateHeapTerm(l->args[1]);
   }
@@ -3140,7 +3101,10 @@ void performCopying(void)
     switch(ptrType) {
       
     case PTR_LTUPLE:    
-      ((LTuple *) ptr)->gcRecurse(ptrStack.popInt());
+      ((LTuple *) ptr)->gcRecurse(ptrStack.popInt(), NO);
+      break;
+    case PTR_LTUPLE_TAIL:    
+      ((LTuple *) ptr)->gcRecurse(ptrStack.popInt(), OK);
       break;
     case PTR_SRECORD:   ((SRecord *) ptr)->gcRecurse();          break;
     case PTR_NAME:      ((Name *) ptr)->gcRecurse ();            break;
