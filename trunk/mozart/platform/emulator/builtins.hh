@@ -308,8 +308,8 @@ public:
     return HashTable::memRequired(sizeof(BuiltinTabEntry));
   }
   char * getName(void * fp) {
-    HashNode * hn = getHashTableEntry(NULL);
-    for (; hn != NULL; hn = getHashTableEntry(hn)) {
+    HashNode * hn = getFirst();
+    for (; hn != NULL; hn = getNext(hn)) {
       BuiltinTabEntry * bit = (BuiltinTabEntry *) hn->value;
       if (bit->getInlineFun() == (InlineFunOrRel) fp ||
 	  bit->getFun() == (OZ_CFun) fp)
