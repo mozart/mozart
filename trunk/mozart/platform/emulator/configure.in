@@ -208,6 +208,19 @@ if test "${GXX}" = yes; then
     oz_opt=""
     oz_om=""
     case ${platform} in
+    powermac-*)
+    # for the MacOS X port
+      case `$CXX -dumpversion` in
+      2.95.*)
+          oz_opt="-O3 -pipe -fschedule-insns2 -fregmove"
+	  oz_om=""
+          ;;
+      *)
+          oz_opt="-O3 -pipe -fstrict-aliasing"
+	  oz_om=""
+          ;;
+      esac
+      ;;
     *-i486) 
 	case `$CXX -dumpversion` in
 	2.95.3)
@@ -319,7 +332,7 @@ case $platform in
     ;;
     *rhapsody | *darwin)
 	AC_DEFINE(RHAPSODY)
-	TOOLLDCMD="$CC -dynamic -bundle -undefined suppress"
+	TOOLLDCMD="$CC -dynamic -bundle -flat_namespace -undefined suppress"
 	oz_enable_modules_static=yes
     ;;
     *)
