@@ -245,12 +245,30 @@ public:
   static HashTable *opcodeTable;
 #endif
 
+
+  static AdressOpcode opcodeToAdress(Opcode oc) {
+#ifdef THREADED
+    return ToInt32(globalInstrTable[oc]);
+#else
+    return oc;
+#endif
+  }
+  static Opcode adressToOpcode(AdressOpcode adr) {
+#ifdef THREADED
+    void * ret = opcodeTable->htFind(adr);
+    Assert(ret != htEmpty);
+    return (Opcode) ToInt32(ret);
+#else
+    return adr;
+#endif
+  }
   static AdressOpcode getOP(ProgramCounter PC) { 
-    return (AdressOpcode) getWord(PC); }
-  static Opcode adressToOpcode(AdressOpcode);
-  static AdressOpcode opcodeToAdress(Opcode);
+    return (AdressOpcode) getWord(PC); 
+  }
   static Opcode getOpcode(ProgramCounter PC) { 
-    return adressToOpcode(getOP(PC)); }
+    return adressToOpcode(getOP(PC)); 
+  }
+
 
   void gCollectCodeBlock(void);
   static void gCollectCodeAreaStart(void);
