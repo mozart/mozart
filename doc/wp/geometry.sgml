@@ -74,7 +74,7 @@
       widget.
 
     <P>
-      In the following we will show the two most important geometry managers
+      <index/packer/<index/pack/<index/grid/In the following we will show the two most important geometry managers
       which are provided in Tk.  One is the packer, which can be used for
       simple arrangements, like placing several widgets in a row or in a
       line.  The other geometry manager we will discuss is implemented by
@@ -127,6 +127,7 @@ end
     <P>
       To display the labels in the toplevel widget, the packer can be
       invoked as follows:
+<index/<<pack>>/
 <chunk class=anonymous><title/pack basic/
 [L1 L2 L3] = {NewLabels}
 {Tk.send pack(L1 L2 L3)}
@@ -155,6 +156,11 @@ end
       <Title/Side Options/
 
       <P>
+        <index class=tails/option<and><<side>>/
+        <index class=tails/option<and><<side>><and><<left>>/
+        <index class=tails/option<and><<side>><and><<right>>/
+        <index class=tails/option<and><<side>><and><<top>>/
+        <index class=tails/option<and><<side>><and><<bottom>>/
         The label widgets in the previous examples were placed from the top to
         the bottom of the toplevel widget.  The side where the widgets are
         packed against can be determined with the <<side>> option.  The default
@@ -183,6 +189,11 @@ end
       <Title/Padding/
 
       <P>
+        <index/padding/
+        <index class=tails/option<and><<padx>>/
+        <index class=tails/option<and><<pady>>/
+        <index class=tails/option<and><<ipadx>>/
+        <index class=tails/option<and><<ipady>>/
         The geometry computed for widgets by the packer can be given
         additional space in two different ways: either externally or
         internally.  Additional external space can be specified with the
@@ -214,6 +225,8 @@ end
       <Title/Anchors/
 
       <P>
+        <index/anchor/
+        <index class=tails/option<and><<anchor>>/
         With the <<anchor>> option it can be specified where in a widget's
         parcel the packer places the widget. If no <<anchor>> option is given,
         the packer places the widget in the center of its parcel. Otherwise,
@@ -244,6 +257,11 @@ end
         a master occupy the master's parcel entirely.
 
       <P>
+        <index class=tails/option<and><<fill>>/
+        <index class=tails/option<and><<fill>><and><<x>>/
+        <index class=tails/option<and><<fill>><and><<y>>/
+        <index class=tails/option<and><<fill>><and><<both>>/
+        <index class=tails/option<and><<fill>><and><<none>>/
         <Ptr to="figure.geometry.packer-fill"> shows the geometry computed when
         the option <<fill>> with value&nbsp;<<x>> is used. Possible values for
         the <<fill>> option are <<x>>, <<y>>, <<both>>, and <<none>> (which is
@@ -259,6 +277,7 @@ end
         </Figure>
 
       <P>
+        <index class=tails/option<and><<expand>>/
         Expansion is only significant when the parcels of the slave do not
         fill the master's parcel completely.  In all our previous examples,
         the parcel of the master was computed by the packer to be just large
@@ -296,6 +315,7 @@ end
     <Title/The Grid Geometry Manager/
 
     <P>
+        <index/grid/
       The grid geometry arranges widgets in a grid-like fashion.  For each
       widget to be managed by the <<grid>> command, a row and a column
       number is given.  The manager computes parcels for the widgets such
@@ -329,6 +349,11 @@ end
       <Title/Padding/
 
       <P>
+        <index/padding/
+        <index class=tails/option<and><<padx>>/
+        <index class=tails/option<and><<pady>>/
+        <index class=tails/option<and><<ipadx>>/
+        <index class=tails/option<and><<ipady>>/
         The <<grid>> command supports padding in the same way as the packer
         does.  In the above example we used external padding by giving <<padx>>
         and <<pady>> options.  It is also possible to use internal padding with
@@ -338,6 +363,8 @@ end
       <Title/Span Options/
 
       <P>
+        <index class=tails/option<and><<columnspan>>/
+        <index class=tails/option<and><<rowspan>>/
         The grid command can also compute geometries where widgets occupy
         more than a single row or column. In the example shown in <Ptr
         to="figure.geometry.span"> the label widget&nbsp;<<L>> is managed
@@ -364,6 +391,7 @@ end
       <Title/Sticky Options/
 
       <P>
+        <index class=tails/option<and><<sticky>>/
         The <<grid>> command combines the <<anchor>> and <<fill>> options from
         the packer in a single <<sticky>> option.  The value given for a sticky
         option determines both the side the widget is placed in its parcel,
@@ -395,6 +423,7 @@ end
       <Title/Weight Options/
 
       <P>
+        <index class=tails/option<and><<weight>>/
         The grid geometry manager employs a different scheme for expansion of
         parcels than the packer.  Rows and columns in the grid can be assigned
         an integer weight.  Additional space available in the master of the
@@ -420,6 +449,7 @@ end
     <Title/Using Anchors for Widgets/
 
     <P>
+        <index class=tails/option<and><<anchor>>/
       The <<anchor>> option for the packer and the <<sticky>> option for the
       grid geometry manager determine where the widget is placed in its
       parcel.  In the same way several kind of widgets, &eg;, message and

@@ -30,6 +30,7 @@
   <Title/Tools for Tk/
 
   <P>
+<index class=tails/<<TkTools>>/
     This chapter presents some common graphical abstractions you might
     find useful when building graphical user interfaces in &Oz;.  The
     graphical abstractions are provided by the module <<TkTools>> and are
@@ -39,6 +40,7 @@
     <Title/Dialogs/
 
     <P>
+<index class=tails/<<TkTools>><and><<dialog>>/
       A dialog displays some graphical information and several buttons.
       The class <<TkTools.dialog>> provides a simple abstraction to build
       dialogs.
@@ -109,6 +111,7 @@ E={New Tk.entry tkInit(parent:D bg:wheat width:20)}
     <Title/Error Dialogs/
 
     <P>
+<index class=tails/<<TkTools>><and><<error>>/
       A dialog to display error messages is provided by the class
       <<TkTools.error>>, which is a sub class of <<TkTools.dialog>>.
       <Ptr to="figure.tools.error"> shows an example of how to use
@@ -174,6 +177,7 @@ E={New TkTools.error
         <Caption/A menubar./
         <P>
           <Picture.Extern to="menubar.gif" type=gif>
+<index class=tails/<<TkTools>><and><<menubar>>/
 <chunk class=anonymous><title/menubar/
 V={New Tk.variable tkInit(0)}
 B={TkTools.menubar W W
@@ -276,6 +280,7 @@ F={New Tk.frame tkInit(parent:W width:10#c height:5#c bg:ivory)}
       It is possible to extend a menubar created with <<TkTools.menubar>> with
       further entries.  The following statement adds a menu entry just before
       the <<Quit>> entry:
+<index class=tails/<<Tk>><and><<menuentry>>/
 <chunk class=anonymous><title/add menuentry/
 A={New Tk.menuentry.command tkInit(parent:B.test.menu
                                    before:B.test.quit
@@ -298,6 +303,7 @@ A={New Tk.menuentry.command tkInit(parent:B.test.menu
 
     <p>
       For example,
+<index class=tails/<<TkTools>><and><<images>>/
 <chunk class=anonymous><title/TkTools.images/
 U='http://www.mozart-oz.org/home/doc/wp/'
 I={TkTools.images [U#'wp.gif' U#'queen.xbm' U#'truck-left.ppm']}
