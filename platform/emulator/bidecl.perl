@@ -1715,473 +1715,569 @@ $builtins = {
     # FD
     #-----------------------------------------------------------------
 
-###    'fdReset'                => { in  => [],
-###                          out => [],
-###                          bi  =>BIfdReset,
-###                          ifdef=>PROFILE_FD},
-###
-###    'fdDiscard'              => { in  => [],
-###                          out => [],
-###                          bi  => BIfdDiscard,
-###                          ifdef=>PROFILE_FD},
-###
-###    'fdGetNext'              => { in  => ['value'],
-###                          out => [],
-###                          bi  => BIfdGetNext,
-###                          ifdef=>PROFILE_FD},
-###
-###    'fdPrint'                => { in  => [],
-###                          out => [],
-###                          bi  => BIfdPrint,
-###                          ifdef=>PROFILE_FD},
-###
-###    'fdTotalAverage' => { in  => [],
-###                          out => [],
-###                          bi  => BIfdTotalAverage,
-###                          ifdef=>PROFILE_FD},
-###
-###    'fdIs'           => { in  => ['*value','+bool'],
-###                          out => [],
-###                          bi  => BIfdIs},
-###
-###    'fdIsVar'                => { in  => ['value'],
-###                          out => [],
-###                          BI  => BIisFdVar},
-###
-###    'fdIsVarB'               => { in  => ['value'],
-###                          out => ['+bool'],
-###                          BI  => BIisFdVarB},
-###
-###    'fdGetLimits'    => { in  => [],
-###                          out => ['+int','+int'],
-###                          BI  => BIgetFDLimits},
-###
-###    'fdGetMin'               => { in  => ['value','int'],
-###                          out => [],
-###                          bi  => BIfdMin},
-###
-###    'fdGetMid'               => { in  => ['value','int'],
-###                          out => [],
-###                          bi  => BIfdMid},
-###
-###    'fdGetMax'               => { in  => ['value','int'],
-###                          out => [],
-###                          bi  => BIfdMax},
-###
-###    'fdGetDom'               => { in  => ['*int','+[value]'],
-###                          out => [],
-###                          bi  => BIfdGetAsList},
-###
-###    'fdGetCard'              => { in  => ['*int','int'],
-###                          out => [],
-###                          bi  => BIfdGetCardinality},
-###
-###    'fdGetNextSmaller'       => { in  => ['+int','*int','int'],
-###                          out => [],
-###                          bi  => BIfdNextSmaller},
-###
-###    'fdGetNextLarger'        => { in  => ['+int','*int','int'],
-###                          out => [],
-###                          bi  => BIfdNextLarger},
-###
-###    'fdTellConstraint'       => { in  => ['+value','int'],
-###                          out => [],
-###                          bi  => BIfdTellConstraint},
-###
-###    'fdWatchSize'    => { in  => ['*int','+int','bool'],
-###                          out => [],
-###                          bi  => BIfdWatchSize},
-###
-###    'fdWatchMin'     => { in  => ['*int','+int','bool'],
-###                          out => [],
-###                          bi  => BIfdWatchMin},
-###
-###    'fdWatchMax'     => { in  => ['*int','+int','bool'],
-###                          out => [],
-###                          bi  => BIfdWatchMax},
-###
-###    'fdConstrDisjSetUp'      => { in  => ['+value','+value','+value','+value'],
-###                          out => [],
-###                          bi  => BIfdConstrDisjSetUp},
-###
-###    'fdConstrDisj'   => { in  => ['+value','+value','+value'],
-###                          out => [],
-###                          bi  => BIfdConstrDisj},
-###
-###    'fdTellConstraintCD'=> { in  => ['value','value','value'],
-###                          out => [],
-###                          bi  => BIfdTellConstraintCD},
-###
-###    'fdp_init'               => { in  => ['atom'],
-###                          out => [],
-###                          bi  => fdp_init,
-###                          ifndef=>FOREIGNFDPROPS},
-###
-###    'fdp_sum'                => { in  => ['+value','+atom','int'],
-###                          out => [],
-###                          bi  => fdp_sum,
-###                          ifndef=>FOREIGNFDPROPS},
-###
-###    'fdp_sumC'               => { in  => ['+value','+value','+atom','int'],
-###                          out => [],
-###                          bi  => fdp_sumC,
-###                          ifndef=>FOREIGNFDPROPS},
-###
-###    'fdp_sumCN'              => { in  => ['+value','+value','+atom','int'],
-###                          out => [],
-###                          bi  => fdp_sumCN,
-###                          ifndef=>FOREIGNFDPROPS},
-###
-###    'fdp_sumR'               => { in  => ['+value','+atom','*int','*int'],
-###                          out => [],
-###                          bi  => fdp_sumR,
-###                          ifndef=>FOREIGNFDPROPS},
-###
-###    'fdp_sumCR'              => { in  => ['+value','+value','+atom','*int','*int'],
-###                          out => [],
-###                          bi  => fdp_sumCR,
-###                          ifndef=>FOREIGNFDPROPS},
-###
-###    'fdp_sumCNR'     => { in  => ['+value','+value','+atom','*int','*int'],
-###                          out => [],
-###                          bi  => fdp_sumCNR,
-###                          ifndef=>FOREIGNFDPROPS},
-###
-###    'fdp_sumCD'              => { in  => ['+value','+atom','*int','*int'],
-###                          out => [],
-###                          bi  => fdp_sumCD,
-###                          ifndef=>FOREIGNFDPROPS},
-###
-###    'fdp_sumCCD'     => { in  => ['+value','+value','+atom','*int','*int'],
-###                          out => [],
-###                          bi  => fdp_sumCCD,
-###                          ifndef=>FOREIGNFDPROPS},
-###
-###    'fdp_sumCNCD'    => { in  => ['+value','+value','+atom','*int','*int'],
-###                          out => [],
-###                          bi  => fdp_sumCNCD,
-###                          ifndef=>FOREIGNFDPROPS},
-###
-###    'fdp_plus_rel'   => { in  => ['int','int','int'],
-###                          out => [],
-###                          bi  => fdp_plus_rel,
-###                          ifndef=>FOREIGNFDPROPS},
-###
-###    'fdp_plus'               => { in  => ['int','int','int'],
-###                          out => [],
-###                          bi  => fdp_plus,
-###                          ifndef=>FOREIGNFDPROPS},
-###
-###    'fdp_minus'              => { in  => ['int','int','int'],
-###                          out => [],
-###                          bi  => fdp_minus,
-###                          ifndef=>FOREIGNFDPROPS},
-###
-###    'fdp_times'              => { in  => ['int','int','int'],
-###                          out => [],
-###                          bi  => fdp_times,
-###                          ifndef=>FOREIGNFDPROPS},
-###
-###    'fdp_times_rel'  => { in  => ['int','int','int'],
-###                          out => [],
-###                          bi  => fdp_times_rel,
-###                          ifndef=>FOREIGNFDPROPS},
-###
-###    'fdp_power'              => { in  => ['int','+int','int'],
-###                          out => [],
-###                          bi  => fdp_power,
-###                          ifndef=>FOREIGNFDPROPS},
-###
-###    'fdp_divD'               => { in  => ['int','+int','int'],
-###                          out => [],
-###                          bi  => fdp_divD,
-###                          ifndef=>FOREIGNFDPROPS},
-###
-###    'fdp_divI'               => { in  => ['int','+int','int'],
-###                          out => [],
-###                          bi  => fdp_divI,
-###                          ifndef=>FOREIGNFDPROPS},
-###
-###    'fdp_modD'               => { in  => ['int','+int','int'],
-###                          out => [],
-###                          bi  => fdp_modD,
-###                          ifndef=>FOREIGNFDPROPS},
-###
-###    'fdp_modI'               => { in  => ['int','+int','int'],
-###                          out => [],
-###                          bi  => fdp_modI,
-###                          ifndef=>FOREIGNFDPROPS},
-###
-###    'fdp_conj'               => { in  => ['int','int','int'],
-###                          out => [],
-###                          bi  => fdp_conj,
-###                          ifndef=>FOREIGNFDPROPS},
-###
-###    'fdp_disj'               => { in  => ['int','int','int'],
-###                          out => [],
-###                          bi  => fdp_disj,
-###                          ifndef=>FOREIGNFDPROPS},
-###
-###    'fdp_exor'               => { in  => ['int','int','int'],
-###                          out => [],
-###                          bi  => fdp_exor,
-###                          ifndef=>FOREIGNFDPROPS},
-###
-###    'fdp_impl'               => { in  => ['int','int','int'],
-###                          out => [],
-###                          bi  => fdp_impl,
-###                          ifndef=>FOREIGNFDPROPS},
-###
-###    'fdp_equi'               => { in  => ['int','int','int'],
-###                          out => [],
-###                          bi  => fdp_equi,
-###                          ifndef=>FOREIGNFDPROPS},
-###
-###    'fdp_nega'               => { in  => ['int','int'],
-###                          out => [],
-###                          bi  => fdp_nega,
-###                          ifndef=>FOREIGNFDPROPS},
-###
-###    'fdp_intR'               => { in  => ['int','+value','int'],
-###                          out => [],
-###                          bi  => fdp_intR,
-###                          ifndef=>FOREIGNFDPROPS},
-###
-###    'fdp_card'               => { in  => ['+value','int','int','int'],
-###                          out => [],
-###                          bi  => fdp_card,
-###                          ifndef=>FOREIGNFDPROPS},
-###
-###    'fdp_exactly'    => { in  => ['int','+value','+int'],
-###                          out => [],
-###                          bi  => fdp_exactly,
-###                          ifndef=>FOREIGNFDPROPS},
-###
-###    'fdp_atleast'    => { in  => ['int','+value','+int'],
-###                          out => [],
-###                          bi  => fdp_atleast,
-###                          ifndef=>FOREIGNFDPROPS},
-###
-###    'fdp_atmost'     => { in  => ['int','+value','+int'],
-###                          out => [],
-###                          bi  => fdp_atmost,
-###                          ifndef=>FOREIGNFDPROPS},
-###
-###    'fdp_element'    => { in  => ['int','+value','int'],
-###                          out => [],
-###                          bi  => fdp_element,
-###                          ifndef=>FOREIGNFDPROPS},
-###
-###    'fdp_notEqOff'   => { in  => ['int','int','+int'],
-###                          out => [],
-###                          bi  => fdp_notEqOff,
-###                          ifndef=>FOREIGNFDPROPS},
-###
-###    'fdp_lessEqOff'  => { in  => ['int','int','+int'],
-###                          out => [],
-###                          bi  => fdp_lessEqOff,
-###                          ifndef=>FOREIGNFDPROPS},
-###
-###    'fdp_minimum'    => { in  => ['int','int','int'],
-###                          out => [],
-###                          bi  => fdp_minimum,
-###                          ifndef=>FOREIGNFDPROPS},
-###
-###    'fdp_maximum'    => { in  => ['int','int','int'],
-###                          out => [],
-###                          bi  => fdp_maximum,
-###                          ifndef=>FOREIGNFDPROPS},
-###
-###    'fdp_inter'      => { in  => ['int','int','int'],
-###                          out => [],
-###                          bi  => fdp_inter,
-###                          ifndef=>FOREIGNFDPROPS},
-###
-###    'fdp_union'      => { in  => ['int','int','int'],
-###                          out => [],
-###                          bi  => fdp_union,
-###                          ifndef=>FOREIGNFDPROPS},
-###
-###    'fdp_distinct'   => { in  => ['+value'],
-###                          out => [],
-###                          bi  => fdp_distinct,
-###                          ifndef=>FOREIGNFDPROPS},
-###
-###    'fdp_distinctD'  => { in  => ['+value'],
-###                          out => [],
-###                          bi  => fdp_distinctD,
-###                          ifndef=>FOREIGNFDPROPS},
-###
-###    'fdp_distinctStream'=> { in  => ['+value','value'],
-###                          out => [],
-###                          bi  => fdp_distinctStream,
-###                          ifndef=>FOREIGNFDPROPS},
-###
-###    'fdp_distinctOffset'=> { in  => ['+value','+value'],
-###                          out => [],
-###                          bi  => fdp_distinctOffset,
-###                          ifndef=>FOREIGNFDPROPS},
-###
-###    'fdp_disjoint'=> { in  => ['int','+int','int','+int'],
-###                          out => [],
-###                          bi  => fdp_disjoint,
-###                          ifndef=>FOREIGNFDPROPS},
-###
-###    'sched_disjoint_card'=> { in  => ['int','+int','int','+int'],
-###                          out => [],
-###                          bi  => sched_disjoint_card,
-###                          ifndef=>FOREIGNFDPROPS},
-###
-###    'fdp_disjointC'=> { in  => ['int','+int','int','+int','int'],
-###                          out => [],
-###                          bi  => fdp_disjointC,
-###                          ifndef=>FOREIGNFDPROPS},
-###
-###    'fdp_distance'   => { in  => ['int','int','+atom','int'],
-###                          out => [],
-###                          bi  => fdp_distance,
-###                          ifndef=>FOREIGNFDPROPS},
-###
-###    'fdp_distinct2'  => { in  => ['+value','+value','+value','+value'],
-###                          out => [],
-###                          bi  => fdp_distinct2,
-###                          ifndef=>FOREIGNFDPROPS},
-###
-###    'sched_cpIterate'        => { in  => ['+value','+value','+value'],
-###                          out => [],
-###                          bi  => sched_cpIterate,
-###                          ifndef=>FOREIGNFDPROPS},
-###
-###    'sched_cpIterateCap'=> { in  => ['+value','+value','+value',
-###                                  '+value','+value','+int'],
-###                          out => [],
-###                          bi  => sched_cpIterateCap,
-###                          ifndef=>FOREIGNFDPROPS},
-###
-###    'sched_cumulativeTI'=> { in  => ['+value','+value','+value',
-###                                  '+value','+value'],
-###                          out => [],
-###                          bi  => sched_cumulativeTI,
-###                          ifndef=>FOREIGNFDPROPS},
-###
-###    'sched_cpIterateCapUp'=> { in  => ['+value','+value','+value',
-###                                    '+value','+value'],
-###                          out => [],
-###                          bi  => sched_cpIterateCapUp,
-###                          ifndef=>FOREIGNFDPROPS},
-###
-###    'sched_taskIntervals'=> { in  => ['+value','+value','+value'],
-###                          out => [],
-###                          bi  => sched_taskIntervals,
-###                          ifndef=>FOREIGNFDPROPS},
-###
-###    'sched_disjunctive'      => { in  => ['+value','+value','+value'],
-###                          out => [],
-###                          bi  => sched_disjunctive,
-###                          ifndef=>FOREIGNFDPROPS},
-###
-###    'sched_disjunctiveStream'=> { in  => ['+value','+value','value'],
-###                          out => [],
-###                          bi  => sched_disjunctiveStream,
-###                          ifndef=>FOREIGNFDPROPS},
-###
-###    'fdp_twice'              => { in  => ['value','value'],
-###                          out => [],
-###                          bi  => fdp_twice,
-###                          ifndef=>FOREIGNFDPROPS},
-###
-###    'fdp_square'     => { in  => ['value','value'],
-###                          out => [],
-###                          bi  => fdp_square,
-###                          ifndef=>FOREIGNFDPROPS},
-###
-###    'fdp_subset'     => { in  => ['value','value'],
-###                          out => [],
-###                          bi  => fdp_subset,
-###                          ifndef=>FOREIGNFDPROPS},
-###
-###    'fdp_dsum'               => { in  => ['+value','+atom','int'],
-###                          out => [],
-###                          bi  => fdp_dsum,
-###                          ifndef=>FOREIGNFDPROPS},
-###
-###    'fdp_dsumC'              => { in  => ['+value','+value','+atom','int'],
-###                          out => [],
-###                          bi  => fdp_dsumC,
-###                          ifndef=>FOREIGNFDPROPS},
-###
-###    'fdp_sumAC'              => { in  => ['+value','+value','+atom','int'],
-###                          out => [],
-###                          bi  => fdp_sumAC,
-###                          ifndef=>FOREIGNFDPROPS},
-###
-###    'counter'                => { in  => ['int','value'],
-###                          out => [],
-###                          bi  => fdtest_counter,
-###                          ifndef=>FOREIGNFDPROPS},
-###
-###    'firstFail'              => { in  => ['+value','value'],
-###                          out => [],
-###                          bi  => fdtest_firstFail,
-###                          ifndef=>FOREIGNFDPROPS},
-###
-###    'sched_taskIntervalsProof'=> { in  => ['value','value','value','value',
-###                                        'value'],
-###                          out => [],
-###                          bi  => sched_taskIntervalsProof,
-###                          ifndef=>FOREIGNFDPROPS},
-###
-###    'sched_firstsLasts'      => { in  => ['value','value','value','value',
-###                                  'value'],
-###                          out => [],
-###                          bi  => sched_firstsLasts,
-###                          ifndef=>FOREIGNFDPROPS},
-###
-###    'spawnLess'              => { in  => ['int','int'],
-###                          out => [],
-###                          bi  => fdtest_spawnLess,
-###                          ifndef=>FOREIGNFDPROPS},
-###
-###    'dplus'          => { in  => ['int','int','int'],
-###                          out => [],
-###                          bi  => fdtest_plus,
-###                          ifndef=>FOREIGNFDPROPS},
-###
-###    'sumac'          => { in  => ['value','value','int'],
-###                          out => [],
-###                          bi  => fdtest_sumac,
-###                          ifndef=>FOREIGNFDPROPS},
-###
-###    'testgensum'     => { in  => ['value','int'],
-###                          out => [],
-###                          bi  => fdtest_gensum,
-###                          ifndef=>FOREIGNFDPROPS},
-###
-###    'testsum'                => { in  => ['value','int'],
-###                          out => [],
-###                          bi  => fdtest_sum,
-###                          ifdef =>ALLDIFF,
-###                          ifndef=>FOREIGNFDPROPS},
-###
-###    'inqueens'               => { in  => ['value'],
-###                          out => [],
-###                          bi  => fdtest_inqueens,
-###                          ifdef =>INPROP,
-###                          ifndef=>FOREIGNFDPROPS},
-###
-###    'debugStable'    => { in  => [],
-###                          out => [],
-###                          bi  => debugStable,
-###                          ifdef =>DEBUG_STABLE},
-###
-###    'resetStable'    => { in  => [],
-###                          out => [],
-###                          bi  => resetStable,
-###                          ifdef =>DEBUG_STABLE},
-###
-###    'fddistribute'   => { in  => ['value','value','value','value','value',],
-###                          out => [],
-###                          bi  => BIfdDistribute},
+    'fdReset'           => { in  => [],
+                             out => [],
+                             bi  =>BIfdReset,
+                             ifdef=>PROFILE_FD,
+                             module=>fd},
+
+    'fdDiscard'         => { in  => [],
+                             out => [],
+                             bi  => BIfdDiscard,
+                             ifdef=>PROFILE_FD,
+                             module=>fd},
+
+    'fdGetNext'         => { in  => ['value'],
+                             out => [],
+                             bi  => BIfdGetNext,
+                             ifdef=>PROFILE_FD,
+                             module=>fd},
+
+    'fdPrint'           => { in  => [],
+                             out => [],
+                             bi  => BIfdPrint,
+                             ifdef=>PROFILE_FD,
+                             module=>fd},
+
+    'fdTotalAverage'    => { in  => [],
+                             out => [],
+                             bi  => BIfdTotalAverage,
+                             ifdef=>PROFILE_FD,
+                             module=>fd},
+
+    'fdIs'              => { in  => ['*value','bool'],
+                             out => [],
+                             bi  => BIfdIs,
+                             module=>fd},
+
+    'fdIsVar'           => { in  => ['value'],
+                             out => [],
+                             BI  => BIisFdVar,
+                             module=>fd},
+
+    'fdIsVarB'          => { in  => ['value'],
+                             out => ['+bool'],
+                             BI  => BIisFdVarB,
+                             module=>fd},
+
+    'fdGetLimits'       => { in  => [],
+                             out => ['+int','+int'],
+                             BI  => BIgetFDLimits,
+                             module=>fd},
+
+    'fdGetMin'          => { in  => ['*int','int'],
+                             out => [],
+                             bi  => BIfdMin,
+                             module=>fd},
+
+    'fdGetMid'          => { in  => ['*int','int'],
+                             out => [],
+                             bi  => BIfdMid,
+                             module=>fd},
+
+    'fdGetMax'          => { in  => ['*int','int'],
+                             out => [],
+                             bi  => BIfdMax,
+                             module=>fd},
+
+    'fdGetDom'          => { in  => ['*int','+[value]'],
+                             out => [],
+                             bi  => BIfdGetAsList,
+                             module=>fd},
+
+    'fdGetCard'         => { in  => ['*int','int'],
+                             out => [],
+                             bi  => BIfdGetCardinality,
+                             module=>fd},
+
+    'fdGetNextSmaller'  => { in  => ['+int','*int','int'],
+                             out => [],
+                             bi  => BIfdNextSmaller,
+                             module=>fd},
+
+    'fdGetNextLarger'   => { in  => ['+int','*int','int'],
+                             out => [],
+                             bi  => BIfdNextLarger,
+                             module=>fd},
+
+    'fdTellConstraint'  => { in  => ['+value','int'],
+                             out => [],
+                             bi  => BIfdTellConstraint,
+                             module=>fd},
+
+    'fdWatchSize'       => { in  => ['*int','+int','bool'],
+                             out => [],
+                             bi  => BIfdWatchSize,
+                             module=>fd},
+
+    'fdWatchMin'        => { in  => ['*int','+int','bool'],
+                             out => [],
+                             bi  => BIfdWatchMin,
+                             module=>fd},
+
+    'fdWatchMax'        => { in  => ['*int','+int','bool'],
+                             out => [],
+                             bi  => BIfdWatchMax,
+                             module=>fd},
+
+    'fdConstrDisjSetUp' => { in  => ['+value','+value','+value','+value'],
+                             out => [],
+                             bi  => BIfdConstrDisjSetUp,
+                             module=>fd},
+
+    'fdConstrDisj'      => { in  => ['+value','+value','+value'],
+                             out => [],
+                             bi  => BIfdConstrDisj,
+                             module=>fd},
+
+    'fdTellConstraintCD'=> { in  => ['value','value','value'],
+                             out => [],
+                             bi  => BIfdTellConstraintCD,
+                             module=>fd},
+
+    'fdp_init'          => { in  => ['atom'],
+                             out => [],
+                             bi  => fdp_init,
+                             ifndef=>FOREIGNFDPROPS,
+                             module=>fd},
+
+    'fdp_sum'           => { in  => ['+value','+atom','int'],
+                             out => [],
+                             bi  => fdp_sum,
+                             ifndef=>FOREIGNFDPROPS,
+                             module=>fd},
+
+    'fdp_sumC'          => { in  => ['+value','+value','+atom','int'],
+                             out => [],
+                             bi  => fdp_sumC,
+                             ifndef=>FOREIGNFDPROPS,
+                             module=>fd},
+
+    'fdp_sumCN'         => { in  => ['+value','+value','+atom','int'],
+                             out => [],
+                             bi  => fdp_sumCN,
+                             ifndef=>FOREIGNFDPROPS,
+                             module=>fd},
+
+    'fdp_sumR'          => { in  => ['+value','+atom','*int','*int'],
+                             out => [],
+                             bi  => fdp_sumR,
+                             ifndef=>FOREIGNFDPROPS,
+                             module=>fd},
+
+    'fdp_sumCR'         => { in  => ['+value','+value','+atom','*int','*int'],
+                             out => [],
+                             bi  => fdp_sumCR,
+                             ifndef=>FOREIGNFDPROPS,
+                             module=>fd},
+
+    'fdp_sumCNR'        => { in  => ['+value','+value','+atom','*int','*int'],
+                             out => [],
+                             bi  => fdp_sumCNR,
+                             ifndef=>FOREIGNFDPROPS,
+                             module=>fd},
+
+    'fdp_sumCD'         => { in  => ['+value','+atom','*int','*int'],
+                             out => [],
+                             bi  => fdp_sumCD,
+                             ifndef=>FOREIGNFDPROPS,
+                             module=>fd},
+
+    'fdp_sumCCD'        => { in  => ['+value','+value','+atom','*int','*int'],
+                             out => [],
+                             bi  => fdp_sumCCD,
+                             ifndef=>FOREIGNFDPROPS,
+                             module=>fd},
+
+    'fdp_sumCNCD'       => { in  => ['+value','+value','+atom','*int','*int'],
+                             out => [],
+                             bi  => fdp_sumCNCD,
+                             ifndef=>FOREIGNFDPROPS,
+                             module=>fd},
+
+    'fdp_plus_rel'      => { in  => ['int','int','int'],
+                             out => [],
+                             bi  => fdp_plus_rel,
+                             ifndef=>FOREIGNFDPROPS,
+                             module=>fd},
+
+    'fdp_plus'          => { in  => ['int','int','int'],
+                             out => [],
+                             bi  => fdp_plus,
+                             ifndef=>FOREIGNFDPROPS,
+                             module=>fd},
+
+    'fdp_minus'         => { in  => ['int','int','int'],
+                             out => [],
+                             bi  => fdp_minus,
+                             ifndef=>FOREIGNFDPROPS,
+                             module=>fd},
+
+    'fdp_times'         => { in  => ['int','int','int'],
+                             out => [],
+                             bi  => fdp_times,
+                             ifndef=>FOREIGNFDPROPS,
+                             module=>fd},
+
+    'fdp_times_rel'     => { in  => ['int','int','int'],
+                             out => [],
+                             bi  => fdp_times_rel,
+                             ifndef=>FOREIGNFDPROPS,
+                             module=>fd},
+
+    'fdp_power'         => { in  => ['int','+int','int'],
+                             out => [],
+                             bi  => fdp_power,
+                             ifndef=>FOREIGNFDPROPS,
+                             module=>fd},
+
+    'fdp_divD'          => { in  => ['int','+int','int'],
+                             out => [],
+                             bi  => fdp_divD,
+                             ifndef=>FOREIGNFDPROPS,
+                             module=>fd},
+
+    'fdp_divI'          => { in  => ['int','+int','int'],
+                             out => [],
+                             bi  => fdp_divI,
+                             ifndef=>FOREIGNFDPROPS,
+                             module=>fd},
+
+    'fdp_modD'          => { in  => ['int','+int','int'],
+                             out => [],
+                             bi  => fdp_modD,
+                             ifndef=>FOREIGNFDPROPS,
+                             module=>fd},
+
+    'fdp_modI'          => { in  => ['int','+int','int'],
+                             out => [],
+                             bi  => fdp_modI,
+                             ifndef=>FOREIGNFDPROPS,
+                             module=>fd},
+
+    'fdp_conj'          => { in  => ['int','int','int'],
+                             out => [],
+                             bi  => fdp_conj,
+                             ifndef=>FOREIGNFDPROPS,
+                             module=>fd},
+
+    'fdp_disj'          => { in  => ['int','int','int'],
+                             out => [],
+                             bi  => fdp_disj,
+                             ifndef=>FOREIGNFDPROPS,
+                             module=>fd},
+
+    'fdp_exor'          => { in  => ['int','int','int'],
+                             out => [],
+                             bi  => fdp_exor,
+                             ifndef=>FOREIGNFDPROPS,
+                             module=>fd},
+
+    'fdp_impl'          => { in  => ['int','int','int'],
+                             out => [],
+                             bi  => fdp_impl,
+                             ifndef=>FOREIGNFDPROPS,
+                             module=>fd},
+
+    'fdp_equi'          => { in  => ['int','int','int'],
+                             out => [],
+                             bi  => fdp_equi,
+                             ifndef=>FOREIGNFDPROPS,
+                             module=>fd},
+
+    'fdp_nega'          => { in  => ['int','int'],
+                             out => [],
+                             bi  => fdp_nega,
+                             ifndef=>FOREIGNFDPROPS,
+                             module=>fd},
+
+    'fdp_intR'          => { in  => ['int','+value','int'],
+                             out => [],
+                             bi  => fdp_intR,
+                             ifndef=>FOREIGNFDPROPS,
+                             module=>fd},
+
+    'fdp_card'          => { in  => ['+value','int','int','int'],
+                             out => [],
+                             bi  => fdp_card,
+                             ifndef=>FOREIGNFDPROPS,
+                             module=>fd},
+
+    'fdp_exactly'       => { in  => ['int','+value','+int'],
+                             out => [],
+                             bi  => fdp_exactly,
+                             ifndef=>FOREIGNFDPROPS,
+                             module=>fd},
+
+    'fdp_atLeast'       => { in  => ['int','+value','+int'],
+                             out => [],
+                             bi  => fdp_atLeast,
+                             ifndef=>FOREIGNFDPROPS,
+                             module=>fd},
+
+    'fdp_atMost'        => { in  => ['int','+value','+int'],
+                             out => [],
+                             bi  => fdp_atMost,
+                             ifndef=>FOREIGNFDPROPS,
+                             module=>fd},
+
+    'fdp_element'       => { in  => ['int','+value','int'],
+                             out => [],
+                             bi  => fdp_element,
+                             ifndef=>FOREIGNFDPROPS,
+                             module=>fd},
+
+    'fdp_notEqOff'      => { in  => ['int','int','+int'],
+                             out => [],
+                             bi  => fdp_notEqOff,
+                             ifndef=>FOREIGNFDPROPS,
+                             module=>fd},
+
+    'fdp_lessEqOff'     => { in  => ['int','int','+int'],
+                             out => [],
+                             bi  => fdp_lessEqOff,
+                             ifndef=>FOREIGNFDPROPS,
+                             module=>fd},
+
+    'fdp_minimum'       => { in  => ['int','int','int'],
+                             out => [],
+                             bi  => fdp_minimum,
+                             ifndef=>FOREIGNFDPROPS,
+                             module=>fd},
+
+    'fdp_maximum'       => { in  => ['int','int','int'],
+                             out => [],
+                             bi  => fdp_maximum,
+                             ifndef=>FOREIGNFDPROPS,
+                             module=>fd},
+
+    'fdp_inter' => { in  => ['int','int','int'],
+                             out => [],
+                             bi  => fdp_inter,
+                             ifndef=>FOREIGNFDPROPS,
+                             module=>fd},
+
+    'fdp_union' => { in  => ['int','int','int'],
+                             out => [],
+                             bi  => fdp_union,
+                             ifndef=>FOREIGNFDPROPS,
+                             module=>fd},
+
+    'fdp_distinct'      => { in  => ['+value'],
+                             out => [],
+                             bi  => fdp_distinct,
+                             ifndef=>FOREIGNFDPROPS,
+                             module=>fd},
+
+    'fdp_distinctD'     => { in  => ['+value'],
+                             out => [],
+                             bi  => fdp_distinctD,
+                             ifndef=>FOREIGNFDPROPS,
+                             module=>fd},
+
+    'fdp_distinctStream'=> { in  => ['+value','value'],
+                             out => [],
+                             bi  => fdp_distinctStream,
+                             ifndef=>FOREIGNFDPROPS,
+                             module=>fd},
+
+    'fdp_distinctOffset'=> { in  => ['+value','+value'],
+                             out => [],
+                             bi  => fdp_distinctOffset,
+                             ifndef=>FOREIGNFDPROPS,
+                             module=>fd},
+
+    'fdp_disjoint'=> { in  => ['int','+int','int','+int'],
+                             out => [],
+                             bi  => fdp_disjoint,
+                             ifndef=>FOREIGNFDPROPS,
+                             module=>fd},
+
+    'sched_disjoint_card'=> { in  => ['int','+int','int','+int'],
+                             out => [],
+                             bi  => sched_disjoint_card,
+                             ifndef=>FOREIGNFDPROPS,
+                             module=>fd},
+
+    'fdp_disjointC'=> { in  => ['int','+int','int','+int','int'],
+                             out => [],
+                             bi  => fdp_disjointC,
+                             ifndef=>FOREIGNFDPROPS,
+                             module=>fd},
+
+    'fdp_distance'      => { in  => ['int','int','+atom','int'],
+                             out => [],
+                             bi  => fdp_distance,
+                             ifndef=>FOREIGNFDPROPS,
+                             module=>fd},
+
+    'fdp_distinct2'     => { in  => ['+value','+value','+value','+value'],
+                             out => [],
+                             bi  => fdp_distinct2,
+                             ifndef=>FOREIGNFDPROPS,
+                             module=>fd},
+
+    'sched_cpIterate'   => { in  => ['+value','+value','+value'],
+                             out => [],
+                             bi  => sched_cpIterate,
+                             ifndef=>FOREIGNFDPROPS,
+                             module=>fd},
+
+    'sched_cpIterateCap'=> { in  => ['+value','+value','+value',
+                                     '+value','+value','+int'],
+                             out => [],
+                             bi  => sched_cpIterateCap,
+                             ifndef=>FOREIGNFDPROPS,
+                             module=>fd},
+
+    'sched_cumulativeTI'=> { in  => ['+value','+value','+value',
+                                     '+value','+value'],
+                             out => [],
+                             bi  => sched_cumulativeTI,
+                             ifndef=>FOREIGNFDPROPS,
+                             module=>fd},
+
+    'sched_cpIterateCapUp'=> { in  => ['+value','+value','+value',
+                                       '+value','+value'],
+                             out => [],
+                             bi  => sched_cpIterateCapUp,
+                             ifndef=>FOREIGNFDPROPS,
+                             module=>fd},
+
+    'sched_taskIntervals'=> { in  => ['+value','+value','+value'],
+                             out => [],
+                             bi  => sched_taskIntervals,
+                             ifndef=>FOREIGNFDPROPS,
+                             module=>fd},
+
+    'sched_disjunctive' => { in  => ['+value','+value','+value'],
+                             out => [],
+                             bi  => sched_disjunctive,
+                             ifndef=>FOREIGNFDPROPS,
+                             module=>fd},
+
+    'sched_disjunctiveStream'=> { in  => ['+value','+value','value'],
+                             out => [],
+                             bi  => sched_disjunctiveStream,
+                             ifndef=>FOREIGNFDPROPS,
+                             module=>fd},
+
+    'fdp_twice'         => { in  => ['int','int'],
+                             out => [],
+                             bi  => fdp_twice,
+                             ifndef=>FOREIGNFDPROPS,
+                             module=>fd},
+
+    'fdp_square'        => { in  => ['int','int'],
+                             out => [],
+                             bi  => fdp_square,
+                             ifndef=>FOREIGNFDPROPS,
+                             module=>fd},
+
+    'fdp_subset'        => { in  => ['int','int'],
+                             out => [],
+                             bi  => fdp_subset,
+                             ifndef=>FOREIGNFDPROPS,
+                             module=>fd},
+
+    'fdp_dsum'          => { in  => ['+value','+atom','int'],
+                             out => [],
+                             bi  => fdp_dsum,
+                             ifndef=>FOREIGNFDPROPS,
+                             module=>fd},
+
+    'fdp_dsumC'         => { in  => ['+value','+value','+atom','int'],
+                             out => [],
+                             bi  => fdp_dsumC,
+                             ifndef=>FOREIGNFDPROPS,
+                             module=>fd},
+
+    'fdp_sumAC'         => { in  => ['+value','+value','+atom','int'],
+                             out => [],
+                             bi  => fdp_sumAC,
+                             ifndef=>FOREIGNFDPROPS,
+                             module=>fd},
+
+    'counter'           => { in  => ['int','value'],
+                             out => [],
+                             bi  => fdtest_counter,
+                             ifndef=>FOREIGNFDPROPS,
+                             module=>fd},
+
+    'firstFail'         => { in  => ['+value','value'],
+                             out => [],
+                             bi  => fdtest_firstFail,
+                             ifndef=>FOREIGNFDPROPS,
+                             module=>fd},
+
+    'sched_taskIntervalsProof'=> { in  => ['value','value','value','value',
+                                           'value'],
+                             out => [],
+                             bi  => sched_taskIntervalsProof,
+                             ifndef=>FOREIGNFDPROPS,
+                             module=>fd},
+
+    'sched_firstsLasts' => { in  => ['value','value','value','value',
+                                     'value'],
+                             out => [],
+                             bi  => sched_firstsLasts,
+                             ifndef=>FOREIGNFDPROPS,
+                             module=>fd},
+
+    'spawnLess'         => { in  => ['int','int'],
+                             out => [],
+                             bi  => fdtest_spawnLess,
+                             ifndef=>FOREIGNFDPROPS,
+                             module=>fd},
+
+    'dplus'             => { in  => ['int','int','int'],
+                             out => [],
+                             bi  => fdtest_plus,
+                             ifndef=>FOREIGNFDPROPS,
+                             module=>fd},
+
+    'sumac'             => { in  => ['value','value','int'],
+                             out => [],
+                             bi  => fdtest_sumac,
+                             ifndef=>FOREIGNFDPROPS,
+                             module=>fd},
+
+    'testgensum'        => { in  => ['value','int'],
+                             out => [],
+                             bi  => fdtest_gensum,
+                             ifndef=>FOREIGNFDPROPS,
+                             module=>fd},
+
+    'testsum'           => { in  => ['value','int'],
+                             out => [],
+                             bi  => fdtest_sum,
+                             ifdef =>ALLDIFF,
+                             ifndef=>FOREIGNFDPROPS,
+                             module=>fd},
+
+    'inqueens'          => { in  => ['value'],
+                             out => [],
+                             bi  => fdtest_inqueens,
+                             ifdef =>INPROP,
+                             ifndef=>FOREIGNFDPROPS,
+                             module=>fd},
+
+    'debugStable'       => { in  => [],
+                             out => [],
+                             bi  => debugStable,
+                             ifdef =>DEBUG_STABLE,
+                             module=>fd},
+
+    'resetStable'       => { in  => [],
+                             out => [],
+                             bi  => resetStable,
+                             ifdef =>DEBUG_STABLE,
+                             module=>fd},
+
+    'fddistribute'      => { in  => ['value','value','value','value','value',],
+                             out => [],
+                             bi  => BIfdDistribute,
+                             module=>fd},
 
     #-----------------------------------------------------------------
     # METAVAR
@@ -2782,14 +2878,14 @@ sub CDECL {
 
 my %include = ();
 my %exclude = ();
-my $includeall = 0;
+my $includedefault = 1;
 
 sub included {
     my $info = shift;
     my $module = $info->{module} || 'oz';
-    return 1 if $includeall;
     return 0 if $exclude{$module};
     return 1 if $include{$module};
+    return $includedefault;
 }
 
 my ($option,$choice,@include,@exclude);
@@ -2812,7 +2908,7 @@ if (@include!=0 && @exclude!=0) {
 foreach $option (@include) { $include{$option} = 1; }
 foreach $option (@exclude) { $exclude{$option} = 1; }
 
-$includeall = 1 if @include==0 && @exclude==0;
+$includedefault = 0 if @include!=0;
 
 if    ($choice eq 'ctable' ) { &CTABLE;  }
 elsif ($choice eq 'cdecl'  ) { &CDECL;   }
