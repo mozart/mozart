@@ -28,8 +28,13 @@
   <Title/Detecting and Handling Distribution Problems: <<Fault>>/
 
 <P>This section summarizes the operations of the <<Fault>> module
-and their argument types.  Please refer to the Distribution Tutorial for
-more information on what the operations do and how to use them.
+and their argument types.  
+Please refer to the Distribution Tutorial for a full specification
+of the operations and examples of how to use them.
+This section carefully indicates where the current release
+is incomplete with respect to the specification
+(a <EM>limitation</EM>)
+or has different behavior (a <EM>modification</EM>).
 
 <section><title/Argument types/
 
@@ -111,12 +116,11 @@ appears in one or more of the following three ways:
 <item>As arguments to a handler call, <<{HandlerProc Entity FStates OP}>>.
 <item>As arguments to a watcher call, <<{WatcherProc Entity FStates}>>.
 </list>
-<P>A limitation of the current release is that if the problem
-was detected during an object operation, then the <<Entity>>
-argument is undefined.
-In the case of handlers and watchers, this limitation can
-be circumvented by putting a reference to the object in
-the handler or watcher.
+<P>A limitation of the current release is that the <<Entity>>
+argument is undefined for an object operation.
+For handlers and watchers, this limitation can
+be circumvented by letting the handler or watcher
+reference the object.
 
 <section><title/Operations/
 
@@ -159,8 +163,8 @@ The handler <<{HandlerProc Entity AFStates OP}>> is called
 if a fault is detected when an operation is attempted on the entity.
 A limitation of the current release is that handlers
 cannot be installed at the <<global>> level.
-A modification of the current release with respect to the
-specification is that
+A modification of the current release
+with respect to the specification is that
 handlers installed on variables always retry
 the operation after they return.
 
@@ -202,8 +206,11 @@ but behaves differently in the current release.
 The limitations are:
 <list>
 <item>If an exception is raised or a handler or watcher
-is invoked for an <EM>object</EM>, then the argument <<Entity>>
-is undefined.
+is invoked for an <EM>object</EM>,
+then the <<Entity>> argument is undefined.
+For handlers and watchers, this limitation can
+be circumvented by letting the handler or watcher
+reference the object.
 <item>If an exception is raised or a handler is invoked
 for an <EM>object</EM>,
 then the attempted object operation cannot be retried.
@@ -216,6 +223,8 @@ The modifications are:
 <list>
 <item>A handler installed on a <EM>variable</EM> will retry
 the operation (i.e., bind or wait) after it returns.
+That is, the handler is inserted before the operation
+instead of replacing the operation.
 </list>
 These limitations and modifications
 will be removed in future releases.
