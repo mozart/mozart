@@ -948,10 +948,10 @@ end
 <P>The server has the new method <<broadcastCrashEvent>>.
 <<<
 meth broadcastCrashEvent(CrashID)
-   {ForAll @clientList
-       proc {$ Element}
-          {Element.ref put(permClient(CrashID))}
-       end}
+   {ConcurrentForAll @clientList
+      proc {$ Element}
+         {Element.ref put(permClient(CrashID))}
+      end}
 end
 >>>
 
