@@ -237,6 +237,7 @@ are those that can be assigned only to one value:
 <ITEM> <EM>Logic variable</EM>:
 <index id=idx.logicvariable/logic variable/
 <index id=idx.variablelogic/variable<and>logic/
+<index see=idx.logicvariable/logic variable/
 Logic variables have two operations:
 they can be bound (i.e., assigned)
 or read (i.e., wait until bound).
