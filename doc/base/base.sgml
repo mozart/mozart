@@ -109,6 +109,7 @@
 
     <Meta name="html.split" value="chapter.misc">
     <Meta name="html.split" value="section.misc.bitstrings">
+    <Meta name="html.split" value="section.misc.foreign.pointers">
 
     <Meta name="html.split.toc"   value="">
     <Meta name="html.split.bib"   value="">
