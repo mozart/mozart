@@ -1539,6 +1539,7 @@ case ETIMEDOUT:{
 default:{
   PD((TCP_HERROR,"Unhandled error: %d please inform erik@sics.se",
       ossockerrno()));
+  fprintf(stderr,"default interpreted as perm:%d \n",ossockerrno());
   return IP_PERM_BLOCK;}}
 return IP_TEMP_BLOCK;
 }
@@ -3148,6 +3149,7 @@ retry:
     return IP_TEMP_BLOCK;}
   if(ossockerrno() == ECONNREFUSED || ossockerrno() == EADDRNOTAVAIL       ){
     r->connectionLost();
+    fprintf(stderr,"cannot open - interpreted as perm:%d \n",ossockerrno());
     return IP_PERM_BLOCK;}
   addr.sin_port = htons(aport);
   goto retry;}
