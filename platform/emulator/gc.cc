@@ -754,7 +754,6 @@ void Name::gcRecurse()
   homeOrGName = ToInt32(((Board*)ToPointer(homeOrGName))->gcBoard());
 }
 
-inline
 Object *Object::gcObject()
 {
   return (Object *) gcConstTerm();
