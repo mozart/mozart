@@ -42,6 +42,13 @@ public:
     fdSuspList[size] = fdSuspList[eqvar] = NULL;
   }
 
+  GenFDVariable(TaggedRef pn = AtomVoid)
+  : GenCVariable(FDVariable, pn) {
+    finiteDomain.init(fu);
+    fdSuspList[det] = fdSuspList[bounds] = NULL;
+    fdSuspList[size] = fdSuspList[eqvar] = NULL;
+  }
+
   // methods relevant for term copying (gc and solve)
   void gc(void);
   size_t getSize(void){return sizeof(GenFDVariable);}
