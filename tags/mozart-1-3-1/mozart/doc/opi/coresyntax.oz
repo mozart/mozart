@@ -1,0 +1,2 @@
+\localSwitches
+\switch +core -codegen

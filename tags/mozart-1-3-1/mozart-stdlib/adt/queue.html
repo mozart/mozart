@@ -1,0 +1,106 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<HTML>
+<HEAD>
+<!-- EDIT -->
+<TITLE>Mozart Standard Library: Functional Queues</TITLE>
+<STYLE>
+BODY {
+	background-color: white;
+	margin-left	: 2cm;
+	margin-right	: 2cm;
+	font-family	: tahoma,arial,helvetica,sans-serif;
+}
+H1 {
+	text-align	: center;
+	color		: #9B0000;
+}
+H2 {	color		: #FF9933; }
+H4 {	color		: slateblue; }
+H3 {	color		: #881155; }
+H5 {	color		: darkslateblue; }
+CODE {	color		: #663366; }
+CODE,TT {
+	font-family	: "lucida console",courier,monospace;
+}
+CODE.DISPLAY {
+	display		: block;
+	white-space	: pre;
+	margin-left	: 2cm;
+	margin-top	: 1em;
+	margin-bottom	: 1em;
+}
+P.AUTHOR {
+	text-align	: center;
+	font-weight	: bold;
+}
+SPAN.MODULE {
+	color		: steelblue;
+}
+A {	color		: steelblue; }
+SPAN.COMMENT      { color: #B22222; }
+SPAN.KEYWORD      { color: #A020F0; }
+SPAN.STRING       { color: #BC8F8F; }
+SPAN.FUNCTIONNAME { color: #0000FF; }
+SPAN.TYPE         { color: #228B22; }
+SPAN.VARIABLENAME { color: #B8860B; }
+SPAN.REFERENCE    { color: #5F9EA0; }
+SPAN.BUILTIN      { color: #DA70D6; }
+</STYLE>
+</HEAD>
+<BODY>
+<!-- EDIT -->
+<H1>Functional Queues</H1>
+<P CLASS="AUTHOR">Denys Duchier</P>
+<DL>
+  <DT><B>module</B>
+  <DD><SPAN CLASS="MODULE">x-oz://system/adt/Queue.ozf</SPAN>
+</DL>
+<HR>
+
+<P>This module provides a functional implemention of queues
+
+<H2>Exports</H2>
+<P>The modules exports the following constructors:
+<DL>
+<DT><CODE>{Queue.new ?Q}</CODE>
+<DD>returns a new functional queue instance <CODE>Q</CODE>, currently
+empty
+<DT><CODE>{Queue.newFromList +L ?Q}</CODE>
+<DD>returns a new functional queue instance <CODE>Q</CODE>, initialized
+with the elements of list <CODE>L</CODE>
+</DL>
+
+<H2>Instance API</H2>
+<P>Each functional queue instance <CODE>Q</CODE> has the following features:
+<DL>
+<DT><CODE>{Q.get ?V}</CODE>
+<DD>returns the next value <CODE>V</CODE> available from <CODE>Q</CODE>,
+or raises exception <CODE>empty</CODE> if none
+<DT><CODE>{Q.put +V}</CODE>
+<DD>enters a new value <CODE>V</CODE> into the queue
+<DT><CODE>{Q.getPut ?Old +New}</CODE>
+<DD>atomically, gets the next value <CODE>Old</CODE> available from <CODE>Q</CODE>
+and enters the value <CODE>New</CODE>.  If <CODE>Q</CODE> was empty, <CODE>New</CODE>
+is <CODE>Old</CODE> and <CODE>Q</CODE> is still empty
+<DT><CODE>{Q.top ?V}</CODE>
+<DD>returns the next value <CODE>V</CODE> available from <CODE>Q</CODE>
+without actually removing it from <CODE>Q</CODE>
+<DT><CODE>{Q.toList ?L}</CODE>
+<DD>returns the list <CODE>L</CODE> of all values in <CODE>Q</CODE>
+<DT><CODE>{Q.toListKill ?L}</CODE>
+<DD>returns the list <CODE>L</CODE> of all values in <CODE>Q</CODE>
+and makes <CODE>Q</CODE> unusable until a subsequent <CODE>{Q.reset}</CODE>.
+This is more efficient that <CODE>{Q.toList ?L}</CODE> because no copy
+is required
+<DT><CODE>{Q.isEmpty ?B}</CODE>
+<DD>returns true iff <CODE>Q</CODE> is empty
+<DT><CODE>{Q.reset}</CODE>
+<DD>discards <CODE>Q</CODE>'s content and resets it to an empty queue
+<DT><CODE>{Q.clone ?Q2}</CODE>
+<DD>returns a new functional queue instance <CODE>Q2</CODE> which is
+a clone of <CODE>Q</CODE>
+</DL>
+
+<HR>
+</BODY>
+</HTML>

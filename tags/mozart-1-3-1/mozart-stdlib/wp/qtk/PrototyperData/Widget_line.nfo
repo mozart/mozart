@@ -1,0 +1,7 @@
+This example shows the line and space widgets.
+
+The tdline widget is a vertical line, so it skips horizontal space.
+The lrline widget is a horizontal line, so it skips vertical space.
+The tdspace and lrspace are equivalent to tdline and lrline without any line.
+
+You can specify the space you want to skip by the width parameter.

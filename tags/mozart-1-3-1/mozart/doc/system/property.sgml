@@ -1,0 +1,859 @@
+<!--
+  - Authors:
+  -   Denys Duchier     <duchier@ps.uni-sb.de>
+  -   Leif Kornstaedt <kornstae@ps.uni-sb.de>
+  -   Christian Schulte <schulte@ps.uni-sb.de>
+  -
+  - Copyright:
+  -   Denys Duchier, 1998
+  -   Leif Kornstaedt, 1998
+  -   Christian Schulte, 1998
+  -
+  - Last change:
+  -   $Date$ by $Author$
+  -   $Revision$
+  -
+  - This file is part of Mozart, an implementation
+  - of Oz 3
+  -    http://www.mozart-oz.org
+  -
+  - See the file "LICENSE" or
+  -    http://www.mozart-oz.org/LICENSE.html
+  - for information on usage and redistribution
+  - of this file, and for a DISCLAIMER OF ALL
+  - WARRANTIES.
+  -
+  -->
+
+
+<Chapter id="Chapter.Property" proglang=oz>
+  <Title/Emulator Properties: <<Property>>/
+
+  <P>
+    The <<Property>> module provides operations to query and possibly
+    update Mozart system-related parameters that control various
+    aspects of the Mozart engine and system modules.
+  </P>
+
+  <P>
+    The most important properties can be controlled graphically by means of
+    the Mozart Panel, which is described in <Ptr.Extern
+    to="ozdoc:panel">.
+  </P>
+
+  <P>
+    The properties are accessible to the programmer by operations
+    resembling the operations on dictionaries: <<Property.put>> sets a
+    property, whereas <<Property.get>> and <<Property.condGet>> access
+    properties. The operations are described <Ref
+    to="section.property.interface"/here/ in more detail.
+  </P>
+
+  <Section id="section.property.intro">
+    <Title/Engine Properties/
+
+  <P>
+    The properties that control the Mozart engine are identified by
+    atoms. For example, the current number of runnable threads is
+    identified by the atom <<'threads.runnable'>>. That is,
+    <<<{Property.get 'threads.runnable'}>>> returns the number of
+    currently runnable threads as an integer.
+  </P>
+
+  <P> 
+    For convenience, most
+    properties are organized into groups. A group is accessed by an
+    atom giving the group's name (<<'threads'>>, for example), and it
+    returns a record containing the 
+    properties of that group. For example,
+    <<<{Property.get 'threads'}>>> returns a record that has several
+    features one of which is <<'runnable'>>. 
+  </P>
+
+  <P>
+    Some properties are read-only.  They provide access to
+    statistical information (as the property <<'threads.runnable'>> in
+    our previous example), but cannot be used to update that information.
+    Other properties are mutable:
+    changing their values customizes the engine's behaviour. For
+    example, the property 
+    <<'threads.medium'>> gives the ratio between the number of time slices
+    available for threads of priorities <<medium>> and <<low>>. This
+    can be changed to 2:1 by:
+<<<{Property.put 'threads.medium' 2}>>>
+  </P>
+
+  <P>
+    <<Property.put>> supports groups as well.  For example, to customize
+    time slices for threads of all priorities, we can do:
+<<<{Property.put 'threads' foo('medium': 2
+                            'high':   2)}>>>
+    The record's label is not significant.
+  </P>
+ 
+  <P> 
+    All properties are listed in the
+    following sections, which are sorted by group.
+  <P>
+
+
+  <Subsection class=unnumbered id="section.property.application">  
+    <Title/Application Support: <<application>>/
+
+    <P>
+      <Table id="table.prop.application">
+        <Tr><Th/Field/ <Th/Mutable/ <Th/Type/ <Th/Explanation/</Tr>
+        <Tr>
+          <Td/<<args>>/
+          <Td/no/
+          <Td/list of atoms/
+          <Td/The arguments passed to an application./
+        </Tr>
+        <Tr>
+          <Td/<<url>>/
+          <Td/no/
+          <Td/<<Atom>>/
+          <Td/The url of the root functor of an application./
+        </Tr>
+      </Table>
+    </P>
+
+  </Subsection>
+
+  <Subsection class=unnumbered id="section.property.dp">  
+    <Title/Distribution: <<dp>>/
+
+    <P>
+      <Table id="table.prop.dp">
+        <Tr><Th/Field/ <Th/Mutable/ <Th/Type/ <Th/Explanation/</Tr>
+        <Tr>
+          <Td/<<version>>/
+          <Td/no/
+          <Td/string/
+          <Td/The distribution version. Only ozengines with the same version can communicate./
+        </Tr>
+        <Tr>
+          <Td/<<clockTick>>/
+          <Td/no/
+          <Td/integer/
+          <Td/The distribution subsystem is activated at least every <<clockTick>> milliseconds./
+        </Tr>
+        <Tr>
+          <Td/<<bufferSize>>/
+          <Td/yes/
+          <Td/integer/
+          <Td/The size of the output and input buffers in bytes. For throughput-bound applications it should be large enough to keep the network utilized between invocations of the distribution subsystem./
+        </Tr>
+        <Tr>
+          <Td/<<probeInterval>>/
+          <Td/yes/
+          <Td/integer/
+          <Td/How often probes are run in milliseconds./
+        </Tr>
+        <Tr>
+          <Td/<<probeTimeout>>/
+          <Td/yes/
+          <Td/integer/
+          <Td/Time before a non responded ping defines temp in milliseconds./
+        </Tr>
+        <Tr>
+          <Td/<<openTimeout>>/
+          <Td/yes/
+          <Td/integer/
+          <Td/Maximum time to wait for a response when establishing a 
+	      connection./
+        </Tr>
+        <Tr>
+          <Td/<<closeTimeout>>/
+          <Td/yes/
+          <Td/integer/
+          <Td/Maximum time to wait for a connection to close./
+        </Tr>
+        <Tr>
+          <Td/<<wfRemoteTimeout>>/
+          <Td/yes/
+          <Td/integer/
+          <Td/Maximum time to wait for a remote peer to reopen a connection
+	      after being remotely closed due to lack of resources./
+        </Tr>
+        <Tr>
+          <Td/<<firewallReopenTimeout>>/
+          <Td/yes/
+          <Td/integer/
+          <Td/Time to wait before reopening a connection after being remotely 
+	      closed due to lack of resources when behind a firewall./
+        </Tr>
+<!--
+        <Tr>
+          <Td/<<isprobing>>/
+          <Td/yes/
+          <Td/Bool/
+          <Td/Probing on or off./
+        </Tr>
+-->
+        <Tr>
+          <Td/<<tcpHardLimit>>/
+          <Td/yes/
+          <Td/integer/
+          <Td/Maximum number of simultaneous tcp connections./
+        </Tr>
+        <Tr>
+          <Td/<<tcpWeakLimit>>/
+          <Td/yes/
+          <Td/integer/
+          <Td/Number of simultaneous tcp connections when stable. The 
+	  difference between tcpHardLimit and tcpWeakLimit is used for 
+	  accepts. If they are set equal, no further accepts will be made 
+	  until some connection has been closed./
+        </Tr>
+        <Tr>
+          <Td/<<retryTimeFloor>>/
+          <Td/yes/
+          <Td/integer/
+          <Td/Least time to wait before retrying a lost connection./
+        </Tr>
+        <Tr>
+          <Td/<<retryTimeCeiling>>/
+          <Td/yes/
+          <Td/integer/
+          <Td/Longest time to wait before retrying a lost connection./
+        </Tr>
+        <Tr>
+          <Td/<<retryTimeFactor>>/
+          <Td/yes/
+          <Td/integer/
+          <Td/Factor determining actual to wait before retrying a lost connection./
+        </Tr>
+        <Tr>
+          <Td/<<flowBufferSize>>/
+          <Td/yes/
+          <Td/integer/
+          <Td/Experimental property for flowcontrol./
+        </Tr>
+        <Tr>
+          <Td/<<flowBufferTime>>/
+          <Td/yes/
+          <Td/integer/
+          <Td/Experimental property for flowcontrol./
+        </Tr>
+      </Table>
+    </P>
+    <P>
+       Some of these properties affect running connections and some affect 
+       only new ones. Running: tcp*Limit. New: probe*, 
+       retryTime*.
+    </P>
+
+  </Subsection>
+  
+  <Subsection class=unnumbered id="section.property.dplog">
+  <Title/Logging of distributed events: <<dpLog>>/
+  
+  <P>
+    <Table id="table.prop.dplog">
+     <Tr><Th/Field/ <Th/Mutable/ <Th/Type/ <Th/Explanation/</Tr>
+     <Tr>
+        <Td/<<connectLog>>/
+	<Td/yes/
+        <Td/<<Bool>>/
+        <Td/Wheter messages and events having to do with keeping the state of the connections used by the distribution layer should be writen to the log./
+       </Tr>
+      <Tr>
+        <Td/<<messageLog>>/
+	<Td/yes/
+        <Td/<<Bool>>/
+        <Td/Wheter messages having to do with keeping the state of the entity protocols of distributed mozart should be writen to the log./
+       </Tr>
+    </Table>
+    </P>
+  <P> 
+      The events are writen to standard out by default. They can be redirected to file by <<DPStatistics.createLogFile>>.
+  </P>
+  </Subsection>
+    
+  
+  <Subsection class=unnumbered id="section.property.errors">  
+    <Title/Printing Errors: <<errors>>/
+    <P> 
+      <Table id="table.prop.errors">
+        <Tr><Th/Field/ <Th/Mutable/ <Th/Type/ <Th/Explanation/</Tr>
+        <Tr>
+          <Td/<<debug>>/
+          <Td/yes/
+          <Td/<<Bool>>/
+          <Td/Whether error exceptions contain debug information./
+        </Tr>
+        <Tr>
+          <Td/<<'thread'>>/
+          <Td/yes/
+          <Td/<<Int>>/
+          <Td/Number of tasks on the thread to be printed./
+        </Tr>
+        <Tr>
+          <Td/<<width>>/
+          <Td/yes/
+          <Td/<<Int>>/
+          <Td/Maximal width used for printing values in error messages./
+        </Tr>
+        <Tr>
+          <Td/<<depth>>/
+          <Td/yes/
+          <Td/<<Int>>/
+          <Td/Maximal depth used for printing values in error messages./
+        </Tr>
+        <Tr>
+          <Td/<<toplevel>>/
+          <Td/yes/
+          <Td/<<Procedure>>/
+          <Td/Nullary procedure invoked after a message has been printed out
+	    about an uncaught exception raised on top level./
+        </Tr>
+        <Tr>
+          <Td/<<subordinate>>/
+          <Td/yes/
+          <Td/<<Procedure>>/
+          <Td/Nullary procedure invoked after a message has been printed out
+	    about an uncaught exception raised within a computation space./
+        </Tr>
+      </Table>
+    </P>
+
+  </Subsection>
+
+
+  <Subsection class=unnumbered id="section.property.fd">  
+    <Title/Finite Domains: <<fd>>/
+
+    <P>
+      <Table id="table.prop.fd">
+        <Tr><Th/Field/ <Th/Mutable/ <Th/Type/ <Th/Explanation/</Tr>
+        <Tr>
+          <Td/<<variables>>/
+          <Td/no/
+          <Td/<<Int>>/
+          <Td/Number of finite domain variables created./
+        </Tr>
+        <Tr>
+          <Td/<<propagators>>/
+          <Td/no/
+          <Td/<<Int>>/
+          <Td/Number of finite domain propagators created./
+        </Tr>
+        <Tr>
+          <Td/<<invoked>>/
+          <Td/no/
+          <Td/<<Int>>/
+          <Td/Number of finite domain propagators invoked./
+        </Tr>
+        <Tr>
+          <Td/<<threshold>>/
+          <Td/yes/
+          <Td/<<Int>>/
+          <Td/Integer when internal domain representation switches from
+        bit sets to interval lists./
+        </Tr>
+      </Table>
+    </P>
+
+  </Subsection>
+
+
+  <Subsection class=unnumbered id="section.property.gc">  
+    <Title/Garbage Collection: <<gc>>/
+
+    <P>
+      <Table id="table.prop.gc">
+        <Tr><Th/Field/ <Th/Mutable/ <Th/Type/ <Th/Explanation/</Tr>
+        <Tr>
+          <Td/<<size>>/
+          <Td/no/
+          <Td/<<Int>>/
+          <Td/Current heap size in bytes/
+        </Tr>
+        <Tr>
+          <Td/<<threshold>>/
+          <Td/no/
+          <Td/<<Int>>/
+          <Td/Heap size in bytes when next automatic garbage collection takes
+        place. Gets recomputed after every garbage collection./
+        </Tr>
+        <Tr>
+          <Td/<<active>>/
+          <Td/no/
+          <Td/<<Int>>/
+          <Td/Heap size in bytes after last garbage collection./
+        </Tr>
+        <Tr>
+          <Td/<<min>>/
+          <Td/yes/
+          <Td/<<Int>>/
+          <Td/Minimal heap size in bytes./
+        </Tr>
+        <Tr>
+          <Td/<<free>>/
+          <Td/yes/
+          <Td/<<1>>&ellipsis;<<100>>/
+          <Td>Gives the percentage of free heap memory after garbage
+        collection. For example, a value of 75 means that 
+        <<threshold>> is set to approximately: 
+        <<active>>*100/(100-75)=<<active>>*4.</Td>
+        </Tr>
+        <Tr>
+          <Td/<<tolerance>>/
+          <Td/yes/
+          <Td/<<1>>&ellipsis;<<100>>/
+          <Td/Gives the percentage by which the emulator is allowed for
+        purposes of better memory allocation to increase <<threshold>>./
+        </Tr>
+        <Tr>
+          <Td/<<on>>/
+          <Td/yes/
+          <Td/<<Bool>>/
+          <Td/Whether garbage collection is invoked automatically./
+        </Tr>
+        <Tr>
+          <Td/<<codeCycles>>/
+          <Td/yes/
+          <Td/<<Int>>/
+          <Td/After how many garbage collections also code garbage
+          collection is performed (zero means no code garbage
+          collection)./
+        </Tr>
+      </Table>
+    </P>
+
+  </Subsection>
+
+
+  <Subsection class=unnumbered id="section.property.limits">  
+    <Title/Implementation Limits: <<limits>>/
+
+    <P>
+      <Table id="table.prop.limits">
+        <Tr><Th/Field/ <Th/Mutable/ <Th/Type/ <Th/Explanation/</Tr>
+        <Tr>
+          <Td/<<int.min>>/
+          <Td/no/
+          <Td/<<Int>>/
+          <Td/The smallest integer that can be represented efficiently
+          (that is, by a single word in memory)
+          by the engine./
+        </Tr>
+        <Tr>
+          <Td/<<int.max>>/
+          <Td/no/
+          <Td/<<Int>>/
+          <Td/The largest integer that can be represented efficiently
+          (that is, by a single word in memory)
+          by the engine./
+        </Tr>
+        <Tr>
+          <Td/<<bytecode.xregisters>>/
+          <Td/no/
+          <Td/<<Int>>/
+          <Td/The number of X&nbsp;registers this engine is able to handle
+	  in the bytecode./
+        </Tr>
+      </Table>
+    </P>
+
+  </Subsection>
+
+
+  <Subsection class=unnumbered id="section.property.marshaler">  
+    <Title/Marshaler: <<marshaler>>/
+
+    <P>
+      <Table id="table.prop.marshaler">
+        <Tr><Th/Field/ <Th/Mutable/ <Th/Type/ <Th/Explanation/</Tr>
+        <Tr>
+          <Td/<<version>>/
+          <Td/no/
+          <Td/a hash-tuple of two integers/
+          <Td/The version of the marshaler./
+        </Tr>
+      </Table>
+    </P>
+
+  </Subsection>
+
+
+  <Subsection class=unnumbered id="section.property.memory">  
+    <Title/Memory Usage: <<memory>>/
+
+    <P>
+      <Table id="table.prop.memory">
+        <Tr><Th/Field/ <Th/Mutable/ <Th/Type/ <Th/Explanation/</Tr>
+        <Tr>
+          <Td/<<atoms>>/
+          <Td/no/
+          <Td/<<Int>>/
+          <Td/Memory used in bytes for atoms./
+        </Tr>
+        <Tr>
+          <Td/<<names>>/
+          <Td/no/
+          <Td/<<Int>>/
+          <Td/Memory used in bytes for names./
+        </Tr>
+        <Tr>
+          <Td/<<freelist>>/
+          <Td/no/
+          <Td/<<Int>>/
+          <Td/Memory allocated but held in free lists for later use in bytes./
+        </Tr>
+        <Tr>
+          <Td/<<code>>/
+          <Td/no/
+          <Td/<<Int>>/
+          <Td/Memory used in bytes for Mozart bytecode./
+        </Tr>
+        <Tr>
+          <Td/<<heap>>/
+          <Td/no/
+          <Td/<<Int>>/
+          <Td/Total memory used in Kilo bytes (i.e., 1024 bytes) since start
+        of the Mozart engine. Is increased after each garbage collection by
+        the heap threshold./
+        </Tr>
+      </Table>
+    </P>
+
+  </Subsection>
+
+
+  <Subsection class=unnumbered id="section.property.messages">  
+    <Title/Printing Messages: <<messages>>/
+
+    <P>
+      <Table id="table.prop.messages">
+        <Tr><Th/Field/ <Th/Mutable/ <Th/Type/ <Th/Explanation/</Tr>
+        <Tr>
+          <Td/<<gc>>/
+          <Td/yes/
+          <Td/<<Bool>>/
+          <Td/Whether messages on garbage collection are printed./
+        </Tr>
+        <Tr>
+          <Td/<<idle>>/
+          <Td/yes/
+          <Td/<<Bool>>/
+          <Td/Whether messages are printed when the Mozart Engine gets idle./
+        </Tr>
+      </Table>
+    </P>
+
+  </Subsection>
+
+
+  <Subsection class=unnumbered id="section.property.platform">  
+    <Title/Platform Information: <<platform>>/
+
+    <P>
+      <Table id="table.prop.platform">
+        <Tr><Th/Field/ <Th/Mutable/ <Th/Type/ <Th/Explanation/</Tr>
+        <Tr>
+          <Td/<<name>>/
+          <Td/no/
+          <Td/<<Atom>>/
+          <Td>
+              The name of the platform as atom of the form
+              <<?_{OS}-?_{ARCH}>> where the following combinations are
+              currently supported:
+              <Table>
+                <Tr><Th/Name/              <Th/OS/   <Th/ARCH/</Tr>
+                <Tr><Th/<<'aix3-rs6000'>>/   <Th/<<'aix3'>>/    <Th/<<'rs6000'>>/</Tr>
+                <Tr><Th/<<'freebsd-i486'>>/  <Th/<<'freebsd'>>/ <Th/<<'i486'>>/</Tr>
+                <Tr><Th/<<'freebsdelf-i486'>>/  <Th/<<'freebsdelf'>>/ <Th/<<'i486'>>/</Tr>
+                <Tr><Th/<<'irix5-mips'>>/    <Th/<<'irix'>>/    <Th/<<'mips'>>/</Tr>
+                <Tr><Th/<<'hpux-700'>>/    <Th/<<'hpux'>>/    <Th/<<'700'>>/</Tr>
+                <Tr><Th/<<'linux-arm'>>/    <Th/<<'linux'>>/ <Th/<<'arm'>>/</Tr>
+                <Tr><Th/<<'linux-i486'>>/    <Th/<<'linux'>>/ <Th/<<'i486'>>/</Tr>
+                <Tr><Th/<<'linux-m68k'>>/    <Th/<<'linux'>>/ <Th/<<'m68k'>>/</Tr>
+		<Tr><Th/<<'linux-mips'>>/    <Th/<<'linux'>>/ <Th/<<'mips'>>/</Tr>
+		<Tr><Th/<<'linux-parisc'>>/    <Th/<<'linux'>>/ <Th/<<'parisc'>>/</Tr>
+		<Tr><Th/<<'linux-ppc'>>/    <Th/<<'linux'>>/ <Th/<<'ppc'>>/</Tr>
+		<Tr><Th/<<'linux-s390'>>/    <Th/<<'linux'>>/ <Th/<<'s390'>>/</Tr>
+		<Tr><Th/<<'linux-sparc'>>/    <Th/<<'linux'>>/ <Th/<<'sparc'>>/</Tr>
+                <Tr><Th/<<'netbsd-i486'>>/   <Th/<<'netbsd'>>/ <Th/<<'i486'>>/</Tr>
+                <Tr><Th/<<'netbsd-m68k'>>/   <Th/<<'netbsd'>>/ <Th/<<'m68k'>>/</Tr>
+                <Tr><Th/<<'netbsd-sparc'>>/  <Th/<<'netbsd'>>/ <Th/<<'sparc'>>/</Tr>
+                <Tr><Th/<<'openbsd-i486'>>/  <Th/<<'openbsd'>>/ <Th/<<'i486'>>/</Tr>
+                <Tr><Th/<<'openbsd-sparc>>/  <Th/<<'openbsd'>>/ <Th/<<'sparc>>/</Tr>
+                <Tr><Th/<<'osf1-alpha'>>/    <Th/<<'osf1'>>/ <Th/<<'alpha'>>/</Tr>
+                <Tr><Th/<<'powermac-darwin'>>/    <Th/<<'powermac'>>/ <Th/<<'darwin'>>/</Tr>
+                <Tr><Th/<<'solaris-i486'>>/  <Th/<<'solaris'>>/ <Th/<<'i486'>>/</Tr>
+                <Tr><Th/<<'solaris-sparc'>>/ <Th/<<'solaris'>>/ <Th/<<'sparc'>>/</Tr>
+                <Tr><Th/<<'sunos-sparc'>>/   <Th/<<'sunos'>>/   <Th/<<'sparc'>>/</Tr>
+                <Tr><Th/<<'ultrix-mips'>>/   <Th/<<'ultrix'>>/  <Th/<<'mips'>>/</Tr>
+                <Tr><Th/<<'win32-i486'>>/    <Th/<<'win32'>>/   <Th/<<'i486'>>/</Tr>
+              </Table>
+          </Td>
+        </Tr>
+        <Tr>
+          <Td/<<os>>/
+          <Td/no/
+          <Td/<<Atom>>/
+          <Td/The operating system part of the platform name./
+        </Tr>
+        <Tr>
+          <Td/<<arch>>/
+          <Td/no/
+          <Td/<<Atom>>/
+          <Td/The architecture part of the platform name./
+        </Tr>
+      </Table>
+    </P>
+
+  </Subsection>
+
+
+  <Subsection class=unnumbered id="section.property.print">  
+    <Title/Printing Values: <<print>>/
+
+    <P>
+      <Table id="table.prop.print">
+        <Tr><Th/Field/ <Th/Mutable/ <Th/Type/ <Th/Explanation/</Tr>
+        <Tr>
+          <Td/<<verbose>>/
+          <Td/yes/
+          <Td/<<Bool>>/
+          <Td/Whether printing values includes verbose information on
+           variables. Used for all printing routines./
+        </Tr>
+        <Tr>
+          <Td/<<width>>/
+          <Td/yes/
+          <Td/<<Int>>/
+          <Td/Maximal width used for <<System.show>> and
+          <<System.print>> (see <Ptr to="chapter.system">)./
+        </Tr>
+        <Tr>
+          <Td/<<depth>>/
+          <Td/yes/
+          <Td/<<Int>>/
+          <Td/Maximal depth used for <<System.show>> and
+          <<System.print>> (see <Ptr to="chapter.system">)./
+        </Tr>
+      </Table>
+    </P>
+
+  </Subsection>
+
+
+  <Subsection class=unnumbered id="section.property.priority">  
+    <Title/Thread Priorities: <<priorities>>/
+
+    <P>
+      <Table id="table.prop.prio">
+        <Tr><Th/Field/ <Th/Mutable/ <Th/Type/ <Th/Explanation/</Tr>
+        <Tr>
+          <Td/<<high>>/
+          <Td/yes/
+          <Td/<<1>>&ellipsis;<<100>>/
+          <Td/Relation between time slices available for threads of
+        priorities <<medium>> and <<low>>./
+        </Tr>
+        <Tr>
+          <Td/<<medium>>/
+          <Td/yes/
+          <Td/<<1>>&ellipsis;<<100>>/
+          <Td/Relation between time slices available for threads of
+        priorities <<high>> and <<medium>>./
+        </Tr>
+      </Table>
+    </P>
+
+  </Subsection>
+
+
+  <Subsection class=unnumbered id="section.property.spaces">  
+    <Title/Computation Spaces: <<spaces>>/
+
+    <P>
+      <Table id="table.prop.space">
+        <Tr><Th/Field/ <Th/Mutable/ <Th/Type/ <Th/Explanation/</Tr>
+        <Tr>
+          <Td/<<created>>/
+          <Td/no/
+          <Td/<<Int>>/
+          <Td/Number of computation spaces created by <<Space.new>>./
+        </Tr>
+        <Tr>
+          <Td/<<cloned>>/
+          <Td/no/
+          <Td/<<Int>>/
+          <Td/Number of computation spaces cloned by <<Space.clone>>./
+        </Tr>
+        <Tr>
+          <Td/<<committed>>/
+          <Td/no/
+          <Td/<<Int>>/
+          <Td/Number of computation spaces committed by
+          <<Space.commit>>./
+        </Tr>
+        <Tr>
+          <Td/<<failed>>/
+          <Td/no/
+          <Td/<<Int>>/
+          <Td/Number of failed computation spaces./
+        </Tr>
+        <Tr>
+          <Td/<<succeeded>>/
+          <Td/no/
+          <Td/<<Int>>/
+          <Td/Number of succeeded computation spaces./
+        </Tr>
+      </Table>
+    </P>
+
+  </Subsection>
+
+
+  <Subsection class=unnumbered id="section.property.threads">  
+    <Title/Threads: <<threads>>/
+
+    <P>
+      <Table id="table.prop.threads">
+        <Tr><Th/Field/ <Th/Mutable/ <Th/Type/ <Th/Explanation/</Tr>
+        <Tr>
+          <Td/<<created>>/
+          <Td/no/
+          <Td/<<Int>>/
+          <Td/Total number of threads created./
+        </Tr>
+        <Tr>
+          <Td/<<runnable>>/
+          <Td/no/
+          <Td/<<Int>>/
+          <Td/Number of currently runnable threads./
+        </Tr>
+        <Tr>
+          <Td/<<min>>/
+          <Td/no/
+          <Td/<<Int>>/
+          <Td/Minimal size of a thread stack in number of tasks./
+        </Tr>
+      </Table>
+    </P>
+
+  </Subsection>
+
+
+  <Subsection class=unnumbered id="section.property.time">  
+    <Title/Time Usage: <<time>>/
+
+    <P>
+      <Table id="table.prop.time">
+        <Tr><Th/Field/ <Th/Mutable/ <Th/Type/ <Th/Explanation/</Tr>
+        <Tr>
+          <Td/<<user>>/
+          <Td/no/
+          <Td/<<Int>>/
+          <Td/Operating system user time of the Oz Emulator process in
+              milliseconds./
+        </Tr>
+        <Tr>
+          <Td/<<system>>/
+          <Td/no/
+          <Td/<<Int>>/
+          <Td/Operating system system time of the Oz Emulator process in
+        milliseconds./
+        </Tr>
+        <Tr>
+          <Td/<<total>>/
+          <Td/no/
+          <Td/<<Int>>/
+          <Td/Elapsed real time in milli seconds from an arbitrary point in
+        the past (for example, system start-up time). Can be used to
+        determine the wall time elapsed between two successive
+        applications of <<{Property.get 'time.total'}>>./
+        </Tr>
+        <Tr>
+          <Td/<<run>>/
+          <Td/no/
+          <Td/<<Int>>/
+          <Td/Run time in milliseconds./
+        </Tr>
+        <Tr>
+          <Td/<<idle>>/
+          <Td/no/
+          <Td/<<Int>>/
+          <Td/Idle time in milliseconds./
+        </Tr>
+        <Tr>
+          <Td/<<copy>>/
+          <Td/no/
+          <Td/<<Int>>/
+          <Td/Time spent on copying (that is, on cloning of spaces) in
+        milliseconds./
+        </Tr>
+        <Tr>
+          <Td/<<propagate>>/
+          <Td/no/
+          <Td/<<Int>>/
+          <Td/Time spent on executing propagators in
+        milliseconds./
+        </Tr>
+        <Tr>
+          <Td/<<gc>>/
+          <Td/no/
+          <Td/<<Int>>/
+          <Td/Time spent on garbage collection in
+          milliseconds./
+        </Tr>
+        <Tr>
+          <Td/<<detailed>>/
+          <Td/yes/
+          <Td/<<Bool>>/
+          <Td/Only if <<true>>, the fields <<time.copy>>, <<time.gc>>,
+          and <<time.propagate>> are updated accordingly./
+        </Tr>
+      </Table>
+    </P>
+
+  </Subsection>
+
+  </Section>
+
+
+
+
+  <Section id="section.property.interface">
+    <Title/The Programming Interface/
+
+  <P>
+    <List>
+      <Entry><Span class=index/<<get>>/
+	<Index class=tails/<<Property>><And><<get>>/
+      <Synopsis>
+	<<{Property.get ?+{LI} ?_{X}}>>
+      <Item>
+        Returns the property stored under the key ?_{LI} (a literal or
+        an integer). Raises an exception, if no property with key
+        ?_{LI} exists.
+    
+      <Entry><Span class=index/<<condGet>>/
+	<Index class=tails/<<Property>><And><<condGet>>/
+      <Synopsis>
+	<<{Property.condGet ?+{LI} ?_{X} ?_{Y}}>>
+      <Item>
+        Returns the property stored under the key ?_{LI} (a literal or
+        an integer). If no property with key
+        ?_{LI} exists, ?_{X} is returned.
+    
+      <Entry><Span class=index/<<put>>/
+	<Index class=tails/<<Property>><And><<put>>/
+      <Synopsis>
+	<<{Property.put ?+{LI} ?_{X}}>>
+      <Item>
+        Stores the property ?_{X} under key ?_{LI} (a literal or
+        an integer). Raises an exception, if the property is
+        read-only.
+    
+    </List>
+  </P>
+  </Section>
+
+
+</Chapter>

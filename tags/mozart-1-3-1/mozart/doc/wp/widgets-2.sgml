@@ -1,0 +1,1378 @@
+<!--
+  - Authors:
+  -   Christian Schulte <schulte@ps.uni-sb.de>
+  -
+  - Contributors:
+  -   Daniel Simon <dansim@ps.uni-sb.de>
+  -   Andy Walter <anwalt@ps.uni-sb.de>
+  -   
+  - Copyright:
+  -   Christian Schulte, 1998
+  -
+  - Last change:
+  -   $Date$ by $Author$
+  -   $Revision$
+  -
+  - This file is part of Mozart, an implementation
+  - of Oz 3
+  -    http://www.mozart-oz.org
+  -
+  - See the file "LICENSE" or
+  -    http://www.mozart-oz.org/LICENSE.html
+  - for information on usage and redistribution
+  - of this file, and for a DISCLAIMER OF ALL
+  - WARRANTIES.
+  -
+  -->
+
+
+<Chapter id="chapter.widgets-2">
+  <Title/More Widgets/
+
+  <P>
+    This chapters presents widgets which are intended to be interactive:
+    buttons to invoke actions, entries to enter text, scales to enter
+    numbers, and listboxes to choose elements of lists.
+
+  <Section id="section.widgets-2.button">
+    <Title/Buttons and Actions/
+
+    <P>
+    <para class=apropos><title/actions/
+      <def/Button/ widgets are similar to label widgets: they display text,
+      bitmaps, or images.  Additionally, they provide for <Def/actions/:
+      pressing the mouse button over the button widget, invokes an
+      action.  An action is either a procedure or a pair of object and
+      message.  If the action is a procedure, pressing the widget button
+      creates a thread in which the procedure is applied.  Otherwise,
+      a thread is created that applies the
+      object to the message provided. Actions are discussed in more
+      detail in <Ptr to="section.widgets-2.action">.
+
+    <P>
+      <Ptr to="figure.widgets-2.buttons"> shows a program which creates two
+      buttons and attaches actions to them. Pressing button <<B1>> browses
+      the atom <<pressed>>, whereas pressing button <<B2>> closes the toplevel
+      widget object&nbsp;<<T>>.
+
+    <p>
+      <Figure id="figure.widgets-2.buttons">
+        <Caption/Buttons with attached actions./
+        <P>
+               <picture.choice>
+          <Picture.Extern to="button.gif" type=gif>
+          <Picture.Extern id="pict.ext.widgets-2.button" to="pictures/widgets-2/button.eps" type=ps>
+               </picture.choice>
+<index class=tails/<<Tk>><and><<button>>/
+<chunk class=anonymous><title/button/
+B1={New Tk.button tkInit(parent: W 
+                         text:   'Press me!'
+                         action: proc {$}
+                                    {Browse pressed}
+                                 end)}
+B2={New Tk.button tkInit(parent: W 
+                         bitmap: error
+                         action: W#tkClose)}
+{Tk.send pack(B1 B2 fill:x padx:1#m pady:1#m)}
+</chunk>
+      </Figure>
+
+    <para class=apropos><title/action values/
+      The <<action>> option is different from other options in
+      that it has not a generic translation as explained in <Ptr
+      to="section.widgets-1.tickles">.  Valid values for this option
+      are not tickles, but as already mentioned, procedures or object
+      message pairs.
+
+    <P>
+      Internally, an object providing for the <<action>> option, creates a Tcl
+      script which when executed invokes the &Oz; procedure or object.  This
+      script is used then as value for the configuration option <<command>>.
+      All widgets which provide for the <<command>> option in Tk, provide for
+      the <<action>> option in &Oz;.
+
+    <para class=apropos><title/changing actions/
+      Actions can be deleted or changed by the method <<tkAction>>.  For
+      example, deleting the action for button <<B1>> and changing the action
+      for <<B2>> can be done by executing:
+<chunk class=anonymous><title/button action/
+{B1 tkAction}
+{B2 tkAction(action: B1 # tkClose)}
+</chunk>
+
+    <P>
+      More information on buttons can be found in
+      <ref.extern to="&tkcmd/button.htm"/<kbd/button//.
+
+
+  <Section id="section.widgets-2.otherbuttons">
+    <Title/Checkbuttons, Radiobuttons, and Variables/
+
+    <para class=apropos><title/checkbuttons/
+      Checkbutton widgets are used for binary choices.  An indicator to the
+      left shows whether the button is <Q/on/ or <Q/off/.  The state of the
+      indicator is given by a tickle variable. A tickle variable is a tickle
+      object that provides messages to set and to query the value of the
+      variable. 
+
+    <para class=apropos><title/radiobuttons/
+      Radiobuttons are used for non-binary choices.  Several radiobuttons
+      are linked together to a group. Selecting a radio button de-selects all
+      buttons belonging to the same group and displays a mark in an indicator
+      to the left.  Radiobuttons are linked together by tickle variables: all
+      buttons belonging to the same group share the same variable.
+
+    <P>
+      <Ptr to="figure.widgets-2.check-and-radio"> shows an example of a
+      checkbutton and a group of three radiobuttons.  The value with which
+      the variable <<V1>> is initialized determines whether the checkbutton
+      initially is selected.  The value of the variable <<V2>> determines
+      which of the radiobuttons is selected initially.
+
+      <Figure id="figure.widgets-2.check-and-radio">
+        <Caption/A checkbutton and three radiobuttons./
+        <P>
+               <picture.choice>
+          <Picture.Extern to="check-and-radio.gif" type=gif>
+          <Picture.Extern id="pict.ext.widgets-2.check-and-radio" to="pictures/widgets-2/check-and-radio.eps" type=ps>
+               </picture.choice>
+<index class=tails/<<Tk>><and><<variable>>/
+<index class=tails/<<Tk>><and><<checkbutton>>/
+<index class=tails/<<Tk>><and><<radiobutton>>/
+<chunk class=anonymous><title/check and radio/
+V1={New Tk.variable tkInit(false)}
+C ={New Tk.checkbutton tkInit(parent:W variable:V1
+                              text:'Bold' anchor:w)}
+V2={New Tk.variable tkInit('Helvetica')}
+Rs={Map ['Times' 'Helvetica' 'Courier']
+    fun {$ F}
+       {New Tk.radiobutton tkInit(parent:W 
+                                  variable:V2 value:F
+                                  text:F anchor:w)}
+    end}
+{Tk.batch [grid(C     padx:2#m columnspan:3)
+           grid(b(Rs) padx:2#m)]}
+</chunk>
+      </Figure>
+
+    <para class=apropos><title/state/
+      To query the state of the radiobutton and of the checkbuttons we query
+      the state of the corresponding variables.  Feeding the following
+      expression
+<chunk class=anonymous><title/return check and radio/
+{Browse state(bold:   {V1 tkReturnInt($)}==1
+              family: {V2 tkReturnAtom($)})}
+</chunk>
+      displays the values of the variables in the browser.  See the
+      <ref to="section.widgets-2.return"/next
+      section/ for a detailed explanation of the <<tkReturnInt>> and
+      <<tkReturnAtom>> messages.
+
+    <para class=apropos><title/actions/
+      Very often selecting a checkbutton or a radiobutton must show
+      immediate effect.  For this purpose it is possible to attach actions
+      to checkbuttons and radiobuttons in the same way as for buttons.
+      <Ptr to="figure.widgets-2.check-and-radio-action"> shows an example
+      where the checkbutton and the radiobuttons configure the font of a
+      label widget.  Note that the options used for initialization of
+      the checkbutton and radiobuttons are the same as in the example shown
+      in <Ptr to="figure.widgets-2.check-and-radio">.
+
+      <Figure id="figure.widgets-2.check-and-radio-action">
+        <Caption/Actions for radiobuttons and checkbuttons./
+        <P>
+               <picture.choice>
+          <Picture.Extern
+to="check-and-radio-action.gif" type=gif>
+          <Picture.Extern
+to="pictures/widgets-2/check-and-radio-action.eps" type=ps>
+               </picture.choice>
+<index/<<tkAction>>/
+<chunk class=anonymous><title/LC/
+fun {GetWeight}
+   if {V1 tkReturnInt($)}==1 then bold else normal end
+end
+F={New Tk.font tkInit(size:24
+                      family: {V2 tkReturn($)}
+                      weight: {GetWeight})}
+L={New Tk.label tkInit(parent:W text:'A test text.' font:F)}
+{C  tkAction(action: proc {$}
+                        {F tk(configure weight:{GetWeight})}
+                        {L tk(configure font:F)}
+                     end)}
+{List.forAllInd ['Times' 'Helvetica' 'Courier']
+ proc {$ I Family}
+    {{Nth Rs I} tkAction(action: proc {$}
+                                    {F tk(configure family:Family)}
+                                    {L tk(configure font:F)}
+                                 end)}
+ end}
+</chunk>
+      </Figure>
+
+
+    <p>
+      Reference information on radiobuttons and checkbuttons can be
+      found in <ref.extern
+      to="&tkcmd;/radiobutton.htm"/<kbd/radiobutton// and <ref.extern
+      to="&tkcmd;/checkbutton.htm"/<kbd/checkbutton//.
+
+
+  <Section id="section.widgets-2.return">
+    <Title/Querying Tickle Objects/
+
+    <P>
+      In the previous section we queried a Tk-variable's state with the
+      methods <<tkReturnInt>> and <<tkReturnAtom>>.  In fact it is possible to
+      query the state of all tickle objects, in particular to query the state
+      of widgets.
+
+    <P>
+      All tickle objects provide a method <<tkReturn>>.  This method is
+      similar to the <<tk>> method in that it sends a message to the graphics
+      engine.  After the message has been executed by the graphics
+      engine, however, the <<tkReturn>> method returns a string,
+      whereas the <<tk>> method 
+      ignores this string.
+
+    <para class=apropos><title/synchronization/
+      The field of the <<tkReturn>> message with the largest integer
+      feature is constrained to the string returned.  The method
+      <<tkReturn>> is asynchronous: it sends the message to the
+      graphics engine but does not block the thread until the return
+      string is available.  Eventually the graphics engine writes the
+      return string to the store.
+   
+    <p>
+      The <<tkReturn>> message is sent
+      asynchronously for efficiency reasons. One
+      can start another calculation without having to
+      wait for <<tkReturn>>'s result.  One can
+      send several <<tkReturn>> messages consecutively, and
+      they will be sent immediately. The messages
+      will be handled by the graphics agent in the
+      same order as they are sent. 
+
+    <p>
+      If you want to be sure that you have
+      received the return value, say <<X>>, 
+      of <<tkReturn>> before continuing, then you must use a <<{Wait X}>>
+      statement.
+
+    <para class=apropos><title/illegal return values/
+      Similar to the method <<tkReturn>> tickle objects provide methods that
+      return atoms, integers, floats and lists of strings, atoms, integers,
+      and floats.  Rather than writing a string to the store they write a
+      value to the store which is obtained by transforming the string to the
+      particular type.  If it is not possible to transform the string into a
+      value of that type, the boolean value <<false>> is written to the store.
+
+    <P>
+      The methods that return a list of strings, atoms, integers, or
+      floats split the string into substrings separated by space characters.
+      For instance, the return string <<"a b c">> is transformed into the
+      list <<[a b c]>> by the method <<tkReturnListAtom>>.  <Ptr
+      to="table.widgets-2.return"> lists the return methods and how
+      the methods transform strings.  Note that a string <<"1.0">> is
+      transformed by <<tkReturnInt>> to the integer&nbsp;<<1>>.
+
+      <Figure class=table id="table.widgets-2.return">
+        <Caption/Returns methods and examples of return values./
+        <Table>
+          <TR>
+            <TH>Method
+            <TH>Example string
+            <TH>Return value
+          <TR>
+            <TD><<tkReturn>>
+            <TD><<"red 1 1.0">>
+            <TD><<"red 1 1.0">>
+          <TR>
+            <TD><<tkReturnAtom>>
+            <TD><<"red 1 1.0">>
+            <TD><<'red 1 1.0'>>
+          <TR>
+            <TD><<tkReturnInt>>
+            <TD><<"1">>
+            <TD><<1>>
+          <TR>
+            <TD><<tkReturnFloat>>
+            <TD><<"1.0">>
+            <TD><<1.0>>
+          <TR>
+            <TD><<tkReturnList>>
+            <TD><<"red 1 1.0">>
+            <TD><<["red" "1" "1.0"]>>
+          <TR>
+            <TD><<tkReturnListAtom>>
+            <TD><<"red 1 1.0">>
+            <TD><<[red '1' '1.0']>>
+          <TR>
+            <TD><<tkReturnListInt>>
+            <TD><<"red 1 1.0">>
+            <TD><<[false 1 1]>>
+          <TR>
+            <TD><<tkReturnListFloat>>
+            <TD><<"red 1 1.0">>
+            <TD><<[false 1.0 1.0]>>
+        </Table>
+      </Figure>
+
+    <para class=apropos><title/string handling procedures/
+      The Tk Module provides also for a set of procedures that can transform
+      strings into atoms, integers, floats and lists of these three types.
+      With these procedures it is possible to transform return strings in
+      a user defined fashion.  For more information see <ptr.extern
+      to="ozdoc:system" key="section.tk.strings">.
+
+
+    <SubSection>
+      <Title/Querying Configuration Options/
+
+      <P>
+        The values of configuration options of a widget can be queried with the
+        <<configure>> command.  Instead of giving a value to which the option
+        is to be set, we give the tickle <<unit>> as value.  The tickle
+        <<unit>> expands to just nothing, meaning that the value is not to
+        be set but to be queried.  For example, to query the value of the
+        <<bg>> option of a widget&nbsp;?_{T}, we can feed
+<<<{?_{T} tkReturnListAtom(configure bg:unit $)}>>
+
+      <P>
+        This displays a list of atoms, usually it suffices to know that the
+        current value of the option is the fifth element of the list, whereas
+        its default value is the fourth element of the list.
+
+    <SubSection>
+      <Title/Querying Widget Parameters/
+
+      <P>
+        The command <<winfo>> is helpful to query parameters of widgets.  For
+        instance, to query the position and geometry of a widget&nbsp;?_{T}, we
+        can use the following:
+<index class=tails/<<Tk>><and><<returnInt>>/
+<<<{Browse {Map [rootx width rooty height]
+         fun {$ A} 
+            {Tk.returnInt winfo(A ?_{T})} 
+         end}}>>>
+
+        The <<winfo>> command provides more options than those used above,
+        for the details please consult <ref.extern
+        to="&tkcmd/winfo.htm"/<kbd/winfo//.
+
+
+  <Section id="section.widgets-2.menu">
+    <Title/Menus, Menuitems, and Menubuttons/
+
+    <P>
+      Menu widgets serve as containers for menu entries.  A menu entry can be
+      one of the following:
+      <Table>
+        <TR/<TD/<<separator>>/<TD/displays a horizontal line//
+        <TR/<TD/<<command>>/<TD/similar to button widgets//
+        <TR/<TD/<<radiobutton>>/<TD/similar to radiobutton widgets//
+        <TR/<TD/<<checkbutton>>/<TD/similar to checkbutton widgets//
+        <TR/<TD/<<cascade>>/<TD/displays sub menus//
+      </Table>
+      Menu entries are not widgets.  In particular, menu entries are not
+      managed by a geometry manager.  Instead as soon as a menu entry is
+      created it is displayed in its parent menu.  To configure a menu entry
+      after it has been created, one needs to use the <<entryconfigure>>
+      command rather than the <<configure>> command.
+
+    <para class=apropos><title/tear off entry/
+      The program shown in <Ptr to="figure.widgets-2.menu"> creates two menu
+      widgets <<M1>> and <<M2>>.  The first cascade entry of the menu widget
+      <<M1>> is configured such that it displays the menu <<M2>> when the menu
+      is traversed.  The option <<tearoff>> determines that the first default
+      so-called <Q/tear off/ entry is not created.  Selecting a tear off
+      entry displays the menu in a window on its own.
+
+      <Figure id="figure.widgets-2.menu">
+        <Caption/A menu with entries, including a cascaded sub menu./
+        <P>
+               <picture.choice>
+          <Picture.Extern to="menu.gif" type=gif>
+          <Picture.Extern id="pict.ext.widgets-2.menu" to="pictures/widgets-2/menu.eps" type=ps>
+               </picture.choice>
+<index class=tails/<<Tk>><and><<menu>>/
+<index class=tails/<<Tk>><and><<menuentry>><and><<cascade>>/
+<index class=tails/<<Tk>><and><<menuentry>><and><<separator>>/
+<index class=tails/<<Tk>><and><<menuentry>><and><<command>>/
+<chunk class=anonymous><title/menu/
+Cs =['Wheat' 'Firebrick' 'Navy' 'Darkorange']
+M1 ={New Tk.menu tkInit(parent:W  tearoff:false)}
+M2 ={New Tk.menu tkInit(parent:M1 tearoff:false)}
+E1 ={New Tk.menuentry.cascade
+     tkInit(parent:M1 label:'Background Color' menu:M2)}
+E2 ={New Tk.menuentry.separator tkInit(parent:M1)}
+E3 ={New Tk.menuentry.command
+     tkInit(parent:M1 label:'Quit' action: W#tkClose)}
+V  ={New Tk.variable tkInit(Cs.1)}
+CEs={Map Cs fun {$ C}
+               {New Tk.menuentry.radiobutton
+                tkInit(parent:M2 label:C var:V val:C
+                       action: W#tk(configure bg:C))}
+            end}
+</chunk>
+      </Figure>
+
+    <para class=apropos><title/posting menus/
+      Usually menus are not visible.  Only when needed a menu appears on the
+      screen, we say that it is <Def/posted/.  After the user has traversed
+      the menu and has selected an entry, the menu is made invisible again: it
+      is <Def/unposted/.  Posting the menu <<M1>> at the upper left edge of
+      the screen can be done by
+<chunk class=anonymous><title/post/
+{M1 tk(post 0 0)}
+</chunk>
+
+    <para class=apropos><title/menubuttons/
+      From menus one can compose menu bars and popup menus.  A menu bar
+      consists of several menubutton widgets.  A menubutton widget can
+      display text, bitmaps, or images.  To a menubutton a menu can be
+      attached such that pressing the button makes the menu widget appear on
+      the screen.  We do not discuss menu bars here in detail, since the
+      <<TkTools>> module provides an abstraction that supports the creation
+      of menu bars (see <ptr to="section.tools.menubars">).
+
+    <para class=apropos><title/popup menus/
+      The command <<tk_popup>> can be used to display popup menus.  It takes
+      as arguments the menu widget and the coordinates where the widget should
+      appear on the screen.  Ideally, we want the menu widget to appear after
+      pressing the mouse button when the mouse pointer is over some widget.
+      The <ref to="section.widgets-2.events"/next section/ introduces
+      events which allows to mattach actions to abitrary widgets.
+
+    <p>
+      Reference information can be found in
+      <ref.extern to="&tkcmd;/menu.htm"/<kbd/menu// and <ref.extern
+      to="&tkcmd;/menubutton.htm"/<kbd/menubutton//.
+
+
+  <Section id="section.widgets-2.events">
+    <Title/Events/
+
+    <para class=apropos><title/binding to events/
+      Button widgets allow to specify an action which is invoked when the
+      button is pressed.  This is only one particular example of attaching an
+      action to an event.  The Tk toolkit allows to attach actions to any
+      widget with the method <<tkBind>>.  To attach an action to an event
+      we refer to as <Def/binding the action to the event/.  The action is
+      invoked when some event occurs.  Examples for events are to move the
+      mouse pointer within a widget, or to press a mouse button when the
+      mouse pointer is over a widget.  Actions can be given arguments.
+      The arguments depend on the type of the event, &eg;, arguments can
+      be the coordinates of the mouse pointer.
+
+    <P>
+      Let us look to the example from the previous section.  There we created
+      a menu widget <<M1>> and a toplevel widget&nbsp;<<T>>.  Now we want
+      that the menu widget is posted if the mouse button is pressed over the
+      toplevel widget&nbsp;<<T>>.  Additionally, we want the menu to get
+      posted at the position of the mouse pointer when the mouse button was
+      pressed.
+
+    <para class=apropos><title/event patterns/
+      The program in <Ptr to="figure.widgets-2.event-menu"> does what we
+      want: <<'&lt;Button-1&gt;'>> for the <<event>> option is
+      the so-called <Def/event pattern/.  The value for the <<args>> option
+      describes that the action should invoked with two arguments.  The
+      first (second) one should be an integer giving the ?{x} (?{y})
+      coordinate of the mouse pointer within the widget when the mouse
+      button has been pressed.  The <<action>> procedure pops up the menu
+      widget at exactly the screen coordinates.  These are computed from
+      the coordinates of the upper left edge of the toplevel widget and the
+      event arguments.
+
+      <Figure id="figure.widgets-2.event-menu">
+        <Caption/Action to popup menu./
+<index class=tails/<<tkBind>>/
+<index class=tails/<<tk_popup>>/
+<chunk class=anonymous><title/popup/
+{W tkBind(event:  '&lt;Button-1&gt;'
+          args:   [int(x) int(y)]
+          action: proc {$ X Y}
+                     TX={Tk.returnInt winfo(rootx W)}
+                     TY={Tk.returnInt winfo(rooty W)}
+                  in
+                     {Tk.send tk_popup(M1 X+TX Y+TY)}
+                  end)}
+</chunk>
+      </Figure>
+
+    <SubSection>
+      <Title/Event Patterns/
+
+      <P>
+        An event pattern is either a string consisting of a single character,
+        where the character must be different from the space character and
+        <<&lt;>>.  This event pattern matches a <<KeyPress>> event for that
+        character.
+
+      <P>
+        Otherwise, an event pattern must be a string
+<<<'&lt;'#?_{Modifier}#'-'#?_{Modifier}#'-'#?_{Type}#'-'#?_{Detail}#'&gt;'>>>
+        where only one of either ?_{Type} or ?_{Detail} is mandatory.  This
+        means, for example that also
+        <<<'&lt;'#?_{Type}#'&gt;'>>>
+        or
+        <<<'&lt;'#?_{Detail}#'&gt;'>>>
+        are valid event patterns. 
+
+      <para class=apropos><title/event modifiers and types/
+        <Ptr to="figure.widgets-2.event-args2"> shows common event modifiers
+        and event types.  Multiple entries separated by commas can be used as
+        synonyms.  The full set of modifiers and types is described in
+        <ref.extern to="&tkcmd/bind.htm"/<kbd/bind//.
+
+        <Figure id="figure.widgets-2.event-args2">
+          <Caption/Some event modifiers and types./
+          <P proglang=none>
+            <Table id="table.widgets-2.event">
+              <TR/<TH colspan=5/Event Modifier//
+              <TR>
+                <TD/<<Control>>/
+                <TD/<<Shift>>/
+                <TD/<<Lock>>/
+                <TD/<<Meta>>/
+                <TD/<<Alt>>/
+              <TR>
+                <TD/<<Button1>>, <<B1>>/
+                <TD/<<Button2>>, <<B2>>/
+                <TD/<<Button3>>, <<B3>>/
+                <TD/<<Button4>>, <<B4>>/
+                <TD/<<Button5>>, <<B5>>/
+              <TR>
+                <TD/<<Double>>/
+                <TD/<<Triple>>/
+                <TD/<P.silent>&nbsp;/
+                <TD/<P.silent>&nbsp;/
+                <TD/<P.silent>&nbsp;/
+            </Table>
+            <Table>
+              <TR>
+                <TH/Event Type/
+                <TH/Description/
+              <TR>
+                <TD/<<Key>>, <<KeyPress>>/
+                <TD/key has been pressed/
+              <TR>
+                <TD/<<KeyRelease>>/
+                <TD/key has been released/
+              <TR>
+                <TD/<<Button>>, <<ButtonPress>>/
+                <TD/mouse button has been pressed/
+              <TR>
+                <TD/<<ButtonRelease>>/
+                <TD/mouse button has been released/
+              <TR>
+                <TD/<<Enter>>/
+                <TD/mouse pointer has entered a widget/
+              <TR>
+                <TD/<<Leave>>/
+                <TD/mouse pointer has left a widget/
+              <TR>
+                <TD/<<Motion>>/
+                <TD/mouse pointer has been moved within widget/
+            </Table>
+        </Figure>
+
+      <P>
+        For example, the event pattern
+        <<<'&lt;Shift-Double-Button&gt;'>>>
+        matches the event that a mouse button is double-clicked while
+        the shift key is pressed.
+
+      <P proglang=none>
+        If the event is <<ButtonPress>> or <<ButtonRelease>>, ?_{Detail} may
+        be the number of a mouse button.  The number must be between <<1>>
+        and&nbsp;<<5>>, where <<1>> is the leftmost button.  The number as
+        detail means that only events from pressing or releasing this
+        particular button match.  If no detail is given, pressing or
+        releasing any button matches the event.  If a number is given as
+        detail, <<ButtonPress>> can be omitted, &eg;, <<&lt;ButtonPress-1&gt;>>
+        and <<&lt;1&gt;>> match the same events.
+
+      <P proglang=none>
+        If the event is <<KeyPress>> or <<KeyRelease>>, ?_{Detail} may be
+        the specification of a key-symbol, &eg;, <<comma>> for the
+        <Key/,/&nbsp;key.  For more information please consult
+        <ref.extern to="&tkcmd/bind.htm"/<kbd/bind//.
+
+
+    <SubSection id="section.widgets-2.event-args">
+      <Title/Event Arguments/
+
+      <P>
+        The <<args>> option of the <<tkBind>> method takes a list of
+        argument specifications.  An argument specification describes
+        the type of the argument and the argument itself.  <Ptr
+        to="figure.widgets-2.event-args"> shows the valid types and some
+        arguments.  The types mean the same as the types for the different
+        return methods as discussed in <Ptr to="section.widgets-2.return">.
+
+        <Figure id="figure.widgets-2.event-args">
+          <Caption/Event arguments./
+          <P>
+            <Table id="table.widgets-2.event-args">
+              <TR/<TH colspan=4/Argument Type//
+              <TR>
+                <TD/<<string(?_{A})>>, <<?_{A}>>/
+                <TD/<<atom(?_{A})>>/
+                <TD/<<int(?_{A})>>/
+                <td/<<float(?_{A})>>/
+              <TR>
+                <TD/<<list(string(?_{A}))>>, <<list(?_{A})>>/
+                <TD/<<list(atom(?_{A})>>/
+                <TD/<<list(int(?_{A})>>/
+                <TD/<<list(float(?_{A})>>/
+            </Table>
+            <Table proglang=none>
+              <TR>
+                <TH/Event Argument/
+                <TH/Description/
+              <TR>
+                <TD/<<x>>/
+                <TD/x coordinate/
+              <TR>
+                <TD/<<y>>/
+                <TD/y coordinate/
+              <TR>
+                <TD/<<K>>/
+                <TD/string describing the symbol of the key pressed/
+              <TR>
+                <TD/<<A>>/
+                <TD/character describing the key pressed/
+            </Table>
+        </Figure>
+
+    <SubSection>
+      <Title/Invoking Actions/
+
+      <P>
+        When an event matches an event pattern to which an action has been
+        bound by <<tkBind>>, a new thread is created in which the action is
+        executed.  If the action is a procedure the arity of the procedure
+        has to be equal to the length of the argument list specified in
+        <<tkBind>>.
+
+      <P>
+        If the action is a pair of object and message, the object is applied
+        to message with the arguments appended.  For example, after creating
+        an event binding by
+<<<{T tkBind(event:  '<1>'
+          args:   [int(x)]
+          action: ?_{O} # invoke(button))}>>>
+        pressing the leftmost button at x-coordinate 42 creates a thread that
+        executes the statement 
+        <<<{?_{O} invoke(button 42)}>>>
+
+    <SubSection>
+      <Title/Appending and Deleting Event Bindings/
+
+      <P>
+        If <<tkBind>> is used as before, any other existing binding for the
+        event pattern specified is overwritten.  If no action is specified any
+        existing binding for the event pattern is deleted.
+
+      <P>
+        For a single event pattern there may be more than one binding.  To
+        create an event binding that does not overwrite already existing
+        bindings, we can give the option <<append>> with value <<true>>.
+        For instance, if we do not only want to popup the menu but also to
+        display <<pop>> in the Browser, we can create an additional binding by
+<chunk class=anonymous><title/event append/
+{W tkBind(event:  '<1>' 
+          append: true
+          action: proc {$} {Browse pop} end)}
+</chunk>
+
+  <Section id="section.widgets-2.action">
+    <Title/More on Actions: Listeners/
+
+    <p>
+      In previous sections we used procedures or pairs of object and
+      message as actions. Each time an action is invoked, a new thread
+      is created. While this is fine as it comes to efficiency
+      (threads in &Oz; are light weight), it may cause trouble in
+      that the order in which actions are invoked might be lost: the
+      threads are created in the right order but there is no guarantee
+      that they will run in that order.
+
+    <p>
+      The class <<Tk.listener>> fixes this. An instance
+      of a subclass of <<Tk.listener>> has a thread of its own in
+      which it serves action messages in order of invocation.
+      For example, in
+<index class=tails/<<Tk>><and><<listener>>/
+<chunk class=anonymous><title/listener/
+L ={New class $ from Tk.listener
+            meth b1 {Browse b1} end
+            meth b2 {Browse b2} end
+         end tkInit}
+B1={New Tk.button tkInit(parent:W text:'One' action: L#b1)}
+B2={New Tk.button tkInit(parent:W text:'Two' action: L#b2)}
+{Tk.send pack(B1 B2 side:left)}
+</chunk>
+      the methods <<b1>> and <<b2>> are always executed in the same
+      order in which the corresponding buttons are pressed.
+
+    <p>
+      When the <<tkInit>> method of the class <<Tk.listener>> is
+      executed, a new thread together with a message stream is
+      created.
+      Whenever an action is 
+      invoked, where the object ?_{O} of an object message pair
+      <<?_{O}#?_{M}>> is an instance of <<Tk.listener>>, no new thread
+      is created but ?_{M} is appended at the end of the message stream.
+      The thread then serves the message ?_{M} as soon as all previous
+      messages on the stream have been served completely. It serves
+      ?_{M} by executing the object application <<{?_{O} ?_{M}}>>.
+
+    <p>
+      An additional message ?_{M} to be served can be given to a
+      listener by the method <<tkServe>>. For example, by
+<chunk class=anonymous><title/tkServe/
+{L tkServe(b1)}
+</chunk>
+      the message <<b1>> is served by <<L>>.
+    
+  </Section>
+
+  <Section id="section.widgets-2.entry">
+    <Title/Entries and Focus/
+
+    <P>
+      An entry widget lets the user enter a single line of text into the
+      widget.  An example is shown in <Ptr to="figure.widgets-2.entry">.
+      The initialization message for the entry widget specifies the width
+      of the entry in characters.  The same holds true for the width of
+      label widgets displaying text: a value for the width without an unit
+      appended is taken as width in characters and not in pixels.
+
+      <Figure id="figure.widgets-2.entry">
+        <Caption/An entry widget to enter text./
+        <P>
+               <picture.choice>
+          <Picture.Extern to="entry.gif" type=gif>
+          <Picture.Extern id="pict.ext.widgets-2.entry" to="pictures/widgets-2/entry.eps" type=ps>
+               </picture.choice>
+<index class=tails/<<Tk>><and><<entry>>/
+<chunk class=anonymous><title/entry/
+L={New Tk.label tkInit(parent:W text:'File name:')}
+E={New Tk.entry tkInit(parent:W width:20)}
+{Tk.batch [pack(L E side:left pady:1#m padx:1#m)
+           focus(E)]}
+</chunk>
+       </Figure>
+
+     <para class=apropos><title/focus/
+       To be able to enter text into an entry, the entry needs to have the
+       <Def/focus/.  If a widget has the focus, all input from the keyboard
+       is directed to that widget. A widget that has the focus is drawn
+       with a frame around it.  To give the focus to widget, we can use the
+       <<focus>> command as in the above example.
+
+     <P>
+       An entry widget can be given the focus also by clicking it with the
+       mouse button.  It is also possible to give the focus to button widgets.
+       That allows to invoke actions with keys, and to move the focus between
+       several widgets by pressing keys.  For more on this, see
+       <ref.extern to="&tkcmd/focus.htm"/<kbd/focus//.
+
+     <para class=apropos><title/returning entered text/
+       To query the string entered in a widget the command <<get>> is provided.
+       To display the entered string in the Browser we can execute
+<chunk class=anonymous><title/entry get/
+{Browse {E tkReturnAtom(get $)}}
+</chunk>
+
+     <P>
+       The string entered in an entry can be deleted, additional characters can
+       be inserted, and so on.  More on entry widgets you can find in
+       <ref.extern to="&tkcmd/entry.htm"/<kbd/entry//.
+
+  <Section id="section.widgets-2.scale">
+    <Title/Scales/
+
+    <P>
+      A scale widget allows to select a number from a certain range by moving
+      a slider.  Each time the slider is moved, an action attached to the
+      slider is invoked with a single argument giving the current number value
+      of the slider. 
+
+    <P>
+      In <Ptr to="figure.widgets-2.scales"> an example is shown which allows
+      to display a color determined by three sliders for the intensity of the
+      base colors red, green, and blue.  The object&nbsp;<<F>> stores the
+      intensity for each base color in an attribute.  Whenever the method
+      <<bg>> is executed it changes the intensity for one of the base colors
+      and changes the background color to the combination of all three base
+      colors.
+
+      <Figure id="figure.widgets-2.scales">
+        <Caption/Scales to configure a frame's background color./
+        <P>
+               <picture.choice>
+          <Picture.Extern to="scale.gif" type=gif>
+          <Picture.Extern id="pict.ext.widgets-2.scale" to="pictures/widgets-2/scale.eps" type=ps>
+               </picture.choice>
+<index class=tails/<<Tk>><and><<listener>>/
+<index class=tails/<<Tk>><and><<scale>>/
+<chunk class=anonymous><title/scale/
+L ={New class $ from Tk.listener
+           attr red:0 green:0 blue:0
+           meth bg(C I)
+              C := I {F tk(configure bg:c(@red @green @blue))}
+           end
+        end tkInit}
+F ={New Tk.frame tkInit(parent:W height:2#c)}
+Ss={Map [red green blue]
+    fun {$ C}
+       {New Tk.scale tkInit(parent:W orient:horizontal length:8#c
+                            label:C 'from':0 to:255
+                            action: L # bg(C)
+                            args:   [int])}
+    end}
+{Tk.send pack(b(Ss) F fill:x)}
+</chunk>
+      </Figure>
+
+    <P>
+      The sliders are configured with the <<label>> option to display the
+      name of the base color as their labels.  The other options besides of
+      <<action>> and <<args>> are self explanatory, more information on them
+      can be found in 
+       <ref.extern to="&tkcmd/scale.htm"/<kbd/scale//.
+
+    <P>
+      The value for the <<args>> option must be a type specification similar to
+      that used for the specification of argument types in event bindings (see
+      <Ptr to="section.widgets-2.event-args">.  The only difference is that no
+      event argument specification is required.  Invoking the action is also
+      similar.  For instance, if the scale for the color <<red>> changes its
+      value to <<10>>, the message <<bg(red 10)>> will eventually be
+      served by the listener <<L>>.
+
+
+  <Section id="section.widgets-2.listbox">
+    <Title/Listboxes and Scrollbars/
+
+    <para class=apropos><title/scanning/
+      A listbox displays a list of strings and allows the user to select one
+      or more of them.  If the listbox contains more lines than it can display
+      at once, the user can select the strings to be displayed by <Def
+      /scanning/ the listbox.  The listbox can be scanned by pressing the
+      second mouse button and moving the mouse pointer up or down while the
+      button is still being pressed.
+
+    <P>
+      A more convenient way than scanning is to use <Def/scrollbar/ widgets.
+      A scrollbar widgets allows the user to determine the portion of
+      strings displayed by moving a slider.  Scrollbars are independent of
+      a particular widget type: they can be also attached to other widgets
+      including entries.
+
+    <P>
+      <Ptr to="figure.widgets-2.listbox"> shows a program that allows to select
+      a color from a list of colors.  The list of colors is provided by some
+      external file inserted at the beginning of the program.  The listbox object 
+      is initialized and creates an event binding for pressing the left mouse
+      button as follows.  First the currently selected index&nbsp;<<I>>
+      is retrieved (the strings in the list box are indexed).  Then the
+      string&nbsp;<<C>> at this index is retrieved and used as background
+      color of the listbox widget.
+
+      <Figure id="figure.widgets-2.listbox">
+        <Caption/A listbox together with a vertical scrollbar./
+        <P>
+               <picture.choice>
+          <Picture.Extern to="listbox.gif" type=gif>
+          <Picture.Extern id="pict.ext.widgets-2.listbox" to="pictures/widgets-2/listbox.eps" type=ps>
+               </picture.choice>
+<index class=tails/<<Tk>><and><<listbox>>/
+<index class=tails/<<Tk>><and><<scrollbar>>/
+<index class=tails/<<Tk>><and><<addXScrollbar>>/
+<index class=tails/<<Tk>><and><<addYScrollbar>>/
+<chunk class=anonymous><title/listbox/
+L={New Tk.listbox tkInit(parent:W height:6)}
+{L tkBind(event:  '&lt;1&gt;'
+          action: proc {$}
+                     I={L tkReturn(curselection $)}
+                     C={L tkReturn(get(I) $)}
+                  in
+                     {L tk(configure bg:C)}
+                  end)}
+S={New Tk.scrollbar tkInit(parent:W)}
+{ForAll <chunk.ref/Color names/ 
+ proc {$ C}
+    {L tk(insert 'end' C)}
+ end}
+{Tk.addYScrollbar L S}
+{Tk.send pack(L S fill:y side:left)}
+</chunk>
+      </Figure>
+
+    <para class=apropos><title/attaching scrollbars/
+      To attach a scrollbar to a widget we use the predefined procedure
+      <<Tk.addYScrollbar>>.  It creates event bindings for the scrollbar such
+      that moving the scrollbar's slider affects the visible strings of the
+      listbox.  Also it creates event bindings for the listbox such that
+      scanning the listbox is reflected by the scrollbar.
+
+    <p>
+      More information on listboxes can be found in        
+      <ref.extern to="&tkcmd/listbox.htm"/<kbd/listbox// and more
+      information on scrollbars in
+       <ref.extern to="&tkcmd/scrollbar.htm"/<kbd/scrollbar//.
+
+  <Section id="section.widgets-2.wm">
+    <Title/Toplevel Widgets and Window Manager Commands/
+
+    <P>
+      To manipulate toplevel widgets which are managed by the window manager
+      similar to how other widgets are managed by a geometry manager, Tcl/Tk
+      provides for the <<wm>> command.
+
+    <P>
+      For example, by
+      <<<{Tk.send wm(iconify ?_{T})}>>>
+      the toplevel widget&nbsp;?_{T} is iconified whereas by
+      <<<{Tk.send wm(deiconify ?_{T})}>>>
+      it is deiconified.
+      For more information see <ref.extern to="&tkcmd/wm.htm"/<kbd/wm//.
+
+    <P>
+      Two important forms of the <<wm>> command are supported such that they
+      can be given as options to the <<tkInit>> method of the <<Tk.toplevel>>
+      class.
+
+    <para class=apropos><title/titled toplevel/
+      For example
+<index class=tails/<<Tk>><and><<toplevel>>/
+<chunk class=anonymous><title/wm title/
+W={New Tk.toplevel tkInit(title:'Something different')}
+</chunk>
+      creates a toplevel widget with the title <Samp/Something different/.
+
+    <para class=apropos><title/withdrawn toplevels/
+      Sometimes it is important to create a toplevel widget in a <Def
+      /withdrawn/ state: the toplevel widget does not appear on the screen.
+      This can be used to first create all widgets to be contained in the
+      toplevel widget, invoke a geometry manager for them, and only then
+      make the toplevel widget appear on the screen.  A toplevel widget can
+      be created in withdrawn state by
+<chunk class=anonymous><title/wm withdraw/
+W={New Tk.toplevel tkInit(withdraw:true)}
+</chunk>
+
+    <P>
+      To make the toplevel widget appear, the window manager command
+<chunk class=anonymous><title/wm deiconify/
+{Tk.send wm(deiconify W)}
+</chunk>
+      can be used.
+
+    <p>
+      Reference information on the window manager command can be found in
+      <ref.extern to="&tkcmd;/wm.htm"/<kbd/wm//.
+
+
+  <Section id="section.widgets-2.file">
+    <Title/Selecting Files/
+
+    <P>
+      Tk provides for predefined dialogs to select files for being opened or
+      for being saved. 
+
+    <P>
+      Selecting a file to be opened can be done with the command
+      <<tk_getOpenFile>>.  For example, an arbitrary file can be selected as
+      shown in <Ptr to="figure.widgets-2.file">.  If the command returns the
+      empty string (that is <<nil>>), the selection dialog has been canceled.
+      Otherwise, the string&nbsp;<<S>> gives the filename of the file to be
+      opened.
+      <Figure id="figure.widgets-2.file">
+        <Caption/Selecting files./
+        <P>
+               <picture.choice>
+          <Picture.Extern to="file.gif" type=gif>
+          <Picture.Extern id="pict.ext.widgets-2.file" to="pictures/widgets-2/file.eps" type=ps>
+               </picture.choice>
+<index/<<tk_getOpenFile>>/
+<chunk class=anonymous><title/file/
+case {Tk.return tk_getOpenFile}
+of nil then skip
+elseof S then {Browse file({String.toAtom S})}
+end
+</chunk>
+      </Figure>
+
+    <P>
+      The visual appearance of the file selector depends on the operating
+      system &Oz; runs on.  For example, the file selector for Unix based
+      operating systems is shown in <Ptr to="figure.widgets-2.file">.  Running
+      &Oz; under Windows uses the Windows specific file selector dialog.
+
+    <P>
+      To select filenames for saving the command <<tk_getSaveFile>> can be
+      used in the same way as above.  The difference is that this command
+      does not require that a file with the selected filename already exists.
+
+    <p>
+      Reference information on both commands can be found in
+      <ref.extern to="&tkcmd;/tk_getOpenFile.htm"/<kbd/tk_getOpenFile//.
+
+
+  <Section id="section.widgets-2.help">
+    <Title/Example: Help Popups/
+
+    <P>
+      In the following we want to look at a small example which provides for
+      a generic interactive help popup window.  The idea is that if the mouse
+      pointer stays over a widget for some time without pressing a mouse
+      button, a small help text is displayed.  The help text should disappear
+      if the mouse pointer leaves the screen area covered by the widget.
+
+    <P>
+      We will build a procedure <<AttachHelp>> such that help texts
+      are enabled by application of
+      the procedure to a widget and a help text.
+      We proceed in three steps, the first is to create a function to
+      create a
+      toplevel widget that displays the help text, the second is a
+      listener class (that is, a subclass of <<Tk.listener>>), and the
+      last step is the definition of <<AttachHelp>> itself.
+
+    <SubSection>
+      <Title/Displaying Help/
+
+      <P>
+        The procedure <<MakePopup>> shown in <Ptr
+        to="figure.widgets-2.help-create"> takes a widget and the help
+        text as its 
+        argument and returns a function to create a toplevel widget
+        containing the text at a position relative to the widget on
+        the screen.
+
+      <P>
+        <Figure id="figure.widgets-2.help-create">
+          <Caption/Creating a help window./
+<chunk><title/Definition of MakePopup/
+fun {MakePopup Parent Text}
+   fun {$}
+      [X Y H]={Map [rootx rooty height]
+               fun {$ WI}
+                  {Tk.returnInt winfo(WI Parent)}
+               end}
+      W={New Tk.toplevel tkInit(withdraw:true bg:black)}
+      M={New Tk.message
+         tkInit(parent:W text:Text bg:khaki aspect:400)}
+   in
+      {Tk.batch [wm(overrideredirect W true)
+                 wm(geometry W '+'#X+10#'+'#Y+H)
+                 pack(M padx:2 pady:2)
+                 wm(deiconify W)]}
+      W
+   end
+end
+</chunk>
+        </Figure>
+
+      <P>
+        The returned function creates a toplevel widget in withdrawn state and
+        configures the toplevel widget such that it:
+        <List enum>
+          <Item>
+            is not equipped with a frame from the window manager.  This is
+            done by using the window manager command <<overrideredirect>>:
+            the window manager is advised to not <Q/redirect/ the toplevel
+            widget into a frame.
+          <Item>
+            appears at a position relative to <<X>> and&nbsp;<<Y>>
+            coordinates of the widget parent, which 
+            done by the <<geometry>> window manager command.
+          <Item>
+            appears on the screen by deiconifying it.
+        </List>
+
+    <SubSection>
+      <Title/The Listener Class/
+
+      <P>
+        The listener class <<HelpListener>> is shown in <Ptr
+        to="figure.widgets-2.help-mixin">.  The method <<init>> initializes an
+        instance of this class by creating
+        a procedure for creation of the popup widget.
+
+       <p>
+        <Figure id="figure.widgets-2.help-mixin">
+          <Caption/The listener class <<HelpListener>>./
+<chunk><title/Definition of HelpListener/
+class HelpListener from Tk.listener
+   attr
+      cancel: unit
+      popup:  unit
+   meth init(parent:P text:T)
+      popup := {MakePopup P T}
+      Tk.listener,tkInit
+   end
+   meth enter
+      C
+   in
+      cancel := C
+      thread A={Alarm 1000} in
+         {WaitOr C A}
+         if {IsDet A} then W={@popup} in
+            {Wait C} {W tkClose}
+         end
+      end
+   end
+   meth leave
+      @cancel=unit
+   end
+end
+</chunk>
+        </Figure>
+
+      <P>
+        When the mouse pointer enters the parent widget,
+        the method <<enter>> gets executed. This method stores a new
+        variable <<C>> in the attribute <<cancel>> which serves as
+        flag whether the help popup must be closed. The newly
+        created thread waits until either one second has elapsed
+        (<<A>> gets bound after 1000 milliseconds) or the widget has
+        been left (<<C>> gets bound). Then possibly the widget for the help
+        text is created, which gets closed when the parent widget is
+        left. Note that if both <<A>> and <<C>> happen to be bound at
+        the same time,
+        the popup will be created and then closed immediately.
+
+      <P>
+        The <<leave>> method signals that the help popup must be
+        closed by binding the variable stored in <<cancel>>.
+
+
+
+    <SubSection>
+      <Title/<<AttachHelp>>/
+
+      <p>
+        The definition of <<AttachHelp>> is shown in <ptr
+        to="figure.widgets-2.attach">. It creates a listener and
+        creates event bindings that are served by that listener.
+
+      <p>
+        <figure id="figure.widgets-2.attach">
+<chunk class=anonymous><title/Definition of AttachHelp/
+local
+   <chunk.ref/Definition of MakePopup/
+   <chunk.ref/Definition of HelpListener/
+in
+   proc {AttachHelp Widget Text}
+      L={New HelpListener init(parent:Widget text:Text)}
+   in
+      {Widget tkBind(event:'&lt;Enter&gt;'  action:L#enter append:true)}
+      {Widget tkBind(event:'&lt;Leave&gt;'  action:L#leave append:true)}
+      {Widget tkBind(event:'&lt;Button&gt;' action:L#leave append:true)}
+   end
+end
+</chunk>
+       </figure>
+
+    <SubSection>
+      <Title/Using Help Popups/
+
+      <P>
+        A small example that shows how to use help popups is shown in
+        <Ptr to="figure.widgets-2.help-use">.  
+
+      <P>
+        <Figure id="figure.widgets-2.help-use">
+          <Caption/Demo of the <<HelpPopup>> class./
+          <P>
+            <picture.choice>
+            <Picture.Extern to="help.gif" type=gif>
+            <Picture.Extern id="pict.ext.widgets-2.help" to="pictures/widgets-2/help.eps" type=ps>
+            </picture.choice>
+<chunk class=anonymous><title/help/
+Bs={Map ['Okay'   # 'Do nothing meaningful.'
+         'Cancel' # 'Do nothing at all.'
+         'Quit'   # 'Close the window.']
+    fun {$ Text # Help}
+       B={New Tk.button tkInit(parent:W text:Text)}
+    in
+       {AttachHelp B Help} B
+    end}
+{Tk.send pack(b(Bs) side:left padx:2#m pady:2#m)}
+</chunk>
+        </Figure>
+
+
+
+<![ %EXTRA; [
+<section><title/Examples/
+<p>
+<chunk><title/EXAMPLES/
+%%%
+%%% Chapter: More Widgets
+%%%
+
+%%
+%% Buttons and Actions
+%%
+
+declare
+W ={New Tk.toplevel tkInit}
+<chunk.ref/button/
+
+<chunk.ref/button action/
+
+{W tkClose}
+
+
+
+%%
+%% Checkbuttons, Radiobuttons, and Variables
+%%
+
+declare
+W ={New Tk.toplevel tkInit}
+<chunk.ref/check and radio/
+
+<chunk.ref/return check and radio/
+
+declare
+<chunk.ref/LC/
+{Tk.send grid(L padx:2#m pady:2#m sticky:ew columnspan:3)}
+
+
+{W tkClose}
+
+
+
+%%
+%% Menus, Menuitems and Menubuttons
+%%
+
+declare
+W  ={New Tk.toplevel tkInit}
+<chunk.ref/menu/
+
+<chunk.ref/post/
+
+
+
+%%
+%% Events
+%%
+
+<chunk.ref/popup/
+
+<chunk.ref/event append/
+
+{W tkClose}
+
+
+
+%%
+%% More on Actions: Listeners
+%%
+
+declare
+W ={New Tk.toplevel tkInit}
+<chunk.ref/listener/
+
+<chunk.ref/tkServe/
+
+{W tkClose}
+
+
+
+%%
+%% Entries and Focus
+%%
+
+declare
+W={New Tk.toplevel tkInit}
+<chunk.ref/entry/
+
+<chunk.ref/entry get/
+
+{W tkClose}
+
+
+
+%%
+%% Scales
+%%
+
+declare
+W ={New Tk.toplevel tkInit}
+<chunk.ref/scale/
+
+{W tkClose}
+
+
+
+%%
+%% Listboxes and Scrollbars
+%%
+
+declare
+W={New Tk.toplevel tkInit}
+<chunk.ref/listbox/
+
+{W tkClose}
+
+
+
+%%
+%% Toplevel Widgets and Window Manager Commands
+%%
+
+declare
+<chunk.ref/wm title/
+
+{W tkClose}
+
+
+declare
+<chunk.ref/wm withdraw/
+
+<chunk.ref/wm deiconify/
+
+{W tkClose}
+
+
+
+%%
+%% Selecting Files
+%%
+
+<chunk.ref/file/
+
+
+
+%%
+%% Example: Help Popups
+%%
+
+declare
+<chunk.ref/Definition of AttachHelp/
+
+declare 
+W={New Tk.toplevel tkInit}
+<chunk.ref/help/
+
+
+{W tkClose}
+
+
+
+
+</chunk>
+]]>
+
+</Chapter>

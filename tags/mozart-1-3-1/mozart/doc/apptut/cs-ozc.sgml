@@ -1,0 +1,41 @@
+<chapter id=chapter.client.server.ozc>
+  <title/Compile Server Application/
+  <p>We now develop an application where a client can send an Oz file
+containing a functor expression to a compile server and gets back the
+corresponding compiled functor.  The server provides a compilation
+service.</p>
+  <section>
+    <title/Server <file/ozc-server.oz//
+    <p>The compile server is compiled as follows:
+<code display proglang=sh/ozc -x ozc-server.oz -o ozc-server.exe/
+and can be started with the command line:
+<code display proglang=sh/ozc-server.exe --ticketfile ?{file}/
+the server returns <code/yes(F)/ where <code/F/ is a functor value, or
+<code/no(Msgs)/, if compilation failed, where <code/Msgs/ are the
+error messages obtained from the compiler's interface.
+<code.extern display to="ozc-server.oz"></p>
+  </section>
+  <section>
+    <title/Client <file/ozc-client.oz//
+    <p>The client can be compiled as follows:
+<code display proglang=sh/ozc -x ozc-client.oz -o ozc-client.exe/
+and can be invoked with:
+<code display proglang=sh/ozc-client.exe --url=?{URL} --in=?{InFile} --out=?{OutFile}/
+It loads the compile server's ticket from ?{URL}, uses it to obtain the
+forwarding procedure, applies it to the textual contents of ?{InFile} and
+saves the returned functor value in ?{OutFile}.  Note that we convert
+the string (&ie; list) representation of the file's contents to a byte
+string for more efficient transmission; this is not necessary, but
+greatly reduces the amount of data that needs to be transmitted.
+<code.extern display to="ozc-client.oz"></p>
+  </section>
+</chapter>
+<!--
+Local Variables:
+mode: sgml
+mode: auto-fill
+sgml-default-dtd-file: "chapter.ced"
+sgml-auto-activate-dtd: t
+adaptive-fill-mode: nil
+End:
+-->

@@ -1,0 +1,124 @@
+<section ID="chapter.widgets.toplevel">
+  <TITLE>Toplevel widgets</title>
+<p>
+<picture.extern to="toplevel.gif" type=gif>
+
+<<<local
+   Desc=td(title:"Test window"
+	   label(text:"Window" width:40))
+   TopLevel
+in
+   TopLevel={QTk.build Desc}
+   {TopLevel show}
+   {Delay 2000}
+   {TopLevel set(title:"TEST WINDOW")}
+   {Delay 2000}
+   {TopLevel set(geometry:geometry(x:200 y:200))}
+end
+   
+>>>
+
+
+
+<subsection> <TITLE>Description</TITLE>
+
+<P>
+
+The very first widget you can use to build a window must be either <<td>> or <<lr>>. This particular widget is called the toplevel widget. A toplevel widget is a <<td>> or <<lr>> widget with added features and functionality. This section will only describe these new parameters, see the specific <<td>> and <<lr>> documentation for the other supported parameters (See <ptr to="chapter.widgets.tdlr">).
+
+</P>
+<P>
+Note that the <<glue>> parameter is <<nswe>> by default and that can't be changed (the toplevel widget is always glued to the border of the window).
+</P>
+<P>
+Note also that a freshly created toplevel window is not displayed by default. Use the <<show>> method to display it once built.
+</p>
+
+<subsection> <title>Parameter List</title><p>
+
+<subsubsection><title>Specific Parameters</title><p>
+<ref to="chapter.widgets.toplevel.action">action</ref>
+<ref to="chapter.widgets.toplevel.actionh">actionh</ref>
+<ref to="chapter.widgets.toplevel.aspect">aspect</ref>
+<ref to="chapter.widgets.toplevel.client">client</ref>
+<ref to="chapter.widgets.toplevel.focusmodel">focusmodel</ref>
+<ref to="chapter.widgets.toplevel.geometry">geometry</ref>
+<ref to="chapter.widgets.toplevel.grid">grid</ref>
+<ref to="chapter.widgets.toplevel.group">group</ref>
+<ref to="chapter.widgets.toplevel.iconbitmap">iconbitmap</ref>
+<ref to="chapter.widgets.toplevel.iconmask">iconmask</ref>
+<ref to="chapter.widgets.toplevel.iconname">iconname</ref>
+<ref to="chapter.widgets.toplevel.iconposition">iconposition</ref>
+<ref to="chapter.widgets.toplevel.iconwindow">iconwindow</ref>
+<ref to="chapter.widgets.toplevel.maxsize">maxsize</ref>
+<ref to="chapter.widgets.toplevel.minsize">minsize</ref>
+<ref to="chapter.widgets.toplevel.resizable">resizable</ref>
+<ref to="chapter.widgets.toplevel.return">return</ref>
+<ref to="chapter.widgets.toplevel.title">title</ref>
+<ref to="chapter.widgets.toplevel.transient">transient</ref>
+
+<subsubsection><title>Non Specific Parameters</title><p>
+<ref to="chapter.widgets.toplevel.param_look">look</ref>
+<ref to="chapter.widgets.toplevel.param_onCreation">onCreation</ref>
+
+<subsection><title>Method List</title><p>
+
+<para><title>close</title><p><<close>>: Closes the window. The variables specified as the  <<return>> parameters of widgets are bound to their corresponding value. No more action can be taken on the window of the widgets displayed inside.
+
+<para><title>deiconify</title><p><<deiconify>>: Deiconifies the window.
+
+<para><title>hide</title><p><<hide>>: Hides the window. The window can be displayed again by using the <<show>> method.
+
+<para><title>iconify</title><p><<iconify>>: Iconifies the window.
+
+<para><title>show</title><p><<show(wait:B1 modal:B2)>>: Makes the window to be visible. If <<B1>> is <<true>>, the call to this method blocks until the window is closed. <<B1>> defaults to <<false>>. If <<B2>> is true, the window is made modal, that is it claims all the user input for the Oz process. Warning use this option with care as a modal window will prevent any other window in the current process to be active, even if the modal window is modal. Modal windows should always be transient windows that requires a user input before doing any further action.
+
+<para><title>wait</title><p><<wait>>: Waits for the window to be closed.
+
+<subsection><title>Detailed Parameters List</title><p>
+
+<para id="chapter.widgets.toplevel.action"><title>action</title><p><<action:C>>: Specifies an action to execute just after the user has clicked the close button of the window but before doing anything such as actually closing the window. <<C>> can take several different forms (see <ptr to="basics.events">). <<C>> defaults to <<toplevel#close>> to close the window.
+
+<para id="chapter.widgets.toplevel.actionh"><title>actionh</title><p><<actionh:C>>: Similar to the <<action>> parameter where then handle of the widget is given as a parameter to the <<action>> to be executed. This parameter overrides the <<action>> parameter when present.
+
+<para id="chapter.widgets.toplevel.aspect"><title>aspect</title><p><<aspect:R>>: <<R>> specifies a range to pass to the window manager for acceptable ratios for the window. <<R>> must be either the atom <<aspect>> to remove all aspect ratio restrictions, or an atom of the form <<aspect(minNumer:I1 minDenom:I2 maxNumer:I3 maxDenom:I4)>> where <<I1>> to <<I4>> must be integers. In such a case, the aspect ratio of window (width/length) will be  constrained to lie between <<I1>>/<<I2>> and <<I3/I4>>. 
+
+<para id="chapter.widgets.toplevel.client"><title>client</title><p><<client:VS>>: Stores <<VS>> (which should be the name of the host on which the application is executing) in window's WM_CLIENT_MACHINE property for use by the window manager or session manager. If <<VS>> is <<nil>>, the command deletes the WM_CLIENT_MACHINE property from window. <<VS>> must be a virtual string.
+
+<para id="chapter.widgets.toplevel.focusmodel"><title>focusmodel</title><p><<focusmodel:A>>: Specifies the focul model for the window. If <<A>> is the atom <<active>>, the window will claim the input focus for itself or its descendants, even at times when the focus is currently in some other application. If <<A>> is the atom <<passive>>, the window will never claim the focus for itself: the window manager should give the focus to window at appropriate times. However, once the focus has been given to window or one of its descendants, the application may re-assign the focus among window's descendants. The focus model defaults to <<passive>> and the <<focus>> method of widgets assumes a passive model of focusing. <<A>> must be one of the following atoms: <<passive>> or <<active>>.
+
+<para id="chapter.widgets.toplevel.geometry"><title>geometry</title><p><<geometry:R>>: Specifies a new geometry for the window (a geometry is the location and size of the window on the screen).<<R>> must be a record of the form <<geometry(x:I1 y:I2 width:I3 height:I4)>>, <<geometry(x:I1 y:I2)>> or <<geometry(widht:I3 height:I4)>>  where <<I1>> to <<I4>> are positive integers. <<I1>> specifies the number of pixels between the left edge of the screen and the left edge of window's border while <<I2>> specifies the number of pixels between the top edge of the screen and the top edge of the window's border. <<I3>> and <<I4>> specifies the desired dimensions of the window.
+
+<para id="chapter.widgets.toplevel.grid"><title>grid</title><p><<grid:R>>: Specifies that the window is to be managed as a gridded window. <<R>> must be either the atom <<grid>> to remove all gridding restrictions, are a record of the form <<grid(baseWidth:I1 baseWidth:I2 heightInc:I3 widthInc:I4)>> where <<I1>> to <<I4>> are positive integers. In such a case, <<I1>> and <<I2>> specify the number of grid units corresponding to the pixel dimensions requested internally by the window. <<I3>> and <<I4>> specifies the number of pixels in each horizontal and vertical grid unit.  These four values determine a range of acceptable sizes for the window, corresponding to grid-based widths and heights that are non-negative integers. during manual resizing, the window manager will restrict the window's size to one of these acceptable sizes. Furthermore, during manual resizing the window manager will display the window's current size in terms of grid units rather than pixels.
+
+<para id="chapter.widgets.toplevel.group"><title>group</title><p><<group:H>>: Specifies a window for the leader of a group of related windows. The window manager may use this information, for example, to unmap all of the windows in a group when the group's leader is iconified. <<H>> must be either a handle of another toplevel window, or <<nil>> to remove the window from any group association.
+
+<para id="chapter.widgets.toplevel.iconbitmap"><title>iconbitmap</title><p><<iconbitmap:I>>: Specifies a bitmap to be displayed in the window's icon. <<I>> must be a valid bitmap (see <ptr to="misc.bitmap">).
+
+<para id="chapter.widgets.toplevel.iconmask"><title>iconmask</title><p><<iconmask:I>>: Specifies a bitmap to be used as a mask in confunction with the <<iconbitmap>> parameter. Where the mask has zeroes no icon will be displayed; where it has ones, the bits from the icon bitmap will be displayed. <<I>> must be a valid bitmap (see <ptr to="misc.bitmap">).
+
+<para id="chapter.widgets.toplevel.iconname"><title>iconname</title><p><<iconname:VS>>: Specifies a virtual string to use inside the icon associated with the window. <<VS>> must be a virtual string.
+
+<para id="chapter.widgets.toplevel.iconposition"><title>iconposition</title><p><<iconposition:R>>: Specifies a position for the icon of the window. <<R>> must be a record of the form <<iconposition(x:I1 y:I2)>> where <<I1>> and <<I2>> are integers that specify the desired position of the icon.
+
+<para id="chapter.widgets.toplevel.iconwindow"><title>iconwindow</title><p><<iconwindow:H>>: Specifies a window to use as icon. When iconified, the window specified by <<H>> is mapped and when uniconified, <<H>> is unmapped. <<H>> must be a handle to another window.
+
+<para id="chapter.widgets.toplevel.maxsize"><title>maxsize</title><p><<maxsize:R>>: Specifies the maximum size the window can claim. <<R>> must be a record of the form <<maxsize(width:I1 height:I2)>> where <<I1>> and <<I2>> are integers specifying the maximum dimension in pixels (or in grid units if the window is gridded).
+
+<para id="chapter.widgets.toplevel.minsize"><title>minsize</title><p><<minsize:R>>: Specifies the minimum size the window can claim. <<R>> must be a record of the form <<minsize(width:I1 height:I2)>> where <<I1>> and <<I2>> are integers specifying the minimum dimension in pixels (or in grid units if the window is gridded).
+
+<para id="chapter.widgets.toplevel.param_look"><title>look</title><p><<look:L>>: Specifies a look to use for the widget. A look specifies default values for the parameters of widgets. This parameter can be specified at creation time only. Moreover changing a look will not change the appearance of widgets that are already displayed with that look. See <ptr to="misc.look"> for more details.
+
+<para id="chapter.widgets.toplevel.param_onCreation"><title>onCreation</title><p><<onCreation:P>>: When a widget is created, for example by <<QTk.build>>, this parameter specifies an action to execute right after the widget has been created, but before returning from the build instruction. It is usefull if one needs the handle of the widget to initialize it in ways not permitted by its description record (for example binding the <<Enter>> or <<Leave>> mouse events).
+
+<para id="chapter.widgets.toplevel.resizable"><title>resizable</title><p><<resizable:R>>: Specifies if the window can be resized vertically and/or horizontally. <<R>> must be a record of the form <<resizable(width:B1 height:B2)>> where <<B1>> and <<B2>> are booleans that are <<true>> if the window is to be resizable in that direction or <<false>> otherwise.
+
+<para id="chapter.widgets.toplevel.return"><title>return</title><p><<return:V>>: If the execution of the action of the toplevel closes the window, <<V>> is bound to true. In all other cases where the window is closed, <<V>> is bound to false. This parameter is valid at creation time only. <<V>> must be a free variable.
+
+<para id="chapter.widgets.toplevel.title"><title>title</title><p><<title:VS>>: <<VS>> specifies a virtual string to pass to the the window manager for use as the title for the window. <<VS>> must be a virtual string.
+
+<para id="chapter.widgets.toplevel.transient"><title>transient</title><p><<transient:H>>: Specifies that the window must work on behalf of the window <<H>>. Some window managers will use this information to manage the window specially. If <<H>> is specified as <<nil>> then the window is marked as not being a transient window any more. Oetherwise <<H>> must be a handle to another toplevel window.
+
+
+
+</section>

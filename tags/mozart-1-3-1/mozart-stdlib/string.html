@@ -1,0 +1,112 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<HTML>
+<HEAD>
+<!-- EDIT -->
+<TITLE>Mozart Standard Library: String Support</TITLE>
+<STYLE>
+BODY {
+	background-color: white;
+	margin-left	: 2cm;
+	margin-right	: 2cm;
+	font-family	: tahoma,arial,helvetica,sans-serif;
+}
+H1 {
+	text-align	: center;
+	color		: #9B0000;
+}
+H2 {	color		: #FF9933; }
+H4 {	color		: slateblue; }
+H3 {	color		: #881155; }
+H5 {	color		: darkslateblue; }
+CODE {	color		: #663366; }
+CODE,TT {
+	font-family	: "lucida console",courier,monospace;
+}
+CODE.DISPLAY {
+	display		: block;
+	white-space	: pre;
+	margin-left	: 2cm;
+	margin-top	: 1em;
+	margin-bottom	: 1em;
+}
+P.AUTHOR {
+	text-align	: center;
+	font-weight	: bold;
+}
+SPAN.MODULE {
+	color		: steelblue;
+}
+A {	color		: steelblue; }
+SPAN.COMMENT      { color: #B22222; }
+SPAN.KEYWORD      { color: #A020F0; }
+SPAN.STRING       { color: #BC8F8F; }
+SPAN.FUNCTIONNAME { color: #0000FF; }
+SPAN.TYPE         { color: #228B22; }
+SPAN.VARIABLENAME { color: #B8860B; }
+SPAN.REFERENCE    { color: #5F9EA0; }
+SPAN.BUILTIN      { color: #DA70D6; }
+</STYLE>
+</HEAD>
+<BODY>
+<!-- EDIT -->
+<H1>String Support</H1>
+<P CLASS="AUTHOR">Denys Duchier</P>
+<DL>
+  <DT><B>module</B>
+  <DD><SPAN CLASS="MODULE">x-oz://system/String.ozf</SPAN>
+</DL>
+<HR>
+
+<P>This module provides additional convenience operation on strings.
+It should not be confused, with the base <CODE>String</CODE> which is
+always present and does not need to be imported.
+
+<H2>Exports</H2>
+
+<DL>
+<DT><CODE>{String.make +VS ?S}</CODE>
+<DD>turns a virtual string into a plain old regular string
+<DT><CODE>{String.length +S ?N}</CODE>
+<DD>returns the length <CODE>N</CODE> of string <CODE>S</CODE>
+<DT><CODE>{String.toInt +S ?I}</CODE>
+<DD>takes a string <CODE>S</CODE> and returns the integer <CODE>I</CODE> of
+which it is the textual representation
+<DT><CODE>{String.toFloat +S ?F}</CODE>
+<DD>takes a string <CODE>S</CODE> and returns the float <CODE>F</CODE> of
+which it is the textual representation
+<DT><CODE>{String.toInt +S ?A}</CODE>
+<DD>takes a string <CODE>S</CODE> and returns the corresponding
+atom <CODE>A</CODE>
+<DT><CODE>{String.capitalize +S1 ?S2}</CODE>
+<DD>takes a string <CODE>S1</CODE> and returns a string <CODE>S2</CODE>
+which is identical except for the first letter which has been capitalized
+<DT><CODE>{String.split +S +Sep ?L}</CODE>
+<DD>splits string <CODE>S</CODE> at all occurrences of string <CODE>Sep</CODE>
+and returns the resulting list <CODE>L</CODE>.  <CODE>Sep</CODE> may also be
+<CODE>unit</CODE> in which case splits occur at all non-empty sequences of
+whitespace characters.  It can also be <CODE>nil</CODE>, in which case
+splits occur between every two characters
+<DT><CODE>{String.splitAtMost +S +Sep +N ?L}</CODE>
+<DD>same as above, but at most <CODE>N</CODE> splits are performed: the
+remainder of the string is returned as the last element of list <CODE>L</CODE>
+<DT><CODE>{String.lstrip +S1 +Chars ?S2}</CODE>
+<DD>takes a string <CODE>S1</CODE> and returns a string
+<CODE>S2</CODE> where all characters at the left of <CODE>S1</CODE>
+which are in <CODE>Chars</CODE> have been removed. <CODE>Chars</CODE>
+can also be <CODE>unit</CODE>, in which case it stands for all whitespace
+characters
+<DT><CODE>{String.rstrip +S1 +Chars ?S2}</CODE>
+<DD>same thing but at the right-end of <CODE>S1</CODE>
+<DT><CODE>{String.strip +S1 +Chars ?S2}</CODE>
+<DD>same thing at both ends
+<DT><CODE>{String.replace +S1 +Old +New ?S2}</CODE>
+<DD>replace every occurrence of string <CODE>Old</CODE> in <CODE>S1</CODE>
+by <CODE>New</CODE>
+<DT><CODE>{String.replaceAtMost +S1 +Old +New +N ?S2}</CODE>
+<DD>same as above, but replace at most <CODE>N</CODE> occurrences of
+<CODE>Old</CODE>
+</DL>
+
+<HR>
+</BODY>
+</HTML>

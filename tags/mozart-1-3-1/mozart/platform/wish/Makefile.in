@@ -1,0 +1,147 @@
+VPATH		= @srcdir@
+PREFIX		= @prefix@
+BUILDTOP	= @BUILDTOP@
+
+PLATFORM	= @PLATFORM@
+PLATFORMDIR     = $(PREFIX)/platform/$(PLATFORM)
+INSTALL		= @INSTALL@
+INSTALL_BIN	= $(INSTALL) -m 555
+INSTALL_DIR	= @INSTALL_DIR@
+CC		= @CC@
+CXX		= @CXX@
+
+TCL_VERSION     = @TCL_VERSION@
+TCL_PREFIX      = @TCL_PREFIX@
+TCL_LIBS        = @TCL_LIBS@
+TCL_LIB_SPEC    = @TCL_LIB_SPEC@
+TCL_INCLUDES    = @TCL_INCLUDES@
+
+TK_VERSION      = @TK_VERSION@
+TK_PREFIX       = @TK_PREFIX@
+TK_LIBS         = @TK_LIBS@
+TK_LIB_SPEC     = @TK_LIB_SPEC@
+TK_XINCLUDES    = @TK_XINCLUDES@
+TK_INCLUDES     = @TK_INCLUDES@
+
+CFLAGS		= @CFLAGS@ @PERMISSIVEOPT@
+LDFLAGS		= @LDFLAGS@
+LN_S		= @LN_S@
+
+PROVIDETCLLIBS  = @PROVIDETCLLIBS@
+
+WINDLLDIR	= @WINDLLDIR@
+
+LIBS    	= $(TK_LIB_SPEC) $(TCL_LIB_SPEC) $(TK_LIBS) @LIBS@
+CPPFLAGS	= -I. $(TK_XINCLUDES) -I $(TCL_INCLUDES) -I $(TK_INCLUDES) @CPPFLAGS@
+TCLLIBTCLDIR    = $(TCL_PREFIX)/lib/tcl$(TCL_VERSION)
+TKLIBTCLDIR     = $(TK_PREFIX)/lib/tk$(TK_VERSION)
+# redhat oddball;
+TCLLIBTCLDIR2   = $(TCL_PREFIX)/share/tcl$(TCL_VERSION)
+TKLIBTCLDIR2    = $(TK_PREFIX)/share/tk$(TK_VERSION)
+
+EXTRALDFLAGS   	= @EXTRALDFLAGS@
+
+IS_DARWIN	= @IS_DARWIN@
+ifeq ($(IS_DARWIN),yes)
+OZWISHRELDIR	= OzWish.app/Contents/MacOS
+OZWISHDIR	= $(PLATFORMDIR)/$(OZWISHRELDIR)
+OZWISH		= $(OZWISHRELDIR)/OzWish
+PROJECTBUILD	= @PROJECTBUILD@
+else
+OZWISH		= tk.exe
+endif
+SRCS		= @SRCS@
+OBJS		= ${SRCS:.cc=.o}
+
+.PHONY: $(PROVIDETCLLIBS)
+
+.SUFFIXES: .cc .o .c $(SUFFIXES)
+
+all: $(OZWISH)
+
+bootstrap: all
+
+### IFEQ BEGIN -------------------------------------------------------
+ifeq ($(IS_DARWIN),yes)
+######################################################################
+# DARWIN SPECIFIC
+######################################################################
+
+$(OZWISH): unixMain.cc MacOSX/OzWish.pbxproj/project.pbxproj MacOSX/OzWish.icns
+	cd MacOSX/OzWish.pbxproj && $(PROJECTBUILD) SYMROOT=$(BUILDTOP)/platform/wish
+
+clean:
+	-rm *~
+
+veryclean: clean
+	-rm -rf OzWish.app
+
+distclean: veryclean
+	-rm -f conf.h config.* Makefile MacOSX/OzWish.pbxproj/project.pbxproj
+
+install: $(PLATFORMDIR) $(OZWISH) $(PROVIDETCLLIBS)
+	cd MacOSX/OzWish.pbxproj && $(PROJECTBUILD) SYMROOT=$(BUILDTOP)/platform/wish DSTROOT=/ install
+
+else
+######################################################################
+# ANYTHING NON-DARWIN
+######################################################################
+
+$(OZWISH): $(OBJS)
+	$(CXX) $(LDFLAGS) $(EXTRALDFLAGS) -o $@ $(OBJS) $(LIBS)
+
+clean:
+	-rm -f $(OBJS) *~
+
+veryclean: clean
+	-rm -f $(OZWISH)
+
+distclean: veryclean
+	-rm -f conf.h config.* Makefile
+	-rm -f ozwish80.mk ozwish.mk1 ozwish.lk1 ozwish.imp ozwish.map ozwish.sym
+
+install: $(PLATFORMDIR) $(OZWISH) $(PROVIDETCLLIBS) @INSTALLWINDLLS@
+	$(INSTALL_BIN) $(OZWISH) $(PLATFORMDIR)
+
+endif
+### IFEQ END ---------------------------------------------------------
+
+installwindlls: $(PLATFORMDIR)
+	$(INSTALL) $(WINDLLDIR)/tcl84.dll $(PLATFORMDIR)
+	$(INSTALL) $(WINDLLDIR)/tk84.dll $(PLATFORMDIR)
+	$(INSTALL) $(WINDLLDIR)/tclpip84.dll $(PLATFORMDIR)
+	$(INSTALL) $(WINDLLDIR)/msvcrt.dll $(PLATFORMDIR)
+
+nothing:
+
+$(PLATFORMDIR):
+	$(INSTALL_DIR) $@
+
+provide-link: $(PLATFORMDIR)
+	rm -rf $(PLATFORMDIR)/wish
+	$(INSTALL_DIR) $(PLATFORMDIR)/wish
+	(cd $(PLATFORMDIR)/wish; \
+		$(LN_S) $(TCLLIBTCLDIR) tcl; \
+		$(LN_S) $(TKLIBTCLDIR) tk)
+
+provide-copy: $(PLATFORMDIR)
+	rm -rf $(PLATFORMDIR)/wish
+	$(INSTALL_DIR) $(PLATFORMDIR)/wish/tcl
+	$(INSTALL_DIR) $(PLATFORMDIR)/wish/tk
+	for i in $(TCLLIBTCLDIR)/*; do\
+	  if test -f $$i; then $(INSTALL) $$i $(PLATFORMDIR)/wish/tcl; fi;\
+	done
+	for i in $(TKLIBTCLDIR)/*; do\
+	  if test -f $$i; then $(INSTALL) $$i $(PLATFORMDIR)/wish/tk; fi;\
+	done
+	for i in $(TCLLIBTCLDIR2)/*; do\
+	  if test -f $$i; then $(INSTALL) $$i $(PLATFORMDIR)/wish/tcl; fi;\
+	done
+	for i in $(TKLIBTCLDIR2)/*; do\
+	  if test -f $$i; then $(INSTALL) $$i $(PLATFORMDIR)/wish/tk; fi;\
+	done
+
+
+check:
+
+depend:

@@ -1,0 +1,385 @@
+/* -*- C++ -*-
+ *  Authors:
+ *    Ralf Scheidhauer <Ralf.Scheidhauer@ps.uni-sb.de>
+ *    Konstantin Popov <kost@sics.se>
+ * 
+ *  Contributors:
+ *    Per Brand (perbrand@sics.se)
+ *    Michael Mehl (mehl@dfki.de)
+ *    Denys Duchier (duchier@ps.uni-sb.de)
+ * 
+ *  Copyright:
+ *    Organization or Person (Year(s))
+ * 
+ *  Last change:
+ *    $Date$ by $Author$
+ *    $Revision$
+ * 
+ *  This file is part of Mozart, an implementation 
+ *  of Oz 3:
+ *     http://mozart.ps.uni-sb.de
+ * 
+ *  See the file "LICENSE" or
+ *     http://mozart.ps.uni-sb.de/LICENSE.html
+ *  for information on usage and redistribution 
+ *  of this file, and for a DISCLAIMER OF ALL 
+ *  WARRANTIES.
+ *
+ */
+
+changequote([[,]])
+
+define(readArg,$1)
+define(writeArg,$1)
+define(instruction,
+	case TOUPPER($1):
+	   opAction($2)
+	   opAction($3)
+	   opAction($4)
+	   opAction($5)
+	   opAction($6)
+	   opAction($7)
+	   opAction($8)
+	   opAction($9)
+	  break;)
+
+define(opAction,
+[[ifelse($1,Number,{TaggedRef t=getTaggedArg(PC++);Assert(mIsNumber(t));gt->traverseOzValue(t);};ozValuesCnt--;,
+        $1,Literal,{TaggedRef t=getTaggedArg(PC++);Assert(mIsLiteral(t));gt->traverseOzValue(t);};ozValuesCnt--;,
+        $1,Feature,{TaggedRef t=getTaggedArg(PC++);Assert(mIsFeature(t));gt->traverseOzValue(t);};ozValuesCnt--;,
+        $1,Constant,{TaggedRef t=getTaggedArg(PC++);Assert(mIsConstant(t));gt->traverseOzValue(t);};ozValuesCnt--;,
+        $1,Builtinname,_m_bi = (Builtin*)getAdressArg(PC++); marshalBuiltin(gt,_m_bi);ozValuesCnt--;,
+        $1,XRegisterIndex,marshalNumber(bs,XRegToInt(getXRegArg(PC++)));,
+        $1,YRegisterIndex,marshalNumber(bs,YRegToInt(getYRegArg(PC++)));,
+        $1,GRegisterIndex,marshalNumber(bs,GRegToInt(getGRegArg(PC++)));,
+        $1,Arity,marshalNumber(bs,(unsigned int)getPosIntArg(PC++));,
+        $1,Label,marshalLabel(bs,instrstart-start,getLabelArg(PC++));,
+        $1,Count,marshalNumber(bs,(unsigned int)getPosIntArg(PC++));,
+        $1,ArityAndIsTail,marshalNumber(bs,(unsigned int)getPosIntArg(PC++));,
+        $1,Dummy,marshalNumber(bs,(unsigned int)getPosIntArg(PC++));,
+        $1,ProcedureRef,marshalProcedureRef(lIT,(AbstractionEntry*)getAdressArg(PC++),bs);,
+        $1,PredId,marshalPredId(gt,(PrTabEntry*)getAdressArg(PC++),bs);ozValuesCnt--;,
+        $1,HashTableRef,partialInst=dpMarshalHashTableRef(gt,desc,instrstart-start,(IHashTable *)getAdressArg(PC++),bs)||partialInst;ozValuesCnt--;,
+        $1,RecordArity,marshalRecordArity(gt,(SRecordArity) getAdressArg(PC++),bs);ozValuesCnt--;,
+        $1,CallMethodInfo,marshalCallMethodInfo(gt,(CallMethodInfo*)getAdressArg(PC++),bs);ozValuesCnt--;,
+        $1,GRegRef,marshalGRegRef((AssRegArray*)getAdressArg(PC++),bs);,
+        $1,Location,marshalLocation(_m_bi,(OZ_Location*)getAdressArg(PC++),bs);,
+        $1,Cache,PC += CacheSize;)]])
+
+
+//
+// Returns OK if the instructioN 'op' at 'PC' won't fit in
+// 'availSpace'. Defined ahead, since it redefines m4 macros;
+static Bool needNewBuffer(Opcode op, ProgramCounter PC, int availSpace);
+
+//
+//
+Bool dpMarshalCode(GenTraverser *gt, GTAbstractEntity *arg)
+{
+  DPMarshalerCodeAreaDescriptor *desc =
+    (DPMarshalerCodeAreaDescriptor *) arg;
+  // ('bs' could be also saved in the argument;)
+  ByteBuffer *bs = (ByteBuffer *) gt->getOpaque();
+  AddressHashTableO1Reset *lIT = desc->getLocationsIT();
+  ProgramCounter start = desc->getStart(), end = desc->getEnd();
+  ProgramCounter PC = desc->getCurrent();
+  // when 'ozValuesCnt' hits zero, then the code area must be broken
+  // in two pieces (before a next instructioN):
+  int ozValuesCnt = ozValuesBADP;
+  ProgramCounter instrstart; // last marshaled instructioN;
+  // '_m_bi' Needed for passing information from marshalling builtins
+  // to locations 
+  Builtin * _m_bi;
+  // 'partialInst' is OK if the last instructioN marshaled didn't fit
+  // completely, so next time marshaling is resumed with it (and not
+  // with the next one);
+  Bool partialInst = NO;
+
+  //
+  if (bs->availableSpace() < 2*DIFMaxSize + OpcodeMaxSize) {
+    // either way, there must be sufficient space for a 'DIF';
+    marshalDIF(bs, DIF_SUSPEND);
+    gt->suspendBA();
+#if defined(DBG_TRACE)
+    DBGINIT();
+    fprintf(dbgout, "> tag: %s(%d) in front of a code area\n",
+	    dif_names[DIF_SUSPEND].name, DIF_SUSPEND);
+    fflush(dbgout);
+#endif
+    return (FALSE);
+  }
+
+  //
+  if (PC == start) marshalCodeStart(bs);
+  marshalDIF(bs, DIF_CODEAREA);
+#if defined(DBG_TRACE)
+  fprintf(dbgout,
+	  "> tag:  %s(%d) [begin=%p, end=%p, current=%p]",
+	  dif_names[DIF_CODEAREA].name, DIF_CODEAREA,
+	  start, end, PC);
+  fflush(dbgout);
+#endif
+
+  //
+  while (ozValuesCnt > 0 && PC < end && partialInst == NO) {
+    instrstart = PC;
+    Opcode op = CodeArea::getOpcode(PC);
+
+    //
+    // Now, the additional check: will it fit in the remaining part of
+    // the buffer?
+    if (needNewBuffer(op, PC, bs->availableSpace())) {
+      // 'ENDOFCHUNK' is not necessary normally (since the receiver
+      // counts Oz values and PC as well), but here we need it 'cause
+      // the receiver does not know that we had to suspend here:
+#if defined(DBG_TRACE)
+      fprintf(dbgout, " %d (suspended: %d does not fit in %d bytes)",
+	      ENDOFCHUNK, op, bs->availableSpace());
+      fflush(dbgout);
+#endif
+      marshalOpCode(bs, instrstart-start, ENDOFCHUNK);
+      marshalDIF(bs, DIF_SUSPEND);
+      gt->suspendBA();
+      break;
+    }
+    PC++;
+
+    //
+    if (op == CALLPROCEDUREREF)
+      op = (getNumberArg(PC+1) & 1)==0 ? FASTCALL : FASTTAILCALL;
+
+    //
+    // (RS?) fastcalls need special handling
+    // kost@ : ... that is, one cannot put internal pointers into the
+    // stream; thus, these instructioNs get replaced by some other
+    // instructioNs.
+    if (op == FASTCALL || op == FASTTAILCALL) {
+      AbstractionEntry *entry = (AbstractionEntry *) getAdressArg(PC);
+      if (!entry->isCopyable()) {
+	marshalOpCode(bs, instrstart-start, CALLCONSTANT);
+	Abstraction *abstr = entry->getAbstr();
+
+	//
+	gt->traverseOzValue(makeTaggedConst(abstr));
+	ozValuesCnt--;
+
+	// 
+	Bool istailcall = (op==FASTTAILCALL);
+	marshalNumber(bs, (abstr->getArity()<<1)|istailcall);
+	PC++; // skip (AbstractionEntry *)
+	PC++; // skip unused second arg
+	continue;
+      }
+    }
+
+    //
+#if defined(DBG_TRACE)
+    fprintf(dbgout, " %d", op);
+    fflush(dbgout);
+#endif
+    marshalOpCode(bs, instrstart-start, op);
+    switch(op) {
+
+      changequote(`,') dnl '
+      include(EMUDIR/../instrDefs.m4)
+      changequote([[,]])
+
+    // don't indent the next line:
+    default: Assert(0); break;
+    }
+  }
+
+  // (don't indent the next line:)
+  // Since the unmarshaler immediately suspends once 'ozValuesCnt'
+  // hits zero, we cannot write out 'ENDOFFILE' in that case either:
+  if (PC >= end && ozValuesCnt > 0) {
+    Assert(partialInst == NO);
+    marshalOpCode(bs, PC-start, ENDOFFILE);
+    marshalCodeEnd(bs);
+#if defined(DBG_TRACE)
+    fprintf(dbgout, " %d (finished)\n", ENDOFFILE);
+    fflush(dbgout);
+#endif
+    delete desc;
+    return (TRUE);
+
+    //
+  } else {
+#if defined(DBG_TRACE)
+    fprintf(dbgout, "\n");
+    fflush(dbgout);
+#endif
+    if (partialInst == OK)
+      PC = instrstart;
+    desc->setCurrent(PC);
+    return (FALSE);
+  }
+}
+
+//
+// The following m4 definitions are based on the following object sizes:
+//
+// Number [ov]
+// Literal [ov]
+// Feature [ov]
+// Constant [ov]
+// Builtinname [ov]
+// XRegisterIndex int
+// YRegisterIndex int
+// GRegisterIndex int
+// Arity int
+// Label int
+// Count int
+// ArityAndIsTail int
+// Dummy int
+// ProcedureRef int,dif,int
+// PredId [ov],int,int|[ov],[ov],int,int,[ov],int,int
+// - hash tables are splitted up, thus require just one entry
+//   to be written out: MinN = 1
+// HashTableRef int,int,int,N=int,(int,int,[ov])|(int,int,[ov],int,(int|[oz]))*MinN
+// RecordArity int,int|[oz]
+// CallMethodInfo int,[oz],int,int|[oz]
+// - 'GRegRef"s' are to be splitted as well, but that's not implemented
+//   currently
+// GRegRef N=int,int*N
+// - yet less probable, Location"s can cause problems as well, but that
+//   would require builtins with very large number of arguments;
+// Location N1=int,N2=int,int*(N1+N2)
+// Cache 
+//
+
+//
+undefine([[opAction]])
+define(opAction,
+[[ifelse($1,Number,PC++;,
+         $1,Literal,PC++;,
+         $1,Feature,PC++;,
+         $1,Constant,PC++;,
+         $1,Builtinname,_m_bi = (Builtin*)getAdressArg(PC++);,
+         $1,XRegisterIndex,size+=MNumberMaxSize;PC++;,
+         $1,YRegisterIndex,size+=MNumberMaxSize;PC++;,
+         $1,GRegisterIndex,size+=MNumberMaxSize;PC++;,
+         $1,Arity,size+=MNumberMaxSize;PC++;,
+         $1,Label,size+=MNumberMaxSize;PC++;,
+         $1,Count,size+=MNumberMaxSize;PC++;,
+         $1,ArityAndIsTail,size+=MNumberMaxSize;PC++;,
+         $1,Dummy,size+=MNumberMaxSize;PC++;,
+         $1,ProcedureRef,size+=(2*MNumberMaxSize + DIFMaxSize);PC++;,
+         $1,PredId,size+=6*MNumberMaxSize;PC++;,
+         $1,HashTableRef,size+=(1*4*MNumberMaxSize + 4*MNumberMaxSize);,
+         $1,RecordArity,size+=2*MNumberMaxSize;PC++;,
+         $1,CallMethodInfo,size+=3*MNumberMaxSize;PC++;,
+         $1,GRegRef,size+=((((AssRegArray *)getAdressArg(PC++))->getSize() + 1)*MNumberMaxSize);,
+         $1,Location,size+=((_m_bi->getInArity() + _m_bi->getOutArity())*MNumberMaxSize + 2*MNumberMaxSize);,
+         $1,Cache,PC += CacheSize;)]])
+
+//
+static Bool needNewBuffer(Opcode op, ProgramCounter PC, int availSpace)
+{
+  // If the current instructioN is the last one, the following
+  // 'ENDOFCHUNK' pseudo-instructioN and 'DIF_SUSPEND' must fit too:
+  int size = DIFMaxSize + 2*OpcodeMaxSize;
+  Builtin *_m_bi;
+
+  PC++;				// skip opcode;
+  switch(op) {
+
+    changequote(`,') dnl '
+    include(EMUDIR/../instrDefs.m4)
+    changequote([[,]])
+
+  // don't indent the next line:
+  default: Assert(0); break;
+  }
+
+  return ((size <= availSpace) ? NO : OK);
+}
+
+
+//
+undefine([[opAction]])
+
+define(opAction,
+[[ifelse($1,Number,PC=unmarshalOzValue(b,PC,code DebugArg(mIsNumber));ozValuesCnt--;,
+        $1,Literal,PC=unmarshalOzValue(b,PC,code DebugArg(mIsLiteral));ozValuesCnt--;,
+        $1,Feature,PC=unmarshalOzValue(b,PC,code DebugArg(mIsFeature));ozValuesCnt--;,
+        $1,Constant,PC=unmarshalOzValue(b,PC,code DebugArg(mIsConstant));ozValuesCnt--;,
+        $1,Builtinname,PC=unmarshalBuiltin(b,PC);ozValuesCnt--;,
+        $1,XRegisterIndex,PC=unmarshalXReg(PC,bs);,
+        $1,YRegisterIndex,PC=unmarshalYReg(PC,bs);,
+        $1,GRegisterIndex,PC=unmarshalGReg(PC,bs);,
+        $1,Arity,PC=unmarshalNum(PC,bs);,
+        $1,Label,PC=unmarshalLabel(PC,bs);,
+        $1,Count,PC=unmarshalNum(PC,bs);,
+        $1,ArityAndIsTail,PC=unmarshalNum(PC,bs);,
+        $1,Dummy,PC=unmarshalNum(PC,bs);,
+        $1,ProcedureRef,PC=unmarshalProcedureRef(b,PC,bs,code);,
+        $1,PredId,PC=unmarshalPredId(b,PC,instPC,bs);ozValuesCnt--;,
+        $1,HashTableRef,PC=dpUnmarshalHashTableRef(b,PC,bs,desc,partialInst);ozValuesCnt--;,
+        $1,RecordArity,PC=unmarshalRecordArity(b,PC,bs);ozValuesCnt--;,
+        $1,CallMethodInfo,PC=unmarshalCallMethodInfo(b,PC,bs);ozValuesCnt--;,
+        $1,GRegRef,PC=unmarshalGRegRef(PC,bs);,
+        $1,Location,PC=unmarshalLocation(PC,bs);,
+        $1,Cache,PC=unmarshalCache(PC,code);)]])
+
+//
+// Returning 'OK' means we are done (with the code area); 
+// 'pc' can be zero meaning "discard the code". If it is non-zero,
+// then it is supposed to be large enough to hold the whole code;
+Bool dpUnmarshalCode(ByteBuffer *bs, Builder *b, 
+		     DPBuilderCodeAreaDescriptor *desc)
+{
+  int ozValuesCnt = ozValuesBADP;
+  ProgramCounter PC = desc->getCurrent();
+  ProgramCounter instPC;
+  DebugCode(instPC = (ProgramCounter) -1);
+  // 'CodeArea*' is passed in it itself:
+  CodeArea *code = desc->getCodeArea();
+  Bool done = NO;
+  Bool partialInst = NO;
+
+  //
+  while (ozValuesCnt > 0 && partialInst == NO) {
+    Opcode op = (Opcode) bs->get();
+    if (op == ENDOFFILE) {
+      done = OK;
+      break;
+    }
+    if (op == ENDOFCHUNK) {
+      break;
+    }
+
+    //
+    if (op == DEBUGENTRY && PC)
+      b->schedGenAction(handleDEBUGENTRY, PC);
+
+    //
+    Assert(op != CALLPROCEDUREREF);
+    if (PC) {
+      instPC = PC;
+      PC = CodeArea::writeOpcode(op, PC);
+    }
+
+    //
+    switch(op) {
+
+      changequote(`,') dnl '
+      include(EMUDIR/../instrDefs.m4)
+      changequote([[,]])
+
+    default: Assert(0); break;
+    }
+  }
+
+  //
+  if (done) {
+    delete desc;
+  } else {
+    if (PC) {
+      if (partialInst == OK)
+	PC = instPC;
+      desc->setCurrent(PC);
+    }
+  }
+  return (done);
+}

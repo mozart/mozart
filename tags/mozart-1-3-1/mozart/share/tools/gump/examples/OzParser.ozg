@@ -1,0 +1,726 @@
+%%%
+%%% Authors:
+%%%   Leif Kornstaedt <kornstae@ps.uni-sb.de>
+%%%   Andreas Sundstroem <andreas@sics.se>
+%%%
+%%% Copyright:
+%%%   Leif Kornstaedt, 1998
+%%%   Andreas Sundstroem, 1998
+%%%
+%%% Last change:
+%%%   $Date$Author: 
+%%%   $Revision: 
+%%%
+%%% This file is part of Mozart, an implementation of Oz 3:
+%%%    http://www.mozart-oz.org
+%%%
+%%% See the file "LICENSE" or
+%%%    http://www.mozart-oz.org/LICENSE.html
+%%% for information on usage and redistribution
+%%% of this file, and for a DISCLAIMER OF ALL
+%%% WARRANTIES.
+%%%
+
+OzParser
+GP = GumpParser.'class'
+
+fun {MakeLongPos Pos1 Pos2}
+   pos(Pos1.1 Pos1.2 Pos1.3 Pos2.1 Pos2.2 Pos2.3)
+end
+
+parser OzParser from GP
+   feat
+      Reporter
+      Scanner
+      
+   attr
+      allowDeprecated
+      
+   meth init(allowDeprecated:AllowDeprecated 'scanner':Scan reporter:Report)
+      self.Reporter = Report
+      self.Scanner = Scan
+      allowDeprecated <- AllowDeprecated
+      GP, init(Scan)
+   end
+
+   meth checkDeprecated(Coord)
+      Msg = 'use `if\' instead of `case\' for boolean conditionals'
+   in
+      if @allowDeprecated then
+	 OzParser, reportWarning(Coord 'deprecation warning' Msg)
+      else
+	 OzParser, reportError(Coord 'deprecation error' Msg)
+      end
+   end
+
+   meth error(VS)
+      OzParser, reportError({self.Scanner parseErrorCoordinates($)}
+			    'parse error' VS)
+   end
+   
+   meth reportError(C K M) 
+      {self.Reporter error(coord:C kind:K msg:M)}
+   end
+   
+   meth reportWarning(C K M) 
+      {self.Reporter warn(coord:C kind:K msg:M)}
+   end
+      
+   %-----------------------------------------------------------------
+   % Token Declarations and Precedences
+   %-----------------------------------------------------------------
+
+   token
+      % compiler directives:
+      'switch' 'pushSwitches' 'popSwitches' 'localSwitches'
+      'SWITCHNAME' 
+
+      'ATOM' 'ATOM()' 'FLOAT' 'INT' 'STRING' 'VARIABLE' 'VARIABLE()'
+
+      '<=' '[]' '...' 
+
+      'at' 'attr' 'case' 'catch' 'choice' 'class' 'cond' 'declare'
+      'define' 'dis' 'else' 'elsecase' 'elseif' 'elseof' 'end' 'export' 'fail'
+      'false' 'false()' 'feat' 'finally' 'from' 'fun' 'functor' 'if' 'in'
+      'import' 'local' 'lock' 'meth' 'not' 'of' 'or' 'proc' 'prop' 'prepare'
+      'raise' 'require' 'self' 'skip' 'then' 'thread' 'true' 'true()' 'try'
+      'unit' 'unit()'
+
+      '=': rightAssoc(100)
+      '<-': rightAssoc(200)
+      'orelse': rightAssoc(300)
+      'andthen': rightAssoc(400)
+      'Compare': nonAssoc(500) 'FdCompare': nonAssoc(500)
+      'FdIn': leftAssoc(600)
+      '|': rightAssoc(700)
+%     '#': rightAssoc(800)   % not needed: hard coded
+      'Add': leftAssoc(900)
+      'FdMul': leftAssoc(1000) 'OtherMul': leftAssoc(1000)
+      ',': rightAssoc(1100)
+      '~': leftAssoc(1200)
+      '.': leftAssoc(1300) '^': leftAssoc(1300)
+      '@': leftAssoc(1400) '!!': leftAssoc(1400)
+
+      'REGEX' '=>' '//' 'lex' 'mode' 'parser' 'prod' 'scanner' 'syn' 'token'
+
+   %--------------------------------------------------------------------
+   % The Syntax Rules
+   %--------------------------------------------------------------------
+
+   syn file($)
+      Queries($)
+   end
+   syn Queries($)
+      Sequence(S) Queries1(Qs) => S|Qs
+   [] Ps=( ProdClause($) )+ Queries1(Qs)
+      => fSynTopLevelProductionTemplates(Ps)|Qs
+   [] Queries1($)
+   [] ThisCoord(C1) FDs = ( FunctorDescriptor($) )+ Queries1(Qs)
+      => fFunctor(fDollar(C1) FDs C1)|Qs
+   end
+   syn Queries1($)
+      Directive(D) Queries(Qs) => D|Qs
+   [] 'declare'(C) Sequence(S) 'in' ThisCoord(C2) Queries1(Qs)
+      => fDeclare(S fSkip(C2) C)|Qs
+   [] 'declare'(C) Sequence(S1) 'in' Sequence(S2) Queries1(Qs)
+      => fDeclare(S1 S2 C)|Qs
+   [] 'declare'(C1) Sequence(S) ThisCoord(C2) Queries1(Qs)
+      => fDeclare(S fSkip(C2) C1)|Qs
+   [] skip => nil
+   end
+   syn Directive($)
+      'switch'       Ss=Switch($)* => dirSwitch(Ss)
+   [] 'pushSwitches'               => dirPushSwitches
+   [] 'popSwitches'                => dirPopSwitches
+   [] 'localSwitches'              => dirLocalSwitches
+   end
+   syn Switch($)
+      '+' ThisCoord(C) 'SWITCHNAME'(S)
+      => case S
+	 of 'gump' then {self.Scanner gumpSyntax(on)}
+	 [] 'allowdeprecated' then allowDeprecated <- true
+	 else skip end
+	 on(S C)
+   [] '-' ThisCoord(C) 'SWITCHNAME'(S)
+      => case S
+	 of 'gump' then {self.Scanner gumpSyntax(off)}
+	 [] 'allowdeprecated' then allowDeprecated <- false
+	 else skip end
+	 off(S C)
+   end
+
+   syn Sequence($)
+      Phrase($)
+   [] Phrase(P) Sequence(S) => fAnd(P S)
+   end
+   syn Phrase($)
+      Phrase(P1) '='(C) Phrase(P2) => fEq(P1 P2 C)
+   [] Phrase(P1) '<-'(C) Phrase(P2) => fAssign(P1 P2 C)
+   [] Phrase(P1) 'orelse'(C) Phrase(P2) => fOrElse(P1 P2 C)
+   [] Phrase(P1) 'andthen'(C) Phrase(P2) => fAndThen(P1 P2 C)
+   [] Phrase(P1) 'Compare'(Op) Coord(C) Phrase(P2)
+      => fOpApply(Op [P1 P2] C)
+   [] Phrase(P1) 'FdCompare'(Op) Coord(C) Phrase(P2)
+      => fFdCompare(Op P1 P2 C)
+   [] Phrase(P1) 'FdIn'(Op) Coord(C) Phrase(P2)
+      => fFdIn(Op P1 P2 C)
+   [] Phrase(P1) '|'(C) Phrase(P2) => fRecord(fAtom('|' C) [P1 P2])
+   [] Phrase2($)
+   [] Phrase2(P1) '#'(C) Pr=( Phrase2($) // '#' )+
+      => fRecord(fAtom('#' C) P1|Pr)
+   end
+   syn Phrase2($)
+      Phrase2(P1) 'Add'(Op) Coord(C) Phrase2(P2)
+      => fOpApply(Op [P1 P2] C)
+   [] Phrase2(P1) 'FdMul'(Op) Coord(C) Phrase2(P2)
+      => fOpApply(Op [P1 P2] C)
+   [] Phrase2(P1) 'OtherMul'(Op) Coord(C) Phrase2(P2)
+      => fOpApply(Op [P1 P2] C)
+   [] Phrase2(P1) ','(C) Phrase2(P2) => fObjApply(P1 P2 C)
+   [] '~'(C) Phrase2(P) => fOpApply('~' [P] C)
+   [] Phrase2(P1) '.'(C) Phrase2(P2) => fOpApply('.' [P1 P2] C)
+   [] Phrase2(P1) '^'(C) Phrase2(P2) => fOpApply('^' [P1 P2] C)
+   [] '@'(C) Phrase2(P) => fAt(P C)
+   [] '!!'(C) Phrase2(P) => fOpApply('!!' [P] C)
+   [] '(' InSequence(S) ')' => S
+   [] Atom($)
+   [] Variable($)
+   [] '_'(C) => fWildcard(C)
+   [] 'unit'(C) => fAtom(unit C)
+   [] 'true'(C) => fAtom(true C)
+   [] 'false'(C) => fAtom(false C)
+   [] 'self'(C) => fSelf(C)
+   [] '$'(C) => fDollar(C)
+   [] String($)
+   [] Int($)
+   [] Float($)
+   [] Label(L) '(' RecordArguments(As) ')'(C2)
+      => case L
+	 of fAtom(A C1) then fRecord(fAtom(A {MakeLongPos C1 C2}) As)
+	 [] fVar(V C1) then fRecord(fVar(V {MakeLongPos C1 C2}) As)
+	 end
+   [] Label(L) '(' RecordArguments(As) '...' ')'(C2)
+      => case L
+	 of fAtom(A C1) then fOpenRecord(fAtom(A {MakeLongPos C1 C2}) As)
+	 [] fVar(V C1) then fOpenRecord(fVar(V {MakeLongPos C1 C2}) As)
+	 end
+   [] '['(C1) Ps=( Phrase($) )+ ']'(C2)
+      => {FoldR Ps fun {$ P In}
+		      fRecord(fAtom('|' {MakeLongPos C1 C2}) [P In])
+		   end
+	  fAtom('nil' {MakeLongPos C1 C2})}
+   [] '{'(C1) Phrase(P) Ps=Phrase($)* '}'(C2)
+      => fApply(P Ps {MakeLongPos C1 C2})
+   [] 'proc'(C1) ProcFlags=( Atom($) )* '{' Phrase(P1) Ps=Phrase($)* '}'
+      InSequence(S)
+      'end'(C2)
+      => fProc(P1 Ps S ProcFlags {MakeLongPos C1 C2})
+   [] 'fun'(C1) ProcFlags=( Atom($) )* '{' Phrase(P1) Ps=Phrase($)* '}'
+      InSequence(S)
+      'end'(C2)
+      => fFun(P1 Ps S ProcFlags {MakeLongPos C1 C2})
+   [] 'functor'(C1) P = (  Phrase($)
+			[] ThisCoord(C3) => fDollar(C3))
+      FDs = ( FunctorDescriptor($) )* 'end'(C2)
+      => fFunctor(P FDs {MakeLongPos C1 C2})
+   [] Class($)
+   [] 'local'(C) Sequence(S1) 'in' Sequence(S2) 'end'
+      => fLocal(S1 S2 C)
+   [] 'if'(C) IfMain(C $)
+   [] 'case'(C) CaseMain(C $)
+   [] 'lock'(C1) InSequence(S) 'end'(C2)
+      => fLock(S {MakeLongPos C1 C2})
+   [] 'lock'(C) ThisCoord(_) Phrase(P) 'then' InSequence(S) 'end'
+      => fLockThen(P S C)
+   [] 'thread'(C) InSequence(S) 'end' => fThread(S C)
+   [] 'try'(C) InSequence(S)
+      Catch=( 'catch'(C) Cs=( CaseClause($) // '[]' )+ => fCatch(Cs C)
+	    [] skip => fNoCatch
+	    )
+      Finally=( 'finally' InSequence($) [] skip => fNoFinally ) 'end'
+      => fTry(S Catch Finally C)
+   [] 'raise'(C) InSequence(S) 'end'
+      => fRaise(S C)
+   [] 'skip'(C) => fSkip(C)
+   [] 'fail'(C) => fFail(C)
+   [] 'not'(C1) InSequence(S) 'end'(C2)
+      => fNot(S {MakeLongPos C1 C2})
+   [] 'cond'(C) CondMain(C $)
+   [] 'or'(C1) OrClauseList(Cs) 'end'(C2)
+      => fOr(Cs {MakeLongPos C1 C2})
+   [] 'dis'(C1) OrClauseList(Cs) 'end'(C2)
+      => fDis(Cs {MakeLongPos C1 C2})
+   [] 'choice'(C1) ChoiceClauseList(Cs) 'end'(C2)
+      => fChoice(Cs {MakeLongPos C1 C2})
+   [] ScannerSpecification($)
+   [] ParserSpecification($)
+   end
+
+   syn InSequence($)
+      ThisCoord(C) Sequence(S1) 'in' Sequence(S2) => fLocal(S1 S2 C)
+   [] ThisCoord(_) Sequence($)
+   end
+
+   syn Label($)
+      'ATOM()'(X) Coord(C) => fAtom(X C)
+   [] 'VARIABLE()'(X) Coord(C) => fVar(X C)
+   [] 'unit()'(C) => fVar('`unit`' C)
+   [] 'true()'(C) => fVar('`true`' C)
+   [] 'false()'(C) => fVar('`false`' C)
+   end
+   syn RecordArguments($)
+      (  Phrase($)
+      [] Feature(F) ':' Phrase(P) => fColon(F P)
+      )*
+   end
+   syn Feature($)
+      Atom($)
+   [] NakedVariable($)
+   [] Int($)
+   [] 'unit'(C) => fVar('`unit`' C)
+   [] 'true'(C) => fVar('`true`' C)
+   [] 'false'(C) => fVar('`false`' C)
+   end
+
+   syn IfMain(C1 $)
+      Sequence(S1) 'then' InSequence(S2) IfRest(P) Coord(C2)
+      => fBoolCase(S1 S2 P {MakeLongPos C1 !C2})
+   end
+   syn IfRest($)
+      'elseif'(C) IfMain(C $)
+   [] 'elsecase'(C) CaseMain(C $)
+   [] 'else' InSequence(S) 'end' => S
+   [] 'end'(C) => fSkip(C)
+   end
+
+   syn CaseMain(C1 $)
+      Sequence(S1) 'then'(C3) InSequence(S2) CaseRest(P) Coord(C2)
+      => OzParser, checkDeprecated(C3)
+	 fBoolCase(S1 S2 P {MakeLongPos C1 C2})
+   [] Sequence(S) 'of' Cs = ( CaseClause($) // ( '[]' [] 'elseof' ) )+
+      CaseRest(P) Coord(C2)
+      => fCase(S Cs P {MakeLongPos C1 C2}) 
+   end
+   syn CaseRest($)
+      'elseif'(C) IfMain(C $)
+   [] 'elsecase'(C) CaseMain(C $)
+   [] 'else' InSequence(S) 'end' => S
+   [] 'end'(C) => fNoElse(C)
+   end
+   syn CaseClause($)
+      SideCondition(S1) 'then' InSequence(S2)
+      => fCaseClause(S1 S2)
+   end
+   
+   syn SideCondition($)
+      Pattern($)
+   [] Pattern(P) 'andthen'(C) Sequence(S)
+      => fSideCondition(P fSkip(C) S C)      
+   [] Pattern(P) 'andthen'(C) Sequence(S1) 'in' Sequence(S2)
+      => fSideCondition(P S1 S2 C)
+   end
+   syn Pattern($)
+      Pattern(P1) '='(C) Pattern(P2) => fEq(P1 P2 C)
+   [] Pattern(P1) '|'(C) Pattern(P2) => fRecord(fAtom('|' C) [P1 P2])
+   [] Phrase2($)
+   [] Phrase2(P) '#'(C) Hs = ( Phrase2($) // '#' )+
+      => fRecord(fAtom('#' C) P|Hs)
+   end
+
+   syn Atom($)
+      'ATOM'(X) Coord(C) => fAtom(X C)
+   end
+   syn NakedVariable($)
+      'VARIABLE'(X) Coord(C) => fVar(X C)
+   end
+   syn Variable($)
+      NakedVariable($)
+   [] '!'(C1) 'VARIABLE'(X) Coord(C2)
+      => fEscape(fVar(X C2) C1)
+   end
+   syn String($)
+      'STRING'(S) Coord(C)
+      => {FoldR S
+	  fun {$ X In}
+	     fRecord(fAtom('|' C) [fInt(X C) In])
+	  end fAtom('nil' C)}
+   end
+   syn Int($)
+      'INT'(X) Coord(C) => fInt(X C)
+   end
+   syn Float($)
+      'FLOAT'(X) Coord(C) => fFloat(X C)
+   end
+
+   syn ThisCoord($) 
+      skip => {self.Scanner getCoordinates($)}
+   end
+   syn Coord($)
+      skip => {self.Scanner getSavedCoordinates($)}
+   end
+
+   %--------------------------------------------------------------------
+   %  Class Extensions
+   %--------------------------------------------------------------------
+    
+   syn Class($)
+      'class'(C1) PhraseOpt(P)
+      Ds=ClassDescriptor($)*
+      Ms=Meth($)*
+      'end'(C2)
+      => fClass(P Ds Ms {MakeLongPos C1 C2})
+   end
+   syn PhraseOpt($)
+      Phrase($)
+   [] ThisCoord(C) => fDollar(C)
+   end
+   syn ClassDescriptor($)
+      'from'(C) Ps=Phrase($)+   => fFrom(Ps C)
+   [] 'attr'(C) As=AttrFeat($)+ => fAttr(As C)
+   [] 'feat'(C) Fs=AttrFeat($)+ => fFeat(Fs C)
+   [] 'prop'(C) Ps=Phrase($)+   => fProp(Ps C)
+   end
+   syn AttrFeat($)
+      F=(  Atom($)
+	[] Variable($)
+	[] Int($)
+	[] 'unit'(C) => fEscape(fVar('`unit`' C) C)
+	[] 'true'(C) => fEscape(fVar('`true`' C) C)
+	[] 'false'(C) => fEscape(fVar('`false`' C) C)
+	)
+      ( skip => F [] ':' Phrase(P) => F#P )
+   end
+   syn Meth($)
+      'meth'(C) MethHead(H)
+      InSequence(S)
+      'end'
+      => fMeth(H S C)
+   end
+   syn MethHead($)
+      MethHead1($)
+   [] MethHead1(H) '='(C) NakedVariable(V) => fEq(H V C)
+   end
+   syn MethHead1($)
+      Atom($)
+   [] Variable($)
+   [] 'unit'(C) => fEscape(fVar('`unit`' C) C)
+   [] 'true'(C) => fEscape(fVar('`true`' C) C)
+   [] 'false'(C) => fEscape(fVar('`false`' C) C)
+   [] MethHeadLabel(L) '(' Fs = ( MethFormal($) )*
+      Open = (  skip => false
+	     [] '...' => true
+	     ) ')' 
+      => if Open then
+	    fOpenRecord(L Fs)
+	 else
+	    fRecord(L Fs)
+	 end
+   end
+      
+   syn MethHeadLabel($)
+      'ATOM()'(X) Coord(C) => fAtom(X C)
+   [] 'VARIABLE()'(X) Coord(C) => fVar(X C)
+   [] '!'(C1) 'VARIABLE()'(X) Coord(C2) => fEscape(fVar(X C2) C1)
+   [] 'unit()'(C) => fEscape(fVar('`unit`' C) C)
+   [] 'true()'(C) => fEscape(fVar('`true`' C) C)
+   [] 'false()'(C) => fEscape(fVar('`false`' C) C)
+   end
+   
+   syn MethFormal($)
+      MethFormalTerm(T) D = (  '<='(C) Phrase(P) => fDefault(P C)
+			  [] skip => fNoDefault)
+      => fMethArg(T D)
+   [] Feature(F) ':' MethFormalTerm(T) D = (  '<='(C) Phrase(P) => fDefault(P C)
+					 [] skip => fNoDefault)
+      => fMethColonArg(F T D)
+   end
+
+   syn MethFormalTerm($)
+      NakedVariable($)
+   [] '$'(C) => fDollar(C)
+   [] '_'(C) => fWildcard(C)
+   end
+
+   %--------------------------------------------------------------------
+   %  Functor Extensions
+   %--------------------------------------------------------------------
+
+   syn FunctorDescriptor($)
+      'require'(C) Ds = ( ImportDecl($) )* => fRequire(Ds C)
+   [] 'prepare'(C) Sequence(S1) 'in' Sequence(S2) => fPrepare(S1 S2 C)
+   [] 'prepare'(C) Sequence(S)             => fPrepare(S fSkip(C) C)
+   [] 'import'(C) Ds = ( ImportDecl($) )*  => fImport(Ds C)
+   [] 'export'(C) Ds = ( ExportDecl($) )*  => fExport(Ds C)
+   [] 'define'(C) Sequence(S1) 'in' Sequence(S2) => fDefine(S1 S2 C)
+   [] 'define'(C) Sequence(S)              => fDefine(S fSkip(C) C)   
+   end
+   
+   syn ImportDecl($)
+      NakedVariable(V) I = ( 'at' Atom(A) => fImportAt(A)
+			   [] skip => fNoImportAt)
+      => fImportItem(V nil I)
+   [] 'VARIABLE()'(X) Coord(C) '(' IFs = ( ImportFeature($) )+ ')'
+      I = ( 'at' Atom(A) => fImportAt(A)
+	  [] skip => fNoImportAt)
+      => fImportItem(fVar(X C) IFs I)
+   end
+
+   syn ExportDecl($)
+      NakedVariable(V) => fExportItem(V)
+   [] F = ( Atom($) [] Int($) ) ':' NakedVariable(V)
+      => fExportItem(fColon(F V))
+   end
+   syn ImportFeature($)
+      ( Atom($) [] Int($) )
+   [] F = ( Atom($) [] Int($) ) ':' NakedVariable(V) => V#F
+   end
+   
+   %--------------------------------------------------------------------
+   % Constraint Extensions
+   %--------------------------------------------------------------------
+
+   syn CondMain(C1 $)
+      Cs=( CondClause($) // '[]' )+ CondRest(P C2) => fCond(Cs P {MakeLongPos C1 C2})
+   end
+   syn CondRest(S C)
+      'else' InSequence(!S) 'end'(!C)
+   [] 'end'(!C) => S = fNoElse(!C)
+   end
+   syn CondClause($)
+      Sequence(S1) ThisCoord(C) 'then' InSequence(S2)
+      => fClause(fSkip(C) S1 S2)
+   [] Sequence(S1) 'in' Sequence(S2) 'then' InSequence(S3)
+      => fClause(S1 S2 S3)
+   end
+
+   syn OrClauseList($)
+      OrClause(C1) '[]' Cr=( OrClause($) // '[]' )+ => C1|Cr
+   end
+   syn OrClause($)
+      Sequence(S) ThisCoord(C)
+      => fClause(fSkip(C) S fNoThen(C))
+   [] Sequence(S1) 'in' Sequence(S2) ThisCoord(C)
+      => fClause(S1 S2 fNoThen(C))
+   [] Sequence(S1) ThisCoord(C) 'then' InSequence(S2)
+      => fClause(fSkip(C) S1 S2)
+   [] Sequence(S1) 'in' Sequence(S2) 'then' InSequence(S3)
+      => fClause(S1 S2 S3)
+   end
+
+   syn ChoiceClauseList($)
+      ( InSequence($) // '[]' )+
+   end
+
+   %--------------------------------------------------------------------
+   % Gump Extensions
+   %--------------------------------------------------------------------
+
+   %--------------------------------------------------------------------
+   % Application-Specific Production Templates
+
+   prod $=twoLists:( A // B )+
+      syn X(Hd1 Tl1 Hd2 Tl2)
+	 A(Elem1)
+	 => Hd1=Elem1|Tl1
+	    Hd2=      Tl2
+      [] X(!Hd1 Tl10 !Hd2 Tl20) B(Elem2) A(Elem1)
+	 => Tl10=Elem1|Tl1
+	    Tl20=Elem2#Tl2
+      end
+   in
+      X(Hd1 Tl1 Hd2 Tl2) => Tl1=nil Tl2=nil Hd1#{VirtualString.toString Hd2}
+   end
+   prod $=twoLists:( A // B )*
+      twoLists:( A($) // B($) )+ [] skip => nil#""
+   end
+
+   %--------------------------------------------------------------------
+   % Scanner Definition
+
+   syn ScannerSpecification($)
+      'scanner'(C1) NakedVariable(V)
+      Ds=ClassDescriptor($)*
+      Ms=Meth($)*
+      Rules=(  LexicalAbbreviation($)
+	    [] LexicalRule($)
+	    [] LexicalMode($)
+	    )+
+      'end'(C2)
+      => fScanner(V Ds Ms Rules {self.Scanner getScannerPrefix($)}
+		  {MakeLongPos C1 C2})
+   end
+   syn LexicalAbbreviation($)
+      'lex' Atom(A) '=' R=( 'REGEX'($) [] 'STRING'($) ) 'end'
+      => fLexicalAbbreviation(A R)
+   [] 'lex' NakedVariable(V) '=' R=( 'REGEX'($) [] 'STRING'($) ) 'end'
+      => fLexicalAbbreviation(V R)
+   end
+   syn LexicalRule($)
+      'lex' R=( 'REGEX'($) [] 'STRING'($) ) InSequence(S) 'end'
+      => fLexicalRule(R S)
+   end
+   syn LexicalMode($)
+      'mode' NakedVariable(V)
+      Fs=[ 'from' NakedVariable($)+ ]
+      Ds=( LexicalRule($) [] LexicalMode($) )*
+      'end'
+      => fMode(V Ds)
+   end
+
+   %--------------------------------------------------------------------
+   % Parser Definition
+
+   syn ParserSpecification($)
+      'parser'(C1) NakedVariable(V)
+      Ds=ClassDescriptor($)*
+      Ms=Meth($)*
+      TokenClause(Token)
+      Rules=ParserDescriptor($)+
+      'end'(C2)
+      => fParser(V Ds Ms Token Rules {self.Scanner getParserExpect($)}
+		 {MakeLongPos C1 C2})
+   end
+   syn TokenClause($)
+      'token' Xs=( Atom($) [] Atom(A) ':' Phrase(P) => A#P )+
+      => fToken(Xs)
+   [] skip => fToken(nil)
+   end
+   syn ParserDescriptor($)
+      SynClause($)
+   [] ProdClause($)
+   end
+   
+   syn ProdClause($)
+      'prod' ProdHead(Key Vs ReturnVariable)
+      Rs=[ Rs=SynClause($)+ 'in' => Rs ] SynAlt(A) 'end'
+      => fProductionTemplate(Key Vs Rs A ReturnVariable)
+   end
+   syn ProdHead(Key Vs ReturnVariable)
+      NakedVariable(!ReturnVariable) '=' ProdHeadRest(HKey !Vs)
+      => Key=HKey.1#(&=|HKey.2)
+   [] '$' Coord(C) '=' ProdHeadRest(HKey !Vs)
+      => Key=HKey.1#(&=|HKey.2) ReturnVariable=fDollar(C)
+   [] ProdHeadRest(!Key !Vs)
+      => ReturnVariable=none
+   end
+   syn ProdHeadRest($ Vs)
+      NakedVariable(V) TerminatorOp(TKey) => Vs=[V] none#TKey
+   [] Atom(A) ':' NakedVariable(V)
+      TKey=( TerminatorOp($) [] skip => "" ) => Vs=[V] A#TKey
+   [] Label=( Atom(A) ':' => A [] skip => none )
+      PKey=(  '(' ProdParams(!Vs SKey) ')' => &(|SKey
+	   [] '[' ProdParams(!Vs SKey) ']' => &[|SKey
+	   [] '{' ProdParams(!Vs SKey) '}' => &{|SKey
+	   )
+      Key=( TerminatorOp(TKey) => {Append PKey TKey} [] skip => PKey )
+      => Label#Key
+   end
+   syn ProdParams(Vs Key)
+      Res=twoLists:( NakedVariable($) [] '_' Coord(C) => fWildcard(C)
+		   // SeparatorOp($)
+		   )*
+      => Res=Vs#Key
+   end
+   syn SeparatorOp($)
+      '//' => "//"
+   end
+   syn TerminatorOp($)
+      'Add'(X) => [{Atom.toString X}.1]
+   [] 'FdMul'(X) => [{Atom.toString X}.1]
+   end
+   syn SynClause($)
+      'syn' SynHead(F Ps)
+      SynAlt(A)
+      'end'
+      => fSyntaxRule(F Ps A)
+   end
+   syn SynHead(F Ps)
+      Atom(!F) => Ps=nil
+   [] NakedVariable(!F) => Ps=nil
+   [] !F=(  'ATOM()'(X) Coord(C) => fAtom(X C)
+	 [] 'VARIABLE()'(X) Coord(C) => fVar(X C)
+	 )
+      '(' !Ps=(  NakedVariable($)
+	      [] '$' Coord(C) => fDollar(C)
+	      [] '_' Coord(C) => fWildcard(C)
+	      )*
+      ')'
+   end
+   syn SynAlt($)
+      As=( SynSeq($) // '[]' )+ => fSynAlternative(As)
+   end
+   syn SynSeq($)
+      NonEmptySeq(nil ?Ds ?Es) => fSynSequence(Ds Es)
+   [] 'skip' OptSynAction(A) => fSynSequence(nil A)
+   end
+   syn OptSynAction($)
+      skip => nil
+   [] '=>' InSequence(S) => [fSynAction(S)]
+   end
+   syn NonEmptySeq(Vs ?Ds $)
+      NakedVariable(V) NonEmptySeq(V|Vs !?Ds $)
+   [] NakedVariable(V) ThisCoord(C) TerminatorOp(Key) SynPrims(Ps)
+      => Ds = nil
+	 {FoldL Vs fun {$ In V} fSynApplication(V nil)|In end
+	  fSynTemplateInstantiation(none#Key
+				    [fSynApplication(V nil)] C)|Ps}
+   [] NakedVariable(V) '=' SynPrimNoAssign(E) SynPrims(Ps)
+      => Ds = nil
+	 {FoldL Vs fun {$ In V} fSynApplication(V nil)|In end
+	  fSynAssignment(V E)|Ps}
+   [] 'in' SynPrims(Ps)
+      => Ds = Vs
+	 Ps
+   [] SynPrimNoVar(P) SynPrims(Ps)
+      => Ds = nil
+	 {FoldL Vs fun {$ In V} fSynApplication(V nil)|In end P|Ps}
+   [] OptSynAction(A)
+      => Ds = nil
+	 {FoldL Vs fun {$ In V} fSynApplication(V nil)|In end A}
+   end
+   syn SynPrims($)
+      OptSynAction($)
+   [] SynPrim(P) SynPrims(Ps) => P|Ps
+   end
+   syn SynPrim($)
+      Variable(V) '=' SynPrimNoAssign(E) => fSynAssignment(V E)
+   [] SynPrimNoAssign($)
+   end
+   syn SynPrimNoAssign($)
+      NakedVariable(V)
+      => fSynApplication(V nil)
+   [] NakedVariable(V) ThisCoord(C) TerminatorOp(Key)
+      => fSynTemplateInstantiation(none#Key [fSynApplication(V nil)] C)
+   [] SynPrimNoVarNoAssign($)
+   end
+   syn SynPrimNoVar($)
+      '!'(C) NakedVariable(V) '=' SynPrimNoAssign(E)
+      => fSynAssignment(fEscape(V C) E)
+   [] SynPrimNoVarNoAssign($)
+   end
+   syn SynPrimNoVarNoAssign($)
+      SynInstTerm($)
+   [] Atom(A) Coord(C) ':' SynInstTerm(E0) Key=[ TerminatorOp($) ]
+      => fSynTemplateInstantiation(A#Key [E0] C)
+   [] SynInstTerm(E0) ThisCoord(C) TerminatorOp(Key)
+      => fSynTemplateInstantiation(none#Key [E0] C)
+   [] As C in
+      Label=( Atom(A) Coord(!C) ':' => A [] ThisCoord(!C) => none )
+      PKey=(  '(' SynProdCallParams(!As XKey) ')' => &(|XKey
+	   [] '[' SynProdCallParams(!As XKey) ']' => &[|XKey
+	   [] '{' SynProdCallParams(!As XKey) '}' => &{|XKey
+	   )
+      Key=( TerminatorOp(TKey) => {Append PKey TKey} [] skip => PKey )
+      => fSynTemplateInstantiation(Label#Key As C)
+   end
+   syn SynInstTerm($)
+      Atom(C) => fSynApplication(C nil)
+   [] 'ATOM()'(X) Coord(C) '(' Ps=Phrase($)+ ')'
+      => fSynApplication(fAtom(X C) Ps)
+   [] 'VARIABLE()'(X) Coord(C) '(' Ps=Phrase($)* ')'
+      => fSynApplication(fVar(X C) Ps)
+   end
+   syn SynProdCallParams(As Key)
+      Res=twoLists:( SynAlt($) // SeparatorOp($) )+ => Res=As#Key
+   end
+end

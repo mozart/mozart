@@ -1,0 +1,180 @@
+<!DOCTYPE BOOK SYSTEM "ozdoc.dtd" [
+
+<!-- Extension to the DTD -->
+<!ENTITY % proglang.values.local "|sh|lambda">
+
+<!-- Include Files -->
+<!ENTITY u_basic_concepts SYSTEM "u_basic_concepts.sgml">
+<!ENTITY u_getting_started SYSTEM "u_getting_started.sgml">
+<!ENTITY u_replacing SYSTEM "u_replacing.sgml">
+<!ENTITY u_nesting SYSTEM "u_nesting.sgml">
+<!ENTITY u_vectors SYSTEM "u_vectors.sgml">
+<!ENTITY u_advanced SYSTEM "u_advanced.sgml">
+
+<!ENTITY r_overview SYSTEM "r_overview.sgml">
+<!ENTITY r_expect SYSTEM "r_expect.sgml">
+<!ENTITY r_prop SYSTEM "r_prop.sgml">
+<!ENTITY r_fdint SYSTEM "r_fdint.sgml">
+<!ENTITY r_fd SYSTEM "r_fd.sgml">
+<!ENTITY r_fsvar SYSTEM "r_fsvar.sgml">
+<!ENTITY r_fs SYSTEM "r_fs.sgml">
+<!ENTITY r_fsc SYSTEM "r_fsc.sgml">
+<!ENTITY r_aux SYSTEM "r_aux.sgml">
+
+<!ENTITY ct_cpi_tutorial SYSTEM "ct_cpi_tutorial.sgml">
+<!ENTITY ct_cpi_reference SYSTEM "ct_cpi_reference.sgml">
+
+<!ENTITY lp_tutorial SYSTEM "lp_tutorial.sgml">
+<!ENTITY lp_reference SYSTEM "lp_reference.sgml">
+<!ENTITY lp_tutorial_intro SYSTEM "lp_tutorial_intro.sgml">
+
+<!ENTITY ip_reference SYSTEM "ip_reference.sgml">
+
+<!ENTITY pel_reference SYSTEM "pel_reference.sgml">
+
+
+<!ENTITY r_anhang SYSTEM "r_anhang.sgml">
+
+
+<!-- Abbreviations -->
+<!ENTITY lt "<">
+<!ENTITY gt ">">
+<!ENTITY amp "&">
+<!ENTITY dot "." -- to distinguish it from periods -->
+<!ENTITY oz "Oz">
+<!ENTITY cpp "C++">
+<!ENTITY ccpp "C/C++">
+<!ENTITY moz3 "Mozart Oz 3">
+<!ENTITY Gump "Gump">
+<!ENTITY lex "<Name type=tool>lex</Name>">
+<!ENTITY yacc "<Name type=tool>yacc</Name>">
+<!ENTITY flex "<Name type=tool>flex</Name>">
+<!ENTITY bison "<Name type=tool>bison</Name>">
+<!ENTITY cpi "C<Span class=allcaps>PI</Span>">
+<!ENTITY sci "S<Span class=allcaps>CI</Span>">
+
+
+<!ENTITY fd_inf "0">
+<!ENTITY fs_sup "134217726">
+<!ENTITY fs_inf "0">
+<!ENTITY fs_sup "134217726">
+
+<!-- Processing Instructions -->
+<!ENTITY emdash PI "emdash">
+<!ENTITY endash PI "endash">
+<!ENTITY nbsp PI "nbsp">
+<!ENTITY ellipsis PI "ellipsis">
+<!ENTITY slash PI "slash">
+<!ENTITY ie PI "ie">
+<!ENTITY wrt PI "wrt">
+<!ENTITY eg PI "eg">
+<!ENTITY resp PI "resp">
+
+]>
+
+
+<Book proglang="oz">
+  <Front>
+
+    <!-- Splitting the document into different HTML nodes -->
+
+    <Meta name="html.split" arg1="chapter.ip" arg2="ip.html">
+    <Meta name="html.split" value="r_overview">
+    <Meta name="html.split" value="r_expect">
+    <Meta name="html.split" value="r_prop">
+    <Meta name="html.split" value="r_fdint">
+    <Meta name="html.split" value="r_fd">
+    <Meta name="html.split" value="r_fsvar">
+    <Meta name="html.split" value="r_fs">
+    <Meta name="html.split" value="r_fsc">
+    <Meta name="html.split" value="r_aux">
+        
+    
+
+    <Meta name="html.split" arg1="chapter.ct" arg2="ct.html">
+    <Meta name="html.split" value="ct.reference.def">
+    <Meta name="html.split" value="ct.reference.wakeup">
+    <Meta name="html.split" value="ct.reference.profile">
+    <Meta name="html.split" value="ct.reference.constraint">
+    <Meta name="html.split" value="ct.reference.ctvar">
+
+
+    <Meta name="html.split" arg1="chapter.lp" arg2="lp.html">
+
+    <Meta name="html.split" arg1="chapter.pel" arg2="pel.html">
+    <Meta name="html.split" value="pel.overview">
+    <Meta name="html.split" value="pel.paramtable">
+    <Meta name="html.split" value="pel.eventlist">
+    <Meta name="html.split" value="pel.propfncttableentry">
+    <Meta name="html.split" value="pel.propfncttable">
+    <Meta name="html.split" value="pel.propqueue">
+    <Meta name="html.split" value="pel.fsetprofile">
+    <Meta name="html.split" value="pel.fseteventlists">
+    <Meta name="html.split" value="pel.fdprofile">
+    <Meta name="html.split" value="pel.fdeventlists">
+    <Meta name="html.split" value="pel.suspvar">
+    <Meta name="html.split" value="pel.suspfsetvar">
+    <Meta name="html.split" value="pel.suspfdintvar">
+
+    <Meta name="entry.category" value="macro">
+    <Meta name="entry.category" value="virtual">
+    <Meta name="entry.category" value="static">
+    <Meta name="entry.category" value="default">
+    <Meta name="entry.category" value="overloaded">
+    <Meta name="entry.category" value="constructor">
+    <Meta name="entry.category" value="destructor">
+    <Meta name="entry.category" value="operator">
+    <Meta name="entry.category" value="constant">
+    <Meta name="entry.category" value="member">
+    <Meta name="entry.category" value="function">
+    <Meta name="entry.category" arg1="fncttype" arg2="function  type">
+    <Meta name="entry.category" arg1="enumtype" arg2="enumerable  type">
+    <Meta name="entry.category" arg1="purevirtual" arg2="pure virtual">
+    <Meta name="entry.category" arg1="datatype" arg2="data type">
+
+
+    <Meta name="html.split.bib" value="">
+    <Meta name="html.split.index" value="">
+    <Meta name="html.split.toc" value="">
+
+    <Meta name=ozversion value="3.0">
+    <Meta name=status value="revised">
+    <Title/The Mozart Constraint Extensions Reference/
+    <Author.Extern to="author.db" key="Tobias.Mueller">
+
+    <Abstract>
+      <P.silent>
+      This reference manual explains all abstractions provided to
+      extend &moz3; constraint capabilities. It is intended to be used
+      in conjunction with the document <Ptr.Extern to="ozdoc:cpitut">.
+
+    </Abstract>
+
+  <Body>
+
+   &ip_reference;
+
+   &ct_cpi_reference; 
+
+   &lp_reference;
+  
+   &pel_reference;
+ 
+  <Back>
+
+<!--    <bib.extern id="system"     to="cpi.bib" key="system">
+
+  <bib.extern id="murray"     to="cpi.bib" key="murray">
+  <bib.extern id="primer"     to="cpi.bib" key="primer">
+  <bib.extern id="absmachine" to="cpi.bib" key="absmachine">
+  <bib.extern id="modules"    to="cpi.bib" key="modules">
+  <bib.extern id="gdb"        to="cpi.bib" key="gdb">
+
+  <Bib.Extern id="BeringerDeBacker:95a" to ="cpi.bib" 
+              key="BeringerDeBacker:95a">
+  <Bib.Extern id="Holzbaur:90" to="cpi.bib" key="Holzbaur:90">
+  <Bib.Extern id="Benhamou:95a" to ="cpi.bib" key="Benhamou:95a">
+  <Bib.Extern id="Chvantal:83" to ="cpi.bib" key="Chvantal:83">
+  <Bib.Extern id="Mueller:98a" to="cpi.bib" key="Mueller:98a">
+-->
+</Book>

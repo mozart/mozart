@@ -1,0 +1,155 @@
+<!--
+  - Authors:
+  -   Denys Duchier <duchier@ps.uni-sb.de>
+  -   Leif Kornstaedt <kornstae@ps.uni-sb.de>
+  -   Christian Schulte <schulte@ps.uni-sb.de>
+  -
+  - Contributors:
+  -   Daniel Simon <dansim@ps.uni-sb.de> (SGML Translation)
+  -
+  - Copyright:
+  -   Denys Duchier, Leif Kornstaedt, and Christian Schulte, 1998
+  -
+  - Last change:
+  -   $Date$ by $Author$
+  -   $Revision$
+  -
+  - This file is part of Mozart, an implementation of Oz 3:
+  -   http://www.mozart-oz.org
+  -
+  - See the file "LICENSE" or
+  -   http://www.mozart-oz.org/LICENSE.html
+  - for information on usage and redistribution
+  - of this file, and for a DISCLAIMER OF ALL
+  - WARRANTIES.
+  -
+  -->
+
+<Chapter id="chapter.literals">
+  <Title/Literals/
+  <Section id="section.literals.general">
+    <Title/Literals in General/
+    <P>
+      The module <Span class=index/<<Literal>>/ contains procedures operating
+      on literals, &ie;, atoms and names.
+      <List>
+	<Entry><Span class=index/<<IsLiteral>>/
+	  <Index class=tails/<<Literal>><And><<is>>/
+	<Synopsis>
+	  <<{Literal.is ?+{X} ??{B}}>>
+	<Item>
+	  tests whether ?_{X} is a literal.
+      </List>
+
+  <Section id="section.literals.atoms">
+    <Title/Atoms/
+    <P>
+      The module <Span class=index/<<Atom>>/ contains procedures operating
+      on atoms.
+      <List>
+	<Entry><Span class=index/<<IsAtom>>/
+	  <Index class=tails/<<Atom>><And><<is>>/
+	<Synopsis>
+	  <<{Atom.is ?+{X} ??{B}}>>
+	<Item>
+	  tests whether ?_{X} is atom.
+
+	<Entry><Span class=index/<<AtomToString>>/
+	  <Index class=tails/<<Atom>><And><<toString>>/
+	<Synopsis>
+	  <<{Atom.toString ?+{A} ??{S}}>>
+	<Item>
+	  binds ?_{S} to the string (list of characters) representing
+	  atom&nbsp;?_{A} according to ISO&nbsp;8859-1.  See also
+	  <Span class=index/<<String.toAtom>>/.
+	<P>
+	  For example,
+	  <<<{AtomToString 'abc'}>>>
+	  yields as output <<[97 98 99]>>.
+      </List>
+
+  <Section id="section.literals.names">
+    <Title/Names/
+    <P>
+      The module <Span class=index/<<Name>>/ contains procedures operating
+      on names.
+      <List>
+	<Entry><Span class=index/<<IsName>>/
+	  <Index class=tails/<<Name>><And><<is>>/
+	<Synopsis>
+	  <<{Name.is ?+{X} ??{B}}>>
+	<Item>
+	  tests whether ?_{X} is a name.
+
+	<Entry><Span class=index/<<NewName>>/
+	  <Index class=tails/<<Name>><And><<new>>/
+	<Synopsis>
+	  <<{Name.new ??{N}}>>
+	<Item>
+	  Creates a new name and binds ?_{N} to it.
+      </List>
+
+  <Section id="section.literals.bool">
+    <Title/Truth Values/
+    <P>
+      The module <Span class=index/<<Bool>>/ contains procedures operating
+      on the truth values <Span class=index/<<true>>/ and <Span class=index
+      /<<false>>/, which denote names.
+      <List>
+	<Entry><Span class=index/<<IsBool>>/
+	  <Index class=tails/<<Bool>><And><<is>>/
+	<Synopsis>
+	  <<{Bool.is ?+{X} ??{B}}>>
+	<Item>
+	  tests whether ?_{X} is <<true>> or <<false>>.
+
+	<Entry><Span class=index/<<Not>>/
+	  <Index/<<Bool>><And><<not>>/
+	<Synopsis>
+	  <<{Bool.'not' ?+{B1} ??{B2}}>>
+	<Item>
+	  returns the negation of truth value&nbsp;?_{B1}.
+
+	<Entry><Span class=index/<<And>>/
+	  <Index/<<Bool>><And><<and>>/
+	<Synopsis>
+	  <<{Bool.and ?+{B1} ?+{B2} ??{B3}}>>
+	<Item>
+	  returns the conjunction of truth values ?_{B1} and&nbsp;?_{B2}.
+	  Note that <<And>> is different from conditional conjunction
+	  available via the keyword <Span class=index/<<andthen>>/ in that
+	  it always evaluates its second argument.
+	<P>
+	  For instance, <<false andthen P>> reduces without reducing
+	  application of <<P>>, whereas reduction of <<{And false P}>>
+	  always applies <<P>>.
+
+	<Entry><Span class=index/<<Or>>/
+	  <Index/<<Bool>><And><<'or'>>/
+	<Synopsis>
+	  <<{Bool.'or' ?+{B1} ?+{B2} ??{B3}}>>
+	<Item>
+	  returns the disjunction of truth values ?_{B1} and&nbsp;?_{B2}.
+	  Note that <<Or>> is different from conditional disjunction
+	  available via the keyword <Span class=index/<<orelse>>/ in that
+	  it always evaluates its second argument.
+	<P>
+	  For instance, <<true orelse P>> reduces without reducing
+	  application of <<P>>, whereas reduction of <<{Or true P}>>
+	  always applies <<P>>.
+      </List>
+
+  <Section id="section.literals.unit">
+    <Title/The Value Unit/
+    <P>
+      The module <Span class=index/<<Unit>>/ contains procedures operating on
+      the value available as <Span class=index/<<unit>>/, which denotes a name.
+      <List>
+	<Entry><Span class=index/<<IsUnit>>/
+	  <Index class=tails/<<Unit>><And><<is>>/
+	<Synopsis>
+	  <<{Unit.is ?+{X} ??{B}}>>
+	<Item>
+	  tests whether ?_{X} is <<unit>>.
+      </List>
+</Chapter>

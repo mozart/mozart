@@ -1,0 +1,104 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<HTML>
+<HEAD>
+<!-- EDIT -->
+<TITLE>Mozart Standard Library: Functional Stacks</TITLE>
+<STYLE>
+BODY {
+	background-color: white;
+	margin-left	: 2cm;
+	margin-right	: 2cm;
+	font-family	: tahoma,arial,helvetica,sans-serif;
+}
+H1 {
+	text-align	: center;
+	color		: #9B0000;
+}
+H2 {	color		: #FF9933; }
+H4 {	color		: slateblue; }
+H3 {	color		: #881155; }
+H5 {	color		: darkslateblue; }
+CODE {	color		: #663366; }
+CODE,TT {
+	font-family	: "lucida console",courier,monospace;
+}
+CODE.DISPLAY {
+	display		: block;
+	white-space	: pre;
+	margin-left	: 2cm;
+	margin-top	: 1em;
+	margin-bottom	: 1em;
+}
+P.AUTHOR {
+	text-align	: center;
+	font-weight	: bold;
+}
+SPAN.MODULE {
+	color		: steelblue;
+}
+A {	color		: steelblue; }
+SPAN.COMMENT      { color: #B22222; }
+SPAN.KEYWORD      { color: #A020F0; }
+SPAN.STRING       { color: #BC8F8F; }
+SPAN.FUNCTIONNAME { color: #0000FF; }
+SPAN.TYPE         { color: #228B22; }
+SPAN.VARIABLENAME { color: #B8860B; }
+SPAN.REFERENCE    { color: #5F9EA0; }
+SPAN.BUILTIN      { color: #DA70D6; }
+</STYLE>
+</HEAD>
+<BODY>
+<!-- EDIT -->
+<H1>Functional Stacks</H1>
+<P CLASS="AUTHOR">Denys Duchier</P>
+<DL>
+  <DT><B>module</B>
+  <DD><SPAN CLASS="MODULE">x-oz://system/adt/Stack.ozf</SPAN>
+</DL>
+<HR>
+
+<P>This module provides a functional implementation of stacks
+
+<H2>Exports</H2>
+<P>The module exports the following constructors:
+<DL>
+<DT><CODE>{Stack.new ?S}</CODE>
+<DD>returns a new functional stack instance <CODE>S</CODE>, currently
+empty
+<DT><CODE>{Stack.newFromList +L ?S}</CODE>
+<DD>returns a new functional stack instance <CODE>S</CODE> initialized
+with the elements of list <CODE>L</CODE>
+</DL>
+
+<H2>Instance API</H2>
+<P>Each functional stack instance <CODE>S</CODE> has the following features:
+<DL>
+<DT><CODE>{S.get ?V}</CODE>
+<DD>returns the next value <CODE>V</CODE> available from <CODE>S</CODE>,
+or raises exception <CODE>empty</CODE> if none
+<DT><CODE>{S.put +V}</CODE>
+<DD>pushes a new value <CODE>V</CODE> onto the stack
+<DT><CODE>{S.getPut ?Old +New}</CODE>
+<DD>atomically, gets the next value <CODE>Old</CODE> available from <CODE>S</CODE>
+and pushes the value <CODE>New</CODE>.  If <CODE>S</CODE> was empty, <CODE>New</CODE>
+is <CODE>Old</CODE> and <CODE>S</CODE> is still empty
+<DT><CODE>{S.top ?V}</CODE>
+<DD>returns the value <CODE>V</CODE> available on top of <CODE>S</CODE>
+without actually removing it
+<DT><CODE>{S.toList ?L}</CODE>
+<DD>returns the list <CODE>L</CODE> of all values in <CODE>S</CODE>
+<DT><CODE>{S.toListKill ?L}</CODE>
+<DD>returns the list <CODE>L</CODE> of all values in <CODE>S</CODE>
+and makes <CODE>S</CODE> unusable until a subsequent <CODE>{S.reset}</CODE>.
+<DT><CODE>{S.isEmpty ?B}</CODE>
+<DD>returns true iff <CODE>S</CODE> is empty
+<DT><CODE>{S.reset}</CODE>
+<DD>discards <CODE>S</CODE>'s content and resets it to an empty stack
+<DT><CODE>{S.clone ?S2}</CODE>
+<DD>returns a new functional queue instance <CODE>S2</CODE> which is
+a clone of <CODE>S</CODE>
+</DL>
+
+<HR>
+</BODY>
+</HTML>
