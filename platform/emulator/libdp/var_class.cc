@@ -73,7 +73,7 @@ Bool ClassVar::sendRequest(DSite *ds)
 
 void ClassVar::gCollectRecurseV(void)
 {
-  if (index != -1)
+  if (index != MakeOB_TIndex(-1))
     BT->bi2borrow(index)->gcPO();
   Assert(gname);
   gCollectGName(gname);
@@ -92,7 +92,7 @@ void ClassVar::disposeV()
 }
 
 //
-TaggedRef newClassProxy(int bi, GName *gnclass)
+TaggedRef newClassProxy(OB_TIndex bi, GName *gnclass)
 {
   ClassVar *pvar = new ClassVar(oz_currentBoard(), bi, gnclass);
   TaggedRef val = makeTaggedRef(newTaggedVar(pvar));

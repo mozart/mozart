@@ -60,7 +60,8 @@ extern char *dpresource_names[];
 class DistResource: public Tertiary{
 public:
   NO_DEFAULT_CONSTRUCTORS(DistResource)
-  DistResource(int i):Tertiary(i,Co_Resource,Te_Proxy){}
+  DistResource(OB_TIndex p)
+    : Tertiary(OB_TIndex2Ptr(p),Co_Resource,Te_Proxy) {}
   
 };
 /************************************************************/
@@ -76,11 +77,11 @@ public:
   ResourceHashTable(int i):GenHashTable(i){}
 
   //
-  void add(OZ_Term entity, int oti) {
+  void add(OZ_Term entity, OB_TIndex oti) {
     // kost@ : this is what we can deal with:
     Assert((!oz_isRef(entity) && !oz_isVar(entity)) ||
 	   (oz_isRef(entity) && oz_isVar(*tagged2Ref(entity))));
-    Assert(find(entity) == RESOURCE_NOT_IN_TABLE);
+    Assert(find(entity) == (OB_TIndex) RESOURCE_NOT_IN_TABLE);
     unsigned int hvalue;
     GenHashBaseKey *ghbk;
     GenHashEntry *ghe;
@@ -88,12 +89,12 @@ public:
     //
     hvalue = hash(entity);
     GenCast(entity, OZ_Term, ghbk, GenHashBaseKey*);
-    GenCast(oti, int, ghe, GenHashEntry*);
+    GenCast(oti, OB_TIndex, ghe, GenHashEntry*);
     GenHashTable::htAddU(hvalue, ghbk, ghe);
   }
 
   //
-  int find(TaggedRef entity) {
+  OB_TIndex find(TaggedRef entity) {
     // kost@ : this is what we can deal with:
     Assert((!oz_isRef(entity) && !oz_isVar(entity)) ||
 	   (oz_isRef(entity) && oz_isVar(*tagged2Ref(entity))));
@@ -115,11 +116,11 @@ public:
       if (te == entity) {
 	// that's the entry we're talking about: let's check whether
 	// the corresponding oe entry is still alive:
-	int oti;
+	OB_TIndex oti;
 	OwnerEntry *oe;
 
 	//
-	GenCast(aux->getEntry(), GenHashEntry*, oti, int);
+	GenCast(aux->getEntry(), GenHashEntry*, oti, OB_TIndex);
 	oe = OT->index2entry(oti);
 
 	//
@@ -147,7 +148,7 @@ public:
     }
 
     //
-    return (RESOURCE_NOT_IN_TABLE);
+    return ((OB_TIndex) RESOURCE_NOT_IN_TABLE);
   }
 
   //

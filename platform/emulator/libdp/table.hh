@@ -52,6 +52,7 @@ Bool withinBorrowTable(int i);
 
 #define END_FREE -1
 
+//
 enum PO_TYPE {
   PO_Var,
   PO_Tert,
@@ -187,13 +188,14 @@ friend class NewOwnerTable;
 public:
   HomeReference homeRef;
   
-  OwnerEntry(int odi, int algs):BucketHashNode((unsigned int) odi, (unsigned int) odi)
-  {
+  OwnerEntry(Ext_OB_TIndex extOTI, int algs) :
+    BucketHashNode((unsigned int) Ext_OB_TIndex2Int(extOTI),
+		   (unsigned int) Ext_OB_TIndex2Int(extOTI)) {
     setFlags(0);
-    homeRef.setUp(odi, algs);
+    homeRef.setUp(extOTI, algs);
   }
   
-  void localize(int index);
+  void localize();
   
   inline RRinstance *getCreditBig() {
     return homeRef.getBigReference();
@@ -204,9 +206,8 @@ public:
   }
 
   inline void mergeReference(RRinstance *r) {
-    if(homeRef.mergeReference(r)){
-      localize(homeRef.oti);
-    }
+    if (homeRef.mergeReference(r))
+      localize();
   }
 
   void updateReference(DSite *rsite);
@@ -220,7 +221,7 @@ public:
     Assert(isPersistent());
   }
 
-  int getOdi(){ return homeRef.oti;}
+  Ext_OB_TIndex getExtOTI() { return (homeRef.extOTI); }
 }; 
 
 /* ********************************************************************** */
@@ -233,7 +234,9 @@ class NewOwnerTable:public BucketHashTable {
   
   void init(int,int);
   void compactify();
-unsigned int hash(int Oid){return (unsigned int)Oid;}
+  unsigned int hash(Ext_OB_TIndex ind) {
+    return ((unsigned int) Ext_OB_TIndex2Int(ind));
+  }
 
 public:
   void print();
@@ -246,17 +249,16 @@ public:
     nxtId = 0;
   }
 
-  OwnerEntry* index2entry(int oe) 
-  { 
-    return (OwnerEntry*) oe;
+  OwnerEntry* index2entry(OB_TIndex oe) { 
+    return ((OwnerEntry*) OB_TIndex2Ptr(oe));
   }
   
-  OwnerEntry* odi2entry(int odi);
+  OwnerEntry* extOTI2entry(Ext_OB_TIndex extOTI);
   
-  int entry2odi(int oe) 
-  { 
-    Assert(oe > 10000);
-    return ((OwnerEntry*)oe)->getOdi();
+  Ext_OB_TIndex entry2extOTI(OB_TIndex oe) { 
+    // kost@ : WHAT THE F$CK IS THAT??! (I've commented it out;)
+    // Assert(oe > 10000);
+    return (((OwnerEntry *) oe)->getExtOTI());
   }
   
   void gcOwnerTableRoots();
@@ -266,9 +268,10 @@ public:
 
   void resize();
 
-  int newOwner(OwnerEntry *&, int);
-  int newOwner(OwnerEntry *&oe){
-    int algs = (ozconf.dpUseTimeLease?GC_ALG_TL:0)|(ozconf.dpUseFracWRC?GC_ALG_WRC:0);
+  OB_TIndex newOwner(OwnerEntry *&, int);
+  OB_TIndex newOwner(OwnerEntry *&oe) {
+    int algs = 
+      (ozconf.dpUseTimeLease?GC_ALG_TL:0)|(ozconf.dpUseFracWRC?GC_ALG_WRC:0);
     return newOwner(oe,algs);
   }
 
@@ -294,7 +297,7 @@ protected:
 public:
   RemoteReference remoteRef;
 
-  BorrowEntry(DSite* s, int i,RRinstance *r):BucketHashNode((unsigned int)i, (unsigned int)s)
+  BorrowEntry(DSite* s, int i, RRinstance *r):BucketHashNode((unsigned int)i, (unsigned int)s)
   {
     setFlags(0);
     remoteRef.setUp(r,s,i); 
@@ -314,7 +317,7 @@ public:
 
   DSite *getSite(){return remoteRef.netaddr.site;}
 
-  int getOTI(){return remoteRef.netaddr.index;}
+  Ext_OB_TIndex getExtOTI() { return (remoteRef.netaddr.index); }
 
   inline RRinstance *getBigReference() {
     return remoteRef.getBigReference();
@@ -356,22 +359,23 @@ public:
   Bool notGCMarked();
 
   BorrowEntry* find(NetAddress *na);
-  BorrowEntry* find(int,DSite*);
-    
+  BorrowEntry* find(Ext_OB_TIndex, DSite*);
 
   void resize(){printf("resize\n");}
 
-  int newBorrow(RRinstance *,DSite*,int);
+  OB_TIndex newBorrow(RRinstance *, DSite*, Ext_OB_TIndex);
 
-  Bool maybeFreeBorrowEntry(int);
+  Bool maybeFreeBorrowEntry(OB_TIndex);
 
-  DSite* getOriginSite(int bi){
-    return ((BorrowEntry *) bi)->getNetAddress()->site;}
+  DSite* getOriginSite(OB_TIndex bi){
+    return ((BorrowEntry *) OB_TIndex2Ptr(bi))->getNetAddress()->site;}
 
-  int getOriginIndex(int bi){
-    return ((BorrowEntry*)bi)->getNetAddress()->index;}
+  Ext_OB_TIndex getOriginIndex(OB_TIndex bi) {
+    return (((BorrowEntry*) OB_TIndex2Ptr(bi))->getNetAddress()->index); }
   
-  BorrowEntry *bi2borrow(int bi) {return (BorrowEntry*) bi;}
+  BorrowEntry *bi2borrow(OB_TIndex bi) {
+    return ((BorrowEntry*) OB_TIndex2Ptr(bi));
+  }
 
   int dumpFrames();
   void dumpProxies();

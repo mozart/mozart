@@ -74,7 +74,7 @@ RRinstance *unmarshalCredit(MarshalerBuffer *buf)
 }
 
 
-void marshalCreditToOwner(MarshalerBuffer *buf,RRinstance *r,int oti)
+void marshalCreditToOwner(MarshalerBuffer *buf,RRinstance *r, Ext_OB_TIndex oti)
 {
   int len= 0 ;
   RRinstance *tmp;
@@ -91,12 +91,12 @@ void marshalCreditToOwner(MarshalerBuffer *buf,RRinstance *r,int oti)
 }
 
 RRinstance *unmarshalCreditToOwner(MarshalerBuffer *buf,
-				   MarshalTag mt, int &oti)
+				   MarshalTag mt, Ext_OB_TIndex &oti)
 
 {
   RRinstance *ans=NULL;
   int len; 
-  oti = unmarshalNumber(buf);
+  oti = MakeExt_OB_TIndex(unmarshalNumber(buf));
   len = unmarshalNumber(buf);
   for(;len>0; len --){
     int type = unmarshalNumber(buf); 
@@ -159,8 +159,9 @@ Bool HomeReference::canBeReclaimed(){
   return FALSE;
 }
 
-void HomeReference::setUp(int indx, int algss){
-  oti = indx;
+void HomeReference::setUp(Ext_OB_TIndex indx, int algss)
+{
+  extOTI = indx;
   algs = NULL; 
   if(algss & GC_ALG_WRC)
     algs = new WRC(this,algs);
@@ -364,7 +365,9 @@ OZ_Term RemoteReference::extract_info(){
 Bool RemoteReference::isPersistent(){
   return algs == NULL;}
 
-void sendReferenceBack(DSite *entitysite,int entityOTI,int type, int val1, int val2) {
+void sendReferenceBack(DSite *entitysite, Ext_OB_TIndex entityOTI,
+		       int type, int val1, int val2)
+{
   MsgContainer *msgC;
   msgC = msgContainerManager->newMsgContainer(entitysite);
   msgC->put_M_OWNER_REF(entityOTI,type,val1,val2);
@@ -373,7 +376,8 @@ void sendReferenceBack(DSite *entitysite,int entityOTI,int type, int val1, int v
 }
 
 
-void sendRRinstanceBack(DSite *s, int oti, RRinstance *r){
+void sendRRinstanceBack(DSite *s, Ext_OB_TIndex oti, RRinstance *r)
+{
   // ERIK
   // Not implemented yet, just because I'm Lazy :) 
   ; 

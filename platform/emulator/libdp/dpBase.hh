@@ -79,4 +79,22 @@ typedef enum {
   LT_CLASS
 } LazyType;
 
+//
+// OTIs ("onwer table indices") or BTI ("borrow table indicies") are
+// no "int"s, but OB_TIndex"es. These is the internal representation
+// of these indices. Currently, we'are defined as follows:
+class OB_Entry;
+typedef OB_Entry* OB_TIndex;
+//
+#define MakeOB_TIndex(ptr)		((OB_Entry*) ptr)
+#define OB_TIndex2Ptr(ob_ti)		((void *) ob_ti)
+#define OB_TIndex2Int(ob_ti)		(ToInt32((void *) ob_ti))
+
+//
+// Externally, OB_TIndex"es are represented as Ext_OB_TIndex:
+typedef int Ext_OB_TIndex;
+//
+#define MakeExt_OB_TIndex(i)		((Ext_OB_TIndex) i)
+#define Ext_OB_TIndex2Int(e_ob_ti)	((int) e_ob_ti)
+
 #endif 
