@@ -38,7 +38,6 @@
 #include "marshaler.hh"
 #include "comm.hh"
 #include "msgbuffer.hh"
-#include "builtins.hh"
 #include "vs_mailbox.hh"
 #include "vs_msgbuffer.hh"
 #include "vs_comm.hh"

@@ -148,11 +148,6 @@ public:
   GenCVariable * gc(void);
   void gcRecurse(void);
 
-  // unifies a generic variable with another generic variable
-  // or a non-variable
-  // invariant: left term == *this
-  OZ_Return unify(TaggedRef *, TaggedRef, ByteCode *);
-
   inline int getSuspListLength(void);
 
   // is X=val still valid

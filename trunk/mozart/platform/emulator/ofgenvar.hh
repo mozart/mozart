@@ -43,6 +43,12 @@
 //-------------------------------------------------------------------------
 
 
+// from ofbi.cc
+extern
+void addFeatOFSSuspensionList(TaggedRef var, SuspList * suspList,
+			      TaggedRef flist, Bool determ);
+
+
 class GenOFSVariable: public GenCVariable {
 
     friend class GenCVariable;
@@ -138,7 +144,7 @@ public:
         // (future optimization: a second suspList only waiting on features)
         if (prev==makeTaggedNULL()) {
             // propagate(suspList, pc_propagator);
-            am.addFeatOFSSuspensionList(makeTaggedCVar(this),suspList,feature,FALSE);
+            addFeatOFSSuspensionList(makeTaggedCVar(this),suspList,feature,FALSE);
 	    return TRUE;
         } else {
 	    return FALSE;

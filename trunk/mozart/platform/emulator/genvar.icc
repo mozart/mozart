@@ -31,31 +31,6 @@
 #pragma interface
 #endif
 
-
-inline
-OZ_Return GenCVariable::unify(TaggedRef * tptr1, TaggedRef term2, 
-			      ByteCode *scp)
-{
-  switch (getType()){
-  case FDVariable:
-    return ((GenFDVariable *)this)->unifyV(tptr1, term2, scp);
-  case FSetVariable:
-    return ((GenFSetVariable *)this)->unifyV(tptr1, term2, scp);
-  case OFSVariable:
-    return ((GenOFSVariable *)this)->unifyV(tptr1, term2, scp);
-  case BoolVariable:
-    return ((GenBoolVariable *)this)->unifyV(tptr1, term2, scp);
-  case PerdioVariable:
-    return ((PerdioVar *)this)->unifyV(tptr1, term2, scp);
-  case CtVariable:
-    return ((GenCtVariable*) this)->unifyV(tptr1, term2, scp);
-  default:
-    return unifyV(tptr1, term2, scp);
-  }
-      
-  return PROCEED;
-} 
-
 inline
 int GenCVariable::getSuspListLength(void)
 {
