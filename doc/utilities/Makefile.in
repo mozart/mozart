@@ -72,7 +72,9 @@ ozdoc: $(FUNCTORS)
 	$(OZC) $(OZFLAGS) -c $< -o $@
 
 %.elc: %.el
+	-rm -f $@
 	$(EMACS) -q -batch -f batch-byte-compile $<
+	mv $<c $@
 
 install: $(BINDIR) $(BINFILES)
 install: $(DOCDIR) $(DOCBINFILES) $(DOCFILES)

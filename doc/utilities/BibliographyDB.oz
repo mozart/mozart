@@ -22,17 +22,14 @@
 functor prop once
 import
    Property(get)
-   OS(tmpnam putEnv system unlink getEnv)
+   OS(tmpnam putEnv system unlink)
    Open(text file)
 export
    'class': BibliographyDBClass
 define
-   BIBTEX = 'bibtex'
-   BSTINPUTS = case {OS.getEnv 'OZ_DOC_BIBINPUTS'} of false then
-		  case {OS.getEnv 'OZ_DOC_PATH'} of false
-		  then {Property.get 'oz.home'}#'/share/doc/'
-		  elseof X then '.:'#X#'/utilities' end
-	       elseof X then X end
+   BIBTEX    = 'bibtex'
+   BIBINPUTS = {ByNeed fun {$} {Property.get 'ozdoc.bib.path'} end}
+   BSTINPUTS = {ByNeed fun {$} {Property.get 'ozdoc.bst.path'} end}
 
    class TextFile from Open.text Open.file
       prop final
@@ -201,7 +198,7 @@ define
 				 end '\\bibdata{'}#'}\n')}
 	    {@AuxFile close()}
 	    {OS.putEnv 'BSTINPUTS' BSTINPUTS}
-	    {OS.putEnv 'BIBINPUTS' BSTINPUTS}
+	    {OS.putEnv 'BIBINPUTS' BIBINPUTS}
 	    case {OS.system BIBTEX#' '#@AuxFileName} of 0 then skip
 	    elseof I then
 	       {Exception.raiseError ozDoc(bibtex I)}

@@ -23,15 +23,15 @@ functor prop once
 import
    Property(get)
    Open(file text)
-   OS(getEnv)
 export
    'class': AuthorDBClass
 define
-   DBPath = ['.'
-	     case {OS.getEnv 'OZ_DOC_PATH'} of false
-	     then {Property.get 'oz.home'}#'/share/doc/'
-	     elseof X then X end
-	    ]
+   DBPath = {ByNeed
+	     fun {$}
+		{String.tokens
+		 {VirtualString.toString
+		  {Property.get 'ozdoc.author.path'}} &:}
+	     end}
 
    local
       class TextFile from Open.file Open.text
