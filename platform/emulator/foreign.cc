@@ -284,10 +284,6 @@ OZ_Term OZ_termType(OZ_Term term)
     return OZ_atom("cell");
   }
 
-  if (isPort(term)) {
-    return OZ_atom("port");
-  }
-
   if (isChunk(term)) {
     return OZ_atom("chunk");
   }
