@@ -527,7 +527,6 @@ unsited in future releases.
 <index/finite set variable/
 <index/logic variable<and>free record/
 <index/free record variable/
-<index/variable<see>logic variable/
 (finite domain, finite set, or free record)
 is passed to another site, then this reference
 <index/future/
