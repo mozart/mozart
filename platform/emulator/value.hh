@@ -1127,6 +1127,9 @@ public:
   Bool compareFunctor(SRecord* str) {
     return compareSortAndArity(str->getLabel(),str->getSRecordArity());
   }
+
+  TaggedRef *getCycleAddr() { return &label; }
+
 };
 
 TaggedRef sortlist(TaggedRef list,int len);
