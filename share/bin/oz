@@ -72,9 +72,8 @@ if [ ! -f $OZILE -o ${TERM-xx} = emacs ]; then
    OZILE=""  # running under emacs
 fi
 
-
 # where is Emacs?
-if [ ${OZEMACS-0} = 0 ]; then
+if [ "${OZEMACS-0}" = 0 ]; then
 	   
   if [ -f ${OZHOME}/ozemacs/bin/$OZPLATFORM/emacs ]; then
 
