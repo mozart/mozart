@@ -437,6 +437,30 @@ LDFLAGS="-L$oz_gmp_lib_dir $LDFLAGS"
 AC_CHECK_LIB(gmp, mpz_init, ,
         AC_MSG_ERROR(required GNU MP lib not found))
 
+
+dnl *****************************************************************
+dnl ccmalloc
+dnl *****************************************************************
+
+AC_MSG_CHECKING(for --with-ccmalloc)
+AC_ARG_WITH(ccmalloc,
+    [--with-ccmalloc
+        use debugging malloc library ccmalloc ])
+
+if test "$with_ccmalloc" = "yes"
+then
+    AC_MSG_RESULT(yes)
+    AC_CHECK_LIB(ccmalloc,main,true,AC_MSG_ERROR(cannot find lib ccmalloc))
+    AC_DEFINE(CCMALLOC)
+    LIBS="$LIBS -lccmalloc"
+elif test -n "$with_ccmalloc"
+then
+    AC_MSG_ERROR(only yes allowed)
+else
+    AC_MSG_RESULT(no)
+fi
+
+
 dnl *****************************************************************
 dnl *** Features
 dnl *****************************************************************
@@ -529,36 +553,10 @@ AC_SUBST(PEANUTS)
 
 
 dnl *****************************************************************
-dnl dmalloc
-dnl *****************************************************************
-
-dnl *** active by executing output of
-dnl ***  dmalloc -l /tmp/dmalloc.$USER -i 100 high
-
-AC_MSG_CHECKING(for --with-dmalloc)
-AC_ARG_WITH(dmalloc,
-    [--with-dmalloc
-        use debugging malloc library dmalloc ])
-
-if test "$with_dmalloc" = "yes"
-then
-    AC_MSG_RESULT(yes)
-    AC_CHECK_LIB(dmalloc,main,true,AC_MSG_ERROR(cannot find lib dmalloc))
-    AC_DEFINE(DMALLOC)
-    LIBS="$LIBS -ldmalloc"
-elif test -n "$with_dmalloc"
-then
-    AC_MSG_ERROR(only yes allowed)
-else
-    AC_MSG_RESULT(no)
-fi
-
-
-dnl *****************************************************************
 dnl malloc
 dnl *****************************************************************
 
-if test -z "$with_dmalloc"
+if test -z "$with_ccmalloc"
 then
     AC_MSG_CHECKING(for --with-malloc)
     AC_ARG_WITH(malloc,

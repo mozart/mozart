@@ -28,6 +28,9 @@ ac_help="$ac_help
 --with-gmp-include=<dir>
         search gmp header in <dir> (default: /usr/local/include)"
 ac_help="$ac_help
+--with-ccmalloc
+        use debugging malloc library ccmalloc "
+ac_help="$ac_help
 --enable-opt       optimize [y|n|d[ebug]|p[rofile]|rsp[rofile]] (default=yes)"
 ac_help="$ac_help
 --enable-ozma      include Oz assembler (default=yes)"
@@ -41,9 +44,6 @@ ac_help="$ac_help
 --enable-linkprop  link propagators statically (default=yes)"
 ac_help="$ac_help
 --enable-peanuts   use peanuts file (default=yes)"
-ac_help="$ac_help
---with-dmalloc
-        use debugging malloc library dmalloc "
 ac_help="$ac_help
 --with-malloc=<obj>
             use malloc from object file <obj> (default: NONE)"
@@ -2299,8 +2299,72 @@ fi
 
 
 
+echo $ac_n "checking for --with-ccmalloc""... $ac_c" 1>&6
+echo "configure:2304: checking for --with-ccmalloc" >&5
+# Check whether --with-ccmalloc or --without-ccmalloc was given.
+if test "${with_ccmalloc+set}" = set; then
+  withval="$with_ccmalloc"
+  :
+fi
+
+
+if test "$with_ccmalloc" = "yes"
+then
+    echo "$ac_t""yes" 1>&6
+    echo $ac_n "checking for main in -lccmalloc""... $ac_c" 1>&6
+echo "configure:2316: checking for main in -lccmalloc" >&5
+ac_lib_var=`echo ccmalloc'_'main | sed 'y%./+-%__p_%'`
+if eval "test \"`echo '$''{'ac_cv_lib_$ac_lib_var'+set}'`\" = set"; then
+  echo $ac_n "(cached) $ac_c" 1>&6
+else
+  ac_save_LIBS="$LIBS"
+LIBS="-lccmalloc  $LIBS"
+cat > conftest.$ac_ext <<EOF
+#line 2324 "configure"
+#include "confdefs.h"
+
+int main() {
+main()
+; return 0; }
+EOF
+if { (eval echo configure:2331: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
+  rm -rf conftest*
+  eval "ac_cv_lib_$ac_lib_var=yes"
+else
+  echo "configure: failed program was:" >&5
+  cat conftest.$ac_ext >&5
+  rm -rf conftest*
+  eval "ac_cv_lib_$ac_lib_var=no"
+fi
+rm -f conftest*
+LIBS="$ac_save_LIBS"
+
+fi
+if eval "test \"`echo '$ac_cv_lib_'$ac_lib_var`\" = yes"; then
+  echo "$ac_t""yes" 1>&6
+  true
+else
+  echo "$ac_t""no" 1>&6
+{ echo "configure: error: cannot find lib ccmalloc" 1>&2; exit 1; }
+fi
+
+    cat >> confdefs.h <<\EOF
+#define CCMALLOC 1
+EOF
+
+    LIBS="$LIBS -lccmalloc"
+elif test -n "$with_ccmalloc"
+then
+    { echo "configure: error: only yes allowed" 1>&2; exit 1; }
+else
+    echo "$ac_t""no" 1>&6
+fi
+
+
+
+
 echo $ac_n "checking for --enable-opt""... $ac_c" 1>&6
-echo "configure:2304: checking for --enable-opt" >&5
+echo "configure:2368: checking for --enable-opt" >&5
 # Check whether --enable-opt or --disable-opt was given.
 if test "${enable_opt+set}" = set; then
   enableval="$enable_opt"
@@ -2323,7 +2387,7 @@ EOF
         for ozm_opt in ""$oz_copt_debug""
         do
             echo $ac_n "checking compiler option $ozm_opt""... $ac_c" 1>&6
-echo "configure:2327: checking compiler option $ozm_opt" >&5
+echo "configure:2391: checking compiler option $ozm_opt" >&5
             ozm_ropt=`echo $ozm_opt | sed -e 's/[^a-zA-Z0-9_]/_/g'`
             if eval "test \"`echo '$''{'oz_cv_gxxopt_$ozm_ropt'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
@@ -2362,7 +2426,7 @@ EOF
         for ozm_opt in ""$oz_copt_profile""
         do
             echo $ac_n "checking compiler option $ozm_opt""... $ac_c" 1>&6
-echo "configure:2366: checking compiler option $ozm_opt" >&5
+echo "configure:2430: checking compiler option $ozm_opt" >&5
             ozm_ropt=`echo $ozm_opt | sed -e 's/[^a-zA-Z0-9_]/_/g'`
             if eval "test \"`echo '$''{'oz_cv_gxxopt_$ozm_ropt'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
@@ -2398,7 +2462,7 @@ EOF
         for ozm_opt in ""-O""
         do
             echo $ac_n "checking compiler option $ozm_opt""... $ac_c" 1>&6
-echo "configure:2402: checking compiler option $ozm_opt" >&5
+echo "configure:2466: checking compiler option $ozm_opt" >&5
             ozm_ropt=`echo $ozm_opt | sed -e 's/[^a-zA-Z0-9_]/_/g'`
             if eval "test \"`echo '$''{'oz_cv_gxxopt_$ozm_ropt'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
@@ -2429,7 +2493,7 @@ fi
         for ozm_opt in ""$oz_copt_optimize""
         do
             echo $ac_n "checking compiler option $ozm_opt""... $ac_c" 1>&6
-echo "configure:2433: checking compiler option $ozm_opt" >&5
+echo "configure:2497: checking compiler option $ozm_opt" >&5
             ozm_ropt=`echo $ozm_opt | sed -e 's/[^a-zA-Z0-9_]/_/g'`
             if eval "test \"`echo '$''{'oz_cv_gxxopt_$ozm_ropt'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
@@ -2458,7 +2522,7 @@ esac
 
 
     echo $ac_n "checking for --enable-ozma""... $ac_c" 1>&6
-echo "configure:2462: checking for --enable-ozma" >&5
+echo "configure:2526: checking for --enable-ozma" >&5
     # Check whether --enable-ozma or --disable-ozma was given.
 if test "${enable_ozma+set}" = set; then
   enableval="$enable_ozma"
@@ -2486,7 +2550,7 @@ EOF
 
 
     echo $ac_n "checking for --enable-threaded""... $ac_c" 1>&6
-echo "configure:2490: checking for --enable-threaded" >&5
+echo "configure:2554: checking for --enable-threaded" >&5
     # Check whether --enable-threaded or --disable-threaded was given.
 if test "${enable_threaded+set}" = set; then
   enableval="$enable_threaded"
@@ -2510,7 +2574,7 @@ EOF
 
 
     echo $ac_n "checking for --enable-fastreg""... $ac_c" 1>&6
-echo "configure:2514: checking for --enable-fastreg" >&5
+echo "configure:2578: checking for --enable-fastreg" >&5
     # Check whether --enable-fastreg or --disable-fastreg was given.
 if test "${enable_fastreg+set}" = set; then
   enableval="$enable_fastreg"
@@ -2534,7 +2598,7 @@ EOF
 
 
     echo $ac_n "checking for --enable-regopt""... $ac_c" 1>&6
-echo "configure:2538: checking for --enable-regopt" >&5
+echo "configure:2602: checking for --enable-regopt" >&5
     # Check whether --enable-regopt or --disable-regopt was given.
 if test "${enable_regopt+set}" = set; then
   enableval="$enable_regopt"
@@ -2558,7 +2622,7 @@ EOF
 
 
     echo $ac_n "checking for --enable-linkprop""... $ac_c" 1>&6
-echo "configure:2562: checking for --enable-linkprop" >&5
+echo "configure:2626: checking for --enable-linkprop" >&5
     # Check whether --enable-linkprop or --disable-linkprop was given.
 if test "${enable_linkprop+set}" = set; then
   enableval="$enable_linkprop"
@@ -2592,7 +2656,7 @@ EOF
 
 
     echo $ac_n "checking for --enable-peanuts""... $ac_c" 1>&6
-echo "configure:2596: checking for --enable-peanuts" >&5
+echo "configure:2660: checking for --enable-peanuts" >&5
     # Check whether --enable-peanuts or --disable-peanuts was given.
 if test "${enable_peanuts+set}" = set; then
   enableval="$enable_peanuts"
@@ -2616,73 +2680,10 @@ fi
 
 
 
-echo $ac_n "checking for --with-dmalloc""... $ac_c" 1>&6
-echo "configure:2621: checking for --with-dmalloc" >&5
-# Check whether --with-dmalloc or --without-dmalloc was given.
-if test "${with_dmalloc+set}" = set; then
-  withval="$with_dmalloc"
-  :
-fi
-
-
-if test "$with_dmalloc" = "yes"
-then
-    echo "$ac_t""yes" 1>&6
-    echo $ac_n "checking for main in -ldmalloc""... $ac_c" 1>&6
-echo "configure:2633: checking for main in -ldmalloc" >&5
-ac_lib_var=`echo dmalloc'_'main | sed 'y%./+-%__p_%'`
-if eval "test \"`echo '$''{'ac_cv_lib_$ac_lib_var'+set}'`\" = set"; then
-  echo $ac_n "(cached) $ac_c" 1>&6
-else
-  ac_save_LIBS="$LIBS"
-LIBS="-ldmalloc  $LIBS"
-cat > conftest.$ac_ext <<EOF
-#line 2641 "configure"
-#include "confdefs.h"
-
-int main() {
-main()
-; return 0; }
-EOF
-if { (eval echo configure:2648: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
-  rm -rf conftest*
-  eval "ac_cv_lib_$ac_lib_var=yes"
-else
-  echo "configure: failed program was:" >&5
-  cat conftest.$ac_ext >&5
-  rm -rf conftest*
-  eval "ac_cv_lib_$ac_lib_var=no"
-fi
-rm -f conftest*
-LIBS="$ac_save_LIBS"
-
-fi
-if eval "test \"`echo '$ac_cv_lib_'$ac_lib_var`\" = yes"; then
-  echo "$ac_t""yes" 1>&6
-  true
-else
-  echo "$ac_t""no" 1>&6
-{ echo "configure: error: cannot find lib dmalloc" 1>&2; exit 1; }
-fi
-
-    cat >> confdefs.h <<\EOF
-#define DMALLOC 1
-EOF
-
-    LIBS="$LIBS -ldmalloc"
-elif test -n "$with_dmalloc"
-then
-    { echo "configure: error: only yes allowed" 1>&2; exit 1; }
-else
-    echo "$ac_t""no" 1>&6
-fi
-
-
-
-if test -z "$with_dmalloc"
+if test -z "$with_ccmalloc"
 then
     echo $ac_n "checking for --with-malloc""... $ac_c" 1>&6
-echo "configure:2686: checking for --with-malloc" >&5
+echo "configure:2687: checking for --with-malloc" >&5
     # Check whether --with-malloc or --without-malloc was given.
 if test "${with_malloc+set}" = set; then
   withval="$with_malloc"
@@ -2706,7 +2707,7 @@ fi
 
 
 echo $ac_n "checking for --enable-tmphack""... $ac_c" 1>&6
-echo "configure:2710: checking for --enable-tmphack" >&5
+echo "configure:2711: checking for --enable-tmphack" >&5
 # Check whether --enable-tmphack or --disable-tmphack was given.
 if test "${enable_tmphack+set}" = set; then
   enableval="$enable_tmphack"
@@ -2743,7 +2744,7 @@ case $platform in
     linux*)
 
     echo $ac_n "checking for --enable-lstatic""... $ac_c" 1>&6
-echo "configure:2747: checking for --enable-lstatic" >&5
+echo "configure:2748: checking for --enable-lstatic" >&5
     # Check whether --enable-lstatic or --disable-lstatic was given.
 if test "${enable_lstatic+set}" = set; then
   enableval="$enable_lstatic"
@@ -2768,7 +2769,7 @@ esac
 
 
     echo $ac_n "checking for --enable-finalization""... $ac_c" 1>&6
-echo "configure:2772: checking for --enable-finalization" >&5
+echo "configure:2773: checking for --enable-finalization" >&5
     # Check whether --enable-finalization or --disable-finalization was given.
 if test "${enable_finalization+set}" = set; then
   enableval="$enable_finalization"
