@@ -48,7 +48,6 @@ parameterized script.
 <subsection class=unnumbered>
   <title/Problem Specification/
 
-
 <p>
 Given a map showing the West European countries
 Netherlands, Belgium, France, Spain, Portugal,
@@ -60,12 +59,11 @@ number of colors is used.
 <subsection class=unnumbered>
   <title/Model/
 
-
 <p>
-We have a variable ?{NbColors} saying how may
+We have a variable <math/NbColors/ saying how may
 different colors we can use.  Moreover, we have a
-variable for every country.  For every pair ?{A},
-?{B} of countries having a border in common we
+variable for every country.  For every pair <math/A/,
+<math/B/ of countries having a border in common we
 impose the constraint <math/A\neq B/.  We represent
 colors as numbers.  Hence we constrain all
 variables for countries to integers in
@@ -76,13 +74,13 @@ variables for countries to integers in
 
 
 <p>
-We first distribute on ?{NbColors}, trying the
+We first distribute on <math/NbColors/, trying the
 numbers <math/0,1,2,\ldots/ in ascending order.  After
-?{NbColors} is determined, we distribute on the
+<math/NbColors/ is determined, we distribute on the
 variables for the countries using the usual
 first-fail strategy.
 
-<figure class="Figure" id="ProgMapColoring">
+<figure id="ProgMapColoring">
 <caption/A script for the Map Coloring Problem
 together with a data specification./
 <<<
@@ -93,7 +91,7 @@ in
       NbColors  = {FD.decl}
    in
       {FD.distribute naive [NbColors]}
-      % Color: Countries --> 1#NbColors
+      %% Color: Countries --> 1#NbColors
       {FD.record color Countries 1#NbColors Color}
       {ForAll Data
        proc {$ A#Bs}
@@ -127,12 +125,12 @@ The figure shows the specification of a map
 containing some European countries.
 <p>
 The script first creates a local variable
-?{NbColors} that specifies the number of different
+<<NbColors>> that specifies the number of different
 colors to be used for coloring the map.  Then it
-distributes naively on ?{NbColors}.  Recall that a
+distributes naively on <<NbColors>>.  Recall that a
 distributor blocks its thread until it has done
-its job.  After ?{NbColors} is determined by
-distribution, the variable ?{Color}  is
+its job.  After <<NbColors>> is determined by
+distribution, the variable <<Color>>  is
 constrained to a record mapping the country names
 to integers in <<1#NbColors>>.  This implicitly
 creates the variables for the Countries.  Next the
@@ -140,9 +138,9 @@ script creates a propagator
 <<<
 Color.A \=: Color.B
 >>>
-for every pair ?{A}, ?{B} of bordering
+for every pair <<A>>, <<B>> of bordering
 countries.
-Finally, the script distributes on ?{Color} using
+Finally, the script distributes on <<Color>> using
 the first-fail strategy.
 <p>
 The statement
@@ -159,7 +157,7 @@ color(
    switzerland: 3 
      )
 >>>
-The search tree of ?{MapColoring} is interesting.
+The search tree of <<MapColoring>> is interesting.
 First, colorings with 0, 1, 2 and 3 colors are
 searched and not found.  Then a coloring with 4
 colors is searched.  Now a solution is found
@@ -170,10 +168,10 @@ not matter.
 </section>
 
 <section id="SecFDConference"><title/Example: Conference/
-<p>
 
+<p>
 This example will employ the constraint provided
-by ?{FD.atMost}.
+by <<FD.atMost>>.
 
 <subsection class=unnumbered>
   <title/Problem Specification/
@@ -189,34 +187,32 @@ the following constraints on the timing of the
 sessions:
 <list enum>
 <item>
-Session ?{4} must take place before Session <math/{11}/.
+Session 4 must take place before Session 11.
 <item>
-Session ?{5} must take place before Session <math/{10}/.
+Session 5 must take place before Session 10.
 <item>
-Session ?{6} must take place before Session <math/{11}/.
+Session 6 must take place before Session 11.
 <item>
-Session ?{1} must not be in parallel with
-Sessions ?{2}, ?{3}, ?{5}, ?{7}, ?{8}, and
-<math/{10}/.
+Session 1 must not be in parallel with
+Sessions 2, 3, 5, 7, 8, and 10.
 <item>
-Session ?{2} must not be in parallel with
-Sessions ?{3}, ?{4}, ?{7}, ?{8}, ?{9}, and
-<math/{11}/.
+Session 2 must not be in parallel with
+Sessions 3, 4, 7, 8, 9, and 11.
 <item>
-Session ?{3} must not be in parallel with
-Sessions ?{5}, ?{6}, and ?{8}.
+Session 3 must not be in parallel with
+Sessions 5, 6, and 8.
 <item>
-Session ?{4} must not be in parallel with
-Sessions ?{6}, ?{8}, and <math/{10}/.
+Session 4 must not be in parallel with
+Sessions 6, 8, and 10.
 <item>
-Session ?{6} must not be in parallel with
-Sessions ?{7} and <math/{10}/.
+Session 6 must not be in parallel with
+Sessions 7 and 10.
 <item>
-Session ?{7} must not be in parallel with
-Sessions ?{8} and ?{9}.
+Session 7 must not be in parallel with
+Sessions 8 and 9.
 <item>
-Session ?{8} must not be in parallel with
-Session <math/{10}/.
+Session 8 must not be in parallel with
+Session 10.
 </list>
 The time table should minimize the number of
 slots.
@@ -229,9 +225,9 @@ The model has a variable <math/{\it NbSlots}/ saying
 how many slots the conference has.  For the given
 data, <math/{\it NbSlots}/ can be constrained to the
 finite domain <math/4\#{11}/.  The model also has a
-variable <math/{\it Plan}_i/ for every session ?{i},
+variable <math/{\it Plan}_i/ for every session <math/i/,
 where <math/{\it Plan}_i/ stands for the number of the
-slot in which Session ?{i} will take place.  Every
+slot in which Session <math/i/ will take place.  Every
 variable <math/{\it Plan}_i/ can be constrained to the
 finite domain <math/1\#{\it NbSlots}/.  The remaining
 constraints are obvious from the problem
@@ -249,7 +245,7 @@ determined, we distribute on the variables
 first-fail strategy.
 
 <p>
-<figure class="Figure" id="ProgConference">
+<figure id="ProgConference">
 <caption/A script for conference scheduling
 together with a data specification./
 
@@ -264,12 +260,12 @@ in
       NbSlots  = {FD.int MinNbSlots#NbSessions}
    in
       {FD.distribute naive [NbSlots]}
-      % Plan: Session --> Slot
+      %% Plan: Session --> Slot
       {FD.tuple plan NbSessions 1#NbSlots Plan}
-      % at most NbParSessions per slot
+      %% at most NbParSessions per slot
       {For 1 NbSlots 1  
        proc {$ Slot} {FD.atMost NbParSessions Plan Slot} end}
-      % impose constraints
+      %% impose constraints
       {ForAll Constraints
        proc {$ C}
 	  case C
@@ -282,14 +278,13 @@ in
    end
 end
 
-Data = data( nbSessions:11  nbParSessions:3
-	     constraints: [ before(4 11)  before(5 10)  before(6 11)
-		            disjoint(1 [2 3 5 7 8 10])
-		            disjoint(2 [3 4 7 8 9 11])
-		            disjoint(3 [5 6 8])  disjoint(4 [6 8 10])
-		            disjoint(6 [7 10])   disjoint(7 [8 9])
-		            disjoint(8 [10]) ] )
-
+Data = data(nbSessions:11  nbParSessions:3
+	    constraints: [ before(4 11)  before(5 10)  before(6 11)
+		           disjoint(1 [2 3 5 7 8 10])
+		           disjoint(2 [3 4 7 8 9 11])
+		           disjoint(3 [5 6 8])  disjoint(4 [6 8 10])
+		           disjoint(6 [7 10])   disjoint(7 [8 9])
+		           disjoint(8 [10]) ] )
 >>>
 
 </figure>
@@ -299,35 +294,40 @@ Data = data( nbSessions:11  nbParSessions:3
 
 <p>
 The script in <Ptr to="ProgConference"> is
-parameterized with an argument ?{Data} specifying
+parameterized with an argument <<Data>> specifying
 the conference to be organized.  The figure also
 shows the specification of the conference
 described in the problem specification.
+
 <p>
-The script creates a local variable ?{NbSlots}
+The script creates a local variable <<NbSlots>>
 specifying the number of slots used by the
 conference.  It then distributes naively on
-?{NbSlots}.  After ?{NbSlots} is determined, it
-constrains its root variable ?{Plan} to a tuple
-mapping the session numbers <math/1,\ldots,11/ to integers
+<<NbSlots>>.  After <<NbSlots>> is determined, it
+constrains its root variable <<Plan>> to a tuple
+mapping the session numbers <<1>>, &ellipsis;, <<11>> to integers
 in <<1#NbSlots>>.  This implicitly creates
 variables corresponding to the variables <math/{\it
 Plan}_i/ of the model.
+
 <p>
 The statement
 <<<
 {FD.atMost NbParSessions Plan Slot}
 >>>
 creates a propagator for a constraint saying that
-at most ?{NbParSessions} components of ?{Plan}
-can be equal to ?{Slot}.
+at most <<NbParSessions>> components of <<Plan>>
+can be equal to <<Slot>>.
+
 <p>
 The statement <<{ForAll Constraints ... }>>
 imposes the constraints of the conference to be
 scheduled.
+
 <p>
-The last statement distributes on ?{Plan} using
+The last statement distributes on <<Plan>> using
 the first-fail strategy.
+
 <p>
 The statement
 <<<
@@ -344,6 +344,9 @@ slots, where the sessions 1, 4 and 9 take place in
 slot 1, the sessions 2, 5 and 6 take place in slot
 2, the sessions 3, 7 and 10 take place in slot 3,
 and the sessions 8 and 11 take place in slot 4.
+
 </section>
+
+
 </chapter>
 
