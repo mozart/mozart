@@ -1,34 +1,34 @@
+### -*- perl -*-
 ###
 ### Authors:
 ###   Denys Duchier <duchier@ps.uni-sb.de>
+###   Leif Kornstaedt <kornstae@ps.uni-sb.de>
 ###   Christian Schulte <schulte@dfki.de>
 ###
 ### Copyright:
 ###   Denys Duchier, 1998
+###   Leif Kornstaedt, 1998
 ###   Christian Schulte, 1998
 ###
 ### Last change:
 ###   $Date$ by $Author$
 ###   $Revision$
 ###
-### This file is part of Mozart, an implementation 
-### of Oz 3:
-###    http://mozart.ps.uni-sb.de
+### This file is part of Mozart, an implementation of Oz 3:
+###   http://mozart.ps.uni-sb.de
 ###
 ### See the file "LICENSE" or
-###    http://mozart.ps.uni-sb.de/LICENSE.html
+###   http://mozart.ps.uni-sb.de/LICENSE.html
 ### for information on usage and redistribution 
 ### of this file, and for a DISCLAIMER OF ALL 
 ### WARRANTIES.
 ###
 
-# -*- perl -*-
-
 %builtins_all =
 (
-    ##* CompilerSupport
+    ##* Compiler Support
 
-    'chunkArity'                => { in  => ['+chunk'],
+    'chunkArity'		=> { in  => ['+chunk'],
 				     out => ['+[feature]'],
 				     BI  => BIchunkArityCompiler},
 
@@ -80,7 +80,7 @@
 				     out => ['+bool'],
 				     BI  => BIisLocalDet},
 
-    ##* Assembler support
+    ##* Assembler Support
 
     'allocateCodeBlock'		=> { in  => ['+int','+[value]'],
 				     out => ['+foreignPointer','+procedure/0'],
