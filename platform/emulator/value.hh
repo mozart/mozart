@@ -878,7 +878,7 @@ public:
     return OK;}
 
   Bool resetEntityCondManager(EntityCond c){
-    Assert(!(c & PERM_BLOCKED|PERM_ME|PERM_SOME|PERM_ALL));
+    Assert(!(c & (PERM_BLOCKED|PERM_ME|PERM_SOME|PERM_ALL)));
     Assert(info!=NULL);
     EntityCond old_ec=getEntityCond();
     info->managerEntityCond &= ~c;
