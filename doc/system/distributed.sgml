@@ -28,10 +28,6 @@
 <Part id="Part.Distributed">
   <Title/Distributed Programming/
 
-  <P>
-  </P>
-
-
   <Chapter id="Chapter.Connection">
     <Title/Connecting Computations: <<Connection>>/
 
@@ -145,7 +141,7 @@
           <Entry><Span class=index/<<init>>/
 	    <Index/<<Connection>><And><<gate>><And><<init>>/
           <Synopsis>
-	    <<init(?_{X} ?_{TicketA} <= _)>>
+	    <code/init(?_{X} ?_{TicketA} <= _)/
           <Item>
             Optionally returns the many-shot ticket ?_{TicketA} (an atom)
             under which the value ?_{X} is offered.
@@ -157,7 +153,7 @@
           <Entry><Span class=index/<<getTicket>>/
 	    <Index/<<Connection>><And><<gate>><And><<getTicket>>/
           <Synopsis>
-	    <<getTicket(?_{TicketA})>>
+	    <code/getTicket(?_{TicketA})/
           <Item>
             Returns the many-shot ticket ?_{TicketA} (an atom) of the
             gate. 
@@ -165,7 +161,7 @@
           <Entry><Span class=index/<<close>>/
 	    <Index/<<Connection>><And><<gate>><And><<close>>/
           <Synopsis>
-	    <<close()>>
+	    <code/close()/
           <Item>
             Closes the gate, which makes further use of the associated
             ticket illegal.
@@ -208,9 +204,9 @@
         <Entry><Span class=index/<<init>>/
 	  <Index/<<Remote>><And><<manager>><And><<init>>/
         <Synopsis>
-<<<init(host:   ?+{HostV}   <= localhost
+<code display/init(host:   ?+{HostV}   <= localhost
      fork:   ?+{ForkA}   <= automatic
-     detach: ?+{DetachB} <= false)>>>
+     detach: ?+{DetachB} <= false)/
         <Item>
           Creates a new Oz process at ?_{HostV} (specified by a virtual
           string), where <<localhost>> is the computer running the
@@ -238,8 +234,8 @@
         <Entry><Span class=index/<<link>>/
 	  <Index/<<Remote>><And><<manager>><And><<link>>/
         <Synopsis>
-	    <<<link(url:?+{UrlV} ?_{ModuleR} <= _)>>>
-	    <<<link(name:?+{NameV} ?_{ModuleR} <= _)>>>
+	    <code display/link(url:?+{UrlV} ?_{ModuleR} <= _)/
+	    <code display/link(name:?+{NameV} ?_{ModuleR} <= _)/
         <Item>
             Links the module identified either by a url ?_{UrlV} (a
             virtual string) or a module name ?_{NameV} (a virtual
@@ -252,8 +248,8 @@
           <Entry><Span class=index/<<apply>>/
 	    <Index/<<Remote>><And><<manager>><And><<apply>>/
           <Synopsis>
-	    <<<apply(url:?+{UrlV} ?+{Functor} ?_{ModuleR} <= _)>>>
-	    <<<apply(name:?+{NameV} ?+{Functor} ?_{ModuleR} <= _)>>>
+	    <code display/apply(url:?+{UrlV} ?+{Functor} ?_{ModuleR} <= _)/
+	    <code display/apply(name:?+{NameV} ?+{Functor} ?_{ModuleR} <= _)/
           <Item>
             Applies the functor ?_{Functor}, where the url ?_{UrlV} (a
             virtual string) or the module name ?_{NameV} (a virtual
@@ -269,8 +265,8 @@
           <Entry><Span class=index/<<enter>>/
 	    <Index/<<Remote>><And><<manager>><And><<enter>>/
           <Synopsis>
-	    <<<enter(url:?+{UrlV} ?_{ModuleR})>>>
-	    <<<enter(name:?+{NameV} ?_{ModuleR})>>>
+	    <code display/enter(url:?+{UrlV} ?_{ModuleR})/
+	    <code display/enter(name:?+{NameV} ?_{ModuleR})/
           <Item>
             Installs the module ?_{ModuleR} under the url ?_{UrlV} (a
             virtual string) or the module name ?_{NameV} (a virtual
@@ -282,7 +278,7 @@
           <Entry><Span class=index/<<ping>>/
 	    <Index/<<Remote>><And><<manager>><And><<ping>>/
           <Synopsis>
-	    <<<ping()>>>
+	    <code display/ping()/
           <Item>
            Raises exception if remote process is dead. Blocks until
            executed by remote process.
@@ -290,7 +286,7 @@
           <Entry><Span class=index/<<close>>/
 	    <Index/<<Remote>><And><<manager>><And><<close>>/
           <Synopsis>
-	    <<<close()>>>
+	    <code display/close()/
           <Item>
             Kills the remote process.
 
@@ -301,13 +297,83 @@
   </Chapter>
 
 
-  <Chapter id="Chapter.Fault">
-    <Title/Detecting and Handling Failure: <<Fault>>/
-  </Chapter>
-
-
   <Chapter id="Chapter.URL">
-    <Title/Refering Distributed Entities: <<URL>>/
+    <Title/Referring To Distributed Entities: <<URL>>/
+    <p>In the age of the <em/World Wide Web/, resources needed by a
+running system don't just reside in files, they reside at URLs.  The
+<code/URL/ module provides an interface for creating and manipulating
+URLs as data-structures.  It fully conforms to URI syntax as defined
+in IETF draft <ref.extern
+to="http://search.ietf.org/internet-drafts/draft-fielding-uri-syntax-03.txt"
+>Uniform Resource Identifiers (URI): Generic Syntax</ref.extern> by
+T.&nbsp;Berners-lexx, R.&nbsp;Fielding, and L.&nbsp;Masinter (June 4,
+1998), and passes all 5 test suites published by Roy Fielding.</P>
+    <p>The only derogations to said specification were made to
+accommodate Windows-style filenames: (1) a prefix of the form
+<code proglang=fundamental/?{C}:/ where ?{C} is a single character is
+interpreted as Windows-style device notation rather than as a uri
+scheme -- in practice, this is a compatible extension since there are
+no legal single character schemes, (2) path segments may indifferently
+be separated by <samp>/</samp> or <samp/\/; this too is compatible
+since non-separator forward and backward slashes oughtto be otherwise
+<em/escape encoded/.</P>
+    <p>There is additionally a further experimental extension: all
+urls may be suffixed by a string of the form "{foo=a,bar=b}".  This
+adds an <em/info/ record to the parsed representation of the url.
+Here, this record would be <code/info(foo:a bar:b)/.  Thus properties
+can be attached to urls.  For example, we may indicate that a url
+denotes a native functor thus:
+<file>file:/foo/bar/baz.so{native}</file>.  Here <code/{native}/ is
+equivalent to <code/{native=}', &ie; the info record is
+<code/info(native:'')/.</p>
+    <p><list>
+	<entry/<code/URL.make//
+	<synopsis/<code/{URL.make ?+{VS} ??{Url}}//
+	<item>Parses virtual string ?_{VS} as a url, according to the
+proposed uri syntax modulo Windows-motivated derigations (see above).
+Local filename syntax is a special case of schemeless uri.  The parsed
+representation of a url is a non-empty record whose features hold the
+various parts of the url, it has the form <code/url(...)/.  We speak
+of url records and url vstrings: the former being the parsed
+representation of the latter.  A url record must be non-empty to
+distinguish it from the url vstring consisting of the atom
+<code/url/.  The empty url record can be written &eg;
+<code/url(unit)/.  ?_{VS} may also be a url record, in which case it
+is simply returned.</item>
+      <entry/<code/URL.is//
+      <synopsis/<code/{URL.is ?+{X}}//
+      <item>Returns <code/true/ iff ?_{X} is a non-empty record
+labeled with <code/url/.</item>
+      <entry/<code/URL.toVs//
+      <synopsis/<code/{URL.toVs ?+{X} ??{VS}}//
+      <item>?_{X} may be a url record or vstring.  The corresponding
+normalied vstring representation is returned. #?_{FRAGMENT} and
+{?_{INFO}} segments are not included (see below).  This is appropriate
+for retrieval since fragment and info sections are meant for
+client-side usage.</item>
+      <entry/<code/URL.toVsExtended//
+      <synopsis/<code/{URL.toVsExtended ?+{X} ?+{HOW} ??{VS}}//
+      <item>Similar to the above, but ?_{HOW} is a record with
+optional boolean features code/full/ and <code/cache/.
+<code/full:true/ indicates that #?{FRAGMENT} and {?{INFO}} sections
+should be included if present.  <code/cache:true/ requests that
+cache-style syntax be used (see <ptr to="Chapter.Resolve">): the
+<samp/:/ following the scheme and the <samp>//</samp> preceding the
+authority are both replaced by single <samp>/</samp>.</item>
+      <entry/<code/URL.toString//
+      <synopsis/<code/{URL.toString ?+{X} ??{STR}}//
+      <item>Calls <code/URL.toVs/ and transforms the result to a
+string.
+      <entry/<code/URL.toAtom//
+      <synopsis/<code/{URL.toAtom ?+{X} ??{Atom}}//
+      <item>Calls <code/URL.toVs/ and transforms the result to a
+atom.
+      <entry/<code/URL.resolve//
+      <synopsis/<code/{URL.resolve ?+{BASE} ?+{REL} ??{Url}}//
+      <item>?_{BASE} and {_{REL} are url records or vstrings.  ?_{REL}
+is resolved relative to ?_{BASE} and a new url record is returned with
+the appropriate fileds filled in.
+    </list></p>
   </Chapter>
 
 
@@ -315,6 +381,18 @@
     <Title/Resolving URLs: <<Resolve>>/
   </Chapter>
 
+  <Chapter id="Chapter.Fault">
+    <Title/Detecting and Handling Failure: <<Fault>>/
+  </Chapter>
 
 </Part>
 
+<!--
+Local Variables:
+mode: sgml
+mode: auto-fill
+sgml-default-dtd-file: "part.ced"
+sgml-auto-activate-dtd: t
+adaptive-fill-mode: nil
+End:
+-->
