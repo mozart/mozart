@@ -93,9 +93,9 @@ OZ_BI_define(PREFIX(flags),0,1)
 OZ_BI_end
 
 OZ_C_proc_interface oz_interface[] = {
-  {SPREFIX(compile),2,1},
-  {SPREFIX(execute),4,1},
-  {SPREFIX(free),1,0},
-  {SPREFIX(flags),0,1},
+  {"compile"	,2,1,PREFIX(compile)},
+  {"execute"	,4,1,PREFIX(execute)},
+  {"free"	,1,0,PREFIX(free)},
+  {"flags"	,0,1,PREFIX(flags)},
   {0,0,0}
 };
