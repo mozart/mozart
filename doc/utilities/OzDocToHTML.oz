@@ -64,36 +64,8 @@ prepare
 define
    DOCTYPE_PUBLIC = '"-//W3C//DTD HTML 4.0 Transitional//EN"'
 
-   ParseError = 'sgml parse error'
-   CrossRefError = 'sgml cross-reference error'
    OzDocError = 'ozdoc to html error'
    OzDocWarning = 'ozdoc to html warning'
-
-   proc {OutputParseErrors S Reporter} Line Lines in
-      {List.takeDropWhile S fun {$ C} C \= &\n end ?Line ?Lines}
-      try R1 FileName R2 LineNumber R3 ColumnNumber R4 Kind Msg in
-         Line = &n|&s|&g|&m|&l|&s|&:|R1
-         {List.takeDropWhile R1 fun {$ C} C \= &: end ?FileName &:|?R2}
-         {List.takeDropWhile R2 fun {$ C} C \= &: end ?LineNumber &:|?R3}
-         {List.takeDropWhile R3 fun {$ C} C \= &: end ?ColumnNumber &:|?R4}
-         Kind#Msg = case R4 of &E|&:|& |R then ParseError#R
-                    elseof &X|&:|& |R then CrossRefError#R
-                    elseof & |R then ParseError#R
-                    end
-         {Reporter error(coord: pos({String.toAtom FileName}
-                                    {String.toInt LineNumber}
-                                    {String.toInt ColumnNumber})
-                         kind: Kind
-                         msg: Msg)}
-      catch _ then
-         {Reporter error(kind: ParseError msg: Line)}
-      end
-      case Lines of [&\n] then skip
-      elseof &\n|Rest then {OutputParseErrors Rest Reporter}
-      elseof nil then skip
-      elseof X then {OutputParseErrors X Reporter}
-      end
-   end
 
    fun {CollapseSpaces S DropSpace}
       case S of C|Cr then
@@ -333,11 +305,7 @@ define
       meth translate(Mode Args) SGMLNode in
          {@Reporter startBatch()}
          {@Reporter startPhase('parsing SGML input')}
-         try
-            SGMLNode = {SGML.parse Args.'in'}
-         catch errors(S) then
-            {OutputParseErrors S @Reporter}
-         end
+         SGMLNode = {SGML.parse Args.'in' @Reporter}
          if {@Reporter hasSeenError($)} then skip
          else
             FontifyMode <- Mode
