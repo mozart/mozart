@@ -291,7 +291,7 @@ with logic variables.
 Oz does not need an explicit
 monitor or signal concept--rather,
 logic variables let threads
-wait for data availability,
+wait until data is available,
 <index id=idx.dataavailability/thread<and>data availability/
 <index/concurrency<and>90% rule/
 which is 90% of the needs of concurrency.
