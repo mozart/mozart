@@ -447,12 +447,27 @@ Bool AM::hookCheckNeeded()
 // outlined auxiliary functions
 // ------------------------------------------------------------------------
 
+// free the memory of the thread (there are no references to it anymore)
+inline
+void AM::disposeThread(Thread *th)
+{
+  Verbose((VERB_THREAD,"Thread::dispose = 0x%x\n",this));
+  if (th == rootThread) {
+    rootThread->init(th->getPriority(),rootBoard);
+    checkToplevel();
+  } else {
+    /* dispose thread: */
+    th->next=threadsFreeList;
+    threadsFreeList = th;
+  }
+}
+
 #define CHECKSEQ                                                              \
 if (e->currentThread->compMode == ALLSEQMODE) {                               \
   e->currentThread=0;                                                         \
   goto LBLstart;                                                              \
 }                                                                             \
-goto LBLcheckEntailment;
+goto LBLpopTask;
 
 inline
 void addSusp(TaggedRef var,Suspension *susp)
@@ -588,6 +603,347 @@ TaggedRef AM::createNamedVariable(int regIndex, TaggedRef name)
   return ret;
 }
 
+
+/*
+ * Entailment handling for emulator
+ *
+ * check entailment and stability
+ *  after thread is finished or top commit
+ */
+enum CE_RET {
+  CE_CONT,
+  CE_NOTHING,
+  CE_FAIL
+};
+
+Bool AM::checkEntailment(Continuation *&contAfter, int &prio)
+{
+
+loop:
+
+  currentBoard->unsetNervous();
+
+  if (currentBoard->isAsk()) {
+    if ( entailment() ) {
+      prio = currentBoard->getActor()->getPriority();
+      contAfter=currentBoard->getBodyPtr();
+
+      trail.popMark();
+
+      Board *tmpBB = currentBoard;
+
+      setCurrent(currentBoard->getParentFast());
+      tmpBB->unsetInstalled();
+      tmpBB->setCommitted(currentBoard);
+
+#ifndef NEWCOUNTER
+      currentBoard->decSuspCount();
+#endif
+
+      return CE_CONT;
+    }
+    return CE_NOTHING;
+  }
+
+  if (currentBoard->isWait ()) {
+// WAITTTOP
+    if (currentBoard->isWaitTop()) {
+
+// WAITTOP: top commit
+      if ( entailment() ) {
+        trail.popMark();
+
+        Board *tmpBB = currentBoard;
+
+        setCurrent(currentBoard->getParentFast());
+        tmpBB->unsetInstalled();
+        tmpBB->setCommitted(currentBoard);
+        currentBoard->decSuspCount();
+        goto loop;
+      }
+
+      Assert(!WaitActor::Cast(currentBoard->getActor())->hasOneChild());
+
+      return CE_NOTHING;
+    }
+
+    Assert(!currentBoard->isWaiting () ||
+           !WaitActor::Cast(currentBoard->getActor())->hasOneChild());
+    return CE_NOTHING;
+
+    // WAIT: no rule
+  }
+
+  if (currentBoard->isSolve ()) {
+    // try to reduce a solve board;
+    DebugCheck ((currentBoard->isReflected () == OK),
+                error ("trying to reduce an already reflected solve actor"));
+
+    SolveActor *solveAA = SolveActor::Cast (currentBoard->getActor ());
+    Board      *solveBB = currentBoard;
+
+    if (isStableSolve(solveAA)) {
+      DebugCheck ((trail.isEmptyChunk () == NO),
+                  error ("non-empty trail chunk for solve board"));
+      // all possible reduction steps require this;
+
+      if (solveBB->hasSuspension () == NO) {
+        // 'solved';
+        // don't unlink the subtree from the computation tree;
+        trail.popMark ();
+        currentBoard->unsetInstalled ();
+        setCurrent (currentBoard->getParentFast());
+        currentBoard->decSuspCount ();
+
+        DebugCheckT (solveBB->setReflected ());
+        // statistic
+        ozstat.incSolveSolved();
+        if ( !fastUnifyOutline(solveAA->getResult(), solveAA->genSolved(), OK) ) {
+          return CE_FAIL;
+        }
+      } else {
+        // 'stable' (stuck) or enumeration;
+
+        // wake up propagators to be woken up on stablity
+        if (solveAA->stable_wake()) {
+
+          solveAA->incThreads();
+          Assert(currentThread);
+          pushCFun(solveBB, &AM::SolveActorWaker);
+
+          LOCAL_PROPAGATION(if (! localPropStore.do_propagation())
+                            return CE_FAIL;);
+        }
+
+        if (isStableSolve(solveAA) == NO)
+          return CE_NOTHING;
+
+        WaitActor *wa = solveAA->getDisWaitActor ();
+
+        if (wa == (WaitActor *) NULL) {
+          // "stuck" (stable without distributing waitActors);
+          // don't unlink the subtree from the computation tree;
+          trail.popMark ();
+          currentBoard->unsetInstalled ();
+          setCurrent (currentBoard->getParentFast());
+          currentBoard->decSuspCount ();
+
+          DebugCheckT (solveBB->setReflected ());
+          if ( !fastUnifyOutline(solveAA->getResult(), solveAA->genStuck(), OK) ) {
+            return CE_FAIL;
+          }
+        } else {
+          // to enumerate;
+          DebugCheck ((wa->hasOneChild () == OK),
+                      error ("wait actor for enumeration with single clause?"));
+          DebugCheck (((WaitActor::Cast (wa))->hasNext () == OK),
+                      error ("wait actor for distribution has a continuation"));
+          DebugCheck ((solveBB->hasSuspension () == NO),
+                      error ("solve board by the enumertaion without suspensions?"));
+
+          Bool stableWait = (wa->getChildCount() == 2 &&
+                             (wa->getChildRefAt(1))->isFailureInBody() == OK);
+
+          if (stableWait == OK && solveAA->isEatWaits()) {
+            Board *waitBoard = wa->getChildRef();
+
+            waitBoard->setCommitted(solveBB);
+            if (!installScript(waitBoard->getScriptRef())) {
+              return CE_FAIL;
+            }
+
+            solveBB->incSuspCount(waitBoard->getSuspCount()-1);
+
+            // Make the actor unstable by incremneting the thread counter
+            solveAA->incThreads();
+
+            // put ~'solve actor';
+            Assert(currentThread);
+            pushCFun(solveBB, &AM::SolveActorWaker);    // no args;
+
+            if (waitBoard->isWaitTop()) {
+              goto loop;
+            }
+
+            prio=solveAA->getPriority();
+            contAfter=waitBoard->getBodyPtr();
+            return CE_CONT;
+          }
+
+          if (solveAA->isGuided()) {
+
+            TaggedRef guide = deref(solveAA->getGuidance());
+
+            if (isCons(guide)) {
+              // it is asserted that each element is an int (see above)
+              int clauseNo = smallIntValue(headDeref(guide)) - 1;
+
+              solveAA->setGuidance(tail(guide));
+
+              if ((clauseNo >= 0) && (clauseNo < wa->getChildCount())) {
+
+                Board *waitBoard = wa->getChildRefAt(clauseNo);
+
+                waitBoard->setCommitted(solveBB);
+
+                if (!installScript(waitBoard->getScriptRef())) {
+                  return CE_FAIL;
+                }
+
+                solveBB->incSuspCount(waitBoard->getSuspCount()-1);
+
+                // Make the actor unstable by incremneting the thread counter
+                solveAA->incThreads();
+
+                // put ~'solve actor';
+                Assert(currentThread);
+                pushCFun(solveBB, &AM::SolveActorWaker);    // no args;
+
+                if (waitBoard->isWaitTop()) {
+                  goto loop;
+                }
+
+                prio=solveAA->getPriority();
+                contAfter=waitBoard->getBodyPtr();
+                return CE_CONT;
+
+              } else {
+                trail.popMark ();
+                currentBoard->unsetInstalled ();
+                setCurrent (currentBoard->getParentFast());
+                currentBoard->decSuspCount ();
+
+                if (!fastUnifyOutline(solveAA->getResult(),
+                                      solveAA->genFailed(),
+                                      OK)) {
+                  return CE_FAIL;
+                }
+              }
+
+            } else {
+              // put back wait actor
+              solveAA->pushWaitActor(wa);
+              // give back number of clauses
+              trail.popMark ();
+              currentBoard->unsetInstalled ();
+              setCurrent (currentBoard->getParentFast());
+              currentBoard->decSuspCount ();
+
+              DebugCheckT (solveBB->setReflected ());
+              if (!fastUnifyOutline(solveAA->getResult(),
+                                       solveAA->genChoice(wa->getChildCount()),
+                                       OK)) {
+                return CE_FAIL;
+              }
+
+            }
+          } else {
+
+            Board *waitBoard = wa->getChild();
+            wa->decChilds();
+
+            if (stableWait) {
+              (void) wa->getChild ();  // remove the last child;
+              wa->decChilds ();
+              DebugCheck((wa->hasNoChilds () == NO),
+                         error ("error in the '... [] true then false ro' case"));
+              trail.popMark ();
+              currentBoard->unsetInstalled ();
+              setCurrent (currentBoard->getParentFast());
+              currentBoard->decSuspCount ();
+
+              waitBoard->setActor (wa);
+              ((AWActor *) wa)->addChild (waitBoard);
+              solveAA->setBoardToInstall (waitBoard);
+              DebugCheckT (solveBB->setReflected ());
+              // statistics
+              ozstat.incSolveDistributed();
+              if ( !fastUnifyOutline(solveAA->getResult(), solveAA->genEnumedFail() ,OK)) {
+                return CE_FAIL;
+              }
+
+            } else {
+              // 'proper' enumeration;
+              trail.popMark ();
+              currentBoard->unsetInstalled ();
+              setCurrent (currentBoard->getParentFast());
+              currentBoard->decSuspCount ();
+
+              WaitActor *nwa = new WaitActor (wa);
+              solveBB->decSuspCount ();   // since WaitActor::WaitActor adds one;
+              waitBoard->setActor (nwa);
+              ((AWActor *) nwa)->addChild (waitBoard);
+              wa->unsetBoard ();  // may not copy the actor and rest of boards too;
+              solveAA->setBoardToInstall (waitBoard);
+
+              //  Now, the following state has been reached:
+              // The waitActor with the 'rest' of actors is unlinked from the
+              // computation space; instead, a new waitActor (*nwa) is linked to it,
+              // and all the tree from solve blackboard (*solveBB) will be now copied.
+              // Moreover, the copy has already the 'boardToInstall' setted properly;
+              Board *newSolveBB = copyTree (solveBB, (Bool *) NULL);
+
+              // ... and now set the original waitActor backward;
+              waitBoard->setFailed();   // this subtree is discarded;
+              wa->setBoard (solveBB);          // original waitActor;
+              // the subtrees (new and old ones) are still linked to the
+              // computation tree;
+              if (wa->hasOneChild () == OK) {
+                solveAA->setBoardToInstall (wa->getChild ());
+              } else {
+                solveAA->setBoardToInstall ((Board *) NULL);
+                // ... since we have set previously board-to-install for copy;
+                solveAA->pushWaitActor (wa);
+                //  If this waitActor has yet more than one clause, it can be
+                // distributed again ... Moreover, it must be considered first.
+              }
+              DebugCheckT (solveBB->setReflected ());
+              DebugCheckT (newSolveBB->setReflected ());
+              // ... and now there are two proper branches of search problem;
+
+              // statistics
+              ozstat.incSolveDistributed();
+              if ( !fastUnifyOutline(solveAA->getResult(),
+                                        solveAA->genEnumed(newSolveBB),
+                                        OK)) {
+                return CE_FAIL;
+              }
+            }
+          }
+        }
+      }
+    } else if (solveAA->isDebug() && solveAA->getThreads() == 0) {
+      // There are some external suspensions to this solver!
+
+      switch (installPath(solveBB->getParentFast())) {
+      case INST_REJECTED:
+      case INST_FAILED:
+        error("impossible: installPath failed in solve genUnstable");
+        return CE_FAIL;
+      case INST_OK:
+        break;
+      }
+
+      TaggedRef newVar = makeTaggedRef(newTaggedUVar(currentBoard));
+      TaggedRef result = solveAA->getResult();
+
+      solveAA->setResult(newVar);
+
+      if ( !fastUnifyOutline(result,
+                             solveAA->genUnstable(newVar),
+                             OK)) {
+        return CE_FAIL;
+      }
+
+    }
+    return CE_NOTHING;
+  }
+
+
+  Assert(currentBoard->isRoot());
+  return CE_NOTHING;
+}
+
 // aux debugging;
 #define VERBMSG(S,A1,A2)                                                   \
     fprintf(verbOut,"(em) %s (arg#1 0x%x, arg#2 0x%x) :%d\n",              \
@@ -697,7 +1053,7 @@ void engine() {
 
   e->currentThread = e->getFirstThread();
 
-  DebugTrace(trace("thread switched"));
+  DebugTrace(trace("new thread"));
 
   e->restartThread();
 
@@ -751,11 +1107,7 @@ void engine() {
       goto LBLemulate;
     }
 
-    if (taskstack->isEmpty((TaskStackEntry) tb)) { //
-      if (e->currentThread->hasNotificationBoard () == OK) {
-        Board *nb = e->currentThread->notificationBoard->getBoardFast();
-        e->decSolveThreads(nb);
-      }
+    if (taskstack->isEmpty((TaskStackEntry) tb)) {
       goto LBLkillThread;
     }
 
@@ -807,7 +1159,7 @@ void engine() {
 #endif
 
         exitCall(PROCEED,ozdeb);
-        goto LBLcheckEntailment;
+        goto LBLpopTask;
       }
 
     case C_CALL_CONT:
@@ -841,7 +1193,11 @@ void engine() {
 
         DebugTrace(trace("nervous",tmpBB));
         INSTALLPATH(tmpBB);
+#ifdef NEWCOUNTER
+        goto LBLpopTask;
+#else
         goto LBLcheckEntailment;
+#endif
       }
 
     case C_CFUNC_CONT:
@@ -878,6 +1234,21 @@ void engine() {
 
         LOCAL_PROPAGATION(Assert(localPropStore.isEmpty()));
 
+#ifdef NEWCOUNTER
+        if (biFun == AM::SolveActorWaker) {
+          Continuation *cont;
+          int prio;
+          switch (e->checkEntailment(cont,prio)) {
+          case CE_FAIL:
+            HF_NOMSG;
+          case CE_CONT:
+            LOADCONT(cont);
+            goto LBLemulateHook;
+          case CE_NOTHING:
+            goto LBLpopTask;
+          }
+        }
+#endif
         switch (biFun(XSize, X)) {
         case FAILED:
           killPropagatedCurrentTaskSusp();
@@ -888,7 +1259,11 @@ void engine() {
           killPropagatedCurrentTaskSusp();
           LOCAL_PROPAGATION(if (! localPropStore.do_propagation())
                             goto localhack0;);
+#ifdef NEWCOUNTER
+          goto LBLpopTask;
+#else
           goto LBLcheckEntailment;
+#endif
         case SUSPEND:
           {
             killPropagatedCurrentTaskSusp();
@@ -912,13 +1287,34 @@ void engine() {
 
   LBLkillThread:
     {
+      DebugTrace(trace("kill thread",CBB));
       Thread *tmpThread = e->currentThread;
-      e->currentThread=(Thread *) NULL;
       if (tmpThread) {  /* may happen if catching SIGSEGV and SIGBUS */
+        if (tmpThread->hasNotificationBoard()) {
+          Board *nb = tmpThread->notificationBoard->getBoardFast();
+          e->decSolveThreads(nb);
+        }
+        e->currentThread=(Thread *) NULL;
         e->disposeThread(tmpThread);
+#ifdef NEWCOUNTER
+        Board *bb=tmpThread->getBoardFast();
+        if (!bb->isFailed()) {
+          bb->decSuspCount();
+          if (CBB != bb) {
+            switch (e->installPath(bb)) {
+            case INST_REJECTED:
+            case INST_FAILED:
+              goto LBLstart;
+            case INST_OK:
+              break;
+            }
+          }
+          goto LBLcheckEntailment;
+        }
+#endif
       }
+      goto LBLstart;
     }
-    goto LBLstart;
   }
 
   error("never here");
@@ -1372,7 +1768,11 @@ void engine() {
 
   Case(RETURN):
   {
+#ifdef NEWCOUNTER
+    goto LBLpopTask;
+#else
     goto LBLcheckEntailment;
+#endif
   }
 
 
@@ -1714,7 +2114,11 @@ void engine() {
                 goto LBLschedule;
               }
               if (isTailCall) {
+#ifdef NEWCOUNTER
+                goto LBLpopTask;
+#else
                 goto LBLcheckEntailment;
+#endif
               }
               JUMP(PC);
             default:
@@ -1935,7 +2339,11 @@ void engine() {
        }
 
        if (isTailCall) {
+#ifdef NEWCOUNTER
+         goto LBLpopTask;
+#else
          goto LBLcheckEntailment;
+#endif
        }
        goto LBLemulate;
      }
@@ -1996,7 +2404,11 @@ void engine() {
        }
 
        if (isTailCall) {
+#ifdef NEWCOUNTER
+         goto LBLpopTask;
+#else
          goto LBLcheckEntailment;
+#endif
        }
        JUMP(PC);
      }
@@ -2011,6 +2423,10 @@ void engine() {
   Case(WAIT):
     {
       Assert(CBB->isWait() && !CBB->isCommitted());
+
+#ifdef NEWCOUNTER
+      CBB->decSuspCount();
+#endif
 
       /* unit commit */
       WaitActor *aa = WaitActor::Cast(CBB->getActor());
@@ -2039,23 +2455,34 @@ void engine() {
   Case(WAITTOP):
     {
       /* top commit */
-      if ( e->entailment() )
-
-      LBLtopCommit:
-       {
-         e->trail.popMark();
-
-         tmpBB = CBB;
-
-         e->setCurrent(CBB->getParentFast());
-         tmpBB->unsetInstalled();
-         tmpBB->setCommitted(CBB);
-#ifndef NEWCOUNTER
-         CBB->decSuspCount();
+#ifdef NEWCOUNTER
+      CBB->decSuspCount();
 #endif
+      if ( e->entailment() ) {
+        e->trail.popMark();
 
-         goto LBLcheckEntailment;
-       }
+        tmpBB = CBB;
+
+        e->setCurrent(CBB->getParentFast());
+        tmpBB->unsetInstalled();
+        tmpBB->setCommitted(CBB);
+        CBB->decSuspCount();
+#ifdef NEWCOUNTER
+        Continuation *cont;
+        int prio;
+        switch (e->checkEntailment(cont,prio)) {
+        case CE_FAIL:
+          HF_NOMSG;
+        case CE_CONT:
+          LOADCONT(cont);
+          goto LBLemulateHook;
+        case CE_NOTHING:
+          goto LBLpopTask;
+        }
+#else
+        goto LBLcheckEntailment;
+#endif
+      }
 
       /* unit commit for WAITTOP */
       WaitActor *aa = WaitActor::Cast(CBB->getActor());
@@ -2071,9 +2498,22 @@ void engine() {
           HF_NOMSG;
         }
         Assert(ret != NO);
-        CBB->incSuspCount(bb->getSuspCount());
-        CBB->decSuspCount();
+        CBB->incSuspCount(bb->getSuspCount()-1);
+#ifdef NEWCOUNTER
+        Continuation *cont;
+        int prio;
+        switch (e->checkEntailment(cont,prio)) {
+        case CE_FAIL:
+          HF_NOMSG;
+        case CE_CONT:
+          LOADCONT(cont);
+          goto LBLemulateHook;
+        case CE_NOTHING:
+          goto LBLpopTask;
+        }
+#else
         goto LBLcheckEntailment;
+#endif
       }
 
       /* suspend WAITTOP */
@@ -2084,6 +2524,9 @@ void engine() {
 
   Case(ASK):
     {
+#ifdef NEWCOUNTER
+      CBB->decSuspCount();
+#endif
       // entailment ?
       if (e->entailment()) {
         e->trail.popMark();
@@ -2091,7 +2534,9 @@ void engine() {
         e->setCurrent(CBB->getParentFast());
         tmpBB->unsetInstalled();
         tmpBB->setCommitted(CBB);
+#ifndef NEWCOUNTER
         CBB->decSuspCount();
+#endif
         DISPATCH(1);
       }
 
@@ -2203,6 +2648,9 @@ void engine() {
       }
 
       Thread *tt = e->newThread(prio,CBB);
+#ifdef NEWCOUNTER
+      CBB->incSuspCount();
+#endif
       if (e->currentSolveBoard != (Board *) NULL) {
         e->incSolveThreads (e->currentSolveBoard);
         tt->setNotificationBoard (e->currentSolveBoard);
@@ -2277,322 +2725,56 @@ void engine() {
 #endif
 
 
-// ----------------- end emulate ------------------------------------------
+  // ----------------- end emulate ------------------------------------------
 
 
-// ------------------------------------------------------------------------
-// *** REDUCE Board
-// ------------------------------------------------------------------------
+  /* -----------------------------------------------------------------------
+   * REDUCE Board
+   * ----------------------------------------------------------------------- */
 
- LBLcheckEntailment:
-  DebugTrace(trace("reduce board",CBB));
+  /*
+   * check entailment and stability
+   *  after thread is finished or top commit
+   */
+LBLcheckEntailment:
+  {
+    DebugTrace(trace("check entailment",CBB));
 
-  /* optimize: builtin called on toplevel mm (29.8.94) */
-  if (CBB == e->rootBoard) {
-    goto LBLpopTask;
-  }
-
-  CBB->unsetNervous();
-
-  if (CBB->isAsk()) {
-    if ( e->entailment() ) {
-      LOADCONT(CBB->getBodyPtr());
-
-      e->trail.popMark();
-
-      tmpBB = CBB;
-
-      e->setCurrent(CBB->getParentFast());
-      tmpBB->unsetInstalled();
-      tmpBB->setCommitted(CBB);
-
-      CBB->decSuspCount();
-
-      goto LBLemulateHook;
-    }
-  } else if (CBB->isWait ()) {
-// WAITTTOP
-    if (CBB->isWaitTop()) {
-
-// WAITTOP: top commit
-      if ( e->entailment() ) {
-        goto LBLtopCommit;
-      }
-
-      DebugCheck(WaitActor::Cast(CBB->getActor())->hasOneChild(),
-                 error("reduce: waittop: can not happen"));
-
-// WAITTOP: no rule
+    /* optimize: builtin called on toplevel mm (29.8.94) */
+    if (CBB == e->rootBoard) {
+#ifdef NEWCOUNTER
+      goto LBLstart;
+#else
       goto LBLpopTask;
+#endif
     }
 
-    DebugCheck((CBB->isWaiting () == OK &&
-                WaitActor::Cast(CBB->getActor())->hasOneChild()),
-               error("reduce: wait: unit commit can not happen"));
-    goto LBLpopTask;
-
-// WAIT: no rule
-  }  else if (CBB->isSolve ()) {
-    // try to reduce a solve board;
-    DebugCheck ((CBB->isReflected () == OK),
-                error ("trying to reduce an already reflected solve actor"));
-
-    SolveActor *solveAA = SolveActor::Cast (CBB->getActor ());
-    Board      *solveBB = CBB;
-
-    if (e->isStableSolve(solveAA)) {
-      DebugCheck ((e->trail.isEmptyChunk () == NO),
-                  error ("non-empty trail chunk for solve board"));
-      // all possible reduction steps require this;
-
-      if (solveBB->hasSuspension () == NO) {
-        // 'solved';
-        // don't unlink the subtree from the computation tree;
-        e->trail.popMark ();
-        CBB->unsetInstalled ();
-        e->setCurrent (CBB->getParentFast());
-        CBB->decSuspCount ();
-
-        DebugCheckT (solveBB->setReflected ());
-        // statistic
-        ozstat.incSolveSolved();
-        if ( !e->fastUnifyOutline(solveAA->getResult(), solveAA->genSolved(), OK) ) {
-          HF_NOMSG;
-        }
-      } else {
-        // 'stable' (stuck) or enumeration;
-
-        // wake up propagators to be woken up on stablity
-        if (solveAA->stable_wake()) {
-
-          solveAA->incThreads();
-          e->pushCFun(solveBB, AM::SolveActorWaker);
-
-          LOCAL_PROPAGATION(if (! localPropStore.do_propagation())
-                            goto LBLfailure;);
-        }
-
-        if (e->isStableSolve(solveAA) == NO)
-          goto LBLpopTask;
-
-        WaitActor *wa = solveAA->getDisWaitActor ();
-
-        if (wa == (WaitActor *) NULL) {
-          // "stuck" (stable without distributing waitActors);
-          // don't unlink the subtree from the computation tree;
-          e->trail.popMark ();
-          CBB->unsetInstalled ();
-          e->setCurrent (CBB->getParentFast());
-          CBB->decSuspCount ();
-
-          DebugCheckT (solveBB->setReflected ());
-          if ( !e->fastUnifyOutline(solveAA->getResult(), solveAA->genStuck(), OK) ) {
-            HF_NOMSG;
-          }
-        } else {
-          // to enumerate;
-          DebugCheck ((wa->hasOneChild () == OK),
-                      error ("wait actor for enumeration with single clause?"));
-          DebugCheck (((WaitActor::Cast (wa))->hasNext () == OK),
-                      error ("wait actor for distribution has a continuation"));
-          DebugCheck ((solveBB->hasSuspension () == NO),
-                      error ("solve board by the enumertaion without suspensions?"));
-
-          Bool stableWait = (wa->getChildCount() == 2 &&
-                             (wa->getChildRefAt(1))->isFailureInBody() == OK);
-
-          if (stableWait == OK && solveAA->isEatWaits()) {
-            Board *waitBoard = wa->getChildRef();
-
-            waitBoard->setCommitted(solveBB);
-            if (!e->installScript(waitBoard->getScriptRef())) {
-              HF_FAIL(,
-                      message("commit of wait disjunction failed\n"));
-            }
-
-            solveBB->incSuspCount(waitBoard->getSuspCount()-1);
-
-            // Make the actor unstable by incremneting the thread counter
-            solveAA->incThreads();
-
-            // put ~'solve actor';
-            e->pushCFun(solveBB, &AM::SolveActorWaker);    // no args;
-
-            if (waitBoard->isWaitTop()) {
-              goto LBLcheckEntailment;
-            }
-
-            LOADCONT(waitBoard->getBodyPtr());
-            Assert(PC != NOCODE);
-
-            goto LBLemulate;
-
-          }
-
-          if (solveAA->isGuided()) {
-
-            TaggedRef guide = deref(solveAA->getGuidance());
-
-            if (isCons(guide)) {
-              // it is asserted that each element is an int (see above)
-              int clauseNo = smallIntValue(headDeref(guide)) - 1;
-
-              solveAA->setGuidance(tail(guide));
-
-              if ((clauseNo >= 0) && (clauseNo < wa->getChildCount())) {
-
-                Board *waitBoard = wa->getChildRefAt(clauseNo);
-
-                waitBoard->setCommitted(solveBB);
-
-                if (!e->installScript(waitBoard->getScriptRef())) {
-                  HF_FAIL(,
-                          message("commit of wait disjunction failed\n"));
-                }
-
-                solveBB->incSuspCount(waitBoard->getSuspCount()-1);
-
-                // Make the actor unstable by incremneting the thread counter
-                solveAA->incThreads();
-
-                // put ~'solve actor';
-                e->pushCFun(solveBB, &AM::SolveActorWaker);    // no args;
-
-                if (waitBoard->isWaitTop()) {
-                  goto LBLcheckEntailment;
-                }
-
-                LOADCONT(waitBoard->getBodyPtr());
-                Assert(PC != NOCODE);
-
-                goto LBLemulate;
-
-              } else {
-                e->trail.popMark ();
-                CBB->unsetInstalled ();
-                e->setCurrent (CBB->getParentFast());
-                CBB->decSuspCount ();
-
-                if (!e->fastUnifyOutline(solveAA->getResult(),
-                                         solveAA->genFailed(),
-                                         OK)) {
-                  HF_NOMSG;
-                }
-              }
-
-            } else {
-              // put back wait actor
-              solveAA->pushWaitActor(wa);
-              // give back number of clauses
-              e->trail.popMark ();
-              CBB->unsetInstalled ();
-              e->setCurrent (CBB->getParentFast());
-              CBB->decSuspCount ();
-
-              DebugCheckT (solveBB->setReflected ());
-              if (!e->fastUnifyOutline(solveAA->getResult(),
-                                       solveAA->genChoice(wa->getChildCount()),
-                                       OK)) {
-                HF_NOMSG;
-              }
-
-            }
-          } else {
-
-            Board *waitBoard = wa->getChild();
-            wa->decChilds();
-
-            if (stableWait) {
-              (void) wa->getChild ();  // remove the last child;
-              wa->decChilds ();
-              DebugCheck((wa->hasNoChilds () == NO),
-                         error ("error in the '... [] true then false ro' case"));
-              e->trail.popMark ();
-              CBB->unsetInstalled ();
-              e->setCurrent (CBB->getParentFast());
-              CBB->decSuspCount ();
-
-              waitBoard->setActor (wa);
-              ((AWActor *) wa)->addChild (waitBoard);
-              solveAA->setBoardToInstall (waitBoard);
-              DebugCheckT (solveBB->setReflected ());
-              // statistics
-              ozstat.incSolveDistributed();
-              if ( !e->fastUnifyOutline(solveAA->getResult(), solveAA->genEnumedFail() ,OK)) {
-                HF_NOMSG;
-              }
-
-            } else {
-              // 'proper' enumeration;
-              e->trail.popMark ();
-              CBB->unsetInstalled ();
-              e->setCurrent (CBB->getParentFast());
-              CBB->decSuspCount ();
-
-              WaitActor *nwa = new WaitActor (wa);
-              solveBB->decSuspCount ();   // since WaitActor::WaitActor adds one;
-              waitBoard->setActor (nwa);
-              ((AWActor *) nwa)->addChild (waitBoard);
-              wa->unsetBoard ();  // may not copy the actor and rest of boards too;
-              solveAA->setBoardToInstall (waitBoard);
-
-              //  Now, the following state has been reached:
-              // The waitActor with the 'rest' of actors is unlinked from the
-              // computation space; instead, a new waitActor (*nwa) is linked to it,
-              // and all the tree from solve blackboard (*solveBB) will be now copied.
-              // Moreover, the copy has already the 'boardToInstall' setted properly;
-              Board *newSolveBB = e->copyTree (solveBB, (Bool *) NULL);
-
-              // ... and now set the original waitActor backward;
-              waitBoard->flags |= Bo_Failed;   // this subtree is discarded;
-              wa->setBoard (solveBB);          // original waitActor;
-              // the subtrees (new and old ones) are still linked to the
-              // computation tree;
-              if (wa->hasOneChild () == OK) {
-                solveAA->setBoardToInstall (wa->getChild ());
-              } else {
-                solveAA->setBoardToInstall ((Board *) NULL);
-                // ... since we have set previously board-to-install for copy;
-                solveAA->pushWaitActor (wa);
-                //  If this waitActor has yet more than one clause, it can be
-                // distributed again ... Moreover, it must be considered first.
-              }
-              DebugCheckT (solveBB->setReflected ());
-              DebugCheckT (newSolveBB->setReflected ());
-              // ... and now there are two proper branches of search problem;
-
-              // statistics
-              ozstat.incSolveDistributed();
-              if ( !e->fastUnifyOutline(solveAA->getResult(),
-                                        solveAA->genEnumed(newSolveBB),
-                                        OK)) {
-                HF_NOMSG;
-              }
-            }
-          }
-        }
+    Continuation *cont;
+    int prio;
+    switch (e->checkEntailment(cont,prio)) {
+    case CE_FAIL:
+      HF_NOMSG;
+    case CE_CONT:
+      LOADCONT(cont);
+#ifdef NEWCOUNTER
+      // hack mm2 (priority ??)
+      e->currentThread = e->newThread(prio,CBB);
+      CBB->incSuspCount();
+      if (e->currentSolveBoard != (Board *) NULL) {
+        e->incSolveThreads (e->currentSolveBoard);
+        e->currentThread->setNotificationBoard (e->currentSolveBoard);
       }
-    } else if (solveAA->isDebug() && solveAA->getThreads() == 0) {
-      // There are some external suspensions to this solver!
-
-      INSTALLPATH(solveBB->getParentFast());
-
-      TaggedRef newVar = makeTaggedRef(newTaggedUVar(CBB));
-      TaggedRef result = solveAA->getResult();
-
-      solveAA->setResult(newVar);
-
-      if ( !e->fastUnifyOutline(result,
-                                solveAA->genUnstable(newVar),
-                                OK)) {
-        HF_NOMSG;
-      }
-
+      e->restartThread();
+#endif
+      goto LBLemulateHook;
+    case CE_NOTHING:
+#ifdef NEWCOUNTER
+      goto LBLstart;
+#else
+      goto LBLpopTask;
+#endif
     }
-  } else {
-    Assert(CBB->isRoot());
   }
-  goto LBLpopTask;
 
 // ----------------- end reduce -------------------------------------------
 
@@ -2619,6 +2801,15 @@ void engine() {
     CBB->setFailed();
     e->reduceTrailOnFail();
     CBB->unsetInstalled();
+#ifdef NEWCOUNTER
+    // mm2
+    warning("mm2: here is more todo: clean thread of all task of failed board");
+    if (e->currentThread->getBoardFast()==CBB) {
+      e->setCurrent(aa->getBoardFast());
+      e->currentThread->home=CBB;
+      CBB->incSuspCount();
+    } else
+#endif
     e->setCurrent(aa->getBoardFast());
 
 // ------------------------------------------------------------------------
@@ -2649,7 +2840,7 @@ void engine() {
         HF_FAIL(,message("reducing 'if fi' to 'false'\n"));
       }
     } else if (aa->isWait ()) {
-      if ((WaitActor::Cast (aa))->hasNext () == OK) {
+      if ((WaitActor::Cast (aa))->hasNext()) {
         CAA = WaitActor::Cast (aa);
         goto LBLexecuteNext;
       }
@@ -2676,10 +2867,23 @@ void engine() {
 
           /* unit commit & WAITTOP */
           if (waitBoard->isWaitTop()) {
+#ifdef NEWCOUNTER
+            Continuation *cont;
+            int prio;
+            switch (e->checkEntailment(cont,prio)) {
+            case CE_FAIL:
+              HF_NOMSG;
+            case CE_CONT:
+              LOADCONT(cont);
+              goto LBLemulateHook;
+            case CE_NOTHING:
+              goto LBLpopTask;
+            }
+#else
             if (!waitBoard->hasSuspension()) {
               goto LBLcheckEntailment;
             }
-
+#endif
             /* or guard not completed:  e.g. or task X = 1 end [] false ro */
             goto LBLpopTask;
           }

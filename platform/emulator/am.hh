@@ -231,8 +231,9 @@ public:
   void awakeNode(Board *node);
 
   // entailment check
-  Bool entailment ();
-  Bool isEmptyTrailChunk ();
+  Bool entailment();
+  Bool isEmptyTrailChunk();
+  Bool checkEntailment(Continuation *&contAfter,int &prio);
 
   // Unification
   Bool unify(TaggedRef ref1, TaggedRef ref2, Bool prop = OK);

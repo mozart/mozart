@@ -253,9 +253,6 @@ void AM::restartThread()
 inline
 Thread *AM::newThread(int p,Board *bb)
 {
-#ifdef NEWCOUNTER
-  bb->incSuspCount();
-#endif
   Thread *th = threadsFreeList;
   if (th) {
     threadsFreeList = th->next;
@@ -264,21 +261,6 @@ Thread *AM::newThread(int p,Board *bb)
   }
   th->init(p,bb);
   return th;
-}
-
-// free the memory of the thread (there are no references to it anymore)
-inline
-void AM::disposeThread(Thread *th)
-{
-  Verbose((VERB_THREAD,"Thread::dispose = 0x%x\n",this));
-  if (th == rootThread) {
-    rootThread->init(th->getPriority(),rootBoard);
-    checkToplevel();
-  } else {
-    /* dispose thread: */
-    th->next=threadsFreeList;
-    threadsFreeList = th;
-  }
 }
 
 // check if the thread is scheduled
