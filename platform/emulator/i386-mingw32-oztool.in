@@ -1,0 +1,46 @@
+#!/bin/sh
+
+plat=i386-mingw32
+
+cmd=$1
+shift
+
+case "$cmd" in
+  c++)      exec ${plat}-g++ -I@srcdir@ "$@" ;;
+  cc)       exec ${plat}-gcc -I@srcdir@ "$@" ;;
+  platform) echo "win32-i486"; exit 0;;
+
+  ld) ;;  # see below
+
+  *) echo "$0: unknown command $cmd" 1>&2; exit 1 ;;
+esac
+
+
+while [ $# != 0 ]
+do
+    case "$1" in
+    -o)  shift; libname=$1;;
+    -lc) ;;  # just ignore it
+    -L*) libdirs="$libdirs $1";;
+    *)   args="$args $1";;
+    esac
+    shift
+done
+
+defname=${libname}.def
+aname=lib${libname}.a
+tempfile=/tmp/oztool$$.o
+
+
+trap "rm -f $tempfile $aname $defname" 0 1 15
+
+
+${plat}-gcc -c -I@srcdir@ @BUILDTOP@/platform/emulator/mozart.c -o $tempfile
+
+${plat}-dlltool --as ${plat}-as --output-def $defname\
+		--dllname $libname --output-lib $aname $tempfile $args
+
+${plat}-dllwrap --dlltool-name ${plat}-dlltool \
+		--driver-name ${plat}-gcc \
+		--as ${plat}-as -s -o $libname --def $defname \
+		--dllname $libname $tempfile $args $libdirs
