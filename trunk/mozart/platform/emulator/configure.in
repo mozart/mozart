@@ -184,6 +184,7 @@ AC_ARG_WITH(sunpro,
 	fi
 
 AC_PROG_CXX
+AC_PROG_CXXCPP
 
 AC_PROG_LEX
 AC_PROG_YACC
@@ -398,10 +399,12 @@ dnl *****************************************************************
 dnl *** GMP
 dnl *****************************************************************
 
+: ${oz_inc_path="/usr/local/include"}
+: ${oz_lib_path="/usr/local/lib"}
+
 : ${oz_check_gmp=yes}
 if test "${oz_check_gmp}" = yes
 then
-    AC_MSG_CHECKING(for --with-gmp)
     AC_ARG_WITH(gmp,
 	[--with-gmp=<dir>
 	    search gmp library and header in <dir> (default: NONE)])
@@ -429,18 +432,17 @@ then
     then
 	oz_gmp_inc_dir=$with_gmp_include
     fi
-    
+
     : ${oz_gmp_lib_dir=/usr/local/lib}
     : ${oz_gmp_inc_dir=/usr/local/include}
-    
-    AC_MSG_RESULT(trying \"-L$oz_gmp_lib_dir -I$oz_gmp_inc_dir\")
-    
-    CPPFLAGS="-I$oz_gmp_inc_dir $CPPFLAGS"
-    AC_CHECK_HEADER(gmp.h,,
+
+    oz_inc_path="$oz_gmp_inc_dir $oz_inc_path"
+    oz_lib_path="$oz_gmp_lib_dir $oz_lib_path"
+
+    OZ_CHECK_HEADER_PATH(gmp.h,,
 	    AC_MSG_ERROR(required GNU MP include file not found))
 	    
-    LDFLAGS="-L$oz_gmp_lib_dir $LDFLAGS"
-    AC_CHECK_LIB(gmp, mpz_init, ,
+    OZ_CHECK_LIB_PATH(gmp, mpz_init, ,
 	    AC_MSG_ERROR(required GNU MP lib not found))
 fi
 
