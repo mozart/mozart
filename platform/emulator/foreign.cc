@@ -1947,7 +1947,7 @@ void OZ_addThread(OZ_Term var, OZ_Thread thr)
     return;
   }
 
-  addSuspAnyVar(varPtr, new SuspList((Thread *) thr));
+  addSuspAnyVar(varPtr, (Thread *) thr);
 }
 
 OZ_Return OZ_suspendOnInternal(OZ_Term var)

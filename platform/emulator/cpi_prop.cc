@@ -155,7 +155,7 @@ OZ_Boolean OZ_Propagator::postOn(OZ_Term t)
 {
   DEREF(t, tptr, ttag);
   if (isAnyVar(ttag)) {
-    addSuspAnyVar(tptr, new SuspList(am.currentThread));
+    addSuspAnyVar(tptr, am.currentThread);
     return OZ_TRUE;
   }
   return OZ_FALSE;

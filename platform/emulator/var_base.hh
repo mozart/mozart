@@ -5,8 +5,11 @@
 #pragma interface
 #endif
 
-SuspList * addSuspToList(SuspList * list, SuspList * elem, Board * home);
 SuspList * addSuspToList(SuspList * list, Thread * elem, Board * home);
+
+#define AddSuspToList(List,Thread,Home) \
+   List = addSuspToList(List,Thread,Home)
+
 
 #define STORE_FLAG 1
 #define REIFIED_FLAG 2
@@ -14,14 +17,6 @@ SuspList * addSuspToList(SuspList * list, Thread * elem, Board * home);
 class SVariable {
 
 friend TaggedRef gcVariable(TaggedRef);
-friend inline void addSuspSVar(TaggedRef, SuspList *);
-friend inline void addSuspSVar(TaggedRef, Thread *);
-friend inline void addSuspUVar(TaggedRefPtr, SuspList *);
-friend inline void addSuspUVar(TaggedRefPtr, Thread *);
-friend inline void addSuspNotCVar(TaggedRefPtr, SuspList *);
-friend inline void addSuspCVar(TaggedRef, Thread *);
-friend void addSuspAnyVar(TaggedRefPtr, SuspList *);
-
 protected:
   SuspList *suspList;
   Board *home;
@@ -55,13 +50,6 @@ public:
   void setSuspList(SuspList *inSuspList) { suspList = inSuspList; }
   void unlinkSuspList() { suspList = NULL; }
 
-  void addSuspension (Thread *thr)
-  {
-    thr->updateExtThread(getBoard());
-
-    suspList = new SuspList(thr, suspList);
-  }
-
   void setStoreFlag(void) {
     suspList = (SuspList *) (((long) suspList) | STORE_FLAG);
   }
@@ -92,56 +80,32 @@ public:
     return r;
   }
 
+  void addSuspSVar(Thread * el)
+  {
+    AddSuspToList(suspList,el,home);
+  }
+
+
   void print(ostream &stream, int depth, int offset, TaggedRef v);
   void printLong(ostream &stream, int depth, int offset, TaggedRef v);
 };
 
 inline
-void addSuspSVar(TaggedRef v, SuspList * el)
-{
-  SVariable * sv = tagged2SVar(v);
-  sv->suspList = addSuspToList(sv->suspList, el, sv->home);
-}
-
-inline
-void addSuspUVar(TaggedRefPtr v, SuspList * el)
-{
-  SVariable * sv = new SVariable(tagged2VarHome(*v));
-  *v = makeTaggedSVar(sv);
-  sv->suspList = addSuspToList(sv->suspList, el, sv->home);
-}
-
-inline
 void addSuspSVar(TaggedRef v, Thread * el)
 {
-  SVariable * sv = tagged2SVar(v);
-  sv->suspList = addSuspToList(sv->suspList, el, sv->home);
+  tagged2SVar(v)->addSuspSVar(el);
 }
 
 inline
 void addSuspUVar(TaggedRefPtr v, Thread * el)
 {
-  SVariable * sv = new SVariable(tagged2VarHome(*v));
+  SVariable *sv = new SVariable(tagged2VarHome(*v));
   *v = makeTaggedSVar(sv);
-  sv->suspList = addSuspToList(sv->suspList, el, sv->home);
+  sv->addSuspSVar(el);
 }
 
-inline
-void addSuspNotCVar(TaggedRefPtr v, SuspList * el)
-{
-  Assert(tagTypeOf(*v) != CVAR);
 
-  SVariable * sv;
-  if (isSVar(*v)) {
-    sv = tagged2SVar(*v);
-  } else {
-    sv = new SVariable(tagged2VarHome(*v));
-    *v = makeTaggedSVar(sv);
-  }
-  sv->suspList = addSuspToList(sv->suspList, el, sv->home);
-}
-
-void addSuspAnyVar(TaggedRefPtr v, SuspList * el);
+void addSuspAnyVar(TaggedRefPtr v, Thread *thr);
 
 inline
 SVariable *tagged2SuspVar(TaggedRef var)
@@ -153,18 +117,6 @@ SVariable *tagged2SuspVar(TaggedRef var)
     : (SVariable *) (void*) tagged2CVar(var);
 }
 
-inline
-SVariable *taggedBecomesSuspVar(TaggedRef *ref)
-{
-  TaggedRef val = *ref;
-  Assert(isAnyVar(val));
-  if (isUVar(val)){
-    SVariable *ret  = new SVariable(tagged2VarHome(val));
-    *ref = makeTaggedSVar(ret);
-    return ret;
-  }
-  return tagged2SuspVar(val);
-}
 
 /*
  * Class VariableNamer: assign names to variables

@@ -17,22 +17,7 @@
 
 Thread *board_constraints_thr = NULL;
 
-SuspList * addSuspToList(SuspList * list, SuspList * elem, Board * hoome)
-{
-#ifdef DEBUG_STABLE
-  if (board_constraints_thr != elem->getElem ()) {
-    board_constraints_thr = elem->getElem ();
-    board_constraints =
-      new SuspList(board_constraints_thr, board_constraints);
-  }
-#endif
-
-  (elem->getElem ())->updateExtThread (hoome->derefBoard());
-  elem->setNext(list);
-  return elem;
-}
-
-SuspList * addSuspToList(SuspList * list, Thread * elem, Board * hoome)
+SuspList *addSuspToList(SuspList *list, Thread *elem, Board *hoome)
 {
   if (list && (list->getElem() == elem))
     return list;

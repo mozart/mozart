@@ -103,7 +103,8 @@ public:
     suspList = suspList->appendToAndUnlink(lv->suspList, reset_local);
   }
 
-  void addDetSusp (Thread *thr);
+  void addDetSusp (Thread *thr, TaggedRef *tptr);
+
   void dispose(void);
 
   // needed to catch multiply occuring reified vars in propagators
@@ -127,6 +128,12 @@ public:
     return (OZ_FiniteDomain *)  (u.var_type & ~u_mask);
   }
 };
+
+inline
+void addSuspCVar(TaggedRef v, Thread *el)
+{
+  tagged2CVar(v)->addSuspSVar(el);
+}
 
 // only SVar and their descendants can be exclusive
 inline
@@ -193,12 +200,6 @@ OZ_FiniteDomain * unpatchReified(OZ_Term t, Bool isBool)
   return v->getReifiedPatch();
 }
 
-inline
-void addSuspCVar(TaggedRef v, Thread * el)
-{
-  SVariable * sv = taggedCVar2SVar(v);
-  sv->suspList = addSuspToList(sv->suspList, el, sv->home);
-}
 
 #include "fsgenvar.hh"
 #include "fdgenvar.hh"

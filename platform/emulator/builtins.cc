@@ -5566,8 +5566,7 @@ OZ_C_proc_begin(BIgetsBound, 1)
   if (isAnyVar(vTag)){
     Thread *thr =
       (Thread *) OZ_makeSuspendedThread (_getsBound_dummy, NULL, 0);
-    SuspList *vcsl = new SuspList(thr, NULL);
-    addSuspAnyVar(vPtr, vcsl);
+    addSuspAnyVar(vPtr, thr);
   }
 
   return PROCEED;
@@ -5590,8 +5589,7 @@ OZ_C_proc_begin(BIgetsBoundB, 2)
   if (isAnyVar(vTag)){
     Thread *thr =
       (Thread *) OZ_makeSuspendedThread (_getsBound_dummyB, OZ_args, OZ_arity);
-    SuspList *vcsl = new SuspList (thr, NULL);
-    addSuspAnyVar(vPtr, vcsl);
+    addSuspAnyVar(vPtr, thr);
   }
 
   return PROCEED;               // no result yet;

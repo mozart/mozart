@@ -58,7 +58,7 @@ OZ_Boolean OZ_Stream::leave(void)
 
   DEREF(tail, tailptr, tailtag);
 
-  addSuspAnyVar(tailptr, new SuspList(am.currentThread));
+  addSuspAnyVar(tailptr, am.currentThread);
   return TRUE;
 }
 

@@ -28,18 +28,21 @@
 
 #include "variable.hh"
 
-void addSuspAnyVar(TaggedRefPtr v, SuspList * el)
+void addSuspAnyVar(TaggedRefPtr v, Thread *thr)
 {
   SVariable * sv;
-  if (isSVar(*v)) {
-    sv = tagged2SVar(*v);
-  } else if (isCVar(*v)) {
-    sv = taggedCVar2SVar(*v);
-  } else {
-    sv = new SVariable(tagged2VarHome(*v));
-    *v = makeTaggedSVar(sv);
+  TaggedRef t = *v;
+  if (isSVar(t)) {
+    addSuspSVar(t,thr);
+    return;
   }
-  sv->suspList = addSuspToList(sv->suspList, el, sv->home);
+  if (isCVar(t)) {
+    addSuspCVar(t,thr);
+    return;
+  }
+  sv = new SVariable(tagged2VarHome(t));
+  *v = makeTaggedSVar(sv);
+  addSuspSVar(*v,thr);
 }
 
 
