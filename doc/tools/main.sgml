@@ -14,6 +14,7 @@
 <!ENTITY profiler           SYSTEM "profiler.sgml">
 <!ENTITY oztool             SYSTEM "oztool.sgml">
 <!ENTITY ozengine           SYSTEM "ozengine.sgml">
+<!ENTITY convert            SYSTEM "convert.sgml">
 
 <!-- Abbreviations -->
 <!ENTITY lt "<">
@@ -56,6 +57,7 @@
 
     <Meta name="html.split"       value="chapter.oztool">
     <Meta name="html.split"       value="chapter.ozengine">
+    <Meta name="html.split"       value="chapter.convert">
 
     <Meta name="html.split.bib"   value="">
     <Meta name="html.split.index" value="">
@@ -65,6 +67,7 @@
     <Meta name=status value=revised>
     <Title/Oz Shell Utilities/
     <Author.Extern to="author.db" key="Denys.Duchier">
+    <Author.Extern to="author.db" key="Leif.Kornstaedt">
     <Author.Extern to="author.db" key="Christian.Schulte">
     <Abstract>
       <P.silent><!--**-->
@@ -77,6 +80,7 @@
     &debugger;
     &profiler;
     &oztool;
+    &convert;
 
   <Back>
 </Book>
