@@ -313,8 +313,8 @@ OZ_C_proc_begin(BIfdDistributeMinPairs, 5) {
 
     if (costs < best_costs) {
       if (best_pair != NULL) {
-        pair_vector->setArg(new_cur, tagged_best_pair);
         tagged_best_pair = tagged_pair;
+        pair_vector->setArg(new_cur, tagged_best_pair);
         best_pair = pair;
         best_costs = costs;
         new_cur++;
