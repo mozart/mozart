@@ -100,8 +100,7 @@ public:
 
   void sCloneRecurseV(void) {}
 
-  OZ_Boolean marshalV(void *p) {
-    MarshalerBuffer *bs = (MarshalerBuffer *) p;
+  OZ_Boolean marshalV(MarshalerBuffer *bs) {
     marshalNumber(bs, size);
     marshalNumber(bs, value);
     return OZ_TRUE;
