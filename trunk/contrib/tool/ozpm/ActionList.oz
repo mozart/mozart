@@ -1,13 +1,13 @@
 functor
 import
-   Global(readDB)
+   Global(localDB)
    System(showInfo:Print)
    Application(exit)
 export
    Run
 define
    proc {Run}
-      for I in {Map {Global.readDB} fun {$ R} R.id end} do
+      for I in {Global.localDB keys($)} do
 	 {Print I}
       end
       {Application.exit 0}
