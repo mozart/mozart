@@ -583,14 +583,21 @@ void *tagValueOf(TypeOfTerm /* tag */, TaggedRef ref)
   return tagValueOf(ref);
 }
 
+#define _tagged2Ref(ref) ((TaggedRef *) ToPointer(ref))
+
+#ifdef DEBUG_CHECK
 inline
 TaggedRef *tagged2Ref(TaggedRef ref)
 {
   GCDEBUG(ref);
 // cannot use CHECKTAG(REF); because only last two bits must be zero
   Assert((ref & 3) == 0);
-  return (TaggedRef *) ToPointer(ref);
+  return _tagged2Ref(ref);
 }
+#else
+/* macros are faster */
+#define tagged2Ref(ref) _tagged2Ref(ref)
+#endif
 
 /* does not deref home pointer! */
 inline
