@@ -31,6 +31,7 @@
 
 #include "base.hh"
 #include "pickle.hh"
+#include "gname.hh"
 #include "boot-manager.hh"
 
 #define RETURN_ON_ERROR(ERROR)             \

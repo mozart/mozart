@@ -93,11 +93,7 @@ public:
   }
 
   TaggedRef getValue()       { return value; }
-  void setValue(TaggedRef v) {
-    if (tagTypeOf(oz_deref(v)) == TAG_CVAR)
-      value = 0;		// '!'
-    value = v;
-  }
+  void setValue(TaggedRef v) { value = v; }
 
   Bool same(GName *other) {
     return (site==other->site && id.same(other->id));
@@ -122,15 +118,26 @@ public:
   Bool getGCMark()   { return gcMark; }
   void resetGCMark() { gcMark = 0;}
 
+  //
+  // Disable GC"ing of names that are not in the table
+  // (e.g. distribution marshaler keeps certain GNames outside the
+  // table for some time). A gname with a value must be in the table,
+  // and, respectively, a gname without a value must stay outside. The
+  // limitation of the current implementation is that value-free names
+  // cannot contain GC"able stuff ('cause the 'gcMark' is (ab)used);
+  void gcMaybeOff();
+  void gcOn() { gcMark = 0; }
+
   void gcMarkSite() {
     site->setGCFlag();
   }
-  void gCollectGName(){
+  void gCollectGName() {
     if (!getGCMark()) {
       setGCMark();
       gcMarkSite();
-      oz_gCollectTerm(value,value);}}
-
+      oz_gCollectTerm(value,value);
+    }
+  }
 };
 
 #define GNAME_HASH_TABLE_DEFAULT_SIZE 500
@@ -153,8 +160,8 @@ extern GNameTable gnameTable;
 
 TaggedRef oz_findGName(GName *gn);
 void addGName(GName *gn, TaggedRef t);
+void overwriteGName(GName *gn, TaggedRef t);
 GName *newGName(TaggedRef t, GNameType gt);
-void deleteGName(GName *gn);
 
 inline void gCollectGName(GName* name) { if (name) name->gCollectGName(); }
 
