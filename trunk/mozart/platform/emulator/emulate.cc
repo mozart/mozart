@@ -2819,10 +2819,21 @@ LBLdispatcher:
 
   LBLunifySpecial:
   {
+    if (shallowCP) {
+      if (e->trail.isEmptyChunk()) {
+	e->trail.popMark();
+      } else {
+	oz_reduceTrailOnFail();
+      }
+      PC=shallowCP;
+      shallowCP=0;
+      e->setShallowHeapTop(NULL);
+    }
+
     // mm2: must also handle pseudo shallow guards ala 'or X=1 [] ... end',
     //  e.g. when X is a future.
     Actor *aa=CBB->getActor();
-    if (aa->isAskWait() && CTT == AWActor::Cast(aa)->getThread()) {
+    if (aa && aa->isAskWait() && CTT == AWActor::Cast(aa)->getThread()) {
       warning("unifySpecial in pseudo shallow guard not impl. Failing.");
       switch (tmpRet) {
       case BI_REPLACEBICALL:
@@ -2839,16 +2850,7 @@ LBLdispatcher:
 	Assert(0);
       }
     }
-    if (shallowCP) {
-      if (e->trail.isEmptyChunk()) {
-	e->trail.popMark();
-      } else {
-	oz_reduceTrailOnFail();
-      }
-      PC=shallowCP;
-      shallowCP=0;
-      e->setShallowHeapTop(NULL);
-    }
+
     switch (tmpRet) {
     case BI_REPLACEBICALL:
       goto LBLreplaceBICall;
