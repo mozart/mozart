@@ -147,10 +147,10 @@ public:
     pushEmpty();
   }
 
-  void pushX(RefsArray X, int i) {
+  void pushX(int i) {
     Assert(i>=0);
     if (i>0) {
-      RefsArray x=copyRefsArray(X,i);
+      RefsArray x=copyRefsArray(XREGS,i);
 #ifdef DEBUG_LIVENESS
       checkLiveness(x);
 #endif

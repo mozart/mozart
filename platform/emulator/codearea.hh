@@ -318,7 +318,7 @@ public:
   {
 #ifdef FASTREGACCESS
 #ifdef FASTERREGACCESS
-    return writeWord((ByteCode) am.getXRef(index),ptr);
+    return writeWord((ByteCode) &(XREGS[index]),ptr);
 #else
     index *= sizeof(TaggedRef);
     return writeWord((ByteCode)index,ptr);
@@ -509,11 +509,11 @@ public:
   }
 
   Abstraction *lookup(ObjectClass *c, TaggedRef meth,
-                      SRecordArity arity, RefsArray X)
+                      SRecordArity arity)
   {
     if (ToInt32(c) != key) {
       Bool defaultsUsed = NO;
-      Abstraction *ret = c->getMethod(meth,arity,X,defaultsUsed);
+      Abstraction *ret = c->getMethod(meth,arity,OK,defaultsUsed);
       if (!defaultsUsed && ret) {
         value = ToInt32(ret);
         key   = ToInt32(c);
@@ -574,7 +574,7 @@ public:
   }
   int getIndex(int n) {
     Assert(n>=0 && n<inAr+outAr);
-    return (map[n]-am.getXRef());
+    return (map[n]-XREGS);
   }
   int getInIndex(int n) {
     Assert(n>=0 && n<inAr);
@@ -595,7 +595,7 @@ public:
   }
   void set(int n,int i) {
     Assert(n>=0 && n<inAr+outAr);
-    map[n]=am.getXRef(i);
+    map[n]=&(XREGS[i]);
   }
   void setIn(int n,int i) {
     Assert(n>=0 && n<inAr);
@@ -615,13 +615,13 @@ extern OZ_Location * OZ_ID_LOC;
 
 #ifdef FASTERREGACCESS
 
-#define XRegToInt(N) (((TaggedRef*) (N)) - am.getXRef())
+#define XRegToInt(N) (((TaggedRef*) (N)) - XREGS)
 #define XRegToPtr(N) ((TaggedRef *) (N))
 
 #else
 
 #define XRegToInt(N) ((N) / sizeof(TaggedRef))
-#define XRegToPtr(N) ((TaggedRef *) (((intlong) am.getXRef()) + (N)))
+#define XRegToPtr(N) ((TaggedRef *) (((intlong) XREGS) + (N)))
 
 #endif
 
@@ -641,7 +641,7 @@ inline
 int  GRegToInt(GReg N) { return N; }
 inline
 TaggedRef * XRegToPtr(XReg N) {
-  return am.getXRef(N);
+  return &(XREGS[N]);
 }
 inline
 TaggedRef * YRegToPtr(RefsArray Y, YReg N) {

@@ -322,7 +322,7 @@ void AM::init(int argc,char **argv)
   // init x args
   {
     for (int i=NumberOfXRegisters; i--; )
-      xRegs[i] = taggedVoidValue;
+      XREGS[i] = taggedVoidValue;
   }
   initOzIdLoc();
 
