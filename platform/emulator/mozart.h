@@ -37,7 +37,7 @@
 /* calling convention "cdecl" under win32 */
 #if defined(__WATCOMC__) || defined(__BORLANDC__)
 #  define ozdeclspec
-#  define ozcdecl __export __cdecl
+#  define ozcdecl
 #  define OZWIN
 #elif defined(__CYGWIN32__) || defined(__MINGW32__) || defined(_MSC_VER)
 #  ifdef WINDOWS_EMULATOR
@@ -305,7 +305,10 @@ typedef struct {
 
 /* declare here, so C linkage is used and symbol is exported */
 #ifndef WINDOWS_EMULATOR
-#if defined(__CYGWIN32__) || defined(__MINGW32__) || defined(_MSC_VER)
+#if defined(__WATCOMC__) || defined(__BORLANDC__)
+extern char __export oz_module_name[];
+OZ_C_proc_interface * __export ozcdecl oz_init_module();
+#elif defined(__CYGWIN32__) || defined(__MINGW32__) || defined(_MSC_VER)
 __declspec(dllexport) extern char oz_module_name[];
 __declspec(dllexport) OZ_C_proc_interface * ozcdecl oz_init_module();
 #else
