@@ -236,6 +236,7 @@ files.base:
 		! -path './winbin/*' -and \
 		! -path './cache/x-oz/contrib/*' -and  \
 		! -path './doc/*' -and  \
+		! -path './print/*' -and  \
 		! -path './examples/*' -and  \
 		! -path './cache/x-oz/system/gump/examples/*' -and  \
 		! -path './share/doc/*' -and  \
