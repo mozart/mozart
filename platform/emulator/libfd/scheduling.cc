@@ -1163,7 +1163,6 @@ OZ_Return CPIteratePropagatorCap::propagate(void)
 
   // memory is automatically disposed when propagator is left
        
-  if (reg_flag == 1) {       
     //////////  
     // do the reified stuff for task pairs.
     //////////  
@@ -1200,7 +1199,6 @@ OZ_Return CPIteratePropagatorCap::propagate(void)
 	  }
 	}
       }
-  }
 
   /*
 // it is not worth the effort
