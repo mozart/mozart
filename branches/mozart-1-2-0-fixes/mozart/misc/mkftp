@@ -43,6 +43,7 @@ my $ACTION_RPM;
 my $ACTION_DOC;
 my $ACTION_WIN;
 my $ACTION_TAR;
+my $ACTION_MAC;
 my $JUSTPRINT;
 my $VERBOSE;
 my $ACTION_HELP;
@@ -62,6 +63,7 @@ my $result = GetOptions
      'documentation=s' => \$ACTION_DOC,
      'windows+'        => \$ACTION_WIN,
      'tar+'            => \$ACTION_TAR,
+     'macosx'          => \$ACTION_MAC,
      'just-print|n+'   => \$JUSTPRINT,
      'verbose|v+'      => \$VERBOSE,
      'help|h+'         => \$ACTION_HELP,
@@ -102,6 +104,9 @@ ACTIONS
 	--tar TARFILES-and-READMES...
 		install tarballs
 
+	--mac PKGFILES-and-READMES...
+		install MacOS X packages
+
 EOF
     exit 0;
 }
@@ -115,6 +120,7 @@ EOF
     $action++ if $ACTION_DOC;
     $action++ if $ACTION_WIN;
     $action++ if $ACTION_TAR;
+    $action++ if $ACTION_MAC;
     die "exactly 1 action must be specified" unless $action == 1;
 }
 
@@ -136,7 +142,7 @@ my $DO   = !$JUSTPRINT;
 sub do_mkdir {
     my $dir = shift;
     print "mkdir $dir\n" if $SHOW;
-    mkdir $dir if $DO;
+    mkdir $dir if $DO && ! -d $dir;
 }
 
 sub do_system {
@@ -151,6 +157,7 @@ sub action_create {
     &do_mkdir("$RELDIR/rpm");
     &do_mkdir("$RELDIR/windows");
     &do_mkdir("$RELDIR/print");
+    &do_mkdir("$RELDIR/macosx");
 }
 
 {
@@ -312,3 +319,21 @@ sub action_tar {
 }
 
 &action_tar if $ACTION_TAR;
+
+sub action_macosx {
+    my $macdir = "$RELDIR/macosx";
+    foreach $file (@ARGV) {
+	my $name = &nondirname($file);
+	if ($name =~ /^mozart-(\d+\.\d+\.\d+)\.\d{8}-(.*)\.pkg\.gz$/) {
+	    die "wrong release number on $name" unless $1 eq $RELEASE_NUMBER;
+	    &do_system("cp -f $file $macdir/$name");
+	} elsif ($name =~ /^README-(\d+\.\d+\.\d+)\.\d{8}-(.*)$/) {
+	    die "wrong release number on $name" unless $1 eq $RELEASE_NUMBER;
+	    &do_system("cp -f $file $macdir/$name");
+	} else {
+	    die "unrecognized macos package $name";
+	}
+    }
+}
+
+&action_macosx if $ACTION_MAC;
