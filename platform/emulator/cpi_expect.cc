@@ -615,7 +615,7 @@ OZ_expect_t OZ_Expect::expectProperTuple(OZ_Term t,
 }
 
 OZ_expect_t OZ_Expect::expectList(OZ_Term t,
-                                    OZ_expect_t(OZ_Expect::* expectf)(OZ_Term))
+                                  OZ_expect_t(OZ_Expect::* expectf)(OZ_Term))
 {
   Assert(oz_isRef(t) || !oz_isVariable(t));
 
@@ -649,6 +649,8 @@ OZ_expect_t OZ_Expect::expectList(OZ_Term t,
       addSuspend(tptr);
       return expectExceptional();
     }
+  } else if (oz_isNil(t)) {
+    return expectProceed(1, 1);
   } else if (oz_isFree(t) || oz_isKinded(t)) {
     addSuspend(tptr);
     return expectSuspend(1, 0);
@@ -899,7 +901,7 @@ OZ_Return OZ_Expect::impose(OZ_Propagator * p)
       staticSpawnVarsNumber = staticSuspendVarsNumber = 0;
       return PROCEED;
     default:
-      DebugCode(OZ_error("Unexpected return value from propagator."));
+      DebugCode(OZ_error("Unexpected return value."));
       return PROCEED;
     }
   }
