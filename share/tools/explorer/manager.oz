@@ -48,7 +48,6 @@ in
 	 lock
 	    PackAll = ToplevelManager,init($)
 	 in
-	    DialogManager,init
 	    MenuManager,init
 	    StatusManager,init
 	    self.explorer = EXPLORER
@@ -89,7 +88,7 @@ in
 
       meth SetCursor(CurNode IsVisible <= false)
 	 %% Might only be invoked if root is not false
-	 MenuManager,normal(explorer([clear postscript reset]))
+	 MenuManager,normal(explorer([postscript reset]))
 	 case {@root isFinished($)} then
 	    StatusManager,finish
 	 else skip end
