@@ -27,8 +27,8 @@
 #include "standard.hh"
 
 // use generated filter functions
-#define GENERATED
-//#define NO_SIMPLIFICATION
+// #define GENERATED
+// #define NO_SIMPLIFICATION
 
 OZ_Return make_intersect_3(OZ_Expect * ope, OZ_Term x, OZ_Term y, OZ_Term z)
 {
