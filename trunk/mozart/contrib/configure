@@ -39,22 +39,22 @@ ac_help="$ac_help
 	whether to build the Mozart instant messenger (default: yes)"
 ac_help="$ac_help
 --enable-contrib-lp
-	whether to build the lp contribution (default: no)"
+	whether to build the lp contribution (default: yes)"
 ac_help="$ac_help
 --enable-contrib-ri
-	whether to build the ri contribution (default: no)"
+	whether to build the ri contribution (default: yes)"
 ac_help="$ac_help
 --enable-contrib-davinci
-	whether to build the davinci contribution (default: no)"
+	whether to build the davinci contribution (default: yes)"
 ac_help="$ac_help
 --enable-contrib-reflect
-	whether to build the reflect contribution (default: no)"
+	whether to build the reflect contribution (default: yes)"
 ac_help="$ac_help
 --enable-contrib-investigator
-	whether to build the investigator contribution (default: no)"
+	whether to build the investigator contribution (default: yes)"
 ac_help="$ac_help
 --enable-contrib-fcp
-	whether to build the fcp contribution (default: no)"
+	whether to build the fcp contribution (default: yes)"
 ac_help="$ac_help
 --enable-contrib-psql
 	whether to build the psql contribution (default: no)"
@@ -1342,7 +1342,7 @@ if test "${enable_contrib_lp+set}" = set; then
   oz_cv_enable_contrib_lp=$enableval
 else
   : ${oz_cv_enable_contrib_lp:=$oz_enable_contrib_lp}
-   : ${oz_cv_enable_contrib_lp:=no}
+   : ${oz_cv_enable_contrib_lp:=yes}
 fi
 
 echo "$ac_t""$oz_cv_enable_contrib_lp" 1>&6
@@ -1359,7 +1359,7 @@ if test "${enable_contrib_ri+set}" = set; then
   oz_cv_enable_contrib_ri=$enableval
 else
   : ${oz_cv_enable_contrib_ri:=$oz_enable_contrib_ri}
-   : ${oz_cv_enable_contrib_ri:=no}
+   : ${oz_cv_enable_contrib_ri:=yes}
 fi
 
 echo "$ac_t""$oz_cv_enable_contrib_ri" 1>&6
@@ -1376,7 +1376,7 @@ if test "${enable_contrib_davinci+set}" = set; then
   oz_cv_enable_contrib_davinci=$enableval
 else
   : ${oz_cv_enable_contrib_davinci:=$oz_enable_contrib_davinci}
-   : ${oz_cv_enable_contrib_davinci:=no}
+   : ${oz_cv_enable_contrib_davinci:=yes}
 fi
 
 echo "$ac_t""$oz_cv_enable_contrib_davinci" 1>&6
@@ -1393,7 +1393,7 @@ if test "${enable_contrib_reflect+set}" = set; then
   oz_cv_enable_contrib_reflect=$enableval
 else
   : ${oz_cv_enable_contrib_reflect:=$oz_enable_contrib_reflect}
-   : ${oz_cv_enable_contrib_reflect:=no}
+   : ${oz_cv_enable_contrib_reflect:=yes}
 fi
 
 echo "$ac_t""$oz_cv_enable_contrib_reflect" 1>&6
@@ -1410,7 +1410,7 @@ if test "${enable_contrib_investigator+set}" = set; then
   oz_cv_enable_contrib_investigator=$enableval
 else
   : ${oz_cv_enable_contrib_investigator:=$oz_enable_contrib_investigator}
-   : ${oz_cv_enable_contrib_investigator:=no}
+   : ${oz_cv_enable_contrib_investigator:=yes}
 fi
 
 echo "$ac_t""$oz_cv_enable_contrib_investigator" 1>&6
@@ -1427,7 +1427,7 @@ if test "${enable_contrib_fcp+set}" = set; then
   oz_cv_enable_contrib_fcp=$enableval
 else
   : ${oz_cv_enable_contrib_fcp:=$oz_enable_contrib_fcp}
-   : ${oz_cv_enable_contrib_fcp:=no}
+   : ${oz_cv_enable_contrib_fcp:=yes}
 fi
 
 echo "$ac_t""$oz_cv_enable_contrib_fcp" 1>&6
