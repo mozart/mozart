@@ -42,7 +42,7 @@ protected:
   // suspensionlist of leftVar
   void relinkSuspListTo(GenCVariable * lv);
   
-  void propagate(TaggedRef, SuspList * &, TaggedRef, Bool);
+  void propagate(TaggedRef, SuspList * &, TaggedRef, PropCaller);
 
 public:
   USEFREELISTMEMORY;
