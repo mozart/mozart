@@ -51,9 +51,10 @@ define
       end
    in
       fun {MakeTable Rows}
-	 {Adjoin
-	  table(nRows: {Length Rows} nColumns: {NColumns Rows})
-	  {List.toTuple table {MakeRows Rows 0 nil}}}
+	 table(nRows: {Length Rows} nColumns: {NColumns Rows}
+	       borderWidth: 5
+	       homogeneous: true
+	       children: {MakeRows Rows 0 nil})
       end
    end
 
@@ -66,14 +67,11 @@ define
        end}
    end
 
-   ArrowDesc =
-   {Adjoin table(borderWidth: 5
-		 homogeneous: true)
-    {MakeTable (unit|{Map ['in' out etchedIn etchedOut]
-		      fun {$ ArrowType}
-			 label(label: ArrowType
-			       xalign: 1.0)
-		      end})|{Map [up down left right] MakeArrows}}}
+   ArrowDesc = {MakeTable (unit|{Map ['in' out etchedIn etchedOut]
+				 fun {$ ArrowType}
+				    label(label: ArrowType
+					  xalign: 1.0)
+				 end})|{Map [up down left right] MakeArrows}}
 
    local
       Label Group
