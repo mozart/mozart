@@ -4,7 +4,7 @@ WINDIR=Y:/.root/project/ps/soft/win32-i486
 #WINDIR=Y:/.root/home/scheidhr/build/packages/win32-i486
 
 # code with debugging infos
-COPT = -Zi #-W3
+COPT = -Zi -W3
 
 # for fast code
 #COPT = -Ox
@@ -12,8 +12,7 @@ COPT = -Zi #-W3
 
 tk.exe: winMain.obj
 	cl $(COPT) -MT -nologo -Fetk.exe winMain.obj \
-	   $(WINDIR)/lib/tcl80.lib $(WINDIR)/lib/tk80.lib user32.lib wsock32.lib
+	   $(WINDIR)/lib/tcl80.lib $(WINDIR)/lib/tk80.lib user32.lib
 
 winMain.obj: winMain.cc
 	cl $(COPT) -nologo -MT -c -Tp winMain.cc -I$(WINDIR)/include
-
