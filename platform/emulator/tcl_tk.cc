@@ -520,7 +520,7 @@ void feature2buffer(SRecord *st, OZ_Term a) {
   }
 }
 
-inline
+//inline
 void tuple2buffer(SRecord *st, int start = 0) {
   if (st->isTuple()) {
     if (start < st->getWidth()) {
