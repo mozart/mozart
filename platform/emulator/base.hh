@@ -189,6 +189,17 @@ if (Cond) {					\
    default: break;
 #endif
 
+#ifdef DEBUG_MEM
+#define MemDebugCode(C) C
+#define MemAssert(C)							\
+  if (!(C)) {								\
+    OZ_error("%s:%d mem assertion '%s' failed",__FILE__,__LINE__,#C);	\
+  }
+#else
+#define MemDebugCode(C)
+#define MemAssert(C)
+#endif
+
 #ifdef DEBUG_FD
 #define DebugFD(Cond,Then) if (Cond) {Then;}
 #else
