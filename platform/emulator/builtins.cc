@@ -557,7 +557,8 @@ OZ_C_proc_begin(BIsystemTellSize,3)
     dt_index size=ceilPwrTwo((numFeats<=FILLLIMIT) ? numFeats
 			     : (int)ceil((double)numFeats/FILLFACTOR));
     GenOFSVariable *newofsvar=new GenOFSVariable(label,size);
-    Bool ok=am.unify(makeTaggedRef(newTaggedCVar(newofsvar)),makeTaggedRef(tPtr));
+    Bool ok=am.unify(makeTaggedRef(newTaggedCVar(newofsvar)),
+		     makeTaggedRef(tPtr));
     Assert(ok);
     return PROCEED;
   }
@@ -618,7 +619,8 @@ OZ_C_proc_begin(BIsystemTellSize,3)
       // Create newofsvar with unbound variable as label & given initial size:
       GenOFSVariable *newofsvar=new GenOFSVariable(label,size);
       // Unify newofsvar and term:
-      Bool ok=am.unify(makeTaggedRef(newTaggedCVar(newofsvar)),makeTaggedRef(tPtr));
+      Bool ok=am.unify(makeTaggedRef(newTaggedCVar(newofsvar)),
+		       makeTaggedRef(tPtr));
       Assert(ok);
       return PROCEED;
     }
@@ -642,7 +644,8 @@ OZ_C_proc_begin(BIrecordTell,2)
   /* most probable case first */
   if (isLiteral(labelTag) && isNotCVar(tag)) {
     GenOFSVariable *newofsvar=new GenOFSVariable(label);
-    Bool ok=am.unify(makeTaggedRef(newTaggedCVar(newofsvar)),makeTaggedRef(tPtr));
+    Bool ok=am.unify(makeTaggedRef(newTaggedCVar(newofsvar)),
+		     makeTaggedRef(tPtr));
     Assert(ok);
     return PROCEED;
   }
@@ -697,7 +700,8 @@ OZ_C_proc_begin(BIrecordTell,2)
       // Create newofsvar with unbound variable as label & given initial size:
       GenOFSVariable *newofsvar=new GenOFSVariable(label);
       // Unify newofsvar and term:
-      Bool ok=am.unify(makeTaggedRef(newTaggedCVar(newofsvar)),makeTaggedRef(tPtr));
+      Bool ok=am.unify(makeTaggedRef(newTaggedCVar(newofsvar)),
+		       makeTaggedRef(tPtr));
       Assert(ok);
       return PROCEED;
     }
@@ -860,7 +864,6 @@ OZ_CFun WidthPropagator::spawner = BIwidthC;
 // implementation and it can be optimized in many ways.
 OZ_Return WidthPropagator::run(void)
 {
-    int res;
     int recwidth;
     OZ_Return result = SLEEP;
 
@@ -881,8 +884,8 @@ OZ_Return WidthPropagator::run(void)
         if (isGenFDVar(wid)) {
             // GenFDVariable *fdwid=tagged2GenFDVar(wid);
             // res=fdwid->setSingleton(recwidth);
-            res=am.unify(makeTaggedSmallInt(recwidth),rawwid);
-            if (res==FAILED) { result = FAILED; break; }
+	  Bool res=am.unify(makeTaggedSmallInt(recwidth),rawwid);
+	  if (!res) { result = FAILED; break; }
         } else if (isSmallInt(widTag)) {
             int intwid=smallIntValue(wid);
             if (recwidth!=intwid) { result = FAILED; break; }
@@ -908,9 +911,9 @@ OZ_Return WidthPropagator::run(void)
             OZ_FiniteDomain &dom = tagged2GenFDVar(wid)->getDom();
             if (dom.getSize() > (dom & slice).getSize()) { 
                 GenFDVariable *fdcon=new GenFDVariable(slice);
-                res=am.unify(makeTaggedRef(newTaggedCVar(fdcon)),rawwid);
+                Bool res=am.unify(makeTaggedRef(newTaggedCVar(fdcon)),rawwid);
                 // No loc/glob handling: res=(fdwid>=recwidth);
-                if (res==FAILED) { result = FAILED; break; }
+                if (!res) { result = FAILED; break; }
             }
         } else if (isSmallInt(widTag)) {
             int intwid=smallIntValue(wid);
@@ -945,8 +948,8 @@ OZ_Return WidthPropagator::run(void)
                 result = PROCEED;
                 if (recwidth==0) {
                     // Convert to LITERAL:
-                    res=am.unify(rawrec,lbl);
-                    if (res==FAILED) error("unexpected failure of Literal conversion");
+		  Bool res=am.unify(rawrec,lbl);
+		  if (!res) error("unexpected failure of Literal conversion");
 		} else {
                     // Convert to SRECORD or LTUPLE:
                     // (Two efficiency problems: 1. Creates record & then unifies,
@@ -956,8 +959,8 @@ OZ_Return WidthPropagator::run(void)
                     Arity *arity=aritytable.find(alist);
                     SRecord *newrec = SRecord::newSRecord(lbl,arity);
 		    newrec->initArgs(am.currentUVarPrototype); 
-                    res=am.unify(rawrec,newrec->normalize());
-                    Assert(res!=FAILED);
+                    Bool res=am.unify(rawrec,newrec->normalize());
+                    Assert(res);
                 }
             }
         }
@@ -1107,8 +1110,8 @@ OZ_Return MonitorArityPropagator::run(void)
 
 
 // Create new thread on suspension:
-OZ_Return uparrowInline(TaggedRef, TaggedRef, TaggedRef&);
-DECLAREBI_USEINLINEFUN2(BIuparrow,uparrowInline)
+OZ_Return uparrowInlineNonBlocking(TaggedRef, TaggedRef, TaggedRef&);
+DECLAREBI_USEINLINEFUN2(BIuparrowNonBlocking,uparrowInlineNonBlocking)
 
 // Block current thread on suspension:
 OZ_Return uparrowInlineBlocking(TaggedRef, TaggedRef, TaggedRef&);
@@ -1128,77 +1131,64 @@ OZ_Return genericUparrowInline(TaggedRef term, TaggedRef fea, TaggedRef &out, Bo
     int suspFlag=FALSE;
 
     // optimize the most common case: adding or reading a feature
-    if (isCVar(termTag) && tagged2CVar(term)->getType()==OFSVariable &&
-	isFeature(feaTag)) {
-      GenOFSVariable *ofsvar=tagged2GenOFSVar(term);
+    if (isCVar(termTag)) {
+      if (tagged2CVar(term)->getType()!=OFSVariable) goto typeError1;
+      if (isFeature(feaTag)) {
+	GenOFSVariable *ofsvar=tagged2GenOFSVar(term);
 
-      TaggedRef t=ofsvar->getFeatureValue(fea);
-      if (t!=makeTaggedNULL()) {
-	// Feature exists
-	out=t;
-	return PROCEED;
-      } 
+	TaggedRef t=ofsvar->getFeatureValue(fea);
+	if (t!=makeTaggedNULL()) {
+	  // Feature exists
+	  out=t;
+	  return PROCEED;
+	}
       
-      if (am.currentBoard == ofsvar->getBoard()) {
-	TaggedRef uvar=makeTaggedRef(newTaggedUVar(am.currentBoard));
-	Bool ok=ofsvar->addFeatureValue(fea,uvar);
-	Assert(ok);
-	ofsvar->propagateOFS();
-	out=uvar;
-	return PROCEED;
+	if (am.currentBoard == ofsvar->getBoard()) {
+	  TaggedRef uvar=makeTaggedRef(newTaggedUVar(am.currentBoard));
+	  Bool ok=ofsvar->addFeatureValue(fea,uvar);
+	  Assert(ok);
+	  ofsvar->propagateOFS();
+	  out=uvar;
+	  return PROCEED;
+	}
       }
     }
 
-    // Constrain term to a record:
-    switch (termTag) {
-    case LTUPLE:
-    case LITERAL:
-    case SRECORD:
-        break;
-    case UVAR:
-    case SVAR:
-	if (!isFeature(feaTag)) {
-            // Create newofsvar with unbound variable as label:
-            GenOFSVariable *newofsvar=new GenOFSVariable();
-            // Unify newofsvar and term:
-            Bool ok=am.unify(makeTaggedRef(newTaggedCVar(newofsvar)),makeTaggedRef(termPtr));
-            Assert(ok);
-            term=makeTaggedRef(termPtr);
-            DEREF(term, termPtr2, tag2);
-            termPtr=termPtr2;
-            termTag=tag2;
-	}
-        break;
-    case CVAR:
-        if (tagged2CVar(term)->getType()!=OFSVariable) goto typeError1;
-        break;
-    default:
-        goto typeError1;
-    }
-
     // Wait until Y is a feature:
-    if (isNotCVar(feaTag)) suspFlag=TRUE;
-    if (isCVar(feaTag)) {
-        suspFlag=TRUE;
+    if (isAnyVar(feaTag)) {
+      if (isCVar(feaTag)) {
         if (tagged2CVar(fea)->getType()==OFSVariable) {
-            GenOFSVariable *ofsvar=tagged2GenOFSVar(fea);
-            if (ofsvar->getWidth()>0) goto typeError2;
+	  GenOFSVariable *ofsvar=tagged2GenOFSVar(fea);
+	  if (ofsvar->getWidth()>0) goto typeError2;
         }
-    }
-    if (suspFlag) {
-        if (blocking) {
-            return SUSPEND;
-        } else {
-            // Create thread containing relational blocking version of uparrow:
-            RefsArray x=allocateRefsArray(3, NO);
-            out=makeTaggedRef(newTaggedUVar(am.currentBoard));
-            x[0]=termOrig;
-            x[1]=feaOrig;
-            x[2]=out;
-            OZ_Thread thr=OZ_makeSuspendedThread(BIuparrowBlocking,x,3); 
-            OZ_addThread(feaOrig,thr);
-            return PROCEED;                     
-        }
+      }
+      if (!isAnyVar(term) && !isRecord(term)) goto typeError2;
+
+      if (blocking) {
+	return SUSPEND;
+      } else {
+	if (isNotCVar(term)) {
+	  // Create newofsvar with unbound variable as label:
+	  GenOFSVariable *newofsvar=new GenOFSVariable();
+	  // Unify newofsvar and term:
+	  Bool ok=am.unify(makeTaggedRef(newTaggedCVar(newofsvar)),
+			   makeTaggedRef(termPtr));
+	  Assert(ok);
+	  term=makeTaggedRef(termPtr);
+	  DEREF(term, termPtr2, tag2);
+	  termPtr=termPtr2;
+	  termTag=tag2;
+	}
+	// Create thread containing relational blocking version of uparrow:
+	RefsArray x=allocateRefsArray(3, NO);
+	out=makeTaggedRef(newTaggedUVar(am.currentBoard));
+	x[0]=termOrig;
+	x[1]=feaOrig;
+	x[2]=out;
+	OZ_Thread thr=OZ_makeSuspendedThread(BIuparrowBlocking,x,3); 
+	OZ_addThread(feaOrig,thr);
+	return PROCEED;                     
+      }
     }
     if (!isFeature(feaTag)) goto typeError2;
 
@@ -1234,7 +1224,8 @@ OZ_Return genericUparrowInline(TaggedRef term, TaggedRef fea, TaggedRef &out, Bo
                 Assert(ok1);
                 out=uvar;
                 // Unify newofsvar and term (which is also an ofsvar):
-                Bool ok2=am.unify(makeTaggedRef(newTaggedCVar(newofsvar)),makeTaggedRef(termPtr));
+                Bool ok2=am.unify(makeTaggedRef(newTaggedCVar(newofsvar)),
+				  makeTaggedRef(termPtr));
                 Assert(ok2);
             }
         }
@@ -1252,7 +1243,8 @@ OZ_Return genericUparrowInline(TaggedRef term, TaggedRef fea, TaggedRef &out, Bo
 	Assert(ok1);
         out=uvar;
         // Unify newofsvar (CVAR) and term (SVAR or UVAR):
-	Bool ok2=am.unify(makeTaggedRef(newTaggedCVar(newofsvar)),makeTaggedRef(termPtr));
+	Bool ok2=am.unify(makeTaggedRef(newTaggedCVar(newofsvar)),
+			  makeTaggedRef(termPtr));
 	Assert(ok2);
         return PROCEED;
       }
@@ -1299,7 +1291,8 @@ typeError2:
 }
 
 
-OZ_Return uparrowInline(TaggedRef term, TaggedRef fea, TaggedRef &out)
+OZ_Return uparrowInlineNonBlocking(TaggedRef term, TaggedRef fea,
+				   TaggedRef &out)
 {
     return genericUparrowInline(term, fea, out, FALSE);
 }
@@ -4752,7 +4745,7 @@ OZ_Return dictionaryGetInline(TaggedRef d, TaggedRef k, TaggedRef &out)
 {
   GetDictAndKey(d,k,dict,key,NO);
   if (dict->getArg(key,out) != PROCEED) {
-    return oz_raise(E_ERROR,E_KERNEL,"dict",2,d,k);
+    return oz_raise(E_SYSTEM,E_KERNEL,"dict",2,d,k);
   }
   return PROCEED;
 }
@@ -5123,7 +5116,7 @@ OZ_C_proc_begin(BIdlOpen,2)
 
 raise:
   return oz_raise(E_ERROR,E_KERNEL,"foreign",3,oz_atom("dlOpen"),
-		  OZ_atom(filename),err);
+		  OZ_getCArg(0),err);
 }
 OZ_C_proc_end
 
@@ -6955,7 +6948,7 @@ BIspec allSpec2[] = {
   {"recordCIsVarB",  2, BIisRecordCVarB,  0},
 
   {".",            3,BIdot,              (IFOR) dotInline},
-  {"^",            3,BIuparrow,        	 (IFOR) uparrowInline},
+  {"^",            3,BIuparrowBlocking,  (IFOR) uparrowInlineBlocking},
 
   {"HasFeature", 3, BIhasFeatureB,  (IFOR) hasFeatureBInline},
   {"CondSelect", 4, BImatchDefault, (IFOR) matchDefaultInline},
