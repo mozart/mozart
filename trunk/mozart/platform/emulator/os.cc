@@ -73,10 +73,17 @@ unsigned int osSystemTime()
 #endif
 }
 
+#ifdef WINDOWS
+static HANDLE timerthread = NULL;
+#endif
+
 
 void osBlockSignals(Bool check)
 {
-#ifndef WINDOWS
+#ifdef WINDOWS
+  if (timerthread)
+    SuspendThread(timerthread);
+#else
   sigset_t s,sOld;
   sigfillset(&s);
 
@@ -100,7 +107,10 @@ void osBlockSignals(Bool check)
 
 void osUnblockSignals()
 {
-#ifndef WINDOWS
+#ifdef WINDOWS
+  if (timerthread)
+    ResumeThread(timerthread);
+#else
   sigset_t s;
   sigemptyset(&s);
   sigprocmask(SIG_SETMASK,&s,NULL);
@@ -116,7 +126,7 @@ void osUnblockSignals()
 OsSigFun *osSignal(int signo, OsSigFun *fun)
 {
 #ifdef WINDOWS
-  signal(signo,fun);
+  signal(signo,(__sig_func)fun);
   return NULL;
 #else
   struct sigaction act, oact;
@@ -228,26 +238,25 @@ extern "C" void __builtin_delete (void *ptr)
 
 #ifdef WINDOWS
 
-class StreamReaders {
+class StreamReader {
 public:
   int fd;
   HANDLE char_avail;
   HANDLE char_consumed;
   char chr;
-  Bool status;  /* true iff input is available */
-  int thrd;     /* reader thread */
+  Bool status;            /* true iff input is available */
+  unsigned long thrd;     /* reader thread */
 };
 
 static StreamReader *readers;
 
 
-void readerThread(void *arg)
+unsigned __stdcall readerThread(void *arg)
 {
   StreamReader *sr = (StreamReader *)arg;
   
   while(1) {
     sr->status=NO;
-    ResetEvent(sr->char_avail);
     int ret = read(sr->fd, &sr->chr, sizeof(char));
     sr->status = (ret == sizeof(char));
     if (ret<0) {
@@ -262,10 +271,15 @@ void readerThread(void *arg)
   }
   sr->status = NO;
   sr->thrd = NULL;
-  _endthread();
+  _endthreadex(0);
+  return 0;
 }
 
 static 
+void deleteReader(int fd)
+{
+}
+
 Bool createReader(int fd)
 {
   StreamReader *sr = &readers[fd];
@@ -280,9 +294,9 @@ Bool createReader(int fd)
     goto err;
   }
   
-  sr->thrd = _beginthread(readerThread, NULL, 4096, sr);
-  if (sr->thrd == -1) {
-    sr->thrd = NULL;
+  unsigned thrid;    
+  sr->thrd = _beginthreadex(NULL,0,&readerThread,sr,0,&thrid);
+  if (sr->thrd == NULL) {
     goto err;
   }
   
@@ -300,12 +314,15 @@ err:
 static 
 int getAvailFDs(int nfds, fd_set *readfds)
 {
-  FD_ZERO(readfds);
   int ret=0, i;
   for (i=0; i<nfds; i++) {
-    if (readers[i].status==OK) {
-      FD_SET(i,readfds);
-      ret++;
+    if (FD_ISSET(i,readfds)) {
+      if (readers[i].status==OK) {
+	FD_SET(i,readfds);
+	ret++;
+      } else {
+	FD_CLR(i,readfds);
+      }
     }
   }
   return ret;
@@ -313,12 +330,12 @@ int getAvailFDs(int nfds, fd_set *readfds)
 
 
 static
-Bool win32Select(int maxfd, fd_set *fds, int *timeout)
+int win32Select(int maxfd, fd_set *fds, int *timeout)
 {
   if (timeout == WAIT_NULL)
-    return getAvailFDs(readfds);
+    return getAvailFDs(maxfd,fds);
   
-  int wait = (timeout==WAIT_INFINITE) ? INFINITE : *timeout;
+  int wait = (timeout==WAIT_INFINITE || *timeout==0) ? INFINITE : *timeout;
 
   HANDLE wait_hnd[OPEN_MAX];
   
@@ -333,24 +350,39 @@ Bool win32Select(int maxfd, fd_set *fds, int *timeout)
   if (nh == 0) {
     /* Nothing to wait on, so fail */
     errno = ECHILD;
-    return NO;
+    return -1;
   }
   
+  time_t startTime = time(NULL);
   DWORD active = WaitForMultipleObjects(nh, wait_hnd, FALSE, wait);
 
   if (active == WAIT_FAILED) {
     errno = EBADF;
-    return NO;
-  } 
-  if (active == WAIT_TIMEOUT) {
-    return 0;
+    return -1;
   } 
 
-  if (timeout!=WAIT_INFINITE) {
-    *timeout = 0;  /* must be corrected !!!!! */
+  if (active == WAIT_TIMEOUT) {
+    *timeout = 0;
+    return 0;
   }
+   
+  Assert(wait != INFINITE);
+  time_t endTime = time(NULL);
+  double d = difftime(endTime,startTime);
+  *timeout = wait - (int)(d*1000.0);
 
   return getAvailFDs(maxfd, fds);
+}
+
+
+unsigned __stdcall timerThread(void *p)
+{
+  int wait = (int)p;
+  while(1) {
+    Sleep(wait);
+    handlerALRM();
+  }
+  return 1;
 }
 
 #endif
@@ -359,6 +391,18 @@ void osSetAlarmTimer(int t, Bool interval)
 {
 #ifdef DEBUG_DET
   return;
+#elif defined(WINDOWS)
+  if (timerthread!=NULL) {
+    TerminateThread(timerthread,0);
+    timerthread = NULL;
+  }
+  if (t>0) {
+    unsigned tid;
+    timerthread =(HANDLE) _beginthreadex(NULL,0,&timerThread,(void*)t,0,&tid);
+    if (timerthread==NULL) {
+      ozpwarning("osSetAlarmTimer(start thread)");
+    }
+  }
 #else
   struct itimerval newT;
 
@@ -375,6 +419,7 @@ void osSetAlarmTimer(int t, Bool interval)
 #endif
 }
 
+#ifndef WINDOWS
 int osGetAlarmTimer()
 {
 #ifdef DEBUG_DET
@@ -389,7 +434,7 @@ int osGetAlarmTimer()
   return (timer.it_value.tv_sec * 1000) + (timer.it_value.tv_usec/1000);
 #endif
 }
-
+#endif
 
 
 /* wait *timeout msecs on given fds
@@ -438,12 +483,14 @@ void osInitSignals()
   osSignal(SIGINT,handlerINT);
   osSignal(SIGTERM,handlerTERM);
   osSignal(SIGSEGV,handlerSEGV);
+  osSignal(SIGUSR1,handlerUSR1);
+  osSignal(SIGFPE,handlerFPE);
+#ifndef WINDOWS
   osSignal(SIGBUS,handlerBUS);
   osSignal(SIGPIPE,handlerPIPE);
-  osSignal(SIGUSR1,handlerUSR1);
   osSignal(SIGCHLD,handlerCHLD);
-  osSignal(SIGFPE,handlerFPE);
   osSignal(SIGALRM,handlerALRM);
+#endif
 #endif
 }
 
@@ -595,8 +642,8 @@ int osTestSelect(int fd, int mode)
   if (GetFileType(h) != FILE_TYPE_PIPE)
     return 1;
 
-  if (readers[fd].thrd==NULL)
-    return -1;
+  //  if (readers[fd].thrd==NULL)
+  //  return -1;
   return (readers[fd].status==OK) ? 1 : 0;
 #else
   while(1) {
@@ -709,6 +756,7 @@ int osread(int fd, void *buf, unsigned int len)
     if (ret<0)
       return ret;
     readers[fd].status=NO;
+    ResetEvent(readers[fd].char_avail);
     PulseEvent(readers[fd].char_consumed);
     return ret+1;
   }
