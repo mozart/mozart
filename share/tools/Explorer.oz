@@ -14,14 +14,24 @@ ExploreOne ExploreAll ExploreBest
 
 in
 
-
 local
 
    \insert 'explorer/main.oz'
 
 in
 
-   Explorer = {New ExplorerClass
-	       init(one:?ExploreOne all:?ExploreAll best:?ExploreBest)}
+   Explorer = {New ExplorerClass init}
+
+   proc {ExploreOne P}
+      {Explorer one(P)}
+   end
+
+   proc {ExploreAll P}
+      {Explorer all(P)}
+   end
+
+   proc {ExploreBest P O}
+      {Explorer all(P O)}
+   end
 
 end

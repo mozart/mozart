@@ -407,7 +407,7 @@ local
 	 class SucceededNode
 	    from LeafNode NumberNode
 	    
-	    meth drawTree(MomTree MomX MyY Scale Font Color)
+	    meth drawTree(MomTree MomX MyY Scale Font Color Width)
 	       NewOffset   = @offset.1
 	       MyX         = MomX + NewOffset
 	       ScaledWidth = Scale * RhombeWidthF
@@ -436,7 +436,7 @@ local
 			  width: LinkWidth)}
 	       {Canvas tk(crea polygon X0 Y1 X1 Y0 X2 Y1 X1 Y2 X0 Y1
 			  fill:    Color
-			  width:   TermNodeBorderWidth
+			  width:   Width
 			  outline: LineColor
 			  tags:    q(Node Tree MomTree Actions))}
 	       case @number of !False then true elseof N then
@@ -472,7 +472,7 @@ local
 	    
 	    meth drawTree(Break MomTree MomX MyY Scale Font)
 	       <<SucceededNode drawTree(MomTree MomX MyY Scale Font
-					EntailedColor)>>
+					EntailedColor TermNodeBorderWidth)>>
 	    end
 	    
 	 end
@@ -483,7 +483,7 @@ local
 
 	    meth drawTree(Break MomTree MomX MyY Scale Font)
 	       <<SucceededNode drawTree(MomTree MomX MyY Scale Font
-					SuspendedColor)>>
+					SuspendedColor NodeBorderWidth)>>
 	    end
 	    
 	 end
