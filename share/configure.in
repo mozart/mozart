@@ -34,6 +34,7 @@ dnl This will check that we are in the Oz directory and initiate
 AC_INIT(lib)
 
 OZ_INIT
+OZ_DENYS_EVENTS
 
 dnl *****************************************************************
 dnl locations
