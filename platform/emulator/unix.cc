@@ -1969,3 +1969,16 @@ OZ_BI_define(unix_kill, 2,0)
 OZ_BI_define(unix_getpid,0,1) {
   OZ_RETURN(oz_int(getpid()));
 } OZ_BI_end
+
+
+OZ_BI_define(unix_setpgid,2,1)
+{
+  OZ_declareInt(0,pid);
+  OZ_declareInt(1,pgid);
+#ifdef HAVE_SETPGID
+  int ret = setpgid(pid,pgid);
+#else
+  int ret = -1;
+#endif
+  OZ_RETURN(oz_int(ret));
+} OZ_BI_end
