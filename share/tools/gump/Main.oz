@@ -165,7 +165,7 @@ local
    % Auxiliary Functions for Code Generation
 
    fun {ValueToAST X}
-      if {IsAtom X} then fAtom(X unit)
+      if {IsLiteral X} then fAtom(X unit)
       elseif {IsInt X} then fInt(X unit)
       elseif {IsTuple X} then
 	 fRecord({ValueToAST {Label X}}
