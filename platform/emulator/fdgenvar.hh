@@ -70,7 +70,7 @@ public:
   }
 
   // methods relevant for term copying (gc and solve)
-  void gc(void);
+  void gc(GenFDVariable *);
   void dispose(void);
 
   Bool unifyFD(TaggedRef *, TaggedRef, TaggedRef *, TaggedRef,

@@ -57,6 +57,7 @@ public:
   }
 
   // methods relevant for term copying (gc and solve)
+  void gc(GenBoolVariable *);
   void dispose(void);
 
   Bool unifyBool(TaggedRef *, TaggedRef, TaggedRef *, TaggedRef,
