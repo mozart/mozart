@@ -70,6 +70,8 @@ void MsgContainer::marshal(ByteBuffer *bb,
       DPMarshaler *dpm;
       if(cont == (void *) 0) {
         dpm = transController->getMarshaler();
+        if (dpm==NULL) {OZ_error("No marshalers");}
+
         if (fullTopFlag) {
           dpm->genFullToplevel();
           fullTopFlag = NO;
@@ -256,6 +258,7 @@ Bool MsgContainer::unmarshal(ByteBuffer *bb,
           dpum = (Builder *) cont;
         } else {
           dpum = transController->getUnmarshaler();
+          if (dpum==NULL) {OZ_error("No unmarshalers");}
           dpUnmarshalerStartBatch(dpum);
         }
 

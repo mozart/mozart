@@ -1069,18 +1069,19 @@ int ComObj::getLastRTT() {
 OZ_Term ComObj::getStateStatistics() {
   switch(state){
   case CLOSED: return oz_atom("closed");
-  case CLOSED_WF_HANDOVER: return oz_atom("handover");
-  case CLOSED_WF_REMOTE: return oz_atom("remote");
+  case CLOSED_WF_HANDOVER: return oz_atom("wait for handover");
+  case CLOSED_WF_REMOTE: return oz_atom("wait for remote");
   case CLOSED_PROBLEM:return oz_atom("problem");
   case ANONYMOUS_WF_NEGOTIATE:return oz_atom("anonymous");
   case OPENING_WF_PRESENT: return oz_atom("presentation");
   case OPENING_WF_NEGOTIATE_ANS:return oz_atom("negotiate");
   case WORKING:   return oz_atom("connected");
-  case CLOSING_HARD: return oz_atom("hard close");
-  case CLOSING_WEAK: return oz_atom("weak close");
-  case CLOSING_WF_DISCONNECT:return oz_atom("disconnect");
+  case CLOSING_HARD: return oz_atom("closing (hard)");
+  case CLOSING_WEAK: return oz_atom("closing (weak)");
+  case CLOSING_WF_DISCONNECT:return oz_atom("wait for disconnect");
+  default:
+    return oz_atom("unknown");
   }
-  return oz_atom("passiv");
 }
 int ComObj::getQueueStatus() {
   return queues.getQueueStatus();
