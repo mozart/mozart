@@ -1212,8 +1212,9 @@ and the following line."
   "Indent every line in the current region."
   (interactive "r")
   (goto-char start)
-  (let ((current-line (count-lines 1 start)))
-    (while (< (point) end)
+  (let ((current-line (count-lines 1 start))
+	(end-line (count-lines 1 end)))
+    (while (< current-line end-line)
       (message "Indenting line %s ..." current-line)
       (oz-indent-line t)
       (setq current-line (1+ current-line))
