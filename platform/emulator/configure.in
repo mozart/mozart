@@ -45,7 +45,7 @@ AC_CANONICAL_HOST
 
 AC_LANG_CPLUSPLUS
 
-if test -d $OZHOME
+if test -n "$OZHOME" && test -d "$OZHOME";
 then
   ac_default_prefix=$OZHOME
 fi
