@@ -733,12 +733,12 @@ test -n "$MAKE" || MAKE="NONE"
 GNU make is needed to build the system.
 It can be retrieved from:
 
-	ftp://ftp.gnu.org/pub/gnu/
+	ftp://ftp.gnu.org/pub/gnu/make/
 
-The latest version at this time is 3.77 and is available
+The latest version at this time is 3.80 and is available
 packaged as the following archive:
 
-	make-3.77.tar.gz
+	make-3.80.tar.gz
 
 You may find a mirror archive closer to you by consulting:
 
@@ -1544,8 +1544,8 @@ fi
           echo "configure: warning: dont know how to check egcs version, assuming ok" 1>&2
 	else
           
-  echo $ac_n "checking $CC version is at least 2.7""... $ac_c" 1>&6
-echo "configure:1549: checking $CC version is at least 2.7" >&5
+  echo $ac_n "checking $CC version is at least 2.95.3""... $ac_c" 1>&6
+echo "configure:1549: checking $CC version is at least 2.95.3" >&5
   oz_tmp_ok=no
   if oz_tmp_version1=`$CC -dumpversion || $CC --version 2>/dev/null`; then
     # first we try to locate the string "version"
@@ -1571,7 +1571,7 @@ echo "configure:1549: checking $CC version is at least 2.7" >&5
     if test -n "$oz_tmp_version"; then
       
   oz_tmp_got="$oz_tmp_version"
-  oz_tmp_want="2.7"
+  oz_tmp_want="2.95.3"
   
   oz_tmp="$oz_tmp_got"
 
@@ -1643,15 +1643,15 @@ echo "configure:1549: checking $CC version is at least 2.7" >&5
           if test "$oz_tmp_ok" = no; then
             { echo "configure: error: 
 configure found the GNU C compiler $CC version $oz_tmp_version
-but version 2.7 or higher is required to build the
+but version 2.95.3 or higher is required to build the
 system.  It can be retrieved from:
 
-	ftp://ftp.gnu.org/pub/gnu/
+	ftp://ftp.gnu.org/pub/gnu/gcc/
 
-The latest version at this time is ??? and is available
+The latest version at this time is 3.3.2 and is available
 packaged as the following archive:
 
-	???
+	gcc-3.3.2.tar.gz
 
 You may find a mirror archive closer to you by consulting:
 
@@ -1982,8 +1982,8 @@ fi
           echo "configure: warning: dont know how to check egcs version, assuming ok" 1>&2
 	else
 	  
-  echo $ac_n "checking $CXX version is at least 2.7""... $ac_c" 1>&6
-echo "configure:1987: checking $CXX version is at least 2.7" >&5
+  echo $ac_n "checking $CXX version is at least 2.95.3""... $ac_c" 1>&6
+echo "configure:1987: checking $CXX version is at least 2.95.3" >&5
   oz_tmp_ok=no
   if oz_tmp_version1=`$CXX -dumpversion || $CXX --version 2>/dev/null`; then
     # first we try to locate the string "version"
@@ -2009,7 +2009,7 @@ echo "configure:1987: checking $CXX version is at least 2.7" >&5
     if test -n "$oz_tmp_version"; then
       
   oz_tmp_got="$oz_tmp_version"
-  oz_tmp_want="2.7"
+  oz_tmp_want="2.95.3"
   
   oz_tmp="$oz_tmp_got"
 
@@ -2081,15 +2081,15 @@ echo "configure:1987: checking $CXX version is at least 2.7" >&5
 	  if test "$oz_tmp_ok" = no; then
             { echo "configure: error: 
 configure found the GNU C++ compiler $CXX version $oz_tmp_version
-but version 2.7 or higher is required to build the
+but version 2.95.3 or higher is required to build the
 system.  It can be retrieved from:
 
-	ftp://ftp.gnu.org/pub/gnu/
+	ftp://ftp.gnu.org/pub/gnu/gcc/
 
-The latest version at this time is 2.95.2 and is available
+The latest version at this time is 3.3.2 and is available
 packaged as the following archive:
 
-	gcc-2.95.2.tar.gz 
+	gcc-3.3.2.tar.gz 
 
 You may find a mirror archive closer to you by consulting:
 
@@ -2350,7 +2350,7 @@ if test -n "${with_tk}"
 then
     oz_tk_search="$with_tk $oz_tk_search"
 elif test -n "${oz_tk_aqua}"; then
-    oz_tk_search="${oz_tk_aqua}/Tk.framework/Resources $oz_tk_search"
+    oz_tk_search="${oz_tk_aqua}/Tk.framework/Resources ${oz_tk_aqua}/Tk.framework $oz_tk_search"
 fi
 
 TK_LIB_DIR=""
@@ -2583,6 +2583,41 @@ case ${platform} in
 	if ! test -d MacOSX; then
 	    mkdir MacOSX
 	fi
+	for ac_prog in xcodebuild pbxbuild
+do
+# Extract the first word of "$ac_prog", so it can be a program name with args.
+set dummy $ac_prog; ac_word=$2
+echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
+echo "configure:2592: checking for $ac_word" >&5
+if eval "test \"`echo '$''{'ac_cv_prog_PROJECTBUILD'+set}'`\" = set"; then
+  echo $ac_n "(cached) $ac_c" 1>&6
+else
+  if test -n "$PROJECTBUILD"; then
+  ac_cv_prog_PROJECTBUILD="$PROJECTBUILD" # Let the user override the test.
+else
+  IFS="${IFS= 	}"; ac_save_ifs="$IFS"; IFS=":"
+  ac_dummy="$PATH"
+  for ac_dir in $ac_dummy; do
+    test -z "$ac_dir" && ac_dir=.
+    if test -f $ac_dir/$ac_word; then
+      ac_cv_prog_PROJECTBUILD="$ac_prog"
+      break
+    fi
+  done
+  IFS="$ac_save_ifs"
+fi
+fi
+PROJECTBUILD="$ac_cv_prog_PROJECTBUILD"
+if test -n "$PROJECTBUILD"; then
+  echo "$ac_t""$PROJECTBUILD" 1>&6
+else
+  echo "$ac_t""no" 1>&6
+fi
+
+test -n "$PROJECTBUILD" && break
+done
+test -n "$PROJECTBUILD" || PROJECTBUILD="xcodebuild"
+
 	TODO="$TODO MacOSX/OzWish.pbxproj/project.pbxproj"
 	;;
 esac
@@ -2766,6 +2801,7 @@ s%@TCL_INCLUDES@%$TCL_INCLUDES%g
 s%@TK_INCLUDES@%$TK_INCLUDES%g
 s%@PROVIDETCLLIBS@%$PROVIDETCLLIBS%g
 s%@IS_DARWIN@%$IS_DARWIN%g
+s%@PROJECTBUILD@%$PROJECTBUILD%g
 
 CEOF
 EOF
