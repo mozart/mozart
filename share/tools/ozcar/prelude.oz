@@ -1,9 +1,6 @@
 %%% $Id$
 %%% Benjamin Lorenz <lorenz@ps.uni-sb.de>
 
-%declare
-%\insert config
-
 \insert string
 \insert tk
 
@@ -159,7 +156,7 @@ fun {UnknownFile F}
 end
 
 fun {StripPath File}
-   case File == '' then
+   case {UnknownFile File} then
       '???'
    else
       S = {Str.rchr {Atom.toString File} &/}
