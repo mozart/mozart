@@ -126,6 +126,7 @@ void AM::init(int argc,char **argv)
   aVarBindHandler  = makeTaggedNULL();
   methApplHdl      = makeTaggedNULL();
   sendHdl          = makeTaggedNULL();
+  newHdl           = makeTaggedNULL();
 
   char *compilerName = OzCompiler;
 
