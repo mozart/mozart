@@ -768,7 +768,8 @@ Bool checkAtom(const char *s)
         && strcmp(t, "cond")? OK: NO;
   case 'd':
     return strcmp(t, "declare") && strcmp(t, "define")
-        && strcmp(t, "dis") && strcmp(t, "div")? OK: NO;
+        && strcmp(t, "dis") && strcmp(t, "div")
+        && strcmp(t, "do")? OK: NO;
   case 'e':
     return strcmp(t, "else") && strcmp(t, "elsecase")
         && strcmp(t, "elseif") && strcmp(t, "elseof")
