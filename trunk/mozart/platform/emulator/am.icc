@@ -300,10 +300,9 @@ RunnableThreadBody* AM::allocateBody()
 //
 //  Make a runnable thread with a task stack;
 inline 
-Thread *AM::mkRunnableThread(int prio, Board *bb, TaggedRef val, 
-			     Bool inSolve, Bool link)
+Thread *AM::mkRunnableThread(int prio, Board *bb, Bool inSolve, Bool link)
 {
-  Thread *th = new Thread(S_RTHREAD | T_prop,prio,bb,val,link);
+  Thread *th = new Thread(S_RTHREAD | T_prop,prio,bb,link);
   th->setBody(allocateBody());
 
   Assert(bb==currentBoard ||
@@ -417,6 +416,15 @@ void AM::changeSelf(Object *o)
   if(o != oldSelf) {
     cachedStack->pushSelf(oldSelf);
     cachedSelf = o;
+  }
+}
+
+inline
+void AM::saveSelf()
+{
+  if (cachedSelf != 0) {
+    currentThread->setSelf(cachedSelf);
+    cachedSelf = 0;
   }
 }
 
