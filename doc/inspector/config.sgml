@@ -21,9 +21,36 @@
   -
   -->
 
-<CHAPTER id="chapter.configure"><TITLE>API Reference</TITLE>
+<CHAPTER id="chapter.configure"><TITLE/API Reference/
   <P>
-    To be done.
-  </P>
-  <SECTION><TITLE></TITLE>
+    This section is still incomplete.
+  <SECTION id="section.configure.mappings"><TITLE/Mapping Functions/
+    <P>
+      Writing mapping functions is easy: Every function follows the
+      pattern below.
+      <CODE DISPLAY>
+fun {MyMapFunction Value MaxWidth MaxDepth}
+   if {WantToMap Value} then
+      &ellipsis; /* computations */ &ellipsis;
+   else Value
+   end
+end
+      </CODE>
+    <P>
+      <CODE>MaxWidth</CODE> and <CODE>MaxDepth</CODE> are integers denoting
+      the node's width and depth limits.  This allows to handle cycles
+      independently of the fact whether they would have been recognized or
+      not.  Keep in mind that mapping functions should not have side-effects
+      on the value.
+    <SUBSECTION><TITLE/Registering a Mapping Function/
+  <SECTION id="section.configure.actions"><TITLE/Action Procedures/
+    <P>
+      Action procedures follow the pattern below.
+      <CODE DISPLAY>
+proc {MyAction Value}
+   &ellipsis; /* computations */ &ellipsis;
+end
+      </CODE>
+    <SUBSECTION><TITLE/Registering an Action Procedure/
+  <SECTION id="section.configure.relations"><TITLE/Equivalence Relations/
 </CHAPTER>

@@ -30,11 +30,15 @@
 <!ENTITY gui          SYSTEM "gui.sgml">
 <!ENTITY config       SYSTEM "config.sgml">
 
+<!ENTITY ie PI "ie">
+<!ENTITY ellipsis PI "ellipsis">
+
 ]>
 
 <BOOK proglang=oz>
   <FRONT>
     <!-- Split the Document into different HTML files -->
+    <META name="html.split.toc" value="">
     <META name="html.split" value="chapter.introduction">
     <META name="html.split" value="chapter.basic">
     <META name="html.split" value="chapter.interactive">
@@ -45,7 +49,7 @@
     <AUTHOR.EXTERN to="author.db" key="Thorsten.Brunklaus">
     <ABSTRACT>
       The Inspector is a graphical and interactive tool for
-      displaying and examining oz values.
+      displaying and examining Oz values.
       The idea is to combine fast basic display services with powerful
       interactive in-place manipulation of the datastructures.
     </ABSTRACT>
