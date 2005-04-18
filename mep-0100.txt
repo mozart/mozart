@@ -70,10 +70,10 @@ Board an effective instrument.
 References
 ==========
 
-.. [1] Discussions on Mozart Governance at hackers@mozart-oz.org,
+.. [#HACKERS] Discussions on Mozart Governance at hackers@mozart-oz.org,
    2004-2005 (http://www.mozart-oz.org/pipermail/mozart-hackers/)
 
-.. [2] Message by Peter Van Roy from Tue Apr 5 2005 with subject
+.. [#STARTING] Message by Peter Van Roy from Tue Apr 5 2005 with subject
    'Starting with Mozart governance' that gives the initial Board composition
    and the voting rules for the Board
    (http://www.mozart-oz.org/pipermail/mozart-hackers/2005/002228.html)
