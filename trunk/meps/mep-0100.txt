@@ -1,0 +1,84 @@
+MEP: 	100
+Title: 	Expansion of Mozart Board to Mozart Community
+Version: 	$Revision$
+Last-Modified: 	$Date$
+Author: 	Peter Van Roy
+Discussions-To:		hackers@mozart-oz.org
+Status: 	Draft
+Type: 	Standards Track
+Content-Type: 	text/x-rst
+Created: 	8-Apr-2005
+Post-History: 
+
+Abstract
+========
+
+The purpose of this MEP is to transfer Mozart governance from
+the Mozart Consortium to representative members of the Mozart
+community.  To this end, the MEP proposes an expanded Board 
+to replace the initial Board.  The initial Board was chosen
+to represent the Mozart Consortium.  The expanded Board will
+represent the Mozart community.  The proposed expanded Board
+consists of the following people:
+
+   * `Raphaël Collet`_
+   * `Denys Duchier`_
+   * `Seif Haridi`_
+   * `Torbjörn Lager`_
+   * `Konstantin Popov`_
+   * Camilo Rueda
+   * `Christian Schulte`_
+   * `Gert Smolka`_
+   * `Peter Van Roy`_
+
+.. _Raphaël Collet: http://www.info.ucl.ac.be/~raph/
+.. _Denys Duchier: http://www.mozart-oz.org/users/duchier/
+.. _Seif Haridi: http://www.sics.se/~seif/
+.. _Torbjörn Lager: http://www.ling.gu.se/~lager/
+.. _Konstantin Popov: http://www.sics.se/~kost/
+.. _Christian Schulte: http://web.it.kth.se/~schulte/
+.. _Gert Smolka: http://www.ps.uni-sb.de/~gert/
+.. _Peter Van Roy: http://www.info.ucl.ac.be/people/cvvanroy.html
+
+Rationale
+=========
+
+The expanded Board consists of people who have shown technical
+competence and activity in Mozart development.  From the Mozart
+community, the new members are Torbjörn Lager and Camilo Rueda.
+Torbjörn Lager is a faculty member at Gothenburg University and
+a prominent Mozart developer and researcher in natural language
+processing who has given intensive Mozart courses.  Camilo Rueda
+is a faculty member at the Pontificia Universidad Javeriana and
+a prominent researcher and head of a research group (together
+with Juan Diaz) that is using Mozart for constraint programming
+and computer science education.  Both of these proposed members
+agree to be on the Board.
+
+In addition, two members are added from within the Mozart
+Consortium: Konstantin Popov from SICS and Raphaël Collet from
+UCL.  These members are added because SICS/KTH and UCL are very
+active in Mozart research and development.  Both of these
+proposed members agree to be on the Board.
+
+This gives a total of nine members covering the various areas
+of Mozart research and development.  We consider that nine
+members is just about right: it is large enough to cover the
+different areas of Mozart work and small enough to make the
+Board an effective instrument.
+
+References
+==========
+
+.. [1] Discussions on Mozart Governance at hackers@mozart-oz.org,
+   2004-2005 (http://www.mozart-oz.org/pipermail/mozart-hackers/)
+
+.. [2] Message by Peter Van Roy from Tue Apr 5 2005 with subject
+   'Starting with Mozart governance' that gives the initial Board composition
+   and the voting rules for the Board
+   (http://www.mozart-oz.org/pipermail/mozart-hackers/2005/002228.html)
+
+Copyright
+=========
+
+This document has been placed in the public domain.
