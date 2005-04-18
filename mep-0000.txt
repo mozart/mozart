@@ -19,15 +19,15 @@ Introduction
 
 Index by Category
 
-     num  title                                        owner
-     ---  -----                                        -----
+     num  title                                          owner
+     ---  -----                                          -----
 
  Meta-MEPs (MEPs about MEPs or Process)
 
- I     0  Index of Mozart Enhancement Proposals        Duchier
- I     1  MEP Guidelines                               Duchier
- I     2  Sample ReStructuredText MEP Template         Duchier
- I     3  Sample Plaintext MEP Template                Duchier
+ I     0  Index of Mozart Enhancement Proposals          Duchier
+ I     1  MEP Guidelines                                 Duchier
+ I     2  Sample ReStructuredText MEP Template           Duchier
+ I     3  Sample Plaintext MEP Template                  Duchier
 
  Other Informational MEPs
 
@@ -36,6 +36,10 @@ Index by Category
 
 
  Open MEPs (under consideration)
+
+     num  title                                          owner
+     ---  -----                                          -----
+ S   100  Expansion of Mozart Board to Mozart Community  Van Roy
 
 
  Finished MEPs (done, implemented in CVS)
@@ -47,12 +51,12 @@ Index by Category
 
 Numerical Index
 
-     num  title                                        owner
-     ---  -----                                        -----
- I     0  Index of Mozart Enhancement Proposals        Duchier
- I     1  MEP Guidelines                               Duchier
- I     2  Sample ReStructuredText MEP Template         Duchier
- I     3  Sample Plaintext MEP Template                Duchier
+     num  title                                          owner
+     ---  -----                                          -----
+ I     0  Index of Mozart Enhancement Proposals          Duchier
+ I     1  MEP Guidelines                                 Duchier
+ I     2  Sample ReStructuredText MEP Template           Duchier
+ I     3  Sample Plaintext MEP Template                  Duchier
 
 
 Key
@@ -70,6 +74,7 @@ Owners
     name                     email address
     ----------------         -------------
     Duchier                  denys.duchier@mozart-oz.org
+    Van Roy                  peter.vanroy@mozart-oz.org
 
 
 References
