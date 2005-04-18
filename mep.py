@@ -23,7 +23,7 @@ class Inliner(rst.states.Inliner):
     Extend `rst.Inliner` for local MEP references.
     """
 
-    mep_url = rst.states.Inliner.pep_url_local
+    mep_url = rst.states.Inliner.pep_url
 
 
 class Reader(standalone.Reader):
