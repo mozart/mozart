@@ -37,7 +37,7 @@ consists of the following people:
 .. _Torbjörn Lager: http://www.ling.gu.se/~lager/
 .. _Konstantin Popov: http://www.sics.se/~kost/
 .. _Christian Schulte: http://web.it.kth.se/~schulte/
-.. _Gert Smolka: http://www.ps.uni-sb.de/~gert/
+.. _Gert Smolka: http://www.ps.uni-sb.de/~smolka/
 .. _Peter Van Roy: http://www.info.ucl.ac.be/people/cvvanroy.html
 
 Rationale
@@ -56,7 +56,7 @@ and computer science education.  Both of these proposed members
 agree to be on the Board.
 
 In addition, two members are added from within the Mozart
-Consortium: Konstantin Popov from SICS and Raphaël Collet from
+Consortium: Seif Haridi from SICS and Raphaël Collet from
 UCL.  These members are added because SICS/KTH and UCL are very
 active in Mozart research and development.  Both of these
 proposed members agree to be on the Board.
