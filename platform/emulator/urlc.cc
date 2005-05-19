@@ -203,7 +203,7 @@ static char* URLC_kp[] = {"http://", "file:", "ftp://", NULL};
 /* characters not to be escaped in HTTP requests.
    if I well understood RFC 1945! ##
    */
-static char URLC_hs[] = "%:@&=+$-_.!*'(),;/?";
+static char URLC_hs[] = "%:@&=+$-_.!*'(),;/?#";
 
 /* throw simulators */
 #define th1(reason) { clean(); return (reason); }
