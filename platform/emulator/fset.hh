@@ -37,6 +37,7 @@
 
 //-----------------------------------------------------------------------------
 
+class FSetConstraint;
 class FSetValue : public OZ_FSetValue {
 
 friend class FSetConstraint;
