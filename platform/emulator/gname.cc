@@ -33,8 +33,8 @@
 #include "board.hh"
 
 //
-template class GenDistEntryTable<GName>;
 #include "hashtblDefs.cc"
+template class GenDistEntryTable<GName>;
 
 //
 GNameTable gnameTable;
