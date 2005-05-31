@@ -112,8 +112,8 @@ static ip_address getMySiteIP()
 }
 
 //
-template class GenDistEntryTable<Site>;
 #include "hashtblDefs.cc"
+template class GenDistEntryTable<Site>;
 
 //
 SiteHashTable* siteTable = 0;
