@@ -1,0 +1,50 @@
+MEP: 	101
+Title: 	Update of Mozart Website for new Governance Model
+Version: 	$Revision$
+Last-Modified: 	$Date$
+Author: 	Peter Van Roy
+Discussions-To:		hackers@mozart-oz.org
+Status: 	Draft
+Type: 	Informational
+Content-Type: 	text/x-rst
+Created: 	19-May-2005
+Post-History: 
+
+Abstract
+========
+
+The purpose of this MEP is to update the Mozart Website
+to explain the new Mozart governance model.  The major
+change is to replace the 'Research Groups' page by a new
+page that explains the Mozart Board, the purpose of 
+MEPs, and provides pointers to create and submit new
+MEPs [#PAGE]_.
+
+
+Rationale
+=========
+
+Now that the new Mozart governance rules are in place,
+the Mozart website should explain them.  We propose to
+replace the current 'Research Groups' page by a new
+page that introduces the new governance model and
+presents the Mozart Board.  Also, some other pages on
+the Mozart website that mention the Mozart Consortium
+need to be changed to mention the Mozart community
+and Board instead.
+
+
+References
+==========
+
+.. [#PAGE] Draft for Mozart Governance page,
+    http://www2.info.ucl.ac.be/people/fsp/mozgov/
+
+.. [#LIST] Mozart governance discussions on hackers mailing list,
+    2005.
+
+
+Copyright
+=========
+
+This document has been placed in the public domain.

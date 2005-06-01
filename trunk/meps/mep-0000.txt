@@ -39,6 +39,10 @@ Index by Category
 
  Open MEPs (under consideration)
 
+     num  title                                          owner
+     ---  -----                                          -----
+ S   101  Update of Website for new Governance Model     Van Roy
+
  Finished MEPs (done, implemented in CVS)
 
  Empty MEPs (or containing only an abstract)
