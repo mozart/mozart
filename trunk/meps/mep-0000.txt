@@ -23,41 +23,50 @@ Index by Category
      ---  -----                                          -----
 
  Meta-MEPs (MEPs about MEPs or Process)
-
+ ---------------------------------------------------------------
  I     0  Index of Mozart Enhancement Proposals          Duchier
  I     1  MEP Guidelines                                 Duchier
  I     2  Sample ReStructuredText MEP Template           Duchier
  I     3  Sample Plaintext MEP Template                  Duchier
+ ---------------------------------------------------------------
 
  Other Informational MEPs
+ ---------------------------------------------------------------
+ ---------------------------------------------------------------
 
  Accepted MEPs (accepted; may not be implemented yet)
-
-     num  title                                          owner
-     ---  -----                                          -----
- S   100  Expansion of Mozart Board to Mozart Community  Van Roy
+ ---------------------------------------------------------------
+ A   100  Expansion of Mozart Board to Mozart Community  Van Roy
+ ---------------------------------------------------------------
 
  Open MEPs (under consideration)
-
-     num  title                                          owner
-     ---  -----                                          -----
+ ---------------------------------------------------------------
  S   101  Update of Website for new Governance Model     Van Roy
+ ---------------------------------------------------------------
 
  Finished MEPs (done, implemented in CVS)
+ ---------------------------------------------------------------
+ ---------------------------------------------------------------
 
  Empty MEPs (or containing only an abstract)
+ ---------------------------------------------------------------
+ ---------------------------------------------------------------
 
  Deferred, Abandoned, Withdrawn, and Rejected MEPs
+ ---------------------------------------------------------------
+ ---------------------------------------------------------------
 
 
 Numerical Index
 
-     num  title                                          owner
-     ---  -----                                          -----
+ ---------------------------------------------------------------
  I     0  Index of Mozart Enhancement Proposals          Duchier
  I     1  MEP Guidelines                                 Duchier
  I     2  Sample ReStructuredText MEP Template           Duchier
  I     3  Sample Plaintext MEP Template                  Duchier
+ A   100  Expansion of Mozart Board to Mozart Community  Van Roy
+ S   101  Update of Website for new Governance Model     Van Roy
+ ---------------------------------------------------------------
 
 
 Key
