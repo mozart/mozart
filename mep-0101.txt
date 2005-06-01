@@ -5,7 +5,7 @@ Last-Modified: 	$Date$
 Author: 	Peter Van Roy
 Discussions-To:		hackers@mozart-oz.org
 Status: 	Draft
-Type: 	Informational
+Type: 	Standards Track
 Content-Type: 	text/x-rst
 Created: 	19-May-2005
 Post-History: 
