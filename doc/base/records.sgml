@@ -558,7 +558,9 @@
           <<{List.member ?_{X} ?+{Ys} ??{B}}>>
         <Item>
           tests whether ?_{X} is equal (in the sense of <<==>>) to some
-          element of&nbsp;?_{Ys}.
+          element of&nbsp;?_{Ys}.  Note: all other procedures of the <<List>>
+          module that operate on a list take it as their first argument.
+          <<Member>> is the only exception (for historical reasons).
 
         <Entry><Span class=index/<<Length>>/
           <Index/<<List>><And><<length>>/
