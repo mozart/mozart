@@ -1,4 +1,3 @@
-
                                     ozmake
 
    [1]Denys Duchier
@@ -809,6 +808,6 @@ CONTACTS
 
 References
 
-   1. http://www.ps.uni-sb.de/~duchier/
-   2. file://localhost/home/keving/MOZART/kosher/mozart-stdlib/ozmake/CHANGES
-   3. http://www.ps.uni-sb.de/~duchier/
+   1. http://www.lifl.fr/~duchier/
+   2. file://localhost/usr/local/Mozart/Published/Mozart/ozmake/CHANGES
+   3. http://www.lifl.fr/~duchier/
