@@ -215,6 +215,25 @@ OZ_BI_define(cgdbm_firstkey,1,1)
   }
 } OZ_BI_end
 
+OZ_BI_define(cgdbm_firstkey_bytestring,1,1)
+{
+  OZ_declareGdbm(0,oz_db,"firstkey",0);
+  datum key;
+
+  key = gdbm_firstkey(oz_db->db);
+  if (key.dptr==NULL) OZ_RETURN(OZ_unit());
+  else {
+    OZ_Term res;
+    char* s = new char[key.dsize+1];
+    memcpy(s,key.dptr,key.dsize);
+    s[key.dsize] = '\0';
+    res = OZ_mkByteString(s,key.dsize);
+    delete s;
+    free(key.dptr);
+    OZ_RETURN(res);
+  }
+} OZ_BI_end
+
 OZ_BI_define(cgdbm_nextkey,2,1)
 {
   OZ_declareGdbm(0,oz_db,"nextkey",0);
@@ -230,6 +249,27 @@ OZ_BI_define(cgdbm_nextkey,2,1)
     memcpy(s,val.dptr,val.dsize);
     s[val.dsize] = '\0';
     res = OZ_atom(s);
+    delete s;
+    free(val.dptr);
+    OZ_RETURN(res);
+  }
+} OZ_BI_end
+
+OZ_BI_define(cgdbm_nextkey_bytestring,2,1)
+{
+  OZ_declareGdbm(0,oz_db,"nextkey",0);
+  OZ_declareVS(  1,oz_key,oz_len);
+  datum key,val;
+  key.dptr  = oz_key;
+  key.dsize = oz_len;
+  val = gdbm_nextkey(oz_db->db,key);
+  if (val.dptr==NULL) OZ_RETURN(OZ_unit());
+  else {
+    OZ_Term res;
+    char *s = new char[val.dsize+1];
+    memcpy(s,val.dptr,val.dsize);
+    s[val.dsize] = '\0';
+    res = OZ_mkByteString(s,val.dsize);
     delete s;
     free(val.dptr);
     OZ_RETURN(res);
@@ -293,6 +333,8 @@ extern "C"
       {"put"            ,3,0,cgdbm_put},
       {"firstkey"       ,1,1,cgdbm_firstkey},
       {"nextkey"        ,2,1,cgdbm_nextkey},
+      {"firstkeyBS"     ,1,1,cgdbm_firstkey_bytestring},
+      {"nextkeyBS"      ,2,1,cgdbm_nextkey_bytestring},
       {"close"          ,1,0,cgdbm_close},
       {"free"           ,1,0,cgdbm_free},
       {"remove"         ,2,0,cgdbm_remove},
