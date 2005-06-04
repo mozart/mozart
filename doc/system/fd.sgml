@@ -415,7 +415,7 @@ equal or larger than ?{n}.
 creates a propagator for
 <p><math>1*{\tt D}_1+\ldots+1*{\tt D}_n+(-1)*{\tt D}\;\sim_{{\tt A}}\;0</math><p>
 For the operational semantics see <<FD.sumC>>.
-For the relation symbol <<'\=:'>>, the propagator waits until at most one
+For the relation symbol <<'\\=:'>>, the propagator waits until at most one
 non-determined variable is left. Then
 the appropriate value
 is discarded from the variable's domain. For the other relations, the
@@ -467,7 +467,7 @@ These values are used to narrow the domain of&nbsp;<math/{\tt D}_k/ until a fixe
 point is reached. We describe the propagation for the different
 possible values of <<A>>.
 <list>
-<entry><<=&lt;:>><item>
+<entry><<'=&lt;:'>><item>
 Narrowing is done according to the following inequalities.
 <p>
 <math>
@@ -508,7 +508,7 @@ We have the following narrowing.
 The propagator ceases to exist if <math/\overline{\codeinline{oz}{X}} - \underline{\codeinline{oz}{Y}}
 \leq \underline{\codeinline{oz}{Z}} - \overline{\codeinline{oz}{V}}/ holds.
 
-<entry><<&gt;=:>>
+<entry><<'&gt;=:'>>
 <item>
 This case can be reduced to <<=&lt;:>> due to the observation that
 <p><math>{\tt I}_1*{\tt D}_1+\ldots+{\tt I}_n*{\tt D}_n+(-1)*{\tt D}\;\geq\;0</math><p>
@@ -517,17 +517,17 @@ is equivalent to
 Alternatively, <math/\underline{\mbox{\mbox{\sl RHS}}_k}/ can be used for the
 definition.
 
-<entry><<&lt;:>>
-<item>Analogous to <<=&lt;:>>
-<entry><<&gt;:>>
-<item>Analogous to <<&gt;=:>>
-<entry><<=:>>
+<entry><<'&lt;:'>>
+<item>Analogous to <<'=&lt;:'>>
+<entry><<'&gt;:'>>
+<item>Analogous to <<'&gt;=:'>>
+<entry><<'=:'>>
 <item>
 In this case, the operational semantics is
 defined by conjunction of the formulas given for <<=&lt;:>> and <<&gt;=:>>.
 Furthermore, coreferences are realized in that, &eg; the propagator
 <<3*X=:3*Y>> tells the basic constraint&nbsp;<<X=Y>>.
-<entry><<\=:>><item>
+<entry><<'\\=:'>><item>
 In this case, the propagator waits until at most one
 non-determined variable is left, say <math/{\tt D}_k/. Then,
 <math/{\mbox{\sl RHS}}_k/ denotes a unique integer value which
@@ -592,7 +592,7 @@ point is reached. We describe the propagation for the different possible
 values of <<A>>.
 
 <list>
-<entry><<=&lt;:>><item>
+<entry><<'=&lt;:'>><item>
 The narrowing is done according to the following inequalities.
 <p><math>
 {\tt D}_{kl} \leq \left \lfloor  \frac{\overline{\mbox{\sl RHS}}_k}{{\tt I}_k * \prod_{j=1,
@@ -638,8 +638,8 @@ We have the following formulas.
 The propagator ceases to exist if <math/3*\overline{\codeinline{oz}{X}}*\overline{\codeinline{oz}{Y}} -
 \underline{\codeinline{oz}{Z}} \leq \underline{\codeinline{oz}{A}}/ holds.
 
-<entry><<&gt;=:>><item>
-This case can be reduced to <<=&lt;:>> due to the observation that
+<entry><<'&gt;=:'>><item>
+This case can be reduced to <<'=&lt;:'>> due to the observation that
 <p><math>
 {\tt I}_1*{\tt D}_{11}*\ldots*{\tt D}_{1k_1}+\ldots+{\tt I}_n*{\tt D}_{n1}*\ldots*{\tt D}_{nk_n}+(-1)*{\tt D}_{(n+1)1}\;\leq\;0
 </math><p>
@@ -650,11 +650,11 @@ is equivalent to
 Alternatively, <math/\underline{\mbox{\mbox{\sl RHS}}_k}/ can be used for the
 definition.
 
-<entry><<&lt;:>><item> Analogous to <<=&lt;:>>
-<entry><<&gt;:>><item> Analogous to <<&gt;=:>>
-<entry><<=:>><item> In this case, the operational semantics is
-defined by conjunction of the formulas given for <<=&lt;:>> and <<&gt;=:>>.
-<entry><<\=:>><item>
+<entry><<'&lt;:'>><item> Analogous to <<'=&lt;:'>>
+<entry><<'&gt;:'>><item> Analogous to <<'&gt;=:'>>
+<entry><<'=:'>><item> In this case, the operational semantics is
+defined by conjunction of the formulas given for <<'=&lt;:'>> and <<'&gt;=:'>>.
+<entry><<'\\=:'>><item>
 In this case, the propagator waits until at most one
 non-determined variable is left, say <math/D_{kl}/. Then, <math/{\mbox{\sl RHS}}_k/
 denotes a unique integer, and if
@@ -691,7 +691,7 @@ vectors ?_{Iv} and ?_{Dv}:
 {\tt I}_n*{\tt D}_n|\;\sim_{{\tt A}}\;{\tt D}</math><p>
 
 The operational semantics is as follows.
-If ?_{A} is <<'<:'>>, <<'=<:'>> or <<'\=:'>>, the following definition
+If ?_{A} is <<'<:'>>, <<'=<:'>> or <<'\\=:'>>, the following definition
 holds.
 
 <p><math> {\tt Iv} * {\tt Dv} \sim_{{\tt A}} D \;\wedge\; (-{\tt Iv})*{\tt Dv}
@@ -729,7 +729,7 @@ The operational semantics is defined analogously to <<FD.sumAC>>.
 <item>
 creates a propagator analogous to <<FD.sum>> but performs
 <em>domain-consistent</em> propagation. Note that only equality
-(?_{A} is <<'=:'>>) and disequality (?_{A} is <<'\=:'>>) are
+(?_{A} is <<'=:'>>) and disequality (?_{A} is <<'\\=:'>>) are
 supported, as for inequalities domain and bounds propagation are
 equivalent.
 
@@ -744,7 +744,7 @@ equivalent.
 <item>
 creates a propagator analogous to <<FD.sumC>> but performs
 <em>domain-consistent</em> propagation. Note that only equality
-(?_{A} is <<'=:'>>) and disequality (?_{A} is <<'\=:'>>) are
+(?_{A} is <<'=:'>>) and disequality (?_{A} is <<'\\=:'>>) are
 supported, as for inequalities domain and bounds propagation are
 equivalent.
 </list>
