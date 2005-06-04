@@ -66,17 +66,21 @@ is no such ?_{KEY} in ?_{DB}.
       <item>Stores Oz value ?_{VAL} under ?_{KEY} in
 ?_{DB}. ?_{VAL} must be ground and stateless.
       <entry/<code/Gdbm.firstkey//
+      <entry/<code/Gdbm.firstkeyBS//
       <synopsis/<code/{Gdbm.firstkey ?+{DB} ??{KEY}}//
       <item>Returns a ?_{KEY} in ?_{DB} (see below).  There is
 absolutely no guarantee as to which key this is going to be.  Returns
-<code/unit/ if the database is empty.
+<code/unit/ if the database is empty. <<Gdbm.firstkey>> returns ?_{KEY}
+as an atom, <<Gdbm.firstkeyBS>> as a bytestring.
       <entry/<code/Gdbm.nextkey//
+      <entry/<code/Gdbm.nextkeyBS//
       <synopsis/<code/{Gdbm.nextkey ?+{DB} ?+{KEY} ??{NEXT}}//
       <item>Returns the ?_{NEXT} key after ?_{KEY}.  Again, there
 is no guarantee as to which key this is going to be.  The only
 guarantee is that if you continue in this manner, you will enumerate
 all the keys in the database, in some order, without repeats.  Returns
-<code/unit/ when there are no more keys.
+<code/unit/ when there are no more keys. <<Gdbm.nextkey>> returns
+?_{NEXT} as an atom, <<Gdbm.nextkeyBS>> as a bytestring.
       <entry/<code/Gdbm.close//
       <synopsis/<code/{Gdbm.close ?+{DB}}//
       <item>Closes the database.  Subsequent access attempts
@@ -88,23 +92,35 @@ raise an exception.
       <synopsis/<code/{Gdbm.reorganize ?+{DB}}//
       <item>see the GDBM documentation.
       <entry/<code/Gdbm.keys//
+      <entry/<code/Gdbm.keysBS//
       <synopsis/<code/{Gdbm.key ?+{DB} ??{KEYS}}//
       <item>Returns the lazy list of all ?_{KEYS} in the database.
+      <<Gdbm.keys>> returns each key as an atom, <<Gdbm.keysBS>> as
+      a bytestring.
       <entry/<code/Gdbm.entries//
+      <entry/<code/Gdbm.entriesBS//
       <synopsis/<code/{Gdbm.entries ?+{DB} ??{ENTRIES}}//
       <item>Returns the lazy list of all pairs <code/KEY#VALUE/ in
-the database.
+the database.  <<Gdbm.entries>> returns each key as an atom,
+<<Gdbm.entriesBS>> as a bytestring.
       <entry/<code/Gdbm.items//
+      <entry/<code/Gdbm.itemsBS//
       <synopsis/<code/{Gdbm.items ?+{DB} ??{ITEMS}}//
       <item>Returns the lazy list of all values stored in the
-database.
+database. <<Gdbm.items>> returns each key as an atom, <<Gdbm.itemsBS>>
+as a bytestring.
       <entry/<code/Gdbm.forAll//
+      <entry/<code/Gdbm.forAllBS//
       <synopsis/<code/{Gdbm.forAll ?+{DB} ?+{P}}//
       <item>Calls <code/{P VALUE}/ for every entry in the database.
+      <<Gdbm.forAll>> loops over all keys as atoms, <<Gdbm.forAllBS>>
+      as bytestrings.
       <entry/<code/Gdbm.forAllInd//
+      <entry/<code/Gdbm.forAllIndBS//
       <synopsis/<code/{Gdbm.forAllInd ?+{DB} ?+{P}}//
       <item>Calls <code/{P KEY VALUE}/ for every entry in the
-database.
+database.  <<Gdbm.forAllInd>> loops over all keys as atoms,
+<<Gdbm.forAllIndBS>> as bytestrings.
     </list></p>
   </section>
 
