@@ -515,7 +515,8 @@ STRING                            "\""({STRINGCHAR}|{PSEUDOCHAR})*"\""
 
 INT          {DIGIT}+
 
-OZINT        ~?(0{OCT}*|0[xX]{HEX}+|0[bB]{BIN}+|{NONZERODIGIT}{DIGIT}*)
+OZNAT        (0{OCT}*|0[xX]{HEX}+|0[bB]{BIN}+|{NONZERODIGIT}{DIGIT}*)
+OZINT        ~?{OZNAT}
 
 FILENAME     ([-0-9a-zA-Z/_~]|\..)+|'[^\'\n]+'
 
@@ -902,7 +903,7 @@ REGEXCHAR    "["([^\]\\]|\\.)+"]"|\"[^"]+\"|\\.|[^<>"\[\]\\\n]
 {RMACRO}                       { return T_RMACRO; }
 ":="                           { return T_COLONEQUALS; }
 
-"."({SPACE}|\n)*[0-9]+         { // Hack to avoid strange parsing of X.1.1:
+"."({SPACE}|\n)*{OZNAT}        { // Hack to avoid strange parsing of X.1.1:
                                  // If "." is followed by integer, then
                                  // a special token is returned.
                                  // If this rule would not be there, the
