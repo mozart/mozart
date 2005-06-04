@@ -13,7 +13,7 @@ OZMAKE_FILES = \
 ozmake: ozmake.ozf
 	$(OZL) $(OZLFLAGS) -x $< -o $@
 
-ozmake.exe: ozmake.ozf
+ozmake.win: ozmake.ozf
 	$(OZL) $(OZLFLAGS) --target=windows -x $< -o $@
 
 ozmake.ozf: $(OZMAKE_FILES)
@@ -80,12 +80,24 @@ other.doc: have.xsltproc ozmake.xml ozmake.xsl
 duchier-ozmake.pkg: ozmake
 	$(OZE) ./ozmake -cvp $@
 
-install-prebuilt:: ozmake.ozf ozmake ozmake.exe duchier-ozmake.pkg
-	$(INSTALL_FILE) ozmake.ozf $(PKGDIR)/ozmake.ozf
-	$(INSTALL_FILE) ozmake $(PKGDIR)/ozmake
-	$(INSTALL_FILE) ozmake.exe $(PKGDIR)/ozmake.exe
-	$(INSTALL_FILE) ozmake.ozf $(PKGDIR)/ozmake-$(VERSION).ozf
-	$(INSTALL_FILE) ozmake $(PKGDIR)/ozmake-$(VERSION)
-	$(INSTALL_FILE) ozmake.exe $(PKGDIR)/ozmake-$(VERSION).exe
-	$(INSTALL_FILE) duchier-ozmake.pkg $(PKGDIR)/duchier-ozmake.pkg
-	$(INSTALL_FILE) duchier-ozmake.pkg $(PKGDIR)/duchier-ozmake-$(VERSION).pkg
+# install-prebuilt:: ozmake.ozf ozmake ozmake.exe duchier-ozmake.pkg
+# 	$(INSTALL_FILE) ozmake.ozf $(PKGDIR)/ozmake.ozf
+# 	$(INSTALL_FILE) ozmake $(PKGDIR)/ozmake
+# 	$(INSTALL_FILE) ozmake.exe $(PKGDIR)/ozmake.exe
+# 	$(INSTALL_FILE) ozmake.ozf $(PKGDIR)/ozmake-$(VERSION).ozf
+# 	$(INSTALL_FILE) ozmake $(PKGDIR)/ozmake-$(VERSION)
+# 	$(INSTALL_FILE) ozmake.exe $(PKGDIR)/ozmake-$(VERSION).exe
+# 	$(INSTALL_FILE) duchier-ozmake.pkg $(PKGDIR)/duchier-ozmake.pkg
+# 	$(INSTALL_FILE) duchier-ozmake.pkg $(PKGDIR)/duchier-ozmake-$(VERSION).pkg
+
+#PREBUILTDIR=/usr/local/web/duchier/mogul/pkg
+PREBUILTDIR=/usr/local/Mozart/Published/Duchier/Export/pkg
+
+
+install-prebuilt:: ozmake.ozf ozmake ozmake.win
+	$(INSTALL_FILE) ozmake.ozf $(PREBUILTDIR)/ozmake.ozf
+	$(INSTALL_FILE) ozmake $(PREBUILTDIR)/ozmake
+	$(INSTALL_FILE) ozmake.win $(PREBUILTDIR)/ozmake.exe
+	$(INSTALL_FILE) ozmake.ozf $(PREBUILTDIR)/ozmake-$(VERSION).ozf
+	$(INSTALL_FILE) ozmake $(PREBUILTDIR)/ozmake-$(VERSION)
+	$(INSTALL_FILE) ozmake.win $(PREBUILTDIR)/ozmake-$(VERSION).exe

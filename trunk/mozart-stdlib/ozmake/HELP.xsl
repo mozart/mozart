@@ -27,13 +27,13 @@
         <xsl:otherwise>Version <xsl:value-of select="$VERSION"/></xsl:otherwise>
       </xsl:choose></DT>
   <DD><A
-  HREF="http://www.ps.uni-sb.de/~duchier/mogul/pub/pkg/ozmake{$EXTENSION}"><SPAN
+  HREF="http://www.lifl.fr/~duchier/mogul/pub/pkg/ozmake{$EXTENSION}"><SPAN
   CLASS="MODULE">ozmake<xsl:value-of select="$EXTENSION"/></SPAN> for Unix</A></DD>
   <DD><A
-  HREF="http://www.ps.uni-sb.de/~duchier/mogul/pub/pkg/ozmake{$EXTENSION}.exe"><SPAN
+  HREF="http://www.lifl.fr/~duchier/mogul/pub/pkg/ozmake{$EXTENSION}.exe"><SPAN
   CLASS="MODULE">ozmake<xsl:value-of select="$EXTENSION"/>.exe</SPAN> for Windows</A></DD>
   <DD><A
-  HREF="http://www.ps.uni-sb.de/~duchier/mogul/pub/pkg/ozmake{$EXTENSION}.ozf">non
+  HREF="http://www.lifl.fr/~duchier/mogul/pub/pkg/ozmake{$EXTENSION}.ozf">non
   executable functor <SPAN
   CLASS="MODULE">ozmake<xsl:value-of select="$EXTENSION"/>.ozf</SPAN>
   for either</A></DD>
@@ -111,7 +111,7 @@ SPAN.BUILTIN      { color: #DA70D6; }
 <xsl:if test="$OZMAKEOUTPUT='html'">
 <H1>ozmake</H1>
 <P CLASS="AUTHOR">
-  <A HREF="http://www.ps.uni-sb.de/~duchier/">Denys Duchier</A>
+  <A HREF="http://www.lifl.fr/~duchier/">Denys Duchier</A>
 </P>
 <DL>
   <DT><B>provides</B></DT>
@@ -139,7 +139,7 @@ successive versions of <FILE>ozmake</FILE>.</P>
 <xsl:if test="$OZMAKEOUTPUT='html'">
 <HR/>
 <ADDRESS>
-<A HREF="http://www.ps.uni-sb.de/~duchier/">Denys Duchier</A>
+<A HREF="http://www.lifl.fr/~duchier/">Denys Duchier</A>
 </ADDRESS>
 </xsl:if>
 </BODY>
