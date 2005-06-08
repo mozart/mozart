@@ -212,6 +212,18 @@ Copyright
     This document has been placed in the public domain.
 
 
+Votes
+
+    Raphaël Collet     []
+    Denys Duchier      []
+    Seif Haridi        []
+    Torbjörn Lager     []
+    Konstantin Popov   []
+    Camilo Rueda       []
+    Christian Schulte  []
+    Gert Smolka        []
+    Peter Van Roy      []
+
 
 Local Variables:
 mode: indented-text
