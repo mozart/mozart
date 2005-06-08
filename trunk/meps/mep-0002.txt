@@ -66,7 +66,7 @@ How to Use This Template
 To use this template you must first decide whether your MEP is going to be an
 Informational or Standards Track MEP.  Most MEPs are Standards Track because
 they propose new functionality for some aspect of Mozart/Oz.  When in
-doubt, read MEP 1 for details or contact the MEP editors <mep@mozart-oz.org>.
+doubt, read MEP 1 for details or contact the MEP editors <meps@mozart-oz.org>.
 
 Once you've decided which type of MEP yours is going to be, follow the
 directions below.
@@ -140,7 +140,7 @@ directions below.
 
   __ http://www.opencontent.org/openpub/
 
-- Send your MEP submission to the MEP editors at mep@mozart-oz.org.
+- Send your MEP submission to the MEP editors at meps@mozart-oz.org.
 
 
 ReStructuredText MEP Formatting Requirements

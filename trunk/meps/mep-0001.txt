@@ -50,7 +50,7 @@ MEP Work Flow
 
 The MEP editors assign MEP numbers and change their status.  The current MEP
 editors are Denys Duchier and Kevin Glynn.  Please send all MEP-related email to
-<mep@mozart-oz.org>
+<meps@mozart-oz.org>
 
 The MEP process begins with a new idea for Mozart/Oz.  It is highly recommended
 that a single MEP contain a single key proposal or new idea.  The more focussed
@@ -66,7 +66,7 @@ Small enhancements or patches often don't need a MEP and can be injected into
 the Mozart/Oz development work flow with an enhancement "bug" submitted to the
 Mozart/Oz bugzilla [#BUGS]_.
 
-The MEP champion then emails the MEP editors <mep@mozart-oz.org> with a proposed
+The MEP champion then emails the MEP editors <meps@mozart-oz.org> with a proposed
 title and a rough, but fleshed out, draft of the MEP.  This draft must be
 written in MEP style as described below.
 
@@ -294,7 +294,7 @@ that's not possible, you can always submit a competing MEP.
 
 If you are interested in assuming ownership of a MEP, send a message asking
 to take over, addressed to both the original author and the MEP editors
-<mep@mozart-oz.org>.  If the original author doesn't respond to email in a
+<meps@mozart-oz.org>.  If the original author doesn't respond to email in a
 timely manner, the MEP editors will make a unilateral decision (it's not like
 such decisions can't be reversed :).
 
