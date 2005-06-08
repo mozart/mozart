@@ -42,6 +42,7 @@ Index by Category
  Open MEPs (under consideration)
  ---------------------------------------------------------------
  S   101  Update of Website for new Governance Model     Van Roy
+ I   102  CVS access for Boris Mejias                      Glynn
  ---------------------------------------------------------------
 
  Finished MEPs (done, implemented in CVS)
@@ -85,6 +86,7 @@ Owners
     ----------------         -------------
     Duchier                  denys.duchier@mozart-oz.org
     Van Roy                  peter.vanroy@mozart-oz.org
+    Glynn                    kevin.glynn@mozart-oz.org
 
 
 References
