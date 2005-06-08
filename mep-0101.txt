@@ -48,3 +48,18 @@ Copyright
 =========
 
 This document has been placed in the public domain.
+
+
+Votes
+=====
+::
+
+    Raphaël Collet     [ACCEPT]
+    Denys Duchier      [ACCEPT]
+    Seif Haridi        [ACCEPT]
+    Torbjörn Lager     []
+    Konstantin Popov   [ACCEPT]
+    Camilo Rueda       [ACCEPT]
+    Christian Schulte  [ACCEPT]
+    Gert Smolka        []
+    Peter Van Roy      [ACCEPT]
