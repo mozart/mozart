@@ -67,6 +67,7 @@ Numerical Index
  I     3  Sample Plaintext MEP Template                  Duchier
  A   100  Expansion of Mozart Board to Mozart Community  Van Roy
  S   101  Update of Website for new Governance Model     Van Roy
+ I   102  CVS access for Boris Mejias                      Glynn
  ---------------------------------------------------------------
 
 
