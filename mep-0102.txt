@@ -1,0 +1,77 @@
+MEP: 102
+Title: Give Boris Mejias Check-in Privileges to Mozart CVS
+Version: $Revision$
+Last-Modified: $Date$
+Author:	Kevin Glynn <glynn@info.ucl.ac.be>
+Status: Draft
+Type: Informational
+Content-Type: text/x-rst
+Created: 08-Jun-2005
+Post-History: 
+
+
+Abstract
+========
+
+The purpose of this MEP is to give Boris Mejias (bmc@info.ucl.ac.be)
+check-in (commit) privileges to Mozart's CVS repository.
+
+
+Motivation
+==========
+
+Boris is integrating the Distributed SubSystem (DSS) [#DSSsite]_
+[#DSS]_ into the Mozart System.  By giving Boris check-in privileges
+this work can be carried out on a branch of the official Mozart CVS
+repository. This will:
+
+1 ensure that the full history of this integration remains within the
+  Mozart CVS repository (the CVS history of DSS development to this
+  point is maintained in another repository). 
+
+2 ensure that the integrated prototype is available to Mozart
+  developers and users for evaluation and debugging.
+
+
+Background
+==========
+
+The current implementation of the distribution layer of the Mozart
+system is tightly bound with the centralised emulator. Since the code
+is not modularised, the task of adding new distributed behaviour and
+fixing bugs becomes very difficult. We propose to introduce the DSS as
+an independent component for distribution support, implementing a glue
+layer to couple the centralised engine with the DSS.
+
+The DSS is middle-ware that provides efficient distribution support
+for different programming languages. It has been implemented by Mozart
+developers and it fits well with the semantics of the Oz language.
+
+The implementation is based in a prototype [#GLUE]_ created at SICS by
+Erik Klintskog and Zacharias El Banna (DSS developers) using an old
+version of Mozart. 
+
+Once the integration is sufficiently functional and stable a separate
+MEP will be proposed to cover the integration of the DSS branch into
+the main trunk.
+
+
+References
+==========
+
+.. [#DSSsite] The Distribution Subsystem (DSS). http://dss.sics.se
+
+.. [#DSS] Erik Klintskog, Zacharias El Banna, Per Brand and Seif
+   Haridi. The Design and Evaluation of a Middleware Library for
+   Distribution of Language Entities. In 8th Asian Computing
+   Conference, Mumbai, India, 2003.
+
+.. [#GLUE] Erik Klintskog. Coupling a Programming System to the DSS, a
+   Case Study. Technical Report T2004:16, Swedish Institute of
+   Computer Science, SICS, 2004.
+
+
+Copyright
+=========
+
+This document has been placed in the public domain.
