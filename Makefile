@@ -9,7 +9,9 @@ all: $(HTMLFILES)
 THERE = www.mozart-oz.org:/services/mozart/httpd/html/meps
 
 update:
-	rsync -aPC --exclude '*~' . $(THERE)
+	chmod g+s .
+	chmod g+w *
+	rsync -rlptPC --exclude '*~' . $(THERE)
 
 clean:
 	-rm *~
