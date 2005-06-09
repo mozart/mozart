@@ -81,7 +81,7 @@ Votes
 =====
 ::
 
-    Raphaël Collet     []
+    Raphaël Collet     [ACCEPT]
     Denys Duchier      [ACCEPT]
     Seif Haridi        [ACCEPT]
     Torbjörn Lager     []
