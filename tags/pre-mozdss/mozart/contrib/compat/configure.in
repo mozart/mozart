@@ -1,0 +1,32 @@
+dnl -*- sh -*-
+dnl
+dnl  Author:
+dnl    Leif Kornstaedt <kornstae@ps.uni-sb.de>
+dnl
+dnl  Copyright:
+dnl    Leif Kornstaedt, 1999
+dnl
+dnl  Last change:
+dnl    $Date$ by $Author$
+dnl    $Revision$
+dnl
+dnl  This file is part of Mozart, an implementation of Oz 3:
+dnl    http://www.mozart-oz.org
+dnl
+dnl  See the file "LICENSE" or
+dnl    http://www.mozart-oz.org/LICENSE.html
+dnl  for information on usage and redistribution
+dnl  of this file, and for a DISCLAIMER OF ALL
+dnl  WARRANTIES.
+dnl
+
+AC_INIT(TextPickle.ozg)
+OZ_CONTRIB_INIT_CXX
+AC_PROG_MAKE_SET
+AC_OUTPUT(Makefile)
+
+errprint(ifdef([OZ_INIT],
+ [autoconf succeeded.
+],
+ [autoconf failed: use 'autoconf -l ../..' to include ../aclocal.m4.
+]))

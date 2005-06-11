@@ -1,0 +1,395 @@
+<!--
+  - Authors:
+  -   Denys Duchier     <duchier@ps.uni-sb.de>
+  -   Leif Kornstaedt <kornstae@ps.uni-sb.de>
+  -   Christian Schulte <schulte@ps.uni-sb.de>
+  -   Tobias Mueller <tmueller@ps.uni-sb.de>
+  -
+  - Copyright:
+  -   Denys Duchier, 1998
+  -   Leif Kornstaedt, 1998
+  -   Christian Schulte, 1998
+  -   Tobias Mueller, 1998
+  -
+  - Last change:
+  -   $Date$ by $Author$
+  -   $Revision$
+  -
+  - This file is part of Mozart, an implementation
+  - of Oz 3
+  -    http://www.mozart-oz.org
+  -
+  - See the file "LICENSE" or
+  -    http://www.mozart-oz.org/LICENSE.html
+  - for information on usage and redistribution
+  - of this file, and for a DISCLAIMER OF ALL
+  - WARRANTIES.
+  -
+  -->
+
+<!DOCTYPE BOOK SYSTEM "ozdoc.dtd" [
+
+<!-- Extension to the DTD -->
+<!ENTITY % author.class "author|author.extern|comic">
+<!ENTITY % picture.element "picture|picture.extern|picture.choice">
+<!ELEMENT comic - O (%picture.element;)>
+<!ENTITY % proglang.values.local "|sh|none|fundamental">
+
+<!-- Abbreviations -->
+<!ENTITY lt "<">
+<!ENTITY gt ">">
+<!ENTITY amp "&">
+<!ENTITY Oz "Oz">
+<!ENTITY qmrk "?">
+<!ENTITY tkcmd "../tcltk/TkCmd">
+
+<!-- Processing Instructions -->
+<!ENTITY emdash PI "emdash">
+<!ENTITY nbsp PI "nbsp">
+<!ENTITY ellipsis PI "ellipsis">
+<!ENTITY cdots PI "cdots">
+<!ENTITY slash PI "slash">
+<!ENTITY ie PI "ie">
+<!ENTITY resp PI "resp">
+<!ENTITY eg PI "eg">
+<!ENTITY etc PI "etc">
+
+
+
+
+<!-- Application programming -->
+
+<!ENTITY chapter.application SYSTEM "application.sgml">
+<!ENTITY chapter.module      SYSTEM "module.sgml">
+
+<!-- Constraint programming -->
+
+<!ENTITY chapter.space       SYSTEM "space.sgml">
+<!ENTITY chapter.recordc     SYSTEM "recordc.sgml">
+<!ENTITY chapter.combinator SYSTEM "combinator.sgml">
+<!ENTITY chapter.fd       SYSTEM "fd.sgml">
+<!ENTITY chapter.fs       SYSTEM "fs.sgml">
+<!ENTITY chapter.types_modes_constr SYSTEM "types_modes_constr.sgml">
+<!ENTITY chapter.schedule SYSTEM "schedule.sgml">
+<!ENTITY chapter.search   SYSTEM "search.sgml">
+
+<!-- Distributed programming -->
+
+<!ENTITY chapter.connection   SYSTEM "connection.sgml">
+<!ENTITY chapter.fault        SYSTEM "fault.sgml">
+<!ENTITY chapter.remote       SYSTEM "remote.sgml">
+<!ENTITY chapter.resolve      SYSTEM "resolve.sgml">
+<!ENTITY chapter.urlurl       SYSTEM "url.sgml">
+<!ENTITY chapter.discovery    SYSTEM "discovery.sgml">
+<!ENTITY chapter.dpinit       SYSTEM "dpinit.sgml">
+<!ENTITY chapter.dpstatistics SYSTEM "dpstatistics.sgml">
+
+
+<!-- Open programming -->
+
+<!ENTITY chapter.os       SYSTEM "os.sgml">
+<!ENTITY chapter.open     SYSTEM "open.sgml">
+ 
+<!-- System programming -->
+
+<!ENTITY chapter.system          SYSTEM "system.sgml">
+<!ENTITY chapter.pickle          SYSTEM "pickle.sgml">
+<!ENTITY chapter.finalize        SYSTEM "finalize.sgml">
+<!ENTITY chapter.error           SYSTEM "error.sgml">
+<!ENTITY chapter.errorformatters SYSTEM "errorformatters.sgml">
+<!ENTITY chapter.property        SYSTEM "property.sgml">
+ 
+<!-- Window programming -->
+
+<!ENTITY chapter.tk       SYSTEM "tk.sgml">
+<!ENTITY chapter.tktools  SYSTEM "tktools.sgml">
+
+<!-- Misc --> 
+
+<!ENTITY chapter.objectsupport SYSTEM "object.sgml">
+ 
+]>
+
+
+<BOOK  proglang=oz>
+<Title/System Modules/
+    <Meta name=latex.package value="pstricks">
+    <Meta name=latex.package value="pifont">
+
+    <Meta name=latex.input value="system-utils.tex">
+  
+    <Meta name=latex.table.spec arg1="table.prop.application"
+	  arg2="lllp{0.6\linewidth}">
+    <Meta name=latex.table.spec arg1="table.prop.dp"
+	  arg2="lllp{0.6\linewidth}">
+    <Meta name=latex.table.spec arg1="table.prop.dplog"
+	  arg2="lllp{0.6\linewidth}">
+    <Meta name=latex.table.spec arg1="table.prop.errors"
+	  arg2="lllp{0.6\linewidth}">
+    <Meta name=latex.table.spec arg1="table.prop.fd"
+	  arg2="lllp{0.6\linewidth}">
+    <Meta name=latex.table.spec arg1="table.prop.gc"
+	  arg2="lllp{0.6\linewidth}">
+    <Meta name=latex.table.spec arg1="table.prop.limits"
+	  arg2="lllp{0.6\linewidth}">
+    <Meta name=latex.table.spec arg1="table.prop.marshaler"
+	  arg2="lllp{0.6\linewidth}">
+    <Meta name=latex.table.spec arg1="table.prop.memory"
+	  arg2="lllp{0.6\linewidth}">
+    <Meta name=latex.table.spec arg1="table.prop.messages"
+	  arg2="lllp{0.6\linewidth}">
+    <Meta name=latex.table.spec arg1="table.prop.platform"
+	  arg2="lllp{0.6\linewidth}">
+    <Meta name=latex.table.spec arg1="table.prop.print"
+	  arg2="lllp{0.6\linewidth}">
+    <Meta name=latex.table.spec arg1="table.prop.prio"
+	  arg2="lllp{0.6\linewidth}">
+    <Meta name=latex.table.spec arg1="table.prop.space"
+	  arg2="lllp{0.6\linewidth}">
+    <Meta name=latex.table.spec arg1="table.prop.threads"
+	  arg2="lllp{0.6\linewidth}">
+    <Meta name=latex.table.spec arg1="table.prop.time"
+	  arg2="lllp{0.6\linewidth}">
+    <Meta name=latex.table.spec arg1="table.prop.env"
+	  arg2="llp{0.6\linewidth}">
+
+    <!-- Splitting the document into different HTML nodes -->
+
+    <!-- Application programming -->
+
+    <Meta name="html.split"       value="chapter.application">
+    <Meta name="html.split"       value="section.application.module">
+    <Meta name="html.split"       value="section.application.parsingconventions">
+    <Meta name="html.split"       value="section.application.specifications">
+    <Meta name="html.split"       value="section.application.list.examples">
+    <Meta name="html.split"       value="section.application.record.examples">
+    <Meta name="html.split"       value="chapter.module">
+
+    <!-- Constraint programming -->
+
+    <Meta name="html.split"       value="chapter.search">
+    <Meta name="html.split"       value="vanillasearch">
+    <Meta name="html.split"       value="generalsearch">
+    <Meta name="html.split"       value="sec.search.object">
+    <Meta name="html.split"       value="section.search.parallel">
+    <Meta name="html.split"       value="chapter.types_modes_constr">
+
+    <Meta name="html.split"       value="chapter.fd">
+    <Meta name="html.split"       value="section.fd.facts">
+    <Meta name="html.split"       value="section.fd.condis">
+    <Meta name="html.split"       value="section.fd.general">
+    <Meta name="html.split"       value="section.fd.telling">
+    <Meta name="html.split"       value="section.fd.reflection">
+    <Meta name="html.split"       value="section.fd.watching">
+    <Meta name="html.split"       value="section.fd.arithmetic">
+    <Meta name="html.split"       value="section.fd.nonlinear">
+    <Meta name="html.split"       value="section.fd.bool">
+    <Meta name="html.split"       value="section.fd.reified">
+    <Meta name="html.split"       value="section.fd.misc">
+    <Meta name="html.split"       value="section.fd.distribution">
+    <Meta name="html.split"       value="section.fd.assignment">
+
+
+    <Meta name="html.split"       value="chapter.schedule">
+    <Meta name="html.split"       value="section.schedule.unary">
+    <Meta name="html.split"       value="section.schedule.distribute">
+    <Meta name="html.split"       value="section.schedule.cumulative">
+    <Meta name="html.split"       value="section.schedule.misc">
+
+
+    <Meta name="html.split"       value="chapter.fs">
+    <Meta name="html.split"       value="section.fs.genral">
+    <Meta name="html.split"       value="section.fs.integers">
+    <Meta name="html.split"       value="section.fs.standard">
+    <Meta name="html.split"       value="section.fs.vars">
+    <Meta name="html.split"       value="section.fs.consts">
+    <Meta name="html.split"       value="section.fs.reified">
+    <Meta name="html.split"       value="section.fs.iterating">
+    <Meta name="html.split"       value="section.fs.reflection">
+    <Meta name="html.split"       value="section.fs.distribution">
+
+    <Meta name="html.split"       value="chapter.recordc">
+
+    <Meta name="html.split"       value="chapter.combinator">
+
+    <Meta name="html.split"       value="chapter.space">
+
+    <!-- Distributed programming -->
+
+    <Meta name="html.split"       value="chapter.connection">
+    <Meta name="html.split"       value="chapter.remote">
+    <Meta name="html.split"       value="chapter.fault">
+    <Meta name="html.split"       value="chapter.urlurl">
+    <Meta name="html.split"       value="chapter.resolve">
+    <Meta name="html.split"       value="chapter.discovery">
+    <Meta name="html.split"       value="chapter.dpinit">
+    <Meta name="html.split"       value="chapter.dpstatistics">
+
+    <!-- Open programming -->
+  
+    <Meta name="html.split"       value="chapter.os">
+    <Meta name="html.split"       value="chapter.open">
+
+    <!-- System programming -->
+
+    <Meta name="html.split"       value="chapter.pickle">
+
+
+    <Meta name="html.split"       value="chapter.property">
+    <Meta name="html.split"       value="section.property.intro">  
+    <Meta name="html.split"       value="section.property.application">  
+    <Meta name="html.split"       value="section.property.dp">  
+    <Meta name="html.split"       value="section.property.dplog">  
+    <Meta name="html.split"       value="section.property.errors">  
+    <Meta name="html.split"       value="section.property.fd">  
+    <Meta name="html.split"       value="section.property.gc">  
+    <Meta name="html.split"       value="section.property.limits">  
+    <Meta name="html.split"       value="section.property.marshaler">  
+    <Meta name="html.split"       value="section.property.memory">  
+    <Meta name="html.split"       value="section.property.messages">  
+    <Meta name="html.split"       value="section.property.platform">  
+    <Meta name="html.split"       value="section.property.print">  
+    <Meta name="html.split"       value="section.property.priority">  
+    <Meta name="html.split"       value="section.property.spaces">  
+    <Meta name="html.split"       value="section.property.threads">  
+    <Meta name="html.split"       value="section.property.time">  
+    <Meta name="html.split"       value="section.property.env">  
+
+    <Meta name="html.split"       value="chapter.error">
+    <Meta name="html.split"       value="chapter.errorformatters">
+    <Meta name="html.split"       value="chapter.finalize">
+    <Meta name="html.split"       value="chapter.system">
+
+    <!-- Window programming -->
+
+    <Meta name="html.split"       value="chapter.tk">
+
+    <Meta name="html.split"       value="section.tk.tickles">
+    <Meta name="html.split"       value="section.tk.objects">
+    <Meta name="html.split"       value="section.tk.no-action">
+    <Meta name="html.split"       value="section.tk.action-widget">
+    <Meta name="html.split"       value="section.tk.toplevel">
+    <Meta name="html.split"       value="section.tk.menuentry">
+    <Meta name="html.split"       value="section.tk.tagmark">
+    <Meta name="html.split"       value="section.tk.image">
+    <Meta name="html.split"       value="section.tk.font">
+    <Meta name="html.split"       value="section.tk.variable">
+    <Meta name="html.split"       value="section.tk.listener">
+    <Meta name="html.split"       value="section.tk.action">
+    <Meta name="html.split"       value="section.tk.strings">
+    <Meta name="html.split"       value="section.tk.misc">
+
+    <Meta name="html.split"       value="chapter.tktools">
+
+    <Meta name="html.split.toc"   value="">
+    <Meta name="html.split.bib"   value="">
+    <Meta name="html.split.index" value="">
+
+    <!-- Misc -->
+
+    <Meta name="html.split"       value="chapter.objectsupport">
+
+    <Meta name="proglang.mode" arg1="none" arg2="fundamental-mode">
+    <meta name=proglang        arg1="fundamental" arg2="fundamental-mode">
+
+    <Author.Extern to="author.db" key="Denys.Duchier">
+    <Author.Extern to="author.db" key="Leif.Kornstaedt">
+    <Author.Extern to="author.db" key="Martin.Homik">
+    <Author.Extern to="author.db" key="Tobias.Mueller">
+    <Author.Extern to="author.db" key="Christian.Schulte">
+    <Author.Extern to="author.db" key="Peter.VanRoy">
+
+    <Comic>
+      <Picture.Choice>
+	<Picture.Extern to="system.gif" type=gif>
+      </Picture.Choice>
+
+    <Abstract>
+      The Mozart system consists of two complementary parts: first
+      comes the Oz <em/core/ language which lays the semantic
+      foundations and whose programmatic interface is documented in
+      <ptr.extern to="ozdoc:base">, then come all the extras necessary
+      for practical programming; these are documented here.
+    </Abstract>
+
+ 
+  <Part id="Part.Application">
+    <Title/Application Programming/ 
+    &chapter.application;
+    &chapter.module; 
+  </Part> 
+
+  <Part id="Part.Constraints">
+    <Title/Constraint Programming/
+    &chapter.types_modes_constr;
+    &chapter.search;
+    &chapter.fd;
+    &chapter.schedule;
+    &chapter.fs;
+    &chapter.recordc;
+    &chapter.combinator;
+    &chapter.space;
+  </Part>
+
+  <Part id="Part.Distributed">
+    <Title/Distributed Programming/
+    &chapter.connection;
+    &chapter.remote;
+    &chapter.urlurl;
+    &chapter.resolve;
+    &chapter.fault;
+    &chapter.discovery;
+    &chapter.dpinit;
+    &chapter.dpstatistics;
+  </Part>
+
+  <Part id="Part.Open">
+    <Title/Open Programming/
+    &chapter.open;
+    &chapter.os;
+  </Part>
+
+  <Part id="Part.System">
+    <Title/System Programming/
+    &chapter.pickle;
+    &chapter.property;
+    &chapter.error;
+    &chapter.errorformatters;
+    &chapter.finalize;
+    &chapter.system;
+  </Part>
+
+  <Part id="Part.Window">
+    <Title/Window Programming/
+    &chapter.tk;
+    &chapter.tktools;
+  </Part>
+
+  <Part id="Part.Misc">
+    <Title/Miscellaneous/
+    &chapter.objectsupport;
+  </Part>
+
+  <Back>
+    <Bib.Extern id="LEWINE.91"   to="system.bib" key="LEWINE:91"> 
+    <Bib.Extern id="Explorer.97" to="system.bib" key="Explorer.97"> 
+    <Bib.Extern id="Caseau.95" to="system.bib" key="Caseau.95"> 
+    <Bib.Extern id="Baptiste.95A" to="system.bib" key="Baptiste.95A"> 
+    <Bib.Extern id="Martin.96" to="system.bib" key="Martin.96"> 
+    <Bib.Extern id="Wuertz.96b" to="system.bib" key="Wuertz.96b"> 
+    <Bib.Extern id="Wuertz.96c" to="system.bib" key="Wuertz.96c"> 
+    <Bib.Extern id="Muellermueller.wlp.97" to="system.bib" key="Muellermueller.wlp.97"> 
+    <Bib.Extern id="Ousterhout.94" to="system.bib" key="Ousterhout.94"> 
+    <Bib.Extern id="puget.98" to="system.bib" key="puget.98">
+    <Bib.Extern id="regin.94" to="system.bib" key="regin.94">
+
+</BOOK>
+<!--
+Local Variables:
+mode: sgml
+mode: auto-fill
+sgml-default-dtd-file: "../book.ced"
+sgml-auto-activate-dtd: t
+adaptive-fill-mode: nil
+End:
+-->

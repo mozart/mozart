@@ -1,0 +1,178 @@
+<chapter id=chapter.opi>
+    <title/The Interactive Development Environment/
+    <author.extern to="author.db" key="Denys.Duchier">
+    <author.extern to="author.db" key="Andreas.Sundstroem">
+
+  <p>This tutorial contains many code examples and you are highly
+encouraged to try them out interactively as you go.  This can be done
+very comfortably by taking advantage of the Mozart system's
+interactive development environment.  We normally call it the OPI,
+which stands for the <em/Oz Programming Interface/, and it is
+described extensively in <ptr.extern to="ozdoc:opi">.  In the present
+section, you will learn just enough about the OPI to allow you to
+start experimenting with our code examples.</p>
+
+  <section>
+      <title/Starting The OPI/
+    <p>Under Unix, the OPI is normally
+started by invoking the command <code proglang=sh/oz/ at the shell
+prompt.  Under Windows, the installation procedure will have
+provided you with a Mozart system program group: click on the Mozart
+item in this group.  Shortly thereafter you get a window that looks
+like this:
+<picture.choice display>
+      <picture.extern to="opi1.gif" type=gif>
+</picture.choice>
+The OPI uses the Emacs editor as the programming front-end.  If you
+are not familiar with Emacs or its terminology, you should consult the
+Emacs on-line tutorial <ptr to="stallman91"> available from the Help
+menu in the Emacs menu bar.</p>
+    <p>The initial window is split in two text buffers.  The upper
+buffer called <code/Oz/ is a space where you can write small pieces of
+code and interactively execute them: it essentially plays, for
+Oz code, the same role as the <code/*scratch*/ buffer for emacs lisp
+code.  The lower text buffer is called <code/*Oz Compiler*/ and shows
+a transcript of your interaction with the compiler of the Mozart
+subprocess.
+  </section>
+
+  <section>
+      <title/Hello World/
+    <p>Let us begin with the traditional <em/Hello World/ example.  In
+the <code/Oz/ buffer, type the following:
+<code display/{Show 'Hello World'}/
+This example illustrates the unconventional syntax of procedure
+invocation in Oz:  it is indicated by curly braces.  Here, procedure
+<code/Show/ is invoked with, as single argument, the atom
+<code/'Hello World'/.</p>
+<p>In order to execute this fragment, we position the point on the line
+we just typed and select <em/Feed Line/ from the Oz menu in the
+menubar.  We now see:
+<picture.choice display>
+      <picture.extern to="opi2.gif" type=gif>
+</picture.choice>
+The transcript from the compiler indicates that
+<code/{Show 'Hello World'}/ was <em/fed/ to the compiler and
+<em/accepted/, &ie; successfully parsed and compiled.  But was it
+executed, and, if yes, where is the output?  Indeed it was executed,
+but the output appears in a different buffer called
+<code/*Oz Emulator*/: this contains the execution transcript.  If we
+select from the Oz menu <em>Show/Hide -&gt; Emulator</em>, we now see:
+<picture.choice display>
+      <picture.extern to="opi3.gif" type=gif>
+</picture.choice>
+</p>
+  </section>
+
+  <section>
+      <title/Good News For The Programmer/
+    <p>The OPI has many features to support interactive code
+development.
+    <subsection>
+	<title/Code Editing/
+      <p proglang=elisp>The <code/oz-mode/ is a major mode for editing
+Oz code, and
+provides automatic indentation as well <code/font-lock/ support for
+code colorization.</p>
+    </subsection>
+    <subsection>
+	<title/Key Bindings/
+      <p proglang=elisp>You may interact with the underlying Mozart
+subprocess from
+any buffer in <code/oz-mode/, not just from the <code/Oz/ buffer as
+demonstrated earlier.  Furthermore, all the actions that we carried
+out in the <em/Hello World/ example can be invoked more conveniently
+through key bindings instead of through the Oz menu.
+      <table display>
+	<tr><td><Key/C-. C-l/</td><td>Feed current line</td></tr>
+	<tr><td><Key/C-. C-r/</td><td>Feed selected region</td></tr>
+	<tr><td><Key/C-. C-b/</td><td>Feed whole buffer</td></tr>
+	<tr><td><Key/M-C-x/</td><td>Feed current paragraph</td></tr>
+	<tr><td><Key/C-. C-p/</td><td><em/idem/</td></tr>
+	<tr><td><Key/C-. c/</td><td>Toggle display of
+<code/*Oz Compiler*/ buffer</td></tr>
+	<tr><td><Key/C-. e/</td><td>Toggle display of
+<code/*Oz Emulator*/ buffer</td></tr>
+      </table>
+      a <q/paragraph/ is a region of text delimited by empty lines.
+    </subsection>
+
+    <subsection>
+	<title/Compiler Errors/
+      <p>The OPI also has support for conveniently dealing with errors
+reported by the compiler.  Let us type the following erroneous code in
+the <code/Oz/ buffer:
+<code display>
+local A B in
+   A = 3
+   proc {B}
+      {Show A + 'Tinman'}
+   end
+   {B 7}
+end
+</code>
+and feed it to the compiler using <Key/M-C-x/.  The compiler reports
+2 errors and we see:
+<picture.choice display>
+      <picture.extern to="opi4.gif" type=gif>
+</picture.choice>
+<Key/C-x `/ (that is <em/Control-x backquote/) positions the
+transcript to make the first error message
+visible and moves the point, in the source buffer, to where the bug
+is likely to be located.
+<picture.choice display>
+      <picture.extern to="opi5.gif" type=gif>
+</picture.choice>
+Indeed, we should not try to add an integer and an atom!
+If we invoke <Key/C-x `/ once more, we see:
+<picture.choice display>
+      <picture.extern to="opi6.gif" type=gif>
+</picture.choice>
+Here, we have mistakenly applied a nullary procedure to an argument.
+    <subsection>
+	<title/Graphical Development Tools/
+      <p>The mozart system has many graphical tools.  Here we only
+mention the <em/Browser/ which is otherwise extensively documented in
+<ptr.extern to="ozdoc:browser">.  So far, we merely used the procedure
+<code/Show/ to print out values.  Instead, we can invoke <code/Browse/
+to get a graphical display interface.  For example, feeding:
+<code display/{Browse 'Hello World'}/
+causes the following new window to pop up:
+<picture.choice display>
+      <picture.extern to="opi7.gif" type=gif>
+</picture.choice>
+This is not very exciting, but let's now feed this code:
+<code display>
+declare W H
+{Browse foo(width:W height:H surface:thread W*H end)}
+</code>
+Now the browser window shows a term that is only partially known
+(instantiated) since variable <code/W/ and <code/H/ have been declared
+but not yet bound to values:
+<picture.choice display>
+      <picture.extern to="opi8.gif" type=gif>
+</picture.choice>
+Now let us feed <code/W=3/ and we see that the browser automatically
+updates the display to reflect the information we just added.
+<picture.choice display>
+      <picture.extern to="opi9.gif" type=gif>
+</picture.choice>
+Now we feed <code/H=5/ and again the browser updates the display and
+now shows a fully instantiated term:
+<picture.choice display>
+      <picture.extern to="opi10.gif" type=gif>
+</picture.choice>
+The browser allows you to see the evolution of the instantiation of a
+term as concurrent computations (threads) proceed and add more
+information.
+  </section>
+</chapter>
+<!--
+Local Variables:
+mode: sgml
+mode: auto-fill
+sgml-default-dtd-file: "../chapter.ced"
+sgml-auto-activate-dtd: t
+adaptive-fill-mode: nil
+End:
+-->

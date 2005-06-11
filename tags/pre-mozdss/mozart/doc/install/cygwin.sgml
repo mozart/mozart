@@ -1,0 +1,443 @@
+<!--
+  - Author:
+  -   Leif Kornstaedt <kornstae@ps.uni-sb.de>
+  -
+  - Copyright:
+  -   Leif Kornstaedt, 2001-2002
+  -
+  - Last change:
+  -   $Date$ by $Author$
+  -   $Revision$
+  -
+  - This file is part of Mozart, an implementation of Oz 3:
+  -   http://www.mozart-oz.org
+  -
+  - See the file "LICENSE" or
+  -   http://www.mozart-oz.org/LICENSE.html
+  - for information on usage and redistribution
+  - of this file, and for a DISCLAIMER OF ALL
+  - WARRANTIES.
+  -
+  -->
+
+<Chapter proglang=sh id="chapter.src.cygwin">
+  <Title/Building Mozart for Windows/
+  <P>
+    This chapter describes how to build Mozart for Windows.  We describe
+    the tools used in the build process and how to obtain them.  We explain
+    how to configure and build both the packages Mozart depends upon and
+    Mozart itself.  We conclude by a description of how to create an
+    installer, should you want to do so.
+  <Section id="section.cygwin.environment">
+    <Title/Setting up the Build Environment/
+    <Para class=apropos><Title/Cygwin/
+      From Version 1.2.1, Mozart can be built natively under Windows using
+      the Cygwin environment.  Cygwin is a Unix environment for Windows.
+      In particular, it provides a C++ compiler (gcc), a Bourne-compatible
+      shell (bash), and all the usual Unix command line tools.  Cygwin can
+      be obtained for free at <Ref.Extern to="http://www.cygwin.com/"
+      >http://www.cygwin.com/</Ref.Extern>.
+    <P>
+      Take yourself to a Windows machine (Windows XP Professional, Windows
+      2000 or Windows NT&nbsp;4 are preferred, though others may work) and
+      install Cygwin (full installation preferred), then start a shell.
+      Make sure that <<uname -r>> displays at least version 1.3.5.  It is
+      a good idea that you familiarize yourself with this environment, as
+      you'll be using it for a while before your Mozart build is finished.
+      I recommend that you read the <Ref.Extern
+      to="http://cygwin.com/cygwin-ug-net/cygwin-ug-net.html"/<Q
+      /Cygwin User's Guide//.
+    <Para class=apropos><Title/Cygwin Basics/
+      As you will have seen on the Cygwin web site, Cygwin actually consists
+      of two parts:  A DLL providing a significant part of the Unix API,
+      and a collection of tools.  The tools we need, the DLL we do not want.
+      By default, all executables created by gcc require the Cygwin DLL
+      (<File/cygwin1.dll/).  This DLL provides the Unix emulation
+      functionality, such as support for Cygwin-style file names (you
+      do not know what this is?  Read the User's Guide!) and mount points.
+      If we built Mozart against this DLL, then we would need to ship it
+      with Mozart (so that Mozart works on systems which do not have Cygwin
+      installed).  We do not want to ship it, and we do not need the Unix
+      emulation, and we want to be a <Q/native/ Windows application, so
+      we will use the <<-mno-cygwin>> flag to gcc throughout the build
+      process.  This flag in fact instructs gcc to act as a cross-compiler:
+      the host environment being Windows with Cygwin, the target environment
+      being native Windows.  This cross-compiler is called <Ref.Extern
+      to="http://www.mingw.org/"/MinGW/, which is also available as a
+      standalone product and as a cross-compiler hosted on Linux.
+    <Para class=apropos><Title/Headers and Libraries/
+      Object files and libraries built for Cygwin do not work with object
+      files and libraries built for MinGW.  Instead of the header files in
+      <File>/usr/include/</File> and the libraries in <File>/usr/lib/</File>,
+      <<gcc -mno-cygwin>> therefore uses the header files from <File
+      >/usr/include/mingw/</File> and the libraries from <File
+      >/usr/lib/mingw/</File>.  Instead of the Cygwin DLL, MinGW links
+      executables against the Microsoft Visual C/C++ Runtime (<File
+      /msvcrt.dll/), which we can redistribute with Mozart.
+    <P>
+      Mozart requires several packages.  Even though some of these are
+      provided with Cygwin, they are built for Cygwin, and we need them
+      built for MinGW.  So before we can actually start on the Mozart
+      sources, we will build these additional packages.  Thankfully we
+      need to do this only once.
+  <Section id="section.cygwin.packages">
+    <Title/Acquiring the Required Packages/
+    <Para class=apropos><Title/Package Directory/
+      We will install all our packages in a new directory we create
+      especially for them.  Say this directory is <File>/opt/packages</File>.
+      Whatever it is, we will refer to it as ?{packages} throughout this
+      document.  Furthermore, we populate the ?{packages} directory with
+      the following subdirectories:
+      <Table>
+	<TR><TH>Directory<TH>Purpose
+	<TR><TD><File/dlls/<TD>For the Dynamically Linked Libraries (DLLs).
+	<TR><TD><File/include/<TD>For the packages' C/C++ header files
+	  (<File/.h/).
+	<TR><TD><File/lib/<TD>For the libraries (<File/.a/).
+      </Table>
+      Furthermore, we create a separate directory for the builds, for
+      example, <File>/tmp/build</File>.  We will refer to this as ?{build}.
+    <Para class=apropos><Title/Required Packages/
+      The following table lists the packages we need, along with their
+      versions and the place where they can be downloaded.
+      <Table>
+	<TR><TH>Package<TH>Version<TH>Location
+	<TR><TD>GNU MP<TD>4.1.2
+	  <TD><Ref.Extern to="ftp://ftp.gnu.org/pub/gnu/gmp/gmp-4.1.2.tar.gz"
+	    ><File>ftp://ftp.gnu.org/pub/gnu/gmp/gmp-4.1.2.tar.gz</File
+	    ></Ref.Extern>
+	<TR><TD>zlib<TD>1.1.4
+	  <TD><Ref.Extern to="http://www.gzip.org/zlib.tar.gz"
+	    ><File>http://www.gzip.org/zlib.tar.gz</File></Ref.Extern>
+	<TR><TD>Tcl/Tk<TD>8.4.6.0
+	  <TD><Ref.Extern
+	    to="http://aspn.activestate.com/ASPN/Downloads/ActiveTcl/"
+	    ><File>http://aspn.activestate.com/ASPN/Downloads/ActiveTcl/</File
+	    ></Ref.Extern>
+	<TR><TD>GDBM<TD>1.8.3
+	  <TD><Ref.Extern
+	    to="ftp://ftp.gnu.org/pub/gnu/gdbm/gdbm-1.8.3.tar.gz"
+	    ><File>ftp://ftp.gnu.org/pub/gnu/gdbm/gdbm-1.8.3.tar.gz</File
+	    ></Ref.Extern>
+	<TR><TD>regex<TD>0.12
+	  <TD><Ref.Extern
+	    to="ftp://ftp.gnu.org/pub/gnu/regex/regex-0.12.tar.gz"
+	    ><File>ftp://ftp.gnu.org/pub/gnu/regex/regex-0.12.tar.gz</File
+	    ></Ref.Extern>
+      </Table>
+      Note that these are all source packages except for Tcl/Tk.  You'll
+      soon find out why.
+    <Para class=apropos><Title/Build Flags/
+      The remainder of this chapter will use ?{CFLAGS} to indicate a
+      meaningful set of flags for the C/C++ compilers.  For instance, you
+      can use the following, which we used for the last releases:
+      <<<-mno-cygwin -O3 -fomit-frame-pointer -march=i586 -mcpu=i686>>>
+      It is imperative that you include <<-mno-cygwin>>!
+    <Para class=apropos><Title/A Note for the Lazy/
+      There's some good news:  If you are lazy enough that you would
+      trust the packages I built, you can just obtain a copy of my
+      ?{packages} directory from <Ref.Extern
+      to="http://www.mozart-oz.org/download/mozart-ftp/extras/packages.tgz"><File
+      >http://www.mozart-oz.org/download/mozart-ftp/extras/packages.tgz</File
+      ></Ref.Extern> and skip most of the following sections (in fact,
+      all but those about the msvcrt and Emacs).  Be sure to adapt
+      the included <File/tclConfig.sh/ and <File/tkConfig.sh/ files
+      to reflect your system's paths!
+    <SubSection>
+      <Title/Microsoft Visual C++ Runtime/
+      <P>
+	This one is easy:  You already have it!  It is located in
+	<<$SYSTEMROOT/system32/>> (at least under Windows 2000; if you're
+	running 9x, then you'll have to locate it yourself).  So we just copy
+	it to our ?{packages}<File>/dlls</File> directory:
+	<<<cp $SYSTEMROOT/system32/msvcrt.dll ?{packages}/dlls>>>
+    <SubSection>
+      <Title/GNU MP/
+      <P>
+	Unpack it, configure it, build it, and install it thus:
+<<<cd ?{build}
+tar zxvf gmp-4.1.2.tar.gz
+cd gmp-4.1.2
+./configure --prefix=?{packages} --disable-shared CFLAGS="?{CFLAGS}"
+make
+make install>>>
+      <P>
+	You should end up with the following files:
+	<Table>
+	  <TR><TD>?{packages}<File>/include/gmp.h</File>
+	  <TR><TD>?{packages}<File>/lib/libgmp.a</File>
+	</Table>
+    <SubSection>
+      <Title/zlib/
+      <P>
+	Unpack it, configure it, build it, and install it thus:
+<<<cd ?{build}
+tar zxvf zlib.tar.gz
+cd zlib-1.1.4
+CFLAGS="?{CFLAGS}" ./configure --prefix=?{packages}
+make
+make install>>>
+      <P>
+	You should end up with the following files:
+	<Table>
+	  <TR><TD>?{packages}<File>/include/zlib.h</File>
+	  <TR><TD>?{packages}<File>/include/zconf.h</File>
+	  <TR><TD>?{packages}<File>/lib/libz.a</File>
+	</Table>
+    <SubSection>
+      <Title>Tcl/Tk</Title>
+      <P>
+	Install your Tcl/Tk distribution (for example, ActiveTcl).  Copy
+	the following files and directories from the installed location:
+	<Table>
+	  <TR><TD>?{packages}<File>/include/tcl.h</File>
+	  <TR><TD>?{packages}<File>/include/tclDecls.h</File>
+	  <TR><TD>?{packages}<File>/include/tclPlatDecls.h</File>
+	  <TR><TD>?{packages}<File>/include/tk.h</File>
+	  <TR><TD>?{packages}<File>/include/tkDecls.h</File>
+	  <TR><TD>?{packages}<File>/include/tkIntXlibDecls.h</File>
+	  <TR><TD>?{packages}<File>/include/tkPlatDecls.h</File>
+	  <TR><TD>?{packages}<File>/include/X11/*</File>
+	  <TR><TD>?{packages}<File>/lib/tk8.4/*</File>
+	  <TR><TD>?{packages}<File>/lib/tcl8.4/*</File>
+	  <TR><TD>?{packages}<File>/dlls/tcl84.dll</File>
+	  <TR><TD>?{packages}<File>/dlls/tclpip84.dll</File>
+	  <TR><TD>?{packages}<File>/dlls/tk84.dll</File>
+	</Table>
+	Unfortunately, Windows Tcl/Tk distributions come without the
+	all-important <File/tclConfig.sh/ and <File/tkConfig.sh/ files,
+	which we therefore have to create manually (directly in the
+	?{packages} directory).  <File/tclConfig.sh/ should have the
+	following contents:
+<<<# tclConfig.sh --
+TCL_VERSION='8.4'
+TCL_PREFIX='?{packages}'
+TCL_LIBS=''
+TCL_LIB_SPEC='?{packages}/dlls/tcl84.dll'>>>
+	Whereas <File/tkConfig.sh/ ought to look like this:
+<<<# tkConfig.sh --
+TK_VERSION='8.4'
+TK_PREFIX='?{packages}'
+TK_LIBS=''
+TK_LIB_SPEC='?{packages}/dlls/tk84.dll'
+TK_XINCLUDES=''>>>
+	(Don't forget to substitute your actual packages directory for
+	?{packages} in these files!)
+    <SubSection>
+      <Title/GDBM/
+      <P>
+	Unpack it thus:
+<<<cd ?{packages}
+tar zxvf gdbm-1.8.3.tar.gz
+cd gdbm-1.8.3>>>
+	GDBM does not compile out-of-the-box for MinGW, so we have to
+	apply a patch.  Copy the file <Ref.Extern to="gdbm-1.8.3-patch.diff"
+	/gdbm-1.8.3-patch.diff/, then patch it, configure it, build it,
+	and install it thus:
+<<<patch &lt; gdbm-1.8.3-patch.diff
+CFLAGS="?{CFLAGS}" ./configure --disable-shared
+make CFLAGS="?{CFLAGS}"
+make prefix=?{packages} install>>>
+      <P>
+	You should end up with the following files:
+	<Table>
+	  <TR><TD>?{packages}<File>/include/gdbm.h</File>
+	  <TR><TD>?{packages}<File>/lib/libgdbm.a</File>
+	</Table>
+    <SubSection>
+      <Title/regex/
+      <P>
+	Unpack it thus:
+<<<cd ?{packages}
+tar zxvf regex-0.12.tar.gz
+cd regex-0.12>>>
+	Like GDBM, the regex package needs a patch <Ref.Extern
+	to="regex-0.12-patch.diff"/regex-0.12-patch.diff/.  Patch the
+	package, configure it, build it, and install it thus:
+<<<patch &lt; regex-0.12-patch.diff
+CFLAGS="?{CFLAGS}" ./configure --prefix=?{packages}
+make CFLAGS="?{CFLAGS}"
+make prefix=?{packages} install>>>
+      <P>
+	You should end up with the following files:
+	<Table>
+	  <TR><TD>?{packages}<File>/include/regex.h</File>
+	  <TR><TD>?{packages}<File>/lib/libregex.a</File>
+	</Table>
+    <SubSection>
+      <Title/Emacs/
+      <P>
+	You need an installed Emacs.  You can get it at <Ref.Extern
+	to="http://www.gnu.org/software/emacs/windows/"
+	<File>http://www.gnu.org/software/emacs/windows/</File
+	></Ref.Extern>.  Unpack it somewhere, for example to
+	<File>/cygdrive/c/Program\ Files/</File> and execute the
+	<File/addpm.exe/ binary in the <File/bin/ subdirectory.
+	We will refer to the directory where Emacs is installed
+	as ?{emacs}.
+  <Section id="section.cygwin.building">
+    <Title/Building Mozart/
+    <P>
+      Now we can get to the real thing.  Retrieve the sources from the CVS:
+<<<cvs -d cvs.mozart-oz.org:/services/mozart/CVS get mozart
+cvs -d cvs.mozart-oz.org:/services/mozart/CVS get mozart-stdlib>>>
+      (specify <<-r mozart-1-2-0-fixes>> to get the fixes branch).
+      See <Ref.Extern to="http://www.mozart-oz.org/download/view.cgi?action=cvs"
+      >http://www.mozart-oz.org/download/view.cgi?action=cvs</Ref.Extern> for details
+      about anonymous CVS.  Let ?{mozart} be the directory created by the
+      first <<cvs get>> command and ?{stdlib} the one created by the second.
+    <Para class=apropos><Title/Environment Variables/
+      We need to start with a clean <Var type=env/PATH/, which in particular
+      must not contain any Mozart installation.  The following works on my
+      system:
+      <<<export PATH=/usr/bin:/bin:?{emacs}/bin:/cygdrive/c/WINNT/system32:/cygdrive/c/WINNT>>>
+      Furthermore, we want to tell the configuration scripts where we
+      placed our Windows DLLs:
+      <<<export windlldir=?{packages}/dlls>>>
+    <Para class=apropos><Title/The Fun Part/
+      Say we want to install Mozart into directory ?{install}.
+      Then we can configure, build, and install Mozart as follows:
+<<<cd ?{build}
+mkdir mozart-build
+cd mozart-build
+CXX=g++ ?{mozart}/configure \
+    --prefix=?{install} \
+    --with-inc-dir=?{packages}/include \
+    --with-lib-dir=?{packages}/lib \
+    --with-tcl=?{packages} \
+    --with-tk=?{packages} \
+    --disable-contrib-compat \
+    --with-stdlib=?{stdlib}
+make bootstrap
+make install>>>
+      <<oztool>> (which is required for building some of the contributions)
+      does not work if given a cygwin symbolic link to the executable
+      it should run.  Currently cygwin has <<c++>> as a symbolic link to
+      <<g++>>.  We get around this by setting <<CXX=g++>> during the
+      configure process,  which will then choose <<g++>> as our default C++ compiler.
+      <P>   
+      A note on the configuration options:  Most of these should be clear,
+      they simply convey to the configuration scripts the knowledge of where
+      we placed our packages.  More information on configuration options
+      can be found in <Ptr to="chapter.src.configure">.  We have to disable
+      the <File/compat/ contrib because it does not build in bootstrap mode
+      (yet).  This is why we have to build it separately once we have our
+      installed system:
+<<<cd ?{build}
+mkdir compat-build
+cd compat-build
+export PATH=?{install}/bin:$PATH
+CXX=g++ ?{mozart}/contrib/compat/configure --with-global-oz --prefix=?{install}
+mkdir share
+cp ?{build}/mozart-build/share/Makefile.boot share
+make
+make install>>>
+      And yeah, verily, thus and so&emdash;we're done.
+    <Para class=apropos><Title/Using Mozart/
+      To use Mozart, you simply have to extend your <Var type=env/PATH/:
+      <<<export PATH=?{install}/bin:$PATH>>>
+      Then you can start <<oz>>, <<ozc>> and so on, as you would expect.
+  <Section id="section.cygwin.documentation">
+    <Title/Building Documentation/
+    <P>
+      Documentation currently cannot be built under Windows alone.  Luckily,
+      this step is optional.  If you don't do it, then you simply have a
+      system without documentation, but it runs.
+    <P>
+      For Windows, we deliver documentation not as a big bunch of HTML files,
+      but as an HTML Help file (also called a CHM file).  HTML Help files
+      provide full-text search capabilities, a full table of contents, and
+      are much smaller than all the HTML sources.  This section explains
+      how to obtain this file.  Take yourself to a Unix machine and say
+      something like:
+<<<unset OZHOME OZPATH OZEMULATOR TEXT2PICKLE
+export PATH=/opt/gcc-2.95.3/bin:/opt/jdk/bin:/usr/bin:/bin:/usr/X11R6/bin:/usr/local/bin
+mkdir /tmp/build
+cd /tmp/build
+?{mozart}/configure --prefix=?{linux-install} \
+    --with-documents=all --enable-chm --with-stdlib=?{stdlib}
+make bootstrap
+make install>>>
+      where ?{linux-install} is a directory different from the ?{install}
+      directory.  Get back to your Windows machine and do:
+<<<cd ?{linux-install}/doc
+/cygdrive/c/Program\ Files/HTML\ Help\ Workshop/hhc Mozart>>>
+      (assuming that you have ?{linux-install} on a network shared file
+      system.  If not, you'll have to somehow copy this directory to
+      your Windows machine).  <File/hhc/ is the HTML Help Compiler from
+      Microsoft's HTML Help Workshop, available freely for download at
+      <Ref.Extern to="http://msdn.microsoft.com/library/en-us/htmlhelp/html/hwMicrosoftHTMLHelpDownloads.asp"><File>http://msdn.microsoft.com/library/en-us/htmlhelp/html/hwMicrosoftHTMLHelpDownloads.asp</File></Ref.Extern>.
+      The current version is 1.31.  (If the URL is broken, search
+      <Ref.Extern to="http://www.microsoft.com/"/Microsoft/'s site for
+      <Q/download html help workshop/.  It seems Microsoft tends to
+      reorganize their site every so often.)
+    <P>
+      This process will leave behind a file <File/Mozart.chm/, which we
+      can copy to a sensible place:
+      <<<cp Mozart.chm ?{install}/doc>>>
+      If you want, you can delete from the ?{install}<File>/doc</File>
+      directory all files except <File/Mozart.chm/ and the <File
+      >demo/applets</File> directory.
+  <Section id="section.cygwin.installer">
+    <Title/Creating an Installer/
+    <P>
+      Windows applications are typically distributed as an installer,
+      which not only creates the file system structure, but also adds
+      the command line tools to the <Var type=env/PATH/, creates Start
+      Menu entries, and establishes associations for file extensions
+      (in our case, <File/.oz/ and <File/.ozg/ files are associated with
+      <File/oz.exe/, and <File/.oza/ files are associated with <File
+      /ozenginew.exe/).  Installers also provide a clean way of removing
+      applications from your system.  The only reason I see why you would
+      want to remove Mozart is to install a new release.
+    <P>
+      Creating an installer is not necessary if you do not plan to
+      redistribute your Mozart build.  You can run Mozart from your
+      ?{install} directory directly.
+    <P>
+      We build our installer with InstallShield Developer, which you can
+      purchase (yes, these things cost real money!) on InstallShield's
+      Web site at <Ref.Extern to="http://www.installshield.com/isd/"><File
+      >http://www.installshield.com/isd/</File></Ref.Extern>.  Start
+      up InstallShield Developer and open the project ?{mozart}<File
+      >/misc/Mozart.ism</File>.  Under <Q/Advanced Views&emdash;Path
+      Variables/ you have to adjust some variables:
+      <Table>
+	<TR><TH>Path Variable<TH>Purpose
+	<TR><TD>SYSTEMROOT<TD>Directory where <File/hhc.exe/ resides,
+	  normally <File/C:\WINNT/.
+	<TR><TD>Base<TD>Directory where you installed Mozart (called
+	  ?{install} above, but in Windows syntax here).
+      </Table>
+    <Para class=apropos><Title/Release Adjustments/
+      When making a new release, you want the installer to document
+      which Mozart version it installs.  Therefore, take care to set
+      the following properties correctly.  Navigate to <Q/Organize Your
+      Setup&emdash;General Information&emdash;Summary Information Stream/
+      and update the <Q/Title/ field.  It is imperative that you generate
+      a new GUID (Globally Unique Identifier) for the package that you're
+      going to create:  Select the <Q/Package Code/ field and click on the
+      <Q/Generate GUID/ button.  Next, find <Q/Product Properties/ (also
+      under <Q/General Information/) and update the <Q/Product Version/
+      field.
+    <Para class=apropos><Title/Check Files/
+      Before building, you should make sure that you didn't screw up and
+      actually have all the files you need (and none you don't want).
+      Run <<cd ?{install} && find . -type f | sort>> and <<diff>> the
+      result with the file <Ref.Extern to="FILES"/<File/FILES//, which
+      contains a list of all the files.
+    <Para class=apropos><Title/Building/
+      Now you're clear to build the release.  Start the
+      <Q/Build&emdash;Release Wizard/ and select your options.  Choose
+      a <Q/Product Configuration/ and a <Q/Release Name/ at random; it's
+      fine to just accept the defaults.  Click <Q/Next/ until you can
+      set the <Q/Media Type/ to <Q/Network Image/.  Next, select
+      <Q/Compress all files/.  From Release 1.2.3, we deliver Mozart
+      both as an <File/EXE/ and as an <File/MSI/, for the convenience of
+      people who know that they already have Windows Installer on their
+      machine&emdash;the only difference in the Release Wizard is whether
+      you select <Q/Create installation launcher/ or not.  A couple of
+      questions later, you can actually get the beast to work.
+    <Para class=apropos><Title/The End/
+      Congratulations!  You're the proud owner of a Mozart installer!
+</Chapter>
