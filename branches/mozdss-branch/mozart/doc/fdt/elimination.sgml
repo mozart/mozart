@@ -1,0 +1,561 @@
+<!--
+  - Authors:
+  -   Christian Schulte <schulte@ps.uni-sb.de>
+  -   Gert Smolka <smolka@dfki.de>
+  -   Jörg Würtz
+  -
+  - Contributors:
+  -   Daniel Simon <dansim@ps.uni-sb.de>
+  -   Andy Walter <anwalt@ps.uni-sb.de>
+  -   
+  - Copyright:
+  -   Christian Schulte, 1998
+  -   Gert Smolka, 1998
+  -   Jörg Würtz, 1997
+  -
+  - Last change:
+  -   $Date$ by $Author$
+  -   $Revision$
+  -
+  - This file is part of Mozart, an implementation
+  - of Oz 3
+  -    http://www.mozart-oz.org
+  -
+  - See the file "LICENSE" or
+  -    http://www.mozart-oz.org/LICENSE.html
+  - for information on usage and redistribution
+  - of this file, and for a DISCLAIMER OF ALL
+  - WARRANTIES.
+  -
+  -->
+
+<chapter id=chapter.elimination>
+<title/Elimination of Symmetries and Defined Constraints/
+
+<p>
+In this section you will learn two basic
+constraint programming techniques.  The first
+technique consists in eliminating symmetries in
+the model, which often leads to scripts with
+smaller search trees.  The second technique
+introduces defined constraints, a means for
+writing modular and concise scripts.
+
+
+<section id="section.elimination.grocery">
+  <title/Example: Grocery/
+
+<p>
+This example illustrates that elimination of
+symmetries can dramatically reduce the size of search trees.
+
+<subsection class=unnumbered>
+  <title/Problem Specification/
+
+<p>
+A kid goes into a grocery store and buys four
+items.  The cashier charges $7.11, the kid pays
+and is about to leave when the cashier calls the
+kid back, and says <q/Hold on, I multiplied the
+four items instead of adding them; I'll try again;
+Hah, with adding them the price still comes to
+$7.11/. What were the prices of the four items?
+
+<subsection class=unnumbered>
+  <title/Model/
+
+
+<p>
+Our model has four variables <math/A/, <math/B/, <math/C/, and
+<math/D/, which stand for the prices of the four items.
+In order that the variables can be constrained to
+finite domains of integers, we assume that the
+prices are given in cents.  To say that the sum of
+the four prices is <math/711/, we impose the constraint
+<math/A+B+C+D = 711/, and to say that the product of
+the four prices is <math/711/, we impose the constraint
+<math display/A\cdot B\cdot C\cdot D = 711\cdot100\cdot100\cdot100/
+The model admits many different equivalent
+solutions since the prices of the items can be
+interchanged.  We can eliminate these symmetries
+by imposing an order on the prices of the items,
+for instance,
+<math display/
+A\le B\le C\le D.
+/
+With these ordering constraints the model has a
+unique solution.
+
+<subsection class=unnumbered>
+  <title/Distribution Strategy/
+
+<p>
+For this problem it is advantageous to use a
+first-fail strategy that splits the domain of the
+selected variable and tries the upper part of the
+domain first.  This strategy leads to a much
+smaller search tree than the standard first-fail
+strategy, which tries the least possible value of
+the selected variable first.
+
+<p>
+<figure id="ProgGrocery" class="Figure">
+<caption/A script for the Grocery Puzzle./
+<chunk class=anonymous><title/Grocery/
+proc {Grocery Root}
+   A#B#C#D = Root
+   S       = 711
+in
+   Root ::: 0#S
+   A+B+C+D =: S
+   A*B*C*D =: S*100*100*100
+   %% eliminate symmetries
+   A =<: B
+   B =<: C
+   C =<: D
+   {FD.distribute generic(value:splitMax) Root}
+end
+</chunk>
+</figure>
+
+<subsection class=unnumbered>
+  <title/Script/
+
+
+<p>
+The script in <Ptr to="ProgGrocery"> spawns a
+search tree with 5039 nodes.  It will explore
+566 nodes before it finds the unique solution
+<<120#125#150#316>>.  Without the ordering
+constraints the script explores more than three
+times as many nodes before finding a first
+solution.  We learn that the elimination of
+symmetries may make it easier to find the first
+solution.
+
+<subsection class=unnumbered>
+  <title/A Subtle Symmetry/
+
+<p>
+There exists another symmetry whose elimination
+leads to a much smaller search tree.  For this we
+observe that 711 has the prime factor 79
+(<math/711=9\cdot79/).  Since the product of the
+prices of the items is 711, we can assume without
+loss of generality that 79 is a prime factor of
+the price <<A>> of the first item.  We adapt our
+script by replacing the statement <<A=<:B>>  with
+<<<
+A =: 79*{FD.decl}
+>>>
+The procedure <<{FD.decl X}>> constrains its
+argument to an integer in the finite domain
+<<0#sup>>, where <<sup>> stands for a large
+implementation-dependent integer
+(<<134217726>> in Mozart on Linux or Sparcs).
+
+<p>
+The new propagator for <<A=:79*X>> reduces the
+search tree of <<Grocery>> to 357 nodes, one
+order of magnitude less than before.  The solution
+of the problem is now found after exploring 44
+nodes.
+</section>
+
+<section id="section.elimination.family">
+  <title/Example: Family/
+<p>
+
+<para class=apropos><title/defined constraints/
+This example illustrates the use of defined
+constraints.  A <def/defined constraint/
+is a procedure
+<<<
+{DefinedConstraint X1 ... Xn}
+>>>
+posting constraints on the variables
+<<X1>>,&nbsp;&ellipsis;&nbsp;<<Xn>>.  The reasons for introducing
+defined constraints are more or less the same as
+for introducing defined procedures in ordinary
+programming.
+
+<p>
+The script for the example will employ the
+procedures <<FD.sum>>, <<FD.sumC>>, and
+<<FD.sumCN>>, which create propagators for linear
+and nonlinear summation constraints.
+
+<subsection class=unnumbered>
+  <title/Problem Specification/
+
+<p>
+Maria and Clara are both heads of households, and
+both families have three boys and three girls.
+Neither family includes any children closer in age
+than one year, and all children are under age 10.
+The youngest child in Maria's family is a girl,
+and Clara has just given birth to a little girl.
+<p> 
+In each family, the sum of the ages of the boys
+equals the sum of the ages of the girls, and the
+sum of the squares of the ages of the boys equals
+the sum of the the squares of ages of the girls.
+The sum of the ages of all children is 60.
+<p>
+What are the ages of the children in each family?
+
+<subsection class=unnumbered>
+  <title/Model/
+
+<p>
+We model a family as a record
+<<<
+Name(boys:[?{B1} ?{B2} ?{B3}] girls:[?{G1} ?{G2} ?{G3}])
+>>>
+where the variables ?{B1}, ?{B2} and ?{B3} stand
+for the ages of the boys in descending order
+(&ie;, ?{B3}  is the age of the youngest boy in
+the family), and the variables ?{G1}, ?{G2} and
+?{G3}  stand for the ages of the girls, also in
+descending order.  This representation of a
+family avoids possible symmetries.  The
+constraints that must hold for a family ?{F} with
+name ?{N} will be posted by the defined
+constraint <<{IsFamily ?{N} ?{F}}>>.
+
+<p>
+A solution is a pair consisting of Maria's and
+Clara's family.
+
+<subsection class=unnumbered>
+  <title/Distribution Stratgey/
+
+<p>
+We distribute on the list of the ages of the
+children of the two families following a
+first-fail strategy.  The strategy splits the
+domain of the selected variable and tries the
+lower part of the domain first.
+
+<subsection class=unnumbered>
+  <title/Script/
+
+<p>
+<figure id="ProgFamily">
+<caption/A script for the Family Puzzle./
+<chunk class=anonymous><title/Family/
+proc {Family Root}
+   <chunk.ref/Definition of IsFamily/
+   <chunk.ref/Definition of AgeList/
+   Maria = {IsFamily maria}
+   Clara = {IsFamily clara}
+   AgeOfMariasYoungestGirl = {Nth Maria.girls 3}
+   AgeOfClarasYoungestGirl = {Nth Clara.girls 3}
+   Ages = {FoldR [Clara.girls Clara.boys Maria.girls Maria.boys] 
+           Append nil}
+in
+   Root = Maria#Clara
+   {ForAll Maria.boys proc {$ A} A >: AgeOfMariasYoungestGirl end}
+   AgeOfClarasYoungestGirl = 0
+   {FD.sum Ages '=:' 60}
+   {FD.distribute split Ages}
+end
+</chunk>
+</figure>
+
+
+<p>
+The script in <Ptr to="ProgFamily"> introduces
+two defined constraints.  The defined constraint
+<<<
+?{F}={IsFamily ?{Name}}
+>>>
+imposes constraints saying that ?{F} is the
+representation of a family with name ?{Name} (see <Ptr
+to="figure.elim.familydef">). 
+The defined constraint
+<<<
+?{L}={AgeList}
+>>>
+imposes constraints saying that ?{L} is a list of
+three integers between <<0>> and <<9>> appearing in
+descending order (see <Ptr to="figure.elim.familydef">).
+
+<p>
+<figure id="figure.elim.familydef">
+<caption/Defined constraints for the Family Puzzle./
+<p>
+<chunk><title/Definition of AgeList/
+proc {AgeList L}
+   {FD.list 3 0#9 L}
+   {Nth L 1} >: {Nth L 2}
+   {Nth L 2} >: {Nth L 3}
+end
+</chunk>
+<chunk><title/Definition of IsFamily/
+fun {IsFamily Name}
+   Coeffs    = [1 1 1 ~1 ~1 ~1]
+   BoysAges  = {AgeList}
+   GirlsAges = {AgeList}
+   Ages      = {Append BoysAges GirlsAges}
+in
+   {FD.distinct Ages}
+   {FD.sumC Coeffs Ages '=:' 0}
+   {FD.sumCN Coeffs {Map Ages fun {$ A} [A A] end} '=:' 0}
+   Name(boys:BoysAges girls:GirlsAges)
+end
+</chunk>
+</figure>
+
+
+<p>
+The statement
+<<<
+{FD.sumC Coeffs Ages '=:' 0}
+>>>
+creates a propagator for the constraint
+<math display/
+1\cdot B_1\;+\;1\cdot B_2\;+\;1\cdot B_3\;+\;(-1)\cdot G_1\;+\;
+(-1)\cdot G_2\;+\;(-1)\cdot G_3\;=\;0
+/<p>
+saying that the sum of the ages of the boys equals
+the sum of the ages of the girls.  The statement
+<<<
+{FD.sumCN Coeffs {Map Ages fun {$ A} [A A] end} '=:' 0}
+>>>
+creates a propagator for the constraint
+<math display/
+\begin{array}{c}
+1\cdot B_1\cdot B_1\;+\;1\cdot B_2\cdot B_2\;+\;1\cdot
+ B_3\cdot B_3 \;+\;(-1)\cdot G_1\cdot G_1\;+\;
+\hskip7mm
+\\
+(-1)\cdot G_2\cdot G_2\;+\;(-1)\cdot G_3\cdot G_3\;=\;0
+\end{array}
+/
+saying that the sum of the squares of the ages of the
+boys equals the sum of the squares of the ages of the
+girls.  The statement
+<<<
+{FD.sum Ages '=:' 60}
+>>>
+creates a propagator for the constraint saying
+that the sum of the ages of all kids equals <<60>>.
+</section>
+
+<section id="section.elimination.zebra">
+  <title/Example: Zebra Puzzle/
+
+<p>
+This example shows a clever problem
+representation avoiding possible symmetries.  It
+also illustrates the use of defined constraints.
+
+<subsection class=unnumbered>
+  <title/Problem Specification/
+
+
+<p>
+Five men with different nationalities live in the
+first five houses of a street.  There are only
+houses on one side of the street.  The men
+practice distinct professions, and each of them
+has a favorite drink and a favorite animal, all of
+them different.  The five houses are painted with
+different colors.  The following facts are known:
+<list enum>
+<item>
+    The Englishman lives in a red house.
+<item>
+    The Spaniard owns a dog.
+<item>
+    The Japanese is a painter.
+<item>
+    The Italian drinks tea.
+<item>
+    The Norwegian lives in the first house.
+<item>
+    The owner of the green house drinks coffee.
+<item>
+    The green house comes after the white one.
+<item>
+    The sculptor breeds snails.
+<item>
+    The diplomat lives in the yellow house.
+<item>
+    Milk is drunk in the third house.
+<item>
+   The Norwegian's house is next to the blue one.
+<item>
+    The violinist drinks juice.
+<item>
+    The fox is in the house next to that of the doctor.
+<item>
+    The horse is in the house next to that of the diplomat.
+<item>
+    The zebra is in the white house.
+<item>
+    One of the men drinks water.
+</list>
+Who lives where?
+
+<subsection class=unnumbered>
+  <title/Model/
+
+	
+<p>
+We number the houses from 1 to 5, where 1 is the
+first and 5 is last house in the street.  There
+are 25 different properties (&ie; hosting an
+Englishman, being the green house, hosting a
+painter, hosting a dog, or hosting someone who
+drinks juice), and each of these properties must
+hold for exactly one house.  The properties are
+partitioned into five groups of five members each,
+where the properties within one group must hold
+for different houses.  The model has one variable
+for each of these properties, where the variable
+stands for the number of the house for which this
+property holds.
+
+<subsection class=unnumbered>
+  <title/Distribution Strategy/
+
+
+<p>
+We distribute on the variables for the properties
+with the standard first-fail strategy.
+
+<figure id="ProgZebra">
+<caption/A script for the Zebra Puzzle./
+<chunk class=anonymous><title/Zebra/
+proc {Zebra Nb}
+   Groups     = [ [english spanish japanese italian norwegian]
+	          [green red yellow blue white]
+	          [painter diplomat violinist doctor sculptor]
+	          [dog zebra fox snails horse]
+                  [juice water tea coffee milk] ]
+   Properties = {FoldR Groups Append nil}
+   proc {Partition Group}
+      {FD.distinct {Map Group fun {$ P} Nb.P end}}
+   end
+   proc {Adjacent X Y}
+      {FD.distance X Y '=:' 1}
+   end
+in
+   %% Nb maps all properties to house numbers
+   {FD.record number Properties 1#5 Nb}
+   {ForAll Groups Partition}
+   Nb.english = Nb.red
+   Nb.spanish = Nb.dog
+   Nb.japanese = Nb.painter
+   Nb.italian = Nb.tea
+   Nb.norwegian = 1
+   Nb.green = Nb.coffee
+   Nb.green >: Nb.white
+   Nb.sculptor = Nb.snails
+   Nb.diplomat = Nb.yellow
+   Nb.milk = 3
+   {Adjacent Nb.norwegian Nb.blue}
+   Nb.violinist = Nb.juice
+   {Adjacent Nb.fox Nb.doctor}
+   {Adjacent Nb.horse Nb.diplomat}
+   Nb.zebra = Nb.white
+   {FD.distribute ff Nb}
+end
+</chunk>
+</figure>
+
+<subsection class=unnumbered>
+  <title/Script/
+
+
+<p>
+<Ptr to="ProgZebra"> shows a script based on
+the outlined model and distribution strategy.
+The script constrains the root variable <<Nb>> to
+a record that maps every property to a house
+number between 1 and&nbsp;5. 
+<p>
+The script introduces two defined constraints.
+The defined constraint
+<<<
+{Partition Group}
+>>>
+says that the properties in the list <<Group>>
+must hold for pairwise distinct houses.  The
+defined constraint
+<<<
+{Adjacent ?{X} ?{Y}}
+>>>
+says that the properties ?{X} and ?{Y} must hold
+for houses that are next to each other.
+
+The statement
+<<<
+{FD.distance X Y '=:' 1}
+>>>
+creates a propagator for <math/|X-Y|=1/.
+<p>
+The script defines a search tree with 33 nodes.
+The unique solution is the record
+<<<
+number(
+   blue:2       coffee:5     diplomat:3  doctor:4     
+   dog:3        english:4    fox:5       green:5     
+   horse:4      italian:2    japanese:5  juice:1
+   milk:3       norwegian:1  painter:5   red:4
+   sculptor:2   snails:2     spanish:3   tea:2        
+   violinist:1  water:4      white:1     yellow:3
+   zebra:1
+      )
+>>>
+</section>
+
+<![ %EXTRA; [
+<section><title/NONE/
+<p>
+<chunk><title/EXAMPLES/
+%%%
+%%% Chapter: Elimination of Symmetries and Defined Constraints
+%%%
+
+%%
+%% Example: Grocery
+%%
+
+declare
+<chunk.ref/Grocery/
+
+{ExploreAll Grocery}
+
+
+
+%%
+%% Example: Family
+%%
+
+declare
+<chunk.ref/Family/
+
+{ExploreAll Family}
+
+
+
+%%
+%% Example: Zebra Puzzle
+%%
+
+declare
+<chunk.ref/Zebra/
+
+{ExploreAll Zebra}
+
+
+
+</chunk>
+]]>
+
+
+</chapter>
+

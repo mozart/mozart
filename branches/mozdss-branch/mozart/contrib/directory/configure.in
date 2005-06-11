@@ -1,0 +1,9 @@
+AC_INIT(ExampleDirectory.oz)
+OZ_CONTRIB_INIT
+AC_OUTPUT(Makefile)
+
+errprint(ifdef([OZ_INIT],
+ [autoconf succeeded.
+],
+ [autoconf failed: use 'autoconf -l ../..' to include ../aclocal.m4.
+]))

@@ -1,0 +1,100 @@
+# -*- Makefile -*-
+#  Authors:
+#    Michael Mehl (mehl@dfki.de)
+# 
+#  Contributors:
+#    optional, Contributor's name (Contributor's email address)
+# 
+#  Copyright:
+#    Michael Mehl (mehl@dfki.de)
+# 
+#  Last change:
+#    $Date$ by $Author$
+#    $Revision$
+# 
+#  This file is part of Mozart, an implementation 
+#  of Oz 3:
+#     http://www.mozart-oz.org
+# 
+#  See the file "LICENSE" or
+#     http://www.mozart-oz.org/LICENSE.html
+#  for information on usage and redistribution 
+#  of this file, and for a DISCLAIMER OF ALL 
+#  WARRANTIES.
+
+BUILDTOP=	@BUILDTOP@
+SRCTOP=		@SRCTOP@
+TESTDIR=	$(BUILDTOP)/share/test
+LIBDIR=		$(BUILDTOP)/share/lib
+PREFIX=		@prefix@
+PLATFORM=	@platform@
+
+BINDIR=		$(PREFIX)/platform/$(PLATFORM)
+INCDIR=		$(PREFIX)/include
+
+EMULATOR_EXE=	@EMULATOR_EXE@
+
+SHELL=		/bin/sh
+LEX=		@LEX@
+LFLAGS=		-8
+YACC=		@YACC@
+YFLAGS=		-d
+M4=		@M4@
+M4_S=		@M4_S@
+CXX=		@CXX@
+CXXCPP=		@CXXCPP@
+
+LD=		@LD@
+DYNLD=		@OZTOOL_SH@ ld
+RANLIB=		@RANLIB@
+AR=		@AR@
+PERL=		perl
+
+AS=		@AS@
+DLLTOOL=	@DLLTOOL@
+DLLWRAP=	@DLLWRAP@
+
+INSTALL=	@INSTALL@
+INSTALL_DIR= 	@INSTALL_DIR@
+INSTALL_BIN=	$(INSTALL) -m 555
+INSTALL_FILE=	$(INSTALL) -m 444
+
+DENYS_EVENTS	= @DENYS_EVENTS@
+ifeq ($(DENYS_EVENTS),yes)
+DENYS_SPECS= Event Timer
+DENYS_SRCS= event.cc timer.cc
+DENYS_CPPFLAGS= -DDENYS_EVENTS
+else
+DENYS_SPECS=
+DENYS_SRCS=
+DENYS_CPPFLAGS=
+endif
+
+SITE_PROPERTY	= @SITE_PROPERTY@
+ifeq ($(SITE_PROPERTY),yes)
+SITE_PROPERTY_CPPFLAGS	= -DSITE_PROPERTY
+SITE_PROPERTY_SPECS	= SiteProperty
+SITE_PROPERTY_SRCS	= siteprop.cc
+else
+SITE_PROPERTY_CPPFLAGS	=
+SITE_PROPERTY_SPECS	=
+SITE_PROPERTY_SRCS	=
+endif
+
+LDFLAGS=	   @LDFLAGS@ $(CUSR)
+EMULDFLAGS=	   @EMULDFLAGS@
+
+EMULATE_CXXFLAGS	= @EMULATE_CXXFLAGS@
+TARGET_CXXFLAGS		=
+
+DEFS=		@DEFS@
+OZ_WARN=	@oz_warn@
+OZ_WARN_ERROR=	@oz_warn_error@
+CPPFLAGS=	@CPPFLAGS@ $(DEFS) $(INCS) $(DENYS_CPPFLAGS) $(SITE_PROPERTY_CPPFLAGS)
+COPT=		@COPT@
+CDYNOPT=	@CDYNOPT@
+CXXFLAGS_NO_ERROR= @CXXFLAGS@ $(COPT) $(OZ_WARN) $(CUSR)
+CXXFLAGS=	$(CXXFLAGS_NO_ERROR) $(TARGET_CXXFLAGS) $(OZ_WARN_ERROR)
+DEPEND=		@DEPEND@ $(CPPFLAGS)
+
+OZVERSION=	$(SRCTOP)/OZVERSION

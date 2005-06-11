@@ -1,0 +1,1014 @@
+<!--
+  - Authors:
+  -   Denys Duchier <duchier@ps.uni-sb.de>
+  -   Leif Kornstaedt <kornstae@ps.uni-sb.de>
+  -   Christian Schulte <schulte@ps.uni-sb.de>
+  -
+  - Contributors:
+  -   Daniel Simon <dansim@ps.uni-sb.de> (SGML Translation)
+  -
+  - Copyright:
+  -   Denys Duchier, Leif Kornstaedt, and Christian Schulte, 1998
+  -
+  - Last change:
+  -   $Date$ by $Author$
+  -   $Revision$
+  -
+  - This file is part of Mozart, an implementation of Oz 3:
+  -   http://www.mozart-oz.org
+  -
+  - See the file "LICENSE" or
+  -   http://www.mozart-oz.org/LICENSE.html
+  - for information on usage and redistribution
+  - of this file, and for a DISCLAIMER OF ALL
+  - WARRANTIES.
+  -
+  -->
+
+<Chapter id="chapter.records">
+  <Title/Records, Tuples, and Lists/
+  <P>
+    This chapter describes procedures to be used with records in general and
+    special kinds of records, namely tuples and lists.
+  <Section id=section.records.records>
+    <Title/Records in General/
+    <P>
+      The module <Span class=index/<<Record>>/ contains procedures operating
+      on records.
+    <P>
+      Procedures that iterate over the subtrees of a record
+      operate in ascending order as specified for <<Arity>>.
+      <List>
+	<Entry><Span class=index/<<.>>/
+	  <Index/<<Value>><And><<'.'>>/
+	<Synopsis>
+	  <<{Value.'.' ?+{RC} ?+{LI} ?_{X}}>>
+	<Item>
+	  returns the field&nbsp;?_{X} of&nbsp;?_{RC} at feature&nbsp;?_{LI}.
+
+	<Entry><Span class=index/<<HasFeature>>/
+	  <Index/<<Value>><And><<hasFeature>>/
+	<Synopsis>
+	  <<{Value.hasFeature ?+{RC} ?+{LI} ??{B}}>>
+	<Item>
+	  tests whether ?_{RC} has feature&nbsp;?_{LI}.
+
+	<Entry><Span class=index/<<CondSelect>>/
+	  <Index/<<Value>><And><<CondSelect>>/
+	<Synopsis>
+	  <<{Value.condSelect ?+{RC} ?+{LI} ?_{X} ?_{Y}}>>
+	<Item>
+	  returns the field of&nbsp;?_{RC} at feature&nbsp;?_{LI}, if ?_{RC}
+	  has feature&nbsp;?_{LI}.  Otherwise, return&nbsp;?_{X}.
+
+	<Entry><Span class=index/<<IsRecord>>/
+	  <Index class=tails/<<Record>><And><<is>>/
+	<Synopsis>
+	  <<{Record.is ?+{X} ??{B}}>>
+	<Item>
+	  tests whether ?_{X} is a record.
+
+	<Entry><Span class=index/<<MakeRecord>>/
+	  <Index class=tails/<<Record>><And><<make>>/
+	<Synopsis>
+	  <<{Record.make ?+{L} ?+{LIs} ??{R}}>>
+	<Item>
+	  returns a new record with label&nbsp;?_{L}, features&nbsp;?_{LIs},
+	  and fresh variables at every field.  All elements of&nbsp;?_{LIs}
+	  must be pairwise distinct, else an error exception is raised.
+	<P>
+	  For example, <<{MakeRecord L A R}>> waits until <<L>> is bound
+	  to a literal, say&nbsp;<<b>>, and <<A>> is bound to a list of
+	  literals and integers, say <<[c d 1]>>, and then binds <<R>> to
+	  <<b(_ c: _ d: _)>>.
+
+	<Entry><Span class=index/<<clone>>/
+	  <Index class=tails/<<Record>><And><<clone>>/
+	<Synopsis>
+	  <<{Record.clone ?+{R1} ??{R2}}>>
+	<Item>
+	  returns a record ?_{R2} with the same label and features as ?_{R1}
+	  and fresh variables at every field.
+
+	<Entry><Span class=index/<<Label>>/
+	  <Index/<<Record>><And><<label>>/
+	<Synopsis>
+	  <<{Record.label ?+{R} ??{L}}>>
+	<Item>
+	  returns the label of&nbsp;?_{R} in&nbsp;?_{L}.
+
+	<Entry><Span class=index/<<Width>>/
+	  <Index/<<Record>><And><<width>>/
+	<Synopsis>
+	  <<{Record.width ?+{R} ??{I}}>>
+	<Item>
+	  returns the width of&nbsp;?_{R} in&nbsp;?_{I}.
+
+	<Entry><Span class=index/<<Arity>>/
+	  <Index/<<Record>><And><<arity>>/
+	<Synopsis>
+	  <<{Record.arity ?+{R} ??{LIs}}>>
+	<Item>
+	  returns the arity ?_{LIs} of&nbsp;?_{R}.  The arity of&nbsp;?_{R}
+	  is the list of its features, beginning with all integer features in
+	  ascending order, followed by the literal features. The atomic
+	  literals occur in ascending order interspersed with names.
+	<P>
+	  For example, <<{Arity a(nil 7 c: 1 b: c)}>> yields <<[1 2 b c]>> as
+	  output.
+
+	<Entry><Span class=index/<<Adjoin>>/
+	  <Index/<<Record>><And><<adjoin>>/
+	<Synopsis>
+	  <<{Record.adjoin ?+{R1} ?+{R2} ??{R3}}>>
+	<Item>
+	  returns the result of adjoining ?_{R2} to&nbsp;?_{R1}.
+	<P>
+	  For example,
+	  <<<{Adjoin a(a b c: 1) b(4 b: 3 c: 2)}>>>
+	  yields the record <<b(4 b b: 3 c: 2)>> as output.
+
+	<Entry><Span class=index/<<AdjoinAt>>/
+	  <Index/<<Record>><And><<adjoinAt>>/
+	<Synopsis>
+	  <<{Record.adjoinAt ?+{R1} ?+{LI} ?_{X} ??{R2}}>>
+	<Item>
+	  binds ?_{R2} to the result of adjoining  the field&nbsp;?_{X}
+	  to&nbsp;?_{R1} at feature&nbsp;?_{LI}.
+	<P>
+	  For example,
+	  <<<{AdjoinAt a(a c: 1) 2 b}>>>
+	  yields <<a(a b c: 1)>> as output, whereas
+	  <<<{AdjoinAt a(a c: 1) c b}>>>
+	  yields <<a(a c: b)>> as output.
+
+	<Entry><Span class=index/<<AdjoinList>>/
+	  <Index/<<Record>><And><<adjoinList>>/
+	<Synopsis>
+	  <<{Record.adjoinList ?+{R1} ?+{Ts} ??{R2}}>>
+	<Item>
+	  binds ?_{R2} to the result of adjoining to ?_{R1} all entries
+	  of&nbsp;?_{Ts}, a finite list of pairs whose first components are
+	  literals or integers, representing features.  Features further to
+	  the right overwrite features further to the left.
+	<P>
+	  For example,
+	  <<<{AdjoinList a(b:1 c:2) [d#3 c#4 d#5]}>>>
+	  yields <<a(b: 1 c: 4 d: 5)>> as output.
+
+	<Entry><<subtract>>
+	  <Index class=tails/<<Record>><And><<subtract>>/
+	<Synopsis>
+	  <<{Record.subtract ?+{R1} ?+{LI} ??{R2}}>>
+	<Item>
+	  If ?_{R1} has feature&nbsp;?_{LI}, returns record&nbsp;?_{R1} with
+	  feature&nbsp;?_{LI} removed.  Otherwise, returns&nbsp;?_{R1}.
+
+	<Entry><<subtractList>>
+	  <Index class=tails/<<Record>><And><<subtractList>>/
+	<Synopsis>
+	  <<{Record.subtractList ?+{R1} ?+{LIs} ??{R2}}>>
+	<Item>
+	  Returns record&nbsp;?_{R1} with
+	  all features in&nbsp;?_{LIs} removed.
+        <p>
+	  For example,
+<<<{Record.subtractList f(jim: 1 jack: 2 jesse: 4) [jesse jim]}>>>
+	  returns the record <<f(jack: 2)>>.
+
+	<Entry><<zip>>
+	  <Index class=tails/<<Record>><And><<zip>>/
+	<Synopsis>
+	  <<{Record.zip ?+{R1} ?+{R2} ?+{P} ??{R3}}>>
+	<Item>
+	  Given two records ?_{R1} and&nbsp;?_{R2} and a ternary
+	  procedure&nbsp;?_{P}, ?_{R3}&nbsp;is bound to a record with
+	  the same label as&nbsp;?_{R1} and those features which are
+	  common to ?_{R1} and&nbsp;?_{R2}.  Features appearing only in
+	  one of the records are silently dropped.  Each fields&nbsp;?_{X}
+	  of ?_{R3} is computed by applying
+	  <<{?_{P} ?_{R1}.?_{X} ?_{R2}.?_{X} ?_{R3}.?_{X}}>>.
+	<P>
+	  For example,
+<<<{Record.zip
+ f(jim: 1 jack: 2 jesse: 4)
+ g(jim: a jack: b joe: c)
+ fun {$ X Y} X#Y end}>>>
+	  yields as output the record <<f(jim: 1#a jack: 2#b)>>.
+
+	<Entry><<toList>>
+	  <Index class=tails/<<Record>><And><<toList>>/
+	<Synopsis>
+	  <<{Record.toList ?+{R} ??{Xs}}>>
+	<Item>
+	  binds ?_{Xs} to list of all fields of&nbsp;?_{R} in the order as
+	  given by <<Arity>> (which see).
+	<P>
+	  For example,
+	  <<<{Record.toList f(a a: 2 b: 3)}>>>
+	  yields <<[a 2 3]>> as output.
+
+	<Entry><<toListInd>>
+	  <Index class=tails/<<Record>><And><<toListInd>>/
+	<Synopsis>
+	  <<{Record.toListInd ?+{R} ??{Ts}}>>
+	<Item>
+	  binds ?_{Ts} to the property list that contains the feature-field
+	  pairs of&nbsp;?_{R} in the order as given by <<Arity>> (which see).
+	<P>
+	  For example,
+	  <<<{Record.toListInd f(a a: 2 b: 3)}>>>
+	  yields <<[1#a a#2 b#3]>> as output.
+
+	<Entry><<toDictionary>>
+	  <Index class=tails/<<Record>><And><<toDictionary>>/
+	<Synopsis>
+	  <<{Record.toDictionary ?+{R} ??{Dictionary}}>>
+	<Item>
+	  returns a dictionary ?_{Dictionary} whose keys and their entries
+	  correspond to the features and their fields of&nbsp;?_{R}.
+      </List>
+    <P>
+      All of the following procedures are provided in two versions.  The
+      so-called <Em/index/ version passes to the procedures an additional
+      index as first actual argument.  The index is an integer or a literal
+      giving the feature of the field currently processed.
+      <List>
+	<Entry><<map>>
+	  <Index class=tails/<<Record>><And><<map>>/
+	<Synopsis>
+	  <<{Record.map ?+{R1} ?+{P} ??{R2}}>>
+	<Item>
+	  returns a record with same label and arity as&nbsp;?_{R1}, whose
+	  fields are computed by applying the binary procedure&nbsp;?_{P} to
+	  all fields of ?_{R1}.
+	<P>
+	  For example,
+	  <<<{Record.map a(12 b: 13 c: 1) IntToFloat}>>>
+	  yields the record <<a(12.0 b: 13.0 c: 1.0)>> as output.
+
+	<Entry><<mapInd>>
+	  <Index class=tails/<<Record>><And><<mapInd>>/
+	<Synopsis>
+	  <<{Record.mapInd ?+{R1} ?+{P} ??{R2}}>>
+	<Item>
+	  is similar to <<Record.map>>, but the ternary procedure&nbsp;?_{P}
+	  is applied with the index as first actual argument.
+	<P>
+	  For example,
+	  <<<{Record.mapInd a(1: d 3: a f: e) fun {$ I A} A(I) end}>>>
+	  yields the record <<a(1: d(1) 3: a(3) f: e(f))>> as output.
+
+	<Entry><<foldL>>
+	  <Index class=tails/<<Record>><And><<foldL>>/
+	<Synopsis>
+	  <<{Record.foldL ?+{R} ?+{P} ?_{X} ??{Y}}>>
+	<Entry><<foldR>>
+	  <Index class=tails/<<Record>><And><<foldR>>/
+	<Synopsis>
+	  <<{Record.foldR ?+{R} ?+{P} ?_{X} ??{Y}}>>
+	<Item>
+	  Used for <Span class=index/folding/ the fields of&nbsp;?_{R}
+	  by applying the ternary procedure&nbsp;?_{P}.
+	<P>
+	  Suppose that ?_{R} has the arity <<[?_{F1} &ellipsis; ?_{Fn}]>>.
+	  Applying the left folding procedure
+	  <<{Record.foldL ?_{R} ?_{P} ?_{Z} ?_{Out}}>>
+	  reduces to
+	  <<<{?_{P} &ellipsis; {?_{P} {?_{P} ?_{Z} ?_{R}.?_{F1}} ?_{R}.?_{F2} &ellipsis; ?_{R}.?_{Fn} ?_{Out}}>>>
+	  The first actual argument of&nbsp;?_{P} is the accumulator in which
+	  the result of the previous application or the start value&nbsp;?_{Z}
+	  is passed.  The second actual argument is a field of&nbsp;?_{R}.
+	<P>
+	  Besides the left folding procedure there exists a right folding
+	  variant.  The application <<{Record.foldR ?_{R} ?_{P} ?_{Z} ?_{Out}}>>
+	  reduces to
+	  <<<{?_{P} ?_{R}.?_{F1} {?_{P} ?_{R}.?_{F2} &ellipsis; {?_{P} ?_{R}.?_{Fn} ?_{Z}} &ellipsis; ?_{Out}}>>>
+	  The first actual argument of&nbsp;?_{P} is a field of&nbsp;?_{R};
+	  the second actual argument is the accumulator in which the result
+	  of the previous application or the start value&nbsp;?_{Z} is passed.
+	<P>
+	  For example,
+	  <<<{Record.foldL a(3 a: 7 b: 4) fun {$ Xr X} X|Xr end nil}>>>
+	  yields the output <<[4 7 3]>>, whereas
+	  <<<{Record.foldR a(3 a: 7 b: 4) fun {$ X Xr} X|Xr end nil}>>>
+	  yields the output <<[3 7 4]>>.
+
+	<Entry><<foldLInd>>
+	  <Index class=tails/<<Record>><And><<foldLInd>>/
+	<Synopsis>
+	  <<{Record.foldLInd ?+{R} ?+{P} ?_{X} ??{Y}}>>
+	<Entry><<foldRInd>>
+	  <Index class=tails/<<Record>><And><<foldRInd>>/
+	<Synopsis>
+	  <<{Record.foldRInd ?+{R} ?+{P} ?_{X} ??{Y}}>>
+	<Item>
+	  are similar to <<Record.foldL>> and <<Record.foldR>>, but the
+	  4-ary procedure&nbsp;?_{P} is applied with the current index as
+	  first actual argument.
+
+	<Entry><<forAll>>
+	  <Index class=tails/<<Record>><And><<forAll>>/
+	<Synopsis>
+	  <<{Record.forAll ?+{R} ?+{PO}}>>
+	<Item>
+	  applies the unary procedure or object&nbsp;?_{PO} to each field
+	  of&nbsp;?_{R}.
+	<P>
+	  Suppose that the arity of&nbsp;?_{R} is
+	  <<[?_{F1} &ellipsis; ?_{Fn}]>>.
+	  The application <<{Record.forAll ?_{R} ?_{P}}>> reduces to the
+	  sequence of statements
+	  <<<{?_{P} ?_{R}.?_{F1}} &ellipsis; {?_{P} ?_{R}.?_{Fn}}>>>
+	<P>
+	  For example,
+	  <<<{Record.forAll O1#O2#O3 proc {$ O} {O do()} end}>>>
+	  sends the message <<do()>> to the objects <<O1>>, <<O2>>,
+	  and&nbsp;<<O3>>.
+
+	<Entry><<forAllInd>>
+	  <Index class=tails/<<Record>><And><<forAllInd>>/
+	<Synopsis>
+	  <<{Record.forAllInd ?+{R} ?+{P}}>>
+	<Item>
+	  is similar to <<Record.forAll>>, but the binary procedure&nbsp;?_{P}
+	  is applied with the current index as first actual argument.
+	<P>
+	  For example, assuming <<O1>>, <<O2>>, and&nbsp;<<O3>> are objects,
+<<<{Record.forAllInd a(do: O1 stop: O2 run: O3)
+ proc {$ M O} {O M} end}>>>
+	  sends the message <<do>> to the object&nbsp;<<O1>>, the message
+	  <<stop>> to&nbsp;<<O2>>, and the message <<run>> to&nbsp;<<O3>>.
+
+	<Entry><<all>>
+	  <Index class=tails/<<Record>><And><<all>>/
+	<Synopsis>
+	  <<{Record.all ?+{R} ?+{P} ??{B}}>>
+	<Entry><<some>>
+	  <Index class=tails/<<Record>><And><<some>>/
+	<Synopsis>
+	  <<{Record.some ?+{R} ?+{P} ??{B}}>>
+	<Item>
+	  tests whether the unary boolean function&nbsp;?_{P} yields <<true>>
+	  when applied to all fields &resp; some field of&nbsp;?_{R}.  Stops
+	  at the first field for which ?_{P} yields <<false>> &resp; <<true>>.
+	  The fields are tested in the order given by <<Arity>> (which see).
+
+	<Entry><<allInd>>
+	  <Index class=tails/<<Record>><And><<allInd>>/
+	<Synopsis>
+	  <<{Record.allInd ?+{R} ?+{P} ??{B}}>>
+	<Entry><<someInd>>
+	  <Index class=tails/<<Record>><And><<someInd>>/
+	<Synopsis>
+	  <<{Record.someInd ?+{R} ?+{P} ??{B}}>>
+	<Item>
+	  is similar to <<Record.all>> &resp; <<Record.some>>, but the binary
+	  boolean function&nbsp;?_{P} is applied with the current index as
+	  first actual argument.
+
+	<Entry><<filter>>
+	  <Index class=tails/<<Record>><And><<filter>>/
+	<Synopsis>
+	  <<{Record.filter ?+{R1} ?+{P} ??{R2}}>>
+	<Entry><<partition>>
+	  <Index class=tails/<<Record>><And><<partition>>/
+	<Synopsis>
+	  <<{Record.partition ?+{R1} ?+{P} ??{R2} ??{R3}}>>
+	<Item>
+	  <<Record.filter>> computes a record&nbsp;?_{R2} which contains all
+	  the features and fields of the record&nbsp;?_{R1} for which the
+	  unary boolean procedure&nbsp;?_{P} applied to the field yields
+	  <<true>>.  <<Record.partition>> works similarly, but returns
+	  in&nbsp;?_{R3} a record with all remaining fields of&nbsp;?_{R1}.
+	<P>
+	  For example, the application
+	  <<<{Record.partition a(1 4 7 a: 3 b: 6 c: 5) IsOdd ?R2 ?R3}>>>
+	  returns <<a(1: 1 3: 7 a: 3 c: 5)>> in <<R2>> and <<a(2: 4 b: 6)>>
+	  in <<R3>>.
+
+	<Entry><<filterInd>>
+	  <Index class=tails/<<Record>><And><<filterInd>>/
+	<Synopsis>
+	  <<{Record.filterInd ?+{R1} ?+{P} ??{R2}}>>
+	<Entry><<partitionInd>>
+	  <Index class=tails/<<Record>><And><<partitionInd>>/
+	<Synopsis>
+	  <<{Record.partitionInd ?+{R1} ?+{P} ??{R2} ??{R3}}>>
+	<Item>
+	  are similar to <<Record.filter>> and <<Record.partition>>, but the
+	  binary boolean function&nbsp;?_{P} is applied with the current index
+	  as first actual argument.
+
+	<Entry><<takeWhile>>
+	  <Index class=tails/<<Record>><And><<takeWhile>>/
+	<Synopsis>
+	  <<{Record.takeWhile ?+{R1} ?+{P} ??{R2}}>>
+	<Entry><<dropWhile>>
+	  <Index class=tails/<<Record>><And><<dropWhile>>/
+	<Synopsis>
+	  <<{Record.dropWhile ?+{R1} ?+{P} ??{R3}}>>
+	<Entry><<takeDropWhile>>
+	  <Index class=tails/<<Record>><And><<takeDropWhile>>/
+	<Synopsis>
+	  <<{Record.takeDropWhile ?+{R2} ?+{P} ??{R2} ??{R3}}>>
+	<Item>
+	  While <<Record.filter>> selects all fields and features of a record
+	  which satisfy a certain condition, the procedure <<Record.takeWhile>>
+	  selects only the starting sequence of features and fields which
+	  fulfill this condition.  The procedure <<Record.dropWhile>> is
+	  dual:  It computes a record with the remaining features and fields.
+	  <<Record.takeWhileDrop>> computes both records.
+	<P>
+	  For example,
+	  <<<{Record.takeWhile a(1 4 7 a: 3 b: 6 c: 5) IsOdd}>>>
+	  yields as output <<a(1)>>, whereas
+	  <<<{Record.dropWhile a(1 4 7 a: 3 b: 6 c: 5) IsOdd}>>>
+	  yields <<a(2: 4 3: 7 a: 3 b: 6 c: 5)>> as output.  Both records can
+	  be computed simultaneously by
+	  <<<{Record.takeDropWhile  a(1 4 7 a: 3 b: 6 c: 5) IsOdd ?R2 ?R3}>>>
+
+	<Entry><<takeWhileInd>>
+	  <Index class=tails/<<Record>><And><<takeWhileInd>>/
+	<Synopsis>
+	  <<{Record.takeWhileInd ?+{R1} ?+{P} ??{R2}}>>
+	<Entry><<dropWhileInd>>
+	  <Index class=tails/<<Record>><And><<dropWhileInd>>/
+	<Synopsis>
+	  <<{Record.dropWhileInd ?+{R1} ?+{P} ??{R3}}>>
+	<Entry><<takeDropWhileInd>>
+	  <Index class=tails/<<Record>><And><<takeDropWhileInd>>/
+	<Synopsis>
+	  <<{Record.takeDropWhileInd ?+{R1} ?+{P} ??{R2} ??{R3}}>>
+	<Item>
+	  are similar to <<Record.takeWhile>>, <<Record.dropWhile>> and
+	  <<Record.takeDropWhile>> but the binary boolean function&nbsp;?_{P}
+	  is applied with the current index as first actual argument.
+
+	<Entry><<waitOr>>
+	  <Index class=tails/<<Record>><And><<waitOr>>/
+	<Synopsis>
+	  <<{Record.waitOr ?+{R} ??{LI}}>>
+	<Item>
+	  blocks until at least one field of&nbsp;?+{R} is determined.
+	  Returns the feature ?_{LI} of a determined field.  Raises an
+	  exception if ?_{R} is not a proper record, that is, if ?_{R}
+	  is a literal.
+	<P>
+	  For example,
+	  <<<{Record.waitOr a(_ b: 1)}>>
+	  returns&nbsp;<<b>> while
+	  <<<{Record.waitOr a(2 b: _)}>>
+	  returns&nbsp;<<1>>, and
+	  <<<{Record.waitOr a(_ b: _)}>>
+	  blocks.
+      </List>
+
+  <Section id=section.records.tuples>
+    <Title/Tuples/
+    <P>
+      The module <Span class=index/<<Tuple>>/ contains procedures operating
+      on tuples.
+      <List>
+	<Entry><Span class=index/<<IsTuple>>/
+	  <Index class=tails/<<Tuple>><And><<is>>/
+	<Synopsis>
+	  <<{Tuple.is ?+{X} ??{B}}>>
+	<Item>
+	  tests whether ?_{X} is a tuple.
+
+	<Entry><Span class=index/<<MakeTuple>>/
+	  <Index class=tails/<<Tuple>><And><<make>>/
+	<Synopsis>
+	  <<{Tuple.make ?+{L} ?+{I} ??{T}}>>
+	<Item>
+	  binds ?_{T} to new tuple with label&nbsp;?_{L} and fresh variables
+	  at features <<1>> through&nbsp;?_{I}.  ?_{I}&nbsp;must be
+	  non-negative, else an error exception is raised.
+	<P>
+	  For example, <<{MakeTuple L N T}>> waits until <<L>> is bound
+	  to a literal, say&nbsp;<<b>>, and <<N>> is bound to a number,
+	  say&nbsp;<<3>>, whereupon <<T>> is bound to <<b(_ _ _)>>.
+
+	<Entry><<toArray>>
+	  <Index class=tails/<<Tuple>><And><<toArray>>/
+	<Synopsis>
+	  <<{Tuple.toArray ?+{T} ??{A}}>>
+	<Item>
+	  returns an array with bounds between <<1>> and <<{Width ?_{T}}>>,
+	  where the elements of the array are the subtrees of&nbsp;?_{T}.
+
+	<Entry><<append>>
+	  <Index class=tails/<<Tuple>><And><<append>>/
+	<Synopsis>
+	  <<{Tuple.append ?+{T1} ?+{T2} ??{T3}}>>
+	<Item>
+	  returns a tuple with same label as&nbsp;?_{T2}.  Given that
+	  ?_{T1} has width&nbsp;<Var type=meta/i/ and ?_{T2} has
+	  width&nbsp;<Var type=meta/j/, ?_{T3}&nbsp;will have width
+	  <<?{i} + ?{j}>>, and the first <Var type=meta/i/ fields
+	  of&nbsp;?_{T3} will be the same as the fields of ?_{T1} in
+	  their original order, and the fields <<?{i} + 1>> through
+	  <<?{i} + ?{j}>> will be the same as the fields of&nbsp;?_{T2}
+	  in their original order.
+      </List>
+
+  <Section id="section.records.lists">
+    <Title/Lists/
+    <P>
+      The module <Span class=index/<<List>>/ contains procedures operating
+      on lists.
+      <List>
+	<Entry><Span class=index/<<IsList>>/
+	  <Index class=tails/<<List>><And><<is>>/
+	<Synopsis>
+	  <<{List.is ?+{X} ??{B}}>>
+	<Item>
+	  tests whether ?_{X} is a list.  Diverges if ?_{X} is an infinite
+	  list.
+
+	<Entry><Span class=index/<<MakeList>>/
+	  <Index class=tails/<<List>><And><<make>>/
+	<Synopsis>
+	  <<{List.make ?+{I} ??{Xs}}>>
+	<Item>
+	  returns a list of length ?_{I}.  All elements are fresh variables.
+
+	<Entry><Span class=index/<<Append>>/
+	  <Index/<<List>><And><<append>>/
+	<Synopsis>
+	  <<{List.append ?+{Xs} ?_{Y} ??{Zs}}>>
+	<Item>
+	  binds ?_{Zs} to the result of appending ?_{Y} to&nbsp;?_{Xs}.
+	  ?_{Y}&nbsp;needs not be a list. However,
+	  ?_{Zs} is only a proper list, if also
+	  ?_{Y} is a proper list.
+        <P>
+          For example,
+          <<<{Append [1 2] [3 4]}>>>
+          returns the list <<[1 2 3 4]>>>, whereas
+          <<<{Append 1|2|nil 3|4}>>>
+          returns <<1|2|(3|4)>>> which is not a
+          proper list, since <<3|4>> is not a
+          proper list.
+
+	<Entry><Span class=index/<<Member>>/
+	  <Index/<<List>><And><<member>>/
+	<Synopsis>
+	  <<{List.member ?_{X} ?+{Ys} ??{B}}>>
+	<Item>
+	  tests whether ?_{X} is equal (in the sense of <<==>>) to some
+	  element of&nbsp;?_{Ys}.  Note: all other procedures of the <<List>>
+	  module that operate on a list take it as their first argument.
+	  <<Member>> is the only exception (for historical reasons).
+
+	<Entry><Span class=index/<<Length>>/
+	  <Index/<<List>><And><<length>>/
+	<Synopsis>
+	  <<{List.length ?+{Xs} ??{I}}>>
+	<Item>
+	  returns the length of&nbsp;?_{Xs}.
+
+	<Entry><Span class=index/<<Nth>>/
+	  <Index/<<List>><And><<nth>>/
+	<Synopsis>
+	  <<{List.nth ?+{Xs} ?+{I} ??{Y}}>>
+	<Item>
+	  returns the ?_{I}th element of&nbsp;?_{Xs} (counting
+	  from&nbsp;<<1>>).
+
+	<Entry><<subtract>>
+	  <Index class=tails/<<List>><And><<subtract>>/
+	<Synopsis>
+	  <<{List.subtract ?+{Xs} ?_{Y} ??{Zs}}>>
+	<Item>
+	  binds ?_{Zs} to&nbsp;?_{Xs} without the leftmost occurrence
+	  of&nbsp;?_{Y} if there is one.
+
+	<Entry><<sub>>
+	  <Index class=tails/<<List>><And><<sub>>/
+	<Synopsis>
+	  <<{List.sub ?+{Xs} ?+{Ys} ??{B}}>>
+	<Item>
+	  tests whether ?_{Xs} is a sublist of ?_{Ys}, &ie;, whether it
+	  contains all elements of&nbsp;?_{Xs} in the same order as&nbsp;?_{Xs}
+	  but not necessarily in succession.
+	<P>
+	  For example, <<[a b]>> is a sublist of both <<[1 a b 2]>> and
+	  <<[1 a 2 b 3]>>, but not of <<[b a]>>.
+
+	<Entry><Span class=index/<<Reverse>>/
+	  <Index/<<List>><And><<reverse>>/
+	<Synopsis>
+	  <<{List.reverse ?+{Xs} ??{Ys}}>>
+	<Item>
+	  returns the elements of&nbsp;?_{Xs} in reverse order.
+
+	<Entry><Span class=index/<<Sort>>/
+	  <Index/<<List>><And><<sort>>/
+	<Synopsis>
+	  <<{List.sort ?+{Xs} ?+{P} ??{Ys}}>>
+	<Item>
+	  binds ?_{Ys} to the result of sorting ?_{Xs} using the
+	  ordering&nbsp;?_{P}.  <<Sort>> is implemented using the
+	  mergesort algorithm.
+	<P>
+	  For example,
+	  <<<{Sort [c d b d a] Value.'<'}>>>
+	  returns the list <<[a b c d d]>>.
+
+	<Entry><Span class=index/<<Merge>>/
+	  <Index/<<List>><And><<merge>>/
+	<Synopsis>
+	  <<{List.merge ?+{Xs} ?+{Ys} ?+{P} ??{Zs}}>>
+	<Item>
+	  binds ?_{Zs} to the result of merging ?_{Xs} and&nbsp;?_{Ys}
+	  using the ordering&nbsp;?_{P}. The lists ?_{Xs} and&nbsp;?_{Ys}
+	  must be sorted.
+
+	<Entry><Span class=index/<<Flatten>>/
+	  <Index/<<List>><And><<flatten>>/
+	<Synopsis>
+	  <<{List.flatten ?+{Xs} ??{Ys}}>>
+	<Item>
+	  binds ?_{Ys} to the result of flattening&nbsp;?_{Xs}, &ie;, of
+	  concatenating all sublists of&nbsp;?_{Xs} recursively.
+
+	<Entry><<withTail>>
+	  <Index class=tails/<<List>><And><<withTail>>/
+	<Synopsis>
+	  <<{List.withTail ?+{I} ?_{Y} ??{Xs}}>>
+	<Item>
+	  returns a list with at least ?_{I}&nbsp;elements whose rest
+	  is&nbsp;?_{Y} (which needs not be a list).  The first ?_{I}
+	  elements are fresh variables.
+	<P>
+	  For example, <<{List.withTail 2 [a b]}>> returns <<[_ _ a b]>>.
+
+	<Entry><<number>>
+	  <Index class=tails/<<List>><And><<number>>/
+	<Synopsis>
+	  <<{List.number ?+{FromI} ?+{ToI} ?+{StepI} ??{Xs}}>>
+	<Item>
+	  returns a list with elements from ?_{FromI} to ?_{ToI} with
+	  step ?_{StepI}.
+	<P>
+	  For example, <<{List.number 1 5 2}>> returns <<[1 3 5]>>,
+	  <<{List.number 5 1 2}>> yields the list <<nil>>, and
+	  <<{List.number 5 0 -2}>> yields the list <<[5 3 1]>>.
+
+	<Entry><<take>>
+	  <Index class=tails/<<List>><And><<take>>/
+	<Synopsis>
+	  <<{List.take ?+{Xs} ?+{I} ??{Ys}}>>
+	<Item>
+	  returns the list that contains the first ?_{I}&nbsp;elements
+	  of&nbsp;?_{Xs}, or ?_{Xs} if it is shorter.
+
+	<Entry><<drop>>
+	  <Index class=tails/<<List>><And><<drop>>/
+	<Synopsis>
+	  <<{List.drop ?+{Xs} ?+{I} ??{Ys}}>>
+	<Item>
+	  returns the list&nbsp;?_{Xs} with the first ?_{I}&nbsp;elements
+	  removed, or to <<nil>> if it is shorter.
+
+	<Entry><<takeDrop>>
+	  <Index class=tails/<<List>><And><<takeDrop>>/
+	<Synopsis>
+	  <<{List.takeDrop ?+{Xs} ?+{I} ??{Ys} ??{Zs}}>>
+	<Item>
+	  binds ?_{Ys} to <<{List.take ?_{Xs} ?_{I}}>> and ?_{Zs} to
+	  <<{List.drop ?_{Xs} ?_{I}}>>.
+
+	<Entry><<last>>
+	  <Index class=tails/<<List>><And><<last>>/
+	<Synopsis>
+	  <<{List.last ?+{Xs} ??{Y}}>>
+	<Item>
+	  returns the last element of&nbsp;?_{Xs}.  Raises an error exception
+	  if ?_{Xs} is <<nil>>.
+
+	<Entry><<toTuple>>
+	  <Index class=tails/<<List>><And><<toTuple>>/
+	<Synopsis>
+	  <<{List.toTuple ?+{L} ?+{Xs} ??{T}}>>
+	<Item>
+	  binds ?_{T} to a tuple with label&nbsp;?_{L} that contains the
+	  elements of&nbsp;?_{Xs} as subtrees in the given order.
+	<P>
+	  For example,
+	  <<<{List.toTuple '#' [a b c]}>>>
+	  returns <<a#b#c>>.
+
+	<Entry><<toRecord>>
+	  <Index class=tails/<<List>><And><<toRecord>>/
+	<Synopsis>
+	  <<{List.toRecord ?+{L} ?+{Ts} ??{R}}>>
+	<Item>
+	  binds ?_{R} to a record with label&nbsp;?_{L} whose subtrees
+	  are given by the property list&nbsp;?_{Ts}:  For every element
+	  <<L?{i}#X?{i}>> of ?_{Xs}, ?_{R}&nbsp;has a field&nbsp;<<X?{i}>>
+	  at feature&nbsp;<<L?{i}>>.  The features in the property list must
+	  be pairwise distinct, else an error exception is raised.
+	<P>
+	  For example,
+	  <<<{List.toRecord f [a#1 b#2 c#3]}>>>
+	  returns <<f(a: 1 b: 2 c: 3)>>.
+
+	<Entry><<zip>>
+	  <Index class=tails/<<List>><And><<zip>>/
+	<Synopsis>
+	  <<{List.zip ?+{Xs} ?+{Ys} ?+{P} ??{Zs}}>>
+	<Item>
+	  returns the list of all elements <<Z?{i}>> computed by applying
+	  <<{?_{P} X?{i} Y?{i}}>>, where <<X?{i}>> is the <Var type=meta/i/th
+	  element of&nbsp;?_{Xs} and <<Y?{i}>> the <Var type=meta/i/th
+	  element of&nbsp;?_{Ys}.  The two input lists must be of equal
+	  length, else an error exception is raised.
+	<P>
+	  For example,
+	  <<<{List.zip [1 6 3] [4 5 6] Max}>>>
+	  returns the list <<[4 6 6]>>.
+
+	<Entry><<isPrefix>>
+	  <Index class=tails/<<List>><And><<isPrefix>>/
+	<Synopsis>
+	  <<{List.isPrefix ?+{Xs} ?+{Ys} ??{B}}>>
+	<Item>
+	  tests whether ?_{Xs} is a prefix of ?_{Ys}.  Given that ?_{Xs}
+	  has length&nbsp;<Var type=meta/i/, it is a prefix of&nbsp;?_{Ys}
+	  if ?_{Ys} has at least length&nbsp;<Var type=meta/i/ and the
+	  first <Var type=meta/i/ elements of&nbsp;?_{Ys} are equal to the
+	  corresponding elements of&nbsp;?_{Xs}.
+      </List>
+    <P>
+      All of the following procedures exist in two versions.  The
+      so-called <Em/index/ version passes to the procedures an additional
+      index as first actual argument.  The index is an integer giving
+      the position of the list element currently processed (counting
+      from&nbsp;<<1>>).
+      <List>
+	<Entry><Span class=index/<<Map>>/
+	  <Index/<<List>><And><<map>>/
+	<Synopsis>
+	  <<{List.map ?+{Xs} ?+{P} ??{Ys}}>>
+	<Item>
+	  returns the list obtained by applying&nbsp;?_{P} to each element
+	  of&nbsp;?_{Xs}.
+	<P>
+	  For example,
+	  <<<{Map [12 13 1] IntToFloat}>>>
+	  returns <<[12.0 13.0 1.0]>>.
+
+	<Entry><<mapInd>>
+	  <Index class=tails/<<List>><And><<mapInd>>/
+	<Synopsis>
+	  <<{List.mapInd ?+{Xs} ?+{P} ??{Ys}}>>
+	<Item>
+	  is similar to <<Map>>, but the ternary procedure&nbsp;?_{P} is
+	  applied with the index as first actual argument.
+	<P>
+	  For example,
+	  <<<{List.mapInd [d a e] fun {$ I A} I#A end}>>>
+	  yields the list <<[1#d 2#a 3#e]>> as output.
+
+	<Entry><Span class=index/<<FoldL>>/
+	  <Index/<<List>><And><<foldL>>/
+	<Synopsis>
+	  <<{List.foldL ?+{Xs} ?+{P} ?_{X} ??{Y}}>>
+	<Entry><Span class=index/<<FoldR>>/
+	  <Index/<<List>><And><<foldR>>/
+	<Synopsis>
+	  <<{List.foldR ?+{Xs} ?+{P} ?_{X} ??{Y}}>>
+	<Item>
+	  Used for folding the elements of&nbsp;?_{Xs} by applying a ternary
+	  procedure&nbsp;?_{P}.
+	<P>
+	  Application of the left folding procedure
+	  <<{FoldL [?_{X1} &ellipsis; ?_{Xn}] ?_{P} ?_{Z} ?_{Out}}>>
+	  reduces to
+	  <<<{?_{P} &ellipsis; {?_{P} {?_{P} ?_{Z} ?_{X1}} ?_{X2}} &ellipsis; ?_{Xn} ?_{Out}}>>>
+	  The first actual argument of&nbsp;?_{P} is the accumulator
+	  in which the result of the previous application or the start
+	  value&nbsp;?_{Z} is passed.  The second actual argument is an
+	  element of&nbsp;?_{Xs}.
+	<P>
+	  Besides the left folding procedure there exists a right
+	  folding variant.  The application
+	  <<{FoldR [?_{X1} &ellipsis; ?_{Xn}] ?_{P} ?_{Z} ?_{Out}}>>
+	  reduces to
+	  <<<{?_{P} ?_{X1} {?_{P} ?_{X2} &ellipsis; {?_{P} ?_{Xn} ?_{Z}} &ellipsis;} ?_{Out}}>>>
+	  The first actual argument of&nbsp;?_{P} is an element
+	  of&nbsp;?_{Xs}.  The second actual argument of&nbsp;?_{P}
+	  is the accumulator in which the result of the previous
+	  application or the start value&nbsp;?_{Z} is passed.
+	<P>
+	  For example,
+	  <<<{FoldL [b c d] fun {$ X Y} f(X Y) end a}>>>
+	  returns <<f(f(f(a b) c) d)>>, whereas
+	  <<<{FoldR [b c d] fun {$ X Y} f(X Y) end a}>>>
+	  returns <<f(b f(c f(d a)))>>.
+
+	<Entry><<foldLInd>>
+	  <Index class=tails/<<List>><And><<foldLInd>>/
+	<Synopsis>
+	  <<{List.foldLInd ?+{Xs} ?+{P} ?_{X} ??{Y}}>>
+	<Entry><<foldRInd>>
+	  <Index class=tails/<<List>><And><<foldRInd>>/
+	<Synopsis>
+	  <<{List.foldRInd ?+{Xs} ?+{P} ?_{X} ??{Y}}>>
+	<Item>
+	  are similar to <<FoldL>> and <<FoldR>>, but the <<4>>-ary
+	  procedure&nbsp;?_{P} is applied with the current index as
+	  first actual argument.
+
+	<Entry><Span class=index/<<FoldLTail>>/
+	  <Index/<<List>><And><<foldLTail>>/
+	<Synopsis>
+	  <<{List.foldLTail ?+{Xs} ?+{P} ?_{X} ??{Y}}>>
+	<Entry><Span class=index/<<FoldRTail>>/
+	  <Index/<<List>><And><<foldRTail>>/
+	<Synopsis>
+	  <<{List.foldRTail ?+{Xs} ?+{P} ?_{X} ??{Y}}>>
+	<Item>
+	  Used for folding all non-<<nil>> tails of&nbsp;?_{Xs} by applying a
+	  ternary procedure&nbsp;?_{P}, &ie;, application of the left folding
+	  procedure
+	  <<<{FoldLTail [?_{X1} &ellipsis; ?_{Xn}] ?_{P} ?_{Z} ?_{Out}}>>>
+	  reduces to
+	  <<<{?_{P} &ellipsis; {?_{P} {?_{P} ?_{Z} [?_{X1} &ellipsis; ?_{Xn}]} [?_{X2} &ellipsis; ?_{Xn}]} &ellipsis; ?_{Xn}] ?_{Out}}>>>
+	  The right folding procedure is analogous.
+
+	<Entry><<foldLTailInd>>
+	  <Index class=tails/<<List>><And><<foldLTailInd>>/
+	<Synopsis>
+	  <<{List.foldLTailInd ?+{Xs} ?+{P} ?_{X} ??{Y}}>>
+	<Entry><<foldRTailInd>>
+	  <Index class=tails/<<List>><And><<foldRTailInd>>/
+	<Synopsis>
+	  <<{List.foldRTailInd ?+{Xs} ?+{P} ?_{X} ??{Y}}>>
+	<Item>
+	  are similar to <<FoldLTail>> and <<FoldRTail>>, but the <<4>>-ary
+	  procedure&nbsp;?_{P} is applied with the current index as first
+	  actual argument.
+
+	<Entry><Span class=index/<<ForAll>>/
+	  <Index/<<List>><And><<forAll>>/
+	<Synopsis>
+	  <<{List.forAll ?+{Xs} ?+{PO}}>>
+	<Item>
+	  applies the unary procedure or object&nbsp;?_{PO} to each element
+	  of&nbsp;?_{Xs}, &ie;, the application
+	  <<<{ForAll [?_{X1} &ellipsis; ?_{Xn}] ?_{P}}>>>
+	  reduces to the sequence of statements
+	  <<<{?_{P} ?_{X1}} &ellipsis; {?_{P} ?_{Xn}}>>>
+	<P>
+	  For example,
+	  <<<{ForAll [O1 O2 O3] proc {$ O} {O do()} end}>>>
+	  sends the message <<do()>> to the objects <<O1>>, <<O2>>,
+	  and&nbsp;<<O3>>.
+
+	<Entry><<forAllInd>>
+	  <Index class=tails/<<List>><And><<forAllInd>>/
+	<Synopsis>
+	  <<{List.forAllInd ?+{Xs} ?+{P}}>>
+	<Item>
+	  is similar to <<ForAll>>, but the binary procedure&nbsp;?_{P} is
+	  applied with the current index as first actual argument.
+	<P>
+	  For example, assuming <<O1>>, <<O2>>, and&nbsp;<<O3>> are objects,
+	  the following statement sends the message <<do(1)>> to the
+	  object&nbsp;<<O1>>, the message <<do(2)>> to&nbsp;<<O2>>, and the
+	  message <<do(3)>> to&nbsp;<<O3>>:
+<<<{List.forAllInd [O1 O2 O3]
+ proc {$ I O} {O do(I)} end}>>>
+
+	<Entry><Span class=index/<<ForAllTail>>/
+	  <Index/<<List>><And><<forAllTail>>/
+	<Synopsis>
+	  <<{List.forAllTail ?+{Xs} ?+{PO}}>>
+	<Item>
+	  applies the unary procedure or object&nbsp;?_{PO} to each
+	  non-<<nil>> tail of&nbsp;?_{Xs}, &ie;, the application
+	  <<<{ForAllTail [?_{X1} &ellipsis; ?_{Xn}] ?_{P}}>>>
+	  reduces to the sequence of statements
+	  <<<{?_{P} [?_{X1} &ellipsis; ?_{Xn}]} {?_{P} [?_{X2} &ellipsis; ?_{Xn}]} &ellipsis; {?_{P} [?_{Xn}]}>>>
+
+	<Entry><<forAllTailInd>>
+	  <Index class=tails/<<List>><And><<forAllTailInd>>/
+	<Synopsis>
+	  <<{List.forAllTailInd ?+{Xs} ?+{P}}>>
+	<Item>
+	  is similar to <<ForAllTail>>, but the binary procedure&nbsp;?_{P}
+	  is applied with the current index as first actual argument.
+
+	<Entry><Span class=index/<<All>>/
+	  <Index/<<List>><And><<all>>/
+	<Synopsis>
+	  <<{List.all ?+{Xs} ?+{P} ??{B}}>>
+	<Entry><Span class=index/<<Some>>/
+	  <Index/<<List>><And><<some>>/
+	<Synopsis>
+	  <<{List.some ?+{Xs} ?+{P} ??{B}}>>
+	<Item>
+	  tests whether the unary boolean function&nbsp;?_{P} yields <<true>>
+	  when applied to all elements &resp; some element of&nbsp;?_{Xs}.
+	  Stops at the first element for which ?_{P} yields <<false>>
+	  &resp; <<true>>.
+
+	<Entry><<allInd>>
+	  <Index class=tails/<<List>><And><<allInd>>/
+	<Synopsis>
+	  <<{List.allInd ?+{Xs} ?+{P} ??{B}}>>
+	<Entry><<someInd>>
+	  <Index class=tails/<<List>><And><<someInd>>/
+	<Synopsis>
+	  <<{List.someInd ?+{Xs} ?+{P} ??{B}}>>
+	<Item>
+	  are similar to <<All>> and <<Some>>, but the binary boolean
+	  function&nbsp;?_{P} is applied with the current index as first
+	  actual argument.
+
+	<Entry><Span class=index/<<Filter>>/
+	  <Index/<<List>><And><<filter>>/
+	<Synopsis>
+	  <<{List.filter ?+{Xs} ?+{P} ??{Ys}}>>
+	<Entry><<partition>>
+	  <Index class=tails/<<List>><And><<partition>>/
+	<Synopsis>
+	  <<{List.partition ?+{Xs} ?+{P} ??{Ys} ??{Zs}}>>
+	<Item>
+	  <<Filter>> returns a list of the elements of&nbsp;?_{Xs} for which
+	  the application of the unary boolean function&nbsp;?_{P} yields
+	  <<true>>, where the ordering is preserved.  <<List.partition>>
+	  works similarly, but additionally returns in ?_{Zs} a list of all
+	  remaining elements of&nbsp;?_{Xs}, where the ordering is preserved
+	  as well.
+	<P>
+	  For example, the application
+	  <<<{List.partition [1 4 2 3 6 5] IsOdd Ys Zs}>>>
+	  returns <<[1 3 5]>> in <<Ys>> and <<[4 2 6]>> in <<Zs>>.
+
+	<Entry><<filterInd>>
+	  <Index class=tails/<<List>><And><<filterInd>>/
+	<Synopsis>
+	  <<{List.filterInd ?+{Xs} ?+{P} ??{Ys}}>>
+	<Entry><<partitionInd>>
+	  <Index class=tails/<<List>><And><<partitionInd>>/
+	<Synopsis>
+	  <<{List.partitionInd ?+{Xs} ?+{P} ??{Ys} ??{Zs}}>>
+	<Item>
+	  are similar to <<Filter>> and <<List.partition>>, but the binary
+	  boolean function&nbsp;?_{P} is applied with the current index as
+	  first actual argument.
+
+	<Entry><<takeWhile>>
+	  <Index class=tails/<<List>><And><<takeWhile>>/
+	<Synopsis>
+	  <<{List.takeWhile ?+{Xs} ?+{P} ??{Ys}}>>
+	<Entry><<dropWhile>>
+	  <Index class=tails/<<List>><And><<dropWhile>>/
+	<Synopsis>
+	  <<{List.dropWhile ?+{Xs} ?+{P} ??{Ys}}>>
+	<Entry><<takeDropWhile>>
+	  <Index class=tails/<<List>><And><<takeDropWhile>>/
+	<Synopsis>
+	  <<{List.takeDropWhile ?+{Xs} ?+{P} ??{Ys} ??{Zs}}>>
+	<Item>
+	  While <<Filter>> selects all elements of a list which satisfy a
+	  certain condition, the procedure <<List.takeWhile>> selects only
+	  the starting sequence of elements which fulfill this condition.
+	  The procedure <<List.dropWhile>> is dual:  It returns the
+	  remainder of the list.  For convenience, <<List.takeDropWhile>>
+	  combines the functionality from both <<List.takeWhile>> and
+	  <<List.dropWhile>>.
+	<P>
+	  For example, the application
+	  <<<{List.takeWhile [1 4 2 3 6 5] IsOdd Ys}>>>
+	  returns <<[1]>> in&nbsp;<<Ys>>, whereas
+	  <<<{List.dropWhile [1 4 2 3 6 5] IsOdd Zs}>>>
+	  returns <<[4 2 3 6 5]>> in&nbsp;<<Ys>>.
+	  <<<{List.takeDropWhile [1 4 2 3 6 5] IsOdd Ys Zs}>>>
+	  combines both.
+
+	<Entry><<takeWhileInd>>
+	  <Index class=tails/<<List>><And><<takeWhileInd>>/
+	<Synopsis>
+	  <<{List.takeWhileInd ?+{Xs} ?+{P} ??{Ys}}>>
+	<Entry><<dropWhileInd>>
+	  <Index class=tails/<<List>><And><<dropWhileInd>>/
+	<Synopsis>
+	  <<{List.dropWhileInd ?+{Xs} ?+{P} ??{Ys}}>>
+	<Entry><<takeDropWhileInd>>
+	  <Index class=tails/<<List>><And><<takeDropWhileInd>>/
+	<Synopsis>
+	  <<{List.takeDropWhileInd ?+{Xs} ?+{P} ??{Ys} ??{Zs}}>>
+	<Item>
+	  are similar to <<List.takeWhile>>, <<List.dropWhile>> and
+	  <<List.takeDropWhile>> but the binary boolean function&nbsp;?_{P}
+	  is applied with the current index as first actual argument.
+      </List>
+
+
+</Chapter>

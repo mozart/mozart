@@ -1,0 +1,93 @@
+<!--
+  - Authors:
+  -   Christian Schulte <schulte@ps.uni-sb.de>
+  -
+  - Contributors (sgml translation):
+  -   Daniel Simon <dansim@ps.uni-sb.de>
+  -   Andy Walter <anwalt@ps.uni-sb.de>
+  -
+  - Copyright:
+  -   Christian Schulte, 1998
+  -
+  - Last change:
+  -   $Date$ by $Author$
+  -   $Revision$
+  -
+  - This file is part of Mozart, an implementation
+  - of Oz 3
+  -    http://www.mozart-oz.org
+  -
+  - See the file "LICENSE" or
+  -    http://www.mozart-oz.org/LICENSE.html
+  - for information on usage and redistribution
+  - of this file, and for a DISCLAIMER OF ALL
+  - WARRANTIES.
+  -
+  -->
+
+<Chapter id="chapter.intro">
+  <Title/Introduction/
+  <P>
+    This document describes how to connect Mozart applications to the rest of the
+    computational world.  Sometimes this is paraphrased as <Span
+    class=index/interoperability/.
+  <P>
+    Interoperability is supported in Mozart by the modules <<Open>> and
+    <<OS>>.  The module <<Open>> provides the following classes:
+    <List enum>
+      <Item>
+	The class <<Open.file>> for reading and writing files.
+      <Item>
+	The class <<Open.socket>> for sending and receiving data over the
+	Internet.
+      <Item>
+	The class <<Open.pipe>> to create operating system processes and to
+	communicate with them.
+      <Item>
+	The class <<Open.text>> for reading and writing texts character by
+	character or line by line.  This class can be combined with any of
+	the classes from above.
+    </List>
+  <P>
+    Each of these classes is described by a chapter on its own (<Ptr
+    to="chapter.files">, <Ptr to="chapter.sockets">, <Ptr to="chapter.pipe">, and <Ptr to="chapter.text">).  The chapters explain
+    the basic concepts to use the classes and contain a small example.
+    Reference information to the classes can be found as usual 
+    in the document <Ptr.Extern to="ozdoc:system" key="chapter.open">.
+  <P>
+    The module <<OS>> provides procedures for random numbers, for manipulating
+    files, directories, sockets, and the like.  The module makes functionality
+    found in the operating system available within &Oz;.  Since &Oz; runs both
+    on Unix based and Windows based platforms, the functionality provided is
+    limited to what is defined by the POSIX.1 Standard&nbsp;<Ptr to="Posix1">.
+    Its documentation can be found in  <Ptr.Extern to="ozdoc:system" key="chapter.os">.
+  <P>
+    It is important to understand the data structures needed for reading,
+    writing, and sending.  For this reason <Ptr to="chapter.data"> discusses
+    these data structures in some detail.
+  <Section>
+    <Title/Local Computation Spaces/
+    <P>
+      There is very little to say about local computation spaces and
+      input&slash;output:
+    <P class=danger>
+      input and output do <Em/not/ work in local computation spaces!
+  <Section>
+    <Title/Conventions/
+    <P>
+      Throughout this document we refer to Unix <Span class=index/manual
+      pages/ for further information.  For example, <File/open(2)/ means that
+      you should look up the manual page with title <Q/open/ in Section&nbsp;2.
+      Type <Code proglang=sh/man 2 open/<Note foot/On some systems you have to
+      type <Code proglang=sh/man -s 2 open/ instead./ to your Unix shell to
+      see the manual page.  In case you are running a Windows based system,
+      information can be found in a good Unix book or a book describing the
+      POSIX.1 standard (&eg;, <Ptr to="Lewine.91">).
+  <Section>
+    <Title/The Examples/
+    <P>
+      This document contains quite a number of examples.  It is recommended to
+      read this document and try the examples while reading.
+      All the examples collected into a single file can be found 
+      <Ref.Extern to="OpenProgramming.oz"/here/.
+</Chapter>

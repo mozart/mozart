@@ -1,0 +1,193 @@
+<!--
+  - Authors:
+  -   Andreas Sundstrom <andreas@sics.se>
+  -
+  - Copyright:
+  -   Andreas Sundstrom, 1999
+  -
+  - Last change:
+  -   $Date$ by $Author$
+  -   $Revision$
+  -
+  - This file is part of Mozart, an implementation
+  - of Oz 3
+  -    http://www.mozart-oz.org
+  -
+  - See the file "LICENSE" or
+  -    http://www.mozart-oz.org/LICENSE.html
+  - for information on usage and redistribution
+  - of this file, and for a DISCLAIMER OF ALL
+  - WARRANTIES.
+  -
+  -->
+
+  <Chapter id="Chapter.Discovery">
+    <Title/Locating services in a network: <<Discovery>>/
+    <author.extern to="author.db" key="Andreas.Sundstroem">
+
+    <P>
+      In order to make it easier to find a <Def/service/ (an Oz server
+      application) one might want to have some sort of yellow pages,
+      or a directory.  While a directory is easy to implement in Oz,
+      the <<Discovery>> module allows to locate it in a local area
+      network.
+    </P>
+
+    <P class=danger>
+      The current implementation may be incomplete on certain
+      platforms. Notably, only on Linux and Solaris it is guaranteed
+      that broadcasts are sent to all the available networks. On other
+      platforms this depends on the operating system.
+    </P>
+
+    <P>
+      The <<Discovery>> service consists of two parts, a server and a
+      client. The server is initialized with a value.  The server
+      waits for inquiries from clients and sends the value as an
+      answer. The client sends a broadcast message to all available
+      networks (for example, ethernet and ip over serial link). Then
+      the client waits for answers from servers.
+    </P>
+
+    <P>
+      A value the server holds would typically be a <Def/ticket/ to
+      an Oz port that a directory server listens to.
+    </P>
+
+    <Section id="Section.Discovery.module">
+      <Title/The Module/
+
+      <P>
+        The module has three features:
+
+      <List enum>
+	<Entry><<server>>
+	  <Index class=tails/<<Discovery>><And><<server>>/
+	<Item>
+	  The server class.
+
+	<Entry><<client>>
+	  <Index class=tails/<<Discovery>><And><<client>>/
+	<Item>
+	  The client class.
+
+	<Entry><<defaultServerPort>>
+	  <Index class=tails/<<Discovery>><And><<defaultServerPort>>/
+	<Item>
+	  The number of the default ip port that the server listens to.
+      </List>
+      </P>
+
+      <P>
+        The server class <Span class=index/<<Discovery.server>>/
+	has following methods:
+      </P>
+
+      <P>
+        <List>
+          <Entry><Span class=index/<<init>>/
+	    <Index/<<Discovery>><And><<server>><And><<init>>/
+          <Synopsis>
+	    <code/init(info:?_{Info} port:?_{PortNr} <= ?_{DefaultServerPort})/
+          <Item>
+	    ?_{Info} is the answer to be send on request by
+	    clients. It must be a virtual string. The server listens
+	    to the ip port ?_{PortNr}. If the field <<port>> is not
+	    present, the default port number will be used.
+
+          <Entry><Span class=index/<<replace>>/
+	    <Index/<<Discovery>><And><<server>><And><<replace>>/
+          <Synopsis>
+	    <code/replace(info:Info)/
+          <Item>
+	    Replaces the answer to be send to clients.
+
+          <Entry><Span class=index/<<close>>/
+	    <Index/<<Discovery>><And><<server>><And><<close>>/
+          <Synopsis>
+	    <code/close()/
+          <Item>
+	    Closes the operation of the server.
+
+        </List>
+      </P>
+
+      <P>
+        The client class <Span class=index/<<Discovery.client>>/
+	has following methods:
+      </P>
+
+      <P>
+        <List>
+          <Entry><Span class=index/<<init>>/
+	    <Index/<<Discovery>><And><<client>><And><<init>>/
+          <Synopsis>
+	    <code/init(port:?_{ServerPortNr} <= ?_{DefaultServerPort})/
+          <Item>
+	    This method broadcasts a message. Answers to that message
+	    can be obtained using the methods <<getOne>> and
+	    <<getAll>>.  The port that the server listens can be
+	    specified as ?_{ServerPortNr}.  If the field <<port>> is
+	    not present, the default port number will be used.
+
+          <Entry><Span class=index/<<getOne>>/
+	    <Index/<<Discovery>><And><<client>><And><<getOne>>/
+          <Synopsis>
+	    <code/getOne(timeOut:?_{TimeOut} <= 1000 info:??_{Info})/
+          <Item>
+	    There could be several servers listening to broadcasts
+	    from a client, therefore there can be several answers. If
+	    an answer is received before ?_{TimeOut} milliseconds the
+	    variable ?_{Info} will hold that answer. Otherwise
+	    ?_{Info} will be <<timeout>>. Answers are Oz strings.
+	  <P> 
+	    Instead of a time in milliseconds ?_{TimeOut} can be
+	    <<inf>>. This means that the method will suspend until an
+	    answer is received (or forever if no answer is received).
+	  <P>
+	    If this method is called again the next answer (if such
+	    answer exists) will be returned.
+
+          <Entry><Span class=index/<<getAll>>/
+	    <Index/<<Discovery>><And><<client>><And><<getAll>>/
+          <Synopsis>
+	    <code/getAll(timeOut:?_{TimeOut} <= 1000 info:??_{Info})/
+          <Item>
+	    Method <<getAll>> can be used instead of method
+	    <<getOne>>.  After calling this method, ?_{Info} will hold
+	    a list of all answers received before ?_{TimeOut}
+	    milliseconds has gone by.
+	  <P> 
+	    This method is implemented using <<getOne>>. So any
+	    answers fetched by calling <<getOne>> will not reappear in
+	    the list ?_{Info}, and vice versa.
+	  <P> 
+	    ?_{TimeOut} can be <<inf>> here too. In this case a
+	    stream will be returned instead of a list.
+
+          <Entry><Span class=index/<<close>>/
+	    <Index/<<Discovery>><And><<client>><And><<close>>/
+          <Synopsis>
+	    <code/close()/
+          <Item>
+	    Closes the operation of the client class.
+
+        </List>
+      </P>
+
+    </Section>
+
+  </Chapter>
+
+
+
+<!--
+Local Variables:
+mode: sgml
+mode: auto-fill
+sgml-default-dtd-file: "part.ced"
+sgml-auto-activate-dtd: t
+adaptive-fill-mode: nil
+End:
+-->
+

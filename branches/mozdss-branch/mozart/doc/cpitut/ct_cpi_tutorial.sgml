@@ -1,0 +1,547 @@
+<Chapter id="chapter.ct">
+  <Title/Building Constraint Systems from Scratch/
+
+<Section id="ct.introduction">
+    <Title/The Generic Part of the &cpi;/
+
+<SubSection id="ct.intro.model">
+    <Title/The Model of a Generic Constraint Solver/
+
+<P> This section describes how to implement constraint systems from
+scratch. First we will explain the underlying concepts in an informal
+way and try to draw a big picture of the implementation.
+
+<P> Constraint propagation takes place in a <Em>computation space</Em>
+which consists of the <Em>constraint store</Em> and propagators
+associated with the constraint store. The constraint store holds
+variables that either refer to values (&ie;, are bound &resp;
+determined) or are unbound. But there may already be some information
+about the value an unbound variable will later refer to. For example,
+it might be already known that a variable refers to an integer. We say
+the variable is <Em>constrained</Em>, here by a finite domain
+constraint. This information is stored right at the variable. To
+provide a generic scheme to associate self-defined constraints with a
+variable in the constraint store, such a variable has a pointer of
+type <<(OZ_Ct *)>>, pointing to an constraint instance of the self-defined
+constraint system. That is done by defining new constraints as
+subclasses of <<OZ_Ct>>.
+
+<P> The main part of a propagator is its propagation routine. This
+routine fulfills mainly three tasks. First it retrieves the constraint
+from the constraint store. The class <<OZ_CtVar>> provides a generic
+interface for that task. Then the propagation algorithm generates new
+projections on the retrieved constraints. Finally the new constraints
+are written back to the constraint store. Usually a propagator
+parameter is shared between more than one propagator. Modifying a
+constraint in the constraint store may enable another propagators to
+generate new projections, hence when writing constraints to the store,
+propagators sharing parameters have to be notified. This is done by
+the appropriate member functions of <<OZ_CtVar>> but to decide what
+propagators to notify, the propagator has to memorize the constraints
+present in the constraint store before the propagation algorithm
+modified the store. The class <<OZ_CtProfile>> serves that purpose by
+providing a generic interface (used in <<OZ_CtVar>>) to store
+characteristic information of a constraint sufficient to derive what
+propagator have to be notified.
+
+<P> The notification of propagators is realized by wake-up lists
+associated with the constrained variable. Depending on the kind of
+constraint system there different events a propagator wants to be
+notified upon. For each event there is a wake-up list. The wake-up
+events of a constraint system are determined by an object of a
+subclass of <<OZ_CtDefinition>>. Hence, upon creation of a new
+constrained variable a reference of type <<OZ_CtDefinition *>> has to
+be passed to <<OZ_mkCtVariable()>> which takes care of creating
+variables with generic constraints.
+
+<P> The following sections explain in detail how a constraint system
+can be implemented using the provided abstractions briefly mentioned in
+th section.
+
+</SubSection>
+
+<!--
+**************************************************************************
+-->
+<SubSection id="ct.intro.overview">
+    <Title/Overview over Generic Part of the &cpi;/
+
+<P>
+The &cpi; provides for abstractions to implement constraint systems
+from scratch.  Five classes provide the required functionality. They
+allow to implement new constraint system at a high level of
+abstraction without sacrificing efficiency (e.g., it is
+straightforward to take advantage of wake-up lists for distinct
+wake-up events [lower bound changed, upper bound changed etc.]).
+
+<P> This part of the &cpi; is based on the principles developed by <Ptr
+to="Holzbaur:90">.
+
+<P>
+The following classes are provided: 
+
+<List>
+
+<Entry> <<OZ_CtDefinition>>
+
+<Item> The class <<OZ_CtDefinition>> serves as an identifier for a
+particular constraint system and defines certain parameters for that
+constraint system, as for example the number of wake-up lists. See
+<Ptr.Extern to="ozdoc:cpiref" key="ct.reference.def"> for details.
+
+<Entry> <<OZ_Ct>>
+
+<Item> The class <<OZ_Ct>> represents the actual constraint attached
+to a constrained variable. See <Ptr.Extern to="ozdoc:cpiref"
+key="ct.reference.constraint"> for details.
+
+<Entry> <<OZ_CtVar>>
+
+<Item> The class <<OZ_CtVar>> provides access to a constrained
+variable in the constraint store. Amongst other things, it provides the
+following services:
+
+<List>
+
+<Item> handling of local and global variables transparently (trailing).
+
+<Item> Making the actual constraints in the store accessible from
+within a propagator to allow to manipulate them.
+
+<Item> Triggering the scanning of appropriate wake-up lists (using
+<<OZ_CtProfile>>).
+
+</List>
+
+See <Ptr.Extern to="ozdoc:cpiref" key="ct.reference.ctvar"> for details.
+
+<Entry> <<OZ_CtProfile>>
+
+<Item> The class <<OZ_CtProfile>> stores characteristic parameters of
+a constraint (called its <EM> profile</EM>) to determine the wake-up
+list(s) to be scanned. Typically, this happens when a propagator is
+left. See <Ptr.Extern to="ozdoc:cpiref" key="ct.reference.profile">
+for details.
+
+<Entry> <<OZ_CtWakeUp>> 
+
+<Item> An instance of the class <<OZ_CtWakeUp>> controls which wake-up
+lists have to be scanned and is produced by comparing the current
+state of a constraint and a previously taken constraint profile. See
+<Ptr.Extern to="ozdoc:cpiref" key="ct.reference.wakeup"> for details.
+
+</List>
+
+<P>
+
+<P>
+Further, there is a function <<OZ_mkCtVariable()>> that allows to
+create a new constrained variable according to a given definition and
+a given constraint. Additionally, the class <<OZ_Expect>> provides the
+member function <<OZ_Expect::expectGenCtVar()>> to handle constrained
+variables appropriately.
+
+<P>
+To demonstrate the usage of this part of the &cpi;, constraints over
+real-intervals are implemented in <Ptr to="ct.casestudy">.
+
+
+</SubSection>
+
+</Section>
+
+<!-- ************************************************************************** -->
+
+<Section id="ct.casestudy">
+    <Title/A Casestudy: Real Interval Constraints/
+
+<SubSection id="ct.casestudy.impl">
+    <Title/An Implementation/
+
+<P>
+In real-interval constraints <Ptr to="Benhamou:95a"> a variable
+denotes a real number <Math type=latex>r</Math>. The constraint
+approximates <Math type=latex>r</Math> by a lower bound and a upper
+bound, &ie; <Math type=latex>l \le r \le u</Math>. The bounds are
+represented as floating point numbers. A floating point number itself
+is an approximation of a real number due to the limited precision of
+its machine representation. The implementation of real-interval
+constraints has to take care to not prune valid solutions by computing
+the bounds too tight. This has to be avoided by controlling the
+direction of rounding of the floating point operations.
+
+<P>
+The <Em/width/ of a real-interval is the difference between its upper
+bound and its lower bound. If the width of a real-interval constraint
+is less than or equal to a given <Em/precision/ then the constraint is
+regarded a value.
+
+<P>
+The goal of this section is to give an overview of how the &cpi; classes
+interact with each other and not to describe the implementation of a
+complete constraint system in too much detail. The definition of all
+required classes is only sketched and additionally, a simple
+propagator is implemented.
+
+<P>
+Note that floating point numbers have the type <<ri_float>> which is
+compatible with float numbers used by the &oz; runtime system. Such float
+numbers may range from <<RI_FLOAT_MIN>> to <<RI_FLOAT_MAX>>.
+
+
+<!-- ************************************************************************** -->
+
+<SubSubSection id="ct.casestudy.impl.ridef"> <Title/A Definition Class
+for Real-Interval Constraints/
+
+<P>
+The class <<RIDefinition>> is derived from the &cpi; class
+<<OZ_CtDefinition>>. It gathers all information needed to handle
+real-interval constraints properly by the runtime system. It allows
+the runtime system to distinguish real-interval constraint from other
+constraints by calling the member function <<getKind()>>. Note
+that <<_kind>> is static and to obtain a unique identifier the
+function <<OZ_getUniqueId()>> is recommended to be used. For testing
+&oz; values to be compatible with real-intervals <<isValidValue()>>,
+is to be defined appropriately.
+
+<P>
+Further, <<RIDefinition>> allows the runtime system to determine the
+number of possible events causing suspending computation to be woken
+up. There are two possible events when suspending computation wants to
+be notified: the lower bound is increased or the upper bound is
+decreased (or both). Therefore, two wake-up lists are used (see
+<<getNoOfWakeUpLists()>>).
+
+<Code.Extern display proglang=cc to="ri_class_ridef.hh" class=linenumbers>
+
+<P>
+The function <<leastConstraint()>> is required to enable the runtime
+system to constrain a variable to a real-interval with greatest
+possible width, &ie;, ranging from <<RI_FLOAT_MIN>> to
+<<RI_FLOAT_MAX>>. For example this is necessary when nested variables
+are to be constrained.
+
+</SubSubSection>
+
+<!-- ************************************************************************** -->
+
+<SubSubSection id="ct.casestudy.impl.profilewakeup"> <Title/Determining Wake-up
+Events for Real-Interval Constraints/
+<P>
+
+Instances of classes derived from <<OZ_CtWakeUp>> indicate to the
+runtime system which wake-up event occurred. Therefore, member
+functions to initialize an <<RIWakeUp>> instance according to a
+possible event are defined. They will be used to determine the wake-up
+event of a propagator upon a certain parameter when imposing a
+propagator(see <Ptr to="ct.casestudy.impl.expect">).
+
+<Code.Extern display proglang=cc to="ri_class_riwakeup.hh" class=linenumbers>
+
+<P>
+An instance of <<RIWakeUp>> is computed from an instance of <<RI>> and
+a profile (stored before the constraint has be modified) by
+<<<OZ_CtWakeUp RI::getWakeUpDescriptor(OZ_CtProfile * p)>>> (see <Ptr
+to="ct.casestudy.impl.constraint">). The definition of the profile
+class <<RIProfile>> for real-intervals is given below.
+
+<Code.Extern display proglang=cc to="ri_class_riprofile.hh" class=linenumbers>
+
+<P>
+The function <<RIProfile::init(OZ_Ct * c)>> takes a snapshot of <<c>>
+to enable the detection of the abovementioned wake-up events, &ie;,
+modified lower/upper bound &resp; both.
+
+</SubSubSection>
+
+
+<!-- ************************************************************************** -->
+
+<SubSubSection id="ct.casestudy.impl.constraint"> <Title/The Actual
+Real-Interval Constraint/
+
+<P>
+The actual real-interval constraint is represented by instances of the
+class <<RI>>. It stores the upper and lower bound, to approximate a
+real number. Apart from constructors and initialization functions a
+couple of general functions are defined.
+
+<Code.Extern display proglang=cc to="ri_class_ri.hh" class=linenumbers>
+
+<P> The member functions <<leastConstraint()>> and <<isValidValue()>>
+are used by class <<RIDefinition>> and their definition is
+self-explanatory. Note that <<ri_float>> values have to be compatible
+with &oz; float such that <<OZ_float()>> is used for testing
+compatibility.
+
+<P>Most of the definitions of virtual member functions and operators
+used for implementing constraint propagation are
+self-explanatory. Note that <<copy()>> uses the <<new>> operator
+provided by <<OZ_Ct>> and the constructor
+<<RI(ri_float,ri_float)>>. The function <<isValue()>> assumes a global
+variable <<ri_float ri_precision;>> that holds the current precision.
+
+<Code.Extern display proglang=cc to="ri_class_rivirt-1.hh" class=linenumbers>
+
+<P>
+The function <<getWakeUpDescriptor()>> computes from the current state
+of the constraint and a given constraint profile <<p>> a wake-up
+descriptor. Therefore, it creates an empty one and sets the
+appropriate events successively. Finally it returns the descriptor.
+
+<Code.Extern display proglang=cc to="ri_class_rivirt-2.hh" class=linenumbers>
+
+<P>
+The function <<isWeakerThan()>> simply compares the widths of two
+real-interval constraints to detect whether the constraint <<*this>>
+is subsumed by <<*r>>. This makes sense since <<*this>> represents
+never values not represented by <<*r>> which is ensured by the runtime
+system.
+
+<P>
+The unification routine for two real-interval constraints computes the
+intersection of the values approximated by <<*this>> and <<*r>>. The
+result is stored in a static variable and eventually a pointer to this
+variable is returned. 
+
+<Code.Extern display proglang=cc to="ri_class_rivirt-3.hh" class=linenumbers>
+
+The unification routine of a real-interval constraint and a value
+checks if the value is compatible with float numbers and then, if the
+value is contained in the set of values represented by the
+constraint. Note that this function indicates only if a unification is
+successful and does not update the constraint.
+
+<P>
+The operators for constraint propagation are straight-forward. They
+return the width of the computed constraint. In case the width is less
+zero, the constraint is inconsistent and thus can be easily tested.
+
+<Code.Extern display proglang=cc to="ri_class_riprop.hh" class=linenumbers>
+
+The functions <<lowerBound()>> and <<upperBound()>> provide access to
+the lower &resp; upper bound of the constraint.
+
+</SubSubSection>
+
+<!--
+**************************************************************************
+-->
+
+<SubSubSection id="ct.casestudy.impl.rivar"> <Title/Accessing the
+Constraint Store/
+
+<P>
+The class <<RIVar>> is defined to provide access to a real-interval
+variable in the constraint store. The class <<RIVar>> is derived from
+<<OZ_CtVar>>. The private and protected part of the class definition
+of <<RIVar>> is the implementation of the principle described in
+<Ptr.Extern to="ozdoc:cpiref" key="ct.reference.ctvar"> for
+real-interval constraints.
+
+<Code.Extern display proglang=cc to="ri_class_rivar.hh" class=linenumbers>
+
+The public part of the class definition is self-explanatory. It
+provides for constructors, the function <<isTouched()>> to enable the
+&cpi; to detect if a parameter has been changed, and operators to
+provide direct access to the real-interval constraints.
+
+</SubSubSection>
+
+<!-- ************************************************************************** -->
+
+<SubSubSection proglang=cc  id="ct.casestudy.impl.expect"> <Title/Extending <<OZ_Expect>>/
+
+<P>
+Propagators are imposed on their parameters by foreign functions which
+are invoked by the &oz; runtime system. Such foreign functions use the
+&cpi; class <<OZ_Expect>> to check that the parameters are
+appropriately kinded (&resp; constrained) or represent compatible
+values. The class <<OZ_Expect>> provides the member function 
+
+<<<
+OZ_expect_t OZ_Expect::expectGenCtVar(OZ_Term t, 
+                                      OZ_CtDefinition * d,
+                                      OZ_CtWakeUp w); 
+>>> 
+
+to define appropriate expect-functions, e.g., for real-interval
+constraints. The customized class defines member functions that check
+for real-intervals and determine the wake-up event. To do that, the
+static members functions of <<RIWakeUp>> (see <Ptr
+to="ct.casestudy.impl.profilewakeup">) are used and the global
+variable <<RIDefinition ri_definition>> is assumed.
+ 
+<Code.Extern display proglang=cc to="ri_class_ri_expect.hh" class=linenumbers>
+
+The class <<RIEexpect>> can now be used to define foreign functions
+that impose propagators on their parameters.
+
+<<<
+OZ_C_proc_begin(ri_lessEq, 2)
+{
+  OZ_EXPECTED_TYPE("real interval, real interval");
+
+  RIExpect pe;
+
+  OZ_EXPECT(pe, 0, expectRIVarMinMax);
+  OZ_EXPECT(pe, 1, expectRIVarMinMax);
+
+  return pe.impose(new RILessEq(OZ_args[0], 
+                                OZ_args[1]));
+}
+OZ_C_proc_end
+>>>
+
+The propagator class <<RILessEq>> is partly defined next.
+
+</SubSubSection>
+
+<!-- ************************************************************************** -->
+
+<SubSubSection proglang=cc id="ct.casestudy.impl.propagator"> <Title/A
+Simple Propagator/
+
+<P>
+The description of the implementation of real-interval constraints is
+closed with the discussion of the propagation function of a simple
+propagator, namely a propagator for the constraint <Math>x \le
+y</Math>. The rest of the class definition of that propagator is
+similar to other propagators and therefore omitted here.
+
+<Code.Extern display proglang=cc to="ri_class_ri_lesseq.hh" class=linenumbers>
+
+Assume that the propagator stores in its state references to its
+parameters on the &oz; heap by the members <<OZ_Term _x, _y;>>. The
+function <<propagate()>> obtains access to the constraint store by
+declaring two instances of class <<RIVar>> and passing the &oz; terms
+<<_x>> and <<_y>> as arguments.
+
+<P>
+The propagation proceeds in three steps.
+
+<List Enum>
+
+<Item> Test if the constraint <Math>x \le y</Math> is subsumed by the
+constraint store, &ie;, <Math>\overline{x} \le \underline{y}</Math>.
+
+<Item> Constrain the upper bound of <Math>x</Math>: <Math>x \le
+\overline{y}</Math>. <P> That is implemented by <<ri_float RI::operator
+<= (ri_float)>>.
+
+<Item> Constrain the lower bound of <Math>y</Math>: <Math>y \ge
+\underline{x}</Math>. <P> That is implemented by <<ri_float RI::operator
+>= (ri_float)>>.
+
+</List>
+
+As said in <Ptr to="ct.casestudy.impl.constraint"> these operators
+return the width of the computed constraint. A width less than 0
+indicates that the constraint has become inconsistent and propagation
+branches to label <<failure>>.
+
+<P>
+The function <<OZ_CtVar::leave()>> returns <<OZ_True>> if the
+constraint does not denotes a value. This is used to detect whether
+the propagator has to be rerun (indicated by <<OZ_SLEEP>>) or not
+(indicated by <<OZ_ENTAILED>>).
+
+<P> The return value <<OZ_FAILED>> informs the runtime system that the
+constraint is inconsistent with the constraint store. 
+
+</SubSubSection>
+
+<!-- ************************************************************************** -->
+
+</SubSection>
+
+<!-- ************************************************************************** -->
+
+<SubSection id="ct.casestudy.reference">
+    <Title/The Reference of the Implemented Real-Interval Constraint
+    Solver/
+
+<P> The module <<RI>> is provided as contribution (being part of the
+&moz3; distribution<note foot>The module <<RI>>
+is <Em/not/ provided on any Windows platform.</note>) and can be accessed either by 
+<<<declare [RI] = {Module.link ['x-oz://contrib/RI']}>> 
+or by 
+<<<import RI at 'x-oz://contrib/RI'>>> 
+as part of a functor definition.
+
+<P>
+<List>
+
+<Entry> <<RI.inf>> 
+<Index class=proglang><<RI>><And><<inf>></Index>
+<Item> An implementation-dependent float value that denotes the
+smallest possible float number. It is <Math>-1.79769 \times
+10^{308}</Math>.
+
+<Entry> <<RI.sup>>
+<Index class=proglang><<RI>><And><<sup>></Index>
+<Item> An implementation-dependent float value that denotes the
+smallest possible float number. It is <Math>1.79769 \times
+10^{308}</Math>.
+
+<Entry> <<{RI.setPrec ?+{F}}>>
+<Index class=proglang><<RI>><And><<setPrec>></Index>
+<Item> Sets the precision of the real-interval constraints to <<F>>.
+
+<Entry> <<{RI.getLowerBound ?+{RI} ??{F}}>>
+<Index class=proglang><<RI>><And><<getLowerBound>></Index>
+<Item> Returns the lower bound of <<RI>> in <<F>>.
+
+<Entry> <<{RI.getUpperBound ?+{RI} ??{F}}>>
+<Index class=proglang><<RI>><And><<getUpperBound>></Index>
+<Item> Returns the upper bound of <<RI>> in <<F>>.
+
+<Entry> <<{RI.getWidth ?+{RI} ??{F}}>>
+<Index class=proglang><<RI>><And><<getWidth>></Index>
+<Item> Returns the width of <<RI>> in <<F>>.
+
+<Entry> <<{RI.var.decl ??{RI}}>> 
+<Index class=proglang><<RI>><And><<var>><And><<decl>></Index>
+<Item> Constrains <<RI>> to a real-interval constraint with the lower
+bound to be <<RI.inf>> and the upper bound to be <<RI.sup>>.
+
+<Entry> <<{RI.var.bounds ?+{L} ?+{U} ??{RI}}>>
+<Index class=proglang><<RI>><And><<var>><And><<bounds>></Index>
+<Item> Constrains <<RI>> to a real-interval constraint with the lower
+bound to be <<L>> and the upper bound to be <<U>>.
+
+<Entry> <<{RI.lessEq ?@{X} ?@{Y}}>>
+<Index class=proglang><<RI>><And><<lessEq>></Index>
+<Item> Imposes the constraint <<X>> <Math/\le/ <<Y>>.
+
+<Entry> <<{RI.greater ?@{X} ?@{Y}}>>
+<Index class=proglang><<RI>><And><<greater>></Index>
+<Item> Imposes the constraint <<X>> <Math/>/ <<Y>>.
+
+<Entry> <<{RI.intBounds ?@{RI} ?@{D}}>> 
+<Index class=proglang><<RI>><And><<intBounds>></Index>
+<Item> Imposes the constraint <Math/\lceil \underline{\mbox{\tt RI}}
+\rceil = \underline{\mbox{\tt D}} \wedge \lfloor \overline{\mbox{\tt
+RI}} \rfloor = \overline{\mbox{\tt D}}/.
+
+<Entry> <<{RI.times ?@{X} ?@{Y} ?@{Z}}>>
+<Index class=proglang><<RI>><And><<times>></Index>
+<Item> Imposes the constraint <<X>> <Math/\times/ <<Y>> <Math/=/ <<Z>>.
+
+<Entry> <<{RI.plus ?@{X} ?@{Y} ?@{Z}}>>
+<Index class=proglang><<RI>><And><<plus>></Index>
+<Item> Imposes the constraint <<X>> <Math/+/ <<Y>> <Math/=/ <<Z>>.
+
+<Entry> <<{RI.distribute ?*{RI}}>> 
+<Index class=proglang><<RI>><And><<distribute>></Index>
+<Item> Creates a choice-point for <Math/\mbox{RI} \le m/ and
+<Math/\mbox{RI} > m/ where <Math>m = \underline{\mbox{\tt RI}} + (\overline{\mbox{\tt RI}} - \underline{\mbox{\tt RI}}) / 2</Math>.
+
+</List>
+
+</SubSection>
+
+</Section>
+
+</Chapter>
