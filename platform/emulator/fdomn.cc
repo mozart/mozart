@@ -191,12 +191,12 @@ int FDIntervals::findSize(void) {
 
 inline
 int FDIntervals::findMinElem(void) {
-  return high ? i_arr[0].left : 0;
+  return high ? i_arr[0].left : -1;
 }
 
 inline
 int FDIntervals::findMaxElem(void) {
-  return high ? i_arr[high - 1].right : 0;
+  return high ? i_arr[high - 1].right : -1;
 }
 
 inline
