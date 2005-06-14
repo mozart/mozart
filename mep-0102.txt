@@ -86,7 +86,7 @@ Votes
     Seif Haridi        [ACCEPT]
     Torbjörn Lager     []
     Konstantin Popov   []
-    Camilo Rueda       []
+    Camilo Rueda       [ACCEPT]
     Christian Schulte  []
     Gert Smolka        []
     Peter Van Roy      [ACCEPT]
