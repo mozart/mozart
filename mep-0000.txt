@@ -36,17 +36,17 @@ Index by Category
 
  Accepted MEPs (accepted; may not be implemented yet)
  ---------------------------------------------------------------
- A   100  Expansion of Mozart Board to Mozart Community  Van Roy
+ A   101  Update of Website for new Governance Model     Van Roy
+ A   102  CVS access for Boris Mejias                      Glynn
  ---------------------------------------------------------------
 
  Open MEPs (under consideration)
  ---------------------------------------------------------------
- S   101  Update of Website for new Governance Model     Van Roy
- I   102  CVS access for Boris Mejias                      Glynn
  ---------------------------------------------------------------
 
  Finished MEPs (done, implemented in CVS)
  ---------------------------------------------------------------
+ F   100  Expansion of Mozart Board to Mozart Community  Van Roy
  ---------------------------------------------------------------
 
  Empty MEPs (or containing only an abstract)
@@ -65,9 +65,9 @@ Numerical Index
  I     1  MEP Guidelines                                 Duchier
  I     2  Sample ReStructuredText MEP Template           Duchier
  I     3  Sample Plaintext MEP Template                  Duchier
- A   100  Expansion of Mozart Board to Mozart Community  Van Roy
- S   101  Update of Website for new Governance Model     Van Roy
- I   102  CVS access for Boris Mejias                      Glynn
+ F   100  Expansion of Mozart Board to Mozart Community  Van Roy
+ A   101  Update of Website for new Governance Model     Van Roy
+ A   102  CVS access for Boris Mejias                      Glynn
  ---------------------------------------------------------------
 
 
