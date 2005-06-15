@@ -3,7 +3,7 @@ Title: Give Boris Mejias Check-in Privileges to Mozart CVS
 Version: $Revision$
 Last-Modified: $Date$
 Author:	Kevin Glynn <glynn@info.ucl.ac.be>
-Status: Draft
+Status: Accepted
 Type: Informational
 Content-Type: text/x-rst
 Created: 08-Jun-2005
@@ -87,6 +87,6 @@ Votes
     Torbjörn Lager     []
     Konstantin Popov   []
     Camilo Rueda       [ACCEPT]
-    Christian Schulte  []
+    Christian Schulte  [ACCEPT]
     Gert Smolka        []
     Peter Van Roy      [ACCEPT]
