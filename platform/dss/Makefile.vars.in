@@ -1,0 +1,19 @@
+# Sets specific vars like AR, CXX, RANLIB and...
+
+WARNINGS= @WARNINGS@
+EXCEPTS = @EXCEPTS@
+
+AR	= @AR@
+RANLIB	= @RANLIB@
+CXX	= @CXX@
+CXXFLAGS= @CXXFLAGS@
+
+INSTDIR = @prefix@
+INSTALL = @INSTALL@
+
+ROOTDIR = @abs_srcdir@
+
+@CREATE_OBJS@
+	@CREATE_OBJS_COMMAND@
+
+

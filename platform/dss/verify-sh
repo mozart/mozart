@@ -1,0 +1,56 @@
+#! /bin/sh
+#
+#
+# Build compiler options matrix from these commands
+#
+# - could of course be more fine-tuned but for now these are enough...
+
+BUILD_DIR="`pwd`/_verifying"
+echo "Building in:$BUILD_DIR"
+
+STATIC="--enable-modules-static=yes"
+DYNMIC="--enable-modules-static=no"
+
+DBG="--enable-opt=d"
+OPT="--enable-opt=std"
+
+MSL_EX="--enable-msgn-examples"
+DSS_EX="--enable-dss-examples"
+
+DSS="--enable-build=dss"
+MSL="--enable-build=messaging"
+
+# combinations
+#
+# - should export LD_LIBRARY_PATH to enable example linking in dynamic mode
+#
+
+DSS_DBG_STATIC="$DSS!$DBG!$STATIC!$DSS_EX"
+DSS_OPT_STATIC="$DSS!$OPT!$STATIC!$DSS_EX"
+DSS_OPT_DYNMIC="$DSS!$OPT!$DYNMIC"
+
+MSL_DBG_STATIC="$MSL!$DBG!$STATIC!$MSL_EX"
+MSL_OPT_STATIC="$MSL!$OPT!$STATIC!$MSL_EX"
+MSL_OPT_DYNMIC="$MSL!$OPT!$DYNMIC"
+
+TESTS="$DSS_DBG_STATIC $DSS_OPT_STATIC $DSS_OPT_DYNMIC $MSL_DBG_STATIC $MSL_OPT_STATIC $MSL_OPT_DYNMIC"
+
+mkdir -p $BUILD_DIR
+cd $BUILD_DIR
+
+for i in $TESTS; do
+ TMP="`echo $i | tr '!' ' '`";
+ rm -fR *;
+ if (../configure $TMP && make); then
+   echo ""
+   echo "build ok"
+   echo ""
+   true;
+ else
+   echo "Found problems when configuring with:$TMP"
+   exit 1;
+ fi;
+done
+
+rm -fR $BUILD_DIR
+echo "ALL BUILDING AND COMPILING OK"

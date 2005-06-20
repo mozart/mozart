@@ -1,0 +1,50 @@
+****************************** DSS HowTo **************************************
+
+  To link the DSS lib-file ALL symbols (functions) that are stated as
+  imported by the DSS in the "dss_interface.hh"-file MUST be implemented
+  EXACTLY as declared. A typical linking error if one is missing is
+  "reference to symbol: XXX not found in ..."
+
+ For use with supplied examples and utilities configure with correct flags.
+ The examples can be compiled in their respective subtrees if not all are wanted,
+ just enter the subtree and type "make".
+ configurations:
+ * "--enable-opt"            to optimize for either (flag): (d) debug, (std) normal.
+
+ * "--enable-dss-examples"   to generate Makefiles for examples AND place in root "install"
+                             !! IF supplied with the first letter of the wanted example, ONLY 
+                             that example will be created !!
+
+ * "--enable-msgn-examples"  to generate Makefiles for messaging examples AND place in root "install"
+                             !! IF supplied with the first letter of the wanted example, ONLY that
+                             will be created !!
+
+ * "--enable-modules-static" Configure static or dynamic linking, i.e. yes = static and no = dynamic
+
+ * "--enable-utils"          to generate Makefile for utilities AND place in root "install", options
+                             are: dss (default with empty selection), messaging (i.e. a reference 
+                             IO_Factory and CSC), ...
+                             This option will default to dss, which includes messaging, if any dss
+                             example is enabled and default to messaging if such examples are selected
+
+ * "--enable-exceptions"     to enable throwing of exceptions from the DSS, exceptions are of the 
+                             ExceptionType found in dss_enums.hh
+			     
+ * "--enable-warnings"       This flag is ALLWAYS TURNED ON. to disable warnings, set to "no". If set
+			     to "error" warnings are also treated as errors
+
+ * "--enable-profiling"	     Embeds gprof information into the library for performance evaluation
+
+ * "--enable-build"          Configure the build directory for compilation of: dss (default), messaging,
+                             ...
+
+ If compiling on your own there are some flags to be aware of:
+ * "DEBUG_CHECK", adds extra safety during execution by introducing our own asserts, which basicly
+                checks for conditions that should be fulfilled and if not calls the GL_error routine.
+ * "DSS_LOG",   add multi-leveled verbose printouts during execution. Depending on the level, different
+                types of status messages are printed. This tool might be useful during implementation
+                of a MAP layer. for more info check out the dssBase.hh in the source directory.
+ * "INTERFACE", enables space-saving gcc pragma directives (for instance during debug compilation)
+ * "EXCEPTION,  allows for throwing exceptions from the interface to the MAP.
+ * "WIN32",     Signal that we're in the windows environment and should use such headers 
+
