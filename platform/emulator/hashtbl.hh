@@ -272,6 +272,7 @@ public:
   int getSize() { return (counter); }
   void htAdd(void *k, void *v);
   void htAddLastNotFound(void *k, void *v);
+  void htAddOverWrite(void *k, void *val); //comments at the .cc-file
   void* htFind(void *k);
   void mkEmpty();
 

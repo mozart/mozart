@@ -38,25 +38,24 @@
 extern Bool (*isPerdioInitialized)();
  
 // 
-extern OZ_Return (*portSend)(Tertiary *p, TaggedRef msg);
-extern OZ_Return (*cellDoExchange)(Tertiary*,TaggedRef,TaggedRef);
-extern OZ_Return (*cellDoAccess)(Tertiary*,TaggedRef);
+extern bool (*portSend)(Tertiary *p, TaggedRef msg);
+extern bool (*cellDoExchange)(Tertiary*,TaggedRef&,TaggedRef);
+extern bool (*cellDoAccess)(Tertiary*,TaggedRef&);
 extern OZ_Return (*cellAtAccess)(Tertiary*,TaggedRef,TaggedRef);
 extern OZ_Return (*cellAtExchange)(Tertiary*,TaggedRef,TaggedRef);
 extern OZ_Return (*cellAssignExchange)(Tertiary*,TaggedRef,TaggedRef);
 extern OZ_Return (*objectExchange) (Tertiary*,TaggedRef,TaggedRef,TaggedRef);
+// Experimental, just for testing the behavior of the GDS PROC_EXEC
+extern void (*cellOperationDone)(Tertiary*,TaggedRef);
 
-// lock/unlock (interface) methods/their usage may be optimized
-// further, e.g. inline cases when distributed locks are currently
-// local;
-extern void (*lockLockProxy)(Tertiary *t, Thread *thr);
-extern LockRet (*lockLockManagerOutline)(LockManagerEmul *lfu, Thread *thr);
-extern void (*unlockLockManagerOutline)(LockManagerEmul *lfu, Thread *thr);
-extern LockRet (*lockLockFrameOutline)(LockFrameEmul *lfu, Thread *thr);
-extern void (*unlockLockFrameOutline)(LockFrameEmul *lfu, Thread *thr);
-
+extern bool (*lockDistLock)(Tertiary*, Thread *thr);
+extern bool (*unlockDistLock)(Tertiary*);
 //
-extern void (*gCollectProxyRecurse)(Tertiary *t);
+extern bool (*distArrayGet)(OzArray*, TaggedRef, TaggedRef&);
+extern bool (*distArrayPut)(OzArray*, TaggedRef, TaggedRef);
+
+extern void (*gCollectProxyRecurse)(ConstTerm *t, void*indx);
+/*
 extern void (*gCollectManagerRecurse)(Tertiary *t);
 extern ConstTerm* (*gCollectDistResource)(ConstTerm*);
 extern void (*gCollectDistCellRecurse)(Tertiary *t);
@@ -64,14 +63,15 @@ extern void (*gCollectDistLockRecurse)(Tertiary *t);
 extern void (*gCollectDistPortRecurse)(Tertiary *t);
 //
 extern void (*gCollectEntityInfo)(Tertiary*);
+*/
 //
 //
 
 //
-extern void (*gCollectPerdioStart)();
-extern void (*gCollectPerdioRoots)();
-extern void (*gCollectBorrowTableUnusedFrames)();
-extern void (*gCollectPerdioFinal)();
+extern void (*gCollectGlueStart)();
+extern void (*gCollectGlueRoots)();
+extern void (*gCollectGlueWeak)();
+extern void (*gCollectGlueFinal)();
 
 // exit hook;
 extern void (*dpExit)();

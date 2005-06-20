@@ -577,7 +577,7 @@ public:
 
 #define CWH_Board 0
 #define CWH_GName 1
-
+#define CWH_Dist  2
 
 class ConstTermWithHome: public ConstTerm {
 private:
@@ -588,11 +588,19 @@ public:
   {
     boardOrGName.set(b,CWH_Board);
   }
+  void setDist(int val)
+  {
+    boardOrGName.set((void*)val,CWH_Dist);
+  }
+  int getDist()
+  {
+    return (int)boardOrGName.getPtr();
+  }
   ConstTermWithHome() { Assert(0); }
   ConstTermWithHome(Board *bb, TypeOfConst tt) : ConstTerm(tt) { setBoard(bb);}
 
   Bool hasGName() { return (boardOrGName.getTag()&CWH_GName); }
-
+  Bool isDist(){ return (boardOrGName.getTag()&CWH_Dist); }
   void init(Board *bb, TypeOfConst tt) { ConstTerm::init(tt); setBoard(bb); }
 
   Board *getBoardInternal() {
@@ -984,13 +992,10 @@ TaggedRef makeTaggedFSetValue(OZ_FSetValue * fsv) {
 class Tertiary: public ConstTerm {
 private:
   Tagged2 tagged; // TertType + Board || TertType + OTI
-  EntityInfo* info;
 public:
 
   TertType getTertType()       { return (TertType) tagged.getTag(); }
   void setTertType(TertType t) { tagged.set(tagged.getData(),(int) t); }
-
-  void setInfo(EntityInfo *infoIn) { info = infoIn; }
 
   void setTertIndex(int i) { tagged.setVal(i); }
   int getTertIndex() { return tagged.getData(); }
@@ -1014,21 +1019,17 @@ public:
   Tertiary() { Assert(0); }	// keep gcc happy;
   Tertiary(Board *b, TypeOfConst s,TertType t) : ConstTerm(s) {
     setTertType(t);
-    info=NULL;
     setBoard(b);}
   Tertiary(void *p, TypeOfConst s, TertType t) : ConstTerm(s) {
     setTertType(t);
-    info=NULL;
     setTertPointer(p);
   }
   Tertiary(int i, TypeOfConst s, TertType t) : ConstTerm(s) {
     setTertType(t);
-    info=NULL;
     setTertIndex(i);
   }
 
   //
-  EntityInfo *getInfo() { return (info); }
 
   Bool isLocal()   { return (getTertType() == Te_Local); }
   Bool isManager() { return (getTertType() == Te_Manager); }
@@ -2663,78 +2664,8 @@ public:
   void globalize(int);
 };
 
-#define Cell_Lock_Invalid     0
-#define Cell_Lock_Requested   1
-#define Cell_Lock_Next        2
-#define Cell_Lock_Valid       4
-#define Cell_Lock_Dump_Asked  8
-#define Cell_Lock_Access_Bit 16
-
-class CellSecEmul {
-friend class CellManagerEmul;
-friend class CellFrameEmul;
-friend class CellFrame;
-friend class CellManager;
-protected:
-  unsigned int state;
-  PendThread* pending;
-  DSite* next;
-  TaggedRef contents;
-  PendThread* pendBinding;
-
-public:
-  CellSecEmul(TaggedRef val) { Assert(0); }
-  CellSecEmul() {}
-
-  unsigned int getState(){return state;}
-
-  TaggedRef getContents(){
-    Assert(state & (Cell_Lock_Valid|Cell_Lock_Requested));
-    return contents;}
-
-  void setContents(TaggedRef t){
-    Assert(state & (Cell_Lock_Valid|Cell_Lock_Requested));
-    contents = t;}
-
-  void dumpPending() {
-    pending = (PendThread *) 0;
-  }
-};
-
-//
-// 'CellManagerEmul' (like other "*Emul" classes) provide only for
-// methods that emulator must be able to use; everithing else (like
-// obtaining the state from a remote site) is PERDIO business
-// ('CellManager')
-class CellManagerEmul : public Tertiary {
-  friend void ConstTerm::gCollectConstRecurse(void);
-  friend void ConstTerm::sCloneConstRecurse(void);
-protected:
-  CellSecEmul *sec;
-  Chain *chain;
-public:
-  NO_DEFAULT_CONSTRUCTORS(CellManagerEmul)
-  CellManagerEmul() { Assert(0); }
-
-  CellSecEmul* getSec(){return sec;}
-  unsigned int getState(){return sec->state;}
-};
-
-class CellFrameEmul : public Tertiary {
-  friend void ConstTerm::gCollectConstRecurse(void);
-  friend void ConstTerm::sCloneConstRecurse(void);
-protected:
-  CellSecEmul *sec;
-  void *forward;
-public:
-  NO_DEFAULT_CONSTRUCTORS2(CellFrameEmul)
-  CellFrameEmul() { Assert(0); }
-
-  unsigned int getState(){return sec->state;}
-
-  CellSecEmul* getSec(){return sec;}
-};
-
+//bmc: Cell_Lock_<definitions> were deleted
+//bmc: Classes CellSecEmul, CellManagerEmul and CellFrameEmul deleted
 
 inline
 Bool oz_isCell(TaggedRef term)
@@ -2845,6 +2776,7 @@ Bool oz_isSpace(TaggedRef term)
  * PendThread  (only used for locks in centralized mozart
  *=================================================================== */
 
+//bmc: Probably the ExKind won't be used anymore.
 enum ExKind{
   EXCHANGE    = 0,
   ASSIGN      = 1,
@@ -2860,36 +2792,49 @@ enum ExKind{
 
 
 //
-// 
+//
+//bmc: Reintroducing the changes form OzDss 
 class PendThread{
 public:
-  Thread *thread;
+  TaggedRef oThread;
   PendThread *next;
   TaggedRef controlvar;
-  TaggedRef nw;
-  TaggedRef old;
-  ExKind    exKind;
-  PendThread(Thread *th,PendThread *pt):
-    next(pt), thread(th),old(0),nw(0), controlvar(0), exKind(NOEX) {}
-  PendThread(Thread *th,PendThread *pt,ExKind e):
-    next(pt), thread(th),old(0),nw(0), controlvar(0), exKind(e) {}
-  PendThread(Thread *th,PendThread *pt,TaggedRef o, TaggedRef n, TaggedRef cv,
-	     ExKind e)
-    :next(pt), thread(th),old(o),nw(n), exKind(e), controlvar(cv) {}
-  PendThread(Thread *th,PendThread *pt,TaggedRef cv,ExKind e)
-    :next(pt), thread(th),old(0),nw(0), exKind(e), controlvar(cv) {}
+  PendThread(PendThread *pt):
+    oThread(0), next(pt), controlvar(0) {}
+  PendThread(Thread *th, PendThread *pt, TaggedRef cv):
+    oThread(oz_thread(th)), next(pt), controlvar(cv) {}
+  PendThread(TaggedRef th, PendThread *pt, TaggedRef cv):
+    oThread(th), next(pt), controlvar(cv) {}
   USEFREELISTMEMORY;
   void dispose(){oz_freeListDispose(this,sizeof(PendThread));}
 };
 
-Thread* pendThreadResumeFirst(PendThread **pt);
+TaggedRef pendThreadResumeFirst(PendThread **pt);
 OZ_Return pendThreadAddToEndEmul(PendThread **pt,Thread *t, Board *home);
 void gCollectPendThreadEmul(PendThread**);
 void sClonePendThreadEmul(PendThread**);
 
 /*===================================================================
+ * Unusables
+ *=================================================================== */
+
+class UnusableResource: public Tertiary{
+public:
+   NO_DEFAULT_CONSTRUCTORS(UnusableResource);
+  
+  UnusableResource()
+    : Tertiary(0xfedda,Co_Resource,Te_Proxy) {}
+};
+
+/*===================================================================
  * Locks
  *=================================================================== */
+enum OzLockTakeResult{ 
+  OZ_LTR_GOT,
+  OZ_LTR_HAS,
+  OZ_LTR_PENDING,
+  OZ_LTR_SUSP
+};
 
 class OzLock:public Tertiary{
 public:
@@ -2904,43 +2849,73 @@ class LockLocal:public OzLock{
   friend void ConstTerm::sCloneConstRecurse(void);
 private:
   PendThread *pending;
-  Thread *locker;
+  TaggedRef locker;
+  int relocks;
 public:                
   NO_DEFAULT_CONSTRUCTORS(LockLocal)
   LockLocal(Board *b) : OzLock(b,Te_Local){
-    pending=NULL;
-    locker = NULL;
-    pending= NULL;}
+    locker = 0;
+    pending = NULL;
+    relocks = 0;
+  }
 
   PendThread* getPending(){return pending;}
   void setPending(PendThread *pt){pending=pt;}
   PendThread** getPendBase(){return &pending;}
   
-  Thread * getLocker() { return locker; }
-  void setLocker(Thread *t) { locker=t; }
+  Thread * getLocker() {
+    if (locker == 0)
+      return NULL;
+    return oz_ThreadToC(locker);
+  }
+  void setLocker(Thread *t) {
+    if (t == NULL)
+      locker = 0;
+    else
+      locker = oz_thread(t);
+  }
+
   Bool hasLock(Thread *t){return (t==getLocker()) ? TRUE : FALSE;}
 
   void unlockComplex();
   void unlock(){
-    Assert(getLocker()!=NULL);
+    Assert(getLocker()!=0);
+    Assert(relocks>0);
+    relocks--;
+    if (relocks > 0 ) return;
     if(pending==NULL){
-      setLocker(NULL);
+      locker = 0;
       return;}
     unlockComplex();}
 
-  Bool isLocked(Thread *t) { return (getLocker()==t); }
+  //Bool isLocked(Thread *t) { return (getLocker()==t); }
 
   void lockComplex(Thread *);
+  /*
   void lock(Thread *t){
     if(t==getLocker()) {return;}
     if(getLocker()==NULL) {setLocker(t);return;}
     lockComplex(t);}
-
-  Bool lockB(Thread *t){
-    if(t==getLocker()) {return TRUE;}
-    if(getLocker()==NULL) {setLocker(t);return TRUE;}
+  */
+  Bool lockB(Thread *t) {
+    Thread *cur = getLocker();
+    if (t == cur) {
+      Assert(relocks > 0);
+      relocks++;
+      return TRUE;
+    }
+    if(getLocker() == NULL) {
+      setLocker(t);
+      Assert(relocks == 0);
+      relocks = 1;
+      return TRUE;
+    }
     lockComplex(t);
-    return FALSE;}
+    return FALSE;
+  }
+
+  void setRelocks(int r) { relocks = r; }
+  int getRelocks() { return relocks; }
 
   void globalize(int);
 
@@ -2949,122 +2924,9 @@ public:
     pending=pt;}
 };
 
-class LockSecEmul {
-friend class LockFrameEmul;
-friend class LockManagerEmul;
-friend class LockFrame;
-friend class LockManager;
-friend class Chain;
-protected:
-  unsigned int state;
-  PendThread* pending;
-  DSite* next;
-  Thread *locker;
-  
-public:
-  NO_DEFAULT_CONSTRUCTORS2(LockSecEmul)
-  LockSecEmul(Thread *t,PendThread *pt) { Assert(0); }
-  LockSecEmul() {}		// 'LockSec()'
-
-  Thread* getLocker(){return locker;}
-
-  unsigned int getState() { return state; }
-
-  Bool secLockB(Thread*t){
-    if(t==locker) return OK;
-    if((locker==NULL) && (state==Cell_Lock_Valid)){
-      Assert(pending==NULL);
-      locker=t;
-      return OK;}
-    return NO;}
-
-  PendThread** getPendBase() { return &pending; }
-  void unlockPending(Thread* th);
-
-  // closing the site;
-  void dumpPending() {
-    locker = (Thread *) 0;
-    pending = (PendThread *) 0;
-  }
-};
-
-class LockManagerEmul : public OzLock {
-protected:
-  LockSecEmul *sec;
-  Chain *chain;
-public:
-  NO_DEFAULT_CONSTRUCTORS2(LockManagerEmul)
-  LockManagerEmul() { Assert(0); }
-
-  Bool hasLock(Thread *t) { 
-    if(getInfo()!=NULL) return FALSE;
-    return (sec->locker==t) ? TRUE : FALSE;}
-
-  LockSecEmul *getSec(){return sec;}
-
-  LockRet lockB(Thread *t){
-    if(getInfo()==NULL){
-      if(sec->secLockB(t)) return LOCK_GOT;}
-    return (*lockLockManagerOutline)(this, t);}
-
-  Bool lockImm(Thread *t){
-    if(sec->secLockB(t)) return TRUE;
-    return FALSE;}
-
-  void unlock(Thread *t){
-    if (sec->getLocker()!=t){
-      sec->unlockPending(t); 
-      return;}
-    Assert(sec->state & Cell_Lock_Valid);
-    sec->locker=NULL;
-    if((sec->state==Cell_Lock_Valid) && sec->pending==NULL) return;
-    (*unlockLockManagerOutline)(this, t);
-  }
-
-  PendThread* getPending() { return sec->pending; }
-};
-
-class LockFrameEmul : public OzLock {
-protected:
-  LockSecEmul *sec;
-  void *forward;
-
-public:
-  NO_DEFAULT_CONSTRUCTORS2(LockFrameEmul)
-  LockFrameEmul() { Assert(0); }
-
-  Bool hasLock(Thread *t){ 
-    if(getInfo()!=NULL) return FALSE;
-    return (t==sec->getLocker()) ? TRUE : FALSE;}
-
-  unsigned int getState(){return sec->state;}
-  /*
-  void lock(Thread *t){
-    if(sec->secLockB(t)) return;
-    (*lockLockFrameOutline)(this, t);
-  }
-  */
-  LockRet lockB(Thread *t){
-    if(getInfo()==NULL){
-      if(sec->secLockB(t)) return LOCK_GOT;}
-    return (*lockLockFrameOutline)(this, t);}
-
-  Bool lockImm(Thread *t){
-    if(sec->secLockB(t)) return TRUE;
-    return FALSE;}
-
-  void unlock(Thread *t){
-    if (sec->getLocker() != t){
-      sec->unlockPending(t);
-      return;}
-    sec->locker=NULL;
-    if((sec->state==Cell_Lock_Valid) && (sec->pending==NULL)){
-      return;}
-    (*unlockLockFrameOutline)(this, t);
-  }
-
-  LockSecEmul* getSec() { return sec; }
-};    
+//bmc: class LockSecEmul deleted
+//bmc: class LockManagerEmul deleted
+//bmc: class LockFrameEmul deleted
 
 inline
 Bool oz_isLock(TaggedRef term)

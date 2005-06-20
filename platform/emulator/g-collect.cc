@@ -1049,7 +1049,7 @@ void AM::gCollect(int msgLevel)
   cacStack.init();
   am.nextGCStep();
 
-  (*gCollectPerdioStart)();
+  (*gCollectGlueStart)();
 
 #ifdef DEBUG_CHECK
   isCollecting = OK;
@@ -1106,8 +1106,9 @@ void AM::gCollect(int msgLevel)
 
   cacStack.gCollectRecurse();
   gCollectDeferWatchers();
-  (*gCollectPerdioRoots)();
+
   cacStack.gCollectRecurse();
+  (*gCollectGlueRoots)();
 
   // now make sure that we preserve all weak dictionaries
   // that still have stuff to do
@@ -1124,14 +1125,15 @@ void AM::gCollect(int msgLevel)
   weakReviveStack.recurse();	// copy stuff scheduled for finalization
   cacStack.gCollectRecurse();
 
-  // Erik+kost: All local roots must be processed at this point!
-  (*gCollectBorrowTableUnusedFrames)();
   cacStack.gCollectRecurse();
 
 #ifdef NEW_NAMER
   GCMeManager::gCollect();
   cacStack.gCollectRecurse();
 #endif
+
+  (*gCollectGlueWeak)();
+  cacStack.gCollectRecurse();
 
   weakStack.recurse();		// must come after namer gc
 
@@ -1145,7 +1147,7 @@ void AM::gCollect(int msgLevel)
   gnameTable.gCollectGNameTable();
   //   MERGECON gcPerdioFinal();
   gCollectSiteTable();
-  (*gCollectPerdioFinal)();
+  (*gCollectGlueFinal)();
   Assert(cacStack.isEmpty());
 
   GCDBG_EXITSPACE;

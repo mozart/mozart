@@ -1273,17 +1273,7 @@ void VarFixStack::_cacFix(void)
  *
  */
 
-#ifdef G_COLLECT
-
-// failure interface for local tertiarys
-#define maybeGCForFailure(t) \
-  if (t->getInfo() != NULL) (*gCollectEntityInfo)(t);
-
-#else
-
-#define maybeGCForFailure(t) 
-
-#endif
+//bmc: maybeGCForFailure(t) deleted
 
 
 
@@ -1302,16 +1292,13 @@ void ConstTerm::_cacConstRecurse(void) {
 
       switch(o->getTertType()) {
       case Te_Local:   
-	maybeGCForFailure(o);
 	break;
 #ifdef G_COLLECT
       case Te_Proxy:   // PER-LOOK is this possible?
-	(*gCollectProxyRecurse)(o); 
-	(*gCollectEntityInfo)(o);
+	(*gCollectProxyRecurse)(o, (void*)o->getTertIndex());
 	break;
       case Te_Manager: 
-	(*gCollectManagerRecurse)(o); 
-	(*gCollectEntityInfo)(o);
+	OZ_error("Managers are arcane, and should be extingt by now (ERIK)");
 	break;
 #endif
       default:         Assert(0);
@@ -1368,33 +1355,28 @@ void ConstTerm::_cacConstRecurse(void) {
   case Co_Cell:
     {
       Tertiary *t=(Tertiary*)this;
-      if (t->isLocal()) {
-	CellLocal *cl=(CellLocal*)t;
-	oz_cacTerm(cl->val,cl->val);
-	maybeGCForFailure(t);
-      }
+
 #ifdef G_COLLECT
-      else {
-	(*gCollectDistCellRecurse)(t);
+      if (!t->isLocal()){
+	//(*gCollectDistCellRecurse)(t);
+	(*gCollectProxyRecurse)(t, (void*)(t->getTertIndex()));
       }
 #endif
+      CellLocal *cl=(CellLocal*)t;
+      oz_cacTerm(cl->val,cl->val);
       break;
     }
     
   case Co_Port:
     {
       Port *p = (Port*) this;
-      if (p->isLocal()) {
-	PortWithStream *pws = (PortWithStream *) this;
-	oz_cacTerm(pws->strm,pws->strm);
-	maybeGCForFailure(p);
-	break;
-      } 
 #ifdef G_COLLECT
-      else {
-	(*gCollectDistPortRecurse)(p);
+      if (!p->isLocal()) {
+	(*gCollectProxyRecurse)(p, (void*)(p->getTertIndex()));
       }
 #endif
+      PortWithStream *pws = (PortWithStream *) this;
+      oz_cacTerm(pws->strm,pws->strm);
       break;
     }
 
@@ -1412,6 +1394,10 @@ void ConstTerm::_cacConstRecurse(void) {
       GName * gn = a->getGName1();
       if (gn) 
 	gCollectGName(gn);
+      else
+	if (a->isDist())
+	  (*gCollectProxyRecurse)(a, (void*)a->getDist());
+
 #endif
       int aw = a->getWidth();
       if (aw > 0) {
@@ -1433,18 +1419,17 @@ void ConstTerm::_cacConstRecurse(void) {
   case Co_Lock:
     {
       Tertiary *t=(Tertiary*)this;
-      if (t->isLocal()) {
-	LockLocal *ll = (LockLocal *) this;
+      LockLocal *ll = (LockLocal *) this;
 #ifdef G_COLLECT
 	gCollectPendThreadEmul(&(ll->pending));
 #endif
-	ll->setLocker(SuspToThread(ll->getLocker()->_cacSuspendable()));
-	maybeGCForFailure(t);
+	if (ll->locker != 0)
+	  oz_cacTerm(ll->locker, ll->locker); 
 	break;
-      } 
+
 #ifdef G_COLLECT
-      else {
-	(*gCollectDistLockRecurse)(t);
+      if (!t->isLocal()) {
+	(*gCollectProxyRecurse)(t, (void*)(t->getTertIndex()));
       }
 #endif
       break;
@@ -1521,7 +1506,8 @@ ConstTerm * ConstTerm::gCollectConstTermInline(void) {
     }
 
   case Co_Resource: {
-      ConstTerm * ret = (*gCollectDistResource)(this);
+      ConstTerm * ret;
+      cacReallocStatic(ConstTerm, this, ret, sizeof(Co_Resource));
       STOREFWDFIELD(this, ret);
       return ret;
     }
@@ -1565,8 +1551,7 @@ ConstTerm * ConstTerm::gCollectConstTermInline(void) {
     goto const_tertiary;
 
   case Co_Cell:
-    sz = (((Tertiary *) this)->getTertType() == Te_Frame) ? 
-      sizeof(CellFrameEmul) : sizeof(CellManagerEmul);
+    sz = sizeof(CellLocal);
     goto const_tertiary;
     
   case Co_Port:  
@@ -1598,10 +1583,11 @@ ConstTerm * ConstTerm::gCollectConstTermInline(void) {
  const_withhome: {
    ConstTermWithHome * ctwh_t = (ConstTermWithHome *) oz_hrealloc(this, sz);
    STOREFWDFIELD(this, ctwh_t);
-   if (ctwh_t->hasGName())
-     gCollectGName(ctwh_t->getGName1());
-   else
-     ctwh_t->setBoard(ctwh_t->getSubBoardInternal()->gCollectBoard());
+   if (!ctwh_t->isDist())
+     if (ctwh_t->hasGName())
+       gCollectGName(ctwh_t->getGName1());
+     else
+       ctwh_t->setBoard(ctwh_t->getSubBoardInternal()->gCollectBoard());
    cacStack.push(ctwh_t, PTR_CONSTTERM);
    return ctwh_t;
  }
@@ -1699,7 +1685,7 @@ ConstTerm *ConstTerm::sCloneConstTermInline(void) {
     goto const_tertiary;
 
   case Co_Cell:
-    sz = sizeof(CellManagerEmul);
+    sz = sizeof(CellLocal);
     goto const_tertiary;
     
   case Co_Port:  
@@ -1900,6 +1886,10 @@ void Thread::_cacRecurse(Thread * fr) {
   if (abstr)
     abstr->_cac();
   id        = fr->id;
+  ozThread  = fr->ozThread;
+  if (ozThread)
+    oz_cacTerm(ozThread, ozThread); 
+
 }
 
 inline 

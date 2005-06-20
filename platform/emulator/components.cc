@@ -1379,7 +1379,7 @@ OZ_BI_define(BItestDPUnmarshaler, 3, 0)
     buf->put(0xFF);          // Ctrl
     buf->putInt(0xFFFFFFFF); // Ack
     buf->putInt(0xFFFFFFFF); // Placeholder for Framesize
-    dpmC = dpMarshalTerm(val, buf, dpm, (DSite *) 0);
+    dpmC = dpMarshalTerm(val, buf, dpm);
     buf->marshalEnd();
 
     buf->unmarshalBegin();

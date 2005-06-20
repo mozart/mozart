@@ -675,6 +675,59 @@ void AddressHashTableO1Reset::htAdd(void *k, void *val)
   DebugCode(tries += step);
 }
 
+// bmc: adding code from Zacharias.
+/*
+  ZACHARIAS htAddSpecial is used to overwrite old entries in the
+  addressHashTable. We want to reuse a key as it is assumed that the old value
+  is obsolete
+
+  This is used in the EngineTable in libdp
+*/
+void
+AddressHashTableO1Reset::htAddOverWrite(void *k, void *val)
+{
+  if (counter > percent) resize();
+
+  //
+  Assert(val != htEmpty);
+  unsigned int m = ((unsigned int) k) * ((unsigned int) 0x9e6d5541);
+  unsigned int pkey = m >> rsBits;
+  Assert(pkey == primeHashFunc(k));
+  unsigned int ikey = 0;
+  int key = (int) pkey;
+  DebugCode(int step = 1;);
+
+  //
+  while (1) {
+    if (table[key].getCnt() < pass) {
+      // certainly not there;
+      table[key].setKey(k);
+      table[key].setValue(val);
+      table[key].setCnt(pass);
+      counter++;
+      break;
+    } else if (table[key].getKey() == k) {
+      // already there;
+      table[key].setValue(val); //OverWrite
+      OZ_warning("HashTable reusing entry");
+      break;
+    } else {
+      // next hop:
+      if (ikey == 0) {
+	ikey = ((m << slsBits) >> rsBits) | 0x1;
+	Assert(ikey == incHashFunc(k));
+	Assert(ikey < tableSize);
+      }
+      key -= ikey;
+      if (key < 0)
+	key += tableSize;
+      DebugCode(step++;);
+    }
+  }
+  DebugCode(nsearch++;);
+  DebugCode(tries += step);
+}
+
 //
 void* AddressHashTableO1Reset::htFind(void *k)
 {
@@ -684,7 +737,6 @@ void* AddressHashTableO1Reset::htFind(void *k)
   unsigned int ikey = 0;
   int key = (int) pkey;
   DebugCode(int step = 1;);
-
   //
   while (1) {
     if (table[key].getCnt() < pass) {
