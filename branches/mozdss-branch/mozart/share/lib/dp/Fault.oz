@@ -25,12 +25,8 @@
 functor
 
 import
-   DPB at 'x-oz://boot/DPB'
-   Fault at 'x-oz://boot/Fault'
-
-require
-   InterFault at 'x-oz://boot/InterFault'
-   
+   Glue at 'x-oz://boot/Glue'
+   DPInit
 export
    getEntityCond:     GetEntityCond
    enable:            Enable
@@ -40,135 +36,161 @@ export
    installWatcher:    InstallWatcher
    deInstallWatcher:  DeInstallWatcher
    defaultEnable:     DefaultEnable
-   defaultDisable:    DefaultDisable
-   
+   defaultDisable:    DefaultDisable   
 define
-   local
-      proc{WrongFormat}
-	 {Exception.raiseError
-	  type(dp('incorrect fault format'))}
-      end
+   proc{WrongFormat}
+      {Exception.raiseError
+       type(dp('incorrect fault format'))}
+   end
 
-      proc{NotImplemented}
-	 {Exception.raiseError
-	  dp('not implemented')}
-      end
+   proc{NotImplemented}
+      {Exception.raiseError
+       dp('not implemented')}
+   end
 
-      proc{Except Entity Cond Op}
-	 {Exception.'raise'
-	  system(dp(entity:Entity conditions:Cond op:Op))}
-      end
+   proc{Except Entity Cond Op}
+      {Exception.'raise'
+       system(dp(entity:Entity conditions:Cond op:Op))}
+   end
 
-      fun{DConvertToInj Cond}
-	 injector(entityType:all 'thread':all 'cond':Cond)
-      end
+   fun{DConvertToInj Cond}
+      injector(entityType:all 'thread':all 'cond':Cond)
+   end
 
-      fun{SConvertToInj Entity Cond}
-	 injector(entityType:single entity:Entity 'thread':all 'cond':Cond)
-      end
+   fun{SConvertToInj Entity Cond}
+      injector(entityType:single entity:Entity 'thread':all 'cond':Cond)
+   end
 
-      fun{TConvertToInj Entity Cond Thread}
-	 safeInjector(entityType:single entity:Entity
-		      'thread':Thread 'cond':Cond)
-      end
+   fun{TConvertToInj Entity Cond Thread}
+      safeInjector(entityType:single entity:Entity
+		   'thread':Thread 'cond':Cond)
+   end
 
-      fun{GConvertToInj Entity Cond}
-	 {NotImplemented}
+   fun{GConvertToInj Entity Cond}
+      {NotImplemented}
+      false
+   end
+
+   fun{I_Impl Level Entity Cond Proc}
+      case Level of global then
+	 {Glue.distHandlerInstall {GConvertToInj Entity Cond} Proc}
+      elseof site then
+	 {Glue.distHandlerInstall {SConvertToInj Entity Cond} Proc}
+      else
+	 {WrongFormat}
 	 false
       end
+   end
 
-      fun{I_Impl Level Entity Cond Proc}
-	 case Level of global then
-	    {Fault.distHandlerInstall {GConvertToInj Entity Cond} Proc}
-	 elseof site then
-	    {Fault.distHandlerInstall {SConvertToInj Entity Cond} Proc}
-	 elseof 'thread'(Th) then
-	    {InterFault.interDistHandlerInstall
-	     {TConvertToInj Entity Cond Th} Proc} 
-	 else
-	    {WrongFormat}
-	    false
-	 end
+   fun{D_Impl Level Entity Cond Proc}
+      case Level of global then
+	 {Glue.distHandlerDeInstall {GConvertToInj Entity any} Proc}
+      elseof site then
+	 {Glue.distHandlerDeInstall {SConvertToInj Entity any} Proc}
+      else
+	 {WrongFormat}
+	 false
       end
+   end
 
-      fun{D_Impl Level Entity Cond Proc}
-	 case Level of global then
-	    {Fault.distHandlerDeInstall {GConvertToInj Entity any} Proc}
-	 elseof site then
-	    {Fault.distHandlerDeInstall {SConvertToInj Entity any} Proc}
-	 elseof 'thread'(Th) then
-	    {InterFault.interDistHandlerDeInstall
-	     {TConvertToInj Entity any Th} Proc} 
-	 else
-	    {WrongFormat}
-	    false
-	 end
-      end
+   fun{DefaultEnableImpl Cond}
+      we_dont_suport_defaultEnabled = Cond
+   end
 
-      fun{DefaultEnableImpl Cond}
-	 {Fault.distHandlerInstall {DConvertToInj Cond} Except}
-      end
+   fun{DefaultDisableImpl Cond}
+      we_dont_suport_defaultDisable = Cond
+   end
 
-      fun{DefaultDisableImpl}
-	 {Fault.distHandlerDeInstall {DConvertToInj any} any}
-      end
+   fun{EnableImpl Entity Level Cond}
+      {I_Impl Level Entity Cond Except}
+   end
 
-      fun{EnableImpl Entity Level Cond}
-	 {I_Impl Level Entity Cond Except}
-      end
+   fun{InstallImpl Entity Level Cond Proc}
+      {I_Impl Level Entity Cond Proc}
+   end
 
-      fun{InstallImpl Entity Level Cond Proc}
-	 {I_Impl Level Entity Cond Proc}
-      end
+   fun{DisableImpl Entity Level}
+      {D_Impl Level Entity any any}
+   end
 
-      fun{DisableImpl Entity Level}
-	 {D_Impl Level Entity any any}
-      end
+   fun{DeInstallImpl Entity Level}
+      {D_Impl Level Entity any any}
+   end
 
-      fun{DeInstallImpl Entity Level}
-	 {D_Impl Level Entity any any}
-      end
-
-      fun{InstallWImpl Entity Cond Proc}
-	 {InterFault.interDistHandlerInstall
-	  watcher(entity:Entity 'cond':Cond) Proc} 
-      end
-
-      fun{DeInstallWImpl Entity Proc}
-	 {InterFault.interDistHandlerDeInstall
-	  watcher(entity:Entity 'cond':any) Proc} 
-      end
-
+   fun{Cond2Int Cond}
+      R = r(permFail:6  tempFail:1) 
    in
-      {Wait DPB}
+      {FoldL Cond fun{$ Ind E} R.E + Ind end 0}
+   end
 
-      GetEntityCond  = Fault.getEntityCond
+   fun{Int2Cond Int}
+      R = r(home_removed:permFail home_prm_unavail:permFail home_tmp_unaval:tempFail)
+   in
+      {Map
+       {FoldL [home_removed#4 home_prm_unavail#2 home_tmp_unaval#1]
+	fun{$ Val#Res Txt#Int}
+	   if Val div Int == 1 then
+	      (Val mod Int)#(Txt|Res)
+	   else
+	      Val#Res
+	   end
+	end
+	Int#nil}.2
+       fun{$ Txt}
+	  R.Txt
+       end}
+   end
+   FaultPort 
 
-      Enable        = fun{$ Entity Level Cond}
-			 {EnableImpl Entity Level Cond}
-		      end
-      Disable       = fun{$ Entity Level}
-			 {DisableImpl Entity Level}
-		      end
-      Install      = fun{$ Entity Level Cond Proc}
-			 {InstallImpl Entity Level Cond Proc}
-		      end
-      DeInstall    = fun{$ Entity Level}
-			 {DeInstallImpl Entity Level}
-		      end
-      DefaultEnable = fun{$ Cond}
-			 {DefaultEnableImpl Cond}
-		      end
-      DefaultDisable= fun{$}
-			 {DefaultDisableImpl}
-		      end
-      InstallWatcher= fun{$ Entity Cond Proc}
-			 {InstallWImpl Entity Cond Proc}
-		      end
-      DeInstallWatcher=fun{$ Entity Proc}
-			 {DeInstallWImpl Entity Proc}
-		       end
-    end
+   {Wait Glue}
+   {DPInit.init connection_settings _}
+
+   thread
+      {ForAll {NewPort $ FaultPort}
+       proc{$ Msg}
+	  case Msg of
+	     watcher(entity:Entity action:Proc condition:IntC) then
+	     thread {Proc Entity {Int2Cond IntC}} end
+	  end
+       end}
+   end
+   
+   {Glue.installFaultPort FaultPort}
+   
+   GetEntityCond  = Glue.getEntityCond
+
+   Enable       = fun{$ Entity Level Cond}
+		     {NotImplemented}
+		     true
+		  end
+   Disable       = fun{$ Entity Level}
+		      {NotImplemented}
+		      true
+		   end
+   Install      = fun{$ Entity Level Cond Proc}
+		     true
+		  end
+   DeInstall    = fun{$ Entity Level}
+		     true
+		  end
+   DefaultEnable = fun{$ Cond}
+		      {NotImplemented}
+		      true
+		   end
+   DefaultDisable= fun{$}
+		      {NotImplemented}
+		      true
+		   end
+   InstallWatcher= fun{$ Entity Cond Proc}
+		      Cint = {Cond2Int Cond}
+		   in
+		      {Glue.distHandlerInstall Entity Cint Proc}
+		   end
+   DeInstallWatcher=fun{$ Entity Cond Proc}
+		       Cint = {Cond2Int Cond}
+		    in
+		       {Glue.distHandlerDeInstall Entity Cint Proc}
+		    end
 end
 
 

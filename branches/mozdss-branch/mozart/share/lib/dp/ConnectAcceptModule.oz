@@ -20,10 +20,10 @@
 %%% WARRANTIES.
 %%%
 
-%\define DBG
+\define DBG
 functor
 import
-   DPMisc at 'x-oz://boot/DPMisc'
+   Glue at 'x-oz://boot/Glue'
    Module
    System
 %   Browser
@@ -35,6 +35,13 @@ export
    CondGetAppState
    InitConnection
 %   InitAccept
+   LastSite
+   GetAllSites
+   GetConSites
+   GetThisSite
+   GetSiteInfo
+   GetChannelStatus
+   SendMsgToSite
 define
    AppState = {NewDictionary}
    GetAppState
@@ -42,6 +49,36 @@ define
    CondGetAppState
    InitConnection
 %   InitAccept
+   
+   ThisSite = {Glue.getThisSite}
+   
+   LastSiteCell = {NewCell none}
+   LastSite
+   GetAllSites
+   GetConSites
+   GetThisSite
+   GetSiteInfo
+   GetChannelStatus
+   SendMsgToSite
+   SendMsgToSitePlus
+   ProcessMsg
+   NewMsgId
+   
+   ConnId = {NewCell 0}
+   MsgTrailer = {NewCell 0}
+   InMsgIdSoftState = {NewDictionary} %% msgId: msgType+input_interface
+   OutMsgIdSoftState = {NewDictionary} %% msgId: list_of_output_interfaces
+   RcvProcs = {NewDictionary}  %% connId: rcvProc
+
+   fun {NewConnId} T in
+      {Exchange ConnId T thread T+1 end}
+      T+1
+   end
+
+   fun {NewMsgTrailer} T in
+      {Exchange MsgTrailer T thread T+1 end}
+      T+1
+   end 
    
    %% Gets a unique id out of the Requsteor structure
    fun{GetIdFromRequestor Requestor}
@@ -55,10 +92,9 @@ define
       {Module.apply
        [functor 
 	export
-	   GetConnGrant
 	   Handover
+	   HandoverRoute
 	   ConnFailed
-	   FreeConnGrant
 	   GetLocalState
 	   PutLocalState
 	   GetAppState
@@ -72,18 +108,7 @@ define
 	   ReadSelect
 	   Close
 	define
-	   proc{GetConnGrant Type CanWait ?Grant}
-	      {DPMisc.getConnGrant Obj.requestor Type CanWait Grant}
-	      case Grant of grant(...) then
-		 {Obj registerResource(grant(Grant))}
-	      else
-		 skip
-	      end
-	   end
-
-	   proc{Handover Grant SetUpParameter}
-	      {Obj unregisterResource(grant(Grant))}
-	      
+	   proc{Handover SetUpParameter}
 	      % This is a fix and not a solution. If another
 	      % ConnectionFunctor than the default one keeps a
 	      % filedescriptor via handover, it must use the same
@@ -93,21 +118,18 @@ define
 	      else skip end
 		 
 	      if {Dictionary.member OngoingRequests Obj.id} then
-		 {DPMisc.handover Obj.requestor Grant SetUpParameter}
+		 {Glue.handover Obj.requestor SetUpParameter}
 	      end
+	   end
+      
+	   proc {HandoverRoute IntermediaryRouter PeerSite}
+	      {Glue.handoverRoute IntermediaryRouter PeerSite}
 	   end
       
 	   proc{ConnFailed Reason}
 	      {Obj freeResources}
 	      if {Dictionary.member OngoingRequests Obj.id} then
-		 {DPMisc.connFailed Obj.requestor Reason}
-	      end
-	   end
-
-	   proc{FreeConnGrant Grant}
-	      {Obj unregisterResource(grant(Grant))}
-	      if {Dictionary.member OngoingRequests Obj.id} then
-		 {DPMisc.freeConnGrant Obj.requestor Grant}
+		 {Glue.connFailed Obj.requestor Reason}
 	      end
 	   end
 
@@ -151,7 +173,7 @@ define
       attr
 	 allocatedResources:nil
 	 localState 
-      meth init(Id Requestor LocalOzState DistOzState)
+      meth init(Id Requestor LocalOzState DistOzState ToRoute TargetSite)
 	 ConnectionFunctor
 	 ConnectModule
       in
@@ -176,7 +198,48 @@ define
 		   {GetConnectionWrapper self})}
 	    {self.moduleManager apply(ConnectionFunctor ConnectModule)} 
 	    localState <- LocalOzState.localState  
-	    {ConnectModule.connect DistOzState.parameter}
+
+	    local
+	       NConId = {NewConnId}
+	       RProc
+	       CWR = proc {$}
+\ifdef DBGroute 
+			{System.showInfo 'connect by routing'}
+\endif
+			{ConnectModule.connectWithRoute 
+			 NConId
+			 ThisSite
+			 TargetSite
+			 {GetConSites}
+			 SendMsgToSitePlus
+			 RProc}
+		     end
+	    in
+	       {Dictionary.put RcvProcs NConId RProc}
+	       
+	       %% temporary use the route intention here ... /V
+	       if ToRoute andthen {Length {GetConSites}} > 0 then
+		  {CWR}
+		  {Dictionary.remove RcvProcs NConId}
+	       else %% connect directly
+\ifdef DBGroute 
+		  {System.showInfo 'connect directly'}
+\endif
+		  try
+		     {ConnectModule.connect DistOzState.parameter}
+		  catch failed_to_connect then
+		     {CWR}
+		  [] abort then
+		     raise abort end
+		  [] terminated then
+		     raise terminated end
+		  [] _ then
+		     {CWR}
+		  finally
+		     {Dictionary.remove RcvProcs NConId}
+		  end
+	       end	       
+	    end
 \ifdef DBG
 	 catch X then 
 	    {System.show warning(X)}
@@ -192,7 +255,7 @@ define
       meth getLocalState($) @localState end
       meth putLocalState(S)
 	 localState <- S
-	 {DPMisc.putLocalState self.requestor S}
+	 {Glue.putLocalState self.requestor S}
       end
       meth registerResource(R)
 	 lock
@@ -209,9 +272,7 @@ define
 	 lock
 	    {ForAll @allocatedResources
 	     proc{$ R}
-		case R of grant(Grant) then
-		   {DPMisc.freeConnGrant self.requestor Grant}
-		elseof fd(FD) then
+		case R of fd(FD) then
 		   {OS.deSelect FD}
 		   {OS.close FD}
 		end
@@ -222,13 +283,14 @@ define
    end
    OngoingRequests
 in
-   proc{InitConnection Stream}
+   proc{InitConnection Stream ToRoute}
 \ifdef DBG
       PID={OS.getPID}
    in
 \endif
       OngoingRequests = {NewDictionary}
 %      {Browser.browse Stream}
+      {System.show going_to_start_the_forAllInd}
       {List.forAllInd Stream
        proc{$ Ind Request}
 \ifdef DBG
@@ -237,7 +299,7 @@ in
 	  {System.show got(Request PID Ind)}
 \endif
 	  case Request of
-	     connect(Requestor LocalOzState DistOzState) then
+	     connect(Requestor LocalOzState DistOzState TargetSite) then
 	     Id = {GetIdFromRequestor Requestor}
 	  in
 	     if {Dictionary.member OngoingRequests Id} then
@@ -252,11 +314,13 @@ in
 		      end
 		      _ = {New ConnectionController init(Id Requestor
 							 LocalOzState
-							 DistOzState)}
+							 DistOzState
+							 ToRoute
+							 TargetSite)}
 		      {Dictionary.remove OngoingRequests Id}
 \ifdef DBG
 		   catch X then
-	    {System.show warning(X)}
+		      {System.show warning(X)}
 %	    thread raise X end end % Use only in OPI
 \else
 		   catch _ then
@@ -265,6 +329,8 @@ in
 		   end
 		end
 	     end
+	  elseof new_site(S) then
+	     {Assign LastSiteCell S}
 	  elseof abort(Requestor) then
 	     Id = {GetIdFromRequestor Requestor}
 	  in
@@ -277,6 +343,8 @@ in
 		   skip
 		end
 	     catch _ then skip end
+	  elseof directMsg(srcSite:S msg:Msg) then
+	     {ProcessMsg S Msg}
 	  else 
 	     {System.showError "Warning Connection Wrapper called with wrong parameters"}
 %	     {System.showError {Value.toVirtualString Request 100 100}}
@@ -301,4 +369,175 @@ in
 %    proc{InitAccept AcceptFunc}
 %       {AcceptProc.accept}
 %    end
+
+   fun{LastSite}
+      {Access LastSiteCell}
+   end
+
+   fun {GetAllSites}
+      {Glue.getAllSites}
+   end
+
+   fun {GetConSites}
+      {Glue.getConSites}
+   end
+
+   fun {GetThisSite}
+      ThisSite
+   end
+
+   fun {GetChannelStatus S}
+      {Glue.getChannelStatus S}
+   end
+   
+   fun {GetSiteInfo S}
+      {Glue.getSiteInfo S}
+   end
+
+   %% Send Msg to site S
+   proc {SendMsgToSite S Msg}
+      {Glue.sendMsgToSite S Msg}
+   end
+
+   fun {NewMsgId}
+      {VirtualString.toAtom {OS.getPID}#{OS.time}#{NewMsgTrailer}}
+   end
+
+   %% Like SendMsgToSite but it keeps a soft state of the msg with id MId
+   proc {SendMsgToSitePlus S Msg MId}
+      TMId LS
+   in
+      if MId \= nil then TMId = MId
+      else TMId = {NewMsgId} end
+      
+      LS = {Dictionary.condGet OutMsgIdSoftState TMId nil}
+      
+      if LS \= nil then
+	 {Dictionary.put OutMsgIdSoftState TMId S|LS}
+      else
+	 {Dictionary.put OutMsgIdSoftState TMId [S]}
+      end
+
+      thread
+	 {Delay 15000}
+	 %% remove the soft state out
+	 {Dictionary.remove OutMsgIdSoftState TMId} 
+      end
+
+%\ifdef DBGroute        
+%      {System.show send_msg_id#TMId}
+%\endif      
+      {SendMsgToSite S {Adjoin m(mid:TMId) Msg}}
+   end
+
+   %% process the msgs received from other sites
+   proc {ProcessMsg SrcSite Msg}
+      % given a msg patern and a list of msgs get the first corresponding site
+      fun {GetInterface MsgP LM}
+	 case LM of X|Xr then
+	    case X of MsgP(E) then E
+	    else {GetInterface MsgP Xr} end
+	 [] nil then nil end
+      end
+
+      fun {AlreadyForwarded MId O}
+	 LS = {Dictionary.condGet OutMsgIdSoftState MId nil}
+      in
+	 {List.sub [O] LS}
+      end
+   in
+\ifdef DBGroute      
+      {System.show {GetSiteInfo SrcSite}.siteId#Msg}
+\endif      
+      case Msg of
+	 m(mt:Mt pt:Pt ttl:Ttl src:Src dst:Dst via:Via
+	   mid:MId cid:CId pl:Pl ...) then
+
+	 if Ttl > 0 then
+	    case Pl of discover_route(trg:Trg) then
+	       ConSites = {GetConSites}
+	    in
+\ifdef DBGroute	       
+		  {System.showInfo 'con:: receive discover_route, msgid:'#MId}
+\endif
+	       
+	       if {Member Trg ConSites} then
+\ifdef DBGroute	       
+		  {System.showInfo 'con:: target '#{GetSiteInfo Trg}.siteId#
+		   ' found, msgid:'#MId}
+\endif
+		  {SendMsgToSitePlus Via
+		   m(mt:Mt pt:Pt ttl:Ttl src:ThisSite dst:Src via:ThisSite
+		     cid:CId pl:route_found(r:[ThisSite Trg])) MId}
+	       else
+		  NghbLst = {Filter ConSites fun {$ E} E\=Via   end}
+	       in
+		  for S in NghbLst do
+		     %% do not forward twice a msg to the same site
+		     if {Not {AlreadyForwarded MId S}} then
+\ifdef DBGroute		     
+			{System.showInfo 'con:: forward discover to: '#
+			 {GetSiteInfo S}.siteId#', msgid:'#MId}
+\endif		     
+			{SendMsgToSitePlus S
+			 m(mt:Mt pt:Pt ttl:Ttl-1 src:Src dst:nil
+			   via:ThisSite cid:CId pl:Pl) MId}
+
+			{Dictionary.put InMsgIdSoftState MId
+			 discover_route(SrcSite)|
+			 {Dictionary.condGet InMsgIdSoftState MId nil}}
+		     end
+		  end
+	       end
+	    [] route_found(r:R) then V in
+\ifdef DBGroute	       
+	       {System.showInfo 'con:: receive route_found, msgid:'#MId}
+\endif
+	       if Dst == ThisSite then 
+		  {Dictionary.condGet RcvProcs CId nil V}
+		  
+		  if V \= nil then
+		     %% call the corresponding rcvProc
+		     {V Pl}
+		     
+		     %% the first in, the only served
+		     {Dictionary.remove RcvProcs CId}
+		  end
+	       else
+		  {GetInterface discover_route
+		   {Dictionary.get InMsgIdSoftState MId} V}
+		  
+		  if V \= nil then
+\ifdef DBGroute	       		     
+		     {System.showInfo 'con:: forward route to: '#
+		      {GetSiteInfo V}.siteId#',  msgid:'#MId}
+\endif		  		     
+		     {SendMsgToSitePlus V
+		      m(mt:Mt pt:Pt ttl:Ttl-1 src:Src dst:Dst via:Via
+			cid:CId pl:route_found(r:ThisSite|R))
+		      MId}
+		  end
+	       end
+	       {Dictionary.put InMsgIdSoftState MId
+		route_found(SrcSite)|
+		{Dictionary.condGet InMsgIdSoftState MId nil}}
+	    else
+	       %!! do not care about eventual other messages
+	       skip
+	    end
+	    
+	    thread
+	       %% remove the soft state after a certain time
+	       {Delay 15000}
+	       {Dictionary.remove InMsgIdSoftState MId} 
+	    end
+	 end
+      else
+	 skip
+\ifdef DBGroute
+	 {System.show misc_msg#Msg}
+\endif
+      end
+   end
+   
 end

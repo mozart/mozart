@@ -26,9 +26,7 @@
 functor
 
 import
-   DPB                             at 'x-oz://boot/DPB'
-   PID(get getCRC received toPort) at 'x-oz://boot/PID'
-
+   Glue at 'x-oz://boot/Glue'
    Error(registerFormatter)   
    Fault(install installWatcher deInstall deInstallWatcher)
    Property(get)
@@ -84,19 +82,14 @@ define
    %%
    %% Force linking of base library
    %%
-   {Wait DPB}
+   {Wait Glue}
    {DPInit.init connection_settings _}
-   
-   %% ERIK
-   %% Har skall varan connect starter kora!!!
-   %%
    
    %%
    %% Base Process Identifier package
    %%
-   ThisPid   = {PID.get}
    fun {ToPort T}
-      {PID.toPort T.host T.port T.time.1 T.time.2} 
+      {Glue.unmarshalPort T.portRep} 
    end
    
    local
@@ -111,10 +104,11 @@ define
       fun {NewTicket IsSingle}
 	 Major#Minor = {Property.get 'dp.version'}
       in
-	 {Adjoin ThisPid ticket(single:  IsSingle
-				key:     {KeyCtr get($)}
-				minor:   Minor
-				major:   Major)}
+	 ticket(portRep: {Glue.marshalPort ExposedPort}
+		single:  IsSingle
+		key:     {KeyCtr get($)}
+		minor:   Minor
+		major:   Major)
       end
    end
    
@@ -131,18 +125,14 @@ define
    in
       
       fun {TicketToString T}
-	 Stamp#Pid = T.time
 	 S = {App ["x-ozticket://"
-		   T.host
-		   &:|{Int.toString T.port}
-		   &:|{IntToKey Stamp}
-		   &:|{IntToKey Pid}
+		   T.portRep
 		   &/|{IntToKey T.key}
 		   &:|{IntToKey T.major}
 		   &:|{IntToKey T.minor}
 		   [&: if T.single  then &s else &m end]] nil}
       in
-	 {Append S &:|{IntToKey {PID.getCRC S}}}
+	 {Append S &:|{IntToKey {Glue.getCRC S}}}
       end
       
       fun {VsToTicket V}
@@ -151,12 +141,9 @@ define
 	    %% syntactically illegal
 	    S={VirtualString.toString V}
 	    [_ nil ProcPart KeyPart] = {String.tokens S &/}
-	    [HostS PortS Stamp Pid]  = {String.tokens ProcPart &:}
 	    [KeyS MajorS MinorS
 	     SingS _]       = {String.tokens KeyPart  &:}
-	    Ticket = ticket(host:    HostS
-			    port:    {String.toInt PortS}
-			    time:    {KeyToInt Stamp}#{KeyToInt Pid}
+	    Ticket = ticket(portRep: ProcPart
 			    key:     {KeyToInt KeyS}
 			    major:   {KeyToInt MajorS}
 			    minor:   {KeyToInt MinorS}
@@ -174,11 +161,12 @@ define
    %% Mapping of Keys to values
    KeyDict   = {Dictionary.new}
    
+   ExposedPort
+   
    thread
-      {ForAll {PID.received}
+      {ForAll {NewPort $ ExposedPort}
        proc {$ T#A}
 	  if
-	     T.time == ThisPid.time andthen
 	     {Dictionary.member KeyDict T.key}
 	  then Y={Dictionary.get KeyDict T.key} in
 	     if T.single then {Dictionary.remove KeyDict T.key} end
@@ -246,7 +234,7 @@ define
 	 Alarm=watch#_
       end
       proc {Handle _ _ _}
-	 {Fault.deInstallWatcher P Watch _}
+	 {Fault.deInstallWatcher P [permFail] Watch _}
 	 {Fault.deInstall P 'thread'(this) _}
 	 {Exception.raiseError connection(ticketToDeadSite V)}
       end
@@ -254,7 +242,6 @@ define
       if T.major#T.minor \= {Property.get 'dp.version'} then
 	 {Exception.raiseError connection(differentDssVersion V)}
       end
-      
       {Fault.installWatcher P [permFail] Watch true}
       {Fault.install P 'thread'(this) [permFail] Handle true}
       {Send P T#X}
@@ -263,21 +250,21 @@ define
       of 1 then
 	 case X of no then
 	    {Fault.deInstall P 'thread'(this) _}
-	    {Fault.deInstallWatcher P Watch _}
+	    {Fault.deInstallWatcher P [permFail] Watch _}
 	    {Exception.raiseError connection(refusedTicket V)}
 	 [] yes(A) then
 	    {Fault.deInstall P 'thread'(this) _}
-	    {Fault.deInstallWatcher P Watch _}
+	    {Fault.deInstallWatcher P [permFail] Watch _}
 	    Entity=A
 	 end
       [] 2 then
 	 case{Record.waitOr Alarm} of 1 then
 	    {Fault.deInstall P 'thread'(this) _}
-	    {Fault.deInstallWatcher P Watch _}
+	    {Fault.deInstallWatcher P [permFail] Watch _}
 	    {Exception.raiseError connection(ticketToDeadSite V)}
 	 [] 2 then
 	    {Fault.deInstall P 'thread'(this) _}
-	    {Fault.deInstallWatcher P Watch _}
+	    {Fault.deInstallWatcher P [permFail] Watch _}
 	    {Exception.raiseError connection(ticketTakeTimeOut V)}	    
 	 end
       end

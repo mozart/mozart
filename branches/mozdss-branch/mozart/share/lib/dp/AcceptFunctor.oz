@@ -20,7 +20,7 @@
 %%% WARRANTIES.
 %%%
 
-%\define DBG
+\define DBG
 functor
 export
    Accept
@@ -29,8 +29,18 @@ import
 \ifdef DBG
    System
 \endif
-   DPMisc at 'x-oz://boot/DPMisc'
+   Glue at 'x-oz://boot/Glue'
 define
+\ifdef DBG
+   ShowInfo  = System.showInfo
+   Show = System.show
+\else
+   Show = proc{$ _} skip end
+   ShowInfo = proc{$ _} skip end
+\endif
+
+   PID % Used for dbg to avoid going to the OS all the time
+   
    class ResourceHandler
       prop
 	 locking
@@ -74,9 +84,7 @@ define
    FDHandler = {New ResourceHandler init(5)}
    fun{BindSocket FD PortNum}
       try 
-\ifdef DBG
-	 {System.showInfo 'BindSocket '#FD#' '#PortNum}
-\endif
+	 {ShowInfo 'BindSocket '#FD#' '#PortNum}
 	 {OS.bind FD PortNum}
 	 PortNum
       catch _ then 
@@ -87,47 +95,35 @@ define
    proc{AcceptSelect FD}
       NewFD in
       try
-\ifdef DBG
-	 {System.showInfo 'AcceptedSelect on '#FD#' '#{OS.getPID}}
-\endif
+	 {ShowInfo 'AcceptedSelect on '#FD#' '#{OS.getPID}}
 	 {FDHandler getResource}
-\ifdef DBG
-	 {System.showInfo 'Got resource'#' '#{OS.getPID}}
-\endif
+	 {ShowInfo 'Got resource'#' '#{OS.getPID}}
 	 {OS.acceptSelect FD}
-\ifdef DBG
-	 {System.showInfo 'After acceptSelect '#FD#' '#{OS.getPID}}
-\endif
+	 {ShowInfo 'After acceptSelect '#FD#' '#{OS.getPID}}
 	 {OS.acceptNonblocking_noDnsLookup FD _ _ NewFD} %InAddress InIPPort NewFD}
-\ifdef DBG
-	 {System.showInfo 'Accepted channel (old '#FD#' new '#NewFD#')'#' '#{OS.getPID}}
-\endif
+	 {ShowInfo 'Accepted channel (old '#FD#' new '#NewFD#')'#' '#{OS.getPID}}
 	 thread
 	    {AcceptProc NewFD}
 	    {FDHandler returnResource}
 	 end
-\ifdef DBG
       % If there is an exception here we can't do much but return the
       % resources and close the socket. The most likely exception is
       % a EPIPE on the new FD.
       catch X then
-	 {System.show exception_AcceptSelect(X {OS.getPID})}
-\else
-      catch _ then
-	 skip
-\endif
+	 {Show exception_AcceptSelect(X {OS.getPID})}
 	 {FDHandler returnResource}
 	 try {OS.close NewFD} catch _ then skip end
       end
       {AcceptSelect FD}
    end
    
-   proc{Accept ListenPortNum}
+   proc{Accept ListenPortNum CPortNum NodeName}
 %      InAddress InIPPort
       FD
-      CPortNum
    in
       /* Create socket */
+      PID = {OS.getPID}
+
       FD={OS.socket 'PF_INET' 'SOCK_STREAM' "tcp"}
       if ListenPortNum==default then
 	 CPortNum = {BindSocket FD 9000}
@@ -137,21 +133,15 @@ define
 	    CPortNum=ListenPortNum
 	 catch _ then raise unable_to_listen_to(ListenPortNum) end end
       end
-\ifdef DBG
-      {System.showInfo 'Bound '#CPortNum}
-\endif
+      {ShowInfo 'Bound '#CPortNum}
       {OS.listen FD 5}
-      {DPMisc.setListenPort CPortNum {OS.uName}.nodename}
-\ifdef DBG
-      {System.showInfo 'Listening on port '#CPortNum#' using fd '#FD#' '#{OS.getPID}}
-\endif
+      NodeName = {OS.uName}.nodename
+      {ShowInfo 'Listening on port '#CPortNum#' using fd '#FD#' '#{OS.getPID}}
       thread
 	 {AcceptSelect FD}
-\ifdef DBG
 	 % This should never be reached
-	 {System.show accept_loop_finished}
+	 {Show accept_loop_finished}
 	 raise accept_loop_finished end
-\endif
       end 
    end
    
@@ -159,26 +149,14 @@ define
       Read InString
    in
       try
+	 {Show accepting}
 	 {OS.readSelect FD}
 	 {OS.read FD MaxRead ?InString nil ?Read}
-
 	 if Read>0 then
 	    case InString of "tcp" then
-	       Grant = {DPMisc.getConnGrant accept tcp false}
-	    in
-	       case Grant of grant(...) then
-\ifdef DBG
-		  {System.showInfo accepted#' '#{OS.getPID}}
-\endif
-		  _={OS.write FD "ok"}
-		  {DPMisc.handover accept Grant settings(fd:FD)}
-	       else % could be busy or no tcp, wait for anoter try
-\ifdef DBG
-		  {System.showInfo busy#' '#{OS.getPID}}
-\endif
-		  _={OS.write FD "no"}
-%		  {AcceptProc FD} What?
-	       end
+	       {ShowInfo accepted#' '#PID}
+	       _={OS.write FD "ok"}
+	       {Glue.handover accept settings(fd:FD)}
 	    [] "give_up" then
 	       {OS.close FD}
 	    else
@@ -189,16 +167,11 @@ define
 	    {OS.close FD}
 	 end
       catch X then
-\ifdef DBG
-	 {System.show acceptProc_caught(X {OS.getPID})}
-\endif
+	 {Show acceptProc_caught(X PID)}
 	 case X of system(os(_ _ _ "Try again") ...) then % EAGAIN => try again
 	    {AcceptProc FD}
 	 else % Other fault conditions AN! should some others be treated?
-\ifdef DBG
-	    {System.show acceptProc_caught}
-	    {System.printError X}
-\endif
+	    {Show acceptProc_caught}
 	    try {OS.close FD} catch _ then skip end
 	 end
       end
