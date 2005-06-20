@@ -263,8 +263,8 @@ class ConstTerm;
 class OZ_Extension;
 class Cell;
 class SChunk;
+class OzArray;
 
-class EntityInfo;
 class Tertiary;
 
 class Port;
@@ -274,6 +274,8 @@ class PortLocal;
 class PendThread;
 class PendBinding;
 class CellLocal;
+//bmc: classes CellFrameEmul, CellSecEmul, CellManagerEmul and Chain
+//will soon dissapear.
 class CellFrameEmul;
 class CellSecEmul;
 class CellManagerEmul;
@@ -286,7 +288,7 @@ class GenTraverser;
 class Builder;
 
 class Site;
-class DSite;
+//class DSite now provided by the Dss.
 
 class Builtin;
 
@@ -352,9 +354,9 @@ class OzDictionary;
 
 class OzLock;
 class LockLocal;
-class LockFrameEmul;
-class LockManagerEmul;
-class LockSecEmul;
+//class LockFrameEmul;
+//class LockManagerEmul;
+//class LockSecEmul deleted.
 
 class InlineCache;
 class OZ_Location;
