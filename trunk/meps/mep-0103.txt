@@ -1,0 +1,177 @@
+MEP:    103
+Title:  Archive Copy of Mozart Governance Rules
+Version:        $Revision$
+Last-Modified:  $Date$
+Author:         Peter Van Roy
+Discussions-To:         hackers@mozart-oz.org
+Status:         Draft
+Type:   Informational
+Content-Type:   text/x-rst
+Created:        16 June 2005
+Post-History: 
+
+Abstract
+========
+
+The purpose of this MEP is to archive the voting rules for
+Mozart governance, which were previously only accessible on
+the Mozart hackers mailing list [#MOZGOV]_.
+
+Specification
+=============
+
+This section contains the verbatim copy of the Mozart
+governance rules.
+
+
+MOZART ENHANCEMENT PROPOSALS (MEPs)
+-----------------------------------
+
+The development of Mozart will be handled by Mozart Enhancement
+Proposals (MEPs).  All changes to Mozart will come through MEPs.
+Anybody, whether user or developer, can introduce a MEP anytime.
+There are two kinds of MEPs: "informational" and "standard track".
+Any significant change or contribution to the Mozart/Oz system or
+governance procedure requires a standard track MEP.  No MEP is
+required for routine modifications such as bug fixes that bring
+the system closer to its specification.
+
+For example, a MEP can be:
+
+* proposed changes in governance, process, website, etc.
+
+* proposal for a new release (this MEP can be very short,
+  e.g., mainly just proposing someone as release manager)
+
+* an extension of the language kernel (e.g., uniform state)
+
+* a new contribution to the standard library (e.g., QTk)
+
+* a bug fix that is not straightforward and benefits from a
+  discussion (e.g., garbage collection Y register bug fix)
+
+* a design with new concepts or ideas long before any actual
+  implementation exists (e.g., Oz-E for security)
+
+The last example is an "informational" MEP: it serves as a design
+document for fleshing out possibilities and discovering whether this
+is indeed a good idea that fits well with the Mozart/Oz philosophy
+and could lead to acceptable extensions or contributions later.
+Acceptance of such a MEP does not in itself signify a right or
+expectation to change Mozart/Oz in any way.  Actual implementation
+proposals are either extensions or contributions and require their
+own separate standard track MEPs.
+
+To introduce a MEP, the author writes a draft and posts it to
+hackers at mozart-oz.org.  MEP editors register the MEP, assign it a
+number, and publish it on the website.
+
+Once a MEP has been registered, everybody in the community is welcome
+and encouraged to debate the proposal and help shape it.  It is the
+author's responsibility to lead and sustain these discussions, record
+in the MEP the opinions expressed, document assenting and dissenting
+points of view, amend and revise the proposal accordingly, and gather
+community consensus behind it.  He should post revised versions of the
+MEP to hackers at mozart-oz.org and ask the MEP editors to update the
+copy published on the website.  When the author so chooses, he can ask
+for a ruling from the Board.
+
+VOTING PROCEDURE
+----------------
+
+Only Board members can vote.  They vote publicly on the hackers list
+with one of the following pronouncements:
+
+* ACCEPT : this MEP is good and ready
+
+* NOTACCEPT : this MEP is not ready or is incompatible with
+  Mozart/Oz philosophy
+
+* ABSTAIN : I do not wish to rule on this MEP
+
+Board members have exactly two weeks to vote.  After that delay their
+vote is automatically ABSTAIN [NOTE1]_ .  The decision of the Board is
+computed from individual votes as follows:
+
+1. ACCEPT >= (2/3)*(ACCEPT+NOTACCEPT) and ACCEPT>0
+   The proposal is accepted.  The Board then gives the author
+   the appropriate rights to do the development, if it is a
+   standard track MEP.  The author becomes responsible for
+   developing and maintaining this part of the system.
+
+2. Otherwise, the proposal is not accepted.  The author is free to
+   continue work on the MEP or to make another MEP, according to
+   the advice given during the community discussion.
+
+In the spirit of Mozart/Oz, the community discussion is very important.
+Therefore, it should rarely be the case that an author asks the Board
+for a vote on a MEP that will probably not be accepted.  All the work
+of design and compromises, of discussion, debate, refinements, and
+revisions should preferably have been fully and satisfactorily
+completed before the MEP's author asks the Board for an official
+decision, i.e., a vote.  We recognize that there may be cases, i.e., a
+stand-off between two opinions, when this is not possible.  The vote
+can be used to break the stand-off in those cases.
+
+There are many MEPs for which we can expect the period of community
+debate to be rather short.  For example, when a package that has been
+offered through MOGUL for a long while is then proposed for inclusion
+in, e.g., the standard library, the MEP would say:
+
+* this package is being proposed for inclusion in stdlib
+
+* this is its purpose
+
+* these are the reasons why it should be in stdlib
+
+* it should be inserted at this URI
+
+* here is the design/API
+
+Note that this MEP is very simple and brief.  MEPs don't have to be
+big.  Since the members of the Board are a subset of the community,
+they too participate in the discussions.  In particular, they will
+give their opinion on, e.g., whether this package belongs in stdlib,
+should be offered as an official add-on, or should remain as an
+individual contribution in MOGUL, or whether modifications of its API
+would be desirable.  That should not take long.  Then it is a simple
+matter to make it official with a vote of the Board.
+
+
+References
+==========
+
+.. [#MOZGOV] Mozart Governance rules,
+   (http://www.mozart-oz.org/pipermail/mozart-hackers/2005/002206.html)
+
+.. [NOTE1] A Board member (A) may delegate his/her voting rights to
+   another Board member (B) who serves as a proxy for (A) while the
+   latter is unavailable.  For the duration of the delegation, (B)
+   has two votes for every MEP: one for him/herself and one for (A).
+   These two votes do not have to be identical.
+
+.. [NOTE2] It should be emphasized that the mandate of Board members is to
+   carefully study and evaluate MEPs, and to issue conservative and
+   well-informed rulings.  It is preferable to ABSTAIN than to cast a
+   vote in ignorance.
+
+
+Copyright
+=========
+
+This document has been placed in the public domain.
+
+
+Votes
+=====
+::
+
+    Raphaël Collet     [ACCEPT]
+    Denys Duchier      []
+    Seif Haridi        []
+    Torbjörn Lager     []
+    Konstantin Popov   []
+    Camilo Rueda       []
+    Christian Schulte  [ACCEPT]
+    Gert Smolka        []
+    Peter Van Roy      []
