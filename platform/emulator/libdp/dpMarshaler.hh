@@ -29,14 +29,12 @@
 #ifndef __DPMARSHALER_HH
 #define __DPMARSHALER_HH
 
+//bmc: I've removed dpBase.hh msgType perdio.hh table.hh
 #include "base.hh"
-#include "dpBase.hh"
-#include "msgType.hh"
 #include "byteBuffer.hh"
-#include "perdio.hh"
-#include "table.hh"
 #include "marshalerBase.hh"
 #include "gname.hh"
+#include "glue_entities.hh"
 
 #ifdef INTERFACE  
 #pragma interface
@@ -303,9 +301,11 @@ protected:
   // as opposed to its stub.
   Bool doToplevel;
 
+  // Defines wich of the proxy-marshal interfaces to se. 
+  Bool pushTerm;  
   //
 public:
-  DPMarshaler() : doToplevel(FALSE) {
+  DPMarshaler() : doToplevel(FALSE), pushTerm(FALSE) {
     lIT = new AddressHashTableO1Reset(LocationsITInitSize);
     vIT = new MarshalerDict(ValuesITInitSize);
     expVars = (OzValuePatch *) 0;
@@ -368,6 +368,8 @@ public:
   void genFullToplevel() { doToplevel = TRUE; }
   Bool isFullToplevel() { return (doToplevel); }
 
+  void pushContents(){ pushTerm = TRUE;}
+  Bool isPushContents(){ return pushTerm; }
   //
   MarshalerDict *getVIT() { return (vIT); }
 };
@@ -474,6 +476,7 @@ private:
 // . keep locations of variables
 // . hold internal (memory) representation of "exported" variables until
 //   their external (network) representations are sent out;
+/*
 class MgrVarPatch : public OzValuePatch {
 private:
   Bool isMarshaled;		// for the case of transmission failure;
@@ -503,6 +506,8 @@ public:
   void marshal(ByteBuffer *bs, Bool hasIndex);
 };
 
+*/
+/*
 inline
 Bool oz_isMgrVarPatch(OZ_Term v)
 {
@@ -515,11 +520,12 @@ MgrVarPatch *oz_getMgrVarPatch(OZ_Term v)
   Assert(oz_isMgrVarPatch(v));
   return ((MgrVarPatch *) oz_getExtVar(v));
 }
-
+*/
 //
 // MVarPatch holds a location of a *marshaled* variable, of whichever
 // type (but should not be marshaled itself: 'processVar()' methods
 // should recognize coreferences, and marshal them accordingly);
+
 class MVarPatch : public OzValuePatch {
 public:
   MVarPatch(OZ_Term locIn, OzValuePatch *nIn)
@@ -527,7 +533,7 @@ public:
   ~MVarPatch() { Assert(0); }
 
   //
-  virtual void          disposeV() { 
+  virtual void disposeV() { 
     disposeOVP();
     oz_freeListDispose(extVar2Var(this), extVarSizeof(MVarPatch));
   }
@@ -545,19 +551,14 @@ public:
 //
 class PxyVarPatch : public OzValuePatch {
 private:
-  DebugCode(OB_TIndex bti;);
+  //  DebugCode(OB_TIndex bti;);
   Bool isMarshaled;
-  Ext_OB_TIndex oti;
-  RRinstance *remoteRef;
-  DSite *ms;			// manager site, always;
   short isReadOnly;		//
-  short isToOwner;		//
-  BYTE  ec;                     // Entity Condition
-
+  Mediator *e_name;
   //
 public:
   PxyVarPatch(OZ_Term locIn, OzValuePatch *nIn,
-		 ProxyVar *pv, DSite *dest);
+		 ProxyVar *pv);
   virtual ~PxyVarPatch() { Assert(0); }
 
   //
@@ -570,7 +571,6 @@ public:
   }
   virtual void gCollectRecurseV() {
     gcRecurseOVP();
-    ms->makeGCMarkSite();
   }
 
   //
@@ -594,7 +594,6 @@ PxyVarPatch *oz_getPxyVarPatch(OZ_Term v)
 // Construct virtual snapshot;
 class VSnapshotBuilder : public GenTraverser {
 private:
-  DSite *dest;			// for this message;
   MarshalerDict *vIT;		// shared with the dpMarshaler;
   OzValuePatch *expVars;
   //
@@ -609,22 +608,20 @@ private:
   //
 public:
   VSnapshotBuilder() {
-    DebugCode(dest = (DSite *) -1;);
     DebugCode(vIT = (MarshalerDict *) -1;);
     DebugCode(expVars = (OzValuePatch *) -1;);
     DebugCode(doToplevel = (Bool) -1;);
   }
 
   //
-  void init(DSite *destIn, DPMarshaler *dpm) {
-    dest = destIn;
+  void init(DPMarshaler *dpm) {
     vIT = dpm->getVIT();
     doToplevel = dpm->isFullToplevel();
     expVars = dpm->getExpVars();
     copyStack(dpm);
   }
 #if defined(EVAL_EAGER_SNAPSHOT)
-  void initEager(DSite *destIn, DPMarshaler *dpm, OZ_Term t) {
+  void initEager(DPMarshaler *dpm, OZ_Term t) {
     dest = destIn;
     vIT = dpm->getVIT();
     doToplevel = dpm->isFullToplevel();
@@ -635,7 +632,6 @@ public:
 
   void reset() {
     GenTraverser::reset();
-    DebugCode(dest = (DSite *) -1;);
     DebugCode(vIT = (MarshalerDict *) -1;);
     DebugCode(doToplevel = (Bool) -1;);
     DebugCode(doToplevel = (Bool) -1;);
@@ -708,8 +704,7 @@ Bool traverseCode(GenTraverser *m, GTAbstractEntity *arg);
 // 'dpMarshalTerm' with four arguments is called when a first frame
 // is marshaled, and with two arguments - for subsequent frames;
 inline
-DPMarshaler* dpMarshalTerm(OZ_Term term,
-			   ByteBuffer *bs, DPMarshaler *dpmIn, DSite *dest)
+DPMarshaler* dpMarshalTerm(OZ_Term term, ByteBuffer *bs, DPMarshaler *dpmIn)
 {
   Assert(dpmIn->isFinished());
 #if defined(EVAL_EAGER_SNAPSHOT)
@@ -721,7 +716,7 @@ DPMarshaler* dpMarshalTerm(OZ_Term term,
 
   //
 #if defined(EVAL_EAGER_SNAPSHOT)
-  vsb.initEager(dest, dpm, term);
+  vsb.initEager(dpm, term);
   DebugCode(vsb.prepareTraversing((Opaque *) bs));
   vsb.resume();
   vsb.finishTraversing();
@@ -749,7 +744,7 @@ DPMarshaler* dpMarshalTerm(OZ_Term term,
   } else {
 #if !defined(EVAL_EAGER_SNAPSHOT)
     // Now, take the snapshot:
-    vsb.init(dest, dpm);	// copy the marshaler's stack, among all;
+    vsb.init(dpm);	// copy the marshaler's stack, among all;
     DebugCode(vsb.prepareTraversing((Opaque *) bs));
     vsb.resume();		// .. off the just copied stack;
     vsb.finishTraversing();
@@ -927,13 +922,7 @@ extern SendRecvCounter mess_counter[];
 // '-1' means the action is suspended;
 
 //
-void marshalTertiary(ByteBuffer *bs,
-		     Tertiary *t, Bool hasIndex, MarshalTag tag);
-OZ_Term unmarshalTertiary(MarshalerBuffer *bs, MarshalTag tag);
-OZ_Term unmarshalOwner(MarshalerBuffer *bs, MarshalTag mt);
 // var.cc
-OZ_Term unmarshalBorrow(MarshalerBuffer *bs,
-			OB_Entry *&ob, OB_TIndex &bi, BYTE &ec);
 void marshalObject(MarshalerBuffer *bs, ConstTerm* t);
 
 //
@@ -957,7 +946,7 @@ void marshalObject(MarshalerBuffer *bs, ConstTerm* t);
 #define MTertiaryMaxSize						\
   (DIFMaxSize +								\
    max(max(MOwnHeadMaxSize, MBorrowHeadMaxSize), MToOwnerMaxSize))
-
+#define MRefConsInfoMaxSize (MDSiteMaxSize + MCreditMaxSize) 
 //
 // Top-level management of marshalers (to be used by transport
 // objects). 
@@ -980,7 +969,7 @@ private:
   int musNum;
 
   //
-protected:
+public:
   DPMarshalers() : mus((MU *) 0), musNum(0) {}
   ~DPMarshalers() { dpAllocateMarshalers(0); }
 
@@ -999,5 +988,6 @@ protected:
 //
 extern DPMarshaler **dpms;
 extern Builder **dpbs;
+extern DPMarshalers *DPM_Repository;
 
 #endif

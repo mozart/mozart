@@ -230,6 +230,18 @@ void DPMARSHALERCLASS::processNoGood(OZ_Term resTerm)
   ByteBuffer *bs = (ByteBuffer *) getOpaque();
 
   //
+
+  // First, check if this is something that we actually should 
+  // marshal, with a structure! 
+  
+  if(oz_isThread(resTerm)) //Katching!!! 
+    {
+      bs->put( DIF_RESOURCE);           
+      glue_marshalOzThread(bs, resTerm); 
+      return ; 
+    }
+
+
   if (bs->availableSpace() >=
       2*DIFMaxSize + MNumberMaxSize + MOwnHeadMaxSize) {
     int index;
@@ -245,8 +257,10 @@ void DPMARSHALERCLASS::processNoGood(OZ_Term resTerm)
     //
     VISITNODE(resTerm, vIT, bs, index, return);
     //
-    MarshalRHTentry(resTerm, index);
-
+    if(index) bs->put(DIF_RESOURCE_DEF);
+    else bs->put(DIF_RESOURCE);
+    glue_marshalUnusable(bs, resTerm);
+    if(index) marshalTermDef(bs, index);
     //
     Assert(bs->availableSpace() >= DIFMaxSize);
   } else {
@@ -280,7 +294,10 @@ void DPMARSHALERCLASS::processBuiltin(OZ_Term biTerm, ConstTerm *biConst)
 
     //
     if (bi->isSited()) {
-      MarshalRHTentry(biTerm, index);
+      if(index) bs->put(DIF_RESOURCE_DEF);
+      else bs->put(DIF_RESOURCE);
+      glue_marshalUnusable(bs, biTerm);
+      if(index) marshalTermDef(bs, index);
     } else {
 #if defined(DBG_TRACE)
       DBGINIT();
@@ -373,6 +390,7 @@ Bool DPMARSHALERCLASS::marshalObjectStub(OZ_Term term, ConstTerm *objConst)
 {
   ByteBuffer *bs = (ByteBuffer *) getOpaque();
 
+  printf("Marshal Object stub %s\n", toC(term));
   //
   if (bs->availableSpace() >= 
       2*DIFMaxSize + MNumberMaxSize + MOwnHeadMaxSize + 2*MGNameMaxSize) {
@@ -386,52 +404,25 @@ Bool DPMARSHALERCLASS::marshalObjectStub(OZ_Term term, ConstTerm *objConst)
     Assert(isObject(o));
     //
     if (o->getClass()->isSited()) {
-      MarshalRHTentry(term, index);
+      if(index) bs->put(DIF_RESOURCE_DEF);
+      else bs->put(DIF_RESOURCE);
+      glue_marshalUnusable(bs, term);
+      if(index) marshalTermDef(bs, index);
     } else {
       //
-      Assert(o->getTertType() == Te_Local || o->getTertType() == Te_Manager);
+      Assert(o->getTertType() == Te_Local || o->getTertType() == Te_Proxy);
       if (o->getTertType() == Te_Local)
-	globalizeTert(o);
-
-      //
-      ObjectClass *oc = o->getClass();
-      GName *gnclass = globalizeConst(oc);
-      Assert(gnclass);
-      GName *gnobj = globalizeConst(o);
-      Assert(o->getGName1());
-      Assert(gnobj);
-      Assert(o->getTertType() == Te_Manager);
-      // No "lazy class" protocol, so it isn't a tertiary:
-      // Assert(oc->getTertType() == Te_Manager);
-      //
+	globalizeTertiary(o);
 
       //
       marshalDIFcounted(bs, index ? DIF_STUB_OBJECT_DEF : DIF_STUB_OBJECT);
-      marshalOwnHead(bs, MakeOB_TIndex(o->getTertPointer()));
-      marshalGName(bs, gnobj);
-      marshalGName(bs, gnclass);
-      //
+      glue_marshalObjectStubInternal(o, bs);
       if (index) marshalTermDef(bs, index);
-
-      //
-#if defined(DBG_TRACE)
-      DBGINIT();
-      fprintf(dbgout, "> tag: %s(%d) = %s\n",
-	      dif_names[DIF_STUB_OBJECT].name, DIF_STUB_OBJECT, toC(term));
-      fflush(dbgout);
-#endif
     }
 
     //
     Assert(bs->availableSpace() >= DIFMaxSize);
   } else {
-#if defined(DBG_TRACE)
-    DBGINIT();
-    fprintf(dbgout, "> tag: %s(%d) on %s\n",
-	    dif_names[DIF_SUSPEND].name, DIF_SUSPEND, toC(term));
-    fflush(dbgout);
-#endif
-    marshalDIFcounted(bs, DIF_SUSPEND);
     suspend(term);
   }
   return (TRUE);
@@ -442,6 +433,7 @@ inline
 Bool DPMARSHALERCLASS::marshalFullObject(OZ_Term term, ConstTerm *objConst)
 {
   ByteBuffer *bs = (ByteBuffer *) getOpaque();
+  printf("MarshalFullObject %s\n", toC(term));
 
   //
   if (bs->availableSpace() >= 
@@ -467,7 +459,7 @@ Bool DPMARSHALERCLASS::marshalFullObject(OZ_Term term, ConstTerm *objConst)
     //
     Object *o = (Object*) objConst;
     Assert(isObject(o));
-    Assert(o->getTertType() == Te_Manager);
+    // Assert(o->getTertType() == Te_Manager);
     // Assert(o->getClass()->getTertType() == Te_Manager);
     marshalGName(bs, o->getGName1());
     doToplevel = FALSE;
@@ -500,17 +492,20 @@ Bool DPMARSHALERCLASS::processObject(OZ_Term term, ConstTerm *objConst)
 }
 
 //
-#define DPMHandleTert(string, tert, term, tag, Return)			\
+#define DPMHandleTert(string, tert, term, Return)			\
 {									\
   ByteBuffer *bs = (ByteBuffer *) getOpaque();				\
   if (bs->availableSpace() >= 						\
       DIFMaxSize + MTertiaryMaxSize + MNumberMaxSize) {			\
     int index;								\
     VISITNODE(term, vIT, bs, index, Return);				\
-    marshalTertiary(bs, tert, index, tag);				\
-    if (index) marshalTermDef(bs, index);				\
-    Assert(bs->availableSpace() >= DIFMaxSize);				\
-  } else {								\
+    if (index) bs->put(DIF_RESOURCE_DEF);				\
+    else								\
+    bs->put(DIF_RESOURCE);                                              \
+    glue_marshalTertiary(bs, tert, isPushContents());                   \
+    if(index) marshalTermDef(bs, index);                                \
+    Assert(bs->availableSpace() >= DIFMaxSize);                         \
+  } else {                                                              \
     DBG_TRACE_CODE(DBGINIT(););						\
     DBG_TRACE_CODE(fprintf(dbgout, "> tag: %s(%d) on %s\n",		\
       dif_names[DIF_SUSPEND].name, DIF_SUSPEND, toC(term)););		\
@@ -524,23 +519,23 @@ Bool DPMARSHALERCLASS::processObject(OZ_Term term, ConstTerm *objConst)
 inline 
 void DPMARSHALERCLASS::processLock(OZ_Term term, Tertiary *tert)
 {
-  DPMHandleTert("lock", tert, term, DIF_LOCK, return);
+  DPMHandleTert("lock", tert, term, return);
 }
 inline 
 Bool DPMARSHALERCLASS::processCell(OZ_Term term, Tertiary *tert)
 {
-  DPMHandleTert("cell", tert, term, DIF_CELL, return(TRUE));
+  DPMHandleTert("cell", tert, term, return(TRUE));
   return (TRUE);
 }
 inline 
 void DPMARSHALERCLASS::processPort(OZ_Term term, Tertiary *tert)
 {
-  DPMHandleTert("port", tert, term, DIF_PORT, return);
+  DPMHandleTert("port", tert, term, return);
 }
 inline 
 void DPMARSHALERCLASS::processResource(OZ_Term term, Tertiary *tert)
 {
-  DPMHandleTert("resource", tert, term, DIF_RESOURCE, return);
+  DPMHandleTert("resource", tert, term, return);
 }
 
 #undef DPMHandleTert
@@ -581,17 +576,27 @@ void DPMARSHALERCLASS::processVar(OZ_Term v, OZ_Term *vRef)
 	break;
 
       case OZ_EVAR_MANAGER:
-	oz_getManagerVar(v)->marshal(bs, index);
-	expVars = new MVarPatch(vrt, expVars);
+	OZ_error("Managers are gone");
+	/*
+	  Managers are gone to the DSS.
+	  
+	  oz_getManagerVar(v)->marshal(bs, index);
+	  expVars = new MVarPatch(vrt, expVars);
+	*/
 	break;
 
       case OZ_EVAR_PROXY:
-	oz_getProxyVar(v)->marshal(bs, index);
+	oz_getProxyVar(v)->marshal(bs, index, vRef, isPushContents());
 	expVars = new MVarPatch(vrt, expVars);
 	break;
 
       case OZ_EVAR_MGRVARPATCH:
-	oz_getMgrVarPatch(v)->marshal(bs, index);
+	OZ_error("MGRVARPATCH not used");
+	/*
+	  Since Managers are gone, ManagerVarPatches are also gone
+
+	  oz_getMgrVarPatch(v)->marshal(bs, index);
+	*/
 	// is already a patch;
 	break;
 
@@ -610,12 +615,14 @@ void DPMARSHALERCLASS::processVar(OZ_Term v, OZ_Term *vRef)
 
       //
     } else if (oz_isFree(v) || oz_isReadOnly(v)) {
-      Assert(perdioInitialized);
-
       //
-      ManagerVar *mvp = globalizeFreeVariable(vRef);
-      mvp->marshal(bs, index);
+      ProxyVar *npv = glue_newGlobalizeFreeVariable(vRef);
+      npv->marshal(bs, index, vRef, isPushContents());
       expVars = new MVarPatch(vrt, expVars);
+      //
+      Assert(oz_isVar(*vRef));
+
+      // (void) triggerVariable(vRef);
 
       //
       if (index) marshalTermDef(bs, index);
@@ -631,7 +638,8 @@ void DPMARSHALERCLASS::processVar(OZ_Term v, OZ_Term *vRef)
       OZ_warning("marshaling a variable as a resource!");
       // handle it as a resource. Note that co-references are already
       // taken care of;
-      MarshalRHTentry(vrt, 0);
+      OZ_error("DPMARSHALERCLASS::Dont remember : MRHTentry\n");
+      //MarshalRHTentry(vrt, 0);
     }
 
     //
@@ -714,10 +722,10 @@ Bool DPMARSHALERCLASS::processSRecord(OZ_Term srecordTerm)
       fflush(dbgout);
 #endif
       if (index) {
-	marshalDIFcounted(bs, DIF_TUPLE_DEF);
-	marshalTermDef(bs, index);
+        marshalDIFcounted(bs, DIF_TUPLE_DEF);
+        marshalTermDef(bs, index);
       } else {
-	marshalDIFcounted(bs, DIF_TUPLE);
+        marshalDIFcounted(bs, DIF_TUPLE);
       }
       marshalNumber(bs, rec->getTupleWidth());
     } else {
@@ -728,10 +736,10 @@ Bool DPMARSHALERCLASS::processSRecord(OZ_Term srecordTerm)
       fflush(dbgout);
 #endif
       if (index) {
-	marshalDIFcounted(bs, DIF_RECORD_DEF);
-	marshalTermDef(bs, index);
+        marshalDIFcounted(bs, DIF_RECORD_DEF);
+        marshalTermDef(bs, index);
       } else {
-	marshalDIFcounted(bs, DIF_RECORD);
+        marshalDIFcounted(bs, DIF_RECORD);
       }
     }
 
@@ -850,7 +858,8 @@ Bool DPMARSHALERCLASS::processDictionary(OZ_Term dictTerm, ConstTerm *dictConst)
     //
     OzDictionary *d = (OzDictionary *) dictConst;
     if (!d->isSafeDict()) {
-      MarshalRHTentry(dictTerm, index);
+      OZ_error("DPMARSHALERCLASS::processDict : MRHTentry\n");
+      //MarshalRHTentry(dictTerm, index);
       Assert(bs->availableSpace() >= DIFMaxSize);
       return (OK);
     } else {
@@ -860,12 +869,11 @@ Bool DPMARSHALERCLASS::processDictionary(OZ_Term dictTerm, ConstTerm *dictConst)
 	      dif_names[DIF_DICT].name, DIF_DICT, toC(dictTerm));
       fflush(dbgout);
 #endif
-      if (index) {
-	marshalDIFcounted(bs, DIF_DICT_DEF);
-	marshalTermDef(bs, index);
-      } else {
-	marshalDIFcounted(bs, DIF_DICT);
-      }
+      if (index) 	marshalDIFcounted(bs, DIF_DICT_DEF);
+      else marshalDIFcounted(bs, DIF_DICT);
+      glue_marshalDictionary(bs, static_cast<ConstTermWithHome*>(dictConst));
+      if (index) marshalTermDef(bs, index);
+
       marshalNumber(bs, d->getSize());
       Assert(bs->availableSpace() >= DIFMaxSize);
       return (NO);
@@ -900,8 +908,10 @@ Bool DPMARSHALERCLASS::processArray(OZ_Term arrayTerm, ConstTerm *arrayConst)
     //
     VISITNODE(arrayTerm, vIT, bs, index, return(OK));
     //
-    MarshalRHTentry(arrayTerm, index);
-
+    if(index) bs->put(DIF_RESOURCE_DEF);
+    else bs->put(DIF_RESOURCE);
+    glue_marshalArray(bs, static_cast<ConstTermWithHome*>(arrayConst));
+    if(index) marshalTermDef(bs, index);
     //
     Assert(bs->availableSpace() >= DIFMaxSize);
   } else {
@@ -923,6 +933,8 @@ Bool DPMARSHALERCLASS::processClass(OZ_Term classTerm, ConstTerm *classConst)
 { 
   ByteBuffer *bs = (ByteBuffer *) getOpaque();
 
+  printf("Process Class %s\n", toC(classTerm));
+
   //
   if (bs->availableSpace() >= 
       max(2*DIFMaxSize + 2*MNumberMaxSize + MGNameMaxSize, 
@@ -939,7 +951,8 @@ Bool DPMARSHALERCLASS::processClass(OZ_Term classTerm, ConstTerm *classConst)
     doToplevel = FALSE;
     //
     if (cl->isSited()) {
-      MarshalRHTentry(classTerm, index);
+      OZ_error("DPMARSHALERCLASS::processClass : MRHTentry\n");
+      //MarshalRHTentry(classTerm, index);
       Assert(bs->availableSpace() >= DIFMaxSize);
       return (OK);		// done - a leaf;
     } else {
@@ -1003,7 +1016,8 @@ Bool DPMARSHALERCLASS::processAbstraction(OZ_Term absTerm, ConstTerm *absConst)
 
     //
     if (pred->isSited()) {
-      MarshalRHTentry(absTerm, index);
+      OZ_error("DPMARSHALERCLASS::processAbstract : MRHTentry\n");
+      //MarshalRHTentry(absTerm, index);
       Assert(bs->availableSpace() >= DIFMaxSize);
       return (OK);		// done - a leaf;
     } else {

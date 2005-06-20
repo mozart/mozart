@@ -1,0 +1,207 @@
+/*
+ *  Authors:
+ *    Erik Klintskog (erik@sics.se)
+ * 
+ *  Contributors:
+ *    optional, Contributor's name (Contributor's email address)
+ * 
+ *  Copyright:
+ *    Erik Klintskog, 2002
+ * 
+ *  Last change:
+ *    $Date$ by $Author$
+ *    $Revision$
+ * 
+ *  This file is part of Mozart, an implementation 
+ *  of Oz 3:
+ *     http://www.mozart-oz.org
+ * 
+ *  See the file "LICENSE" or
+ *     http://www.mozart-oz.org/LICENSE.html
+ *  for information on usage and redistribution 
+ *  of this file, and for a DISCLAIMER OF ALL 
+ *  WARRANTIES.
+ *
+ */
+
+//#if defined(INTERFACE)
+//#pragma implementation "glue_interface.hh"
+//#endif
+
+
+#include "engine_interface.hh"
+#include "dss_object.hh"
+#include "glue_interface.hh"
+#include "glue_ozSite.hh"
+#include "glue_siteRepresentation.hh"
+#include "os.hh"
+#include "glue_base.hh"
+
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+void doPortSend(PortWithStream *port,TaggedRef val,Board*);
+OZ_Return accessCell(OZ_Term cell,OZ_Term &out);
+
+/* From DSS */
+MAP::MAP() :
+  Mediation_Object() {}
+
+ OZ_Term g_connectPort;
+ OZ_Term g_kbrStreamPort;
+ OZ_Term g_defaultAcceptProcedure;
+ OZ_Term g_defaultConnectionProcedure;
+ OZ_Term g_faultPort;
+
+
+PstInContainerInterface* 
+MAP::createPstInContainer(){
+  return new PstInContainer();
+}
+
+void
+MAP::GL_error(const char *format, ...){
+  va_list ap;
+  va_start(ap,format);
+  vfprintf(stderr,format,ap);
+  fprintf(stderr, "\n -- Error in pid %d --", osgetpid());
+  bool loop=true;
+  while(loop){;}
+  //OZ_error("DSS_warning %s", format,ap);
+  va_end(ap);
+}
+
+void
+MAP::GL_warning(const char *format, ...){
+  va_list ap;
+  va_start(ap,format);
+  vfprintf(stderr,format,ap);
+  fprintf(stderr, "\n -- Warning in pid %d --", osgetpid());
+  bool loop=true;
+  while(loop){;}
+  //OZ_warning("DSS_warning %s", format,ap);
+  va_end(ap);
+}
+void 
+MAP::kbr_message(int key, PstInContainerInterface* pstin){
+  PstInContainer *pst = static_cast<PstInContainer*>(pstin);
+  printf("Receiving key:%d, msg %s\n", key, toC(pst->a_term)); 
+  PortWithStream * pws  =  static_cast<PortWithStream*>(tagged2Const(g_kbrStreamPort));
+  OZ_Term msg = OZ_recordInit(oz_atom("message"), oz_cons(oz_pairA("msg",pst->a_term), oz_cons(oz_pairAI("key", key),  oz_nil())));
+  doPortSend(pws,msg, NULL); 
+}
+
+
+void 
+MAP::kbr_divideResp(int start, int stop, int n){
+  printf("Divide interval ]%d %d ]\n", start, stop);
+  PortWithStream * pws  =  static_cast<PortWithStream*>(tagged2Const(g_kbrStreamPort));
+  OZ_Term msg =OZ_recordInit(oz_atom("divide"),
+			     oz_cons(oz_pairAI("begin",start), 
+				     oz_cons(oz_pairAI("end", stop), 
+					     oz_cons(oz_pairAI("n", n), oz_nil()))));
+  doPortSend(((PortWithStream *) tagged2Const(g_kbrStreamPort)), msg, NULL); 
+}
+
+void 
+MAP::kbr_newResp(int start, int stop, int n, PstInContainerInterface* pstin){
+  printf("Divide interval ]%d %d ]\n", start, stop);
+  PortWithStream * pws  =  static_cast<PortWithStream*>(tagged2Const(g_kbrStreamPort));
+  PstInContainer *pst = static_cast<PstInContainer*>(pstin);
+  OZ_Term msg =OZ_recordInit(oz_atom("newResp"),
+			     oz_cons(oz_pairAI("begin",start), 
+				     oz_cons(oz_pairAI("end", stop), 
+					     oz_cons(oz_pairAI("n", n), 
+						     oz_cons(oz_pairA("data", pst->a_term), 
+							     oz_nil()
+							     )
+						     )
+					     )
+				     )
+			     );
+  doPortSend(((PortWithStream *) tagged2Const(g_kbrStreamPort)), msg, NULL); 
+}
+
+
+
+
+ComService::ComService(int ip, int port, const char* str){
+  Oz_Site *os = new Oz_Site(); 
+  OZ_Term oz_os = OZ_extension(os); 
+  thisGSite = new Glue_SiteRep(ip, port, NULL,oz_os); 
+  os->setGSR(thisGSite);
+  char *RId = (char *)malloc(strlen(str)+1); // RId will be freed in GSA
+  strcpy(RId, str); 
+  thisGSite->m_setRId(RId);
+
+} 
+
+
+ComService::~ComService(){;}
+
+void ComService::closeAnonConnection(VirtualChannelInterface* con){
+  printf("Implement the IO-factory, socket not closed\n"); 
+}
+
+// Create a SiteAddress object from the representation found in 
+// the readbuffer. Connect the new object to the passed DssSite
+// object. 
+CsSiteInterface* ComService::unmarshalCsSite(DSite* name, DssReadBuffer* const buf){
+  int ip = getInt(buf); 
+  int port = getInt(buf); 
+	
+  int RIdLen = getInt(buf);
+  char *RId = (char *)malloc(RIdLen+1);
+  getStr(buf, RId, RIdLen);
+  *(RId+RIdLen) = 0x00;  // put the sring terminator
+
+  Oz_Site *os = new Oz_Site(); 
+  OZ_Term oz_os = OZ_extension(os); 
+  Glue_SiteRep * gsa = new Glue_SiteRep(ip, port, name,oz_os); 
+  gsa->m_setRId(RId);
+  os->setGSR(gsa); 
+  
+  OZ_Term command=OZ_recordInit(oz_atom("new_site"),
+				oz_cons(oz_pair2(oz_int(1),
+						 oz_os),
+					oz_nil()));
+  doPortSend(((PortWithStream *) tagged2Const(g_connectPort)), 
+	     command, NULL); 
+  return gsa; 
+} 
+
+    
+CsSiteInterface *ComService::connectSelfReps(MsgnLayer *msg, DSite* ds){ 
+  a_msgnLayer = msg; 
+  thisGSite->m_setDssSite(ds);
+  return thisGSite;
+}
+
+
+void  ComService::m_gcSweep(){
+  ;
+}
+
+// Channel establishemnt 
+void ComService::channelEstablished(ChannelRequest *CR, VirtualChannelInterface *vc){;}
+void ComService::connectionFailed(ChannelRequest *CR, 
+				  ConnectionFailReason reason){;}
+
+// Explicit site handeling
+void ComService::m_MsgReceived(CsSiteInterface* CS, MsgContainer* msg){
+  PstInContainer *pst = NULL; 
+  Glue_SiteRep *gsr = static_cast<Glue_SiteRep*>(CS);
+
+  OZ_Term command=OZ_recordInit(oz_atom("directMsg"),
+				oz_cons(oz_pair2(oz_atom("msg"),
+						 pst->a_term),
+				oz_cons(oz_pair2(oz_atom("srcSite"),gsr->m_getOzSite()),
+				oz_nil())));
+  doPortSend(((PortWithStream *) tagged2Const(g_connectPort)), command, NULL); 
+}
+
+ExtDataContainerInterface* 
+ComService::m_createExtDataContainer(BYTE){
+  printf("we're sending NOTHING, thus we should se no extdata containers\n"); 
+  return NULL;
+}
