@@ -36,17 +36,18 @@ Index by Category
 
  Accepted MEPs (accepted; may not be implemented yet)
  ---------------------------------------------------------------
- A   101  Update of Website for new Governance Model     Van Roy
- A   102  CVS access for Boris Mejias                      Glynn
  ---------------------------------------------------------------
 
  Open MEPs (under consideration)
  ---------------------------------------------------------------
+ I   103  Archive Copy of Mozart Governance Rules        Van Roy
  ---------------------------------------------------------------
 
  Finished MEPs (done, implemented in CVS)
  ---------------------------------------------------------------
  F   100  Expansion of Mozart Board to Mozart Community  Van Roy
+ F   101  Update of Website for new Governance Model     Van Roy
+ F   102  CVS access for Boris Mejias                      Glynn
  ---------------------------------------------------------------
 
  Empty MEPs (or containing only an abstract)
@@ -66,8 +67,9 @@ Numerical Index
  I     2  Sample ReStructuredText MEP Template           Duchier
  I     3  Sample Plaintext MEP Template                  Duchier
  F   100  Expansion of Mozart Board to Mozart Community  Van Roy
- A   101  Update of Website for new Governance Model     Van Roy
- A   102  CVS access for Boris Mejias                      Glynn
+ F   101  Update of Website for new Governance Model     Van Roy
+ F   102  CVS access for Boris Mejias                      Glynn
+ I   103  Archive Copy of Mozart Governance Rules        Van Roy
  ---------------------------------------------------------------
 
 
@@ -86,8 +88,8 @@ Owners
     name                     email address
     ----------------         -------------
     Duchier                  denys.duchier@mozart-oz.org
-    Van Roy                  peter.vanroy@mozart-oz.org
-    Glynn                    kevin.glynn@mozart-oz.org
+    Van Roy                  pvr@info.ucl.ac.be
+    Glynn                    glynn@info.ucl.ac.be
 
 
 References
