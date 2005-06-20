@@ -19,23 +19,36 @@
 %%% WARRANTIES.
 %%%
 
-%\define DBG
+\define DBG
 functor
 import
-   DPB     at 'x-oz://boot/DPB'
+   Glue     at 'x-oz://boot/Glue'
    ConnectAcceptModule
    ConnectionFunctor
    AcceptFunctor
-   DPMisc at 'x-oz://boot/DPMisc'
-   DPStatistics
+   OS
 \ifdef DBG
    System
 \endif
 export
    Init
    GetSettings
+   GetLastSite
+   GetAllSites
+   GetConSites
+   GetThisSite
+   GetChannelStatus
+   GetSiteInfo
+   SendMsgToSite   
 define
-   {Wait DPB}
+
+\ifdef DBG
+   Show = System.show
+\else
+   Show = proc{$ _} skip end
+\endif
+  
+   {Wait Glue}
    ConnectState = {NewCell notStarted}
 
    proc{CheckSettings R}
@@ -59,36 +72,69 @@ define
       %% For c level a connection functor is also needed and has to be
       %% added to settings if not specified.
       AccMod = {CondSelect Settings acceptProc AcceptFunctor}
-      IntSettings = if {HasFeature Settings connectProc} then
-		       Settings
-		    else
-		       {AdjoinAt Settings connectProc
-			ConnectionFunctor.connectionfunctor}
-		    end
+      IpPort
+      NodeName
+      InSettings
+      LP Stream
    in
-      {CheckSettings IntSettings}
-\ifdef DBG
-      {System.show {DPMisc.initIPConnection IntSettings}}
-\else
-      _={DPMisc.initIPConnection IntSettings}
-\endif
+      {CheckSettings Settings}
+
 \ifdef DBG
       try
-	 {AccMod.accept {CondSelect Settings port default}}
-      catch X then {System.show accept_ex(X)}end
+	 {AccMod.accept {CondSelect Settings port default} IpPort NodeName}
+      catch X then {System.show accept_ex(X)} raise X end end
 \else
-      {AccMod.accept {CondSelect Settings port default}}
+      {AccMod.accept {CondSelect Settings port default} IpPort NodeName}
 \endif
+
+      {Show IpPort}
+
+      % Adding up what is missing to the settings structure
+      
+      InSettings = {FoldL [connectProc#fun{$} ConnectionFunctor.connectionfunctor end
+			   port#fun{$} IpPort end
+			   ip#fun{$}
+				 AddrList = try
+					       {OS.getHostByName NodeName}.addrList
+					    catch _ then 
+					       nil
+					    end
+			      in
+				 case AddrList of nil then "127.0.0.1"
+				 elseof [nil] then "127.0.0.1"
+				 elseof L then L.1 end
+			      end
+			   siteId#fun{$} nil end
+			   %% temporary set the route intention here ... /V
+			   toRoute#fun{$} false end
+			   dhtId#fun{$} 0-1 end]
+		    fun{$ Ind F#P}
+		       if  {HasFeature Ind F} then Ind
+		       else{AdjoinAt Ind F {P}} end
+		    end
+		    Settings}
+      
+      LP = {NewPort Stream}
+      {Show InSettings}
+      {Show {Glue.initIPConnection InSettings.port InSettings.ip
+	     InSettings.siteId InSettings.connectProc LP InSettings.dhtId}}
+            
+      {Delay 500}
+      
       thread
-	 {ConnectAcceptModule.initConnection {DPMisc.getConnectWstream}}
+	 %% temporary set the route intention here ... /V
+	 {ConnectAcceptModule.initConnection Stream InSettings.toRoute}
       end
       Settings
    end
 
    fun{Init Settings} O N in
+      {Show dpInit(Settings)}
       {Exchange ConnectState O N}
+      {Show exchanged(O)}
       case O of
 	 notStarted then
+	 {Show starting}
 	 N={StartDP Settings}
 	 true
       else
@@ -103,7 +149,7 @@ define
       case S of notStarted then
 	 S
       else
-	 MySite={Filter {DPStatistics.siteStatistics}
+	 MySite={Filter {Glue.siteStatistics}
 		 fun{$ X} X.state==mine end}.1
       in
 	 init(ip:MySite.ip
@@ -113,6 +159,33 @@ define
 	      connectProc:{CondSelect S connectProc default}
 	      acceptProc:{CondSelect S acceptProc default})
       end
+   end
+   fun{GetLastSite}
+      {ConnectAcceptModule.lastSite}
+   end
+   
+   fun {GetAllSites}
+      {ConnectAcceptModule.getAllSites}
+   end
+
+   fun {GetConSites}
+      {ConnectAcceptModule.getConSites}
+   end
+
+   fun {GetThisSite}
+      {ConnectAcceptModule.getThisSite}
+   end
+
+   fun {GetChannelStatus S}
+      {ConnectAcceptModule.getChannelStatus S}
+   end
+
+   fun {GetSiteInfo S}
+      {ConnectAcceptModule.getSiteInfo S}
+   end
+
+   proc {SendMsgToSite S Msg}
+      {ConnectAcceptModule.sendMsgToSite S Msg}
    end
 end
 

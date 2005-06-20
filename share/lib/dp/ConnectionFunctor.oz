@@ -20,7 +20,7 @@
 %%% WARRANTIES.
 %%%
 
-%\define DBG
+\define DBG
 functor
 export
    Connectionfunctor
@@ -28,185 +28,166 @@ define
    functor Connectionfunctor
    export
       Connect
+      ConnectWithRoute
    import
       ConnectionWrapper at 'x-oz://connection/ConnectionWrapper.ozf'
+\ifdef DBGroute
+      System
+\endif
+\ifdef TSTroute 
+      System
+      Property
+\endif
 \ifdef DBG
       System(show:Show showInfo showError)
       Property
 \endif
    define
+      proc{Dshow M}
+\ifdef DBG
+	 {Show M}
+\endif
+	 skip
+      end
+      
       RetryTimes=10
       RetryWaitTime=100
+
+      ConnId
       
       proc {Parse P ?Address ?IPPort}
       % Get Address and Port to connect to out of P
 	 ip_addr(addr:Address port:IPPort)=P
       end
-      
-      proc{Connect P}       
-\ifdef DBG
-	 {Show connect(P)}
-	 T0 = {Property.get 'time.total'}
-	 {Property.put 'print.depth' 100}
-	 {Property.put 'print.width' 100}
-\endif
-	 FD
-	 Address IPPort
-	 Done
-	 proc{GetNegChannel Time}
-	    if Time>0 then
-	       try
-		  FD={ConnectionWrapper.socket 'PF_INET' 'SOCK_STREAM' "tcp"}
-		  if FD==~1 then raise no_fd end end
-		  {ConnectionWrapper.connect FD Address IPPort}
-	       catch X then
-		  case X of system(os(_ _ _ "Connection refused") ...) then
-		     Done=failed
-		     {ConnectionWrapper.close FD}
-\ifdef DBG
-		     {System.show discovered_perm(FD Address IPPort)}
-\endif
-		     {ConnectionWrapper.connFailed perm}
-		  [] system(os(_ _ _ "In progress") ...) then
-		     % only tells that the socket is in progress
-		     skip
-		  [] system(kernel(terminate) ...) then
-		     raise terminated end
-		  else
-		     if FD\=~1 then {ConnectionWrapper.close FD} end
-\ifdef DBG
-		     {System.show caught(X)}
-		     {System.show retrying}
-\endif
-       	             % Delay for a while and retry
-		     {Delay RetryWaitTime}
-		     {GetNegChannel Time-1}
-		  end
-	       end
-	    else
-	       Done=failed
-	       {ConnectionWrapper.connFailed temp}    
-	    end
-	 end
-      in
-	 {Parse P ?Address ?IPPort}
-	 {GetNegChannel RetryTimes}
-	       
-	 if {Not {IsDet Done}} then
-         % Try tcp
-	    Grant = {ConnectionWrapper.getConnGrant tcp true}
-	    ReadS
-	 in
-\ifdef DBG
-	    {System.show grant_response(Grant)}
-\endif
-	    case Grant of grant(...) then
-	       try
-\ifdef DBG
-		  {System.show writeSelect}
-\endif
-		  {ConnectionWrapper.writeSelect FD}
-\ifdef DBG
-		  {System.show write}
-\endif
-		  try
-		     _={ConnectionWrapper.write FD "tcp"}
-		  catch X then
-		     case X of system(os(_ _ _ "Broken pipe") ...) then
-			% This is EPIPE. It can be discussed wether this
-			% is perm or not, but in the old system, an EPIPE
-			% at this early stage was interpreted as such.
-			Done=failed
-			{ConnectionWrapper.close FD}
-\ifdef DBG
-			{System.show discovered_perm_2(FD Address IPPort)}
-\endif
-			{ConnectionWrapper.freeConnGrant Grant}
-			{ConnectionWrapper.connFailed perm}
-			raise perm end
-		     [] system(os(_ _ _ "Connection refused") ...) then 
-			Done=failed
-			{ConnectionWrapper.close FD}
-\ifdef DBG
-			{System.show discovered_perm_3(FD Address IPPort)}
-\endif
-			{ConnectionWrapper.freeConnGrant Grant}
-			{ConnectionWrapper.connFailed perm}
-			raise perm end
-		     [] system(kernel(terminate) ...) then
-			raise terminated end
-		     else
-			raise X end
-		     end
-		  end
-\ifdef DBG
-		  {System.show readSelect}
-\endif
 
-		  {ConnectionWrapper.readSelect FD}
-		  _ = {ConnectionWrapper.read FD 2 ReadS nil}
-		  case ReadS of "ok" then 
-\ifdef DBG
-		  {System.show read_ok}
-\endif
-		     {ConnectionWrapper.handover Grant settings(fd:FD)}
-		     Done=connected
-		  else
-\ifdef DBG
-		  {System.show read_else(ReadS)}
-\endif
-		     {ConnectionWrapper.freeConnGrant Grant}
-		  end
-	       % If we catch an exception here (other than perm, se above)
-	       % it means the connection
-	       % was somehow corrupted. Report this as a temp error and let
-	       % the requestor try again.
-	       catch X then
-\ifdef DBG
-		  {System.show connect_caught(X)}
-\endif
-		  case X of perm then skip
-		  [] system(kernel(terminate) ...) then
-		     raise terminated end
-		  else
-\ifdef DBG
-		     {System.show reporting_temp}
-\endif
-		     Done=failed
-		     {ConnectionWrapper.freeConnGrant Grant}
-		     {ConnectionWrapper.connFailed temp}
-		  end
-	       end
-	    else
-	       skip
-	    end
-	 end
-
-	 /*
-	 if {Not {IsDet Done}} then
-	 % Go ahead and try some other transport media
-	 end
-	 */
-      
-      % Either we have a connection or
-      % we figured out that the remote site was perm or
-      % we are out of ConnectionWrappersible transport medias
-	 if {Not {IsDet Done}} then
+      %%bmc: Method GetNegChannel it was previously local to Connect
+      proc{GetNegChannel Address Port Time FD}
+	 if Time>0 then
 	    try
-	       _={ConnectionWrapper.write FD "give_up"}
-	       {ConnectionWrapper.close FD}
+	       FD={ConnectionWrapper.socket 'PF_INET' 'SOCK_STREAM' "tcp"}
+	       if FD==~1 then raise no_fd end end
+	       {ConnectionWrapper.connect FD Address Port}
 	    catch X then
-	       case X of system(kernel(terminate) ...) then
+	       {Dshow X}
+	       case X of system(os(_ _ _ "Connection refused") ...) then
+		  raise perm end
+	       elseof system(os(_ _ _ "In progress") ...) then
+		  {Dshow dont_worry}
+	       elseof system(kernel(terminate) ...) then
 		  raise terminated end
-	       else skip end
+	       elseof _ then 
+		  if FD\=~1 then {ConnectionWrapper.close FD} end
+		  {Dshow caught(X)}
+		  {Delay RetryWaitTime}
+		  {GetNegChannel Address Port Time-1 FD}
+	       end
 	    end
-	       
-	    {ConnectionWrapper.connFailed 'No transport or not accepted'}
-\ifdef DBG	 
-	 elseif Done==connected then
-	    {System.show connectDone({Property.get 'time.total'} -T0)}
-\endif
+	 else
+	    raise failed_to_connect end
 	 end
       end
+
+      proc{Connect P}       
+	 FD Address Port ReadS
+      in
+	 try
+	    {Parse P ?Address ?Port}
+	    {Dshow connecting(Address Port)}
+	    {GetNegChannel Address Port RetryTimes FD}
+	    {Dshow connected(FD)}
+	    try
+	       {ConnectionWrapper.writeSelect FD}
+	       _={ConnectionWrapper.write FD "tcp"}
+	       % Since connection establishment is assynchronous, 
+	       % the fault codes can appear at the first write. 
+	    catch X then
+	       case X of  system(os(_ _ _ "Broken pipe") ...) then
+		  raise perm end
+	       elseof system(os(_ _ _ "Connection refused") ...) then
+		  raise perm end
+	       elseof X then
+		  raise X end
+	       end
+	    end
+	    
+	    {ConnectionWrapper.readSelect FD}
+	    _ = {ConnectionWrapper.read FD 2 ReadS nil}
+	    if ReadS == "ok" then 
+	       {ConnectionWrapper.handover settings(fd:FD)}
+	    else
+	       % Here we should choose another protocol
+	       raise choose_protocol end
+	    end
+	
+	    % If we catch an exception here (other than perm, se above)
+	    % it means the connection
+	    % was somehow corrupted. Report this as a temp error and let
+	    % the requestor try again.
+	 catch perm then
+	    {ConnectionWrapper.close FD}
+	    {ConnectionWrapper.connFailed perm}
+	 [] system(kernel(terminate) ...) then
+	    {ConnectionWrapper.close FD}
+	    raise terminated end
+	 [] abort then
+	    raise terminated end 
+	 [] failed_to_connect then
+	    %{Delay 1000}
+	    skip
+	    {Dshow could_not_connect}
+	    raise failed_to_connect end
+	 [] E then 
+	    {ConnectionWrapper.close FD}
+	    {Dshow tcp_did_not_work}
+	    %{Delay 1000}
+	    raise E end 
+	 end
+      end
+
+      %% Connect to TargetSite by discovering a route to it.
+      proc {ConnectWithRoute CId ThisSite TargetSite NghbLst
+	    SendMsgToSite RcvProc}
+	 fun {GetRoute Strm}
+	    case Strm of M|Mr then
+	       case M of route_found(r:R) then
+\ifdef DBGroute
+		  {System.showInfo 'con:: route discovered'}
+\endif		  
+		  R
+	       else
+		  {GetRoute Mr}
+	       end
+	    end
+	 end
+
+	 MsgPort
+	 Route  %% a list of sites
+\ifdef TSTroute 
+	 T0 = {Record.filter {Property.get time} IsInt}
+\endif
+      in
+	 %%! we might have to use P here /V
+
+	 ConnId = CId
+	 RcvProc = proc {$ M} {Send MsgPort M} end
+	 
+	 for S in NghbLst do
+\ifdef DBGroute	    
+	    {System.showInfo 'con:: send discover_route'}
+\endif	    
+	    {SendMsgToSite S m(mt:prot pt:flood ttl:5
+			       src:ThisSite dst:nil via:ThisSite cid:ConnId
+			       pl:discover_route(trg:TargetSite))  nil}
+	 end
+	 
+	 {GetRoute {NewPort $ MsgPort} Route}
+\ifdef TSTroute 
+	 {System.show connectRoute#
+	  {Record.zip {Record.filter {Property.get time} IsInt} T0 Number.'-'}}
+\endif
+	 
+	 {ConnectionWrapper.handoverRoute {Reverse Route} TargetSite}	 
+      end
+      
    end
 end

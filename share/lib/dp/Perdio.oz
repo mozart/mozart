@@ -1,6 +1,6 @@
 functor
 import
-   DPB at 'x-oz://boot/DPB'
+   Glue at 'x-oz://boot/Glue'
    Event(put)
    Timer(alarm:Alarm)
 export
@@ -31,9 +31,9 @@ define
       end
    end
 
-   {StartTask 'dp.probe'       3000 low DPB.'task.probe'}
-   {StartTask 'dp.tmpDown'    60000 low DPB.'task.tmpDown'}
-   {StartTask 'dp.myDown'       500 low DPB.'task.myDown'}
-   {StartTask 'dp.flowControl' 1000 low DPB.'task.flowControl'}
+   {StartTask 'dp.probe'       3000 low Glue.'task.probe'}
+   {StartTask 'dp.tmpDown'    60000 low Glue.'task.tmpDown'}
+   {StartTask 'dp.myDown'       500 low Glue.'task.myDown'}
+   {StartTask 'dp.flowControl' 1000 low Glue.'task.flowControl'}
 
 end
