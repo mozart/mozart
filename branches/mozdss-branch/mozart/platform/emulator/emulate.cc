@@ -2235,12 +2235,31 @@ LBLdispatcher:
       RecOrCell state = self->getState();
       SRecord *rec;
       if (stateIsCell(state)) {
+	OZ_Term ans = oz_newVariable();
+	XPC(2) = ans;
+	OZ_Return res = cellAtAccess(getCell(state), fea, XPC(2));
+
+	switch(res) {
+	case PROCEED: {
+	  DISPATCH(5);
+	}
+	case SUSPEND: {
+	  PC += 5;
+	  PushContX(PC);
+	  SUSPENDONVARLIST;
+	  MAGIC_RET;
+	}
+	default:
+	  Assert(0);
+	}
+	/*
 	rec = getState(state,NO,fea,XPC(2));
 	if (rec==NULL) {
 	  PC += 5;
 	  Assert(!e->isEmptyPreparedCalls());
 	  goto LBLreplaceBICall;
 	}
+	*/
       } else {
 	rec = getRecord(state);
       }
@@ -2269,12 +2288,29 @@ LBLdispatcher:
       SRecord *rec;
       
       if (stateIsCell(state)) {
+	
+	OZ_Return res = cellAtExchange(getCell(state),fea,XPC(2)); 
+	switch(res){
+	case PROCEED:{
+	  DISPATCH(5);
+	}
+	case SUSPEND:{
+	  PC += 5; 
+	  PushContX(PC);
+	  SUSPENDONVARLIST;
+	  MAGIC_RET;
+	}
+	default:
+	  Assert(0); 
+	}
+	/*
 	rec = getState(state,OK,fea,XPC(2));
 	if (rec==NULL) {
 	  PC += 5;
 	  Assert(!e->isEmptyPreparedCalls());
 	  goto LBLreplaceBICall;
 	}
+	*/
       } else {
 	rec = getRecord(state);
       }
@@ -2472,70 +2508,33 @@ LBLdispatcher:
 	    RAISE_THREAD;
 	  }
 	}
-	if (((LockLocal*)t)->hasLock(th))
-	  goto has_lock;
-	if (((LockLocal*)t)->lockB(th))
-	  goto got_lock;
-	goto no_lock;
       }
+      else
+	{
+	  if (!e->isCurrentRoot()) {
+	    (void) oz_raise(E_ERROR,E_KERNEL,"globalState",1,AtomLock);
+	    RAISE_THREAD;
+	  }
 
-      if (!e->isCurrentRoot()) {
-	(void) oz_raise(E_ERROR,E_KERNEL,"globalState",1,AtomLock);
-	RAISE_THREAD;
+	  if ((*lockDistLock)(t, th))
+	    {
+	      PushCont(PC+lbl); // failure preepmtion 
+	      PC += 3;
+	      Assert(!e->isEmptyPreparedCalls());
+	      CTS->pushLock(t);
+	      goto LBLreplaceBICall;
+	    }
+	}
+      if (((LockLocal*)t)->lockB(th)){
+	PushCont(PC+lbl);
+	CTS->pushLock(t);
+	DISPATCH(3);
       }
-
-      LockRet ret;
-  
-      switch (t->getTertType()) {
-      case Te_Frame:
-	{
-	  if (((LockFrameEmul *)t)->hasLock(th))
-	    goto has_lock;
-	  ret = ((LockFrameEmul *)t)->lockB(th);
-	  break;
-	}
-      case Te_Proxy:
-	{
-	  (*lockLockProxy)(t, th);
-	  goto no_lock;
-	}
-      case Te_Manager:
-	{
-	  if (((LockManagerEmul *)t)->hasLock(th)) 
-	    goto has_lock;
-	  ret=((LockManagerEmul *)t)->lockB(th);
-	  break;
-	}
-      default:
-	Assert(0);
-      }
-
-      if (ret==LOCK_GOT) 
-	goto got_lock;
-      if (ret==LOCK_WAIT) 
-	goto no_lock;
-
       PushCont(PC+lbl); // failure preepmtion 
-      PC += 3;
-      Assert(!e->isEmptyPreparedCalls());
-      goto LBLreplaceBICall;
-  
-    got_lock:
-      PushCont(PC+lbl);
-      CTS->pushLock(t);
-      DISPATCH(3);
-  
-    has_lock:
-      PushCont(PC+lbl);
-      DISPATCH(3);
-  
-    no_lock:
-      PushCont(PC+lbl);
       CTS->pushLock(t);
       PC += 3;
       Assert(!e->isEmptyPreparedCalls());
       goto LBLreplaceBICall;
-
     }
 
   Case(RETURN)
@@ -3117,15 +3116,9 @@ LBLdispatcher:
       case Te_Local:
 	((LockLocal*)lck)->unlock();
 	break;
-      case Te_Frame:
-	((LockFrameEmul *)lck)->unlock(e->currentThread());
-	break;
       case Te_Proxy:
-	oz_raise(E_ERROR,E_KERNEL,"globalState",1,AtomLock);
-	RAISE_THREAD_NO_PC;
-      case Te_Manager:
-	((LockManagerEmul *)lck)->unlock(e->currentThread());
-	break;}
+	(*unlockDistLock)(lck);
+      }
       goto LBLpopTaskNoPreempt;
     }
 

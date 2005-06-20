@@ -1327,20 +1327,16 @@ void Builtin::initname(void) {
  *=================================================================== */
 
 void LockLocal::unlockComplex(){
-  setLocker(pendThreadResumeFirst(&pending));
+  locker = pendThreadResumeFirst(&pending);
+  Assert(relocks == 0);
+  relocks = 1;
   return;}
 
 void LockLocal::lockComplex(Thread *t){
   // mm2: ignoring the return is badly wrong
   (void) pendThreadAddToEndEmul(getPendBase(),t,getBoardInternal());}
 
-void LockSecEmul::unlockPending(Thread* th){
-  Assert(th!=NULL);
-  PendThread** pt=&pending;
-  while((*pt)->thread!=th){
-    pt= &((*pt)->next);
-    if((*pt)==NULL) return;}
-  *pt=(*pt)->next;}
+//bmc: void LockSecEmul::unlockPending(Thread* th) -- deleted --
 
 /*===================================================================
  * PendThread
@@ -1351,45 +1347,33 @@ OZ_Return pendThreadAddToEndEmul(PendThread **pt,Thread *t, Board *home)
   while(*pt!=NULL){pt= &((*pt)->next);}
 
   ControlVarNew(controlvar,home);
-  *pt=new PendThread(t,NULL,0,0,controlvar,NOEX);
+  *pt=new PendThread(t, NULL, controlvar);
   SuspendOnControlVar;
 }
 
-Thread * pendThreadResumeFirst(PendThread **pt){
-  Thread * t;
+TaggedRef pendThreadResumeFirst(PendThread **pt){
+  TaggedRef t;
   do {
     PendThread * tmp = *pt;
     Assert(tmp!=NULL);
-    ControlVarResume(tmp->controlvar);
-    t = tmp->thread;
-    Assert(t!=NULL);
-    Assert(t!=(Thread*) 0x1);
+    OZ_unifyInThread(tmp->controlvar, NameUnit);
+    t = tmp->oThread;
     *pt = tmp->next;
     tmp->dispose();
-    if (!t->isDead())
+    if (!oz_ThreadToC(t)->isDead())
       return t;
   } while (*pt);
   return t;
 }
 
-
 void gCollectPendThreadEmul(PendThread **pt)
 {
   PendThread *tmp;
   while (*pt!=NULL) {
-    // As the bugfix in Thread::gCollectRecurseV
-    Thread *tmpThread = SuspToThread((*pt)->thread->gCollectSuspendable());
-    if (!tmpThread) {
-      tmpThread=new Thread((*pt)->thread->getFlags(),
-			   (*pt)->thread->getPriority(),
-			   oz_rootBoard(),(*pt)->thread->getID());
-    }
-    tmp=new PendThread(tmpThread,(*pt)->next);
-    Assert((tmp)->thread!=NULL);
-    tmp->exKind = (*pt)->exKind;
-    oz_gCollectTerm((*pt)->old,tmp->old);
-    oz_gCollectTerm((*pt)->nw,tmp->nw);
+    tmp=new PendThread((*pt)->next);
     oz_gCollectTerm((*pt)->controlvar,tmp->controlvar);
+    oz_gCollectTerm((*pt)->oThread,tmp->oThread);
+    
     *pt=tmp;
     pt=&(tmp->next);
   }

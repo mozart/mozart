@@ -397,9 +397,16 @@ OZ_Return arrayGetInline(TaggedRef t, TaggedRef i, TaggedRef &out)
   }
 
   OzArray *ar = tagged2Array(array);
-  out = ar->getArg(tagged2SmallInt(index));
-  if (out) return PROCEED;
-  return oz_raise(E_ERROR,E_KERNEL,"array",2,array,index);
+  if (ar->isDist() && (*distArrayGet)(ar,index,out))
+    {
+      return BI_REPLACEBICALL; 
+    }
+  else
+    {
+      out = ar->getArg(tagged2SmallInt(index));
+      if (out) return PROCEED;
+      return oz_raise(E_ERROR,E_KERNEL,"array",2,array,index);
+    }
 }
 OZ_DECLAREBI_USEINLINEFUN2(BIarrayGet,arrayGetInline)
 
@@ -418,9 +425,15 @@ OZ_Return arrayPutInline(TaggedRef t, TaggedRef i, TaggedRef value)
   }
 
   OzArray *ar = tagged2Array(array);
-  CheckLocalBoard(ar,"array");
-  if (ar->setArg(tagged2SmallInt(index),value)) return PROCEED;
-
+  if (ar->isDist() && distArrayPut(ar,index,value))
+    {
+      return BI_REPLACEBICALL; 
+    }
+  else{
+    // Denna kommer bli problem..
+    CheckLocalBoard(ar,"array");
+    if (ar->setArg(tagged2SmallInt(index),value)) return PROCEED;
+  }
   return oz_raise(E_ERROR,E_KERNEL,"array",2,array,index);
 }
 
@@ -3128,7 +3141,7 @@ OZ_DECLAREBI_USEINLINEFUN1(BIsub1,BIsub1Inline)
 // ---------------------------------------------------------------------
 
 // use VARS or READONLYS for ports
-// #define VAR_PORT
+//#define VAR_PORT
 
 #ifdef VAR_PORT
 
@@ -3142,7 +3155,7 @@ OZ_BI_define(BInewPort,1,1)
 } OZ_BI_end
 
 
-void doPortSend(PortWithStream *port,TaggedRef val)
+void doPortSend(PortWithStream *port,TaggedRef val, Board * home)
 {
   LTuple *lt = new LTuple(am.getCurrentOptVar(), am.getCurrentOptVar());
     
@@ -3247,7 +3260,7 @@ OZ_Return oz_sendPort(OZ_Term prt, OZ_Term val)
   Board * prt_home = port->getBoardInternal()->derefBoard();
   
   Bool sc_required = (prt_home != oz_currentBoard());
-  
+	
   if (sc_required) {
     // Perform situatedness check
     OZ_Return ret = (*OZ_checkSituatedness)(prt_home,&val);
@@ -3261,7 +3274,8 @@ OZ_Return oz_sendPort(OZ_Term prt, OZ_Term val)
       oz_newThreadInject(prt_home)->pushCall(BI_send,RefsArray::make(prt,val));
       return PROCEED;
     } else {
-      return (*portSend)(port,val);
+      if ((*portSend)(port,val))
+	return PROCEED;
     }
   } 
   doPortSend((PortWithStream*)port,val,
@@ -3328,11 +3342,11 @@ OZ_BI_define(BInewCell,1,1)
 OZ_Return accessCell(OZ_Term cell,OZ_Term &out)
 {
   Tertiary *tert= (Tertiary *) tagged2Const(cell);
-  if(!tert->isLocal()){
-    out = oz_newVariable(); /* ATTENTION - clumsy */
-    return (*cellDoAccess)(tert,out);
-  }
+  if(!tert->isLocal() && !(*cellDoAccess)(tert, out))
+    return BI_REPLACEBICALL;
+
   out = ((CellLocal*)tert)->getValue();
+
   return PROCEED;
 }
 
@@ -3340,26 +3354,12 @@ OZ_Return exchangeCell(OZ_Term cell, OZ_Term newVal, OZ_Term &oldVal)
 {
   Assert(!oz_isVar(newVal));
   Tertiary *tert = (Tertiary *) tagged2Const(cell);
-  if(tert->isLocal()){
-    CellLocal *cellLocal=(CellLocal*)tert;
-    CheckLocalBoard(cellLocal,"cell");
-    oldVal = cellLocal->exchangeValue(newVal);
-    return PROCEED;
-  } else {
-    if(!tert->isProxy() && (tert->getInfo()==NULL)){
-      CellSecEmul* sec;
-      if(tert->getTertType()==Te_Frame){
-	sec=((CellFrameEmul*)tert)->getSec();}
-      else{
-	sec=((CellManagerEmul*)tert)->getSec();}    
-      if(sec->getState()==Cell_Lock_Valid){
-	TaggedRef old=sec->getContents();
-	sec->setContents(newVal);
-	oldVal = old;
-	return PROCEED;}}
-    oldVal = oz_newVariable();
-    return (*cellDoExchange)(tert,oldVal,newVal);
-  }
+  if(!tert->isLocal() && !(*cellDoExchange)(tert, oldVal, newVal))
+    return BI_REPLACEBICALL;
+  CellLocal *cellLocal=(CellLocal*)tert;
+  CheckLocalBoard(cellLocal,"cell");
+  oldVal = cellLocal->exchangeValue(newVal);
+  return PROCEED;
 }
 
 OZ_BI_define(BIaccessCell,1,1)
@@ -3731,7 +3731,7 @@ SRecord *getRecordFromState(RecOrCell state)
   if(t->isLocal()) { // can happen if globalized object becomes localized again
     return tagged2SRecord(oz_deref(((CellLocal*)t)->getValue()));
   }
-
+  /*
   if(!t->isProxy()) {
     CellSecEmul* sec;
     if(t->getTertType()==Te_Frame) {
@@ -3746,6 +3746,7 @@ SRecord *getRecordFromState(RecOrCell state)
 	return tagged2SRecord(old);
     }
   }
+  */
   return NULL;
 }
   
@@ -3832,7 +3833,7 @@ SRecord *getState(RecOrCell state, Bool isAssign, OZ_Term fea,OZ_Term &val)
       EmCode = (*cellAssignExchange)(t,fea,val);
     } else {
       val= oz_newVariable();
-      EmCode = (*cellAtExchange)(t,fea,val);
+      EmCode = (*cellAtAccess)(t,fea,val);
     }
   } else {
     if(!isAssign) val = oz_newVariable();

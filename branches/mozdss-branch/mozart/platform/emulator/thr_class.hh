@@ -62,13 +62,13 @@ private:
   unsigned int id;              // unique identity for debugging
   PrTabEntry *abstr;            // for profiler
   TaskStack *taskStack;
-
+  TaggedRef ozThread;
 public:
   NO_DEFAULT_CONSTRUCTORS(Thread);
   USEFREELISTMEMORY;
 
   Thread(int flags, int prio, Board * bb, int i)
-    : Suspendable(flags | (prio << PRIORITY_SHIFT), bb), id(i), abstr(0) {
+    : Suspendable(flags | (prio << PRIORITY_SHIFT), bb), id(i), abstr(0), ozThread(0) {
     taskStack = new TaskStack(ozconf.stackMinSize); 
     ozstat.createdThreads.incf();
   }
@@ -90,6 +90,14 @@ public:
   }
   PrTabEntry *getAbstr(void) { 
     return abstr; 
+  }
+
+  TaggedRef getOzThread(){
+    return ozThread; 
+  }
+  
+  void setOzThread(TaggedRef t){
+    ozThread = t;
   }
 
   Bool isSuspended() { 

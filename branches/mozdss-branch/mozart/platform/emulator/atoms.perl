@@ -297,6 +297,10 @@
           ( NameOoMethSrc,     "ooMethSrc"),
           ( NameOoAttrSrc,     "ooAttrSrc"),
           ( NameOoFeatSrc,     "ooFeatSrc"),
+	  # connectivity status
+	  ( AtomCommunicating, "communicating"),
+	  ( AtomChannel, "channel"),
+	  ( AtomCircuit, "circuit"),
 	  );
 
 
