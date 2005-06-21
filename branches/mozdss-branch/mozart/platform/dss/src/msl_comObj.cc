@@ -7,13 +7,8 @@
  *  Copyright:
  * 
  *  Last change:
-<<<<<<< msl_comObj.cc
  *    $Date$ by $Author$
  *    $Revision$
-=======
- *    $Date$ by $Author$
- *    $Revision$
->>>>>>> 1.15
  * 
  *  This file is part of Mozart, an implementation 
  *  of Oz 3:
