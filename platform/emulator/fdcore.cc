@@ -303,17 +303,9 @@ OZ_BI_end
 //-----------------------------------------------------------------------------
 // watches
 
-OZ_BI_define(BIfdWatchSize, 3, 0)
+OZ_BI_define(BIfdWatchSize, 2, 1)
 {
-  ExpectedTypes(OZ_EM_FD "," OZ_EM_INT "," OZ_EM_TNAME);
-
-  OZ_getINDeref(2, t, tptr);
-  Assert(!oz_isRef(t));
-  if (!oz_isVarOrRef(t)) {
-    if (oz_isBool(t))
-      return PROCEED;
-    return FAILED;
-  }
+  ExpectedTypes(OZ_EM_FD "," OZ_EM_INT);
 
   OZ_getINDeref(0, v, vptr);
   int vsize = 0;
@@ -345,33 +337,22 @@ OZ_BI_define(BIfdWatchSize, 3, 0)
   }
 
 // compute return value
-  if (vsize < size) return OZ_unify (OZ_in(2), oz_true());
-  if (size < 1) return (OZ_unify (OZ_in(2), oz_false()));
+  if (vsize < size) { OZ_RETURN_BOOL(true); }
+  if (size < 1) { OZ_RETURN_BOOL(false); }
 
   Assert(!oz_isRef(v));
   if (oz_isVarOrRef(v)){
     //  must return SUSPEND;
-    Assert(!oz_isRef(t));
-    if (oz_isVarOrRef(t))
-      oz_suspendOn2(makeTaggedRef(vptr), makeTaggedRef(tptr));
     oz_suspendOnPtr(vptr);
   }
 
-  return (OZ_unify (OZ_in(2), oz_false()));
+  OZ_RETURN_BOOL(false);
 } OZ_BI_end
 
 
-OZ_BI_define(BIfdWatchMin, 3, 0)
+OZ_BI_define(BIfdWatchMin, 2, 1)
 {
-  ExpectedTypes(OZ_EM_FD "," OZ_EM_INT "," OZ_EM_TNAME);
-
-  OZ_getINDeref(2, t, tptr);
-  Assert(!oz_isRef(t));
-  if (!oz_isVarOrRef(t)) {
-    if (oz_isBool(t))
-      return PROCEED;
-    return FAILED;
-  }
+  ExpectedTypes(OZ_EM_FD "," OZ_EM_INT);
 
   OZ_getINDeref(0, v, vptr);
   int vmin = -1, vmax = -1;
@@ -404,32 +385,21 @@ OZ_BI_define(BIfdWatchMin, 3, 0)
     TypeError(1, "");
   }
 
-  if (min < 0) return (OZ_unify (OZ_in(2), oz_false()));
-  if (vmin > min) return OZ_unify (OZ_in(2), oz_true());
+  if (min < 0) { OZ_RETURN_BOOL(false); }
+  if (vmin > min) { OZ_RETURN_BOOL(true); }
 
   Assert(!oz_isRef(v));
   if (oz_isVarOrRef(v) && min < vmax){
     //  must return SUSPEND;
-    Assert(!oz_isRef(t));
-    if (oz_isVarOrRef(t))
-      oz_suspendOn2(makeTaggedRef(vptr), makeTaggedRef(tptr));
     oz_suspendOnPtr(vptr);
   }
 
-  return (OZ_unify (OZ_in(2), oz_false()));
+  OZ_RETURN_BOOL(false);
 } OZ_BI_end
 
-OZ_BI_define(BIfdWatchMax, 3, 0)
+OZ_BI_define(BIfdWatchMax, 2, 1)
 {
-  ExpectedTypes(OZ_EM_FD "," OZ_EM_INT "," OZ_EM_TNAME);
-
-  OZ_getINDeref(2, t, tptr);
-  Assert(!oz_isRef(t));
-  if (!oz_isVarOrRef(t)) {
-    if (oz_isBool(t))
-      return PROCEED;
-    return FAILED;
-  }
+  ExpectedTypes(OZ_EM_FD "," OZ_EM_INT);
 
   OZ_getINDeref(0, v, vptr);
   int vmin = -1, vmax = -1;
@@ -462,19 +432,16 @@ OZ_BI_define(BIfdWatchMax, 3, 0)
     TypeError(1, "");
   }
 
-  if (vmax < max) return OZ_unify (OZ_in(2), oz_true());
-  if (max < 0) return (OZ_unify (OZ_in(2), oz_false()));
+  if (vmax < max) { OZ_RETURN_BOOL(true); }
+  if (max < 0) { OZ_RETURN_BOOL(false); }
 
   Assert(!oz_isRef(v));
   if (oz_isVarOrRef(v) && vmin < max){
     //  must return SUSPEND;
-    Assert(!oz_isRef(t));
-    if (oz_isVarOrRef(t))
-      oz_suspendOn2(makeTaggedRef(vptr), makeTaggedRef(tptr));
     oz_suspendOnPtr(vptr);
   }
 
-  return (OZ_unify (OZ_in(2), oz_false()));
+  OZ_RETURN_BOOL(false);
 } OZ_BI_end
 
 

@@ -88,16 +88,16 @@
                               out => [],
                               bi  => BIfdDeclTellConstraint},
 
-    'watch.size'         => { in  => ['*int','+int','bool'],
-                              out => [],
+    'watch.size'         => { in  => ['*int','+int'],
+                              out => ['+bool'],
                               bi  => BIfdWatchSize},
 
-    'watch.min'          => { in  => ['*int','+int','bool'],
-                              out => [],
+    'watch.min'          => { in  => ['*int','+int'],
+                              out => ['+bool'],
                               bi  => BIfdWatchMin},
 
-    'watch.max'          => { in  => ['*int','+int','bool'],
-                              out => [],
+    'watch.max'          => { in  => ['*int','+int'],
+                              out => ['+bool'],
                               bi  => BIfdWatchMax},
 
  );
