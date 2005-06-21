@@ -3959,7 +3959,7 @@ else
 #line 3960 "configure"
 #include "confdefs.h"
 #ifdef __cplusplus
-extern "C" void exit(int);
+extern "C" void exit(int) throw ();
 #endif
 #include <ctype.h>
 #define ISLOWER(c) ('a' <= (c) && (c) <= 'z')
@@ -5891,7 +5891,7 @@ else
 #line 5892 "configure"
 #include "confdefs.h"
 #ifdef __cplusplus
-extern "C" void exit(int);
+extern "C" void exit(int) throw ();
 #endif
 
 class DoubleConv {
@@ -5945,7 +5945,7 @@ else
 #line 5946 "configure"
 #include "confdefs.h"
 #ifdef __cplusplus
-extern "C" void exit(int);
+extern "C" void exit(int) throw ();
 #endif
 
 class DoubleConv {
@@ -8931,7 +8931,7 @@ fi
 #define MODULES_LINK_STATIC 1
 EOF
 
-	STATIC_MODULES="\$(MODULE_NAMES)"
+	STATIC_MODULES="\$(MODULE_NAMES) DSS"
 	DYNAMIC_MODULES=""
 	
     else
@@ -9589,7 +9589,7 @@ else
 #line 9590 "configure"
 #include "confdefs.h"
 #ifdef __cplusplus
-extern "C" void exit(int);
+extern "C" void exit(int) throw ();
 #endif
 
 #include <sys/types.h>
@@ -9792,7 +9792,7 @@ else
 #line 9793 "configure"
 #include "confdefs.h"
 #ifdef __cplusplus
-extern "C" void exit(int);
+extern "C" void exit(int) throw ();
 #endif
 
 #ifdef __GNUC__
@@ -9874,7 +9874,7 @@ else
 #line 9875 "configure"
 #include "confdefs.h"
 #ifdef __cplusplus
-extern "C" void exit(int);
+extern "C" void exit(int) throw ();
 #endif
 
 #ifdef __GNUC__
@@ -9956,7 +9956,7 @@ else
 #line 9957 "configure"
 #include "confdefs.h"
 #ifdef __cplusplus
-extern "C" void exit(int);
+extern "C" void exit(int) throw ();
 #endif
 
 class Tag {
@@ -9997,7 +9997,7 @@ else
 #line 9998 "configure"
 #include "confdefs.h"
 #ifdef __cplusplus
-extern "C" void exit(int);
+extern "C" void exit(int) throw ();
 #endif
 
 class Tag {
@@ -10048,7 +10048,7 @@ else
 #line 10049 "configure"
 #include "confdefs.h"
 #ifdef __cplusplus
-extern "C" void exit(int);
+extern "C" void exit(int) throw ();
 #endif
 
 class Tag {
