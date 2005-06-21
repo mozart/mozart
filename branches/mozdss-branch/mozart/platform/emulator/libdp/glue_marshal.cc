@@ -234,7 +234,10 @@ void glue_marshalArray(ByteBuffer *bs, ConstTermWithHome *arrayConst)
 
 ///////////////////////////////////////////////////////////////////////////
 ////  Marshal Dictionary
-void glue_marshalDictionary(ByteBuffer *bs, ConstTermWithHome *arrayConst) {}
+void glue_marshalDictionary(ByteBuffer *bs, ConstTermWithHome *arrayConst) {
+  // Not implemented yet
+  //Assert(0);
+}
 
 
 ///////////////////////////////////////////////////////////////////////////
@@ -242,8 +245,33 @@ void glue_marshalDictionary(ByteBuffer *bs, ConstTermWithHome *arrayConst) {}
 
 void glue_marshalUnusable(ByteBuffer *bs, TaggedRef tr)
 {
+  //bmc:
+  // If the Unusable has a mediator in the engineTable
+  // then, it's already distributed
+  AbstractEntity *ae;
+  UnusableMediator *me;
+  me = reinterpret_cast<UnusableMediator*>(engineTable->lookupMediator(tr));
+  if ( me == NULL) {
+    // Even when we don't distribute this unusable, we have to remember
+    // that it has been exported.
+    //bmc: I'm not sure yet about the distibution strategy of this entity
+    ae = dss->m_createImmutableAbstractEntity(
+      PN_IMMUTABLE_LAZY,
+      AA_STATIONARY_MANAGER,
+      RC_ALG_WRC);
+    me = new UnusableMediator(ae, tr);
+    ae->assignMediator(me);
+    engineTable->insert(me, tr);
+  }
+  else {
+    ae = me->getAbstractEntity();
+  }
+  CoordinatorAssistantInterface *cai = ae->getCoordinatorAssistant();
+  GlueWriteBuffer *gwb = static_cast<GlueWriteBuffer *>(bs);
+  cai->marshal(gwb, PMF_ORDINARY);
   bs->put(DSS_DIF_UNUSABLE);
-  /*
+ 
+   /*
   Mediator *me = taggedref2Me(tr);   
   ProxyInterface *pi;
   if (me  == NULL){
@@ -265,8 +293,8 @@ void glue_marshalUnusable(ByteBuffer *bs, TaggedRef tr)
   //Assert(0);
 }
 
-
-
+ ///////////////////////////////////////////////////////////////////////////
+ ////  Marshal OzThread 
 
 void glue_marshalOzThread(ByteBuffer *bs, TaggedRef thr)
 {
@@ -413,54 +441,42 @@ void glue_marshalOzThread(ByteBuffer *bs, TaggedRef thr)
 	  Assert(me);
 	  return makeTaggedConst(me->getConst());
 	}
-      case DSS_DIF_PORT:
-	{
-	  RelaxedMutableMediatorInterface* mmi = dynamic_cast<RelaxedMutableMediatorInterface*>(ae->accessMediator());
-	  Assert(mmi); 
-	  ConstMediator *me = dynamic_cast<ConstMediator *>(mmi);
-	  Assert(me);
-	  return makeTaggedConst(me->getConst());
-	}
-      case DSS_DIF_ARRAY:
-	{
-	  (void) unmarshalNumber(bs); 
-	  (void) unmarshalNumber(bs); 
-	  MutableMediatorInterface* mmi = static_cast<MutableMediatorInterface*>(ae->accessMediator());
-	  ConstMediator *me = dynamic_cast<ConstMediator *>(mmi);
-	  Assert(me);
-	  return makeTaggedConst(me->getConst());
-	}
-      case DSS_DIF_UNUSABLE: 
-	{
-    
-  	  /*
-	    Assert(dynamic_cast<UnusableMediator *>(ae->accessMediator()) != NULL);	
-
-	    return 	dynamic_cast<UnusableMediator *>(ae->accessMediator())->getRef();
-	  */
-	}
-
-      default: 
-	OZ_error("Unknown DSS_DIF");
-      }
+    case DSS_DIF_PORT: {
+      RelaxedMutableMediatorInterface* mmi = dynamic_cast<RelaxedMutableMediatorInterface*>(ae->accessMediator());
+      Assert(mmi); 
+      ConstMediator *me = dynamic_cast<ConstMediator *>(mmi);
+      Assert(me);
+      return makeTaggedConst(me->getConst());
+    }
+    case DSS_DIF_ARRAY: {
+      (void) unmarshalNumber(bs); 
+      (void) unmarshalNumber(bs); 
+      MutableMediatorInterface* mmi = static_cast<MutableMediatorInterface*>(ae->accessMediator());
+      ConstMediator *me = dynamic_cast<ConstMediator *>(mmi);
+      Assert(me);
+      return makeTaggedConst(me->getConst());
+    }
+    case DSS_DIF_UNUSABLE: {
+      Assert(dynamic_cast<UnusableMediator *>(ae->accessMediator()) != NULL);
+      ImmutableMediatorInterface* imi = 
+        static_cast<ImmutableMediatorInterface*>(ae->accessMediator());
+      UnusableMediator* me = dynamic_cast<UnusableMediator *>(imi);
+      Assert(me);
+      return me->getRef();
+    }
+    default: 
+      OZ_error("Unknown DSS_DIF");
+    }
 
     } else {
       switch(bs->get()){
-      case DSS_DIF_UNUSABLE:{
-	Tertiary* tert =  new UnusableResource();
-	Assert(0);
-	/*
-	  Not done yet...
-
-
-	TaggedRef tr = makeTaggedConst(tert);
-	UnusableMediator *um = new UnusableMediator(ae, tr);
-	engineTable->insert(um,tr);
-	tert->setIndex(reinterpret_cast<int>(um));
-	return tr; 
-	*/
-      }
-	
+    case DSS_DIF_UNUSABLE: {
+      Tertiary* tert =  new UnusableResource();
+      TaggedRef tr = makeTaggedConst(tert);
+      UnusableMediator *um = new UnusableMediator(ae, tr);
+      tert->setTertIndex(reinterpret_cast<int>(um));
+      return tr;
+    }
       case DSS_DIF_THREAD:{
 	TaggedRef oTh=  oz_thread(oz_newThreadSuspended(1));
 	OzThreadMediator *me = new OzThreadMediator(ae,oTh); 

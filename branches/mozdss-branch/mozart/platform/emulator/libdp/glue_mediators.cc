@@ -486,6 +486,9 @@ char* UnusableMediator::getPrintType(){return "Unusable!!!";}
 
 
 /************************* UnusableMediator *************************/
+UnusableMediator::UnusableMediator(AbstractEntity *ae, TaggedRef t) :
+  RefMediator(ae, t) {}
+
 
 void UnusableMediator::localize() {}
 
