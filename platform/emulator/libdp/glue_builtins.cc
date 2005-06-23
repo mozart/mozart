@@ -362,7 +362,7 @@ OZ_BI_define(BImsToPort,1,1)
   
   GlueReadBuffer buf(raw_buf, len);
   DSS_unmarshal_status status = dss->unmarshalProxy(ae,&buf, PUF_FREE,aen);
-  delete raw_buf;
+  free(raw_buf);
   
 
   if(status.exist) {
