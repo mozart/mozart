@@ -384,7 +384,7 @@ private:
 public:
   GenDistEntryTable(int sizeAsPowerOf2) { init(sizeAsPowerOf2); }
   ~GenDistEntryTable() {
-    delete table;
+    delete[] table;
     DebugCode(table = (NODE **) -1;);
     DebugCode(tableSize = counter = percent = bits = rsBits = -1;);
   }

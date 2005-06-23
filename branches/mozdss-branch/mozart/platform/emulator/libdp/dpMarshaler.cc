@@ -1109,7 +1109,7 @@ OZ_Term dpUnmarshalTerm(ByteBuffer *bs, Builder *b)
 	  value = oz_uniqueName(printname);
 	  b->buildValue(value);
 	  b->setTerm(value, refTag);
-	  delete printname;
+	  delete[] printname;
 #if defined(DBG_TRACE)
 	  fprintf(dbgout, " = %s (at %d)\n", toC(value), refTag);
 	  fflush(dbgout);
