@@ -61,11 +61,10 @@ public:
     oz_freeListDispose(this, sizeof(ReadOnly));
   }
   void printStream(ostream &out,int depth = 10) {
-    if (getType() == OZ_VAR_READONLY_QUIET) {
-      out << "<readonly quiet>";
-    } else {
-      out << "<readonly>";
-    }
+    out << "<readonly";
+    if (isDistributed()) out << " distributed";
+    if (getType() == OZ_VAR_READONLY) out << " needed";
+    out << ">";
   }
   void printLongStream(ostream &out,int depth = 10,
 				int offset = 0) {

@@ -62,11 +62,10 @@ public:
   }
 
   void printStream(ostream &out,int depth = 10) {
-    if (getType() == OZ_VAR_SIMPLE_QUIET) {
-      out << "<simple quiet>";
-    } else {
-      out << "<simple>";
-    }
+    out << "<simple";
+    if (isDistributed()) out << " distributed";
+    if (getType() == OZ_VAR_SIMPLE) out << " needed";
+    out << ">";
   }
   void printLongStream(ostream &out,int depth = 10,
 			int offset = 0) {
