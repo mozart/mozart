@@ -3,7 +3,7 @@
  *    Erik Klintskog, 2002
  * 
  *  Contributors:
- *    optional, Contributor's name (Contributor's email address)
+ *    Raphael Collet (raph@info.ucl.ac.be)
  * 
  *  Copyright:
  *    Erik Klintskog, 2002
@@ -31,123 +31,113 @@
 #pragma interface
 #endif
 
-
 #include "dss_object.hh"
-#include "tagged.hh" 
+#include "tagged.hh"
 
 // forward declarations of class definitions
-
 class Watcher;
 
-enum AO_TYPE {
-  AO_TYPE_UNINIT,
-  AO_TYPE_VAR,
-  AO_TYPE_CONST,
-  AO_TYPE_REF
+// the different types of mediators
+enum MEDIATOR_TYPE {
+  MEDIATOR_TYPE_UNINIT,     // unused
+  MEDIATOR_TYPE_VAR,        // mediator for an OzVariable
+  MEDIATOR_TYPE_CONST,      // mediator for a ConstTerm
+  MEDIATOR_TYPE_REF         // only a reference (no entity)
 };
 
-enum AO_CONNECT{
-  AO_CONNECT_HASH,
-  AO_CONNECT_LIST
+// whether a mediator should be kept in the mediator table
+enum MEDIATOR_CONNECT {
+  MEDIATOR_CONNECT_HASH,    // should be kept in the hash table
+  MEDIATOR_CONNECT_LIST     // no longer kept in the hash table
 };
 
-enum ENGINE_GC{
-  ENGINE_GC_DEAD,
-  ENGINE_GC_WEAK,
-  ENGINE_GC_PRIMARY
+// status of engine garbage collection
+enum ENGINE_GC {
+  ENGINE_GC_NONE,           // not collected
+  ENGINE_GC_WEAK,           // collected as a weak reference
+  ENGINE_GC_PRIMARY         // collected as a primary reference
 };
+
 
 
 // Mediator is the abstract class for all mediators
-class Mediator{
+class Mediator {
   friend class EngineTable;
-  friend class Proxy;
 protected:
-  AO_TYPE    type:2;
-  AO_CONNECT connect:2;
-  ENGINE_GC  engine_gc:2;
-  DSS_GC     dss_gc:2;
-  int        id; 
-protected:
-  Mediator *prev,*next;  // For Engine Table
-  int patchCnt; //ERIK, document why we had this
+  MEDIATOR_TYPE    type:2;
+  MEDIATOR_CONNECT connect:2;
+  ENGINE_GC        engine_gc:2;   // status of engine gc
+  DSS_GC           dss_gc:2;      // status of dss gc
+  int              id;
+
+  TaggedRef entity;            // references to engine and dss entities
+  AbstractEntity *absEntity;
+
+  Mediator *prev,*next;   // For Engine Table
+  int patchCount;         // number of patches (for marshaler)
   Watcher *watchers;
-  AbstractEntity *a_abstractEntityInstance; 
+
+  // raph: for debugging (to be removed)
+  bool collected;
+
 private:
   void triggerWatchers(FaultState);
 
 public:
-
-  Mediator(AbstractEntity*);
+  /*************** constructor/destructor ***************/
+  Mediator(AbstractEntity*, TaggedRef);
   virtual ~Mediator();
 
-  //******************* GC and flags ************************
-  bool hasGCStatus(){ return (engine_gc != ENGINE_GC_DEAD); }
-  void engGC(ENGINE_GC status); // For engineTable
-  virtual void dssGC() = 0; // This can be invoked ONLY ONCE!
-  void gCollect();
-  //********************** ASSORTED ************************
-  void incPatchCnt();
-  void decPatchCnt();
+  /*************** set/get entity/abstract entity ***************/
+  TaggedRef getEntity();
+  void setEntity(TaggedRef ref);
+
+  // the entity (variable) disappears and becomes a passive reference
+  void mkPassiveRef();
 
   AbstractEntity *getAbstractEntity();
-  void            setAbstractEntity(AbstractEntity *a);
+  void setAbstractEntity(AbstractEntity *a);
+  CoordinatorAssistantInterface* getCoordinatorAssistant();
 
-  CoordinatorAssistantInterface* getCoordAssInterface();
-  
+  /*************** garbage collection ***************/
+  bool hasBeenGC() { return (engine_gc != ENGINE_GC_NONE); }
+  void resetGC();                  // reset the gc status
+  void engineGC(ENGINE_GC status); // collect mediator (from engine)
+  void dssGC();                    // collect mediator (from dss)
+  void gCollect();                 // collect the mediator's references
+  // Note: In order to specialize gCollect(), make it a virtual method.
+
+  /*************** marshaling ***************/
+  void incPatchCount();
+  void decPatchCount();
+
+  /*************** fault handling ***************/
   void addWatcher(TaggedRef proc, FaultState fs);
   void removeWatcher(TaggedRef proc, FaultState fs);
 
-  virtual TaggedRef getEntity() = 0; 
-  virtual char* getPrintType() = 0;
-  
-  void mkPassiveRef(); //Convert Var to Ref and remove from further hash-listing
-
-  //********************** DEBUG ***************************
-  void print();
-  //#ifdef INTERFACE
-  bool check();
-  //#endif
-
-  //***************** MediatorInterface ********************
   virtual void reportFaultState(const FaultState& fs);
+
+  /*************** debugging ***************/
+  virtual char* getPrintType() = 0;
+  void print();
+  bool check();
 };
+
 
 
 // ConstMediator is an abstract class for mediators referring to a
-// ConstTerm in the emulator
-class ConstMediator:public Mediator{
-protected: 
-  ConstTerm* a_const;
+// ConstTerm in the emulator.
+class ConstMediator: public Mediator {
 public: 
   ConstMediator(AbstractEntity *ae, ConstTerm *t);
-  
-  void setConst(ConstTerm *t);
   ConstTerm* getConst();
-  virtual TaggedRef getEntity();
-  virtual void dssGC();
   virtual char *getPrintType();
 };
 
-
-// RefMediator is an abstract class for mediators referring to an
-// emulator entity via a tagged reference (variables, threads)
-class RefMediator:public Mediator{
-  TaggedRef a_ref; 
-public: 
-  RefMediator(AbstractEntity *ae, TaggedRef t);
-  
-  void setRef(TaggedRef tr) {  a_ref = tr; }
-  TaggedRef getRef() { return a_ref;}
-  void derefPtr();
-  virtual TaggedRef getEntity(){return a_ref;}
-  virtual void dssGC();
-  virtual char *getPrintType();
-};
 
 
 // mediators for Oz threads
-class OzThreadMediator:public RefMediator, public MutableMediatorInterface{
+class OzThreadMediator: public Mediator, public MutableMediatorInterface {
 public:
   OzThreadMediator(AbstractEntity *ae, TaggedRef t);
   
@@ -168,7 +158,7 @@ public:
 
 // mediators for "unusables".  An unusable is a remote representation
 // of a site-specific entity.
-class UnusableMediator:public RefMediator, public ImmutableMediatorInterface {
+class UnusableMediator: public Mediator, public ImmutableMediatorInterface {
 public:
   UnusableMediator(AbstractEntity* ae, TaggedRef t);
   
@@ -244,7 +234,7 @@ public:
 
 
 // mediators for Oz variables
-class VarMediator: public RefMediator, public MonotonicMediatorInterface{
+class VarMediator: public Mediator, public MonotonicMediatorInterface {
 public:
   VarMediator(AbstractEntity *p, TaggedRef t);
   
@@ -260,7 +250,7 @@ public:
 
 
 // mediators for immutable values that are replicated lazily
-class LazyVarMediator: public RefMediator{
+class LazyVarMediator: public Mediator {
 public:
   LazyVarMediator(AbstractEntity *p, TaggedRef t);
   virtual void localize();
@@ -311,7 +301,7 @@ public:
 
 // mediators for Oz variables
 class OzVariableMediator:
-  public RefMediator, public MonotonicMediatorInterface {
+  public Mediator, public MonotonicMediatorInterface {
 public:
   OzVariableMediator(AbstractEntity *ae, TaggedRef t);
   

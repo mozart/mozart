@@ -31,9 +31,9 @@
 #pragma interface
 #endif
 
-
 #include "value.hh"
 #include "glue_mediators.hh"
+
 class AddressHashTableO1Reset;
 class Watcher;
 

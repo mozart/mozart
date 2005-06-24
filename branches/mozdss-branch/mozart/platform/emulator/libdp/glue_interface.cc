@@ -177,9 +177,9 @@ CsSiteInterface *ComService::connectSelfReps(MsgnLayer *msg, DSite* ds){
   return thisGSite;
 }
 
-
-void  ComService::m_gcSweep(){
-  ;
+// mark all DSites used by the CSC
+void ComService::m_gcSweep() {
+  // raph: where are those DSites?
 }
 
 // Channel establishemnt 

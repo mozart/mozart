@@ -103,10 +103,9 @@ EngineTable::remove(Mediator *ao){
 void
 EngineTable::backup(Mediator *ao){
   //Reset for next garbage collection
-  ao->engine_gc = ENGINE_GC_DEAD;
-  ao->dss_gc =  DSS_GC_NONE; 
+  ao->resetGC();
 
-  if (ao->connect == AO_CONNECT_HASH) // If still known by engine
+  if (ao->connect == MEDIATOR_CONNECT_HASH) // If still known by engine
     addressBackup->htAdd((void*)ao->getEntity(),(void*)ao);
 }
 
@@ -165,12 +164,12 @@ EngineTable::print(){
 
 void
 EngineTable::gcPrimary(){
-  //  printf("ET - GC PRIMARY\n");
+  printf("--- raph: EngineTable::gcPrimary\n");
   Mediator *ao_tmp = aoList;
   while(ao_tmp != NULL){
-    // If we don't localize things this could be opted away to just be performed
-    // when engine_gc is DEAD
-    ao_tmp->dss_gc = ao_tmp->getCoordAssInterface()->getDssDGCStatus();
+    // If we don't localize things this could be opted away to just be
+    // performed when engine_gc is DEAD
+    ao_tmp->dss_gc = ao_tmp->getCoordinatorAssistant()->getDssDGCStatus();
     if(ao_tmp->dss_gc == DSS_GC_PRIMARY)
       ao_tmp->dssGC();
     ao_tmp = ao_tmp->next;
@@ -181,6 +180,7 @@ EngineTable::gcPrimary(){
 
 void
 EngineTable::gcWeak(){
+  printf("--- raph: EngineTable::gcWeak\n");
   Mediator *ao_tmp = aoList;
   while(ao_tmp != NULL){
     if(ao_tmp->dss_gc == DSS_GC_WEAK){
@@ -199,7 +199,7 @@ EngineTable::gcCleanUp(){
   // 2) deleting the ao if it is obsolete
   // 3) reset the status of the ao for next gc
   // 4) back up the ao for the cleaning phase
-  //printf("ET - CLEAN UP\n");
+  printf("--- raph: EngineTable::gcCleanUp\n");
   Mediator *ao_tmp = aoList;
   bool remove;
 
@@ -209,7 +209,7 @@ EngineTable::gcCleanUp(){
     case DSS_GC_LOCALIZE:
       // If not wanted by engine we haven't collected it so it is safe to remove
       // else we try to localize it
-      if (ao_tmp->hasGCStatus())
+      if (ao_tmp->hasBeenGC())
 	{
 	  printf("localizing, not working\n"); 
 	  Assert(0); 
@@ -217,16 +217,16 @@ EngineTable::gcCleanUp(){
       break;
     case DSS_GC_NONE:
       //If neither dss nor engine wants it then clean out else save
-      remove = !(ao_tmp->hasGCStatus());
+      remove = !(ao_tmp->hasBeenGC());
       break;
     case DSS_GC_PRIMARY:
       remove = false; //We have collected it so its a keeper;
       break;
     case DSS_GC_WEAK:
       remove = false;
-      if (!(ao_tmp->hasGCStatus())){ // Try remove weak
+      if (!(ao_tmp->hasBeenGC())){ // Try remove weak
 	// Ok so we could actually remove it if it succeds, introduce that later
-	ao_tmp->getCoordAssInterface()->clearWeakRoot();
+	ao_tmp->getCoordinatorAssistant()->clearWeakRoot();
       }
       break;
     default:
@@ -284,7 +284,7 @@ AbstractEntity *index2AE(const int& indx){
 };
 
 CoordinatorAssistantInterface *index2CAI(const int& indx){
-  return engineTable->findMediator(reinterpret_cast<Mediator *>(indx))->getCoordAssInterface();
+  return engineTable->findMediator(reinterpret_cast<Mediator *>(indx))->getCoordinatorAssistant();
 };
 
 

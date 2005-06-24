@@ -1103,12 +1103,11 @@ void AM::gCollect(int msgLevel)
 
   PrTabEntry::gCollectPrTabEntries();
   extRefs = extRefs->gCollect();
-
   cacStack.gCollectRecurse();
+
   gCollectDeferWatchers();
-
-  cacStack.gCollectRecurse();
   (*gCollectGlueRoots)();
+  cacStack.gCollectRecurse();
 
   // now make sure that we preserve all weak dictionaries
   // that still have stuff to do
@@ -1123,8 +1122,6 @@ void AM::gCollect(int msgLevel)
 
   gCollectWeakDictionariesContent();
   weakReviveStack.recurse();	// copy stuff scheduled for finalization
-  cacStack.gCollectRecurse();
-
   cacStack.gCollectRecurse();
 
 #ifdef NEW_NAMER

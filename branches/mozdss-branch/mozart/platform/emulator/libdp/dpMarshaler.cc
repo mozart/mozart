@@ -134,7 +134,7 @@ PxyVarPatch::PxyVarPatch(OZ_Term locIn, OzValuePatch *nIn,
   */
   Assert(pv->getIdV() == OZ_EVAR_PROXY);
   isReadOnly = pv->isReadOnly();
-  pv->getMediator()->incPatchCnt();
+  pv->getMediator()->incPatchCount();
 }
 
 //
@@ -143,7 +143,7 @@ void PxyVarPatch::disposeV()
   disposeOVP();
   DebugCode(isMarshaled = OK;);
   DebugCode(isReadOnly = -1;);
-  e_name->decPatchCnt();
+  e_name->decPatchCount();
   DebugCode(e_name = reinterpret_cast<Mediator *>(NULL));
   oz_freeListDispose(extVar2Var(this), extVarSizeof(PxyVarPatch));
 }
@@ -159,7 +159,7 @@ void PxyVarPatch::marshal(ByteBuffer *bs, int hasIndex)
 		    (hasIndex ? DIF_VAR_DEF : DIF_VAR));
   bs->put(tag);
   GlueWriteBuffer *buf = static_cast<GlueWriteBuffer*>(bs); 
-  e_name->getCoordAssInterface()->marshal(buf,PMF_ORDINARY);
+  e_name->getCoordinatorAssistant()->marshal(buf,PMF_ORDINARY);
 }
 
 //bmc: Manager code deleted here.
@@ -179,7 +179,7 @@ void ObjectVar::marshal(ByteBuffer *bs, Bool hasCoRefsIndex)
   GName *classgn = getGNameClass();
 
   GlueWriteBuffer *buf = static_cast<GlueWriteBuffer*>(bs);
-  getMediator()->getCoordAssInterface()->marshal(buf, PMF_ORDINARY);
+  getMediator()->getCoordinatorAssistant()->marshal(buf, PMF_ORDINARY);
   marshalGName(bs, gname);
   marshalGName(bs, classgn);
 }

@@ -118,9 +118,9 @@ bool distArrayPutStub(OzArray*, TaggedRef, TaggedRef){
 }
 
 // interface for GC;
-void gCollectProxyRecurseStub(ConstTerm *t, void* indx)
+void gCollectMediatorStub(void* m)
 {
-  OZD_error("'gCollectProxyRecurse' called without DP library?");
+  OZD_error("'gCollectMediator' called without DP library?");
 }
 
 //
@@ -192,13 +192,14 @@ bool (*unlockDistLock)(Tertiary *t)
   = unlockDistLockStub; 
 bool (*distArrayGet)(OzArray*, TaggedRef, TaggedRef&)
   = distArrayGetStub;
-
 bool (*distArrayPut)(OzArray*, TaggedRef, TaggedRef)
   =    distArrayPutStub;
-//
-void (*gCollectProxyRecurse)(ConstTerm *t, void*)
-  = gCollectProxyRecurseStub;
-//
+
+// garbage collection of a mediator
+void (*gCollectMediator)(void*)
+  = gCollectMediatorStub;
+
+// dss garbage collection steps
 void (*gCollectGlueStart)()
   = gCollectPerdioStartStub;
 void (*gCollectGlueRoots)()

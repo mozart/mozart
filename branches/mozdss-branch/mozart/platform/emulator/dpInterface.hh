@@ -60,7 +60,7 @@ extern bool (*unlockDistLock)(Tertiary*);
 extern bool (*distArrayGet)(OzArray*, TaggedRef, TaggedRef&);
 extern bool (*distArrayPut)(OzArray*, TaggedRef, TaggedRef);
 
-extern void (*gCollectProxyRecurse)(ConstTerm *t, void*indx);
+extern void (*gCollectMediator)(void *med);
 /*
 extern void (*gCollectManagerRecurse)(Tertiary *t);
 extern ConstTerm* (*gCollectDistResource)(ConstTerm*);
