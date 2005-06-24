@@ -414,6 +414,7 @@ OZ_Return oz_var_forceBind(OzVariable*,TaggedRef*,TaggedRef);
 OZ_Return oz_var_addSusp(TaggedRef*, Suspendable *);
 OZ_Return oz_var_addQuietSusp(TaggedRef*, Suspendable *);
 OZ_Return oz_var_makeNeeded(TaggedRef *);
+OZ_Return oz_var_makeNeededLocal(TaggedRef *);
 void oz_var_dispose(OzVariable*);
 void oz_var_printStream(ostream&, const char*, OzVariable*, int = 10);
 int oz_var_getSuspListLength(OzVariable*);

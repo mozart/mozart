@@ -213,7 +213,6 @@ public:
 
 };
 
-OZ_Term glue_newUnmarshalVar(MarshalerBuffer* bs, Bool isReadOnly, Bool isAuto);
 
 inline
 ProxyVar *oz_getProxyVar(TaggedRef v) {

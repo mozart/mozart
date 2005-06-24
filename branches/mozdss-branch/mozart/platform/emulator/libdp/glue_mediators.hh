@@ -309,4 +309,21 @@ public:
 };
 
 
+// mediators for Oz variables
+class OzVariableMediator:
+  public RefMediator, public MonotonicMediatorInterface {
+public:
+  OzVariableMediator(AbstractEntity *ae, TaggedRef t);
+  
+  virtual AOcallback callback_Bind(DssOperationId *id,
+				   PstInContainerInterface* operation); 
+  virtual AOcallback callback_Append(DssOperationId *id,
+				     PstInContainerInterface* operation);
+  virtual void localize();
+  virtual char *getPrintType();
+  virtual PstOutContainerInterface *retrieveEntityRepresentation();
+  virtual void installEntityRepresentation(PstInContainerInterface*);
+}; 
+
+
 #endif

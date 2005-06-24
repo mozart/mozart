@@ -57,6 +57,20 @@ static char* AO_CONNECT_string[AO_CONNECT_LIST +1] =
 void doPortSend(PortWithStream *port,TaggedRef val,Board * home);
 
 
+char* ConstMediator::getPrintType(){ return "const";}
+char* LazyVarMediator::getPrintType(){ return "lazyVar";}
+char* RefMediator::getPrintType(){ return "ref";}
+char* PortMediator::getPrintType(){ return "port";}
+char* CellMediator::getPrintType(){ return "cell";}
+char* LockMediator::getPrintType(){ return "lock";}
+char* VarMediator::getPrintType(){ return "var";}
+char* ArrayMediator::getPrintType(){ return "array";}
+char* OzThreadMediator::getPrintType() {return "thread";}
+char* UnusableMediator::getPrintType(){return "Unusable!!!";}
+char* OzVariableMediator::getPrintType(){ return "var";}
+
+
+
 //************************** Mediator ***************************//
 
 Mediator::Mediator(AbstractEntity *ae):
@@ -433,7 +447,7 @@ VarMediator::callback_Append(DssOperationId *id,
   Assert(0);
   return AOCB_FINISH; 
 }
-  
+
 //  Unify has to be taken care of outside the DSS. The DSS is 
 //  not able to understand all the small issues regarding logical variables
 //  and unification. However, since unification is not a protocol issue, 
@@ -472,23 +486,9 @@ VarMediator::callback_Append(DssOperationId *id,
 
 
 
-char* ConstMediator::getPrintType(){ return "const";}
-char* LazyVarMediator::getPrintType(){ return "lazyVar";}
-char* RefMediator::getPrintType(){ return "ref";}
-char* PortMediator::getPrintType(){ return "port";}
-char* CellMediator::getPrintType(){ return "cell";}
-char* LockMediator::getPrintType(){ return "lock";}
-char* VarMediator::getPrintType(){ return "var";}
-char* ArrayMediator::getPrintType(){ return "array";}
-char* OzThreadMediator::getPrintType() {return "thread";}
-char* UnusableMediator::getPrintType(){return "Unusable!!!";}
-
-
-
 /************************* UnusableMediator *************************/
 UnusableMediator::UnusableMediator(AbstractEntity *ae, TaggedRef t) :
   RefMediator(ae, t) {}
-
 
 void UnusableMediator::localize() {}
 
@@ -811,4 +811,69 @@ ArrayMediator::retrieveEntityRepresentation(){
     ar[i] = int_0; 
   }
   return new PstOutContainer(list);
+}
+
+
+
+/************************* OzVariableMediator *************************/
+
+// assumption: t is a tagged REF to a tagged VAR.
+OzVariableMediator::OzVariableMediator(AbstractEntity *ae, TaggedRef t) :
+  RefMediator(ae, t) {
+  type = AO_TYPE_VAR; 
+}
+
+void OzVariableMediator::localize(){
+  OZ_warning("Localizing of var is disabled, %d\n", id);
+}
+
+PstOutContainerInterface *OzVariableMediator::retrieveEntityRepresentation(){
+  printf("--- raph: retrieveEntityRepresentation %x\n", getRef());
+  return new PstOutContainer(getRef());
+}
+
+void OzVariableMediator::installEntityRepresentation(PstInContainerInterface* pstin){
+  printf("--- raph: installEntityRepresentation %x\n", getRef());
+  PstInContainer *pst = static_cast<PstInContainer*>(pstin); 
+  TaggedRef* ref = tagged2Ref(getRef()); // points to the var's tagged ref
+  OzVariable* ov = tagged2Var(*ref);
+  TaggedRef  arg = pst->a_term;
+  
+  oz_bindLocalVar(ov, ref, arg);
+  mkPassiveRef();
+}
+
+AOcallback
+OzVariableMediator::callback_Bind(DssOperationId *id,
+				  PstInContainerInterface* pstin)
+{
+  printf("--- raph: callback_Bind %x\n", getRef());
+  PstInContainer *pst = static_cast<PstInContainer*>(pstin); 
+  TaggedRef* ref = tagged2Ref(getRef()); // points to the var's tagged ref
+  OzVariable* ov = tagged2Var(*ref);
+  TaggedRef  arg = pst->a_term;
+  
+  oz_bindLocalVar(ov, ref, arg);
+  mkPassiveRef();
+  return AOCB_FINISH;
+}
+
+AOcallback
+OzVariableMediator::callback_Append(DssOperationId *id,
+				    PstInContainerInterface* pstin)
+{
+  printf("--- raph: callback_Append %x\n", getRef());
+  // check pstin
+  if (pstin !=  NULL) {
+    PstInContainer *pst = static_cast<PstInContainer*>(pstin);
+    TaggedRef msg = pst->a_term;
+    Assert(msg == oz_atom("needed"));
+  }
+  TaggedRef* ref = tagged2Ref(getRef()); // points to the tagged ref
+  
+  // raph: The variable may have been bound at this point.  This can
+  // happen when two operations Bind and Append are done concurrently.
+  // Therefore we check whether the ref is still a var.
+  if (oz_isVar(*ref)) oz_var_makeNeededLocal(ref);
+  return AOCB_FINISH; 
 }

@@ -573,23 +573,17 @@ void VSnapshotBuilder::processVar(OZ_Term v, OZ_Term *vRef)
   // Note: a variable is identified by its *location*;
   VisitNodeTrav(vrt, vIT, return);
 
-  //
   // Now, construct a VAR patch for this variable (export it if needed);
   if (oz_isExtVar(v)) {
     ExtVarType evt = oz_getExtVar(v)->getIdV();
     switch (evt) {
     case OZ_EVAR_MANAGER:
-      {
-	OZ_error("Snaphshoting non existing var: OZ_EVAR_MANAGER");
-      }
+      OZ_error("Snaphshoting non existing var: OZ_EVAR_MANAGER");
       break;
 
     case OZ_EVAR_PROXY:
-      {
-	// make&save an "exported" proxy:
-	ProxyVar *pvp = oz_getProxyVar(v);
-	expVars = new PxyVarPatch(vrt, expVars, pvp);
-      }
+      // those no longer exist
+      OZ_error("Snaphshoting non existing var: OZ_EVAR_PROXY");
       break;
 
     case OZ_EVAR_LAZY:
@@ -605,19 +599,18 @@ void VSnapshotBuilder::processVar(OZ_Term v, OZ_Term *vRef)
       break;
     }
   } else if (oz_isFree(v) || oz_isReadOnly(v)) {
-    //
-    ProxyVar *npv = glue_newGlobalizeFreeVariable(vRef);
-    expVars = new PxyVarPatch(vrt, expVars, npv);
-    //
+    // globalize if needed
+    OzVariable *var = tagged2Var(v);
+    if (!var->isDistributed()) var = glue_globalizeOzVariable(vRef);
     Assert(oz_isVar(*vRef));
-    // bmc: triggerVariable is not needed anymore because Futures has
-    // been replaced by ByNeed and ReadOnly, so now, the transient
-    // entity from the dss take care of that kind of entities.
 
-    // (void) triggerVariable(vRef);
+    // to be done later
+    OZ_error("variable patching not available yet");
+
+    // ProxyVar *npv = glue_newGlobalizeFreeVariable(vRef);
+    // expVars = new PxyVarPatch(vrt, expVars, npv);
+
   } else { 
-    //
-
     // Actualy, we should copy all these types of variables
     // (constraint stuff), and then marshal them as "nogood"s.  So,
     // just ignoring them is a limitation: the system behaves
@@ -1666,7 +1659,7 @@ OZ_Term dpUnmarshalTerm(ByteBuffer *bs, Builder *b)
 
     case DIF_VAR_DEF:
       {
-	OZ_Term v = glue_newUnmarshalVar(bs, FALSE);
+	OZ_Term v = glue_unmarshalOzVariable(bs, FALSE);
 	int refTag = unmarshalRefTag(bs);
 #if defined(DBG_TRACE)
 	fprintf(dbgout, " = %s (at %d)\n", toC(v), refTag);
@@ -1678,7 +1671,7 @@ OZ_Term dpUnmarshalTerm(ByteBuffer *bs, Builder *b)
 
     case DIF_VAR:
       {
-	OZ_Term v = glue_newUnmarshalVar(bs, FALSE);
+	OZ_Term v = glue_unmarshalOzVariable(bs, FALSE);
 #if defined(DBG_TRACE)
 	fprintf(dbgout, " = %s (at %d)\n", toC(v), refTag);
 	fflush(dbgout);
@@ -1689,7 +1682,7 @@ OZ_Term dpUnmarshalTerm(ByteBuffer *bs, Builder *b)
 
     case DIF_READONLY_DEF:
       {
-	OZ_Term f = glue_newUnmarshalVar(bs, TRUE);
+	OZ_Term f = glue_unmarshalOzVariable(bs, TRUE);
 	int refTag = unmarshalRefTag(bs);
 #if defined(DBG_TRACE)
 	fprintf(dbgout, " = %s (at %d)\n", toC(f), refTag);
@@ -1701,7 +1694,7 @@ OZ_Term dpUnmarshalTerm(ByteBuffer *bs, Builder *b)
 
     case DIF_READONLY:
       {
-	OZ_Term f = glue_newUnmarshalVar(bs, TRUE);
+	OZ_Term f = glue_unmarshalOzVariable(bs, TRUE);
 #if defined(DBG_TRACE)
 	fprintf(dbgout, " = %s (at %d)\n", toC(f), refTag);
 	fflush(dbgout);
@@ -1710,6 +1703,7 @@ OZ_Term dpUnmarshalTerm(ByteBuffer *bs, Builder *b)
 	break;
       }
 
+      /*
     case DIF_VAR_AUTO_DEF: 
       {
 	OZ_error("Faulty level");
@@ -1759,6 +1753,7 @@ OZ_Term dpUnmarshalTerm(ByteBuffer *bs, Builder *b)
 	b->buildValue(fa);
 	break;
       }
+      */
 
     case DIF_OBJECT_DEF:
       {

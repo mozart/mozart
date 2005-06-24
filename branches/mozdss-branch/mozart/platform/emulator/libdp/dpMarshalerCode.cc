@@ -548,24 +548,23 @@ void DPMARSHALERCLASS::processResource(OZ_Term term, Tertiary *tert)
 inline 
 void DPMARSHALERCLASS::processVar(OZ_Term v, OZ_Term *vRef)
 {
+  // v == *vRef && oz_isVar(v)
   ByteBuffer *bs = (ByteBuffer *) getOpaque();
 
-  //
-  if (bs->availableSpace() >= 2*DIFMaxSize + MNumberMaxSize + 
-      max(max(MOwnHeadMaxSize, (MBorrowHeadMaxSize + 2*MGNameMaxSize)),
-	  MToOwnerMaxSize)) {
-    int index;
+  // check whether bs has enough space available
+  if (bs->availableSpace() >= 2*DIFMaxSize + MNumberMaxSize + MProxyMaxSize) {
 #if defined(DBG_TRACE)
     DBGINIT();
     fprintf(dbgout, "> var = %s\n", toC(v));
     fflush(dbgout);
 #endif
 
-    //
+    // check index first
+    int index;
     OZ_Term vrt = makeTaggedRef(vRef);
     VISITNODE(vrt, vIT, bs, index, return);
 
-    //
+    // extvars marshal themselves
     if (oz_isExtVar(v)) {
       ExtVarType evt = oz_getExtVar(v)->getIdV();
       switch (evt) {
@@ -576,28 +575,20 @@ void DPMARSHALERCLASS::processVar(OZ_Term v, OZ_Term *vRef)
 	break;
 
       case OZ_EVAR_MANAGER:
+	// no more Managers with the DSS
 	OZ_error("Managers are gone");
-	/*
-	  Managers are gone to the DSS.
-	  
-	  oz_getManagerVar(v)->marshal(bs, index);
-	  expVars = new MVarPatch(vrt, expVars);
-	*/
 	break;
 
       case OZ_EVAR_PROXY:
-	oz_getProxyVar(v)->marshal(bs, index, vRef, isPushContents());
-	expVars = new MVarPatch(vrt, expVars);
+	// no more Proxies either, I just removed them
+	OZ_error("Proxies are gone");
+	// oz_getProxyVar(v)->marshal(bs, index, vRef, isPushContents());
+	// expVars = new MVarPatch(vrt, expVars);
 	break;
 
       case OZ_EVAR_MGRVARPATCH:
+	// Since Managers are gone, ManagerVarPatches are also gone
 	OZ_error("MGRVARPATCH not used");
-	/*
-	  Since Managers are gone, ManagerVarPatches are also gone
-
-	  oz_getMgrVarPatch(v)->marshal(bs, index);
-	*/
-	// is already a patch;
 	break;
 
       case OZ_EVAR_PXYVARPATCH:
@@ -610,21 +601,22 @@ void DPMARSHALERCLASS::processVar(OZ_Term v, OZ_Term *vRef)
 	break;
       }
 
-      //
+      // marshal the index, if any
       if (index) marshalTermDef(bs, index);
 
       //
     } else if (oz_isFree(v) || oz_isReadOnly(v)) {
-      //
-      ProxyVar *npv = glue_newGlobalizeFreeVariable(vRef);
-      npv->marshal(bs, index, vRef, isPushContents());
-      expVars = new MVarPatch(vrt, expVars);
-      //
+      // globalize if needed
+      OzVariable *var = tagged2Var(v);
+      if (!var->isDistributed()) var = glue_globalizeOzVariable(vRef);
       Assert(oz_isVar(*vRef));
 
-      // (void) triggerVariable(vRef);
+      // marshal it
+      glue_marshalOzVariable(bs, vRef, index, isPushContents());
+      // raph: forget about this one for a minute
+      // expVars = new MVarPatch(vrt, expVars);
 
-      //
+      // marshal the index, if any
       if (index) marshalTermDef(bs, index);
 
       //
@@ -642,8 +634,9 @@ void DPMARSHALERCLASS::processVar(OZ_Term v, OZ_Term *vRef)
       //MarshalRHTentry(vrt, 0);
     }
 
-    //
+    // this is necessary for DIF_SUSPEND
     Assert(bs->availableSpace() >= DIFMaxSize);
+
   } else {
 #if defined(DBG_TRACE)
     DBGINIT();

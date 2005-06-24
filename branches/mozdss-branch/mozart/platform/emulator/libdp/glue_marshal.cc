@@ -104,6 +104,39 @@ ProxyVar* glue_newGlobalizeFreeVariable(TaggedRef *tPtr)
   return (mv);
 }
 
+// globalize a variable
+OzVariable *glue_globalizeOzVariable(TaggedRef *vPtr) {
+  printf("--- raph: globalize var %x\n", makeTaggedRef(vPtr));
+  Assert(oz_isVar(*vPtr));
+  Assert(!(tagged2Var(*vPtr)->isDistributed()));
+  Assert(oz_isFree(*vPtr) || oz_isReadOnly(*vPtr));
+
+  // lookup for an annotation, and determine the protocol, type of
+  // access architecture, and reference count
+  int annotation=0;
+  getAnnotation(makeTaggedRef(vPtr), annotation);
+
+  ProtocolName pn = PN_TRANSIENT;
+  // ProtocolName pn = PN_TRANSIENT_REMOTE;
+  Access_Architecture aa = static_cast<Access_Architecture>
+    ((annotation & ANOT_AA_MASK) != ANOT_USE_DEFAULT ?
+     annotation & ANOT_AA_MASK : AA_STATIONARY_MANAGER);
+  int rc = (annotation & RC_ALG_MASK ? annotation & RC_ALG_MASK : RC_ALG_WRC);
+
+  // create abstract entity and mediator
+  AbstractEntity *ae = dss->m_createMonotonicAbstractEntity(pn, aa, rc);
+  OzVariableMediator *med = new OzVariableMediator(ae, makeTaggedRef(vPtr));
+  engineTable->insert(med, makeTaggedRef(vPtr));
+  ae->assignMediator(med);
+
+  // set up the variable as distributed
+  OzVariable *var = oz_getNonOptVar(vPtr);
+  var->setDistributed(med);
+  return var;
+}
+
+
+
 /* Globalize Tert defines the EMU and settings for the EMU. 
    Further initializations are done by globalizeTertCntl.. */
 
@@ -236,15 +269,14 @@ void glue_marshalArray(ByteBuffer *bs, ConstTermWithHome *arrayConst)
 ////  Marshal Dictionary
 void glue_marshalDictionary(ByteBuffer *bs, ConstTermWithHome *arrayConst) {
   // Not implemented yet
-  //Assert(0);
+  Assert(0);
 }
 
 
 ///////////////////////////////////////////////////////////////////////////
 ////  Marshal Unusable 
 
-void glue_marshalUnusable(ByteBuffer *bs, TaggedRef tr)
-{
+void glue_marshalUnusable(ByteBuffer *bs, TaggedRef tr) {
   //bmc:
   // If the Unusable has a mediator in the engineTable
   // then, it's already distributed
@@ -270,8 +302,8 @@ void glue_marshalUnusable(ByteBuffer *bs, TaggedRef tr)
   GlueWriteBuffer *gwb = static_cast<GlueWriteBuffer *>(bs);
   cai->marshal(gwb, PMF_ORDINARY);
   bs->put(DSS_DIF_UNUSABLE);
- 
-   /*
+  
+  /*
   Mediator *me = taggedref2Me(tr);   
   ProxyInterface *pi;
   if (me  == NULL){
@@ -293,9 +325,6 @@ void glue_marshalUnusable(ByteBuffer *bs, TaggedRef tr)
   //Assert(0);
 }
 
- ///////////////////////////////////////////////////////////////////////////
- ////  Marshal OzThread 
-
 void glue_marshalOzThread(ByteBuffer *bs, TaggedRef thr)
 {
   Mediator *med = reinterpret_cast<Mediator*>(oz_thread_getDistVal(thr, 0)); 
@@ -315,220 +344,222 @@ void glue_marshalOzThread(ByteBuffer *bs, TaggedRef thr)
 }
 
 
- ///////////////////////////////////////////////////////////////////////////
- ////  Marshal Tertiary 
+///////////////////////////////////////////////////////////////////////////
+////  Marshal Tertiary 
 
 
- void glue_marshalTertiary(ByteBuffer *bs, Tertiary *t, Bool push)
- {
-   switch(t->getTertType()){
-   case Te_Local:
-     globalizeTertiary(t);
-     // no break here!
-   case Te_Proxy:
-     {
-       CoordinatorAssistantInterface* cai=index2CAI(t->getTertIndex());
-       GlueWriteBuffer *gwb = static_cast<GlueWriteBuffer *>(bs); 
-       cai->marshal(gwb, (push)?PMF_PUSH:PMF_ORDINARY);
+void glue_marshalTertiary(ByteBuffer *bs, Tertiary *t, Bool push)
+{
+  switch(t->getTertType()){
+  case Te_Local:
+    globalizeTertiary(t);
+    // no break here!
+  case Te_Proxy:
+    {
+      CoordinatorAssistantInterface* cai=index2CAI(t->getTertIndex());
+      GlueWriteBuffer *gwb = static_cast<GlueWriteBuffer *>(bs); 
+      cai->marshal(gwb, (push)?PMF_PUSH:PMF_ORDINARY);
 
-       switch(t->getType()){
-       case Co_Cell:
-	 bs->put(DSS_DIF_CELL);
-	 break;
-       case Co_Port:
-	 bs->put(DSS_DIF_PORT);
-	 break; 
-       case Co_Lock: 
-	 bs->put(DSS_DIF_LOCK);
-	 break;
-       default:
-	 OZ_error("We dont distribute that SHIT %d", t->getType());
-       }
-       break; 
-     }
-   default:
-     OZ_error("A tertiary is either a proxy or a manager not a %d",t->getTertType());
-   }
- }
+      switch(t->getType()){
+      case Co_Cell:
+	bs->put(DSS_DIF_CELL);
+	break;
+      case Co_Port:
+	bs->put(DSS_DIF_PORT);
+	break; 
+      case Co_Lock: 
+	bs->put(DSS_DIF_LOCK);
+	break;
+      default:
+	OZ_error("We dont distribute that SHIT %d", t->getType());
+      }
+      break; 
+    }
+  default:
+    OZ_error("A tertiary is either a proxy or a manager not a %d",t->getTertType());
+  }
+}
 
- ///////////////////////////////////////////////////////////////////////////
- ////  Marshal Object Stub 
-
-
- void glue_marshalObjectStubInternal(Object* o, ByteBuffer *bs)
- {
-   ObjectClass *oc = o->getClass();
-   GName *gnclass = globalizeConst(oc);
-   Assert(gnclass);
-   GName *gnobj = globalizeConst(o);
-   Assert(o->getGName1());
-   Assert(gnobj);
-   //  ProxyName pn=tr2Pn(makeTaggedConst(o));
-
-   CoordinatorAssistantInterface *cai=index2CAI(o->getTertIndex());
-
-   GlueWriteBuffer *gwb = static_cast<GlueWriteBuffer *>(bs); 
-   cai->marshal(gwb, PMF_ORDINARY);
-   marshalGName(bs, gnobj);
-   marshalGName(bs, gnclass);
-
- }
+///////////////////////////////////////////////////////////////////////////
+////  Marshal Object Stub 
 
 
- ///////////////////////////////////////////////////////////////////////////
- ////  Unmarshal Object Stub 
+void glue_marshalObjectStubInternal(Object* o, ByteBuffer *bs)
+{
+  ObjectClass *oc = o->getClass();
+  GName *gnclass = globalizeConst(oc);
+  Assert(gnclass);
+  GName *gnobj = globalizeConst(o);
+  Assert(o->getGName1());
+  Assert(gnobj);
+  //  ProxyName pn=tr2Pn(makeTaggedConst(o));
+
+  CoordinatorAssistantInterface *cai=index2CAI(o->getTertIndex());
+
+  GlueWriteBuffer *gwb = static_cast<GlueWriteBuffer *>(bs); 
+  cai->marshal(gwb, PMF_ORDINARY);
+  marshalGName(bs, gnobj);
+  marshalGName(bs, gnclass);
+
+}
 
 
- OZ_Term glue_unmarshalObjectStub(ByteBuffer *bs)
- {
-   AbstractEntity *ae;
-   AbstractEntityName aen;
-   OZ_Term obj;
-   OZ_Term clas;
-   GlueReadBuffer *buf = static_cast<GlueReadBuffer*>(bs);
-   DSS_unmarshal_status status = dss->unmarshalProxy(ae,buf,PUF_ORDINARY,aen);
-   GName *gnobj   = unmarshalGName(&obj, bs);
-   GName *gnclass = unmarshalGName(&clas, bs);
-
-   if (gnobj == NULL) // The object existed 
-     return obj;
-   if (gnclass == NULL)
-     gnclass = ((ObjectClass*)tagged2Const(clas))->getGName(); 
-
-   Assert(!status.exist);
-   ObjectVar *var = new ObjectVar(oz_currentBoard(),gnobj,gnclass); 
-   TaggedRef val = makeTaggedRef(newTaggedVar(extVar2Var(var)));
-
-   LazyVarMediator *me = new LazyVarMediator(ae, val);
-   engineTable->insert(me,val);
-   var->setMediator(me);
-   addGName(gnobj, val);
-   //PT->setEngineName(p_name,e_name);
-   return val; 
- }
-
- ///////////////////////////////////////////////////////////////////////////
- ////  UnMarshal ConstTerms, the ones with a distributed behavior 
+///////////////////////////////////////////////////////////////////////////
+////  Unmarshal Object Stub 
 
 
- OZ_Term  glue_unmarshalDistTerm(ByteBuffer *bs)
- {
-   AbstractEntity *ae;
-   AbstractEntityName aen; 
+OZ_Term glue_unmarshalObjectStub(ByteBuffer *bs)
+{
+  AbstractEntity *ae;
+  AbstractEntityName aen;
+  OZ_Term obj;
+  OZ_Term clas;
+  GlueReadBuffer *buf = static_cast<GlueReadBuffer*>(bs);
+  DSS_unmarshal_status status = dss->unmarshalProxy(ae,buf,PUF_ORDINARY,aen);
+  GName *gnobj   = unmarshalGName(&obj, bs);
+  GName *gnclass = unmarshalGName(&clas, bs);
 
-   GlueReadBuffer *buf = static_cast<GlueReadBuffer*>(bs);
+  if (gnobj == NULL) // The object existed 
+    return obj;
+  if (gnclass == NULL)
+    gnclass = ((ObjectClass*)tagged2Const(clas))->getGName(); 
 
-   DSS_unmarshal_status stat = dss->unmarshalProxy(ae, buf, PUF_ORDINARY , aen);
+  Assert(!status.exist);
+  ObjectVar *var = new ObjectVar(oz_currentBoard(),gnobj,gnclass); 
+  TaggedRef val = makeTaggedRef(newTaggedVar(extVar2Var(var)));
+
+  LazyVarMediator *me = new LazyVarMediator(ae, val);
+  engineTable->insert(me,val);
+  var->setMediator(me);
+  addGName(gnobj, val);
+  //PT->setEngineName(p_name,e_name);
+  return val; 
+}
+
+///////////////////////////////////////////////////////////////////////////
+////  UnMarshal ConstTerms, the ones with a distributed behavior 
+
+
+OZ_Term  glue_unmarshalDistTerm(ByteBuffer *bs)
+{
+  AbstractEntity *ae;
+  AbstractEntityName aen; 
+
+  GlueReadBuffer *buf = static_cast<GlueReadBuffer*>(bs);
+
+  DSS_unmarshal_status stat = dss->unmarshalProxy(ae, buf, PUF_ORDINARY , aen);
    
 
-   if(stat.exist) {
-     switch(bs->get()){
-     case DSS_DIF_THREAD:
-       {
-	 MutableMediatorInterface* mmi = dynamic_cast<MutableMediatorInterface*>(ae->accessMediator());
-	 Assert(mmi); 
-	 OzThreadMediator *me = dynamic_cast<OzThreadMediator *>(mmi); 
-	 Assert(me);
-	 return me->getRef();
-	}
-      case DSS_DIF_CELL:
-      case DSS_DIF_LOCK:
-	{
-	  MediatorInterface *mi = ae->accessMediator(); 
-	  MutableMediatorInterface* mmi = dynamic_cast<MutableMediatorInterface*>(mi);
-	  Assert(mmi); 
-	  ConstMediator *me = dynamic_cast<ConstMediator *>(mmi);
-	  Assert(me);
-	  return makeTaggedConst(me->getConst());
-	}
+  if(stat.exist) {
+    switch(bs->get()){
+    case DSS_DIF_THREAD:
+      {
+	MutableMediatorInterface* mmi = dynamic_cast<MutableMediatorInterface*>(ae->accessMediator());
+	Assert(mmi); 
+	OzThreadMediator *me = dynamic_cast<OzThreadMediator *>(mmi); 
+	Assert(me);
+	return me->getRef();
+      }
+    case DSS_DIF_CELL:
+    case DSS_DIF_LOCK:
+      {
+	MediatorInterface *mi = ae->accessMediator(); 
+	MutableMediatorInterface* mmi = dynamic_cast<MutableMediatorInterface*>(mi);
+	Assert(mmi); 
+	ConstMediator *me = dynamic_cast<ConstMediator *>(mmi);
+	Assert(me);
+	return makeTaggedConst(me->getConst());
+      }
     case DSS_DIF_PORT: {
-      RelaxedMutableMediatorInterface* mmi = dynamic_cast<RelaxedMutableMediatorInterface*>(ae->accessMediator());
-      Assert(mmi); 
-      ConstMediator *me = dynamic_cast<ConstMediator *>(mmi);
-      Assert(me);
-      return makeTaggedConst(me->getConst());
-    }
+        RelaxedMutableMediatorInterface* mmi = dynamic_cast<RelaxedMutableMediatorInterface*>(ae->accessMediator());
+        Assert(mmi); 
+        ConstMediator *me = dynamic_cast<ConstMediator *>(mmi);
+        Assert(me);
+        return makeTaggedConst(me->getConst());
+      }
     case DSS_DIF_ARRAY: {
-      (void) unmarshalNumber(bs); 
-      (void) unmarshalNumber(bs); 
-      MutableMediatorInterface* mmi = static_cast<MutableMediatorInterface*>(ae->accessMediator());
-      ConstMediator *me = dynamic_cast<ConstMediator *>(mmi);
-      Assert(me);
-      return makeTaggedConst(me->getConst());
-    }
+        (void) unmarshalNumber(bs); 
+        (void) unmarshalNumber(bs); 
+        MutableMediatorInterface* mmi = static_cast<MutableMediatorInterface*>(ae->accessMediator());
+        ConstMediator *me = dynamic_cast<ConstMediator *>(mmi);
+        Assert(me);
+        return makeTaggedConst(me->getConst());
+      }
     case DSS_DIF_UNUSABLE: {
-      Assert(dynamic_cast<UnusableMediator *>(ae->accessMediator()) != NULL);
-      ImmutableMediatorInterface* imi = 
-        static_cast<ImmutableMediatorInterface*>(ae->accessMediator());
-      UnusableMediator* me = dynamic_cast<UnusableMediator *>(imi);
-      Assert(me);
-      return me->getRef();
-    }
+        Assert(dynamic_cast<UnusableMediator *>(ae->accessMediator()) != NULL);
+        ImmutableMediatorInterface* imi = 
+          static_cast<ImmutableMediatorInterface*>(ae->accessMediator());
+        UnusableMediator* me = dynamic_cast<UnusableMediator *>(imi);
+        Assert(me);
+        return me->getRef();
+      }
+
     default: 
       OZ_error("Unknown DSS_DIF");
     }
 
-    } else {
-      switch(bs->get()){
-    case DSS_DIF_UNUSABLE: {
+  } else {
+    switch(bs->get()){
+    case DSS_DIF_UNUSABLE:{
+      //bmc:
       Tertiary* tert =  new UnusableResource();
       TaggedRef tr = makeTaggedConst(tert);
       UnusableMediator *um = new UnusableMediator(ae, tr);
       tert->setTertIndex(reinterpret_cast<int>(um));
       return tr;
     }
-      case DSS_DIF_THREAD:{
-	TaggedRef oTh=  oz_thread(oz_newThreadSuspended(1));
-	OzThreadMediator *me = new OzThreadMediator(ae,oTh); 
-	engineTable->insert(me,oTh);
-	ae->assignMediator(me);
-	Mediator *med = static_cast<Mediator*>(me); 
-	oz_thread_setDistVal(oTh, 0, reinterpret_cast<void*>(med));
-	return oTh; 
-      }
-      case DSS_DIF_CELL:{
-	Tertiary *tert = new CellProxy(); 
-	CellMediator *me = new CellMediator(ae, tert); 
-	engineTable->insert(me,makeTaggedConst(tert));
-	tert->setTertIndex(reinterpret_cast<int>(me));
-	ae->assignMediator(me);
-	return makeTaggedConst(tert);}
-      case DSS_DIF_PORT: {
-	Tertiary *tert = new PortProxy();        
-	PortMediator *me = new PortMediator(ae, tert); 
-	engineTable->insert(me,makeTaggedConst(tert));
-	tert->setTertIndex(reinterpret_cast<int>(me));
-	ae->assignMediator(me);
-	return makeTaggedConst(tert);
-      }
-      case DSS_DIF_LOCK:{
-	Tertiary *tert = new LockProxy();
-	LockMediator *me = new LockMediator(ae, tert); 
-	engineTable->insert(me,makeTaggedConst(tert));
-	tert->setTertIndex(reinterpret_cast<int>(me));
-	ae->assignMediator(me); 
-	return makeTaggedConst(tert);
-      }
-      case DSS_DIF_ARRAY:{
-	int low  =  unmarshalNumber(bs); 
-	int high =  unmarshalNumber(bs); 
-	ConstTermWithHome *ozc = new ArrayProxy(low, high);
-	ArrayMediator* me = new ArrayMediator(ae, ozc); 
-	engineTable->insert(me,makeTaggedConst(ozc));
-	int mediator = reinterpret_cast<int>(me);
-	ozc->setDist(mediator);
-	Assert(ozc->isDist()); 
-	Assert(ozc->getDist() == mediator);
-	//	printf("Inserting am:&d me:%d\n",(int)me, (int)(Mediator*)me); 
-	ae->assignMediator(me);
-	return makeTaggedConst(ozc); 
-      }
-      default: 
-	OZ_error("Unknown DSS_DIF"); 
-      }
-      
+    case DSS_DIF_THREAD:{
+      TaggedRef oTh=  oz_thread(oz_newThreadSuspended(1));
+      OzThreadMediator *me = new OzThreadMediator(ae,oTh); 
+      engineTable->insert(me,oTh);
+      ae->assignMediator(me);
+      Mediator *med = static_cast<Mediator*>(me); 
+      oz_thread_setDistVal(oTh, 0, reinterpret_cast<void*>(med));
+      return oTh; 
     }
- }
+    case DSS_DIF_CELL:{
+      Tertiary *tert = new CellProxy(); 
+      CellMediator *me = new CellMediator(ae, tert); 
+      engineTable->insert(me,makeTaggedConst(tert));
+      tert->setTertIndex(reinterpret_cast<int>(me));
+      ae->assignMediator(me);
+      return makeTaggedConst(tert);}
+    case DSS_DIF_PORT: {
+      Tertiary *tert = new PortProxy();        
+      PortMediator *me = new PortMediator(ae, tert); 
+      engineTable->insert(me,makeTaggedConst(tert));
+      tert->setTertIndex(reinterpret_cast<int>(me));
+      ae->assignMediator(me);
+      return makeTaggedConst(tert);
+    }
+    case DSS_DIF_LOCK:{
+      Tertiary *tert = new LockProxy();
+      LockMediator *me = new LockMediator(ae, tert); 
+      engineTable->insert(me,makeTaggedConst(tert));
+      tert->setTertIndex(reinterpret_cast<int>(me));
+      ae->assignMediator(me); 
+      return makeTaggedConst(tert);
+    }
+    case DSS_DIF_ARRAY:{
+      int low  =  unmarshalNumber(bs); 
+      int high =  unmarshalNumber(bs); 
+      ConstTermWithHome *ozc = new ArrayProxy(low, high);
+      ArrayMediator* me = new ArrayMediator(ae, ozc); 
+      engineTable->insert(me,makeTaggedConst(ozc));
+      int mediator = reinterpret_cast<int>(me);
+      ozc->setDist(mediator);
+      Assert(ozc->isDist()); 
+      Assert(ozc->getDist() == mediator);
+      //	printf("Inserting am:&d me:%d\n",(int)me, (int)(Mediator*)me); 
+      ae->assignMediator(me);
+      return makeTaggedConst(ozc); 
+    }
+    default: 
+      OZ_error("Unknown DSS_DIF"); 
+    }
+      
+  }
+}
 
 
 ///////////////////////////////////////////////////////////////////////////
@@ -584,4 +615,62 @@ void ProxyVar::marshal(ByteBuffer *bs, Bool hasIndex, TaggedRef* vRef, Bool push
   GlueWriteBuffer *gwb = static_cast<GlueWriteBuffer *>(bs); 
   cai->marshal(gwb, (push)?PMF_PUSH:PMF_ORDINARY);
 
+}
+
+
+
+////////////////////////////////////////////////////////////////////////
+// Marshal/unmarshal a variable
+
+// Note: when marshaling a DEF, the index is marshaled *afterwards* by
+// the caller
+
+void glue_marshalOzVariable(ByteBuffer *bs, TaggedRef *vPtr,
+			    Bool hasIndex, Bool push) {
+  Assert(tagged2Var(*vPtr)->isDistributed());
+
+  // marshal emulator-specific data
+  MarshalTag tag = (oz_isReadOnly(*vPtr) ?
+		    (hasIndex ? DIF_READONLY_DEF : DIF_READONLY) :
+		    (hasIndex ? DIF_VAR_DEF : DIF_VAR));
+  bs->put(tag);
+
+  // marshal dss-specific data
+  OzVariable *var = tagged2Var(*vPtr);
+  Mediator *med = static_cast<Mediator*> (var->getMediator());
+  CoordinatorAssistantInterface *cai = med->getCoordAssInterface();
+  GlueWriteBuffer *gwb = static_cast<GlueWriteBuffer*> (bs);
+  bool done = cai->marshal(gwb, (push ? PMF_PUSH : PMF_ORDINARY));
+  Assert(done);
+}
+
+OZ_Term glue_unmarshalOzVariable(ByteBuffer* bs, Bool isReadOnly) {
+  AbstractEntity *ae;
+  AbstractEntityName aen;
+  OzVariableMediator *med;
+
+  // unmarshal dss-specific data
+  GlueReadBuffer *buf = static_cast<GlueReadBuffer*>(bs);
+  DSS_unmarshal_status stat = dss->unmarshalProxy(ae, buf, PUF_ORDINARY, aen);
+
+  if (stat.exist) {
+    // the variable already exists, return it
+    MonotonicMediatorInterface *mmi
+      = static_cast<MonotonicMediatorInterface*> (ae->accessMediator());
+    med = dynamic_cast<OzVariableMediator*> (mmi);
+    return med->getRef();
+  } else {
+    // the variable does not exist, create it
+    TaggedRef ref = (isReadOnly ?
+		     oz_newReadOnly(oz_currentBoard()) :
+		     oz_newSimpleVar(oz_currentBoard()));
+    TaggedRef *ptr = tagged2Ref(ref);
+    OzVariable *var = tagged2Var(*ptr);
+
+    med = new OzVariableMediator(ae, ref);
+    engineTable->insert(med, ref);
+    var->setDistributed(med);
+    ae->assignMediator(med);
+    return ref;
+  }
 }

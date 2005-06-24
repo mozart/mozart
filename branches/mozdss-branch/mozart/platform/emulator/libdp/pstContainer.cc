@@ -232,8 +232,8 @@ PstInContainerInterface* PstOutContainer::loopBack2In(){
 
 PstOutContainerInterface*
 PstOutContainer::duplicate(){
-  Assert(0); 
-  return NULL; 
+  // raph: was not implemented.  Is this too simple?
+  return new PstOutContainer(a_term);
 }
 
 
