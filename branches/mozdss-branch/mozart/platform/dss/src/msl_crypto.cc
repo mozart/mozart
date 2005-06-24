@@ -132,16 +132,20 @@ namespace _msl_internal{ //Start namespace
     gmp_randinit_default(s_state);
     gmp_randseed_ui(s_state,seed);
 
-    mpz_init2(s_rand_limbs, N_LIMBS*32);
-    mpz_urandomb(s_rand_limbs, s_state, N_LIMBS*32);
+    mpz_init2(s_rand_limbs, N_LIMBS*LIMB_BITS);
+    mpz_urandomb(s_rand_limbs, s_state, N_LIMBS*LIMB_BITS);
 
     mpz_init(s_a);
     mpz_init(s_b);
     mpz_init(s_v);
-    mpz_init2(s_cipher,CIPHER_BLOCK_BITS); mpz_urandomb(s_cipher, s_state, CIPHER_BLOCK_BITS);
-    mpz_init2(s_plain ,CIPHER_BLOCK_BITS); mpz_urandomb(s_plain , s_state, CIPHER_BLOCK_BITS);
-    s_plain->_mp_size  = PLAIN_BLOCK_BYTES  / LIMB_BYTES;
+
+    mpz_init2(s_cipher,CIPHER_BLOCK_BITS);
+    mpz_urandomb(s_cipher, s_state, CIPHER_BLOCK_BITS);
     s_cipher->_mp_size = CIPHER_BLOCK_BYTES / LIMB_BYTES;
+
+    mpz_init2(s_plain ,CIPHER_BLOCK_BITS);
+    mpz_urandomb(s_plain , s_state, CIPHER_BLOCK_BITS);
+    s_plain->_mp_size = PLAIN_BLOCK_BYTES  / LIMB_BYTES;
   }
 
   void
@@ -153,20 +157,17 @@ namespace _msl_internal{ //Start namespace
     mpz_clear(s_v);
     mpz_clear(s_b);
     mpz_clear(s_a);
-
   }
 
 
 
   u32
   random_u32(){
-    static int pos;
-    pos = (++pos) % N_LIMBS;
-    if(pos != 0)
-      return static_cast<u32>(s_rand_limbs->_mp_d[pos]);
-    // else get new random vector
-    mpz_urandomb(s_rand_limbs, s_state, N_LIMBS*32);
-    return static_cast<u32>(s_rand_limbs->_mp_d[0]);
+    static int pos = 0;
+    pos = (pos+1) % N_LIMBS;
+    // get a new random vector when pos gets back to value 0
+    if (pos == 0) mpz_urandomb(s_rand_limbs, s_state, N_LIMBS*LIMB_BITS);
+    return static_cast<u32>(s_rand_limbs->_mp_d[pos]);
   }
 
 
@@ -248,42 +249,53 @@ namespace _msl_internal{ //Start namespace
   // ******************************* PUBLIC ******************************
 
   RSA_public::RSA_public():e(65537){
-    //n = new BYTE[CIPHER_BLOCK_BYTES];
+#ifdef CRYPTO_ENABLED
     mpz_init2(n, CIPHER_BLOCK_BITS);
+#else
+    n = new BYTE[CIPHER_BLOCK_BYTES];
+#endif
   }
 
 
   RSA_public::RSA_public(BYTE* const str, size_t len): e(0){
     e = gf_char2integer(str);
-    //n = new BYTE[CIPHER_BLOCK_BYTES];
-    //memcpy(n,str,len - 4);
 
+#ifdef CRYPTO_ENABLED
     int limbs = len/4 - 1;
     mpz_init2(n,limbs*LIMB_BITS);
     n->_mp_size = limbs;   // set number used and..
     for (int i = 0; i < limbs; ++i){
       (n->_mp_d[i] = gf_char2integer(&str[4*(i+1)])); // ...fill them
     }
+#else
+    n = new BYTE[CIPHER_BLOCK_BYTES];
+    memcpy(n,str,len - 4);
+#endif
   }
 
   RSA_public::~RSA_public(){
-    //delete [] n;
+#ifdef CRYPTO_ENABLED
     mpz_clear(n); 
+#else
+    delete [] n;
+#endif
   }
 
   BYTE*
   RSA_public::getStringRep() const{
     static BYTE buf[RSA_MARSHALED_REPRESENTATION];
 
+#ifdef CRYPTO_ENABLED
     //    e +    limbs
     Assert(4 + n->_mp_size * 4 == RSA_MARSHALED_REPRESENTATION);
     gf_integer2char(buf,e);
     for (int i = 0; i < n->_mp_size; ++i){
       gf_integer2char(&buf[4*(i+1)],n->_mp_d[i]);
     }
-
-    //gf_integer2char(buf,e);
-    //memcpy(buf+4,n,CIPHER_BLOCK_BYTES);
+#else
+    gf_integer2char(buf,e);
+    memcpy(buf+4,n,CIPHER_BLOCK_BYTES);
+#endif
 
     return buf;
   }
@@ -291,7 +303,7 @@ namespace _msl_internal{ //Start namespace
 
   RSA_private::RSA_private():
     RSA_public(){
-
+#ifdef CRYPTO_ENABLED
     mpz_init2(p,  PRIME_BITS);   mpz_init2(q,  PRIME_BITS);
     mpz_init2(dp, PRIME_BITS);   mpz_init2(dq, PRIME_BITS);
     mpz_init2(p_1,PRIME_BITS + LIMB_BITS);   mpz_init2(q_1,PRIME_BITS + LIMB_BITS);
@@ -311,16 +323,17 @@ namespace _msl_internal{ //Start namespace
     mpz_invert(d, dp, u); // d, e, ((p-1)*(q-1)) , here we could test that mpz_inverts doesn't return 0
     // .. d is now private key
     
-    
     //cached values: CRT
     mpz_invert(u,q,p);
     mpz_mod(dp,d,p_1);
     mpz_mod(dq,d,q_1);
-
-    //generate_garbage(n,CIPHER_BLOCK_BYTES);
+#else
+    generate_garbage(n,CIPHER_BLOCK_BYTES);
+#endif
   }
 
   RSA_private::~RSA_private(){
+#ifdef CRYPTO_ENABLED
     mpz_clear(p);
     mpz_clear(q);
     mpz_clear(d);
@@ -329,30 +342,37 @@ namespace _msl_internal{ //Start namespace
     mpz_clear(dp);
     mpz_clear(dq);
     mpz_clear(u);
+#endif
   }
 
 
   void
   RSA_public::scramble(BYTE* const output, BYTE* const input){
+#ifdef CRYPTO_ENABLED
     mp_move(s_plain,input, PLAIN_BLOCK_BYTES);
     mpz_powm_ui(s_cipher,s_plain,e,n);
     mp_move(output, s_cipher, CIPHER_BLOCK_BYTES);
-    
-    //memcpy(output,input,PLAIN_BLOCK_BYTES);
-    //gf_integer2char((output+PLAIN_BLOCK_BYTES), random_u32());
+#else
+    memcpy(output,input,PLAIN_BLOCK_BYTES);
+    gf_integer2char((output+PLAIN_BLOCK_BYTES), random_u32());
+#endif
   }
+
   void
   RSA_public::de_scramble(BYTE* const output, BYTE* const input){
+#ifdef CRYPTO_ENABLED
     mp_move(s_cipher,input, CIPHER_BLOCK_BYTES);
     mpz_powm_ui(s_plain,s_cipher,e,n);
     mp_move(output, s_plain, PLAIN_BLOCK_BYTES);
-
-    //memcpy(output,input,PLAIN_BLOCK_BYTES);
+#else
+    memcpy(output,input,PLAIN_BLOCK_BYTES);
+#endif
   }
 
 
   void
   RSA_private::scramble(BYTE* const output, BYTE* const input){
+#ifdef CRYPTO_ENABLED
     mp_move(s_plain, input, PLAIN_BLOCK_BYTES);
     // Apply CRT
     mpz_mod( s_v, s_plain, p);
@@ -371,12 +391,15 @@ namespace _msl_internal{ //Start namespace
     
     mpz_add(s_cipher ,s_v, s_b); // (((a-b) * u) % p ) * p + b
     mp_move(output, s_cipher, CIPHER_BLOCK_BYTES);
- 
-    //memcpy(output,input,PLAIN_BLOCK_BYTES);
-    //gf_integer2char((output + PLAIN_BLOCK_BYTES), random_u32());
+#else
+    memcpy(output,input,PLAIN_BLOCK_BYTES);
+    gf_integer2char((output + PLAIN_BLOCK_BYTES), random_u32());
+#endif
   }
+
   void
   RSA_private::de_scramble(BYTE* const output, BYTE* const input){
+#ifdef CRYPTO_ENABLED
     mp_move(s_cipher,input, CIPHER_BLOCK_BYTES);
     // Apply CRT
     mpz_mod( s_v, s_cipher, p);
@@ -395,8 +418,9 @@ namespace _msl_internal{ //Start namespace
     
     mpz_add(s_plain ,s_v, s_b); // (((a-b) * u) % p ) * p + b
     mp_move(output, s_plain, PLAIN_BLOCK_BYTES);
-
-    // memcpy(output,input,PLAIN_BLOCK_BYTES);
+#else
+    memcpy(output,input,PLAIN_BLOCK_BYTES);
+#endif
   }
 
   
