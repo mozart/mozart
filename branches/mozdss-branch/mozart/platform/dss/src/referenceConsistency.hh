@@ -83,6 +83,7 @@ namespace _dss_internal{ // Start namespace
     
     virtual void m_mergeReferenceInfo(DssReadBuffer* bs) = 0; 
     virtual void m_makeGCpreps();
+    virtual char *m_stringrep() = 0;
     MACRO_NO_DEFAULT_CONSTRUCTORS(Reference);
   };
  

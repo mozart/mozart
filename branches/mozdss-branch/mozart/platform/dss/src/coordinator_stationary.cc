@@ -125,7 +125,7 @@ namespace _dss_internal{ //Start namespace
     delete a_prot;
 
     if (a_man == NULL){
-      Assert(a_ps == PROXY_STATUS_REMOTE);
+      Assert(a_ps == PROXY_STATUS_REMOTE && a_remoteRef);
       a_remoteRef->m_dropReference();
       delete a_remoteRef;
     }
@@ -138,7 +138,6 @@ namespace _dss_internal{ //Start namespace
   ProxyStationary::m_initHomeProxy(Coordinator *m){
     a_ps  = PROXY_STATUS_HOME;
     a_man = m;
-		//bmc: should I initialize here a_remoteRef to NULL or 0 ??
     m->m_initProxy(this);
   };
 
@@ -158,11 +157,11 @@ namespace _dss_internal{ //Start namespace
   };
 
 
-   // **************** REFERENCE ******************* 
+  // **************** REFERENCE *******************
   Reference*
   ProxyStationary::m_getReferenceStructure(){
     if (a_remoteRef) return a_remoteRef;
-    if(a_man) return a_man->a_homeRef;
+    if (a_man) return a_man->a_homeRef;
     return NULL; 
   }
 
@@ -201,7 +200,7 @@ namespace _dss_internal{ //Start namespace
   DSS_GC
   ProxyStationary::getDssDGCStatus(){
     if (a_man == NULL){
-      Assert(a_ps == PROXY_STATUS_REMOTE);
+      Assert(a_ps == PROXY_STATUS_REMOTE && a_remoteRef && a_prot);
       if (a_remoteRef->m_isRoot()) return DSS_GC_PRIMARY;
       if (a_prot->isWeakRoot()) return DSS_GC_WEAK;
       return DSS_GC_NONE;
@@ -218,6 +217,7 @@ namespace _dss_internal{ //Start namespace
 
   void
   ProxyStationary::m_receiveRefMsg(MsgContainer *msgC, DSite* sender){
+    Assert(a_remoteRef);
     RCalg remove = a_remoteRef->m_msgToGcAlg(msgC, sender);
     if (remove != RC_ALG_PERSIST){
       MsgContainer *msg =m_createASMsg(M_PROXY_PROXY_CNET);
@@ -229,14 +229,16 @@ namespace _dss_internal{ //Start namespace
   void
   ProxyStationary::m_makeGCpreps(){
     a_prot->makeGCpreps();
-    a_remoteRef->m_makeGCpreps();
+    // raph: not sure the following is correct if a_remoteRef==NULL
+    if (a_remoteRef) a_remoteRef->m_makeGCpreps();
     Assert(a_man == NULL || a_ps == PROXY_STATUS_HOME);
   }
   
   char *
   ProxyStationary::m_stringrep(){
     static char buf[300];
-    sprintf(buf,"STATIONARY %s %s",a_remoteRef->m_stringrep(),a_prot->m_stringrep());
+    sprintf(buf, "STATIONARY %s %s",
+	    m_getReferenceStructure()->m_stringrep(), a_prot->m_stringrep());
     return buf;
   }
 
