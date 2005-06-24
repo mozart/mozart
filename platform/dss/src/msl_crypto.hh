@@ -30,6 +30,9 @@
 #pragma interface
 #endif
 
+// comment this line to disable actual encryption
+//#define CRYPTO_ENABLED
+
 
 #include <gmp.h>
 #include <string.h>
@@ -75,18 +78,23 @@ namespace _msl_internal{ //Start namespace
   class RSA_public{
   protected:
     u32 e;
+#ifdef CRYPTO_ENABLED
     mpz_t n;
+#else
+    BYTE *n;
+#endif
 
     // encrypt or verify
     virtual void    scramble(BYTE* const output, BYTE* const input);
     virtual void de_scramble(BYTE* const output, BYTE* const input);
 
     inline RSA_public();
+
   private:
     RSA_public(const RSA_public&):e(0){}
     RSA_public& operator=(const RSA_public&){ return *this; }
+
   public:
-     
     RSA_public(BYTE* const str, size_t len);
     virtual ~RSA_public();
     
@@ -101,14 +109,16 @@ namespace _msl_internal{ //Start namespace
     // ***************** KEY COMPARISON ******************
     // we assume that e is almost always the same....
 
+#ifdef CRYPTO_ENABLED
     bool operator==(const RSA_public& rsa){return (mpz_cmp(n,rsa.n) == 0); }
     bool operator> (const RSA_public& rsa){return (mpz_cmp(n,rsa.n) >  0); }
     bool operator< (const RSA_public& rsa){return (mpz_cmp(n,rsa.n) <  0); }
+#else
+    bool operator==(const RSA_public& rsa){return (memcmp(n,rsa.n,CIPHER_BLOCK_BYTES) == 0); }
+    bool operator> (const RSA_public& rsa){return (memcmp(n,rsa.n,CIPHER_BLOCK_BYTES) >  0); }
+    bool operator< (const RSA_public& rsa){return (memcmp(n,rsa.n,CIPHER_BLOCK_BYTES) <  0); }
+#endif
 
-    //bool operator==(const RSA_public& rsa){return (memcmp(n,rsa.n,CIPHER_BLOCK_BYTES) == 0); }
-    //bool operator> (const RSA_public& rsa){return (memcmp(n,rsa.n,CIPHER_BLOCK_BYTES) >  0); }
-    //bool operator< (const RSA_public& rsa){return (memcmp(n,rsa.n,CIPHER_BLOCK_BYTES) <  0); }
-  
     // pointer to static data, do not delete, in the future we might
     // want different sizes ont the key but for now we leave that to a
     // predefined size (i.e. then we would return the length of buf too)
@@ -118,8 +128,10 @@ namespace _msl_internal{ //Start namespace
 
   class RSA_private: public RSA_public{
   protected:
+#ifdef CRYPTO_ENABLED
     mpz_t p,q,d;
     mpz_t p_1,q_1,dp,dq,u;  // helpers for CRT
+#endif
 
     // decrypt or sign
     virtual void    scramble(BYTE* const output, BYTE* const input);
