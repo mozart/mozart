@@ -500,8 +500,9 @@ void oz_gCollectTerm(TaggedRef & f, TaggedRef & t) {
 // builtins.cc
 OZ_Return oz_sendPort(OZ_Term prt, OZ_Term val);
 
-// var_simple.cc
-OzVariable *oz_newSimpleVar(Board *bb);
+// var_simple.cc, readonly.cc
+OZ_Term oz_newSimpleVar(Board *bb);
+OZ_Term oz_newReadOnly(Board *bb);
 
 #ifndef HAVE_STRDUP
 inline char * strdup(const char *s) {

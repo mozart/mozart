@@ -124,9 +124,12 @@ enum TypeOfVariable {
 #define STORE_FLAG 1
 #define REIFIED_FLAG 2
 
-#define SVAR_UNUSED    0x1
-#define VAR_TRAILED   0x2
-#define SVAR_FLAGSMASK 0x3
+// raph: These two flags indicate whether a variable is distributed,
+// and trailed.  They are orthogonal, since a distributed variable can
+// be speculatively bound inside a computation space.
+#define VAR_DISTRIBUTED 0x1
+#define VAR_TRAILED     0x2
+
 
 #define DISPOSE_SUSPLIST(SL)			\
 {						\
@@ -136,6 +139,7 @@ enum TypeOfVariable {
   }						\
   DebugCode(SL = 0);				\
 }
+
 
 class OzVariable {
   //
@@ -161,7 +165,10 @@ private:
 		 u_ct   = OZ_VAR_CT, 
 		 u_mask = 3};
 
-  unsigned int homeAndFlags;
+  // tagged pointer to either a home space (if the variable is local),
+  // or a dss mediator (if the variable is distributed)
+  Tagged2 homeOrMediator;
+
 protected:
   SuspList * suspList;
 
@@ -170,11 +177,9 @@ public:
   TypeOfVariable getTypeMasked(void) {
     return TypeOfVariable(u.var_type & u_mask);
   }
-
   TypeOfVariable getType(void) {
     return u.var_type;
   }
-
   void setType(TypeOfVariable t){
     u.var_type = t;
   }
@@ -182,35 +187,65 @@ public:
   OzVariable() { Assert(0); }
   OzVariable(TypeOfVariable t, DummyClass *) { setType(t); };
   OzVariable(TypeOfVariable t, Board *bb) : suspList(NULL) {
-    homeAndFlags=(unsigned int)bb;
+    homeOrMediator.set(bb, 0);  // local and not trailed
     setType(t);
   }
 
   void initAsExtension(Board*bb) {
-    homeAndFlags=(unsigned int)bb;
+    homeOrMediator.set(bb, 0);  // not a distributed variable
     suspList = 0;
     setType(OZ_VAR_EXT);
   }
 
   USEFREELISTMEMORY;
 
+  // get/set the variable's home
   Board *getBoardInternal() {
-    return (Board *)(homeAndFlags&~SVAR_FLAGSMASK);
+    if (isDistributed()) return oz_rootBoard();
+    return (Board *) homeOrMediator.getPtr();
   }
   void setHome(Board *h) {
-    homeAndFlags = (homeAndFlags&SVAR_FLAGSMASK)|((unsigned)h);
+    Assert(!isDistributed());
+    homeOrMediator.setPtr(h);
   }
 
+  // test/set whether the variable is trailed
   Bool isTrailed(void) {
-    return homeAndFlags&VAR_TRAILED;
+    return homeOrMediator.getTag() & VAR_TRAILED;
   }
   void setTrailed(void) {
-    homeAndFlags |= VAR_TRAILED;
+    homeOrMediator.borTag(VAR_TRAILED);  // bitwise or with tag
   }
   void unsetTrailed(void) {
-    homeAndFlags &= ~VAR_TRAILED;
+    homeOrMediator.bandTag(~VAR_TRAILED);  // bitwise and with tag
   }
 
+  // test whether the variable is distributed
+  Bool isDistributed() {
+    return homeOrMediator.getTag() & VAR_DISTRIBUTED;
+  }
+
+  // set both distribution flag and home/mediator
+  void setDistributed(void *mediator) {
+    int trailtag = homeOrMediator.getTag() & VAR_TRAILED;
+    homeOrMediator.set(mediator, VAR_DISTRIBUTED | trailtag);
+  }
+  void setLocal() {
+    int trailtag = homeOrMediator.getTag() & VAR_TRAILED;
+    homeOrMediator.set(oz_rootBoard(), trailtag);
+  }
+
+  // get/set the variable's mediator (the variable must be distributed)
+  void *getMediator() {
+    Assert(isDistributed());
+    return homeOrMediator.getPtr();
+  }
+  void setMediator(void *mediator) {
+    Assert(isDistributed());
+    homeOrMediator.setPtr(mediator);
+  }
+
+  // suspension list stuff
   void disposeS(void) {
     for (SuspList * l = suspList; l; l = l->dispose());
     DebugCode(suspList=0);
