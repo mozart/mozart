@@ -48,7 +48,12 @@ void  glue_marshalOzThread(ByteBuffer *bs, TaggedRef tr);
 /* GLobalization of the tertiaries and variables. */
 /* Localization should in here as well. */ 
 
+void glue_marshalOzVariable(ByteBuffer *bs, TaggedRef *vPtr,
+			    Bool hasIndex, Bool push);
+OZ_Term glue_unmarshalOzVariable(ByteBuffer* bs, Bool isReadOnly);
+
 ProxyVar* glue_newGlobalizeFreeVariable(TaggedRef *tPtr); 
+OzVariable *glue_globalizeOzVariable(TaggedRef *vPtr);
 void globalizeTertiary(Tertiary *t);
 
 #endif

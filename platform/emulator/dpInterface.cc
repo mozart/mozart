@@ -79,6 +79,20 @@ OZ_Return cellAssignExchangeStub(Tertiary*,TaggedRef,TaggedRef)
   return (PROCEED);
 }
 
+// distributed variables
+OZ_Return distVarBindStub(OzVariable*, TaggedRef*, TaggedRef) {
+  OZD_error("'distVarBind' called without DP library");
+  return PROCEED;
+}
+OZ_Return distVarUnifyStub(OzVariable*, TaggedRef*, OzVariable*, TaggedRef*) {
+  OZD_error("'distVarUnify' called without DP library");
+  return PROCEED;
+}
+OZ_Return distVarMakeNeededStub(TaggedRef*) {
+  OZD_error("'distVarMakeNeeded' called without DP library");
+  return PROCEED;
+}
+
 // lock/unlock (interface) methods/their usage may be optimized
 // further, e.g. inline cases when distributed locks are currently
 // local;
@@ -156,6 +170,14 @@ OZ_Return (*cellAtExchange)(Tertiary*,TaggedRef,TaggedRef)
   = cellAtExchangeStub;
 OZ_Return (*cellAssignExchange)(Tertiary*,TaggedRef,TaggedRef)
   = cellAssignExchangeStub;
+
+// distributed variables
+OZ_Return (*distVarBind)(OzVariable*, TaggedRef*, TaggedRef)
+  = distVarBindStub;
+OZ_Return (*distVarUnify)(OzVariable*, TaggedRef*, OzVariable*, TaggedRef*)
+  = distVarUnifyStub;
+OZ_Return (*distVarMakeNeeded)(TaggedRef*)
+  = distVarMakeNeededStub;
 
 // experimental 
 void (*cellOperationDone)(Tertiary*,TaggedRef)

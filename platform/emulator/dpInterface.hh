@@ -48,6 +48,12 @@ extern OZ_Return (*objectExchange) (Tertiary*,TaggedRef,TaggedRef,TaggedRef);
 // Experimental, just for testing the behavior of the GDS PROC_EXEC
 extern void (*cellOperationDone)(Tertiary*,TaggedRef);
 
+// distributed variables
+extern OZ_Return (*distVarBind)(OzVariable*, TaggedRef*, TaggedRef);
+extern OZ_Return (*distVarUnify)(OzVariable*, TaggedRef*,
+				 OzVariable*, TaggedRef*);
+extern OZ_Return (*distVarMakeNeeded)(TaggedRef*);
+
 extern bool (*lockDistLock)(Tertiary*, Thread *thr);
 extern bool (*unlockDistLock)(Tertiary*);
 //

@@ -34,6 +34,7 @@
 #include "glue_tables.hh"
 #include "glue_interface.hh"
 #include "pstContainer.hh"
+#include "unify.hh"
 
 void oz_thread_setDistVal(TaggedRef tr, int i, void* v); 
 void* oz_thread_getDistVal(TaggedRef tr, int i); 
@@ -310,6 +311,9 @@ bool distArrayPutImpl(OzArray *oza, TaggedRef indx, TaggedRef val){
 }
 
 
+
+/************************* Variables *************************/
+
 // Variable are somewhat different from the other entities. 
 // The variable in itself is used to cntrl the execution of
 // the threads. Thus, no extra operations has to be done to 
@@ -402,6 +406,137 @@ OZ_Return distVarDoUnify(ProxyVar* lpv,ProxyVar* rpv, TaggedRef *lPtr, TaggedRef
   return PROCEED;
 }
 
+// bind a distributed variable
+OZ_Return distVarBindImpl(OzVariable *ov, TaggedRef *varPtr, TaggedRef val) {
+  printf("--- raph: bind distributed variable %x\n", makeTaggedRef(varPtr));
+  Assert(ov == tagged2Var(*varPtr));
+  Mediator *med = static_cast<Mediator *> (ov->getMediator());
+  MonotonicAbstractEntity *ae =
+    static_cast<MonotonicAbstractEntity *> (med->getAbstractEntity());
+
+  // ask the abstract entity
+  DssThreadId *thrId = getThreadId();
+  PstOutContainerInterface** pstout;
+  OpRetVal cont = ae->abstractOperation_Bind(thrId, pstout);
+
+  // allocate PstOutContainer if required
+  if (pstout != NULL) *(pstout) = new PstOutContainer(val);
+
+  switch(cont) {
+  case DSS_PROCEED: // bind the local entity
+    oz_bindLocalVar(ov, varPtr, val);
+    return PROCEED; 
+  case DSS_SKIP: // skip the operation: should not happen
+    Assert(0);
+    return PROCEED;
+  case DSS_SUSPEND: // suspend operation
+    thrId->setThreadMediator(new SuspendedVarBind(val, med));
+    // raph: the following is probably not correct, I recommend a
+    // quiet suspension instead
+    // return oz_addSuspendVarList(varPtr);
+    return oz_var_addQuietSusp(varPtr, oz_currentThread());
+  case DSS_RAISE: // error
+    OZ_error("Not Implemented yet, raise");
+    return PROCEED; 
+  case DSS_INTERNAL_ERROR_NO_OP:
+    OZ_error("Not Handled, varBind DSS_INTERNAL_ERROR_NO_OP ");
+    return PROCEED; 
+  case DSS_INTERNAL_ERROR_NO_PROXY:
+    OZ_error("Not Handled, varBind DSS_INTERNAL_ERROR_NO_PROXY");
+    return PROCEED; 
+  default:
+    OZ_error("Unknown error");
+    return PROCEED; 
+  }
+}
+
+// unify two distributed variables
+OZ_Return distVarUnifyImpl(OzVariable *lvar, TaggedRef *lptr,
+			   OzVariable *rvar, TaggedRef *rptr) {
+  printf("--- raph: unify distributed variables %x and %x\n",
+	 makeTaggedRef(lptr), makeTaggedRef(rptr));
+  Assert(lptr != rptr);
+  Assert(lvar == tagged2Var(*lptr) && rvar == tagged2Var(*rptr));
+  Assert(lvar->isDistributed() && rvar->isDistributed());
+  Assert(oz_isFree(*lptr) || oz_isFree(*rptr));
+
+  OzVariableMediator *lmed, *rmed;
+  MonotonicAbstractEntity *lae, *rae;
+  lmed = static_cast<OzVariableMediator *> (lvar->getMediator());
+  rmed = static_cast<OzVariableMediator *> (rvar->getMediator());
+  lae = static_cast<MonotonicAbstractEntity *> (lmed->getAbstractEntity());
+  rae = static_cast<MonotonicAbstractEntity *> (rmed->getAbstractEntity());
+
+  // determine which (med, ae) is bound to which (target)
+  bool l2r = (oz_isFree(*lptr) && oz_isFree(*rptr) ?
+	      dss->m_orderEntities(lae, rae) : oz_isFree(*lptr));
+  Mediator *med               = (l2r ? lmed : rmed);
+  MonotonicAbstractEntity *ae = (l2r ? lae : rae);
+  TaggedRef target            = (l2r ? rmed->getRef() : lmed->getRef());
+
+  // propagate need if necessary
+  if (oz_isNeeded(*lptr)) oz_var_makeNeeded(rptr);
+  if (oz_isNeeded(*rptr)) oz_var_makeNeeded(lptr);
+
+  // ask the abstract entity
+  DssThreadId *thrId = getThreadId();
+  PstOutContainerInterface** pstout;
+  OpRetVal cont = ae->abstractOperation_Bind(thrId, pstout);
+  if (pstout != NULL) *(pstout) = new PstOutContainer(target);
+
+  switch(cont){
+  case DSS_PROCEED:
+    return PROCEED;
+  case DSS_SUSPEND:
+    thrId->setThreadMediator(new SuspendedVarBind(target, med));
+    return SUSPEND;
+  case DSS_SKIP: // error
+    OZ_error("Unexpected skip operation");
+    return PROCEED;
+  case DSS_RAISE:
+  case DSS_INTERNAL_ERROR_NO_OP:
+  case DSS_INTERNAL_ERROR_NO_PROXY:
+  default: 
+    OZ_error("Not Handled, varUnify");
+    return PROCEED; 
+  }
+}
+
+// make a distributed variable needed
+OZ_Return distVarMakeNeededImpl(TaggedRef *varPtr) {
+  printf("--- raph: need distributed var %x\n", makeTaggedRef(varPtr));
+  // anyway make it needed locally
+  oz_var_makeNeededLocal(varPtr);
+
+  OzVariable *ov = tagged2Var(*varPtr);
+  Mediator *med = static_cast<Mediator *> (ov->getMediator());
+  MonotonicAbstractEntity *ae =
+    static_cast<MonotonicAbstractEntity *> (med->getAbstractEntity());
+
+  // ask the abstract entity
+  DssThreadId *thrId = getThreadId();
+  PstOutContainerInterface** pstout;
+  OpRetVal cont = ae->abstractOperation_Append(thrId, pstout);
+
+  // allocate PstOutContainer if required
+  if (pstout != NULL) *(pstout) = new PstOutContainer(oz_atom("needed"));
+
+  switch(cont) {
+  case DSS_PROCEED:
+  case DSS_SKIP:
+    return PROCEED;
+  case DSS_SUSPEND: // raph: this is a dirty solution...
+    thrId->setThreadMediator(new SuspendedVarBind(0, med));
+    return PROCEED;
+  case DSS_RAISE:
+  case DSS_INTERNAL_ERROR_NO_OP:
+  case DSS_INTERNAL_ERROR_NO_PROXY:
+  default:
+    OZ_error("error in distVarMakeNeeded");
+    return PROCEED; 
+  }
+}
+
 
 
 OZ_Return cellAtExchangeImpl(Tertiary* o, TaggedRef fea, TaggedRef val){
@@ -459,6 +594,11 @@ void initEntityOperations(){
   cellDoAccess = &cellDoAccessImpl;
   
   // Experimental
+
+  // variables
+  distVarBind = &distVarBindImpl;
+  distVarUnify = &distVarUnifyImpl;
+  distVarMakeNeeded = &distVarMakeNeededImpl;
   
   // The objects 
   cellAtExchange = &cellAtExchangeImpl;
