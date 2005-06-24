@@ -944,7 +944,7 @@ OZ_Term dpUnmarshalTerm(ByteBuffer *bs, Builder *b)
 
 	  //
 	  b->setTerm(value, refTag);
-	  delete printname;
+	  delete [] printname;
 #if defined(DBG_TRACE)
 	  fprintf(dbgout, " = %s (at %d)\n", toC(value), refTag);
 	  fflush(dbgout);
@@ -994,7 +994,7 @@ OZ_Term dpUnmarshalTerm(ByteBuffer *bs, Builder *b)
 	  }
 
 	  //
-	  delete printname;
+	  delete [] printname;
 #if defined(DBG_TRACE)
 	  fprintf(dbgout, " = %s\n", toC(value));
 	  fflush(dbgout);
@@ -1035,7 +1035,7 @@ OZ_Term dpUnmarshalTerm(ByteBuffer *bs, Builder *b)
 	  value = makeTaggedLiteral(aux);
 	  b->buildValue(value);
 	  b->setTerm(value, refTag);
-	  delete printname;
+	  delete [] printname;
 #if defined(DBG_TRACE)
 	  fprintf(dbgout, " = %s (at %d)\n", toC(value), refTag);
 	  fflush(dbgout);
@@ -1070,7 +1070,7 @@ OZ_Term dpUnmarshalTerm(ByteBuffer *bs, Builder *b)
 	  NamedName *aux = NamedName::newCopyableName(strdup(printname));
 	  value = makeTaggedLiteral(aux);
 	  b->buildValue(value);
-	  delete printname;
+	  delete [] printname;
 #if defined(DBG_TRACE)
 	  fprintf(dbgout, " = %s\n", toC(value));
 	  fflush(dbgout);
@@ -1109,7 +1109,7 @@ OZ_Term dpUnmarshalTerm(ByteBuffer *bs, Builder *b)
 	  value = oz_uniqueName(printname);
 	  b->buildValue(value);
 	  b->setTerm(value, refTag);
-	  delete[] printname;
+	  delete [] printname;
 #if defined(DBG_TRACE)
 	  fprintf(dbgout, " = %s (at %d)\n", toC(value), refTag);
 	  fflush(dbgout);
@@ -1142,7 +1142,7 @@ OZ_Term dpUnmarshalTerm(ByteBuffer *bs, Builder *b)
 
 	  value = oz_uniqueName(printname);
 	  b->buildValue(value);
-	  delete printname;
+	  delete [] printname;
 #if defined(DBG_TRACE)
 	  fprintf(dbgout, " = %s\n", toC(value));
 	  fflush(dbgout);
@@ -1394,7 +1394,7 @@ OZ_Term dpUnmarshalTerm(ByteBuffer *bs, Builder *b)
 	fflush(dbgout);
 #endif
 	b->buildValue(OZ_CStringToNumber(aux));
-	delete aux;
+	delete [] aux;
 	break;
       }
 
@@ -1409,7 +1409,7 @@ OZ_Term dpUnmarshalTerm(ByteBuffer *bs, Builder *b)
 	OZ_Term value = OZ_CStringToNumber(aux);
 	b->buildValue(value);
 	b->setTerm(value, refTag);
-	delete aux;
+	delete [] aux;
 	break;
       }
 
@@ -2025,12 +2025,12 @@ OZ_Term dpUnmarshalTerm(ByteBuffer *bs, Builder *b)
 	if (!found) {
 	  OZ_warning("Builtin '%s' not in table.", name);
 	  value = oz_nil();
-	  delete name;
+	  delete [] name;
 	} else {
 	  if (found->isSited()) {
 	    OZ_warning("Unpickling sited builtin: '%s'", name);
 	  }
-	  delete name;
+	  delete [] name;
 	  value = makeTaggedConst(found);
 	}
 	b->buildValue(value);
@@ -2051,12 +2051,12 @@ OZ_Term dpUnmarshalTerm(ByteBuffer *bs, Builder *b)
 	if (!found) {
 	  OZ_warning("Builtin '%s' not in table.", name);
 	  value = oz_nil();
-	  delete name;
+	  delete [] name;
 	} else {
 	  if (found->isSited()) {
 	    OZ_warning("Unpickling sited builtin: '%s'", name);
 	  }
-	  delete name;
+	  delete [] name;
 	  value = makeTaggedConst(found);
 	}
 	b->buildValue(value);
