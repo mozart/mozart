@@ -152,7 +152,7 @@ namespace _dss_internal{ //Start namespace
 	  msgC->pushIntVal(OO_UPDATE);
 	  msgC->pushIntVal(aop); 
 	  gf_pushPstOut(msgC,ans->duplicate()); 
-	  manager->m_sendToProxy(s,msgC); 
+	  manager->m_sendToProxy(pl->a_contain1,msgC); 
 	}
       }
       MsgContainer *msgC = manager->m_createProxyProtMsg();
