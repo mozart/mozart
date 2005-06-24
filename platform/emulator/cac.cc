@@ -874,7 +874,9 @@ OzVariable * OzVariable::_cacVarInline(void) {
   Assert(!cacIsMarked());
   Assert(!isTrailed());
 
-  Board * bb = getBoardInternal()->_cacBoard();
+  // raph: Distributed variables are toplevel, so we don't need to cac
+  // their board.  However we must take care of its mediator.
+  Board *bb = (isDistributed() ? NULL : getBoardInternal()->_cacBoard());
 
   OzVariable * to;
 
@@ -921,7 +923,11 @@ OzVariable * OzVariable::_cacVarInline(void) {
     break;
   }
 
-  to->setHome(bb);
+  if (bb)
+    to->setHome(bb);
+  else
+    cacStack.push(to, PTR_VAR); // to collect the mediator
+
   cacStack.pushSuspList(&(to->suspList));
 
   return (to);
@@ -944,6 +950,14 @@ inline
 void OzVariable::_cacVarRecurse(void) {
   
   switch (getType()) {
+  case OZ_VAR_SIMPLE_QUIET:
+  case OZ_VAR_SIMPLE:
+  case OZ_VAR_READONLY_QUIET:
+  case OZ_VAR_READONLY:
+    // only for distributed variables, to collect their mediator
+    Assert(isDistributed());
+    (*gCollectMediator)(getMediator());
+    break;
   case OZ_VAR_FAILED:  
     ((Failed *)      this)->_cacRecurse(); 
     break;
@@ -959,7 +973,6 @@ void OzVariable::_cacVarRecurse(void) {
   default: 
     Assert(0);
   }
-
 }
 
 
@@ -1295,7 +1308,7 @@ void ConstTerm::_cacConstRecurse(void) {
 	break;
 #ifdef G_COLLECT
       case Te_Proxy:   // PER-LOOK is this possible?
-	(*gCollectProxyRecurse)(o, (void*)o->getTertIndex());
+	(*gCollectMediator)((void*)o->getTertIndex());
 	break;
       case Te_Manager: 
 	OZ_error("Managers are arcane, and should be extingt by now (ERIK)");
@@ -1359,7 +1372,7 @@ void ConstTerm::_cacConstRecurse(void) {
 #ifdef G_COLLECT
       if (!t->isLocal()){
 	//(*gCollectDistCellRecurse)(t);
-	(*gCollectProxyRecurse)(t, (void*)(t->getTertIndex()));
+	(*gCollectMediator)((void*)(t->getTertIndex()));
       }
 #endif
       CellLocal *cl=(CellLocal*)t;
@@ -1372,7 +1385,7 @@ void ConstTerm::_cacConstRecurse(void) {
       Port *p = (Port*) this;
 #ifdef G_COLLECT
       if (!p->isLocal()) {
-	(*gCollectProxyRecurse)(p, (void*)(p->getTertIndex()));
+	(*gCollectMediator)((void*)(p->getTertIndex()));
       }
 #endif
       PortWithStream *pws = (PortWithStream *) this;
@@ -1396,7 +1409,7 @@ void ConstTerm::_cacConstRecurse(void) {
 	gCollectGName(gn);
       else
 	if (a->isDist())
-	  (*gCollectProxyRecurse)(a, (void*)a->getDist());
+	  (*gCollectMediator)((void*)a->getDist());
 
 #endif
       int aw = a->getWidth();
@@ -1429,7 +1442,7 @@ void ConstTerm::_cacConstRecurse(void) {
 
 #ifdef G_COLLECT
       if (!t->isLocal()) {
-	(*gCollectProxyRecurse)(t, (void*)(t->getTertIndex()));
+	(*gCollectMediator)((void*)(t->getTertIndex()));
       }
 #endif
       break;

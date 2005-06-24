@@ -472,7 +472,7 @@ OZ_Return distVarUnifyImpl(OzVariable *lvar, TaggedRef *lptr,
 	      dss->m_orderEntities(lae, rae) : oz_isFree(*lptr));
   Mediator *med               = (l2r ? lmed : rmed);
   MonotonicAbstractEntity *ae = (l2r ? lae : rae);
-  TaggedRef target            = (l2r ? rmed->getRef() : lmed->getRef());
+  TaggedRef target            = (l2r ? rmed->getEntity() : lmed->getEntity());
 
   // propagate need if necessary
   if (oz_isNeeded(*lptr)) oz_var_makeNeeded(rptr);

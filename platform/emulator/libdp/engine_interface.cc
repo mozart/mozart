@@ -54,6 +54,7 @@ MAP* glue_dss_connection;
 DSS_Object* dss;
 ComService* glue_com_connection; 
 GlueIoFactoryClass* glue_ioFactory;
+
 // GC Routines
 // 
 // These routines are now defined at Glue level, and not as it used to be
@@ -63,19 +64,11 @@ GlueIoFactoryClass* glue_ioFactory;
 // (conceptually, they where never there)
 
 
-//ZACHARIAS: To gc proxies (the only thing gc:ed by us
-void gcProxyRecurseImpl(ConstTerm *t, void* indx) {
-  Mediator *tmp= reinterpret_cast<Mediator *>(indx);
-  Assert(dynamic_cast<ConstMediator*>(tmp) != NULL);
-  ConstMediator *ao = static_cast<ConstMediator*>(tmp); 
+// collect a mediator
+void gcMediatorImpl(void *m) {
+  Mediator *med = static_cast<Mediator*>(m);
   
-  if(ao->hasGCStatus())
-    {
-      OZ_warning("ao already marked:%p",ao);
-      return;
-    }
-  ao->engGC(ENGINE_GC_PRIMARY);
-  ao->setConst(t); 
+  if (!(med->hasBeenGC())) med->engineGC(ENGINE_GC_PRIMARY);
 }
 
 /*************************************************************************************************/
@@ -86,13 +79,11 @@ void gcGluePrepareImpl()
   // Mark all msg containers. Has to be done for the 
   // snapshoting mechanism. 
   gcPstContainersStart();
-  
 }
 
 
 void gcGlueRootsImpl()
 {
-
   // Now work on that
   gcEngineTablePrimary();
 
@@ -243,7 +234,7 @@ void initDP(int port, int ip, const char *siteId, int primKey)
   gCollectGlueWeak  = gcGlueWeakImpl;
   gCollectGlueRoots = gcGlueRootsImpl;
   gCollectGlueFinal = gcGlueFinalImpl;
-  gCollectProxyRecurse = gcProxyRecurseImpl;
+  gCollectMediator  = gcMediatorImpl;
 
   // Starting the DSS
   engineTable      = new EngineTable(100);
@@ -254,9 +245,3 @@ void initDP(int port, int ip, const char *siteId, int primKey)
   initHeartBeat(HEART_BEAT_RATE);
   OzSite_init();
 }
-
-
-
-
-
-

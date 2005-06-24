@@ -90,13 +90,16 @@ VarStatus LazyVar::checkStatusV()
 
 TaggedRef LazyVar::getTaggedRef() 
 {
-  return static_cast<RefMediator*>(e_name)->getRef();
+  Assert(0);
+  //  return static_cast<RefMediator*>(e_name)->getEntity();
 }
 
 /*********************** PROXY VAR **************************/
 
 TaggedRef ProxyVar::getTaggedRef(){
-  return static_cast<RefMediator*>(e_name)->getRef();}
+  Assert(0);
+  //  return static_cast<RefMediator*>(e_name)->getEntity();
+}
 
 
 OZ_Return ProxyVar::addSuspV(TaggedRef *, Suspendable * susp)
@@ -106,11 +109,12 @@ OZ_Return ProxyVar::addSuspV(TaggedRef *, Suspendable * susp)
 }
 
 void ProxyVar::gCollectRecurseV(void)
-{ 
-    if (status) {
-    oz_gCollectTerm(status,status);
-  }
-  static_cast<RefMediator*>(e_name)->derefPtr(); 
+{
+  Assert(0);
+//    if (status) {
+//      oz_gCollectTerm(status,status);
+//    }
+//    static_cast<RefMediator*>(e_name)->derefPtr(); 
 } 
 
 // Comes from glue_entityOpImpl
@@ -156,13 +160,13 @@ VarStatus ProxyVar::checkStatusV()
 }
 
 ExtVar* ProxyVar::gCollectV(){
-  e_name->engGC(ENGINE_GC_PRIMARY); 
+  e_name->engineGC(ENGINE_GC_PRIMARY); 
   return new ProxyVar(*this);
 }
 
 
 ExtVar* ObjectVar::gCollectV(){
-  e_name->engGC(ENGINE_GC_PRIMARY); 
+  e_name->engineGC(ENGINE_GC_PRIMARY); 
   return new ObjectVar(*this);
 }
 

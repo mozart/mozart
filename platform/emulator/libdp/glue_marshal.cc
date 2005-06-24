@@ -337,7 +337,7 @@ void glue_marshalOzThread(ByteBuffer *bs, TaggedRef thr)
     engineTable->insert(med, thr);
     oz_thread_setDistVal(thr, 0, reinterpret_cast<void*>(med)); 
   }
-  CoordinatorAssistantInterface* cai = med->getCoordAssInterface(); 
+  CoordinatorAssistantInterface* cai = med->getCoordinatorAssistant(); 
   GlueWriteBuffer *gwb = static_cast<GlueWriteBuffer *>(bs); 
   cai->marshal(gwb, PMF_ORDINARY);
   bs->put(DSS_DIF_THREAD); 
@@ -458,7 +458,7 @@ OZ_Term  glue_unmarshalDistTerm(ByteBuffer *bs)
 	Assert(mmi); 
 	OzThreadMediator *me = dynamic_cast<OzThreadMediator *>(mmi); 
 	Assert(me);
-	return me->getRef();
+	return me->getEntity();
       }
     case DSS_DIF_CELL:
     case DSS_DIF_LOCK:
@@ -491,7 +491,7 @@ OZ_Term  glue_unmarshalDistTerm(ByteBuffer *bs)
           static_cast<ImmutableMediatorInterface*>(ae->accessMediator());
         UnusableMediator* me = dynamic_cast<UnusableMediator *>(imi);
         Assert(me);
-        return me->getRef();
+        return me->getEntity();
       }
 
     default: 
@@ -582,7 +582,7 @@ OZ_Term glue_newUnmarshalVar(ByteBuffer* bs, Bool isFuture)
     /* If we find teh variable, return it.*/
     MonotonicMediatorInterface *tmi = static_cast<MonotonicMediatorInterface *>(ae->accessMediator());
     me = dynamic_cast<VarMediator *>(tmi);
-    return me->getRef();
+    return me->getEntity();
   }
   /* The variable has to be built.*/
   ProxyVar *pvar = new ProxyVar(oz_currentBoard(),isFuture);
@@ -611,7 +611,7 @@ void ProxyVar::marshal(ByteBuffer *bs, Bool hasIndex, TaggedRef* vRef, Bool push
   bs->put(tag);
   //  ProxyName pn=tr2Pn(makeTaggedRef(vRef));
 
-  CoordinatorAssistantInterface  *cai = getMediator()->getCoordAssInterface();
+  CoordinatorAssistantInterface  *cai = getMediator()->getCoordinatorAssistant();
   GlueWriteBuffer *gwb = static_cast<GlueWriteBuffer *>(bs); 
   cai->marshal(gwb, (push)?PMF_PUSH:PMF_ORDINARY);
 
@@ -638,7 +638,7 @@ void glue_marshalOzVariable(ByteBuffer *bs, TaggedRef *vPtr,
   // marshal dss-specific data
   OzVariable *var = tagged2Var(*vPtr);
   Mediator *med = static_cast<Mediator*> (var->getMediator());
-  CoordinatorAssistantInterface *cai = med->getCoordAssInterface();
+  CoordinatorAssistantInterface *cai = med->getCoordinatorAssistant();
   GlueWriteBuffer *gwb = static_cast<GlueWriteBuffer*> (bs);
   bool done = cai->marshal(gwb, (push ? PMF_PUSH : PMF_ORDINARY));
   Assert(done);
@@ -658,7 +658,7 @@ OZ_Term glue_unmarshalOzVariable(ByteBuffer* bs, Bool isReadOnly) {
     MonotonicMediatorInterface *mmi
       = static_cast<MonotonicMediatorInterface*> (ae->accessMediator());
     med = dynamic_cast<OzVariableMediator*> (mmi);
-    return med->getRef();
+    return med->getEntity();
   } else {
     // the variable does not exist, create it
     TaggedRef ref = (isReadOnly ?
