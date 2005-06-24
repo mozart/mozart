@@ -30,6 +30,8 @@ SRCDSS = dssBase.cc 	dss_interface.cc 	\
 	dss_dksInstance.cc dss_dssDks.cc protocol_dksBroadcast.cc \
 	dss_dksBackbone.cc
 
+REALSRC = $(SRCMSL:%=$(SRCDIR)/%) $(SRCDSS:%=$(SRCDIR)/%)
+
 OBJSBSE = $(SRCBSE:%.cc=%.o)
 OBJSMSL = $(OBJSBSE) $(SRCMSL:%.cc=%.o) # Messaging contains Base also
 OBJSDSS	= $(OBJSMSL) $(SRCDSS:%.cc=%.o) # and DSS both Base and Messaging
@@ -66,5 +68,9 @@ install: all
 	@INSTALL@ @ENVTYPE@ @prefix@/lib; @EXAMPLES@
 	@COPY_HEADERS@
 
-depend:
+depend:: $(REALSRC)
+	$(DEPEND) $^ > Makefile.deps
+
+# dependencies
+-include Makefile.deps
 
