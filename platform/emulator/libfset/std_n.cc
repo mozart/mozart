@@ -598,18 +598,39 @@ filter_intersectN(OZ_Filter<FSetIntersectionNPropagator> &s,
 
 OZ_Return FSetIntersectionNPropagator::propagate(void)
 {
-  DECL_DYN_ARRAY(OZ_FSetVar, vs, _vs_size);
-  for (int i = _vs_size; i--; )
-    vs[i].read(_vs[i]);
-  OZ_FSetVarVector xs(_vs_size, vs, &_vs);
+  switch (_vs_size) {
+  case 0:
+    {
+      OZ_FSetVar z(_s);
+      if (*z <<= OZ_FSetConstraint(fs_full))
+	{ z.leave(); return OZ_ENTAILED; }
+      else
+	{ z.fail(); return OZ_FAILED; }
+    }
+  case 1:
+    {
+      return replaceBy(_s,_vs[0]);
+    }
+  case 2:
+    {
+      return replaceBy(new FSetIntersectionPropagator(_vs[0],_vs[1],_s));
+    }
+  default:
+    {
+      DECL_DYN_ARRAY(OZ_FSetVar, vs, _vs_size);
+      for (int i = _vs_size; i--; )
+	vs[i].read(_vs[i]);
+      OZ_FSetVarVector xs(_vs_size, vs, &_vs);
 
-  OZ_FSetVar z(_s);
-  //
-  PropagatorController_VS_S P(_vs_size, vs, z);
-  //
-  OZ_Filter<FSetIntersectionNPropagator> s(this, &P);
-  //
-  return filter_intersectN(s, xs, z)();
+      OZ_FSetVar z(_s);
+      //
+      PropagatorController_VS_S P(_vs_size, vs, z);
+      //
+      OZ_Filter<FSetIntersectionNPropagator> s(this, &P);
+      //
+      return filter_intersectN(s, xs, z)();
+    }
+  }
 }
 
 //-----------------------------------------------------------------------------
