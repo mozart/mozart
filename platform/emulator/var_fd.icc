@@ -124,7 +124,7 @@ inline
 OzBoolVariable * OzFDVariable::becomesBool(void) { 
   relinkSuspListToItself(); // mm2: should return the suspList
   finiteDomain.disposeExtension();
-  return new(this) OzBoolVariable(suspList);
+  return new(this) OzBoolVariable(getBoardInternal(), suspList);
 }
 
 inline
