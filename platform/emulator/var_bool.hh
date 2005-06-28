@@ -52,10 +52,9 @@ public:
     ozstat.fdvarsCreated.incf();
   }
 
-  // mm2: ???
-  OzBoolVariable(SuspList *sl) : OzVariable(OZ_VAR_BOOL,(DummyClass*)0)
-  {
-    suspList=sl;
+  // this one is used by becomesBool()
+  OzBoolVariable(Board *bb, SuspList *sl) : OzVariable(OZ_VAR_BOOL, bb) {
+    suspList = sl;
   }
 
   USEFREELISTMEMORY;
