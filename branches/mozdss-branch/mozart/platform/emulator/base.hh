@@ -366,8 +366,6 @@ class GName;
 
 class IONode;
 
-class DummyClass {};
-
 void checkGC();
 
 // see version.sed
