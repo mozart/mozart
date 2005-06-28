@@ -180,7 +180,6 @@ public:
   }
 
   OzVariable() { Assert(0); }
-  OzVariable(TypeOfVariable t, DummyClass *) { setType(t); };
   OzVariable(TypeOfVariable t, Board *bb) : suspList(NULL) {
     homeAndFlags=(unsigned int)bb;
     setType(t);
