@@ -3,7 +3,7 @@
  *    Erik Klintskog (erik@sics.se)
  * 
  *  Contributors:
- *    optional, Contributor's name (Contributor's email address)
+ *    Boris Mejias (bmc@info.ucl.ac.be)
  * 
  *  Copyright:
  *    Erik Klintskog, 2002
@@ -161,8 +161,12 @@ void globalizeTertiary(Tertiary *t)
   switch(t->getType()) {
   case Co_Cell:
     {
-      getAnnotations(makeTaggedConst(t), PN_MIGRATORY_STATE, AA_STATIONARY_MANAGER ,RC_ALG_WRC, prot, aa, gc);
-      ae= dss->m_createMutableAbstractEntity(prot,aa,gc);
+      getAnnotations(makeTaggedConst(t),
+                     PN_MIGRATORY_STATE,
+                     AA_STATIONARY_MANAGER,
+                     RC_ALG_WRC,
+                     prot, aa, gc);
+      ae = dss->m_createMutableAbstractEntity(prot,aa,gc);
       CellMediator *cm = new CellMediator(ae, t);
       me = cm; 
       ae->assignMediator(cm);
@@ -170,8 +174,12 @@ void globalizeTertiary(Tertiary *t)
     }
   case Co_Lock:
     {
-      getAnnotations(makeTaggedConst(t), PN_MIGRATORY_STATE, AA_STATIONARY_MANAGER ,RC_ALG_WRC, prot, aa, gc);
-      ae= dss->m_createMutableAbstractEntity( prot, aa, gc);
+      getAnnotations(makeTaggedConst(t),
+                     PN_MIGRATORY_STATE,
+                     AA_STATIONARY_MANAGER,
+                     RC_ALG_WRC,
+                     prot, aa, gc);
+      ae = dss->m_createMutableAbstractEntity( prot, aa, gc);
       LockMediator *lm = new LockMediator(ae,t);
       me = lm; 
       ae->assignMediator(lm); 
@@ -179,23 +187,37 @@ void globalizeTertiary(Tertiary *t)
     }
   case Co_Object:
     {
-      /*
-      aa   = (aa_annotation   != ANOT_USE_DEFAULT) ? aa_annotation   : AA_STATIONARY_MANAGER;
-      prot = (prot_annotation != ANOT_USE_DEFAULT) ? prot_annotation : PN_SYNC_CHANEL;
-      Object *o = (Object *) t; 
-      TaggedRef state = o->getState();
-      if (!oz_isConst(state)) // the state is a cell
-	o->setState(OZ_newCell(state));
-      ProxyInterface *pi= createEMU(cm, static_cast<ProtocolName>(prot),static_cast<Access_Architecture>(aa), gc);
-      me = new LazyVarMediator(pi,makeTaggedConst(t),cm);
-      break;
-      */
-      //Assert(0);
+      getAnnotations(makeTaggedConst(t),
+                     PN_MIGRATORY_STATE, 
+                     AA_STATIONARY_MANAGER,
+                     RC_ALG_WRC,
+                     prot, aa, gc);
+      ae = dss->m_createMutableAbstractEntity(prot,aa,gc);
+      //bmc: Maybe two possibilities here. Create a LazyVarMediator first
+      //continuing with the approach of marshaling only the stub in the 
+      //beginning, or just go eagerly for the object. We are going to try
+      //the eager approach first, and then the optimization.
+      ObjectMediator *om = new ObjectMediator(ae,t);
+      ae->assignMediator(om);
+      me = om;
+      
+      Object *o = (Object *) t;
+      RecOrCell state = o->getState();
+      if (!stateIsCell(state)) {
+        SRecord *r = getRecord(state);
+        Assert(r!=NULL);
+        Tertiary *cell = (Tertiary *) tagged2Const(OZ_newCell(makeTaggedSRecord(r)));
+        o->setState(cell);
+      }
       break;
     }
   case Co_Port:
     {
-      getAnnotations(makeTaggedConst(t), PN_SIMPLE_CHANNEL, AA_STATIONARY_MANAGER ,RC_ALG_WRC, prot, aa, gc);
+      getAnnotations(makeTaggedConst(t),
+                     PN_SIMPLE_CHANNEL,
+                     AA_STATIONARY_MANAGER,
+                     RC_ALG_WRC,
+                     prot, aa, gc);
       ae = dss->m_createRelaxedMutableAbstractEntity(prot,aa, gc);
       
       // Looks strange, but the asbtarct entity takes only 
@@ -362,16 +384,19 @@ void glue_marshalTertiary(ByteBuffer *bs, Tertiary *t, Bool push)
 
       switch(t->getType()){
       case Co_Cell:
-	bs->put(DSS_DIF_CELL);
-	break;
+        bs->put(DSS_DIF_CELL);
+        break;
       case Co_Port:
-	bs->put(DSS_DIF_PORT);
-	break; 
-      case Co_Lock: 
-	bs->put(DSS_DIF_LOCK);
-	break;
+        bs->put(DSS_DIF_PORT);
+        break; 
+      case Co_Lock:
+        bs->put(DSS_DIF_LOCK);
+        break;
+      case Co_Resource:
+        bs->put(DSS_DIF_UNUSABLE);
+        break;
       default:
-	OZ_error("We dont distribute that SHIT %d", t->getType());
+        OZ_error("We dont distribute that SHIT %d", t->getType());
       }
       break; 
     }
@@ -454,21 +479,22 @@ OZ_Term  glue_unmarshalDistTerm(ByteBuffer *bs)
     switch(bs->get()){
     case DSS_DIF_THREAD:
       {
-	MutableMediatorInterface* mmi = dynamic_cast<MutableMediatorInterface*>(ae->accessMediator());
-	Assert(mmi); 
-	OzThreadMediator *me = dynamic_cast<OzThreadMediator *>(mmi); 
-	Assert(me);
-	return me->getEntity();
+        MutableMediatorInterface* mmi = 
+            dynamic_cast<MutableMediatorInterface*>(ae->accessMediator());
+        Assert(mmi); 
+        OzThreadMediator *me = dynamic_cast<OzThreadMediator *>(mmi);
+        Assert(me);
+        return me->getEntity();
       }
     case DSS_DIF_CELL:
     case DSS_DIF_LOCK:
       {
-	MediatorInterface *mi = ae->accessMediator(); 
-	MutableMediatorInterface* mmi = dynamic_cast<MutableMediatorInterface*>(mi);
-	Assert(mmi); 
-	ConstMediator *me = dynamic_cast<ConstMediator *>(mmi);
-	Assert(me);
-	return makeTaggedConst(me->getConst());
+        MediatorInterface *mi = ae->accessMediator(); 
+        MutableMediatorInterface* mmi = dynamic_cast<MutableMediatorInterface*>(mi);
+        Assert(mmi); 
+        ConstMediator *me = dynamic_cast<ConstMediator *>(mmi);
+        Assert(me);
+        return makeTaggedConst(me->getConst());
       }
     case DSS_DIF_PORT: {
         RelaxedMutableMediatorInterface* mmi = dynamic_cast<RelaxedMutableMediatorInterface*>(ae->accessMediator());
@@ -488,7 +514,7 @@ OZ_Term  glue_unmarshalDistTerm(ByteBuffer *bs)
     case DSS_DIF_UNUSABLE: {
         Assert(dynamic_cast<UnusableMediator *>(ae->accessMediator()) != NULL);
         ImmutableMediatorInterface* imi = 
-          static_cast<ImmutableMediatorInterface*>(ae->accessMediator());
+            static_cast<ImmutableMediatorInterface*>(ae->accessMediator());
         UnusableMediator* me = dynamic_cast<UnusableMediator *>(imi);
         Assert(me);
         return me->getEntity();
@@ -523,7 +549,8 @@ OZ_Term  glue_unmarshalDistTerm(ByteBuffer *bs)
       engineTable->insert(me,makeTaggedConst(tert));
       tert->setTertIndex(reinterpret_cast<int>(me));
       ae->assignMediator(me);
-      return makeTaggedConst(tert);}
+      return makeTaggedConst(tert);
+    }
     case DSS_DIF_PORT: {
       Tertiary *tert = new PortProxy();        
       PortMediator *me = new PortMediator(ae, tert); 
