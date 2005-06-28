@@ -185,7 +185,6 @@ public:
   }
 
   OzVariable() { Assert(0); }
-  OzVariable(TypeOfVariable t, DummyClass *) { setType(t); };
   OzVariable(TypeOfVariable t, Board *bb) : suspList(NULL) {
     homeOrMediator.set(bb, 0);  // local and not trailed
     setType(t);
