@@ -527,11 +527,12 @@ OZ_Term  glue_unmarshalDistTerm(ByteBuffer *bs)
   } else {
     switch(bs->get()){
     case DSS_DIF_UNUSABLE:{
-      //bmc:
       Tertiary* tert =  new UnusableResource();
       TaggedRef tr = makeTaggedConst(tert);
       UnusableMediator *um = new UnusableMediator(ae, tr);
+      engineTable->insert(um,makeTaggedConst(tert));
       tert->setTertIndex(reinterpret_cast<int>(um));
+      ae->assignMediator(um);
       return tr;
     }
     case DSS_DIF_THREAD:{
