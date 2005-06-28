@@ -401,6 +401,23 @@ OZ_Return FSetDiffPropagator::propagate(void)
 
   do {
     xt=x; yt=y; zt=z;
+#ifndef NO_SIMPLIFICATION
+    if (z->isEmpty()) {
+      OZ_DEBUGPRINTTHIS("replace: (z empty)");
+      P.vanish();
+      return replaceBy(new FSetSubsumePropagator(_x,_y));
+    }
+    if (y->isEmpty()) {
+      OZ_DEBUGPRINTTHIS("replace: (y empty)");
+      P.vanish();
+      return replaceBy(_x,_z);
+    }
+    if (x->isSubsumedBy(*y)) {
+      OZ_DEBUGPRINTTHIS("replace: (x subsumed by y)");
+      FailOnInvalid(*z <<= OZ_FSetConstraint(fs_empty));
+      return P.vanish();
+    }
+#endif
     // x-y=z
     //  disjoint(y,z)
     //  union(x,z)=union(y,z)
