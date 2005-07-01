@@ -3,7 +3,7 @@
  *    Erik Klintskog (erik@sics.se)
  * 
  *  Contributors:
- *    optional, Contributor's name (Contributor's email address)
+ *    Boris Mejias, bmc@info.ucl.ac.be
  * 
  *  Copyright:
  *    Erik Klintskog, 2004
@@ -54,7 +54,9 @@ namespace _dss_internal{
   
   MsgContainer* 
   HomeGCalgorithm::m_createRemoteMsg(){
-    return a_homeRef->a_coordinator->m_createProxyRefMsg();
+    MsgContainer *msg = a_homeRef->a_coordinator->m_createProxyRefMsg();
+    msg->pushIntVal(a_type);
+    return msg;
   }
   
   bool 
@@ -75,12 +77,16 @@ namespace _dss_internal{
   
   MsgContainer* 
   RemoteGCalgorithm::m_createHomeMsg(){
-    return a_remoteRef->a_proxy->m_createCoordRefMsg();
+    MsgContainer *msg = a_remoteRef->a_proxy->m_createCoordRefMsg();
+    msg->pushIntVal(a_type); 
+    return msg;
   }
   
   MsgContainer*
   RemoteGCalgorithm::m_createRemoteMsg(){ 
-    return a_remoteRef->a_proxy->m_createProxyRefMsg();
+    MsgContainer *msg = a_remoteRef->a_proxy->m_createProxyRefMsg();
+    msg->pushIntVal(a_type);
+    return msg;
   }
   
   void 
