@@ -78,7 +78,10 @@ namespace _dss_internal{
   MsgContainer* 
   RemoteGCalgorithm::m_createHomeMsg(){
     MsgContainer *msg = a_remoteRef->a_proxy->m_createCoordRefMsg();
-    msg->pushIntVal(a_type); 
+    // raph: msg->pushIntVal(a_type) is incorrect, because passing
+    // a_type by ref is unsafe!  This is why t is introduced below.
+    int t = a_type;
+    msg->pushIntVal(t);
     return msg;
   }
   
