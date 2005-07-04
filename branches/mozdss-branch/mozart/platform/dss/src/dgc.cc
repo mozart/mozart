@@ -55,7 +55,8 @@ namespace _dss_internal{
   MsgContainer* 
   HomeGCalgorithm::m_createRemoteMsg(){
     MsgContainer *msg = a_homeRef->a_coordinator->m_createProxyRefMsg();
-    msg->pushIntVal(a_type);
+    int t = a_type;
+    msg->pushIntVal(t);
     return msg;
   }
   
