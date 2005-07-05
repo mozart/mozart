@@ -401,7 +401,7 @@ namespace _msl_internal{ //Start namespace
   
   // ************************ Push  methods
   
-  void  MsgCnt::pushIntVal(const int& v){
+  void  MsgCnt::pushIntVal(int v){
     m_pushVal(reinterpret_cast<void*>(v), FT_NUMBER); }
   
   void  MsgCnt::pushADC(ExtDataContainerInterface* v){

@@ -187,7 +187,7 @@ typedef unsigned int (*TimerWakeUpProc)(void *);
 class MsgContainer{
 public:
   virtual void pushDSiteVal(DSite*) = 0;
-  virtual void pushIntVal(const int& ) = 0; 
+  virtual void pushIntVal(int) = 0; 
   virtual void pushADC(ExtDataContainerInterface*) = 0; 
   virtual void pushSDC(ExtDataContainerInterface*) = 0; 
   virtual void pushMsgC(MsgContainer*) = 0; 
