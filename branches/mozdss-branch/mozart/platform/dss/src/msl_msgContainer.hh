@@ -217,7 +217,7 @@ namespace _msl_internal{ //Start namespace
   public: // External methods used when sending a MsgC
     virtual void pushDSiteVal(DSite* s);
 
-    virtual void pushIntVal(const int& v);
+    virtual void pushIntVal(int v);
     virtual void pushADC(ExtDataContainerInterface* v);
     virtual void pushSDC(ExtDataContainerInterface* v);
     virtual void pushMsgC(MsgContainer*); 
