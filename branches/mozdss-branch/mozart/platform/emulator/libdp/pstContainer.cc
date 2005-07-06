@@ -31,7 +31,8 @@
 #include "pstContainer.hh"
 #include "glue_buffer.hh"
 
-static BYTE shared_byte_area[16000];
+#define SHARED_BYTE_AREA_SIZE 16000
+static BYTE shared_byte_area[SHARED_BYTE_AREA_SIZE];
 DPMarshalers* DPM_Repository;
 
 static PstContainer *g_PstContainers = NULL; 
@@ -91,6 +92,7 @@ void PstInContainer::gcFinish(){
 
 bool PstInContainer::unmarshal(DssReadBuffer *buf){
   int len = buf->availableData();
+  Assert(len <= SHARED_BYTE_AREA_SIZE);
   buf->readFromBuffer(shared_byte_area, len); 
   GlueReadBuffer bb(shared_byte_area, len);
   Builder *dpum;
@@ -176,6 +178,8 @@ void PstOutContainer::gcFinish(){
 }
 bool PstOutContainer::marshal(DssWriteBuffer* buf){
   int len = buf->availableSpace();
+  if (len > SHARED_BYTE_AREA_SIZE) len = SHARED_BYTE_AREA_SIZE;
+  // Assert(len <= SHARED_BYTE_AREA_SIZE);
   GlueWriteBuffer bb(shared_byte_area, len);
   
   if (a_marshal_cont == NULL)
