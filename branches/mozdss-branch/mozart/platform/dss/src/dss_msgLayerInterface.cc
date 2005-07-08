@@ -312,9 +312,11 @@ namespace _dss_internal{
 	a_pstIn = m_getEnvironment()->a_map->createPstInContainer();
       return a_pstIn->unmarshal(bb); 
     }
+    // dispose pst in/out containers, and delete this one
     void  PstContainer::dispose(){
       if (a_pstIn) a_pstIn->dispose();
       if (a_pstOut) a_pstOut->dispose();
+      delete this;
     }
     void  PstContainer::resetMarshaling(){
       if (a_pstOut) a_pstOut->resetMarshaling();
@@ -338,8 +340,10 @@ namespace _dss_internal{
     PstContainer::m_getPstIn(){
       if (a_pstIn) 
 	return a_pstIn; 
-      if (a_pstOut)
-	return a_pstOut->loopBack2In();
+      if (a_pstOut) {
+	a_pstIn = a_pstOut->loopBack2In(); // keep track of it (for GC)
+	return a_pstIn;
+      }
       return NULL; 
     }
 
@@ -521,6 +525,9 @@ namespace _dss_internal{
   }
   
   PstInContainerInterface* PstDataContainer::m_getPstIn(){
+    // raph: this operation might leak memory (the returned
+    // PstInContainerInterface will not be disposed).
+    Assert(0);
     PstInContainerInterface* pstIn = m_getEnvironment()->a_map->createPstInContainer();
     ReadBlockBuffer rb(a_cntdBuf->m_getBuffer()); 
     pstIn->unmarshal(&rb);

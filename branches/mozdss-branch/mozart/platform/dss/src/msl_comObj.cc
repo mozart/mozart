@@ -501,7 +501,9 @@ namespace _msl_internal { //Start namespace
 	{
 	  printf("App message received in non working comObject state, silently discarded\n");	    
 	}
-      return true; 
+      // raph: Don't return here: msgC must be freed from memory.
+      // return true; 
+      break;
     case C_ACK: // Actually a dummy, since acknum was retrieved during unmarsh.
       break;
     case C_ANON_PRESENT:
