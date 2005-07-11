@@ -26,28 +26,30 @@
 
 #include "glue_buffer.hh"  
 
-GlueReadBuffer::GlueReadBuffer(BYTE* b, int len):ByteBuffer(b, len){}
+GlueReadBuffer::GlueReadBuffer(BYTE* b, int len) : ByteBuffer(b, len) {}
 
-int GlueReadBuffer::availableData() const {
-	return 1000;
-}
+// This one had to be redefined.  We cannot reuse availableSpace()
+// from ByteBuffer since it does not have the 'const' modifier.
+int GlueReadBuffer::availableData() const { return endMB - posMB; }
 
-void GlueReadBuffer::commitRead(size_t){;} //bmc: this is only necessary for other libraries, like the dss/utils for C++ code
-const BYTE GlueReadBuffer::getByte(){ return get();}
+void GlueReadBuffer::commitRead(size_t size) {}
+
+const BYTE GlueReadBuffer::getByte(){ return get(); }
+
 void GlueReadBuffer::readFromBuffer(BYTE* ptr, size_t size) {
-  for(;size>0; size--){
-    *ptr = get();
-    ptr ++; 
-  }
+  for(; size>0; size--) { *ptr = get(); ptr++; }
 }
 
-GlueWriteBuffer::GlueWriteBuffer(BYTE* b, int len):ByteBuffer(b, len){}
 
-int GlueWriteBuffer::availableSpace() const { return 1000;}
-void GlueWriteBuffer::putByte(const BYTE& c){put(c);}  
-void GlueWriteBuffer::writeToBuffer(const BYTE* ptr, size_t size){
-  // This is so ugly!
-  for(; size>0; size--) {
-    put(*ptr++);
-	}
+
+GlueWriteBuffer::GlueWriteBuffer(BYTE* b, int len) : ByteBuffer(b, len) {}
+
+// We cannot inherit this method from ByteBuffer, since it does not
+// have the 'const' modifier.
+int GlueWriteBuffer::availableSpace() const { return endMB - posMB;}
+
+void GlueWriteBuffer::putByte(const BYTE& c) { put(c); }  
+
+void GlueWriteBuffer::writeToBuffer(const BYTE* ptr, size_t size) {
+  for(; size>0; size--) { put(*ptr); ptr++; }
 } 
