@@ -39,6 +39,9 @@
 void oz_thread_setDistVal(TaggedRef tr, int i, void* v); 
 void* oz_thread_getDistVal(TaggedRef tr, int i); 
 
+// return a DssThreadId corresponding to the current Oz thread, or a
+// new DssThreadId if the operation is internal (in which case there
+// is no current thread)
 DssThreadId* getThreadId(){
   // Warning, this one will leak. We have to associate each thread
   // with a DssThreadId.  By some means a thread can be queried for
@@ -46,14 +49,23 @@ DssThreadId* getThreadId(){
   // Mozart only supports those darn open-hashtables, not really
   // suitable for our need.  Consequently, due to laziness I have
   // chosen to do this suboptimal hack.
-  TaggedRef thr = oz_thread(oz_currentThread());
-  DssThreadId *id = reinterpret_cast<DssThreadId*>(oz_thread_getDistVal(thr, 1));
-  if(id == NULL) {
-    id = dss->m_createDssThreadId();
-    oz_thread_setDistVal(thr, 1,reinterpret_cast<void*>(id));
+  Thread *t = oz_currentThread();
+  if (t) {
+    // get a DssThreadId corresponding to t
+    TaggedRef thr = oz_thread(t);
+    DssThreadId *id =
+      reinterpret_cast<DssThreadId*>(oz_thread_getDistVal(thr, 1));
+    if(id == NULL) {
+      id = dss->m_createDssThreadId();
+      oz_thread_setDistVal(thr, 1,reinterpret_cast<void*>(id));
+    }
+    return id; 
+  } else {
+    // there is no current thread, create a new one
+    return dss->m_createDssThreadId();
   }
-  return id; 
 }
+
 
 
 bool unlockDistLockImpl(Tertiary *l){
@@ -124,93 +136,73 @@ bool lockDistLockImpl(Tertiary *l, Thread *thr){
 }
 
 
-bool cellDoAccessImpl(Tertiary *p, TaggedRef &ans )
-{
+
+bool cellDoAccessImpl(Tertiary *p, TaggedRef &ans) {
   CellMediator *me = static_cast<CellMediator*>(index2Me(p->getTertIndex())); 
   AbstractEntity *ae = me->getAbstractEntity();
   MutableAbstractEntity *mae = static_cast<MutableAbstractEntity*>(ae);
   
   DssThreadId *thrId = getThreadId();
-
   PstOutContainerInterface** pstout;
   OpRetVal cont = mae->abstractOperation_Read(thrId,pstout);
-  if (pstout != NULL){
-    *(pstout) = new PstOutContainer(oz_nil()); 
-  }
+  if (pstout != NULL) *(pstout) = new PstOutContainer(oz_nil()); 
 
-  switch(cont)
-    {
-    case DSS_PROCEED:
-      {
-	return true; 
-      }
-    case DSS_SKIP:
-      Assert(0); 
-      return true;   
-    case DSS_SUSPEND:
-      {
-	OZ_Term var = oz_newVariable();
-	ans = var; 
-	thrId->setThreadMediator(new SuspendedCellAccess(me, ans)); 
-	return false;
-      }
-    case DSS_RAISE:
-      OZ_error("Not Implemented yet, raise");
-      return false; 
-    case DSS_INTERNAL_ERROR_NO_OP:
-      OZ_error("Not Handled cellDoAccess,  DSS_INTERNAL_ERROR_NO_OP");
-      return false; 
-    case DSS_INTERNAL_ERROR_NO_PROXY:
-    default: 
-      OZ_error("Not Handled cellDoAccess, DSS_INTERNAL_ERROR_NO_PROXY ");
-      return false; 
-    }
-  return false;
+  switch(cont) {
+  case DSS_PROCEED:
+    return true; 
+  case DSS_SKIP:
+    Assert(0); 
+    return true;   
+  case DSS_SUSPEND:
+    ans = static_cast<TaggedRef>(oz_newVariable());
+    thrId->setThreadMediator(new SuspendedCellAccess(me, ans)); 
+    return false;
+  case DSS_RAISE:
+    OZ_error("Not Implemented yet, raise");
+    return false; 
+  case DSS_INTERNAL_ERROR_NO_OP:
+    OZ_error("Not Handled cellDoAccess,  DSS_INTERNAL_ERROR_NO_OP");
+    return false; 
+  case DSS_INTERNAL_ERROR_NO_PROXY:
+  default: 
+    OZ_error("Not Handled cellDoAccess, DSS_INTERNAL_ERROR_NO_PROXY ");
+    return false; 
+  }
 }
 
 
- bool cellDoExchangeImpl(Tertiary *p, TaggedRef &oldVal,TaggedRef newVal )
-{
+bool cellDoExchangeImpl(Tertiary *p, TaggedRef &oldVal, TaggedRef newVal) {
   // This is used for both assign and exchange! 
   CellMediator *me = static_cast<CellMediator*>(index2Me(p->getTertIndex())); 
   AbstractEntity *ae = me->getAbstractEntity();
   MutableAbstractEntity *mae = static_cast<MutableAbstractEntity*>(ae);
   DssThreadId *thrId = getThreadId();
 
-
   PstOutContainerInterface** pstout;
   OpRetVal cont = mae->abstractOperation_Write(thrId, pstout);
-  if (pstout != NULL){
-    *(pstout) = new PstOutContainer(newVal);
+  if (pstout != NULL) *(pstout) = new PstOutContainer(newVal);
+
+  switch(cont) {
+  case DSS_PROCEED:
+    return true; 
+  case DSS_SKIP:
+    Assert(0); 
+    return true;   
+  case DSS_SUSPEND:
+    oldVal = static_cast<TaggedRef>(oz_newVariable());
+    thrId->setThreadMediator(new SuspendedCellExchange(me, newVal, oldVal)); 
+    return false;
+  case DSS_RAISE:
+    OZ_error("Not Implemented yet, raise");
+    return false; 
+  case DSS_INTERNAL_ERROR_NO_OP:
+    OZ_error("Not Handled Cell Exchange  DSS_INTERNAL_ERROR_NO_OP");
+    return false; 
+  case DSS_INTERNAL_ERROR_NO_PROXY:
+  default: 
+    OZ_error("Not Handled  Cell Exchange DSS_INTERNAL_ERROR_NO_PROXY");
+    return false; 
   }
-  switch(cont)
-    {
-    case DSS_PROCEED:
-      {
-	return true; 
-      }
-    case DSS_SKIP:
-      Assert(0); 
-      return true;   
-    case DSS_SUSPEND:
-      {
-	OZ_Term var = oz_newVariable();
-	oldVal = var; 
-	thrId->setThreadMediator(new SuspendedCellExchange(me, newVal, var)); 
-	return false;
-      }
-    case DSS_RAISE:
-      OZ_error("Not Implemented yet, raise");
-      return false; 
-    case DSS_INTERNAL_ERROR_NO_OP:
-      OZ_error("Not Handled Cell Exchange  DSS_INTERNAL_ERROR_NO_OP");
-      return false; 
-    case DSS_INTERNAL_ERROR_NO_PROXY:
-    default: 
-      OZ_error("Not Handled  Cell Exchange DSS_INTERNAL_ERROR_NO_PROXY");
-      return false; 
-    }
-  return false;
 }
 
 
@@ -218,35 +210,32 @@ bool cellDoAccessImpl(Tertiary *p, TaggedRef &ans )
 
 bool portSendImpl(Tertiary *p, TaggedRef msg){
   PortMediator *me = static_cast<PortMediator*>(index2Me(p->getTertIndex())); 
-  AbstractEntity *ae = me->getAbstractEntity();
-  RelaxedMutableAbstractEntity *mae = static_cast<RelaxedMutableAbstractEntity*>(ae);
+  RelaxedMutableAbstractEntity *mae =
+    static_cast<RelaxedMutableAbstractEntity*>(me->getAbstractEntity());
 
   PstOutContainerInterface** pstout;
   OpRetVal cont = mae->abstractOperation_Write(pstout);
-  if (pstout != NULL){
-    *(pstout) = new PstOutContainer(msg);
+  if (pstout != NULL) *(pstout) = new PstOutContainer(msg);
+
+  switch(cont) {
+  case DSS_PROCEED:
+    return false;
+  case DSS_SKIP:
+    return true;   
+  case DSS_SUSPEND:
+    Assert(0); 
+    return true; 
+  case DSS_RAISE:
+    OZ_error("Not Implemented yet, raise");
+    return false; 
+  case DSS_INTERNAL_ERROR_NO_OP:
+    OZ_error("Not Handled, portSend DSS_INTERNAL_ERROR_NO_OP");
+    return false; 
+  case DSS_INTERNAL_ERROR_NO_PROXY:
+  default: 
+    OZ_error("Not Handled, portSend DSS_INTERNAL_ERROR_NO_PROXY");
+    return false; 
   }
-  switch(cont)
-    {
-    case DSS_PROCEED:
-      return false;
-    case DSS_SKIP:
-      return true;   
-    case DSS_SUSPEND:
-      Assert(0); 
-      return true; 
-    case DSS_RAISE:
-      OZ_error("Not Implemented yet, raise");
-      return false; 
-    case DSS_INTERNAL_ERROR_NO_OP:
-      OZ_error("Not Handled, portSend DSS_INTERNAL_ERROR_NO_OP");
-      return false; 
-    case DSS_INTERNAL_ERROR_NO_PROXY:
-    default: 
-      OZ_error("Not Handled, portSend DSS_INTERNAL_ERROR_NO_PROXY");
-      return false; 
-    }
-  return false;
 }
 
 void cellOperationDoneReadImpl(Tertiary* tert, TaggedRef ans, int thid){
@@ -264,6 +253,8 @@ void cellOperationDoneWriteImpl(Tertiary* tert )
   ; 
 }
 
+
+
 bool distArrayGetImpl(OzArray *oza, TaggedRef indx, TaggedRef &ans){
   ArrayMediator *me = static_cast<ArrayMediator*>(index2Me(oza->getDist())); 
   AbstractEntity *ae = me->getAbstractEntity();
@@ -271,21 +262,18 @@ bool distArrayGetImpl(OzArray *oza, TaggedRef indx, TaggedRef &ans){
   
   DssThreadId *thrId = getThreadId();
     
-    PstOutContainerInterface** pstout;
-    OpRetVal cont = mae->abstractOperation_Read(thrId,pstout);
-    if (pstout != NULL){
-    *(pstout) = new PstOutContainer(indx); 
-    }
-    if (cont == DSS_PROCEED) {
-    return false; 
-    }
-    if (cont == DSS_SUSPEND){
-	OZ_Term var = oz_newVariable();
-	ans = var; 
-	thrId->setThreadMediator(new SuspendedArrayGet(me, ans, tagged2SmallInt(indx))); 
-	return true;}
-    OZ_error("Shit, something vent wrong when doing an array op");
-    return false;
+  PstOutContainerInterface** pstout;
+  OpRetVal cont = mae->abstractOperation_Read(thrId,pstout);
+  if (pstout != NULL) *(pstout) = new PstOutContainer(indx); 
+
+  if (cont == DSS_PROCEED) return false; 
+  if (cont == DSS_SUSPEND) {
+    ans = oz_newVariable();
+    thrId->setThreadMediator(new SuspendedArrayGet(me, ans, tagged2SmallInt(indx))); 
+    return true;
+  }
+  OZ_error("Shit, something vent wrong when doing an array op");
+  return false;
 }
 
 bool distArrayPutImpl(OzArray *oza, TaggedRef indx, TaggedRef val){
@@ -297,15 +285,13 @@ bool distArrayPutImpl(OzArray *oza, TaggedRef indx, TaggedRef val){
     
   PstOutContainerInterface** pstout;
   OpRetVal cont = mae->abstractOperation_Write(thrId,pstout);
-  if (pstout != NULL){
-    *(pstout) = new PstOutContainer(oz_cons(indx,val)); 
-  }
-  if (cont == DSS_PROCEED) {
-    return false; 
-  }
-  if (cont == DSS_SUSPEND){
+  if (pstout != NULL) *(pstout) = new PstOutContainer(oz_cons(indx,val)); 
+
+  if (cont == DSS_PROCEED) return false; 
+  if (cont == DSS_SUSPEND) {
     thrId->setThreadMediator(new SuspendedArrayPut(me, val, tagged2SmallInt(indx))); 
-    return true;}
+    return true;
+  }
   OZ_error("Shit, something vent wrong when doing an array op");
   return false;
 }
@@ -429,12 +415,13 @@ OZ_Return distVarBindImpl(OzVariable *ov, TaggedRef *varPtr, TaggedRef val) {
   case DSS_SKIP: // skip the operation: should not happen
     Assert(0);
     return PROCEED;
-  case DSS_SUSPEND: // suspend operation
+  case DSS_SUSPEND: { // suspend operation
     thrId->setThreadMediator(new SuspendedVarBind(val, med));
-    // raph: the following is probably not correct, I recommend a
-    // quiet suspension instead
-    // return oz_addSuspendVarList(varPtr);
-    return oz_var_addQuietSusp(varPtr, oz_currentThread());
+    // use quiet suspension here (avoid extra distributed operations),
+    // and don't add a suspension if there is no current thread
+    Thread *thr = oz_currentThread();
+    return (thr ? oz_var_addQuietSusp(varPtr, thr) : PROCEED);
+  }
   case DSS_RAISE: // error
     OZ_error("Not Implemented yet, raise");
     return PROCEED; 
