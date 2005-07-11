@@ -79,9 +79,8 @@ OzValuePatch* gcFinishOVP(OZ_Term ot)
     Assert(oz_isVarOrRef(ot));	// due to 'gcStartOVP()';
     Assert(oz_isExtVar(ot));	// ditto;
     DebugCode(ExtVarType evt = oz_getExtVar(ot)->getIdV(););
-    Assert(evt == OZ_EVAR_MGRVARPATCH || 
-	   evt == OZ_EVAR_PXYVARPATCH ||
-	   evt == OZ_EVAR_MVARPATCH);
+    Assert(evt == OZ_EVAR_DISTRIBUTEDVARPATCH ||
+	   evt == OZ_EVAR_MARSHALEDVARPATCH);
 
     OzValuePatch *ovp = (OzValuePatch *) oz_getExtVar(ot);
     if (ovp->val) {
