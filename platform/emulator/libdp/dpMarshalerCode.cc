@@ -571,31 +571,14 @@ void DPMARSHALERCLASS::processVar(OZ_Term v, OZ_Term *vRef)
       case OZ_EVAR_LAZY:
 	oz_getLazyVar(v)->marshal(bs, index);
 	// only a "place holding" patch is necessary:
-	expVars = new MVarPatch(vrt, expVars);
+	expVars = new MarshaledVarPatch(vrt, expVars);
 	break;
 
-      case OZ_EVAR_MANAGER:
-	// no more Managers with the DSS
-	OZ_error("Managers are gone");
+      case OZ_EVAR_DISTRIBUTEDVARPATCH:
+	oz_getDistributedVarPatch(v)->marshal(bs, index);
 	break;
 
-      case OZ_EVAR_PROXY:
-	// no more Proxies either, I just removed them
-	OZ_error("Proxies are gone");
-	// oz_getProxyVar(v)->marshal(bs, index, vRef, isPushContents());
-	// expVars = new MVarPatch(vrt, expVars);
-	break;
-
-      case OZ_EVAR_MGRVARPATCH:
-	// Since Managers are gone, ManagerVarPatches are also gone
-	OZ_error("MGRVARPATCH not used");
-	break;
-
-      case OZ_EVAR_PXYVARPATCH:
-	oz_getPxyVarPatch(v)->marshal(bs, index);
-	break;
-
-      case OZ_EVAR_MVARPATCH:
+      case OZ_EVAR_MARSHALEDVARPATCH:
       default:
 	Assert(0);
 	break;
@@ -610,12 +593,10 @@ void DPMARSHALERCLASS::processVar(OZ_Term v, OZ_Term *vRef)
       OzVariable *var = tagged2Var(v);
       if (!var->isDistributed()) var = glue_globalizeOzVariable(vRef);
       Assert(oz_isVar(*vRef));
-
       // marshal it
       glue_marshalOzVariable(bs, vRef, index, isPushContents());
-      // raph: forget about this one for a minute
-      // expVars = new MVarPatch(vrt, expVars);
-
+      // patch it
+      expVars = new MarshaledVarPatch(vrt, expVars);
       // marshal the index, if any
       if (index) marshalTermDef(bs, index);
 

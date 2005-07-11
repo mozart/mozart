@@ -29,7 +29,6 @@
 #ifndef __DPMARSHALER_HH
 #define __DPMARSHALER_HH
 
-//bmc: I've removed dpBase.hh msgType perdio.hh table.hh
 #include "base.hh"
 #include "byteBuffer.hh"
 #include "marshalerBase.hh"
@@ -476,118 +475,75 @@ private:
 // . keep locations of variables
 // . hold internal (memory) representation of "exported" variables until
 //   their external (network) representations are sent out;
-/*
-class MgrVarPatch : public OzValuePatch {
-private:
-  Bool isMarshaled;		// for the case of transmission failure;
-  OB_TIndex oti;
-  RRinstance *remoteRef;
-  MarshalTag tag;		// readonly? auto?
 
-  //
-public:
-  MgrVarPatch(OZ_Term locIn, OzValuePatch *nIn,
-		 ManagerVar *mv, DSite *dest);
-  virtual ~MgrVarPatch() { Assert(0); }
-
-  //
-  virtual void          disposeV();
-  //
-  virtual ExtVarType    getIdV(void) { return (OZ_EVAR_MGRVARPATCH); }
-  //
-  virtual OzValuePatch* gCollectV() {
-    return (new MgrVarPatch(*this));
-  }
-  virtual void gCollectRecurseV() {
-    gcRecurseOVP();
-  }
-
-  //
-  void marshal(ByteBuffer *bs, Bool hasIndex);
-};
-
-*/
-/*
-inline
-Bool oz_isMgrVarPatch(OZ_Term v)
-{
-  return (oz_isExtVar(v) && (oz_getExtVar(v)->getIdV() == OZ_EVAR_MGRVARPATCH));
-}
-
-inline
-MgrVarPatch *oz_getMgrVarPatch(OZ_Term v)
-{
-  Assert(oz_isMgrVarPatch(v));
-  return ((MgrVarPatch *) oz_getExtVar(v));
-}
-*/
 //
-// MVarPatch holds a location of a *marshaled* variable, of whichever
-// type (but should not be marshaled itself: 'processVar()' methods
-// should recognize coreferences, and marshal them accordingly);
+// MarshaledVarPatch holds a location of a *marshaled* variable, of
+// whichever type (but should not be marshaled itself: 'processVar()'
+// methods should recognize coreferences, and marshal them
+// accordingly).  It can be seen as an optimization of
+// DistributedVarPatch.
 
-class MVarPatch : public OzValuePatch {
+class MarshaledVarPatch : public OzValuePatch {
 public:
-  MVarPatch(OZ_Term locIn, OzValuePatch *nIn)
-    : OzValuePatch(locIn, nIn) {}
-  ~MVarPatch() { Assert(0); }
+  MarshaledVarPatch(OZ_Term loc, OzValuePatch *next)
+    : OzValuePatch(loc, next) {}
+  ~MarshaledVarPatch() { Assert(0); }
 
   //
   virtual void disposeV() { 
     disposeOVP();
-    oz_freeListDispose(extVar2Var(this), extVarSizeof(MVarPatch));
+    oz_freeListDispose(extVar2Var(this), extVarSizeof(MarshaledVarPatch));
   }
   //
-  virtual ExtVarType    getIdV(void) { return (OZ_EVAR_MVARPATCH); }
+  virtual ExtVarType getIdV(void) { return (OZ_EVAR_MARSHALEDVARPATCH); }
   //
   virtual OzValuePatch* gCollectV() {
-    return (new MVarPatch(*this));
+    return (new MarshaledVarPatch(*this));
   }
-  virtual void gCollectRecurseV() {
-    gcRecurseOVP();
-  }
+  virtual void gCollectRecurseV() { gcRecurseOVP(); }
 };
 
 //
-class PxyVarPatch : public OzValuePatch {
+// DistributedVarPatch holds a location of a variable that has not
+// been marshaled yet when the snapshot took place.  This one contains
+// the necessary information to marshal the variable.
+
+class DistributedVarPatch : public OzValuePatch {
 private:
-  //  DebugCode(OB_TIndex bti;);
-  Bool isMarshaled;
-  short isReadOnly;		//
-  Mediator *e_name;
-  //
+  Bool isMarshaled;     // for debugging purposes
+  short isReadOnly;     // for marshaling
+  Mediator *med;        // the variable's mediator
+
 public:
-  PxyVarPatch(OZ_Term locIn, OzValuePatch *nIn,
-		 ProxyVar *pv);
-  virtual ~PxyVarPatch() { Assert(0); }
+  DistributedVarPatch(OZ_Term loc, OzValuePatch *next, OzVariable *ov);
+  virtual ~DistributedVarPatch() { Assert(0); }
 
   //
-  virtual void          disposeV();
+  virtual void disposeV();
   //
-  virtual ExtVarType    getIdV(void) { return (OZ_EVAR_PXYVARPATCH); }
+  virtual ExtVarType getIdV(void) { return (OZ_EVAR_DISTRIBUTEDVARPATCH); }
   //
   virtual OzValuePatch* gCollectV() {
-    return (new PxyVarPatch(*this));
+    return (new DistributedVarPatch(*this));
   }
-  virtual void gCollectRecurseV() {
-    gcRecurseOVP();
-  }
+  virtual void gCollectRecurseV() { gcRecurseOVP(); }
 
   //
   void marshal(ByteBuffer *bs, Bool hasIndex);
 };
 
 inline
-Bool oz_isPxyVarPatch(OZ_Term v)
+Bool oz_isDistributedVarPatch(OZ_Term v)
 {
-  return (oz_isExtVar(v) && (oz_getExtVar(v)->getIdV() == OZ_EVAR_PXYVARPATCH));
+  return (oz_isExtVar(v) &&
+	  (oz_getExtVar(v)->getIdV() == OZ_EVAR_DISTRIBUTEDVARPATCH));
 }
 
 inline
-PxyVarPatch *oz_getPxyVarPatch(OZ_Term v)
+DistributedVarPatch *oz_getDistributedVarPatch(OZ_Term v)
 {
-  Assert(oz_isPxyVarPatch(v));
-  return ((PxyVarPatch *) oz_getExtVar(v));
+  Assert(oz_isDistributedVarPatch(v));
+  return ((DistributedVarPatch *) oz_getExtVar(v));
 }
 
 //

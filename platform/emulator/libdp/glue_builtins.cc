@@ -321,8 +321,8 @@ OZ_BI_define(BIgetCRC,1,1)
     
   OZ_RETURN(OZ_unsignedInt(crc));
 } OZ_BI_end
-#define PORT_TO_TICK_BUF_LEN 400
 
+#define PORT_TO_TICK_BUF_LEN 400
 unsigned char portToTickBuf[PORT_TO_TICK_BUF_LEN];
 
 OZ_BI_define(BIportToMS,1,1)

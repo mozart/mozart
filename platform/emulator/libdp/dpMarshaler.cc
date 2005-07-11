@@ -32,33 +32,18 @@
 #if defined(INTERFACE)
 #pragma implementation "dpMarshaler.hh"
 #endif
-//bmc: I have removed several inclusions here
+
 #include "base.hh"
-//#include "dpBase.hh" //bmc: was in libdp
-//#include "perdio.hh" //bmc: was in libdp
-//#include "msgType.hh" //bmc: was in libdp
-//#include "table.hh" //bmc: was in libdp
 #include "dpMarshaler.hh"
 #include "dpInterface.hh"
-//#include "var.hh" //bmc: was in libdp
-//#include "var_obj.hh" //bmc: was in libdp
 #include "var_readonly.hh"
-//#include "var_class.hh" //bmc: was in libdp
 #include "gname.hh" 
-//#include "state.hh" //bmc: was in libdp
-//#include "port.hh"  //bmc: was in libdp
-//#include "dpResource.hh"  //bmc: was in libdp
 #include "boot-manager.hh"
 
-//bmc: Now I'm adding the DSS
 #include "dss_object.hh"
 
 #include "glue_buffer.hh"
 #include "glue_marshal.hh"
-//bmc: I'm not sure if I need to add the following
-//#include "engine_interface.hh"
-//#include "glue_entities.hh"
-//#include "glue_tables.hh"
 
 
 
@@ -92,65 +77,32 @@ void marshalDIFcounted(MarshalerBuffer *bs, MarshalTag tag)
 }
 
 
-/**********************************************************************/
-/*  basic proxy */
-/**********************************************************************/
 
-//bmc: Al the code about the borrower and owner does not make sence
-//any more, because now the marshaler does not have explicit knowledge
-//about the distribution, and then, the concepts of borrower and owner
-//dissapears for the marshaler.
+/******************** DistributedVarPatch ********************/
 
-//bmc: Here some comments writen before deleting the code.
-//bmc: the OB_TIndex is part of the dpBase.hh and it was not used by
-//bmc: the implementation of the OzDSS.
-//bmc: the RRinstance belongs to the removed referenceConsistency.hh
-//bmc: Ext_OB_TIndex also comes from dpBase.hh
-
-//
-// Variables - immediate ones and patches;
-//
-extern Bool globalRedirectFlag;
-
-//bmc: The manager is not a part of the marshaler anymore, because the
-//marshaler now does not have explicit knowledge about the
-//distribution. The manager is now part of the DSS. The code realted
-//to the manager has been deleted from here.
-
-//bmc: The destination DSite is now known by the DSS and no longer by
-//bmc: the marshaler. Then, it has been removed from the PxyVarPatch
-//bmc: I'm removing all references to explicit distribution. I still
-//bmc: don't get the meaning of the e_name, so, I still have to
-//bmc: clarify that.
-
-//
-PxyVarPatch::PxyVarPatch(OZ_Term locIn, OzValuePatch *nIn,
-			 ProxyVar *pv)
-  : OzValuePatch(locIn, nIn), isMarshaled(NO)
+// constructor
+DistributedVarPatch::DistributedVarPatch(OZ_Term loc, OzValuePatch *next,
+					 OzVariable *ov)
+  : OzValuePatch(loc, next), isMarshaled(NO)
 {
-  /*
-    When the PxyVar ceased to remember the marshaling info it 
-    became a rather neat structure. Erik
-  */
-  Assert(pv->getIdV() == OZ_EVAR_PROXY);
-  isReadOnly = pv->isReadOnly();
-  pv->getMediator()->incPatchCount();
+  Assert(ov->isDistributed());
+  isReadOnly = oz_check_var_status(ov) == EVAR_STATUS_READONLY;
+  med = static_cast<Mediator*>(ov->getMediator());
 }
 
 //
-void PxyVarPatch::disposeV()
+void DistributedVarPatch::disposeV()
 {
   disposeOVP();
   DebugCode(isMarshaled = OK;);
   DebugCode(isReadOnly = -1;);
-  e_name->decPatchCount();
-  DebugCode(e_name = reinterpret_cast<Mediator *>(NULL));
-  oz_freeListDispose(extVar2Var(this), extVarSizeof(PxyVarPatch));
+  DebugCode(med = reinterpret_cast<Mediator *>(NULL));
+  oz_freeListDispose(extVar2Var(this), extVarSizeof(DistributedVarPatch));
 }
 
 //
 // An index, if any, is marshaled *afterwards*;
-void PxyVarPatch::marshal(ByteBuffer *bs, int hasIndex)
+void DistributedVarPatch::marshal(ByteBuffer *bs, int hasIndex)
 {
   Assert(isMarshaled == NO);
   isMarshaled = OK;
@@ -159,11 +111,10 @@ void PxyVarPatch::marshal(ByteBuffer *bs, int hasIndex)
 		    (hasIndex ? DIF_VAR_DEF : DIF_VAR));
   bs->put(tag);
   GlueWriteBuffer *buf = static_cast<GlueWriteBuffer*>(bs); 
-  e_name->getCoordinatorAssistant()->marshal(buf,PMF_ORDINARY);
+  med->getCoordinatorAssistant()->marshal(buf,PMF_ORDINARY);
 }
 
-//bmc: Manager code deleted here.
-//bmc: ProxyPatch::marshal(ByteBuffer *bs, Bool hasIndex) deleted.
+
 
 //
 // kost@ : both 'DIF_VAR_OBJECT' and 'DIF_STUB_OBJECT' (currently)
@@ -603,12 +554,8 @@ void VSnapshotBuilder::processVar(OZ_Term v, OZ_Term *vRef)
     OzVariable *var = tagged2Var(v);
     if (!var->isDistributed()) var = glue_globalizeOzVariable(vRef);
     Assert(oz_isVar(*vRef));
-
-    // to be done later
-    OZ_error("variable patching not available yet");
-
-    // ProxyVar *npv = glue_newGlobalizeFreeVariable(vRef);
-    // expVars = new PxyVarPatch(vrt, expVars, npv);
+    // patch it
+    expVars = new DistributedVarPatch(vrt, expVars, var);
 
   } else { 
     // Actualy, we should copy all these types of variables
@@ -616,6 +563,7 @@ void VSnapshotBuilder::processVar(OZ_Term v, OZ_Term *vRef)
     // just ignoring them is a limitation: the system behaves
     // differently when such variables are bound between logical
     // sending of a message and their marshaling.
+    Assert(0);
   }
 }
 
