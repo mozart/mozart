@@ -176,7 +176,7 @@ namespace _msl_internal { //Start namespace
 
     MsgCnt *app_msgs = NULL, *msgs = a_queues->clearAll();
     while(msgs!=NULL) {
-      msgs->m_loopBack(); // "rewind"
+      msgs->resetCounter(); // "rewind"
       MslMessageType mt = static_cast<MslMessageType>(msgs->popIntVal());
       MsgCnt *nxt = msgs->a_next;
       
