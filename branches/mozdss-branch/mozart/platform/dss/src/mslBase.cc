@@ -80,7 +80,7 @@ namespace _msl_internal{
       // Converting the outgoing message to an incomming message
       // This _must_ be done here and not when the event is inserted in 
       // the queue, since the pst field can be uninitialized. 
-      a_msgC->m_loopBack();
+      a_msgC->m_convert2Rec();
       //MsgCnt *msg = static_cast<MsgCnt*>(msgC); 
       int mt=a_msgC->popIntVal();
       if(mt == C_APPLICATION){
