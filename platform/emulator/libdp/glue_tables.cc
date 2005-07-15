@@ -103,9 +103,9 @@ EngineTable::remove(Mediator *ao){
 void
 EngineTable::backup(Mediator *ao){
   //Reset for next garbage collection
-  ao->resetGC();
+  ao->resetGCStatus();
 
-  if (ao->connect == MEDIATOR_CONNECT_HASH) // If still known by engine
+  if (!ao->isAttached()) // If not known by engine
     addressBackup->htAdd((void*)ao->getEntity(),(void*)ao);
 }
 
@@ -129,7 +129,7 @@ Mediator*
 EngineTable::lookupMediator(TaggedRef tr){
   void* med = addressMain->htFind((void *)tr) ;
   if ( med ==  htEmpty) return NULL;
-  else reinterpret_cast<Mediator*>(med); 
+  else return reinterpret_cast<Mediator*>(med); 
 }
 
 Mediator *
@@ -169,9 +169,9 @@ EngineTable::gcPrimary(){
   while(ao_tmp != NULL){
     // If we don't localize things this could be opted away to just be
     // performed when engine_gc is DEAD
-    ao_tmp->dss_gc = ao_tmp->getCoordinatorAssistant()->getDssDGCStatus();
-    if(ao_tmp->dss_gc == DSS_GC_PRIMARY)
-      ao_tmp->dssGC();
+    ao_tmp->getDssDGCStatus();
+    if (ao_tmp->dss_gc_status == DSS_GC_PRIMARY)
+      ao_tmp->gCollect();
     ao_tmp = ao_tmp->next;
   }
   //  printf("**** DONE ****\n");
@@ -183,9 +183,9 @@ EngineTable::gcWeak(){
   printf("--- raph: EngineTable::gcWeak\n");
   Mediator *ao_tmp = aoList;
   while(ao_tmp != NULL){
-    if(ao_tmp->dss_gc == DSS_GC_WEAK){
+    if(ao_tmp->dss_gc_status == DSS_GC_WEAK){
       // might not be collected yet
-      ao_tmp->dssGC();
+      ao_tmp->gCollect();
     }
     ao_tmp = ao_tmp->next;
   }
@@ -205,11 +205,11 @@ EngineTable::gcCleanUp(){
 
   while(ao_tmp != NULL){
     remove = true;
-    switch(ao_tmp->dss_gc){ // have been retreived in the primary step
+    switch(ao_tmp->dss_gc_status){ // have been retreived in the primary step
     case DSS_GC_LOCALIZE:
       // If not wanted by engine we haven't collected it so it is safe to remove
       // else we try to localize it
-      if (ao_tmp->hasBeenGC())
+      if (ao_tmp->isCollected())
 	{
 	  printf("localizing, not working\n"); 
 	  Assert(0); 
@@ -217,20 +217,20 @@ EngineTable::gcCleanUp(){
       break;
     case DSS_GC_NONE:
       //If neither dss nor engine wants it then clean out else save
-      remove = !(ao_tmp->hasBeenGC());
+      remove = !(ao_tmp->isCollected());
       break;
     case DSS_GC_PRIMARY:
       remove = false; //We have collected it so its a keeper;
       break;
     case DSS_GC_WEAK:
       remove = false;
-      if (!(ao_tmp->hasBeenGC())){ // Try remove weak
+      if (!(ao_tmp->isCollected())){ // Try remove weak
 	// Ok so we could actually remove it if it succeds, introduce that later
 	ao_tmp->getCoordinatorAssistant()->clearWeakRoot();
       }
       break;
     default:
-      OZ_error("Unknown dss action %d",ao_tmp->dss_gc);
+      OZ_error("Unknown dss action %d",ao_tmp->dss_gc_status);
       break;
     }
     Mediator* tmp_ao = ao_tmp->next;

@@ -66,9 +66,7 @@ GlueIoFactoryClass* glue_ioFactory;
 
 // collect a mediator
 void gcMediatorImpl(void *m) {
-  Mediator *med = static_cast<Mediator*>(m);
-  
-  if (!(med->hasBeenGC())) med->engineGC(ENGINE_GC_PRIMARY);
+  static_cast<Mediator*>(m)->gCollect();
 }
 
 /*************************************************************************************************/

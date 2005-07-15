@@ -34,29 +34,52 @@
 #include "dss_object.hh"
 #include "tagged.hh"
 
-// forward declarations of class definitions
-class Watcher;
 
-// the different types of mediators
-enum MEDIATOR_TYPE {
-  MEDIATOR_TYPE_UNINIT,     // unused
-  MEDIATOR_TYPE_VAR,        // mediator for an OzVariable
-  MEDIATOR_TYPE_CONST,      // mediator for a ConstTerm
-  MEDIATOR_TYPE_REF         // only a reference (no entity)
-};
+/*
+  Mediators interface Oz entities to DSS abstract entities.  Several
+  aspects of distribution are implemented by mediators:
 
-// whether a mediator should be kept in the mediator table
-enum MEDIATOR_CONNECT {
-  MEDIATOR_CONNECT_HASH,    // should be kept in the hash table
-  MEDIATOR_CONNECT_LIST     // no longer kept in the hash table
-};
+  - Operations: An operation on a distributed Oz entity may require an
+  operation on its abstract entity.  The entity's mediator gives
+  access to its abstract entity.  The mediator also implements
+  callbacks for remote operations, and the needs of the entity's
+  distribution protocol.
 
-// status of engine garbage collection
-enum ENGINE_GC {
-  ENGINE_GC_NONE,           // not collected
-  ENGINE_GC_WEAK,           // collected as a weak reference
-  ENGINE_GC_PRIMARY         // collected as a primary reference
-};
+  - Globalization/Localization: The mediator is responsible for
+  creating the abstract entity, and for localizing the Oz entity.  It
+  takes part in garbage collection, and makes the local and
+  distributed GC cooperate.  It also stores the entity's annotation,
+  which parameterizes its globalization.
+
+  - Faults: Abstract operations report distribution failures to their
+  mediator.  The mediator adapts the Oz entity's semantics to the
+  given failure, and maintains a stream describing the entity's fault
+  state.
+
+  A mediator always has references to its Oz entity, and to its
+  corresponding abstract entity (when distributed).  The abstract
+  entity also refers to the mediator.  An Oz entity normally has a
+  pointer to its mediator.  But this might not be the case, for
+  instance when the mediator only stores the entity's annotation (see
+  detached mediators below).
+
+  Now a bit of terminology:
+
+  - A mediator is ACTIVE when it refers to a valid language entity.
+  It becomes PASSIVE whenever this entity disappears.  In our case
+  this only happens when variables are bound.  For the sake of
+  consistency, passive mediators must be attached (see below).
+
+  - A mediator is ATTACHED when the emulator has a direct pointer to
+  it.  Otherwise is is DETACHED, and should be looked up in the
+  mediator table (using the entity's taggedref as a key).  Attached
+  mediators are not found by looking up the mediator table.
+
+  Note. Insertion of the mediator in the mediator table is automatic
+  upon creation.  Connection to the abstract entity is also automatic
+  upon globalization (not yet, still buggy).
+
+ */
 
 
 
@@ -64,56 +87,59 @@ enum ENGINE_GC {
 class Mediator {
   friend class EngineTable;
 protected:
-  MEDIATOR_TYPE    type:2;
-  MEDIATOR_CONNECT connect:2;
-  ENGINE_GC        engine_gc:2;   // status of engine gc
-  DSS_GC           dss_gc:2;      // status of dss gc
+  bool   active:1;          // TRUE if it is active
+  bool   attached:1;        // TRUE if it is attached
+  bool   collected:1;       // TRUE if it has been collected
+  DSS_GC dss_gc_status:2;   // status of dss gc
+  int    annotation:24;     // the entity's annotation (24 bits)
+
   int              id;
 
-  TaggedRef entity;            // references to engine and dss entities
-  AbstractEntity *absEntity;
+  TaggedRef       entity;      // references to engine and dss entities
+  TaggedRef       faultStream;
+  AbstractEntity* absEntity;
 
-  Mediator *prev,*next;   // For Engine Table
-  int patchCount;         // number of patches (for marshaler)
-  Watcher *watchers;
-
-  // raph: for debugging (to be removed)
-  bool collected;
-
-private:
-  void triggerWatchers(FaultState);
+  Mediator *prev;
+  Mediator *next;           // for mediator table
 
 public:
   /*************** constructor/destructor ***************/
-  Mediator(AbstractEntity*, TaggedRef);
+  Mediator(AbstractEntity*, TaggedRef, bool);
   virtual ~Mediator();
+
+  /*************** active/passive, attached/detached ***************/
+  bool isActive() { return active; }
+  void makePassive();
+
+  bool isAttached() { return attached; }
+  void setAttached(bool a) { attached = a; }
 
   /*************** set/get entity/abstract entity ***************/
   TaggedRef getEntity();
   void setEntity(TaggedRef ref);
 
-  // the entity (variable) disappears and becomes a passive reference
-  void mkPassiveRef();
-
   AbstractEntity *getAbstractEntity();
   void setAbstractEntity(AbstractEntity *a);
   CoordinatorAssistantInterface* getCoordinatorAssistant();
 
+  /*************** annotate/globalize/localize ***************/
+  int getAnnotation() { return annotation; }
+  void annotate(int a) { annotation = a; } // warning: unchecked
+  //virtual void globalize() = 0;     // create abstract entity
+  virtual void localize() = 0;      // try to localize entity
+
   /*************** garbage collection ***************/
-  bool hasBeenGC() { return (engine_gc != ENGINE_GC_NONE); }
-  void resetGC();                  // reset the gc status
-  void engineGC(ENGINE_GC status); // collect mediator (from engine)
-  void dssGC();                    // collect mediator (from dss)
-  void gCollect();                 // collect the mediator's references
+  bool isCollected();         // test (may also collect if detached)
+  void gCollect();            // collect mediator (idempotent)
+  void resetGCStatus();       // reset the gc status
+  DSS_GC getDssDGCStatus();   // ask and return dss gc status
+
   // Note: In order to specialize gCollect(), make it a virtual method.
 
-  /*************** marshaling ***************/
-  void incPatchCount();
-  void decPatchCount();
-
   /*************** fault handling ***************/
-  void addWatcher(TaggedRef proc, FaultState fs);
-  void removeWatcher(TaggedRef proc, FaultState fs);
+  TaggedRef getFaultStream();
+  // int getFaultState();        // return current fault state
+  // void setFaultState(int);    // force fault state
 
   virtual void reportFaultState(const FaultState& fs);
 
@@ -161,6 +187,7 @@ public:
 class UnusableMediator: public Mediator, public ImmutableMediatorInterface {
 public:
   UnusableMediator(AbstractEntity* ae, TaggedRef t);
+  ~UnusableMediator();
   
   virtual AOcallback callback_Read(DssThreadId* id_of_calling_thread,
 				   DssOperationId* operation_id,
@@ -302,8 +329,13 @@ public:
 // mediators for Oz variables
 class OzVariableMediator:
   public Mediator, public MonotonicMediatorInterface {
+private:
+  int patchCount;     // number of patches (for marshaler)
+
 public:
   OzVariableMediator(AbstractEntity *ae, TaggedRef t);
+  void incPatchCount();
+  void decPatchCount();
   
   virtual AOcallback callback_Bind(DssOperationId *id,
 				   PstInContainerInterface* operation); 

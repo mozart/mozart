@@ -371,7 +371,6 @@ OZ_BI_define(BImsToPort,1,1)
   }
   Tertiary* prt = new PortProxy();
   PortMediator *me = new PortMediator(ae, prt); 
-  engineTable->insert(me, makeTaggedConst(prt));
   prt->setTertIndex(reinterpret_cast<int>(me));
   ae->assignMediator(me);
   OZ_RETURN(makeTaggedConst(prt));
@@ -820,7 +819,8 @@ OZ_BI_define(BIdistHandlerInstall,4,1){
 	  case Co_Port:
 	    if (((Tertiary*)ct)->getTertType() == Te_Proxy)
 	      {
-		index2Me(((Tertiary*)ct)->getTertIndex())->addWatcher(proc0,condition);
+		OZ_warning("Watcher installation disabled");
+		// index2Me(((Tertiary*)ct)->getTertIndex())->addWatcher(proc0,condition);
 	      }
 	    else
 	      {
@@ -839,7 +839,8 @@ OZ_BI_define(BIdistHandlerInstall,4,1){
       if(oz_isExtVar(entity) && oz_getExtVar(entity)->getIdV() == OZ_EVAR_PROXY)
 	{
 	  ProxyVar *nv = (ProxyVar*)oz_getExtVar(entity);
-	  nv->getMediator()->addWatcher(proc0,condition);
+	  OZ_warning("Watcher installation disabled");
+	  // nv->getMediator()->addWatcher(proc0,condition);
 	}
       else
 	OZ_error("Installing watcher on non distributed variable");
@@ -872,7 +873,8 @@ OZ_BI_define(BIgetEntityCond,2,0){
 	  case Co_Port:
 	    if (((Tertiary*)ct)->getTertType() == Te_Proxy)
 	      {
-		index2Me(((Tertiary*)ct)->getTertIndex())->removeWatcher(proc0,condition);
+		OZ_warning("Watcher deinstallation disabled");
+		//index2Me(((Tertiary*)ct)->getTertIndex())->removeWatcher(proc0,condition);
 	      }
 	    else
 	      {

@@ -29,31 +29,19 @@
 #endif
 
 #include "glue_mediators.hh"
+#include "glue_tables.hh"
 //#include "dss_interface.hh"
 #include "pstContainer.hh"
 #include "value.hh"
 #include "thr_int.hh"
 #include "glue_faults.hh"
 #include "unify.hh"
+#include "cac.hh"
 
 
 // The identity of the mediators, used for... I dont remeber
 // Check it out, Erik. 
 static int medIdCntr = 1; 
-
-static char* MEDIATOR_TYPE_string[MEDIATOR_TYPE_REF + 1] = 
-  {
-    "MEDIATOR_TYPE_UNINIT",
-    "MEDIATOR_TYPE_VAR",
-    "MEDIATOR_TYPE_CONST",
-    "MEDIATOR_TYPE_REF"
-  };
-
-static char* MEDIATOR_CONNECT_string[MEDIATOR_CONNECT_LIST +1] = 
-  {
-    "MEDIATOR_CONNECT_HASH",
-    "MEDIATOR_CONNECT_LIST"
-  };
 
 void doPortSend(PortWithStream *port,TaggedRef val,Board * home);
 
@@ -73,25 +61,34 @@ char* OzVariableMediator::getPrintType(){ return "var";}
 
 //************************** Mediator ***************************//
 
-Mediator::Mediator(AbstractEntity *ae, TaggedRef ref) :
-  connect(MEDIATOR_CONNECT_HASH), engine_gc(ENGINE_GC_NONE),
-  dss_gc(DSS_GC_NONE), prev(NULL), next(NULL), patchCount(0),
-  watchers(NULL), absEntity(ae), entity(ref) {
+Mediator::Mediator(AbstractEntity *ae, TaggedRef ref, bool attach) :
+  active(TRUE), attached(attach), collected(FALSE),
+  dss_gc_status(DSS_GC_NONE), annotation(0),
+  entity(ref), absEntity(ae), faultStream(0),
+  prev(NULL), next(NULL)
+{
   id = medIdCntr++; 
-  collected = FALSE;
+  engineTable->insert(this, ref);
+  // apparently this does not work...
+  // if (ae) ae->assignMediator(reinterpret_cast<MediatorInterface*>(this));
 }
 
 Mediator::~Mediator(){
   // ERIK, removed delete during reconstruction
   // We keep the tight 1:1 mapping and remove the abstract entity
   // along with the Mediator.
-  delete absEntity;
+  if (absEntity) delete absEntity;
 #ifdef INTERFACE
   // Nullify the pointers in debug mode
   absEntity = NULL;
-  watchers = NULL;
   next = prev = NULL;
 #endif
+}
+
+void
+Mediator::makePassive() {
+  Assert(attached);
+  active = FALSE;
 }
 
 void
@@ -102,12 +99,6 @@ Mediator::setEntity(TaggedRef ref) {
 TaggedRef
 Mediator::getEntity() {
   return entity;
-}
-
-void
-Mediator::mkPassiveRef() {
-  type = MEDIATOR_TYPE_REF;
-  connect = MEDIATOR_CONNECT_LIST;
 }
 
 AbstractEntity *
@@ -125,125 +116,74 @@ Mediator::getCoordinatorAssistant() {
   return absEntity->getCoordinatorAssistant();
 }
 
-void
-Mediator::resetGC() {
-  engine_gc = ENGINE_GC_NONE;
-  dss_gc = DSS_GC_NONE;
-  collected = FALSE;
-}
-
-void
-Mediator::engineGC(ENGINE_GC status){
-  Assert(engine_gc == ENGINE_GC_NONE);
-  printf("--- raph: Mediator::engineGC %d\n", id);
-  engine_gc = status;
-  gCollect();
-}
-
-void Mediator::dssGC(){
-  // we must collect now if the engine hasn't done it
-  printf("--- raph: Mediator::dssGC %d\n", id);
-  if (!hasBeenGC()) {
-    engine_gc = ENGINE_GC_WEAK;
-    gCollect();
-  }
+bool
+Mediator::isCollected() {
+  // if mediator is detached, check its term
+  if (!collected && !attached && isGCMarkedTerm(entity)) gCollect();
+  return collected;
 }
 
 void Mediator::gCollect(){
-  printf("--- raph: Mediator::gCollect %d\n", id);
-  Assert(!collected);
-  collected = TRUE;
-  
-  // collect the entity, then the watchers
-  oz_gCollectTerm(entity, entity);
-  for(Watcher *ptr = watchers; ptr != NULL; ptr=ptr->next)
-    ptr->gCollect();
+  if (!collected) {
+    printf("--- raph: Mediator::gCollect %d\n", id);
+    collected = TRUE;
+    
+    // collect the entity, then the watchers
+    oz_gCollectTerm(entity, entity);
+    if (faultStream) oz_gCollectTerm(faultStream, faultStream);
+  }
 } 
 
-void 
-Mediator::incPatchCount() {
-  patchCount++;
+void
+Mediator::resetGCStatus() {
+  collected = FALSE;
+  dss_gc_status = DSS_GC_NONE;
 }
 
-void 
-Mediator::decPatchCount() {
-  patchCount--;
+DSS_GC
+Mediator::getDssDGCStatus() {
+  Assert(dss_gc_status == DSS_GC_NONE);
+  if (absEntity)
+    dss_gc_status = absEntity->getCoordinatorAssistant()->getDssDGCStatus();
+  return dss_gc_status;
 }
 
-void Mediator::triggerWatchers(FaultState fs)
-{
-  Watcher **ptr = &watchers; 
-  while(*ptr!=NULL)
-    {
-      if ((*ptr)->fs & fs) 
-	
-	{
-	  //	  printf("Mediator %d: fireing watchers\n", id);  
-	  Watcher *tmp = *ptr; 
-	  *ptr = (*ptr)->next;
-	  tmp->winvoke(fs,this->getEntity()); 
-	  delete tmp; 
-	}
-      else
-	ptr = &((*ptr)->next);
-    }
+TaggedRef
+Mediator::getFaultStream() {
+  // create the fault stream, if necessary
+  if (faultStream == 0) reportFaultState(FS_NO_FAULT);
+  return faultStream;
 }
 
-void Mediator::addWatcher(TaggedRef proc, FaultState fs)
-{
-  watchers = new Watcher(proc,fs,watchers);
-  FaultState hs = getCoordinatorAssistant()->getFaultState();
-  if (fs & hs)
-    {
-      triggerWatchers(hs);
-    }
-  else
-    {
-      FaultState regFs = getCoordinatorAssistant()->getRegisteredFS();
-      if (fs & ~regFs)
-	{
-	  /* 
-	     The searched for error condition enlarges the search space 
-	  */
-	  getCoordinatorAssistant()->setRegisteredFS((fs | regFs));
-	}
-    }
-}
+void Mediator::reportFaultState(const FaultState& fs) {
+  // determine fault description
+  TaggedRef state;
+  switch (fs) {
+  case FS_NO_FAULT:               state = AtomNormal;
+  case FS_AA_HOME_TMP_UNAVAIL:
+  case FS_AA_HOME_PRM_UNAVAIL:
+  case FS_AA_HOME_REMOVED:
+    OZ_error("Dunno what to do with these FS_AA_HOME_*");
+  case FS_PROT_STATE_TMP_UNAVAIL: state = AtomTempFail;
+  case FS_PROT_STATE_PRM_UNAVAIL: state = AtomPermFail;
+  default: Assert(0);
+  }
 
-void Mediator::removeWatcher(TaggedRef proc, FaultState fs)
-{
-  Watcher **ptr = &watchers; 
-  while(*ptr!=NULL)
-    {
-      if ((*ptr)->fs ==  fs && (*ptr)->proc == proc)
-	{
-	  Watcher *tmp = *ptr; 
-	  *ptr = (*ptr)->next;
-	  delete tmp; 
-	}
-      else
-	ptr = &((*ptr)->next);
-    }
-}
-
-void Mediator::reportFaultState(const FaultState& fs){
-  this->triggerWatchers(fs);
-  FaultState tmp=FS_NO_FAULT;
-  if(watchers != NULL)
-    {
-      // Reinstalling the fault intersest of the watchers that 
-      // didn't fire 
-      for(Watcher* ptr = watchers;ptr!=NULL;ptr = ptr->next)
-	tmp |= ptr->fs; 
-      getCoordinatorAssistant()->setRegisteredFS(tmp);
-    }
+  // add state to the stream
+  TaggedRef newStream = oz_cons(state, oz_newReadOnly(oz_rootBoard()));
+  if (faultStream) {
+    TaggedRef *vptr = tagged2Ref(oz_tail(faultStream));
+    Assert(oz_isVar(*vptr));
+    oz_bindReadOnly(vptr, newStream);
+  }
+  faultStream = newStream;
 }
 
 void
 Mediator::print(){
   printf("%s mediator, id %d, ae %x, ref %x, gc(eng:%d dss:%d), con %d\n",
 	 getPrintType(), id, absEntity, entity,
-	 (int) engine_gc, (int) dss_gc, (int) connect);
+	 (int) collected, (int) dss_gc_status, (int) attached);
 }
 
 bool
@@ -259,9 +199,8 @@ Mediator::check(){
 /************************* ConstMediator *************************/
 
 ConstMediator::ConstMediator(AbstractEntity *ae, ConstTerm *t) :
-  Mediator(ae, makeTaggedConst(t)) {
-  type = MEDIATOR_TYPE_CONST;
-}
+  Mediator(ae, makeTaggedConst(t), TRUE)
+{}
 
 ConstTerm* ConstMediator::getConst(){
   return tagged2Const(getEntity()); 
@@ -321,7 +260,7 @@ void PortMediator::localize(){
 /************************* LazyVarMediator *************************/
 
 LazyVarMediator::LazyVarMediator(AbstractEntity *ae, TaggedRef t) :
-  Mediator(ae, t) {}
+  Mediator(ae, t, TRUE) {}
 
 void LazyVarMediator::localize(){
   ((Object*)tagged2Const(getEntity()))->localize();
@@ -380,9 +319,9 @@ WakeRetVal LazyVarMediator::resumeFunctionalThread(DssThreadId * id, PstInContai
 
 /************************* VarMediator *************************/
 
-VarMediator::VarMediator(AbstractEntity *ae, TaggedRef t) : Mediator(ae, t) {
-  type = MEDIATOR_TYPE_VAR; 
-}
+VarMediator::VarMediator(AbstractEntity *ae, TaggedRef t) :
+  Mediator(ae, t, TRUE)
+{}
 
 void VarMediator::localize(){
   OZ_warning("Localizing of var is disabled, %d\n", id);
@@ -399,7 +338,7 @@ void VarMediator::installEntityRepresentation(PstInContainerInterface* pstin){
   // raph: don't do this at home, kids!
   ExtVar* ev = oz_getExtVar(*(TaggedRef *)var);
   oz_bindLocalVar( extVar2Var(ev), (TaggedRef *)var,arg);
-  mkPassiveRef();
+  makePassive();
 }
 
 AOcallback
@@ -412,7 +351,7 @@ VarMediator::callback_Bind(DssOperationId *id,
   // raph: don't do this at home, kids!
   ExtVar *ev = oz_getExtVar(*(TaggedRef *)var);
   oz_bindLocalVar( extVar2Var(ev), (TaggedRef *)var,arg);
-  mkPassiveRef();
+  makePassive();
   return AOCB_FINISH;
 }
 
@@ -428,7 +367,11 @@ VarMediator::callback_Append(DssOperationId *id,
 
 /************************* UnusableMediator *************************/
 UnusableMediator::UnusableMediator(AbstractEntity *ae, TaggedRef t) :
-  Mediator(ae, t) {}
+  Mediator(ae, t, FALSE) {}
+
+UnusableMediator::~UnusableMediator() {
+  printf("--- raph: delete UnusableMediator\n");
+}
 
 void UnusableMediator::localize() {}
 
@@ -444,7 +387,7 @@ UnusableMediator::callback_Read(DssThreadId* id_of_calling_thread,
 /************************* OzThreadMediator *************************/
 
 OzThreadMediator::OzThreadMediator(AbstractEntity *ae, TaggedRef t) :
-  Mediator(ae, t) {}
+  Mediator(ae, t, TRUE) {}
 
 void OzThreadMediator::localize(){
   // check that we are a proper version...
@@ -759,11 +702,13 @@ ArrayMediator::retrieveEntityRepresentation(){
 
 // assumption: t is a tagged REF to a tagged VAR.
 OzVariableMediator::OzVariableMediator(AbstractEntity *ae, TaggedRef t) :
-  Mediator(ae, t) {
-  type = MEDIATOR_TYPE_VAR; 
-}
+  Mediator(ae, t, TRUE), patchCount(0)
+{}
 
-void OzVariableMediator::localize(){
+void OzVariableMediator::incPatchCount() { patchCount++; }
+void OzVariableMediator::decPatchCount() { patchCount--; }
+
+void OzVariableMediator::localize() {
   OZ_warning("Localizing of var is disabled, %d\n", id);
 }
 
@@ -774,28 +719,28 @@ PstOutContainerInterface *OzVariableMediator::retrieveEntityRepresentation(){
 
 void OzVariableMediator::installEntityRepresentation(PstInContainerInterface* pstin){
   printf("--- raph: installEntityRepresentation %x\n", getEntity());
-  Assert(type == MEDIATOR_TYPE_VAR);
+  Assert(active);
   PstInContainer *pst = static_cast<PstInContainer*>(pstin); 
   TaggedRef* ref = tagged2Ref(getEntity()); // points to the var's tagged ref
   OzVariable* ov = tagged2Var(*ref);
   TaggedRef  arg = pst->a_term;
   
   oz_bindLocalVar(ov, ref, arg);
-  mkPassiveRef();
+  makePassive();
 }
 
 AOcallback
 OzVariableMediator::callback_Bind(DssOperationId *id,
 				  PstInContainerInterface* pstin) {
   printf("--- raph: callback_Bind %x\n", getEntity());
-  Assert(type == MEDIATOR_TYPE_VAR);
+  Assert(active);
   PstInContainer *pst = static_cast<PstInContainer*>(pstin); 
   TaggedRef* ref = tagged2Ref(getEntity()); // points to the var's tagged ref
   OzVariable* ov = tagged2Var(*ref);
   TaggedRef  arg = pst->a_term;
   
   oz_bindLocalVar(ov, ref, arg);
-  mkPassiveRef();
+  makePassive();
   return AOCB_FINISH;
 }
 
@@ -807,7 +752,7 @@ OzVariableMediator::callback_Append(DssOperationId *id,
   // raph: The variable may have been bound at this point.  This can
   // happen when two operations Bind and Append are done concurrently
   // (a "feature" of the dss).  Therefore we check the type first.
-  if (type == MEDIATOR_TYPE_VAR) {
+  if (active) {
     // check pstin
     if (pstin !=  NULL) {
       PstInContainer *pst = static_cast<PstInContainer*>(pstin);
