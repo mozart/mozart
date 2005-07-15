@@ -98,7 +98,6 @@ ProxyVar* glue_newGlobalizeFreeVariable(TaggedRef *tPtr)
   *tPtr = makeTaggedVar(extVar2Var(mv));
 
   VarMediator *me = new VarMediator(pi, makeTaggedRef(tPtr)); 
-  engineTable->insert(me, makeTaggedRef(tPtr));
   mv->setMediator(me); 
   pi->assignMediator(me);
   return (mv);
@@ -126,7 +125,6 @@ OzVariable *glue_globalizeOzVariable(TaggedRef *vPtr) {
   // create abstract entity and mediator
   AbstractEntity *ae = dss->m_createMonotonicAbstractEntity(pn, aa, rc);
   OzVariableMediator *med = new OzVariableMediator(ae, makeTaggedRef(vPtr));
-  engineTable->insert(med, makeTaggedRef(vPtr));
   ae->assignMediator(med);
 
   // set up the variable as distributed
@@ -239,8 +237,6 @@ void globalizeTertiary(Tertiary *t)
   // Creating the EMU
   // Instrumenting the proxy to be distributed.
   t->setTertType(Te_Proxy);
-  // Inserting into the enginetable
-  engineTable->insert(me, makeTaggedConst(t));
   t->setTertIndex(reinterpret_cast<int>(me));
 }
 
@@ -273,7 +269,6 @@ void glue_marshalArray(ByteBuffer *bs, ConstTermWithHome *arrayConst)
     ae->assignMediator(am); 
     
     arrayConst->setDist(reinterpret_cast<int>(me));
-    engineTable->insert(me, makeTaggedConst(ozA));
     Assert(ozA->isDist());
     Assert(me = index2Me(ozA->getDist())); 
   }
@@ -315,7 +310,6 @@ void glue_marshalUnusable(ByteBuffer *bs, TaggedRef tr) {
       RC_ALG_WRC);
     me = new UnusableMediator(ae, tr);
     ae->assignMediator(me);
-    engineTable->insert(me, tr);
   }
   else {
     ae = me->getAbstractEntity();
@@ -356,7 +350,6 @@ void glue_marshalOzThread(ByteBuffer *bs, TaggedRef thr)
     OzThreadMediator *tm = new OzThreadMediator(ae, thr);
     med = tm; 
     ae->assignMediator(tm); 
-    engineTable->insert(med, thr);
     oz_thread_setDistVal(thr, 0, reinterpret_cast<void*>(med)); 
   }
   CoordinatorAssistantInterface* cai = med->getCoordinatorAssistant(); 
@@ -454,7 +447,6 @@ OZ_Term glue_unmarshalObjectStub(ByteBuffer *bs)
   TaggedRef val = makeTaggedRef(newTaggedVar(extVar2Var(var)));
 
   LazyVarMediator *me = new LazyVarMediator(ae, val);
-  engineTable->insert(me,val);
   var->setMediator(me);
   addGName(gnobj, val);
   //PT->setEngineName(p_name,e_name);
@@ -530,7 +522,6 @@ OZ_Term  glue_unmarshalDistTerm(ByteBuffer *bs)
       Tertiary* tert =  new UnusableResource();
       TaggedRef tr = makeTaggedConst(tert);
       UnusableMediator *um = new UnusableMediator(ae, tr);
-      engineTable->insert(um,makeTaggedConst(tert));
       tert->setTertIndex(reinterpret_cast<int>(um));
       ae->assignMediator(um);
       return tr;
@@ -538,7 +529,6 @@ OZ_Term  glue_unmarshalDistTerm(ByteBuffer *bs)
     case DSS_DIF_THREAD:{
       TaggedRef oTh=  oz_thread(oz_newThreadSuspended(1));
       OzThreadMediator *me = new OzThreadMediator(ae,oTh); 
-      engineTable->insert(me,oTh);
       ae->assignMediator(me);
       Mediator *med = static_cast<Mediator*>(me); 
       oz_thread_setDistVal(oTh, 0, reinterpret_cast<void*>(med));
@@ -547,7 +537,6 @@ OZ_Term  glue_unmarshalDistTerm(ByteBuffer *bs)
     case DSS_DIF_CELL:{
       Tertiary *tert = new CellProxy(); 
       CellMediator *me = new CellMediator(ae, tert); 
-      engineTable->insert(me,makeTaggedConst(tert));
       tert->setTertIndex(reinterpret_cast<int>(me));
       ae->assignMediator(me);
       return makeTaggedConst(tert);
@@ -555,7 +544,6 @@ OZ_Term  glue_unmarshalDistTerm(ByteBuffer *bs)
     case DSS_DIF_PORT: {
       Tertiary *tert = new PortProxy();        
       PortMediator *me = new PortMediator(ae, tert); 
-      engineTable->insert(me,makeTaggedConst(tert));
       tert->setTertIndex(reinterpret_cast<int>(me));
       ae->assignMediator(me);
       return makeTaggedConst(tert);
@@ -563,7 +551,6 @@ OZ_Term  glue_unmarshalDistTerm(ByteBuffer *bs)
     case DSS_DIF_LOCK:{
       Tertiary *tert = new LockProxy();
       LockMediator *me = new LockMediator(ae, tert); 
-      engineTable->insert(me,makeTaggedConst(tert));
       tert->setTertIndex(reinterpret_cast<int>(me));
       ae->assignMediator(me); 
       return makeTaggedConst(tert);
@@ -573,7 +560,6 @@ OZ_Term  glue_unmarshalDistTerm(ByteBuffer *bs)
       int high =  unmarshalNumber(bs); 
       ConstTermWithHome *ozc = new ArrayProxy(low, high);
       ArrayMediator* me = new ArrayMediator(ae, ozc); 
-      engineTable->insert(me,makeTaggedConst(ozc));
       int mediator = reinterpret_cast<int>(me);
       ozc->setDist(mediator);
       Assert(ozc->isDist()); 
@@ -618,7 +604,6 @@ OZ_Term glue_newUnmarshalVar(ByteBuffer* bs, Bool isFuture)
   TaggedRef val = makeTaggedRef(newTaggedVar(extVar2Var(pvar)));
   
   me = new VarMediator(ae, val); 
-  engineTable->insert(me, val); 
   //PT->setEngineName(p_name,e_name);
   pvar->setMediator(me);
   ae->assignMediator(me);
@@ -696,7 +681,6 @@ OZ_Term glue_unmarshalOzVariable(ByteBuffer* bs, Bool isReadOnly) {
     OzVariable *var = tagged2Var(*ptr);
 
     med = new OzVariableMediator(ae, ref);
-    engineTable->insert(med, ref);
     var->setDistributed(med);
     ae->assignMediator(med);
     return ref;

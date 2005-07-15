@@ -160,13 +160,13 @@ VarStatus ProxyVar::checkStatusV()
 }
 
 ExtVar* ProxyVar::gCollectV(){
-  e_name->engineGC(ENGINE_GC_PRIMARY); 
+  e_name->gCollect(); 
   return new ProxyVar(*this);
 }
 
 
 ExtVar* ObjectVar::gCollectV(){
-  e_name->engineGC(ENGINE_GC_PRIMARY); 
+  e_name->gCollect(); 
   return new ObjectVar(*this);
 }
 
@@ -289,7 +289,7 @@ void ObjectVar::transfer(TaggedRef ObjRef, TaggedRef *Vptr){
   o->setClassTerm(oz_deref(oz_findGName(gClass)));
   
   oz_bindLocalVar(extVar2Var(this), Vptr, ObjRef);
-  e_name->mkPassiveRef();
+  e_name->makePassive();
 }
 
 GName* ObjectVar::getGNameClass()  {
