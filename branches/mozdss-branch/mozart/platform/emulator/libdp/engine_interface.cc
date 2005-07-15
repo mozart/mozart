@@ -83,7 +83,7 @@ void gcGluePrepareImpl()
 void gcGlueRootsImpl()
 {
   // Now work on that
-  gcEngineTablePrimary();
+  gcMediatorTablePrimary();
 
   // Gcollect the messages stored in the outgoing and 
   // incomming queue
@@ -99,7 +99,7 @@ void gcGlueRootsImpl()
 
 
 void gcGlueWeakImpl(){
-  gcEngineTableWeak();
+  gcMediatorTableWeak();
 }
 
 
@@ -107,7 +107,7 @@ void gcGlueWeakImpl(){
 void gcGlueFinalImpl()
 {
   //Decide what to do and do it for mediators
-  gcEngineTableCleanUp();
+  gcMediatorTableCleanUp();
 
   dss->gcDssResources();
   // The annotations are weak pointers, and must then be 
@@ -235,7 +235,7 @@ void initDP(int port, int ip, const char *siteId, int primKey)
   gCollectMediator  = gcMediatorImpl;
 
   // Starting the DSS
-  engineTable      = new EngineTable(100);
+  mediatorTable     = new MediatorTable();
 
   //resourceTable    = new ResourceHashTable(RESOURCE_HASH_TABLE_DEFAULT_SIZE);
   dss = new DSS_Object(glue_ioFactory, glue_com_connection, glue_dss_connection);
