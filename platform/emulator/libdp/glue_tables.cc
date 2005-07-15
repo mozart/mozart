@@ -3,7 +3,7 @@
  *    Zacharias El Banna, 2002
  * 
  *  Contributors:
- *    optional, Contributor's name (Contributor's email address)
+ *    Raphael Collet (raph@info.ucl.ac.be)
  * 
  *  Copyright:
  *    Zacharias El Banna, 2002
@@ -30,7 +30,6 @@
 #endif
 
 #include "am.hh"
-#include "hashtbl.hh"
 #include "glue_tables.hh"
 #include "pstContainer.hh"
 #include "engine_interface.hh"
@@ -38,7 +37,9 @@
 void doPortSend(PortWithStream *port,TaggedRef val,Board*);
 OZ_Return accessCell(OZ_Term cell,OZ_Term &out);
 
-EngineTable *engineTable;
+
+// The mediator table
+MediatorTable *mediatorTable;
 
 
 
@@ -53,239 +54,154 @@ void Object::localize(){
 }
 
 
-/********************************* ENGINE TABLE ***********************************/
+/************************* Mediator Table *************************/
 
-
-EngineTable::EngineTable(int size){
-  addressMain   = new AddressHashTableO1Reset(size);
-  addressBackup = new AddressHashTableO1Reset(size); 
-  aoList = NULL;
+MediatorTable::MediatorTable() :
+  medList(NULL), noneList(NULL), weakList(NULL), primaryList(NULL),
+  localizeList(NULL)
+{
+  medTable = new AddressHashTableO1Reset(100);
 }
 
-int
-EngineTable::getSize(){
-  int i = 0;
-  Mediator *ao_tmp=aoList;
-  while(ao_tmp != NULL){
-    ao_tmp = ao_tmp->next;
-    i++;
-  }
-  return i;
+MediatorTable::~MediatorTable() {
+  Mediator *med;
+  while (med = pop(medList)) delete med;
+  delete medTable;
 }
 
-/*
-  Insert address object into big chained list and also into hashtable for the glue
- */
+// put med in the list (and in the hash table if detached)
 void
-EngineTable::insert(Mediator *ao, TaggedRef tr){
-  // insert (and possibly overwrite obsolete) hash table
-  addressMain->htAddOverWrite((void *)tr, (void *)ao);
-  //insert into chained list
-  ao->prev = NULL;
-  ao->next = aoList;
-  if (aoList != NULL)
-    aoList->prev = ao;
-  aoList = ao;
+MediatorTable::insert(Mediator *med) {
+  med->resetGCStatus();     // simpler when gc cleanup
+  push(medList, med);
+  if (!med->isAttached())
+    medTable->htAdd(reinterpret_cast<void*>(med->getEntity()),
+		    static_cast<void*>(med));
 }
 
-void
-EngineTable::remove(Mediator *ao){
-  if (ao->prev != NULL)
-    ao->prev->next = ao->next;
-  else // first in list
-    aoList = ao->next;
-  if(ao->next != NULL)
-    ao->next->prev = ao->prev;
-  delete (ao);
-}
-
-
-void
-EngineTable::backup(Mediator *ao){
-  //Reset for next garbage collection
-  ao->resetGCStatus();
-
-  if (!ao->isAttached()) // If not known by engine
-    addressBackup->htAdd((void*)ao->getEntity(),(void*)ao);
-}
-
-bool
-EngineTable::isEmpty(){
-  return (aoList == NULL); 
-}
-
-EngineTable::~EngineTable(){
-  delete addressMain;
-  delete addressBackup;
-  Mediator *ao_tmp;
-  while (aoList != NULL) {
-    ao_tmp = aoList;
-    aoList = aoList->next;
-    delete ao_tmp;
-  }
-}
-
+// lookup a mediator (for detached mediators only)
 Mediator*
-EngineTable::lookupMediator(TaggedRef tr){
-  void* med = addressMain->htFind((void *)tr) ;
-  if ( med ==  htEmpty) return NULL;
-  else return reinterpret_cast<Mediator*>(med); 
+MediatorTable::lookup(TaggedRef ref) {
+  void *med = medTable->htFind(reinterpret_cast<void*>(ref));
+  return (med == htEmpty ? NULL : static_cast<Mediator*>(med));
 }
 
-Mediator *
-EngineTable::findMediator(void *en){
-#ifdef INTERFACE
-  Mediator *ao_tmp = static_cast<Mediator *>(en); // Just for debugging simplicity
-  Assert((int)en != 0xbedda);
-  Assert(ao_tmp->check());
-  return ao_tmp;
-#else
-  return static_cast<Mediator *>(en);
-#endif
-}
-
-
+// primary phase of gc
 void
-EngineTable::print(){
-  printf("************************* ENGINE TABLE *************************\n");
-  printf("%d\n",getSize());
-  Mediator *ao_tmp = aoList;
-  while(ao_tmp != NULL){
-    ao_tmp->print();
-    ao_tmp = ao_tmp->next;
-  }
-  printf("********************** ENGINE TABLE - DONE *********************\n");
-}
-
-// ZACHARIAS
-// Should create a weak list on the fly to avoid scanning the entire
-// dist-table twice
-//
-
-void
-EngineTable::gcPrimary(){
-  printf("--- raph: EngineTable::gcPrimary\n");
-  Mediator *ao_tmp = aoList;
-  while(ao_tmp != NULL){
-    // If we don't localize things this could be opted away to just be
-    // performed when engine_gc is DEAD
-    ao_tmp->getDssDGCStatus();
-    if (ao_tmp->dss_gc_status == DSS_GC_PRIMARY)
-      ao_tmp->gCollect();
-    ao_tmp = ao_tmp->next;
-  }
-  //  printf("**** DONE ****\n");
-}
-
-
-void
-EngineTable::gcWeak(){
-  printf("--- raph: EngineTable::gcWeak\n");
-  Mediator *ao_tmp = aoList;
-  while(ao_tmp != NULL){
-    if(ao_tmp->dss_gc_status == DSS_GC_WEAK){
-      // might not be collected yet
-      ao_tmp->gCollect();
+MediatorTable::gcPrimary() {
+  // first put each element in its gc list
+  Mediator *med;
+  while (med = pop(medList)) {
+    switch (med->getDssGCStatus()) {
+    case DSS_GC_NONE:     push(noneList, med); break;
+    case DSS_GC_WEAK:     push(weakList, med); break;
+    case DSS_GC_PRIMARY:  push(primaryList, med); break;
+    case DSS_GC_LOCALIZE: push(localizeList, med); break;
+    default: Assert(0);
     }
-    ao_tmp = ao_tmp->next;
   }
+  Assert(medList == NULL);
+
+  // now mark all primary roots
+  for (med = primaryList; med; med = med->next) med->gCollect();
 }
 
-
+// check weak roots
 void
-EngineTable::gcCleanUp(){
-  //This method is responsible for quite a few things
-  // 1) calculate what action the DSS should take
-  // 2) deleting the ao if it is obsolete
-  // 3) reset the status of the ao for next gc
-  // 4) back up the ao for the cleaning phase
-  printf("--- raph: EngineTable::gcCleanUp\n");
-  Mediator *ao_tmp = aoList;
-  bool remove;
-
-  while(ao_tmp != NULL){
-    remove = true;
-    switch(ao_tmp->dss_gc_status){ // have been retreived in the primary step
-    case DSS_GC_LOCALIZE:
-      // If not wanted by engine we haven't collected it so it is safe to remove
-      // else we try to localize it
-      if (ao_tmp->isCollected())
-	{
-	  printf("localizing, not working\n"); 
-	  Assert(0); 
-	}
-      break;
-    case DSS_GC_NONE:
-      //If neither dss nor engine wants it then clean out else save
-      remove = !(ao_tmp->isCollected());
-      break;
-    case DSS_GC_PRIMARY:
-      remove = false; //We have collected it so its a keeper;
-      break;
-    case DSS_GC_WEAK:
-      remove = false;
-      if (!(ao_tmp->isCollected())){ // Try remove weak
-	// Ok so we could actually remove it if it succeds, introduce that later
-	ao_tmp->getCoordinatorAssistant()->clearWeakRoot();
-      }
-      break;
-    default:
-      OZ_error("Unknown dss action %d",ao_tmp->dss_gc_status);
-      break;
+MediatorTable::gcWeak() {
+  // check weak mediators; clear non-marked weak roots
+  for (Mediator* med = weakList; med; med = med->next) {
+    if (!med->isCollected()) {
+      med->getCoordinatorAssistant()->clearWeakRoot();
+      med->gCollect();
     }
-    Mediator* tmp_ao = ao_tmp->next;
-    if (remove){
-      EngineTable::remove(ao_tmp);
-    }
-    else //Back up
-      backup(ao_tmp);
-    //printf(" ACTION:%d\n",action);
-    ao_tmp = tmp_ao;
   }
+
+  // this is the right time to check detached mediators.  Remember
+  // that isCollected() will gCollect() if the entity has been marked.
+  AHT_HashNodeCnt *node;
+  for (node = medTable->getFirst(); node; node = medTable->getNext(node))
+    static_cast<Mediator*>(node->getValue())->isCollected();
   
-  AddressHashTableO1Reset *tmp=addressBackup;
-  addressMain->mkEmpty();
-  addressBackup = addressMain;
-  addressMain = tmp;
+  // Note. This is incomplete if the fault stream of such a mediator
+  // refers to another entity with a detached mediator.  The latter
+  // needs to be collected as well.  We should recursively collect
+  // those mediators until we reach a fix point.
+}
+
+// cleanup the table
+void
+MediatorTable::gcCleanUp() {
+  Mediator* med;
+
+  // cleanup hash table first
+  medTable->mkEmpty();
+  Assert(medList == NULL);
+
+  // primary and weak roots have been collected, reinsert them
+  while (med = pop(primaryList)) insert(med);
+  while (med = pop(weakList)) insert(med);
+
+  // some in noneList may have been collected, reinsert if marked
+  while (med = pop(noneList)) {
+    if (med->isCollected()) insert(med); else delete med;
+  }
+
+  // try to localize if marked, delete otherwise.  Note: when
+  // localizing, the mediator must either delete itself, or reinsert
+  // itself in the table.
+  while (med = pop(localizeList)) {
+    if (med->isCollected()) med->localize(); else delete med;
+  }
+
+  Assert(noneList == NULL);
+  Assert(weakList == NULL);
+  Assert(primaryList == NULL);
+  Assert(localizeList == NULL);
+}
+
+// print the table
+void
+MediatorTable::print() {
+  printf("----- contents of the mediator table -----\n");
+  for (Mediator *med = medList; med; med = med->next) med->print();
+  printf("------------------------------------------\n");
 }
 
 
 
-void gcEngineTablePrimary(){
-  //printf("GC PRIMARY\n");
-  engineTable->gcPrimary();
+/************************* Interface functions *************************/
+
+void gcMediatorTablePrimary(){
+  mediatorTable->gcPrimary();
 };
 
-void gcEngineTableWeak(){
-  //  printf("GC WEAK CLEAN\n");
-  engineTable->gcWeak();
+void gcMediatorTableWeak(){
+  mediatorTable->gcWeak();
 };
 
-void gcEngineTableCleanUp(){
-  //  printf("GC CLEAN UP\n");
-  engineTable->gcCleanUp();
+void gcMediatorTableCleanUp(){
+  mediatorTable->gcCleanUp();
 };
 
 
 // Todo: the shortcuts must return error values
 // if no addressobject was found. Erik 
 
-Mediator *taggedref2Me(TaggedRef tr){
-  return engineTable->lookupMediator(tr);
+Mediator *taggedref2Me(TaggedRef tr) {
+  return mediatorTable->lookup(tr);
 }
 
 Mediator *index2Me(const int& indx){
-  return engineTable->findMediator(reinterpret_cast<Mediator *>(indx));
+  return reinterpret_cast<Mediator*>(indx);
 }
+
 // Was index2Pi now index2AE
 // Get a AbstractEntity *from a engine name
-AbstractEntity *index2AE(const int& indx){
-  return engineTable->findMediator(reinterpret_cast<Mediator *>(indx))->getAbstractEntity();
+AbstractEntity *index2AE(const int& indx) {
+  return index2Me(indx)->getAbstractEntity();
 };
 
 CoordinatorAssistantInterface *index2CAI(const int& indx){
-  return engineTable->findMediator(reinterpret_cast<Mediator *>(indx))->getCoordinatorAssistant();
+  return index2Me(indx)->getCoordinatorAssistant();
 };
-
-
-

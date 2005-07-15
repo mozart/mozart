@@ -531,7 +531,7 @@ OZ_BI_define(BIgetOperCntr,0,1)
 
 OZ_BI_define(BIprintDPTables,0,0)
 {
-  engineTable->print();
+  mediatorTable->print();
   int arg = 0; 
   dss->operateIntParam(DSS_STATIC,DSS_STATIC_DEBUG_TABLES,0,arg);
   return OZ_ENTAILED;

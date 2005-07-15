@@ -299,7 +299,7 @@ void glue_marshalUnusable(ByteBuffer *bs, TaggedRef tr) {
   // then, it's already distributed
   AbstractEntity *ae;
   UnusableMediator *me;
-  me = reinterpret_cast<UnusableMediator*>(engineTable->lookupMediator(tr));
+  me = reinterpret_cast<UnusableMediator*>(mediatorTable->lookup(tr));
   if ( me == NULL) {
     // Even when we don't distribute this unusable, we have to remember
     // that it has been exported.

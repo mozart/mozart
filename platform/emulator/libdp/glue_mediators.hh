@@ -85,7 +85,7 @@
 
 // Mediator is the abstract class for all mediators
 class Mediator {
-  friend class EngineTable;
+  friend class MediatorTable;
 protected:
   bool   active:1;          // TRUE if it is active
   bool   attached:1;        // TRUE if it is attached
@@ -99,7 +99,6 @@ protected:
   TaggedRef       faultStream;
   AbstractEntity* absEntity;
 
-  Mediator *prev;
   Mediator *next;           // for mediator table
 
 public:
@@ -132,7 +131,7 @@ public:
   bool isCollected();         // test (may also collect if detached)
   void gCollect();            // collect mediator (idempotent)
   void resetGCStatus();       // reset the gc status
-  DSS_GC getDssDGCStatus();   // ask and return dss gc status
+  DSS_GC getDssGCStatus();    // ask and return dss gc status
 
   // Note: In order to specialize gCollect(), make it a virtual method.
 
@@ -146,7 +145,6 @@ public:
   /*************** debugging ***************/
   virtual char* getPrintType() = 0;
   void print();
-  bool check();
 };
 
 

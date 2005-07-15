@@ -4,7 +4,7 @@
  *    Erik Klintskog, 2002
  * 
  *  Contributors:
- *    optional, Contributor's name (Contributor's email address)
+ *    Raphael Collet (raph@info.ucl.ac.be)
  * 
  *  Copyright:
  *    Zacharias El Banna, 2002
@@ -32,85 +32,99 @@
 #endif
 
 #include "value.hh"
+#include "hashtbl.hh"
 #include "glue_mediators.hh"
-
-class AddressHashTableO1Reset;
-class Watcher;
 
 
 /*
-  The engine table handles the address objects and look-ups for these.
+  The mediator table handles mediator lookups, and their garbage
+  collection.
 
-  The engine table itself  involved in garbage collection with three
-  sweeps. Primary -> Weak -> CleanUp. CleanUp needs to be run before DSS-cleanup
-  and has to set action on each proxy.
+  Note that mediator lookup is only available for detached mediators
+  (glue_mediators.hh).  Those mediators are stored in a hash table for
+  that purpose.  Otherwise all mediators are simply kept in a list.
+  If you change this, make sure that the passive mediators are never
+  inserted in the hash table (they have no valid key).
 
-  The engine table is currently realized as a hash table on tagged refs and
-  a "waste" list for keeping address objects only reached from the DSS (notably
-  variables) this list is however a root to the local gc and ao:s here are
-  treated as any other address object in that sense.
+  The garbage collection of mediators is done in three phases:
+
+  - The primary phase collects the mediators that are primary roots
+  for the DSS.
+
+  - The weak phase should happen after local garbage collection.  It
+  determines which weak roots should be removed.  The detached
+  mediators are also collected during this phase.  Indeed, those are
+  not directly marked by local garbage collection.  Therefore one must
+  check whether their entity has been marked after local gc.
+
+  - The cleanup phase removes unused mediators from the table.  It
+  localizes entities that are only referred to locally, and deletes
+  mediators of dead entities.
 
  */
 
-class EngineTable{
+class MediatorTable {
+
 private:
-  AddressHashTableO1Reset *addressMain;
-  AddressHashTableO1Reset *addressBackup;
- 
-  Mediator *aoList;
+  // list of all mediators
+  Mediator* medList;
 
+  // The detached mediators are also put in this hash table
+  AddressHashTableO1Reset *medTable;
 
-  void remove(Mediator *ao);
-  void backup(Mediator *ao);
-  bool isEmpty();
-  int  getSize();
+  // used during garbage collection only
+  Mediator* noneList;     // mediators with status DSS_GC_NONE
+  Mediator* weakList;     // mediators with status DSS_GC_WEAK
+  Mediator* primaryList;  // mediators with status DSS_GC_PRIMARY
+  Mediator* localizeList; // mediators with status DSS_GC_LOCALIZE
+
+  // useful functions for manipulating lists
+  inline void push(Mediator* &lst, Mediator *med) {
+    med->next = lst; lst = med;
+  }
+  inline Mediator* pop(Mediator* &lst) {
+    Mediator *med = lst;
+    if (med) lst = med->next;
+    return med;
+  }
 
 public:
-  EngineTable(int size);
-  ~EngineTable();
+  MediatorTable();
+  ~MediatorTable();
 
-  void insert(Mediator *ao, TaggedRef tr);
+  void insert(Mediator *med);
+  Mediator *lookup(TaggedRef ref);
 
-  Mediator *lookupMediator(TaggedRef tr);
-  Mediator *findMediator(void *en);
-
-  /******************* DSS ***********************/
+  // gc
   void gcPrimary();
   void gcWeak();
-  void gcCleanUp(); // removes old entries
+  void gcCleanUp();
 
+  // debugging
   void print();
-  /****************** LATER **********************/
-  //ProxyInterface *      getPN(TaggedRef entity);
 };
 
 
-extern EngineTable *engineTable;
+// THE mediator table
+extern MediatorTable *mediatorTable;
 
 
 /*************************** GC **************************/
-void gcEngineTablePrimary();
-void gcEngineTableWeak();
-void gcEngineTableCleanUp();
+void gcMediatorTablePrimary();
+void gcMediatorTableWeak();
+void gcMediatorTableCleanUp();
 
 /************************ LOOK-UPS ***********************/
 
-// Get an EngineName from a tagged ref
-//EngineName tr2En(TaggedRef tr); 
-
-// Get an Mediator from a taggedref, 
-// this demands a full lookup in the hash table. 
-
 Mediator *taggedref2Me(TaggedRef tr);
-
 Mediator *index2Me(const int&);
+
 // Get a ProxyInterface * from a engine name
 AbstractEntity *index2AE(const int&);
 CoordinatorAssistantInterface *index2CAI(const int&);
 
 // Get a ProxyInterface * from a TaggedRef, returns
 // the ProxyInterface * 0 if no entry was found. 
-
 
 
 #endif

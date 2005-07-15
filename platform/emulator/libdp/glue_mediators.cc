@@ -64,11 +64,10 @@ char* OzVariableMediator::getPrintType(){ return "var";}
 Mediator::Mediator(AbstractEntity *ae, TaggedRef ref, bool attach) :
   active(TRUE), attached(attach), collected(FALSE),
   dss_gc_status(DSS_GC_NONE), annotation(0),
-  entity(ref), absEntity(ae), faultStream(0),
-  prev(NULL), next(NULL)
+  entity(ref), absEntity(ae), faultStream(0), next(NULL)
 {
   id = medIdCntr++; 
-  engineTable->insert(this, ref);
+  mediatorTable->insert(this);
   // apparently this does not work...
   // if (ae) ae->assignMediator(reinterpret_cast<MediatorInterface*>(this));
 }
@@ -81,7 +80,7 @@ Mediator::~Mediator(){
 #ifdef INTERFACE
   // Nullify the pointers in debug mode
   absEntity = NULL;
-  next = prev = NULL;
+  next = NULL;
 #endif
 }
 
@@ -141,7 +140,7 @@ Mediator::resetGCStatus() {
 }
 
 DSS_GC
-Mediator::getDssDGCStatus() {
+Mediator::getDssGCStatus() {
   Assert(dss_gc_status == DSS_GC_NONE);
   if (absEntity)
     dss_gc_status = absEntity->getCoordinatorAssistant()->getDssDGCStatus();
@@ -184,14 +183,6 @@ Mediator::print(){
   printf("%s mediator, id %d, ae %x, ref %x, gc(eng:%d dss:%d), con %d\n",
 	 getPrintType(), id, absEntity, entity,
 	 (int) collected, (int) dss_gc_status, (int) attached);
-}
-
-bool
-Mediator::check(){
-  bool ok = TRUE;
-  if (prev != NULL) ok = (ok && (prev->next == this));
-  if (next != NULL) ok = (ok && (next->prev == this));
-  return OK;
 }
 
 
