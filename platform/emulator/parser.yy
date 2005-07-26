@@ -976,7 +976,9 @@ FOR_decls	: /* empty */
 		  { $$ = oz_consUnwrap($1,$2); }
 		;
 
-FOR_decl	: atom ':' phrase
+FOR_decl	: atom
+		  { $$ = newCTerm(oz_atom("forFlag"),$1); }
+		| atom ':' phrase
 		  { $$ = newCTerm(oz_atom("forFeature"),$1,$3); }
 		| phrase T_in FOR_gen
 		  { $$ = newCTerm(oz_atom("forPattern"),$1,$3); }
