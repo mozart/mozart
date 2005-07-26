@@ -1385,6 +1385,10 @@ The second subexpression matches optional flags, the third subexpression
 matches the definition's identifier (if it is a variable) and is used for
 fontification.")
 
+(defconst oz-for-matcher
+  "\\<\\(for\\)\\s +\\(lazy\\)\\>"
+  "Regular expression matching a for keyword followed by a lazy flag")
+
 (defconst oz-functor-matcher
   (concat "\\<functor\\([ \t]+\\|[ \t]*!\\)"
           "\\([A-Z\300-\326\330-\336]"
@@ -1461,6 +1465,8 @@ and is used for fontification.")
   (append (list (list oz-proc-fun-matcher
                       '(2 font-lock-variable-name-face)
                       '(3 font-lock-function-name-face))
+                (list oz-for-matcher
+                      '(2 font-lock-variable-name-face))
                 (list oz-functor-matcher
                       '(2 font-lock-function-name-face))
                 (list oz-class-matcher
