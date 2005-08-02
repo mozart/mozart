@@ -42,8 +42,8 @@
 #include "cac.hh"
 
 //
-template class GenDistEntryTable<RHTNode>;
 #include "hashtblDefs.cc"
+template class GenDistEntryTable<RHTNode>;
 
 //
 ResourceHashTable *resourceTable;
