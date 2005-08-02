@@ -45,8 +45,8 @@
 ((po)->isTertiary() ? makeTaggedConst((po)->getTertiary()) : (po)->getRef())
 
 //
-template class GenDistEntryTable<BorrowEntry>;
 #include "hashtblDefs.cc"
+template class GenDistEntryTable<BorrowEntry>;
 
 
 OwnerTable *ownerTable;

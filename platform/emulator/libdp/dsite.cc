@@ -51,8 +51,8 @@
 #define SECONDARY_SITE_TABLE_SIZE  6
 
 //
-template class GenDistEntryTable<DSite>;
 #include "hashtblDefs.cc"
+template class GenDistEntryTable<DSite>;
 
 DSiteHashTable* primarySiteTable
 = new DSiteHashTable(PRIMARY_SITE_TABLE_SIZE);
