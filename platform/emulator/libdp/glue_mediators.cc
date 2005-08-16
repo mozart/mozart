@@ -115,23 +115,22 @@ Mediator::getCoordinatorAssistant() {
   return absEntity->getCoordinatorAssistant();
 }
 
-bool
-Mediator::isCollected() {
-  // if mediator is detached, check its term
-  if (!collected && !attached && isGCMarkedTerm(entity)) gCollect();
-  return collected;
-}
-
 void Mediator::gCollect(){
   if (!collected) {
     printf("--- raph: Mediator::gCollect %d\n", id);
     collected = TRUE;
     
-    // collect the entity, then the watchers
+    // collect the entity and its fault stream (if present)
     oz_gCollectTerm(entity, entity);
     if (faultStream) oz_gCollectTerm(faultStream, faultStream);
   }
-} 
+}
+
+void
+Mediator::checkGCollect() {
+  // if mediator is detached, check its term
+  if (!collected && !attached && isGCMarkedTerm(entity)) gCollect();
+}
 
 void
 Mediator::resetGCStatus() {
