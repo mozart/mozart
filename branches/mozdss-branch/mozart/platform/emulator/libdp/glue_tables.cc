@@ -75,8 +75,8 @@ MediatorTable::insert(Mediator *med) {
   med->resetGCStatus();     // simpler when gc cleanup
   push(medList, med);
   if (!med->isAttached())
-    medTable->htAdd(reinterpret_cast<void*>(med->getEntity()),
-		    static_cast<void*>(med));
+    medTable->htAddOverWrite(reinterpret_cast<void*>(med->getEntity()),
+			     static_cast<void*>(med));
 }
 
 // lookup a mediator (for detached mediators only)
@@ -117,11 +117,10 @@ MediatorTable::gcWeak() {
     }
   }
 
-  // this is the right time to check detached mediators.  Remember
-  // that isCollected() will gCollect() if the entity has been marked.
+  // this is the right time to check detached mediators.
   AHT_HashNodeCnt *node;
   for (node = medTable->getFirst(); node; node = medTable->getNext(node))
-    static_cast<Mediator*>(node->getValue())->isCollected();
+    static_cast<Mediator*>(node->getValue())->checkGCollect();
   
   // Note. This is incomplete if the fault stream of such a mediator
   // refers to another entity with a detached mediator.  The latter

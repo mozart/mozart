@@ -128,8 +128,9 @@ public:
   virtual void localize() = 0;      // try to localize entity
 
   /*************** garbage collection ***************/
-  bool isCollected();         // test (may also collect if detached)
+  bool isCollected() { return collected; }
   void gCollect();            // collect mediator (idempotent)
+  void checkGCollect();       // collect if entity marked
   void resetGCStatus();       // reset the gc status
   DSS_GC getDssGCStatus();    // ask and return dss gc status
 
