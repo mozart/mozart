@@ -35,6 +35,7 @@
 #include "protocol_lazyinvalid.hh"
 #include "protocol_migratory.hh"
 #include "protocol_once_only.hh"
+#include "protocol_transient_remote.hh"
 #include "protocol_pilgrim.hh"
 #include "protocol_simple_channel.hh"
 #include "protocol_immutable_lazy.hh"
@@ -73,7 +74,7 @@ namespace _dss_internal{ //Start namespace
   
   MutableAbstractEntityImpl::MutableAbstractEntityImpl()
   {
-    ;     assignMediator(NULL); 
+    assignMediator(NULL); 
   }
 
   
@@ -187,7 +188,7 @@ namespace _dss_internal{ //Start namespace
   
   MonotonicAbstractEntityImpl::MonotonicAbstractEntityImpl()
   {
-    ;    assignMediator(NULL); 
+    assignMediator(NULL); 
   }
 
   AbstractEntity *MonotonicAbstractEntityImpl::m_getAEreference(){
@@ -201,7 +202,15 @@ namespace _dss_internal{ //Start namespace
   {
     ProtocolProxy* pp = a_coordinationProxy->m_getProtocol();
     GlobalThread *gid = static_cast<GlobalThread*>(id); 
-    return static_cast<ProtocolOnceOnlyProxy*>(pp)->protocol_Terminate(gid,out,AO_OO_BIND);
+    switch (pp->getProtocolName()) {
+    case PN_TRANSIENT:
+      return static_cast<ProtocolOnceOnlyProxy*>(pp)->protocol_Terminate(gid,out,AO_OO_BIND);
+    case PN_TRANSIENT_REMOTE:
+      return static_cast<ProtocolTransientRemoteProxy*>(pp)->protocol_Terminate(gid,out,AO_OO_BIND);
+    default:
+      Assert(0);
+    }
+    return DSS_INTERNAL_ERROR_SEVERE;
   }
 
   
@@ -214,14 +223,14 @@ namespace _dss_internal{ //Start namespace
     switch(pp->getProtocolName()){
     case PN_TRANSIENT:
       return static_cast<ProtocolOnceOnlyProxy*>(pp)->protocol_Update(gid,out,AO_OO_UPDATE); 
+    case PN_TRANSIENT_REMOTE:
+      return static_cast<ProtocolTransientRemoteProxy*>(pp)->protocol_Update(gid,out,AO_OO_UPDATE); 
     case PN_DKSBROADCAST:
       return static_cast<ProtocolDksBcProxy*>(pp)-> m_broadCast(out,AO_OO_UPDATE); 
     default:
       Assert(0); 
-      return DSS_INTERNAL_ERROR_SEVERE;
     }
     return DSS_INTERNAL_ERROR_SEVERE;
-    
   }
 
   AOcallback 
@@ -288,7 +297,7 @@ namespace _dss_internal{ //Start namespace
   
   ImmutableAbstractEntityImpl::ImmutableAbstractEntityImpl()
   {
-    ;     assignMediator(NULL); 
+    assignMediator(NULL); 
   }
   
   OpRetVal
@@ -409,13 +418,13 @@ namespace _dss_internal{ //Start namespace
     return this;
   }
 
-AOcallback
+  AOcallback
   RelaxedMutableAbstractEntityImpl::applyAbstractOperation(const AbsOp& aop,
 							   DssThreadId* thid,
 							   DssOperationId *opid,
 							   PstInContainerInterface* builder , 
 							   PstOutContainerInterface*& ans)
-{
+  {
     MediatorInterface *mi = this->accessMediator();
     Assert(dynamic_cast<RelaxedMutableMediatorInterface*>(mi)); 
     RelaxedMutableMediatorInterface *mmi = static_cast<RelaxedMutableMediatorInterface*>(mi);  
@@ -450,11 +459,11 @@ AOcallback
   }
 
 
-void  MutableAbstractEntityImpl::localInitatedOperationCompleted()
-{
-  ProtocolProxy* pp = a_coordinationProxy->m_getProtocol();
-  pp->localInitatedOperationCompleted();
-}
+  void  MutableAbstractEntityImpl::localInitatedOperationCompleted()
+  {
+    ProtocolProxy* pp = a_coordinationProxy->m_getProtocol();
+    pp->localInitatedOperationCompleted();
+  }
 
   
 }
