@@ -284,7 +284,7 @@ int ConstTerm::checkSituatedness(void) {
   case Co_Lock:
     {
       Tertiary * t = (Tertiary *) this;
-      if (t->isLocal() && !ISGOOD(t->getBoardLocal())) {
+      if (!t->isDistributed() && !ISGOOD(t->getBoardLocal())) {
 	MARKFIELD(this);
 	return NO;
       }

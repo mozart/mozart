@@ -2501,7 +2501,7 @@ LBLdispatcher:
       OzLock *t = (OzLock*) tagged2Const(aux);
       Thread *th = e->currentThread();
   
-      if (t->isLocal()) {
+      if (!t->isDistributed()) {
 	if (!e->isCurrentRoot()) {
 	  if (!oz_isCurrentBoard(GETBOARD((LockLocal*)t))) {
 	    (void) oz_raise(E_ERROR,E_KERNEL,"globalState",1,AtomLock);

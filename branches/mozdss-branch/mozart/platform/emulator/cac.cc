@@ -1370,7 +1370,7 @@ void ConstTerm::_cacConstRecurse(void) {
       Tertiary *t=(Tertiary*)this;
 
 #ifdef G_COLLECT
-      if (!t->isLocal()){
+      if (t->isDistributed()){
 	//(*gCollectDistCellRecurse)(t);
 	(*gCollectMediator)((void*)(t->getTertIndex()));
       }
@@ -1384,7 +1384,7 @@ void ConstTerm::_cacConstRecurse(void) {
     {
       Port *p = (Port*) this;
 #ifdef G_COLLECT
-      if (!p->isLocal()) {
+      if (p->isDistributed()) {
 	(*gCollectMediator)((void*)(p->getTertIndex()));
       }
 #endif
@@ -1408,7 +1408,7 @@ void ConstTerm::_cacConstRecurse(void) {
       if (gn) 
 	gCollectGName(gn);
       else
-	if (a->isDist())
+	if (a->isDistributed())
 	  (*gCollectMediator)((void*)a->getDist());
 
 #endif
@@ -1441,7 +1441,7 @@ void ConstTerm::_cacConstRecurse(void) {
 	break;
 
 #ifdef G_COLLECT
-      if (!t->isLocal()) {
+      if (t->isDistributed()) {
 	(*gCollectMediator)((void*)(t->getTertIndex()));
       }
 #endif
@@ -1586,7 +1586,7 @@ ConstTerm * ConstTerm::gCollectConstTermInline(void) {
   
  const_tertiary: {
     Tertiary * t_t = (Tertiary *) oz_hrealloc(this, sz);
-    if (t_t->isLocal())
+    if (!t_t->isDistributed())
       t_t->setBoardLocal(t_t->getBoardLocal()->gCollectBoard());
     cacStack.push(t_t, PTR_CONSTTERM);
     STOREFWDFIELD(this, t_t);
@@ -1596,7 +1596,7 @@ ConstTerm * ConstTerm::gCollectConstTermInline(void) {
  const_withhome: {
    ConstTermWithHome * ctwh_t = (ConstTermWithHome *) oz_hrealloc(this, sz);
    STOREFWDFIELD(this, ctwh_t);
-   if (!ctwh_t->isDist())
+   if (!ctwh_t->isDistributed())
      if (ctwh_t->hasGName())
        gCollectGName(ctwh_t->getGName1());
      else
@@ -1719,7 +1719,7 @@ ConstTerm *ConstTerm::sCloneConstTermInline(void) {
   
  const_tertiary: {
     Tertiary * t_f = (Tertiary *) this;
-    if (!t_f->isLocal()) 
+    if (t_f->isDistributed()) 
       return this;
     Board * bb = t_f->getBoardLocal();
     Assert(bb->cacIsAlive());
