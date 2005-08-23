@@ -600,7 +600,7 @@ public:
   ConstTermWithHome(Board *bb, TypeOfConst tt) : ConstTerm(tt) { setBoard(bb);}
 
   Bool hasGName() { return (boardOrGName.getTag()&CWH_GName); }
-  Bool isDist(){ return (boardOrGName.getTag()&CWH_Dist); }
+  Bool isDistributed(){ return (boardOrGName.getTag()&CWH_Dist); }
   void init(Board *bb, TypeOfConst tt) { ConstTerm::init(tt); setBoard(bb); }
 
   Board *getBoardInternal() {
@@ -1031,16 +1031,14 @@ public:
 
   //
 
-  Bool isLocal()   { return (getTertType() == Te_Local); }
-  Bool isManager() { return (getTertType() == Te_Manager); }
-  Bool isProxy()   { return (getTertType() == Te_Proxy); }
-  Bool isFrame()   { return (getTertType() == Te_Frame); }
+  Bool isDistributed() { return !(getTertType() == Te_Local); }
+  Bool isProxy() { return (getTertType() == Te_Proxy); }
 
   Board *getBoardInternal() {
-    return isLocal() ? (Board*)getTertPointer() : oz_rootBoardOutline();}
+    return isDistributed() ? oz_rootBoardOutline() : (Board*)getTertPointer();}
 
   Board *getBoardLocal() {
-    Assert(isLocal());
+    Assert(!isDistributed());
     return (Board*) getTertPointer();
   }
 

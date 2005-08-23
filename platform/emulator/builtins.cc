@@ -397,7 +397,7 @@ OZ_Return arrayGetInline(TaggedRef t, TaggedRef i, TaggedRef &out)
   }
 
   OzArray *ar = tagged2Array(array);
-  if (ar->isDist() && (*distArrayGet)(ar,index,out))
+  if (ar->isDistributed() && (*distArrayGet)(ar,index,out))
     {
       return BI_REPLACEBICALL; 
     }
@@ -425,7 +425,7 @@ OZ_Return arrayPutInline(TaggedRef t, TaggedRef i, TaggedRef value)
   }
 
   OzArray *ar = tagged2Array(array);
-  if (ar->isDist() && distArrayPut(ar,index,value))
+  if (ar->isDistributed() && distArrayPut(ar,index,value))
     {
       return BI_REPLACEBICALL; 
     }
@@ -3342,7 +3342,7 @@ OZ_BI_define(BInewCell,1,1)
 OZ_Return accessCell(OZ_Term cell,OZ_Term &out)
 {
   Tertiary *tert= (Tertiary *) tagged2Const(cell);
-  if(!tert->isLocal() && !(*cellDoAccess)(tert, out))
+  if(tert->isDistributed() && !(*cellDoAccess)(tert, out))
     return BI_REPLACEBICALL;
 
   out = ((CellLocal*)tert)->getValue();
@@ -3354,7 +3354,7 @@ OZ_Return exchangeCell(OZ_Term cell, OZ_Term newVal, OZ_Term &oldVal)
 {
   Assert(!oz_isVar(newVal));
   Tertiary *tert = (Tertiary *) tagged2Const(cell);
-  if(!tert->isLocal() && !(*cellDoExchange)(tert, oldVal, newVal))
+  if(tert->isDistributed() && !(*cellDoExchange)(tert, oldVal, newVal))
     return BI_REPLACEBICALL;
   CellLocal *cellLocal=(CellLocal*)tert;
   CheckLocalBoard(cellLocal,"cell");
@@ -3728,7 +3728,7 @@ SRecord *getRecordFromState(RecOrCell state)
     return getRecord(state);
 
   Tertiary *t=getCell(state);          // shortcut
-  if(t->isLocal()) { // can happen if globalized object becomes localized again
+  if(!t->isDistributed()) { // can happen if globalized object becomes localized again
     return tagged2SRecord(oz_deref(((CellLocal*)t)->getValue()));
   }
   /*

@@ -227,7 +227,7 @@ Bool Pickler::processCell(OZ_Term term, Tertiary *tert)
   VisitNodeM2ndP(term, vIT, bs, index, return(OK));
 
   //
-  Assert(cloneCells() && tert->isLocal());
+  Assert(cloneCells() && !tert->isDistributed());
   if (index) {
     marshalDIF(bs, DIF_CLONEDCELL_DEF);
     marshalTermDef(bs, index);
@@ -546,7 +546,7 @@ inline
 Bool ResourceExcavator::processCell(OZ_Term cellTerm, Tertiary *tert)
 {
   VisitNodeTrav(cellTerm, vIT, return(TRUE));
-  if (cloneCells() && tert->isLocal()) {
+  if (cloneCells() && !tert->isDistributed()) {
     return (NO);
   } else {
     addResource(cellTerm);

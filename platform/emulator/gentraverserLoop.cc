@@ -232,7 +232,7 @@ void TRAVERSERCLASS::doit()
 
 	case Co_Cell:
 	  if (!processCell(t, (Tertiary *) ct) && 
-	      ((Tertiary *) ct)->isLocal()) {
+	      !((Tertiary *) ct)->isDistributed()) {
 	    t = ((CellLocal *) ct)->getValue();
 	    continue;
 	  }

@@ -150,7 +150,7 @@ void getAnnotations(TaggedRef tr, int p_def, int a_def, int g_def,
 
 void globalizeTertiary(Tertiary *t)
 { 
-  Assert((t->isLocal()));
+  Assert(!(t->isDistributed()));
   Mediator *me;
   AbstractEntity *ae;
   ProtocolName prot; 
@@ -254,7 +254,7 @@ void glue_marshalArray(ByteBuffer *bs, ConstTermWithHome *arrayConst)
 {
   OzArray *ozA = static_cast<OzArray*>(arrayConst);
   AbstractEntity *ae;
-  if(!ozA->isDist()) {
+  if(!ozA->isDistributed()) {
     //bmc: Shouldn't we call a globalize function here??
     printf( "new array "); 
     ProtocolName prot; 
@@ -269,7 +269,7 @@ void glue_marshalArray(ByteBuffer *bs, ConstTermWithHome *arrayConst)
     ae->assignMediator(am); 
     
     arrayConst->setDist(reinterpret_cast<int>(me));
-    Assert(ozA->isDist());
+    Assert(ozA->isDistributed());
     Assert(me = index2Me(ozA->getDist())); 
   }
   else
@@ -562,7 +562,7 @@ OZ_Term  glue_unmarshalDistTerm(ByteBuffer *bs)
       ArrayMediator* me = new ArrayMediator(ae, ozc); 
       int mediator = reinterpret_cast<int>(me);
       ozc->setDist(mediator);
-      Assert(ozc->isDist()); 
+      Assert(ozc->isDistributed()); 
       Assert(ozc->getDist() == mediator);
       //	printf("Inserting am:&d me:%d\n",(int)me, (int)(Mediator*)me); 
       ae->assignMediator(me);
