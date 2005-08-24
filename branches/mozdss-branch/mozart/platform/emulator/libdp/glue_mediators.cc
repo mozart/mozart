@@ -629,6 +629,9 @@ ArrayMediator::ArrayMediator(AbstractEntity *ae, ConstTerm *t) :
   ConstMediator(ae, t) {}
   
 void
+ArrayMediator::globalize() {;}
+
+void
 ArrayMediator::localize() {;}
 
 AOcallback 
