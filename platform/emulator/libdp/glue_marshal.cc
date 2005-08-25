@@ -87,8 +87,8 @@ ProxyVar* glue_newGlobalizeFreeVariable(TaggedRef *tPtr)
   int aa_an = ((annotation & ANOT_AA_MASK) != ANOT_USE_DEFAULT) ? annotation & ANOT_AA_MASK : AA_STATIONARY_MANAGER;
   //  printf("glob var --"); 
   AbstractEntity *pi=dss->m_createMonotonicAbstractEntity(PN_TRANSIENT,
-							  static_cast<Access_Architecture>(aa_an),
-							  gc_an); 
+							  static_cast<AccessArchitecture>(aa_an),
+							  static_cast<RCalg>(gc_an)); 
 
   // Creating the new variable that will be used to identify the
   // distribution property of the original variable. 
@@ -117,10 +117,11 @@ OzVariable *glue_globalizeOzVariable(TaggedRef *vPtr) {
 
   ProtocolName pn = PN_TRANSIENT;
   // ProtocolName pn = PN_TRANSIENT_REMOTE;
-  Access_Architecture aa = static_cast<Access_Architecture>
+  AccessArchitecture aa = static_cast<AccessArchitecture>
     ((annotation & ANOT_AA_MASK) != ANOT_USE_DEFAULT ?
      annotation & ANOT_AA_MASK : AA_STATIONARY_MANAGER);
-  int rc = (annotation & RC_ALG_MASK ? annotation & RC_ALG_MASK : RC_ALG_WRC);
+  RCalg rc = static_cast<RCalg>
+    (annotation & RC_ALG_MASK ? annotation & RC_ALG_MASK : RC_ALG_WRC);
 
   // create abstract entity and mediator
   AbstractEntity *ae = dss->m_createMonotonicAbstractEntity(pn, aa, rc);
@@ -139,13 +140,13 @@ OzVariable *glue_globalizeOzVariable(TaggedRef *vPtr) {
    Further initializations are done by globalizeTertCntl.. */
 
 void getAnnotations(TaggedRef tr, int p_def, int a_def, int g_def, 
-		    ProtocolName &p, Access_Architecture &a, int &g)
+		    ProtocolName &p, AccessArchitecture &a, RCalg &g)
 {
   int annotation = 0;
   getAnnotation(tr, annotation); 
-  g = ((annotation & RC_ALG_MASK)) ? annotation & RC_ALG_MASK : g_def;
+  g = static_cast<RCalg>(((annotation & RC_ALG_MASK)) ? annotation & RC_ALG_MASK : g_def);
   p = static_cast<ProtocolName>(((annotation & ANOT_PROT_MASK)) ? annotation & ANOT_PROT_MASK : p_def);
-  a = static_cast<Access_Architecture>((annotation & ANOT_AA_MASK) ? annotation & ANOT_AA_MASK : a_def);
+  a = static_cast<AccessArchitecture>((annotation & ANOT_AA_MASK) ? annotation & ANOT_AA_MASK : a_def);
 } 
 
 void globalizeTertiary(Tertiary *t)
@@ -154,8 +155,8 @@ void globalizeTertiary(Tertiary *t)
   Mediator *me;
   AbstractEntity *ae;
   ProtocolName prot; 
-  Access_Architecture aa; 
-  int  gc;
+  AccessArchitecture aa; 
+  RCalg gc;
   switch(t->getType()) {
   case Co_Cell:
     {
@@ -258,8 +259,8 @@ void glue_marshalArray(ByteBuffer *bs, ConstTermWithHome *arrayConst)
     //bmc: Shouldn't we call a globalize function here??
     printf( "new array "); 
     ProtocolName prot; 
-    Access_Architecture aa; 
-    int  gc;
+    AccessArchitecture aa; 
+    RCalg gc;
     getAnnotations(makeTaggedConst(arrayConst), PN_SIMPLE_CHANNEL, AA_STATIONARY_MANAGER ,RC_ALG_WRC, prot, aa, gc);
     
     ae = dss->m_createMutableAbstractEntity(prot,aa,gc);

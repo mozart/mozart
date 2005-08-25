@@ -54,14 +54,14 @@ namespace _dss_internal{ //Start namespace
   AS_Node::~AS_Node(){};
   
 
-  AS_Node::AS_Node(const Access_Architecture& a, DSS_Environment* const env):
+  AS_Node::AS_Node(const AccessArchitecture& a, DSS_Environment* const env):
       NetIdNode(),
       DSS_Environment_Base(env),
       a_aa(a){
       // Created Resolver base node
     };
     
-  AS_Node::AS_Node(NetIdentity ni, const Access_Architecture& a,
+  AS_Node::AS_Node(NetIdentity ni, const AccessArchitecture& a,
 	  DSS_Environment* const env):
     NetIdNode(ni),
     DSS_Environment_Base(env),
@@ -78,14 +78,14 @@ namespace _dss_internal{ //Start namespace
   }
   // ****************************** Coordinator ***********************************'
   
-  Coordinator::Coordinator(const Access_Architecture& a,
+  Coordinator::Coordinator(const AccessArchitecture& a,
 		   ProtocolManager* const p, DSS_Environment* const env):AS_Node(a,env), a_proxy(NULL), a_prot(p){
     DebugCode(a_allocated++);
     m_getEnvironment()->a_coordinatorTable->m_add(this);
   };
 
 
-  Coordinator::Coordinator(NetIdentity ni, const Access_Architecture& a,
+  Coordinator::Coordinator(NetIdentity ni, const AccessArchitecture& a,
 		   ProtocolManager* const p, DSS_Environment* const env):AS_Node(ni, a,env), a_proxy(NULL), a_prot(p){
     DebugCode(a_allocated++);
     m_getEnvironment()->a_coordinatorTable->m_insert(this);
@@ -150,7 +150,7 @@ namespace _dss_internal{ //Start namespace
   }
 
   
-  Proxy::Proxy(NetIdentity ni, const Access_Architecture& a,
+  Proxy::Proxy(NetIdentity ni, const AccessArchitecture& a,
 	       ProtocolProxy* const prot, AE_ProxyCallbackInterface* ae, DSS_Environment* const env):
     AS_Node(ni,a,env), a_ps(PROXY_STATUS_UNSET), a_currentFS(0),
     a_registeredFS(0), a_prot(prot), a_remoteRef(NULL), a_man(NULL),a_AbsEnt_Interface(ae) {
