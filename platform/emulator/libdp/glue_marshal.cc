@@ -256,22 +256,13 @@ void glue_marshalArray(ByteBuffer *bs, ConstTermWithHome *arrayConst)
   OzArray *ozA = static_cast<OzArray*>(arrayConst);
   AbstractEntity *ae;
   if(!ozA->isDistributed()) {
-    //bmc: Shouldn't we call a globalize function here??
-    printf( "new array "); 
-    ProtocolName prot; 
-    AccessArchitecture aa; 
-    RCalg gc;
-    getAnnotations(makeTaggedConst(arrayConst), PN_SIMPLE_CHANNEL, AA_STATIONARY_MANAGER ,RC_ALG_WRC, prot, aa, gc);
-    
-    ae = dss->m_createMutableAbstractEntity(prot,aa,gc);
-
-    ArrayMediator *am = new ArrayMediator(ae,arrayConst);
-    Mediator *me = am; 
-    ae->assignMediator(am); 
-    
-    arrayConst->setDist(reinterpret_cast<int>(me));
+    ArrayMediator *am = static_cast<ArrayMediator*>
+      (mediatorTable->lookup(makeTaggedConst(arrayConst)));
+    if (am == NULL) am = new ArrayMediator(NULL, arrayConst);
+      
+    am->globalize();
+    ae = am->getAbstractEntity();
     Assert(ozA->isDistributed());
-    Assert(me = index2Me(ozA->getDist())); 
   }
   else
     ae=index2AE(ozA->getDist());
