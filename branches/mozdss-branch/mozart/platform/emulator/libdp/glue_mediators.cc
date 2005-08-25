@@ -30,7 +30,7 @@
 
 #include "glue_mediators.hh"
 #include "glue_tables.hh"
-//#include "dss_interface.hh"
+#include "glue_interface.hh"
 #include "pstContainer.hh"
 #include "value.hh"
 #include "thr_int.hh"
@@ -38,6 +38,10 @@
 #include "unify.hh"
 #include "cac.hh"
 
+#define ANOT_PROT_MASK 0xFF
+#define ANOT_GC_MASK       0xFF00
+#define ANOT_AA_MASK       0xFF0000
+#define RC_ALG_MASK (RC_ALG_WRC | RC_ALG_TL |  RC_ALG_RC | RC_ALG_RLV1 | RC_ALG_RLV2 | RC_ALG_IRC ) 
 
 // The identity of the mediators, used for... I dont remeber
 // Check it out, Erik. 
@@ -630,47 +634,31 @@ ArrayMediator::ArrayMediator(AbstractEntity *ae, ConstTerm *t) :
   
 void
 ArrayMediator::globalize() {
-///////////////////////////////////////////////////////77
-/*  OzArray *ozA = static_cast<OzArray*>(arrayConst);
-  AbstractEntity *ae;
-  if(!ozA->isDistributed()) {
-    //bmc: Shouldn't we call a globalize function here??
-    printf( "new array "); 
-    ProtocolName prot; 
-    AccessArchitecture aa; 
-    RCalg gc;
-    getAnnotations(makeTaggedConst(arrayConst), PN_SIMPLE_CHANNEL, AA_STATIONARY_MANAGER ,RC_ALG_WRC, prot, aa, gc);
-    
-    ae = dss->m_createMutableAbstractEntity(prot,aa,gc);
-
-    ArrayMediator *am = new ArrayMediator(ae,arrayConst);
-    Mediator *me = am; 
-    ae->assignMediator(am); 
-    
-    arrayConst->setDist(reinterpret_cast<int>(me));
-    Assert(ozA->isDistributed());
-    Assert(me = index2Me(ozA->getDist())); 
-  }
-  else
-    ae=index2AE(ozA->getDist());
-  GlueWriteBuffer *gwb = static_cast<GlueWriteBuffer *>(bs); 
-  ae->getCoordinatorAssistant()->marshal(gwb, PMF_ORDINARY);
-  bs->put(DSS_DIF_ARRAY);
-  marshalNumber(bs, ozA->getLow());;
-  marshalNumber(bs, ozA->getHigh());;
-///////////////////////////////////////////////////////77
-*/
   Assert(getAbstractEntity() == NULL);
-/*  
-  ProtocolName pn = annotation;
-  AccessArchitecture aa;
-  RCalg gc_alg;
-  int annotation = 0;
-  getAnnotation(tr, annotation); 
-  g = ((annotation & RC_ALG_MASK)) ? annotation & RC_ALG_MASK : g_def;
-  p = static_cast<ProtocolName>(((annotation & ANOT_PROT_MASK)) ? annotation & ANOT_PROT_MASK : p_def);
-  a = static_cast<AccessArchitecture>((annotation & ANOT_AA_MASK) ? annotation & ANOT_AA_MASK : a_def);
-  */
+ 
+  // The following piece of code will be replaced by something like
+  // getParameters(AtomArray, pn, aa, gc);
+  ProtocolName pn = static_cast<ProtocolName>
+    (((annotation & ANOT_PROT_MASK)) ? 
+      annotation & ANOT_PROT_MASK : PN_SIMPLE_CHANNEL);
+  AccessArchitecture aa = static_cast<AccessArchitecture>
+    ((annotation & ANOT_AA_MASK) ?
+      annotation & ANOT_AA_MASK : AA_STATIONARY_MANAGER);
+  RCalg gc = static_cast<RCalg>
+    ((annotation & RC_ALG_MASK) ?
+      annotation & RC_ALG_MASK : RC_ALG_WRC);
+      
+  AbstractEntity *ae = dss->m_createMutableAbstractEntity(pn, aa, gc);
+  
+  // The following piece of code will be replaced by something like
+  // setAbstractEntity(ae);
+  setAbstractEntity(ae);
+  ae->assignMediator(this);
+  
+  OzArray* oa = static_cast<OzArray*>(tagged2Const(getEntity()));
+  oa->setDist(reinterpret_cast<int>(this));
+  Assert(this == index2Me(oa->getDist()));
+  setAttached(true);
 }
 
 void
