@@ -165,7 +165,7 @@ enum ProtocolName {
 };
 
 
-// ********* Access_Architecture *********
+// ********* AccessArchitecture *********
 // The access architecture, or (R)esolver (L)ookup (P)rotocol as it
 // is referred to in the documentation, see section XXX, defines the
 // behavior of the resolver (manager). This is a property which is silently 
@@ -176,7 +176,7 @@ enum ProtocolName {
 // - MIGRATORY_MANAGER, the resolver can utilise the migration features of the 
 //   manipulateAS Proxy function.
 
-enum Access_Architecture{
+enum AccessArchitecture{
   AA_NO_ARCHITECTURE    = 0x00000,  // Don't use, only here for internal debugging 
   AA_STATIONARY_MANAGER = 0x10000,
   AA_MIGRATORY_MANAGER  = 0x20000,

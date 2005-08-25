@@ -76,31 +76,31 @@ public:
   DSS_unmarshal_status unmarshalProxy(AbstractEntity* &proxy,
 				      DssReadBuffer* const buf,
 				      const ProxyUnmarshalFlag& flag,
-				      AbstractEntityName&        cm);
+				      AbstractEntityName& cm);
   
   
   MutableAbstractEntity*
   m_createMutableAbstractEntity(const ProtocolName& prot,
-				const Access_Architecture& aa,
-				const int&          GC_annot);
+				const AccessArchitecture& aa,
+				const RCalg& GC_annot);
 
 
   RelaxedMutableAbstractEntity*
   m_createRelaxedMutableAbstractEntity(const ProtocolName& prot,
-				       const Access_Architecture& aa,
-				       const int&          GC_annot);
+				       const AccessArchitecture& aa,
+				       const RCalg& GC_annot);
 
 
   MonotonicAbstractEntity*
   m_createMonotonicAbstractEntity(const ProtocolName& prot,
-				  const Access_Architecture& aa,
-				  const int&          GC_annot);
+				  const AccessArchitecture& aa,
+				  const RCalg& GC_annot);
 
 
   ImmutableAbstractEntity*
   m_createImmutableAbstractEntity(const ProtocolName& prot,
-				  const Access_Architecture& aa,
-				  const int&          GC_annot);
+				  const AccessArchitecture& aa,
+				  const RCalg& GC_annot);
 
   DssThreadId* m_createDssThreadId();
   

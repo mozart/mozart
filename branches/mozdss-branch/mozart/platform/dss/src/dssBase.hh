@@ -243,7 +243,7 @@ namespace _dss_internal{ //Start namespace
     int                        a_DuplicateToOwnerRefCounter;
 
   private:
-    Proxy* _m_createProxy(const ProtocolName& prot, const Access_Architecture& aa,
+    Proxy* _m_createProxy(const ProtocolName& prot, const AccessArchitecture& aa,
 			  DssReadBuffer* const bs, DSite* const site, const int& oti);
 
     DSS_Environment(const DSS_Environment& de);
@@ -264,30 +264,30 @@ namespace _dss_internal{ //Start namespace
     // ************** according to specification. 
 
     Proxy *m_initializeCoordination(const ProtocolName& prot,
-				    const Access_Architecture& aa, 
-				    const int& GC_annot,
+				    const AccessArchitecture& aa, 
+				    const RCalg& GC_annot,
 				    AE_ProxyCallbackInterface *ae);
     
     MutableAbstractEntity*
     m_createMutableAbstractEntity(const ProtocolName& prot,
-				  const Access_Architecture& aa,
-				  const int& GC_annot);
+				  const AccessArchitecture& aa,
+				  const RCalg& GC_annot);
 
 
     RelaxedMutableAbstractEntity*
     m_createRelaxedMutableAbstractEntity(const ProtocolName& prot,
-					 const Access_Architecture& aa,
-					 const int& GC_annot);
+					 const AccessArchitecture& aa,
+					 const RCalg& GC_annot);
     
     MonotonicAbstractEntity*
     m_createMonotonicAbstractEntity(const ProtocolName& prot,
-				    const Access_Architecture& aa,
-				    const int& GC_annot);
+				    const AccessArchitecture& aa,
+				    const RCalg& GC_annot);
 
     ImmutableAbstractEntity*
     m_createImmutableAbstractEntity(const ProtocolName& prot,
-				    const Access_Architecture& aa,
-				    const int& GC_annot);
+				    const AccessArchitecture& aa,
+				    const RCalg& GC_annot);
 
     
     bool m_orderEntities(AbstractEntity* const ae_first, AbstractEntity* const ae_second);

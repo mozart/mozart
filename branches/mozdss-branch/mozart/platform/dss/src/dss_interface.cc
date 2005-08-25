@@ -119,8 +119,8 @@ namespace _dss_internal{
     
   Proxy*
   DSS_Environment::m_initializeCoordination(const ProtocolName& prot,
-					    const Access_Architecture& aa, 
-					    const int& GC_annot,
+					    const AccessArchitecture& aa, 
+					    const RCalg& GC_annot,
 					    AE_ProxyCallbackInterface *ae){
     
     
@@ -365,8 +365,8 @@ namespace _dss_internal{
 
   MutableAbstractEntity*
   DSS_Environment::m_createMutableAbstractEntity(const ProtocolName& prot,
-						 const Access_Architecture& aa,
-						 const int& GC_annot){
+						 const AccessArchitecture& aa,
+						 const RCalg& GC_annot){
     MutableAbstractEntityImpl *MAE;
     MAE = new MutableAbstractEntityImpl();
     Proxy *prx = m_initializeCoordination(prot,  aa,  GC_annot, MAE);
@@ -377,8 +377,8 @@ namespace _dss_internal{
   
   RelaxedMutableAbstractEntity*
   DSS_Environment::m_createRelaxedMutableAbstractEntity(const ProtocolName& prot,
-							const Access_Architecture& aa,
-							const int& GC_annot){
+							const AccessArchitecture& aa,
+							const RCalg& GC_annot){
     RelaxedMutableAbstractEntityImpl *MAE;
     MAE = new RelaxedMutableAbstractEntityImpl();
     Proxy *prx = m_initializeCoordination(prot,  aa,  GC_annot, MAE);
@@ -389,8 +389,8 @@ namespace _dss_internal{
   
   MonotonicAbstractEntity*
   DSS_Environment::m_createMonotonicAbstractEntity(const ProtocolName& prot,
-						   const Access_Architecture& aa,
-						   const int& GC_annot){
+						   const AccessArchitecture& aa,
+						   const RCalg& GC_annot){
     MonotonicAbstractEntityImpl *MAE;
     MAE = new MonotonicAbstractEntityImpl();
     Proxy *prx = m_initializeCoordination(prot,  aa,  GC_annot, MAE);
@@ -401,8 +401,8 @@ namespace _dss_internal{
   //  Added 03dec05 by Per Sahlin
   ImmutableAbstractEntity*
   DSS_Environment::m_createImmutableAbstractEntity(const ProtocolName& prot,
-						   const Access_Architecture& aa,
-						   const int& GC_annot){
+						   const AccessArchitecture& aa,
+						   const RCalg& GC_annot){
     ImmutableAbstractEntityImpl *MAE;
     MAE = new ImmutableAbstractEntityImpl();
     Proxy *prx = m_initializeCoordination(prot,  aa,  GC_annot, MAE);
@@ -528,31 +528,31 @@ ParamRetVal DSS_Object::operateStrParam(const DSS_AREA& area, const DSS_AREA_ID&
 
 MutableAbstractEntity*
 DSS_Object::m_createMutableAbstractEntity(const ProtocolName& prot,
-					  const Access_Architecture& aa,
-					  const int& GC_annot){
+					  const AccessArchitecture& aa,
+					  const RCalg& GC_annot){
   return _a_env->m_createMutableAbstractEntity(prot, aa, GC_annot); 
 }
 
 
 RelaxedMutableAbstractEntity*
 DSS_Object::m_createRelaxedMutableAbstractEntity(const ProtocolName& prot,
-					  const Access_Architecture& aa,
-						 const int& GC_annot){
+						 const AccessArchitecture& aa,
+						 const RCalg& GC_annot){
   return _a_env->m_createRelaxedMutableAbstractEntity(prot, aa, GC_annot); 
 }
 
 
 MonotonicAbstractEntity*
 DSS_Object::m_createMonotonicAbstractEntity(const ProtocolName& prot, 
-					    const Access_Architecture& aa, 
-					    const int& GC_annot){
+					    const AccessArchitecture& aa, 
+					    const RCalg& GC_annot){
   return _a_env->m_createMonotonicAbstractEntity(prot, aa, GC_annot);
 }
 
 ImmutableAbstractEntity*
 DSS_Object::m_createImmutableAbstractEntity(const ProtocolName& prot, 
-					    const Access_Architecture& aa, 
-					    const int& GC_annot){
+					    const AccessArchitecture& aa, 
+					    const RCalg& GC_annot){
   
   return _a_env->m_createImmutableAbstractEntity(prot, aa, GC_annot); 
 }

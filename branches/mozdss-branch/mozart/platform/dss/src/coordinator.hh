@@ -48,17 +48,17 @@ namespace _dss_internal{ //Start namespace
   
   class AS_Node: public NetIdNode, public DSS_Environment_Base {
   public:
-    const Access_Architecture a_aa:20;
+    const AccessArchitecture a_aa:20;
   protected:
     ::MsgContainer *m_createASMsg(const MessageType& mt);
   public:
 
-    AS_Node(NetIdentity ni, const Access_Architecture& a, DSS_Environment* const env);
-    AS_Node(const Access_Architecture& a, DSS_Environment* const env);
+    AS_Node(NetIdentity ni, const AccessArchitecture& a, DSS_Environment* const env);
+    AS_Node(const AccessArchitecture& a, DSS_Environment* const env);
     
     virtual ~AS_Node()=0;
     
-    inline Access_Architecture m_getASname(){ return a_aa; }
+    inline AccessArchitecture m_getASname(){ return a_aa; }
     
   };
   
@@ -85,10 +85,10 @@ namespace _dss_internal{ //Start namespace
 #endif
 
     // ************* CONSTRUCTORS *******************
-    Coordinator(const Access_Architecture& a,
+    Coordinator(const AccessArchitecture& a,
 		ProtocolManager* const prot, DSS_Environment* const env);
 
-    Coordinator(NetIdentity ni, const Access_Architecture& a,
+    Coordinator(NetIdentity ni, const AccessArchitecture& a,
 		ProtocolManager* const prot, DSS_Environment* const env);
     virtual ~Coordinator();
     
@@ -173,7 +173,7 @@ namespace _dss_internal{ //Start namespace
 
     // ***************** Constructors ***********************************
     
-    Proxy(NetIdentity id, const Access_Architecture& a,
+    Proxy(NetIdentity id, const AccessArchitecture& a,
 	  ProtocolProxy* const prot, AE_ProxyCallbackInterface* ,DSS_Environment* const env);
     virtual ~Proxy();
     
