@@ -110,27 +110,11 @@ OzVariable *glue_globalizeOzVariable(TaggedRef *vPtr) {
   Assert(!(tagged2Var(*vPtr)->isDistributed()));
   Assert(oz_isFree(*vPtr) || oz_isReadOnly(*vPtr));
 
-  // lookup for an annotation, and determine the protocol, type of
-  // access architecture, and reference count
-  int annotation=0;
-  getAnnotation(makeTaggedRef(vPtr), annotation);
-
-  ProtocolName pn = PN_TRANSIENT;
-  // ProtocolName pn = PN_TRANSIENT_REMOTE;
-  AccessArchitecture aa = static_cast<AccessArchitecture>
-    ((annotation & ANOT_AA_MASK) != ANOT_USE_DEFAULT ?
-     annotation & ANOT_AA_MASK : AA_STATIONARY_MANAGER);
-  RCalg rc = static_cast<RCalg>
-    (annotation & RC_ALG_MASK ? annotation & RC_ALG_MASK : RC_ALG_WRC);
-
-  // create abstract entity and mediator
-  AbstractEntity *ae = dss->m_createMonotonicAbstractEntity(pn, aa, rc);
-  OzVariableMediator *med = new OzVariableMediator(ae, makeTaggedRef(vPtr));
-  ae->assignMediator(med);
-
-  // set up the variable as distributed
+  // create mediator and globalize
   OzVariable *var = oz_getNonOptVar(vPtr);
+  OzVariableMediator *med = new OzVariableMediator(NULL, makeTaggedRef(vPtr));
   var->setDistributed(med);
+  med->globalize();
   return var;
 }
 

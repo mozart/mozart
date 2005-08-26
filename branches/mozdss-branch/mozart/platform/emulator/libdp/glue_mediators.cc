@@ -109,14 +109,28 @@ Mediator::getAbstractEntity() {
   return absEntity;
 }
 
+// set both links between mediator and abstract entity
 void            
 Mediator::setAbstractEntity(AbstractEntity *ae) {
   absEntity = ae;
+  if (ae) ae->assignMediator(dynamic_cast<MediatorInterface*>(this));
 }
 
 CoordinatorAssistantInterface* 
 Mediator::getCoordinatorAssistant() {
   return absEntity->getCoordinatorAssistant();
+}
+
+void
+Mediator::getDssParameters(ProtocolName &pn, AccessArchitecture &aa,
+			   RCalg &rc) {
+  int def = getDefaultAnnotation(getEntityType());
+  pn = static_cast<ProtocolName>
+    (annotation & PN_MASK ? annotation & PN_MASK : def & PN_MASK);
+  aa = static_cast<AccessArchitecture>
+    (annotation & AA_MASK ? annotation & AA_MASK : def & AA_MASK);
+  rc = static_cast<RCalg>
+    (annotation & RC_ALG_MASK ? annotation & RC_ALG_MASK : def & RC_ALG_MASK);
 }
 
 void Mediator::gCollect(){
@@ -635,25 +649,13 @@ ArrayMediator::ArrayMediator(AbstractEntity *ae, ConstTerm *t) :
 void
 ArrayMediator::globalize() {
   Assert(getAbstractEntity() == NULL);
- 
-  // The following piece of code will be replaced by something like
-  // getParameters(AtomArray, pn, aa, gc);
-  ProtocolName pn = static_cast<ProtocolName>
-    (((annotation & ANOT_PROT_MASK)) ? 
-      annotation & ANOT_PROT_MASK : PN_SIMPLE_CHANNEL);
-  AccessArchitecture aa = static_cast<AccessArchitecture>
-    ((annotation & ANOT_AA_MASK) ?
-      annotation & ANOT_AA_MASK : AA_STATIONARY_MANAGER);
-  RCalg gc = static_cast<RCalg>
-    ((annotation & RC_ALG_MASK) ?
-      annotation & RC_ALG_MASK : RC_ALG_WRC);
-      
-  AbstractEntity *ae = dss->m_createMutableAbstractEntity(pn, aa, gc);
-  
-  // The following piece of code will be replaced by something like
-  // setAbstractEntity(ae);
-  setAbstractEntity(ae);
-  ae->assignMediator(this);
+
+  // create abstract entity
+  ProtocolName pn;
+  AccessArchitecture aa;
+  RCalg rc;
+  getDssParameters(pn, aa, rc);
+  setAbstractEntity(dss->m_createMutableAbstractEntity(pn, aa, rc));
   
   OzArray* oa = static_cast<OzArray*>(tagged2Const(getEntity()));
   oa->setDist(reinterpret_cast<int>(this));
@@ -730,6 +732,17 @@ OzVariableMediator::OzVariableMediator(AbstractEntity *ae, TaggedRef t) :
 
 void OzVariableMediator::incPatchCount() { patchCount++; }
 void OzVariableMediator::decPatchCount() { patchCount--; }
+
+void OzVariableMediator::globalize() {
+  if (absEntity) return;   // don't globalize twice
+
+  // create abstract entity
+  ProtocolName pn;
+  AccessArchitecture aa;
+  RCalg rc;
+  getDssParameters(pn, aa, rc);
+  setAbstractEntity(dss->m_createMonotonicAbstractEntity(pn, aa, rc));
+}
 
 void OzVariableMediator::localize() {
   OZ_warning("Localizing of var is disabled, %d\n", id);
