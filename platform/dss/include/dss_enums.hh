@@ -161,7 +161,8 @@ enum ProtocolName {
   PN_IMMUTABLE_LAZY  = 11,
   PN_IMMUTABLE_EAGER = 12,
   PN_IMMEDIATE       = 13,
-  PN_DKSBROADCAST    = 14
+  PN_DKSBROADCAST    = 14,
+  PN_MASK            = 0xFF   // bit mask
 };
 
 
@@ -180,7 +181,8 @@ enum AccessArchitecture{
   AA_NO_ARCHITECTURE    = 0x00000,  // Don't use, only here for internal debugging 
   AA_STATIONARY_MANAGER = 0x10000,
   AA_MIGRATORY_MANAGER  = 0x20000,
-  AA_MOBILE_COORDINATOR = 0x40000
+  AA_MOBILE_COORDINATOR = 0x40000,
+  AA_MASK               = 0xF0000   // bit mask
 };
 
 
@@ -206,7 +208,8 @@ enum RCalg{
   RC_ALG_RLV1    = 0x0800,
   RC_ALG_RLV2    = 0x1000,
   RC_ALG_IRC     = 0x2000,
-  RC_ALG_ERROR   = 0x8000
+  RC_ALG_ERROR   = 0x8000,
+  RC_ALG_MASK    = 0xFF00   // bit mask
 };
 
 

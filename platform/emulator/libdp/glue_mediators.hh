@@ -83,6 +83,22 @@
 
 
 
+// the types of entities that can be distributed
+enum EntityType {
+  ETYPE_VARIABLE,
+  ETYPE_PORT,
+  ETYPE_CELL,
+  ETYPE_LOCK,
+  ETYPE_OBJECT,
+  ETYPE_ARRAY,
+  ETYPE_THREAD,
+  ETYPE_UNUSABLE,
+  ETYPE_LAZYCOPY,
+  ETYPE_LAST          // must be last
+};
+
+
+
 // Mediator is the abstract class for all mediators
 class Mediator {
   friend class MediatorTable;
@@ -124,6 +140,9 @@ public:
   /*************** annotate/globalize/localize ***************/
   int getAnnotation() { return annotation; }
   void annotate(int a) { annotation = a; } // warning: unchecked
+  virtual EntityType getEntityType() = 0;
+  void getDssParameters(ProtocolName&, AccessArchitecture&, RCalg&);
+
   //virtual void globalize() = 0;     // create abstract entity
   virtual void localize() = 0;      // try to localize entity
 
@@ -175,9 +194,10 @@ public:
 				   PstInContainerInterface* operation,
 				   PstOutContainerInterface*& possible_answer);
   virtual void localize();
-  virtual char *getPrintType();
   virtual PstOutContainerInterface *retrieveEntityRepresentation();
   virtual void installEntityRepresentation(PstInContainerInterface*);  
+  EntityType getEntityType() { return ETYPE_THREAD; }
+  virtual char *getPrintType();
 };
 
 
@@ -193,9 +213,10 @@ public:
 				   PstInContainerInterface* operation,
 				   PstOutContainerInterface*& possible_answer);
   virtual void localize();
-  virtual char *getPrintType();
   virtual PstOutContainerInterface *retrieveEntityRepresentation() { Assert(0); return NULL;}
   virtual void installEntityRepresentation(PstInContainerInterface*) { Assert(0);}
+  EntityType getEntityType() { return ETYPE_UNUSABLE; }
+  virtual char *getPrintType();
 };
 
 
@@ -213,9 +234,10 @@ public:
 				   PstInContainerInterface* operation,
 				   PstOutContainerInterface*& possible_answer);
   virtual void localize();
-  virtual char *getPrintType();
   virtual PstOutContainerInterface *retrieveEntityRepresentation() { Assert(0); return NULL;}
   virtual void installEntityRepresentation(PstInContainerInterface*) { Assert(0);} 
+  EntityType getEntityType() { return ETYPE_PORT; }
+  virtual char *getPrintType();
 }; 
 
 
@@ -233,9 +255,10 @@ public:
 				   PstInContainerInterface* operation,
 				   PstOutContainerInterface*& possible_answer);
   virtual void localize();
-  virtual char *getPrintType();
   virtual PstOutContainerInterface *retrieveEntityRepresentation();
   virtual void installEntityRepresentation(PstInContainerInterface*); 
+  EntityType getEntityType() { return ETYPE_CELL; }
+  virtual char *getPrintType();
 }; 
 
 
@@ -253,9 +276,10 @@ public:
 				   PstInContainerInterface* operation,
 				   PstOutContainerInterface*& possible_answer);
   virtual void localize();
-  virtual char *getPrintType();
   virtual PstOutContainerInterface *retrieveEntityRepresentation();  
   virtual void installEntityRepresentation(PstInContainerInterface*);  
+  EntityType getEntityType() { return ETYPE_LOCK; }
+  virtual char *getPrintType();
 }; 
 
 
@@ -269,9 +293,10 @@ public:
   virtual AOcallback callback_Append(DssOperationId *id,
 				     PstInContainerInterface* operation);
   virtual void localize();
-  virtual char *getPrintType();
   virtual PstOutContainerInterface *retrieveEntityRepresentation();
   virtual void installEntityRepresentation(PstInContainerInterface*);
+  EntityType getEntityType() { return ETYPE_VARIABLE; }
+  virtual char *getPrintType();
 }; 
 
 
@@ -280,6 +305,7 @@ class LazyVarMediator: public Mediator {
 public:
   LazyVarMediator(AbstractEntity *p, TaggedRef t);
   virtual void localize();
+  EntityType getEntityType() { return ETYPE_LAZYCOPY; }
   virtual char *getPrintType();
 }; 
 
@@ -299,10 +325,11 @@ public:
 				   PstOutContainerInterface*& possible_answer);
   virtual void globalize();
   virtual void localize();
-  virtual char *getPrintType();
 
   virtual PstOutContainerInterface *retrieveEntityRepresentation() ;
   virtual void installEntityRepresentation(PstInContainerInterface*) ;
+  EntityType getEntityType() { return ETYPE_ARRAY; }
+  virtual char *getPrintType();
 }; 
 
 
@@ -320,9 +347,10 @@ public:
 				   PstInContainerInterface* operation,
 				   PstOutContainerInterface*& possible_answer);
   virtual void localize();
-  virtual char *getPrintType();
   virtual PstOutContainerInterface *retrieveEntityRepresentation();
   virtual void installEntityRepresentation(PstInContainerInterface*);
+  EntityType getEntityType() { return ETYPE_OBJECT; }
+  virtual char *getPrintType();
 };
 
 
@@ -337,12 +365,15 @@ public:
   void incPatchCount();
   void decPatchCount();
   
+  virtual void globalize();
+  virtual void localize();
+  EntityType getEntityType() { return ETYPE_VARIABLE; }
+  virtual char *getPrintType();
+
   virtual AOcallback callback_Bind(DssOperationId *id,
 				   PstInContainerInterface* operation); 
   virtual AOcallback callback_Append(DssOperationId *id,
 				     PstInContainerInterface* operation);
-  virtual void localize();
-  virtual char *getPrintType();
   virtual PstOutContainerInterface *retrieveEntityRepresentation();
   virtual void installEntityRepresentation(PstInContainerInterface*);
 }; 

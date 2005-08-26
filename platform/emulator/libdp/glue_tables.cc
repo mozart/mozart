@@ -169,6 +169,20 @@ MediatorTable::print() {
 
 
 
+/************************* Annotation Table *************************/
+
+static int defaultAnnotation[ETYPE_LAST];
+
+int getDefaultAnnotation(EntityType type) {
+  return defaultAnnotation[type];
+}
+
+void setDefaultAnnotation(EntityType type, int annotation) {
+  defaultAnnotation[type] = annotation;
+}
+
+
+
 /************************* Interface functions *************************/
 
 void gcMediatorTablePrimary(){

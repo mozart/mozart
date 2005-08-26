@@ -223,6 +223,18 @@ void initDP(int port, int ip, const char *siteId, int primKey)
   Address2Info = new AddressHashTableO1Reset(100);
   Address2InfoBackup = new AddressHashTableO1Reset(100); 
 
+  // initial default annotations
+  const int default_aa_rc = AA_STATIONARY_MANAGER | RC_ALG_WRC;
+  setDefaultAnnotation(ETYPE_VARIABLE, PN_TRANSIENT | default_aa_rc);
+  setDefaultAnnotation(ETYPE_PORT, PN_SIMPLE_CHANNEL | default_aa_rc);
+  setDefaultAnnotation(ETYPE_CELL, PN_MIGRATORY_STATE | default_aa_rc);
+  setDefaultAnnotation(ETYPE_LOCK, PN_MIGRATORY_STATE | default_aa_rc);
+  setDefaultAnnotation(ETYPE_OBJECT, PN_MIGRATORY_STATE | default_aa_rc);
+  setDefaultAnnotation(ETYPE_ARRAY, PN_SIMPLE_CHANNEL | default_aa_rc);
+  setDefaultAnnotation(ETYPE_THREAD, PN_SIMPLE_CHANNEL | default_aa_rc);
+  setDefaultAnnotation(ETYPE_UNUSABLE, PN_SIMPLE_CHANNEL | default_aa_rc);
+  setDefaultAnnotation(ETYPE_LAZYCOPY, PN_IMMUTABLE_LAZY | default_aa_rc);
+
 
   initEntityOperations();
   

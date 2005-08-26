@@ -104,9 +104,23 @@ public:
   void print();
 };
 
-
 // THE mediator table
 extern MediatorTable *mediatorTable;
+
+
+
+/*
+  Each type of distributable entity must have a default annotation,
+  which gives the DSS parameters for that type.
+
+  The default annotation for a type must be both valid (appropriate
+  protocol, etc.) and complete (all parameters).
+
+ */
+
+int getDefaultAnnotation(EntityType type);
+void setDefaultAnnotation(EntityType type, int annotation);
+
 
 
 /*************************** GC **************************/
