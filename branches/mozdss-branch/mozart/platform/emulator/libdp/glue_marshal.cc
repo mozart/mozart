@@ -144,15 +144,12 @@ void globalizeTertiary(Tertiary *t)
   switch(t->getType()) {
   case Co_Cell:
     {
-      getAnnotations(makeTaggedConst(t),
-                     PN_MIGRATORY_STATE,
-                     AA_STATIONARY_MANAGER,
-                     RC_ALG_WRC,
-                     prot, aa, gc);
-      ae = dss->m_createMutableAbstractEntity(prot,aa,gc);
-      CellMediator *cm = new CellMediator(ae, t);
-      me = cm; 
-      ae->assignMediator(cm);
+      // retrieve mediator, or create one
+      me = mediatorTable->lookup(makeTaggedConst(t));
+      if (me == NULL) me = new CellMediator(t);
+      // globalize
+      me->getDssParameters(prot, aa, gc);
+      me->setAbstractEntity(dss->m_createMutableAbstractEntity(prot,aa,gc));
       break; 
     }
   case Co_Lock:

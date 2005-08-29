@@ -65,15 +65,13 @@ char* OzVariableMediator::getPrintType(){ return "var";}
 
 //************************** Mediator ***************************//
 
-Mediator::Mediator(AbstractEntity *ae, TaggedRef ref, bool attach) :
+Mediator::Mediator(TaggedRef ref, bool attach) :
   active(TRUE), attached(attach), collected(FALSE),
   dss_gc_status(DSS_GC_NONE), annotation(0),
-  entity(ref), absEntity(ae), faultStream(0), next(NULL)
+  entity(ref), absEntity(NULL), faultStream(0), next(NULL)
 {
   id = medIdCntr++; 
   mediatorTable->insert(this);
-  // apparently this does not work...
-  // if (ae) ae->assignMediator(reinterpret_cast<MediatorInterface*>(this));
 }
 
 Mediator::~Mediator(){
@@ -206,8 +204,8 @@ Mediator::print(){
 
 /************************* ConstMediator *************************/
 
-ConstMediator::ConstMediator(AbstractEntity *ae, ConstTerm *t) :
-  Mediator(ae, makeTaggedConst(t), TRUE)
+ConstMediator::ConstMediator(ConstTerm *t, bool attach) :
+  Mediator(makeTaggedConst(t), attach)
 {}
 
 ConstTerm* ConstMediator::getConst(){
@@ -219,7 +217,10 @@ ConstTerm* ConstMediator::getConst(){
 /************************* PortMediator *************************/
 
 PortMediator::PortMediator(AbstractEntity *ae, Tertiary *t) :
-  ConstMediator(ae, t) {}
+  ConstMediator(t, ATTACHED)
+{
+  setAbstractEntity(ae);
+}
 
 AOcallback PortMediator::callback_Write(DssThreadId *id, 
 					DssOperationId* operation_id,
@@ -268,7 +269,10 @@ void PortMediator::localize(){
 /************************* LazyVarMediator *************************/
 
 LazyVarMediator::LazyVarMediator(AbstractEntity *ae, TaggedRef t) :
-  Mediator(ae, t, TRUE) {}
+  Mediator(t, ATTACHED)
+{
+  setAbstractEntity(ae);
+}
 
 void LazyVarMediator::localize(){
   ((Object*)tagged2Const(getEntity()))->localize();
@@ -328,8 +332,10 @@ WakeRetVal LazyVarMediator::resumeFunctionalThread(DssThreadId * id, PstInContai
 /************************* VarMediator *************************/
 
 VarMediator::VarMediator(AbstractEntity *ae, TaggedRef t) :
-  Mediator(ae, t, TRUE)
-{}
+  Mediator(t, ATTACHED)
+{
+  setAbstractEntity(ae);
+}
 
 void VarMediator::localize(){
   OZ_warning("Localizing of var is disabled, %d\n", id);
@@ -375,7 +381,10 @@ VarMediator::callback_Append(DssOperationId *id,
 
 /************************* UnusableMediator *************************/
 UnusableMediator::UnusableMediator(AbstractEntity *ae, TaggedRef t) :
-  Mediator(ae, t, FALSE) {}
+  Mediator(t, DETACHED)
+{
+  setAbstractEntity(ae);
+}
 
 UnusableMediator::~UnusableMediator() {
   printf("--- raph: delete UnusableMediator\n");
@@ -395,7 +404,10 @@ UnusableMediator::callback_Read(DssThreadId* id_of_calling_thread,
 /************************* OzThreadMediator *************************/
 
 OzThreadMediator::OzThreadMediator(AbstractEntity *ae, TaggedRef t) :
-  Mediator(ae, t, TRUE) {}
+  Mediator(t, ATTACHED)
+{
+  setAbstractEntity(ae);
+}
 
 void OzThreadMediator::localize(){
   // check that we are a proper version...
@@ -436,7 +448,10 @@ OzThreadMediator::installEntityRepresentation(PstInContainerInterface*){
 /************************* LockMediator *************************/
 
 LockMediator::LockMediator(AbstractEntity *ae, Tertiary *t) :
-  ConstMediator(ae, t) {}
+  ConstMediator(t, ATTACHED)
+{
+  setAbstractEntity(ae);
+}
 
 void LockMediator::localize(){
   OZ_warning("localizing lock");
@@ -555,8 +570,15 @@ LockMediator::installEntityRepresentation(PstInContainerInterface* pstIn){
 
 extern TaggedRef BI_remoteExecDone; 
 
+// use this constructor for annotations, etc.
+CellMediator::CellMediator(Tertiary *t) : ConstMediator(t, DETACHED)
+{}
+
 CellMediator::CellMediator(AbstractEntity *ae, Tertiary *t) :
- ConstMediator(ae, t) {}
+  ConstMediator(t, ATTACHED)
+{
+  setAbstractEntity(ae);
+}
 
 void CellMediator::localize(){
   OZ_warning("localizing cell");
@@ -609,7 +631,10 @@ CellMediator::callback_Read(DssThreadId *id,
 /************************* ObjectMediator *************************/
 
 ObjectMediator::ObjectMediator(AbstractEntity *ae, Tertiary *t) :
-  ConstMediator(ae, t) {}
+  ConstMediator(t, ATTACHED)
+{
+  setAbstractEntity(ae);
+}
 
 AOcallback
 ObjectMediator::callback_Write(DssThreadId* id_of_calling_thread,
@@ -644,7 +669,10 @@ ObjectMediator::installEntityRepresentation(PstInContainerInterface*){;}
 /************************* ArrayMediator *************************/
 
 ArrayMediator::ArrayMediator(AbstractEntity *ae, ConstTerm *t) :
-  ConstMediator(ae, t) {}
+  ConstMediator(t, ATTACHED)
+{
+  setAbstractEntity(ae);
+}
   
 void
 ArrayMediator::globalize() {
@@ -727,8 +755,10 @@ ArrayMediator::retrieveEntityRepresentation(){
 
 // assumption: t is a tagged REF to a tagged VAR.
 OzVariableMediator::OzVariableMediator(AbstractEntity *ae, TaggedRef t) :
-  Mediator(ae, t, TRUE), patchCount(0)
-{}
+  Mediator(t, ATTACHED), patchCount(0)
+{
+  setAbstractEntity(ae);
+}
 
 void OzVariableMediator::incPatchCount() { patchCount++; }
 void OzVariableMediator::decPatchCount() { patchCount--; }

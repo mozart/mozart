@@ -131,14 +131,18 @@ public:
 }; 
 
 
-void annotateEntity(TaggedRef entity,int a){
-  TaggedRef e = oz_deref(entity);
-  void *in = (InfoClassNode *)Address2Info->htFind((void *)e);
-  //printf("Setting Annotation %s key:%x val:%d\n",toC(entity), (int)e, a);
-  if(in == htEmpty) 
-    Address2Info->htAdd((void *)e, (void*) new InfoClassNode(a));
-  else
-    ((InfoClassNode*)in)->annotation = a; 
+void annotateEntity(TaggedRef entity, int a) {
+  // warning: limited to cells right now!
+  entity = oz_deref(entity);
+  Assert(oz_isCell(entity));
+
+  // lookup for existing mediator, and create if not present
+  Mediator *med = mediatorTable->lookup(entity);
+  if (med == NULL)
+    med = new CellMediator(static_cast<Tertiary*>(tagged2Const(entity)));
+
+  // annotate
+  med->annotate(a);
 }
 
 Bool getAnnotation(TaggedRef e, int &a)
