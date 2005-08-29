@@ -97,6 +97,10 @@ enum EntityType {
   ETYPE_LAST          // must be last
 };
 
+// attached or detached
+#define DETACHED 0
+#define ATTACHED 1
+
 
 
 // Mediator is the abstract class for all mediators
@@ -119,7 +123,7 @@ protected:
 
 public:
   /*************** constructor/destructor ***************/
-  Mediator(AbstractEntity*, TaggedRef, bool);
+  Mediator(TaggedRef entity, bool attached);
   virtual ~Mediator();
 
   /*************** active/passive, attached/detached ***************/
@@ -173,7 +177,7 @@ public:
 // ConstTerm in the emulator.
 class ConstMediator: public Mediator {
 public: 
-  ConstMediator(AbstractEntity *ae, ConstTerm *t);
+  ConstMediator(ConstTerm *t, bool attached);
   ConstTerm* getConst();
   virtual char *getPrintType();
 };
@@ -244,6 +248,7 @@ public:
 // mediators for Oz cells
 class CellMediator: public ConstMediator, public MutableMediatorInterface{
 public:
+  CellMediator(Tertiary *t);
   CellMediator(AbstractEntity *p, Tertiary *t);
   
   virtual AOcallback callback_Write(DssThreadId* id_of_calling_thread,
