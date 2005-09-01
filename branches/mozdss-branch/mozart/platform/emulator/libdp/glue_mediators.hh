@@ -237,6 +237,7 @@ public:
 				   DssOperationId* operation_id,
 				   PstInContainerInterface* operation,
 				   PstOutContainerInterface*& possible_answer);
+  //virtual void localize();
   virtual void localize();
   virtual PstOutContainerInterface *retrieveEntityRepresentation() { Assert(0); return NULL;}
   virtual void installEntityRepresentation(PstInContainerInterface*) { Assert(0);} 
@@ -271,6 +272,7 @@ public:
 // mediators for Oz locks
 class LockMediator: public ConstMediator, public MutableMediatorInterface{
 public:
+  LockMediator(Tertiary *t);
   LockMediator(AbstractEntity *p, Tertiary *t);
   
   virtual AOcallback callback_Write(DssThreadId* id_of_calling_thread,
@@ -281,6 +283,7 @@ public:
 				   DssOperationId* operation_id,
 				   PstInContainerInterface* operation,
 				   PstOutContainerInterface*& possible_answer);
+  virtual void globalize();
   virtual void localize();
   virtual PstOutContainerInterface *retrieveEntityRepresentation();  
   virtual void installEntityRepresentation(PstInContainerInterface*);  
