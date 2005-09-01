@@ -442,10 +442,24 @@ OzThreadMediator::installEntityRepresentation(PstInContainerInterface*){
 
 /************************* LockMediator *************************/
 
+LockMediator::LockMediator(Tertiary *t) : ConstMediator(t, DETACHED)
+{}
+
 LockMediator::LockMediator(AbstractEntity *ae, Tertiary *t) :
   ConstMediator(t, ATTACHED)
 {
   setAbstractEntity(ae);
+}
+
+void LockMediator::globalize(){
+  Assert(getAbstractEntity() == NULL);
+
+  ProtocolName pn;
+  AccessArchitecture aa;
+  RCalg rc;
+  getDssParameters(pn, aa, rc);
+  setAbstractEntity(dss->m_createMutableAbstractEntity( pn, aa, rc));
+  setAttached(ATTACHED);
 }
 
 void LockMediator::localize(){
@@ -590,7 +604,7 @@ void CellMediator::globalize() {
   if (annotation & AA_MASK) printf("-+-using own access architecture\n");
   if (!(annotation & RC_ALG_MASK)) printf("-+-using default gc algorithm\n");
       
-  setAttached(true);
+  setAttached(ATTACHED);
 }
 
 void CellMediator::localize() {
