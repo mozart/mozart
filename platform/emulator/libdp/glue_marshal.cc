@@ -147,9 +147,8 @@ void globalizeTertiary(Tertiary *t)
       // retrieve mediator, or create one
       me = mediatorTable->lookup(makeTaggedConst(t));
       if (me == NULL) me = new CellMediator(t);
-      // globalize
-      me->getDssParameters(prot, aa, gc);
-      me->setAbstractEntity(dss->m_createMutableAbstractEntity(prot,aa,gc));
+      static_cast<CellMediator*>(me)->globalize();
+      //me->globalize();
       break; 
     }
   case Co_Lock:

@@ -38,11 +38,6 @@
 #include "unify.hh"
 #include "cac.hh"
 
-#define ANOT_PROT_MASK 0xFF
-#define ANOT_GC_MASK       0xFF00
-#define ANOT_AA_MASK       0xFF0000
-#define RC_ALG_MASK (RC_ALG_WRC | RC_ALG_TL |  RC_ALG_RC | RC_ALG_RLV1 | RC_ALG_RLV2 | RC_ALG_IRC ) 
-
 // The identity of the mediators, used for... I dont remeber
 // Check it out, Erik. 
 static int medIdCntr = 1; 
@@ -580,12 +575,30 @@ CellMediator::CellMediator(AbstractEntity *ae, Tertiary *t) :
   setAbstractEntity(ae);
 }
 
-void CellMediator::localize(){
+void CellMediator::globalize() {
+  Assert(getAbstractEntity() == NULL);
+
+  // create abstract entity
+  ProtocolName pn;
+  AccessArchitecture aa;
+  RCalg rc;
+  getDssParameters(pn, aa, rc);
+  setAbstractEntity(dss->m_createMutableAbstractEntity(pn, aa, rc));
+
+  // bmc: Temporary feedback
+  if (!(annotation & PN_MASK)) printf("-+-using default protocol name\n");
+  if (annotation & AA_MASK) printf("-+-using own access architecture\n");
+  if (!(annotation & RC_ALG_MASK)) printf("-+-using default gc algorithm\n");
+      
+  setAttached(true);
+}
+
+void CellMediator::localize() {
   OZ_warning("localizing cell");
 }
 
 PstOutContainerInterface *
-CellMediator::retrieveEntityRepresentation(){
+CellMediator::retrieveEntityRepresentation() {
   CellLocal *cell = static_cast<CellLocal*>(getConst());
   TaggedRef out =cell->getValue();
   return new PstOutContainer(out);
