@@ -92,28 +92,35 @@ define
    end
 
    proc{Annotate E An}
-      Dec = r(synch_chanel: 1
-	      migratory:    2
-	      once_only:    3
-	      once_only_remote: 4
-	      invalidation_eager:  5
-	      stationary:    1
-	      pilgrim:       9
-	      invalidation_lazy:  10
-	      
-	      persistent:   1 * 256
-	      fracWRC:      2 * 256
-	      timelease:    4 * 256
-	      irc:          8 * 256
-	      refList_1:    16 * 256
-	      refList_2:    32 * 256
-
-	      stationary_manager: 1 * 256 * 256
-	      mobile_manager:     2 * 256 * 256
-	     )
-   
-      IntVal = {FoldL An fun{$ Ind V} Ind + Dec.V end 0}
+      Prot = pn(default: 0
+		synch_chanel: 1
+		migratory:    2
+		once_only:    3
+		once_only_remote: 4
+		invalidation_eager:  5
+		stationary:    1
+		pilgrim:       9
+		invalidation_lazy:  10
+	       )
+      GColl = aa(default: 0
+		 persistent:   1 * 256
+		 fracWRC:      2 * 256
+		 timelease:    4 * 256
+		 irc:          8 * 256
+		 refList_1:    16 * 256
+		 refList_2:    32 * 256
+		)
+      AccArch = aa(default: 0
+		   stationary_manager: 1 * 256 * 256
+		   mobile_manager:     2 * 256 * 256
+		  )
+      IntVal
    in
+      case An of a(pn:P aa:A gc:G) then
+	 IntVal = Prot.P + AccArch.A + GColl.G
+      else
+	 raise 'bad structured annotation' end
+      end
       {Glue.setAnnotation E IntVal}
    end
    
