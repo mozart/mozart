@@ -608,7 +608,25 @@ void CellMediator::globalize() {
 }
 
 void CellMediator::localize() {
-  OZ_warning("localizing cell");
+  printf("Going to localize the darn thing\n"); 
+  if (annotation || faultStream) {
+    // we have to keep the mediator, so
+    // 1. remove abstract entity
+    delete absEntity;
+    absEntity = NULL;
+    // 2. localize the cell (detach mediator)
+    static_cast<Tertiary*>(tagged2Const(entity))->setTertType(Te_Local);
+    setAttached(DETACHED);
+    // 3. keep the mediator in the table
+    mediatorTable->insert(this);
+    
+  } else {
+    // remove completely mediator, so
+    // 1. localize the cell
+    static_cast<Tertiary*>(tagged2Const(entity))->setTertType(Te_Local);
+    // 2. delete mediator
+    delete this;
+  }
 }
 
 PstOutContainerInterface *
