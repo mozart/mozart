@@ -102,13 +102,12 @@ define
 		pilgrim:       9
 		invalidation_lazy:  10
 	       )
-      GColl = aa(default: 0
-		 persistent:   1 * 256
-		 fracWRC:      2 * 256
-		 timelease:    4 * 256
-		 irc:          8 * 256
-		 refList_1:    16 * 256
-		 refList_2:    32 * 256
+      GColl = gc(default: 0
+		 fracWRC:      1 * 256
+		 timelease:    2 * 256
+		 refList_1:    8 * 256
+		 refList_2:    16 * 256
+		 irc:          32 * 256
 		)
       AccArch = aa(default: 0
 		   stationary_manager: 1 * 256 * 256
