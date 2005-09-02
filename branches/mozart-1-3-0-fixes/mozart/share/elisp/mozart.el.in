@@ -1159,6 +1159,7 @@ With C-u C-u as prefix argument, send it a SIGKILL instead."
     (save-excursion
       (set-buffer buffer)
       (compilation-mode)
+      (setq buffer-read-only nil)
       (set (make-local-variable 'compilation-parse-errors-function)
 	   'oz-compilation-parse-errors))
     (comint-exec buffer (buffer-name buffer) (cons host port) nil nil)
