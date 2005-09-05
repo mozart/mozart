@@ -205,7 +205,7 @@ void glue_marshalArray(ByteBuffer *bs, ConstTermWithHome *arrayConst)
     Assert(ozA->isDistributed());
   }
   else
-    ae=index2AE(ozA->getDist());
+    ae=index2AE((int)(ozA->getMediator()));
   GlueWriteBuffer *gwb = static_cast<GlueWriteBuffer *>(bs); 
   ae->getCoordinatorAssistant()->marshal(gwb, PMF_ORDINARY);
   bs->put(DSS_DIF_ARRAY);
@@ -499,10 +499,10 @@ OZ_Term  glue_unmarshalDistTerm(ByteBuffer *bs)
       int high =  unmarshalNumber(bs); 
       ConstTermWithHome *ozc = new ArrayProxy(low, high);
       ArrayMediator* me = new ArrayMediator(ae, ozc); 
-      int mediator = reinterpret_cast<int>(me);
-      ozc->setDist(mediator);
+      void *mediator = reinterpret_cast<void*>(me);
+      ozc->setMediator(mediator);
       Assert(ozc->isDistributed()); 
-      Assert(ozc->getDist() == mediator);
+      Assert(ozc->getMediator() == mediator);
       //	printf("Inserting am:&d me:%d\n",(int)me, (int)(Mediator*)me); 
       ae->assignMediator(me);
       return makeTaggedConst(ozc); 

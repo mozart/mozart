@@ -1409,7 +1409,7 @@ void ConstTerm::_cacConstRecurse(void) {
 	gCollectGName(gn);
       else
 	if (a->isDistributed())
-	  (*gCollectMediator)((void*)a->getDist());
+	  (*gCollectMediator)(a->getMediator());
 
 #endif
       int aw = a->getWidth();

@@ -264,7 +264,7 @@ OZ_BI_define(BImigrateManager,1,0){
   if(oz_isArray(entity)){
     ConstTermWithHome *c = static_cast<ConstTermWithHome*>(tagged2Const(entity));
     if(c->isDistributed()){
-      CoordinatorAssistantInterface *pi=index2CAI(c->getDist());
+      CoordinatorAssistantInterface *pi=index2CAI((int)(c->getMediator()));
       void *ret; 
       pi->manipulateCNET(NULL); 
     }

@@ -256,7 +256,7 @@ void cellOperationDoneWriteImpl(Tertiary* tert )
 
 
 bool distArrayGetImpl(OzArray *oza, TaggedRef indx, TaggedRef &ans){
-  ArrayMediator *me = static_cast<ArrayMediator*>(index2Me(oza->getDist())); 
+  ArrayMediator *me = static_cast<ArrayMediator*>(oza->getMediator()); 
   AbstractEntity *ae = me->getAbstractEntity();
   MutableAbstractEntity *mae = static_cast<MutableAbstractEntity*>(ae);
   
@@ -277,7 +277,7 @@ bool distArrayGetImpl(OzArray *oza, TaggedRef indx, TaggedRef &ans){
 }
 
 bool distArrayPutImpl(OzArray *oza, TaggedRef indx, TaggedRef val){
-  ArrayMediator *me = static_cast<ArrayMediator*>(index2Me(oza->getDist())); 
+  ArrayMediator *me = static_cast<ArrayMediator*>(oza->getMediator()); 
   AbstractEntity *ae = me->getAbstractEntity();
   MutableAbstractEntity *mae = static_cast<MutableAbstractEntity*>(ae);
   

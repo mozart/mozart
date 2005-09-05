@@ -777,8 +777,8 @@ ArrayMediator::globalize() {
   setAbstractEntity(dss->m_createMutableAbstractEntity(pn, aa, rc));
   
   OzArray* oa = static_cast<OzArray*>(tagged2Const(getEntity()));
-  oa->setDist(reinterpret_cast<int>(this));
-  Assert(this == index2Me(oa->getDist()));
+  oa->setMediator(this);
+  Assert(this == static_cast<ArrayMediator*>(oa->getMediator()));
   setAttached(ATTACHED);
 }
 
@@ -861,8 +861,8 @@ DictionaryMediator::globalize() {
   setAbstractEntity(dss->m_createMutableAbstractEntity(pn, aa, rc));
   
   OzDictionary* od = static_cast<OzDictionary*>(tagged2Const(getEntity()));
-  od->setDist(reinterpret_cast<int>(this));
-  Assert(this == index2Me(od->getDist()));
+  od->setMediator(this);
+  Assert(this == reinterpret_cast<DictionaryMediator*>(od->getMediator()));
   setAttached(ATTACHED);
 }
 
