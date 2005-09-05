@@ -136,70 +136,42 @@ void getAnnotations(TaggedRef tr, int p_def, int a_def, int g_def,
 void globalizeTertiary(Tertiary *t)
 { 
   Assert(!(t->isDistributed()));
-  Mediator *me;
-  AbstractEntity *ae;
-  ProtocolName prot; 
-  AccessArchitecture aa; 
-  RCalg gc;
   switch(t->getType()) {
   case Co_Cell:
     {
       // retrieve mediator, or create one
-      me = mediatorTable->lookup(makeTaggedConst(t));
+      CellMediator* me = static_cast<CellMediator*>
+	(mediatorTable->lookup(makeTaggedConst(t)));
       if (me == NULL) me = new CellMediator(t);
-      static_cast<CellMediator*>(me)->globalize();
+      me->globalize();
       break; 
     }
   case Co_Lock:
     {
       // retrieve mediator, or create one
-      me = mediatorTable->lookup(makeTaggedConst(t));
+      LockMediator* me = static_cast<LockMediator*>
+	(mediatorTable->lookup(makeTaggedConst(t)));
       if (me == NULL) me = new LockMediator(t);
-      static_cast<LockMediator*>(me)->globalize();
+      me->globalize();
       break;
     }
   case Co_Object:
     {
-      getAnnotations(makeTaggedConst(t),
-                     PN_MIGRATORY_STATE, 
-                     AA_STATIONARY_MANAGER,
-                     RC_ALG_WRC,
-                     prot, aa, gc);
-      ae = dss->m_createMutableAbstractEntity(prot,aa,gc);
-      //bmc: Maybe two possibilities here. Create a LazyVarMediator first
-      //continuing with the approach of marshaling only the stub in the 
-      //beginning, or just go eagerly for the object. We are going to try
-      //the eager approach first, and then the optimization.
-      ObjectMediator *om = new ObjectMediator(ae,t);
-      ae->assignMediator(om);
-      me = om;
-      
-      Object *o = (Object *) t;
-      RecOrCell state = o->getState();
-      if (!stateIsCell(state)) {
-        SRecord *r = getRecord(state);
-        Assert(r!=NULL);
-        Tertiary *cell = (Tertiary *) tagged2Const(OZ_newCell(makeTaggedSRecord(r)));
-        o->setState(cell);
-      }
+      // retrieve mediator, or create one
+      ObjectMediator* me = static_cast<ObjectMediator*>
+	(mediatorTable->lookup(makeTaggedConst(t)));
+      if (me == NULL) me = new ObjectMediator(NULL,t);
+      me->globalize();
       break;
     }
   case Co_Port:
     {
-      getAnnotations(makeTaggedConst(t),
-                     PN_SIMPLE_CHANNEL,
-                     AA_STATIONARY_MANAGER,
-                     RC_ALG_WRC,
-                     prot, aa, gc);
-      ae = dss->m_createRelaxedMutableAbstractEntity(prot,aa, gc);
-      
-      // Looks strange, but the asbtarct entity takes only 
-      // Mediator interfaces that is an suprclass of the specialized
-      // Mediators, but not of the top Mediator.
-      PortMediator *pm = new PortMediator(ae,t);
-      ae->assignMediator(pm);
-      me = pm;
-      break; 
+      // retrieve mediator, or create one
+      PortMediator* me = static_cast<PortMediator*>
+	(mediatorTable->lookup(makeTaggedConst(t)));
+      if (me == NULL) me = new PortMediator(NULL, t);
+      me->globalize();
+      break;
     }
   default:
     {
@@ -207,12 +179,6 @@ void globalizeTertiary(Tertiary *t)
       Assert(0);
     }
   }
-
-
-  // Creating the EMU
-  // Instrumenting the proxy to be distributed.
-  t->setTertType(Te_Proxy);
-  t->setTertIndex(reinterpret_cast<int>(me));
 }
 
 
@@ -229,7 +195,7 @@ void glue_marshalArray(ByteBuffer *bs, ConstTermWithHome *arrayConst)
 {
   OzArray *ozA = static_cast<OzArray*>(arrayConst);
   AbstractEntity *ae;
-  if(!ozA->isDistributed()) {
+  if (!ozA->isDistributed()) {
     ArrayMediator *am = static_cast<ArrayMediator*>
       (mediatorTable->lookup(makeTaggedConst(arrayConst)));
     if (am == NULL) am = new ArrayMediator(NULL, arrayConst);
@@ -250,9 +216,16 @@ void glue_marshalArray(ByteBuffer *bs, ConstTermWithHome *arrayConst)
 
 ///////////////////////////////////////////////////////////////////////////
 ////  Marshal Dictionary
-void glue_marshalDictionary(ByteBuffer *bs, ConstTermWithHome *arrayConst) {
+void glue_marshalDictionary(ByteBuffer *bs, ConstTermWithHome *dict) {
   // Not implemented yet
-  Assert(0);
+  OzDictionary *ozD = static_cast<OzDictionary*>(dict);
+  AbstractEntity *ae;
+  if (!ozD->isDistributed()) {
+    DictionaryMediator *me = static_cast<DictionaryMediator*>
+      (mediatorTable->lookup(makeTaggedConst(dict)));
+    if (me == NULL) me = new DictionaryMediator(NULL, dict);
+  }
+  //Assert(0);
 }
 
 

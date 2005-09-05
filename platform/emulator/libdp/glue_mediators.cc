@@ -52,6 +52,7 @@ char* CellMediator::getPrintType(){ return "cell";}
 char* LockMediator::getPrintType(){ return "lock";}
 char* VarMediator::getPrintType(){ return "var";}
 char* ArrayMediator::getPrintType(){ return "array";}
+char* DictionaryMediator::getPrintType(){ return "dictionary";}
 char* OzThreadMediator::getPrintType() {return "thread";}
 char* UnusableMediator::getPrintType(){return "Unusable!!!";}
 char* OzVariableMediator::getPrintType(){ return "var";}
@@ -252,6 +253,22 @@ PortMediator::callback_Read(DssThreadId *id,
 //{
 //    (void)  p->exchangeStream(arg); 
 // }
+
+void PortMediator::globalize() {
+  Assert(getAbstractEntity() == NULL);
+
+  // create abstract entity
+  ProtocolName pn;
+  AccessArchitecture aa;
+  RCalg rc;
+  getDssParameters(pn, aa, rc);
+  setAbstractEntity(dss->m_createRelaxedMutableAbstractEntity(pn, aa, rc));
+
+  Tertiary *t = static_cast<Tertiary*>(getConst());
+  t->setTertType(Te_Proxy);
+  t->setTertIndex(reinterpret_cast<int>(this));
+  setAttached(ATTACHED);
+}
 
 void PortMediator::localize(){
   Tertiary *t = static_cast<Tertiary*>(getConst());
@@ -459,6 +476,10 @@ void LockMediator::globalize(){
   RCalg rc;
   getDssParameters(pn, aa, rc);
   setAbstractEntity(dss->m_createMutableAbstractEntity( pn, aa, rc));
+
+  Tertiary *t = static_cast<Tertiary*>(tagged2Const(entity));
+  t->setTertType(Te_Proxy);
+  t->setTertIndex(reinterpret_cast<int>(this));
   setAttached(ATTACHED);
 }
 
@@ -597,13 +618,12 @@ void CellMediator::globalize() {
   AccessArchitecture aa;
   RCalg rc;
   getDssParameters(pn, aa, rc);
+  printf("--- boris: globalize cell (pn=%x, aa=%x, rc=%x)\n", pn, aa, rc);
   setAbstractEntity(dss->m_createMutableAbstractEntity(pn, aa, rc));
 
-  // bmc: Temporary feedback
-  if (!(annotation & PN_MASK)) printf("-+-using default protocol name\n");
-  if (annotation & AA_MASK) printf("-+-using own access architecture\n");
-  if (!(annotation & RC_ALG_MASK)) printf("-+-using default gc algorithm\n");
-      
+  Tertiary *t = static_cast<Tertiary*>(tagged2Const(entity));
+  t->setTertType(Te_Proxy);
+  t->setTertIndex(reinterpret_cast<int>(this));
   setAttached(ATTACHED);
 }
 
@@ -697,6 +717,32 @@ ObjectMediator::callback_Read(DssThreadId* id_of_calling_thread,
   return AOCB_FINISH;
 }
 
+void ObjectMediator::globalize() {
+  ProtocolName pn;
+  AccessArchitecture aa;
+  RCalg gc;
+  getDssParameters( pn, aa, gc);
+  setAbstractEntity(dss->m_createMutableAbstractEntity(pn, aa, gc));
+  //bmc: Maybe two possibilities here. Create a LazyVarMediator first
+  //continuing with the approach of marshaling only the stub in the 
+  //beginning, or just go eagerly for the object. We are going to try
+  //the eager approach first, and then the optimization.
+  
+  //bmc: Cellify state
+  Object *o = (Object *) entity;
+  RecOrCell state = o->getState();
+  if (!stateIsCell(state)) {
+    SRecord *r = getRecord(state);
+    Assert(r != NULL);
+    Tertiary *cell = (Tertiary *) tagged2Const(OZ_newCell(makeTaggedSRecord(r)));
+    o->setState(cell);
+  }
+  
+  o->setTertType(Te_Proxy);
+  o->setTertIndex(reinterpret_cast<int>(this));
+  setAttached(ATTACHED);
+}
+
 void
 ObjectMediator::localize() {}
 
@@ -733,7 +779,7 @@ ArrayMediator::globalize() {
   OzArray* oa = static_cast<OzArray*>(tagged2Const(getEntity()));
   oa->setDist(reinterpret_cast<int>(this));
   Assert(this == index2Me(oa->getDist()));
-  setAttached(true);
+  setAttached(ATTACHED);
 }
 
 void
@@ -794,6 +840,98 @@ ArrayMediator::retrieveEntityRepresentation(){
   return new PstOutContainer(list);
 }
 
+
+/************************* DictionaryMediator *************************/
+
+DictionaryMediator::DictionaryMediator(AbstractEntity *ae, ConstTerm *t) :
+  ConstMediator(t, ATTACHED)
+{
+  setAbstractEntity(ae);
+}
+  
+void
+DictionaryMediator::globalize() {
+  Assert(getAbstractEntity() == NULL);
+
+  // create abstract entity
+  ProtocolName pn;
+  AccessArchitecture aa;
+  RCalg rc;
+  getDssParameters(pn, aa, rc);
+  setAbstractEntity(dss->m_createMutableAbstractEntity(pn, aa, rc));
+  
+  OzDictionary* od = static_cast<OzDictionary*>(tagged2Const(getEntity()));
+  od->setDist(reinterpret_cast<int>(this));
+  Assert(this == index2Me(od->getDist()));
+  setAttached(ATTACHED);
+}
+
+void
+DictionaryMediator::localize() {;}
+
+//bmc: rewrite this method
+AOcallback 
+DictionaryMediator::callback_Write(DssThreadId *id,
+			      DssOperationId* operation_id,
+			      PstInContainerInterface* pstin,
+			      PstOutContainerInterface*& possible_answer)
+{
+  OzDictionary *ozd = static_cast<OzDictionary*>(getConst());
+  TaggedRef arg = static_cast<PstInContainer*>(pstin)->a_term;
+  int index = tagged2SmallInt(OZ_head(arg));
+  TaggedRef val = OZ_tail(arg);
+  ozd->setArg(index,val);
+  possible_answer = NULL;
+  return AOCB_FINISH;
+}
+
+//bmc: rewrite this method
+AOcallback
+DictionaryMediator::callback_Read(DssThreadId *id,
+			     DssOperationId* operation_id,
+			     PstInContainerInterface* pstin,
+			     PstOutContainerInterface*& possible_answer)
+{
+  OzDictionary *ozd = static_cast<OzDictionary*>(getConst()); 
+  TaggedRef arg = static_cast<PstInContainer*>(pstin)->a_term;
+  int indx = tagged2SmallInt(arg);
+  possible_answer =  new PstOutContainer(ozd->getArg(indx));
+  return AOCB_FINISH;
+}
+
+//bmc: rewrite this method
+void
+DictionaryMediator::installEntityRepresentation(PstInContainerInterface* pstin){
+  OzDictionary *ozd = static_cast<OzDictionary*>(getConst()); 
+  TaggedRef arg = static_cast<PstInContainer*>(pstin)->a_term;
+  /*
+  int width = ozd->getWidth();
+  TaggedRef *ar = ozd->getRef();
+  for(int i=width - 1; i>=0; i--){
+    TaggedRef el = oz_head(arg); 
+    arg = oz_tail(arg); 
+    ar[i] = el; 
+  }
+  */
+}
+
+//bmc: rewrite this method
+PstOutContainerInterface*
+DictionaryMediator::retrieveEntityRepresentation(){
+  OzDictionary *ozd = static_cast<OzDictionary*>(getConst()); 
+  /*
+  TaggedRef *ar = ozd->getRef();
+  int width = ozd->getWidth();
+  TaggedRef list = oz_nil();
+  TaggedRef int_0 = makeTaggedSmallInt(0); 
+  for(int i=0; i<width; i++){
+    list = oz_cons(ar[i],list); 
+    ar[i] = int_0; 
+  }
+  return new PstOutContainer(list);
+  */
+  return new PstOutContainer(oz_nil());
+}
 
 
 /************************* OzVariableMediator *************************/
