@@ -4,7 +4,7 @@
  *    Ralf Scheidhauer (Ralf.Scheidhauer@ps.uni-sb.de)
  * 
  *  Contributors:
- *    optional, Contributor's name (Contributor's email address)
+ *    Boriss Mejias (bmc@info.ucl.ac.be)
  * 
  *  Copyright:
  *    Organization or Person (Year(s))
@@ -575,9 +575,9 @@ public:
 };
 
 
-#define CWH_Board 0
-#define CWH_GName 1
-#define CWH_Dist  2
+#define CWH_BOARD    0
+#define CWH_GNAME    1
+#define CWH_MEDIATOR 2
 
 class ConstTermWithHome: public ConstTerm {
 private:
@@ -586,21 +586,21 @@ private:
 public:
   void setBoard(Board *b)
   {
-    boardOrGName.set(b,CWH_Board);
+    boardOrGName.set(b,CWH_BOARD);
   }
-  void setDist(int val)
+  void setMediator(void *mediator)
   {
-    boardOrGName.set((void*)val,CWH_Dist);
+    boardOrGName.set(mediator, CWH_MEDIATOR);
   }
-  int getDist()
+  void *getMediator()
   {
-    return (int)boardOrGName.getPtr();
+    return boardOrGName.getPtr();
   }
   ConstTermWithHome() { Assert(0); }
   ConstTermWithHome(Board *bb, TypeOfConst tt) : ConstTerm(tt) { setBoard(bb);}
 
-  Bool hasGName() { return (boardOrGName.getTag()&CWH_GName); }
-  Bool isDistributed(){ return (boardOrGName.getTag()&CWH_Dist); }
+  Bool hasGName() { return (boardOrGName.getTag()&CWH_GNAME); }
+  Bool isDistributed(){ return (boardOrGName.getTag()&CWH_MEDIATOR); }
   void init(Board *bb, TypeOfConst tt) { ConstTerm::init(tt); setBoard(bb); }
 
   Board *getBoardInternal() {
@@ -614,7 +614,7 @@ public:
 
   void setGName(GName *gn) { 
     Assert(gn);
-    boardOrGName.set(gn,CWH_GName);
+    boardOrGName.set(gn,CWH_GNAME);
   }
   GName *getGName1() {
     return hasGName()?(GName *)boardOrGName.getPtr():(GName *)NULL;
