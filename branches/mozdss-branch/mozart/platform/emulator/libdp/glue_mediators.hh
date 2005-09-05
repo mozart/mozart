@@ -91,6 +91,7 @@ enum EntityType {
   ETYPE_LOCK,
   ETYPE_OBJECT,
   ETYPE_ARRAY,
+  ETYPE_DICTIONARY,
   ETYPE_THREAD,
   ETYPE_UNUSABLE,
   ETYPE_LAZYCOPY,
@@ -237,7 +238,7 @@ public:
 				   DssOperationId* operation_id,
 				   PstInContainerInterface* operation,
 				   PstOutContainerInterface*& possible_answer);
-  //virtual void localize();
+  virtual void globalize();
   virtual void localize();
   virtual PstOutContainerInterface *retrieveEntityRepresentation() { Assert(0); return NULL;}
   virtual void installEntityRepresentation(PstInContainerInterface*) { Assert(0);} 
@@ -342,6 +343,29 @@ public:
 }; 
 
 
+// mediators for Oz arrays
+class DictionaryMediator: public ConstMediator, public MutableMediatorInterface{
+public:
+  DictionaryMediator(AbstractEntity *p, ConstTerm *t);
+  
+  virtual AOcallback callback_Write(DssThreadId* id_of_calling_thread,
+				    DssOperationId* operation_id,
+				    PstInContainerInterface* operation,
+				    PstOutContainerInterface*& possible_answer);
+  virtual AOcallback callback_Read(DssThreadId* id_of_calling_thread,
+				   DssOperationId* operation_id,
+				   PstInContainerInterface* operation,
+				   PstOutContainerInterface*& possible_answer);
+  virtual void globalize();
+  virtual void localize();
+
+  virtual PstOutContainerInterface *retrieveEntityRepresentation() ;
+  virtual void installEntityRepresentation(PstInContainerInterface*) ;
+  EntityType getEntityType() { return ETYPE_ARRAY; }
+  virtual char *getPrintType();
+}; 
+
+
 // mediators for Oz objects
 class ObjectMediator: public ConstMediator, public MutableMediatorInterface{
 public:
@@ -355,6 +379,7 @@ public:
 				   DssOperationId* operation_id,
 				   PstInContainerInterface* operation,
 				   PstOutContainerInterface*& possible_answer);
+  virtual void globalize();
   virtual void localize();
   virtual PstOutContainerInterface *retrieveEntityRepresentation();
   virtual void installEntityRepresentation(PstInContainerInterface*);
