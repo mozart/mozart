@@ -112,7 +112,7 @@ OzVariable *glue_globalizeOzVariable(TaggedRef *vPtr) {
 
   // create mediator and globalize
   OzVariable *var = oz_getNonOptVar(vPtr);
-  OzVariableMediator *med = new OzVariableMediator(NULL, makeTaggedRef(vPtr));
+  OzVariableMediator *med = new OzVariableMediator(makeTaggedRef(vPtr), NULL);
   var->setDistributed(med);
   med->globalize();
   return var;
@@ -160,7 +160,7 @@ void globalizeTertiary(Tertiary *t)
       // retrieve mediator, or create one
       ObjectMediator* me = static_cast<ObjectMediator*>
 	(mediatorTable->lookup(makeTaggedConst(t)));
-      if (me == NULL) me = new ObjectMediator(NULL,t);
+      if (me == NULL) me = new ObjectMediator(t, NULL);
       me->globalize();
       break;
     }
@@ -169,7 +169,7 @@ void globalizeTertiary(Tertiary *t)
       // retrieve mediator, or create one
       PortMediator* me = static_cast<PortMediator*>
 	(mediatorTable->lookup(makeTaggedConst(t)));
-      if (me == NULL) me = new PortMediator(NULL, t);
+      if (me == NULL) me = new PortMediator(t, NULL);
       me->globalize();
       break;
     }
@@ -194,38 +194,38 @@ void* oz_thread_getDistVal(TaggedRef tr, int i);
 void glue_marshalArray(ByteBuffer *bs, ConstTermWithHome *arrayConst)
 {
   OzArray *ozA = static_cast<OzArray*>(arrayConst);
-  AbstractEntity *ae;
+
   if (!ozA->isDistributed()) {
     ArrayMediator *am = static_cast<ArrayMediator*>
       (mediatorTable->lookup(makeTaggedConst(arrayConst)));
-    if (am == NULL) am = new ArrayMediator(NULL, arrayConst);
-      
+    if (am == NULL) am = new ArrayMediator(arrayConst, NULL);
     am->globalize();
-    ae = am->getAbstractEntity();
-    Assert(ozA->isDistributed());
   }
-  else
-    ae=index2AE((int)(ozA->getMediator()));
+  Assert(ozA->isDistributed());
+
+  AbstractEntity *ae = index2AE((int)(ozA->getMediator()));
   GlueWriteBuffer *gwb = static_cast<GlueWriteBuffer *>(bs); 
   ae->getCoordinatorAssistant()->marshal(gwb, PMF_ORDINARY);
   bs->put(DSS_DIF_ARRAY);
   marshalNumber(bs, ozA->getLow());;
   marshalNumber(bs, ozA->getHigh());;
-  
 }
 
 ///////////////////////////////////////////////////////////////////////////
 ////  Marshal Dictionary
 void glue_marshalDictionary(ByteBuffer *bs, ConstTermWithHome *dict) {
-  // Not implemented yet
   OzDictionary *ozD = static_cast<OzDictionary*>(dict);
-  AbstractEntity *ae;
+
   if (!ozD->isDistributed()) {
     DictionaryMediator *me = static_cast<DictionaryMediator*>
       (mediatorTable->lookup(makeTaggedConst(dict)));
-    if (me == NULL) me = new DictionaryMediator(NULL, dict);
+    if (me == NULL) me = new DictionaryMediator(dict, NULL);
+    me->globalize();
   }
-  //Assert(0);
+  Assert(ozD->isDistributed());
+
+  // the rest is not implemented yet
+  Assert(0);
 }
 
 
@@ -233,63 +233,30 @@ void glue_marshalDictionary(ByteBuffer *bs, ConstTermWithHome *dict) {
 ////  Marshal Unusable 
 
 void glue_marshalUnusable(ByteBuffer *bs, TaggedRef tr) {
-  //bmc:
-  // If the Unusable has a mediator in the engineTable
-  // then, it's already distributed
-  AbstractEntity *ae;
-  UnusableMediator *me;
-  me = reinterpret_cast<UnusableMediator*>(mediatorTable->lookup(tr));
-  if ( me == NULL) {
-    // Even when we don't distribute this unusable, we have to remember
-    // that it has been exported.
-    //bmc: I'm not sure yet about the distibution strategy of this entity
-    ae = dss->m_createImmutableAbstractEntity(
-      PN_IMMUTABLE_LAZY,
-      AA_STATIONARY_MANAGER,
-      RC_ALG_WRC);
-    me = new UnusableMediator(ae, tr);
-    ae->assignMediator(me);
+  // bmc: If the Unusable has a mediator in the mediator table, then
+  // it's already distributed
+  UnusableMediator *me =
+    reinterpret_cast<UnusableMediator*>(mediatorTable->lookup(tr));
+  if (me == NULL) {
+    // create mediator and globalize
+    me = new UnusableMediator(tr);
+    me->globalize();
   }
-  else {
-    ae = me->getAbstractEntity();
-  }
-  CoordinatorAssistantInterface *cai = ae->getCoordinatorAssistant();
+
+  // now go for marshaling
+  CoordinatorAssistantInterface *cai = me->getCoordinatorAssistant();
   GlueWriteBuffer *gwb = static_cast<GlueWriteBuffer *>(bs);
   cai->marshal(gwb, PMF_ORDINARY);
   bs->put(DSS_DIF_UNUSABLE);
-  
-  /*
-  Mediator *me = taggedref2Me(tr);   
-  ProxyInterface *pi;
-  if (me  == NULL){
-    pi = createEMU(CM_PLACE_HOLDER,
-		   PN_SYNC_CHANEL,
-		   AA_STATIONARY_MANAGER,
-		   RC_ALG_WRC);
-    Mediator *me = new UnusableMediator(pi,tr,CM_PLACE_HOLDER);
-    int med = reinterpret_cast<int>(me);
-    engineTable->insert(me, tr);
-  }else{
-    pi=me->getProxy();
-  }
-  GlueWriteBuffer *gwb = static_cast<GlueWriteBuffer *>(bs); 
-  pi->marshal(gwb, PMF_ORDINARY);
-  bs->put(DSS_DIF_UNUSABLE);
-  // ERIK, Add a description? 
-  */
-  //Assert(0);
 }
 
 void glue_marshalOzThread(ByteBuffer *bs, TaggedRef thr)
 {
-  Mediator *med = reinterpret_cast<Mediator*>(oz_thread_getDistVal(thr, 0)); 
-  
-  if (med == NULL){
-    AbstractEntity *ae = dss->m_createMutableAbstractEntity(PN_SIMPLE_CHANNEL, AA_STATIONARY_MANAGER, RC_ALG_WRC);
-    OzThreadMediator *tm = new OzThreadMediator(ae, thr);
-    med = tm; 
-    ae->assignMediator(tm); 
-    oz_thread_setDistVal(thr, 0, reinterpret_cast<void*>(med)); 
+  OzThreadMediator *med =
+    reinterpret_cast<OzThreadMediator*>(oz_thread_getDistVal(thr, 0)); 
+  if (med == NULL) {
+    med = new OzThreadMediator(thr, NULL);
+    med->globalize();
   }
   CoordinatorAssistantInterface* cai = med->getCoordinatorAssistant(); 
   GlueWriteBuffer *gwb = static_cast<GlueWriteBuffer *>(bs); 
@@ -385,7 +352,7 @@ OZ_Term glue_unmarshalObjectStub(ByteBuffer *bs)
   ObjectVar *var = new ObjectVar(oz_currentBoard(),gnobj,gnclass); 
   TaggedRef val = makeTaggedRef(newTaggedVar(extVar2Var(var)));
 
-  LazyVarMediator *me = new LazyVarMediator(ae, val);
+  LazyVarMediator *me = new LazyVarMediator(val, ae);
   var->setMediator(me);
   addGName(gnobj, val);
   //PT->setEngineName(p_name,e_name);
@@ -460,16 +427,13 @@ OZ_Term  glue_unmarshalDistTerm(ByteBuffer *bs)
     case DSS_DIF_UNUSABLE:{
       Tertiary* tert =  new UnusableResource();
       TaggedRef tr = makeTaggedConst(tert);
-      UnusableMediator *um = new UnusableMediator(ae, tr);
+      UnusableMediator *um = new UnusableMediator(tr, ae);
       tert->setTertIndex(reinterpret_cast<int>(um));
-      ae->assignMediator(um);
       return tr;
     }
     case DSS_DIF_THREAD:{
-      TaggedRef oTh=  oz_thread(oz_newThreadSuspended(1));
-      OzThreadMediator *me = new OzThreadMediator(ae,oTh); 
-      ae->assignMediator(me);
-      Mediator *med = static_cast<Mediator*>(me); 
+      TaggedRef oTh = oz_thread(oz_newThreadSuspended(1));
+      Mediator *med = new OzThreadMediator(oTh, ae); 
       oz_thread_setDistVal(oTh, 0, reinterpret_cast<void*>(med));
       return oTh; 
     }
@@ -477,34 +441,30 @@ OZ_Term  glue_unmarshalDistTerm(ByteBuffer *bs)
       Tertiary *tert = new CellProxy(); 
       CellMediator *me = new CellMediator(ae, tert); 
       tert->setTertIndex(reinterpret_cast<int>(me));
-      ae->assignMediator(me);
       return makeTaggedConst(tert);
     }
     case DSS_DIF_PORT: {
       Tertiary *tert = new PortProxy();        
-      PortMediator *me = new PortMediator(ae, tert); 
+      PortMediator *me = new PortMediator(tert, ae); 
       tert->setTertIndex(reinterpret_cast<int>(me));
-      ae->assignMediator(me);
       return makeTaggedConst(tert);
     }
     case DSS_DIF_LOCK:{
       Tertiary *tert = new LockProxy();
-      LockMediator *me = new LockMediator(ae, tert); 
+      LockMediator *me = new LockMediator(tert, ae); 
       tert->setTertIndex(reinterpret_cast<int>(me));
-      ae->assignMediator(me); 
       return makeTaggedConst(tert);
     }
     case DSS_DIF_ARRAY:{
       int low  =  unmarshalNumber(bs); 
       int high =  unmarshalNumber(bs); 
       ConstTermWithHome *ozc = new ArrayProxy(low, high);
-      ArrayMediator* me = new ArrayMediator(ae, ozc); 
+      ArrayMediator* me = new ArrayMediator(ozc, ae); 
       void *mediator = reinterpret_cast<void*>(me);
       ozc->setMediator(mediator);
       Assert(ozc->isDistributed()); 
       Assert(ozc->getMediator() == mediator);
       //	printf("Inserting am:&d me:%d\n",(int)me, (int)(Mediator*)me); 
-      ae->assignMediator(me);
       return makeTaggedConst(ozc); 
     }
     default: 
@@ -619,9 +579,8 @@ OZ_Term glue_unmarshalOzVariable(ByteBuffer* bs, Bool isReadOnly) {
     TaggedRef *ptr = tagged2Ref(ref);
     OzVariable *var = tagged2Var(*ptr);
 
-    med = new OzVariableMediator(ae, ref);
+    med = new OzVariableMediator(ref, ae);
     var->setDistributed(med);
-    ae->assignMediator(med);
     return ref;
   }
 }

@@ -212,7 +212,10 @@ ConstTerm* ConstMediator::getConst(){
 
 /************************* PortMediator *************************/
 
-PortMediator::PortMediator(AbstractEntity *ae, Tertiary *t) :
+PortMediator::PortMediator(Tertiary *t) : ConstMediator(t, DETACHED)
+{}
+
+PortMediator::PortMediator(Tertiary *t, AbstractEntity *ae) :
   ConstMediator(t, ATTACHED)
 {
   setAbstractEntity(ae);
@@ -264,6 +267,7 @@ void PortMediator::globalize() {
   getDssParameters(pn, aa, rc);
   setAbstractEntity(dss->m_createRelaxedMutableAbstractEntity(pn, aa, rc));
 
+  // attach to entity
   Tertiary *t = static_cast<Tertiary*>(getConst());
   t->setTertType(Te_Proxy);
   t->setTertIndex(reinterpret_cast<int>(this));
@@ -271,24 +275,42 @@ void PortMediator::globalize() {
 }
 
 void PortMediator::localize(){
-  Tertiary *t = static_cast<Tertiary*>(getConst());
-  t->setTertType(Te_Local);
-  t->setBoard(am.currentBoard());
+  if (annotation || faultStream) {
+    // we have to keep the mediator, so
+    // 1. remove abstract entity
+    delete absEntity;
+    absEntity = NULL;
+    // 2. localize the port (detach mediator)
+    Tertiary *t = static_cast<Tertiary*>(getConst());
+    t->setTertType(Te_Local);
+    t->setBoard(am.currentBoard());
+    setAttached(DETACHED);
+    // 3. keep the mediator in the table
+    mediatorTable->insert(this);
+    
+  } else {
+    // remove completely mediator, so
+    // 1. localize the port
+    Tertiary *t = static_cast<Tertiary*>(getConst());
+    t->setTertType(Te_Local);
+    t->setBoard(am.currentBoard());
+    // 2. delete mediator
+    delete this;
+  }
 }
 
 
 
 /************************* LazyVarMediator *************************/
 
-LazyVarMediator::LazyVarMediator(AbstractEntity *ae, TaggedRef t) :
+LazyVarMediator::LazyVarMediator(TaggedRef t, AbstractEntity *ae) :
   Mediator(t, ATTACHED)
 {
   setAbstractEntity(ae);
 }
 
-void LazyVarMediator::localize(){
-  ((Object*)tagged2Const(getEntity()))->localize();
-}
+void LazyVarMediator::globalize() { Assert(0); }
+void LazyVarMediator::localize() { Assert(0); }
 
 /*
 PstOutContainerInterface* LazyVarMediator::DOE(const AbsOp& aop, DssThreadId * id, PstInContainerInterface* trav){ 
@@ -349,9 +371,8 @@ VarMediator::VarMediator(AbstractEntity *ae, TaggedRef t) :
   setAbstractEntity(ae);
 }
 
-void VarMediator::localize(){
-  OZ_warning("Localizing of var is disabled, %d\n", id);
-}
+void VarMediator::globalize() { Assert(0); }
+void VarMediator::localize() { Assert(0); }
 
 PstOutContainerInterface *VarMediator::retrieveEntityRepresentation(){
   return new PstOutContainer(getEntity());
@@ -392,17 +413,39 @@ VarMediator::callback_Append(DssOperationId *id,
 
 
 /************************* UnusableMediator *************************/
-UnusableMediator::UnusableMediator(AbstractEntity *ae, TaggedRef t) :
+
+UnusableMediator::UnusableMediator(TaggedRef t) : Mediator(t, DETACHED)
+{}
+
+UnusableMediator::UnusableMediator(TaggedRef t, AbstractEntity *ae) :
   Mediator(t, DETACHED)
 {
   setAbstractEntity(ae);
 }
 
-UnusableMediator::~UnusableMediator() {
-  printf("--- raph: delete UnusableMediator\n");
+void UnusableMediator::globalize() {
+  Assert(getAbstractEntity() == NULL);
+
+  // create abstract entity
+  ProtocolName pn;
+  AccessArchitecture aa;
+  RCalg rc;
+  getDssParameters(pn, aa, rc);
+  setAbstractEntity(dss->m_createImmutableAbstractEntity(pn, aa, rc));
 }
 
-void UnusableMediator::localize() {}
+void UnusableMediator::localize() {
+  if (annotation || faultStream) {
+    // we have to keep the mediator, so remove the abstract entity,
+    // and reinsert the mediator in the table
+    delete absEntity;
+    absEntity = NULL;
+    mediatorTable->insert(this);
+  } else {
+    // remove completely mediator, so
+    delete this;
+  }
+}
 
 AOcallback
 UnusableMediator::callback_Read(DssThreadId* id_of_calling_thread,
@@ -415,15 +458,34 @@ UnusableMediator::callback_Read(DssThreadId* id_of_calling_thread,
 
 /************************* OzThreadMediator *************************/
 
-OzThreadMediator::OzThreadMediator(AbstractEntity *ae, TaggedRef t) :
+OzThreadMediator::OzThreadMediator(TaggedRef t, AbstractEntity *ae) :
   Mediator(t, ATTACHED)
 {
   setAbstractEntity(ae);
 }
 
+// for the threads
+void oz_thread_setDistVal(TaggedRef tr, int i, void* v); 
+
+void OzThreadMediator::globalize(){
+  Assert(getAbstractEntity() == NULL);
+
+  // create abstract entity
+  ProtocolName pn;
+  AccessArchitecture aa;
+  RCalg rc;
+  getDssParameters(pn, aa, rc);
+  setAbstractEntity(dss->m_createMutableAbstractEntity(pn, aa, rc));
+
+  // attach to entity
+  oz_thread_setDistVal(entity, 0, this);
+  setAttached(ATTACHED);
+}
+
 void OzThreadMediator::localize(){
-  // check that we are a proper version...
-  ;
+  // raph: current limitation: we don't keep thread mediators...
+  oz_thread_setDistVal(entity, 0, NULL);
+  delete this;
 }
 
 AOcallback
@@ -462,7 +524,7 @@ OzThreadMediator::installEntityRepresentation(PstInContainerInterface*){
 LockMediator::LockMediator(Tertiary *t) : ConstMediator(t, DETACHED)
 {}
 
-LockMediator::LockMediator(AbstractEntity *ae, Tertiary *t) :
+LockMediator::LockMediator(Tertiary *t, AbstractEntity *ae) :
   ConstMediator(t, ATTACHED)
 {
   setAbstractEntity(ae);
@@ -484,7 +546,24 @@ void LockMediator::globalize(){
 }
 
 void LockMediator::localize(){
-  OZ_warning("localizing lock");
+  if (annotation || faultStream) {
+    // we have to keep the mediator, so
+    // 1. remove abstract entity
+    delete absEntity;
+    absEntity = NULL;
+    // 2. localize the lock (detach mediator)
+    static_cast<Tertiary*>(tagged2Const(entity))->setTertType(Te_Local);
+    setAttached(DETACHED);
+    // 3. keep the mediator in the table
+    mediatorTable->insert(this);
+    
+  } else {
+    // remove completely mediator, so
+    // 1. localize the lock
+    static_cast<Tertiary*>(tagged2Const(entity))->setTertType(Te_Local);
+    // 2. delete mediator
+    delete this;
+  }
 }
 
 AOcallback 
@@ -618,9 +697,9 @@ void CellMediator::globalize() {
   AccessArchitecture aa;
   RCalg rc;
   getDssParameters(pn, aa, rc);
-  printf("--- boris: globalize cell (pn=%x, aa=%x, rc=%x)\n", pn, aa, rc);
   setAbstractEntity(dss->m_createMutableAbstractEntity(pn, aa, rc));
 
+  // attach to entity
   Tertiary *t = static_cast<Tertiary*>(tagged2Const(entity));
   t->setTertType(Te_Proxy);
   t->setTertIndex(reinterpret_cast<int>(this));
@@ -628,7 +707,6 @@ void CellMediator::globalize() {
 }
 
 void CellMediator::localize() {
-  printf("Going to localize the darn thing\n"); 
   if (annotation || faultStream) {
     // we have to keep the mediator, so
     // 1. remove abstract entity
@@ -695,7 +773,10 @@ CellMediator::callback_Read(DssThreadId *id,
 
 /************************* ObjectMediator *************************/
 
-ObjectMediator::ObjectMediator(AbstractEntity *ae, Tertiary *t) :
+ObjectMediator::ObjectMediator(Tertiary *t) : ConstMediator(t, DETACHED)
+{}
+
+ObjectMediator::ObjectMediator(Tertiary *t, AbstractEntity *ae) :
   ConstMediator(t, ATTACHED)
 {
   setAbstractEntity(ae);
@@ -729,7 +810,7 @@ void ObjectMediator::globalize() {
   //the eager approach first, and then the optimization.
   
   //bmc: Cellify state
-  Object *o = (Object *) entity;
+  Object *o = static_cast<Object*>(getConst());
   RecOrCell state = o->getState();
   if (!stateIsCell(state)) {
     SRecord *r = getRecord(state);
@@ -744,7 +825,26 @@ void ObjectMediator::globalize() {
 }
 
 void
-ObjectMediator::localize() {}
+ObjectMediator::localize() {
+  if (annotation || faultStream) {
+    // we have to keep the mediator, so
+    // 1. remove abstract entity
+    delete absEntity;
+    absEntity = NULL;
+    // 2. localize the cell (detach mediator)
+    static_cast<Tertiary*>(tagged2Const(entity))->setTertType(Te_Local);
+    setAttached(DETACHED);
+    // 3. keep the mediator in the table
+    mediatorTable->insert(this);
+    
+  } else {
+    // remove completely mediator, so
+    // 1. localize the cell
+    static_cast<Tertiary*>(tagged2Const(entity))->setTertType(Te_Local);
+    // 2. delete mediator
+    delete this;
+  }
+}
 
 char*
 ObjectMediator::getPrintType(){ return NULL; }
@@ -759,7 +859,10 @@ ObjectMediator::installEntityRepresentation(PstInContainerInterface*){;}
 
 /************************* ArrayMediator *************************/
 
-ArrayMediator::ArrayMediator(AbstractEntity *ae, ConstTerm *t) :
+ArrayMediator::ArrayMediator(ConstTerm *t) : ConstMediator(t, DETACHED)
+{}
+
+ArrayMediator::ArrayMediator(ConstTerm *t, AbstractEntity *ae) :
   ConstMediator(t, ATTACHED)
 {
   setAbstractEntity(ae);
@@ -783,7 +886,26 @@ ArrayMediator::globalize() {
 }
 
 void
-ArrayMediator::localize() {;}
+ArrayMediator::localize() {
+  if (annotation || faultStream) {
+    // we have to keep the mediator, so
+    // 1. remove abstract entity
+    delete absEntity;
+    absEntity = NULL;
+    // 2. localize the cell (detach mediator)
+    static_cast<OzArray*>(getConst())->setBoard(oz_currentBoard());
+    setAttached(DETACHED);
+    // 3. keep the mediator in the table
+    mediatorTable->insert(this);
+    
+  } else {
+    // remove completely mediator, so
+    // 1. localize the cell
+    static_cast<OzArray*>(getConst())->setBoard(oz_currentBoard());
+    // 2. delete mediator
+    delete this;
+  }
+}
 
 AOcallback 
 ArrayMediator::callback_Write(DssThreadId *id,
@@ -813,37 +935,41 @@ ArrayMediator::callback_Read(DssThreadId *id,
   return AOCB_FINISH;
 }
 
-void
-ArrayMediator::installEntityRepresentation(PstInContainerInterface* pstin){
-  OzArray *oza = static_cast<OzArray*>(getConst()); 
-  TaggedRef arg = static_cast<PstInContainer*>(pstin)->a_term;
-  int width = oza->getWidth();
-  TaggedRef *ar = oza->getRef();
-  for(int i=width - 1; i>=0; i--){
-    TaggedRef el = oz_head(arg); 
-    arg = oz_tail(arg); 
-    ar[i] = el; 
-  }
-}
-
 PstOutContainerInterface*
 ArrayMediator::retrieveEntityRepresentation(){
+  // raph: the elements are sent in a list (in order)
+  OzArray *oza = static_cast<OzArray*>(getConst()); 
+  TaggedRef *ar = oza->getRef();
+  TaggedRef list = oz_nil();
+  for (int i = oza->getWidth()-1; i >= 0; i--) {
+    list = oz_cons(ar[i], list);
+    ar[i] = makeTaggedSmallInt(0);   // not a great idea...
+  }
+  return new PstOutContainer(list);
+}
+
+void
+ArrayMediator::installEntityRepresentation(PstInContainerInterface* pstin){
+  // raph: the elements are taken from a list (in order)
   OzArray *oza = static_cast<OzArray*>(getConst()); 
   TaggedRef *ar = oza->getRef();
   int width = oza->getWidth();
-  TaggedRef list = oz_nil();
-  TaggedRef int_0 = makeTaggedSmallInt(0); 
-  for(int i=0; i<width; i++){
-    list = oz_cons(ar[i],list); 
-    ar[i] = int_0; 
+  TaggedRef list = static_cast<PstInContainer*>(pstin)->a_term;
+  for (int i = 0; i < width; i++) {
+    ar[i] = oz_head(list);
+    list = oz_tail(list);
   }
-  return new PstOutContainer(list);
+  Assert(oz_isNil(list));
 }
 
 
 /************************* DictionaryMediator *************************/
 
-DictionaryMediator::DictionaryMediator(AbstractEntity *ae, ConstTerm *t) :
+DictionaryMediator::DictionaryMediator(ConstTerm *t) :
+  ConstMediator(t, DETACHED)
+{}
+
+DictionaryMediator::DictionaryMediator(ConstTerm *t, AbstractEntity *ae) :
   ConstMediator(t, ATTACHED)
 {
   setAbstractEntity(ae);
@@ -867,7 +993,26 @@ DictionaryMediator::globalize() {
 }
 
 void
-DictionaryMediator::localize() {;}
+DictionaryMediator::localize() {
+  if (annotation || faultStream) {
+    // we have to keep the mediator, so
+    // 1. remove abstract entity
+    delete absEntity;
+    absEntity = NULL;
+    // 2. localize the cell (detach mediator)
+    static_cast<OzDictionary*>(getConst())->setBoard(oz_currentBoard());
+    setAttached(DETACHED);
+    // 3. keep the mediator in the table
+    mediatorTable->insert(this);
+    
+  } else {
+    // remove completely mediator, so
+    // 1. localize the cell
+    static_cast<OzDictionary*>(getConst())->setBoard(oz_currentBoard());
+    // 2. delete mediator
+    delete this;
+  }
+}
 
 //bmc: rewrite this method
 AOcallback 
@@ -899,45 +1044,37 @@ DictionaryMediator::callback_Read(DssThreadId *id,
   return AOCB_FINISH;
 }
 
-//bmc: rewrite this method
-void
-DictionaryMediator::installEntityRepresentation(PstInContainerInterface* pstin){
-  OzDictionary *ozd = static_cast<OzDictionary*>(getConst()); 
-  TaggedRef arg = static_cast<PstInContainer*>(pstin)->a_term;
-  /*
-  int width = ozd->getWidth();
-  TaggedRef *ar = ozd->getRef();
-  for(int i=width - 1; i>=0; i--){
-    TaggedRef el = oz_head(arg); 
-    arg = oz_tail(arg); 
-    ar[i] = el; 
-  }
-  */
-}
-
-//bmc: rewrite this method
 PstOutContainerInterface*
 DictionaryMediator::retrieveEntityRepresentation(){
+  // sent the list of entries
+  OzDictionary *ozd = static_cast<OzDictionary*>(getConst());
+  return new PstOutContainer(ozd->pairs());
+}
+
+void
+DictionaryMediator::installEntityRepresentation(PstInContainerInterface* pstin){
+  // make sure the dictionary is empty
   OzDictionary *ozd = static_cast<OzDictionary*>(getConst()); 
-  /*
-  TaggedRef *ar = ozd->getRef();
-  int width = ozd->getWidth();
-  TaggedRef list = oz_nil();
-  TaggedRef int_0 = makeTaggedSmallInt(0); 
-  for(int i=0; i<width; i++){
-    list = oz_cons(ar[i],list); 
-    ar[i] = int_0; 
+  ozd->removeAll();
+  // insert all entries (not pretty efficient)
+  TaggedRef entries = static_cast<PstInContainer*>(pstin)->a_term;
+  while (!oz_isNil(entries)) {
+    TaggedRef keyval = oz_head(entries);
+    ozd->setArg(oz_left(keyval), oz_right(keyval));
+    entries = oz_tail(entries);
   }
-  return new PstOutContainer(list);
-  */
-  return new PstOutContainer(oz_nil());
 }
 
 
 /************************* OzVariableMediator *************************/
 
 // assumption: t is a tagged REF to a tagged VAR.
-OzVariableMediator::OzVariableMediator(AbstractEntity *ae, TaggedRef t) :
+OzVariableMediator::OzVariableMediator(TaggedRef t) :
+  Mediator(t, ATTACHED), patchCount(0)
+{}
+
+// assumption: t is a tagged REF to a tagged VAR.
+OzVariableMediator::OzVariableMediator(TaggedRef t, AbstractEntity *ae) :
   Mediator(t, ATTACHED), patchCount(0)
 {
   setAbstractEntity(ae);
@@ -958,7 +1095,24 @@ void OzVariableMediator::globalize() {
 }
 
 void OzVariableMediator::localize() {
-  OZ_warning("Localizing of var is disabled, %d\n", id);
+  if (patchCount > 0) {
+    // in this case, we simply cannot localize
+    mediatorTable->insert(this);
+
+  } else if (annotation || faultStream) {
+    // we have to keep the mediator, so remove the abstract entity,
+    // and keep the mediator in the table
+    delete absEntity;
+    absEntity = NULL;
+    mediatorTable->insert(this);
+    
+  } else {
+    // remove completely mediator, so
+    // 1. localize the variable
+    if (active) tagged2Var(oz_deref(entity))->setLocal();
+    // 2. delete mediator
+    delete this;
+  }
 }
 
 PstOutContainerInterface *OzVariableMediator::retrieveEntityRepresentation(){
