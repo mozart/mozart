@@ -370,9 +370,8 @@ OZ_BI_define(BImsToPort,1,1)
     OZ_RETURN(makeTaggedConst(me->getConst()));
   }
   Tertiary* prt = new PortProxy();
-  PortMediator *me = new PortMediator(ae, prt); 
+  PortMediator *me = new PortMediator(prt, ae); 
   prt->setTertIndex(reinterpret_cast<int>(me));
-  ae->assignMediator(me);
   OZ_RETURN(makeTaggedConst(prt));
 }OZ_BI_end
 

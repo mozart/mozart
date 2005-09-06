@@ -148,7 +148,7 @@ public:
   virtual EntityType getEntityType() = 0;
   void getDssParameters(ProtocolName&, AccessArchitecture&, RCalg&);
 
-  //virtual void globalize() = 0;     // create abstract entity
+  virtual void globalize() = 0;     // create abstract entity
   virtual void localize() = 0;      // try to localize entity
 
   /*************** garbage collection ***************/
@@ -188,7 +188,7 @@ public:
 // mediators for Oz threads
 class OzThreadMediator: public Mediator, public MutableMediatorInterface {
 public:
-  OzThreadMediator(AbstractEntity *ae, TaggedRef t);
+  OzThreadMediator(TaggedRef t, AbstractEntity *ae);
   
   virtual AOcallback callback_Write(DssThreadId* id_of_calling_thread,
 				    DssOperationId* operation_id,
@@ -198,6 +198,7 @@ public:
 				   DssOperationId* operation_id,
 				   PstInContainerInterface* operation,
 				   PstOutContainerInterface*& possible_answer);
+  virtual void globalize();
   virtual void localize();
   virtual PstOutContainerInterface *retrieveEntityRepresentation();
   virtual void installEntityRepresentation(PstInContainerInterface*);  
@@ -210,13 +211,14 @@ public:
 // of a site-specific entity.
 class UnusableMediator: public Mediator, public ImmutableMediatorInterface {
 public:
-  UnusableMediator(AbstractEntity* ae, TaggedRef t);
-  ~UnusableMediator();
+  UnusableMediator(TaggedRef t);
+  UnusableMediator(TaggedRef t, AbstractEntity* ae);
   
   virtual AOcallback callback_Read(DssThreadId* id_of_calling_thread,
 				   DssOperationId* operation_id,
 				   PstInContainerInterface* operation,
 				   PstOutContainerInterface*& possible_answer);
+  virtual void globalize();
   virtual void localize();
   virtual PstOutContainerInterface *retrieveEntityRepresentation() { Assert(0); return NULL;}
   virtual void installEntityRepresentation(PstInContainerInterface*) { Assert(0);}
@@ -229,7 +231,8 @@ public:
 class PortMediator:
   public ConstMediator, public RelaxedMutableMediatorInterface {
 public:
-  PortMediator(AbstractEntity *p, Tertiary *t);
+  PortMediator(Tertiary *t);
+  PortMediator(Tertiary *t, AbstractEntity *ae);
   
   virtual AOcallback callback_Write(DssThreadId* id_of_calling_thread,
 				    DssOperationId* operation_id,
@@ -274,7 +277,7 @@ public:
 class LockMediator: public ConstMediator, public MutableMediatorInterface{
 public:
   LockMediator(Tertiary *t);
-  LockMediator(AbstractEntity *p, Tertiary *t);
+  LockMediator(Tertiary *t, AbstractEntity *p);
   
   virtual AOcallback callback_Write(DssThreadId* id_of_calling_thread,
 				    DssOperationId* operation_id,
@@ -302,6 +305,7 @@ public:
 				   PstInContainerInterface* operation); 
   virtual AOcallback callback_Append(DssOperationId *id,
 				     PstInContainerInterface* operation);
+  virtual void globalize();
   virtual void localize();
   virtual PstOutContainerInterface *retrieveEntityRepresentation();
   virtual void installEntityRepresentation(PstInContainerInterface*);
@@ -313,7 +317,8 @@ public:
 // mediators for immutable values that are replicated lazily
 class LazyVarMediator: public Mediator {
 public:
-  LazyVarMediator(AbstractEntity *p, TaggedRef t);
+  LazyVarMediator(TaggedRef t, AbstractEntity *ae);
+  virtual void globalize();
   virtual void localize();
   EntityType getEntityType() { return ETYPE_LAZYCOPY; }
   virtual char *getPrintType();
@@ -323,7 +328,8 @@ public:
 // mediators for Oz arrays
 class ArrayMediator: public ConstMediator, public MutableMediatorInterface{
 public:
-  ArrayMediator(AbstractEntity *p, ConstTerm *t);
+  ArrayMediator(ConstTerm *t);
+  ArrayMediator(ConstTerm *t, AbstractEntity *p);
   
   virtual AOcallback callback_Write(DssThreadId* id_of_calling_thread,
 				    DssOperationId* operation_id,
@@ -346,7 +352,8 @@ public:
 // mediators for Oz arrays
 class DictionaryMediator: public ConstMediator, public MutableMediatorInterface{
 public:
-  DictionaryMediator(AbstractEntity *p, ConstTerm *t);
+  DictionaryMediator(ConstTerm *t);
+  DictionaryMediator(ConstTerm *t, AbstractEntity *ae);
   
   virtual AOcallback callback_Write(DssThreadId* id_of_calling_thread,
 				    DssOperationId* operation_id,
@@ -369,7 +376,8 @@ public:
 // mediators for Oz objects
 class ObjectMediator: public ConstMediator, public MutableMediatorInterface{
 public:
-  ObjectMediator(AbstractEntity *p, Tertiary *t);
+  ObjectMediator(Tertiary *t);
+  ObjectMediator(Tertiary *t, AbstractEntity *p);
   
   virtual AOcallback callback_Write(DssThreadId* id_of_calling_thread,
 				    DssOperationId* operation_id,
@@ -395,7 +403,8 @@ private:
   int patchCount;     // number of patches (for marshaler)
 
 public:
-  OzVariableMediator(AbstractEntity *ae, TaggedRef t);
+  OzVariableMediator(TaggedRef t);
+  OzVariableMediator(TaggedRef t, AbstractEntity *ae);
   void incPatchCount();
   void decPatchCount();
   
