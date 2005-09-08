@@ -538,9 +538,7 @@ enum TypeOfConst {
 
 enum TertType {
   Te_Local   = 0, // 0000
-  Te_Manager = 1, // 0001
-  Te_Proxy   = 2, // 0010
-  Te_Frame   = 3  // 0011
+  Te_Proxy   = 2, // 0001
 };
 
 #define DebugIndexCheck(IND) {Assert(IND< (1<<27));Assert(IND>=0);}
@@ -1812,9 +1810,9 @@ Bool stateIsCell(RecOrCell rc) {
 }
 
 inline
-Tertiary * getCell(RecOrCell rc)   {
+OzCell * getCell(RecOrCell rc)   {
   Assert(stateIsCell(rc)); 
-  return (Tertiary *) tagged2Const(rc);
+  return reinterpret_cast<OzCell*>(tagged2Const(rc));
 }
 
 inline
@@ -1873,7 +1871,7 @@ public:
     Assert(s!=0); 
     state=makeTaggedSRecord(s); 
   }
-  void setState(Tertiary *c) { 
+  void setState(ConstTerm *c) { 
     state = c ? makeTaggedConst(c) : makeTaggedNULL(); 
   }
   void setState(OZ_Term s) {
@@ -2628,11 +2626,10 @@ int oz_procedureArity(OZ_Term pterm)
 
 /*===================================================================
  * Cell
- * Unused third field from tertiary.
+ * Moving from Tertiary to ConstTermWithHome
  *=================================================================== */
 
-
-class CellLocal:public Tertiary{
+class OzCell:public ConstTermWithHome{
   friend void ConstTerm::gCollectConstRecurse(void);
   friend void ConstTerm::sCloneConstRecurse(void);
 private:
@@ -2643,11 +2640,15 @@ private:
   // although I was not really able to locate such a cast precisely.
   // WARNING: TaggedRef needs to be the same size as void* else this
   // won't work.
+  // BORISS:
+  // if Denys got it right. We don't need the dummy member anymore.
   TaggedRef val;
-  void *dummy; // mm2
+  //void *dummy; // mm2
 public:                
-  NO_DEFAULT_CONSTRUCTORS(CellLocal)
-  CellLocal(Board *b,TaggedRef v) : Tertiary(b, Co_Cell,Te_Local), val(v) {}  
+  NO_DEFAULT_CONSTRUCTORS(OzCell);
+
+  OzCell(Board *b, TaggedRef v) : ConstTermWithHome(b, Co_Cell), val(v) {}  
+//  OzCell() : ConstTermWithHome(oz_currentBoard(), Co_Cell), val(0) {}  
   TaggedRef getValue() { return val; }
 
   void setValue(TaggedRef v) { val=v; }
@@ -2662,13 +2663,17 @@ public:
   void globalize(int);
 };
 
-//bmc: Cell_Lock_<definitions> were deleted
-//bmc: Classes CellSecEmul, CellManagerEmul and CellFrameEmul deleted
-
 inline
 Bool oz_isCell(TaggedRef term)
 {
   return oz_isConst(term) && tagged2Const(term)->getType() == Co_Cell;
+}
+
+inline
+OzCell *tagged2Cell(TaggedRef term)
+{
+  Assert(oz_isCell(term));
+  return (OzCell *) tagged2Const(term);
 }
                   
 /*===================================================================
@@ -2697,13 +2702,6 @@ public:
   PortWithStream(Board *b, TaggedRef s) : Port(b,Te_Local)  {
     strm = s;}
 };
-
-/* ----------------------------------------------------
-   PORTS    local               manager           proxy
-lst word:   Co_Port:board       Co_Port:_         Co_Port:_
-2nd word:   Te_Local:NO_ENTRY   Te_Manager:owner  Te_Proxy:borrow
-3rd word    <<stream>>          <<stream>>        _
----------------------------------------------------- */
 
 class PortLocal: public PortWithStream {
   friend void ConstTerm::gCollectConstRecurse(void);

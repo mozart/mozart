@@ -273,13 +273,7 @@ class PortLocal;
 
 class PendThread;
 class PendBinding;
-class CellLocal;
-//bmc: classes CellFrameEmul, CellSecEmul, CellManagerEmul and Chain
-//will soon dissapear.
-class CellFrameEmul;
-class CellSecEmul;
-class CellManagerEmul;
-class Chain;
+class OzCell;
 
 class RefTable;
 class RefTrail;

@@ -45,12 +45,7 @@ namespace _dss_internal{ //Start namespace
   ProtocolImmediateProxy::m_initRemoteProt(DssReadBuffer* buf){
     //    stateHolder = true; 
     //       bool skel = !(buf->getByte() == IM_C_FULL);
-
-    //<<<<<<< protocol_immediate.cc
-     //  SendMsgContainer *msgC = a_proxy->m_createProtMsg();
-    //=======
     //  MsgContainer *msgC = a_proxy->m_createProtMsg();
-    //>>>>>>> 1.4
     //msgC->setMessageType(M_MANAGER_PROTOCOL);
     //a_proxy->m_sendToCoordinator(msgC);
     return false;

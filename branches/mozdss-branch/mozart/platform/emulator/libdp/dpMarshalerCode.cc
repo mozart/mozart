@@ -459,8 +459,6 @@ Bool DPMARSHALERCLASS::marshalFullObject(OZ_Term term, ConstTerm *objConst)
     //
     Object *o = (Object*) objConst;
     Assert(isObject(o));
-    // Assert(o->getTertType() == Te_Manager);
-    // Assert(o->getClass()->getTertType() == Te_Manager);
     marshalGName(bs, o->getGName1());
     doToplevel = FALSE;
 
@@ -522,10 +520,29 @@ void DPMARSHALERCLASS::processLock(OZ_Term term, Tertiary *tert)
   DPMHandleTert("lock", tert, term, return);
 }
 inline 
-Bool DPMARSHALERCLASS::processCell(OZ_Term term, Tertiary *tert)
+Bool DPMARSHALERCLASS::processCell(OZ_Term term, ConstTerm *cellConst)
 {
-  DPMHandleTert("cell", tert, term, return(TRUE));
-  return (TRUE);
+  ByteBuffer *bs = (ByteBuffer *) getOpaque();
+  if (bs->availableSpace() >= 
+      2*DIFMaxSize + MNumberMaxSize + MOwnHeadMaxSize) {
+    int index;
+    VISITNODE(term, vIT, bs, index, return(OK));
+    if(index) bs->put(DIF_RESOURCE_DEF);
+    else bs->put(DIF_RESOURCE);
+    glue_marshalCell(bs, static_cast<ConstTermWithHome*>(cellConst));
+    if(index) marshalTermDef(bs, index);
+    Assert(bs->availableSpace() >= DIFMaxSize);
+  } else {
+#if defined(DBG_TRACE)
+    DBGINIT();
+    fprintf(dbgout, "> tag: %s(%d) on %s\n",
+      dif_names[DIF_SUSPEND].name, DIF_SUSPEND, toC(term));
+    fflush(dbgout);
+#endif
+    marshalDIFcounted(bs, DIF_SUSPEND);
+    suspend(term);
+  }
+  return (OK);
 }
 inline 
 void DPMARSHALERCLASS::processPort(OZ_Term term, Tertiary *tert)

@@ -226,12 +226,6 @@ Bool TaskStack::findCatch(Thread *thr,
 	  ((LockLocal*)lck)->unlock();
 	}
 	break;
-      case Te_Frame:
-	OZD_error("lock frame unlocking\n");
-	break;
-      case Te_Manager: 
-	OZD_error("lock manager unlocking\n");	
-	break;
       case Te_Proxy: OZD_error("lock proxy unlocking\n");break;}
     } else if (PC==C_SET_SELF_Ptr) { 
       foundSelf = (Object*) G;

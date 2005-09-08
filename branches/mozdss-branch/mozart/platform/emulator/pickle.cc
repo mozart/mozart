@@ -218,7 +218,7 @@ void Pickler::processLock(OZ_Term term, Tertiary *tert)
 }
 
 inline 
-Bool Pickler::processCell(OZ_Term term, Tertiary *tert)
+Bool Pickler::processCell(OZ_Term term, ConstTerm *cellConst)
 {
   int index;
   PickleMarshalerBuffer *bs = (PickleMarshalerBuffer *) getOpaque();	 
@@ -227,7 +227,7 @@ Bool Pickler::processCell(OZ_Term term, Tertiary *tert)
   VisitNodeM2ndP(term, vIT, bs, index, return(OK));
 
   //
-  Assert(cloneCells() && !tert->isDistributed());
+  Assert(cloneCells() && !(static_cast<OzCell*>(cellConst)->isDistributed()));
   if (index) {
     marshalDIF(bs, DIF_CLONEDCELL_DEF);
     marshalTermDef(bs, index);
@@ -543,10 +543,10 @@ void ResourceExcavator::processLock(OZ_Term lockTerm, Tertiary *tert)
   addResource(lockTerm);
 }
 inline 
-Bool ResourceExcavator::processCell(OZ_Term cellTerm, Tertiary *tert)
+Bool ResourceExcavator::processCell(OZ_Term cellTerm, ConstTerm *cellConst)
 {
   VisitNodeTrav(cellTerm, vIT, return(TRUE));
-  if (cloneCells() && !tert->isDistributed()) {
+  if (cloneCells() && !(static_cast<OzCell*>(cellConst)->isDistributed())) {
     return (NO);
   } else {
     addResource(cellTerm);

@@ -658,7 +658,7 @@ inline OZ_Term oz_newPort(OZ_Term val)
 }
 inline OZ_Term oz_newCell(OZ_Term val)
 {
-  return makeTaggedConst(new CellLocal(oz_currentBoard(),val));
+  return makeTaggedConst(new OzCell(oz_currentBoard(), val));
 }
 
 #else
@@ -676,7 +676,7 @@ inline OZ_Term oz_newCell(OZ_Term val)
 #define oz_newName() makeTaggedLiteral(Name::newName(oz_currentBoard()))
 #define oz_newPort(val) \
   makeTaggedConst(new PortWithStream(oz_currentBoard(), (val)))
-#define oz_newCell(val) makeTaggedConst(new CellLocal(oz_currentBoard(),(val)))
+#define oz_newCell(val) makeTaggedConst(new OzCell(oz_currentBoard(),(val)))
 #endif
 
 //

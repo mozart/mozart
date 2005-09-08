@@ -680,11 +680,11 @@ LockMediator::installEntityRepresentation(PstInContainerInterface* pstIn){
 extern TaggedRef BI_remoteExecDone; 
 
 // use this constructor for annotations, etc.
-CellMediator::CellMediator(Tertiary *t) : ConstMediator(t, DETACHED)
+CellMediator::CellMediator(ConstTerm *c) : ConstMediator(c, DETACHED)
 {}
 
-CellMediator::CellMediator(AbstractEntity *ae, Tertiary *t) :
-  ConstMediator(t, ATTACHED)
+CellMediator::CellMediator(ConstTerm *c, AbstractEntity *ae) :
+  ConstMediator(c, ATTACHED)
 {
   setAbstractEntity(ae);
 }
@@ -700,9 +700,8 @@ void CellMediator::globalize() {
   setAbstractEntity(dss->m_createMutableAbstractEntity(pn, aa, rc));
 
   // attach to entity
-  Tertiary *t = static_cast<Tertiary*>(tagged2Const(entity));
-  t->setTertType(Te_Proxy);
-  t->setTertIndex(reinterpret_cast<int>(this));
+  OzCell *cell = tagged2Cell(entity);
+  cell->setMediator((void *)(this));
   setAttached(ATTACHED);
 }
 
@@ -713,7 +712,7 @@ void CellMediator::localize() {
     delete absEntity;
     absEntity = NULL;
     // 2. localize the cell (detach mediator)
-    static_cast<Tertiary*>(tagged2Const(entity))->setTertType(Te_Local);
+    tagged2Cell(entity)->setBoard(oz_currentBoard());
     setAttached(DETACHED);
     // 3. keep the mediator in the table
     mediatorTable->insert(this);
@@ -721,7 +720,7 @@ void CellMediator::localize() {
   } else {
     // remove completely mediator, so
     // 1. localize the cell
-    static_cast<Tertiary*>(tagged2Const(entity))->setTertType(Te_Local);
+    tagged2Cell(entity)->setBoard(oz_currentBoard());
     // 2. delete mediator
     delete this;
   }
@@ -729,7 +728,7 @@ void CellMediator::localize() {
 
 PstOutContainerInterface *
 CellMediator::retrieveEntityRepresentation() {
-  CellLocal *cell = static_cast<CellLocal*>(getConst());
+  OzCell *cell = tagged2Cell(entity);
   TaggedRef out =cell->getValue();
   return new PstOutContainer(out);
 }
@@ -738,7 +737,7 @@ void
 CellMediator::installEntityRepresentation(PstInContainerInterface* pstIn){
   PstInContainer *pst = static_cast<PstInContainer*>(pstIn); 
   TaggedRef state =  pst->a_term;
-  CellLocal *cell = static_cast<CellLocal*>(getConst());
+  OzCell *cell = tagged2Cell(entity);
   cell->setValue(state); 
 }
 
@@ -752,7 +751,7 @@ CellMediator::callback_Write(DssThreadId *id,
     PstInContainer *pst = static_cast<PstInContainer*>(pstin); 
     arg =  pst->a_term;
   }
-  CellLocal *cell = static_cast<CellLocal*>(getConst());
+  OzCell *cell = tagged2Cell(entity);
   TaggedRef out = cell->exchangeValue(arg);
   possible_answer =  new PstOutContainer(out);
   return AOCB_FINISH;
@@ -763,7 +762,7 @@ CellMediator::callback_Read(DssThreadId *id,
 			    DssOperationId* operation_id,
 			    PstInContainerInterface* pstin,
 			    PstOutContainerInterface*& possible_answer){
-  CellLocal *cell = static_cast<CellLocal*>(getConst());
+  OzCell *cell = tagged2Cell(entity);
   TaggedRef out =cell->getValue();
   possible_answer =  new PstOutContainer(out);
   return AOCB_FINISH;
@@ -815,7 +814,7 @@ void ObjectMediator::globalize() {
   if (!stateIsCell(state)) {
     SRecord *r = getRecord(state);
     Assert(r != NULL);
-    Tertiary *cell = (Tertiary *) tagged2Const(OZ_newCell(makeTaggedSRecord(r)));
+    OzCell *cell = tagged2Cell(OZ_newCell(makeTaggedSRecord(r)));
     o->setState(cell);
   }
   

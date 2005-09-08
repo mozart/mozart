@@ -387,7 +387,7 @@ public:
   void processBuiltin(OZ_Term biTerm, ConstTerm *biConst);
   Bool processObject(OZ_Term objTerm, ConstTerm *objConst);
   void processLock(OZ_Term lockTerm, Tertiary *lockTert);
-  Bool processCell(OZ_Term cellTerm, Tertiary *cellTert);
+  Bool processCell(OZ_Term cellTerm, ConstTerm *cellConst);
   void processPort(OZ_Term portTerm, Tertiary *portTert);
   void processResource(OZ_Term resTerm, Tertiary *tert);
   void processNoGood(OZ_Term resTerm);
@@ -434,7 +434,7 @@ public:
   void processBuiltin(OZ_Term biTerm, ConstTerm *biConst);
   Bool processObject(OZ_Term objTerm, ConstTerm *objConst);
   void processLock(OZ_Term lockTerm, Tertiary *lockTert);
-  Bool processCell(OZ_Term cellTerm, Tertiary *cellTert);
+  Bool processCell(OZ_Term cellTerm, ConstTerm *cellConst);
   void processPort(OZ_Term portTerm, Tertiary *portTert);
   void processResource(OZ_Term resTerm, Tertiary *tert);
   void processNoGood(OZ_Term resTerm);
@@ -616,7 +616,7 @@ public:
   Bool processChunk(OZ_Term chunkTerm, ConstTerm *chunkConst);
   Bool processClass(OZ_Term classTerm, ConstTerm *classConst);
   Bool processObject(OZ_Term objTerm, ConstTerm *objConst);
-  Bool processCell(OZ_Term cellTerm, Tertiary *cellTert);
+  Bool processCell(OZ_Term cellTerm, ConstTerm *cellConst);
   Bool processAbstraction(OZ_Term absTerm, ConstTerm *absConst);
   Bool processArray(OZ_Term arrayTerm, ConstTerm *arrayConst);
   void processSync();

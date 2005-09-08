@@ -3339,26 +3339,25 @@ OZ_BI_define(BInewCell,1,1)
 } OZ_BI_end
 
 
-OZ_Return accessCell(OZ_Term cell,OZ_Term &out)
+OZ_Return accessCell(OZ_Term term, OZ_Term &out)
 {
-  Tertiary *tert= (Tertiary *) tagged2Const(cell);
-  if(tert->isDistributed() && !(*cellDoAccess)(tert, out))
+  OzCell *cell = tagged2Cell(term);
+  if (cell->isDistributed() && !(*cellDoAccess)(cell, out))
     return BI_REPLACEBICALL;
 
-  out = ((CellLocal*)tert)->getValue();
+  out = cell->getValue();
 
   return PROCEED;
 }
 
-OZ_Return exchangeCell(OZ_Term cell, OZ_Term newVal, OZ_Term &oldVal)
+OZ_Return exchangeCell(OZ_Term term, OZ_Term newVal, OZ_Term &oldVal)
 {
   Assert(!oz_isVar(newVal));
-  Tertiary *tert = (Tertiary *) tagged2Const(cell);
-  if(tert->isDistributed() && !(*cellDoExchange)(tert, oldVal, newVal))
+  OzCell *cell = tagged2Cell(term);
+  if(cell->isDistributed() && !(*cellDoExchange)(cell, oldVal, newVal))
     return BI_REPLACEBICALL;
-  CellLocal *cellLocal=(CellLocal*)tert;
-  CheckLocalBoard(cellLocal,"cell");
-  oldVal = cellLocal->exchangeValue(newVal);
+  CheckLocalBoard(cell,"cell");
+  oldVal = cell->exchangeValue(newVal);
   return PROCEED;
 }
 
@@ -3727,26 +3726,10 @@ SRecord *getRecordFromState(RecOrCell state)
   if (!stateIsCell(state))
     return getRecord(state);
 
-  Tertiary *t=getCell(state);          // shortcut
-  if(!t->isDistributed()) { // can happen if globalized object becomes localized again
-    return tagged2SRecord(oz_deref(((CellLocal*)t)->getValue()));
+  OzCell *c = getCell(state);          // shortcut
+  if(!c->isDistributed()) { // can happen if globalized object becomes localized again
+    return tagged2SRecord(oz_deref(c->getValue()));
   }
-  /*
-  if(!t->isProxy()) {
-    CellSecEmul* sec;
-    if(t->getTertType()==Te_Frame) {
-      sec=((CellFrameEmul*)t)->getSec();
-    } else {
-      sec=((CellManagerEmul*)t)->getSec();
-    }
-    if(sec->getState()==Cell_Lock_Valid) {
-      TaggedRef old = oz_deref(sec->getContents());
-      Assert(!oz_isRef(old));
-      if (!oz_isVarOrRef(old))
-	return tagged2SRecord(old);
-    }
-  }
-  */
   return NULL;
 }
   
@@ -3770,10 +3753,10 @@ OZ_Return stateAt(RecOrCell state, OZ_Term fea, OZ_Term &old){
   }
   
   old=oz_newVariable();  
-  Tertiary *t=getCell(state);          // shortcut
+  OzCell *cell = getCell(state);          // shortcut
   if (oz_onToplevel()) {
-    return (*cellAtExchange)(t,fea,old);}
-  return (*cellAtAccess)(t,fea,old);
+    return (*cellAtExchange)(cell, fea, old);}
+  return (*cellAtAccess)(cell, fea, old);
 }
 
 OZ_Return stateLevelError(TaggedRef fea,TaggedRef newVal){
@@ -3794,8 +3777,8 @@ OZ_Return stateAssign(RecOrCell state, OZ_Term fea, OZ_Term neW){
   }
 
   if (!oz_onToplevel()) {return stateLevelError(fea,neW);}
-  Tertiary *t=getCell(state);          // shortcut
-  return (*cellAssignExchange)(t,fea,neW);
+  OzCell *cell = getCell(state);          // shortcut
+  return (*cellAssignExchange)(cell, fea, neW);
 }
 
 inline
@@ -3812,9 +3795,9 @@ OZ_Return stateExch(RecOrCell state, OZ_Term fea, OZ_Term &old, OZ_Term neW){
     oz_typeError(0,"(valid) Feature");}
   
   old=oz_newVariable();
-  Tertiary *t=getCell(state);          // shortcut
+  OzCell *cell = getCell(state);          // shortcut
   if (!oz_onToplevel()) {return stateLevelError(fea,neW);} 
-  return (*objectExchange)(t,fea,old,neW);
+  return (*objectExchange)(cell, fea, old, neW);
 }
 
 //perdio interface to engine inline object functions
@@ -3826,18 +3809,18 @@ SRecord *getState(RecOrCell state, Bool isAssign, OZ_Term fea,OZ_Term &val)
     return aux;}
   
   int EmCode;
-  Tertiary *t=getCell(state);          // shortcut
+  OzCell *cell = getCell(state);          // shortcut
 
   if (oz_onToplevel()) {
     if(isAssign) {
-      EmCode = (*cellAssignExchange)(t,fea,val);
+      EmCode = (*cellAssignExchange)(cell, fea, val);
     } else {
       val= oz_newVariable();
-      EmCode = (*cellAtAccess)(t,fea,val);
+      EmCode = (*cellAtAccess)(cell, fea, val);
     }
   } else {
     if(!isAssign) val = oz_newVariable();
-    EmCode = (*cellAtAccess)(t,fea,val);
+    EmCode = (*cellAtAccess)(cell, fea, val);
   }
 
   Assert(EmCode==BI_REPLACEBICALL);

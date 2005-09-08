@@ -139,7 +139,7 @@ void annotateEntity(TaggedRef entity, int a) {
   // lookup for existing mediator, and create if not present
   Mediator *med = mediatorTable->lookup(entity);
   if (med == NULL)
-    med = new CellMediator(static_cast<Tertiary*>(tagged2Const(entity)));
+    med = new CellMediator(tagged2Const(entity));
 
   // annotate
   med->annotate(a);
