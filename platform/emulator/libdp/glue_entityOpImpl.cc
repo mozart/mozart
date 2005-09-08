@@ -392,15 +392,22 @@ OZ_Return distVarDoUnify(ProxyVar* lpv,ProxyVar* rpv, TaggedRef *lPtr, TaggedRef
   return PROCEED;
 }
 
+
 // bind a distributed variable
 OZ_Return distVarBindImpl(OzVariable *ov, TaggedRef *varPtr, TaggedRef val) {
   printf("--- raph: bind distributed variable %x\n", makeTaggedRef(varPtr));
   Assert(ov == tagged2Var(*varPtr));
-  Mediator *med = static_cast<Mediator *> (ov->getMediator());
+  Mediator *med = static_cast<Mediator*>(ov->getMediator());
   MonotonicAbstractEntity *ae =
-    static_cast<MonotonicAbstractEntity *> (med->getAbstractEntity());
+    static_cast<MonotonicAbstractEntity*>(med->getAbstractEntity());
 
-  // ask the abstract entity
+  // if not distributed, simply bind locally
+  if (ae == NULL) {
+    oz_bindLocalVar(ov, varPtr, val);
+    return PROCEED;
+  }
+
+  // otherwise ask the abstract entity
   DssThreadId *thrId = getThreadId();
   PstOutContainerInterface** pstout;
   OpRetVal cont = ae->abstractOperation_Bind(thrId, pstout);
@@ -437,57 +444,40 @@ OZ_Return distVarBindImpl(OzVariable *ov, TaggedRef *varPtr, TaggedRef val) {
   }
 }
 
-// unify two distributed variables
+
+// unify two distributed variables (left hand side must be free)
 OZ_Return distVarUnifyImpl(OzVariable *lvar, TaggedRef *lptr,
 			   OzVariable *rvar, TaggedRef *rptr) {
   printf("--- raph: unify distributed variables %x and %x\n",
 	 makeTaggedRef(lptr), makeTaggedRef(rptr));
   Assert(lptr != rptr);
   Assert(lvar == tagged2Var(*lptr) && rvar == tagged2Var(*rptr));
-  Assert(lvar->isDistributed() && rvar->isDistributed());
-  Assert(oz_isFree(*lptr) || oz_isFree(*rptr));
+  Assert(lvar->hasMediator() && rvar->hasMediator());
+  Assert(oz_isFree(*lptr));
 
   OzVariableMediator *lmed, *rmed;
   MonotonicAbstractEntity *lae, *rae;
-  lmed = static_cast<OzVariableMediator *> (lvar->getMediator());
-  rmed = static_cast<OzVariableMediator *> (rvar->getMediator());
-  lae = static_cast<MonotonicAbstractEntity *> (lmed->getAbstractEntity());
-  rae = static_cast<MonotonicAbstractEntity *> (rmed->getAbstractEntity());
+  lmed = static_cast<OzVariableMediator*>(lvar->getMediator());
+  rmed = static_cast<OzVariableMediator*>(rvar->getMediator());
+  lae = static_cast<MonotonicAbstractEntity*>(lmed->getAbstractEntity());
+  rae = static_cast<MonotonicAbstractEntity*>(rmed->getAbstractEntity());
 
-  // determine which (med, ae) is bound to which (target)
-  bool l2r = (oz_isFree(*lptr) && oz_isFree(*rptr) ?
-	      dss->m_orderEntities(lae, rae) : oz_isFree(*lptr));
-  Mediator *med               = (l2r ? lmed : rmed);
-  MonotonicAbstractEntity *ae = (l2r ? lae : rae);
-  TaggedRef target            = (l2r ? rmed->getEntity() : lmed->getEntity());
-
-  // propagate need if necessary
+  // first propagate need
   if (oz_isNeeded(*lptr)) oz_var_makeNeeded(rptr);
-  if (oz_isNeeded(*rptr)) oz_var_makeNeeded(lptr);
+  else { if (oz_isNeeded(*rptr)) oz_var_makeNeeded(lptr); }
 
-  // ask the abstract entity
-  DssThreadId *thrId = getThreadId();
-  PstOutContainerInterface** pstout;
-  OpRetVal cont = ae->abstractOperation_Bind(thrId, pstout);
-  if (pstout != NULL) *(pstout) = new PstOutContainer(target);
-
-  switch(cont){
-  case DSS_PROCEED:
-    return PROCEED;
-  case DSS_SUSPEND:
-    thrId->setThreadMediator(new SuspendedVarBind(target, med));
-    return SUSPEND;
-  case DSS_SKIP: // error
-    OZ_error("Unexpected skip operation");
-    return PROCEED;
-  case DSS_RAISE:
-  case DSS_INTERNAL_ERROR_NO_OP:
-  case DSS_INTERNAL_ERROR_NO_PROXY:
-  default: 
-    OZ_error("Not Handled, varUnify");
-    return PROCEED; 
+  // then determine which binds to which
+  //  (1) bind free to read-only;
+  //  (2) if both free, bind local to distributed;
+  //  (3) if both free and distributed, use dss ordering.
+  if (!oz_isFree(*rptr) || (lae == NULL) ||
+      (rae && dss->m_orderEntities(lae, rae))) {
+    return distVarBindImpl(lvar, lptr, rmed->getEntity()); // left-to-right
+  } else {
+    return distVarBindImpl(rvar, rptr, lmed->getEntity()); // right-to-left
   }
 }
+
 
 // make a distributed variable needed
 OZ_Return distVarMakeNeededImpl(TaggedRef *varPtr) {
@@ -500,7 +490,10 @@ OZ_Return distVarMakeNeededImpl(TaggedRef *varPtr) {
   MonotonicAbstractEntity *ae =
     static_cast<MonotonicAbstractEntity *> (med->getAbstractEntity());
 
-  // ask the abstract entity
+  // if not distributed, return
+  if (ae == NULL) return PROCEED;
+
+  // otherwise ask the abstract entity
   DssThreadId *thrId = getThreadId();
   PstOutContainerInterface** pstout;
   OpRetVal cont = ae->abstractOperation_Append(thrId, pstout);

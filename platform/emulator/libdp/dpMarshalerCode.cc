@@ -591,7 +591,7 @@ void DPMARSHALERCLASS::processVar(OZ_Term v, OZ_Term *vRef)
     } else if (oz_isFree(v) || oz_isReadOnly(v)) {
       // globalize if needed
       OzVariable *var = tagged2Var(v);
-      if (!var->isDistributed()) var = glue_globalizeOzVariable(vRef);
+      var = glue_globalizeOzVariable(vRef);
       Assert(oz_isVar(*vRef));
       // marshal it
       glue_marshalOzVariable(bs, vRef, index, isPushContents());

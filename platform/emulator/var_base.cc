@@ -165,9 +165,9 @@ OZ_Return oz_var_unify(OzVariable *lvar, TaggedRef *lptr, TaggedRef *rptr) {
   // attempt a distributed operation if (1) the binding is done at the
   // toplevel and is not an '==', and (2) the variable is distributed,
   // and (3) the variable is free
-  if (oz_isLocalVar(lvar) && lvar->isDistributed() && oz_isFree(*lptr)) {
+  if (oz_isLocalVar(lvar) && lvar->hasMediator() && oz_isFree(*lptr)) {
     OzVariable *rvar = tagged2Var(*rptr);
-    if (rvar->isDistributed()) // both sides are distributed
+    if (rvar->hasMediator()) // both sides are distributed
       return (*distVarUnify)(lvar, lptr, rvar, rptr);
     if (!oz_isFree(*rptr)) // right-hand side is local and not free
       return (*distVarBind)(lvar, lptr, makeTaggedRef(rptr));
@@ -183,7 +183,7 @@ OZ_Return oz_var_bind(OzVariable *ov,TaggedRef *ptr,TaggedRef val) {
   // attempt a distributed operation if (1) the binding is done at the
   // toplevel and is not an '==', and (2) the variable is distributed,
   // and (3) the variable is free
-  if (oz_isLocalVar(ov) && ov->isDistributed() && oz_isFree(*ptr))
+  if (oz_isLocalVar(ov) && ov->hasMediator() && oz_isFree(*ptr))
     return (*distVarBind)(ov, ptr, val);
   else
     return oz_var_bindLocal(ov, ptr, val);
@@ -193,7 +193,7 @@ OZ_Return oz_var_bind(OzVariable *ov,TaggedRef *ptr,TaggedRef val) {
 OZ_Return oz_var_forceBind(OzVariable *ov,TaggedRef *ptr,TaggedRef val) {
   // attempt a distributed operation if (1) the binding is done at the
   // toplevel and is not an '==', and (2) the variable is distributed
-  if (oz_isLocalVar(ov) && ov->isDistributed())
+  if (oz_isLocalVar(ov) && ov->hasMediator())
     return (*distVarBind)(ov, ptr, val);
   else
     return oz_var_forceBindLocal(ov, ptr, val);
@@ -282,7 +282,7 @@ OZ_Return oz_var_makeNeededLocal(TaggedRef *v) {
 // make a variable needed (possibly distributed)
 OZ_Return oz_var_makeNeeded(TaggedRef *v) {
   if (oz_isNeeded(*v)) return PROCEED;
-  if (tagged2Var(*v)->isDistributed()) return (*distVarMakeNeeded)(v);
+  if (tagged2Var(*v)->hasMediator()) return (*distVarMakeNeeded)(v);
   return oz_var_makeNeededLocal(v);
 }
 

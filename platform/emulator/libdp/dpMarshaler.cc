@@ -85,7 +85,7 @@ DistributedVarPatch::DistributedVarPatch(OZ_Term loc, OzValuePatch *next,
 					 OzVariable *ov)
   : OzValuePatch(loc, next), isMarshaled(NO)
 {
-  Assert(ov->isDistributed());
+  Assert(ov->hasMediator());
   isReadOnly = oz_check_var_status(ov) == EVAR_STATUS_READONLY;
   med = static_cast<Mediator*>(ov->getMediator());
 }
@@ -552,7 +552,7 @@ void VSnapshotBuilder::processVar(OZ_Term v, OZ_Term *vRef)
   } else if (oz_isFree(v) || oz_isReadOnly(v)) {
     // globalize if needed
     OzVariable *var = tagged2Var(v);
-    if (!var->isDistributed()) var = glue_globalizeOzVariable(vRef);
+    var = glue_globalizeOzVariable(vRef);
     Assert(oz_isVar(*vRef));
     // patch it
     expVars = new DistributedVarPatch(vrt, expVars, var);

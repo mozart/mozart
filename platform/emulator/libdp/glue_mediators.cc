@@ -1109,7 +1109,7 @@ void OzVariableMediator::localize() {
   } else {
     // remove completely mediator, so
     // 1. localize the variable
-    if (active) tagged2Var(oz_deref(entity))->setLocal();
+    if (active) tagged2Var(oz_deref(entity))->removeMediator();
     // 2. delete mediator
     delete this;
   }
