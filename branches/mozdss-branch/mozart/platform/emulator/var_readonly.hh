@@ -62,7 +62,7 @@ public:
   }
   void printStream(ostream &out,int depth = 10) {
     out << "<readonly";
-    if (isDistributed()) out << " distributed";
+    if (hasMediator()) out << " distributed";
     if (getType() == OZ_VAR_READONLY) out << " needed";
     out << ">";
   }

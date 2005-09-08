@@ -39,13 +39,9 @@
 #endif
 
 #if defined(DEBUG_CONSTRAINT_UNIFY)
-
 #define DEBUG_CONSTRAIN_VAR(ARGS) printf ARGS; fflush(stdout);
-
 #else
-
 #define DEBUG_CONSTRAIN_VAR(ARGS)
-
 #endif
 
 #include "tagged.hh"
@@ -54,33 +50,6 @@
 #include "value.hh"
 #include "pointer-marks.hh"
 #include "am.hh"
-
-//#define DEBUG_TELLCONSTRAINTS
-
-// NOTE:
-//   this order is used in the case of VAR=VAR unification
-//
-// kost@ : the following description (who compiled it??!), the
-// 'CMPVAR(...)'  with its usage, and the table used before (just
-// below) are contradictory!!
-// -----
-//   e.g. SimpleVariable are bound prefered
-// partial order required:
-//  Simple<<Future<<Distributed<<everything
-//  Bool<<FD
-// see int cmpVar(OzVariable *, OzVariable *)
-//
-//  enum TypeOfVariable {
-//    OZ_VAR_FD      = 0,
-//    OZ_VAR_BOOL    = 1,
-//    OZ_VAR_FS      = 2,
-//    OZ_VAR_CT      = 3,
-//    OZ_VAR_EXT     = 4,
-//    OZ_VAR_SIMPLE  = 5,
-//    OZ_VAR_FUTURE  = 6,
-//    OZ_VAR_OF      = 7
-//  };
-// -----
 
 //
 // kost@ : Now, we keep the 'cmpVar(...)'  definition, so: variables
@@ -124,11 +93,13 @@ enum TypeOfVariable {
 #define STORE_FLAG 1
 #define REIFIED_FLAG 2
 
-// raph: These two flags indicate whether a variable is distributed,
-// and trailed.  They are orthogonal, since a distributed variable can
-// be speculatively bound inside a computation space.
-#define VAR_DISTRIBUTED 0x1
-#define VAR_TRAILED     0x2
+// raph: The flag VAR_MEDIATOR indicates that a mediator is attached
+// to the variable.  The mediator is used for distribution, and can be
+// present without the variable being distributed.  VAR_TRAILED is
+// used for trailing.  Both flags are orthogonal, since a distributed
+// variable can be speculatively bound inside a computation space.
+#define VAR_MEDIATOR 0x1
+#define VAR_TRAILED  0x2
 
 
 #define DISPOSE_SUSPLIST(SL)			\
@@ -166,7 +137,7 @@ private:
 		 u_mask = 3};
 
   // tagged pointer to either a home space (if the variable is local),
-  // or a dss mediator (if the variable is distributed)
+  // or a glue mediator (if the variable is distributed)
   Tagged2 homeOrMediator;
 
 protected:
@@ -200,11 +171,10 @@ public:
 
   // get/set the variable's home
   Board *getBoardInternal() {
-    if (isDistributed()) return oz_rootBoard();
-    return (Board *) homeOrMediator.getPtr();
+    return (hasMediator() ? oz_rootBoard() : (Board*) homeOrMediator.getPtr());
   }
   void setHome(Board *h) {
-    Assert(!isDistributed());
+    Assert(!hasMediator());
     homeOrMediator.setPtr(h);
   }
 
@@ -219,29 +189,22 @@ public:
     homeOrMediator.bandTag(~VAR_TRAILED);  // bitwise and with tag
   }
 
-  // test whether the variable is distributed
-  Bool isDistributed() {
-    return homeOrMediator.getTag() & VAR_DISTRIBUTED;
+  // test whether the variable has a mediator
+  Bool hasMediator() {
+    return homeOrMediator.getTag() & VAR_MEDIATOR;
   }
-
-  // set both distribution flag and home/mediator
-  void setDistributed(void *mediator) {
-    int trailtag = homeOrMediator.getTag() & VAR_TRAILED;
-    homeOrMediator.set(mediator, VAR_DISTRIBUTED | trailtag);
-  }
-  void setLocal() {
-    int trailtag = homeOrMediator.getTag() & VAR_TRAILED;
-    homeOrMediator.set(oz_rootBoard(), trailtag);
-  }
-
-  // get/set the variable's mediator (the variable must be distributed)
+  // get/set/remove the variable's mediator, and set VAR_MEDIATOR tag
   void *getMediator() {
-    Assert(isDistributed());
+    Assert(hasMediator());
     return homeOrMediator.getPtr();
   }
   void setMediator(void *mediator) {
-    Assert(isDistributed());
-    homeOrMediator.setPtr(mediator);
+    int trailtag = homeOrMediator.getTag() & VAR_TRAILED;
+    homeOrMediator.set(mediator, VAR_MEDIATOR | trailtag);
+  }
+  void removeMediator() {
+    int trailtag = homeOrMediator.getTag() & VAR_TRAILED;
+    homeOrMediator.set(oz_rootBoard(), trailtag);
   }
 
   // suspension list stuff

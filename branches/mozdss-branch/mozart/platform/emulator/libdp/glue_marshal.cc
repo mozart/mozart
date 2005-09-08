@@ -103,18 +103,20 @@ ProxyVar* glue_newGlobalizeFreeVariable(TaggedRef *tPtr)
   return (mv);
 }
 
-// globalize a variable
+// globalize a variable (if necessary)
 OzVariable *glue_globalizeOzVariable(TaggedRef *vPtr) {
-  printf("--- raph: globalize var %x\n", makeTaggedRef(vPtr));
-  Assert(oz_isVar(*vPtr));
-  Assert(!(tagged2Var(*vPtr)->isDistributed()));
   Assert(oz_isFree(*vPtr) || oz_isReadOnly(*vPtr));
 
-  // create mediator and globalize
+  // get a mediator, and globalize if necessary
   OzVariable *var = oz_getNonOptVar(vPtr);
-  OzVariableMediator *med = new OzVariableMediator(makeTaggedRef(vPtr), NULL);
-  var->setDistributed(med);
-  med->globalize();
+  OzVariableMediator *med;
+  if (var->hasMediator())
+    med = static_cast<OzVariableMediator*>(var->getMediator());
+  else {
+    med = new OzVariableMediator(makeTaggedRef(vPtr), NULL);
+    var->setMediator(med);
+  }
+  if (med->getAbstractEntity() == NULL) med->globalize();
   return var;
 }
 
@@ -539,7 +541,7 @@ void ProxyVar::marshal(ByteBuffer *bs, Bool hasIndex, TaggedRef* vRef, Bool push
 
 void glue_marshalOzVariable(ByteBuffer *bs, TaggedRef *vPtr,
 			    Bool hasIndex, Bool push) {
-  Assert(tagged2Var(*vPtr)->isDistributed());
+  // assumption: the variable is distributed
 
   // marshal emulator-specific data
   MarshalTag tag = (oz_isReadOnly(*vPtr) ?
@@ -549,7 +551,8 @@ void glue_marshalOzVariable(ByteBuffer *bs, TaggedRef *vPtr,
 
   // marshal dss-specific data
   OzVariable *var = tagged2Var(*vPtr);
-  Mediator *med = static_cast<Mediator*> (var->getMediator());
+  Mediator *med = static_cast<Mediator*>(var->getMediator());
+  Assert(med->getAbstractEntity());
   CoordinatorAssistantInterface *cai = med->getCoordinatorAssistant();
   GlueWriteBuffer *gwb = static_cast<GlueWriteBuffer*> (bs);
   bool done = cai->marshal(gwb, (push ? PMF_PUSH : PMF_ORDINARY));
@@ -579,8 +582,7 @@ OZ_Term glue_unmarshalOzVariable(ByteBuffer* bs, Bool isReadOnly) {
     TaggedRef *ptr = tagged2Ref(ref);
     OzVariable *var = tagged2Var(*ptr);
 
-    med = new OzVariableMediator(ref, ae);
-    var->setDistributed(med);
+    var->setMediator(new OzVariableMediator(ref, ae));
     return ref;
   }
 }

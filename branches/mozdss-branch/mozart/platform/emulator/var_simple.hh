@@ -63,7 +63,7 @@ public:
 
   void printStream(ostream &out,int depth = 10) {
     out << "<simple";
-    if (isDistributed()) out << " distributed";
+    if (hasMediator()) out << " distributed";
     if (getType() == OZ_VAR_SIMPLE) out << " needed";
     out << ">";
   }

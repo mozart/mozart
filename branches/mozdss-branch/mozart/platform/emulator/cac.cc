@@ -875,8 +875,8 @@ OzVariable * OzVariable::_cacVarInline(void) {
   Assert(!isTrailed());
 
   // raph: Distributed variables are toplevel, so we don't need to cac
-  // their board.  However we must take care of its mediator.
-  Board *bb = (isDistributed() ? NULL : getBoardInternal()->_cacBoard());
+  // their board.  However we must take care of their mediator.
+  Board *bb = (hasMediator() ? NULL : getBoardInternal()->_cacBoard());
 
   OzVariable * to;
 
@@ -955,7 +955,6 @@ void OzVariable::_cacVarRecurse(void) {
   case OZ_VAR_READONLY_QUIET:
   case OZ_VAR_READONLY:
     // only for distributed variables, to collect their mediator
-    Assert(isDistributed());
     (*gCollectMediator)(getMediator());
     break;
   case OZ_VAR_FAILED:  
