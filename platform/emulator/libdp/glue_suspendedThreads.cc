@@ -92,7 +92,7 @@ SuspendedCellAccess::SuspendedCellAccess(Mediator* med, OZ_Term var):
 
 WakeRetVal SuspendedCellAccess::resumeDoLocal(DssOperationId*){
   CellMediator *pM = static_cast<CellMediator*>(a_mediator);
-  CellLocal *cell     = static_cast<CellLocal*>(pM->getConst());
+  OzCell *cell     = static_cast<OzCell*>(pM->getConst());
   OZ_Term contents = cell->getValue();
   oz_unify(a_var,contents);
   resume();
@@ -115,7 +115,7 @@ SuspendedCellExchange::SuspendedCellExchange(Mediator* med, OZ_Term newVal, OZ_T
 
 WakeRetVal SuspendedCellExchange::resumeDoLocal(DssOperationId*){
   CellMediator *pM = static_cast<CellMediator*>(a_mediator);
-  CellLocal *cell  = static_cast<CellLocal*>(pM->getConst());
+  OzCell *cell  = static_cast<OzCell*>(pM->getConst());
   OZ_Term contents = cell->exchangeValue(a_newVal); 
   oz_unify(a_var,contents);
   resume();

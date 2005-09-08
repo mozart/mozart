@@ -498,7 +498,7 @@ void VSnapshotBuilder::processLock(OZ_Term lockTerm, Tertiary *tert)
   VisitNodeTrav(lockTerm, vIT, return);
 }
 inline 
-Bool VSnapshotBuilder::processCell(OZ_Term cellTerm, Tertiary *tert)
+Bool VSnapshotBuilder::processCell(OZ_Term cellTerm, ConstTerm *cellConst)
 {
   VisitNodeTrav(cellTerm, vIT, return(TRUE));
   return (TRUE);
@@ -1414,10 +1414,6 @@ OZ_Term dpUnmarshalTerm(ByteBuffer *bs, Builder *b)
 	break;
       }
 
-      //bmc: The two cases considering the owner has dissapeared
-      //bmc: I still have to take a look with the other types of data
-      //bmc: I have to consider the new Cells and Locks.
-      //
     case DIF_OWNER_DEF:
     case DIF_OWNER:
     case DIF_PORT_DEF:

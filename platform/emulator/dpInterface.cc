@@ -44,36 +44,36 @@ bool portSendStub(Tertiary *p, TaggedRef msg)
   OZD_error("'portSend' called without DP library?");
   return true;
 }
-bool cellDoExchangeStub(Tertiary*,TaggedRef&,TaggedRef)
+bool cellDoExchangeStub(OzCell*,TaggedRef&,TaggedRef)
 {
   OZD_error("'cellDoExchange' called without DP library?");
   return true;
 }
-OZ_Return objectExchangeStub(Tertiary*,TaggedRef,TaggedRef,TaggedRef)
+OZ_Return objectExchangeStub(OzCell*,TaggedRef,TaggedRef,TaggedRef)
 {
   OZD_error("'objectExchange' called without DP library?");
   return (PROCEED);
 }
-bool cellDoAccessStub(Tertiary*,TaggedRef&)
+bool cellDoAccessStub(OzCell*,TaggedRef&)
 {
   OZD_error("'cellDoAccess' called without DP library?");
   return true;
 }
-void cellOperationDoneStub(Tertiary*,TaggedRef){
+void cellOperationDoneStub(OzCell*,TaggedRef){
   OZD_error("'cellDoAccess' called without DP library?");
 }
 
-OZ_Return cellAtAccessStub(Tertiary*,TaggedRef,TaggedRef)
+OZ_Return cellAtAccessStub(OzCell*,TaggedRef,TaggedRef)
 {
   OZD_error("'cellAtAccess' called without DP library?");
   return (PROCEED);
 }
-OZ_Return cellAtExchangeStub(Tertiary*,TaggedRef,TaggedRef)
+OZ_Return cellAtExchangeStub(OzCell*,TaggedRef,TaggedRef)
 {
   OZD_error("'cellAtExchange' called without DP library?");
   return (PROCEED);
 }
-OZ_Return cellAssignExchangeStub(Tertiary*,TaggedRef,TaggedRef)
+OZ_Return cellAssignExchangeStub(OzCell*,TaggedRef,TaggedRef)
 {
   OZD_error("'cellAssignExchange' called without DP library?");
   return (PROCEED);
@@ -158,17 +158,17 @@ Bool (*isPerdioInitialized)() = isPerdioInitializedStub;
 // 
 bool (*portSend)(Tertiary *p, TaggedRef msg)
   = portSendStub;
-bool (*cellDoExchange)(Tertiary*,TaggedRef&,TaggedRef)
+bool (*cellDoExchange)(OzCell*,TaggedRef&,TaggedRef)
   = cellDoExchangeStub;
-OZ_Return (*objectExchange)(Tertiary*,TaggedRef,TaggedRef,TaggedRef)
+OZ_Return (*objectExchange)(OzCell*,TaggedRef,TaggedRef,TaggedRef)
   = objectExchangeStub;
-bool (*cellDoAccess)(Tertiary*,TaggedRef&)
+bool (*cellDoAccess)(OzCell*,TaggedRef&)
   = cellDoAccessStub;
-OZ_Return (*cellAtAccess)(Tertiary*,TaggedRef,TaggedRef)
+OZ_Return (*cellAtAccess)(OzCell*,TaggedRef,TaggedRef)
   = cellAtAccessStub;
-OZ_Return (*cellAtExchange)(Tertiary*,TaggedRef,TaggedRef)
+OZ_Return (*cellAtExchange)(OzCell*,TaggedRef,TaggedRef)
   = cellAtExchangeStub;
-OZ_Return (*cellAssignExchange)(Tertiary*,TaggedRef,TaggedRef)
+OZ_Return (*cellAssignExchange)(OzCell*,TaggedRef,TaggedRef)
   = cellAssignExchangeStub;
 
 // distributed variables
@@ -180,7 +180,7 @@ OZ_Return (*distVarMakeNeeded)(TaggedRef*)
   = distVarMakeNeededStub;
 
 // experimental 
-void (*cellOperationDone)(Tertiary*,TaggedRef)
+void (*cellOperationDone)(OzCell*,TaggedRef)
   =cellOperationDoneStub;
 
 // lock/unlock (interface) methods/their usage may be optimized

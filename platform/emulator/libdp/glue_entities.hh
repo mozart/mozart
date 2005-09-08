@@ -58,19 +58,6 @@ public:
   }
 };
 
-/************************ A Cell ************************/
-
-class CellProxy : public Tertiary {
-private:
-  int holder; // mm2: on alpha sizeof(int) != sizeof(void *)
-  void *dummy; // mm2
-public:
-  NO_DEFAULT_CONSTRUCTORS(CellProxy)
-
-    CellProxy():Tertiary(NOT_USED_INDEX,Co_Cell,Te_Proxy){  // on import
-    holder = 0;}
-};
-
 /************************ Lock Proxy **********************/
 
 class LockProxy : public LockLocal{

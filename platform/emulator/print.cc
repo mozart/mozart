@@ -695,30 +695,15 @@ void ConstTerm::printLongStream(ostream &stream, int depth, int offset)
     ((ObjectClass *) this)->printLongStream(stream,depth,offset);
     break;
   case Co_Cell:	      
-    switch(((Tertiary *)this)->getTertType()){
-    case Te_Local:
-      stream << "CellLocal@" << this;
-      break;
-    case Te_Frame:
-      stream << "CellFrame@" << this;
-      break;
-    case Te_Manager:
-      stream << "CellManager@" << this;
-      break;
-    case Te_Proxy:
-      stream << "CellProxy@" << this;
-      break;
-    default:
-      Assert(NO);
-    }
+    if (((OzCell *)this)->isDistributed())
+      stream << "Proxy Cell@" << this;
+    else
+      stream << "Local Cell@" << this;    
     break;
   case Co_Port:	      
     switch(((Tertiary *)this)->getTertType()){
     case Te_Local:
       stream << "PortLocal@" << this;
-      break;
-    case Te_Manager:
-      stream << "PortManager@" << this;
       break;
     case Te_Proxy:
       stream << "PortProxy@" << this;
@@ -743,12 +728,6 @@ void ConstTerm::printLongStream(ostream &stream, int depth, int offset)
     switch(((Tertiary *)this)->getTertType()){
     case Te_Local:
       stream << "<LockLocal@" << this << ">";
-      break;
-    case Te_Frame:
-      stream << "<LockFrame@" << this << ">";
-      break;
-    case Te_Manager:
-      stream << "<LockManager@" << this << ">";
       break;
     case Te_Proxy:
       stream << "<LockProxy@" << this << ">";
@@ -791,30 +770,15 @@ void ConstTerm::printStream(ostream &stream, int depth)
   case Co_Class:       ((ObjectClass *) this)->printStream(stream,depth);
     break;
   case Co_Cell:
-    switch(((Tertiary *)this)->getTertType()){
-    case Te_Local:
-      stream << "CellLocal@" << this;
-      break;
-    case Te_Frame:
-      stream << "CellFrame@" << this;
-      break;
-    case Te_Manager:
-      stream << "CellManager@" << this;
-      break;
-    case Te_Proxy:
+    if (((OzCell *)this)->isDistributed())
       stream << "CellProxy@" << this;
-      break;
-    default:
-      Assert(NO);
-    }
+    else
+      stream << "CellLocal@" << this;
     break;
   case Co_Port:
     switch(((Tertiary *)this)->getTertType()){
     case Te_Local:
       stream << "PortLocal@" << this;
-      break;
-    case Te_Manager:
-      stream << "PortManager@" << this;
       break;
     case Te_Proxy:
       stream << "PortProxy@" << this;
@@ -835,12 +799,6 @@ void ConstTerm::printStream(ostream &stream, int depth)
     switch(((Tertiary *)this)->getTertType()){
     case Te_Local:
       stream << "<LockLocal@" << this << ">";
-      break;
-    case Te_Frame:
-      stream << "<LockFrame@" << this << ">";
-      break;
-    case Te_Manager:
-      stream << "<LockManager@" << this << ">";
       break;
     case Te_Proxy:
       stream << "<LockProxy@" << this << ">";

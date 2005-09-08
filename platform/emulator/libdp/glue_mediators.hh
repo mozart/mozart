@@ -253,8 +253,8 @@ public:
 // mediators for Oz cells
 class CellMediator: public ConstMediator, public MutableMediatorInterface{
 public:
-  CellMediator(Tertiary *t);
-  CellMediator(AbstractEntity *p, Tertiary *t);
+  CellMediator(ConstTerm *c);
+  CellMediator(ConstTerm *c, AbstractEntity *p);
   
   virtual AOcallback callback_Write(DssThreadId* id_of_calling_thread,
 				    DssOperationId* operation_id,

@@ -39,14 +39,14 @@ extern Bool (*isPerdioInitialized)();
  
 // 
 extern bool (*portSend)(Tertiary *p, TaggedRef msg);
-extern bool (*cellDoExchange)(Tertiary*,TaggedRef&,TaggedRef);
-extern bool (*cellDoAccess)(Tertiary*,TaggedRef&);
-extern OZ_Return (*cellAtAccess)(Tertiary*,TaggedRef,TaggedRef);
-extern OZ_Return (*cellAtExchange)(Tertiary*,TaggedRef,TaggedRef);
-extern OZ_Return (*cellAssignExchange)(Tertiary*,TaggedRef,TaggedRef);
-extern OZ_Return (*objectExchange) (Tertiary*,TaggedRef,TaggedRef,TaggedRef);
+extern bool (*cellDoExchange)(OzCell*,TaggedRef&,TaggedRef);
+extern bool (*cellDoAccess)(OzCell*,TaggedRef&);
+extern OZ_Return (*cellAtAccess)(OzCell*,TaggedRef,TaggedRef);
+extern OZ_Return (*cellAtExchange)(OzCell*,TaggedRef,TaggedRef);
+extern OZ_Return (*cellAssignExchange)(OzCell*,TaggedRef,TaggedRef);
+extern OZ_Return (*objectExchange) (OzCell*,TaggedRef,TaggedRef,TaggedRef);
 // Experimental, just for testing the behavior of the GDS PROC_EXEC
-extern void (*cellOperationDone)(Tertiary*,TaggedRef);
+extern void (*cellOperationDone)(OzCell*,TaggedRef);
 
 // distributed variables
 extern OZ_Return (*distVarBind)(OzVariable*, TaggedRef*, TaggedRef);
@@ -61,15 +61,6 @@ extern bool (*distArrayGet)(OzArray*, TaggedRef, TaggedRef&);
 extern bool (*distArrayPut)(OzArray*, TaggedRef, TaggedRef);
 
 extern void (*gCollectMediator)(void *med);
-/*
-extern void (*gCollectManagerRecurse)(Tertiary *t);
-extern ConstTerm* (*gCollectDistResource)(ConstTerm*);
-extern void (*gCollectDistCellRecurse)(Tertiary *t);
-extern void (*gCollectDistLockRecurse)(Tertiary *t);
-extern void (*gCollectDistPortRecurse)(Tertiary *t);
-//
-extern void (*gCollectEntityInfo)(Tertiary*);
-*/
 //
 //
 

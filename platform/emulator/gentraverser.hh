@@ -592,7 +592,7 @@ protected:
   void processBuiltin(OZ_Term biTerm, ConstTerm *biConst);
   // 'Tertiary' OzConst"s;
   void processLock(OZ_Term lockTerm, Tertiary *lockTert);
-  Bool processCell(OZ_Term cellTerm, Tertiary *cellTert);
+  Bool processCell(OZ_Term cellTerm, ConstTerm *cellConst);
   void processPort(OZ_Term portTerm, Tertiary *portTert);
   void processResource(OZ_Term resTerm, Tertiary *tert);
   // anything else:
@@ -2130,7 +2130,7 @@ public:
 
   //
   void buildClonedCell() {
-    CellLocal *c = new CellLocal(oz_currentBoard(), oz_int(0));
+    OzCell *c = new OzCell(oz_currentBoard(), oz_int(0));
     buildValue(makeTaggedConst(c));
     GetBTFrame(frame);
     EnsureBTSpace(frame, 1);
@@ -2138,7 +2138,7 @@ public:
     SetBTFrame(frame);
   }
   void buildClonedCellRemember(int n) {
-    CellLocal *c = new CellLocal(oz_currentBoard(), oz_int(0));
+    OzCell *c = new OzCell(oz_currentBoard(), oz_int(0));
     OZ_Term cell = makeTaggedConst(c);
     buildValue(cell);
     setTerm(cell, n);

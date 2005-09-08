@@ -231,9 +231,8 @@ void TRAVERSERCLASS::doit()
 	  break;
 
 	case Co_Cell:
-	  if (!processCell(t, (Tertiary *) ct) && 
-	      !((Tertiary *) ct)->isDistributed()) {
-	    t = ((CellLocal *) ct)->getValue();
+	  if (!processCell(t, ct) && !(static_cast<OzCell*>(ct)->isDistributed())) {
+	    t = static_cast<OzCell*>(ct)->getValue();
 	    continue;
 	  }
 	  break;

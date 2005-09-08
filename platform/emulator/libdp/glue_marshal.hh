@@ -42,7 +42,8 @@ void glue_marshalTertiary(ByteBuffer *bs, Tertiary *t, Bool push);
 OZ_Term glue_unmarshalObjectStub(ByteBuffer *bs);
 void  glue_marshalObjectStubInternal(Object*,ByteBuffer *bs);
 void glue_marshalArray(ByteBuffer *bs, ConstTermWithHome *arrayConst);
-void glue_marshalDictionary(ByteBuffer *bs, ConstTermWithHome *arrayConst);
+void glue_marshalDictionary(ByteBuffer *bs, ConstTermWithHome *dictConst);
+void glue_marshalCell(ByteBuffer *bs, ConstTermWithHome *cellConst);
 void glue_marshalUnusable(ByteBuffer *bs, TaggedRef tr); 
 void  glue_marshalOzThread(ByteBuffer *bs, TaggedRef tr); 
 /* GLobalization of the tertiaries and variables. */

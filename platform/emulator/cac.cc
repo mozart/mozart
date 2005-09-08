@@ -1309,9 +1309,6 @@ void ConstTerm::_cacConstRecurse(void) {
       case Te_Proxy:   // PER-LOOK is this possible?
 	(*gCollectMediator)((void*)o->getTertIndex());
 	break;
-      case Te_Manager: 
-	OZ_error("Managers are arcane, and should be extingt by now (ERIK)");
-	break;
 #endif
       default:         Assert(0);
       }
@@ -1366,16 +1363,14 @@ void ConstTerm::_cacConstRecurse(void) {
     
   case Co_Cell:
     {
-      Tertiary *t=(Tertiary*)this;
+      OzCell *c = (OzCell*)this;
 
 #ifdef G_COLLECT
-      if (t->isDistributed()){
-	//(*gCollectDistCellRecurse)(t);
-	(*gCollectMediator)((void*)(t->getTertIndex()));
+      if (c->isDistributed()){
+	(*gCollectMediator)((void*)(c->getMediator()));
       }
 #endif
-      CellLocal *cl=(CellLocal*)t;
-      oz_cacTerm(cl->val,cl->val);
+      oz_cacTerm(c->val, c->val);
       break;
     }
     
@@ -1549,6 +1544,10 @@ ConstTerm * ConstTerm::gCollectConstTermInline(void) {
     sz = sizeof(OzDictionary);
     goto const_withhome;
     
+  case Co_Cell:
+    sz = sizeof(OzCell);
+    goto const_withhome;
+    
   case Co_Class: 
     sz = sizeof(ObjectClass);
     goto const_withhome;
@@ -1562,10 +1561,6 @@ ConstTerm * ConstTerm::gCollectConstTermInline(void) {
     sz = sizeof(Object);
     goto const_tertiary;
 
-  case Co_Cell:
-    sz = sizeof(CellLocal);
-    goto const_tertiary;
-    
   case Co_Port:  
     sz = (((Tertiary *)this)->getTertType() == Te_Proxy) ? 
       SIZEOFPORTPROXY : sizeof(PortLocal);
@@ -1683,6 +1678,10 @@ ConstTerm *ConstTerm::sCloneConstTermInline(void) {
     sz = sizeof(OzDictionary);
     goto const_withhome;
     
+  case Co_Cell:
+    sz = sizeof(OzCell);
+    goto const_withhome;
+    
   case Co_Class: 
     sz = sizeof(ObjectClass);
     goto const_withhome;
@@ -1696,10 +1695,6 @@ ConstTerm *ConstTerm::sCloneConstTermInline(void) {
     sz = sizeof(Object);
     goto const_tertiary;
 
-  case Co_Cell:
-    sz = sizeof(CellLocal);
-    goto const_tertiary;
-    
   case Co_Port:  
     sz = sizeof(PortLocal);
     goto const_tertiary;

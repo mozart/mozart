@@ -137,8 +137,8 @@ bool lockDistLockImpl(Tertiary *l, Thread *thr){
 
 
 
-bool cellDoAccessImpl(Tertiary *p, TaggedRef &ans) {
-  CellMediator *me = static_cast<CellMediator*>(index2Me(p->getTertIndex())); 
+bool cellDoAccessImpl(OzCell *p, TaggedRef &ans) {
+  CellMediator *me = static_cast<CellMediator*>(p->getMediator()); 
   AbstractEntity *ae = me->getAbstractEntity();
   MutableAbstractEntity *mae = static_cast<MutableAbstractEntity*>(ae);
   
@@ -171,9 +171,9 @@ bool cellDoAccessImpl(Tertiary *p, TaggedRef &ans) {
 }
 
 
-bool cellDoExchangeImpl(Tertiary *p, TaggedRef &oldVal, TaggedRef newVal) {
+bool cellDoExchangeImpl(OzCell *p, TaggedRef &oldVal, TaggedRef newVal) {
   // This is used for both assign and exchange! 
-  CellMediator *me = static_cast<CellMediator*>(index2Me(p->getTertIndex())); 
+  CellMediator *me = static_cast<CellMediator*>(p->getMediator()); 
   AbstractEntity *ae = me->getAbstractEntity();
   MutableAbstractEntity *mae = static_cast<MutableAbstractEntity*>(ae);
   DssThreadId *thrId = getThreadId();
@@ -238,7 +238,7 @@ bool portSendImpl(Tertiary *p, TaggedRef msg){
   }
 }
 
-void cellOperationDoneReadImpl(Tertiary* tert, TaggedRef ans, int thid){
+void cellOperationDoneReadImpl(OzCell* cell, TaggedRef ans, int thid){
   //  DssThreadId *thrId = reinterpret_cast<DssThreadId*>(thid); 
 //    PortMediator *me = static_cast<PortMediator*>(index2Me(tert->getIndex())); 
 //    ProxyInterface *pi = me->getProxy();
@@ -248,7 +248,7 @@ void cellOperationDoneReadImpl(Tertiary* tert, TaggedRef ans, int thid){
 }
 
 
-void cellOperationDoneWriteImpl(Tertiary* tert )
+void cellOperationDoneWriteImpl(OzCell* cell)
 {
   ; 
 }
@@ -519,7 +519,7 @@ OZ_Return distVarMakeNeededImpl(TaggedRef *varPtr) {
 
 
 
-OZ_Return cellAtExchangeImpl(Tertiary* o, TaggedRef fea, TaggedRef val){
+OZ_Return cellAtExchangeImpl(OzCell* cell, TaggedRef fea, TaggedRef val){
   /*
   printf("cellAtExchange feature:%s",toC(fea));
   printf(" val:%s\n", toC(val));
@@ -534,7 +534,7 @@ OZ_Return cellAtExchangeImpl(Tertiary* o, TaggedRef fea, TaggedRef val){
 }
 
 
-OZ_Return cellAtAccessImpl(Tertiary* o, TaggedRef fea, TaggedRef val){
+OZ_Return cellAtAccessImpl(OzCell* cell, TaggedRef fea, TaggedRef val){
   /*
   printf("cellAtAccess feature:%s",toC(fea));
   printf(" val:%s\n",toC(val)); 
@@ -548,7 +548,7 @@ OZ_Return cellAtAccessImpl(Tertiary* o, TaggedRef fea, TaggedRef val){
   return PROCEED;
 }
 
-OZ_Return objectExchangeImpl(Tertiary* o, TaggedRef fea, TaggedRef oVal, TaggedRef nVal){
+OZ_Return objectExchangeImpl(OzCell* o, TaggedRef fea, TaggedRef oVal, TaggedRef nVal){
   return PROCEED;
 }
 
