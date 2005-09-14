@@ -502,14 +502,14 @@ OZ_Term  glue_unmarshalDistTerm(ByteBuffer *bs)
     case DSS_DIF_ARRAY:{
       int low  =  unmarshalNumber(bs); 
       int high =  unmarshalNumber(bs); 
-      ConstTermWithHome *ozc = new ArrayProxy(low, high);
-      ArrayMediator* me = new ArrayMediator(ozc, ae); 
+      OzArray *ozA = new OzArray(oz_currentBoard(), low, high, oz_nil());
+      ArrayMediator* me = new ArrayMediator(ozA, ae); 
       void *mediator = reinterpret_cast<void*>(me);
-      ozc->setMediator(mediator);
-      Assert(ozc->isDistributed()); 
-      Assert(ozc->getMediator() == mediator);
+      ozA->setMediator(mediator);
+      Assert(ozA->isDistributed()); 
+      Assert(ozA->getMediator() == mediator);
       //	printf("Inserting am:&d me:%d\n",(int)me, (int)(Mediator*)me); 
-      return makeTaggedConst(ozc); 
+      return makeTaggedConst(ozA); 
     }
     default: 
       OZ_error("Unknown DSS_DIF"); 
