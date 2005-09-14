@@ -59,11 +59,6 @@ public:
 };
 
 
-class ArrayProxy :public OzArray{
-public:
-  ArrayProxy(int low, int high):OzArray(oz_currentBoard(), low, high, oz_nil()){;}
-};
-
 /***************** The Variable ******************/
 #define GET_VAR(po,T) oz_get##T##Var(*((po)->getPtr()))
 #define GET_TERM(po,T) oz_get##T##Var(*((po)->getAnyPtr()))
