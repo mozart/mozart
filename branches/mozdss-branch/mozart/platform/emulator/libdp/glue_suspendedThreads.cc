@@ -1,305 +1,356 @@
+/*
+ *  Authors:
+ *    Zacharias El Banna, 2002
+ *    Erik Klintskog, 2002
+ * 
+ *  Contributors:
+ *    Raphael Collet (raph@info.ucl.ac.be)
+ * 
+ *  Copyright:
+ *    Zacharias El Banna, 2002
+ * 
+ *  Last change:
+ *    $Date$ by $Author$
+ *    $Revision$
+ * 
+ *  This file is part of Mozart, an implementation 
+ *  of Oz 3:
+ *     http://www.mozart-oz.org
+ * 
+ *  See the file "LICENSE" or
+ *     http://www.mozart-oz.org/LICENSE.html
+ *  for information on usage and redistribution 
+ *  of this file, and for a DISCLAIMER OF ALL 
+ *  WARRANTIES.
+ *
+ */
+
 #if defined(INTERFACE)
 #pragma implementation "glue_suspendedThreads.hh"
 #endif
 
-
 #include "glue_suspendedThreads.hh"
+#include "glue_interface.hh"
 #include "value.hh"
 #include "controlvar.hh"
 #include "pstContainer.hh"
 
-static SuspendedThread* g_suspenedThreadList = NULL; 
 
-// FORWARDERS....
-void doPortSend(OzPort *port, TaggedRef val, Board * home);
-OZ_Return accessCell(OZ_Term cell,OZ_Term &out);
+/************************* DssThreadIds *************************/
+
+// a small pool of available DssThreadIds (circular buffer)
+#define POOL_SIZE 16
+static DssThreadId* threadId[POOL_SIZE];
+static unsigned int first = 0;     // first available DssThreadId
+static unsigned int count = 0;     // how many DssThreadIds in the pool
+
+inline void putThreadId(DssThreadId* tid) {
+  threadId[(first+count) % POOL_SIZE] = tid; count++;
+}
+inline DssThreadId* popThreadId() {
+  int f = first; first = (f+1) % POOL_SIZE; count--; return threadId[f];
+}
+
+DssThreadId* currentThreadId() {
+  if (count == 0) putThreadId(dss->m_createDssThreadId());
+  return threadId[first];
+}
+
+void setCurrentThreadMediator(ThreadMediator* tm) {
+  popThreadId()->setThreadMediator(tm);
+}
+
+void releaseThreadId(DssThreadId* tid) {
+  if (count < POOL_SIZE) putThreadId(tid); else tid->dispose();
+}
 
 
-void gCollectSuspThreads(){
-  SuspendedThread* tmp, **ptr = &g_suspenedThreadList; 
-  while(*ptr){
-    if ((*ptr)->gCollect()){
-      ptr = &(*ptr)->a_next; 
-      
+
+/************************* SuspendedOperation *************************/
+
+static SuspendedOperation* suspendedOpList = NULL;
+
+void gCollectSuspendedOperations() {
+  SuspendedOperation** curPtr = &suspendedOpList;
+  SuspendedOperation* cur = *curPtr;
+  
+  while (cur) {
+    if (cur->gCollect()) {
+      curPtr = &(cur->next);
+    } else {
+      *curPtr = cur->next;   // removed from list
+      delete cur;
     }
-    else
-      {
-	tmp = *ptr;
-	*ptr = tmp->a_next; 
-	delete tmp; 
-      }
+    cur = *curPtr;
   }
-  
 }
 
-SuspendedThread::SuspendedThread(Mediator *m){
-  a_next = g_suspenedThreadList;
-  g_suspenedThreadList = this; 
-  a_mediator = m; 
-}
-
-
-
-OZ_Return SuspendedThread::suspend()
+SuspendedOperation::SuspendedOperation(Mediator* med) :
+  mediator(med), ctlVar(makeTaggedNULL())
 {
-  ControlVarNew(cv,oz_rootBoard());  
-  a_cntrlVar = cv; 
-  return suspendOnControlVar();
+  threadId = currentThreadId();
+  setCurrentThreadMediator(this);
+  next = suspendedOpList;
+  suspendedOpList = this;
 }
 
-
-OZ_Return SuspendedThread::resume(){
-  ControlVarResume(a_cntrlVar);
-  // I assume that this is for debug purposes, Erik
-  a_cntrlVar = static_cast<OZ_Term>(0);
-  return PROCEED; 
+void SuspendedOperation::suspend() {
+  ControlVarNew(cv, oz_rootBoard());
+  ctlVar = cv;
+  suspendOnControlVar();
 }
 
-bool SuspendedThread::gc(){
-  if (a_cntrlVar == static_cast<OZ_Term>(0))
-    return false; 
-  else{
-    oz_gCollectTerm(a_cntrlVar, a_cntrlVar);
-    return true; 
+// this operation is MANDATORY.  It binds the control var, and nullify
+// the threadId.  The latter means that the operation has resumed.
+void SuspendedOperation::resume() {
+  if (ctlVar) { ControlVarResume(ctlVar); }
+  releaseThreadId(threadId);
+  threadId = NULL;
+}
+
+bool SuspendedOperation::gc() {
+  if (threadId) {
+    oz_gCollectTerm(ctlVar, ctlVar); return true;
+  } else {
+    return false;
   }
 }
 
-SuspendedVarBind::SuspendedVarBind(OZ_Term val, Mediator *med):SuspendedThread(med), a_val(val)
-{ 
-  // Erik, this is a suboptimal solution, we'll have to fixit right
-  // later. The variable has its own suspension and does not relay 
-  // on the the cntrl-vars. However, If things where to be done 
-  // correctly, we should _not_ suspend on the variable body, but on
-  // the cntrl strucure. 
+
+
+/************************* SuspendedDummy *************************/
+
+SuspendedDummy::SuspendedDummy() : SuspendedOperation(NULL)
+{}
+
+WakeRetVal SuspendedDummy::resumeDoLocal(DssOperationId*) {
+  resume(); return WRV_DONE;
 }
 
-WakeRetVal SuspendedVarBind::resumeDoLocal(DssOperationId*){
-  a_val = (TaggedRef)0;  
-  return WRV_DONE;
-}
-WakeRetVal SuspendedVarBind::resumeRemoteDone(PstInContainerInterface* pstin){
-  a_val = (TaggedRef)0;  
-  return WRV_DONE;
-  
+WakeRetVal SuspendedDummy::resumeRemoteDone(PstInContainerInterface*) {
+  resume(); return WRV_DONE;
 }
 
-SuspendedCellAccess::SuspendedCellAccess(Mediator* med, OZ_Term var):
-  SuspendedThread(med),
-  a_var(var)
+bool SuspendedDummy::gCollect() {
+  return gc();
+}
+
+
+
+/************************* SuspendedCellAccess *************************/
+
+SuspendedCellAccess::SuspendedCellAccess(Mediator* med, OZ_Term var) :
+  SuspendedOperation(med), result(var)
 {
   suspend();
 }
 
-WakeRetVal SuspendedCellAccess::resumeDoLocal(DssOperationId*){
-  CellMediator *pM = static_cast<CellMediator*>(a_mediator);
+WakeRetVal SuspendedCellAccess::resumeDoLocal(DssOperationId*) {
+  CellMediator *pM = static_cast<CellMediator*>(getMediator());
   OzCell *cell     = static_cast<OzCell*>(pM->getConst());
   OZ_Term contents = cell->getValue();
-  oz_unify(a_var,contents);
+  oz_unify(result,contents);
   resume();
   return WRV_DONE; 
 }
+
 WakeRetVal SuspendedCellAccess::resumeRemoteDone(PstInContainerInterface* pstin){
   PstInContainer *pst = static_cast<PstInContainer*>(pstin);
-  oz_unify(a_var, pst->a_term); 
+  oz_unify(result, pst->a_term); 
   resume();
   return WRV_DONE; 
 }
-
-SuspendedCellExchange::SuspendedCellExchange(Mediator* med, OZ_Term newVal, OZ_Term ans):
-  SuspendedThread(med), 
-  a_newVal(newVal), 
-  a_var(ans)
-{
-  suspend();
-}
-
-WakeRetVal SuspendedCellExchange::resumeDoLocal(DssOperationId*){
-  CellMediator *pM = static_cast<CellMediator*>(a_mediator);
-  OzCell *cell  = static_cast<OzCell*>(pM->getConst());
-  OZ_Term contents = cell->exchangeValue(a_newVal); 
-  oz_unify(a_var,contents);
-  resume();
-  return WRV_DONE; 
-}
-WakeRetVal SuspendedCellExchange::resumeRemoteDone(PstInContainerInterface* pstin){
-  PstInContainer *pst = static_cast<PstInContainer*>(pstin);
-  oz_unify(a_var, pst->a_term); 
-  resume(); 
-  return WRV_DONE; 
-}
-
-
-
-bool SuspendedCellExchange::gCollect(){
-  if (gc())
-    {
-      oz_gCollectTerm(a_var,a_var); 
-      oz_gCollectTerm(a_newVal,a_newVal); 
-      return true; 
-    }
-  else
-    return false; 
-}
-
-
-
 
 bool SuspendedCellAccess::gCollect(){
-  if (gc())
-    {
-      oz_gCollectTerm(a_var,a_var); 
-      return true; 
-    }
-  else
+  if (gc()) {
+    oz_gCollectTerm(result, result);
+    return true; 
+  } else
     return false; 
 }
 
 
 
-bool SuspendedVarBind::gCollect(){
-  if (a_val != (TaggedRef) 0)
-    {
-      oz_gCollectTerm(a_val,a_val); 
-      return true; 
-    }
-  else
-    return false; 
-  
-}
+/************************* SuspendedCellExchange *************************/
 
-SuspendedLockTake::SuspendedLockTake(Mediator* med, TaggedRef tr):SuspendedThread(med), a_ozThread(tr)
+SuspendedCellExchange::SuspendedCellExchange(Mediator* med,
+					     OZ_Term newVal, OZ_Term ans) :
+  SuspendedOperation(med), newValue(newVal), result(ans)
 {
   suspend();
 }
 
-WakeRetVal 
-SuspendedLockTake::resumeDoLocal(DssOperationId*){
-  LockLocal *lck = static_cast<LockLocal*>(static_cast<ConstMediator*>(getMediator())->getConst());
-  Thread *theThread = oz_ThreadToC( a_ozThread);
-  if (lck->getLocker() == NULL || lck->getLocker() == theThread){
-    lck->lockB(theThread);
-    resume();
-  }
-  else
-    {
-      PendThread **pt = lck->getPendBase(); 
-      while(*pt!=NULL){pt= &((*pt)->next);}
-      *pt = new PendThread(a_ozThread, NULL,  a_cntrlVar);
-      a_cntrlVar = 0; 
-      
-    }
+WakeRetVal SuspendedCellExchange::resumeDoLocal(DssOperationId*) {
+  CellMediator *pM = static_cast<CellMediator*>(getMediator());
+  OzCell *cell     = static_cast<OzCell*>(pM->getConst());
+  OZ_Term contents = cell->exchangeValue(newValue); 
+  oz_unify(result, contents);
+  resume();
   return WRV_DONE; 
 }
+
+WakeRetVal SuspendedCellExchange::resumeRemoteDone(PstInContainerInterface* pstin) {
+  PstInContainer *pst = static_cast<PstInContainer*>(pstin);
+  oz_unify(result, pst->a_term);
+  resume();
+  return WRV_DONE;
+}
+
+bool SuspendedCellExchange::gCollect(){
+  if (gc()) {
+    oz_gCollectTerm(newValue, newValue);
+    oz_gCollectTerm(result, result);
+    return true; 
+  } else
+    return false; 
+}
+
+
+
+/************************* SuspendedLockTake *************************/
+
+SuspendedLockTake::SuspendedLockTake(Mediator* med, TaggedRef thr) :
+  SuspendedOperation(med), ozthread(thr)
+{
+  suspend();
+}
+
+WakeRetVal SuspendedLockTake::resumeDoLocal(DssOperationId*) {
+  ConstMediator *med = static_cast<ConstMediator*>(getMediator());
+  LockLocal *lck     = static_cast<LockLocal*>(med->getConst());
+  Thread *theThread = oz_ThreadToC(ozthread);
+  if (lck->getLocker() == NULL || lck->getLocker() == theThread) {
+    lck->lockB(theThread);
+  } else {
+    PendThread **pt = lck->getPendBase(); 
+    while(*pt!=NULL) { pt= &((*pt)->next); }
+    *pt = new PendThread(ozthread, NULL,  ctlVar);
+    ctlVar = 0;     // resume() should not trigger control var...
+  }
+  resume();
+  return WRV_DONE; 
+}
+
 WakeRetVal 
 SuspendedLockTake::resumeRemoteDone(PstInContainerInterface* pstin){
   PstInContainer *pst = static_cast<PstInContainer*>(pstin);
   TaggedRef lst = pst->a_term;
-  
-  OzLock *lck = static_cast<OzLock*>(static_cast<ConstMediator*>(getMediator())->getConst());
+
+  ConstMediator *med = static_cast<ConstMediator*>(getMediator());
+  LockLocal *lck     = static_cast<LockLocal*>(med->getConst());
   switch(oz_intToC(oz_head(lst))){
   case 1:
-      // We had it, remove the unlock stackframe! 
-      // Remove the darn 
+    // We had it, remove the unlock stackframe! 
+    // Remove the darn 
     // Fall through!
   case 2:
-    {
-      resume(); 
-      return WRV_DONE; 
-    }
+    break;
   case 3:
-    oz_unify(oz_head(oz_tail(lst)), a_cntrlVar);
+    oz_unify(oz_head(oz_tail(lst)), ctlVar);
+    ctlVar = 0;
     break; 
   }
-  
-}
-bool 
-SuspendedLockTake::gCollect(){
-  oz_gCollectTerm(a_ozThread, a_ozThread); 
-  return gc();
-}
-
-SuspendedLockRelease::SuspendedLockRelease(Mediator* med):SuspendedThread(med), used(true){;}
-
-WakeRetVal 
-SuspendedLockRelease::resumeDoLocal(DssOperationId*){
-  LockLocal *lck = static_cast<LockLocal*>(static_cast<ConstMediator*>(getMediator())->getConst());
-  lck->unlock();
-  used = false; 
+  resume();
   return WRV_DONE;
 }
 
+bool SuspendedLockTake::gCollect() {
+  if (gc()) {
+    oz_gCollectTerm(ozthread, ozthread);
+    return true;
+  } else
+    return false;
+}
+
+
+
+/************************* SuspendedLockRelease *************************/
+
+SuspendedLockRelease::SuspendedLockRelease(Mediator* med) :
+  SuspendedOperation(med)
+{}
+
+WakeRetVal 
+SuspendedLockRelease::resumeDoLocal(DssOperationId*) {
+  ConstMediator *med = static_cast<ConstMediator*>(getMediator());
+  LockLocal *lck     = static_cast<LockLocal*>(med->getConst());
+  lck->unlock();
+  resume();
+  return WRV_DONE;
+}
 
 WakeRetVal 
 SuspendedLockRelease::resumeRemoteDone(PstInContainerInterface* pstin){
-  used = false; 
+  resume();
   return WRV_DONE;
 }
-bool 
-SuspendedLockRelease::gCollect(){
-  return used; 
-}
 
-SuspendedArrayPut::SuspendedArrayPut(Mediator* med, OZ_Term val, int indx):
-  SuspendedThread(med), 
-  a_val(val), a_indx(indx)
-{
-  suspend();
-}
-
-WakeRetVal SuspendedArrayPut::resumeDoLocal(DssOperationId*){
-  ArrayMediator *pM = static_cast<ArrayMediator*>(a_mediator);
-  OzArray*oza     = static_cast<OzArray*>(pM->getConst());  
-  TaggedRef *ar = oza->getRef();
-  ar[a_indx] = a_val; 
-  resume(); 
-  return WRV_DONE; 
-}
-WakeRetVal SuspendedArrayPut::resumeRemoteDone(PstInContainerInterface* pstin){
-  resume(); 
-  return WRV_DONE; 
-}
-bool SuspendedArrayPut::gCollect(){
-  oz_gCollectTerm(a_val, a_val); 
+bool SuspendedLockRelease::gCollect() {
   return gc();
 }
 
 
 
-SuspendedArrayGet::SuspendedArrayGet(Mediator* med, OZ_Term var, int indx):
-  SuspendedThread(med),
-  a_var(var), a_indx(indx)
+/************************* SuspendedArrayGet *************************/
+
+SuspendedArrayGet::SuspendedArrayGet(Mediator* med, int idx,  OZ_Term var) :
+  SuspendedOperation(med), index(idx), result(var)
 {
   suspend();
 }
 
-WakeRetVal SuspendedArrayGet::resumeDoLocal(DssOperationId*){
-  ArrayMediator *pM = static_cast<ArrayMediator*>(a_mediator);
-  OzArray*oza     = static_cast<OzArray*>(pM->getConst()); 
+WakeRetVal SuspendedArrayGet::resumeDoLocal(DssOperationId*) {
+  ArrayMediator *pM = static_cast<ArrayMediator*>(getMediator());
+  OzArray* oza      = static_cast<OzArray*>(pM->getConst());
   TaggedRef *ar = oza->getRef();
-  oz_unify(a_var,ar[a_indx]);
-  resume(); 
-  return WRV_DONE; 
+  oz_unify(result, ar[index]);
+  resume();
+  return WRV_DONE;
 }
+
 WakeRetVal SuspendedArrayGet::resumeRemoteDone(PstInContainerInterface* pstin){
   PstInContainer *pst = static_cast<PstInContainer*>(pstin);
-  oz_unify(a_var, pst->a_term); 
-  resume(); 
-  return WRV_DONE; 
+  oz_unify(result, pst->a_term);
+  resume();
+  return WRV_DONE;
 }
+
 bool SuspendedArrayGet::gCollect(){
-  oz_gCollectTerm(a_var, a_var); 
-  return gc();
+  if (gc()) {
+    oz_gCollectTerm(result, result);
+    return true;
+  } else
+    return false;
 }
 
-/*
-
-ReplaceFrame(frame,pc,y,cap)      
-
-pushFrame(C_LOCK_Ptr, 0, lck); 
 
 
-*/
+/************************* SuspendedArrayPut *************************/
 
+SuspendedArrayPut::SuspendedArrayPut(Mediator* med, int idx, OZ_Term val) :
+  SuspendedOperation(med), index(idx), value(val)
+{
+  suspend();
+}
 
+WakeRetVal SuspendedArrayPut::resumeDoLocal(DssOperationId*) {
+  ArrayMediator *pM = static_cast<ArrayMediator*>(getMediator());
+  OzArray*oza       = static_cast<OzArray*>(pM->getConst());
+  TaggedRef *ar = oza->getRef();
+  ar[index] = value;
+  resume();
+  return WRV_DONE;
+}
 
+WakeRetVal SuspendedArrayPut::resumeRemoteDone(PstInContainerInterface* pstin){
+  resume();
+  return WRV_DONE;
+}
 
+bool SuspendedArrayPut::gCollect() {
+  if (gc()) {
+    oz_gCollectTerm(value, value);
+    return true;
+  } else
+    return false;
+}

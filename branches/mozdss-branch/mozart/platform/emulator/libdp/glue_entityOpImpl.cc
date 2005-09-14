@@ -36,36 +36,6 @@
 #include "pstContainer.hh"
 #include "unify.hh"
 
-void oz_thread_setDistVal(TaggedRef tr, int i, void* v); 
-void* oz_thread_getDistVal(TaggedRef tr, int i); 
-
-// return a DssThreadId corresponding to the current Oz thread, or a
-// new DssThreadId if the operation is internal (in which case there
-// is no current thread)
-DssThreadId* getThreadId(){
-  // Warning, this one will leak. We have to associate each thread
-  // with a DssThreadId.  By some means a thread can be queried for
-  // its DssId, preferably by the use of a hastable. Unfortunately
-  // Mozart only supports those darn open-hashtables, not really
-  // suitable for our need.  Consequently, due to laziness I have
-  // chosen to do this suboptimal hack.
-  Thread *t = oz_currentThread();
-  if (t) {
-    // get a DssThreadId corresponding to t
-    TaggedRef thr = oz_thread(t);
-    DssThreadId *id =
-      reinterpret_cast<DssThreadId*>(oz_thread_getDistVal(thr, 1));
-    if(id == NULL) {
-      id = dss->m_createDssThreadId();
-      oz_thread_setDistVal(thr, 1,reinterpret_cast<void*>(id));
-    }
-    return id; 
-  } else {
-    // there is no current thread, create a new one
-    return dss->m_createDssThreadId();
-  }
-}
-
 
 
 bool unlockDistLockImpl(Tertiary *l){
@@ -79,7 +49,7 @@ bool unlockDistLockImpl(Tertiary *l){
   LockMediator *me = static_cast<LockMediator*>(index2Me(l->getTertIndex())); 
   AbstractEntity *ae = me->getAbstractEntity();
   MutableAbstractEntity *mae = static_cast<MutableAbstractEntity*>(ae);
-  DssThreadId *thrId = getThreadId();
+  DssThreadId *thrId = currentThreadId();
   printf("LockDistLockRelease\n");
   PstOutContainerInterface** pstout;
   // Should we assert this one will not request a pstout?
@@ -89,7 +59,7 @@ bool unlockDistLockImpl(Tertiary *l){
       return false; 
 
     case DSS_SUSPEND:
-      thrId->setThreadMediator(new SuspendedLockRelease(me )); 
+      new SuspendedLockRelease(me); 
       return true;
     case DSS_RAISE:
       OZ_error("Not Implemented yet, raise");
@@ -107,7 +77,7 @@ bool lockDistLockImpl(Tertiary *l, Thread *thr){
   LockMediator *me = static_cast<LockMediator*>(index2Me(l->getTertIndex())); 
   AbstractEntity *ae = me->getAbstractEntity();
   MutableAbstractEntity *mae = static_cast<MutableAbstractEntity*>(ae);
-  DssThreadId *thrId = getThreadId();
+  DssThreadId *thrId = currentThreadId();
 
   printf("LockDistLockTake\n");
   PstOutContainerInterface** pstout;
@@ -121,7 +91,7 @@ bool lockDistLockImpl(Tertiary *l, Thread *thr){
     case DSS_SKIP:
       OZ_error("Should not happened, skip, lock");
     case DSS_SUSPEND:
-      thrId->setThreadMediator(new SuspendedLockTake(me, oz_thread(thr))); 
+      new SuspendedLockTake(me, oz_thread(thr)); 
       return true; ;
     case DSS_RAISE:
       OZ_error("Not Implemented yet, raise");
@@ -142,7 +112,7 @@ bool cellDoAccessImpl(OzCell *p, TaggedRef &ans) {
   AbstractEntity *ae = me->getAbstractEntity();
   MutableAbstractEntity *mae = static_cast<MutableAbstractEntity*>(ae);
   
-  DssThreadId *thrId = getThreadId();
+  DssThreadId *thrId = currentThreadId();
   PstOutContainerInterface** pstout;
   OpRetVal cont = mae->abstractOperation_Read(thrId,pstout);
   if (pstout != NULL) *(pstout) = new PstOutContainer(oz_nil()); 
@@ -155,7 +125,7 @@ bool cellDoAccessImpl(OzCell *p, TaggedRef &ans) {
     return true;   
   case DSS_SUSPEND:
     ans = static_cast<TaggedRef>(oz_newVariable());
-    thrId->setThreadMediator(new SuspendedCellAccess(me, ans)); 
+    new SuspendedCellAccess(me, ans);
     return false;
   case DSS_RAISE:
     OZ_error("Not Implemented yet, raise");
@@ -176,7 +146,7 @@ bool cellDoExchangeImpl(OzCell *p, TaggedRef &oldVal, TaggedRef newVal) {
   CellMediator *me = static_cast<CellMediator*>(p->getMediator()); 
   AbstractEntity *ae = me->getAbstractEntity();
   MutableAbstractEntity *mae = static_cast<MutableAbstractEntity*>(ae);
-  DssThreadId *thrId = getThreadId();
+  DssThreadId *thrId = currentThreadId();
 
   PstOutContainerInterface** pstout;
   OpRetVal cont = mae->abstractOperation_Write(thrId, pstout);
@@ -190,7 +160,7 @@ bool cellDoExchangeImpl(OzCell *p, TaggedRef &oldVal, TaggedRef newVal) {
     return true;   
   case DSS_SUSPEND:
     oldVal = static_cast<TaggedRef>(oz_newVariable());
-    thrId->setThreadMediator(new SuspendedCellExchange(me, newVal, oldVal)); 
+    new SuspendedCellExchange(me, newVal, oldVal);
     return false;
   case DSS_RAISE:
     OZ_error("Not Implemented yet, raise");
@@ -256,7 +226,7 @@ bool distArrayGetImpl(OzArray *oza, TaggedRef indx, TaggedRef &ans){
   AbstractEntity *ae = me->getAbstractEntity();
   MutableAbstractEntity *mae = static_cast<MutableAbstractEntity*>(ae);
   
-  DssThreadId *thrId = getThreadId();
+  DssThreadId *thrId = currentThreadId();
     
   PstOutContainerInterface** pstout;
   OpRetVal cont = mae->abstractOperation_Read(thrId,pstout);
@@ -265,7 +235,7 @@ bool distArrayGetImpl(OzArray *oza, TaggedRef indx, TaggedRef &ans){
   if (cont == DSS_PROCEED) return false; 
   if (cont == DSS_SUSPEND) {
     ans = oz_newVariable();
-    thrId->setThreadMediator(new SuspendedArrayGet(me, ans, tagged2SmallInt(indx))); 
+    new SuspendedArrayGet(me, tagged2SmallInt(indx), ans);
     return true;
   }
   OZ_error("Shit, something vent wrong when doing an array op");
@@ -277,7 +247,7 @@ bool distArrayPutImpl(OzArray *oza, TaggedRef indx, TaggedRef val){
   AbstractEntity *ae = me->getAbstractEntity();
   MutableAbstractEntity *mae = static_cast<MutableAbstractEntity*>(ae);
   
-  DssThreadId *thrId = getThreadId();
+  DssThreadId *thrId = currentThreadId();
     
   PstOutContainerInterface** pstout;
   OpRetVal cont = mae->abstractOperation_Write(thrId,pstout);
@@ -285,7 +255,7 @@ bool distArrayPutImpl(OzArray *oza, TaggedRef indx, TaggedRef val){
 
   if (cont == DSS_PROCEED) return false; 
   if (cont == DSS_SUSPEND) {
-    thrId->setThreadMediator(new SuspendedArrayPut(me, val, tagged2SmallInt(indx))); 
+    new SuspendedArrayPut(me, tagged2SmallInt(indx), val);
     return true;
   }
   OZ_error("Shit, something vent wrong when doing an array op");
@@ -297,7 +267,7 @@ bool distArrayPutImpl(OzArray *oza, TaggedRef indx, TaggedRef val){
 /************************* Variables *************************/
 
 // Variable are somewhat different from the other entities. 
-// The variable in itself is used to cntrl the execution of
+// The variable in itself is used to control the execution of
 // the threads. Thus, no extra operations has to be done to 
 // suspend the thread. 
 
@@ -308,7 +278,7 @@ bool distVarDoBind(ProxyVar* pv, TaggedRef *lPtr, TaggedRef r){
   Mediator *me = pv->getMediator();
   AbstractEntity *ae = me->getAbstractEntity();
   MonotonicAbstractEntity *tae = static_cast<MonotonicAbstractEntity *>(ae);
-  DssThreadId *thrId = getThreadId();
+  DssThreadId *thrId = currentThreadId();
 
   PstOutContainerInterface** pstout;
   OpRetVal cont = tae->abstractOperation_Bind(thrId,pstout);
@@ -324,7 +294,7 @@ bool distVarDoBind(ProxyVar* pv, TaggedRef *lPtr, TaggedRef r){
       Assert(0);
       return true; // I dont know about this one    
     case DSS_SUSPEND:
-      thrId->setThreadMediator(new SuspendedVarBind(r,me));
+      new SuspendedDummy();
       return false; 
     case DSS_RAISE:
       OZ_error("Not Implemented yet, raise");
@@ -348,7 +318,7 @@ OZ_Return distVarDoUnify(ProxyVar* lpv,ProxyVar* rpv, TaggedRef *lPtr, TaggedRef
   MonotonicAbstractEntity *ltae = static_cast<MonotonicAbstractEntity *>(lpv->getMediator()->getAbstractEntity());
   MonotonicAbstractEntity *rtae = static_cast<MonotonicAbstractEntity *>(rpv->getMediator()->getAbstractEntity());
 
-  DssThreadId *thrId = getThreadId();
+  DssThreadId *thrId = currentThreadId();
   
   bool order = dss->m_orderEntities(ltae,rtae);
   if(order){
@@ -372,7 +342,7 @@ OZ_Return distVarDoUnify(ProxyVar* lpv,ProxyVar* rpv, TaggedRef *lPtr, TaggedRef
   case DSS_PROCEED:
     return PROCEED;
   case DSS_SUSPEND:
-    thrId->setThreadMediator(new SuspendedVarBind(r,me));
+    new SuspendedDummy();
     return SUSPEND;
   case DSS_SKIP:
     Assert(0);
@@ -404,7 +374,7 @@ OZ_Return distVarBindImpl(OzVariable *ov, TaggedRef *varPtr, TaggedRef val) {
   }
 
   // otherwise ask the abstract entity
-  DssThreadId *thrId = getThreadId();
+  DssThreadId *thrId = currentThreadId();
   PstOutContainerInterface** pstout;
   OpRetVal cont = ae->abstractOperation_Bind(thrId, pstout);
 
@@ -418,8 +388,8 @@ OZ_Return distVarBindImpl(OzVariable *ov, TaggedRef *varPtr, TaggedRef val) {
   case DSS_SKIP: // skip the operation: should not happen
     Assert(0);
     return PROCEED;
-  case DSS_SUSPEND: { // suspend operation
-    thrId->setThreadMediator(new SuspendedVarBind(val, med));
+  case DSS_SUSPEND: { // suspend operation (no explicit resume)
+    new SuspendedDummy();
     // use quiet suspension here (avoid extra distributed operations),
     // and don't add a suspension if there is no current thread
     Thread *thr = oz_currentThread();
@@ -490,7 +460,7 @@ OZ_Return distVarMakeNeededImpl(TaggedRef *varPtr) {
   if (ae == NULL) return PROCEED;
 
   // otherwise ask the abstract entity
-  DssThreadId *thrId = getThreadId();
+  DssThreadId *thrId = currentThreadId();
   PstOutContainerInterface** pstout;
   OpRetVal cont = ae->abstractOperation_Append(thrId, pstout);
 
@@ -501,8 +471,8 @@ OZ_Return distVarMakeNeededImpl(TaggedRef *varPtr) {
   case DSS_PROCEED:
   case DSS_SKIP:
     return PROCEED;
-  case DSS_SUSPEND: // raph: this is a dirty solution...
-    thrId->setThreadMediator(new SuspendedVarBind(0, med));
+  case DSS_SUSPEND:
+    new SuspendedDummy();
     return PROCEED;
   case DSS_RAISE:
   case DSS_INTERNAL_ERROR_NO_OP:
