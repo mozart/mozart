@@ -93,8 +93,8 @@ void gcGlueRootsImpl()
   // suspended threads must be keept alive. 
   gCollectGASreps();
 
-  // GCollect all the suspended threads 
-  gCollectSuspThreads();
+  // GCollect all the suspended operations
+  gCollectSuspendedOperations();
 }
 
 

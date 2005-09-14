@@ -4,7 +4,7 @@
  *    Erik Klintskog, 2002
  * 
  *  Contributors:
- *    optional, Contributor's name (Contributor's email address)
+ *    Raphael Collet (raph@info.ucl.ac.be)
  * 
  *  Copyright:
  *    Zacharias El Banna, 2002
@@ -32,118 +32,152 @@
 #pragma interface
 #endif
 
-#include "glue_tables.hh"
-#include "dss_classes.hh"
 #include "value.hh"
 #include "glue_mediators.hh"
+#include "glue_tables.hh"
+#include "dss_classes.hh"
 
 
-void gCollectSuspThreads(); 
+/*
+  A SuspendedOperation object is a "thread mediator" for the DSS, and
+  is in charge of resuming a distributed operation in the emulator.
+  It is given as a thread mediator to a DssThreadId, and is called
+  back when the DSS operation has completed.  It completes the
+  operation in the emulator, and releases the DssThreadId.
 
-class SuspendedThread: public ThreadMediator
-{
+  A distributed operation is often initiated by an Oz thread.
+  However, for the sake of simplicity, we do not mix DssThreadIds with
+  Oz threads.  An Oz thread is always resumed by means of a control
+  variable.  The corresponding SuspendedOperation binds the control
+  variable, and releases the DssThreadId.
+
+  Note.  A new SuspendedOperation automatically makes itself the
+  thread mediator of the current DssThreadId, and forces the renewal
+  of the current DssThreadId.
+
+ */
+
+
+
+// return the current DssThreadId
+DssThreadId* currentThreadId();
+
+// Those ones are called automatically by SuspendedOperations...
+// set the ThreadMediator of the current DssThreadId (which is renewed)
+void setCurrentThreadMediator(ThreadMediator* tm);
+// release a DssThreadId after usage
+void releaseThreadId(DssThreadId* tid);
+
+
+
+// garbage collect SuspendedOperation objects, and DssThreadIds too
+void gCollectSuspendedOperations();
+
+
+
+// generic class SuspendedOperation
+class SuspendedOperation : public ThreadMediator {
+  friend void gCollectSuspendedOperations();
+
+protected:
+  TaggedRef ctlVar;           // control var for thread synchronization
+  Mediator* mediator;         // entity mediator
+  DssThreadId* threadId;      // which DssThreadId is mediated
+  SuspendedOperation *next;   // used for garbage collection
+
 public:
-  OZ_Term a_cntrlVar;
-  Mediator *a_mediator; 
-  SuspendedThread *a_next;
-public:
-  SuspendedThread(Mediator *m);
+  SuspendedOperation(Mediator*);
+  Mediator* getMediator() { return mediator; }
+  void suspend();   // generic suspend (set ctlVar)
+  void resume();    // generic resume (synchronize ctlVar)
+  bool gc();        // returns TRUE and collect stuff if needed
   
-  OZ_Return suspend();
-  OZ_Return resume();
-  
+  // inherited from ThreadMediator
   virtual WakeRetVal resumeDoLocal(DssOperationId*) = 0; 
   virtual WakeRetVal resumeRemoteDone(PstInContainerInterface* pstin) = 0;
-  
-  bool gc();
-  virtual bool gCollect() = 0; 
-  Mediator* getMediator(){
-    return a_mediator; 
-  }
+
+  // returns TRUE and collect stuff if needed
+  virtual bool gCollect() = 0;
 };
 
 
-
-class SuspendedVarBind:public SuspendedThread{
+// dummy suspended operation (nothing to do for resume)
+class SuspendedDummy : public SuspendedOperation {
 public:
-  OZ_Term a_val; 
-  SuspendedVarBind(OZ_Term, Mediator*);
+  SuspendedDummy();
   WakeRetVal resumeDoLocal(DssOperationId*);
   WakeRetVal resumeRemoteDone(PstInContainerInterface* pstin);
-  virtual bool gCollect();
+  bool gCollect();
 };
 
-class SuspendedCellAccess:public SuspendedThread{
+
+// suspended cell operations
+class SuspendedCellAccess: public SuspendedOperation {
+private:
+  OZ_Term result;   // must be an Oz variable
 public:
-  OZ_Term a_var; 
   SuspendedCellAccess(Mediator*, OZ_Term);
   WakeRetVal resumeDoLocal(DssOperationId*);
   WakeRetVal resumeRemoteDone(PstInContainerInterface* pstin);
-  virtual bool gCollect();
+  bool gCollect();
 };
 
-
-class SuspendedCellExchange:public SuspendedThread{
+class SuspendedCellExchange: public SuspendedOperation {
+private:
+  OZ_Term newValue, result;
 public:
-  OZ_Term a_var; 
-  OZ_Term a_newVal; 
   SuspendedCellExchange(Mediator*, OZ_Term, OZ_Term);
   WakeRetVal resumeDoLocal(DssOperationId*);
   WakeRetVal resumeRemoteDone(PstInContainerInterface* pstin);
-  virtual bool gCollect();
+  bool gCollect();
 };
 
 
-class SuspendedLockTake:public SuspendedThread{
+// suspended lock operations
+class SuspendedLockTake: public SuspendedOperation {
+private:
+  TaggedRef ozthread;
 public:
-  TaggedRef a_ozThread; 
   SuspendedLockTake(Mediator*, TaggedRef);
   WakeRetVal resumeDoLocal(DssOperationId*);
   WakeRetVal resumeRemoteDone(PstInContainerInterface* pstin);
-  virtual bool gCollect();
+  bool gCollect();
 };
 
-class SuspendedLockRelease:public SuspendedThread{
+class SuspendedLockRelease: public SuspendedOperation {
 public:
-  // This is a phony construct since I'm not able 
-  // to suspend an unlocking thread. Thus this 
-  // suspension holder does _not_ refere or represent
-  // a proper thread..
-  bool used; 
+  // This is a phony construct since I'm not able to suspend an
+  // unlocking thread. Thus this suspension holder does _not_ refer or
+  // represent a proper thread.
   SuspendedLockRelease(Mediator*);
   WakeRetVal resumeDoLocal(DssOperationId*);
   WakeRetVal resumeRemoteDone(PstInContainerInterface* pstin);
-  virtual bool gCollect();
+  bool gCollect();
 };
 
 
-class SuspendedArrayGet:public SuspendedThread{
+// suspended array operations
+class SuspendedArrayGet: public SuspendedOperation {
+private:
+  int index;
+  OZ_Term result;
 public:
-  OZ_Term a_var; 
-  int a_indx;
-  SuspendedArrayGet(Mediator*, OZ_Term, int indx);
+  SuspendedArrayGet(Mediator*, int idx, OZ_Term);
   WakeRetVal resumeDoLocal(DssOperationId*);
   WakeRetVal resumeRemoteDone(PstInContainerInterface* pstin);
-  virtual bool gCollect();
+  bool gCollect();
 };
 
-
-class SuspendedArrayPut:public SuspendedThread{
+class SuspendedArrayPut: public SuspendedOperation {
+private:
+  int index;
+  OZ_Term value;
 public:
-  OZ_Term a_val; 
-  int a_indx;
-  SuspendedArrayPut(Mediator*, OZ_Term, int indx);
+  SuspendedArrayPut(Mediator*, int idx, OZ_Term);
   WakeRetVal resumeDoLocal(DssOperationId*);
   WakeRetVal resumeRemoteDone(PstInContainerInterface* pstin);
-  virtual bool gCollect();
+  bool gCollect();
 };
 
 
 #endif 
-
-
-
-
-
-
-
