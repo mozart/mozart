@@ -34,7 +34,7 @@
 #include "pstContainer.hh"
 #include "engine_interface.hh"
 
-void doPortSend(PortWithStream *port,TaggedRef val,Board*);
+void doPortSend(OzPort *port, TaggedRef val, Board*);
 OZ_Return accessCell(OZ_Term cell,OZ_Term &out);
 
 

@@ -1376,14 +1376,14 @@ void ConstTerm::_cacConstRecurse(void) {
     
   case Co_Port:
     {
-      Port *p = (Port*) this;
+      OzPort *p = (OzPort*) this;
 #ifdef G_COLLECT
       if (p->isDistributed()) {
-	(*gCollectMediator)((void*)(p->getTertIndex()));
+	(*gCollectMediator)((void*)(p->getMediator()));
       }
 #endif
-      PortWithStream *pws = (PortWithStream *) this;
-      oz_cacTerm(pws->strm,pws->strm);
+      OzPort *pws = (OzPort *) this;
+      oz_cacTerm(pws->strm, pws->strm);
       break;
     }
 
@@ -1562,9 +1562,8 @@ ConstTerm * ConstTerm::gCollectConstTermInline(void) {
     goto const_tertiary;
 
   case Co_Port:  
-    sz = (((Tertiary *)this)->getTertType() == Te_Proxy) ? 
-      SIZEOFPORTPROXY : sizeof(PortLocal);
-    goto const_tertiary;
+    sz = sizeof(OzPort);
+    goto const_withhome;
 
   case Co_Space:
     sz = sizeof(Space);
@@ -1696,8 +1695,8 @@ ConstTerm *ConstTerm::sCloneConstTermInline(void) {
     goto const_tertiary;
 
   case Co_Port:  
-    sz = sizeof(PortLocal);
-    goto const_tertiary;
+    sz = sizeof(OzPort);
+    goto const_withhome;
 
   case Co_Space:
     sz = sizeof(Space);

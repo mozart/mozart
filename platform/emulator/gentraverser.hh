@@ -593,7 +593,7 @@ protected:
   // 'Tertiary' OzConst"s;
   void processLock(OZ_Term lockTerm, Tertiary *lockTert);
   Bool processCell(OZ_Term cellTerm, ConstTerm *cellConst);
-  void processPort(OZ_Term portTerm, Tertiary *portTert);
+  void processPort(OZ_Term portTerm, ConstTerm *portConst);
   void processResource(OZ_Term resTerm, Tertiary *tert);
   // anything else:
   void processNoGood(OZ_Term resTerm);

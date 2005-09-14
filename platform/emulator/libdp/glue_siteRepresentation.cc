@@ -206,7 +206,7 @@ Glue_SiteRep::establishConnection(){
 				  oz_cons(oz_pair2(oz_int(3),DistOzState),
 					  oz_cons(oz_pair2(oz_int(4),this->m_getOzSite()),
 						  oz_nil()))))); 
-  doPortSend(((PortWithStream *) tagged2Const(g_connectPort)), command, NULL);  
+  doPortSend(tagged2Port(g_connectPort), command, NULL);  
   // return NULL to indicate that the operation is assynchronous
   return NULL; 
 }

@@ -267,9 +267,7 @@ class OzArray;
 
 class Tertiary;
 
-class Port;
-class PortWithStream;
-class PortLocal;
+class OzPort;
 
 class PendThread;
 class PendBinding;

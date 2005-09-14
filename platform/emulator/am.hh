@@ -419,7 +419,7 @@ public:
   }
 
   TaggedRef getDebugStreamTail() {
-    return tagged2PortWithStream(debugPort)->strm;
+    return tagged2Port(debugPort)->strm;
   }
 
   void debugStreamMessage(TaggedRef message) {
@@ -654,7 +654,7 @@ inline OZ_Term oz_newName()
 }
 inline OZ_Term oz_newPort(OZ_Term val)
 {
-  return makeTaggedConst(new PortWithStream(oz_currentBoard(), val));
+  return makeTaggedConst(new OzPort(oz_currentBoard(), val));
 }
 inline OZ_Term oz_newCell(OZ_Term val)
 {
@@ -675,7 +675,7 @@ inline OZ_Term oz_newCell(OZ_Term val)
 
 #define oz_newName() makeTaggedLiteral(Name::newName(oz_currentBoard()))
 #define oz_newPort(val) \
-  makeTaggedConst(new PortWithStream(oz_currentBoard(), (val)))
+  makeTaggedConst(new OzPort(oz_currentBoard(), (val)))
 #define oz_newCell(val) makeTaggedConst(new OzCell(oz_currentBoard(),(val)))
 #endif
 

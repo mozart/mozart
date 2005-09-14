@@ -11,7 +11,7 @@
 static SuspendedThread* g_suspenedThreadList = NULL; 
 
 // FORWARDERS....
-void doPortSend(PortWithStream *port,TaggedRef val,Board * home);
+void doPortSend(OzPort *port, TaggedRef val, Board * home);
 OZ_Return accessCell(OZ_Term cell,OZ_Term &out);
 
 

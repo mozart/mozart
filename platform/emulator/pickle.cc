@@ -238,7 +238,7 @@ Bool Pickler::processCell(OZ_Term term, ConstTerm *cellConst)
 }
 
 inline 
-void Pickler::processPort(OZ_Term termcellTerm, Tertiary *tert)
+void Pickler::processPort(OZ_Term termcellTerm, ConstTerm *portConst)
 {
   OZ_error("Pickler::processPort is called!");
 }
@@ -554,7 +554,7 @@ Bool ResourceExcavator::processCell(OZ_Term cellTerm, ConstTerm *cellConst)
   }
 }
 inline 
-void ResourceExcavator::processPort(OZ_Term portTerm, Tertiary *tert)
+void ResourceExcavator::processPort(OZ_Term portTerm, ConstTerm *portConst)
 {
   addResource(portTerm);
 }

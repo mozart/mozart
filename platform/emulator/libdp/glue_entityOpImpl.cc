@@ -208,8 +208,9 @@ bool cellDoExchangeImpl(OzCell *p, TaggedRef &oldVal, TaggedRef newVal) {
 
 
 
-bool portSendImpl(Tertiary *p, TaggedRef msg){
-  PortMediator *me = static_cast<PortMediator*>(index2Me(p->getTertIndex())); 
+bool portSendImpl(OzPort *p, TaggedRef msg){
+  Assert(p->isDistributed());
+  PortMediator *me = static_cast<PortMediator*>(p->getMediator()); 
   RelaxedMutableAbstractEntity *mae =
     static_cast<RelaxedMutableAbstractEntity*>(me->getAbstractEntity());
 
@@ -239,11 +240,6 @@ bool portSendImpl(Tertiary *p, TaggedRef msg){
 }
 
 void cellOperationDoneReadImpl(OzCell* cell, TaggedRef ans, int thid){
-  //  DssThreadId *thrId = reinterpret_cast<DssThreadId*>(thid); 
-//    PortMediator *me = static_cast<PortMediator*>(index2Me(tert->getIndex())); 
-//    ProxyInterface *pi = me->getProxy();
-//    PstOutContainer *load = new PstOutContainer(ans);
-//    if (pi->doAbstractOperation(AO_EP_W_DONE,thrId,load) != DSS_SKIP) 
     OZ_error("Unexpected return value from AO_RE_W_DONE"); 
 }
 

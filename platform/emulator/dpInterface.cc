@@ -39,7 +39,7 @@ Bool isPerdioInitializedStub()
 }
 
 //
-bool portSendStub(Tertiary *p, TaggedRef msg)
+bool portSendStub(OzPort *p, TaggedRef msg)
 {
   OZD_error("'portSend' called without DP library?");
   return true;
@@ -156,7 +156,7 @@ Bool distHandlerDeInstallStub(unsigned short x,unsigned short y,
 Bool (*isPerdioInitialized)() = isPerdioInitializedStub;
 
 // 
-bool (*portSend)(Tertiary *p, TaggedRef msg)
+bool (*portSend)(OzPort *p, TaggedRef msg)
   = portSendStub;
 bool (*cellDoExchange)(OzCell*,TaggedRef&,TaggedRef)
   = cellDoExchangeStub;

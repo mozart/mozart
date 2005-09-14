@@ -504,7 +504,7 @@ Bool VSnapshotBuilder::processCell(OZ_Term cellTerm, ConstTerm *cellConst)
   return (TRUE);
 }
 inline 
-void VSnapshotBuilder::processPort(OZ_Term portTerm, Tertiary *tert)
+void VSnapshotBuilder::processPort(OZ_Term portTerm, ConstTerm *portConst)
 {
   VisitNodeTrav(portTerm, vIT, return);
 }

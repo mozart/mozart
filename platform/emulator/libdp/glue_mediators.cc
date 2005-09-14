@@ -42,7 +42,7 @@
 // Check it out, Erik. 
 static int medIdCntr = 1; 
 
-void doPortSend(PortWithStream *port,TaggedRef val,Board * home);
+void doPortSend(OzPort *port, TaggedRef val, Board * home);
 
 
 char* ConstMediator::getPrintType(){ return "const";}
@@ -212,11 +212,11 @@ ConstTerm* ConstMediator::getConst(){
 
 /************************* PortMediator *************************/
 
-PortMediator::PortMediator(Tertiary *t) : ConstMediator(t, DETACHED)
+PortMediator::PortMediator(ConstTerm *p) : ConstMediator(p, DETACHED)
 {}
 
-PortMediator::PortMediator(Tertiary *t, AbstractEntity *ae) :
-  ConstMediator(t, ATTACHED)
+PortMediator::PortMediator(ConstTerm *p, AbstractEntity *ae) :
+  ConstMediator(p, ATTACHED)
 {
   setAbstractEntity(ae);
 }
@@ -227,8 +227,8 @@ AOcallback PortMediator::callback_Write(DssThreadId *id,
 {
   PstInContainer *pst = static_cast<PstInContainer*>(pstin); 
   TaggedRef arg =  pst->a_term;
-  PortWithStream *p = static_cast<PortWithStream*>(getConst());
-  doPortSend(p,arg,NULL);
+  OzPort *p = tagged2Port(entity);
+  doPortSend(p, arg, NULL);
   return AOCB_FINISH; 
 }
 
@@ -258,20 +258,18 @@ PortMediator::callback_Read(DssThreadId *id,
 // }
 
 void PortMediator::globalize() {
-  Assert(getAbstractEntity() == NULL);
-
+  Assert(absEntity == NULL);
   // create abstract entity
   ProtocolName pn;
   AccessArchitecture aa;
   RCalg rc;
   getDssParameters(pn, aa, rc);
   setAbstractEntity(dss->m_createRelaxedMutableAbstractEntity(pn, aa, rc));
-
   // attach to entity
-  Tertiary *t = static_cast<Tertiary*>(getConst());
-  t->setTertType(Te_Proxy);
-  t->setTertIndex(reinterpret_cast<int>(this));
+  OzPort *p = tagged2Port(entity);
+  p->setMediator((void *) this);
   setAttached(ATTACHED);
+  Assert(absEntity != NULL);
 }
 
 void PortMediator::localize(){
@@ -281,9 +279,7 @@ void PortMediator::localize(){
     delete absEntity;
     absEntity = NULL;
     // 2. localize the port (detach mediator)
-    Tertiary *t = static_cast<Tertiary*>(getConst());
-    t->setTertType(Te_Local);
-    t->setBoard(am.currentBoard());
+    tagged2Port(entity)->setBoard(am.currentBoard());
     setAttached(DETACHED);
     // 3. keep the mediator in the table
     mediatorTable->insert(this);
@@ -291,9 +287,7 @@ void PortMediator::localize(){
   } else {
     // remove completely mediator, so
     // 1. localize the port
-    Tertiary *t = static_cast<Tertiary*>(getConst());
-    t->setTertType(Te_Local);
-    t->setBoard(am.currentBoard());
+    tagged2Port(entity)->setBoard(am.currentBoard());
     // 2. delete mediator
     delete this;
   }

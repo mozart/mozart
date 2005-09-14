@@ -238,7 +238,7 @@ void TRAVERSERCLASS::doit()
 	  break;
 
 	case Co_Port:
-	  processPort(t, (Tertiary *) ct);
+	  processPort(t, ct);
 	  break;
 	case Co_Resource:
 	  processResource(t, (Tertiary *) ct);

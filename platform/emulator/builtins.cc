@@ -3155,11 +3155,11 @@ OZ_BI_define(BInewPort,1,1)
 } OZ_BI_end
 
 
-void doPortSend(PortWithStream *port,TaggedRef val, Board * home)
+void doPortSend(OzPort *port, TaggedRef val, Board * home)
 {
   LTuple *lt = new LTuple(am.getCurrentOptVar(), am.getCurrentOptVar());
     
-  OZ_Term old = ((PortWithStream*)port)->exchangeStream(lt->getTail());
+  OZ_Term old = port->exchangeStream(lt->getTail());
 
   OZ_unifyInThread(old,makeTaggedLTuple(lt));
   OZ_unifyInThread(val,lt->getHead()); // might raise exception if val is non exportable
@@ -3177,10 +3177,10 @@ OZ_BI_define(BInewPort,0,2)
   return PROCEED;
 } OZ_BI_end
 
-#define FAST_DOPORTSEND
+//#define FAST_DOPORTSEND
 
 #ifdef FAST_DOPORTSEND
-void doPortSend(PortWithStream *port,TaggedRef val,Board * home) {
+void doPortSend(OzPort *port, TaggedRef val, Board * home) {
   if (home==(Board*)NULL || home==oz_currentBoard()) {
     OZ_Term newFut = oz_newReadOnly(oz_currentBoard());
     OZ_Term lt     = oz_cons(val,newFut);
@@ -3220,7 +3220,7 @@ void doPortSend(PortWithStream *port,TaggedRef val,Board * home) {
   }
 }
 #else
-void doPortSend(PortWithStream *port,TaggedRef val,Board * home) {
+void doPortSend(OzPort *port, TaggedRef val, Board * home) {
   if (home != (Board *) NULL) {
     OZ_Term newFut = oz_newReadOnly(home);
     OZ_Term newVar = oz_newVariable(home);
@@ -3255,7 +3255,7 @@ OZ_Return oz_sendPort(OZ_Term prt, OZ_Term val)
 {
   Assert(oz_isPort(prt));
 
-  Port *port  = tagged2Port(prt);
+  OzPort *port  = tagged2Port(prt);
 
   Board * prt_home = port->getBoardInternal()->derefBoard();
   
@@ -3268,7 +3268,7 @@ OZ_Return oz_sendPort(OZ_Term prt, OZ_Term val)
       return ret;
   }
     
-  if (port->isProxy()) {
+  if (port->isDistributed()) {
     if (sc_required) {
       // Fork a thread to redo the send
       oz_newThreadInject(prt_home)->pushCall(BI_send,RefsArray::make(prt,val));
@@ -3278,8 +3278,7 @@ OZ_Return oz_sendPort(OZ_Term prt, OZ_Term val)
 	return PROCEED;
     }
   } 
-  doPortSend((PortWithStream*)port,val,
-	     sc_required ? prt_home : (Board *) NULL);
+  doPortSend(port, val, sc_required ? prt_home : (Board *) NULL);
   return PROCEED;
 }
 

@@ -545,9 +545,28 @@ Bool DPMARSHALERCLASS::processCell(OZ_Term term, ConstTerm *cellConst)
   return (OK);
 }
 inline 
-void DPMARSHALERCLASS::processPort(OZ_Term term, Tertiary *tert)
+void DPMARSHALERCLASS::processPort(OZ_Term term, ConstTerm *portConst)
 {
-  DPMHandleTert("port", tert, term, return);
+  ByteBuffer *bs = (ByteBuffer *) getOpaque();
+  if (bs->availableSpace() >= 
+      2*DIFMaxSize + MNumberMaxSize + MOwnHeadMaxSize) {
+    int index;
+    VISITNODE(term, vIT, bs, index, return);
+    if(index) bs->put(DIF_RESOURCE_DEF);
+    else bs->put(DIF_RESOURCE);
+    glue_marshalPort(bs, static_cast<ConstTermWithHome*>(portConst));
+    if(index) marshalTermDef(bs, index);
+    Assert(bs->availableSpace() >= DIFMaxSize);
+  } else {
+#if defined(DBG_TRACE)
+    DBGINIT();
+    fprintf(dbgout, "> tag: %s(%d) on %s\n",
+      dif_names[DIF_SUSPEND].name, DIF_SUSPEND, toC(term));
+    fflush(dbgout);
+#endif
+    marshalDIFcounted(bs, DIF_SUSPEND);
+    suspend(term);
+  }
 }
 inline 
 void DPMARSHALERCLASS::processResource(OZ_Term term, Tertiary *tert)
