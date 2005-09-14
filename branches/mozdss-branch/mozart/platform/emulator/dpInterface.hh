@@ -38,7 +38,7 @@
 extern Bool (*isPerdioInitialized)();
  
 // 
-extern bool (*portSend)(Tertiary *p, TaggedRef msg);
+extern bool (*portSend)(OzPort *p, TaggedRef msg);
 extern bool (*cellDoExchange)(OzCell*,TaggedRef&,TaggedRef);
 extern bool (*cellDoAccess)(OzCell*,TaggedRef&);
 extern OZ_Return (*cellAtAccess)(OzCell*,TaggedRef,TaggedRef);

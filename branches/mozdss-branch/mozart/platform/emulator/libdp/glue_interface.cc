@@ -40,8 +40,8 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
-void doPortSend(PortWithStream *port,TaggedRef val,Board*);
-OZ_Return accessCell(OZ_Term cell,OZ_Term &out);
+void doPortSend(OzPort *port, TaggedRef val, Board*);
+OZ_Return accessCell(OZ_Term cell, OZ_Term &out);
 
 /* From DSS */
 MAP::MAP() :
@@ -86,40 +86,39 @@ void
 MAP::kbr_message(int key, PstInContainerInterface* pstin){
   PstInContainer *pst = static_cast<PstInContainer*>(pstin);
   printf("Receiving key:%d, msg %s\n", key, toC(pst->a_term)); 
-  PortWithStream * pws  =  static_cast<PortWithStream*>(tagged2Const(g_kbrStreamPort));
-  OZ_Term msg = OZ_recordInit(oz_atom("message"), oz_cons(oz_pairA("msg",pst->a_term), oz_cons(oz_pairAI("key", key),  oz_nil())));
-  doPortSend(pws,msg, NULL); 
+  OzPort *pws = tagged2Port(g_kbrStreamPort);
+  OZ_Term msg = OZ_recordInit(oz_atom("message"),
+                              oz_cons(oz_pairA("msg", pst->a_term), 
+			              oz_cons(oz_pairAI("key", key),
+				              oz_nil())));
+  doPortSend(pws, msg, NULL);
 }
 
 
 void 
 MAP::kbr_divideResp(int start, int stop, int n){
   printf("Divide interval ]%d %d ]\n", start, stop);
-  PortWithStream * pws  =  static_cast<PortWithStream*>(tagged2Const(g_kbrStreamPort));
-  OZ_Term msg =OZ_recordInit(oz_atom("divide"),
-			     oz_cons(oz_pairAI("begin",start), 
-				     oz_cons(oz_pairAI("end", stop), 
-					     oz_cons(oz_pairAI("n", n), oz_nil()))));
-  doPortSend(((PortWithStream *) tagged2Const(g_kbrStreamPort)), msg, NULL); 
+  OzPort *pws = tagged2Port(g_kbrStreamPort);
+  OZ_Term msg = OZ_recordInit(oz_atom("divide"),
+		  	      oz_cons(oz_pairAI("begin",start), 
+			 	      oz_cons(oz_pairAI("end", stop), 
+					      oz_cons(oz_pairAI("n", n),
+					              oz_nil()))));
+  doPortSend(pws, msg, NULL); 
 }
 
 void 
 MAP::kbr_newResp(int start, int stop, int n, PstInContainerInterface* pstin){
   printf("Divide interval ]%d %d ]\n", start, stop);
-  PortWithStream * pws  =  static_cast<PortWithStream*>(tagged2Const(g_kbrStreamPort));
+  OzPort *pws = tagged2Port(g_kbrStreamPort);
   PstInContainer *pst = static_cast<PstInContainer*>(pstin);
-  OZ_Term msg =OZ_recordInit(oz_atom("newResp"),
-			     oz_cons(oz_pairAI("begin",start), 
-				     oz_cons(oz_pairAI("end", stop), 
-					     oz_cons(oz_pairAI("n", n), 
-						     oz_cons(oz_pairA("data", pst->a_term), 
-							     oz_nil()
-							     )
-						     )
-					     )
-				     )
-			     );
-  doPortSend(((PortWithStream *) tagged2Const(g_kbrStreamPort)), msg, NULL); 
+  OZ_Term msg = OZ_recordInit(oz_atom("newResp"),
+  			      oz_cons(oz_pairAI("begin",start),
+			              oz_cons(oz_pairAI("end", stop),
+				              oz_cons(oz_pairAI("n", n),
+					              oz_cons(oz_pairA("data", pst->a_term),
+							      oz_nil())))));
+  doPortSend(pws, msg, NULL); 
 }
 
 
@@ -165,8 +164,7 @@ CsSiteInterface* ComService::unmarshalCsSite(DSite* name, DssReadBuffer* const b
 				oz_cons(oz_pair2(oz_int(1),
 						 oz_os),
 					oz_nil()));
-  doPortSend(((PortWithStream *) tagged2Const(g_connectPort)), 
-	     command, NULL); 
+  doPortSend(tagged2Port(g_connectPort), command, NULL); 
   return gsa; 
 } 
 
@@ -197,7 +195,7 @@ void ComService::m_MsgReceived(CsSiteInterface* CS, MsgContainer* msg){
 						 pst->a_term),
 				oz_cons(oz_pair2(oz_atom("srcSite"),gsr->m_getOzSite()),
 				oz_nil())));
-  doPortSend(((PortWithStream *) tagged2Const(g_connectPort)), command, NULL); 
+  doPortSend(tagged2Port(g_connectPort), command, NULL); 
 }
 
 ExtDataContainerInterface* 

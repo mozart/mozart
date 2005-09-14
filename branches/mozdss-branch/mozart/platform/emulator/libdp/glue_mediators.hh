@@ -231,8 +231,8 @@ public:
 class PortMediator:
   public ConstMediator, public RelaxedMutableMediatorInterface {
 public:
-  PortMediator(Tertiary *t);
-  PortMediator(Tertiary *t, AbstractEntity *ae);
+  PortMediator(ConstTerm *p);
+  PortMediator(ConstTerm *p, AbstractEntity *ae);
   
   virtual AOcallback callback_Write(DssThreadId* id_of_calling_thread,
 				    DssOperationId* operation_id,

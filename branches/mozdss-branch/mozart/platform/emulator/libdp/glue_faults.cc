@@ -43,7 +43,7 @@ Watcher::Watcher(TaggedRef p, FaultState f, Watcher *n):
 
 void Watcher::winvoke(FaultState cond, TaggedRef entity){
   OZ_Term msg = OZ_recordInit(oz_atom("watcher"),oz_cons(oz_pairA("entity",entity),oz_cons(oz_pairA("action",proc),oz_cons(oz_pairAI("condition",cond),oz_nil()))));
-  doPortSend((PortWithStream*)tagged2Port(FaultPort),msg,NULL);
+  doPortSend(tagged2Port(FaultPort), msg, NULL);
 }
 
 void Watcher::gCollect(){

@@ -331,21 +331,21 @@ OZ_BI_define(BIportToMS,1,1)
   if (!oz_isPort(prt)) {
     oz_typeError(0,"Port");}
   int len; 
-  Port *t  = tagged2Port(prt);
-  switch(t->getTertType()){
-  case Te_Local:
-    globalizeTertiary(t);
-    // no break here!
-  case Te_Proxy: {
-    CoordinatorAssistantInterface  *cai = index2CAI(t->getTertIndex());
-    GlueWriteBuffer buf(portToTickBuf, PORT_TO_TICK_BUF_LEN); 
-    cai->marshal(&buf, PMF_FREE);
-    len = buf.bufferUsed();
-    break; 
+  OzPort *p  = tagged2Port(prt);
+  PortMediator *me;
+  if (!p->isDistributed()){
+    // retrieve mediator, or create one
+    me = static_cast<PortMediator*>(mediatorTable->lookup(prt));
+    if (me == NULL) me = new PortMediator(p, NULL);
+    me->globalize();
+  } else {
+    me = static_cast<PortMediator*>(p->getMediator());
   }
-  default:
-    OZ_error("Something is horribly wrong Type of Tertiary is neither local, nor proxy" );
-  }
+  Assert(p->isDistributed());
+  CoordinatorAssistantInterface *cai = me->getCoordinatorAssistant();
+  GlueWriteBuffer buf(portToTickBuf, PORT_TO_TICK_BUF_LEN); 
+  cai->marshal(&buf, PMF_FREE);
+  len = buf.bufferUsed();
   char *str = encodeB64((char*)portToTickBuf, len);
   OZ_RETURN( OZ_string(str));
 }OZ_BI_end
@@ -364,15 +364,14 @@ OZ_BI_define(BImsToPort,1,1)
   DSS_unmarshal_status status = dss->unmarshalProxy(ae,&buf, PUF_FREE,aen);
   free(raw_buf);
   
-
   if(status.exist) {
     PortMediator *me = static_cast<PortMediator *>(ae->accessMediator());
     OZ_RETURN(makeTaggedConst(me->getConst()));
   }
-  Tertiary* prt = new PortProxy();
-  PortMediator *me = new PortMediator(prt, ae); 
-  prt->setTertIndex(reinterpret_cast<int>(me));
-  OZ_RETURN(makeTaggedConst(prt));
+  OzPort* p = new OzPort(oz_currentBoard(), oz_newReadOnly(oz_currentBoard()));
+  PortMediator *me = new PortMediator(p, ae); 
+  p->setMediator(me);
+  OZ_RETURN(makeTaggedConst(p));
 }OZ_BI_end
 
 

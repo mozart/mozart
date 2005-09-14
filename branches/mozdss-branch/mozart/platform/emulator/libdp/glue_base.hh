@@ -37,6 +37,6 @@ extern OZ_Term g_defaultAcceptProcedure;
 extern OZ_Term g_defaultConnectionProcedure;
 extern OZ_Term g_faultPort;
 
-void doPortSend(PortWithStream *port,TaggedRef val,Board*);
+void doPortSend(OzPort *port, TaggedRef val, Board*);
 
 #endif

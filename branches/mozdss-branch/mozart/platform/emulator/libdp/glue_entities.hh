@@ -46,17 +46,6 @@ const Mediator * const NOT_USED_VAR_INDEX  = reinterpret_cast<Mediator *>(0xbedd
 
 extern TaggedRef BI_portWait;
 
-/************************ A Port ************************/
-
-class PortProxy: public PortWithStream  {
-public:
-  NO_DEFAULT_CONSTRUCTORS(PortProxy);
-  PortProxy(): PortWithStream(oz_currentBoard(),oz_newReadOnly(oz_currentBoard())) 
-  {
-    setTertType(Te_Proxy);
-    setTertIndex(NOT_USED_INDEX);
-  }
-};
 
 /************************ Lock Proxy **********************/
 

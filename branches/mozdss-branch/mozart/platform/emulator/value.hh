@@ -602,7 +602,7 @@ public:
   void init(Board *bb, TypeOfConst tt) { ConstTerm::init(tt); setBoard(bb); }
 
   Board *getBoardInternal() {
-    return hasGName() ? oz_rootBoardOutline() : (Board*)boardOrGName.getPtr();
+    return isDistributed() ? oz_rootBoardOutline() : (Board*)boardOrGName.getPtr();
   }
 
   Board *getSubBoardInternal() {
@@ -2633,22 +2633,13 @@ class OzCell:public ConstTermWithHome{
   friend void ConstTerm::gCollectConstRecurse(void);
   friend void ConstTerm::sCloneConstRecurse(void);
 private:
-  // DENYS:
-  // if I understand things correctly, the dummy member is there to
-  // make it half-way likely that we can somehow cast between
-  // CellFrame and CellLocal.  Such a cast may be used for forwarding,
-  // although I was not really able to locate such a cast precisely.
-  // WARNING: TaggedRef needs to be the same size as void* else this
-  // won't work.
-  // BORISS:
-  // if Denys got it right. We don't need the dummy member anymore.
+  // When the cell is distributed, val == 0 means that the state is not present.
   TaggedRef val;
-  //void *dummy; // mm2
+
 public:                
   NO_DEFAULT_CONSTRUCTORS(OzCell);
 
   OzCell(Board *b, TaggedRef v) : ConstTermWithHome(b, Co_Cell), val(v) {}  
-//  OzCell() : ConstTermWithHome(oz_currentBoard(), Co_Cell), val(0) {}  
   TaggedRef getValue() { return val; }
 
   void setValue(TaggedRef v) { val=v; }
@@ -2677,49 +2668,30 @@ OzCell *tagged2Cell(TaggedRef term)
 }
                   
 /*===================================================================
- * Ports          
+ * Port          
  *=================================================================== */
 
-class Port : public Tertiary {
-  friend void ConstTerm::gCollectConstRecurse(void);
-  friend void ConstTerm::sCloneConstRecurse(void);
-public:
-  NO_DEFAULT_CONSTRUCTORS(Port)
-  Port(Board *b, TertType tt) : Tertiary(b,Co_Port,tt){}
-};
-
-class PortWithStream : public Port {
+class OzPort : public ConstTermWithHome {
   friend void ConstTerm::gCollectConstRecurse(void);
   friend void ConstTerm::sCloneConstRecurse(void);
 public:
   TaggedRef strm;
-  NO_DEFAULT_CONSTRUCTORS(PortWithStream)
-  TaggedRef exchangeStream(TaggedRef newStream)
-  { 
+  NO_DEFAULT_CONSTRUCTORS(OzPort)
+  TaggedRef exchangeStream(TaggedRef newStream) { 
     TaggedRef ret = strm;
     strm = newStream;
-    return ret;   }
-  PortWithStream(Board *b, TaggedRef s) : Port(b,Te_Local)  {
-    strm = s;}
-};
-
-class PortLocal: public PortWithStream {
-  friend void ConstTerm::gCollectConstRecurse(void);
-  friend void ConstTerm::sCloneConstRecurse(void);
-public:
-  NO_DEFAULT_CONSTRUCTORS(PortLocal)
-  PortLocal(Board *b, TaggedRef s) : PortWithStream(b,s) {};
+    return ret;
+  }
+  
+  OzPort(Board *b, TaggedRef s):ConstTermWithHome(b, Co_Port), strm(s) {}
 };
 
 inline
 Bool oz_isPort(TaggedRef term)
 { return oz_isConst(term) && tagged2Const(term)->getType() == Co_Port;}
   
-inline PortWithStream *tagged2PortWithStream(TaggedRef term)
-{ return (PortWithStream *) tagged2Const(term);}
-
-inline Port *tagged2Port(TaggedRef term)
-{ return (Port*) tagged2Const(term);}
+inline OzPort *tagged2Port(TaggedRef term)
+{ return (OzPort *) tagged2Const(term);}
 
 /*===================================================================
  * Space

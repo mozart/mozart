@@ -388,7 +388,7 @@ public:
   Bool processObject(OZ_Term objTerm, ConstTerm *objConst);
   void processLock(OZ_Term lockTerm, Tertiary *lockTert);
   Bool processCell(OZ_Term cellTerm, ConstTerm *cellConst);
-  void processPort(OZ_Term portTerm, Tertiary *portTert);
+  void processPort(OZ_Term portTerm, ConstTerm *portConst);
   void processResource(OZ_Term resTerm, Tertiary *tert);
   void processNoGood(OZ_Term resTerm);
   void processVar(OZ_Term cv, OZ_Term *varTerm);
@@ -435,7 +435,7 @@ public:
   Bool processObject(OZ_Term objTerm, ConstTerm *objConst);
   void processLock(OZ_Term lockTerm, Tertiary *lockTert);
   Bool processCell(OZ_Term cellTerm, ConstTerm *cellConst);
-  void processPort(OZ_Term portTerm, Tertiary *portTert);
+  void processPort(OZ_Term portTerm, ConstTerm *portConst);
   void processResource(OZ_Term resTerm, Tertiary *tert);
   void processNoGood(OZ_Term resTerm);
   void processVar(OZ_Term cv, OZ_Term *varTerm);
@@ -605,7 +605,7 @@ public:
   void processBigInt(OZ_Term biTerm);
   void processBuiltin(OZ_Term biTerm, ConstTerm *biConst);
   void processLock(OZ_Term lockTerm, Tertiary *lockTert);
-  void processPort(OZ_Term portTerm, Tertiary *portTert);
+  void processPort(OZ_Term portTerm, ConstTerm *portConst);
   void processResource(OZ_Term resTerm, Tertiary *tert);
   void processNoGood(OZ_Term resTerm);
   void processVar(OZ_Term cv, OZ_Term *varTerm);

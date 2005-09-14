@@ -165,11 +165,8 @@ void globalizeTertiary(Tertiary *t)
     }
   case Co_Port:
     {
-      // retrieve mediator, or create one
-      PortMediator* me = static_cast<PortMediator*>
-	(mediatorTable->lookup(makeTaggedConst(t)));
-      if (me == NULL) me = new PortMediator(t, NULL);
-      me->globalize();
+      OZ_error("Globalization of Ports shouldn't be done as a Tertiary\n");
+      Assert(0);
       break;
     }
   default:
@@ -233,19 +230,41 @@ void glue_marshalDictionary(ByteBuffer *bs, ConstTermWithHome *dictConst) {
 void glue_marshalCell(ByteBuffer *bs, ConstTermWithHome *cellConst)
 {
   OzCell *ozC = static_cast<OzCell*>(cellConst);
-
+  CellMediator *cm;
   if (!ozC->isDistributed()) {
-    CellMediator *cm = static_cast<CellMediator*>
+    cm = static_cast<CellMediator*>
       (mediatorTable->lookup(makeTaggedConst(cellConst)));
     if (cm == NULL) cm = new CellMediator(cellConst, NULL);
     cm->globalize();
   }
   Assert(ozC->isDistributed());
 
-  AbstractEntity *ae = index2AE((int)(ozC->getMediator()));
   GlueWriteBuffer *gwb = static_cast<GlueWriteBuffer *>(bs); 
-  ae->getCoordinatorAssistant()->marshal(gwb, PMF_ORDINARY);
+  (cm->getCoordinatorAssistant())->marshal(gwb, PMF_ORDINARY);
   bs->put(DSS_DIF_CELL);
+}
+
+
+///////////////////////////////////////////////////////////////////////////
+////  Marshal Port 
+
+void glue_marshalPort(ByteBuffer *bs, ConstTermWithHome *portConst)
+{
+  OzPort *ozP = static_cast<OzPort*>(portConst);
+  PortMediator *pm;
+  if (!ozP->isDistributed()) {
+    pm = static_cast<PortMediator*>
+      (mediatorTable->lookup(makeTaggedConst(portConst)));
+    if (pm == NULL) pm = new PortMediator(portConst, NULL);
+    pm->globalize();
+  } else {
+    pm = static_cast<PortMediator*>(ozP->getMediator());
+  }
+  Assert(ozP->isDistributed());
+
+  GlueWriteBuffer *gwb = static_cast<GlueWriteBuffer *>(bs); 
+  (pm->getCoordinatorAssistant())->marshal(gwb, PMF_ORDINARY);
+  bs->put(DSS_DIF_PORT);
 }
 
 
@@ -308,6 +327,8 @@ void glue_marshalTertiary(ByteBuffer *bs, Tertiary *t, Bool push)
         bs->put(DSS_DIF_CELL);
         break;
       case Co_Port:
+        OZ_error("Port shall not be marshaled as Tertiary\n");
+	Assert(0);      
         bs->put(DSS_DIF_PORT);
         break; 
       case Co_Lock:
@@ -460,16 +481,17 @@ OZ_Term  glue_unmarshalDistTerm(ByteBuffer *bs)
       return oTh; 
     }
     case DSS_DIF_CELL:{
-      OzCell *cell = new OzCell(NULL, 0); 
+      OzCell *cell = new OzCell(NULL, makeTaggedNULL()); 
       CellMediator *me = new CellMediator(cell, ae); 
       cell->setMediator((void *)me);
       return makeTaggedConst(cell);
     }
     case DSS_DIF_PORT: {
-      Tertiary *tert = new PortProxy();        
-      PortMediator *me = new PortMediator(tert, ae); 
-      tert->setTertIndex(reinterpret_cast<int>(me));
-      return makeTaggedConst(tert);
+      OzPort *port = new OzPort(oz_currentBoard(),
+                                oz_newReadOnly(oz_currentBoard()));
+      PortMediator *me = new PortMediator(port, ae); 
+      port->setMediator(me);
+      return makeTaggedConst(port);
     }
     case DSS_DIF_LOCK:{
       Tertiary *tert = new LockProxy();
