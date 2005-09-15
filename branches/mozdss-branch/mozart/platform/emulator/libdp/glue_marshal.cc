@@ -236,11 +236,13 @@ void glue_marshalCell(ByteBuffer *bs, ConstTermWithHome *cellConst)
       (mediatorTable->lookup(makeTaggedConst(cellConst)));
     if (cm == NULL) cm = new CellMediator(cellConst, NULL);
     cm->globalize();
-  }
+  } 
+  else cm = static_cast<CellMediator*>(ozC->getMediator());
+  
   Assert(ozC->isDistributed());
 
   GlueWriteBuffer *gwb = static_cast<GlueWriteBuffer *>(bs); 
-  (cm->getCoordinatorAssistant())->marshal(gwb, PMF_ORDINARY);
+  cm->getCoordinatorAssistant()->marshal(gwb, PMF_ORDINARY);
   bs->put(DSS_DIF_CELL);
 }
 
