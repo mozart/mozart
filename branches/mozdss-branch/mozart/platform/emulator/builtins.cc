@@ -3323,7 +3323,7 @@ OZ_BI_define(BIsendRecvPort,2,1)
 
 OZ_BI_define(BInewLock,0,1)
 {
-  OZ_RETURN(makeTaggedConst(new LockLocal(oz_currentBoard())));
+  OZ_RETURN(makeTaggedConst(new OzLock(oz_currentBoard())));
 } OZ_BI_end
 
 // ---------------------------------------------------------------------
@@ -4201,7 +4201,7 @@ Object *newObject(SRecord *feat, SRecord *st, ObjectClass *cla, Board *b)
 {
   OzLock *lck=NULL;
   if (cla->supportsLocking()) {
-    lck = new LockLocal(oz_currentBoard());
+    lck = new OzLock(oz_currentBoard());
   }
   return new Object(b,st,cla,feat,lck);
 }

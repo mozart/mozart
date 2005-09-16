@@ -1323,20 +1323,20 @@ void Builtin::initname(void) {
 
 
 /*===================================================================
- * LockLocal
+ * OzLock
  *=================================================================== */
 
-void LockLocal::unlockComplex(){
+void OzLock::unlockComplex() {
   locker = pendThreadResumeFirst(&pending);
   Assert(relocks == 0);
   relocks = 1;
-  return;}
+  return;
+}
 
-void LockLocal::lockComplex(Thread *t){
+void OzLock::lockComplex(Thread *t) {
   // mm2: ignoring the return is badly wrong
-  (void) pendThreadAddToEndEmul(getPendBase(),t,getBoardInternal());}
-
-//bmc: void LockSecEmul::unlockPending(Thread* th) -- deleted --
+  (void) pendThreadAddToEndEmul(getPendBase(), t, getBoardInternal());
+}
 
 /*===================================================================
  * PendThread

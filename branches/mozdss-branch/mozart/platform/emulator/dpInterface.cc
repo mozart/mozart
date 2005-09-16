@@ -97,13 +97,13 @@ OZ_Return distVarMakeNeededStub(TaggedRef*) {
 // further, e.g. inline cases when distributed locks are currently
 // local;
 // interface;
-bool unlockDistLockStub(Tertiary *t)
+bool unlockDistLockStub(OzLock *l)
 {
   OZD_error("'unlockDistLock' called without DP library?");
   return false; 
 }
 
-bool lockDistLockStub(Tertiary *t, Thread *thr)
+bool lockDistLockStub(OzLock *l, Thread *thr)
 {
   OZD_error("'lockDistLock' called without DP library?");
   return false;
@@ -186,9 +186,9 @@ void (*cellOperationDone)(OzCell*,TaggedRef)
 // lock/unlock (interface) methods/their usage may be optimized
 // further, e.g. inline cases when distributed locks are currently
 // local;
-bool (*lockDistLock)(Tertiary *t, Thread *thr)
+bool (*lockDistLock)(OzLock *l, Thread *thr)
   = lockDistLockStub;
-bool (*unlockDistLock)(Tertiary *t)
+bool (*unlockDistLock)(OzLock *l)
   = unlockDistLockStub; 
 bool (*distArrayGet)(OzArray*, TaggedRef, TaggedRef&)
   = distArrayGetStub;

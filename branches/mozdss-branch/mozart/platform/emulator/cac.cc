@@ -1426,7 +1426,7 @@ void ConstTerm::_cacConstRecurse(void) {
   case Co_Lock:
     {
       Tertiary *t=(Tertiary*)this;
-      LockLocal *ll = (LockLocal *) this;
+      OzLock *ll = (OzLock *) this;
 #ifdef G_COLLECT
 	gCollectPendThreadEmul(&(ll->pending));
 #endif
@@ -1552,6 +1552,14 @@ ConstTerm * ConstTerm::gCollectConstTermInline(void) {
     sz = sizeof(ObjectClass);
     goto const_withhome;
 
+  case Co_Port:  
+    sz = sizeof(OzPort);
+    goto const_withhome;
+
+  case Co_Lock:
+    sz = sizeof(OzLock);
+    goto const_withhome;
+
     /*
      * Tertiary
      *
@@ -1561,16 +1569,8 @@ ConstTerm * ConstTerm::gCollectConstTermInline(void) {
     sz = sizeof(Object);
     goto const_tertiary;
 
-  case Co_Port:  
-    sz = sizeof(OzPort);
-    goto const_withhome;
-
   case Co_Space:
     sz = sizeof(Space);
-    goto const_tertiary;
-
-  case Co_Lock:
-    sz = sizeof(LockLocal);
     goto const_tertiary;
 
   default:
@@ -1685,6 +1685,14 @@ ConstTerm *ConstTerm::sCloneConstTermInline(void) {
     sz = sizeof(ObjectClass);
     goto const_withhome;
 
+  case Co_Port:  
+    sz = sizeof(OzPort);
+    goto const_withhome;
+
+  case Co_Lock:
+    sz = sizeof(OzLock);
+    goto const_withhome;
+
     /*
      * Tertiary
      *
@@ -1694,16 +1702,8 @@ ConstTerm *ConstTerm::sCloneConstTermInline(void) {
     sz = sizeof(Object);
     goto const_tertiary;
 
-  case Co_Port:  
-    sz = sizeof(OzPort);
-    goto const_withhome;
-
   case Co_Space:
     sz = sizeof(Space);
-    goto const_tertiary;
-
-  case Co_Lock:
-    sz = sizeof(LockLocal);
     goto const_tertiary;
 
   default:

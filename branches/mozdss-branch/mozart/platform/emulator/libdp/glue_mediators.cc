@@ -515,10 +515,10 @@ OzThreadMediator::installEntityRepresentation(PstInContainerInterface*){
 
 /************************* LockMediator *************************/
 
-LockMediator::LockMediator(Tertiary *t) : ConstMediator(t, DETACHED)
+LockMediator::LockMediator(ConstTerm *t) : ConstMediator(t, DETACHED)
 {}
 
-LockMediator::LockMediator(Tertiary *t, AbstractEntity *ae) :
+LockMediator::LockMediator(ConstTerm *t, AbstractEntity *ae) :
   ConstMediator(t, ATTACHED)
 {
   setAbstractEntity(ae);
@@ -533,9 +533,8 @@ void LockMediator::globalize(){
   getDssParameters(pn, aa, rc);
   setAbstractEntity(dss->m_createMutableAbstractEntity( pn, aa, rc));
 
-  Tertiary *t = static_cast<Tertiary*>(tagged2Const(entity));
-  t->setTertType(Te_Proxy);
-  t->setTertIndex(reinterpret_cast<int>(this));
+  OzLock *lock = static_cast<OzLock*>(getConst());
+  lock->setMediator((void *)this);
   setAttached(ATTACHED);
 }
 
@@ -546,7 +545,7 @@ void LockMediator::localize(){
     delete absEntity;
     absEntity = NULL;
     // 2. localize the lock (detach mediator)
-    static_cast<Tertiary*>(tagged2Const(entity))->setTertType(Te_Local);
+    static_cast<OzLock*>(getConst())->setBoard(oz_currentBoard());
     setAttached(DETACHED);
     // 3. keep the mediator in the table
     mediatorTable->insert(this);
@@ -554,7 +553,7 @@ void LockMediator::localize(){
   } else {
     // remove completely mediator, so
     // 1. localize the lock
-    static_cast<Tertiary*>(tagged2Const(entity))->setTertType(Te_Local);
+    static_cast<OzLock*>(getConst())->setBoard(oz_currentBoard());
     // 2. delete mediator
     delete this;
   }
@@ -568,7 +567,7 @@ LockMediator::callback_Write(DssThreadId* id_of_calling_thread,
 {
   // Two perations can be done, Lock and Unlock. If a reference to a
   // thread is passed as contents, it is a lock, otherwise an unlock
-  LockLocal *lock = static_cast<LockLocal*>(getConst());
+  OzLock *lock = static_cast<OzLock*>(getConst());
   if(operation !=  NULL) {
     /////// LOCK /////////////
     PstInContainer *pst = static_cast<PstInContainer*>(operation); 
@@ -616,7 +615,7 @@ LockMediator::callback_Read(DssThreadId* id_of_calling_thread,
 
 PstOutContainerInterface *
 LockMediator::retrieveEntityRepresentation(){
-  LockLocal *lock = static_cast<LockLocal*>(getConst());
+  OzLock *lock = static_cast<OzLock*>(getConst());
   if (lock->getLocker() == NULL)
     return NULL; 
   
@@ -642,7 +641,7 @@ LockMediator::retrieveEntityRepresentation(){
 
 void 
 LockMediator::installEntityRepresentation(PstInContainerInterface* pstIn){
-  LockLocal *lock = static_cast<LockLocal*>(getConst());
+  OzLock *lock = static_cast<OzLock*>(getConst());
   if (pstIn == NULL)
     {
       lock->setPending(NULL); 

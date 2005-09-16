@@ -276,8 +276,8 @@ public:
 // mediators for Oz locks
 class LockMediator: public ConstMediator, public MutableMediatorInterface{
 public:
-  LockMediator(Tertiary *t);
-  LockMediator(Tertiary *t, AbstractEntity *p);
+  LockMediator(ConstTerm *t);
+  LockMediator(ConstTerm *t, AbstractEntity *p);
   
   virtual AOcallback callback_Write(DssThreadId* id_of_calling_thread,
 				    DssOperationId* operation_id,

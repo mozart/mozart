@@ -493,7 +493,7 @@ void VSnapshotBuilder::processNoGood(OZ_Term resTerm)
   VisitNodeTrav(resTerm, vIT, return);
 }
 inline 
-void VSnapshotBuilder::processLock(OZ_Term lockTerm, Tertiary *tert)
+void VSnapshotBuilder::processLock(OZ_Term lockTerm, ConstTerm *lockConst)
 {
   VisitNodeTrav(lockTerm, vIT, return);
 }
