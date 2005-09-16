@@ -2503,7 +2503,7 @@ LBLdispatcher:
   
       if (!t->isDistributed()) {
 	if (!e->isCurrentRoot()) {
-	  if (!oz_isCurrentBoard(GETBOARD((LockLocal*)t))) {
+	  if (!oz_isCurrentBoard(GETBOARD(t))) {
 	    (void) oz_raise(E_ERROR,E_KERNEL,"globalState",1,AtomLock);
 	    RAISE_THREAD;
 	  }
@@ -2525,7 +2525,7 @@ LBLdispatcher:
 	      goto LBLreplaceBICall;
 	    }
 	}
-      if (((LockLocal*)t)->lockB(th)){
+      if (t->lockB(th)){
 	PushCont(PC+lbl);
 	CTS->pushLock(t);
 	DISPATCH(3);
@@ -3110,15 +3110,10 @@ LBLdispatcher:
 
   Case(TASKLOCK)
     {
-      OzLock *lck = (OzLock *) CAP;
+      OzLock *lock = (OzLock *) CAP;
       CAP = (Abstraction *) NULL;
-      switch(lck->getTertType()){
-      case Te_Local:
-	((LockLocal*)lck)->unlock();
-	break;
-      case Te_Proxy:
-	(*unlockDistLock)(lck);
-      }
+      if (lock->isDistributed()) (*unlockDistLock)(lock);
+      else lock->unlock();
       goto LBLpopTaskNoPreempt;
     }
 

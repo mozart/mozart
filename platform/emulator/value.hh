@@ -2804,33 +2804,26 @@ enum OzLockTakeResult{
   OZ_LTR_SUSP
 };
 
-class OzLock:public Tertiary{
-public:
-  NO_DEFAULT_CONSTRUCTORS(OzLock)
-  OzLock() { Assert(0); }
-  OzLock(Board *b,TertType tt):Tertiary(b,Co_Lock,tt){}
-  OzLock(void *i,TertType tt):Tertiary(i,Co_Lock,tt){}
-};
-
-class LockLocal:public OzLock{
+class OzLock:public ConstTermWithHome{
   friend void ConstTerm::gCollectConstRecurse(void);
   friend void ConstTerm::sCloneConstRecurse(void);
 private:
   PendThread *pending;
   TaggedRef locker;
   int relocks;
-public:                
-  NO_DEFAULT_CONSTRUCTORS(LockLocal)
-  LockLocal(Board *b) : OzLock(b,Te_Local){
+public:
+  NO_DEFAULT_CONSTRUCTORS(OzLock)
+  OzLock() { Assert(0); }
+  OzLock(Board *b):ConstTermWithHome(b, Co_Lock){
     locker = 0;
     pending = NULL;
     relocks = 0;
   }
 
-  PendThread* getPending(){return pending;}
-  void setPending(PendThread *pt){pending=pt;}
-  PendThread** getPendBase(){return &pending;}
-  
+  PendThread* getPending() { return pending; }
+  void setPending(PendThread *pt) { pending = pt; }
+  PendThread** getPendBase() { return &pending; }
+
   Thread * getLocker() {
     if (locker == 0)
       return NULL;
@@ -2843,28 +2836,23 @@ public:
       locker = oz_thread(t);
   }
 
-  Bool hasLock(Thread *t){return (t==getLocker()) ? TRUE : FALSE;}
+  Bool hasLock(Thread *t) { return (t==getLocker()) ? TRUE : FALSE; }
 
   void unlockComplex();
-  void unlock(){
+  void unlock() {
     Assert(getLocker()!=0);
     Assert(relocks>0);
     relocks--;
     if (relocks > 0 ) return;
-    if(pending==NULL){
+    if(pending==NULL) {
       locker = 0;
-      return;}
-    unlockComplex();}
-
-  //Bool isLocked(Thread *t) { return (getLocker()==t); }
+      return;
+    }
+    unlockComplex();
+  }
 
   void lockComplex(Thread *);
-  /*
-  void lock(Thread *t){
-    if(t==getLocker()) {return;}
-    if(getLocker()==NULL) {setLocker(t);return;}
-    lockComplex(t);}
-  */
+
   Bool lockB(Thread *t) {
     Thread *cur = getLocker();
     if (t == cur) {
@@ -2887,14 +2875,12 @@ public:
 
   void globalize(int);
 
-  void convertToLocal(Thread *t,PendThread *pt){
+  void convertToLocal(Thread *t,PendThread *pt) {
     setLocker(t);
-    pending=pt;}
-};
+    pending=pt;
+  }
 
-//bmc: class LockSecEmul deleted
-//bmc: class LockManagerEmul deleted
-//bmc: class LockFrameEmul deleted
+};
 
 inline
 Bool oz_isLock(TaggedRef term)

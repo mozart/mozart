@@ -47,18 +47,6 @@ const Mediator * const NOT_USED_VAR_INDEX  = reinterpret_cast<Mediator *>(0xbedd
 extern TaggedRef BI_portWait;
 
 
-/************************ Lock Proxy **********************/
-
-class LockProxy : public LockLocal{
-public:
-  LockProxy():LockLocal(oz_currentBoard())
-  {
-    setTertType(Te_Proxy); setTertIndex(NOT_USED_INDEX);
-  } 
-  
-};
-
-
 /***************** The Variable ******************/
 #define GET_VAR(po,T) oz_get##T##Var(*((po)->getPtr()))
 #define GET_TERM(po,T) oz_get##T##Var(*((po)->getAnyPtr()))

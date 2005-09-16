@@ -38,7 +38,7 @@
 
 
 
-bool unlockDistLockImpl(Tertiary *l){
+bool unlockDistLockImpl(OzLock *l){
   // Here we have to do a minor violation to the sequential
   // consistency.  I don't undestand how a thread should be suspended
   // on an unlock operation.  This is a necessity, in order to
@@ -46,7 +46,7 @@ bool unlockDistLockImpl(Tertiary *l){
   // a dummy thread that acts as a goaly for the resume operation. No
   // actual thread exists.
 
-  LockMediator *me = static_cast<LockMediator*>(index2Me(l->getTertIndex())); 
+  LockMediator *me = static_cast<LockMediator*>(l->getMediator()); 
   AbstractEntity *ae = me->getAbstractEntity();
   MutableAbstractEntity *mae = static_cast<MutableAbstractEntity*>(ae);
   DssThreadId *thrId = currentThreadId();
@@ -73,8 +73,8 @@ bool unlockDistLockImpl(Tertiary *l){
   return true;
 }
 
-bool lockDistLockImpl(Tertiary *l, Thread *thr){
-  LockMediator *me = static_cast<LockMediator*>(index2Me(l->getTertIndex())); 
+bool lockDistLockImpl(OzLock *l, Thread *thr){
+  LockMediator *me = static_cast<LockMediator*>(l->getMediator()); 
   AbstractEntity *ae = me->getAbstractEntity();
   MutableAbstractEntity *mae = static_cast<MutableAbstractEntity*>(ae);
   DssThreadId *thrId = currentThreadId();

@@ -345,10 +345,6 @@ class Object;
 class OzDictionary;
 
 class OzLock;
-class LockLocal;
-//class LockFrameEmul;
-//class LockManagerEmul;
-//class LockSecEmul deleted.
 
 class InlineCache;
 class OZ_Location;

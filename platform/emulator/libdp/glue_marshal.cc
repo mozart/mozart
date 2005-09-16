@@ -147,6 +147,9 @@ void globalizeTertiary(Tertiary *t)
     }
   case Co_Lock:
     {
+      OZ_error("Globalization of Lock shouldn't be done as a Tertiary\n");
+      Assert(0);
+      break; 
       // retrieve mediator, or create one
       LockMediator* me = static_cast<LockMediator*>
 	(mediatorTable->lookup(makeTaggedConst(t)));
@@ -259,14 +262,37 @@ void glue_marshalPort(ByteBuffer *bs, ConstTermWithHome *portConst)
       (mediatorTable->lookup(makeTaggedConst(portConst)));
     if (pm == NULL) pm = new PortMediator(portConst, NULL);
     pm->globalize();
-  } else {
-    pm = static_cast<PortMediator*>(ozP->getMediator());
   }
+  else pm = static_cast<PortMediator*>(ozP->getMediator());
+
   Assert(ozP->isDistributed());
 
   GlueWriteBuffer *gwb = static_cast<GlueWriteBuffer *>(bs); 
   (pm->getCoordinatorAssistant())->marshal(gwb, PMF_ORDINARY);
   bs->put(DSS_DIF_PORT);
+}
+
+
+///////////////////////////////////////////////////////////////////////////
+////  Marshal Lock 
+
+void glue_marshalLock(ByteBuffer *bs, ConstTermWithHome *lockConst)
+{
+  OzLock *ozL = static_cast<OzLock*>(lockConst);
+  LockMediator *lm;
+  if (!ozL->isDistributed()) {
+    lm = static_cast<LockMediator*>
+      (mediatorTable->lookup(makeTaggedConst(lockConst)));
+    if (lm == NULL) lm = new LockMediator(lockConst, NULL);
+    lm->globalize();
+  } 
+  else lm = static_cast<LockMediator*>(ozL->getMediator());
+  
+  Assert(ozL->isDistributed());
+
+  GlueWriteBuffer *gwb = static_cast<GlueWriteBuffer *>(bs); 
+  lm->getCoordinatorAssistant()->marshal(gwb, PMF_ORDINARY);
+  bs->put(DSS_DIF_LOCK);
 }
 
 
@@ -326,15 +352,14 @@ void glue_marshalTertiary(ByteBuffer *bs, Tertiary *t, Bool push)
       case Co_Cell:
         OZ_error("Cell shall not be marshaled as Tertiary\n");
 	Assert(0);
-        bs->put(DSS_DIF_CELL);
         break;
       case Co_Port:
         OZ_error("Port shall not be marshaled as Tertiary\n");
 	Assert(0);      
-        bs->put(DSS_DIF_PORT);
         break; 
       case Co_Lock:
-        bs->put(DSS_DIF_LOCK);
+        OZ_error("Lock shall not be marshaled as Tertiary\n");
+	Assert(0);
         break;
       case Co_Resource:
         bs->put(DSS_DIF_UNUSABLE);
@@ -496,10 +521,10 @@ OZ_Term  glue_unmarshalDistTerm(ByteBuffer *bs)
       return makeTaggedConst(port);
     }
     case DSS_DIF_LOCK:{
-      Tertiary *tert = new LockProxy();
-      LockMediator *me = new LockMediator(tert, ae); 
-      tert->setTertIndex(reinterpret_cast<int>(me));
-      return makeTaggedConst(tert);
+      OzLock *lock = new OzLock(oz_currentBoard());
+      LockMediator *me = new LockMediator(lock, ae); 
+      lock->setMediator((void *)me);
+      return makeTaggedConst(lock);
     }
     case DSS_DIF_ARRAY:{
       int low  =  unmarshalNumber(bs); 

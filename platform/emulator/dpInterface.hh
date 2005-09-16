@@ -54,8 +54,8 @@ extern OZ_Return (*distVarUnify)(OzVariable*, TaggedRef*,
 				 OzVariable*, TaggedRef*);
 extern OZ_Return (*distVarMakeNeeded)(TaggedRef*);
 
-extern bool (*lockDistLock)(Tertiary*, Thread *thr);
-extern bool (*unlockDistLock)(Tertiary*);
+extern bool (*lockDistLock)(OzLock*, Thread *thr);
+extern bool (*unlockDistLock)(OzLock*);
 //
 extern bool (*distArrayGet)(OzArray*, TaggedRef, TaggedRef&);
 extern bool (*distArrayPut)(OzArray*, TaggedRef, TaggedRef);

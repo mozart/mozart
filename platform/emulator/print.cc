@@ -701,16 +701,10 @@ void ConstTerm::printLongStream(ostream &stream, int depth, int offset)
       stream << "Local Cell@" << this;    
     break;
   case Co_Port:	      
-    switch(((Tertiary *)this)->getTertType()){
-    case Te_Local:
-      stream << "PortLocal@" << this;
-      break;
-    case Te_Proxy:
-      stream << "PortProxy@" << this;
-      break;
-    default:
-      Assert(NO);
-    }
+    if (((OzPort *)this)->isDistributed())
+      stream << "Proxy Port@" << this;
+    else
+      stream << "Local Port@" << this;    
     break;
   case Co_Space:
     ((Space *) this)->printLongStream(stream,depth,offset);
@@ -724,16 +718,11 @@ void ConstTerm::printLongStream(ostream &stream, int depth, int offset)
   case Co_Dictionary:
     ((OzDictionary *) this)->printLongStream(stream,depth,offset);
     break;
-  case Co_Lock:       
-    switch(((Tertiary *)this)->getTertType()){
-    case Te_Local:
-      stream << "<LockLocal@" << this << ">";
-      break;
-    case Te_Proxy:
-      stream << "<LockProxy@" << this << ">";
-      break;
-    default:         Assert(NO);
-    }
+  case Co_Lock:
+    if (((OzLock *) this)->isDistributed())
+      stream << "<Proxy Lock@" << this << ">";
+    else
+      stream << "<Local Lock@" << this << ">";
     break;
   case Co_Builtin:
     ((Builtin *) this)->printLongStream(stream,depth,offset);
@@ -771,21 +760,15 @@ void ConstTerm::printStream(ostream &stream, int depth)
     break;
   case Co_Cell:
     if (((OzCell *)this)->isDistributed())
-      stream << "CellProxy@" << this;
+      stream << "Proxy Cell@" << this;
     else
-      stream << "CellLocal@" << this;
+      stream << "Local Cell@" << this;
     break;
   case Co_Port:
-    switch(((Tertiary *)this)->getTertType()){
-    case Te_Local:
-      stream << "PortLocal@" << this;
-      break;
-    case Te_Proxy:
-      stream << "PortProxy@" << this;
-      break;
-    default:
-      Assert(NO);
-    }
+    if (((OzPort *)this)->isDistributed())
+      stream << "Proxy Port@" << this;
+    else
+      stream << "Local Port@" << this;
     break;
   case Co_Space:       ((Space *) this)->printStream(stream,depth);
     break;
@@ -796,15 +779,10 @@ void ConstTerm::printStream(ostream &stream, int depth)
   case Co_Dictionary:  ((OzDictionary *) this)->printStream(stream,depth);
     break;
   case Co_Lock:
-    switch(((Tertiary *)this)->getTertType()){
-    case Te_Local:
-      stream << "<LockLocal@" << this << ">";
-      break;
-    case Te_Proxy:
-      stream << "<LockProxy@" << this << ">";
-      break;
-    default:         Assert(NO);
-    }
+    if (((OzLock *)this)->isDistributed())
+      stream << "Proxy Lock@" << this;
+    else
+      stream << "Local Lock@" << this;
     break;
   case Co_Builtin:     ((Builtin *) this)->printStream(stream,depth);
     break;

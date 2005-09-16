@@ -217,12 +217,12 @@ SuspendedLockTake::SuspendedLockTake(Mediator* med, TaggedRef thr) :
 
 WakeRetVal SuspendedLockTake::resumeDoLocal(DssOperationId*) {
   ConstMediator *med = static_cast<ConstMediator*>(getMediator());
-  LockLocal *lck     = static_cast<LockLocal*>(med->getConst());
+  OzLock *lock = static_cast<OzLock*>(med->getConst());
   Thread *theThread = oz_ThreadToC(ozthread);
-  if (lck->getLocker() == NULL || lck->getLocker() == theThread) {
-    lck->lockB(theThread);
+  if (lock->getLocker() == NULL || lock->getLocker() == theThread) {
+    lock->lockB(theThread);
   } else {
-    PendThread **pt = lck->getPendBase(); 
+    PendThread **pt = lock->getPendBase(); 
     while(*pt!=NULL) { pt= &((*pt)->next); }
     *pt = new PendThread(ozthread, NULL,  ctlVar);
     ctlVar = 0;     // resume() should not trigger control var...
@@ -237,7 +237,7 @@ SuspendedLockTake::resumeRemoteDone(PstInContainerInterface* pstin){
   TaggedRef lst = pst->a_term;
 
   ConstMediator *med = static_cast<ConstMediator*>(getMediator());
-  LockLocal *lck     = static_cast<LockLocal*>(med->getConst());
+  OzLock *lck     = static_cast<OzLock*>(med->getConst());
   switch(oz_intToC(oz_head(lst))){
   case 1:
     // We had it, remove the unlock stackframe! 
@@ -273,8 +273,8 @@ SuspendedLockRelease::SuspendedLockRelease(Mediator* med) :
 WakeRetVal 
 SuspendedLockRelease::resumeDoLocal(DssOperationId*) {
   ConstMediator *med = static_cast<ConstMediator*>(getMediator());
-  LockLocal *lck     = static_cast<LockLocal*>(med->getConst());
-  lck->unlock();
+  OzLock *lock = static_cast<OzLock*>(med->getConst());
+  lock->unlock();
   resume();
   return WRV_DONE;
 }
