@@ -38,7 +38,6 @@
 class ProxyVar; 
 OZ_Term glue_unmarshalDistTerm(ByteBuffer *bs);
 OZ_Term glue_newUnmarshalVar(ByteBuffer* bs, Bool isFuture);
-void glue_marshalTertiary(ByteBuffer *bs, Tertiary *t, Bool push);
 OZ_Term glue_unmarshalObjectStub(ByteBuffer *bs);
 void  glue_marshalObjectStubInternal(Object*,ByteBuffer *bs);
 void glue_marshalArray(ByteBuffer *bs, ConstTermWithHome *arrayConst);

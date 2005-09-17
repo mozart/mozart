@@ -333,48 +333,6 @@ void glue_marshalOzThread(ByteBuffer *bs, TaggedRef thr)
 
 
 ///////////////////////////////////////////////////////////////////////////
-////  Marshal Tertiary 
-
-
-void glue_marshalTertiary(ByteBuffer *bs, Tertiary *t, Bool push)
-{
-  switch(t->getTertType()){
-  case Te_Local:
-    globalizeTertiary(t);
-    // no break here!
-  case Te_Proxy:
-    {
-      CoordinatorAssistantInterface* cai=index2CAI(t->getTertIndex());
-      GlueWriteBuffer *gwb = static_cast<GlueWriteBuffer *>(bs); 
-      cai->marshal(gwb, (push)?PMF_PUSH:PMF_ORDINARY);
-
-      switch(t->getType()){
-      case Co_Cell:
-        OZ_error("Cell shall not be marshaled as Tertiary\n");
-	Assert(0);
-        break;
-      case Co_Port:
-        OZ_error("Port shall not be marshaled as Tertiary\n");
-	Assert(0);      
-        break; 
-      case Co_Lock:
-        OZ_error("Lock shall not be marshaled as Tertiary\n");
-	Assert(0);
-        break;
-      case Co_Resource:
-        bs->put(DSS_DIF_UNUSABLE);
-        break;
-      default:
-        OZ_error("We dont distribute that SHIT %d", t->getType());
-      }
-      break; 
-    }
-  default:
-    OZ_error("A tertiary is either a proxy or a manager not a %d",t->getTertType());
-  }
-}
-
-///////////////////////////////////////////////////////////////////////////
 ////  Marshal Object Stub 
 
 
@@ -495,10 +453,10 @@ OZ_Term  glue_unmarshalDistTerm(ByteBuffer *bs)
   } else {
     switch(bs->get()){
     case DSS_DIF_UNUSABLE:{
-      Tertiary* tert =  new UnusableResource();
-      TaggedRef tr = makeTaggedConst(tert);
+      UnusableResource* unused = new UnusableResource();
+      TaggedRef tr = makeTaggedConst(unused);
       UnusableMediator *um = new UnusableMediator(tr, ae);
-      tert->setTertIndex(reinterpret_cast<int>(um));
+      unused->setMediator((void *)um);
       return tr;
     }
     case DSS_DIF_THREAD:{

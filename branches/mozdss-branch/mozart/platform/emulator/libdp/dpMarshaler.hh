@@ -389,7 +389,7 @@ public:
   void processLock(OZ_Term lockTerm, ConstTerm *lockConst);
   Bool processCell(OZ_Term cellTerm, ConstTerm *cellConst);
   void processPort(OZ_Term portTerm, ConstTerm *portConst);
-  void processResource(OZ_Term resTerm, Tertiary *tert);
+  void processResource(OZ_Term resTerm, ConstTerm *unusConst);
   void processNoGood(OZ_Term resTerm);
   void processVar(OZ_Term cv, OZ_Term *varTerm);
   Bool processLTuple(OZ_Term ltupleTerm);
@@ -436,7 +436,7 @@ public:
   void processLock(OZ_Term lockTerm, ConstTerm *lockConst);
   Bool processCell(OZ_Term cellTerm, ConstTerm *cellConst);
   void processPort(OZ_Term portTerm, ConstTerm *portConst);
-  void processResource(OZ_Term resTerm, Tertiary *tert);
+  void processResource(OZ_Term resTerm, ConstTerm *unusConst);
   void processNoGood(OZ_Term resTerm);
   void processVar(OZ_Term cv, OZ_Term *varTerm);
   Bool processLTuple(OZ_Term ltupleTerm);
@@ -606,7 +606,7 @@ public:
   void processBuiltin(OZ_Term biTerm, ConstTerm *biConst);
   void processLock(OZ_Term lockTerm, ConstTerm *lockConst);
   void processPort(OZ_Term portTerm, ConstTerm *portConst);
-  void processResource(OZ_Term resTerm, Tertiary *tert);
+  void processResource(OZ_Term resTerm, ConstTerm *unusConst);
   void processNoGood(OZ_Term resTerm);
   void processVar(OZ_Term cv, OZ_Term *varTerm);
   Bool processLTuple(OZ_Term ltupleTerm);

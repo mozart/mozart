@@ -2786,12 +2786,10 @@ void sClonePendThreadEmul(PendThread**);
  * Unusables
  *=================================================================== */
 
-class UnusableResource: public Tertiary{
+class UnusableResource: public ConstTermWithHome {
 public:
-   NO_DEFAULT_CONSTRUCTORS(UnusableResource);
-  
-  UnusableResource()
-    : Tertiary(0xfedda,Co_Resource,Te_Proxy) {}
+  NO_DEFAULT_CONSTRUCTORS(UnusableResource);
+  UnusableResource():ConstTermWithHome(NULL, Co_Resource) {}
 };
 
 /*===================================================================
