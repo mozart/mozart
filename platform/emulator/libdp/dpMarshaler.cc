@@ -509,7 +509,7 @@ void VSnapshotBuilder::processPort(OZ_Term portTerm, ConstTerm *portConst)
   VisitNodeTrav(portTerm, vIT, return);
 }
 inline 
-void VSnapshotBuilder::processResource(OZ_Term rTerm, Tertiary *tert)
+void VSnapshotBuilder::processResource(OZ_Term rTerm, ConstTerm *unusConst)
 {
   VisitNodeTrav(rTerm, vIT, return);
 }

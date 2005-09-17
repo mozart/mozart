@@ -490,30 +490,6 @@ Bool DPMARSHALERCLASS::processObject(OZ_Term term, ConstTerm *objConst)
 }
 
 //
-#define DPMHandleTert(string, tert, term, Return)			\
-{									\
-  ByteBuffer *bs = (ByteBuffer *) getOpaque();				\
-  if (bs->availableSpace() >= 						\
-      DIFMaxSize + MTertiaryMaxSize + MNumberMaxSize) {			\
-    int index;								\
-    VISITNODE(term, vIT, bs, index, Return);				\
-    if (index) bs->put(DIF_RESOURCE_DEF);				\
-    else								\
-    bs->put(DIF_RESOURCE);                                              \
-    glue_marshalTertiary(bs, tert, isPushContents());                   \
-    if(index) marshalTermDef(bs, index);                                \
-    Assert(bs->availableSpace() >= DIFMaxSize);                         \
-  } else {                                                              \
-    DBG_TRACE_CODE(DBGINIT(););						\
-    DBG_TRACE_CODE(fprintf(dbgout, "> tag: %s(%d) on %s\n",		\
-      dif_names[DIF_SUSPEND].name, DIF_SUSPEND, toC(term)););		\
-    DBG_TRACE_CODE(fflush(dbgout););					\
-    marshalDIFcounted(bs, DIF_SUSPEND);					\
-    suspend(term);							\
-  }									\
-}
-
-//
 inline 
 void DPMARSHALERCLASS::processLock(OZ_Term term, ConstTerm *lockConst)
 {
@@ -589,13 +565,29 @@ void DPMARSHALERCLASS::processPort(OZ_Term term, ConstTerm *portConst)
   }
 }
 inline 
-void DPMARSHALERCLASS::processResource(OZ_Term term, Tertiary *tert)
+void DPMARSHALERCLASS::processResource(OZ_Term term, ConstTerm *unusConst)
 {
-  DPMHandleTert("resource", tert, term, return);
+  ByteBuffer *bs = (ByteBuffer *) getOpaque();
+  if (bs->availableSpace() >= 
+      2*DIFMaxSize + MNumberMaxSize + MOwnHeadMaxSize) {
+    int index;
+    VISITNODE(term, vIT, bs, index, return);
+    if(index) bs->put(DIF_RESOURCE_DEF);
+    else bs->put(DIF_RESOURCE);
+    glue_marshalUnusable(bs, makeTaggedConst(unusConst));
+    if(index) marshalTermDef(bs, index);
+    Assert(bs->availableSpace() >= DIFMaxSize);
+  } else {
+#if defined(DBG_TRACE)
+    DBGINIT();
+    fprintf(dbgout, "> tag: %s(%d) on %s\n",
+      dif_names[DIF_SUSPEND].name, DIF_SUSPEND, toC(term));
+    fflush(dbgout);
+#endif
+    marshalDIFcounted(bs, DIF_SUSPEND);
+    suspend(term);
+  }
 }
-
-#undef DPMHandleTert
-
 
 //
 // Remaining variables, i.e. those that have not beed exported during
