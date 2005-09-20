@@ -150,12 +150,6 @@ void globalizeTertiary(Tertiary *t)
       OZ_error("Globalization of Lock shouldn't be done as a Tertiary\n");
       Assert(0);
       break; 
-      // retrieve mediator, or create one
-      LockMediator* me = static_cast<LockMediator*>
-	(mediatorTable->lookup(makeTaggedConst(t)));
-      if (me == NULL) me = new LockMediator(t);
-      me->globalize();
-      break;
     }
   case Co_Object:
     {
@@ -328,7 +322,7 @@ void glue_marshalOzThread(ByteBuffer *bs, TaggedRef thr)
   CoordinatorAssistantInterface* cai = med->getCoordinatorAssistant(); 
   GlueWriteBuffer *gwb = static_cast<GlueWriteBuffer *>(bs); 
   cai->marshal(gwb, PMF_ORDINARY);
-  bs->put(DSS_DIF_THREAD); 
+  //bs->put(DSS_DIF_THREAD); 
 }
 
 
@@ -336,7 +330,7 @@ void glue_marshalOzThread(ByteBuffer *bs, TaggedRef thr)
 ////  Marshal Object Stub 
 
 
-void glue_marshalObjectStubInternal(Object* o, ByteBuffer *bs)
+void glue_marshalObjectStubInternal(OzObject* o, ByteBuffer *bs)
 {
   ObjectClass *oc = o->getClass();
   GName *gnclass = globalizeConst(oc);
@@ -346,13 +340,22 @@ void glue_marshalObjectStubInternal(Object* o, ByteBuffer *bs)
   Assert(gnobj);
   //  ProxyName pn=tr2Pn(makeTaggedConst(o));
 
-  CoordinatorAssistantInterface *cai=index2CAI(o->getTertIndex());
+  ObjectMediator *om;
+  if (o->isDistributed())
+    om = static_cast<ObjectMediator*>(o->getMediator());
+  else {
+    om = static_cast<ObjectMediator*>
+      (mediatorTable->lookup(makeTaggedConst(o)));
+    if (om = NULL) om = new ObjectMediator(o, NULL);
+    om->globalize();
+  }
+  Assert(o->isDistributed());
 
   GlueWriteBuffer *gwb = static_cast<GlueWriteBuffer *>(bs); 
-  cai->marshal(gwb, PMF_ORDINARY);
+  (om->getCoordinatorAssistant())->marshal(gwb, PMF_ORDINARY);
   marshalGName(bs, gnobj);
   marshalGName(bs, gnclass);
-
+//  bs->put(DSS_DIF_OBJECT_STUB);
 }
 
 

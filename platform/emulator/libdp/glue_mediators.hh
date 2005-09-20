@@ -4,6 +4,7 @@
  * 
  *  Contributors:
  *    Raphael Collet (raph@info.ucl.ac.be)
+ *    Boriss Mejias (bmc@info.ucl.ac.be)
  * 
  *  Copyright:
  *    Erik Klintskog, 2002
@@ -376,8 +377,8 @@ public:
 // mediators for Oz objects
 class ObjectMediator: public ConstMediator, public MutableMediatorInterface{
 public:
-  ObjectMediator(Tertiary *t);
-  ObjectMediator(Tertiary *t, AbstractEntity *p);
+  ObjectMediator(ConstTerm *obj);
+  ObjectMediator(ConstTerm *obj, AbstractEntity *p);
   
   virtual AOcallback callback_Write(DssThreadId* id_of_calling_thread,
 				    DssOperationId* operation_id,

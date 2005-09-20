@@ -130,7 +130,7 @@ public:
     taskStack->pushCatch();
   }
 
-  void pushSelf(Object * s) {
+  void pushSelf(OzObject * s) {
     taskStack->pushSelf(s);
   }
 

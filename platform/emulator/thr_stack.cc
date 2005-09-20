@@ -196,7 +196,7 @@ Bool TaskStack::findCatch(Thread *thr,
     }
   }
 
-  Object * foundSelf = (Object *) NULL;
+  OzObject * foundSelf = (OzObject *) NULL;
   
   while (!isEmpty()) {
     if (out) {
@@ -226,7 +226,7 @@ Bool TaskStack::findCatch(Thread *thr,
 	if (lck->hasLock(thr)) lck->unlock();
       }
     } else if (PC==C_SET_SELF_Ptr) { 
-      foundSelf = (Object*) G;
+      foundSelf = (OzObject*) G;
     } else if (PC==C_SET_ABSTR_Ptr) { 
       ozstat.leaveCall((PrTabEntry*)Y);
     }

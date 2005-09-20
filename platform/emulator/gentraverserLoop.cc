@@ -198,7 +198,7 @@ void TRAVERSERCLASS::doit()
 	case Co_Object:
 	  if (!processObject(t, ct)) {
 	    //
-	    Object *o = (Object *) tagged2Const(t);
+	    OzObject *o = tagged2Object(t);
 
 	    //
 	    SRecord *sr = o->getFreeRecord();

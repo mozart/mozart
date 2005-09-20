@@ -4,6 +4,7 @@
  * 
  *  Contributors:
  *    Raphael Collet (raph@info.ucl.ac.be)
+ *    Boriss Mejias (bmc@info.ucl.ac.be)
  * 
  *  Copyright:
  *    Erik Klintskog, 2002
@@ -765,11 +766,11 @@ CellMediator::callback_Read(DssThreadId *id,
 
 /************************* ObjectMediator *************************/
 
-ObjectMediator::ObjectMediator(Tertiary *t) : ConstMediator(t, DETACHED)
+ObjectMediator::ObjectMediator(ConstTerm *obj) : ConstMediator(obj, DETACHED)
 {}
 
-ObjectMediator::ObjectMediator(Tertiary *t, AbstractEntity *ae) :
-  ConstMediator(t, ATTACHED)
+ObjectMediator::ObjectMediator(ConstTerm *obj, AbstractEntity *ae) :
+  ConstMediator(obj, ATTACHED)
 {
   setAbstractEntity(ae);
 }
@@ -802,7 +803,7 @@ void ObjectMediator::globalize() {
   //the eager approach first, and then the optimization.
   
   //bmc: Cellify state
-  Object *o = static_cast<Object*>(getConst());
+  OzObject *o = tagged2Object(entity);
   RecOrCell state = o->getState();
   if (!stateIsCell(state)) {
     SRecord *r = getRecord(state);
@@ -811,8 +812,7 @@ void ObjectMediator::globalize() {
     o->setState(cell);
   }
   
-  o->setTertType(Te_Proxy);
-  o->setTertIndex(reinterpret_cast<int>(this));
+  o->setMediator((void *)this);
   setAttached(ATTACHED);
 }
 
@@ -824,7 +824,7 @@ ObjectMediator::localize() {
     delete absEntity;
     absEntity = NULL;
     // 2. localize the cell (detach mediator)
-    static_cast<Tertiary*>(tagged2Const(entity))->setTertType(Te_Local);
+    tagged2Object(entity)->setBoard(oz_currentBoard());
     setAttached(DETACHED);
     // 3. keep the mediator in the table
     mediatorTable->insert(this);
@@ -832,7 +832,7 @@ ObjectMediator::localize() {
   } else {
     // remove completely mediator, so
     // 1. localize the cell
-    static_cast<Tertiary*>(tagged2Const(entity))->setTertType(Te_Local);
+    tagged2Object(entity)->setBoard(oz_currentBoard());
     // 2. delete mediator
     delete this;
   }

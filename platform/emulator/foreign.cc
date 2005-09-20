@@ -1694,7 +1694,7 @@ OZ_Term OZ_subtree(OZ_Term term, OZ_Term fea)
       case Co_Extension:
 	return tagged2Extension(term)->getFeatureV(fea);
       case Co_Object:
-	return ((Object *) ct)->getFeature(fea);
+	return ((OzObject *) ct)->getFeature(fea);
       case Co_Chunk:
 	return ((SChunk *) ct)->getFeature(fea);
       default:

@@ -260,14 +260,14 @@ public:
 typedef int32 ChachedOORegs;
 
 inline
-Object *getObject(ChachedOORegs regs)
+OzObject *getObject(ChachedOORegs regs)
 {
-  return (Object*) ToPointer(regs&~3);
+  return (OzObject*) ToPointer(regs&~3);
 }
 
 
 inline 
-ChachedOORegs setObject(ChachedOORegs regs, Object *o)
+ChachedOORegs setObject(ChachedOORegs regs, OzObject *o)
 {
   return (ToInt32(o)|(regs&0x3));
 }
@@ -307,7 +307,7 @@ private:
 
   //
   TaskStack *cachedStack;
-  Object *cachedSelf;
+  OzObject *cachedSelf;
 
   //
   int gcStep;
@@ -450,16 +450,16 @@ public:
   // see builtins.cc
   inline OZ_Return eqeq(TaggedRef Ain,TaggedRef Bin);
 
-  void setSelf(Object *o) { 
+  void setSelf(OzObject *o) { 
     cachedSelf = o; 
   }
 
-  Object *getSelf() { 
+  OzObject *getSelf() { 
     return cachedSelf; 
   }
 
-  void changeSelf(Object * o) {
-    Object *oldSelf = cachedSelf;
+  void changeSelf(OzObject * o) {
+    OzObject *oldSelf = cachedSelf;
     if(o != oldSelf) {
       cachedStack->pushSelf(oldSelf);
       cachedSelf = o;

@@ -8,6 +8,8 @@
  * 
  *  Contributors:
  *    Andreas Sundstroem <andreas@sics.se>
+ *    Boriss Mejias <bmc@info.ucl.ac.be>
+ *    Raphael Collet <raph@info.ucl.ac.be>
  * 
  *  Copyright:
  *    Per Brand, 1998
@@ -400,7 +402,7 @@ Bool DPMARSHALERCLASS::marshalObjectStub(OZ_Term term, ConstTerm *objConst)
     VISITNODE(term, vIT, bs, index, return(OK));
 
     //
-    Object *o = (Object*) objConst;
+    OzObject *o = (OzObject*) objConst;
     Assert(isObject(o));
     //
     if (o->getClass()->isSited()) {
@@ -409,11 +411,6 @@ Bool DPMARSHALERCLASS::marshalObjectStub(OZ_Term term, ConstTerm *objConst)
       glue_marshalUnusable(bs, term);
       if(index) marshalTermDef(bs, index);
     } else {
-      //
-      Assert(o->getTertType() == Te_Local || o->getTertType() == Te_Proxy);
-      if (o->getTertType() == Te_Local)
-	globalizeTertiary(o);
-
       //
       marshalDIFcounted(bs, index ? DIF_STUB_OBJECT_DEF : DIF_STUB_OBJECT);
       glue_marshalObjectStubInternal(o, bs);
@@ -457,7 +454,7 @@ Bool DPMARSHALERCLASS::marshalFullObject(OZ_Term term, ConstTerm *objConst)
     }
 
     //
-    Object *o = (Object*) objConst;
+    OzObject *o = (OzObject*) objConst;
     Assert(isObject(o));
     marshalGName(bs, o->getGName1());
     doToplevel = FALSE;
