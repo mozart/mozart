@@ -577,7 +577,7 @@ void Abstraction::printStream(ostream &stream, int depth)
 	 << getPrintName() << "/" << getArity();
 }
 
-void Object::printStream(ostream &stream, int depth)
+void OzObject::printStream(ostream &stream, int depth)
 {
   stream << "<O:" << getPrintName()
          << ", ";
@@ -689,7 +689,7 @@ void ConstTerm::printLongStream(ostream &stream, int depth, int offset)
     ((Abstraction *) this)->printLongStream(stream,depth,offset);
     break;
   case Co_Object:
-    ((Object *) this)->printLongStream(stream,depth,offset);
+    ((OzObject *) this)->printLongStream(stream,depth,offset);
     break;
   case Co_Class:
     ((ObjectClass *) this)->printLongStream(stream,depth,offset);
@@ -754,7 +754,7 @@ void ConstTerm::printStream(ostream &stream, int depth)
     break;
   case Co_Abstraction: ((Abstraction *) this)->printStream(stream,depth);
     break;
-  case Co_Object:      ((Object *) this)->printStream(stream,depth);
+  case Co_Object:      ((OzObject *) this)->printStream(stream,depth);
     break;
   case Co_Class:       ((ObjectClass *) this)->printStream(stream,depth);
     break;
@@ -988,7 +988,7 @@ void LTuple::printLongStream(ostream &stream, int depth, int offset)
   ozd_printLongStream(args[1],stream,PRINT_DEPTH_DEC(depth),offset+2);
 }
 
-void Object::printLongStream(ostream &stream, int depth, int offset)
+void OzObject::printLongStream(ostream &stream, int depth, int offset)
 {
   stream << indent(offset)
 	 << "Object: "

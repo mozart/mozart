@@ -1821,7 +1821,7 @@ SRecord * getRecord(RecOrCell rc) {
   return tagged2SRecord(rc);
 }
 
-class Object: public Tertiary {
+class OzObject: public ConstTermWithHome {
   friend void ConstTerm::gCollectConstRecurse(void);
   friend void ConstTerm::sCloneConstRecurse(void);
 private:
@@ -1829,7 +1829,7 @@ private:
   TaggedRef cl1, lock, freeFeatures, state;
 public:
   OZPRINTLONG
-  NO_DEFAULT_CONSTRUCTORS(Object)
+  NO_DEFAULT_CONSTRUCTORS(OzObject)
 
   ObjectClass * getClass(void) { 
     return (ObjectClass *) tagged2Const(cl1); 
@@ -1936,8 +1936,8 @@ public:
   GName *globalize();
   void localize();
 
-  Object(Board *bb, SRecord *s, ObjectClass *ac, SRecord *feat, OzLock *lck)
-    : Tertiary(bb, Co_Object,Te_Local)
+  OzObject(Board *bb, SRecord *s, ObjectClass *ac, SRecord *feat, OzLock *lck)
+    : ConstTermWithHome(bb, Co_Object)
   {
     setFreeRecord(feat);
     setClass(ac);
@@ -1948,8 +1948,8 @@ public:
 
   // kost@ : this is THE constructor to be used by the builder (for
   // distribution and eventually persistence);
-  Object(Board *bb, GName *gn, OZ_Term s, SRecord *feat, OzLock *lck)
-    : Tertiary(bb, Co_Object, Te_Local)
+  OzObject(Board *bb, GName *gn, OZ_Term s, SRecord *feat, OzLock *lck)
+    : ConstTermWithHome(bb, Co_Object)
   {
     setFreeRecord(feat);
     setState(s);
@@ -1974,10 +1974,10 @@ Bool oz_isObject(TaggedRef term)
 }
 
 inline
-Object *tagged2Object(TaggedRef term)
+OzObject *tagged2Object(TaggedRef term)
 {
   Assert(oz_isObject(term));
-  return (Object *)tagged2Const(term);
+  return (OzObject *)tagged2Const(term);
 }
 
 inline

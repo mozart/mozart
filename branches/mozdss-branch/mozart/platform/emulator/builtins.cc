@@ -3906,9 +3906,9 @@ OZ_BI_define(BIcatAccessOO,1,1)
     }
     else {
       // Check for feature
-      Object *self = am.getSelf();
+      OzObject *self = am.getSelf();
       if (self && oz_isFeature(cat)) {
-	// Object attribute
+	// OzObject attribute
 	RecOrCell state = self->getState();
 	OZ_Term old;
 	ret = stateAt(state,cat,old);
@@ -3954,9 +3954,9 @@ OZ_BI_define(BIcatAssignOO,2,0)
     }
   }         
   // Check for feature
-  Object *self = am.getSelf();
+  OzObject *self = am.getSelf();
   if (oz_isFeature(cat) && self) {
-    // Object attribute
+    // OzObject attribute
     CheckLocalBoard(self,"object");
   
     RecOrCell state = self->getState();
@@ -4002,9 +4002,9 @@ OZ_BI_define(BIcatExchangeOO,2,1)
     }
     else {
       // Check for feature
-      Object *self = am.getSelf();
+      OzObject *self = am.getSelf();
       if (oz_isFeature(cat) && self) {
-	// Object attribute
+	// OzObject attribute
 	CheckLocalBoard(self,"object");
 	RecOrCell state = self->getState();
 
@@ -4150,7 +4150,7 @@ OZ_BI_define(BIassign,2,0)
     oz_typeError(0,"Feature");
   }
 
-  Object *self = am.getSelf();
+  OzObject *self = am.getSelf();
   CheckLocalBoard(self,"object");
   
   RecOrCell state = self->getState();
@@ -4174,7 +4174,7 @@ OZ_BI_define(BIexchange,2,1)
     oz_typeError(1,"Feature");
   }
 
-  Object *self=am.getSelf();
+  OzObject *self=am.getSelf();
   CheckLocalBoard(self,"object");
   RecOrCell state = self->getState();
   TaggedRef old;
@@ -4197,13 +4197,13 @@ inline int sizeOf(SRecord *sr)
 }
 
 inline
-Object *newObject(SRecord *feat, SRecord *st, ObjectClass *cla, Board *b)
+OzObject *newObject(SRecord *feat, SRecord *st, ObjectClass *cla, Board *b)
 {
   OzLock *lck=NULL;
   if (cla->supportsLocking()) {
     lck = new OzLock(oz_currentBoard());
   }
-  return new Object(b,st,cla,feat,lck);
+  return new OzObject(b,st,cla,feat,lck);
 }
 
 
@@ -4335,7 +4335,7 @@ OZ_Term makeObject(OZ_Term initState, OZ_Term ffeatures, ObjectClass *clas)
     initState = dummyRecord;
   }
 
-  Object *out = 
+  OzObject *out = 
     newObject(oz_isSRecord(ffeatures) ? tagged2SRecord(ffeatures) : (SRecord*) NULL,
 	      tagged2SRecord(initState),
 	      clas,

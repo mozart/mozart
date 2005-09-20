@@ -71,7 +71,7 @@ TaggedRef XREGS_SAVE[NumberOfXRegisters];
 // -----------------------------------------------------------------------
 
 inline
-Abstraction *getSendMethod(Object *obj, TaggedRef label, SRecordArity arity, 
+Abstraction *getSendMethod(OzObject *obj, TaggedRef label, SRecordArity arity, 
 			   InlineCache *cache)
 {
   Assert(oz_isFeature(label));
@@ -2229,7 +2229,7 @@ LBLdispatcher:
   Case(INLINEAT)
     {
       TaggedRef fea = getLiteralArg(PC+1);
-      Object *self = e->getSelf();
+      OzObject *self = e->getSelf();
 
       Assert(e->getSelf()!=NULL);
       RecOrCell state = self->getState();
@@ -2277,7 +2277,7 @@ LBLdispatcher:
     {      
       TaggedRef fea = getLiteralArg(PC+1);
 
-      Object *self = e->getSelf();
+      OzObject *self = e->getSelf();
 
       if (!e->isCurrentRoot() && !oz_isCurrentBoard(GETBOARD(self))) {
 	(void) oz_raise(E_ERROR,E_KERNEL,"globalState",1,AtomObject);
@@ -2635,7 +2635,7 @@ LBLdispatcher:
 
     DEREF(object,objectPtr);
     if (oz_isObject(object)) {
-      Object *obj      = tagged2Object(object);
+      OzObject *obj      = tagged2Object(object);
       Abstraction *def = getSendMethod(obj,label,arity,(InlineCache*)(PC+4));
       if (def == NULL) {
 	goto bombSend;
@@ -2738,7 +2738,7 @@ LBLdispatcher:
 // -----------------------------------------------------------------------
        if (typ==Co_Object) {
 	 CheckArity(1, makeTaggedConst(predicate));
-	 Object *o = (Object*) predicate;
+	 OzObject *o = (OzObject*) predicate;
 	 Assert(o->getClass()->getFallbackApply());
 	 Abstraction *def =
 	   tagged2Abstraction(o->getClass()->getFallbackApply());
@@ -3129,7 +3129,7 @@ LBLdispatcher:
 
   Case(TASKSETSELF)
     {
-      e->setSelf((Object *) CAP);
+      e->setSelf((OzObject *) CAP);
       CAP = NULL;
       goto LBLpopTaskNoPreempt;
     }

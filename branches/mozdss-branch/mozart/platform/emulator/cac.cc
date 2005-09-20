@@ -1294,7 +1294,7 @@ void ConstTerm::_cacConstRecurse(void) {
   switch(getType()) {
   case Co_Object:
     {
-      Object *o = (Object *) this;
+      OzObject *o = (OzObject *) this;
 
 #ifdef G_COLLECT
       GName * gn = o->getGName1();
@@ -1302,16 +1302,10 @@ void ConstTerm::_cacConstRecurse(void) {
 	gCollectGName(gn);
 #endif
 
-      switch(o->getTertType()) {
-      case Te_Local:   
-	break;
 #ifdef G_COLLECT
-      case Te_Proxy:   // PER-LOOK is this possible?
-	(*gCollectMediator)((void*)o->getTertIndex());
-	break;
+      if (o->isDistributed()) // PER-LOOK is this possible?
+	(*gCollectMediator)((void*)o->getMediator());
 #endif
-      default:         Assert(0);
-      }
 
       OZ_cacBlock(&(o->cl1), &(o->cl1), 4);
       break;
@@ -1560,14 +1554,14 @@ ConstTerm * ConstTerm::gCollectConstTermInline(void) {
     sz = sizeof(OzLock);
     goto const_withhome;
 
+  case Co_Object: 
+    sz = sizeof(OzObject);
+    goto const_withhome;
+
     /*
      * Tertiary
      *
      */
-
-  case Co_Object: 
-    sz = sizeof(Object);
-    goto const_tertiary;
 
   case Co_Space:
     sz = sizeof(Space);
@@ -1693,14 +1687,14 @@ ConstTerm *ConstTerm::sCloneConstTermInline(void) {
     sz = sizeof(OzLock);
     goto const_withhome;
 
+  case Co_Object: 
+    sz = sizeof(OzObject);
+    goto const_withhome;
+
     /*
      * Tertiary
      *
      */
-
-  case Co_Object: 
-    sz = sizeof(Object);
-    goto const_tertiary;
 
   case Co_Space:
     sz = sizeof(Space);

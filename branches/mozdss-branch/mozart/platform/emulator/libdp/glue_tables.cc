@@ -4,6 +4,7 @@
  * 
  *  Contributors:
  *    Raphael Collet (raph@info.ucl.ac.be)
+ *    Boriss Mejias (bmc@info.ucl.ac.be)
  * 
  *  Copyright:
  *    Zacharias El Banna, 2002
@@ -48,8 +49,7 @@ MediatorTable *mediatorTable;
 /*   Localizing                 should be more localize */
 /**********************************************************************/
 
-void Object::localize(){
-  setTertType(Te_Local);
+void OzObject::localize(){
   setBoard(oz_currentBoard());
 }
 

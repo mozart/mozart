@@ -445,7 +445,7 @@ repeat:
 	(SRecord *) NULL : tagged2SRecord(value);
       OzLock *lock = oz_isNil(lockTerm) ? 
 	(OzLock *) NULL : (OzLock *) tagged2Const(lockTerm);
-      Object *o = new Object(oz_rootBoard(), gname, state, feat, lock);
+      OzObject *o = new OzObject(oz_rootBoard(), gname, state, feat, lock);
       OZ_Term objTerm = makeTaggedConst(o);
       overwriteGName(gname, objTerm);
       if (doMemo) {

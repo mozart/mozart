@@ -4,6 +4,8 @@
  *    Zacharias El Banna (zeb@sics.se)
  *
  *  Contributors:
+ *    Boriss Mejias (bmc@info.ucl.ac.be)
+ *    Raphael Collet (raph@info.ucl.ac.be)
  * 
  *  Copyright:
  * 
@@ -249,10 +251,6 @@ VarKind classifyVar(TaggedRef* tPtr)
 
 /*********************** OBJECT VAR **************************/
 
-//TaggedRef newObjectProxy(int bi, GName *gnobj, TaggedRef cl){
-//  return (TaggedRef) NULL;
-//}
-
 LazyType ObjectVar::getLazyType(){
   return (LT_OBJECT);
 }
@@ -284,7 +282,7 @@ void ObjectVar::transfer(TaggedRef ObjRef, TaggedRef *Vptr){
   
   /* We'll have to bind the class */ 
   Assert(oz_isObject(ObjRef));
-  Object *o = (Object *) tagged2Const(ObjRef);
+  OzObject *o = (OzObject *) tagged2Const(ObjRef);
 
   o->setClassTerm(oz_deref(oz_findGName(gClass)));
   

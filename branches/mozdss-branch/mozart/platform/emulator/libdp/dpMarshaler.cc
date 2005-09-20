@@ -8,6 +8,8 @@
  * 
  *  Contributors:
  *    Andreas Sundstroem <andreas@sics.se>
+ *    Boriss Mejias <bmc@info.ucl.ac.be>
+ *    Raphael Collet <raph@info.ucl.ac.be>
  * 
  *  Copyright:
  *    Per Brand, 1998

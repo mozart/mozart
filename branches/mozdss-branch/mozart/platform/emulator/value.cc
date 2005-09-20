@@ -193,7 +193,7 @@ const char *ConstTerm::getPrintName()
   case Co_Abstraction:
     return ((Abstraction *) this)->getPrintName();
   case Co_Object:
-    return ((Object *) this)->getPrintName();
+    return ((OzObject *) this)->getPrintName();
   case Co_Class:
     return ((ObjectClass *) this)->getPrintName();
   case Co_Builtin:
@@ -216,7 +216,7 @@ int ConstTerm::getArity()
 
 
 /*===================================================================
- * Object
+ * OzObject
  *=================================================================== */
 
 /*
@@ -293,7 +293,7 @@ TaggedRef duplist(TaggedRef list, int &len)
   return ret;
 }
 
-TaggedRef Object::getArityList(void) {
+TaggedRef OzObject::getArityList(void) {
   TaggedRef ret = oz_nil();
   
   SRecord *rec=getClass()->getUnfreeRecord();
@@ -301,7 +301,7 @@ TaggedRef Object::getArityList(void) {
   return ret;
 }
 
-int Object::getWidth(void) {
+int OzObject::getWidth(void) {
   int ret = 0;
   SRecord *feat=getFreeRecord();
   if (feat) ret = feat->getWidth();
@@ -311,7 +311,7 @@ int Object::getWidth(void) {
   return ret;
 }
 
-GName *Object::globalize(){
+GName *OzObject::globalize(){
   if (!getGName1()) {
     setGName(newGName(makeTaggedConst(this),GNT_OBJECT));}
   return getGName1();

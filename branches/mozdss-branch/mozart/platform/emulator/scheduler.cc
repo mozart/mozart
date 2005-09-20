@@ -43,7 +43,7 @@ int run_thread(Thread * ct) {
   ozstat.leaveCall(ct->getAbstr());
   ct->setAbstr(NULL);
   am.cachedStack = ct->getTaskStackRef();
-  am.cachedSelf  = (Object *) 0;
+  am.cachedSelf  = (OzObject *) 0;
   
   int ret = engine(NO);
     
@@ -52,7 +52,7 @@ int run_thread(Thread * ct) {
   
   if (am.getSelf()) {
     ct->pushSelf(am.getSelf());
-    am.cachedSelf = (Object *) NULL;
+    am.cachedSelf = (OzObject *) NULL;
   }
 
   am.setCurrentThread((Thread *) NULL);
