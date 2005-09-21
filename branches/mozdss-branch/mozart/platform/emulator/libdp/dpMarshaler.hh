@@ -901,9 +901,6 @@ void marshalObject(MarshalerBuffer *bs, ConstTerm* t);
 #define MOwnHeadMaxSize							\
   (2*DIFMaxSize + MNumberMaxSize + MCreditMaxSize)
 #define MToOwnerMaxSize MCreditToOwnerMaxSize
-#define MTertiaryMaxSize						\
-  (DIFMaxSize +								\
-   max(max(MOwnHeadMaxSize, MBorrowHeadMaxSize), MToOwnerMaxSize))
 #define MRefConsInfoMaxSize (MDSiteMaxSize + MCreditMaxSize) 
 
 // raph: maximal size for marshaling DSS proxies.  I had to pick this

@@ -227,7 +227,7 @@ void TRAVERSERCLASS::doit()
 	  break;
 
 	case Co_Lock:
-	  processLock(t, (Tertiary *) ct);
+	  processLock(t, ct);
 	  break;
 
 	case Co_Cell:
@@ -241,7 +241,7 @@ void TRAVERSERCLASS::doit()
 	  processPort(t, ct);
 	  break;
 	case Co_Resource:
-	  processResource(t, (Tertiary *) ct);
+	  processResource(t, ct);
 	  break;
 
 	default:

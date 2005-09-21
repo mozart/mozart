@@ -264,9 +264,6 @@ class OZ_Extension;
 class Cell;
 class SChunk;
 class OzArray;
-
-class Tertiary;
-
 class OzPort;
 
 class PendThread;

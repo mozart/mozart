@@ -40,7 +40,6 @@
 #include "glue_tables.hh"
 
 const int NOT_USED_INDEX = 0xbedda;
-const Mediator * const NOT_USED_TERT_INDEX = reinterpret_cast<Mediator *>(0xbedda);
 const Mediator * const NOT_USED_VAR_INDEX  = reinterpret_cast<Mediator *>(0xbedda);
 
 

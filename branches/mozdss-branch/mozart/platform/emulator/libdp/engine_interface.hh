@@ -52,8 +52,7 @@ void annotateEntity(TaggedRef,int);
 Bool getAnnotation(TaggedRef, int &); 
 void gcAddress2InfoTables();
 
-void gcProxyRecurseImpl(Tertiary *t);
-Bool localizeTertiary(Tertiary*);
+void gcProxyRecurseImpl(ConstTerm *ct);
 
 void initDP(int port, int ip, const char *siteId, int primKey);
 

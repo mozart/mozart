@@ -263,6 +263,11 @@ int ConstTerm::checkSituatedness(void) {
   case Co_Array:
   case Co_Dictionary:
   case Co_Class: 
+  case Co_Object: 
+  case Co_Cell:
+  case Co_Port:  
+  case Co_Space:
+  case Co_Lock:
     { 
       ConstTermWithHome * ctwh = (ConstTermWithHome *) this;
       if (!ctwh->hasGName() && !ISGOOD(ctwh->getSubBoardInternal())) {
@@ -271,25 +276,6 @@ int ConstTerm::checkSituatedness(void) {
       }
     }
     break;
-
-    /*
-     * Tertiary
-     *
-     */
-
-  case Co_Object: 
-  case Co_Cell:
-  case Co_Port:  
-  case Co_Space:
-  case Co_Lock:
-    {
-      Tertiary * t = (Tertiary *) this;
-      if (!t->isDistributed() && !ISGOOD(t->getBoardLocal())) {
-	MARKFIELD(this);
-	return NO;
-      }
-    }
-    
 
   default:
     break;
