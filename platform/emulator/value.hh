@@ -536,11 +536,6 @@ enum TypeOfConst {
 
 #define Co_ChunkStart Co_Object
 
-enum TertType {
-  Te_Local   = 0, // 0000
-  Te_Proxy   = 2, // 0001
-};
-
 #define DebugIndexCheck(IND) {Assert(IND< (1<<27));Assert(IND>=0);}
 
 class ConstTerm : public OZ_Container {
@@ -606,7 +601,7 @@ public:
   }
 
   Board *getSubBoardInternal() {
-    Assert(!hasGName()); 
+    Assert(!isDistributed()); 
     return (Board*)boardOrGName.getPtr();
   }
 
@@ -982,65 +977,6 @@ TaggedRef makeTaggedFSetValue(OZ_FSetValue * fsv) {
   return makeTaggedConst(new ConstFSetValue(fsv));
 }
 
-
-/*===================================================================
- * Tertiary
- *=================================================================== */
-
-class Tertiary: public ConstTerm {
-private:
-  Tagged2 tagged; // TertType + Board || TertType + OTI
-public:
-
-  TertType getTertType()       { return (TertType) tagged.getTag(); }
-  void setTertType(TertType t) { tagged.set(tagged.getData(),(int) t); }
-
-  void setTertIndex(int i) { tagged.setVal(i); }
-  int getTertIndex() { return tagged.getData(); }
-  void setTertPointer (void *p) { tagged.setPtr(p); }
-  void *getTertPointer() { return tagged.getPtr(); }
-
-  Bool checkTertiary(TypeOfConst s,TertType t){
-    return (s==getType() && t==getTertType());}
-
-  void setBoard(Board *b) {
-    if (getTertType() == Te_Local) {
-      setTertPointer(b);
-    }
-  }
-  void setBoardLocal(Board *b) {
-    Assert(getTertType() == Te_Local);
-    setTertPointer(b);
-  }
-
-  NO_DEFAULT_CONSTRUCTORS(Tertiary)
-  Tertiary() { Assert(0); }	// keep gcc happy;
-  Tertiary(Board *b, TypeOfConst s,TertType t) : ConstTerm(s) {
-    setTertType(t);
-    setBoard(b);}
-  Tertiary(void *p, TypeOfConst s, TertType t) : ConstTerm(s) {
-    setTertType(t);
-    setTertPointer(p);
-  }
-  Tertiary(int i, TypeOfConst s, TertType t) : ConstTerm(s) {
-    setTertType(t);
-    setTertIndex(i);
-  }
-
-  //
-
-  Bool isDistributed() { return !(getTertType() == Te_Local); }
-  Bool isProxy() { return (getTertType() == Te_Proxy); }
-
-  Board *getBoardInternal() {
-    return isDistributed() ? oz_rootBoardOutline() : (Board*)getTertPointer();}
-
-  Board *getBoardLocal() {
-    Assert(!isDistributed());
-    return (Board*) getTertPointer();
-  }
-
-};
 
 /*===================================================================
  * ForeignPointer
@@ -2626,7 +2562,6 @@ int oz_procedureArity(OZ_Term pterm)
 
 /*===================================================================
  * Cell
- * Moving from Tertiary to ConstTermWithHome
  *=================================================================== */
 
 class OzCell:public ConstTermWithHome{
@@ -2697,7 +2632,7 @@ inline OzPort *tagged2Port(TaggedRef term)
  * Space
  *=================================================================== */
 
-class Space: public Tertiary {
+class Space: public ConstTermWithHome {
   friend void ConstTerm::gCollectConstRecurse(void);
   friend void ConstTerm::sCloneConstRecurse(void);
 private:
@@ -2711,8 +2646,9 @@ public:
   OZPRINTLONG
   NO_DEFAULT_CONSTRUCTORS(Space)
 
-  Space(Board *h, Board *s) : Tertiary(h,Co_Space,Te_Local), solve(s) {};
-  Space(int i, TertType t) : Tertiary(i,Co_Space,t) {}
+  Space(Board *h, Board *s) : ConstTermWithHome(h, Co_Space), solve(s) {};
+// bmc: I do not think that we need this constructor.
+// Space(int i, TertType t) : ConstTermWithHome(i,Co_Space,t) {}
 
   Bool isMarkedFailed(void) { 
     return !solve;
@@ -2730,8 +2666,6 @@ public:
     solve = (Board *) 1; 
   } 
 };
-
-
 
 inline 
 Bool oz_isSpace(TaggedRef term)

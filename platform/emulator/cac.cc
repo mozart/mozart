@@ -1314,7 +1314,7 @@ void ConstTerm::_cacConstRecurse(void) {
   case Co_Space:
     {
       Space *s = (Space *) this;
-      if (!s->isProxy()) {
+      if (!s->isDistributed()) {
 	if (!s->isMarkedFailed() && !s->isMarkedMerged()) {
 	  if (s->solve->cacIsAlive()) {
 	    s->solve = s->solve->_cacBoard();
@@ -1419,7 +1419,6 @@ void ConstTerm::_cacConstRecurse(void) {
 
   case Co_Lock:
     {
-      Tertiary *t=(Tertiary*)this;
       OzLock *ll = (OzLock *) this;
 #ifdef G_COLLECT
 	gCollectPendThreadEmul(&(ll->pending));
@@ -1429,8 +1428,8 @@ void ConstTerm::_cacConstRecurse(void) {
 	break;
 
 #ifdef G_COLLECT
-      if (t->isDistributed()) {
-	(*gCollectMediator)((void*)(t->getTertIndex()));
+      if (ll->isDistributed()) {
+	(*gCollectMediator)(ll->getMediator());
       }
 #endif
       break;
@@ -1558,28 +1557,14 @@ ConstTerm * ConstTerm::gCollectConstTermInline(void) {
     sz = sizeof(OzObject);
     goto const_withhome;
 
-    /*
-     * Tertiary
-     *
-     */
-
   case Co_Space:
     sz = sizeof(Space);
-    goto const_tertiary;
+    goto const_withhome;
 
   default:
     Assert(0);
   }
   
- const_tertiary: {
-    Tertiary * t_t = (Tertiary *) oz_hrealloc(this, sz);
-    if (!t_t->isDistributed())
-      t_t->setBoardLocal(t_t->getBoardLocal()->gCollectBoard());
-    cacStack.push(t_t, PTR_CONSTTERM);
-    STOREFWDFIELD(this, t_t);
-    return t_t;
-  }
-
  const_withhome: {
    ConstTermWithHome * ctwh_t = (ConstTermWithHome *) oz_hrealloc(this, sz);
    STOREFWDFIELD(this, ctwh_t);
@@ -1691,34 +1676,14 @@ ConstTerm *ConstTerm::sCloneConstTermInline(void) {
     sz = sizeof(OzObject);
     goto const_withhome;
 
-    /*
-     * Tertiary
-     *
-     */
-
   case Co_Space:
     sz = sizeof(Space);
-    goto const_tertiary;
+    goto const_withhome;
 
   default:
     Assert(0);
   }
   
- const_tertiary: {
-    Tertiary * t_f = (Tertiary *) this;
-    if (t_f->isDistributed()) 
-      return this;
-    Board * bb = t_f->getBoardLocal();
-    Assert(bb->cacIsAlive());
-    if (!NEEDSCOPYING(bb)) 
-      return this;
-    Tertiary * t_t = (Tertiary *) oz_hrealloc(this, sz);
-    t_t->setBoardLocal(bb->sCloneBoard());
-    cacStack.push(t_t, PTR_CONSTTERM);
-    STOREFWDFIELD(this, t_t);
-    return t_t;
-  }
-
  const_withhome: {
    ConstTermWithHome * ctwh_f = (ConstTermWithHome *) this;
    if (ctwh_f->hasGName()) 

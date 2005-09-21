@@ -253,19 +253,17 @@ OZ_BI_define(BImigrateManager,1,0){
   OZ_declareTerm(0,entity);
   // Check that the argument actually is 
   // distributed and fetch the ProxyName
-  if ((oz_isPort(entity) || oz_isCell(entity)) && 
-      ((Tertiary*)tagged2Const(entity))->getTertType()==Te_Proxy)
-    {
-      Tertiary* t = (Tertiary*)tagged2Const(entity);
-      CoordinatorAssistantInterface *pi=index2CAI(t->getTertIndex());
-      //ZACHARIAS: argument 2 is unecessary so pass any void*
-      pi->manipulateCNET(NULL); 
-    }
-  if(oz_isArray(entity)){
-    ConstTermWithHome *c = static_cast<ConstTermWithHome*>(tagged2Const(entity));
-    if(c->isDistributed()){
-      CoordinatorAssistantInterface *pi=index2CAI((int)(c->getMediator()));
-      void *ret; 
+  ConstTermWithHome *ct = static_cast<ConstTermWithHome*>(tagged2Const(entity));
+  if ((oz_isPort(entity) || oz_isCell(entity)) && ct->isDistributed()) {
+    CoordinatorAssistantInterface *pi = 
+      static_cast<Mediator*>(ct->getMediator())->getCoordinatorAssistant();
+    //ZACHARIAS: argument 2 is unecessary so pass any void*
+    pi->manipulateCNET(NULL); 
+  }
+  if(oz_isArray(entity)) {
+    if(ct->isDistributed()){
+      CoordinatorAssistantInterface *pi = 
+        static_cast<Mediator*>(ct->getMediator())->getCoordinatorAssistant();
       pi->manipulateCNET(NULL); 
     }
   }
@@ -815,20 +813,14 @@ OZ_BI_define(BIdistHandlerInstall,4,1){
 	  switch(ct->getType()){
 	  case Co_Cell:
 	  case Co_Port:
-	    if (((Tertiary*)ct)->getTertType() == Te_Proxy)
-	      {
-		OZ_warning("Watcher installation disabled");
-		// index2Me(((Tertiary*)ct)->getTertIndex())->addWatcher(proc0,condition);
-	      }
-	    else
-	      {
-		OZ_warning("Installing wathcer on non distributed tertiary");
-		
-	      }
+	    if (((ConstTermWithHome *)ct)->isDistributed()) {
+	      OZ_warning("Watcher installation disabled");
+	    } else {
+	      OZ_warning("Installing wathcer on non distributed entity");
+	    }
 	    break; 
 	  default: 
 	    return oz_raise(E_SYSTEM,E_SYSTEM,"what should I do?",1,OZ_atom("e dont distribute that"));
-	    
 	  }
 	}
     }
@@ -869,15 +861,9 @@ OZ_BI_define(BIgetEntityCond,2,0){
 	  switch(ct->getType()){
 	  case Co_Cell:
 	  case Co_Port:
-	    if (((Tertiary*)ct)->getTertType() == Te_Proxy)
-	      {
-		OZ_warning("Watcher deinstallation disabled");
-		//index2Me(((Tertiary*)ct)->getTertIndex())->removeWatcher(proc0,condition);
-	      }
-	    else
-	      {
-		; 
-	      }
+	    if (((ConstTermWithHome *)ct)->isDistributed()) {
+	      OZ_warning("Watcher deinstallation disabled");
+	    }
 	    break; 
 	  default: 
 	    return oz_raise(E_SYSTEM,E_SYSTEM,"what should I do?",1,OZ_atom("e dont distribute that"));

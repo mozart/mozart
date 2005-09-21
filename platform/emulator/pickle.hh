@@ -79,9 +79,9 @@ public:
   void processExtension(OZ_Term extensionTerm);
   void processBigInt(OZ_Term biTerm);
   void processBuiltin(OZ_Term biTerm, ConstTerm *biConst);
-  void processLock(OZ_Term lockTerm, Tertiary *lockTert);
+  void processLock(OZ_Term lockTerm, ConstTerm *lockConst);
   void processPort(OZ_Term portTerm, ConstTerm *portConst);
-  void processResource(OZ_Term resTerm, Tertiary *tert);
+  void processResource(OZ_Term resTerm, ConstTerm *resConst);
   void processNoGood(OZ_Term resTerm);
   void processVar(OZ_Term cv, OZ_Term *varTerm);
   Bool processLTuple(OZ_Term ltupleTerm);
@@ -153,9 +153,9 @@ public:
   void processExtension(OZ_Term extensionTerm);
   void processBigInt(OZ_Term biTerm);
   void processBuiltin(OZ_Term biTerm, ConstTerm *biConst);
-  void processLock(OZ_Term lockTerm, Tertiary *lockTert);
+  void processLock(OZ_Term lockTerm, ConstTerm *lockConst);
   void processPort(OZ_Term portTerm, ConstTerm *portConst);
-  void processResource(OZ_Term resTerm, Tertiary *tert);
+  void processResource(OZ_Term resTerm, ConstTerm *resConst);
   void processNoGood(OZ_Term resTerm);
   void processVar(OZ_Term cv, OZ_Term *varTerm);
   Bool processLTuple(OZ_Term ltupleTerm);

@@ -212,7 +212,7 @@ Bool Pickler::processObject(OZ_Term term, ConstTerm *objConst)
 
 //
 inline 
-void Pickler::processLock(OZ_Term term, Tertiary *tert)
+void Pickler::processLock(OZ_Term term, ConstTerm *lockConst)
 {
   OZ_error("Pickler::processLock is called!");
 }
@@ -244,7 +244,7 @@ void Pickler::processPort(OZ_Term termcellTerm, ConstTerm *portConst)
 }
 
 inline 
-void Pickler::processResource(OZ_Term term, Tertiary *tert)
+void Pickler::processResource(OZ_Term term, ConstTerm *resConst)
 {
   OZ_error("Pickler::processResource is called!");
 }
@@ -538,7 +538,7 @@ Bool ResourceExcavator::processObject(OZ_Term objTerm, ConstTerm *objConst)
   return (TRUE);
 }
 inline 
-void ResourceExcavator::processLock(OZ_Term lockTerm, Tertiary *tert)
+void ResourceExcavator::processLock(OZ_Term lockTerm, ConstTerm *lockConst)
 {
   addResource(lockTerm);
 }
@@ -559,7 +559,7 @@ void ResourceExcavator::processPort(OZ_Term portTerm, ConstTerm *portConst)
   addResource(portTerm);
 }
 inline 
-void ResourceExcavator::processResource(OZ_Term rTerm, Tertiary *tert)
+void ResourceExcavator::processResource(OZ_Term rTerm, ConstTerm *resConst)
 {
   addResource(rTerm);
 }
@@ -924,9 +924,9 @@ OZ_Term unpickleTermInternal(PickleMarshalerBuffer *bs)
     case DIF_OBJECT_DEF:
     case DIF_OBJECT:
 #ifdef DEBUG_CHECK
-      OZ_error("unmarshal: unexpected tertiary (%d)\n",tag);
+      OZ_error("unmarshal: unexpected term (%d)\n",tag);
 #else
-      OZ_warning("unmarshal: unexpected tertiary (%d)\n",tag);
+      OZ_warning("unmarshal: unexpected term (%d)\n",tag);
 #endif
       b->buildValue(oz_nil());
       break;

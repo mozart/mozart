@@ -40,8 +40,7 @@
 #include "dss_enums.hh"
 /* The interafce to the Marshaler for marshaling and unmarshaling 
    of entities. Since the marshaler differentiate between variables
-   and tertiaries this separation is keept. */ 
-// An index, if any, is marshaled *after* 'marshalTertiary()';
+   and ConstTermWithHome this separation is keept. */ 
 
 enum DssMarshalDIFs{
   DSS_DIF_CELL, 
@@ -120,11 +119,6 @@ OzVariable *glue_globalizeOzVariable(TaggedRef *vPtr) {
   return var;
 }
 
-
-
-/* Globalize Tert defines the EMU and settings for the EMU. 
-   Further initializations are done by globalizeTertCntl.. */
-
 void getAnnotations(TaggedRef tr, int p_def, int a_def, int g_def, 
 		    ProtocolName &p, AccessArchitecture &a, RCalg &g)
 {
@@ -134,49 +128,6 @@ void getAnnotations(TaggedRef tr, int p_def, int a_def, int g_def,
   p = static_cast<ProtocolName>(((annotation & ANOT_PROT_MASK)) ? annotation & ANOT_PROT_MASK : p_def);
   a = static_cast<AccessArchitecture>((annotation & ANOT_AA_MASK) ? annotation & ANOT_AA_MASK : a_def);
 } 
-
-void globalizeTertiary(Tertiary *t)
-{ 
-  Assert(!(t->isDistributed()));
-  switch(t->getType()) {
-  case Co_Cell:
-    {
-      OZ_error("Globalization of Cells shouldn't be done as a Tertiary\n");
-      Assert(0);
-      break; 
-    }
-  case Co_Lock:
-    {
-      OZ_error("Globalization of Lock shouldn't be done as a Tertiary\n");
-      Assert(0);
-      break; 
-    }
-  case Co_Object:
-    {
-      // retrieve mediator, or create one
-      ObjectMediator* me = static_cast<ObjectMediator*>
-	(mediatorTable->lookup(makeTaggedConst(t)));
-      if (me == NULL) me = new ObjectMediator(t, NULL);
-      me->globalize();
-      break;
-    }
-  case Co_Port:
-    {
-      OZ_error("Globalization of Ports shouldn't be done as a Tertiary\n");
-      Assert(0);
-      break;
-    }
-  default:
-    {
-      OZ_error("Globalization of unknown tert type %d\n",t->getType());
-      Assert(0);
-    }
-  }
-}
-
-
-
-
 
 ///// For the darn threads 
 void oz_thread_setDistVal(TaggedRef tr, int i, void* v); 

@@ -740,8 +740,6 @@ VSnapshotBuilder vsb;
 /*   interface to Oz-core                                  */
 /* *********************************************************************/
 
-//bmc: marshalTertiary removed.
-
 static 
 char *tagToComment(MarshalTag tag)
 {
@@ -770,11 +768,6 @@ char *tagToComment(MarshalTag tag)
     return "";
 }}
 
-//bmc: unmarshalTertiary removed.
-
-//bmc: This variable is present in the MozDSS but was present in the
-//bmc: Mozart implementation. I still have to know if I need it or not.
-//
 void DPBuilderCodeAreaDescriptor::gc()
 {
   Assert(current >= start && current <= end);
@@ -1446,24 +1439,24 @@ OZ_Term dpUnmarshalTerm(ByteBuffer *bs, Builder *b)
       }
     case DIF_RESOURCE_DEF:
       {
-	OZ_Term tert = glue_unmarshalDistTerm(bs);
+	OZ_Term termres = glue_unmarshalDistTerm(bs);
 	int refTag = unmarshalRefTag(bs);
 #if defined(DBG_TRACE)
-	fprintf(dbgout, " = %s (at %d)\n", toC(tert), refTag);
+	fprintf(dbgout, " = %s (at %d)\n", toC(termres), refTag);
 	fflush(dbgout);
 #endif
-	b->buildValueRemember(tert, refTag);
+	b->buildValueRemember(termres, refTag);
 	break;
       }
 
     case DIF_RESOURCE:
       {
-	OZ_Term tert = glue_unmarshalDistTerm(bs);
+	OZ_Term termres = glue_unmarshalDistTerm(bs);
 #if defined(DBG_TRACE)
-	fprintf(dbgout, " = %s\n", toC(tert));
+	fprintf(dbgout, " = %s\n", toC(termres));
 	fflush(dbgout);
 #endif
-	b->buildValue(tert);
+	b->buildValue(termres);
 	break;
       }
 

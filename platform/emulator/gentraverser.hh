@@ -590,11 +590,10 @@ protected:
   // OzConst"s;
   void processBigInt(OZ_Term biTerm);
   void processBuiltin(OZ_Term biTerm, ConstTerm *biConst);
-  // 'Tertiary' OzConst"s;
-  void processLock(OZ_Term lockTerm, Tertiary *lockTert);
+  void processLock(OZ_Term lockTerm, ConstTerm *lockConst);
   Bool processCell(OZ_Term cellTerm, ConstTerm *cellConst);
   void processPort(OZ_Term portTerm, ConstTerm *portConst);
-  void processResource(OZ_Term resTerm, Tertiary *tert);
+  void processResource(OZ_Term resTerm, ConstTerm *resConst);
   // anything else:
   void processNoGood(OZ_Term resTerm);
   //
