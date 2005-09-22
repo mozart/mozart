@@ -183,6 +183,7 @@ public:
   ConstTerm* getConst();
   virtual char *getPrintType();
   virtual void globalize();
+  virtual void localize();
 };
 
 
@@ -243,7 +244,6 @@ public:
 				   DssOperationId* operation_id,
 				   PstInContainerInterface* operation,
 				   PstOutContainerInterface*& possible_answer);
-  virtual void localize();
   virtual PstOutContainerInterface *retrieveEntityRepresentation() { Assert(0); return NULL;}
   virtual void installEntityRepresentation(PstInContainerInterface*) { Assert(0);} 
   EntityType getEntityType() { return ETYPE_PORT; }
@@ -265,7 +265,6 @@ public:
 				   DssOperationId* operation_id,
 				   PstInContainerInterface* operation,
 				   PstOutContainerInterface*& possible_answer);
-  virtual void localize();
   virtual PstOutContainerInterface *retrieveEntityRepresentation();
   virtual void installEntityRepresentation(PstInContainerInterface*); 
   EntityType getEntityType() { return ETYPE_CELL; }
@@ -287,7 +286,6 @@ public:
 				   DssOperationId* operation_id,
 				   PstInContainerInterface* operation,
 				   PstOutContainerInterface*& possible_answer);
-  virtual void localize();
   virtual PstOutContainerInterface *retrieveEntityRepresentation();  
   virtual void installEntityRepresentation(PstInContainerInterface*);  
   EntityType getEntityType() { return ETYPE_LOCK; }
@@ -338,8 +336,6 @@ public:
 				   DssOperationId* operation_id,
 				   PstInContainerInterface* operation,
 				   PstOutContainerInterface*& possible_answer);
-  virtual void localize();
-
   virtual PstOutContainerInterface *retrieveEntityRepresentation() ;
   virtual void installEntityRepresentation(PstInContainerInterface*) ;
   EntityType getEntityType() { return ETYPE_ARRAY; }
@@ -361,8 +357,6 @@ public:
 				   DssOperationId* operation_id,
 				   PstInContainerInterface* operation,
 				   PstOutContainerInterface*& possible_answer);
-  virtual void localize();
-
   virtual PstOutContainerInterface *retrieveEntityRepresentation() ;
   virtual void installEntityRepresentation(PstInContainerInterface*) ;
   EntityType getEntityType() { return ETYPE_ARRAY; }
@@ -385,7 +379,6 @@ public:
 				   PstInContainerInterface* operation,
 				   PstOutContainerInterface*& possible_answer);
   virtual void globalize();
-  virtual void localize();
   virtual PstOutContainerInterface *retrieveEntityRepresentation();
   virtual void installEntityRepresentation(PstInContainerInterface*);
   EntityType getEntityType() { return ETYPE_OBJECT; }

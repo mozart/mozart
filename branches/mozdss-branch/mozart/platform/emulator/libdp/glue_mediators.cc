@@ -227,6 +227,27 @@ void ConstMediator::globalize() {
   setAttached(ATTACHED);
 }
 
+void ConstMediator::localize(){
+  if (annotation || faultStream) {
+    // we have to keep the mediator, so
+    // 1. remove abstract entity
+    delete absEntity;
+    absEntity = NULL;
+    // 2. localize the lock (detach mediator)
+    static_cast<ConstTermWithHome*>(getConst())->setBoard(oz_currentBoard());
+    setAttached(DETACHED);
+    // 3. keep the mediator in the table
+    mediatorTable->insert(this);
+    
+  } else {
+    // remove completely mediator, so
+    // 1. localize the lock
+    static_cast<ConstTermWithHome*>(getConst())->setBoard(oz_currentBoard());
+    // 2. delete mediator
+    delete this;
+  }
+}
+
 
 /************************* PortMediator *************************/
 
@@ -274,28 +295,6 @@ PortMediator::callback_Read(DssThreadId *id,
 //{
 //    (void)  p->exchangeStream(arg); 
 // }
-
-void PortMediator::localize(){
-  if (annotation || faultStream) {
-    // we have to keep the mediator, so
-    // 1. remove abstract entity
-    delete absEntity;
-    absEntity = NULL;
-    // 2. localize the port (detach mediator)
-    tagged2Port(entity)->setBoard(am.currentBoard());
-    setAttached(DETACHED);
-    // 3. keep the mediator in the table
-    mediatorTable->insert(this);
-    
-  } else {
-    // remove completely mediator, so
-    // 1. localize the port
-    tagged2Port(entity)->setBoard(am.currentBoard());
-    // 2. delete mediator
-    delete this;
-  }
-}
-
 
 
 /************************* LazyVarMediator *************************/
@@ -527,27 +526,6 @@ LockMediator::LockMediator(ConstTerm *t, AbstractEntity *ae) :
   setAbstractEntity(ae);
 }
 
-void LockMediator::localize(){
-  if (annotation || faultStream) {
-    // we have to keep the mediator, so
-    // 1. remove abstract entity
-    delete absEntity;
-    absEntity = NULL;
-    // 2. localize the lock (detach mediator)
-    static_cast<OzLock*>(getConst())->setBoard(oz_currentBoard());
-    setAttached(DETACHED);
-    // 3. keep the mediator in the table
-    mediatorTable->insert(this);
-    
-  } else {
-    // remove completely mediator, so
-    // 1. localize the lock
-    static_cast<OzLock*>(getConst())->setBoard(oz_currentBoard());
-    // 2. delete mediator
-    delete this;
-  }
-}
-
 AOcallback 
 LockMediator::callback_Write(DssThreadId* id_of_calling_thread,
 			     DssOperationId* operation_id,
@@ -671,27 +649,6 @@ CellMediator::CellMediator(ConstTerm *c, AbstractEntity *ae) :
   setAbstractEntity(ae);
 }
 
-void CellMediator::localize() {
-  if (annotation || faultStream) {
-    // we have to keep the mediator, so
-    // 1. remove abstract entity
-    delete absEntity;
-    absEntity = NULL;
-    // 2. localize the cell (detach mediator)
-    tagged2Cell(entity)->setBoard(oz_currentBoard());
-    setAttached(DETACHED);
-    // 3. keep the mediator in the table
-    mediatorTable->insert(this);
-    
-  } else {
-    // remove completely mediator, so
-    // 1. localize the cell
-    tagged2Cell(entity)->setBoard(oz_currentBoard());
-    // 2. delete mediator
-    delete this;
-  }
-}
-
 PstOutContainerInterface *
 CellMediator::retrieveEntityRepresentation() {
   OzCell *cell = tagged2Cell(entity);
@@ -788,28 +745,6 @@ void ObjectMediator::globalize() {
   setAttached(ATTACHED);
 }
 
-void
-ObjectMediator::localize() {
-  if (annotation || faultStream) {
-    // we have to keep the mediator, so
-    // 1. remove abstract entity
-    delete absEntity;
-    absEntity = NULL;
-    // 2. localize the cell (detach mediator)
-    tagged2Object(entity)->setBoard(oz_currentBoard());
-    setAttached(DETACHED);
-    // 3. keep the mediator in the table
-    mediatorTable->insert(this);
-    
-  } else {
-    // remove completely mediator, so
-    // 1. localize the cell
-    tagged2Object(entity)->setBoard(oz_currentBoard());
-    // 2. delete mediator
-    delete this;
-  }
-}
-
 char*
 ObjectMediator::getPrintType(){ return NULL; }
 
@@ -830,28 +765,6 @@ ArrayMediator::ArrayMediator(ConstTerm *t, AbstractEntity *ae) :
   ConstMediator(t, ATTACHED)
 {
   setAbstractEntity(ae);
-}
-
-void
-ArrayMediator::localize() {
-  if (annotation || faultStream) {
-    // we have to keep the mediator, so
-    // 1. remove abstract entity
-    delete absEntity;
-    absEntity = NULL;
-    // 2. localize the cell (detach mediator)
-    static_cast<OzArray*>(getConst())->setBoard(oz_currentBoard());
-    setAttached(DETACHED);
-    // 3. keep the mediator in the table
-    mediatorTable->insert(this);
-    
-  } else {
-    // remove completely mediator, so
-    // 1. localize the cell
-    static_cast<OzArray*>(getConst())->setBoard(oz_currentBoard());
-    // 2. delete mediator
-    delete this;
-  }
 }
 
 AOcallback 
@@ -920,28 +833,6 @@ DictionaryMediator::DictionaryMediator(ConstTerm *t, AbstractEntity *ae) :
   ConstMediator(t, ATTACHED)
 {
   setAbstractEntity(ae);
-}
-
-void
-DictionaryMediator::localize() {
-  if (annotation || faultStream) {
-    // we have to keep the mediator, so
-    // 1. remove abstract entity
-    delete absEntity;
-    absEntity = NULL;
-    // 2. localize the cell (detach mediator)
-    static_cast<OzDictionary*>(getConst())->setBoard(oz_currentBoard());
-    setAttached(DETACHED);
-    // 3. keep the mediator in the table
-    mediatorTable->insert(this);
-    
-  } else {
-    // remove completely mediator, so
-    // 1. localize the cell
-    static_cast<OzDictionary*>(getConst())->setBoard(oz_currentBoard());
-    // 2. delete mediator
-    delete this;
-  }
 }
 
 //bmc: rewrite this method
