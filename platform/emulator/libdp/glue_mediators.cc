@@ -216,14 +216,9 @@ void ConstMediator::globalize() {
   AccessArchitecture aa;
   RCalg rc;
   getDssParameters(pn, aa, rc);
+  setAbstractEntity(dss->m_createMutableAbstractEntity( pn, aa, rc));
 
-  ConstTermWithHome *ctwh = static_cast<ConstTermWithHome*>(getConst());
-  if (ctwh->getType() == Co_Port)
-    setAbstractEntity(dss->m_createRelaxedMutableAbstractEntity( pn, aa, rc));
-  else
-    setAbstractEntity(dss->m_createMutableAbstractEntity( pn, aa, rc));
-
-  ctwh->setMediator((void *)this);
+  static_cast<ConstTermWithHome*>(getConst())->setMediator((void *)this);
   setAttached(ATTACHED);
 }
 
@@ -295,6 +290,20 @@ PortMediator::callback_Read(DssThreadId *id,
 //{
 //    (void)  p->exchangeStream(arg); 
 // }
+
+void PortMediator::globalize() {
+  Assert(getAbstractEntity() == NULL);
+  
+  ProtocolName pn;
+  AccessArchitecture aa;
+  RCalg rc;
+  getDssParameters(pn, aa, rc);
+  setAbstractEntity(dss->m_createRelaxedMutableAbstractEntity( pn, aa, rc));
+
+  tagged2Port(entity)->setMediator((void *)this);
+  setAttached(ATTACHED);
+}
+
 
 
 /************************* LazyVarMediator *************************/
