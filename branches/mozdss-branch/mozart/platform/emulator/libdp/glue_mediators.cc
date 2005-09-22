@@ -209,6 +209,23 @@ ConstTerm* ConstMediator::getConst(){
   return tagged2Const(getEntity()); 
 }
 
+void ConstMediator::globalize() {
+  Assert(getAbstractEntity() == NULL);
+
+  ProtocolName pn;
+  AccessArchitecture aa;
+  RCalg rc;
+  getDssParameters(pn, aa, rc);
+
+  ConstTermWithHome *ctwh = static_cast<ConstTermWithHome*>(getConst());
+  if (ctwh->getType() == Co_Port)
+    setAbstractEntity(dss->m_createRelaxedMutableAbstractEntity( pn, aa, rc));
+  else
+    setAbstractEntity(dss->m_createMutableAbstractEntity( pn, aa, rc));
+
+  ctwh->setMediator((void *)this);
+  setAttached(ATTACHED);
+}
 
 
 /************************* PortMediator *************************/
@@ -257,21 +274,6 @@ PortMediator::callback_Read(DssThreadId *id,
 //{
 //    (void)  p->exchangeStream(arg); 
 // }
-
-void PortMediator::globalize() {
-  Assert(absEntity == NULL);
-  // create abstract entity
-  ProtocolName pn;
-  AccessArchitecture aa;
-  RCalg rc;
-  getDssParameters(pn, aa, rc);
-  setAbstractEntity(dss->m_createRelaxedMutableAbstractEntity(pn, aa, rc));
-  // attach to entity
-  OzPort *p = tagged2Port(entity);
-  p->setMediator((void *) this);
-  setAttached(ATTACHED);
-  Assert(absEntity != NULL);
-}
 
 void PortMediator::localize(){
   if (annotation || faultStream) {
@@ -525,20 +527,6 @@ LockMediator::LockMediator(ConstTerm *t, AbstractEntity *ae) :
   setAbstractEntity(ae);
 }
 
-void LockMediator::globalize(){
-  Assert(getAbstractEntity() == NULL);
-
-  ProtocolName pn;
-  AccessArchitecture aa;
-  RCalg rc;
-  getDssParameters(pn, aa, rc);
-  setAbstractEntity(dss->m_createMutableAbstractEntity( pn, aa, rc));
-
-  OzLock *lock = static_cast<OzLock*>(getConst());
-  lock->setMediator((void *)this);
-  setAttached(ATTACHED);
-}
-
 void LockMediator::localize(){
   if (annotation || faultStream) {
     // we have to keep the mediator, so
@@ -681,22 +669,6 @@ CellMediator::CellMediator(ConstTerm *c, AbstractEntity *ae) :
   ConstMediator(c, ATTACHED)
 {
   setAbstractEntity(ae);
-}
-
-void CellMediator::globalize() {
-  Assert(getAbstractEntity() == NULL);
-
-  // create abstract entity
-  ProtocolName pn;
-  AccessArchitecture aa;
-  RCalg rc;
-  getDssParameters(pn, aa, rc);
-  setAbstractEntity(dss->m_createMutableAbstractEntity(pn, aa, rc));
-
-  // attach to entity
-  OzCell *cell = tagged2Cell(entity);
-  cell->setMediator((void *)(this));
-  setAttached(ATTACHED);
 }
 
 void CellMediator::localize() {
@@ -859,23 +831,6 @@ ArrayMediator::ArrayMediator(ConstTerm *t, AbstractEntity *ae) :
 {
   setAbstractEntity(ae);
 }
-  
-void
-ArrayMediator::globalize() {
-  Assert(getAbstractEntity() == NULL);
-
-  // create abstract entity
-  ProtocolName pn;
-  AccessArchitecture aa;
-  RCalg rc;
-  getDssParameters(pn, aa, rc);
-  setAbstractEntity(dss->m_createMutableAbstractEntity(pn, aa, rc));
-  
-  OzArray* oa = static_cast<OzArray*>(tagged2Const(getEntity()));
-  oa->setMediator(this);
-  Assert(this == static_cast<ArrayMediator*>(oa->getMediator()));
-  setAttached(ATTACHED);
-}
 
 void
 ArrayMediator::localize() {
@@ -965,23 +920,6 @@ DictionaryMediator::DictionaryMediator(ConstTerm *t, AbstractEntity *ae) :
   ConstMediator(t, ATTACHED)
 {
   setAbstractEntity(ae);
-}
-  
-void
-DictionaryMediator::globalize() {
-  Assert(getAbstractEntity() == NULL);
-
-  // create abstract entity
-  ProtocolName pn;
-  AccessArchitecture aa;
-  RCalg rc;
-  getDssParameters(pn, aa, rc);
-  setAbstractEntity(dss->m_createMutableAbstractEntity(pn, aa, rc));
-  
-  OzDictionary* od = static_cast<OzDictionary*>(tagged2Const(getEntity()));
-  od->setMediator(this);
-  Assert(this == reinterpret_cast<DictionaryMediator*>(od->getMediator()));
-  setAttached(ATTACHED);
 }
 
 void
