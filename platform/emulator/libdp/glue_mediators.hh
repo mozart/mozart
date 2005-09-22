@@ -182,6 +182,7 @@ public:
   ConstMediator(ConstTerm *t, bool attached);
   ConstTerm* getConst();
   virtual char *getPrintType();
+  virtual void globalize();
 };
 
 
@@ -242,7 +243,6 @@ public:
 				   DssOperationId* operation_id,
 				   PstInContainerInterface* operation,
 				   PstOutContainerInterface*& possible_answer);
-  virtual void globalize();
   virtual void localize();
   virtual PstOutContainerInterface *retrieveEntityRepresentation() { Assert(0); return NULL;}
   virtual void installEntityRepresentation(PstInContainerInterface*) { Assert(0);} 
@@ -265,7 +265,6 @@ public:
 				   DssOperationId* operation_id,
 				   PstInContainerInterface* operation,
 				   PstOutContainerInterface*& possible_answer);
-  virtual void globalize();
   virtual void localize();
   virtual PstOutContainerInterface *retrieveEntityRepresentation();
   virtual void installEntityRepresentation(PstInContainerInterface*); 
@@ -288,7 +287,6 @@ public:
 				   DssOperationId* operation_id,
 				   PstInContainerInterface* operation,
 				   PstOutContainerInterface*& possible_answer);
-  virtual void globalize();
   virtual void localize();
   virtual PstOutContainerInterface *retrieveEntityRepresentation();  
   virtual void installEntityRepresentation(PstInContainerInterface*);  
@@ -340,7 +338,6 @@ public:
 				   DssOperationId* operation_id,
 				   PstInContainerInterface* operation,
 				   PstOutContainerInterface*& possible_answer);
-  virtual void globalize();
   virtual void localize();
 
   virtual PstOutContainerInterface *retrieveEntityRepresentation() ;
@@ -364,7 +361,6 @@ public:
 				   DssOperationId* operation_id,
 				   PstInContainerInterface* operation,
 				   PstOutContainerInterface*& possible_answer);
-  virtual void globalize();
   virtual void localize();
 
   virtual PstOutContainerInterface *retrieveEntityRepresentation() ;
