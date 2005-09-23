@@ -162,11 +162,12 @@ namespace _dss_internal{ //Start namespace
     Reference(), 
     a_coordinator(c){
     if (gc_annot == static_cast<unsigned int>(RC_ALG_WRC)) {
-      a_algs = new WRC_Home(this,NULL,m_getEnvironment()->a_dssconf.gc_wrc_alpha); // almost always
+      // optimization for the most common case
+      a_algs = new WRC_Home(this,NULL,m_getEnvironment()->a_dssconf.gc_wrc_alpha);
     } else {
       a_algs = NULL;
       if(!(gc_annot == RC_ALG_PERSIST)){ // If not persistent, add algs
-	if(gc_annot & RC_ALG_WRC) printf("RC_ALG_WRC\n"); a_algs = new WRC_Home(this,a_algs,m_getEnvironment()->a_dssconf.gc_wrc_alpha);
+	if(gc_annot & RC_ALG_WRC)  a_algs = new WRC_Home(this,a_algs,m_getEnvironment()->a_dssconf.gc_wrc_alpha);
 	if(gc_annot & RC_ALG_TL)   a_algs = new TL_Home(this,a_algs,m_getEnvironment()->a_dssconf.gc_tl_leaseTime);
 	if(gc_annot & RC_ALG_RC)   a_algs = new RC_Home(this,a_algs);
 	if(gc_annot & RC_ALG_RLV1) a_algs = new RLV1_Home(this,a_algs);
