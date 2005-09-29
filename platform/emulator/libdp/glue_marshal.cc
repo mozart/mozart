@@ -48,6 +48,7 @@ enum DssMarshalDIFs{
   DSS_DIF_LOCK,
   DSS_DIF_VAR,
   DSS_DIF_ARRAY,
+  DSS_DIF_DICTIONARY,
   DSS_DIF_UNUSABLE,
   DSS_DIF_THREAD
 };
@@ -139,37 +140,45 @@ void glue_marshalArray(ByteBuffer *bs, ConstTermWithHome *arrayConst)
 {
   OzArray *ozA = static_cast<OzArray*>(arrayConst);
 
-  if (!ozA->isDistributed()) {
-    ArrayMediator *am = static_cast<ArrayMediator*>
+  ArrayMediator *am;
+  if (ozA->isDistributed())
+    am = static_cast<ArrayMediator*>(ozA->getMediator());
+  else {
+    am = static_cast<ArrayMediator*>
       (mediatorTable->lookup(makeTaggedConst(arrayConst)));
     if (am == NULL) am = new ArrayMediator(arrayConst, NULL);
     am->globalize();
   }
   Assert(ozA->isDistributed());
 
-  AbstractEntity *ae = index2AE((int)(ozA->getMediator()));
   GlueWriteBuffer *gwb = static_cast<GlueWriteBuffer *>(bs); 
-  ae->getCoordinatorAssistant()->marshal(gwb, PMF_ORDINARY);
+  am->marshal(gwb, PMF_ORDINARY);
   bs->put(DSS_DIF_ARRAY);
-  marshalNumber(bs, ozA->getLow());;
-  marshalNumber(bs, ozA->getHigh());;
+  marshalNumber(bs, ozA->getLow());
+  marshalNumber(bs, ozA->getHigh());
 }
 
 ///////////////////////////////////////////////////////////////////////////
 ////  Marshal Dictionary
+
 void glue_marshalDictionary(ByteBuffer *bs, ConstTermWithHome *dictConst) {
   OzDictionary *ozD = static_cast<OzDictionary*>(dictConst);
 
-  if (!ozD->isDistributed()) {
-    DictionaryMediator *me = static_cast<DictionaryMediator*>
+  DictionaryMediator *dm;
+  if (ozD->isDistributed())
+    dm = static_cast<DictionaryMediator*>(ozD->getMediator());
+  else {
+    dm = static_cast<DictionaryMediator*>
       (mediatorTable->lookup(makeTaggedConst(dictConst)));
-    if (me == NULL) me = new DictionaryMediator(dictConst, NULL);
-    me->globalize();
+    if (dm == NULL) dm = new DictionaryMediator(dictConst, NULL);
+    dm->globalize();
   }
   Assert(ozD->isDistributed());
 
-  // the rest is not implemented yet
-  Assert(0);
+  GlueWriteBuffer *gwb = static_cast<GlueWriteBuffer *>(bs);
+  dm->marshal(gwb, PMF_ORDINARY);
+  bs->put(DSS_DIF_DICTIONARY);
+  marshalNumber(bs, ozD->getSize());
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -190,7 +199,7 @@ void glue_marshalCell(ByteBuffer *bs, ConstTermWithHome *cellConst)
   Assert(ozC->isDistributed());
 
   GlueWriteBuffer *gwb = static_cast<GlueWriteBuffer *>(bs); 
-  cm->getCoordinatorAssistant()->marshal(gwb, PMF_ORDINARY);
+  cm->marshal(gwb, PMF_ORDINARY);
   bs->put(DSS_DIF_CELL);
 }
 
@@ -213,7 +222,7 @@ void glue_marshalPort(ByteBuffer *bs, ConstTermWithHome *portConst)
   Assert(ozP->isDistributed());
 
   GlueWriteBuffer *gwb = static_cast<GlueWriteBuffer *>(bs); 
-  (pm->getCoordinatorAssistant())->marshal(gwb, PMF_ORDINARY);
+  pm->marshal(gwb, PMF_ORDINARY);
   bs->put(DSS_DIF_PORT);
 }
 
@@ -236,7 +245,7 @@ void glue_marshalLock(ByteBuffer *bs, ConstTermWithHome *lockConst)
   Assert(ozL->isDistributed());
 
   GlueWriteBuffer *gwb = static_cast<GlueWriteBuffer *>(bs); 
-  lm->getCoordinatorAssistant()->marshal(gwb, PMF_ORDINARY);
+  lm->marshal(gwb, PMF_ORDINARY);
   bs->put(DSS_DIF_LOCK);
 }
 
@@ -255,10 +264,8 @@ void glue_marshalUnusable(ByteBuffer *bs, TaggedRef tr) {
     me->globalize();
   }
 
-  // now go for marshaling
-  CoordinatorAssistantInterface *cai = me->getCoordinatorAssistant();
   GlueWriteBuffer *gwb = static_cast<GlueWriteBuffer *>(bs);
-  cai->marshal(gwb, PMF_ORDINARY);
+  me->marshal(gwb, PMF_ORDINARY);
   bs->put(DSS_DIF_UNUSABLE);
 }
 
@@ -270,9 +277,8 @@ void glue_marshalOzThread(ByteBuffer *bs, TaggedRef thr)
     med = new OzThreadMediator(thr, NULL);
     med->globalize();
   }
-  CoordinatorAssistantInterface* cai = med->getCoordinatorAssistant(); 
   GlueWriteBuffer *gwb = static_cast<GlueWriteBuffer *>(bs); 
-  cai->marshal(gwb, PMF_ORDINARY);
+  med->marshal(gwb, PMF_ORDINARY);
   //bs->put(DSS_DIF_THREAD); 
 }
 
@@ -303,7 +309,7 @@ void glue_marshalObjectStubInternal(OzObject* o, ByteBuffer *bs)
   Assert(o->isDistributed());
 
   GlueWriteBuffer *gwb = static_cast<GlueWriteBuffer *>(bs); 
-  (om->getCoordinatorAssistant())->marshal(gwb, PMF_ORDINARY);
+  om->marshal(gwb, PMF_ORDINARY);
   marshalGName(bs, gnobj);
   marshalGName(bs, gnclass);
 //  bs->put(DSS_DIF_OBJECT_STUB);
@@ -354,11 +360,9 @@ OZ_Term  glue_unmarshalDistTerm(ByteBuffer *bs)
 
   DSS_unmarshal_status stat = dss->unmarshalProxy(ae, buf, PUF_ORDINARY , aen);
    
-
   if(stat.exist) {
     switch(bs->get()){
-    case DSS_DIF_THREAD:
-      {
+    case DSS_DIF_THREAD: {
         MutableMediatorInterface* mmi = 
             dynamic_cast<MutableMediatorInterface*>(ae->accessMediator());
         Assert(mmi); 
@@ -366,11 +370,16 @@ OZ_Term  glue_unmarshalDistTerm(ByteBuffer *bs)
         Assert(me);
         return me->getEntity();
       }
+    case DSS_DIF_ARRAY:
+    	printf("+++ got an existing array\n"); //bmc
+        (void) unmarshalNumber(bs); 
+    case DSS_DIF_DICTIONARY:
+    	printf("+++ got an existing dictionary\n"); //bmc
+        (void) unmarshalNumber(bs); 
     case DSS_DIF_CELL:
-    case DSS_DIF_LOCK:
-      {
-        MediatorInterface *mi = ae->accessMediator(); 
-        MutableMediatorInterface* mmi = dynamic_cast<MutableMediatorInterface*>(mi);
+    case DSS_DIF_LOCK: {
+        MutableMediatorInterface* mmi =
+	  static_cast<MutableMediatorInterface*>(ae->accessMediator());
         Assert(mmi); 
         ConstMediator *me = dynamic_cast<ConstMediator *>(mmi);
         Assert(me);
@@ -383,14 +392,6 @@ OZ_Term  glue_unmarshalDistTerm(ByteBuffer *bs)
         Assert(me);
         return makeTaggedConst(me->getConst());
       }
-    case DSS_DIF_ARRAY: {
-        (void) unmarshalNumber(bs); 
-        (void) unmarshalNumber(bs); 
-        MutableMediatorInterface* mmi = static_cast<MutableMediatorInterface*>(ae->accessMediator());
-        ConstMediator *me = dynamic_cast<ConstMediator *>(mmi);
-        Assert(me);
-        return makeTaggedConst(me->getConst());
-      }
     case DSS_DIF_UNUSABLE: {
         Assert(dynamic_cast<UnusableMediator *>(ae->accessMediator()) != NULL);
         ImmutableMediatorInterface* imi = 
@@ -399,7 +400,6 @@ OZ_Term  glue_unmarshalDistTerm(ByteBuffer *bs)
         Assert(me);
         return me->getEntity();
       }
-
     default: 
       OZ_error("Unknown DSS_DIF");
     }
@@ -449,6 +449,14 @@ OZ_Term  glue_unmarshalDistTerm(ByteBuffer *bs)
       Assert(ozA->getMediator() == mediator);
       //	printf("Inserting am:&d me:%d\n",(int)me, (int)(Mediator*)me); 
       return makeTaggedConst(ozA); 
+    }
+    case DSS_DIF_DICTIONARY: {
+      printf("+++ got a dictionary\n"); //bmc
+      int size = unmarshalNumber(bs);
+      OzDictionary *dict = new OzDictionary(oz_currentBoard(), size); 
+      DictionaryMediator *me = new DictionaryMediator(dict, ae); 
+      dict->setMediator((void *)me);
+      return makeTaggedConst(dict);
     }
     default: 
       OZ_error("Unknown DSS_DIF"); 

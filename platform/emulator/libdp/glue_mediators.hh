@@ -34,7 +34,7 @@
 
 #include "dss_object.hh"
 #include "tagged.hh"
-
+#include "glue_buffer.hh"
 
 /*
   Mediators interface Oz entities to DSS abstract entities.  Several
@@ -167,6 +167,9 @@ public:
   // void setFaultState(int);    // force fault state
 
   virtual void reportFaultState(const FaultState& fs);
+
+  /*************** marshaling ***************/
+  virtual void marshal(GlueWriteBuffer *gwb, const ProxyMarshalFlag& pmf);
 
   /*************** debugging ***************/
   virtual char* getPrintType() = 0;

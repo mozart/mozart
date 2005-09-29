@@ -190,6 +190,11 @@ void Mediator::reportFaultState(const FaultState& fs) {
   faultStream = newStream;
 }
 
+void 
+Mediator::marshal(GlueWriteBuffer *gwb, const ProxyMarshalFlag& pmf) {
+  absEntity->getCoordinatorAssistant()->marshal(gwb, pmf);
+}
+
 void
 Mediator::print(){
   printf("%s mediator, id %d, ae %x, ref %x, gc(eng:%d dss:%d), con %d\n",
@@ -844,14 +849,13 @@ DictionaryMediator::DictionaryMediator(ConstTerm *t, AbstractEntity *ae) :
   setAbstractEntity(ae);
 }
 
-//bmc: rewrite this method
 AOcallback 
 DictionaryMediator::callback_Write(DssThreadId *id,
 			      DssOperationId* operation_id,
 			      PstInContainerInterface* pstin,
 			      PstOutContainerInterface*& possible_answer)
 {
-  OzDictionary *ozd = static_cast<OzDictionary*>(getConst());
+  OzDictionary *ozd = tagged2Dictionary(entity);
   TaggedRef arg = static_cast<PstInContainer*>(pstin)->a_term;
   int index = tagged2SmallInt(OZ_head(arg));
   TaggedRef val = OZ_tail(arg);
@@ -860,14 +864,13 @@ DictionaryMediator::callback_Write(DssThreadId *id,
   return AOCB_FINISH;
 }
 
-//bmc: rewrite this method
 AOcallback
 DictionaryMediator::callback_Read(DssThreadId *id,
 			     DssOperationId* operation_id,
 			     PstInContainerInterface* pstin,
 			     PstOutContainerInterface*& possible_answer)
 {
-  OzDictionary *ozd = static_cast<OzDictionary*>(getConst()); 
+  OzDictionary *ozd = tagged2Dictionary(entity); 
   TaggedRef arg = static_cast<PstInContainer*>(pstin)->a_term;
   int indx = tagged2SmallInt(arg);
   possible_answer =  new PstOutContainer(ozd->getArg(indx));
@@ -877,14 +880,14 @@ DictionaryMediator::callback_Read(DssThreadId *id,
 PstOutContainerInterface*
 DictionaryMediator::retrieveEntityRepresentation(){
   // sent the list of entries
-  OzDictionary *ozd = static_cast<OzDictionary*>(getConst());
+  OzDictionary *ozd = tagged2Dictionary(entity);
   return new PstOutContainer(ozd->pairs());
 }
 
 void
 DictionaryMediator::installEntityRepresentation(PstInContainerInterface* pstin){
   // make sure the dictionary is empty
-  OzDictionary *ozd = static_cast<OzDictionary*>(getConst()); 
+  OzDictionary *ozd = tagged2Dictionary(entity); 
   ozd->removeAll();
   // insert all entries (not pretty efficient)
   TaggedRef entries = static_cast<PstInContainer*>(pstin)->a_term;

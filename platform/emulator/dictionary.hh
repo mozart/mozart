@@ -704,7 +704,8 @@ public:
   }
 
   //
-  Bool isSafeDict() { return (dictFlags & DictSafeFlag); }
+//  Bool isSafeDict() { return (dictFlags & DictSafeFlag); }
+  Bool isSafeDict() { return true; }
   void markSafe()   { dictFlags |= DictSafeFlag; }
   //
   DictNode* pairsInArray() { return (table->getPairsInArray()); }
