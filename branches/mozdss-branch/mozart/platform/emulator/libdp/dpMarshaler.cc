@@ -318,8 +318,6 @@ void DPMarshaler2ndP::vHook()
 #undef VISITNODE
 #undef DPMARSHALERCLASS
 
-//bmc: unmarshalBorrow deleted here.
-
 //
 // 'suspend' turns 'OK' if unmarshaling is not complete;
 ProgramCounter
@@ -783,12 +781,6 @@ void DPBuilderCodeAreaDescriptor::gc()
 #endif
 }
 
-
-
-//bmc: I have deleted the unmarshalOwner.
-//bmc: I still have to check if the dpunmarshalTerm belongs to the new
-//bmc: or the old days. I think I will have to remove it.
-//
 //
 OZ_Term dpUnmarshalTerm(ByteBuffer *bs, Builder *b)
 {
@@ -808,7 +800,6 @@ OZ_Term dpUnmarshalTerm(ByteBuffer *bs, Builder *b)
     fprintf(dbgout, "< tag: %s(%d)", dif_names[tag].name, tag);
     fflush(dbgout);
 #endif
-
     switch (tag) {
 	
     case DIF_SMALLINT: 
@@ -1409,14 +1400,18 @@ OZ_Term dpUnmarshalTerm(ByteBuffer *bs, Builder *b)
 	break;
       }
 
-    case DIF_OWNER_DEF:
     case DIF_OWNER:
-    case DIF_PORT_DEF:
-    case DIF_CELL_DEF:
-    case DIF_LOCK_DEF:
+    case DIF_OWNER_DEF:
     case DIF_PORT:
+    case DIF_PORT_DEF:
     case DIF_CELL:
+    case DIF_CELL_DEF:
     case DIF_LOCK:
+    case DIF_LOCK_DEF:
+    case DIF_ARRAY:
+    case DIF_ARRAY_DEF:
+    case DIF_DICT:
+    case DIF_DICT_DEF:
     case DIF_VAR_OBJECT:
     case DIF_VAR_OBJECT_DEF:
       {
@@ -1924,7 +1919,7 @@ OZ_Term dpUnmarshalTerm(ByteBuffer *bs, Builder *b)
 	break;
       }
 
-    case DIF_DICT_DEF:
+/*    case DIF_DICT_DEF:
       {
 	int refTag = unmarshalRefTag(bs);
 	int size   = unmarshalNumber(bs);
@@ -1948,7 +1943,7 @@ OZ_Term dpUnmarshalTerm(ByteBuffer *bs, Builder *b)
 #endif
 	break;
       }
-
+*/
     case DIF_BUILTIN_DEF:
       {
 	int refTag = unmarshalRefTag(bs);
@@ -2112,11 +2107,6 @@ OZ_Term dpUnmarshalTerm(ByteBuffer *bs, Builder *b)
       fflush(dbgout);
 #endif
       b->buildFSETValue();
-      break;
-
-    case DIF_ARRAY:
-      OZ_error("not implemented!"); 
-      b->buildValue(oz_nil());
       break;
 
       //

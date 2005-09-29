@@ -235,6 +235,7 @@ void initDP(int port, int ip, const char *siteId, int primKey)
   setDefaultAnnotation(ETYPE_LOCK, PN_MIGRATORY_STATE | default_aa_rc);
   setDefaultAnnotation(ETYPE_OBJECT, PN_MIGRATORY_STATE | default_aa_rc);
   setDefaultAnnotation(ETYPE_ARRAY, PN_SIMPLE_CHANNEL | default_aa_rc);
+  setDefaultAnnotation(ETYPE_DICTIONARY, PN_SIMPLE_CHANNEL | default_aa_rc);
   setDefaultAnnotation(ETYPE_THREAD, PN_SIMPLE_CHANNEL | default_aa_rc);
   setDefaultAnnotation(ETYPE_UNUSABLE, PN_SIMPLE_CHANNEL | default_aa_rc);
   setDefaultAnnotation(ETYPE_LAZYCOPY, PN_IMMUTABLE_LAZY | default_aa_rc);

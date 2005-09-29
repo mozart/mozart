@@ -865,6 +865,7 @@ Bool DPMARSHALERCLASS::processDictionary(OZ_Term dictTerm, ConstTerm *dictConst)
 {
   ByteBuffer *bs = (ByteBuffer *) getOpaque();
 
+  printf("Process Dictionary %s\n", toC(dictTerm));
   //
   if (bs->availableSpace() >= 
       max(2*DIFMaxSize + MNumberMaxSize + MOwnHeadMaxSize,
@@ -888,12 +889,12 @@ Bool DPMARSHALERCLASS::processDictionary(OZ_Term dictTerm, ConstTerm *dictConst)
 	      dif_names[DIF_DICT].name, DIF_DICT, toC(dictTerm));
       fflush(dbgout);
 #endif
-      if (index) 	marshalDIFcounted(bs, DIF_DICT_DEF);
-      else marshalDIFcounted(bs, DIF_DICT);
+      if (index) bs->put(DIF_RESOURCE_DEF);
+      else bs->put(DIF_RESOURCE);
       glue_marshalDictionary(bs, static_cast<ConstTermWithHome*>(dictConst));
       if (index) marshalTermDef(bs, index);
 
-      marshalNumber(bs, d->getSize());
+//      marshalNumber(bs, d->getSize());
       Assert(bs->availableSpace() >= DIFMaxSize);
       return (NO);
     }
