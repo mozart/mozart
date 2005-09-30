@@ -44,7 +44,77 @@
 static int medIdCntr = 1; 
 
 void doPortSend(OzPort *port, TaggedRef val, Board * home);
+void oz_thread_setDistVal(TaggedRef tr, int i, void* v); 
+void* oz_thread_getDistVal(TaggedRef tr, int i);
 
+
+
+/************************* glue_getMediator *************************/
+
+// special cases for glue_getMediator
+template <class EntityMediator>
+inline Mediator *getCTWHMediator(ConstTerm* ct) {
+  ConstTermWithHome *ctwh = static_cast<ConstTermWithHome*>(ct);
+  Mediator *med = (ctwh->isDistributed() ?
+		   static_cast<Mediator*>(ctwh->getMediator()) :
+		   mediatorTable->lookup(makeTaggedConst(ct)));
+  return (med ? med : new EntityMediator(ct));
+}
+
+inline Mediator *getUnusableMediator(TaggedRef entity) {
+  Mediator *med = mediatorTable->lookup(entity);
+  return (med ? med : new UnusableMediator(entity));
+}
+
+
+
+Mediator *glue_getMediator(TaggedRef entity) {
+  // assumption: entity is properly deref'd
+
+  if (oz_isRef(entity)) { // entity is a variable
+    TaggedRef *vPtr = tagged2Ref(entity);
+    OzVariable *var = oz_getNonOptVar(vPtr);
+    if (!var->hasMediator()) var->setMediator(new OzVariableMediator(entity));
+    return static_cast<Mediator*>(var->getMediator());
+
+  } else { // entity is a const term
+    ConstTerm *ct = tagged2Const(entity);
+
+    switch (ct->getType()) {
+    case Co_Cell:       return getCTWHMediator<CellMediator>(ct);
+    case Co_Object:     return getCTWHMediator<ObjectMediator>(ct);
+    case Co_Port:       return getCTWHMediator<PortMediator>(ct);
+    case Co_Array:      return getCTWHMediator<ArrayMediator>(ct);
+    case Co_Dictionary: return getCTWHMediator<DictionaryMediator>(ct);
+    case Co_Lock:       return getCTWHMediator<LockMediator>(ct);
+
+    case Co_Builtin:
+      if (static_cast<Builtin*>(ct)->isSited())
+	return getUnusableMediator(entity);
+      break;   // other builtins don't have a mediator
+
+    case Co_Extension:
+      if (oz_isThread(entity)) {
+	Mediator *med =
+	  reinterpret_cast<Mediator*>(oz_thread_getDistVal(entity, 0));
+	if (med == NULL) med = mediatorTable->lookup(entity);
+	return (med ? med : new OzThreadMediator(entity));
+      }
+      // fall through, other extensions are unusables
+    case Co_Resource:
+      return getUnusableMediator(entity);
+
+    default:
+      break;
+    }
+    OZ_error("No mediator for entity");
+    return NULL;
+  }
+}
+
+
+
+/************************* common stuff *************************/
 
 char* ConstMediator::getPrintType(){ return "const";}
 char* LazyVarMediator::getPrintType(){ return "lazyVar";}
@@ -468,14 +538,14 @@ UnusableMediator::callback_Read(DssThreadId* id_of_calling_thread,
 
 /************************* OzThreadMediator *************************/
 
+OzThreadMediator::OzThreadMediator(TaggedRef t) : Mediator(t, DETACHED)
+{}
+
 OzThreadMediator::OzThreadMediator(TaggedRef t, AbstractEntity *ae) :
   Mediator(t, ATTACHED)
 {
   setAbstractEntity(ae);
 }
-
-// for the threads
-void oz_thread_setDistVal(TaggedRef tr, int i, void* v); 
 
 void OzThreadMediator::globalize(){
   Assert(getAbstractEntity() == NULL);
