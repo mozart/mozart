@@ -3,6 +3,7 @@
  *    Erik Klintskog (erik@sics.se)
  * 
  *  Contributors:
+ *    Raphael Collet (raph@info.ucl.ac.be)
  *    Boris Mejias (bmc@info.ucl.ac.be)
  * 
  *  Copyright:
@@ -77,6 +78,16 @@ enum DssMarshalDIFs{
 #define ANOT_MOBILE_MAN     0x20000
 
 Bool getAnnotation(TaggedRef e, int &a);
+
+
+
+// the most generic globalize function
+void glue_globalizeEntity(TaggedRef entity) {
+  Mediator *med = glue_getMediator(entity);
+  if (!med->getAbstractEntity()) med->globalize();
+}
+
+
 
 ProxyVar* glue_newGlobalizeFreeVariable(TaggedRef *tPtr)
 {
@@ -210,15 +221,9 @@ void glue_marshalCell(ByteBuffer *bs, ConstTermWithHome *cellConst)
 void glue_marshalPort(ByteBuffer *bs, ConstTermWithHome *portConst)
 {
   OzPort *ozP = static_cast<OzPort*>(portConst);
-  PortMediator *pm;
-  if (!ozP->isDistributed()) {
-    pm = static_cast<PortMediator*>
-      (mediatorTable->lookup(makeTaggedConst(portConst)));
-    if (pm == NULL) pm = new PortMediator(portConst, NULL);
-    pm->globalize();
-  }
-  else pm = static_cast<PortMediator*>(ozP->getMediator());
+  Mediator *pm = glue_getMediator(makeTaggedConst(ozP));
 
+  if (!pm->getAbstractEntity()) pm->globalize();
   Assert(ozP->isDistributed());
 
   GlueWriteBuffer *gwb = static_cast<GlueWriteBuffer *>(bs); 

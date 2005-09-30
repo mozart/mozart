@@ -178,6 +178,11 @@ public:
 
 
 
+// return the mediator of an entity (create one if necessary)
+Mediator *glue_getMediator(TaggedRef entity);
+
+
+
 // ConstMediator is an abstract class for mediators referring to a
 // ConstTerm in the emulator.
 class ConstMediator: public Mediator {
@@ -194,6 +199,7 @@ public:
 // mediators for Oz threads
 class OzThreadMediator: public Mediator, public MutableMediatorInterface {
 public:
+  OzThreadMediator(TaggedRef t);
   OzThreadMediator(TaggedRef t, AbstractEntity *ae);
   
   virtual AOcallback callback_Write(DssThreadId* id_of_calling_thread,
@@ -414,6 +420,5 @@ public:
   virtual PstOutContainerInterface *retrieveEntityRepresentation();
   virtual void installEntityRepresentation(PstInContainerInterface*);
 }; 
-
 
 #endif

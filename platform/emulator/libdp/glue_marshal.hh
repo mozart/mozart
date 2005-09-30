@@ -2,9 +2,8 @@
  *  Authors:
  *    Erik Klintskog (erik@sics.se)
  *
- * 
  *  Contributors:
- *    optional, Contributor's name (Contributor's email address)
+ *    Raphael Collet (raph@info.ucl.ac.be)
  * 
  *  Copyright:
  *    Erik Klintskog, 2002
@@ -32,9 +31,14 @@
 #pragma interface
 #endif
 
-
 #include "base.hh"
 #include "value.hh"
+
+// globalize an entity
+void glue_globalizeEntity(TaggedRef entity);
+
+
+
 class ProxyVar; 
 OZ_Term glue_unmarshalDistTerm(ByteBuffer *bs);
 OZ_Term glue_newUnmarshalVar(ByteBuffer* bs, Bool isFuture);
