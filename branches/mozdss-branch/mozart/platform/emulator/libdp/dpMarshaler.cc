@@ -1413,44 +1413,12 @@ OZ_Term dpUnmarshalTerm(ByteBuffer *bs, Builder *b)
     case DIF_DICT_DEF:
     case DIF_VAR_OBJECT:
     case DIF_VAR_OBJECT_DEF:
-      {
-	OZ_error("Unmarshaling tags from the old system");
-	break;
-      }
-
     case DIF_STUB_OBJECT:
-      {
-	OZ_Term obj = glue_unmarshalObjectStub(bs);
-	b->buildValue(obj);
-	break;
-      }
     case DIF_STUB_OBJECT_DEF:
-      {
-	OZ_Term obj = glue_unmarshalObjectStub(bs);
-	int refTag = unmarshalRefTag(bs);
-	b->buildValueRemember(obj, refTag);
-	break;
-      }
     case DIF_RESOURCE_DEF:
-      {
-	OZ_Term termres = glue_unmarshalDistTerm(bs);
-	int refTag = unmarshalRefTag(bs);
-#if defined(DBG_TRACE)
-	fprintf(dbgout, " = %s (at %d)\n", toC(termres), refTag);
-	fflush(dbgout);
-#endif
-	b->buildValueRemember(termres, refTag);
-	break;
-      }
-
     case DIF_RESOURCE:
       {
-	OZ_Term termres = glue_unmarshalDistTerm(bs);
-#if defined(DBG_TRACE)
-	fprintf(dbgout, " = %s\n", toC(termres));
-	fflush(dbgout);
-#endif
-	b->buildValue(termres);
+	OZ_error("Unmarshaling tags from the old system");
 	break;
       }
 
@@ -1591,48 +1559,11 @@ OZ_Term dpUnmarshalTerm(ByteBuffer *bs, Builder *b)
       }
 
     case DIF_VAR_DEF:
-      {
-	OZ_Term v = glue_unmarshalOzVariable(bs, FALSE);
-	int refTag = unmarshalRefTag(bs);
-#if defined(DBG_TRACE)
-	fprintf(dbgout, " = %s (at %d)\n", toC(v), refTag);
-	fflush(dbgout);
-#endif
-	b->buildValueRemember(v, refTag);
-	break;
-      }
-
     case DIF_VAR:
-      {
-	OZ_Term v = glue_unmarshalOzVariable(bs, FALSE);
-#if defined(DBG_TRACE)
-	fprintf(dbgout, " = %s (at %d)\n", toC(v), refTag);
-	fflush(dbgout);
-#endif
-	b->buildValue(v);
-	break;
-      }
-
     case DIF_READONLY_DEF:
-      {
-	OZ_Term f = glue_unmarshalOzVariable(bs, TRUE);
-	int refTag = unmarshalRefTag(bs);
-#if defined(DBG_TRACE)
-	fprintf(dbgout, " = %s (at %d)\n", toC(f), refTag);
-	fflush(dbgout);
-#endif
-	b->buildValueRemember(f, refTag);
-	break;
-      }
-
     case DIF_READONLY:
       {
-	OZ_Term f = glue_unmarshalOzVariable(bs, TRUE);
-#if defined(DBG_TRACE)
-	fprintf(dbgout, " = %s (at %d)\n", toC(f), refTag);
-	fflush(dbgout);
-#endif
-	b->buildValue(f);
+	OZ_error("Unmarshaling tags from the old system");
 	break;
       }
 
@@ -2137,6 +2068,26 @@ OZ_Term dpUnmarshalTerm(ByteBuffer *bs, Builder *b)
       // caller should know whether that's a complete message;
       return ((OZ_Term) -1);
 
+    case DIF_GLUE: {
+      OZ_Term t = glue_unmarshalEntity(bs);
+#if defined(DBG_TRACE)
+	fprintf(dbgout, " = %s\n", toC(t));
+	fflush(dbgout);
+#endif
+      b->buildValue(t);
+      break;
+    }
+
+    case DIF_GLUE_DEF: {
+      int refTag = unmarshalRefTag(bs);
+      OZ_Term t = glue_unmarshalEntity(bs);
+#if defined(DBG_TRACE)
+      fprintf(dbgout, " = %s (at %d)\n", toC(t), refTag);
+      fflush(dbgout);
+#endif
+      b->buildValueRemember(t, refTag);
+      break;
+    }
 
     case DIF_UNUSED0:
     case DIF_UNUSED1:

@@ -37,26 +37,8 @@
 // globalize an entity
 void glue_globalizeEntity(TaggedRef entity);
 
-
-
-class ProxyVar; 
-OZ_Term glue_unmarshalDistTerm(ByteBuffer *bs);
-OZ_Term glue_newUnmarshalVar(ByteBuffer* bs, Bool isFuture);
-OZ_Term glue_unmarshalObjectStub(ByteBuffer *bs);
-void glue_marshalObjectStubInternal(OzObject*, ByteBuffer *bs);
-void glue_marshalArray(ByteBuffer *bs, ConstTermWithHome *arrayConst);
-void glue_marshalDictionary(ByteBuffer *bs, ConstTermWithHome *dictConst);
-void glue_marshalCell(ByteBuffer *bs, ConstTermWithHome *cellConst);
-void glue_marshalPort(ByteBuffer *bs, ConstTermWithHome *portConst);
-void glue_marshalLock(ByteBuffer *bs, ConstTermWithHome *lockConst);
-void glue_marshalUnusable(ByteBuffer *bs, TaggedRef tr); 
-void glue_marshalOzThread(ByteBuffer *bs, TaggedRef tr); 
-
-void glue_marshalOzVariable(ByteBuffer *bs, TaggedRef *vPtr,
-			    Bool hasIndex, Bool push);
-OZ_Term glue_unmarshalOzVariable(ByteBuffer* bs, Bool isReadOnly);
-
-ProxyVar* glue_newGlobalizeFreeVariable(TaggedRef *tPtr); 
-OzVariable *glue_globalizeOzVariable(TaggedRef *vPtr);
+// marshal/unmarshal an entity
+void glue_marshalEntity(TaggedRef entity, ByteBuffer *bs);
+OZ_Term glue_unmarshalEntity(ByteBuffer *bs);
 
 #endif

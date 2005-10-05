@@ -229,16 +229,18 @@ void initDP(int port, int ip, const char *siteId, int primKey)
 
   // initial default annotations
   const int default_aa_rc = AA_STATIONARY_MANAGER | RC_ALG_WRC;
-  setDefaultAnnotation(ETYPE_VARIABLE, PN_TRANSIENT | default_aa_rc);
-  setDefaultAnnotation(ETYPE_PORT, PN_SIMPLE_CHANNEL | default_aa_rc);
-  setDefaultAnnotation(ETYPE_CELL, PN_MIGRATORY_STATE | default_aa_rc);
-  setDefaultAnnotation(ETYPE_LOCK, PN_MIGRATORY_STATE | default_aa_rc);
-  setDefaultAnnotation(ETYPE_OBJECT, PN_MIGRATORY_STATE | default_aa_rc);
-  setDefaultAnnotation(ETYPE_ARRAY, PN_SIMPLE_CHANNEL | default_aa_rc);
-  setDefaultAnnotation(ETYPE_DICTIONARY, PN_SIMPLE_CHANNEL | default_aa_rc);
-  setDefaultAnnotation(ETYPE_THREAD, PN_SIMPLE_CHANNEL | default_aa_rc);
-  setDefaultAnnotation(ETYPE_UNUSABLE, PN_SIMPLE_CHANNEL | default_aa_rc);
-  setDefaultAnnotation(ETYPE_LAZYCOPY, PN_IMMUTABLE_LAZY | default_aa_rc);
+  setDefaultAnnotation(GLUE_NONE, 0);
+  setDefaultAnnotation(GLUE_LAZYCOPY, PN_IMMUTABLE_LAZY | default_aa_rc);
+  setDefaultAnnotation(GLUE_UNUSABLE, PN_SIMPLE_CHANNEL | default_aa_rc);
+  setDefaultAnnotation(GLUE_VARIABLE, PN_TRANSIENT | default_aa_rc);
+  setDefaultAnnotation(GLUE_READONLY, PN_TRANSIENT | default_aa_rc);
+  setDefaultAnnotation(GLUE_PORT, PN_SIMPLE_CHANNEL | default_aa_rc);
+  setDefaultAnnotation(GLUE_CELL, PN_MIGRATORY_STATE | default_aa_rc);
+  setDefaultAnnotation(GLUE_LOCK, PN_MIGRATORY_STATE | default_aa_rc);
+  setDefaultAnnotation(GLUE_OBJECT, PN_MIGRATORY_STATE | default_aa_rc);
+  setDefaultAnnotation(GLUE_ARRAY, PN_SIMPLE_CHANNEL | default_aa_rc);
+  setDefaultAnnotation(GLUE_DICTIONARY, PN_SIMPLE_CHANNEL | default_aa_rc);
+  setDefaultAnnotation(GLUE_THREAD, PN_SIMPLE_CHANNEL | default_aa_rc);
 
 
   initEntityOperations();

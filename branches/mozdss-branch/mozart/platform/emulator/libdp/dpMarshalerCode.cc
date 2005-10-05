@@ -238,8 +238,8 @@ void DPMARSHALERCLASS::processNoGood(OZ_Term resTerm)
   
   if(oz_isThread(resTerm)) //Katching!!! 
     {
-      bs->put( DIF_RESOURCE);           
-      glue_marshalOzThread(bs, resTerm); 
+      bs->put(DIF_GLUE);           
+      glue_marshalEntity(resTerm, bs); 
       return ; 
     }
 
@@ -259,10 +259,9 @@ void DPMARSHALERCLASS::processNoGood(OZ_Term resTerm)
     //
     VISITNODE(resTerm, vIT, bs, index, return);
     //
-    if(index) bs->put(DIF_RESOURCE_DEF);
-    else bs->put(DIF_RESOURCE);
-    glue_marshalUnusable(bs, resTerm);
-    if(index) marshalTermDef(bs, index);
+    if (index) { bs->put(DIF_GLUE_DEF); marshalTermDef(bs, index); }
+    else { bs->put(DIF_GLUE); }
+    glue_marshalEntity(resTerm, bs);
     //
     Assert(bs->availableSpace() >= DIFMaxSize);
   } else {
@@ -296,10 +295,10 @@ void DPMARSHALERCLASS::processBuiltin(OZ_Term biTerm, ConstTerm *biConst)
 
     //
     if (bi->isSited()) {
-      if(index) bs->put(DIF_RESOURCE_DEF);
-      else bs->put(DIF_RESOURCE);
-      glue_marshalUnusable(bs, biTerm);
-      if(index) marshalTermDef(bs, index);
+      if (index) { bs->put(DIF_GLUE_DEF); marshalTermDef(bs, index); }
+      else { bs->put(DIF_GLUE); }
+      glue_marshalEntity(biTerm, bs);
+
     } else {
 #if defined(DBG_TRACE)
       DBGINIT();
@@ -406,15 +405,16 @@ Bool DPMARSHALERCLASS::marshalObjectStub(OZ_Term term, ConstTerm *objConst)
     Assert(isObject(o));
     //
     if (o->getClass()->isSited()) {
-      if(index) bs->put(DIF_RESOURCE_DEF);
-      else bs->put(DIF_RESOURCE);
-      glue_marshalUnusable(bs, term);
-      if(index) marshalTermDef(bs, index);
+      // marshal term as an unusable (should eventually be automatic...)
+      if (index) { bs->put(DIF_GLUE_DEF); marshalTermDef(bs, index); }
+      else { bs->put(DIF_GLUE); }
+      glue_marshalEntity(term, bs);
+
     } else {
-      //
-      marshalDIFcounted(bs, index ? DIF_STUB_OBJECT_DEF : DIF_STUB_OBJECT);
-      glue_marshalObjectStubInternal(o, bs);
-      if (index) marshalTermDef(bs, index);
+      // marshal the object stub
+      if (index) { bs->put(DIF_GLUE_DEF); marshalTermDef(bs, index); }
+      else { bs->put(DIF_GLUE); }
+      glue_marshalEntity(term, bs);
     }
 
     //
@@ -495,11 +495,11 @@ void DPMARSHALERCLASS::processLock(OZ_Term term, ConstTerm *lockConst)
       2*DIFMaxSize + MNumberMaxSize + MOwnHeadMaxSize) {
     int index;
     VISITNODE(term, vIT, bs, index, return);
-    if(index) bs->put(DIF_RESOURCE_DEF);
-    else bs->put(DIF_RESOURCE);
-    glue_marshalLock(bs, static_cast<ConstTermWithHome*>(lockConst));
-    if(index) marshalTermDef(bs, index);
+    if (index) { bs->put(DIF_GLUE_DEF); marshalTermDef(bs, index); }
+    else { bs->put(DIF_GLUE); }
+    glue_marshalEntity(term, bs);
     Assert(bs->availableSpace() >= DIFMaxSize);
+
   } else {
 #if defined(DBG_TRACE)
     DBGINIT();
@@ -520,11 +520,11 @@ Bool DPMARSHALERCLASS::processCell(OZ_Term term, ConstTerm *cellConst)
       2*DIFMaxSize + MNumberMaxSize + MOwnHeadMaxSize) {
     int index;
     VISITNODE(term, vIT, bs, index, return(OK));
-    if(index) bs->put(DIF_RESOURCE_DEF);
-    else bs->put(DIF_RESOURCE);
-    glue_marshalCell(bs, static_cast<ConstTermWithHome*>(cellConst));
-    if(index) marshalTermDef(bs, index);
+    if (index) { bs->put(DIF_GLUE_DEF); marshalTermDef(bs, index); }
+    else { bs->put(DIF_GLUE); }
+    glue_marshalEntity(term, bs);
     Assert(bs->availableSpace() >= DIFMaxSize);
+
   } else {
 #if defined(DBG_TRACE)
     DBGINIT();
@@ -545,11 +545,11 @@ void DPMARSHALERCLASS::processPort(OZ_Term term, ConstTerm *portConst)
       2*DIFMaxSize + MNumberMaxSize + MOwnHeadMaxSize) {
     int index;
     VISITNODE(term, vIT, bs, index, return);
-    if(index) bs->put(DIF_RESOURCE_DEF);
-    else bs->put(DIF_RESOURCE);
-    glue_marshalPort(bs, static_cast<ConstTermWithHome*>(portConst));
-    if(index) marshalTermDef(bs, index);
+    if (index) { bs->put(DIF_GLUE_DEF); marshalTermDef(bs, index); }
+    else { bs->put(DIF_GLUE); }
+    glue_marshalEntity(term, bs);
     Assert(bs->availableSpace() >= DIFMaxSize);
+
   } else {
 #if defined(DBG_TRACE)
     DBGINIT();
@@ -569,11 +569,11 @@ void DPMARSHALERCLASS::processResource(OZ_Term term, ConstTerm *unusConst)
       2*DIFMaxSize + MNumberMaxSize + MOwnHeadMaxSize) {
     int index;
     VISITNODE(term, vIT, bs, index, return);
-    if(index) bs->put(DIF_RESOURCE_DEF);
-    else bs->put(DIF_RESOURCE);
-    glue_marshalUnusable(bs, makeTaggedConst(unusConst));
-    if(index) marshalTermDef(bs, index);
+    if (index) { bs->put(DIF_GLUE_DEF); marshalTermDef(bs, index); }
+    else { bs->put(DIF_GLUE); }
+    glue_marshalEntity(term, bs);
     Assert(bs->availableSpace() >= DIFMaxSize);
+
   } else {
 #if defined(DBG_TRACE)
     DBGINIT();
@@ -634,15 +634,12 @@ void DPMARSHALERCLASS::processVar(OZ_Term v, OZ_Term *vRef)
 
       //
     } else if (oz_isFree(v) || oz_isReadOnly(v)) {
-      // globalize if needed
-      glue_globalizeEntity(vrt);
-      Assert(oz_isVar(*vRef));
       // marshal it
-      glue_marshalOzVariable(bs, vRef, index, isPushContents());
+      if (index) { bs->put(DIF_GLUE_DEF); marshalTermDef(bs, index); }
+      else { bs->put(DIF_GLUE); }
+      glue_marshalEntity(vrt, bs);
       // patch it
       expVars = new MarshaledVarPatch(vrt, expVars);
-      // marshal the index, if any
-      if (index) marshalTermDef(bs, index);
 
       //
     } else {
@@ -888,12 +885,10 @@ Bool DPMARSHALERCLASS::processDictionary(OZ_Term dictTerm, ConstTerm *dictConst)
 	      dif_names[DIF_DICT].name, DIF_DICT, toC(dictTerm));
       fflush(dbgout);
 #endif
-      if (index) bs->put(DIF_RESOURCE_DEF);
-      else bs->put(DIF_RESOURCE);
-      glue_marshalDictionary(bs, static_cast<ConstTermWithHome*>(dictConst));
-      if (index) marshalTermDef(bs, index);
+      if (index) { bs->put(DIF_GLUE_DEF); marshalTermDef(bs, index); }
+      else { bs->put(DIF_GLUE); }
+      glue_marshalEntity(dictTerm, bs);
 
-//      marshalNumber(bs, d->getSize());
       Assert(bs->availableSpace() >= DIFMaxSize);
       return (NO);
     }
@@ -927,10 +922,9 @@ Bool DPMARSHALERCLASS::processArray(OZ_Term arrayTerm, ConstTerm *arrayConst)
     //
     VISITNODE(arrayTerm, vIT, bs, index, return(OK));
     //
-    if(index) bs->put(DIF_RESOURCE_DEF);
-    else bs->put(DIF_RESOURCE);
-    glue_marshalArray(bs, static_cast<ConstTermWithHome*>(arrayConst));
-    if(index) marshalTermDef(bs, index);
+    if (index) { bs->put(DIF_GLUE_DEF); marshalTermDef(bs, index); }
+    else { bs->put(DIF_GLUE); }
+    glue_marshalEntity(arrayTerm, bs);
     //
     Assert(bs->availableSpace() >= DIFMaxSize);
   } else {

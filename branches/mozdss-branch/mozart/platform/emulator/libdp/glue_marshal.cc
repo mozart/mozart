@@ -39,47 +39,14 @@
 #include "thr_int.hh"
 #include "value.hh"
 #include "dss_enums.hh"
-/* The interafce to the Marshaler for marshaling and unmarshaling 
-   of entities. Since the marshaler differentiate between variables
-   and ConstTermWithHome this separation is keept. */ 
 
-enum DssMarshalDIFs{
-  DSS_DIF_CELL, 
-  DSS_DIF_PORT,
-  DSS_DIF_LOCK,
-  DSS_DIF_VAR,
-  DSS_DIF_ARRAY,
-  DSS_DIF_DICTIONARY,
-  DSS_DIF_UNUSABLE,
-  DSS_DIF_THREAD
-};
-
-///////////////////////////////////////////////////////////////////////////
-
-/* Globalization of entities */
-/* Implemented as two different routines depending on special */ 
-/* characterestica of the entities. Still, the both routines uses */
-/* the same interafces againts the dss and the glue. */ 
-
-#define RC_ALG_MASK (RC_ALG_WRC | RC_ALG_TL |  RC_ALG_RC | RC_ALG_RLV1 | RC_ALG_RLV2 | RC_ALG_IRC ) 
+// for the threads
+void oz_thread_setDistVal(TaggedRef tr, int i, void* v); 
+void* oz_thread_getDistVal(TaggedRef tr, int i); 
 
 
-#define ANOT_USE_DEFAULT 0
-#define ANOT_PROT_MASK 0xFF
-#define ANOT_GC_MASK       0xFF00
-#define ANOT_AA_MASK       0xFF0000
-#define ANOT_ASYNCH_CHANEL 0x1
-#define ANOT_SYNCH_CHANEL  0x2
-#define ANOT_MIGRATORY 0x4
-#define ANOT_ONCE_ONLY 0x8
-#define ANOT_INVALIDATION 0x10
-#define ANOT_STATIONARY 0x20
-#define ANOT_STATIONARY_MAN 0x10000
-#define ANOT_MOBILE_MAN     0x20000
 
-Bool getAnnotation(TaggedRef e, int &a);
-
-
+/************************* Globalization *************************/
 
 // the most generic globalize function
 void glue_globalizeEntity(TaggedRef entity) {
@@ -89,426 +56,159 @@ void glue_globalizeEntity(TaggedRef entity) {
 
 
 
-ProxyVar* glue_newGlobalizeFreeVariable(TaggedRef *tPtr)
-{
-  int annotation=0;
-  
-  (void)   getAnnotation(makeTaggedRef(tPtr), annotation); 
-  int gc_an = ((annotation & RC_ALG_MASK)) ? annotation & RC_ALG_MASK : RC_ALG_WRC;
-  int aa_an = ((annotation & ANOT_AA_MASK) != ANOT_USE_DEFAULT) ? annotation & ANOT_AA_MASK : AA_STATIONARY_MANAGER;
-  //  printf("glob var --"); 
-  AbstractEntity *pi=dss->m_createMonotonicAbstractEntity(PN_TRANSIENT,
-							  static_cast<AccessArchitecture>(aa_an),
-							  static_cast<RCalg>(gc_an)); 
+/************************* Marshaling *************************/
 
-  // Creating the new variable that will be used to identify the
-  // distribution property of the original variable. 
-  OzVariable *cv = oz_getNonOptVar(tPtr);
-  ProxyVar *mv = new ProxyVar(oz_currentBoard(),FALSE);
-  extVar2Var(mv)->setSuspList(cv->unlinkSuspList());
-  *tPtr = makeTaggedVar(extVar2Var(mv));
+/*
+  The format of marshaled glue entities is the following:
 
-  VarMediator *me = new VarMediator(pi, makeTaggedRef(tPtr)); 
-  mv->setMediator(me); 
-  pi->assignMediator(me);
-  return (mv);
+  +----------+ - - - +----------+------------+-------------+
+  | DIF_GLUE | index | Dss data | entity tag | entity data |
+  +----------+ - - - +----------+------------+-------------+
+
+  The first tag and optional index are handled outside of the glue.
+  The tag is either DIF_GLUE (with no index), or DIF_GLUE_DEF (with
+  index).
+
+  The remaining part is glue-specific, and handled here.  The Dss data
+  is a marshaled representation of a Dss abstract entity.  The entity
+  tag (a GlueTag) describes the type of entity, and is followed by
+  entity-specific data.
+
+  The reason for putting entity data after the Dss data is: if the
+  proxy unmarshaled by the Dss already exists, we don't need to create
+  an emulator entity.  In that case, we simply have to remove the data
+  from the buffer.
+
+*/
+
+// marshal an entity
+void glue_marshalEntity(TaggedRef entity, ByteBuffer *bs) {
+  Mediator *med = glue_getMediator(entity);
+  if (!med->getAbstractEntity()) med->globalize();
+  med->marshal(bs);
 }
 
-// globalize a variable (if necessary)
-OzVariable *glue_globalizeOzVariable(TaggedRef *vPtr) {
-  Assert(oz_isFree(*vPtr) || oz_isReadOnly(*vPtr));
-
-  // get a mediator, and globalize if necessary
-  OzVariable *var = oz_getNonOptVar(vPtr);
-  OzVariableMediator *med;
-  if (var->hasMediator())
-    med = static_cast<OzVariableMediator*>(var->getMediator());
-  else {
-    med = new OzVariableMediator(makeTaggedRef(vPtr), NULL);
-    var->setMediator(med);
-  }
-  if (med->getAbstractEntity() == NULL) med->globalize();
-  return var;
+// generic marshaling
+void Mediator::marshal(ByteBuffer *bs) {
+  // first marshal Dss-specific stuff
+  GlueWriteBuffer *gwb = static_cast<GlueWriteBuffer*>(bs);
+  absEntity->getCoordinatorAssistant()->marshal(gwb, PMF_ORDINARY);
+  // then the entity type
+  bs->put(getType());
+  // by default there is no extra data
 }
 
-void getAnnotations(TaggedRef tr, int p_def, int a_def, int g_def, 
-		    ProtocolName &p, AccessArchitecture &a, RCalg &g)
-{
-  int annotation = 0;
-  getAnnotation(tr, annotation); 
-  g = static_cast<RCalg>(((annotation & RC_ALG_MASK)) ? annotation & RC_ALG_MASK : g_def);
-  p = static_cast<ProtocolName>(((annotation & ANOT_PROT_MASK)) ? annotation & ANOT_PROT_MASK : p_def);
-  a = static_cast<AccessArchitecture>((annotation & ANOT_AA_MASK) ? annotation & ANOT_AA_MASK : a_def);
-} 
-
-///// For the darn threads 
-void oz_thread_setDistVal(TaggedRef tr, int i, void* v); 
-void* oz_thread_getDistVal(TaggedRef tr, int i); 
-///////////////////////////////////////////////////////////////////////////
-////  Marshal Array 
-
-void glue_marshalArray(ByteBuffer *bs, ConstTermWithHome *arrayConst)
-{
-  OzArray *ozA = static_cast<OzArray*>(arrayConst);
-
-  ArrayMediator *am;
-  if (ozA->isDistributed())
-    am = static_cast<ArrayMediator*>(ozA->getMediator());
-  else {
-    am = static_cast<ArrayMediator*>
-      (mediatorTable->lookup(makeTaggedConst(arrayConst)));
-    if (am == NULL) am = new ArrayMediator(arrayConst, NULL);
-    am->globalize();
-  }
-  Assert(ozA->isDistributed());
-
-  GlueWriteBuffer *gwb = static_cast<GlueWriteBuffer *>(bs); 
-  am->marshal(gwb, PMF_ORDINARY);
-  bs->put(DSS_DIF_ARRAY);
-  marshalNumber(bs, ozA->getLow());
-  marshalNumber(bs, ozA->getHigh());
-}
-
-///////////////////////////////////////////////////////////////////////////
-////  Marshal Dictionary
-
-void glue_marshalDictionary(ByteBuffer *bs, ConstTermWithHome *dictConst) {
-  OzDictionary *ozD = static_cast<OzDictionary*>(dictConst);
-
-  DictionaryMediator *dm;
-  if (ozD->isDistributed())
-    dm = static_cast<DictionaryMediator*>(ozD->getMediator());
-  else {
-    dm = static_cast<DictionaryMediator*>
-      (mediatorTable->lookup(makeTaggedConst(dictConst)));
-    if (dm == NULL) dm = new DictionaryMediator(dictConst, NULL);
-    dm->globalize();
-  }
-  Assert(ozD->isDistributed());
-
-  GlueWriteBuffer *gwb = static_cast<GlueWriteBuffer *>(bs);
-  dm->marshal(gwb, PMF_ORDINARY);
-  bs->put(DSS_DIF_DICTIONARY);
-  marshalNumber(bs, ozD->getSize());
-}
-
-///////////////////////////////////////////////////////////////////////////
-////  Marshal Cell 
-
-void glue_marshalCell(ByteBuffer *bs, ConstTermWithHome *cellConst)
-{
-  OzCell *ozC = static_cast<OzCell*>(cellConst);
-  CellMediator *cm;
-  if (!ozC->isDistributed()) {
-    cm = static_cast<CellMediator*>
-      (mediatorTable->lookup(makeTaggedConst(cellConst)));
-    if (cm == NULL) cm = new CellMediator(cellConst, NULL);
-    cm->globalize();
-  } 
-  else cm = static_cast<CellMediator*>(ozC->getMediator());
-  
-  Assert(ozC->isDistributed());
-
-  GlueWriteBuffer *gwb = static_cast<GlueWriteBuffer *>(bs); 
-  cm->marshal(gwb, PMF_ORDINARY);
-  bs->put(DSS_DIF_CELL);
+// specific for arrays
+void ArrayMediator::marshal(ByteBuffer *bs) {
+  OzArray *oza = static_cast<OzArray*>(getConst());
+  GlueWriteBuffer *gwb = static_cast<GlueWriteBuffer*>(bs);
+  absEntity->getCoordinatorAssistant()->marshal(gwb, PMF_ORDINARY);
+  bs->put(getType());
+  marshalNumber(bs, oza->getLow());
+  marshalNumber(bs, oza->getHigh());
 }
 
 
-///////////////////////////////////////////////////////////////////////////
-////  Marshal Port 
 
-void glue_marshalPort(ByteBuffer *bs, ConstTermWithHome *portConst)
-{
-  OzPort *ozP = static_cast<OzPort*>(portConst);
-  Mediator *pm = glue_getMediator(makeTaggedConst(ozP));
+/************************* Unmarshaling *************************/
 
-  if (!pm->getAbstractEntity()) pm->globalize();
-  Assert(ozP->isDistributed());
-
-  GlueWriteBuffer *gwb = static_cast<GlueWriteBuffer *>(bs); 
-  pm->marshal(gwb, PMF_ORDINARY);
-  bs->put(DSS_DIF_PORT);
-}
-
-
-///////////////////////////////////////////////////////////////////////////
-////  Marshal Lock 
-
-void glue_marshalLock(ByteBuffer *bs, ConstTermWithHome *lockConst)
-{
-  OzLock *ozL = static_cast<OzLock*>(lockConst);
-  LockMediator *lm;
-  if (!ozL->isDistributed()) {
-    lm = static_cast<LockMediator*>
-      (mediatorTable->lookup(makeTaggedConst(lockConst)));
-    if (lm == NULL) lm = new LockMediator(lockConst, NULL);
-    lm->globalize();
-  } 
-  else lm = static_cast<LockMediator*>(ozL->getMediator());
-  
-  Assert(ozL->isDistributed());
-
-  GlueWriteBuffer *gwb = static_cast<GlueWriteBuffer *>(bs); 
-  lm->marshal(gwb, PMF_ORDINARY);
-  bs->put(DSS_DIF_LOCK);
-}
-
-
-///////////////////////////////////////////////////////////////////////////
-////  Marshal Unusable 
-
-void glue_marshalUnusable(ByteBuffer *bs, TaggedRef tr) {
-  // bmc: If the Unusable has a mediator in the mediator table, then
-  // it's already distributed
-  UnusableMediator *me =
-    reinterpret_cast<UnusableMediator*>(mediatorTable->lookup(tr));
-  if (me == NULL) {
-    // create mediator and globalize
-    me = new UnusableMediator(tr);
-    me->globalize();
-  }
-
-  GlueWriteBuffer *gwb = static_cast<GlueWriteBuffer *>(bs);
-  me->marshal(gwb, PMF_ORDINARY);
-  bs->put(DSS_DIF_UNUSABLE);
-}
-
-void glue_marshalOzThread(ByteBuffer *bs, TaggedRef thr)
-{
-  OzThreadMediator *med =
-    reinterpret_cast<OzThreadMediator*>(oz_thread_getDistVal(thr, 0)); 
-  if (med == NULL) {
-    med = new OzThreadMediator(thr, NULL);
-    med->globalize();
-  }
-  GlueWriteBuffer *gwb = static_cast<GlueWriteBuffer *>(bs); 
-  med->marshal(gwb, PMF_ORDINARY);
-  //bs->put(DSS_DIF_THREAD); 
-}
-
-
-///////////////////////////////////////////////////////////////////////////
-////  Marshal Object Stub 
-
-
-void glue_marshalObjectStubInternal(OzObject* o, ByteBuffer *bs)
-{
-  ObjectClass *oc = o->getClass();
-  GName *gnclass = globalizeConst(oc);
-  Assert(gnclass);
-  GName *gnobj = globalizeConst(o);
-  Assert(o->getGName1());
-  Assert(gnobj);
-  //  ProxyName pn=tr2Pn(makeTaggedConst(o));
-
-  ObjectMediator *om;
-  if (o->isDistributed())
-    om = static_cast<ObjectMediator*>(o->getMediator());
-  else {
-    om = static_cast<ObjectMediator*>
-      (mediatorTable->lookup(makeTaggedConst(o)));
-    if (om = NULL) om = new ObjectMediator(o, NULL);
-    om->globalize();
-  }
-  Assert(o->isDistributed());
-
-  GlueWriteBuffer *gwb = static_cast<GlueWriteBuffer *>(bs); 
-  om->marshal(gwb, PMF_ORDINARY);
-  marshalGName(bs, gnobj);
-  marshalGName(bs, gnclass);
-//  bs->put(DSS_DIF_OBJECT_STUB);
-}
-
-
-///////////////////////////////////////////////////////////////////////////
-////  Unmarshal Object Stub 
-
-
-OZ_Term glue_unmarshalObjectStub(ByteBuffer *bs)
-{
+// unmarshal an entity
+OZ_Term glue_unmarshalEntity(ByteBuffer *bs) {
   AbstractEntity *ae;
   AbstractEntityName aen;
-  OZ_Term obj;
-  OZ_Term clas;
-  GlueReadBuffer *buf = static_cast<GlueReadBuffer*>(bs);
-  DSS_unmarshal_status status = dss->unmarshalProxy(ae,buf,PUF_ORDINARY,aen);
-  GName *gnobj   = unmarshalGName(&obj, bs);
-  GName *gnclass = unmarshalGName(&clas, bs);
+  GlueReadBuffer *grb = static_cast<GlueReadBuffer*>(bs);
 
-  if (gnobj == NULL) // The object existed 
-    return obj;
-  if (gnclass == NULL)
-    gnclass = ((ObjectClass*)tagged2Const(clas))->getGName(); 
+  DSS_unmarshal_status stat = dss->unmarshalProxy(ae, grb, PUF_ORDINARY, aen);
+  GlueTag tag = static_cast<GlueTag>(bs->get());
 
-  Assert(!status.exist);
-  ObjectVar *var = new ObjectVar(oz_currentBoard(),gnobj,gnclass); 
-  TaggedRef val = makeTaggedRef(newTaggedVar(extVar2Var(var)));
-
-  LazyVarMediator *me = new LazyVarMediator(val, ae);
-  var->setMediator(me);
-  addGName(gnobj, val);
-  //PT->setEngineName(p_name,e_name);
-  return val; 
-}
-
-///////////////////////////////////////////////////////////////////////////
-////  UnMarshal ConstTerms, the ones with a distributed behavior 
-
-
-OZ_Term  glue_unmarshalDistTerm(ByteBuffer *bs)
-{
-  AbstractEntity *ae;
-  AbstractEntityName aen; 
-
-  GlueReadBuffer *buf = static_cast<GlueReadBuffer*>(bs);
-
-  DSS_unmarshal_status stat = dss->unmarshalProxy(ae, buf, PUF_ORDINARY , aen);
-   
-  if(stat.exist) {
-    switch(bs->get()){
-    case DSS_DIF_THREAD: {
-        MutableMediatorInterface* mmi = 
-            dynamic_cast<MutableMediatorInterface*>(ae->accessMediator());
-        Assert(mmi); 
-        OzThreadMediator *me = dynamic_cast<OzThreadMediator *>(mmi);
-        Assert(me);
-        return me->getEntity();
-      }
-    case DSS_DIF_ARRAY:
-    	printf("+++ got an existing array\n"); //bmc
-        (void) unmarshalNumber(bs); 
-    case DSS_DIF_DICTIONARY:
-    	printf("+++ got an existing dictionary\n"); //bmc
-        (void) unmarshalNumber(bs); 
-    case DSS_DIF_CELL:
-    case DSS_DIF_LOCK: {
-        MutableMediatorInterface* mmi =
-	  static_cast<MutableMediatorInterface*>(ae->accessMediator());
-        Assert(mmi); 
-        ConstMediator *me = dynamic_cast<ConstMediator *>(mmi);
-        Assert(me);
-        return makeTaggedConst(me->getConst());
-      }
-    case DSS_DIF_PORT: {
-        RelaxedMutableMediatorInterface* mmi = dynamic_cast<RelaxedMutableMediatorInterface*>(ae->accessMediator());
-        Assert(mmi); 
-        ConstMediator *me = dynamic_cast<ConstMediator *>(mmi);
-        Assert(me);
-        return makeTaggedConst(me->getConst());
-      }
-    case DSS_DIF_UNUSABLE: {
-        Assert(dynamic_cast<UnusableMediator *>(ae->accessMediator()) != NULL);
-        ImmutableMediatorInterface* imi = 
-            static_cast<ImmutableMediatorInterface*>(ae->accessMediator());
-        UnusableMediator* me = dynamic_cast<UnusableMediator *>(imi);
-        Assert(me);
-        return me->getEntity();
-      }
-    default: 
-      OZ_error("Unknown DSS_DIF");
+  if (stat.exist) {
+    // drop entity-specific data
+    switch (tag) {
+    case GLUE_ARRAY:
+      unmarshalNumber(bs); unmarshalNumber(bs); break;
+    default:
+      break;
     }
+    // access to entity
+    Mediator *med = dynamic_cast<Mediator*>(ae->accessMediator());
+    return med->getEntity();
 
   } else {
-    switch(bs->get()){
-    case DSS_DIF_UNUSABLE:{
-      UnusableResource* unused = new UnusableResource();
-      TaggedRef tr = makeTaggedConst(unused);
-      UnusableMediator *um = new UnusableMediator(tr, ae);
-      unused->setMediator((void *)um);
-      return tr;
+    // build the entity and its mediator
+    switch (tag) {
+    case GLUE_LAZYCOPY: {
+      OZ_error("Glue: unmarshaling lazy immutable not implemented yet");
+      return makeTaggedNULL();
     }
-    case DSS_DIF_THREAD:{
-      TaggedRef oTh = oz_thread(oz_newThreadSuspended(1));
-      Mediator *med = new OzThreadMediator(oTh, ae); 
-      oz_thread_setDistVal(oTh, 0, reinterpret_cast<void*>(med));
-      return oTh; 
+    case GLUE_UNUSABLE: {
+      UnusableResource *unused = new UnusableResource();
+      TaggedRef ref = makeTaggedConst(unused);
+      unused->setMediator(new UnusableMediator(ref, ae));
+      return ref;
     }
-    case DSS_DIF_CELL:{
-      OzCell *cell = new OzCell(NULL, makeTaggedNULL()); 
-      CellMediator *me = new CellMediator(cell, ae); 
-      cell->setMediator((void *)me);
-      return makeTaggedConst(cell);
+    case GLUE_VARIABLE: {
+      TaggedRef ref = oz_newSimpleVar(oz_currentBoard());
+      OzVariable *var = tagged2Var(*tagged2Ref(ref));
+      var->setMediator(new OzVariableMediator(ref, ae));
+      return ref;
     }
-    case DSS_DIF_PORT: {
-      OzPort *port = new OzPort(oz_currentBoard(),
-                                oz_newReadOnly(oz_currentBoard()));
-      PortMediator *me = new PortMediator(port, ae); 
-      port->setMediator(me);
+    case GLUE_READONLY: {
+      TaggedRef ref = oz_newReadOnly(oz_currentBoard());
+      OzVariable *var = tagged2Var(*tagged2Ref(ref));
+      var->setMediator(new OzVariableMediator(ref, ae));
+      return ref;
+    }
+    case GLUE_PORT: {
+      // the stream of the port is unused
+      OzPort *port = new OzPort(oz_currentBoard(), makeTaggedNULL());
+      port->setMediator(new PortMediator(port, ae));
       return makeTaggedConst(port);
     }
-    case DSS_DIF_LOCK:{
+    case GLUE_CELL: {
+      OzCell *cell = new OzCell(oz_currentBoard(), makeTaggedNULL());
+      cell->setMediator(new CellMediator(cell, ae));
+      return makeTaggedConst(cell);
+    }
+    case GLUE_LOCK: {
       OzLock *lock = new OzLock(oz_currentBoard());
-      LockMediator *me = new LockMediator(lock, ae); 
-      lock->setMediator((void *)me);
+      lock->setMediator(new LockMediator(lock, ae));
       return makeTaggedConst(lock);
     }
-    case DSS_DIF_ARRAY:{
-      int low  =  unmarshalNumber(bs); 
-      int high =  unmarshalNumber(bs); 
-      OzArray *ozA = new OzArray(oz_currentBoard(), low, high, oz_nil());
-      ArrayMediator* me = new ArrayMediator(ozA, ae); 
-      void *mediator = reinterpret_cast<void*>(me);
-      ozA->setMediator(mediator);
-      Assert(ozA->isDistributed()); 
-      Assert(ozA->getMediator() == mediator);
-      //	printf("Inserting am:&d me:%d\n",(int)me, (int)(Mediator*)me); 
-      return makeTaggedConst(ozA); 
+    case GLUE_OBJECT: {
+      OZ_error("Glue: unmarshaling object not implemented yet");
+      return makeTaggedNULL();
     }
-    case DSS_DIF_DICTIONARY: {
-      printf("+++ got a dictionary\n"); //bmc
-      int size = unmarshalNumber(bs);
-      OzDictionary *dict = new OzDictionary(oz_currentBoard(), size); 
-      DictionaryMediator *me = new DictionaryMediator(dict, ae); 
-      dict->setMediator((void *)me);
+    case GLUE_ARRAY: {
+      int low  = unmarshalNumber(bs);
+      int high = unmarshalNumber(bs);
+      OzArray *oza = new OzArray(oz_currentBoard(), low, high,
+				 makeTaggedNULL());
+      oza->setMediator(new ArrayMediator(oza, ae));
+      return makeTaggedConst(oza);
+    }
+    case GLUE_DICTIONARY: {
+      OzDictionary *dict = new OzDictionary(oz_currentBoard());
+      dict->setMediator(new DictionaryMediator(dict, ae));
       return makeTaggedConst(dict);
     }
-    default: 
-      OZ_error("Unknown DSS_DIF"); 
+    case GLUE_THREAD: {
+      TaggedRef ref = oz_thread(oz_newThreadSuspended(1));
+      oz_thread_setDistVal(ref, 0, new OzThreadMediator(ref, ae));
+      return ref;
     }
-      
+    default:
+      OZ_error("Glue: unmarshaling unknown entity type");
+      return makeTaggedNULL();
+    }
   }
 }
 
 
-///////////////////////////////////////////////////////////////////////////
-////  Unmarshal of a Variable
 
-
-OZ_Term glue_newUnmarshalVar(ByteBuffer* bs, Bool isFuture)
-{
-  AbstractEntity *ae;
-  AbstractEntityName aen;
-  VarMediator *me;
-  
-  
-  GlueReadBuffer *buf = static_cast<GlueReadBuffer*>(bs);
-  DSS_unmarshal_status stat = dss->unmarshalProxy(ae, buf, PUF_ORDINARY, aen);
-  //printf("Used unmarshaling %d\n", used);
-
-  
-  if (stat.exist) {
-    /* If we find teh variable, return it.*/
-    MonotonicMediatorInterface *tmi = static_cast<MonotonicMediatorInterface *>(ae->accessMediator());
-    me = dynamic_cast<VarMediator *>(tmi);
-    return me->getEntity();
-  }
-  /* The variable has to be built.*/
-  ProxyVar *pvar = new ProxyVar(oz_currentBoard(),isFuture);
-  /* Make a taggedref out of the proxy-var*/
-  TaggedRef val = makeTaggedRef(newTaggedVar(extVar2Var(pvar)));
-  
-  me = new VarMediator(ae, val); 
-  //PT->setEngineName(p_name,e_name);
-  pvar->setMediator(me);
-  ae->assignMediator(me);
-  return val;
-}
-
+/**********************************************************************/
 
 ///////////////////////////////////////////////////////////////////////////
 ////  Marshal of a Variable
-
 
 void ProxyVar::marshal(ByteBuffer *bs, Bool hasIndex, TaggedRef* vRef, Bool push)
 {
@@ -523,60 +223,4 @@ void ProxyVar::marshal(ByteBuffer *bs, Bool hasIndex, TaggedRef* vRef, Bool push
   GlueWriteBuffer *gwb = static_cast<GlueWriteBuffer *>(bs); 
   cai->marshal(gwb, (push)?PMF_PUSH:PMF_ORDINARY);
 
-}
-
-
-
-////////////////////////////////////////////////////////////////////////
-// Marshal/unmarshal a variable
-
-// Note: when marshaling a DEF, the index is marshaled *afterwards* by
-// the caller
-
-void glue_marshalOzVariable(ByteBuffer *bs, TaggedRef *vPtr,
-			    Bool hasIndex, Bool push) {
-  // assumption: the variable is distributed
-
-  // marshal emulator-specific data
-  MarshalTag tag = (oz_isReadOnly(*vPtr) ?
-		    (hasIndex ? DIF_READONLY_DEF : DIF_READONLY) :
-		    (hasIndex ? DIF_VAR_DEF : DIF_VAR));
-  bs->put(tag);
-
-  // marshal dss-specific data
-  OzVariable *var = tagged2Var(*vPtr);
-  Mediator *med = static_cast<Mediator*>(var->getMediator());
-  Assert(med->getAbstractEntity());
-  CoordinatorAssistantInterface *cai = med->getCoordinatorAssistant();
-  GlueWriteBuffer *gwb = static_cast<GlueWriteBuffer*> (bs);
-  bool done = cai->marshal(gwb, (push ? PMF_PUSH : PMF_ORDINARY));
-  Assert(done);
-}
-
-OZ_Term glue_unmarshalOzVariable(ByteBuffer* bs, Bool isReadOnly) {
-  AbstractEntity *ae;
-  AbstractEntityName aen;
-  OzVariableMediator *med;
-
-  // unmarshal dss-specific data
-  GlueReadBuffer *buf = static_cast<GlueReadBuffer*>(bs);
-  DSS_unmarshal_status stat = dss->unmarshalProxy(ae, buf, PUF_ORDINARY, aen);
-
-  if (stat.exist) {
-    // the variable already exists, return it
-    MonotonicMediatorInterface *mmi
-      = static_cast<MonotonicMediatorInterface*> (ae->accessMediator());
-    med = dynamic_cast<OzVariableMediator*> (mmi);
-    return med->getEntity();
-  } else {
-    // the variable does not exist, create it
-    TaggedRef ref = (isReadOnly ?
-		     oz_newReadOnly(oz_currentBoard()) :
-		     oz_newSimpleVar(oz_currentBoard()));
-    TaggedRef *ptr = tagged2Ref(ref);
-    OzVariable *var = tagged2Var(*ptr);
-
-    var->setMediator(new OzVariableMediator(ref, ae));
-    return ref;
-  }
 }

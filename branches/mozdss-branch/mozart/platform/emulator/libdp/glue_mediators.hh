@@ -84,19 +84,22 @@
 
 
 
-// the types of entities that can be distributed
-enum EntityType {
-  ETYPE_VARIABLE,
-  ETYPE_PORT,
-  ETYPE_CELL,
-  ETYPE_LOCK,
-  ETYPE_OBJECT,
-  ETYPE_ARRAY,
-  ETYPE_DICTIONARY,
-  ETYPE_THREAD,
-  ETYPE_UNUSABLE,
-  ETYPE_LAZYCOPY,
-  ETYPE_LAST          // must be last
+// the types of entities handled by the glue.  Those tags are also
+// used as marshaling tags.
+enum GlueTag {
+  GLUE_NONE = 0,       // 
+  GLUE_LAZYCOPY,       // immutables
+  GLUE_UNUSABLE,
+  GLUE_VARIABLE,       // transients
+  GLUE_READONLY,
+  GLUE_PORT,           // asynchronuous mutables
+  GLUE_CELL,           // mutables
+  GLUE_LOCK,
+  GLUE_OBJECT,
+  GLUE_ARRAY,
+  GLUE_DICTIONARY,
+  GLUE_THREAD,
+  GLUE_LAST            // must be last
 };
 
 // attached or detached
@@ -109,11 +112,12 @@ enum EntityType {
 class Mediator {
   friend class MediatorTable;
 protected:
-  bool   active:1;          // TRUE if it is active
-  bool   attached:1;        // TRUE if it is attached
-  bool   collected:1;       // TRUE if it has been collected
-  DSS_GC dss_gc_status:2;   // status of dss gc
-  int    annotation:24;     // the entity's annotation (24 bits)
+  bool    active:1;          // TRUE if it is active
+  bool    attached:1;        // TRUE if it is attached
+  bool    collected:1;       // TRUE if it has been collected
+  DSS_GC  dss_gc_status:2;   // status of dss gc
+  GlueTag type:5;            // type of entity
+  int     annotation:20;     // the entity's annotation (20 bits)
 
   int              id;
 
@@ -125,7 +129,7 @@ protected:
 
 public:
   /*************** constructor/destructor ***************/
-  Mediator(TaggedRef entity, bool attached);
+  Mediator(TaggedRef entity, GlueTag type, bool attached);
   virtual ~Mediator();
 
   /*************** active/passive, attached/detached ***************/
@@ -136,17 +140,16 @@ public:
   void setAttached(bool a) { attached = a; }
 
   /*************** set/get entity/abstract entity ***************/
-  TaggedRef getEntity();
-  void setEntity(TaggedRef ref);
-
-  AbstractEntity *getAbstractEntity();
+  TaggedRef getEntity() { return entity; }
+  AbstractEntity *getAbstractEntity() { return absEntity; }
   void setAbstractEntity(AbstractEntity *a);
   CoordinatorAssistantInterface* getCoordinatorAssistant();
 
   /*************** annotate/globalize/localize ***************/
+  GlueTag getType() { return type; }
+
   int getAnnotation() { return annotation; }
   void annotate(int a) { annotation = a; } // warning: unchecked
-  virtual EntityType getEntityType() = 0;
   void getDssParameters(ProtocolName&, AccessArchitecture&, RCalg&);
 
   virtual void globalize() = 0;     // create abstract entity
@@ -169,7 +172,7 @@ public:
   virtual void reportFaultState(const FaultState& fs);
 
   /*************** marshaling ***************/
-  virtual void marshal(GlueWriteBuffer *gwb, const ProxyMarshalFlag& pmf);
+  virtual void marshal(ByteBuffer *bs);
 
   /*************** debugging ***************/
   virtual char* getPrintType() = 0;
@@ -187,7 +190,7 @@ Mediator *glue_getMediator(TaggedRef entity);
 // ConstTerm in the emulator.
 class ConstMediator: public Mediator {
 public: 
-  ConstMediator(ConstTerm *t, bool attached);
+  ConstMediator(ConstTerm *t, GlueTag type, bool attached);
   ConstTerm* getConst();
   virtual char *getPrintType();
   virtual void globalize();
@@ -214,7 +217,6 @@ public:
   virtual void localize();
   virtual PstOutContainerInterface *retrieveEntityRepresentation();
   virtual void installEntityRepresentation(PstInContainerInterface*);  
-  EntityType getEntityType() { return ETYPE_THREAD; }
   virtual char *getPrintType();
 };
 
@@ -234,7 +236,6 @@ public:
   virtual void localize();
   virtual PstOutContainerInterface *retrieveEntityRepresentation() { Assert(0); return NULL;}
   virtual void installEntityRepresentation(PstInContainerInterface*) { Assert(0);}
-  EntityType getEntityType() { return ETYPE_UNUSABLE; }
   virtual char *getPrintType();
 };
 
@@ -256,7 +257,6 @@ public:
   virtual void globalize();
   virtual PstOutContainerInterface *retrieveEntityRepresentation() { Assert(0); return NULL;}
   virtual void installEntityRepresentation(PstInContainerInterface*) { Assert(0);} 
-  EntityType getEntityType() { return ETYPE_PORT; }
   virtual char *getPrintType();
 }; 
 
@@ -277,7 +277,6 @@ public:
 				   PstOutContainerInterface*& possible_answer);
   virtual PstOutContainerInterface *retrieveEntityRepresentation();
   virtual void installEntityRepresentation(PstInContainerInterface*); 
-  EntityType getEntityType() { return ETYPE_CELL; }
   virtual char *getPrintType();
 }; 
 
@@ -298,7 +297,6 @@ public:
 				   PstOutContainerInterface*& possible_answer);
   virtual PstOutContainerInterface *retrieveEntityRepresentation();  
   virtual void installEntityRepresentation(PstInContainerInterface*);  
-  EntityType getEntityType() { return ETYPE_LOCK; }
   virtual char *getPrintType();
 }; 
 
@@ -316,7 +314,6 @@ public:
   virtual void localize();
   virtual PstOutContainerInterface *retrieveEntityRepresentation();
   virtual void installEntityRepresentation(PstInContainerInterface*);
-  EntityType getEntityType() { return ETYPE_VARIABLE; }
   virtual char *getPrintType();
 }; 
 
@@ -327,7 +324,6 @@ public:
   LazyVarMediator(TaggedRef t, AbstractEntity *ae);
   virtual void globalize();
   virtual void localize();
-  EntityType getEntityType() { return ETYPE_LAZYCOPY; }
   virtual char *getPrintType();
 }; 
 
@@ -348,7 +344,7 @@ public:
 				   PstOutContainerInterface*& possible_answer);
   virtual PstOutContainerInterface *retrieveEntityRepresentation() ;
   virtual void installEntityRepresentation(PstInContainerInterface*) ;
-  EntityType getEntityType() { return ETYPE_ARRAY; }
+  virtual void marshal(ByteBuffer *bs);
   virtual char *getPrintType();
 }; 
 
@@ -369,7 +365,6 @@ public:
 				   PstOutContainerInterface*& possible_answer);
   virtual PstOutContainerInterface *retrieveEntityRepresentation() ;
   virtual void installEntityRepresentation(PstInContainerInterface*) ;
-  EntityType getEntityType() { return ETYPE_ARRAY; }
   virtual char *getPrintType();
 }; 
 
@@ -391,7 +386,6 @@ public:
   virtual void globalize();
   virtual PstOutContainerInterface *retrieveEntityRepresentation();
   virtual void installEntityRepresentation(PstInContainerInterface*);
-  EntityType getEntityType() { return ETYPE_OBJECT; }
   virtual char *getPrintType();
 };
 
@@ -410,7 +404,6 @@ public:
   
   virtual void globalize();
   virtual void localize();
-  EntityType getEntityType() { return ETYPE_VARIABLE; }
   virtual char *getPrintType();
 
   virtual AOcallback callback_Bind(DssOperationId *id,

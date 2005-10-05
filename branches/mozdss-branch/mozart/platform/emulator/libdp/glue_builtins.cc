@@ -326,26 +326,20 @@ unsigned char portToTickBuf[PORT_TO_TICK_BUF_LEN];
 OZ_BI_define(BIportToMS,1,1)
 {
   oz_declareNonvarIN(0,prt);
-  if (!oz_isPort(prt)) {
-    oz_typeError(0,"Port");}
-  int len; 
-  OzPort *p  = tagged2Port(prt);
-  PortMediator *me;
-  if (!p->isDistributed()){
-    // retrieve mediator, or create one
-    me = static_cast<PortMediator*>(mediatorTable->lookup(prt));
-    if (me == NULL) me = new PortMediator(p, NULL);
-    me->globalize();
-  } else {
-    me = static_cast<PortMediator*>(p->getMediator());
-  }
-  Assert(p->isDistributed());
-  CoordinatorAssistantInterface *cai = me->getCoordinatorAssistant();
-  GlueWriteBuffer buf(portToTickBuf, PORT_TO_TICK_BUF_LEN); 
-  cai->marshal(&buf, PMF_FREE);
-  len = buf.bufferUsed();
-  char *str = encodeB64((char*)portToTickBuf, len);
-  OZ_RETURN( OZ_string(str));
+  if (!oz_isPort(prt)) { oz_typeError(0,"Port"); }
+
+  // globalize the port, and get its mediator
+  glue_globalizeEntity(prt);
+  Mediator *med = glue_getMediator(prt);
+
+  // marshal the Dss abstract entity
+  GlueWriteBuffer buf(portToTickBuf, PORT_TO_TICK_BUF_LEN);
+  med->getCoordinatorAssistant()->marshal(&buf, PMF_FREE);
+
+  // turn it into a string
+  int len = buf.bufferUsed();
+  char *str = encodeB64((char*) portToTickBuf, len);
+  OZ_RETURN(OZ_string(str));
 }OZ_BI_end
 
 
@@ -363,13 +357,15 @@ OZ_BI_define(BImsToPort,1,1)
   free(raw_buf);
   
   if(status.exist) {
-    PortMediator *me = static_cast<PortMediator *>(ae->accessMediator());
-    OZ_RETURN(makeTaggedConst(me->getConst()));
+    PortMediator *med = static_cast<PortMediator*>(ae->accessMediator());
+    OZ_RETURN(med->getEntity());
+
+  } else {
+    // create a port whose stream is unused
+    OzPort* p = new OzPort(oz_currentBoard(), makeTaggedNULL());
+    p->setMediator(new PortMediator(p, ae));
+    OZ_RETURN(makeTaggedConst(p));
   }
-  OzPort* p = new OzPort(oz_currentBoard(), oz_newReadOnly(oz_currentBoard()));
-  PortMediator *me = new PortMediator(p, ae); 
-  p->setMediator(me);
-  OZ_RETURN(makeTaggedConst(p));
 }OZ_BI_end
 
 

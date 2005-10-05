@@ -118,8 +118,8 @@ extern MediatorTable *mediatorTable;
 
  */
 
-int getDefaultAnnotation(EntityType type);
-void setDefaultAnnotation(EntityType type, int annotation);
+int getDefaultAnnotation(GlueTag type);
+void setDefaultAnnotation(GlueTag type, int annotation);
 
 
 
