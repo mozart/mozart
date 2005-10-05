@@ -140,6 +140,8 @@ typedef enum {
   DIF_VAR_AUTO,
   DIF_READONLY_AUTO,
   DIF_VAR_OBJECT,
+  DIF_GLUE,                     // entities handled by the GLUE
+  DIF_GLUE_DEF,
   DIF_LAST
 } MarshalTag;
 
@@ -231,6 +233,8 @@ const struct {
   { DIF_VAR_AUTO,        "AUTOMATICALLY_REGISTERED_VAR"},
   { DIF_READONLY_AUTO,   "AUTOMATICALLY_REGISTERED_READONLY"},
   { DIF_VAR_OBJECT,      "VAR_OBJECT_EXPORTED"},
+  { DIF_GLUE,            "GLUE_ENTITY"},
+  { DIF_GLUE_DEF,        "GLUE_ENTITY_DEF"},
   { DIF_LAST,            "LAST"}
 };
 

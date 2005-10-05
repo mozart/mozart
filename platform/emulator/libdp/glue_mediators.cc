@@ -132,9 +132,9 @@ char* OzVariableMediator::getPrintType(){ return "var";}
 
 //************************** Mediator ***************************//
 
-Mediator::Mediator(TaggedRef ref, bool attach) :
+Mediator::Mediator(TaggedRef ref, GlueTag etype, bool attach) :
   active(TRUE), attached(attach), collected(FALSE),
-  dss_gc_status(DSS_GC_NONE), annotation(0),
+  dss_gc_status(DSS_GC_NONE), type(etype), annotation(0),
   entity(ref), absEntity(NULL), faultStream(0), next(NULL)
 {
   id = medIdCntr++; 
@@ -159,21 +159,6 @@ Mediator::makePassive() {
   active = FALSE;
 }
 
-void
-Mediator::setEntity(TaggedRef ref) {
-  entity = ref;
-}
-
-TaggedRef
-Mediator::getEntity() {
-  return entity;
-}
-
-AbstractEntity *
-Mediator::getAbstractEntity() { 
-  return absEntity;
-}
-
 // set both links between mediator and abstract entity
 void            
 Mediator::setAbstractEntity(AbstractEntity *ae) {
@@ -189,7 +174,7 @@ Mediator::getCoordinatorAssistant() {
 void
 Mediator::getDssParameters(ProtocolName &pn, AccessArchitecture &aa,
 			   RCalg &rc) {
-  int def = getDefaultAnnotation(getEntityType());
+  int def = getDefaultAnnotation(getType());
   pn = static_cast<ProtocolName>
     (annotation & PN_MASK ? annotation & PN_MASK : def & PN_MASK);
   aa = static_cast<AccessArchitecture>
@@ -200,12 +185,10 @@ Mediator::getDssParameters(ProtocolName &pn, AccessArchitecture &aa,
 
 void Mediator::gCollect(){
   if (!collected) {
-    printf("--- raph: Mediator::gCollect %d\n", id);
     collected = TRUE;
-    
     // collect the entity and its fault stream (if present)
     oz_gCollectTerm(entity, entity);
-    if (faultStream) oz_gCollectTerm(faultStream, faultStream);
+    oz_gCollectTerm(faultStream, faultStream);
   }
 }
 
@@ -260,11 +243,6 @@ void Mediator::reportFaultState(const FaultState& fs) {
   faultStream = newStream;
 }
 
-void 
-Mediator::marshal(GlueWriteBuffer *gwb, const ProxyMarshalFlag& pmf) {
-  absEntity->getCoordinatorAssistant()->marshal(gwb, pmf);
-}
-
 void
 Mediator::print(){
   printf("%s mediator, id %d, ae %x, ref %x, gc(eng:%d dss:%d), con %d\n",
@@ -276,8 +254,8 @@ Mediator::print(){
 
 /************************* ConstMediator *************************/
 
-ConstMediator::ConstMediator(ConstTerm *t, bool attach) :
-  Mediator(makeTaggedConst(t), attach)
+ConstMediator::ConstMediator(ConstTerm *t, GlueTag type, bool attach) :
+  Mediator(makeTaggedConst(t), type, attach)
 {}
 
 ConstTerm* ConstMediator::getConst(){
@@ -321,11 +299,12 @@ void ConstMediator::localize(){
 
 /************************* PortMediator *************************/
 
-PortMediator::PortMediator(ConstTerm *p) : ConstMediator(p, DETACHED)
+PortMediator::PortMediator(ConstTerm *p) :
+  ConstMediator(p, GLUE_PORT, DETACHED)
 {}
 
 PortMediator::PortMediator(ConstTerm *p, AbstractEntity *ae) :
-  ConstMediator(p, ATTACHED)
+  ConstMediator(p, GLUE_PORT, ATTACHED)
 {
   setAbstractEntity(ae);
 }
@@ -384,7 +363,7 @@ void PortMediator::globalize() {
 /************************* LazyVarMediator *************************/
 
 LazyVarMediator::LazyVarMediator(TaggedRef t, AbstractEntity *ae) :
-  Mediator(t, ATTACHED)
+  Mediator(t, GLUE_LAZYCOPY, ATTACHED)
 {
   setAbstractEntity(ae);
 }
@@ -446,7 +425,7 @@ WakeRetVal LazyVarMediator::resumeFunctionalThread(DssThreadId * id, PstInContai
 /************************* VarMediator *************************/
 
 VarMediator::VarMediator(AbstractEntity *ae, TaggedRef t) :
-  Mediator(t, ATTACHED)
+  Mediator(t, GLUE_VARIABLE, ATTACHED)
 {
   setAbstractEntity(ae);
 }
@@ -494,11 +473,12 @@ VarMediator::callback_Append(DssOperationId *id,
 
 /************************* UnusableMediator *************************/
 
-UnusableMediator::UnusableMediator(TaggedRef t) : Mediator(t, DETACHED)
+UnusableMediator::UnusableMediator(TaggedRef t) :
+  Mediator(t, GLUE_UNUSABLE, DETACHED)
 {}
 
 UnusableMediator::UnusableMediator(TaggedRef t, AbstractEntity *ae) :
-  Mediator(t, DETACHED)
+  Mediator(t, GLUE_UNUSABLE, DETACHED)
 {
   setAbstractEntity(ae);
 }
@@ -538,11 +518,12 @@ UnusableMediator::callback_Read(DssThreadId* id_of_calling_thread,
 
 /************************* OzThreadMediator *************************/
 
-OzThreadMediator::OzThreadMediator(TaggedRef t) : Mediator(t, DETACHED)
+OzThreadMediator::OzThreadMediator(TaggedRef t) :
+  Mediator(t, GLUE_THREAD, DETACHED)
 {}
 
 OzThreadMediator::OzThreadMediator(TaggedRef t, AbstractEntity *ae) :
-  Mediator(t, ATTACHED)
+  Mediator(t, GLUE_THREAD, ATTACHED)
 {
   setAbstractEntity(ae);
 }
@@ -601,11 +582,12 @@ OzThreadMediator::installEntityRepresentation(PstInContainerInterface*){
 
 /************************* LockMediator *************************/
 
-LockMediator::LockMediator(ConstTerm *t) : ConstMediator(t, DETACHED)
+LockMediator::LockMediator(ConstTerm *t) :
+  ConstMediator(t, GLUE_LOCK, DETACHED)
 {}
 
 LockMediator::LockMediator(ConstTerm *t, AbstractEntity *ae) :
-  ConstMediator(t, ATTACHED)
+  ConstMediator(t, GLUE_LOCK, ATTACHED)
 {
   setAbstractEntity(ae);
 }
@@ -724,11 +706,12 @@ LockMediator::installEntityRepresentation(PstInContainerInterface* pstIn){
 extern TaggedRef BI_remoteExecDone; 
 
 // use this constructor for annotations, etc.
-CellMediator::CellMediator(ConstTerm *c) : ConstMediator(c, DETACHED)
+CellMediator::CellMediator(ConstTerm *c) :
+  ConstMediator(c, GLUE_CELL, DETACHED)
 {}
 
 CellMediator::CellMediator(ConstTerm *c, AbstractEntity *ae) :
-  ConstMediator(c, ATTACHED)
+  ConstMediator(c, GLUE_CELL, ATTACHED)
 {
   setAbstractEntity(ae);
 }
@@ -779,11 +762,12 @@ CellMediator::callback_Read(DssThreadId *id,
 
 /************************* ObjectMediator *************************/
 
-ObjectMediator::ObjectMediator(ConstTerm *obj) : ConstMediator(obj, DETACHED)
+ObjectMediator::ObjectMediator(ConstTerm *obj) :
+  ConstMediator(obj, GLUE_OBJECT, DETACHED)
 {}
 
 ObjectMediator::ObjectMediator(ConstTerm *obj, AbstractEntity *ae) :
-  ConstMediator(obj, ATTACHED)
+  ConstMediator(obj, GLUE_OBJECT, ATTACHED)
 {
   setAbstractEntity(ae);
 }
@@ -842,11 +826,12 @@ ObjectMediator::installEntityRepresentation(PstInContainerInterface*){;}
 
 /************************* ArrayMediator *************************/
 
-ArrayMediator::ArrayMediator(ConstTerm *t) : ConstMediator(t, DETACHED)
+ArrayMediator::ArrayMediator(ConstTerm *t) :
+  ConstMediator(t, GLUE_ARRAY, DETACHED)
 {}
 
 ArrayMediator::ArrayMediator(ConstTerm *t, AbstractEntity *ae) :
-  ConstMediator(t, ATTACHED)
+  ConstMediator(t, GLUE_ARRAY, ATTACHED)
 {
   setAbstractEntity(ae);
 }
@@ -910,11 +895,11 @@ ArrayMediator::installEntityRepresentation(PstInContainerInterface* pstin){
 /************************* DictionaryMediator *************************/
 
 DictionaryMediator::DictionaryMediator(ConstTerm *t) :
-  ConstMediator(t, DETACHED)
+  ConstMediator(t, GLUE_DICTIONARY, DETACHED)
 {}
 
 DictionaryMediator::DictionaryMediator(ConstTerm *t, AbstractEntity *ae) :
-  ConstMediator(t, ATTACHED)
+  ConstMediator(t, GLUE_DICTIONARY, ATTACHED)
 {
   setAbstractEntity(ae);
 }
@@ -973,12 +958,16 @@ DictionaryMediator::installEntityRepresentation(PstInContainerInterface* pstin){
 
 // assumption: t is a tagged REF to a tagged VAR.
 OzVariableMediator::OzVariableMediator(TaggedRef t) :
-  Mediator(t, ATTACHED), patchCount(0)
+  Mediator(t, oz_isFree(*tagged2Ref(t)) ? GLUE_VARIABLE : GLUE_READONLY,
+	   ATTACHED),
+  patchCount(0)
 {}
 
 // assumption: t is a tagged REF to a tagged VAR.
 OzVariableMediator::OzVariableMediator(TaggedRef t, AbstractEntity *ae) :
-  Mediator(t, ATTACHED), patchCount(0)
+  Mediator(t, oz_isFree(*tagged2Ref(t)) ? GLUE_VARIABLE : GLUE_READONLY,
+	   ATTACHED),
+  patchCount(0)
 {
   setAbstractEntity(ae);
 }
