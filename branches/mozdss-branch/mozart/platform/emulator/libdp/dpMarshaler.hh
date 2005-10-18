@@ -507,21 +507,26 @@ public:
 
 //
 // DistributedVarPatch holds a location of a variable that has not
-// been marshaled yet when the snapshot took place.  This one contains
-// the necessary information to marshal the variable.
+// been marshaled yet when the snapshot took place.  The mediator of
+// the patched variable is assigned to the patch itself.  This
+// mediator contains all the necessary information for marshaling.
 
 class DistributedVarPatch : public OzValuePatch {
-private:
-  Bool isMarshaled;     // for debugging purposes
-  short isReadOnly;     // for marshaling
-  Mediator *med;        // the variable's mediator
-
 public:
-  DistributedVarPatch(OZ_Term loc, OzValuePatch *next, OzVariable *ov);
+  DistributedVarPatch(OZ_Term loc, OzValuePatch *next)
+    : OzValuePatch(loc, next)
+  {
+    OzVariable *ov = tagged2Var(oz_deref(loc));
+    Assert(ov->hasMediator());
+    extVar2Var(this)->setMediator(ov->getMediator());
+  }
   virtual ~DistributedVarPatch() { Assert(0); }
 
   //
-  virtual void disposeV();
+  virtual void disposeV() {
+    disposeOVP();
+    oz_freeListDispose(extVar2Var(this), extVarSizeof(DistributedVarPatch));
+  }
   //
   virtual ExtVarType getIdV(void) { return (OZ_EVAR_DISTRIBUTEDVARPATCH); }
   //
@@ -529,9 +534,6 @@ public:
     return (new DistributedVarPatch(*this));
   }
   virtual void gCollectRecurseV() { gcRecurseOVP(); }
-
-  //
-  void marshal(ByteBuffer *bs, Bool hasIndex);
 };
 
 inline

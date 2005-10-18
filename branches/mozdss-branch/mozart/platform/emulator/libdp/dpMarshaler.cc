@@ -80,44 +80,6 @@ void marshalDIFcounted(MarshalerBuffer *bs, MarshalTag tag)
 
 
 
-/******************** DistributedVarPatch ********************/
-
-// constructor
-DistributedVarPatch::DistributedVarPatch(OZ_Term loc, OzValuePatch *next,
-					 OzVariable *ov)
-  : OzValuePatch(loc, next), isMarshaled(NO)
-{
-  Assert(ov->hasMediator());
-  isReadOnly = oz_check_var_status(ov) == EVAR_STATUS_READONLY;
-  med = static_cast<Mediator*>(ov->getMediator());
-}
-
-//
-void DistributedVarPatch::disposeV()
-{
-  disposeOVP();
-  DebugCode(isMarshaled = OK;);
-  DebugCode(isReadOnly = -1;);
-  DebugCode(med = reinterpret_cast<Mediator *>(NULL));
-  oz_freeListDispose(extVar2Var(this), extVarSizeof(DistributedVarPatch));
-}
-
-//
-// An index, if any, is marshaled *afterwards*;
-void DistributedVarPatch::marshal(ByteBuffer *bs, int hasIndex)
-{
-  Assert(isMarshaled == NO);
-  isMarshaled = OK;
-  MarshalTag tag = (isReadOnly ? 
-		    (hasIndex ? DIF_READONLY_DEF : DIF_READONLY) :
-		    (hasIndex ? DIF_VAR_DEF : DIF_VAR));
-  bs->put(tag);
-  GlueWriteBuffer *buf = static_cast<GlueWriteBuffer*>(bs); 
-  med->getCoordinatorAssistant()->marshal(buf,PMF_ORDINARY);
-}
-
-
-
 //
 // kost@ : both 'DIF_VAR_OBJECT' and 'DIF_STUB_OBJECT' (currently)
 // have the "tertiary" representation (and, thus, are unmarshaled
@@ -550,11 +512,10 @@ void VSnapshotBuilder::processVar(OZ_Term v, OZ_Term *vRef)
       break;
     }
   } else if (oz_isFree(v) || oz_isReadOnly(v)) {
-    // globalize if needed
+    // globalize the variable if needed, and patch it
+    printf("--- raph: patching var\n");
     glue_globalizeEntity(vrt);
-    OzVariable *var = tagged2Var(*vRef);
-    // patch it
-    expVars = new DistributedVarPatch(vrt, expVars, var);
+    expVars = new DistributedVarPatch(vrt, expVars);
 
   } else { 
     // Actualy, we should copy all these types of variables

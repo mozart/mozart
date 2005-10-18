@@ -391,16 +391,10 @@ public:
 
 
 // mediators for Oz variables
-class OzVariableMediator:
-  public Mediator, public MonotonicMediatorInterface {
-private:
-  int patchCount;     // number of patches (for marshaler)
-
+class OzVariableMediator: public Mediator, public MonotonicMediatorInterface {
 public:
   OzVariableMediator(TaggedRef t);
   OzVariableMediator(TaggedRef t, AbstractEntity *ae);
-  void incPatchCount();
-  void decPatchCount();
   
   virtual void globalize();
   virtual void localize();
@@ -413,5 +407,10 @@ public:
   virtual PstOutContainerInterface *retrieveEntityRepresentation();
   virtual void installEntityRepresentation(PstInContainerInterface*);
 }; 
+
+// Note.  Abstract entities of patched variables are always kept
+// alive, even when the variable is bound.  The DistributedVarPatches
+// do collect their mediators, which forces them to keep the abstract
+// entity alive.
 
 #endif
