@@ -139,9 +139,11 @@ Mediator::Mediator(TaggedRef ref, GlueTag etype, bool attach) :
 {
   id = medIdCntr++; 
   mediatorTable->insert(this);
+  printf("--- raph: new mediator %p (type=%d)\n", this, type);
 }
 
 Mediator::~Mediator(){
+  printf("--- raph: remove mediator %p\n", this);
   // ERIK, removed delete during reconstruction
   // We keep the tight 1:1 mapping and remove the abstract entity
   // along with the Mediator.
@@ -185,6 +187,7 @@ Mediator::getDssParameters(ProtocolName &pn, AccessArchitecture &aa,
 
 void Mediator::gCollect(){
   if (!collected) {
+    printf("--- raph: gc %s mediator %p\n", getPrintType(), this);
     collected = TRUE;
     // collect the entity and its fault stream (if present)
     oz_gCollectTerm(entity, entity);
@@ -959,21 +962,16 @@ DictionaryMediator::installEntityRepresentation(PstInContainerInterface* pstin){
 // assumption: t is a tagged REF to a tagged VAR.
 OzVariableMediator::OzVariableMediator(TaggedRef t) :
   Mediator(t, oz_isFree(*tagged2Ref(t)) ? GLUE_VARIABLE : GLUE_READONLY,
-	   ATTACHED),
-  patchCount(0)
+	   ATTACHED)
 {}
 
 // assumption: t is a tagged REF to a tagged VAR.
 OzVariableMediator::OzVariableMediator(TaggedRef t, AbstractEntity *ae) :
   Mediator(t, oz_isFree(*tagged2Ref(t)) ? GLUE_VARIABLE : GLUE_READONLY,
-	   ATTACHED),
-  patchCount(0)
+	   ATTACHED)
 {
   setAbstractEntity(ae);
 }
-
-void OzVariableMediator::incPatchCount() { patchCount++; }
-void OzVariableMediator::decPatchCount() { patchCount--; }
 
 void OzVariableMediator::globalize() {
   if (absEntity) return;   // don't globalize twice
@@ -987,24 +985,11 @@ void OzVariableMediator::globalize() {
 }
 
 void OzVariableMediator::localize() {
-  if (patchCount > 0) {
-    // in this case, we simply cannot localize
-    mediatorTable->insert(this);
-
-  } else if (annotation || faultStream) {
-    // we have to keep the mediator, so remove the abstract entity,
-    // and keep the mediator in the table
-    delete absEntity;
-    absEntity = NULL;
-    mediatorTable->insert(this);
-    
-  } else {
-    // remove completely mediator, so
-    // 1. localize the variable
-    if (active) tagged2Var(oz_deref(entity))->removeMediator();
-    // 2. delete mediator
-    delete this;
-  }
+  // In any case, we keep the mediator.  So remove the abstract
+  // entity, and keep the mediator in the table
+  delete absEntity;
+  absEntity = NULL;
+  mediatorTable->insert(this);
 }
 
 PstOutContainerInterface *OzVariableMediator::retrieveEntityRepresentation(){

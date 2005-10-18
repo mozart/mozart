@@ -614,13 +614,19 @@ void DPMARSHALERCLASS::processVar(OZ_Term v, OZ_Term *vRef)
       ExtVarType evt = oz_getExtVar(v)->getIdV();
       switch (evt) {
       case OZ_EVAR_LAZY:
+	// raph: this is broken, don't use it!
+	Assert(0);
 	oz_getLazyVar(v)->marshal(bs, index);
 	// only a "place holding" patch is necessary:
 	expVars = new MarshaledVarPatch(vrt, expVars);
 	break;
 
       case OZ_EVAR_DISTRIBUTEDVARPATCH:
-	oz_getDistributedVarPatch(v)->marshal(bs, index);
+	// marshal it
+	printf("--- raph: marshaling distributed var patch\n");
+	if (index) { bs->put(DIF_GLUE_DEF); marshalTermDef(bs, index); }
+	else { bs->put(DIF_GLUE); }
+	glue_marshalEntity(vrt, bs);
 	break;
 
       case OZ_EVAR_MARSHALEDVARPATCH:
@@ -628,9 +634,6 @@ void DPMARSHALERCLASS::processVar(OZ_Term v, OZ_Term *vRef)
 	Assert(0);
 	break;
       }
-
-      // marshal the index, if any
-      if (index) marshalTermDef(bs, index);
 
       //
     } else if (oz_isFree(v) || oz_isReadOnly(v)) {

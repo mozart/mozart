@@ -878,6 +878,9 @@ OzVariable * OzVariable::_cacVarInline(void) {
   // their board.  However we must take care of their mediator.
   Board *bb = (hasMediator() ? NULL : getBoardInternal()->_cacBoard());
 
+  // whether recursive cac is required
+  bool recurse = hasMediator();
+
   OzVariable * to;
 
   switch (getType()) {
@@ -891,7 +894,7 @@ OzVariable * OzVariable::_cacVarInline(void) {
     to = extVar2Var(var2ExtVar(this)->_cacV());
     memcpy(to,this,sizeof(OzVariable));
     GCDBG_INTOSPACE(to);
-    cacStack.push(to, PTR_VAR);
+    recurse = TRUE;
     break;
   case OZ_VAR_READONLY_QUIET:
   case OZ_VAR_READONLY:
@@ -899,14 +902,14 @@ OzVariable * OzVariable::_cacVarInline(void) {
     break;
   case OZ_VAR_FAILED:
     cacReallocStatic(OzVariable,this,to,sizeof(Failed));
-    cacStack.push(to, PTR_VAR);
+    recurse = TRUE;
     break;
   case OZ_VAR_BOOL:
     cacReallocStatic(OzVariable,this,to,sizeof(OzBoolVariable));
     break;
   case OZ_VAR_OF:
     cacReallocStatic(OzVariable,this,to,sizeof(OzOFVariable));
-    cacStack.push(to, PTR_VAR);
+    recurse = TRUE;
     break;
   case OZ_VAR_FD:
     cacReallocStatic(OzVariable,this,to,sizeof(OzFDVariable));
@@ -919,14 +922,12 @@ OzVariable * OzVariable::_cacVarInline(void) {
   case OZ_VAR_CT:     
     cacReallocStatic(OzVariable,this,to,sizeof(OzCtVariable));
     ((OzCtVariable*) to)->_cac(bb); 
-    cacStack.push(to, PTR_VAR);
+    recurse = TRUE;
     break;
   }
 
-  if (bb)
-    to->setHome(bb);
-  else
-    cacStack.push(to, PTR_VAR); // to collect the mediator
+  if (bb) to->setHome(bb);
+  if (recurse) cacStack.push(to, PTR_VAR);
 
   cacStack.pushSuspList(&(to->suspList));
 
@@ -948,14 +949,14 @@ void Failed::_cacRecurse(void) {
 
 inline
 void OzVariable::_cacVarRecurse(void) {
+  // if a mediator is present, collect it
+  if (hasMediator()) (*gCollectMediator)(getMediator());
   
   switch (getType()) {
   case OZ_VAR_SIMPLE_QUIET:
   case OZ_VAR_SIMPLE:
   case OZ_VAR_READONLY_QUIET:
   case OZ_VAR_READONLY:
-    // only for distributed variables, to collect their mediator
-    (*gCollectMediator)(getMediator());
     break;
   case OZ_VAR_FAILED:  
     ((Failed *)      this)->_cacRecurse(); 
