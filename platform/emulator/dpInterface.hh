@@ -60,6 +60,9 @@ extern bool (*unlockDistLock)(OzLock*);
 extern bool (*distArrayGet)(OzArray*, TaggedRef, TaggedRef&);
 extern bool (*distArrayPut)(OzArray*, TaggedRef, TaggedRef);
 
+extern bool (*distDictionaryGet)(OzDictionary*, TaggedRef, TaggedRef&);
+extern bool (*distDictionaryPut)(OzDictionary*, TaggedRef, TaggedRef);
+
 extern void (*gCollectMediator)(void *med);
 //
 //

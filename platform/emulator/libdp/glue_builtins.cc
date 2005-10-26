@@ -334,6 +334,7 @@ OZ_BI_define(BIportToMS,1,1)
 
   // marshal the Dss abstract entity
   GlueWriteBuffer buf(portToTickBuf, PORT_TO_TICK_BUF_LEN);
+//  pm->marshal(&buf, PMF_FREE);
   med->getCoordinatorAssistant()->marshal(&buf, PMF_FREE);
 
   // turn it into a string

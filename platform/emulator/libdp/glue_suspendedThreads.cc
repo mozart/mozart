@@ -354,3 +354,67 @@ bool SuspendedArrayPut::gCollect() {
   } else
     return false;
 }
+
+
+/************************* SuspendedDictionaryGet *************************/
+
+SuspendedDictionaryGet::SuspendedDictionaryGet(Mediator* med, OZ_Term k,  OZ_Term var) :
+  SuspendedOperation(med), key(k), result(var)
+{
+  suspend();
+}
+
+WakeRetVal SuspendedDictionaryGet::resumeDoLocal(DssOperationId*) {
+  DictionaryMediator *dm = static_cast<DictionaryMediator*>(getMediator());
+  OzDictionary* ozD  = static_cast<OzDictionary*>(dm->getConst());
+  oz_unify(result, ozD->getArg(key));
+  resume();
+  return WRV_DONE;
+}
+
+WakeRetVal SuspendedDictionaryGet::resumeRemoteDone(PstInContainerInterface* pstin){
+  PstInContainer *pst = static_cast<PstInContainer*>(pstin);
+  oz_unify(result, pst->a_term);
+  resume();
+  return WRV_DONE;
+}
+
+bool SuspendedDictionaryGet::gCollect(){
+  if (gc()) {
+    oz_gCollectTerm(result, result);
+    return true;
+  } else
+    return false;
+}
+
+
+
+/************************* SuspendedDictionaryPut *************************/
+
+SuspendedDictionaryPut::SuspendedDictionaryPut(Mediator* med, OZ_Term k, OZ_Term val) :
+  SuspendedOperation(med), key(k), value(val)
+{
+  suspend();
+}
+
+WakeRetVal SuspendedDictionaryPut::resumeDoLocal(DssOperationId*) {
+  DictionaryMediator *dm = static_cast<DictionaryMediator*>(getMediator());
+  OzDictionary* ozD = static_cast<OzDictionary*>(dm->getConst());
+  ozD->setArg(key, value);
+  resume();
+  return WRV_DONE;
+}
+
+WakeRetVal SuspendedDictionaryPut::resumeRemoteDone(PstInContainerInterface* pstin){
+  resume();
+  return WRV_DONE;
+}
+
+bool SuspendedDictionaryPut::gCollect() {
+  if (gc()) {
+    oz_gCollectTerm(value, value);
+    return true;
+  } else
+    return false;
+}
+
