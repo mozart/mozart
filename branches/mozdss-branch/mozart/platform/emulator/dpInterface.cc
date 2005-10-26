@@ -116,6 +116,14 @@ bool distArrayPutStub(OzArray*, TaggedRef, TaggedRef){
   OZD_error("'distArrayPutStub' called without DP library?");
   return false; 
 }
+bool distDictionaryGetStub(OzDictionary*, TaggedRef, TaggedRef&){
+  OZD_error("'distDictionaryGetStub' called without DP library?");
+  return false; 
+}
+bool distDictionaryPutStub(OzDictionary*, TaggedRef, TaggedRef){
+  OZD_error("'distDictionaryPutStub' called without DP library?");
+  return false; 
+}
 
 // interface for GC;
 void gCollectMediatorStub(void* m)
@@ -194,6 +202,10 @@ bool (*distArrayGet)(OzArray*, TaggedRef, TaggedRef&)
   = distArrayGetStub;
 bool (*distArrayPut)(OzArray*, TaggedRef, TaggedRef)
   =    distArrayPutStub;
+bool (*distDictionaryGet)(OzDictionary*, TaggedRef, TaggedRef&)
+  = distDictionaryGetStub;
+bool (*distDictionaryPut)(OzDictionary*, TaggedRef, TaggedRef)
+  =    distDictionaryPutStub;
 
 // garbage collection of a mediator
 void (*gCollectMediator)(void*)

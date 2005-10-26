@@ -180,4 +180,28 @@ public:
 };
 
 
+// suspended dictionary operations
+class SuspendedDictionaryGet: public SuspendedOperation {
+private:
+  OZ_Term key;
+  OZ_Term result;
+public:
+  SuspendedDictionaryGet(Mediator*, OZ_Term, OZ_Term);
+  WakeRetVal resumeDoLocal(DssOperationId*);
+  WakeRetVal resumeRemoteDone(PstInContainerInterface* pstin);
+  bool gCollect();
+};
+
+class SuspendedDictionaryPut: public SuspendedOperation {
+private:
+  OZ_Term key;
+  OZ_Term value;
+public:
+  SuspendedDictionaryPut(Mediator*, OZ_Term, OZ_Term);
+  WakeRetVal resumeDoLocal(DssOperationId*);
+  WakeRetVal resumeRemoteDone(PstInContainerInterface* pstin);
+  bool gCollect();
+};
+
+
 #endif 

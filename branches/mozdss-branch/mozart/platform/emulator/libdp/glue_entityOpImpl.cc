@@ -262,6 +262,48 @@ bool distArrayPutImpl(OzArray *oza, TaggedRef indx, TaggedRef val){
   return false;
 }
 
+bool distDictionaryGetImpl(OzDictionary *ozD, TaggedRef key, TaggedRef &ans){
+  DictionaryMediator *dm = 
+    static_cast<DictionaryMediator*>(ozD->getMediator()); 
+  MutableAbstractEntity *mae = 
+    static_cast<MutableAbstractEntity*>(dm->getAbstractEntity());
+  
+  DssThreadId *thrId = currentThreadId();
+    
+  PstOutContainerInterface** pstout;
+  OpRetVal cont = mae->abstractOperation_Read(thrId, pstout);
+  if (pstout != NULL) *(pstout) = new PstOutContainer(key); 
+
+  if (cont == DSS_PROCEED) return false; 
+  if (cont == DSS_SUSPEND) {
+    ans = oz_newVariable();
+    new SuspendedDictionaryGet(dm, key, ans);
+    return true;
+  }
+  OZ_error("Dome! something went wrong getting from a dist dictionary");
+  return false;
+}
+
+bool distDictionaryPutImpl(OzDictionary *ozD, TaggedRef key, TaggedRef val){
+  DictionaryMediator *dm = 
+    static_cast<DictionaryMediator*>(ozD->getMediator()); 
+  MutableAbstractEntity *mae = 
+    static_cast<MutableAbstractEntity*>(dm->getAbstractEntity());
+  
+  DssThreadId *thrId = currentThreadId();
+    
+  PstOutContainerInterface** pstout;
+  OpRetVal cont = mae->abstractOperation_Write(thrId, pstout);
+  if (pstout != NULL) *(pstout) = new PstOutContainer(oz_cons(key, val));
+
+  if (cont == DSS_PROCEED) return false; 
+  if (cont == DSS_SUSPEND) {
+    new SuspendedDictionaryPut(dm, key, val);
+    return true;
+  }
+  OZ_error("Dome! something went wrong putting from a dist dictionary");
+  return false;
+}
 
 
 /************************* Variables *************************/
@@ -561,5 +603,9 @@ void initEntityOperations(){
   // Arrays
   distArrayPut = &distArrayPutImpl; 
   distArrayGet = &distArrayGetImpl; 
+
+  // Dictionaries
+  distDictionaryPut = &distDictionaryPutImpl; 
+  distDictionaryGet = &distDictionaryGetImpl; 
   
 }

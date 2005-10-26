@@ -603,7 +603,16 @@ OZ_DECLAREBI_USEINLINEFUN2(BIdictionaryMember,dictionaryMemberInline)
 
 OZ_Return dictionaryGetInline(OZ_Term d, OZ_Term k, OZ_Term &out)
 {
-  GetDictAndKey(d,k,dict,key,NO);
+  //Code from the macro GetKeyAndDict included here
+  NONVAR(k,key);
+  if (!oz_isFeature(key)) { oz_typeError(1,"feature"); }
+  NONVAR(d,dictaux);
+  if (!oz_isDictionary(dictaux)) { oz_typeError(0,"Dictionary"); }
+  OzDictionary *dict = tagged2Dictionary(dictaux);
+  if (dict->isDistributed() && (*distDictionaryGet)(dict, key, out)) {
+    return BI_REPLACEBICALL;
+  }
+
   out = dict->getArg(key);
   if (out) {
     return (PROCEED);
@@ -628,7 +637,17 @@ OZ_DECLAREBI_USEINLINEFUN3(BIdictionaryCondGet,dictionaryCondGetInline)
 
 OZ_Return dictionaryPutInline(OZ_Term d, OZ_Term k, OZ_Term value)
 {
-  GetDictAndKey(d,k,dict,key,OK);
+  //Code from the macro GetKeyAndDict included here
+  NONVAR(k,key);
+  if (!oz_isFeature(key)) { oz_typeError(1,"feature"); }
+  NONVAR(d,dictaux);
+  if (!oz_isDictionary(dictaux)) { oz_typeError(0,"Dictionary"); }
+  OzDictionary *dict = tagged2Dictionary(dictaux);
+  if (dict->isDistributed() && (*distDictionaryPut)(dict, key, value)) {
+    return BI_REPLACEBICALL;
+  }
+  
+  CheckLocalBoard(dict, "dict");
   dict->setArg(key,value);
   return PROCEED;
 }
