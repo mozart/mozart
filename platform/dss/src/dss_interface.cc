@@ -354,13 +354,13 @@ namespace _dss_internal{
       return PRV_AREA_NOT_FOUND;
     }
     return PRV_OK;
-  };
+  }
 
 
   ParamRetVal
   DSS_Environment::m_operateStrParam(const DSS_AREA&, const DSS_AREA_ID&, const int& param, const char* const str){
     return PRV_AREA_NOT_FOUND;
-  };
+  }
 
 
   MutableAbstractEntity*

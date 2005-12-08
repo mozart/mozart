@@ -29,6 +29,7 @@
 // Place nice templates in here for code reusability
 //
 
+#include <stdlib.h> // For the macro 
 #include "dss_enums.hh" // For the macro 
 
 template<class T>

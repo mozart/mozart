@@ -130,7 +130,6 @@ enum DSiteState{
 
 
 class VirtualChannelInterface{
-  ;
 };
 
 
@@ -178,7 +177,6 @@ public:
 
 
 class TimerElementInterface{
-  ;
 };
 
 typedef unsigned int (*TimerWakeUpProc)(void *);
@@ -221,7 +219,6 @@ public:
 };
 
 class ChannelRequest{
-  ;
 };
 
 class VcCbkClassInterface{

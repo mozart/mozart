@@ -140,13 +140,11 @@ namespace _dss_internal{
   // the responsability of the DKS_userClass to implement proper tranportation of
   // afore mentioned messages. 
   class DksMessage{
-    ;
   };
   
 
   // A temporary construction
   class DksBcMessage{
-    ;
   };
   
   

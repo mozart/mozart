@@ -326,7 +326,7 @@ namespace _msl_internal{
     DssCryptoReadByteBuffer* tmp = new DssCryptoReadByteBuffer(key, keylen, iv1, iv2, a_readBuffer);
     delete a_readBuffer;
     a_readBuffer = tmp;
-  };
+  }
 
   void
   EndRouter::m_EncryptWriteTransport(BYTE* const key, const u32& keylen,
@@ -335,7 +335,7 @@ namespace _msl_internal{
     DssCryptoWriteByteBuffer* tmp = new DssCryptoWriteByteBuffer(key,keylen, iv1,iv2,a_writeBuffer);
     delete a_writeBuffer;
     a_writeBuffer = tmp;
-  };
+  }
 
  
 

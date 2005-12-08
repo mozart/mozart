@@ -170,7 +170,7 @@ namespace _dss_internal{
 
   bool TL_Remote::setUpdatePeriod(const int& val){
     return (((a_expireDate - (m_getEnvironment()->a_msgnLayer->m_getCurrTime())) > (val+LEAST_PERIOD) && val > LEAST_PERIOD) ? (a_periodTime = val)!=0: false);
-  };
+  }
 
   
 }

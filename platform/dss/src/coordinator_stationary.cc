@@ -131,7 +131,7 @@ namespace _dss_internal{ //Start namespace
     }
     else
       delete a_man;
-  };
+  }
   
   
   void
@@ -139,7 +139,7 @@ namespace _dss_internal{ //Start namespace
     a_ps  = PROXY_STATUS_HOME;
     a_man = m;
     m->m_initProxy(this);
-  };
+  }
 
 
   bool
@@ -154,7 +154,7 @@ namespace _dss_internal{ //Start namespace
       m_siteStateChange(hs,state);
     }
     return skel;
-  };
+  }
 
 
   // **************** REFERENCE *******************

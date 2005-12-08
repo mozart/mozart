@@ -34,11 +34,11 @@ namespace _dss_internal{
   
   // ******************************** SiteHandler2 ********************************
 
-  SiteHandler::SiteHandler():a_siteList(NULL){};
+  SiteHandler::SiteHandler():a_siteList(NULL){}
 
   bool SiteHandler::isEmpty() const { 
     return (a_siteList == NULL);
-  };
+  }
 
 
   void SiteHandler::modifyDSite(DSite* site, int no){

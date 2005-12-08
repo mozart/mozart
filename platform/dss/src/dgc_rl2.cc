@@ -45,7 +45,7 @@ namespace _dss_internal{
   }
 
 
-  RLV2_Home::~RLV2_Home(){};
+  RLV2_Home::~RLV2_Home(){}
 
 
   void RLV2_Home::m_getReferenceInfo(DssWriteBuffer *bs, DSite* dest){ 
@@ -82,10 +82,10 @@ namespace _dss_internal{
 
   RLV2_Remote::RLV2_Remote(RemoteReference *p, DssReadBuffer *bs, GCalgorithm *g):
     RemoteGCalgorithm(p,g,RC_ALG_RLV2),decs(0){
-  };
+  }
 
 
-  RLV2_Remote::~RLV2_Remote(){};
+  RLV2_Remote::~RLV2_Remote(){}
 
 
   void RLV2_Remote::m_getReferenceInfo(DssWriteBuffer *bs, DSite* dest){

@@ -100,14 +100,14 @@ void ProtocolDksBcManager::makeGCpreps(){
     //
     
   }
-  bool ProtocolDksBcProxy::clearWeakRoot(){ return false; };
-  void ProtocolDksBcProxy::makeGCpreps(){};
+  bool ProtocolDksBcProxy::clearWeakRoot(){ return false; }
+  void ProtocolDksBcProxy::makeGCpreps(){}
   bool ProtocolDksBcProxy::m_initRemoteProt(DssReadBuffer* buf){
     a_proxy->m_getEnvironment()->a_dksInstHT->m_unmarshalDksInstance(buf, a_dks);
     a_dks->setCallBackService(this); 
     a_dks->m_joinNetwork(a_proxy->m_getCoordinatorSite()); 
     return true; 
-  };
+  }
   int  ProtocolDksBcProxy::siteStateChanged(DSite*, const DSiteState&)
   {
     // currently we don't care 
