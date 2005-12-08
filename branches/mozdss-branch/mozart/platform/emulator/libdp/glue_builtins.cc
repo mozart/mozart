@@ -163,7 +163,7 @@ OZ_BI_define(BIhandoverRoute,2,0) {
   if (nrSites > 6) 
     return OZ_FAILED; 
 
-  DSite **dsVec = new (DSite*)[nrSites];
+  DSite **dsVec = new DSite*[nrSites];
 
   int tmpNum = nrSites; 
   while (dssIsCons(slist, &hd, &tl)) {
