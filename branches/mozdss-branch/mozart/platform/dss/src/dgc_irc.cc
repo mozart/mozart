@@ -40,7 +40,9 @@ namespace _dss_internal{
   
   // ****************************** PUBLIC IRC_HOME *******************************
 
-  IRC_Home::IRC_Home(HomeReference *p, GCalgorithm *g):HomeGCalgorithm(p,g,RC_ALG_IRC), counter(0){};
+  IRC_Home::IRC_Home(HomeReference *p, GCalgorithm *g):
+    HomeGCalgorithm(p,g,RC_ALG_IRC), 
+    counter(0){}
 
 
   IRC_Home::~IRC_Home(){}

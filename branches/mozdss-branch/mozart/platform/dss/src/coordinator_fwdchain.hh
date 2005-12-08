@@ -44,7 +44,7 @@ namespace _dss_internal{ //Start namespace
     MANAGER_STATUS_REF_INC  // Old Manager waits for commit. 
   };
   
-
+  class ProxyFwdChain;
   
   class CoordinatorFwdChain: public Coordinator{
     friend class ProxyFwdChain;

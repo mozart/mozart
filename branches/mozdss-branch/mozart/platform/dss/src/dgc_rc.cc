@@ -42,7 +42,9 @@ namespace _dss_internal{
     GC_RC_ACK
   }; 
   
-  RC_Home::RC_Home(HomeReference *p, GCalgorithm *g):HomeGCalgorithm(p,g,RC_ALG_RC), counter(0){};
+  RC_Home::RC_Home(HomeReference *p, GCalgorithm *g):
+    HomeGCalgorithm(p,g,RC_ALG_RC),
+    counter(0){}
 
 
   RC_Home::~RC_Home(){}

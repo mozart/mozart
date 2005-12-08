@@ -537,21 +537,21 @@ namespace _dss_internal{ //Start namespace
     ::MsgContainer *msg = m_createASMsg(M_PROXY_PROXY_PROTOCOL);
     msg->pushIntVal(m_getEpoch());
     return msg; 
-  };
+  }
   
   ::MsgContainer * 
   ProxyFwdChain::m_createCoordRefMsg(){
     ::MsgContainer *msg = m_createASMsg(M_PROXY_COORD_REF);
     msg->pushIntVal(m_getEpoch());
     return msg; 
-  };
+  }
 
   ::MsgContainer * 
   ProxyFwdChain::m_createProxyRefMsg(){
     ::MsgContainer *msg = m_createASMsg(M_PROXY_PROXY_REF);
     msg->pushIntVal(m_getEpoch());
     return msg; 
-  };
+  }
   
   // ************* Communication ********************
   

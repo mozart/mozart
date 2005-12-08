@@ -7,6 +7,7 @@
 
 #include "msl_transObj.hh"
 #include "msl_buffer.hh"
+#include "msl_dct.hh"
 
 
 // #include "dssBase.hh"

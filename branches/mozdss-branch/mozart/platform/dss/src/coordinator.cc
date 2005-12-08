@@ -51,15 +51,14 @@ namespace _dss_internal{ //Start namespace
   // The AS-Node
   //
 
-  AS_Node::~AS_Node(){};
-  
+  AS_Node::~AS_Node(){}
 
   AS_Node::AS_Node(const AccessArchitecture& a, DSS_Environment* const env):
       NetIdNode(),
       DSS_Environment_Base(env),
       a_aa(a){
       // Created Resolver base node
-    };
+    }
     
   AS_Node::AS_Node(NetIdentity ni, const AccessArchitecture& a,
 	  DSS_Environment* const env):
@@ -67,7 +66,7 @@ namespace _dss_internal{ //Start namespace
     DSS_Environment_Base(env),
     a_aa(a){
     // Created Resolver base node
-  };
+  }
   
   ::MsgContainer *
   AS_Node::m_createASMsg(const MessageType& mt){
@@ -82,14 +81,14 @@ namespace _dss_internal{ //Start namespace
 		   ProtocolManager* const p, DSS_Environment* const env):AS_Node(a,env), a_proxy(NULL), a_prot(p){
     DebugCode(a_allocated++);
     m_getEnvironment()->a_coordinatorTable->m_add(this);
-  };
+  }
 
 
   Coordinator::Coordinator(NetIdentity ni, const AccessArchitecture& a,
 		   ProtocolManager* const p, DSS_Environment* const env):AS_Node(ni, a,env), a_proxy(NULL), a_prot(p){
     DebugCode(a_allocated++);
     m_getEnvironment()->a_coordinatorTable->m_insert(this);
-  };
+  }
   
 
   // Access structures has to delete the ref by themselves  

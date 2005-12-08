@@ -37,7 +37,7 @@ namespace _msl_internal{ //Start namespace
     const int C_HEADER = 12; // or 20
     const int TCP_SIZE_POS   = 5;
     const size_t SIZE_INT    = 4;
-  };
+  }
 
 #ifdef DEBUG_CHECK
   int DssSimpleReadBuffer::a_allocated = 0;
@@ -518,7 +518,7 @@ namespace _msl_internal{ //Start namespace
 
     // Correct pointers so that we start from the beginning (next time).
     a_putptr = a_pos;
-  };
+  }
 
 
   BYTE*

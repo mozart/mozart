@@ -43,7 +43,7 @@ namespace _dss_internal{ //Start namespace
     DssThreadId(), 
     a_exit(ext){
     DebugCode(a_allocated++);
-  };
+  }
 
 
   GlobalThread::GlobalThread(GlobalThreadTable* const ext):
@@ -51,7 +51,7 @@ namespace _dss_internal{ //Start namespace
     DssThreadId(), 
     a_exit(ext){
     DebugCode(a_allocated++);
-  };
+  }
   
   void
   GlobalThread::dispose(){

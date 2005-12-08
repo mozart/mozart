@@ -90,13 +90,13 @@
 #else
     _exit(1);
 #endif
-  };
+  }
 
   void dssAssert(const char* const file, const int& line, const char* const condition){
     fprintf(stderr,"%s:%d assertion '%s' failed (%d)\n",file,line,condition, getpid());
     bool loop = true;
     while(loop);
-  };
+  }
  
  
   // We enable the dssLog utility here if flag is set
@@ -121,7 +121,7 @@
       fprintf(stderr,"\n");
       va_end(ap);
     }
-  };
+  }
 
   // ****************** DSS LONGTIME ********************
   //
@@ -131,12 +131,12 @@
 #endif
 
 //Constructors added to force the inclussion of the symbols in the library.
-ThreadMediator::ThreadMediator() {};
-MediatorInterface::MediatorInterface() {};
-Mediation_Object::Mediation_Object() {};
-MutableMediatorInterface::MutableMediatorInterface() {};
-MonotonicMediatorInterface::MonotonicMediatorInterface() {};
-ImmutableMediatorInterface::ImmutableMediatorInterface() {};
-RelaxedMutableMediatorInterface::RelaxedMutableMediatorInterface() {};
-PstOutContainerInterface::PstOutContainerInterface() {};
-PstInContainerInterface::PstInContainerInterface() {};
+ThreadMediator::ThreadMediator() {}
+MediatorInterface::MediatorInterface() {}
+Mediation_Object::Mediation_Object() {}
+MutableMediatorInterface::MutableMediatorInterface() {}
+MonotonicMediatorInterface::MonotonicMediatorInterface() {}
+ImmutableMediatorInterface::ImmutableMediatorInterface() {}
+RelaxedMutableMediatorInterface::RelaxedMutableMediatorInterface() {}
+PstOutContainerInterface::PstOutContainerInterface() {}
+PstInContainerInterface::PstInContainerInterface() {}

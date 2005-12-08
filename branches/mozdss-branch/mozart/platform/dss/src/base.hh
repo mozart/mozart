@@ -140,7 +140,7 @@ inline void Exception(const bool& cond, const ExceptionType& et){
   if(cond) throw et;
 }
 #else
-inline void Exception(const bool&, const ExceptionType&){};
+inline void Exception(const bool&, const ExceptionType&){}
 #endif // EXCEPTIONS
 
 // ******************************* ENUMS AND CONSTANTS ****************************

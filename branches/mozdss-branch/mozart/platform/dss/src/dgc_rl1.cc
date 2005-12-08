@@ -53,7 +53,7 @@ namespace _dss_internal{
   }
 
 
-  RLV1_Home::~RLV1_Home(){};
+  RLV1_Home::~RLV1_Home(){}
 
   void RLV1_Home::m_getReferenceInfo(DssWriteBuffer *bs, DSite *dest){
     insertDSite(dest);
@@ -108,7 +108,7 @@ namespace _dss_internal{
   }
 
 
-  RLV1_Remote::~RLV1_Remote(){};
+  RLV1_Remote::~RLV1_Remote(){}
 
 
   void RLV1_Remote::m_getReferenceInfo(DssWriteBuffer *bs, DSite* dest){

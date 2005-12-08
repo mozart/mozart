@@ -231,6 +231,6 @@ namespace _msl_internal{
 }
 
 //Constructors added to force the inclussion of the symbols in the library.
-ComServiceInterface::ComServiceInterface() {};
-CsSiteInterface::CsSiteInterface() {};
-IoFactoryInterface::IoFactoryInterface() {};
+ComServiceInterface::ComServiceInterface() {}
+CsSiteInterface::CsSiteInterface() {}
+IoFactoryInterface::IoFactoryInterface() {}
