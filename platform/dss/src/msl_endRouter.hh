@@ -1,3 +1,28 @@
+/*
+ *  Authors:
+ *    Erik Klintskog (erik@sics.se)
+ * 
+ *  Contributors:
+ *    Raphael Collet (raph@info.ucl.ac.be)
+ * 
+ *  Copyright:
+ * 
+ *  Last change:
+ *    $Date$ by $Author$
+ *    $Revision$
+ * 
+ *  This file is part of Mozart, an implementation 
+ *  of Oz 3:
+ *     http://www.mozart-oz.org
+ * 
+ *  See the file "LICENSE" or
+ *     http://www.mozart-oz.org/LICENSE.html
+ *  for information on usage and redistribution 
+ *  of this file, and for a DISCLAIMER OF ALL 
+ *  WARRANTIES.
+ *
+ */
+
 #ifndef __ENDROUTE_HH
 #define __ENDROUTE_HH
 
@@ -9,69 +34,43 @@
 #include "msl_buffer.hh"
 #include "msl_dct.hh"
 
-
-// #include "dssBase.hh"
-
-
-
-enum unmarshalReturn {
-  U_MORE,
-  U_WAIT,
-  U_CLOSED
-};
-
 namespace _msl_internal{ //Start namespace 
 
   class RouteTransController;
   class DataAreaContainer;
   class EndRouterDeliver;
-  
-  class EndRouter: public TransObj {
+
+  class EndRouter: public BufferedTransObj {
     friend class RouteTransController;
+
   private:
-    static const int E_MIN_FOR_HEADER = 100;// Minimal size available to even consider marshaling
-    static const int CF_FIRST=0;
-    static const int CF_CONT =1;
-    static const int CF_FINAL=2;
-  protected:
-    DssReadByteBuffer*  a_readBuffer;
-    DssWriteByteBuffer* a_writeBuffer;
-  private:
-    // DssTransportChannel *a_channel; // it is not actually used in this class
-    int a_minSend;
     ComObj *a_succ;  // the successor ComObj
     int a_routeId;   // the route Id
-    
+
     EndRouterDeliver* deliverEvent; 
-    
-    void marshal(MsgCnt *msgC, int acknum);
-    unmarshalReturn unmarshal();
 
-    EndRouter(const EndRouter&):TransObj(0,NULL),a_readBuffer(NULL),a_writeBuffer(NULL), a_minSend(0), a_succ(NULL), a_routeId(0), deliverEvent(NULL){}
+    EndRouter(const EndRouter&) : 
+      BufferedTransObj(0,NULL),
+      a_succ(NULL), a_routeId(0), deliverEvent(NULL) {}
     EndRouter& operator=(const EndRouter&){ return *this; }
-    
+
   public:
-
-    
     EndRouter(MsgnLayerEnv*); 
-    virtual ~EndRouter();
+    virtual ~EndRouter() {}
 
-    VirtualChannelInterface *m_closeConnection();
-    void deliver();
-    void readyToReceive();
-    
-    //    void setChannel(DssTransportChannel*);  // actually, this method is not used
+    virtual VirtualChannelInterface *m_closeConnection();
+    virtual void deliver();
+    virtual void readyToReceive();
 
     // Set the next comObj to communicate through
     void setSuccessor(ComObj *succ) { a_succ = succ; }
-
     void setRouteId(int routeId) { a_routeId = routeId; }
-    
+
     // Init the route set up procedure, by sending C_SET_ROUTE
     void initRouteSetUp(DSite *succ[], int nrSites);
 
     void writeHandler();
-    
+
     // Read handler for transparent DAC messages.
     void readHandler(DssSimpleDacDct *dac);
     
@@ -80,17 +79,8 @@ namespace _msl_internal{ //Start namespace
     // !!!to be continued ...
     void routeSetUp(int routeId);
 
-    TransMedium getTransportMedium() {return TM_ROUTE;}
-    virtual void m_EncryptReadTransport(BYTE* const key, const u32& keylen,
-					const u32& iv1,  const u32& iv2);
-    virtual void m_EncryptWriteTransport(BYTE* const key, const u32& keylen,
-					 const u32& iv1,  const u32& iv2);
-
+    virtual TransMedium getTransportMedium() {return TM_ROUTE;}
   };
-
-
 
 } //End namespace
 #endif
-
-

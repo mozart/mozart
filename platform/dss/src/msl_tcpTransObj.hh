@@ -3,6 +3,7 @@
  *    Anna Neiderud (annan@sics.se)
  * 
  *  Contributors:
+ *    Raphael Collet (raph@info.ucl.ac.be)
  * 
  *  Copyright:
  * 
@@ -33,48 +34,24 @@
 #include "dss_comService.hh"
 #include "mslBase.hh"
 
-namespace _msl_internal{ //Start namespace 
-  
-  enum unmarshalReturn {
-    U_MORE,
-    U_WAIT,
-    U_CLOSED
-  };  
+namespace _msl_internal{ //Start namespace
 
- 
-  class DssReadByteBuffer;
-  class DssWriteByteBuffer;
-  
-  class TCPTransObj: public TransObj, public ::VcCbkClassInterface {
+  class TCPTransObj: public BufferedTransObj, public ::VcCbkClassInterface {
+
   private:
+    // raph: We extend the BufferedTransObj with a virtual channel.
+    ::VirtualChannelInterface* a_channel;
 
-    static const int T_MIN_FOR_HEADER = 100;// Minimal size available to even consider marshaling
-
-    enum ControlFlag{
-      CF_FIRST,
-      CF_CONT,
-      CF_FINAL
-    };
-
-    int                  a_minSend;
-    DssReadByteBuffer*   a_readBuffer;
-    DssWriteByteBuffer*  a_writeBuffer;
-    
-    ::VirtualChannelInterface*    a_channel;
-    
-    
-    void marshal(MsgCnt *msgC, int acknum);
-    unmarshalReturn unmarshal();
-
-    TCPTransObj(const TCPTransObj&):TransObj(0,NULL), a_minSend(0), a_readBuffer(NULL), a_writeBuffer(NULL), a_channel(NULL)
-{}
+    // should not be used
+    TCPTransObj(const TCPTransObj&)
+      : BufferedTransObj(0,NULL), a_channel(NULL) {}
     TCPTransObj& operator=(const TCPTransObj&){ return *this; }
     
   public:
 #ifdef DEBUG_CHECK
     static int           a_allocated;
 #endif
-    
+
     TCPTransObj(MsgnLayerEnv* env);
     virtual ~TCPTransObj();
     
@@ -87,14 +64,10 @@ namespace _msl_internal{ //Start namespace
     virtual bool writeDataAvailable();
   
     virtual TransMedium getTransportMedium() {return TM_TCP;}
-    virtual void m_EncryptReadTransport(BYTE* const key, const u32& keylen,
-					const u32& iv1,  const u32& iv2);
-    virtual void m_EncryptWriteTransport(BYTE* const key, const u32& keylen,
-					 const u32& iv1,  const u32& iv2);
-
+    // m_EncryptReadTransport()  inherited
+    // m_EncryptWriteTransport() inherited
 
     inline void setChannel(VirtualChannelInterface* ch){ a_channel = ch; }
-    
   };
 
 } //End namespace
