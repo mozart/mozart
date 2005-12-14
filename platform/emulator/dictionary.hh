@@ -704,10 +704,11 @@ public:
   }
 
   //
-//  Bool isSafeDict() { return (dictFlags & DictSafeFlag); }
-  Bool isSafeDict() { return true; }
+//  Bool isSafeDict() { return true; }
+  Bool isSafeDict() { return (dictFlags & DictSafeFlag); }
   void markSafe()   { dictFlags |= DictSafeFlag; }
-  //
+
+      //
   DictNode* pairsInArray() { return (table->getPairsInArray()); }
 
   OZPRINT;

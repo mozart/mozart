@@ -1503,7 +1503,7 @@ OZ_BI_define(BIchunkArityCompiler,1,1)
 
   switch (tagged2Const(ch)->getType()) {
   case Co_Class:
-    OZ_RETURN(tagged2ObjectClass(ch)->getArityList());
+    OZ_RETURN(tagged2OzClass(ch)->getArityList());
   case Co_Object:
     OZ_RETURN(tagged2Object(ch)->getArityList());
   case Co_Chunk:

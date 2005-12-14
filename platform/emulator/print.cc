@@ -595,7 +595,7 @@ void OzObject::printStream(ostream &stream, int depth)
   stream << ">";
 }
 
-void ObjectClass::printStream(ostream &stream, int depth)
+void OzClass::printStream(ostream &stream, int depth)
 {
   stream << "C:" << getPrintName();
 }
@@ -692,7 +692,7 @@ void ConstTerm::printLongStream(ostream &stream, int depth, int offset)
     ((OzObject *) this)->printLongStream(stream,depth,offset);
     break;
   case Co_Class:
-    ((ObjectClass *) this)->printLongStream(stream,depth,offset);
+    ((OzClass *) this)->printLongStream(stream,depth,offset);
     break;
   case Co_Cell:	      
     if (((OzCell *)this)->isDistributed())
@@ -756,7 +756,7 @@ void ConstTerm::printStream(ostream &stream, int depth)
     break;
   case Co_Object:      ((OzObject *) this)->printStream(stream,depth);
     break;
-  case Co_Class:       ((ObjectClass *) this)->printStream(stream,depth);
+  case Co_Class:       ((OzClass *) this)->printStream(stream,depth);
     break;
   case Co_Cell:
     if (((OzCell *)this)->isDistributed())
@@ -797,7 +797,7 @@ void ForeignPointer::printStream(ostream &stream, int depth)
   stream << "foreign pointer: " << getPointer() << " at " << this << '.';
 }
 
-void ObjectClass::printLongStream(ostream &stream, int depth, int offset)
+void OzClass::printLongStream(ostream &stream, int depth, int offset)
 {
   stream << indent(offset)
 	 << "Class: "

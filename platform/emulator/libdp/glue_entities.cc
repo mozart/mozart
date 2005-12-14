@@ -257,7 +257,7 @@ LazyType ObjectVar::getLazyType(){
 
 void ObjectVar::sendRequest(TaggedRef *v){
   Assert(0);
-  //if(isObjectClassAvail()) 
+  //if(isOzClassAvail()) 
   //lazyVarFetch(this, v,oz_true());
   //else
   //lazyVarFetch(this, v,oz_false());
@@ -278,7 +278,7 @@ void ObjectVar::disposeV(){
 }
 
 void ObjectVar::transfer(TaggedRef ObjRef, TaggedRef *Vptr){
-  Assert(isObjectClassAvail());
+  Assert(isOzClassAvail());
   
   /* We'll have to bind the class */ 
   Assert(oz_isObject(ObjRef));
@@ -294,6 +294,6 @@ GName* ObjectVar::getGNameClass()  {
   return gClass;
 }
 
-Bool ObjectVar::isObjectClassAvail(){
+Bool ObjectVar::isOzClassAvail(){
   return (oz_findGName(gClass) != (TaggedRef) 0); 
 }

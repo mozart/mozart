@@ -3248,20 +3248,20 @@ LBLdispatcher:
 
       if (oz_isClass(cls)) {
 	Bool defaultsUsed;
-	Abstraction *abstr = tagged2ObjectClass(cls)->getMethod(cmi->mn,cmi->arity,
+	Abstraction *abstr = tagged2OzClass(cls)->getMethod(cmi->mn,cmi->arity,
 								NO,defaultsUsed);
 	/* fill cache and try again later */
 	if (abstr==NULL || defaultsUsed) {
 	  isTailCall = cmi->isTailCall;
 	  if (!isTailCall) PC = PC+3;
 	  
-	  Assert(tagged2ObjectClass(cls)->getFallbackApply());
+	  Assert(tagged2OzClass(cls)->getFallbackApply());
 	
 	  XREGS[1] = makeMessage(cmi->arity,cmi->mn);
 	  XREGS[0] = cls;
 	
 	  predArity = 2;
-	  predicate = tagged2Const(tagged2ObjectClass(cls)->getFallbackApply());
+	  predicate = tagged2Const(tagged2OzClass(cls)->getFallbackApply());
 	  goto LBLcall;
 	}
 	patchToFastCall(abstr,PC,cmi->isTailCall);

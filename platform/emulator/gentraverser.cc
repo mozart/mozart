@@ -384,7 +384,7 @@ repeat:
   case BT_classFeatures:
     {
       Assert(oz_isSRecord(value));
-      GetBTTaskPtr1(frame, ObjectClass*, cl);
+      GetBTTaskPtr1(frame, OzClass*, cl);
       GetBTTaskArg2(frame, int, flags);
       DiscardBTFrame(frame);
 
@@ -965,7 +965,7 @@ void Builder::dbgWrap()
       break;
 
       //
-      // 'ObjectClass' is already there:
+      // 'OzClass' is already there:
     case BT_classFeatures:
       NextBTFrame(frame);
       break;			// case;

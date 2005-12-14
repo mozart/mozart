@@ -1634,7 +1634,7 @@ OZ_Term oz_checkList(OZ_Term l, OzCheckList check=OZ_CHECK_ANY) {
 }
 
 /*===================================================================
- * ObjectClass
+ * OzClass
  *=================================================================== */
 
 /* Internal representation of Oz classes */
@@ -1643,7 +1643,7 @@ OZ_Term oz_checkList(OZ_Term l, OzCheckList check=OZ_CHECK_ANY) {
 #define CLASS_SITED   0x2
 #define CLASS_FLAGS_MAX 0x3
 
-class ObjectClass: public ConstTermWithHome {
+class OzClass: public ConstTermWithHome {
   friend void ConstTerm::gCollectConstRecurse(void);
   friend void ConstTerm::sCloneConstRecurse(void);
 private:
@@ -1656,9 +1656,9 @@ private:
 public:
   USEHEAPMEMORY;
   OZPRINTLONG
-  NO_DEFAULT_CONSTRUCTORS(ObjectClass)
+  NO_DEFAULT_CONSTRUCTORS(OzClass)
 
-  ObjectClass(TaggedRef feat, TaggedRef fm, TaggedRef uf, TaggedRef dm,
+  OzClass(TaggedRef feat, TaggedRef fm, TaggedRef uf, TaggedRef dm,
 	      Bool lck, Bool sited, Board *b)
     : ConstTermWithHome(b,Co_Class)
   {
@@ -1767,13 +1767,13 @@ public:
   OZPRINTLONG
   NO_DEFAULT_CONSTRUCTORS(OzObject)
 
-  ObjectClass * getClass(void) { 
-    return (ObjectClass *) tagged2Const(cl1); 
+  OzClass * getClass(void) { 
+    return (OzClass *) tagged2Const(cl1); 
   }
   OZ_Term getClassTerm(void) {
     return (cl1);
   }
-  void setClass(ObjectClass *c) {
+  void setClass(OzClass *c) {
     Assert(!c || c->supportsLocking()>=0);
     cl1=makeTaggedConst(c);
   }
@@ -1872,7 +1872,7 @@ public:
   GName *globalize();
   void localize();
 
-  OzObject(Board *bb, SRecord *s, ObjectClass *ac, SRecord *feat, OzLock *lck)
+  OzObject(Board *bb, SRecord *s, OzClass *ac, SRecord *feat, OzLock *lck)
     : ConstTermWithHome(bb, Co_Object)
   {
     setFreeRecord(feat);
@@ -1917,7 +1917,7 @@ OzObject *tagged2Object(TaggedRef term)
 }
 
 inline
-Bool isObjectClass(ConstTerm *t)
+Bool isOzClass(ConstTerm *t)
 {
   return (t->getType()==Co_Class);
 }
@@ -1925,14 +1925,14 @@ Bool isObjectClass(ConstTerm *t)
 inline
 Bool oz_isClass(TaggedRef term)
 {
-  return oz_isConst(term) && isObjectClass(tagged2Const(term));
+  return oz_isConst(term) && isOzClass(tagged2Const(term));
 }
 
 inline
-ObjectClass *tagged2ObjectClass(TaggedRef term)
+OzClass *tagged2OzClass(TaggedRef term)
 {
   Assert(oz_isClass(term));
-  return (ObjectClass *)tagged2Const(term);
+  return (OzClass *)tagged2Const(term);
 }
 
 /*===================================================================

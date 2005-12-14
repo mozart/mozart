@@ -200,7 +200,7 @@ public:
   virtual void gCollectRecurseV(void);
   virtual void disposeV(void);
 
-  Bool isObjectClassAvail(void); 
+  Bool isOzClassAvail(void); 
   GName *getGNameClass();
   virtual void marshal(ByteBuffer *, Bool hasCoRefsIndex);
 

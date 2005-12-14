@@ -103,7 +103,7 @@ GName *SChunk::globalize()
   return getGName1();
 }
 
-GName *ObjectClass::globalize()
+GName *OzClass::globalize()
 {
   if (!hasGName()) {
     setGName(newGName(makeTaggedConst(this),GNT_CLASS));}

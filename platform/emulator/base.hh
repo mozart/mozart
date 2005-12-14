@@ -336,7 +336,7 @@ class IHashTable;
 
 class CompStream;
 
-class ObjectClass;
+class OzClass;
 class OzObject;
 
 class OzDictionary;

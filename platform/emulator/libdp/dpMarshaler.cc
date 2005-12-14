@@ -577,8 +577,7 @@ VSnapshotBuilder::processClass(OZ_Term classTerm, ConstTerm *classConst)
 { 
   VisitNodeTrav(classTerm, vIT, return(TRUE));
   //
-  ObjectClass *cl = (ObjectClass *) classConst;
-  return (cl->isSited());
+  return (((OzClass *) classConst)->isSited());
 }
 
 //
@@ -1370,8 +1369,6 @@ OZ_Term dpUnmarshalTerm(ByteBuffer *bs, Builder *b)
     case DIF_LOCK_DEF:
     case DIF_ARRAY:
     case DIF_ARRAY_DEF:
-    case DIF_DICT:
-    case DIF_DICT_DEF:
     case DIF_VAR_OBJECT:
     case DIF_VAR_OBJECT_DEF:
     case DIF_STUB_OBJECT:
@@ -1379,10 +1376,38 @@ OZ_Term dpUnmarshalTerm(ByteBuffer *bs, Builder *b)
     case DIF_RESOURCE_DEF:
     case DIF_RESOURCE:
       {
-	OZ_error("Unmarshaling tags from the old system");
-	break;
+        OZ_error("Unmarshaling tags from the old system");
+        break;
       }
 
+    // Unmmarshaling stateless dictionaries.
+    case DIF_DICT_DEF:
+      {
+        printf("unmarshaling a DICT_DEF\n"); //bmc
+        int refTag = unmarshalRefTag(bs);
+        int size   = unmarshalNumber(bs);
+        Assert(oz_onToplevel());
+        b->buildDictionaryRemember(size,refTag);
+#if defined(DBG_TRACE)
+        fprintf(dbgout, " size=%d (at %d)\n", size, refTag);
+        fflush(dbgout);
+#endif
+        break;
+      }
+
+    case DIF_DICT:
+      {
+        printf("unmarshaling a DICT\n"); //bmc
+        int size   = unmarshalNumber(bs);
+        Assert(oz_onToplevel());
+        b->buildDictionary(size);
+#if defined(DBG_TRACE)
+        fprintf(dbgout, " size=%d\n", size);
+        fflush(dbgout);
+#endif
+        break;
+      }
+      
     case DIF_CHUNK_DEF:
       {
 	int refTag = unmarshalRefTag(bs);

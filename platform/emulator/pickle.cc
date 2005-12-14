@@ -411,7 +411,7 @@ Bool Pickler::processClass(OZ_Term classTerm, ConstTerm *classConst)
   }
 
   //
-  ObjectClass *cl = (ObjectClass *) classConst;
+  OzClass *cl = (OzClass *) classConst;
   Assert(!cl->isSited());
   GName *gn = globalizeConst(cl);
   Assert(gn);
@@ -631,7 +631,7 @@ inline Bool
 ResourceExcavator::processClass(OZ_Term classTerm, ConstTerm *classConst)
 { 
   VisitNodeTrav(classTerm, vIT, return(TRUE));
-  ObjectClass *cl = (ObjectClass *) classConst;
+  OzClass *cl = (OzClass *) classConst;
   if (cl->isSited()) {
     addNogood(classTerm);
     return (OK);		// done - a leaf;

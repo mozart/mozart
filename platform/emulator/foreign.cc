@@ -896,9 +896,9 @@ void const2buffer(ostream &out, ConstTerm *c,const char sign,int depth)
   case Co_Class:
   case Co_Object:
     if (*s == '_' && *(s+1) == 0) {
-      out << (isObjectClass(c) ? "<C>" : "<O>");
+      out << (isOzClass(c) ? "<C>" : "<O>");
     } else {
-      out << (isObjectClass(c) ? "<C: " : "<O: ") << s << '>';
+      out << (isOzClass(c) ? "<C: " : "<O: ") << s << '>';
     }
     break;
 
