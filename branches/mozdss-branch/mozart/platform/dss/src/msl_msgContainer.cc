@@ -121,7 +121,7 @@ namespace _msl_internal{ //Start namespace
     // totally (!) unmarshaled.
     
     while (a_nof_fields < MAX_NOF_FIELDS) {
-      if (bb->m_availableData() == 0) {
+      if (bb->availableData() == 0) {
 	setFlag(MSG_HAS_UNMARSHALCONT);
 	return true;
       }
@@ -181,7 +181,7 @@ namespace _msl_internal{ //Start namespace
 	
 	if (msg->deserialize(bb, source, env)) {
 	  setFlag(MSG_CLEAR);
-	  msg->popIntVal(); // removing the msgtype...
+	  msg->popIntVal(); // removing the stop marker
 	  a_nof_fields++; // commit
 	  continue; 
 	} else {
@@ -253,7 +253,7 @@ namespace _msl_internal{ //Start namespace
     // is marshaled, and the loop will never be able to start again.
     
     while (a_current < a_nof_fields) {
-      int space = bb->m_availableSpace();
+      int space = bb->availableSpace();
       switch (a_fields[a_current].a_ft) {
       case FT_NUMBER:
 	if (space > sz_MNumberMax) {
@@ -324,7 +324,7 @@ namespace _msl_internal{ //Start namespace
     Assert(a_current == a_nof_fields); // Must be last
     // reached last, send stop marker
     if (bb->availableSpace() > 0) {
-      bb->putByte(TYPE_END);
+      bb->m_putByte(TYPE_END);
       setFlag(MSG_CLEAR);
       return;
     }

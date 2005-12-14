@@ -31,7 +31,7 @@
 #include "pstContainer.hh"
 #include "glue_buffer.hh"
 
-#define SHARED_BYTE_AREA_SIZE 16000
+#define SHARED_BYTE_AREA_SIZE 16384
 static BYTE shared_byte_area[SHARED_BYTE_AREA_SIZE];
 DPMarshalers* DPM_Repository;
 
@@ -93,23 +93,21 @@ void PstInContainer::gcFinish(){
 bool PstInContainer::unmarshal(DssReadBuffer *buf){
   int len = buf->availableData();
   Assert(len <= SHARED_BYTE_AREA_SIZE);
+
   buf->readFromBuffer(shared_byte_area, len); 
   GlueReadBuffer bb(shared_byte_area, len);
   Builder *dpum;
 
-  if (a_builder_cont == NULL)
-    {
-      dpum = DPM_Repository->dpGetUnmarshaler();
-      // The new unmarshaler needs to be initiated.. 
-      dpUnmarshalerStartBatch(dpum);
-    }
-  else
-    {
-      // Since the old one allready was 
-      // initiated we dont have to do it again. 
-      dpum = a_builder_cont;
-
-    }
+  if (a_builder_cont == NULL) {
+    dpum = DPM_Repository->dpGetUnmarshaler();
+    // The new unmarshaler needs to be initiated.. 
+    dpUnmarshalerStartBatch(dpum);
+    
+  } else {
+    // Since the old one allready was 
+    // initiated we dont have to do it again. 
+    dpum = a_builder_cont;
+  }
   
   OZ_Term utRet = dpUnmarshalTerm(&bb, dpum);
   int readLen = bb.bufferUsed();
@@ -128,9 +126,6 @@ bool PstInContainer::unmarshal(DssReadBuffer *buf){
     DPM_Repository->dpReturnUnmarshaler(dpum);
     return TRUE;
   }
-  
-  
-  
 }
 
 
@@ -176,58 +171,45 @@ void PstOutContainer::gcStart(){
 void PstOutContainer::gcFinish(){
   if (a_marshal_cont != NULL) a_marshal_cont->gcFinish();
 }
+
 bool PstOutContainer::marshal(DssWriteBuffer* buf){
   int len = buf->availableSpace();
   if (len > SHARED_BYTE_AREA_SIZE) len = SHARED_BYTE_AREA_SIZE;
   // Assert(len <= SHARED_BYTE_AREA_SIZE);
   GlueWriteBuffer bb(shared_byte_area, len);
-  
-  if (a_marshal_cont == NULL)
-    {
-      DPMarshaler *dpm = DPM_Repository->dpGetMarshaler();
-      
-      if(a_fullTopTerm){
-	dpm->genFullToplevel();
-      }
-      
-      if(a_pushContents){
-	dpm->pushContents();
-      }
-      a_marshal_cont = dpMarshalTerm(a_term, &bb, dpm);	
+  DPMarshaler *dpm;
 
-      int written_len = bb.bufferUsed();
-      buf->writeToBuffer(shared_byte_area,written_len);
-      if(a_marshal_cont == NULL)
-	{
-	  DPM_Repository->dpReturnMarshaler(dpm);
-	  return TRUE;
-	}
-      return FALSE; 
-    }
-  else
-    {
-      DPMarshaler *dpm = (DPMarshaler *) a_marshal_cont;
-      a_marshal_cont = dpMarshalContTerm(&bb, dpm);
-      
-      int written_len = bb.bufferUsed();
-      buf->writeToBuffer(shared_byte_area,written_len);
-      
-      if (a_marshal_cont == NULL) 
-	{
-	  DPM_Repository->dpReturnMarshaler(dpm);
-	  return TRUE; 
-	}
-      return FALSE; 
-    }
+  if (a_marshal_cont == NULL) {
+    // start marshaling
+    dpm = DPM_Repository->dpGetMarshaler();
+    if (a_fullTopTerm) dpm->genFullToplevel();
+    if (a_pushContents) dpm->pushContents();
+    a_marshal_cont = dpMarshalTerm(a_term, &bb, dpm);
+
+  } else {
+    // continue marshaling
+    dpm = (DPMarshaler *) a_marshal_cont;
+    a_marshal_cont = dpMarshalContTerm(&bb, dpm);
+  }
+
+  // write to Dss buffer
+  int written_len = bb.bufferUsed();
+  buf->writeToBuffer(shared_byte_area,written_len);
+
+  if (a_marshal_cont == NULL) {
+    // no continuation
+    DPM_Repository->dpReturnMarshaler(dpm);
+    return TRUE;
+  } else {
+    return FALSE; 
+  }
 }
 
-
 void PstOutContainer::resetMarshaling(){
-  if (a_marshal_cont != NULL)
-    {
-      DPM_Repository->dpReturnMarshaler(a_marshal_cont);
-      a_marshal_cont = NULL; 
-    }
+  if (a_marshal_cont != NULL) {
+    DPM_Repository->dpReturnMarshaler(a_marshal_cont);
+    a_marshal_cont = NULL; 
+  }
 }
 
 PstInContainerInterface* PstOutContainer::loopBack2In(){

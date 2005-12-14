@@ -1,6 +1,7 @@
 /*
  *  Authors:
  *    Zacharias El Banna (zeb@sics.se)
+ *    Raphael Collet (raph@info.ucl.ac.be)
  * 
  *  Contributors:
  * 
@@ -34,459 +35,280 @@
 
 namespace _msl_internal{ //Start namespace
 
-  // limited buffers can be used for easy serializing to data areas
+  /************************* SimpleBuffer *************************/
 
-  class DssSimpleReadBuffer: public DssReadBuffer{
+  // SimpleBuffer: an implementation of a non-circular buffer.  It
+  // defines a position, which can be used both for reading and
+  // writing.  The buffer area is automatically deallocated.
+
+  class SimpleBuffer {
   private:
-    BYTE* a_buf;
-    BYTE* a_pos;
-    u32   a_size;
-#ifdef DEBUG_CHECK
-    static int a_allocated;
-#endif
+    BYTE*  buf;      // start of the buffer
+    BYTE*  pos;      // position inside the buffer
+    size_t size;     // size (in bytes) of the buffer
 
-    DssSimpleReadBuffer(const DssSimpleReadBuffer&):a_buf(NULL),a_pos(NULL),a_size(0){}
-    DssSimpleReadBuffer& operator=(const  DssSimpleReadBuffer&){ return *this; }
+    // those are not allowed
+    SimpleBuffer(const SimpleBuffer&) { Assert(0); }
+    SimpleBuffer& operator= (const SimpleBuffer&) { return *this; }
 
   public:
-    
-    DssSimpleReadBuffer():a_buf(NULL),a_pos(NULL),a_size(0){
-#ifdef DEBUG_CHECK
-      ++a_allocated;
-#endif
-}
-    
-    DssSimpleReadBuffer(const u32& sz, BYTE* const bf):a_buf(bf),a_pos(bf),a_size(sz){
-#ifdef DEBUG_CHECK
-      ++a_allocated;
-#endif
-    }
-    
-    virtual ~DssSimpleReadBuffer(){
-#ifdef DEBUG_CHECK
-      --a_allocated;
-#endif
-      delete [] a_buf; 
-    }
+    // constructors and destructor
+    SimpleBuffer() : buf(NULL), pos(NULL), size(0) {}
+    SimpleBuffer(BYTE* const &b, size_t const &sz)
+      : buf(b), pos(b), size(sz) {}
+    virtual ~SimpleBuffer() { delete [] buf; }
 
-    inline u32 getUsed() const { return (a_pos - a_buf); }
-    void hook(const u32& sz, BYTE* const bf){ a_size = sz; a_buf = a_pos = bf; }
-    void drop(){ a_buf = a_pos = NULL; a_size = 0; }
-    // ********* Read **********
+    // set/get buffer
+    void hook(BYTE* const &b, size_t const &sz) { buf = pos = b; size = sz; }
+    void drop() { buf = pos = NULL; size = 0; }
+    BYTE* unhook() { BYTE* b = buf; drop(); return b; }
 
-    virtual int  availableData() const{ Assert(getUsed() <= a_size); return (a_size - getUsed()); };
-    virtual void readFromBuffer(BYTE* ptr, size_t wanted){  memcpy(ptr,a_pos,wanted);   }
-    virtual void commitRead(size_t read){ a_pos+=read; }; 
-    
-    virtual const BYTE getByte(){ return *(a_pos)++; }; 
+    // get total size/space before pos/space after pos
+    size_t getSize() const { return size; }
+    size_t getUsed() const { return (pos - buf); }
+    size_t getFree() const { return size - (pos - buf); }
 
-    int   m_getInt(){ int i = gf_char2integer(a_pos); a_pos+=4; return i; }
-    void  m_readOutBuffer(BYTE* ptr, size_t wanted){  memcpy(ptr,a_pos,wanted); a_pos += wanted;  }
-    BYTE* m_getReadPos() const { return a_pos; };
+    // get/reset the position
+    BYTE* getPos() const { return pos; }
+    void rewindPos() { pos = buf; }
+
+    // simple read/write
+    BYTE m_getByte() { return *(pos++); }
+    void m_putByte(const BYTE &b) { *(pos++) = b; }
+    int m_getInt() {
+      int i = gf_char2integer(pos); pos += SIZE_INT; return i; }
+    void m_putInt(const int &i) {
+      gf_integer2char(pos, i); pos += SIZE_INT; }
+
+    // read/write blocks (require explicit commit())
+    void m_read(BYTE* const &ptr, size_t const &len) {
+      memcpy(ptr, pos, len); }
+    void m_write(const BYTE* const &ptr, size_t const &len) {
+      memcpy(pos, ptr, len); }
+    void m_commit(size_t const &len) { pos += len; }
   };
 
 
-  class DssSimpleWriteBuffer: public DssWriteBuffer{
-  private:
-    friend class DssSimpleDacDct;
-    BYTE* a_buf;
-    BYTE* a_pos;
-    u32   a_size;
-#ifdef DEBUG_CHECK
-    static int a_allocated;
-#endif
 
-    DssSimpleWriteBuffer(const DssSimpleWriteBuffer&):a_buf(NULL),a_pos(NULL),a_size(0){}
-    DssSimpleWriteBuffer& operator=(const  DssSimpleWriteBuffer&){ return *this; }
-
+  // a SimpleBuffer dressed as a DssReadBuffer
+  class DssSimpleReadBuffer : public DssReadBuffer, public SimpleBuffer {
   public:
-    
-    DssSimpleWriteBuffer(const u32& sz, BYTE* const bf): a_buf(bf), a_pos(bf), a_size(sz){
-#ifdef DEBUG_CHECK
-      ++a_allocated;
-#endif
+    DssSimpleReadBuffer() : SimpleBuffer() {}
+    DssSimpleReadBuffer(BYTE* const &buf, size_t const &len)
+      : SimpleBuffer(buf, len) {}
+
+    // implementation of DssReadBuffer
+    virtual int availableData() const { return getFree(); }
+    virtual void readFromBuffer(BYTE* ptr, size_t len) { m_read(ptr, len); }
+    virtual void commitRead(size_t len) { m_commit(len); }
+    virtual const BYTE getByte() { return m_getByte(); }
+
+    // extra methods
+    void m_readOutBuffer(BYTE* const &ptr, size_t const &len) {
+      m_read(ptr, len); m_commit(len);
     }
-    virtual ~DssSimpleWriteBuffer(){
-#ifdef DEBUG_CHECK
-      --a_allocated;
-#endif
-      delete [] a_buf; 
-    }
+    BYTE* m_getReadPos() const { return getPos(); }
+  };
+
+
+
+  // a SimpleBuffer dressed as a DssWriteBuffer
+  class DssSimpleWriteBuffer : public DssWriteBuffer, public SimpleBuffer {
+  public:
+    DssSimpleWriteBuffer(BYTE* const &buf, size_t const &len)
+      : SimpleBuffer(buf, len) {}
     
-    u32 getSize() const { return a_size; }
-    u32 getUsed() const { return a_pos - a_buf; }
-    
-    // *********** Buffer manipulation *********
-    inline BYTE* unhook(){ BYTE* tmp = a_buf; a_buf = NULL; a_pos = NULL; return tmp; }
-    inline void  hook(const u32& sz, BYTE* const bf){ a_buf = a_pos = bf; a_size = sz;  }
-    
-    inline void  resetWriting(){ if (a_buf == NULL){ a_buf = new BYTE[a_size]; } a_pos = a_buf; }
-    inline void  setWritten(const u32& len){ Assert(len <= a_size); a_pos+= len; }
-    
-    // ****************** Write ****************
-    virtual int  availableSpace() const { return a_size - getUsed(); };
-    virtual void writeToBuffer(const BYTE* ptr, size_t write){
-      memcpy(a_pos,ptr,write);
-      setWritten(write);
+    // implementation of DssWriteBuffer
+    virtual int availableSpace() const { return getFree(); }
+    virtual void writeToBuffer(const BYTE* ptr, size_t len) {
+      m_write(ptr, len); m_commit(len);
     };
-    
-    virtual void putByte(const BYTE& b){ *(a_pos)++ = b; }
-    void m_putInt(const int& i){ gf_integer2char(a_pos,i); a_pos+=4; }
-    BYTE* m_getWritePos() const { return a_pos; };
-    
+    virtual void putByte(const BYTE& b) { m_putByte(b); }
   };
 
 
-  //    A guide to the pointers of this circular buffer(s):
+
+  /************************* CircularBuffer *************************/
+
+  // CircularBuffer: an implementation of a circular buffer, whose
+  // interface is the one of a FIFO queue.  Sheme:
   //
-  //    !! The Read- and Write-ByteBuffers are organized the same
-  //    !! They only expose a different set of operations
+  //        +--------+                +--------+
+  //    buf |        |            buf |////////|
+  //        |////////| getpos         |        | putpos
+  //        |////////|                |        |
+  //        |////////|                |        |
+  //        |        | putpos         |////////| getpos
+  //        |        |                |////////|
+  //    end +--------+            end +--------+
   //
-  //     Static            Dynamic
+  // The following invariant is maintained by the implementation:
+  // end = buf + size, buf <= getpos < end, buf <= putpos < end,
+  // putpos = getpos + used (modulo size).
   //
-  //            ----------
-  //        buf |        |
-  //            |////////| getptr
-  //            |////////|
-  //            |////////| posMB
-  //            |////////|
-  //            |        | putptr
-  //            |        |
-  //     lastMB |        |
-  //      endMB ----------
-  //
-  //      /// = filled area
-  //      view each line as a byte and the pointers as pointing to the 
-  //      byte of their line
+  // Note. The buffer area is automatically deallocated.
 
-  //      buf:      the beginning of the buffer
-  //      lastMB:   the end (last byte) of the buffer
-  //      endMB:    next after last.
-  //      getptr:   the beginning of the filled area, 
-  //                except in the case of an empty buffer: putptr==getptr
-  //      posMB:    the next byte to be read (unmarshaling) or written (marshaling)
-  //      putptr:   the beginning of the empty area,
-  //                except in the case of a full buffer:   putptr==getptr
-
-  //      getptr and putptr are static while marshaling or unmarshaling
-  //      and will be adjusted together with the used field when
-  //      getCommit or marshalEnd are called.
-  
-  //      posMB is moved by the get and put methods implemented in
-  //      mbuffer.hh. For efficiency reasons it is not possible to
-  //      adjust anything else in those methods. If posMB reaches the
-  //      end of the buffer the corresponding putNext or getNext method
-  //      will be called, allowing this buffer to be circular.
-
-  //      Note:
-  //      . getPtr,putPtr always point to a byte WITHIN buffer;
-  //      . posMB can point (temporarily) to the byte immediately after
-  //        the buffer;
-
-
-  static const int TRAILER=1; // CF_CONT | CF_FINAL
-
-  static const int MUSTREAD = 9;
-
-  const u32 sz_framemark = 4; // How much a frame mark takes
-
-  class DssAdvancedBufferController{
-  protected:
-    const BYTE *a_bufMB;  //  start of buffer
-    const BYTE *a_lastMB; //  last byte in buffer i.e a_endMB - 1 
-    const BYTE *a_endMB;  //  end of buffer
-    const int   a_size;   //  the total size ( = endMB - bufMB)
-    int         a_used;   // total used buffer space - current writing
-			  // (i.e. adjusted after commit)    
-    // Dynamic
-    BYTE *a_pos;
-    BYTE *a_getptr;      //  start of frame
-    BYTE *a_putptr;      //  end of frame
-
-    inline bool  m_posOutOfBounds() const { return (a_pos  > a_lastMB); }
-    inline void  m_circlePos() { a_pos  = const_cast<BYTE *>(a_bufMB); }
-    inline bool  m_putOutOfBounds() const { return (a_putptr > a_lastMB); }
-    inline void  m_circlePut() { a_putptr = const_cast<BYTE *>(a_bufMB); }
-    inline bool  m_getOutOfBounds() const { return (a_getptr > a_lastMB); }
-    inline void  m_circleGet() { a_getptr = const_cast<BYTE *>(a_bufMB); }
- 
-    void m_reinitBuffer();
-
-    DssAdvancedBufferController(BYTE* const buf, const int& sz):
-      a_bufMB(buf),
-      a_lastMB(buf + sz - 1),
-      a_endMB(buf + sz),
-      a_size(sz),
-      a_used(0),
-      a_pos(NULL),
-      a_getptr(NULL),
-      a_putptr(NULL){
-      m_reinitBuffer();
-    }
-
-    virtual ~DssAdvancedBufferController(){}; // someone else is responsible for de-allocating
-
-  private: // not to be used
-    DssAdvancedBufferController(const DssAdvancedBufferController&):
-      a_bufMB(NULL), a_lastMB(NULL), a_endMB(NULL),
-      a_size(0), a_used(0), a_pos(NULL), a_getptr(NULL),
-      a_putptr(NULL){
-    }
-
-    DssAdvancedBufferController& operator=(const DssAdvancedBufferController&){ return *this; }
-
-  public:
-
-    // ******************** SERIALIZE ********************
-    //
-    // These serialization functions are somewhat general... You can
-    // use read or write functions on the buffer as long as the
-    // context permits it
-
-    const BYTE m_getByte(){ if (m_posOutOfBounds()) m_circlePos(); return (*a_pos++); }
-    void       m_putByte(const BYTE& b){ if (m_posOutOfBounds()) m_circlePos(); (*a_pos++) = b; }
-
-    int        m_getInt();
-    void       m_putInt(int i);
-
-    void dispose_buf(){ delete [] a_bufMB; a_bufMB = NULL;  };
-  };
-
-
-  class DssCryptoController{
-  protected:
-    const BYTE *c_bufMB;  //  start of buffer
-    const BYTE *c_lastMB; //  last byte in buffer i.e c_endMB - 1 
-    const BYTE *c_endMB;  //  end of buffer
-
-    // framing for read and writes
-    BYTE *c_getptr; 
-    BYTE *c_putptr;
-    
-    int c_size; //size of this buffer
-    int c_used; // used bytes, how much can we read out/ write in
-
-    // encryption technique
-    BlowFish    a_crypto;
-
-    void m_reinitCrypto();
-
-    DssCryptoController(BYTE* const key, const u32& keylen,
-			const u32& iv1,  const u32& iv2,
-			BYTE* const buffer, const int& sz):
-      c_bufMB(buffer),
-      c_lastMB(buffer + sz - 1),
-      c_endMB(buffer + sz),
-      c_getptr(NULL),
-      c_putptr(NULL),
-      c_size(sz),
-      c_used(0),
-      a_crypto(key,keylen,iv1,iv2){
-      m_reinitCrypto();
-      
-    }
-
-    virtual ~DssCryptoController(){ delete [] c_bufMB; }
-
-  private: // not to be used
-    DssCryptoController(const DssCryptoController&):
-      c_bufMB(NULL), c_lastMB(NULL), c_endMB(NULL),
-      c_getptr(NULL),c_putptr(NULL), c_size(0),
-      c_used(0), a_crypto(NULL,0,0,0){
-    };
- 
-    DssCryptoController& operator=(const DssCryptoController&){ return *this; };
-  };
-  // ********************************** READING ***************************************
-
-
-  //
-  // For the read buffer the space from getptr to putptr is used
-  // by the marshaler and the PST while the area from putptr to
-  // getptr is used by the TransportLayer
-  //
-
-  class DssReadByteBuffer:public ::DssReadBuffer, public DssAdvancedBufferController {
-    friend class DssCryptoReadByteBuffer;
-
+  class CircularBuffer {
   private:
+    BYTE*  const buf;      // first position
+    BYTE*  const end;      // = buf + size
+    size_t const size;     // buffer size (in bytes)
 
-    int a_framesize;      // For unmarshaling (fake frames)
-    
-    // Check how long we have moved the position (i.e how many bytes we have read)
-    // i.e 
-    inline int  m_readBytes() const{ return (a_pos - a_getptr + ((a_pos >= a_getptr) ? 0 :a_size)); }
-    inline bool m_allRead()   const{ return (a_pos == a_getptr); }
-    inline bool m_noRead()    const{ return (a_pos == a_putptr) && (a_used < a_size); }
+    BYTE*  getpos;         // position of first byte to be read
+    BYTE*  putpos;         // position of first byte to be written
+    size_t used;           // amount of bytes between getpos and putpos
+
+    // not allowed
+    CircularBuffer(const CircularBuffer&)
+      : buf(NULL), end(NULL), size(0), used(0), getpos(NULL), putpos(NULL) {}
+    CircularBuffer& operator= (const CircularBuffer&) { return *this; }
+
+  protected:
+    void reinit() { getpos = putpos = buf; used = 0; }
+
+    // correct a given position (provided buf <= pos < buf + 2*size)
+    void checkPos(BYTE* &pos) { if (pos >= end) pos -= size; }
 
   public:
-    const  char* m_stringrep() const;
+    CircularBuffer(BYTE* const &b, const size_t& sz)
+      : buf(b), end(b + sz), size(sz), used(0), getpos(b), putpos(b) {}
+    virtual ~CircularBuffer() { delete [] buf; }
 
-    DssReadByteBuffer(BYTE* const buf, const int& sz): DssAdvancedBufferController(buf, sz), a_framesize(0){ }
-    
-    virtual ~DssReadByteBuffer(){ };
+    // space total/used/available
+    size_t getSize() const { return size; }
+    size_t getUsed() const { return used; }
+    size_t getFree() const { return size - used; }
+
+    // read/write a byte
+    BYTE m_getByte() {
+      BYTE b = *(getpos++); checkPos(getpos); used--; return b; }
+    void m_putByte(const BYTE& b) {
+      *(putpos++) = b; checkPos(putpos); used++; }
+
+    // read/write integers (in little endian encoding format)
+    int m_getInt() {
+      int i = 0;
+      for (int k=0; k < SIZE_INT; k++) i = i | (m_getByte() << (k*8));
+      return i;
+    }
+    void m_putInt(int i) {
+      for (int k=0; k < SIZE_INT; k++) { m_putByte((i & 0xFF)); i >>= 8; }
+    }
+
+    // modifies an int at a given position (without updating used)
+    void m_putInt(BYTE* pos, int i) {
+      for (int k=0; k < SIZE_INT; k++) {
+	*(pos++) = i & 0xFF; checkPos(pos); i >>= 8;
+      }
+    }
+
+    // read/write a block of data, without moving the position
+    void m_read(BYTE* const &ptr, size_t const &len) const;
+    void m_write(const BYTE* const &ptr, size_t const &len);
+
+    // moves the read/write position forwards (or backwards if len<0)
+    void m_commitRead(const int &len);
+    void m_commitWrite(const int &len);
+
+    // return read/write pointer
+    BYTE* getReadPos() const { return getpos; }
+    BYTE* getWritePos() const { return putpos; }
+
+    // set 'pos' to read/write position, and return the maximum
+    // available block size from that position in the buffer
+    size_t getReadBlock(BYTE* &pos) const;
+    size_t getWriteBlock(BYTE* &pos) const;
+  };
 
 
-   inline int m_availableData() const { Assert(a_framesize - m_readBytes() >=0); return (a_framesize - m_readBytes()); };
 
+  // a CircularBuffer dressed as a DssReadBuffer
+  class DssReadByteBuffer : public DssReadBuffer, public CircularBuffer {
+  private:
+    size_t outerframe;     // available data outside frame
 
-    // ******************** SERIALIZE ********************
+  public:
+    DssReadByteBuffer(size_t const &sz)
+      : CircularBuffer(new BYTE[sz], sz), outerframe(0) {}
 
-    virtual int availableData() const;         // Read framesize number of bytes from th buffer, starting at posMB
-    virtual void readFromBuffer(BYTE* ptr, size_t read); // .. and commit when done
+    // set/reset frame size for user.  BEWARE!  The frame size must be
+    // reset every time you write in the buffer!
+    void setFrameSize(size_t const &sz) { outerframe = getUsed() - sz; }
+    void resetFrame() { outerframe = 0; }
+
+    // implementation of DssReadBuffer
+    virtual int availableData() const;
+    virtual void readFromBuffer(BYTE* ptr, size_t len);
     virtual void commitRead(size_t len);
+    virtual const BYTE getByte();
 
-    bool  m_frameGrab(BYTE& mrk, BYTE*& frm_end); // returns true if frame can be okey
-    void  m_frameFinalize(BYTE* frm_end){ a_pos = frm_end; }
-
-
-    // Reads a byte out of the byte stream, throws EXCEPTION_NO_DATA
-    // if no byte is available
-    virtual const BYTE getByte(); 
-
-    // ************** Interface to the Transport channel *************
-    //
-    // locate a char buffer for reading, returning the amount of free space
-    virtual int  m_getReadParameters(BYTE *&buf) const;
-    // ... and make the byteBuffer aware that a read operation has been done
-    virtual void m_hasRead(const int& sizeRead);
-    virtual bool m_transform(){ /* no-op, buffer is valid */ return true; };
-
-    inline void m_unmarshalBegin()       { a_pos = a_getptr; }; // reposition
-    inline void m_unmarshalEnd()         { a_framesize = 0; }
-
-    // *************** Interface to the Marshaler ******************    
-
-    // Checks whether cgSize bytes are read into the buffer. 
-    // Used by the transportlayer to find if a complete 
-    // frame header has been written to the buffer.   
-    inline bool m_canGet(const int& cgSize) const { return (a_used - m_readBytes()) >= cgSize; };
-
-    inline void m_setFrameSize(const int& size) { Assert(size >= 0); a_framesize = size; }  // set working space size (i.e. don't assume put - get)
-
-    // Called when all data has been deserialized
-    void  m_commitReadOfData();
-
-  public:
-    virtual void m_reinit(){ m_reinitBuffer(); }
+    // decoding (see DssCryptoReadByteBuffer)
+    virtual bool decode() { return true; }
   };
 
 
-  class DssCryptoReadByteBuffer: public DssReadByteBuffer, private DssCryptoController{
+
+  // the crypto part of a DssReadByteBuffer
+  class DssCryptoReadByteBuffer : public DssReadByteBuffer {
   private:
-    inline int  m_getPlainLength() const;
-    inline int  m_getCryptoLength() const;
+    DssReadByteBuffer* const databuffer;     // destination of decoding
+    BlowFish                 crypto;         // encryption technique
+
   public:
     DssCryptoReadByteBuffer(BYTE* const key, const u32& keylen,
 			    const u32& iv1,  const u32& iv2,
-			    DssReadByteBuffer* const old):
-      DssReadByteBuffer(const_cast<BYTE*>(old->a_bufMB),old->a_size),
-      DssCryptoController(key,keylen,iv1,iv2, new BYTE[old->a_size], old->a_size){
-    }
+			    DssReadByteBuffer* const &buf)
+      : DssReadByteBuffer(buf->getSize()), databuffer(buf),
+	crypto(key, keylen, iv1, iv2)
+    {}
 
-    //virtual ~DssCryptoReadByteBuffer(){}
-
-    virtual int  m_getReadParameters(BYTE *&buf) const;
-    virtual void m_hasRead(const int& sizeRead);
-    virtual bool m_transform();
-
-    virtual void m_reinit(){ m_reinitBuffer(); m_reinitCrypto(); }
-  };
-
-
-  // ********************************** WRITING ***************************************
-
-
-  // For the write buffer the space from putptr to getptr is used
-  // by the PST and the marshaler while the area from getptr to
-  // putptr is used by the TransportLayer
-  //
-
-  class DssWriteByteBuffer: public ::DssWriteBuffer, public DssAdvancedBufferController{
-    friend class DssCryptoWriteByteBuffer;
-  protected:
-
-    // Differ from read estimate in that we want to see "all free" if
-    // pos == put
-    //
-    inline int m_lenEstimate() const{ return (a_pos - a_putptr + ((a_pos >= a_putptr) ? 0 : a_size)); }
-
-  public:
-
-    const  char* m_stringrep() const;
-
-    DssWriteByteBuffer(BYTE* const buf, const int& sz): DssAdvancedBufferController(buf,sz){  };
-    
-    virtual ~DssWriteByteBuffer(){ };
-
-    // ****************** SERIALIZE ********************
-    //
-    inline int m_availableSpace() const{ Assert((a_size-a_used - TRAILER) - m_lenEstimate() >= 0); return ((a_size-a_used - TRAILER) - m_lenEstimate());  }
-
-    // Secure framing. Use when testing marshaling to check
-    // correctness of marshaled data lengths
-
-    BYTE* m_frameMark();
-    void  m_frameMarkFinal(BYTE* frm, const BYTE& mrk);
- 
-    // ******************** Interface to the PST *************************
-    //
-    // Returns the available amount of free bytes from 
-    // a bytebuffer. The value is true for a buffer that 
-    // is currently written to.
-
-    virtual int  availableSpace() const;
-    virtual void writeToBuffer(const BYTE* ptr, size_t write);
-    virtual void putByte(const BYTE&);
-
-
-    // ************** Interface to the Transport channel *************
-    virtual int m_getUsed()   const {  Assert(a_used >=0); return (a_used);  }
-
-    // prepare for writing out a portion of the buffer.
-    // A size/location of a sequential chunk of bytes is returned:
-    virtual int  m_getWriteParameters(BYTE *&buf) const;
-    // ... and report writing out that portion:
-    virtual void m_hasWritten(const int& sizeWritten);
-
-    virtual void m_transform(){ /* no-op */ };
-
-
-    // ******************* Interface to the Marshaler ********************
-    inline int  m_getUnused() const { Assert((a_size - a_used) >= 0); return (a_size - a_used);}
-    inline void m_marshalBegin() { a_pos = a_putptr; };
-    void        m_marshalEnd();
-
-  public:
-    virtual void m_reinit(){ m_reinitBuffer(); }
+    // decode data to databuffer; returns true if no error occurred
+    virtual bool decode();
   };
 
 
 
-  class DssCryptoWriteByteBuffer: public DssWriteByteBuffer, private DssCryptoController{
+  // a CircularBuffer dressed as a DssWriteBuffer
+  class DssWriteByteBuffer : public DssWriteBuffer, public CircularBuffer {
   private:
-    inline int  m_getPlainLength() const;
-    inline int  m_getCryptoLength() const;
-  public:
+    size_t reserved;     // amount of reserved space (in bytes)
 
+  public:
+    DssWriteByteBuffer(size_t const &sz)
+      : CircularBuffer(new BYTE[sz], sz), reserved(0) {}
+
+    // manages reserved space.  Don't forget to reset it after usage!
+    void reserveSpace(int const &len) { reserved += len; }
+    void resetReserve() { reserved = 0; }
+
+    // implementation of DssWriteBuffer
+    virtual int availableSpace() const;
+    virtual void writeToBuffer(const BYTE* ptr, size_t len);
+    virtual void putByte(const BYTE& b);
+
+    // coding (see DssCryptoWriteByteBuffer)
+    virtual void encode() {}
+  };
+
+
+
+  // the crypto part of a DssWriteBuffer
+  class DssCryptoWriteByteBuffer : public DssWriteByteBuffer {
+  private:
+    DssWriteByteBuffer* const databuffer;     // source of encoding
+    BlowFish                  crypto;         // encryption technique
+
+  public:
     DssCryptoWriteByteBuffer(BYTE* const key, const u32& keylen,
 			     const u32& iv1,  const u32& iv2,
-			     DssWriteByteBuffer* const old):
-      DssWriteByteBuffer(const_cast<BYTE*>(old->a_bufMB),old->a_size),
-      DssCryptoController(key,keylen,iv1,iv2, new BYTE[old->a_size], old->a_size){
-    }
+			     DssWriteByteBuffer* const &buf)
+      : DssWriteByteBuffer(buf->getSize()), databuffer(buf),
+	crypto(key, keylen, iv1, iv2)
+    {}
 
-
-    //virtual ~DssCryptoWriteByteBuffer(){ }
-
-    virtual int  m_getUsed()   const { Assert(c_used >=0); return (c_used); }
-    virtual int  m_getWriteParameters(BYTE *&buf) const;
-    virtual void m_hasWritten(const int& sizeWritten);
-    virtual void m_transform();
-
-    virtual void m_reinit(){ m_reinitBuffer(); m_reinitCrypto(); }
+    // encode data from data buffer
+    virtual void encode();
   };
-
 
 } //End namespace
 #endif

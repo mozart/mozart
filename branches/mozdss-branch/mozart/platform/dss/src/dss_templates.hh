@@ -331,7 +331,11 @@ void t_deleteAllCompare(T1** const headptr, T2* const compare){
     
     bool isEmpty(){ return (a_front == NULL); }
 
-    unsigned int m_size() { int i = 0; for(T1* tmp = a_front; tmp != NULL; tmp = tmp->a_next) i++; }
+    unsigned int m_size() {
+      int i = 0;
+      for (T1* tmp = a_front; tmp != NULL; tmp = tmp->a_next) i++;
+      return i;
+    }
 
     void m_makeGCpreps(){ t_gcList(a_front); }
 

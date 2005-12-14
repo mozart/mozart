@@ -153,7 +153,7 @@ namespace _msl_internal{ //Start namespace
     int size = dsrd->getSize();
     BYTE *retbuf, *inp = dsrd->unhook();
     bool ok = m_decrypt(retlen, retbuf, size, inp);
-    return (ok) ? new DssSimpleReadBuffer(retlen,retbuf) : NULL;
+    return (ok) ? new DssSimpleReadBuffer(retbuf, retlen) : NULL;
   }
 
  
@@ -324,7 +324,7 @@ namespace _msl_internal{ //Start namespace
     //printf("I_KEY:");gf_printBuf(a_key->getStringRep(),RSA_MARSHALED_REPRESENTATION);
     int len = RSA_MARSHALED_REPRESENTATION; // for compiler to know key_len
     BYTE  digest[PLAIN_BLOCK_BYTES - 4];
-    DssSimpleWriteBuffer dswb(BUILD_SIZE - (4 + CIPHER_BLOCK_BYTES), buf_start);
+    DssSimpleWriteBuffer dswb(buf_start, BUILD_SIZE - (4 + CIPHER_BLOCK_BYTES));
 
     // **** start marshaling of to-be-signed area ****
     dswb.m_putInt(0xFFFFFFFF);
@@ -354,7 +354,7 @@ namespace _msl_internal{ //Start namespace
     a_MarshaledRepresentation = new BYTE[a_MRlength];
     memcpy(a_MarshaledRepresentation, start, a_MRlength);
     // printf("SIGN (IMR)\n");  gf_printBuf(a_MarshaledRepresentation, a_MRlength);
-    dswb.hook(BUILD_SIZE, start);
+    dswb.hook(start, BUILD_SIZE);
   }
 
   void Site::m_virtualCircuitEstablished(int len, DSite *dstSite[]){
@@ -443,8 +443,9 @@ namespace _msl_internal{ //Start namespace
     // verify found against malicious addresses
     if (found == NULL){
       // these were accounted for in the prev len check, now recheck buffer
-      DssSimpleReadBuffer dsrb(len - (4 + CIPHER_BLOCK_BYTES) ,
-			       marshaled_representation + 4 + CIPHER_BLOCK_BYTES);
+      DssSimpleReadBuffer
+	dsrb(marshaled_representation + 4 + CIPHER_BLOCK_BYTES,
+	     len - (4 + CIPHER_BLOCK_BYTES));
 
       int  buf_len = dsrb.m_getInt();             //printf("buf_len:%d\n",buf_len);
       int  key_len = gf_Unmarshal8bitInt(&dsrb);  //printf("key_len:%d\n",key_len); 

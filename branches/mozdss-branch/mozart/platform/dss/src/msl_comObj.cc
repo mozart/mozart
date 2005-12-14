@@ -1034,7 +1034,7 @@ namespace _msl_internal { //Start namespace
 	  
 	m_setCState(OPENING_WF_NEGOTIATE);
 
-	DssSimpleWriteBuffer dswb(256, new BYTE[256]);
+	DssSimpleWriteBuffer dswb(new BYTE[256], 256);
 	
 	// *********** COLLECT INFO *********
 	dswb.writeToBuffer(const_cast<BYTE*>(dss_version),3); // 3
@@ -1042,7 +1042,7 @@ namespace _msl_internal { //Start namespace
 	a_mslEnv->a_mySite->m_marshalDSite(&dswb); // X size
 	
 	// For the other side to verify that we are the owner of the key pair
-	DssSimpleWriteBuffer dswb2(96, new BYTE[96]); // 49 || 9 + 17 (CI)
+	DssSimpleWriteBuffer dswb2(new BYTE[96], 96); // 49 || 9 + 17 (CI)
 	dswb2.m_putInt(ticket);                          // 4
 	dswb2.m_putInt(a_sec.a_ticket);                  // 4
 
@@ -1115,7 +1115,7 @@ namespace _msl_internal { //Start namespace
 	      a_transObj->m_EncryptReadTransport( a_sec.a_key, 32, a_sec.a_iv1, a_sec.a_iv2);
 	      a_transObj->m_EncryptWriteTransport(a_sec.a_key, 32, a_sec.a_iv1, a_sec.a_iv2);
 	    }
-	    DssSimpleWriteBuffer dswb(32, new BYTE[32]);
+	    DssSimpleWriteBuffer dswb(new BYTE[32], 32);
 	    MsgCnt* newmsgC = new MsgCnt(C_INIT_NEGOTIATE, true);
 	    dswb.m_putInt(ticket);
 	    dswb.m_putInt(a_sec.a_ticket);
@@ -1160,7 +1160,7 @@ namespace _msl_internal { //Start namespace
     m_setCState(ANONYMOUS_WF_PRESENT);
 
     MsgCnt *msgC= new MsgCnt(C_ANON_PRESENT, true);
-    DssSimpleWriteBuffer* dswb = new DssSimpleWriteBuffer(32, new BYTE[32]);
+    DssSimpleWriteBuffer* dswb = new DssSimpleWriteBuffer(new BYTE[32], 32);
 
     // *********** COLLECT INFO *********
   
@@ -1197,7 +1197,7 @@ namespace _msl_internal { //Start namespace
     MsgCnt *newmsgC;
 
     DssSimpleReadBuffer *dsrb = verifyEncryptedMessage(a_mslEnv->a_mySite,msg);
-    DssSimpleReadBuffer  dsrb2(0,NULL);
+    DssSimpleReadBuffer  dsrb2;
 
     if(dsrb != NULL && dsrb->availableData() > 3){
           dsrb->m_readOutBuffer(version2,3);
@@ -1211,9 +1211,10 @@ namespace _msl_internal { //Start namespace
 	if(dsrb->availableData() == len){
 	  cipher = new BYTE[len];
 	  dsrb->readFromBuffer(cipher,len);
+	  dsrb->commitRead(len);
 	  
 	  if(s1->m_decrypt(retLen, plain, len, cipher)){ // if the data checks out when decrypted
-	    dsrb2.hook(retLen, plain);
+	    dsrb2.hook(plain, retLen);
 	    if(dsrb2.availableData() >= 9){ // tickets + sec type
 	      ticket = dsrb2.m_getInt();
 	      if(ticket == a_sec.a_ticket){
@@ -1257,7 +1258,7 @@ namespace _msl_internal { //Start namespace
 		if(extractCI(&dsrb2,bufferSize)){
 		  // NORMAL CASE
 		  a_site->m_setComObj(this);		
-		  DssSimpleWriteBuffer dswb(64, new BYTE[64]);
+		  DssSimpleWriteBuffer dswb(new BYTE[64], 64);
 		  dswb.m_putInt(ticket);
 		  dswb.m_putInt(a_sec.a_ticket); // TODO: last ticket for now
 		  createCI(&dswb,  bufferSize);

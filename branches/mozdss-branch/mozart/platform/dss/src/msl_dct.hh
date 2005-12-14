@@ -76,7 +76,6 @@ namespace _msl_internal{
       DSDD_WRITE
     };
 
-    friend class DssSimpleReadBuffer;
     BYTE*     a_buf;
     BYTE*     a_pos;
     u32       a_size;
@@ -96,14 +95,6 @@ namespace _msl_internal{
 
     DssSimpleDacDct(const u32& sz, BYTE* const bf):a_buf(bf),a_pos(bf),a_size(sz),a_mode(DSDD_UNDEF){
       //printf("DssSimpleDacDct(%p)::create %d\n",static_cast<void*>(this),sz); gf_printBuf("buffer", a_buf,a_size);
-    }
-
-    DssSimpleDacDct(DssSimpleWriteBuffer* dswb):
-      a_buf(dswb->a_buf),
-      a_pos(dswb->a_buf),
-      a_size(dswb->getUsed()),a_mode(DSDD_WRITE){
-      Assert(dswb->getUsed() < dswb->a_size); 
-      dswb->a_buf = NULL; dswb->a_pos = NULL;
     }
 
     virtual ~DssSimpleDacDct(){ delete [] a_buf; }
