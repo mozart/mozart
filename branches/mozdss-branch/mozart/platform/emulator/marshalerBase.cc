@@ -154,7 +154,7 @@ GName *globalizeConst(ConstTerm *t)
 { 
   switch(t->getType()) {
   case Co_Object:      return ((OzObject*)t)->globalize();
-  case Co_Class:       return ((ObjectClass*)t)->globalize();
+  case Co_Class:       return ((OzClass*)t)->globalize();
   case Co_Chunk:       return ((SChunk*)t)->globalize();
   case Co_Abstraction: return ((Abstraction*)t)->globalize();
   default: Assert(0); return NULL;

@@ -1330,7 +1330,7 @@ void ConstTerm::_cacConstRecurse(void) {
     
   case Co_Class:
     {
-      ObjectClass *cl = (ObjectClass *) this;
+      OzClass *cl = (OzClass *) this;
 #ifdef G_COLLECT
       GName * gn = cl->getGName1();
       if (gn) 
@@ -1543,7 +1543,7 @@ ConstTerm * ConstTerm::gCollectConstTermInline(void) {
     goto const_withhome;
     
   case Co_Class: 
-    sz = sizeof(ObjectClass);
+    sz = sizeof(OzClass);
     goto const_withhome;
 
   case Co_Port:  
@@ -1662,7 +1662,7 @@ ConstTerm *ConstTerm::sCloneConstTermInline(void) {
     goto const_withhome;
     
   case Co_Class: 
-    sz = sizeof(ObjectClass);
+    sz = sizeof(OzClass);
     goto const_withhome;
 
   case Co_Port:  

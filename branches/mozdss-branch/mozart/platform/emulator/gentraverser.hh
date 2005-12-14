@@ -1742,7 +1742,7 @@ public:
     Assert(gname);
 
     //      
-    ObjectClass *cl = new ObjectClass(makeTaggedNULL(), 
+    OzClass *cl = new OzClass(makeTaggedNULL(), 
 				      makeTaggedNULL(),
 				      makeTaggedNULL(), 
 				      makeTaggedNULL(), NO, NO,
@@ -1762,7 +1762,7 @@ public:
     Assert(gname);
 
     //      
-    ObjectClass *cl = new ObjectClass(makeTaggedNULL(), 
+    OzClass *cl = new OzClass(makeTaggedNULL(), 
 				      makeTaggedNULL(),
 				      makeTaggedNULL(), 
 				      makeTaggedNULL(), NO, NO,

@@ -854,11 +854,11 @@ void Builder::gCollect()
       }
 
       //
-      // 'ObjectClass' is already there:
+      // 'OzClass' is already there:
     case BT_classFeatures:
       {
-	GetBTTaskPtr1(frame, ObjectClass*, oc);
-	ObjectClass *noc = (ObjectClass *) oc->gCollectConstTerm();
+	GetBTTaskPtr1(frame, OzClass*, oc);
+	OzClass *noc = (OzClass *) oc->gCollectConstTerm();
 	ReplaceBTTask1stPtrOnly(frame, noc);
 	// yet unset features are already initialized to zero;
 	//

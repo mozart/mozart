@@ -168,7 +168,7 @@ void TRAVERSERCLASS::doit()
 	case Co_Class:
 	  if (!processClass(t, ct)) {
 	    Assert(tosNotRunning == (StackEntry *) 0);
-	    ObjectClass *cl = (ObjectClass *) ct;
+	    OzClass *cl = (OzClass *) ct;
 	    SRecord *fs = cl->getFeatures();
 	    t = fs ? makeTaggedSRecord(fs) : oz_nil();
 	    continue;

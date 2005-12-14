@@ -684,9 +684,9 @@ OZ_Return genericDot(TaggedRef t, TaggedRef f, TaggedRef &tf, Bool isdot) {
 	goto no_feature;
       return PROCEED;
     case Co_Class:
-      tf = tagged2ObjectClass(t)->classGetFeature(f);
+      tf = tagged2OzClass(t)->classGetFeature(f);
       if (tf == makeTaggedNULL()) {
-	TaggedRef cfs = oz_deref(tagged2ObjectClass(t)->classGetFeature(NameOoFeat));
+	TaggedRef cfs = oz_deref(tagged2OzClass(t)->classGetFeature(NameOoFeat));
 	if (oz_isSRecord(cfs)) {
 	  tf = tagged2SRecord(cfs)->getFeature(f);
 	  if (tf) {
@@ -4197,7 +4197,7 @@ inline int sizeOf(SRecord *sr)
 }
 
 inline
-OzObject *newObject(SRecord *feat, SRecord *st, ObjectClass *cla, Board *b)
+OzObject *newObject(SRecord *feat, SRecord *st, OzClass *cla, Board *b)
 {
   OzLock *lck=NULL;
   if (cla->supportsLocking()) {
@@ -4223,7 +4223,7 @@ OZ_BI_define(BInewClass,3,1) {
 
   TaggedRef uf = oz_isSRecord(ufeatures) ? ufeatures : makeTaggedNULL();
 
-  ObjectClass *cl = new ObjectClass(features,
+  OzClass *cl = new OzClass(features,
 				    fastmeth,
 				    uf,
 				    defmethods,
@@ -4244,7 +4244,7 @@ OZ_BI_define(BIcomma,2,0)
     oz_typeError(0,"Class");
   }
 
-  TaggedRef fb = tagged2ObjectClass(cl)->getFallbackApply();
+  TaggedRef fb = tagged2OzClass(cl)->getFallbackApply();
   Assert(fb);
 
   am.prepareCall(fb,RefsArray::make(OZ_in(0),OZ_in(1)));
@@ -4267,7 +4267,7 @@ OZ_BI_define(BIsend,3,0)
     oz_typeError(2,"Object");
   }
 
-  TaggedRef fb = tagged2ObjectClass(cl)->getFallbackApply();
+  TaggedRef fb = tagged2OzClass(cl)->getFallbackApply();
   Assert(fb);
 
   am.changeSelf(tagged2Object(obj));
@@ -4321,7 +4321,7 @@ TaggedRef cloneObjectRecord(TaggedRef record, Bool cloneAll)
 static TaggedRef dummyRecord = 0;
 
 inline
-OZ_Term makeObject(OZ_Term initState, OZ_Term ffeatures, ObjectClass *clas)
+OZ_Term makeObject(OZ_Term initState, OZ_Term ffeatures, OzClass *clas)
 {
   Assert(oz_isRecord(initState) && oz_isRecord(ffeatures));
 
@@ -4355,7 +4355,7 @@ OZ_Return newObjectInline(TaggedRef cla, TaggedRef &out)
     oz_typeError(0,"Class");
   }
 
-  ObjectClass *realclass = tagged2ObjectClass(cla);
+  OzClass *realclass = tagged2OzClass(cla);
   TaggedRef attr = realclass->classGetFeature(NameOoAttr);
   { DEREF(attr,_1); }
   Assert(!oz_isRef(attr));
@@ -4385,7 +4385,7 @@ OZ_BI_define(BINew,3,0)
     oz_typeError(0,"Class");
   }
 
-  ObjectClass * oc = tagged2ObjectClass(cl);
+  OzClass * oc = tagged2OzClass(cl);
 
   TaggedRef fb = oc->getFallbackNew();
 
@@ -4425,7 +4425,7 @@ OZ_BI_define(BIclassIsSited,1,1)  {
     oz_typeError(0,"Class");
   }
 
-  OZ_RETURN(tagged2ObjectClass(cl)->isSited() ? oz_true() : oz_false());
+  OZ_RETURN(tagged2OzClass(cl)->isSited() ? oz_true() : oz_false());
 } OZ_BI_end
 
 OZ_BI_define(BIclassIsLocking,1,1)  {
@@ -4436,7 +4436,7 @@ OZ_BI_define(BIclassIsLocking,1,1)  {
     oz_typeError(0,"Class");
   }
 
-  OZ_RETURN(tagged2ObjectClass(cl)->supportsLocking() ? oz_true():oz_false());
+  OZ_RETURN(tagged2OzClass(cl)->supportsLocking() ? oz_true():oz_false());
 } OZ_BI_end
 
 #ifdef MISC_BUILTINS

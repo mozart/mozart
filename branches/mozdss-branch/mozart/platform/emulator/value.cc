@@ -181,7 +181,7 @@ int oz_fastlength(OZ_Term l) {
  * ConstTerm
  *=================================================================== */
 
-const char *ObjectClass::getPrintName() 
+const char *OzClass::getPrintName() 
 { 
   TaggedRef aux = classGetFeature(NameOoPrintName);
   return aux ? tagged2Literal(oz_deref(aux))->getPrintName() : "???";
@@ -195,7 +195,7 @@ const char *ConstTerm::getPrintName()
   case Co_Object:
     return ((OzObject *) this)->getPrintName();
   case Co_Class:
-    return ((ObjectClass *) this)->getPrintName();
+    return ((OzClass *) this)->getPrintName();
   case Co_Builtin:
     return ((Builtin *)this)->getPrintName();
   default:
@@ -320,7 +320,7 @@ GName *OzObject::globalize(){
 
 /* X==NULL means: do not reorder X args */
 inline
-Bool ObjectClass::lookupDefault(TaggedRef label, SRecordArity arity, Bool reorder)
+Bool OzClass::lookupDefault(TaggedRef label, SRecordArity arity, Bool reorder)
 {
   TaggedRef def;
 
@@ -402,7 +402,7 @@ Bool ObjectClass::lookupDefault(TaggedRef label, SRecordArity arity, Bool reorde
 }
 
 
-Abstraction *ObjectClass::getMethod(TaggedRef label, SRecordArity arity, 
+Abstraction *OzClass::getMethod(TaggedRef label, SRecordArity arity, 
 				    Bool reorder,
 				    Bool &defaultsUsed)
 {
@@ -427,7 +427,7 @@ Abstraction *ObjectClass::getMethod(TaggedRef label, SRecordArity arity,
 
 
 
-TaggedRef ObjectClass::getFallbackNew() {
+TaggedRef OzClass::getFallbackNew() {
   TaggedRef fbs = oz_deref(classGetFeature(NameOoFallback));
 
   if (!oz_isSRecord(fbs)) 
@@ -443,7 +443,7 @@ TaggedRef ObjectClass::getFallbackNew() {
   return fbn;
 }
 
-TaggedRef ObjectClass::getFallbackApply() {
+TaggedRef OzClass::getFallbackApply() {
   TaggedRef fbs = oz_deref(classGetFeature(NameOoFallback));
 
   if (!oz_isSRecord(fbs)) 
@@ -1444,7 +1444,7 @@ TaggedRef oz_getPrintName(TaggedRef t) {
       case Co_Abstraction:
 	return ((Abstraction *) rec)->getName();
       case Co_Class:
-	return oz_atom((OZ_CONST char*)((ObjectClass *) rec)->getPrintName());
+	return oz_atom((OZ_CONST char*)((OzClass *) rec)->getPrintName());
       default:
 	break;
       }

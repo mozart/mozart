@@ -877,8 +877,8 @@ Bool DPMARSHALERCLASS::processDictionary(OZ_Term dictTerm, ConstTerm *dictConst)
     //
     OzDictionary *d = (OzDictionary *) dictConst;
     if (!d->isSafeDict()) {
+      printf("It is not a safe dictionary\n"); //bmc
       OZ_error("DPMARSHALERCLASS::processDict : MRHTentry\n");
-      //MarshalRHTentry(dictTerm, index);
       Assert(bs->availableSpace() >= DIFMaxSize);
       return (OK);
     } else {
@@ -888,10 +888,16 @@ Bool DPMARSHALERCLASS::processDictionary(OZ_Term dictTerm, ConstTerm *dictConst)
 	      dif_names[DIF_DICT].name, DIF_DICT, toC(dictTerm));
       fflush(dbgout);
 #endif
-      if (index) { bs->put(DIF_GLUE_DEF); marshalTermDef(bs, index); }
-      else { bs->put(DIF_GLUE); }
-      glue_marshalEntity(dictTerm, bs);
-
+//      if (index) { bs->put(DIF_GLUE_DEF); marshalTermDef(bs, index); }
+//      else { bs->put(DIF_GLUE); }
+//      glue_marshalEntity(dictTerm, bs);
+      if (index) { 
+        bs->put(DIF_DICT_DEF);
+        marshalTermDef(bs, index); 
+      }else { 
+        bs->put(DIF_DICT);
+      }
+      marshalNumber(bs, d->getSize());
       Assert(bs->availableSpace() >= DIFMaxSize);
       return (NO);
     }
@@ -960,7 +966,7 @@ Bool DPMARSHALERCLASS::processClass(OZ_Term classTerm, ConstTerm *classConst)
     //
     VISITNODE(classTerm, vIT, bs, index, return(OK));
 
-    ObjectClass *cl = (ObjectClass *) classConst;
+    OzClass *cl = (OzClass *) classConst;
     // classes are not handled by the lazy protocol specially right
     // now, but they are still sent using SEND_LAZY, so the flag is to
     // be reset:
@@ -968,7 +974,6 @@ Bool DPMARSHALERCLASS::processClass(OZ_Term classTerm, ConstTerm *classConst)
     //
     if (cl->isSited()) {
       OZ_error("DPMARSHALERCLASS::processClass : MRHTentry\n");
-      //MarshalRHTentry(classTerm, index);
       Assert(bs->availableSpace() >= DIFMaxSize);
       return (OK);		// done - a leaf;
     } else {
@@ -981,10 +986,10 @@ Bool DPMARSHALERCLASS::processClass(OZ_Term classTerm, ConstTerm *classConst)
       fflush(dbgout);
 #endif
       if (index) {
-	marshalDIFcounted(bs, DIF_CLASS_DEF);
-	marshalTermDef(bs, index);
+        marshalDIFcounted(bs, DIF_CLASS_DEF);
+        marshalTermDef(bs, index);
       } else {
-	marshalDIFcounted(bs, DIF_CLASS);
+        marshalDIFcounted(bs, DIF_CLASS);
       }
 
       //

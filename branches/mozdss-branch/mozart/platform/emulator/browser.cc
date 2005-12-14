@@ -61,7 +61,7 @@ OZ_BI_define(BIchunkWidth, 1,1)
     int w;
     switch (tagged2Const(ch)->getType()) {
     case Co_Class: 
-      w = tagged2ObjectClass(ch)->getWidth();
+      w = tagged2OzClass(ch)->getWidth();
       break;
     case Co_Object:
       w = tagged2Object(ch)->getWidth();
@@ -142,7 +142,7 @@ OZ_BI_define(BIchunkArityBrowser,1,1)
     TaggedRef as;
     switch (tagged2Const(ch)->getType()) {
     case Co_Class : 
-      as = tagged2ObjectClass(ch)->getArityList();
+      as = tagged2OzClass(ch)->getArityList();
       break;
     case Co_Object: 
       as = tagged2Object(ch)->getArityList();
