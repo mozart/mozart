@@ -1292,22 +1292,13 @@ void VarFixStack::_cacFix(void)
 
 inline
 void ConstTerm::_cacConstRecurse(void) {
+  // raph: ConstTermWithHome's already have garbage collected their
+  // mediator, gname, or board in gCollectConstTermInline().
+
   switch(getType()) {
   case Co_Object:
     {
       OzObject *o = (OzObject *) this;
-
-#ifdef G_COLLECT
-      GName * gn = o->getGName1();
-      if (gn) 
-	gCollectGName(gn);
-#endif
-
-#ifdef G_COLLECT
-      if (o->isDistributed()) // PER-LOOK is this possible?
-	(*gCollectMediator)((void*)o->getMediator());
-#endif
-
       OZ_cacBlock(&(o->cl1), &(o->cl1), 4);
       break;
     }
@@ -1327,15 +1318,10 @@ void ConstTerm::_cacConstRecurse(void) {
       }
       break;
     }
-    
+
   case Co_Class:
     {
       OzClass *cl = (OzClass *) this;
-#ifdef G_COLLECT
-      GName * gn = cl->getGName1();
-      if (gn) 
-	gCollectGName(gn);
-#endif
       OZ_cacBlock(&(cl->features), &(cl->features), 4);
       break;
     }
@@ -1345,40 +1331,25 @@ void ConstTerm::_cacConstRecurse(void) {
       Abstraction *a = (Abstraction *) this;
 #ifdef G_COLLECT
       gCollectCode(a->getPred()->getCodeBlock());
-      GName * gn = a->getGName1();
-      if (gn) 
-	gCollectGName(gn);
 #endif
 #ifdef S_CLONE
-            OZ_cacBlock(a->getGRef(),a->getGRef(),
+      OZ_cacBlock(a->getGRef(),a->getGRef(),
       		  a->getPred()->getGSize());
 #endif
       break;
     }
-    
+
   case Co_Cell:
     {
       OzCell *c = (OzCell*)this;
-
-#ifdef G_COLLECT
-      if (c->isDistributed()){
-	(*gCollectMediator)((void*)(c->getMediator()));
-      }
-#endif
       oz_cacTerm(c->val, c->val);
       break;
     }
-    
+
   case Co_Port:
     {
       OzPort *p = (OzPort*) this;
-#ifdef G_COLLECT
-      if (p->isDistributed()) {
-	(*gCollectMediator)((void*)(p->getMediator()));
-      }
-#endif
-      OzPort *pws = (OzPort *) this;
-      oz_cacTerm(pws->strm, pws->strm);
+      oz_cacTerm(p->strm, p->strm);
       break;
     }
 
@@ -1388,19 +1359,10 @@ void ConstTerm::_cacConstRecurse(void) {
       oz_cacTerm(c->value,c->value);
       break;
     }
-    
+
   case Co_Array:
     {
       OzArray *a = (OzArray*) this;
-#ifdef G_COLLECT
-      GName * gn = a->getGName1();
-      if (gn) 
-	gCollectGName(gn);
-      else
-	if (a->isDistributed())
-	  (*gCollectMediator)(a->getMediator());
-
-#endif
       int aw = a->getWidth();
       if (aw > 0) {
 	TaggedRef * newargs = 
@@ -1410,7 +1372,7 @@ void ConstTerm::_cacConstRecurse(void) {
       }
       break;
     }
-    
+
   case Co_Dictionary:
     {
       OzDictionary *dict = (OzDictionary *) this;
@@ -1422,20 +1384,13 @@ void ConstTerm::_cacConstRecurse(void) {
     {
       OzLock *ll = (OzLock *) this;
 #ifdef G_COLLECT
-	gCollectPendThreadEmul(&(ll->pending));
+      gCollectPendThreadEmul(&(ll->pending));
 #endif
-	if (ll->locker != 0)
-	  oz_cacTerm(ll->locker, ll->locker); 
-	break;
-
-#ifdef G_COLLECT
-      if (ll->isDistributed()) {
-	(*gCollectMediator)(ll->getMediator());
-      }
-#endif
+      if (ll->locker != 0)
+	oz_cacTerm(ll->locker, ll->locker); 
       break;
     }
-    
+
   default:
     Assert(0);
   }
@@ -1565,19 +1520,20 @@ ConstTerm * ConstTerm::gCollectConstTermInline(void) {
   default:
     Assert(0);
   }
-  
- const_withhome: {
-   ConstTermWithHome * ctwh_t = (ConstTermWithHome *) oz_hrealloc(this, sz);
-   STOREFWDFIELD(this, ctwh_t);
-   if (!ctwh_t->isDistributed())
-     if (ctwh_t->hasGName())
-       gCollectGName(ctwh_t->getGName1());
-     else
-       ctwh_t->setBoard(ctwh_t->getSubBoardInternal()->gCollectBoard());
-   cacStack.push(ctwh_t, PTR_CONSTTERM);
-   return ctwh_t;
- }
 
+ const_withhome: {
+    ConstTermWithHome * ctwh_t = (ConstTermWithHome *) oz_hrealloc(this, sz);
+    STOREFWDFIELD(this, ctwh_t);
+    // garbage collect mediator, gname, or board
+    if (ctwh_t->isDistributed())
+      (*gCollectMediator)(ctwh_t->getMediator());
+    else if (ctwh_t->hasGName())
+      gCollectGName(ctwh_t->getGName1());
+    else
+      ctwh_t->setBoard(ctwh_t->getSubBoardInternal()->gCollectBoard());
+    cacStack.push(ctwh_t, PTR_CONSTTERM);
+    return ctwh_t;
+  }
 }
 
 //
