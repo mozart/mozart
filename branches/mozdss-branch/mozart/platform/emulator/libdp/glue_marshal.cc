@@ -40,10 +40,6 @@
 #include "value.hh"
 #include "dss_enums.hh"
 
-// for the threads
-void oz_thread_setDistVal(TaggedRef tr, int i, void* v); 
-void* oz_thread_getDistVal(TaggedRef tr, int i); 
-
 
 
 /************************* Globalization *************************/
@@ -193,7 +189,9 @@ OZ_Term glue_unmarshalEntity(ByteBuffer *bs) {
     }
     case GLUE_THREAD: {
       TaggedRef ref = oz_thread(oz_newThreadSuspended(1));
-      oz_thread_setDistVal(ref, 0, new OzThreadMediator(ref, ae));
+      ConstTermWithHome* ctwh =
+	static_cast<ConstTermWithHome*>(tagged2Const(ref));
+      ctwh->setMediator(new OzThreadMediator(ref, ae));
       return ref;
     }
     default:

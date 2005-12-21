@@ -200,7 +200,7 @@ public:
 
 
 // mediators for Oz threads
-class OzThreadMediator: public Mediator, public MutableMediatorInterface {
+class OzThreadMediator: public ConstMediator, public MutableMediatorInterface {
 public:
   OzThreadMediator(TaggedRef t);
   OzThreadMediator(TaggedRef t, AbstractEntity *ae);
@@ -213,8 +213,6 @@ public:
 				   DssOperationId* operation_id,
 				   PstInContainerInterface* operation,
 				   PstOutContainerInterface*& possible_answer);
-  virtual void globalize();
-  virtual void localize();
   virtual PstOutContainerInterface *retrieveEntityRepresentation();
   virtual void installEntityRepresentation(PstInContainerInterface*);  
   virtual char *getPrintType();
