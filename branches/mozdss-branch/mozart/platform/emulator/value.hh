@@ -623,6 +623,11 @@ public:
  *
  */
 
+// raph: Extensions are "wrapped" in ConstTerm's.  In memory, an
+// OZ_Extension object always sits next to a ConstTermWithHome object.
+// The latter is of type Co_Extension, an provides a board, mediator,
+// or gname to the extension.
+
 inline 
 Bool oz_isExtension(TaggedRef t) {
   return oz_isConst(t) && tagged2Const(t)->getType() == Co_Extension;
@@ -630,23 +635,24 @@ Bool oz_isExtension(TaggedRef t) {
 
 inline
 OZ_Extension* const2Extension(ConstTerm* p) {
-  return reinterpret_cast<OZ_Extension*>(reinterpret_cast<void**>(p)+1);
+  ConstTermWithHome* c = static_cast<ConstTermWithHome*>(p);
+  return reinterpret_cast<OZ_Extension*>(c + 1);
 }
 
 inline
-ConstTerm* extension2Const(OZ_Extension* p) {
-  return reinterpret_cast<ConstTerm*>(reinterpret_cast<void**>(p)-1);
+ConstTermWithHome* extension2Const(OZ_Extension* p) {
+  return reinterpret_cast<ConstTermWithHome*>(p) - 1;
 }
 
 inline 
 OZ_Extension * tagged2Extension(TaggedRef t) {
   Assert(oz_isExtension(t));
-  return reinterpret_cast<OZ_Extension*>(reinterpret_cast<void**>(tagged2Const(t))+1);
+  return const2Extension(tagged2Const(t));
 }
 
 inline 
 TaggedRef makeTaggedExtension(OZ_Extension * s) {
-  return makeTaggedConst(reinterpret_cast<ConstTerm*>(reinterpret_cast<void**>(s)-1));
+  return makeTaggedConst(extension2Const(s));
 }
 
 /*===================================================================

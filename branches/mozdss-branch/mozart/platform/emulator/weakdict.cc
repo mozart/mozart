@@ -84,7 +84,7 @@ void gCollectWeakDictionariesPreserve()
       if (tagged2Const(t)->cacIsMarked())
 	continue;
       WeakDictionary*d = _tagged2WeakDictionary(t);
-      if (((Board*)d->__getSpaceInternal())->cacIsAlive() &&
+      if (extension2Const(d)->getBoardInternal()->cacIsAlive() &&
 	  d->stream!=0 &&
 	  !d->isEmpty())
 	// gc has the side effect of entering the copy into
