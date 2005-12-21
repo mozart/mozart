@@ -44,8 +44,6 @@
 static int medIdCntr = 1; 
 
 void doPortSend(OzPort *port, TaggedRef val, Board * home);
-void oz_thread_setDistVal(TaggedRef tr, int i, void* v); 
-void* oz_thread_getDistVal(TaggedRef tr, int i);
 
 
 
@@ -95,9 +93,10 @@ Mediator *glue_getMediator(TaggedRef entity) {
 
     case Co_Extension:
       if (oz_isThread(entity)) {
-	Mediator *med =
-	  reinterpret_cast<Mediator*>(oz_thread_getDistVal(entity, 0));
-	if (med == NULL) med = mediatorTable->lookup(entity);
+	ConstTermWithHome *ctwh = static_cast<ConstTermWithHome*>(ct);
+	Mediator *med = (ctwh->isDistributed() ?
+			 static_cast<Mediator*>(ctwh->getMediator()) :
+			 mediatorTable->lookup(entity));
 	return (med ? med : new OzThreadMediator(entity));
       }
       // fall through, other extensions are unusables
@@ -522,34 +521,13 @@ UnusableMediator::callback_Read(DssThreadId* id_of_calling_thread,
 /************************* OzThreadMediator *************************/
 
 OzThreadMediator::OzThreadMediator(TaggedRef t) :
-  Mediator(t, GLUE_THREAD, DETACHED)
+  ConstMediator(tagged2Const(t), GLUE_THREAD, DETACHED)
 {}
 
 OzThreadMediator::OzThreadMediator(TaggedRef t, AbstractEntity *ae) :
-  Mediator(t, GLUE_THREAD, ATTACHED)
+  ConstMediator(tagged2Const(t), GLUE_THREAD, ATTACHED)
 {
   setAbstractEntity(ae);
-}
-
-void OzThreadMediator::globalize(){
-  Assert(getAbstractEntity() == NULL);
-
-  // create abstract entity
-  ProtocolName pn;
-  AccessArchitecture aa;
-  RCalg rc;
-  getDssParameters(pn, aa, rc);
-  setAbstractEntity(dss->m_createMutableAbstractEntity(pn, aa, rc));
-
-  // attach to entity
-  oz_thread_setDistVal(entity, 0, this);
-  setAttached(ATTACHED);
-}
-
-void OzThreadMediator::localize(){
-  // raph: current limitation: we don't keep thread mediators...
-  oz_thread_setDistVal(entity, 0, NULL);
-  delete this;
 }
 
 AOcallback

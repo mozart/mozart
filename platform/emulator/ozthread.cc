@@ -27,28 +27,16 @@
 Suspendable * (*suspendableSCloneSuspendableDynamic)(Suspendable *);
 
 class OzThread: public OZ_Extension {
-public:
 
 private:
   Thread *thread;
-  void *distVal[2];
+
 public:
   OzThread(Thread *thread)
-    : OZ_Extension(GETBOARD(thread)), thread(thread) {
-    distVal[0] = NULL;
-    distVal[1] = NULL;
-  }
+    : OZ_Extension(GETBOARD(thread)), thread(thread) {}
 
   virtual
   int getIdV() { return OZ_E_THREAD; }
-
-  void *getDistVal(int i){
-    return distVal[i]; 
-  }
-
-  void setDistVal(int i, void* d){
-    distVal[i] = d; 
-  }
 
   virtual
   OZ_Term printV(int depth = 10) {
@@ -121,12 +109,4 @@ OZ_Return OzThread::eqV(OZ_Term term)
 {
   return (oz_isThread(term) &&
 	  thread == oz_ThreadToC(term)) ? PROCEED : FAILED;
-}
-
-void oz_thread_setDistVal(TaggedRef tr, int i, void* v){
-  ((OzThread *) tagged2Extension(tr))->setDistVal(i, v);
-}
-
-void* oz_thread_getDistVal(TaggedRef tr, int i){
-  return ((OzThread *) tagged2Extension(tr))->getDistVal(i);
 }
