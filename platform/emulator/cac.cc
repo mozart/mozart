@@ -1414,28 +1414,6 @@ ConstTerm * ConstTerm::gCollectConstTermInline(void) {
      *
      */
 
-  case Co_Extension: {
-    OZ_Extension * ex = const2Extension(this);
-    Assert(ex);
-    GCDBG_INFROMSPACE(ex);
-
-    Board * bb = (Board *) ex->__getSpaceInternal();
-
-    OZ_Extension * ret = ex->gCollectV();
-    Assert(extension2Const(ret)->getType() == Co_Extension);
-    GCDBG_INTOSPACE(ret);
-
-    if (bb) {
-      Assert(bb->cacIsAlive());      
-      ret->__setSpaceInternal(bb->gCollectBoard());
-    }
-
-    ConstTerm* cret = extension2Const(ret);
-    cacStack.push(cret,PTR_EXTENSION);
-    STOREFWDFIELD(this,(OZ_Container*)cret);
-    return cret;
-  }
-
   case Co_Float: {
     ConstTerm * ret = new Float(((Float *) this)->getValue());
     STOREFWDFIELD(this, ret);
@@ -1481,6 +1459,33 @@ ConstTerm * ConstTerm::gCollectConstTermInline(void) {
      *
      */
 
+  case Co_Extension: {
+    // extensions are a special case of ConstTermWithHome
+    OZ_Extension* ext = const2Extension(this);
+    ConstTermWithHome* cext = (ConstTermWithHome*) this;
+    Assert(ext);
+    GCDBG_INFROMSPACE(ext);
+
+    // copy
+    OZ_Extension* ret = ext->gCollectV();
+    ConstTermWithHome* cret = extension2Const(ret);
+    *cret = *cext;     // copy ConstTermWithHome
+    Assert(cret->getType() == Co_Extension);
+    GCDBG_INTOSPACE(ret);
+
+    // garbage collect mediator, gname, or board
+    if (cret->isDistributed())
+      (*gCollectMediator)(cret->getMediator());
+    else if (cret->hasGName())
+      gCollectGName(cret->getGName1());
+    else
+      cret->setBoard(cret->getSubBoardInternal()->gCollectBoard());
+
+    cacStack.push(cret, PTR_EXTENSION);
+    STOREFWDFIELD(this, (OZ_Container*) cret);
+    return cret;
+  }
+
   case Co_Chunk:
     sz = sizeof(SChunk);
     goto const_withhome;
@@ -1524,6 +1529,7 @@ ConstTerm * ConstTerm::gCollectConstTermInline(void) {
  const_withhome: {
     ConstTermWithHome * ctwh_t = (ConstTermWithHome *) oz_hrealloc(this, sz);
     STOREFWDFIELD(this, ctwh_t);
+    
     // garbage collect mediator, gname, or board
     if (ctwh_t->isDistributed())
       (*gCollectMediator)(ctwh_t->getMediator());
@@ -1531,6 +1537,7 @@ ConstTerm * ConstTerm::gCollectConstTermInline(void) {
       gCollectGName(ctwh_t->getGName1());
     else
       ctwh_t->setBoard(ctwh_t->getSubBoardInternal()->gCollectBoard());
+    
     cacStack.push(ctwh_t, PTR_CONSTTERM);
     return ctwh_t;
   }
@@ -1560,30 +1567,6 @@ ConstTerm *ConstTerm::sCloneConstTermInline(void) {
      *
      */
 
-  case Co_Extension: {
-    // This is in fact situated
-    OZ_Extension * ex = const2Extension(this);
-    Assert(ex);
-    Board * bb = (Board *) ex->__getSpaceInternal();
-
-    if (bb) {
-      Assert(bb->cacIsAlive());
-      if (!NEEDSCOPYING(bb))
-	return this;
-    }
-  
-    OZ_Extension * ret = ex->sCloneV();
-
-    if (bb) {
-      ret->__setSpaceInternal(bb->sCloneBoard());
-    }
-
-    ConstTerm* cret = extension2Const(ret);
-    cacStack.push(cret,PTR_EXTENSION);
-    STOREFWDFIELD(this, (OZ_Container *) cret);
-    return cret;
-  }
-
   case Co_Float:
   case Co_BigInt:
   case Co_FSetValue:
@@ -1596,6 +1579,29 @@ ConstTerm *ConstTerm::sCloneConstTermInline(void) {
      * ConstTermWithHome
      *
      */
+
+  case Co_Extension: {
+    // extensions are a special case of ConstTermWithHome
+    OZ_Extension* ext = const2Extension(this);
+    ConstTermWithHome* cext = (ConstTermWithHome*) this;
+    if (cext->isDistributed() || cext->hasGName()) 
+      return this;
+    
+    Board* bb = cext->getSubBoardInternal();
+    Assert(bb->cacIsAlive());
+    if (!NEEDSCOPYING(bb))
+      return this;
+    
+    // clone
+    OZ_Extension* ret = ext->sCloneV();
+    ConstTermWithHome* cret = extension2Const(ret);
+    Assert(cret->getType() == Co_Extension);
+    cret->setBoard(bb->sCloneBoard());
+    
+    cacStack.push(cret, PTR_EXTENSION);
+    STOREFWDFIELD(this, (OZ_Container *) cret);
+    return cret;
+  }
 
   case Co_Abstraction: 
     sz = ((Abstraction *) this)->getAllocSize();
@@ -1643,12 +1649,14 @@ ConstTerm *ConstTerm::sCloneConstTermInline(void) {
   
  const_withhome: {
    ConstTermWithHome * ctwh_f = (ConstTermWithHome *) this;
-   if (ctwh_f->hasGName()) 
+   if (ctwh_f->isDistributed() || ctwh_f->hasGName()) 
      return this;
+   
    Board * bb = ctwh_f->getSubBoardInternal();
    Assert(bb->cacIsAlive());
    if (!NEEDSCOPYING(bb)) 
      return this;
+   
    ConstTermWithHome * ctwh_t = (ConstTermWithHome *) oz_hrealloc(this, sz);
    ctwh_t->setBoard(bb->sCloneBoard());
    cacStack.push(ctwh_t, PTR_CONSTTERM);
