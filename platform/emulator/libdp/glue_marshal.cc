@@ -157,18 +157,21 @@ OZ_Term glue_unmarshalEntity(ByteBuffer *bs) {
     case GLUE_PORT: {
       // the stream of the port is unused
       OzPort *port = new OzPort(oz_currentBoard(), makeTaggedNULL());
-      port->setMediator(new PortMediator(port, ae));
-      return makeTaggedConst(port);
+      TaggedRef ref = makeTaggedConst(port);
+      port->setMediator(new PortMediator(ref, ae));
+      return ref;
     }
     case GLUE_CELL: {
       OzCell *cell = new OzCell(oz_currentBoard(), makeTaggedNULL());
-      cell->setMediator(new CellMediator(cell, ae));
-      return makeTaggedConst(cell);
+      TaggedRef ref = makeTaggedConst(cell);
+      cell->setMediator(new CellMediator(ref, ae));
+      return ref;
     }
     case GLUE_LOCK: {
       OzLock *lock = new OzLock(oz_currentBoard());
-      lock->setMediator(new LockMediator(lock, ae));
-      return makeTaggedConst(lock);
+      TaggedRef ref = makeTaggedConst(lock);
+      lock->setMediator(new LockMediator(ref, ae));
+      return ref;
     }
     case GLUE_OBJECT: {
       OZ_error("Glue: unmarshaling object not implemented yet");
@@ -179,13 +182,15 @@ OZ_Term glue_unmarshalEntity(ByteBuffer *bs) {
       int high = unmarshalNumber(bs);
       OzArray *oza = new OzArray(oz_currentBoard(), low, high,
 				 makeTaggedNULL());
-      oza->setMediator(new ArrayMediator(oza, ae));
-      return makeTaggedConst(oza);
+      TaggedRef ref = makeTaggedConst(oza);
+      oza->setMediator(new ArrayMediator(ref, ae));
+      return ref;
     }
     case GLUE_DICTIONARY: {
       OzDictionary *dict = new OzDictionary(oz_currentBoard());
-      dict->setMediator(new DictionaryMediator(dict, ae));
-      return makeTaggedConst(dict);
+      TaggedRef ref = makeTaggedConst(dict);
+      dict->setMediator(new DictionaryMediator(ref, ae));
+      return ref;
     }
     case GLUE_THREAD: {
       TaggedRef ref = oz_thread(oz_newThreadSuspended(1));

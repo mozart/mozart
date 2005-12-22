@@ -364,8 +364,9 @@ OZ_BI_define(BImsToPort,1,1)
   } else {
     // create a port whose stream is unused
     OzPort* p = new OzPort(oz_currentBoard(), makeTaggedNULL());
-    p->setMediator(new PortMediator(p, ae));
-    OZ_RETURN(makeTaggedConst(p));
+    TaggedRef t = makeTaggedConst(p);
+    p->setMediator(new PortMediator(t, ae));
+    OZ_RETURN(t);
   }
 }OZ_BI_end
 
