@@ -190,7 +190,7 @@ Mediator *glue_getMediator(TaggedRef entity);
 // ConstTerm in the emulator.
 class ConstMediator: public Mediator {
 public: 
-  ConstMediator(ConstTerm *t, GlueTag type, bool attached);
+  ConstMediator(TaggedRef t, GlueTag type, bool attached);
   ConstTerm* getConst();
   virtual char *getPrintType();
   virtual void globalize();
@@ -242,8 +242,8 @@ public:
 class PortMediator:
   public ConstMediator, public RelaxedMutableMediatorInterface {
 public:
-  PortMediator(ConstTerm *p);
-  PortMediator(ConstTerm *p, AbstractEntity *ae);
+  PortMediator(TaggedRef t);
+  PortMediator(TaggedRef t, AbstractEntity *ae);
   
   virtual AOcallback callback_Write(DssThreadId* id_of_calling_thread,
 				    DssOperationId* operation_id,
@@ -262,8 +262,8 @@ public:
 // mediators for Oz cells
 class CellMediator: public ConstMediator, public MutableMediatorInterface{
 public:
-  CellMediator(ConstTerm *c);
-  CellMediator(ConstTerm *c, AbstractEntity *p);
+  CellMediator(TaggedRef t);
+  CellMediator(TaggedRef t, AbstractEntity *ae);
   
   virtual AOcallback callback_Write(DssThreadId* id_of_calling_thread,
 				    DssOperationId* operation_id,
@@ -282,8 +282,8 @@ public:
 // mediators for Oz locks
 class LockMediator: public ConstMediator, public MutableMediatorInterface{
 public:
-  LockMediator(ConstTerm *t);
-  LockMediator(ConstTerm *t, AbstractEntity *p);
+  LockMediator(TaggedRef t);
+  LockMediator(TaggedRef t, AbstractEntity *ae);
   
   virtual AOcallback callback_Write(DssThreadId* id_of_calling_thread,
 				    DssOperationId* operation_id,
@@ -329,8 +329,8 @@ public:
 // mediators for Oz arrays
 class ArrayMediator: public ConstMediator, public MutableMediatorInterface{
 public:
-  ArrayMediator(ConstTerm *t);
-  ArrayMediator(ConstTerm *t, AbstractEntity *p);
+  ArrayMediator(TaggedRef t);
+  ArrayMediator(TaggedRef t, AbstractEntity *ae);
   
   virtual AOcallback callback_Write(DssThreadId* id_of_calling_thread,
 				    DssOperationId* operation_id,
@@ -350,8 +350,8 @@ public:
 // mediators for Oz arrays
 class DictionaryMediator: public ConstMediator, public MutableMediatorInterface{
 public:
-  DictionaryMediator(ConstTerm *t);
-  DictionaryMediator(ConstTerm *t, AbstractEntity *ae);
+  DictionaryMediator(TaggedRef t);
+  DictionaryMediator(TaggedRef t, AbstractEntity *ae);
   
   virtual AOcallback callback_Write(DssThreadId* id_of_calling_thread,
 				    DssOperationId* operation_id,
@@ -370,8 +370,8 @@ public:
 // mediators for Oz objects
 class ObjectMediator: public ConstMediator, public MutableMediatorInterface{
 public:
-  ObjectMediator(ConstTerm *obj);
-  ObjectMediator(ConstTerm *obj, AbstractEntity *p);
+  ObjectMediator(TaggedRef t);
+  ObjectMediator(TaggedRef t, AbstractEntity *ae);
   
   virtual AOcallback callback_Write(DssThreadId* id_of_calling_thread,
 				    DssOperationId* operation_id,

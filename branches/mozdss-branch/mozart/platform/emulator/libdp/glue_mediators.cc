@@ -49,19 +49,20 @@ void doPortSend(OzPort *port, TaggedRef val, Board * home);
 
 /************************* glue_getMediator *************************/
 
-// special cases for glue_getMediator
-template <class EntityMediator>
-inline Mediator *getCTWHMediator(ConstTerm* ct) {
-  ConstTermWithHome *ctwh = static_cast<ConstTermWithHome*>(ct);
-  Mediator *med = (ctwh->isDistributed() ?
-		   static_cast<Mediator*>(ctwh->getMediator()) :
-		   mediatorTable->lookup(makeTaggedConst(ct)));
-  return (med ? med : new EntityMediator(ct));
+// generic functions to retrieve mediators
+
+template <class M>
+inline Mediator* lookupMediator(TaggedRef entity) {
+  Mediator* med = mediatorTable->lookup(entity);
+  return (med ? med : new M(entity));
 }
 
-inline Mediator *getUnusableMediator(TaggedRef entity) {
-  Mediator *med = mediatorTable->lookup(entity);
-  return (med ? med : new UnusableMediator(entity));
+template <class M>
+inline Mediator* getCTWHMediator(ConstTerm* ct) {
+  ConstTermWithHome* ctwh = static_cast<ConstTermWithHome*>(ct);
+  return (ctwh->isDistributed() ?
+	  static_cast<Mediator*>(ctwh->getMediator()) :
+	  lookupMediator<M>(makeTaggedConst(ct)));
 }
 
 
@@ -88,20 +89,16 @@ Mediator *glue_getMediator(TaggedRef entity) {
 
     case Co_Builtin:
       if (static_cast<Builtin*>(ct)->isSited())
-	return getUnusableMediator(entity);
+	return lookupMediator<UnusableMediator>(entity);
       break;   // other builtins don't have a mediator
 
     case Co_Extension:
-      if (oz_isThread(entity)) {
-	ConstTermWithHome *ctwh = static_cast<ConstTermWithHome*>(ct);
-	Mediator *med = (ctwh->isDistributed() ?
-			 static_cast<Mediator*>(ctwh->getMediator()) :
-			 mediatorTable->lookup(entity));
-	return (med ? med : new OzThreadMediator(entity));
-      }
+      if (oz_isThread(entity))
+	return getCTWHMediator<OzThreadMediator>(ct);
+
       // fall through, other extensions are unusables
     case Co_Resource:
-      return getUnusableMediator(entity);
+      return lookupMediator<UnusableMediator>(entity);
 
     default:
       break;
@@ -256,8 +253,8 @@ Mediator::print(){
 
 /************************* ConstMediator *************************/
 
-ConstMediator::ConstMediator(ConstTerm *t, GlueTag type, bool attach) :
-  Mediator(makeTaggedConst(t), type, attach)
+ConstMediator::ConstMediator(TaggedRef t, GlueTag type, bool attach) :
+  Mediator(t, type, attach)
 {}
 
 ConstTerm* ConstMediator::getConst(){
@@ -301,12 +298,12 @@ void ConstMediator::localize(){
 
 /************************* PortMediator *************************/
 
-PortMediator::PortMediator(ConstTerm *p) :
-  ConstMediator(p, GLUE_PORT, DETACHED)
+PortMediator::PortMediator(TaggedRef t) :
+  ConstMediator(t, GLUE_PORT, DETACHED)
 {}
 
-PortMediator::PortMediator(ConstTerm *p, AbstractEntity *ae) :
-  ConstMediator(p, GLUE_PORT, ATTACHED)
+PortMediator::PortMediator(TaggedRef t, AbstractEntity *ae) :
+  ConstMediator(t, GLUE_PORT, ATTACHED)
 {
   setAbstractEntity(ae);
 }
@@ -521,11 +518,11 @@ UnusableMediator::callback_Read(DssThreadId* id_of_calling_thread,
 /************************* OzThreadMediator *************************/
 
 OzThreadMediator::OzThreadMediator(TaggedRef t) :
-  ConstMediator(tagged2Const(t), GLUE_THREAD, DETACHED)
+  ConstMediator(t, GLUE_THREAD, DETACHED)
 {}
 
 OzThreadMediator::OzThreadMediator(TaggedRef t, AbstractEntity *ae) :
-  ConstMediator(tagged2Const(t), GLUE_THREAD, ATTACHED)
+  ConstMediator(t, GLUE_THREAD, ATTACHED)
 {
   setAbstractEntity(ae);
 }
@@ -563,11 +560,11 @@ OzThreadMediator::installEntityRepresentation(PstInContainerInterface*){
 
 /************************* LockMediator *************************/
 
-LockMediator::LockMediator(ConstTerm *t) :
+LockMediator::LockMediator(TaggedRef t) :
   ConstMediator(t, GLUE_LOCK, DETACHED)
 {}
 
-LockMediator::LockMediator(ConstTerm *t, AbstractEntity *ae) :
+LockMediator::LockMediator(TaggedRef t, AbstractEntity *ae) :
   ConstMediator(t, GLUE_LOCK, ATTACHED)
 {
   setAbstractEntity(ae);
@@ -687,12 +684,12 @@ LockMediator::installEntityRepresentation(PstInContainerInterface* pstIn){
 extern TaggedRef BI_remoteExecDone; 
 
 // use this constructor for annotations, etc.
-CellMediator::CellMediator(ConstTerm *c) :
-  ConstMediator(c, GLUE_CELL, DETACHED)
+CellMediator::CellMediator(TaggedRef t) :
+  ConstMediator(t, GLUE_CELL, DETACHED)
 {}
 
-CellMediator::CellMediator(ConstTerm *c, AbstractEntity *ae) :
-  ConstMediator(c, GLUE_CELL, ATTACHED)
+CellMediator::CellMediator(TaggedRef t, AbstractEntity *ae) :
+  ConstMediator(t, GLUE_CELL, ATTACHED)
 {
   setAbstractEntity(ae);
 }
@@ -743,12 +740,12 @@ CellMediator::callback_Read(DssThreadId *id,
 
 /************************* ObjectMediator *************************/
 
-ObjectMediator::ObjectMediator(ConstTerm *obj) :
-  ConstMediator(obj, GLUE_OBJECT, DETACHED)
+ObjectMediator::ObjectMediator(TaggedRef t) :
+  ConstMediator(t, GLUE_OBJECT, DETACHED)
 {}
 
-ObjectMediator::ObjectMediator(ConstTerm *obj, AbstractEntity *ae) :
-  ConstMediator(obj, GLUE_OBJECT, ATTACHED)
+ObjectMediator::ObjectMediator(TaggedRef t, AbstractEntity *ae) :
+  ConstMediator(t, GLUE_OBJECT, ATTACHED)
 {
   setAbstractEntity(ae);
 }
@@ -807,11 +804,11 @@ ObjectMediator::installEntityRepresentation(PstInContainerInterface*){;}
 
 /************************* ArrayMediator *************************/
 
-ArrayMediator::ArrayMediator(ConstTerm *t) :
+ArrayMediator::ArrayMediator(TaggedRef t) :
   ConstMediator(t, GLUE_ARRAY, DETACHED)
 {}
 
-ArrayMediator::ArrayMediator(ConstTerm *t, AbstractEntity *ae) :
+ArrayMediator::ArrayMediator(TaggedRef t, AbstractEntity *ae) :
   ConstMediator(t, GLUE_ARRAY, ATTACHED)
 {
   setAbstractEntity(ae);
@@ -875,11 +872,11 @@ ArrayMediator::installEntityRepresentation(PstInContainerInterface* pstin){
 
 /************************* DictionaryMediator *************************/
 
-DictionaryMediator::DictionaryMediator(ConstTerm *t) :
+DictionaryMediator::DictionaryMediator(TaggedRef t) :
   ConstMediator(t, GLUE_DICTIONARY, DETACHED)
 {}
 
-DictionaryMediator::DictionaryMediator(ConstTerm *t, AbstractEntity *ae) :
+DictionaryMediator::DictionaryMediator(TaggedRef t, AbstractEntity *ae) :
   ConstMediator(t, GLUE_DICTIONARY, ATTACHED)
 {
   setAbstractEntity(ae);
