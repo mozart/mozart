@@ -251,9 +251,27 @@ void Pickler::processResource(OZ_Term term, ConstTerm *resConst)
 
 //
 inline 
-void Pickler::processVar(OZ_Term cv, OZ_Term *varTerm)
+Bool Pickler::processVar(OZ_Term cv, OZ_Term *varTerm)
 {
+  if (oz_isFailed(cv)) {
+    int index;
+    PickleMarshalerBuffer *bs = (PickleMarshalerBuffer *) getOpaque();
+
+    //
+    VisitNodeM2ndP(makeTaggedRef(varTerm), vIT, bs, index, return(OK));
+
+    //
+    if (index) {
+      marshalDIF(bs, DIF_FAILEDVALUE_DEF);
+      marshalTermDef(bs, index);
+    } else {
+      marshalDIF(bs, DIF_FAILEDVALUE);
+    }
+    return (NO);
+  }
+
   OZ_error("Pickler::processVar is called!");
+  return (TRUE);
 }
 
 //
@@ -566,9 +584,14 @@ void ResourceExcavator::processResource(OZ_Term rTerm, ConstTerm *resConst)
 
 //
 inline 
-void ResourceExcavator::processVar(OZ_Term v, OZ_Term *vRef)
+Bool ResourceExcavator::processVar(OZ_Term v, OZ_Term *vRef)
 {
-  addResource(makeTaggedRef(vRef));
+  if (oz_isFailed(v)) {
+    return (NO);     // not a resource
+  } else {
+    addResource(makeTaggedRef(vRef));
+    return (OK);
+  }
 }
 
 //
@@ -1231,6 +1254,16 @@ OZ_Term unpickleTermInternal(PickleMarshalerBuffer *bs)
     case DIF_CLONEDCELL:
       b->buildClonedCell();
       break;
+
+    case DIF_FAILEDVALUE:
+      b->buildFailedValue();
+      break;
+
+    case DIF_FAILEDVALUE_DEF: {
+      int refTag = unmarshalRefTag(bs);
+      b->buildFailedValueRemember(refTag);
+      break;
+    }
 
     case DIF_EOF: 
       return (b->finish());

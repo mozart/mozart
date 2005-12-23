@@ -478,13 +478,13 @@ void VSnapshotBuilder::processResource(OZ_Term rTerm, ConstTerm *unusConst)
 
 //
 inline 
-void VSnapshotBuilder::processVar(OZ_Term v, OZ_Term *vRef)
+Bool VSnapshotBuilder::processVar(OZ_Term v, OZ_Term *vRef)
 {
   Assert(oz_isVar(v));
   OZ_Term vrt = makeTaggedRef(vRef);
 
   // Note: a variable is identified by its *location*;
-  VisitNodeTrav(vrt, vIT, return);
+  VisitNodeTrav(vrt, vIT, return(OK));
 
   // Now, construct a VAR patch for this variable (export it if needed);
   if (oz_isExtVar(v)) {
@@ -517,7 +517,11 @@ void VSnapshotBuilder::processVar(OZ_Term v, OZ_Term *vRef)
     glue_globalizeEntity(vrt);
     expVars = new DistributedVarPatch(vrt, expVars);
 
-  } else { 
+  } else if (oz_isFailed(v)) {
+    // that's a value, just go through it
+    return NO;
+
+  } else {
     // Actualy, we should copy all these types of variables
     // (constraint stuff), and then marshal them as "nogood"s.  So,
     // just ignoring them is a limitation: the system behaves
@@ -525,6 +529,8 @@ void VSnapshotBuilder::processVar(OZ_Term v, OZ_Term *vRef)
     // sending of a message and their marshaling.
     Assert(0);
   }
+
+  return OK;
 }
 
 //
@@ -2053,6 +2059,16 @@ OZ_Term dpUnmarshalTerm(ByteBuffer *bs, Builder *b)
       // returns '-1' for an additional consistency check - the
       // caller should know whether that's a complete message;
       return ((OZ_Term) -1);
+
+    case DIF_FAILEDVALUE:
+      b->buildFailedValue();
+      break;
+
+    case DIF_FAILEDVALUE_DEF: {
+      int refTag = unmarshalRefTag(bs);
+      b->buildFailedValueRemember(refTag);
+      break;
+    }
 
     case DIF_GLUE: {
       OZ_Term t = glue_unmarshalEntity(bs);

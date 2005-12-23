@@ -393,7 +393,7 @@ public:
   void processPort(OZ_Term portTerm, ConstTerm *portConst);
   void processResource(OZ_Term resTerm, ConstTerm *unusConst);
   void processNoGood(OZ_Term resTerm);
-  void processVar(OZ_Term cv, OZ_Term *varTerm);
+  Bool processVar(OZ_Term cv, OZ_Term *varTerm);
   Bool processLTuple(OZ_Term ltupleTerm);
   Bool processSRecord(OZ_Term srecordTerm);
   Bool processFSETValue(OZ_Term fsetvalueTerm);
@@ -440,7 +440,7 @@ public:
   void processPort(OZ_Term portTerm, ConstTerm *portConst);
   void processResource(OZ_Term resTerm, ConstTerm *unusConst);
   void processNoGood(OZ_Term resTerm);
-  void processVar(OZ_Term cv, OZ_Term *varTerm);
+  Bool processVar(OZ_Term cv, OZ_Term *varTerm);
   Bool processLTuple(OZ_Term ltupleTerm);
   Bool processSRecord(OZ_Term srecordTerm);
   Bool processFSETValue(OZ_Term fsetvalueTerm);
@@ -612,7 +612,7 @@ public:
   void processPort(OZ_Term portTerm, ConstTerm *portConst);
   void processResource(OZ_Term resTerm, ConstTerm *unusConst);
   void processNoGood(OZ_Term resTerm);
-  void processVar(OZ_Term cv, OZ_Term *varTerm);
+  Bool processVar(OZ_Term cv, OZ_Term *varTerm);
   Bool processLTuple(OZ_Term ltupleTerm);
   Bool processSRecord(OZ_Term srecordTerm);
   Bool processFSETValue(OZ_Term fsetvalueTerm);

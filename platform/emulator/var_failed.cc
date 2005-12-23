@@ -38,11 +38,21 @@
 OZ_Return Failed::bind(TaggedRef *vPtr, TaggedRef t)
 {
   // simply raise the exception in the current thread
-  return OZ_raiseDebug(exception);
+  return OZ_raise(exception);
 }
 
 OZ_Return Failed::unify(TaggedRef *vPtr, TaggedRef *tPtr)
 {
+  // dirty hack: allow unification if both are failed values, and
+  // encapsulate the same exception.  This prevents some stupid bug in
+  // distributed unification...
+  if (oz_isFailed(*tPtr)) {
+    Failed* t = static_cast<Failed*>(tagged2Var(*tPtr));
+    if (oz_deref(getException()) == oz_deref(t->getException())) {
+      oz_bindVar(this, vPtr, makeTaggedRef(tPtr));
+      return PROCEED;
+    }
+  }
   return bind(vPtr, makeTaggedRef(tPtr));
 }
 
@@ -56,7 +66,7 @@ OZ_Return Failed::forceBind(TaggedRef *vPtr, TaggedRef t)
 OZ_Return Failed::addSusp(TaggedRef *tPtr, Suspendable * susp)
 {
   // simply raise the exception in the current thread
-  return OZ_raiseDebug(exception);
+  return OZ_raise(exception);
 }
 
 void Failed::printStream(ostream &out,int depth)

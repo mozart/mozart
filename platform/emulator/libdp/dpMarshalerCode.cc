@@ -591,7 +591,7 @@ void DPMARSHALERCLASS::processResource(OZ_Term term, ConstTerm *unusConst)
 // snapshot construction. Note that such variables need special
 // attention in order to avoid run-away marshaling: is it safe today?
 inline 
-void DPMARSHALERCLASS::processVar(OZ_Term v, OZ_Term *vRef)
+Bool DPMARSHALERCLASS::processVar(OZ_Term v, OZ_Term *vRef)
 {
   // v == *vRef && oz_isVar(v)
   ByteBuffer *bs = (ByteBuffer *) getOpaque();
@@ -607,7 +607,7 @@ void DPMARSHALERCLASS::processVar(OZ_Term v, OZ_Term *vRef)
     // check index first
     int index;
     OZ_Term vrt = makeTaggedRef(vRef);
-    VISITNODE(vrt, vIT, bs, index, return);
+    VISITNODE(vrt, vIT, bs, index, return(OK));
 
     // extvars marshal themselves
     if (oz_isExtVar(v)) {
@@ -645,6 +645,13 @@ void DPMARSHALERCLASS::processVar(OZ_Term v, OZ_Term *vRef)
       expVars = new MarshaledVarPatch(vrt, expVars);
 
       //
+    } else if (oz_isFailed(v)) {
+      // marshal tag
+      if (index) { bs->put(DIF_FAILEDVALUE_DEF); marshalTermDef(bs, index); }
+      else { bs->put(DIF_FAILEDVALUE); }
+      // then recurse through the exception
+      return (NO);
+
     } else {
       // Handle the variable as a resource. 
 
@@ -661,6 +668,7 @@ void DPMARSHALERCLASS::processVar(OZ_Term v, OZ_Term *vRef)
 
     // this is necessary for DIF_SUSPEND
     Assert(bs->availableSpace() >= DIFMaxSize);
+    return (OK);
 
   } else {
 #if defined(DBG_TRACE)
@@ -671,6 +679,7 @@ void DPMARSHALERCLASS::processVar(OZ_Term v, OZ_Term *vRef)
 #endif
     marshalDIFcounted(bs, DIF_SUSPEND);
     suspend(makeTaggedRef(vRef));
+    return (OK);
   }
 }
 
