@@ -43,6 +43,7 @@
 #include "codearea.hh"
 #include "am.hh"
 #include "dictionary.hh"
+#include "var_failed.hh"
 
 //
 // 3#2 compatibility (alters assertions);
@@ -596,12 +597,11 @@ protected:
   void processResource(OZ_Term resTerm, ConstTerm *resConst);
   // anything else:
   void processNoGood(OZ_Term resTerm);
-  //
-  void processVar(OZ_Term v, OZ_Term *vRef);
 
   //
   // These methods return TRUE if the node to be considered a leaf;
   // (Note that we might want to go through a repetition, don't we?)
+  Bool processVar(OZ_Term v, OZ_Term *vRef);
   Bool processLTuple(OZ_Term ltupleTerm);
   Bool processSRecord(OZ_Term srecordTerm);
   Bool processFSETValue(OZ_Term fsetvalueTerm);
@@ -2144,6 +2144,27 @@ public:
     GetBTFrame(frame);
     EnsureBTSpace(frame, 1);
     PutBTTaskPtr(frame, BT_spointer, c->getRef());
+    SetBTFrame(frame);
+  }
+
+  // build a failed value
+  void buildFailedValue() {
+    OZ_Term t = oz_newFailed(am.currentBoard(), oz_int(0));
+    Failed* f = (Failed*) tagged2Var(*tagged2Ref(t));
+    buildValue(t);
+    GetBTFrame(frame);
+    EnsureBTSpace(frame, 1);
+    PutBTTaskPtr(frame, BT_spointer, f->getRefException());
+    SetBTFrame(frame);
+  }
+  void buildFailedValueRemember(int n) {
+    OZ_Term t = oz_newFailed(am.currentBoard(), oz_int(0));
+    Failed* f = (Failed*) tagged2Var(*tagged2Ref(t));
+    buildValue(t);
+    setTerm(t, n);
+    GetBTFrame(frame);
+    EnsureBTSpace(frame, 1);
+    PutBTTaskPtr(frame, BT_spointer, f->getRefException());
     SetBTFrame(frame);
   }
 

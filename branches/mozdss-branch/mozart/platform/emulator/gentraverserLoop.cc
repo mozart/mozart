@@ -253,7 +253,12 @@ void TRAVERSERCLASS::doit()
 
     case LTAG_VAR0:
     case LTAG_VAR1:
-      processVar(t, tPtr);
+      if (!processVar(t, tPtr)) {
+	Assert(oz_isFailed(t));
+	// now traverse the exception
+	t = static_cast<Failed*>(tagged2Var(t))->getException();
+	continue;
+      }
       break;
 
     case LTAG_MARK0:

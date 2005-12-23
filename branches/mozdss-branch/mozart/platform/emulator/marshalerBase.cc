@@ -126,6 +126,10 @@ MarshalTag defmap[DIF_LAST] = {
   DIF_VAR_AUTO_DEF,
   DIF_READONLY_AUTO_DEF,
   DIF_VAR_OBJECT_DEF,
+  DIF_FAILEDVALUE_DEF,
+  (MarshalTag) -1,		// DIF_FAILEDVALUE_DEF
+  DIF_GLUE_DEF,
+  (MarshalTag) -1		// DIF_GLUE_DEF
 };
 
 #if !defined(TEXT2PICKLE)
