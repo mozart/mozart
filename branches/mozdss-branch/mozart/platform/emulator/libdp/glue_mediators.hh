@@ -35,6 +35,7 @@
 #include "dss_object.hh"
 #include "tagged.hh"
 #include "glue_buffer.hh"
+#include "engine_interface.hh"
 
 /*
   Mediators interface Oz entities to DSS abstract entities.  Several
@@ -117,7 +118,8 @@ protected:
   bool    collected:1;       // TRUE if it has been collected
   DSS_GC  dss_gc_status:2;   // status of dss gc
   GlueTag type:5;            // type of entity
-  int     annotation:20;     // the entity's annotation (20 bits)
+
+  Annotation annotation;     // the entity's annotation
 
   int              id;
 
@@ -148,9 +150,9 @@ public:
   /*************** annotate/globalize/localize ***************/
   GlueTag getType() { return type; }
 
-  int getAnnotation() { return annotation; }
-  void annotate(int a) { annotation = a; } // warning: unchecked
-  void getDssParameters(ProtocolName&, AccessArchitecture&, RCalg&);
+  Annotation getAnnotation() { return annotation; }
+  void setAnnotation(const Annotation& a) { annotation = a; }
+  void completeAnnotation();
 
   virtual void globalize() = 0;     // create abstract entity
   virtual void localize() = 0;      // try to localize entity

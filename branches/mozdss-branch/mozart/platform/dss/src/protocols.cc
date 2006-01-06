@@ -103,7 +103,7 @@ void gf_sendManagerToProxy(Coordinator* m, DSite* s, int i1){
     s->m_sendMsg(msgC); 
   }
   
-  ProtocolManager *gf_createProtManagarer(MsgContainer* msgC, ProtocolName pn){
+  ProtocolManager *gf_createProtManager(MsgContainer* msgC, ProtocolName pn){
     switch(pn){
     case PN_MIGRATORY_STATE: 
       return  new ProtocolMigratoryManager(msgC);   
@@ -175,8 +175,8 @@ void gf_sendManagerToProxy(Coordinator* m, DSite* s, int i1){
   
   
   
-  ProtocolProxy* gf_createRemoteProxy(int type, DSite* myDSite){
-    switch(type){
+  ProtocolProxy* gf_createRemoteProxy(ProtocolName prot, DSite* myDSite){
+    switch(prot){
     case PN_DKSBROADCAST:    return new ProtocolDksBcProxy(); break; 
     case PN_SIMPLE_CHANNEL:  return new ProtocolSimpleChannelProxy();  break;
     case PN_MIGRATORY_STATE: return new ProtocolMigratoryProxy(); break;

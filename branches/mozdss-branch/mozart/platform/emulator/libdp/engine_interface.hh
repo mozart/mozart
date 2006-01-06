@@ -34,9 +34,7 @@
 
 #include "base.hh"
 #include "value.hh"
-#include "pstContainer.hh"
-
-extern int ThreadIdCtr;
+#include "dss_enums.hh"
 
 
 
@@ -46,13 +44,30 @@ class ProxyVar;
 class LazyVar;
 
 
-/* Annotations */ 
+/* Annotations */
 
-void annotateEntity(TaggedRef,int);
-Bool getAnnotation(TaggedRef, int &); 
-void gcAddress2InfoTables();
+struct Annotation {
+  ProtocolName       pn : PN_NBITS;
+  AccessArchitecture aa : AA_NBITS;
+  RCalg              rc : RC_ALG_NBITS;
+};
 
-void gcProxyRecurseImpl(ConstTerm *ct);
+const Annotation emptyAnnotation = { PN_NO_PROTOCOL,
+				     AA_NO_ARCHITECTURE,
+				     RC_ALG_NONE };
+
+inline
+Annotation makeAnnotation(ProtocolName pn, AccessArchitecture aa, RCalg rc) {
+  Annotation annot = { pn, aa, rc };
+  return annot;
+}
+
+void setAnnotation(TaggedRef, const Annotation&);
+Annotation getAnnotation(TaggedRef);
+
+
+
+/* DP initialization */
 
 void initDP(int port, int ip, const char *siteId, int primKey);
 

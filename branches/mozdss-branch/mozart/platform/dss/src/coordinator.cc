@@ -209,17 +209,19 @@ namespace _dss_internal{ //Start namespace
       break;
     default: Assert(0);
     }
-    // Bit saving schema, assert we only need 4 bits for each flag
-    Assert(16 >= prf);           // 2 bits is actually enough but 4 is easier to count with
-    Assert(16 >= m_getAEname()); // 3 bits is enough for the moment
-    Assert(16 >= (m_getASname() >> 16)); // 2 bits is actually enough but 4 is easier to count with
-    Assert(16 >= m_getProtocol()->getProtocolName()); // 4 bits needed
-
 
     DSite* dest = m_getEnvironment()->a_msgnLayer->m_getDestDSite();
     
-    //     head       =   a  +          b0          +                   c00                      +         d000    
-    unsigned int head = (prf + (m_getAEname() << 4) + (m_getProtocol()->getProtocolName() << 8) + (m_getASname() >> 4));
+    // Bit saving schema:
+    //        +-------------+-------------+-------------+-------------+
+    // head = | access arch | proto name  |   ae name   | marshal flag|
+    //        +-------------+-------------+-------------+-------------+
+    Assert(AA_NBITS + PN_NBITS + AEN_NBITS + PMF_NBITS <= 16);
+    unsigned int head = ((((m_getASname())
+			   << PN_NBITS | m_getProtocol()->getProtocolName())
+			  << AEN_NBITS | m_getAEname())
+			 << PMF_NBITS | prf);
+
     ::gf_MarshalNumber(buf, head);             // 2 
     gf_marshalNetIdentity(buf, m_getNetId()); 
     m_getReferenceInfo(buf, dest);                 // 8 -> 48 (often ~10, WRC)
@@ -377,7 +379,9 @@ namespace _dss_internal{ //Start namespace
 
   
   
-  Proxy* gf_createCoordinationProxy(int type, NetIdentity ni, ProtocolProxy *prox, 
+  Proxy* gf_createCoordinationProxy(AccessArchitecture type,
+				    NetIdentity ni,
+				    ProtocolProxy *prox, 
 				    AE_ProxyCallbackInterface *aepc_interface, 
 				    DSS_Environment* env){
     
@@ -390,7 +394,10 @@ namespace _dss_internal{ //Start namespace
     return NULL;
   }
   
-  Coordinator *gf_createCoordinator(int type, ProtocolManager *pman, int GC_annot, DSS_Environment *env){
+  Coordinator *gf_createCoordinator(AccessArchitecture type,
+				    ProtocolManager *pman,
+				    RCalg GC_annot,
+				    DSS_Environment *env){
     switch(type){
     case AA_STATIONARY_MANAGER: return new CoordinatorStationary(pman,GC_annot,env);
     case AA_MIGRATORY_MANAGER:  return new CoordinatorFwdChain(pman,GC_annot, env);

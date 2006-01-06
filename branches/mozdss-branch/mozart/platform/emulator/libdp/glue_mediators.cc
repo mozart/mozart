@@ -130,7 +130,7 @@ char* OzVariableMediator::getPrintType(){ return "var";}
 
 Mediator::Mediator(TaggedRef ref, GlueTag etype, bool attach) :
   active(TRUE), attached(attach), collected(FALSE),
-  dss_gc_status(DSS_GC_NONE), type(etype), annotation(0),
+  dss_gc_status(DSS_GC_NONE), type(etype), annotation(emptyAnnotation),
   entity(ref), absEntity(NULL), faultStream(0), next(NULL)
 {
   id = medIdCntr++; 
@@ -170,15 +170,13 @@ Mediator::getCoordinatorAssistant() {
 }
 
 void
-Mediator::getDssParameters(ProtocolName &pn, AccessArchitecture &aa,
-			   RCalg &rc) {
-  int def = getDefaultAnnotation(getType());
-  pn = static_cast<ProtocolName>
-    (annotation & PN_MASK ? annotation & PN_MASK : def & PN_MASK);
-  aa = static_cast<AccessArchitecture>
-    (annotation & AA_MASK ? annotation & AA_MASK : def & AA_MASK);
-  rc = static_cast<RCalg>
-    (annotation & RC_ALG_MASK ? annotation & RC_ALG_MASK : def & RC_ALG_MASK);
+Mediator::completeAnnotation() {
+  if (!annotation.pn || !annotation.aa || !annotation.rc) {
+    Annotation def = getDefaultAnnotation(getType());
+    if (!annotation.pn) annotation.pn = def.pn;
+    if (!annotation.aa) annotation.aa = def.aa;
+    if (!annotation.rc) annotation.rc = def.rc;
+  }
 }
 
 void Mediator::gCollect(){
@@ -264,35 +262,26 @@ ConstTerm* ConstMediator::getConst(){
 void ConstMediator::globalize() {
   Assert(getAbstractEntity() == NULL);
 
-  ProtocolName pn;
-  AccessArchitecture aa;
-  RCalg rc;
-  getDssParameters(pn, aa, rc);
-  setAbstractEntity(dss->m_createMutableAbstractEntity( pn, aa, rc));
+  completeAnnotation();
+  setAbstractEntity(dss->m_createMutableAbstractEntity(annotation.pn,
+						       annotation.aa,
+						       annotation.rc));
 
   static_cast<ConstTermWithHome*>(getConst())->setMediator((void *)this);
   setAttached(ATTACHED);
 }
 
 void ConstMediator::localize(){
-  if (annotation || faultStream) {
-    // we have to keep the mediator, so
-    // 1. remove abstract entity
-    delete absEntity;
-    absEntity = NULL;
-    // 2. localize the lock (detach mediator)
-    static_cast<ConstTermWithHome*>(getConst())->setBoard(oz_currentBoard());
-    setAttached(DETACHED);
-    // 3. keep the mediator in the table
-    mediatorTable->insert(this);
-    
-  } else {
-    // remove completely mediator, so
-    // 1. localize the lock
-    static_cast<ConstTermWithHome*>(getConst())->setBoard(oz_currentBoard());
-    // 2. delete mediator
-    delete this;
-  }
+  printf("--- raph: localize mediator %p\n", this);
+  // We always to keep the mediator, so we remove the abstract entity,
+  // detach the mediator, and reinsert the mediator in the table.
+  delete absEntity;
+  absEntity = NULL;
+
+  static_cast<ConstTermWithHome*>(getConst())->setBoard(oz_currentBoard());
+  setAttached(DETACHED);
+
+  mediatorTable->insert(this);
 }
 
 
@@ -346,12 +335,11 @@ PortMediator::callback_Read(DssThreadId *id,
 
 void PortMediator::globalize() {
   Assert(getAbstractEntity() == NULL);
-  
-  ProtocolName pn;
-  AccessArchitecture aa;
-  RCalg rc;
-  getDssParameters(pn, aa, rc);
-  setAbstractEntity(dss->m_createRelaxedMutableAbstractEntity( pn, aa, rc));
+
+  completeAnnotation();
+  setAbstractEntity(dss->m_createRelaxedMutableAbstractEntity(annotation.pn,
+							      annotation.aa,
+							      annotation.rc));
 
   tagged2Port(entity)->setMediator((void *)this);
   setAttached(ATTACHED);
@@ -485,25 +473,18 @@ UnusableMediator::UnusableMediator(TaggedRef t, AbstractEntity *ae) :
 void UnusableMediator::globalize() {
   Assert(getAbstractEntity() == NULL);
 
-  // create abstract entity
-  ProtocolName pn;
-  AccessArchitecture aa;
-  RCalg rc;
-  getDssParameters(pn, aa, rc);
-  setAbstractEntity(dss->m_createImmutableAbstractEntity(pn, aa, rc));
+  completeAnnotation();
+  setAbstractEntity(dss->m_createImmutableAbstractEntity(annotation.pn,
+							 annotation.aa,
+							 annotation.rc));
 }
 
 void UnusableMediator::localize() {
-  if (annotation || faultStream) {
-    // we have to keep the mediator, so remove the abstract entity,
-    // and reinsert the mediator in the table
-    delete absEntity;
-    absEntity = NULL;
-    mediatorTable->insert(this);
-  } else {
-    // remove completely mediator, so
-    delete this;
-  }
+  // We always to keep the mediator, so we remove the abstract entity,
+  // and reinsert the mediator in the table.
+  delete absEntity;
+  absEntity = NULL;
+  mediatorTable->insert(this);
 }
 
 AOcallback
@@ -767,11 +748,12 @@ ObjectMediator::callback_Read(DssThreadId* id_of_calling_thread,
 }
 
 void ObjectMediator::globalize() {
-  ProtocolName pn;
-  AccessArchitecture aa;
-  RCalg gc;
-  getDssParameters( pn, aa, gc);
-  setAbstractEntity(dss->m_createMutableAbstractEntity(pn, aa, gc));
+  Assert(getAbstractEntity() == NULL);
+
+  completeAnnotation();
+  setAbstractEntity(dss->m_createMutableAbstractEntity(annotation.pn,
+						       annotation.aa,
+						       annotation.rc));
   //bmc: Maybe two possibilities here. Create a LazyVarMediator first
   //continuing with the approach of marshaling only the stub in the 
   //beginning, or just go eagerly for the object. We are going to try
@@ -952,11 +934,10 @@ void OzVariableMediator::globalize() {
   if (absEntity) return;   // don't globalize twice
 
   // create abstract entity
-  ProtocolName pn;
-  AccessArchitecture aa;
-  RCalg rc;
-  getDssParameters(pn, aa, rc);
-  setAbstractEntity(dss->m_createMonotonicAbstractEntity(pn, aa, rc));
+  completeAnnotation();
+  setAbstractEntity(dss->m_createMonotonicAbstractEntity(annotation.pn,
+							 annotation.aa,
+							 annotation.rc));
 }
 
 void OzVariableMediator::localize() {

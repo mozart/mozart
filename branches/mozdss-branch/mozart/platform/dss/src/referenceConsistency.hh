@@ -63,7 +63,7 @@ namespace _dss_internal{ // Start namespace
   
     
     // ******************* MISC *************************
-    unsigned int m_getAlgorithms(); // returns a bitvector of all algorithms
+    RCalg m_getAlgorithms(); // returns a bitvector of all algorithms
     void m_removeAlgs();
     inline int  m_getNoOfAlgs() const {
       int i = 0; for(GCalgorithm *tmp = a_algs;tmp != NULL ; tmp = tmp->a_next) i++; return i;
@@ -100,7 +100,7 @@ namespace _dss_internal{ // Start namespace
     bool m_isRoot(); // H: one or more non-roots: true R: one or more roots: false
     void m_mergeReferenceInfo(DssReadBuffer* bs);
 
-    HomeReference(Coordinator *c, const unsigned int& gc_annot);
+    HomeReference(Coordinator *c, const RCalg& gc_annot);
     virtual ~HomeReference(){ DebugCode(a_allocated--);};
     
     // ************ METHODS *************

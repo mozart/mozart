@@ -91,38 +91,42 @@ define
       {Glue.setMsgPriority Msg Prio}
    end
 
-   proc{Annotate E An}
-      Prot = pn(default: 0
-		synch_chanel: 1
-		migratory:    2
-		once_only:    3
-		once_only_remote: 4
-		invalidation_eager:  5
-		stationary:    1
-		pilgrim:       9
-		invalidation_lazy:  10
-	       )
-      GColl = gc(default: 0
-		 fracWRC:      1 * 256
-		 timelease:    2 * 256
-		 refList_1:    8 * 256
-		 refList_2:    16 * 256
-		 irc:          32 * 256
-		)
-      AccArch = aa(default: 0
-		   stationary_manager: 1 * 256 * 256
-		   mobile_manager:     2 * 256 * 256
-		  )
-      IntVal
+   %% valid annotations
+   Protocol = protocol(stationary: 1     % PN_SIMPLE_CHANNEL
+		       migratory:  2     % PN_MIGRATORY_STATE
+		       replicated: 5     % PN_EAGER_INVALID
+		       variable:   3     % PN_TRANSIENT
+		       replyvar:   4     % PN_TRANSIENT_REMOTE
+		       ondemand:   11    % PN_IMMUTABLE_LAZY
+		      )
+   RefCount = refcount(persistent: 1     % RC_ALG_PERSIST
+		       refcount:   2     % RC_ALG_WRC
+		       lease:      4     % RC_ALG_TL
+		      )
+
+   %% annotate an entity
+   proc {Annotate X An}
+      Apn Arc
+      PN AA RC
    in
-      case An of a(pn:P aa:A gc:G) then
-	 IntVal = Prot.P + AccArch.A + GColl.G
-      else
-	 raise 'bad structured annotation' end
+      try
+	 {List.partition An fun {$ A} {HasFeature Protocol A} end Apn Arc}
+	 PN = case Apn
+	      of nil then 0     % PN_NO_PROTOCOL
+	      [] [P] then Protocol.P
+	      end
+	 AA = 0     % AA_NO_ARCHITECTURE
+	 RC = for R in Arc  sum:Sum do {Sum RefCount.R} end
+      catch _ then
+	 raise dp('annotation syntax error' An) end
       end
-      {Glue.setAnnotation E IntVal}
+      try
+	 {Glue.setAnnotation X PN AA RC}
+      catch E then
+	 raise {Tuple.append E dp(An)} end
+      end
    end
-   
+
    proc{PrintDSSTables}
       {Glue.printDPTables}
    end

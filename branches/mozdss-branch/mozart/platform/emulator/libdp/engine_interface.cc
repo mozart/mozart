@@ -74,8 +74,8 @@ void gcMediatorImpl(void *m) {
 
 void gcGluePrepareImpl()
 {
-  // Mark all msg containers. Has to be done for the 
-  // snapshoting mechanism. 
+  // Mark all msg containers. Has to be done for the snapshoting
+  // mechanism.
   gcPstContainersStart();
 }
 
@@ -110,82 +110,29 @@ void gcGlueFinalImpl()
   gcMediatorTableCleanUp();
 
   dss->gcDssResources();
-  // The annotations are weak pointers, and must then be 
-  // keept only if the entities themselfs are collected. 
-  gcAddress2InfoTables();
 
   gcPstContainersFinish();
 }
 
 
-AddressHashTableO1Reset *Address2Info;
-AddressHashTableO1Reset *Address2InfoBackup;
 
-class InfoClassNode
-{
-public:
-  int annotation; 
-  InfoClassNode(int a){
-    annotation = a; 
-  }
-}; 
+/************************* Annotations *************************/
 
-
-void annotateEntity(TaggedRef entity, int a) {
-  // warning: limited to cells right now!
-  entity = oz_deref(entity);
-  Assert(oz_isCell(entity));
-
-  // lookup for existing mediator, and create if not present
-  Mediator *med = mediatorTable->lookup(entity);
-  if (med == NULL)
-    med = new CellMediator(entity);
-
-  // annotate
-  med->annotate(a);
+void setAnnotation(TaggedRef entity, const Annotation& a) {
+  // take the mediator of entity, and store annotation
+  entity = oz_safeDeref(entity);
+  glue_getMediator(entity)->setAnnotation(a);
 }
 
-Bool getAnnotation(TaggedRef e, int &a)
-{
-  TaggedRef entity = oz_deref(e);
-  //printf("Reading Annotation %s key:%x\n",toC(entity),(int)entity);
-  void *in = (InfoClassNode *)Address2Info->htFind((void *)entity);
-  if(in==htEmpty){
-    printf("---- nothing\n");
-    return FALSE;}
-  a = ((InfoClassNode*)in)->annotation; 
-  printf("++++ found: %d!\n",a);
-  return TRUE;
-}
-
-// We keep the addresses in two open-hash-tables.
-// At each gc, we read all entries out of the used
-// ht and insert them into the unused. By this schema
-// we swicth between the two ht's. 
-
-void gcAddress2InfoTables()
-{
-  for(AHT_HashNodeCnt *node = Address2Info->getFirst();node!=NULL;node = Address2Info->getNext(node))
-    {
-      TaggedRef t = (TaggedRef)node->getKey();
-      if (isGCMarkedTerm(t))
-	{
-	  //printf("Keeping ENtity");
-	  oz_gCollectTerm(t,t);
-	  Address2InfoBackup->htAdd((void*)t,(void*)node->getValue());
-	}
-      //else
-      //printf("Dropping Node\n");
-    }
-  // Switch and clean...
-  // The current ht is cleared and the hts switch place..
-  AddressHashTableO1Reset *tmp=Address2InfoBackup;
-  Address2Info->mkEmpty();
-  Address2InfoBackup = Address2Info;
-  Address2Info = tmp;
+Annotation getAnnotation(TaggedRef entity) {
+  // create a mediator if necessary
+  entity = oz_safeDeref(entity);
+  return glue_getMediator(entity)->getAnnotation();
 }
 
 
+
+/************************* Time stuff *************************/
 
 LongTime lastTime; 
 
@@ -210,6 +157,10 @@ void initHeartBeat(int rate)
   am.setMinimalTaskInterval((void *) HEART_BEAT_ID,rate);
 }
 
+
+
+/************************* DP initialization *************************/
+
 void initDP(int port, int ip, const char *siteId, int primKey)
 {
   //
@@ -222,29 +173,27 @@ void initDP(int port, int ip, const char *siteId, int primKey)
   // Allocate the marshalers, and unmarshalers
   DPM_Repository = new DPMarshalers();
   DPM_Repository->dpAllocateMarshalers(100);
-  
-  // The two tables used for annotations 
-  Address2Info = new AddressHashTableO1Reset(100);
-  Address2InfoBackup = new AddressHashTableO1Reset(100); 
 
-  // initial default annotations
-  const int default_aa_rc = AA_STATIONARY_MANAGER | RC_ALG_WRC;
-  setDefaultAnnotation(GLUE_NONE, 0);
-  setDefaultAnnotation(GLUE_LAZYCOPY, PN_IMMUTABLE_LAZY | default_aa_rc);
-  setDefaultAnnotation(GLUE_UNUSABLE, PN_SIMPLE_CHANNEL | default_aa_rc);
-  setDefaultAnnotation(GLUE_VARIABLE, PN_TRANSIENT | default_aa_rc);
-  setDefaultAnnotation(GLUE_READONLY, PN_TRANSIENT | default_aa_rc);
-  setDefaultAnnotation(GLUE_PORT, PN_SIMPLE_CHANNEL | default_aa_rc);
-  setDefaultAnnotation(GLUE_CELL, PN_MIGRATORY_STATE | default_aa_rc);
-  setDefaultAnnotation(GLUE_LOCK, PN_MIGRATORY_STATE | default_aa_rc);
-  setDefaultAnnotation(GLUE_OBJECT, PN_MIGRATORY_STATE | default_aa_rc);
-  setDefaultAnnotation(GLUE_ARRAY, PN_SIMPLE_CHANNEL | default_aa_rc);
-  setDefaultAnnotation(GLUE_DICTIONARY, PN_SIMPLE_CHANNEL | default_aa_rc);
-  setDefaultAnnotation(GLUE_THREAD, PN_SIMPLE_CHANNEL | default_aa_rc);
+  // initialize default annotations
+  const AccessArchitecture aa = AA_STATIONARY_MANAGER;
+  const RCalg              rc = RC_ALG_WRC;
+  setDefaultAnnotation(GLUE_NONE,       emptyAnnotation);
+  setDefaultAnnotation(GLUE_LAZYCOPY,   PN_IMMUTABLE_LAZY,  aa, rc);
+  setDefaultAnnotation(GLUE_UNUSABLE,   PN_SIMPLE_CHANNEL,  aa, rc);
+  setDefaultAnnotation(GLUE_VARIABLE,   PN_TRANSIENT,       aa, rc);
+  setDefaultAnnotation(GLUE_READONLY,   PN_TRANSIENT,       aa, rc);
+  setDefaultAnnotation(GLUE_PORT,       PN_SIMPLE_CHANNEL,  aa, rc);
+  setDefaultAnnotation(GLUE_CELL,       PN_MIGRATORY_STATE, aa, rc);
+  setDefaultAnnotation(GLUE_LOCK,       PN_MIGRATORY_STATE, aa, rc);
+  setDefaultAnnotation(GLUE_OBJECT,     PN_MIGRATORY_STATE, aa, rc);
+  setDefaultAnnotation(GLUE_ARRAY,      PN_SIMPLE_CHANNEL,  aa, rc);
+  setDefaultAnnotation(GLUE_DICTIONARY, PN_SIMPLE_CHANNEL,  aa, rc);
+  setDefaultAnnotation(GLUE_THREAD,     PN_SIMPLE_CHANNEL,  aa, rc);
 
+  // create mediator table
+  mediatorTable     = new MediatorTable();
 
   initEntityOperations();
-  
 
   // GC 
   gCollectGlueStart = gcGluePrepareImpl;
@@ -254,9 +203,6 @@ void initDP(int port, int ip, const char *siteId, int primKey)
   gCollectMediator  = gcMediatorImpl;
 
   // Starting the DSS
-  mediatorTable     = new MediatorTable();
-
-  //resourceTable    = new ResourceHashTable(RESOURCE_HASH_TABLE_DEFAULT_SIZE);
   dss = new DSS_Object(glue_ioFactory, glue_com_connection, glue_dss_connection);
 
   initHeartBeat(HEART_BEAT_RATE);

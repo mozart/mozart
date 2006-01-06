@@ -322,11 +322,16 @@ namespace _dss_internal{ //Start namespace
   };
   
   // Used for creating the different types of coordinators/proxies
-   Proxy* gf_createCoordinationProxy(int type, NetIdentity ni, ProtocolProxy *prox, 
-				    AE_ProxyCallbackInterface *aepc_interface, 
+   Proxy* gf_createCoordinationProxy(AccessArchitecture type,
+				     NetIdentity ni,
+				     ProtocolProxy *prox, 
+				     AE_ProxyCallbackInterface *aepc_interface,
 				     DSS_Environment* env);
   
-  Coordinator *gf_createCoordinator(int type, ProtocolManager *pman, int GC_annot, DSS_Environment *env);
+  Coordinator *gf_createCoordinator(AccessArchitecture type,
+				    ProtocolManager *pman,
+				    RCalg GC_annot,
+				    DSS_Environment *env);
 
 } //End namespace
 #endif
