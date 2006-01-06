@@ -150,21 +150,21 @@
                                    out => ['+record'],
                                    BI  => BIgetMsgPriority},
 
-     'setMsgPriority'        =>  { in  => ['+atom', '+atom'],
+     'setMsgPriority'        =>  { in  => ['+atom','+atom'],
                                    out => [],
                                    BI  => BIsetMsgPriority},
 
-     'getAnnotation'        =>  { in  => ['value'],
-                                   out => ['+int'],
+     'getAnnotation'         =>  { in  => ['value'],
+                                   out => ['+int','+int','+int'],
                                    BI  => BIgetAnnotation},
+
+     'setAnnotation'         =>  { in  => ['value','+int','+int','+int'],
+                                   out => [],
+                                   BI  => BIsetAnnotation},
 
      'migrateManager'        =>  { in  => ['value'],
                                    out => [],
                                    BI  => BImigrateManager},
-
-     'setAnnotation'        =>  { in  => ['+atom', '+int'],
-                                   out => [],
-                                   BI  => BIsetAnnotation},
 
      'createLogFile'         => { in  => ['+string'],
 				  out => [],

@@ -44,7 +44,7 @@ namespace _dss_internal{ // Start namespace
     static int a_allocated;
 #endif
     GCalgorithm*     a_next; 
-    RCalg            a_type:16;
+    RCalg            a_type:RC_ALG_NBITS;
     
     GCalgorithm( GCalgorithm* const g, const RCalg& tp ):
       a_next(g),a_type(tp){ DebugCode(a_allocated++);};

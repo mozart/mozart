@@ -41,8 +41,8 @@ namespace _dss_internal{ //Start namespace
     void m_initProxy(Proxy *p);
   public:
     // ************** CONSTRUCTORS *******************
-    CoordinatorStationary( ProtocolManager* const prot,
-		       const unsigned int& gc_annot, DSS_Environment* const env);
+    CoordinatorStationary(ProtocolManager* const prot,
+			  const RCalg& gc_annot, DSS_Environment* const env);
     virtual ~CoordinatorStationary();
     
     // ******************* MESSAGES ***********************

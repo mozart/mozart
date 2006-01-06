@@ -138,8 +138,9 @@ namespace _dss_internal{ //Start namespace
   
 
   // ************** CONSTRUCTORS *******************
-  CoordinatorMobile::CoordinatorMobile( ProtocolManager* const prot,
-					const unsigned int& gc_annot, DSS_Environment* const env):
+  CoordinatorMobile::CoordinatorMobile(ProtocolManager* const prot,
+				       const RCalg& gc_annot,
+				       DSS_Environment* const env):
     Coordinator(AA_MOBILE_COORDINATOR, prot, env),
     a_epoch(1)
    {
@@ -149,15 +150,16 @@ namespace _dss_internal{ //Start namespace
      env->a_dksBackbone->m_insertService( m_getNetId(), mcbs); 
    }
   
-   CoordinatorMobile::CoordinatorMobile( NetIdentity ni,  DSS_Environment* const env, 
-					 int epoch, 
-					 ProxyMobile *prx,
-					 MsgContainer *msg):
+  CoordinatorMobile::CoordinatorMobile(NetIdentity ni,
+				       DSS_Environment* const env, 
+				       int epoch, 
+				       ProxyMobile *prx,
+				       MsgContainer *msg):
      Coordinator(ni, AA_MOBILE_COORDINATOR, NULL, env),
      a_epoch(epoch){
      a_proxy = prx; 
      a_homeRef = new HomeReference(this,RC_ALG_PERSIST); 
-     a_prot = gf_createProtManagarer(msg, a_proxy->m_getProtocol()->getProtocolName()); 
+     a_prot = gf_createProtManager(msg, a_proxy->m_getProtocol()->getProtocolName()); 
      a_prot->manager = this;
 
      // informing the backbone service about the new loction

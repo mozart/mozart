@@ -71,8 +71,9 @@ namespace _dss_internal{ //Start namespace
 
     
     
-    CoordinatorFwdChain( ProtocolManager* const prot,
-			 const unsigned int& gc_annot,  DSS_Environment* const env);
+    CoordinatorFwdChain(ProtocolManager* const prot,
+			const RCalg& gc_annot,
+			DSS_Environment* const env);
     CoordinatorFwdChain(NetIdentity ni, ProxyFwdChain* const p,
 		     DSS_Environment* const env);
     virtual ~CoordinatorFwdChain();

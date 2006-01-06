@@ -156,7 +156,7 @@ namespace _dss_internal{ //Start namespace
   AbstractEntityName
   MutableAbstractEntityImpl::m_getName()
   {
-    return AE_MUTABLE; 
+    return AEN_MUTABLE; 
   }
 
   CoordinatorAssistantInterface *
@@ -268,7 +268,7 @@ namespace _dss_internal{ //Start namespace
   AbstractEntityName
   MonotonicAbstractEntityImpl::m_getName()
   {
-    return AE_TRANSIENT; 
+    return AEN_TRANSIENT; 
   }
   
 
@@ -291,7 +291,7 @@ namespace _dss_internal{ //Start namespace
   ImmutableAbstractEntityImpl::m_getName()
   {
     
-    return AE_IMMUTABLE; 
+    return AEN_IMMUTABLE; 
   }
 
   
@@ -410,7 +410,7 @@ namespace _dss_internal{ //Start namespace
   
   AbstractEntityName 
   RelaxedMutableAbstractEntityImpl::m_getName(){
-    return AE_RELAXED_MUTABLE;
+    return AEN_RELAXED_MUTABLE;
   }
   
   AbstractEntity *

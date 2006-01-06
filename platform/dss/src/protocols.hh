@@ -52,7 +52,7 @@ namespace _dss_internal{ //Start namespace
     virtual void msgReceived(MsgContainer*,DSite*)=0;
     virtual void makeGCpreps(){}
 
-    inline AbstractEntityName getAEname(){ Assert(0); return AE_NOT_DEFINED;}
+    inline AbstractEntityName getAEname(){ Assert(0); return AEN_NOT_DEFINED;}
   
 
     virtual void sendMigrateInfo(MsgContainer*){ 
@@ -131,9 +131,9 @@ namespace _dss_internal{ //Start namespace
   void gf_sendManagerToProxy(Coordinator* m, DSite* s, int i1, DSite *s1);
   
   // Creating protocl proxies and managers
-  ProtocolManager *gf_createProtManagarer(MsgContainer* msgC, ProtocolName pn);
+  ProtocolManager *gf_createProtManager(MsgContainer* msgC, ProtocolName pn);
   void gf_createProtocolProxyManager(ProtocolName prot, DSS_Environment* env, ProtocolManager *&pman, ProtocolProxy *&pprox);
-  ProtocolProxy* gf_createRemoteProxy(int type, DSite* myDSite);
+  ProtocolProxy* gf_createRemoteProxy(ProtocolName prot, DSite* myDSite);
   
 } //End namespace
 #endif 

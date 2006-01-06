@@ -130,8 +130,9 @@ namespace _dss_internal{ //Start namespace
   
   
   // ********************* CONSTRUCTORS **************************************
-  CoordinatorFwdChain::CoordinatorFwdChain( ProtocolManager* const pm, const unsigned int& gc_annot,
-					    DSS_Environment* const env):
+  CoordinatorFwdChain::CoordinatorFwdChain(ProtocolManager* const pm,
+					   const RCalg& gc_annot,
+					   DSS_Environment* const env):
     Coordinator( AA_MIGRATORY_MANAGER, pm, env),
     a_refList(NULL), 
     a_deliverQueue(),
@@ -297,9 +298,9 @@ namespace _dss_internal{ //Start namespace
        break;
      case MA_YES:{
        unsigned int e = msgC->popIntVal();
-       unsigned int a = msgC->popIntVal();
+       RCalg a = static_cast<RCalg>(msgC->popIntVal());
        
-       a_prot = gf_createProtManagarer(msgC, a_proxy->m_getProtocol()->getProtocolName()); 
+       a_prot = gf_createProtManager(msgC, a_proxy->m_getProtocol()->getProtocolName()); 
        
        a_prot->manager = this;
 

@@ -171,14 +171,19 @@ MediatorTable::print() {
 
 /************************* Annotation Table *************************/
 
-static int defaultAnnotation[GLUE_LAST];
+static Annotation defaultAnnotation[GLUE_LAST];
 
-int getDefaultAnnotation(GlueTag type) {
+Annotation getDefaultAnnotation(GlueTag type) {
   return defaultAnnotation[type];
 }
 
-void setDefaultAnnotation(GlueTag type, int annotation) {
+void setDefaultAnnotation(GlueTag type, Annotation annotation) {
   defaultAnnotation[type] = annotation;
+}
+
+void setDefaultAnnotation(GlueTag type, ProtocolName pn,
+			  AccessArchitecture aa, RCalg rc) {
+  setDefaultAnnotation(type, makeAnnotation(pn, aa, rc));
 }
 
 

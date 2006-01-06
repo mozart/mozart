@@ -118,8 +118,10 @@ extern MediatorTable *mediatorTable;
 
  */
 
-int getDefaultAnnotation(GlueTag type);
-void setDefaultAnnotation(GlueTag type, int annotation);
+Annotation getDefaultAnnotation(GlueTag type);
+void setDefaultAnnotation(GlueTag type, Annotation annotation);
+void setDefaultAnnotation(GlueTag type, ProtocolName pn,
+			  AccessArchitecture aa, RCalg rc);
 
 
 

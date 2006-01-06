@@ -44,7 +44,8 @@ namespace _dss_internal{ //Start namespace
   public:
     // ************** CONSTRUCTORS *******************
     CoordinatorMobile( ProtocolManager* const prot,
-		       const unsigned int& gc_annot, DSS_Environment* const env);
+		       const RCalg& gc_annot,
+		       DSS_Environment* const env);
     
     CoordinatorMobile( NetIdentity ni,  DSS_Environment* const env, 
 		       int epoch, ProxyMobile *prx, MsgContainer *msg);

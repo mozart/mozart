@@ -71,8 +71,10 @@ enum OpRetVal{
 enum ProxyMarshalFlag{
   PMF_ORDINARY, 
   PMF_PUSH,
-  PMF_FREE
+  PMF_FREE,
+  PMF_MASK  = 0xF  // bit mask
 };
+const int PMF_NBITS = 4;     // must be consistent with PMF_MASK
 
 
 enum ASop{
@@ -130,22 +132,22 @@ const FaultState FS_PROT_STATE_TMP_UNAVAIL = 0x010;
 const FaultState FS_PROT_STATE_PRM_UNAVAIL = 0x020;
 
 
+
+// AbstractEntityName
 enum AbstractEntityName {
-  AE_NOT_DEFINED, // Don't use, only here for internal debugging 
-  AE_MUTABLE,
-  AE_RELAXED_MUTABLE,
-  AE_TRANSIENT,
-  AE_IMMUTABLE,
-  AE_IMMUTABLE_UNNAMED
+  AEN_NOT_DEFINED       = 0, // Don't use, only here for internal debugging 
+  AEN_MUTABLE           = 1,
+  AEN_RELAXED_MUTABLE   = 2,
+  AEN_TRANSIENT         = 3,
+  AEN_IMMUTABLE         = 4,
+  AEN_IMMUTABLE_UNNAMED = 5,
+  AEN_MASK              = 0xF   // bit mask
 };
+const int AEN_NBITS = 4;     // must be consistent with AE_MASK
 
 
 
-
-// If we use more than 8 bits we have to check some other functionality
-// (Do we need unique bits at all)??
-// - marshal and unmarshal of protocol name for example.
-//
+// ProtocolName
 enum ProtocolName {
   PN_NO_PROTOCOL     = 0, // Don't use, only here for internal debugging 
   PN_SIMPLE_CHANNEL  = 1, 
@@ -162,8 +164,10 @@ enum ProtocolName {
   PN_IMMUTABLE_EAGER = 12,
   PN_IMMEDIATE       = 13,
   PN_DKSBROADCAST    = 14,
-  PN_MASK            = 0xFF   // bit mask
+  PN_MASK            = 0xF   // bit mask
 };
+const int PN_NBITS = 4;     // must be consistent with PN_MASK
+
 
 
 // ********* AccessArchitecture *********
@@ -178,12 +182,14 @@ enum ProtocolName {
 //   manipulateAS Proxy function.
 
 enum AccessArchitecture{
-  AA_NO_ARCHITECTURE    = 0x00000,  // Don't use, only here for internal debugging 
-  AA_STATIONARY_MANAGER = 0x10000,
-  AA_MIGRATORY_MANAGER  = 0x20000,
-  AA_MOBILE_COORDINATOR = 0x40000,
-  AA_MASK               = 0xF0000   // bit mask
+  AA_NO_ARCHITECTURE    = 0x0,  // Don't use, only here for internal debugging 
+  AA_STATIONARY_MANAGER = 0x1,
+  AA_MIGRATORY_MANAGER  = 0x2,
+  AA_MOBILE_COORDINATOR = 0x4,
+  AA_MASK               = 0xF   // bit mask
 };
+const int AA_NBITS = 4;     // must be consistent with AA_MASK
+
 
 
 // ***************** GC *******************
@@ -201,16 +207,19 @@ enum AccessArchitecture{
 // - IRC, indirectional RC (don't use)
 
 enum RCalg{
-  RC_ALG_PERSIST = 0x0000,
-  RC_ALG_WRC     = 0x0100,
-  RC_ALG_TL      = 0x0200,
-  RC_ALG_RC      = 0x0400,
-  RC_ALG_RLV1    = 0x0800,
-  RC_ALG_RLV2    = 0x1000,
-  RC_ALG_IRC     = 0x2000,
-  RC_ALG_ERROR   = 0x8000,
-  RC_ALG_MASK    = 0xFF00   // bit mask
+  RC_ALG_NONE    = 0x00,   // Don't use, only here for internal debugging
+  RC_ALG_PERSIST = 0x01,   // should not be combined with others!
+  RC_ALG_WRC     = 0x02,
+  RC_ALG_TL      = 0x04,
+  RC_ALG_RC      = 0x08,
+  RC_ALG_RLV1    = 0x10,
+  RC_ALG_RLV2    = 0x20,
+  RC_ALG_IRC     = 0x40,
+  RC_ALG_ERROR   = 0x80,
+  RC_ALG_MASK    = 0xFF   // bit mask
 };
+const int RC_ALG_NBITS = 8;     // must be consistent with RC_ALG_MASK
+
 
 
 // ************** RC_OPS *****************

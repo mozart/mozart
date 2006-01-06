@@ -178,46 +178,54 @@ namespace _dss_internal{
       ret.skel = skel;
       ret.exist = true;
       return ret;
+
     } else {
-      switch((head >> 4) & 0xF){
-      case AE_MUTABLE:      
+      AbstractEntityName aen =
+	static_cast<AbstractEntityName>((head >> PMF_NBITS) & AEN_MASK);
+      ProtocolName pn =
+	static_cast<ProtocolName>((head >> (PMF_NBITS+AEN_NBITS)) & PN_MASK);
+      AccessArchitecture aa =
+	static_cast<AccessArchitecture>((head >> (PMF_NBITS+AEN_NBITS+PN_NBITS)) & AA_MASK);
+
+      switch (aen) {
+      case AEN_MUTABLE:      
       {
         MutableAbstractEntityImpl *MAE = new MutableAbstractEntityImpl();
         aepc_interface = MAE; 
         ae_instance = MAE; 
-        ae_name = AE_MUTABLE; 
+        ae_name = AEN_MUTABLE; 
         break; 
       }
-      case AE_RELAXED_MUTABLE: 
+      case AEN_RELAXED_MUTABLE: 
 	{
 	  RelaxedMutableAbstractEntityImpl *MAE = new RelaxedMutableAbstractEntityImpl();
 	  ae_instance =  MAE;
 	  aepc_interface = MAE; 
-	  ae_name = AE_RELAXED_MUTABLE; 
+	  ae_name = AEN_RELAXED_MUTABLE; 
 	  break; 
 	}
-      case AE_TRANSIENT:      
+      case AEN_TRANSIENT:      
 	{
 	  MonotonicAbstractEntityImpl *MAE = new MonotonicAbstractEntityImpl();
 	  ae_instance =  MAE;
 	  aepc_interface = MAE; 
-	  ae_name = AE_TRANSIENT;  
+	  ae_name = AEN_TRANSIENT;  
 	  break; 
 	}
-      case AE_IMMUTABLE:        
+      case AEN_IMMUTABLE:        
 	{
 	  ImmutableAbstractEntityImpl * MAE = new ImmutableAbstractEntityImpl();
 	  ae_instance =  MAE;
 	  aepc_interface = MAE; 
-	  ae_name = AE_IMMUTABLE;  
+	  ae_name = AEN_IMMUTABLE;  
 	  break; 
 	}
-       case AE_IMMUTABLE_UNNAMED: 
+       case AEN_IMMUTABLE_UNNAMED: 
  	{
  	  ImmutableAbstractEntityImpl *MAE = new ImmutableAbstractEntityImpl();
  	  ae_instance =  MAE;
  	  aepc_interface = MAE; 
- 	  ae_name = AE_IMMUTABLE_UNNAMED;  
+ 	  ae_name = AEN_IMMUTABLE_UNNAMED;  
  	  break; 
  	}
       default:
@@ -225,16 +233,16 @@ namespace _dss_internal{
 	  aepc_interface = NULL;
 	  ae_instance = NULL;
 	  Assert(0);
-	  a_map->GL_error("Not a valid abstract entity type %x",((head >> 4) & 0xF));
+	  a_map->GL_error("Not a valid abstract entity type %x", aen);
 	}
       }
       
-      ProtocolProxy *prox = gf_createRemoteProxy((head >> 8) & 0xF, a_myDSite);
+      ProtocolProxy *prox = gf_createRemoteProxy(pn, a_myDSite);
       
       // Create proxy, don't forget to init the protocol after creation
       // (perhaps one should "init" the proxy instead...
       
-      pe = gf_createCoordinationProxy(((head << 4) & 0xF0000), ni, prox, aepc_interface, this); 
+      pe = gf_createCoordinationProxy(aa, ni, prox, aepc_interface, this); 
       
       skel = pe->m_initRemoteProxy(buf);
       aepc_interface->setCoordinationProxy(pe); 

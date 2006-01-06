@@ -45,11 +45,14 @@ namespace _dss_internal{ //Start namespace
 
 
 
-  unsigned int 
+  RCalg
   Reference::m_getAlgorithms(){
+    if (a_algs == NULL) return RC_ALG_PERSIST;
+
     unsigned int gc_annot = 0;
-    for(GCalgorithm *ptr = a_algs; ptr!=NULL; ptr = ptr->a_next) gc_annot += ptr->a_type;
-    return gc_annot; 
+    for (GCalgorithm *ptr = a_algs; ptr!=NULL; ptr = ptr->a_next)
+      gc_annot += ptr->a_type;
+    return static_cast<RCalg>(gc_annot); 
   }
 
   void
@@ -63,7 +66,7 @@ namespace _dss_internal{ //Start namespace
     Assert(dest != NULL || m_getNoOfAlgs() == 0); //Since we make it persistent if we want to marshal without site
     gf_Marshal8bitInt(bs, m_getNoOfAlgs()); //      1: save length,  always less than 255
     for(GCalgorithm *tmp = a_algs; tmp != NULL ; tmp = tmp->a_next){
-      gf_Marshal8bitInt(bs, ((tmp->a_type) >> 8)); //        2: save type,  type is 0xAA00, shift down 8 bits
+      gf_Marshal8bitInt(bs, tmp->a_type); //        2: save type
       tmp->m_getReferenceInfo(bs, dest); //   3: save data
     }
   }
@@ -158,15 +161,16 @@ namespace _dss_internal{ //Start namespace
 
   // ***********************  Home Reference ***************************
  
-  HomeReference::HomeReference(Coordinator *c, const unsigned int& gc_annot):
+  HomeReference::HomeReference(Coordinator *c, const RCalg& gc_annot):
     Reference(), 
     a_coordinator(c){
-    if (gc_annot == static_cast<unsigned int>(RC_ALG_WRC)) {
+    if (gc_annot == RC_ALG_WRC) {
       // optimization for the most common case
       a_algs = new WRC_Home(this,NULL,m_getEnvironment()->a_dssconf.gc_wrc_alpha);
     } else {
+      Assert(gc_annot);
       a_algs = NULL;
-      if(!(gc_annot == RC_ALG_PERSIST)){ // If not persistent, add algs
+      if(!(gc_annot & RC_ALG_PERSIST)){ // If not persistent, add algs
 	if(gc_annot & RC_ALG_WRC)  a_algs = new WRC_Home(this,a_algs,m_getEnvironment()->a_dssconf.gc_wrc_alpha);
 	if(gc_annot & RC_ALG_TL)   a_algs = new TL_Home(this,a_algs,m_getEnvironment()->a_dssconf.gc_tl_leaseTime);
 	if(gc_annot & RC_ALG_RC)   a_algs = new RC_Home(this,a_algs);
@@ -301,7 +305,7 @@ namespace _dss_internal{ //Start namespace
   void RemoteReference::m_buildAlgorithms(DssReadBuffer *bs){
     int len = gf_Unmarshal8bitInt(bs); //  1: load length
     for(int i = 0; i < len; i++){
-      RCalg type = static_cast<RCalg>(gf_Unmarshal8bitInt(bs) << 8); //        2: load type 0xAA => 0xAA00, see getReference
+      RCalg type = static_cast<RCalg>(gf_Unmarshal8bitInt(bs)); // 2: load type
       switch(type){
       case RC_ALG_WRC:  a_algs = new  WRC_Remote(this,bs,a_algs, m_getEnvironment()->a_dssconf.gc_wrc_alpha); break;
       case RC_ALG_TL:   a_algs = new   TL_Remote(this,bs,a_algs, m_getEnvironment()->a_dssconf.gc_tl_updateTime); break;
@@ -340,7 +344,7 @@ namespace _dss_internal{ //Start namespace
     GCalgorithm *tmpNext, *tmpNew = NULL;  
   
     for(int i = 0; i < len; i++){  //     For all marshaled algorithms
-      type = static_cast<RCalg>(gf_Unmarshal8bitInt(bs) << 8);  //        2: load type, see m_buildAlgs
+      type = static_cast<RCalg>(gf_Unmarshal8bitInt(bs));  // 2: load type
     
       GCalgorithm **tmpOld = &a_algs;
       while ((*tmpOld) != NULL){ //        Find alg

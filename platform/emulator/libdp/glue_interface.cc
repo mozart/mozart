@@ -36,6 +36,7 @@
 #include "glue_siteRepresentation.hh"
 #include "os.hh"
 #include "glue_base.hh"
+#include "pstContainer.hh"
 
 #include <sys/socket.h>
 #include <netinet/in.h>

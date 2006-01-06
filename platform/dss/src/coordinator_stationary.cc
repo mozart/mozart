@@ -48,8 +48,9 @@ namespace _dss_internal{ //Start namespace
   
   
 
-  CoordinatorStationary::CoordinatorStationary( ProtocolManager* const m, const unsigned int& gc_annot,
-				        DSS_Environment* const env):
+  CoordinatorStationary::CoordinatorStationary(ProtocolManager* const m,
+					       const RCalg& gc_annot,
+					       DSS_Environment* const env):
     Coordinator(AA_STATIONARY_MANAGER, m, env){
     m->manager = this;
     a_homeRef = new HomeReference(this, gc_annot);
