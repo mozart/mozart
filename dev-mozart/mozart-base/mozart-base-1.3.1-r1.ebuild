@@ -3,7 +3,7 @@ SRC_URI="http://www.mozart-oz.org/download/mozart-ftp/store/1.3.1-2004-06-16/moz
 HOMEPAGE="http://www.mozart-oz.org/"
 KEYWORDS="x86 ppc sparc hppa"
 
-DEPEND="virtual/glibc
+DEPEND="virtual/libc
         virtual/emacs
         app-shells/bash
         dev-lang/perl
@@ -21,7 +21,7 @@ DEPEND="virtual/glibc
         dev-lang/tcl
         dev-lang/tk
 "
-RDEPEND="virtual/glibc
+RDEPEND="virtual/libc
         virtual/emacs
         app-shells/bash
         sys-apps/sh-utils
