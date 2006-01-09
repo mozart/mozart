@@ -631,7 +631,6 @@ OZ_BI_define(BIsetAnnotation,4,0)
   // parsed by DPControl.annotate.  The latter calls this builtin with
   // three integers (pn, aa, rc).  The builtin only checks the
   // consistency of the annotation for the given entity.
-
   oz_declareSafeDerefIN(0,entity);
   oz_declareIntIN(1,pn);
   oz_declareIntIN(2,aa);
@@ -639,39 +638,44 @@ OZ_BI_define(BIsetAnnotation,4,0)
 
   Annotation a = getAnnotation(entity);
 
-  // first check incrementality
-  if (a.pn != PN_NO_PROTOCOL && a.pn != pn) goto incremental_error;
-  if (a.aa != AA_NO_ARCHITECTURE && a.aa != aa) goto incremental_error;
-  if (a.rc != RC_ALG_NONE && a.rc != rc) goto incremental_error;
-
-  // then check protocol consistency with respect to entity
-  switch (pn) {
-  case PN_NO_PROTOCOL: break;
-  case PN_SIMPLE_CHANNEL:
-    if (!oz_isConst(entity)) goto protocol_error;
-    break;
-  case PN_MIGRATORY_STATE:
-  case PN_PILGRIM_STATE:
-  case PN_EAGER_INVALID:
-  case PN_LAZY_INVALID:
-    if (!oz_isConst(entity)) goto protocol_error;
-    break;
-  case PN_TRANSIENT:
-  case PN_TRANSIENT_REMOTE:
-    if (!oz_isVarOrRef(entity)) goto protocol_error;
-    break;
-  case PN_IMMUTABLE_LAZY:
-  case PN_IMMUTABLE_EAGER:
-    if (!oz_isConst(entity)) goto protocol_error;
-    break;
-  default:
-    goto protocol_error;
+  // check incrementality and consistency
+  if (pn != PN_NO_PROTOCOL) {
+    if (a.pn != PN_NO_PROTOCOL && a.pn != pn) goto incremental_error;
+    // check protocol consistency (quite rough, not complete yet)
+    switch (pn) {
+    case PN_NO_PROTOCOL: break;
+    case PN_SIMPLE_CHANNEL:
+      if (!oz_isConst(entity)) goto protocol_error;
+      break;
+    case PN_MIGRATORY_STATE:
+    case PN_PILGRIM_STATE:
+    case PN_EAGER_INVALID:
+    case PN_LAZY_INVALID:
+      if (!oz_isConst(entity)) goto protocol_error;
+      break;
+    case PN_TRANSIENT:
+    case PN_TRANSIENT_REMOTE:
+      if (!oz_isVarOrRef(entity)) goto protocol_error;
+      break;
+    case PN_IMMUTABLE_LAZY:
+    case PN_IMMUTABLE_EAGER:
+      if (!oz_isConst(entity)) goto protocol_error;
+      break;
+    default:
+      goto protocol_error;
+    }
+    a.pn = static_cast<ProtocolName>(pn);
+  }
+  if (aa != AA_NO_ARCHITECTURE) {
+    if (a.aa != AA_NO_ARCHITECTURE && a.aa != aa) goto incremental_error;
+    a.aa = static_cast<AccessArchitecture>(aa);
+  }
+  if (rc != RC_ALG_NONE) {
+    if (a.rc != RC_ALG_NONE && a.rc != rc) goto incremental_error;
+    a.rc = static_cast<RCalg>(rc);
   }
 
   // set annotation
-  if (pn != PN_NO_PROTOCOL) a.pn = static_cast<ProtocolName>(pn);
-  if (aa != AA_NO_ARCHITECTURE) a.aa = static_cast<AccessArchitecture>(aa);
-  if (rc != RC_ALG_NONE) a.rc = static_cast<RCalg>(rc);
   setAnnotation(entity, a);
   return PROCEED;
 
@@ -685,10 +689,11 @@ OZ_BI_define(BIsetAnnotation,4,0)
 
 OZ_BI_define(BIgetAnnotation,1,3)
 {
-  Annotation a = getAnnotation(oz_safeDeref(OZ_in(1)));
-  OZ_out(0) = a.pn;
-  OZ_out(1) = a.aa;
-  OZ_out(2) = a.rc;
+  oz_declareSafeDerefIN(0,entity);
+  Annotation a = getAnnotation(entity);
+  OZ_out(0) = oz_int(a.pn);
+  OZ_out(1) = oz_int(a.aa);
+  OZ_out(2) = oz_int(a.rc);
   return PROCEED;
 } OZ_BI_end
 
