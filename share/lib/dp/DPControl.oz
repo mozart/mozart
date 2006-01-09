@@ -91,39 +91,35 @@ define
       {Glue.setMsgPriority Msg Prio}
    end
 
-   %% valid annotations
-   Protocol = protocol(stationary: 1     % PN_SIMPLE_CHANNEL
-		       migratory:  2     % PN_MIGRATORY_STATE
-		       replicated: 5     % PN_EAGER_INVALID
-		       variable:   3     % PN_TRANSIENT
-		       replyvar:   4     % PN_TRANSIENT_REMOTE
-		       ondemand:   11    % PN_IMMUTABLE_LAZY
-		      )
-   RefCount = refcount(persistent: 1     % RC_ALG_PERSIST
-		       refcount:   2     % RC_ALG_WRC
-		       lease:      4     % RC_ALG_TL
-		      )
-
-   %% annotate an entity
-   proc {Annotate X An}
-      Apn Arc
-      PN AA RC
+   local
+      %% annotations as constraints
+      Constrain =
+      constr(stationary: fun {$}  1#_#_#_#_ end     % PN_SIMPLE_CHANNEL
+	     migratory:  fun {$}  2#_#_#_#_ end     % PN_MIGRATORY_STATE
+	     replicated: fun {$}  5#_#_#_#_ end     % PN_EAGER_INVALID
+	     variable:   fun {$}  3#_#_#_#_ end     % PN_TRANSIENT
+	     replyvar:   fun {$}  4#_#_#_#_ end     % PN_TRANSIENT_REMOTE
+	     ondemand:   fun {$} 11#_#_#_#_ end     % PN_IMMUTABLE_LAZY
+	     persistent: fun {$}  _#_#1#0#0 end     % RC_ALG_PERSIST
+	     refcount:   fun {$}  _#_#0#2#_ end     % RC_ALG_WRC
+	     lease:      fun {$}  _#_#0#_#4 end     % RC_ALG_TL
+	    )
    in
-      try
-	 {List.partition An fun {$ A} {HasFeature Protocol A} end Apn Arc}
-	 PN = case Apn
-	      of nil then 0     % PN_NO_PROTOCOL
-	      [] [P] then Protocol.P
-	      end
-	 AA = 0     % AA_NO_ARCHITECTURE
-	 RC = for R in Arc  sum:Sum do {Sum RefCount.R} end
-      catch _ then
-	 raise dp('annotation syntax error' An) end
-      end
-      try
-	 {Glue.setAnnotation X PN AA RC}
-      catch E then
-	 raise {Tuple.append E dp(An)} end
+      %% annotate an entity
+      proc {Annotate E As}
+	 PN AA RC0 RC1 RC2
+	 Annot = PN#AA#RC0#RC1#RC2
+      in
+	 try
+	    %% constrain Annot with the elements of As, and complete with
+	    %% zeroes (= PN_NO_PROTOCOL, AA_NO_ARCHITECTURE, RC_ALG_NONE)
+	    for A in As do {Constrain.A Annot} end
+	    {Record.forAll Annot proc {$ X} if {IsFree X} then X=0 end end}
+	 catch _ then
+	    raise dp('annotation format error' As) end
+	 end
+	 %% now set annotation with the parameters
+	 {Glue.setAnnotation E PN AA RC0+RC1+RC2}
       end
    end
 
