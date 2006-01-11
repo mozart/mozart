@@ -334,7 +334,7 @@ Bool Pickler::processChunk(OZ_Term chunkTerm, ConstTerm *chunkConst)
   int index;
   PickleMarshalerBuffer *bs = (PickleMarshalerBuffer *) getOpaque();
   SChunk *ch    = (SChunk *) chunkConst;
-  GName *gname  = globalizeConst(ch);
+  GName *gname  = ch->globalize();
   Assert(gname);
 
   //
@@ -431,7 +431,7 @@ Bool Pickler::processClass(OZ_Term classTerm, ConstTerm *classConst)
   //
   OzClass *cl = (OzClass *) classConst;
   Assert(!cl->isSited());
-  GName *gn = globalizeConst(cl);
+  GName *gn = cl->globalize();
   Assert(gn);
   marshalGName(bs, gn);
   marshalNumber(bs, cl->getFlags());
@@ -457,7 +457,7 @@ Bool Pickler::processAbstraction(OZ_Term absTerm, ConstTerm *absConst)
   }
 
   Abstraction *pp = (Abstraction *) absConst;
-  GName* gname = globalizeConst(pp);
+  GName* gname = pp->globalize();
   Assert(gname);
   PrTabEntry *pred = pp->getPred();
   Assert(!pred->isSited());

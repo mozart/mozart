@@ -480,10 +480,56 @@ Bool DPMARSHALERCLASS::marshalFullObject(OZ_Term term, ConstTerm *objConst)
 inline 
 Bool DPMARSHALERCLASS::processObject(OZ_Term term, ConstTerm *objConst)
 {
+/*
   if (doToplevel)
     return (marshalFullObject(term, objConst));
   else
     return (marshalObjectStub(term, objConst));
+*/
+
+// bmc: Always send the structure of the object. The state is not
+// managed by this procedure, because it depends on the protocol
+// that triggers retreive/install state
+
+  ByteBuffer *bs = (ByteBuffer *) getOpaque();
+
+  printf("Marshaling Object %s\n", toC(term));
+  //
+  if (bs->availableSpace() >= 
+      2*DIFMaxSize + MNumberMaxSize + MOwnHeadMaxSize + 2*MGNameMaxSize) {
+    int index;
+
+    //
+    VISITNODE(term, vIT, bs, index, return(OK));
+
+    //
+    OzObject *o = (OzObject*) objConst;
+    Assert(isObject(o));
+    //
+    if (o->getClass()->isSited()) {
+      // marshal term as an unusable (should eventually be automatic...)
+      if (index) { bs->put(DIF_OBJECT_DEF); marshalTermDef(bs, index); }
+      else { bs->put(DIF_OBJECT); }
+      glue_marshalEntity(term, bs);
+
+    } else {
+      // marshal the object stub
+      if (index) {
+        bs->put(DIF_OBJECT_DEF); 
+        marshalTermDef(bs, index); 
+      } else { 
+        bs->put(DIF_OBJECT); 
+      }
+      glue_marshalEntity(term, bs);
+    }
+
+    //
+    Assert(bs->availableSpace() >= DIFMaxSize);
+  } else {
+    suspend(term);
+  }
+  return (FALSE);
+
 }
 
 //
@@ -815,7 +861,7 @@ Bool DPMARSHALERCLASS::processChunk(OZ_Term chunkTerm, ConstTerm *chunkConst)
     }
 
     //
-    GName *gname  = globalizeConst((SChunk *) chunkConst);
+    GName *gname = ((SChunk *)chunkConst)->globalize();
     Assert(gname);
     marshalGName(bs, gname);
 
@@ -887,7 +933,10 @@ Bool DPMARSHALERCLASS::processDictionary(OZ_Term dictTerm, ConstTerm *dictConst)
     OzDictionary *d = (OzDictionary *) dictConst;
     if (!d->isSafeDict()) {
       printf("It is not a safe dictionary\n"); //bmc
-      OZ_error("DPMARSHALERCLASS::processDict : MRHTentry\n");
+      //OZ_error("DPMARSHALERCLASS::processDict : MRHTentry\n");
+      if (index) { bs->put(DIF_GLUE_DEF); marshalTermDef(bs, index); }
+      else { bs->put(DIF_GLUE); }
+      glue_marshalEntity(dictTerm, bs);
       Assert(bs->availableSpace() >= DIFMaxSize);
       return (OK);
     } else {
@@ -897,9 +946,6 @@ Bool DPMARSHALERCLASS::processDictionary(OZ_Term dictTerm, ConstTerm *dictConst)
 	      dif_names[DIF_DICT].name, DIF_DICT, toC(dictTerm));
       fflush(dbgout);
 #endif
-//      if (index) { bs->put(DIF_GLUE_DEF); marshalTermDef(bs, index); }
-//      else { bs->put(DIF_GLUE); }
-//      glue_marshalEntity(dictTerm, bs);
       if (index) { 
         bs->put(DIF_DICT_DEF);
         marshalTermDef(bs, index); 
@@ -995,14 +1041,16 @@ Bool DPMARSHALERCLASS::processClass(OZ_Term classTerm, ConstTerm *classConst)
       fflush(dbgout);
 #endif
       if (index) {
+        printf("Yeah, we got an index, so what?\n"); //bmc
         marshalDIFcounted(bs, DIF_CLASS_DEF);
         marshalTermDef(bs, index);
       } else {
+        printf("No index over here\n"); //bmc
         marshalDIFcounted(bs, DIF_CLASS);
       }
 
       //
-      GName *gn = globalizeConst(cl);
+      GName *gn = cl->globalize();
       Assert(gn);
       marshalGName(bs, gn);
       marshalNumber(bs, cl->getFlags());
@@ -1068,7 +1116,7 @@ Bool DPMARSHALERCLASS::processAbstraction(OZ_Term absTerm, ConstTerm *absConst)
       }
 
       //
-      GName* gname = globalizeConst(pp);
+      GName *gname = pp->globalize();
       Assert(gname);
       marshalGName(bs, gname);
       marshalNumber(bs, pp->getArity());

@@ -1611,8 +1611,19 @@ OZ_Term dpUnmarshalTerm(ByteBuffer *bs, Builder *b)
       }
       */
 
-    case DIF_OBJECT_DEF:
-      {
+    case DIF_OBJECT_DEF: {
+      printf("We are in Object_DEF\n"); //bmc
+      int refTag = unmarshalRefTag(bs);
+      OZ_Term t = glue_unmarshalEntity(bs);
+#if defined(DBG_TRACE)
+      fprintf(dbgout, " = %s\n", toC(t));
+      fflush(dbgout);
+#endif
+      GName *gname = tagged2Object(t)->getGName1();
+      b->buildObjectRemember(gname, refTag);
+      break;
+    }
+/*
 	OZ_Term value;
 	int refTag = unmarshalRefTag(bs);
 	GName *gname = unmarshalGName(&value, bs);
@@ -1661,10 +1672,20 @@ OZ_Term dpUnmarshalTerm(ByteBuffer *bs, Builder *b)
 	  }
 	}
 	break;
-      }
+*/  
 
-    case DIF_OBJECT:
-      {
+    case DIF_OBJECT: {
+      printf("We are in DIF_Object\n"); //bmc
+      OZ_Term t = glue_unmarshalEntity(bs);
+#if defined(DBG_TRACE)
+      fprintf(dbgout, " = %s\n", toC(t));
+      fflush(dbgout);
+#endif
+      GName *gname = tagged2Object(t)->getGName1();
+      b->buildObject(gname);
+      break;
+    }
+/*
 	OZ_Term value;
 	GName *gname = unmarshalGName(&value, bs);
 	if (gname) {
@@ -1703,7 +1724,7 @@ OZ_Term dpUnmarshalTerm(ByteBuffer *bs, Builder *b)
 	  }
 	}
 	break;
-      }
+*/  
 
     case DIF_PROC_DEF:
       { 

@@ -343,9 +343,6 @@ inline void marshalTermRef(MarshalerBuffer *bs, int lbl) {
 }
 
 #if !defined(TEXT2PICKLE)
-//
-// Globalization - needed for both pickling & distribution;
-GName *globalizeConst(ConstTerm *t);
 
 //
 void initRobustMarshaler();
