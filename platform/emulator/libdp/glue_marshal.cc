@@ -104,6 +104,19 @@ void ArrayMediator::marshal(ByteBuffer *bs) {
   marshalNumber(bs, oza->getHigh());
 }
 
+// specific for objects
+void ObjectMediator::marshal(ByteBuffer *bs) {
+  OzObject *ozo = static_cast<OzObject*>(getConst());
+  GlueWriteBuffer *gwb = static_cast<GlueWriteBuffer*>(bs);
+  absEntity->getCoordinatorAssistant()->marshal(gwb, PMF_ORDINARY);
+  bs->put(getType());
+  // We also marshal the global name of the class
+  OzClass *oc = ozo->getClass();
+  GName *gnclass = oc->globalize();
+  Assert(gnclass);
+  marshalGName(bs, gnclass);
+}
+
 
 
 /************************* Unmarshaling *************************/
@@ -121,7 +134,13 @@ OZ_Term glue_unmarshalEntity(ByteBuffer *bs) {
     // drop entity-specific data
     switch (tag) {
     case GLUE_ARRAY:
-      unmarshalNumber(bs); unmarshalNumber(bs); break;
+      unmarshalNumber(bs); 
+      unmarshalNumber(bs); 
+      break;
+    case GLUE_OBJECT:
+      TaggedRef gnclass;
+      unmarshalGName(&gnclass, bs);
+      break;
     default:
       break;
     }
@@ -174,8 +193,17 @@ OZ_Term glue_unmarshalEntity(ByteBuffer *bs) {
       return ref;
     }
     case GLUE_OBJECT: {
-      OZ_error("Glue: unmarshaling object not implemented yet");
-      return makeTaggedNULL();
+      //OZ_error("Glue: unmarshaling object not implemented yet");
+      // First unmarshal the class
+      OZ_Term clas;
+      GName *gnclass = unmarshalGName(&clas, bs);
+      printf("Hasta aqui vamos bien dijo el chancho entrando en la puerta del horno\n"); //bmc
+      OzObject *obj = new OzObject(oz_currentBoard(), 
+                                   gnclass, makeTaggedNULL(), makeTaggedNULL(), makeTaggedNULL());
+      printf("Object created, with only a gname as a class\n"); //bmc
+      obj->setMediator(new ObjectMediator(makeTaggedConst(obj), ae));
+      printf("Ready to Return the object\n"); //bmc      
+      return makeTaggedConst(obj);
     }
     case GLUE_ARRAY: {
       int low  = unmarshalNumber(bs);
@@ -195,7 +223,7 @@ OZ_Term glue_unmarshalEntity(ByteBuffer *bs) {
     case GLUE_THREAD: {
       TaggedRef ref = oz_thread(oz_newThreadSuspended(1));
       ConstTermWithHome* ctwh =
-	static_cast<ConstTermWithHome*>(tagged2Const(ref));
+        static_cast<ConstTermWithHome*>(tagged2Const(ref));
       ctwh->setMediator(new OzThreadMediator(ref, ae));
       return ref;
     }

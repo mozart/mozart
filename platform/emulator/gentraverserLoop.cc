@@ -166,6 +166,7 @@ void TRAVERSERCLASS::doit()
 	  break;
 
 	case Co_Class:
+    printf("we are marshaling a darn Class\n"); //bmc
 	  if (!processClass(t, ct)) {
 	    Assert(tosNotRunning == (StackEntry *) 0);
 	    OzClass *cl = (OzClass *) ct;
@@ -200,6 +201,7 @@ void TRAVERSERCLASS::doit()
 	    //
 	    OzObject *o = tagged2Object(t);
 
+      put(o->getClassTerm());
 	    //
 	    SRecord *sr = o->getFreeRecord();
 	    OZ_Term tsr;
@@ -215,6 +217,7 @@ void TRAVERSERCLASS::doit()
 	    put(tsr);
 
 	    //
+      //bmc: I should not put the state yet.
 	    put(makeTaggedConst(getCell(o->getState())));
 
 	    //

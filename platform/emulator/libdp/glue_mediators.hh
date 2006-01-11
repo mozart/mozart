@@ -386,6 +386,7 @@ public:
   virtual void globalize();
   virtual PstOutContainerInterface *retrieveEntityRepresentation();
   virtual void installEntityRepresentation(PstInContainerInterface*);
+  virtual void marshal(ByteBuffer *bs);
   virtual char *getPrintType();
 };
 
