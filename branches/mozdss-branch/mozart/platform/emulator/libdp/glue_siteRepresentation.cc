@@ -95,8 +95,8 @@ Glue_SiteRep*  Glue_SiteRep::m_getNext(){
 }
 
 void Glue_SiteRep::m_gc(){
-  if (a_conThreadVar != (OZ_Term) 0)
-    oz_gCollectTerm(a_conThreadVar, a_conThreadVar); 
+  if (a_ozSite) oz_gCollectTerm(a_ozSite, a_ozSite);
+  if (a_conThreadVar) oz_gCollectTerm(a_conThreadVar, a_conThreadVar); 
 }
 
 DSite* Glue_SiteRep::m_getDssSite(){ return  a_dssSite;}

@@ -153,6 +153,7 @@
 	  ( AtomError,          "error"),
 
 	  # Failure
+	  ( AtomOk,             "ok"),
 	  ( AtomBlocked,	"blocked"),
 	  ( AtomPermBlocked,	"permBlocked"),
 	  ( AtomTempBlocked,	"tempBlocked"),
