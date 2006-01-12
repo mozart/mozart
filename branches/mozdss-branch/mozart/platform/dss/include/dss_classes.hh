@@ -210,8 +210,7 @@ public:
   virtual void installEntityRepresentation(PstInContainerInterface*) = 0; 
 
   virtual void localize() {;}
-  // virtual setSkeleton() = 0; 
-  // virtual setComplete() = 0; 
+  virtual void reportFaultState(const FaultState& fs) = 0;
 };
 
 class DSSDLLSPEC  MutableMediatorInterface: public MediatorInterface{
