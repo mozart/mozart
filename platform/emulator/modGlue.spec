@@ -162,6 +162,18 @@
                                    out => [],
                                    BI  => BIsetAnnotation},
 
+     'getFaultStream'        => { in  => ['value'],
+				  out => ['list'],
+				  BI  => BIgetFaultStream},
+
+     'getFaultState'         => { in  => ['value'],
+				  out => ['+atom'],
+				  BI  => BIgetFaultState},
+
+     'setFaultState'         => { in  => ['value','+atom'],
+				  out => [],
+				  BI  => BIsetFaultState},
+
      'migrateManager'        =>  { in  => ['value'],
                                    out => [],
                                    BI  => BImigrateManager},

@@ -107,27 +107,46 @@ enum GlueTag {
 #define DETACHED 0
 #define ATTACHED 1
 
+// entity fault states, and their atom equivalents
+enum GlueFaultState {
+  GLUE_FAULT_NONE = 0,     // must be zero (fast checking)
+  GLUE_FAULT_TEMP,
+  GLUE_FAULT_PERM
+};
+
+inline
+TaggedRef fsToAtom(GlueFaultState fs) {
+  switch (fs) {
+  case GLUE_FAULT_NONE: return AtomOk;
+  case GLUE_FAULT_TEMP: return AtomTempFail;
+  case GLUE_FAULT_PERM: return AtomPermFail;
+  }
+  Assert(0);
+};
+
 
 
 // Mediator is the abstract class for all mediators
 class Mediator {
   friend class MediatorTable;
 protected:
-  bool    active:1;          // TRUE if it is active
-  bool    attached:1;        // TRUE if it is attached
-  bool    collected:1;       // TRUE if it has been collected
-  DSS_GC  dss_gc_status:2;   // status of dss gc
-  GlueTag type:5;            // type of entity
+  bool            active:1;          // TRUE if it is active
+  bool            attached:1;        // TRUE if it is attached
+  bool            collected:1;       // TRUE if it has been collected
+  DSS_GC          dss_gc_status:2;   // status of dss gc
+  GlueTag         type:5;            // type of entity
+  GlueFaultState  faultState:2;      // current fault state
 
-  Annotation annotation;     // the entity's annotation
+  Annotation      annotation;        // the entity's annotation
 
-  int              id;
+  int             id;
 
   TaggedRef       entity;      // references to engine and dss entities
   TaggedRef       faultStream;
+  TaggedRef       faultCtlVar;
   AbstractEntity* absEntity;
 
-  Mediator *next;           // for mediator table
+  Mediator*       next;           // for mediator table
 
 public:
   /*************** constructor/destructor ***************/
@@ -167,11 +186,12 @@ public:
   // Note: In order to specialize gCollect(), make it a virtual method.
 
   /*************** fault handling ***************/
-  TaggedRef getFaultStream();
-  // int getFaultState();        // return current fault state
-  // void setFaultState(int);    // force fault state
+  GlueFaultState getFaultState() { return faultState; }
+  void           setFaultState(GlueFaultState fs);
+  TaggedRef      getFaultStream();
+  OZ_Return      suspendOnFault();     // suspend on control var
 
-  virtual void reportFaultState(const FaultState& fs);
+  void reportFS(const FaultState& fs);
 
   /*************** marshaling ***************/
   virtual void marshal(ByteBuffer *bs);
@@ -218,6 +238,7 @@ public:
   virtual PstOutContainerInterface *retrieveEntityRepresentation();
   virtual void installEntityRepresentation(PstInContainerInterface*);  
   virtual char *getPrintType();
+  virtual void reportFaultState(const FaultState& fs) { reportFS(fs); }
 };
 
 
@@ -237,6 +258,7 @@ public:
   virtual PstOutContainerInterface *retrieveEntityRepresentation() { Assert(0); return NULL;}
   virtual void installEntityRepresentation(PstInContainerInterface*) { Assert(0);}
   virtual char *getPrintType();
+  virtual void reportFaultState(const FaultState& fs) { reportFS(fs); }
 };
 
 
@@ -258,6 +280,7 @@ public:
   virtual PstOutContainerInterface *retrieveEntityRepresentation() { Assert(0); return NULL;}
   virtual void installEntityRepresentation(PstInContainerInterface*) { Assert(0);} 
   virtual char *getPrintType();
+  virtual void reportFaultState(const FaultState& fs) { reportFS(fs); }
 }; 
 
 
@@ -278,6 +301,7 @@ public:
   virtual PstOutContainerInterface *retrieveEntityRepresentation();
   virtual void installEntityRepresentation(PstInContainerInterface*); 
   virtual char *getPrintType();
+  virtual void reportFaultState(const FaultState& fs) { reportFS(fs); }
 }; 
 
 
@@ -298,6 +322,7 @@ public:
   virtual PstOutContainerInterface *retrieveEntityRepresentation();  
   virtual void installEntityRepresentation(PstInContainerInterface*);  
   virtual char *getPrintType();
+  virtual void reportFaultState(const FaultState& fs) { reportFS(fs); }
 }; 
 
 
@@ -346,6 +371,7 @@ public:
   virtual void installEntityRepresentation(PstInContainerInterface*) ;
   virtual void marshal(ByteBuffer *bs);
   virtual char *getPrintType();
+  virtual void reportFaultState(const FaultState& fs) { reportFS(fs); }
 }; 
 
 
@@ -366,6 +392,7 @@ public:
   virtual PstOutContainerInterface *retrieveEntityRepresentation() ;
   virtual void installEntityRepresentation(PstInContainerInterface*) ;
   virtual char *getPrintType();
+  virtual void reportFaultState(const FaultState& fs) { reportFS(fs); }
 }; 
 
 
@@ -388,6 +415,7 @@ public:
   virtual void installEntityRepresentation(PstInContainerInterface*);
   virtual void marshal(ByteBuffer *bs);
   virtual char *getPrintType();
+  virtual void reportFaultState(const FaultState& fs) { reportFS(fs); }
 };
 
 
@@ -407,6 +435,7 @@ public:
 				     PstInContainerInterface* operation);
   virtual PstOutContainerInterface *retrieveEntityRepresentation();
   virtual void installEntityRepresentation(PstInContainerInterface*);
+  virtual void reportFaultState(const FaultState& fs) { reportFS(fs); }
 }; 
 
 // Note.  Abstract entities of patched variables are always kept

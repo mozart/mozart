@@ -227,21 +227,21 @@ OZ_BI_define(BIconnFailed,2,0) {
   oz_declareNonvarIN(0,requestor);
   oz_declareNonvarIN(1,reason);
   
-  int Cid; 
-  OZ_Return ret = getRecordField(requestor, "req",Cid);
-  if(ret!=OZ_ENTAILED) return ret;
+  int Cid;
+  OZ_Return ret = getRecordField(requestor, "req", Cid);
+  if (ret != OZ_ENTAILED) return ret;
   
   Glue_SiteRep *sa = reinterpret_cast<Glue_SiteRep*>(Cid);
   
-  if(oz_eq(reason,oz_atom("perm"))) {
-    ;
+  if (oz_eq(reason, oz_atom("perm"))) {
+    sa->m_getDssSite()->m_stateChange(DSite_GLOBAL_PRM);
   } 
-  else if(oz_eq(reason,oz_atom("temp"))) {
+  else if (oz_eq(reason, oz_atom("temp"))) {
     // This could be reported to the comObj, but the comObj also
     // has its own timer to discover this.
     ;
   }
-  else { 
+  else {
     // AN: For now do as for temp. Could go ahead and inform comObj.
     ;
   }
@@ -625,6 +625,10 @@ OZ_BI_define(BIsendMpongPL,5,0)
   OZ_error("Removed during reconstruction"); return PROCEED; 
 } OZ_BI_end
 
+
+
+/******************** Annotations and faults ********************/
+
 OZ_BI_define(BIsetAnnotation,4,0)
 {
   // raph: For the sake of simplicity, the list of annotations is
@@ -696,6 +700,53 @@ OZ_BI_define(BIgetAnnotation,1,3)
   OZ_out(2) = oz_int(a.rc);
   return PROCEED;
 } OZ_BI_end
+
+OZ_BI_define(BIgetFaultStream,1,1)
+{
+  oz_declareSafeDerefIN(0,entity);
+  Mediator* med = glue_getMediator(entity);
+  if (med)
+    OZ_RETURN(med->getFaultStream());
+  else
+    return oz_raise(E_SYSTEM, AtomDp, "nondistributable entity", 1, entity);
+} OZ_BI_end
+
+OZ_BI_define(BIgetFaultState,1,1)
+{
+  oz_declareSafeDerefIN(0,entity);
+  Mediator* med = glue_getMediator(entity);
+  if (med)
+    OZ_RETURN(fsToAtom(med->getFaultState()));
+  else
+    return oz_raise(E_SYSTEM, AtomDp, "nondistributable entity", 1, entity);
+} OZ_BI_end
+
+OZ_BI_define(BIsetFaultState,2,0)
+{
+  oz_declareSafeDerefIN(0,entity);
+  oz_declareNonvarIN(1,state);
+
+  GlueFaultState newfs;
+  // parse new state
+  if (oz_eq(state, AtomPermFail))      newfs = GLUE_FAULT_PERM;
+  else if (oz_eq(state, AtomTempFail)) newfs = GLUE_FAULT_TEMP;
+  else if (oz_eq(state, AtomOk))       newfs = GLUE_FAULT_NONE;
+  else return oz_raise(E_SYSTEM, AtomDp, "invalid fault state", 1, state);
+
+  Mediator* med = glue_getMediator(entity);
+  if (med == NULL)
+    return oz_raise(E_SYSTEM, AtomDp, "nondistributable entity", 1, entity);
+
+  // state transition is invalid when going from PERM to non-PERM
+  if (newfs != GLUE_FAULT_PERM && med->getFaultState() == GLUE_FAULT_PERM)
+    return oz_raise(E_SYSTEM, AtomDp, "invalid fault transition", 1, state);
+
+  // set new state
+  med->setFaultState(newfs);
+  return PROCEED;
+
+} OZ_BI_end
+
 
 
 OZ_BI_define(BItablesExtract,0,1)

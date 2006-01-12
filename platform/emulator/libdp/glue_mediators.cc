@@ -34,6 +34,7 @@
 #include "glue_interface.hh"
 #include "pstContainer.hh"
 #include "value.hh"
+#include "controlvar.hh"
 #include "thr_int.hh"
 #include "glue_faults.hh"
 #include "unify.hh"
@@ -130,8 +131,9 @@ char* OzVariableMediator::getPrintType(){ return "var";}
 
 Mediator::Mediator(TaggedRef ref, GlueTag etype, bool attach) :
   active(TRUE), attached(attach), collected(FALSE),
-  dss_gc_status(DSS_GC_NONE), type(etype), annotation(emptyAnnotation),
-  entity(ref), absEntity(NULL), faultStream(0), next(NULL)
+  dss_gc_status(DSS_GC_NONE), type(etype), faultState(GLUE_FAULT_NONE),
+  annotation(emptyAnnotation),
+  entity(ref), absEntity(NULL), faultStream(0), faultCtlVar(0), next(NULL)
 {
   id = medIdCntr++; 
   mediatorTable->insert(this);
@@ -161,7 +163,10 @@ Mediator::makePassive() {
 void            
 Mediator::setAbstractEntity(AbstractEntity *ae) {
   absEntity = ae;
-  if (ae) ae->assignMediator(dynamic_cast<MediatorInterface*>(this));
+  if (ae) {
+    ae->assignMediator(dynamic_cast<MediatorInterface*>(this));
+    ae->getCoordinatorAssistant()->setRegisteredFS(FS_AA_MASK | FS_PROT_MASK);
+  }
 }
 
 CoordinatorAssistantInterface* 
@@ -183,9 +188,10 @@ void Mediator::gCollect(){
   if (!collected) {
     printf("--- raph: gc %s mediator %p\n", getPrintType(), this);
     collected = TRUE;
-    // collect the entity and its fault stream (if present)
+    // collect the entity, its fault stream, and control var (if present)
     oz_gCollectTerm(entity, entity);
     oz_gCollectTerm(faultStream, faultStream);
+    oz_gCollectTerm(faultCtlVar, faultCtlVar);
   }
 }
 
@@ -209,35 +215,54 @@ Mediator::getDssGCStatus() {
   return dss_gc_status;
 }
 
-TaggedRef
-Mediator::getFaultStream() {
-  // create the fault stream, if necessary
-  if (faultStream == 0) reportFaultState(FS_NO_FAULT);
-  return faultStream;
+void
+Mediator::setFaultState(GlueFaultState fs) {
+  if (faultState != fs) {
+    faultState = fs;
+
+    if (fs == GLUE_FAULT_NONE && faultCtlVar) { // wakeup blocked threads
+      ControlVarResume(faultCtlVar);
+      faultCtlVar = 0;
+    }
+
+    if (faultStream) {   // extend fault stream if present
+      TaggedRef tail = oz_newReadOnly(oz_rootBoard());
+      oz_bindReadOnly(tagged2Ref(faultStream), oz_cons(fsToAtom(fs), tail));
+      faultStream = tail;
+    }
+  }
 }
 
-void Mediator::reportFaultState(const FaultState& fs) {
-  // determine fault description
-  TaggedRef state;
-  switch (fs) {
-  case FS_NO_FAULT:               state = AtomNormal;
-  case FS_AA_HOME_TMP_UNAVAIL:
-  case FS_AA_HOME_PRM_UNAVAIL:
-  case FS_AA_HOME_REMOVED:
-    OZ_error("Dunno what to do with these FS_AA_HOME_*");
-  case FS_PROT_STATE_TMP_UNAVAIL: state = AtomTempFail;
-  case FS_PROT_STATE_PRM_UNAVAIL: state = AtomPermFail;
-  default: Assert(0);
-  }
+TaggedRef
+Mediator::getFaultStream() {
+  // create the fault stream if necessary
+  if (faultStream == 0) faultStream = oz_newReadOnly(oz_rootBoard());
+  return oz_cons(fsToAtom(faultState), faultStream);
+}
 
-  // add state to the stream
-  TaggedRef newStream = oz_cons(state, oz_newReadOnly(oz_rootBoard()));
-  if (faultStream) {
-    TaggedRef *vptr = tagged2Ref(oz_tail(faultStream));
-    Assert(oz_isVar(*vptr));
-    oz_bindReadOnly(vptr, newStream);
+OZ_Return
+Mediator::suspendOnFault() {
+  Assert(faultState);
+  if (oz_currentThread() != NULL) {
+    if (faultCtlVar == 0) faultCtlVar = oz_newVariable(oz_rootBoard());
+    return oz_var_addSusp(tagged2Ref(faultCtlVar), oz_currentThread());
   }
-  faultStream = newStream;
+  return SUSPEND;
+}
+
+void
+Mediator::reportFS(const FaultState& fs) {
+  if (faultState != GLUE_FAULT_PERM) {
+    // determine new fault state
+    GlueFaultState s = GLUE_FAULT_NONE;
+
+    if (fs & FS_PROT_STATE_TMP_UNAVAIL) s = GLUE_FAULT_TEMP;
+    if (fs & FS_AA_HOME_PRM_UNAVAIL ||
+	fs & FS_AA_HOME_REMOVED ||
+	fs & FS_PROT_STATE_PRM_UNAVAIL) s = GLUE_FAULT_PERM;
+
+    setFaultState(s);
+  }
 }
 
 void
