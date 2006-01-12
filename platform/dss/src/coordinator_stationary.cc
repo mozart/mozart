@@ -264,33 +264,32 @@ namespace _dss_internal{ //Start namespace
   {
     // ********* Access Architecture part **********
     Assert(s != m_getEnvironment()->a_myDSite);
-    if(s == m_getGUIdSite()){ 
-      // The Home site of the entity is affected. This directly affects the 
-      // proxy. If the home site is unaccessable for any reason the proxy 
-      // cannot guarante its functionality 
+    if (s == m_getGUIdSite()) {
+      // The Home site of the entity is affected. This directly
+      // affects the proxy. If the home site is unaccessable for any
+      // reason the proxy cannot guarante its functionality.
       switch(state){
-	// remove tmp, if any 
-      case DSite_OK://  setFaultState(getFaultState() & FS_AA_HOME_TMP_UNAVAIL); break; //OLD, suspicious
-	setFaultState(getFaultState() & ~FS_AA_MASK);
-      case DSite_TMP: setFaultState(getFaultState() | FS_AA_HOME_TMP_UNAVAIL); break;
+      case DSite_OK: // remove tmp, if any 
+	setFaultState(getFaultState() & ~FS_AA_MASK); break;
+      case DSite_TMP:
+	setFaultState(getFaultState() | FS_AA_HOME_TMP_UNAVAIL); break;
       case DSite_GLOBAL_PRM:
-      case DSite_LOCAL_PRM: setFaultState(getFaultState() | FS_AA_HOME_PRM_UNAVAIL); break;
+      case DSite_LOCAL_PRM:
+	setFaultState(getFaultState() | FS_AA_HOME_PRM_UNAVAIL); break;
       default:
 	dssError("Unknown DSite state %d for %s",state,s->m_stringrep());
       }
     }
     
-    // Clear the old protocol fault state. 
+    // Ask the protocol if the erronous site affects its
+    // functionality.
     setFaultState(getFaultState() & ~FS_PROT_MASK);
-    
-    // Ask the protocol if the erronous site affects its 
-    // functionality. 
     setFaultState(getFaultState() | a_prot->siteStateChanged(s, state));
-    if(getRegisteredFS() & getFaultState()){ 
-      // GLUE_INTERFACE 
+
+    // Notify the glue interface if required
+    if (getRegisteredFS() & getFaultState()) {
       a_AbsEnt_Interface->reportFaultState(getRegisteredFS() & getFaultState());
     }
-
   }
   
     void 

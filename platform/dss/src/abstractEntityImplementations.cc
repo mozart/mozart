@@ -116,7 +116,7 @@ namespace _dss_internal{ //Start namespace
 
   void
   MutableAbstractEntityImpl::reportFaultState(const FaultState& fs){
-    Assert(0); 
+    if (a_mediator) a_mediator->reportFaultState(fs);
   }
 
   PstOutContainerInterface* 
@@ -254,9 +254,8 @@ namespace _dss_internal{ //Start namespace
 
   
   void 
-  MonotonicAbstractEntityImpl::reportFaultState(const FaultState& fs)
-  {
-    Assert(0); 
+  MonotonicAbstractEntityImpl::reportFaultState(const FaultState& fs) {
+    if (a_mediator) a_mediator->reportFaultState(fs);
   }
 
   CoordinatorAssistantInterface *
@@ -342,9 +341,8 @@ namespace _dss_internal{ //Start namespace
   }
 
   void 
-  ImmutableAbstractEntityImpl::reportFaultState(unsigned int const &fs)
-  {
-    Assert(0); 
+  ImmutableAbstractEntityImpl::reportFaultState(const FaultState& fs) {
+    if (a_mediator) a_mediator->reportFaultState(fs);
   }
   
   CoordinatorAssistantInterface*
@@ -387,7 +385,7 @@ namespace _dss_internal{ //Start namespace
   
   void
   RelaxedMutableAbstractEntityImpl::reportFaultState(const FaultState& fs){
-    ; 
+    if (a_mediator) a_mediator->reportFaultState(fs);
   }
   
   PstOutContainerInterface* 
