@@ -38,6 +38,7 @@
 #include "thr_int.hh"
 #include "glue_faults.hh"
 #include "unify.hh"
+#include "var_readonly.hh"
 #include "cac.hh"
 
 // The identity of the mediators, used for... I dont remeber
@@ -118,7 +119,6 @@ char* LazyVarMediator::getPrintType(){ return "lazyVar";}
 char* PortMediator::getPrintType(){ return "port";}
 char* CellMediator::getPrintType(){ return "cell";}
 char* LockMediator::getPrintType(){ return "lock";}
-char* VarMediator::getPrintType(){ return "var";}
 char* ArrayMediator::getPrintType(){ return "array";}
 char* DictionaryMediator::getPrintType(){ return "dictionary";}
 char* OzThreadMediator::getPrintType() {return "thread";}
@@ -431,55 +431,6 @@ WakeRetVal LazyVarMediator::resumeFunctionalThread(DssThreadId * id, PstInContai
 }
 
 */
-
-
-
-/************************* VarMediator *************************/
-
-VarMediator::VarMediator(AbstractEntity *ae, TaggedRef t) :
-  Mediator(t, GLUE_VARIABLE, ATTACHED)
-{
-  setAbstractEntity(ae);
-}
-
-void VarMediator::globalize() { Assert(0); }
-void VarMediator::localize() { Assert(0); }
-
-PstOutContainerInterface *VarMediator::retrieveEntityRepresentation(){
-  return new PstOutContainer(getEntity());
-}
-
-void VarMediator::installEntityRepresentation(PstInContainerInterface* pstin){
-  PstInContainer *pst = static_cast<PstInContainer*>(pstin); 
-  TaggedRef var = getEntity();
-  TaggedRef arg =  pst->a_term;
-  // raph: don't do this at home, kids!
-  ExtVar* ev = oz_getExtVar(*(TaggedRef *)var);
-  oz_bindLocalVar( extVar2Var(ev), (TaggedRef *)var,arg);
-  makePassive();
-}
-
-AOcallback
-VarMediator::callback_Bind(DssOperationId *id,
-			   PstInContainerInterface* pstin)
-{
-  PstInContainer *pst = static_cast<PstInContainer*>(pstin); 
-  TaggedRef var = getEntity();
-  TaggedRef arg = pst->a_term;
-  // raph: don't do this at home, kids!
-  ExtVar *ev = oz_getExtVar(*(TaggedRef *)var);
-  oz_bindLocalVar( extVar2Var(ev), (TaggedRef *)var,arg);
-  makePassive();
-  return AOCB_FINISH;
-}
-
-AOcallback
-VarMediator::callback_Append(DssOperationId *id,
-			     PstInContainerInterface* pstin)
-{
-  Assert(0);
-  return AOCB_FINISH; 
-}
 
 
 

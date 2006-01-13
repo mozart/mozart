@@ -306,6 +306,7 @@ bool distDictionaryPutImpl(OzDictionary *ozD, TaggedRef key, TaggedRef val){
 }
 
 
+
 /************************* Variables *************************/
 
 // Variable are somewhat different from the other entities. 
@@ -315,90 +316,6 @@ bool distDictionaryPutImpl(OzDictionary *ozD, TaggedRef key, TaggedRef val){
 
 // The DOE of the MEdiator is solely used to cntrl the variable, 
 // and not the thread-resumes. 
-
-bool distVarDoBind(ProxyVar* pv, TaggedRef *lPtr, TaggedRef r){
-  Mediator *me = pv->getMediator();
-  AbstractEntity *ae = me->getAbstractEntity();
-  MonotonicAbstractEntity *tae = static_cast<MonotonicAbstractEntity *>(ae);
-  DssThreadId *thrId = currentThreadId();
-
-  PstOutContainerInterface** pstout;
-  OpRetVal cont = tae->abstractOperation_Bind(thrId,pstout);
-  if (pstout != NULL){
-    *(pstout) = new PstOutContainer(r);
-  }
-  switch(cont)
-    {
-    case DSS_PROCEED:
-      delete thrId; 
-      return true; 
-    case DSS_SKIP:
-      Assert(0);
-      return true; // I dont know about this one    
-    case DSS_SUSPEND:
-      new SuspendedDummy();
-      return false; 
-    case DSS_RAISE:
-      OZ_error("Not Implemented yet, raise");
-      return false; 
-    case DSS_INTERNAL_ERROR_NO_OP:
-      OZ_error("Not Handled, varBind DSS_INTERNAL_ERROR_NO_OP ");
-      return false; 
-    case DSS_INTERNAL_ERROR_NO_PROXY:
-    default: 
-      OZ_error("Not Handled, varBind,  DSS_INTERNAL_ERROR_NO_PROXY");
-      return false; 
-    }
-  Assert(0); 
-  return false; 
-}
-
-OZ_Return distVarDoUnify(ProxyVar* lpv,ProxyVar* rpv, TaggedRef *lPtr, TaggedRef r){
-  TaggedRef bind;
-  Mediator* me;
-  MonotonicAbstractEntity *tae;
-  MonotonicAbstractEntity *ltae = static_cast<MonotonicAbstractEntity *>(lpv->getMediator()->getAbstractEntity());
-  MonotonicAbstractEntity *rtae = static_cast<MonotonicAbstractEntity *>(rpv->getMediator()->getAbstractEntity());
-
-  DssThreadId *thrId = currentThreadId();
-  
-  bool order = dss->m_orderEntities(ltae,rtae);
-  if(order){
-    tae  = ltae;
-    bind = rpv->getTaggedRef();
-    me   = lpv->getMediator();
-  }else{
-    tae  = rtae;
-    bind = lpv->getTaggedRef();
-    me   = rpv->getMediator();
-  }
-
-  PstOutContainerInterface** pstout;
-  OpRetVal cont = tae->abstractOperation_Bind(thrId,pstout);
-  if (pstout != NULL){
-    *(pstout) = new PstOutContainer(bind);
-  }
-  
-  // Same as above
-  switch(cont){
-  case DSS_PROCEED:
-    return PROCEED;
-  case DSS_SUSPEND:
-    new SuspendedDummy();
-    return SUSPEND;
-  case DSS_SKIP:
-    Assert(0);
-    return PROCEED; // I dont know about this one    
-  case DSS_RAISE:
-  case DSS_INTERNAL_ERROR_NO_OP:
-  case DSS_INTERNAL_ERROR_NO_PROXY:
-  default: 
-    OZ_error("Not Handled, varUnify");
-    return PROCEED; 
-  }
-  Assert(0);
-  return PROCEED;
-}
 
 
 // bind a distributed variable
@@ -560,21 +477,6 @@ OZ_Return objectExchangeImpl(OzCell* o, TaggedRef fea, TaggedRef oVal, TaggedRef
   return PROCEED;
 }
 
-OZ_Return lazyVarFetch(LazyVar* lv, TaggedRef *vptr, OZ_Term Term)
-{
-  /*
-  //printf("Fetching Lazy Var\n");
-  ProxyInterface *pi = lv->getMediator()->getProxy();
-  SuspLazyObject *stoc = new SuspLazyObject(vptr);
-  PstOutContainer *load = new PstOutContainer(Term);
-  // Prepare for full marshaling. A lazy node is a stop node
-  // for the marshaler; the stopnode property must be bypassed.
-  OpRetVal ret = pi->doAbstractOperation(AO_LZ_FETCH,stoc->thId,load);
-  
-  return decodeOpRetVal(ret,stoc);
-  */
-  return PROCEED;
-}
 
 
 void initEntityOperations(){

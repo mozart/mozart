@@ -898,40 +898,7 @@ OZ_BI_define(BIinstallFaultPort,1,0){
 }OZ_BI_end
 
 OZ_BI_define(BIdistHandlerInstall,4,1){
-  oz_declareIN(0,e);
-  oz_declareIntIN(1,condition); 
-  oz_declareIN(2,proc0);
-  TaggedRef entity = oz_deref(e);
-  if(!oz_isVarOrRef(entity))
-    {
-      if(oz_isConst(entity))
-	{
-	  ConstTerm *ct = tagged2Const(entity); 
-	  switch(ct->getType()){
-	  case Co_Cell:
-	  case Co_Port:
-	    if (((ConstTermWithHome *)ct)->isDistributed()) {
-	      OZ_warning("Watcher installation disabled");
-	    } else {
-	      OZ_warning("Installing wathcer on non distributed entity");
-	    }
-	    break; 
-	  default: 
-	    return oz_raise(E_SYSTEM,E_SYSTEM,"what should I do?",1,OZ_atom("e dont distribute that"));
-	  }
-	}
-    }
-  else
-    {
-      if(oz_isExtVar(entity) && oz_getExtVar(entity)->getIdV() == OZ_EVAR_PROXY)
-	{
-	  ProxyVar *nv = (ProxyVar*)oz_getExtVar(entity);
-	  OZ_warning("Watcher installation disabled");
-	  // nv->getMediator()->addWatcher(proc0,condition);
-	}
-      else
-	OZ_error("Installing watcher on non distributed variable");
-    }
+  OZ_warning("Watcher installation disabled");
   OZ_RETURN(oz_bool(TRUE));
 }OZ_BI_end
 
@@ -945,35 +912,7 @@ OZ_BI_define(BIdistHandlerDeInstall,2,1){
 }OZ_BI_end
 
 OZ_BI_define(BIgetEntityCond,2,0){
-  oz_declareIN(0,e);
-  oz_declareIntIN(1,condition); 
-  oz_declareIN(2,proc0);
-  TaggedRef entity = oz_deref(e);
-  
-  if(!oz_isVarOrRef(entity))
-    {
-      if(oz_isConst(entity))
-	{
-	  ConstTerm *ct = tagged2Const(entity); 
-	  switch(ct->getType()){
-	  case Co_Cell:
-	  case Co_Port:
-	    if (((ConstTermWithHome *)ct)->isDistributed()) {
-	      OZ_warning("Watcher deinstallation disabled");
-	    }
-	    break; 
-	  default: 
-	    return oz_raise(E_SYSTEM,E_SYSTEM,"what should I do?",1,OZ_atom("e dont distribute that"));
-	    
-	  }
-	}
-    }
-  else
-    {
-      OZ_warning("Variables not handled yet");
-    }
-  
-  
+  OZ_warning("Watcher deinstallation disabled");
   OZ_RETURN(oz_cons(AtomNormal,oz_nil()));
 }OZ_BI_end
 

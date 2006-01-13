@@ -81,25 +81,6 @@ void marshalDIFcounted(MarshalerBuffer *bs, MarshalTag tag)
 
 
 //
-// kost@ : both 'DIF_VAR_OBJECT' and 'DIF_STUB_OBJECT' (currently)
-// have the "tertiary" representation (and, thus, are unmarshaled
-// using 'unmarshalTertiary'). An index, if any, is marshaled
-// *afterwards*;
-void ObjectVar::marshal(ByteBuffer *bs, Bool hasCoRefsIndex)
-{
-  
-  marshalDIFcounted(bs, (hasCoRefsIndex ?
-			 DIF_VAR_OBJECT_DEF : DIF_VAR_OBJECT));
-  
-  GName *classgn = getGNameClass();
-
-  GlueWriteBuffer *buf = static_cast<GlueWriteBuffer*>(bs);
-  getMediator()->getCoordinatorAssistant()->marshal(buf, PMF_ORDINARY);
-  marshalGName(bs, gname);
-  marshalGName(bs, classgn);
-}
-
-//
 // 'dpMarshalLitCont' marshals a string (which is passed in as 'arg')
 // as long as the buffer allows. If the string does not fit
 // completely, then marshaling suspends. Note that the string fragment

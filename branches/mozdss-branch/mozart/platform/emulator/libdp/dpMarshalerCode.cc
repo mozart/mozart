@@ -662,9 +662,9 @@ Bool DPMARSHALERCLASS::processVar(OZ_Term v, OZ_Term *vRef)
       case OZ_EVAR_LAZY:
 	// raph: this is broken, don't use it!
 	Assert(0);
-	oz_getLazyVar(v)->marshal(bs, index);
+	// oz_getLazyVar(v)->marshal(bs, index);
 	// only a "place holding" patch is necessary:
-	expVars = new MarshaledVarPatch(vrt, expVars);
+	// expVars = new MarshaledVarPatch(vrt, expVars);
 	break;
 
       case OZ_EVAR_DISTRIBUTEDVARPATCH:
