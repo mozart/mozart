@@ -3,7 +3,7 @@
  *    Erik Klintskog (erik@sics.se)
  * 
  *  Contributors:
- *    optional, Contributor's name (Contributor's email address)
+ *    Raphael Collet (raph@info.ucl.ac.be)
  * 
  *  Copyright:
  *    Erik Klintskog, 2002
