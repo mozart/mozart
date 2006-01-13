@@ -310,23 +310,6 @@ public:
 }; 
 
 
-// mediators for Oz variables
-class VarMediator: public Mediator, public MonotonicMediatorInterface {
-public:
-  VarMediator(AbstractEntity *p, TaggedRef t);
-  
-  virtual AOcallback callback_Bind(DssOperationId *id,
-				   PstInContainerInterface* operation); 
-  virtual AOcallback callback_Append(DssOperationId *id,
-				     PstInContainerInterface* operation);
-  virtual void globalize();
-  virtual void localize();
-  virtual PstOutContainerInterface *retrieveEntityRepresentation();
-  virtual void installEntityRepresentation(PstInContainerInterface*);
-  virtual char *getPrintType();
-}; 
-
-
 // mediators for immutable values that are replicated lazily
 class LazyVarMediator: public Mediator {
 public:

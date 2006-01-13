@@ -37,12 +37,6 @@
 
 
 
-// Interafces to the Engine 
-/* Forward dec */ 
-class ProxyVar;
-class LazyVar;
-
-
 /* Annotations */
 
 struct Annotation {

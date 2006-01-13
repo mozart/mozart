@@ -233,25 +233,3 @@ OZ_Term glue_unmarshalEntity(ByteBuffer *bs) {
     }
   }
 }
-
-
-
-/**********************************************************************/
-
-///////////////////////////////////////////////////////////////////////////
-////  Marshal of a Variable
-
-void ProxyVar::marshal(ByteBuffer *bs, Bool hasIndex, TaggedRef* vRef, Bool push)
-{
-  Assert(getIdV() == OZ_EVAR_PROXY);
-  MarshalTag tag = (isReadOnly() ? 
-		    (hasIndex ? DIF_READONLY_DEF : DIF_READONLY) :
-		    (hasIndex ? DIF_VAR_DEF : DIF_VAR));
-  bs->put(tag);
-  //  ProxyName pn=tr2Pn(makeTaggedRef(vRef));
-
-  CoordinatorAssistantInterface  *cai = getMediator()->getCoordinatorAssistant();
-  GlueWriteBuffer *gwb = static_cast<GlueWriteBuffer *>(bs); 
-  cai->marshal(gwb, (push)?PMF_PUSH:PMF_ORDINARY);
-
-}
