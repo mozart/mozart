@@ -4,6 +4,8 @@
  * 
  *  Contributors:
  *    Erik Klintskog (erik@sics.se)
+ *    Raphael Collet (raph@info.ucl.ac.be)
+ *    Boriss Mejias (bmc@info.ucl.ac.be)
  * 
  *  Copyright:
  * 
@@ -726,23 +728,21 @@ OZ_BI_define(BIsetFaultState,2,0)
   oz_declareSafeDerefIN(0,entity);
   oz_declareNonvarIN(1,state);
 
-  GlueFaultState newfs;
-  // parse new state
-  if (oz_eq(state, AtomPermFail))      newfs = GLUE_FAULT_PERM;
-  else if (oz_eq(state, AtomTempFail)) newfs = GLUE_FAULT_TEMP;
-  else if (oz_eq(state, AtomOk))       newfs = GLUE_FAULT_NONE;
-  else return oz_raise(E_SYSTEM, AtomDp, "invalid fault state", 1, state);
+  // first parse new state
+  GlueFaultState fs;
+  if (!atomToFS(state, fs))
+    return oz_raise(E_SYSTEM, AtomDp, "invalid fault state", 1, state);
 
   Mediator* med = glue_getMediator(entity);
   if (med == NULL)
     return oz_raise(E_SYSTEM, AtomDp, "nondistributable entity", 1, entity);
 
-  // state transition is invalid when going from PERM to non-PERM
-  if (newfs != GLUE_FAULT_PERM && med->getFaultState() == GLUE_FAULT_PERM)
+  // check state transition
+  if (!validFaultStateTransition(med->getFaultState(), fs))
     return oz_raise(E_SYSTEM, AtomDp, "invalid fault transition", 1, state);
 
   // set new state
-  med->setFaultState(newfs);
+  med->setFaultState(fs);
   return PROCEED;
 
 } OZ_BI_end

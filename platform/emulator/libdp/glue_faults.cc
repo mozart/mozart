@@ -4,7 +4,7 @@
  *    Erik Klintskog (erik@sics.se)
  * 
  *  Contributors:
- *    optional, Contributor's name (Contributor's email address)
+ *    Raphael Collet (raph@info.ucl.ac.be)
  * 
  *  Copyright:
  *    Per Brand
@@ -29,23 +29,4 @@
 #pragma implementation "glue_faults.hh"
 #endif
 
-#include "glue_faults.hh"
-#include "glue_tables.hh"
-#include "glue_base.hh"
-
-OZ_Term FaultPort; 
-
-Watcher::Watcher(TaggedRef p, FaultState f, Watcher *n):
-  proc(p),fs(f), next(n)
-{
-  ; 
-}
-
-void Watcher::winvoke(FaultState cond, TaggedRef entity){
-  OZ_Term msg = OZ_recordInit(oz_atom("watcher"),oz_cons(oz_pairA("entity",entity),oz_cons(oz_pairA("action",proc),oz_cons(oz_pairAI("condition",cond),oz_nil()))));
-  doPortSend(tagged2Port(FaultPort), msg, NULL);
-}
-
-void Watcher::gCollect(){
-  oz_gCollectTerm(proc, proc);
-}
+// No implementation needed.  See glue_faults.hh.
