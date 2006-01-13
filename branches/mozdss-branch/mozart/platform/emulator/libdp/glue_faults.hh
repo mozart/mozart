@@ -4,7 +4,7 @@
  *    Erik Klintskog (erik@sics.se)
  * 
  *  Contributors:
- *    optional, Contributor's name (Contributor's email address)
+ *    Raphael Collet (raph@info.ucl.ac.be)
  * 
  *  Copyright:
  *    Per Brand
@@ -33,21 +33,45 @@
 #pragma interface
 #endif
 
-#include "tagged.hh"
-#include "dss_object.hh"
+// raph: The new Fault model no longer uses watchers.  Streams and
+// dataflow synchronization are expressive enough to implement failure
+// watchers at the language level.  Therefore we only need to describe
+// fault states, with their language counterpart.
 
-class Watcher {
-public: 
-  TaggedRef proc;
-  FaultState fs; 
-  Watcher *next; 
-  
-  Watcher(TaggedRef p, FaultState f, Watcher *n);
-  
-  void winvoke(FaultState cond, TaggedRef entity);
-  void gCollect();
+#include "tagged.hh"
+
+// entity fault states
+enum GlueFaultState {
+  GLUE_FAULT_NONE = 0,     // must be zero; non-zero means failure
+  GLUE_FAULT_TEMP,
+  GLUE_FAULT_PERM
 };
 
+// conversion between GlueFaultState and atoms
+inline
+TaggedRef fsToAtom(GlueFaultState fs) {
+  switch (fs) {
+  case GLUE_FAULT_NONE: return AtomOk;
+  case GLUE_FAULT_TEMP: return AtomTempFail;
+  case GLUE_FAULT_PERM: return AtomPermFail;
+  }
+  Assert(0);
+}
+
+// returns TRUE iff the conversion is succesful
+inline
+Bool atomToFS(TaggedRef a, GlueFaultState &fs) {
+  if (oz_eq(a, AtomPermFail)) { fs = GLUE_FAULT_PERM; return TRUE; }
+  if (oz_eq(a, AtomTempFail)) { fs = GLUE_FAULT_TEMP; return TRUE; }
+  if (oz_eq(a, AtomOk))       { fs = GLUE_FAULT_NONE; return TRUE; }
+  return FALSE;
+}
+
+// check state transition
+inline
+Bool validFaultStateTransition(const GlueFaultState& s0,
+			       const GlueFaultState& s1) {
+  return (s0 != GLUE_FAULT_PERM || s1 == GLUE_FAULT_PERM);
+}
 
 #endif
-

@@ -34,8 +34,9 @@
 
 #include "dss_object.hh"
 #include "tagged.hh"
-#include "glue_buffer.hh"
 #include "engine_interface.hh"
+#include "glue_buffer.hh"
+#include "glue_faults.hh"
 
 /*
   Mediators interface Oz entities to DSS abstract entities.  Several
@@ -106,23 +107,6 @@ enum GlueTag {
 // attached or detached
 #define DETACHED 0
 #define ATTACHED 1
-
-// entity fault states, and their atom equivalents
-enum GlueFaultState {
-  GLUE_FAULT_NONE = 0,     // must be zero (fast checking)
-  GLUE_FAULT_TEMP,
-  GLUE_FAULT_PERM
-};
-
-inline
-TaggedRef fsToAtom(GlueFaultState fs) {
-  switch (fs) {
-  case GLUE_FAULT_NONE: return AtomOk;
-  case GLUE_FAULT_TEMP: return AtomTempFail;
-  case GLUE_FAULT_PERM: return AtomPermFail;
-  }
-  Assert(0);
-};
 
 
 
