@@ -38,6 +38,124 @@
 
 
 
+// ports
+OZ_Return distPortSendImpl(OzPort *p, TaggedRef msg) {
+  Assert(p->isDistributed());
+  PortMediator *me = static_cast<PortMediator*>(p->getMediator());
+
+  // suspend if fault state not ok
+  if (me->getFaultState()) return me->suspendOnFault();
+
+  RelaxedMutableAbstractEntity *mae =
+    static_cast<RelaxedMutableAbstractEntity*>(me->getAbstractEntity());
+  PstOutContainerInterface** pstout;
+  OpRetVal cont = mae->abstractOperation_Write(pstout);
+  if (pstout != NULL) *(pstout) = new PstOutContainer(msg);
+
+  switch(cont) {
+  case DSS_PROCEED:
+    doPortSend(p, msg, NULL);
+    return PROCEED;
+  case DSS_SKIP:
+    return PROCEED;
+  case DSS_SUSPEND:
+    Assert(0); 
+    return PROCEED;
+  case DSS_RAISE:
+    OZ_error("Not Implemented yet, raise");
+    return PROCEED;
+  case DSS_INTERNAL_ERROR_NO_OP:
+    OZ_error("Not Handled, distPortSend DSS_INTERNAL_ERROR_NO_OP");
+    return PROCEED;
+  case DSS_INTERNAL_ERROR_NO_PROXY:
+  default: 
+    OZ_error("Not Handled, distPortSend DSS_INTERNAL_ERROR_NO_PROXY");
+    return PROCEED;
+  }
+}
+
+
+
+// cells
+OZ_Return distCellAccessImpl(OzCell *c, TaggedRef &ans) {
+  CellMediator *me = static_cast<CellMediator*>(c->getMediator());
+
+  // suspend if fault state not ok
+  if (me->getFaultState()) return me->suspendOnFault();
+
+  MutableAbstractEntity *mae =
+    static_cast<MutableAbstractEntity*>(me->getAbstractEntity());
+  DssThreadId *thrId = currentThreadId();
+  PstOutContainerInterface** pstout;
+  OpRetVal cont = mae->abstractOperation_Read(thrId,pstout);
+  if (pstout != NULL) *(pstout) = new PstOutContainer(oz_nil()); 
+
+  switch(cont) {
+  case DSS_PROCEED:
+    ans = c->getValue();
+    return PROCEED;
+  case DSS_SKIP:
+    Assert(0); 
+    return PROCEED;
+  case DSS_SUSPEND:
+    ans = static_cast<TaggedRef>(oz_newVariable());
+    new SuspendedCellAccess(me, ans);
+    return BI_REPLACEBICALL;
+  case DSS_RAISE:
+    OZ_error("Not Implemented yet, raise");
+    return PROCEED;
+  case DSS_INTERNAL_ERROR_NO_OP:
+    OZ_error("Not Handled distCellAccess, DSS_INTERNAL_ERROR_NO_OP");
+    return PROCEED;
+  case DSS_INTERNAL_ERROR_NO_PROXY:
+  default: 
+    OZ_error("Not Handled distCellAccess, DSS_INTERNAL_ERROR_NO_PROXY ");
+    return PROCEED;
+  }
+}
+
+
+OZ_Return distCellExchangeImpl(OzCell *c,
+			       TaggedRef &oldVal, TaggedRef newVal) {
+  // This is used for both assign and exchange! 
+  CellMediator *me = static_cast<CellMediator*>(c->getMediator()); 
+
+  // suspend if fault state not ok
+  if (me->getFaultState()) return me->suspendOnFault();
+
+  MutableAbstractEntity *mae =
+    static_cast<MutableAbstractEntity*>(me->getAbstractEntity());
+  DssThreadId *thrId = currentThreadId();
+  PstOutContainerInterface** pstout;
+  OpRetVal cont = mae->abstractOperation_Write(thrId, pstout);
+  if (pstout != NULL) *(pstout) = new PstOutContainer(newVal);
+
+  switch(cont) {
+  case DSS_PROCEED:
+    oldVal = c->exchangeValue(newVal);
+    return PROCEED;
+  case DSS_SKIP:
+    Assert(0); 
+    return PROCEED;
+  case DSS_SUSPEND:
+    oldVal = static_cast<TaggedRef>(oz_newVariable());
+    new SuspendedCellExchange(me, newVal, oldVal);
+    return BI_REPLACEBICALL;
+  case DSS_RAISE:
+    OZ_error("Not Implemented yet, raise");
+    return PROCEED;
+  case DSS_INTERNAL_ERROR_NO_OP:
+    OZ_error("Not Handled Cell Exchange DSS_INTERNAL_ERROR_NO_OP");
+    return PROCEED;
+  case DSS_INTERNAL_ERROR_NO_PROXY:
+  default: 
+    OZ_error("Not Handled Cell Exchange DSS_INTERNAL_ERROR_NO_PROXY");
+    return PROCEED;
+  }
+}
+
+
+
 bool unlockDistLockImpl(OzLock *l){
   // Here we have to do a minor violation to the sequential
   // consistency.  I don't undestand how a thread should be suspended
@@ -106,108 +224,6 @@ bool lockDistLockImpl(OzLock *l, Thread *thr){
 }
 
 
-
-bool cellDoAccessImpl(OzCell *p, TaggedRef &ans) {
-  CellMediator *me = static_cast<CellMediator*>(p->getMediator()); 
-  AbstractEntity *ae = me->getAbstractEntity();
-  MutableAbstractEntity *mae = static_cast<MutableAbstractEntity*>(ae);
-  
-  DssThreadId *thrId = currentThreadId();
-  PstOutContainerInterface** pstout;
-  OpRetVal cont = mae->abstractOperation_Read(thrId,pstout);
-  if (pstout != NULL) *(pstout) = new PstOutContainer(oz_nil()); 
-
-  switch(cont) {
-  case DSS_PROCEED:
-    return true; 
-  case DSS_SKIP:
-    Assert(0); 
-    return true;   
-  case DSS_SUSPEND:
-    ans = static_cast<TaggedRef>(oz_newVariable());
-    new SuspendedCellAccess(me, ans);
-    return false;
-  case DSS_RAISE:
-    OZ_error("Not Implemented yet, raise");
-    return false; 
-  case DSS_INTERNAL_ERROR_NO_OP:
-    OZ_error("Not Handled cellDoAccess,  DSS_INTERNAL_ERROR_NO_OP");
-    return false; 
-  case DSS_INTERNAL_ERROR_NO_PROXY:
-  default: 
-    OZ_error("Not Handled cellDoAccess, DSS_INTERNAL_ERROR_NO_PROXY ");
-    return false; 
-  }
-}
-
-
-bool cellDoExchangeImpl(OzCell *p, TaggedRef &oldVal, TaggedRef newVal) {
-  // This is used for both assign and exchange! 
-  CellMediator *me = static_cast<CellMediator*>(p->getMediator()); 
-  AbstractEntity *ae = me->getAbstractEntity();
-  MutableAbstractEntity *mae = static_cast<MutableAbstractEntity*>(ae);
-  DssThreadId *thrId = currentThreadId();
-
-  PstOutContainerInterface** pstout;
-  OpRetVal cont = mae->abstractOperation_Write(thrId, pstout);
-  if (pstout != NULL) *(pstout) = new PstOutContainer(newVal);
-
-  switch(cont) {
-  case DSS_PROCEED:
-    return true; 
-  case DSS_SKIP:
-    Assert(0); 
-    return true;   
-  case DSS_SUSPEND:
-    oldVal = static_cast<TaggedRef>(oz_newVariable());
-    new SuspendedCellExchange(me, newVal, oldVal);
-    return false;
-  case DSS_RAISE:
-    OZ_error("Not Implemented yet, raise");
-    return false; 
-  case DSS_INTERNAL_ERROR_NO_OP:
-    OZ_error("Not Handled Cell Exchange  DSS_INTERNAL_ERROR_NO_OP");
-    return false; 
-  case DSS_INTERNAL_ERROR_NO_PROXY:
-  default: 
-    OZ_error("Not Handled  Cell Exchange DSS_INTERNAL_ERROR_NO_PROXY");
-    return false; 
-  }
-}
-
-
-
-
-bool portSendImpl(OzPort *p, TaggedRef msg){
-  Assert(p->isDistributed());
-  PortMediator *me = static_cast<PortMediator*>(p->getMediator()); 
-  RelaxedMutableAbstractEntity *mae =
-    static_cast<RelaxedMutableAbstractEntity*>(me->getAbstractEntity());
-
-  PstOutContainerInterface** pstout;
-  OpRetVal cont = mae->abstractOperation_Write(pstout);
-  if (pstout != NULL) *(pstout) = new PstOutContainer(msg);
-
-  switch(cont) {
-  case DSS_PROCEED:
-    return false;
-  case DSS_SKIP:
-    return true;   
-  case DSS_SUSPEND:
-    Assert(0); 
-    return true; 
-  case DSS_RAISE:
-    OZ_error("Not Implemented yet, raise");
-    return false; 
-  case DSS_INTERNAL_ERROR_NO_OP:
-    OZ_error("Not Handled, portSend DSS_INTERNAL_ERROR_NO_OP");
-    return false; 
-  case DSS_INTERNAL_ERROR_NO_PROXY:
-  default: 
-    OZ_error("Not Handled, portSend DSS_INTERNAL_ERROR_NO_PROXY");
-    return false; 
-  }
-}
 
 void cellOperationDoneReadImpl(OzCell* cell, TaggedRef ans, int thid){
     OZ_error("Unexpected return value from AO_RE_W_DONE"); 
@@ -323,6 +339,10 @@ OZ_Return distVarBindImpl(OzVariable *ov, TaggedRef *varPtr, TaggedRef val) {
   printf("--- raph: bind distributed variable %x\n", makeTaggedRef(varPtr));
   Assert(ov == tagged2Var(*varPtr));
   Mediator *med = static_cast<Mediator*>(ov->getMediator());
+
+  // suspend if fault state not ok
+  if (med->getFaultState()) return med->suspendOnFault();
+
   MonotonicAbstractEntity *ae =
     static_cast<MonotonicAbstractEntity*>(med->getAbstractEntity());
 
@@ -480,8 +500,12 @@ OZ_Return objectExchangeImpl(OzCell* o, TaggedRef fea, TaggedRef oVal, TaggedRef
 
 
 void initEntityOperations(){
-  cellDoExchange = &cellDoExchangeImpl;
-  cellDoAccess = &cellDoAccessImpl;
+  // ports
+  distPortSend = &distPortSendImpl;
+
+  // cells
+  distCellAccess = &distCellAccessImpl;
+  distCellExchange = &distCellExchangeImpl;
   
   // Experimental
 
@@ -494,9 +518,6 @@ void initEntityOperations(){
   cellAtExchange = &cellAtExchangeImpl;
   cellAtAccess   = &cellAtAccessImpl; 
   objectExchange = &objectExchangeImpl;
-  
-  // Ports 
-  portSend = &portSendImpl;
   
   // Lock
   lockDistLock = &lockDistLockImpl; 

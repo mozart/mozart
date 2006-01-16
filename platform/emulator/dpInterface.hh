@@ -3,6 +3,8 @@
  *    Per Brand, Konstantin Popov
  * 
  *  Contributors:
+ *    Raphael Collet (raph@info.ucl.ac.be)
+ *    Boriss Mejias (bmc@info.ucl.ac.be)
  * 
  *  Copyright:
  *    Per Brand, Konstantin Popov 1998
@@ -32,15 +34,36 @@
 
 #include "base.hh"
 
-#define SIZEOFPORTPROXY (4*sizeof(void*))
+// The following functions interface the distribution layer to the
+// engine.  They implement operations that may imply distribution.
+// The function pointers are assigned once the glue layer is loaded.
 
 //
 extern Bool (*isPerdioInitialized)();
- 
+
+
+
+/************************* Entity operations **************************/
+
+// We use the following convention:
+//
+//    OZ_Return (*distXXXYYY)(ZZZ, ...);
+//
+// XXX denotes the entity type, YYY denotes the operation, and ZZZ
+// denotes a pointer or reference to the entity.  The operation's
+// arguments are given next.  The returned value may indicate that:
+//  - the operation just succeeded (PROCEED)
+//  - the operation will be resumed later (BI_REPLACEBICALL)
+//  - the operation suspended, typically because of a fault (SUSPEND)
+
+// ports
+extern OZ_Return (*distPortSend)(OzPort*, TaggedRef);
+
+// cells
+extern OZ_Return (*distCellAccess)(OzCell*, TaggedRef&);
+extern OZ_Return (*distCellExchange)(OzCell*, TaggedRef&, TaggedRef);
+
 // 
-extern bool (*portSend)(OzPort *p, TaggedRef msg);
-extern bool (*cellDoExchange)(OzCell*,TaggedRef&,TaggedRef);
-extern bool (*cellDoAccess)(OzCell*,TaggedRef&);
 extern OZ_Return (*cellAtAccess)(OzCell*,TaggedRef,TaggedRef);
 extern OZ_Return (*cellAtExchange)(OzCell*,TaggedRef,TaggedRef);
 extern OZ_Return (*cellAssignExchange)(OzCell*,TaggedRef,TaggedRef);
@@ -63,15 +86,20 @@ extern bool (*distArrayPut)(OzArray*, TaggedRef, TaggedRef);
 extern bool (*distDictionaryGet)(OzDictionary*, TaggedRef, TaggedRef&);
 extern bool (*distDictionaryPut)(OzDictionary*, TaggedRef, TaggedRef);
 
-extern void (*gCollectMediator)(void *med);
-//
-//
 
-//
+
+/******************** Garbage collection routines *********************/
+
+// various phases of GC
 extern void (*gCollectGlueStart)();
 extern void (*gCollectGlueRoots)();
 extern void (*gCollectGlueWeak)();
 extern void (*gCollectGlueFinal)();
+
+// mark a given mediator
+extern void (*gCollectMediator)(void *med);
+
+
 
 // exit hook;
 extern void (*dpExit)();
@@ -84,6 +112,5 @@ extern Bool (*distHandlerInstall)(unsigned short,unsigned short,
 				       Thread*,TaggedRef, TaggedRef);
 extern Bool (*distHandlerDeInstall)(unsigned short,unsigned short,
 				       Thread*,TaggedRef, TaggedRef);
+
 #endif // __DPINTERFACE_HH
-
-

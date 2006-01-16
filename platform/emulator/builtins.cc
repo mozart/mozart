@@ -3274,8 +3274,7 @@ OZ_Return oz_sendPort(OZ_Term prt, OZ_Term val)
       oz_newThreadInject(prt_home)->pushCall(BI_send,RefsArray::make(prt,val));
       return PROCEED;
     } else {
-      if ((*portSend)(port,val))
-	return PROCEED;
+      return (*distPortSend)(port, val);
     }
   } 
   doPortSend(port, val, sc_required ? prt_home : (Board *) NULL);
@@ -3341,11 +3340,9 @@ OZ_BI_define(BInewCell,1,1)
 OZ_Return accessCell(OZ_Term term, OZ_Term &out)
 {
   OzCell *cell = tagged2Cell(term);
-  if (cell->isDistributed() && !(*cellDoAccess)(cell, out))
-    return BI_REPLACEBICALL;
-
+  if (cell->isDistributed())
+    return (*distCellAccess)(cell, out);
   out = cell->getValue();
-
   return PROCEED;
 }
 
@@ -3353,8 +3350,8 @@ OZ_Return exchangeCell(OZ_Term term, OZ_Term newVal, OZ_Term &oldVal)
 {
   Assert(!oz_isVar(newVal));
   OzCell *cell = tagged2Cell(term);
-  if(cell->isDistributed() && !(*cellDoExchange)(cell, oldVal, newVal))
-    return BI_REPLACEBICALL;
+  if (cell->isDistributed())
+    return (*distCellExchange)(cell, oldVal, newVal);
   CheckLocalBoard(cell,"cell");
   oldVal = cell->exchangeValue(newVal);
   return PROCEED;
