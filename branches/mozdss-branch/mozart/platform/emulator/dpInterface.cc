@@ -3,6 +3,8 @@
  *    Per Brand, Konstantin Popov
  * 
  *  Contributors:
+ *    Raphael Collet (raph@info.ucl.ac.be)
+ *    Boriss Mejias (bmc@info.ucl.ac.be)
  * 
  *  Copyright:
  *    Per Brand, Konstantin Popov 1998
@@ -38,26 +40,27 @@ Bool isPerdioInitializedStub()
   return (NO);
 }
 
+// ports
+OZ_Return distPortSendStub(OzPort *p, TaggedRef msg) {
+  OZD_error("'distPortSend' called without DP library?");
+  return PROCEED;
+}
+
+// cells
+OZ_Return distCellAccessStub(OzCell*, TaggedRef&) {
+  OZD_error("'distCellAccess' called without DP library?");
+  return PROCEED;
+}
+OZ_Return distCellExchangeStub(OzCell*, TaggedRef&, TaggedRef) {
+  OZD_error("'distCellExchange' called without DP library?");
+  return PROCEED;
+}
+
 //
-bool portSendStub(OzPort *p, TaggedRef msg)
-{
-  OZD_error("'portSend' called without DP library?");
-  return true;
-}
-bool cellDoExchangeStub(OzCell*,TaggedRef&,TaggedRef)
-{
-  OZD_error("'cellDoExchange' called without DP library?");
-  return true;
-}
 OZ_Return objectExchangeStub(OzCell*,TaggedRef,TaggedRef,TaggedRef)
 {
   OZD_error("'objectExchange' called without DP library?");
   return (PROCEED);
-}
-bool cellDoAccessStub(OzCell*,TaggedRef&)
-{
-  OZD_error("'cellDoAccess' called without DP library?");
-  return true;
 }
 void cellOperationDoneStub(OzCell*,TaggedRef){
   OZD_error("'cellDoAccess' called without DP library?");
@@ -126,20 +129,12 @@ bool distDictionaryPutStub(OzDictionary*, TaggedRef, TaggedRef){
 }
 
 // interface for GC;
-void gCollectMediatorStub(void* m)
-{
+void gCollectMediatorStub(void* m) {
   OZD_error("'gCollectMediator' called without DP library?");
 }
 
-//
-// (Only) gCollect method - for cells & locks (because we have to know
-// whether they are accessible locally or not);
-
-//
-void gCollectPerdioStartStub() {}
-void gCollectPerdioFinalStub() {}
-void gCollectBorrowTableUnusedFramesStub() {}
-void gCollectPerdioRootsStub() {}
+// stub for gCollectGlueXXX() functions: simply do nothing
+void doNothingStub() {}
 
 // exit hook;
 void dpExitStub() {;}
@@ -163,15 +158,18 @@ Bool distHandlerDeInstallStub(unsigned short x,unsigned short y,
 //
 Bool (*isPerdioInitialized)() = isPerdioInitializedStub;
 
-// 
-bool (*portSend)(OzPort *p, TaggedRef msg)
-  = portSendStub;
-bool (*cellDoExchange)(OzCell*,TaggedRef&,TaggedRef)
-  = cellDoExchangeStub;
+// ports
+OZ_Return (*distPortSend)(OzPort*, TaggedRef)
+  = distPortSendStub;
+
+// cells
+OZ_Return (*distCellAccess)(OzCell*, TaggedRef&)
+  = distCellAccessStub;
+OZ_Return (*distCellExchange)(OzCell*, TaggedRef&, TaggedRef)
+  = distCellExchangeStub;
+
 OZ_Return (*objectExchange)(OzCell*,TaggedRef,TaggedRef,TaggedRef)
   = objectExchangeStub;
-bool (*cellDoAccess)(OzCell*,TaggedRef&)
-  = cellDoAccessStub;
 OZ_Return (*cellAtAccess)(OzCell*,TaggedRef,TaggedRef)
   = cellAtAccessStub;
 OZ_Return (*cellAtExchange)(OzCell*,TaggedRef,TaggedRef)
@@ -213,13 +211,13 @@ void (*gCollectMediator)(void*)
 
 // dss garbage collection steps
 void (*gCollectGlueStart)()
-  = gCollectPerdioStartStub;
+  = doNothingStub;
 void (*gCollectGlueRoots)()
-  = gCollectPerdioRootsStub;
+  = doNothingStub;
 void (*gCollectGlueWeak)()
-  = gCollectBorrowTableUnusedFramesStub;
+  = doNothingStub;
 void (*gCollectGlueFinal)()
-  = gCollectPerdioFinalStub;
+  = doNothingStub;
 
 // exit hook;
 void (*dpExit)()

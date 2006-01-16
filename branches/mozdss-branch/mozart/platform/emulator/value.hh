@@ -2634,6 +2634,9 @@ Bool oz_isPort(TaggedRef term)
 inline OzPort *tagged2Port(TaggedRef term)
 { return (OzPort *) tagged2Const(term);}
 
+// implemented in builtins.cc
+void doPortSend(OzPort *port, TaggedRef val, Board*);
+
 /*===================================================================
  * Space
  *=================================================================== */
