@@ -609,9 +609,9 @@ OZ_Return dictionaryGetInline(OZ_Term d, OZ_Term k, OZ_Term &out)
   NONVAR(d,dictaux);
   if (!oz_isDictionary(dictaux)) { oz_typeError(0,"Dictionary"); }
   OzDictionary *dict = tagged2Dictionary(dictaux);
-  if (dict->isDistributed() && (*distDictionaryGet)(dict, key, out)) {
-    return BI_REPLACEBICALL;
-  }
+
+  if (dict->isDistributed())
+    return (*distDictionaryGet)(dict, key, out);
 
   out = dict->getArg(key);
   if (out) {
@@ -643,11 +643,10 @@ OZ_Return dictionaryPutInline(OZ_Term d, OZ_Term k, OZ_Term value)
   NONVAR(d,dictaux);
   if (!oz_isDictionary(dictaux)) { oz_typeError(0,"Dictionary"); }
   OzDictionary *dict = tagged2Dictionary(dictaux);
-  if (dict->isDistributed() && (*distDictionaryPut)(dict, key, value)) {
-    return BI_REPLACEBICALL;
-  }
-  
   CheckLocalBoard(dict, "dict");
+
+  if (dict->isDistributed())
+    return (*distDictionaryPut)(dict, key, value);
   dict->setArg(key,value);
   return PROCEED;
 }

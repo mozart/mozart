@@ -391,22 +391,16 @@ OZ_Return arrayGetInline(TaggedRef t, TaggedRef i, TaggedRef &out)
   if (!oz_isArray(array)) {
     oz_typeError(0,"Array");
   }
-
   if (!oz_isSmallInt(index)) {
     oz_typeError(1,"smallInteger");
   }
 
   OzArray *ar = tagged2Array(array);
-  if (ar->isDistributed() && (*distArrayGet)(ar,index,out))
-    {
-      return BI_REPLACEBICALL; 
-    }
-  else
-    {
-      out = ar->getArg(tagged2SmallInt(index));
-      if (out) return PROCEED;
-      return oz_raise(E_ERROR,E_KERNEL,"array",2,array,index);
-    }
+  if (ar->isDistributed())
+    return (*distArrayGet)(ar,index,out);
+  out = ar->getArg(tagged2SmallInt(index));
+  if (out) return PROCEED;
+  return oz_raise(E_ERROR,E_KERNEL,"array",2,array,index);
 }
 OZ_DECLAREBI_USEINLINEFUN2(BIarrayGet,arrayGetInline)
 
@@ -419,21 +413,16 @@ OZ_Return arrayPutInline(TaggedRef t, TaggedRef i, TaggedRef value)
   if (!oz_isArray(array)) {
     oz_typeError(0,"Array");
   }
-
   if (!oz_isSmallInt(index)) {
     oz_typeError(1,"smallInteger");
   }
 
   OzArray *ar = tagged2Array(array);
-  if (ar->isDistributed() && distArrayPut(ar,index,value))
-    {
-      return BI_REPLACEBICALL; 
-    }
-  else{
-    // Denna kommer bli problem..
-    CheckLocalBoard(ar,"array");
-    if (ar->setArg(tagged2SmallInt(index),value)) return PROCEED;
-  }
+  CheckLocalBoard(ar,"array");
+
+  if (ar->isDistributed())
+    return (*distArrayPut)(ar,index,value);
+  if (ar->setArg(tagged2SmallInt(index),value)) return PROCEED;
   return oz_raise(E_ERROR,E_KERNEL,"array",2,array,index);
 }
 
