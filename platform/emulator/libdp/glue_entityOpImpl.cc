@@ -35,10 +35,12 @@
 #include "glue_interface.hh"
 #include "pstContainer.hh"
 #include "unify.hh"
+#include "builtins.hh"
 
 
 
-// ports
+/******************************* Ports ********************************/
+
 OZ_Return distPortSendImpl(OzPort *p, TaggedRef msg) {
   Assert(p->isDistributed());
   PortMediator *me = static_cast<PortMediator*>(p->getMediator());
@@ -76,7 +78,8 @@ OZ_Return distPortSendImpl(OzPort *p, TaggedRef msg) {
 
 
 
-// cells
+/******************************* Cells ********************************/
+
 OZ_Return distCellAccessImpl(OzCell *c, TaggedRef &ans) {
   CellMediator *me = static_cast<CellMediator*>(c->getMediator());
 
@@ -155,6 +158,8 @@ OZ_Return distCellExchangeImpl(OzCell *c,
 }
 
 
+
+/****************************** Locks *********************************/
 
 bool unlockDistLockImpl(OzLock *l){
   // Here we have to do a minor violation to the sequential
@@ -237,88 +242,122 @@ void cellOperationDoneWriteImpl(OzCell* cell)
 
 
 
-bool distArrayGetImpl(OzArray *oza, TaggedRef indx, TaggedRef &ans){
-  ArrayMediator *me = static_cast<ArrayMediator*>(oza->getMediator()); 
-  AbstractEntity *ae = me->getAbstractEntity();
-  MutableAbstractEntity *mae = static_cast<MutableAbstractEntity*>(ae);
-  
+/******************************* Arrays *******************************/
+
+OZ_Return distArrayGetImpl(OzArray *oza, TaggedRef indx, TaggedRef &ans) {
+  ArrayMediator *me = static_cast<ArrayMediator*>(oza->getMediator());
+
+  // suspend if fault state not ok
+  if (me->getFaultState()) return me->suspendOnFault();
+
+  MutableAbstractEntity *mae =
+    static_cast<MutableAbstractEntity*>(me->getAbstractEntity());
   DssThreadId *thrId = currentThreadId();
-    
-  PstOutContainerInterface** pstout;
-  OpRetVal cont = mae->abstractOperation_Read(thrId,pstout);
-  if (pstout != NULL) *(pstout) = new PstOutContainer(indx); 
-
-  if (cont == DSS_PROCEED) return false; 
-  if (cont == DSS_SUSPEND) {
-    ans = oz_newVariable();
-    new SuspendedArrayGet(me, tagged2SmallInt(indx), ans);
-    return true;
-  }
-  OZ_error("Shit, something vent wrong when doing an array op");
-  return false;
-}
-
-bool distArrayPutImpl(OzArray *oza, TaggedRef indx, TaggedRef val){
-  ArrayMediator *me = static_cast<ArrayMediator*>(oza->getMediator()); 
-  AbstractEntity *ae = me->getAbstractEntity();
-  MutableAbstractEntity *mae = static_cast<MutableAbstractEntity*>(ae);
-  
-  DssThreadId *thrId = currentThreadId();
-    
-  PstOutContainerInterface** pstout;
-  OpRetVal cont = mae->abstractOperation_Write(thrId,pstout);
-  if (pstout != NULL) *(pstout) = new PstOutContainer(oz_cons(indx,val)); 
-
-  if (cont == DSS_PROCEED) return false; 
-  if (cont == DSS_SUSPEND) {
-    new SuspendedArrayPut(me, tagged2SmallInt(indx), val);
-    return true;
-  }
-  OZ_error("Shit, something vent wrong when doing an array op");
-  return false;
-}
-
-bool distDictionaryGetImpl(OzDictionary *ozD, TaggedRef key, TaggedRef &ans){
-  DictionaryMediator *dm = 
-    static_cast<DictionaryMediator*>(ozD->getMediator()); 
-  MutableAbstractEntity *mae = 
-    static_cast<MutableAbstractEntity*>(dm->getAbstractEntity());
-  
-  DssThreadId *thrId = currentThreadId();
-    
   PstOutContainerInterface** pstout;
   OpRetVal cont = mae->abstractOperation_Read(thrId, pstout);
-  if (pstout != NULL) *(pstout) = new PstOutContainer(key); 
+  if (pstout != NULL) *(pstout) = new PstOutContainer(indx);
 
-  if (cont == DSS_PROCEED) return false; 
-  if (cont == DSS_SUSPEND) {
+  switch (cont) {
+  case DSS_PROCEED:
+    ans = oza->getArg(tagged2SmallInt(indx));
+    if (ans) return PROCEED;
+    return oz_raise(E_ERROR,E_KERNEL,"array",2,makeTaggedConst(oza),indx);
+  case DSS_SUSPEND:
     ans = oz_newVariable();
-    new SuspendedDictionaryGet(dm, key, ans);
-    return true;
+    new SuspendedArrayGet(me, tagged2SmallInt(indx), ans);
+    return BI_REPLACEBICALL;
+  default:
+    OZ_error("Unhandled error in distArrayGet");
+    return PROCEED;
   }
-  OZ_error("Dome! something went wrong getting from a dist dictionary");
-  return false;
 }
 
-bool distDictionaryPutImpl(OzDictionary *ozD, TaggedRef key, TaggedRef val){
-  DictionaryMediator *dm = 
-    static_cast<DictionaryMediator*>(ozD->getMediator()); 
-  MutableAbstractEntity *mae = 
-    static_cast<MutableAbstractEntity*>(dm->getAbstractEntity());
-  
+OZ_Return distArrayPutImpl(OzArray *oza, TaggedRef indx, TaggedRef val) {
+  ArrayMediator *me = static_cast<ArrayMediator*>(oza->getMediator()); 
+
+  // suspend if fault state not ok
+  if (me->getFaultState()) return me->suspendOnFault();
+
+  MutableAbstractEntity *mae =
+    static_cast<MutableAbstractEntity*>(me->getAbstractEntity());
   DssThreadId *thrId = currentThreadId();
-    
+  PstOutContainerInterface** pstout;
+  OpRetVal cont = mae->abstractOperation_Write(thrId,pstout);
+  if (pstout != NULL) *(pstout) = new PstOutContainer(oz_cons(indx,val));
+
+  switch (cont) {
+  case DSS_PROCEED:
+    if (oza->setArg(tagged2SmallInt(indx),val)) return PROCEED;
+    return oz_raise(E_ERROR,E_KERNEL,"array",2,makeTaggedConst(oza),indx);
+  case DSS_SUSPEND:
+    new SuspendedArrayPut(me, tagged2SmallInt(indx), val);
+    return BI_REPLACEBICALL;
+  default:
+    OZ_error("Unhandled error in distArrayPut");
+    return PROCEED;
+  }
+}
+
+
+
+/**************************** Dictionaries ****************************/
+
+OZ_Return
+distDictionaryGetImpl(OzDictionary *ozD, TaggedRef key, TaggedRef &ans) {
+  DictionaryMediator *me =
+    static_cast<DictionaryMediator*>(ozD->getMediator());
+
+  // suspend if fault state not ok
+  if (me->getFaultState()) return me->suspendOnFault();
+
+  MutableAbstractEntity *mae = 
+    static_cast<MutableAbstractEntity*>(me->getAbstractEntity());
+  DssThreadId *thrId = currentThreadId();
+  PstOutContainerInterface** pstout;
+  OpRetVal cont = mae->abstractOperation_Read(thrId, pstout);
+  if (pstout != NULL) *(pstout) = new PstOutContainer(key);
+
+  switch (cont) {
+  case DSS_PROCEED:
+    ans = ozD->getArg(key);
+    if (ans) return PROCEED;
+    return oz_raise(E_SYSTEM,E_KERNEL,"dict",2,makeTaggedConst(ozD),key);
+  case DSS_SUSPEND:
+    ans = oz_newVariable();
+    new SuspendedDictionaryGet(me, key, ans);
+    return BI_REPLACEBICALL;
+  default:
+    OZ_error("Unhandled error in distDictionaryGet");
+    return PROCEED;
+  }
+}
+
+OZ_Return
+distDictionaryPutImpl(OzDictionary *ozD, TaggedRef key, TaggedRef val) {
+  DictionaryMediator *me = 
+    static_cast<DictionaryMediator*>(ozD->getMediator()); 
+
+  // suspend if fault state not ok
+  if (me->getFaultState()) return me->suspendOnFault();
+
+  MutableAbstractEntity *mae =
+    static_cast<MutableAbstractEntity*>(me->getAbstractEntity());
+  DssThreadId *thrId = currentThreadId();
   PstOutContainerInterface** pstout;
   OpRetVal cont = mae->abstractOperation_Write(thrId, pstout);
   if (pstout != NULL) *(pstout) = new PstOutContainer(oz_cons(key, val));
 
-  if (cont == DSS_PROCEED) return false; 
-  if (cont == DSS_SUSPEND) {
-    new SuspendedDictionaryPut(dm, key, val);
-    return true;
+  switch (cont) {
+  case DSS_PROCEED:
+    ozD->setArg(key, val);
+    return PROCEED;
+  case DSS_SUSPEND:
+    new SuspendedDictionaryPut(me, key, val);
+    return BI_REPLACEBICALL;
+  default:
+    OZ_error("Unhandled error in distDictionaryPut");
+    return PROCEED;
   }
-  OZ_error("Dome! something went wrong putting from a dist dictionary");
-  return false;
 }
 
 
@@ -507,28 +546,25 @@ void initEntityOperations(){
   distCellAccess = &distCellAccessImpl;
   distCellExchange = &distCellExchangeImpl;
   
-  // Experimental
+  // locks
+  lockDistLock = &lockDistLockImpl; 
+  unlockDistLock = &unlockDistLockImpl; 
+  
+  // objects 
+  cellAtExchange = &cellAtExchangeImpl;
+  cellAtAccess   = &cellAtAccessImpl; 
+  objectExchange = &objectExchangeImpl;
+
+  // arrays
+  distArrayPut = &distArrayPutImpl;
+  distArrayGet = &distArrayGetImpl;
+
+  // dictionaries
+  distDictionaryPut = &distDictionaryPutImpl;
+  distDictionaryGet = &distDictionaryGetImpl;
 
   // variables
   distVarBind = &distVarBindImpl;
   distVarUnify = &distVarUnifyImpl;
   distVarMakeNeeded = &distVarMakeNeededImpl;
-  
-  // The objects 
-  cellAtExchange = &cellAtExchangeImpl;
-  cellAtAccess   = &cellAtAccessImpl; 
-  objectExchange = &objectExchangeImpl;
-  
-  // Lock
-  lockDistLock = &lockDistLockImpl; 
-  unlockDistLock = &unlockDistLockImpl; 
-  
-  // Arrays
-  distArrayPut = &distArrayPutImpl; 
-  distArrayGet = &distArrayGetImpl; 
-
-  // Dictionaries
-  distDictionaryPut = &distDictionaryPutImpl; 
-  distDictionaryGet = &distDictionaryGetImpl; 
-  
 }

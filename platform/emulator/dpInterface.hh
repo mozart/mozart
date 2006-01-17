@@ -63,6 +63,12 @@ extern OZ_Return (*distPortSend)(OzPort*, TaggedRef);
 extern OZ_Return (*distCellAccess)(OzCell*, TaggedRef&);
 extern OZ_Return (*distCellExchange)(OzCell*, TaggedRef&, TaggedRef);
 
+// locks
+extern OZ_Return (*distLockLock)(OzLock*, Thread*);
+extern OZ_Return (*distLockUnlock)(OzLock*);
+extern bool (*lockDistLock)(OzLock*, Thread *thr);
+extern bool (*unlockDistLock)(OzLock*);
+
 // 
 extern OZ_Return (*cellAtAccess)(OzCell*,TaggedRef,TaggedRef);
 extern OZ_Return (*cellAtExchange)(OzCell*,TaggedRef,TaggedRef);
@@ -71,20 +77,19 @@ extern OZ_Return (*objectExchange) (OzCell*,TaggedRef,TaggedRef,TaggedRef);
 // Experimental, just for testing the behavior of the GDS PROC_EXEC
 extern void (*cellOperationDone)(OzCell*,TaggedRef);
 
+// arrays
+extern OZ_Return (*distArrayGet)(OzArray*, TaggedRef, TaggedRef&);
+extern OZ_Return (*distArrayPut)(OzArray*, TaggedRef, TaggedRef);
+
+// dictionaries
+extern OZ_Return (*distDictionaryGet)(OzDictionary*, TaggedRef, TaggedRef&);
+extern OZ_Return (*distDictionaryPut)(OzDictionary*, TaggedRef, TaggedRef);
+
 // distributed variables
 extern OZ_Return (*distVarBind)(OzVariable*, TaggedRef*, TaggedRef);
 extern OZ_Return (*distVarUnify)(OzVariable*, TaggedRef*,
 				 OzVariable*, TaggedRef*);
 extern OZ_Return (*distVarMakeNeeded)(TaggedRef*);
-
-extern bool (*lockDistLock)(OzLock*, Thread *thr);
-extern bool (*unlockDistLock)(OzLock*);
-//
-extern bool (*distArrayGet)(OzArray*, TaggedRef, TaggedRef&);
-extern bool (*distArrayPut)(OzArray*, TaggedRef, TaggedRef);
-
-extern bool (*distDictionaryGet)(OzDictionary*, TaggedRef, TaggedRef&);
-extern bool (*distDictionaryPut)(OzDictionary*, TaggedRef, TaggedRef);
 
 
 

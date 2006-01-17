@@ -56,6 +56,29 @@ OZ_Return distCellExchangeStub(OzCell*, TaggedRef&, TaggedRef) {
   return PROCEED;
 }
 
+// locks
+OZ_Return distLockLockStub(OzLock*, Thread*) {
+  OZD_error("'distLockLock' called without DP library?");
+  return PROCEED;
+}
+OZ_Return distLockUnlockStub(OzLock*) {
+  OZD_error("'distLockUnlock' called without DP library?");
+  return PROCEED;
+}
+
+// (to be removed)
+// lock/unlock (interface) methods/their usage may be optimized
+// further, e.g. inline cases when distributed locks are currently
+// local;
+bool unlockDistLockStub(OzLock *l) {
+  OZD_error("'unlockDistLock' called without DP library?");
+  return false; 
+}
+bool lockDistLockStub(OzLock *l, Thread *thr) {
+  OZD_error("'lockDistLock' called without DP library?");
+  return false;
+}
+
 //
 OZ_Return objectExchangeStub(OzCell*,TaggedRef,TaggedRef,TaggedRef)
 {
@@ -82,6 +105,26 @@ OZ_Return cellAssignExchangeStub(OzCell*,TaggedRef,TaggedRef)
   return (PROCEED);
 }
 
+// arrays
+OZ_Return distArrayGetStub(OzArray*, TaggedRef, TaggedRef&) {
+  OZD_error("'distArrayGet' called without DP library?");
+  return PROCEED;
+}
+OZ_Return distArrayPutStub(OzArray*, TaggedRef, TaggedRef) {
+  OZD_error("'distArrayPut' called without DP library?");
+  return PROCEED;
+}
+
+// dictionaries
+OZ_Return distDictionaryGetStub(OzDictionary*, TaggedRef, TaggedRef&) {
+  OZD_error("'distDictionaryGet' called without DP library?");
+  return PROCEED;
+}
+OZ_Return distDictionaryPutStub(OzDictionary*, TaggedRef, TaggedRef) {
+  OZD_error("'distDictionaryPut' called without DP library?");
+  return PROCEED;
+}
+
 // distributed variables
 OZ_Return distVarBindStub(OzVariable*, TaggedRef*, TaggedRef) {
   OZD_error("'distVarBind' called without DP library");
@@ -94,38 +137,6 @@ OZ_Return distVarUnifyStub(OzVariable*, TaggedRef*, OzVariable*, TaggedRef*) {
 OZ_Return distVarMakeNeededStub(TaggedRef*) {
   OZD_error("'distVarMakeNeeded' called without DP library");
   return PROCEED;
-}
-
-// lock/unlock (interface) methods/their usage may be optimized
-// further, e.g. inline cases when distributed locks are currently
-// local;
-// interface;
-bool unlockDistLockStub(OzLock *l)
-{
-  OZD_error("'unlockDistLock' called without DP library?");
-  return false; 
-}
-
-bool lockDistLockStub(OzLock *l, Thread *thr)
-{
-  OZD_error("'lockDistLock' called without DP library?");
-  return false;
-}
-bool distArrayGetStub(OzArray*, TaggedRef, TaggedRef&){
-  OZD_error("'distArrayGetStub' called without DP library?");
-  return false; 
-}
-bool distArrayPutStub(OzArray*, TaggedRef, TaggedRef){
-  OZD_error("'distArrayPutStub' called without DP library?");
-  return false; 
-}
-bool distDictionaryGetStub(OzDictionary*, TaggedRef, TaggedRef&){
-  OZD_error("'distDictionaryGetStub' called without DP library?");
-  return false; 
-}
-bool distDictionaryPutStub(OzDictionary*, TaggedRef, TaggedRef){
-  OZD_error("'distDictionaryPutStub' called without DP library?");
-  return false; 
 }
 
 // interface for GC;
@@ -168,6 +179,16 @@ OZ_Return (*distCellAccess)(OzCell*, TaggedRef&)
 OZ_Return (*distCellExchange)(OzCell*, TaggedRef&, TaggedRef)
   = distCellExchangeStub;
 
+// locks
+OZ_Return (*distLockLock)(OzLock*, Thread*)
+  = distLockLockStub;
+OZ_Return (*distLockUnlock)(OzLock*)
+  =distLockUnlockStub;
+bool (*lockDistLock)(OzLock *l, Thread *thr)
+  = lockDistLockStub;
+bool (*unlockDistLock)(OzLock *l)
+  = unlockDistLockStub; 
+
 OZ_Return (*objectExchange)(OzCell*,TaggedRef,TaggedRef,TaggedRef)
   = objectExchangeStub;
 OZ_Return (*cellAtAccess)(OzCell*,TaggedRef,TaggedRef)
@@ -176,6 +197,18 @@ OZ_Return (*cellAtExchange)(OzCell*,TaggedRef,TaggedRef)
   = cellAtExchangeStub;
 OZ_Return (*cellAssignExchange)(OzCell*,TaggedRef,TaggedRef)
   = cellAssignExchangeStub;
+
+// arrays
+OZ_Return (*distArrayGet)(OzArray*, TaggedRef, TaggedRef&)
+  = distArrayGetStub;
+OZ_Return (*distArrayPut)(OzArray*, TaggedRef, TaggedRef)
+  = distArrayPutStub;
+
+// dictionaries
+OZ_Return (*distDictionaryGet)(OzDictionary*, TaggedRef, TaggedRef&)
+  = distDictionaryGetStub;
+OZ_Return (*distDictionaryPut)(OzDictionary*, TaggedRef, TaggedRef)
+  = distDictionaryPutStub;
 
 // distributed variables
 OZ_Return (*distVarBind)(OzVariable*, TaggedRef*, TaggedRef)
@@ -188,22 +221,6 @@ OZ_Return (*distVarMakeNeeded)(TaggedRef*)
 // experimental 
 void (*cellOperationDone)(OzCell*,TaggedRef)
   =cellOperationDoneStub;
-
-// lock/unlock (interface) methods/their usage may be optimized
-// further, e.g. inline cases when distributed locks are currently
-// local;
-bool (*lockDistLock)(OzLock *l, Thread *thr)
-  = lockDistLockStub;
-bool (*unlockDistLock)(OzLock *l)
-  = unlockDistLockStub; 
-bool (*distArrayGet)(OzArray*, TaggedRef, TaggedRef&)
-  = distArrayGetStub;
-bool (*distArrayPut)(OzArray*, TaggedRef, TaggedRef)
-  =    distArrayPutStub;
-bool (*distDictionaryGet)(OzDictionary*, TaggedRef, TaggedRef&)
-  = distDictionaryGetStub;
-bool (*distDictionaryPut)(OzDictionary*, TaggedRef, TaggedRef)
-  =    distDictionaryPutStub;
 
 // garbage collection of a mediator
 void (*gCollectMediator)(void*)
