@@ -100,10 +100,22 @@ void SuspendedOperation::suspend() {
   suspendOnControlVar();
 }
 
-// this operation is MANDATORY.  It binds the control var, and nullify
-// the threadId.  The latter means that the operation has resumed.
 void SuspendedOperation::resume() {
   if (ctlVar) { ControlVarResume(ctlVar); }
+  releaseThreadId(threadId);
+  threadId = NULL;
+}
+
+void SuspendedOperation::resumeRaise(TaggedRef exc) {
+  Assert(ctlVar);
+  ControlVarRaise(ctlVar, exc);
+  releaseThreadId(threadId);
+  threadId = NULL;
+}
+
+void SuspendedOperation::resumeUnify(TaggedRef a, TaggedRef b) {
+  Assert(ctlVar);
+  ControlVarUnify(ctlVar, a, b);
   releaseThreadId(threadId);
   threadId = NULL;
 }
@@ -149,15 +161,13 @@ WakeRetVal SuspendedCellAccess::resumeDoLocal(DssOperationId*) {
   CellMediator *pM = static_cast<CellMediator*>(getMediator());
   OzCell *cell     = static_cast<OzCell*>(pM->getConst());
   OZ_Term contents = cell->getValue();
-  oz_unify(result,contents);
-  resume();
+  resumeUnify(result,contents); // no exceptions here.
   return WRV_DONE; 
 }
 
 WakeRetVal SuspendedCellAccess::resumeRemoteDone(PstInContainerInterface* pstin){
   PstInContainer *pst = static_cast<PstInContainer*>(pstin);
-  oz_unify(result, pst->a_term); 
-  resume();
+  resumeUnify(result, pst->a_term); 
   return WRV_DONE; 
 }
 
@@ -184,15 +194,13 @@ WakeRetVal SuspendedCellExchange::resumeDoLocal(DssOperationId*) {
   CellMediator *pM = static_cast<CellMediator*>(getMediator());
   OzCell *cell     = static_cast<OzCell*>(pM->getConst());
   OZ_Term contents = cell->exchangeValue(newValue); 
-  oz_unify(result, contents);
-  resume();
+  resumeUnify(result, contents); // no exceptions here
   return WRV_DONE; 
 }
 
 WakeRetVal SuspendedCellExchange::resumeRemoteDone(PstInContainerInterface* pstin) {
   PstInContainer *pst = static_cast<PstInContainer*>(pstin);
-  oz_unify(result, pst->a_term);
-  resume();
+  resumeUnify(result, pst->a_term);
   return WRV_DONE;
 }
 
@@ -302,16 +310,17 @@ SuspendedArrayGet::SuspendedArrayGet(Mediator* med, int idx,  OZ_Term var) :
 WakeRetVal SuspendedArrayGet::resumeDoLocal(DssOperationId*) {
   ArrayMediator *pM = static_cast<ArrayMediator*>(getMediator());
   OzArray* oza      = static_cast<OzArray*>(pM->getConst());
-  TaggedRef *ar = oza->getRef();
-  oz_unify(result, ar[index]);
-  resume();
+  TaggedRef out = oza->getArg(index);
+  if (out) 
+    resumeUnify(result, out);
+  else 
+    resumeRaise(OZ_makeException(E_ERROR, E_KERNEL, "array", 2, oza, index));
   return WRV_DONE;
 }
 
 WakeRetVal SuspendedArrayGet::resumeRemoteDone(PstInContainerInterface* pstin){
   PstInContainer *pst = static_cast<PstInContainer*>(pstin);
-  oz_unify(result, pst->a_term);
-  resume();
+  resumeUnify(result, pst->a_term);
   return WRV_DONE;
 }
 
@@ -337,8 +346,10 @@ WakeRetVal SuspendedArrayPut::resumeDoLocal(DssOperationId*) {
   ArrayMediator *pM = static_cast<ArrayMediator*>(getMediator());
   OzArray*oza       = static_cast<OzArray*>(pM->getConst());
   TaggedRef *ar = oza->getRef();
-  ar[index] = value;
-  resume();
+  if (oza->setArg(index,value))
+    resume();
+  else
+    resumeRaise(OZ_makeException(E_ERROR, E_KERNEL, "array", 2, oza, index));
   return WRV_DONE;
 }
 
@@ -367,15 +378,17 @@ SuspendedDictionaryGet::SuspendedDictionaryGet(Mediator* med, OZ_Term k,  OZ_Ter
 WakeRetVal SuspendedDictionaryGet::resumeDoLocal(DssOperationId*) {
   DictionaryMediator *dm = static_cast<DictionaryMediator*>(getMediator());
   OzDictionary* ozD  = static_cast<OzDictionary*>(dm->getConst());
-  oz_unify(result, ozD->getArg(key));
-  resume();
+  TaggedRef out = ozD->getArg(key);
+  if (out)
+    resumeUnify(result, out);
+  else
+    resumeRaise(OZ_makeException(E_SYSTEM, E_KERNEL, "dict", 2, ozD, key));
   return WRV_DONE;
 }
 
 WakeRetVal SuspendedDictionaryGet::resumeRemoteDone(PstInContainerInterface* pstin){
   PstInContainer *pst = static_cast<PstInContainer*>(pstin);
-  oz_unify(result, pst->a_term);
-  resume();
+  resumeUnify(result, pst->a_term);
   return WRV_DONE;
 }
 
