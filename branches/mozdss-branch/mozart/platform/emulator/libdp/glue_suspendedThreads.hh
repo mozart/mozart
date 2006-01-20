@@ -85,11 +85,17 @@ protected:
   DssThreadId* threadId;      // which DssThreadId is mediated
   SuspendedOperation *next;   // used for garbage collection
 
+  // suspend the current thread on the control variable
+  void suspend();
+  
+  // resume the suspended thread (synchronize ctlVar)
+  void resume();
+  void resumeRaise(TaggedRef exc);
+  void resumeUnify(TaggedRef a, TaggedRef b);
+
 public:
   SuspendedOperation(Mediator*);
   Mediator* getMediator() { return mediator; }
-  void suspend();   // generic suspend (set ctlVar)
-  void resume();    // generic resume (synchronize ctlVar)
   bool gc();        // returns TRUE and collect stuff if needed
   
   // inherited from ThreadMediator

@@ -934,8 +934,12 @@ Bool DPMARSHALERCLASS::processDictionary(OZ_Term dictTerm, ConstTerm *dictConst)
     if (!d->isSafeDict()) {
       printf("It is not a safe dictionary\n"); //bmc
       //OZ_error("DPMARSHALERCLASS::processDict : MRHTentry\n");
-      if (index) { bs->put(DIF_GLUE_DEF); marshalTermDef(bs, index); }
-      else { bs->put(DIF_GLUE); }
+      if (index) { 
+        bs->put(DIF_GLUE_DEF); 
+        marshalTermDef(bs, index); 
+      } else { 
+        bs->put(DIF_GLUE); 
+      }
       glue_marshalEntity(dictTerm, bs);
       Assert(bs->availableSpace() >= DIFMaxSize);
       return (OK);

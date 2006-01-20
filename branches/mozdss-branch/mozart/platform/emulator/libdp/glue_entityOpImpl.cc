@@ -260,7 +260,8 @@ OZ_Return distArrayGetImpl(OzArray *oza, TaggedRef indx, TaggedRef &ans) {
   switch (cont) {
   case DSS_PROCEED:
     ans = oza->getArg(tagged2SmallInt(indx));
-    if (ans) return PROCEED;
+    if (ans) 
+      return PROCEED;
     return oz_raise(E_ERROR,E_KERNEL,"array",2,makeTaggedConst(oza),indx);
   case DSS_SUSPEND:
     ans = oz_newVariable();
@@ -287,7 +288,8 @@ OZ_Return distArrayPutImpl(OzArray *oza, TaggedRef indx, TaggedRef val) {
 
   switch (cont) {
   case DSS_PROCEED:
-    if (oza->setArg(tagged2SmallInt(indx),val)) return PROCEED;
+    if (oza->setArg(tagged2SmallInt(indx),val)) 
+      return PROCEED;
     return oz_raise(E_ERROR,E_KERNEL,"array",2,makeTaggedConst(oza),indx);
   case DSS_SUSPEND:
     new SuspendedArrayPut(me, tagged2SmallInt(indx), val);
@@ -320,7 +322,8 @@ distDictionaryGetImpl(OzDictionary *ozD, TaggedRef key, TaggedRef &ans) {
   switch (cont) {
   case DSS_PROCEED:
     ans = ozD->getArg(key);
-    if (ans) return PROCEED;
+    if (ans) 
+      return PROCEED;
     return oz_raise(E_SYSTEM,E_KERNEL,"dict",2,makeTaggedConst(ozD),key);
   case DSS_SUSPEND:
     ans = oz_newVariable();
