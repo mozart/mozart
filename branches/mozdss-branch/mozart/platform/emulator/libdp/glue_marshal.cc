@@ -215,9 +215,9 @@ OZ_Term glue_unmarshalEntity(ByteBuffer *bs) {
       return ref;
     }
     case GLUE_DICTIONARY: {
-      OzDictionary *dict = new OzDictionary(oz_currentBoard());
-      TaggedRef ref = makeTaggedConst(dict);
-      dict->setMediator(new DictionaryMediator(ref, ae));
+      OzDictionary *ozd = new OzDictionary(oz_currentBoard());
+      TaggedRef ref = makeTaggedConst(ozd);
+      ozd->setMediator(new DictionaryMediator(ref, ae));
       return ref;
     }
     case GLUE_THREAD: {

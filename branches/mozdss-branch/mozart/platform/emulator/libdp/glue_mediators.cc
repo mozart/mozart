@@ -782,8 +782,11 @@ ArrayMediator::callback_Write(DssThreadId *id,
   TaggedRef arg = static_cast<PstInContainer*>(pstin)->a_term;
   int index = tagged2SmallInt(OZ_head(arg));
   TaggedRef val = OZ_tail(arg);
-  oza->setArg(index,val);
-  possible_answer = NULL;
+  if (oza->setArg(index,val))
+    possible_answer = NULL;
+  else
+    possible_answer = new PstOutContainer(
+          OZ_makeException(E_ERROR, E_KERNEL, "array", 2, oza, index));
   return AOCB_FINISH;
 }
 
@@ -795,9 +798,15 @@ ArrayMediator::callback_Read(DssThreadId *id,
 {
   OzArray *oza = static_cast<OzArray*>(getConst()); 
   TaggedRef arg = static_cast<PstInContainer*>(pstin)->a_term;
-  int indx = tagged2SmallInt(arg);
-  possible_answer =  new PstOutContainer(oza->getArg(indx));
+  int index = tagged2SmallInt(arg);
+  TaggedRef out = oza->getArg(index);
+  if (out) 
+    possible_answer = new PstOutContainer(out);
+  else 
+    possible_answer = new PstOutContainer(
+          OZ_makeException(E_ERROR, E_KERNEL, "array", 2, oza, index));
   return AOCB_FINISH;
+
 }
 
 PstOutContainerInterface*
@@ -863,8 +872,13 @@ DictionaryMediator::callback_Read(DssThreadId *id,
 {
   OzDictionary *ozd = tagged2Dictionary(entity); 
   TaggedRef arg = static_cast<PstInContainer*>(pstin)->a_term;
-  int indx = tagged2SmallInt(arg);
-  possible_answer =  new PstOutContainer(ozd->getArg(indx));
+  int index = tagged2SmallInt(arg);
+  TaggedRef out = ozd->getArg(index);
+  if (out)
+    possible_answer = new PstOutContainer(out);
+  else
+    possible_answer = new PstOutContainer(
+            OZ_makeException(E_SYSTEM, E_KERNEL, "dict", 2, ozd, index));
   return AOCB_FINISH;
 }
 
