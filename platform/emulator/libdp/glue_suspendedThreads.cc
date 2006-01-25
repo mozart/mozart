@@ -320,7 +320,12 @@ WakeRetVal SuspendedArrayGet::resumeDoLocal(DssOperationId*) {
 
 WakeRetVal SuspendedArrayGet::resumeRemoteDone(PstInContainerInterface* pstin){
   PstInContainer *pst = static_cast<PstInContainer*>(pstin);
-  resumeUnify(result, pst->a_term);
+  OZ_Term answer = pst->a_term;
+  // Check if it's an exception
+  if (oz_isSRecord(answer) && tagged2SRecord(answer)->getLabel() == E_ERROR)
+      resumeRaise(answer);
+  else
+    resumeUnify(result, answer);
   return WRV_DONE;
 }
 
@@ -354,7 +359,13 @@ WakeRetVal SuspendedArrayPut::resumeDoLocal(DssOperationId*) {
 }
 
 WakeRetVal SuspendedArrayPut::resumeRemoteDone(PstInContainerInterface* pstin){
-  resume();
+  PstInContainer *pst = static_cast<PstInContainer*>(pstin);
+  OZ_Term answer = pst->a_term;
+  // Check if it's an exception
+  if (oz_isSRecord(answer) && tagged2SRecord(answer)->getLabel() == E_ERROR)
+    resumeRaise(answer);
+  else
+    resume();
   return WRV_DONE;
 }
 
@@ -388,7 +399,12 @@ WakeRetVal SuspendedDictionaryGet::resumeDoLocal(DssOperationId*) {
 
 WakeRetVal SuspendedDictionaryGet::resumeRemoteDone(PstInContainerInterface* pstin){
   PstInContainer *pst = static_cast<PstInContainer*>(pstin);
-  resumeUnify(result, pst->a_term);
+  OZ_Term answer = pst->a_term;
+  // Check if it's an exception
+  if (oz_isSRecord(answer) && tagged2SRecord(answer)->getLabel() == E_SYSTEM)
+    resumeRaise(answer);
+  else
+    resumeUnify(result, answer);
   return WRV_DONE;
 }
 
