@@ -2034,6 +2034,10 @@ public:
   int getLow()      { return offset; }
   int getWidth()    { return width; }
   int getHigh()     { return getWidth() + offset - 1; }
+  bool checkIndex(int n) {
+    n -= offset;
+    return !(n>=width || n<0);
+  }
 
   OzArray(Board *b, int low, int high, TaggedRef initvalue)
     : ConstTermWithHome(b,Co_Array) 

@@ -396,11 +396,15 @@ OZ_Return arrayGetInline(TaggedRef t, TaggedRef i, TaggedRef &out)
   }
 
   OzArray *ar = tagged2Array(array);
+  if (!ar->checkIndex(tagged2SmallInt(index)))
+    return oz_raise(E_ERROR,E_KERNEL,"array",2,array,index);
+  
   if (ar->isDistributed())
     return (*distArrayGet)(ar,index,out);
   out = ar->getArg(tagged2SmallInt(index));
-  if (out) return PROCEED;
-  return oz_raise(E_ERROR,E_KERNEL,"array",2,array,index);
+  Assert(out);
+  return PROCEED;
+  
 }
 OZ_DECLAREBI_USEINLINEFUN2(BIarrayGet,arrayGetInline)
 
@@ -420,10 +424,13 @@ OZ_Return arrayPutInline(TaggedRef t, TaggedRef i, TaggedRef value)
   OzArray *ar = tagged2Array(array);
   CheckLocalBoard(ar,"array");
 
+  if (!ar->checkIndex(tagged2SmallInt(index)))
+    return oz_raise(E_ERROR,E_KERNEL,"array",2,array,index);
+
   if (ar->isDistributed())
     return (*distArrayPut)(ar,index,value);
-  if (ar->setArg(tagged2SmallInt(index),value)) return PROCEED;
-  return oz_raise(E_ERROR,E_KERNEL,"array",2,array,index);
+  ar->setArg(tagged2SmallInt(index),value);
+  return PROCEED;
 }
 
 OZ_DECLAREBI_USEINLINEREL3(BIarrayPut,arrayPutInline);
