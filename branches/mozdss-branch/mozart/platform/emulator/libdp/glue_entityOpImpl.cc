@@ -250,6 +250,10 @@ OZ_Return distArrayGetImpl(OzArray *oza, TaggedRef indx, TaggedRef &ans) {
   // suspend if fault state not ok
   if (me->getFaultState()) return me->suspendOnFault();
 
+  // Before starting distributed operations, check the index
+  if (!oza->checkIndex(tagged2SmallInt(indx)))
+    return oz_raise(E_ERROR, E_KERNEL, "array", 2, makeTaggedConst(oza), indx);
+
   MutableAbstractEntity *mae =
     static_cast<MutableAbstractEntity*>(me->getAbstractEntity());
   DssThreadId *thrId = currentThreadId();
@@ -262,7 +266,7 @@ OZ_Return distArrayGetImpl(OzArray *oza, TaggedRef indx, TaggedRef &ans) {
     ans = oza->getArg(tagged2SmallInt(indx));
     if (ans) 
       return PROCEED;
-    return oz_raise(E_ERROR,E_KERNEL,"array",2,makeTaggedConst(oza),indx);
+    return oz_raise(E_ERROR, E_KERNEL, "array", 2, makeTaggedConst(oza), indx);
   case DSS_SUSPEND:
     ans = oz_newVariable();
     new SuspendedArrayGet(me, tagged2SmallInt(indx), ans);
@@ -278,6 +282,10 @@ OZ_Return distArrayPutImpl(OzArray *oza, TaggedRef indx, TaggedRef val) {
 
   // suspend if fault state not ok
   if (me->getFaultState()) return me->suspendOnFault();
+
+  // Before starting distributed operations, check the index
+  if (!oza->checkIndex(tagged2SmallInt(indx)))
+    return oz_raise(E_ERROR, E_KERNEL, "array", 2, makeTaggedConst(oza), indx);
 
   MutableAbstractEntity *mae =
     static_cast<MutableAbstractEntity*>(me->getAbstractEntity());
