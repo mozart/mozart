@@ -12,6 +12,7 @@
  *    Leif Kornstaedt (kornstae@ps.uni-sb.de)
  *    Fred Spiessens (fsp@info.ucl.ac.be)
  *    Raphael Collet (raph@info.ucl.ac.be)
+ *    Boriss Mejias (bmc@info.ucl.ac.be)
  * 
  *  Copyright:
  *    Michael Mehl, 1997,1998
@@ -396,14 +397,15 @@ OZ_Return arrayGetInline(TaggedRef t, TaggedRef i, TaggedRef &out)
   }
 
   OzArray *ar = tagged2Array(array);
-  if (!ar->checkIndex(tagged2SmallInt(index)))
-    return oz_raise(E_ERROR,E_KERNEL,"array",2,array,index);
-  
+    
   if (ar->isDistributed())
-    return (*distArrayGet)(ar,index,out);
+    return (*distArrayGet)(ar, index, out);
+    
   out = ar->getArg(tagged2SmallInt(index));
-  Assert(out);
-  return PROCEED;
+  if (out)
+    return PROCEED;
+  else
+    return oz_raise(E_ERROR, E_KERNEL, "array", 2, array, index);  
   
 }
 OZ_DECLAREBI_USEINLINEFUN2(BIarrayGet,arrayGetInline)
@@ -424,13 +426,12 @@ OZ_Return arrayPutInline(TaggedRef t, TaggedRef i, TaggedRef value)
   OzArray *ar = tagged2Array(array);
   CheckLocalBoard(ar,"array");
 
-  if (!ar->checkIndex(tagged2SmallInt(index)))
-    return oz_raise(E_ERROR,E_KERNEL,"array",2,array,index);
-
   if (ar->isDistributed())
-    return (*distArrayPut)(ar,index,value);
-  ar->setArg(tagged2SmallInt(index),value);
-  return PROCEED;
+    return (*distArrayPut)(ar, index, value);
+  if (ar->setArg(tagged2SmallInt(index), value))
+    return PROCEED;
+  else
+    return oz_raise(E_ERROR,E_KERNEL, "array", 2, array, index);
 }
 
 OZ_DECLAREBI_USEINLINEREL3(BIarrayPut,arrayPutInline);
