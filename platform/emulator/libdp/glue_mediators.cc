@@ -786,7 +786,8 @@ ArrayMediator::callback_Write(DssThreadId *id,
     possible_answer = NULL;
   else
     possible_answer = new PstOutContainer(
-          OZ_makeException(E_ERROR, E_KERNEL, "array", 2, oza, index));
+          OZ_makeException(E_ERROR, E_KERNEL, "array", 
+                           2, makeTaggedConst(oza), index));
   return AOCB_FINISH;
 }
 
@@ -804,7 +805,8 @@ ArrayMediator::callback_Read(DssThreadId *id,
     possible_answer = new PstOutContainer(out);
   else 
     possible_answer = new PstOutContainer(
-          OZ_makeException(E_ERROR, E_KERNEL, "array", 2, oza, index));
+          OZ_makeException(E_ERROR, E_KERNEL, "array", 
+                           2, makeTaggedConst(oza), index));
   return AOCB_FINISH;
 
 }
@@ -878,7 +880,8 @@ DictionaryMediator::callback_Read(DssThreadId *id,
     possible_answer = new PstOutContainer(out);
   else
     possible_answer = new PstOutContainer(
-            OZ_makeException(E_SYSTEM, E_KERNEL, "dict", 2, ozd, index));
+            OZ_makeException(E_SYSTEM, E_KERNEL, "dict", 
+                             2, makeTaggedConst(ozd), index));
   return AOCB_FINISH;
 }
 

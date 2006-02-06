@@ -360,12 +360,16 @@ WakeRetVal SuspendedArrayPut::resumeDoLocal(DssOperationId*) {
 
 WakeRetVal SuspendedArrayPut::resumeRemoteDone(PstInContainerInterface* pstin){
   PstInContainer *pst = static_cast<PstInContainer*>(pstin);
-  OZ_Term answer = pst->a_term;
-  // Check if it's an exception
-  if (oz_isSRecord(answer) && tagged2SRecord(answer)->getLabel() == E_ERROR)
-    resumeRaise(answer);
-  else
+  
+  // If the result sent back is NULL, means everything went fine
+  if (pst == NULL) {
     resume();
+  } else {
+    // Check if it's an exception
+    OZ_Term answer = pst->a_term;
+    if (oz_isSRecord(answer) && tagged2SRecord(answer)->getLabel() == E_ERROR)
+      resumeRaise(answer);
+  }
   return WRV_DONE;
 }
 
