@@ -62,22 +62,23 @@ namespace _dss_internal{ //Start namespace
      int synch   = msg->popIntVal();
      ::PstInContainerInterface* builder = gf_popPstIn(msg);
      SimpleOp* so;
-     ::PstOutContainerInterface* ans = NULL; // Must be declared here since we need a ref to it in m_doe
+     // Must be declared here since we need a ref to it in m_doe
+     ::PstOutContainerInterface* ans = NULL;
      if(synch == SYNCH){
        GlobalThread *id = gf_popThreadIdVal(msg, manager->m_getEnvironment());
        so = new SimpleOp(id,sender);
 
        if (manager->m_doe(static_cast<AbsOp>(absOp), id, so, builder, ans) == AOCB_FINISH){
-	 delete so; 
-	 ::MsgContainer *msgC = manager->m_createProxyProtMsg();
-	 gf_pushThreadIdVal(msgC,id);
-	 gf_pushPstOut(msgC,ans);
-	 sender->m_sendMsg(msgC);
+        delete so; 
+        ::MsgContainer *msgC = manager->m_createProxyProtMsg();
+        gf_pushThreadIdVal(msgC,id);
+        gf_pushPstOut(msgC,ans);
+        sender->m_sendMsg(msgC);
        }
      } else {
        so = new SimpleOp(NULL,NULL);
        if (manager->m_doe(static_cast<AbsOp>(absOp), NULL, so, builder, ans) == AOCB_FINISH)
-	 delete so; 
+        delete so; 
      }
    }
 
