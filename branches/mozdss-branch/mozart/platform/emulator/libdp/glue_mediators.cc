@@ -859,9 +859,9 @@ DictionaryMediator::callback_Write(DssThreadId *id,
 {
   OzDictionary *ozd = tagged2Dictionary(entity);
   TaggedRef arg = static_cast<PstInContainer*>(pstin)->a_term;
-  int index = tagged2SmallInt(OZ_head(arg));
+  TaggedRef key = OZ_head(arg);
   TaggedRef val = OZ_tail(arg);
-  ozd->setArg(index,val);
+  ozd->setArg(key,val);
   possible_answer = NULL;
   return AOCB_FINISH;
 }
@@ -873,9 +873,8 @@ DictionaryMediator::callback_Read(DssThreadId *id,
 			     PstOutContainerInterface*& possible_answer)
 {
   OzDictionary *ozd = tagged2Dictionary(entity); 
-  TaggedRef arg = static_cast<PstInContainer*>(pstin)->a_term;
-  int index = tagged2SmallInt(arg);
-  TaggedRef out = ozd->getArg(index);
+  TaggedRef key = static_cast<PstInContainer*>(pstin)->a_term;
+  TaggedRef out = ozd->getArg(key);
   if (out)
     possible_answer = new PstOutContainer(out);
   else

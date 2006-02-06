@@ -332,7 +332,7 @@ distDictionaryGetImpl(OzDictionary *ozD, TaggedRef key, TaggedRef &ans) {
     ans = ozD->getArg(key);
     if (ans) 
       return PROCEED;
-    return oz_raise(E_SYSTEM,E_KERNEL,"dict",2,makeTaggedConst(ozD),key);
+    return oz_raise(E_SYSTEM, E_KERNEL, "dict", 2, makeTaggedConst(ozD), key);
   case DSS_SUSPEND:
     ans = oz_newVariable();
     new SuspendedDictionaryGet(me, key, ans);
