@@ -405,7 +405,7 @@ WakeRetVal SuspendedDictionaryGet::resumeRemoteDone(PstInContainerInterface* pst
   PstInContainer *pst = static_cast<PstInContainer*>(pstin);
   OZ_Term answer = pst->a_term;
   // Check if it's an exception
-  if (oz_isSRecord(answer) && tagged2SRecord(answer)->getLabel() == E_SYSTEM)
+  if (oz_isSRecord(answer) && tagged2SRecord(answer)->getLabel() == E_ERROR)
     resumeRaise(answer);
   else
     resumeUnify(result, answer);
