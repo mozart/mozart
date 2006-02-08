@@ -875,12 +875,16 @@ DictionaryMediator::callback_Read(DssThreadId *id,
   OzDictionary *ozd = tagged2Dictionary(entity); 
   TaggedRef key = static_cast<PstInContainer*>(pstin)->a_term;
   TaggedRef out = ozd->getArg(key);
-  if (out)
-    possible_answer = new PstOutContainer(out);
-  else
-    possible_answer = new PstOutContainer(
-            OZ_makeException(E_SYSTEM, E_KERNEL, "dict", 
-                             2, makeTaggedConst(ozd), index));
+  TaggedRef recOut;
+  if (out) {
+    recOut = OZ_record(OZ_atom("ok"), oz_mklist(makeTaggedSmallInt(1)));
+    OZ_putSubtree(recOut, makeTaggedSmallInt(1), out);
+  } else {
+    recOut = OZ_makeException(E_ERROR, E_KERNEL, "dict",
+                              2, makeTaggedConst(ozd), key);
+  }
+  Assert(oz_isSRecord(recOut));
+  possible_answer = new PstOutContainer(recOut);
   return AOCB_FINISH;
 }
 

@@ -404,11 +404,12 @@ WakeRetVal SuspendedDictionaryGet::resumeDoLocal(DssOperationId*) {
 WakeRetVal SuspendedDictionaryGet::resumeRemoteDone(PstInContainerInterface* pstin){
   PstInContainer *pst = static_cast<PstInContainer*>(pstin);
   OZ_Term answer = pst->a_term;
-  // Check if it's an exception
-  if (oz_isSRecord(answer) && tagged2SRecord(answer)->getLabel() == E_ERROR)
+  Assert(oz_isSRecord(answer));
+  SRecord* recAns = tagged2SRecord(answer);
+  if (recAns->getLabel() == OZ_atom("ok"))
+    resumeUnify(result, OZ_subtree(answer, makeTaggedSmallInt(1)));  
+  else if (recAns->getLabel() == E_ERROR)
     resumeRaise(answer);
-  else
-    resumeUnify(result, answer);
   return WRV_DONE;
 }
 
