@@ -61,6 +61,9 @@ public:
   
   DSite* m_getDssSite();
   void m_setDssSite(DSite*);
+  void m_setConnection(VirtualChannelInterface* vc);
+  void m_monitorConnection();     // install a rtt monitor
+
   Glue_SiteRep *m_getNext();
   Glue_SiteRep **m_getNextPP() {return &a_next;}
   

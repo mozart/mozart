@@ -213,7 +213,7 @@ OZ_BI_define(BIhandover,2,0){
       OZ_Return ret=getRecordField(requestor,"req",con);
       if(ret!=OZ_ENTAILED) return ret;
       Glue_SiteRep *sa = reinterpret_cast<Glue_SiteRep*>(con);
-      sa->m_getDssSite()->m_connectionEstablished(channel);
+      sa->m_setConnection(channel);
       return OZ_ENTAILED;
     }
   glue_com_connection->a_msgnLayer->m_anonymousChannelEstablished(channel); 

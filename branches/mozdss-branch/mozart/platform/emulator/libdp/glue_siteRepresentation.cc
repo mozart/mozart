@@ -102,6 +102,13 @@ void Glue_SiteRep::m_gc(){
 DSite* Glue_SiteRep::m_getDssSite(){ return  a_dssSite;}
 void Glue_SiteRep::m_setDssSite(DSite* sa){  a_dssSite = sa;}
 
+void
+Glue_SiteRep::m_setConnection(VirtualChannelInterface* vc) {
+  // give the connection to the DSite, and monitor the connection
+  a_dssSite->m_connectionEstablished(vc);
+  m_monitorConnection();
+}
+
 OZ_Term Glue_SiteRep::m_getOzSite(){ return a_ozSite;}
 
 OZ_Term Glue_SiteRep::m_getInfo() {
@@ -170,10 +177,27 @@ Glue_SiteRep::monitor(){
   ;
 }
 
+inline
+void
+Glue_SiteRep::m_monitorConnection() {
+  a_dssSite->m_installRTmonitor(0, 30000);
+}
+
 void    
-Glue_SiteRep::reportRtViolation(int measuredRT, int installedLow,
-				int installedHigh){
-  ;
+Glue_SiteRep::reportRtViolation(int rtt, int low, int high) {
+  if (a_dssSite->m_getFaultState() <= DSite_TMP) {
+    if (rtt == high) {
+      // This means that no message was received recently
+      printf("--- Glue_SiteRep: site tempFailed\n");
+      a_dssSite->m_stateChange(DSite_TMP);
+      a_dssSite->m_installRTmonitor(30000, 30000);
+    } else {
+      // A message has been received, so the site is ok again
+      printf("--- Glue_SiteRep: site ok again\n");
+      a_dssSite->m_stateChange(DSite_OK);
+      a_dssSite->m_installRTmonitor(0, 30000);
+    }
+  }
 }
 
 VirtualChannelInterface *    
