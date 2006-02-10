@@ -209,11 +209,12 @@ namespace _dss_internal{
   
   void
   DssMslClbk::m_stateChange(DSite* s, const DSiteState& state){
+    printf("DSS DssMslClbk::m_stateChange(%p, %X)\n", s, state);
     m_getEnvironment()->a_proxyTable->m_siteStateChange(s, state); 
     m_getEnvironment()->a_coordinatorTable->m_siteStateChange(s, state); 
 
-    printf("DKS - SiteStateChange comment out\n");
-    //m_getEnvironment()->a_dksInstHT->m_siteStateChane(s, state); 
+    // printf("DKS - SiteStateChange comment out\n");
+    // m_getEnvironment()->a_dksInstHT->m_siteStateChane(s, state); 
   }
   
   void 

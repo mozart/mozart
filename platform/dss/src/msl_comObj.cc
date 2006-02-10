@@ -129,7 +129,7 @@ namespace _msl_internal { //Start namespace
     a_sentLrgMsg(0),
     a_receivedLrgMsg(0),
     a_reopentimer(NULL),
-    a_minrtt(0xFFFFFFFF),
+    a_minrtt(0),
     a_maxrtt(0),
     a_ackCanceled(true),
     a_ackExpiration(DSS_LongTime()),
@@ -225,21 +225,25 @@ namespace _msl_internal { //Start namespace
   } // perhaps pass from where we came
   
   inline unsigned int ComObj::sendProbePing(){
-    if (a_msgReceivedDuringProbeInterval)
-      // We have received a msg, and it was within the 
-      // rtt boundary
-      {
-	if (a_msgSentDuringProbeInterval == false  && !a_queues->hasQueued())
-	  {
-	    MsgCnt *msg = new MsgCnt(C_PING, true); 
-	    m_send(msg, MSG_PRIO_HIGH);
-	  }
-	a_msgSentDuringProbeInterval = false; 
-	a_msgReceivedDuringProbeInterval = false; 
-	return a_maxrtt;
+    if (a_msgReceivedDuringProbeInterval) {
+      // We have received a msg, and it was within the rtt boundary.
+      // So continue probing, and make sure that at least one message
+      // is exchanged during the next probe interval.  Send a ping if
+      // necessary.
+      a_msgSentDuringProbeInterval = false; 
+      a_msgReceivedDuringProbeInterval = false; 
+      if (!a_queues->hasNeed()) {   // possibly no communication
+	m_send(new MsgCnt(C_PING, false), MSG_PRIO_LAZY);
       }
-    (a_site->m_getCsSite())->reportRtViolation(a_maxrtt, a_minrtt, a_maxrtt);
+      return a_maxrtt;
+    }
+
+    // Nothing has been received within the rtt boundary, so stop
+    // probing, and report the violation.  By convention the reported
+    // rtt is a_maxrtt.
+    a_probeIntervalTimer = NULL;   // timer will be deleted after return
     a_probing = false;
+    a_site->m_getCsSite()->reportRtViolation(a_maxrtt, a_minrtt, a_maxrtt);
     return 0;
   }
 
@@ -296,6 +300,10 @@ namespace _msl_internal { //Start namespace
 
   // ZACHARIAS: Below looks more than funny, check the boolean assignments...
 
+  // raph: Those assignments reflect a "clean" state for the probe.
+  // Moreover they will force to exchange at least one message, which
+  // is necessary for the probing mechanism to work.
+
   // Specials to opt imer management
   inline void ComObj::setProbeIntervalTimer(){
     a_msgSentDuringProbeInterval     = false; 
@@ -306,6 +314,7 @@ namespace _msl_internal { //Start namespace
 			 if_comObj_sendProbePing, static_cast<void*>(this));
     }
   }
+
   // set ack timer to msgAckTimeout
   inline void ComObj::setAckTimer(){
     a_ackCanceled   = false;
@@ -503,6 +512,13 @@ namespace _msl_internal { //Start namespace
 	}
       // raph: Don't return here: msgC must be freed from memory.
       // return true; 
+      break;
+    case C_PING:
+      if (m_inState(WORKING | CLOSING_WEAK | CLOSING_HARD)) { // open
+	a_lastReceived++;
+	a_remoteRef = true;
+	sendAckExplicit();     // the remote site asked for it
+      }
       break;
     case C_ACK: // Actually a dummy, since acknum was retrieved during unmarsh.
       break;
@@ -775,14 +791,20 @@ namespace _msl_internal { //Start namespace
   }
   
   void ComObj::msgAcked(int num) {
-    int rtt=a_queues->msgAcked(num,false,a_probing && a_state==WORKING);
-    if(rtt!=-1) a_lastrtt=rtt;
-    if(a_probing && a_state==WORKING) {
-      a_msgReceivedDuringProbeInterval = true; 
-      if(rtt!=-1 && (rtt<a_minrtt && rtt>=a_maxrtt)) {
+    int rtt = a_queues->msgAcked(num, false, a_probing && a_state==WORKING);
+    if (rtt!=-1) a_lastrtt=rtt;
+
+    if (a_probing && a_state==WORKING) {   // we are probing
+      a_msgReceivedDuringProbeInterval = true;
+
+      if (rtt != -1 && (rtt < a_minrtt || a_maxrtt <= rtt)) {
+	// The rtt of the message was out of bounds, so stop probing,
+	// and report the violation.  By convention the reported rtt
+	// must be different from a_maxrtt in this case.
+	if (rtt == a_maxrtt) rtt++;
 	e_timers->clearTimer(a_probeIntervalTimer);
-	(a_site->m_getCsSite())->reportRtViolation( a_maxrtt, a_minrtt, a_maxrtt);
 	a_probing=false;
+	a_site->m_getCsSite()->reportRtViolation(rtt, a_minrtt, a_maxrtt);
       }
     }
   }
@@ -903,6 +925,8 @@ namespace _msl_internal { //Start namespace
     // here we could destroy the expiration times too.
     a_ackCanceled = true;
     e_timers->clearTimer(a_ackTimer); 
+
+    a_probing = false;
     e_timers->clearTimer(a_probeIntervalTimer);
   }
 

@@ -154,7 +154,8 @@ namespace _dss_internal{
 
   void TL_Remote::m_dropReference()
   {
-    m_getEnvironment()->a_msgnLayer->m_clearTimer(a_timer); 
+    m_getEnvironment()->a_msgnLayer->m_clearTimer(a_timer);
+    a_timer = NULL;
   }
 
   bool TL_Remote::m_isRoot() { return false; }

@@ -151,11 +151,9 @@ TimerElementInterface* MsgnLayer::m_setTimer( const unsigned int& time, TimerWak
   return static_cast<TimerElementInterface*>(ele); 
 }
 
-
 void MsgnLayer::m_clearTimer(TimerElementInterface* tel){
-  TimerElement* tei = static_cast<TimerElement*>(tel);
-  a_mslEnv->a_timers->clearTimer(tei);
-  tel = NULL; 
+  TimerElement* te = static_cast<TimerElement*>(tel);
+  a_mslEnv->a_timers->clearTimer(te);
 }
 
 
