@@ -159,6 +159,8 @@ namespace _msl_internal{ //Start namespace
 
     void m_ticks(int steps);
     
+    // Clear the timer element tel.  When triggered, no action will
+    // take place, and the object tel will be deleted.
     inline void clearTimer(TimerElement*& tel){
       if(tel != NULL){
 	tel->m_kill();
@@ -166,11 +168,16 @@ namespace _msl_internal{ //Start namespace
       }
     }
 
+    // Insert the timer element tel in the queue.  Uses the 'wakeup'
+    // procedure and time specified in tel.
     inline void m_safeInsert(TimerElement* const tel);
 
-    void setTimer(TimerElement*& tel, const unsigned int& time, TimerWakeUpProc t, void* const arg);
-
-    // void insertImmediate((TimerElement*& tel, TimerWakeUpProc t, void* const arg);
+    // Set the timer element tel to be triggered after the specified
+    // time.  The trigger issues a call (*t)(arg) which must return an
+    // integer N.  If N=0, tel is deleted.  If N>0, the timer is reset
+    // to be triggered after delay N.
+    void setTimer(TimerElement*& tel, const unsigned int& time,
+		  TimerWakeUpProc t, void* const arg);
 
     char* m_stringrep();
 
