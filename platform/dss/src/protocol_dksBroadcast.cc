@@ -108,11 +108,6 @@ void ProtocolDksBcManager::makeGCpreps(){
     a_dks->m_joinNetwork(a_proxy->m_getCoordinatorSite()); 
     return true; 
   }
-  int  ProtocolDksBcProxy::siteStateChanged(DSite*, const DSiteState&)
-  {
-    // currently we don't care 
-    return 0;
-  }
   
   char *ProtocolDksBcProxy::m_stringrep(){
     return "<DksBC>"; 

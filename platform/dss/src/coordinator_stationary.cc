@@ -260,35 +260,38 @@ namespace _dss_internal{ //Start namespace
 
     
   void
-  ProxyStationary::m_siteStateChange(DSite*s, const DSiteState& state)
+  ProxyStationary::m_siteStateChange(DSite* s, const DSiteState& state)
   {
-    // ********* Access Architecture part **********
+    FaultState fs = 0;     // fault state changes
+
+    // Access Architecture part
     Assert(s != m_getEnvironment()->a_myDSite);
     if (s == m_getGUIdSite()) {
       // The Home site of the entity is affected. This directly
       // affects the proxy. If the home site is unaccessable for any
       // reason the proxy cannot guarante its functionality.
       switch(state){
-      case DSite_OK: // remove tmp, if any 
-	setFaultState(getFaultState() & ~FS_AA_MASK); break;
-      case DSite_TMP:
-	setFaultState(getFaultState() | FS_AA_HOME_TMP_UNAVAIL); break;
+      case DSite_OK:         fs = FS_AA_HOME_OK;          break;
+      case DSite_TMP:        fs = FS_AA_HOME_TMP_UNAVAIL; break;
       case DSite_GLOBAL_PRM:
-      case DSite_LOCAL_PRM:
-	setFaultState(getFaultState() | FS_AA_HOME_PRM_UNAVAIL); break;
+      case DSite_LOCAL_PRM:  fs = FS_AA_HOME_PRM_UNAVAIL; break;
       default:
 	dssError("Unknown DSite state %d for %s",state,s->m_stringrep());
       }
     }
-    
-    // Ask the protocol if the erronous site affects its
-    // functionality.
-    setFaultState(getFaultState() & ~FS_PROT_MASK);
-    setFaultState(getFaultState() | a_prot->siteStateChanged(s, state));
 
-    // Notify the glue interface if required
-    if (getRegisteredFS() & getFaultState()) {
-      a_AbsEnt_Interface->reportFaultState(getRegisteredFS() & getFaultState());
+    // Protocol part
+    fs |= a_prot->siteStateChanged(s, state);
+
+    // change the state if necessary
+    if (fs) {
+      if ((fs & FS_AA_MASK) == 0)   fs |= getFaultState() & FS_AA_MASK;
+      if ((fs & FS_PROT_MASK) == 0) fs |= getFaultState() & FS_PROT_MASK;
+      setFaultState(fs);
+
+      // Notify the glue interface if required
+      if (fs & getRegisteredFS())
+	a_AbsEnt_Interface->reportFaultState(fs & getRegisteredFS());
     }
   }
   

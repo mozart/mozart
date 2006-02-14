@@ -117,7 +117,7 @@ namespace _dss_internal{ //Start namespace
   // ******************* Failure handlers ************************
   void
   Coordinator::m_siteStateChange(DSite *, const DSiteState&){
-    printf("site stat changed\n"); 
+    // currently the coordinator does not bother...
   }
 
   void  
@@ -150,18 +150,22 @@ namespace _dss_internal{ //Start namespace
 
   
   Proxy::Proxy(NetIdentity ni, const AccessArchitecture& a,
-	       ProtocolProxy* const prot, AE_ProxyCallbackInterface* ae, DSS_Environment* const env):
-    AS_Node(ni,a,env), a_ps(PROXY_STATUS_UNSET), a_currentFS(0),
-    a_registeredFS(0), a_prot(prot), a_remoteRef(NULL), a_man(NULL),a_AbsEnt_Interface(ae) {
+	       ProtocolProxy* const prot, AE_ProxyCallbackInterface* ae,
+	       DSS_Environment* const env):
+    AS_Node(ni,a,env), a_ps(PROXY_STATUS_UNSET),
+    a_prot(prot), a_remoteRef(NULL), a_man(NULL),a_AbsEnt_Interface(ae)
+  {
     DebugCode(a_allocated++);
-    setFaultState(FS_NO_FAULT);
-    setRegisteredFS(FS_NO_FAULT);
+    setFaultState(FS_ALL_OK);
+    setRegisteredFS(0);
     m_getEnvironment()->a_proxyTable->m_insert(this);
   }
 
   void 
   Proxy::setFaultState(FaultState s){   
     dssLog(DLL_BEHAVIOR,"PROXY (%p): SetFaultState man:%p fs:%d",this,a_man,s); 
+    // fault state must be complete (AA and PROT part)
+    Assert((s & FS_AA_MASK) && (s & FS_PROT_MASK));
     a_currentFS = s;
   }
   
@@ -254,6 +258,7 @@ namespace _dss_internal{ //Start namespace
 
   // ******************* Failure handlers ************************
   void Proxy::m_siteStateChange(DSite *, const DSiteState&){
+    // just ignore it.  (Don't tell anyone we do this!)
   }
   void Proxy::m_undeliveredCoordMsg(DSite* dest, MessageType mtt,MsgContainer* msg){
     delete msg; 

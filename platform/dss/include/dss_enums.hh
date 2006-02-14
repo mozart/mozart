@@ -120,16 +120,31 @@ enum DSS_GC{
 };
 
 
-//FaultState is 3*4bit = 12 bits
+
+// FaultState describe the fault status of entities.  Bit masking is
+// used, both for registration and reporting.  The programmer must
+// register to which fault states she wants to be notified.  See
+// CoordinatorAssistantInterface::setRegisteredFS().  The fault
+// notification may combine an access architecture state with a
+// protocol-level state.
 typedef unsigned int FaultState;
-const FaultState FS_NO_FAULT               = 0x000;
-const FaultState FS_AA_MASK                = 0x00F;
-const FaultState FS_AA_HOME_TMP_UNAVAIL    = 0x001;
-const FaultState FS_AA_HOME_PRM_UNAVAIL    = 0x002;
-const FaultState FS_AA_HOME_REMOVED        = 0x004;
-const FaultState FS_PROT_MASK              = 0xFF0;
-const FaultState FS_PROT_STATE_TMP_UNAVAIL = 0x010;
-const FaultState FS_PROT_STATE_PRM_UNAVAIL = 0x020;
+const int FS_NBITS = 8;     // must be consistent with values below
+
+// access architecture fault states
+const FaultState FS_AA_MASK                = 0x0F;
+const FaultState FS_AA_HOME_OK             = 0x01;
+const FaultState FS_AA_HOME_TMP_UNAVAIL    = 0x02;
+const FaultState FS_AA_HOME_PRM_UNAVAIL    = 0x04;
+const FaultState FS_AA_HOME_REMOVED        = 0x08;
+
+// protocol-level fault states
+const FaultState FS_PROT_MASK              = 0xF0;
+const FaultState FS_PROT_STATE_OK          = 0x10;
+const FaultState FS_PROT_STATE_TMP_UNAVAIL = 0x20;
+const FaultState FS_PROT_STATE_PRM_UNAVAIL = 0x40;
+
+// shorthand
+const FaultState FS_ALL_OK = FS_AA_HOME_OK | FS_PROT_STATE_OK;
 
 
 

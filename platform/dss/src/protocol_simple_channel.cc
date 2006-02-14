@@ -160,6 +160,22 @@ namespace _dss_internal{ //Start namespace
     stateHolder = false; // change to non-stateholder
     return true;
   }
+
+  FaultState
+  ProtocolSimpleChannelProxy::siteStateChanged(DSite* s,
+					       const DSiteState& state) {
+    if (!stateHolder && (a_proxy->m_getCoordinatorSite() == s)) {
+      switch (state) {
+      case DSite_OK:         return FS_PROT_STATE_OK;
+      case DSite_TMP:        return FS_PROT_STATE_TMP_UNAVAIL;
+      case DSite_GLOBAL_PRM:
+      case DSite_LOCAL_PRM:  return FS_PROT_STATE_PRM_UNAVAIL;
+      default:
+	dssError("Unknown DSite state %d for %s",state,s->m_stringrep());
+      }
+    }
+    return 0;
+  }
   
   void ProtocolSimpleChannelProxy::localInitatedOperationCompleted(){ ; }
 

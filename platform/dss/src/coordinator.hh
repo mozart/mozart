@@ -157,8 +157,8 @@ namespace _dss_internal{ //Start namespace
 
   protected:
     ProxyStatus    a_ps:3;             // 3 needed for Windows!
-    FaultState     a_currentFS:12;
-    FaultState     a_registeredFS:12;
+    FaultState     a_currentFS   :FS_NBITS;
+    FaultState     a_registeredFS:FS_NBITS;
     ProtocolProxy* a_prot;             // The execution protocol
     RemoteReference*     a_remoteRef;              // NULL indicates that the proxy shares reference with the coordinator. 
   public:

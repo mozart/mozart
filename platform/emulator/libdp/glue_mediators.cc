@@ -165,7 +165,7 @@ Mediator::setAbstractEntity(AbstractEntity *ae) {
   absEntity = ae;
   if (ae) {
     ae->assignMediator(dynamic_cast<MediatorInterface*>(this));
-    ae->getCoordinatorAssistant()->setRegisteredFS(FS_AA_MASK | FS_PROT_MASK);
+    ae->getCoordinatorAssistant()->setRegisteredFS(FS_PROT_MASK);
   }
 }
 
@@ -255,11 +255,8 @@ Mediator::reportFS(const FaultState& fs) {
   if (faultState != GLUE_FAULT_PERM) {
     // determine new fault state
     GlueFaultState s = GLUE_FAULT_NONE;
-
     if (fs & FS_PROT_STATE_TMP_UNAVAIL) s = GLUE_FAULT_TEMP;
-    if (fs & FS_AA_HOME_PRM_UNAVAIL ||
-	fs & FS_AA_HOME_REMOVED ||
-	fs & FS_PROT_STATE_PRM_UNAVAIL) s = GLUE_FAULT_PERM;
+    if (fs & FS_PROT_STATE_PRM_UNAVAIL) s = GLUE_FAULT_PERM;
 
     setFaultState(s);
   }
