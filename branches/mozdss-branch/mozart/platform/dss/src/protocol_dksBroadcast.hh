@@ -81,9 +81,8 @@ namespace _dss_internal{ //Start namespace
     // ZACHARIAS: explain what bool return means, thanks ;)
     virtual bool m_initRemoteProt(DssReadBuffer*);
 
-    // Called when the state of a site changes. It is up to the
-    // protocol to deduce if it is affected by the site. 
-    virtual int siteStateChanged(DSite*, const DSiteState&);
+    // Currently faults are ignored.
+    // virtual FaultState siteStateChanged(DSite*, const DSiteState&);
 
     //located in dss_access.cc, the only placed accessed from
     virtual char *m_stringrep();

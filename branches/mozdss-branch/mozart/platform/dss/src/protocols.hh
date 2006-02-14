@@ -98,7 +98,9 @@ namespace _dss_internal{ //Start namespace
 
     // Called when the state of a site changes. It is up to the
     // protocol to deduce if it is affected by the site. 
-    virtual int siteStateChanged(DSite*, const DSiteState&){return 0;}
+    virtual FaultState siteStateChanged(DSite*, const DSiteState&) {
+      return 0;
+    }
 
     //located in dss_access.cc, the only placed accessed from
     virtual char *m_stringrep();
