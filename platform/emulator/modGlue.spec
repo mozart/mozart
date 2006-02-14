@@ -174,6 +174,14 @@
 				  out => [],
 				  BI  => BIsetFaultState},
 
+     'getMaxRtt'             => { in  => [],
+                                  out => ['+int'],
+                                  BI  => BIgetMaxRtt},
+
+     'setMaxRtt'             => { in  => ['+int'],
+                                  out => [],
+                                  BI  => BIsetMaxRtt},
+
      'migrateManager'        =>  { in  => ['value'],
                                    out => [],
                                    BI  => BImigrateManager},

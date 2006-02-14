@@ -62,7 +62,6 @@ public:
   DSite* m_getDssSite();
   void m_setDssSite(DSite*);
   void m_setConnection(VirtualChannelInterface* vc);
-  void m_monitorConnection();     // install a rtt monitor
 
   Glue_SiteRep *m_getNext();
   Glue_SiteRep **m_getNextPP() {return &a_next;}
@@ -89,6 +88,8 @@ public:
 extern Glue_SiteRep* site_address_representations; 
 
 extern Glue_SiteRep* thisGSite; // the gsa proper to the current process 
+
+extern int RTT_UPPERBOUND;     // the maximum rtt used to detect tempFail
 
 void gCollectGASreps(); 
 

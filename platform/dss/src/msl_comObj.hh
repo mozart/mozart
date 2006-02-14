@@ -44,6 +44,7 @@
 
 #include "mslBase.hh"
 #include "msl_timers.hh"
+#include "msl_dsite.hh"
 
 namespace _msl_internal{ //Start namespace
 
@@ -139,7 +140,13 @@ namespace _msl_internal{ //Start namespace
 
     EndRouter* a_pred; // the transObj preceding this comObj.!!! change it
     
-    inline void m_setCState(const CState& s){ a_state = s; }
+    inline void m_setCState(const CState& s){
+      a_state = s;
+      if (s == WORKING && a_site->m_getCsSite())
+	// notify the upper layer that the connection is now working,
+	// hence application monitors can be applied.
+	a_site->m_getCsSite()->monitor();
+    }
     inline CState m_getCState() const { return a_state; }
 
     // throw a State vector to check if in one of a set of states -> (WORKING | CLOSED | ... )
