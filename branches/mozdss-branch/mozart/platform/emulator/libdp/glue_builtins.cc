@@ -747,6 +747,18 @@ OZ_BI_define(BIsetFaultState,2,0)
 
 } OZ_BI_end
 
+OZ_BI_define(BIgetMaxRtt,0,1)
+{
+  OZ_RETURN(oz_int(RTT_UPPERBOUND));
+} OZ_BI_end
+
+OZ_BI_define(BIsetMaxRtt,1,0)
+{
+  oz_declareIntIN(0,maxrtt);
+  RTT_UPPERBOUND = maxrtt;
+  return PROCEED;
+} OZ_BI_end
+
 
 
 OZ_BI_define(BItablesExtract,0,1)

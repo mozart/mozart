@@ -212,6 +212,7 @@ public:
   virtual void    marshalCsSite( DssWriteBuffer* const buf) = 0; 
   virtual void    updateCsSite( DssReadBuffer* const buf) = 0; 
   virtual void    disposeCsSite() = 0; 
+  // monitor() is called when the connection can be monitored
   virtual void    monitor() = 0; 
   virtual void    reportRtViolation(int measuredRT, int installedLow, int installedHigh) = 0; 
   virtual VirtualChannelInterface *establishConnection() = 0;
