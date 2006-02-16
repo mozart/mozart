@@ -85,8 +85,10 @@ namespace _dss_internal{ //Start namespace
   
     virtual void remoteInitatedOperationCompleted(DssOperationId* opId,::PstOutContainerInterface* pstOut) {;} 
     void localInitatedOperationCompleted(){Assert(0);} 
-  };
 
+    // check fault state
+    virtual FaultState siteStateChanged(DSite*, const DSiteState&);
+  };
 
 } //End namespace
 #endif 
