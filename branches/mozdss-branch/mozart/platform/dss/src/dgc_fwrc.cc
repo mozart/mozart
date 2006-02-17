@@ -44,61 +44,89 @@ namespace _dss_internal{
     return (enumerator / wrc_alpha);
   }
   
-  
+  FracHandler::FracHandler(const int& alpha) : frac(NULL), wrc_alpha(alpha)
+  {}
+
+  FracHandler::FracHandler(const int& e, const int& d, const int& alpha) :
+    frac(new TwoTypeContainer<int,int>(e,d,NULL)), wrc_alpha(alpha)
+  {}
+
+  inline void FracHandler::Frac_init(const int& e, const int& d) {
+    frac = new TwoTypeContainer<int,int>(e,d,NULL);
+  }
+
+  FracHandler::~FracHandler() {
+    t_deleteList(frac);
+  }
+
+  // Invariant: frac is a list of pairs (e,d), such that
+  // e <= MAXENUMERATOR, and the values of d are increasing
+
   void
   FracHandler::insertPair(const int& e, const int& k){
     if (k == 0) return;
     
-    TwoTypeContainer<int,int>** tmp = &frac;
-    while((*tmp)!=NULL && (*tmp)->a_contain2 < k){
-      tmp = &((*tmp)->a_next);
+    TwoTypeContainer<int,int>** nodep = &frac;
+    while ((*nodep)!=NULL && (*nodep)->a_contain2 < k) {
+      nodep = &((*nodep)->a_next);
     }
-    
-    if ((*tmp) == NULL || (*tmp)->a_contain2 > k){
-      *tmp = new TwoTypeContainer<int,int>(e,k,*tmp);
+    // (*nodep) == NULL || (*nodep)->a_contain2 >= k
+
+    if ((*nodep) == NULL || (*nodep)->a_contain2 > k) {
+      // insert (e,k) in front of *nodep
+      *nodep = new TwoTypeContainer<int,int>(e, k, *nodep);
       return;
     }
-    if (e + (*tmp)->a_contain1 == MAXENUMERATOR) {
-      TwoTypeContainer<int,int>* ttmp = (*tmp)->a_next;
-      delete (*tmp);
-      (*tmp) = ttmp;
+    // (*nodep) != NULL && (*nodep)->a_contain2 == k
+    if (e + (*nodep)->a_contain1 == MAXENUMERATOR) {
+      // remove the pair at *nodep, and insert (1,k-1)
+      TwoTypeContainer<int,int>* next = (*nodep)->a_next;
+      delete *nodep;
+      *nodep = next;
+      insertPair(1, k-1);
+      return;
+    }
+    if (e + (*nodep)->a_contain1 > MAXENUMERATOR) {
+      // add e here, decrease MAXENUMERATOR, and insert (1,k-1)
+      (*nodep)->a_contain1 += e - MAXENUMERATOR;
       insertPair(1,k-1);
       return;
     }
-    if (e + (*tmp)->a_contain1 > MAXENUMERATOR) {
-      (*tmp)->a_contain1 = e + (*tmp)->a_contain1 - MAXENUMERATOR;
-      insertPair(1,k-1);
-      return;
-    }
-    
-    (*tmp)->a_contain1 = e + (*tmp)->a_contain1;
+    // (*nodep)->a_contain1 + e < MAXENUMERATOR
+    (*nodep)->a_contain1 += e;
   }
   
   void
-  FracHandler::getNewRefWeightPair(int &e, int &d){
-    Assert(frac != NULL);
+  FracHandler::getNewRefWeightPair(int &e, int &d) {
+    // frac can be NULL if all references have been collected at the
+    // home site, but the entity has not been localized
+    if (frac == NULL) Frac_init(MAXENUMERATOR, 1);
+
     if (frac->a_contain1 > 1) {
       e = GiveSize(frac->a_contain1);
       frac->a_contain1 -= e;
       d = frac->a_contain2;
     } else {
-      if (frac->a_next == NULL || frac->a_next->a_contain2 > (frac->a_contain2 + 1)) {
+      // frac is a pair of the form (1,k)
+      if (frac->a_next == NULL ||
+	  frac->a_next->a_contain2 > (frac->a_contain2 + 1)) {
+	// there is no pair of the form (*,k+1).  Decompose frac into
+	// (e,k+1) and (MAXENUMERATOR-e,k+1), and keep the latter.
 	e = GiveSize(MAXENUMERATOR);
 	d = frac->a_contain2+1;
+	frac->a_contain1 = (MAXENUMERATOR - e);
 	frac->a_contain2 = d;
-	frac->a_contain1 = (MAXENUMERATOR); // - e;
-	frac->a_contain1 -= e; // don't put together this and the
-	//above line (did that anyway but now with ()'s)
       } else {
-	// "steal" from the one after
-	TwoTypeContainer<int,int>* temp= frac->a_next;
-	d = temp->a_contain2;
-	e = GiveSize(temp->a_contain1); // 1 or E div alpha
-	if (temp->a_contain1 > 1)
-	  temp->a_contain1 -= e;
+	// "steal" from the second pair
+	TwoTypeContainer<int,int>* second = frac->a_next;
+	e = GiveSize(second->a_contain1); // 1 or E div alpha
+	d = second->a_contain2;
+	// decrease e from second, and delete it if the left part nullify
+	if (second->a_contain1 > 1)
+	  second->a_contain1 -= e;
 	else {
-	  frac->a_next = temp->a_next;
-	  delete temp;
+	  frac->a_next = second->a_next;
+	  delete second;
 	}
       }
     }
@@ -111,20 +139,6 @@ namespace _dss_internal{
     TwoTypeContainer<int,int>* tmp=frac;
     frac = frac->a_next;
     delete tmp;
-  }
-  
-  FracHandler::FracHandler(const int& e, const int& d, const int& alpha):
-    frac(new TwoTypeContainer<int,int>(e,d,NULL)), wrc_alpha(alpha){
-  }
-
-  FracHandler::FracHandler(const int& alpha):frac(NULL),wrc_alpha(alpha){}
-  inline void FracHandler::Frac_init(const int& e, const int& d){
-    frac = new TwoTypeContainer<int,int>(e,d,NULL); 
-  }
-
-
-  FracHandler::~FracHandler(){
-    t_deleteList(frac);
   }
   
 
@@ -177,7 +191,7 @@ namespace _dss_internal{
   void
   WRC_Remote::m_getReferenceInfo(DssWriteBuffer *bs, DSite *dest){
     int e, d;
-    getNewRefWeightPair(e,d);;
+    getNewRefWeightPair(e,d);
     gf_MarshalNumber(bs, e);
     gf_MarshalNumber(bs, d);
   }

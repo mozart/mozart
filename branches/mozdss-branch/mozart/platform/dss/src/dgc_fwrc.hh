@@ -40,27 +40,27 @@ namespace _dss_internal{ // Start namespace
     //  Handling the list of enum denum pairs
     //
     TwoTypeContainer<int,int>* frac;
-    inline int GiveSize(const int& enumerator);
-
     int wrc_alpha;
+
+    int GiveSize(const int& enumerator);
+
     FracHandler(const FracHandler&):frac(NULL),wrc_alpha(0){}
     FracHandler& operator=(const FracHandler&){ return *this; }
     
   protected:
     static const int MAXENUMERATOR;
 
-    inline FracHandler(const int& alpha);
-    inline void Frac_init(const int& e, const int& d);
-
-    inline FracHandler(const int& e, const int& d, const int& alpha);
+    FracHandler(const int& alpha);
+    FracHandler(const int& e, const int& d, const int& alpha);
     virtual ~FracHandler();
 
+    void Frac_init(const int& e, const int& d);
+
+    inline bool isEmpty(){ return (frac == NULL); }
     void insertPair(const int& e, const int& k);
     void removeHead(int& e, int& d);
 
     void getNewRefWeightPair(int &e, int &d);  
-
-    inline bool isEmpty(){ return (frac == NULL); }
 
   public:
     inline bool setAlpha(const int& val){ return (val > 0) ? (wrc_alpha = val)!=0 : false; }
