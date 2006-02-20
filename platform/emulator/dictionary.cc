@@ -608,7 +608,7 @@ OZ_Return dictionaryGetInline(OZ_Term d, OZ_Term k, OZ_Term &out)
   if (out) {
     return (PROCEED);
   } else {
-    return oz_raise(E_SYSTEM,E_KERNEL,"dict",2,d,k);
+    return oz_raise(E_ERROR,E_KERNEL,"dict",2,d,k);
   }
   Assert(0);
 }
@@ -640,7 +640,7 @@ OZ_Return dictionaryExchangeInline(OZ_Term d, OZ_Term k, OZ_Term value, OZ_Term&
   GetDictAndKey(d,k,dict,key,OK);
   // do not create entry if it does not already exist
   if (dict->exchange(key,value,old,false)) return PROCEED;
-  else return oz_raise(E_SYSTEM,E_KERNEL,"dict",2,d,k);
+  else return oz_raise(E_ERROR,E_KERNEL,"dict",2,d,k);
 }
 
 OZ_DECLAREBI_USEINLINEFUN3(BIdictionaryExchange,dictionaryExchangeInline)
