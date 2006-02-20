@@ -635,6 +635,23 @@
           <Td/Maximal depth used for <<System.show>> and
           <<System.print>> (see <Ptr to="chapter.system">)./
         </Tr>
+        <Tr>
+          <Td/<<scientificFloats>>/
+          <Td/yes/
+          <Td/<<Bool>>/
+          <Td/Forces the scientific (with an exponent) representation
+          of floats. By default floats are printed in the decimal
+          notation unless the exponent of the scientific
+          representation is smaller than -4 or larger or equal to the
+          precision (the 'g' conversion by the 'fprintf' function in
+          POSIX.1)./
+        </Tr>
+        <Tr>
+          <Td/<<floatPrecision>>/
+          <Td/yes/
+          <Td/<<Int>>/
+          <Td/Number of digits in the representation of floats, 5 by default./
+        </Tr>
       </Table>
     </P>
 
@@ -807,7 +824,7 @@
           <Td/yes/
           <Td/<<Bool>>/
           <Td/Only if <<true>>, the fields <<time.copy>>, <<time.gc>>,
-          and <<time.propagate>> are updated accordingly./
+          <<time.propagate>> and <<time.run>> are updated accordingly./
         </Tr>
       </Table>
     </P>
@@ -816,7 +833,62 @@
 
   </Section>
 
-
+  
+  <Section id="section.property.env">
+    <Title/Environment Properties/
+    <P>Other miscellaneous properties characterize the environment in which
+    Mozart is installed and runs.
+    <Table id="table.prop.env">
+      <Tr><Th/Property/ <Th/Type/ <Th/Description/</Tr>
+      <Tr>
+        <Td/<<oz.dotoz>>/
+	<Td/VirtualString/
+	<Td>user directory for personal customizations and packages.
+	Initialized from <<OZ_DOTOZ>> or <<OZDOTOZ>>, or the default
+	<file>~/.oz/1.3.0</file></Td>
+      </Tr>
+      <Tr>
+        <Td/<<oz.home>>/
+	<Td/VirtualString/
+	<Td/top directory of the mozart installation.  Initialized from <<OZ_HOME>>
+	or <<OZHOME>> or property <<oz.configure.home>>/
+      </Tr>
+      <Tr>
+        <Td/<<oz.search.load>>/
+	<Td/VirtualString/
+	<Td>methods for resolving functors: initialized from <<OZ_SEARCH_LOAD>>,
+	<<OZ_LOAD>> or <<OZLOAD>> (or a default)</Td>
+      </Tr>
+      <Tr>
+        <Td/<<oz.search.path>>/
+	<Td/VirtualString/
+	<Td>where to search for includes: initialized from <<OZ_SEARCH_PATH>>,
+	<<OZ_PATH>> or <<OZPATH>> (or a default)</Td>
+      </Tr>
+      <Tr>
+        <Td/<<oz.trace.load>>/
+	<Td/Bool/
+	<Td>controls whether resolvers output tracing information</Td>
+      </Tr>
+      <Tr>
+        <Td/<<path.separator>>/
+	<Td/Char/
+	<Td>the character used as a search path separator for the current platform
+	(<<:>> for Unix, and <<;>> for Windows)</Td>
+      </Tr>
+      <Tr>
+        <Td/<<path.escape>>/
+	<Td/Char/
+	<Td>the character used for escaping another character (usually backslash)</Td>
+      </Tr>
+      <Tr>
+        <Td/<<user.home>>/
+	<Td/VirtualString/
+	<Td>user home directory where applicable.  Initialized from <<HOME>>
+	(or otherwise from <<HOMEDRIVE>> and <<HOMEPATH>> on Windows)</Td>
+      </Tr>
+    </Table>
+  </Section>
 
 
   <Section id="section.property.interface">
