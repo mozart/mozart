@@ -763,7 +763,7 @@ known about the set ?{M}.
 >>>
 <item>
 Returns a specification of the set of elements that are neither known
-to included in ?{M} no excluded from ?{M}.
+to be included in ?{M} nor excluded from ?{M}.
 
 <entry>
 <index class=module/FS<and>reflect<and>lowerBoundList/
@@ -795,8 +795,8 @@ known about the set ?{M}.
 >>>
 <item>
 Returns an expanded specification (&ie;, every individual element is
-represented) of the set of elements that are neither known to included
-in ?{M} no excluded from ?{M}.
+represented) of the set of elements that are neither known to be
+included in ?{M} nor excluded from ?{M}.
 
 <entry>
 <index class=module/FS<and>reflect<and>cardOf<and>lowerBound/
@@ -823,9 +823,9 @@ Returns the cardinality of the current greatest lower bound for ?{M}.
 <<<{FS.reflect.cardOf.unknown *M ?I}
 >>>
 <item>
-        
-        Returns the number of elements that are currently not known to
-        be included or excluded from ?{M}.
+Returns the number of elements that are currently not known to be
+included or excluded from ?{M}.
+
 </list>
 </section>
 
