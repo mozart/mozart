@@ -1,10 +1,9 @@
 /*
  *  Authors:
  *    Erik Klintskog (erik@sics.se)
- *
  * 
  *  Contributors:
- *    optional, Contributor's name (Contributor's email address)
+ *    Raphael Collet (raph@info.ucl.ac.be)
  * 
  *  Copyright:
  *    Erik Klintskog, 1998
@@ -35,28 +34,29 @@
 #include "dssBase.hh"
 #include "protocols.hh"
 #include "dss_templates.hh"
+
 namespace _dss_internal{ //Start namespace
 
-  class ProtocolTransientRemoteManager:public ProtocolManager{
+  class ProtocolTransientRemoteManager : public ProtocolManager {
   private:
-    OneContainer<DSite> *a_proxies;
-    bool a_bound;
-    DSite *a_current;          // the proxy that has the write token
+    OneContainer<DSite> *a_proxies;   // the registered proxies
+    bool a_bound;                     // whether the transient is bound
+    DSite *a_current;                 // the proxy that has the write token
 
-    // invariant: a_current is not a member of a_proxies.
+    // Invariant: a_current is not a member of a_proxies if it is remote.
 
     ProtocolTransientRemoteManager(const ProtocolTransientRemoteManager&):
-      a_proxies(NULL), a_bound(false), a_current(NULL){}
-
-    ProtocolTransientRemoteManager& operator=(const ProtocolTransientRemoteManager&){ return *this; }
+      a_proxies(NULL), a_bound(false), a_current(NULL) {}
+    ProtocolTransientRemoteManager&
+    operator=(const ProtocolTransientRemoteManager&) { return *this; }
 
   public:
     ProtocolTransientRemoteManager(DSite* const site);
     ProtocolTransientRemoteManager(::MsgContainer * const);
     ~ProtocolTransientRemoteManager();
+
     void makeGCpreps();
     void msgReceived(::MsgContainer*,DSite*);
-
     void sendRedirect(DSite*);
     void sendMigrateInfo(MsgContainer*); 
 
@@ -65,52 +65,53 @@ namespace _dss_internal{ //Start namespace
   };
 
 
-  class ProtocolTransientRemoteProxy:public ProtocolProxy{
+
+  class ProtocolTransientRemoteProxy : public ProtocolProxy {
     friend class ProtocolTransientRemoteManager;
 
   private:
-    OneContainer<GlobalThread> *a_susps; 
-    bool a_bound;
-    bool a_writeToken;          // whether this has the write token
+    OneContainer<GlobalThread> *a_susps;   // suspended threads
+    bool a_bound;                          // whether the transient is bound
+    bool a_writeToken;                     // whether this has the write token
 
     ProtocolTransientRemoteProxy(const ProtocolTransientRemoteProxy&):
-      ProtocolProxy(PN_NO_PROTOCOL), a_susps(NULL),a_bound(false),a_writeToken(false){}
+      ProtocolProxy(PN_NO_PROTOCOL), a_susps(NULL), a_bound(false),
+      a_writeToken(false) {}
+    ProtocolTransientRemoteProxy&
+    operator=(const ProtocolTransientRemoteProxy&) { return *this; }
 
-    ProtocolTransientRemoteProxy& operator=(const ProtocolTransientRemoteProxy&){ return *this; }
-
+    // wake up the suspended threads
     void wkSuspThrs(); 
 
   public:
     ProtocolTransientRemoteProxy();
     ~ProtocolTransientRemoteProxy();
 
-    OpRetVal protocol_Terminate(GlobalThread* const th_id, ::PstOutContainerInterface**& msg,const AbsOp& aop);
-    OpRetVal protocol_Update(GlobalThread* const th_id, ::PstOutContainerInterface**& msg,const AbsOp& aop);
+    OpRetVal protocol_Terminate(GlobalThread* const th_id,
+				::PstOutContainerInterface**& msg,
+				const AbsOp& aop);
+    OpRetVal protocol_Update(GlobalThread* const th_id,
+			     ::PstOutContainerInterface**& msg,
+			     const AbsOp& aop);
 
-    void makeGCpreps(); //threads should be guarded from the glue as well as....
-    bool isWeakRoot(){ return (a_susps != NULL); };
+    bool isWeakRoot() { return (a_susps != NULL); }
 
+    void makeGCpreps(); //threads should be guarded from the glue as well as...
     void msgReceived(::MsgContainer*,DSite*);
   
-    bool m_initRemoteProt(DssReadBuffer*);
-  
-    void sendMigrateInfo(MsgContainer*); 
-    void instantiateMigrateInfo(::MsgContainer*);
-
     // Marshaling and unmarshaling proxy information
     virtual bool marshal_protocol_info(DssWriteBuffer *buf, DSite*);
     virtual bool dispose_protocol_info(DssReadBuffer *buf );
+    virtual bool m_initRemoteProt(DssReadBuffer*);
     
-    virtual void remoteInitatedOperationCompleted(DssOperationId* opId,PstOutContainerInterface* pstOut) {;} 
-    virtual void localInitatedOperationCompleted() {Assert(0);} 
+    virtual void
+    remoteInitatedOperationCompleted(DssOperationId* opId,
+				     PstOutContainerInterface* pstOut) {}
+    virtual void localInitatedOperationCompleted() { Assert(0); }
 
     // check fault state
     virtual FaultState siteStateChanged(DSite*, const DSiteState&);
   };
 
-
 } //End namespace
 #endif 
-
-
-
