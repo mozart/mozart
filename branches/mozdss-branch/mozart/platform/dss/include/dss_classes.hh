@@ -253,6 +253,11 @@ public:
   virtual AOcallback callback_Append(DssOperationId* operation_id,
 				     PstInContainerInterface* operation) = 0;
 
+  // summarize past Append operations; the answer (if given) is sent
+  // to a new proxy as one single Append operation.
+  virtual AOcallback callback_Changes(DssOperationId* operation_id,
+				      PstOutContainerInterface*& possible_answer)=0;
+
 };
 
 class DSSDLLSPEC  ImmutableMediatorInterface: public MediatorInterface{

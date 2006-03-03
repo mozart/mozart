@@ -247,6 +247,8 @@ namespace _dss_internal{ //Start namespace
       return mmi->callback_Bind(opid,builder);
     case AO_OO_UPDATE:
       return mmi->callback_Append(opid,builder);
+    case AO_OO_CHANGES:
+      return mmi->callback_Changes(opid, ans);
     }
     return AOCB_FINISH;
   }

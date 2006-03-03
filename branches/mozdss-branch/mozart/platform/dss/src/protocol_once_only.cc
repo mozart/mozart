@@ -37,7 +37,9 @@ namespace _dss_internal{ //Start namespace
   // Registration of proxy P:
   //    P                 M
   //    |---OO_REGISTER-->|
-  //    |<--OO_REDIRECT---|   replied only if transient already bound
+  //    |<--OO_REDIRECT---|   if transient already bound
+  // or:
+  //    |<---OO_UPDATE----|   if changes are provided by pst
   //
   // Deregistration of proxy P:
   //    P                   M
@@ -122,11 +124,22 @@ namespace _dss_internal{ //Start namespace
     t_gcList(a_proxies);
   }
 
-  // register a remote proxy (autoregistration mechanism)
+  // register a remote proxy
   void ProtocolOnceOnlyManager::register_remote(DSite* s) {
     // don't insert it twice
     t_deleteCompare(&a_proxies, s);
     a_proxies = new OneContainer<DSite>(s, a_proxies);
+
+    // send an update for changes if necessary
+    ::PstOutContainerInterface *ans;
+    manager->m_doe(AO_OO_CHANGES, NULL, NULL, NULL, ans);
+    if (ans != NULL) {
+      MsgContainer *msgC = manager->m_createProxyProtMsg();
+      msgC->pushIntVal(OO_UPDATE);
+      msgC->pushIntVal(AO_OO_UPDATE);
+      gf_pushPstOut(msgC, ans);
+      manager->m_sendToProxy(s, msgC);
+    }
   }
 
   // send an OO_REDIRECT message to proxy at site s
@@ -148,7 +161,7 @@ namespace _dss_internal{ //Start namespace
       if (a_bound)
 	sendRedirect(s);
       else
-	a_proxies = new OneContainer<DSite>(s, a_proxies);
+	register_remote(s);
       break;
     }
     case OO_DEREGISTER:{
