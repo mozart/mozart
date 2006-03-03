@@ -400,6 +400,8 @@ public:
 				   PstInContainerInterface* operation); 
   virtual AOcallback callback_Append(DssOperationId *id,
 				     PstInContainerInterface* operation);
+  virtual AOcallback callback_Changes(DssOperationId* id,
+				      PstOutContainerInterface*& answer);
   virtual PstOutContainerInterface *retrieveEntityRepresentation();
   virtual void installEntityRepresentation(PstInContainerInterface*);
   virtual void reportFaultState(const FaultState& fs) { reportFS(fs); }

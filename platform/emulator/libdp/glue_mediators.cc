@@ -993,3 +993,13 @@ OzVariableMediator::callback_Append(DssOperationId *id,
   }
   return AOCB_FINISH; 
 }
+
+AOcallback
+OzVariableMediator::callback_Changes(DssOperationId *id,
+				     PstOutContainerInterface*& answer) {
+  printf("--- raph: callback_Changes\n");
+  // simply check whether the variable is needed
+  answer = (active && oz_isNeeded(oz_deref(entity)) ?
+	    new PstOutContainer(oz_atom("needed")) : NULL);
+  return AOCB_FINISH; 
+}
