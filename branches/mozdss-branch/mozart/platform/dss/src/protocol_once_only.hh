@@ -1,10 +1,9 @@
 /*
  *  Authors:
  *    Erik Klintskog (erik@sics.se)
- *
  * 
  *  Contributors:
- *    optional, Contributor's name (Contributor's email address)
+ *    Raphael Collet (raph@info.ucl.ac.be)
  * 
  *  Copyright:
  *    Erik Klintskog, 1998
@@ -35,56 +34,74 @@
 #include "dssBase.hh"
 #include "protocols.hh"
 #include "dss_templates.hh"
+
 namespace _dss_internal{ //Start namespace
 
-  class ProtocolOnceOnlyManager:public ProtocolManager{
+  class ProtocolOnceOnlyManager : public ProtocolManager {
   private:
-    OneContainer<DSite> *a_proxies;
-    bool a_bound;
+    OneContainer<DSite> *a_proxies;   // the registered proxies
+    bool a_bound;                     // whether the transient is bound
 
-    ProtocolOnceOnlyManager(const ProtocolOnceOnlyManager&):a_proxies(NULL),a_bound(false){};
-    ProtocolOnceOnlyManager& operator=(const ProtocolOnceOnlyManager&){ return *this; }
+    ProtocolOnceOnlyManager(const ProtocolOnceOnlyManager&) :
+      a_proxies(NULL), a_bound(false) {}
+    ProtocolOnceOnlyManager& operator=(const ProtocolOnceOnlyManager&)
+    { return *this; }
+
   public:
-
     ProtocolOnceOnlyManager(DSite* const site);
     ProtocolOnceOnlyManager(MsgContainer * const);
     ~ProtocolOnceOnlyManager();
+
     void makeGCpreps();
     void msgReceived(MsgContainer*,DSite*);
-
     void sendRedirect(DSite*);
     void sendMigrateInfo(MsgContainer*); 
+
+    // register a remote proxy
+    void register_remote(DSite*);
   };
 
-  enum ProtOOop{
-    ProtOO_wait, 
-    ProtOO_write, 
-    ProtOO_terminate 
-  };
 
-  class ProtocolOnceOnlyProxy:public ProtocolProxy{
+
+  class ProtocolOnceOnlyProxy : public ProtocolProxy {
   private:
-    TwoContainer<GlobalThread, ProtOOop> *a_susps; 
-    bool a_bound;
+    OneContainer<GlobalThread> *a_susps;   // suspended threads
+    bool a_bound;                          // whether the transient is bound
 
-    ProtocolOnceOnlyProxy(const ProtocolOnceOnlyProxy&):ProtocolProxy(PN_TRANSIENT),a_susps(NULL),a_bound(false){};
-    ProtocolOnceOnlyProxy& operator=(const ProtocolOnceOnlyProxy&){ return *this; }
+    // Note. a_susps used to be a TwoContainer<GlobalThread,ProtOOop>.
+    // I simplified it, because in practice we do not need to know on
+    // which operation a GlobalThread suspends.
+
+    ProtocolOnceOnlyProxy(const ProtocolOnceOnlyProxy&) :
+      ProtocolProxy(PN_TRANSIENT), a_susps(NULL), a_bound(false) {}
+    ProtocolOnceOnlyProxy& operator=(const ProtocolOnceOnlyProxy&)
+    { return *this; }
+
   public:
     ProtocolOnceOnlyProxy();
-    
-    OpRetVal protocol_Terminate(GlobalThread* const th_id, ::PstOutContainerInterface**& msg,const AbsOp& aop);
-    OpRetVal protocol_Update(GlobalThread* const th_id, ::PstOutContainerInterface**& msg,const AbsOp& aop);
-    
-    virtual bool isWeakRoot(){ return (a_susps != NULL); };
-
-    void makeGCpreps(); //threads should be guarded from the glue as well as....
-    void msgReceived(MsgContainer*,DSite*);
     ~ProtocolOnceOnlyProxy();
+    
+    OpRetVal protocol_Terminate(GlobalThread* const th_id,
+				::PstOutContainerInterface**& msg,
+				const AbsOp& aop);
+    OpRetVal protocol_Update(GlobalThread* const th_id,
+			     ::PstOutContainerInterface**& msg,
+			     const AbsOp& aop);
+
+    virtual bool isWeakRoot() { return (a_susps != NULL); }
+
+    void makeGCpreps(); //threads should be guarded from the glue as well as...
+    void msgReceived(MsgContainer*,DSite*);
   
-    bool m_initRemoteProt(DssReadBuffer*);
+    // Marshaling and unmarshaling proxy information
+    virtual bool marshal_protocol_info(DssWriteBuffer *buf, DSite*);
+    virtual bool dispose_protocol_info(DssReadBuffer *buf );
+    virtual bool m_initRemoteProt(DssReadBuffer*);
   
-    virtual void remoteInitatedOperationCompleted(DssOperationId* opId,::PstOutContainerInterface* pstOut) {;} 
-    void localInitatedOperationCompleted(){Assert(0);} 
+    virtual void
+    remoteInitatedOperationCompleted(DssOperationId* opId,
+				     ::PstOutContainerInterface* pstOut) {} 
+    virtual void localInitatedOperationCompleted() { Assert(0); }
 
     // check fault state
     virtual FaultState siteStateChanged(DSite*, const DSiteState&);
