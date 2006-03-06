@@ -76,9 +76,8 @@ namespace _dss_internal{ //Start namespace
   //
   // Proxy P wants to update the transient.  This scheme is very
   // similar to the binding case; proxy P* serializes all updates.
-  // The tricky part is that the manager must remind the proxies'
-  // request in order to send the update confirmation to the right
-  // proxy.
+  // The manager sends the update confirmation to the requesting
+  // proxy, and regular update messages to the other proxies.
   //
   // (1)  P                     M                     P*
   //      |--TR_UPDATE_REQUEST->|                     |
@@ -191,8 +190,12 @@ namespace _dss_internal{ //Start namespace
 	   this, a_current->m_stringrep(), 
 	   manager->m_getEnvironment()->a_myDSite->m_stringrep()); 
 
-    t_deleteCompare(&a_proxies, dest);   // ensures the invariant
+    // return immediately if the proxy is already registered
+    if (dest == a_current) return false;
+    for (OneContainer<DSite>* p = a_proxies; p; p = p->a_next)
+      if (p->a_contain1 == dest) return false;
 
+    // the proxy is not registered yet
     if (a_current == manager->m_getEnvironment()->a_myDSite) {
       // the home proxy has the write token; we give it away
       a_current = dest; 
