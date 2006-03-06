@@ -126,8 +126,11 @@ namespace _dss_internal{ //Start namespace
 
   // register a remote proxy
   void ProtocolOnceOnlyManager::register_remote(DSite* s) {
-    // don't insert it twice
-    t_deleteCompare(&a_proxies, s);
+    // do nothing if the proxy is already registered
+    for (OneContainer<DSite>* p = a_proxies; p; p = p->a_next)
+      if (p->a_contain1 == s) return;
+
+    // insert s in a_proxies
     a_proxies = new OneContainer<DSite>(s, a_proxies);
 
     // send an update for changes if necessary
