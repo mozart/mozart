@@ -60,8 +60,10 @@ namespace _dss_internal{ //Start namespace
     void sendRedirect(DSite*);
     void sendMigrateInfo(MsgContainer*); 
 
-    // returns true iff the site can take the write token
-    bool register_remote(DSite*);
+    // register a remote proxy
+    void register_remote(DSite*);
+    // register a proxy, and returns true if it is given the write token
+    bool register_token(DSite*);
   };
 
 

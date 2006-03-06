@@ -46,7 +46,9 @@ namespace _dss_internal{ //Start namespace
   // Registration of proxy P:
   //    P                 M
   //    |---TR_REGISTER-->|
-  //    |<--TR_REDIRECT---|   replied only if transient already bound
+  //    |<--TR_REDIRECT---|   if transient already bound
+  // or:
+  //    |<---TR_UPDATE----|   if changes are provided by pst
   //
   // Deregistration of proxy P:
   //    P                   M
@@ -82,10 +84,10 @@ namespace _dss_internal{ //Start namespace
   //      |--TR_UPDATE_REQUEST->|                     |
   //      |                     |--TR_UPDATE_REQUEST->|
   //
-  // (2)  P         P*                    M               P'
-  //      |         |--TR_UPDATE_CONFIRM->|               |
-  //      |         |                     |---TR_UPDATE-->|
-  //      |<------TR_UPDATE_CONFIRM-------|               |
+  // (2)  P                     M                     P*      P'
+  //      |                     |<-TR_UPDATE_CONFIRM--|       |
+  //      |<-TR_UPDATE_CONFIRM--|                             |
+  //      |                     |----------TR_UPDATE--------->|
   //
   // Special case: P* initiates the update.  No confirmation is
   // required here, therefore P* sends a TR_UPDATE, which is forwarded
@@ -165,9 +167,26 @@ namespace _dss_internal{ //Start namespace
     t_gcList(a_proxies);
   }
 
+  // register a remote proxy at dest
+  void ProtocolTransientRemoteManager::register_remote(DSite *dest) {
+    // simply add dest to a_proxies
+    a_proxies = new OneContainer<DSite>(dest, a_proxies);
+
+    // send an update for changes if necessary
+    PstOutContainerInterface *ans;
+    manager->m_doe(AO_OO_CHANGES, NULL, NULL, NULL, ans);
+    if (ans != NULL) {
+      MsgContainer *msgC = manager->m_createProxyProtMsg();
+      msgC->pushIntVal(TR_UPDATE);
+      msgC->pushIntVal(AO_OO_UPDATE);
+      gf_pushPstOut(msgC, ans);
+      manager->m_sendToProxy(dest, msgC);
+    }
+  }
+
   // register a remote proxy at dest, and returns true if dest is
   // given the write token
-  bool ProtocolTransientRemoteManager::register_remote(DSite *dest) {
+  bool ProtocolTransientRemoteManager::register_token(DSite *dest) {
     dssLog(DLL_BEHAVIOR,"TRAN REM (%p) RegisteringRemote:\nnew: %s\ncur: %s",
 	   this, a_current->m_stringrep(), 
 	   manager->m_getEnvironment()->a_myDSite->m_stringrep()); 
@@ -181,8 +200,7 @@ namespace _dss_internal{ //Start namespace
 	     dest->m_stringrep()); 
       return true;
     } else {
-      // register dest
-      a_proxies = new OneContainer<DSite>(dest, a_proxies);
+      register_remote(dest);
       return false;
     }
   }
@@ -207,7 +225,7 @@ namespace _dss_internal{ //Start namespace
       if (a_bound)
 	sendRedirect(s);
       else
-	a_proxies = new OneContainer<DSite>(s, a_proxies);
+	register_remote(s);
       break;
     }
     case TR_DEREGISTER: {
@@ -269,6 +287,69 @@ namespace _dss_internal{ //Start namespace
 	delete a_proxies;
 	a_proxies = next;
       }
+      break;
+    }
+    case TR_UPDATE_REQUEST: {
+      // A remote proxy requests an update.
+      if (a_bound) break;
+      int aop = msg->popIntVal();
+      GlobalThread *id  = gf_popThreadIdVal(msg, manager->m_getEnvironment());
+      PstInContainerInterface *builder = gf_popPstIn(msg);
+      // Forward the request to the current proxy.
+      MsgContainer *msgC = manager->m_createProxyProtMsg();
+      msgC->pushIntVal(TR_UPDATE_REQUEST);
+      msgC->pushIntVal(aop);
+      gf_pushThreadIdVal(msgC, id);
+      gf_pushPstOut(msgC, builder->loopBack2Out());
+      a_current->m_sendMsg(msgC); 
+      break;
+    }
+    case TR_UPDATE_CONFIRM: {
+      // The current proxy sends back an update confirmation.
+      if (a_bound) break;
+      Assert(s == a_current);
+      int aop = msg->popIntVal();
+      PstInContainerInterface *builder = gf_popPstIn(msg);
+      GlobalThread *id  = gf_popThreadIdVal(msg, manager->m_getEnvironment());
+      PstOutContainerInterface *ans = builder->loopBack2Out();
+      DSite *requester = id->m_getGUIdSite();
+      // Send TR_UPDATE to all proxies except the requester
+      for (OneContainer<DSite> *p = a_proxies; p; p = p->a_next) {
+	if (p->a_contain1 != requester && p->a_contain1 != a_current) {
+	  MsgContainer *msgC = manager->m_createProxyProtMsg();
+	  msgC->pushIntVal(TR_UPDATE);
+	  msgC->pushIntVal(aop);
+	  gf_pushPstOut(msgC, ans->duplicate());
+	  manager->m_sendToProxy(p->a_contain1, msgC);
+	}
+      }
+      // Send TR_UPDATE_CONFIRM to requester
+      MsgContainer *msgC = manager->m_createProxyProtMsg();
+      msgC->pushIntVal(TR_UPDATE_CONFIRM);
+      msgC->pushIntVal(aop);
+      gf_pushPstOut(msgC, ans);
+      gf_pushThreadIdVal(msgC, id);
+      manager->m_sendToProxy(requester, msgC);
+      break;
+    }
+    case TR_UPDATE: {
+      // The current proxy sends an update, simply forward it.
+      if (a_bound) break;
+      Assert(s == a_current);
+      int aop = msg->popIntVal();
+      PstInContainerInterface *builder = gf_popPstIn(msg);
+      PstOutContainerInterface *ans = builder->loopBack2Out();
+      // send update to all proxies except the current proxy
+      for (OneContainer<DSite> *p = a_proxies; p; p = p->a_next) {
+	if (p->a_contain1 != s) {
+	  MsgContainer *msgC = manager->m_createProxyProtMsg();
+	  msgC->pushIntVal(TR_UPDATE);
+	  msgC->pushIntVal(aop);
+	  gf_pushPstOut(msgC, ans->duplicate());
+	  manager->m_sendToProxy(p->a_contain1, msgC);
+	}
+      }
+      delete ans;     // because we haven't sent this one
       break;
     }
     case TR_GETSTATUS: 
@@ -360,9 +441,35 @@ namespace _dss_internal{ //Start namespace
 						::PstOutContainerInterface**& msg,
 						const AbsOp& aop)
   {
-    printf("not implemented yet\n"); 
-    Assert(0); 
-    return (DSS_SUSPEND);
+    if (a_bound) {
+      msg = NULL; 
+      return DSS_PROCEED; 
+    }
+    if (a_writeToken) {
+      // this proxy makes the update, and notifies the manager
+      MsgContainer *msgC = a_proxy->m_createCoordProtMsg();
+      msgC->pushIntVal(TR_UPDATE);
+      msgC->pushIntVal(aop);
+      msg = gf_pushUnboundPstOut(msgC);
+      a_proxy->m_sendToCoordinator(msgC);
+      return DSS_PROCEED; 
+
+    } else {
+      // send update request to manager
+      MsgContainer *msgC = a_proxy->m_createCoordProtMsg();
+      msgC->pushIntVal(TR_UPDATE_REQUEST);
+      msgC->pushIntVal(aop);
+      gf_pushThreadIdVal(msgC, th_id);
+      msg = gf_pushUnboundPstOut(msgC);
+      if (a_proxy->m_sendToCoordinator(msgC)) {
+	dssLog(DLL_BEHAVIOR,"TRANSIENT REMOTE (%p): Send Bind",this);
+	a_susps = new OneContainer<GlobalThread>(th_id, a_susps);
+	return DSS_SUSPEND;
+      } else {
+	msg = NULL;
+	return DSS_RAISE;
+      }
+    }
   }
 
   // receive a message
@@ -409,6 +516,41 @@ namespace _dss_internal{ //Start namespace
       wkSuspThrs();
       break;
     }
+    case TR_UPDATE_REQUEST: {
+      // this proxy has the write token, and is asked to update
+      Assert(a_writeToken);
+      if (!a_bound) {
+	AbsOp aop = static_cast<AbsOp>(msg->popIntVal());
+	GlobalThread *id = gf_popThreadIdVal(msg, a_proxy->m_getEnvironment());
+	PstInContainerInterface *builder = gf_popPstIn(msg);
+	// do the update
+	PstOutContainerInterface *ans;
+	a_proxy->m_doe(aop, id, NULL, builder, ans);
+	// send TR_UPDATE_CONFIRM to manager
+	MsgContainer *msgC = a_proxy->m_createCoordProtMsg();
+	msgC->pushIntVal(TR_UPDATE_CONFIRM);
+	msgC->pushIntVal(aop);
+	gf_pushPstOut(msgC, builder->loopBack2Out());
+	gf_pushThreadIdVal(msgC, id);
+	a_proxy->m_sendToCoordinator(msgC);
+      }
+      break;
+    }
+    case TR_UPDATE_CONFIRM:
+    case TR_UPDATE: {
+      // do the update
+      AbsOp aop = static_cast<AbsOp>(msg->popIntVal());
+      PstInContainerInterface* builder = gf_popPstIn(msg);
+      PstOutContainerInterface* ans;
+      a_proxy->m_doe(aop, NULL, NULL, builder, ans);
+      // resume calling thread if this is a confirmation
+      if (msgType == TR_UPDATE_CONFIRM) {
+	GlobalThread* id = gf_popThreadIdVal(msg, a_proxy->m_getEnvironment());
+	t_deleteCompare(&a_susps, id);
+	id->resumeDoLocal(NULL);
+      }
+      break;
+    }
     case TR_RECEIVESTATUS:
       a_proxy->m_getEnvironment()->a_map->GL_error("Msg %d to variable not implemented yet", msgType);
       break;
@@ -433,7 +575,7 @@ namespace _dss_internal{ //Start namespace
       ProtocolTransientRemoteManager* pm =
 	static_cast<ProtocolTransientRemoteManager*>(a_proxy->a_man->a_prot);
 
-      if (pm->register_remote(dest))
+      if (pm->register_token(dest))
 	buf->putByte(TR_REG_TOKEN);
       else
 	buf->putByte(TR_REG_AUTO);
