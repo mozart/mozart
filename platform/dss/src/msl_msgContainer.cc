@@ -37,6 +37,8 @@
 
 namespace _msl_internal{ //Start namespace
 
+  const int INITIAL_SIZE = 8;     // initial size of a_fields
+
   namespace{
     const int sz_MAX_DP_STRING = 4; // This is based on what??
   }
@@ -60,15 +62,17 @@ namespace _msl_internal{ //Start namespace
 
   MsgCnt::MsgCnt() :
     a_flag(MSG_CLEAR), a_num(-1), a_internalMsg(false), a_sendTime(),
-    a_nof_fields(0), a_current(0), a_next(NULL)
+    a_max_fields(INITIAL_SIZE), a_nof_fields(0), a_current(0), a_next(NULL)
   {
+    a_fields = new MsgField[a_max_fields];
     DebugCode(a_allocated++);
   }
   
   MsgCnt::MsgCnt(int Type, bool internal) :
     a_flag(MSG_CLEAR), a_num(-1), a_internalMsg(internal), a_sendTime(),
-    a_nof_fields(0), a_current(0), a_next(NULL)
+    a_max_fields(INITIAL_SIZE), a_nof_fields(0), a_current(0), a_next(NULL)
   {
+    a_fields = new MsgField[a_max_fields];
     DebugCode(a_allocated++);
     pushIntVal(Type); 
   }
@@ -81,6 +85,7 @@ namespace _msl_internal{ //Start namespace
       if(a_fields[i].a_ft >= FT_ADC && a_fields[i].a_arg != NULL)
 	static_cast<ExtDataContainerInterface*>(a_fields[i].a_arg)->dispose(); 
     }
+    delete [] a_fields;
   }
 
 
@@ -120,7 +125,7 @@ namespace _msl_internal{ //Start namespace
     // It is initialized at creation, and incremented for each item
     // totally (!) unmarshaled.
     
-    while (a_nof_fields < MAX_NOF_FIELDS) {
+    while (true) {
       if (bb->availableData() == 0) {
 	setFlag(MSG_HAS_UNMARSHALCONT);
 	return true;
@@ -148,7 +153,8 @@ namespace _msl_internal{ //Start namespace
       case TYPE_DCT: {
 	dssLog(DLL_DEBUG,"MSGCONTAINER  (%p): deserilizing DATA AREA",this);
 	DssCompoundTerm *dac;
-	
+
+	checkSize();
 	if (checkFlag(MSG_HAS_UNMARSHALCONT)) {
 	  // continue with current one
 	  dac = static_cast<DssCompoundTerm*>(a_fields[a_nof_fields].a_arg);
@@ -173,6 +179,7 @@ namespace _msl_internal{ //Start namespace
 	}
       }
       case TYPE_MSG: {
+	checkSize();
 	if( checkFlag(MSG_CLEAR)){
 	  a_fields[a_nof_fields].a_arg = new MsgCnt(); 
 	  a_fields[a_nof_fields].a_ft  = FT_MSGC;  
@@ -194,6 +201,7 @@ namespace _msl_internal{ //Start namespace
 	dssLog(DLL_DEBUG,"MSGCONTAINER  (%p): deserilizing DATA AREA",this);
 	ExtDataContainerInterface *dac;
 	
+	checkSize();
 	if (checkFlag(MSG_HAS_UNMARSHALCONT)){
 	  // continue with current one
 	  dac = static_cast<ExtDataContainerInterface*>(a_fields[a_nof_fields].a_arg);
