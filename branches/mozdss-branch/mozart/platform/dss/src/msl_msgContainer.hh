@@ -56,8 +56,6 @@
 
 namespace _msl_internal{ //Start namespace
 
-  const int MAX_NOF_FIELDS=15;
-
   class Site; 
   class DssCompoundTerm; 
   class DssReadByteBuffer; 
@@ -91,16 +89,6 @@ namespace _msl_internal{ //Start namespace
 
   // ************************* MESSAGE CONTAINER **************************
 
-  //
-  // TODO: In order to extend the message container with arbitrarily
-  // many fields we have to define a new structure which can resize
-  // itself depending on need.
-  //
-  // As of now there can only be MAX_NOF_FIELDS arguments
-  //
-  // Furthermore one should evalute whether we do want autodeletion of
-  // elements when destroying a Receive container
-
   class MsgCnt: public MsgContainer{
     
 #ifdef DEBUG_CHECK
@@ -108,13 +96,14 @@ namespace _msl_internal{ //Start namespace
 #endif
 
   private:
-    MsgFlags        a_flag:3; // Windows adapted
-    MsgField        a_fields[MAX_NOF_FIELDS];
-    int             a_num; //queue number?? ZACHARIAS
+    MsgFlags        a_flag:3;      // Windows adapted
+    MsgField*       a_fields;      // fields array, resized when needed
+    int             a_num;         //queue number?? ZACHARIAS
     bool            a_internalMsg; 
     DSS_LongTime    a_sendTime;
 
     // Counters
+    short int a_max_fields;     // size of the array a_fields
     short int a_nof_fields;     // number of fields in the buffer
     short int a_current;        // current position in the buffer
     
@@ -122,10 +111,23 @@ namespace _msl_internal{ //Start namespace
     // while reading data and serialization increments a_current.  The
     // counters must satisfy the invariant:
     //
-    //         0 <= a_current <= a_nof_fields <= MAX_NOF_FIELDS.
+    //         0 <= a_current <= a_nof_fields <= a_max_fields.
     inline bool checkCounters() {
       return (0 <= a_current && a_current <= a_nof_fields &&
-	      a_nof_fields <= MAX_NOF_FIELDS);
+	      a_nof_fields <= a_max_fields);
+    }
+
+    // resize the array a_fields when all slots are used
+    inline void checkSize() {
+      if (a_nof_fields == a_max_fields) {
+	int old_size = a_max_fields;
+	MsgField* old = a_fields;
+	Assert(a_max_fields*2 < (1 << 8*sizeof(short int)));
+	a_max_fields *= 2;     // double size
+	a_fields = new MsgField[a_max_fields];
+	for (int i = 0; i < old_size; i++) a_fields[i] = old[i];
+	delete [] old;
+      }
     }
 
   public:
@@ -148,7 +150,8 @@ namespace _msl_internal{ //Start namespace
       return v; 
     }
     inline void m_pushVal(void *v, const FieldType& ft){
-      Assert(a_nof_fields + 1 < MAX_NOF_FIELDS);
+      checkSize();
+      Assert(a_nof_fields < a_max_fields);
       a_fields[a_nof_fields].a_ft    = ft;
       a_fields[a_nof_fields++].a_arg = v;
     }
