@@ -19,9 +19,9 @@ struct siginfo a{
 };
 typedef struct siginfo siginfo_t;
   */
-typedef struct user_i387_struct ucontext_t;
+typedef struct user_i387_struct ucontext_mozart_t;
 typedef int sigfpe_code_type;
-typedef void (*sigfpe_handler_type)(int, siginfo_t * , ucontext_t *);
+typedef void (*sigfpe_handler_type)(int, siginfo_t * , ucontext_mozart_t *);
 
 #define SIGFPE_DEFAULT (_sigfpe_default)
 #define SIGFPE_IGNORE  (_sigfpe_ignore)

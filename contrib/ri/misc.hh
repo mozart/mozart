@@ -40,7 +40,7 @@
 #include "ieeefp.h"
 #include "sigfpe.h"
 
-void exception_handler(int i, siginfo_t * info, ucontext_t * fpu_state);
+void exception_handler(int i, siginfo_t * info, ucontext_mozart_t * fpu_state);
 
 #define TOWARDS_MINUS_INF fpsetround(FP_RM)
 #define TOWARDS_PLUS_INF  fpsetround(FP_RP)
