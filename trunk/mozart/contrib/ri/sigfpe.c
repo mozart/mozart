@@ -2,13 +2,13 @@
 #include "ieeefp.h"
 #include <stdio.h>
 
-static void sigfpe_abort(int i, siginfo_t *info, ucontext_t *fpu_state)
+static void sigfpe_abort(int i, siginfo_t *info, ucontext_mozart_t *fpu_state)
 {
 	fprintf(stderr, "Floating point exception\n");
 	abort();
 }
 
-static void sigfpe_ignore(int i, siginfo_t *info, ucontext_t *fpu_state)
+static void sigfpe_ignore(int i, siginfo_t *info, ucontext_mozart_t *fpu_state)
 {}
 
 sigfpe_handler_type _sigfpe_abort   = (sigfpe_handler_type) &sigfpe_abort;
@@ -25,7 +25,7 @@ static sigfpe_handler_type  sigfpe_array[6] = {
 	FPE_DEFAULT,
 	FPE_DEFAULT};
 
-static ucontext_t sigfpe_fpu_state;
+static ucontext_mozart_t sigfpe_fpu_state;
 static siginfo_t sigfpe_info;
 static int dispatcher_installed = 0;
 
