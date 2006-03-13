@@ -73,41 +73,51 @@ public:
 
 //-----------------------------------------------------------------------------
 
-// This kind of table stores the id of an item. In case the id is
-// preliminary, i.e., the item has not been reflected yet, the id is
-// (internally) negative. The id of a reflected item is (internally)
-// positive. To the outside a table provides only positive ids.
+// This kind of table stores the id of an item.  (Ids are positive.)
+// Internally two hash tables are used.  The table 'preliminary'
+// stores preliminary ids of items (before they are reflected).  Once
+// reflected, the items are also put in table 'reflected'.  This
+// separation makes up for the limitations of AddressHashTable.
 
 template <class T_WHAT>
-class TableClass : protected AddressHashTable {
+class TableClass {
 private:
-  int id_counter;
+  AddressHashTable pretable;     // ids of possibly non reflected items
+  AddressHashTable reftable;     // ids of reflected items
+  int id_counter;                // next id available (positive)
 
 public:
-  TableClass(void) : AddressHashTable(2000), id_counter(-1) {}
+  TableClass(void) : pretable(2000), reftable(2000), id_counter(1) {}
 
   int add(T_WHAT k, Bool &is_reflected) {
     DEBUGPRINT(("TableClass::add -- in --"));
 
-    int i = (int) htFind((void *) k);
-    DEBUGPRINT(("TableClass::add -- htFind --"));
-    is_reflected = ((i != (int) htEmpty) && (i >= 0));
-    if (i != (int) htEmpty) {
-      return abs(i)-1;
-    }
-    DEBUGPRINT(("TableClass::add -- after loop --"));
-    id_counter -= 1;
-    htAdd((void *) k, (void *) id_counter);
+    // First look whether the item has been reflected
+    int id = (int) reftable.htFind((void*) k);
+    is_reflected = (id != (int) htEmpty);
+    if (is_reflected) return id;
+
+    // It hasn't been reflected yet, maybe it has a preliminary id...
+    DEBUGPRINT(("TableClass::add -- not reflected yet --"));
+    id = (int) pretable.htFind((void*) k);
+    if (id != (int) htEmpty) return id;
+
+    // It has no id, so create a preliminary id
+    id = id_counter++;
+    pretable.htAdd((void*) k, (void*) id);
     DEBUGPRINT(("TableClass::add -- out --"));
-    return abs(id_counter)-1;
+    return id;
   }
 
   void reflected(T_WHAT k) {
     DEBUGPRINT(("TableClass::reflected -- in --"));
 
-    int i = (int) htFind((void *) k);
-    DEBUG_ASSERT((i != (int) htEmpty) && (i < 0));
-    htAdd((void *) k, (void *) -i);
+    // The item must have a preliminary id
+    int id = (int) pretable.htFind((void*) k);
+    DEBUG_ASSERT(id != (int) htEmpty);
+
+    // Store the id as a reflected one
+    reftable.htAdd((void*) k, (void*) id);
 
     DEBUGPRINT(("TableClass::reflected -- out --"));
   }
