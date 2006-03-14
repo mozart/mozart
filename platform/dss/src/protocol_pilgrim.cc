@@ -32,7 +32,6 @@
 namespace _dss_internal{ //Start namespace
 
   // **************************  Migratory Token  ***************************
-  namespace { // We don't need to expose these outside the file so..
     
     enum Pilgrim_Message {
       PLGM_REGISTER_REQUEST,
@@ -388,7 +387,6 @@ namespace _dss_internal{ //Start namespace
 	  m_forwardToken();
 	}
     }
-  }
   
   ProtocolPilgrimProxy::~ProtocolPilgrimProxy(){
     //    printf("deleteing %d\n", a_proxy->m_getGUIdIndex());
