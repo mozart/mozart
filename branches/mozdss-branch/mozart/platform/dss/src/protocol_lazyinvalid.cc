@@ -33,7 +33,6 @@ namespace _dss_internal{ //Start namespace
 
 // **************************  Migratory Token  ***************************
 
-  namespace {
     enum CacheInvalid_Message {
       LCI_INVALID_READ,     // m2p
       LCI_READ_TOKEN,       // m2p
@@ -340,5 +339,4 @@ namespace _dss_internal{ //Start namespace
     t_gcList(a_readers); 
     if(a_writer) a_writer->m_makeGCpreps(); 
   }
-  } //End namespace
-}
+} //End namespace
