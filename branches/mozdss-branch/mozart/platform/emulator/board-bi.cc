@@ -59,7 +59,7 @@ protected:
 
 public:
 
-  BaseDistributor::BaseDistributor(Board * bb, const int n) {
+  BaseDistributor(Board * bb, const int n) {
     offset = 0; 
     num    = n;
     var    = oz_newVariable(bb);
@@ -77,7 +77,7 @@ public:
     return num;
   }
 
-  virtual int BaseDistributor::commit(Board * bb, int n) {
+  virtual int commit(Board * bb, int n) {
     if (n > offset+num) {
       return -num;
     }
@@ -92,7 +92,7 @@ public:
     return 0;
   }
   
-  virtual int BaseDistributor::commit(Board * bb, int l, int r) {
+  virtual int commit(Board * bb, int l, int r) {
     if (r > offset+num) {
       return -num;
     }
@@ -104,7 +104,7 @@ public:
     return num;
   }
   
-  virtual Distributor * BaseDistributor::gCollect(void) {
+  virtual Distributor * gCollect(void) {
     BaseDistributor * t = 
       (BaseDistributor *) oz_hrealloc(this,sizeof(BaseDistributor));
 
@@ -113,7 +113,7 @@ public:
     return (Distributor *) t;
   }
 
-  virtual Distributor * BaseDistributor::sClone(void) {
+  virtual Distributor * sClone(void) {
     BaseDistributor * t = 
       (BaseDistributor *) oz_hrealloc(this,sizeof(BaseDistributor));
 
