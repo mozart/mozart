@@ -169,7 +169,7 @@ public:
   //
   void resize(int new_size) {
     if (new_size > this->_size) {
-      this->_array = realloc(this->_array, this->_size, new_size);
+      this->_array = this->realloc(this->_array, this->_size, new_size);
       this->_size = new_size;
     }
   }
