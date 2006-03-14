@@ -105,7 +105,7 @@ protected:
   int _size;
   T * _array;
   //
-  T * reallocArray(T * old, int old_n, int new_n) {
+  T * realloc(T * old, int old_n, int new_n) {
     if (old_n < new_n) {
       T * _new = (T *) this->alloc(new_n * sizeof(T));
       T * _old = old;
@@ -122,7 +122,7 @@ protected:
     if (s >= _size) {
       int old_size = _size;
       _size = s + m;
-      _array = reallocArray(_array, old_size, _size);
+      _array = realloc(_array, old_size, _size);
     }
   }
 public:
@@ -169,7 +169,7 @@ public:
   //
   void resize(int new_size) {
     if (new_size > this->_size) {
-      this->_array = reallocArray(this->_array, this->_size, new_size);
+      this->_array = this->realloc(this->_array, this->_size, new_size);
       this->_size = new_size;
     }
   }
