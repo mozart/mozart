@@ -205,7 +205,7 @@ private:
   // This hash routine works for completely full hash tables and hash tables with
   // restricted empty slotes (i.e., in which elements have been removed by making
   // their value NULL).
-  dt_index DynamicTable::fullhash(TaggedRef id)
+  dt_index fullhash(TaggedRef id)
   {
     Assert(isPwrTwo(size));
     Assert(oz_isFeature(id));
