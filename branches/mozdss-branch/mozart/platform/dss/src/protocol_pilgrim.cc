@@ -97,13 +97,13 @@ namespace _dss_internal{ //Start namespace
       
       TwoContainer<DSite, bool> *first = a_enterLeaveQueue.peek(); 
       DSite *sender = first->a_contain1; 
-      //      printf("%s: %d %s\n", first->a_contain2?"Enter":"Leave", manager->m_getGUIdIndex(), sender->stringrep()); 
+      //      printf("%s: %d %s\n", first->a_contain2?"Enter":"Leave", a_coordinator->m_getGUIdIndex(), sender->stringrep()); 
       
       if(first->a_contain2)// enter 
 	{
 	  RingElement *next = a_ringEle->a_next; 
 	  RingElement *re = new RingElement(sender, a_ringEle, next);
-	  gf_sendManagerToProxy(manager,a_ringEle->a_site,PLGM_NEW_NEXT,sender);
+	  gf_sendManagerToProxy(a_coordinator,a_ringEle->a_site,PLGM_NEW_NEXT,sender);
 	  a_ringEle->a_next = re; 
 	  next->a_prev = re; 
 	}
@@ -122,7 +122,7 @@ namespace _dss_internal{ //Start namespace
 	 
 	  if (a_ringEle->a_next == a_ringEle)
 	    {
-	      gf_sendManagerToProxy(manager, sender, PLGM_SOLE_HOLDER);
+	      gf_sendManagerToProxy(a_coordinator, sender, PLGM_SOLE_HOLDER);
 	      return; 
 	    }
 	  RingElement *prev = rm->a_prev; 
@@ -130,7 +130,7 @@ namespace _dss_internal{ //Start namespace
 	  
 	  prev->a_next = next; 
 	  next->a_prev = prev; 
-	  gf_sendManagerToProxy(manager, prev->a_site, PLGM_CLEAR_NEXT, next->a_site);
+	  gf_sendManagerToProxy(a_coordinator, prev->a_site, PLGM_CLEAR_NEXT, next->a_site);
 	  if(rm == a_ringEle)
 	    a_ringEle = rm->a_next;
 	  delete rm; 

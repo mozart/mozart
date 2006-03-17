@@ -144,7 +144,7 @@ namespace _dss_internal{ //Start namespace
     Coordinator(AA_MOBILE_COORDINATOR, prot, env),
     a_epoch(1)
    {
-     prot->manager = this;
+     prot->a_coordinator = this;
      a_homeRef = new HomeReference(this, gc_annot); 
      MobileCoordBS* mcbs = new MobileCoordBS(env->a_myDSite, a_epoch); 
      env->a_dksBackbone->m_insertService( m_getNetId(), mcbs); 
@@ -160,7 +160,7 @@ namespace _dss_internal{ //Start namespace
      a_proxy = prx; 
      a_homeRef = new HomeReference(this,RC_ALG_PERSIST); 
      a_prot = gf_createProtManager(msg, a_proxy->m_getProtocol()->getProtocolName()); 
-     a_prot->manager = this;
+     a_prot->a_coordinator = this;
 
      // informing the backbone service about the new loction
      LargeMessage *lmsg = new LargeMessage(); 

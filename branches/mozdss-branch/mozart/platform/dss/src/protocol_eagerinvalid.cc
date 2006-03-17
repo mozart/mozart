@@ -85,7 +85,7 @@ namespace _dss_internal{ //Start namespace
 	}
 	else
 	  {
-	    MsgContainer *msgC = manager->m_createProxyProtMsg();
+	    MsgContainer *msgC = a_coordinator->m_createProxyProtMsg();
 	    gf_createSndMsg(msgC, ECI_INVALID_READ); 
 	    Assert(ptr->a_contain2);
 	    (ptr->a_contain1)->m_sendMsg(msgC);
@@ -98,8 +98,8 @@ namespace _dss_internal{ //Start namespace
 
   void 
   ProtocolEagerInvalidManager::m_updateOneReader(DSite *target){
-    MsgContainer *msgC = manager->m_createProxyProtMsg();
-    gf_createSndMsg(msgC,  ECI_READ_TOKEN, manager->retrieveEntityState()); 
+    MsgContainer *msgC = a_coordinator->m_createProxyProtMsg();
+    gf_createSndMsg(msgC,  ECI_READ_TOKEN, a_coordinator->retrieveEntityState()); 
     target->m_sendMsg(msgC); 
   }
   
@@ -124,7 +124,7 @@ namespace _dss_internal{ //Start namespace
   void 
   ProtocolEagerInvalidManager::m_sendWriteRight(){
     OneContainer<DSite>* ptr = a_writers.peek();
-    MsgContainer *msgC = manager->m_createProxyProtMsg();
+    MsgContainer *msgC = a_coordinator->m_createProxyProtMsg();
     gf_createSndMsg(msgC, ECI_WRITE_TOKEN); 
     (ptr->a_contain1)->m_sendMsg(msgC);
   }
@@ -150,7 +150,7 @@ namespace _dss_internal{ //Start namespace
 	Assert(ele->a_contain1 == sender);
 	delete ele; 
 	PstInContainerInterface* buildcont =  gf_popPstIn(msg);  
-	manager->installEntityState(buildcont); 
+	a_coordinator->installEntityState(buildcont); 
 	m_updateAllReaders(sender); 
 	if(!a_writers.isEmpty())
 	  m_invalidateReaders();
@@ -186,7 +186,7 @@ namespace _dss_internal{ //Start namespace
     case  ECI_DEREGISTER_READ:
       {
 	if(!t_deleteCompare(&a_readers, sender))
-	  manager->m_getEnvironment()->a_map->GL_warning("Deregesetering non reegistered site");
+	  a_coordinator->m_getEnvironment()->a_map->GL_warning("Deregesetering non reegistered site");
 	break;
       }
     default:

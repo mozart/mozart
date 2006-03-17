@@ -52,7 +52,7 @@ namespace _dss_internal{ //Start namespace
 					       const RCalg& gc_annot,
 					       DSS_Environment* const env):
     Coordinator(AA_STATIONARY_MANAGER, m, env){
-    m->manager = this;
+    m->a_coordinator = this;
     a_homeRef = new HomeReference(this, gc_annot);
   }
   

@@ -35,8 +35,8 @@ namespace _dss_internal{ //Start namespace
   
   void
   ProtocolImmutableEagerManager::msgReceived(MsgContainer *msg, DSite* sender){
-    MsgContainer *msgC = manager->m_createProxyProtMsg();
-    gf_pushPstOut(msgC,manager->retrieveEntityState());
+    MsgContainer *msgC = a_coordinator->m_createProxyProtMsg();
+    gf_pushPstOut(msgC,a_coordinator->retrieveEntityState());
     sender->m_sendMsg(msgC);
   }
   

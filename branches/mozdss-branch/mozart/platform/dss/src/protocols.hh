@@ -41,12 +41,12 @@ namespace _dss_internal{ //Start namespace
 #ifdef DEBUG_CHECK
     static int a_allocated;
 #endif
-    Coordinator *manager;
+    Coordinator *a_coordinator;
 
   public:
 
 
-    ProtocolManager():manager(NULL){ DebugCode(a_allocated++); };
+    ProtocolManager():a_coordinator(NULL){ DebugCode(a_allocated++); };
     virtual ~ProtocolManager(){ DebugCode(a_allocated--); }
 
     virtual void msgReceived(MsgContainer*,DSite*)=0;
@@ -56,7 +56,7 @@ namespace _dss_internal{ //Start namespace
   
 
     virtual void sendMigrateInfo(MsgContainer*){ 
-      manager->m_getEnvironment()->a_map->GL_warning("Migrating non Migratable Manager");
+      a_coordinator->m_getEnvironment()->a_map->GL_warning("Migrating non Migratable Manager");
     }
 
     MACRO_NO_DEFAULT_CONSTRUCTORS(ProtocolManager);

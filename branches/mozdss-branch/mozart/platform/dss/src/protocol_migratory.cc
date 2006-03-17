@@ -62,10 +62,10 @@ namespace _dss_internal{ //Start namespace
     switch(message) {
     case MIGM_TOKEN_GET:{
       if(current != sender){
-	::MsgContainer *msgC = manager->m_createProxyProtMsg();
+	::MsgContainer *msgC = a_coordinator->m_createProxyProtMsg();
 	msgC->pushIntVal(MIGM_TOKEN_FORWARD);
 	msgC->pushDSiteVal(sender);
-	manager->m_sendToProxy(current, msgC); 
+	a_coordinator->m_sendToProxy(current, msgC); 
 	current = sender;
       } else {
 	// it is already coming to the (home) proxy
@@ -75,11 +75,11 @@ namespace _dss_internal{ //Start namespace
     }
     case MIGM_NEED_NO_MORE:{
       if (current == sender){ // have not forwarded it to someone else 
-	::MsgContainer *msgC = manager->m_createProxyProtMsg();
-	current = manager->m_getEnvironment()->a_myDSite;
+	::MsgContainer *msgC = a_coordinator->m_createProxyProtMsg();
+	current = a_coordinator->m_getEnvironment()->a_myDSite;
 	msgC->pushIntVal(MIGM_TOKEN_FORWARD);
 	msgC->pushDSiteVal(current);
-	manager->m_sendToProxy(sender, msgC); 
+	a_coordinator->m_sendToProxy(sender, msgC); 
       }
       break;
     }

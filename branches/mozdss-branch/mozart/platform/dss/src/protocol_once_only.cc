@@ -138,23 +138,23 @@ namespace _dss_internal{ //Start namespace
 
     // send an update for changes if necessary
     ::PstOutContainerInterface *ans;
-    manager->m_doe(AO_OO_CHANGES, NULL, NULL, NULL, ans);
+    a_coordinator->m_doe(AO_OO_CHANGES, NULL, NULL, NULL, ans);
     if (ans != NULL) {
-      MsgContainer *msgC = manager->m_createProxyProtMsg();
+      MsgContainer *msgC = a_coordinator->m_createProxyProtMsg();
       msgC->pushIntVal(OO_UPDATE);
       msgC->pushIntVal(AO_OO_UPDATE);
       gf_pushPstOut(msgC, ans);
-      manager->m_sendToProxy(s, msgC);
+      a_coordinator->m_sendToProxy(s, msgC);
     }
   }
 
   // send an OO_REDIRECT message to proxy at site s
   void ProtocolOnceOnlyManager::sendRedirect(DSite *s) {
-    Assert(manager->m_getProxy() != NULL);
-    MsgContainer *msgC = manager->m_createProxyProtMsg();
+    Assert(a_coordinator->m_getProxy() != NULL);
+    MsgContainer *msgC = a_coordinator->m_createProxyProtMsg();
     msgC->pushIntVal(OO_REDIRECT);
-    gf_pushPstOut(msgC, manager->retrieveEntityState());
-    manager->m_sendToProxy(s, msgC); 
+    gf_pushPstOut(msgC, a_coordinator->retrieveEntityState());
+    a_coordinator->m_sendToProxy(s, msgC); 
   }
 
   // treat messages  
@@ -189,11 +189,11 @@ namespace _dss_internal{ //Start namespace
       dssLog(DLL_BEHAVIOR,"ONCE ONLY (%p): Received Bind",this);
       // do the callback in order to bind
       AbsOp aop    = static_cast<AbsOp>(msg->popIntVal());
-      GlobalThread *id  = gf_popThreadIdVal(msg, manager->m_getEnvironment());
+      GlobalThread *id  = gf_popThreadIdVal(msg, a_coordinator->m_getEnvironment());
       ::PstInContainerInterface *builder = gf_popPstIn(msg);
-      Assert(manager->m_getProxy() != NULL);
+      Assert(a_coordinator->m_getProxy() != NULL);
       ::PstOutContainerInterface *ans;
-      manager->m_doe(aop,id,NULL,builder, ans);
+      a_coordinator->m_doe(aop,id,NULL,builder, ans);
       a_bound = true; 
       // send OO_REDIRECT to all proxies
       while (a_proxies!=NULL) {
@@ -207,33 +207,33 @@ namespace _dss_internal{ //Start namespace
     case OO_UPDATE_REQUEST: {
       if (a_bound) break;
       int aop = msg->popIntVal();
-      GlobalThread *id  = gf_popThreadIdVal(msg, manager->m_getEnvironment());
+      GlobalThread *id  = gf_popThreadIdVal(msg, a_coordinator->m_getEnvironment());
       ::PstInContainerInterface *builder = gf_popPstIn(msg);
       ::PstOutContainerInterface *ans = builder->loopBack2Out();
       // send OO_UPDATE to all proxies except requester
       for (OneContainer<DSite> *pl = a_proxies; pl != NULL ; pl=pl->a_next) {
 	if (pl->a_contain1 != s) {
-	  MsgContainer *msgC = manager->m_createProxyProtMsg();
+	  MsgContainer *msgC = a_coordinator->m_createProxyProtMsg();
 	  msgC->pushIntVal(OO_UPDATE);
 	  msgC->pushIntVal(aop);
 	  gf_pushPstOut(msgC,ans->duplicate());
-	  manager->m_sendToProxy(pl->a_contain1,msgC);
+	  a_coordinator->m_sendToProxy(pl->a_contain1,msgC);
 	}
       }
       // send OO_UPDATE_CONFIRM to requester
-      MsgContainer *msgC = manager->m_createProxyProtMsg();
+      MsgContainer *msgC = a_coordinator->m_createProxyProtMsg();
       msgC->pushIntVal(OO_UPDATE_CONFIRM);
       msgC->pushIntVal(aop);
       gf_pushPstOut(msgC, ans);
       gf_pushThreadIdVal(msgC,id);
-      manager->m_sendToProxy(s,msgC);
+      a_coordinator->m_sendToProxy(s,msgC);
       break; 
       
     }
     case OO_GETSTATUS: 
-      manager->m_getEnvironment()->a_map->GL_error("Msg %d to variable not implemented yet", msgType);
+      a_coordinator->m_getEnvironment()->a_map->GL_error("Msg %d to variable not implemented yet", msgType);
     default: 
-      manager->m_getEnvironment()->a_map->GL_error("Unknown Msg %d to variable", msgType);
+      a_coordinator->m_getEnvironment()->a_map->GL_error("Unknown Msg %d to variable", msgType);
     }
   }
 

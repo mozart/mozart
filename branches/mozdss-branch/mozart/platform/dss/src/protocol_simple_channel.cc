@@ -52,8 +52,8 @@ namespace _dss_internal{ //Start namespace
 
   ProtocolSimpleChannelManager::ProtocolSimpleChannelManager(::MsgContainer *msg){
     ::PstInContainerInterface* builder = gf_popPstIn(msg);
-    static_cast<ProtocolSimpleChannelProxy*>(manager->m_getProxy()->m_getProtocol())->stateHolder = true; 
-    manager->installEntityState(builder); 
+    static_cast<ProtocolSimpleChannelProxy*>(a_coordinator->m_getProxy()->m_getProtocol())->stateHolder = true; 
+    a_coordinator->installEntityState(builder); 
    }
 
    void
@@ -65,19 +65,19 @@ namespace _dss_internal{ //Start namespace
      // Must be declared here since we need a ref to it in m_doe
      ::PstOutContainerInterface* ans = NULL;
      if(synch == SYNCH){
-       GlobalThread *id = gf_popThreadIdVal(msg, manager->m_getEnvironment());
+       GlobalThread *id = gf_popThreadIdVal(msg, a_coordinator->m_getEnvironment());
        so = new SimpleOp(id,sender);
 
-       if (manager->m_doe(static_cast<AbsOp>(absOp), id, so, builder, ans) == AOCB_FINISH){
+       if (a_coordinator->m_doe(static_cast<AbsOp>(absOp), id, so, builder, ans) == AOCB_FINISH){
         delete so; 
-        ::MsgContainer *msgC = manager->m_createProxyProtMsg();
+        ::MsgContainer *msgC = a_coordinator->m_createProxyProtMsg();
         gf_pushThreadIdVal(msgC,id);
         gf_pushPstOut(msgC,ans);
         sender->m_sendMsg(msgC);
        }
      } else {
        so = new SimpleOp(NULL,NULL);
-       if (manager->m_doe(static_cast<AbsOp>(absOp), NULL, so, builder, ans) == AOCB_FINISH)
+       if (a_coordinator->m_doe(static_cast<AbsOp>(absOp), NULL, so, builder, ans) == AOCB_FINISH)
         delete so; 
      }
    }
@@ -152,8 +152,8 @@ namespace _dss_internal{ //Start namespace
    ProtocolSimpleChannelProxy::ProtocolSimpleChannelProxy():ProtocolProxy(PN_SIMPLE_CHANNEL),stateHolder(true){}
 
   void ProtocolSimpleChannelManager::sendMigrateInfo(::MsgContainer* msg){
-    gf_pushPstOut(msg, manager->retrieveEntityState());
-    static_cast<ProtocolSimpleChannelProxy*>(manager->m_getProxy()->m_getProtocol())->stateHolder = false; 
+    gf_pushPstOut(msg, a_coordinator->retrieveEntityState());
+    static_cast<ProtocolSimpleChannelProxy*>(a_coordinator->m_getProxy()->m_getProtocol())->stateHolder = false; 
   }
 
   bool ProtocolSimpleChannelProxy::m_initRemoteProt(DssReadBuffer*){
