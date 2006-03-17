@@ -138,7 +138,7 @@ namespace _dss_internal{ //Start namespace
     a_deliverQueue(),
     a_coordPtr(env->a_myDSite),
     a_ms(MANAGER_STATUS_PROT){
-    pm->manager = this;
+    pm->a_coordinator = this;
     a_refList = new TwoContainer<HomeReference,int>(new HomeReference(this, gc_annot), 0, NULL); 
   }
 
@@ -302,7 +302,7 @@ namespace _dss_internal{ //Start namespace
        
        a_prot = gf_createProtManager(msgC, a_proxy->m_getProtocol()->getProtocolName()); 
        
-       a_prot->manager = this;
+       a_prot->a_coordinator = this;
 
 
        // Droping the reference to the old coord and 

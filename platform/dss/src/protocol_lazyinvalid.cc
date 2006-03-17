@@ -62,8 +62,8 @@ namespace _dss_internal{ //Start namespace
   
   void 
   ProtocolLazyInvalidManager::m_updateOneReader(DSite *target){
-    MsgContainer *msgC = manager->m_createProxyProtMsg();
-    gf_createSndMsg(msgC,  LCI_READ_TOKEN, manager->retrieveEntityState()); 
+    MsgContainer *msgC = a_coordinator->m_createProxyProtMsg();
+    gf_createSndMsg(msgC,  LCI_READ_TOKEN, a_coordinator->retrieveEntityState()); 
     target->m_sendMsg(msgC); 
   }
     
@@ -76,7 +76,7 @@ namespace _dss_internal{ //Start namespace
   {
     if(a_writer!=NULL)
       {
-	MsgContainer *msgC = manager->m_createProxyProtMsg();
+	MsgContainer *msgC = a_coordinator->m_createProxyProtMsg();
 	gf_createSndMsg(msgC,  LCI_INVALID_WRITE); 
 	a_writer->m_sendMsg(msgC); 
       }
@@ -103,7 +103,7 @@ namespace _dss_internal{ //Start namespace
 		delete tmp; 
 	      }
 	      else{
-		MsgContainer *msgC = manager->m_createProxyProtMsg();
+		MsgContainer *msgC = a_coordinator->m_createProxyProtMsg();
 		gf_createSndMsg(msgC,  LCI_INVALID_READ); 
 		rdr->m_sendMsg(msgC);
 		ptr = &(*ptr)->a_next;
@@ -127,8 +127,8 @@ namespace _dss_internal{ //Start namespace
   void 
   ProtocolLazyInvalidManager::m_sendWriteRight(){
     TwoContainer<DSite,bool>* ptr = a_requests.drop();
-    MsgContainer *msgC = manager->m_createProxyProtMsg();
-    gf_createSndMsg(msgC, LCI_WRITE_TOKEN, manager->retrieveEntityState()); 
+    MsgContainer *msgC = a_coordinator->m_createProxyProtMsg();
+    gf_createSndMsg(msgC, LCI_WRITE_TOKEN, a_coordinator->retrieveEntityState()); 
     (ptr->a_contain1)->m_sendMsg(msgC);
     
     delete ptr; 
@@ -152,7 +152,7 @@ namespace _dss_internal{ //Start namespace
     case LCI_WRITE_INVALIDATED:
       {
 	PstInContainerInterface* buildcont =  gf_popPstIn(msg); 
-	manager->installEntityState(buildcont); 
+	a_coordinator->installEntityState(buildcont); 
 	Assert(sender == a_writer);
 	a_writer = NULL;
 	Assert(a_readers == NULL); 
