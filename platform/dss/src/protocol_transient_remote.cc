@@ -54,25 +54,28 @@ namespace _dss_internal{ //Start namespace
   //    P                   M
   //    |---TR_DEREGISTER-->|
   //
-  // Proxy P wants to bind the transient.  If P is remote and does not
-  // have the write token, go to step (1).  If P is remote and has the
-  // write token, go to step (2).  Otherwise, go to step (3).
+  // Proxy P wants to bind the transient.  Skip step (1) if P has the
+  // write token.
   //
   // (1)  P                   M                   P*
   //      |------TR_BIND----->|                   |
   //      |                   |------TR_BIND----->|
   //
-  // (2)  P*                  M                   HP
-  //      |-----TR_BOUND----->|                   |   (skip this step
-  //      |                   |-----TR_BOUND----->|    if P*=HP)
+  // (2)  P*                  M
+  //      |-----TR_BOUND----->|   if P* is remote
+  //      |---TR_HOME_BOUND-->|   if P* is the home proxy
   //
   // (3)  HP                  M                   P'
-  //      |---TR_HOME_BOUND-->|                   |
   //      |                   |----TR_REDIRECT--->|   (sent to others)
+  //      |<--TR_HOME_BOUND---|                   |   if P* is remote
   //
   // In the best case, P* initiates the binding.  If there is no other
   // remote proxy, only one message is sent over the network.  The
   // protocol is optimal for that case.
+  //
+  // The message TR_HOME_BOUND does not carry any information.  It is
+  // used by the manager and its proxy to notify each other when the
+  // transient is bound on the home site.
   //
   // Proxy P wants to update the transient.  This scheme is very
   // similar to the binding case; proxy P* serializes all updates.
@@ -103,12 +106,12 @@ namespace _dss_internal{ //Start namespace
     // In the message descriptions, "PM" means a message sent by a
     // proxy to its manager, and so on.
     enum TR_msg_names{
-      TR_REGISTER,       // PM: register a proxy at the manager
-      TR_DEREGISTER,     // PM: remove the registration at the manager
+      TR_REGISTER,       //     PM: register a proxy at the manager
+      TR_DEREGISTER,     //     PM: remove the registration at the manager
       TR_BIND,           // PM,MP*: request to bind the transient
-      TR_BOUND,          // P*M,MHP: remote proxy has bound the transient
-      TR_HOME_BOUND,     // HPM: home proxy tells that transient is bound
-      TR_REDIRECT,       // MP: tell the binding to proxies
+      TR_BOUND,          //    P*M: remote proxy has bound the transient
+      TR_HOME_BOUND,     // HP<->M: transient bound, notify HP or manager
+      TR_REDIRECT,       //     MP: tell the binding to proxies
       TR_GETSTATUS,      // PM,MP*: get the status (bound or not)
       TR_RECEIVESTATUS,  // P*M,MP: answer to a getstatus
       TR_UPDATE_REQUEST, // PM,MP*: request to update
@@ -267,13 +270,10 @@ namespace _dss_internal{ //Start namespace
       break;
     }
     case TR_BOUND: {
-      // A remote proxy has bound the transient, forward to home proxy.
+      // A remote proxy has bound the transient, so install the state...
       PstInContainerInterface *builder = gf_popPstIn(msg);
-      MsgContainer *msgC = manager->m_createProxyProtMsg();
-      msgC->pushIntVal(TR_BOUND); 
-      gf_pushPstOut(msgC, builder->loopBack2Out());
-      manager->m_getEnvironment()->a_myDSite->m_sendMsg(msgC); 
-      break;
+      manager->installEntityState(builder);
+      // fall through
     }
     case TR_HOME_BOUND: {
       // This is either a bind coming from the home proxy, or it is an
@@ -286,7 +286,17 @@ namespace _dss_internal{ //Start namespace
       while (a_proxies!=NULL) {
 	OneContainer<DSite> *next = a_proxies->a_next; 
 	DSite *si = a_proxies->a_contain1;
-	if (si!=mySite && si!=a_current) sendRedirect(si);
+	if (si == mySite) {
+	  if (msgType == TR_BOUND) {
+	    // Notify the home proxy that the transient has been bound.
+	    MsgContainer *msgC = manager->m_createProxyProtMsg();
+	    msgC->pushIntVal(TR_HOME_BOUND);
+	    si->m_sendMsg(msgC);
+	  }
+	} else {
+	  Assert(si != a_current);
+	  sendRedirect(si);
+	}
 	delete a_proxies;
 	a_proxies = next;
       }
@@ -416,9 +426,12 @@ namespace _dss_internal{ //Start namespace
     if (a_writeToken) {
       // this proxy binds the transient, and notifies the manager
       MsgContainer *msgC = a_proxy->m_createCoordProtMsg();
-      msgC->pushIntVal(a_proxy->m_getProxyStatus() == PROXY_STATUS_HOME ?
-		       TR_HOME_BOUND : TR_BOUND);
-      msg = gf_pushUnboundPstOut(msgC);
+      if (a_proxy->m_getProxyStatus() == PROXY_STATUS_HOME) {
+	msgC->pushIntVal(TR_HOME_BOUND);
+      } else {
+	msgC->pushIntVal(TR_BOUND);
+	msg = gf_pushUnboundPstOut(msgC);
+      }
       a_proxy->m_sendToCoordinator(msgC);
       return DSS_PROCEED; 
 
@@ -498,16 +511,13 @@ namespace _dss_internal{ //Start namespace
       }
       break;
     }
-    case TR_BOUND: {
+    case TR_HOME_BOUND: {
       // the transient has been bound remotely, this is the home proxy
       Assert(a_proxy->m_getProxyStatus() == PROXY_STATUS_HOME);
+      // the state has been installed by the manager, simply wake up
+      // suspensions
       a_bound = true;
-      PstInContainerInterface* cont = gf_popPstIn(msg);
-      a_proxy->installEntityState(cont);
       wkSuspThrs();
-      MsgContainer *msgC = a_proxy->m_createCoordProtMsg();
-      msgC->pushIntVal(TR_HOME_BOUND);
-      a_proxy->m_sendToCoordinator(msgC);
       break;
     }
     case TR_REDIRECT: {
