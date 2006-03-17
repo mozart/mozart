@@ -85,6 +85,9 @@ namespace _dss_internal{ //Start namespace
     };
   }
 
+  // whether autoregistration must be used
+#define AUTOREGISTRATION
+
 
 
   /******************** ProtocolOnceOnlyManager ********************/
@@ -359,6 +362,7 @@ namespace _dss_internal{ //Start namespace
   // marshal proxy information (autoregistration mechanism)
   bool ProtocolOnceOnlyProxy::marshal_protocol_info(DssWriteBuffer *buf,
 						    DSite* dest) {
+#ifdef AUTOREGISTRATION
     if (dest && a_proxy->m_getProxyStatus() == PROXY_STATUS_HOME) {
       // we automatically register dest at the manager
       ProtocolOnceOnlyManager* pm =
@@ -369,30 +373,37 @@ namespace _dss_internal{ //Start namespace
     } else {
       buf->putByte(OO_REG_MANUAL);
     }
+#endif
     return true;
   }
 
   bool 
   ProtocolOnceOnlyProxy::dispose_protocol_info(DssReadBuffer *buf) {
+#ifdef AUTOREGISTRATION
     buf->getByte();
+#endif
     return true;
   }
 
   // initialize remote proxy (for registration)
   bool
   ProtocolOnceOnlyProxy::m_initRemoteProt(DssReadBuffer* buf) {
+#ifdef AUTOREGISTRATION
     Assert(a_proxy->m_getProxyStatus() == PROXY_STATUS_REMOTE);
     switch (buf->getByte()) {
     case OO_REG_AUTO:
       break;
     case OO_REG_MANUAL: {
+#endif
       MsgContainer *msgC  = a_proxy->m_createCoordProtMsg();
       msgC->pushIntVal(OO_REGISTER);
       dssLog(DLL_BEHAVIOR,"ONCE ONLY (%p): Send REGISTER",this);
       a_proxy->m_sendToCoordinator(msgC);
+#ifdef AUTOREGISTRATION
       break;
     }
     }
+#endif
     return true;
   }
 
