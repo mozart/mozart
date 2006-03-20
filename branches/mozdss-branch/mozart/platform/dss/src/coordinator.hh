@@ -39,6 +39,21 @@
 
 namespace _dss_internal{ //Start namespace
 
+  // Reminder: Coordination and protocol architecture
+  //
+  //                                         Abstract Entity
+  //                                                ^
+  //                                                |
+  //                                                v
+  //           Coordinator <--------------------> Proxy
+  //              ^   ^                           ^   ^
+  //              |   |                           |   |
+  //              V   v                           v   v
+  //  HomeReference  ProtocolManager  ProtocolProxy  RemoteReference
+  //
+  //       (on home site only)               (on all sites)
+
+
 
   // ********************************** AS_Node **************************************
   //
