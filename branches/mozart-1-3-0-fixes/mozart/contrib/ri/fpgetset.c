@@ -65,7 +65,7 @@ fp_except fpgetsticky(void)
 fp_except fpsetsticky(fp_except code)
 {
 	fp_except r;
-	static ucontext_t sigfpe_fpu_state;
+	static ucontext_mozart_t sigfpe_fpu_state;
 
 
 	/* There seems to be no such thing as an fldsw instruction,
