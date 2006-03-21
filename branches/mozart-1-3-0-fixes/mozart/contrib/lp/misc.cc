@@ -59,7 +59,7 @@ double * getDoubleVector(OZ_Term t, double * v)
 }
 
 #ifdef LINUX_IEEE
-void exception_handler(int i, siginfo_t * info, ucontext_t * fpu_state)
+void exception_handler(int i, siginfo_t * info, ucontext_mozart_t * fpu_state)
 {
   static char *msg[6] = {"invalid operation", "denormal", "divide by zero",
 			 "underflow", "overflow", "precision loss"};
