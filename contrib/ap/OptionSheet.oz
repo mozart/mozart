@@ -4,6 +4,7 @@ import
    CB(checkBox:CheckBox) at 'x-oz://contrib/tk/CheckBox.ozf'
    SF(scrollFrame:ScrollFrame) at 'x-oz://contrib/tk/ScrollFrame.ozf'
    Tk TkTools
+   System
 export
    GetGuiCmdArgs
    AddHandler
@@ -800,18 +801,24 @@ class OptionSheet from Tk.toplevel
        ]}
    end
    meth get($)
-      {Application.postProcess
-       {FoldR {Map @rows fun {$ R} {R get($)} end}
-           fun {$ V L}
-              case V
-              of K#X       then if K==NONE then X else V end|L
-              [] alias(L2) then {Append L2 L}
-              [] omit      then L
-              [] bad(K)    then
-                 raise system(ap(illegalOptionValue K)) end
-              end
-           end nil}
-       self.specs}
+      optRec(Args) = {Application.postProcess
+                      {FoldR {Map @rows fun {$ R} {R get($)} end}
+                       fun {$ V L}
+                          case V
+                          of K#X       then if K==NONE then X else V end|L
+                          [] alias(L2) then {Append L2 L}
+                          [] omit      then L
+                          [] bad(K)    then
+                             raise system(ap(illegalOptionValue K)) end
+                          end
+                       end nil}
+                      self.specs}
+   in
+      case {Label self.specs}
+      of plain  then Args
+      [] list   then Args
+      [] record then optRec(Args)
+      end
    end
    meth userSelectNotify(R)
       if @selected\=unit andthen @selected\=R then
