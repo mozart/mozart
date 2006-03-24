@@ -1,6 +1,7 @@
 /*
  *  Authors:
  *    Zacharias El Banna
+ *    Raphael Collet (raph@info.ucl.ac.be)
  * 
  *  Contributors:
  *    optional, Contributor's name (Contributor's email address)
@@ -342,50 +343,138 @@ void t_deleteAllCompare(T1** const headptr, T2* const compare){
     ~FifoQueue(){ t_deleteList(a_front); };
   };
 
-  // ********************** SIMPLE LIST STRUCTURE ********************
-  //
-  //
-  template <class T1>
-  class SimpleList{
-  protected:
-    T1* a_head;
-
-  public:
-    
-    SimpleList():a_head(NULL){};
-
-    ~SimpleList(){
-      while(a_head){
-	T1* tmp = a_head;
-	a_head  = a_head->a_next;
-	delete tmp;
-      }
-    }
-    
-    bool isEmpty(){ return a_head == NULL; }
-    
-    void insertElement(T1* a){
-      a->a_next = a_head;
-      a_head = a;
-    }
-    
-    T1* dropListHead(){
-      T1* tmp = a_head;
-      a_head = a_head->a_next;
-      return tmp;
-    }
-
-    T1** getHead(){ return (&a_head); }
-
-    T1* dropAllList(){
-      T1* tmp = a_head;
-      a_head = NULL;
-      return tmp;
-    }
-
-    MACRO_NO_DEFAULT_CONSTRUCTORS(SimpleList);
-  };
 
 
+/******************** Templates added by raph ********************/
+
+// Pairs can be used to make a list of tuples in general.  The
+// conversion operator is useful when e1 is used as a key.
+template <typename T1, typename T2>
+struct Pair {
+  T1 first; T2 second;
+  Pair() {}
+  Pair(T1 const &a, T2 const &b) : first(a), second(b) {}
+  operator T1 () { return first; }
+};
+
+template <typename T1, typename T2>
+Pair<T1,T2> makePair(T1 const &a, T2 const &b) { return Pair<T1,T2>(a, b); }
+
+
+
+// The following templates implement simple linked lists.  I have
+// defined the class Position in order to abstract a position in a
+// list.  It effectively hides all the pointer juggling used when
+// modifying the list.
+
+template <typename T> class Position;
+template <typename T> class SimpleList;
+template <typename T> class SimpleQueue;
+
+// the underlying nodes of a list
+template <typename T> class SimpleNode {
+  friend class Position<T>;
+  friend class SimpleList<T>;
+  friend class SimpleQueue<T>;
+private:
+  T elem;
+  SimpleNode<T>* next;
+  SimpleNode(T const &e, SimpleNode<T>* n) : elem(e), next(n) {}
+};
+
+
+
+// A position is a window on a given element in a list, or after the
+// last element in that list.  The after-last position is very
+// convenient for appending elements at the end of the list.
+template <typename T>
+class Position {
+private:
+  SimpleNode<T>** curPtr;     // a pointer to a pointer to the current node
+
+public:
+  void init(SimpleList<T> &s) { curPtr = &(s.first); }
+
+  Position() : curPtr(NULL) {}
+  Position(SimpleList<T> &s) { init(s); }
+  Position(SimpleList<T> *s) { init(*s); }
+
+  // check whether the position is empty, and return the element
+  bool hasElement() const { return *curPtr; }
+  bool isEmpty() const { return !hasElement(); }
+  T& element() const { return (*curPtr)->elem; }
+
+  // jump to next position
+  void next() { curPtr = &((*curPtr)->next); }
+  // push an element at the current position (shift current element)
+  void push(T const &e) { *curPtr = new SimpleNode<T>(e, *curPtr); }
+  // insert an element at current position, and shift position
+  void insert(T const &e) { push(e); next(); }
+  // remove the element at the current position
+  void remove() {
+    SimpleNode<T>* node = *curPtr; *curPtr = node->next; delete node;
+  }
+  // remove and return the element at the current position
+  T pop() { T e = element(); remove(); return e; }
+  // find the position of an element (after-last position if not found)
+  bool find(T const &e) {
+    while (hasElement() && !(element() == e)) next();
+    return hasElement();
+  }
+
+  // similar to the ones above, but more convenient for pairs
+  template <typename T1, typename T2>
+  void push(T1 const &e1, T2 const &e2) { push(makePair(e1, e2)); }
+  template <typename T1, typename T2>
+  void insert(T1 const &e1, T2 const &e2) { insert(makePair(e1, e2)); }
+  template <typename T1>
+  bool find(T1 const &e1) { // find the pair whose first element is e1
+    while (hasElement() && !((T1) element() == e1)) next();
+    return hasElement();
+  }
+
+  // basic operator overloading: pos(l) sets pos at the first position
+  // in l; pos() returns true if pos is nonempty; *pos returns the
+  // element; ++pos and pos++ shifts to next position.
+  void operator() (SimpleList<T> &s) { init(s); }
+  bool operator() () const { return hasElement(); }
+  T&   operator*  () const { return element(); }
+  void operator++ (int) { next(); }
+  void operator++ () { next(); }
+};
+
+
+
+// The linked list itself.
+template <typename T>
+class SimpleList {
+  friend class Position<T>;
+
+private:
+  SimpleNode<T>* first;     // the first node
+
+public:
+  SimpleList() : first(NULL) {}
+  ~SimpleList() {
+    while (first) { SimpleNode<T>* n = first; first = n->next; delete n; }
+  }
+  bool isEmpty() const { return first == NULL; }
+  Position<T> front() { return (Position<T>) (*this); }
+
+  // Only operations push(), pop(), contains() and remove() are
+  // provided.  For other operations, use a Position.
+  void push(T const &e) { front().push(e); }
+  T pop() { return front().pop(); }
+  bool contains(T const &e) const { return front().find(e); }
+  bool remove(T const &e) {
+    Position<T> p(*this); return p.find(e) ? p.remove(), true : false;
+  }
+};
+
+// Use on a list of pointers to a class with method m_makeGCpreps.
+template <class T>
+void t_gcList(SimpleList<T*> &list) {
+  for (Position<T*> p(list); p(); p++) (*p)->m_makeGCpreps();
+}
 
 #endif
