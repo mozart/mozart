@@ -3,6 +3,7 @@
  *    Zacharias El Banna (zeb@sics.se)
  * 
  *  Contributors:
+ *    Raphael Collet (raph@info.ucl.ac.be)
  * 
  *  Copyright:
  * 
@@ -41,14 +42,14 @@ namespace _msl_internal{
 
   inline void Timers::m_hrs_insert(TimerElement* const tel){
     tel->a_time -= (MSG - (a_mseconds + SG * a_minutes));
-    a_hourList.insertElement(tel);
+    a_hourList.push(tel);
   }
   
   
   inline void Timers::m_min_insert(TimerElement* const tel){
     unsigned int pos = ((tel->a_time / SG) + a_minutes) % MINUTES;
     tel->a_time %= SG; // remove minutes
-    a_minuteWheel[pos].insertElement(tel);
+    a_minuteWheel[pos].push(tel);
   }
   
   
@@ -56,7 +57,7 @@ namespace _msl_internal{
     //           pos = (             pos from now              +     safety if near now               ) mod. no of positions
     unsigned int pos = ((tel->a_time + a_mseconds)/GRANULARITY + ((tel->a_time > GRANULARITY) ? 0 : 1)) % SECONDS;
     //dssLog(DLL_NOTHING,"TIMER   (%p): SECOND INSERT %p [time:%3d pos:%3d] %s",this,tel,tel->a_time,pos,m_stringrep());
-    a_secondWheel[pos].insertElement(tel);
+    a_secondWheel[pos].push(tel);
     DebugCode(tel->a_time = 0;);
   }
   
@@ -69,17 +70,15 @@ namespace _msl_internal{
   // revolution.
     
   inline void Timers::m_hour_tick(){
-    TimerElement** iter = a_hourList.getHead();
-    while(*iter){
-      if((*iter)->a_time < MSG){
-	TimerElement* tmp = *iter;
-	(*iter) = (*iter)->a_next;
+    Position<TimerElement*> p(a_hourList);
+    while (p.hasElement()) {
+      if ((*p)->a_time < MSG) {
 	//dssLog(DLL_ALL,"TIMER   (%p): Dropping hour timer %p",this,tmp);
-	m_min_insert(tmp); // Know we are talking about a_minutes (or seconds)
+	m_min_insert(p.pop()); // Know we are talking about a_minutes (or seconds)
       } else {
 	//dssLog(DLL_ALL,"TIMER   (%p): Postponing hour timer %p",this,(*iter));
-	(*iter)->a_time -= MSG;
-	iter = &((*iter)->a_next);
+	(*p)->a_time -= MSG;
+	p.next();
       }
     }
   }
@@ -90,13 +89,13 @@ namespace _msl_internal{
     if(a_minutes == 0)
       m_hour_tick();
     while(!a_minuteWheel[a_minutes].isEmpty()){
-      TimerElement* tmp = a_minuteWheel[a_minutes].dropListHead();
-      if(tmp->m_live()){
-	//dssLog(DLL_NOTHING,"TIMER   (%p): Dropping minute timer %p",this,tmp);
-	m_sec_insert(tmp);
+      TimerElement* tel = a_minuteWheel[a_minutes].pop();
+      if(tel->m_live()){
+	//dssLog(DLL_NOTHING,"TIMER   (%p): Dropping minute timer %p",this,tel);
+	m_sec_insert(tel);
       } else {
-	//dssLog(DLL_NOTHING,"TIMER   (%p): Deleting minute timer %p",this,tmp);
-	delete tmp;
+	//dssLog(DLL_NOTHING,"TIMER   (%p): Deleting minute timer %p",this,tel);
+	delete tel;
       }
     }
   }
@@ -125,22 +124,20 @@ namespace _msl_internal{
     //if(!a_secondWheel[pos].isEmpty()){
     //  dssLog(DLL_NOTHING,"TIMER   (%p): EXECUTING TIMED EVENTS %s",this,m_stringrep()); 
     //}
-    TimerElement* head = a_secondWheel[pos].dropAllList();
-    while(head){
-      TimerElement* tmp = head;
-      head  = head->a_next;
-      if(tmp->m_dead()) delete tmp;  // Most timers are cleared
+    while (!a_secondWheel[pos].isEmpty()) {
+      TimerElement* tel = a_secondWheel[pos].pop();
+      if (tel->m_dead()) delete tel;  // Most timers are cleared
       else{
 	//dssLog(DLL_NOTHING,"TIMER   (%p): Executing %p",this,tmp);
-	unsigned int new_time = tmp->m_exec();
-	if(new_time == 0) delete tmp; // Most timers are also not reused (???)
+	unsigned int new_time = tel->m_exec();
+	if(new_time == 0) delete tel; // Most timers are also not reused (???)
 	else {
 	  // The below assert should not be valid since the m_sec_insert corrects "near now" values?
 	  //Assert(new_time > GRANULARITY);
-	  tmp->m_reset(new_time);
+	  tel->m_reset(new_time);
 	  //dssLog(DLL_NOTHING,"TIMRS   (%p): Reinserting %p (time:%d)",this,tmp,tmp->a_time);
 	  Assert(a_suspended); // must be during this action
-	  a_suspensionList.insertElement(tmp);
+	  a_suspensionList.push(tel);
 	}
       }
     }
@@ -192,9 +189,8 @@ namespace _msl_internal{
       } while(steps >= 0);
       a_suspended = false;
       // Add elements inserted during ticks
-      while(!a_suspensionList.isEmpty()){
-	m_internalInsert(a_suspensionList.dropListHead());
-      }
+      while(!a_suspensionList.isEmpty())
+	m_internalInsert(a_suspensionList.pop());
     }
   }
 
@@ -204,7 +200,7 @@ namespace _msl_internal{
     if(!a_suspended)
       m_internalInsert(tel);
     else
-      a_suspensionList.insertElement(tel); 
+      a_suspensionList.push(tel); 
   }
   
   
@@ -218,7 +214,7 @@ namespace _msl_internal{
     if(!a_suspended)
       m_internalInsert(tel);
     else
-      a_suspensionList.insertElement(tel); 
+      a_suspensionList.push(tel); 
   }
 
 

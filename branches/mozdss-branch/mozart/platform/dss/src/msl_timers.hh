@@ -3,6 +3,7 @@
  *    Zacharias El Banna (zeb@sics.se)
  * 
  *  Contributors:
+ *    Raphael Collet (raph@info.ucl.ac.be)
  * 
  *  Copyright:
  * 
@@ -32,17 +33,8 @@
 #include <stdio.h>
 #include "mslBase.hh"
 #include "dss_templates.hh"
+
 namespace _msl_internal{ //Start namespace
-
-  
-  
-  //
-  // Returns if it which to be reinserted
-  // 0  == NO
-  // >0 == YES (with value)
-  //
-  
-
   
   // ****************** BASIC TIMER ELEMENT *******************
   //
@@ -50,11 +42,10 @@ namespace _msl_internal{ //Start namespace
   //
 
   class TimerElement: public TimerElementInterface {
-    friend class SimpleList<TimerElement>;
     friend class Timers;
+
   protected:
     // ********** for TimeWheel *************
-    TimerElement *a_next;
     unsigned int  a_time;
     // ********* for WheelElement ***********
     TimerWakeUpProc a_contain;
@@ -67,16 +58,12 @@ namespace _msl_internal{ //Start namespace
 #endif
 
     // Invoked ONLY
-    inline void m_reset(const unsigned int& time){ a_time    = time; DebugCode(a_next = reinterpret_cast<TimerElement*>(0xAABBCCDD);); }
+    inline void m_reset(const unsigned int& time){ a_time = time; }
     inline unsigned int  m_exec(){ return (a_contain)(a_args); }
 
   private: // not to be used
-   TimerElement(const TimerElement& te):
-      a_next(NULL),
-      a_time(0),
-      a_contain(NULL),
-      a_args(NULL){
-    }
+    TimerElement(const TimerElement& te):
+      a_time(0), a_contain(NULL), a_args(NULL) {}
     
     TimerElement& operator=(const TimerElement& te){ return *this; }
 
@@ -95,19 +82,17 @@ namespace _msl_internal{ //Start namespace
 
     // Basic timer creation. Starting it is done through "Timer" operations
     TimerElement(TimerWakeUpProc t, void* const arg, const unsigned int& time):
-      a_next(NULL),
-      a_time(time),
-      a_contain(t),
-      a_args(arg){
+      a_time(time), a_contain(t), a_args(arg)
+    {
       Assert(time > 0);
       DebugCode(a_allocated++);
     };
-
 
     ~TimerElement(){
       DebugCode(a_allocated--);
     }
   };
+
 
 
   class Timers{
@@ -119,14 +104,10 @@ namespace _msl_internal{ //Start namespace
     static const unsigned int SG  = (SECONDS * GRANULARITY);
     static const unsigned int MSG = (MINUTES * SG);
     
-    SimpleList<TimerElement> a_secondWheel[SECONDS]; // Our smallest wheel
-    SimpleList<TimerElement> a_minuteWheel[MINUTES]; // Our bigger wheel
-    SimpleList<TimerElement> a_hourList;             // List of those NON EXISTING "out of bounds" elements
-    SimpleList<TimerElement> a_suspensionList;       // During execution of ticks.
-    
-    // Immediate after
-    //
-    // SimpleList<TimerElement> a_immediateAfter;
+    SimpleList<TimerElement*> a_secondWheel[SECONDS]; // Our smallest wheel
+    SimpleList<TimerElement*> a_minuteWheel[MINUTES]; // Our bigger wheel
+    SimpleList<TimerElement*> a_hourList;             // "out of bounds" elements
+    SimpleList<TimerElement*> a_suspensionList;       // During execution of ticks.
 
     unsigned int a_mseconds;
     unsigned int a_minutes; 
