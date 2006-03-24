@@ -283,16 +283,8 @@ namespace _dss_internal{ //Start namespace
     // Protocol part
     fs |= a_prot->siteStateChanged(s, state);
 
-    // change the state if necessary
-    if (fs) {
-      if ((fs & FS_AA_MASK) == 0)   fs |= getFaultState() & FS_AA_MASK;
-      if ((fs & FS_PROT_MASK) == 0) fs |= getFaultState() & FS_PROT_MASK;
-      setFaultState(fs);
-
-      // Notify the glue interface if required
-      if (fs & getRegisteredFS())
-	a_AbsEnt_Interface->reportFaultState(fs & getRegisteredFS());
-    }
+    // update the fault state (unless nothing to tell)
+    if (fs) updateFaultState(fs);
   }
   
     void 
