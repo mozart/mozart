@@ -207,8 +207,8 @@ namespace _dss_internal{ //Start namespace
     virtual void        setRegisteredFS(const FaultState& s);
     virtual FaultState  getRegisteredFS() const {return a_registeredFS;}
     
-    void    setFaultState(FaultState s); 
     virtual FaultState  getFaultState() const { return a_currentFS;} 
+    void    updateFaultState(FaultState fs); 
     
     
     // ***************** Marshal *********************

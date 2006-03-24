@@ -54,14 +54,14 @@ namespace _dss_internal{ //Start namespace
   AS_Node::~AS_Node(){}
 
   AS_Node::AS_Node(const AccessArchitecture& a, DSS_Environment* const env):
-      NetIdNode(),
-      DSS_Environment_Base(env),
-      a_aa(a){
-      // Created Resolver base node
-    }
+    NetIdNode(),
+    DSS_Environment_Base(env),
+    a_aa(a){
+    // Created Resolver base node
+  }
     
   AS_Node::AS_Node(NetIdentity ni, const AccessArchitecture& a,
-	  DSS_Environment* const env):
+		   DSS_Environment* const env):
     NetIdNode(ni),
     DSS_Environment_Base(env),
     a_aa(a){
@@ -78,14 +78,14 @@ namespace _dss_internal{ //Start namespace
   // ****************************** Coordinator ***********************************'
   
   Coordinator::Coordinator(const AccessArchitecture& a,
-		   ProtocolManager* const p, DSS_Environment* const env):AS_Node(a,env), a_proxy(NULL), a_prot(p){
+			   ProtocolManager* const p, DSS_Environment* const env):AS_Node(a,env), a_proxy(NULL), a_prot(p){
     DebugCode(a_allocated++);
     m_getEnvironment()->a_coordinatorTable->m_add(this);
   }
 
 
   Coordinator::Coordinator(NetIdentity ni, const AccessArchitecture& a,
-		   ProtocolManager* const p, DSS_Environment* const env):AS_Node(ni, a,env), a_proxy(NULL), a_prot(p){
+			   ProtocolManager* const p, DSS_Environment* const env):AS_Node(ni, a,env), a_proxy(NULL), a_prot(p){
     DebugCode(a_allocated++);
     m_getEnvironment()->a_coordinatorTable->m_insert(this);
   }
@@ -153,20 +153,28 @@ namespace _dss_internal{ //Start namespace
 	       ProtocolProxy* const prot, AE_ProxyCallbackInterface* ae,
 	       DSS_Environment* const env):
     AS_Node(ni,a,env), a_ps(PROXY_STATUS_UNSET),
+    a_currentFS(FS_ALL_OK), a_registeredFS(0),
     a_prot(prot), a_remoteRef(NULL), a_man(NULL),a_AbsEnt_Interface(ae)
   {
     DebugCode(a_allocated++);
-    setFaultState(FS_ALL_OK);
-    setRegisteredFS(0);
     m_getEnvironment()->a_proxyTable->m_insert(this);
   }
 
+  // update the fault state; fs must be nonzero, but may contain a
+  // partial fault state, like a protocol failure only, for instance.
   void 
-  Proxy::setFaultState(FaultState s){   
-    dssLog(DLL_BEHAVIOR,"PROXY (%p): SetFaultState man:%p fs:%d",this,a_man,s); 
-    // fault state must be complete (AA and PROT part)
-    Assert((s & FS_AA_MASK) && (s & FS_PROT_MASK));
-    a_currentFS = s;
+  Proxy::updateFaultState(FaultState fs) {
+    Assert(fs);
+    // first complete the missing parts
+    if ((fs & FS_AA_MASK) == 0)   fs |= getFaultState() & FS_AA_MASK;
+    if ((fs & FS_PROT_MASK) == 0) fs |= getFaultState() & FS_PROT_MASK;
+    if (fs != a_currentFS) {
+      // this is a real change, make the update
+      a_currentFS = fs;
+      // Notify the glue interface if required
+      if (fs & getRegisteredFS())
+	a_AbsEnt_Interface->reportFaultState(fs & getRegisteredFS());
+    }
   }
   
   // Access structures has to delete the ref by themselves
