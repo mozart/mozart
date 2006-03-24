@@ -3,7 +3,7 @@
  *    Erik Klintskog (erikd@sics.se)
  * 
  *  Contributors:
- *    optional, Contributor's name (Contributor's email address)
+ *    Raphael Collet (raph@info.ucl.ac.be)
  * 
  *  Copyright:
  *    Erik Klintskog, 1998
@@ -39,12 +39,12 @@ namespace _dss_internal{ // Start namespace
   class FracHandler{
     //  Handling the list of enum denum pairs
     //
-    TwoTypeContainer<int,int>* frac;
+    SimpleList<Pair<int,int> > frac;
     int wrc_alpha;
 
     int GiveSize(const int& enumerator);
 
-    FracHandler(const FracHandler&):frac(NULL),wrc_alpha(0){}
+    FracHandler(const FracHandler&):frac(),wrc_alpha(0){}
     FracHandler& operator=(const FracHandler&){ return *this; }
     
   protected:
@@ -56,7 +56,7 @@ namespace _dss_internal{ // Start namespace
 
     void Frac_init(const int& e, const int& d);
 
-    inline bool isEmpty(){ return (frac == NULL); }
+    inline bool isEmpty(){ return frac.isEmpty(); }
     void insertPair(const int& e, const int& k);
     void removeHead(int& e, int& d);
 

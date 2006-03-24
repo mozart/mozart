@@ -44,101 +44,87 @@ namespace _dss_internal{
     return (enumerator / wrc_alpha);
   }
   
-  FracHandler::FracHandler(const int& alpha) : frac(NULL), wrc_alpha(alpha)
+  FracHandler::FracHandler(const int& alpha) : frac(), wrc_alpha(alpha)
   {}
 
   FracHandler::FracHandler(const int& e, const int& d, const int& alpha) :
-    frac(new TwoTypeContainer<int,int>(e,d,NULL)), wrc_alpha(alpha)
-  {}
+    frac(), wrc_alpha(alpha)
+  {
+    Frac_init(e, d);
+  }
 
   inline void FracHandler::Frac_init(const int& e, const int& d) {
-    frac = new TwoTypeContainer<int,int>(e,d,NULL);
+    Assert(frac.isEmpty());
+    frac.push(makePair(e, d));
   }
 
-  FracHandler::~FracHandler() {
-    t_deleteList(frac);
-  }
+  FracHandler::~FracHandler() {}
 
   // Invariant: frac is a list of pairs (e,d), such that
-  // e <= MAXENUMERATOR, and the values of d are increasing
+  // 1 <= e <= MAXENUMERATOR, and the values of d are increasing
 
   void
   FracHandler::insertPair(const int& e, const int& k){
     if (k == 0) return;
-    
-    TwoTypeContainer<int,int>** nodep = &frac;
-    while ((*nodep)!=NULL && (*nodep)->a_contain2 < k) {
-      nodep = &((*nodep)->a_next);
-    }
-    // (*nodep) == NULL || (*nodep)->a_contain2 >= k
 
-    if ((*nodep) == NULL || (*nodep)->a_contain2 > k) {
-      // insert (e,k) in front of *nodep
-      *nodep = new TwoTypeContainer<int,int>(e, k, *nodep);
-      return;
+    Position<Pair<int,int> > pos(frac);
+    while (pos() && (*pos).second < k) pos++;
+    // we are on the first position whose denum is >= k
+
+    if (pos.isEmpty() || (*pos).second > k) {
+      // insert (e,k) at this position
+      pos.push(e, k);
+    } else {
+      // here (*pos).second == k, so we add e in this pair
+      (*pos).first += e;
+      if ((*pos).first >= MAXENUMERATOR) {
+	// decrease MAXENUMERATOR, and insert (1,k-1)
+	(*pos).first -= MAXENUMERATOR;
+	if ((*pos).first == 0) pos.remove();
+	insertPair(1, k-1);
+      }
     }
-    // (*nodep) != NULL && (*nodep)->a_contain2 == k
-    if (e + (*nodep)->a_contain1 == MAXENUMERATOR) {
-      // remove the pair at *nodep, and insert (1,k-1)
-      TwoTypeContainer<int,int>* next = (*nodep)->a_next;
-      delete *nodep;
-      *nodep = next;
-      insertPair(1, k-1);
-      return;
-    }
-    if (e + (*nodep)->a_contain1 > MAXENUMERATOR) {
-      // add e here, decrease MAXENUMERATOR, and insert (1,k-1)
-      (*nodep)->a_contain1 += e - MAXENUMERATOR;
-      insertPair(1,k-1);
-      return;
-    }
-    // (*nodep)->a_contain1 + e < MAXENUMERATOR
-    (*nodep)->a_contain1 += e;
   }
   
   void
   FracHandler::getNewRefWeightPair(int &e, int &d) {
-    // frac can be NULL if all references have been collected at the
-    // home site, but the entity has not been localized
-    if (frac == NULL) Frac_init(MAXENUMERATOR, 1);
+    // frac can be empty if all references have been collected at the
+    // home site, but the entity has not been localized yet
+    if (frac.isEmpty()) Frac_init(MAXENUMERATOR, 1);
 
-    if (frac->a_contain1 > 1) {
-      e = GiveSize(frac->a_contain1);
-      frac->a_contain1 -= e;
-      d = frac->a_contain2;
+    Position<Pair<int,int> > pair1(frac);
+    if ((*pair1).first > 1) {
+      // take from *pair1
+      e = GiveSize((*pair1).first);
+      d = (*pair1).second;
+      (*pair1).first -= e;
     } else {
-      // frac is a pair of the form (1,k)
-      if (frac->a_next == NULL ||
-	  frac->a_next->a_contain2 > (frac->a_contain2 + 1)) {
-	// there is no pair of the form (*,k+1).  Decompose frac into
-	// (e,k+1) and (MAXENUMERATOR-e,k+1), and keep the latter.
+      // *pair1 is of the form (1,k)
+      Position<Pair<int,int> > pair2 = pair1;
+      pair2++;   // move to second position
+      if (pair2.isEmpty() || (*pair2).second > (*pair1).second + 1) {
+	// there is no pair of the form (_,k+1).  Decompose *pair1
+	// into (e,k+1) and (MAXENUMERATOR-e,k+1), and keep the latter.
 	e = GiveSize(MAXENUMERATOR);
-	d = frac->a_contain2+1;
-	frac->a_contain1 = (MAXENUMERATOR - e);
-	frac->a_contain2 = d;
+	d = (*pair1).second + 1;
+	(*pair1) = makePair(MAXENUMERATOR - e, d);
       } else {
-	// "steal" from the second pair
-	TwoTypeContainer<int,int>* second = frac->a_next;
-	e = GiveSize(second->a_contain1); // 1 or E div alpha
-	d = second->a_contain2;
-	// decrease e from second, and delete it if the left part nullify
-	if (second->a_contain1 > 1)
-	  second->a_contain1 -= e;
-	else {
-	  frac->a_next = second->a_next;
-	  delete second;
-	}
+	// "steal" from *pair2
+	e = GiveSize((*pair2).first); // 1 or E div alpha
+	d = (*pair2).second;
+	// decrease e from *pair2, and drop it if (*pair2).first nullifies
+	if ((*pair2).first > 1) (*pair2).first -= e;
+	else pair2.remove();
       }
     }
   }
 
   void
-  FracHandler::removeHead(int& e, int& d){
-    e = frac->a_contain1;
-    d = frac->a_contain2;
-    TwoTypeContainer<int,int>* tmp=frac;
-    frac = frac->a_next;
-    delete tmp;
+  FracHandler::removeHead(int& e, int& d) {
+    Position<Pair<int,int> > pos(frac);
+    e = (*pos).first;
+    d = (*pos).second;
+    pos.remove();
   }
   
 
