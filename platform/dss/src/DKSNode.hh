@@ -62,14 +62,6 @@ namespace _dss_internal{
 
 #define ADCT_DKS_RT 255
 #define ADCT_DKS_SV 254
-
-  // Some template classes that simply are to long and 
-  // complicated to spellout all over the code. 
-                       
-#define Mrshl_N_Key TwoContainer<DKS_MarshalItem, int>
-#define Item_N_Key TwoContainer<DKS_DataItem, int>  
-#define Site_N_Key TwoContainer<DksSite, int>
-
   
   // A process representtaion for the DKS system
   // The class contains a DSite reference plus an id. 
@@ -228,7 +220,7 @@ namespace _dss_internal{
     DksSite a_pPred; 
     DKS_userClass *a_callback; 
     DKS_RoutingTable* a_routingTable;
-    FifoQueue<OneContainer<DksSite> > a_joinQueue; 
+    SimpleQueue<DksSite*> a_joinQueue;
     DksSite *a_predList;
 
     int a_K; 

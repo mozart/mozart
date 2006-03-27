@@ -213,12 +213,12 @@ namespace _dss_internal{
    
   DksMessage* DksBackbone::m_divideResp(int start, int stop, int n){
     printf("Dividing -- drop [%d -- %d]\n", start, stop); 
-    OneContainer<DksBackboneId2Srvc> *found = NULL; 
+    SimpleList<DksBackboneId2Srvc*> found;
     for(NetIdNode *node = a_serviceHT->m_getNext(NULL) ; node != NULL; node = a_serviceHT->m_getNext(node)) {
       DksBackboneId2Srvc* bs = static_cast<DksBackboneId2Srvc*>(node); 
 
       if(lf_keyInInterval(lf_hashNetIdentity(bs->m_getNetId()), start, stop, n)){
-	found = new OneContainer<DksBackboneId2Srvc>(bs, found); 
+	found.push(bs);
 	printf("node %d is a droper\n", lf_hashNetIdentity(bs->m_getNetId())); 
       }else{
 	printf("node %d is a keeper\n", lf_hashNetIdentity(bs->m_getNetId())); 
@@ -226,8 +226,8 @@ namespace _dss_internal{
     }
   
     LargeMessage *lm = new LargeMessage(); 
-    for(OneContainer<DksBackboneId2Srvc> *ptr = found; ptr != NULL; ptr = ptr->a_next){
-      DksBackboneId2Srvc *db = ptr->a_contain1; 
+    while (!found.isEmpty()) {
+      DksBackboneId2Srvc *db = found.pop();
       a_serviceHT->m_removeNetId(db);
       lm->pushNetId(db->m_getNetId());
       lm->pushInt(db->a_srv->m_getType()); 
