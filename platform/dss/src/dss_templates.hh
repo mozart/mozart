@@ -354,11 +354,12 @@ struct Pair {
   T1 first; T2 second;
   Pair() {}
   Pair(T1 const &a, T2 const &b) : first(a), second(b) {}
-  operator T1 () { return first; }
 };
 
 template <typename T1, typename T2>
-Pair<T1,T2> makePair(T1 const &a, T2 const &b) { return Pair<T1,T2>(a, b); }
+Pair<T1,T2> makePair(T1 const &a, T2 const &b) {
+  return Pair<T1,T2>(a, b);
+}
 
 
 
@@ -412,7 +413,9 @@ public:
   void insert(T const &e) { push(e); next(); }
   // remove the element at the current position
   void remove() {
-    SimpleNode<T>* node = *curPtr; *curPtr = node->next; delete node;
+    SimpleNode<T>* node = *curPtr;
+    *curPtr = node->next;
+    delete node;
   }
   // remove and return the element at the current position
   T pop() { T e = element(); remove(); return e; }
@@ -424,18 +427,22 @@ public:
 
   // similar to the ones above, but more convenient for pairs
   template <typename T1, typename T2>
-  void push(T1 const &e1, T2 const &e2) { push(makePair(e1, e2)); }
+  void push(T1 const &e1, T2 const &e2) {
+    push(makePair(e1, e2));
+  }
   template <typename T1, typename T2>
-  void insert(T1 const &e1, T2 const &e2) { insert(makePair(e1, e2)); }
+  void insert(T1 const &e1, T2 const &e2) {
+    insert(makePair(e1, e2));
+  }
   template <typename T1>
   bool find(T1 const &e1) { // find the pair whose first element is e1
-    while (hasElement() && !((T1) element() == e1)) next();
+    while (hasElement() && !(element().first == e1)) next();
     return hasElement();
   }
 
   // basic operator overloading: pos(l) sets pos at the first position
   // in l; pos() returns true if pos is nonempty; *pos returns the
-  // element; ++pos and pos++ shifts to next position.
+  // element; ++pos and pos++ shift to next position.
   void operator() (SimpleList<T> &s) { init(s); }
   bool operator() () const { return hasElement(); }
   T&   operator*  () const { return element(); }
@@ -453,13 +460,16 @@ class SimpleList {
 private:
   SimpleNode<T>* first;     // the first node
 
+  SimpleList& operator=(const SimpleList&);
+  SimpleList(const SimpleList&);
+
 public:
   SimpleList() : first(NULL) {}
   ~SimpleList() {
     while (first) { SimpleNode<T>* n = first; first = n->next; delete n; }
   }
   bool isEmpty() const { return first == NULL; }
-  Position<T> front() { return (Position<T>) (*this); }
+  Position<T> front() { return Position<T>(*this); }
 
   // Only operations push(), pop(), contains() and remove() are
   // provided.  For other operations, use a Position.
@@ -467,14 +477,66 @@ public:
   T pop() { return front().pop(); }
   bool contains(T const &e) const { return front().find(e); }
   bool remove(T const &e) {
-    Position<T> p(*this); return p.find(e) ? p.remove(), true : false;
+    Position<T> p(*this);
+    return p.find(e) ? p.remove(), true : false;
   }
 };
 
-// Use on a list of pointers to a class with method m_makeGCpreps.
+
+
+// Use these when your list contains pointers to objects with a method
+// m_makeGCpreps().
 template <class T>
 void t_gcList(SimpleList<T*> &list) {
   for (Position<T*> p(list); p(); p++) (*p)->m_makeGCpreps();
 }
+
+template <class C1, class C2>
+void t_gcList(SimpleList<Pair<C1*,C2*> > &list) {
+  for (Position<Pair<C1*,C2*> > p(list); p(); p++) {
+    (*p).first->m_makeGCpreps();
+    (*p).second->m_makeGCpreps();
+  }
+}
+
+template <class C1, typename T2>
+void t_gcList(SimpleList<Pair<C1*,T2> > &list) {
+  for (Position<Pair<C1*,T2> > p(list); p(); p++)
+    (*p).first->m_makeGCpreps();
+}
+
+
+
+// An implementation of a FIFO queue
+template <typename T>
+class SimpleQueue : public SimpleList<T> {
+private:
+  Position<T> afterlast;     // the after-last position, for appending
+
+  SimpleQueue& operator= (const SimpleQueue&);
+  SimpleQueue(const SimpleQueue&);
+
+public:
+  SimpleQueue() : SimpleList<T>(), afterlast(*this) {}
+  ~SimpleQueue() {}
+  using SimpleList<T>::isEmpty;
+  using SimpleList<T>::front;
+  Position<T> rear() { return afterlast; }
+
+  // queue operations: append(), peek(), and pop().
+  void append(T const &e) { afterlast.insert(e); }
+  T& peek() const { return front().element(); }
+  T pop() {
+    T e = front().pop();
+    if (isEmpty()) afterlast(*this);
+    return e;
+  }
+
+  // call this when you modify the end of the list with a position!
+  void check() {
+    afterlast(*this);
+    while (afterlast()) afterlast++;
+  }
+};
 
 #endif
