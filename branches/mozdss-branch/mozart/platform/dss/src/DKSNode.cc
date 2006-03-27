@@ -1008,7 +1008,7 @@ namespace _dss_internal{
 	else
 	  {
 	    printf(" zzzzzzzzzzzzzzzzzzenquing(n:%d nj:%d)\n",a_myId.id,Nj.id);
-	    //a_joinQueue.append(new OneContainer<DksSite>(Nj, NULL)); 
+	    //a_joinQueue.append(Nj); 
 	  }
       }
     else
@@ -1059,9 +1059,7 @@ namespace _dss_internal{
    }
 
    void DKSNode::m_processQ(){
-     OneContainer<DksSite> *el = a_joinQueue.drop();
-     if (el == NULL) return ; 
-     DksSite* E = el->a_contain1; 
+     DksSite* E = a_joinQueue.pop();
      printf("zzzzzzzzzzzzzzzzzz#dequed\n"); 
      if(f_belongs(E->id, a_pred.id, a_myId.id, LEFT_RIGHT, a_N))
        m_insertInBack(*E); 
