@@ -1,11 +1,13 @@
 /*
  *  Authors:
  *    Erik Klintskog,     2004 
+ * 
  *  Contributors:
  *    optional, Contributor's name (Contributor's email address)
  * 
  *  Copyright:
  *    Erik Klintskog,     2004
+ * 
  *  Last change:
  *    $Date$ by $Author$
  *    $Revision$
@@ -35,6 +37,7 @@
 namespace _dss_internal{ //Start namespace
   
   class ProxyMobile; 
+
   class CoordinatorMobile: public Coordinator {
     friend class ProxyMobile;
   protected:
@@ -83,7 +86,7 @@ namespace _dss_internal{ //Start namespace
   
   class ProxyMobile: public Proxy {
   private:
-    FifoQueue< OneContainer<MsgContainer> > a_unsentMsgs; 
+    SimpleQueue<MsgContainer*> a_unsentMsgs;
     DSite* a_coordSite; 
     int a_epoch; 
     bool a_fl_coordLost; 
