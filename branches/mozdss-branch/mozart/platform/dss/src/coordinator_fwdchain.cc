@@ -1,8 +1,10 @@
 /*  Authors:
- *    Zacharias El Banna, 2002 (zeb@sics.se) Wrote and designed the original coordinator
- *                                           structure called manager. This was a direct 
- *                                           continuation of what was found in Mozart.
+ *    Zacharias El Banna, 2002 (zeb@sics.se) wrote and designed the
+ *    original coordinator structure called manager. This was a direct
+ *    continuation of what was found in Mozart.
+ * 
  *    Erik Klintskog,     2004 (erik@sics.se)
+ * 
  *  Contributors:
  *    optional, Contributor's name (Contributor's email address)
  * 
@@ -28,7 +30,6 @@
 #if defined(INTERFACE)
 #pragma implementation "coordinator_fwdchain.hh"
 #endif
-
 
 #include "dssBase.hh"
 #include "msl_serialize.hh"
@@ -64,9 +65,6 @@ namespace _dss_internal{ //Start namespace
   
   class ProxyDct; 
   
-#define DRI_triplet ThreeContainer<DSite, Reference, int>
-#define SrcMsg_pair TwoClassContainer<DSite, MsgContainer>  
-
   void
   CoordinatorFwdChain::m_forwardMessage(MsgContainer* msgC, DSite* fromsite, DSite *dest){
     MsgContainer *msg = m_createASMsg(M_COORD_COORD_CNET);
@@ -80,7 +78,7 @@ namespace _dss_internal{ //Start namespace
     switch(a_ms){
     case MANAGER_STATUS_REF_INC:
     case MANAGER_STATUS_PROT:
-      return a_refList->a_contain2;  
+      return a_refList.front().element().second;
     case MANAGER_STATUS_WAITING: 
     case MANAGER_STATUS_REF_COM:
       return static_cast<ProxyFwdChain*>(a_proxy)->a_epoch; 
@@ -107,9 +105,9 @@ namespace _dss_internal{ //Start namespace
     MsgContainer *ans = m_createASMsg(M_COORD_COORD_CNET);
     ans->pushIntVal(MA_NEWREF);
     ans->pushDSiteVal(m_getEnvironment()->a_myDSite); 
-    ans->pushIntVal(a_refList->a_contain2); 
+    ans->pushIntVal(a_refList.front().element().second); 
     InfiniteWriteBuffer *bs =new InfiniteWriteBuffer();
-    a_refList->a_contain1->m_getReferenceInfo(bs, s);
+    a_refList.front().element().first->m_getReferenceInfo(bs, s);
     gf_pushEBA(ans, new EdcByteArea(bs->m_getBuffer())); 
     s->m_sendMsg(ans); 
     delete bs;
@@ -120,9 +118,9 @@ namespace _dss_internal{ //Start namespace
     MsgContainer *ans = m_createASMsg(M_COORD_PROXY_CNET);
     ans->pushIntVal(MA_NEWREF);
     ans->pushDSiteVal(m_getEnvironment()->a_myDSite); 
-    ans->pushIntVal(a_refList->a_contain2); 
+    ans->pushIntVal(a_refList.front().element().second); 
     InfiniteWriteBuffer *bs =new InfiniteWriteBuffer();
-    a_refList->a_contain1->m_getReferenceInfo(bs, s);
+    a_refList.front().element().first->m_getReferenceInfo(bs, s);
     gf_pushEBA(ans, new EdcByteArea(bs->m_getBuffer())); 
     s->m_sendMsg(ans); 
     delete bs;
@@ -134,25 +132,26 @@ namespace _dss_internal{ //Start namespace
 					   const RCalg& gc_annot,
 					   DSS_Environment* const env):
     Coordinator( AA_MIGRATORY_MANAGER, pm, env),
-    a_refList(NULL), 
+    a_refList(), 
     a_deliverQueue(),
     a_coordPtr(env->a_myDSite),
-    a_ms(MANAGER_STATUS_PROT){
+    a_ms(MANAGER_STATUS_PROT)
+  {
     pm->a_coordinator = this;
-    a_refList = new TwoContainer<HomeReference,int>(new HomeReference(this, gc_annot), 0, NULL); 
+    a_refList.push(makePair(new HomeReference(this, gc_annot), 0));
   }
 
   
   CoordinatorFwdChain::CoordinatorFwdChain(NetIdentity ni, ProxyFwdChain* const p,
 				     DSS_Environment* const env):
     Coordinator(ni, AA_MIGRATORY_MANAGER, NULL, env),
-    a_refList(NULL),
+    a_refList(),
     a_deliverQueue(),
     a_coordPtr(NULL),
-    a_ms(MANAGER_STATUS_REF_COM){ //We are a comlete ref
+    a_ms(MANAGER_STATUS_REF_COM)
+  { //We are a comlete ref
     a_proxy  = p;
     p->a_man = this; 
-    a_refList = NULL;
   }
 
 
@@ -164,7 +163,7 @@ namespace _dss_internal{ //Start namespace
   void
   CoordinatorFwdChain::m_queueProtMessage(MsgContainer *m, DSite* fromsite){
     dssLog(DLL_ALL,"QUEUEING migratory message");
-    a_deliverQueue.append(new SrcMsg_pair(fromsite, m, NULL));
+    a_deliverQueue.append(makePair(fromsite, m));
   }
   
   
@@ -174,16 +173,19 @@ namespace _dss_internal{ //Start namespace
   void
   CoordinatorFwdChain::m_deliverProtMessages(DSite* dest){
     dssLog(DLL_ALL,"DELIVERING migratory messages");
-    TwoClassContainer<DSite, MsgContainer>  *q;
-    while((q = a_deliverQueue.drop()) != NULL){
-      dssLog(DLL_ALL,"delivering migratory message from %s",q->a_contain1->m_stringrep());
-      MsgContainer *msg = q->a_contain2; 
-      if(dest == m_getEnvironment()->a_myDSite){
-	dssLog(DLL_DEBUG,"Migratory protocol message delivered locally");
-	a_prot->msgReceived(msg,q->a_contain1);
-      } else {
-	dssLog(DLL_DEBUG,"Migratory protocol message delivered forwarded");  
-	m_forwardMessage(msg,q->a_contain1,dest);
+    if (dest == m_getEnvironment()->a_myDSite) { // deliver locally
+      dssLog(DLL_DEBUG,"Migratory protocol messages delivered locally");
+      while (!a_deliverQueue.isEmpty()) {
+	Pair<DSite*, MsgContainer*> sm = a_deliverQueue.pop();
+	dssLog(DLL_ALL,"delivering migratory message from %s",sm.first->m_stringrep());
+	a_prot->msgReceived(sm.second, sm.first);
+      }
+    } else { // forward messages
+      dssLog(DLL_DEBUG,"Migratory protocol messages forwarded");  
+      while (!a_deliverQueue.isEmpty()) {
+	Pair<DSite*, MsgContainer*> sm = a_deliverQueue.pop();
+	dssLog(DLL_ALL,"delivering migratory message from %s",sm.first->m_stringrep());
+	m_forwardMessage(sm.second, sm.first, dest);
       }
     }
   }
@@ -224,10 +226,10 @@ namespace _dss_internal{ //Start namespace
   void 
   CoordinatorFwdChain::m_receiveRefMsg(MsgContainer *msgC, DSite* fromsite){
     unsigned int e = msgC->popIntVal();
-    TwoContainer<HomeReference, int> *ptr = NULL; 
-    for(ptr = a_refList; ptr!=NULL && ptr->a_contain2 != e ; ptr = ptr->a_next);
-    if(ptr)
-      ptr->a_contain1->m_msgToGcAlg(msgC,fromsite);
+    // let's find the pair whose second element is e
+    Position<Pair<HomeReference*, int> > pos(a_refList);
+    while (pos() && (*pos).second != e) pos++;
+    if (pos()) (*pos).first->m_msgToGcAlg(msgC,fromsite);
   }
 
 
@@ -311,9 +313,11 @@ namespace _dss_internal{ //Start namespace
        delete static_cast<ProxyFwdChain*>(a_proxy)->a_ref;
        static_cast<ProxyFwdChain*>(a_proxy)->a_ref = NULL;
        
-       a_refList = new TwoContainer<HomeReference, int>(new HomeReference(this,a),
-							e,
-							a_refList->a_next);
+       // raph: The former version of the push() below was dropping
+       // the front element of a_refList (memory leak!)  I guess it
+       // was a bug...  If not, add a "a_refList.pop()" before it.
+       a_refList.push(makePair(new HomeReference(this, a), (int) e));
+
        // send new reference
        m_sendRefUpdateCoord(fromsite);
       
@@ -367,13 +371,10 @@ namespace _dss_internal{ //Start namespace
    DSS_GC
    CoordinatorFwdChain::m_getDssDGCStatus(){
      // Old ref versions 
-     TwoContainer<HomeReference, int> **ptr = &a_refList;
-     while((*ptr) != NULL){
-       if((*ptr)->a_contain1->m_isRoot())
-	 return DSS_GC_PRIMARY; 
-       TwoContainer<HomeReference, int> *tmp = (*ptr); 
-       (*ptr) = (*ptr)->a_next;
-       delete tmp;
+     Position<Pair<HomeReference*, int> > pos(a_refList);
+     while (pos()) {
+       if ((*pos).first->m_isRoot()) return DSS_GC_PRIMARY;
+       pos.remove();
      }
      if(a_ms == MANAGER_STATUS_REF_COM) return DSS_GC_NONE; // Migrated
      return DSS_GC_LOCALIZE; // Protocol manager
@@ -381,10 +382,9 @@ namespace _dss_internal{ //Start namespace
   
   void
   CoordinatorFwdChain::m_makeGCpreps(){
-    for(TwoClassContainer<DSite, MsgContainer>* ptr = a_deliverQueue.peek(); 
-	ptr!= NULL ; ptr = ptr->a_next)
-      ptr->a_contain1->m_makeGCpreps(); 
     t_gcList(a_refList);
+    for (Position<Pair<DSite*, MsgContainer*> > p(a_deliverQueue); p(); p++)
+      (*p).first->m_makeGCpreps();
     a_prot->makeGCpreps();
   }
 
@@ -433,9 +433,10 @@ namespace _dss_internal{ //Start namespace
       coordSite = a_coordSite; 
     }
     else{
+      CoordinatorFwdChain* coord = static_cast<CoordinatorFwdChain*>(a_man);
       coordSite = m_getEnvironment()->a_myDSite;
-      ref       = static_cast<CoordinatorFwdChain*>(a_man)->a_refList->a_contain1; 
-      epoch     = static_cast<CoordinatorFwdChain*>(a_man)->a_refList->a_contain2;
+      ref       = coord->a_refList.front().element().first;
+      epoch     = coord->a_refList.front().element().second;
     }
     
     if( dest == coordSite){
@@ -465,8 +466,10 @@ namespace _dss_internal{ //Start namespace
       printf(" Received epoch equal to held \n"); 
       if(a_ref)
 	a_ref->m_mergeReferenceInfo(bs); 
-      else
-	static_cast<CoordinatorFwdChain*>(a_man)->a_refList->a_contain1->m_mergeReferenceInfo(bs); 
+      else {
+	CoordinatorFwdChain* coord = static_cast<CoordinatorFwdChain*>(a_man);
+	coord->a_refList.front().element().first->m_mergeReferenceInfo(bs);
+      }
       return; 
     }
     
@@ -505,9 +508,9 @@ namespace _dss_internal{ //Start namespace
   }
   
   void ProxyFwdChain::m_makePersistent(){
-    if(a_ref)
-      a_ref->m_makePersistent();
-    static_cast<CoordinatorFwdChain*>(a_man)->a_refList->a_contain1->m_makePersistent(); 
+    if (a_ref) a_ref->m_makePersistent();
+    CoordinatorFwdChain* coord = static_cast<CoordinatorFwdChain*>(a_man);
+    coord->a_refList.front().element().first->m_makePersistent(); 
   }
 
   
@@ -716,7 +719,8 @@ namespace _dss_internal{ //Start namespace
   int
   ProxyFwdChain::m_getEpoch(){
     if(a_ref) return a_epoch; 
-    return static_cast<CoordinatorFwdChain*>(a_man)->a_refList->a_contain2; 
+    CoordinatorFwdChain* coord = static_cast<CoordinatorFwdChain*>(a_man);
+    return coord->a_refList.front().element().second;
   }
 
   void 

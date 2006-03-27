@@ -28,12 +28,12 @@
 #pragma implementation "coordinator_mobile.hh"
 #endif
 
-
 #include "coordinator_mobile.hh"
 #include "protocols.hh"
 #include "msl_serialize.hh"
 #include "dss_largeMessages.hh"
 #include "dss_dksBackbone.hh"
+
 namespace _dss_internal{ //Start namespace
   
   enum MobileCoordinatorMsgs{
@@ -436,7 +436,7 @@ namespace _dss_internal{ //Start namespace
   bool
   ProxyMobile::m_sendToCoordinator(MsgContainer* msg){
     if(a_fl_coordLost) {
-      a_unsentMsgs.append(new OneContainer<MsgContainer>(msg, NULL)); 
+      a_unsentMsgs.append(msg); 
       return true;
     }
     a_coordSite->m_sendMsg(msg);
@@ -480,7 +480,7 @@ namespace _dss_internal{ //Start namespace
   void 
   ProxyMobile::m_undeliveredCoordMsg(DSite*, MessageType mtt, MsgContainer* msg){
     // We only store messages addressed to the coordinator
-    a_unsentMsgs.append(new OneContainer<MsgContainer>(msg, NULL)); 
+    a_unsentMsgs.append(msg); 
     if(!a_fl_coordLost){
       a_fl_coordLost = true;
       a_coordSite = NULL;
@@ -497,7 +497,7 @@ namespace _dss_internal{ //Start namespace
   void 
   ProxyMobile::m_noCoordAtDest(DSite* sender, MessageType mtt, MsgContainer* msg){
     printf("ProxyMobile::m_noCoordAtDest\n"); 
-    a_unsentMsgs.append(new OneContainer<MsgContainer>(msg, NULL)); 
+    a_unsentMsgs.append(msg); 
     if(!a_fl_coordLost){
       a_fl_coordLost = true;
       a_coordSite = NULL;
@@ -519,11 +519,10 @@ namespace _dss_internal{ //Start namespace
       a_epoch  = epoch; 
       a_coordSite = site;
       a_fl_coordLost = false; 
-      for(OneContainer<MsgContainer> *ele = a_unsentMsgs.drop(); 
-	  ele != NULL; 
-	  ele = a_unsentMsgs.drop()){
-	ele->a_contain1->m_convert2Send();
-	m_sendToCoordinator(ele->a_contain1);
+      while (!a_unsentMsgs.isEmpty()) {
+	MsgContainer* msg = a_unsentMsgs.pop();
+	msg->m_convert2Send();
+	m_sendToCoordinator(msg);
       }
     }
   }

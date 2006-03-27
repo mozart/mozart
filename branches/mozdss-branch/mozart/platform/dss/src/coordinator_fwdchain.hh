@@ -2,6 +2,7 @@
  *  Authors:
  *    Zacharias El Banna, 2002
  *    Erik Klintskog,     2004 
+ * 
  *  Contributors:
  *    optional, Contributor's name (Contributor's email address)
  * 
@@ -49,8 +50,8 @@ namespace _dss_internal{ //Start namespace
   class CoordinatorFwdChain: public Coordinator{
     friend class ProxyFwdChain;
   private:
-    TwoContainer<HomeReference,int>*  a_refList;
-    FifoQueue< TwoClassContainer<DSite, MsgContainer> > a_deliverQueue;
+    SimpleList<Pair<HomeReference*, int> >    a_refList;
+    SimpleQueue<Pair<DSite*, MsgContainer*> > a_deliverQueue;
     DSite *a_coordPtr;     // the pointer is used when migrating.
   protected:
     CoordFwdChainStatus a_ms:2;
