@@ -106,20 +106,19 @@ private:
 
   class Event{
   public:
-    Event* a_next;
 #ifdef DEBUG_CHECK
     static int a_allocated;
 #endif
   private:
-    Event(const Event& e):a_next(NULL){ DebugCode(a_allocated++); }
-    Event& operator=(const Event& e){ a_next = e.a_next; return *this; }
+    Event(const Event& e) { DebugCode(a_allocated++); }
+    Event& operator=(const Event& e){ return *this; }
   public:
     // If you want to do additional stuff with the object when scheduling
     virtual void event_action(){};
     virtual void event_execute(MsgnLayerEnv* env)=0; //Everything must execute something
     virtual void m_makeGCpreps(){};
 
-    Event():a_next(NULL){ DebugCode(a_allocated++); };
+    Event() { DebugCode(a_allocated++); };
 
     virtual ~Event(){ DebugCode(a_allocated--); };
   };

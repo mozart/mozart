@@ -3,7 +3,7 @@
  *    Erik Klintskog
  * 
  *  Contributors:
- *    optional, Contributor's name (Contributor's email address)
+ *    Raphael Collet (raph@info.ucl.ac.be)
  * 
  *  Copyright:
  *    Organization or Person (Year(s))
@@ -23,7 +23,6 @@
  *  WARRANTIES.
  *
  */
-
  
 #if defined(INTERFACE)
 #pragma implementation "mslBase.hh"
@@ -35,21 +34,20 @@
 #include "msl_dsite.hh"
 #include "msl_msgContainer.hh"
 #include "msl_interRouter.hh"
+
 namespace _msl_internal{
 
-   // ********************** Scheduled Events to be run ASAP ****************************
+  // ********************** Scheduled Events to be run ASAP ****************************
   // 
 #ifdef DEBUG_CHECK
   int Event::a_allocated=0;
 #endif
 
-
   
 
-  
   class ImmediateEvents{
   private:
-    FifoQueue<Event> a_queue;
+    SimpleQueue<Event*> a_queue;
   public:
     void m_appendEvent(Event* const ev){
       a_queue.append(ev);
@@ -61,12 +59,12 @@ namespace _msl_internal{
 
     void executeEvents(MsgnLayerEnv *evn){
       while (!a_queue.isEmpty()){
-	Event *ev = a_queue.drop();
+	Event *ev = a_queue.pop();
 	ev->event_execute(evn);
 	delete ev;
       }
     }
-    void gc(){ a_queue.m_makeGCpreps();  }
+    void gc(){ t_gcList(a_queue); }
   };
   
 
@@ -211,22 +209,19 @@ namespace _msl_internal{
 
   void 
   MsgnLayerEnv::m_gcSweep(){
-      // Collecting all loopback messages. A well desined system
-  // should not have any pending messages at all.
+    // Collecting all loopback messages. A well desined system
+    // should not have any pending messages at all.
+    a_immediateEvents->gc();
   
-  a_immediateEvents->gc();
+    // Give the communication service the chance to 
+    // mark all the DSite objects it is using. 
+    a_comService->m_gcSweep();
   
-  // Give the communication service the chance to 
-  // mark all the DSite objects it is using. 
-  
-  a_comService->m_gcSweep();
-  
-  // Clean the DSite table from unmarsked DSite objects.
-  // It is of nessesarity that all data structures that 
-  // potentially referes DSIte objects have been 
-  // given a chance to mark the DSite objects they refer. 
-  a_siteHT->gcSiteTable();
-  
+    // Clean the DSite table from unmarsked DSite objects.
+    // It is of nessesarity that all data structures that 
+    // potentially referes DSIte objects have been 
+    // given a chance to mark the DSite objects they refer. 
+    a_siteHT->gcSiteTable();
   }
 }
 
