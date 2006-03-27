@@ -125,20 +125,21 @@ namespace _msl_internal{
 
   class IntListDct: public DssCompoundTerm  {
   private:
-    OneTypeContainer<int>* a_list; 
-    OneTypeContainer<int>* a_curPtr; 
+    SimpleList<int> *a_list;
+    Position<int>   a_curPos;     // used for marshaling
 
-    IntListDct(const IntListDct&):a_list(NULL), a_curPtr(NULL){}
+    IntListDct(const IntListDct&):a_list(NULL), a_curPos(){}
     IntListDct& operator=(const IntListDct&){ return *this; }
     
   public:
-    IntListDct(OneTypeContainer<int>*);
+    IntListDct();
+    IntListDct(SimpleList<int>*);
     virtual bool marshal(DssWriteBuffer *bb,MsgnLayerEnv* env); 
     virtual bool unmarshal(DssReadBuffer *bb,MsgnLayerEnv* env); 
     virtual void dispose(); 
     virtual DCT_Types getType() const { return DctT_intList; }
     virtual void resetMarshaling(); 
-    OneTypeContainer<int> *getItems(); 
+    SimpleList<int> *getItems(); 
   };
 
 }

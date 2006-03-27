@@ -50,7 +50,7 @@ namespace _msl_internal{
       //     case DctT_dksMessage:
       //       return new  DksMessageDct(e);
     case DctT_intList:
-      return new IntListDct(NULL);
+      return new IntListDct();
       //     case  DctT_dksSiteVec:
       //       return new DksSiteVecDct();
       //     default:
@@ -148,14 +148,20 @@ namespace _msl_internal{
 
   // *******************************************************
  
-  OneTypeContainer<int> *IntListDct::getItems(){
-    OneTypeContainer<int> *tmp = a_list; 
+  SimpleList<int> *IntListDct::getItems(){
+    SimpleList<int> *it = a_list;
     a_list = NULL; 
-    a_curPtr = NULL;
-    return tmp; 
+    a_curPos = Position<int>();     // reset to an invalid position
+    return it; 
   }
 
-  IntListDct::IntListDct(OneTypeContainer<int>* data):a_list(data), a_curPtr(data){}
+  IntListDct::IntListDct() :
+    a_list(new SimpleList<int>()), a_curPos(a_list) {}
+
+  IntListDct::IntListDct(SimpleList<int>* data) :
+    a_list(data), a_curPos(data) {
+    Assert(data);
+  }
 
   
 #define MIN_DI_SIZE 8
@@ -164,42 +170,39 @@ namespace _msl_internal{
 #define DI_SUSP 2
   
   bool IntListDct::marshal(DssWriteBuffer *bb, MsgnLayerEnv* env){
-    for(;bb->availableSpace() > MIN_DI_SIZE &&  a_curPtr != NULL; a_curPtr = a_curPtr->a_next)
-      {
-	gf_Marshal8bitInt(bb,DI_ENTRY);
-	gf_MarshalNumber(bb,a_curPtr->a_contain1);
-      }
-    if (a_curPtr == NULL){
-      gf_Marshal8bitInt(bb,DI_END);
-      return true;
+    while (a_curPos() && bb->availableSpace() > MIN_DI_SIZE) {
+      gf_Marshal8bitInt(bb, DI_ENTRY);
+      gf_MarshalNumber(bb, *a_curPos);
+      a_curPos++;
     }
-    gf_Marshal8bitInt(bb,DI_SUSP);
-    return false;
+    if (a_curPos.isEmpty()) {
+      gf_Marshal8bitInt(bb,DI_END); return true;
+    } else {
+      gf_Marshal8bitInt(bb,DI_SUSP); return false;
+    }
   }
   
   bool IntListDct::unmarshal(DssReadBuffer *bb,MsgnLayerEnv* env){
     while(true){
       switch(gf_Unmarshal8bitInt(bb)){
       case DI_END:
-	{
-	  a_list = a_curPtr; 
-	  return true; 
-	}
+	a_curPos.init(*a_list);     // reinit position
+	return true; 
       case DI_SUSP:
 	return false; 
       case DI_ENTRY:
-	a_curPtr = new OneTypeContainer<int>(gf_UnmarshalNumber(bb), a_curPtr); 
+	a_curPos.insert(gf_UnmarshalNumber(bb));
       }
     }
   }
   
   void IntListDct::dispose(){
-    t_deleteList(a_curPtr);
+    if (a_list) delete a_list;
     delete this; 
   }
   
   void IntListDct::resetMarshaling(){
-    a_curPtr = a_list;  
+    a_curPos.init(*a_list);
   }
 
   
