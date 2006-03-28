@@ -28,7 +28,14 @@
 #include "dss_templates.hh"
 #include "dss_msgLayerInterface.hh"
 #include "dss_netId.hh"
+
 namespace _dss_internal{
+
+  // raph: LargeMessage's have been introduced because of a (slightly
+  // artificial) limitation in the size of MsgContainer's.  Recently I
+  // removed this limitation, so LargeMessage's should be considered
+  // deprecated.  I might possibly remove them completely from the DSS
+  // soon...
   
   // Externs
   class LargeMessage; 
@@ -43,9 +50,11 @@ namespace _dss_internal{
   // class is restricted in size and thus realy large messages of integers,
   // sites and extdatacontainers should be created by large messages. 
   class LargeMessage{
-    friend void gf_pushLargeMessage(MsgContainer* , LargeMessage* ); 
+    friend void gf_pushLargeMessage(MsgContainer*, LargeMessage*);
+    friend LargeMessage* gf_popLargeMessage(MsgContainer*);
   private:
-    FifoQueue< OneContainer<LrgMsgEle> > a_elements; 
+    SimpleQueue<LrgMsgEle*> a_elements;
+    LargeMessage(SimpleList<LrgMsgEle*> &elements);
   public: 
     void pushInt(int i);
     void pushDSiteVal(DSite* s);
@@ -59,7 +68,6 @@ namespace _dss_internal{
     bool isEmpty();
     LargeMessage* popLM();
     LargeMessage(); 
-    LargeMessage( FifoQueue< OneContainer<LrgMsgEle> > *elements); 
   };
   
   
