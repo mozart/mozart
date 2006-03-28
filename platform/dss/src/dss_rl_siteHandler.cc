@@ -29,57 +29,45 @@
 
 #include "dss_rl_siteHandler.hh"
 #include "dss_comService.hh"
+
 namespace _dss_internal{
 
   
   // ******************************** SiteHandler2 ********************************
 
-  SiteHandler::SiteHandler():a_siteList(NULL){}
+  SiteHandler::SiteHandler() : a_siteList() {}
 
   bool SiteHandler::isEmpty() const { 
-    return (a_siteList == NULL);
+    return a_siteList.isEmpty();
   }
 
 
   void SiteHandler::modifyDSite(DSite* site, int no){
-    TwoContainer<DSite,int>** tmpSite = &a_siteList;
-    while((*tmpSite) != NULL){
-      if ((*tmpSite)->a_contain1 != site){
-	tmpSite = &((*tmpSite)->a_next);
-      } else { // Found site
-	(*tmpSite)->a_contain2 = (*tmpSite)->a_contain2 + no; // decs < 0 => return of Site
-	if ((*tmpSite)->a_contain2 == 0){ // Delete it
-	  TwoContainer<DSite,int>* tmpSiteDel = (*tmpSite);
-	  (*tmpSite) = (*tmpSite)->a_next;
-	  delete tmpSiteDel;
-	}
-	return;
-      }
+    Position<Pair<DSite*, int> > pos(a_siteList);
+    if (pos.find(site)) {
+      // found site
+      (*pos).second += no;     // decs < 0 => return of Site
+      if ((*pos).second == 0) pos.remove();
+    } else {
+      // No site found, insert this one
+      a_siteList.push(makePair(site, no));
     }
-    // No site found, insert this one
-    a_siteList = new TwoContainer<DSite,int>(site, no, a_siteList);
   }
 
 
-  void SiteHandler::gcPreps(){ //Markup sites and remove perms
-    TwoContainer<DSite,int>** tmpSite = &a_siteList;
-    while ((*tmpSite) != NULL){
-      if((*tmpSite)->a_contain1->m_getFaultState() != DSite_GLOBAL_PRM){
-	(*tmpSite)->m_makeGCpreps();
-	tmpSite = &((*tmpSite)->a_next);
+  void SiteHandler::gcPreps() {
+    //Markup sites and remove perms
+    Position<Pair<DSite*, int> > pos(a_siteList);
+    while (pos()) {
+      if ((*pos).first->m_getFaultState() != DSite_GLOBAL_PRM) {
+	(*pos).first->m_makeGCpreps();
+	pos++;
       } else {
-	dssLog(DLL_BEHAVIOR,"RL: Removeing failed site: %s",(*tmpSite)->a_contain1->m_stringrep());
-	TwoContainer<DSite,int>* tmpSiteDel = (*tmpSite);
-	(*tmpSite) = (*tmpSite)->a_next;
-	delete tmpSiteDel;
+	dssLog(DLL_BEHAVIOR,"RL: Removing failed site: %s",
+	       (*pos).first->m_stringrep());
+	pos.remove();
       }
     }
   }
-
-  SiteHandler::~SiteHandler(){
-    t_deleteList(a_siteList);
-  }
-
-  
 
 }
