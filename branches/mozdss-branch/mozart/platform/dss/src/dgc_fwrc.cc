@@ -192,15 +192,14 @@ namespace _dss_internal{
 
   void
   WRC_Remote::m_dropReference(){
-    MsgContainer *msgC;
+    MsgContainer *msgC = m_createHomeMsg();
     int e,d;
-    while(!isEmpty()){
-      msgC = m_createHomeMsg();
+    while (!isEmpty()) {
       removeHead(e,d);
       msgC->pushIntVal(e);
       msgC->pushIntVal(d);
-      m_sendToHome(msgC);
     }
+    m_sendToHome(msgC);
   }
 
 
