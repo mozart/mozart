@@ -45,13 +45,10 @@ namespace _dss_internal{ //Start namespace
   };
 
 
-#define  AopPstEle TwoContainer<PstOutContainerInterface, int>
-#define APE_List   FifoQueue< AopPstEle >
   
   class ProtocolDksBcProxy: public ProtocolProxy, public DksBcClass {
   private: 
-    
-    APE_List a_unsentMsgs; 
+    SimpleQueue<Pair<PstOutContainerInterface*, int> > a_unsentMsgs;
     bool a_isFunctional;
     bool a_isReferenceInstance;
     DksInstance *a_dks; 
