@@ -469,15 +469,18 @@ public:
     while (first) { SimpleNode<T>* n = first; first = n->next; delete n; }
   }
   bool isEmpty() const { return first == NULL; }
-  Position<T> front() { return Position<T>(*this); }
+  Position<T> front() { return Position<T>(this); }
 
   // Only operations push(), pop(), contains() and remove() are
   // provided.  For other operations, use a Position.
   void push(T const &e) { front().push(e); }
   T pop() { return front().pop(); }
-  bool contains(T const &e) const { return front().find(e); }
+  bool contains(T const &e) const {
+    Position<T> p(const_cast<SimpleList<T>*>(this));
+    return p.find(e);
+  }
   bool remove(T const &e) {
-    Position<T> p(*this);
+    Position<T> p(this);
     return p.find(e) ? p.remove(), true : false;
   }
 };
