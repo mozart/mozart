@@ -73,7 +73,7 @@ void ProtocolDksBcManager::makeGCpreps(){
       DssDksBcMessage *msg = new DssDksBcMessage(pdc, static_cast<int>(aop)); 
       a_dks->m_broadcastRing(msg);
     }else{
-      //a_unsentMsgs.append(new AopPstEle(pst, aop, NULL));  
+      // a_unsentMsgs.append(makePair(pst, (int) aop));
       Assert(0); 
     }
     return DSS_PROCEED; 
