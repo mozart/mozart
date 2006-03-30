@@ -39,11 +39,11 @@ namespace _dss_internal{ //Start namespace
 
   class ProtocolOnceOnlyManager : public ProtocolManager {
   private:
-    OneContainer<DSite> *a_proxies;   // the registered proxies
+    SimpleList<DSite*> a_proxies;     // the registered proxies
     bool a_bound;                     // whether the transient is bound
 
     ProtocolOnceOnlyManager(const ProtocolOnceOnlyManager&) :
-      a_proxies(NULL), a_bound(false) {}
+      a_proxies(), a_bound(false) {}
     ProtocolOnceOnlyManager& operator=(const ProtocolOnceOnlyManager&)
     { return *this; }
 
@@ -65,15 +65,15 @@ namespace _dss_internal{ //Start namespace
 
   class ProtocolOnceOnlyProxy : public ProtocolProxy {
   private:
-    OneContainer<GlobalThread> *a_susps;   // suspended threads
-    bool a_bound;                          // whether the transient is bound
+    SimpleList<GlobalThread*> a_susps;   // suspended threads
+    bool a_bound;                        // whether the transient is bound
 
     // Note. a_susps used to be a TwoContainer<GlobalThread,ProtOOop>.
     // I simplified it, because in practice we do not need to know on
     // which operation a GlobalThread suspends.
 
     ProtocolOnceOnlyProxy(const ProtocolOnceOnlyProxy&) :
-      ProtocolProxy(PN_TRANSIENT), a_susps(NULL), a_bound(false) {}
+      ProtocolProxy(PN_TRANSIENT), a_susps(), a_bound(false) {}
     ProtocolOnceOnlyProxy& operator=(const ProtocolOnceOnlyProxy&)
     { return *this; }
 
@@ -88,7 +88,7 @@ namespace _dss_internal{ //Start namespace
 			     ::PstOutContainerInterface**& msg,
 			     const AbsOp& aop);
 
-    virtual bool isWeakRoot() { return (a_susps != NULL); }
+    virtual bool isWeakRoot() { return !a_susps.isEmpty(); }
 
     void makeGCpreps(); //threads should be guarded from the glue as well as...
     void msgReceived(MsgContainer*,DSite*);
