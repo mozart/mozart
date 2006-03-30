@@ -94,33 +94,26 @@ namespace _dss_internal{ //Start namespace
 
   // normal constructor  
   ProtocolOnceOnlyManager::ProtocolOnceOnlyManager(DSite* const site) :
-    a_proxies(new OneContainer<DSite>(site,NULL)), a_bound(false)
-  {}
+    a_proxies(), a_bound(false) {
+    a_proxies.push(site);
+  }
 
   // fill msgC with manager migration info
   void ProtocolOnceOnlyManager::sendMigrateInfo(MsgContainer* msgC) {
-    OneContainer<DSite> *ptr = a_proxies;
-    int len = 0;
-    for (; ptr != NULL; ptr = ptr->a_next) len++;
     msgC->pushIntVal(a_bound);
-    msgC->pushIntVal(len);
-    for (ptr = a_proxies; ptr != NULL; ptr = ptr->a_next)
-      msgC->pushDSiteVal(ptr->a_contain1);
+    for (Position<DSite*> p(a_proxies); p(); p++) msgC->pushDSiteVal(*p);
   }
 
   // constructor called in case of migration
   ProtocolOnceOnlyManager::ProtocolOnceOnlyManager(MsgContainer* const msgC) :
-    a_proxies(NULL)
+    a_proxies()
   {
     a_bound = ((msgC->popIntVal())!=0);
-    for (int len = msgC->popIntVal(); len > 0 ; len--)
-      a_proxies = new OneContainer<DSite>(msgC->popDSiteVal(), NULL);
+    while (!msgC->m_isEmpty()) a_proxies.push(msgC->popDSiteVal());
   }
 
   // destructor
-  ProtocolOnceOnlyManager::~ProtocolOnceOnlyManager() {
-    t_deleteList(a_proxies);
-  }
+  ProtocolOnceOnlyManager::~ProtocolOnceOnlyManager() {}
 
   // gc
   void ProtocolOnceOnlyManager::makeGCpreps(){
@@ -130,11 +123,10 @@ namespace _dss_internal{ //Start namespace
   // register a remote proxy
   void ProtocolOnceOnlyManager::register_remote(DSite* s) {
     // do nothing if the proxy is already registered
-    for (OneContainer<DSite>* p = a_proxies; p; p = p->a_next)
-      if (p->a_contain1 == s) return;
+    if (a_proxies.contains(s)) return;
 
     // insert s in a_proxies
-    a_proxies = new OneContainer<DSite>(s, a_proxies);
+    a_proxies.push(s);
 
     // send an update for changes if necessary
     ::PstOutContainerInterface *ans;
@@ -177,10 +169,10 @@ namespace _dss_internal{ //Start namespace
       if (a_bound) break;
       dssLog(DLL_BEHAVIOR,"ONCE ONLY (%p): Received DEREGISTER %p\n",this,s);
 #ifdef DEBUG_CHECK
-      bool t = t_deleteCompare(&a_proxies, s);
+      bool t = a_proxies.remove(s);
       Assert(t);
 #else
-      t_deleteCompare(&a_proxies, s);
+      a_proxies.remove(s);
 #endif
       break;
     }
@@ -196,12 +188,7 @@ namespace _dss_internal{ //Start namespace
       a_coordinator->m_doe(aop,id,NULL,builder, ans);
       a_bound = true; 
       // send OO_REDIRECT to all proxies
-      while (a_proxies!=NULL) {
-	OneContainer<DSite> *next = a_proxies->a_next;
-	sendRedirect(a_proxies->a_contain1);
-	delete a_proxies;
-	a_proxies = next;
-      }
+      while (!a_proxies.isEmpty()) sendRedirect(a_proxies.pop());
       break;
     }
     case OO_UPDATE_REQUEST: {
@@ -211,13 +198,13 @@ namespace _dss_internal{ //Start namespace
       ::PstInContainerInterface *builder = gf_popPstIn(msg);
       ::PstOutContainerInterface *ans = builder->loopBack2Out();
       // send OO_UPDATE to all proxies except requester
-      for (OneContainer<DSite> *pl = a_proxies; pl != NULL ; pl=pl->a_next) {
-	if (pl->a_contain1 != s) {
+      for (Position<DSite*> p(a_proxies); p(); p++) {
+	if ((*p) != s) {
 	  MsgContainer *msgC = a_coordinator->m_createProxyProtMsg();
 	  msgC->pushIntVal(OO_UPDATE);
 	  msgC->pushIntVal(aop);
 	  gf_pushPstOut(msgC,ans->duplicate());
-	  a_coordinator->m_sendToProxy(pl->a_contain1,msgC);
+	  a_coordinator->m_sendToProxy(*p, msgC);
 	}
       }
       // send OO_UPDATE_CONFIRM to requester
@@ -243,11 +230,11 @@ namespace _dss_internal{ //Start namespace
   
   // simple constructor
   ProtocolOnceOnlyProxy::ProtocolOnceOnlyProxy() :
-    ProtocolProxy(PN_TRANSIENT), a_susps(NULL), a_bound(false) {}
+    ProtocolProxy(PN_TRANSIENT), a_susps(), a_bound(false) {}
 
   // destructor
   ProtocolOnceOnlyProxy::~ProtocolOnceOnlyProxy() {
-    Assert(a_susps == NULL);
+    Assert(a_susps.isEmpty());
     // deregister if this proxy is remote, and the transient is not bound
     if (!a_bound && a_proxy->m_getProxyStatus() == PROXY_STATUS_REMOTE) {
       MsgContainer *msgC  = a_proxy->m_createCoordProtMsg();
@@ -280,7 +267,7 @@ namespace _dss_internal{ //Start namespace
     msg = gf_pushUnboundPstOut(msgC);
     if (a_proxy->m_sendToCoordinator(msgC)) {
       // suspend the current thread until an answer comes back
-      a_susps = new OneContainer<GlobalThread>(th_id, a_susps);
+      a_susps.push(th_id);
       return DSS_SUSPEND;
     }
     // the message could not be sent
@@ -306,7 +293,7 @@ namespace _dss_internal{ //Start namespace
     msg = gf_pushUnboundPstOut(msgC);
     if (a_proxy->m_sendToCoordinator(msgC)) {
       // suspend the current thread until an answer comes back
-      a_susps = new OneContainer<GlobalThread>(th_id, a_susps);
+      a_susps.push(th_id);
       return DSS_SUSPEND;
     }
     // the message could not be sent
@@ -327,14 +314,8 @@ namespace _dss_internal{ //Start namespace
       // already done by the manager...
       if (a_proxy->m_getProxyStatus() != PROXY_STATUS_HOME)
 	a_proxy->installEntityState(cont);
-      // resume all suspensions
-      while (a_susps) {
-	OneContainer<GlobalThread>* next = a_susps->a_next;
-	// not really clear about this
-	(a_susps->a_contain1)->resumeDoLocal(NULL);
-	delete a_susps;
-	a_susps = next;
-      }
+      // resume all suspensions (not really clear about the resumeDoLocal)
+      while (!a_susps.isEmpty()) a_susps.pop()->resumeDoLocal(NULL);
       break;
     }
     case OO_UPDATE_CONFIRM:
@@ -347,7 +328,7 @@ namespace _dss_internal{ //Start namespace
       // resume calling thread if this is a confirmation
       if (msgType == OO_UPDATE_CONFIRM) {
 	GlobalThread* id = gf_popThreadIdVal(msg, a_proxy->m_getEnvironment());
-	t_deleteCompare(&a_susps, id);
+	a_susps.remove(id);
 	id->resumeDoLocal(NULL);
       }
       break; 

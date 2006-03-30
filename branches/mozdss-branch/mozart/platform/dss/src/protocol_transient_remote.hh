@@ -39,14 +39,14 @@ namespace _dss_internal{ //Start namespace
 
   class ProtocolTransientRemoteManager : public ProtocolManager {
   private:
-    OneContainer<DSite> *a_proxies;   // the registered proxies
+    SimpleList<DSite*> a_proxies;     // the registered proxies
     bool a_bound;                     // whether the transient is bound
     DSite *a_current;                 // the proxy that has the write token
 
     // Invariant: a_current is not a member of a_proxies if it is remote.
 
     ProtocolTransientRemoteManager(const ProtocolTransientRemoteManager&):
-      a_proxies(NULL), a_bound(false), a_current(NULL) {}
+      a_proxies(), a_bound(false), a_current(NULL) {}
     ProtocolTransientRemoteManager&
     operator=(const ProtocolTransientRemoteManager&) { return *this; }
 
@@ -72,12 +72,12 @@ namespace _dss_internal{ //Start namespace
     friend class ProtocolTransientRemoteManager;
 
   private:
-    OneContainer<GlobalThread> *a_susps;   // suspended threads
+    SimpleList<GlobalThread*> a_susps;     // suspended threads
     bool a_bound;                          // whether the transient is bound
     bool a_writeToken;                     // whether this has the write token
 
     ProtocolTransientRemoteProxy(const ProtocolTransientRemoteProxy&):
-      ProtocolProxy(PN_NO_PROTOCOL), a_susps(NULL), a_bound(false),
+      ProtocolProxy(PN_NO_PROTOCOL), a_susps(), a_bound(false),
       a_writeToken(false) {}
     ProtocolTransientRemoteProxy&
     operator=(const ProtocolTransientRemoteProxy&) { return *this; }
@@ -96,7 +96,7 @@ namespace _dss_internal{ //Start namespace
 			     ::PstOutContainerInterface**& msg,
 			     const AbsOp& aop);
 
-    bool isWeakRoot() { return (a_susps != NULL); }
+    bool isWeakRoot() { return !a_susps.isEmpty(); }
 
     void makeGCpreps(); //threads should be guarded from the glue as well as...
     void msgReceived(::MsgContainer*,DSite*);

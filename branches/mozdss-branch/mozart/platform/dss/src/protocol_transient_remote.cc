@@ -133,36 +133,28 @@ namespace _dss_internal{ //Start namespace
   
   // normal constructor
   ProtocolTransientRemoteManager::ProtocolTransientRemoteManager(DSite* const site) :
-    a_proxies(new OneContainer<DSite>(site,NULL)),
-    a_bound(false), a_current(site)
-  {}
+    a_proxies(), a_bound(false), a_current(site) {
+    a_proxies.push(site);
+  }
 
   // fill msgC with manager migration info
   void ProtocolTransientRemoteManager::sendMigrateInfo(MsgContainer* msgC) {
-    OneContainer<DSite> *ptr = a_proxies;
-    int len = 0;
-    for (; ptr != NULL; ptr = ptr->a_next) len++;
     msgC->pushIntVal(a_bound);
     msgC->pushDSiteVal(a_current);
-    msgC->pushIntVal(len);
-    for (ptr = a_proxies; ptr != NULL; ptr = ptr->a_next)
-      msgC->pushDSiteVal(ptr->a_contain1);
+    for (Position<DSite*> p(a_proxies); p(); p++) msgC->pushDSiteVal(*p);
   }
 
   // constructor called in case of migration
   ProtocolTransientRemoteManager::ProtocolTransientRemoteManager(::MsgContainer* const msgC) :
-    a_proxies(NULL), a_bound(false), a_current(NULL)
+    a_proxies(), a_bound(false), a_current(NULL)
   {
     a_bound = ((msgC->popIntVal())!=0);
     a_current = msgC->popDSiteVal();
-    for (int len = msgC->popIntVal(); len > 0 ; len--)
-      a_proxies = new OneContainer<DSite>(msgC->popDSiteVal(), NULL);
+    while (!msgC->m_isEmpty()) a_proxies.push(msgC->popDSiteVal());
   }
 
   // destructor
-  ProtocolTransientRemoteManager::~ProtocolTransientRemoteManager() {
-    t_deleteList(a_proxies);
-  }
+  ProtocolTransientRemoteManager::~ProtocolTransientRemoteManager() {}
 
   // gc
   void ProtocolTransientRemoteManager::makeGCpreps() {
@@ -172,7 +164,7 @@ namespace _dss_internal{ //Start namespace
   // register a remote proxy at dest
   void ProtocolTransientRemoteManager::register_remote(DSite *dest) {
     // simply add dest to a_proxies
-    a_proxies = new OneContainer<DSite>(dest, a_proxies);
+    a_proxies.push(dest);
 
     // send an update for changes if necessary
     PstOutContainerInterface *ans;
@@ -194,9 +186,7 @@ namespace _dss_internal{ //Start namespace
 	   a_coordinator->m_getEnvironment()->a_myDSite->m_stringrep()); 
 
     // return immediately if the proxy is already registered
-    if (dest == a_current) return false;
-    for (OneContainer<DSite>* p = a_proxies; p; p = p->a_next)
-      if (p->a_contain1 == dest) return false;
+    if (dest == a_current || a_proxies.contains(dest)) return false;
 
     // the proxy is not registered yet
     if (a_current == a_coordinator->m_getEnvironment()->a_myDSite) {
@@ -251,10 +241,10 @@ namespace _dss_internal{ //Start namespace
 	
       } else {
 #ifdef DEBUG_CHECK
-	bool t = t_deleteCompare(&a_proxies, s);
+	bool t = a_proxies.remove(s);
 	Assert(t);
 #else
-	t_deleteCompare(&a_proxies, s);
+	a_proxies.remove(s);
 #endif
       }
       break;
@@ -283,9 +273,8 @@ namespace _dss_internal{ //Start namespace
       // All proxies, except the home proxy and the current proxy, are
       // informed about the binding.
       DSite *mySite = a_coordinator->m_getEnvironment()->a_myDSite;
-      while (a_proxies!=NULL) {
-	OneContainer<DSite> *next = a_proxies->a_next; 
-	DSite *si = a_proxies->a_contain1;
+      while (!a_proxies.isEmpty()) {
+	DSite *si = a_proxies.pop();
 	if (si == mySite) {
 	  if (msgType == TR_BOUND) {
 	    // Notify the home proxy that the transient has been bound.
@@ -297,8 +286,6 @@ namespace _dss_internal{ //Start namespace
 	  Assert(si != a_current);
 	  sendRedirect(si);
 	}
-	delete a_proxies;
-	a_proxies = next;
       }
       break;
     }
@@ -327,13 +314,13 @@ namespace _dss_internal{ //Start namespace
       PstOutContainerInterface *ans = builder->loopBack2Out();
       DSite *requester = id->m_getGUIdSite();
       // Send TR_UPDATE to all proxies except the requester
-      for (OneContainer<DSite> *p = a_proxies; p; p = p->a_next) {
-	if (p->a_contain1 != requester && p->a_contain1 != a_current) {
+      for (Position<DSite*> p(a_proxies); p(); p++) {
+	if ((*p) != requester && (*p) != a_current) {
 	  MsgContainer *msgC = a_coordinator->m_createProxyProtMsg();
 	  msgC->pushIntVal(TR_UPDATE);
 	  msgC->pushIntVal(aop);
 	  gf_pushPstOut(msgC, ans->duplicate());
-	  a_coordinator->m_sendToProxy(p->a_contain1, msgC);
+	  a_coordinator->m_sendToProxy(*p, msgC);
 	}
       }
       // Send TR_UPDATE_CONFIRM to requester
@@ -353,13 +340,13 @@ namespace _dss_internal{ //Start namespace
       PstInContainerInterface *builder = gf_popPstIn(msg);
       PstOutContainerInterface *ans = builder->loopBack2Out();
       // send update to all proxies except the current proxy
-      for (OneContainer<DSite> *p = a_proxies; p; p = p->a_next) {
-	if (p->a_contain1 != s) {
+      for (Position<DSite*> p(a_proxies); p(); p++) {
+	if ((*p) != s) {
 	  MsgContainer *msgC = a_coordinator->m_createProxyProtMsg();
 	  msgC->pushIntVal(TR_UPDATE);
 	  msgC->pushIntVal(aop);
 	  gf_pushPstOut(msgC, ans->duplicate());
-	  a_coordinator->m_sendToProxy(p->a_contain1, msgC);
+	  a_coordinator->m_sendToProxy(*p, msgC);
 	}
       }
       delete ans;     // because we haven't sent this one
@@ -379,13 +366,13 @@ namespace _dss_internal{ //Start namespace
 
   // constructor
   ProtocolTransientRemoteProxy::ProtocolTransientRemoteProxy():
-    ProtocolProxy(PN_TRANSIENT_REMOTE), a_susps(NULL),
+    ProtocolProxy(PN_TRANSIENT_REMOTE), a_susps(),
     a_bound(false), a_writeToken(false)
   {}
 
   // destructor
   ProtocolTransientRemoteProxy::~ProtocolTransientRemoteProxy(){
-    Assert(a_susps == NULL);
+    Assert(a_susps.isEmpty());
     // deregister if this proxy is remote, and the transient is not
     // bound.  Don't care about the write token, the manager knows.
     if (!a_bound && a_proxy->m_getProxyStatus() == PROXY_STATUS_REMOTE) {
@@ -403,14 +390,8 @@ namespace _dss_internal{ //Start namespace
 
   // resume all suspensions
   void ProtocolTransientRemoteProxy::wkSuspThrs() {
-    OneContainer<GlobalThread>* next;
-    while (a_susps) {
-      // not really clear about this
-      (a_susps->a_contain1)->resumeDoLocal(NULL);
-      next = a_susps->a_next;
-      delete a_susps;
-      a_susps = next; 
-    }
+    // not really clear about the resumeDoLocal
+    while (!a_susps.isEmpty()) a_susps.pop()->resumeDoLocal(NULL);
   }
 
   // initiate a bind
@@ -442,7 +423,7 @@ namespace _dss_internal{ //Start namespace
       msg = gf_pushUnboundPstOut(msgC);
       if (a_proxy->m_sendToCoordinator(msgC)) {
 	dssLog(DLL_BEHAVIOR,"TRANSIENT REMOTE (%p): Send Bind",this);
-	a_susps = new OneContainer<GlobalThread>(th_id, a_susps);
+	a_susps.push(th_id);
 	return DSS_SUSPEND;
       } else {
 	msg = NULL;
@@ -479,7 +460,7 @@ namespace _dss_internal{ //Start namespace
       msg = gf_pushUnboundPstOut(msgC);
       if (a_proxy->m_sendToCoordinator(msgC)) {
 	dssLog(DLL_BEHAVIOR,"TRANSIENT REMOTE (%p): Send Bind",this);
-	a_susps = new OneContainer<GlobalThread>(th_id, a_susps);
+	a_susps.push(th_id);
 	return DSS_SUSPEND;
       } else {
 	msg = NULL;
@@ -559,7 +540,7 @@ namespace _dss_internal{ //Start namespace
       // resume calling thread if this is a confirmation
       if (msgType == TR_UPDATE_CONFIRM) {
 	GlobalThread* id = gf_popThreadIdVal(msg, a_proxy->m_getEnvironment());
-	t_deleteCompare(&a_susps, id);
+	a_susps.remove(id);
 	id->resumeDoLocal(NULL);
       }
       break;
