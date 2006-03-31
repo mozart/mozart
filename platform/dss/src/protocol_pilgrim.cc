@@ -29,9 +29,10 @@
 #endif
 
 #include "protocol_pilgrim.hh"
+
 namespace _dss_internal{ //Start namespace
 
-  // **************************  Migratory Token  ***************************
+  // **************************  Pilgrim Token  ***************************
     
     enum Pilgrim_Message {
       PLGM_REGISTER_REQUEST,
@@ -46,43 +47,54 @@ namespace _dss_internal{ //Start namespace
       PLGM_INSERTED_IN_RING
       
     };
-    
-    
-    //     static char* plgMsgVector[PLGM_REMOVED_FROM_RING + 1] = 
-    //       {
-    // 	"register",
-    // 	"set_next", 
-    // 	"deregsiter", 
-    // 	"contents", 
-    // 	"sole_holder",
-    // 	"clear_next",
-    // 	"removed"
-    //       };
-    
-    //     static char* plgSttVector[ PLGT_SOLE_MEMBER + 1] = 
-    //       {
-    // 	"non_member", 
-    // 	"member", 
-    // 	"spawning",
-    // 	"waiting",
-    // 	"sole_member"
-    //       };
-  
-  
-    RingElement::RingElement(DSite* s, RingElement* p, RingElement* n):
-      a_site(s), a_prev(p), a_next(n){;}
+
+
+
+  bool SiteRing::find(DSite* const s) {
+    if (isEmpty()) return false;
+    SiteElement* pos = pred;
+    do {
+      if (pos->next->site == s) { pred = pos; return true; }
+      pos = pos->next;
+    } while (pos != pred);
+    return false;
+  }
+
+  void SiteRing::insert(DSite* const s) { // before the current element
+    if (pred == NULL) {
+      pred = new SiteElement(s, NULL);
+      pred->next = pred;
+    } else {
+      pred->next = new SiteElement(s, pred->next);
+    }
+  }
+
+  void SiteRing::remove() { // current element
+    SiteElement* cur = pred->next;
+    pred = (cur == pred ? NULL : cur->next); // check for emptyness
+    delete cur;
+  }
+
+  void SiteRing::makeGCpreps() {
+    if (pred) {
+      SiteElement* pos = pred;
+      do {
+	pos->site->m_makeGCpreps();
+	pos = pos->next;
+      } while (pos != pred);
+    }
+  }
+
     
     
     ProtocolPilgrimManager::ProtocolPilgrimManager(DSite* s):
-      a_ringEle(NULL), a_enterLeaveQueue(){
-      a_ringEle = new RingElement(s,NULL, NULL);
-      a_ringEle->a_next = a_ringEle; 
-      a_ringEle->a_prev = a_ringEle; 
+      a_ring(), a_enterLeaveQueue(){
+      a_ring.insert(s);
     }
   
     ProtocolPilgrimProxy::ProtocolPilgrimProxy(DSite *s):
       ProtocolProxy(PN_PILGRIM_STATE),  a_next(s), a_state(PLGT_SOLE_MEMBER),
-      a_Pqueue(), a_jobs(0), a_use(1){
+      a_operations(), a_jobs(0), a_use(1){
     }
     
     bool
@@ -94,55 +106,26 @@ namespace _dss_internal{ //Start namespace
     
     void
     ProtocolPilgrimManager::m_enterLeave(){
+      Pair<DSite*, bool> elem = a_enterLeaveQueue.peek();
+      DSite* sender = elem.first;
       
-      TwoContainer<DSite, bool> *first = a_enterLeaveQueue.peek(); 
-      DSite *sender = first->a_contain1; 
-      //      printf("%s: %d %s\n", first->a_contain2?"Enter":"Leave", a_coordinator->m_getGUIdIndex(), sender->stringrep()); 
-      
-      if(first->a_contain2)// enter 
-	{
-	  RingElement *next = a_ringEle->a_next; 
-	  RingElement *re = new RingElement(sender, a_ringEle, next);
-	  gf_sendManagerToProxy(a_coordinator,a_ringEle->a_site,PLGM_NEW_NEXT,sender);
-	  a_ringEle->a_next = re; 
-	  next->a_prev = re; 
-	}
-      else // leave
-	{
-	  RingElement *ctr = a_ringEle; 
-	  RingElement *rm = NULL;
-	  do{
-	    if(ctr->a_site == sender){
-	      rm = ctr; 
-	      break; 
-	    }
-	    ctr = ctr->a_next; 
-	  }while(ctr!=a_ringEle);
-	  Assert(rm != NULL);
-	 
-	  if (a_ringEle->a_next == a_ringEle)
-	    {
-	      gf_sendManagerToProxy(a_coordinator, sender, PLGM_SOLE_HOLDER);
-	      return; 
-	    }
-	  RingElement *prev = rm->a_prev; 
-	  RingElement *next = rm->a_next;
-	  
-	  prev->a_next = next; 
-	  next->a_prev = prev; 
-	  gf_sendManagerToProxy(a_coordinator, prev->a_site, PLGM_CLEAR_NEXT, next->a_site);
-	  if(rm == a_ringEle)
-	    a_ringEle = rm->a_next;
-	  delete rm; 
-	}
-      // RingElement *ptr = a_ringEle; 
-      //      printf("Ring\n"); 
-      //      do{
-      //	printf("%s\n", ptr->a_site->stringrep()); 
-      //	ptr = ptr->a_next; 
-      //    }while(ptr!=a_ringEle); 
+      if (elem.second) { // enter 
+	gf_sendManagerToProxy(a_coordinator, a_ring.current(),
+			      PLGM_NEW_NEXT, sender);
+	a_ring.insert(sender);
 
-	
+      } else { // leave
+	bool t = a_ring.find(sender);
+	Assert(t);
+
+	if (a_ring.predecessor() == sender) { // sender is left alone
+	  gf_sendManagerToProxy(a_coordinator, sender, PLGM_SOLE_HOLDER);
+	} else { // let the predecessor reconnect
+	  a_ring.remove();
+	  gf_sendManagerToProxy(a_coordinator, a_ring.predecessor(),
+				PLGM_CLEAR_NEXT, a_ring.current());
+	}
+      }
     }
     
     void
@@ -151,24 +134,19 @@ namespace _dss_internal{ //Start namespace
       switch(message) {
       case PLGM_REGISTER_REQUEST:{
 	bool doDirect = a_enterLeaveQueue.isEmpty(); 
-	a_enterLeaveQueue.append(new TwoContainer<DSite,bool>(sender, true, NULL)); 
-	if (doDirect) 
-	  m_enterLeave(); 
+	a_enterLeaveQueue.append(makePair(sender, true)); 
+	if (doDirect) m_enterLeave(); 
 	break;
       }
-      case PLGM_ENTER_LEAVE_DONE:
-	{
-	  TwoContainer<DSite,bool>* ele = a_enterLeaveQueue.drop();
-	  delete ele; 
-	  if(!a_enterLeaveQueue.isEmpty())
-	    m_enterLeave();
-	  break; 
-	}
+      case PLGM_ENTER_LEAVE_DONE: {
+	a_enterLeaveQueue.pop();
+	if (!a_enterLeaveQueue.isEmpty()) m_enterLeave();
+	break; 
+      }
       case PLGM_DEREGISTER_REQUEST:{
 	bool doDirect = a_enterLeaveQueue.isEmpty(); 
-	a_enterLeaveQueue.append(new TwoContainer<DSite,bool>(sender, false, NULL)); 
-	if (doDirect) 
-	  m_enterLeave(); 
+	a_enterLeaveQueue.append(makePair(sender, false)); 
+	if (doDirect) m_enterLeave(); 
 	break;
       }
       default:
@@ -178,8 +156,7 @@ namespace _dss_internal{ //Start namespace
 
 
     ProtocolPilgrimManager::ProtocolPilgrimManager(::MsgContainer* msg):
-      ProtocolManager(), a_ringEle(NULL),
-      a_enterLeaveQueue(){
+      ProtocolManager(), a_ring(), a_enterLeaveQueue(){
       Assert(0);
     }
   
@@ -211,12 +188,9 @@ namespace _dss_internal{ //Start namespace
 
     void
     ProtocolPilgrimProxy::m_resumeOperations(){
-      OneContainer<GlobalThread>* cont;
-      while(!a_Pqueue.isEmpty()){
-	cont =  a_Pqueue.drop(); // Drop a container..
-	if ((cont->a_contain1)->resumeDoLocal(NULL) == WRV_CONTINUING)
+      while (!a_operations.isEmpty()) {
+	if (a_operations.pop()->resumeDoLocal(NULL) == WRV_CONTINUING)
 	  a_jobs ++; 
-	delete cont; // .. and delete it
       }
     }
 
@@ -238,7 +212,7 @@ namespace _dss_internal{ //Start namespace
 	  // afford more than one invokatins to avoid startvation
 	case PLGT_RING_MEMBER:
 	  {
-	    a_Pqueue.append(new OneContainer<GlobalThread>(id,NULL));
+	    a_operations.append(id);
 	    return DSS_SUSPEND;
 	  }
 	case PLGT_SOLE_MEMBER: 
@@ -291,7 +265,7 @@ namespace _dss_internal{ //Start namespace
 	  PstInContainerInterface* buildcont =  gf_popPstIn(msg);
 	  a_proxy->installEntityState(buildcont);
 	  a_state = PLGT_SPAWNING_JOBS;
-	  bool noOps = a_Pqueue.isEmpty();
+	  bool noOps = a_operations.isEmpty();
 	  m_resumeOperations();
 	  if(a_next == (a_proxy->m_getEnvironment())->a_myDSite)
 	    {
@@ -332,7 +306,7 @@ namespace _dss_internal{ //Start namespace
 	break; 
       case PLGM_REMOVED_FROM_RING:{
 	gf_sendProxyToProxy(a_proxy,a_next, PLGM_PROXY_FLUSH);
-	if(a_state == PLGT_WAITING_FOR_JOBS || !a_Pqueue.isEmpty()){
+	if(a_state == PLGT_WAITING_FOR_JOBS || !a_operations.isEmpty()){
 	  // A race condition, new requests arrived while deregsestring, 
 	  // reregestier
 	  m_requestToken();
@@ -367,12 +341,8 @@ namespace _dss_internal{ //Start namespace
 
     void 
     ProtocolPilgrimManager::makeGCpreps(){
-      RingElement *ctr = a_ringEle; 
-      do{
-	ctr->a_site->m_makeGCpreps();
-	ctr = ctr->a_next; 
-      }while(ctr!=a_ringEle);
-      a_enterLeaveQueue.m_makeGCpreps();
+      a_ring.makeGCpreps();
+      t_gcList(a_enterLeaveQueue);
     }
 
     void
@@ -396,7 +366,7 @@ namespace _dss_internal{ //Start namespace
   ProtocolPilgrimProxy::makeGCpreps()
   { 
     if (a_next != NULL) a_next->m_makeGCpreps();
-    a_Pqueue.m_makeGCpreps();
+    t_gcList(a_operations);
   }
   
 } //End namespace
