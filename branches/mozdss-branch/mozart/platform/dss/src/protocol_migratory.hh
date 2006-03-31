@@ -23,6 +23,7 @@
  *  WARRANTIES.
  *
  */
+
 #ifndef __PROTOCOL_MIGRATORY_HH
 #define __PROTOCOL_MIGRATORY_HH
 
@@ -33,9 +34,10 @@
 #include "dssBase.hh"
 #include "protocols.hh"
 #include "dss_templates.hh"
+
 namespace _dss_internal{ //Start namespace
 
-// **************************  Migratory Token  ***************************
+  // **************************  Migratory Token  ***************************
   enum Migratory_Token {
     MIGT_EMPTY,
     MIGT_HERE,
@@ -70,7 +72,10 @@ namespace _dss_internal{ //Start namespace
   private:
     DSite*    a_next;     // NULL
     Migratory_Token a_token;  //empty
-    FifoQueue< TwoContainer<GlobalThread,Migratory_Operation> > a_Pqueue; // int queue
+    SimpleQueue<Pair<Migratory_Operation, GlobalThread*> > a_operations;
+
+    // a_operations contains pairs of the form <MIGO_ACCESS, tid> and
+    // <MIGO_FORWARD, NULL>.
 
     void requestToken();
     void forwardToken();
@@ -78,9 +83,8 @@ namespace _dss_internal{ //Start namespace
 
     ProtocolMigratoryProxy(const ProtocolMigratoryProxy&):
       ProtocolProxy(PN_MIGRATORY_STATE),a_next(NULL), a_token(MIGT_EMPTY),
-      a_Pqueue(){
-      //a_Pqueue(FifoQueue< TwoContainer<GlobalThread,Migratory_Operation> >()){
-    }
+      a_operations()
+    {}
 
     ProtocolMigratoryProxy& operator=(const ProtocolMigratoryProxy&){ return *this; }
 
@@ -105,7 +109,7 @@ namespace _dss_internal{ //Start namespace
     bool clearWeakRoot();    
     
     OpRetVal protocol_Access(GlobalThread* const, ::PstOutContainerInterface**&);
-    void makeGCpreps() { if (a_next != NULL) a_next->m_makeGCpreps(); }
+    void makeGCpreps();
     void msgReceived(::MsgContainer*,DSite*);
     
     virtual void remoteInitatedOperationCompleted(DssOperationId* opId,::PstOutContainerInterface* pstOut) {;} 
