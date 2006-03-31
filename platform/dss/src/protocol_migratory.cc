@@ -30,6 +30,7 @@
 
 #include "protocol_migratory.hh"
 #include "dssBase.hh"
+
 namespace _dss_internal{ //Start namespace
 
 // **************************  Migratory Token  ***************************
@@ -47,7 +48,7 @@ namespace _dss_internal{ //Start namespace
 
 
   ProtocolMigratoryProxy::ProtocolMigratoryProxy():
-    ProtocolProxy(PN_MIGRATORY_STATE),a_next(NULL), a_token(MIGT_HERE),a_Pqueue(){}
+    ProtocolProxy(PN_MIGRATORY_STATE),a_next(NULL), a_token(MIGT_HERE),a_operations(){}
   
   bool 
   ProtocolMigratoryProxy::m_initRemoteProt(DssReadBuffer*)
@@ -124,28 +125,29 @@ namespace _dss_internal{ //Start namespace
 
   void
   ProtocolMigratoryProxy::resumeOperations(){
-    TwoContainer<GlobalThread,Migratory_Operation>* cont;
-    Assert(!a_Pqueue.isEmpty() || (a_proxy->m_getProxyStatus() == PROXY_STATUS_HOME && a_Pqueue.isEmpty())); 
-    while(!a_Pqueue.isEmpty()){
-      cont =  a_Pqueue.drop(); // Drop a container..
-      dssLog(DLL_BEHAVIOR,"MigratoryProxy::resumeOperation: %d, Thread:%d",cont->a_contain2,cont->a_contain1);
-      switch(cont->a_contain2){
+    Assert(!a_operations.isEmpty() ||
+	   a_proxy->m_getProxyStatus() == PROXY_STATUS_HOME);
+    while (!a_operations.isEmpty()) {
+      Pair<Migratory_Operation, GlobalThread*> op = a_operations.pop();
+      dssLog(DLL_BEHAVIOR,"MigratoryProxy::resumeOperation: %d, Thread:%d",
+	     op.first, op.second);
+      switch (op.first) {
       case MIGO_ACCESS:
-	(cont->a_contain1)->resumeDoLocal(NULL); // ERIK!!
+	(op.second)->resumeDoLocal(NULL); // ERIK!!
 	break;
       case MIGO_FORWARD:
-	forwardToken(); // always forward token and if...
-	if (!a_Pqueue.isEmpty()) requestToken(); // Queue is not empty then request it again
+	forwardToken(); // always forward token and...
+	// if Queue is not empty then request it again
+	if (!a_operations.isEmpty()) requestToken();
 	return;
       default:
 	Assert(0);
-	a_proxy->m_getEnvironment()->a_map->GL_error("Migratory Proxy: error, unknown operation %d",cont->a_contain2);
+	a_proxy->m_getEnvironment()->a_map->GL_error("Migratory Proxy: error, unknown operation %d", op.first);
 	return;
       }
-      delete cont; // .. and delete it
     }
     if(a_next != NULL){ // How did we get here (no lock anymore)?
-      Assert(0);
+      // Assert(0);
       forwardToken();
     }
   }
@@ -156,14 +158,13 @@ namespace _dss_internal{ //Start namespace
     dssLog(DLL_BEHAVIOR,"MigratoryProxy::Access operation (%d)",a_token);
     out = NULL; // Never transmit
     switch(a_token){
-    case MIGT_EMPTY:
-      requestToken();
-      a_Pqueue.append(new TwoContainer<GlobalThread,Migratory_Operation>(id,MIGO_ACCESS,NULL));
-      return DSS_SUSPEND;
     case MIGT_HERE:
       return DSS_PROCEED;
+    case MIGT_EMPTY:
+      requestToken();
+      // fall through
     case MIGT_REQUESTED:
-      a_Pqueue.append(new TwoContainer<GlobalThread,Migratory_Operation>(id,MIGO_ACCESS,NULL));
+      a_operations.append(makePair(MIGO_ACCESS, id));
       return DSS_SUSPEND;
     default:
       Assert(0);
@@ -181,7 +182,7 @@ namespace _dss_internal{ //Start namespace
       if (a_token == MIGT_HERE)
 	forwardToken();
       else
-	a_Pqueue.append(new TwoContainer<GlobalThread,Migratory_Operation>(0,MIGO_FORWARD,NULL));
+	a_operations.append(makePair(MIGO_FORWARD, (GlobalThread*) NULL));
       break;
     }
     case MIGM_TOKEN:{
@@ -214,5 +215,13 @@ namespace _dss_internal{ //Start namespace
   }
 
 
+  void
+  ProtocolMigratoryProxy::makeGCpreps() {
+    if (a_next) a_next->m_makeGCpreps();
+
+    Position<Pair<Migratory_Operation, GlobalThread*> > pos;
+    for (pos(a_operations); pos(); pos++)
+      if ((*pos).first == MIGO_ACCESS) (*pos).second->m_makeGCpreps();
+  }
 
 } //End namespace
