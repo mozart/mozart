@@ -23,6 +23,7 @@
  *  WARRANTIES.
  *
  */
+
 #ifndef __PROTOCOL_PILGRIM_HH
 #define __PROTOCOL_PILGRIM_HH
 
@@ -33,9 +34,10 @@
 #include "dssBase.hh"
 #include "protocols.hh"
 #include "dss_templates.hh"
+
 namespace _dss_internal{ //Start namespace
 
-// **************************  Migratory Token  ***************************
+  // **************************  Pilgrim Token  ***************************
   enum Pilgrim_Token {
     PLGT_NON_MEMBER,
     PLGT_RING_MEMBER,
@@ -44,27 +46,41 @@ namespace _dss_internal{ //Start namespace
     PLGT_SOLE_MEMBER
   };
 
-  class RingElement{
-  public: 
-    DSite *a_site; 
-    RingElement  *a_prev; 
-    RingElement  *a_next; 
-    RingElement(DSite*, RingElement*, RingElement*);
-  private:
-    RingElement(const RingElement&):a_site(NULL), a_prev(NULL),a_next(NULL){}
-    RingElement operator=(const RingElement&){ return *this;} 
+
+  // A ring of sites (elements are single-linked)
+  struct SiteElement {
+    DSite* site;
+    SiteElement* next;
+    SiteElement(DSite* s, SiteElement* n) : site(s), next(n) {}
   };
-  
+
+  // This class maintains a ref to a current node and its neighbors
+  // (predecessor and successor) in the ring.
+  class SiteRing {
+  private:
+    SiteElement* pred;     // the predecessor of the current element
+  public:
+    bool isEmpty() const { return pred == NULL; }
+    DSite* predecessor() const { return pred->site; }
+    DSite* current() const { return pred->next->site; }
+    DSite* successor() const { return pred->next->next->site; }
+    bool find(DSite* const s);
+    void insert(DSite* const s); // before the current element
+    void remove(); // current element
+    void makeGCpreps();
+    SiteRing() : pred(NULL) {}
+    ~SiteRing() { while (!isEmpty()) remove(); }
+  };
+
 
   class ProtocolPilgrimManager:public ProtocolManager {
   private:
-    RingElement *a_ringEle;
-    FifoQueue<  TwoContainer<DSite, bool> > a_enterLeaveQueue; 
+    SiteRing a_ring;
+    SimpleQueue<Pair<DSite*, bool> > a_enterLeaveQueue;
     void m_enterLeave();
 
     ProtocolPilgrimManager(const ProtocolPilgrimManager&):
-      ProtocolManager(), a_ringEle(NULL),
-      a_enterLeaveQueue(){}
+      ProtocolManager(), a_ring(), a_enterLeaveQueue(){}
     ProtocolPilgrimManager& operator=(const ProtocolPilgrimManager&){ return *this; }
 
   public:
@@ -81,7 +97,7 @@ namespace _dss_internal{ //Start namespace
   private:
     DSite*    a_next;     // NULL
     Pilgrim_Token a_state;  //empty
-    FifoQueue< OneContainer<GlobalThread> > a_Pqueue; // int queue
+    SimpleQueue<GlobalThread*> a_operations;
     int a_jobs; 
     int a_use;
     
@@ -92,7 +108,7 @@ namespace _dss_internal{ //Start namespace
 
     ProtocolPilgrimProxy(const ProtocolPilgrimProxy&):
       ProtocolProxy(PN_NO_PROTOCOL), a_next(NULL), a_state(PLGT_NON_MEMBER),
-      a_Pqueue(), a_jobs(0),a_use(0){}
+      a_operations(), a_jobs(0),a_use(0){}
     ProtocolPilgrimProxy& operator=(const ProtocolPilgrimProxy&){ return *this; }
 
   public:
