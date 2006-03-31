@@ -528,7 +528,7 @@ public:
 
   // queue operations: append(), peek(), and pop().
   void append(T const &e) { afterlast.insert(e); }
-  T& peek() const { return front().element(); }
+  T& peek() { return front().element(); }
   T pop() {
     T e = front().pop();
     if (isEmpty()) afterlast(*this);
