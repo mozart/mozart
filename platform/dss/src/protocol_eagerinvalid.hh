@@ -23,6 +23,7 @@
  *  WARRANTIES.
  *
  */
+
 #ifndef __PROTOCOL_EAGERINVALID_HH
 #define __PROTOCOL_EAGERINVALID_HH
 
@@ -36,7 +37,6 @@
 
 namespace _dss_internal{ //Start namespace
 
-// **************************  Migratory Token  ***************************
   enum ECItokenStatus {
     ECITS_VALID,
     ECITS_INVALID
@@ -44,23 +44,24 @@ namespace _dss_internal{ //Start namespace
 
   class ProtocolEagerInvalidManager:public ProtocolManager {
   private:
-    TwoContainer<DSite, bool>* a_readers;
-    FifoQueue<OneContainer<DSite> > a_writers; 
+    SimpleList<Pair<DSite*, bool> > a_readers;
+    SimpleQueue<DSite*> a_writers;
 
     ProtocolEagerInvalidManager(const ProtocolEagerInvalidManager&):
-      a_readers(NULL), a_writers(){}
+      a_readers(), a_writers(){}
     ProtocolEagerInvalidManager& operator=(const ProtocolEagerInvalidManager&){ return *this; }
 								    
   public:
     ProtocolEagerInvalidManager(DSite *mysite):
-      a_readers(NULL), a_writers(){ 
-      a_readers = new  TwoContainer<DSite, bool>(mysite, true,NULL); 
+      a_readers(), a_writers() {
+      a_readers.push(makePair(mysite, true));
     }
     ProtocolEagerInvalidManager(::MsgContainer*);
-    ~ProtocolEagerInvalidManager(){ t_deleteList(a_readers); }
+    ~ProtocolEagerInvalidManager() {}
     void makeGCpreps();
     void msgReceived(::MsgContainer*,DSite*);
     void sendMigrateInfo(::MsgContainer*); 
+
   private: 
     void m_invalidateReaders();
     void m_sendWriteRight();
@@ -72,13 +73,14 @@ namespace _dss_internal{ //Start namespace
 
   class ProtocolEagerInvalidProxy:public ProtocolProxy{
   private:
-    OneContainer<GlobalThread> *a_readers; 
-    OneContainer<GlobalThread> *a_writers; 
+    SimpleQueue<GlobalThread*> a_readers;
+    SimpleQueue<GlobalThread*> a_writers;
     ECItokenStatus  a_token;
 
     ProtocolEagerInvalidProxy(const ProtocolEagerInvalidProxy&):
-      ProtocolProxy(PN_EAGER_INVALID), a_readers(NULL), a_writers(NULL), a_token(ECITS_INVALID){}
+      ProtocolProxy(PN_EAGER_INVALID), a_readers(), a_writers(), a_token(ECITS_INVALID){}
     ProtocolEagerInvalidProxy& operator=(const ProtocolEagerInvalidProxy&){ return *this; }
+
   public:
     ProtocolEagerInvalidProxy();
     ProtocolEagerInvalidProxy(DssReadBuffer*);
@@ -86,8 +88,8 @@ namespace _dss_internal{ //Start namespace
     OpRetVal protocol_Read( GlobalThread* const th_id, PstOutContainerInterface**& msg);
     OpRetVal protocol_Write( GlobalThread* const th_id, PstOutContainerInterface**& msg);
 
-    void makeGCpreps(){;}
-    bool isWeakRoot(){ return (a_readers != NULL || a_writers != NULL); };
+    void makeGCpreps();
+    bool isWeakRoot(){ return !a_readers.isEmpty() || !a_writers.isEmpty(); }
 
     void msgReceived(::MsgContainer*,DSite*);
     ~ProtocolEagerInvalidProxy();
@@ -97,9 +99,9 @@ namespace _dss_internal{ //Start namespace
     virtual void remoteInitatedOperationCompleted(DssOperationId* opId,
 						  ::PstOutContainerInterface* pstOut){;}  
     void localInitatedOperationCompleted(){Assert(0);} 
+
   private: 
     void m_writeDone(); 
-    
   };
 
 } //End namespace
