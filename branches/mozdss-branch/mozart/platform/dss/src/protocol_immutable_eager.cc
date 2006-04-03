@@ -28,6 +28,7 @@
 #endif
 
 #include "protocol_immutable_eager.hh"
+
 namespace _dss_internal{ //Start namespace
 
   
@@ -40,20 +41,16 @@ namespace _dss_internal{ //Start namespace
     sender->m_sendMsg(msgC);
   }
   
-  ProtocolImmutableEagerProxy::ProtocolImmutableEagerProxy():ProtocolProxy(PN_IMMUTABLE_EAGER), stateHolder(true), a_readers(NULL){;} 
+  ProtocolImmutableEagerProxy::ProtocolImmutableEagerProxy() :
+    ProtocolProxy(PN_IMMUTABLE_EAGER), stateHolder(true), a_readers() {} 
   
   void
   ProtocolImmutableEagerProxy::msgReceived(MsgContainer *msg, DSite* u){
     PstInContainerInterface* load = gf_popPstIn(msg);
     a_proxy->installEntityState(load);
-    while(a_readers!=NULL){
-      OneContainer<GlobalThread>* ptr = a_readers->a_next; 
-      (a_readers->a_contain1)->resumeDoLocal(NULL);
-      delete a_readers;
-      a_readers  = ptr;
-    }    
+    while (!a_readers.isEmpty())
+      a_readers.pop()->resumeDoLocal(NULL);
     a_proxy->a_AbsEnt_Interface->m_getAEreference()->accessMediator()->localize();
-    
     stateHolder = true;   
   }
 
@@ -75,13 +72,16 @@ namespace _dss_internal{ //Start namespace
   ProtocolImmutableEagerProxy::protocol_send(GlobalThread* const th_id){
     // Check if we it is a home proxy, in such cases the 
     // operation can be performed without sending messages. 
-    if (stateHolder){
-      return DSS_PROCEED;
-    }
+    if (stateHolder) return DSS_PROCEED;
     // If the structure is not transfered, the threads should suspend until 
     // the the structure is complete.
-    a_readers = new OneContainer<GlobalThread>(th_id, a_readers);
+    a_readers.push(th_id);
     return (DSS_SUSPEND);
+  }
+
+  void
+  ProtocolImmutableEagerProxy::makeGCpreps() {
+    t_gcList(a_readers);
   }
   
 } //end namespace

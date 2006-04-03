@@ -34,8 +34,8 @@
 #include "dss_comService.hh"
 #include "protocols.hh"
 #include "dss_templates.hh"
-namespace _dss_internal{ //Start namespace
 
+namespace _dss_internal{ //Start namespace
 
   class ProtocolImmutableLazyManager:public ProtocolManager{
   public:
@@ -46,7 +46,7 @@ namespace _dss_internal{ //Start namespace
   
   class ProtocolImmutableLazyProxy:public ProtocolProxy{
     bool stateHolder: true; 
-    OneContainer<GlobalThread>* a_readers; 
+    SimpleList<GlobalThread*> a_readers; 
   public: 
     ProtocolImmutableLazyProxy();
     ~ProtocolImmutableLazyProxy(){};
@@ -56,7 +56,9 @@ namespace _dss_internal{ //Start namespace
     virtual void remoteInitatedOperationCompleted(DssOperationId*, PstOutContainerInterface*); 
     virtual void localInitatedOperationCompleted(); 
     virtual bool isWeakRoot(){ return stateHolder; }; // The glue should know if a thread is relying on proxy
+    virtual void makeGCpreps();
     virtual bool m_initRemoteProt(DssReadBuffer*); 
   };
+
 } //End namespace
 #endif
