@@ -29,198 +29,158 @@
 #endif
 
 #include "protocol_lazyinvalid.hh"
+
 namespace _dss_internal{ //Start namespace
 
-// **************************  Migratory Token  ***************************
+  enum CacheInvalid_Message {
+    LCI_INVALID_READ,     // m2p
+    LCI_READ_TOKEN,       // m2p
+    LCI_READ_INVALIDATED, // p2m
+    LCI_READ_REQUEST,     // p2m
 
-    enum CacheInvalid_Message {
-      LCI_INVALID_READ,     // m2p
-      LCI_READ_TOKEN,       // m2p
-      LCI_READ_INVALIDATED, // p2m
-      LCI_READ_REQUEST,     // p2m
+    LCI_WRITE_REQUEST,    // p2m
+    LCI_WRITE_TOKEN,      // m2p
+    LCI_WRITE_INVALIDATED,// p2m
+    LCI_INVALID_WRITE     // m2p
+  };
 
-      LCI_WRITE_REQUEST,    // p2m
-      LCI_WRITE_TOKEN,      // m2p
-      LCI_WRITE_INVALIDATED,// p2m
-      LCI_INVALID_WRITE     // m2p
-    };
 
-    /*
-    static char *msg_strings[] = { "LCI_INVALID_READ",
-				   "LCI_READ_TOKEN",      
-				   "LCI_READ_INVALIDATED",
-				   "LCI_READ_REQUEST",   
-				   "LCI_WRITE_REQUEST", 
-				   "LCI_WRITE_TOKEN",   
-				   "LCI_WRITE_INVALIDATED",
-				   "LCI_INVALID_WRITE"     
-				   
-				   };
-    */
-  
-    
-  
+
   void 
   ProtocolLazyInvalidManager::m_updateOneReader(DSite *target){
     MsgContainer *msgC = a_coordinator->m_createProxyProtMsg();
     gf_createSndMsg(msgC,  LCI_READ_TOKEN, a_coordinator->retrieveEntityState()); 
     target->m_sendMsg(msgC); 
   }
-    
-    
-    
-  
-  
-    void 
-  ProtocolLazyInvalidManager::m_handleNextRequest()
-  {
-    if(a_writer!=NULL)
-      {
-	MsgContainer *msgC = a_coordinator->m_createProxyProtMsg();
-	gf_createSndMsg(msgC,  LCI_INVALID_WRITE); 
-	a_writer->m_sendMsg(msgC); 
+
+  void 
+  ProtocolLazyInvalidManager::m_handleNextRequest() {
+    if (a_writer!=NULL) {
+      MsgContainer *msgC = a_coordinator->m_createProxyProtMsg();
+      gf_createSndMsg(msgC,  LCI_INVALID_WRITE); 
+      a_writer->m_sendMsg(msgC); 
+
+    } else {
+      // Get all queued read requests
+      while (!a_requests.isEmpty() && a_requests.peek().second) {
+	Pair<DSite*, bool> req = a_requests.pop();
+	a_readers.push(req);
+	m_updateOneReader(req.first);
       }
-    else
-      {
-	while(!a_requests.isEmpty() && a_requests.peek()->a_contain2) // Get all queued read requests
-	  {
-	    TwoContainer<DSite, bool> *cnt= a_requests.drop(); 
-	    cnt->a_next = a_readers; 
-	    a_readers = cnt; 
-	    m_updateOneReader(cnt->a_contain1); 
+      if (!a_requests.isEmpty()) {
+	// Invalidate all readers, dont invalidate the next writer
+	DSite* writer = a_requests.peek().first;
+	Position<Pair<DSite*, bool> > r(a_readers);
+	while (r()) {
+	  if ((*r).first == writer) {
+	    r.remove();
+	  } else {
+	    MsgContainer *msgC = a_coordinator->m_createProxyProtMsg();
+	    gf_createSndMsg(msgC,  LCI_INVALID_READ); 
+	    (*r).first->m_sendMsg(msgC);
+	    r++;
 	  }
-	if (!a_requests.isEmpty())
-	  {
-	    // Invalidate all readers, dont invalidate the next writer, AND if 
-	    // the readers contained no other process that teh writer, send imediatly
-	    DSite *WriterSite = a_requests.peek()->a_contain1;
-	    TwoContainer<DSite, bool>** ptr = &a_readers;
-	    while((*ptr)!=NULL){
-	      DSite *rdr = (*ptr)->a_contain1; 
-	      if ( rdr == WriterSite){
-		TwoContainer<DSite, bool>* tmp = *ptr; 
-		(*ptr) = (*ptr)->a_next; 
-		delete tmp; 
-	      }
-	      else{
-		MsgContainer *msgC = a_coordinator->m_createProxyProtMsg();
-		gf_createSndMsg(msgC,  LCI_INVALID_READ); 
-		rdr->m_sendMsg(msgC);
-		ptr = &(*ptr)->a_next;
-	      }
-	    }
-	    if (a_readers == NULL) 
-	      {
-		m_sendWriteRight();
-		a_writer = WriterSite; 
-		
-		// So, we have now passed the state to a writer. However, if there 
-		// are more requests in the Pipe, they must be handled.
-		if (!a_requests.isEmpty())
-		  m_handleNextRequest();
-	      }
-	  }
+	}
+	// optimization: if the readers contained no other process
+	// that the writer, send immediately
+	if (a_readers.isEmpty()) {
+	  m_sendWriteRight();
+	  a_writer = writer;
+	  // So, we have now passed the state to a writer.  If there
+	  // are more requests in the Pipe, they must be handled.
+	  if (!a_requests.isEmpty()) m_handleNextRequest();
+	}
       }
+    }
   }
-  
-  
+
+
   void 
   ProtocolLazyInvalidManager::m_sendWriteRight(){
-    TwoContainer<DSite,bool>* ptr = a_requests.drop();
+    Pair<DSite*, bool> req = a_requests.pop();
     MsgContainer *msgC = a_coordinator->m_createProxyProtMsg();
     gf_createSndMsg(msgC, LCI_WRITE_TOKEN, a_coordinator->retrieveEntityState()); 
-    (ptr->a_contain1)->m_sendMsg(msgC);
-    
-    delete ptr; 
+    req.first->m_sendMsg(msgC);
   }
   
   void
   ProtocolLazyInvalidManager::msgReceived(::MsgContainer* msg, DSite* sender){
     int message = msg->popIntVal();
     switch(message) {
-    case LCI_WRITE_REQUEST:
-      {
-	if (a_requests.isEmpty()){
-	  a_requests.append(new TwoContainer<DSite,bool>(sender, false, NULL)); 
-	  m_handleNextRequest();
-	}
-	else{
-	  a_requests.append(new TwoContainer<DSite,bool>(sender, false, NULL));
-	}
-	break; 
-      }
-    case LCI_WRITE_INVALIDATED:
-      {
-	PstInContainerInterface* buildcont =  gf_popPstIn(msg); 
-	a_coordinator->installEntityState(buildcont); 
-	Assert(sender == a_writer);
-	a_writer = NULL;
-	Assert(a_readers == NULL); 
-	a_readers = new TwoContainer<DSite, bool>(sender, true, NULL); 
-	m_handleNextRequest();
-	break; 
-      }
-    case LCI_READ_INVALIDATED: 
-      {
-	
-	DebugCode(bool found =) t_deleteCompare(&a_readers, sender); 
-	Assert(found); 
-	if(a_readers == NULL)
-	  m_handleNextRequest();
-	break; 
-      }
-    case LCI_READ_REQUEST:
-      {
-	if (a_requests.isEmpty()){
-	  a_requests.append(new TwoContainer<DSite,bool>(sender, true, NULL));
-	  m_handleNextRequest();
-	}
-	else {
-	  a_requests.append(new TwoContainer<DSite,bool>(sender, true, NULL));
-	}
-	break;
-      }
+    case LCI_WRITE_REQUEST: {
+      bool ready = a_requests.isEmpty();
+      a_requests.append(makePair(sender, false));
+      if (ready) m_handleNextRequest();
+      break;
+    }
+    case LCI_WRITE_INVALIDATED: {
+      PstInContainerInterface* buildcont =  gf_popPstIn(msg); 
+      a_coordinator->installEntityState(buildcont); 
+      Assert(sender == a_writer);
+      a_writer = NULL;
+      Assert(a_readers.isEmpty());
+      a_readers.push(makePair(sender, true));
+      m_handleNextRequest();
+      break;
+    }
+    case LCI_READ_INVALIDATED: {
+      Position<Pair<DSite*, bool> > p(a_readers);
+      if (p.find(sender)) p.remove(); else { Assert(0); }
+      if (a_readers.isEmpty()) m_handleNextRequest();
+      break;
+    }
+    case LCI_READ_REQUEST: {
+      bool ready = a_requests.isEmpty();
+      a_requests.append(makePair(sender, true));
+      if (ready) m_handleNextRequest();
+      break;
+    }
     default:
       Assert(0);
     }
   }
 
 
-    void ProtocolLazyInvalidManager::sendMigrateInfo(::MsgContainer* msg){
-    int len = 0; 
-    TwoContainer<DSite, bool> *ptr = a_readers;
-    for(; ptr != NULL ; ptr = ptr->a_next)
-      {
-	len++; 
-      }
+  void ProtocolLazyInvalidManager::sendMigrateInfo(::MsgContainer* msg){
+    int len = 0;
+    for (Position<Pair<DSite*,bool> > p(a_readers); p(); p++) len++;
     msg->pushIntVal(len);
-    for(ptr = a_readers; ptr != NULL ; ptr = ptr->a_next){
-      msg->pushDSiteVal(ptr->a_contain1);
-      msg->pushIntVal(static_cast<bool>(ptr->a_contain2));
-      
+    for (Position<Pair<DSite*,bool> > p(a_readers); p(); p++) {
+      msg->pushDSiteVal((*p).first);
+      msg->pushIntVal((*p).second);
     }
-    Assert(0) // We need to move the writers as well!
-      }
-    
-    ProtocolLazyInvalidManager::ProtocolLazyInvalidManager(::MsgContainer* msg):
-      a_readers(NULL), a_requests(), a_writer(NULL){
-      int len = msg->popIntVal();
-      for(;len>0; len --) 
-	a_readers = new TwoContainer<DSite,bool>(msg->popDSiteVal(),static_cast<bool>(msg->popIntVal()), a_readers);
+    // send writer and requests as well
+    msg->pushDSiteVal(a_writer);
+    for (Position<Pair<DSite*,bool> > p(a_readers); p(); p++) {
+      msg->pushDSiteVal((*p).first);
+      msg->pushIntVal((*p).second);
     }
-    
-    ProtocolLazyInvalidManager::ProtocolLazyInvalidManager(DSite *mysite):
-      a_readers(NULL),a_requests(), a_writer(mysite)
-    {} 
+  }
+
+  ProtocolLazyInvalidManager::ProtocolLazyInvalidManager(::MsgContainer* msg):
+    a_readers(), a_requests(), a_writer(NULL)
+  {
+    int len = msg->popIntVal();
+    for (;len>0; len --)
+      a_readers.push(makePair(msg->popDSiteVal(), (bool) msg->popIntVal()));
+    // then get writer and requests
+    a_writer = msg->popDSiteVal();
+    while (!msg->m_isEmpty())
+      a_requests.append(makePair(msg->popDSiteVal(), (bool) msg->popIntVal()));
+  }
+
+  ProtocolLazyInvalidManager::ProtocolLazyInvalidManager(DSite *mysite):
+    a_readers(),a_requests(), a_writer(mysite)
+  {} 
     
 
 
   ProtocolLazyInvalidProxy::ProtocolLazyInvalidProxy():
-    ProtocolProxy(PN_LAZY_INVALID),a_readers(NULL), a_writers(NULL), a_token(LCITS_WRITE_TOKEN){ }
+    ProtocolProxy(PN_LAZY_INVALID),a_readers(), a_writers(), a_token(LCITS_WRITE_TOKEN){ }
 
 
   ProtocolLazyInvalidProxy::ProtocolLazyInvalidProxy(DssReadBuffer*):
-    ProtocolProxy(PN_LAZY_INVALID),a_readers(NULL), a_writers(NULL), a_token(LCITS_INVALID){}
+    ProtocolProxy(PN_LAZY_INVALID),a_readers(), a_writers(), a_token(LCITS_INVALID){}
   
 
   bool
@@ -230,8 +190,8 @@ namespace _dss_internal{ //Start namespace
   }
 
   ProtocolLazyInvalidProxy::~ProtocolLazyInvalidProxy(){
-    Assert(a_writers == NULL); 
-    Assert(a_readers == NULL); 
+    Assert(a_writers.isEmpty());
+    Assert(a_readers.isEmpty());
   }
 
   void
@@ -255,9 +215,8 @@ namespace _dss_internal{ //Start namespace
     msg = NULL;
     switch(a_token){
     case LCITS_INVALID:
-      if(a_readers == NULL)
-	m_requestReadToken();
-      a_readers = new OneContainer<GlobalThread>(th_id,a_readers);
+      if (a_readers.isEmpty()) m_requestReadToken();
+      a_readers.append(th_id);
       return DSS_SUSPEND;
     case  LCITS_READ_TOKEN:
     case  LCITS_WRITE_TOKEN:
@@ -272,15 +231,13 @@ namespace _dss_internal{ //Start namespace
   ProtocolLazyInvalidProxy::protocol_Write(GlobalThread* const th_id, PstOutContainerInterface**& msg){
     dssLog(DLL_BEHAVIOR,"LazyInvalidProxy::Write");
     msg = NULL;
-    if (a_token == LCITS_WRITE_TOKEN){
+    if (a_token == LCITS_WRITE_TOKEN) {
       return DSS_PROCEED;
+    } else {
+      if (a_writers.isEmpty()) m_requestWriteToken();
+      a_writers.append(th_id);
+      return DSS_SUSPEND;
     }
-    
-    if (a_writers == NULL)
-      m_requestWriteToken();
-    
-    a_writers = new OneContainer<GlobalThread>(th_id, a_writers); 
-    return DSS_SUSPEND;
   }
 
 	  
@@ -292,42 +249,34 @@ namespace _dss_internal{ //Start namespace
       ::PstInContainerInterface* buildcont =  gf_popPstIn(msg);
       a_token = LCITS_READ_TOKEN;
       a_proxy->installEntityState(buildcont);
-      while(a_readers!=NULL){
-	OneContainer<GlobalThread>* ptr = a_readers->a_next; 
-	(a_readers->a_contain1)->resumeDoLocal(NULL);
-	delete a_readers;
-	a_readers  = ptr;
-      }
+      // wake up readers
+      while (!a_readers.isEmpty())
+	a_readers.pop()->resumeDoLocal(NULL);
       break; 
     }
     case LCI_WRITE_TOKEN:{
       a_token = LCITS_WRITE_TOKEN;
       PstInContainerInterface* buildcont =  gf_popPstIn(msg);
       a_proxy->installEntityState(buildcont);
-      while(a_writers != NULL){
-	OneContainer<GlobalThread> *tmp = a_writers; 
-	(a_writers->a_contain1)->resumeDoLocal(NULL);
-	a_writers = a_writers->a_next;
-	delete tmp; 
-      }
+      // wake up writers
+      while (!a_writers.isEmpty())
+	a_writers.pop()->resumeDoLocal(NULL);
       break; 
     }
-    case LCI_INVALID_READ:
-      {
-	a_token = LCITS_INVALID;
-	MsgContainer *msgC  = a_proxy->m_createCoordProtMsg();
-	gf_createSndMsg(msgC, LCI_READ_INVALIDATED);
-	a_proxy->m_sendToCoordinator(msgC); 
-	break; 
-      }
-    case LCI_INVALID_WRITE:
-      {	
-	a_token = LCITS_READ_TOKEN;
-	MsgContainer *msgC  = a_proxy->m_createCoordProtMsg();
-	gf_createSndMsg(msgC, LCI_WRITE_INVALIDATED, a_proxy->retrieveEntityState());
-	a_proxy->m_sendToCoordinator(msgC); 
-	break; 
-      }
+    case LCI_INVALID_READ: {
+      a_token = LCITS_INVALID;
+      MsgContainer *msgC  = a_proxy->m_createCoordProtMsg();
+      gf_createSndMsg(msgC, LCI_READ_INVALIDATED);
+      a_proxy->m_sendToCoordinator(msgC);
+      break;
+    }
+    case LCI_INVALID_WRITE: {	
+      a_token = LCITS_READ_TOKEN;
+      MsgContainer *msgC  = a_proxy->m_createCoordProtMsg();
+      gf_createSndMsg(msgC, LCI_WRITE_INVALIDATED, a_proxy->retrieveEntityState());
+      a_proxy->m_sendToCoordinator(msgC);
+      break;
+    }
     default:
       Assert(0);
     }
@@ -335,8 +284,14 @@ namespace _dss_internal{ //Start namespace
 
 
   void ProtocolLazyInvalidManager::makeGCpreps(){
-    a_requests.m_makeGCpreps();
-    t_gcList(a_readers); 
-    if(a_writer) a_writer->m_makeGCpreps(); 
+    t_gcList(a_readers);
+    t_gcList(a_requests);
+    if (a_writer) a_writer->m_makeGCpreps();
   }
+
+  void ProtocolLazyInvalidProxy::makeGCpreps(){
+    t_gcList(a_readers);
+    t_gcList(a_writers);
+  }
+
 } //End namespace

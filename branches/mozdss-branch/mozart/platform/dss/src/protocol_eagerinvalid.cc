@@ -29,9 +29,8 @@
 #endif
 
 #include "protocol_eagerinvalid.hh"
-namespace _dss_internal{ //Start namespace
 
-// **************************  Migratory Token  ***************************
+namespace _dss_internal{ //Start namespace
 
   namespace {
     enum CacheInvalid_Message {
@@ -44,56 +43,41 @@ namespace _dss_internal{ //Start namespace
       ECI_WRITE_TOKEN,     // m2p
       ECI_WRITE_DONE       // p2m
     };
-    /*    
-    static char *msg_strings[] = { "ECI_INVALID_READ",
-				   "ECI_READ_TOKEN",      
-				   "ECI_READ_INVALIDATED",
-				   "ECI_REGISTER_READ",   
-				   "ECI_DEREGISTER_READ", 
-				   "ECI_WRITE_REQUEST",   
-				   "ECI_WRITE_TOKEN",     
-				   "ECI_WRITE_DONE" };
-    
-    */
+
     enum ECI_pendType{
       ECIPT_WRITE,
       ECIPT_READ
     };
-
   }
   
   
   void  ProtocolEagerInvalidManager::printStatus(){
     printf("Writers:\n");
-    for(OneContainer<DSite> *ptr = a_writers.peek(); ptr!=NULL; ptr = ptr->a_next)
-      printf("%s\n",ptr->a_contain1->m_stringrep()); 
+    for (Position<DSite*> p(a_writers); p(); p++)
+      printf("%s\n", (*p)->m_stringrep()); 
     printf("Readers:\n"); 
-    for(TwoContainer<DSite,bool> *ptr2 = a_readers; ptr2!=NULL; ptr2 = ptr2->a_next)
-      printf("%s ----> %s\n",ptr2->a_contain1->m_stringrep(), ptr2->a_contain2?"+":"-"); 
+    for (Position<Pair<DSite*,bool> > p(a_readers); p(); p++)
+      printf("%s ----> %s\n", (*p).first->m_stringrep(), (*p).second?"+":"-");
   }
 
   
   void 
-  ProtocolEagerInvalidManager::m_invalidateReaders()
-  {
-    DSite *WriterSite = a_writers.peek()->a_contain1;
+  ProtocolEagerInvalidManager::m_invalidateReaders() {
+    Assert(!a_writers.isEmpty());
+    DSite* writer = a_writers.peek();
     bool hasNotSent = true; 
-    for(TwoContainer<DSite, bool>* ptr = a_readers; ptr!=NULL; ptr = ptr->a_next)
-      {
-	if (ptr->a_contain1 == WriterSite){
-	  ptr->a_contain2 = false; 
-	}
-	else
-	  {
-	    MsgContainer *msgC = a_coordinator->m_createProxyProtMsg();
-	    gf_createSndMsg(msgC, ECI_INVALID_READ); 
-	    Assert(ptr->a_contain2);
-	    (ptr->a_contain1)->m_sendMsg(msgC);
-	    hasNotSent = false; 
-	}
+    for (Position<Pair<DSite*,bool> > p(a_readers); p(); p++) {
+      if ((*p).first == writer) {
+	(*p).second = false;
+      } else {
+	MsgContainer *msgC = a_coordinator->m_createProxyProtMsg();
+	gf_createSndMsg(msgC, ECI_INVALID_READ); 
+	Assert((*p).second);
+	(*p).first->m_sendMsg(msgC);
+	hasNotSent = false; 
       }
-    if(hasNotSent)
-      m_sendWriteRight();
+    }
+    if (hasNotSent) m_sendWriteRight();
   }
 
   void 
@@ -106,27 +90,23 @@ namespace _dss_internal{ //Start namespace
   
 
   void 
-  ProtocolEagerInvalidManager::m_updateAllReaders(DSite *exclude)
-  {
-    for(TwoContainer<DSite, bool>* ptr = a_readers; ptr!=NULL; ptr = ptr->a_next)
-      {
-	if (ptr->a_contain1 != exclude){
-	  m_updateOneReader(ptr->a_contain1);
-	}
-	// The current holder does not have to have a copy, howver, 
-	// he was marked as invalidated when the invalidation for his
-	// previous read vent out... That tok me quite a while to 
-	// understand .... Erik
-	ptr->a_contain2 = true; 
-      }
+  ProtocolEagerInvalidManager::m_updateAllReaders(DSite *exclude) {
+    for (Position<Pair<DSite*,bool> > p(a_readers); p(); p++) {
+      if ((*p).first != exclude) m_updateOneReader((*p).first);
+      // The current holder does not have to have a copy, howver, 
+      // he was marked as invalidated when the invalidation for his
+      // previous read vent out... That tok me quite a while to 
+      // understand .... Erik
+      (*p).second = true;
+    }
   }
   
   void 
   ProtocolEagerInvalidManager::m_sendWriteRight(){
-    OneContainer<DSite>* ptr = a_writers.peek();
+    DSite* writer = a_writers.peek();
     MsgContainer *msgC = a_coordinator->m_createProxyProtMsg();
     gf_createSndMsg(msgC, ECI_WRITE_TOKEN); 
-    (ptr->a_contain1)->m_sendMsg(msgC);
+    writer->m_sendMsg(msgC);
   }
   
   void
@@ -136,59 +116,47 @@ namespace _dss_internal{ //Start namespace
     //    printStatus();
     //    printf("\n"); 
     switch(message) {
-    case ECI_WRITE_REQUEST:
-      {
-	bool clearReads      = a_writers.isEmpty();
-	a_writers.append(new OneContainer<DSite>(sender, NULL)); 
-	if (clearReads)
-	  m_invalidateReaders();
-	break; 
+    case ECI_WRITE_REQUEST: {
+      bool clearReads = a_writers.isEmpty();
+      a_writers.append(sender); 
+      if (clearReads) m_invalidateReaders();
+      break;
+    }
+    case ECI_WRITE_DONE: {
+      DSite* writer = a_writers.pop();
+      Assert(writer == sender);
+      PstInContainerInterface* buildcont =  gf_popPstIn(msg);  
+      a_coordinator->installEntityState(buildcont); 
+      m_updateAllReaders(sender); 
+      if(!a_writers.isEmpty()) m_invalidateReaders();
+      break; 
+    }
+    case ECI_READ_INVALIDATED: {
+      bool allFalse = false;
+      for (Position<Pair<DSite*,bool> > p(a_readers); p(); p++) {
+	if ((*p).first == sender) { (*p).second = false; }
+	allFalse = allFalse || (*p).second; 
       }
-    case ECI_WRITE_DONE:
-      {
-	OneContainer<DSite>* ele = a_writers.drop();
-	Assert(ele->a_contain1 == sender);
-	delete ele; 
-	PstInContainerInterface* buildcont =  gf_popPstIn(msg);  
-	a_coordinator->installEntityState(buildcont); 
-	m_updateAllReaders(sender); 
-	if(!a_writers.isEmpty())
-	  m_invalidateReaders();
-	break; 
+      if (!allFalse) m_sendWriteRight();
+      break; 
+    }
+    case ECI_REGISTER_READ: {
+      if (a_writers.isEmpty()) {
+	a_readers.push(makePair(sender, true));
+	m_updateOneReader(sender);
+      } else {
+	a_readers.push(makePair(sender, false));
       }
-    case ECI_READ_INVALIDATED: 
-      {
-	bool allFalse = false; 
-	for(TwoContainer<DSite,bool>* ptr = a_readers; ptr!= NULL; ptr = ptr->a_next)
-	  {
-	    if(ptr->a_contain1 == sender) {
-	      ptr->a_contain2 = false; 
-	    }
-	    allFalse = allFalse || ptr->a_contain2; 
-	  }
-	if (!allFalse)
-	  {
-	    m_sendWriteRight();
-	  }
-	break; 
-      }
-    case ECI_REGISTER_READ:
-      {
-	if (a_writers.isEmpty()){
-	  a_readers = new TwoContainer<DSite,bool>(sender, true, a_readers);
-	  m_updateOneReader(sender);
-	}
-	else {
-	  a_readers = new TwoContainer<DSite,bool>(sender, false, a_readers);
-	}
-	break;
-      }
-    case  ECI_DEREGISTER_READ:
-      {
-	if(!t_deleteCompare(&a_readers, sender))
-	  a_coordinator->m_getEnvironment()->a_map->GL_warning("Deregesetering non reegistered site");
-	break;
-      }
+      break;
+    }
+    case ECI_DEREGISTER_READ: {
+      Position<Pair<DSite*,bool> > p(a_readers);
+      if (p.find(sender))
+	p.remove();
+      else
+	a_coordinator->m_getEnvironment()->a_map->GL_warning("Deregesetering non reegistered site");
+      break;
+    }
     default:
       Assert(0);
     }
@@ -198,35 +166,37 @@ namespace _dss_internal{ //Start namespace
 
 
   void ProtocolEagerInvalidManager::sendMigrateInfo(MsgContainer* msg){
-    int len = 0; 
-    TwoContainer<DSite, bool> *ptr = a_readers;
-    for(; ptr != NULL ; ptr = ptr->a_next)
-      {
-	len++; 
-      }
+    int len = 0;
+    for (Position<Pair<DSite*,bool> > p(a_readers); p(); p++) len++;
     msg->pushIntVal(len);
-    for(ptr = a_readers; ptr != NULL ; ptr = ptr->a_next){
-      msg->pushDSiteVal(ptr->a_contain1);
-      msg->pushIntVal(static_cast<bool>(ptr->a_contain2));
-      
+    for (Position<Pair<DSite*,bool> > p(a_readers); p(); p++) {
+      msg->pushDSiteVal((*p).first);
+      msg->pushIntVal((*p).second);
     }
-    Assert(0) // We need to move the writers as well!
+    // move the writers as well
+    for (Position<DSite*> p(a_writers); p(); p++)
+      msg->pushDSiteVal(*p);
   }
   
-  ProtocolEagerInvalidManager::ProtocolEagerInvalidManager(MsgContainer* msg):a_readers(NULL),a_writers(){
+  ProtocolEagerInvalidManager::ProtocolEagerInvalidManager(MsgContainer* msg) :
+    a_readers(),a_writers()
+  {
     int len = msg->popIntVal();
-    for(;len>0; len --) 
-      a_readers = new TwoContainer<DSite,bool>(msg->popDSiteVal(),static_cast<bool>(msg->popIntVal()), a_readers);
+    for (;len>0; len--)
+      a_readers.push(makePair(msg->popDSiteVal(), (bool) msg->popIntVal()));
+    // then get writers
+    while (!msg->m_isEmpty())
+      a_writers.append(msg->popDSiteVal());
   }
   
 
   
   ProtocolEagerInvalidProxy::ProtocolEagerInvalidProxy():
-    ProtocolProxy(PN_EAGER_INVALID),a_readers(NULL), a_writers(NULL), a_token(ECITS_VALID){ }
+    ProtocolProxy(PN_EAGER_INVALID),a_readers(), a_writers(), a_token(ECITS_VALID){ }
 
 
   ProtocolEagerInvalidProxy::ProtocolEagerInvalidProxy(DssReadBuffer*):
-    ProtocolProxy(PN_EAGER_INVALID),a_readers(NULL), a_writers(NULL), a_token(ECITS_INVALID){
+    ProtocolProxy(PN_EAGER_INVALID),a_readers(), a_writers(), a_token(ECITS_INVALID){
   }
   
 
@@ -240,8 +210,8 @@ namespace _dss_internal{ //Start namespace
   }
 
   ProtocolEagerInvalidProxy::~ProtocolEagerInvalidProxy(){
-    Assert(a_writers == NULL); 
-    Assert(a_readers == NULL); 
+    Assert(a_writers.isEmpty()); 
+    Assert(a_readers.isEmpty()); 
     if (a_proxy->m_getProxyStatus() == PROXY_STATUS_HOME) return;
     MsgContainer *msgC  = a_proxy->m_createCoordProtMsg();
     gf_createSndMsg(msgC,ECI_DEREGISTER_READ);
@@ -253,7 +223,6 @@ namespace _dss_internal{ //Start namespace
     MsgContainer *msgC  = a_proxy->m_createCoordProtMsg();
     gf_createSndMsg(msgC,  ECI_WRITE_DONE, a_proxy->retrieveEntityState());
     a_proxy->m_sendToCoordinator(msgC); 
-    
   }
   
   OpRetVal
@@ -262,7 +231,7 @@ namespace _dss_internal{ //Start namespace
     msg = NULL;
     switch(a_token){
     case ECITS_INVALID:
-      a_readers = new OneContainer<GlobalThread>(th_id,a_readers);
+      a_readers.append(th_id);
       return DSS_SUSPEND;
     case ECITS_VALID:{
       // 	  printf("Count the thread!\n");
@@ -278,12 +247,12 @@ namespace _dss_internal{ //Start namespace
   ProtocolEagerInvalidProxy::protocol_Write(GlobalThread* const th_id, PstOutContainerInterface**& msg){
     dssLog(DLL_BEHAVIOR,"EagerInvalidProxy::Write");
     msg = NULL;
-    if (a_writers == NULL){
+    if (a_writers.isEmpty()) {
       MsgContainer *msgC = a_proxy->m_createCoordProtMsg();
       msgC->pushIntVal(ECI_WRITE_REQUEST);
       a_proxy->m_sendToCoordinator(msgC);
     }
-    a_writers = new OneContainer<GlobalThread>(th_id, a_writers); 
+    a_writers.append(th_id);
     return DSS_SUSPEND;
   }
 
@@ -296,32 +265,25 @@ namespace _dss_internal{ //Start namespace
       PstInContainerInterface* buildcont =  gf_popPstIn(msg);
       a_token = ECITS_VALID;
       a_proxy->installEntityState(buildcont);
-      while(a_readers!=NULL){
-	OneContainer<GlobalThread>* ptr = a_readers->a_next; 
-	(a_readers->a_contain1)->resumeDoLocal(NULL);
-	delete a_readers;
-	a_readers  = ptr;
-      }
+      // wake up readers
+      while (!a_readers.isEmpty())
+	a_readers.pop()->resumeDoLocal(NULL);
       break; 
     }
     case ECI_WRITE_TOKEN:{
-      while(a_writers != NULL){
-	OneContainer<GlobalThread> *tmp = a_writers; 
-	(a_writers->a_contain1)->resumeDoLocal(NULL);
-	a_writers = a_writers->a_next;
-	delete tmp; 
-      }
+      // wake up all writers, then "propagate" result
+      while (!a_writers.isEmpty())
+	a_writers.pop()->resumeDoLocal(NULL);
       m_writeDone();
       break; 
     }
-    case ECI_INVALID_READ:
-      {
-	a_token = ECITS_INVALID;
-	MsgContainer *msgC  = a_proxy->m_createCoordProtMsg();
-	gf_createSndMsg(msgC, ECI_READ_INVALIDATED);
-	a_proxy->m_sendToCoordinator(msgC); 
-	break; 
-      }
+    case ECI_INVALID_READ: {
+      a_token = ECITS_INVALID;
+      MsgContainer *msgC  = a_proxy->m_createCoordProtMsg();
+      gf_createSndMsg(msgC, ECI_READ_INVALIDATED);
+      a_proxy->m_sendToCoordinator(msgC); 
+      break; 
+    }
     default:
       Assert(0);
     }
@@ -329,7 +291,13 @@ namespace _dss_internal{ //Start namespace
 
 
   void ProtocolEagerInvalidManager::makeGCpreps(){
-    a_writers.m_makeGCpreps();
-    t_gcList(a_readers); 
+    t_gcList(a_readers);
+    t_gcList(a_writers);
   }
+
+  void ProtocolEagerInvalidProxy::makeGCpreps(){
+    t_gcList(a_readers);
+    t_gcList(a_writers);
+  }
+
 } //End namespace

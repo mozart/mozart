@@ -36,7 +36,6 @@
 
 namespace _dss_internal{ //Start namespace
 
-// **************************  Migratory Token  ***************************
   enum LCItokenStatus {
     LCITS_READ_TOKEN,
     LCITS_WRITE_TOKEN,
@@ -45,21 +44,25 @@ namespace _dss_internal{ //Start namespace
 
   class ProtocolLazyInvalidManager:public ProtocolManager {
   private:
-    TwoContainer<DSite, bool>* a_readers;
-    FifoQueue<TwoContainer<DSite, bool> > a_requests;
+    SimpleList<Pair<DSite*, bool> > a_readers;
+    SimpleQueue<Pair<DSite*, bool> > a_requests;
     DSite* a_writer;
 
+    // a_requests contains pairs (site, b), where b is true for read
+    // requests, and false for write requests.
+
     ProtocolLazyInvalidManager(const ProtocolLazyInvalidManager&):
-      a_readers(NULL), a_requests(), a_writer(NULL){}
+      a_readers(), a_requests(), a_writer(NULL){}
     ProtocolLazyInvalidManager operator=(const ProtocolLazyInvalidManager&){ return *this; }
 
   public:
     ProtocolLazyInvalidManager(DSite *mysite);
     ProtocolLazyInvalidManager(MsgContainer*);
-    ~ProtocolLazyInvalidManager(){ t_deleteList(a_readers); }
+    ~ProtocolLazyInvalidManager() {}
     void makeGCpreps();
     void msgReceived(MsgContainer*,DSite*);
     void sendMigrateInfo(MsgContainer*); 
+
   private: 
     void m_handleNextRequest();
     void m_sendWriteRight();
@@ -70,24 +73,26 @@ namespace _dss_internal{ //Start namespace
 
   class ProtocolLazyInvalidProxy:public ProtocolProxy{
   private:
-    OneContainer<GlobalThread> *a_readers; 
-    OneContainer<GlobalThread> *a_writers; 
+    SimpleQueue<GlobalThread*> a_readers;
+    SimpleQueue<GlobalThread*> a_writers;
     LCItokenStatus  a_token;
 
     ProtocolLazyInvalidProxy(const ProtocolLazyInvalidProxy&):
-      ProtocolProxy(PN_EAGER_INVALID), a_readers(NULL), a_writers(NULL), a_token(LCITS_INVALID){}
+      ProtocolProxy(PN_EAGER_INVALID), a_readers(), a_writers(), a_token(LCITS_INVALID){}
     ProtocolLazyInvalidProxy operator=(const ProtocolLazyInvalidProxy&){ return *this; }
 
   public:
     ProtocolLazyInvalidProxy();
     ProtocolLazyInvalidProxy(DssReadBuffer*);
 
-    
     OpRetVal protocol_Read( GlobalThread* const th_id, PstOutContainerInterface**& msg);
     OpRetVal protocol_Write(GlobalThread* const th_id, PstOutContainerInterface**& msg);
 
-    void makeGCpreps(){;}
-    bool isWeakRoot(){ return !(a_readers == NULL && a_writers == NULL && a_token == LCITS_INVALID); };
+    void makeGCpreps();
+    bool isWeakRoot(){
+      return !(a_readers.isEmpty() && a_writers.isEmpty() &&
+	       a_token == LCITS_INVALID);
+    }
 
     void msgReceived(MsgContainer*,DSite*);
     ~ProtocolLazyInvalidProxy();
@@ -97,6 +102,7 @@ namespace _dss_internal{ //Start namespace
     virtual void remoteInitatedOperationCompleted(DssOperationId* opId,
 						  PstOutContainerInterface* pstOut){;}  
     void localInitatedOperationCompleted(){Assert(0);} 
+
   private: 
     void m_requestWriteToken();
     void m_requestReadToken();
