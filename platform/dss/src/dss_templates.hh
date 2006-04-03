@@ -38,19 +38,25 @@ void t_swap(T& t1, T& t2){
   T tmp = t1; t1 = t2; t2 = tmp;
 }
 
+// ****************** SMALL FUNS ********************
+//
+template <class T1>
+T1 t_max(const T1& t1, const T1& t2){ return ((t1 > t2) ? t1 : t2); }
+
+template <class T1>
+T1 t_min(const T1& t1, const T1& t2){ return ((t1 < t2) ? t1 : t2); }
+
+
+
+// Note.  OneContainer, TwoContainer, and their variants are not used
+// anymore.  They have been replaced by SimpleList and SimpleQueue,
+// which are much less bug-prone.  See below.
+
 //
 // The Oncecontainer should be extended with non-defined functions such as
 // - m_makeGCpreps()
 // - Destructor
 // - m_stringrep() 
-
-  // ****************** SMALL FUNS ********************
-  //
-  template <class T1>
-  T1 t_max(const T1& t1, const T1& t2){ return ((t1 > t2) ? t1 : t2); }
-
-  template <class T1>
-  T1 t_min(const T1& t1, const T1& t2){ return ((t1 < t2) ? t1 : t2); }
  
   // **************** One element Containers **********
   //
