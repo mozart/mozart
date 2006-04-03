@@ -28,7 +28,9 @@
 #endif
 
 #include "protocol_immutable_lazy.hh"
+
 namespace _dss_internal{ //Start namespace
+
   ProtocolImmutableLazyManager::ProtocolImmutableLazyManager(){}
   
   void
@@ -38,18 +40,15 @@ namespace _dss_internal{ //Start namespace
     sender->m_sendMsg(msgC);
   }
   
-  ProtocolImmutableLazyProxy::ProtocolImmutableLazyProxy():ProtocolProxy(PN_IMMUTABLE_LAZY), stateHolder(true), a_readers(NULL){;} 
+  ProtocolImmutableLazyProxy::ProtocolImmutableLazyProxy() :
+    ProtocolProxy(PN_IMMUTABLE_LAZY), stateHolder(true), a_readers() {} 
   
   void
   ProtocolImmutableLazyProxy::msgReceived(MsgContainer *msg, DSite* u){
     PstInContainerInterface* load = gf_popPstIn(msg);
     a_proxy->installEntityState(load);
-    while(a_readers!=NULL){
-      OneContainer<GlobalThread>* ptr = a_readers->a_next; 
-      (a_readers->a_contain1)->resumeDoLocal(NULL);
-      delete a_readers;
-      a_readers  = ptr;
-    }    
+    while (!a_readers.isEmpty())
+      a_readers.pop()->resumeDoLocal(NULL);
     a_proxy->a_AbsEnt_Interface->m_getAEreference()->accessMediator()->localize();
     stateHolder = true;   
   }
@@ -72,17 +71,20 @@ namespace _dss_internal{ //Start namespace
       msg = NULL;
       return DSS_PROCEED;
     }
-    if (a_readers == NULL) {
+    if (a_readers.isEmpty()) {
       MsgContainer *msgC = a_proxy->m_createCoordProtMsg();
-      if(a_proxy->m_sendToCoordinator(msgC) == false)
-	{
-	  msg = NULL; 
-	  return (DSS_RAISE);
-	}
+      if (!a_proxy->m_sendToCoordinator(msgC) == false) {
+	msg = NULL;
+	return (DSS_RAISE);
+      }
     }
-    a_readers = new OneContainer<GlobalThread>(th_id, a_readers);
+    a_readers.push(th_id);
     return (DSS_SUSPEND);
   }
 
-  
+  void
+  ProtocolImmutableLazyProxy::makeGCpreps() {
+    t_gcList(a_readers);
+  }
+
 } //end namespace
