@@ -34,6 +34,7 @@
 
 #include "coordinator.hh"
 #include "dss_threads.hh"
+
 namespace _dss_internal{ //Start namespace
 
   class ProtocolManager{
@@ -44,8 +45,6 @@ namespace _dss_internal{ //Start namespace
     Coordinator *a_coordinator;
 
   public:
-
-
     ProtocolManager():a_coordinator(NULL){ DebugCode(a_allocated++); };
     virtual ~ProtocolManager(){ DebugCode(a_allocated--); }
 
@@ -58,6 +57,11 @@ namespace _dss_internal{ //Start namespace
     virtual void sendMigrateInfo(MsgContainer*){ 
       a_coordinator->m_getEnvironment()->a_map->GL_warning("Migrating non Migratable Manager");
     }
+
+    // Called when the state of a site changes.  It is up to the
+    // protocol to deduce if it is affected by the site.  By default
+    // does nothing.
+    virtual void m_siteStateChange(DSite*, const DSiteState&) {}
 
     MACRO_NO_DEFAULT_CONSTRUCTORS(ProtocolManager);
   };

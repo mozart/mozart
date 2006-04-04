@@ -35,6 +35,7 @@
 #include "dss_templates.hh"
 
 namespace _dss_internal{ //Start namespace
+
   class CoordinatorStationary: public Coordinator {
     friend class ProxyStationary;
   protected:
@@ -58,6 +59,9 @@ namespace _dss_internal{ //Start namespace
     void m_receiveAsMsg(  MsgContainer *, DSite*){ Assert(0); }
     
     void m_makeGCpreps();
+
+    virtual void m_siteStateChange(DSite *, const DSiteState&); 
+
     char *m_stringrep();
   };
   

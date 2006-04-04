@@ -99,6 +99,11 @@ namespace _dss_internal{ //Start namespace
     a_homeRef->m_makeGCpreps(); 
   }
 
+  void
+  CoordinatorStationary::m_siteStateChange(DSite* s, const DSiteState& state) {
+    // simply notify the protocol manager
+    a_prot->m_siteStateChange(s, state);
+  }
 
   char *
   CoordinatorStationary::m_stringrep(){
@@ -260,8 +265,7 @@ namespace _dss_internal{ //Start namespace
 
     
   void
-  ProxyStationary::m_siteStateChange(DSite* s, const DSiteState& state)
-  {
+  ProxyStationary::m_siteStateChange(DSite* s, const DSiteState& state) {
     FaultState fs = 0;     // fault state changes
 
     // Access Architecture part
