@@ -149,6 +149,16 @@ namespace _dss_internal{ //Start namespace
     virtual void m_undeliveredProxyMsg(DSite* dest, MessageType mtt,MsgContainer* msg); 
     virtual void m_noCoordAtDest(DSite* sender, MessageType mtt, MsgContainer* msg); 
     virtual void m_noProxyAtDest(DSite* sender, MessageType mtt, MsgContainer* msg); 
+
+    // A note about failure handlers (raph).
+    //
+    // The current fault state of an entity is stored in its proxy.
+    // It is important for a coordinator and its home proxy to be
+    // consistent when they report fault states, especially for the
+    // upper layers.  In order to ensure this consistency, I advise to
+    // not update the fault state directly from the coordinator (or
+    // protocol manager).  Instead the coordinator should send a
+    // message to its proxy(ies), which will update the fault state.
   
   };
 
