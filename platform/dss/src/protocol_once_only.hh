@@ -40,10 +40,11 @@ namespace _dss_internal{ //Start namespace
   class ProtocolOnceOnlyManager : public ProtocolManager {
   private:
     SimpleList<DSite*> a_proxies;     // the registered proxies
-    bool a_bound;                     // whether the transient is bound
+    bool a_bound:1;                   // whether the transient is bound
+    bool a_failed:1;                  // whether the state is permfail
 
     ProtocolOnceOnlyManager(const ProtocolOnceOnlyManager&) :
-      a_proxies(), a_bound(false) {}
+      a_proxies(), a_bound(false), a_failed(false) {}
     ProtocolOnceOnlyManager& operator=(const ProtocolOnceOnlyManager&)
     { return *this; }
 
@@ -59,6 +60,9 @@ namespace _dss_internal{ //Start namespace
 
     // register a remote proxy
     void register_remote(DSite*);
+
+    // check failed proxies
+    void m_siteStateChange(DSite*, const DSiteState&);
   };
 
 
@@ -66,14 +70,16 @@ namespace _dss_internal{ //Start namespace
   class ProtocolOnceOnlyProxy : public ProtocolProxy {
   private:
     SimpleList<GlobalThread*> a_susps;   // suspended threads
-    bool a_bound;                        // whether the transient is bound
+    bool a_bound:1;                      // whether the transient is bound
+    bool a_failed:1;                  // whether the state is permfail
 
     // Note. a_susps used to be a TwoContainer<GlobalThread,ProtOOop>.
     // I simplified it, because in practice we do not need to know on
     // which operation a GlobalThread suspends.
 
     ProtocolOnceOnlyProxy(const ProtocolOnceOnlyProxy&) :
-      ProtocolProxy(PN_TRANSIENT), a_susps(), a_bound(false) {}
+      ProtocolProxy(PN_TRANSIENT), a_susps(), a_bound(false), a_failed(false)
+    {}
     ProtocolOnceOnlyProxy& operator=(const ProtocolOnceOnlyProxy&)
     { return *this; }
 
@@ -87,6 +93,7 @@ namespace _dss_internal{ //Start namespace
     OpRetVal protocol_Update(GlobalThread* const th_id,
 			     ::PstOutContainerInterface**& msg,
 			     const AbsOp& aop);
+    OpRetVal protocol_Kill(GlobalThread* const th_id);
 
     virtual bool isWeakRoot() { return !a_susps.isEmpty(); }
 

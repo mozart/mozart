@@ -40,13 +40,14 @@ namespace _dss_internal{ //Start namespace
   class ProtocolTransientRemoteManager : public ProtocolManager {
   private:
     SimpleList<DSite*> a_proxies;     // the registered proxies
-    bool a_bound;                     // whether the transient is bound
     DSite *a_current;                 // the proxy that has the write token
+    bool a_bound:1;                   // whether the transient is bound
+    bool a_failed:1;                  // whether the entity is permfail
 
     // Invariant: a_current is not a member of a_proxies if it is remote.
 
     ProtocolTransientRemoteManager(const ProtocolTransientRemoteManager&):
-      a_proxies(), a_bound(false), a_current(NULL) {}
+      a_proxies(), a_current(NULL), a_bound(false), a_failed(false) {}
     ProtocolTransientRemoteManager&
     operator=(const ProtocolTransientRemoteManager&) { return *this; }
 
@@ -64,6 +65,9 @@ namespace _dss_internal{ //Start namespace
     void register_remote(DSite*);
     // register a proxy, and returns true if it is given the write token
     bool register_token(DSite*);
+
+    // check failed proxies
+    void m_siteStateChange(DSite*, const DSiteState&);
   };
 
 
@@ -73,12 +77,13 @@ namespace _dss_internal{ //Start namespace
 
   private:
     SimpleList<GlobalThread*> a_susps;     // suspended threads
-    bool a_bound;                          // whether the transient is bound
-    bool a_writeToken;                     // whether this has the write token
+    bool a_bound:1;                        // whether the transient is bound
+    bool a_failed:1;                       // whether the entity is permfail
+    bool a_writeToken:1;                   // whether this has the write token
 
     ProtocolTransientRemoteProxy(const ProtocolTransientRemoteProxy&):
       ProtocolProxy(PN_NO_PROTOCOL), a_susps(), a_bound(false),
-      a_writeToken(false) {}
+      a_failed(false), a_writeToken(false) {}
     ProtocolTransientRemoteProxy&
     operator=(const ProtocolTransientRemoteProxy&) { return *this; }
 
@@ -95,6 +100,7 @@ namespace _dss_internal{ //Start namespace
     OpRetVal protocol_Update(GlobalThread* const th_id,
 			     ::PstOutContainerInterface**& msg,
 			     const AbsOp& aop);
+    OpRetVal protocol_Kill(GlobalThread* const th_id);
 
     bool isWeakRoot() { return !a_susps.isEmpty(); }
 
