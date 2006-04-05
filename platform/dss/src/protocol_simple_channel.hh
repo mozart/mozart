@@ -3,7 +3,7 @@
  *    Erik Klintskog (erik@sics.se)
  * 
  *  Contributors:
- *    optional, Contributor's name (Contributor's email address)
+ *    Raphael Collet (raph@info.ucl.ac.be)
  * 
  *  Copyright:
  *    Erik Klintskog, 2002
@@ -32,10 +32,12 @@
 
 #include "dssBase.hh"
 #include "protocols.hh"
+
 namespace _dss_internal{ //Start namespace
 
 
   class ProtocolSimpleChannelManager:public ProtocolManager{
+    bool failed;     // whether state is permfail
     ProtocolSimpleChannelManager(const ProtocolSimpleChannelManager&){};
     ProtocolSimpleChannelManager& operator=(const ProtocolSimpleChannelManager&){ return *this; }
   public:
@@ -50,13 +52,16 @@ namespace _dss_internal{ //Start namespace
   
   class ProtocolSimpleChannelProxy:public ProtocolProxy{
     friend class _dss_internal::ProtocolSimpleChannelManager;
-    bool stateHolder; 
+    bool stateHolder:1;
+    bool failed:1;                        // whether state is permfail
+    SimpleQueue<GlobalThread*> a_susps;   // suspended threads
   public: 
     ProtocolSimpleChannelProxy();
     ~ProtocolSimpleChannelProxy(){};
     
     OpRetVal protocol_Synch(GlobalThread* const th_id, ::PstOutContainerInterface**& msg, const AbsOp& aop);
     OpRetVal protocol_Asynch(::PstOutContainerInterface**& msg, const AbsOp& aop);
+    OpRetVal protocol_Kill(GlobalThread* const th_id);
     
     void remoteInitatedOperationCompleted(DssOperationId*, ::PstOutContainerInterface*); 
     void localInitatedOperationCompleted(); 
@@ -64,11 +69,14 @@ namespace _dss_internal{ //Start namespace
     
     bool isWeakRoot(){ return stateHolder; }; // The glue should know if a thread is relying on proxy
 
+    void m_makeGCpreps() { t_gcList(a_susps); }
+
     void msgReceived(::MsgContainer*,DSite*);
-    virtual bool m_initRemoteProt(DssReadBuffer*); 
+    bool m_initRemoteProt(DssReadBuffer*); 
 
     // check fault state
     virtual FaultState siteStateChanged(DSite*, const DSiteState&);
+    void makeFailed();
   };
 
 
