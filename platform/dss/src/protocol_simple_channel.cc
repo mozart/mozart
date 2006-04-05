@@ -31,6 +31,25 @@
 
 namespace _dss_internal{ //Start namespace
 
+  // Quick description of the protocol.
+  //
+  // Proxy P makes an asynchronuous operation:
+  //    P                 M
+  //    |----SC_ASYNCH--->|
+  //    |<--SC_PERMFAIL---| if state is permfail
+  //
+  // Proxy P makes a synchronuous operation:
+  //    P                 M
+  //    |----SC_SYNCH---->|
+  //    |<---SC_RETURN----|
+  // or:
+  //    |<--SC_PERMFAIL---| if state is permfail
+  //
+  // Proxy P makes the entity permfail:
+  //    P                 M
+  //    |---SC_PERMFAIL-->|
+  //    |<--SC_PERMFAIL---|
+
   namespace {
     enum SC_message {
       SC_ASYNCH,     // asynchronuous operation
