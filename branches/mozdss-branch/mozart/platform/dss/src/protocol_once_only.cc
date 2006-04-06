@@ -243,8 +243,7 @@ namespace _dss_internal{ //Start namespace
   ProtocolOnceOnlyProxy::~ProtocolOnceOnlyProxy() {
     Assert(a_susps.isEmpty());
     // deregister if this proxy is remote, and the transient is not bound
-    if (!a_bound && !a_failed &&
-	a_proxy->m_getProxyStatus() == PROXY_STATUS_REMOTE) {
+    if (!a_bound && !a_failed && !a_proxy->m_isHomeProxy()) {
       dssLog(DLL_BEHAVIOR,"ONCE ONLY (%p): Send DEREGISTER", this);
       sendToManager(OO_DEREGISTER);
     }
@@ -314,8 +313,7 @@ namespace _dss_internal{ //Start namespace
       //
       // The home proxy does not have to perform the bind, it is
       // already done by the manager...
-      if (a_proxy->m_getProxyStatus() != PROXY_STATUS_HOME)
-	a_proxy->installEntityState(cont);
+      if (!a_proxy->m_isHomeProxy()) a_proxy->installEntityState(cont);
       // resume all suspensions (not really clear about the resumeDoLocal)
       while (!a_susps.isEmpty()) a_susps.pop()->resumeDoLocal(NULL);
       break;
@@ -353,10 +351,10 @@ namespace _dss_internal{ //Start namespace
   bool ProtocolOnceOnlyProxy::marshal_protocol_info(DssWriteBuffer *buf,
 						    DSite* dest) {
 #ifdef AUTOREGISTRATION
-    if (dest && a_proxy->m_getProxyStatus() == PROXY_STATUS_HOME) {
+    if (dest && a_proxy->m_isHomeProxy()) {
       // we automatically register dest at the manager
       ProtocolOnceOnlyManager* pm =
-	static_cast<ProtocolOnceOnlyManager*>(a_proxy->a_man->a_prot);
+	static_cast<ProtocolOnceOnlyManager*>(a_proxy->a_coordinator->a_prot);
       pm->register_remote(dest);
       buf->putByte(OO_REG_AUTO);
 
@@ -379,7 +377,7 @@ namespace _dss_internal{ //Start namespace
   bool
   ProtocolOnceOnlyProxy::m_initRemoteProt(DssReadBuffer* buf) {
 #ifdef AUTOREGISTRATION
-    Assert(a_proxy->m_getProxyStatus() == PROXY_STATUS_REMOTE);
+    Assert(!a_proxy->m_isHomeProxy());
     switch (buf->getByte()) {
     case OO_REG_AUTO:
       break;
