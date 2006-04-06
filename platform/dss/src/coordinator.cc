@@ -154,7 +154,7 @@ namespace _dss_internal{ //Start namespace
 	       DSS_Environment* const env):
     AS_Node(ni,a,env), a_ps(PROXY_STATUS_UNSET),
     a_currentFS(FS_ALL_OK), a_registeredFS(0),
-    a_prot(prot), a_remoteRef(NULL), a_man(NULL),a_AbsEnt_Interface(ae)
+    a_prot(prot), a_remoteRef(NULL), a_coordinator(NULL),a_AbsEnt_Interface(ae)
   {
     DebugCode(a_allocated++);
     m_getEnvironment()->a_proxyTable->m_insert(this);

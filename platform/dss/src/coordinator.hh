@@ -187,8 +187,8 @@ namespace _dss_internal{ //Start namespace
     ProtocolProxy* a_prot;             // The execution protocol
     RemoteReference*     a_remoteRef;              // NULL indicates that the proxy shares reference with the coordinator. 
   public:
-    Coordinator*                              a_man;   // For home proxies
-    AE_ProxyCallbackInterface*   a_AbsEnt_Interface;
+    Coordinator*               a_coordinator;   // For home proxies
+    AE_ProxyCallbackInterface* a_AbsEnt_Interface;
 
   private:
     Proxy& operator=(const Proxy&){ return *this; }
@@ -209,7 +209,8 @@ namespace _dss_internal{ //Start namespace
     // ***************** Proxy Status ******************************************
     
     inline void m_setProxyStatus(const ProxyStatus& p){ a_ps = p; }
-    inline ProxyStatus       m_getProxyStatus(){  return a_ps; }
+    inline ProxyStatus m_getProxyStatus(){  return a_ps; }
+    inline bool m_isHomeProxy() { return a_ps == PROXY_STATUS_HOME; }
     
     
     // **************** Proxy Faults ****************

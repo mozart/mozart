@@ -288,7 +288,7 @@ namespace _dss_internal{ //Start namespace
   void 
   ProxyMobile::m_initHomeProxy(Coordinator *m){
     a_ps  = PROXY_STATUS_HOME;
-    a_man = m;
+    a_coordinator = m;
     a_epoch = 1; 
     m->m_initProxy(this);
     a_coordSite = m_getEnvironment()->a_myDSite; 
@@ -312,7 +312,7 @@ namespace _dss_internal{ //Start namespace
     if(a_remoteRef)
       a_remoteRef->m_makePersistent(); 
     else
-      a_man->a_homeRef->m_makePersistent(); 
+      a_coordinator->a_homeRef->m_makePersistent(); 
   }
 
   ProxyMobile::~ProxyMobile(){
@@ -321,8 +321,8 @@ namespace _dss_internal{ //Start namespace
       a_remoteRef->m_dropReference();
       delete a_remoteRef;
     }
-    if (a_man != NULL)
-      delete a_man;
+    if (a_coordinator != NULL)
+      delete a_coordinator;
   }
 
 
@@ -361,8 +361,8 @@ namespace _dss_internal{ //Start namespace
     case MCM_COORDSTATE:
       {
 	int epoch = msgC->popIntVal(); 
-	a_man = new CoordinatorMobile( m_getNetId(), m_getEnvironment(), 
-				       epoch, this, msgC); 
+	a_coordinator = new CoordinatorMobile(m_getNetId(), m_getEnvironment(),
+					      epoch, this, msgC);
 	a_ps  = PROXY_STATUS_HOME;
 	m_receivedNewCoordInfo(m_getEnvironment()->a_myDSite, epoch);
 	break; 
@@ -545,7 +545,7 @@ namespace _dss_internal{ //Start namespace
       a_remoteRef->m_makePersistent(); 
     else
       a_remoteRef = new RemoteReference(this); 
-    a_man = NULL; 
+    a_coordinator = NULL; 
     a_epoch = epoch; 
     a_coordSite = sender; 
   }

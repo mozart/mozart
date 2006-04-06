@@ -130,20 +130,20 @@ namespace _dss_internal{ //Start namespace
     //prot is deleted by Proxy
     delete a_prot;
 
-    if (a_man == NULL){
+    if (a_coordinator == NULL){
       Assert(a_ps == PROXY_STATUS_REMOTE && a_remoteRef);
       a_remoteRef->m_dropReference();
       delete a_remoteRef;
     }
     else
-      delete a_man;
+      delete a_coordinator;
   }
   
   
   void
   ProxyStationary::m_initHomeProxy(Coordinator *m){
     a_ps  = PROXY_STATUS_HOME;
-    a_man = m;
+    a_coordinator = m;
     m->m_initProxy(this);
   }
 
@@ -167,7 +167,7 @@ namespace _dss_internal{ //Start namespace
   Reference*
   ProxyStationary::m_getReferenceStructure(){
     if (a_remoteRef) return a_remoteRef;
-    if (a_man) return a_man->a_homeRef;
+    if (a_coordinator) return a_coordinator->a_homeRef;
     return NULL; 
   }
 
@@ -205,13 +205,13 @@ namespace _dss_internal{ //Start namespace
   // ******************* Messages ***********************
   DSS_GC
   ProxyStationary::getDssDGCStatus(){
-    if (a_man == NULL){
+    if (a_coordinator == NULL){
       Assert(a_ps == PROXY_STATUS_REMOTE && a_remoteRef && a_prot);
       if (a_remoteRef->m_isRoot()) return DSS_GC_PRIMARY;
       if (a_prot->isWeakRoot()) return DSS_GC_WEAK;
       return DSS_GC_NONE;
     }
-    return a_man->m_getDssDGCStatus();
+    return a_coordinator->m_getDssDGCStatus();
   }
   
 
@@ -237,7 +237,7 @@ namespace _dss_internal{ //Start namespace
     a_prot->makeGCpreps();
     // raph: not sure the following is correct if a_remoteRef==NULL
     if (a_remoteRef) a_remoteRef->m_makeGCpreps();
-    Assert(a_man == NULL || a_ps == PROXY_STATUS_HOME);
+    Assert(a_coordinator == NULL || a_ps == PROXY_STATUS_HOME);
   }
   
   char *

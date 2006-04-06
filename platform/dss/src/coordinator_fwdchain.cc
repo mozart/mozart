@@ -151,7 +151,7 @@ namespace _dss_internal{ //Start namespace
     a_ms(MANAGER_STATUS_REF_COM)
   { //We are a comlete ref
     a_proxy  = p;
-    p->a_man = this; 
+    p->a_coordinator = this; 
   }
 
 
@@ -198,7 +198,7 @@ namespace _dss_internal{ //Start namespace
 
   void
   CoordinatorFwdChain::m_initiateMigration(){
-    Assert(a_proxy->a_man == this);
+    Assert(a_proxy->a_coordinator == this);
     MsgContainer *msgC = m_createASMsg(M_COORD_COORD_CNET);
     msgC->pushIntVal(MA_REQUEST);
     m_getCoordSite()->m_sendMsg(msgC);
@@ -433,7 +433,8 @@ namespace _dss_internal{ //Start namespace
       coordSite = a_coordSite; 
     }
     else{
-      CoordinatorFwdChain* coord = static_cast<CoordinatorFwdChain*>(a_man);
+      CoordinatorFwdChain* coord =
+	static_cast<CoordinatorFwdChain*>(a_coordinator);
       coordSite = m_getEnvironment()->a_myDSite;
       ref       = coord->a_refList.front().element().first;
       epoch     = coord->a_refList.front().element().second;
@@ -467,7 +468,8 @@ namespace _dss_internal{ //Start namespace
       if(a_ref)
 	a_ref->m_mergeReferenceInfo(bs); 
       else {
-	CoordinatorFwdChain* coord = static_cast<CoordinatorFwdChain*>(a_man);
+	CoordinatorFwdChain* coord =
+	  static_cast<CoordinatorFwdChain*>(a_coordinator);
 	coord->a_refList.front().element().first->m_mergeReferenceInfo(bs);
       }
       return; 
@@ -509,7 +511,8 @@ namespace _dss_internal{ //Start namespace
   
   void ProxyFwdChain::m_makePersistent(){
     if (a_ref) a_ref->m_makePersistent();
-    CoordinatorFwdChain* coord = static_cast<CoordinatorFwdChain*>(a_man);
+    CoordinatorFwdChain* coord =
+      static_cast<CoordinatorFwdChain*>(a_coordinator);
     coord->a_refList.front().element().first->m_makePersistent(); 
   }
 
@@ -568,7 +571,7 @@ namespace _dss_internal{ //Start namespace
   void
   ProxyFwdChain::m_initHomeProxy(Coordinator *m){
     a_ps  = PROXY_STATUS_HOME;
-    a_man = m;
+    a_coordinator = m;
     m->m_initProxy(this);
   }
   
@@ -603,8 +606,8 @@ namespace _dss_internal{ //Start namespace
       a_remoteRef->m_dropReference();
       delete a_remoteRef;
     }
-    if (a_man != NULL)
-      delete a_man;
+    if (a_coordinator != NULL)
+      delete a_coordinator;
   }
 
 
@@ -659,8 +662,9 @@ namespace _dss_internal{ //Start namespace
   
   DSS_GC
   ProxyFwdChain::getDssDGCStatus(){
-    if(a_man){
-      DSS_GC man_status = static_cast<CoordinatorFwdChain*>(a_man)->m_getDssDGCStatus();
+    if(a_coordinator){
+      DSS_GC man_status =
+	static_cast<CoordinatorFwdChain*>(a_coordinator)->m_getDssDGCStatus();
       if (man_status != DSS_GC_NONE)
 	return man_status;
     }
@@ -699,7 +703,8 @@ namespace _dss_internal{ //Start namespace
     // install the ref just yet.
     // - send a requets for migration
     
-    CoordinatorFwdChain *mm = static_cast<CoordinatorFwdChain *>(a_man);
+    CoordinatorFwdChain *mm =
+      static_cast<CoordinatorFwdChain *>(a_coordinator);
     if(mm == NULL){
       mm = new CoordinatorFwdChain(m_getNetId(),this, m_getEnvironment());
     }
@@ -719,7 +724,8 @@ namespace _dss_internal{ //Start namespace
   int
   ProxyFwdChain::m_getEpoch(){
     if(a_ref) return a_epoch; 
-    CoordinatorFwdChain* coord = static_cast<CoordinatorFwdChain*>(a_man);
+    CoordinatorFwdChain* coord =
+      static_cast<CoordinatorFwdChain*>(a_coordinator);
     return coord->a_refList.front().element().second;
   }
 

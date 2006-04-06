@@ -388,8 +388,7 @@ namespace _dss_internal{ //Start namespace
     Assert(a_susps.isEmpty());
     // deregister if this proxy is remote, and the transient is not
     // bound.  Don't care about the write token, the manager knows.
-    if (!a_bound && !a_failed &&
-	a_proxy->m_getProxyStatus() == PROXY_STATUS_REMOTE) {
+    if (!a_bound && !a_failed && !a_proxy->m_isHomeProxy()) {
       dssLog(DLL_BEHAVIOR,"TRANSIENT REMOTE (%p): Send DEREGISTER", this);
       sendToManager(TR_DEREGISTER);
     }
@@ -417,7 +416,7 @@ namespace _dss_internal{ //Start namespace
     if (a_failed) return DSS_RAISE;
     if (a_writeToken) {
       // this proxy binds the transient, and notifies the manager
-      if (a_proxy->m_getProxyStatus() == PROXY_STATUS_HOME)
+      if (a_proxy->m_isHomeProxy())
 	sendToManager(TR_HOME_BOUND);
       else
 	sendToManager(TR_BOUND, UnboundPst(msg));
@@ -489,7 +488,7 @@ namespace _dss_internal{ //Start namespace
 	a_bound = true; 
 	PstInContainerInterface *cont = gf_popPstIn(msg);
 	a_proxy->installEntityState(cont); 
-	if (a_proxy->m_getProxyStatus() == PROXY_STATUS_HOME)
+	if (a_proxy->m_isHomeProxy())
 	  sendToManager(TR_HOME_BOUND);
 	else
 	  sendToManager(TR_BOUND, a_proxy->retrieveEntityState());
@@ -498,7 +497,7 @@ namespace _dss_internal{ //Start namespace
     }
     case TR_HOME_BOUND: {
       // the transient has been bound remotely, this is the home proxy
-      Assert(a_proxy->m_getProxyStatus() == PROXY_STATUS_HOME);
+      Assert(a_proxy->m_isHomeProxy());
       // the state has been installed by the manager, simply wake up
       // suspensions
       a_bound = true;
@@ -507,7 +506,7 @@ namespace _dss_internal{ //Start namespace
     }
     case TR_REDIRECT: {
       // sent to remote proxies only
-      Assert(a_proxy->m_getProxyStatus() != PROXY_STATUS_HOME && !a_bound);
+      Assert(!a_proxy->m_isHomeProxy() && !a_bound);
       a_bound = true;
       PstInContainerInterface* cont = gf_popPstIn(msg);
       a_proxy->installEntityState(cont); 
@@ -563,7 +562,7 @@ namespace _dss_internal{ //Start namespace
   bool
   ProtocolTransientRemoteProxy::marshal_protocol_info(DssWriteBuffer *buf,
 						      DSite *dest) {
-    if (dest && a_proxy->m_getProxyStatus() == PROXY_STATUS_HOME) {
+    if (dest && a_proxy->m_isHomeProxy()) {
       // anyway the write token is no longer at home
       a_writeToken = false;
 
@@ -573,7 +572,7 @@ namespace _dss_internal{ //Start namespace
       // instead, it would then be necessary to guarantee that the 
       // internal message arrives before eventual remote messages.
       ProtocolTransientRemoteManager* pm =
-	static_cast<ProtocolTransientRemoteManager*>(a_proxy->a_man->a_prot);
+	static_cast<ProtocolTransientRemoteManager*>(a_proxy->a_coordinator->a_prot);
 
       if (pm->register_token(dest))
 	buf->putByte(TR_REG_TOKEN);
@@ -595,7 +594,7 @@ namespace _dss_internal{ //Start namespace
   // initialize remote proxy (for registration)
   bool
   ProtocolTransientRemoteProxy::m_initRemoteProt(DssReadBuffer* buf) {
-    Assert(a_proxy->m_getProxyStatus() == PROXY_STATUS_REMOTE);
+    Assert(!a_proxy->m_isHomeProxy());
     switch (buf->getByte()) {
     case TR_REG_AUTO:
       break;
