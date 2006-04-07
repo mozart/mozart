@@ -133,12 +133,7 @@ namespace _dss_internal{ //Start namespace
     case MIGM_FAILED_PRED: {
       // The sender tells that it will not receive the token; it is
       // therefore lost (we know the predecessor has had it).
-      if (a_last) {
-	// notify all proxies
-	while (!a_chain.isEmpty())
-	  sendToProxy(a_chain.pop().first, MIGM_PERMFAIL);
-	a_last = NULL;
-      }
+      if (a_last) lostToken();
       break;
     }
     case MIGM_OLD_SUCC:
@@ -197,21 +192,26 @@ namespace _dss_internal{ //Start namespace
     
     // all proxies in the chain failed; we've lost the state
     while (!a_chain.isEmpty()) a_chain.pop();
+    lostToken();
+  }
+
+  // notify proxies that the token has been lost
+  void ProtocolMigratoryManager::lostToken() {
     a_last = NULL;
-    // notify home proxy (take the short cut...)
+    // notify eagerly the home proxy (take the short cut...)
     ProtocolProxy* pp = a_coordinator->m_getProxy()->m_getProtocol();
     static_cast<ProtocolMigratoryProxy*>(pp)->lostToken();
+    // notify all proxies left in a_chain
+    while (!a_chain.isEmpty())
+      sendToProxy(a_chain.pop().first, MIGM_PERMFAIL);
   }
 
 
   // check for failed proxies
   void ProtocolMigratoryManager::m_siteStateChange(DSite* s,
 						   const DSiteState& state) {
-    if (a_last &&
-	(state == DSite_GLOBAL_PRM || state == DSite_LOCAL_PRM) &&
-	a_chain.front().find(s)) {
+    if (a_last && state >= DSite_GLOBAL_PRM && a_chain.front().find(s))
       inquire(s);
-    }
   }
 
 
@@ -393,8 +393,7 @@ namespace _dss_internal{ //Start namespace
 	  dssError("Unknown DSite state %d for %s",state,s->m_stringrep());
 	}
       }
-      if (a_successor == s &&
-	  (state == DSite_GLOBAL_PRM || state == DSite_LOCAL_PRM)) {
+      if (a_successor == s && state >= DSite_GLOBAL_PRM) {
 	a_successor = NULL;
 	sendToManager(MIGM_FAILED_SUCC);
       }

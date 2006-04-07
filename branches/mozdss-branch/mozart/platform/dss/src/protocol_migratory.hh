@@ -55,6 +55,8 @@ namespace _dss_internal{ //Start namespace
 
     // run the inquiry algorithm
     void inquire(DSite*);
+    // called when the token has been lost
+    void lostToken();
 
     ProtocolMigratoryManager(const ProtocolMigratoryManager&) {}
     ProtocolMigratoryManager& operator=(const ProtocolMigratoryManager&){ return *this; }
