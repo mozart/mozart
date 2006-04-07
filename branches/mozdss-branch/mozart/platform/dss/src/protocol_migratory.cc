@@ -33,6 +33,65 @@
 
 namespace _dss_internal{ //Start namespace
 
+  // Quick description of the protocol.
+  //
+  // The protocol makes a unique token migrate among proxies, and the
+  // state of the abstract entity migrates with the token.  The proxy
+  // that has the token can update the entity locally.  The protocol
+  // dynamically builds a forwarding chain among the proxies that want
+  // to update the abstract entity.
+  //
+  // Proxy P asks for the token:
+  //    P              M                   P'
+  //    |---MIGM_GET-->|                   |   P' is the last proxy
+  //    |              |--MIGM_FORWARD(P)->|   in the forwarding chain
+  //
+  // Proxy P forwards the token (after reception):
+  //    P                  P'
+  //    |----MIGM_TOKEN--->|
+  //
+  // Proxy P has the token but no successor:
+  //    P                     M
+  //    |---MIGM_TOKEN_HERE-->|   (not mandatory, optimization only)
+  //
+  // Proxy P wants to get rid of the token:
+  //    P                       M
+  //    |---MIGM_NEED_NO_MORE-->|   (P has the token and no successor)
+  //
+  // The following part extends the protocol above in order to avoid
+  // failed proxies, and diagnose the loss of the token.
+  //
+  // P detects that its successor P' failed:
+  //    P                      M
+  //    |---MIGM_FAILED_SUCC-->|
+  //    |<--MIGM_FORWARD(P")---|   if P" is the successor of P'
+  //
+  // Manager inquires the predecessor of a failed proxy:
+  //    M                     P
+  //    |---MIGM_CHECK_SUCC-->|
+  //    |<---MIGM_OLD_SUCC----|   if P already forwarded token
+  // or:
+  //    |<--MIGM_FAILED_SUCC--|   if P has not forwarded yet
+  //
+  // Manager inquires the successor of a failed proxy (only when the
+  // latter has no predecessor):
+  //    M                     P
+  //    |---MIGM_CHECK_PRED-->|
+  //    |<---MIGM_OLD_PRED----|   if P already forwarded token
+  // or:
+  //    |<--MIGM_TOKEN_HERE---|   if P has the token
+  // or:
+  //    |<--MIGM_FAILED_PRED--|   if P has not received it yet
+  //
+  // In the latter reply, we can infer that P will never receive the
+  // token.  It is therefore lost, and the manager notifies proxies
+  // with MIGM_PERMFAIL.
+  //
+  // Proxy P makes the entity fail (if not failed yet):
+  //    P                   M                   P'
+  //    |---MIGM_PERMFAIL-->|                   |
+  //    |<--MIGM_PERMFAIL---|---MIGM_PERMFAIL-->|   (sent to all proxies)
+
   namespace {
     // messages
     enum Migratory_Message {
