@@ -83,9 +83,9 @@ ozostream &ozostream::operator << (double d)
 {
   char buf[100];
   if (ozconf.printScientificFloats)
-    sprintf(buf,"%2$.*1$e",ozconf.printFloatPrecision,d);
+    sprintf(buf,"%.*e",ozconf.printFloatPrecision,d);
   else
-    sprintf(buf,"%2$.*1$g",ozconf.printFloatPrecision,d);
+    sprintf(buf,"%.*g",ozconf.printFloatPrecision,d);
   return *this << buf;
 }
 
