@@ -8,6 +8,7 @@
  * 
  *  Copyright:
  *    Zacharias El Banna, 2002
+ *    Raphael Collet, 2006
  * 
  *  Last change:
  *    $Date$ by $Author$
@@ -379,11 +380,7 @@ template <typename T> class SimpleList;
 template <typename T> class SimpleQueue;
 
 // the underlying nodes of a list
-template <typename T> class SimpleNode {
-  friend class Position<T>;
-  friend class SimpleList<T>;
-  friend class SimpleQueue<T>;
-private:
+template <typename T> struct SimpleNode {
   T elem;
   SimpleNode<T>* next;
   SimpleNode(T const &e, SimpleNode<T>* n) : elem(e), next(n) {}
@@ -454,6 +451,7 @@ public:
   T&   operator*  () const { return element(); }
   void operator++ (int) { next(); }
   void operator++ () { next(); }
+  bool operator== (Position<T> const &p) { return curPtr == p.curPtr; }
 };
 
 
@@ -546,6 +544,54 @@ public:
     afterlast(*this);
     while (afterlast()) afterlast++;
   }
+};
+
+
+
+// An implementation of a ring with SimpleNodes.
+template <typename T>
+class SimpleRing {
+private:
+  SimpleNode<T>* pred;     // predecessor of the current node
+  int            sz;       // how many elements
+
+public:
+  bool isEmpty() const { return pred == NULL; }
+  int size() const { return sz; }
+
+  // access the current element, its neighbors, and step forward
+  T& predecessor() const { return pred->elem; }
+  T& current() const { return pred->next->elem; }
+  T& successor() const { return pred->next->next->elem; }
+  void step() { pred = pred->next; }
+
+  // basic operations: find(), push(), and pop()
+  bool find(T const e) {
+    for (int n = size(); n > 0; n--) {
+      if (current() == e) return true; else step();
+    }
+    return false;
+  }
+  void push(T const e) { // before the current element
+    if (pred) {
+      pred->next = new SimpleNode<T>(e, pred->next);
+    } else {
+      pred = new SimpleNode<T>(e, NULL);
+      pred->next = pred;
+    }
+    sz++;
+  }
+  T pop() { // the current element
+    SimpleNode<T>* cur = pred->next;
+    T e = cur->elem;
+    if (cur == pred) pred = NULL; else pred->next = cur->next;
+    delete cur;
+    sz--;
+    return e;
+  }
+
+  SimpleRing() : pred(NULL), sz(0) {}
+  ~SimpleRing() { while (!isEmpty()) pop(); }
 };
 
 #endif
