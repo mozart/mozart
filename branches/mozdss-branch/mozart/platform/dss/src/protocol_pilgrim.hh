@@ -3,7 +3,7 @@
  *    Erik Klintskog(erik@sics.se)
  * 
  *  Contributors:
- *    optional, Contributor's name (Contributor's email address)
+ *    Raphael Collet (raph@info.ucl.ac.be)
  * 
  *  Copyright:
  *    Zacharias El Banna, 2002
@@ -37,97 +37,123 @@
 
 namespace _dss_internal{ //Start namespace
 
-  // **************************  Pilgrim Token  ***************************
-  enum Pilgrim_Token {
-    PLGT_NON_MEMBER,
-    PLGT_RING_MEMBER,
-    PLGT_SPAWNING_JOBS,
-    PLGT_WAITING_FOR_JOBS,
-    PLGT_SOLE_MEMBER
-  };
-
-
-  // A ring of sites (elements are single-linked)
-  struct SiteElement {
-    DSite* site;
-    SiteElement* next;
-    SiteElement(DSite* s, SiteElement* n) : site(s), next(n) {}
-  };
-
-  // This class maintains a ref to a current node and its neighbors
-  // (predecessor and successor) in the ring.
-  class SiteRing {
+  // for the coloring algorithm
+  class PilgrimColor {
   private:
-    SiteElement* pred;     // the predecessor of the current element
+    static const int last = 1<<29;
+    int value : 30;
+    bool dark : 1;
   public:
-    bool isEmpty() const { return pred == NULL; }
-    DSite* predecessor() const { return pred->site; }
-    DSite* current() const { return pred->next->site; }
-    DSite* successor() const { return pred->next->next->site; }
-    bool find(DSite* const s);
-    void insert(DSite* const s); // before the current element
-    void remove(); // current element
-    void makeGCpreps();
-    SiteRing() : pred(NULL) {}
-    ~SiteRing() { while (!isEmpty()) remove(); }
+    PilgrimColor() : value(0), dark(0) {}   // white, no real color
+    PilgrimColor(const int &c) : value(c >> 1), dark(c & 1) {}
+    void whiten() { value = dark = 0; }
+    bool isWhite() const { return value == 0; }
+    void darken() { dark = 1; }
+    bool isDark() const { return dark; }
+    operator int () const { return (value << 1) | dark; }
+    void operator++ (int) { value = (value % last) + 1; dark = 0; }
+    bool operator== (PilgrimColor const &c) { return value == c.value; }
+    bool operator< (PilgrimColor const &c) { // beware: non-transitive!
+      return (c.value - value + last) % last < (last / 2); }
   };
+
 
 
   class ProtocolPilgrimManager:public ProtocolManager {
   private:
-    SiteRing a_ring;
-    SimpleQueue<Pair<DSite*, bool> > a_enterLeaveQueue;
-    void m_enterLeave();
+    SimpleRing<DSite*> a_ring;      // the proxies in the ring
+    bool               a_lastLeaving; // last proxy in ring wants to leave
+    SimpleList<DSite*> a_leaving;   // the leaving proxies
+    PilgrimColor       a_color;     // the current token color
+
+    // Invariants:
+    //  - a_ring is empty iff the token is lost;
+    //  - a_ring and a_leaving are disjoint.
+
+    void m_lostToken();
+    void m_removeFailed(DSite* s);
 
     ProtocolPilgrimManager(const ProtocolPilgrimManager&):
-      ProtocolManager(), a_ring(), a_enterLeaveQueue(){}
-    ProtocolPilgrimManager& operator=(const ProtocolPilgrimManager&){ return *this; }
+      ProtocolManager(), a_ring(), a_lastLeaving(false), a_leaving(),
+      a_color() {}
+    ProtocolPilgrimManager& operator=(const ProtocolPilgrimManager&){
+      return *this; }
 
   public:
     ProtocolPilgrimManager(DSite* mysite);
     ProtocolPilgrimManager(::MsgContainer*);
-    ~ProtocolPilgrimManager(){};
+    ~ProtocolPilgrimManager() {}
     void makeGCpreps();
     void msgReceived(::MsgContainer*,DSite*);
     void sendMigrateInfo(MsgContainer*); 
+
+    // check for failed proxies
+    void m_siteStateChange(DSite*, const DSiteState&);
   };
-  
+
+
+  // token status of pilgrim proxy
+  enum PilgrimToken {
+    PLGT_EMPTY,     // token not here
+    PLGT_HERE,      // token here
+    PLGT_LOST       // token lost
+  };
+
 
   class ProtocolPilgrimProxy:public ProtocolProxy{
+    friend class ProtocolPilgrimManager;
+
   private:
-    DSite*    a_next;     // NULL
-    Pilgrim_Token a_state;  //empty
-    SimpleQueue<GlobalThread*> a_operations;
-    int a_jobs; 
-    int a_use;
+    PilgrimToken  a_token;        // token status
+
+    DSite*        a_successor;    // successor in the ring
+    bool          a_registered:1; // whether proxy has registered
+    bool          a_reachable:1;  // whether proxy can receive token
+    int           a_freeRounds;   // how many "free rounds" before leaving
+
+    PilgrimColor  a_color;        // the current color
+    bool          a_coloring:1;   // whether proxy must forward color
+    bool          a_strict:1;     // whether proxy rejects different colors
+
+    SimpleQueue<GlobalThread*> a_susps; // suspended operations
+    int           a_jobsLeft;     // operations not terminated yet
     
-    void m_requestToken();
-    void m_deregisterToken();
+    void m_register();
+    void m_deregister();
+    bool m_isAlone();
     void m_forwardToken();
+    bool m_acceptTokenColor(PilgrimColor const &col);
+    void m_forwardColor();
     void m_resumeOperations();
+    void m_lostToken();
 
     ProtocolPilgrimProxy(const ProtocolPilgrimProxy&):
-      ProtocolProxy(PN_NO_PROTOCOL), a_next(NULL), a_state(PLGT_NON_MEMBER),
-      a_operations(), a_jobs(0),a_use(0){}
-    ProtocolPilgrimProxy& operator=(const ProtocolPilgrimProxy&){ return *this; }
+      ProtocolProxy(PN_NO_PROTOCOL), a_token(PLGT_EMPTY), a_successor(NULL),
+      a_registered(false), a_reachable(false), a_freeRounds(0), a_color(),
+      a_coloring(false), a_strict(true), a_susps(), a_jobsLeft(0) {}
+    ProtocolPilgrimProxy& operator=(const ProtocolPilgrimProxy&){
+      return *this; }
 
   public:
     ProtocolPilgrimProxy(DSite*);
-    bool m_initRemoteProt(DssReadBuffer*);
     ~ProtocolPilgrimProxy(); 
+    bool m_initRemoteProt(DssReadBuffer*);
 
-    bool isWeakRoot(){
-      return (a_state != PLGT_NON_MEMBER);
-    };
-    
+    void makeGCpreps(); 
+    bool isWeakRoot();
     bool clearWeakRoot();    
     
-    OpRetVal protocol_Access(GlobalThread* const, ::PstOutContainerInterface**&);
-    void makeGCpreps(); 
+    OpRetVal protocol_Access(GlobalThread* const,
+			     ::PstOutContainerInterface**&);
+    OpRetVal protocol_Kill(GlobalThread* const th_id);
+
     void msgReceived(::MsgContainer*,DSite*);
-    void remoteInitatedOperationCompleted(DssOperationId* opId,::PstOutContainerInterface* pstOut);
-    
+    void remoteInitatedOperationCompleted(DssOperationId* opId,
+					  ::PstOutContainerInterface* pstOut);
     void localInitatedOperationCompleted(); 
+
+    // check fault state
+    virtual FaultState siteStateChanged(DSite*, const DSiteState&);
   };
 
 } //End namespace
