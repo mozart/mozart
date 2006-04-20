@@ -96,6 +96,7 @@ define
       Constrain =
       constr(stationary: fun {$}  1#_#_#_#_ end     % PN_SIMPLE_CHANNEL
 	     migratory:  fun {$}  2#_#_#_#_ end     % PN_MIGRATORY_STATE
+	     pilgrim:    fun {$}  9#_#_#_#_ end     % PN_PILGRIM_STATE
 	     replicated: fun {$}  5#_#_#_#_ end     % PN_EAGER_INVALID
 	     variable:   fun {$}  3#_#_#_#_ end     % PN_TRANSIENT
 	     replyvar:   fun {$}  4#_#_#_#_ end     % PN_TRANSIENT_REMOTE
