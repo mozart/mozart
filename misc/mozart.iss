@@ -15,8 +15,8 @@ SolidCompression=yes
 OutputDir=.
 ChangesAssociations=yes
 ChangesEnvironment=yes
-WizardImageFile=MozartBitmap.bmp
-WizardSmallImageFile=logo\mozart-55x24.gif
+WizardImageFile=MozartSide.bmp
+WizardSmallImageFile=MozartSmall.bmp
 WizardImageBackcolor=$fffff0
 WizardImageStretch=no
 
