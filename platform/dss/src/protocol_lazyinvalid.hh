@@ -3,7 +3,7 @@
  *    Erik Klintskog
  * 
  *  Contributors:
- *    optional, Contributor's name (Contributor's email address)
+ *    Raphael Collet (raph@info.ucl.ac.be)
  * 
  *  Copyright:
  *    Zacharias El Banna, 2002
@@ -36,24 +36,27 @@
 
 namespace _dss_internal{ //Start namespace
 
-  enum LCItokenStatus {
-    LCITS_READ_TOKEN,
-    LCITS_WRITE_TOKEN,
-    LCITS_INVALID
-  };
-
   class ProtocolLazyInvalidManager:public ProtocolManager {
   private:
-    SimpleList<Pair<DSite*, bool> > a_readers;
+    bool a_failed;
     SimpleQueue<Pair<DSite*, bool> > a_requests;
+    SimpleList<DSite*> a_readers;
     DSite* a_writer;
 
     // a_requests contains pairs (site, b), where b is true for read
     // requests, and false for write requests.
+    //
+    // a_readers contains all reader proxies that have not invalidated
+    // their state yet.  They are asked to invalidate once a write
+    // request must be served; the write token is given once a_readers
+    // becomes empty.
+    //
+    // a_writer is the proxy that currently has the write token.
 
     ProtocolLazyInvalidManager(const ProtocolLazyInvalidManager&):
-      a_readers(), a_requests(), a_writer(NULL){}
-    ProtocolLazyInvalidManager operator=(const ProtocolLazyInvalidManager&){ return *this; }
+      a_failed(false), a_requests(), a_readers(), a_writer(NULL) {}
+    ProtocolLazyInvalidManager operator=(const ProtocolLazyInvalidManager&){
+      return *this; }
 
   public:
     ProtocolLazyInvalidManager(DSite *mysite);
@@ -63,49 +66,65 @@ namespace _dss_internal{ //Start namespace
     void msgReceived(MsgContainer*,DSite*);
     void sendMigrateInfo(MsgContainer*); 
 
+    void m_siteStateChange(DSite*, const DSiteState&);
+
   private: 
+    void m_sendWriteToken();
+    void m_updateOneReader(DSite *);
     void m_handleNextRequest();
-    void m_sendWriteRight();
-    void m_updateOneReader(DSite *target);
-    void m_updateAllReaders(DSite *exclude);
+    void m_failed();
   };
 
 
+  enum LazyInvalidToken {
+    LIT_INVALID,     // proxy has no valid state
+    LIT_READER,      // proxy has read token
+    LIT_WRITER,      // proxy has write token
+    LIT_FAILED       // state is lost
+  };
+
   class ProtocolLazyInvalidProxy:public ProtocolProxy{
   private:
+    LazyInvalidToken a_token;     // status of this proxy
     SimpleQueue<GlobalThread*> a_readers;
     SimpleQueue<GlobalThread*> a_writers;
-    LCItokenStatus  a_token;
 
     ProtocolLazyInvalidProxy(const ProtocolLazyInvalidProxy&):
-      ProtocolProxy(PN_EAGER_INVALID), a_readers(), a_writers(), a_token(LCITS_INVALID){}
-    ProtocolLazyInvalidProxy operator=(const ProtocolLazyInvalidProxy&){ return *this; }
+      ProtocolProxy(PN_EAGER_INVALID), a_token(LIT_INVALID),
+      a_readers(), a_writers() {}
+    ProtocolLazyInvalidProxy operator=(const ProtocolLazyInvalidProxy&){
+      return *this; }
 
   public:
     ProtocolLazyInvalidProxy();
     ProtocolLazyInvalidProxy(DssReadBuffer*);
+    ~ProtocolLazyInvalidProxy();
 
-    OpRetVal protocol_Read( GlobalThread* const th_id, PstOutContainerInterface**& msg);
-    OpRetVal protocol_Write(GlobalThread* const th_id, PstOutContainerInterface**& msg);
+    OpRetVal protocol_Read(GlobalThread* const th_id,
+			   PstOutContainerInterface**& msg);
+    OpRetVal protocol_Write(GlobalThread* const th_id,
+			    PstOutContainerInterface**& msg);
+    OpRetVal protocol_Kill(GlobalThread* const th_id);
 
+    bool m_initRemoteProt(DssReadBuffer*);
     void makeGCpreps();
-    bool isWeakRoot(){
-      return !(a_readers.isEmpty() && a_writers.isEmpty() &&
-	       a_token == LCITS_INVALID);
+    bool isWeakRoot() {
+      return a_token == LIT_READER || a_token == LIT_WRITER ||
+	!a_readers.isEmpty() || !a_writers.isEmpty();
     }
 
     void msgReceived(MsgContainer*,DSite*);
-    ~ProtocolLazyInvalidProxy();
 
-    bool m_initRemoteProt(DssReadBuffer*);
+    virtual void
+    remoteInitatedOperationCompleted(DssOperationId* opId,
+				     PstOutContainerInterface* pstOut) {}
+    void localInitatedOperationCompleted() { Assert(0); }
 
-    virtual void remoteInitatedOperationCompleted(DssOperationId* opId,
-						  PstOutContainerInterface* pstOut){;}  
-    void localInitatedOperationCompleted(){Assert(0);} 
+    virtual FaultState siteStateChanged(DSite*, const DSiteState&);
 
   private: 
-    void m_requestWriteToken();
     void m_requestReadToken();
+    void m_requestWriteToken();
   };
 
 } //End namespace
