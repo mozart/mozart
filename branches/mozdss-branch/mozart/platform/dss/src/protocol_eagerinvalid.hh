@@ -3,7 +3,7 @@
  *    Erik Klintskog
  * 
  *  Contributors:
- *    optional, Contributor's name (Contributor's email address)
+ *    Raphael Collet (raph@info.ucl.ac.be)
  * 
  *  Copyright:
  *    Zacharias El Banna, 2002
@@ -37,68 +37,84 @@
 
 namespace _dss_internal{ //Start namespace
 
-  enum ECItokenStatus {
-    ECITS_VALID,
-    ECITS_INVALID
-  };
-
   class ProtocolEagerInvalidManager:public ProtocolManager {
   private:
     SimpleList<Pair<DSite*, bool> > a_readers;
-    SimpleQueue<DSite*> a_writers;
+    SimpleQueue<DSite*> a_requests;
+    DSite* a_writer;
+
+    // a_readers contain pairs (site, b), where b is false when the
+    // proxy has invalidated its state.
+    //
+    // a_requests contains the proxies that will update the state,
+    // while a_writer is the proxy that currently has the write token
+    // (or NULL if none).
+
+    // Invariant: a_readers is empty iff the entity is permfail
 
     ProtocolEagerInvalidManager(const ProtocolEagerInvalidManager&):
-      a_readers(), a_writers(){}
-    ProtocolEagerInvalidManager& operator=(const ProtocolEagerInvalidManager&){ return *this; }
+      a_readers(), a_requests(), a_writer(NULL) {}
+    ProtocolEagerInvalidManager& operator=(const ProtocolEagerInvalidManager&){
+      return *this; }
 								    
   public:
-    ProtocolEagerInvalidManager(DSite *mysite):
-      a_readers(), a_writers() {
-      a_readers.push(makePair(mysite, true));
-    }
+    ProtocolEagerInvalidManager(DSite *mysite);
     ProtocolEagerInvalidManager(::MsgContainer*);
     ~ProtocolEagerInvalidManager() {}
     void makeGCpreps();
     void msgReceived(::MsgContainer*,DSite*);
     void sendMigrateInfo(::MsgContainer*); 
 
+    void m_siteStateChange(DSite*, const DSiteState&);
+
   private: 
+    bool m_isFailed() { return a_readers.isEmpty(); }
+    void m_register(DSite* s);
+    void m_deregister(DSite* s);
     void m_invalidateReaders();
-    void m_sendWriteRight();
-    void m_updateOneReader(DSite *target);
-    void m_updateAllReaders(DSite *exclude);
+    void m_invalidated(DSite* s);
+    void m_sendWriteToken();
+    void m_updateOneReader(DSite *s);
+    void m_updateAllReaders();
+    void m_failed();
     void printStatus();
   };
 
 
   class ProtocolEagerInvalidProxy:public ProtocolProxy{
   private:
+    bool a_failed:1;     // true when the state is permfail
+    bool a_valid:1;      // true iff the state is valid
     SimpleQueue<GlobalThread*> a_readers;
     SimpleQueue<GlobalThread*> a_writers;
-    ECItokenStatus  a_token;
 
     ProtocolEagerInvalidProxy(const ProtocolEagerInvalidProxy&):
-      ProtocolProxy(PN_EAGER_INVALID), a_readers(), a_writers(), a_token(ECITS_INVALID){}
-    ProtocolEagerInvalidProxy& operator=(const ProtocolEagerInvalidProxy&){ return *this; }
+      ProtocolProxy(PN_EAGER_INVALID), a_failed(false), a_valid(false),
+      a_readers(), a_writers() {}
+    ProtocolEagerInvalidProxy& operator=(const ProtocolEagerInvalidProxy&){
+      return *this; }
 
   public:
     ProtocolEagerInvalidProxy();
     ProtocolEagerInvalidProxy(DssReadBuffer*);
+    ~ProtocolEagerInvalidProxy();
 
-    OpRetVal protocol_Read( GlobalThread* const th_id, PstOutContainerInterface**& msg);
-    OpRetVal protocol_Write( GlobalThread* const th_id, PstOutContainerInterface**& msg);
+    OpRetVal protocol_Read(GlobalThread* const th_id,
+			   PstOutContainerInterface**& msg);
+    OpRetVal protocol_Write(GlobalThread* const th_id,
+			    PstOutContainerInterface**& msg);
+    OpRetVal protocol_Kill(GlobalThread* const th_id);
 
+    bool m_initRemoteProt(DssReadBuffer*);
     void makeGCpreps();
     bool isWeakRoot(){ return !a_readers.isEmpty() || !a_writers.isEmpty(); }
 
     void msgReceived(::MsgContainer*,DSite*);
-    ~ProtocolEagerInvalidProxy();
-
-    bool m_initRemoteProt(DssReadBuffer*);
-
     virtual void remoteInitatedOperationCompleted(DssOperationId* opId,
-						  ::PstOutContainerInterface* pstOut){;}  
+						  ::PstOutContainerInterface* pstOut){}
     void localInitatedOperationCompleted(){Assert(0);} 
+
+    virtual FaultState siteStateChanged(DSite*, const DSiteState&);
 
   private: 
     void m_writeDone(); 
