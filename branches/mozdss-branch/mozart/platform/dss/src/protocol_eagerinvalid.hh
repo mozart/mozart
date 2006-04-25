@@ -96,7 +96,7 @@ namespace _dss_internal{ //Start namespace
 
   public:
     ProtocolEagerInvalidProxy();
-    ProtocolEagerInvalidProxy(DssReadBuffer*);
+    bool m_initRemoteProt(DssReadBuffer*);
     ~ProtocolEagerInvalidProxy();
 
     OpRetVal protocol_Read(GlobalThread* const th_id,
@@ -105,9 +105,11 @@ namespace _dss_internal{ //Start namespace
 			    PstOutContainerInterface**& msg);
     OpRetVal protocol_Kill(GlobalThread* const th_id);
 
-    bool m_initRemoteProt(DssReadBuffer*);
     void makeGCpreps();
-    bool isWeakRoot(){ return !a_readers.isEmpty() || !a_writers.isEmpty(); }
+    bool isWeakRoot() {
+      return a_valid || !a_readers.isEmpty() || !a_writers.isEmpty();
+    }
+    bool clearWeakRoot();
 
     void msgReceived(::MsgContainer*,DSite*);
     virtual void remoteInitatedOperationCompleted(DssOperationId* opId,
