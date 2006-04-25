@@ -107,11 +107,7 @@ namespace _dss_internal{ //Start namespace
     OpRetVal protocol_Kill(GlobalThread* const th_id);
 
     void makeGCpreps();
-    bool isWeakRoot() {
-      return a_token == LIT_READER || a_token == LIT_WRITER ||
-	!a_readers.isEmpty() || !a_writers.isEmpty();
-    }
-    bool clearWeakRoot();
+    bool isWeakRoot() { return a_token == LIT_WRITER || !a_writers.isEmpty(); }
 
     void msgReceived(MsgContainer*,DSite*);
 

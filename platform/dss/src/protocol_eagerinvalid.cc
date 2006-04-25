@@ -168,7 +168,8 @@ namespace _dss_internal{ //Start namespace
     for (Position<Pair<DSite*,bool> > p(a_readers); p(); p++) {
       if ((*p).first == writer) {
 	(*p).second = false;
-      } else if ((*p).second) {
+      } else {
+	Assert((*p).second);
 	sendToProxy((*p).first, EI_INVALID_READ);
 	ready = false;
       }
@@ -349,10 +350,8 @@ namespace _dss_internal{ //Start namespace
     int message = msg->popIntVal();
     switch (message) {
     case EI_INVALID_READ: {
-      if (a_valid) {
-	a_valid = false;
-	sendToManager(EI_READ_INVALIDATED);
-      }
+      a_valid = false;
+      sendToManager(EI_READ_INVALIDATED);
       break; 
     }
     case EI_READ_TOKEN:{
@@ -380,19 +379,6 @@ namespace _dss_internal{ //Start namespace
     default:
       Assert(0);
     }
-  }
-
-
-  // weak root status
-  bool
-  ProtocolEagerInvalidProxy::clearWeakRoot() {
-    if (a_valid && a_readers.isEmpty() && a_writers.isEmpty()) {
-      // simply force the invalidation...
-      a_valid = false;
-      sendToManager(EI_READ_INVALIDATED);
-      return true;
-    }
-    return false;
   }
 
 
