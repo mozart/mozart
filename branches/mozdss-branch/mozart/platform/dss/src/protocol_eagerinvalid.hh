@@ -106,10 +106,7 @@ namespace _dss_internal{ //Start namespace
     OpRetVal protocol_Kill(GlobalThread* const th_id);
 
     void makeGCpreps();
-    bool isWeakRoot() {
-      return a_valid || !a_readers.isEmpty() || !a_writers.isEmpty();
-    }
-    bool clearWeakRoot();
+    bool isWeakRoot() { return !a_writers.isEmpty(); }
 
     void msgReceived(::MsgContainer*,DSite*);
     virtual void remoteInitatedOperationCompleted(DssOperationId* opId,
