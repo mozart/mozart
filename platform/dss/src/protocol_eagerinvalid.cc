@@ -168,10 +168,9 @@ namespace _dss_internal{ //Start namespace
     for (Position<Pair<DSite*,bool> > p(a_readers); p(); p++) {
       if ((*p).first == writer) {
 	(*p).second = false;
-      } else {
-	Assert((*p).second);
+      } else if ((*p).second) {
 	sendToProxy((*p).first, EI_INVALID_READ);
-	ready = false; 
+	ready = false;
       }
     }
     if (ready) m_sendWriteToken();
@@ -294,10 +293,6 @@ namespace _dss_internal{ //Start namespace
     return true;
   }
 
-  ProtocolEagerInvalidProxy::ProtocolEagerInvalidProxy(DssReadBuffer*):
-    ProtocolProxy(PN_EAGER_INVALID), a_failed(false), a_valid(false),
-    a_readers(), a_writers() {}
-
   ProtocolEagerInvalidProxy::~ProtocolEagerInvalidProxy(){
     Assert(a_writers.isEmpty()); 
     Assert(a_readers.isEmpty()); 
@@ -354,8 +349,10 @@ namespace _dss_internal{ //Start namespace
     int message = msg->popIntVal();
     switch (message) {
     case EI_INVALID_READ: {
-      a_valid = false;
-      sendToManager(EI_READ_INVALIDATED);
+      if (a_valid) {
+	a_valid = false;
+	sendToManager(EI_READ_INVALIDATED);
+      }
       break; 
     }
     case EI_READ_TOKEN:{
@@ -383,6 +380,19 @@ namespace _dss_internal{ //Start namespace
     default:
       Assert(0);
     }
+  }
+
+
+  // weak root status
+  bool
+  ProtocolEagerInvalidProxy::clearWeakRoot() {
+    if (a_valid && a_readers.isEmpty() && a_writers.isEmpty()) {
+      // simply force the invalidation...
+      a_valid = false;
+      sendToManager(EI_READ_INVALIDATED);
+      return true;
+    }
+    return false;
   }
 
 

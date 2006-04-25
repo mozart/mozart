@@ -260,10 +260,6 @@ namespace _dss_internal{ //Start namespace
     ProtocolProxy(PN_LAZY_INVALID), a_token(LIT_WRITER),
     a_readers(), a_writers() {}
 
-  ProtocolLazyInvalidProxy::ProtocolLazyInvalidProxy(DssReadBuffer*):
-    ProtocolProxy(PN_LAZY_INVALID), a_token(LIT_WRITER),
-    a_readers(), a_writers() {}
-
   bool
   ProtocolLazyInvalidProxy::m_initRemoteProt(DssReadBuffer*) {
     a_token = LIT_INVALID;
@@ -351,8 +347,10 @@ namespace _dss_internal{ //Start namespace
       break; 
     }
     case LI_INVALID_READ: {
-      a_token = LIT_INVALID;
-      sendToManager(LI_READ_INVALIDATED);
+      if (a_token == LIT_READER) {
+	a_token = LIT_INVALID;
+	sendToManager(LI_READ_INVALIDATED);
+      }
       break;
     }
     case LI_WRITE_TOKEN: {
@@ -363,9 +361,11 @@ namespace _dss_internal{ //Start namespace
       while (!a_writers.isEmpty()) a_writers.pop()->resumeDoLocal(NULL);
       break; 
     }
-    case LI_INVALID_WRITE: {	
-      a_token = LIT_READER;
-      sendToManager(LI_WRITE_INVALIDATED, a_proxy->retrieveEntityState());
+    case LI_INVALID_WRITE: {
+      if (a_token == LIT_WRITER) {
+	a_token = LIT_READER;
+	sendToManager(LI_WRITE_INVALIDATED, a_proxy->retrieveEntityState());
+      }
       break;
     }
     case LI_PERMFAIL: {
@@ -377,6 +377,28 @@ namespace _dss_internal{ //Start namespace
     default:
       Assert(0);
     }
+  }
+
+
+  // weak root status
+  bool
+  ProtocolLazyInvalidProxy::clearWeakRoot() {
+    if (isWeakRoot() && a_readers.isEmpty() && a_writers.isEmpty()) {
+      // get rid of the tokens...
+      switch (a_token) {
+      case LIT_WRITER:
+	a_token = LIT_READER;
+	sendToManager(LI_WRITE_INVALIDATED, a_proxy->retrieveEntityState());
+	// fall through
+      case LIT_READER:
+	a_token = LIT_INVALID;
+	sendToManager(LI_READ_INVALIDATED);
+	return true;
+      default:
+	Assert(0); break;
+      }
+    }
+    return false;
   }
 
 

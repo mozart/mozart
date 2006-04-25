@@ -97,7 +97,7 @@ namespace _dss_internal{ //Start namespace
 
   public:
     ProtocolLazyInvalidProxy();
-    ProtocolLazyInvalidProxy(DssReadBuffer*);
+    bool m_initRemoteProt(DssReadBuffer*);
     ~ProtocolLazyInvalidProxy();
 
     OpRetVal protocol_Read(GlobalThread* const th_id,
@@ -106,12 +106,12 @@ namespace _dss_internal{ //Start namespace
 			    PstOutContainerInterface**& msg);
     OpRetVal protocol_Kill(GlobalThread* const th_id);
 
-    bool m_initRemoteProt(DssReadBuffer*);
     void makeGCpreps();
     bool isWeakRoot() {
       return a_token == LIT_READER || a_token == LIT_WRITER ||
 	!a_readers.isEmpty() || !a_writers.isEmpty();
     }
+    bool clearWeakRoot();
 
     void msgReceived(MsgContainer*,DSite*);
 
