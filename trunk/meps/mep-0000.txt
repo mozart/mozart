@@ -40,7 +40,6 @@ Index by Category
 
  Open MEPs (under consideration)
  ---------------------------------------------------------------
- I   103  Archive Copy of Mozart Governance Rules        Van Roy
  S   104  Mozart release 1.3.2                  Jaradin - Mejias
  ---------------------------------------------------------------
 
@@ -49,6 +48,7 @@ Index by Category
  F   100  Expansion of Mozart Board to Mozart Community  Van Roy
  F   101  Update of Website for new Governance Model     Van Roy
  F   102  CVS access for Boris Mejias                      Glynn
+ F   103  Archive Copy of Mozart Governance Rules        Van Roy
  ---------------------------------------------------------------
 
  Empty MEPs (or containing only an abstract)
@@ -70,7 +70,7 @@ Numerical Index
  F   100  Expansion of Mozart Board to Mozart Community  Van Roy
  F   101  Update of Website for new Governance Model     Van Roy
  F   102  CVS access for Boris Mejias                      Glynn
- I   103  Archive Copy of Mozart Governance Rules        Van Roy
+ F   103  Archive Copy of Mozart Governance Rules        Van Roy
  S   104  Mozart release 1.3.2                  Jaradin - Mejias
  ---------------------------------------------------------------
 
