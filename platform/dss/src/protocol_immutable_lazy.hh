@@ -3,7 +3,7 @@
  *    Per Sahlin (sahlin@sics.se)
  * 
  *  Contributors:
- *    optional, Contributor's name (Contributor's email address)
+ *    Raphael Collet (raph@info.ucl.ac.be)
  * 
  *  Copyright:
  *    Per Sahlin, 2003
@@ -30,34 +30,26 @@
 #pragma interface
 #endif
 
-#include "dssBase.hh"
-#include "dss_comService.hh"
-#include "protocols.hh"
-#include "dss_templates.hh"
+#include "protocol_immutable_eager.hh"
 
 namespace _dss_internal{ //Start namespace
 
-  class ProtocolImmutableLazyManager:public ProtocolManager{
-  public:
-    ProtocolImmutableLazyManager();
-    ~ProtocolImmutableLazyManager(){};
-    virtual void msgReceived(MsgContainer*,DSite*);    
-  };
-  
-  class ProtocolImmutableLazyProxy:public ProtocolProxy{
-    bool stateHolder: true; 
-    SimpleList<GlobalThread*> a_readers; 
-  public: 
-    ProtocolImmutableLazyProxy();
-    ~ProtocolImmutableLazyProxy(){};
+  // See protocol_immutable_eager.hh for ProtocolImmutableManager and
+  // ProtocolImmutableProxy.
 
-    OpRetVal protocol_send(GlobalThread* const th_id, PstOutContainerInterface**& msg);
-    virtual void msgReceived(MsgContainer*,DSite*);   
-    virtual void remoteInitatedOperationCompleted(DssOperationId*, PstOutContainerInterface*); 
-    virtual void localInitatedOperationCompleted(); 
-    virtual bool isWeakRoot(){ return stateHolder; }; // The glue should know if a thread is relying on proxy
-    virtual void makeGCpreps();
+  class ProtocolImmutableLazyManager : public ProtocolImmutableManager {
+  public:
+    ProtocolImmutableLazyManager() : ProtocolImmutableManager() {}
+  };
+
+  class ProtocolImmutableLazyProxy : public ProtocolImmutableProxy {
+  public:
+    ProtocolImmutableLazyProxy() :
+      ProtocolImmutableProxy(PN_IMMUTABLE_LAZY) {}
+
     virtual bool m_initRemoteProt(DssReadBuffer*); 
+
+    OpRetVal protocol_Access(GlobalThread* const th_id);
   };
 
 } //End namespace

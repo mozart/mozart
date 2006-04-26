@@ -3,7 +3,7 @@
  *    Per Sahlin (sahlin@sics.se)
  * 
  *  Contributors:
- *    optional, Contributor's name (Contributor's email address)
+ *    Raphael Collet (raph@info.ucl.ac.be)
  * 
  *  Copyright:
  *    Per Sahlin, 2003
@@ -31,35 +31,67 @@
 #endif
 
 #include "dssBase.hh"
-#include "dss_comService.hh"
 #include "protocols.hh"
 #include "dss_templates.hh"
 
 namespace _dss_internal{ //Start namespace
 
-  class ProtocolImmutableEagerManager:public ProtocolManager{
+  // The eager and lazy immutable protocols are almost identical.
+  // Their managers are identical, and their proxies only differ in
+  // the moment they request the state.  I have therefore factored out
+  // the common stuff here.
+
+  class ProtocolImmutableManager : public ProtocolManager {
+  private:
+    bool failed:1;                         // whether entity is permfail
   public:
-    ProtocolImmutableEagerManager();
-    ~ProtocolImmutableEagerManager(){};
-    virtual void msgReceived(MsgContainer*,DSite*);    
+    ProtocolImmutableManager();
+    ~ProtocolImmutableManager() {}
+    virtual void msgReceived(MsgContainer*,DSite*);
   };
-  
-  class ProtocolImmutableEagerProxy:public ProtocolProxy{
-    bool stateHolder: true; 
-    SimpleList<GlobalThread*> a_readers;
+
+  class ProtocolImmutableProxy : public ProtocolProxy {
+  protected:
+    bool failed:1;                         // whether entity is permfail
+    bool stateHolder:1;                    // whether proxy has entity state
+    SimpleList<GlobalThread*> a_readers;   // suspended read operations
+
+    void m_requestState();
+
   public: 
-    ProtocolImmutableEagerProxy();
-    ~ProtocolImmutableEagerProxy(){};
-    
-    OpRetVal protocol_send(GlobalThread* const th_id);
- 
+    ProtocolImmutableProxy(const ProtocolName&);
+    ~ProtocolImmutableProxy() { Assert(a_readers.isEmpty()); }
+
+    OpRetVal protocol_Kill(GlobalThread* const th_id);
+
     virtual void msgReceived(MsgContainer*,DSite*);   
-    virtual void remoteInitatedOperationCompleted(DssOperationId*, PstOutContainerInterface*); 
-    virtual void localInitatedOperationCompleted(); 
-        
-    virtual bool isWeakRoot(){ return stateHolder; }; // The glue should know if a thread is relying on proxy
+    virtual void remoteInitatedOperationCompleted(DssOperationId*,
+						  PstOutContainerInterface*) {}
+    virtual void localInitatedOperationCompleted() {}
+
     virtual void makeGCpreps();
+    virtual bool isWeakRoot() { return false; }
+
+    virtual FaultState siteStateChanged(DSite*, const DSiteState&);
+  };
+
+
+
+  // Now comes the specific stuff for the eager protocol:
+
+  class ProtocolImmutableEagerManager : public ProtocolImmutableManager {
+  public:
+    ProtocolImmutableEagerManager() : ProtocolImmutableManager() {}
+  };
+
+  class ProtocolImmutableEagerProxy : public ProtocolImmutableProxy {
+  public: 
+    ProtocolImmutableEagerProxy() :
+      ProtocolImmutableProxy(PN_IMMUTABLE_EAGER) {}
+
     virtual bool m_initRemoteProt(DssReadBuffer*); 
+
+    OpRetVal protocol_Access(GlobalThread* const th_id);
   };
 
 } //End namespace

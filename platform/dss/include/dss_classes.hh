@@ -208,8 +208,6 @@ public:
   MediatorInterface();
   virtual PstOutContainerInterface *retrieveEntityRepresentation() = 0;
   virtual void installEntityRepresentation(PstInContainerInterface*) = 0; 
-
-  virtual void localize() {;}
   virtual void reportFaultState(const FaultState& fs) = 0;
 };
 
@@ -268,6 +266,11 @@ public:
 				   PstInContainerInterface* operation,
 				   PstOutContainerInterface*& possible_answer)=0;
 
+  // Note.  The programming system may want to localize the entity
+  // once its state has been installed.  However it should not delete
+  // the abstract entity before all suspended read operations have
+  // been woken up.  This is because the protocol proxy is deleted
+  // together with the abstract entity.
 };
 
 

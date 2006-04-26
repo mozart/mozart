@@ -313,9 +313,9 @@ namespace _dss_internal{ //Start namespace
     case PN_SIMPLE_CHANNEL:  
       return static_cast<ProtocolSimpleChannelProxy*>(pp)->protocol_Synch(gid,pstout,AO_STATE_READ);
     case PN_IMMUTABLE_LAZY:
-      return static_cast<ProtocolImmutableLazyProxy*>(pp)->protocol_send(gid, pstout);
+      return static_cast<ProtocolImmutableLazyProxy*>(pp)->protocol_Access(gid);
     case PN_IMMUTABLE_EAGER:
-      return static_cast<ProtocolImmutableEagerProxy*>(pp)->protocol_send(gid);
+      return static_cast<ProtocolImmutableEagerProxy*>(pp)->protocol_Access(gid);
     case PN_IMMEDIATE:
       return static_cast<ProtocolImmediateProxy*>(pp)->protocol_send(gid);
     default: 
