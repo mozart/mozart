@@ -3,7 +3,7 @@
  *    Per Sahlin (sahlin@sics.se)
  * 
  *  Contributors:
- *    optional, Contributor's name (Contributor's email address)
+ *    Raphael Collet (raph@info.ucl.ac.be)
  * 
  *  Copyright:
  *    Per Sahlin, 2003
@@ -31,60 +31,23 @@
 
 namespace _dss_internal{ //Start namespace
 
-  ProtocolImmutableLazyManager::ProtocolImmutableLazyManager(){}
-  
-  void
-  ProtocolImmutableLazyManager::msgReceived(MsgContainer *msg, DSite* sender){
-    MsgContainer *msgC = a_coordinator->m_createProxyProtMsg();
-    gf_pushPstOut(msgC, a_coordinator->retrieveEntityState());
-    sender->m_sendMsg(msgC);
-  }
-  
-  ProtocolImmutableLazyProxy::ProtocolImmutableLazyProxy() :
-    ProtocolProxy(PN_IMMUTABLE_LAZY), stateHolder(true), a_readers() {} 
-  
-  void
-  ProtocolImmutableLazyProxy::msgReceived(MsgContainer *msg, DSite* u){
-    PstInContainerInterface* load = gf_popPstIn(msg);
-    a_proxy->installEntityState(load);
-    while (!a_readers.isEmpty())
-      a_readers.pop()->resumeDoLocal(NULL);
-    a_proxy->a_AbsEnt_Interface->m_getAEreference()->accessMediator()->localize();
-    stateHolder = true;   
-  }
- 
+
+  /******************** ProtocolImmutableLazyProxy ********************/
+
   bool
   ProtocolImmutableLazyProxy::m_initRemoteProt(DssReadBuffer*){
     stateHolder = false; 
     return true;
   }
-  
-  void  ProtocolImmutableLazyProxy::remoteInitatedOperationCompleted(DssOperationId*, PstOutContainerInterface*) {;}
-
-  void ProtocolImmutableLazyProxy::localInitatedOperationCompleted(){ ; }
 
   OpRetVal
-  ProtocolImmutableLazyProxy::protocol_send(GlobalThread* const th_id, PstOutContainerInterface**& msg){
-    // Check if we it is a home proxy, in such cases the 
-    // operation can be performed without sending messages. 
-    if (stateHolder){
-      msg = NULL;
-      return DSS_PROCEED;
-    }
-    if (a_readers.isEmpty()) {
-      MsgContainer *msgC = a_proxy->m_createCoordProtMsg();
-      if (!a_proxy->m_sendToCoordinator(msgC) == false) {
-	msg = NULL;
-	return (DSS_RAISE);
-      }
-    }
+  ProtocolImmutableLazyProxy::protocol_Access(GlobalThread* const th_id) {
+    if (failed) return DSS_RAISE;
+    if (stateHolder) return DSS_PROCEED;
+    // ask manager if necessary, and wait
+    if (a_readers.isEmpty()) m_requestState();
     a_readers.push(th_id);
-    return (DSS_SUSPEND);
-  }
-
-  void
-  ProtocolImmutableLazyProxy::makeGCpreps() {
-    t_gcList(a_readers);
+    return DSS_SUSPEND;
   }
 
 } //end namespace

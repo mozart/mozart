@@ -3,7 +3,7 @@
  *    Per Sahlin (sahlin@sics.se)
  * 
  *  Contributors:
- *    optional, Contributor's name (Contributor's email address)
+ *    Raphael Collet (raph@info.ucl.ac.be)
  * 
  *  Copyright:
  *    Per Sahlin, 2003
@@ -31,57 +31,130 @@
 
 namespace _dss_internal{ //Start namespace
 
-  
-  ProtocolImmutableEagerManager::ProtocolImmutableEagerManager(){}
-  
-  void
-  ProtocolImmutableEagerManager::msgReceived(MsgContainer *msg, DSite* sender){
-    MsgContainer *msgC = a_coordinator->m_createProxyProtMsg();
-    gf_pushPstOut(msgC,a_coordinator->retrieveEntityState());
-    sender->m_sendMsg(msgC);
-  }
-  
-  ProtocolImmutableEagerProxy::ProtocolImmutableEagerProxy() :
-    ProtocolProxy(PN_IMMUTABLE_EAGER), stateHolder(true), a_readers() {} 
-  
-  void
-  ProtocolImmutableEagerProxy::msgReceived(MsgContainer *msg, DSite* u){
-    PstInContainerInterface* load = gf_popPstIn(msg);
-    a_proxy->installEntityState(load);
-    while (!a_readers.isEmpty())
-      a_readers.pop()->resumeDoLocal(NULL);
-    a_proxy->a_AbsEnt_Interface->m_getAEreference()->accessMediator()->localize();
-    stateHolder = true;   
+  // Quick description of the protocol.
+  //
+  // The protocol is extremely simple.  When a proxy is created, it
+  // sends an empty message to its manager, which replies with the
+  // state.  The proxy then installs the state.
+
+  namespace {
+    enum Immutable_Message {
+      IMM_GET,       // PM: ask state to manager
+      IMM_PUT,       // MP: send state to proxy
+      IMM_PERMFAIL   // PM,MP: make entity permfail
+    };
   }
 
-  bool 
-  ProtocolImmutableEagerProxy::m_initRemoteProt(DssReadBuffer*){
-    stateHolder = false; 
-    MsgContainer *msgC = a_proxy->m_createCoordProtMsg();
-    a_proxy->m_sendToCoordinator(msgC);
-    return true;
+
+
+  /******************** ProtocolImmutableManager ********************/
+
+  ProtocolImmutableManager::ProtocolImmutableManager() : failed(false) {}
+
+  void
+  ProtocolImmutableManager::msgReceived(MsgContainer *msg, DSite* sender){
+    switch (msg->popIntVal()) {
+    case IMM_GET:
+      if (!failed) {
+	sendToProxy(sender, IMM_PUT, a_coordinator->retrieveEntityState());
+	break;
+      }
+      // fall through
+    case IMM_PERMFAIL:
+      sendToProxy(sender, IMM_PERMFAIL);
+      break;
+    default:
+      Assert(0);
+    }
   }
-  
-  void  
-  ProtocolImmutableEagerProxy::remoteInitatedOperationCompleted(DssOperationId*, PstOutContainerInterface*) {;}
-  void 
-  ProtocolImmutableEagerProxy::localInitatedOperationCompleted(){ ; }
+
+
+
+  /******************** ProtocolImmutableProxy ********************/
+
+  ProtocolImmutableProxy::ProtocolImmutableProxy(const ProtocolName& pn) :
+    ProtocolProxy(pn), failed(false), stateHolder(true), a_readers() {} 
+
+  void
+  ProtocolImmutableProxy::makeGCpreps() {
+    t_gcList(a_readers);
+  }
+
+  void
+  ProtocolImmutableProxy::m_requestState() {
+    sendToManager(IMM_GET);
+  }
 
 
   OpRetVal
-  ProtocolImmutableEagerProxy::protocol_send(GlobalThread* const th_id){
-    // Check if we it is a home proxy, in such cases the 
-    // operation can be performed without sending messages. 
-    if (stateHolder) return DSS_PROCEED;
-    // If the structure is not transfered, the threads should suspend until 
-    // the the structure is complete.
+  ProtocolImmutableProxy::protocol_Kill(GlobalThread* const th_id){
+    if (failed) return DSS_SKIP;
+    sendToManager(IMM_PERMFAIL);
     a_readers.push(th_id);
-    return (DSS_SUSPEND);
+    return DSS_SUSPEND;
   }
 
+
   void
-  ProtocolImmutableEagerProxy::makeGCpreps() {
-    t_gcList(a_readers);
+  ProtocolImmutableProxy::msgReceived(MsgContainer *msg, DSite* u){
+    if (failed) return;
+    switch (msg->popIntVal()) {
+    case IMM_PUT: {
+      PstInContainerInterface* builder = gf_popPstIn(msg);
+      a_proxy->installEntityState(builder);
+      stateHolder = true;
+      while (!a_readers.isEmpty()) a_readers.pop()->resumeDoLocal(NULL);
+      break;
+    }
+    case IMM_PERMFAIL: {
+      failed = true;
+      a_proxy->updateFaultState(FS_PROT_STATE_PRM_UNAVAIL);
+      // suspensions should be woken up...
+      break;
+    }
+    default:
+      Assert(0);
+    }
   }
-  
+
+
+  // handle site failures
+  FaultState
+  ProtocolImmutableProxy::siteStateChanged(DSite* s, const DSiteState& state) {
+    if (!failed && !stateHolder && s == a_proxy->m_getCoordinatorSite()) {
+      switch (state) {
+      case DSite_OK:
+	return FS_PROT_STATE_OK;
+      case DSite_TMP:
+	return FS_PROT_STATE_TMP_UNAVAIL;
+      case DSite_GLOBAL_PRM: case DSite_LOCAL_PRM:
+	failed = true;
+	return FS_PROT_STATE_PRM_UNAVAIL;
+      default:
+	dssError("Unknown DSite state %d for %s",state,s->m_stringrep());
+      }
+    }
+    return 0;
+  }
+
+
+
+  /******************** ProtocolImmutableEagerProxy ********************/
+
+  bool 
+  ProtocolImmutableEagerProxy::m_initRemoteProt(DssReadBuffer*){
+    stateHolder = false;
+    m_requestState();
+    return true;
+  }
+
+  OpRetVal
+  ProtocolImmutableEagerProxy::protocol_Access(GlobalThread* const th_id){
+    if (failed) return DSS_RAISE;
+    if (stateHolder) return DSS_PROCEED;
+    // the state is coming, be patient...
+    a_readers.push(th_id);
+    return DSS_SUSPEND;
+  }
+
 } //end namespace
