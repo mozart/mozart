@@ -1,0 +1,99 @@
+MEP: 104
+Title: Mozart release 1.3.2
+Author: Yves Jaradin <yjaradin@info.ucl.ac.be>, Boriss Mejias <bmc@info.ucl.ac.be>
+Status: Draft
+Type: Standards Track
+Content-Type: text/x-rst
+Created: 10-Feb-2006
+Post-History:
+
+
+Abstract
+========
+
+The purpose of this MEP is to make a new release of the Mozart platform.
+The new release will:
+
+* Fix various bugs in Mozart 1.3.1
+
+* Add support for recent versions of gcc (gcc 3.4 and 4.0)
+
+The release manager will be Boris Mejias, assisted by Yves Jaradin. In
+order to make the release we will need:
+
+* Update access to the website for Boris Mejías
+
+* CVS write access for Yves Jaradin
+
+
+Motivation
+==========
+
+Bugs
+----
+
+A fair amount of bugs have been fixed since Mozart 1.3.1 or will be
+fixed soon. As the fixes are only available through CVS, many users
+continues to fight with these bugs. A bug-fix release is therefore
+recommended for the typical users.
+
+
+GCC
+---
+
+Mozart 1.3.1 can't be built with gcc newer than 3.3. Mozart 1.3.2 will
+be buildable with (at least) all commonly deployed versions of gcc up
+to gcc 4.0.
+
+Background
+==========
+
+Team
+----
+
+The release manager for Mozart 1.3.2 is Boriss Mejias, he will be
+assisted by Yves Jaradin.  Everyone is invited to participate in
+producing bug reports, fixes or patches.
+
+
+Activities
+----------
+
+* Announcement of the coming release to hackers and users, asking for
+  bug reports
+
+* Bugs and documentation fixes + testing
+
+* Code freeze
+
+* Documentation fixes
+
+* Release tagging and source release packaging (tgz, srpm)
+
+* Critical binary release packaging (tgz, generic rpm, win32)
+
+* update website for new release
+
+* Release announcement
+
+* More source and/or binary packages
+
+
+Schedule
+--------
+
+No deadlines are fixed yet.
+
+
+Backwards Compatibility
+=======================
+
+Mozart 1.3.2 will be compatible with Mozart 1.3.1.  Native modules
+compiled with gcc >3.2 will be compatible with the binary release
+packages.
+
+
+Copyright
+=========
+
+This document has been placed in the public domain. 
