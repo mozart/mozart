@@ -109,6 +109,11 @@ namespace _dss_internal{ //Start namespace
     return a_proxy->retrieveEntityState();
   }
   
+  ::PstOutContainerInterface* 
+  Coordinator::deinstallEntityState(){
+    return a_proxy->deinstallEntityState();
+  }
+  
   void 
   Coordinator::installEntityState(PstInContainerInterface* builder){
     a_proxy->installEntityState(builder); 
@@ -192,6 +197,11 @@ namespace _dss_internal{ //Start namespace
   ::PstOutContainerInterface* 
   Proxy::retrieveEntityState(){
     return a_AbsEnt_Interface->retrieveEntityState(); 
+  }
+
+  ::PstOutContainerInterface* 
+  Proxy::deinstallEntityState(){
+    return a_AbsEnt_Interface->deinstallEntityState(); 
   }
   
   void 

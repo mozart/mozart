@@ -206,8 +206,16 @@ public:
 class DSSDLLSPEC MediatorInterface{
 public:
   MediatorInterface();
-  virtual PstOutContainerInterface *retrieveEntityRepresentation() = 0;
+
+  // both the following return the entity's current state.  The first
+  // one is used to make a copy of the state, while the second one may
+  // turn the entity into a skeleton.
+  virtual PstOutContainerInterface* retrieveEntityRepresentation() = 0;
+  virtual PstOutContainerInterface* deinstallEntityRepresentation() {
+    return retrieveEntityRepresentation(); }
+  // set the entity's new state
   virtual void installEntityRepresentation(PstInContainerInterface*) = 0; 
+  // report the entity's new fault state
   virtual void reportFaultState(const FaultState& fs) = 0;
 };
 
