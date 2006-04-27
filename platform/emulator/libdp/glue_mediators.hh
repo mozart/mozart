@@ -283,6 +283,7 @@ public:
 				   PstInContainerInterface* operation,
 				   PstOutContainerInterface*& possible_answer);
   virtual PstOutContainerInterface *retrieveEntityRepresentation();
+  virtual PstOutContainerInterface *deinstallEntityRepresentation();
   virtual void installEntityRepresentation(PstInContainerInterface*); 
   virtual char *getPrintType();
   virtual void reportFaultState(const FaultState& fs) { reportFS(fs); }
@@ -335,6 +336,7 @@ public:
 				   PstInContainerInterface* operation,
 				   PstOutContainerInterface*& possible_answer);
   virtual PstOutContainerInterface *retrieveEntityRepresentation() ;
+  virtual PstOutContainerInterface *deinstallEntityRepresentation() ;
   virtual void installEntityRepresentation(PstInContainerInterface*) ;
   virtual void marshal(ByteBuffer *bs);
   virtual char *getPrintType();
@@ -357,6 +359,7 @@ public:
 				   PstInContainerInterface* operation,
 				   PstOutContainerInterface*& possible_answer);
   virtual PstOutContainerInterface *retrieveEntityRepresentation() ;
+  virtual PstOutContainerInterface *deinstallEntityRepresentation() ;
   virtual void installEntityRepresentation(PstInContainerInterface*) ;
   virtual char *getPrintType();
   virtual void reportFaultState(const FaultState& fs) { reportFS(fs); }
