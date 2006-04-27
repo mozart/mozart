@@ -77,7 +77,7 @@ namespace _dss_internal{ //Start namespace
 
   void ProtocolSimpleChannelManager::sendMigrateInfo(::MsgContainer* msg){
     msg->pushIntVal(failed);
-    gf_pushPstOut(msg, a_coordinator->retrieveEntityState());
+    gf_pushPstOut(msg, a_coordinator->deinstallEntityState());
     static_cast<ProtocolSimpleChannelProxy*>(a_coordinator->m_getProxy()->m_getProtocol())->stateHolder = false; 
   }
 

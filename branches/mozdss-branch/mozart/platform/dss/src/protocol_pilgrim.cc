@@ -309,7 +309,7 @@ namespace _dss_internal{ //Start namespace
     Assert(a_token == PLGT_HERE && a_jobsLeft == 0);
     if (a_successor && !m_isAlone()) {
       sendToProxy(a_successor, PLGM_TOKEN,
-		  a_proxy->retrieveEntityState(), (int) a_color);
+		  a_proxy->deinstallEntityState(), (int) a_color);
       a_token = PLGT_EMPTY;
     }
   }

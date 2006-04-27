@@ -125,6 +125,12 @@ namespace _dss_internal{ //Start namespace
     return mi->retrieveEntityRepresentation();
   }
 
+  PstOutContainerInterface* 
+  MutableAbstractEntityImpl::deinstallEntityState(){
+    MediatorInterface *mi = this->accessMediator();
+    return mi->deinstallEntityRepresentation();
+  }
+
   void 
   MutableAbstractEntityImpl::installEntityState(::PstInContainerInterface* builder){
     MediatorInterface *mi = this->accessMediator();
@@ -176,6 +182,12 @@ namespace _dss_internal{ //Start namespace
   MonotonicAbstractEntityImpl::retrieveEntityState(){
     MediatorInterface *mi = this->accessMediator();
     return mi->retrieveEntityRepresentation(); 
+  }
+
+  PstOutContainerInterface* 
+  MonotonicAbstractEntityImpl::deinstallEntityState(){
+    MediatorInterface *mi = this->accessMediator();
+    return mi->deinstallEntityRepresentation(); 
   }
 
   void 
@@ -281,6 +293,12 @@ namespace _dss_internal{ //Start namespace
   ImmutableAbstractEntityImpl::retrieveEntityState(){
     MediatorInterface *mi = this->accessMediator();
     return mi->retrieveEntityRepresentation();
+  }
+
+  PstOutContainerInterface* 
+  ImmutableAbstractEntityImpl::deinstallEntityState(){
+    MediatorInterface *mi = this->accessMediator();
+    return mi->deinstallEntityRepresentation();
   }
 
   void 
@@ -396,6 +414,12 @@ namespace _dss_internal{ //Start namespace
   RelaxedMutableAbstractEntityImpl::retrieveEntityState(){
     MediatorInterface *mi = this->accessMediator();
     return mi->retrieveEntityRepresentation();
+  }
+  
+  PstOutContainerInterface* 
+  RelaxedMutableAbstractEntityImpl::deinstallEntityState(){
+    MediatorInterface *mi = this->accessMediator();
+    return mi->deinstallEntityRepresentation();
   }
 
   void 

@@ -307,7 +307,7 @@ namespace _dss_internal{ //Start namespace
     Assert(a_token == MIGT_HERE && a_successor);
     dssLog(DLL_BEHAVIOR,"MigratoryProxy::forwardToken : To:%s",
 	   a_successor->m_stringrep());
-    sendToProxy(a_successor, MIGM_TOKEN, a_proxy->retrieveEntityState());
+    sendToProxy(a_successor, MIGM_TOKEN, a_proxy->deinstallEntityState());
     a_token = MIGT_EMPTY;
     a_successor = NULL;
     a_request++;

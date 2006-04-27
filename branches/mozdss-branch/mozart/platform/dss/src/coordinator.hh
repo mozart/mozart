@@ -119,6 +119,7 @@ namespace _dss_internal{ //Start namespace
 		     ::PstOutContainerInterface*& );
     
     ::PstOutContainerInterface* retrieveEntityState();
+    ::PstOutContainerInterface* deinstallEntityState();
     void installEntityState(::PstInContainerInterface*); 
     // ****************** Message Abstractions **********************
     
@@ -244,6 +245,7 @@ namespace _dss_internal{ //Start namespace
 		     ::PstOutContainerInterface*& );
     
     ::PstOutContainerInterface* retrieveEntityState();
+    ::PstOutContainerInterface* deinstallEntityState();
     void installEntityState(::PstInContainerInterface* builder);
     // **************** REFERENCE *******************
 

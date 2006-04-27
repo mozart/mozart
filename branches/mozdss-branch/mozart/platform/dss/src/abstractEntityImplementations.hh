@@ -87,6 +87,7 @@ namespace _dss_internal{ //Start namespace
 					      PstOutContainerInterface*&) = 0; 
     
     virtual PstOutContainerInterface* retrieveEntityState() = 0; 
+    virtual PstOutContainerInterface* deinstallEntityState() = 0;
     virtual void installEntityState(::PstInContainerInterface* builder) = 0; 
 
     virtual void reportFaultState(const FaultState& fs)=0; 
@@ -115,6 +116,7 @@ namespace _dss_internal{ //Start namespace
 					      PstOutContainerInterface*&); 
     
     virtual PstOutContainerInterface* retrieveEntityState(); 
+    virtual PstOutContainerInterface* deinstallEntityState();
     virtual void installEntityState(::PstInContainerInterface* builder); 
     
     virtual void reportFaultState(const FaultState& fs);
@@ -147,7 +149,7 @@ namespace _dss_internal{ //Start namespace
 					       PstOutContainerInterface*&);    
 
     virtual PstOutContainerInterface* retrieveEntityState(); 
-
+    virtual PstOutContainerInterface* deinstallEntityState();
     virtual void installEntityState(::PstInContainerInterface* builder); 
     
     virtual void reportFaultState(const FaultState& fs);
@@ -186,6 +188,7 @@ namespace _dss_internal{ //Start namespace
     
     
     virtual PstOutContainerInterface* retrieveEntityState(); 
+    virtual PstOutContainerInterface* deinstallEntityState();
     virtual void installEntityState(::PstInContainerInterface* builder); 
 
     virtual void reportFaultState(const FaultState& fs);
@@ -218,10 +221,9 @@ namespace _dss_internal{ //Start namespace
 					      PstOutContainerInterface*&);    
 
     virtual ::PstOutContainerInterface* retrieveEntityState(); 
+    virtual PstOutContainerInterface* deinstallEntityState();
     virtual void installEntityState(::PstInContainerInterface* builder); 
 
-
- 
     virtual void reportFaultState(const FaultState& fs);
     
     virtual CoordinatorAssistantInterface *getCoordinatorAssistant() const;
