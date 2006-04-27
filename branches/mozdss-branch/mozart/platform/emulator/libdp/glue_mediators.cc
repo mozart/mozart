@@ -655,6 +655,13 @@ CellMediator::retrieveEntityRepresentation() {
   return new PstOutContainer(out);
 }
 
+PstOutContainerInterface *
+CellMediator::deinstallEntityRepresentation() {
+  OzCell *cell = tagged2Cell(entity);
+  TaggedRef out = cell->exchangeValue(makeTaggedNULL());
+  return new PstOutContainer(out);
+}
+
 void 
 CellMediator::installEntityRepresentation(PstInContainerInterface* pstIn){
   PstInContainer *pst = static_cast<PstInContainer*>(pstIn); 
@@ -814,9 +821,20 @@ ArrayMediator::retrieveEntityRepresentation(){
   OzArray *oza = static_cast<OzArray*>(getConst()); 
   TaggedRef *ar = oza->getRef();
   TaggedRef list = oz_nil();
+  for (int i = oza->getWidth()-1; i >= 0; i--)
+    list = oz_cons(ar[i], list);
+  return new PstOutContainer(list);
+}
+
+PstOutContainerInterface*
+ArrayMediator::deinstallEntityRepresentation(){
+  // raph: the elements are sent in a list (in order)
+  OzArray *oza = static_cast<OzArray*>(getConst()); 
+  TaggedRef *ar = oza->getRef();
+  TaggedRef list = oz_nil();
   for (int i = oza->getWidth()-1; i >= 0; i--) {
     list = oz_cons(ar[i], list);
-    ar[i] = makeTaggedSmallInt(0);   // not a great idea...
+    ar[i] = makeTaggedNULL();
   }
   return new PstOutContainer(list);
 }
@@ -892,6 +910,15 @@ DictionaryMediator::retrieveEntityRepresentation(){
   return new PstOutContainer(ozd->pairs());
 }
 
+PstOutContainerInterface*
+DictionaryMediator::deinstallEntityRepresentation(){
+  // sent the list of entries, and clean up the dictionary
+  OzDictionary *ozd = tagged2Dictionary(entity);
+  TaggedRef entries = ozd->pairs();
+  ozd->removeAll();
+  return new PstOutContainer(entries);
+}
+
 void
 DictionaryMediator::installEntityRepresentation(PstInContainerInterface* pstin){
   // make sure the dictionary is empty
@@ -934,6 +961,7 @@ void OzVariableMediator::globalize() {
 }
 
 void OzVariableMediator::localize() {
+  printf("--- raph: localize mediator %p\n", this);
   // In any case, we keep the mediator.  So remove the abstract
   // entity, and keep the mediator in the table
   delete absEntity;
