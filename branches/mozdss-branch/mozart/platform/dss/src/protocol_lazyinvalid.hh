@@ -121,6 +121,7 @@ namespace _dss_internal{ //Start namespace
   private: 
     void m_requestReadToken();
     void m_requestWriteToken();
+    void m_failed();
   };
 
 } //End namespace

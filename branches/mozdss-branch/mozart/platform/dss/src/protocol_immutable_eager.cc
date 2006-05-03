@@ -85,6 +85,14 @@ namespace _dss_internal{ //Start namespace
     sendToManager(IMM_GET);
   }
 
+  void
+  ProtocolImmutableProxy::m_failed() {
+    failed = true;
+    a_proxy->updateFaultState(FS_PROT_STATE_PRM_UNAVAIL);
+    // resume operations
+    while (!a_readers.isEmpty()) a_readers.pop()->resumeFailed();
+  }
+
 
   OpRetVal
   ProtocolImmutableProxy::protocol_Kill() {
@@ -105,9 +113,7 @@ namespace _dss_internal{ //Start namespace
       break;
     }
     case IMM_PERMFAIL: {
-      failed = true;
-      a_proxy->updateFaultState(FS_PROT_STATE_PRM_UNAVAIL);
-      // suspensions should be woken up...
+      m_failed();
       break;
     }
     default:
@@ -121,13 +127,10 @@ namespace _dss_internal{ //Start namespace
   ProtocolImmutableProxy::siteStateChanged(DSite* s, const DSiteState& state) {
     if (!failed && !stateHolder && s == a_proxy->m_getCoordinatorSite()) {
       switch (state) {
-      case DSite_OK:
-	return FS_PROT_STATE_OK;
-      case DSite_TMP:
-	return FS_PROT_STATE_TMP_UNAVAIL;
-      case DSite_GLOBAL_PRM: case DSite_LOCAL_PRM:
-	failed = true;
-	return FS_PROT_STATE_PRM_UNAVAIL;
+      case DSite_OK:         return FS_PROT_STATE_OK;
+      case DSite_TMP:        return FS_PROT_STATE_TMP_UNAVAIL;
+      case DSite_GLOBAL_PRM:
+      case DSite_LOCAL_PRM:  m_failed(); return FS_PROT_STATE_PRM_UNAVAIL;
       default:
 	dssError("Unknown DSite state %d for %s",state,s->m_stringrep());
       }

@@ -148,7 +148,6 @@ namespace _dss_internal{ //Start namespace
     }
     case SC_PERMFAIL:
       makeFailed();
-      a_proxy->updateFaultState(FS_PROT_STATE_PRM_UNAVAIL);
       break;
     }
   }
@@ -212,7 +211,8 @@ namespace _dss_internal{ //Start namespace
 
   void ProtocolSimpleChannelProxy::makeFailed() {
     failed = true;
-    // wake up suspensions (not complete yet)
+    a_proxy->updateFaultState(FS_PROT_STATE_PRM_UNAVAIL);
+    while (!a_susps.isEmpty()) a_susps.pop()->resumeFailed();
   }
   
   void ProtocolSimpleChannelProxy::localInitatedOperationCompleted(){ ; }

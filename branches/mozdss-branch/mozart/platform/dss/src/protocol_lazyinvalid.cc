@@ -286,6 +286,15 @@ namespace _dss_internal{ //Start namespace
     sendToManager(LI_WRITE_REQUEST);
   }
 
+  // notify failure
+  void ProtocolLazyInvalidProxy::m_failed() {
+    a_token = LIT_FAILED;
+    a_proxy->updateFaultState(FS_PROT_STATE_PRM_UNAVAIL);
+    // resume suspended threads
+    while (!a_readers.isEmpty()) a_readers.pop()->resumeFailed();
+    while (!a_writers.isEmpty()) a_writers.pop()->resumeFailed();
+  }
+
 
   OpRetVal
   ProtocolLazyInvalidProxy::protocol_Read(GlobalThread* const th_id,
@@ -362,9 +371,7 @@ namespace _dss_internal{ //Start namespace
       break;
     }
     case LI_PERMFAIL: {
-      a_token = LIT_FAILED;
-      a_proxy->updateFaultState(FS_PROT_STATE_PRM_UNAVAIL);
-      // we should also wake up all readers and writers!
+      m_failed();
       break;
     }
     default:
@@ -384,7 +391,7 @@ namespace _dss_internal{ //Start namespace
       case DSite_TMP:
 	return FS_PROT_STATE_TMP_UNAVAIL;
       case DSite_GLOBAL_PRM: case DSite_LOCAL_PRM:
-	a_token = LIT_FAILED;
+	m_failed();
 	return FS_PROT_STATE_PRM_UNAVAIL;
       default:
 	dssError("Unknown DSite state %d for %s",state,s->m_stringrep());

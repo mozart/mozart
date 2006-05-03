@@ -405,6 +405,14 @@ namespace _dss_internal{ //Start namespace
     while (!a_susps.isEmpty()) a_susps.pop()->resumeDoLocal(NULL);
   }
 
+  // notify failure
+  void ProtocolTransientRemoteProxy::m_failed() {
+    a_failed = true;
+    a_proxy->updateFaultState(FS_PROT_STATE_PRM_UNAVAIL);
+    // resume operations
+    while (!a_susps.isEmpty()) a_susps.pop()->resumeFailed();
+  }
+
   // initiate a bind
   OpRetVal 
   ProtocolTransientRemoteProxy::protocol_Terminate(GlobalThread* const th_id,
@@ -540,9 +548,7 @@ namespace _dss_internal{ //Start namespace
       break;
     }
     case TR_PERMFAIL: {
-      a_failed = true;
-      a_proxy->updateFaultState(FS_PROT_STATE_PRM_UNAVAIL);
-      wkSuspThrs();
+      m_failed();
       if (a_writeToken) sendToManager(TR_PERMFAIL);
       break;
     }
@@ -617,10 +623,7 @@ namespace _dss_internal{ //Start namespace
       case DSite_OK:         return FS_PROT_STATE_OK;
       case DSite_TMP:        return FS_PROT_STATE_TMP_UNAVAIL;
       case DSite_GLOBAL_PRM:
-      case DSite_LOCAL_PRM:
-	a_failed = true;
-	wkSuspThrs();
-	return FS_PROT_STATE_PRM_UNAVAIL;
+      case DSite_LOCAL_PRM:  m_failed(); return FS_PROT_STATE_PRM_UNAVAIL;
       default:
 	dssError("Unknown DSite state %d for %s",state,s->m_stringrep());
       }

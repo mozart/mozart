@@ -332,7 +332,8 @@ namespace _dss_internal{ //Start namespace
     a_token = MIGT_LOST;
     a_successor = NULL;
     a_proxy->updateFaultState(FS_PROT_STATE_PRM_UNAVAIL);
-    // wake up all suspensions?
+    // resume suspended threads
+    while (!a_susps.isEmpty()) a_susps.pop()->resumeFailed();
   }
 
 
