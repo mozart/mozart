@@ -68,39 +68,41 @@ typedef struct unmarshal_return{
   bool skel;
 } DSS_unmarshal_status;
 
+
+
 // Used to identify an operation
-class DSSDLLSPEC DssOperationId
-{
-public: 
-  DssOperationId(){;}
+class DSSDLLSPEC DssOperationId {
+public:
+  DssOperationId() {}
 };
 
-// Used to identify a thread, local or remote. 
-// The Map has to inherit from this class to implement 
-// its thread identifiers. 
+
+// A ThreadMediator is used to provide the DSS an interface to a
+// suspended operation in the programming system.  The operation can
+// be resumed in one of three ways:
+//  - resumeDoLocal: the entity state is available locally;
+//  - resumeRemoteDone: the result of the operation is given;
+//  - resumeFailed: the entity is in state permfail.
 class DSSDLLSPEC ThreadMediator{
 public:
   ThreadMediator();
   virtual WakeRetVal resumeDoLocal(DssOperationId*)=0;
   virtual WakeRetVal resumeRemoteDone(PstInContainerInterface* pstin)=0;
-
+  virtual WakeRetVal resumeFailed()=0;
 };
 
 
+// A DssThreadId represents a thread in the programming system.
 class DSSDLLSPEC DssThreadId{
 private:
   ThreadMediator* a_thread; 
 
 public: 
   DssThreadId():a_thread(NULL){}
+  void setThreadMediator(ThreadMediator* t) { a_thread = t; }
+  ThreadMediator* getThreadMediator() { return a_thread; }
 
-  void setThreadMediator(ThreadMediator* t){
-    a_thread = t; 
-  }
-  ThreadMediator* getThreadMediator(){
-    return a_thread; 
-  }
-  virtual void dispose() =0; 
+  virtual void dispose() = 0;
 
   MACRO_NO_DEFAULT_CONSTRUCTORS(DssThreadId);
 };
