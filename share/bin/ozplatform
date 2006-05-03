@@ -76,6 +76,8 @@ case $system in
    ;;
    *Power*Mac*Darwin*)  OZARCH=powermac-darwin
    ;;
+   *i*86*Darwin*)       OZARCH=i486-darwin
+   ;;
    *)                   OZARCH=unknown-unknown
    ;;
 esac
