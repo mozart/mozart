@@ -128,6 +128,13 @@ bool SuspendedOperation::gc() {
   }
 }
 
+WakeRetVal SuspendedOperation::resumeFailed() {
+  // simply forget about the control var, and release the thread id
+  releaseThreadId(threadId);
+  threadId = NULL;
+  return WRV_DONE;
+}
+
 
 
 /************************* SuspendedDummy *************************/

@@ -101,6 +101,7 @@ public:
   // inherited from ThreadMediator
   virtual WakeRetVal resumeDoLocal(DssOperationId*) = 0; 
   virtual WakeRetVal resumeRemoteDone(PstInContainerInterface* pstin) = 0;
+  virtual WakeRetVal resumeFailed();
 
   // returns TRUE and collect stuff if needed
   virtual bool gCollect() = 0;
