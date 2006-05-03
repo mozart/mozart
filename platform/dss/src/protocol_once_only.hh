@@ -83,6 +83,8 @@ namespace _dss_internal{ //Start namespace
     ProtocolOnceOnlyProxy& operator=(const ProtocolOnceOnlyProxy&)
     { return *this; }
 
+    void m_failed();
+
   public:
     ProtocolOnceOnlyProxy();
     ~ProtocolOnceOnlyProxy();

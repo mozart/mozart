@@ -90,6 +90,8 @@ namespace _dss_internal{ //Start namespace
     // wake up the suspended threads
     void wkSuspThrs(); 
 
+    void m_failed();
+
   public:
     ProtocolTransientRemoteProxy();
     ~ProtocolTransientRemoteProxy();

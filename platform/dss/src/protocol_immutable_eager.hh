@@ -57,6 +57,7 @@ namespace _dss_internal{ //Start namespace
     SimpleList<GlobalThread*> a_readers;   // suspended read operations
 
     void m_requestState();
+    void m_failed();
 
   public: 
     ProtocolImmutableProxy(const ProtocolName&);

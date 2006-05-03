@@ -117,6 +117,7 @@ namespace _dss_internal{ //Start namespace
 
   private: 
     void m_writeDone(); 
+    void m_failed();
   };
 
 } //End namespace

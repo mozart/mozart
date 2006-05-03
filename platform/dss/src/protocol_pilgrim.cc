@@ -343,7 +343,8 @@ namespace _dss_internal{ //Start namespace
     a_reachable = a_registered = false;
     a_successor = NULL;
     a_proxy->updateFaultState(FS_PROT_STATE_PRM_UNAVAIL);
-    // wake up all suspensions?
+    // resume suspended threads
+    while (!a_susps.isEmpty()) a_susps.pop()->resumeFailed();
   }
 
 
@@ -492,7 +493,7 @@ namespace _dss_internal{ //Start namespace
       switch (state) {
       case DSite_OK:         return FS_PROT_STATE_OK;
       case DSite_GLOBAL_PRM:
-      case DSite_LOCAL_PRM:  return FS_PROT_STATE_PRM_UNAVAIL;
+      case DSite_LOCAL_PRM:  m_lostToken(); return FS_PROT_STATE_PRM_UNAVAIL;
       default:               return 0;
       }
     }

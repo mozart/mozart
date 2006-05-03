@@ -311,6 +311,15 @@ namespace _dss_internal{ //Start namespace
     sendToManager(EI_WRITE_DONE, a_proxy->retrieveEntityState());
   }
 
+  void
+  ProtocolEagerInvalidProxy::m_failed() {
+    a_failed = true;
+    a_proxy->updateFaultState(FS_PROT_STATE_PRM_UNAVAIL);
+    // resume suspended threads
+    while (!a_readers.isEmpty()) a_readers.pop()->resumeFailed();
+    while (!a_writers.isEmpty()) a_writers.pop()->resumeFailed();
+  }
+
   
   OpRetVal
   ProtocolEagerInvalidProxy::protocol_Read(GlobalThread* const th_id,
@@ -368,9 +377,7 @@ namespace _dss_internal{ //Start namespace
       break; 
     }
     case EI_PERMFAIL: {
-      a_failed = true;
-      a_proxy->updateFaultState(FS_PROT_STATE_PRM_UNAVAIL);
-      // we should also wake up all readers and writers!
+      m_failed();
       break;
     }
     default:
@@ -390,7 +397,7 @@ namespace _dss_internal{ //Start namespace
       case DSite_TMP:
 	return FS_PROT_STATE_TMP_UNAVAIL;
       case DSite_GLOBAL_PRM: case DSite_LOCAL_PRM:
-	a_failed = true;
+	m_failed();
 	return FS_PROT_STATE_PRM_UNAVAIL;
       default:
 	dssError("Unknown DSite state %d for %s",state,s->m_stringrep());
