@@ -360,11 +360,9 @@ namespace _dss_internal{ //Start namespace
 
   // kill the entity
   OpRetVal
-  ProtocolMigratoryProxy::protocol_Kill(GlobalThread* const th_id) {
-    if (a_token == MIGT_LOST) return DSS_SKIP;
-    if (!sendToManager(MIGM_PERMFAIL)) return DSS_RAISE;
-    a_susps.push(th_id);
-    return DSS_SUSPEND;
+  ProtocolMigratoryProxy::protocol_Kill() {
+    if (a_token != MIGT_LOST) sendToManager(MIGM_PERMFAIL);
+    return DSS_SKIP;
   }
 
   

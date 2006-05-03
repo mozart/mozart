@@ -294,11 +294,9 @@ namespace _dss_internal{ //Start namespace
 
   // kill the entity
   OpRetVal
-  ProtocolOnceOnlyProxy::protocol_Kill(GlobalThread* const th_id) {
-    if (a_bound || a_failed) return DSS_RAISE;
-    if (!sendToManager(OO_PERMFAIL)) return DSS_RAISE;
-    a_susps.push(th_id);
-    return DSS_SUSPEND;
+  ProtocolOnceOnlyProxy::protocol_Kill() {
+    if (!a_bound && !a_failed) sendToManager(OO_PERMFAIL);
+    return DSS_SKIP;
   }
 
   // receive a message

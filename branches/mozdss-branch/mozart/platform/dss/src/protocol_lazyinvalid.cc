@@ -324,12 +324,9 @@ namespace _dss_internal{ //Start namespace
   }
 
   OpRetVal
-  ProtocolLazyInvalidProxy::protocol_Kill(GlobalThread* const th_id) {
-    dssLog(DLL_BEHAVIOR,"LazyInvalidProxy::Kill");
-    if (a_token == LIT_FAILED) return DSS_SKIP;
-    sendToManager(LI_PERMFAIL);
-    a_readers.append(th_id);
-    return DSS_SUSPEND;
+  ProtocolLazyInvalidProxy::protocol_Kill() {
+    if (a_token != LIT_FAILED) sendToManager(LI_PERMFAIL);
+    return DSS_SKIP;
   }
 
 

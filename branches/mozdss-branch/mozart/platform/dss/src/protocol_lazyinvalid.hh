@@ -104,7 +104,7 @@ namespace _dss_internal{ //Start namespace
 			   PstOutContainerInterface**& msg);
     OpRetVal protocol_Write(GlobalThread* const th_id,
 			    PstOutContainerInterface**& msg);
-    OpRetVal protocol_Kill(GlobalThread* const th_id);
+    OpRetVal protocol_Kill();
 
     void makeGCpreps();
     bool isWeakRoot() { return a_token == LIT_WRITER || !a_writers.isEmpty(); }

@@ -61,7 +61,7 @@ namespace _dss_internal{ //Start namespace
     
     OpRetVal protocol_Synch(GlobalThread* const th_id, ::PstOutContainerInterface**& msg, const AbsOp& aop);
     OpRetVal protocol_Asynch(::PstOutContainerInterface**& msg, const AbsOp& aop);
-    OpRetVal protocol_Kill(GlobalThread* const th_id);
+    OpRetVal protocol_Kill();
     
     void remoteInitatedOperationCompleted(DssOperationId*, ::PstOutContainerInterface*); 
     void localInitatedOperationCompleted(); 

@@ -145,7 +145,7 @@ namespace _dss_internal{ //Start namespace
     
     OpRetVal protocol_Access(GlobalThread* const,
 			     ::PstOutContainerInterface**&);
-    OpRetVal protocol_Kill(GlobalThread* const th_id);
+    OpRetVal protocol_Kill();
 
     void msgReceived(::MsgContainer*,DSite*);
     void remoteInitatedOperationCompleted(DssOperationId* opId,
