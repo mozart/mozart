@@ -1751,8 +1751,8 @@ fi
           echo "configure: warning: dont know how to check egcs version, assuming ok" 1>&2
 	else
 	  
-  echo $ac_n "checking $CXX version is at least 2.95.3""... $ac_c" 1>&6
-echo "configure:1756: checking $CXX version is at least 2.95.3" >&5
+  echo $ac_n "checking $CXX version is at least 3.3.2""... $ac_c" 1>&6
+echo "configure:1756: checking $CXX version is at least 3.3.2" >&5
   oz_tmp_ok=no
   if oz_tmp_version1=`$CXX -dumpversion || $CXX --version 2>/dev/null`; then
     # first we try to locate the string "version"
@@ -1778,7 +1778,7 @@ echo "configure:1756: checking $CXX version is at least 2.95.3" >&5
     if test -n "$oz_tmp_version"; then
       
   oz_tmp_got="$oz_tmp_version"
-  oz_tmp_want="2.95.3"
+  oz_tmp_want="3.3.2"
   
   oz_tmp="$oz_tmp_got"
 
@@ -1850,15 +1850,15 @@ echo "configure:1756: checking $CXX version is at least 2.95.3" >&5
 	  if test "$oz_tmp_ok" = no; then
             { echo "configure: error: 
 configure found the GNU C++ compiler $CXX version $oz_tmp_version
-but version 2.95.3 or higher is required to build the
+but version 3.3.2 or higher is required to build the
 system.  It can be retrieved from:
 
 	ftp://ftp.gnu.org/pub/gnu/gcc/
 
-The latest version at this time is 3.3.2 and is available
+The latest version at this time is 4.1.0 and is available
 packaged as the following archive:
 
-	gcc-3.3.2.tar.gz 
+	gcc-4.1.0.tar.bz2 
 
 You may find a mirror archive closer to you by consulting:
 
@@ -2220,8 +2220,8 @@ fi
           echo "configure: warning: dont know how to check egcs version, assuming ok" 1>&2
 	else
           
-  echo $ac_n "checking $CC version is at least 2.95.3""... $ac_c" 1>&6
-echo "configure:2225: checking $CC version is at least 2.95.3" >&5
+  echo $ac_n "checking $CC version is at least 3.3.2""... $ac_c" 1>&6
+echo "configure:2225: checking $CC version is at least 3.3.2" >&5
   oz_tmp_ok=no
   if oz_tmp_version1=`$CC -dumpversion || $CC --version 2>/dev/null`; then
     # first we try to locate the string "version"
@@ -2247,7 +2247,7 @@ echo "configure:2225: checking $CC version is at least 2.95.3" >&5
     if test -n "$oz_tmp_version"; then
       
   oz_tmp_got="$oz_tmp_version"
-  oz_tmp_want="2.95.3"
+  oz_tmp_want="3.3.2"
   
   oz_tmp="$oz_tmp_got"
 
@@ -2319,15 +2319,15 @@ echo "configure:2225: checking $CC version is at least 2.95.3" >&5
           if test "$oz_tmp_ok" = no; then
             { echo "configure: error: 
 configure found the GNU C compiler $CC version $oz_tmp_version
-but version 2.95.3 or higher is required to build the
+but version 3.3.2 or higher is required to build the
 system.  It can be retrieved from:
 
 	ftp://ftp.gnu.org/pub/gnu/gcc/
 
-The latest version at this time is 3.3.2 and is available
+The latest version at this time is 4.1.0 and is available
 packaged as the following archive:
 
-	gcc-3.3.2.tar.gz
+	gcc-4.1.0.tar.bz2
 
 You may find a mirror archive closer to you by consulting:
 
@@ -3546,7 +3546,7 @@ fi
           ;;
       esac
       ;;
-    *-i486) 
+    *-i486|i486-darwin) 
 	case `$CXX -dumpversion` in
 	2.95.3)
 	    oz_opt="-O3 -pipe -fschedule-insns2 -fregmove"
@@ -3959,7 +3959,7 @@ else
 #line 3960 "configure"
 #include "confdefs.h"
 #ifdef __cplusplus
-extern "C" void exit(int) throw ();
+extern "C" void exit(int);
 #endif
 #include <ctype.h>
 #define ISLOWER(c) ('a' <= (c) && (c) <= 'z')
@@ -5891,7 +5891,7 @@ else
 #line 5892 "configure"
 #include "confdefs.h"
 #ifdef __cplusplus
-extern "C" void exit(int) throw ();
+extern "C" void exit(int);
 #endif
 
 class DoubleConv {
@@ -5945,7 +5945,7 @@ else
 #line 5946 "configure"
 #include "confdefs.h"
 #ifdef __cplusplus
-extern "C" void exit(int) throw ();
+extern "C" void exit(int);
 #endif
 
 class DoubleConv {
@@ -9589,7 +9589,7 @@ else
 #line 9590 "configure"
 #include "confdefs.h"
 #ifdef __cplusplus
-extern "C" void exit(int) throw ();
+extern "C" void exit(int);
 #endif
 
 #include <sys/types.h>
@@ -9792,7 +9792,7 @@ else
 #line 9793 "configure"
 #include "confdefs.h"
 #ifdef __cplusplus
-extern "C" void exit(int) throw ();
+extern "C" void exit(int);
 #endif
 
 #ifdef __GNUC__
@@ -9874,7 +9874,7 @@ else
 #line 9875 "configure"
 #include "confdefs.h"
 #ifdef __cplusplus
-extern "C" void exit(int) throw ();
+extern "C" void exit(int);
 #endif
 
 #ifdef __GNUC__
@@ -9956,7 +9956,7 @@ else
 #line 9957 "configure"
 #include "confdefs.h"
 #ifdef __cplusplus
-extern "C" void exit(int) throw ();
+extern "C" void exit(int);
 #endif
 
 class Tag {
@@ -9997,7 +9997,7 @@ else
 #line 9998 "configure"
 #include "confdefs.h"
 #ifdef __cplusplus
-extern "C" void exit(int) throw ();
+extern "C" void exit(int);
 #endif
 
 class Tag {
@@ -10048,7 +10048,7 @@ else
 #line 10049 "configure"
 #include "confdefs.h"
 #ifdef __cplusplus
-extern "C" void exit(int) throw ();
+extern "C" void exit(int);
 #endif
 
 class Tag {
