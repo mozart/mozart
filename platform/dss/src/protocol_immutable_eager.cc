@@ -87,11 +87,9 @@ namespace _dss_internal{ //Start namespace
 
 
   OpRetVal
-  ProtocolImmutableProxy::protocol_Kill(GlobalThread* const th_id){
-    if (failed) return DSS_SKIP;
-    sendToManager(IMM_PERMFAIL);
-    a_readers.push(th_id);
-    return DSS_SUSPEND;
+  ProtocolImmutableProxy::protocol_Kill() {
+    if (!failed) sendToManager(IMM_PERMFAIL);
+    return DSS_SKIP;
   }
 
 

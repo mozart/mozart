@@ -180,11 +180,9 @@ namespace _dss_internal{ //Start namespace
   }
 
   OpRetVal
-  ProtocolSimpleChannelProxy::protocol_Kill(GlobalThread* const th_id) {
-    if (failed) return DSS_RAISE;
-    if (!sendToManager(SC_PERMFAIL)) return DSS_RAISE;
-    a_susps.append(th_id);
-    return DSS_SUSPEND;
+  ProtocolSimpleChannelProxy::protocol_Kill() {
+    if (!failed) sendToManager(SC_PERMFAIL);
+    return DSS_SKIP;
   }
 
 

@@ -62,7 +62,7 @@ namespace _dss_internal{ //Start namespace
     ProtocolImmutableProxy(const ProtocolName&);
     ~ProtocolImmutableProxy() { Assert(a_readers.isEmpty()); }
 
-    OpRetVal protocol_Kill(GlobalThread* const th_id);
+    OpRetVal protocol_Kill();
 
     virtual void msgReceived(MsgContainer*,DSite*);   
     virtual void remoteInitatedOperationCompleted(DssOperationId*,

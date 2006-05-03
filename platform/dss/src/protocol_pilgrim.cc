@@ -362,11 +362,9 @@ namespace _dss_internal{ //Start namespace
 
   // kill the entity
   OpRetVal
-  ProtocolPilgrimProxy::protocol_Kill(GlobalThread* const th_id) {
-    if (a_token == PLGT_LOST) return DSS_SKIP;
-    if (!sendToManager(PLGM_PERMFAIL)) return DSS_RAISE;
-    a_susps.append(th_id);
-    return DSS_SUSPEND;
+  ProtocolPilgrimProxy::protocol_Kill() {
+    if (a_token != PLGT_LOST) sendToManager(PLGM_PERMFAIL);
+    return DSS_SKIP;
   }
   
   

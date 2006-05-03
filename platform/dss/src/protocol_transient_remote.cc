@@ -460,19 +460,15 @@ namespace _dss_internal{ //Start namespace
 
   // kill the entity
   OpRetVal
-  ProtocolTransientRemoteProxy::protocol_Kill(GlobalThread* const th_id) {
-    if (a_bound || a_failed) return DSS_RAISE;
-    if (a_writeToken) { // make it fail, an notifies manager
-      a_failed = true;
-      a_proxy->updateFaultState(FS_PROT_STATE_PRM_UNAVAIL);
+  ProtocolTransientRemoteProxy::protocol_Kill() {
+    if (!a_bound && !a_failed) {
+      if (a_writeToken) { // make it fail immediately
+	a_failed = true;
+	a_proxy->updateFaultState(FS_PROT_STATE_PRM_UNAVAIL);
+      }
       sendToManager(TR_PERMFAIL);
-      return DSS_PROCEED;   // ?
-
-    } else { // ask to manager
-      if (!sendToManager(TR_PERMFAIL)) return DSS_RAISE;
-      a_susps.push(th_id);
-      return DSS_SUSPEND;
     }
+    return DSS_SKIP;
   }
 
   // receive a message

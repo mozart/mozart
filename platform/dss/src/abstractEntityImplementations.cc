@@ -114,6 +114,21 @@ namespace _dss_internal{ //Start namespace
     return DSS_INTERNAL_ERROR_SEVERE;
   }
 
+  OpRetVal
+  MutableAbstractEntityImpl::abstractOperation_Kill() {
+    ProtocolProxy* pp = a_coordinationProxy->m_getProtocol();
+    switch(pp->getProtocolName()){
+    case PN_SIMPLE_CHANNEL:  return static_cast<ProtocolSimpleChannelProxy*>(pp)->protocol_Kill();
+    case PN_MIGRATORY_STATE: return static_cast<ProtocolMigratoryProxy*>(pp)->protocol_Kill();
+    case PN_EAGER_INVALID:   return static_cast<ProtocolEagerInvalidProxy*>(pp)->protocol_Kill();
+    case PN_LAZY_INVALID:    return static_cast<ProtocolLazyInvalidProxy*>(pp)->protocol_Kill();
+    case PN_PILGRIM_STATE:   return static_cast<ProtocolPilgrimProxy*>(pp)->protocol_Kill();
+    default: 
+      Assert(0); 
+    }
+    return DSS_INTERNAL_ERROR_SEVERE;
+  }
+
   void
   MutableAbstractEntityImpl::reportFaultState(const FaultState& fs){
     if (a_mediator) a_mediator->reportFaultState(fs);
@@ -245,6 +260,20 @@ namespace _dss_internal{ //Start namespace
     return DSS_INTERNAL_ERROR_SEVERE;
   }
 
+  OpRetVal
+  MonotonicAbstractEntityImpl::abstractOperation_Kill() {
+    ProtocolProxy* pp = a_coordinationProxy->m_getProtocol();
+    switch (pp->getProtocolName()) {
+    case PN_TRANSIENT:
+      return static_cast<ProtocolOnceOnlyProxy*>(pp)->protocol_Kill();
+    case PN_TRANSIENT_REMOTE:
+      return static_cast<ProtocolTransientRemoteProxy*>(pp)->protocol_Kill();
+    default:
+      Assert(0);
+    }
+    return DSS_INTERNAL_ERROR_SEVERE;
+  }
+
   AOcallback 
   MonotonicAbstractEntityImpl::applyAbstractOperation(const AbsOp& aop,
 						      DssThreadId* thid,
@@ -343,6 +372,22 @@ namespace _dss_internal{ //Start namespace
 
     //  return (DSS_SUSPEND);
   }
+  
+  OpRetVal
+  ImmutableAbstractEntityImpl::abstractOperation_Kill() {
+   ProtocolProxy* pp = a_coordinationProxy->m_getProtocol();
+    switch(pp->getProtocolName()){
+    case PN_SIMPLE_CHANNEL:  
+      return static_cast<ProtocolSimpleChannelProxy*>(pp)->protocol_Kill();
+    case PN_IMMUTABLE_LAZY:
+      return static_cast<ProtocolImmutableLazyProxy*>(pp)->protocol_Kill();
+    case PN_IMMUTABLE_EAGER:
+      return static_cast<ProtocolImmutableEagerProxy*>(pp)->protocol_Kill();
+    default: 
+      Assert(0); 
+    }
+    return DSS_INTERNAL_ERROR_SEVERE;
+  }
 
   AOcallback
   ImmutableAbstractEntityImpl::applyAbstractOperation(const AbsOp& aop,
@@ -405,6 +450,18 @@ namespace _dss_internal{ //Start namespace
     return DSS_INTERNAL_ERROR_SEVERE;
   }
   
+  OpRetVal 
+  RelaxedMutableAbstractEntityImpl::abstractOperation_Kill() {
+    ProtocolProxy* pp = a_coordinationProxy->m_getProtocol();
+    switch(pp->getProtocolName()) {
+    case PN_SIMPLE_CHANNEL:
+      return static_cast<ProtocolSimpleChannelProxy*>(pp)->protocol_Kill();
+    default:
+      Assert(0); 
+    }
+    return DSS_INTERNAL_ERROR_SEVERE;
+  }
+
   void
   RelaxedMutableAbstractEntityImpl::reportFaultState(const FaultState& fs){
     if (a_mediator) a_mediator->reportFaultState(fs);

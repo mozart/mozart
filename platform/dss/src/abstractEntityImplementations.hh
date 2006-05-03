@@ -109,6 +109,8 @@ namespace _dss_internal{ //Start namespace
     virtual OpRetVal abstractOperation_Write(DssThreadId *id,
 					     ::PstOutContainerInterface**& out);
     
+    virtual OpRetVal abstractOperation_Kill();
+
     virtual AOcallback applyAbstractOperation(const AbsOp&,
 					      DssThreadId*,
 					      DssOperationId*,
@@ -141,6 +143,8 @@ namespace _dss_internal{ //Start namespace
 					    ::PstOutContainerInterface**& out);
     
     virtual OpRetVal abstractOperation_Write(::PstOutContainerInterface**& out);
+    
+    virtual OpRetVal abstractOperation_Kill();
     
     virtual AOcallback applyAbstractOperation(const AbsOp&,
 					       DssThreadId*,
@@ -178,6 +182,8 @@ namespace _dss_internal{ //Start namespace
     virtual OpRetVal abstractOperation_Append(DssThreadId *id,
 					      ::PstOutContainerInterface**& out);
     
+    virtual OpRetVal abstractOperation_Kill();
+    
     virtual AOcallback applyAbstractOperation(const AbsOp&,
 					      DssThreadId*,
 					      DssOperationId*,
@@ -213,6 +219,8 @@ namespace _dss_internal{ //Start namespace
     ImmutableAbstractEntityImpl();
     virtual OpRetVal abstractOperation_Read(DssThreadId *id,
 					    ::PstOutContainerInterface**& pstout);
+    
+    virtual OpRetVal abstractOperation_Kill();
     
     virtual AOcallback applyAbstractOperation(const AbsOp&,
 					      DssThreadId*,

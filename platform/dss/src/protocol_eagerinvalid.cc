@@ -335,12 +335,9 @@ namespace _dss_internal{ //Start namespace
   }
 
   OpRetVal
-  ProtocolEagerInvalidProxy::protocol_Kill(GlobalThread* const th_id) {
-    dssLog(DLL_BEHAVIOR,"EagerInvalidProxy::Kill");
-    if (a_failed) return DSS_SKIP;
-    sendToManager(EI_PERMFAIL);
-    a_readers.append(th_id);
-    return DSS_SUSPEND;
+  ProtocolEagerInvalidProxy::protocol_Kill() {
+    if (!a_failed) sendToManager(EI_PERMFAIL);
+    return DSS_SKIP;
   }
 
 

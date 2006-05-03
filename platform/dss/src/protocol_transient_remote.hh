@@ -100,7 +100,7 @@ namespace _dss_internal{ //Start namespace
     OpRetVal protocol_Update(GlobalThread* const th_id,
 			     ::PstOutContainerInterface**& msg,
 			     const AbsOp& aop);
-    OpRetVal protocol_Kill(GlobalThread* const th_id);
+    OpRetVal protocol_Kill();
 
     bool isWeakRoot() { return !a_susps.isEmpty(); }
 
