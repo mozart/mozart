@@ -2497,44 +2497,32 @@ LBLdispatcher:
 			oz_nil());
 	RAISE_TYPE1("lock",oz_mklist(aux));
       }
-  
-      OzLock *t = (OzLock*) tagged2Const(aux);
-      Thread *th = e->currentThread();
-  
-      if (!t->isDistributed()) {
-	if (!e->isCurrentRoot()) {
-	  if (!oz_isCurrentBoard(GETBOARD(t))) {
-	    (void) oz_raise(E_ERROR,E_KERNEL,"globalState",1,AtomLock);
-	    RAISE_THREAD;
-	  }
-	}
-      }
-      else
-	{
-	  if (!e->isCurrentRoot()) {
-	    (void) oz_raise(E_ERROR,E_KERNEL,"globalState",1,AtomLock);
-	    RAISE_THREAD;
-	  }
 
-	  if ((*lockDistLock)(t, th))
-	    {
-	      PushCont(PC+lbl); // failure preepmtion 
-	      PC += 3;
-	      Assert(!e->isEmptyPreparedCalls());
-	      CTS->pushLock(t);
-	      goto LBLreplaceBICall;
-	    }
-	}
-      if (t->lockB(th)){
+      OzLock* lock = (OzLock*) tagged2Const(aux);
+
+      switch (lockTake(lock)) {
+      case RAISE: { // can be a situatedness error, for instance
+	RAISE_THREAD;
+      }
+      case PROCEED: { // we have the lock
 	PushCont(PC+lbl);
-	CTS->pushLock(t);
+	CTS->pushLock(lock);
 	DISPATCH(3);
       }
-      PushCont(PC+lbl); // failure preepmtion 
-      CTS->pushLock(t);
-      PC += 3;
-      Assert(!e->isEmptyPreparedCalls());
-      goto LBLreplaceBICall;
+      case BI_REPLACEBICALL: { // lock will be granted later
+	PushCont(PC+lbl); // failure preepmtion 
+	CTS->pushLock(lock);
+	PC += 3;
+	Assert(!e->isEmptyPreparedCalls());
+	goto LBLreplaceBICall;
+      }
+      case SUSPEND: { // suspended because of an entity failure
+	PushContX(PC);
+	SUSPENDONVARLIST;
+      }
+      default:
+	Assert(0);
+      }
     }
 
   Case(RETURN)
@@ -3112,8 +3100,7 @@ LBLdispatcher:
     {
       OzLock *lock = (OzLock *) CAP;
       CAP = (Abstraction *) NULL;
-      if (lock->isDistributed()) (*unlockDistLock)(lock);
-      else lock->unlock();
+      lockRelease(lock);
       goto LBLpopTaskNoPreempt;
     }
 

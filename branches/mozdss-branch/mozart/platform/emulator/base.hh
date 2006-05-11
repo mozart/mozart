@@ -266,8 +266,7 @@ class SChunk;
 class OzArray;
 class OzPort;
 
-class PendThread;
-class PendBinding;
+class PendingThreadList;
 class OzCell;
 
 class RefTable;

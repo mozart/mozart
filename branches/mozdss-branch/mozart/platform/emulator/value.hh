@@ -2686,49 +2686,6 @@ Bool oz_isSpace(TaggedRef term)
   return oz_isConst(term) && tagged2Const(term)->getType() == Co_Space;
 }
 
-
-/*===================================================================
- * PendThread  (only used for locks in centralized mozart
- *=================================================================== */
-
-//bmc: Probably the ExKind won't be used anymore.
-enum ExKind{
-  EXCHANGE    = 0,
-  ASSIGN      = 1,
-  AT          = 2,
-  NOEX        = 3, // lock
-  ACCESS      = 4,
-  DEEPAT      = 5,
-  REMOTEACCESS= 6,
-  O_EXCHANGE  = 7,
-  MOVEEX      = 8,
-  DUMMY       = 9
-};
-
-
-//
-//
-//bmc: Reintroducing the changes form OzDss 
-class PendThread{
-public:
-  TaggedRef oThread;
-  PendThread *next;
-  TaggedRef controlvar;
-  PendThread(PendThread *pt):
-    oThread(0), next(pt), controlvar(0) {}
-  PendThread(Thread *th, PendThread *pt, TaggedRef cv):
-    oThread(oz_thread(th)), next(pt), controlvar(cv) {}
-  PendThread(TaggedRef th, PendThread *pt, TaggedRef cv):
-    oThread(th), next(pt), controlvar(cv) {}
-  USEFREELISTMEMORY;
-  void dispose(){oz_freeListDispose(this,sizeof(PendThread));}
-};
-
-TaggedRef pendThreadResumeFirst(PendThread **pt);
-OZ_Return pendThreadAddToEndEmul(PendThread **pt,Thread *t, Board *home);
-void gCollectPendThreadEmul(PendThread**);
-void sClonePendThreadEmul(PendThread**);
-
 /*===================================================================
  * Unusables
  *=================================================================== */
@@ -2740,91 +2697,109 @@ public:
 };
 
 /*===================================================================
+ * PendingThreadList  (only used for locks now)
+ *=================================================================== */
+
+// a linked list of pairs (thread, control var)
+class PendingThreadList {
+public:
+  TaggedRef thread;
+  TaggedRef controlvar;
+  PendingThreadList *next;
+
+  PendingThreadList(PendingThreadList *pt):
+    thread(0), controlvar(0), next(pt) {}
+  PendingThreadList(TaggedRef t, TaggedRef cv, PendingThreadList *pt):
+    thread(t), controlvar(cv), next(pt) {}
+  USEFREELISTMEMORY;
+  void dispose(){oz_freeListDispose(this,sizeof(PendingThreadList));}
+};
+
+// convert from/to an Oz list of pairs
+TaggedRef pendingThreadList2List(PendingThreadList*);
+PendingThreadList* list2PendingThreadList(TaggedRef);
+
+// add/remove elements
+void pendingThreadAdd(PendingThreadList** pt, TaggedRef t, TaggedRef cv);
+void pendingThreadDrop(PendingThreadList** pt, TaggedRef t);
+TaggedRef pendingThreadResumeFirst(PendingThreadList** pt);
+void disposePendingThreadList(PendingThreadList*);
+
+/*===================================================================
  * Locks
  *=================================================================== */
-enum OzLockTakeResult{ 
-  OZ_LTR_GOT,
-  OZ_LTR_HAS,
-  OZ_LTR_PENDING,
-  OZ_LTR_SUSP
-};
 
 class OzLock:public ConstTermWithHome{
   friend void ConstTerm::gCollectConstRecurse(void);
   friend void ConstTerm::sCloneConstRecurse(void);
 private:
-  PendThread *pending;
-  TaggedRef locker;
-  int relocks;
+  TaggedRef locker;               // the thread that has the lock
+  int depth;                      // locking depth (reentrant locks)
+  PendingThreadList *pending;     // threads waiting for the lock
+
 public:
   NO_DEFAULT_CONSTRUCTORS(OzLock)
   OzLock() { Assert(0); }
-  OzLock(Board *b):ConstTermWithHome(b, Co_Lock){
-    locker = 0;
-    pending = NULL;
-    relocks = 0;
+  OzLock(Board *b):
+    ConstTermWithHome(b, Co_Lock), locker(0), depth(0), pending(NULL) {}
+
+  // get/set the locker thread, locking depth, and queue of pending
+  // threads.  The latter is a list of pairs ThreadId#ControlVar.
+  TaggedRef getLocker() { return locker; }
+  void setLocker(TaggedRef t) { Assert(oz_isThread(t)); locker = t; }
+
+  int getLockingDepth() { return depth; }
+  void setLockingDepth(int d) { depth = d; }
+
+  PendingThreadList* getPending() { return pending; }
+  void setPending(PendingThreadList* pt) {
+    disposePendingThreadList(pending);
+    pending = pt;
   }
 
-  PendThread* getPending() { return pending; }
-  void setPending(PendThread *pt) { pending = pt; }
-  PendThread** getPendBase() { return &pending; }
+  // simple test
+  Bool hasLock(TaggedRef t) { return oz_eq(t, locker); }
 
-  Thread * getLocker() {
-    if (locker == 0)
-      return NULL;
-    return oz_ThreadToC(locker);
-  }
-  void setLocker(Thread *t) {
-    if (t == NULL)
-      locker = 0;
-    else
-      locker = oz_thread(t);
-  }
-
-  Bool hasLock(Thread *t) { return (t==getLocker()) ? TRUE : FALSE; }
-
-  void unlockComplex();
-  void unlock() {
-    Assert(getLocker()!=0);
-    Assert(relocks>0);
-    relocks--;
-    if (relocks > 0 ) return;
-    if(pending==NULL) {
-      locker = 0;
-      return;
-    }
-    unlockComplex();
-  }
-
-  void lockComplex(Thread *);
-
-  Bool lockB(Thread *t) {
-    Thread *cur = getLocker();
-    if (t == cur) {
-      Assert(relocks > 0);
-      relocks++;
+  // try to take the lock, and return TRUE if done.  Note that the
+  // thread must explicitly subscribe if the lock was not granted!
+  Bool take(TaggedRef t) {
+    if (hasLock(t)) {
+      Assert(depth > 0);
+      depth++;
       return TRUE;
     }
-    if(getLocker() == NULL) {
+    if (locker == 0) {
       setLocker(t);
-      Assert(relocks == 0);
-      relocks = 1;
+      Assert(depth == 0);
+      depth = 1;
       return TRUE;
     }
-    lockComplex(t);
     return FALSE;
   }
 
-  void setRelocks(int r) { relocks = r; }
-  int getRelocks() { return relocks; }
-
-  void globalize(int);
-
-  void convertToLocal(Thread *t,PendThread *pt) {
-    setLocker(t);
-    pending=pt;
+  // subscribe to the pending list of the lock
+  void subscribe(TaggedRef t, TaggedRef cv) {
+    Assert(!oz_eq(t, locker) && locker != 0);
+    pendingThreadAdd(&pending, t, cv);
   }
 
+  // release the lock for thread t (possibly earlier than expected)
+  void release(TaggedRef t) {
+    Assert(locker != 0 && depth > 0);
+    if (oz_eq(t, locker)) {
+      depth--;
+      if (depth == 0) {
+	if (pending != NULL) {
+	  locker = pendingThreadResumeFirst(&pending);
+	  depth = 1;
+	} else {
+	  locker = 0;
+	}
+      }
+    } else { // this is an early release, drop t from the queue
+      pendingThreadDrop(&pending, t);
+    }
+  }
 };
 
 inline
@@ -2832,6 +2807,11 @@ Bool oz_isLock(TaggedRef term)
 {
   return oz_isConst(term) && tagged2Const(term)->getType() == Co_Lock;
 }
+
+// those operations support both the centralized and distributed cases
+OZ_Return lockTake(OzLock*);
+void lockRelease(OzLock*);
+
 /*===================================================================
  * 
  *=================================================================== */

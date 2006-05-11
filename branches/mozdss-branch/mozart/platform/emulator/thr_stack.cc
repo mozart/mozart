@@ -220,11 +220,7 @@ Bool TaskStack::findCatch(Thread *thr,
       dbg->dispose();
     } else if (PC==C_LOCK_Ptr) { 
       OzLock *lck = (OzLock *) G;
-      if (lck->isDistributed())
-        OZD_error("lock proxy unlocking\n");
-      else {
-	if (lck->hasLock(thr)) lck->unlock();
-      }
+      lockRelease(lck);
     } else if (PC==C_SET_SELF_Ptr) { 
       foundSelf = (OzObject*) G;
     } else if (PC==C_SET_ABSTR_Ptr) { 
