@@ -231,6 +231,7 @@ SuspendedLockTake::SuspendedLockTake(Mediator* med, TaggedRef thr) :
 }
 
 WakeRetVal SuspendedLockTake::resumeDoLocal(DssOperationId*) {
+  /*
   ConstMediator *med = static_cast<ConstMediator*>(getMediator());
   OzLock *lock = static_cast<OzLock*>(med->getConst());
   Thread *theThread = oz_ThreadToC(ozthread);
@@ -243,11 +244,13 @@ WakeRetVal SuspendedLockTake::resumeDoLocal(DssOperationId*) {
     ctlVar = 0;     // resume() should not trigger control var...
   }
   resume();
+  */
   return WRV_DONE; 
 }
 
 WakeRetVal 
 SuspendedLockTake::resumeRemoteDone(PstInContainerInterface* pstin){
+  /*
   PstInContainer *pst = static_cast<PstInContainer*>(pstin);
   TaggedRef lst = pst->a_term;
 
@@ -266,6 +269,7 @@ SuspendedLockTake::resumeRemoteDone(PstInContainerInterface* pstin){
     break; 
   }
   resume();
+  */
   return WRV_DONE;
 }
 
@@ -289,7 +293,7 @@ WakeRetVal
 SuspendedLockRelease::resumeDoLocal(DssOperationId*) {
   ConstMediator *med = static_cast<ConstMediator*>(getMediator());
   OzLock *lock = static_cast<OzLock*>(med->getConst());
-  lock->unlock();
+  //  lock->unlock();
   resume();
   return WRV_DONE;
 }

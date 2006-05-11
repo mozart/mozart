@@ -228,6 +228,15 @@ bool lockDistLockImpl(OzLock *l, Thread *thr){
   return true; 
 }
 
+OZ_Return distLockTakeImpl(OzLock*, TaggedRef) {
+  return PROCEED;
+}
+
+OZ_Return distLockReleaseImpl(OzLock*, TaggedRef) {
+  return PROCEED;
+}
+
+
 
 
 void cellOperationDoneReadImpl(OzCell* cell, TaggedRef ans, int thid){
@@ -386,7 +395,7 @@ distDictionaryPutImpl(OzDictionary *ozD, TaggedRef key, TaggedRef val) {
 
 // bind a distributed variable
 OZ_Return distVarBindImpl(OzVariable *ov, TaggedRef *varPtr, TaggedRef val) {
-  printf("--- raph: bind distributed variable %x\n", makeTaggedRef(varPtr));
+  //  printf("--- raph: bind distributed variable %x\n", makeTaggedRef(varPtr));
   Assert(ov == tagged2Var(*varPtr));
   Mediator *med = static_cast<Mediator*>(ov->getMediator());
 
@@ -558,8 +567,8 @@ void initEntityOperations(){
   distCellExchange = &distCellExchangeImpl;
   
   // locks
-  lockDistLock = &lockDistLockImpl; 
-  unlockDistLock = &unlockDistLockImpl; 
+  distLockTake = &distLockTakeImpl;
+  distLockRelease = &distLockReleaseImpl;
   
   // objects 
   cellAtExchange = &cellAtExchangeImpl;

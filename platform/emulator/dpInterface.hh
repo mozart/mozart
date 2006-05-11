@@ -64,10 +64,8 @@ extern OZ_Return (*distCellAccess)(OzCell*, TaggedRef&);
 extern OZ_Return (*distCellExchange)(OzCell*, TaggedRef&, TaggedRef);
 
 // locks
-extern OZ_Return (*distLockLock)(OzLock*, Thread*);
-extern OZ_Return (*distLockUnlock)(OzLock*);
-extern bool (*lockDistLock)(OzLock*, Thread *thr);
-extern bool (*unlockDistLock)(OzLock*);
+extern OZ_Return (*distLockTake)(OzLock*, TaggedRef);
+extern OZ_Return (*distLockRelease)(OzLock*, TaggedRef);
 
 // 
 extern OZ_Return (*cellAtAccess)(OzCell*,TaggedRef,TaggedRef);

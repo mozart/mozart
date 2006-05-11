@@ -530,6 +530,7 @@ LockMediator::callback_Write(DssThreadId* id_of_calling_thread,
 			     PstInContainerInterface* operation,
 			     PstOutContainerInterface*& possible_answer)
 {
+  /*
   // Two perations can be done, Lock and Unlock. If a reference to a
   // thread is passed as contents, it is a lock, otherwise an unlock
   OzLock *lock = static_cast<OzLock*>(getConst());
@@ -567,6 +568,7 @@ LockMediator::callback_Write(DssThreadId* id_of_calling_thread,
     possible_answer = NULL; 
     return AOCB_FINISH;
   }
+  */
 }
 
 AOcallback 
@@ -580,6 +582,7 @@ LockMediator::callback_Read(DssThreadId* id_of_calling_thread,
 
 PstOutContainerInterface *
 LockMediator::retrieveEntityRepresentation(){
+  /*
   OzLock *lock = static_cast<OzLock*>(getConst());
   if (lock->getLocker() == NULL)
     return NULL; 
@@ -602,10 +605,12 @@ LockMediator::retrieveEntityRepresentation(){
   lock->setLocker(NULL); 
   lock->setRelocks(0); 
   return (new PstOutContainer(strct));
+  */
 }
 
 void 
 LockMediator::installEntityRepresentation(PstInContainerInterface* pstIn){
+  /*
   OzLock *lock = static_cast<OzLock*>(getConst());
   if (pstIn == NULL)
     {
@@ -629,6 +634,7 @@ LockMediator::installEntityRepresentation(PstInContainerInterface* pstIn){
 	}
       lock->setPending(pending); 
     }
+  */
 }
 
 

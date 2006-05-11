@@ -57,26 +57,13 @@ OZ_Return distCellExchangeStub(OzCell*, TaggedRef&, TaggedRef) {
 }
 
 // locks
-OZ_Return distLockLockStub(OzLock*, Thread*) {
-  OZD_error("'distLockLock' called without DP library?");
+OZ_Return distLockTakeStub(OzLock*, TaggedRef) {
+  OZD_error("'distLockTake' called without DP library?");
   return PROCEED;
 }
-OZ_Return distLockUnlockStub(OzLock*) {
-  OZD_error("'distLockUnlock' called without DP library?");
+OZ_Return distLockReleaseStub(OzLock*, TaggedRef) {
+  OZD_error("'distLockRelease' called without DP library?");
   return PROCEED;
-}
-
-// (to be removed)
-// lock/unlock (interface) methods/their usage may be optimized
-// further, e.g. inline cases when distributed locks are currently
-// local;
-bool unlockDistLockStub(OzLock *l) {
-  OZD_error("'unlockDistLock' called without DP library?");
-  return false; 
-}
-bool lockDistLockStub(OzLock *l, Thread *thr) {
-  OZD_error("'lockDistLock' called without DP library?");
-  return false;
 }
 
 //
@@ -180,15 +167,12 @@ OZ_Return (*distCellExchange)(OzCell*, TaggedRef&, TaggedRef)
   = distCellExchangeStub;
 
 // locks
-OZ_Return (*distLockLock)(OzLock*, Thread*)
-  = distLockLockStub;
-OZ_Return (*distLockUnlock)(OzLock*)
-  =distLockUnlockStub;
-bool (*lockDistLock)(OzLock *l, Thread *thr)
-  = lockDistLockStub;
-bool (*unlockDistLock)(OzLock *l)
-  = unlockDistLockStub; 
+OZ_Return (*distLockTake)(OzLock*, TaggedRef)
+  = distLockTakeStub;
+OZ_Return (*distLockRelease)(OzLock*, TaggedRef)
+  = distLockReleaseStub;
 
+//
 OZ_Return (*objectExchange)(OzCell*,TaggedRef,TaggedRef,TaggedRef)
   = objectExchangeStub;
 OZ_Return (*cellAtAccess)(OzCell*,TaggedRef,TaggedRef)

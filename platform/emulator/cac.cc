@@ -120,7 +120,7 @@ static int gUsageVector[StaticGUsageVectorSize];
 #define _cacLocalInline          gCollectLocalInline
 #define _cacLocalRecurse         gCollectLocalRecurse
 
-#define _cacPendThreadEmul       gCollectPendThreadEmul
+#define _cacPendingThreadList    gCollectPendingThreadList
 
 #define _cacSuspList             gCollectSuspList
 #define _cacLocalSuspList        gCollectLocalSuspList
@@ -163,7 +163,7 @@ static int gUsageVector[StaticGUsageVectorSize];
 #define _cacLocalInline          sCloneLocalInline
 #define _cacLocalRecurse         sCloneLocalRecurse
 
-#define _cacPendThreadEmul       sClonePendThreadEmul
+#define _cacPendingThreadList    sClonePendingThreadList
 
 #define _cacSuspList             sCloneSuspList
 #define _cacLocalSuspList        sCloneLocalSuspList
@@ -1288,6 +1288,17 @@ void VarFixStack::_cacFix(void)
 
 //bmc: maybeGCForFailure(t) deleted
 
+inline
+void _cacPendingThreadList(PendingThreadList** ptp) {
+  while (*ptp != NULL) {
+    PendingThreadList* pt = new PendingThreadList((*ptp)->next);
+    oz_cacTerm((*ptp)->controlvar, pt->controlvar);
+    oz_cacTerm((*ptp)->thread, pt->thread);
+    *ptp = pt;
+    ptp = &(pt->next);
+  }
+}
+
 
 
 inline
@@ -1383,9 +1394,7 @@ void ConstTerm::_cacConstRecurse(void) {
   case Co_Lock:
     {
       OzLock *ll = (OzLock *) this;
-#ifdef G_COLLECT
-      gCollectPendThreadEmul(&(ll->pending));
-#endif
+      _cacPendingThreadList(&(ll->pending));
       if (ll->locker != 0)
 	oz_cacTerm(ll->locker, ll->locker); 
       break;

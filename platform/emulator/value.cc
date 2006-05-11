@@ -1323,61 +1323,116 @@ void Builtin::initname(void) {
 
 
 /*===================================================================
- * OzLock
+ * PendingThreadList
  *=================================================================== */
 
-void OzLock::unlockComplex() {
-  locker = pendThreadResumeFirst(&pending);
-  Assert(relocks == 0);
-  relocks = 1;
-  return;
+TaggedRef pendingThreadList2List(PendingThreadList* pt) {
+  TaggedRef list = 0;
+  TaggedRef* tailp = &list;
+  while (pt != NULL) {
+    *tailp = oz_cons(oz_pair2(pt->thread, pt->controlvar), 0);
+    tailp = tagged2LTuple(*tailp)->getRefTail();
+  }
+  *tailp = oz_nil();
+  return list;
 }
 
-void OzLock::lockComplex(Thread *t) {
-  // mm2: ignoring the return is badly wrong
-  (void) pendThreadAddToEndEmul(getPendBase(), t, getBoardInternal());
+PendingThreadList* list2PendingThreadList(TaggedRef l) {
+  PendingThreadList* pt = NULL;
+  PendingThreadList** ptp = &pt;
+  for (l = oz_deref(l); oz_isLTuple(l); l = oz_deref(oz_tail(l))) {
+    TaggedRef pair = oz_deref(oz_head(l));
+    TaggedRef thr = oz_deref(oz_left(pair));
+    TaggedRef cv = oz_right(pair);
+    *ptp = new PendingThreadList(thr, cv, NULL);
+    ptp = &((*ptp)->next);
+  }
+  return pt;
+}
+
+void pendingThreadAdd(PendingThreadList** pt, TaggedRef t, TaggedRef cv) {
+  while (*pt != NULL) { pt = &((*pt)->next); }
+  *pt = new PendingThreadList(t, cv, NULL);
+}
+
+void pendingThreadDrop(PendingThreadList** pt, TaggedRef t) {
+  while (*pt != NULL) {
+    if (oz_eq(t, (*pt)->thread)) {
+      PendingThreadList* p = *pt;
+      *pt = p->next;
+      OZ_unifyInThread(p->controlvar, oz_unit());   // maybe not useful...
+      p->dispose();
+      return;
+    }
+  }
+}
+
+TaggedRef pendingThreadResumeFirst(PendingThreadList** pt) {
+  PendingThreadList* p = *pt;
+  TaggedRef thr;
+  Assert(p != NULL);
+  *pt = p->next;
+  thr = p->thread;
+  OZ_unifyInThread(p->controlvar, oz_unit());
+  p->dispose();
+  return thr;
+}
+
+void disposePendingThreadList(PendingThreadList* pt) {
+  while (pt != NULL) {
+    PendingThreadList* p = pt;
+    pt = p->next;
+    p->dispose();
+  }
 }
 
 /*===================================================================
- * PendThread
+ * OzLock
  *=================================================================== */
 
-OZ_Return pendThreadAddToEndEmul(PendThread **pt,Thread *t, Board *home)
-{
-  while(*pt!=NULL){pt= &((*pt)->next);}
+// defined in builtins.cc
+int  oz_raise(OZ_Term cat, OZ_Term key, const char * label, int arity, ...);
 
-  ControlVarNew(controlvar,home);
-  *pt=new PendThread(t, NULL, controlvar);
-  SuspendOnControlVar;
-}
+OZ_Return lockTake(OzLock* lock) {
+  Thread* thr = oz_currentThread();
+  TaggedRef t = oz_thread(thr);
 
-TaggedRef pendThreadResumeFirst(PendThread **pt){
-  TaggedRef t;
-  do {
-    PendThread * tmp = *pt;
-    Assert(tmp!=NULL);
-    OZ_unifyInThread(tmp->controlvar, NameUnit);
-    t = tmp->oThread;
-    *pt = tmp->next;
-    tmp->dispose();
-    if (!oz_ThreadToC(t)->isDead())
-      return t;
-  } while (*pt);
-  return t;
-}
+  if (!lock->isDistributed()) { // centralized case
+    if (!oz_isCurrentBoard(GETBOARD(lock)))
+      return oz_raise(E_ERROR,E_KERNEL,"globalState",1,AtomLock);
 
-void gCollectPendThreadEmul(PendThread **pt)
-{
-  PendThread *tmp;
-  while (*pt!=NULL) {
-    tmp=new PendThread((*pt)->next);
-    oz_gCollectTerm((*pt)->controlvar,tmp->controlvar);
-    oz_gCollectTerm((*pt)->oThread,tmp->oThread);
-    
-    *pt=tmp;
-    pt=&(tmp->next);
+    if (lock->take(t)) return PROCEED;
+    ControlVarNew(controlvar, oz_currentBoard());
+    lock->subscribe(t, controlvar);
+    SuspendOnControlVar;
+
+  } else { // distributed case
+    if (!oz_isRootBoard(oz_currentBoard()))
+      return oz_raise(E_ERROR,E_KERNEL,"globalState",1,AtomLock);
+
+    return (*distLockTake)(lock, t);
   }
 }
+
+// the release operation is asynchronuous, but take and release
+// operations must be executed in order
+void lockRelease(OzLock* lock) {
+  Thread* thr = oz_currentThread();
+  TaggedRef t = oz_thread(thr);
+
+  if (!lock->isDistributed()) { // centralized case
+    Assert(oz_isCurrentBoard(GETBOARD(lock)));
+    lock->release(t);
+
+  } else { // distributed case
+    Assert(oz_isRootBoard(oz_currentBoard()));
+    (void) (*distLockRelease)(lock, t);
+  }
+}
+
+/*===================================================================
+ * 
+ *=================================================================== */
 
 #define STRING_BLOCK_SZ 64
 
