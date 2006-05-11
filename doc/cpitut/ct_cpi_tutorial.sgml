@@ -379,7 +379,7 @@ The class <<RIEexpect>> can now be used to define foreign functions
 that impose propagators on their parameters.
 
 <<<
-OZ_C_proc_begin(ri_lessEq, 2)
+OZ_BI_define(ri_lessEq, 2, 0)
 {
   OZ_EXPECTED_TYPE("real interval, real interval");
 
@@ -391,7 +391,7 @@ OZ_C_proc_begin(ri_lessEq, 2)
   return pe.impose(new RILessEq(OZ_args[0],
                                 OZ_args[1]));
 }
-OZ_C_proc_end
+OZ_BI_end
 >>>
 
 The propagator class <<RILessEq>> is partly defined next.
