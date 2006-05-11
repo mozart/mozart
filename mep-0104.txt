@@ -1,7 +1,7 @@
 MEP: 104
 Title: Mozart release 1.3.2
 Author: Yves Jaradin <yjaradin@info.ucl.ac.be>, Boriss Mejias <bmc@info.ucl.ac.be>
-Status: Draft
+Status: Accepted
 Type: Standards Track
 Content-Type: text/x-rst
 Created: 10-Feb-2006
@@ -97,3 +97,17 @@ Copyright
 =========
 
 This document has been placed in the public domain. 
+
+Votes
+=====
+::
+
+    Raphaël Collet     [ACCEPT]
+    Denys Duchier      []
+    Seif Haridi        []
+    Torbjörn Lager     []
+    Konstantin Popov   [ACCEPT]
+    Camilo Rueda       [ACCEPT]
+    Christian Schulte  [ACCEPT]
+    Gert Smolka        []
+    Peter Van Roy      [ACCEPT]
