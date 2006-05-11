@@ -265,13 +265,15 @@ again. The alternatives are to resume a propagator if the variable's
 domain becomes a singleton, the bounds are narrowed or some value is
 removed from the domain.
 
-<p> The macros <<OZ_C_proc_begin>> and <<OZ_C_proc_end>> are provided
+<p> The macros <<OZ_BI_define>> and <<OZ_BI_end>> are provided
 to allow the implementation of &ccpp; functions which are compliant
 with the calling conventions of Oz's emulator.
 
-<p> The first argument of the macro <<OZ_C_proc_begin>> defines the
-name of the function and the second argument the number of arguments
-of type <<OZ_Term>>. The macro <<OZ_args>> provides access to the
+<p> The first argument of the macro <<OZ_BI_define>> defines the
+name of the function, the second argument the number of input arguments
+of type <<OZ_Term>>, and the third argument the number of output arguments
+of type <<OZ_Term>> (for a propagator this will always be 0). 
+The macro <<OZ_args>> provides access to the
 actual argument. The name of the function has to obey certain rules to
 be compatible with the module <<Foreign>> which enables linking object
 files to a running Oz runtime system. The definition of the macro
