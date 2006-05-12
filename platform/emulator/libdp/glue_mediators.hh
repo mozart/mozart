@@ -305,6 +305,7 @@ public:
 				   PstInContainerInterface* operation,
 				   PstOutContainerInterface*& possible_answer);
   virtual PstOutContainerInterface *retrieveEntityRepresentation();  
+  virtual PstOutContainerInterface *deinstallEntityRepresentation();  
   virtual void installEntityRepresentation(PstInContainerInterface*);  
   virtual char *getPrintType();
   virtual void reportFaultState(const FaultState& fs) { reportFS(fs); }

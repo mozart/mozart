@@ -152,11 +152,11 @@ public:
 };
 
 class SuspendedLockRelease: public SuspendedOperation {
+private:
+  TaggedRef ozthread;
 public:
-  // This is a phony construct since I'm not able to suspend an
-  // unlocking thread. Thus this suspension holder does _not_ refer or
-  // represent a proper thread.
-  SuspendedLockRelease(Mediator*);
+  // Note: we do not suspend the requesting thread!
+  SuspendedLockRelease(Mediator*, TaggedRef);
   WakeRetVal resumeDoLocal(DssOperationId*);
   WakeRetVal resumeRemoteDone(PstInContainerInterface* pstin);
   bool gCollect();

@@ -2746,7 +2746,7 @@ public:
   // get/set the locker thread, locking depth, and queue of pending
   // threads.  The latter is a list of pairs ThreadId#ControlVar.
   TaggedRef getLocker() { return locker; }
-  void setLocker(TaggedRef t) { Assert(oz_isThread(t)); locker = t; }
+  void setLocker(TaggedRef t) { locker = t; }
 
   int getLockingDepth() { return depth; }
   void setLockingDepth(int d) { depth = d; }

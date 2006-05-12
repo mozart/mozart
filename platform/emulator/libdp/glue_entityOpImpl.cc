@@ -36,6 +36,7 @@
 #include "pstContainer.hh"
 #include "unify.hh"
 #include "builtins.hh"
+#include "controlvar.hh"
 
 
 
@@ -161,79 +162,81 @@ OZ_Return distCellExchangeImpl(OzCell *c,
 
 /****************************** Locks *********************************/
 
-bool unlockDistLockImpl(OzLock *l){
-  // Here we have to do a minor violation to the sequential
-  // consistency.  I don't undestand how a thread should be suspended
-  // on an unlock operation.  This is a necessity, in order to
-  // preserve consistency.  However, the show must go on, so I create
-  // a dummy thread that acts as a goaly for the resume operation. No
-  // actual thread exists.
+OZ_Return distLockTakeImpl(OzLock* lock, TaggedRef thr) {
+  LockMediator *me = static_cast<LockMediator*>(lock->getMediator()); 
 
-  LockMediator *me = static_cast<LockMediator*>(l->getMediator()); 
-  AbstractEntity *ae = me->getAbstractEntity();
-  MutableAbstractEntity *mae = static_cast<MutableAbstractEntity*>(ae);
+  // suspend if fault state not ok
+  if (me->getFaultState()) return me->suspendOnFault();
+
+  MutableAbstractEntity *mae =
+    static_cast<MutableAbstractEntity*>(me->getAbstractEntity());
   DssThreadId *thrId = currentThreadId();
-  printf("LockDistLockRelease\n");
   PstOutContainerInterface** pstout;
-  // Should we assert this one will not request a pstout?
-  switch(mae->abstractOperation_Write(thrId,pstout))
-    {
-    case DSS_PROCEED:
-      return false; 
+  OpRetVal cont = mae->abstractOperation_Write(thrId, pstout);
+  if (pstout != NULL)
+    *(pstout) = new PstOutContainer(oz_cons(oz_atom("take"), thr));
 
-    case DSS_SUSPEND:
-      new SuspendedLockRelease(me); 
-      return true;
-    case DSS_RAISE:
-      OZ_error("Not Implemented yet, raise");
-    case DSS_INTERNAL_ERROR_NO_OP:
-    case DSS_INTERNAL_ERROR_NO_PROXY:
-    default: 
-      OZ_error("Should not happened, skip, lock");
-    }
-  OZ_error("Should not happened, no true switch statement");
-  
-  return true;
-}
-
-bool lockDistLockImpl(OzLock *l, Thread *thr){
-  LockMediator *me = static_cast<LockMediator*>(l->getMediator()); 
-  AbstractEntity *ae = me->getAbstractEntity();
-  MutableAbstractEntity *mae = static_cast<MutableAbstractEntity*>(ae);
-  DssThreadId *thrId = currentThreadId();
-
-  printf("LockDistLockTake\n");
-  PstOutContainerInterface** pstout;
-  OpRetVal cont = mae->abstractOperation_Write(thrId,pstout);
-  if (pstout != NULL){
-    *(pstout) = new PstOutContainer(oz_thread(thr)); 
+  switch(cont) {
+  case DSS_PROCEED: {
+    if (lock->take(thr)) return PROCEED;
+    ControlVarNew(controlvar, oz_currentBoard());
+    lock->subscribe(thr, controlvar);
+    SuspendOnControlVar;
   }
-  switch(cont){
-    case DSS_PROCEED:
-      return false; 
-    case DSS_SKIP:
-      OZ_error("Should not happened, skip, lock");
-    case DSS_SUSPEND:
-      new SuspendedLockTake(me, oz_thread(thr)); 
-      return true; ;
-    case DSS_RAISE:
-      OZ_error("Not Implemented yet, raise");
-      return PROCEED; 
-    case DSS_INTERNAL_ERROR_NO_OP:
-    case DSS_INTERNAL_ERROR_NO_PROXY:
-    default: 
-      OZ_error("Should not happened, skip, lock");
-    }
-  OZ_error("Should not happened, no true switch statement");
-  return true; 
+  case DSS_SKIP:
+    Assert(0); 
+    return PROCEED;
+  case DSS_SUSPEND:
+    new SuspendedLockTake(me, thr);
+    return BI_REPLACEBICALL;
+  case DSS_RAISE:
+    OZ_error("Not Implemented yet, raise");
+    return PROCEED;
+  case DSS_INTERNAL_ERROR_NO_OP:
+    OZ_error("Not Handled Cell Exchange DSS_INTERNAL_ERROR_NO_OP");
+    return PROCEED;
+  case DSS_INTERNAL_ERROR_NO_PROXY:
+  default: 
+    OZ_error("Not Handled Cell Exchange DSS_INTERNAL_ERROR_NO_PROXY");
+    return PROCEED;
+  }
 }
 
-OZ_Return distLockTakeImpl(OzLock*, TaggedRef) {
-  return PROCEED;
-}
+OZ_Return distLockReleaseImpl(OzLock* lock, TaggedRef thr) {
+  LockMediator *me = static_cast<LockMediator*>(lock->getMediator()); 
 
-OZ_Return distLockReleaseImpl(OzLock*, TaggedRef) {
-  return PROCEED;
+  // ignore if fault state is permFail
+  if (me->getFaultState() == GLUE_FAULT_PERM) return PROCEED;
+
+  MutableAbstractEntity *mae =
+    static_cast<MutableAbstractEntity*>(me->getAbstractEntity());
+  DssThreadId *thrId = currentThreadId();
+  PstOutContainerInterface** pstout;
+  OpRetVal cont = mae->abstractOperation_Write(thrId, pstout);
+  if (pstout != NULL)
+    *(pstout) = new PstOutContainer(oz_cons(oz_atom("release"), thr));
+
+  switch(cont) {
+  case DSS_PROCEED:
+    lock->release(thr);
+    return PROCEED;
+  case DSS_SKIP:
+    Assert(0); 
+    return PROCEED;
+  case DSS_SUSPEND:
+    new SuspendedLockRelease(me, thr);
+    return PROCEED;     // we do not block the current thread!
+  case DSS_RAISE:
+    OZ_error("Not Implemented yet, raise");
+    return PROCEED;
+  case DSS_INTERNAL_ERROR_NO_OP:
+    OZ_error("Not Handled Cell Exchange DSS_INTERNAL_ERROR_NO_OP");
+    return PROCEED;
+  case DSS_INTERNAL_ERROR_NO_PROXY:
+  default: 
+    OZ_error("Not Handled Cell Exchange DSS_INTERNAL_ERROR_NO_PROXY");
+    return PROCEED;
+  }
 }
 
 

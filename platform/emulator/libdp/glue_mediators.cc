@@ -530,45 +530,29 @@ LockMediator::callback_Write(DssThreadId* id_of_calling_thread,
 			     PstInContainerInterface* operation,
 			     PstOutContainerInterface*& possible_answer)
 {
-  /*
-  // Two perations can be done, Lock and Unlock. If a reference to a
-  // thread is passed as contents, it is a lock, otherwise an unlock
-  OzLock *lock = static_cast<OzLock*>(getConst());
-  if(operation !=  NULL) {
-    /////// LOCK /////////////
-    PstInContainer *pst = static_cast<PstInContainer*>(operation); 
-    TaggedRef ozThread =  pst->a_term;
-    
-    Thread *dummyThread = oz_ThreadToC(ozThread);
-    if (lock->getLocker() == NULL){
-      lock->lockB(dummyThread); 
-      possible_answer = new PstOutContainer(oz_cons(oz_int(2),oz_nil())); 
-      return AOCB_FINISH;
-  }
-    if( lock->getLocker() == dummyThread){
-      lock->lockB(dummyThread); 
-      possible_answer = new PstOutContainer(oz_cons(oz_int(1),oz_nil())); 
-      return AOCB_FINISH;
+  // Locks provide two operations.  The argument 'operation' has the
+  // form Op|ThreadId, where Op is either 'take', or 'release'.
+  OzLock* lock = static_cast<OzLock*>(getConst());
+  PstInContainer* pst = static_cast<PstInContainer*>(operation);
+  if (oz_isCons(pst->a_term)) {
+    TaggedRef op = oz_head(pst->a_term);
+    TaggedRef thr = oz_tail(pst->a_term);
+
+    if (oz_eq(op, oz_atom("take"))) {
+      if (lock->take(thr)) { // granted, return unit
+	possible_answer = new PstOutContainer(oz_unit());
+      } else { // subscribe, and return control variable
+	TaggedRef controlvar = oz_newVariable(oz_rootBoard());
+	lock->subscribe(thr, controlvar);
+	possible_answer = new PstOutContainer(controlvar);
+      }
+    } else {
+      Assert(oz_eq(op, oz_atom("release")));
+      lock->release(thr);
+      possible_answer = NULL;
     }
-    // Hua, breaking all the abstractions... But if things are implemented
-    // so non-general as the locks, what can we do? 
-    TaggedRef var = oz_newVariable(oz_currentBoard());	
-    // add pendthread to pending list. 
-    
-    PendThread **pt = lock->getPendBase(); 
-    while(*pt!=NULL){pt= &((*pt)->next);}
-    *pt = new PendThread(ozThread, NULL,  var); 
-    
-    possible_answer = new PstOutContainer(oz_cons(oz_int(3),oz_cons(var, oz_nil()))); 
-    return AOCB_FINISH;
   }
-  else{
-    /////// UNLOCK /////////////
-    lock->unlock(); 
-    possible_answer = NULL; 
-    return AOCB_FINISH;
-  }
-  */
+  return AOCB_FINISH;
 }
 
 AOcallback 
@@ -581,60 +565,42 @@ LockMediator::callback_Read(DssThreadId* id_of_calling_thread,
 }
 
 PstOutContainerInterface *
-LockMediator::retrieveEntityRepresentation(){
-  /*
-  OzLock *lock = static_cast<OzLock*>(getConst());
-  if (lock->getLocker() == NULL)
-    return NULL; 
-  
-  TaggedRef pList = oz_nil(); 
-  TaggedRef locker =  oz_pair2(oz_thread(lock->getLocker()), oz_int(lock->getRelocks()));
-  PendThread *pt = lock->getPending();
-  
-  while (pt){
-    PendThread *tmp = pt->next;
-    pList = oz_cons(oz_pair2(pt->oThread, pt->controlvar), pList); 
-    pt->dispose(); 
-    pt = tmp; 
+LockMediator::retrieveEntityRepresentation() {
+  OzLock* lock = static_cast<OzLock*>(getConst());
+  TaggedRef locker = lock->getLocker();
+  if (locker == 0) {
+    return NULL;
+  } else {
+    TaggedRef depth = oz_int(lock->getLockingDepth());
+    TaggedRef pending = pendingThreadList2List(lock->getPending());
+    TaggedRef answer = oz_cons(oz_pair2(locker, depth), pending);
+    return new PstOutContainer(answer);
   }
-  // ERIK, this should actually NOT be done. It is first
-  // when the proxy is defined to be a skeleton that those 
-  // can be removed. 
-  TaggedRef strct = oz_pair2(locker, pList);
-  lock->setPending(NULL); 
-  lock->setLocker(NULL); 
-  lock->setRelocks(0); 
-  return (new PstOutContainer(strct));
-  */
+}
+
+PstOutContainerInterface *
+LockMediator::deinstallEntityRepresentation() {
+  OzLock* lock = static_cast<OzLock*>(getConst());
+  PstOutContainerInterface* tmp = retrieveEntityRepresentation();
+  lock->setLocker(0);
+  lock->setLockingDepth(0);
+  lock->setPending(NULL);
+  return tmp;
 }
 
 void 
 LockMediator::installEntityRepresentation(PstInContainerInterface* pstIn){
-  /*
-  OzLock *lock = static_cast<OzLock*>(getConst());
-  if (pstIn == NULL)
-    {
-      lock->setPending(NULL); 
-      lock->setLocker(NULL); 
-      lock->setRelocks(0); 
-    }
-  else
-    {
-      PstInContainer *pst = static_cast<PstInContainer*>(pstIn); 
-      TaggedRef strckt = pst->a_term; 
-      lock->setLocker(oz_ThreadToC(oz_left(oz_left(strckt))));
-      lock->setRelocks(OZ_intToC(oz_right(oz_left(strckt))));
-      TaggedRef lst = oz_right(strckt); 
-      PendThread *pending = NULL; 
-      while(!oz_eq(lst, oz_nil()))
-	{
-	  TaggedRef ele = oz_head(lst); 
-	  pending = new PendThread(oz_left(ele), pending, oz_right(ele)); 
-	  lst = oz_tail(lst); 
-	}
-      lock->setPending(pending); 
-    }
-  */
+  OzLock* lock = static_cast<OzLock*>(getConst());
+  if (pstIn == NULL) {
+    lock->setLocker(0);
+    lock->setLockingDepth(0);
+    lock->setPending(NULL);
+  } else {
+    PstInContainer* pst = static_cast<PstInContainer*>(pstIn);
+    lock->setLocker(oz_left(oz_head(pst->a_term)));
+    lock->setLockingDepth(OZ_intToC(oz_right(oz_head(pst->a_term))));
+    lock->setPending(list2PendingThreadList(oz_tail(pst->a_term)));
+  }
 }
 
 
