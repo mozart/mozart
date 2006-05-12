@@ -38,6 +38,7 @@
 #include "glue_tables.hh"
 #include "thr_int.hh"
 #include "value.hh"
+#include "var_readonly.hh"
 #include "dss_enums.hh"
 
 

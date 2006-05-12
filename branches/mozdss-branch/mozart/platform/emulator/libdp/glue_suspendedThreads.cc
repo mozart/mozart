@@ -231,45 +231,27 @@ SuspendedLockTake::SuspendedLockTake(Mediator* med, TaggedRef thr) :
 }
 
 WakeRetVal SuspendedLockTake::resumeDoLocal(DssOperationId*) {
-  /*
-  ConstMediator *med = static_cast<ConstMediator*>(getMediator());
-  OzLock *lock = static_cast<OzLock*>(med->getConst());
-  Thread *theThread = oz_ThreadToC(ozthread);
-  if (lock->getLocker() == NULL || lock->getLocker() == theThread) {
-    lock->lockB(theThread);
-  } else {
-    PendThread **pt = lock->getPendBase(); 
-    while(*pt!=NULL) { pt= &((*pt)->next); }
-    *pt = new PendThread(ozthread, NULL,  ctlVar);
-    ctlVar = 0;     // resume() should not trigger control var...
+  ConstMediator* med = static_cast<ConstMediator*>(getMediator());
+  OzLock* lock = static_cast<OzLock*>(med->getConst());
+  if (!lock->take(ozthread)) { // the thread must subscribe
+    // the thread already waits on ctlVar, so let's reuse it!
+    lock->subscribe(ozthread, ctlVar);
+    ctlVar = 0;
   }
   resume();
-  */
-  return WRV_DONE; 
+  return WRV_DONE;
 }
 
 WakeRetVal 
 SuspendedLockTake::resumeRemoteDone(PstInContainerInterface* pstin){
-  /*
-  PstInContainer *pst = static_cast<PstInContainer*>(pstin);
-  TaggedRef lst = pst->a_term;
-
-  ConstMediator *med = static_cast<ConstMediator*>(getMediator());
-  OzLock *lck     = static_cast<OzLock*>(med->getConst());
-  switch(oz_intToC(oz_head(lst))){
-  case 1:
-    // We had it, remove the unlock stackframe! 
-    // Remove the darn 
-    // Fall through!
-  case 2:
-    break;
-  case 3:
-    oz_unify(oz_head(oz_tail(lst)), ctlVar);
-    ctlVar = 0;
-    break; 
-  }
+  PstInContainer* pst = static_cast<PstInContainer*>(pstin);
+  // The result is either unit, or a control variable, on which the
+  // thread should synchronize.  Binding ctlVar to res does the job!
+  OZ_Return ret = oz_unify(ctlVar, pst->a_term);
+  // It succeed immediately, since ctlVar is never distributed.
+  Assert(ret == PROCEED);
+  ctlVar = 0;
   resume();
-  */
   return WRV_DONE;
 }
 
@@ -285,27 +267,33 @@ bool SuspendedLockTake::gCollect() {
 
 /************************* SuspendedLockRelease *************************/
 
-SuspendedLockRelease::SuspendedLockRelease(Mediator* med) :
-  SuspendedOperation(med)
-{}
+SuspendedLockRelease::SuspendedLockRelease(Mediator* med, TaggedRef thr) :
+  SuspendedOperation(med), ozthread(thr)
+{
+  // Remember: the release operation is asynchronuous for the thread,
+  // so we do not suspend it.
+}
 
-WakeRetVal 
-SuspendedLockRelease::resumeDoLocal(DssOperationId*) {
-  ConstMediator *med = static_cast<ConstMediator*>(getMediator());
+WakeRetVal SuspendedLockRelease::resumeDoLocal(DssOperationId*) {
+  ConstMediator* med = static_cast<ConstMediator*>(getMediator());
   OzLock *lock = static_cast<OzLock*>(med->getConst());
-  //  lock->unlock();
+  lock->release(ozthread);
   resume();
   return WRV_DONE;
 }
 
-WakeRetVal 
+WakeRetVal
 SuspendedLockRelease::resumeRemoteDone(PstInContainerInterface* pstin){
   resume();
   return WRV_DONE;
 }
 
 bool SuspendedLockRelease::gCollect() {
-  return gc();
+  if (gc()) {
+    oz_gCollectTerm(ozthread, ozthread);
+    return true;
+  } else
+    return false;
 }
 
 

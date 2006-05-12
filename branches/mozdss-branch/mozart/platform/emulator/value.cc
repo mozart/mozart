@@ -1329,7 +1329,7 @@ void Builtin::initname(void) {
 TaggedRef pendingThreadList2List(PendingThreadList* pt) {
   TaggedRef list = 0;
   TaggedRef* tailp = &list;
-  while (pt != NULL) {
+  for (; pt != NULL; pt = pt->next) {
     *tailp = oz_cons(oz_pair2(pt->thread, pt->controlvar), 0);
     tailp = tagged2LTuple(*tailp)->getRefTail();
   }
