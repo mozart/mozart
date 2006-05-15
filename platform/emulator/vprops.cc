@@ -218,9 +218,10 @@ static OZ_Term getApplicationArgs(void) {
 // Handle the case of indexed property P whose value can be
 // found at location L.  Return the corresponding Oz term.
 
-#define CASE_INT( P,L) case P: return OZ_int( L)
+#define CASE_INT( P,L) case P: return OZ_int(L)
 #define CASE_BOOL(P,L) case P: return oz_bool(L)
 #define CASE_ATOM(P,L) case P: return oz_atomNoDup(L)
+#define CASE_UNSIGNEDINT(P,L) case P: return OZ_unsignedInt(L)
 
 // Construct an Arity given `n' atoms.  First argument is n
 // i.e. the number of features, the following arguments are
@@ -279,6 +280,7 @@ REC__ = SRecord::newSRecord(LAB__,(Arity*)ARY__);
 #define SET_INT( F,I) SET_REC(F,OZ_int( I))
 #define SET_BOOL(F,B) SET_REC(F,oz_bool(B))
 #define SET_ATOM(F,A) SET_REC(F,oz_atom(A))
+#define SET_UNSIGNEDINT(F,I) SET_REC(F,OZ_unsignedInt(I))
 
 OZ_Term GetEmulatorProperty(EmulatorPropertyIndex prop) {
   SRecord * REC__;
@@ -344,18 +346,18 @@ OZ_Term GetEmulatorProperty(EmulatorPropertyIndex prop) {
     CASE_INT(PROP_GC_TOLERANCE,ozconf.heapTolerance);
     CASE_INT(PROP_GC_CODE_CYCLES,ozconf.codeGCcycles);
     CASE_BOOL(PROP_GC_ON,ozconf.gcFlag);
-    CASE_INT(PROP_GC_THRESHOLD,ozconf.heapThreshold*KB);
-    CASE_INT(PROP_GC_SIZE,getUsedMemory()*KB);
-    CASE_INT(PROP_GC_ACTIVE,ozstat.gcLastActive*KB);
+    CASE_UNSIGNEDINT(PROP_GC_THRESHOLD,ozconf.heapThreshold*KB);
+    CASE_UNSIGNEDINT(PROP_GC_SIZE,getUsedMemory()*KB);
+    CASE_UNSIGNEDINT(PROP_GC_ACTIVE,ozstat.gcLastActive*KB);
     CASE_REC(PROP_GC,"gc",
 	     (8,AtomCodeCycles,AtomMin,AtomFree,AtomTolerance,
 	      AtomOn,AtomThreshold,AtomSize,AtomActive),
-	     SET_INT(AtomMin,       ozconf.heapMinSize*KB);
-	     SET_INT(AtomFree,      ozconf.heapFree);
-	     SET_INT(AtomTolerance, ozconf.heapTolerance);
+	     SET_UNSIGNEDINT(AtomMin,       ozconf.heapMinSize*KB);
+	     SET_UNSIGNEDINT(AtomFree,      ozconf.heapFree);
+	     SET_UNSIGNEDINT(AtomTolerance, ozconf.heapTolerance);
 	     SET_BOOL(AtomOn,       ozconf.gcFlag);
-	     SET_INT(AtomThreshold, ozconf.heapThreshold*KB);
-	     SET_INT(AtomSize,      getUsedMemory()*KB);
+	     SET_UNSIGNEDINT(AtomThreshold, ozconf.heapThreshold*KB);
+	     SET_UNSIGNEDINT(AtomSize,      getUsedMemory()*KB);
 	     SET_INT(AtomCodeCycles, ozconf.codeGCcycles);
 	     SET_INT(AtomActive,    ozstat.gcLastActive*KB););
     // PRINT
