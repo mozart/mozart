@@ -1022,9 +1022,9 @@ void AM::doGCollect(void) {
   gCollect(ozconf.gcVerbosity);
 
   /* calc limits for next gc */
-  int used   = getUsedMemory();
-  int free   = min(ozconf.heapFree,99);
-  int wanted = max(((long) used) * (100 / (100 - free)),
+  unsigned int used   = getUsedMemory();
+  unsigned int free   = min(ozconf.heapFree,99);
+  unsigned int wanted = max(((long) used) * (100 / (100 - free)),
 		   ozconf.heapMinSize);
 
   /* Try to align as much as possible to end of blocksize */
