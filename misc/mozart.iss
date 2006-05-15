@@ -142,9 +142,9 @@ begin
     ssPostInstall:
       begin
         if ExpandConstant('{userdocs}') = ExpandConstant('{commondocs}') then
-          ModifyPath('{app}\bin', pmAddToEnd+pmAddAllways, psAllUsers)
+          ModifyPath('{app}\bin', pmAddToEnd, psAllUsers)
         else
-          ModifyPath('{app}\bin', pmAddToEnd+pmAddAllways, psCurrentUser)
+          ModifyPath('{app}\bin', pmAddToEnd, psCurrentUser)
       end
   end
 end;
