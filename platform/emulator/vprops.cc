@@ -622,6 +622,7 @@ OZ_Term GetEmulatorProperty(EmulatorPropertyIndex prop) {
 #undef CASE_INT
 #undef CASE_BOOL
 #undef CASE_ATOM
+#undef CASE_UNSIGNEDINT
 #undef DEFINE_REC
 #undef RETURN_REC
 #undef SET_REC
@@ -629,6 +630,7 @@ OZ_Term GetEmulatorProperty(EmulatorPropertyIndex prop) {
 #undef CASE_REC
 #undef SET_INT
 #undef SET_BOOL
+#undef SET_UNSIGNEDINT
 
 // Macros for manipulating the `val' argument of SetEmulatorProperty
 // val has been DEREFed and there is also val_ptr and val_tag, and it
@@ -656,10 +658,22 @@ if (!oz_isSmallInt(val) ||			\
     (INT__=tagged2SmallInt(val))<0)		\
   oz_typeError(1,"Int>=0");
 
+// Check that the value is a non-negative integer
+#define CHECK_INT                        \
+if (oz_isSmallInt(val)) {              \
+  INT__=tagged2SmallInt(val);		       \
+} else if (oz_isBigInt(val)) {         \
+  INT__=tagged2BigInt(val)->getInt();  \
+} else oz_typeError(1,"Int>=0");
+
 // Handle the case of indexed property P that should be an int>=0
 
 #define CASE_NAT_DO(P,DO) case P: CHECK_NAT; DO; return PROCEED;
 #define CASE_NAT(P,L) CASE_NAT_DO(P,L=INT__);
+
+// Handle the case of indexed property P that should be an int>=0
+// and not necessarily a smallint
+#define CASE_INT_DO(P,DO) case P: CHECK_INT; DO; return PROCEED;
 
 // Check that the value is an integer in [1..100], i.e. a percentage
 
@@ -779,7 +793,8 @@ OZ_Return SetEmulatorProperty(EmulatorPropertyIndex prop,OZ_Term val) {
     CASE_REC(PROP_PICKLE,
 	     SET_BOOL(AtomCells,ozconf.pickleCells););
     // GC
-    CASE_NAT_DO(PROP_GC_MIN,{
+    //GC_MIN could also be a big int.
+    CASE_INT_DO(PROP_GC_MIN,{
       ozconf.heapMinSize=INT__/KB;
     });
     CASE_PERCENT(PROP_GC_FREE,ozconf.heapFree);
