@@ -30,7 +30,7 @@ If ?_{TXT} is a byte string, you can simply invoke
 of calling <code/Regex.search/ on ?_{TXT}.
       <entry><code/Regex.groups/
       <synopsis><code/{Regex.groups ?+{MATCH} ?+{TXT} ??{GROUPS}}/
-      <item>Returns the list ?_{GROUPS} of substrings of ?_{TXT}
+      <item>Returns the record ?_{GROUPS}, with label <code/group/, of substrings of ?_{TXT}
 corresponding to the groups of ?_{MATCH}.  Group 0 (the whole match)
 is not included.
       <entry><code/Regex.allMatches/
