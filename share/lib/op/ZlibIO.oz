@@ -2,16 +2,7 @@ functor
 export
    CompressedFile
 import
-   ZLIBIO(
-      is             : ZIs
-      new            : ZNew
-      close          : ZClose
-      readByteString : ZReadByteString
-      read           : ZRead
-      write          : ZWrite
-      flush          : ZFlush
-      )
-   at 'x-oz://boot/ZlibIO'
+   ZLIBIO at 'x-oz://boot/ZlibIO'
    Open(file:File)
 prepare
    NoArg = {NewName}
@@ -21,6 +12,13 @@ prepare
    % ReadSizeAll = 4096 not used in this functor
 define
 
+   ZNew            = ZLIBIO.new
+   ZClose          = ZLIBIO.close
+   ZReadByteString = ZLIBIO.readByteString
+   ZRead           = ZLIBIO.read
+   ZWrite          = ZLIBIO.write
+   ZFlush          = ZLIBIO.flush
+   
    proc {DoReadAll ZFile Head Tail LenSofar LenTotal}
       Mid N
    in
