@@ -50,7 +50,7 @@ This information consists of the following quantities:
 	  <item>Statistical estimation of the time spent in the
 procedure. This works as follows: every 10ms a signal is delivered and
 the emulator increases the <q/samples/ counter of the procedure
-currently executing.</item>
+currently executing. <p class="danger"> This is broken and disabled in the current implementation!</item>
 	 <entry/<em>closures</em>/
 	  <item>How many times the corresponding closure was created. 
 	  Note that nested procedure declarations like <<Bar>> in
