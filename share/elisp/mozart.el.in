@@ -1080,7 +1080,7 @@ With C-u C-u as prefix argument, send it a SIGKILL instead."
 	(if (not force)
 	    (let* ((i *oz-halt-timeout*)
 		   (proc (get-buffer-process oz-emulator-buffer)))
-	      (oz-send-string "{Application.exit 0}" t)
+	      (oz-send-string " functor _ require Application prepare {Application.exit 0} end " t)
 	      (while (and (eq (process-status proc) 'run)
 			  (> i 0))
 		(message "Halting Oz ... %s" i)
