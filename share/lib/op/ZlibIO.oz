@@ -18,7 +18,7 @@ prepare
    RaiseError = Exception.raiseError
    ListToRecord = List.toRecord
    ReadSize    = 1024
-   ReadSizeAll = 4096
+   % ReadSizeAll = 4096 not used in this functor
 define
 
    proc {DoReadAll ZFile Head Tail LenSofar LenTotal}
