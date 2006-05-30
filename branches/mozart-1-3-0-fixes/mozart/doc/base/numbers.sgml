@@ -336,7 +336,7 @@ end>>>
 	  two candidates, ?_{F} is rounded to the closest even integer,
 	  &eg;, <<{FloatToInt 1.5}>> and <<{FloatToInt 2.5}>> both
 	  return&nbsp;<<2>>.
-
+	  <p class=danger> In the current implementation, the value is converted through a signed 32-bit integer, so this function is bogus when applied to large floats.
 	<Entry><Span class=index/<<FloatToString>>/
 	  <Index class=tails/<<Float>><And><<toString>>/
 	<Synopsis>
