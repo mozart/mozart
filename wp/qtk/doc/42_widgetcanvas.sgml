@@ -342,13 +342,13 @@ Methods supported by canvas tags and canvas items handles:
 
 <LIST>
 
-<ITEM> <<addtag(abvode Tag)>>: Selects the item just after (above) the one given by <<Tag>> in the display list. If <<Tag>> denotes more than one item, then the last (topmost) of these items in the display list is used. 
+<ITEM> <<addtag(above Tag)>>: Selects the item just after (above) the one given by <<Tag>> in the display list. If <<Tag>> denotes more than one item, then the last (topmost) of these items in the display list is used. 
 
 <ITEM> <<addtag(all)>>: Selects all the items in the canvas. 
 
 <ITEM> <<addtag(below Tag)>>: Selects the item just before (below) the one given by <<Tag>> in the display list. If <<Tag>> denotes more than one item, then the first (lowest) of these items in the display list is used. 
 
-<ITEM> <<addtag(closest X Y ?Halo? ?Start?)>>: Selects the item closest to the point given by <<X>> and <<Y>>. If more than one item is at the same closest distance (e.g. two items overlap the point), then the top-most of these items (the last one in the display list) is used. If <<Halo>> is specified, then it must be a non-negative value. Any item closer than <<Halo>> to the point is considered to overlap it. The start argument may be used to step circularly through all the closest items. If <<Start>> is specified, it is a tag and it selects the first item in the display list with the given that tag. Instead of selecting the topmost closest item, this form will select the topmost closest item that is below <<Start>> in the display list; if no such item exists, then the selection behaves as if the <<Start>> argument had not been specified. 
+<ITEM> <<addtag(closest X Y ?Halo? ?Start?)>>: Selects the item closest to the point given by <<X>> and <<Y>>. If more than one item is at the same closest distance (e.g. two items overlap the point), then the top-most of these items (the last one in the display list) is used. If <<Halo>> is specified, then it must be a non-negative value. Any item closer than <<Halo>> to the point is considered to overlap it. The start argument may be used to step circularly through all the closest items. If <<Start>> is specified, it is a tag and it selects the first item in the display list with the given tag. Instead of selecting the topmost closest item, this form will select the topmost closest item that is below <<Start>> in the display list; if no such item exists, then the selection behaves as if the <<Start>> argument had not been specified. 
 
 <ITEM> <<addtag(enclosed X1 Y1 X2 Y2)>>: Selects all the items completely enclosed within the rectangular region given by <<X1>>, <<Y1>>, <<X2>>, and <<Y2>>. <<X1>> must be no greater then <<X2>> and <<Y1>> must be no greater than <<Y2>>. 
 
