@@ -141,9 +141,31 @@
    <section id="section.m132.usability">
       <title/Changes in the implementation that affect usability and performance/
       <subsection><title/Oz Compiler/
-      <p>Keyword <code/native/ has been removed from class's
-      properties. This implies a change in the module <code/Open/ in
-      contributions, fixing a runtime error. (bug 1277)</p>
+      <p>
+        <list>
+        <item> Keyword <code/native/ has been removed from class's
+        properties. This implies a change in the module <code/Open/ in
+        contributions, fixing a runtime error (bug 1277).
+
+        <item> A warning is triggered when a non-valid property is
+        added after keyword <code/fun/ in function definitions. This
+        prevents programmers from creating eager functions when
+        keyword <code/lazy/ is misspelled (bug 1437).
+
+        <item> Added <<--warnshadow>> option to compiler to emit warning
+        message when variables in an outer scope are shadowed (bug 1707).
+
+        </list>
+      </p>
+      </subsection>
+
+      <subsection><title/Garbage Collection/
+      <p>
+        <list>
+	<item> Indexes have been fixed to work with RAM memory bigger
+	that 1GB.
+        </list>
+      </p>
       </subsection>
 
       <subsection><title/Distribution Layer/
@@ -152,12 +174,12 @@
         <item> <code/NewPort/ does not block anymore when using a
         distributed variable for the stream. Currently, the builtin
         receives one input and one output, but it should change to two
-        outputs in a future release. (bug 1521).
+        outputs in a future release (bug 1521).
 
         <item>Problem with sockets generating 'segmentation fault'
-        with P2PS is fixed. (bugs 1304, 1339)
+        with P2PS is fixed (bugs 1304, 1339).
 
-        <item>Failed assertion in the Owner table fixed. (bug 1461)
+        <item>Failed assertion in the Owner table fixed (bug 1461).
         </list>
       </p>
       </subsection>
@@ -185,13 +207,14 @@
 
       <p>
       <list>
-      <item> Documentation: 1419, 1660, 1479
       <item> Error messages: 1429, 1816
       <item> XML related: 1333
       <item> GCC Compiler: 1636
       <item> RPM building: 1649
       <item> Reflect module: 1839
-      <item> FloatToString: 1869.
+      <item> FloatToString: 1869
+      <item> Tools: 1332, 1459, 1775
+      <item> Documentation: 590, 991, 1371, 1445, 1374, 1375, 1419, 1466, 1479, 1614, 1660, 1818, 1820, 1832
       </list>  
       </p>
    </section>
