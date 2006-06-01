@@ -67,6 +67,12 @@
         <Item>
           Output warnings about redeclarations of top-level variables,
           either by <<declare>> or locally.
+        <Entry><Code><Span class=ignore/\switch +/warnshadow</Code>
+          (default: <<false>>)
+        <Item>
+          Output warnings about redeclarations of all variables,
+          either by <<declare>> or locally (subsumes
+          <Code><Span class=ignore/\switch +/warnredecl</Code>).
         <Entry><Code><Span class=ignore/\switch +/warnunused</Code>
           (default: <<true>>)
         <Item>

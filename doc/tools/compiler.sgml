@@ -227,6 +227,9 @@ if you want to use the
         <entry/<code/--(no)warnredecl//
         <item/Warn about top-level redeclarations./
 
+        <entry/<code/--(no)warnshadow//
+        <item/Warn about all redeclarations./
+
         <entry/<code/--(no)warnunused//
         <item/Warn about unused variables./
 
