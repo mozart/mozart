@@ -1018,6 +1018,13 @@ in
 	 WarningsLabel = {New Tk.label tkInit(parent: WarningsFrame
 					      text: 'Warnings'
 					      font: SwitchGroupFont)}
+	 WarnShadow = {New Tk.variable tkInit(false)}
+	 WarnShadowSw = {New Tk.checkbutton
+			 tkInit(parent: WarningsFrame
+				text: 'All redeclarations'
+				font: SwitchFont
+				variable: WarnShadow
+				action: {MkAction Switch(warnshadow)})}
 	 WarnRedecl = {New Tk.variable tkInit(false)}
 	 WarnRedeclSw = {New Tk.checkbutton
 			 tkInit(parent: WarningsFrame
@@ -1258,7 +1265,7 @@ in
 		    %% "Switches" note:
 		    pack(Column1 Column2 Column3 side: left fill: y)
 		    pack(GlobalFrame WarningsFrame padx: 8 pady: 8 anchor: w)
-		    pack(WarningsLabel WarnRedeclSw WarnUnusedSw
+		    pack(WarningsLabel WarnShadowSw WarnRedeclSw WarnUnusedSw
 			 WarnUnusedFormalsSw WarnForwardSw anchor: w)
 		    pack(GlobalLabel CompilerPassesSw ShowInsertSw
 			 EchoQueriesSw ShowDeclaresSw ErrorsFrame anchor: w)
@@ -1310,6 +1317,7 @@ in
 				   showinsert: ShowInsert
 				   echoqueries: EchoQueries
 				   showdeclares: ShowDeclares
+				   warnshadow: WarnShadow
 				   warnredecl: WarnRedecl
 				   warnunused: WarnUnused
 				   warnunusedformals: WarnUnusedFormals
@@ -1334,7 +1342,7 @@ in
 			self.MaxNumberOfErrors.inc self.MaxNumberOfErrors.dec
 			self.MaxNumberOfErrors.entry DoMaxErrors
 			CompilerPassesSw ShowInsertSw EchoQueriesSw
-			ShowDeclaresSw WarnRedeclSw WarnUnusedSw
+			ShowDeclaresSw WarnShadowSw WarnRedeclSw WarnUnusedSw
 			WarnUnusedFormalsSw WarnForwardSw ExpressionSw
 			AllowDeprecatedSw GumpSw StaticAnalysisSw CoreSw
 			RealCoreSw DebugValueSw DebugTypeSw CodeGenSw
