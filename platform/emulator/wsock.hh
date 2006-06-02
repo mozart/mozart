@@ -49,6 +49,7 @@
  #define OZNOINTERFACE
 #endif 
 
+ #define FD_SETSIZE 10240
  #include <windows.h>
  #include <winsock.h>
 
