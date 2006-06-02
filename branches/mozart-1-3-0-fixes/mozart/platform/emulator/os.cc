@@ -2184,17 +2184,23 @@ static DWORD __stdcall readerThread(void *p)
   while(1) {
     DWORD count;
     if (ReadFile(in,buf,bufSz,&count,0)==FALSE) {
-      if (GetLastError() != ERROR_BROKEN_PIPE) {
-	LPVOID lpMsgBuf;
-	FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER |
-		      FORMAT_MESSAGE_FROM_SYSTEM |
-		      FORMAT_MESSAGE_IGNORE_INSERTS,
-		      NULL, GetLastError(),
-		      MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
-		      (LPTSTR) &lpMsgBuf, 0, NULL);
-	message("ReadFile(%d) failed: %s\n",in,GetLastError(),
-		(LPTSTR)lpMsgBuf);
-	LocalFree(lpMsgBuf);
+      DWORD dwError=GetLastError();
+      switch (dwError) {
+      case ERROR_BROKEN_PIPE:
+      case ERROR_INVALID_HANDLE:
+      case ERROR_INVALID_PARAMETER:
+	break; // ignore this
+      default: {
+	  LPVOID lpMsgBuf;
+	  FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER |
+			FORMAT_MESSAGE_FROM_SYSTEM |
+			FORMAT_MESSAGE_IGNORE_INSERTS,
+			NULL, dwError,
+			MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+			(LPTSTR) &lpMsgBuf, 0, NULL);
+	  message("ReadFile(%d) failed: %d: %s\n",in,dwError, (LPTSTR)lpMsgBuf);
+	  LocalFree(lpMsgBuf);
+        }
       }
       break;
     }
