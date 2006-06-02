@@ -251,7 +251,7 @@ begin
 
   // Read current path value from registry
   OK := RegQueryStringValue(RegRootKey, RegSubKeyName, RegValueName, OldPath);
-  if not OK then
+  if not OK and (Scope=psAllUsers) then
   begin
     result := mpMissingRights;
     Exit;
