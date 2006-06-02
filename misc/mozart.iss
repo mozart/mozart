@@ -61,8 +61,6 @@ Name: "contrib\micq"; Description: "Mozart Instant Messenger"; Types: full custo
 Name: "contrib\directory"; Description: "Directory Service"; Types: full custom; Flags: checkablealone
 
 [Files]
-; applets_images
-Source: "cache\x-oz\doc\demo\applets\images\*.*"; DestDir: "{app}\cache\x-oz\doc\demo\applets\images" ; Flags: recursesubdirs; Components: docs\chm
 ; base
 Source: "*.*"; Excludes: "*.iss,*.exe,*~"; DestDir: "{app}"; Components: base
 ; bin
@@ -71,14 +69,12 @@ Source: "*.*"; Excludes: "*.iss,*.exe,*~"; DestDir: "{app}"; Components: base
 ; bin_ozenginew
 Source: "bin\*.*"; DestDir: "{app}\bin"; Components: base
 ; cache_xoz_system
-Source: "cache\x-oz\system\*.ozf"; DestDir: "{app}\cache\x-oz\system"; Flags: recursesubdirs; Components: base
-Source: "cache\x-oz\system\images\*.xbm"; DestDir:  "{app}\cache\x-oz\system\images"; Flags: recursesubdirs; Components: base
-Source: "cache\x-oz\system\images\*.jpg"; DestDir:  "{app}\cache\x-oz\system\images"; Flags: recursesubdirs; Components: base
+Source: "cache\x-oz\system\*.*"; DestDir: "{app}\cache\x-oz\system"; Flags: recursesubdirs; Components: base
 ; cache_xozlib
-Source: "cache\x-ozlib\*"; DestDir: "{app}\cache\x-ozlib"; Flags: recursesubdirs skipifsourcedoesntexist; Components: base
+Source: "cache\x-ozlib\*.*"; DestDir: "{app}\cache\x-ozlib"; Flags: recursesubdirs skipifsourcedoesntexist; Components: base
 ; contrib_*
 Source: "cache\x-oz\contrib\ap\*.*"; DestDir: "{app}\cache\x-oz\contrib\ap"; Flags: skipifsourcedoesntexist recursesubdirs; Components: contrib\ap
-Source: "cache\x-oz\contrib\compat\*.ozf"; DestDir: "{app}\cache\x-oz\contrib\compat"; Flags: skipifsourcedoesntexist recursesubdirs; Components: contrib\compat
+Source: "cache\x-oz\contrib\compat\*.*"; DestDir: "{app}\cache\x-oz\contrib\compat"; Flags: skipifsourcedoesntexist recursesubdirs; Components: contrib\compat
 Source: "cache\x-oz\contrib\directory\*.*"; DestDir: "{app}\cache\x-oz\contrib\directory"; Flags: skipifsourcedoesntexist recursesubdirs; Components: contrib\directory
 Source: "cache\x-oz\contrib\doc\*.*"; DestDir: "{app}\cache\x-oz\contrib\doc"; Flags: skipifsourcedoesntexist recursesubdirs; Components: contrib\doc_c
 Source: "cache\x-oz\contrib\gdbm.*"; DestDir: "{app}\cache\x-oz\contrib"; Flags: skipifsourcedoesntexist recursesubdirs; Components: contrib\gdbm
@@ -91,11 +87,11 @@ Source: "bin\convertTextPickle"; DestDir: "{app}\bin"; DestName: "convertTextPic
 ; doc
 Source: "doc\Mozart.chm"; DestDir: "{app}\doc"; Components: docs\chm; Flags: skipifsourcedoesntexist
 ; doc_addons
-Source: "doc\add-ons\README.html"; DestDir: "{app}\doc\add-ons"; Components: docs\chm; Flags:skipifsourcedoesntexist
+Source: "doc\add-ons\*.*"; DestDir: "{app}\doc\add-ons"; Components: docs\chm; Flags: skipifsourcedoesntexist recursesubdirs
 ; doc_demo_applets
-Source: "doc\demo\applets\*.oza"; DestDir: "{app}\doc\demo\applets"; Components: docs\chm\applets
+Source: "doc\demo\applets\*.*"; DestDir: "{app}\doc\demo\applets"; Components: docs\chm\applets; Flags: skipifsourcedoesntexist recursesubdirs
 ; doc_duchierozmake
-;
+Source: "doc\mozart-ozmake\*.*"; DestDir: "{app}\doc\mozart-ozmake"; Components: docs\chm; Flags: skipifsourcedoesntexist recursesubdirs
 ; doc_mozartstdlib
 ;
 ; doc_mt10
@@ -105,7 +101,7 @@ Source: "doc\system\MT10.ozf"; DestDir: "{app}\doc\system"; Flags: skipifsourced
 ; examples
 Source: "examples\*.*"; DestDir: "{app}\examples"; Flags: recursesubdirs; Components: docs\examples
 ; include
-Source: "install\*.*"; DestDir: "{app}\include"; Flags: skipifsourcedoesntexist recursesubdirs; Components: base
+Source: "include\*.*"; DestDir: "{app}\include"; Flags: skipifsourcedoesntexist recursesubdirs; Components: base
 ; platform_win32i486
 Source: "platform\win32-i486\*.*"; DestDir: "{app}\platform\win32-i486"; Flags: recursesubdirs; Components: base
 ; share
@@ -141,7 +137,7 @@ begin
   case CurStep of
     ssPostInstall:
       begin
-        if ExpandConstant('{userdocs}') = ExpandConstant('{commondocs}') then
+        if IsAdminLoggedOn then
           ModifyPath('{app}\bin', pmAddToEnd, psAllUsers)
         else
           ModifyPath('{app}\bin', pmAddToEnd, psCurrentUser)
@@ -154,7 +150,7 @@ begin
   case CurUninstallStep of
     usPostUninstall:
       begin
-        if ExpandConstant('{userdocs}') = ExpandConstant('{commondocs}') then
+        if IsAdminLoggedOn then
           ModifyPath('{app}\bin', pmRemove, psAllUsers)
         else
           ModifyPath('{app}\bin', pmRemove, psCurrentUser)
