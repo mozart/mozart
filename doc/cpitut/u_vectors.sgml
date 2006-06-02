@@ -95,7 +95,7 @@ resp. <<OZ_sCloneTerm>> to them.  Updating the array <<_d>> requires
 to duplicate the array and then to update all elements. This
 funtionality is provided by <<OZ_gCollectAllocBlock()>>
 (<<OZ_sCloneAllocBlock()>>) for garbage collection (space
-cloning). Here comes the code of that member function.
+cloning). Here comes the code of those member functions.
 
 <p>
 <Code.Extern display proglang=cc to="programs/ex_c.4.cc" class=linenumbers>
@@ -133,7 +133,7 @@ The propagator for the <Math/element/ constraint operates on a vector, which
 is represented by an array in the state of the propagator. The
 member function <<propagate()>> has to apply certain functions, like
 <<leave()>> and <<fail()>>, to all elements of the array at once and
-not to an individual elements. Therefore, it makes sense to define an
+not to individual elements. Therefore, it makes sense to define an
 <Em/iterator/ for such data structures.
 
 <p>
@@ -146,7 +146,7 @@ array, which will be used by the member function <<propagate()>> of the
 
 <p>
 The iterator class provides the member functions <<leave()>> and
-<<fail()>> which call in turn the corresponding member functions of all
+<<fail()>> which call in turn the corresponding member functions on all
 elements of the array <<l>>. The function <<leave()>> returns <Math/1/ if
 there is at least one non-singleton domain left.
 
@@ -162,7 +162,7 @@ presented in <ptr to="u_vector.element"> for the constraint
 <p>
 The function <<propagate()>> defines local variables of type
 <<OZ_FDIntVar>>. Then it initializes the iterator object
-<<D>>. That avoids to apply a member function to every individual
+<<D>>. That avoids having to apply a member function to each
 element of <<d>> by hand if all elements have to be considered. The
 following <<for>>-loop initializes the elements of <<d>>.
 
@@ -172,7 +172,7 @@ below) checks if there is a non-singleton domain left, and if so it
 returns <<OZ_SLEEP>>. Otherwise the propagator is entailed and
 consequently returns <<OZ_ENTAILED>>. The label <<failure>> is
 provided because of the use of the macro <<FailOnEmpty>> (see
-<ptr to="u_getting_started.propagation">) and corresponding code applies
+<ptr to="u_getting_started.propagation">) and the corresponding code applies
 <<fail>> to all variables of type <<OZ_FDIntVar>>.
 
 <p>
@@ -198,7 +198,7 @@ domain of <Math/n/, &ie <<n>>, is constrained by <<aux_n>>.
 
 <p>
 The second rule 2 <ptr to="u_vector.rule_e2"> states that the domain
-of <Math/v/ cannot contain more values than occurring in all yet
+of <Math/v/ cannot contain values that are not
 possible elements of the vector <Math/d/. The implementation uses
 again an initially empty auxiliary domain <<aux_v>> and collects in a
 loop all elements of <Math/d_i/ in <<aux_v>> by iterating over all
