@@ -17,7 +17,7 @@ imposing propagators. This section discusses the following issues:
 </List>
 <p>
 The answers to these questions will be used in later sections, for
-example, when we come to implement propagators imposed on not only on
+example, when we come to implement propagators imposed on more than just
 single variables.
 
 <SubSection id="u_nesting.basic">
@@ -62,7 +62,7 @@ yet then the constraint in the store for this parameter is
 <Em/insufficient/.
 
 <p>
-The type of the return value allows to handle even structured
+The type of the return value allows to handle structured
 parameters. The definition of the return type is as follows.
 
 <p>
@@ -86,14 +86,14 @@ the following examples.
 
 <Entry> Example 2.
 <Item> Let us suppose we expect a parameter to be a vector
-      with <Math/n/ fields of integers, whereby a vector is either a closed
-      record, a tuple or a list. First the parameter is expected to be a
+      with <Math/n/ integer fields, where a vector is either a closed
+      record, a tuple, or a list. First the parameter is expected to be a
       vector (which is one constraint expected to be found in the store)
       and then all its <Math/n/ elements are to be integers, which determines
-      the field <<size>> of the return value to <Math/n+1/. If the field
-      <<accepted>> is <Math/n+1/ too, all expected constraints are
-      present. Otherwise appropriate action has to be taken, as for
-      example suspending the execution of the header function.  The
+      the field <<size>> of the return value to be <Math/n+1/. If the field
+      <<accepted>> is also <Math/n+1/, then all expected constraints are
+      present. Otherwise appropriate action has to be taken, for
+      example, suspending the execution of the header function.  The
       implementation to check for a vector of finite domain variable is
       discussed in <ptr to="u_nesting.basic">.
 
@@ -107,8 +107,8 @@ are constrained according to the corresponding <<expect>> function
 are added to set <Math/A/. All the other variables are added to set 
 <Math/B/. The
 <<expect>> function for finite domain variables has an extra argument
-to determine the event which resumes the propagator, as for example only
-narrowing the bounds of the domain. This information is maintained in
+to determine the event which resumes the propagator, for example only
+narrowing of the bounds of the domain. This information is maintained in
 the sets too.
 
 <p>
@@ -121,8 +121,8 @@ are further constrained.
 Calling <<OZ_Expect::impose()>> introduces the propagator which is
 passed as argument to the runtime system and makes the propagator resume
 if at least one variable of both sets is constrained in a way defined by
-the according <<expect>> function. Additionally, variables in set <Math/B/
-are constrained to finite domain variables. This will be used for the
+the corresponding <<expect>> function. Additionally, variables in set <Math/B/
+are constrained to be finite domain variables. This will be used for the
 implementation of nestable propagators.
 
 <p>
@@ -158,7 +158,7 @@ header functions for propagators, the &cpi provides three macros.
 <Entry> <<OZ_EXPECTED_TYPE(S)>> <Item> defines a &ccpp; string
 <<S>> typically consisting of a number of substrings separated by
 commas which describe the constraint expected at the corresponding
-argument position. The first substring corresponds to first argument
+argument position. The first substring corresponds to the first argument
 with index <Math/0/, the second one to the second argument with index
 <Math/1/ and so on. The substrings are used to generate meaningful
 messages in case an inconsistent constraint is detected. There are
@@ -169,8 +169,8 @@ is required by <<OZ_EXPECT>> and <<OZ_EXPECT_SUSPEND>>.
 
 <Entry> <<OZ_EXPECT(O, P, F)>>
 <Item> checks if the argument at position
-      <<P>> (<<P>> is an C integer with a value starting from <Math/0/)
-      is constrained according to semantics of <<F>> (which is an
+      <<P>> (<<P>> is a C integer with a value starting from <Math/0/)
+      is constrained according to the semantics of <<F>> (which is an
       <<expect>> member function of class <<O>>). The type of
       <<F>> has to be <<OZ_Expect_t O::F(OZ_Term)>>. The value of
       <<O>> has to be an instance of the class <<OZ_Expect>> or a
@@ -248,9 +248,9 @@ requirements will be discussed in this section.
 The <<expect>> member functions are used to define new <<expect>>
 functions which specify the constraints for each parameter of a
 propagator which have to be entailed by the store to enable the
-imposition of the propagator. To be conform with the macros
-<<OZ_EXPECT>> and <<OZ_EXPECT_SUSPEND>> the type of the return
-value of the resulting <<expect>> function has to be
+imposition of the propagator. To conform with the macros
+<<OZ_EXPECT>> and <<OZ_EXPECT_SUSPEND>> the type of the
+resulting <<expect>> function has to be
 <<OZ_expect_t (O::*)(OZ_Term)>>, where <<O>> is either
 <<OZ_Expect>> or a class inheriting from it.
 
