@@ -32,6 +32,12 @@
 #include <stdlib.h>
 #include <math.h>
 
+#ifdef __GNUC__
+typedef long long int verylong;
+#else
+typedef long verylong;
+#endif
+
 //-----------------------------------------------------------------------------
 
 /*
@@ -556,14 +562,15 @@ failure:
 //-----------------------------------------------------------------------------
 
 struct Interval {
-  int left, right, use;
+  int left, right;
+  verylong use;
 };
 
 
 class Order_StartDurUseTerms_By_CompareDursUse {
 public:
   Bool operator()(const StartDurUseTerms& a, const StartDurUseTerms& b) {
-    return a.dur * a.use > b.dur * b.use;
+    return ((verylong)a.dur) * a.use > ((verylong)b.dur) * b.use;
   }
 };
 
@@ -687,7 +694,7 @@ OZ_Return CPIteratePropagatorCumTI::propagate(void)
   int &ts      = reg_sz;
   int * dur    = reg_offset;
   int * use    = reg_use;
-  int capacity = reg_capacity;
+  verylong capacity = reg_capacity;
 
   // if we have no tasks the prop returns trivially true
   if (ts == 0) return PROCEED;
@@ -722,7 +729,7 @@ OZ_Return CPIteratePropagatorCumTI::propagate(void)
   }
 
   int set0Size;
- int compSet0Size;
+  int compSet0Size;
   int outSideSize;
   int mysup = OZ_getFDSup();
   
@@ -733,7 +740,8 @@ OZ_Return CPIteratePropagatorCumTI::propagate(void)
 
 
   struct TISet {
-    int low, up, dur, size, min, max, empty, ect, lst, overlap;
+    int low, up, dur, min, max, empty, ect, lst;
+    verylong size, overlap;
     // extension for tasks inside task intervals
   };
 
@@ -772,11 +780,11 @@ tiloop:
       cset->min        = MinMax[right].min;
 
       int cdur = 0;
-      int csize = 0;
+      verylong csize = 0;
       int empty = 1;
       int clst = 0;
       int cect = OZ_getFDSup();
-      int overlap=0;
+      verylong overlap=0;
       if ( (cset->low <= MinMax[right].min)
 	   && (MinMax[left].max + dur[left] <= cset->up)
 	   ) 
@@ -790,7 +798,7 @@ tiloop:
 		 && (dueL <= cset->up) ) {
 	      empty = 0;
 	      cdur += durL;
-	      csize += use[l]*durL;
+	      csize += use[l]*((verylong)durL);
 	      clst = intMax(clst, dueL-durL);
 	      cect = intMin(cect, releaseL+durL);
 
@@ -802,7 +810,7 @@ tiloop:
 	    }
 	    else {
 	      // add the overlapping amount of tasks
-	      int overlapTmp = intMin(intMax(0,releaseL+durL-cset->low),
+	      verylong overlapTmp = intMin(intMax(0,releaseL+durL-cset->low),
 				      intMin(intMax(0,cset->up-dueL+durL),
 					     intMin(durL,cset->up-cset->low)));
 	      overlap += overlapTmp*use[l];
@@ -842,13 +850,13 @@ tiloop:
 	  int useI     = use[i];
 	  int releaseI = MinMax[i].min;
 	  int dueI     = maxI + durI;
-	  int sizeAll, tsizeTI, treleaseTI, tdueTI;
+	  verylong sizeAll, tsizeTI, treleaseTI, tdueTI;
 	  int contained = 0;
 	  if ( (releaseI >= releaseTI) && (dueI <= dueTI) ) {
 	    // I is in TI
 	    contained = 1;
  	    sizeAll = sizeTI;
-	    tsizeTI = sizeTI - durI*useI; 
+	    tsizeTI = sizeTI - ((verylong)durI)*useI; 
 	    if (i==left) {
 	      treleaseTI = cset->min;
 	      tdueTI = dueTI;
@@ -869,14 +877,14 @@ tiloop:
 	    treleaseTI = releaseTI;
 	    tdueTI     = dueTI;
 	    tsizeTI     = sizeTI;
-	    sizeAll     = durI*useI + sizeTI;
+	    sizeAll     = ((verylong)durI)*useI + sizeTI;
 	  }
 
 	  int overlapI = intMin(intMax(0,releaseI+durI-treleaseTI),
 				intMin(intMax(0,tdueTI-dueI+durI),
 				       intMin(durI,tdueTI-treleaseTI)))*use[i];
-	  int OS = sizeAll;
-	  int OT = tsizeTI;
+	  verylong OS = sizeAll;
+	  verylong OT = tsizeTI;
 
 
 	  // if task i is contained, this does not work!
@@ -888,7 +896,7 @@ tiloop:
 
 	  if ( ((tdueTI - treleaseTI) * capacity < sizeAll) &&
 	       ((dueI - treleaseTI) * capacity < sizeAll) ) {
-	    int delta = tsizeTI - (tdueTI - treleaseTI) * (capacity - useI);
+	    verylong delta = tsizeTI - (tdueTI - treleaseTI) * (capacity - useI);
 	    if (delta > 0) {
 	      // l must be first
 	      int val = tdueTI - (int) ceil((double) delta / (double) useI);
@@ -914,7 +922,7 @@ tiloop:
 	    int delta = tsizeTI - (tdueTI - treleaseTI) * (capacity - useI);
 	    if (delta > 0) {
 	      // l must be last
-	      int val = treleaseTI + (int) ceil((double) delta / (double) useI);
+	      verylong val = treleaseTI + (int) ceil((double) delta / (double) useI);
 	      if (releaseI < val) {
 		tiFlag = 1;
 		FailOnEmpty(*x[i] >= val);
@@ -984,11 +992,11 @@ capLoop:
     //////////
     int min_left = mysup;
     int max_right = 0;
-    int sum = 0;
+    verylong sum = 0;
     for (i=0; i<ts; i++) {
       int iMin = MinMax[i].min;
       int iDue = MinMax[i].max + dur[i];
-      sum = sum + use[i] * dur[i];
+      sum = sum + use[i] * ((verylong)dur[i]);
       if (iMin < min_left) min_left = iMin;
       if (iDue > max_right) max_right = iDue;
     }
@@ -1087,7 +1095,7 @@ capLoop:
       int dur_i = dur[i];
       for (j=0; j<exclusion_nb; j++) {
 	Interval Exclusion = ExclusionIntervals[j];
-	int span = Exclusion.right - Exclusion.left;
+	verylong span = Exclusion.right - Exclusion.left;
 	if (Exclusion.use + span * use_i > span * capacity) {
 	  int left = Exclusion.left;
 	  int right = Exclusion.right;
