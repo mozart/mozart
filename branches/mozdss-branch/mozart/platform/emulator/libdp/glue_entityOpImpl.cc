@@ -415,9 +415,8 @@ OZ_Return distVarBindImpl(OzVariable *ov, TaggedRef *varPtr, TaggedRef val) {
   }
 
   // otherwise ask the abstract entity
-  DssThreadId *thrId = currentThreadId();
   PstOutContainerInterface** pstout;
-  OpRetVal cont = ae->abstractOperation_Bind(thrId, pstout);
+  OpRetVal cont = ae->abstractOperation_Bind(NULL, pstout);
 
   // allocate PstOutContainer if required
   if (pstout != NULL) *(pstout) = new PstOutContainer(val);
@@ -430,7 +429,6 @@ OZ_Return distVarBindImpl(OzVariable *ov, TaggedRef *varPtr, TaggedRef val) {
     Assert(0);
     return PROCEED;
   case DSS_SUSPEND: { // suspend operation (no explicit resume)
-    new SuspendedDummy();
     // use quiet suspension here (avoid extra distributed operations),
     // and don't add a suspension if there is no current thread
     Thread *thr = oz_currentThread();
@@ -501,9 +499,8 @@ OZ_Return distVarMakeNeededImpl(TaggedRef *varPtr) {
   if (ae == NULL) return PROCEED;
 
   // otherwise ask the abstract entity
-  DssThreadId *thrId = currentThreadId();
   PstOutContainerInterface** pstout;
-  OpRetVal cont = ae->abstractOperation_Append(thrId, pstout);
+  OpRetVal cont = ae->abstractOperation_Append(NULL, pstout);
 
   // allocate PstOutContainer if required
   if (pstout != NULL) *(pstout) = new PstOutContainer(oz_atom("needed"));
@@ -511,9 +508,7 @@ OZ_Return distVarMakeNeededImpl(TaggedRef *varPtr) {
   switch(cont) {
   case DSS_PROCEED:
   case DSS_SKIP:
-    return PROCEED;
   case DSS_SUSPEND:
-    new SuspendedDummy();
     return PROCEED;
   case DSS_RAISE:
   case DSS_INTERNAL_ERROR_NO_OP:
