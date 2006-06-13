@@ -37,14 +37,22 @@
 
 namespace _dss_internal{ //Start namespace
 
+  // status of transient entity (used by both transient protocols)
+  enum TransientStatus {
+    TRANS_STATUS_FREE,      // not bound yet
+    TRANS_STATUS_WAITING,   // bind/kill attempt sent, waiting for result
+    TRANS_STATUS_BOUND,     // bound (final state)
+    TRANS_STATUS_FAILED     // permfailed (final state)
+  };
+
+
   class ProtocolOnceOnlyManager : public ProtocolManager {
   private:
     SimpleList<DSite*> a_proxies;     // the registered proxies
-    bool a_bound:1;                   // whether the transient is bound
-    bool a_failed:1;                  // whether the state is permfail
+    TransientStatus    a_status;      // transient status
 
     ProtocolOnceOnlyManager(const ProtocolOnceOnlyManager&) :
-      a_proxies(), a_bound(false), a_failed(false) {}
+      a_proxies(), a_status(TRANS_STATUS_FREE) {}
     ProtocolOnceOnlyManager& operator=(const ProtocolOnceOnlyManager&)
     { return *this; }
 
@@ -69,17 +77,15 @@ namespace _dss_internal{ //Start namespace
 
   class ProtocolOnceOnlyProxy : public ProtocolProxy {
   private:
-    SimpleList<GlobalThread*> a_susps;   // suspended threads
-    bool a_bound:1;                      // whether the transient is bound
-    bool a_failed:1;                  // whether the state is permfail
+    SimpleList<GlobalThread*> a_susps;    // suspended threads
+    TransientStatus           a_status;   // transient status
 
     // Note. a_susps used to be a TwoContainer<GlobalThread,ProtOOop>.
     // I simplified it, because in practice we do not need to know on
     // which operation a GlobalThread suspends.
 
     ProtocolOnceOnlyProxy(const ProtocolOnceOnlyProxy&) :
-      ProtocolProxy(PN_TRANSIENT), a_susps(), a_bound(false), a_failed(false)
-    {}
+      ProtocolProxy(PN_TRANSIENT), a_susps(), a_status(TRANS_STATUS_FREE) {}
     ProtocolOnceOnlyProxy& operator=(const ProtocolOnceOnlyProxy&)
     { return *this; }
 

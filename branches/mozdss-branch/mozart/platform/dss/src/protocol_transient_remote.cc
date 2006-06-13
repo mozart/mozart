@@ -37,8 +37,8 @@ namespace _dss_internal{ //Start namespace
   // This protocol is a variant of the "once only" protocol (see
   // protocol_once_only.cc), where one of the proxies is responsible
   // for binding and updating the transient.  In the "once only"
-  // protocol, this role was played by the manager.  The first remote
-  // proxy automatically plays this role.
+  // protocol, this role was played by the manager.  Here the first
+  // remote proxy automatically plays this role.
   //
   // In the following description, P* denotes the proxy that has the
   // write token, and HP denotes the "home" proxy.
@@ -87,13 +87,12 @@ namespace _dss_internal{ //Start namespace
   //      |                     |--TR_UPDATE_REQUEST->|
   //
   // (2)  P                     M                     P*      P'
-  //      |                     |<-TR_UPDATE_CONFIRM--|       |
-  //      |<-TR_UPDATE_CONFIRM--|                             |
+  //      |                     |<-----TR_UPDATE------|       |
+  //      |<-----TR_UPDATE------|                             |
   //      |                     |----------TR_UPDATE--------->|
   //
-  // Special case: P* initiates the update.  No confirmation is
-  // required here, therefore P* sends a TR_UPDATE, which is forwarded
-  // to other proxies by the manager.
+  // Special case: P* initiates the update.  P* sends a TR_UPDATE,
+  // which is directly forwarded to other proxies by the manager.
   //
   // (1*) P*              M               P'
   //      |---TR_UPDATE-->|               |
@@ -120,6 +119,16 @@ namespace _dss_internal{ //Start namespace
   //
   //    M                 P
   //    |---TR_PERMFAIL-->| (to all proxies)
+  //
+  //
+  //
+  // Message formats (optional parameters are between square brackets):
+  //    TR_BIND AbsOp Pst
+  //    TR_BOUND Pst
+  //    TR_HOME_BOUND
+  //    TR_REDIRECT Pst
+  //    TR_UPDATE_REQUEST AbsOp Pst [GlobalThread]
+  //    TR_UPDATE AbsOp Pst [GlobalThread]
 
   namespace{
     // In the message descriptions, "PM" means a message sent by a
@@ -135,7 +144,6 @@ namespace _dss_internal{ //Start namespace
       TR_RECEIVESTATUS,  // P*M,MP: answer to a getstatus
       TR_UPDATE_REQUEST, // PM,MP*: request to update
       TR_UPDATE,         // P*M,MP: send update to proxie(s)
-      TR_UPDATE_CONFIRM, // P*M,MP: update confirmation (to requesting proxy)
       TR_PERMFAIL        //  PM,MP: make the entity permfail
     };
     
@@ -153,13 +161,13 @@ namespace _dss_internal{ //Start namespace
   
   // normal constructor
   ProtocolTransientRemoteManager::ProtocolTransientRemoteManager(DSite* const site) :
-    a_proxies(), a_current(site), a_bound(false), a_failed(false) {
+    a_proxies(), a_current(site), a_status(TRANS_STATUS_FREE) {
     a_proxies.push(site);
   }
 
   // fill msgC with manager migration info
   void ProtocolTransientRemoteManager::sendMigrateInfo(MsgContainer* msgC) {
-    msgC->pushIntVal((a_bound ? 1 : 0) + (a_failed ? 2 : 0));
+    msgC->pushIntVal(a_status);
     msgC->pushDSiteVal(a_current);
     for (Position<DSite*> p(a_proxies); p(); p++) msgC->pushDSiteVal(*p);
   }
@@ -168,9 +176,7 @@ namespace _dss_internal{ //Start namespace
   ProtocolTransientRemoteManager::ProtocolTransientRemoteManager(::MsgContainer* const msgC) :
     a_proxies(), a_current(NULL)
   {
-    int status = msgC->popIntVal();
-    a_bound = status & 1;
-    a_failed = status & 2;
+    a_status = static_cast<TransientStatus>(msgC->popIntVal());
     a_current = msgC->popDSiteVal();
     while (!msgC->m_isEmpty()) a_proxies.push(msgC->popDSiteVal());
   }
@@ -231,16 +237,18 @@ namespace _dss_internal{ //Start namespace
     case TR_REGISTER: {
       dssLog(DLL_BEHAVIOR,"TRANSIENT REMOTE (%p): Received REGISTER %p",
 	     this,s);
-      if (a_bound) sendRedirect(s);
-      else if (a_failed) sendToProxy(s, TR_PERMFAIL);
-      else register_remote(s);
+      switch (a_status) {
+      case TRANS_STATUS_BOUND:  sendRedirect(s); break;
+      case TRANS_STATUS_FAILED: sendToProxy(s, TR_PERMFAIL); break;
+      default:                  register_remote(s); break;
+      }
       break;
     }
     case TR_DEREGISTER: {
       // Remove proxy from list.  If the once_only is bound, the proxy
       // has already been removed.  This latecoming request can thus
       // be dropped.
-      if (a_bound || a_failed) break;
+      if (a_status > TRANS_STATUS_WAITING) break;
       dssLog(DLL_BEHAVIOR,"TRANSIENT REMOTE (%p): Received DEREGISTER %p\n",
 	     this,s);
       // remember: a_current is not a member of a_proxies (if remote).
@@ -264,7 +272,8 @@ namespace _dss_internal{ //Start namespace
     case TR_BIND: {
       // forward request to the proxy a_current (home or remote).
       dssLog(DLL_BEHAVIOR,"TRANSIENT REMOTE (%p): Received Bind",this);
-      if (a_bound || a_failed) break;
+      if (a_status > TRANS_STATUS_FREE) break;
+      a_status = TRANS_STATUS_WAITING;
       PstInContainerInterface *builder = gf_popPstIn(msg);
       sendToProxy(a_current, TR_BIND, builder->loopBack2Out());
       break;
@@ -279,7 +288,7 @@ namespace _dss_internal{ //Start namespace
       // This is either a bind coming from the home proxy, or it is an
       // indication that the entity instance at this site is fully
       // initiated, and that redirects can be sent.
-      a_bound = true;
+      a_status = TRANS_STATUS_BOUND;
       // All proxies, except the home proxy and the current proxy, are
       // informed about the binding.
       DSite *mySite = a_coordinator->m_getEnvironment()->a_myDSite;
@@ -297,51 +306,43 @@ namespace _dss_internal{ //Start namespace
     }
     case TR_UPDATE_REQUEST: {
       // A remote proxy requests an update.
-      if (a_bound || a_failed) break;
+      if (a_status > TRANS_STATUS_FREE) break;
       int aop = msg->popIntVal();
-      GlobalThread *id = popThreadId(msg);
       PstInContainerInterface *builder = gf_popPstIn(msg);
-      // Forward the request to the current proxy.
       PstOutContainerInterface *arg = builder->loopBack2Out();
-      sendToProxy(a_current, TR_UPDATE_REQUEST, aop, id, arg);
-      break;
-    }
-    case TR_UPDATE_CONFIRM: {
-      // The current proxy sends back an update confirmation.
-      if (a_bound || a_failed) break;
-      Assert(s == a_current);
-      int aop = msg->popIntVal();
-      PstInContainerInterface *builder = gf_popPstIn(msg);
-      GlobalThread *id = popThreadId(msg);
-      PstOutContainerInterface *ans = builder->loopBack2Out();
-      DSite *requester = id->m_getGUIdSite();
-      // Send TR_UPDATE to all proxies except the requester
-      for (Position<DSite*> p(a_proxies); p(); p++) {
-	if ((*p) != requester && (*p) != a_current)
-	  sendToProxy(*p, TR_UPDATE, aop, ans->duplicate());
-      }
-      // Send TR_UPDATE_CONFIRM to requester
-      sendToProxy(requester, TR_UPDATE_CONFIRM, aop, ans, id);
+      // Forward the request to the current proxy.
+      if (!msg->m_isEmpty())
+	sendToProxy(a_current, TR_UPDATE_REQUEST, aop, arg, popThreadId(msg));
+      else
+	sendToProxy(a_current, TR_UPDATE_REQUEST, aop, arg);
       break;
     }
     case TR_UPDATE: {
       // The current proxy sends an update, simply forward it.
-      if (a_bound || a_failed) break;
+      if (a_status > TRANS_STATUS_WAITING) break;
       Assert(s == a_current);
       int aop = msg->popIntVal();
       PstInContainerInterface *builder = gf_popPstIn(msg);
       PstOutContainerInterface *ans = builder->loopBack2Out();
-      // send update to all proxies except the current proxy
+      // take requester if present
+      GlobalThread *tid = (msg->m_isEmpty() ? NULL : popThreadId(msg));
+      DSite *requester = (tid ? tid->m_getGUIdSite() : NULL);
+      // send TR_UPDATE to all proxies except the requester
       for (Position<DSite*> p(a_proxies); p(); p++) {
-	if ((*p) != s) sendToProxy(*p, TR_UPDATE, aop, ans->duplicate());
+	if ((*p) != requester && (*p) != a_current)
+	  sendToProxy(*p, TR_UPDATE, aop, ans->duplicate());
       }
-      delete ans;     // because we haven't sent this one
+      // send specific TR_UPDATE to requester if present
+      if (requester)
+	sendToProxy(requester, TR_UPDATE, aop, ans, tid);
+      else
+	delete ans;
       break;
     }
     case TR_PERMFAIL: {
-      if (a_bound || a_failed) break;
+      if (a_status > TRANS_STATUS_WAITING) break;
       if (s == a_current) { // The entity failed, forward to all proxies
-	a_failed = true;
+	a_status = TRANS_STATUS_FAILED;
 	while (!a_proxies.isEmpty())
 	  sendToProxy(a_proxies.pop(), TR_PERMFAIL);
       } else { // Forward to current proxy
@@ -361,10 +362,10 @@ namespace _dss_internal{ //Start namespace
   void
   ProtocolTransientRemoteManager::m_siteStateChange(DSite* s,
 						    const DSiteState& state) {
-    if (!a_failed && !a_bound &&
+    if (a_status <= TRANS_STATUS_WAITING &&
 	(state == DSite_GLOBAL_PRM || state == DSite_LOCAL_PRM)) {
       if (s == a_current) { // the current proxy failed, permfail!
-	a_failed = true;
+	a_status = TRANS_STATUS_FAILED;
 	while (!a_proxies.isEmpty())
 	  sendToProxy(a_proxies.pop(), TR_PERMFAIL);
       } else { // simply remove it from a_proxies if present
@@ -380,7 +381,7 @@ namespace _dss_internal{ //Start namespace
   // constructor
   ProtocolTransientRemoteProxy::ProtocolTransientRemoteProxy():
     ProtocolProxy(PN_TRANSIENT_REMOTE), a_susps(),
-    a_bound(false), a_failed(false), a_writeToken(false)
+    a_status(TRANS_STATUS_FREE), a_writeToken(false)
   {}
 
   // destructor
@@ -388,7 +389,7 @@ namespace _dss_internal{ //Start namespace
     Assert(a_susps.isEmpty());
     // deregister if this proxy is remote, and the transient is not
     // bound.  Don't care about the write token, the manager knows.
-    if (!a_bound && !a_failed && !a_proxy->m_isHomeProxy()) {
+    if (a_status < TRANS_STATUS_WAITING && !a_proxy->m_isHomeProxy()) {
       dssLog(DLL_BEHAVIOR,"TRANSIENT REMOTE (%p): Send DEREGISTER", this);
       sendToManager(TR_DEREGISTER);
     }
@@ -407,7 +408,7 @@ namespace _dss_internal{ //Start namespace
 
   // notify failure
   void ProtocolTransientRemoteProxy::m_failed() {
-    a_failed = true;
+    a_status = TRANS_STATUS_FAILED;
     a_proxy->updateFaultState(FS_PROT_STATE_PRM_UNAVAIL);
     // resume operations
     while (!a_susps.isEmpty()) a_susps.pop()->resumeFailed();
@@ -420,23 +421,25 @@ namespace _dss_internal{ //Start namespace
 						   const AbsOp& aop)
   {
     msg = NULL;   // default
-    if (a_bound) return DSS_PROCEED;
-    if (a_failed) return DSS_RAISE;
-    if (a_writeToken) {
-      // this proxy binds the transient, and notifies the manager
-      if (a_proxy->m_isHomeProxy())
-	sendToManager(TR_HOME_BOUND);
-      else
-	sendToManager(TR_BOUND, UnboundPst(msg));
-      return DSS_PROCEED; 
-
-    } else {
-      // send binding request to manager
-      if (sendToManager(TR_BIND, UnboundPst(msg))) {
-	dssLog(DLL_BEHAVIOR,"TRANSIENT REMOTE (%p): Send Bind",this);
-	a_susps.push(th_id);
-	return DSS_SUSPEND;
+    switch (a_status) {
+    case TRANS_STATUS_FREE:
+      if (a_writeToken) { // we directly bind and notify the manager
+	a_status = TRANS_STATUS_BOUND;
+	if (a_proxy->m_isHomeProxy())
+	  sendToManager(TR_HOME_BOUND);
+	else
+	  sendToManager(TR_BOUND, UnboundPst(msg));
+	return DSS_PROCEED; 
       }
+      // send binding request to manager
+      a_status = TRANS_STATUS_WAITING;
+      sendToManager(TR_BIND, UnboundPst(msg));
+      // fall through
+    case TRANS_STATUS_WAITING:
+      // suspend the current thread until an answer comes back
+      if (th_id) a_susps.push(th_id);
+      return DSS_SUSPEND;
+    default:
       return DSS_RAISE;
     }
   }
@@ -448,20 +451,24 @@ namespace _dss_internal{ //Start namespace
 						const AbsOp& aop)
   {
     msg = NULL;   // default
-    if (a_bound) return DSS_PROCEED;
-    if (a_failed) return DSS_RAISE;
-    if (a_writeToken) {
-      // this proxy makes the update, and notifies the manager
-      sendToManager(TR_UPDATE, aop, UnboundPst(msg));
-      return DSS_PROCEED; 
-
-    } else {
-      // send update request to manager
-      if (sendToManager(TR_UPDATE_REQUEST, aop, th_id, UnboundPst(msg))) {
-	dssLog(DLL_BEHAVIOR,"TRANSIENT REMOTE (%p): Send Bind",this);
-	a_susps.push(th_id);
-	return DSS_SUSPEND;
+    switch (a_status) {
+    case TRANS_STATUS_FREE:
+      if (a_writeToken) {
+	// this proxy makes the update, and notifies the manager
+	sendToManager(TR_UPDATE, aop, UnboundPst(msg));
+	return DSS_PROCEED;
       }
+      // send update request to manager
+      if (th_id)
+	sendToManager(TR_UPDATE_REQUEST, aop, UnboundPst(msg), th_id);
+      else
+	sendToManager(TR_UPDATE_REQUEST, aop, UnboundPst(msg));
+      // fall through
+    case TRANS_STATUS_WAITING:
+      // the update is useless because of the binding attempt, suspend
+      if (th_id) a_susps.push(th_id);
+      return DSS_SUSPEND;
+    default:
       return DSS_RAISE;
     }
   }
@@ -469,9 +476,10 @@ namespace _dss_internal{ //Start namespace
   // kill the entity
   OpRetVal
   ProtocolTransientRemoteProxy::protocol_Kill() {
-    if (!a_bound && !a_failed) {
+    if (a_status < TRANS_STATUS_WAITING) {
+      a_status = TRANS_STATUS_WAITING;
       if (a_writeToken) { // make it fail immediately
-	a_failed = true;
+	a_status = TRANS_STATUS_FAILED;
 	a_proxy->updateFaultState(FS_PROT_STATE_PRM_UNAVAIL);
       }
       sendToManager(TR_PERMFAIL);
@@ -482,14 +490,14 @@ namespace _dss_internal{ //Start namespace
   // receive a message
   void
   ProtocolTransientRemoteProxy::msgReceived(::MsgContainer * msg, DSite*) {
-    if (a_failed) return;
+    if (a_status == TRANS_STATUS_FAILED) return;
     int msgType = msg->popIntVal();
     switch (msgType) {
     case TR_BIND: {
       // this proxy has the write token, and is asked to bind
       Assert(a_writeToken);
-      if (!a_bound) {
-	a_bound = true; 
+      if (a_status < TRANS_STATUS_BOUND) {
+	a_status = TRANS_STATUS_BOUND; 
 	PstInContainerInterface *cont = gf_popPstIn(msg);
 	a_proxy->installEntityState(cont); 
 	if (a_proxy->m_isHomeProxy())
@@ -504,14 +512,14 @@ namespace _dss_internal{ //Start namespace
       Assert(a_proxy->m_isHomeProxy());
       // the state has been installed by the manager, simply wake up
       // suspensions
-      a_bound = true;
+      a_status = TRANS_STATUS_BOUND;
       wkSuspThrs();
       break;
     }
     case TR_REDIRECT: {
       // sent to remote proxies only
-      Assert(!a_proxy->m_isHomeProxy() && !a_bound);
-      a_bound = true;
+      Assert(!a_proxy->m_isHomeProxy() && a_status < TRANS_STATUS_BOUND);
+      a_status = TRANS_STATUS_BOUND;
       PstInContainerInterface* cont = gf_popPstIn(msg);
       a_proxy->installEntityState(cont); 
       wkSuspThrs();
@@ -520,30 +528,32 @@ namespace _dss_internal{ //Start namespace
     case TR_UPDATE_REQUEST: {
       // this proxy has the write token, and is asked to update
       Assert(a_writeToken);
-      if (!a_bound) {
+      if (a_status < TRANS_STATUS_BOUND) {
 	AbsOp aop = static_cast<AbsOp>(msg->popIntVal());
-	GlobalThread *id = popThreadId(msg);
 	PstInContainerInterface *builder = gf_popPstIn(msg);
+	GlobalThread *tid = (msg->m_isEmpty() ? NULL : popThreadId(msg));
 	// do the update
 	PstOutContainerInterface *ans;
-	a_proxy->m_doe(aop, id, NULL, builder, ans);
-	// send TR_UPDATE_CONFIRM to manager
-	sendToManager(TR_UPDATE_CONFIRM, aop, builder->loopBack2Out(), id);
+	a_proxy->m_doe(aop, tid, NULL, builder, ans);
+	// send TR_UPDATE to manager
+	if (tid)
+	  sendToManager(TR_UPDATE, aop, builder->loopBack2Out(), tid);
+	else
+	  sendToManager(TR_UPDATE, aop, builder->loopBack2Out());
       }
       break;
     }
-    case TR_UPDATE_CONFIRM:
     case TR_UPDATE: {
       // do the update
       AbsOp aop = static_cast<AbsOp>(msg->popIntVal());
       PstInContainerInterface* builder = gf_popPstIn(msg);
       PstOutContainerInterface* ans;
       a_proxy->m_doe(aop, NULL, NULL, builder, ans);
-      // resume calling thread if this is a confirmation
-      if (msgType == TR_UPDATE_CONFIRM) {
-	GlobalThread* id = popThreadId(msg);
-	a_susps.remove(id);
-	id->resumeDoLocal(NULL);
+      // resume calling thread if present
+      if (!msg->m_isEmpty()) {
+	GlobalThread* tid = popThreadId(msg);
+	a_susps.remove(tid);
+	tid->resumeDoLocal(NULL);
       }
       break;
     }
@@ -618,7 +628,8 @@ namespace _dss_internal{ //Start namespace
   FaultState
   ProtocolTransientRemoteProxy::siteStateChanged(DSite* s,
 						 const DSiteState& state) {
-    if (!a_bound && !a_failed && (a_proxy->m_getCoordinatorSite() == s)) {
+    if (a_status <= TRANS_STATUS_WAITING &&
+	a_proxy->m_getCoordinatorSite() == s) {
       switch (state) {
       case DSite_OK:         return FS_PROT_STATE_OK;
       case DSite_TMP:        return FS_PROT_STATE_TMP_UNAVAIL;
