@@ -1,0 +1,1296 @@
+<doc>
+
+<section><title>USAGE</title>
+<usagelist>
+  <usage>ozmake OPTIONS TARGETS</usage>
+</usagelist>
+
+<p><tool>ozmake</tool> is a tool for building Mozart-based projects
+and for creating and installing Mozart packages.  It was inspired by
+the Unix tools <tool>make</tool> and <tool>rpm</tool>, but is much,
+much simpler, is specialized for Mozart-based software development and
+deployment, and transparently supports all platforms on which Mozart
+has been ported.
+<tool>ozmake</tool> must currently be invoked from a shell, but it
+will eventually acquire additionally an optional, user-friendly
+graphical interface.</p>
+</section>
+
+<section><title>SYNOPSIS</title>
+
+<usagelist>
+  <usage>ozmake --help</usage>
+  <usage>ozmake [--build] [TARGETS...]</usage>
+  <usage>ozmake --install [TARGETS...]</usage>
+  <usage>ozmake --install [--package=PKG]</usage>
+  <usage>ozmake --uninstall [--package=PKG]</usage>
+  <usage>ozmake --clean</usage>
+  <usage>ozmake --veryclean</usage>
+  <usage>ozmake --create [--package=FILE]</usage>
+  <usage>ozmake --publish</usage>
+  <usage>ozmake --extract [--package=PKG]</usage>
+  <usage>ozmake --list [--package=MOGUL]</usage>
+  <usage>ozmake --config=(put|delete|list) ...</usage>
+  <usage>ozmake --mogul=(put|delete|list|export) ...</usage>
+</usagelist>
+
+</section>
+
+<section><title>OPTIONS</title>
+
+<p>In the following, we write meta variables between angle brackets,
+e.g. <meta>PREFIX</meta> or <meta>URI as cache path</meta></p>
+
+<subsection><title>General Options</title>
+
+<optlist>
+<optentry>
+  <option>
+    <opt>-v</opt>
+    <opt>--verbose</opt>
+  </option>
+  <item>print out more tracing information that the default.  By supplying
+  this option twice, you will sometimes get even more information.</item>
+</optentry>
+<optentry>
+  <option>
+    <opt>-q</opt>
+    <opt>--quiet</opt>
+  </option>
+  <item>suppress all tracing and feedback information</item>
+</optentry>
+<optentry>
+  <option>
+    <opt>-n</opt>
+    <opt>--just-print</opt>
+  </option>
+  <item>perform a dry run, i.e. just print what would happen without
+        actually performing the actions</item>
+</optentry>
+<optentry>
+  <option>
+    <opt>--local</opt>
+  </option>
+  <item>do not recurse into subdirectories</item>
+</optentry>
+<optentry>
+  <option>
+    <opt>--(no)autodepend</opt>
+  </option>
+  <default><opt>true</opt></default>
+  <item>automatically determine build-time and install-time (run-time)
+	dependencies.  Currently, this is only supported for Oz sources
+	by looking at <oz>import</oz> and <oz>require</oz> sections.
+  </item>
+</optentry>
+<optentry>
+  <option>
+    <opt>--(no)requires</opt>
+  </option>
+  <default><opt>true</opt></default>
+  <item>automatically fetch and install other packages that the current one
+	requires.  This option is relevant both for building and for installing.
+  </item>
+</optentry>
+</optlist>
+
+<p>What you should remember here, is that <opt>-vn</opt> is your friend.  Add
+<opt>-vn</opt> at the end of any <tool>ozmake</tool> invocation, and it will
+tell you in great detail what the command would do, without actually doing
+it.</p>
+
+</subsection>
+
+<subsection><title>Directories and URLs</title>
+
+<optlist>
+<optentry>
+  <option>
+    <opt>--prefix=<meta>PREFIX</meta></opt>
+  </option>
+  <default><file>~/.oz</file></default>
+  <item>root of private installation area</item>
+</optentry>
+<optentry>
+  <option>
+    <opt>--dir=<meta>DIR</meta></opt>
+  </option>
+  <default>current directory</default>
+  <item>default directory for other options below</item>
+</optentry>
+<optentry>
+  <option>
+    <opt>--builddir=<meta>BUILDDIR</meta></opt>
+  </option>
+  <default><meta>DIR</meta></default>
+  <item>directory in which to build</item>
+</optentry>
+<optentry>
+  <option>
+    <opt>--srcdir=<meta>SRCDIR</meta></opt>
+  </option>
+  <default><meta>DIR</meta></default>
+  <item>directory where source files are located</item>
+</optentry>
+<optentry>
+  <option>
+    <opt>--bindir=<meta>BINDIR</meta></opt>
+  </option>
+  <default><file><meta>PREFIX</meta>/bin</file></default>
+  <item>directory where <oz>bin</oz> targets are placed</item>
+</optentry>
+<optentry>
+  <option>
+    <opt>--libroot=<meta>LIBROOT</meta></opt>
+  </option>
+  <default><file><meta>PREFIX</meta>/cache</file></default>
+  <item>root directory of cache into which <oz>lib</oz> targets are
+  installed</item>
+</optentry>
+<optentry>
+  <option>
+    <opt>--libdir=<meta>LIBDIR</meta></opt>
+  </option>
+  <default><file><meta>LIBROOT</meta>/<meta>URI as cache path</meta></file></default>
+  <item>directory into which <oz>lib</oz> targets are installed</item>
+  <example>
+    <eqlist>
+      <eqentry>
+        <eqleft><meta>URI</meta></eqleft>
+        <eqright><file>x-ozlib://foo/bar/baz</file></eqright>
+      </eqentry>
+      <eqentry>
+        <eqleft><meta>URI as cache path</meta></eqleft>
+        <eqright><file>x-ozlib/foo/bar/baz</file></eqright>
+      </eqentry>
+      <eqentry>
+        <eqleft><meta>LIBDIR</meta></eqleft>
+        <eqright><file><meta>LIBROOT</meta>/x-ozlib/foo/bar/baz</file></eqright>
+      </eqentry>
+    </eqlist>
+  </example>
+</optentry>
+<optentry>
+  <option>
+    <opt>--docroot=<meta>DOCROOT</meta></opt>
+  </option>
+  <default><file><meta>PREFIX</meta>/doc</file></default>
+  <item>root directory into which <oz>doc</oz> targets are
+  installed</item>
+</optentry>
+<optentry>
+  <option>
+    <opt>--docdir=<meta>DOCDIR</meta></opt>
+  </option>
+  <default><file><meta>DOCROOT</meta>/<meta>MOGUL as filename</meta></file></default>
+  <item>directory into which <oz>doc</oz> targets are installed</item>
+  <example>
+    <eqlist>
+      <eqentry>
+        <eqleft><meta>MOGUL</meta></eqleft>
+        <eqright><file>mogul:/aaa/bbb/ccc</file></eqright>
+      </eqentry>
+      <eqentry>
+        <eqleft><meta>MOGUL as filename</meta></eqleft>
+        <eqright><file>aaa-bbb-ccc</file></eqright>
+      </eqentry>
+      <eqentry>
+        <eqleft><meta>DOCDIR</meta></eqleft>
+        <eqright><file><meta>DOCROOT</meta>/aaa-bbb-ccc</file></eqright>
+      </eqentry>
+    </eqlist>
+  </example>
+</optentry>
+<optentry>
+  <option>
+    <opt>--extractdir=<meta>EXTRACTDIR</meta></opt>
+  </option>
+  <default><meta>DIR</meta></default>
+  <item>directory into which to extract a package</item>
+</optentry>
+<optentry>
+  <option>
+    <opt>--archive=<meta>ARCHIVE</meta></opt>
+  </option>
+  <default><file>http://www.mozart-oz.org/mogul/pkg</file></default>
+  <item>URL of mogul archive from which packages can be
+  downloaded</item>
+  <example>
+    <eqlist>
+      <eqentry>
+        <eqleft><meta>MOGUL</meta></eqleft>
+        <eqright><file>mogul:/aaa/bbb/ccc</file></eqright>
+      </eqentry>
+    </eqlist>
+    is downloaded from
+    <file><meta>ARCHIVE</meta>/aaa-bbb-ccc.pkg</file>
+  </example>
+</optentry>
+<optentry>
+  <option>
+    <opt>--moguldir=<meta>MOGULDIR</meta></opt>
+  </option>
+  <item>directory in which are placed sub-directories for the user's
+contributions: a directory for packages, one for documentation,
+one for mogul database entries.</item>
+</optentry>
+<optentry>
+  <option>
+    <opt>--mogulurl=<meta>MOGULURL</meta></opt>
+  </option>
+  <item>url corresponding to the <meta>MOGULDIR</meta> directory</item>
+</optentry>
+</optlist>
+
+</subsection>
+
+<subsection><title>Files</title>
+
+<optlist>
+<optentry>
+  <option>
+    <opt>-m <meta>FILE</meta></opt>
+    <opt>--makefile=<meta>FILE</meta></opt>
+  </option>
+  <default><file><meta>SRCDIR</meta>/makefile.oz</file></default>
+  <item>location of makefile</item>
+</optentry>
+<optentry>
+  <option>
+    <opt>-p <meta>PKG</meta></opt>
+    <opt>--package=<meta>PKG</meta></opt>
+  </option>
+  <item>file or URL of package.  when creating a package, it should be
+        a local filename.  when extracting or installing, it can also
+        be a URL or a mogul id; in the latter case, the package is
+        automatically downloaded from the mogul archive
+  </item>
+</optentry>
+<optentry>
+  <option>
+    <opt>-V <meta>VERSION</meta></opt>
+    <opt>--packageversion=<meta>VERSION</meta></opt>
+  </option>
+  <item>this option is respected by <opt>--extract</opt> and
+	<opt>--install</opt>.  When <opt>--extract</opt> is given a
+	MOGUL id and downloads the corresponding package from the
+	MOGUL archive, it will look precisely for the given
+	<meta>VERSION</meta> of the package.  <opt>--install</opt>
+	will simply check that the package to be installed really has
+	this <meta>VERSION</meta>.
+  </item>
+</optentry>
+<optentry>
+  <option>
+    <opt>--database=<meta>DB</meta></opt>
+  </option>
+  <default><file><meta>PREFIX</meta>/DATABASE</file></default>
+  <item>base path of installed packages database.
+        The database is saved in both pickled and textual format
+        respectively in files <file><meta>DB</meta>.ozf</file> and
+        <file><meta>DB</meta>.txt</file>
+  </item>
+</optentry>
+</optlist>
+
+</subsection>
+
+<subsection><title>Help</title>
+
+<usagelist>
+  <usage>ozmake --help</usage>
+</usagelist>
+
+<optlist>
+<optentry>
+  <option>
+    <opt>-h</opt>
+    <opt>--help</opt>
+  </option>
+  <item>print this information message</item>
+</optentry>
+</optlist>
+
+</subsection>
+
+<subsection><title>Build</title>
+
+<usagelist>
+  <usage>ozmake [--build]</usage>
+  <item>build all targets</item>
+  <usage>ozmake [--build] FILES...</usage>
+  <item>build these target</item>
+</usagelist>
+
+<optlist>
+<optentry>
+  <option>
+    <opt>-b</opt>
+    <opt>--build</opt>
+  </option>
+  <item>this is the default.  builds targets of the package</item>
+</optentry>
+<optentry>
+  <option>
+    <opt>--optlevel=( none | debug | optimize )</opt>
+  </option>
+  <default><opt>optimize</opt></default>
+  <item>select optimization level for compilation</item>
+</optentry>
+<optentry>
+  <option>
+    <opt>-g</opt>
+    <opt>--debug</opt>
+    <opt>--optlevel=debug</opt>
+  </option>
+  <item>compile with debugging</item>
+</optentry>
+<optentry>
+  <option>
+    <opt>-O</opt>
+    <opt>--optimize</opt>
+    <opt>--optlevel=optimize</opt>
+  </option>
+  <item>compile with full optimization.  this is the default</item>
+</optentry>
+<optentry>
+  <option>
+    <opt>--(no)gnu</opt>
+  </option>
+  <item>is the C++ compiler the GNU compiler.  this is determined
+        automatically and allows a greater optimization level, namely
+        passing <opt>-O3</opt> rather than just <opt>-O</opt> to the
+        compiler
+  </item>
+</optentry>
+<optentry>
+  <option>
+    <opt>--(no)fullbuild</opt>
+  </option>
+  <default><opt>false</opt></default>
+  <item>also build the <oz>src</oz> targets</item>
+</optentry>
+<optentry>
+  <option>
+    <opt>--includedir DIR</opt>
+    <opt>-I DIR</opt>
+  </option>
+  <item>tell the C++ compiler to additionally search
+  <file>DIR</file> for include files</item>
+</optentry>
+<optentry>
+  <option>
+    <opt>--(no)sysincludedirs</opt>
+  </option>
+  <default><opt>true</opt></default>
+  <item>tell the C++ compiler to additionally search (or not, if using
+  <opt>--nosysincludedirs</opt>) the Mozart-specific include
+  directories located in the global installation directory and in the
+  user's private <file>~/.oz</file> area.</item>
+</optentry>
+<optentry>
+  <option>
+    <opt>--librarydir DIR</opt>
+    <opt>-L DIR</opt>
+  </option>
+  <item>tell the C++ linker to additionally search
+  <file>DIR</file> for libraries</item>
+</optentry>
+<optentry>
+  <option>
+    <opt>--(no)syslibrarydirs</opt>
+  </option>
+  <default><opt>true</opt></default>
+  <item>tell the C++ linker to additionally search (or not, if using
+  <opt>--nosyslibrarydirs</opt>) the Mozart-specific library
+  directories located in the global installation directory and in the
+  user's private <file>~/.oz</file> area.</item>
+</optentry>
+</optlist>
+
+</subsection>
+
+<subsection><title>Install</title>
+
+<usagelist>
+  <usage>ozmake --install</usage>
+  <item>install using the makefile</item>
+  <usage>ozmake --install FILES...</usage>
+  <item>install these targets using the makefile</item>
+  <usage>ozmake --install --package=PKG</usage>
+  <item>install package <opt>PKG</opt></item>
+</usagelist>
+
+<optlist>
+<optentry>
+  <option>
+    <opt>-i</opt>
+    <opt>--install</opt>
+  </option>
+  <item>install targets of the package and updates the package
+  database</item>
+</optentry>
+<optentry>
+  <option>
+    <opt>--grade=( none | same | up | down | any | freshen )</opt>
+  </option>
+  <default><opt>none</opt></default>
+  <item>what to do if this package is already installed?
+  <tool>ozmake</tool> will compare version and dates, where the
+  version is more significant.
+  <optlist>
+    <optentry>
+      <option><opt>--grade=none</opt></option>
+      <item>signals an error</item>
+    </optentry>
+    <optentry>
+      <option><opt>--grade=same</opt></option>
+      <item>requires versions and dates to be the same</item>
+    </optentry>
+    <optentry>
+      <option><opt>--grade=up</opt></option>
+      <item>requires a package with newer version or same version and
+      newer release date than the one installed</item>
+    </optentry>
+    <optentry>
+      <option><opt>--grade=down</opt></option>
+      <item>requires a package with older version or same version and
+      older release date than the one installed</item>
+    </optentry>
+    <optentry>
+      <option><opt>--grade=any</opt></option>
+      <item>no conditions</item>
+    </optentry>
+    <optentry>
+      <option><opt>--grade=freshen</opt></option>
+      <item>install if the package is newer else do nothing</item>
+    </optentry>
+  </optlist>
+  </item>
+</optentry>
+<optentry>
+  <option>
+    <opt>-U</opt>
+    <opt>--upgrade</opt>
+  </option>
+  <item>equivalent to <opt>--install --grade=up</opt></item>
+</optentry>
+<optentry>
+  <option>
+    <opt>--downgrade</opt>
+  </option>
+  <item>equivalent to <opt>--install --grade=down</opt></item>
+</optentry>
+<optentry>
+  <option>
+    <opt>-A</opt>
+    <opt>--anygrade</opt>
+  </option>
+  <item>equivalent to <opt>--install --grade=any</opt></item>
+</optentry>
+<optentry>
+  <option>
+    <opt>-F</opt>
+    <opt>--freshen</opt>
+  </option>
+  <item>equivalent to <opt>--install --grade=freshen</opt></item>
+</optentry>
+<optentry>
+  <option>
+    <opt>--(no)replacefiles</opt>
+  </option>
+  <default><opt>false</opt></default>
+  <item>allow installation to overwrite files from other packages
+  </item>
+</optentry>
+<optentry>
+  <option>
+    <opt>-R</opt>
+    <opt>--replace</opt>
+  </option>
+  <item>equivalent to <opt>--install --grade=any --replacefiles</opt>
+  </item>
+</optentry>
+<optentry>
+  <option>
+    <opt>--(no)extendpackage</opt>
+  </option>
+  <default><opt>false</opt></default>
+  <item>whether to replace or extend the current installation of this
+        package if any
+  </item>
+</optentry>
+<optentry>
+  <option>
+    <opt>-X</opt>
+    <opt>--extend</opt>
+  </option>
+  <item>equivalent to <opt>--install --grade=any --extendpackage</opt>
+  </item>
+</optentry>
+<optentry>
+  <option>
+    <opt>--(no)savedb</opt>
+  </option>
+  <default><opt>true</opt></default>
+  <item>save the updated database after installation
+  </item>
+</optentry>
+<optentry>
+  <option>
+    <opt>--includedocs</opt>
+    <opt>--excludedocs</opt>
+  </option>
+  <default><opt>--includedocs</opt></default>
+  <item>whether to install the <oz>doc</oz> targets</item>
+</optentry>
+<optentry>
+  <option>
+    <opt>--includelibs</opt>
+    <opt>--excludelibs</opt>
+  </option>
+  <default><opt>--includelibs</opt></default>
+  <item>whether to install the <oz>lib</oz> targets</item>
+</optentry>
+<optentry>
+  <option>
+    <opt>--includebins</opt>
+    <opt>--excludebins</opt>
+  </option>
+  <default><opt>--includebins</opt></default>
+  <item>whether to install the <oz>bin</oz> targets</item>
+</optentry>
+<optentry>
+  <option>
+    <opt>--(no)keepzombies</opt>
+  </option>
+  <default><opt>false</opt></default>
+  <item>whether to remove files left over from a previous installation
+        of this package
+  </item>
+</optentry>
+<optentry>
+  <option>
+    <opt>--exe=( default | yes | no | both | multi )</opt>
+  </option>
+  <default><opt>default</opt></default>
+  <item>the convention on Windows is that executables have a <file>.exe</file>, while
+	on Unix they have no extension.  The <opt>--exe</opt> option allows you to
+	control the conventions used by <tool>ozmake</tool> when installing executables.
+        <optlist>
+          <optentry>
+            <option><opt>--exe=default</opt></option>
+            <item>use the platform's convention</item>
+          </optentry>
+          <optentry>
+            <option><opt>--exe=yes</opt></option>
+            <item>use a <file>.exe</file> extension</item>
+          </optentry>
+          <optentry>
+            <option><opt>--exe=no</opt></option>
+            <item>use no extension</item>
+          </optentry>
+          <optentry>
+            <option><opt>--exe=both</opt></option>
+            <item>install all executables with <file>.exe</file> extension and
+            without</item>
+          </optentry>
+          <optentry>
+            <option><opt>--exe=multi</opt></option>
+            <item>install executable functors for both Unix and Windows.
+            The Unix versions are installed without extension, and the
+	    Windows versions are installed with <file>.exe</file> extension</item>
+          </optentry>
+        </optlist>
+  </item>
+</optentry>
+</optlist>
+
+</subsection>
+
+<subsection><title>Uninstall</title>
+
+<usagelist>
+  <usage>ozmake --uninstall</usage>
+  <item>uninstall package described by makefile</item>
+  <usage>ozmake --uninstall --package=PKG</usage>
+  <item>uninstall package named by mogul id <opt>PKG</opt></item>
+</usagelist>
+
+<optlist>
+<optentry>
+  <option>
+    <opt>-e</opt>
+    <opt>--uninstall</opt>
+  </option>
+  <item>uninstall a package</item>
+</optentry>
+</optlist>
+
+</subsection>
+
+<subsection><title>Clean</title>
+
+<usagelist>
+  <usage>ozmake --clean</usage>
+  <usage>ozmake --veryclean</usage>
+  <default type="glob"><opt>*~ *.ozf *.o *.so-* *.exe</opt></default>
+  <item>remove files as specified by the makefile's clean and
+	veryclean features. <opt>--veryclean</opt> implies
+	<opt>--clean</opt>.
+  </item>
+</usagelist>
+
+</subsection>
+
+<subsection><title>Create</title>
+
+<usagelist>
+  <usage>ozmake --create [--package=<meta>FILE</meta>]</usage>
+  <item>create a package and save it in <meta>FILE</meta>.  the files
+        needed for the package are automatically computed from the
+        makefile.  If <opt>--package=<meta>FILE</meta></opt> is not supplied,
+	a default is computed using the mogul id (and possibly version number)
+	found in the makefile.
+  </item>
+</usagelist>
+
+<optlist>
+<optentry>
+  <option>
+    <opt>--include(bins|libs|docs)</opt>
+    <opt>--exclude(bins|libs|docs)</opt>
+  </option>
+  <item>control which target types are included in the package
+  </item>
+</optentry>
+</optlist>
+
+</subsection>
+
+<subsection><title>Publish</title>
+
+<usagelist>
+  <usage>ozmake --publish</usage>
+  <item>automatically takes care of all the steps necessary for
+        creating/updating a package contributed by the user and
+	making all necessary data available to the MOGUL librarian.
+	See documentation for <opt>--mogul</opt> below.
+  </item>
+</usagelist>
+
+</subsection>
+
+<subsection><title>Extract</title>
+
+<usagelist>
+  <usage>ozmake --extract --package=<meta>PKG</meta></usage>
+  <item>extract the files from file or URL <mate>PKG</mate>.  if
+        <meta>PKG</meta> is a mogul id, then the package is
+        automatically downloaded from the mogul archive
+  </item>
+</usagelist>
+
+</subsection>
+
+<subsection><title>List</title>
+
+<usagelist>
+  <usage>ozmake --list</usage>
+  <item>list info for all packages in the installed package
+  database</item>
+  <usage>ozmake --list --package=<meta>MOGUL</meta></usage>
+  <item>list info for the installed package identified by mogul id
+        <meta>MOGUL</meta>
+  </item>
+</usagelist>
+
+<optlist>
+<optentry>
+  <option>
+    <opt>--linewidth=N</opt>
+  </option>
+  <default>70</default>
+  <item>assume a line with of <opt>N</opt> characters</item>
+</optentry>
+</optlist>
+
+</subsection>
+
+<subsection><title>Config</title>
+
+<usagelist>
+  <usage>ozmake --config=put <meta>OPTIONS</meta></usage>
+  <item>record the given <meta>OPTIONS</meta> in <tool>ozmake</tool>'s
+  configuration database, and use them as defaults in subsequent
+  invocations of <tool>ozmake</tool> unless explicitly
+  overridden on the command line.  For example:
+  <opt>ozmake --config=put --prefix=/usr/local/oz</opt>
+  saves <file>/usr/local/oz</file> as the default value for option
+  <opt>--prefix</opt></item>
+  <usage>ozmake --config=delete <meta>OPT1</meta> ... <meta>OPTn</meta></usage>
+  <item>deletes some entries from the configuration database.  For example:
+  <opt>ozmake --config=delete prefix</opt>
+  removes the default for <opt>--prefix</opt> from the configuration database</item>
+  <usage>ozmake --config=list</usage>
+  <item>lists the contents of <tool>ozmake</tool>'s configuration database</item>
+</usagelist>
+<p>the argument to <opt>--config</opt> can be abbreviated to any non-ambiguous
+prefix</p>
+</subsection>
+
+<subsection><title>Mogul</title>
+
+<p>If you choose to contribute packages to the MOGUL archive,
+<opt>ozmake --mogul=<meta>ACTION</meta></opt> simplifies your task.
+It makes it easy for you to maintain a database of your contributions
+and to export them so that the MOGUL librarian may automatically
+find them.  In fact, the simplest way is to use
+<opt>ozmake --publish</opt> which will take take care of all
+details for you.</p>
+
+<usagelist>
+  <usage>ozmake --mogul=put</usage>
+  <item>update the user's database of own mogul contributions with
+  the data for this contribution (in local directory)</item>
+  <usage>ozmake --mogul=put --package=<meta>PKG</meta></usage>
+  <item>same as above, but using the package <meta>PKG</meta> explicitly given</item>
+  <usage>ozmake --mogul=delete <meta>MOG1</meta> ... <meta>MOGn</meta></usage>
+  <item>remove the entries with mogul ids <meta>MOG1</meta> through <meta>MOGn</meta>
+  from the user's database of own contribution</item>
+  <usage>ozmake --mogul=delete</usage>
+  <item>remove entry for current contribution</item>
+  <usage>ozmake --mogul=list</usage>
+  <item>show the recorded data for all entries in the user's database of own
+  mogul contributions</item>
+  <usage>ozmake --mogul=list <meta>MOG1</meta> ... <meta>MOGn</meta></usage>
+  <item>show the recorded data for entries <meta>MOG1</meta> through <meta>MOGn</meta>
+  in the user's database of own mogul contributions</item>
+  <usage>ozmake --mogul=export</usage>
+  <item>write all necessary mogul entries for the user's own mogul contributions.
+  These are the entries which will be read by the MOGUL librarian to automatically
+  assemble the full MOGUL database.</item>
+</usagelist>
+
+<p>The data for your contributions need to be made available to the MOGUL librarian
+on the WEB.  You want to just update a local directory with your contributions, but,
+in order for the MOGUL librarian to find them, these directories must also be available
+through URLs on the WEB.  Here are some options that allow you to control this
+correspondence, and for which you should set default using
+<opt>ozmake --config=put</opt></p>
+
+<optlist>
+  <optentry>
+    <option>
+      <opt>--moguldir=<meta>MOGULDIR</meta></opt>
+    </option>
+    <option>
+      <opt>--mogulurl=<meta>MOGULURL</meta></opt>
+    </option>
+    <item><meta>MOGULDIR</meta> is a directory which is also available on the WEB
+    through url <meta>MOGULURL</meta>.  <meta>MOGULDIR</meta> is intended as a
+    root directory in which sub-directories for packages, documentation, and
+    mogul entries will be found.</item>
+  </optentry>
+</optlist>
+
+<p>For those who really enjoy pain, <tool>ozmake</tool> has of course many
+options to shoot yourself in the foot.  In the options below <meta>ID</meta> stands
+for the filename version of the package's mogul id (basically replace slashes by
+dashes).  You can control where packages, their documentation and mogul database
+entries and stored and made available using the options below:</p>
+
+<optlist>
+  <optentry>
+    <option>
+      <opt>--mogulpkgdir=<meta>MOGULPKGDIR</meta></opt>
+    </option>
+    <default><meta>MOGULDIR</meta>/pkg/<meta>ID</meta>/</default>
+  </optentry>
+  <optentry>
+    <option>
+      <opt>--mogulpkgurl=<meta>MOGULPKGURL</meta></opt>
+    </option>
+    <default><meta>MOGULURL</meta>/pkg/<meta>ID</meta>/</default>
+  </optentry>
+  <optentry>
+    <option>
+      <opt>--moguldocdir=<meta>MOGULDOCDIR</meta></opt>
+    </option>
+    <default><meta>MOGULDIR</meta>/doc/<meta>ID</meta>/</default>
+  </optentry>
+  <optentry>
+    <option>
+      <opt>--moguldocurl=<meta>MOGULDOCURL</meta></opt>
+    </option>
+    <default><meta>MOGULURL</meta>/doc/<meta>ID</meta>/</default>
+  </optentry>
+  <optentry>
+    <option>
+      <opt>--moguldbdir=<meta>MOGULDBDIR</meta></opt>
+    </option>
+    <default><meta>MOGULDIR</meta>/db/<meta>ID</meta>/</default>
+  </optentry>
+  <optentry>
+    <option>
+      <opt>--moguldburl=<meta>MOGULDBURL</meta></opt>
+    </option>
+    <default><meta>MOGULURL</meta>/db/<meta>ID</meta>/</default>
+  </optentry>
+</optlist>
+
+<p>Your contributions should all have mogul ids which are <em>below</em>
+the mogul id which you where granted for your section of the mogul
+database.  For convenience, <tool>ozmake</tool> will attempt to guess
+the root mogul id of your section as soon as there are entries in
+your database of your own contributions.  However, it is much preferable
+to tell <tool>ozmake</tool> about it using:</p>
+
+<optlist>
+  <optentry>
+    <option>
+      <opt>--mogulrootid=<meta>ROOTID</meta></opt>
+    </option>
+  </optentry>
+</optlist>
+
+<p>and to set it using <opt>ozmake --config=put --mogulrootid=<meta>ROOTID</meta></opt></p>
+
+</subsection>
+
+</section>
+
+<section><title>MAKEFILE</title>
+
+<p>The makefile contains a single Oz record which describes the project
+and should normally be placed in a file called <file>makefile.oz</file>.  A
+makefile typically looks like this:</p>
+<oz.display>
+        makefile(
+          lib : ['Foo.ozf']
+          uri : 'x-ozlib://mylib'
+          mogul : 'mogul:/denys/lib-foo')
+</oz.display>
+<p>stating explicitly that there is one library target, namely the
+functor <file>Foo.ozf</file>, and that it should installed at URI:</p>
+<oz.display>
+        x-ozlib://mylib/Foo.ozf
+</oz.display>
+<p>and implicitly that it should be compiled from the Oz source file
+<file>Foo.oz</file>.  When you invoke <opt>ozmake --install</opt>, the
+<oz>mogul</oz> feature serves to uniquely identify this package and
+the files it contributes in the <tool>ozmake</tool> database of
+installed packages.</p>
+
+<p>There are many more features which can occur in the makefile and
+they are all optional.  If you omit all the features, you only get the
+defaults and you don't even need a makefile.  All values, such as
+<oz>files</oz>, should be given as virtual string; atoms are
+recommended except for features <oz>blurb</oz>, <oz>info_text</oz> and
+<oz>info_html</oz>, where strings are recommended.</p>
+<oz.display>
+        makefile(
+          bin      : [ FILES... ]
+          lib      : [ FILES... ]
+          doc      : [ FILES... ]
+          src      : [ FILES... ]
+          depends  :
+             o( FILE : [ FILES... ]
+                ...
+              )
+          rules    :
+             o( FILE : TOOL(FILE)
+                ...
+              )
+          clean     : [ GLOB... ]
+          veryclean : [ GLOB... ]
+          uri       : URI
+          mogul     : MOGUL
+          author    : [ AUTHORS... ]
+          released  : DATE
+          blurb     : TEXT
+          info_text : TEXT
+          info_html : TEXT
+          subdirs   : [ DIRS... ]
+          requires  : [ MOGUL... ]
+          categories: [ CATEGORY... ]
+          version   : VERSION
+          provides  : [ FILES... ]
+        )
+</oz.display>
+<p>Features bin, lib and doc list targets to be installed in
+<meta>BINDIR</meta>, <meta>LIBDIR</meta> and <meta>DOCDIR</meta>
+respectively.  <oz>bin</oz> targets should be executable functors,
+i.e. they should end with extension <file>.exe</file>.  <oz>lib</oz>
+targets are typically compiled functors i.e. ending with extension
+<file>.ozf</file>, but could also be native functors, i.e. ending with
+extension <file>.so</file>, or simply data files.  <oz>doc</oz>
+targets are documentation files.</p>
+
+<subsection><title>Extensions</title>
+
+<p><tool>ozmake</tool> knows how to build targets by looking at the target's
+extension:</p>
+<dlist>
+  <dentry>
+    <dleft><file>Foo.exe</file></dleft>
+    <dright>is an executable functor and is created from
+    <file>Foo.ozf</file></dright>
+  </dentry>
+  <dentry>
+    <dleft><file>Foo.ozf</file></dleft>
+    <dright>is a compiled functor and is created from
+    <file>Foo.oz</file></dright>
+  </dentry>
+  <dentry>
+    <dleft><file>Foo.o</file></dleft>
+    <dright>is a compiled C++ file and is created from
+    <file>Foo.cc</file></dright>
+  </dentry>
+  <dentry>
+    <dleft><file>Foo.so</file></dleft>
+    <dright>is a native functor and is created from
+    <file>Foo.o</file></dright>
+  </dentry>
+  <dentry>
+    <dleft><file>Foo.cc</file></dleft>
+    <dright>is a C++ source file</dright>
+  </dentry>
+  <dentry>
+    <dleft><file>Foo.hh</file></dleft>
+    <dright>is a C++ header file</dright>
+  </dentry>
+</dlist>
+<p>Note that these are <em>abstract</em> targets.  In particular,
+<file>Foo.so</file> really denotes the file
+<file>Foo.so-<meta>PLATFORM</meta></file> where <meta>PLATFORM</meta>
+identifies the architecture and operating system where the package is
+built; for example: <file>linux-i486</file>.  Also, when a bin target
+<file>Foo.exe</file> is installed, it is installed both as
+<file><meta>BINDIR</meta>/Foo.exe</file> and
+<file><meta>BINDIR</meta>/Foo</file> so that it can be invoked as
+<file>Foo</file> on both Windows and Unix platforms.</p>
+
+<p>It is imperative that you respect the conventional use of
+extensions described here: <tool>ozmake</tool> permits no variation
+and supports no other extensions.</p>
+
+</subsection>
+
+<subsection><title>Rules</title>
+
+<p><tool>ozmake</tool> has built-in rules for building files.  Occasionally, you may
+want to override the default rule for one or more targets.  This is
+done with feature <oz>rule</oz> which contains a record mapping target to
+rule:</p>
+<oz.display>
+        TARGET_FILE : TOOL(SOURCE_FILE)
+</oz.display>
+<p>the rule may also have a list of options:</p>
+<oz.display>
+        TARGET_FILE : TOOL(SOURCE_FILE OPTIONS)
+</oz.display>
+<p>The tools supported by <tool>ozmake</tool> are <tool>ozc</tool> (Oz
+compiler), <tool>ozl</tool> (Oz linker), <tool>cc</tool> (C++
+compiler), <tool>ld</tool> (C++ linker).  The default rules are:</p>
+<oz.display>
+        'Foo.exe' : ozl('Foo.ozf' [executable])
+        'Foo.ozf' : ozc('Foo.oz')
+        'Foo.o'   : cc('Foo.cc')
+        'Foo.so'  : ld('Foo.o')
+</oz.display>
+<p>The tools support the following options:</p>
+<dlist>
+  <dentry>
+    <dleft><tool>ozc</tool></dleft>
+    <dright>
+      <dlist>
+        <dentry>
+          <dleft><oz>executable</oz></dleft>
+          <dright>make the result executable</dright>
+        </dentry>
+	<dentry>
+	  <dleft><oz>'define'(S)</oz></dleft>
+	  <dright>define macro <oz>S</oz>.  Same as <cmd>-D<oz>S</oz></cmd> on the command line</dright>
+	</dentry>
+      </dlist>
+    </dright>
+  </dentry>
+  <dentry>
+    <dleft><tool>ozl</tool></dleft>
+    <dright>
+      <dlist>
+        <dentry>
+          <dleft><oz>executable</oz></dleft>
+          <dright>make the result executable</dright>
+        </dentry>
+      </dlist>
+    </dright>
+  </dentry>
+  <dentry>
+    <dleft><tool>cc</tool></dleft>
+    <dright>
+      <dlist>
+        <dentry>
+          <dleft><oz>include(DIR)</oz></dleft>
+          <dright>Similar to the usual C++ compiler option
+          <oz>-IDIR</oz>. <oz>DIR</oz> is a virtual
+          string</dright>
+        </dentry>
+        <dentry>
+          <dleft><oz>'define'(MAC)</oz></dleft>
+          <dright>Similar to the usual C++ compiler option
+          <oz>-DMAC</oz>. <oz>MAC</oz> is a virtual
+          string</dright>
+        </dentry>
+      </dlist>
+    </dright>
+  </dentry>
+  <dentry>
+    <dleft><tool>ld</tool></dleft>
+    <dright>
+      <dlist>
+        <dentry>
+          <dleft><oz>library(DIR)</oz></dleft>
+          <dright>Similar to the usual C++ linker option
+          <oz>-lDIR</oz>. <oz>DIR</oz> is a virtual
+          string</dright>
+        </dentry>
+      </dlist>
+    </dright>
+  </dentry>
+</dlist>
+
+<p>You might want to specify a rule to create a pre-linked library:</p>
+<oz.display>
+        'Utils.ozf' : ozl('Foo.ozf')
+</oz.display>
+<p>or to create a non-prelinked executable:</p>
+<oz.display>
+        'Foo.exe' : ozc('Foo.oz' [executable])
+</oz.display>
+
+</subsection>
+
+<subsection><title>Dependencies</title>
+
+<p><tool>ozmake</tool> automatically determines whether targets needed
+to be rebuilt, e.g. because they are missing or if some source file
+needed to create them has been modified.  The rules are used to
+determine dependencies between files.  Sometimes this is insufficient
+e.g. because you use tool <tool>ozl</tool> (dependencies on imports),
+or <oz>\insert</oz> in an Oz file, or <code>#include</code> in a C++
+file.  In this case you can specify additional dependencies using
+feature <oz>depends</oz> which is a record mapping targets to list of
+dependencies:</p>
+<oz.display>
+        TARGET : [ FILES... ]
+</oz.display>
+<p>For example:</p>
+<oz.display>
+        'Foo.o' : [ 'Foo.hh' 'Baz.hh' ]
+</oz.display>
+<p>or</p>
+<oz.display>
+        'Foo.exe' : [ 'Lib1.ozf' 'Lib2.ozf' ]
+</oz.display>
+
+</subsection>
+
+<subsection><title>Cleaning</title>
+
+<p>During development, it is often convenient to be able to easily remove
+all junk and compiled files to obtain again a clean project directory.
+This is supported by <opt>ozmake --clean</opt> and
+<opt>ozmake --veryclean</opt>; the latter
+also implies the former.  Files to be removed are specified by
+<em>glob</em>
+patterns where <opt>?</opt> matches any 1 character and <opt>*</opt>
+matches a sequence of 0 or more characters.  All files in
+<metya>BUILDDIR</metya> matching one such pattern is removed.  There
+are built-in patterns, but you can override them with features
+<oz>clean</oz> and <oz>veryclean</oz> which should be lists of
+glob patterns.  For example the default clean glob patterns are:</p>
+<oz.display>
+        clean : [ "*~" "*.ozf" "*.o" "*.so-*" "*.exe" ]
+</oz.display>
+</subsection>
+
+<subsection><title>Package Related Features</title>
+
+<subsubsection><title>uri</title>
+
+<p>feature <oz>uri</oz> indicates the URI where to install lib
+targets.  For example:</p>
+<oz.display>
+        uri : 'x-ozlib://mylib/XML'
+</oz.display>
+<p>states that all <oz>lib</oz> targets (e.g. <file>Foo.ozf</file>) will
+be installed under this URI so that they can also be imported from it,
+i.e.:</p>
+<oz.display>
+       import MyFoo at 'x-ozlib://mylib/XML/Foo.ozf'
+</oz.display>
+
+</subsubsection>
+
+<subsubsection><title>mogul</title>
+
+<p>feature <oz>mogul</oz> is the mogul id uniquely identifying this
+package.  It is used to identify the package in the database of
+installed packages, to create/publish the package, and to install its
+documentation files.</p>
+
+</subsubsection>
+
+<subsubsection><title>author</title>
+
+<p>feature <oz>author</oz> is a virtual string or list of virtual string
+resp. identifying the author or authors of the package.  It is
+recommended to identify authors by their mogul id, however is is also
+possible to simply give their names.  For example, the recommended way
+is:</p>
+<oz.display>
+        author : 'mogul:/duchier'
+</oz.display>
+<p>but the following is also possible:</p>
+<oz.display>
+        author : 'Denys Duchier'
+</oz.display>
+</subsubsection>
+
+<subsubsection><title>released</title>
+
+<p>feature <oz>released</oz> is a virtual string specifying the date
+and time of release in the following format:</p>
+<oz.display>
+        released : "YYYY-MM-DD-HH:MM:SS"
+</oz.display>
+<p>time is optional.  An appropriate release date using the current date
+and time is automatically inserted when invoking
+<opt>ozmake --create</opt> or <opt>ozmake --publish</opt>.</p>
+</subsubsection>
+
+<subsubsection><title>blurb</title>
+
+<p>feature <oz>blurb</oz> contains a very short piece of text describing the
+package.  This text should be just one line and is intended to be used
+as a title when the package is published in the mogul archive.</p>
+</subsubsection>
+
+<subsubsection><title>info_text</title>
+
+<p>feature <oz>info_text</oz> contains a plain text description of the package.
+This is intended to be used as an abstract on the presentation page
+for the package in the mogul archive.  It should be brief and
+informative, but should not attempt to document the package.</p>
+</subsubsection>
+
+<subsubsection><title>info_html</title>
+
+<p>feature <oz>info_html</oz> is similar to <oz>info_text</oz> but
+contains HTML rather than plain text.</p>
+</subsubsection>
+
+<subsubsection><title>src</title>
+
+<p>feature <oz>src</oz> indicates which targets should be considered
+source, i.e. in particular non-buildable.  All targets mentioned in
+<oz>src</oz> should be mentioned in <oz>bin</oz>, <oz>lib</oz>, or
+<oz>doc</oz> too.  The point of <oz>src</oz> is to support
+distributing packages with pre-built targets and without giving out
+the corresponding sources.  You should not do this with native
+functors since they are platform dependent and not portable, but it
+can be a convenient means of distributing pre-built Oz libraries. For
+example:</p>
+<oz.display>
+        makefile(
+          lib : [ 'Foo.ozf' ]
+          src : [ 'Foo.ozf' ]
+          uri : 'x-ozlib://mylib'
+          mogul : 'mogul:/myname/foolib')
+</oz.display>
+<p>is a makefile for a package that distribute the pre-compiled
+<file>Foo.ozf</file>, but does not also distribute its source
+<file>Foo.oz</file>.  Normally, when you build a package it simply
+checks that the <oz>src</oz> files are present but will not attempt to
+build them.  If you have the sources, you can force building the
+<oz>src</oz> targets if necessary using <opt>--fullbuild</opt>.</p>
+</subsubsection>
+
+<subsubsection><title>subdirs</title>
+
+<p>feature <oz>subdirs</oz> is a list of bare filenames representing
+subdirectories of the project.  By default, when necessary,
+<tool>ozmake</tool> will recurse into these subdirectories.  It is
+expected that each subdirectory should provide its own makefile.  The
+mogul id is automatically inherited to subdirectories and the uri is
+automatically extended by appending the name of the subdirectory: thus
+sub-makefiles can be simpler since they don't need to be concerned with
+package-level features.</p>
+</subsubsection>
+
+<subsubsection><title>requires</title>
+<p>feature <oz>requires</oz> is a list of module URIs or package MOGUL ids.
+These represent the <em>external</em> dependencies of the package.  They are
+not yet used, but eventually <tool>ozmake</tool> will be able to use them to
+automate the recursive installation of other packages required by the one
+you are interested in.</p>
+</subsubsection>
+
+<subsubsection><title>categories</title>
+<p>feature <oz>categories</oz> is a list of MOGUL categories to help
+categorize this package in the MOGUL archive.</p>
+</subsubsection>
+
+<subsubsection><title>version</title>
+<p>feature <oz>version</oz> is used to provide a version string.  This
+is a string that consist of integers separated by single dots, e.g.
+<oz>"2"</oz> or <oz>"3.1.7"</oz>.</p>
+</subsubsection>
+
+<subsubsection><title>provides</title>
+<p>feature <oz>provides</oz> is used to override the default
+information about what the package provides, normally automatically
+computed from the <oz>bin</oz> and <oz>lib</oz> targets: it should be
+a list which contains a subset of these targets.  The
+<oz>provides</oz> feature of a makefile does not override or otherwise
+affect its sub-makefiles: each makefile should separately override if
+it so desires.  To state that a makefile does not officially provide
+any functors or executable application, you would add:
+<oz.display>
+        provides : nil
+</oz.display>
+You should use the <oz>provides</oz> feature when your package contains
+both official public functors as well as purely implementational functors
+that are not part of the official public interface and should not be
+mentioned as <em>provided</em> by the package.</p>
+</subsubsection>
+
+</subsection>
+</section>
+
+<section><title>CONTACTS</title>
+
+<p>Authors should really be referred to by mogul ids denoting mogul entries
+that describe them.  In order to make this easier, a <file>makefile.oz</file>
+may also contain a <oz>contact</oz> feature which is either a record
+describing a person, or a list of such records.</p>
+
+<p>You should not have a <oz>contact</oz> feature in every makefile.  Rather,
+the <oz>contact</oz> feature is usually intended for makefiles that only have a
+<oz>contact</oz> feature, i.e. whose only purpose is to create mogul entries
+for the corresponding persons. Here is an example of such a makefile:</p>
+<oz.display>
+        makefile(
+           contact :
+              o(
+                 mogul : 'mogul:/duchier/denys'
+                 name  : 'Denys Duchier'
+                 email : 'duchier@ps.uni-sb.de'
+                 www   : 'http://www.ps.uni-sb.de/~duchier/'))
+</oz.display>
+<p>You can invoke <opt>ozmake --publish</opt> on such a makefile to contribute
+the corresponding mogul database entries</p>
+</section>
+</doc>

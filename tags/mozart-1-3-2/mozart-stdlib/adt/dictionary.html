@@ -1,0 +1,110 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<HTML>
+<HEAD>
+<!-- EDIT -->
+<TITLE>Mozart Standard Library: Functional Dictionaries</TITLE>
+<STYLE>
+BODY {
+	background-color: white;
+	margin-left	: 2cm;
+	margin-right	: 2cm;
+	font-family	: tahoma,arial,helvetica,sans-serif;
+}
+H1 {
+	text-align	: center;
+	color		: #9B0000;
+}
+H2 {	color		: #FF9933; }
+H4 {	color		: slateblue; }
+H3 {	color		: #881155; }
+H5 {	color		: darkslateblue; }
+CODE {	color		: #663366; }
+CODE,TT {
+	font-family	: "lucida console",courier,monospace;
+}
+CODE.DISPLAY {
+	display		: block;
+	white-space	: pre;
+	margin-left	: 2cm;
+	margin-top	: 1em;
+	margin-bottom	: 1em;
+}
+P.AUTHOR {
+	text-align	: center;
+	font-weight	: bold;
+}
+SPAN.MODULE {
+	color		: steelblue;
+}
+A {	color		: steelblue; }
+SPAN.COMMENT      { color: #B22222; }
+SPAN.KEYWORD      { color: #A020F0; }
+SPAN.STRING       { color: #BC8F8F; }
+SPAN.FUNCTIONNAME { color: #0000FF; }
+SPAN.TYPE         { color: #228B22; }
+SPAN.VARIABLENAME { color: #B8860B; }
+SPAN.REFERENCE    { color: #5F9EA0; }
+SPAN.BUILTIN      { color: #DA70D6; }
+</STYLE>
+</HEAD>
+<BODY>
+<!-- EDIT -->
+<H1>Functional Dictionaries</H1>
+<P CLASS="AUTHOR">Denys Duchier</P>
+<DL>
+  <DT><B>module</B>
+  <DD><SPAN CLASS="MODULE">x-oz://system/adt/Dictionary.ozf</SPAN>
+</DL>
+<HR>
+
+<P>This module provides functional interface for dictionaries
+
+<H2>Exports</H2>
+<P>The module exports the following constructors:
+<DL>
+<DT><CODE>{Dictionary.new ?D}</CODE>
+<DD>returns a new empty functional dictionary <CODE>D</CODE>
+<DT><CODE>{Dictionary.newFromRecord +R ?D}</CODE>
+<DD>returns a new functional dictionary <CODE>D</CODE> initialized
+using the key/value mapping provided by record <CODE>R</CODE>
+</DL>
+
+<H2>Instance API</H2>
+
+<P>Each functional dictionary instance <CODE>D</CODE> has the following
+features:
+<DL>
+<DT><CODE>{D.get +Key ?Value}</CODE>
+<DD>returns the <CODE>Value</CODE> for the given <CODE>Key</CODE>,
+or raises an exception if none
+<DT><CODE>{D.put +Key +Value}</CODE>
+<DD>sets the <CODE>Value</CODE> for the given <CODE>Key</CODE>
+<DT><CODE>{D.condGet +Key +Default ?Value}</CODE>
+<DD>returns the <CODE>Value</CODE> for the given <CODE>Key</CODE>, or
+the <CODE>Default</CODE> if none
+<DT><CODE>{D.reset}</CODE>
+<DD>remove all entries
+<DT><CODE>{D.keys ?L}</CODE>
+<DD>returns the list <CODE>L</CODE> of all keys in <CODE>D</CODE>
+<DT><CODE>{D.items ?L}</CODE>
+<DD>returns the list <CODE>L</CODE> of all values in <CODE>D</CODE>
+<DT><CODE>{D.entries ?L}</CODE>
+<DD>returns the list <CODE>L</CODE> of all pairs <CODE>Key#Values</CODE>
+for entries in <CODE>D</CODE>
+<DT><CODE>{D.isEmpty ?B}</CODE>
+<DD>returns true iff <CODE>D</CODE> is empty
+<DT><CODE>{D.remove +Key}</CODE>
+<DD>remove the entry for <CODE>Key</CODE> if any
+<DT><CODE>{D.member +Key ?B}</CODE>
+<DD>returns true iff there is an entry for <CODE>Key</CODE>
+<DT><CODE>{D.clone ?D2}</CODE>
+<DD>returns a new functional dictionary instance <CODE>D2</CODE>
+that is a clone of <CODE>D</CODE>
+<DT><CODE>{D.toRecord +L ?R}</CODE>
+<DD>return the current entries in <CODE>D</CODE> in the form of
+a record <CODE>R</CODE> with label <CODE>L</CODE>
+</DL>
+
+<HR>
+</BODY>
+</HTML>

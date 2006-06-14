@@ -1,0 +1,47 @@
+@SET_MAKE@
+BUILDTOP	= @BUILDTOP@
+SRCTOP		= @SRCTOP@
+PREFIX		= @prefix@
+SRCDIR		= @srcdir@
+VPATH		= @srcdir@
+HOMEURL		= @HOMEURL@
+LIB_DIR		= $(PREFIX)/contrib/tk
+OZC		= @OZC@
+INSTALL		= @INSTALL@
+INSTALL_DIR	= @INSTALL_DIR@
+INSTALL_LIB	= $(INSTALL) -m 444
+FUNCTORS	= CheckBox.ozf ScrollFrame.ozf
+NEWCACHEDIR	= $(PREFIX)/cache/x-oz/contrib/tk
+PLATFORM	= @PLATFORM@
+CYGPATH		= $(SRCTOP)/share/lib/cygpath.sh
+
+all:		$(FUNCTORS)
+%.ozf: %.oz
+	$(OZC) -c $(shell $(CYGPATH) "$<") -o $@
+install:	$(NEWCACHEDIR) $(addprefix $(NEWCACHEDIR)/,$(FUNCTORS))
+$(LIB_DIR) $(NEWCACHEDIR):
+	$(INSTALL_DIR) $@
+$(LIB_DIR)/%.ozf: %.ozf
+	$(INSTALL_LIB) $< $@
+$(NEWCACHEDIR)/%.ozf: %.ozf
+	$(INSTALL_LIB) $< $@
+
+clean veryclean:
+	-rm -f *~ *.ozf
+
+distclean: veryclean
+	-rm -f Makefile config.*
+
+include $(BUILDTOP)/share/Makefile.boot
+
+bootstrap: boot-all
+
+#---------------------------------------------------------------------
+# Automatic Makefile update
+#---------------------------------------------------------------------
+
+Makefile: Makefile.in config.status
+	./config.status
+
+config.status: configure
+	./config.status --recheck

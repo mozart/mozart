@@ -1,0 +1,859 @@
+<!--
+  - Author:
+  -   Leif Kornstaedt <kornstae@ps.uni-sb.de>
+  -
+  - Copyright:
+  -   Leif Kornstaedt, 1996-1998
+  -
+  - Last change:
+  -   $Date$ by $Author$
+  -   $Revision$
+  -
+  - This file is part of Mozart, an implementation of Oz 3:
+  -   http://www.mozart-oz.org
+  -
+  - See the file "LICENSE" or
+  -   http://www.mozart-oz.org/LICENSE.html
+  - for information on usage and redistribution
+  - of this file, and for a DISCLAIMER OF ALL
+  - WARRANTIES.
+  -
+  -->
+
+<Chapter id="chapter.parser">
+  <Title/The &Gump; Parser Generator/
+  <P>
+    <Index/parser<And>generator/
+    This chapter describes the &Gump; Parser Generator.  As for the &Gump;
+    Scanner Generator described in the last chapter, its input consists of
+    an &Oz; source with embedded parser specifications and the output are &Oz;
+    class definitions.
+  <Para class=apropos><Title/Definitions/
+    A <Def>parser</Def> is a program that performs syntax analysis.  This
+    means that a stream of tokens<Index/token<And>stream/ is analyzed and a
+    (unique) tree structure on the tokens in this stream is computed.  The
+    token classes are called <Def>terminal symbols</Def>; additionally, new
+    <Def>nonterminal symbols</Def> are introduced in the specification.  For
+    each nonterminal, a set of rules is given which indicates sequences of
+    symbols that may be replaced by this nonterminal.  The token sequence
+    is read from left to right and subsequences of symbols are replaced by
+    nonterminal symbols according to the rules (which is called a <Def
+    >reduction</Def>).  Either the result is a special nonterminal, a
+    <Def class=noindex>start symbol</Def><Index/start symbols/, or the input
+    is erroneous and rejected.  A result is constructed during the parse by
+    executing user-specified <Def>semantic actions</Def> each reduction.
+  <P>
+    This chapter first describes the basic concepts of the &Gump; Parser
+    Generator by example in <Ptr to="section.parser.example">.  <Ptr
+    to="section.parser.reference"> presents the more advanced concepts and
+    a detailed definition of the specification language.
+  <Section id="section.parser.example">
+    <Title/Example/
+    <P>
+      This section presents the parser for the functional language <Name
+      type=language>Lambda</Name><Index/Lambda<And>language used as example/
+      for which a scanner was specified in the last chapter.
+    <SubSection>
+      <Title/Writing a Parser Specification/
+      <P>
+	<Ptr to="program.parser.example"> shows the parser specification which
+	will serve as an example to demonstrate the basic concepts of the
+	&Gump; Parser Generator.  This example will be examined in detail in
+	the following.
+	<Figure float id="program.parser.example" class=program>
+	  <Caption>The <<LambdaParser>> parser specification.</Caption>
+	  <P>
+	    <Code.Extern display to="LambdaParser.ozg" class=linenumbers>
+	</Figure>
+      <Para class=apropos><Title/Class Descriptors/
+	Again, a &Gump; specification resembles a class definition introduced
+	by a special keyword, <<parser>>, and augmented by additional
+	declarations.  The usual class descriptors <<from>> and <<meth>>
+	are also used in this specification in lines 2 to&nbsp;8.  The
+	switches <Code><Span class=ignore>\switch +</Span
+	>gumpparseroutputsimplified</Code><Index/compiler<And>switch<And
+	><<gumpparseroutputsimplified>>/ and <Code><Span class=ignore
+	>\switch +</Span>gumpparserverbose</Code><Index/compiler<And>switch<And
+	><<gumpparserverbose>>/ simply cause additional information to be
+	output at parser generation time; we will see this in the next section.
+      <P>
+	The <<error>><Index class=module/GumpParser.'class'<And>error/ method
+	will be called upon detection of <Span class=index/parse errors/<Index
+	/error<And>syntax/<Index/syntax errors/.  Its parameter is a virtual
+	string describing the error.  We redefine this method (which has a
+	default implementation in the super class <<GumpParser.'class'>>)
+	since we want to provide the user with the line number<Index/line
+	numbers/ information we maintain in the scanner.
+      <Para class=apropos><Title/Token Declarations/
+	In line&nbsp;10 begin the token declarations<Index/token<And
+	>declaration/.  All token classes (which must be atoms) that
+	the scanner can produce are listed after the <<token>> keyword.
+	Additionally, some tokens are assigned an <Def>associativity</Def>
+	(here: <<leftAssoc>>) and a <Def>precedence</Def> value (a nonzero
+	positive integer) after a colon.  These are used to resolve
+	ambiguities in the syntax rules<Index/ambiguities<And>in a parser
+	specification/.  The reason for the assignments in our example are
+	explained below.  (You may notice that one of the listed tokens cannot
+	be produced by the scanner, the <<'APPLY'>> token.  This is called a
+	<Def>pseudo-token</Def> and is solely defined for its associativity
+	and precedence information.)
+      <Para class=apropos><Title/Syntax Rules/
+	<Index/syntax rules/
+	Line&nbsp;19 marks the start of the syntax rules themselves.  For
+	each nonterminal, a syntax rule (introduced by the keyword <<syn>>)
+	must be given.  Nonterminals may be named by atoms or variables.
+      <Para class=apropos><Title/Start Symbols/
+	<Index/start symbols/
+	<Index/nonterminal<And>start/
+	An atom means that this nonterminal is a start symbol.  Several start
+	symbols may be defined &endash; the one to reduce to is selected when
+	a concrete parse is initiated.
+      <Para class=apropos><Title/Formal Parameter Lists/
+	Following the nonterminal is its parameter list, consisting of zero or
+	more variables in parentheses.  The start symbol <<program>> has two
+	parameters: a list of definitions and a list of terms.  These are both
+	output parameters, as is indicated by the commentary&nbsp;<<?>>.
+      <Para class=apropos><Title/EBNF Phrases/
+	The body of each syntax rule is an <Span class=index/EBNF/ phrase
+	(EBNF is an abbreviation of <Def>Extended Backus-Naur-Formalism</Def>).
+	As in &Oz;, we distinguish between statements and expressions:  Some
+	EBNF phrases carry values and may thus only stand at expression
+	position, others don't and must be used at statement position.
+      <P>
+	The basic building blocks of EBNF expressions are <Def>grammar symbol
+	applications</Def>, denoted by the name of a terminal or nonterminal
+	followed by the actual parameter list in parentheses.  An example of
+	this is the <<Definition($)>> in line&nbsp;20, which is an application
+	of the nonterminal <<Definition>> with a single actual parameter.
+	Since this is the <Span class=index/nesting marker/, the application
+	is an expression (as opposed to a statement) with the value of the
+	corresponding actual parameter as its value.  This application
+	is written inside the <Span class=index/repetition/ symbols
+	<<{ &ellipsis; }*>>, which means that the application is to be
+	repeated 0 to&nbsp;<Var type=meta>n</Var> times.  The repetition
+	construct builds a list of its argument's values at each iteration,
+	since it is used in expression position.  This list is assigned to
+	the formal parameter <<Definitions>>.
+      <P>
+	The next line, line&nbsp;21, is similar:  Here, a nonempty list (note
+	the&nbsp;<<+>>) of <<Term>>s is expected, seperated by semicolons.
+	The values computed by each <<Term>> are collected in a list, which
+	is assigned to the formal parameter <<Terms>>.
+      <Para class=apropos><Title/Local Variables/
+	The next syntax rule introduces a new feature: <Span class=index/local
+	variables/.  All variables in <Def>pattern position</Def> in syntax
+	rules are implicitly declared local.  EBNF pattern positions are the
+	left side of an assignment (such as in line&nbsp;20) and the actual
+	parameters of grammar symbol applications.  If in any of these
+	places a single non-escaped variable (&ie;, written without&nbsp;<<!>>)
+	is used, it is implicitly declared local to the EBNF construct it is
+	used in.  Such is the case for the variables <<I>> and&nbsp;<<T>> in
+	line&nbsp;24.  The formal parameter variables assigned to in lines 20
+	and&nbsp;21 had to be escaped to avoid their implicit (re-)declaration.
+      <P>
+	The syntax rule for <<Definition>> in line&nbsp;23 has a single
+	parameter.  Since this is the nesting marker, an EBNF expression
+	is expected as body of this rule.  The value of a sequence of EBNF
+	expressions is the value of the last expression (as in &Oz;, where
+	the value of a sequential composition is the value of the
+	composition's second argument).
+      <Para class=apropos><Title/Semantic Actions/
+	The last EBNF expression in line&nbsp;23 is the <Def class=noindex
+	>semantic action</Def><Index/semantic actions/, introduced by the
+	arrow <<=&gt;>>.  This action constructs an abstract syntax tree node
+	(represented as a tuple).
+      <Para class=apropos><Title/Alternatives/
+	Lines 26 to&nbsp;32 show the rule for <<Term>>.  This rule has several
+	<Span class=index/alternatives/, separated by the choice operator
+	<<[]>>.  These alternatives also imply the need for the given token
+	precedences and associativities mentioned above:  Not all inputs have
+	a unique parse tree.  If, for example, we wrote
+	<Code display proglang=lambda>lambda x.y z</Code>
+	this could be parsed as either
+	<Code display proglang=lambda>(lambda x.y) z</Code>
+	or
+	<Code display proglang=lambda>lambda x.(y z)</Code>
+	We want to enforce the second meaning (that is, the application has a
+	higher precedence than the abstraction); furthermore, the application
+	should be left-associative (&ie;, <Code proglang=lambda>x y z</Code>
+	means <Code proglang=lambda>(x y) z</Code>).
+      <Para class=apropos><Title/Resolving Conflicts/
+	This is why the <Span class=index/pseudo-token/ <<'APPLY'>> was
+	introduced.  Each alternative may also have, like the tokens, a
+	precedence and an associativity.  If the alternative contains a
+	terminal, than the values of the last terminal are used.
+	Alternatively, a special <Def>precedence token</Def> may be specified
+	via <<prec(?{terminal})>>; then the values of this are used instead.
+	Thus, the application <Code proglang=lambda>Term Term</Code> is
+	left-associative.  Higher precedence values mean tighter binding
+	of operators.  Thus, the application (token <<'APPLY'>> of
+	precedence&nbsp;2) has precedence over the abstraction
+	(token&nbsp;<<'.'>> of precedence&nbsp;1).
+      <P>
+	However, one anomaly remains because the application has no
+	(visible) operator &endash; to resolve conflicts, the
+	precedence&slash;associativity values of the lookahead token are
+	compared to the values of the (potentially) applicable rules.  So
+	if the lookahead is one of the tokens with which a <<Term>> can begin,
+	it is in fact an application we have to parse.  This is why all these
+	tokens are assigned the same precedence as the application.  (For a
+	more detailed description of how operator precedence information is
+	used to resolve conflicts, consult the <Span class=index/&bison;/
+	manual&nbsp;<Ptr to="donellystallman95">.
+      <Para class=apropos><Title/Epsilon Productions/
+	The last nonterminal, <<Line>> in line&nbsp;33, is actually only
+	introduced for the semantic value it computes.  The empty sequence of
+	grammar symbols is denoted by <<skip>>.
+    <SubSection>
+      <Title/Invoking Gump/
+      <P>
+	Parser specifications are processed in the same way scanner
+	specifications are.  First we prepare the Gump Parser Generator
+	by feeding:<Index/compiler<And>parser specifications/
+	<<<\switch +gump>>><Index/compiler<And>switch<And><<gump>>/
+      <P>
+	Then the file to translate is simply fed into the compiler.
+	Suppose you saved the example specification in the file
+	<File/LambdaParser.ozg/; feed:
+	<<<\insert LambdaParser.ozg>>>
+	The extension <File/.ozg/<Index/file<And>extension <<.ozg>>/
+	indicating, as before, an &Oz; file with embedded &Gump;
+	specifications.
+      <para class=apropos><Title/Output Files/
+	<Index/file<And>created by Gump/
+	Two files are generated from the <<parser>> definition:
+	<File/LambdaParser.simplified/ contains a simplified version of
+	the syntax rules where the EBNF constructs have been expanded to
+	equivalent BNF forms (because the <Code><Span class=ignore
+	>\switch +</Span>gumpparseroutputsimplified</Code><Index/compiler<And
+	>switch<And><<gumpparseroutputsimplified>>/ switch was set),
+	whereas the file <File/LambdaParser.output/ contains the output from
+	the <Span class=index/&bison;/ parse table generator (because the
+	<Code><Span class=ignore>\switch +</Span>gumpparserverbose</Code><Index
+	/compiler<And>switch<And><<gumpparserverbose>>/ switch was set).  These
+	names are generated from the parser specification's name.
+    <SubSection>
+      <Title/Using the Generated Parser/
+      <P>
+	<Ptr to="program.parser.test"> shows an example &Oz; program that uses
+	both the generated scanner from the last chapter and the generated
+	parser from above.
+	<Figure float id="program.parser.test" class=program>
+	  <Caption>A program making use of the generated parser.</Caption>
+	  <P>
+	    <Code.Extern display to="TestParser.ozg">
+	</Figure>
+      <Para class=apropos><Title/Initialization/
+	First, the scanner and parser classes are loaded.  After instantiating
+	and initializing the scanner, a parser object is created.  This needs
+	as initializer a single parameter, a scanner.  This is, technically
+	speaking, a unary procedure that understands the messages
+	<<putToken>><Index class=module/GumpScanner.'class'<And>putToken/
+	and <<getToken>><Index class=module/GumpScanner.'class'<And>getToken/
+	described in <Ptr to="section.parser.class">.
+      <Para class=apropos><Title/Initiating a Parse/
+	The most interesting message sent to the parser is the <<parse>><Index
+	class=module/GumpParser.'class'<And>parse/ message.  The first argument
+	has to be a tuple.  The label specifies the start symbol to use, the
+	features correspond to the actual parameters of the start symbol.
+	In this case, the actual parameter variables <<Definitions>> and
+	<<Terms>> are bound to lists of definitions and terms, respectively.
+	The second argument to the <<parse>> message is the result status.
+	This is either unified with <<true>> if parsing was successful or with
+	<<false>> otherwise.
+  <Section id="section.parser.reference">
+    <Title/Reference/
+    <P>
+      This section is the reference manual for the &Gump; Parser Generator.
+      It is divided into three parts:  First, the syntax of the &Gump; parser
+      specification language is given in <Ptr to="section.parser.syntax">.
+      Then, the options to parser generation supported by the &Gump;
+      Parser Generator are detailed in <Ptr to="section.parser.params">.
+      Finally, the runtime support for generated parsers, the mixin class
+      <<GumpParser.'class'>>, is presented in <Ptr to="section.parser.class">.
+    <SubSection id="section.parser.syntax">
+      <Title/Syntax of the Parser Specification Language/
+      <P>
+	The meta-notation used for describing the syntax of the specification
+	language is explained in <Ptr to="appendix.notation">.  (Note:  This
+	is <Em>not</Em> the language used in &Gump; to specify parsers.  This
+	is intentional.)
+      <P>
+	&Gump; specifications are allowed anywhere as a statement.
+	<Grammar.Rule/?={statement}
+	  <Grammar.Alt type=add/?={parser specification}//
+      <P>
+	A parser specification is introduced by the keyword <<parser>>,
+	followed by the usual components of an &Oz; class.  After these
+	come additional parser-specific descriptors.  Parser specifications
+	must be named by variables, since the names of these variables will
+	be used to generate auxiliary file names during parser generation.
+	<Index/file<And>created by Gump/
+	<Grammar.Rule/?={parser specification}
+	  <Grammar.Alt/<<parser>> ?={variable}/
+	  <Grammar.Alt type=space/{ ?={class descriptor} }/
+	  <Grammar.Alt type=space/{ ?={method} }/
+	  <Grammar.Alt type=space/[ ?={token clause} ]/
+	  <Grammar.Alt type=space/{ ?={parser descriptor} }+/
+	  <Grammar.Alt type=space/<<end>>//
+      <SubSubSection>
+	<Title/Token Declarations/
+	<P>
+	  <Index/token<And>declaration/
+	  The first extra parser descriptor is the <<token>> clause.  This
+	  defines the names of the terminals used in the specification as well
+	  as (optionally) their associativity and precedence.  Several tokens
+	  are predefined:  Atoms of length&nbsp;1 are always considered to be
+	  tokens.  Furthermore, token <Span class=index/<<'error'>>/<Index
+	  /error<And>token/<Index/token<and>error/ stands for an erroneous
+	  token (sequence) and is used for error recovery<Index/error<And
+	  >recovery/, and token <Span class=index/<<'EOF'>>/
+	  <Index/end-of-file/<Index/token<and>end-of-file/ signalizes the end
+	  of input and is always expected before reduction to the start symbol
+	  can take place.
+	  <Grammar.Rule/?={token clause}
+	    <Grammar.Alt/<<token>> { ?={token declaration} }+//
+	  <Grammar.Rule/?={token declaration}
+	    <Grammar.Alt/?={atom} [ <Q class=terminal/<<:>>/ ?={expression} ]//
+	<P>
+	  The optional expression following the colon in a token declaration
+	  must be a tuple with arity&nbsp;1 and one of the labels
+	  <Span class=index/<<leftAssoc>>/, <Span class=index/<<rightAssoc>>/
+	  or <Span class=index/<<nonAssoc>>/, depending on the desired
+	  associativity.  The feature must always be a nonzero positive
+	  integer.  Only the relative values matter; they are used to derive
+	  an ordering on the tokens.  Larger values imply a greater binding
+	  strength of the operator.  For the algorithm used to resolve
+	  conflicts using operator precedence information, refer
+	  to the <Span class=index/&bison;/ manual&nbsp;<Ptr
+	  to="donellystallman95" info="Node `Precedence'">.
+	<SubSubSection>
+	  <Title/Syntax Rules/
+	  <P>
+	    <Index/syntax rules/
+	    Syntax rules are parser descriptors.  They are composed of a
+	    head and a body.  The head specifies the name of the defined
+	    nonterminal, where atoms are considered start symbols, as well
+	    as the formal parameters of the nonterminal.  Only one syntax
+	    rule per nonterminal name is allowed.
+	    <Grammar.Rule/?={parser descriptor}
+	      <Grammar.Alt/?={syn clause}//
+	    <Grammar.Rule/?={syn clause}
+	      <Grammar.Alt/<<syn>> ?={syn head} ?={syn alt} <<end>>//
+	    <Grammar.Rule/?={syn head}
+	      <Grammar.Alt/?={atom}/
+	      <Grammar.Alt/?={atom label} ?={syn formals}/
+	      <Grammar.Alt/?={variable}/
+	      <Grammar.Alt/?={variable label} ?={syn formals}//
+	    <Grammar.Rule/?={syn formals}
+	      <Grammar.Alt/<Q class=terminal/<<(>>/ { ?={syn formal} }
+		<Q class=terminal/<<)>>///
+	  <P>
+	    The body of a syntax rule is an EBNF phrase.  It is distinguished
+	    between EBNF statements and EBNF expressions:  EBNF expressions
+	    carry an additional value.  In the following, it is always
+	    specified where EBNF statements or expressions are expected and
+	    which constructs yield a value.
+	  <P>
+	    Formal parameters are denoted by variables.  At most one parameter
+	    may be the nesting marker; in this case the body of the syntax
+	    rule must be an EBNF expression.  Its value is unified with the
+	    corresponding actual parameter upon application of the nonterminal.
+	    <Grammar.Rule/?={syn formal}
+	      <Grammar.Alt/?={variable}/
+	      <Grammar.Alt/<Q class=terminal/<<_>>//
+	      <Grammar.Alt/<Q class=terminal/<<$>>///
+	  <P>
+	    An alternation specifies several sequences (called <Def
+	    >alternatives</Def>), separated by the choice operator&nbsp;<<[]>>.
+	    Either all sequences must be EBNF expressions or all sequences
+	    must be EBNF statements.  If all alternatives are expressions, the
+	    alternation is an expression and yields at runtime the value of
+	    the selected sequence at runtime.
+	    <Grammar.Rule/?={syn alt}
+	      <Grammar.Alt/?={syn seq}
+		{ <Q class=terminal/<<[]>>/ ?={syn seq} }//
+	  <P>
+	    At the beginning of an sequence, <Span class=index/local variables/
+	    may be declared.  These are visible only inside the sequence.  The
+	    sequence itself is composed of <Math.Choice><Math type=html><I
+	    >n&lt;/I> >= 0</Math><Math type=latex>n \ge 0</Math></Math.Choice>
+	    EBNF factors, optionally followed by a semantic action.  If an
+	    EBNF expression is expected at the place the sequence stands,
+	    then a semantic action<Index/semantic actions/ must either be an
+	    expression or be omitted.  In the latter case, the last EBNF phrase
+	    must be an EBNF expression, the value of the sequence then is the
+	    value of this EBNF expression.  All other EBNF factors must be
+	    statements.  If <Math.Choice><Math type=html><I>n&lt;/I> = 0</Math
+	    ><Math type=latex>n = 0</Math></Math.Choice>, then the sequence may
+	    be written as <Span class=index/<<skip>>/.<Index/empty sequence/
+	    <Grammar.Rule/?={syn seq}
+	      <Grammar.Alt/[ { ?={variable} }+ <<in>> ] { ?={syn factor} }
+		[ ?={syn action} ]/
+	      <Grammar.Alt/<<skip>> [ ?={syn action} ]//
+	    <Grammar.Rule/?={syn action}
+	      <Grammar.Alt/<Q class=terminal/<<=&gt;>>/
+		( ?={in statement} | ?={in expression} )//
+	  <P>
+	    An EBNF factor is either an application or an assignment.  An
+	    application is denoted by the name of either a terminal or a
+	    nonterminal, optionally followed by the actual parameters in
+	    parentheses.  Terminals may either have a single (variable)
+	    parameter or no parameter at all; if a parameter is specified
+	    then it is unified with the actual token value<Index/token<And
+	    >value/ at runtime.  In the application of a nonterminal, the
+	    number of actual parameters must correspond to the number of formal
+	    parameters in the nonterminal's definition.  Non-escaped variables
+	    as actual parameters are implicitly declared local to the
+	    innermost sequence that contains the application.  At most one
+	    actual parameter may be the nesting marker.  In this case,
+	    the application is an expression yielding the value of the
+	    corresponding actual parameter; else it is a statement.
+	    <Grammar.Rule/?={syn factor}
+	      <Grammar.Alt/?={syn application}/
+	      <Grammar.Alt/?={syn assignment}//
+	    <Grammar.Rule/?={syn application}
+	      <Grammar.Alt/?={atom}/
+	      <Grammar.Alt/?={atom label} ?={syn actuals}/
+	      <Grammar.Alt/?={variable}/
+	      <Grammar.Alt/?={variable label} ?={syn actuals}//
+	    <Grammar.Rule/?={syn actuals}
+	      <Grammar.Alt/<Q class=terminal/<<(>>/ { ?={expression} }
+		<Q class=terminal/<<)>>///
+	  <P>
+	    Two grammar symbols are predefined which receive a special
+	    treatment:
+	    <List>
+	      <Entry><<'prec'(?{A})>><Index/<<'prec'>>/
+	      <Item>
+		<Index/precedence/
+		By inserting an application of <<prec>> into a sequence,
+		the latter is assigned an associativity and a precedence.
+		These are taken from the token&nbsp;<Var type=meta>A</Var>.
+		Sequences that contain no application of <<prec>> inherit
+		the values of the last token used in the sequence if there
+		is one, and have no associated associativity and precedence
+		otherwise.
+	      <Entry><<'error'>><Index/<<'error'>>/
+	      <Item>
+		<Index/parse errors/
+		<Index/syntax errors/
+		<Index/error<And>syntax/
+		<Index/error<And>recovery/
+		The application of the predefined terminal <<'error'>>
+		defines a restart point for error recovery.  Consult
+		the <Span class=index/&bison;/ manual&nbsp;<Ptr
+		to="donellystallman95" info="Node `Error Recovery'">
+		for additional information.
+	    </List>
+	  <P>
+	    An assignment equates a variable with the value of an EBNF
+	    expression.  Unless the variable is escaped, it is implicitly
+	    declared local to the sequence the assignment appears in, else it
+	    must have been declared local within the current syntax rule (or
+	    be a formal parameter).  An assignment is always a statement.
+	    <Grammar.Rule/?={syn assignment}
+	      <Grammar.Alt/[ <Q class=terminal/<<!>>/ ] ?={variable}
+		<Q class=terminal/<<=>>/ ?={syn factor}//
+	<SubSubSection>
+	  <Title/Definition of Production Templates/
+	  <P>
+	    <Index/production templates/
+	    This section and the next augment the syntax rules defined above
+	    by the concept of <Def>production templates</Def>.  These provide
+	    for, &eg;, the <Span class=index/repetition/ constructs used in
+	    the example in <Ptr to="section.parser.example">.
+	  <P>
+	    The definition of a production template is another parser
+	    descriptor.  Production templates are local to the parser
+	    specification they are defined in, and may be used only textually
+	    after their definition.  (This is to avoid cyclic production
+	    template expansions.)  Production templates may be redefined.
+	    <Grammar.Rule/?={parser descriptor}
+	      <Grammar.Alt type=add/?={prod clause}//
+	  <P>
+	    A production template definition consists of a head and a body.
+	    The body specifies the EBNF phrase the production template is
+	    to be replaced with when instantiated.  The body may introduce
+	    optional local syntax rules which are always newly created when
+	    instantiated.  These must be denoted by variables.
+	    <Grammar.Rule/?={prod clause}
+	      <Grammar.Alt/<<prod>> ?={prod head}/
+	      <Grammar.Alt type=space/[ ?={local rules} <<in>> ] ?={syn alt}/
+	      <Grammar.Alt type=space/<<end>>//
+	    <Grammar.Rule/?={local rules}
+	      <Grammar.Alt/{ ?={syn clause} }+//
+	  <P>
+	    The head of a production template provides &endash; aside from the
+	    list of its formal parameters &endash; the unique identification
+	    of the production template.  This is composed of the following
+	    parts:
+	    <List enum>
+	      <Item>
+		whether the production template is an expression or a
+		statement when it is instantiated (expressions being denoted
+		by <<V=&ellipsis;>> or <<$=&ellipsis>>; in the head);
+	      <Item>
+		the optional identification name of the template, written
+		before a colon;
+	      <Item>
+		the used parentheses, brackets or braces, if any;
+	      <Item>
+		the number of arguments, all being separated by <<//>>; and
+	      <Item>
+		the used postfix operator, if any.
+	    </List>
+	  <P>
+	    For example, you could define the commonly used notation
+	    <<[ ?{X} ]>> as an <Span class=index/EBNF/ <Span class=index
+	    /option/, or use <<{ ?{X} // ?{Y} }+>> for a separated list with
+	    at least one element.  This construct could yield a value, such
+	    as a list of the &Oz; values produced by the expression&nbsp;<Var
+	    type=meta>X</Var>, which would be denoted by the production
+	    template <<?{Z}={ ?{X} // ?{Y} }+>>.  (Compare this to the
+	    template's instantiation in <Ptr to="program.parser.example">
+	    in line&nbsp;21.)
+	    <Grammar.Rule/?={prod head}
+	      <Grammar.Alt/?={template definition}/
+	      <Grammar.Alt/?={variable} <Q class=terminal/<<=>>/
+		?={template definition}/
+	      <Grammar.Alt/<Q class=terminal/<<$>>/ <Q class=terminal/<<=>>/
+		?={template definition}//
+	    <Grammar.Rule/?={template definition}
+	      <Grammar.Alt/?={prod formal list}/
+	      <Grammar.Alt/?={atom} <Q class=terminal/<<:>>/
+		?={prod formal list}//
+	    <Grammar.Rule/?={prod formal list}
+	      <Grammar.Alt/<Q class=terminal/<<(>>/ ?={prod formals}
+		<Q class=terminal/<<)>>/ [ ?={prod postfix} ]/
+	      <Grammar.Alt/<Q class=terminal/<<[>>/ ?={prod formals}
+		<Q class=terminal/<<]>>/ [ ?={prod postfix} ]/
+	      <Grammar.Alt/<Q class=terminal/<<{>>/ ?={prod formals}
+		<Q class=terminal/<<}>>/ [ ?={prod postfix} ]/
+	      <Grammar.Alt/?={variable} ?={prod postfix}//
+	    <Grammar.Rule>?={prod formals}
+	      <Grammar.Alt>?={variable}
+		{ <Q class=terminal><<//>></Q> ?={variable} }</Grammar.Alt>
+	    <Grammar.Rule>?={prod postfix}
+	      <Grammar.Alt><Q class=terminal/<<+>>/ |
+		<Q class=terminal/<<->>/ |
+		<Q class=terminal/<<*>>/ |
+		<Q class=terminal><</>></Q></Grammar.Alt>
+	<SubSubSection>
+	  <Title/Expansion of Production Templates/
+	  <P>
+	    Production templates may be instantiated as EBNF factors.
+	    <Grammar.Rule/?={syn factor}
+	      <Grammar.Alt type=add/?={template instantiation}//
+	  <P>
+	    The instantiation of a production template is very similar to its
+	    definition, since it must specify the same unique identification.
+	    The difference is that instead of the formal parameter variables
+	    actual EBNF phrases are allowed.
+	    <Grammar.Rule/?={template instantiation}
+	      <Grammar.Alt/?={prod actual list}/
+	      <Grammar.Alt/?={atom} <Q class=terminal/<<:>>/
+		?={prod actual list}//
+	    <Grammar.Rule/?={prod actual list}
+	      <Grammar.Alt/<Q class=terminal/<<(>>/ ?={prod actuals}
+		<Q class=terminal/<<)>>/ [ ?={prod postfix} ]/
+	      <Grammar.Alt/<Q class=terminal/<<[>>/ ?={prod actuals}
+		<Q class=terminal/<<]>>/ [ ?={prod postfix} ]/
+	      <Grammar.Alt/<Q class=terminal/<<{>>/ ?={prod actuals}
+		<Q class=terminal/<<}>>/ [ ?={prod postfix} ]/
+	      <Grammar.Alt/?={syn application} ?={prod postfix}//
+	    <Grammar.Rule>?={prod actuals}
+	      <Grammar.Alt>?={syn alt}
+		{ <Q class=terminal><<//>></Q> ?={syn alt} }</Grammar.Alt>
+	  <P>
+	    When a production template is expanded, name clashes must be
+	    avoided.  This is why the expansion proceeds in several steps:
+	    <List>
+	      <Item>
+		The local variables of the template are uniquely renamed,
+		both in the body's EBNF phrase as well as in the local rules.
+	      <Item>
+		The local rules are uniquely renamed to avoid confusion with
+		other rules in the parser specification.
+	      <Item>
+		The actual EBNF phrases are substituted for the parameter
+		variables of the production template.  The formal parameter
+		variables may only occur as applications of grammar symbols
+		and may either be applied with a single actual parameter or
+		none at all.  If the parameter is given, then the actual
+		EBNF phrase must be an expression whose value is unified
+		with the application's actual parameter.
+	      <Item>
+		The local rules are quantified over the local variables used
+		in actual EBNF phrases of the instantiation by adding these
+		as parameters.
+	      <Item>
+		The local rules are aded to the table of grammar symbols.
+	      <Item>
+		The template instantiation is replaced by the body's EBNF
+		phrase from the production template's definition.
+	    </List>
+	<SubSubSection>
+	  <Title/Predefined Production Templates/
+	  <P>
+	    <Index/production templates<And>predefined/
+	    <Index/repetition<And>predefined operators/
+	    <Ptr to="table.parser.predef"> shows the predefined production
+	    templates.  For many operators several equivalent notations exist.
+	    All operators also have a form that yields a value:  The grouping
+	    construct yields the value of its argument, as do options (or
+	    <<nil>> if they are not chosen at runtime); the repetition
+	    constructs yield Oz lists of their first argument.
+	    <Figure float id="table.parser.predef" class=table>
+	      <Caption>Predefined production templates.</Caption>
+	      <P>
+		<Table>
+		  <TR>
+		    <TD>Grouping
+		    <TD><<( ?{A} )>>
+		  <TR>
+		    <TD>Option
+		    <TD><<[ ?{A} ]>>
+		  <TR>
+		    <TD>Mandatory Repetition
+		    <TD>
+		      <P.silent><!--**--><<?{A}+>>
+		      <P><<( ?{A} )+>>
+		      <P><<{ ?{A} }+>>
+		  <TR>
+		    <TD>Optional Repetition
+		    <TD>
+		      <P.silent><!--**--><<?{A}*>>
+		      <P><<( ?{A} )*>>
+		      <P><<{ ?{A} }*>>
+		  <TR>
+		    <TD>Mandatory Separated Repetition
+		    <TD>
+		      <P.silent><!--**--><<( ?{A} // ?{B} )+>>
+		      <P><<( ?{A} // ?{B} )>>
+		      <P><<{ ?{A} // ?{B} }+>>
+		      <P><<{ ?{A} // ?{B} }>>
+		  <TR>
+		    <TD>Optional Separated Repetition
+		    <TD>
+		      <P.silent><!--**--><<( ?{A} // ?{B} )*>>
+		      <P><<{ ?{A} // ?{B} }*>>
+		</Table>
+	    </Figure>
+	<SubSubSection>
+	  <Title/Assignment of Attribute Types/
+	  <P>
+	    Due to the underlying <Span class=index/LR(1)/ algorithm used,
+	    two different attribute types must be distinguished concerning
+	    parameters to nonterminals, namely <Def class=noindex
+	    >synthesized</Def><Index/synthesized attributes/<Index
+	    /attributes<And>synthesized/ and <Def>inherited attributes</Def
+	    ><Index/attributes<And>inherited/.  This is in contrary to &Oz;,
+	    where input and output arguments need not be distinguished due to
+	    the concept of logical variables and unification.  However, things
+	    are simplified by an algorithm determining the attribute types
+	    automatically.
+	  <P>
+	    Before this algorithm is explained in the following, we need to
+	    introduce a definition.
+	  <Para class=apropos><Title/Definition/
+	    Let <Var type=meta>S</Var> be an expanded sequence (&ie;, template
+	    instantiations and assignments have been expanded) with EBNF
+	    factors <Math.Choice><Math type=html>0, ..., <I>n&lt;/I></Math>
+	    <Math type=latex>0, \ldots, n</Math></Math.Choice>.  Let
+	    <Var type=meta>i</Var> be the index of the first EBNF factor
+	    (application or semantic action) in which a local
+	    Variable&nbsp;<Var type=meta>V</Var> (which is not a formal
+	    parameter) of the sequence occurs.  Then we say that <Var
+	    type=meta>V</Var> is <Def class=noindex/initialized/ in all EBNF
+	    factors with indices&nbsp;<Var type=meta>j</Var>, <Math.Choice
+	    ><Math type=html><I>j&lt;/I> >= <I>i&lt;/I></Math><Math type=latex
+	    >j \ge i</Math></Math.Choice>, and <Def
+	    class=noindex/uninitialized / in all others.
+	  <P>
+	    The following rules describe how attribute types are derived from
+	    their uses in applications of grammar symbols:
+	    <List>
+	      <Item>
+		The (optional) parameter of a terminal always is a
+		synthesized attribute (since the scanner always produces
+		the token value).
+	      <Item>
+		Let the <Var type=meta>i</Var>th actual parameter of an
+		application of a grammar symbol&nbsp;<Var type=meta>B</Var>
+		be either an uninitialized local variable&nbsp;<Var type=meta
+		>V</Var> or a nesting marker.  Then the <Var type=meta
+		>i</Var>th formal parameter of&nbsp;<Var type=meta>B</Var>
+		is a synthesized attribute.  Furthermore, <Var type=meta
+		>V</Var>&nbsp;may not occur in any other actual parameter
+		of the application.
+	      <Item>
+		Let the <Var type=meta>i</Var>th actual parameter of an
+		application of a grammar symbol&nbsp;<Var type=meta>B</Var>
+		be either an initialized local variable&nbsp;<Var type=meta
+		>V</Var> or a complex &Oz; expression (&ie;, neither a
+		variable nor a nesting marker).  Then the <Var type=meta
+		>i</Var>th formal parameter of&nbsp;<Var type=meta>B</Var>
+		is an inherited attribute.  Furthermore, no uninitialized
+		variable may occur in said actual parameter.
+	      <Item>
+		If a formal parameter of the syntax rule for a
+		nonterminal&nbsp;<Var type=meta>A</Var> is used as actual
+		parameter of an application of a nonterminal&nbsp;<Var
+		type=meta>B</Var>, then the corresponding formal parameters
+		of <Var type=meta>A</Var> and&nbsp;<Var type=meta>B</Var>
+		are attributes of the same type, &ie;, either both
+		synthesized or both inherited.
+	    </List>
+	    Note that nothing can be concluded from the use of a formal
+	    parameter variable in a semantic action, since &Oz; does not
+	    distinguish between access of and assignment to a variable: both
+	    are realized by unification.
+	  <P>
+	    <Index/error<And>in parser attribute types/
+	    If contradicting attribute types are derived for any formal
+	    parameter variable of a nonterminal, then this is an error.
+	    If no attribute type can be derived for a formal parameter
+	    variable, then it is realized as a synthesized attribute.
+    <SubSection id="section.parser.params">
+      <Title/Parameters to Parser Generation/
+      <Para class=apropos><Title/Macro Directives/
+	<Index/macro directives/
+	The following macro directive tells the <Span class=index/&bison;/
+	parse table generator to expect a certain number of shift&slash;reduce
+	conflicts:
+	<<<\gumpparserexpect ?={int}>>>
+	<Index/compiler<And>switch<And><<gumpparserexpect>>/
+      <Para class=apropos><Title/Switches/
+	<Ptr to="table.parser.params"> summarizes the options that the &Gump;
+	Parser Generator understands.  They may be given as compiler switches
+	before a parser specification.
+	<Figure float id="table.parser.params" class=table>
+	  <Caption>Compiler switches for the &Gump; Parser Generator.</Caption>
+	  <P>
+	    <Table>
+	      <TR>
+		<TH>Switch
+		<TH>Effect
+	      <TR>
+		<TD><Code><Span class=ignore>\switch +</Span
+		  >gumpparseroutputsimplified</Code>
+		  <Index/compiler<And>switch<And
+		  ><<gumpparseroutputsimplified>>/
+		<TD>create the <File/.simplified/ file with the BNF version
+		  of the grammar
+	      <TR>
+		<TD><Code><Span class=ignore>\switch +</Span
+		  >gumpparserverbose</Code>
+		  <Index/compiler<And>switch<And><<gumpparserverbose>>/
+		<TD>create the <File/.output/ file with the Bison verbose
+		  output
+	    </Table>
+	</Figure>
+    <SubSection id="section.parser.class">
+      <Title/The Mixin Class <<GumpParser.'class'>>/
+      <P>
+	The mixin class <Span class=index/<<GumpParser.'class'>>/, defined
+	in the module <<GumpParser>>, is required to make &Gump; parser
+	specifications executable.  It requires some features to be present
+	in derived classes; these are automatically inserted by the &Gump;
+	Parser Generator and contain the generated parse tables.  They all
+	begin with <<syn&ellipsis>>; thus it is a good idea not to define any
+	such named class components in order to avoid conflicts with &Gump;
+	internals.  Likewise, you should not define any variables beginning
+	with <<Syn&ellipsis;>>, since such variable names are generated by
+	the tool.
+      <Para class=apropos><Title/Abstract Members/
+	Furthermore, the following method must be defined:
+	<List>
+	  <Entry><<meth synExecuteAction(?+{I})>>
+	    <Index class=module/GumpParser.'class'<And>synExecuteAction/
+	  <Item>
+	    This method is invoked each time a reduction takes place.
+	    The parameter&nbsp;?_{I} is the number of the rule reduced.
+	</List>
+      <Para class=apropos><Title/Provided Members/
+	<<GumpParser.'class'>> defines several attributes and methods that
+	may be called by users of the generated parser or from inside semantic
+	actions:
+	<List>
+	  <Entry><<attr lookaheadSymbol>>
+	    <Index class=module/GumpParser.'class'<And>lookaheadSymbol/
+	  <Item>
+	    This contains the token class of the current lookahead symbol.
+	  <Entry><<attr lookaheadValue>>
+	    <Index class=module/GumpParser.'class'<And>lookaheadValue/
+	  <Item>
+	    This contains the token value of the current lookahead symbol.
+	  <Entry><<feat noLookahead>>
+	    <Index class=module/GumpParser.'class'<And>noLookahead/
+	  <Item>
+	    This is the value <<lookaheadSymbol>> should be set to if you
+	    want to skip a token from inside a semantic action.
+	  <Entry><<meth init(?+{P})>>
+	    <Index class=module/GumpParser.'class'<And>init/
+	  <Item>
+	    This initializes the internal structures of the
+	    <<GumpParser.'class'>> and connects it to a scanner&nbsp;?_{P}.
+	    ?_{P}&nbsp;must at least understand the messages <<putToken>><Index
+	    class=module/GumpScanner.'class'<And>putToken/ and
+	    <<getToken>><Index class=module/GumpScanner.'class'<And>getToken/
+	    as described in <Ptr to="section.scanner.class">.
+	  <Entry><<meth parse(?+{T} ??{B})>>
+	    <Index class=module/GumpParser.'class'<And>parse/
+	  <Item>
+	    This methods initates a parse.  The label of tuple&nbsp;?_{T}
+	    denotes the start symbol<Index/start symbols/ to use (which must be
+	    a declared nonterminal named by an atom); its features correspond
+	    to the parameters of the corresponding syntax rule.  Values of
+	    inherited attributes are extracted from this tuple, values
+	    of synthesized attributes are unified with the corresponding
+	    features after the parse is finished (successfully).  The
+	    parameter&nbsp;?_{B} is unified with <<true>> if the parse was
+	    successful and with <<false>> otherwise.
+	  <Entry><<meth accept()>>
+	    <Index class=module/GumpParser.'class'<And>accept/
+	  <Item>
+	    By calling this method the parse is interrupted and success
+	    reported.  (Note that the values of synthesized attributes of
+	    the start symbol given to <<parse>> are not influenced by this.)
+	  <Entry><<meth abort()>>
+	    <Index class=module/GumpParser.'class'<And>abort/
+	  <Item>
+	    By calling this method the parse is interrupted and failure
+	    reported.  (Note that the <<error>> method is not called.)
+	  <Entry><<meth raiseError()>>
+	    <Index class=module/GumpParser.'class'<And>raiseError/
+	  <Item>
+	    This method places the parser in the same state as if a syntax
+	    error had been found in the input.  Normal error recovery is
+	    attempted.  The method <<error>> is not called.
+	  <Entry><<meth errorOK()>>
+	    <Index class=module/GumpParser.'class'<And>errorOK/
+	  <Item>
+	    <Index/error<And>recovery/
+	    When a production with a restart point (token <<error>>) is
+	    reduced, this method may be called to tell the parser that the
+	    error recovery process is finished and normal parsing may be
+	    resumed.
+	  <Entry><<meth clearLookahead()>>
+	    <Index class=module/GumpParser.'class'<And>clearLookahead/
+	  <Item>
+	    When a production with a restart point (token <<error>>) is
+	    reduced, this method may be called to clear the lookahead token
+	    (if, for example, it was used to synchronize to the restart
+	    point and is not legal thereafter).
+	  <Entry><<meth error(?+{V})>>
+	    <Index class=module/GumpParser.'class'<And>error/
+	  <Item>
+	    This method is always invoked when (during normal parsing) an
+	    error in the input is recognized.  It is handed a diagnostic
+	    message in&nbsp;?_{V}.  This method may be overridden in derived
+	    classes.
+	  <Entry><<meth getScanner(??{P})>>
+	    <Index class=module/GumpParser.'class'<And>getScanner/
+	  <Item>
+	    Returns the scanner object or procedure&nbsp;?_{P} currently
+	    used as the token source.
+	</List>
+</Chapter>

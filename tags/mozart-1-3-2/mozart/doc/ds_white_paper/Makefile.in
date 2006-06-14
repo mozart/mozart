@@ -1,0 +1,21 @@
+SRCTOP		= @SRCTOP@
+SRCDIR		= @srcdir@
+VPATH		= @srcdir@
+
+WHAT = ds_white_paper
+WHATCLASS=other
+PRINTNAME=DistributionSubsystem
+HTMLEXTRAFILES=Simulator.gif bootstrap.gif core_three_layers.gif log_tool.gif \
+		proxy_manager.gif three_states.gif time_sharing.gif \
+		DistributionPanel.gif
+
+WHAT	= ds_white_paper
+MAIN	= main.sgml
+SGMLSRCS = introduction.sgml connections.sgml entities.sgml efficient.sgml \
+	failures.sgml interfaces.sgml tools.sgml
+
+
+
+include ../Makefile.common
+
+

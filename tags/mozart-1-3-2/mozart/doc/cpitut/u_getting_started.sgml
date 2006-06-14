@@ -1,0 +1,352 @@
+<Section id="u_getting_started">
+<Title/Getting Started/
+
+<p>
+This section makes the reader familiar with the &cpi by implementing a
+propagator for the constraint <Math/x+y=z/ and explains the steps to be taken
+to get it running.
+
+<SubSection id="u_getting_started.prerequisites">
+<Title/Prerequisites/
+<p>
+The implementation of new propagators via the &cpi requires a correctly
+installed Oz system. The following points should be obeyed.
+
+
+<List>
+
+<Entry> Include File.
+
+<Item> To obtain the functionality provided by the &cpi include the
+file <Code proglang=sh>mozart_cpi.hh</Code> in the appropriate &ccpp;
+source files.
+
+<Entry> Platform-independent compilation and linkage of native
+functors.
+
+<Item> Use <Code proglang=sh/oztool/ to compile &ccpp; source programs
+ (<Code proglang=sh/oztool c++/) and to link object files (<Code
+ proglang=sh/oztool ld/). It has the right options &resp; search paths
+ set depending on your current platform and environment. See
+ <Ptr.extern to="ozdoc:apptut"
+ key="section.counter.global.compilation"> for details on <Code
+ proglang=sh/oztool/.
+
+<Entry> Naming Conventions.
+
+<Item> Identifiers starting with <<OZ_>> are provided by the &cpi and
+must not be defined by the programmer.
+
+</List>
+
+<SubSection id="u_getting_started.building">
+<Title/Building a Propagator/
+<p>
+This section explains by means of an example the constraint propagator
+interface of Oz. We implement the propagator for the constraint
+<Math/x+y=z/. For the sake of clarity we use a rather straightforward
+algorithm here. The operational semantics will provide as much
+pruning/propagation as possible. This is in contrast to the constraint
+<Math/x+y=z/ supplied by the finite domain library (see <Ptr.Extern
+to="ozdoc:system" key="section.fd.misc">), which reasons only over
+bounds of domains.
+
+<SubSubSection id="u_getting_started.building.def">
+<Title/A Propagator's Class Definition/
+
+<para class=apropos><title/&cpi class <<OZ_Propagator>>/ The emulator
+requires a uniform way to refer to all instances of propagators. This
+is realised by providing the class <<OZ_Propagator>>, which is the
+class all propagators have to be inherited from. Therefore, the
+emulator can refer to any propagator by a pointer of type
+<<(OZ_Propagator *)>> The class <<OZ_Propagator>> is in terms of &cpp;
+a so-called <Em/abstract base class/, &ie no object of such a class
+can be created (since for at least one member function intentionally
+no implementation is provided, indicated by an appended
+<<=0>>. Instead, it defines the minimal functionality required of all
+classes inherited from it. The following code depicts a fragment of
+the definition of the class <<OZ_Propagator>> defined by the &cpi (in
+the file <<mozart_cpi.hh>>). It shows all member functions which have
+to be defined in a derived class.
+
+<Code.Extern display proglang=cc to="programs/ozpropdef.hh" class=linenumbers>
+
+<p>
+There are basically three groups of member functions dealing with
+reflection, memory management, and constraint propagation.  Member
+functions concerned with reflection allow to obtain information about
+a certain instance of a propagator. For example, this is used to
+generate a message in case of a top-level failure.
+
+<para class=apropos><title/<<getProfile()>>/ For each propagator
+class, one instance of class <<OZ_PropagatorProfile>> is
+allocated. This class is intended to give the Oz Profiler access to
+some information about this class, for instance a count of the number
+of invocations of propagators belonging to this class. This function
+must return a pointer to this instance, but otherwise the programmer
+needs not to be concerned about it. Note that for the profile function
+to be shared for all instances, it has to be declared <<static>>.
+<p>
+
+<para class=apropos><title/<<getParameters()>>/
+The arguments of a propagator
+are returned by <<getParameters()>> as a list
+represented as an Oz heap data structure. This is denoted by the return
+type <<OZ_Term>>.
+
+
+<para class=apropos><title/<<sizeOf()>>/
+Memory management of Oz requires to know the size of a propagator. The
+member function <<sizeOf()>> implements this
+functionality. Its return type is defined in the standard header
+<<&lt;stddef.h&gt>>. 
+
+<para class=apropos><title/<<gCollect()>> and <<sClone()>>/ Further, on
+garbage collection and space cloning references into heap which are
+held in the state of the propagator (or somehow reachable by a
+propagator) have to be updated, since items stored on the heap are
+occasionally moved to a new location. The member functions
+<<gcollect()>> and <<sClone>> are provided for that purpose. The
+definition of these functions is identical for most propagators. For
+an example where the difference of both functions matters see <ptr
+to="u_advanced.redundant">.
+
+<para class=apropos><title/<<propagate()>>/
+The most important member function is <<propagate()>>.
+It is responsible for the actual
+constraint propagation and is called by the emulator when the
+propagator's execution state is switched to <<running>>.  The returned
+value of type <<OZ_Return>> indicates the runtime system the outcome
+of the propagation performed by <<propagate()>>.
+<p>
+The implementation of the addition propagator starts with the definition
+of the class <<AddProp>>. The definition of the member function
+<<propagate()>> is explained in <ptr to="u_getting_started.propagation">.
+
+<Code.Extern display proglang=cc to="programs/ex_a.1.cc" class=linenumbers>
+<Code.Extern display proglang=cc to="programs/ex_a.2.cc" class=linenumbers>
+
+
+The propagator stores in its state, &ie in its data members, references
+to the variables it is imposed on (namely <<_x>>, <<_y>> and <<_z>> of
+type <<OZ_Term>>. The constructor of the 
+class <<AddProp>>, which is invoked by the header function, initialises the
+data members with the arguments of the corresponding Oz application.
+
+The member function <<sizeOf()>> returns the number of bytes occupied
+by the addition propagator using &ccpp;'s <<sizeof>> operator.  The
+&cpi provides for the functions <<OZ_gCollectTerm()>> and
+<<OZ_sCloneTerm()>>, which are used for the implemention of the member
+functions <<gcollect()>> and <<sClone()>>, which apply
+<<gCollectTerm()>> resp. <<sCloneTerm()>> to all data members of type
+<<OZ_Term>>. The construction of lists is supported by the interface
+abstractions <<OZ_cons()>> and <<OZ_nil()>> (see <Ptr.Extern
+to="ozdoc:foreign" key="section.term_access">). The function
+<<getParameters()>> straightforwardly composes a list containing the
+references to the arguments hold in the propagator's state.
+
+The reason for the friend declaration will become clear in <Ptr
+to="u_getting_started.creating">.
+<p>
+
+<SubSubSection id="u_getting_started.propagation">
+<Title/The Propagation Part of a Propagator/
+<p>
+The member function <<propagate()>> implements the algorithm which
+defines the operational semantics of the propagator, &ie the amount of
+constraint propagation achieved at each invocation.
+<p>
+The algorithm used here rebuilds the domains of the variables always
+from scratch. Therefore, auxiliary domains for each variable are
+introduced which are initially empty. For all values of the domains of
+<Math/x/ and <Math/y/ it is checked if there is a consistent value in
+the domain 
+of <Math/z/. If so, the values are added to the corresponding auxiliary
+domains. Finally, the domains of the variables are constrained,
+&ie intersected, with the corresponding auxiliary
+domains. Consequently, the core of the program code consists of two
+nested loops iterating over all values of the domains of <Math/x/ and 
+<Math/y/.
+
+<Code.Extern display proglang=cc to="programs/ex_a.3b.cc" class=linenumbers>
+<Code.Extern display proglang=cc to="programs/ex_a.3a.cc" class=linenumbers>
+<Code.Extern display proglang=cc to="programs/ex_a.3.cc" class=linenumbers>
+
+<para class=apropos><title/&cpi class <<OZ_FDIntVar>>/
+A propagator needs direct
+access to the variables it is imposed on. The interface class
+<<OZ_FDIntVar>> provides member functions to access variables in the 
+constraint store. The constructor dereferences a variable in the store
+and stores the dereferenced information in the state of the newly
+created object. The operators <<*>> and <<-&gt>> are overloaded to
+provide direct access to the finite domain of a variable in the 
+store or to invoke member functions of the class <<OZ_FiniteDomain>>
+(see below). 
+<p>
+
+<para class=apropos><title/&cpi class <<OZ_FiniteDomain>>/
+The finite domain of a variable is represented by an instance of the
+class <<OZ_FiniteDomain>>, modifying their value is immediately
+visible in
+the constraint store. Calling the constructor with the value
+<<fd_empty>> creates an empty finite domain, as used for the
+auxiliary variables here. The operator <<+=>> adds a value to a
+domain. The operator <<&=>> intersects two domains, modifies the
+domain on the left hand side and returns the size of the intersected
+domain. The member function <<getMinElem()>> returns the smallest value
+of the domain and <<getNextLargerElem(i)>> returns the smallest value
+of the domain larger than <<i>> (both return <<-1>> when they reach
+their respective end of the domain). Testing whether a value is contained
+in a domain or not can be done by the member function <<isIn()>>.
+
+
+<para class=apropos><title/The implementation/
+The implementation of the constraint
+<Math/x+y=z/ proceeds as follows. First the variables in the store are
+retrieved and stored in the local &ccpp; variables <<x>>, <<y>> and
+<<z>>. The corresponding auxiliary domains are held in the
+variables <<x_aux>>,  <<y_aux>> and <<z_aux>>, 
+which are
+initialised to empty domains. Two nested for-loops enumerate all
+possible pairs <Math/(v_x,v_y)/ of values of the domains of <Math/x/
+and <Math/y/. Each 
+loop starts from the smallest value of the domain and proceeds until
+<Math/-1/ 
+is returned, indicating that there is no larger value. If there is a
+value <Math/v_z/ in the domain of <Math/z/ satisfying the relation
+<Math/v_x + v_y = v_z/,
+these values are added to the appropriate auxiliary
+domains. After completing the nested loops, the domains of the variables
+are constrained by intersecting them with the auxiliary domains.
+ 
+<para class=apropos><title/<<FailOnEmpty()>>/
+The
+macro <<FailOnEmpty()>> branches to the label
+<<failure>> if its argument results in the value <Math/0/. Thereby,
+constraining the domain of a variable to an empty domain causes the
+execution to branch to label <<failure>> and eventually to return
+<<OZ_FAILED>> to the emulator. The return value of the member function
+<<leave()>> of class <<OZ_FDIntVar>>  is used to decide whether the
+propagator returns <<OZ_SLEEP>> or <<OZ_ENTAILED>>. 
+The return value
+<<OZ_ENTAILED>> indicates entailment and is returned if all variable's
+domains are singletons. Otherwise, <<OZ_SLEEP>> is returned and the
+propagator is resumed when at least one of its variables is
+constrained again.
+
+<p>
+Before leaving <<propagate()>>, the member function <<leave()>> has to
+be called. If the variable's domain has been constrained by the
+propagator, it causes the scheduler to switch all propagators waiting
+for further constraints on that variable to become <<runnable>>. The
+return value of <<leave>> is <Math/0/ if the domain became a singleton,
+otherwise <Math/1/. This information is used to decide whether a propagator
+is entailed or not. In case the propagator encounters an empty domain or
+any other inconsistency, the member function <<fail()>> has to be
+called to do some cleanups before <<propagate()>> is left.
+
+<SubSubSection id="u_getting_started.creating">
+<Title/Creating a Propagator/
+
+<para class=apropos><title/The header function/ Before a propagator
+can be created and introduced to the emulator, its variables must be
+sufficiently constrained, e.g. the variables must be constrained to
+finite domains. In case, only a subset of variables is sufficiently
+constrained, the computation will suspend and resume again when more
+constraints become available. This is checked by the header function,
+which is called by the runtime system, when an appropriately connected
+Oz abstraction is applied.  For our example, this function is
+called <<fd_add>>.
+
+<para class=apropos><title/Determining when to resume a propagator/
+Further, when a propagator is imposed on a variable, it has to be
+determined which changes to the domain resume the propagator
+again. The alternatives are to resume a propagator if the variable's
+domain becomes a singleton, the bounds are narrowed or some value is
+removed from the domain.
+
+<p> The macros <<OZ_C_proc_begin>> and <<OZ_C_proc_end>> are provided
+to allow the implementation of &ccpp; functions which are compliant
+with the calling conventions of Oz's emulator.
+
+<p> The first argument of the macro <<OZ_C_proc_begin>> defines the
+name of the function and the second argument the number of arguments
+of type <<OZ_Term>>. The macro <<OZ_args>> provides access to the
+actual argument. The name of the function has to obey certain rules to
+be compatible with the module <<Foreign>> which enables linking object
+files to a running Oz runtime system. The definition of the macro
+<<OZ_EXPECTED_TYPE>> is explained in <Ptr.Extern to="ozdoc:cpiref"
+key="expect.macros">.
+
+<Code.Extern display proglang=cc to="programs/ex_a.4.cc" class=linenumbers>
+
+<para class=apropos><title/Using <<OZ_EXPECT>>/ The macro
+<<OZ_EXPECT>> ensures that incompatible constraints on the
+propagator's parameters lead to failure and insufficient constraints
+cause the execution to be suspended until more constraints become
+known. An object of class <<OZ_Expect>> collects in its state all
+variables the propagator is to be imposed on. Such an object is at the
+first argument position of <<OZ_EXPECT>>. The second argument of
+<<OZ_EXPECT>> determines which argument of <<fd_add>> shall be
+checked. The member function <<expectIntVar()>> of class <<OZ_Expect>>
+expects a variable to be already constrained to a finite domain. If a
+variable is sufficiently constrained, it is stored in the state of the
+object <<pe>>. The second argument of <<expectIntVar>> is used to
+determine what kind of domain pruning causes a propagator to be
+resumed. Its default value is <<fd_prop_any>>, &ie a propagator is
+resumed on any pruning of the domain.  For further details see <ptr
+to="u_nesting">.
+
+<para class=apropos><title/Creation of a propagator/ Finally, the
+actual propagator is created by calling its constructor via the
+application of the <<new>> operator. The reference to the newly
+created propagator is passed as argument to <<impose()>>, a member
+function of <<OZ_Expect>>, which executes the <<propagate()>> method
+and introduces the propagator to the emulator.
+
+<para class=apropos><Title/Connecting Propagators and Oz Code/
+Propagators are connected with &moz3; as native functors according to
+<Ptr.Extern to="ozdoc:apptut"
+key="section.counter.global.compilation.deployment">. To enable that
+one has to define a function <<oz_init_module>>.
+
+<Code.Extern display proglang=cc to="programs/ex_a.interface.cc">
+
+The line <<AddProp::profile = "addition/3";>> assigns explicitly the
+name <<"addition/3">> to the propagator. The default name is <<"&lt;anonymous propagator&gt;">>.
+<P>
+Before a native functor can be loaded it must be compiled according to
+<Ptr.Extern to="ozdoc:apptut"
+key="section.counter.global.compilation">. Supposing the &ccpp; code
+is stored in the file <<ex_a.cc>>, then the following lines create the
+object file.
+
+<Code display proglang=sh>
+oztool c++ -c ex_a.cc -o ex_a.o
+oztool ld  -o ex_a.so-linux-i486 ex_a.o  
+</Code>
+
+<p>
+The Oz code below loads the object file <<ex_a.so-linux-i486>> and
+makes the Oz abstraction <<FD_PROP.add>> available. The procedure
+<<FD_PROP.add>> takes 3 arguments and imposes the addition propagator
+implemented in the sections before.
+
+<Code.Extern display to="programs/ex_a.1.oz" class=linenumbers>
+
+After feeding in the above Oz code the addition propagator is available
+and can be used. To do so feed the following code in line by line. The
+results are shown in the Oz browser (shown in comments appended to
+lines).
+
+<Code.Extern display to="programs/ex_a.2.oz" class=linenumbers>
+
+<para class=apropos><Title/Troubleshooting/
+
+<p> Debugging a propagator is usually done by <Code proglang=sh/gdb/
+<Ptr to="gdb"> in conjunction with <Code proglang=sh/emacs/ <Ptr
+to="stallman91">. The Oz Programming Interface provides adequate
+means to support debugging based on these two tools. We refer the
+reader to <Ptr.Extern to="ozdoc:opi" key="section.intro.gdb"> for
+details.
+

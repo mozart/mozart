@@ -1,0 +1,303 @@
+@SET_MAKE@
+BUILDTOP	= @BUILDTOP@
+SRCTOP		= @SRCTOP@
+PREFIX		= @prefix@
+SRCDIR          = @srcdir@
+VPATH           = @srcdir@
+PLATFORM	= @PLATFORM@
+LIB_DIR		= $(PREFIX)/cache/x-oz/system/gtk
+EXAMPLES_DIR	= $(PREFIX)/examples/gtk
+HOMEURL         = @HOMEURL@
+
+OZC		= @OZC@
+OZL             = @OZL@
+COMPILE		= $(OZC) -c
+LINK            = $(OZL)
+OZTOOL		= @OZTOOL@
+OZENGINE        = @OZENGINE@
+CPP             = @CPP@
+CPPFLAGS	= -undef -D__GNUC__ -std=c99 @CPPFLAGS@
+CXX             = @CXX@
+CXXFLAGS	= @CXXFLAGS@
+LDFLAGS		= @LDFLAGS@
+LIBS		= @LIBS@
+CYGPATH         = $(SRCTOP)/share/lib/cygpath.sh
+INSTALL		= @INSTALL@
+INSTALL_DIR	= @INSTALL_DIR@
+INSTALL_LIB	= $(INSTALL) -m 444
+INSTALL_FILE	= $(INSTALL) -m 444
+INSTALL_DLL	= $(INSTALL) -m 555
+
+FLEX            = @FLEX@
+BISON           = @BISON@
+GTKCONFIG       = @GTKCONFIG@
+HAVE_CANVAS     = @HAVE_CANVAS@
+CANVASDIR       = @CANVASDIR@
+
+#---------------------------------------------------------------------
+# Extra Variables
+#---------------------------------------------------------------------
+
+BUILDDIR        = $(shell pwd) 
+
+GTKFLAGS        = $(shell $(GTKCONFIG) --cflags)
+GTKLIBS         = $(shell $(GTKCONFIG) --libs)
+
+ifeq ($(HAVE_CANVAS), yes)
+GTKCANVASFLAGS = -I$(CANVASDIR)/include
+GTKCANVASLIBS  = -L$(CANVASDIR)/lib -lgtk-canvas -lart_lgpl -lgdk_imlib
+else
+GTKCANVASFLAGS =
+GTKCANVASLIBS  =
+endif
+
+CPPEXTRAFLAGS = $(shell $(GTKCONFIG) --cflags gtk) $(GTKCANVASFLAGS)
+
+ifeq ($(PLATFORM), win32-i486)
+CXXPLAFLAGS = -fnative-struct
+else
+CXXPLAFLAGS =
+endif
+CXXEXTRAFLAGS = $(CXXPLAFLAGS) $(GTKFLAGS) $(GTKCANVASFLAGS) -I$(SRCDIR) -I.
+
+NATEXTRAFLAGS = -s $(GTKCANVASLIBS) $(GTKLIBS)
+
+GTKGENERATED = $(wildcard GDK.oz)
+
+#---------------------------------------------------------------------
+# C99 Parser
+#---------------------------------------------------------------------
+
+PARSERSRCS = lex.yy.cc \
+             c.bison.tab.cc
+PARSEROBJS = $(PARSERSRCS:%.cc=%.o)
+PARSERCMPS = parser.so-$(PLATFORM)
+
+#---------------------------------------------------------------------
+# Oz Binding Generator
+#---------------------------------------------------------------------
+
+OZSRCS    = GOZCore.oz \
+            Util.oz \
+            Prepare.oz \
+            Flatten.oz \
+            Collect.oz \
+            NativeEmitter.oz \
+            ToolKit.oz \
+            Main.oz \
+            OzWrapper.oz
+
+OZOBJS    = $(OZSRCS:%.oz=%.ozf)
+OZINSTALL = $(LIB_DIR)/GOZCore.ozf
+
+GENOBJS    = Collect.ozf \
+             Flatten.ozf \
+             Prepare.ozf \
+             Util.ozf \
+             NativeEmitter.ozf \
+             ArgumentEmitter.ozf \
+             ToolKit.ozf \
+             Main.ozf
+GENINSTALL = $(LIB_DIR)/Generator.ozf
+
+CSIGSRCS = GOZSignal.c
+CSRCS    = $(CSIGSRCS) GOZArguments.c
+COBJS    = $(CSRCS:%.c=%.o)
+CCMPS    = $(CSIGSRCS:%.c=%.so-$(PLATFORM))
+CINSTALL = $(CSIGSRCS:%.c=$(LIB_DIR)/%.so-$(PLATFORM))
+
+#---------------------------------------------------------------------
+# Native Wrapper
+#---------------------------------------------------------------------
+
+NATBASESRCS = GdkNative.c \
+              GtkNative.c \
+              GdkFieldNative.c \
+              GtkFieldNative.c
+
+ifeq ($(HAVE_CANVAS), yes)
+NATOPTSRCS = GtkCanvasNative.c \
+             GtkCanvasFieldNative.c
+else
+NATOPTSRCS =
+endif
+
+NATSRCS    = $(NATBASESRCS) $(NATOPTSRCS)
+NATOBJS    = $(NATSRCS:%.c=%.o)
+NATCMPS    = $(NATSRCS:%.c=%.so-$(PLATFORM))
+NATINSTALL = $(NATSRCS:%.c=$(LIB_DIR)/%.so-$(PLATFORM))
+
+#---------------------------------------------------------------------
+# Oz Class Wrapper
+#---------------------------------------------------------------------
+
+WRPBASESRCS = GDK.oz \
+              GTK.oz \
+
+ifeq ($(HAVE_CANVAS), yes)
+WRPOPTSRCS = GTKCANVAS.oz
+else
+WRPOPTSRCS = 
+endif
+
+WRPSRCS    = $(WRPBASESRCS) $(WRPOPTSRCS) 
+WRPOBJS    = $(WRPSRCS:%.oz=%.ozf)
+WRPINSTALL = $(WRPSRCS:%.oz=$(LIB_DIR)/%.ozf)
+
+#---------------------------------------------------------------------
+# GBuilder
+#---------------------------------------------------------------------
+
+BUILDERSRCS = GBuilderTypes.oz \
+	      GBuilderWidgets.oz \
+	      GBuilder.oz
+BUILDEROBJS = $(BUILDERSRCS:%.oz=%.ozf)
+BUILDERINSTALL = $(BUILDEROBJS:%=$(LIB_DIR)/%)
+
+#---------------------------------------------------------------------
+# Target Variables
+#---------------------------------------------------------------------
+
+TARGETS     = gtkraw.c $(PARSERCMPS) $(OZOBJS) Generator.ozf $(BUILDEROBJS)
+GEN_TARGETS = $(NATCMPS) $(WRPOBJS)
+LIB_TARGETS = $(CINSTALL) $(OZINSTALL) $(WRPINSTALL) $(NATINSTALL) \
+              $(GENINSTALL) $(BUILDERINSTALL)
+EXAMPLES_FILES = \
+	CList.oz CTree.oz CanvasEvents.oz CanvasMove.oz CanvasScramble.oz \
+	FileSelection.oz HelloArgs.oz HelloCanvas.oz HelloGTK.oz \
+	HelloImage.oz HelloText.oz List.oz GBuilderExamples.oz
+EXAMPLES_TARGETS = $(EXAMPLES_FILES:%=$(EXAMPLES_DIR)/%)
+
+#---------------------------------------------------------------------
+# Rules
+#---------------------------------------------------------------------
+
+%.o: %.cc
+	OZTOOL_CXX="@CXX@" \
+	$(OZTOOL) c++ $(WINOZTOOLCXXFLAGS) $(CXXFLAGS) $(CXXEXTRAFLAGS) \
+	-c $< -o $@
+
+%.o: %.c
+	OZTOOL_CXX="@CXX@" \
+	$(OZTOOL) c++ $(WINOZTOOLCXXFLAGS) $(CXXFLAGS) $(CXXEXTRAFLAGS) \
+	-c $< -o $@
+
+%.ozf: %.oz
+	$(COMPILE) `$(CYGPATH) $<` \
+	-I`$(CYGPATH) $(SRCDIR)` -I`$(CYGPATH) $(BUILDDIR)` -o $@
+
+%.ozf: builder/%.oz
+	$(COMPILE) `$(CYGPATH) $<` \
+	-I`$(CYGPATH) $(SRCDIR)` -I`$(CYGPATH) $(BUILDDIR)` -o $@
+
+$(PARSERCMPS):%.so-$(PLATFORM): $(PARSEROBJS)
+	OZTOOL_LD="@CXX@" \
+	$(OZTOOL) ld $(WINOZTOOLLDFLAGS) -o $@ $^
+
+$(CCMPS):%.so-$(PLATFORM): $(COBJS)
+	OZTOOL_LD="@CXX@" \
+	$(OZTOOL) ld $(WINOZTOOLLDFLAGS) \
+        -o $@ $^ $(NATEXTRAFLAGS)
+
+$(NATCMPS):%.so-$(PLATFORM): %.o
+	OZTOOL_LD="@CXX@" \
+	$(OZTOOL) ld $(WINOZTOOLLDFLAGS) -o $@ $< $(NATEXTRAFLAGS)
+
+#---------------------------------------------------------------------
+# Building
+#---------------------------------------------------------------------
+
+.PHONY: all install clean veryclean distclean bootstrap depend
+
+all: $(TARGETS) binding
+install: $(LIB_DIR) $(LIB_TARGETS) $(EXAMPLES_DIR) $(EXAMPLES_TARGETS) \
+	install_names
+install_names:
+	cp ClassNames.ozp $(LIB_DIR)/ClassNames.ozp
+
+#---------------------------------------------------------------------
+# Create Parser Files
+#---------------------------------------------------------------------
+
+c.bison.tab.cc: c.bison
+	$(BISON) -d $<
+	@mv y.tab.c c.bison.tab.cc
+	@mv y.tab.h c.bison.tab.hh
+
+lex.yy.cc: c.flex
+	$(FLEX) -o$@ $<
+
+c.bison.tab.hh: c.bison.tab.cc ;
+
+lex.yy.o: c.bison.tab.hh
+
+#---------------------------------------------------------------------
+# Read GTK C Sources
+#---------------------------------------------------------------------
+
+gtkraw.c: gtkdefs.c
+	$(CPP) $(CPPFLAGS) $(CPPEXTRAFLAGS) $< $@
+
+#---------------------------------------------------------------------
+# Create Binding Files
+#---------------------------------------------------------------------
+
+Generator.ozf: $(GENOBJS)
+	$(LINK) Main.ozf -o $@
+
+binding:
+ifeq ($(GTKGENERATED), GDK.oz)
+	@$(MAKE) wrapper_files
+else
+	$(OZENGINE) Generator.ozf OzWrapper.ozf
+	@$(MAKE) wrapper_files
+endif
+
+wrapper_files: $(GEN_TARGETS) $(CCMPS)
+
+#---------------------------------------------------------------------
+# Installing
+#---------------------------------------------------------------------
+
+$(LIB_DIR) $(EXAMPLES_DIR):
+	$(INSTALL_DIR) $@
+
+$(LIB_DIR)/%.ozf: %.ozf
+	$(INSTALL_LIB) $< $@
+
+$(LIB_DIR)/%.so-$(PLATFORM): %.so-$(PLATFORM)
+	$(INSTALL_DLL) $< $@
+
+$(EXAMPLES_DIR)/%: examples/%
+	$(INSTALL_FILE) $< $@
+
+$(EXAMPLES_DIR)/%: builder/%
+	$(INSTALL_FILE) $< $@
+
+#---------------------------------------------------------------------
+# Cleaning up
+#---------------------------------------------------------------------
+
+clean veryclean:
+	-$(RM) -f *~ *.ozf *.o *.so-*
+
+distclean: clean
+	-$(RM) config.* Makefile
+
+#---------------------------------------------------------------------
+# Bootstrap Stuff
+#---------------------------------------------------------------------
+
+-include $(BUILDTOP)/share/Makefile.boot
+
+bootstrap: boot-all
+
+#---------------------------------------------------------------------
+# Automatic Makefile update
+#---------------------------------------------------------------------
+
+Makefile: Makefile.in config.status
+	./config.status
+
+config.status: configure
+	./config.status --recheck

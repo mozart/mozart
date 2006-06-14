@@ -1,0 +1,6 @@
+include(sync.1.cc)
+include(sync.class.cc)
+include(sync.failon.cc)
+include(sync.prop.cc)
+include(sync.header.cc)
+include(sync.nfi.cc)

@@ -1,0 +1,120 @@
+<!--
+  - Authors:
+  -   Tobias Mueller <tmueller@ps.uni-sb.de>
+  -
+  - Copyright:
+  -   Tobias Mueller, 1998
+  -
+  - Last change:
+  -   $Date$ by $Author$
+  -   $Revision$
+  -
+  - This file is part of Mozart, an implementation
+  - of Oz 3
+  -    http://www.mozart-oz.org
+  -
+  - See the file "LICENSE" or
+  -    http://www.mozart-oz.org/LICENSE.html
+  - for information on usage and redistribution
+  - of this file, and for a DISCLAIMER OF ALL
+  - WARRANTIES.
+  -
+  -->
+
+<Chapter id="chapter.flowers">
+  <Title/Flowers/
+    <Author.Extern to="author.db" key="Gert.Smolka">
+    <Author.Extern to="author.db" key="Tobias.Mueller">
+
+
+  <P>
+    <List class=linkmenu>
+      <Item><Ref.Extern to="applets/Flowers.oza"/Start Applet for Flowers/
+      <Item><Ref.Extern to="applets/Flowers3d.oza"/Start Applet for 3D Flowers/
+      <Item>
+	<Ref.extern to="ozdoc:install" key="appendix.applets"/How to enable Applets/
+    </List>
+  </P>
+
+<P>
+
+Lindenmayer systems are used to model the development of plants (see
+<Ptr to="Lindenmayer:90">). They are basically rewriting systems,
+which generate a term describing the topology of a plant. The starting
+point is an initial term, which is successively expanded by replacing
+parts of it with the initial term itself. The final expansion of the
+plant is determined by the number of rewriting steps.
+
+The term describing a plant's topology (in short topology term) is a
+sequence of drawing instructions represented by an ordinary list.  A
+graphical representation of such a plant can be obtained by
+appropriately interpreting the list holding drawing instructions. The
+semantics of the drawing instructions is given below, supposing a
+current state:
+
+<List>
+<Entry> <<[...]>>
+<Item> a sequence of drawing instructions, whereby all modifications
+of the state are local to the sequence.
+
+<Entry> <<f>> <Item> draw a line from the current position using the
+current orientation and the step-width <Math/l/.
+
+<Entry> <<l>> <Item> turn the current orientation by <Math/\delta/
+degrees to the left.
+
+<Entry> <<r>> <Item> turn the current orientation by <Math/\delta/
+degrees to the right.
+
+</List>
+
+<P> The state represents the current position and the current
+orientation. The arc <Math/\delta/ (used by rotations) and the
+stepwidth <Math/l/ (used for moving from one position to another) are
+supposed to be constant while drawing.
+
+
+<Para><Title/Description of <File/Flowers.oz// The variables
+<<FlowerA>> and <<FlowerB>> hold descriptions of plants using a proper
+record. Such a description consists of an initial state (fields at
+features <<xPos>>, <<yPos>> and <<angle>>), the term describing the
+topology (field at feature <<grammar>> and the field at feature
+<<start>> as initial value for the rewriting process), the parameters
+<Math/l/ (field at feature <<stepWidth>>) and <Math/\delta/ (field at
+feature <Math/delta/), and the recursion depth (field at feature
+<<recDepth>>), which determines the number rewriting cycles. The
+central procedure of the program is <<DrawFlower>>. It implements a
+kind of rewriting system which interlaces expansion and drawing of the
+topology term. You may try to find new flower topologies by modifying
+the descriptions held by the mentioned variables <<FlowerA>> and
+<<FlowerB>>.
+
+<P> After starting the program a window pops up. The growing of the
+flowers can then be controlled by pressing the appropriate buttons
+which meaning ought to be self-explanatory.
+
+<P> The program <File/Flowers3d.oz/ renders a three-dimensional
+flower. The principle remains unchanged only the computation for the
+drawing is slightly more complicated.
+
+<!-- ********************************************************************** -->
+  <Section class=unnumbered id="section.flowers.implementation">
+    <Title/Implementation/
+
+    <Subsection class=unnumbered id=code.flowers>
+      <title>Two flowers: <File/Flowers.oz/</title>
+      <para><title><ref.extern to="Flowers/Flowers.oz">Source
+File</ref.extern></title>
+<code.extern display to="Flowers/Flowers.oz" proglang=oz></para>
+    </subsection>
+
+    <Subsection class=unnumbered id=code.flowers3d>
+      <title>A single 3D flower: <File/Flowers3d.oz/</title>
+      <para><title><ref.extern to="Flowers/Flowers3d.oz">Source
+File</ref.extern></title>
+<code.extern display to="Flowers/Flowers3d.oz" proglang=oz></para>
+    </subsection>
+
+  </section>
+
+</Chapter>

@@ -1,0 +1,143 @@
+/*
+ *  Authors:
+ *    Tobias Mueller (tmueller@ps.uni-sb.de)
+ * 
+ *  Contributors:
+ *    Christian Schulte <schulte@ps.uni-sb.de>
+ * 
+ *  Copyright:
+ *    Organization or Person (Year(s))
+ * 
+ *  Last change:
+ *    $Date$ by $Author$
+ *    $Revision$
+ * 
+ *  This file is part of Mozart, an implementation 
+ *  of Oz 3:
+ *     http://www.mozart-oz.org
+ * 
+ *  See the file "LICENSE" or
+ *     http://www.mozart-oz.org/LICENSE.html
+ *  for information on usage and redistribution 
+ *  of this file, and for a DISCLAIMER OF ALL 
+ *  WARRANTIES.
+ *
+ */
+
+#ifndef __FDGENVAR_ICC__
+#define __FDGENVAR_ICC__
+
+#if defined(INTERFACE) && !defined(OUTLINE)
+#pragma interface
+#endif
+
+// this is only needed for the becomesBool hack
+#include "var_bool.hh"
+#include "unify.hh"
+
+inline
+void OzFDVariable::dispose(void) {
+  finiteDomain.disposeExtension();
+
+  DISPOSE_SUSPLIST(fdSuspList[fd_prop_singl]);
+  DISPOSE_SUSPLIST(fdSuspList[fd_prop_bounds]);
+
+  disposeS();
+  oz_freeListDispose(this, sizeof(OzFDVariable));
+}
+
+inline
+void OzFDVariable::relinkSuspListTo(OzFDVariable * lv, Bool reset_local)
+{
+  Assert(this != lv);
+
+  OzVariable::relinkSuspListTo(lv, reset_local); // any
+
+  // Maintain suspension locality
+
+  if (reset_local) {
+    for (int i = 0; i < fd_prop_any; i += 1)
+      fdSuspList[i] =
+	fdSuspList[i]->appendToAndUnlink(lv->suspList, reset_local);
+
+  } else {
+    for (int i = 0; i < fd_prop_any; i += 1)
+      fdSuspList[i] =
+	fdSuspList[i]->appendToAndUnlink(lv->fdSuspList[i], reset_local);
+  }
+}
+
+inline
+void OzFDVariable::installPropagators(OzFDVariable * glob_var)
+{
+  installPropagatorsG(glob_var);
+  Board * gb = glob_var->getBoardInternal();
+  for (int i = 0; i < fd_prop_any; i += 1)
+    fdSuspList[i] = oz_installPropagators(fdSuspList[i],
+					  glob_var->fdSuspList[i],
+					  gb);
+}
+
+inline
+Bool isGenFDVar(TaggedRef term)
+{
+  return oz_isVar(term) && (tagged2Var(term)->getType() == OZ_VAR_FD);
+}
+
+inline
+OzFDVariable * tagged2GenFDVar(TaggedRef term)
+{
+  return (OzFDVariable *) tagged2Var(term);
+}
+
+inline
+void addSuspFDVar(TaggedRef v, Suspendable * susp, OZ_FDPropState list_index)
+{
+
+  OzFDVariable * fv = tagged2GenFDVar(v);
+
+  Assert(list_index == fd_prop_any ||
+	 fv->getBoardInternal()->derefBoard() ==
+	 susp->getBoardInternal()->derefBoard());
+  
+  switch (list_index) {
+  case fd_prop_singl:
+    Assert(susp->isPropagator());
+    fv->fdSuspList[fd_prop_singl] = 
+      new SuspList(susp, fv->fdSuspList[fd_prop_singl]);
+    break;
+  case fd_prop_bounds:
+    Assert(susp->isPropagator());
+    fv->fdSuspList[fd_prop_bounds] = 
+      new SuspList(susp, fv->fdSuspList[fd_prop_bounds]);
+    break;
+  case fd_prop_any:
+    fv->addSuspSVar(susp);
+    break;
+  default:
+    Assert(0);
+    break;
+  }
+}
+
+inline 
+OzBoolVariable * OzFDVariable::becomesBool(void) { 
+  relinkSuspListToItself(); // mm2: should return the suspList
+  finiteDomain.disposeExtension();
+  return new(this) OzBoolVariable(getBoardInternal(), suspList);
+}
+
+inline
+void OzFDVariable::becomesSmallIntAndPropagate(TaggedRef * trPtr)
+{
+  if (oz_isSmallInt(*trPtr)) return;
+
+  Assert(this == tagged2Var(*trPtr));
+
+  TaggedRef si_val = makeTaggedSmallInt(CAST_FD_OBJ(finiteDomain).getSingleElem());
+  propagate(fd_prop_singl);
+  DoBind(trPtr, si_val);
+  dispose();
+}
+
+#endif /* __FDGENVAR_ICC__ */
