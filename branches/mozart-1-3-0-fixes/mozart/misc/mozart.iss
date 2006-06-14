@@ -2,14 +2,14 @@
 AppName=Mozart
 ; icon: \bin\oz.exe
 AppCopyright=Open-Source system, see www.mozart-oz.org
-AppVerName=Mozart 1.3.1
+AppVerName=Mozart 1.3.2
 AppPublisher=SICS, DFKI, and other parties
 DefaultDirName={pf}\Mozart
 DefaultGroupName=Mozart
 AllowNoIcons=yes
 LicenseFile=LICENSE.rtf
 ;InfoBeforeFile=README
-OutputBaseFilename=Mozart-1.3.1
+OutputBaseFilename=Mozart-1.3.2
 Compression=lzma
 SolidCompression=yes
 OutputDir=.
