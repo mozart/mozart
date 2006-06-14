@@ -102,14 +102,12 @@
                     </OBJECT>
                     <!--#include "fst/fst.hhc"-->
                   <LI><OBJECT type="text/sitemap">
-                      <PARAM name="Name" value="High-level Window
-                      Programming with QTk">
+                      <PARAM name="Name" value="High-level Window Programming with QTk">
                       <PARAM name="Local" value="mozart-stdlib/wp/qtk/html/index.html">
                       <PARAM name="ImageNumber" value="11">
                     </OBJECT>
                   <LI><OBJECT type="text/sitemap">
-                      <PARAM name="Name" value="Window Programming
-                      with Tk">
+                      <PARAM name="Name" value="Window Programming with Tk">
                       <PARAM name="Local" value="wp/index.html">
                       <PARAM name="ImageNumber" value="11">
                     </OBJECT>
@@ -161,7 +159,6 @@
                       <PARAM name="Local" value="mozart-stdlib/index.html">
                       <PARAM name="ImageNumber" value="11">
                     </OBJECT>
-                    <!--#include "$(STDLIB)/mozart-stdlib.hhc"-->
                 </UL>
               <LI><OBJECT type="text/sitemap">
                   <PARAM name="Name" value="Programming Interface and Tools">
