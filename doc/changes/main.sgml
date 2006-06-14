@@ -136,6 +136,11 @@
       documented. (bug 1691)</p>
       </subsection>
 
+      <subsection><title/Psql Contribution/
+      <p>The contribution to work with PostgreSQL is working again. To
+      build it use <code/--enable-contrib-psql/ during configuration.</p>
+      </subsection>
+
    </section>
 
    <section id="section.m132.usability">
@@ -213,6 +218,7 @@
       <item> RPM building: 1649
       <item> Reflect module: 1839
       <item> FloatToString: 1869
+      <item> Emacs OPI related: 1890
       <item> Tools: 1332, 1459, 1775
       <item> Documentation: 590, 991, 1371, 1445, 1374, 1375, 1419, 1466, 1479, 1614, 1660, 1818, 1820, 1832
       </list>  
