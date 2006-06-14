@@ -6,6 +6,7 @@
  *  Contributors:
  *    Kostja Popow (popow@ps.uni-sb.de)
  *    Christian Schulte <schulte@ps.uni-sb.de>
+ *    Raphael Collet (raph@info.ucl.ac.be)
  *
  *  Copyright:
  *    Organization or Person (Year(s))
