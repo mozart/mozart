@@ -135,7 +135,7 @@ define
 	 try
 	    {ExecSQL "BEGIN" _}
 	    {ExecSQL "DECLARE myportal CURSOR FOR "#Str R1}
-	    if {CmdStatus R2}\="DECLARE CURSOR" then
+	    if {CmdStatus R1}\="DECLARE CURSOR" then
 	       raise sql(bad_query Str {CmdStatus R1}) end
 	    end
 
