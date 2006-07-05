@@ -155,11 +155,11 @@ namespace _dss_internal{ //Start namespace
 
   
   Proxy::Proxy(NetIdentity ni, const AccessArchitecture& a,
-	       ProtocolProxy* const prot, AE_ProxyCallbackInterface* ae,
-	       DSS_Environment* const env):
+	       ProtocolProxy* const prot, DSS_Environment* const env) :
     AS_Node(ni,a,env), a_ps(PROXY_STATUS_UNSET),
     a_currentFS(FS_ALL_OK), a_registeredFS(0),
-    a_prot(prot), a_remoteRef(NULL), a_coordinator(NULL),a_AbsEnt_Interface(ae)
+    a_prot(prot), a_remoteRef(NULL),
+    a_coordinator(NULL), a_abstractEntity(NULL)
   {
     DebugCode(a_allocated++);
     m_getEnvironment()->a_proxyTable->m_insert(this);
@@ -177,8 +177,8 @@ namespace _dss_internal{ //Start namespace
       // this is a real change, make the update
       a_currentFS = fs;
       // Notify the glue interface if required
-      if (fs & getRegisteredFS())
-	a_AbsEnt_Interface->reportFaultState(fs & getRegisteredFS());
+      if (a_abstractEntity && (fs & getRegisteredFS()))
+	a_abstractEntity->reportFaultState(fs & getRegisteredFS());
     }
   }
   
@@ -190,23 +190,27 @@ namespace _dss_internal{ //Start namespace
   
 
   AOcallback
-  Proxy::m_doe(const AbsOp& aop, DssThreadId* thid, DssOperationId* oId, PstInContainerInterface* builder, PstOutContainerInterface*& ans){
-    return a_AbsEnt_Interface->applyAbstractOperation(aop, thid, oId, builder, ans);
+  Proxy::m_doe(const AbsOp& aop, DssThreadId* thid, DssOperationId* oId,
+	       PstInContainerInterface* builder,
+	       PstOutContainerInterface*& ans)
+  {
+    return applyAbstractOperation(a_abstractEntity, aop,
+				  thid, oId, builder, ans);
   }
   
   ::PstOutContainerInterface* 
   Proxy::retrieveEntityState(){
-    return a_AbsEnt_Interface->retrieveEntityState(); 
+    return a_abstractEntity->retrieveEntityRepresentation(); 
   }
 
   ::PstOutContainerInterface* 
   Proxy::deinstallEntityState(){
-    return a_AbsEnt_Interface->deinstallEntityState(); 
+    return a_abstractEntity->deinstallEntityRepresentation(); 
   }
   
   void 
   Proxy::installEntityState(PstInContainerInterface* builder){
-    a_AbsEnt_Interface->installEntityState(builder); 
+    a_abstractEntity->installEntityRepresentation(builder); 
   }
   
   
@@ -265,12 +269,6 @@ namespace _dss_internal{ //Start namespace
     // have a failure detection need on a particular site.
     //    m_getGUIdSite()->m_connect();
     a_registeredFS = s;
-  }
-
-  AE_ProxyCallbackInterface* 
-  Proxy::getAEpki()
-  {
-    return a_AbsEnt_Interface;
   }
 
 
@@ -405,13 +403,11 @@ namespace _dss_internal{ //Start namespace
   Proxy* gf_createCoordinationProxy(AccessArchitecture type,
 				    NetIdentity ni,
 				    ProtocolProxy *prox, 
-				    AE_ProxyCallbackInterface *aepc_interface, 
 				    DSS_Environment* env){
-    
     switch(type){
-    case AA_STATIONARY_MANAGER: return  new ProxyStationary(ni,prox,	aepc_interface,  env);
-    case AA_MIGRATORY_MANAGER:  return  new ProxyFwdChain(ni, prox, 	aepc_interface,  env);
-    case AA_MOBILE_COORDINATOR: return  new ProxyMobile(ni, prox, 	aepc_interface,  env);
+    case AA_STATIONARY_MANAGER: return new ProxyStationary(ni, prox, env);
+    case AA_MIGRATORY_MANAGER:  return new ProxyFwdChain(ni, prox, env);
+    case AA_MOBILE_COORDINATOR: return new ProxyMobile(ni, prox, env);
     default: Assert(0); 
     }
     return NULL;

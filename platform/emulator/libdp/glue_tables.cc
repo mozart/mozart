@@ -35,23 +35,10 @@
 #include "pstContainer.hh"
 #include "engine_interface.hh"
 
-void doPortSend(OzPort *port, TaggedRef val, Board*);
-OZ_Return accessCell(OZ_Term cell,OZ_Term &out);
-
 
 // The mediator table
 MediatorTable *mediatorTable;
 
-
-
-
-/**********************************************************************/
-/*   Localizing                 should be more localize */
-/**********************************************************************/
-
-void OzObject::localize(){
-  setBoard(oz_currentBoard());
-}
 
 
 /************************* Mediator Table *************************/
@@ -75,8 +62,7 @@ MediatorTable::insert(Mediator *med) {
   med->resetGCStatus();     // simpler when gc cleanup
   push(medList, med);
   if (!med->isAttached())
-    medTable->htAddOverWrite(reinterpret_cast<void*>(med->getEntity()),
-			     static_cast<void*>(med));
+    medTable->htAddOverWrite(reinterpret_cast<void*>(med->getEntity()), med);
 }
 
 // lookup a mediator (for detached mediators only)
@@ -146,11 +132,9 @@ MediatorTable::gcCleanUp() {
     if (med->isCollected()) insert(med); else delete med;
   }
 
-  // try to localize if marked, delete otherwise.  Note: when
-  // localizing, the mediator must either delete itself, or reinsert
-  // itself in the table.
+  // localize if marked, delete otherwise.
   while (med = pop(localizeList)) {
-    if (med->isCollected()) med->localize(); else delete med;
+    if (med->isCollected()) { med->localize(); insert(med); } else delete med;
   }
 
   Assert(noneList == NULL);
@@ -200,26 +184,4 @@ void gcMediatorTableWeak(){
 
 void gcMediatorTableCleanUp(){
   mediatorTable->gcCleanUp();
-};
-
-
-// Todo: the shortcuts must return error values
-// if no addressobject was found. Erik 
-
-Mediator *taggedref2Me(TaggedRef tr) {
-  return mediatorTable->lookup(tr);
-}
-
-Mediator *index2Me(const int& indx){
-  return reinterpret_cast<Mediator*>(indx);
-}
-
-// Was index2Pi now index2AE
-// Get a AbstractEntity *from a engine name
-AbstractEntity *index2AE(const int& indx) {
-  return index2Me(indx)->getAbstractEntity();
-};
-
-CoordinatorAssistantInterface *index2CAI(const int& indx){
-  return index2Me(indx)->getCoordinatorAssistant();
 };

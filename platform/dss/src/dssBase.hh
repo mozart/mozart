@@ -98,7 +98,6 @@ namespace _dss_internal{ //Start namespace
   class DksBackbone; 
   
   class DSS_Environment;
-  class AE_ProxyCallbackInterface;
   class DksInstanceHT; 
   class MD5;
 
@@ -243,16 +242,10 @@ namespace _dss_internal{ //Start namespace
     int                        a_DuplicateToOwnerRefCounter;
 
   private:
-    Proxy* _m_createProxy(const ProtocolName& prot, const AccessArchitecture& aa,
-			  DssReadBuffer* const bs, DSite* const site, const int& oti);
-
     DSS_Environment(const DSS_Environment& de);
     DSS_Environment& operator=(const DSS_Environment& de){ return *this; }
+
   public:
-
-    DSite                     *m_getDestDSite();
-    DSite                     *m_getSrcDSite();
-
     DSS_Environment( IoFactoryInterface * const io, 
 		     ComServiceInterface *  const sa, 
 		     Mediation_Object* const mo,
@@ -260,41 +253,24 @@ namespace _dss_internal{ //Start namespace
     
     virtual ~DSS_Environment(); //closeDSS
 
-    // ************** Proxy "factory" methods, creates proxies and abstract entities
-    // ************** according to specification. 
+    DSite                     *m_getDestDSite();
+    DSite                     *m_getSrcDSite();
 
-    Proxy *m_initializeCoordination(const ProtocolName& prot,
+    // Proxy "factory" methods, creates proxies according to
+    // specifications.
+
+    Proxy* m_initializeCoordination(const ProtocolName& prot,
 				    const AccessArchitecture& aa, 
-				    const RCalg& GC_annot,
-				    AE_ProxyCallbackInterface *ae);
-    
-    MutableAbstractEntity*
-    m_createMutableAbstractEntity(const ProtocolName& prot,
-				  const AccessArchitecture& aa,
-				  const RCalg& GC_annot);
-
-
-    RelaxedMutableAbstractEntity*
-    m_createRelaxedMutableAbstractEntity(const ProtocolName& prot,
-					 const AccessArchitecture& aa,
-					 const RCalg& GC_annot);
-    
-    MonotonicAbstractEntity*
-    m_createMonotonicAbstractEntity(const ProtocolName& prot,
-				    const AccessArchitecture& aa,
 				    const RCalg& GC_annot);
 
-    ImmutableAbstractEntity*
-    m_createImmutableAbstractEntity(const ProtocolName& prot,
-				    const AccessArchitecture& aa,
-				    const RCalg& GC_annot);
-
-    
-    bool m_orderEntities(AbstractEntity* const ae_first, AbstractEntity* const ae_second);
+    Proxy* m_unmarshalProxy(DssReadBuffer* const buf,
+			    const ProxyUnmarshalFlag& flag,
+			    AbstractEntityName& cm);
 
     DssThreadId *m_createDssThreadId(); 
     
-    DSS_unmarshal_status   m_unmarshalProxy(AbstractEntity* &proxy, DssReadBuffer* const buf, const ProxyUnmarshalFlag& flag, AbstractEntityName& cm);
+    bool m_orderEntities(AbstractEntity* const ae_first,
+			 AbstractEntity* const ae_second);
     
     void            m_gcDssResources();
     

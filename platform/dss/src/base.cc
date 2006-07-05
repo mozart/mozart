@@ -132,11 +132,6 @@
 
 //Constructors added to force the inclussion of the symbols in the library.
 ThreadMediator::ThreadMediator() {}
-MediatorInterface::MediatorInterface() {}
 Mediation_Object::Mediation_Object() {}
-MutableMediatorInterface::MutableMediatorInterface() {}
-MonotonicMediatorInterface::MonotonicMediatorInterface() {}
-ImmutableMediatorInterface::ImmutableMediatorInterface() {}
-RelaxedMutableMediatorInterface::RelaxedMutableMediatorInterface() {}
 PstOutContainerInterface::PstOutContainerInterface() {}
 PstInContainerInterface::PstInContainerInterface() {}

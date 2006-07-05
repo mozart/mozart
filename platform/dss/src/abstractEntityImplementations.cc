@@ -2,8 +2,9 @@
  *  Authors:
  *    Zacharias El Banna (zeb@sics.se)
  *    Erik Klintskog (erik@sics.se)
+ * 
  *  Contributors:
- *    optional, Contributor's name (Contributor's email address)
+ *    Raphael Collet (raph@info.ucl.ac.be)
  * 
  *  Copyright:
  *    Zacharias El Banna, 2002
@@ -43,516 +44,264 @@
 #include "protocol_immediate.hh"
 #include "protocol_dksBroadcast.hh"
 
-namespace _dss_internal{ //Start namespace
-
-  
-#ifdef DEBUG_CHECK
-  int AE_ProxyCallbackInterface::a_allocated=0;
-#endif
-
-  
-  // *************************** AE_ProxyCallbackInterface ****************************'
-  
-  AE_ProxyCallbackInterface::AE_ProxyCallbackInterface():
-    a_coordinationProxy(NULL){
-    DebugCode(a_allocated++);
-  }
-  
-  AE_ProxyCallbackInterface::~AE_ProxyCallbackInterface(){
-    DebugCode(a_allocated--);
-    delete a_coordinationProxy;
-  }
-  
-  
-  void AE_ProxyCallbackInterface::setCoordinationProxy(Proxy *pr)
-  {
-    a_coordinationProxy = pr; 
-  }
-
-  
-  // **************************** MutableAbstractEntityImpl *****************************
-  
-  MutableAbstractEntityImpl::MutableAbstractEntityImpl()
-  {
-    assignMediator(NULL); 
-  }
-
-  
-  OpRetVal 
-  MutableAbstractEntityImpl::abstractOperation_Read(DssThreadId *id,
-						    PstOutContainerInterface**& out)
-  {
-    ProtocolProxy* pp = a_coordinationProxy->m_getProtocol();
-    GlobalThread *gid = static_cast<GlobalThread*>(id);
-    switch(pp->getProtocolName()){
-    case PN_MIGRATORY_STATE: return static_cast<ProtocolMigratoryProxy*>(pp)->protocol_Access(gid,out);
-    case PN_SIMPLE_CHANNEL:  return static_cast<ProtocolSimpleChannelProxy*>(pp)->protocol_Synch(gid,out,AO_STATE_READ);
-    case PN_EAGER_INVALID:   return static_cast<ProtocolEagerInvalidProxy*>(pp)->protocol_Read(gid,out);
-    case PN_LAZY_INVALID:    return static_cast<ProtocolLazyInvalidProxy*>(pp)->protocol_Read(gid,out);
-    case PN_PILGRIM_STATE:   return static_cast<ProtocolPilgrimProxy*>(pp)->protocol_Access(gid,out);
-    default: 
-      Assert(0); 
-    }
-    return DSS_INTERNAL_ERROR_SEVERE;
-  }
-
-  OpRetVal
-  MutableAbstractEntityImpl::abstractOperation_Write(DssThreadId *id,
-						     PstOutContainerInterface**& out)
-  {
-    ProtocolProxy* pp = a_coordinationProxy->m_getProtocol();
-    GlobalThread *gid = static_cast<GlobalThread*>(id);
-    switch(pp->getProtocolName()){
-    case PN_MIGRATORY_STATE: return static_cast<ProtocolMigratoryProxy*>(pp)->protocol_Access(gid,out);
-    case PN_SIMPLE_CHANNEL:  return static_cast<ProtocolSimpleChannelProxy*>(pp)->protocol_Synch(gid,out,AO_STATE_WRITE);
-    case PN_EAGER_INVALID:   return static_cast<ProtocolEagerInvalidProxy*>(pp)->protocol_Write(gid,out);
-    case PN_LAZY_INVALID:    return static_cast<ProtocolLazyInvalidProxy*>(pp)->protocol_Write(gid,out);
-    case PN_PILGRIM_STATE:   return static_cast<ProtocolPilgrimProxy*>(pp)->protocol_Access(gid,out);
-    default: 
-      Assert(0); 
-    }
-    return DSS_INTERNAL_ERROR_SEVERE;
-  }
-
-  OpRetVal
-  MutableAbstractEntityImpl::abstractOperation_Kill() {
-    ProtocolProxy* pp = a_coordinationProxy->m_getProtocol();
-    switch(pp->getProtocolName()){
-    case PN_SIMPLE_CHANNEL:  return static_cast<ProtocolSimpleChannelProxy*>(pp)->protocol_Kill();
-    case PN_MIGRATORY_STATE: return static_cast<ProtocolMigratoryProxy*>(pp)->protocol_Kill();
-    case PN_EAGER_INVALID:   return static_cast<ProtocolEagerInvalidProxy*>(pp)->protocol_Kill();
-    case PN_LAZY_INVALID:    return static_cast<ProtocolLazyInvalidProxy*>(pp)->protocol_Kill();
-    case PN_PILGRIM_STATE:   return static_cast<ProtocolPilgrimProxy*>(pp)->protocol_Kill();
-    default: 
-      Assert(0); 
-    }
-    return DSS_INTERNAL_ERROR_SEVERE;
-  }
-
-  void
-  MutableAbstractEntityImpl::reportFaultState(const FaultState& fs){
-    if (a_mediator) a_mediator->reportFaultState(fs);
-  }
-
-  PstOutContainerInterface* 
-  MutableAbstractEntityImpl::retrieveEntityState(){
-    MediatorInterface *mi = this->accessMediator();
-    return mi->retrieveEntityRepresentation();
-  }
-
-  PstOutContainerInterface* 
-  MutableAbstractEntityImpl::deinstallEntityState(){
-    MediatorInterface *mi = this->accessMediator();
-    return mi->deinstallEntityRepresentation();
-  }
-
-  void 
-  MutableAbstractEntityImpl::installEntityState(::PstInContainerInterface* builder){
-    MediatorInterface *mi = this->accessMediator();
-    mi->installEntityRepresentation(builder); 
-  }
-
-  
-  AbstractEntity *MutableAbstractEntityImpl::m_getAEreference(){
-    return this;
-  }
+using namespace _dss_internal;
 
 
-  
-  AOcallback 
-  MutableAbstractEntityImpl::applyAbstractOperation(const AbsOp& aop,
-						    DssThreadId* thid,
-						    DssOperationId *opid,
-						    PstInContainerInterface* builder , 
-						    PstOutContainerInterface*& ans)
-  {
-    MediatorInterface *mi = this->accessMediator();
-    MutableMediatorInterface *mmi = static_cast<MutableMediatorInterface*>(mi);  
-    if (aop == AO_STATE_WRITE)
-      return mmi->callback_Write(thid,opid,builder,ans); 
-    else
-      return mmi->callback_Read(thid,opid,builder,ans); 
-  }
 
-  AbstractEntityName
-  MutableAbstractEntityImpl::m_getName()
-  {
-    return AEN_MUTABLE; 
-  }
+/************************* AbstractEntity *************************/
 
-  CoordinatorAssistantInterface *
-  MutableAbstractEntityImpl::getCoordinatorAssistant(void) const
-  {
-    
-    return  static_cast<CoordinatorAssistantInterface*>(a_coordinationProxy);
-  }
-  
-  
-  
-  
-  // ******************************** TransientAbstractEntityImpl **************************'
+AbstractEntity::AbstractEntity() : a_proxy(NULL) {}
 
+AbstractEntity::~AbstractEntity() {
+  if (a_proxy) delete static_cast<Proxy*>(a_proxy);
+}
 
-  PstOutContainerInterface* 
-  MonotonicAbstractEntityImpl::retrieveEntityState(){
-    MediatorInterface *mi = this->accessMediator();
-    return mi->retrieveEntityRepresentation(); 
-  }
+void AbstractEntity::setCoordinatorAssistant(CoordinatorAssistant* p) {
+  if (a_proxy) delete static_cast<Proxy*>(a_proxy);
+  a_proxy = p;
+  if (a_proxy) static_cast<Proxy*>(a_proxy)->setAbstractEntity(this);
+}
 
-  PstOutContainerInterface* 
-  MonotonicAbstractEntityImpl::deinstallEntityState(){
-    MediatorInterface *mi = this->accessMediator();
-    return mi->deinstallEntityRepresentation(); 
-  }
+void
+AbstractEntity::remoteInitatedOperationCompleted(DssOperationId* opId,
+						 PstOutContainerInterface* pstOut){
+  ProtocolProxy* pp = static_cast<Proxy*>(a_proxy)->m_getProtocol();
+  pp->remoteInitatedOperationCompleted(opId, pstOut);
+}
 
-  void 
-  MonotonicAbstractEntityImpl::installEntityState(::PstInContainerInterface* builder){
-    MediatorInterface *mi = this->accessMediator();
-    mi->installEntityRepresentation(builder); 
-  }
+void AbstractEntity::localInitatedOperationCompleted() {
+  ProtocolProxy* pp = static_cast<Proxy*>(a_proxy)->m_getProtocol();
+  pp->localInitatedOperationCompleted();
+}
 
-
-  
-  MonotonicAbstractEntityImpl::MonotonicAbstractEntityImpl()
-  {
-    assignMediator(NULL); 
+OpRetVal AbstractEntity::abstractOperation_Kill() {
+  ProtocolProxy* pp = static_cast<Proxy*>(a_proxy)->m_getProtocol();
+  switch (pp->getProtocolName()) {
+  case PN_SIMPLE_CHANNEL:
+    return static_cast<ProtocolSimpleChannelProxy*>(pp)->protocol_Kill();
+  case PN_MIGRATORY_STATE:
+    return static_cast<ProtocolMigratoryProxy*>(pp)->protocol_Kill();
+  case PN_TRANSIENT:
+    return static_cast<ProtocolOnceOnlyProxy*>(pp)->protocol_Kill();
+  case PN_TRANSIENT_REMOTE:
+    return static_cast<ProtocolTransientRemoteProxy*>(pp)->protocol_Kill();
+  case PN_EAGER_INVALID:
+    return static_cast<ProtocolEagerInvalidProxy*>(pp)->protocol_Kill();
+  case PN_PILGRIM_STATE:
+    return static_cast<ProtocolPilgrimProxy*>(pp)->protocol_Kill();
+  case PN_LAZY_INVALID:
+    return static_cast<ProtocolLazyInvalidProxy*>(pp)->protocol_Kill();
+  case PN_IMMUTABLE_LAZY:
+    return static_cast<ProtocolImmutableLazyProxy*>(pp)->protocol_Kill();
+  case PN_IMMUTABLE_EAGER:
+    return static_cast<ProtocolImmutableEagerProxy*>(pp)->protocol_Kill();
+  default: 
+    Assert(0); 
   }
-
-  AbstractEntity *MonotonicAbstractEntityImpl::m_getAEreference(){
-    return this;
-  }
-  
-
-  OpRetVal
-  MonotonicAbstractEntityImpl::abstractOperation_Bind(DssThreadId *id,
-						      PstOutContainerInterface**& out)
-  {
-    ProtocolProxy* pp = a_coordinationProxy->m_getProtocol();
-    GlobalThread *gid = static_cast<GlobalThread*>(id); 
-    switch (pp->getProtocolName()) {
-    case PN_TRANSIENT:
-      return static_cast<ProtocolOnceOnlyProxy*>(pp)->protocol_Terminate(gid,out,AO_OO_BIND);
-    case PN_TRANSIENT_REMOTE:
-      return static_cast<ProtocolTransientRemoteProxy*>(pp)->protocol_Terminate(gid,out,AO_OO_BIND);
-    default:
-      Assert(0);
-    }
-    return DSS_INTERNAL_ERROR_SEVERE;
-  }
-
-  
-  OpRetVal 
-  MonotonicAbstractEntityImpl::abstractOperation_Append(DssThreadId *id,
-							PstOutContainerInterface**& out)
-  {
-    ProtocolProxy* pp = a_coordinationProxy->m_getProtocol();
-    GlobalThread *gid = static_cast<GlobalThread*>(id); 
-    switch(pp->getProtocolName()){
-    case PN_TRANSIENT:
-      return static_cast<ProtocolOnceOnlyProxy*>(pp)->protocol_Update(gid,out,AO_OO_UPDATE); 
-    case PN_TRANSIENT_REMOTE:
-      return static_cast<ProtocolTransientRemoteProxy*>(pp)->protocol_Update(gid,out,AO_OO_UPDATE); 
-    case PN_DKSBROADCAST:
-      return static_cast<ProtocolDksBcProxy*>(pp)-> m_broadCast(out,AO_OO_UPDATE); 
-    default:
-      Assert(0); 
-    }
-    return DSS_INTERNAL_ERROR_SEVERE;
-  }
-
-  OpRetVal
-  MonotonicAbstractEntityImpl::abstractOperation_Kill() {
-    ProtocolProxy* pp = a_coordinationProxy->m_getProtocol();
-    switch (pp->getProtocolName()) {
-    case PN_TRANSIENT:
-      return static_cast<ProtocolOnceOnlyProxy*>(pp)->protocol_Kill();
-    case PN_TRANSIENT_REMOTE:
-      return static_cast<ProtocolTransientRemoteProxy*>(pp)->protocol_Kill();
-    default:
-      Assert(0);
-    }
-    return DSS_INTERNAL_ERROR_SEVERE;
-  }
-
-  AOcallback 
-  MonotonicAbstractEntityImpl::applyAbstractOperation(const AbsOp& aop,
-						      DssThreadId* thid,
-						      DssOperationId *opid,
-						      PstInContainerInterface* builder, 
-						      PstOutContainerInterface*& ans){
-    MediatorInterface *mi = this->accessMediator();
-    MonotonicMediatorInterface *mmi = static_cast<MonotonicMediatorInterface*>(mi);  
-    ans = NULL; 
-    switch(aop){
-    case AO_OO_BIND:
-      return mmi->callback_Bind(opid,builder);
-    case AO_OO_UPDATE:
-      return mmi->callback_Append(opid,builder);
-    case AO_OO_CHANGES:
-      return mmi->callback_Changes(opid, ans);
-    default:
-      Assert(0);
-    }
-    return AOCB_FINISH;
-  }
-    
-
-  
-  void 
-  MonotonicAbstractEntityImpl::reportFaultState(const FaultState& fs) {
-    if (a_mediator) a_mediator->reportFaultState(fs);
-  }
-
-  CoordinatorAssistantInterface *
-  MonotonicAbstractEntityImpl::getCoordinatorAssistant(void) const
-  {
-    return  static_cast<CoordinatorAssistantInterface*>(a_coordinationProxy);
-  }
-  
-  AbstractEntityName
-  MonotonicAbstractEntityImpl::m_getName()
-  {
-    return AEN_TRANSIENT; 
-  }
-  
-
-  // *********************************   ImmutableAbstractEntityImpl **************************
-
-  PstOutContainerInterface* 
-  ImmutableAbstractEntityImpl::retrieveEntityState(){
-    MediatorInterface *mi = this->accessMediator();
-    return mi->retrieveEntityRepresentation();
-  }
-
-  PstOutContainerInterface* 
-  ImmutableAbstractEntityImpl::deinstallEntityState(){
-    MediatorInterface *mi = this->accessMediator();
-    return mi->deinstallEntityRepresentation();
-  }
-
-  void 
-  ImmutableAbstractEntityImpl::installEntityState(::PstInContainerInterface* builder){
-    MediatorInterface *mi = this->accessMediator();
-    mi->installEntityRepresentation(builder); 
-  }
-  
-
-  AbstractEntityName
-  ImmutableAbstractEntityImpl::m_getName()
-  {
-    
-    return AEN_IMMUTABLE; 
-  }
-
-  
-  ImmutableAbstractEntityImpl::ImmutableAbstractEntityImpl()
-  {
-    assignMediator(NULL); 
-  }
-  
-  OpRetVal
-  ImmutableAbstractEntityImpl::abstractOperation_Read(DssThreadId *id,
-							  PstOutContainerInterface**& pstout)
-  {
-   ProtocolProxy* pp = a_coordinationProxy->m_getProtocol();
-    GlobalThread *gid = static_cast<GlobalThread*>(id);
-    switch(pp->getProtocolName()){
-    case PN_SIMPLE_CHANNEL:  
-      return static_cast<ProtocolSimpleChannelProxy*>(pp)->protocol_Synch(gid,pstout,AO_STATE_READ);
-    case PN_IMMUTABLE_LAZY:
-      return static_cast<ProtocolImmutableLazyProxy*>(pp)->protocol_Access(gid);
-    case PN_IMMUTABLE_EAGER:
-      return static_cast<ProtocolImmutableEagerProxy*>(pp)->protocol_Access(gid);
-    case PN_IMMEDIATE:
-      return static_cast<ProtocolImmediateProxy*>(pp)->protocol_send(gid);
-    default: 
-      Assert(0); 
-    }
-    return DSS_INTERNAL_ERROR_SEVERE;
-
-    //  return (DSS_SUSPEND);
-  }
-  
-  OpRetVal
-  ImmutableAbstractEntityImpl::abstractOperation_Kill() {
-   ProtocolProxy* pp = a_coordinationProxy->m_getProtocol();
-    switch(pp->getProtocolName()){
-    case PN_SIMPLE_CHANNEL:  
-      return static_cast<ProtocolSimpleChannelProxy*>(pp)->protocol_Kill();
-    case PN_IMMUTABLE_LAZY:
-      return static_cast<ProtocolImmutableLazyProxy*>(pp)->protocol_Kill();
-    case PN_IMMUTABLE_EAGER:
-      return static_cast<ProtocolImmutableEagerProxy*>(pp)->protocol_Kill();
-    default: 
-      Assert(0); 
-    }
-    return DSS_INTERNAL_ERROR_SEVERE;
-  }
-
-  AOcallback
-  ImmutableAbstractEntityImpl::applyAbstractOperation(const AbsOp& aop,
-						      DssThreadId* thid,
-						      DssOperationId *opid,
-						      PstInContainerInterface* builder , 
-						      PstOutContainerInterface*& ans)
-  {
-    MediatorInterface *mi = this->accessMediator();
-    ImmutableMediatorInterface *mmi = static_cast<ImmutableMediatorInterface*>(mi);  
-    return mmi->callback_Read(thid,opid,builder,ans); 
-    
-    return AOCB_FINISH; 
-  }
-  
-  AbstractEntity *ImmutableAbstractEntityImpl::m_getAEreference(){
-    return this;
-  }
-
-  void 
-  ImmutableAbstractEntityImpl::reportFaultState(const FaultState& fs) {
-    if (a_mediator) a_mediator->reportFaultState(fs);
-  }
-  
-  CoordinatorAssistantInterface*
-  ImmutableAbstractEntityImpl::getCoordinatorAssistant() const 
-  {
-    return static_cast<CoordinatorAssistantInterface*>(a_coordinationProxy);
-  }
-  
-  // ********************************* RelaxedMutableAbstractEntityImpl **************************'
-
-  RelaxedMutableAbstractEntityImpl::RelaxedMutableAbstractEntityImpl()
-  {
-    assignMediator(NULL); 
-  }
-  
-  OpRetVal 
-  RelaxedMutableAbstractEntityImpl::abstractOperation_Read(DssThreadId *id,
-							   PstOutContainerInterface**& out)
-  {
-    ProtocolProxy* pp = a_coordinationProxy->m_getProtocol();
-    GlobalThread *gid = static_cast<GlobalThread*>(id); 
-    switch(pp->getProtocolName()) {
-    case PN_SIMPLE_CHANNEL:  return static_cast<ProtocolSimpleChannelProxy*>(pp)->protocol_Synch(gid,out,AO_STATE_READ);
-    default:
-      Assert(0); 
-    }
-    return DSS_INTERNAL_ERROR_SEVERE;
-  }
-
-  OpRetVal
-  RelaxedMutableAbstractEntityImpl::abstractOperation_Write(::PstOutContainerInterface**& out){
-    ProtocolProxy* pp = a_coordinationProxy->m_getProtocol();
-    switch(pp->getProtocolName()){
-    case PN_SIMPLE_CHANNEL:  return static_cast<ProtocolSimpleChannelProxy*>(pp)->protocol_Asynch(out,AO_STATE_WRITE);
-    default:
-      Assert(0); 
-    }
-    return DSS_INTERNAL_ERROR_SEVERE;
-  }
-  
-  OpRetVal 
-  RelaxedMutableAbstractEntityImpl::abstractOperation_Kill() {
-    ProtocolProxy* pp = a_coordinationProxy->m_getProtocol();
-    switch(pp->getProtocolName()) {
-    case PN_SIMPLE_CHANNEL:
-      return static_cast<ProtocolSimpleChannelProxy*>(pp)->protocol_Kill();
-    default:
-      Assert(0); 
-    }
-    return DSS_INTERNAL_ERROR_SEVERE;
-  }
-
-  void
-  RelaxedMutableAbstractEntityImpl::reportFaultState(const FaultState& fs){
-    if (a_mediator) a_mediator->reportFaultState(fs);
-  }
-  
-  PstOutContainerInterface* 
-  RelaxedMutableAbstractEntityImpl::retrieveEntityState(){
-    MediatorInterface *mi = this->accessMediator();
-    return mi->retrieveEntityRepresentation();
-  }
-  
-  PstOutContainerInterface* 
-  RelaxedMutableAbstractEntityImpl::deinstallEntityState(){
-    MediatorInterface *mi = this->accessMediator();
-    return mi->deinstallEntityRepresentation();
-  }
-
-  void 
-  RelaxedMutableAbstractEntityImpl::installEntityState(::PstInContainerInterface* builder){
-    MediatorInterface *mi = this->accessMediator();
-    mi->installEntityRepresentation(builder); 
-  }
-
-  CoordinatorAssistantInterface*
-  RelaxedMutableAbstractEntityImpl::getCoordinatorAssistant() const
-  {
-    return  static_cast<CoordinatorAssistantInterface*>(a_coordinationProxy); 
-  }
-  
-  AbstractEntityName 
-  RelaxedMutableAbstractEntityImpl::m_getName(){
-    return AEN_RELAXED_MUTABLE;
-  }
-  
-  AbstractEntity *
-  RelaxedMutableAbstractEntityImpl::m_getAEreference(){
-    return this;
-  }
-
-  AOcallback
-  RelaxedMutableAbstractEntityImpl::applyAbstractOperation(const AbsOp& aop,
-							   DssThreadId* thid,
-							   DssOperationId *opid,
-							   PstInContainerInterface* builder , 
-							   PstOutContainerInterface*& ans)
-  {
-    MediatorInterface *mi = this->accessMediator();
-    Assert(dynamic_cast<RelaxedMutableMediatorInterface*>(mi)); 
-    RelaxedMutableMediatorInterface *mmi = static_cast<RelaxedMutableMediatorInterface*>(mi);  
-    if (aop == AO_STATE_WRITE)
-      return mmi->callback_Write(thid,opid,builder); 
-    else
-      return mmi->callback_Read(thid,opid,builder,ans); 
-  }
-
-  void  ImmutableAbstractEntityImpl::remoteInitatedOperationCompleted(DssOperationId* opId,
-					PstOutContainerInterface* pstOut){
-    ProtocolProxy* pp = a_coordinationProxy->m_getProtocol();
-    pp->remoteInitatedOperationCompleted(opId, pstOut);
-  }
-
-  void MonotonicAbstractEntityImpl::remoteInitatedOperationCompleted(DssOperationId* opId,
-					PstOutContainerInterface* pstOut){
-    ProtocolProxy* pp = a_coordinationProxy->m_getProtocol();
-    pp->remoteInitatedOperationCompleted(opId, pstOut);
-  }
-
-  void  RelaxedMutableAbstractEntityImpl::remoteInitatedOperationCompleted(DssOperationId* opId,
-					PstOutContainerInterface* pstOut){
-    ProtocolProxy* pp = a_coordinationProxy->m_getProtocol();
-    pp->remoteInitatedOperationCompleted(opId, pstOut);
-  }
-
-  void  MutableAbstractEntityImpl::remoteInitatedOperationCompleted(DssOperationId* opId,
-					PstOutContainerInterface* pstOut){
-    ProtocolProxy* pp = a_coordinationProxy->m_getProtocol();
-    pp->remoteInitatedOperationCompleted(opId, pstOut);
-  }
-
-
-  void  MutableAbstractEntityImpl::localInitatedOperationCompleted()
-  {
-    ProtocolProxy* pp = a_coordinationProxy->m_getProtocol();
-    pp->localInitatedOperationCompleted();
-  }
-
-  
+  return DSS_INTERNAL_ERROR_SEVERE;
 }
 
 
 
+/******************** MutableAbstractEntity ********************/
+
+MutableAbstractEntity::MutableAbstractEntity() : AbstractEntity() {}
+
+OpRetVal 
+MutableAbstractEntity::abstractOperation_Read(DssThreadId *id,
+					      PstOutContainerInterface**& out)
+{
+  ProtocolProxy* pp = static_cast<Proxy*>(a_proxy)->m_getProtocol();
+  GlobalThread* gid = static_cast<GlobalThread*>(id);
+  switch (pp->getProtocolName()) {
+  case PN_SIMPLE_CHANNEL:
+    return static_cast<ProtocolSimpleChannelProxy*>(pp)->protocol_Synch(gid,out,AO_STATE_READ);
+  case PN_MIGRATORY_STATE:
+    return static_cast<ProtocolMigratoryProxy*>(pp)->protocol_Access(gid,out);
+  case PN_EAGER_INVALID:
+    return static_cast<ProtocolEagerInvalidProxy*>(pp)->protocol_Read(gid,out);
+  case PN_LAZY_INVALID:
+    return static_cast<ProtocolLazyInvalidProxy*>(pp)->protocol_Read(gid,out);
+  case PN_PILGRIM_STATE:
+    return static_cast<ProtocolPilgrimProxy*>(pp)->protocol_Access(gid,out);
+  default: 
+    Assert(0);
+  }
+  return DSS_INTERNAL_ERROR_SEVERE;
+}
+
+OpRetVal
+MutableAbstractEntity::abstractOperation_Write(DssThreadId *id,
+					       PstOutContainerInterface**& out)
+{
+  ProtocolProxy* pp = static_cast<Proxy*>(a_proxy)->m_getProtocol();
+  GlobalThread* gid = static_cast<GlobalThread*>(id);
+  switch (pp->getProtocolName()) {
+  case PN_SIMPLE_CHANNEL:
+    return static_cast<ProtocolSimpleChannelProxy*>(pp)->protocol_Synch(gid,out,AO_STATE_WRITE);
+  case PN_MIGRATORY_STATE:
+    return static_cast<ProtocolMigratoryProxy*>(pp)->protocol_Access(gid,out);
+  case PN_EAGER_INVALID:
+    return static_cast<ProtocolEagerInvalidProxy*>(pp)->protocol_Write(gid,out);
+  case PN_LAZY_INVALID:
+    return static_cast<ProtocolLazyInvalidProxy*>(pp)->protocol_Write(gid,out);
+  case PN_PILGRIM_STATE:
+    return static_cast<ProtocolPilgrimProxy*>(pp)->protocol_Access(gid,out);
+  default: 
+    Assert(0);
+  }
+  return DSS_INTERNAL_ERROR_SEVERE;
+}
 
 
 
+/******************** RelaxedMutableAbstractEntity ********************/
+
+RelaxedMutableAbstractEntity::RelaxedMutableAbstractEntity() :
+  AbstractEntity() {}
+
+OpRetVal 
+RelaxedMutableAbstractEntity::abstractOperation_Read(DssThreadId *id,
+						     PstOutContainerInterface**& out)
+{
+  ProtocolProxy* pp = static_cast<Proxy*>(a_proxy)->m_getProtocol();
+  GlobalThread* gid = static_cast<GlobalThread*>(id); 
+  switch (pp->getProtocolName()) {
+  case PN_SIMPLE_CHANNEL:
+    return static_cast<ProtocolSimpleChannelProxy*>(pp)->protocol_Synch(gid,out,AO_STATE_READ);
+  default:
+    Assert(0);
+  }
+  return DSS_INTERNAL_ERROR_SEVERE;
+}
+
+OpRetVal
+RelaxedMutableAbstractEntity::abstractOperation_Write(PstOutContainerInterface**& out){
+  ProtocolProxy* pp = static_cast<Proxy*>(a_proxy)->m_getProtocol();
+  switch (pp->getProtocolName()) {
+  case PN_SIMPLE_CHANNEL:
+    return static_cast<ProtocolSimpleChannelProxy*>(pp)->protocol_Asynch(out,AO_STATE_WRITE);
+  default:
+    Assert(0);
+  }
+  return DSS_INTERNAL_ERROR_SEVERE;
+}
+
+
+
+/******************** MonotonicAbstractEntity ********************/
+
+MonotonicAbstractEntity::MonotonicAbstractEntity() : AbstractEntity() {}
+
+OpRetVal
+MonotonicAbstractEntity::abstractOperation_Bind(DssThreadId *id,
+						PstOutContainerInterface**& out)
+{
+  ProtocolProxy* pp = static_cast<Proxy*>(a_proxy)->m_getProtocol();
+  GlobalThread* gid = static_cast<GlobalThread*>(id); 
+  switch (pp->getProtocolName()) {
+  case PN_TRANSIENT:
+    return static_cast<ProtocolOnceOnlyProxy*>(pp)->protocol_Terminate(gid,out,AO_OO_BIND);
+  case PN_TRANSIENT_REMOTE:
+    return static_cast<ProtocolTransientRemoteProxy*>(pp)->protocol_Terminate(gid,out,AO_OO_BIND);
+  default:
+    Assert(0);
+  }
+  return DSS_INTERNAL_ERROR_SEVERE;
+}
+  
+OpRetVal 
+MonotonicAbstractEntity::abstractOperation_Append(DssThreadId *id,
+						  PstOutContainerInterface**& out)
+{
+  ProtocolProxy* pp = static_cast<Proxy*>(a_proxy)->m_getProtocol();
+  GlobalThread* gid = static_cast<GlobalThread*>(id); 
+  switch (pp->getProtocolName()) {
+  case PN_TRANSIENT:
+    return static_cast<ProtocolOnceOnlyProxy*>(pp)->protocol_Update(gid,out,AO_OO_UPDATE);
+  case PN_TRANSIENT_REMOTE:
+    return static_cast<ProtocolTransientRemoteProxy*>(pp)->protocol_Update(gid,out,AO_OO_UPDATE);
+  case PN_DKSBROADCAST:
+    return static_cast<ProtocolDksBcProxy*>(pp)-> m_broadCast(out,AO_OO_UPDATE);
+  default:
+    Assert(0);
+  }
+  return DSS_INTERNAL_ERROR_SEVERE;
+}
+
+
+
+/******************** ImmutableAbstractEntity ********************/
+
+ImmutableAbstractEntity::ImmutableAbstractEntity() : AbstractEntity() {}
+  
+OpRetVal
+ImmutableAbstractEntity::abstractOperation_Read(DssThreadId *id,
+						PstOutContainerInterface**& out)
+{
+  ProtocolProxy* pp = static_cast<Proxy*>(a_proxy)->m_getProtocol();
+  GlobalThread* gid = static_cast<GlobalThread*>(id); 
+  switch (pp->getProtocolName()) {
+  case PN_SIMPLE_CHANNEL:
+    return static_cast<ProtocolSimpleChannelProxy*>(pp)->protocol_Synch(gid,out,AO_STATE_READ);
+  case PN_IMMUTABLE_LAZY:
+    return static_cast<ProtocolImmutableLazyProxy*>(pp)->protocol_Access(gid);
+  case PN_IMMUTABLE_EAGER:
+    return static_cast<ProtocolImmutableEagerProxy*>(pp)->protocol_Access(gid);
+  case PN_IMMEDIATE:
+    return static_cast<ProtocolImmediateProxy*>(pp)->protocol_send(gid);
+  default:
+    Assert(0);
+  }
+  return DSS_INTERNAL_ERROR_SEVERE;
+}
+
+
+
+namespace _dss_internal{ //Start namespace
+
+  /******************** applyAbstractOperation ********************/
+
+  AOcallback applyAbstractOperation(AbstractEntity* ae, const AbsOp& aop,
+				    DssThreadId* tid, DssOperationId* oid,
+				    PstInContainerInterface* pstin,
+				    PstOutContainerInterface*& pstout) {
+    pstout = NULL;
+    switch (ae->getAEName()) {
+    case AEN_MUTABLE: {
+      MutableAbstractEntity* mae = static_cast<MutableAbstractEntity*>(ae);
+      switch (aop) {
+      case AO_STATE_WRITE: return mae->callback_Write(tid, oid, pstin, pstout);
+      case AO_STATE_READ:  return mae->callback_Read(tid, oid, pstin, pstout);
+      default: Assert(0); return AOCB_FINISH;
+      }
+    }
+    case AEN_RELAXED_MUTABLE: {
+      RelaxedMutableAbstractEntity* rmae =
+	static_cast<RelaxedMutableAbstractEntity*>(ae);
+      switch (aop) {
+      case AO_STATE_WRITE: return rmae->callback_Write(tid, oid, pstin);
+      case AO_STATE_READ:  return rmae->callback_Read(tid, oid, pstin, pstout);
+      default: Assert(0); return AOCB_FINISH;
+      }
+    }
+    case AEN_TRANSIENT: {
+      MonotonicAbstractEntity* mae = static_cast<MonotonicAbstractEntity*>(ae);
+      switch (aop) {
+      case AO_OO_BIND:    return mae->callback_Bind(oid, pstin);
+      case AO_OO_UPDATE:  return mae->callback_Append(oid, pstin);
+      case AO_OO_CHANGES: return mae->callback_Changes(oid, pstout);
+      default: Assert(0); return AOCB_FINISH;
+      }
+    }
+    case AEN_IMMUTABLE:
+    case AEN_IMMUTABLE_UNNAMED: {
+      ImmutableAbstractEntity* iae = static_cast<ImmutableAbstractEntity*>(ae);
+      return iae->callback_Read(tid, oid, pstin, pstout);
+    }
+    default:
+      Assert(0); return AOCB_FINISH;
+    }
+  }
+
+}

@@ -3,7 +3,8 @@
  *    Erik Klintskog (erik@sics.se)
  * 
  *  Contributors:
- *    optional, Contributor's name (Contributor's email address)
+ *    Raphael Collet (raph@info.ucl.ac.be)
+ *    Boriss Mejias (bmc@info.ucl.ac.be)
  * 
  *  Copyright:
  *    Erik Klintskog, 2003
@@ -49,10 +50,8 @@ OZ_Return distPortSendImpl(OzPort *p, TaggedRef msg) {
   // suspend if fault state not ok
   if (me->getFaultState()) return me->suspendOnFault();
 
-  RelaxedMutableAbstractEntity *mae =
-    static_cast<RelaxedMutableAbstractEntity*>(me->getAbstractEntity());
   PstOutContainerInterface** pstout;
-  OpRetVal cont = mae->abstractOperation_Write(pstout);
+  OpRetVal cont = me->abstractOperation_Write(pstout);
   if (pstout != NULL) *(pstout) = new PstOutContainer(msg);
 
   switch(cont) {
@@ -87,11 +86,9 @@ OZ_Return distCellAccessImpl(OzCell *c, TaggedRef &ans) {
   // suspend if fault state not ok
   if (me->getFaultState()) return me->suspendOnFault();
 
-  MutableAbstractEntity *mae =
-    static_cast<MutableAbstractEntity*>(me->getAbstractEntity());
   DssThreadId *thrId = currentThreadId();
   PstOutContainerInterface** pstout;
-  OpRetVal cont = mae->abstractOperation_Read(thrId,pstout);
+  OpRetVal cont = me->abstractOperation_Read(thrId,pstout);
   if (pstout != NULL) *(pstout) = new PstOutContainer(oz_nil()); 
 
   switch(cont) {
@@ -127,11 +124,9 @@ OZ_Return distCellExchangeImpl(OzCell *c,
   // suspend if fault state not ok
   if (me->getFaultState()) return me->suspendOnFault();
 
-  MutableAbstractEntity *mae =
-    static_cast<MutableAbstractEntity*>(me->getAbstractEntity());
   DssThreadId *thrId = currentThreadId();
   PstOutContainerInterface** pstout;
-  OpRetVal cont = mae->abstractOperation_Write(thrId, pstout);
+  OpRetVal cont = me->abstractOperation_Write(thrId, pstout);
   if (pstout != NULL) *(pstout) = new PstOutContainer(newVal);
 
   switch(cont) {
@@ -168,11 +163,9 @@ OZ_Return distLockTakeImpl(OzLock* lock, TaggedRef thr) {
   // suspend if fault state not ok
   if (me->getFaultState()) return me->suspendOnFault();
 
-  MutableAbstractEntity *mae =
-    static_cast<MutableAbstractEntity*>(me->getAbstractEntity());
   DssThreadId *thrId = currentThreadId();
   PstOutContainerInterface** pstout;
-  OpRetVal cont = mae->abstractOperation_Write(thrId, pstout);
+  OpRetVal cont = me->abstractOperation_Write(thrId, pstout);
   if (pstout != NULL)
     *(pstout) = new PstOutContainer(oz_cons(oz_atom("take"), thr));
 
@@ -208,11 +201,9 @@ OZ_Return distLockReleaseImpl(OzLock* lock, TaggedRef thr) {
   // ignore if fault state is permFail
   if (me->getFaultState() == GLUE_FAULT_PERM) return PROCEED;
 
-  MutableAbstractEntity *mae =
-    static_cast<MutableAbstractEntity*>(me->getAbstractEntity());
   DssThreadId *thrId = currentThreadId();
   PstOutContainerInterface** pstout;
-  OpRetVal cont = mae->abstractOperation_Write(thrId, pstout);
+  OpRetVal cont = me->abstractOperation_Write(thrId, pstout);
   if (pstout != NULL)
     *(pstout) = new PstOutContainer(oz_cons(oz_atom("release"), thr));
 
@@ -266,11 +257,9 @@ OZ_Return distArrayGetImpl(OzArray *oza, TaggedRef indx, TaggedRef &ans) {
   if (!oza->checkIndex(tagged2SmallInt(indx)))
     return oz_raise(E_ERROR, E_KERNEL, "array", 2, makeTaggedConst(oza), indx);
 
-  MutableAbstractEntity *mae =
-    static_cast<MutableAbstractEntity*>(me->getAbstractEntity());
   DssThreadId *thrId = currentThreadId();
   PstOutContainerInterface** pstout;
-  OpRetVal cont = mae->abstractOperation_Read(thrId, pstout);
+  OpRetVal cont = me->abstractOperation_Read(thrId, pstout);
   if (pstout != NULL) *(pstout) = new PstOutContainer(indx);
 
   switch (cont) {
@@ -299,11 +288,9 @@ OZ_Return distArrayPutImpl(OzArray *oza, TaggedRef indx, TaggedRef val) {
   if (!oza->checkIndex(tagged2SmallInt(indx)))
     return oz_raise(E_ERROR, E_KERNEL, "array", 2, makeTaggedConst(oza), indx);
 
-  MutableAbstractEntity *mae =
-    static_cast<MutableAbstractEntity*>(me->getAbstractEntity());
   DssThreadId *thrId = currentThreadId();
   PstOutContainerInterface** pstout;
-  OpRetVal cont = mae->abstractOperation_Write(thrId,pstout);
+  OpRetVal cont = me->abstractOperation_Write(thrId,pstout);
   if (pstout != NULL) *(pstout) = new PstOutContainer(oz_cons(indx,val));
 
   switch (cont) {
@@ -332,11 +319,9 @@ distDictionaryGetImpl(OzDictionary *ozD, TaggedRef key, TaggedRef &ans) {
   // suspend if fault state not ok
   if (me->getFaultState()) return me->suspendOnFault();
 
-  MutableAbstractEntity *mae = 
-    static_cast<MutableAbstractEntity*>(me->getAbstractEntity());
   DssThreadId *thrId = currentThreadId();
   PstOutContainerInterface** pstout;
-  OpRetVal cont = mae->abstractOperation_Read(thrId, pstout);
+  OpRetVal cont = me->abstractOperation_Read(thrId, pstout);
   if (pstout != NULL) *(pstout) = new PstOutContainer(key);
 
   switch (cont) {
@@ -363,11 +348,9 @@ distDictionaryPutImpl(OzDictionary *ozD, TaggedRef key, TaggedRef val) {
   // suspend if fault state not ok
   if (me->getFaultState()) return me->suspendOnFault();
 
-  MutableAbstractEntity *mae =
-    static_cast<MutableAbstractEntity*>(me->getAbstractEntity());
   DssThreadId *thrId = currentThreadId();
   PstOutContainerInterface** pstout;
-  OpRetVal cont = mae->abstractOperation_Write(thrId, pstout);
+  OpRetVal cont = me->abstractOperation_Write(thrId, pstout);
   if (pstout != NULL) *(pstout) = new PstOutContainer(oz_cons(key, val));
 
   switch (cont) {
@@ -398,25 +381,22 @@ distDictionaryPutImpl(OzDictionary *ozD, TaggedRef key, TaggedRef val) {
 
 // bind a distributed variable
 OZ_Return distVarBindImpl(OzVariable *ov, TaggedRef *varPtr, TaggedRef val) {
-  //  printf("--- raph: bind distributed variable %x\n", makeTaggedRef(varPtr));
   Assert(ov == tagged2Var(*varPtr));
-  Mediator *med = static_cast<Mediator*>(ov->getMediator());
+  OzVariableMediator *med =
+    static_cast<OzVariableMediator*>(ov->getMediator());
 
   // suspend if fault state not ok
   if (med->getFaultState()) return med->suspendOnFault();
 
-  MonotonicAbstractEntity *ae =
-    static_cast<MonotonicAbstractEntity*>(med->getAbstractEntity());
-
   // if not distributed, simply bind locally
-  if (ae == NULL) {
+  if (!med->isDistributed()) {
     oz_bindLocalVar(ov, varPtr, val);
     return PROCEED;
   }
 
   // otherwise ask the abstract entity
   PstOutContainerInterface** pstout;
-  OpRetVal cont = ae->abstractOperation_Bind(NULL, pstout);
+  OpRetVal cont = med->abstractOperation_Bind(NULL, pstout);
 
   // allocate PstOutContainer if required
   if (pstout != NULL) *(pstout) = new PstOutContainer(val);
@@ -453,19 +433,14 @@ OZ_Return distVarBindImpl(OzVariable *ov, TaggedRef *varPtr, TaggedRef val) {
 // unify two distributed variables (left hand side must be free)
 OZ_Return distVarUnifyImpl(OzVariable *lvar, TaggedRef *lptr,
 			   OzVariable *rvar, TaggedRef *rptr) {
-  printf("--- raph: unify distributed variables %x and %x\n",
-	 makeTaggedRef(lptr), makeTaggedRef(rptr));
   Assert(lptr != rptr);
   Assert(lvar == tagged2Var(*lptr) && rvar == tagged2Var(*rptr));
   Assert(lvar->hasMediator() && rvar->hasMediator());
   Assert(oz_isFree(*lptr));
 
   OzVariableMediator *lmed, *rmed;
-  MonotonicAbstractEntity *lae, *rae;
   lmed = static_cast<OzVariableMediator*>(lvar->getMediator());
   rmed = static_cast<OzVariableMediator*>(rvar->getMediator());
-  lae = static_cast<MonotonicAbstractEntity*>(lmed->getAbstractEntity());
-  rae = static_cast<MonotonicAbstractEntity*>(rmed->getAbstractEntity());
 
   // first propagate need
   if (oz_isNeeded(*lptr)) oz_var_makeNeeded(rptr);
@@ -475,8 +450,8 @@ OZ_Return distVarUnifyImpl(OzVariable *lvar, TaggedRef *lptr,
   //  (1) bind free to read-only;
   //  (2) if both free, bind local to distributed;
   //  (3) if both free and distributed, use dss ordering.
-  if (!oz_isFree(*rptr) || (lae == NULL) ||
-      (rae && dss->m_orderEntities(lae, rae))) {
+  if (!oz_isFree(*rptr) || !lmed->isDistributed() ||
+      (rmed->isDistributed() && dss->m_orderEntities(lmed, rmed))) {
     return distVarBindImpl(lvar, lptr, rmed->getEntity()); // left-to-right
   } else {
     return distVarBindImpl(rvar, rptr, lmed->getEntity()); // right-to-left
@@ -486,21 +461,19 @@ OZ_Return distVarUnifyImpl(OzVariable *lvar, TaggedRef *lptr,
 
 // make a distributed variable needed
 OZ_Return distVarMakeNeededImpl(TaggedRef *varPtr) {
-  printf("--- raph: need distributed var %x\n", makeTaggedRef(varPtr));
   // anyway make it needed locally
   oz_var_makeNeededLocal(varPtr);
 
   OzVariable *ov = tagged2Var(*varPtr);
-  Mediator *med = static_cast<Mediator *> (ov->getMediator());
-  MonotonicAbstractEntity *ae =
-    static_cast<MonotonicAbstractEntity *> (med->getAbstractEntity());
+  OzVariableMediator *med =
+    static_cast<OzVariableMediator*>(ov->getMediator());
 
   // if not distributed, return
-  if (ae == NULL) return PROCEED;
+  if (!med->isDistributed()) return PROCEED;
 
   // otherwise ask the abstract entity
   PstOutContainerInterface** pstout;
-  OpRetVal cont = ae->abstractOperation_Append(NULL, pstout);
+  OpRetVal cont = med->abstractOperation_Append(NULL, pstout);
 
   // allocate PstOutContainer if required
   if (pstout != NULL) *(pstout) = new PstOutContainer(oz_atom("needed"));

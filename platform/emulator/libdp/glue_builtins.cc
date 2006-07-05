@@ -258,14 +258,14 @@ OZ_BI_define(BImigrateManager,1,0){
   // distributed and fetch the ProxyName
   ConstTermWithHome *ct = static_cast<ConstTermWithHome*>(tagged2Const(entity));
   if ((oz_isPort(entity) || oz_isCell(entity)) && ct->isDistributed()) {
-    CoordinatorAssistantInterface *pi = 
+    CoordinatorAssistant *pi = 
       static_cast<Mediator*>(ct->getMediator())->getCoordinatorAssistant();
     //ZACHARIAS: argument 2 is unecessary so pass any void*
     pi->manipulateCNET(NULL); 
   }
   if(oz_isArray(entity)) {
     if(ct->isDistributed()){
-      CoordinatorAssistantInterface *pi = 
+      CoordinatorAssistant *pi = 
         static_cast<Mediator*>(ct->getMediator())->getCoordinatorAssistant();
       pi->manipulateCNET(NULL); 
     }
@@ -337,7 +337,6 @@ OZ_BI_define(BIportToMS,1,1)
 
   // marshal the Dss abstract entity
   GlueWriteBuffer buf(portToTickBuf, PORT_TO_TICK_BUF_LEN);
-//  pm->marshal(&buf, PMF_FREE);
   med->getCoordinatorAssistant()->marshal(&buf, PMF_FREE);
 
   // turn it into a string
@@ -351,24 +350,22 @@ OZ_BI_define(BImsToPort,1,1)
 {
   oz_declareProperStringIN(0,str);
   int len = strlen(str); 
-  unsigned char* raw_buf = (unsigned char*)decodeB64((char*)str, len);
-  
-  AbstractEntity *ae; 
-  AbstractEntityName aen;
+  unsigned char* raw_buf = (unsigned char*) decodeB64((char*)str, len);
   
   GlueReadBuffer buf(raw_buf, len);
-  DSS_unmarshal_status status = dss->unmarshalProxy(ae,&buf, PUF_FREE,aen);
+  AbstractEntityName aen;
+  CoordinatorAssistant* proxy = dss->unmarshalProxy(&buf, PUF_FREE, aen);
   free(raw_buf);
-  
-  if(status.exist) {
-    PortMediator *med = static_cast<PortMediator*>(ae->accessMediator());
+
+  PortMediator* med = static_cast<PortMediator*>(proxy->getAbstractEntity());
+  if (med) {
     OZ_RETURN(med->getEntity());
 
   } else {
     // create a port whose stream is unused
-    OzPort* p = new OzPort(oz_currentBoard(), makeTaggedNULL());
-    TaggedRef t = makeTaggedConst(p);
-    p->setMediator(new PortMediator(t, ae));
+    OzPort* prt = new OzPort(oz_currentBoard(), makeTaggedNULL());
+    TaggedRef t = makeTaggedConst(prt);
+    prt->setMediator(new PortMediator(t, proxy));
     OZ_RETURN(t);
   }
 }OZ_BI_end

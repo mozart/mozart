@@ -563,8 +563,10 @@ namespace _dss_internal{ //Start namespace
   // ************* Communication ********************
   
   ProxyFwdChain::ProxyFwdChain(NetIdentity ni, ProtocolProxy* const p,
-				 AE_ProxyCallbackInterface *ae, DSS_Environment* const env):
-    Proxy(ni, AA_MIGRATORY_MANAGER,p,ae,env), a_coordSite(NULL), a_ref(NULL), a_epoch(0){
+			       DSS_Environment* const env):
+    Proxy(ni, AA_MIGRATORY_MANAGER, p, env),
+    a_coordSite(NULL), a_ref(NULL), a_epoch(0)
+  {
     p->a_proxy = this;
   }
 

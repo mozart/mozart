@@ -275,12 +275,9 @@ namespace _dss_internal{ //Start namespace
   // ******************** ProxyMobile Class ********************************
 
   ProxyMobile::ProxyMobile(NetIdentity ni, ProtocolProxy* const p,
-			   AE_ProxyCallbackInterface *ae, 
 			   DSS_Environment* const env):
-    Proxy(ni, AA_MOBILE_COORDINATOR,p,ae,env),
-    a_coordSite(NULL), 
-    a_fl_coordLost(false), 
-    a_epoch(-1)
+    Proxy(ni, AA_MOBILE_COORDINATOR, p, env),
+    a_coordSite(NULL), a_fl_coordLost(false), a_epoch(-1)
   {
     p->a_proxy = this;
   }

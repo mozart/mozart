@@ -2,8 +2,9 @@
  *  Authors:
  *    Zacharias El Banna, 2002 (zeb@sics.se)
  *    Erik Klintskog, 2003 (erik@sics.se)
+ * 
  *  Contributors:
- *    optional, Contributor's name (Contributor's email address)
+ *    Raphael Collet (raph@info.ucl.ac.be)
  * 
  *  Copyright:
  *    Zacharias El Banna, 2002
@@ -31,10 +32,8 @@
 
 #include "dssBase.hh"
 
+/*************** DSS_INTERFACE PART I: THE ENVIRONMENT ***************/
 
-// ********************* DSS_INTERFACE PART I: THE ENVIRONMENT *********************
-//
-//
 #include "msl_serialize.hh"
 #include "coordinator.hh"
 #include "dss_global_name.hh"
@@ -54,14 +53,12 @@
 //
 
 namespace _dss_internal{
-
-
-
   
-  // Note: On some compilers there may be a problem with initialization and "this"
+  // Note: On some compilers there may be a problem with
+  // initialization and "this".
   //
-  // We should be able to pass primes to the DSS_Environment to reuse identity...
-  // for now I don't see the need though
+  // We should be able to pass primes to the DSS_Environment to reuse
+  // identity...  for now I don't see the need though
   DSS_Environment::DSS_Environment(IoFactoryInterface * const io, 
 				   ComServiceInterface *  const sa, 
 				   Mediation_Object* const mo,
@@ -107,6 +104,7 @@ namespace _dss_internal{
     delete a_proxyTable;
     delete a_nameTable;
   }
+
   DSite*
   DSS_Environment::m_getDestDSite(){
     return a_msgnLayer->m_getDestDSite();
@@ -120,16 +118,14 @@ namespace _dss_internal{
   Proxy*
   DSS_Environment::m_initializeCoordination(const ProtocolName& prot,
 					    const AccessArchitecture& aa, 
-					    const RCalg& GC_annot,
-					    AE_ProxyCallbackInterface *ae){
-    
-    
+					    const RCalg& GC_annot)
+  {
     ProtocolManager *pman; 
     ProtocolProxy *pprox;
     gf_createProtocolProxyManager(prot, this, pman, pprox); 
   
     Coordinator *m = gf_createCoordinator(aa, pman, GC_annot, this); 
-    Proxy   *p = gf_createCoordinationProxy(aa, m->m_getNetId(), pprox, ae, this); 
+    Proxy *p = gf_createCoordinationProxy(aa, m->m_getNetId(), pprox, this); 
     p->m_initHomeProxy(m);
     return p;
   }
@@ -138,121 +134,66 @@ namespace _dss_internal{
   //
   //   Internal routin. Used by the unmarshaler to create its proxies. 
   //  
- 
-  
-  DSS_unmarshal_status
-  DSS_Environment::m_unmarshalProxy(AbstractEntity* &ae_instance, 
-				    DssReadBuffer* const buf,
+  // raph: This is a simplification of former method
+  // m_unmarshalProxy(), because abstract entities are no longer
+  // created by the DSS itself.
+  //
+  Proxy*
+  DSS_Environment::m_unmarshalProxy(DssReadBuffer* const buf,
 				    const ProxyUnmarshalFlag& flag, 
-				    AbstractEntityName& ae_name){
-    DSS_unmarshal_status ret;
-    bool skel;
-    if (flag == PUF_ORDINARY && m_getSrcDSite() == NULL){
+				    AbstractEntityName& ae_name)
+  {
+    if (flag == PUF_ORDINARY && m_getSrcDSite() == NULL) {
       a_map->GL_warning("Called unmarshalProxy without source");
-      ae_instance = NULL;
-      ret.exist = false;
-      return ret;
+      return NULL;
       // ERIK, exception!!
     }
-    // unmarshalInternal - check with marshal (Proxy) that the "protocol" is correct
-    bool exist;
-    unsigned int head = gf_UnmarshalNumber(buf);
-    
-    NetIdentity ni = gf_unmarshalNetIdentity(buf,this); 
-    
-    // Casting problems. AbstractEntity is the mother and the aepc is
-    // the father of an ae implementation... do you get it? The Proxy
-    // needs the aepc, so we have to fig it out when we initialize the
-    // implementations, since the inoprmation is lost in the
-    // abstraecEntity representation.
-    
-    AE_ProxyCallbackInterface *aepc_interface; 
-    
-    Proxy* pe = a_proxyTable->m_find(ni);
-    if(exist = (pe != NULL)) { // fixed so that exists actually is set right      
-      //Will return bool! if false: the whole structure is sent./P
-      pe->m_mergeReferenceInfo(buf);
-      skel = pe->m_getProtocol()->dispose_protocol_info(buf); 
-      AE_ProxyCallbackInterface* aePCI = pe->getAEpki();
-      ae_instance = aePCI->m_getAEreference();
-      ret.skel = skel;
-      ret.exist = true;
-      return ret;
+
+    // unmarshalInternal - check with marshal (Proxy) that the
+    // "protocol" is correct
+    unsigned int header = gf_UnmarshalNumber(buf);
+    NetIdentity ni = gf_unmarshalNetIdentity(buf,this);
+
+    // the proxy might exist already, look it up
+    Proxy* p = a_proxyTable->m_find(ni);
+
+    if (p != NULL) {
+      p->m_mergeReferenceInfo(buf);
+      (void) p->m_getProtocol()->dispose_protocol_info(buf); 
+      return p;
 
     } else {
+      // create a proxy
       AbstractEntityName aen =
-	static_cast<AbstractEntityName>((head >> PMF_NBITS) & AEN_MASK);
+	static_cast<AbstractEntityName>((header >> PMF_NBITS) & AEN_MASK);
       ProtocolName pn =
-	static_cast<ProtocolName>((head >> (PMF_NBITS+AEN_NBITS)) & PN_MASK);
+	static_cast<ProtocolName>((header >> (PMF_NBITS+AEN_NBITS)) & PN_MASK);
       AccessArchitecture aa =
-	static_cast<AccessArchitecture>((head >> (PMF_NBITS+AEN_NBITS+PN_NBITS)) & AA_MASK);
+	static_cast<AccessArchitecture>((header >> (PMF_NBITS+AEN_NBITS+PN_NBITS)) & AA_MASK);
 
-      switch (aen) {
-      case AEN_MUTABLE:      
-      {
-        MutableAbstractEntityImpl *MAE = new MutableAbstractEntityImpl();
-        aepc_interface = MAE; 
-        ae_instance = MAE; 
-        ae_name = AEN_MUTABLE; 
-        break; 
-      }
-      case AEN_RELAXED_MUTABLE: 
-	{
-	  RelaxedMutableAbstractEntityImpl *MAE = new RelaxedMutableAbstractEntityImpl();
-	  ae_instance =  MAE;
-	  aepc_interface = MAE; 
-	  ae_name = AEN_RELAXED_MUTABLE; 
-	  break; 
-	}
-      case AEN_TRANSIENT:      
-	{
-	  MonotonicAbstractEntityImpl *MAE = new MonotonicAbstractEntityImpl();
-	  ae_instance =  MAE;
-	  aepc_interface = MAE; 
-	  ae_name = AEN_TRANSIENT;  
-	  break; 
-	}
-      case AEN_IMMUTABLE:        
-	{
-	  ImmutableAbstractEntityImpl * MAE = new ImmutableAbstractEntityImpl();
-	  ae_instance =  MAE;
-	  aepc_interface = MAE; 
-	  ae_name = AEN_IMMUTABLE;  
-	  break; 
-	}
-       case AEN_IMMUTABLE_UNNAMED: 
- 	{
- 	  ImmutableAbstractEntityImpl *MAE = new ImmutableAbstractEntityImpl();
- 	  ae_instance =  MAE;
- 	  aepc_interface = MAE; 
- 	  ae_name = AEN_IMMUTABLE_UNNAMED;  
- 	  break; 
- 	}
+      switch (aen) { // simple check
+      case AEN_MUTABLE:
+      case AEN_RELAXED_MUTABLE:
+      case AEN_TRANSIENT:
+      case AEN_IMMUTABLE:
+      case AEN_IMMUTABLE_UNNAMED:
+	ae_name = aen;
+	break;
       default:
-	{
-	  aepc_interface = NULL;
-	  ae_instance = NULL;
-	  Assert(0);
-	  a_map->GL_error("Not a valid abstract entity type %x", aen);
-	}
+	Assert(0);
+	a_map->GL_error("Not a valid abstract entity type %x", aen);
+	return NULL;
       }
-      
+
       ProtocolProxy *prox = gf_createRemoteProxy(pn, a_myDSite);
-      
+
       // Create proxy, don't forget to init the protocol after creation
       // (perhaps one should "init" the proxy instead...
-      
-      pe = gf_createCoordinationProxy(aa, ni, prox, aepc_interface, this); 
-      
-      skel = pe->m_initRemoteProxy(buf);
-      aepc_interface->setCoordinationProxy(pe); 
+      p = gf_createCoordinationProxy(aa, ni, prox, this); 
+      (void) p->m_initRemoteProxy(buf);
+      return p;
     }
-    
-    
-    ret.exist = exist;
-    ret.skel = skel;
-    
-    return ret;
+    Assert(0);
   }
 
 
@@ -328,8 +269,7 @@ namespace _dss_internal{
 	//     ComObj::a_allocated,
 	//     TCPTransObj::a_allocated);
 	
-	printf("AEs:%d Prots:[M:%d | P:%d] Coord:[M:%d | P:%d]\n",
-	       AE_ProxyCallbackInterface::a_allocated,
+	printf("Prots:[M:%d | P:%d] Coord:[M:%d | P:%d]\n",
 	       ProtocolManager::a_allocated,
 	       ProtocolProxy::a_allocated,
 	       Coordinator::a_allocated,
@@ -371,54 +311,6 @@ namespace _dss_internal{
   }
 
 
-  MutableAbstractEntity*
-  DSS_Environment::m_createMutableAbstractEntity(const ProtocolName& prot,
-						 const AccessArchitecture& aa,
-						 const RCalg& GC_annot){
-    MutableAbstractEntityImpl *MAE;
-    MAE = new MutableAbstractEntityImpl();
-    Proxy *prx = m_initializeCoordination(prot,  aa,  GC_annot, MAE);
-    MAE->setCoordinationProxy(prx); 
-    return static_cast<MutableAbstractEntity*>(MAE);
-  }
-  
-  
-  RelaxedMutableAbstractEntity*
-  DSS_Environment::m_createRelaxedMutableAbstractEntity(const ProtocolName& prot,
-							const AccessArchitecture& aa,
-							const RCalg& GC_annot){
-    RelaxedMutableAbstractEntityImpl *MAE;
-    MAE = new RelaxedMutableAbstractEntityImpl();
-    Proxy *prx = m_initializeCoordination(prot,  aa,  GC_annot, MAE);
-    MAE->setCoordinationProxy(prx); 
-    return static_cast<RelaxedMutableAbstractEntity*>(MAE);
-  }
-  
-  
-  MonotonicAbstractEntity*
-  DSS_Environment::m_createMonotonicAbstractEntity(const ProtocolName& prot,
-						   const AccessArchitecture& aa,
-						   const RCalg& GC_annot){
-    MonotonicAbstractEntityImpl *MAE;
-    MAE = new MonotonicAbstractEntityImpl();
-    Proxy *prx = m_initializeCoordination(prot,  aa,  GC_annot, MAE);
-    MAE->setCoordinationProxy(prx); 
-    return static_cast<MonotonicAbstractEntity*>(MAE);
-  }
-
-  //  Added 03dec05 by Per Sahlin
-  ImmutableAbstractEntity*
-  DSS_Environment::m_createImmutableAbstractEntity(const ProtocolName& prot,
-						   const AccessArchitecture& aa,
-						   const RCalg& GC_annot){
-    ImmutableAbstractEntityImpl *MAE;
-    MAE = new ImmutableAbstractEntityImpl();
-    Proxy *prx = m_initializeCoordination(prot,  aa,  GC_annot, MAE);
-    MAE->setCoordinationProxy(prx); 
-    return static_cast<ImmutableAbstractEntity*>(MAE);
-  }
-
-
   DssThreadId*
   DSS_Environment::m_createDssThreadId(){
     return a_threadTable->createDistThread(); 
@@ -426,7 +318,8 @@ namespace _dss_internal{
 
 
   bool
-  DSS_Environment::m_orderEntities(AbstractEntity* const ae_first, AbstractEntity* const ae_second){
+  DSS_Environment::m_orderEntities(AbstractEntity* const ae_first,
+				   AbstractEntity* const ae_second){
   // *** Sort on dsite first and then number ***
 
   // Get the AS_Node through dynamic casting, this is necessary since
@@ -492,9 +385,7 @@ namespace _dss_internal{
 
 
 
-
-
-// ********************* DSS_INTERFACE PART II: THE INTERFACE *********************
+/*************** DSS_INTERFACE PART II: THE INTERFACE ***************/
 
 using namespace _dss_internal;
 
@@ -515,12 +406,22 @@ DSS_Object::~DSS_Object(){
 }
 
 
-DSS_unmarshal_status DSS_Object::unmarshalProxy(AbstractEntity* &proxy, 
-						DssReadBuffer* const buf, 
-						const ProxyUnmarshalFlag& flag,
-						AbstractEntityName& cm){
-  return _a_env->m_unmarshalProxy(proxy,buf,flag,cm); 
+CoordinatorAssistant*
+DSS_Object::createProxy(const ProtocolName& prot,
+			const AccessArchitecture& aa,
+			const RCalg& GC_annot)
+{
+  return _a_env->m_initializeCoordination(prot, aa, GC_annot);
 }
+
+CoordinatorAssistant*
+DSS_Object::unmarshalProxy(DssReadBuffer* const buf, 
+			   const ProxyUnmarshalFlag& flag,
+			   AbstractEntityName& cm)
+{
+  return _a_env->m_unmarshalProxy(buf,flag,cm); 
+}
+
 
 void DSS_Object::gcDssResources(){ _a_env->m_gcDssResources(); }
 
@@ -533,45 +434,14 @@ ParamRetVal DSS_Object::operateStrParam(const DSS_AREA& area, const DSS_AREA_ID&
   return _a_env->m_operateStrParam(area,id,param,str);
 }
 
-
-MutableAbstractEntity*
-DSS_Object::m_createMutableAbstractEntity(const ProtocolName& prot,
-					  const AccessArchitecture& aa,
-					  const RCalg& GC_annot){
-  return _a_env->m_createMutableAbstractEntity(prot, aa, GC_annot); 
-}
-
-
-RelaxedMutableAbstractEntity*
-DSS_Object::m_createRelaxedMutableAbstractEntity(const ProtocolName& prot,
-						 const AccessArchitecture& aa,
-						 const RCalg& GC_annot){
-  return _a_env->m_createRelaxedMutableAbstractEntity(prot, aa, GC_annot); 
-}
-
-
-MonotonicAbstractEntity*
-DSS_Object::m_createMonotonicAbstractEntity(const ProtocolName& prot, 
-					    const AccessArchitecture& aa, 
-					    const RCalg& GC_annot){
-  return _a_env->m_createMonotonicAbstractEntity(prot, aa, GC_annot);
-}
-
-ImmutableAbstractEntity*
-DSS_Object::m_createImmutableAbstractEntity(const ProtocolName& prot, 
-					    const AccessArchitecture& aa, 
-					    const RCalg& GC_annot){
   
-  return _a_env->m_createImmutableAbstractEntity(prot, aa, GC_annot); 
-}
-  
-DssThreadId*
-DSS_Object::m_createDssThreadId(){
+DssThreadId* DSS_Object::m_createDssThreadId() {
   return _a_env->m_createDssThreadId();
 }
 
-bool
-DSS_Object::m_orderEntities(AbstractEntity* const ae_first, AbstractEntity* const ae_second){
+bool DSS_Object::m_orderEntities(AbstractEntity* const ae_first,
+				 AbstractEntity* const ae_second)
+{
   return _a_env->m_orderEntities(ae_first,ae_second);
 }
 
@@ -621,5 +491,3 @@ void
 DSS_Object::m_joinBackbone(DssReadBuffer *buf){
   _a_env->m_joinBackbone(buf); 
 }
-
-
