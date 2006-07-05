@@ -93,7 +93,7 @@ namespace _dss_internal{ //Start namespace
   public:
     // ************** CONSTRUCTORS *******************
     ProxyMobile(NetIdentity ni, ProtocolProxy* const prot,
-		AE_ProxyCallbackInterface*,DSS_Environment* const env); 
+		DSS_Environment* const env); 
 		
     ~ProxyMobile();
     

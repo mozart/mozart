@@ -126,7 +126,7 @@ namespace _dss_internal{ //Start namespace
     
     // ************** CONSTRUCTORS ******************
     ProxyFwdChain(NetIdentity ni, ProtocolProxy* const prot,
-		   AE_ProxyCallbackInterface*, DSS_Environment* const env);
+		   DSS_Environment* const env);
     ~ProxyFwdChain();
     
     virtual void m_initHomeProxy(Coordinator *m);

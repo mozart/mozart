@@ -35,6 +35,7 @@
 #include "dss_enums.hh"
 #include "dss_classes.hh"
 #include "dss_comService.hh"
+
 // Make things visible outside the dll for windows
 // DSS_EXPORTING should be defined by DSS-dll compilation
 #ifndef WIN32
@@ -64,6 +65,9 @@
 // 
 //
 
+namespace _dss_internal{
+  class DSS_Environment;
+}
 
 class DSSDLLSPEC DSS_Object{
 private:
@@ -73,40 +77,22 @@ public:
   DSS_Object(IoFactoryInterface* const io, ComServiceInterface*  const sa, Mediation_Object* const mo, const bool& sec_channel = false);
   virtual ~DSS_Object();
 
-  DSS_unmarshal_status unmarshalProxy(AbstractEntity* &proxy,
-				      DssReadBuffer* const buf,
-				      const ProxyUnmarshalFlag& flag,
-				      AbstractEntityName& cm);
-  
-  
-  MutableAbstractEntity*
-  m_createMutableAbstractEntity(const ProtocolName& prot,
-				const AccessArchitecture& aa,
-				const RCalg& GC_annot);
+  // create/unmarshal a coordination proxy
+  CoordinatorAssistant* createProxy(const ProtocolName&,
+				    const AccessArchitecture&,
+				    const RCalg&);
 
-
-  RelaxedMutableAbstractEntity*
-  m_createRelaxedMutableAbstractEntity(const ProtocolName& prot,
-				       const AccessArchitecture& aa,
-				       const RCalg& GC_annot);
-
-
-  MonotonicAbstractEntity*
-  m_createMonotonicAbstractEntity(const ProtocolName& prot,
-				  const AccessArchitecture& aa,
-				  const RCalg& GC_annot);
-
-
-  ImmutableAbstractEntity*
-  m_createImmutableAbstractEntity(const ProtocolName& prot,
-				  const AccessArchitecture& aa,
-				  const RCalg& GC_annot);
+  CoordinatorAssistant* unmarshalProxy(DssReadBuffer* const,
+				       const ProxyUnmarshalFlag&,
+				       AbstractEntityName&);
 
   DssThreadId* m_createDssThreadId();
   
   
-  // retrurns true if first can be said to be (globally) logically ordered before second.
-  bool m_orderEntities(AbstractEntity* const ae_first, AbstractEntity* const ae_second);
+  // returns true if first can be said to be (globally) logically
+  // ordered before second.
+  bool m_orderEntities(AbstractEntity* const ae_first,
+		       AbstractEntity* const ae_second);
 
   // Periodically invoke to clean up internal DSS constructs
   void gcDssResources();

@@ -45,8 +45,6 @@
 // Check it out, Erik. 
 static int medIdCntr = 1; 
 
-void doPortSend(OzPort *port, TaggedRef val, Board * home);
-
 
 
 /************************* glue_getMediator *************************/
@@ -112,28 +110,13 @@ Mediator *glue_getMediator(TaggedRef entity) {
 
 
 
-/************************* common stuff *************************/
-
-char* ConstMediator::getPrintType(){ return "const";}
-char* LazyVarMediator::getPrintType(){ return "lazyVar";}
-char* PortMediator::getPrintType(){ return "port";}
-char* CellMediator::getPrintType(){ return "cell";}
-char* LockMediator::getPrintType(){ return "lock";}
-char* ArrayMediator::getPrintType(){ return "array";}
-char* DictionaryMediator::getPrintType(){ return "dictionary";}
-char* OzThreadMediator::getPrintType() {return "thread";}
-char* UnusableMediator::getPrintType(){return "Unusable!!!";}
-char* OzVariableMediator::getPrintType(){ return "var";}
-
-
-
 //************************** Mediator ***************************//
 
 Mediator::Mediator(TaggedRef ref, GlueTag etype, bool attach) :
   active(TRUE), attached(attach), collected(FALSE),
   dss_gc_status(DSS_GC_NONE), type(etype), faultState(GLUE_FAULT_NONE),
   annotation(emptyAnnotation),
-  entity(ref), absEntity(NULL), faultStream(0), faultCtlVar(0), next(NULL)
+  entity(ref), faultStream(0), faultCtlVar(0), next(NULL)
 {
   id = medIdCntr++; 
   mediatorTable->insert(this);
@@ -142,13 +125,9 @@ Mediator::Mediator(TaggedRef ref, GlueTag etype, bool attach) :
 
 Mediator::~Mediator(){
   printf("--- raph: remove mediator %p\n", this);
-  // ERIK, removed delete during reconstruction
-  // We keep the tight 1:1 mapping and remove the abstract entity
-  // along with the Mediator.
-  if (absEntity) delete absEntity;
+  // The coordination proxy is deleted by ~AbstractEntity().
 #ifdef INTERFACE
   // Nullify the pointers in debug mode
-  absEntity = NULL;
   next = NULL;
 #endif
 }
@@ -159,19 +138,14 @@ Mediator::makePassive() {
   active = FALSE;
 }
 
-// set both links between mediator and abstract entity
-void            
-Mediator::setAbstractEntity(AbstractEntity *ae) {
-  absEntity = ae;
-  if (ae) {
-    ae->assignMediator(dynamic_cast<MediatorInterface*>(this));
-    ae->getCoordinatorAssistant()->setRegisteredFS(FS_PROT_MASK);
-  }
+CoordinatorAssistant*
+Mediator::getCoordinatorAssistant() {
+  return dynamic_cast<AbstractEntity*>(this)->getCoordinatorAssistant();
 }
 
-CoordinatorAssistantInterface* 
-Mediator::getCoordinatorAssistant() {
-  return absEntity->getCoordinatorAssistant();
+void
+Mediator::setCoordinatorAssistant(CoordinatorAssistant* p) {
+  dynamic_cast<AbstractEntity*>(this)->setCoordinatorAssistant(p);
 }
 
 void
@@ -210,8 +184,8 @@ Mediator::resetGCStatus() {
 DSS_GC
 Mediator::getDssGCStatus() {
   Assert(dss_gc_status == DSS_GC_NONE);
-  if (absEntity)
-    dss_gc_status = absEntity->getCoordinatorAssistant()->getDssDGCStatus();
+  if (getCoordinatorAssistant())
+    dss_gc_status = getCoordinatorAssistant()->getDssDGCStatus();
   return dss_gc_status;
 }
 
@@ -222,7 +196,7 @@ Mediator::setFaultState(GlueFaultState fs) {
 
     if (fs == GLUE_FAULT_NONE && faultCtlVar) { // wakeup blocked threads
       ControlVarResume(faultCtlVar);
-      faultCtlVar = 0;
+      faultCtlVar = makeTaggedNULL();
     }
 
     if (faultStream) {   // extend fault stream if present
@@ -264,8 +238,8 @@ Mediator::reportFS(const FaultState& fs) {
 
 void
 Mediator::print(){
-  printf("%s mediator, id %d, ae %x, ref %x, gc(eng:%d dss:%d), con %d\n",
-	 getPrintType(), id, absEntity, entity,
+  printf("%s mediator, id %d, proxy %x, ref %x, gc(eng:%d dss:%d), con %d\n",
+	 getPrintType(), id, getCoordinatorAssistant(), entity,
 	 (int) collected, (int) dss_gc_status, (int) attached);
 }
 
@@ -273,38 +247,34 @@ Mediator::print(){
 
 /************************* ConstMediator *************************/
 
-ConstMediator::ConstMediator(TaggedRef t, GlueTag type, bool attach) :
-  Mediator(t, type, attach)
+ConstMediator::ConstMediator(TaggedRef t, GlueTag type, bool attached) :
+  Mediator(t, type, attached)
 {}
 
-ConstTerm* ConstMediator::getConst(){
-  return tagged2Const(getEntity()); 
+ConstTermWithHome* ConstMediator::getConst() const {
+  return static_cast<ConstTermWithHome*>(tagged2Const(getEntity()));
 }
 
 void ConstMediator::globalize() {
-  Assert(getAbstractEntity() == NULL);
-
+  Assert(getCoordinatorAssistant() == NULL);
+  // Determine the full annotation, create a coordination proxy with
+  // it, and attach the mediator.
   completeAnnotation();
-  setAbstractEntity(dss->m_createMutableAbstractEntity(annotation.pn,
-						       annotation.aa,
-						       annotation.rc));
-
-  static_cast<ConstTermWithHome*>(getConst())->setMediator((void *)this);
+  setCoordinatorAssistant(dss->createProxy(annotation.pn,
+					   annotation.aa,
+					   annotation.rc));
+  getConst()->setMediator(static_cast<Mediator*>(this));
   setAttached(ATTACHED);
 }
 
-void ConstMediator::localize(){
-  printf("--- raph: localize mediator %p\n", this);
-  // We always to keep the mediator, so we remove the abstract entity,
-  // detach the mediator, and reinsert the mediator in the table.
-  delete absEntity;
-  absEntity = NULL;
-
-  static_cast<ConstTermWithHome*>(getConst())->setBoard(oz_currentBoard());
+void ConstMediator::localize() {
+  // We keep the mediator, so we remove the coordination proxy, detach
+  // the mediator, and reinsert it in the mediator table.
+  setCoordinatorAssistant(NULL);
+  getConst()->setBoard(oz_currentBoard());
   setAttached(DETACHED);
-
-  mediatorTable->insert(this);
 }
+
 
 
 /************************* PortMediator *************************/
@@ -313,201 +283,85 @@ PortMediator::PortMediator(TaggedRef t) :
   ConstMediator(t, GLUE_PORT, DETACHED)
 {}
 
-PortMediator::PortMediator(TaggedRef t, AbstractEntity *ae) :
+PortMediator::PortMediator(TaggedRef t, CoordinatorAssistant* p) :
   ConstMediator(t, GLUE_PORT, ATTACHED)
 {
-  setAbstractEntity(ae);
-}
-
-AOcallback PortMediator::callback_Write(DssThreadId *id, 
-					DssOperationId* operation_id,
-					PstInContainerInterface* pstin)
-{
-  PstInContainer *pst = static_cast<PstInContainer*>(pstin); 
-  TaggedRef arg =  pst->a_term;
-  OzPort *p = tagged2Port(entity);
-  doPortSend(p, arg, NULL);
-  return AOCB_FINISH; 
+  AbstractEntity::setCoordinatorAssistant(p);
 }
 
 AOcallback
-PortMediator::callback_Read(DssThreadId *id,
-			    DssOperationId* operation_id,
-			    PstInContainerInterface* pstin,
-			    PstOutContainerInterface*& possible_answer)
+PortMediator::callback_Write(DssThreadId*, DssOperationId*,
+			     PstInContainerInterface* pstin)
 {
-  Assert(0); 
-  return AOCB_FINISH; 
-}
-
-// This is code for extracting and installing the state of a port...
-// 
-// We'll put a fresh variable in the stream. This stream is not to be 
-// used any more, its just a placeholder. 
-//{
-//  TaggedRef out = p->exchangeStream(oz_newFuture(oz_currentBoard()));
-//    PstOutContainer *c = new PstOutContainer(out);
-//    c->a_pushContents = TRUE;
-//    return c; 
-//  }
-//
-//{
-//    (void)  p->exchangeStream(arg); 
-// }
-
-void PortMediator::globalize() {
-  Assert(getAbstractEntity() == NULL);
-
-  completeAnnotation();
-  setAbstractEntity(dss->m_createRelaxedMutableAbstractEntity(annotation.pn,
-							      annotation.aa,
-							      annotation.rc));
-
-  tagged2Port(entity)->setMediator((void *)this);
-  setAttached(ATTACHED);
-}
-
-
-
-/************************* LazyVarMediator *************************/
-
-LazyVarMediator::LazyVarMediator(TaggedRef t, AbstractEntity *ae) :
-  Mediator(t, GLUE_LAZYCOPY, ATTACHED)
-{
-  setAbstractEntity(ae);
-}
-
-void LazyVarMediator::globalize() { Assert(0); }
-void LazyVarMediator::localize() { Assert(0); }
-
-/*
-PstOutContainerInterface* LazyVarMediator::DOE(const AbsOp& aop, DssThreadId * id, PstInContainerInterface* trav){ 
-  PstInContainer *pst = static_cast<PstInContainer*>(trav); 
-  TaggedRef arg =  pst->a_term;
-  switch (aop){ 
-  case AO_LZ_FETCH:
-    {
-      OZ_Term t = getEntity();
-      TaggedRef out; 
-      if(OZ_boolToC(arg))
-	out=OZ_pair2( oz_nil(),t);
-      else
-	{
-	  Object *o = (Object *) tagged2Const(t);
-	  out = OZ_pair2(o->getClassTerm(),t);
-	}
-      PstOutContainer *pst = new PstOutContainer(out);
-      pst->a_fullTopTerm = TRUE;
-      return pst; 
-    }
-  default:
-    {
-      OZ_error("Unknown AOP:%d for CM_LAZY_VAR",aop); 
-    }
-  }
-  return NULL; 
-}
-*/
-
-/*
-
-WakeRetVal LazyVarMediator::resumeFunctionalThread(DssThreadId * id, PstInContainerInterface* trav){ 
-  PstInContainer *tc = static_cast<PstInContainer*>(trav);
-  TaggedRef t = tc->a_term; 
-  Assert(oz_isTuple(t));
-  TaggedRef to = oz_deref(OZ_getArg(t,1));
-  Object *o = (Object *) tagged2Const(to);
-  
-  OZ_Term cl = oz_deref(getEntity());
-  ObjectVar *var = (ObjectVar *)tagged2Var(cl);
-  
-  // Second, fix the variable binding
-  var->transfer(to,  &cl);
-  // ERIK, I think we are lacking a bind here...
-  return WRV_OK;
-}
-
-*/
-
-
-
-/************************* UnusableMediator *************************/
-
-UnusableMediator::UnusableMediator(TaggedRef t) :
-  Mediator(t, GLUE_UNUSABLE, DETACHED)
-{}
-
-UnusableMediator::UnusableMediator(TaggedRef t, AbstractEntity *ae) :
-  Mediator(t, GLUE_UNUSABLE, DETACHED)
-{
-  setAbstractEntity(ae);
-}
-
-void UnusableMediator::globalize() {
-  Assert(getAbstractEntity() == NULL);
-
-  completeAnnotation();
-  setAbstractEntity(dss->m_createImmutableAbstractEntity(annotation.pn,
-							 annotation.aa,
-							 annotation.rc));
-}
-
-void UnusableMediator::localize() {
-  // We always to keep the mediator, so we remove the abstract entity,
-  // and reinsert the mediator in the table.
-  delete absEntity;
-  absEntity = NULL;
-  mediatorTable->insert(this);
-}
-
-AOcallback
-UnusableMediator::callback_Read(DssThreadId* id_of_calling_thread,
-				DssOperationId* operation_id,
-				PstInContainerInterface* operation,
-				PstOutContainerInterface*& possible_answer)
-{ return AOCB_FINISH;}
-
-
-
-/************************* OzThreadMediator *************************/
-
-OzThreadMediator::OzThreadMediator(TaggedRef t) :
-  ConstMediator(t, GLUE_THREAD, DETACHED)
-{}
-
-OzThreadMediator::OzThreadMediator(TaggedRef t, AbstractEntity *ae) :
-  ConstMediator(t, GLUE_THREAD, ATTACHED)
-{
-  setAbstractEntity(ae);
-}
-
-AOcallback
-OzThreadMediator::callback_Write(DssThreadId *id, 
-				 DssOperationId* operation_id,
-				 PstInContainerInterface* pstin,
-				 PstOutContainerInterface*& possible_answer)
-{
+  TaggedRef arg = static_cast<PstInContainer*>(pstin)->a_term;
+  doPortSend(static_cast<OzPort*>(getConst()), arg, NULL);
   return AOCB_FINISH;
 }
 
 AOcallback
-OzThreadMediator::callback_Read(DssThreadId *id,
-				DssOperationId* operation_id,
-				PstInContainerInterface* pstin,
-				PstOutContainerInterface*& possible_answer)
+PortMediator::callback_Read(DssThreadId*, DssOperationId*,
+			    PstInContainerInterface*,
+			    PstOutContainerInterface*&)
 {
+  Assert(0);
   return AOCB_FINISH;
+}
+
+
+ 
+/************************* CellMediator *************************/
+
+// use this constructor for annotations, etc.
+CellMediator::CellMediator(TaggedRef t) :
+  ConstMediator(t, GLUE_CELL, DETACHED)
+{}
+
+CellMediator::CellMediator(TaggedRef t, CoordinatorAssistant* p) :
+  ConstMediator(t, GLUE_CELL, ATTACHED)
+{
+  AbstractEntity::setCoordinatorAssistant(p);
 }
 
 PstOutContainerInterface *
-OzThreadMediator::retrieveEntityRepresentation(){
-  Assert(0); 
-  return NULL;
+CellMediator::retrieveEntityRepresentation() {
+  OzCell *cell = tagged2Cell(getEntity());
+  TaggedRef out = cell->getValue();
+  return new PstOutContainer(out);
+}
+
+PstOutContainerInterface *
+CellMediator::deinstallEntityRepresentation() {
+  OzCell *cell = tagged2Cell(getEntity());
+  TaggedRef out = cell->exchangeValue(makeTaggedNULL());
+  return new PstOutContainer(out);
 }
 
 void 
-OzThreadMediator::installEntityRepresentation(PstInContainerInterface*){
-  Assert(0); 
+CellMediator::installEntityRepresentation(PstInContainerInterface* pstIn){
+  PstInContainer *pst = static_cast<PstInContainer*>(pstIn);
+  OzCell *cell = tagged2Cell(getEntity());
+  cell->setValue(pst->a_term);
+}
+
+AOcallback
+CellMediator::callback_Write(DssThreadId*, DssOperationId*,
+			     PstInContainerInterface* pstin,
+			     PstOutContainerInterface*& answer){
+  OzCell *cell = tagged2Cell(getEntity());
+  TaggedRef arg = static_cast<PstInContainer*>(pstin)->a_term;
+  TaggedRef out = cell->exchangeValue(arg);
+  answer = new PstOutContainer(out);
+  return AOCB_FINISH;
+}
+
+AOcallback
+CellMediator::callback_Read(DssThreadId*, DssOperationId*,
+			    PstInContainerInterface* pstin,
+			    PstOutContainerInterface*& answer){
+  OzCell *cell = tagged2Cell(entity);
+  TaggedRef out =cell->getValue();
+  answer = new PstOutContainer(out);
+  return AOCB_FINISH;
 }
 
 
@@ -518,49 +372,48 @@ LockMediator::LockMediator(TaggedRef t) :
   ConstMediator(t, GLUE_LOCK, DETACHED)
 {}
 
-LockMediator::LockMediator(TaggedRef t, AbstractEntity *ae) :
+LockMediator::LockMediator(TaggedRef t, CoordinatorAssistant* p) :
   ConstMediator(t, GLUE_LOCK, ATTACHED)
 {
-  setAbstractEntity(ae);
+  AbstractEntity::setCoordinatorAssistant(p);
 }
 
 AOcallback 
-LockMediator::callback_Write(DssThreadId* id_of_calling_thread,
-			     DssOperationId* operation_id,
+LockMediator::callback_Write(DssThreadId*, DssOperationId*,
 			     PstInContainerInterface* operation,
-			     PstOutContainerInterface*& possible_answer)
+			     PstOutContainerInterface*& answer)
 {
   // Locks provide two operations.  The argument 'operation' has the
   // form Op|ThreadId, where Op is either 'take', or 'release'.
   OzLock* lock = static_cast<OzLock*>(getConst());
-  PstInContainer* pst = static_cast<PstInContainer*>(operation);
-  if (oz_isCons(pst->a_term)) {
-    TaggedRef op = oz_head(pst->a_term);
-    TaggedRef thr = oz_tail(pst->a_term);
+  TaggedRef arg = static_cast<PstInContainer*>(operation)->a_term;
+  if (oz_isCons(arg)) {
+    TaggedRef op = oz_head(arg);
+    TaggedRef thr = oz_tail(arg);
 
     if (oz_eq(op, oz_atom("take"))) {
       if (lock->take(thr)) { // granted, return unit
-	possible_answer = new PstOutContainer(oz_unit());
+	answer = new PstOutContainer(oz_unit());
       } else { // subscribe, and return control variable
 	TaggedRef controlvar = oz_newVariable(oz_rootBoard());
 	lock->subscribe(thr, controlvar);
-	possible_answer = new PstOutContainer(controlvar);
+	answer = new PstOutContainer(controlvar);
       }
     } else {
       Assert(oz_eq(op, oz_atom("release")));
       lock->release(thr);
-      possible_answer = NULL;
+      answer = NULL;
     }
   }
   return AOCB_FINISH;
 }
 
 AOcallback 
-LockMediator::callback_Read(DssThreadId* id_of_calling_thread,
-			    DssOperationId* operation_id,
-			    PstInContainerInterface* operation,
-			    PstOutContainerInterface*& possible_answer){
-  Assert(0); 
+LockMediator::callback_Read(DssThreadId*, DssOperationId*,
+			    PstInContainerInterface*,
+			    PstOutContainerInterface*&)
+{
+  Assert(0);
   return AOCB_FINISH;
 }
 
@@ -580,8 +433,8 @@ LockMediator::retrieveEntityRepresentation() {
 
 PstOutContainerInterface *
 LockMediator::deinstallEntityRepresentation() {
-  OzLock* lock = static_cast<OzLock*>(getConst());
   PstOutContainerInterface* tmp = retrieveEntityRepresentation();
+  OzLock* lock = static_cast<OzLock*>(getConst());
   lock->setLocker(0);
   lock->setLockingDepth(0);
   lock->setPending(NULL);
@@ -596,143 +449,12 @@ LockMediator::installEntityRepresentation(PstInContainerInterface* pstIn){
     lock->setLockingDepth(0);
     lock->setPending(NULL);
   } else {
-    PstInContainer* pst = static_cast<PstInContainer*>(pstIn);
-    lock->setLocker(oz_left(oz_head(pst->a_term)));
-    lock->setLockingDepth(OZ_intToC(oz_right(oz_head(pst->a_term))));
-    lock->setPending(list2PendingThreadList(oz_tail(pst->a_term)));
+    TaggedRef arg = static_cast<PstInContainer*>(pstIn)->a_term;
+    lock->setLocker(oz_left(oz_head(arg)));
+    lock->setLockingDepth(OZ_intToC(oz_right(oz_head(arg))));
+    lock->setPending(list2PendingThreadList(oz_tail(arg)));
   }
 }
-
-
- 
-/************************* CellMediator *************************/
-
-extern TaggedRef BI_remoteExecDone; 
-
-// use this constructor for annotations, etc.
-CellMediator::CellMediator(TaggedRef t) :
-  ConstMediator(t, GLUE_CELL, DETACHED)
-{}
-
-CellMediator::CellMediator(TaggedRef t, AbstractEntity *ae) :
-  ConstMediator(t, GLUE_CELL, ATTACHED)
-{
-  setAbstractEntity(ae);
-}
-
-PstOutContainerInterface *
-CellMediator::retrieveEntityRepresentation() {
-  OzCell *cell = tagged2Cell(entity);
-  TaggedRef out =cell->getValue();
-  return new PstOutContainer(out);
-}
-
-PstOutContainerInterface *
-CellMediator::deinstallEntityRepresentation() {
-  OzCell *cell = tagged2Cell(entity);
-  TaggedRef out = cell->exchangeValue(makeTaggedNULL());
-  return new PstOutContainer(out);
-}
-
-void 
-CellMediator::installEntityRepresentation(PstInContainerInterface* pstIn){
-  PstInContainer *pst = static_cast<PstInContainer*>(pstIn); 
-  TaggedRef state =  pst->a_term;
-  OzCell *cell = tagged2Cell(entity);
-  cell->setValue(state); 
-}
-
-AOcallback
-CellMediator::callback_Write(DssThreadId *id,
-			     DssOperationId* operation_id,
-			     PstInContainerInterface* pstin,
-			     PstOutContainerInterface*& possible_answer){
-  TaggedRef arg;
-  if(pstin !=  NULL) {
-    PstInContainer *pst = static_cast<PstInContainer*>(pstin); 
-    arg =  pst->a_term;
-  }
-  OzCell *cell = tagged2Cell(entity);
-  TaggedRef out = cell->exchangeValue(arg);
-  possible_answer =  new PstOutContainer(out);
-  return AOCB_FINISH;
-}
-
-AOcallback
-CellMediator::callback_Read(DssThreadId *id,
-			    DssOperationId* operation_id,
-			    PstInContainerInterface* pstin,
-			    PstOutContainerInterface*& possible_answer){
-  OzCell *cell = tagged2Cell(entity);
-  TaggedRef out =cell->getValue();
-  possible_answer =  new PstOutContainer(out);
-  return AOCB_FINISH;
-}
-
-
-
-/************************* ObjectMediator *************************/
-
-ObjectMediator::ObjectMediator(TaggedRef t) :
-  ConstMediator(t, GLUE_OBJECT, DETACHED)
-{}
-
-ObjectMediator::ObjectMediator(TaggedRef t, AbstractEntity *ae) :
-  ConstMediator(t, GLUE_OBJECT, ATTACHED)
-{
-  setAbstractEntity(ae);
-}
-
-AOcallback
-ObjectMediator::callback_Write(DssThreadId* id_of_calling_thread,
-			       DssOperationId* operation_id,
-			       PstInContainerInterface* operation,
-			       PstOutContainerInterface*& possible_answer){
-  return AOCB_FINISH;
-}
-
-AOcallback
-ObjectMediator::callback_Read(DssThreadId* id_of_calling_thread,
-       DssOperationId* operation_id,
-       PstInContainerInterface* operation,
-       PstOutContainerInterface*& possible_answer){
-  return AOCB_FINISH;
-}
-
-void ObjectMediator::globalize() {
-  Assert(getAbstractEntity() == NULL);
-
-  completeAnnotation();
-  setAbstractEntity(dss->m_createMutableAbstractEntity(annotation.pn,
-						       annotation.aa,
-						       annotation.rc));
-  //bmc: Maybe two possibilities here. Create a LazyVarMediator first
-  //continuing with the approach of marshaling only the stub in the 
-  //beginning, or just go eagerly for the object. We are going to try
-  //the eager approach first, and then the optimization.
-  
-  //bmc: Cellify state
-  OzObject *o = tagged2Object(entity);
-  RecOrCell state = o->getState();
-  if (!stateIsCell(state)) {
-    SRecord *r = getRecord(state);
-    Assert(r != NULL);
-    OzCell *cell = tagged2Cell(OZ_newCell(makeTaggedSRecord(r)));
-    o->setState(cell);
-  }
-  
-  o->setMediator((void *)this);
-  setAttached(ATTACHED);
-}
-
-char*
-ObjectMediator::getPrintType(){ return NULL; }
-
-PstOutContainerInterface*
-ObjectMediator::retrieveEntityRepresentation(){ return NULL; }
-
-void
-ObjectMediator::installEntityRepresentation(PstInContainerInterface*){;}
 
 
 
@@ -742,49 +464,44 @@ ArrayMediator::ArrayMediator(TaggedRef t) :
   ConstMediator(t, GLUE_ARRAY, DETACHED)
 {}
 
-ArrayMediator::ArrayMediator(TaggedRef t, AbstractEntity *ae) :
+ArrayMediator::ArrayMediator(TaggedRef t, CoordinatorAssistant* p) :
   ConstMediator(t, GLUE_ARRAY, ATTACHED)
 {
-  setAbstractEntity(ae);
+  AbstractEntity::setCoordinatorAssistant(p);
 }
 
 AOcallback 
-ArrayMediator::callback_Write(DssThreadId *id,
-			      DssOperationId* operation_id,
+ArrayMediator::callback_Write(DssThreadId*, DssOperationId*,
 			      PstInContainerInterface* pstin,
-			      PstOutContainerInterface*& possible_answer)
+			      PstOutContainerInterface*& answer)
 {
   OzArray *oza = static_cast<OzArray*>(getConst());
   TaggedRef arg = static_cast<PstInContainer*>(pstin)->a_term;
-  int index = tagged2SmallInt(OZ_head(arg));
-  TaggedRef val = OZ_tail(arg);
+  int index = tagged2SmallInt(oz_head(arg));
+  TaggedRef val = oz_tail(arg);
   if (oza->setArg(index,val))
-    possible_answer = NULL;
+    answer = NULL;
   else
-    possible_answer = new PstOutContainer(
-          OZ_makeException(E_ERROR, E_KERNEL, "array", 
-                           2, makeTaggedConst(oza), index));
+    answer = new PstOutContainer(OZ_makeException(E_ERROR, E_KERNEL, "array",
+						  2, getEntity(), index));
   return AOCB_FINISH;
 }
 
 AOcallback
-ArrayMediator::callback_Read(DssThreadId *id,
-			     DssOperationId* operation_id,
+ArrayMediator::callback_Read(DssThreadId*, DssOperationId*,
 			     PstInContainerInterface* pstin,
-			     PstOutContainerInterface*& possible_answer)
+			     PstOutContainerInterface*& answer)
 {
-  OzArray *oza = static_cast<OzArray*>(getConst()); 
+  OzArray *oza = static_cast<OzArray*>(getConst());
   TaggedRef arg = static_cast<PstInContainer*>(pstin)->a_term;
   int index = tagged2SmallInt(arg);
   TaggedRef out = oza->getArg(index);
-  if (out) 
-    possible_answer = new PstOutContainer(out);
+  if (out)
+    answer = new PstOutContainer(out);
   else 
-    possible_answer = new PstOutContainer(
-          OZ_makeException(E_ERROR, E_KERNEL, "array", 
-                           2, makeTaggedConst(oza), index));
+    answer = new PstOutContainer(OZ_makeException(E_ERROR, E_KERNEL, "array", 
+						  2, getEntity(), index));
   return AOCB_FINISH;
-
 }
 
 PstOutContainerInterface*
@@ -826,66 +543,61 @@ ArrayMediator::installEntityRepresentation(PstInContainerInterface* pstin){
 }
 
 
+
 /************************* DictionaryMediator *************************/
 
 DictionaryMediator::DictionaryMediator(TaggedRef t) :
   ConstMediator(t, GLUE_DICTIONARY, DETACHED)
 {}
 
-DictionaryMediator::DictionaryMediator(TaggedRef t, AbstractEntity *ae) :
+DictionaryMediator::DictionaryMediator(TaggedRef t, CoordinatorAssistant* p) :
   ConstMediator(t, GLUE_DICTIONARY, ATTACHED)
 {
-  setAbstractEntity(ae);
+  AbstractEntity::setCoordinatorAssistant(p);
 }
 
 AOcallback 
-DictionaryMediator::callback_Write(DssThreadId *id,
-			      DssOperationId* operation_id,
-			      PstInContainerInterface* pstin,
-			      PstOutContainerInterface*& possible_answer)
+DictionaryMediator::callback_Write(DssThreadId*, DssOperationId*,
+				   PstInContainerInterface* pstin,
+				   PstOutContainerInterface*& answer)
 {
-  OzDictionary *ozd = tagged2Dictionary(entity);
+  OzDictionary *ozd = tagged2Dictionary(getEntity());
   TaggedRef arg = static_cast<PstInContainer*>(pstin)->a_term;
-  TaggedRef key = OZ_head(arg);
-  TaggedRef val = OZ_tail(arg);
+  TaggedRef key = oz_head(arg);
+  TaggedRef val = oz_tail(arg);
   ozd->setArg(key,val);
-  possible_answer = NULL;
+  answer = NULL;
   return AOCB_FINISH;
 }
 
 AOcallback
-DictionaryMediator::callback_Read(DssThreadId *id,
-			     DssOperationId* operation_id,
-			     PstInContainerInterface* pstin,
-			     PstOutContainerInterface*& possible_answer)
+DictionaryMediator::callback_Read(DssThreadId*, DssOperationId*,
+				  PstInContainerInterface* pstin,
+				  PstOutContainerInterface*& answer)
 {
-  OzDictionary *ozd = tagged2Dictionary(entity); 
+  OzDictionary *ozd = tagged2Dictionary(getEntity()); 
   TaggedRef key = static_cast<PstInContainer*>(pstin)->a_term;
   TaggedRef out = ozd->getArg(key);
-  TaggedRef recOut;
   if (out) {
-    recOut = OZ_record(OZ_atom("ok"), oz_mklist(makeTaggedSmallInt(1)));
-    OZ_putSubtree(recOut, makeTaggedSmallInt(1), out);
+    answer = new PstOutContainer(OZ_mkTupleC("ok", 1, out));
   } else {
-    recOut = OZ_makeException(E_ERROR, E_KERNEL, "dict",
-                              2, makeTaggedConst(ozd), key);
+    answer = new PstOutContainer(OZ_makeException(E_ERROR, E_KERNEL, "dict",
+						  2, getEntity(), key));
   }
-  Assert(oz_isSRecord(recOut));
-  possible_answer = new PstOutContainer(recOut);
   return AOCB_FINISH;
 }
 
 PstOutContainerInterface*
 DictionaryMediator::retrieveEntityRepresentation(){
   // sent the list of entries
-  OzDictionary *ozd = tagged2Dictionary(entity);
+  OzDictionary *ozd = tagged2Dictionary(getEntity());
   return new PstOutContainer(ozd->pairs());
 }
 
 PstOutContainerInterface*
 DictionaryMediator::deinstallEntityRepresentation(){
   // sent the list of entries, and clean up the dictionary
-  OzDictionary *ozd = tagged2Dictionary(entity);
+  OzDictionary *ozd = tagged2Dictionary(getEntity());
   TaggedRef entries = ozd->pairs();
   ozd->removeAll();
   return new PstOutContainer(entries);
@@ -894,7 +606,7 @@ DictionaryMediator::deinstallEntityRepresentation(){
 void
 DictionaryMediator::installEntityRepresentation(PstInContainerInterface* pstin){
   // make sure the dictionary is empty
-  OzDictionary *ozd = tagged2Dictionary(entity); 
+  OzDictionary *ozd = tagged2Dictionary(getEntity()); 
   ozd->removeAll();
   // insert all entries (not pretty efficient)
   TaggedRef entries = static_cast<PstInContainer*>(pstin)->a_term;
@@ -906,6 +618,150 @@ DictionaryMediator::installEntityRepresentation(PstInContainerInterface* pstin){
 }
 
 
+
+/************************* ObjectMediator *************************/
+
+ObjectMediator::ObjectMediator(TaggedRef t) :
+  ConstMediator(t, GLUE_OBJECT, DETACHED)
+{}
+
+ObjectMediator::ObjectMediator(TaggedRef t, CoordinatorAssistant* p) :
+  ConstMediator(t, GLUE_OBJECT, ATTACHED)
+{
+  AbstractEntity::setCoordinatorAssistant(p);
+}
+
+AOcallback
+ObjectMediator::callback_Write(DssThreadId*, DssOperationId*,
+			       PstInContainerInterface* operation,
+			       PstOutContainerInterface*& answer) {
+  return AOCB_FINISH;
+}
+
+AOcallback
+ObjectMediator::callback_Read(DssThreadId*, DssOperationId*,
+			      PstInContainerInterface* operation,
+			      PstOutContainerInterface*& answer) {
+  return AOCB_FINISH;
+}
+
+PstOutContainerInterface*
+ObjectMediator::retrieveEntityRepresentation(){ return NULL; }
+
+PstOutContainerInterface*
+ObjectMediator::deinstallEntityRepresentation(){ return NULL; }
+
+void
+ObjectMediator::installEntityRepresentation(PstInContainerInterface*){;}
+
+void ObjectMediator::globalize() {
+  // We still have to figure out for this one.  See the old crap below.
+
+  /*
+  Assert(getAbstractEntity() == NULL);
+
+  completeAnnotation();
+  setAbstractEntity(dss->m_createMutableAbstractEntity(annotation.pn,
+						       annotation.aa,
+						       annotation.rc));
+  //bmc: Maybe two possibilities here. Create a LazyVarMediator first
+  //continuing with the approach of marshaling only the stub in the 
+  //beginning, or just go eagerly for the object. We are going to try
+  //the eager approach first, and then the optimization.
+  
+  //bmc: Cellify state
+  OzObject *o = tagged2Object(entity);
+  RecOrCell state = o->getState();
+  if (!stateIsCell(state)) {
+    SRecord *r = getRecord(state);
+    Assert(r != NULL);
+    OzCell *cell = tagged2Cell(OZ_newCell(makeTaggedSRecord(r)));
+    o->setState(cell);
+  }
+  
+  o->setMediator((void *)this);
+  setAttached(ATTACHED);
+  */
+}
+
+
+
+/************************* OzThreadMediator *************************/
+
+OzThreadMediator::OzThreadMediator(TaggedRef t) :
+  ConstMediator(t, GLUE_THREAD, DETACHED)
+{}
+
+OzThreadMediator::OzThreadMediator(TaggedRef t, CoordinatorAssistant* p) :
+  ConstMediator(t, GLUE_THREAD, ATTACHED)
+{
+  AbstractEntity::setCoordinatorAssistant(p);
+}
+
+AOcallback
+OzThreadMediator::callback_Write(DssThreadId*, DssOperationId*,
+				 PstInContainerInterface*,
+				 PstOutContainerInterface*&)
+{
+  return AOCB_FINISH;
+}
+
+AOcallback
+OzThreadMediator::callback_Read(DssThreadId*, DssOperationId*,
+				PstInContainerInterface*,
+				PstOutContainerInterface*&)
+{
+  return AOCB_FINISH;
+}
+
+PstOutContainerInterface*
+OzThreadMediator::retrieveEntityRepresentation(){
+  Assert(0); return NULL;
+}
+
+void 
+OzThreadMediator::installEntityRepresentation(PstInContainerInterface*){
+  Assert(0); 
+}
+
+
+
+/************************* UnusableMediator *************************/
+
+UnusableMediator::UnusableMediator(TaggedRef t) :
+  Mediator(t, GLUE_UNUSABLE, DETACHED)
+{}
+
+UnusableMediator::UnusableMediator(TaggedRef t, CoordinatorAssistant* p) :
+  Mediator(t, GLUE_UNUSABLE, DETACHED)
+{
+  AbstractEntity::setCoordinatorAssistant(p);
+}
+
+void UnusableMediator::globalize() {
+  Assert(AbstractEntity::getCoordinatorAssistant() == NULL);
+  completeAnnotation();
+  AbstractEntity::setCoordinatorAssistant(dss->createProxy(annotation.pn,
+							   annotation.aa,
+							   annotation.rc));
+}
+
+void UnusableMediator::localize() {
+  // We keep the mediator, so we remove the coordination proxy, and
+  // reinsert it in the mediator table.
+  AbstractEntity::setCoordinatorAssistant(NULL);
+}
+
+AOcallback
+UnusableMediator::callback_Read(DssThreadId*, DssOperationId*,
+				PstInContainerInterface*,
+				PstOutContainerInterface*&)
+{
+  return AOCB_FINISH;
+}
+
+
+
 /************************* OzVariableMediator *************************/
 
 // assumption: t is a tagged REF to a tagged VAR.
@@ -915,30 +771,30 @@ OzVariableMediator::OzVariableMediator(TaggedRef t) :
 {}
 
 // assumption: t is a tagged REF to a tagged VAR.
-OzVariableMediator::OzVariableMediator(TaggedRef t, AbstractEntity *ae) :
+OzVariableMediator::OzVariableMediator(TaggedRef t, CoordinatorAssistant* p) :
   Mediator(t, oz_isFree(*tagged2Ref(t)) ? GLUE_VARIABLE : GLUE_READONLY,
 	   ATTACHED)
 {
-  setAbstractEntity(ae);
+  AbstractEntity::setCoordinatorAssistant(p);
+}
+
+bool OzVariableMediator::isDistributed() const {
+  return AbstractEntity::getCoordinatorAssistant() != NULL;
 }
 
 void OzVariableMediator::globalize() {
-  if (absEntity) return;   // don't globalize twice
-
-  // create abstract entity
+  Assert(AbstractEntity::getCoordinatorAssistant() == NULL);
   completeAnnotation();
-  setAbstractEntity(dss->m_createMonotonicAbstractEntity(annotation.pn,
-							 annotation.aa,
-							 annotation.rc));
+  AbstractEntity::setCoordinatorAssistant(dss->createProxy(annotation.pn,
+							   annotation.aa,
+							   annotation.rc));
 }
 
 void OzVariableMediator::localize() {
-  printf("--- raph: localize mediator %p\n", this);
-  // In any case, we keep the mediator.  So remove the abstract
-  // entity, and keep the mediator in the table
-  delete absEntity;
-  absEntity = NULL;
-  mediatorTable->insert(this);
+  printf("--- raph: localize var mediator %p\n", this);
+  // So remove the coordination proxy, and keep the mediator in the
+  // table
+  AbstractEntity::setCoordinatorAssistant(NULL);
 }
 
 PstOutContainerInterface *OzVariableMediator::retrieveEntityRepresentation(){
@@ -949,24 +805,22 @@ PstOutContainerInterface *OzVariableMediator::retrieveEntityRepresentation(){
 void OzVariableMediator::installEntityRepresentation(PstInContainerInterface* pstin){
   printf("--- raph: installEntityRepresentation %x\n", getEntity());
   Assert(active);
-  PstInContainer *pst = static_cast<PstInContainer*>(pstin); 
+  TaggedRef arg = static_cast<PstInContainer*>(pstin)->a_term;
   TaggedRef* ref = tagged2Ref(getEntity()); // points to the var's tagged ref
   OzVariable* ov = tagged2Var(*ref);
-  TaggedRef  arg = pst->a_term;
   
   oz_bindLocalVar(ov, ref, arg);
   makePassive();
 }
 
 AOcallback
-OzVariableMediator::callback_Bind(DssOperationId *id,
+OzVariableMediator::callback_Bind(DssOperationId*,
 				  PstInContainerInterface* pstin) {
   printf("--- raph: callback_Bind %x\n", getEntity());
   Assert(active);
-  PstInContainer *pst = static_cast<PstInContainer*>(pstin); 
+  TaggedRef arg = static_cast<PstInContainer*>(pstin)->a_term;
   TaggedRef* ref = tagged2Ref(getEntity()); // points to the var's tagged ref
   OzVariable* ov = tagged2Var(*ref);
-  TaggedRef  arg = pst->a_term;
   
   oz_bindLocalVar(ov, ref, arg);
   makePassive();
@@ -974,7 +828,7 @@ OzVariableMediator::callback_Bind(DssOperationId *id,
 }
 
 AOcallback
-OzVariableMediator::callback_Append(DssOperationId *id,
+OzVariableMediator::callback_Append(DssOperationId*,
 				    PstInContainerInterface* pstin) {
   printf("--- raph: callback_Append %x\n", getEntity());
 
@@ -984,9 +838,8 @@ OzVariableMediator::callback_Append(DssOperationId *id,
   if (active) {
     // check pstin
     if (pstin !=  NULL) {
-      PstInContainer *pst = static_cast<PstInContainer*>(pstin);
-      TaggedRef msg = pst->a_term;
-      Assert(msg == oz_atom("needed"));
+      TaggedRef arg = static_cast<PstInContainer*>(pstin)->a_term;
+      Assert(arg == oz_atom("needed"));
     }
     TaggedRef* ref = tagged2Ref(getEntity()); // points to the tagged ref
     oz_var_makeNeededLocal(ref);
@@ -995,7 +848,7 @@ OzVariableMediator::callback_Append(DssOperationId *id,
 }
 
 AOcallback
-OzVariableMediator::callback_Changes(DssOperationId *id,
+OzVariableMediator::callback_Changes(DssOperationId*,
 				     PstOutContainerInterface*& answer) {
   printf("--- raph: callback_Changes\n");
   // simply check whether the variable is needed

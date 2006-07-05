@@ -39,15 +39,9 @@
 
 class PstOutContainerInterface;
 class PstInContainerInterface;
-
-class MediatorInterface;
 class DssWriteBuffer; 
 class DssReadBuffer; 
-class CoordinatorAssistantInterface; 
-
-namespace _dss_internal{
-  class DSS_Environment;
-}
+class CoordinatorAssistant; 
 
 #ifndef WIN32
 #define DSSDLLSPEC
@@ -60,13 +54,6 @@ namespace _dss_internal{
 #endif
 
 //****************************** Not in the documantation yet *************************
-
-class GlobalNameInterface;
-
-typedef struct unmarshal_return{
-  bool exist;
-  bool skel;
-} DSS_unmarshal_status;
 
 
 
@@ -113,72 +100,153 @@ public:
 
 /************************* THE ABSTRACT ENTITY *************************/
 
-// The abstract entity provides access to all functionalities of an
+// These abstract classes provide the functionalities of a distributed
 // entity (abstract operations, reference consistency, fault status)
-// in the DSS, with a single API.  It also make the callbacks to the
-// entity's mediator (see below).  Abstract entities are specialized
-// into four categories, namely immutable, monotonic, relaxed mutable,
-// and mutable.
+// in the DSS, with a single API.  In order to implement a distributed
+// entity, the user extends one of those classes, and implements the
+// corresponding callbacks.  Abstract entities are specialized into
+// four categories, namely mutable, relaxed mutable, monotonic, and
+// immutable.
 
-class DSSDLLSPEC AbstractEntity{
+// The abstract classes result from the merging of former interfaces
+// AbstractEntity and Mediator (by raph).
+
+class DSSDLLSPEC AbstractEntity {
 protected:
-  MediatorInterface *a_mediator;
-  
-  AbstractEntity():a_mediator(NULL){}
+  CoordinatorAssistant* a_proxy;
+
+  AbstractEntity();
 
 public:
-  virtual ~AbstractEntity(){}
+  virtual ~AbstractEntity();
 
-  void assignMediator(MediatorInterface *mediator){ a_mediator = mediator; }
-  MediatorInterface *accessMediator() const { return a_mediator; }
+  /************************* SUPPLIED BY DSS *************************/
 
-  // returns the coordination proxy of the entity
-  virtual CoordinatorAssistantInterface *getCoordinatorAssistant() const = 0;
+  virtual AbstractEntityName getAEName() const { return AEN_NOT_DEFINED; }
+
+  // get/set coordination proxy (see note below)
+  CoordinatorAssistant* getCoordinatorAssistant() const { return a_proxy; }
+  void setCoordinatorAssistant(CoordinatorAssistant*);
 
   // notify the resumption of programming system operations to the DSS
-  virtual void remoteInitatedOperationCompleted(DssOperationId*,
-						PstOutContainerInterface*) = 0;
-  virtual void localInitatedOperationCompleted() = 0;
+  void remoteInitatedOperationCompleted(DssOperationId*,
+					PstOutContainerInterface*);
+  void localInitatedOperationCompleted();
 
   // abstract operation Kill - try to make the fault state permfail.
   // This operation is asynchronous, and not guaranteed to succeed.
-  virtual OpRetVal abstractOperation_Kill() = 0;
+  OpRetVal abstractOperation_Kill();
+
+  /************************* SUPPLIED BY USER *************************/
+
+  // both the following return the entity's current state.  The first
+  // one is used to make a copy of the state, while the second one may
+  // turn the entity into a skeleton.
+  virtual PstOutContainerInterface* retrieveEntityRepresentation() = 0;
+  virtual PstOutContainerInterface* deinstallEntityRepresentation() {
+    return retrieveEntityRepresentation(); }
+  // set the entity's new state
+  virtual void installEntityRepresentation(PstInContainerInterface*) = 0; 
+
+  // report the entity's new fault state
+  virtual void reportFaultState(const FaultState& fs) = 0;
 
   MACRO_NO_DEFAULT_CONSTRUCTORS(AbstractEntity);
 };
+
+// ABOUT THE COORDINATION PROXY.  (1) Coordination proxies are created
+// by a DSS_Object.  A proxy p is attached to its abstract entity ae
+// by the call ae->setCoordinatorAssistant(p).
+// (2) The proxy is deleted by the DSS when either ae is deleted, or
+// ae->setCoordinatorAssistant(NULL) is called.  The latter localizes
+// the entity.
 
 
 
 // The following specializations define the abstract operations
 // specific to each category.
 
-class DSSDLLSPEC RelaxedMutableAbstractEntity:public AbstractEntity{
+class DSSDLLSPEC MutableAbstractEntity: public AbstractEntity{
 public:
-  virtual OpRetVal abstractOperation_Read(DssThreadId*,
-					  PstOutContainerInterface**&) = 0;
-  virtual OpRetVal abstractOperation_Write(PstOutContainerInterface**&) = 0;
+  MutableAbstractEntity();
+
+  /************************* SUPPLIED BY DSS *************************/
+  virtual AbstractEntityName getAEName() const { return AEN_MUTABLE; }
+  OpRetVal abstractOperation_Read(DssThreadId*, PstOutContainerInterface**&);
+  OpRetVal abstractOperation_Write(DssThreadId*, PstOutContainerInterface**&);
+
+  /************************* SUPPLIED BY USER *************************/
+  virtual AOcallback callback_Write(DssThreadId* id_of_calling_thread,
+				    DssOperationId* operation_id,
+				    PstInContainerInterface* operation,
+				    PstOutContainerInterface*& answer)=0;
+  virtual AOcallback callback_Read(DssThreadId* id_of_calling_thread,
+				   DssOperationId* operation_id,
+				   PstInContainerInterface* operation,
+				   PstOutContainerInterface*& answer)=0;
 };
 
-class DSSDLLSPEC MutableAbstractEntity:public AbstractEntity{
+
+class DSSDLLSPEC RelaxedMutableAbstractEntity: public AbstractEntity{
 public:
-  virtual OpRetVal abstractOperation_Read(DssThreadId*,
-					  PstOutContainerInterface**&) = 0;
-  virtual OpRetVal abstractOperation_Write(DssThreadId*,
-					   PstOutContainerInterface**&) = 0;
+  RelaxedMutableAbstractEntity();
+
+  /************************* SUPPLIED BY DSS *************************/
+  virtual AbstractEntityName getAEName() const { return AEN_RELAXED_MUTABLE; }
+  OpRetVal abstractOperation_Read(DssThreadId*, PstOutContainerInterface**&);
+  OpRetVal abstractOperation_Write(PstOutContainerInterface**&);
+
+  /************************* SUPPLIED BY USER *************************/
+  virtual AOcallback callback_Write(DssThreadId* id_of_calling_thread, 
+				    DssOperationId* operation_id,
+				    PstInContainerInterface* operation)=0;
+  virtual AOcallback callback_Read(DssThreadId* id_of_calling_thread,
+				   DssOperationId* operation_id,
+				   PstInContainerInterface* operation,
+				   PstOutContainerInterface*& answer)=0;
 };
 
-class DSSDLLSPEC MonotonicAbstractEntity:public AbstractEntity{
+
+class DSSDLLSPEC MonotonicAbstractEntity: public AbstractEntity{
 public:
-  virtual OpRetVal abstractOperation_Bind(DssThreadId*,
-					  PstOutContainerInterface**&) = 0;
-  virtual OpRetVal abstractOperation_Append(DssThreadId*,
-					    PstOutContainerInterface**&) = 0;
+  MonotonicAbstractEntity();
+
+  /************************* SUPPLIED BY DSS *************************/
+  virtual AbstractEntityName getAEName() const { return AEN_TRANSIENT; }
+  OpRetVal abstractOperation_Bind(DssThreadId*, PstOutContainerInterface**&);
+  OpRetVal abstractOperation_Append(DssThreadId*, PstOutContainerInterface**&);
+
+  /************************* SUPPLIED BY USER *************************/
+  virtual AOcallback callback_Bind(DssOperationId* operation_id,
+				   PstInContainerInterface* operation) = 0;
+  virtual AOcallback callback_Append(DssOperationId* operation_id,
+				     PstInContainerInterface* operation) = 0;
+  // summarize past Append operations; the answer (if given) is sent
+  // to a new proxy as one single Append operation.
+  virtual AOcallback callback_Changes(DssOperationId* operation_id,
+				      PstOutContainerInterface*& answer)=0;
 };
 
-class DSSDLLSPEC ImmutableAbstractEntity:public AbstractEntity{
+
+class DSSDLLSPEC ImmutableAbstractEntity: public AbstractEntity{
 public:
-  virtual OpRetVal abstractOperation_Read(DssThreadId*,
-					  PstOutContainerInterface**&) = 0;
+  ImmutableAbstractEntity();
+
+  /************************* SUPPLIED BY DSS *************************/
+  virtual AbstractEntityName getAEName() const { return AEN_IMMUTABLE; }
+  OpRetVal abstractOperation_Read(DssThreadId*, PstOutContainerInterface**&);
+
+  /************************* SUPPLIED BY USER *************************/
+  virtual AOcallback callback_Read(DssThreadId* id_of_calling_thread,
+				   DssOperationId* operation_id,
+				   PstInContainerInterface* operation,
+				   PstOutContainerInterface*& answer)=0;
+
+  // Note.  The programming system may want to localize the entity
+  // once its state has been installed.  However it should not delete
+  // the abstract entity before all suspended read operations have
+  // been woken up.  This is because the protocol proxy is deleted
+  // together with the abstract entity.
 };
 
 
@@ -190,8 +258,10 @@ public:
 // This object provides an API to the coordination architecture, the
 // reference consistency protocols, the fault status, and marshaling.
 
-class DSSDLLSPEC CoordinatorAssistantInterface{
+class DSSDLLSPEC CoordinatorAssistant {
 public:
+  virtual AbstractEntity* getAbstractEntity() const = 0;
+
   // ******************** Coordination Manipulation ********************
   virtual bool  manipulateCNET(void* argument) = 0; 
 
@@ -211,95 +281,6 @@ public:
   // *********************** Marshaler interface ***********************
   virtual bool        marshal(DssWriteBuffer          *buf,
 			      const ProxyMarshalFlag&  flag )=0;
-};
-
-
-
-
-
-/************************* THE MEDIATOR *************************/
-
-// The mediator is provided by the programming system to give the DSS
-// access to an entity's representation.  The mediator is given to the
-// DSS via the corresponding abstract entity.  Just like abstract
-// entities, mediators are split into four categories.  The category
-// of a mediator and the corresponding abstract entity must coincide.
-
-class DSSDLLSPEC MediatorInterface{
-public:
-  MediatorInterface();
-
-  // both the following return the entity's current state.  The first
-  // one is used to make a copy of the state, while the second one may
-  // turn the entity into a skeleton.
-  virtual PstOutContainerInterface* retrieveEntityRepresentation() = 0;
-  virtual PstOutContainerInterface* deinstallEntityRepresentation() {
-    return retrieveEntityRepresentation(); }
-  // set the entity's new state
-  virtual void installEntityRepresentation(PstInContainerInterface*) = 0; 
-  // report the entity's new fault state
-  virtual void reportFaultState(const FaultState& fs) = 0;
-};
-
-
-class DSSDLLSPEC  MutableMediatorInterface: public MediatorInterface{
-public:
-  MutableMediatorInterface();
-  virtual AOcallback callback_Write(DssThreadId* id_of_calling_thread,
-				    DssOperationId* operation_id,
-				    PstInContainerInterface* operation,
-				    PstOutContainerInterface*& possible_answer)=0;
-
-  virtual AOcallback callback_Read(DssThreadId* id_of_calling_thread,
-				   DssOperationId* operation_id,
-				   PstInContainerInterface* operation,
-				   PstOutContainerInterface*& possible_answer)=0;
-};
-
-
-class DSSDLLSPEC  RelaxedMutableMediatorInterface: public MediatorInterface{
-public:
-  RelaxedMutableMediatorInterface();
-  virtual AOcallback callback_Write(DssThreadId* id_of_calling_thread, 
-				    DssOperationId* operation_id,
-				    PstInContainerInterface* operation)=0;
-
-  virtual AOcallback callback_Read(DssThreadId* id_of_calling_thread,
-				   DssOperationId* operation_id,
-				   PstInContainerInterface* operation,
-				   PstOutContainerInterface*& possible_answer)=0;
-};
-
-
-class DSSDLLSPEC  MonotonicMediatorInterface: public MediatorInterface{
-public:
-  MonotonicMediatorInterface();
-  virtual AOcallback callback_Bind(DssOperationId* operation_id,
-				   PstInContainerInterface* operation) = 0;
-  
-  virtual AOcallback callback_Append(DssOperationId* operation_id,
-				     PstInContainerInterface* operation) = 0;
-
-  // summarize past Append operations; the answer (if given) is sent
-  // to a new proxy as one single Append operation.
-  virtual AOcallback callback_Changes(DssOperationId* operation_id,
-				      PstOutContainerInterface*& possible_answer)=0;
-};
-
-
-class DSSDLLSPEC  ImmutableMediatorInterface: public MediatorInterface{
-public:
-  ImmutableMediatorInterface();
-  virtual AOcallback callback_Read(DssThreadId* id_of_calling_thread,
-				   DssOperationId* operation_id,
-				   PstInContainerInterface* operation,
-				   PstOutContainerInterface*& possible_answer)=0;
-
-  // Note.  The programming system may want to localize the entity
-  // once its state has been installed.  However it should not delete
-  // the abstract entity before all suspended read operations have
-  // been woken up.  This is because the protocol proxy is deleted
-  // together with the abstract entity.
 };
 
 

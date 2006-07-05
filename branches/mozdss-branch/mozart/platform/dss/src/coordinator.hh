@@ -55,7 +55,7 @@ namespace _dss_internal{ //Start namespace
 
 
 
-  // ********************************** AS_Node **************************************
+  // ************************* AS_Node *************************
   //
   // AS is an abstract base-class 
   //
@@ -76,10 +76,12 @@ namespace _dss_internal{ //Start namespace
     inline AccessArchitecture m_getASname(){ return a_aa; }
     
   };
+
+
   
-  // *********************************** Manager ************************************
+  // ************************* Coordinator *************************
   //
-  // Manager is an abstract base-class
+  // Coordinator is an abstract base-class
   //
 
   class Coordinator: public AS_Node {
@@ -163,15 +165,15 @@ namespace _dss_internal{ //Start namespace
   
   };
 
+
   
-  // *********************************** Proxy *************************************
+  // ************************* Proxy *************************
   //
-  // Proxy is (as managers) an abstract base-class AND also an endpoint for the
-  // Glue through ProxyInterface
+  // Proxy is (as coordinators) an abstract base-class AND also an
+  // endpoint for the Glue through CoordinatorAssistant
   //
 
-
-  class Proxy: public AS_Node, public ::CoordinatorAssistantInterface{
+  class Proxy: public AS_Node, public ::CoordinatorAssistant{
     friend class ProxyTable;
     friend class ProxyProtocol;
   public:
@@ -188,46 +190,46 @@ namespace _dss_internal{ //Start namespace
     ProtocolProxy* a_prot;             // The execution protocol
     RemoteReference*     a_remoteRef;              // NULL indicates that the proxy shares reference with the coordinator. 
   public:
-    Coordinator*               a_coordinator;   // For home proxies
-    AE_ProxyCallbackInterface* a_AbsEnt_Interface;
+    Coordinator*    a_coordinator;          // For home proxies
+    AbstractEntity* a_abstractEntity;
 
   private:
     Proxy& operator=(const Proxy&){ return *this; }
     Proxy();
     Proxy(const Proxy&);
-  public:
 
+  public:
     // ***************** Constructors ***********************************
-    
     Proxy(NetIdentity id, const AccessArchitecture& a,
-	  ProtocolProxy* const prot, AE_ProxyCallbackInterface* ,DSS_Environment* const env);
+	  ProtocolProxy* const prot, DSS_Environment* const env);
     virtual ~Proxy();
-    
 
     virtual void m_initHomeProxy(Coordinator *m)=0;
     virtual bool m_initRemoteProxy(DssReadBuffer *bs)=0;
 
-    // ***************** Proxy Status ******************************************
-    
+    // ***************** AbstractEntity *********************************
+    virtual AbstractEntity* getAbstractEntity() const {
+      return a_abstractEntity;
+    }
+    void setAbstractEntity(AbstractEntity* ae) { a_abstractEntity = ae; }
+
+    // ***************** Proxy Status ***********************************
     inline void m_setProxyStatus(const ProxyStatus& p){ a_ps = p; }
     inline ProxyStatus m_getProxyStatus(){  return a_ps; }
     inline bool m_isHomeProxy() { return a_ps == PROXY_STATUS_HOME; }
     
-    
     // **************** Proxy Faults ****************
-
     virtual void        setRegisteredFS(const FaultState& s);
     virtual FaultState  getRegisteredFS() const {return a_registeredFS;}
     
     virtual FaultState  getFaultState() const { return a_currentFS;} 
     void    updateFaultState(FaultState fs); 
     
-    
     // ***************** Marshal *********************
     // Marshaling    Flag = [ORDINARY,FREE, PUSH ?(i.e push)]
     virtual bool marshal(DssWriteBuffer* , const ProxyMarshalFlag&);
-    inline AbstractEntityName   m_getAEname(){
-      return a_AbsEnt_Interface->m_getName(); 
+    inline AbstractEntityName m_getAEname(){
+      return a_abstractEntity ? a_abstractEntity->getAEName() : AEN_NOT_DEFINED;
     }
     
     // ****************** GC **********************
@@ -235,8 +237,7 @@ namespace _dss_internal{ //Start namespace
     virtual bool    clearWeakRoot();
     
     // ****************** GET **********************
-    inline ProtocolProxy    *m_getProtocol(){     return a_prot; }
-    AE_ProxyCallbackInterface* getAEpki();
+    inline ProtocolProxy *m_getProtocol() { return a_prot; }
     
     // ************* DOE Abstraction* ***************
     
@@ -350,12 +351,11 @@ namespace _dss_internal{ //Start namespace
   };
   
   // Used for creating the different types of coordinators/proxies
-   Proxy* gf_createCoordinationProxy(AccessArchitecture type,
-				     NetIdentity ni,
-				     ProtocolProxy *prox, 
-				     AE_ProxyCallbackInterface *aepc_interface,
-				     DSS_Environment* env);
-  
+  Proxy* gf_createCoordinationProxy(AccessArchitecture type,
+				    NetIdentity ni,
+				    ProtocolProxy *prox, 
+				    DSS_Environment* env);
+
   Coordinator *gf_createCoordinator(AccessArchitecture type,
 				    ProtocolManager *pman,
 				    RCalg GC_annot,

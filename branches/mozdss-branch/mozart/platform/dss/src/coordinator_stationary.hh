@@ -70,7 +70,7 @@ namespace _dss_internal{ //Start namespace
   public:
     // ************** CONSTRUCTORS *******************
     ProxyStationary(NetIdentity ni, ProtocolProxy* const prot,
-		    AE_ProxyCallbackInterface*, DSS_Environment* const env);
+		    DSS_Environment* const env);
     ~ProxyStationary();
     
     virtual void m_initHomeProxy(Coordinator *m);

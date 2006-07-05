@@ -119,8 +119,9 @@ namespace _dss_internal{ //Start namespace
   // ********************** CONSTRUCTOR    *******************************
 
   ProxyStationary::ProxyStationary(NetIdentity ni, ProtocolProxy* const prot,
-				   AE_ProxyCallbackInterface *ae, DSS_Environment* const env):
-    Proxy(ni,AA_STATIONARY_MANAGER,prot, ae, env){
+				   DSS_Environment* const env) :
+    Proxy(ni, AA_STATIONARY_MANAGER, prot, env)
+  {
     prot->a_proxy = this;
   }
 

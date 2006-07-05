@@ -124,9 +124,9 @@ enum DSS_GC{
 // FaultState describe the fault status of entities.  Bit masking is
 // used, both for registration and reporting.  The programmer must
 // register to which fault states she wants to be notified.  See
-// CoordinatorAssistantInterface::setRegisteredFS().  The fault
-// notification may combine an access architecture state with a
-// protocol-level state.
+// CoordinatorAssistant::setRegisteredFS().  The fault notification
+// may combine an access architecture state with a protocol-level
+// state.
 typedef unsigned int FaultState;
 const int FS_NBITS = 8;     // must be consistent with values below
 

@@ -3,7 +3,7 @@
  *    Erik Klintskog (erik@sics.se)
  * 
  *  Contributors:
- *    optional, Contributor's name (Contributor's email address)
+ *    Raphael Collet (raph@info.ucl.ac.be)
  * 
  *  Copyright:
  *    Erik Klintskog, 2002
@@ -32,7 +32,22 @@
 
 #include "dss_enums.hh"
 #include "dssBase.hh"
+
 namespace _dss_internal{ //Start namespace
+
+  // The AbstractEntity* classes are declared in dss_classes.
+
+  // raph: XxxAbstractEntity's and XxxMediatorInterface's have been
+  // merged into a single set of abstract classes XxxAbstractEntity.
+  // This is the partial implementation of XxxAbstractEntity, which
+  // was formerly implemented by classes XxxAbstractEntityImpl.
+  //
+  // The formerly existing classes AE_ProxyCallbackInterface,
+  // MutableAbstractEntityImpl, RelaxedMutableAbstractEntityImpl,
+  // MonotonicAbstractEntityImpl, and ImmutableAbstractEntityImpl have
+  // therefore been removed.  Code has been reduced, since there was a
+  // lot of code duplication in those classes, and callbacks are now
+  // more direct (no more mediators).
 
   enum AbsOp{
     AO_NO_OP = 0, 
@@ -55,194 +70,12 @@ namespace _dss_internal{ //Start namespace
     AO_EP_EXTRACT,
     AO_EP_INSTALL
   };
-  
-  
-  class AE_ProxyCallbackInterface{
-  public:
-#ifdef DEBUG_CHECK
-    static int a_allocated;
-#endif
-    // This is an result of interface bulshit. 
-    // The Proxy needs a ref to the abstract entity, 
-    // which in turn needs a ref to the proxy... 
-    // Some one of the two has to be set "laziliy" and
-    // not at instantiation time... Because of simplicity
-    // the abstract entity lost.
-    //
-    // This solution has the benefit that we can alloe the 
-    // AE to point to the Proxy, instead of only to the 
-    // CAinterface
-    Proxy *a_coordinationProxy; 
 
-    MACRO_NO_DEFAULT_CONSTRUCTORS(AE_ProxyCallbackInterface);
-
-  public:
-
-    void setCoordinationProxy(Proxy *pr);
-        
-    virtual AOcallback applyAbstractOperation(const AbsOp&,
-					      DssThreadId*,
-					      DssOperationId*,
-					      PstInContainerInterface* , 
-					      PstOutContainerInterface*&) = 0; 
-    
-    virtual PstOutContainerInterface* retrieveEntityState() = 0; 
-    virtual PstOutContainerInterface* deinstallEntityState() = 0;
-    virtual void installEntityState(::PstInContainerInterface* builder) = 0; 
-
-    virtual void reportFaultState(const FaultState& fs)=0; 
-    
-    virtual AbstractEntityName m_getName() = 0;
-    virtual AbstractEntity *m_getAEreference() = 0; 
-
-    AE_ProxyCallbackInterface();
-    virtual ~AE_ProxyCallbackInterface();
-  };
-  
-
-  class MutableAbstractEntityImpl: public MutableAbstractEntity,
-				   public AE_ProxyCallbackInterface{
-  public:
-    virtual OpRetVal abstractOperation_Read(DssThreadId *id,
-					    ::PstOutContainerInterface**& out);
-    
-    virtual OpRetVal abstractOperation_Write(DssThreadId *id,
-					     ::PstOutContainerInterface**& out);
-    
-    virtual OpRetVal abstractOperation_Kill();
-
-    virtual AOcallback applyAbstractOperation(const AbsOp&,
-					      DssThreadId*,
-					      DssOperationId*,
-					      PstInContainerInterface* , 
-					      PstOutContainerInterface*&); 
-    
-    virtual PstOutContainerInterface* retrieveEntityState(); 
-    virtual PstOutContainerInterface* deinstallEntityState();
-    virtual void installEntityState(::PstInContainerInterface* builder); 
-    
-    virtual void reportFaultState(const FaultState& fs);
-    
-    virtual CoordinatorAssistantInterface *getCoordinatorAssistant() const;
-    
-    MutableAbstractEntityImpl();
-
-    virtual AbstractEntityName m_getName(); 
-    virtual AbstractEntity *m_getAEreference();
-    
-    virtual void remoteInitatedOperationCompleted(DssOperationId* opId,
-						  ::PstOutContainerInterface* pstOut); 
-  
-    virtual void localInitatedOperationCompleted();
-  };
-
-  class RelaxedMutableAbstractEntityImpl: public RelaxedMutableAbstractEntity,
-					  public AE_ProxyCallbackInterface{
-  public:
-    virtual OpRetVal abstractOperation_Read(DssThreadId *id,
-					    ::PstOutContainerInterface**& out);
-    
-    virtual OpRetVal abstractOperation_Write(::PstOutContainerInterface**& out);
-    
-    virtual OpRetVal abstractOperation_Kill();
-    
-    virtual AOcallback applyAbstractOperation(const AbsOp&,
-					       DssThreadId*,
-					       DssOperationId*,
-					       PstInContainerInterface* , 
-					       PstOutContainerInterface*&);    
-
-    virtual PstOutContainerInterface* retrieveEntityState(); 
-    virtual PstOutContainerInterface* deinstallEntityState();
-    virtual void installEntityState(::PstInContainerInterface* builder); 
-    
-    virtual void reportFaultState(const FaultState& fs);
-    
-    virtual CoordinatorAssistantInterface *getCoordinatorAssistant() const;
-    
-    RelaxedMutableAbstractEntityImpl();
-
-    virtual AbstractEntityName m_getName(); 
-    virtual AbstractEntity *m_getAEreference();
-    
-    virtual void remoteInitatedOperationCompleted(DssOperationId* opId,
-						  ::PstOutContainerInterface* pstOut); 
-
-    virtual void localInitatedOperationCompleted(){;}
-  };
-
-
-  
-  class MonotonicAbstractEntityImpl: public MonotonicAbstractEntity,
-				     public AE_ProxyCallbackInterface{
-  public:
-    virtual OpRetVal abstractOperation_Bind(DssThreadId *id,
-					    ::PstOutContainerInterface**& out);
-    
-    virtual OpRetVal abstractOperation_Append(DssThreadId *id,
-					      ::PstOutContainerInterface**& out);
-    
-    virtual OpRetVal abstractOperation_Kill();
-    
-    virtual AOcallback applyAbstractOperation(const AbsOp&,
-					      DssThreadId*,
-					      DssOperationId*,
-					      PstInContainerInterface*,
-					      PstOutContainerInterface*&);
-
-
-    
-    
-    virtual PstOutContainerInterface* retrieveEntityState(); 
-    virtual PstOutContainerInterface* deinstallEntityState();
-    virtual void installEntityState(::PstInContainerInterface* builder); 
-
-    virtual void reportFaultState(const FaultState& fs);
-    
-    virtual  CoordinatorAssistantInterface *getCoordinatorAssistant() const;
-
-    MonotonicAbstractEntityImpl();
-    
-    virtual AbstractEntityName m_getName();
-    virtual AbstractEntity    *m_getAEreference();
-    
-    virtual void remoteInitatedOperationCompleted(DssOperationId* opId,
-						  ::PstOutContainerInterface* pstOut); 
-    
-    virtual void localInitatedOperationCompleted(){;}
-  };
-  
-  class ImmutableAbstractEntityImpl: public ImmutableAbstractEntity,
-				     public AE_ProxyCallbackInterface{
-     
-  public:
-    ImmutableAbstractEntityImpl();
-    virtual OpRetVal abstractOperation_Read(DssThreadId *id,
-					    ::PstOutContainerInterface**& pstout);
-    
-    virtual OpRetVal abstractOperation_Kill();
-    
-    virtual AOcallback applyAbstractOperation(const AbsOp&,
-					      DssThreadId*,
-					      DssOperationId*,
-					      PstInContainerInterface* , 
-					      PstOutContainerInterface*&);    
-
-    virtual ::PstOutContainerInterface* retrieveEntityState(); 
-    virtual PstOutContainerInterface* deinstallEntityState();
-    virtual void installEntityState(::PstInContainerInterface* builder); 
-
-    virtual void reportFaultState(const FaultState& fs);
-    
-    virtual CoordinatorAssistantInterface *getCoordinatorAssistant() const;
-    virtual AbstractEntityName m_getName(); 
-    virtual AbstractEntity *m_getAEreference();
-    
-    virtual void remoteInitatedOperationCompleted(DssOperationId* opId,
-						  ::PstOutContainerInterface* pstOut); 
-    virtual void localInitatedOperationCompleted(){;}
-  };
-
+  // apply an abstract operation on a given abstract entity        
+  AOcallback applyAbstractOperation(AbstractEntity* ae, const AbsOp& aop,
+				    DssThreadId* tid, DssOperationId* oid,
+				    PstInContainerInterface* pstin,
+				    PstOutContainerInterface*& pstout);
 
 }
 #endif

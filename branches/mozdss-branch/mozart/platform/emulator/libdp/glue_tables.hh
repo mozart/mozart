@@ -130,17 +130,4 @@ void gcMediatorTablePrimary();
 void gcMediatorTableWeak();
 void gcMediatorTableCleanUp();
 
-/************************ LOOK-UPS ***********************/
-
-Mediator *taggedref2Me(TaggedRef tr);
-Mediator *index2Me(const int&);
-
-// Get a ProxyInterface * from a engine name
-AbstractEntity *index2AE(const int&);
-CoordinatorAssistantInterface *index2CAI(const int&);
-
-// Get a ProxyInterface * from a TaggedRef, returns
-// the ProxyInterface * 0 if no entry was found. 
-
-
 #endif

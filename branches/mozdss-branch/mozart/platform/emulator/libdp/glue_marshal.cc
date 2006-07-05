@@ -48,7 +48,7 @@
 // the most generic globalize function
 void glue_globalizeEntity(TaggedRef entity) {
   Mediator *med = glue_getMediator(entity);
-  if (!med->getAbstractEntity()) med->globalize();
+  if (!med->getCoordinatorAssistant()) med->globalize();
 }
 
 
@@ -81,7 +81,7 @@ void glue_globalizeEntity(TaggedRef entity) {
 // marshal an entity
 void glue_marshalEntity(TaggedRef entity, ByteBuffer *bs) {
   Mediator *med = glue_getMediator(entity);
-  if (!med->getAbstractEntity()) med->globalize();
+  if (!med->getCoordinatorAssistant()) med->globalize();
   med->marshal(bs);
 }
 
@@ -89,7 +89,7 @@ void glue_marshalEntity(TaggedRef entity, ByteBuffer *bs) {
 void Mediator::marshal(ByteBuffer *bs) {
   // first marshal Dss-specific stuff
   GlueWriteBuffer *gwb = static_cast<GlueWriteBuffer*>(bs);
-  absEntity->getCoordinatorAssistant()->marshal(gwb, PMF_ORDINARY);
+  getCoordinatorAssistant()->marshal(gwb, PMF_ORDINARY);
   // then the entity type
   bs->put(getType());
   // by default there is no extra data
@@ -99,7 +99,7 @@ void Mediator::marshal(ByteBuffer *bs) {
 void ArrayMediator::marshal(ByteBuffer *bs) {
   OzArray *oza = static_cast<OzArray*>(getConst());
   GlueWriteBuffer *gwb = static_cast<GlueWriteBuffer*>(bs);
-  absEntity->getCoordinatorAssistant()->marshal(gwb, PMF_ORDINARY);
+  AbstractEntity::getCoordinatorAssistant()->marshal(gwb, PMF_ORDINARY);
   bs->put(getType());
   marshalNumber(bs, oza->getLow());
   marshalNumber(bs, oza->getHigh());
@@ -109,7 +109,7 @@ void ArrayMediator::marshal(ByteBuffer *bs) {
 void ObjectMediator::marshal(ByteBuffer *bs) {
   OzObject *ozo = static_cast<OzObject*>(getConst());
   GlueWriteBuffer *gwb = static_cast<GlueWriteBuffer*>(bs);
-  absEntity->getCoordinatorAssistant()->marshal(gwb, PMF_ORDINARY);
+  AbstractEntity::getCoordinatorAssistant()->marshal(gwb, PMF_ORDINARY);
   bs->put(getType());
   // We also marshal the global name of the class
   OzClass *oc = ozo->getClass();
@@ -124,14 +124,12 @@ void ObjectMediator::marshal(ByteBuffer *bs) {
 
 // unmarshal an entity
 OZ_Term glue_unmarshalEntity(ByteBuffer *bs) {
-  AbstractEntity *ae;
-  AbstractEntityName aen;
   GlueReadBuffer *grb = static_cast<GlueReadBuffer*>(bs);
-
-  DSS_unmarshal_status stat = dss->unmarshalProxy(ae, grb, PUF_ORDINARY, aen);
+  AbstractEntityName aen;
+  CoordinatorAssistant* proxy = dss->unmarshalProxy(grb, PUF_ORDINARY, aen);
   GlueTag tag = static_cast<GlueTag>(bs->get());
 
-  if (stat.exist) {
+  if (proxy->getAbstractEntity()) {
     // drop entity-specific data
     switch (tag) {
     case GLUE_ARRAY:
@@ -145,8 +143,8 @@ OZ_Term glue_unmarshalEntity(ByteBuffer *bs) {
     default:
       break;
     }
-    // access to entity
-    Mediator *med = dynamic_cast<Mediator*>(ae->accessMediator());
+    // return entity
+    Mediator *med = dynamic_cast<Mediator*>(proxy->getAbstractEntity());
     return med->getEntity();
 
   } else {
@@ -159,38 +157,38 @@ OZ_Term glue_unmarshalEntity(ByteBuffer *bs) {
     case GLUE_UNUSABLE: {
       UnusableResource *unused = new UnusableResource();
       TaggedRef ref = makeTaggedConst(unused);
-      unused->setMediator(new UnusableMediator(ref, ae));
+      unused->setMediator(new UnusableMediator(ref, proxy));
       return ref;
     }
     case GLUE_VARIABLE: {
       TaggedRef ref = oz_newSimpleVar(oz_currentBoard());
       OzVariable *var = tagged2Var(*tagged2Ref(ref));
-      var->setMediator(new OzVariableMediator(ref, ae));
+      var->setMediator(new OzVariableMediator(ref, proxy));
       return ref;
     }
     case GLUE_READONLY: {
       TaggedRef ref = oz_newReadOnly(oz_currentBoard());
       OzVariable *var = tagged2Var(*tagged2Ref(ref));
-      var->setMediator(new OzVariableMediator(ref, ae));
+      var->setMediator(new OzVariableMediator(ref, proxy));
       return ref;
     }
     case GLUE_PORT: {
       // the stream of the port is unused
       OzPort *port = new OzPort(oz_currentBoard(), makeTaggedNULL());
       TaggedRef ref = makeTaggedConst(port);
-      port->setMediator(new PortMediator(ref, ae));
+      port->setMediator(new PortMediator(ref, proxy));
       return ref;
     }
     case GLUE_CELL: {
       OzCell *cell = new OzCell(oz_currentBoard(), makeTaggedNULL());
       TaggedRef ref = makeTaggedConst(cell);
-      cell->setMediator(new CellMediator(ref, ae));
+      cell->setMediator(new CellMediator(ref, proxy));
       return ref;
     }
     case GLUE_LOCK: {
       OzLock *lock = new OzLock(oz_currentBoard());
       TaggedRef ref = makeTaggedConst(lock);
-      lock->setMediator(new LockMediator(ref, ae));
+      lock->setMediator(new LockMediator(ref, proxy));
       return ref;
     }
     case GLUE_OBJECT: {
@@ -202,7 +200,7 @@ OZ_Term glue_unmarshalEntity(ByteBuffer *bs) {
       OzObject *obj = new OzObject(oz_currentBoard(), 
                                    gnclass, makeTaggedNULL(), makeTaggedNULL(), makeTaggedNULL());
       printf("Object created, with only a gname as a class\n"); //bmc
-      obj->setMediator(new ObjectMediator(makeTaggedConst(obj), ae));
+      obj->setMediator(new ObjectMediator(makeTaggedConst(obj), proxy));
       printf("Ready to Return the object\n"); //bmc      
       return makeTaggedConst(obj);
     }
@@ -212,20 +210,20 @@ OZ_Term glue_unmarshalEntity(ByteBuffer *bs) {
       OzArray *oza = new OzArray(oz_currentBoard(), low, high,
 				 makeTaggedNULL());
       TaggedRef ref = makeTaggedConst(oza);
-      oza->setMediator(new ArrayMediator(ref, ae));
+      oza->setMediator(new ArrayMediator(ref, proxy));
       return ref;
     }
     case GLUE_DICTIONARY: {
       OzDictionary *ozd = new OzDictionary(oz_currentBoard());
       TaggedRef ref = makeTaggedConst(ozd);
-      ozd->setMediator(new DictionaryMediator(ref, ae));
+      ozd->setMediator(new DictionaryMediator(ref, proxy));
       return ref;
     }
     case GLUE_THREAD: {
       TaggedRef ref = oz_thread(oz_newThreadSuspended(1));
       ConstTermWithHome* ctwh =
         static_cast<ConstTermWithHome*>(tagged2Const(ref));
-      ctwh->setMediator(new OzThreadMediator(ref, ae));
+      ctwh->setMediator(new OzThreadMediator(ref, proxy));
       return ref;
     }
     default:
