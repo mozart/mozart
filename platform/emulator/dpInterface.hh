@@ -100,7 +100,11 @@ extern void (*gCollectGlueWeak)();
 extern void (*gCollectGlueFinal)();
 
 // mark a given mediator
-extern void (*gCollectMediator)(void *med);
+class Mediator;
+extern void (*gCollectMediator)(Mediator*);
+
+// Note.  The class Mediator is defined in libdp; only the type
+// Mediator is declared here.
 
 
 

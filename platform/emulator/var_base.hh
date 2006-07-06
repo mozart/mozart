@@ -98,6 +98,7 @@ enum TypeOfVariable {
 // present without the variable being distributed.  VAR_TRAILED is
 // used for trailing.  Both flags are orthogonal, since a distributed
 // variable can be speculatively bound inside a computation space.
+class Mediator;
 #define VAR_MEDIATOR 0x1
 #define VAR_TRAILED  0x2
 
@@ -194,13 +195,13 @@ public:
     return homeOrMediator.getTag() & VAR_MEDIATOR;
   }
   // get/set/remove the variable's mediator, and set VAR_MEDIATOR tag
-  void *getMediator() {
+  Mediator *getMediator() {
     Assert(hasMediator());
-    return homeOrMediator.getPtr();
+    return (Mediator*) homeOrMediator.getPtr();
   }
-  void setMediator(void *mediator) {
+  void setMediator(Mediator* med) {
     int trailtag = homeOrMediator.getTag() & VAR_TRAILED;
-    homeOrMediator.set(mediator, VAR_MEDIATOR | trailtag);
+    homeOrMediator.set(med, VAR_MEDIATOR | trailtag);
   }
   void removeMediator() {
     int trailtag = homeOrMediator.getTag() & VAR_TRAILED;

@@ -127,7 +127,7 @@ OZ_Return distVarMakeNeededStub(TaggedRef*) {
 }
 
 // interface for GC;
-void gCollectMediatorStub(void* m) {
+void gCollectMediatorStub(Mediator*) {
   OZD_error("'gCollectMediator' called without DP library?");
 }
 
@@ -207,7 +207,7 @@ void (*cellOperationDone)(OzCell*,TaggedRef)
   =cellOperationDoneStub;
 
 // garbage collection of a mediator
-void (*gCollectMediator)(void*)
+void (*gCollectMediator)(Mediator*)
   = gCollectMediatorStub;
 
 // dss garbage collection steps
