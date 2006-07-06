@@ -258,15 +258,13 @@ OZ_BI_define(BImigrateManager,1,0){
   // distributed and fetch the ProxyName
   ConstTermWithHome *ct = static_cast<ConstTermWithHome*>(tagged2Const(entity));
   if ((oz_isPort(entity) || oz_isCell(entity)) && ct->isDistributed()) {
-    CoordinatorAssistant *pi = 
-      static_cast<Mediator*>(ct->getMediator())->getCoordinatorAssistant();
+    CoordinatorAssistant *pi = ct->getMediator()->getCoordinatorAssistant();
     //ZACHARIAS: argument 2 is unecessary so pass any void*
     pi->manipulateCNET(NULL); 
   }
   if(oz_isArray(entity)) {
     if(ct->isDistributed()){
-      CoordinatorAssistant *pi = 
-        static_cast<Mediator*>(ct->getMediator())->getCoordinatorAssistant();
+      CoordinatorAssistant *pi = ct->getMediator()->getCoordinatorAssistant();
       pi->manipulateCNET(NULL); 
     }
   }
@@ -357,7 +355,7 @@ OZ_BI_define(BImsToPort,1,1)
   CoordinatorAssistant* proxy = dss->unmarshalProxy(&buf, PUF_FREE, aen);
   free(raw_buf);
 
-  PortMediator* med = static_cast<PortMediator*>(proxy->getAbstractEntity());
+  PortMediator* med = dynamic_cast<PortMediator*>(proxy->getAbstractEntity());
   if (med) {
     OZ_RETURN(med->getEntity());
 

@@ -269,7 +269,7 @@ namespace _dss_internal{ //Start namespace
     pstout = NULL;
     switch (ae->getAEName()) {
     case AEN_MUTABLE: {
-      MutableAbstractEntity* mae = static_cast<MutableAbstractEntity*>(ae);
+      MutableAbstractEntity* mae = dynamic_cast<MutableAbstractEntity*>(ae);
       switch (aop) {
       case AO_STATE_WRITE: return mae->callback_Write(tid, oid, pstin, pstout);
       case AO_STATE_READ:  return mae->callback_Read(tid, oid, pstin, pstout);
@@ -278,7 +278,7 @@ namespace _dss_internal{ //Start namespace
     }
     case AEN_RELAXED_MUTABLE: {
       RelaxedMutableAbstractEntity* rmae =
-	static_cast<RelaxedMutableAbstractEntity*>(ae);
+	dynamic_cast<RelaxedMutableAbstractEntity*>(ae);
       switch (aop) {
       case AO_STATE_WRITE: return rmae->callback_Write(tid, oid, pstin);
       case AO_STATE_READ:  return rmae->callback_Read(tid, oid, pstin, pstout);
@@ -286,7 +286,8 @@ namespace _dss_internal{ //Start namespace
       }
     }
     case AEN_TRANSIENT: {
-      MonotonicAbstractEntity* mae = static_cast<MonotonicAbstractEntity*>(ae);
+      MonotonicAbstractEntity* mae =
+	dynamic_cast<MonotonicAbstractEntity*>(ae);
       switch (aop) {
       case AO_OO_BIND:    return mae->callback_Bind(oid, pstin);
       case AO_OO_UPDATE:  return mae->callback_Append(oid, pstin);
@@ -296,7 +297,8 @@ namespace _dss_internal{ //Start namespace
     }
     case AEN_IMMUTABLE:
     case AEN_IMMUTABLE_UNNAMED: {
-      ImmutableAbstractEntity* iae = static_cast<ImmutableAbstractEntity*>(ae);
+      ImmutableAbstractEntity* iae =
+	dynamic_cast<ImmutableAbstractEntity*>(ae);
       return iae->callback_Read(tid, oid, pstin, pstout);
     }
     default:

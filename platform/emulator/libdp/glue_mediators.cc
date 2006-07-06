@@ -60,8 +60,7 @@ inline Mediator* lookupMediator(TaggedRef entity) {
 template <class M>
 inline Mediator* getCTWHMediator(ConstTerm* ct) {
   ConstTermWithHome* ctwh = static_cast<ConstTermWithHome*>(ct);
-  return (ctwh->isDistributed() ?
-	  static_cast<Mediator*>(ctwh->getMediator()) :
+  return (ctwh->isDistributed() ? ctwh->getMediator() :
 	  lookupMediator<M>(makeTaggedConst(ct)));
 }
 
@@ -74,7 +73,7 @@ Mediator *glue_getMediator(TaggedRef entity) {
     TaggedRef *vPtr = tagged2Ref(entity);
     OzVariable *var = oz_getNonOptVar(vPtr);
     if (!var->hasMediator()) var->setMediator(new OzVariableMediator(entity));
-    return static_cast<Mediator*>(var->getMediator());
+    return var->getMediator();
 
   } else { // entity is a const term
     ConstTerm *ct = tagged2Const(entity);
@@ -138,16 +137,6 @@ Mediator::makePassive() {
   active = FALSE;
 }
 
-CoordinatorAssistant*
-Mediator::getCoordinatorAssistant() {
-  return dynamic_cast<AbstractEntity*>(this)->getCoordinatorAssistant();
-}
-
-void
-Mediator::setCoordinatorAssistant(CoordinatorAssistant* p) {
-  dynamic_cast<AbstractEntity*>(this)->setCoordinatorAssistant(p);
-}
-
 void
 Mediator::completeAnnotation() {
   if (!annotation.pn || !annotation.aa || !annotation.rc) {
@@ -184,7 +173,7 @@ Mediator::resetGCStatus() {
 DSS_GC
 Mediator::getDssGCStatus() {
   Assert(dss_gc_status == DSS_GC_NONE);
-  if (getCoordinatorAssistant())
+  if (isDistributed())
     dss_gc_status = getCoordinatorAssistant()->getDssDGCStatus();
   return dss_gc_status;
 }
@@ -225,7 +214,7 @@ Mediator::suspendOnFault() {
 }
 
 void
-Mediator::reportFS(const FaultState& fs) {
+Mediator::reportFaultState(const FaultState& fs) {
   if (faultState != GLUE_FAULT_PERM) {
     // determine new fault state
     GlueFaultState s = GLUE_FAULT_NONE;
@@ -256,7 +245,7 @@ ConstTermWithHome* ConstMediator::getConst() const {
 }
 
 void ConstMediator::globalize() {
-  Assert(getCoordinatorAssistant() == NULL);
+  Assert(!isDistributed());
   // Determine the full annotation, create a coordination proxy with
   // it, and attach the mediator.
   completeAnnotation();
@@ -286,7 +275,7 @@ PortMediator::PortMediator(TaggedRef t) :
 PortMediator::PortMediator(TaggedRef t, CoordinatorAssistant* p) :
   ConstMediator(t, GLUE_PORT, ATTACHED)
 {
-  AbstractEntity::setCoordinatorAssistant(p);
+  setCoordinatorAssistant(p);
 }
 
 AOcallback
@@ -319,7 +308,7 @@ CellMediator::CellMediator(TaggedRef t) :
 CellMediator::CellMediator(TaggedRef t, CoordinatorAssistant* p) :
   ConstMediator(t, GLUE_CELL, ATTACHED)
 {
-  AbstractEntity::setCoordinatorAssistant(p);
+  setCoordinatorAssistant(p);
 }
 
 PstOutContainerInterface *
@@ -375,7 +364,7 @@ LockMediator::LockMediator(TaggedRef t) :
 LockMediator::LockMediator(TaggedRef t, CoordinatorAssistant* p) :
   ConstMediator(t, GLUE_LOCK, ATTACHED)
 {
-  AbstractEntity::setCoordinatorAssistant(p);
+  setCoordinatorAssistant(p);
 }
 
 AOcallback 
@@ -467,7 +456,7 @@ ArrayMediator::ArrayMediator(TaggedRef t) :
 ArrayMediator::ArrayMediator(TaggedRef t, CoordinatorAssistant* p) :
   ConstMediator(t, GLUE_ARRAY, ATTACHED)
 {
-  AbstractEntity::setCoordinatorAssistant(p);
+  setCoordinatorAssistant(p);
 }
 
 AOcallback 
@@ -553,7 +542,7 @@ DictionaryMediator::DictionaryMediator(TaggedRef t) :
 DictionaryMediator::DictionaryMediator(TaggedRef t, CoordinatorAssistant* p) :
   ConstMediator(t, GLUE_DICTIONARY, ATTACHED)
 {
-  AbstractEntity::setCoordinatorAssistant(p);
+  setCoordinatorAssistant(p);
 }
 
 AOcallback 
@@ -628,7 +617,7 @@ ObjectMediator::ObjectMediator(TaggedRef t) :
 ObjectMediator::ObjectMediator(TaggedRef t, CoordinatorAssistant* p) :
   ConstMediator(t, GLUE_OBJECT, ATTACHED)
 {
-  AbstractEntity::setCoordinatorAssistant(p);
+  setCoordinatorAssistant(p);
 }
 
 AOcallback
@@ -695,7 +684,7 @@ OzThreadMediator::OzThreadMediator(TaggedRef t) :
 OzThreadMediator::OzThreadMediator(TaggedRef t, CoordinatorAssistant* p) :
   ConstMediator(t, GLUE_THREAD, ATTACHED)
 {
-  AbstractEntity::setCoordinatorAssistant(p);
+  setCoordinatorAssistant(p);
 }
 
 AOcallback
@@ -735,21 +724,21 @@ UnusableMediator::UnusableMediator(TaggedRef t) :
 UnusableMediator::UnusableMediator(TaggedRef t, CoordinatorAssistant* p) :
   Mediator(t, GLUE_UNUSABLE, DETACHED)
 {
-  AbstractEntity::setCoordinatorAssistant(p);
+  setCoordinatorAssistant(p);
 }
 
 void UnusableMediator::globalize() {
-  Assert(AbstractEntity::getCoordinatorAssistant() == NULL);
+  Assert(!isDistributed());
   completeAnnotation();
-  AbstractEntity::setCoordinatorAssistant(dss->createProxy(annotation.pn,
-							   annotation.aa,
-							   annotation.rc));
+  setCoordinatorAssistant(dss->createProxy(annotation.pn,
+					   annotation.aa,
+					   annotation.rc));
 }
 
 void UnusableMediator::localize() {
   // We keep the mediator, so we remove the coordination proxy, and
   // reinsert it in the mediator table.
-  AbstractEntity::setCoordinatorAssistant(NULL);
+  setCoordinatorAssistant(NULL);
 }
 
 AOcallback
@@ -775,26 +764,22 @@ OzVariableMediator::OzVariableMediator(TaggedRef t, CoordinatorAssistant* p) :
   Mediator(t, oz_isFree(*tagged2Ref(t)) ? GLUE_VARIABLE : GLUE_READONLY,
 	   ATTACHED)
 {
-  AbstractEntity::setCoordinatorAssistant(p);
-}
-
-bool OzVariableMediator::isDistributed() const {
-  return AbstractEntity::getCoordinatorAssistant() != NULL;
+  setCoordinatorAssistant(p);
 }
 
 void OzVariableMediator::globalize() {
-  Assert(AbstractEntity::getCoordinatorAssistant() == NULL);
+  Assert(!isDistributed());
   completeAnnotation();
-  AbstractEntity::setCoordinatorAssistant(dss->createProxy(annotation.pn,
-							   annotation.aa,
-							   annotation.rc));
+  setCoordinatorAssistant(dss->createProxy(annotation.pn,
+					   annotation.aa,
+					   annotation.rc));
 }
 
 void OzVariableMediator::localize() {
   printf("--- raph: localize var mediator %p\n", this);
   // So remove the coordination proxy, and keep the mediator in the
   // table
-  AbstractEntity::setCoordinatorAssistant(NULL);
+  setCoordinatorAssistant(NULL);
 }
 
 PstOutContainerInterface *OzVariableMediator::retrieveEntityRepresentation(){
