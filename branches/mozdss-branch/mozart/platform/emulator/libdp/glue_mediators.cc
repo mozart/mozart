@@ -263,7 +263,7 @@ void ConstMediator::globalize() {
   setCoordinatorAssistant(dss->createProxy(annotation.pn,
 					   annotation.aa,
 					   annotation.rc));
-  getConst()->setMediator(static_cast<Mediator*>(this));
+  getConst()->setMediator(this);
   setAttached(ATTACHED);
 }
 

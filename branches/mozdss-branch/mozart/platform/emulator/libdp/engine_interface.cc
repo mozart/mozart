@@ -65,8 +65,8 @@ GlueIoFactoryClass* glue_ioFactory;
 
 
 // collect a mediator
-void gcMediatorImpl(void *m) {
-  static_cast<Mediator*>(m)->gCollect();
+void gcMediatorImpl(Mediator* med) {
+  med->gCollect();
 }
 
 /*************************************************************************************************/

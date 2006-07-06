@@ -571,6 +571,7 @@ public:
 #define CWH_BOARD    0
 #define CWH_GNAME    1
 #define CWH_MEDIATOR 2
+class Mediator;
 
 class ConstTermWithHome: public ConstTerm {
 private:
@@ -581,13 +582,13 @@ public:
   {
     boardOrGName.set(b,CWH_BOARD);
   }
-  void setMediator(void *mediator)
+  void setMediator(Mediator *med)
   {
-    boardOrGName.set(mediator, CWH_MEDIATOR);
+    boardOrGName.set(med, CWH_MEDIATOR);
   }
-  void *getMediator()
+  Mediator *getMediator()
   {
-    return boardOrGName.getPtr();
+    return (Mediator*) boardOrGName.getPtr();
   }
   ConstTermWithHome() { Assert(0); }
   ConstTermWithHome(Board *bb, TypeOfConst tt) : ConstTerm(tt) { setBoard(bb);}
