@@ -165,8 +165,23 @@ public:
 
 // The following specializations define the abstract operations
 // specific to each category.
+//
+// Note the use of virtual inheritance, to avoid multiple inheritance
+// issues.  One can define an generic extension of AbstractEntity, and
+// then specialize it to specific kinds of entities.  The performance
+// overhead of virtual inheritance is pretty small.  A typical
+// inheritance diagram is shown below, with virtual inheritance placed
+// as shown.
+//
+//                            AbstractEntity
+//                               /      \
+//                      virtual /        \ virtual
+//            MutableAbstractEntity      MyEntity
+//                              \        /
+//                               \      /
+//                           MyMutableEntity
 
-class DSSDLLSPEC MutableAbstractEntity: public AbstractEntity{
+class DSSDLLSPEC MutableAbstractEntity: public virtual AbstractEntity{
 public:
   MutableAbstractEntity();
 
@@ -187,7 +202,7 @@ public:
 };
 
 
-class DSSDLLSPEC RelaxedMutableAbstractEntity: public AbstractEntity{
+class DSSDLLSPEC RelaxedMutableAbstractEntity: public virtual AbstractEntity{
 public:
   RelaxedMutableAbstractEntity();
 
@@ -207,7 +222,7 @@ public:
 };
 
 
-class DSSDLLSPEC MonotonicAbstractEntity: public AbstractEntity{
+class DSSDLLSPEC MonotonicAbstractEntity: public virtual AbstractEntity{
 public:
   MonotonicAbstractEntity();
 
@@ -228,7 +243,7 @@ public:
 };
 
 
-class DSSDLLSPEC ImmutableAbstractEntity: public AbstractEntity{
+class DSSDLLSPEC ImmutableAbstractEntity: public virtual AbstractEntity{
 public:
   ImmutableAbstractEntity();
 

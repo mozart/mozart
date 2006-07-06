@@ -120,11 +120,11 @@ enum GlueTag {
 
 
 
-// Mediator is the abstract class for all mediators.  Mediator itself
-// does not extend class AbstractEntity, but each concrete mediator
-// class extends one of Mutable/Monotonic/Immutable AbstractEntity.
+// Mediator is the abstract class for all mediators.  Mediator extends
+// class AbstractEntity, and each concrete mediator class extends one
+// of Mutable/Monotonic/Immutable AbstractEntity.
 
-class Mediator {
+class Mediator : public virtual AbstractEntity {
   friend class MediatorTable;
 
 protected:
@@ -157,10 +157,9 @@ public:
   bool isAttached() const { return attached; }
   void setAttached(bool a) { attached = a; }
 
-  /*************** get entity/coordination proxy ***************/
+  /*************** get entity ***************/
   TaggedRef getEntity() const { return entity; }
-  CoordinatorAssistant* getCoordinatorAssistant();
-  void setCoordinatorAssistant(CoordinatorAssistant*);
+  bool isDistributed() const { return getCoordinatorAssistant() != NULL; }
 
   /*************** annotate/globalize/localize ***************/
   GlueTag getType() const { return type; }
@@ -187,7 +186,7 @@ public:
   TaggedRef      getFaultStream();
   OZ_Return      suspendOnFault();     // suspend on control var
 
-  void reportFS(const FaultState& fs);
+  virtual void reportFaultState(const FaultState&);
 
   /*************** marshaling ***************/
   virtual void marshal(ByteBuffer *bs);
@@ -232,7 +231,6 @@ public:
     Assert(0); return NULL; }
   virtual void installEntityRepresentation(PstInContainerInterface*) {
     Assert(0); }
-  virtual void reportFaultState(const FaultState& fs) { reportFS(fs); }
   virtual char *getPrintType() { return "port"; }
 }; 
 
@@ -252,7 +250,6 @@ public:
   virtual PstOutContainerInterface *retrieveEntityRepresentation();
   virtual PstOutContainerInterface *deinstallEntityRepresentation();
   virtual void installEntityRepresentation(PstInContainerInterface*); 
-  virtual void reportFaultState(const FaultState& fs) { reportFS(fs); }
   virtual char *getPrintType() { return "cell"; }
 }; 
 
@@ -272,7 +269,6 @@ public:
   virtual PstOutContainerInterface *retrieveEntityRepresentation();
   virtual PstOutContainerInterface *deinstallEntityRepresentation();
   virtual void installEntityRepresentation(PstInContainerInterface*); 
-  virtual void reportFaultState(const FaultState& fs) { reportFS(fs); }
   virtual char *getPrintType() { return "lock"; }
 }; 
 
@@ -292,7 +288,6 @@ public:
   virtual PstOutContainerInterface *retrieveEntityRepresentation();
   virtual PstOutContainerInterface *deinstallEntityRepresentation();
   virtual void installEntityRepresentation(PstInContainerInterface*); 
-  virtual void reportFaultState(const FaultState& fs) { reportFS(fs); }
   virtual void marshal(ByteBuffer*);
   virtual char *getPrintType() { return "array"; }
 }; 
@@ -313,7 +308,6 @@ public:
   virtual PstOutContainerInterface *retrieveEntityRepresentation();
   virtual PstOutContainerInterface *deinstallEntityRepresentation();
   virtual void installEntityRepresentation(PstInContainerInterface*); 
-  virtual void reportFaultState(const FaultState& fs) { reportFS(fs); }
   virtual char *getPrintType() { return "dictionary"; }
 }; 
 
@@ -333,7 +327,6 @@ public:
   virtual PstOutContainerInterface *retrieveEntityRepresentation();
   virtual PstOutContainerInterface *deinstallEntityRepresentation();
   virtual void installEntityRepresentation(PstInContainerInterface*); 
-  virtual void reportFaultState(const FaultState& fs) { reportFS(fs); }
   virtual void globalize();
   virtual void marshal(ByteBuffer*);
   virtual char *getPrintType() { return "object"; }
@@ -354,7 +347,6 @@ public:
 				   PstOutContainerInterface*&);
   virtual PstOutContainerInterface *retrieveEntityRepresentation();
   virtual void installEntityRepresentation(PstInContainerInterface*); 
-  virtual void reportFaultState(const FaultState& fs) { reportFS(fs); }
   virtual char *getPrintType() { return "thread"; }
 };
 
@@ -374,7 +366,6 @@ public:
     Assert(0); return NULL; }
   virtual void installEntityRepresentation(PstInContainerInterface*) {
     Assert(0); }
-  virtual void reportFaultState(const FaultState& fs) { reportFS(fs); }
   virtual void globalize();
   virtual void localize();
   virtual char *getPrintType() { return "unusable"; }
@@ -387,7 +378,6 @@ class OzVariableMediator: public Mediator, public MonotonicAbstractEntity {
 public:
   OzVariableMediator(TaggedRef);
   OzVariableMediator(TaggedRef, CoordinatorAssistant*);
-  bool isDistributed() const;
   
   virtual void globalize();
   virtual void localize();
@@ -401,7 +391,6 @@ public:
 				      PstOutContainerInterface*& answer);
   virtual PstOutContainerInterface *retrieveEntityRepresentation();
   virtual void installEntityRepresentation(PstInContainerInterface*);
-  virtual void reportFaultState(const FaultState& fs) { reportFS(fs); }
 }; 
 
 // Note.  Patched variables keep their distribution support alive,
