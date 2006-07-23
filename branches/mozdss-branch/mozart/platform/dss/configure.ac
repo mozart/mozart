@@ -71,14 +71,14 @@ AC_PROG_CXX(CXX)
 AC_MSG_CHECKING(for $CXX version)
 CXX_VERSION="`$CXX -dumpversion`"
 case "$CXX_VERSION" in
+    1* | 2*)
+	VERSION=BELOW3
+    ;;
     3*)
 	VERSION=3
     ;;
-    2*)
-	VERSION=2
-    ;;
     *)
-	VERSION=X
+	VERSION=ABOVE3
     ;;
 esac
 AC_MSG_RESULT($CXX_VERSION)
@@ -216,25 +216,28 @@ case "$host_os" in
     solaris*)
 	AC_MSG_RESULT(-- adding solaris environment --)
 	CXXFLAGS="-DSOLARIS $CXXFLAGS"
+    ;;
+    darwin*)
+	if test "$enable_modules_static" != yes; then
+	    # Mac OS X does not support shared objects
+	    AC_MSG_ERROR(DSS will not build without --enable-modules-static on Darwin!)
+	fi
+    ;;
 esac
 
 CPU_FLAGS=""
 AC_MSG_CHECKING(CPU type)
 case "$host_cpu" in
-    i?86)
-        AC_MSG_RESULT(intel $host_cpu arch)
-	CPU_FLAGS="-march=$host_cpu -mcpu=$host_cpu"
-    ;;
     sparc)
         AC_MSG_RESULT(sparc CPU)
 	CPU_FLAGS="-mcpu=v8 -DBIG_ENDIAN_HOST"
     ;;
     *)
 	AC_MSG_RESULT($host_cpu architecture)
-	if test "$VERSION" = 3; then
-	    CPU_FLAGS="-march=$host_cpu -mcpu=$host_cpu"
+	if test "$VERSION" = ABOVE3; then
+	    CPU_FLAGS="-march=$host_cpu -mtune=$host_cpu"
 	else
-	    CPU_FLAGS="-march=i686 -mcpu=i686"
+	    CPU_FLAGS="-march=$host_cpu -mcpu=$host_cpu"
 	fi
     ;;
 esac
@@ -258,6 +261,7 @@ AC_SUBST(UTILS)
 AC_SUBST(EXAMPLES)
 AC_SUBST(CREATE_OBJS)
 AC_SUBST(CREATE_OBJS_COMMAND)
+AC_SUBST(CXXFLAGS)
 
 AC_CONFIG_FILES(Makefile Makefile.vars)
 AC_OUTPUT

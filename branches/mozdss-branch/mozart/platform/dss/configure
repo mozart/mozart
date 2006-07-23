@@ -4998,14 +4998,14 @@ echo "$as_me:$LINENO: checking for $CXX version" >&5
 echo $ECHO_N "checking for $CXX version... $ECHO_C" >&6
 CXX_VERSION="`$CXX -dumpversion`"
 case "$CXX_VERSION" in
+    1* | 2*)
+	VERSION=BELOW3
+    ;;
     3*)
 	VERSION=3
     ;;
-    2*)
-	VERSION=2
-    ;;
     *)
-	VERSION=X
+	VERSION=ABOVE3
     ;;
 esac
 echo "$as_me:$LINENO: result: $CXX_VERSION" >&5
@@ -5219,17 +5219,21 @@ echo "${ECHO_T}-- adding cygwin environment --" >&6
 	echo "$as_me:$LINENO: result: -- adding solaris environment --" >&5
 echo "${ECHO_T}-- adding solaris environment --" >&6
 	CXXFLAGS="-DSOLARIS $CXXFLAGS"
+    ;;
+    darwin*)
+	if test "$enable_modules_static" != yes; then
+	    # Mac OS X does not support shared objects
+	    { { echo "$as_me:$LINENO: error: DSS will not build without --enable-modules-static on Darwin!" >&5
+echo "$as_me: error: DSS will not build without --enable-modules-static on Darwin!" >&2;}
+   { (exit 1); exit 1; }; }
+	fi
+    ;;
 esac
 
 CPU_FLAGS=""
 echo "$as_me:$LINENO: checking CPU type" >&5
 echo $ECHO_N "checking CPU type... $ECHO_C" >&6
 case "$host_cpu" in
-    i?86)
-        echo "$as_me:$LINENO: result: intel $host_cpu arch" >&5
-echo "${ECHO_T}intel $host_cpu arch" >&6
-	CPU_FLAGS="-march=$host_cpu -mcpu=$host_cpu"
-    ;;
     sparc)
         echo "$as_me:$LINENO: result: sparc CPU" >&5
 echo "${ECHO_T}sparc CPU" >&6
@@ -5238,10 +5242,10 @@ echo "${ECHO_T}sparc CPU" >&6
     *)
 	echo "$as_me:$LINENO: result: $host_cpu architecture" >&5
 echo "${ECHO_T}$host_cpu architecture" >&6
-	if test "$VERSION" = 3; then
-	    CPU_FLAGS="-march=$host_cpu -mcpu=$host_cpu"
+	if test "$VERSION" = ABOVE3; then
+	    CPU_FLAGS="-march=$host_cpu -mtune=$host_cpu"
 	else
-	    CPU_FLAGS="-march=i686 -mcpu=i686"
+	    CPU_FLAGS="-march=$host_cpu -mcpu=$host_cpu"
 	fi
     ;;
 esac
@@ -5254,6 +5258,7 @@ if test "$prefix" = "" -o "$prefix" = "NONE"; then
 echo "$as_me: WARNING: No prefix supplied" >&2;}
     COPY_HEADERS=""
 fi
+
 
 
 
