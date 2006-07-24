@@ -236,7 +236,7 @@ bootstrap:: all
 $(MODINTERS): bidecl.perl
 .PHONY: libDSS.a
 libDSS.a:
-	cp ../dss/libDSS.a .
+	cp -p ../dss/libDSS.a .
 
 .PHONY: libGlue.a
 libGlue.a:
@@ -244,7 +244,7 @@ libGlue.a:
 
 .PHONY: Glue.so-$(PLATFORM)
 Glue.so-$(PLATFORM):
-	cp ../dss/libDSS.so .
+	cp -p ../dss/libDSS.so .
 	cd libdp; $(MAKE) ../$@
 
 .PHONY: libFDP.a FDP.so-$(PLATFORM) libSchedule.a Schedule.so-$(PLATFORM)
