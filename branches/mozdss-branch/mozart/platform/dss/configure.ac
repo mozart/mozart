@@ -206,6 +206,7 @@ AC_MSG_RESULT()
 AC_MSG_CHECKING(environment)
 AC_MSG_RESULT(found $host_os)
 dnl Check for special cygwin environment
+DYNLD="\$(CXX) -shared -Wl,-soname,\$@"
 case "$host_os" in
     *cygwin)
         AC_MSG_RESULT(-- adding cygwin environment --)
@@ -218,10 +219,7 @@ case "$host_os" in
 	CXXFLAGS="-DSOLARIS $CXXFLAGS"
     ;;
     darwin*)
-	if test "$enable_modules_static" != yes; then
-	    # Mac OS X does not support shared objects
-	    AC_MSG_ERROR(DSS will not build without --enable-modules-static on Darwin!)
-	fi
+	DYNLD="\$(CXX) -dynamic -bundle -flat_namespace -undefined suppress"
     ;;
 esac
 
@@ -262,6 +260,7 @@ AC_SUBST(EXAMPLES)
 AC_SUBST(CREATE_OBJS)
 AC_SUBST(CREATE_OBJS_COMMAND)
 AC_SUBST(CXXFLAGS)
+AC_SUBST(DYNLD)
 
 AC_CONFIG_FILES(Makefile Makefile.vars)
 AC_OUTPUT

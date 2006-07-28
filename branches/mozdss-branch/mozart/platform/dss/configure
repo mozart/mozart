@@ -313,7 +313,7 @@ ac_includes_default="\
 
 ac_subdirs_all="$ac_subdirs_all examples"
 ac_subdirs_all="$ac_subdirs_all utils"
-ac_subst_vars='SHELL PATH_SEPARATOR PACKAGE_NAME PACKAGE_TARNAME PACKAGE_VERSION PACKAGE_STRING PACKAGE_BUGREPORT exec_prefix prefix program_transform_name bindir sbindir libexecdir datadir sysconfdir sharedstatedir localstatedir libdir includedir oldincludedir infodir mandir build_alias host_alias target_alias DEFS ECHO_C ECHO_N ECHO_T LIBS build build_cpu build_vendor build_os host host_cpu host_vendor host_os CXX CXXFLAGS LDFLAGS CPPFLAGS ac_ct_CXX EXEEXT OBJEXT CC CFLAGS ac_ct_CC INSTALL_PROGRAM INSTALL_SCRIPT INSTALL_DATA SET_MAKE CXXCPP EGREP AR RANLIB ac_ct_RANLIB subdirs WARNINGS EXCEPTS ENVTYPE ENV COPY_HEADERS UTILS EXAMPLES CREATE_OBJS CREATE_OBJS_COMMAND LIBOBJS LTLIBOBJS'
+ac_subst_vars='SHELL PATH_SEPARATOR PACKAGE_NAME PACKAGE_TARNAME PACKAGE_VERSION PACKAGE_STRING PACKAGE_BUGREPORT exec_prefix prefix program_transform_name bindir sbindir libexecdir datadir sysconfdir sharedstatedir localstatedir libdir includedir oldincludedir infodir mandir build_alias host_alias target_alias DEFS ECHO_C ECHO_N ECHO_T LIBS build build_cpu build_vendor build_os host host_cpu host_vendor host_os CXX CXXFLAGS LDFLAGS CPPFLAGS ac_ct_CXX EXEEXT OBJEXT CC CFLAGS ac_ct_CC INSTALL_PROGRAM INSTALL_SCRIPT INSTALL_DATA SET_MAKE CXXCPP EGREP AR RANLIB ac_ct_RANLIB subdirs WARNINGS EXCEPTS ENVTYPE ENV COPY_HEADERS UTILS EXAMPLES CREATE_OBJS CREATE_OBJS_COMMAND DYNLD LIBOBJS LTLIBOBJS'
 ac_subst_files=''
 
 # Initialize some variables set by options.
@@ -5207,6 +5207,7 @@ echo "$as_me:$LINENO: checking environment" >&5
 echo $ECHO_N "checking environment... $ECHO_C" >&6
 echo "$as_me:$LINENO: result: found $host_os" >&5
 echo "${ECHO_T}found $host_os" >&6
+DYNLD="\$(CXX) -shared -Wl,-soname,\$@"
 case "$host_os" in
     *cygwin)
         echo "$as_me:$LINENO: result: -- adding cygwin environment --" >&5
@@ -5221,12 +5222,7 @@ echo "${ECHO_T}-- adding solaris environment --" >&6
 	CXXFLAGS="-DSOLARIS $CXXFLAGS"
     ;;
     darwin*)
-	if test "$enable_modules_static" != yes; then
-	    # Mac OS X does not support shared objects
-	    { { echo "$as_me:$LINENO: error: DSS will not build without --enable-modules-static on Darwin!" >&5
-echo "$as_me: error: DSS will not build without --enable-modules-static on Darwin!" >&2;}
-   { (exit 1); exit 1; }; }
-	fi
+	DYNLD="\$(CXX) -dynamic -bundle -flat_namespace -undefined suppress"
     ;;
 esac
 
@@ -5258,6 +5254,7 @@ if test "$prefix" = "" -o "$prefix" = "NONE"; then
 echo "$as_me: WARNING: No prefix supplied" >&2;}
     COPY_HEADERS=""
 fi
+
 
 
 
@@ -5945,6 +5942,7 @@ s,@UTILS@,$UTILS,;t t
 s,@EXAMPLES@,$EXAMPLES,;t t
 s,@CREATE_OBJS@,$CREATE_OBJS,;t t
 s,@CREATE_OBJS_COMMAND@,$CREATE_OBJS_COMMAND,;t t
+s,@DYNLD@,$DYNLD,;t t
 s,@LIBOBJS@,$LIBOBJS,;t t
 s,@LTLIBOBJS@,$LTLIBOBJS,;t t
 CEOF

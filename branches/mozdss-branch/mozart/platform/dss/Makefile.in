@@ -42,7 +42,7 @@ all: @ENVTYPE@
 	@EXAMPLES@
 
 lib@ENV@.so: $(OBJS@ENV@)
-	$(CXX) -shared -Wl,-soname,$@ -o $@ $(OBJS@ENV@) $(LIBS)
+	@DYNLD@ -o $@ $(OBJS@ENV@) $(LIBS)
 
 lib@ENV@.a: lib@ENV@.a($(OBJS@ENV@))
 	$(RANLIB) $@
