@@ -157,9 +157,12 @@ public:
   bool isAttached() const { return attached; }
   void setAttached(bool a) { attached = a; }
 
-  /*************** get entity ***************/
+  /*************** entity/coordinator ***************/
   TaggedRef getEntity() const { return entity; }
+  void setProxy(CoordinatorAssistant*);
   bool isDistributed() const { return getCoordinatorAssistant() != NULL; }
+
+  // Note: use setProxy() instead of setCoordinatorAssistant().
 
   /*************** annotate/globalize/localize ***************/
   GlueTag getType() const { return type; }

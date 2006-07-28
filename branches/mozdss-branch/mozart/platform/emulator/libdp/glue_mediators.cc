@@ -138,6 +138,18 @@ Mediator::makePassive() {
 }
 
 void
+Mediator::setProxy(CoordinatorAssistant* p) {
+  setCoordinatorAssistant(p);
+  if (p) {
+    if (faultState == GLUE_FAULT_PERM) {
+      abstractOperation_Kill();     // globalizing a failed entity...
+    } else {
+      p->setRegisteredFS(FS_PROT_MASK);
+    }
+  }
+}
+
+void
 Mediator::completeAnnotation() {
   if (!annotation.pn || !annotation.aa || !annotation.rc) {
     Annotation def = getDefaultAnnotation(getType());
@@ -249,9 +261,7 @@ void ConstMediator::globalize() {
   // Determine the full annotation, create a coordination proxy with
   // it, and attach the mediator.
   completeAnnotation();
-  setCoordinatorAssistant(dss->createProxy(annotation.pn,
-					   annotation.aa,
-					   annotation.rc));
+  setProxy(dss->createProxy(annotation.pn, annotation.aa, annotation.rc));
   getConst()->setMediator(this);
   setAttached(ATTACHED);
 }
@@ -259,7 +269,7 @@ void ConstMediator::globalize() {
 void ConstMediator::localize() {
   // We keep the mediator, so we remove the coordination proxy, detach
   // the mediator, and reinsert it in the mediator table.
-  setCoordinatorAssistant(NULL);
+  setProxy(NULL);
   getConst()->setBoard(oz_currentBoard());
   setAttached(DETACHED);
 }
@@ -275,7 +285,7 @@ PortMediator::PortMediator(TaggedRef t) :
 PortMediator::PortMediator(TaggedRef t, CoordinatorAssistant* p) :
   ConstMediator(t, GLUE_PORT, ATTACHED)
 {
-  setCoordinatorAssistant(p);
+  setProxy(p);
 }
 
 AOcallback
@@ -308,7 +318,7 @@ CellMediator::CellMediator(TaggedRef t) :
 CellMediator::CellMediator(TaggedRef t, CoordinatorAssistant* p) :
   ConstMediator(t, GLUE_CELL, ATTACHED)
 {
-  setCoordinatorAssistant(p);
+  setProxy(p);
 }
 
 PstOutContainerInterface *
@@ -364,7 +374,7 @@ LockMediator::LockMediator(TaggedRef t) :
 LockMediator::LockMediator(TaggedRef t, CoordinatorAssistant* p) :
   ConstMediator(t, GLUE_LOCK, ATTACHED)
 {
-  setCoordinatorAssistant(p);
+  setProxy(p);
 }
 
 AOcallback 
@@ -456,7 +466,7 @@ ArrayMediator::ArrayMediator(TaggedRef t) :
 ArrayMediator::ArrayMediator(TaggedRef t, CoordinatorAssistant* p) :
   ConstMediator(t, GLUE_ARRAY, ATTACHED)
 {
-  setCoordinatorAssistant(p);
+  setProxy(p);
 }
 
 AOcallback 
@@ -542,7 +552,7 @@ DictionaryMediator::DictionaryMediator(TaggedRef t) :
 DictionaryMediator::DictionaryMediator(TaggedRef t, CoordinatorAssistant* p) :
   ConstMediator(t, GLUE_DICTIONARY, ATTACHED)
 {
-  setCoordinatorAssistant(p);
+  setProxy(p);
 }
 
 AOcallback 
@@ -617,7 +627,7 @@ ObjectMediator::ObjectMediator(TaggedRef t) :
 ObjectMediator::ObjectMediator(TaggedRef t, CoordinatorAssistant* p) :
   ConstMediator(t, GLUE_OBJECT, ATTACHED)
 {
-  setCoordinatorAssistant(p);
+  setProxy(p);
 }
 
 AOcallback
@@ -684,7 +694,7 @@ OzThreadMediator::OzThreadMediator(TaggedRef t) :
 OzThreadMediator::OzThreadMediator(TaggedRef t, CoordinatorAssistant* p) :
   ConstMediator(t, GLUE_THREAD, ATTACHED)
 {
-  setCoordinatorAssistant(p);
+  setProxy(p);
 }
 
 AOcallback
@@ -724,21 +734,19 @@ UnusableMediator::UnusableMediator(TaggedRef t) :
 UnusableMediator::UnusableMediator(TaggedRef t, CoordinatorAssistant* p) :
   Mediator(t, GLUE_UNUSABLE, DETACHED)
 {
-  setCoordinatorAssistant(p);
+  setProxy(p);
 }
 
 void UnusableMediator::globalize() {
   Assert(!isDistributed());
   completeAnnotation();
-  setCoordinatorAssistant(dss->createProxy(annotation.pn,
-					   annotation.aa,
-					   annotation.rc));
+  setProxy(dss->createProxy(annotation.pn, annotation.aa, annotation.rc));
 }
 
 void UnusableMediator::localize() {
   // We keep the mediator, so we remove the coordination proxy, and
   // reinsert it in the mediator table.
-  setCoordinatorAssistant(NULL);
+  setProxy(NULL);
 }
 
 AOcallback
@@ -764,22 +772,20 @@ OzVariableMediator::OzVariableMediator(TaggedRef t, CoordinatorAssistant* p) :
   Mediator(t, oz_isFree(*tagged2Ref(t)) ? GLUE_VARIABLE : GLUE_READONLY,
 	   ATTACHED)
 {
-  setCoordinatorAssistant(p);
+  setProxy(p);
 }
 
 void OzVariableMediator::globalize() {
   Assert(!isDistributed());
   completeAnnotation();
-  setCoordinatorAssistant(dss->createProxy(annotation.pn,
-					   annotation.aa,
-					   annotation.rc));
+  setProxy(dss->createProxy(annotation.pn, annotation.aa, annotation.rc));
 }
 
 void OzVariableMediator::localize() {
   printf("--- raph: localize var mediator %p\n", this);
   // So remove the coordination proxy, and keep the mediator in the
   // table
-  setCoordinatorAssistant(NULL);
+  setProxy(NULL);
 }
 
 PstOutContainerInterface *OzVariableMediator::retrieveEntityRepresentation(){
