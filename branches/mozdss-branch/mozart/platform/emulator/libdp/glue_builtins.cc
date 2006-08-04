@@ -742,6 +742,39 @@ OZ_BI_define(BIsetFaultState,2,0)
 
 } OZ_BI_end
 
+/************************* Killing entities *************************/
+
+OZ_BI_define(BIkill,1,0)
+{
+  oz_declareSafeDerefIN(0,entity);
+
+  Mediator* med = glue_getMediator(entity);
+  if (med == NULL)
+    return oz_raise(E_SYSTEM, AtomDp, "nondistributable entity", 1, entity);
+
+  if (med->isDistributed())
+    med->abstractOperation_Kill();
+  else
+    med->setFaultState(GLUE_FAULT_PERM);
+
+  return PROCEED;
+} OZ_BI_end
+
+OZ_BI_define(BIkillLocal,1,0)
+{
+  oz_declareSafeDerefIN(0,entity);
+
+  Mediator* med = glue_getMediator(entity);
+  if (med == NULL)
+    return oz_raise(E_SYSTEM, AtomDp, "nondistributable entity", 1, entity);
+
+  // simply set fault state to localFail (at least)
+  med->setFaultState(GLUE_FAULT_LOCAL);
+  return PROCEED;
+} OZ_BI_end
+
+/******************** Tempfail detection parameters ********************/
+
 OZ_BI_define(BIgetMaxRtt,0,1)
 {
   OZ_RETURN(oz_int(RTT_UPPERBOUND));

@@ -163,9 +163,11 @@ void Mediator::gCollect(){
   if (!collected) {
     printf("--- raph: gc %s mediator %p\n", getPrintType(), this);
     collected = TRUE;
-    // collect the entity, its fault stream, and control var (if present)
+    // collect the entity, its fault stream, ...
     oz_gCollectTerm(entity, entity);
     oz_gCollectTerm(faultStream, faultStream);
+    // ... and mark the control var only if the failure can go away
+    if (faultState > GLUE_FAULT_TEMP) faultCtlVar = makeTaggedNULL();
     oz_gCollectTerm(faultCtlVar, faultCtlVar);
   }
 }
@@ -190,20 +192,35 @@ Mediator::getDssGCStatus() {
   return dss_gc_status;
 }
 
+// used below to extend the fault stream
+inline
+void addToTail(TaggedRef& tail, const TaggedRef val) {
+  TaggedRef t = oz_newReadOnly(oz_rootBoard());
+  oz_bindReadOnly(tagged2Ref(tail), oz_cons(val, t));
+  tail = t;
+}
+
 void
 Mediator::setFaultState(GlueFaultState fs) {
-  if (faultState != fs) {
-    faultState = fs;
+  // this method is robust: it has no effect if state fs cannot be
+  // reached from the current fault state.  This simplifies cases like
+  // the DSS reporting 'ok' while we are in state 'localFail'.
+  if (faultState == fs) return;
 
-    if (fs == GLUE_FAULT_NONE && faultCtlVar) { // wakeup blocked threads
+  if (faultState < fs) {   // we are going to a worse state
+    do {
+      faultState = static_cast<GlueFaultState>(faultState + 1);
+      if (faultStream) addToTail(faultStream, fsToAtom(faultState));
+    } while (faultState < fs);
+    Assert(faultState == fs);
+
+  } else if (faultState == GLUE_FAULT_TEMP) {   // tempFail -> ok
+    Assert(fs == GLUE_FAULT_NONE);
+    faultState = fs;
+    if (faultStream) addToTail(faultStream, fsToAtom(faultState));
+    if (faultCtlVar) {   // wake up blocked threads
       ControlVarResume(faultCtlVar);
       faultCtlVar = makeTaggedNULL();
-    }
-
-    if (faultStream) {   // extend fault stream if present
-      TaggedRef tail = oz_newReadOnly(oz_rootBoard());
-      oz_bindReadOnly(tagged2Ref(faultStream), oz_cons(fsToAtom(fs), tail));
-      faultStream = tail;
     }
   }
 }
