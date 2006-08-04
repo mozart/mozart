@@ -40,11 +40,12 @@
 
 #include "tagged.hh"
 
-// entity fault states
+// entity fault states (do not change order!)
 enum GlueFaultState {
   GLUE_FAULT_NONE = 0,     // must be zero; non-zero means failure
-  GLUE_FAULT_TEMP,
-  GLUE_FAULT_PERM
+  GLUE_FAULT_TEMP,         // tempFail
+  GLUE_FAULT_LOCAL,        // localFail
+  GLUE_FAULT_PERM          // permFail
 };
 
 // conversion between GlueFaultState and atoms
@@ -53,15 +54,17 @@ TaggedRef fsToAtom(GlueFaultState fs) {
   switch (fs) {
   case GLUE_FAULT_NONE: return AtomOk;
   case GLUE_FAULT_TEMP: return AtomTempFail;
+  case GLUE_FAULT_LOCAL: return AtomLocalFail;
   case GLUE_FAULT_PERM: return AtomPermFail;
   }
   Assert(0);
 }
 
-// returns TRUE iff the conversion is succesful
+// returns TRUE iff the conversion is successful
 inline
 Bool atomToFS(TaggedRef a, GlueFaultState &fs) {
   if (oz_eq(a, AtomPermFail)) { fs = GLUE_FAULT_PERM; return TRUE; }
+  if (oz_eq(a, AtomLocalFail)) { fs = GLUE_FAULT_LOCAL; return TRUE; }
   if (oz_eq(a, AtomTempFail)) { fs = GLUE_FAULT_TEMP; return TRUE; }
   if (oz_eq(a, AtomOk))       { fs = GLUE_FAULT_NONE; return TRUE; }
   return FALSE;
@@ -71,7 +74,7 @@ Bool atomToFS(TaggedRef a, GlueFaultState &fs) {
 inline
 Bool validFaultStateTransition(const GlueFaultState& s0,
 			       const GlueFaultState& s1) {
-  return (s0 != GLUE_FAULT_PERM || s1 == GLUE_FAULT_PERM);
+  return (s0 <= s1 || s0 == GLUE_FAULT_TEMP);
 }
 
 #endif

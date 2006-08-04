@@ -174,6 +174,14 @@
 				  out => [],
 				  BI  => BIsetFaultState},
 
+     'kill'                  => { in  => ['value'],
+				  out => [],
+				  BI  => BIkill},
+
+     'killLocal'             => { in  => ['value'],
+				  out => [],
+				  BI  => BIkillLocal},
+
      'getMaxRtt'             => { in  => [],
                                   out => ['+int'],
                                   BI  => BIgetMaxRtt},
