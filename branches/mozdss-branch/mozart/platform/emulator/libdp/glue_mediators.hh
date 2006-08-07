@@ -83,14 +83,18 @@
   this only happens when variables are bound.  For the sake of
   consistency, passive mediators are considered attached (see below).
 
-  - A mediator is ATTACHED when the emulator has a direct pointer to
-  it.  Otherwise is is DETACHED, and should be looked up in the
-  mediator table (using the entity's taggedref as a key).  Attached
-  mediators are not found by looking up the mediator table.
+  - A mediator is ATTACHED when its corresponding entity has a direct
+  pointer to it.  Otherwise is is DETACHED, and should be looked up in
+  the mediator table (using the entity's taggedref as a key).
+  Attached mediators are not found by looking up the mediator table.
 
-  Note. Insertion of the mediator in the mediator table is automatic
+  Note 1. Insertion of the mediator in the mediator table is automatic
   upon creation.  Connection to the coordination proxy is also
   automatic upon globalization.
+
+  Note 2. Mediators of failed entities should be attached, otherwise
+  the emulator might not notice the failure.  This is because we only
+  check for failure if the entity has an attached mediator.
 
  */
 
@@ -155,7 +159,8 @@ public:
   void makePassive();
 
   bool isAttached() const { return attached; }
-  void setAttached(bool a) { attached = a; }
+  virtual void attach() {}     // attach mediator if possible
+  virtual void detach() {}     // detach mediator if possible
 
   /*************** entity/coordinator ***************/
   TaggedRef getEntity() const { return entity; }
@@ -171,8 +176,8 @@ public:
   void setAnnotation(const Annotation& a) { annotation = a; }
   void completeAnnotation();
 
-  virtual void globalize() = 0;     // create coordination proxy
-  virtual void localize() = 0;      // localize entity
+  void globalize();     // create coordination proxy
+  void localize();      // localize entity
 
   /*************** garbage collection ***************/
   bool isCollected() const { return collected; }
@@ -212,8 +217,8 @@ class ConstMediator: public Mediator {
 public: 
   ConstMediator(TaggedRef t, GlueTag type, bool attached);
   ConstTermWithHome* getConst() const;
-  virtual void globalize();
-  virtual void localize();
+  virtual void attach();
+  virtual void detach();
   virtual char *getPrintType() { return "const"; }
 };
 
@@ -330,7 +335,6 @@ public:
   virtual PstOutContainerInterface *retrieveEntityRepresentation();
   virtual PstOutContainerInterface *deinstallEntityRepresentation();
   virtual void installEntityRepresentation(PstInContainerInterface*); 
-  virtual void globalize();
   virtual void marshal(ByteBuffer*);
   virtual char *getPrintType() { return "object"; }
 };
@@ -369,8 +373,6 @@ public:
     Assert(0); return NULL; }
   virtual void installEntityRepresentation(PstInContainerInterface*) {
     Assert(0); }
-  virtual void globalize();
-  virtual void localize();
   virtual char *getPrintType() { return "unusable"; }
 };
 
@@ -382,8 +384,6 @@ public:
   OzVariableMediator(TaggedRef);
   OzVariableMediator(TaggedRef, CoordinatorAssistant*);
   
-  virtual void globalize();
-  virtual void localize();
   virtual char *getPrintType() { return "var"; }
 
   virtual AOcallback callback_Bind(DssOperationId *id,

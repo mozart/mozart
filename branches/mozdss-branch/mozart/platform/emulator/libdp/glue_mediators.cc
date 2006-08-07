@@ -141,11 +141,10 @@ void
 Mediator::setProxy(CoordinatorAssistant* p) {
   setCoordinatorAssistant(p);
   if (p) {
-    if (faultState == GLUE_FAULT_PERM) {
+    if (faultState == GLUE_FAULT_PERM)
       abstractOperation_Kill();     // globalizing a failed entity...
-    } else {
-      p->setRegisteredFS(FS_PROT_MASK);
-    }
+    else
+      p->setRegisteredFS(FS_PROT_MASK);   // register fault reporting
   }
 }
 
@@ -157,6 +156,24 @@ Mediator::completeAnnotation() {
     if (!annotation.aa) annotation.aa = def.aa;
     if (!annotation.rc) annotation.rc = def.rc;
   }
+}
+
+void Mediator::globalize() {
+  Assert(!isDistributed());
+  // Determine full annotation, create a coordination proxy with it,
+  // and attach the mediator.
+  completeAnnotation();
+  setProxy(dss->createProxy(annotation.pn, annotation.aa, annotation.rc));
+  if (!attached) attach();
+}
+
+void Mediator::localize() {
+  Assert(isDistributed());
+  // We have to keep the mediator for future globalizations.  So
+  // remove the coordination proxy, and detach the mediator (unless
+  // the entity has failed).
+  setProxy(NULL);
+  if (attached && faultState == GLUE_FAULT_NONE) detach();
 }
 
 void Mediator::gCollect(){
@@ -213,6 +230,10 @@ Mediator::setFaultState(GlueFaultState fs) {
       if (faultStream) addToTail(faultStream, fsToAtom(faultState));
     } while (faultState < fs);
     Assert(faultState == fs);
+
+    // the failure probably won't be noticed by the emulator if the
+    // mediator is detached, so try to attach it.
+    if (!attached) attach();
 
   } else if (faultState == GLUE_FAULT_TEMP) {   // tempFail -> ok
     Assert(fs == GLUE_FAULT_NONE);
@@ -273,22 +294,14 @@ ConstTermWithHome* ConstMediator::getConst() const {
   return static_cast<ConstTermWithHome*>(tagged2Const(getEntity()));
 }
 
-void ConstMediator::globalize() {
-  Assert(!isDistributed());
-  // Determine the full annotation, create a coordination proxy with
-  // it, and attach the mediator.
-  completeAnnotation();
-  setProxy(dss->createProxy(annotation.pn, annotation.aa, annotation.rc));
+void ConstMediator::attach() {
   getConst()->setMediator(this);
-  setAttached(ATTACHED);
+  attached = TRUE;
 }
 
-void ConstMediator::localize() {
-  // We keep the mediator, so we remove the coordination proxy, detach
-  // the mediator, and reinsert it in the mediator table.
-  setProxy(NULL);
+void ConstMediator::detach() {
   getConst()->setBoard(oz_currentBoard());
-  setAttached(DETACHED);
+  attached = FALSE;
 }
 
 
@@ -670,36 +683,6 @@ ObjectMediator::deinstallEntityRepresentation(){ return NULL; }
 void
 ObjectMediator::installEntityRepresentation(PstInContainerInterface*){;}
 
-void ObjectMediator::globalize() {
-  // We still have to figure out for this one.  See the old crap below.
-
-  /*
-  Assert(getAbstractEntity() == NULL);
-
-  completeAnnotation();
-  setAbstractEntity(dss->m_createMutableAbstractEntity(annotation.pn,
-						       annotation.aa,
-						       annotation.rc));
-  //bmc: Maybe two possibilities here. Create a LazyVarMediator first
-  //continuing with the approach of marshaling only the stub in the 
-  //beginning, or just go eagerly for the object. We are going to try
-  //the eager approach first, and then the optimization.
-  
-  //bmc: Cellify state
-  OzObject *o = tagged2Object(entity);
-  RecOrCell state = o->getState();
-  if (!stateIsCell(state)) {
-    SRecord *r = getRecord(state);
-    Assert(r != NULL);
-    OzCell *cell = tagged2Cell(OZ_newCell(makeTaggedSRecord(r)));
-    o->setState(cell);
-  }
-  
-  o->setMediator((void *)this);
-  setAttached(ATTACHED);
-  */
-}
-
 
 
 /************************* OzThreadMediator *************************/
@@ -754,18 +737,6 @@ UnusableMediator::UnusableMediator(TaggedRef t, CoordinatorAssistant* p) :
   setProxy(p);
 }
 
-void UnusableMediator::globalize() {
-  Assert(!isDistributed());
-  completeAnnotation();
-  setProxy(dss->createProxy(annotation.pn, annotation.aa, annotation.rc));
-}
-
-void UnusableMediator::localize() {
-  // We keep the mediator, so we remove the coordination proxy, and
-  // reinsert it in the mediator table.
-  setProxy(NULL);
-}
-
 AOcallback
 UnusableMediator::callback_Read(DssThreadId*, DssOperationId*,
 				PstInContainerInterface*,
@@ -790,19 +761,6 @@ OzVariableMediator::OzVariableMediator(TaggedRef t, CoordinatorAssistant* p) :
 	   ATTACHED)
 {
   setProxy(p);
-}
-
-void OzVariableMediator::globalize() {
-  Assert(!isDistributed());
-  completeAnnotation();
-  setProxy(dss->createProxy(annotation.pn, annotation.aa, annotation.rc));
-}
-
-void OzVariableMediator::localize() {
-  printf("--- raph: localize var mediator %p\n", this);
-  // So remove the coordination proxy, and keep the mediator in the
-  // table
-  setProxy(NULL);
 }
 
 PstOutContainerInterface *OzVariableMediator::retrieveEntityRepresentation(){
