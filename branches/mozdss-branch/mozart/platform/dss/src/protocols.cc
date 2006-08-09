@@ -4,7 +4,7 @@
  *    Zacharias El Banna (zeb@sics.se)
  * 
  *  Contributors:
- *    optional, Contributor's name (Contributor's email address)
+ *    Raphael Collet (raph@info.ucl.ac.be)
  * 
  *  Copyright:
  *    Erik Klintskog,  2003
@@ -43,157 +43,176 @@
 #include "protocol_transient_remote.hh"
 #include "protocol_lazyinvalid.hh"
 
-
 namespace _dss_internal{ 
-  
+
+  // Quick description of the basic protocol.
+  //
+  // Registration of proxy P:
+  //    P                   M
+  //    |---PROT_REGISTER-->|
+  //    |<--PROT_PERMFAIL---|   if entity is permfail
+  //
+  // Deregistration of proxy P:
+  //    P                     M
+  //    |---PROT_DEREGISTER-->|
+  //
+  // Proxy P makes the entity fail:
+  //    P                   M                   P'
+  //    |---PROT_PERMFAIL-->|                   |
+  //    |<--PROT_PERMFAIL---|---PROT_PERMFAIL-->| (to all registered proxies)
 
 #ifdef DEBUG_CHECK
   int ProtocolManager::a_allocated=0;
   int ProtocolProxy::a_allocated=0;
 #endif
-  
-  
+
+  /************************* ProtocolManager *************************/
+
+  void ProtocolManager::sendMigrateInfo(MsgContainer* msg) {
+    msg->pushIntVal(a_status);
+    msg->pushIntVal(a_proxies.size());
+    while (!a_proxies.isEmpty()) msg->pushDSiteVal(a_proxies.pop());
+  }
+
+  ProtocolManager::ProtocolManager(MsgContainer* msg) :
+    a_coordinator(NULL), a_proxies()
+  {
+    a_status = msg->popIntVal();
+    int n = msg->popIntVal();
+    while (n--) registerProxy(msg->popDSiteVal());
+  }
+
+  void ProtocolManager::m_siteStateChange(DSite* s, const DSiteState& state) {
+    if (state >= DSite_GLOBAL_PRM) a_proxies.remove(s);
+  }
+
+  void ProtocolManager::makePermFail() {
+    a_status |= 1;
+    while (!a_proxies.isEmpty()) sendToProxy(a_proxies.pop(), PROT_PERMFAIL);
+  }
+
+  /************************* ProtocolProxy *************************/
+
   char *ProtocolProxy::m_stringrep(){
     static char buf[45];
     // Erik, removed a printout that was pretybad.
     sprintf(buf,"Protocol:%d",p_name);
     return buf;
   } 
-  
-  
-  //// Proxy to Manager /////
-  void gf_sendProxyToManager(Proxy* p, int i1){
-    MsgContainer *msgC = p->m_createCoordProtMsg();
-    gf_createSndMsg(msgC,i1); 
-    p->m_sendToCoordinator(msgC);
-  }
-  ///// Proxy to Proxy
-  void gf_sendProxyToProxy(Proxy* p, DSite* s, int i1){
-    MsgContainer *msgC = p->m_createProxyProtMsg();
-    gf_createSndMsg(msgC,i1);
-    s->m_sendMsg(msgC); 
+
+  OpRetVal ProtocolProxy::protocol_Register() {
+    if (!isRegistered()) {
+      setRegistered(true); sendToManager(PROT_REGISTER);
+    }
+    return DSS_SKIP;
   }
 
-  void gf_sendProxyToProxy(Proxy* p, DSite* s, int i1, DSite* s1){
-    MsgContainer *msgC = p->m_createProxyProtMsg();
-    gf_createSndMsg(msgC,i1, s1);
-    s->m_sendMsg(msgC); 
-  }
-  
-   void gf_sendProxyToProxy(Proxy* p, DSite* s, int i1,
-		      PstOutContainerInterface* out ){
-     MsgContainer *msgC = p->m_createProxyProtMsg();
-     gf_createSndMsg(msgC,i1,out);
-     s->m_sendMsg(msgC); 
-  }
-  
-  //// Manager to Proxy 
-  
-  
-void gf_sendManagerToProxy(Coordinator* m, DSite* s, int i1){
-    MsgContainer *msgC = m->m_createProxyProtMsg();
-    gf_createSndMsg(msgC,i1);
-    s->m_sendMsg(msgC); 
+  OpRetVal ProtocolProxy::protocol_Deregister() {
+    if (isRegistered()) {
+      setRegistered(false); sendToManager(PROT_DEREGISTER);
+    }
+    return DSS_SKIP;
   }
 
-
-  void gf_sendManagerToProxy(Coordinator* m, DSite* s, int i1, DSite *s1){
-    MsgContainer *msgC = m->m_createProxyProtMsg();
-    gf_createSndMsg(msgC,i1,s1);
-    s->m_sendMsg(msgC); 
+  void ProtocolProxy::makePermFail() {
+    a_status = (a_status & ~3) | 1;   // permfailed and deregistered
+    a_proxy->updateFaultState(FS_PROT_STATE_PRM_UNAVAIL);
+    while (!a_susps.isEmpty()) a_susps.pop()->resumeFailed();
   }
-  
-  ProtocolManager *gf_createProtManager(MsgContainer* msgC, ProtocolName pn){
-    switch(pn){
-    case PN_MIGRATORY_STATE: 
-      return  new ProtocolMigratoryManager(msgC);   
+
+  OpRetVal ProtocolProxy::protocol_Kill() {
+    if (!isPermFail()) sendToManager(PROT_PERMFAIL);
+    return DSS_SKIP;
+  }
+
+  /****************************************************************/
+
+  // create a pair manager-proxy (on home site)
+  void gf_createProtocolProxyManager(ProtocolName prot, DSS_Environment* env,
+				     ProtocolManager *&pman, ProtocolProxy *&pprox) {
+    switch(prot){
+    case PN_SIMPLE_CHANNEL:
+      pman  = new ProtocolSimpleChannelManager(env->a_myDSite);
+      pprox = new ProtocolSimpleChannelProxy();
       break;
-    case PN_SIMPLE_CHANNEL:    
-      return  new ProtocolSimpleChannelManager(msgC);  
+    case PN_MIGRATORY_STATE:
+      pman  = new ProtocolMigratoryManager(env->a_myDSite);
+      pprox = new ProtocolMigratoryProxy();
       break;
-    case PN_EAGER_INVALID:  
-      return new ProtocolEagerInvalidManager(msgC); 
+    case PN_PILGRIM_STATE: 
+      pman  = new ProtocolPilgrimManager(env->a_myDSite);
+      pprox = new ProtocolPilgrimProxy(env->a_myDSite);
+      break; 
+    case PN_EAGER_INVALID:
+      pman  = new ProtocolEagerInvalidManager(env->a_myDSite); 
+      pprox = new ProtocolEagerInvalidProxy();
       break;
-    case PN_TRANSIENT:     
-      return new ProtocolOnceOnlyManager(msgC);    
+    case PN_LAZY_INVALID:
+      pman  = new ProtocolLazyInvalidManager(env->a_myDSite); 
+      pprox = new ProtocolLazyInvalidProxy();
+      break;
+    case PN_TRANSIENT:
+      pman  = new ProtocolOnceOnlyManager(env->a_myDSite);
+      pprox = new ProtocolOnceOnlyProxy();
+      break;
+    case PN_TRANSIENT_REMOTE:
+      pman  = new ProtocolTransientRemoteManager(env->a_myDSite);
+      pprox = new ProtocolTransientRemoteProxy();
+      break; 
+    case PN_IMMUTABLE_LAZY:
+      pman  = new ProtocolImmutableLazyManager();
+      pprox = new ProtocolImmutableLazyProxy();
+      break; 
+    case PN_IMMUTABLE_EAGER:
+      pman  = new ProtocolImmutableEagerManager();
+      pprox = new ProtocolImmutableEagerProxy();
+      break; 
+    case PN_IMMEDIATE:
+      pman  = new ProtocolImmediateManager();
+      pprox = new ProtocolImmediateProxy();
+      break; 
+    case PN_DKSBROADCAST:
+      pman  = new ProtocolDksBcManager();
+      pprox = new ProtocolDksBcProxy();
+      static_cast<ProtocolDksBcProxy*>(pprox)->m_initHome(env); 
       break;
     default:
-      return NULL;
+      pman = NULL;
+      pprox = NULL;
+      Assert(0);
     }
   }
- void gf_createProtocolProxyManager(ProtocolName prot, DSS_Environment* env, ProtocolManager *&pman, ProtocolProxy *&pprox){
-      
-      switch(prot){
-      case PN_DKSBROADCAST:
-	pman  = new ProtocolDksBcManager();
-	pprox = new ProtocolDksBcProxy();
-	static_cast<ProtocolDksBcProxy*>(pprox)->m_initHome(env); 
-	break;
-      case PN_SIMPLE_CHANNEL:
-	pman  = new ProtocolSimpleChannelManager();
-	pprox = new ProtocolSimpleChannelProxy();
-	break;
-      case PN_EAGER_INVALID:
-	pman  = new ProtocolEagerInvalidManager(env->a_myDSite); 
-	pprox = new ProtocolEagerInvalidProxy();
-	break;
-      case PN_LAZY_INVALID:
-	pman  = new ProtocolLazyInvalidManager(env->a_myDSite); 
-	pprox = new ProtocolLazyInvalidProxy();
-	break;
-      case PN_MIGRATORY_STATE:
-	pman  = new ProtocolMigratoryManager(env->a_myDSite);
-	pprox = new ProtocolMigratoryProxy();
-	break;
-      case PN_TRANSIENT:
-	pprox = new ProtocolOnceOnlyProxy();
-	pman  = new ProtocolOnceOnlyManager(env->a_myDSite);
-      break;
-      case PN_TRANSIENT_REMOTE:
-	pprox = new ProtocolTransientRemoteProxy();
-	pman  = new ProtocolTransientRemoteManager(env->a_myDSite);
-	break; 
-      case PN_PILGRIM_STATE: 
-	pprox = new ProtocolPilgrimProxy(env->a_myDSite);
-	pman  = new ProtocolPilgrimManager(env->a_myDSite);
-	break; 
-      case PN_IMMUTABLE_LAZY:
-	pman  = new ProtocolImmutableLazyManager();
-	pprox = new ProtocolImmutableLazyProxy();
-	break; 
-      case PN_IMMUTABLE_EAGER:
-	pman  = new ProtocolImmutableEagerManager();
-	pprox = new ProtocolImmutableEagerProxy();
-	break; 
-      case PN_IMMEDIATE:
-	pman  = new ProtocolImmediateManager();
-	pprox = new ProtocolImmediateProxy();
-	break; 
-      default: pprox = NULL; pman = NULL; Assert(0);
-      }
-    }
-  
-  
-  
+
+  // create a remote proxy
   ProtocolProxy* gf_createRemoteProxy(ProtocolName prot, DSite* myDSite){
     switch(prot){
-    case PN_DKSBROADCAST:    return new ProtocolDksBcProxy(); break; 
-    case PN_SIMPLE_CHANNEL:  return new ProtocolSimpleChannelProxy();  break;
-    case PN_MIGRATORY_STATE: return new ProtocolMigratoryProxy(); break;
-    case PN_TRANSIENT:       return new ProtocolOnceOnlyProxy();      break;
-    case PN_TRANSIENT_REMOTE:return new ProtocolTransientRemoteProxy();      break;
-    case PN_EAGER_INVALID:   return new ProtocolEagerInvalidProxy(); break;
-    case PN_LAZY_INVALID:    return new ProtocolLazyInvalidProxy(); break;
-    case PN_PILGRIM_STATE:   return new ProtocolPilgrimProxy(myDSite); break;
-    case PN_IMMUTABLE_LAZY:  return new ProtocolImmutableLazyProxy(); break;
-    case PN_IMMUTABLE_EAGER: return new ProtocolImmutableEagerProxy(); break;
-    case PN_IMMEDIATE:       return new ProtocolImmediateProxy(); break;
-    default:  Assert(0); return NULL;
+    case PN_SIMPLE_CHANNEL:   return new ProtocolSimpleChannelProxy();
+    case PN_MIGRATORY_STATE:  return new ProtocolMigratoryProxy();
+    case PN_PILGRIM_STATE:    return new ProtocolPilgrimProxy(myDSite);
+    case PN_EAGER_INVALID:    return new ProtocolEagerInvalidProxy();
+    case PN_LAZY_INVALID:     return new ProtocolLazyInvalidProxy();
+    case PN_TRANSIENT:        return new ProtocolOnceOnlyProxy();
+    case PN_TRANSIENT_REMOTE: return new ProtocolTransientRemoteProxy();
+    case PN_IMMUTABLE_LAZY:   return new ProtocolImmutableLazyProxy();
+    case PN_IMMUTABLE_EAGER:  return new ProtocolImmutableEagerProxy();
+    case PN_IMMEDIATE:        return new ProtocolImmediateProxy();
+    case PN_DKSBROADCAST:     return new ProtocolDksBcProxy();
+    default: Assert(0); return NULL;
+    }
+  }
+
+  // create a manager (resulting from manager migration)
+  ProtocolManager *gf_createProtManager(MsgContainer* msgC, ProtocolName pn){
+    switch(pn){
+    case PN_SIMPLE_CHANNEL:   return new ProtocolSimpleChannelManager(msgC);
+    case PN_MIGRATORY_STATE:  return new ProtocolMigratoryManager(msgC);
+    case PN_PILGRIM_STATE:    return new ProtocolPilgrimManager(msgC);
+    case PN_EAGER_INVALID:    return new ProtocolEagerInvalidManager(msgC);
+    case PN_LAZY_INVALID:     return new ProtocolLazyInvalidManager(msgC);
+    case PN_TRANSIENT:        return new ProtocolOnceOnlyManager(msgC);
+    case PN_TRANSIENT_REMOTE: return new ProtocolTransientRemoteManager(msgC);
+    default: Assert(0); return NULL;
     }
   }
   
-  
-  
-  
 }
-
