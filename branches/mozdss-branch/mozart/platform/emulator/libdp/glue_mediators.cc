@@ -141,10 +141,12 @@ void
 Mediator::setProxy(CoordinatorAssistant* p) {
   setCoordinatorAssistant(p);
   if (p) {
-    if (faultState == GLUE_FAULT_PERM)
+    if (faultState == GLUE_FAULT_PERM) {
       abstractOperation_Kill();     // globalizing a failed entity...
-    else
+    } else {
       p->setRegisteredFS(FS_PROT_MASK);   // register fault reporting
+      if (faultStream) abstractOperation_Monitor();
+    }
   }
 }
 
@@ -249,7 +251,10 @@ Mediator::setFaultState(GlueFaultState fs) {
 TaggedRef
 Mediator::getFaultStream() {
   // create the fault stream if necessary
-  if (faultStream == 0) faultStream = oz_newReadOnly(oz_rootBoard());
+  if (faultStream == 0) {
+    faultStream = oz_newReadOnly(oz_rootBoard());
+    abstractOperation_Monitor();
+  }
   return oz_cons(fsToAtom(faultState), faultStream);
 }
 
