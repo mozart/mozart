@@ -34,110 +34,132 @@ namespace _dss_internal{ //Start namespace
   // Quick description of the protocol.
   //
   // Proxy P makes an asynchronuous operation:
-  //    P                 M
-  //    |----SC_ASYNCH--->|
-  //    |<--SC_PERMFAIL---| if state is permfail
+  //    P                   M
+  //    |-----SC_ASYNCH---->|
+  //    |<--PROT_PERMFAIL---| if state is permfail
   //
   // Proxy P makes a synchronuous operation:
-  //    P                 M
-  //    |----SC_SYNCH---->|
-  //    |<---SC_RETURN----|
+  //    P                   M
+  //    |-----SC_SYNCH----->|
+  //    |<----SC_RETURN-----|
   // or:
-  //    |<--SC_PERMFAIL---| if state is permfail
-  //
-  // Proxy P makes the entity permfail:
-  //    P                 M
-  //    |---SC_PERMFAIL-->|
-  //    |<--SC_PERMFAIL---|
+  //    |<--PROT_PERMFAIL---| if state is permfail
 
   namespace {
     enum SC_message {
       SC_ASYNCH,     // asynchronuous operation
       SC_SYNCH,      // synchronuous operation
-      SC_RETURN,     // return from synchronuous operation
-      SC_PERMFAIL    // make the entity permfail
+      SC_RETURN      // return from synchronuous operation
     };
   }
 
-  class SimpleOp: public DssOperationId{
-  public: 
-    GlobalThread *a_threadId; 
-    DSite* a_sender; 
-    SimpleOp(GlobalThread* id, DSite* sender) :
-      a_threadId(id), a_sender(sender) {}
-  private:
-    SimpleOp(const SimpleOp&):a_threadId(NULL), a_sender(NULL){}
-    SimpleOp operator=(const SimpleOp&){ return *this; }
-  };
-
 
   
-  ProtocolSimpleChannelManager::ProtocolSimpleChannelManager() :
-    failed(false) {}
+  /******************** ProtocolSimpleChannelManager ********************/
 
-  void ProtocolSimpleChannelManager::sendMigrateInfo(::MsgContainer* msg){
-    msg->pushIntVal(failed);
-    gf_pushPstOut(msg, a_coordinator->deinstallEntityState());
-    static_cast<ProtocolSimpleChannelProxy*>(a_coordinator->m_getProxy()->m_getProtocol())->stateHolder = false; 
+  ProtocolSimpleChannelManager::ProtocolSimpleChannelManager(DSite* const s) {}
+
+  ProtocolSimpleChannelProxy* ProtocolSimpleChannelManager::homeProxy() const {
+    return static_cast<ProtocolSimpleChannelProxy*>
+      (a_coordinator->m_getProxy()->m_getProtocol());
   }
 
-  ProtocolSimpleChannelManager::ProtocolSimpleChannelManager(::MsgContainer *msg){
-    failed = msg->popIntVal();
-    ::PstInContainerInterface* builder = gf_popPstIn(msg);
-    static_cast<ProtocolSimpleChannelProxy*>(a_coordinator->m_getProxy()->m_getProtocol())->stateHolder = true; 
-    a_coordinator->installEntityState(builder); 
+  void ProtocolSimpleChannelManager::sendMigrateInfo(MsgContainer* msg) {
+    // put generic info, then the entity's state
+    ProtocolManager::sendMigrateInfo(msg);
+    msgPush(msg, a_coordinator->deinstallEntityState());
+    homeProxy()->setStatus(false);
+  }
+
+  ProtocolSimpleChannelManager::ProtocolSimpleChannelManager(MsgContainer* msg)
+    : ProtocolManager(msg) {
+    // install entity state
+    homeProxy()->setStatus(true);
+    a_coordinator->installEntityState(gf_popPstIn(msg));
   }
 
   void
-  ProtocolSimpleChannelManager::msgReceived(::MsgContainer *msg, DSite* sender){
-    if (failed) { // return SC_PERMFAIL
-      sendToProxy(sender, SC_PERMFAIL); return;
+  ProtocolSimpleChannelManager::msgReceived(MsgContainer* msg, DSite* sender) {
+    if (isPermFail()) { // return PROT_PERMFAIL
+      sendToProxy(sender, PROT_PERMFAIL); return;
     }
     int msgType = msg->popIntVal();
     switch (msgType) {
     case SC_ASYNCH:
     case SC_SYNCH: {
       AbsOp aop = static_cast<AbsOp>(msg->popIntVal());
-      PstInContainerInterface* builder = gf_popPstIn(msg);
-      PstOutContainerInterface* ans = NULL;
-      if (msgType == SC_ASYNCH) {
-	SimpleOp* so = new SimpleOp(NULL, NULL);
-	if (a_coordinator->m_doe(aop, NULL, so, builder, ans) == AOCB_FINISH)
-	  delete so;
-      }
-      else {
-	GlobalThread* id = popThreadId(msg);
-	SimpleOp* so = new SimpleOp(id, sender);
-	if (a_coordinator->m_doe(aop, id, so, builder, ans) == AOCB_FINISH) {
-	  delete so;
-	  sendToProxy(sender, SC_RETURN, id, ans);
-	}
-      }
+      PstInContainerInterface* arg = gf_popPstIn(msg);
+      if (msgType == SC_ASYNCH)
+	homeProxy()->do_operation(NULL, NULL, aop, arg);
+      else
+	homeProxy()->do_operation(sender, popThreadId(msg), aop, arg);
       break;
     }
-    case SC_PERMFAIL: {
-      failed = true;
-      sendToProxy(sender, SC_PERMFAIL);
+    case PROT_REGISTER:
+      registerProxy(sender);
       break;
-    }
+    case PROT_DEREGISTER:
+      deregisterProxy(sender);
+      break;
+    case PROT_PERMFAIL:
+      makePermFail();
+      // we must make the home proxy fail, otherwise it could still
+      // access the state
+      homeProxy()->makePermFail();
+      break;
     default:
       Assert(0);
     }
+  }
+
+
+
+  /******************** ProtocolSimpleChannelProxy ********************/
+
+  ProtocolSimpleChannelProxy::ProtocolSimpleChannelProxy() :
+    ProtocolProxy(PN_SIMPLE_CHANNEL)
+  { setStatus(true); }
+
+  ProtocolSimpleChannelProxy::~ProtocolSimpleChannelProxy() {
+    protocol_Deregister();
+  }
+
+  bool ProtocolSimpleChannelProxy::m_initRemoteProt(DssReadBuffer*){
+    setStatus(false); // change to non-stateholder
+    return true;
+  }
+
+  // used for resuming callbacks when they are not atomic
+  class RemoteOperation : public DssOperationId {
+  public:
+    DSite*        sender;
+    GlobalThread* caller;
+    RemoteOperation(DSite* s, GlobalThread* t) : sender(s), caller(t) {}
+  };
+
+  // perform an operation for a remote proxy (use NULL as sender for
+  // asynchronuous operations)
+  void
+  ProtocolSimpleChannelProxy::do_operation(DSite* sender, GlobalThread* caller,
+					   AbsOp aop, PstInContainerInterface* arg) {
+    RemoteOperation* op = new RemoteOperation(sender, caller);
+    PstOutContainerInterface* ans = NULL;
+    if (a_proxy->m_doe(aop, caller, op, arg, ans) == AOCB_FINISH)
+      ProtocolSimpleChannelProxy::remoteInitatedOperationCompleted(op, ans);
   }
 
   void
   ProtocolSimpleChannelProxy::remoteInitatedOperationCompleted(DssOperationId* opId,
 							       ::PstOutContainerInterface* pstOut)
   {
-    SimpleOp *so = static_cast<SimpleOp*>(opId); 
-    if (so->a_sender!=NULL)
-      sendToProxy(so->a_sender, SC_RETURN, so->a_threadId, pstOut);
-    delete so; 
+    RemoteOperation* op = static_cast<RemoteOperation*>(opId);
+    if (op->sender) sendToProxy(op->sender, SC_RETURN, op->caller, pstOut);
+    delete op;
   }
 
   void
   ProtocolSimpleChannelProxy::msgReceived(::MsgContainer *msg, DSite* u){
-    if (failed) return;
+    if (isPermFail()) return;
     switch (msg->popIntVal()) {
     case SC_RETURN: {
       GlobalThread *th = popThreadId(msg);
@@ -146,9 +168,11 @@ namespace _dss_internal{ //Start namespace
       a_susps.remove(th);
       break;
     }
-    case SC_PERMFAIL:
-      makeFailed();
+    case PROT_PERMFAIL:
+      makePermFail();
       break;
+    default:
+      Assert(0);
     }
   }
 
@@ -157,10 +181,8 @@ namespace _dss_internal{ //Start namespace
 					     ::PstOutContainerInterface**& msg,
 					     const AbsOp& aop){
     msg = NULL;   // default
-    if (failed) return DSS_RAISE;
-    // Check if we it is a home proxy, in such cases the 
-    // operation can be performed without sending messages. 
-    if (stateHolder) return DSS_PROCEED;
+    if (isPermFail()) return DSS_RAISE;
+    if (getStatus()) return DSS_PROCEED;
     if (!sendToManager(SC_SYNCH, aop, UnboundPst(msg), th_id))
       return DSS_RAISE;
     a_susps.append(th_id);
@@ -171,50 +193,27 @@ namespace _dss_internal{ //Start namespace
   ProtocolSimpleChannelProxy::protocol_Asynch(::PstOutContainerInterface**& msg,
 					      const AbsOp& aop){
     msg = NULL;   // default
-    if (failed) return DSS_RAISE;
-    if (stateHolder) return DSS_PROCEED;
+    if (isPermFail()) return DSS_RAISE;
+    if (getStatus()) return DSS_PROCEED;
     if (!sendToManager(SC_ASYNCH, aop, UnboundPst(msg)))
       return DSS_RAISE;
     return DSS_SKIP;
   }
 
-  OpRetVal
-  ProtocolSimpleChannelProxy::protocol_Kill() {
-    if (!failed) sendToManager(SC_PERMFAIL);
-    return DSS_SKIP;
-  }
-
-
-  ProtocolSimpleChannelProxy::ProtocolSimpleChannelProxy() :
-    ProtocolProxy(PN_SIMPLE_CHANNEL), stateHolder(true), failed(false) {}
-
-  bool ProtocolSimpleChannelProxy::m_initRemoteProt(DssReadBuffer*){
-    stateHolder = false; // change to non-stateholder
-    return true;
-  }
-
   FaultState
   ProtocolSimpleChannelProxy::siteStateChanged(DSite* s,
 					       const DSiteState& state) {
-    if (!failed && !stateHolder && (a_proxy->m_getCoordinatorSite() == s)) {
+    if (!isPermFail() && (a_proxy->m_getCoordinatorSite() == s)) {
       switch (state) {
       case DSite_OK:         return FS_PROT_STATE_OK;
       case DSite_TMP:        return FS_PROT_STATE_TMP_UNAVAIL;
       case DSite_GLOBAL_PRM:
-      case DSite_LOCAL_PRM:  makeFailed(); return FS_PROT_STATE_PRM_UNAVAIL;
+      case DSite_LOCAL_PRM:  makePermFail(); return FS_PROT_STATE_PRM_UNAVAIL;
       default:
 	dssError("Unknown DSite state %d for %s",state,s->m_stringrep());
       }
     }
     return 0;
   }
-
-  void ProtocolSimpleChannelProxy::makeFailed() {
-    failed = true;
-    a_proxy->updateFaultState(FS_PROT_STATE_PRM_UNAVAIL);
-    while (!a_susps.isEmpty()) a_susps.pop()->resumeFailed();
-  }
-  
-  void ProtocolSimpleChannelProxy::localInitatedOperationCompleted(){ ; }
 
 } //end namespace

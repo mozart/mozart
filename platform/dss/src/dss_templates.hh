@@ -473,6 +473,11 @@ public:
     while (first) { SimpleNode<T>* n = first; first = n->next; delete n; }
   }
   bool isEmpty() const { return first == NULL; }
+  int size() const {
+    int len = 0;
+    for (Position<T> p(const_cast<SimpleList<T>*>(this)); p(); p++) len++;
+    return len;
+  }
   Position<T> front() { return Position<T>(this); }
 
   // Only operations push(), pop(), contains() and remove() are
@@ -527,6 +532,7 @@ public:
   SimpleQueue() : SimpleList<T>(), afterlast(*this) {}
   ~SimpleQueue() {}
   using SimpleList<T>::isEmpty;
+  using SimpleList<T>::size;
   using SimpleList<T>::front;
   Position<T> rear() { return afterlast; }
 

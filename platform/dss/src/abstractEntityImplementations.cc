@@ -101,6 +101,33 @@ OpRetVal AbstractEntity::abstractOperation_Kill() {
   return DSS_INTERNAL_ERROR_SEVERE;
 }
 
+OpRetVal AbstractEntity::abstractOperation_Monitor() {
+  ProtocolProxy* pp = static_cast<Proxy*>(a_proxy)->m_getProtocol();
+  switch (pp->getProtocolName()) {
+  case PN_SIMPLE_CHANNEL:
+    return static_cast<ProtocolSimpleChannelProxy*>(pp)->protocol_Register();
+  case PN_MIGRATORY_STATE:
+    return static_cast<ProtocolMigratoryProxy*>(pp)->protocol_Register();
+  case PN_TRANSIENT:
+    return static_cast<ProtocolOnceOnlyProxy*>(pp)->protocol_Register();
+  case PN_TRANSIENT_REMOTE:
+    return static_cast<ProtocolTransientRemoteProxy*>(pp)->protocol_Register();
+  case PN_EAGER_INVALID:
+    return static_cast<ProtocolEagerInvalidProxy*>(pp)->protocol_Register();
+  case PN_PILGRIM_STATE:
+    return static_cast<ProtocolPilgrimProxy*>(pp)->protocol_Register();
+  case PN_LAZY_INVALID:
+    return static_cast<ProtocolLazyInvalidProxy*>(pp)->protocol_Register();
+  case PN_IMMUTABLE_LAZY:
+    return static_cast<ProtocolImmutableLazyProxy*>(pp)->protocol_Register();
+  case PN_IMMUTABLE_EAGER:
+    return static_cast<ProtocolImmutableEagerProxy*>(pp)->protocol_Register();
+  default: 
+    Assert(0); 
+  }
+  return DSS_INTERNAL_ERROR_SEVERE;
+}
+
 
 
 /******************** MutableAbstractEntity ********************/

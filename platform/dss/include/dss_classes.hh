@@ -135,7 +135,9 @@ public:
 
   // abstract operation Kill - try to make the fault state permfail.
   // This operation is asynchronous, and not guaranteed to succeed.
+  // Monitor requests to notify failures eagerly to this proxy.
   OpRetVal abstractOperation_Kill();
+  OpRetVal abstractOperation_Monitor();
 
   /************************* SUPPLIED BY USER *************************/
 
