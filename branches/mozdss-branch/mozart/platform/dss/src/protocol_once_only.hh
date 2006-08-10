@@ -37,59 +37,48 @@
 
 namespace _dss_internal{ //Start namespace
 
-  // status of transient entity (used by both transient protocols)
+  // status of transient entity, when not permfail (used by both
+  // transient protocols)
   enum TransientStatus {
     TRANS_STATUS_FREE,      // not bound yet
     TRANS_STATUS_WAITING,   // bind/kill attempt sent, waiting for result
-    TRANS_STATUS_BOUND,     // bound (final state)
-    TRANS_STATUS_FAILED     // permfailed (final state)
+    TRANS_STATUS_BOUND      // bound (final state)
   };
 
 
   class ProtocolOnceOnlyManager : public ProtocolManager {
   private:
-    SimpleList<DSite*> a_proxies;     // the registered proxies
-    TransientStatus    a_status;      // transient status
-
-    ProtocolOnceOnlyManager(const ProtocolOnceOnlyManager&) :
-      a_proxies(), a_status(TRANS_STATUS_FREE) {}
+    ProtocolOnceOnlyManager(const ProtocolOnceOnlyManager&) {}
     ProtocolOnceOnlyManager& operator=(const ProtocolOnceOnlyManager&)
     { return *this; }
 
   public:
     ProtocolOnceOnlyManager(DSite* const site);
-    ProtocolOnceOnlyManager(MsgContainer * const);
-    ~ProtocolOnceOnlyManager();
+    ProtocolOnceOnlyManager(MsgContainer* const msg) : ProtocolManager(msg) {}
+    ~ProtocolOnceOnlyManager() {}
 
-    void makeGCpreps();
-    void msgReceived(MsgContainer*,DSite*);
+    // inherited from ProtocolManager: makeGCpreps(),
+    // sendMigrateInfo(), m_siteStateChange()
+
+    void registerRemote(DSite*);   // for remote proxies only
     void sendRedirect(DSite*);
-    void sendMigrateInfo(MsgContainer*); 
 
-    // register a remote proxy
-    void register_remote(DSite*);
-
-    // check failed proxies
-    void m_siteStateChange(DSite*, const DSiteState&);
+    void msgReceived(MsgContainer*,DSite*);
   };
 
 
 
   class ProtocolOnceOnlyProxy : public ProtocolProxy {
   private:
-    SimpleList<GlobalThread*> a_susps;    // suspended threads
-    TransientStatus           a_status;   // transient status
-
-    // Note. a_susps used to be a TwoContainer<GlobalThread,ProtOOop>.
-    // I simplified it, because in practice we do not need to know on
-    // which operation a GlobalThread suspends.
+    // Note. We use a_susps from ProtocolProxy.  a_susps used to be a
+    // TwoContainer<GlobalThread,ProtOOop>.  I simplified it, because
+    // in practice we do not need to know on which operation a
+    // GlobalThread suspends.
 
     ProtocolOnceOnlyProxy(const ProtocolOnceOnlyProxy&) :
-      ProtocolProxy(PN_TRANSIENT), a_susps(), a_status(TRANS_STATUS_FREE) {}
+      ProtocolProxy(PN_TRANSIENT) {}
     ProtocolOnceOnlyProxy& operator=(const ProtocolOnceOnlyProxy&)
     { return *this; }
-
-    void m_failed();
 
   public:
     ProtocolOnceOnlyProxy();
@@ -105,7 +94,6 @@ namespace _dss_internal{ //Start namespace
 
     virtual bool isWeakRoot() { return !a_susps.isEmpty(); }
 
-    void makeGCpreps(); //threads should be guarded from the glue as well as...
     void msgReceived(MsgContainer*,DSite*);
   
     // Marshaling and unmarshaling proxy information

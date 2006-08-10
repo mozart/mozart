@@ -35,17 +35,17 @@ namespace _dss_internal{ //Start namespace
   // Quick description of the protocol.
   //
   // Registration of proxy P:
-  //    P                 M
-  //    |---OO_REGISTER-->|
-  //    |<--OO_REDIRECT---|   if transient already bound
+  //    P                   M
+  //    |---PROT_REGISTER-->|
+  //    |<---OO_REDIRECT----|   if transient already bound
   // or:
-  //    |<---OO_UPDATE----|   if changes are provided by pst
+  //    |<----OO_UPDATE-----|   if changes are provided by pst
   // or:
-  //    |<--OO_PERMFAIL---|   if entity is permfail
+  //    |<--PROT_PERMFAIL---|   if entity is permfail
   //
   // Deregistration of proxy P:
-  //    P                   M
-  //    |---OO_DEREGISTER-->|
+  //    P                     M
+  //    |---PROT_DEREGISTER-->|
   //
   // Proxy P binds transient (not bound yet):
   //    P                 M                 P'
@@ -59,16 +59,17 @@ namespace _dss_internal{ //Start namespace
   //
   // Any message OO_BIND or OO_UPDATE_REQUEST received after the
   // binding of the transient is ignored.  The proxy will eventually
-  // receive the OO_REDIRECT message (or possibly OO_PERMFAIL).
+  // receive the OO_REDIRECT message (or possibly PROT_PERMFAIL).
   //
   // Note.  The message OO_UPDATE sent back to P may contain a thread
   // id to wakeup the requesting thread.  We do not need this in the
   // binding case, since OO_REDIRECT wakes up all suspended threads.
   //
-  // Proxy P makes the entity fail (if not bound or failed yet):
-  //    P                 M                 P'
-  //    |---OO_PERMFAIL-->|                 |
-  //    |<--OO_PERMFAIL---|---OO_PERMFAIL-->|   (sent to all proxies)
+  // Note.  For the sake of consistency, the entity cannot fail after
+  // it has been bound.  Indeed, a proxy that sends a PROT_PERMFAIL
+  // message in that case will eventually receive the OO_REDIRECT
+  // message.  Conceptually, the binding makes the transient
+  // disappear; it can therefore no longer fail.
   //
   //
   //
@@ -82,15 +83,12 @@ namespace _dss_internal{ //Start namespace
     // In the message descriptions, "PM" means a message sent by a
     // proxy to its manager, and so on.
     enum OO_msg_names{
-      OO_REGISTER,       // PM: register a proxy at the manager
-      OO_DEREGISTER,     // PM: remove the registration at the manager
       OO_BIND,           // PM: try to bind the once only Manager
       OO_REDIRECT,       // MP: tell the binding to proxies
       OO_GETSTATUS,      // PM: get the status (bound or not) of a Manager
       OO_RECEIVESTATUS,  // MP: answer to a getstatus
       OO_UPDATE_REQUEST, // PM: request to update
-      OO_UPDATE,         // MP: send update to proxie(s)
-      OO_PERMFAIL        // **: make the entity permfail
+      OO_UPDATE          // MP: send update to proxie(s)
     };
 
     // type of registration
@@ -108,40 +106,16 @@ namespace _dss_internal{ //Start namespace
   /******************** ProtocolOnceOnlyManager ********************/
 
   // normal constructor  
-  ProtocolOnceOnlyManager::ProtocolOnceOnlyManager(DSite* const site) :
-    a_proxies(), a_status(TRANS_STATUS_FREE) {
-    a_proxies.push(site);
-  }
-
-  // fill msgC with manager migration info
-  void ProtocolOnceOnlyManager::sendMigrateInfo(MsgContainer* msgC) {
-    msgC->pushIntVal(a_status);
-    for (Position<DSite*> p(a_proxies); p(); p++) msgC->pushDSiteVal(*p);
-  }
-
-  // constructor called in case of migration
-  ProtocolOnceOnlyManager::ProtocolOnceOnlyManager(MsgContainer* const msgC) :
-    a_proxies()
-  {
-    a_status = static_cast<TransientStatus>(msgC->popIntVal());
-    while (!msgC->m_isEmpty()) a_proxies.push(msgC->popDSiteVal());
-  }
-
-  // destructor
-  ProtocolOnceOnlyManager::~ProtocolOnceOnlyManager() {}
-
-  // gc
-  void ProtocolOnceOnlyManager::makeGCpreps(){
-    t_gcList(a_proxies);
+  ProtocolOnceOnlyManager::ProtocolOnceOnlyManager(DSite* const site) {
+    setStatus(TRANS_STATUS_FREE);
+    registerProxy(site);
   }
 
   // register a remote proxy
-  void ProtocolOnceOnlyManager::register_remote(DSite* s) {
-    // do nothing if the proxy is already registered
-    if (a_proxies.contains(s)) return;
+  void ProtocolOnceOnlyManager::registerRemote(DSite* s) {
+    if (isRegisteredProxy(s)) return;
 
-    // insert s in a_proxies
-    a_proxies.push(s);
+    registerProxy(s);   // inserted in a_proxies
 
     // send an update for changes if necessary
     ::PstOutContainerInterface *ans;
@@ -160,82 +134,54 @@ namespace _dss_internal{ //Start namespace
   ProtocolOnceOnlyManager::msgReceived(MsgContainer * msg, DSite* s) {
     int msgType = msg->popIntVal();
     switch (msgType) {
-    case OO_REGISTER: {
+    case PROT_REGISTER: {
       dssLog(DLL_BEHAVIOR,"ONCE ONLY (%p): Received REGISTER %p",this,s);
-      switch (a_status) {
-      case TRANS_STATUS_BOUND:  sendRedirect(s); break;
-      case TRANS_STATUS_FAILED: sendToProxy(s, OO_PERMFAIL); break;
-      default:                  register_remote(s); break;
-      }
+      if (isPermFail()) { sendToProxy(s, PROT_PERMFAIL); break; }
+      if (getStatus() == TRANS_STATUS_BOUND) { sendRedirect(s); break; }
+      registerRemote(s);
       break;
     }
-    case OO_DEREGISTER:{
-      // Remove proxy from list.  If the once_only is bound, the proxy
-      // has already been removed.  This latecoming request can thus
-      // be dropped.
-      if (a_status > TRANS_STATUS_WAITING) break;
-      dssLog(DLL_BEHAVIOR,"ONCE ONLY (%p): Received DEREGISTER %p\n",this,s);
-#ifdef DEBUG_CHECK
-      bool t = a_proxies.remove(s);
-      Assert(t);
-#else
-      a_proxies.remove(s);
-#endif
+    case PROT_DEREGISTER: {
+      deregisterProxy(s);
+      break;
+    }
+    case PROT_PERMFAIL: {
+      if (isPermFail() || getStatus() == TRANS_STATUS_BOUND) break;
+      makePermFail();
       break;
     }
     case OO_BIND: {
       dssLog(DLL_BEHAVIOR,"ONCE ONLY (%p): Received Bind",this);
-      if (a_status > TRANS_STATUS_FREE) break; 
+      if (isPermFail() || getStatus() == TRANS_STATUS_BOUND) break;
       // do the callback in order to bind
       AbsOp aop = static_cast<AbsOp>(msg->popIntVal());
-      ::PstInContainerInterface *builder = gf_popPstIn(msg);
-      GlobalThread *tid = (msg->m_isEmpty() ? NULL : popThreadId(msg));
+      PstInContainerInterface* arg = gf_popPstIn(msg);
+      GlobalThread* tid = (msg->m_isEmpty() ? NULL : popThreadId(msg));
       Assert(a_coordinator->m_getProxy() != NULL);
-      ::PstOutContainerInterface *ans;
-      a_coordinator->m_doe(aop, tid, NULL, builder, ans);
-      a_status = TRANS_STATUS_BOUND;
+      PstOutContainerInterface* ans = NULL;
+      a_coordinator->m_doe(aop, tid, NULL, arg, ans);
+      setStatus(TRANS_STATUS_BOUND);
       // send OO_REDIRECT to all proxies
       while (!a_proxies.isEmpty()) sendRedirect(a_proxies.pop());
       break;
     }
     case OO_UPDATE_REQUEST: {
-      if (a_status > TRANS_STATUS_FREE) break;
+      if (isPermFail() || getStatus() == TRANS_STATUS_BOUND) break;
       int aop = msg->popIntVal();
-      ::PstInContainerInterface *builder = gf_popPstIn(msg);
-      GlobalThread *tid = (msg->m_isEmpty() ? NULL : popThreadId(msg));
-      ::PstOutContainerInterface *ans = builder->loopBack2Out();
+      PstInContainerInterface* arg = gf_popPstIn(msg);
+      GlobalThread* tid = (msg->m_isEmpty() ? NULL : popThreadId(msg));
+      PstOutContainerInterface* ans = arg->loopBack2Out();
       // send OO_UPDATE to all proxies except requester
       for (Position<DSite*> p(a_proxies); p(); p++) {
 	if ((*p) != s) sendToProxy(*p, OO_UPDATE, aop, ans->duplicate());
       }
       // send OO_UPDATE to requester (with GlobalThread if provided)
-      if (tid)
-	sendToProxy(s, OO_UPDATE, aop, ans, tid);
-      else
-	sendToProxy(s, OO_UPDATE, aop, ans);
+      if (tid) sendToProxy(s, OO_UPDATE, aop, ans, tid);
+      else sendToProxy(s, OO_UPDATE, aop, ans);
       break; 
     }
-    case OO_PERMFAIL: {
-      if (a_status > TRANS_STATUS_WAITING) break;   // It will no longer fail
-      a_status = TRANS_STATUS_FAILED;
-      // tell to all proxies
-      while (!a_proxies.isEmpty()) sendToProxy(a_proxies.pop(), OO_PERMFAIL);
-      break;
-    }
-    case OO_GETSTATUS: 
-      a_coordinator->m_getEnvironment()->a_map->GL_error("Msg %d to variable not implemented yet", msgType);
     default: 
       a_coordinator->m_getEnvironment()->a_map->GL_error("Unknown Msg %d to variable", msgType);
-    }
-  }
-
-  // check for a possible proxy failure
-  void
-  ProtocolOnceOnlyManager::m_siteStateChange(DSite* s,
-					     const DSiteState& state) {
-    if (state == DSite_GLOBAL_PRM || state == DSite_LOCAL_PRM) {
-      // simply remove it from a_proxies (if present)
-      a_proxies.remove(s);
     }
   }
 
@@ -244,30 +190,17 @@ namespace _dss_internal{ //Start namespace
   /******************** ProtocolOnceOnlyProxy ********************/
   
   // simple constructor
-  ProtocolOnceOnlyProxy::ProtocolOnceOnlyProxy() :
-    ProtocolProxy(PN_TRANSIENT), a_susps(), a_status(TRANS_STATUS_FREE) {}
+  ProtocolOnceOnlyProxy::ProtocolOnceOnlyProxy() : ProtocolProxy(PN_TRANSIENT) {
+    setStatus(TRANS_STATUS_FREE);
+    setRegistered(true);     // home proxy is registered by manager
+  }
 
   // destructor
   ProtocolOnceOnlyProxy::~ProtocolOnceOnlyProxy() {
     Assert(a_susps.isEmpty());
     // deregister if this proxy is remote, and the transient is not bound
-    if (a_status < TRANS_STATUS_WAITING && !a_proxy->m_isHomeProxy()) {
-      dssLog(DLL_BEHAVIOR,"ONCE ONLY (%p): Send DEREGISTER", this);
-      sendToManager(OO_DEREGISTER);
-    }
-  }
-
-  void
-  ProtocolOnceOnlyProxy::makeGCpreps() {
-    t_gcList(a_susps);
-  }
-
-  // notify failure
-  void ProtocolOnceOnlyProxy::m_failed() {
-    a_status = TRANS_STATUS_FAILED;
-    a_proxy->updateFaultState(FS_PROT_STATE_PRM_UNAVAIL);
-    // resume operations
-    while (!a_susps.isEmpty()) a_susps.pop()->resumeFailed();
+    if (getStatus() < TRANS_STATUS_WAITING && !a_proxy->m_isHomeProxy())
+      protocol_Deregister();
   }
 
   // initiate a bind
@@ -277,12 +210,13 @@ namespace _dss_internal{ //Start namespace
 					    const AbsOp& aop)
   {
     msg = NULL;   // default
-    switch (a_status) {
+    if (isPermFail()) return DSS_RAISE;
+    switch (getStatus()) {
     case TRANS_STATUS_FREE:
       // send an OO_BIND message to the manager
       if (th_id) sendToManager(OO_BIND, aop, UnboundPst(msg), th_id);
       else sendToManager(OO_BIND, aop, UnboundPst(msg));
-      a_status = TRANS_STATUS_WAITING;
+      setStatus(TRANS_STATUS_WAITING);
       // fall through
     case TRANS_STATUS_WAITING:
       // suspend the current thread until an answer comes back
@@ -300,15 +234,14 @@ namespace _dss_internal{ //Start namespace
 					 const AbsOp& aop)
   {
     msg = NULL;   // default
-    switch (a_status) {
+    if (isPermFail()) return DSS_RAISE;
+    switch (getStatus()) {
     case TRANS_STATUS_FREE:
       // send an OO_UPDATE_REQUEST message to the manager.  This
       // request is useless if we already attempted to bind the
       // transient, since the binding will succeed before this update.
-      if (th_id)
-	sendToManager(OO_UPDATE_REQUEST, aop, UnboundPst(msg), th_id);
-      else
-	sendToManager(OO_UPDATE_REQUEST, aop, UnboundPst(msg));
+      if (th_id) sendToManager(OO_UPDATE_REQUEST, aop, UnboundPst(msg), th_id);
+      else sendToManager(OO_UPDATE_REQUEST, aop, UnboundPst(msg));
       // fall through
     case TRANS_STATUS_WAITING:
       // suspend the current thread until an answer comes back
@@ -322,9 +255,9 @@ namespace _dss_internal{ //Start namespace
   // kill the entity
   OpRetVal
   ProtocolOnceOnlyProxy::protocol_Kill() {
-    if (a_status < TRANS_STATUS_WAITING) {
-      a_status = TRANS_STATUS_WAITING;   // later requests will never succeed
-      sendToManager(OO_PERMFAIL);
+    if (!isPermFail() && getStatus() < TRANS_STATUS_WAITING) {
+      setStatus(TRANS_STATUS_WAITING);   // later requests will never succeed
+      return ProtocolProxy::protocol_Kill();
     }
     return DSS_SKIP;
   }
@@ -332,11 +265,11 @@ namespace _dss_internal{ //Start namespace
   // receive a message
   void
   ProtocolOnceOnlyProxy::msgReceived(MsgContainer * msg, DSite*) {
-    if (a_status > TRANS_STATUS_WAITING) return;
+    if (isPermFail() || getStatus() == TRANS_STATUS_BOUND) return;
     int msgType = msg->popIntVal();
     switch (msgType) {
     case OO_REDIRECT: {
-      a_status = TRANS_STATUS_BOUND;
+      setStatus(TRANS_STATUS_BOUND);
       PstInContainerInterface* cont = gf_popPstIn(msg);
       //
       // The home proxy does not have to perform the bind, it is
@@ -348,10 +281,10 @@ namespace _dss_internal{ //Start namespace
     }
     case OO_UPDATE: {
       // do the callback in order to update
-      int absOp = msg->popIntVal();
+      AbsOp aop = static_cast<AbsOp>(msg->popIntVal());
       PstInContainerInterface* cont = gf_popPstIn(msg);
-      ::PstOutContainerInterface* ans;
-      a_proxy->m_doe(static_cast<AbsOp>(absOp),NULL, NULL, cont, ans);
+      PstOutContainerInterface* ans;
+      a_proxy->m_doe(aop, NULL, NULL, cont, ans);
       // resume calling thread if this is a confirmation
       if (!msg->m_isEmpty()) {
 	GlobalThread* tid = popThreadId(msg);
@@ -360,12 +293,10 @@ namespace _dss_internal{ //Start namespace
       }
       break; 
     }
-    case OO_PERMFAIL: {
-      m_failed();
+    case PROT_PERMFAIL: {
+      makePermFail();
       break;
     }
-    case OO_RECEIVESTATUS:
-      a_proxy->m_getEnvironment()->a_map->GL_error("Msg %d to variable not implemented yet", msgType);
     default: 
       a_proxy->m_getEnvironment()->a_map->GL_error("Unknown Msg %d to variable", msgType);
     }
@@ -379,7 +310,7 @@ namespace _dss_internal{ //Start namespace
       // we automatically register dest at the manager
       ProtocolOnceOnlyManager* pm =
 	static_cast<ProtocolOnceOnlyManager*>(a_proxy->a_coordinator->a_prot);
-      pm->register_remote(dest);
+      pm->registerRemote(dest);
       buf->putByte(OO_REG_AUTO);
 
     } else {
@@ -402,31 +333,24 @@ namespace _dss_internal{ //Start namespace
   ProtocolOnceOnlyProxy::m_initRemoteProt(DssReadBuffer* buf) {
 #ifdef AUTOREGISTRATION
     Assert(!a_proxy->m_isHomeProxy());
-    switch (buf->getByte()) {
-    case OO_REG_AUTO:
-      break;
-    case OO_REG_MANUAL: {
+    if (buf->getByte() == OO_REG_AUTO) return true;
 #endif
-      dssLog(DLL_BEHAVIOR,"ONCE ONLY (%p): Send REGISTER",this);
-      sendToManager(OO_REGISTER);
-#ifdef AUTOREGISTRATION
-      break;
-    }
-    }
-#endif
+    dssLog(DLL_BEHAVIOR,"ONCE ONLY (%p): Send REGISTER",this);
+    setRegistered(false);
+    protocol_Register();
     return true;
   }
 
   // interpret a site failure
   FaultState
   ProtocolOnceOnlyProxy::siteStateChanged(DSite* s, const DSiteState& state) {
-    if (a_status <= TRANS_STATUS_WAITING &&
+    if (getStatus() <= TRANS_STATUS_WAITING &&
 	(a_proxy->m_getCoordinatorSite() == s)) {
       switch (state) {
       case DSite_OK:         return FS_PROT_STATE_OK;
       case DSite_TMP:        return FS_PROT_STATE_TMP_UNAVAIL;
       case DSite_GLOBAL_PRM:
-      case DSite_LOCAL_PRM:  m_failed(); return FS_PROT_STATE_PRM_UNAVAIL;
+      case DSite_LOCAL_PRM:  makePermFail(); return FS_PROT_STATE_PRM_UNAVAIL;
       default:
 	dssError("Unknown DSite state %d for %s",state,s->m_stringrep());
       }
