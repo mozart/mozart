@@ -42,31 +42,27 @@ namespace _dss_internal{ //Start namespace
 
   class ProtocolTransientRemoteManager : public ProtocolManager {
   private:
-    SimpleList<DSite*> a_proxies;   // the registered proxies
     DSite*             a_current;   // the proxy that has the write token
-    TransientStatus    a_status;    // transient status
-
-    // Invariant: a_current is not a member of a_proxies if it is remote.
 
     ProtocolTransientRemoteManager(const ProtocolTransientRemoteManager&):
-      a_proxies(), a_current(NULL), a_status(TRANS_STATUS_FREE) {}
+      a_current(NULL) {}
     ProtocolTransientRemoteManager&
     operator=(const ProtocolTransientRemoteManager&) { return *this; }
 
   public:
     ProtocolTransientRemoteManager(DSite* const site);
-    ProtocolTransientRemoteManager(::MsgContainer * const);
-    ~ProtocolTransientRemoteManager();
+    ~ProtocolTransientRemoteManager() {}
 
-    void makeGCpreps();
-    void msgReceived(::MsgContainer*,DSite*);
+    void sendMigrateInfo(MsgContainer*);
+    ProtocolTransientRemoteManager(MsgContainer* const);
+
+    // register a remote proxy.  registerToken() returns true if the
+    // proxy is given the write token
+    void registerRemote(DSite*);
+    bool registerToken(DSite*);
+
     void sendRedirect(DSite*);
-    void sendMigrateInfo(MsgContainer*); 
-
-    // register a remote proxy
-    void register_remote(DSite*);
-    // register a proxy, and returns true if it is given the write token
-    bool register_token(DSite*);
+    void msgReceived(MsgContainer*, DSite*);
 
     // check failed proxies
     void m_siteStateChange(DSite*, const DSiteState&);
@@ -75,27 +71,22 @@ namespace _dss_internal{ //Start namespace
 
 
   class ProtocolTransientRemoteProxy : public ProtocolProxy {
-    friend class ProtocolTransientRemoteManager;
-
   private:
-    SimpleList<GlobalThread*> a_susps;   // suspended threads
-    TransientStatus a_status:8;          // transient status
-    bool a_writeToken:1;                 // whether this has the write token
-
     ProtocolTransientRemoteProxy(const ProtocolTransientRemoteProxy&):
-      ProtocolProxy(PN_NO_PROTOCOL), a_susps(), a_status(TRANS_STATUS_FREE),
-      a_writeToken(false) {}
+      ProtocolProxy(PN_NO_PROTOCOL) {}
     ProtocolTransientRemoteProxy&
     operator=(const ProtocolTransientRemoteProxy&) { return *this; }
-
-    // wake up the suspended threads
-    void wkSuspThrs(); 
-
-    void m_failed();
 
   public:
     ProtocolTransientRemoteProxy();
     ~ProtocolTransientRemoteProxy();
+
+    int getStatus() const { return ProtocolProxy::getStatus() >> 1; }
+    bool hasToken() const { return ProtocolProxy::getStatus() & 1; }
+    void setStatus(int v) {
+      ProtocolProxy::setStatus((v << 1) | (hasToken() ? 1 : 0)); }
+    void setToken(bool b) {
+      ProtocolProxy::setStatus((getStatus() << 1) | (b ? 1 : 0)); }
 
     OpRetVal protocol_Terminate(GlobalThread* const th_id,
 				::PstOutContainerInterface**& msg,
@@ -107,7 +98,6 @@ namespace _dss_internal{ //Start namespace
 
     bool isWeakRoot() { return !a_susps.isEmpty(); }
 
-    void makeGCpreps(); //threads should be guarded from the glue as well as...
     void msgReceived(::MsgContainer*,DSite*);
   
     // Marshaling and unmarshaling proxy information
@@ -116,8 +106,8 @@ namespace _dss_internal{ //Start namespace
     virtual bool m_initRemoteProt(DssReadBuffer*);
     
     virtual void
-    remoteInitatedOperationCompleted(DssOperationId* opId,
-				     PstOutContainerInterface* pstOut) {}
+    remoteInitatedOperationCompleted(DssOperationId*,
+				     PstOutContainerInterface*) { Assert(0); }
     virtual void localInitatedOperationCompleted() { Assert(0); }
 
     // check fault state
