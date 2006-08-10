@@ -64,8 +64,6 @@ namespace _dss_internal{ //Start namespace
     void do_operation(DSite*, GlobalThread*, AbsOp, PstInContainerInterface*);
     void remoteInitatedOperationCompleted(DssOperationId*, PstOutContainerInterface*); 
     void localInitatedOperationCompleted() { Assert(0); }
-    
-    bool isWeakRoot(){ return getStatus(); }
 
     void msgReceived(::MsgContainer*,DSite*);
     bool m_initRemoteProt(DssReadBuffer*); 
