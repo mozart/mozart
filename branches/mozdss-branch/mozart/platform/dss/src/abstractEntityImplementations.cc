@@ -65,16 +65,19 @@ void AbstractEntity::setCoordinatorAssistant(CoordinatorAssistant* p) {
 void
 AbstractEntity::remoteInitatedOperationCompleted(DssOperationId* opId,
 						 PstOutContainerInterface* pstOut){
+  Assert(a_proxy);
   ProtocolProxy* pp = static_cast<Proxy*>(a_proxy)->m_getProtocol();
   pp->remoteInitatedOperationCompleted(opId, pstOut);
 }
 
 void AbstractEntity::localInitatedOperationCompleted() {
+  Assert(a_proxy);
   ProtocolProxy* pp = static_cast<Proxy*>(a_proxy)->m_getProtocol();
   pp->localInitatedOperationCompleted();
 }
 
 OpRetVal AbstractEntity::abstractOperation_Kill() {
+  if (!a_proxy) return DSS_INTERNAL_ERROR_NO_PROXY;
   ProtocolProxy* pp = static_cast<Proxy*>(a_proxy)->m_getProtocol();
   switch (pp->getProtocolName()) {
   case PN_SIMPLE_CHANNEL:
@@ -102,6 +105,7 @@ OpRetVal AbstractEntity::abstractOperation_Kill() {
 }
 
 OpRetVal AbstractEntity::abstractOperation_Monitor() {
+  if (!a_proxy) return DSS_INTERNAL_ERROR_NO_PROXY;
   ProtocolProxy* pp = static_cast<Proxy*>(a_proxy)->m_getProtocol();
   switch (pp->getProtocolName()) {
   case PN_SIMPLE_CHANNEL:
@@ -132,12 +136,13 @@ OpRetVal AbstractEntity::abstractOperation_Monitor() {
 
 /******************** MutableAbstractEntity ********************/
 
-MutableAbstractEntity::MutableAbstractEntity() : AbstractEntity() {}
+MutableAbstractEntity::MutableAbstractEntity() {}
 
 OpRetVal 
 MutableAbstractEntity::abstractOperation_Read(DssThreadId *id,
 					      PstOutContainerInterface**& out)
 {
+  if (!a_proxy) return DSS_INTERNAL_ERROR_NO_PROXY;
   ProtocolProxy* pp = static_cast<Proxy*>(a_proxy)->m_getProtocol();
   GlobalThread* gid = static_cast<GlobalThread*>(id);
   switch (pp->getProtocolName()) {
@@ -161,6 +166,7 @@ OpRetVal
 MutableAbstractEntity::abstractOperation_Write(DssThreadId *id,
 					       PstOutContainerInterface**& out)
 {
+  if (!a_proxy) return DSS_INTERNAL_ERROR_NO_PROXY;
   ProtocolProxy* pp = static_cast<Proxy*>(a_proxy)->m_getProtocol();
   GlobalThread* gid = static_cast<GlobalThread*>(id);
   switch (pp->getProtocolName()) {
@@ -184,13 +190,13 @@ MutableAbstractEntity::abstractOperation_Write(DssThreadId *id,
 
 /******************** RelaxedMutableAbstractEntity ********************/
 
-RelaxedMutableAbstractEntity::RelaxedMutableAbstractEntity() :
-  AbstractEntity() {}
+RelaxedMutableAbstractEntity::RelaxedMutableAbstractEntity() {}
 
 OpRetVal 
 RelaxedMutableAbstractEntity::abstractOperation_Read(DssThreadId *id,
 						     PstOutContainerInterface**& out)
 {
+  if (!a_proxy) return DSS_INTERNAL_ERROR_NO_PROXY;
   ProtocolProxy* pp = static_cast<Proxy*>(a_proxy)->m_getProtocol();
   GlobalThread* gid = static_cast<GlobalThread*>(id); 
   switch (pp->getProtocolName()) {
@@ -204,6 +210,7 @@ RelaxedMutableAbstractEntity::abstractOperation_Read(DssThreadId *id,
 
 OpRetVal
 RelaxedMutableAbstractEntity::abstractOperation_Write(PstOutContainerInterface**& out){
+  if (!a_proxy) return DSS_INTERNAL_ERROR_NO_PROXY;
   ProtocolProxy* pp = static_cast<Proxy*>(a_proxy)->m_getProtocol();
   switch (pp->getProtocolName()) {
   case PN_SIMPLE_CHANNEL:
@@ -218,12 +225,13 @@ RelaxedMutableAbstractEntity::abstractOperation_Write(PstOutContainerInterface**
 
 /******************** MonotonicAbstractEntity ********************/
 
-MonotonicAbstractEntity::MonotonicAbstractEntity() : AbstractEntity() {}
+MonotonicAbstractEntity::MonotonicAbstractEntity() {}
 
 OpRetVal
 MonotonicAbstractEntity::abstractOperation_Bind(DssThreadId *id,
 						PstOutContainerInterface**& out)
 {
+  if (!a_proxy) return DSS_INTERNAL_ERROR_NO_PROXY;
   ProtocolProxy* pp = static_cast<Proxy*>(a_proxy)->m_getProtocol();
   GlobalThread* gid = static_cast<GlobalThread*>(id); 
   switch (pp->getProtocolName()) {
@@ -241,6 +249,7 @@ OpRetVal
 MonotonicAbstractEntity::abstractOperation_Append(DssThreadId *id,
 						  PstOutContainerInterface**& out)
 {
+  if (!a_proxy) return DSS_INTERNAL_ERROR_NO_PROXY;
   ProtocolProxy* pp = static_cast<Proxy*>(a_proxy)->m_getProtocol();
   GlobalThread* gid = static_cast<GlobalThread*>(id); 
   switch (pp->getProtocolName()) {
@@ -260,12 +269,13 @@ MonotonicAbstractEntity::abstractOperation_Append(DssThreadId *id,
 
 /******************** ImmutableAbstractEntity ********************/
 
-ImmutableAbstractEntity::ImmutableAbstractEntity() : AbstractEntity() {}
+ImmutableAbstractEntity::ImmutableAbstractEntity() {}
   
 OpRetVal
 ImmutableAbstractEntity::abstractOperation_Read(DssThreadId *id,
 						PstOutContainerInterface**& out)
 {
+  if (!a_proxy) return DSS_INTERNAL_ERROR_NO_PROXY;
   ProtocolProxy* pp = static_cast<Proxy*>(a_proxy)->m_getProtocol();
   GlobalThread* gid = static_cast<GlobalThread*>(id); 
   switch (pp->getProtocolName()) {
