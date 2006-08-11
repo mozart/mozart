@@ -87,7 +87,7 @@ namespace _dss_internal{ //Start namespace
   //      |                     |--TR_UPDATE_REQUEST->|
   //
   // (2)  P                     M                     P*      P'
-  //      |                     |<-----TR_UPDATE------|       |
+  //      |                     |<--TR_UPDATE_REPLY---|       |
   //      |<-----TR_UPDATE------|                             |
   //      |                     |----------TR_UPDATE--------->|
   //
@@ -127,6 +127,7 @@ namespace _dss_internal{ //Start namespace
   //    TR_BOUND
   //    TR_REDIRECT Pst
   //    TR_UPDATE_REQUEST AbsOp Pst [GlobalThread]
+  //    TR_UPDATE_REPLY AbsOp Pst [GlobalThread]
   //    TR_UPDATE AbsOp Pst [GlobalThread]
 
   namespace{
@@ -139,6 +140,7 @@ namespace _dss_internal{ //Start namespace
       TR_GETSTATUS,      // PM,MP*: get the status (bound or not)
       TR_RECEIVESTATUS,  // P*M,MP: answer to a getstatus
       TR_UPDATE_REQUEST, // PM,MP*: request to update
+      TR_UPDATE_REPLY,   //    P*M: send update reply to manager
       TR_UPDATE          // P*M,MP: send update to proxie(s)
     };
     
@@ -165,6 +167,13 @@ namespace _dss_internal{ //Start namespace
   void ProtocolTransientRemoteManager::sendMigrateInfo(MsgContainer* msg) {
     ProtocolManager::sendMigrateInfo(msg);
     msg->pushDSiteVal(a_current);
+    while (!a_requests.isEmpty()) {
+      TR_request req = a_requests.pop();
+      msgPush(msg, req.type);
+      msgPush(msg, req.aop);
+      msgPush(msg, req.pst);
+      msgPush(msg, req.thr);
+    }
   }
 
   // constructor called in case of migration
@@ -172,6 +181,17 @@ namespace _dss_internal{ //Start namespace
   ProtocolTransientRemoteManager(MsgContainer* const msg) :
     ProtocolManager(msg), a_current(NULL) {
     a_current = msg->popDSiteVal();
+    while (!msg->m_isEmpty()) {
+      TR_request req = { msg->popIntVal(), msg->popIntVal(),
+			 gf_popPstIn(msg)->loopBack2Out(), popThreadId(msg) };
+      a_requests.append(req);
+    }
+  }
+
+  void ProtocolTransientRemoteManager::makeGCpreps() {
+    ProtocolManager::makeGCpreps();
+    // mark all threads in buffered messages
+    for (Position<TR_request> p(a_requests); p(); p++) (*p).makeGCpreps();
   }
 
   // register a remote proxy at s
@@ -198,14 +218,32 @@ namespace _dss_internal{ //Start namespace
 
     // if the home proxy has the write token, we give it to s
     if (a_current == a_coordinator->m_getEnvironment()->a_myDSite) {
-      dssLog(DLL_BEHAVIOR,"TRAN REM (%p) New cur %s", this, s->m_stringrep());
-      a_current = s;
-      ProtocolProxy* pp = a_coordinator->m_getProxy()->m_getProtocol();
-      static_cast<ProtocolTransientRemoteProxy*>(pp)->setToken(false);
-      return true;
+      setCurrent(s); return true;
     }
-
     return false;
+  }
+
+  // make s the current proxy, and forward unprocessed requests to it
+  void ProtocolTransientRemoteManager::setCurrent(DSite* s) {
+    DSite *mySite = a_coordinator->m_getEnvironment()->a_myDSite;
+    Assert((a_current == mySite || s == mySite) && a_current != s);
+
+    a_current = s;
+
+    // update the status of the home proxy
+    ProtocolProxy* pp = a_coordinator->m_getProxy()->m_getProtocol();
+    static_cast<ProtocolTransientRemoteProxy*>(pp)->setToken(s == mySite);
+
+    // forward buffered requests
+    for (Position<TR_request> p(a_requests); p(); p++) {
+      TR_request req = *p;
+      if (req.type == PROT_PERMFAIL)
+	sendToProxy(s, PROT_PERMFAIL);
+      else if (req.thr)
+	sendToProxy(s, req.type, req.aop, req.pst->duplicate(), req.thr);
+      else
+	sendToProxy(s, req.type, req.aop, req.pst->duplicate());
+    }
   }
 
   // send an TR_REDIRECT message to proxy at site s
@@ -222,18 +260,14 @@ namespace _dss_internal{ //Start namespace
     case PROT_REGISTER: {
       if (isPermFail()) { sendToProxy(s, PROT_PERMFAIL); break; }
       if (getStatus() == TRANS_STATUS_BOUND) { sendRedirect(s); break; }
-      registerRemote(s);
+      if (!isRegisteredProxy(s)) registerRemote(s);
       break;
     }
     case PROT_DEREGISTER: {
       deregisterProxy(s);
+      // if s is the current proxy, the home proxy gets the token back
       if (s == a_current && !isPermFail() && getStatus() < TRANS_STATUS_BOUND)
-	makePermFail();
-      // Currently we cannot handle the deregistration of the current
-      // proxy!  Giving the write token to the home proxy is not
-      // enough, because messages could be lost by the former token
-      // holder.  Correct handling requires the manager to keep
-      // requests, in order to resend them to the new current proxy.
+	setCurrent(a_coordinator->m_getEnvironment()->a_myDSite);
       break;
     }
     case TR_BIND: {
@@ -243,10 +277,13 @@ namespace _dss_internal{ //Start namespace
       setStatus(TRANS_STATUS_WAITING);
       int aop = msg->popIntVal();
       PstOutContainerInterface* arg = gf_popPstIn(msg)->loopBack2Out();
-      if (!msg->m_isEmpty())
-	sendToProxy(a_current, TR_BIND, aop, arg, popThreadId(msg));
-      else
-	sendToProxy(a_current, TR_BIND, aop, arg);
+      GlobalThread *tid = (msg->m_isEmpty() ? NULL : popThreadId(msg));
+      // enqueue request
+      TR_request req = { msgType, aop, arg->duplicate(), tid };
+      a_requests.append(req);
+      // forward to current proxy
+      if (tid) sendToProxy(a_current, TR_BIND, aop, arg, tid);
+      else sendToProxy(a_current, TR_BIND, aop, arg);
       break;
     }
     case TR_REDIRECT: {
@@ -269,6 +306,8 @@ namespace _dss_internal{ //Start namespace
       }
       // send TR_REDIRECT to all other proxies
       while (!a_proxies.isEmpty()) sendRedirect(a_proxies.pop());
+      // empty a_requests
+      while (!a_requests.isEmpty()) a_requests.pop().dispose();
       break;
     }
     case TR_UPDATE_REQUEST: {
@@ -276,20 +315,22 @@ namespace _dss_internal{ //Start namespace
       if (isPermFail() || getStatus() > TRANS_STATUS_FREE) break;
       int aop = msg->popIntVal();
       PstOutContainerInterface *arg = gf_popPstIn(msg)->loopBack2Out();
-      // Forward the request to the current proxy.
-      if (!msg->m_isEmpty())
-	sendToProxy(a_current, TR_UPDATE_REQUEST, aop, arg, popThreadId(msg));
-      else
-	sendToProxy(a_current, TR_UPDATE_REQUEST, aop, arg);
+      GlobalThread *tid = (msg->m_isEmpty() ? NULL : popThreadId(msg));
+      // enqueue request
+      TR_request req = { msgType, aop, arg->duplicate(), tid };
+      a_requests.append(req);
+      // forward to current proxy
+      if (tid) sendToProxy(a_current, TR_UPDATE_REQUEST, aop, arg, tid);
+      else sendToProxy(a_current, TR_UPDATE_REQUEST, aop, arg);
       break;
     }
+    case TR_UPDATE_REPLY:
     case TR_UPDATE: {
       if (isPermFail() || getStatus() == TRANS_STATUS_BOUND) break;
       // The current proxy sends an update, simply forward it.
       Assert(s == a_current);
       int aop = msg->popIntVal();
       PstOutContainerInterface *ans = gf_popPstIn(msg)->loopBack2Out();
-      // take requester if present
       GlobalThread *tid = (msg->m_isEmpty() ? NULL : popThreadId(msg));
       DSite *requester = (tid ? tid->m_getGUIdSite() : NULL);
       // send TR_UPDATE to all proxies except the requester
@@ -298,18 +339,26 @@ namespace _dss_internal{ //Start namespace
 	  sendToProxy(*p, TR_UPDATE, aop, ans->duplicate());
       }
       // send specific TR_UPDATE to requester if present
-      if (requester)
-	sendToProxy(requester, TR_UPDATE, aop, ans, tid);
-      else
-	delete ans;
+      if (requester) sendToProxy(requester, TR_UPDATE, aop, ans, tid);
+      else ans->dispose();
+      // pop request if it is a reply
+      if (msgType == TR_UPDATE_REPLY) a_requests.pop().dispose();
       break;
     }
     case PROT_PERMFAIL: {
-      if (isPermFail() || getStatus() == TRANS_STATUS_BOUND) break;
-      if (s == a_current)
-	makePermFail();     // The entity failed, forward to all proxies
-      else
-	sendToProxy(a_current, PROT_PERMFAIL);   // Forward to current proxy
+      if (isPermFail() || getStatus() > TRANS_STATUS_FREE) break;
+      if (s == a_current) {
+	// empty a_requests
+	while (!a_requests.isEmpty()) a_requests.pop().dispose();
+	makePermFail();
+      } else {
+	setStatus(TRANS_STATUS_WAITING);
+	// enqueue request
+	TR_request req = { PROT_PERMFAIL, 0, NULL, NULL };
+	a_requests.append(req);
+	// forward to current proxy
+	sendToProxy(a_current, PROT_PERMFAIL);
+      }
       break;
     }
     default: 
@@ -424,8 +473,8 @@ namespace _dss_internal{ //Start namespace
     int msgType = msg->popIntVal();
     switch (msgType) {
     case TR_BIND: {
+      if (!hasToken()) break;
       // this proxy has the write token, and is asked to bind
-      Assert(hasToken());
       AbsOp aop = static_cast<AbsOp>(msg->popIntVal());
       PstInContainerInterface *arg = gf_popPstIn(msg);
       GlobalThread* tid = (msg->m_isEmpty() ? NULL : popThreadId(msg));
@@ -451,17 +500,16 @@ namespace _dss_internal{ //Start namespace
       break;
     }
     case TR_UPDATE_REQUEST: {
+      if (!hasToken()) break;
       // this proxy has the write token, and is asked to update
-      Assert(hasToken());
-      // do the update
       AbsOp aop = static_cast<AbsOp>(msg->popIntVal());
       PstInContainerInterface *arg = gf_popPstIn(msg);
       GlobalThread *tid = (msg->m_isEmpty() ? NULL : popThreadId(msg));
       PstOutContainerInterface *ans;
       a_proxy->m_doe(aop, tid, NULL, arg, ans);
-      // send TR_UPDATE to manager
-      if (tid) sendToManager(TR_UPDATE, aop, arg->loopBack2Out(), tid);
-      else sendToManager(TR_UPDATE, aop, arg->loopBack2Out());
+      // send TR_UPDATE_REPLY to manager
+      if (tid) sendToManager(TR_UPDATE_REPLY, aop, arg->loopBack2Out(), tid);
+      else sendToManager(TR_UPDATE_REPLY, aop, arg->loopBack2Out());
       break;
     }
     case TR_UPDATE: {

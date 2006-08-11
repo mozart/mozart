@@ -40,9 +40,17 @@
 
 namespace _dss_internal{ //Start namespace
 
+  // for buffered requests
+  struct TR_request {
+    int type; int aop; PstOutContainerInterface* pst; GlobalThread* thr;
+    void makeGCpreps() { if (thr) thr->m_makeGCpreps(); }
+    void dispose() { if (pst) pst->dispose(); }
+  };
+
   class ProtocolTransientRemoteManager : public ProtocolManager {
   private:
-    DSite*             a_current;   // the proxy that has the write token
+    DSite* a_current;   // the proxy that has the write token
+    SimpleQueue<TR_request> a_requests;   // buffered requests
 
     ProtocolTransientRemoteManager(const ProtocolTransientRemoteManager&):
       a_current(NULL) {}
@@ -56,10 +64,13 @@ namespace _dss_internal{ //Start namespace
     void sendMigrateInfo(MsgContainer*);
     ProtocolTransientRemoteManager(MsgContainer* const);
 
+    void makeGCpreps();
+
     // register a remote proxy.  registerToken() returns true if the
     // proxy is given the write token
     void registerRemote(DSite*);
     bool registerToken(DSite*);
+    void setCurrent(DSite*);     // change current token holder
 
     void sendRedirect(DSite*);
     void msgReceived(MsgContainer*, DSite*);
