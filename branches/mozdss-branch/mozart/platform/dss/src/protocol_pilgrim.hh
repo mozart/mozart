@@ -63,19 +63,17 @@ namespace _dss_internal{ //Start namespace
   private:
     SimpleRing<DSite*> a_ring;      // the proxies in the ring
     bool               a_lastLeaving; // last proxy in ring wants to leave
-    SimpleList<DSite*> a_leaving;   // the leaving proxies
     PilgrimColor       a_color;     // the current token color
 
     // Invariants:
     //  - a_ring is empty iff the token is lost;
-    //  - a_ring and a_leaving are disjoint.
+    //  - all proxies in the ring are in a_proxies
 
     void m_lostToken();
     void m_removeFailed(DSite* s);
 
     ProtocolPilgrimManager(const ProtocolPilgrimManager&):
-      ProtocolManager(), a_ring(), a_lastLeaving(false), a_leaving(),
-      a_color() {}
+      a_lastLeaving(false) {}
     ProtocolPilgrimManager& operator=(const ProtocolPilgrimManager&){
       return *this; }
 
@@ -83,7 +81,6 @@ namespace _dss_internal{ //Start namespace
     ProtocolPilgrimManager(DSite* mysite);
     ProtocolPilgrimManager(::MsgContainer*);
     ~ProtocolPilgrimManager() {}
-    void makeGCpreps();
     void msgReceived(::MsgContainer*,DSite*);
     void sendMigrateInfo(MsgContainer*); 
 
@@ -92,45 +89,32 @@ namespace _dss_internal{ //Start namespace
   };
 
 
-  // token status of pilgrim proxy
-  enum PilgrimToken {
-    PLGT_EMPTY,     // token not here
-    PLGT_HERE,      // token here
-    PLGT_LOST       // token lost
-  };
-
-
   class ProtocolPilgrimProxy:public ProtocolProxy{
-    friend class ProtocolPilgrimManager;
-
   private:
-    PilgrimToken  a_token;        // token status
+    // the proxy status contains the following boolean flags:
+    //  - hasToken: if the token is on this proxy;
+    //  - isInRing: whether the proxy is inside the ring;
+    //  - isReachable: this proxy might still be reachable from the ring;
+    //  - isColoring: whether proxy must forward color;
+    //  - isStrict: whether proxy rejects different colors.
+    bool hasToken(void) const { return getStatus() & 1; }
+    bool isInRing(void) const { return getStatus() & 2; }
+    bool isReachable(void) const { return getStatus() & 4; }
+    bool isColoring(void) const { return getStatus() & 8; }
+    bool isStrict(void) const { return getStatus() & 16; }
+    void hasToken(bool b) { setStatus((getStatus() & ~1) || (b ? 1 : 0)); }
+    void isInRing(bool b) { setStatus((getStatus() & ~2) || (b ? 2 : 0)); }
+    void isReachable(bool b) { setStatus((getStatus() & ~4) || (b ? 4 : 0)); }
+    void isColoring(bool b) { setStatus((getStatus() & ~8) || (b ? 8 : 0)); }
+    void isStrict(bool b) { setStatus((getStatus() & ~16) || (b ? 16 : 0)); }
 
     DSite*        a_successor;    // successor in the ring
-    bool          a_registered:1; // whether proxy has registered
-    bool          a_reachable:1;  // whether proxy can receive token
     int           a_freeRounds;   // how many "free rounds" before leaving
-
     PilgrimColor  a_color;        // the current color
-    bool          a_coloring:1;   // whether proxy must forward color
-    bool          a_strict:1;     // whether proxy rejects different colors
-
-    SimpleQueue<GlobalThread*> a_susps; // suspended operations
-    int           a_jobsLeft;     // operations not terminated yet
-    
-    void m_register();
-    void m_deregister();
-    bool m_isAlone();
-    void m_forwardToken();
-    bool m_acceptTokenColor(PilgrimColor const &col);
-    void m_forwardColor();
-    void m_resumeOperations();
-    void m_lostToken();
+    int           a_jobsLeft;     // resumed operations not terminated yet
 
     ProtocolPilgrimProxy(const ProtocolPilgrimProxy&):
-      ProtocolProxy(PN_NO_PROTOCOL), a_token(PLGT_EMPTY), a_successor(NULL),
-      a_registered(false), a_reachable(false), a_freeRounds(0), a_color(),
-      a_coloring(false), a_strict(true), a_susps(), a_jobsLeft(0) {}
+      ProtocolProxy(PN_NO_PROTOCOL) {}
     ProtocolPilgrimProxy& operator=(const ProtocolPilgrimProxy&){
       return *this; }
 
@@ -140,16 +124,25 @@ namespace _dss_internal{ //Start namespace
     bool m_initRemoteProt(DssReadBuffer*);
 
     void makeGCpreps(); 
-    bool isWeakRoot();
+    bool isWeakRoot() { return isReachable(); }
     bool clearWeakRoot();    
+    
+    void m_enter();
+    void m_leave();
+    bool m_isAlone();
+    void m_forwardToken();
+    bool m_acceptTokenColor(PilgrimColor const &col);
+    void m_forwardColor();
+    void m_resumeOperations();
+    void m_lostToken();
     
     OpRetVal protocol_Access(GlobalThread* const,
 			     ::PstOutContainerInterface**&);
-    OpRetVal protocol_Kill();
 
     void msgReceived(::MsgContainer*,DSite*);
     void remoteInitatedOperationCompleted(DssOperationId* opId,
-					  ::PstOutContainerInterface* pstOut);
+					  ::PstOutContainerInterface* pstOut) {
+      Assert(0); }
     void localInitatedOperationCompleted(); 
 
     // check fault state

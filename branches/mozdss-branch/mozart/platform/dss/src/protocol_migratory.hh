@@ -66,7 +66,7 @@ namespace _dss_internal{ //Start namespace
     ProtocolMigratoryManager(::MsgContainer*);
     ~ProtocolMigratoryManager() {}
 
-    void makeGCpreps() { t_gcList(a_chain); }
+    void makeGCpreps() { ProtocolManager::makeGCpreps(); t_gcList(a_chain); }
     void msgReceived(::MsgContainer*,DSite*);
     
     void sendMigrateInfo(::MsgContainer*); 
@@ -76,22 +76,19 @@ namespace _dss_internal{ //Start namespace
   };
 
 
-  // state of a migratory proxy
+  // state of a migratory proxy (when not permfail)
   enum MigratoryToken {
     MIGT_EMPTY,       // token not here
     MIGT_REQUESTED,   // token not here, but has been requested
-    MIGT_HERE,        // token here
-    MIGT_LOST         // token lost (entity's state is thus permfail)
+    MIGT_HERE         // token here
   };
   
 
   class ProtocolMigratoryProxy:public ProtocolProxy{
     friend class ProtocolMigratoryManager;
   private:
-    MigratoryToken             a_token;       // where is the token?
-    DSite*                     a_successor;   // next proxy in chain
-    int                        a_request;     // request id
-    SimpleQueue<GlobalThread*> a_susps;       // suspended threads
+    DSite* a_successor;   // next proxy in chain
+    int    a_request;     // request id
 
     void requestToken();
     void forwardToken();
@@ -99,28 +96,24 @@ namespace _dss_internal{ //Start namespace
     void lostToken();
 
     ProtocolMigratoryProxy(const ProtocolMigratoryProxy&):
-      ProtocolProxy(PN_MIGRATORY_STATE), a_token(MIGT_EMPTY), a_successor(NULL)
-    {}
+      ProtocolProxy(PN_MIGRATORY_STATE), a_successor(NULL) {}
     ProtocolMigratoryProxy& operator=(const ProtocolMigratoryProxy&){ return *this; }
 
   public:
     ProtocolMigratoryProxy();
     bool m_initRemoteProt(DssReadBuffer*);
-    ~ProtocolMigratoryProxy(){};
+    ~ProtocolMigratoryProxy();
 
     // WEAK protocol (to get rid of the token)
     // 1) I send a "need_no_more" to manager
     // 2) manager check if I am last, 
     //    if so it sends me a "forward" (to home proxy)
     //    else  it has already sent me a forward message and everething is ok
-    bool isWeakRoot(){
-      return (a_token == MIGT_REQUESTED || a_token == MIGT_HERE);
-    }
+    bool isWeakRoot() { return !isPermFail() && getStatus() > MIGT_EMPTY; }
     bool clearWeakRoot();    
     
     OpRetVal protocol_Access(GlobalThread* const,
 			     ::PstOutContainerInterface**&);
-    OpRetVal protocol_Kill();
 
     void makeGCpreps();
     void msgReceived(::MsgContainer*,DSite*);
