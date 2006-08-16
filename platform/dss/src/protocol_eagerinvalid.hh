@@ -39,43 +39,39 @@ namespace _dss_internal{ //Start namespace
 
   class ProtocolEagerInvalidManager:public ProtocolManager {
   private:
-    SimpleList<Pair<DSite*, bool> > a_readers;
-    SimpleQueue<DSite*> a_requests;
-    DSite* a_writer;
+    SimpleList<DSite*> a_readers;
+    SimpleQueue<DSite*> a_writers;
 
-    // a_readers contain pairs (site, b), where b is false when the
-    // proxy has invalidated its state.
+    // All proxies are registered in a_proxies.  a_readers contains
+    // all reader proxies that have not invalidated their state yet.
+    // They are asked to invalidate once a write request must be
+    // served; the write token is given once a_readers becomes empty.
     //
-    // a_requests contains the proxies that will update the state,
-    // while a_writer is the proxy that currently has the write token
-    // (or NULL if none).
+    // a_writers contains the proxies that made a write request.  The
+    // first element of a_writers has the write token if a_readers is
+    // empty.
 
-    // Invariant: a_readers is empty iff the entity is permfail
-
-    ProtocolEagerInvalidManager(const ProtocolEagerInvalidManager&):
-      a_readers(), a_requests(), a_writer(NULL) {}
+    ProtocolEagerInvalidManager(const ProtocolEagerInvalidManager&) {}
     ProtocolEagerInvalidManager& operator=(const ProtocolEagerInvalidManager&){
       return *this; }
 								    
   public:
     ProtocolEagerInvalidManager(DSite *mysite);
+    void sendMigrateInfo(::MsgContainer*); 
     ProtocolEagerInvalidManager(::MsgContainer*);
     ~ProtocolEagerInvalidManager() {}
-    void makeGCpreps();
-    void msgReceived(::MsgContainer*,DSite*);
-    void sendMigrateInfo(::MsgContainer*); 
 
+    void msgReceived(::MsgContainer*,DSite*);
     void m_siteStateChange(DSite*, const DSiteState&);
 
   private: 
-    bool m_isFailed() { return a_readers.isEmpty(); }
     void m_register(DSite* s);
     void m_deregister(DSite* s);
     void m_invalidateReaders();
     void m_invalidated(DSite* s);
     void m_sendWriteToken();
-    void m_updateOneReader(DSite *s);
-    void m_updateAllReaders();
+    void m_updateOneReader(DSite*);
+    void m_updateAllReaders(DSite*);
     void m_failed();
     void printStatus();
   };
@@ -83,14 +79,13 @@ namespace _dss_internal{ //Start namespace
 
   class ProtocolEagerInvalidProxy:public ProtocolProxy{
   private:
-    bool a_failed:1;     // true when the state is permfail
-    bool a_valid:1;      // true iff the state is valid
-    SimpleQueue<GlobalThread*> a_readers;
-    SimpleQueue<GlobalThread*> a_writers;
+    // The status of the proxy tells whether the state is valid.  The
+    // first a_reads elements of a_susps are read operations, and the
+    // remaining ones are write operations
+    int a_reads;
 
     ProtocolEagerInvalidProxy(const ProtocolEagerInvalidProxy&):
-      ProtocolProxy(PN_EAGER_INVALID), a_failed(false), a_valid(false),
-      a_readers(), a_writers() {}
+      ProtocolProxy(PN_EAGER_INVALID), a_reads(0) {}
     ProtocolEagerInvalidProxy& operator=(const ProtocolEagerInvalidProxy&){
       return *this; }
 
@@ -99,25 +94,21 @@ namespace _dss_internal{ //Start namespace
     bool m_initRemoteProt(DssReadBuffer*);
     ~ProtocolEagerInvalidProxy();
 
+    bool isWeakRoot() { return !isPermFail() && a_reads < a_susps.size(); }
+
     OpRetVal protocol_Read(GlobalThread* const th_id,
 			   PstOutContainerInterface**& msg);
     OpRetVal protocol_Write(GlobalThread* const th_id,
 			    PstOutContainerInterface**& msg);
-    OpRetVal protocol_Kill();
-
-    void makeGCpreps();
-    bool isWeakRoot() { return !a_writers.isEmpty(); }
 
     void msgReceived(::MsgContainer*,DSite*);
-    virtual void remoteInitatedOperationCompleted(DssOperationId* opId,
-						  ::PstOutContainerInterface* pstOut){}
+
+    virtual void remoteInitatedOperationCompleted(DssOperationId*,
+						  ::PstOutContainerInterface*)
+    { Assert(0); }
     void localInitatedOperationCompleted(){Assert(0);} 
 
     virtual FaultState siteStateChanged(DSite*, const DSiteState&);
-
-  private: 
-    void m_writeDone(); 
-    void m_failed();
   };
 
 } //End namespace

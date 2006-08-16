@@ -42,9 +42,9 @@ namespace _dss_internal{ //Start namespace
   // causality between sites.
   //
   // Proxy P registers (at creation):
-  //    P                      M
-  //    |---EI_REGISTER_READ-->|
-  //    |<---EI_READ_TOKEN-----| if no write request is being served
+  //    P                   M
+  //    |---PROT_REGISTER-->|
+  //    |<--EI_READ_TOKEN---| if no write request is being served
   //
   // Proxy P requests write token: (1) P first registers to manager M.
   // (2) Once all requests before P have been served, M asks all other
@@ -69,15 +69,12 @@ namespace _dss_internal{ //Start namespace
 
   namespace {
     enum EagerInvalid_Message {
-      EI_REGISTER_READ,    // p2m: register reader
-      EI_DEREGISTER_READ,  // p2m: deregister reader
       EI_INVALID_READ,     // m2p: invalidates reader state
       EI_READ_INVALIDATED, // p2m: confirms invalidation
       EI_READ_TOKEN,       // m2p: provides new state
       EI_WRITE_REQUEST,    // p2m: register writer
       EI_WRITE_TOKEN,      // m2p: give write token
-      EI_WRITE_DONE,       // p2m: give back write token and new state
-      EI_PERMFAIL          // mp,pm: make entity permfail
+      EI_WRITE_DONE        // p2m: give back write token and new state
     };
   }
 
@@ -85,53 +82,43 @@ namespace _dss_internal{ //Start namespace
 
   /******************** ProtocolEagerInvalidManager ********************/
 
-  ProtocolEagerInvalidManager::ProtocolEagerInvalidManager(DSite *mysite):
-    a_readers(), a_requests(), a_writer(NULL) {
-    a_readers.push(makePair(mysite, true));
+  ProtocolEagerInvalidManager::ProtocolEagerInvalidManager(DSite *mysite) {
+    registerProxy(mysite);
+    a_readers.push(mysite);
   }
 
-  void ProtocolEagerInvalidManager::sendMigrateInfo(MsgContainer* msg){
-    int len = 0;
-    for (Position<Pair<DSite*,bool> > p(a_readers); p(); p++) len++;
-    msg->pushIntVal(len);
-    for (Position<Pair<DSite*,bool> > p(a_readers); p(); p++) {
-      msg->pushDSiteVal((*p).first);
-      msg->pushIntVal((*p).second);
-    }
-    // move current writer and pending requests
-    msg->pushDSiteVal(a_writer);
-    for (Position<DSite*> p(a_requests); p(); p++) msg->pushDSiteVal(*p);
+  void ProtocolEagerInvalidManager::sendMigrateInfo(MsgContainer* msg) {
+    ProtocolManager::sendMigrateInfo(msg);
+    msgPush(msg, a_readers.size());
+    for (Position<DSite*> p(a_readers); p(); p++) msgPush(msg, *p);
+    msgPush(msg, a_writers.size());
+    for (Position<DSite*> p(a_writers); p(); p++) msgPush(msg, *p);
   }
 
   ProtocolEagerInvalidManager::ProtocolEagerInvalidManager(MsgContainer* msg) :
-    a_readers(), a_requests(), a_writer(NULL)
+    ProtocolManager(msg)
   {
     int len = msg->popIntVal();
-    for (;len>0; len--)
-      a_readers.push(makePair(msg->popDSiteVal(), (bool) msg->popIntVal()));
-    // then get writer and requests
-    a_writer = msg->popDSiteVal();
-    while (!msg->m_isEmpty()) a_requests.append(msg->popDSiteVal());
-  }
-
-  void ProtocolEagerInvalidManager::makeGCpreps(){
-    t_gcList(a_readers);
-    t_gcList(a_requests);
-    if (a_writer) a_writer->m_makeGCpreps();
+    while (len--) a_readers.push(msg->popDSiteVal());
+    len = msg->popIntVal();
+    while (len--) a_writers.append(msg->popDSiteVal());
   }
 
 
   void  ProtocolEagerInvalidManager::printStatus(){
-    if (m_isFailed()) {
+    if (isPermFail()) {
       printf("Failed\n");
     } else {
       printf("Readers:\n"); 
-      for (Position<Pair<DSite*,bool> > p(a_readers); p(); p++)
-	printf("   %s %s\n", (*p).first->m_stringrep(), (*p).second?"+":"-");
+      for (Position<DSite*> p(a_proxies); p(); p++)
+	printf("   %s %s\n", (*p)->m_stringrep(),
+	       a_readers.contains(*p) ? "+" : "-");
       printf("Writers:\n");
-      if (a_writer) printf("   %s (*)\n", a_writer->m_stringrep());
-      for (Position<DSite*> p(a_requests); p(); p++)
-	printf("   %s\n", (*p)->m_stringrep());
+      Position<DSite*> p(a_writers);
+      if (p()) {
+	printf("   %s %s\n", (*p)->m_stringrep(), a_readers.isEmpty()?"(*)":"");
+	for (p++; p(); p++) printf("   %s\n", (*p)->m_stringrep());
+      }
     }
   }
 
@@ -139,64 +126,50 @@ namespace _dss_internal{ //Start namespace
   // register a proxy
   void
   ProtocolEagerInvalidManager::m_register(DSite* s) {
-    if (a_writer == NULL && a_requests.isEmpty()) {
-      a_readers.push(makePair(s, true));
-      m_updateOneReader(s);
-    } else {
-      a_readers.push(makePair(s, false));
-    }
+    registerProxy(s);
+    if (a_writers.isEmpty()) m_updateOneReader(s);
   }
 
   // deregister a proxy (possibly because of a site failure)
   void
   ProtocolEagerInvalidManager::m_deregister(DSite* s) {
-    Assert(s != a_writer);
-    Position<Pair<DSite*,bool> > p(a_readers);
-    if (p.find(s)) {
-      p.remove();
-      if (a_requests.remove(s)) a_requests.check();
-      if (!a_writer) m_invalidated(s);
+    if (a_readers.isEmpty() && !a_writers.isEmpty() && s == a_writers.peek()) {
+      // s has the write token, so the state is lost
+      m_failed();
+    } else {
+      deregisterProxy(s);
+      if (a_writers.remove(s)) a_writers.check();
+      m_invalidated(s);
     }
   }
 
   // ask all readers to invalidate their state
   void 
   ProtocolEagerInvalidManager::m_invalidateReaders() {
-    Assert(a_writer == NULL && !a_requests.isEmpty());
-    DSite* writer = a_requests.peek();
-    bool ready = true;
-    for (Position<Pair<DSite*,bool> > p(a_readers); p(); p++) {
-      if ((*p).first == writer) {
-	(*p).second = false;
-      } else {
-	Assert((*p).second);
-	sendToProxy((*p).first, EI_INVALID_READ);
-	ready = false;
-      }
-    }
-    if (ready) m_sendWriteToken();
+    Assert(!a_writers.isEmpty());
+    // we don't invalidate the proxy that will receive the token
+    a_readers.remove(a_writers.peek());
+    // we ask the remaining readers to invalidate their state
+    for (Position<DSite*> p(a_readers); p(); p++)
+      sendToProxy(*p, EI_INVALID_READ);
+    // in case we are ready already
+    if (a_readers.isEmpty()) m_sendWriteToken();
   }
 
   // mark a proxy as invalidated, and possibly send the write token
   void
   ProtocolEagerInvalidManager::m_invalidated(DSite* s) {
-    bool ready = true;
-    for (Position<Pair<DSite*,bool> > p(a_readers); p(); p++) {
-      if ((*p).first == s) { (*p).second = false; }
-      ready = ready && !(*p).second;
-    }
-    if (ready) m_sendWriteToken();
+    if (a_readers.remove(s) && a_readers.isEmpty()) m_sendWriteToken();
   }
 
   // all proxies have invalidated their state, send write token
   void 
   ProtocolEagerInvalidManager::m_sendWriteToken(){
-    if (!a_requests.isEmpty()) {
-      a_writer = a_requests.pop();
-      sendToProxy(a_writer, EI_WRITE_TOKEN);
+    if (!a_writers.isEmpty()) {
+      sendToProxy(a_writers.peek(), EI_WRITE_TOKEN);
     } else {
       // all requests have been dropped, make state valid again
-      m_updateAllReaders();
+      m_updateAllReaders(NULL);
     }
   }
 
@@ -204,42 +177,43 @@ namespace _dss_internal{ //Start namespace
   void 
   ProtocolEagerInvalidManager::m_updateOneReader(DSite *s) {
     sendToProxy(s, EI_READ_TOKEN, a_coordinator->retrieveEntityState());
+    a_readers.push(s);
   }
 
   // send state to all readers, and prepare next request
   void 
-  ProtocolEagerInvalidManager::m_updateAllReaders() {
-    for (Position<Pair<DSite*,bool> > p(a_readers); p(); p++) {
-      if ((*p).first != a_writer) m_updateOneReader((*p).first);
-      (*p).second = true;
+  ProtocolEagerInvalidManager::m_updateAllReaders(DSite* writer) {
+    for (Position<DSite*> p(a_proxies); p(); p++) {
+      if (*p == writer) {
+	a_readers.push(writer);   // writer already has state
+      } else {
+	m_updateOneReader(*p);   // send new state
+      }
     }
-    a_writer = NULL;
-    if (!a_requests.isEmpty()) m_invalidateReaders();
+    if (!a_writers.isEmpty()) m_invalidateReaders();
   }
 
   // notify permfail to all known proxies
   void
   ProtocolEagerInvalidManager::m_failed() {
-    while (!a_readers.isEmpty())
-      sendToProxy(a_readers.pop().first, EI_PERMFAIL);
-    while (!a_requests.isEmpty()) a_requests.pop();
-    a_writer = NULL;
+    while (!a_readers.isEmpty()) a_readers.pop();
+    while (!a_writers.isEmpty()) a_writers.pop();
+    makePermFail();
   }
 
 
   void
   ProtocolEagerInvalidManager::msgReceived(::MsgContainer* msg, DSite* sender){
-    if (m_isFailed()) {
-      sendToProxy(sender, EI_PERMFAIL); return;
+    if (isPermFail()) {
+      sendToProxy(sender, PROT_PERMFAIL); return;
     }
     int message = msg->popIntVal();
     switch(message) {
-    case EI_REGISTER_READ: {
+    case PROT_REGISTER: {
       m_register(sender);
       break;
     }
-    case EI_DEREGISTER_READ: {
-      Assert(a_writer != sender && !a_requests.contains(sender));
+    case PROT_DEREGISTER: {
       m_deregister(sender);
       break;
     }
@@ -248,19 +222,20 @@ namespace _dss_internal{ //Start namespace
       break; 
     }
     case EI_WRITE_REQUEST: {
-      bool ready = (a_writer == NULL && a_requests.isEmpty());
-      a_requests.append(sender); 
+      bool ready = a_writers.isEmpty();
+      a_writers.append(sender); 
       if (ready) m_invalidateReaders();
       break;
     }
     case EI_WRITE_DONE: {
-      Assert(sender == a_writer);
+      Assert(sender == a_writers.peek());
       PstInContainerInterface* builder = gf_popPstIn(msg);  
       a_coordinator->installEntityState(builder);
-      m_updateAllReaders();
+      a_writers.pop();
+      m_updateAllReaders(sender);
       break;
     }
-    case EI_PERMFAIL: {
+    case PROT_PERMFAIL: {
       m_failed();
       break;
     }
@@ -274,9 +249,7 @@ namespace _dss_internal{ //Start namespace
   void
   ProtocolEagerInvalidManager::m_siteStateChange(DSite* s,
 						 const DSiteState& state) {
-    if (!m_isFailed() && state >= DSite_GLOBAL_PRM) {
-      if (s == a_writer) m_failed(); else m_deregister(s);
-    }
+    if (!isPermFail() && state >= DSite_GLOBAL_PRM) m_deregister(s);
   }
 
 
@@ -284,40 +257,21 @@ namespace _dss_internal{ //Start namespace
   /******************** ProtocolEagerInvalidProxy ********************/
 
   ProtocolEagerInvalidProxy::ProtocolEagerInvalidProxy():
-    ProtocolProxy(PN_EAGER_INVALID), a_failed(false), a_valid(true),
-    a_readers(), a_writers() {}
+    ProtocolProxy(PN_EAGER_INVALID), a_reads(0) {
+    setStatus(true);
+    setRegistered(true);
+  }
 
   bool
-  ProtocolEagerInvalidProxy::m_initRemoteProt(DssReadBuffer*){
-    sendToManager(EI_REGISTER_READ);
-    a_valid = false;
+  ProtocolEagerInvalidProxy::m_initRemoteProt(DssReadBuffer*) {
+    protocol_Register();
+    setStatus(false);
     return true;
   }
 
   ProtocolEagerInvalidProxy::~ProtocolEagerInvalidProxy(){
-    Assert(a_writers.isEmpty()); 
-    Assert(a_readers.isEmpty()); 
-    if (!a_proxy->m_isHomeProxy()) sendToManager(EI_DEREGISTER_READ);
-  }
-
-  void ProtocolEagerInvalidProxy::makeGCpreps(){
-    t_gcList(a_readers);
-    t_gcList(a_writers);
-  }
-
-
-  void 
-  ProtocolEagerInvalidProxy::m_writeDone() {
-    sendToManager(EI_WRITE_DONE, a_proxy->retrieveEntityState());
-  }
-
-  void
-  ProtocolEagerInvalidProxy::m_failed() {
-    a_failed = true;
-    a_proxy->updateFaultState(FS_PROT_STATE_PRM_UNAVAIL);
-    // resume suspended threads
-    while (!a_readers.isEmpty()) a_readers.pop()->resumeFailed();
-    while (!a_writers.isEmpty()) a_writers.pop()->resumeFailed();
+    Assert(a_susps.isEmpty()); 
+    if (!a_proxy->m_isHomeProxy()) protocol_Deregister();
   }
 
   
@@ -326,58 +280,51 @@ namespace _dss_internal{ //Start namespace
 					   PstOutContainerInterface**& msg){
     dssLog(DLL_BEHAVIOR,"EagerInvalidProxy::Read");
     msg = NULL;
-    if (a_failed) return DSS_RAISE;
-    if (a_valid) return DSS_PROCEED;
-    a_readers.append(th_id);
+    if (isPermFail()) return DSS_RAISE;
+    if (getStatus()) return DSS_PROCEED;
+    a_susps.push(th_id); a_reads++;
     return DSS_SUSPEND;
   }
-  
+
   OpRetVal
   ProtocolEagerInvalidProxy::protocol_Write(GlobalThread* const th_id,
 					    PstOutContainerInterface**& msg){
     dssLog(DLL_BEHAVIOR,"EagerInvalidProxy::Write");
     msg = NULL;
-    if (a_failed) return DSS_RAISE;
-    if (a_writers.isEmpty()) sendToManager(EI_WRITE_REQUEST);
-    a_writers.append(th_id);
+    if (isPermFail()) return DSS_RAISE;
+    if (a_reads == a_susps.size()) sendToManager(EI_WRITE_REQUEST);
+    a_susps.append(th_id);
     return DSS_SUSPEND;
-  }
-
-  OpRetVal
-  ProtocolEagerInvalidProxy::protocol_Kill() {
-    if (!a_failed) sendToManager(EI_PERMFAIL);
-    return DSS_SKIP;
   }
 
 
   void
   ProtocolEagerInvalidProxy::msgReceived(::MsgContainer* msg, DSite*){
-    if (a_failed) return;
+    if (isPermFail()) return;
     int message = msg->popIntVal();
     switch (message) {
     case EI_INVALID_READ: {
-      a_valid = false;
+      setStatus(false);
       sendToManager(EI_READ_INVALIDATED);
       break; 
     }
     case EI_READ_TOKEN:{
       PstInContainerInterface* buildcont = gf_popPstIn(msg);
       a_proxy->installEntityState(buildcont);
-      a_valid = true;
-      // wake up readers
-      while (!a_readers.isEmpty())
-	a_readers.pop()->resumeDoLocal(NULL);
+      setStatus(true);
+      // wake up read operations
+      for (; a_reads > 0; a_reads--) a_susps.pop()->resumeDoLocal(NULL);
       break;
     }
     case EI_WRITE_TOKEN:{
-      // wake up all writers, then send back result to manager
-      while (!a_writers.isEmpty())
-	a_writers.pop()->resumeDoLocal(NULL);
-      m_writeDone();
+      // wake up all readers and writers, then send back result to manager
+      while (!a_susps.isEmpty()) a_susps.pop()->resumeDoLocal(NULL);
+      a_reads = 0;
+      sendToManager(EI_WRITE_DONE, a_proxy->retrieveEntityState());
       break; 
     }
-    case EI_PERMFAIL: {
-      m_failed();
+    case PROT_PERMFAIL: {
+      makePermFail();
       break;
     }
     default:
@@ -390,15 +337,12 @@ namespace _dss_internal{ //Start namespace
   FaultState
   ProtocolEagerInvalidProxy::siteStateChanged(DSite* s,
 					      const DSiteState& state) {
-    if (!a_failed && a_proxy->m_getCoordinatorSite() == s) {
+    if (!isPermFail() && a_proxy->m_getCoordinatorSite() == s) {
       switch (state) {
-      case DSite_OK:
-	return FS_PROT_STATE_OK;
-      case DSite_TMP:
-	return FS_PROT_STATE_TMP_UNAVAIL;
-      case DSite_GLOBAL_PRM: case DSite_LOCAL_PRM:
-	m_failed();
-	return FS_PROT_STATE_PRM_UNAVAIL;
+      case DSite_OK:         return FS_PROT_STATE_OK;
+      case DSite_TMP:        return FS_PROT_STATE_TMP_UNAVAIL;
+      case DSite_GLOBAL_PRM:
+      case DSite_LOCAL_PRM:  makePermFail(); return FS_PROT_STATE_PRM_UNAVAIL;
       default:
 	dssError("Unknown DSite state %d for %s",state,s->m_stringrep());
       }

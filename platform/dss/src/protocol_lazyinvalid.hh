@@ -38,7 +38,6 @@ namespace _dss_internal{ //Start namespace
 
   class ProtocolLazyInvalidManager:public ProtocolManager {
   private:
-    bool a_failed;
     SimpleQueue<Pair<DSite*, bool> > a_requests;
     SimpleList<DSite*> a_readers;
     DSite* a_writer;
@@ -54,7 +53,7 @@ namespace _dss_internal{ //Start namespace
     // a_writer is the proxy that currently has the write token.
 
     ProtocolLazyInvalidManager(const ProtocolLazyInvalidManager&):
-      a_failed(false), a_requests(), a_readers(), a_writer(NULL) {}
+      a_writer(NULL) {}
     ProtocolLazyInvalidManager operator=(const ProtocolLazyInvalidManager&){
       return *this; }
 
@@ -79,19 +78,18 @@ namespace _dss_internal{ //Start namespace
   enum LazyInvalidToken {
     LIT_INVALID,     // proxy has no valid state
     LIT_READER,      // proxy has read token
-    LIT_WRITER,      // proxy has write token
-    LIT_FAILED       // state is lost
+    LIT_WRITER       // proxy has write token
   };
 
   class ProtocolLazyInvalidProxy:public ProtocolProxy{
   private:
-    LazyInvalidToken a_token;     // status of this proxy
-    SimpleQueue<GlobalThread*> a_readers;
-    SimpleQueue<GlobalThread*> a_writers;
+    // The status of the proxy is a LazyInvalidToken.  The first
+    // a_reads elements of a_susps are read operations, and the
+    // remaining ones are write operations
+    int a_reads;
 
     ProtocolLazyInvalidProxy(const ProtocolLazyInvalidProxy&):
-      ProtocolProxy(PN_EAGER_INVALID), a_token(LIT_INVALID),
-      a_readers(), a_writers() {}
+      ProtocolProxy(PN_EAGER_INVALID), a_reads(0) {}
     ProtocolLazyInvalidProxy operator=(const ProtocolLazyInvalidProxy&){
       return *this; }
 
@@ -104,10 +102,9 @@ namespace _dss_internal{ //Start namespace
 			   PstOutContainerInterface**& msg);
     OpRetVal protocol_Write(GlobalThread* const th_id,
 			    PstOutContainerInterface**& msg);
-    OpRetVal protocol_Kill();
 
-    void makeGCpreps();
-    bool isWeakRoot() { return a_token == LIT_WRITER || !a_writers.isEmpty(); }
+    bool isWeakRoot() { return !isPermFail() && (getStatus() == LIT_WRITER
+						 || a_reads < a_susps.size());}
 
     void msgReceived(MsgContainer*,DSite*);
 
@@ -121,7 +118,6 @@ namespace _dss_internal{ //Start namespace
   private: 
     void m_requestReadToken();
     void m_requestWriteToken();
-    void m_failed();
   };
 
 } //End namespace
