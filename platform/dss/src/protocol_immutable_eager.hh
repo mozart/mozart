@@ -42,36 +42,29 @@ namespace _dss_internal{ //Start namespace
   // the common stuff here.
 
   class ProtocolImmutableManager : public ProtocolManager {
-  private:
-    bool failed:1;                         // whether entity is permfail
   public:
-    ProtocolImmutableManager();
+    ProtocolImmutableManager() {}
+    ProtocolImmutableManager(MsgContainer*);
     ~ProtocolImmutableManager() {}
+    virtual void sendMigrateInfo(MsgContainer*);
     virtual void msgReceived(MsgContainer*,DSite*);
   };
 
   class ProtocolImmutableProxy : public ProtocolProxy {
-  protected:
-    bool failed:1;                         // whether entity is permfail
-    bool stateHolder:1;                    // whether proxy has entity state
-    SimpleList<GlobalThread*> a_readers;   // suspended read operations
-
-    void m_requestState();
-    void m_failed();
-
+    // the status of the proxy tells whether the state is installed
   public: 
     ProtocolImmutableProxy(const ProtocolName&);
-    ~ProtocolImmutableProxy() { Assert(a_readers.isEmpty()); }
+    ~ProtocolImmutableProxy();
 
-    OpRetVal protocol_Kill();
+    virtual bool m_initRemoteProt(DssReadBuffer*);
+
+    void m_requestState();
+    void m_installState(PstInContainerInterface*);
 
     virtual void msgReceived(MsgContainer*,DSite*);   
     virtual void remoteInitatedOperationCompleted(DssOperationId*,
 						  PstOutContainerInterface*) {}
     virtual void localInitatedOperationCompleted() {}
-
-    virtual void makeGCpreps();
-    virtual bool isWeakRoot() { return false; }
 
     virtual FaultState siteStateChanged(DSite*, const DSiteState&);
   };
@@ -83,6 +76,8 @@ namespace _dss_internal{ //Start namespace
   class ProtocolImmutableEagerManager : public ProtocolImmutableManager {
   public:
     ProtocolImmutableEagerManager() : ProtocolImmutableManager() {}
+    ProtocolImmutableEagerManager(MsgContainer* msg) :
+      ProtocolImmutableManager(msg) {}
   };
 
   class ProtocolImmutableEagerProxy : public ProtocolImmutableProxy {
