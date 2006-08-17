@@ -40,14 +40,14 @@ namespace _dss_internal{ //Start namespace
   class ProtocolImmutableLazyManager : public ProtocolImmutableManager {
   public:
     ProtocolImmutableLazyManager() : ProtocolImmutableManager() {}
+    ProtocolImmutableLazyManager(MsgContainer* msg) :
+      ProtocolImmutableManager(msg) {}
   };
 
   class ProtocolImmutableLazyProxy : public ProtocolImmutableProxy {
   public:
     ProtocolImmutableLazyProxy() :
       ProtocolImmutableProxy(PN_IMMUTABLE_LAZY) {}
-
-    virtual bool m_initRemoteProt(DssReadBuffer*); 
 
     OpRetVal protocol_Access(GlobalThread* const th_id);
   };

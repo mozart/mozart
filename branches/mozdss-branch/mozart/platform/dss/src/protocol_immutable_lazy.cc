@@ -34,19 +34,13 @@ namespace _dss_internal{ //Start namespace
 
   /******************** ProtocolImmutableLazyProxy ********************/
 
-  bool
-  ProtocolImmutableLazyProxy::m_initRemoteProt(DssReadBuffer*){
-    stateHolder = false; 
-    return true;
-  }
-
   OpRetVal
   ProtocolImmutableLazyProxy::protocol_Access(GlobalThread* const th_id) {
-    if (failed) return DSS_RAISE;
-    if (stateHolder) return DSS_PROCEED;
+    if (isPermFail()) return DSS_RAISE;
+    if (getStatus()) return DSS_PROCEED;
     // ask manager if necessary, and wait
-    if (a_readers.isEmpty()) m_requestState();
-    a_readers.push(th_id);
+    if (a_susps.isEmpty()) m_requestState();
+    a_susps.append(th_id);
     return DSS_SUSPEND;
   }
 
