@@ -76,6 +76,7 @@ namespace _dss_internal{ //Start namespace
       sendToProxy(sender, IMM_PUT, a_coordinator->retrieveEntityState());
       break;
     case PROT_PERMFAIL:
+      if (!isRegisteredProxy(sender)) registerProxy(sender);
       makePermFail();
       break;
     default:
