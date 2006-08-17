@@ -220,7 +220,7 @@ namespace _dss_internal{ //Start namespace
       // fall through
     case TRANS_STATUS_WAITING:
       // suspend the current thread until an answer comes back
-      if (th_id) a_susps.push(th_id);
+      if (th_id) a_susps.append(th_id);
       return DSS_SUSPEND;
     default:
       return DSS_RAISE;
@@ -245,7 +245,7 @@ namespace _dss_internal{ //Start namespace
       // fall through
     case TRANS_STATUS_WAITING:
       // suspend the current thread until an answer comes back
-      if (th_id) a_susps.push(th_id);
+      if (th_id) a_susps.append(th_id);
       return DSS_SUSPEND;
     default:
       return DSS_RAISE;
