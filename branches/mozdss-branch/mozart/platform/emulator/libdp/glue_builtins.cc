@@ -733,7 +733,7 @@ OZ_BI_define(BIsetFaultState,2,0)
     return oz_raise(E_SYSTEM, AtomDp, "nondistributable entity", 1, entity);
 
   // check state transition
-  if (!validFaultStateTransition(med->getFaultState(), fs))
+  if (!validFSTransition(med->getFaultState(), fs))
     return oz_raise(E_SYSTEM, AtomDp, "invalid fault transition", 1, state);
 
   // set new state
