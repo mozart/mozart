@@ -72,8 +72,7 @@ Bool atomToFS(TaggedRef a, GlueFaultState &fs) {
 
 // check state transition
 inline
-Bool validFaultStateTransition(const GlueFaultState& s0,
-			       const GlueFaultState& s1) {
+Bool validFSTransition(const GlueFaultState& s0, const GlueFaultState& s1) {
   return (s0 <= s1 || s0 == GLUE_FAULT_TEMP);
 }
 
