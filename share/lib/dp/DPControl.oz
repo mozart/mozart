@@ -92,32 +92,55 @@ define
    end
 
    local
-      %% annotations as constraints
+      %% each annotation parameter is a record, possibly with no field
+      fun {Access access(S)}
+	 case S
+	 of stationary then _#1#_#_#_     % AA_STATIONARY_MANAGER
+	 [] migratory  then _#2#_#_#_     % AA_MIGRATORY_MANAGER
+	 end
+      end
+      fun {Stationary stationary}  1#_#_#_#_ end     % PN_SIMPLE_CHANNEL
+      fun {Migratory  migratory}   2#_#_#_#_ end     % PN_MIGRATORY_STATE
+      fun {Pilgrim    pilgrim}     9#_#_#_#_ end     % PN_PILGRIM_STATE
+      fun {Replicated replicated}  5#_#_#_#_ end     % PN_EAGER_INVALID
+      fun {Variable   variable}    3#_#_#_#_ end     % PN_TRANSIENT
+      fun {Reply      reply}       4#_#_#_#_ end     % PN_TRANSIENT_REMOTE
+      fun {Immediate  immediate}  13#_#_#_#_ end     % PN_IMMEDIATE
+      fun {Eager      eager}      12#_#_#_#_ end     % PN_IMMUTABLE_EAGER
+      fun {Lazy       lazy}       11#_#_#_#_ end     % PN_IMMUTABLE_LAZY
+      fun {Persistent persistent}  _#_#1#0#0 end     % RC_ALG_PERSIST
+      fun {Refcount   refcount}    _#_#0#2#_ end     % RC_ALG_WRC
+      fun {Lease      lease}       _#_#0#_#4 end     % RC_ALG_TL
+      %% map each annotation label to a parameter constraint
       Constrain =
-      constr(stationary: fun {$}  1#_#_#_#_ end     % PN_SIMPLE_CHANNEL
-	     migratory:  fun {$}  2#_#_#_#_ end     % PN_MIGRATORY_STATE
-	     pilgrim:    fun {$}  9#_#_#_#_ end     % PN_PILGRIM_STATE
-	     replicated: fun {$}  5#_#_#_#_ end     % PN_EAGER_INVALID
-	     variable:   fun {$}  3#_#_#_#_ end     % PN_TRANSIENT
-	     replyvar:   fun {$}  4#_#_#_#_ end     % PN_TRANSIENT_REMOTE
-	     ondemand:   fun {$} 11#_#_#_#_ end     % PN_IMMUTABLE_LAZY
-	     persistent: fun {$}  _#_#1#0#0 end     % RC_ALG_PERSIST
-	     refcount:   fun {$}  _#_#0#2#_ end     % RC_ALG_WRC
-	     lease:      fun {$}  _#_#0#_#4 end     % RC_ALG_TL
+      constr(access:     Access
+	     stationary: Stationary
+	     migratory:  Migratory
+	     pilgrim:    Pilgrim
+	     replicated: Replicated
+	     variable:   Variable
+	     reply:      Reply
+	     immediate:  Immediate
+	     eager:      Eager
+	     lazy:       Lazy
+	     persistent: Persistent
+	     refcount:   Refcount
+	     lease:      Lease
 	    )
    in
       %% annotate an entity
-      proc {Annotate E As}
+      proc {Annotate E Annot}
+	 As = if {List.is Annot} then Annot else [Annot] end
 	 PN AA RC0 RC1 RC2
-	 Annot = PN#AA#RC0#RC1#RC2
+	 Param = PN#AA#RC0#RC1#RC2
       in
 	 try
-	    %% constrain Annot with the elements of As, and complete with
+	    %% constrain Param with the elements of As, and complete with
 	    %% zeroes (= PN_NO_PROTOCOL, AA_NO_ARCHITECTURE, RC_ALG_NONE)
-	    for A in As do {Constrain.A Annot} end
+	    for A in As do {Constrain.{Label A} A Param} end
 	    {Record.forAll Annot proc {$ X} if {IsFree X} then X=0 end end}
 	 catch _ then
-	    raise dp('annotation format error' As) end
+	    raise dp('annotation format error' Annot) end
 	 end
 	 %% now set annotation with the parameters
 	 {Glue.setAnnotation E PN AA RC0+RC1+RC2}
