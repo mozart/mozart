@@ -254,11 +254,11 @@ define
          [] 's'(ID) then {Assign SysId ID}
          [] 'p'(ID) then {Assign PubId ID}
          [] 'f'(ID) then {Assign GenId ID}
-         [] '{'(Ename) then skip
-         [] '}'(Ename) then skip
-         [] 'L'(Line) then skip
-         [] 'L'(Line File) then skip
-         [] '#'(Text) then skip
+         [] '{'(_) then skip % nothing to do with '{'(Ename)
+         [] '}'(_) then skip % nothing to do with '}'(Ename)
+         [] 'L'(_) then skip % nothing to do with 'L'(Line)
+         [] 'L'(_ _) then skip % nothing to do with 'L'(Line File)
+         [] '#'(_) then skip % nothing to do with '#'(Text)
          [] 'C' then raise done end
          [] 'i' then skip
          [] 'e' then skip
