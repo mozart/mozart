@@ -218,9 +218,10 @@ static OZ_Term getApplicationArgs(void) {
 // Handle the case of indexed property P whose value can be
 // found at location L.  Return the corresponding Oz term.
 
-#define CASE_INT( P,L) case P: return OZ_int( L)
+#define CASE_INT( P,L) case P: return OZ_int(L)
 #define CASE_BOOL(P,L) case P: return oz_bool(L)
 #define CASE_ATOM(P,L) case P: return oz_atomNoDup(L)
+#define CASE_UNSIGNEDINT(P,L) case P: return OZ_unsignedInt(L)
 
 // Construct an Arity given `n' atoms.  First argument is n
 // i.e. the number of features, the following arguments are
@@ -279,6 +280,7 @@ REC__ = SRecord::newSRecord(LAB__,(Arity*)ARY__);
 #define SET_INT( F,I) SET_REC(F,OZ_int( I))
 #define SET_BOOL(F,B) SET_REC(F,oz_bool(B))
 #define SET_ATOM(F,A) SET_REC(F,oz_atom(A))
+#define SET_UNSIGNEDINT(F,I) SET_REC(F,OZ_unsignedInt(I))
 
 OZ_Term GetEmulatorProperty(EmulatorPropertyIndex prop) {
   SRecord * REC__;
@@ -344,18 +346,18 @@ OZ_Term GetEmulatorProperty(EmulatorPropertyIndex prop) {
     CASE_INT(PROP_GC_TOLERANCE,ozconf.heapTolerance);
     CASE_INT(PROP_GC_CODE_CYCLES,ozconf.codeGCcycles);
     CASE_BOOL(PROP_GC_ON,ozconf.gcFlag);
-    CASE_INT(PROP_GC_THRESHOLD,ozconf.heapThreshold*KB);
-    CASE_INT(PROP_GC_SIZE,getUsedMemory()*KB);
-    CASE_INT(PROP_GC_ACTIVE,ozstat.gcLastActive*KB);
+    CASE_UNSIGNEDINT(PROP_GC_THRESHOLD,ozconf.heapThreshold*KB);
+    CASE_UNSIGNEDINT(PROP_GC_SIZE,getUsedMemory()*KB);
+    CASE_UNSIGNEDINT(PROP_GC_ACTIVE,ozstat.gcLastActive*KB);
     CASE_REC(PROP_GC,"gc",
              (8,AtomCodeCycles,AtomMin,AtomFree,AtomTolerance,
               AtomOn,AtomThreshold,AtomSize,AtomActive),
-             SET_INT(AtomMin,       ozconf.heapMinSize*KB);
-             SET_INT(AtomFree,      ozconf.heapFree);
-             SET_INT(AtomTolerance, ozconf.heapTolerance);
+             SET_UNSIGNEDINT(AtomMin,       ozconf.heapMinSize*KB);
+             SET_UNSIGNEDINT(AtomFree,      ozconf.heapFree);
+             SET_UNSIGNEDINT(AtomTolerance, ozconf.heapTolerance);
              SET_BOOL(AtomOn,       ozconf.gcFlag);
-             SET_INT(AtomThreshold, ozconf.heapThreshold*KB);
-             SET_INT(AtomSize,      getUsedMemory()*KB);
+             SET_UNSIGNEDINT(AtomThreshold, ozconf.heapThreshold*KB);
+             SET_UNSIGNEDINT(AtomSize,      getUsedMemory()*KB);
              SET_INT(AtomCodeCycles, ozconf.codeGCcycles);
              SET_INT(AtomActive,    ozstat.gcLastActive*KB););
     // PRINT
@@ -620,6 +622,7 @@ OZ_Term GetEmulatorProperty(EmulatorPropertyIndex prop) {
 #undef CASE_INT
 #undef CASE_BOOL
 #undef CASE_ATOM
+#undef CASE_UNSIGNEDINT
 #undef DEFINE_REC
 #undef RETURN_REC
 #undef SET_REC
@@ -627,6 +630,7 @@ OZ_Term GetEmulatorProperty(EmulatorPropertyIndex prop) {
 #undef CASE_REC
 #undef SET_INT
 #undef SET_BOOL
+#undef SET_UNSIGNEDINT
 
 // Macros for manipulating the `val' argument of SetEmulatorProperty
 // val has been DEREFed and there is also val_ptr and val_tag, and it
@@ -654,10 +658,22 @@ if (!oz_isSmallInt(val) ||                      \
     (INT__=tagged2SmallInt(val))<0)             \
   oz_typeError(1,"Int>=0");
 
+// Check that the value is a non-negative integer
+#define CHECK_INT                        \
+if (oz_isSmallInt(val)) {              \
+  INT__=tagged2SmallInt(val);                  \
+} else if (oz_isBigInt(val)) {         \
+  INT__=tagged2BigInt(val)->getInt();  \
+} else oz_typeError(1,"Int>=0");
+
 // Handle the case of indexed property P that should be an int>=0
 
 #define CASE_NAT_DO(P,DO) case P: CHECK_NAT; DO; return PROCEED;
 #define CASE_NAT(P,L) CASE_NAT_DO(P,L=INT__);
+
+// Handle the case of indexed property P that should be an int>=0
+// and not necessarily a smallint
+#define CASE_INT_DO(P,DO) case P: CHECK_INT; DO; return PROCEED;
 
 // Check that the value is an integer in [1..100], i.e. a percentage
 
@@ -777,7 +793,8 @@ OZ_Return SetEmulatorProperty(EmulatorPropertyIndex prop,OZ_Term val) {
     CASE_REC(PROP_PICKLE,
              SET_BOOL(AtomCells,ozconf.pickleCells););
     // GC
-    CASE_NAT_DO(PROP_GC_MIN,{
+    //GC_MIN could also be a big int.
+    CASE_INT_DO(PROP_GC_MIN,{
       ozconf.heapMinSize=INT__/KB;
     });
     CASE_PERCENT(PROP_GC_FREE,ozconf.heapFree);
