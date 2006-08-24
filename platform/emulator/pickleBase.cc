@@ -53,7 +53,7 @@ void putVerbatim(MarshalerBuffer *bs, const char *s)
 //
 #define oz_isalnum(c) ((c) >= 'a' && (c) <= 'z' || \
                        (c) >= 0337 && (c) <= 0366 || \
-                       (c) >= 0370 && (c) <= 0377 || \
+                       (c) >= 0370 && ((c) < 0377 || (c) == 0377) || \
                        (c) >= 'A' && (c) <= 'Z' || \
                        (c) >= 0300 && (c) <= 0326 || \
                        (c) >= 0330 && (c) <= 0336 || \
