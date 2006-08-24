@@ -47,14 +47,14 @@ void ClassVar::marshal(ByteBuffer *bs)
 {
   PD((MARSHAL,"var classproxy"));
   // lazy classes are not first class now, so:
-  OZ_error("marshaling a ClassVar??!");
+  OZ_error("marshaling a ClassVar?!?");
 }
 
 //
 void ClassVar::sendRequest()
 {
   // lazy classes are not first class now, so:
-  OZ_error("requesting the class of a ClassVar??!");
+  OZ_error("requesting the class of a ClassVar?!?");
 }
 
 //
