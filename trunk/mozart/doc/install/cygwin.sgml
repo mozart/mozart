@@ -102,14 +102,14 @@
       versions and the place where they can be downloaded.
       <Table>
 	<TR><TH>Package<TH>Version<TH>Location
-	<TR><TD>GNU MP<TD>4.1.2
-	  <TD><Ref.Extern to="ftp://ftp.gnu.org/pub/gnu/gmp/gmp-4.1.2.tar.gz"
-	    ><File>ftp://ftp.gnu.org/pub/gnu/gmp/gmp-4.1.2.tar.gz</File
+	<TR><TD>GNU MP<TD>4.1.4
+	  <TD><Ref.Extern to="ftp://ftp.gnu.org/pub/gnu/gmp/gmp-4.1.4.tar.gz"
+	    ><File>ftp://ftp.gnu.org/pub/gnu/gmp/gmp-4.1.4.tar.gz</File
 	    ></Ref.Extern>
-	<TR><TD>zlib<TD>1.1.4
-	  <TD><Ref.Extern to="http://www.gzip.org/zlib.tar.gz"
-	    ><File>http://www.gzip.org/zlib.tar.gz</File></Ref.Extern>
-	<TR><TD>Tcl/Tk<TD>8.4.6.0
+	<TR><TD>zlib<TD>1.2.3
+	  <TD><Ref.Extern to="http://www.gzip.org/zlib-1.2.3.tar.gz"
+	    ><File>http://www.gzip.org/zlib-1.2.3.tar.gz</File></Ref.Extern>
+	<TR><TD>Tcl/Tk<TD>8.4.12.0
 	  <TD><Ref.Extern
 	    to="http://aspn.activestate.com/ASPN/Downloads/ActiveTcl/"
 	    ><File>http://aspn.activestate.com/ASPN/Downloads/ActiveTcl/</File
@@ -275,13 +275,23 @@ make prefix=?{packages} install>>>
 	<File/addpm.exe/ binary in the <File/bin/ subdirectory.
 	We will refer to the directory where Emacs is installed
 	as ?{emacs}.
+      </P>
+      <P>
+        You really need to use the Emacs version you have installed in
+        your Windows system. If you have Emacs installed along with
+        cygwin, you have to change your PATH to build Mozart in order
+        to find first the Emacs that it's installed for Windows. Be
+        aware that the <code/configure/ script is not going to check
+        whether you have Emacs installed in your system, but it will
+        be necessary to build, so install it NOW!
+      </P>
   <Section id="section.cygwin.building">
     <Title/Building Mozart/
     <P>
       Now we can get to the real thing.  Retrieve the sources from the CVS:
 <<<cvs -d cvs.mozart-oz.org:/services/mozart/CVS get mozart
 cvs -d cvs.mozart-oz.org:/services/mozart/CVS get mozart-stdlib>>>
-      (specify <<-r mozart-1-2-0-fixes>> to get the fixes branch).
+      (specify <<-r mozart-1-3-0-fixes>> to get the fixes branch).
       See <Ref.Extern to="http://www.mozart-oz.org/download/view.cgi?action=cvs"
       >http://www.mozart-oz.org/download/view.cgi?action=cvs</Ref.Extern> for details
       about anonymous CVS.  Let ?{mozart} be the directory created by the
@@ -307,7 +317,6 @@ CXX=g++ ?{mozart}/configure \
     --with-tcl=?{packages} \
     --with-tk=?{packages} \
     --disable-contrib-compat \
-    --with-stdlib=?{stdlib}
 make bootstrap
 make install>>>
       <<oztool>> (which is required for building some of the contributions)
@@ -315,6 +324,19 @@ make install>>>
       it should run.  Currently cygwin has <<c++>> as a symbolic link to
       <<g++>>.  We get around this by setting <<CXX=g++>> during the
       configure process,  which will then choose <<g++>> as our default C++ compiler.
+
+      <P>
+      We will build the standard library in a different directory, but
+      it will be installed in the same one where Mozart is. This is
+      specified in during the configuration. Then we can configure,
+      build, and install Mozart as follows:
+<<<cd ?{build}
+mkdir stdlib-build
+cd stdlib-build
+../?{stdlib}/configure --prefix=?{install}
+make
+make install>>>
+
       <P>   
       A note on the configuration options:  Most of these should be clear,
       they simply convey to the configuration scripts the knowledge of where
@@ -344,12 +366,20 @@ make install>>>
       this step is optional.  If you don't do it, then you simply have a
       system without documentation, but it runs.
     <P>
-      For Windows, we deliver documentation not as a big bunch of HTML files,
-      but as an HTML Help file (also called a CHM file).  HTML Help files
-      provide full-text search capabilities, a full table of contents, and
-      are much smaller than all the HTML sources.  This section explains
-      how to obtain this file.  Take yourself to a Unix machine and say
+      For Windows, we deliver documentation not as a big bunch of HTML
+      files, but as an HTML Help file (also called a CHM file).  HTML
+      Help files provide full-text search capabilities, a full table
+      of contents, and are much smaller than all the HTML sources.
+      This section explains how to obtain this file.  Take yourself to
+      a Unix machine. You will need <code/gawk/ and <code/nsgml/
+      installed in your system. These tools are used to parse,
+      validate, and normalize SGML and XML files. You can find them in
+      <Ref.Extern to="http://www.gnu.org/software/gawk/gawk.html">
+      <File>http://www.gnu.org/software/gawk/gawk.html</File
+      ></Ref.Extern> and <Ref.Extern to="http://www.jclark.com/sp/">
+      <File>http://www.jclark.com/sp/</File ></Ref.Extern>. Then, do
       something like:
+
 <<<unset OZHOME OZPATH OZEMULATOR TEXT2PICKLE
 export PATH=/opt/gcc-2.95.3/bin:/opt/jdk/bin:/usr/bin:/bin:/usr/X11R6/bin:/usr/local/bin
 mkdir /tmp/build
@@ -367,10 +397,13 @@ make install>>>
       your Windows machine).  <File/hhc/ is the HTML Help Compiler from
       Microsoft's HTML Help Workshop, available freely for download at
       <Ref.Extern to="http://msdn.microsoft.com/library/en-us/htmlhelp/html/hwMicrosoftHTMLHelpDownloads.asp"><File>http://msdn.microsoft.com/library/en-us/htmlhelp/html/hwMicrosoftHTMLHelpDownloads.asp</File></Ref.Extern>.
-      The current version is 1.31.  (If the URL is broken, search
+      The current version is 1.4, but this one does not provide 
+      <File/hhc/. The version you'll have to install is 1.32.  
+      (If the URL is broken, search
       <Ref.Extern to="http://www.microsoft.com/"/Microsoft/'s site for
       <Q/download html help workshop/.  It seems Microsoft tends to
       reorganize their site every so often.)
+
     <P>
       This process will leave behind a file <File/Mozart.chm/, which we
       can copy to a sensible place:
@@ -395,7 +428,20 @@ make install>>>
       redistribute your Mozart build.  You can run Mozart from your
       ?{install} directory directly.
     <P>
-      We build our installer with InstallShield Developer, which you can
+      We build our installer with InnoSetup, which is a ?{free}
+      installer for Windows programs. You can get it from <Ref.Extern
+      to="http://www.jrsoftware.org/isinfo.php">
+      <File>http://www.jrsoftware.org/isinfo.php</File
+      ></Ref.Extern>. Start up InnoSetup and open the script
+      ?{mozart}<File>/misc/mozart.iss</File>. Then, run the script and
+      everything should fine. Congratulations!  You're the proud owner
+      of a Mozart installer!
+
+<!-- 
+  - Old the stuff of the no longer supported InstallShield. (it was
+    too expensive)
+
+      We build our installer with InstallShield Developer which you can
       purchase (yes, these things cost real money!) on InstallShield's
       Web site at <Ref.Extern to="http://www.installshield.com/isd/"><File
       >http://www.installshield.com/isd/</File></Ref.Extern>.  Start
@@ -440,4 +486,6 @@ make install>>>
       questions later, you can actually get the beast to work.
     <Para class=apropos><Title/The End/
       Congratulations!  You're the proud owner of a Mozart installer!
+-->
+
 </Chapter>
