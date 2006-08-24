@@ -4,7 +4,6 @@ import
    CB(checkBox:CheckBox) at 'x-oz://contrib/tk/CheckBox.ozf'
    SF(scrollFrame:ScrollFrame) at 'x-oz://contrib/tk/ScrollFrame.ozf'
    Tk TkTools
-   System
 export
    GetGuiCmdArgs
    AddHandler
