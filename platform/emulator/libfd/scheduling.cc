@@ -30,6 +30,12 @@
 #include "auxcomp.hh"
 #include <stdlib.h>
 
+#ifdef __GNUC__
+typedef long long int verylong;
+#else
+typedef long verylong;
+#endif
+
 //-----------------------------------------------------------------------------
 #if !defined(MODULES_LINK_STATIC)
 template class _PropagatorController_V_V<OZ_Return,OZ_FDIntVar,PROCEED,FAILED,SLEEP>;
@@ -148,13 +154,14 @@ static void myqsort(T * my, int left, int right,
 
 //
 struct Interval {
-  int left, right, use;
+  int left, right;
+  verylong use;
 };
 // for cpIterateCap
 struct StartDurUseTerms {
   OZ_Term start;
   int dur;
-  int use;
+  verylong use;
 };
 
 //
@@ -1009,7 +1016,8 @@ OZ_BI_end
 
 
 struct Set2 {
-  int dSi, sUp, sLow, extSize, overlap;
+  verylong dSi, overlap;
+  int sUp, sLow, extSize;
   int * ext;
 };
 
@@ -1030,7 +1038,7 @@ OZ_Return CPIteratePropagatorCap::propagate(void)
   int &ts      = reg_sz;
   int * dur    = reg_offset;
   int * use    = reg_use;
-  int capacity = reg_capacity;
+  verylong capacity = reg_capacity;
 
   // if we have no tasks the prop returns trivially true
   if (ts == 0) return PROCEED;
@@ -1143,16 +1151,16 @@ cploop:
 
     kUp = MinMax[upTask].max + dur[upTask];
     kDown = MinMax[upTask].min;
-    int use0 = 0;
+    verylong use0 = 0;
     set0Size = 0;
     compSet0Size = 0;
     outSideSize = 0;
-    int overlap=0;
+    verylong overlap=0;
 
     // compute set S0
     int l;
     for (l=0; l<ts; l++) {
-      int dl = dur[l];
+      verylong dl = dur[l];
       int xlMin = MinMax[l].min;
       int xlMaxDL = MinMax[l].max + dl;
       if (( kDown <= xlMin) && ( xlMaxDL <= kUp)) {
@@ -1161,7 +1169,7 @@ cploop:
       }
       else {
         // overlaps for failure reasoning only
-        int overlapTmp = intMin(intMax(0,xlMin+dl-kDown),
+        verylong overlapTmp = intMin(intMax(0,xlMin+dl-kDown),
                                 intMin(intMax(0,kUp-xlMaxDL+dl),
                                        intMin(dl,kUp-kDown)));
         overlap += overlapTmp*use[l];
@@ -1213,7 +1221,7 @@ cploop:
       if (MinMax[realL].max+dur[realL] <= kUp) {
         struct Set2 *bset = &Sets[setSize];
         setSize++;
-        int dSi = bset->dSi + dur[realL]*use[realL];
+        verylong dSi = bset->dSi + ((verylong)dur[realL])*use[realL];
         int minL = MinMax[realL].min;
         if ( (kUp - minL)*capacity < dSi) {
           goto failure;
@@ -1238,10 +1246,10 @@ cploop:
       struct Set2 *s = &Sets[setCount];
       int minL = MinMax[l].min;
       int maxL = MinMax[l].max;
-      int durL = dur[l];
+      verylong durL = dur[l];
       int useL = use[l];
 
-      int sizeAll = s->dSi + durL*useL;
+      verylong sizeAll = s->dSi + durL*useL;
 
       if (maxL+durL > s->sUp) {
         if ( (s->sUp - s->sLow)*capacity >= sizeAll) {
@@ -1262,7 +1270,7 @@ cploop:
             lCount++;
           }
           else {
-            int rest = s->dSi - (s->sUp - s->sLow)*(capacity - useL);
+            verylong rest = s->dSi - (s->sUp - s->sLow)*(capacity - useL);
             if (rest > 0) {
               // l must be last
               int val = s->sLow + (int) ceil((double) rest / (double) useL);
@@ -1309,18 +1317,18 @@ cploop:
 
     kUp = MinMax[downTask].max + dur[downTask];
     kDown = MinMax[downTask].min;
-    int use0 = 0;
+    verylong use0 = 0;
     set0Size = 0;
     compSet0Size = 0;
     outSideSize = 0;
-    int overlap=0;
+    verylong overlap=0;
 
     //////////
     // compute set S0
     //////////
     int l;
     for (l=0; l<ts; l++) {
-      int dl = dur[l];
+      verylong dl = dur[l];
       int xlMin = MinMax[l].min;
       int xlMaxDL = MinMax[l].max + dl;
       if (( kDown <= xlMin) && ( xlMaxDL <= kUp)) {
@@ -1328,7 +1336,7 @@ cploop:
         set0[set0Size++] = l;
       }
       else {
-        int overlapTmp = intMin(intMax(0,xlMin+dl-kDown),
+        verylong overlapTmp = intMin(intMax(0,xlMin+dl-kDown),
                                 intMin(intMax(0,kUp-xlMaxDL+dl),
                                        intMin(dl,kUp-kDown)));
         overlap += overlapTmp*use[l];
@@ -1379,10 +1387,10 @@ cploop:
         if (MinMax[realL].min >= kDown) {
           int setSizeBefore = setSize;
           struct Set2 *bset = &Sets[setSizeBefore];
-          int durL = dur[realL];
+          verylong durL = dur[realL];
           setSize++;
-          int dSi = bset->dSi + durL*use[realL];
-          int maxL = MinMax[realL].max+durL;
+          verylong dSi = bset->dSi + durL*use[realL];
+          verylong maxL = MinMax[realL].max+durL;
           if ( (maxL - kDown)*capacity < dSi)
             {
               goto failure;
@@ -1408,9 +1416,9 @@ cploop:
       struct Set2 *s = &Sets[setCount];
       int minL = MinMax[l].min;
       int maxL = MinMax[l].max;
-      int durL = dur[l];
+      verylong durL = dur[l];
       int useL = use[l];
-      int sizeAll = s->dSi + durL*useL;
+      verylong sizeAll = s->dSi + durL*useL;
 
 
       if (minL < s->sLow) {
@@ -1432,7 +1440,7 @@ cploop:
             lCount++;
           }
           else {
-            int rest = s->dSi - (s->sUp - s->sLow)*(capacity - useL);
+            verylong rest = s->dSi - (s->sUp - s->sLow)*(capacity - useL);
             if (rest > 0) {
               int val = s->sUp - (int) ceil( (double) rest / (double) useL);
               // l must be first
@@ -1542,11 +1550,11 @@ capLoop:
     //////////
     int min_left = mysup;
     int max_right = 0;
-    int sum = 0;
+    verylong sum = 0;
     for (i=0; i<ts; i++) {
       int iMin = MinMax[i].min;
       int iDue = MinMax[i].max + dur[i];
-      sum = sum + use[i] * dur[i];
+      sum = sum + use[i] * ((verylong)dur[i]);
       if (iMin < min_left) min_left = iMin;
       if (iDue > max_right) max_right = iDue;
     }
@@ -1594,8 +1602,8 @@ capLoop:
       while ((right_pt < double_nb) && (IntervalBounds[right_pt] == left_val))
         right_pt++;
       if (right_pt == double_nb)  break;
-      int right_val = IntervalBounds[right_pt];
-      int cum = 0;
+      verylong right_val = IntervalBounds[right_pt];
+      verylong cum = 0;
 
       for (i=low_counter; i<interval_nb; i++) {
 
@@ -1630,10 +1638,10 @@ capLoop:
       int lst = MinMax[i].max;
       int ect = MinMax[i].min + dur[i];
       int use_i = use[i];
-      int dur_i = dur[i];
+      verylong dur_i = dur[i];
       for (j=0; j<exclusion_nb; j++) {
         Interval Exclusion = ExclusionIntervals[j];
-        int span = Exclusion.right - Exclusion.left;
+        verylong span = Exclusion.right - Exclusion.left;
         if (Exclusion.use + span * use_i > span * capacity) {
           int left = Exclusion.left;
           int right = Exclusion.right;
@@ -1810,7 +1818,7 @@ OZ_Return CPIteratePropagatorCapUp::propagate(void)
   int &ts      = reg_sz;
   int * dur    = reg_offset;
   int * use    = reg_use;
-  int capacity = reg_capacity;
+  verylong capacity = reg_capacity;
 
   // if we have no tasks the prop returns trivially true
   if (ts == 0) return PROCEED;
@@ -1895,7 +1903,7 @@ capLoop:
       if (right_pt == double_nb)  break;
       int right_val = IntervalBounds[right_pt];
       // cum is the amount of possible usage
-      int cum = 0;
+      verylong cum = 0;
       for (i=low_counter; i<interval_nb; i++) {
         int leftInt = Intervals[i].left;
         int rightInt = Intervals[i].right;
@@ -1923,7 +1931,7 @@ capLoop:
       int dur_i = dur[i];
       for (j=0; j<inclusion_nb; j++) {
         Interval Inclusion = InclusionIntervals[j];
-        int span = Inclusion.right - Inclusion.left;
+        verylong span = Inclusion.right - Inclusion.left;
         if (Inclusion.use - span * use_i < span * capacity) {
           int left = Inclusion.left;
           int right = Inclusion.right;
