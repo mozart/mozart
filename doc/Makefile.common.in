@@ -59,7 +59,7 @@ $(WHAT)-html/index.html:        $(WHAT)-1st.html
 
 $(WHAT)-1st.html: $(MAIN) $(SGMLSRCS) $(HTMLEXTRAFILES)
         rm -f latex.db && \
-        if [ $(PRINTNAME) ]; then opt=--link=Print,$(PRINTLINK)\?class=$(WHATCLASS)\&name=$(PRINTNAME); \
+        if [ $(PRINTNAME) ]; then opt=--link=Print,$(PRINTLINK)\&class=$(WHATCLASS)\&name=$(PRINTNAME); \
         else opt=; fi; \
         rm -f $(WHAT)-html/index.html ; \
         $(DOCIFY) $(OZDOCHTMLFLAGS) --in=$< --out=$(WHAT)-html \
@@ -86,7 +86,7 @@ $(WHAT)-tex/$(WHAT).ps: $(MAIN) $(SGMLSRCS) $(TEXEXTRAFILES)
         do { test $$i = NONE || cp -p $$i $(WHAT)-tex; } done
 
 $(WHAT)-2nd.html: $(MAIN) $(SGMLSRCS) $(HTMLEXTRAFILES)
-        if [ $(PRINTNAME) ]; then opt=--link=Print,$(PRINTLINK)\?class=$(WHATCLASS)\&name=$(PRINTNAME); \
+        if [ $(PRINTNAME) ]; then opt=--link=Print,$(PRINTLINK)\&class=$(WHATCLASS)\&name=$(PRINTNAME); \
         else opt=; fi; \
         rm -f $(WHAT)-html/index.html ; \
         $(DOCIFY) $(OZDOCHTMLFLAGS) --in=$< --out=$(WHAT)-html \
