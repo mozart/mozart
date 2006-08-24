@@ -106,8 +106,8 @@ namespace _dss_internal{ //Start namespace
 
   namespace {
     enum Pilgrim_Message {
-      PLGM_ENTER,    // PM: proxy wants to be inserted in ring
-      PLGM_LEAVE,  // PM: proxy wants to leave the ring
+      PLGM_ENTER,       // PM: proxy wants to be inserted in ring
+      PLGM_LEAVE,       // PM: proxy wants to leave the ring
       PLGM_FORWARD,     // MP: manager assigns new successor to proxy
       PLGM_TOKEN,       // PP: pass token
       PLGM_COLOR_START, // PM: proxy requests a color change (no arg),
@@ -429,7 +429,7 @@ namespace _dss_internal{ //Start namespace
     }
     case PLGM_COLOR_DONE: {
       PilgrimColor col = msg->popIntVal();
-      if (!isInRing() && !(a_color == col)) isReachable(false);
+      if (!isInRing() && isReachable() && !(a_color == col)) isReachable(false);
       break;
     }
     case PROT_PERMFAIL: {
