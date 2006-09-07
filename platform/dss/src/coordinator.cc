@@ -141,18 +141,10 @@ namespace _dss_internal{ //Start namespace
   Coordinator::m_noProxyAtDest(DSite* sender, MessageType mtt, MsgContainer* msg){
     delete msg; 
   }
-  
-  // ****************************************** PROXY *******************************************************
-  int
-  Proxy::sm_getMRsize(){
-    //          Mgr                               +     epoch      +      len     +     type       +              algs             = 48
-    printf("Lazy calculculation of proxy marshal size, a static 48\n");
-    // DSite::sm_getMRsize()
-    return ( 48 + sz_MNumberMax + sz_MNumberMax  +  sz_M8bitInt + 5 * sz_M8bitInt + (3 * sz_MNumberMax + sz_M8bitInt));
-    
 
-  }
 
+
+  /****************************** Proxy ******************************/
   
   Proxy::Proxy(NetIdentity ni, const AccessArchitecture& a,
 	       ProtocolProxy* const prot, DSS_Environment* const env) :
@@ -247,21 +239,25 @@ namespace _dss_internal{ //Start namespace
 			   << PN_NBITS | m_getProtocol()->getProtocolName())
 			  << AEN_NBITS | m_getAEname())
 			 << PMF_NBITS | prf);
+    gf_Marshal8bitInt(buf, head >> 8);
+    gf_Marshal8bitInt(buf, head & 0xFF);        // 2 bytes
 
-    ::gf_MarshalNumber(buf, head);             // 2 
-    gf_marshalNetIdentity(buf, m_getNetId()); 
-    m_getReferenceInfo(buf, dest);                 // 8 -> 48 (often ~10, WRC)
+    gf_marshalNetIdentity(buf, m_getNetId());   // a DSite + a number
+    m_getReferenceInfo(buf, dest);              // up to 48 (often ~10, WRC)
 
-    
-    //++++++ Returns true except when the protocol is immediate, when the whole node should be distributed.
-    bool a = m_getProtocol()->marshal_protocol_info(buf, dest); 
-      
-     
-    return a;
-    // ----------------------------------------------------------------
-    //                                         12 bytes (alot better than the old 78)
+    // Returns true except when the protocol is immediate, when the
+    // whole node should be distributed.  The protocol using DKS
+    // marshals a NetId + 3 numbers + a DSite.  The other protocols
+    // marshal at most 1 byte.
+    return m_getProtocol()->marshal_protocol_info(buf, dest);
   }
 
+  int
+  Proxy::sm_getMRsize(){
+    return 48 + 3 * sz_M8bitInt + sz_MNumberMax + DSite::sm_getMRsize();
+    // Note: this is correct for all protocols except PN_DKSBROADCAST,
+    // for which you must add 2*DSite::sm_getMRsize()+4*sz_MNumberMax.
+  }
 
 
   void Proxy::setRegisteredFS(const FaultState& s){
