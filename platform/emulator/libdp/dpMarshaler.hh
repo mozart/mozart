@@ -905,12 +905,13 @@ void marshalObject(MarshalerBuffer *bs, ConstTerm* t);
 #define MToOwnerMaxSize MCreditToOwnerMaxSize
 #define MRefConsInfoMaxSize (MDSiteMaxSize + MCreditMaxSize) 
 
-// raph: maximal size for marshaling DSS proxies.  I had to pick this
-// information in the DSS implementation, and I am not even sure it is
-// correct.  When marshaling, the DSS assumes there is enough space
-// available in the provided buffers.  But the user has no clue about
-// the required amount of space!  DSS is crap.
-#define MProxyMaxSize 12
+// raph: maximal size for marshaling distributed entities.  The
+// DssProxyMaxSize is only speculative, and might be underevaluated.
+// When marshaling, the DSS assumes there is enough space available in
+// the provided buffers.  Increase DssProxyMaxSize if you encounter
+// DSS errors when marshaling.
+#define MDssProxyMaxSize  172
+#define MMediatorMaxSize  MDssProxyMaxSize + 1   // (proxy + glue tag)
 
 //
 // Top-level management of marshalers (to be used by transport
