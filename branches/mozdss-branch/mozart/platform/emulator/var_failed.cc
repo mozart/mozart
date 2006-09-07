@@ -43,12 +43,13 @@ OZ_Return Failed::bind(TaggedRef *vPtr, TaggedRef t)
 
 OZ_Return Failed::unify(TaggedRef *vPtr, TaggedRef *tPtr)
 {
-  // dirty hack: allow unification if both are failed values, and
-  // encapsulate the same exception.  This prevents some stupid bug in
-  // distributed unification...
+  // allow unification if both are failed values, and encapsulate the
+  // same exception.  This prevents a bug in distributed unification,
+  // where the failed value is unified with another "instance" of
+  // itself.
   if (oz_isFailed(*tPtr)) {
     Failed* t = static_cast<Failed*>(tagged2Var(*tPtr));
-    if (oz_deref(getException()) == oz_deref(t->getException())) {
+    if (oz_eqeq(getException(), t->getException()) == PROCEED) {
       oz_bindVar(this, vPtr, makeTaggedRef(tPtr));
       return PROCEED;
     }
