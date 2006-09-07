@@ -394,7 +394,10 @@ void handlerCHLD(int);
 void handlerALRM(int);
 void handlerUSR2(int);
 
+// unify.cc
 OZ_Return oz_unify(OZ_Term t1, OZ_Term t2);
+// builtins.cc
+OZ_Return oz_eqeq(OZ_Term t1, OZ_Term t2);
 
 // printing (see foreign.cc)
 void oz_printStream(OZ_Term term, ostream &out,
