@@ -280,7 +280,7 @@ namespace _msl_internal{ //Start namespace
     } else {
       gf_Marshal8bitInt(buf,((a_state != DSite_GLOBAL_PRM) ?  DMT_SITE_OK : DMT_SITE_PERM));
       Assert(a_MarshaledRepresentation != NULL);
-      Assert(buf->availableSpace() >= a_MRlength);
+      Assert(buf->availableSpace() > a_MRlength);
       gf_MarshalNumber(buf, a_MRlength);
       buf->writeToBuffer(a_MarshaledRepresentation, a_MRlength);
     }

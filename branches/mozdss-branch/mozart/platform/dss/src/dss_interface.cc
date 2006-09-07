@@ -151,7 +151,7 @@ namespace _dss_internal{
 
     // unmarshalInternal - check with marshal (Proxy) that the
     // "protocol" is correct
-    unsigned int header = gf_UnmarshalNumber(buf);
+    int header = gf_Unmarshal8bitInt(buf) << 8 | gf_Unmarshal8bitInt(buf);
     NetIdentity ni = gf_unmarshalNetIdentity(buf,this);
 
     // the proxy might exist already, look it up
