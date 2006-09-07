@@ -231,21 +231,8 @@ void DPMARSHALERCLASS::processNoGood(OZ_Term resTerm)
 {
   ByteBuffer *bs = (ByteBuffer *) getOpaque();
 
-  //
-
-  // First, check if this is something that we actually should 
-  // marshal, with a structure! 
-  
-  if(oz_isThread(resTerm)) //Katching!!! 
-    {
-      bs->put(DIF_GLUE);           
-      glue_marshalEntity(resTerm, bs); 
-      return ; 
-    }
-
-
   if (bs->availableSpace() >=
-      2*DIFMaxSize + MNumberMaxSize + MOwnHeadMaxSize) {
+      2*DIFMaxSize + MNumberMaxSize + MMediatorMaxSize) {
     int index;
 #if defined(DBG_TRACE)
     {
@@ -287,7 +274,7 @@ void DPMARSHALERCLASS::processBuiltin(OZ_Term biTerm, ConstTerm *biConst)
   //
   if (bs->availableSpace() >= 
       max(2*DIFMaxSize + 2*MNumberMaxSize + strlen(pn),
-	  2*DIFMaxSize + MNumberMaxSize + MOwnHeadMaxSize)) {
+	  2*DIFMaxSize + MNumberMaxSize + MMediatorMaxSize)) {
     int index;
 
     //
@@ -394,7 +381,7 @@ Bool DPMARSHALERCLASS::marshalObjectStub(OZ_Term term, ConstTerm *objConst)
   printf("Marshal Object stub %s\n", toC(term));
   //
   if (bs->availableSpace() >= 
-      2*DIFMaxSize + MNumberMaxSize + MOwnHeadMaxSize + 2*MGNameMaxSize) {
+      2*DIFMaxSize + MNumberMaxSize + MMediatorMaxSize + 2*MGNameMaxSize) {
     int index;
 
     //
@@ -496,7 +483,7 @@ Bool DPMARSHALERCLASS::processObject(OZ_Term term, ConstTerm *objConst)
   printf("Marshaling Object %s\n", toC(term));
   //
   if (bs->availableSpace() >= 
-      2*DIFMaxSize + MNumberMaxSize + MOwnHeadMaxSize + 2*MGNameMaxSize) {
+      2*DIFMaxSize + MNumberMaxSize + MMediatorMaxSize + 2*MGNameMaxSize) {
     int index;
 
     //
@@ -538,7 +525,7 @@ void DPMARSHALERCLASS::processLock(OZ_Term term, ConstTerm *lockConst)
 {
   ByteBuffer *bs = (ByteBuffer *) getOpaque();
   if (bs->availableSpace() >= 
-      2*DIFMaxSize + MNumberMaxSize + MOwnHeadMaxSize) {
+      2*DIFMaxSize + MNumberMaxSize + MMediatorMaxSize) {
     int index;
     VISITNODE(term, vIT, bs, index, return);
     if (index) { bs->put(DIF_GLUE_DEF); marshalTermDef(bs, index); }
@@ -563,7 +550,7 @@ Bool DPMARSHALERCLASS::processCell(OZ_Term term, ConstTerm *cellConst)
 {
   ByteBuffer *bs = (ByteBuffer *) getOpaque();
   if (bs->availableSpace() >= 
-      2*DIFMaxSize + MNumberMaxSize + MOwnHeadMaxSize) {
+      2*DIFMaxSize + MNumberMaxSize + MMediatorMaxSize) {
     int index;
     VISITNODE(term, vIT, bs, index, return(OK));
     if (index) { bs->put(DIF_GLUE_DEF); marshalTermDef(bs, index); }
@@ -583,12 +570,13 @@ Bool DPMARSHALERCLASS::processCell(OZ_Term term, ConstTerm *cellConst)
   }
   return (OK);
 }
+
 inline 
 void DPMARSHALERCLASS::processPort(OZ_Term term, ConstTerm *portConst)
 {
   ByteBuffer *bs = (ByteBuffer *) getOpaque();
   if (bs->availableSpace() >= 
-      2*DIFMaxSize + MNumberMaxSize + MOwnHeadMaxSize) {
+      2*DIFMaxSize + MNumberMaxSize + MMediatorMaxSize) {
     int index;
     VISITNODE(term, vIT, bs, index, return);
     if (index) { bs->put(DIF_GLUE_DEF); marshalTermDef(bs, index); }
@@ -607,12 +595,13 @@ void DPMARSHALERCLASS::processPort(OZ_Term term, ConstTerm *portConst)
     suspend(term);
   }
 }
+
 inline 
 void DPMARSHALERCLASS::processResource(OZ_Term term, ConstTerm *unusConst)
 {
   ByteBuffer *bs = (ByteBuffer *) getOpaque();
   if (bs->availableSpace() >= 
-      2*DIFMaxSize + MNumberMaxSize + MOwnHeadMaxSize) {
+      2*DIFMaxSize + MNumberMaxSize + MMediatorMaxSize) {
     int index;
     VISITNODE(term, vIT, bs, index, return);
     if (index) { bs->put(DIF_GLUE_DEF); marshalTermDef(bs, index); }
@@ -643,7 +632,8 @@ Bool DPMARSHALERCLASS::processVar(OZ_Term v, OZ_Term *vRef)
   ByteBuffer *bs = (ByteBuffer *) getOpaque();
 
   // check whether bs has enough space available
-  if (bs->availableSpace() >= 2*DIFMaxSize + MNumberMaxSize + MProxyMaxSize) {
+  if (bs->availableSpace() >=
+      2*DIFMaxSize + MNumberMaxSize + MMediatorMaxSize) {
 #if defined(DBG_TRACE)
     DBGINIT();
     fprintf(dbgout, "> var = %s\n", toC(v));
@@ -922,7 +912,7 @@ Bool DPMARSHALERCLASS::processDictionary(OZ_Term dictTerm, ConstTerm *dictConst)
   printf("Process Dictionary %s\n", toC(dictTerm));
   //
   if (bs->availableSpace() >= 
-      max(2*DIFMaxSize + MNumberMaxSize + MOwnHeadMaxSize,
+      max(2*DIFMaxSize + MNumberMaxSize + MMediatorMaxSize,
 	  2*DIFMaxSize + 2*MNumberMaxSize)) {
     int index;
 
@@ -984,7 +974,7 @@ Bool DPMARSHALERCLASS::processArray(OZ_Term arrayTerm, ConstTerm *arrayConst)
   ByteBuffer *bs = (ByteBuffer *) getOpaque();
 
   if (bs->availableSpace() >= 
-      2*DIFMaxSize + MNumberMaxSize + MOwnHeadMaxSize) {
+      2*DIFMaxSize + MNumberMaxSize + MMediatorMaxSize) {
     int index;
 
     //

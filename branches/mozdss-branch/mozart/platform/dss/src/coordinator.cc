@@ -253,10 +253,11 @@ namespace _dss_internal{ //Start namespace
   }
 
   int
-  Proxy::sm_getMRsize(){
-    return 48 + 3 * sz_M8bitInt + sz_MNumberMax + DSite::sm_getMRsize();
+  Proxy::sm_getMRsize() {   // incomplete!
+    Assert(0);
+    return 48 + 3 * sz_M8bitInt + sz_MNumberMax + 200;
     // Note: this is correct for all protocols except PN_DKSBROADCAST,
-    // for which you must add 2*DSite::sm_getMRsize()+4*sz_MNumberMax.
+    // for which you must add 2 * <DSite size> + 4 * sz_MNumberMax.
   }
 
 
