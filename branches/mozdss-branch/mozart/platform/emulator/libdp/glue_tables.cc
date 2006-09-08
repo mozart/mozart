@@ -85,6 +85,11 @@ MediatorTable::gcPrimary() {
     case DSS_GC_LOCALIZE: push(localizeList, med); break;
     default: Assert(0);
     }
+    // Independently of their DGC status, variable mediators must be
+    // collected when they have suspensions.  This is because the
+    // suspensions themselves do not keep the variable alive.
+    TaggedRef t = oz_deref(med->getEntity());
+    if (oz_isVar(t) && !(tagged2Var(t)->isEmptySuspList())) med->gCollect();
   }
   Assert(medList == NULL);
 
