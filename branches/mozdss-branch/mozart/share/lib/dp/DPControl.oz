@@ -2,7 +2,6 @@ functor
 import
    Glue at 'x-oz://boot/Glue'
    DPInit
-   System
 export
    SetDGC
    GetDGC
@@ -138,7 +137,7 @@ define
 	    %% constrain Param with the elements of As, and complete with
 	    %% zeroes (= PN_NO_PROTOCOL, AA_NO_ARCHITECTURE, RC_ALG_NONE)
 	    for A in As do {Constrain.{Label A} A Param} end
-	    {Record.forAll Annot proc {$ X} if {IsFree X} then X=0 end end}
+	    {Record.forAll Param proc {$ X} if {IsFree X} then X=0 end end}
 	 catch _ then
 	    raise dp('annotation format error' Annot) end
 	 end
