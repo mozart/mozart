@@ -119,11 +119,9 @@ Mediator::Mediator(TaggedRef ref, GlueTag etype, bool attach) :
 {
   id = medIdCntr++; 
   mediatorTable->insert(this);
-  printf("--- raph: new mediator %p (type=%d)\n", this, type);
 }
 
 Mediator::~Mediator(){
-  printf("--- raph: remove mediator %p\n", this);
   // The coordination proxy is deleted by ~AbstractEntity().
 #ifdef INTERFACE
   // Nullify the pointers in debug mode
@@ -180,7 +178,6 @@ void Mediator::localize() {
 
 void Mediator::gCollect(){
   if (!collected) {
-    printf("--- raph: gc %s mediator %p\n", getPrintType(), this);
     collected = TRUE;
     // collect the entity, its fault stream, ...
     oz_gCollectTerm(entity, entity);
@@ -769,12 +766,10 @@ OzVariableMediator::OzVariableMediator(TaggedRef t, CoordinatorAssistant* p) :
 }
 
 PstOutContainerInterface *OzVariableMediator::retrieveEntityRepresentation(){
-  printf("--- raph: retrieveEntityRepresentation %x\n", getEntity());
   return new PstOutContainer(getEntity());
 }
 
 void OzVariableMediator::installEntityRepresentation(PstInContainerInterface* pstin){
-  printf("--- raph: installEntityRepresentation %x\n", getEntity());
   Assert(active);
   TaggedRef arg = static_cast<PstInContainer*>(pstin)->a_term;
   TaggedRef* ref = tagged2Ref(getEntity()); // points to the var's tagged ref
@@ -787,7 +782,6 @@ void OzVariableMediator::installEntityRepresentation(PstInContainerInterface* ps
 AOcallback
 OzVariableMediator::callback_Bind(DssOperationId*,
 				  PstInContainerInterface* pstin) {
-  printf("--- raph: callback_Bind %x\n", getEntity());
   Assert(active);
   TaggedRef arg = static_cast<PstInContainer*>(pstin)->a_term;
   TaggedRef* ref = tagged2Ref(getEntity()); // points to the var's tagged ref
@@ -801,8 +795,6 @@ OzVariableMediator::callback_Bind(DssOperationId*,
 AOcallback
 OzVariableMediator::callback_Append(DssOperationId*,
 				    PstInContainerInterface* pstin) {
-  printf("--- raph: callback_Append %x\n", getEntity());
-
   // raph: The variable may have been bound at this point.  This can
   // happen when two operations Bind and Append are done concurrently
   // (a "feature" of the dss).  Therefore we check the type first.
@@ -821,7 +813,6 @@ OzVariableMediator::callback_Append(DssOperationId*,
 AOcallback
 OzVariableMediator::callback_Changes(DssOperationId*,
 				     PstOutContainerInterface*& answer) {
-  printf("--- raph: callback_Changes\n");
   // simply check whether the variable is needed
   answer = (active && oz_isNeeded(oz_deref(entity)) ?
 	    new PstOutContainer(oz_atom("needed")) : NULL);
