@@ -95,7 +95,7 @@ namespace _dss_internal{ //Start namespace
 
   ProtocolImmutableProxy::~ProtocolImmutableProxy() {
     Assert(a_susps.isEmpty());
-    protocol_Deregister();
+    if (!a_proxy->m_isHomeProxy()) protocol_Deregister();
   }
 
   bool ProtocolImmutableProxy::m_initRemoteProt(DssReadBuffer*) {

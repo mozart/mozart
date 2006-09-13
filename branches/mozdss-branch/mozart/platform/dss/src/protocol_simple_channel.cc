@@ -121,7 +121,7 @@ namespace _dss_internal{ //Start namespace
   { setStatus(true); }
 
   ProtocolSimpleChannelProxy::~ProtocolSimpleChannelProxy() {
-    protocol_Deregister();
+    if (!a_proxy->m_isHomeProxy()) protocol_Deregister();
   }
 
   bool ProtocolSimpleChannelProxy::m_initRemoteProt(DssReadBuffer*){

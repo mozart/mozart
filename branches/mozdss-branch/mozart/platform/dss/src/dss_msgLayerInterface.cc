@@ -94,9 +94,10 @@ namespace _dss_internal{
 	NetIdentity ni = gf_popNetIdentity(msgC); 
 	Proxy *pe   = m_getEnvironment()->a_proxyTable->m_find(ni);
 	
-	if(pe)  pe->m_receiveProtMsg(msgC,sender);
-	else{
-	  mt == M_PROXY_PROXY_PROTOCOL ? m_noDestProxy2Proxy(msgC, sender):m_noDestCoord2Proxy(msgC, sender);
+	if (pe) pe->m_receiveProtMsg(msgC,sender);
+	else {
+	  if (mt == M_PROXY_PROXY_PROTOCOL) m_noDestProxy2Proxy(msgC, sender);
+	  else m_noDestCoord2Proxy(msgC, sender);
 	}
 	break;
       }
@@ -116,8 +117,10 @@ namespace _dss_internal{
 	NetIdentity ni = gf_popNetIdentity(msgC); 
 	Proxy *pe   = m_getEnvironment()->a_proxyTable->m_find(ni);
 	if (pe) pe->m_receiveRefMsg(msgC,sender);
-	else  
-	  mt == M_PROXY_PROXY_REF ? m_noDestProxy2Proxy(msgC, sender):m_noDestCoord2Proxy(msgC, sender);
+	else {
+	  if (mt == M_PROXY_PROXY_REF) m_noDestProxy2Proxy(msgC, sender);
+	  else m_noDestCoord2Proxy(msgC, sender);
+	}
 	break;
       }
     case M_PROXY_COORD_CNET:
@@ -126,8 +129,10 @@ namespace _dss_internal{
 	NetIdentity ni = gf_popNetIdentity(msgC); 
 	Coordinator *me = m_getEnvironment()->a_coordinatorTable->m_find(ni);
 	if(me) me->m_receiveAsMsg(msgC, sender);
-	else
-	  mt == M_PROXY_COORD_CNET ? m_noDestProxy2Coord(msgC, sender):m_noDestCoord2Coord(msgC, sender);
+	else {
+	  if (mt == M_PROXY_COORD_CNET) m_noDestProxy2Coord(msgC, sender);
+	  else m_noDestCoord2Coord(msgC, sender);
+	}
 	break;
       }
     case M_PROXY_PROXY_CNET:
@@ -136,8 +141,10 @@ namespace _dss_internal{
 	NetIdentity ni = gf_popNetIdentity(msgC); 
 	Proxy *pe   = m_getEnvironment()->a_proxyTable->m_find(ni);
 	if(pe) pe->m_receiveAsMsg(msgC, sender);
-	else
-	  mt == M_PROXY_PROXY_CNET ? m_noDestProxy2Proxy(msgC, sender):m_noDestCoord2Proxy(msgC, sender);
+	else {
+	  if (mt == M_PROXY_PROXY_CNET) m_noDestProxy2Proxy(msgC, sender);
+	  else m_noDestCoord2Proxy(msgC, sender);
+	}
 	break;
       }
     case M_PROXY_CNET:
@@ -174,7 +181,6 @@ namespace _dss_internal{
 	}
       case M_PROXY_COORD_NODEST:
 	{ 
-	  printf("msg not delivered\n"); 
 	  MsgContainer * msg = msgC->popMsgC(); 
 	  MessageType mtt = static_cast<MessageType>(msg->popIntVal());
 	  NetIdentity ni = gf_popNetIdentity(msg);
