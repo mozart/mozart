@@ -1,0 +1,83 @@
+MEP: 105
+Title: Migration of the infrastructure for Mozart development
+Author: Boriss Mejias <bmc@info.ucl.ac.be>, Guido Tack <tack@ps.uni-sb.de>
+Status: Draft
+Type: Standards Track
+Content-Type: text/x-rst
+Created: 12-Sep-2006
+Post-History:
+
+
+Abstract
+========
+
+The purpose of this MEP is to start the migration of the infrastructure for Mozart development from its current host in Saarbrücken to a more open administration platform with a better version control system. The goal is to host the Mozart repository in a Gforge platform [#Gforge]_ , providing support for mailing lists and a bug-tracking system. The version control system will move from CVS to Subversion (SVN) [#SVN]_ . This MEP is not meant to migrate the website or mail server to a new server.
+
+
+Motivation
+==========
+
+One of the main goals of the new Mozart Governance System was to open the development of Mozart to external contributors. Unfortunately, the current administration scheme does not help to make things more fluid. CVS accounts are connected to machine accounts at Programming Systems Lab, Universität des Saarlandes. 
+
+It has been discussed already in the hackers mailing list that the infrastructure for Mozart development should move away from Saarbrücken [#Discussion]_ , and this is a proposal to solve that problem.
+
+The Gforge platform, hosted at the Université catholique de Louvain, provides a convenient way to administrate accounts for developers, mailing list, bug-tracking systems, discussion forums and web pages. Currently, there is a test project called Mozart-Test1 that can be found at http://gforge.info.ucl.ac.be/scm/?group_id=12 . Over there one can browse the subversion repository created from a snapshot taken before the release of Mozart-1.3.2. Other features of the system are accessible from that page too.
+
+
+Background
+==========
+
+Team
+----
+
+The migration will be taken over by Boriss Mejias and Guido Tack. After the migration, one or more administrators must be designated to carry on with the administration of the project. The migration of the bug-tracking system will require contribution from the community.
+
+
+Activities
+----------
+
+* While the MEP is being discussed and voted, hackers can test the current Mozart-Test1 project [#Test1]_ .
+
+* Once the MEP is accepted, the Mozart project will be created at Gforge hosted at Université catholique de Louvain.
+
+* Freeze the current CVS repository. An equivalent SVN repository is created and moved to Gforge.
+
+* Developers create accounts in Gforge and they are granted permissions to work on the project.
+
+* Mailing lists are created for the project migrating all subscribed persons.
+
+* There seems to be no way to automatically migrate the bug-tracking system. In order to do that, we will require the contribution of the community to migrate the open reports to the new bug-tracking system.
+
+Backwards Compatibility
+=======================
+
+The migration from CVS to SVN will keep the whole history of development, as it can be seen in the Mozart-Test1 project. The mailing list archives will also be migrated to the new host. The migration of the bug-tracking system will take some time. If there are not enough volunteers who migrate the bug entries, we may have to decide to not migrate closed bug-reports. In this case, a read-only archive of the current bug tracking system could be kept.
+
+References
+=========
+
+.. [#Gforge] Gforge at UCL http://gforge.info.ucl.ac.be
+
+.. [#SVN] Subversion http://subversion.tigris.org/
+
+.. [#Discussion] Mozart-hackers archives http://www.mozart-oz.org/pipermail/mozart-hackers/2006/002621.html
+
+.. [#Test1] Mozart-Test1 project http://gforge.info.ucl.ac.be/scm/?group_id=12
+
+Copyright
+=========
+
+This document has been placed in the public domain. 
+
+Votes
+=====
+::
+
+    Raphaël Collet     []
+    Denys Duchier      []
+    Seif Haridi        []
+    Torbjörn Lager     []
+    Konstantin Popov   [ACCEPT]
+    Camilo Rueda       [ACCEPT]
+    Gert Smolka        [ACCEPT]
+    Peter Van Roy      [ACCEPT]
