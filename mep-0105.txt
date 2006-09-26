@@ -1,7 +1,7 @@
 MEP: 105
 Title: Migration of the infrastructure for Mozart development
 Author: Boriss Mejias <bmc@info.ucl.ac.be>, Guido Tack <tack@ps.uni-sb.de>
-Status: Draft
+Status: Accepted
 Type: Standards Track
 Content-Type: text/x-rst
 Created: 12-Sep-2006
@@ -73,10 +73,10 @@ Votes
 =====
 ::
 
-    Raphaël Collet     []
+    Raphaël Collet     [ACCEPT]
     Denys Duchier      []
     Seif Haridi        []
-    Torbjörn Lager     []
+    Torbjörn Lager     [ACCEPT]
     Konstantin Popov   [ACCEPT]
     Camilo Rueda       [ACCEPT]
     Gert Smolka        [ACCEPT]
