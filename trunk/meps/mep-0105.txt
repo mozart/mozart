@@ -75,7 +75,7 @@ Votes
 
     Raphaël Collet     [ACCEPT]
     Denys Duchier      []
-    Seif Haridi        []
+    Seif Haridi        [ACCEPT]
     Torbjörn Lager     [ACCEPT]
     Konstantin Popov   [ACCEPT]
     Camilo Rueda       [ACCEPT]
