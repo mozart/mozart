@@ -54,7 +54,7 @@ Backwards Compatibility
 The migration from CVS to SVN will keep the whole history of development, as it can be seen in the Mozart-Test1 project. The mailing list archives will also be migrated to the new host. The migration of the bug-tracking system will take some time. If there are not enough volunteers who migrate the bug entries, we may have to decide to not migrate closed bug-reports. In this case, a read-only archive of the current bug tracking system could be kept.
 
 References
-=========
+==========
 
 .. [#Gforge] Gforge at UCL http://gforge.info.ucl.ac.be
 
