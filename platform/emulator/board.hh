@@ -43,6 +43,11 @@
 #include "susp_queue.hh"
 #include "pointer-marks.hh"
 
+#ifdef BUILD_GECODE
+#include "GeSpace.hh"
+#include "thr_int.hh"
+#endif
+
 #define GETBOARD(v) ((v)->getBoardInternal()->derefBoard())
 
 //
@@ -226,7 +231,7 @@ public:
   Bool isBlocked(void);
   void checkStability(void);
   void checkExtSuspension(Suspendable *);
-  
+   
   //
   // Cascaded runnable thread counter
   //
@@ -424,6 +429,36 @@ public:
   TaggedRef getCloneDiff(void);
 #endif
 
+
+#ifdef BUILD_GECODE
+  //GenericSpace declaration
+private:
+  GenericSpace *gespace;
+public:
+  /* Return the generic space corresponding to this board. This method will
+     create it lazily if needed unless to is set to true (to stands for test
+     only 
+  */
+  GenericSpace* getGenericSpace(bool to = false) {
+    if (!to) {
+      if (gespace == NULL) {
+	//printf("creating new gespace on request\n");fflush(stdout);
+    	gespace = new GenericSpace(this);
+    	oz_newThreadInject(this)->pushCall(BI_PROP_GEC,NULL);
+      }	
+    }
+    
+    return gespace;
+  }
+  
+  void deleteGenericSpace(void) {
+    //printf("Deleting genericspace\n");fflush(stdout);
+    delete gespace;
+    //GenericSpace::gscounter--;
+    gespace = NULL;
+    //printf("deleted new gspace %d\n",GenericSpace::gscounter);fflush(stdout);
+  }
+#endif
 
 };
 

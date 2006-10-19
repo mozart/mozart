@@ -60,6 +60,10 @@
 			      out => [],
 			      BI  => BI_prop_lpq},
 
+	 'gec_propagate'	 => { in  => [],
+			      out => [],
+			      BI  => BI_prop_gec},
+
      'waitStatus'	 => { in  => ['value', 'value'],
 			      out => ['value'],
 			      BI  => BIwaitStatus},

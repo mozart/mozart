@@ -64,10 +64,14 @@ Board::Board()
     status(taggedVoidValue), rootVar(taggedVoidValue),
     script(taggedVoidValue), parent(NULL), flags(BoTag_Root)
 {
+  //printf("BOARD: called constructor\n");fflush(stdout);
   Assert((int) OddGCStep == 0x0 && (int) EvenGCStep == (int) BoTag_EvenGC);
   optVar = makeTaggedVar(new OptVar(this));
   lpq.init();
   setGCStep(oz_getGCStep());
+#ifdef BUILD_GECODE
+  gespace = NULL;
+#endif
 }
 
 
@@ -82,6 +86,15 @@ Board::Board(Board * p)
   rootVar = makeTaggedRef(newTaggedOptVar(optVar));
   setGCStep(oz_getGCStep());
   lpq.init();
+#ifdef BUILD_GECODE
+  if(p->gespace != NULL) {
+    gespace = new GenericSpace(this);
+    oz_newThreadInject(this)->pushCall(BI_PROP_GEC,NULL);
+  } else {
+    gespace = NULL;
+  }
+#endif
+
 #ifdef CS_PROFILE
   orig_start  = (int32 *) NULL;
   copy_start  = (int32 *) NULL;
@@ -99,7 +112,7 @@ void Board::bindStatus(TaggedRef t) {
   TaggedRef s = getStatus();
   DEREF(s, sPtr);
   if (oz_isReadOnly(s))
-    oz_bindReadOnly(sPtr, t);
+      oz_bindReadOnly(sPtr, t);      
 }
 
 void Board::clearStatus() {
@@ -161,7 +174,6 @@ OZ_Return Board::scheduleLPQ(void) {
     count_prop_invocs_sum_runnable += lpq.getSize()+1;
     count_prop_invocs_nb_smp_runnable += 1;
 #endif
-
     switch (oz_runPropagator(prop)) {
     case SLEEP:
       oz_sleepPropagator(prop);
@@ -418,15 +430,34 @@ void Board::checkStability(void) {
 
   } else {
     int n = crt;
-
     setScript(trail.unwind(this));
     Assert(!oz_onToplevel() || trail.isEmptyChunk());
     am.setCurrent(pb, pb->getOptVar());
   
     if (n == 0) {
-      // No runnable threads: suspended
+      // No runnable threads: suspended      
       TaggedRef newVar = oz_newReadOnly(pb);
       
+#ifdef BUILD_GECODE
+      if (getGenericSpace(true)){
+	OzVariable* nv = tagged2Var(oz_deref(newVar));
+	TaggedRef oldVar = getStatus();
+	DEREF(oldVar, oldVarPtr);
+	// Transfer the suspensions in this space to the new variable
+	SuspList** suspPtr = tagged2Var(oldVar)->getSuspListRef();
+	SuspList* susp = *suspPtr;
+	while (susp) {
+	  if (susp->getSuspendable()->getBoardInternal() == this) {
+	    nv->addSuspSVar(susp->getSuspendable());
+	    *suspPtr = susp->getNext();     // drop susp from list
+	  } else {
+	    suspPtr = (*suspPtr)->getNextRef();
+	  }
+	  susp = *suspPtr;
+	}
+      }
+#endif
+
       bindStatus(genSuspended(newVar));
       setStatus(newVar);
       pb->decRunnableThreads();
@@ -649,7 +680,7 @@ void Board::unsetGlobalMarks(void) {
   }
 
 }
-
+ 
 OZ_Return (*OZ_checkSituatedness)(Board *,TaggedRef *);
 
 

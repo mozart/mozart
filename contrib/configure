@@ -64,6 +64,9 @@ ac_help="$ac_help
 ac_help="$ac_help
 --enable-contrib-directory
 	whether to build the directory contribution (default: yes)"
+ac_help="$ac_help
+--enable-contrib-geoz
+	whether to build the Gecode CS (default: no)"
 
 # Initialize some variables set by options.
 # The variables have the same names as the options, with
@@ -580,7 +583,7 @@ do
 # Extract the first word of "$ac_prog", so it can be a program name with args.
 set dummy $ac_prog; ac_word=$2
 echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
-echo "configure:584: checking for $ac_word" >&5
+echo "configure:587: checking for $ac_word" >&5
 if eval "test \"`echo '$''{'ac_cv_prog_RM'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -619,7 +622,7 @@ done
 
   
   echo $ac_n "checking for SRCTOP""... $ac_c" 1>&6
-echo "configure:623: checking for SRCTOP" >&5
+echo "configure:626: checking for SRCTOP" >&5
 if eval "test \"`echo '$''{'oz_cv_path_SRCTOP'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -653,7 +656,7 @@ echo "$ac_t""$oz_cv_path_SRCTOP" 1>&6
   
   
   echo $ac_n "checking for BUILDTOP""... $ac_c" 1>&6
-echo "configure:657: checking for BUILDTOP" >&5
+echo "configure:660: checking for BUILDTOP" >&5
 if eval "test \"`echo '$''{'oz_cv_path_BUILDTOP'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -712,7 +715,7 @@ else { echo "configure: error: can not run $ac_config_sub" 1>&2; exit 1; }
 fi
 
 echo $ac_n "checking host system type""... $ac_c" 1>&6
-echo "configure:716: checking host system type" >&5
+echo "configure:719: checking host system type" >&5
 
 host_alias=$host
 case "$host_alias" in
@@ -740,7 +743,7 @@ do
 # Extract the first word of "$ac_prog", so it can be a program name with args.
 set dummy $ac_prog; ac_word=$2
 echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
-echo "configure:744: checking for $ac_word" >&5
+echo "configure:747: checking for $ac_word" >&5
 if eval "test \"`echo '$''{'ac_cv_prog_MAKE'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -809,13 +812,13 @@ You may find a mirror archive closer to you by consulting:
   else
     
   echo $ac_n "checking for GNU make""... $ac_c" 1>&6
-echo "configure:813: checking for GNU make" >&5
+echo "configure:816: checking for GNU make" >&5
   MAKE=$oz_cv_MAKE
   echo "$ac_t""(cached) $MAKE" 1>&6
   fi
   
   echo $ac_n "checking whether ${MAKE-make} sets \${MAKE}""... $ac_c" 1>&6
-echo "configure:819: checking whether ${MAKE-make} sets \${MAKE}" >&5
+echo "configure:822: checking whether ${MAKE-make} sets \${MAKE}" >&5
 set dummy ${MAKE-make}; ac_make=`echo "$2" | sed 'y%./+-%__p_%'`
 if eval "test \"`echo '$''{'ac_cv_prog_make_${ac_make}_set'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
@@ -844,7 +847,7 @@ fi
   
   if test "${INSTALL+set}" = set; then
     echo $ac_n "checking whether to unset broken INSTALL""... $ac_c" 1>&6
-echo "configure:848: checking whether to unset broken INSTALL" >&5
+echo "configure:851: checking whether to unset broken INSTALL" >&5
 if eval "test \"`echo '$''{'oz_cv_unset_INSTALL'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -875,7 +878,7 @@ echo "$ac_t""$oz_cv_unset_INSTALL" 1>&6
 # SVR4 /usr/ucb/install, which tries to use the nonexistent group "staff"
 # ./install, which can be erroneously created by make from ./install.sh.
 echo $ac_n "checking for a BSD compatible install""... $ac_c" 1>&6
-echo "configure:879: checking for a BSD compatible install" >&5
+echo "configure:882: checking for a BSD compatible install" >&5
 if test -z "$INSTALL"; then
 if eval "test \"`echo '$''{'ac_cv_path_install'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
@@ -934,7 +937,7 @@ test -z "$INSTALL_DATA" && INSTALL_DATA='${INSTALL} -m 644'
     if test -z "$WITH_GLOBAL_OZ"; then
       
   echo $ac_n "checking for --with-global-oz""... $ac_c" 1>&6
-echo "configure:938: checking for --with-global-oz" >&5
+echo "configure:941: checking for --with-global-oz" >&5
   # Check whether --with-global-oz or --without-global-oz was given.
 if test "${with_global_oz+set}" = set; then
   withval="$with_global_oz"
@@ -968,7 +971,7 @@ fi
     # Extract the first word of "mkinstalldirs", so it can be a program name with args.
 set dummy mkinstalldirs; ac_word=$2
 echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
-echo "configure:972: checking for $ac_word" >&5
+echo "configure:975: checking for $ac_word" >&5
 if eval "test \"`echo '$''{'ac_cv_path_INSTALL_DIR'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -1012,7 +1015,7 @@ fi
     
   
   echo $ac_n "checking for oz version""... $ac_c" 1>&6
-echo "configure:1016: checking for oz version" >&5
+echo "configure:1019: checking for oz version" >&5
 if eval "test \"`echo '$''{'oz_cv_ozversion'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -1056,7 +1059,7 @@ echo "$ac_t""$oz_cv_ozversion" 1>&6
     if test -z "$WITH_GLOBAL_OZ"; then
       
   echo $ac_n "checking for --with-global-oz""... $ac_c" 1>&6
-echo "configure:1060: checking for --with-global-oz" >&5
+echo "configure:1063: checking for --with-global-oz" >&5
   # Check whether --with-global-oz or --without-global-oz was given.
 if test "${with_global_oz+set}" = set; then
   withval="$with_global_oz"
@@ -1090,7 +1093,7 @@ fi
     # Extract the first word of "ozplatform", so it can be a program name with args.
 set dummy ozplatform; ac_word=$2
 echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
-echo "configure:1094: checking for $ac_word" >&5
+echo "configure:1097: checking for $ac_word" >&5
 if eval "test \"`echo '$''{'ac_cv_path_OZPLATFORM'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -1137,7 +1140,7 @@ fi
     if test -z "$WITH_GLOBAL_OZ"; then
       
   echo $ac_n "checking for --with-global-oz""... $ac_c" 1>&6
-echo "configure:1141: checking for --with-global-oz" >&5
+echo "configure:1144: checking for --with-global-oz" >&5
   # Check whether --with-global-oz or --without-global-oz was given.
 if test "${with_global_oz+set}" = set; then
   withval="$with_global_oz"
@@ -1171,7 +1174,7 @@ fi
     # Extract the first word of "oztool", so it can be a program name with args.
 set dummy oztool; ac_word=$2
 echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
-echo "configure:1175: checking for $ac_word" >&5
+echo "configure:1178: checking for $ac_word" >&5
 if eval "test \"`echo '$''{'ac_cv_path_OZTOOL'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -1217,7 +1220,7 @@ fi
   esac
   
   echo $ac_n "checking for --with-inc-dir""... $ac_c" 1>&6
-echo "configure:1221: checking for --with-inc-dir" >&5
+echo "configure:1224: checking for --with-inc-dir" >&5
   # Check whether --with-inc-dir or --without-inc-dir was given.
 if test "${with_inc_dir+set}" = set; then
   withval="$with_inc_dir"
@@ -1259,7 +1262,7 @@ fi
 
   
   echo $ac_n "checking for --with-lib-dir""... $ac_c" 1>&6
-echo "configure:1263: checking for --with-lib-dir" >&5
+echo "configure:1266: checking for --with-lib-dir" >&5
   # Check whether --with-lib-dir or --without-lib-dir was given.
 if test "${with_lib_dir+set}" = set; then
   withval="$with_lib_dir"
@@ -1303,7 +1306,7 @@ fi
   
   
   echo $ac_n "checking for build date""... $ac_c" 1>&6
-echo "configure:1307: checking for build date" >&5
+echo "configure:1310: checking for build date" >&5
 if eval "test \"`echo '$''{'oz_cv_build_date'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -1317,7 +1320,7 @@ echo "$ac_t""$oz_cv_build_date" 1>&6
   
   
   echo $ac_n "checking for OZLOADSEP""... $ac_c" 1>&6
-echo "configure:1321: checking for OZLOADSEP" >&5
+echo "configure:1324: checking for OZLOADSEP" >&5
 if eval "test \"`echo '$''{'oz_cv_OZLOADSEP'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -1337,7 +1340,7 @@ echo "$ac_t""$oz_cv_OZLOADSEP" 1>&6
 
   
   echo $ac_n "checking for OZLOADWIN""... $ac_c" 1>&6
-echo "configure:1341: checking for OZLOADWIN" >&5
+echo "configure:1344: checking for OZLOADWIN" >&5
 if eval "test \"`echo '$''{'oz_cv_OZLOADWIN'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -1379,7 +1382,7 @@ CONTRIBDIRS="tk ap"
 
 
 echo $ac_n "checking for --enable-contrib-gdbm""... $ac_c" 1>&6
-echo "configure:1383: checking for --enable-contrib-gdbm" >&5
+echo "configure:1386: checking for --enable-contrib-gdbm" >&5
 # Check whether --enable-contrib-gdbm or --disable-contrib-gdbm was given.
 if test "${enable_contrib_gdbm+set}" = set; then
   enableval="$enable_contrib_gdbm"
@@ -1396,7 +1399,7 @@ echo "$ac_t""$oz_cv_enable_contrib_gdbm" 1>&6
   fi
 
 echo $ac_n "checking for --enable-contrib-regex""... $ac_c" 1>&6
-echo "configure:1400: checking for --enable-contrib-regex" >&5
+echo "configure:1403: checking for --enable-contrib-regex" >&5
 # Check whether --enable-contrib-regex or --disable-contrib-regex was given.
 if test "${enable_contrib_regex+set}" = set; then
   enableval="$enable_contrib_regex"
@@ -1413,7 +1416,7 @@ echo "$ac_t""$oz_cv_enable_contrib_regex" 1>&6
   fi
 
 echo $ac_n "checking for --enable-contrib-doc""... $ac_c" 1>&6
-echo "configure:1417: checking for --enable-contrib-doc" >&5
+echo "configure:1420: checking for --enable-contrib-doc" >&5
 # Check whether --enable-contrib-doc or --disable-contrib-doc was given.
 if test "${enable_contrib_doc+set}" = set; then
   enableval="$enable_contrib_doc"
@@ -1430,7 +1433,7 @@ echo "$ac_t""$oz_cv_enable_contrib_doc" 1>&6
   fi
 
 echo $ac_n "checking for --enable-contrib-os""... $ac_c" 1>&6
-echo "configure:1434: checking for --enable-contrib-os" >&5
+echo "configure:1437: checking for --enable-contrib-os" >&5
 # Check whether --enable-contrib-os or --disable-contrib-os was given.
 if test "${enable_contrib_os+set}" = set; then
   enableval="$enable_contrib_os"
@@ -1447,7 +1450,7 @@ echo "$ac_t""$oz_cv_enable_contrib_os" 1>&6
   fi
 
 echo $ac_n "checking for --enable-contrib-micq""... $ac_c" 1>&6
-echo "configure:1451: checking for --enable-contrib-micq" >&5
+echo "configure:1454: checking for --enable-contrib-micq" >&5
 # Check whether --enable-contrib-micq or --disable-contrib-micq was given.
 if test "${enable_contrib_micq+set}" = set; then
   enableval="$enable_contrib_micq"
@@ -1468,7 +1471,7 @@ subdirs="$CONTRIBDIRS"
 
 
 echo $ac_n "checking for --enable-contrib-ri""... $ac_c" 1>&6
-echo "configure:1472: checking for --enable-contrib-ri" >&5
+echo "configure:1475: checking for --enable-contrib-ri" >&5
 # Check whether --enable-contrib-ri or --disable-contrib-ri was given.
 if test "${enable_contrib_ri+set}" = set; then
   enableval="$enable_contrib_ri"
@@ -1485,7 +1488,7 @@ echo "$ac_t""$oz_cv_enable_contrib_ri" 1>&6
   fi
 
 echo $ac_n "checking for --enable-contrib-lp""... $ac_c" 1>&6
-echo "configure:1489: checking for --enable-contrib-lp" >&5
+echo "configure:1492: checking for --enable-contrib-lp" >&5
 # Check whether --enable-contrib-lp or --disable-contrib-lp was given.
 if test "${enable_contrib_lp+set}" = set; then
   enableval="$enable_contrib_lp"
@@ -1502,7 +1505,7 @@ echo "$ac_t""$oz_cv_enable_contrib_lp" 1>&6
   fi
 
 echo $ac_n "checking for --enable-contrib-davinci""... $ac_c" 1>&6
-echo "configure:1506: checking for --enable-contrib-davinci" >&5
+echo "configure:1509: checking for --enable-contrib-davinci" >&5
 # Check whether --enable-contrib-davinci or --disable-contrib-davinci was given.
 if test "${enable_contrib_davinci+set}" = set; then
   enableval="$enable_contrib_davinci"
@@ -1519,7 +1522,7 @@ echo "$ac_t""$oz_cv_enable_contrib_davinci" 1>&6
   fi
 
 echo $ac_n "checking for --enable-contrib-reflect""... $ac_c" 1>&6
-echo "configure:1523: checking for --enable-contrib-reflect" >&5
+echo "configure:1526: checking for --enable-contrib-reflect" >&5
 # Check whether --enable-contrib-reflect or --disable-contrib-reflect was given.
 if test "${enable_contrib_reflect+set}" = set; then
   enableval="$enable_contrib_reflect"
@@ -1536,7 +1539,7 @@ echo "$ac_t""$oz_cv_enable_contrib_reflect" 1>&6
   fi
 
 echo $ac_n "checking for --enable-contrib-investigator""... $ac_c" 1>&6
-echo "configure:1540: checking for --enable-contrib-investigator" >&5
+echo "configure:1543: checking for --enable-contrib-investigator" >&5
 # Check whether --enable-contrib-investigator or --disable-contrib-investigator was given.
 if test "${enable_contrib_investigator+set}" = set; then
   enableval="$enable_contrib_investigator"
@@ -1553,7 +1556,7 @@ echo "$ac_t""$oz_cv_enable_contrib_investigator" 1>&6
   fi
 
 echo $ac_n "checking for --enable-contrib-fcp""... $ac_c" 1>&6
-echo "configure:1557: checking for --enable-contrib-fcp" >&5
+echo "configure:1560: checking for --enable-contrib-fcp" >&5
 # Check whether --enable-contrib-fcp or --disable-contrib-fcp was given.
 if test "${enable_contrib_fcp+set}" = set; then
   enableval="$enable_contrib_fcp"
@@ -1570,7 +1573,7 @@ echo "$ac_t""$oz_cv_enable_contrib_fcp" 1>&6
   fi
 
 echo $ac_n "checking for --enable-contrib-psql""... $ac_c" 1>&6
-echo "configure:1574: checking for --enable-contrib-psql" >&5
+echo "configure:1577: checking for --enable-contrib-psql" >&5
 # Check whether --enable-contrib-psql or --disable-contrib-psql was given.
 if test "${enable_contrib_psql+set}" = set; then
   enableval="$enable_contrib_psql"
@@ -1587,7 +1590,7 @@ echo "$ac_t""$oz_cv_enable_contrib_psql" 1>&6
   fi
 
 echo $ac_n "checking for --enable-contrib-compat""... $ac_c" 1>&6
-echo "configure:1591: checking for --enable-contrib-compat" >&5
+echo "configure:1594: checking for --enable-contrib-compat" >&5
 # Check whether --enable-contrib-compat or --disable-contrib-compat was given.
 if test "${enable_contrib_compat+set}" = set; then
   enableval="$enable_contrib_compat"
@@ -1604,7 +1607,7 @@ echo "$ac_t""$oz_cv_enable_contrib_compat" 1>&6
   fi
 
 echo $ac_n "checking for --enable-contrib-directory""... $ac_c" 1>&6
-echo "configure:1608: checking for --enable-contrib-directory" >&5
+echo "configure:1611: checking for --enable-contrib-directory" >&5
 # Check whether --enable-contrib-directory or --disable-contrib-directory was given.
 if test "${enable_contrib_directory+set}" = set; then
   enableval="$enable_contrib_directory"
@@ -1620,6 +1623,22 @@ echo "$ac_t""$oz_cv_enable_contrib_directory" 1>&6
     CONTRIBDIRS="$CONTRIBDIRS${CONTRIBDIRS+ }directory"
   fi
 
+echo $ac_n "checking for --enable-contrib-geoz""... $ac_c" 1>&6
+echo "configure:1628: checking for --enable-contrib-geoz" >&5
+# Check whether --enable-contrib-geoz or --disable-contrib-geoz was given.
+if test "${enable_contrib_geoz+set}" = set; then
+  enableval="$enable_contrib_geoz"
+  oz_cv_enable_contrib_geoz=$enableval
+else
+  : ${oz_cv_enable_contrib_geoz:=$oz_enable_contrib_geoz}
+   : ${oz_cv_enable_contrib_geoz:=no}
+fi
+
+echo "$ac_t""$oz_cv_enable_contrib_geoz" 1>&6
+
+  if test "$oz_cv_enable_contrib_geoz" = yes; then
+    CONTRIBDIRS="$CONTRIBDIRS${CONTRIBDIRS+ }geoz"
+  fi
 
 trap '' 1 2 15
 cat > confcache <<\EOF

@@ -524,7 +524,7 @@ Abstraction * Abstraction::gCollect(int gUsageLen, int * gUsage) {
  *
  */
 
-inline
+//inline
 Board * Board::_cacBoard(void) {
   GCDBG_INFROMSPACE(this);
 
@@ -2124,6 +2124,31 @@ void Board::_cacRecurse() {
     setDistributor(d->_cac());
   }
   cacStack.pushSuspList((SuspList **) &nonMonoSuspList);
+
+#ifdef BUILD_GECODE 
+  //printf("CAC\n");fflush(stdout);
+if (gespace != NULL) {
+#ifdef S_CLONE
+    
+  /*
+    At this point all propagation have been run. If not then a excepiton will be raised 
+    by am
+  */
+  //Assert(gespace->isStable());
+  
+  /*
+    false is used for clone because we want an independent copy of he space.
+    true could be used but we have not tested it yet and could not be thread safe.
+  */
+  //printf("CAC-CLONE\n");fflush(stdout);
+  gespace = static_cast<GenericSpace*>(gespace->clone(false));
+  //printf("CAC-CLONE-FINISHED\n");fflush(stdout);
+  //  printf("CAC:FINISH generic space failed %d \n", gespace->failed());fflush(stdout);
+#endif
+  gespace->_cac();
+}
+//printf("CAC-FINISHED\n");fflush(stdout);
+#endif
 
 #ifdef CS_PROFILE
 #ifdef G_COLLECT

@@ -162,6 +162,19 @@ esac
 AC_SUBST(EMULATOR_EXE)
 
 dnl *****************************************************************
+dnl *** gecode
+dnl *****************************************************************
+ 
+ GECODE_LDFLAGS=
+ GECODE_LIBS=
+ BUILD_GECODE=no
+
+ OZ_LIB_GECODE
+ AC_SUBST(BUILD_GECODE)
+ 
+dnl *****************************************************************
+
+dnl *****************************************************************
 dnl Compiler, Linker, and m4 options
 dnl *****************************************************************
 
@@ -175,7 +188,12 @@ if test "${GXX}" = yes; then
     M4_S="-s"
     DEPEND="$CXX -MM"
 
-    OZ_CXX_OPTIONS(-fno-exceptions,oz_a)
+    if test "$BUILD_GECODE" = yes; then
+	OZ_CXX_OPTIONS(-fexceptions,oz_a)
+    else
+	OZ_CXX_OPTIONS(-fno-exceptions,oz_a)
+    fi
+
     CXXAVOID=$oz_a
     CXXFLAGS="$CXXFLAGS $oz_a"
 
@@ -238,7 +256,7 @@ if test "${GXX}" = yes; then
           ;;
       esac
       ;;
-    *-i486|i486-darwin) 
+    *-i486) 
 	case `$CXX -dumpversion` in
 	2.95.3)
 	    oz_opt="-O3 -pipe -fschedule-insns2 -fregmove"
@@ -1807,7 +1825,7 @@ dnl *****************************************************************
 
 AC_CONFIG_HEADER(conf-others.h)
 
-AC_OUTPUT(Makefile.vars Makefile Makefile.rules libdp/Makefile libfd/Makefile libfset/Makefile OZCONF.h:OZCONF.in oztool.sh:oztool.in $target-oztool:i386-mingw32-oztool.in .gdbinit)
+AC_OUTPUT(Makefile.vars Makefile Makefile.rules libdp/Makefile libfd/Makefile libfset/Makefile cp/int/Makefile OZCONF.h:OZCONF.in oztool.sh:oztool.in $target-oztool:i386-mingw32-oztool.in .gdbinit)
 
 errprint(ifdef([OZ_INIT],
  [autoconf succeeded
