@@ -1,0 +1,102 @@
+<chapter id="chapter.introduction">
+<title/Introduction/
+
+<p>Mozart provides support for distributed programming. This document
+describes how distribution is realized and what features Mozart offers
+to deal with distribution. Guidance on how to practically do distributed
+programming can be found in the <ptr.extern to="ozdoc:dstutorial">.
+
+<p>Distribution is realized by a <em>Distribution Subsystem</em> (DS)
+used by the Mozart process. The DS implements a
+state-of-the-art middleware abstracting away the network from higher
+levels.  This is achieved by defining entity consistency protocols
+that maintain the semantics of local Oz-entities also when
+distributed.  Messages in these protocols are reliably delivered
+disregarding, transient network congestion and partitions.
+
+<para class=apropos><title/Communication with an arbitrary number of
+sites<note foot>Every Mozart process is referred to as a site.</note>/</para>
+
+<p>Through a 128 bit unique-id schema, billions of remote machines can
+be addressed.  By letting connections time-share the usage of physical
+channels when there is a lack of resources, the DS is able to handle
+thousands of simultaneous connections even on off-the-shelf hardware.
+
+<para class=apropos><title/Modular design allows customization/</para>
+
+<p>The DS has a layered and modular design enabling additions of new
+transport protocols. The DS currently uses TCP, but work is being
+done to add a lean reliable UDP implementation and a shared memory
+communication schema.
+
+<para class=apropos><title/Platform Independent/</para>
+
+<p>The implementation of the DS is mature, stable, and available on 
+multiple platforms. Currently, versions for Linux, Windows and many flavours of Unix exist. The protocols used for transferring data are platform
+independent, enabling inter-platform communication.
+ 
+
+<para class=apropos><title/Serialization of the language graph/</para>
+
+<p>An advanced marshaler is available to serialize language graphs to be
+fit in messages. During marshaling the different types of entities are
+treated separately to allow replication of stateless entities, and
+distribution of references to stateful ones. An unmarshaler is able to
+build a corresponding language graph at the receiver side, replacing
+remote entity references with proxy structures.
+
+<para class=apropos><title/Reliable message delivery and fault
+tolerant/</para>
+
+<p>The DS ensures reliable delivery of messages even in the case of
+transient faults. By use of an acknowledge schema, transient faults 
+can be recovered. 
+
+<para class=apropos><title/High throughput with an efficient
+implementation/</para>
+
+<p>By clever usage of pipelining in bounded memory, together with
+priority based message sending, the overhead imposed by the complexity
+of the DS makes the communication only slightly slower than over a raw
+socket implemented in C.
+
+<section><title/Layered Design/
+
+<p>The DS is responsible for opening and closing connections,
+transferring messages, reporting network problems and executing the
+consistency protocols attached to all distributed entities. This is
+implemented by a three-layered structure (see <Ptr to
+="figure.three-layered">) with the three layers <em>Protocol
+Layer</em>, <em>Communication Layer</em> and <em>Transport
+Layer</em>. The topmost layer, the Protocol Layer, is responsible for
+running the protocols that the DS implements. The middle layer, the
+Communication Layer, handles virtual channels that are created between
+different processes. The lowest layer, the Transport Layer, implements
+an interface to any transport protocol used to transfer messages
+between machines. The Communication Layer and the Transport Layer
+together are also referred to as the <em>Message Passing Layer</em>. A
+more detailed description of this design can be found in Anna
+Neiderud's <ref.extern
+to="http://www.sics.se/~annan/ThesisReport.doc">master's thesis
+report</ref.extern>.
+ 
+<figure id="figure.three-layered">
+<caption/The Mozart Virtual machine and the Distribution Subsystem /
+<picture.choice display>
+      <picture.extern to="core_three_layers.gif" type=gif>
+</picture.choice>
+</figure>
+
+<section><title/Outline/
+
+<p>The remainder of this document describes some major parts of the DS
+and their implementation. <ptr to=chapter.connections> explains the
+bootstrapping sequence for connections and how connection
+establishment can be customized. <ptr to=chapter.entities> then
+discusses how entities of Mozart are distributed. After that <ptr
+to=chapter.efficient> shows how the implementation has been made
+efficient. A challenging question in distributed programming is
+failure, and how to deal with it is discussed in <ptr
+to=chapter.failures>. <ptr to=chapter.tools> and <ptr
+to=chapter.interfaces> give useful pointers to understanding and using
+all the features described.

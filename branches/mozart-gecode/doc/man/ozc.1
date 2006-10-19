@@ -1,0 +1,205 @@
+.\" Copyright stuff
+.TH ozc 1
+.SH NAME
+ozc \- compile oz code
+.SH SYNOPSIS
+.B ozc [\|\fImode\fP\|] \fIoptions .\|.\|.\fP
+.PP
+.SM MODES
+.PP
+The `\fBozc\fP' compiler can operate in one of several mutually
+exclusive modes selected by the options below:
+.TP
+.B \-h, \-?, \-\-help
+Prints out information on all legal options, then exits
+.TP
+.B \-c, \-\-dump
+`\fBozc -c\fP \fIFILE.oz\fP'
+compiles and evaluates the expression in file \fIFILE.oz\fP, then
+pickles the resulting value into the output file, \fIFILE.ozf\fP by
+default.
+.TP
+.B \-e, \-\-feedtoemulator
+`\fBozc -e\fP \fIFILE.oz\fP'
+compiles and executes the statement in file \fIFILE.oz\fP. This is the
+default mode of operation.
+.TP
+.B \-E, \-\-core
+`\fBozc -E\fP \fIFILE.oz\fP'
+translates the statement in file \fIFILE.oz\fP into the core language,
+then writes this expanded form into the output file, \fIFILE.ozi\fP by
+default.
+.TP
+.B \-S, \-\-outputcode
+`\fBozc -S\fP \fIFILE.oz\fP'
+compiles the statement in file \fIFILE.oz\fP into the assembly
+bytecode format, then writes it to the output file, \fIFILE.ozm\fP by
+default.
+.TP
+.B \-x, \-\-executable
+`\fBozc -x\fP \fIFILE.oz\fP'
+much like \fB-c\fP, compiles and evaluates the expression in file
+\fIFILE.oz\fP, then writes the resulting value into the output file,
+by default: \fIFILE\fP (no extension) under Unix or \fIFILE.exe\fP
+under Windows. Additionally, it makes the output file
+executable. Thus, if \fIFoo.oz\fP contains an application functor: 
+`\fBozc -x\fP \fIFoo.oz\fP' creates the file \fIFoo\fP (\fIFoo.exe\fP
+under Windows), which is executable and can be invoked directly from
+the shell. However, you can always run an application functor as
+follows: `\fBozengine\fP \fIurl args .\|.\|.\fP' where \fIurl\fP is a
+URL or pathname that references the application functor.
+.PP
+.SM OPTIONS
+.PP
+Additionally, the compiler understands the following general options:
+.TP
+.B \-v, \-\-verbose
+Display all compiler messages
+.TP
+.B \-q, \-\-quiet
+Inhibit compiler messages
+.TP
+.B \-M, \-\-makedepend
+Instead of executing, write a list of dependencies to stdout
+.TP
+.B \-o \fIFILE\fP, \-\-outputfile=\fIFILE\fP
+Write output to \fIFILE\fP (\- for stdout)
+.TP
+.B \--execheader=\fISTRING\fP
+When invoked with option \fB-x\fP the compiler first outputs a header
+so that the output file may be interpreted by the operating system as
+an executable. Under Unix, the default behaviour is to use the following as header:
+.br
+.nf
+
+#!/bin/sh 
+exec ozengine $0 "$@"
+
+.fi
+The \fB\-\-execheader\fP option allows you to specify a different
+header.
+.TP
+.B \-\-execpath=\fISTRING\fP
+Uses the header given above in the description of
+\fB\-\-execheader\fP, except that \fBozengine\fP is replaced by
+\fISTRING\fP.
+.TP
+.B \-\-execfile=\fIFILE\fP
+Reads in \fIFILE\fP and uses this as header. Under Windows, the
+default behaviour is to use the file provided in
+\fIozhome/bin/ozwrapper.bin\fP, where \fIozhome\fP is Mozart's
+installation folder. \fIozwrapper.bin\fP is a Windows executable that
+launches ozengine.
+.TP
+.B \-\-execwrapper=\fIFILE\fP
+Reads in \fIozhome/bin/FILE\fP and uses it as header for executable
+files. Apart from \fIozwrapper.bin\fP, an \fIozwrapperw.bin\fP is
+supplied that launches \fBozenginew\fP instead of \fBozengine\fP. This
+option provides a convenient way to use this alternative wrapper.
+.TP
+.B \-z \fIN\fP, \-\-compress=\fIN\fP
+Pickles may be written in a compressed format. By default they are not
+compressed. `\fB\-z\fP \fIN\fP' selects a compression level: \fIN\fP
+is an integer between 1 and 9. Compressing a pickle may improve
+loading/downloading time.
+.TP
+.B \-D \fINAME\fP, \-\-define=\fINAME\fP
+Define macro \fINAME\fP. Code source may have `\fB\\ifdef\fP
+\fINAME\fP' conditional directives that tests whether macro \fINAME\fP
+is defined.
+.TP
+.B \-U \fINAME\fP, \-\-undefine=\fINAME\FP
+Undefines macro \fINAME\fP
+.TP
+.B \-l \fIMODULES\fP, \-\-environment=\fIMODULES\fP
+.nf
+
+ozc -l Baz=$HOME/baz.ozf -c Foo.oz
+
+.fi
+Makes \fIMODULES\fP, a comma-separated list of pairs VAR=URL,
+available in the environment. For each VAR=URL, the module available
+through the functor at URL is obtained and VAR is bound to it. The
+file \fIFoo.oz\fP being compiled can then reference variable VAR.
+.TP
+.B \-I \fIDIR\fP, \-\-incdir=\fIDIR\fP
+Adds \fIDIR\fP to the head of OZPATH which is used to locate files to
+\fB\\insert\fP.
+.TP
+.B \-\-include=\fIFILE\fP
+Compile and execute the statement in \fIFILE\fP before processing the
+remaining options. This can be used e. g. to extend the compilation
+environment by executing a \fBdeclare\fP.
+.TP
+.B \-\-maxerrors=\fIN\fP
+Limit the number of errors reported to \fIN\fP.
+.TP
+.B \-\-baseurl=\fISTRING\fP
+Set the base URL to resolve imports of computed functors to
+\fISTRING\FP.
+.PP
+.SM SWITCHES
+.PP
+Finally, phases of the compiler can be controlled by the compiler
+switches below:
+.TP
+.B \-g, \-\-(no)debuginfo
+Emits code with debugging information. Use this option if you want to
+take advantage of The Mozart Debugger. The \fB\-g\fP option is actually
+an abbreviation for the combination of \fB\-\-controlflowinfo\fP and
+\fB\-\-staticvarnames\fP.
+.TP
+.B \-\-(no)controlflowinfo
+Include control flow information
+.TP
+.B \-\-(no)staticvarnames
+Include static variable name information
+.TP
+.B \-p, \-\-(no)profile
+Emits code with profiling information. Use this option if you want to
+take advantage of The Mozart Profiler.
+.TP
+.B \-\-(no)gump
+Allow Gump definitions.
+.TP
+.B \-\-(no)compilerpasses
+Show compiler passes.
+.TP
+.B \-\-(no)warnredecl
+Warn about top-level redeclarations.
+.TP
+.B \-\-(no)warnshadow
+Warn about all redeclarations.
+.TP
+.B \-\-(no)warnunused
+Warn about unused variables.
+.TP
+.B \-\-(no)warnunusedformals
+Warn about unused variables and formals.
+.TP
+.B \-\-(no)warnforward
+Warn about oo forward declarations.
+.TP
+.B \-\-(no)warnopt
+Warn about missed optimizations.
+.TP
+.B \-\-(no)expression
+Expect expressions, not statements.
+.TP
+.B \-\-(no)allowdeprecated
+Allow use of deprecated syntax.
+.TP
+.B \-\-(no)staticanalysis
+Run static analysis.
+.TP
+.B \-\-(no)realcore
+Output the real non-fancy core syntax.
+.TP
+.B \-\-(no)debugvalue
+Annotate variable values in core output.
+.TP
+.B \-\-(no)debugtype
+Annotate variable types in core output.
+.TP
+.B \-\-functionalpatterns
+Use functional pattern-matching.

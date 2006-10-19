@@ -1,0 +1,104 @@
+<chapter id=chapter.regex>
+    <title/Regular Expressions/
+  <p>The <code/regex/ module implements an interface to the POSIX
+regex library and builds some higher level facilities on top of it.
+The module may be imported as follows:
+<code display>import Regex at 'x-oz://contrib/regex'</code>
+<list>
+      <entry><code/Regex.is/
+      <synopsis><code/{Regex.is ?+{X} ??{B}}/
+      <item>Returns <code/true/ iff ?_{X} is a regex object.
+      <entry><code/Regex.make/
+      <synopsis><code/{Regex.make ?+{PAT} ??{RE}}/
+      <item>Creates regex object ?_{RE} from virtual string pattern
+?_{PAT}. Note that ?_{Regex.make} cannot be used in (subordinated) spaces.
+      <entry><code/Regex.search/
+      <synopsis><code/{Regex.search ?+{RE} ?+{TXT} ??{MATCH}}/
+      <item>Returns the next ?_{MATCH} of regex ?_{RE} in virtual string
+?_{TXT}, or <code/false/ if there is no such match.  ?_{RE} is also
+permitted to be a virtual string pattern, in which case it is
+automatically compiled into a regex object.
+<p>A match is a record with integer features: one for each group in
+the pattern and also feature 0 for the whole match.  The value on each
+feature is a pair <code/I#J/ of start and end indices into ?_{TXT}.
+If ?_{TXT} is a byte string, you can simply invoke
+<code/{ByteString.slice TXT I J}/ to extract the match.
+      <entry><code/Regex.group/
+      <synopsis><code/{Regex.group ?+{N} ?+{MATCH} ?+{TXT} ??{GROUP}}/
+      <item>Return the substring ?_{GROUP} matched by the ?_{N} group of
+?_{MATCH} in virtual string ?_{TXT}.  ?_{MATCH} should be the result
+of calling <code/Regex.search/ on ?_{TXT}.
+      <entry><code/Regex.groups/
+      <synopsis><code/{Regex.groups ?+{MATCH} ?+{TXT} ??{GROUPS}}/
+      <item>Returns the list ?_{GROUPS} of substrings of ?_{TXT}
+corresponding to the groups of ?_{MATCH}.  Group 0 (the whole match)
+is not included.
+      <entry><code/Regex.allMatches/
+      <synopsis><code/{Regex.allMatches ?+{RE} ?+{TXT} ??{MATCHES}}/
+      <item>Returns the list of all ?_{MATCHES} of regular expression ?_{RE}
+in virtual string ?_{TXT}.  ?_{RE} should not be anchored.
+      <entry><code/Regex.forAll/
+      <synopsis><code/{Regex.forAll ?+{RE} ?+{TXT} ?+{P}}/
+      <item>Applies the 1 argument procedure ?_{P} to every match of ?_{RE}
+in ?_{TXT}.
+      <entry><code/Regex.map/
+      <synopsis><code/{Regex.map ?+{RE} ?+{TXT} ?+{F} ??{RESULTS}}/
+      <item>Applies the 1 argument function ?_{F} to every match of ?_{RE}
+in ?_{TXT} and returns the corresponding list of ?_{RESULTS}.
+	<entry><code/Regex.foldR/
+      <synopsis/<code/{Regex.foldR ?+{RE} ?+{TXT} ?+{F} ?_{INIT} ??{RESULT}}//
+      <entry><code/Regex.foldL/
+      <synopsis/<code/{Regex.foldL ?+{RE} ?+{TXT} ?+{F} ?_{INIT} ??{RESULT}}//
+      <item>The usual reduction procedure (see List module).
+      <entry><code/Regex.split/
+      <synopsis><code/{Regex.split ?+{RE} ?+{TXT} ??{STRINGS}}/
+      <item>Splits the input ?_{TXT} at every match of separator
+?_{RE}, and returns the resulting list of strings.
+      <entry><code/Regex.compile/
+      <synopsis><code/{Regex.compile ?+{PAT} ?+{CFLAGS} ??{RE}}/
+      <item>This is the more complicated version of
+<code/Regex.make/.  The
+additional ?_{CFLAGS} argument further parametrizes the regex
+compilation process.  It is either an atom or a list of atoms, from
+the set: <code/extended/, <code/icase/, <code/nosub/, <code/newline/.
+The default is <code/[extended newline]/.  See the man page for
+<code proglang=c/regcomp/ for further details.
+      <entry><code/Regex.execute/
+      <synopsis><code/{Regex.execute ?+{RE} ?+{TXT} ?+{IDX} ?+{EFLAGS} ??{MATCH}}/
+      <item>This is the more complicated version of <code/Regex.search/.
+Integer ?_{IDX} is the offset at which to start the search in
+?+{TXT}. ?_{EFLAGS} further specify how to search: it is an atom or
+list of atoms, from the set: <code/notbol/, <code/noteol/.  The
+default is <code/nil/.  See the man page for <code
+proglang=c/regexec/ for further details.
+      <entry><code/Regex.cflags.set/
+      <entry><code/Regex.cflags.get/
+      <synopsis><code/{Regex.cflags.set ?+{SPEC}}/
+      <synopsis><code/{Regex.cflags.get ??{SPEC}}/
+      <item>Set or get the current ?_{CFLAGS} defaults, &EG; used by
+<code/Regex.make/.
+      <entry><code/Regex.eflags.set/
+      <entry><code/Regex.eflags.get/
+      <synopsis><code/{Regex.eflags.set ?+{SPEC}}/
+      <synopsis><code/{Regex.eflags.get ??{SPEC}}/
+      <item>Set or get the current ?_{EFLAGS} defaults, &EG; used by
+<code/Regex.search/.
+      <entry/<code/Regex.replace//
+      <synopsis/<code/{Regex.replace ?+{TXT} ?+{RE} ?+{FUN} ??{RES}}//
+      <item/Replace every occurrence of ?_{RE} in ?_{TXT} with the result
+of applying ?_{FUN} to the current ?_{TXT} and the current match./
+      <entry/<code/Regex.replaceRegion//
+      <synopsis/<code/{Regex.replaceRegion ?+{TXT} ?+{LO} ?+{HI} ?+{RE} ?+{FUN} ??{RES}}//
+      <item/Same as above, but only operate on the region starting at ?_{LO} inclusive
+and ending at ?_{HI} exclusive./
+</list></p>
+</chapter>
+<!--
+Local Variables:
+mode: sgml
+mode: auto-fill
+sgml-default-dtd-file: "chapter.ced"
+sgml-auto-activate-dtd: t
+adaptive-fill-mode: nil
+End:
+-->

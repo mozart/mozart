@@ -1,0 +1,29 @@
+This tutorial shows how to write efficient and robust distributed
+applications with the Mozart programming system.
+We first present and motivate the distribution model and
+the basic primitives needed for building distributed applications.
+We then progressively introduce
+examples of distributed applications
+to illustrate servers,
+agents, mobility, collaborative tools,
+fault tolerance, and security.
+
+<P>The tutorial is suitable for Oz programmers who want to be
+able to quickly start writing distributed programs.
+The document is deliberately informal and thus complements
+the other Oz tutorials and
+the research papers on distribution in Oz.
+
+<P>The Mozart programming system has been
+developed by researchers from
+DFKI (the German Research Center for Artificial Intelligence),
+SICS (the Swedish Institute of Computer Science),
+the University of the Saarland,
+UCL (the Université catholique de Louvain),
+and others.
+
+<P CLASS=WARNING> THE MATERIAL IN THIS DOCUMENT IS INCOMPLETE.  THIS
+DOCUMENT WILL EVENTUALLY BE SUPERSEDED BY A COMPLETE DOCUMENT.  IN THE
+MEANTIME, WE RECOMMEND LOOKING AT THE DISTRIBUTED PROGRAMMING (DP)
+CATEGORY OF THE MOGUL ARCHIVE AND READING CHAPTER 11 OF THE BOOK
+'CONCEPTS, TECHNIQUES, AND MODELS OF COMPUTER PROGRAMMING'.

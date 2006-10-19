@@ -1,0 +1,196 @@
+<!--
+  - Authors:
+  -   Christian Schulte <schulte@ps.uni-sb.de>
+  -   Gert Smolka <smolka@dfki.de>
+  -   Jörg Würtz
+  -
+  - Copyright:
+  -   Christian Schulte, 1998
+  -   Gert Smolka, 1998
+  -   Jörg Würtz, 1997
+  -
+  - Last change:
+  -   $Date$ by $Author$
+  -   $Revision$
+  -
+  - This file is part of Mozart, an implementation
+  - of Oz 3
+  -    http://www.mozart-oz.org
+  -
+  - See the file "LICENSE" or
+  -    http://www.mozart-oz.org/LICENSE.html
+  - for information on usage and redistribution
+  - of this file, and for a DISCLAIMER OF ALL
+  - WARRANTIES.
+  -
+  -->
+
+<chapter id="chapter.user-defined">
+  <title/User-Defined Distributors/
+
+<p>
+In this section we show how the user can program his or her own
+distributors. 
+
+<section id="section.user-defined.naive">
+  <title/A Naive Distribution Strategy/
+
+<p>
+The distributor we program in this section
+implements a naive distribution strategy: choose
+the first not yet determined variable from a list
+and try the smallest possible value first. The
+distributor is shown in <ptr to=fig.naiveDist>.
+
+<figure id=fig.naiveDist>
+<caption/A distributor for a naive distribution strategy./
+<chunk class=anonymous><title/NaiveDistributor/
+proc {NaiveDistributor Is}
+   {Space.waitStable}
+   local
+      Fs={Filter Is fun {$ I} {FD.reflect.size I}>1 end}
+   in
+      case Fs
+      of nil then skip
+      [] F|Fr then M={FD.reflect.min F} in
+	 choice F=M   {NaiveDistributor Fr}
+	 []     F\=:M {NaiveDistributor Fs}
+	 end
+      end
+   end
+end
+</chunk>
+
+<para><title/choice-statements/ To maximize the
+information available for distribution we wait
+until the computation space becomes stable. A
+thread that executes <<{Space.waitStable}>> blocks
+until its hosting computation space ?{S} becomes
+stable. When ?{S} becomes stable, execution
+proceeds with the next statement.
+
+<p>
+Thus, the variable <<Fs>> in <ptr
+to=fig.naiveDist> denotes the list of undetermined
+variables after ?{S} has become stable. To
+detect undetermined variables we use the procedure
+<<FD.reflect.size>> that returns the current
+size of a variable's domain. If the domain size is
+one, the variable is determined and consequently
+not included in the list <<Fs>>.
+
+<p>
+Then the least possible value for the first 
+undetermined variable <<F>> is computed by 
+<<<
+M={FD.reflect.min I}
+>>>
+
+<para><title/binary choice-statements/
+We now have to distribute. To this aim Oz provides a binary
+choice-statement. If a thread reaches the statement 
+<<<
+choice ?{S1}
+[]     ?{S2}
+end
+>>>
+the thread is blocked until its hosting
+computation space becomes stable. 
+
+<p>
+If the space has become stable,  the computation in the
+blocked  thread is resumed and it is distributed. Distribution yields
+two spaces, one obtained by replacing
+the choice-statement by the statement ?{S1}, one obtained by  replacing
+the choice-statement by the statement ?{S2}. 
+All search engines in this tutorial will explore the
+space first which hosts ?{S1}. 
+
+<p>
+In <ptr to=fig.naiveDist>, we distribute with the constraint that
+the selected variable is determined to the current least possible
+value. The distribution is done if no undetermined variables are left. 
+
+</section>
+
+<section  id="section.user-defined.split">
+  <title/A Domain-Splitting Distributor/
+
+<p>
+In this section we program a distributor for the domain-splitting
+strategy (see <ptr to=page.domainsplitting>).  
+The program is shown in <ptr to=fig.splitDist>. 
+
+<figure id=fig.splitDist>
+<caption/A distributor for a  domain-splitting strategy./
+<chunk class=anonymous><title/SplitDistributor/<![ RCDATA [
+proc {SplitDistributor Is}
+   {Space.waitStable}
+   local
+      Fs={Filter Is fun {$ I} {FD.reflect.size I}>1 end}
+   in 
+      case Fs 
+      of nil then skip
+      [] F|Fr then 
+	 MinVar#_ = {FoldL Fr fun {$ Var#Size X}
+				 if {FD.reflect.size X}<Size then
+				    X#{FD.reflect.size X}
+				 else 
+                                    Var#Size
+				 end
+			      end F#{FD.reflect.size F}}
+	 Mid = {FD.reflect.mid MinVar} 
+      in
+	 choice MinVar =<: Mid {SplitDistributor Fs}
+	 []     MinVar >: Mid  {SplitDistributor Fs}
+	 end
+      end
+   end
+end]]>
+</chunk>
+
+As in the previous section we first discard all determined
+variables. Then we select the 
+variable <<MinVar>> which has the smallest domain (as it is done for the
+first-fail distribution strategy).
+For the selected variable we determine the value that is in the middle of the
+least and largest possible value by
+<<<
+Mid = {FD.reflect.mid MinVar} 
+>>>
+After this is done we distribute with the constraint that <<MinVar>>
+should be smaller than or equal to <<Mid>>. 
+</section>
+
+<![ %EXTRA; [
+<section><title/NONE/
+<p>
+<chunk><title/EXAMPLES/
+%%%
+%%% Chapter: User-Defined Distributors
+%%%
+
+%%
+%% A Naive Distribution Strategy
+%%
+
+declare
+<chunk.ref/NaiveDistributor/
+
+
+
+%%
+%% A Domain-Splitting Distributor
+%%
+
+declare
+<chunk.ref/SplitDistributor/
+
+
+
+</chunk>
+]]>
+
+
+</chapter>
+

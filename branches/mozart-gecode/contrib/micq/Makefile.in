@@ -1,0 +1,132 @@
+@SET_MAKE@
+BUILDTOP	= @BUILDTOP@
+SRCTOP		= @SRCTOP@
+PREFIX		= @prefix@
+SRCDIR          = @srcdir@
+VPATH           = @srcdir@
+OZENGINE	= @OZE@
+PLATFORM	= @PLATFORM@
+HOMEURL		= @HOMEURL@
+LIB_DIR		= $(PREFIX)/contrib/micq
+DEMO_DIR	= $(PREFIX)/doc/demo/applets
+OZC		= @OZC@ 
+CYGPATH		= $(SRCTOP)/share/lib/cygpath.sh
+COMPILE	        = $(OZC) -b $(shell $(CYGPATH) $(BUILDTOP)/contrib/micq/)
+OZL		= @OZL@
+INSTALL		= @INSTALL@
+INSTALL_DIR	= @INSTALL_DIR@
+INSTALL_LIB	= $(INSTALL) -m 444
+APPLETS		= server.oza client.oza
+GIFCONV		= Gif2Functor.oza
+ICONDIR		= $(SRCDIR)/Icons2
+MAKEGIF		= $(OZENGINE) $(GIFCONV)
+GIFS		= $(addsuffix _gif.ozf, Logo Letter Online Offline Away Powered_by_oz Eyes)
+NEWCACHEDIR	= $(PREFIX)/cache/x-oz/contrib/micq
+
+all:		$(GIFCONV) $(GIFS) $(APPLETS)
+
+install:: $(DEMO_DIR) $(DEMO_DIR)/MIM.oza \
+	$(NEWCACHEDIR) $(addprefix $(NEWCACHEDIR)/,$(APPLETS))
+
+$(NEWCACHEDIR)/% : %
+	$(INSTALL_LIB) $< $@
+
+$(LIB_DIR) $(DEMO_DIR) $(NEWCACHEDIR):
+	$(INSTALL_DIR) $@
+$(LIB_DIR)/%.oza: %.oza
+	$(INSTALL_LIB) $< $@
+$(DEMO_DIR)/MIM.oza: client.oza
+	$(INSTALL_LIB) $< $@
+BMETH = $(BUILDTOP)/contrib/micq/methods.ozf
+SMETH = $(SRCDIR)/methods.oz
+
+
+include $(BUILDTOP)/share/Makefile.boot
+
+$(GIFCONV): Gif2Functor.oz GifToBase64.ozf
+	$(COMPILE) -c $(shell $(CYGPATH) "$<") -o $@
+
+Logo_gif.ozf : $(ICONDIR)/logo.gif
+	$(MAKEGIF) $(shell $(CYGPATH) "$<") -o Logo_gif.ozf
+
+Letter_gif.ozf : $(ICONDIR)/letter.gif
+	$(MAKEGIF) $(shell $(CYGPATH) "$<") -o Letter_gif.ozf
+
+Away_gif.ozf : $(ICONDIR)/away_t.gif
+	$(MAKEGIF) $(shell $(CYGPATH) "$<") -o Away_gif.ozf
+
+Online_gif.ozf : $(ICONDIR)/online_t.gif
+	$(MAKEGIF) $(shell $(CYGPATH) "$<") -o Online_gif.ozf
+
+Offline_gif.ozf : $(ICONDIR)/offline_t.gif
+	$(MAKEGIF) $(shell $(CYGPATH) "$<") -o Offline_gif.ozf
+
+Eyes_gif.ozf : $(ICONDIR)/eyes_t.gif
+	$(MAKEGIF) $(shell $(CYGPATH) "$<") -o Eyes_gif.ozf
+
+Powered_by_oz_gif.ozf : $(ICONDIR)/powered-by-oz-100.gif
+	$(MAKEGIF) $(shell $(CYGPATH) "$<") -o Powered_by_oz_gif.ozf
+
+SERVER_FUNCTORS = \
+	server.ozf database.ozf mobility.ozf log.ozf sysadm.ozf \
+	addapplicationgui.ozf editapplicationgui.ozf
+CLIENT_FUNCTORS = \
+	client.ozf messagedisplay.ozf manager.ozf mobility.ozf \
+	newaccountgui.ozf clientgui.ozf MozartPower.ozf FaqEdit.ozf \
+	popup.ozf draganddrop.ozf messagegui.ozf newfriendsgui.ozf \
+	editaccount.ozf addapplicationgui.ozf dialoggui.ozf \
+	configureclient.ozf editapplicationgui.ozf messagedisplay.ozf \
+	ScrollFrame.ozf BrowserControl.ozf Logo_gif.ozf Letter_gif.ozf \
+	Away_gif.ozf Online_gif.ozf Offline_gif.ozf Eyes_gif.ozf \
+	Powered_by_oz_gif.ozf
+
+micq: startserver.oz defaultsettings.ozf
+	$(COMPILE) -x $(OZEXECFILE) $(shell $(CYGPATH) "$<") -o $@
+client: startclient.oz defaultsettings.ozf
+	$(COMPILE) -x $(OZEXECFILE) $(shell $(CYGPATH) "$<") -o $@
+
+server.oza: micq $(SERVER_FUNCTORS)
+	$(OZL) -z 9 $< -o $@
+client.oza: client $(CLIENT_FUNCTORS)
+	$(OZL) -z 9 $< -o $@
+
+%.ozf: %.oz
+	$(COMPILE) -c $(shell $(CYGPATH) "$<") -o $@
+
+MozartPower.ozf: Powered_by_oz_gif.ozf
+
+FaqEdit.ozf: $(BMETH)
+addapplicationgui.ozf: $(BMETH)
+client.ozf: $(BMETH)
+clientgui.ozf: $(BMETH)
+editaccount.ozf: $(BMETH)
+editapplicationgui.ozf: $(BMETH)
+faq.ozf: $(BMETH) defaultsettings.ozf
+newaccountgui.ozf: $(BMETH)
+newfriendsgui.ozf: $(BMETH)
+server.ozf: $(BMETH)
+sysadm.ozf: $(BMETH)
+
+$(BMETH): methods.ozf.orig
+	  cp $< $@
+
+clean veryclean:
+	-rm -f *~ *.ozf *.oza micq client
+
+distclean: veryclean
+	-rm -f Makefile config.*
+
+bootstrap: boot-all
+
+newboot:
+	$(COMPILE) -c $(SMETH) -o $(SMETH)f.orig
+
+#---------------------------------------------------------------------
+# Automatic Makefile update
+#---------------------------------------------------------------------
+
+Makefile: Makefile.in config.status
+	./config.status
+
+config.status: configure
+	./config.status --recheck

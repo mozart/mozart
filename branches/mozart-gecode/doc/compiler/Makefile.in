@@ -1,0 +1,14 @@
+VPATH		= @srcdir@
+SRCDIR		= @srcdir@
+
+WHAT = compiler
+MAIN = compiler.sgml
+SGMLSRCS = \
+	intro.sgml directives.sgml applications.sgml \
+	api.sgml engines.sgml interfaces.sgml examples.sgml \
+	switches.sgml narrator.sgml syntax.sgml bytecode.sgml \
+	EvalExpression.oz VirtualStringToValue.oz
+HTMLEXTRAFILES =
+PRINTNAME=Compiler
+WHATCLASS=reference
+include ../Makefile.common

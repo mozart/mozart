@@ -1,0 +1,13 @@
+VPATH		= @srcdir@
+SRCDIR		= @srcdir@
+
+WHAT = opi
+MAIN = opi.sgml
+WHATCLASS=tools
+PRINTNAME=OzProgrammingInterface
+SGMLSRCS = \
+	ozdotemacs.el opi.bib
+HTMLEXTRAFILES = menu.gif prof1.gif prof2.gif prof3.gif prof4.gif prof5.gif
+OZDOCHTMLFLAGS = --autoindex
+
+include ../Makefile.common

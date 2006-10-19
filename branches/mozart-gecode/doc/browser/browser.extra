@@ -1,0 +1,6 @@
+<!ELEMENT menu - - (%p.chars.mix;)*>
+<!ATTLIST menu
+	%common.attr;
+	key CDATA #IMPLIED
+	mouse (l1|l2|m1|m2|r1|r2) #IMPLIED
+>

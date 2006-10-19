@@ -1,0 +1,84 @@
+<!--
+  - Authors:
+  -   Christian Schulte <schulte@ps.uni-sb.de>
+  -
+  - Copyright:
+  -   Christian Schulte, 1998
+  -
+  - Last change:
+  -   $Date$ by $Author$
+  -   $Revision$
+  -
+  - This file is part of Mozart, an implementation
+  - of Oz 3
+  -    http://www.mozart-oz.org
+  -
+  - See the file "LICENSE" or
+  -    http://www.mozart-oz.org/LICENSE.html
+  - for information on usage and redistribution
+  - of this file, and for a DISCLAIMER OF ALL
+  - WARRANTIES.
+  -
+  -->
+
+<chapter id="chapter.summary">
+<Title/Summary/
+
+<P>
+This chapter briefly outlines the features of the Oz Explorer.
+</P>
+
+<Para Class=Apropos><Title/Invoking/ The Explorer is invoked by
+applying it to a <Em/script/. It can be applied to both a script and
+an <Em/order/, which switches the Explorer to branch and bound mode
+such that it supports best solution search.
+</Para>
+
+<Para Class=Apropos><Title/Exploring/ The search tree of the current
+script can be explored in a user-guided manner.  Starting from any
+node in the search tree further parts can be explored. Explored parts
+of the search tree are drawn as they are explored.
+</Para>
+
+<P>
+Search trees can be explored in a depth-first fashion up to the next
+solution. Entire subtrees as well as single nodes can be
+explored. Exploration and/or drawing can be stopped and resumed at any
+time.
+</P>
+
+<Para Class=Apropos><Title/Information Access/ Nodes in the tree
+representing choices and solutions carry as information their
+corresponding computation spaces. The Explorer gives first-class
+access to them by predefined or user-defined procedures.
+</Para>
+
+<P>
+Statistical information is available in a status bar during
+exploration. Detailed statistical information with respect to a
+subtree can be accessed by predefined or user-defined procedures.
+</P>
+ 
+<Para Class=Apropos><Title/Display Economics/ The display of large
+search trees can be kept economic by scaling the tree and by hiding
+subtrees.  Support for automatically hiding complete subtrees not
+containing solutions is provided. Hidden subtrees can be unhidden on
+demand.
+</Para>
+
+<Para Class=Apropos><Title/Recomputation/ The Explorer can run scripts
+with a large number of constraints and propagators and with large
+search trees efficiently with respect to both space and
+time. User-configurable recomputation can be employed to trade space
+for time for scripts which would require to much memory otherwise.
+</Para>
+
+<Para Class=Apropos><Title/Postscript Output/ The search tree of a
+script can be dumped in postscript format.
+</Para>
+
+<Para Class=Apropos><Title/Finding Nodes/ Nodes in the search tree can
+be selected directly or by convenient short cuts.
+</Para>
+
+</chapter>
