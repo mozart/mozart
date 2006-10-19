@@ -31,13 +31,21 @@ VPATH=	@srcdir@
 SRCDIR=	@srcdir@
 BUILDDIR = @builddir@
 
+BUILD_GECODE = @BUILD_GECODE@
+
+
 include Makefile.vars
 
 MODULE_NAMES =							\
 	PID Fault DPMisc DPB VirtualSite DPStatistics Tk Schedule FDP FSP \
 	Parser \
 	CompilerSupport Browser Debug Space FDB FSB CTB RecordC Compat \
-	Win32 Profile OsTime ZlibIO
+	Win32 Profile OsTime ZlibIO 
+
+ifeq ($(BUILD_GECODE), yes)
+MODULE_NAMES += geoz
+endif
+
 
 STATIC_MODULES=		@STATIC_MODULES@
 DYNAMIC_MODULES=	@DYNAMIC_MODULES@
@@ -45,13 +53,25 @@ STATIC_MODULELIBS=	-L. ${STATIC_MODULES:%=-l%}
 STATIC_MODULETARGETS=	$(STATIC_MODULES:%=lib%.a)
 DYNAMIC_MODULETARGETS=	$(DYNAMIC_MODULES:%=%.so-$(PLATFORM))
 
-LIBS=		$(STATIC_MODULELIBS) @LIBS@ 
+LIBS=		$(STATIC_MODULELIBS) @LIBS@
+
+ifeq ($(BUILD_GECODE), yes)
+LIBS += @GECODE_LIBS@
+endif
 
 INCS=		-I. -I$(SRCDIR)
+
 M4_D=		-DEMUDIR=$(SRCDIR)
 TARGETS=	$(EMULATOR_EXE) text2pickle.exe
 SUBDIRS=	libdp libfd libfset
 OZVERSION=	$(SRCTOP)/OZVERSION
+
+
+
+ifeq ($(BUILD_GECODE), yes)
+SUBDIRS+=cp/int
+endif
+
 
 # these are the builtin modules: non-sited primitives
 # NOTE: update this list also in share/lib/Makefile.in 
@@ -118,11 +138,19 @@ RUNSRCS=\
 	thr_stack.cc thr_class.cc thr_pool.cc \
 	susp_queue.cc thr_int.cc suspendable.cc
 
+ifeq ($(BUILD_GECODE), yes)
+RUNSRCS += lateThread.cc
+endif
+
 SPACESRCS=\
 	board.cc distributor.cc
 
+ifeq ($(BUILD_GECODE), yes)
+SPACESRCS += GeSpace.cc
+endif
+
 MEMSRCS=\
-	g-collect.cc cmem.cc mem.cc liveness.cc
+	g-collect.cc s-clone.cc cmem.cc mem.cc liveness.cc
 
 PICKLESRCS=\
 	gname.cc site.cc \
@@ -168,7 +196,7 @@ OSTIMESRCS= \
 DEBUGSRCS= \
 	debugBI.cc
 SPACEOPSRCS = \
-	s-clone.cc board-bi.cc sit-check.cc
+	 board-bi.cc sit-check.cc
 FDBSRCS = \
 	fdcore.cc
 FSBSRCS = \
@@ -260,6 +288,10 @@ libVirtualSite.a VirtualSite.so-$(PLATFORM):
 .PHONY: libFDP.a FDP.so-$(PLATFORM) libSchedule.a Schedule.so-$(PLATFORM)
 libFDP.a FDP.so-$(PLATFORM) libSchedule.a Schedule.so-$(PLATFORM):
 	cd libfd; $(MAKE) ../$@
+
+.PHONY: geoz.so-$(PLATFORM)
+geoz.so-$(PLATFORM):
+	cd cp/int; $(MAKE) ../../$@
 
 .PHONY: libFSP.a FSP.so-$(PLATFORM)
 libFSP.a FSP.so-$(PLATFORM):
@@ -564,6 +596,9 @@ atoms.cc: atoms.perl
 
 atoms.hh: atoms.perl
 	$(PERL) $< -header > $@
+
+GeSpace.o: GeSpace.cc
+	$(CXX) $(CPPFLAGS) $(GESPACE_CXXFLAGS) -c -o $@ $<
 
 # should be after make in subdirs (see Makefiles.rules)
 

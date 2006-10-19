@@ -102,6 +102,15 @@ WPSRC   = Tk TkTools Tix
 SUPPSRC = Type Narrator Listener ErrorListener DefaultURL ObjectSupport
 MACSRC	= Macro BackquoteMacro LoopMacro
 
+
+BUILD_GECODE = @BUILD_GECODE@
+
+ifeq ($(BUILD_GECODE), yes)
+CPSRC1+=GFD
+endif
+
+
+
 RUNFUNCTORS1 = \
 	$(SPSRC:%=%.ozf) \
 	$(OPSRC:%=%.ozf) \
@@ -122,6 +131,11 @@ FUNCTORS = $(FUNCTORS1) Init.ozf
 
 SYSLETS0 = ozc ozl
 SYSLETS = $(SYSLETS0:%=%$(EXE_EXT))
+
+
+ifeq ($(BUILD_GECODE), yes)
+OZCFLAGS += -DBUILD_GECODE
+endif
 
 .PHONY: all
 
@@ -188,6 +202,10 @@ $(FUNCTORS): Base.ozf
 
 Search.ozf: cp/Search.oz Base.ozf
 	$(COMPILE) $(shell $(CYGPATH) "$<") -o $@
+
+GFD.ozf: cp/GFD.oz
+	$(COMPILE) $(shell $(CYGPATH) "$<") -o $@
+
 CpSupport.ozf: cp/CpSupport.oz Base.ozf
 	$(COMPILE) $(shell $(CYGPATH) "$<") -o $@
 %.ozf: cp/%.oz CpSupport.ozf Base.ozf

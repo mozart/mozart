@@ -24,7 +24,7 @@ import
    Debug                         at 'x-oz://boot/Debug'
    Parser                        at 'x-oz://boot/Parser'
    CompilerSupport(nameVariable) at 'x-oz://boot/CompilerSupport'
-   Property(get condGet)
+   Property(get condGet put)
    Error(extendedVSToVS exceptionToMessage registerFormatter printException)
    Type(ask)
    Narrator('class')

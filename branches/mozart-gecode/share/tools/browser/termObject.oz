@@ -3086,6 +3086,51 @@ in
       %%
    end
 
+\ifdef BUILD_GECODE
+   
+   %%
+   %%
+   %% generic constraint variables;
+   %%
+   class GeVariableTermObject from I_MetaVariableTermObject
+				 %%
+      feat
+	 type: T_GeVariable
+
+	 %%
+	 %%  
+      meth makeTerm
+\ifdef DEBUG_TO
+	 {Show 'GeVariabelTermObject::makeTerm is applied' # self.term}
+\endif 
+	 %%
+	 I_MetaVariableTermObject , SetWatchPoint
+	 
+	 %%
+	 local
+	    Constraint ConstraintName Name Term
+	 in
+	    Term = self.term
+	    
+	    %%
+	    %Constraint = 'gevar' %{GetCtVarConstraintAsAtom Term}
+
+	    %%
+	    %ConstraintName = {String.toAtom {Value.toVirtualString Term ~1 ~1}}
+
+	    %%
+	    %Name = 
+	    %{self GetName($)} #
+	    %DLABraceS # ConstraintName # DColonS # Constraint # DRABraceS
+
+	    %%
+	    RepManagerObject , insert(str: {String.toAtom {Value.toVirtualString Term ~1 ~1}})
+	 end
+      end
+      %%
+   end
+\endif
+   
 %%%
 %%%
 %%%  Unknown terms;

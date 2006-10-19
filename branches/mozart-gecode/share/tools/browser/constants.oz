@@ -111,6 +111,11 @@ T_CtVariable  = {NewName}
 %%  ... and finite set variable resp. finite set value;
 T_FSet          = {NewName}
 
+\ifdef BUILD_GECODE
+%% Gecode variables
+T_GeVariable    = {NewName}
+\endif
+
 %%
 %% group #4: What for a bullsh$t ??!
 T_Unknown       = {NewName}

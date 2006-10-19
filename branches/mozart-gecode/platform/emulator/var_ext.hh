@@ -40,6 +40,8 @@ typedef enum {
   OZ_EVAR_MGRVARPATCH,
   OZ_EVAR_PXYVARPATCH,
   OZ_EVAR_MVARPATCH,
+  // Gecode Variable Type
+  OZ_EVAR_GEVAR,
   OZ_EVAR_LAST
 } ExtVarType;
 

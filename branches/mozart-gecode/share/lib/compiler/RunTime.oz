@@ -30,6 +30,12 @@ import
    Space('choose')
    RecordC('^' tellSize)
    FD(int dom sum sumC sumCN reified)
+\ifdef BUILD_GECODE
+   System
+   GFD
+   Property
+\endif
+   
 export
    Literals
    Tokens
@@ -52,8 +58,7 @@ require
    BootName(newUnique: NewUniqueName)
    at 'x-oz://boot/Name'
 
-   BootValue(newReadOnly:NewReadOnly bindReadOnly:BindReadOnly
-	     dotAssign dotExchange catAccess catAssign catExchange catAccessOO catAssignOO catExchangeOO) at 'x-oz://boot/Value'
+   BootValue(dotAssign dotExchange catAccess catAssign catExchange catAccessOO catAssignOO catExchangeOO) at 'x-oz://boot/Value'
 prepare
    ProcValues0 = env(%% Operators
 		     '.': Value.'.'
@@ -194,28 +199,6 @@ prepare
 	 {Exchange C.2 nil unit}
 	 {Access C.1}
       end
-      proc {RetYield C}
-	 {BindReadOnly {Access C} nil}
-      end
-      proc {Yield C X}
-	 O
-	 N={NewReadOnly}
-      in
-	 {Exchange C O N}
-	 {BindReadOnly O X|N}
-	 {WaitNeeded N}
-      end
-      proc {MkYield C L}
-	 {NewReadOnly L}
-	 {NewCell L C}
-	 {WaitNeeded L}
-      end
-      proc {YieldAppend C L}
-	 case L
-	 of nil then skip
-	 [] H|T then {Yield C H} {YieldAppend C T}
-	 end
-      end
    in
       ProcValuesFor =
       env(
@@ -234,12 +217,7 @@ prepare
 	 'For.prepend'       : Prepend
 	 'For.retintdefault' : RetIntDefault
 	 'For.retint'        : RetInt
-	 'For.retlist'       : RetList
-	 'For.retyield'      : RetYield
-	 'For.yield'         : Yield
-	 'For.yieldAppend'   : YieldAppend
-	 'For.mkyield'       : MkYield
-	 )
+	 'For.retlist'       : RetList)
    end
    ProcValuesAll = {Adjoin ProcValues0 ProcValuesFor}
 define
@@ -296,23 +274,66 @@ define
    end
 
    proc {FDInt A B}
+\ifdef BUILD_GECODE
+      if {Property.condGet geoz false} then
+	 {GFD.int A B}
+      else
+	 {FD.int A B}
+      end
+\else
       {FD.int A B}
+\endif
    end
 
    proc {FDDom A B}
+\ifdef BUILD_GECODE
+      if {Property.condGet geoz false} then
+	 {GFD.dom A B}
+      else
+	 {FD.dom A B}
+      end
+\else
       {FD.dom A B}
+\endif
+      
    end
 
    proc {FDSum X O D}
+\ifdef BUILD_GECODE      
+      if {Property.condGet geoz false} then
+	 {GFD.sum X O D}
+      else
+	 {FD.sum X O D}
+      end
+\else
       {FD.sum X O D}
+\endif
    end
 
    proc {FDSumC A X O D}
+\ifdef BUILD_GECODE
+      if {Property.condGet geoz false} then
+	 {GFD.sumC A X O D}
+      else
+	 {FD.sumC A X O D}
+      end
+\else
       {FD.sumC A X O D}
+\endif
    end
 
    proc {FDSumCN A X O D}
+\ifdef BUILD_GECODE
+      if {Property.condGet geoz false} then
+	 {System.show 'A'#A#' X '#X#'D'#D}
+	 {GFD.sumCN A X O D}
+	 {System.show 'despuessss'}
+      else
+	 {FD.sumCN A X O D}
+      end
+\else
       {FD.sumCN A X O D}
+\endif
    end
 
    fun {FDReifiedInt A B}
