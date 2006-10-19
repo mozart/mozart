@@ -980,6 +980,45 @@ build the system.  It can be retrieved from:
 fi
 ])
 
+dnl - 
+dnl -
+
+AC_DEFUN(OZ_LIB_GECODE,[
+  AC_MSG_CHECKING(for --with-gecode)
+  AC_ARG_WITH(gecode,
+	[--with-gecode=<dir>  search gecode library and header in <dir> (default: no)],
+	with_gecode=$withval,
+	with_gecode=no)
+
+  AC_MSG_WARN([
+   *** FIX ME!! 
+   *** Do a real Check for headers and libraries])
+  GECODE_LDFLAGS=""
+  GECODE_LIBS="" 
+  GECODE_INC=""
+  BUILD_GECODE="no"
+  if test "$with_gecode" != no; then
+    AC_MSG_RESULT($with_gecode)
+    oz_inc_path="$with_gecode/include $oz_inc_path"
+    OZ_CHECK_HEADER_PATH(gecode/kernel.hh)
+    OZ_CHECK_HEADER_PATH(gecode/int.hh)
+    OZ_CHECK_HEADER_PATH(gecode/set.hh)
+    GECODE_LDFLAGS="-L$with_gecode/lib"
+    GECODE_INC="-I$with_gecode/include"
+    GECODE_LIBS="-lgecodekernel -lgecodeint -lgecodeset"
+    OZ_ADDTO_CPPFLAGS("-DBUILD_GECODE")
+    BUILD_GECODE="yes"
+  else
+    AC_MSG_RESULT(no)
+    AC_MSG_RESULT([ *** GECODE support is not going to be built. (http://www.gecode.org/)])
+  fi
+
+  AC_SUBST(GECODE_LDFLAGS)
+  AC_SUBST(GECODE_LIBS)
+  AC_SUBST(GECODE_INC)
+  AC_SUBST(BUILD_GECODE)
+])
+
 dnl ------------------------------------------------------------------
 dnl OZ_NEEDS_FUNC(FUNCTION)
 dnl
