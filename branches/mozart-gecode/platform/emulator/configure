@@ -10532,7 +10532,7 @@ done
 ac_given_srcdir=$srcdir
 ac_given_INSTALL="$INSTALL"
 
-trap 'rm -fr `echo "Makefile.vars Makefile Makefile.rules libdp/Makefile libfd/Makefile libfset/Makefile cp/int/Makefile OZCONF.h:OZCONF.in oztool.sh:oztool.in $target-oztool:i386-mingw32-oztool.in .gdbinit conf-others.h" | sed "s/:[^ ]*//g"` conftest*; exit 1' 1 2 15
+trap 'rm -fr `echo "Makefile.vars Makefile Makefile.rules libdp/Makefile libfd/Makefile libfset/Makefile libcp/int/Makefile OZCONF.h:OZCONF.in oztool.sh:oztool.in $target-oztool:i386-mingw32-oztool.in .gdbinit conf-others.h" | sed "s/:[^ ]*//g"` conftest*; exit 1' 1 2 15
 EOF
 cat >> $CONFIG_STATUS <<EOF
 
@@ -10677,7 +10677,7 @@ EOF
 
 cat >> $CONFIG_STATUS <<EOF
 
-CONFIG_FILES=\${CONFIG_FILES-"Makefile.vars Makefile Makefile.rules libdp/Makefile libfd/Makefile libfset/Makefile cp/int/Makefile OZCONF.h:OZCONF.in oztool.sh:oztool.in $target-oztool:i386-mingw32-oztool.in .gdbinit"}
+CONFIG_FILES=\${CONFIG_FILES-"Makefile.vars Makefile Makefile.rules libdp/Makefile libfd/Makefile libfset/Makefile libcp/int/Makefile OZCONF.h:OZCONF.in oztool.sh:oztool.in $target-oztool:i386-mingw32-oztool.in .gdbinit"}
 EOF
 cat >> $CONFIG_STATUS <<\EOF
 for ac_file in .. $CONFIG_FILES; do if test "x$ac_file" != x..; then
