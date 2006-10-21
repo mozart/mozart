@@ -41,9 +41,10 @@ MODULE_NAMES =							\
 	Parser \
 	CompilerSupport Browser Debug Space FDB FSB CTB RecordC Compat \
 	Win32 Profile OsTime ZlibIO 
-
+CLEAN_LIBCP=
 ifeq ($(BUILD_GECODE), yes)
 MODULE_NAMES += geoz
+CLEAN_LIBCP=cd libcp/int; $(MAKE) clean
 endif
 
 
@@ -69,7 +70,7 @@ OZVERSION=	$(SRCTOP)/OZVERSION
 
 
 ifeq ($(BUILD_GECODE), yes)
-SUBDIRS+=cp/int
+SUBDIRS+=libcp/int
 endif
 
 
@@ -291,7 +292,7 @@ libFDP.a FDP.so-$(PLATFORM) libSchedule.a Schedule.so-$(PLATFORM):
 
 .PHONY: geoz.so-$(PLATFORM)
 geoz.so-$(PLATFORM):
-	cd cp/int; $(MAKE) ../../$@
+	cd libcp/int; $(MAKE) ../../$@
 
 .PHONY: libFSP.a FSP.so-$(PLATFORM)
 libFSP.a FSP.so-$(PLATFORM):
@@ -611,7 +612,7 @@ veryclean::
 	-rm -f version.cc $(TARGETS) \
 		*.exe *.map *.imp *.sym \
 		$(CREATEDFILES) TAGS Makefile.deps \
-		$(DYNAMIC_MODULETARGETS)
+		$(DYNAMIC_MODULETARGETS) $(CLEAN_LIBCP)
 
 distclean::
 	-rm -f OZCONF.h conf-others.h config.cache config.log config.status \

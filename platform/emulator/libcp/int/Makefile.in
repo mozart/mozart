@@ -46,13 +46,13 @@ first: $(GENERATED_FILES)
 	$(PERL) $(FCPDECL) -file $< -interface > $@ || { rm -f $@; exit 1; }
 
 distclean::
-	-rm -f Makefile makefile
+	-rm -f Makefile makefile $(GENERATED_FILES)
 
 veryclean::
-	-rm -f *.a *.so-$(PLATFORM) TAGS Makefile.deps
+	-rm -f *.a *.so-$(PLATFORM) TAGS Makefile.deps $(GENERATED_FILES)
 
 cleaner::
-	-rm -f *.a *.so-$(PLATFORM)
+	-rm -f *.a *.so-$(PLATFORM) $(GENERATED_FILES)
 
 
 BUILDDIR=$(shell pwd)
