@@ -187,16 +187,6 @@ AC_ARG_ENABLE(contrib-directory,
 AC_MSG_RESULT($oz_cv_enable_contrib_directory)
 OZ_ADDTO_CONTRIBDIRS(directory)
 
-AC_MSG_CHECKING([for --enable-contrib-geoz])
-AC_ARG_ENABLE(contrib-geoz,
-  [--enable-contrib-geoz
-	whether to build the Gecode CS (default: no)],
-  [oz_cv_enable_contrib_geoz=$enableval],
-  [: ${oz_cv_enable_contrib_geoz:=$oz_enable_contrib_geoz}
-   : ${oz_cv_enable_contrib_geoz:=no}])
-AC_MSG_RESULT($oz_cv_enable_contrib_geoz)
-OZ_ADDTO_CONTRIBDIRS(geoz)
-
 AC_OUTPUT(Makefile)
 
 errprint(ifdef([OZ_INIT],
