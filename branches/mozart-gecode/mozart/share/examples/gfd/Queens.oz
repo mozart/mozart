@@ -23,8 +23,6 @@
  *
  */
 
-%\switch +geoz
-
 declare
 T = {GFD.int  0#9}
 fun{Queens N}
@@ -41,4 +39,3 @@ fun{Queens N}
 end
 
 {ExploreAll {Queens 6}}
-%{Show {SearchOne {Queens 10}}}

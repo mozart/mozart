@@ -33,6 +33,7 @@
 #include "var_ext.hh"
 #include "GeSpace.hh"
 
+
 enum GeVarType {T_GeIntVar, T_GeSetVar};
 
 /** 
@@ -117,6 +118,9 @@ public:
   }
   
   GeVarType getType(void) { return type; }
+
+  // Methods needed to clone pointed gecode variables.
+  virtual Gecode::VarBase* clone(void) = 0;
 };
 
 inline 

@@ -1,4 +1,3 @@
-
 /*
  *  Main authors:
  *     Raphael Collet <raph@info.ucl.ac.be>
@@ -132,6 +131,16 @@ Bool GeIntVar::validV(TaggedRef val) {
 OZ_Term GeIntVar::statusV() {
   //printf("called statusV\n");fflush(stdout);
   return OZ_mkTupleC("kinded", 1, OZ_atom("int"));
+}
+
+
+VarBase* GeIntVar::clone(void) {
+  GenericSpace* gs = extVar2Var(this)->getBoardInternal()->getGenericSpace(true);
+  Assert(gs);
+  IntVar &v = getIntVarInfo();
+  IntVar x;
+  x.update(gs,false,v);
+  return x.variable();
 }
 
 #include <iostream>
