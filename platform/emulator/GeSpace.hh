@@ -94,19 +94,11 @@ private:
    * references. Position in the vector  is used to achieve this.
    */
   std::vector<OZ_Term> refs;
-  /**
-   * \brief Type information.
-   * In order to create a copy of a VarRefArray object, we have to copy all variables and 
-   * references. Type information is needed since VarBase class does not have a copy method.
-   */
-  std::vector<Gecode::VarTypeId> types;
-
+ 
   /**
      Invariant:
-     vars.size() = refs.size() = types.size()
-     \todo: There are more memory efficient ways to keep types. A vector is used as a prototype
-     but final final version should not contain it. Reason: types << vars. 
-   */
+     vars.size() = refs.size() 
+  */
 public:
   /// \name Constructors
   //@{
@@ -117,7 +109,7 @@ public:
    * @param s The space where the variables will be created
    */
   VarRefArray() :
-    vars(0), refs(0), types(0) {}
+    vars(0), refs(0) {}
 
   /** 
    * \brief Copy constructor
@@ -133,13 +125,10 @@ public:
    * 
    * @param x A pointer to the corresponding variable implementation
    * @param r A reference to the mozart heap reference corresponding to the variable
-   * @param type Variable type identifier (VTI_INT, VTI_SET, etc.)
    * @return The index of the new allocated variable
    */
-  int newVar(Gecode::VarBase *x, OZ_Term r, Gecode::VarTypeId type) {
-    refs.push_back(r);
-    vars.push_back(x);
-    types.push_back(type);
+  int newVar(Gecode::VarBase *x, OZ_Term r) {
+    refs.push_back(r); vars.push_back(x);
   }
 
   int getSize(void) {
@@ -261,11 +250,10 @@ public:
    * 
    * @param v A pointer to the var implementation
    * @param r A reference to the mozart heap node corresponding to the variable
-   * @param vti The gecode type of the variable (VTI_INT,VTI_SET,etc)
    * 
    * @return The index of the new variable
    */
-  int newVar(Gecode::VarBase *v, OZ_Term r, Gecode::VarTypeId vti);
+  int newVar(Gecode::VarBase *v, OZ_Term r);
 
   int getVarsSize(void) {return vars.getSize();}
 

@@ -34,7 +34,7 @@ VarRefArray::VarRefArray(Gecode::Space* s, VarRefArray& v, bool share) {
   for (int i=0; i<v.vars.size(); i++) {
     refs.push_back(OZ_Term());
     refs[i] = *v.getRef(i);
-     types.push_back(v.types[i]);
+    //types.push_back(v.types[i]);
     // clone the GeVar pointed by refs[i]
      OZ_Term dt = OZ_deref(refs[i]);
     if (oz_isExtVar(dt)) {
@@ -42,6 +42,11 @@ VarRefArray::VarRefArray(Gecode::Space* s, VarRefArray& v, bool share) {
       Assert(oz_getExtVar(dt)->getIdV() == OZ_EVAR_GEVAR);
       vars.push_back(static_cast<GeVar*>(oz_getExtVar(dt))->clone());
     } else {
+      /*
+	When vars[i] has been bound to a value, refs[i] no longer points to a GeVar but
+	to a some structure in the heap (deending on the domain specific representation).
+	In this way, vars[i] should never be used after that.
+      */
       vars.push_back(static_cast<VarBase*>(NULL));
     }
   }
@@ -117,8 +122,8 @@ Gecode::SpaceStatus GenericSpace::status(unsigned long int& pn) {
   return ret;
 }
 
-int GenericSpace::newVar(Gecode::VarBase *v, OZ_Term r, Gecode::VarTypeId vti) {
-  vars.newVar(v,r,vti);
+int GenericSpace::newVar(Gecode::VarBase *v, OZ_Term r) {
+  vars.newVar(v,r);
   return vars.getSize()-1;
 }
 
