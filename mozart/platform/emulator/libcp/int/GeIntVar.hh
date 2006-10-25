@@ -94,7 +94,7 @@ inline OZ_Term new_GeIntVar(Gecode::IntSet& dom) {
   Gecode::IntVar x(sp,dom);
   OzVariable* ov   = extVar2Var(new GeIntVar(sp->getVarsSize()));
   OZ_Term ref      = makeTaggedRef(newTaggedVar(ov));
-  int index        = sp->newVar(static_cast<Gecode::VarBase*>(x.variable()), ref, Gecode::VTI_INT);
+  int index        = sp->newVar(static_cast<Gecode::VarBase*>(x.variable()), ref);
   postIntVarReflector(sp,index,ref);
   return ref;
 }
