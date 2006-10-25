@@ -25,9 +25,27 @@
  */
 
 #include "var_readonly.hh"
+#include "GeVar.hh"
 #include "GeSpace.hh"
 
 using namespace Gecode;
+
+VarRefArray::VarRefArray(Gecode::Space* s, VarRefArray& v, bool share) {
+  for (int i=0; i<v.vars.size(); i++) {
+    refs.push_back(OZ_Term());
+    refs[i] = *v.getRef(i);
+     types.push_back(v.types[i]);
+    // clone the GeVar pointed by refs[i]
+     OZ_Term dt = OZ_deref(refs[i]);
+    if (oz_isExtVar(dt)) {
+      // ensures that refs[i] is a gecode contrain variable 
+      Assert(oz_getExtVar(dt)->getIdV() == OZ_EVAR_GEVAR);
+      vars.push_back(static_cast<GeVar*>(oz_getExtVar(dt))->clone());
+    } else {
+      vars.push_back(static_cast<VarBase*>(NULL));
+    }
+  }
+}
 
 unsigned long int GenericSpace::unused_uli;
 
@@ -37,9 +55,7 @@ GenericSpace::GenericSpace(Board* b)
   : vars(), board(b), determined(0),
   gc_pred(NULL), gc_succ(GeSpaceCollectList), gc_marked(false)
 {
-  //printf("GenericSpace: constructor\n");fflush(stdout);
-  trigger = oz_newReadOnly(board);
-  
+  trigger = oz_newReadOnly(board);  
   gscounter++;
   if (GeSpaceCollectList) GeSpaceCollectList->gc_pred = this;
   GeSpaceCollectList = this;
@@ -52,7 +68,6 @@ GenericSpace::GenericSpace(GenericSpace& s, bool share)
       determined(s.determined), trigger(s.trigger),
     gc_pred(NULL), gc_succ(GeSpaceCollectList), gc_marked(false)
 {
-  //printf("GenericSpace: c-constructor\n");fflush(stdout);
   gscounter++;
   if(GeSpaceCollectList) GeSpaceCollectList->gc_pred = this;
   GeSpaceCollectList = this;
@@ -61,7 +76,6 @@ GenericSpace::GenericSpace(GenericSpace& s, bool share)
 inline
 GenericSpace::~GenericSpace(void) {
   // Release the memory pointed by variables in vars.
-  //printf("Removing gespace %p from memory\n",this);fflush(stdout);
   if (gc_pred) {
     gc_pred->gc_succ = gc_succ;
   } else {
@@ -81,7 +95,6 @@ void GenericSpace::setBoard(Board* b) {
 inline
 void GenericSpace::makeStable(void) { 
   Assert(getTrigger());
-  //printf("GenericSpace::makeStable(void)\n");fflush(stdout);
   if (oz_isReadOnly(oz_deref(getTrigger()))) {
     return;
   }
@@ -91,7 +104,6 @@ void GenericSpace::makeStable(void) {
 inline
 void GenericSpace::makeUnstable(void) {
   Assert(getTrigger());
-  //printf("GenericSpace::makeUnStable(void)\n");fflush(stdout);
   TaggedRef t = getTrigger();
   DEREF(t,t_ptr);
   if (oz_isReadOnly(t)) {
@@ -111,14 +123,14 @@ int GenericSpace::newVar(Gecode::VarBase *v, OZ_Term r, Gecode::VarTypeId vti) {
 }
 
 Gecode::VarBase* GenericSpace::getVar(int n) { 
-  Assert(n >= 0 && n<vars.getSize());
+  Assert(n >= 0 && n<vars.getSize() && &vars.getVar(n));
   makeUnstable();
   return &vars.getVar(n);
 }
 
 //should return a constant pointer
 Gecode::VarBase* GenericSpace::getVarInfo(int n){
-  Assert(n >= 0 && n < vars.getSize());
+  Assert(n >= 0 && n < vars.getSize() && &vars.getVar(n));
   return &vars.getVar(n);
 }
 
@@ -141,12 +153,10 @@ void GenericSpace::sClone() {
   board = board->sCloneBoard();
   for (int i=0; i<vars.getSize(); i++) OZ_sClone(vars.getRef(i));
   OZ_sClone(&trigger);
-
 }
 
 // delete unmarked objects
 void gCollectGeSpaces() {
-  //printf("collected GeSpaces\n");fflush(stdout);
   GenericSpace* cur = GeSpaceCollectList;
   unsigned int i = 0;
   while (cur != NULL) {
@@ -160,5 +170,4 @@ void gCollectGeSpaces() {
       i++;
     }
   }
-  //printf("collected %d spaces\n",i);fflush(stdout);
 }

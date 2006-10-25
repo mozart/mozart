@@ -125,25 +125,7 @@ public:
    * from each constraint system.
    * 
    */
-  VarRefArray(Gecode::Space* s, VarRefArray& v, bool share = false) {
-    for (int i=0; i<v.vars.size(); i++) {
-      refs.push_back(OZ_Term());
-      refs[i] = *v.getRef(i);
-
-      types.push_back(v.types[i]);
-      
-      if (types[i] == Gecode::VTI_INT ) {
-	Gecode::Int::IntVarImp *ivp = reinterpret_cast<Gecode::Int::IntVarImp*>(v.vars[i]);
-	GeView<Gecode::Int::IntVarImp> iv(ivp);
-	Gecode::Int::IntView *vv = reinterpret_cast<Gecode::Int::IntView*>(&iv);
-	Gecode::Int::IntView nv;
-	nv.update(s,share,*vv);
-	vars.push_back(nv.variable());
-      } else {
-	Assert(0);
-      }
-    }
-  }
+  VarRefArray(Gecode::Space* s, VarRefArray& v, bool share = false);
   //@}
 
   /** 
