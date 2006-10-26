@@ -34,7 +34,7 @@ VarRefArray::VarRefArray(Gecode::Space* s, VarRefArray& v, bool share) {
   for (int i=0; i<v.vars.size(); i++) {
     refs.push_back(OZ_Term());
     refs[i] = *v.getRef(i);
-    //types.push_back(v.types[i]);
+    
     // clone the GeVar pointed by refs[i]
      OZ_Term dt = OZ_deref(refs[i]);
     if (oz_isExtVar(dt)) {
@@ -133,8 +133,7 @@ Gecode::VarBase* GenericSpace::getVar(int n) {
   return &vars.getVar(n);
 }
 
-//should return a constant pointer
-Gecode::VarBase* GenericSpace::getVarInfo(int n){
+const Gecode::VarBase* GenericSpace::getVarInfo(int n){
   Assert(n >= 0 && n < vars.getSize() && &vars.getVar(n));
   return &vars.getVar(n);
 }
