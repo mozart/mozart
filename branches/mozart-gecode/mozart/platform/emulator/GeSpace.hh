@@ -59,15 +59,6 @@
 #include "gecode/set.hh"
 
 
-
-template<class Var>
-class GeView: public Gecode::VariableViewBase<Var> {
-public:
-  GeView(Gecode::VarBase *var)
-    : Gecode::VariableViewBase<Var>(static_cast<Var*>(var)) {} 
-};
-
-
 class GenericSpace;
 
 
@@ -280,8 +271,7 @@ public:
    *
    */
 
-  // This function should be const!!!
-  Gecode::VarBase* getVarInfo(int n);
+  const Gecode::VarBase* getVarInfo(int n);
 
   //@}
 
