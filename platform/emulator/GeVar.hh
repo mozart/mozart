@@ -33,14 +33,14 @@
 #include "var_ext.hh"
 #include "GeSpace.hh"
 
-/*
+
 template<class Var>
 class GeView: public Gecode::VariableViewBase<Var> {
 public:
   GeView(Gecode::VarBase *var)
     : Gecode::VariableViewBase<Var>(static_cast<Var*>(var)) {} 
 };
-*/
+
 
 
 enum GeVarType {T_GeIntVar, T_GeSetVar};
