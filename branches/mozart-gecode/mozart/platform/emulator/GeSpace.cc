@@ -133,7 +133,7 @@ Gecode::VarBase* GenericSpace::getVar(int n) {
   return &vars.getVar(n);
 }
 
-const Gecode::VarBase* GenericSpace::getVarInfo(int n){
+Gecode::VarBase* GenericSpace::getVarInfo(int n){
   Assert(n >= 0 && n < vars.getSize() && &vars.getVar(n));
   return &vars.getVar(n);
 }

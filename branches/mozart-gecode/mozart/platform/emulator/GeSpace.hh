@@ -271,7 +271,7 @@ public:
    *
    */
 
-  const Gecode::VarBase* getVarInfo(int n);
+  Gecode::VarBase* getVarInfo(int n);
 
   //@}
 
