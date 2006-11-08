@@ -31,6 +31,7 @@
 
 
 #include "var_ext.hh"
+#include "unify.hh"
 #include "GeSpace.hh"
 
 
@@ -108,6 +109,10 @@ public:
     return EVAR_STATUS_KINDED;
   }
 
+  int getIndex(void) {return index;}
+
+  virtual void printDomain(void) = 0;
+
   virtual void disposeV() {
     disposeS();     // free susplist
     // here we can free the memory taken by the variable itself (if we
@@ -128,14 +133,41 @@ public:
   
   GeVarType getType(void) { return type; }
 
-  // Methods needed to clone pointed gecode variables.
+  // Method needed to clone pointed gecode variables.
   virtual Gecode::VarBase* clone(void) = 0;
+  virtual bool intersect(TaggedRef x) = 0;
+  virtual bool In(TaggedRef x) = 0;
+  virtual TaggedRef clone(TaggedRef v) = 0;
+  
 };
 
 inline 
 bool oz_isGeVar(OZ_Term t) {
   OZ_Term dt = OZ_deref(t);
   return oz_isExtVar(dt) && oz_getExtVar(dt)->getIdV() == OZ_EVAR_GEVAR;
+}
+inline
+void checkGlobalVar(OZ_Term v) {
+  //  cout<<"Inicio check: "<<oz_isInt(v)<<endl; fflush(stdout);
+  Assert(oz_isGeVar(v));
+  DEREF(v,vp);
+  ExtVar *ev = oz_getExtVar(v);
+  if (!oz_isLocalVar(ev)) {
+    TaggedRef nlv = static_cast<GeVar*>(ev)->clone(v);
+
+    ExtVar *varTmp = var2ExtVar(tagged2Var(oz_deref(nlv)));
+    GeVar *gvar = static_cast<GeVar*>(varTmp);
+    //    cout<<"DOM"<<endl; fflush(stdout);
+    gvar->printDomain();
+
+    //meter al trail v [v]
+    TaggedRef nlvAux = oz_deref(nlv);
+
+    Assert(oz_isVar(nlvAux));
+    trail.pushGeVariable(vp, nlvAux);
+    //    *vp = nlvAux;
+  }
+  //  cout<<"Termino check: "<<oz_isInt(v)<<endl; fflush(stdout);
 }
 
 // This Gecode propagator reflects a Gecode variable assignment inside
@@ -162,13 +194,15 @@ public:
 
   // this propagator should never fail
   Gecode::ExecStatus propagate(Gecode::Space* s) {
-    //printf("Variable determined by gecode....%d\n",index);fflush(stdout);
+    //    printf("Variable determined by gecode....%d\n",index);fflush(stdout);
+    //    cout<<"SPACE::::: "<<s<<endl; fflush(stdout);
     OZ_Term ref = getVarRef(static_cast<GenericSpace*>(s));
     OZ_Term val = getVal();
     GenericSpace *tmp = static_cast<GenericSpace*>(s);
-    OZ_Return ret = OZ_unify(ref, val);    
+    OZ_Return ret = OZ_unify(ref, val);
     //printf("GeVar.hh val:%d\n",OZ_intToC(val));fflush(stdout);
-    Assert(ret == PROCEED);
+    //    Assert(ret == PROCEED);
+    if (ret == FAILED) return Gecode::ES_FAILED;
     tmp->incDetermined();
     //printf("intsLength = %d -- setsLength = %d determined = %d",tmp->intsLength(),tmp->setsLength(),tmp->getDetermined());
     return Gecode::ES_SUBSUMED;

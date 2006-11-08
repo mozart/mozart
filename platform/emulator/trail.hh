@@ -35,9 +35,10 @@
 
 
 enum TeType {
-  Te_Mark     = 0,
-  Te_Bind     = 1,
-  Te_Variable = 2,
+  Te_Mark        = 0,
+  Te_Bind        = 1,
+  Te_Variable    = 2,
+  Te_GeVariable  = 3
 };
 
 class Trail: public Stack {
@@ -74,6 +75,8 @@ public:
 
   void pushVariable(TaggedRef *);
 
+  void pushGeVariable(TaggedRef *, TaggedRef);
+
 
   /*
    * Popping
@@ -86,7 +89,7 @@ public:
 
   void popVariable(TaggedRef *&, OzVariable *&);
   
-
+  void popGeVariable(TaggedRef *&, OzVariable *&);
   /*
    * Unwinding
    *
