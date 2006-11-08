@@ -29,9 +29,11 @@
 
 #include "GeIntProp-builtins.hh"
 
+
 using namespace Gecode;
 using namespace Gecode::Int;
 
+/*
 OZ_BI_define(int_eq,3,0)
 {
  //Both spaces must be the same
@@ -39,6 +41,14 @@ OZ_BI_define(int_eq,3,0)
   IntVar v1,v2;
   GenericSpace *gesp1;   
   int consistencyLevel; 
+  cout<<"int_eq : "<<endl; fflush(stdout);
+
+  GenericSpace *gesp2 = extVar2Var(get_GeIntVar(OZ_in(0)))->getBoardInternal()->getGenericSpace();
+  
+  printf("espacio variable global %p\n", gesp2); fflush(stdout); 
+  
+  checkGlobalVar(OZ_in(0));
+  
   if(!OZ_isInt(OZ_in(2)))
       RAISE_EXCEPTION("The last value must be the consistency level");
     
@@ -48,7 +58,7 @@ OZ_BI_define(int_eq,3,0)
   
   v1 = get_IntVar(OZ_in(0));
   gesp1 = extVar2Var(get_GeIntVar(OZ_in(0)))->getBoardInternal()->getGenericSpace();
-
+  printf("espacio variable local %p\n", gesp1); fflush(stdout); 
   if(OZ_isInt(OZ_in(1)))
     {       
       int domain=OZ_intToC(OZ_in(1));
@@ -65,7 +75,9 @@ OZ_BI_define(int_eq,3,0)
     }	
 
   try{
+    cout<<"v1: ["<<v1.min()<<", "<<v1.max()<<" ]"<<endl; fflush(stdout);
     eq(gesp1,v1,v2,(IntConLevel)consistencyLevel);
+    gesp1->status();
      unsigned int a;
      GZ_RETURN(gesp1);
   } catch (Exception e) {
@@ -73,9 +85,32 @@ OZ_BI_define(int_eq,3,0)
   }
 } OZ_BI_end
 
+*/
+
+OZ_BI_define(int_eq,3,0) 
+{
+  DeclareGSpace(gs);
+  int consistencyLevel, relType;
+  
+  if(!OZ_isInt(OZ_in(2))) RAISE_EXCEPTION("The last variable must be the consistency level: ");
+  consistencyLevel = OZ_intToC(OZ_in(2));
+  
+  DeclareGeIntVar(0,v1,gs);
+  DeclareGeIntVar(1,v2,gs);
+  
+  try{
+    eq(gs,v1,v2,(IntConLevel)consistencyLevel);
+  }
+  catch(Exception e) {
+    RAISE_GE_EXCEPTION(e);
+  }
+  GZ_RETURN(gs);
+} OZ_BI_end
 
 OZ_BI_define(int_rel,4,0) {
   DeclareGSpace(gesp1);
+
+  //  cout<<"rell ---. "<<oz_isLocalVar(get_GeIntVar(OZ_in(0)))<<endl; fflush(stdout);
   int consistencyLevel,relType; 
   if(!OZ_isInt(OZ_in(3))) {
     RAISE_EXCEPTION("The last value must be the consistency level: relProp");
@@ -103,7 +138,7 @@ OZ_BI_define(int_dist,2,0)
  {
    DeclareGSpace(sp);
    DECLARE_INTVARARRAY(sp,var,0);   
-    OZ_declareInt(1,conlevel);
+   OZ_declareInt(1,conlevel);
    try {
      distinct(sp,var,(IntConLevel)conlevel);
      unsigned int a;

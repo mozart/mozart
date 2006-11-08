@@ -39,6 +39,7 @@
 #include "var_base.hh"
 #include "var_readonly.hh"
 #include "var_opt.hh"
+#include "GeVar.hh"
 #include "os.hh"
 #include "trail.hh"
 
@@ -490,6 +491,7 @@ void Board::fail(void) {
 
 OZ_Return Board::installScript(Bool isMerging)
 {
+  //  cout<<"installScript"<<endl; fflush(stdout);
   TaggedRef xys = oz_deref(script);
 
   setScript(oz_nil());
@@ -498,7 +500,9 @@ OZ_Return Board::installScript(Bool isMerging)
   while (oz_isLTuple(xys)) {
     TaggedRef xy = oz_deref(oz_head(xys));
     Assert(oz_isCons(xy));
+    //global reference
     TaggedRef x = oz_head(xy);
+    //local variable
     TaggedRef y = oz_tail(xy);
 
     xys = oz_deref(oz_tail(xys));
@@ -516,13 +520,69 @@ OZ_Return Board::installScript(Bool isMerging)
        * script will be simplified!
        *
        */
-      if (!oz_isVarOrRef(oz_deref(x)) && !oz_isVarOrRef(oz_deref(y)))
+      if (!oz_isVarOrRef(oz_deref(x)) && !oz_isVarOrRef(oz_deref(y))) {
+	cout<<"MALDITA SEAAAAAAAAAAAA"<<endl; fflush(stdout);
 	Board::ignoreWakeUp(NO);
-      else
+      }
+      else {
+	cout<<"RRRRRRRRRRRRRRRRR"<<endl; fflush(stdout);
 	Board::ignoreWakeUp(OK);
+      }
     }
 
-    int res = oz_unify(x, y);
+    int res = PROCEED;
+
+    if (oz_isGeVar(x)) {
+	cout<<"Instalando el espacio .............. "<<(oz_currentBoard()->getGenericSpace())<<endl; fflush(stdout);
+	GeVar *tmpVar = static_cast<GeVar*>(oz_getExtVar(oz_deref(x)));
+      if (oz_isGeVar(y)) {
+	GeVar *tmpVar2 = static_cast<GeVar*>(var2ExtVar(tagged2Var(oz_deref(y))));
+	cout<<"x global.... "<<endl;  fflush(stdout);
+	tmpVar->printDomain(); fflush(stdout);
+	cout<<"si es GeVar"<<endl; fflush(stdout);
+	tmpVar2->printDomain();
+	bool NOempty = tmpVar->intersect(y);
+	cout<<"Despues..."<<endl; fflush(stdout);
+	tmpVar2->printDomain();
+	////	bool NOempty = true;
+	//	gespace->status();
+	//	tmpVar->printDomain();
+	res = NOempty? PROCEED: FAILED;
+	cout<<"RES:  "<<res<<endl; fflush(stdout);
+      
+      }
+      //Igual toca intersectar el valor local y con la variable global x
+      else { 	
+	Assert(oz_isInt(y));
+	bool IS = tmpVar->In(y);
+	res = IS? PROCEED: FAILED;
+	//	res = oz_unify(x,y);
+      }
+      TaggedRef *xpt = tagged2Ref(x);
+      //DEREF(x,xpp);
+      //TaggedRef xpp = oz_deref(x);
+      TaggedRef xaux = x;
+
+      //No siempre es verdadero este invariante porque la variable local puede estar determinada
+      //      Assert(oz_isVar(oz_deref(y)));
+
+      trail.pushGeVariable(xpt,oz_deref(y));
+      if(oz_isInt(y)) { 
+	cout<<"UNIFICANOOOOOOOOOOOOOOOOOOOOOOOO"<<endl; fflush(stdout);
+	res = oz_unify(x,y);
+	
+      }
+      ////      *xpt = oz_deref(y);
+      //   gespace->makeUnstable();
+      /*      GeVar *tmpVar = static_cast<GeVar*>(oz_getExtVar(oz_deref(x)));
+	      printf("SSS despues %p \n", extVar2Var(tmpVar)->getBoardInternal()); fflush(stdout);
+	      tmpVar->printDomain();*/
+      cout<<"termino script"<<endl; fflush(stdout);
+    } else {
+      cout<<"AAAAAAAAAAAAAAAAAAA: "<<mustIgnoreWakeUp()<<endl; fflush(stdout);
+      //      Board::ignoreWakeUp(NO); //Asi funciona¡¡¡¡¡¡ el ejemplo del hilo Wait
+      res = oz_unify(x, y);
+    }
 
     Board::ignoreWakeUp(NO);
 
