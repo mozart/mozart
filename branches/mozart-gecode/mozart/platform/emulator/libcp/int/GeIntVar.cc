@@ -60,40 +60,61 @@ OZ_Return GeIntVar::unifyV(TaggedRef* lPtr, TaggedRef* rPtr) {
   if (irange()) {
     oz_bindLocalVar(extVar2Var(this), lPtr, makeTaggedRef(rPtr));
     // intersect the domain of rvar with the domain of lvar
-    IntView(rintvar).inter(space, lrange);
+    ////    IntView(rintvar).inter(space, lrange);
     /* Unification is entailed by means of an eq propagator. After post this
        propagator the generic space must becomes unstable. The unstability is
        a result of posting the propagator */
     eq(space, lintvar, rintvar);
     // wakeup space propagators to inmediatly update all related variables
-    unsigned int alt = 0; //useless variable
+    unsigned long alt = 0; //useless variable
+    //    return (space->status(alt)== Gecode::SS_FAILED) ? FAILED: PROCEED ;
+    if(space->status(alt) == Gecode::SS_FAILED) {
+      extVar2Var(this)->getBoardInternal()->setFailed();
+      return FAILED;
+    }
+    else return PROCEED;
     //xspace->status(alt);
         
-    return PROCEED;
+    //return PROCEED;
   } else {
     return FAILED;
   }
 }
 
+
+/*
+  At this point vPtr must be a local variable (be careful)
+*/
 OZ_Return GeIntVar::bindV(TaggedRef* vPtr, TaggedRef val) {
-  
   if (validV(val)) {
     //Board *tmp = oz_currentBoard();
     //am.setCurrent(extVar2Var(this)->getBoardInternal(),extVar2Var(this)->getBoardInternal()->getOptVar());
     if (oz_isLocalVar(extVar2Var(this))) {
       //if (true) {
       // first bind the variable in Mozart
-      oz_bindLocalVar(extVar2Var(this), vPtr, val);      
+
+      oz_bindLocalVar(extVar2Var(this), vPtr, val);
+
       // then bind the IntVar in the GenericSpace
-      GenericSpace* s =  extVar2Var(this)->getBoardInternal()->getGenericSpace();
+      GenericSpace* s =  extVar2Var(this)->getBoardInternal()->getGenericSpace();      
       int n = OZ_intToC(val);
       //printf("GeIntVar::bindV\n");fflush(stdout);
       ModEvent me = IntView(getIntVar()).eq(s, n);
       Assert(!me_failed(me));     // must succeed
+
+      unsigned long alt = 0; //useless variable
+      //      return (s->status(alt)== Gecode::SS_FAILED) ? FAILED: PROCEED ;
+      if (s->status(alt) == Gecode::SS_FAILED) {
+	extVar2Var(this)->getBoardInternal()->setFailed();
+	return FAILED;
+      }
+      return PROCEED;
+
       // wakeup space propagators to inmediatly update all related variables
       //unsigned int alt = 0; //useless variable
       //s->status(alt);
     } else {
+      cout<<"NOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO global var"<<endl; fflush(stdout);
       // global binding...
       oz_bindGlobalVar(extVar2Var(this), vPtr, val);
     }
@@ -143,6 +164,40 @@ VarBase* GeIntVar::clone(void) {
   return x.variable();
 }
 
+//(this) is the global variable
+//x is the local variable
+bool GeIntVar::intersect(TaggedRef x) {
+  IntVar& gv = getIntVarInfo();
+  ViewRanges<IntView> gvr(gv);
+
+  IntVar& liv = get_IntVar(x);
+  IntView vw(liv);
+  return (vw.inter(oz_currentBoard()->getGenericSpace(),gvr)==Gecode::ME_GEN_FAILED ? false: true);
+  //  return (vw.inter(oz_currentBoard()->getGenericSpace(),gvr) != Gecode::ME_GEN_FAILED)
+  
+  //  return vw.size()>0;
+}
+
+//(this) is the global variable
+//lx is the local value
+bool GeIntVar::In(TaggedRef lx) {
+  IntVar gv = getIntVarInfo();
+  IntView vw(gv);
+  return vw.in(oz_intToC(lx));
+}
+
+TaggedRef GeIntVar::clone(TaggedRef v) {
+  Assert(OZ_isGeIntVar(v));
+  //  IntVar& gv = get_IntVar(v);
+  //  ViewRange<IntView> gvr(gv);
+  
+  OZ_Term lv = new_GeIntVar(IntSet(Limits::Int::int_min,Limits::Int::int_max));
+  //IntVar& liv = get_IntVar(lv);
+  //IntView(liv).inter(oz_currentBoard()->getGenericSpace(),gvr);
+  ////  get_GeIntVar(lv)->intersect(v);
+  get_GeIntVar(v)->intersect(lv);
+  return lv;
+}
 #include <iostream>
 #include <sstream>
 #include <string>

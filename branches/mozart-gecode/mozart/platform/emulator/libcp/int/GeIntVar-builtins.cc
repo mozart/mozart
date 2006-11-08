@@ -25,10 +25,15 @@
  */
 
 
+#ifndef __GEOZ_INT_VAR_BUILTINS_CC__
+#define __GEOZ_INT_VAR_BUILTINS_CC__
+
 #include "GeIntVar-builtins.hh"
+
 
 using namespace Gecode;
 using namespace Gecode::Int;
+
 
 /** 
  * \brief Creates a new IntVar variable 
@@ -185,3 +190,5 @@ OZ_BI_define(intvar_branch,3,0)
 }
 OZ_BI_end
 
+
+#endif

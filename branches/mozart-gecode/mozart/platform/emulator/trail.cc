@@ -29,7 +29,9 @@
 
 #include "trail.hh"
 #include "var_base.hh"
+#include "var_ext.hh"
 #include "thr_int.hh"
+#include "GeVar.hh"
 
 Trail trail;
 
@@ -64,6 +66,41 @@ void Trail::pushVariable(TaggedRef * varPtr) {
 
 }
 
+void Trail::pushGeVariable(TaggedRef * varPtr, TaggedRef varLocal) {
+  //La variable debe ser global
+  OzVariable *v = extVar2Var(oz_getExtVar(*varPtr));
+
+  Assert(v);
+  Assert(!v->isTrailed());
+
+  ensureFree(3);
+  
+  Assert(oz_isVar(*varPtr));
+  //  Assert(oz_isGeVar(*varPtr));
+
+  Stack::push((StackEntry) varPtr,      NO);
+  // inserta la variable global para seguir trabajando con la local.
+  Stack::push((StackEntry) v,           NO);
+  Stack::push((StackEntry) Te_GeVariable, NO);
+  
+
+  v->setTrailed();
+
+  *varPtr = varLocal;
+
+  //Igual que en board.cc:554
+  //  Assert(oz_isVar(*varPtr));
+  if(oz_isVar(*varPtr)) {
+
+    GeVar *vl = static_cast<GeVar*>(oz_getExtVar(varLocal));
+    GenericSpace *gs = oz_currentBoard()->getGenericSpace();
+    
+    gs->setVarRef(vl->getIndex(),makeTaggedRef(varPtr));
+  }
+
+
+}
+
 void Trail::pushMark(void) {
   // All variables marked as trailed must be unmarked!
 
@@ -73,6 +110,8 @@ void Trail::pushMark(void) {
     switch ((TeType) (int) *top) {
     case Te_Mark:
       goto exit;
+    case Te_GeVariable:
+      cout<<"pushMark Te_GeVariable"<<endl; fflush(stdout);
     case Te_Variable: {
       TaggedRef * varPtr = (TaggedRef *) *(top-2);
       Assert(oz_isVar(*varPtr));
@@ -101,6 +140,8 @@ void Trail::test(void) {
     switch ((TeType) (int) *top) {
     case Te_Mark:
       goto exit;
+    case Te_GeVariable:
+      cout<<"test Te_GeVariable"<<endl; fflush(stdout);
     case Te_Variable: {
       TaggedRef * varPtr = (TaggedRef *) *(top-2);
       Assert(oz_isVar(*varPtr));
@@ -139,6 +180,28 @@ void Trail::popVariable(TaggedRef *&varPtr, OzVariable *&orig) {
   varPtr = (TaggedRef *)  Stack::pop();
 }
 
+inline
+void Trail::popGeVariable(TaggedRef *&varPtr, OzVariable *&orig) {
+  Assert(getTeType() == Te_GeVariable);
+  (void) Stack::pop();
+  orig   = (OzVariable *) Stack::pop();
+  varPtr = (TaggedRef *)  Stack::pop();
+
+  //  Assert(oz_isVar(*varPtr));
+
+  //if current space is failed isn't necessary to change the OZ_Term vector in GenericSpace
+  //unwindFailed
+  if(oz_currentBoard()->isFailed() == BoTag_Failed) return;
+
+  if(oz_isVar(*varPtr)) {
+    cout<<"Restoring the local reference in OZ_Term vector ..."<<endl; fflush(stdout);
+    OzVariable *lvar = tagged2Var(*varPtr);
+    GeVar *v1 = static_cast<GeVar*>(var2ExtVar(lvar));
+    //    cout<<"oz_currentBoard(): "<<(oz_currentBoard())->isFailed()<<endl; fflush(stdout);
+    GenericSpace *gs = oz_currentBoard()->getGenericSpace();
+    gs->setVarRef(v1->getIndex(),makeTaggedRef(newTaggedVar(lvar)));
+  }
+}
 
 void Trail::popMark(void) {
   Assert(isEmptyChunk());
@@ -150,6 +213,8 @@ void Trail::popMark(void) {
     switch ((TeType) (int) *top) {
     case Te_Mark:
       return;
+    case Te_GeVariable:
+      cout<<"popMark Te_GeVariable"<<endl; fflush(stdout);
     case Te_Variable: {
       TaggedRef * varPtr = (TaggedRef *) *(top-2);
       Assert(oz_isVar(*varPtr));
@@ -196,7 +261,6 @@ TaggedRef Trail::unwind(Board * b) {
       switch (getTeType()) {
 
       case Te_Bind: {
-
 	TaggedRef * refPtr, value;
 	
 	popBind(refPtr, value);
@@ -226,7 +290,39 @@ TaggedRef Trail::unwind(Board * b) {
 	
 	break;
       }
-      
+      case Te_GeVariable: {
+	TaggedRef *varPtr;
+	OzVariable *glb;
+	popGeVariable(varPtr,glb);
+
+	if(oz_isInt(*varPtr)) {
+	  s = oz_cons(oz_cons(makeTaggedRef(varPtr), *varPtr), s);
+	}
+	else {
+	  Assert(oz_isVar(*varPtr));
+	  OzVariable *lv = tagged2Var(*varPtr);
+	  TaggedRef tmplv = *newTaggedVar(lv);	
+	  s = oz_cons(oz_cons(makeTaggedRef(varPtr),
+			      tmplv),s);
+	}
+
+	TaggedRef varTmp = makeTaggedRef(newTaggedVar(glb));
+	//	unBind(varPtr,oz_deref(varTmp));
+	*varPtr = oz_deref(varTmp);
+
+	Assert(tagged2Var(*varPtr)->isTrailed());
+	tagged2Var(*varPtr)->unsetTrailed();	 
+
+	cout<<"termino unwind: "<<endl; fflush(stdout);
+
+	// Ojo -> pensar!!
+	/*if (hasNoRunnable && !oz_var_hasSuspAt(*varPtr,b)) {
+	  AssureThread;
+	  oz_var_addSusp(varPtr, t);
+	  }*/
+
+	break;  
+      }
       case Te_Variable: {
 	TaggedRef * varPtr;
 	OzVariable * copy;
@@ -241,6 +337,7 @@ TaggedRef Trail::unwind(Board * b) {
 	tagged2Var(*varPtr)->unsetTrailed();
 	
 	if (hasNoRunnable && !oz_var_hasSuspAt(*varPtr,b)) {
+	  cout<<"AssureThread Te_Variable"<<endl; fflush(stdout);
 	  AssureThread;
 	  oz_var_addSusp(varPtr, t);
 	}
@@ -278,6 +375,29 @@ void Trail::unwindFailed(void) {
       unBind(refPtr,value);
       break;
     }
+
+    case Te_GeVariable: {
+      cout<<"unwindFailed Te_GeVariable"<<endl; fflush(stdout);
+      TaggedRef *varPtr;
+      OzVariable *glb;
+      popGeVariable(varPtr,glb);
+      
+      if(!oz_isInt(*varPtr)) {
+	Assert(oz_isVar(*varPtr));
+      
+	OzVariable *lv = tagged2Var(*varPtr);
+	TaggedRef varTmp = makeTaggedRef(newTaggedVar(glb));
+	*varPtr = oz_deref(varTmp);
+
+	//	*varPtr = makeTaggedRef(newTaggedVar(glb));
+	
+	Assert(tagged2Var(*varPtr)->isTrailed());
+	tagged2Var(*varPtr)->unsetTrailed();	 
+      }
+      else { cout<<"Es entero"<<endl; fflush(stdout); }
+
+      break;  
+      }
 
     case Te_Variable: {
       TaggedRef * varPtr;
@@ -336,6 +456,24 @@ void Trail::unwindEqEq(void) {
 
       break;
     }
+
+    case Te_GeVariable: {
+      cout<<"unwindEqEq Te_GeVariable"<<endl; fflush(stdout);
+      TaggedRef *varPtr;
+      OzVariable *glb;
+      popGeVariable(varPtr,glb);
+      Assert(oz_isVar(*varPtr));
+      
+      OzVariable *lv = tagged2Var(*varPtr);
+      
+      *varPtr = makeTaggedRef(newTaggedVar(glb));
+
+      Assert(tagged2Var(*varPtr)->isTrailed());
+      tagged2Var(*varPtr)->unsetTrailed();	 
+
+      //      (void) oz_addSuspendVarList(varPtr);
+      break;  
+      }
 
     case Te_Variable: {
       TaggedRef * varPtr;

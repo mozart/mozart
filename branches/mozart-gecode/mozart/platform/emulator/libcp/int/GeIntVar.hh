@@ -63,6 +63,11 @@ public:
     return (*tmp);
   }
 
+  virtual void printDomain(void) {
+    Gecode::IntVar tmp = getIntVarInfo();
+    cout<<"tmp ---> ["<<tmp.min()<<", "<<tmp.max()<<"]"<<endl; fflush(stdout);
+  }
+
   GeVarType type() { return getType(); }
 
   virtual ExtVar* gCollectV() { return new GeIntVar(*this); }
@@ -85,16 +90,23 @@ public:
   virtual void printStreamV(ostream &out,int depth);
 
   virtual Gecode::VarBase* clone(void);
+  
+  virtual bool intersect(TaggedRef x);
+  
+  virtual bool In(TaggedRef x);
+  //clone para crear variable local desde los propagadores.
+  virtual TaggedRef clone(TaggedRef v);
 };
 
 void postIntVarReflector(GenericSpace* s, int index, OZ_Term ref);
 
-inline OZ_Term new_GeIntVar(Gecode::IntSet& dom) {
+inline OZ_Term new_GeIntVar(const Gecode::IntSet& dom) {
   GenericSpace* sp = oz_currentBoard()->getGenericSpace();
   Gecode::IntVar x(sp,dom);
   OzVariable* ov   = extVar2Var(new GeIntVar(sp->getVarsSize()));
   OZ_Term ref      = makeTaggedRef(newTaggedVar(ov));
   int index        = sp->newVar(static_cast<Gecode::VarBase*>(x.variable()), ref);
+
   postIntVarReflector(sp,index,ref);
   return ref;
 }
