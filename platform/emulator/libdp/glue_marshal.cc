@@ -196,7 +196,7 @@ OZ_Term glue_unmarshalEntity(ByteBuffer *bs) {
       // First unmarshal the class
       OZ_Term clas;
       GName *gnclass = unmarshalGName(&clas, bs);
-      printf("Hasta aqui vamos bien dijo el chancho entrando en la puerta del horno\n"); //bmc
+      printf("Right after unmarshaling the Global Name of the class.\n"); //bmc
       OzObject *obj = new OzObject(oz_currentBoard(), 
                                    gnclass, makeTaggedNULL(), makeTaggedNULL(), makeTaggedNULL());
       printf("Object created, with only a gname as a class\n"); //bmc
