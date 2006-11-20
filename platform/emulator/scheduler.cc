@@ -44,9 +44,8 @@ int run_thread(Thread * ct) {
   ct->setAbstr(NULL);
   am.cachedStack = ct->getTaskStackRef();
   am.cachedSelf  = (Object *) 0;
-  
+
   int ret = engine(NO);
-    
   ct->setAbstr(ozstat.currAbstr);
   ozstat.leaveCall(NULL);
   
@@ -83,12 +82,10 @@ void scheduler(void) {
     do {
 
       ct = am.threadsPool.getNext();
-
       if (ct == (Thread *) NULL) {
 	am.suspendEngine();
 	continue;
       }
-
       if (!ct->isStop())
 	break;
 
@@ -116,7 +113,6 @@ void scheduler(void) {
     }
 
     Assert(oz_currentBoard() == cb);
-
     switch (run_thread(ct)) {
       
     case T_PREEMPT:

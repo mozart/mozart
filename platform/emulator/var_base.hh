@@ -247,6 +247,9 @@ public:
   void relinkSuspListTo(OzVariable * lv, Bool reset_local = FALSE) {
     suspList = suspList->appendToAndUnlink(lv->suspList, reset_local);
   }
+  void relinkSuspListTo2(OzVariable * lv, Bool reset_local = FALSE) {
+    Assert(!suspList->appendToAndUnlink(lv->suspList, reset_local));
+  }
 
   Bool cacIsMarked(void) {
     return IsMarkedPointer(suspList,1);

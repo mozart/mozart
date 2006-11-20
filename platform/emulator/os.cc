@@ -922,7 +922,6 @@ int osSelect(fd_set *readfds, fd_set *writefds, unsigned int *ptimeout)
 {
   struct timeval timeoutstruct, *timeoutptr;
   unsigned int currentSystemTime;
-
   if (ptimeout == (unsigned int*) WAIT_NULL) {
     timeoutstruct.tv_sec = 0;
     timeoutstruct.tv_usec = 0;
@@ -942,7 +941,6 @@ int osSelect(fd_set *readfds, fd_set *writefds, unsigned int *ptimeout)
     // note that the alarm clock is untouched here now;
     osUnblockSignals();
   }
-
 #ifdef WINDOWS
   fd_set rsocks, wsocks, rother, wother;
   int numSocks = splitSocks(readfds,&rsocks,&rother) 
@@ -956,9 +954,8 @@ int osSelect(fd_set *readfds, fd_set *writefds, unsigned int *ptimeout)
   ret = addOther(&rsocks,&rother,readfds) + addOther(&wsocks,&wother,writefds);
   *readfds = rsocks; *writefds = wsocks;
 #else
-  int ret = select(openMax,readfds,writefds,NULL,timeoutptr);
+    int ret = select(openMax,readfds,writefds,NULL,timeoutptr);
 #endif
-
   if (ptimeout != (unsigned int*) WAIT_NULL) {
     // kost@ : Note that effectively the time spent in wait 
     // may be greater than specified;
@@ -966,7 +963,6 @@ int osSelect(fd_set *readfds, fd_set *writefds, unsigned int *ptimeout)
     //    Assert(*ptimeout >= 0); // mm2: *ptimeout is unsigned!!!
     osBlockSignals();
   }
-
   return ret;
 }
 

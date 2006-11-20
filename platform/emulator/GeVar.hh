@@ -96,7 +96,7 @@ public:
   ExtVarType    getIdV() { return OZ_EVAR_GEVAR;}
   virtual ExtVar*       gCollectV() = 0;
   virtual ExtVar*       sCloneV() = 0;
-
+  
   virtual void gCollectRecurseV() { }
   virtual void sCloneRecurseV() { }
 
@@ -109,9 +109,11 @@ public:
     return EVAR_STATUS_KINDED;
   }
 
+
   int getIndex(void) {return index;}
 
   virtual void printDomain(void) = 0;
+
 
   virtual void disposeV() {
     disposeS();     // free susplist
@@ -135,10 +137,12 @@ public:
 
   // Method needed to clone pointed gecode variables.
   virtual Gecode::VarBase* clone(void) = 0;
+
   virtual bool intersect(TaggedRef x) = 0;
   virtual bool In(TaggedRef x) = 0;
   virtual TaggedRef clone(TaggedRef v) = 0;
   
+
 };
 
 inline 
@@ -205,6 +209,7 @@ public:
     if (ret == FAILED) return Gecode::ES_FAILED;
     tmp->incDetermined();
     //printf("intsLength = %d -- setsLength = %d determined = %d",tmp->intsLength(),tmp->setsLength(),tmp->getDetermined());
+    printf("propagate\n");fflush(stdout);
     return Gecode::ES_SUBSUMED;
   }
 };

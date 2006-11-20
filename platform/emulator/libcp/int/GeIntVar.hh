@@ -65,13 +65,13 @@ public:
 
   virtual void printDomain(void) {
     Gecode::IntVar tmp = getIntVarInfo();
-    cout<<"tmp ---> ["<<tmp.min()<<", "<<tmp.max()<<"]"<<endl; fflush(stdout);
+    //cout<<"tmp ---> ["<<tmp.min()<<", "<<tmp.max()<<"]"<<endl; fflush(stdout);
   }
 
   GeVarType type() { return getType(); }
 
   virtual ExtVar* gCollectV() { return new GeIntVar(*this); }
-  virtual ExtVar* sCloneV() { return new GeIntVar(*this); }
+  virtual ExtVar* sCloneV() { printf("virtual ExtVar sCloneV()\n");fflush(stdout);return new GeIntVar(*this); }
 
   virtual OZ_Return     unifyV(TaggedRef*, TaggedRef*);
   virtual OZ_Return     bindV(TaggedRef*, TaggedRef);
@@ -87,15 +87,20 @@ public:
   virtual Bool          validV(TaggedRef v);
   virtual OZ_Term       statusV();
 
+
+
   virtual void printStreamV(ostream &out,int depth);
 
+
   virtual Gecode::VarBase* clone(void);
+
   
   virtual bool intersect(TaggedRef x);
   
   virtual bool In(TaggedRef x);
   //clone para crear variable local desde los propagadores.
   virtual TaggedRef clone(TaggedRef v);
+
 };
 
 void postIntVarReflector(GenericSpace* s, int index, OZ_Term ref);

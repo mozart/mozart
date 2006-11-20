@@ -74,6 +74,7 @@ void oz_bindLocalVar(OzVariable *ov, TaggedRef *varPtr, TaggedRef term)
   Assert(oz_isLocalVar(ov));
   Assert(!am.inEqEq());
   oz_checkSuspensionList(ov, pc_std_unif);
+  //printf("oz_bindLocalVar despues oz_check\n");fflush(stdout);
   /*  if(ov->getType() == OZ_VAR_EXT) {
     cout<<"susList: "<<oz_var_getSuspListLength(ov)<<endl; fflush(stdout);
     cout<<"current: "<<oz_currentBoard()<<endl; fflush(stdout);
@@ -95,6 +96,7 @@ void oz_bindLocalVar(OzVariable *ov, TaggedRef *varPtr, TaggedRef term)
       term = makeTaggedRef(termPtr);
     }
   */
+
   oz_var_dispose(ov);
   doBind(varPtr,term);
 }
