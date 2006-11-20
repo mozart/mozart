@@ -91,7 +91,6 @@ SuspList * SuspList::appendToAndUnlink(SuspList * &to_list, Bool reset_local)
       SuspList * last DebugCode(= NULL);
       for (aux = this; 1; ) {
 	aux->getSuspendable()->setTagged();
-	
 	SuspList * aux_next = aux->getNext(); 
 	
 	if (aux_next) {
@@ -125,6 +124,7 @@ SuspList * SuspList::appendToAndUnlink(SuspList * &to_list, Bool reset_local)
   }
   return NULL;
 }
+
 
 // drop every list entry referring to `prop'
 SuspList *  SuspList::dropPropagator(Propagator * prop) {

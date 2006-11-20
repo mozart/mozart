@@ -59,8 +59,8 @@ end
 %{System.show {Space.ask S}}
 %%%{Show {SearchAll Money}}
 {ExploreAll Money}
-T <: 3
-{Browse T}
+%T <: 3
+%{Browse T}
 %{Show {SearchOne Money}}
 %%X Y
 %%X = {GFD.int 0#1}

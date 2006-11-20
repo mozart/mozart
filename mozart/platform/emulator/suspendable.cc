@@ -137,7 +137,6 @@ void oz_checkAnySuspensionList(SuspList ** suspList,
 {
   if (am.inEqEq() || Board::mustIgnoreWakeUp())
     return;
-
   home = home->derefBoard();
 
   SuspList ** p  = suspList;
@@ -155,7 +154,6 @@ void oz_checkAnySuspensionList(SuspList ** suspList,
 #endif
 
     SuspList ** n = sl->getNextRef();
-
     if (sl->getSuspendable()->_wakeup(home,calledBy)) {
       *p = *n;
       sl->dispose();

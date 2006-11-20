@@ -543,7 +543,6 @@ void AM::suspendEngine(void)
     unsigned int sleepTime = waitTime();
     //
     suspCnt++;
-
     // here we set up wake_jmp so that we can longjmp out of a
     // signal handler
     if (sigsetjmp(wake_jmp,1)==0) {
@@ -579,7 +578,6 @@ void AM::suspendEngine(void)
       // returning normally from osBlockSelect
       sleepTime=(osTotalTime() - idle_start);
     }
-
     // 
     // kost@ : we have to simulate an effect of the alarm (since no
     // explicit alarm signal is sent while in 'osBlockSelect()');
@@ -589,7 +587,6 @@ void AM::suspendEngine(void)
 
     wakeUser();
   }
-
   ozstat.printRunning(stdout);
   
   // restart alarm
