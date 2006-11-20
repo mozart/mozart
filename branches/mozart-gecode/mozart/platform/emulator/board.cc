@@ -59,6 +59,41 @@ Bool Board::_ignoreWakeUp = NO;
  *
  */
 
+
+void newRelink(OzVariable *globalVar,  OzVariable *localVar, Board *sb)
+{
+  //printf("newRelink\n");fflush(stdout);
+  SuspList *sl = globalVar->getSuspList();
+  SuspList *local = new SuspList((Suspendable *)NULL);
+  SuspList *global = new SuspList((Suspendable *)NULL);
+  
+  for (;sl;sl=sl->getNext())
+    {
+      //printf("newRelink dentro del for\n");fflush(stdout);
+      if (sb==sl->getSuspendable()->getBoardInternal())
+	{
+	  if (local->getSuspendable()==NULL)
+	    localVar->setSuspList(new SuspList(sl->getSuspendable(),(SuspList *)NULL));
+	  else	    
+	    localVar->setSuspList(new SuspList(sl->getSuspendable(),local));      
+	}
+      else
+	{
+	  if (global->getSuspendable()==NULL)
+	    globalVar->setSuspList(new SuspList(sl->getSuspendable(),(SuspList *)NULL));
+	  else	    
+	    globalVar->setSuspList(new SuspList(sl->getSuspendable(),global));      
+	}
+
+    }
+  //localVar->setSuspList((SuspList *)NULL);
+  //globalVar->setSuspList((SuspList *)NULL);
+  //localVar->setSuspList(local);
+  //globalVar->setSuspList(global);
+  //printf("endRelink\n");fflush(stdout);
+}
+
+
 Board::Board() 
   : suspCount(0), dist(0),
     crt(0), suspList(0), nonMonoSuspList(0),
@@ -521,38 +556,41 @@ OZ_Return Board::installScript(Bool isMerging)
        *
        */
       if (!oz_isVarOrRef(oz_deref(x)) && !oz_isVarOrRef(oz_deref(y))) {
-	cout<<"MALDITA SEAAAAAAAAAAAA"<<endl; fflush(stdout);
+	//cout<<"MALDITA SEAAAAAAAAAAAA"<<endl; fflush(stdout);
 	Board::ignoreWakeUp(NO);
       }
       else {
-	cout<<"RRRRRRRRRRRRRRRRR"<<endl; fflush(stdout);
+	//cout<<"RRRRRRRRRRRRRRRRR"<<endl; fflush(stdout);
 	Board::ignoreWakeUp(OK);
       }
     }
 
     int res = PROCEED;
 
+    if (oz_isGeVar(x)||oz_isGeVar(y))
+      Board::ignoreWakeUp(NO);
+
+
     if (oz_isGeVar(x)) {
-	cout<<"Instalando el espacio .............. "<<(oz_currentBoard()->getGenericSpace())<<endl; fflush(stdout);
 	GeVar *tmpVar = static_cast<GeVar*>(oz_getExtVar(oz_deref(x)));
       if (oz_isGeVar(y)) {
+
 	GeVar *tmpVar2 = static_cast<GeVar*>(var2ExtVar(tagged2Var(oz_deref(y))));
-	cout<<"x global.... "<<endl;  fflush(stdout);
 	tmpVar->printDomain(); fflush(stdout);
-	cout<<"si es GeVar"<<endl; fflush(stdout);
 	tmpVar2->printDomain();
 	bool NOempty = tmpVar->intersect(y);
-	cout<<"Despues..."<<endl; fflush(stdout);
 	tmpVar2->printDomain();
 	////	bool NOempty = true;
 	//	gespace->status();
 	//	tmpVar->printDomain();
 	res = NOempty? PROCEED: FAILED;
-	cout<<"RES:  "<<res<<endl; fflush(stdout);
-      
+	//if (NOempty)
+	//  newRelink(tagged2Var(oz_deref(x)),  tagged2Var(oz_deref(y)), this);
       }
       //Igual toca intersectar el valor local y con la variable global x
-      else { 	
+      else { 
+	//PAra que se hace esto si al final hay un if donde se pregunta 
+	//si y es entero y se llama a la unificacion
 	Assert(oz_isInt(y));
 	bool IS = tmpVar->In(y);
 	res = IS? PROCEED: FAILED;
@@ -567,21 +605,13 @@ OZ_Return Board::installScript(Bool isMerging)
       //      Assert(oz_isVar(oz_deref(y)));
 
       trail.pushGeVariable(xpt,oz_deref(y));
-      if(oz_isInt(y)) { 
-	cout<<"UNIFICANOOOOOOOOOOOOOOOOOOOOOOOO"<<endl; fflush(stdout);
-	res = oz_unify(x,y);
-	
-      }
-      ////      *xpt = oz_deref(y);
-      //   gespace->makeUnstable();
-      /*      GeVar *tmpVar = static_cast<GeVar*>(oz_getExtVar(oz_deref(x)));
-	      printf("SSS despues %p \n", extVar2Var(tmpVar)->getBoardInternal()); fflush(stdout);
-	      tmpVar->printDomain();*/
-      cout<<"termino script"<<endl; fflush(stdout);
+      if(oz_isInt(y))  
+	  res = oz_unify(x,y);		      
     } else {
-      cout<<"AAAAAAAAAAAAAAAAAAA: "<<mustIgnoreWakeUp()<<endl; fflush(stdout);
       //      Board::ignoreWakeUp(NO); //Asi funciona¡¡¡¡¡¡ el ejemplo del hilo Wait
       res = oz_unify(x, y);
+      //oz_var_dispose(tagged2Var(oz_deref(y)));
+      //doBind(tagged2Ref(y),x);
     }
 
     Board::ignoreWakeUp(NO);

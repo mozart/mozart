@@ -329,6 +329,8 @@ OzVariable * oz_var_copyForTrail(OzVariable * v) {
     return ((OzFSVariable *) v)->copyForTrail();
   case OZ_VAR_CT: 
     return ((OzCtVariable *) v)->copyForTrail();
+    //case OZ_VAR_EXT: 
+    //return (var2ExtVar(v))->copyForTrail();
   default:
     Assert(0);
     return NULL;
@@ -351,6 +353,9 @@ void oz_var_restoreFromCopy(OzVariable * o, OzVariable * c) {
   case OZ_VAR_CT: 
     ((OzCtVariable *) o)->restoreFromCopy((OzCtVariable *) c);
     break;
+    //case OZ_VAR_EXT: 
+    //(var2ExtVar(o))->restoreFromTrail(var2ExtVar(c));
+    //break;
   default:
     Assert(0);
     break;

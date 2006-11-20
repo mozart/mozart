@@ -40,7 +40,7 @@ VarRefArray::VarRefArray(Gecode::Space* s, VarRefArray& v, bool share) {
     if (oz_isExtVar(dt)) {
       // ensures that refs[i] is a gecode contrain variable 
       Assert(oz_getExtVar(dt)->getIdV() == OZ_EVAR_GEVAR);
-      vars.push_back(static_cast<GeVar*>(oz_getExtVar(dt))->clone());
+      vars.push_back(static_cast<GeVar*>(oz_getExtVar(dt))->clone());      
     } else {
       /*
 	When vars[i] has been bound to a value, refs[i] no longer points to a GeVar but
@@ -73,6 +73,7 @@ GenericSpace::GenericSpace(GenericSpace& s, bool share)
       determined(s.determined), trigger(s.trigger),
     gc_pred(NULL), gc_succ(GeSpaceCollectList), gc_marked(false)
 {
+  printf("GenericSpace::GenericSpace(GenericSpace s, bool share) \n");fflush(stdout);
   gscounter++;
   if(GeSpaceCollectList) GeSpaceCollectList->gc_pred = this;
   GeSpaceCollectList = this;

@@ -35,7 +35,8 @@ using namespace Gecode::Int;
 
 
 OZ_Return GeIntVar::unifyV(TaggedRef* lPtr, TaggedRef* rPtr) {
-  if (!OZ_isGeIntVar(*rPtr)) return OZ_suspendOnInternal(*rPtr);
+  printf("GeIntVar::unifyV\n");fflush(stdout);
+  //  if (!OZ_isGeIntVar(*rPtr)) return OZ_suspendOnInternal(*rPtr);
 
   GeIntVar* lgeintvar = this;
   GeIntVar* rgeintvar = get_GeIntVar(*rPtr);
@@ -56,9 +57,10 @@ OZ_Return GeIntVar::unifyV(TaggedRef* lPtr, TaggedRef* rPtr) {
   ViewRanges<IntView> rrange(rintvar);
   Iter::Ranges::Inter<ViewRanges<IntView>, ViewRanges<IntView> >
     irange(lrange, rrange);
-
   if (irange()) {
+    //printf("GeIntVar::unifyV antes de bindLocal oz_isVar(lPtr)=%d -- oz_isVar(rPtr)=%d %d\n",oz_isVar(*lPtr),oz_isVar(*rPtr),*lPtr);fflush(stdout);
     oz_bindLocalVar(extVar2Var(this), lPtr, makeTaggedRef(rPtr));
+    //printf("GeIntVar::unifyV despues de bindLocal oz_isVar(lPtr)=%d -- oz_isVar(rPtr)=%d %d\n",oz_isVar(*lPtr),oz_isVar(*rPtr),*lPtr);fflush(stdout);
     // intersect the domain of rvar with the domain of lvar
     ////    IntView(rintvar).inter(space, lrange);
     /* Unification is entailed by means of an eq propagator. After post this
@@ -92,7 +94,7 @@ OZ_Return GeIntVar::bindV(TaggedRef* vPtr, TaggedRef val) {
     if (oz_isLocalVar(extVar2Var(this))) {
       //if (true) {
       // first bind the variable in Mozart
-
+      printf("bindV var length=%d isVarOrRef=%d\n",extVar2Var(this)->getSuspListLengthS(),oz_isVarOrRef(val));fflush(stdout);
       oz_bindLocalVar(extVar2Var(this), vPtr, val);
 
       // then bind the IntVar in the GenericSpace
@@ -108,6 +110,7 @@ OZ_Return GeIntVar::bindV(TaggedRef* vPtr, TaggedRef val) {
 	extVar2Var(this)->getBoardInternal()->setFailed();
 	return FAILED;
       }
+      printf("end bindV\n");fflush(stdout);
       return PROCEED;
 
       // wakeup space propagators to inmediatly update all related variables
@@ -164,6 +167,7 @@ VarBase* GeIntVar::clone(void) {
   return x.variable();
 }
 
+
 //(this) is the global variable
 //x is the local variable
 bool GeIntVar::intersect(TaggedRef x) {
@@ -198,6 +202,7 @@ TaggedRef GeIntVar::clone(TaggedRef v) {
   get_GeIntVar(v)->intersect(lv);
   return lv;
 }
+
 #include <iostream>
 #include <sstream>
 #include <string>

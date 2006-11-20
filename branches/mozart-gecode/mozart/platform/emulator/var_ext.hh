@@ -77,6 +77,9 @@ public:
   virtual OZ_Term       statusV() = 0;
   virtual VarStatus     checkStatusV() = 0;
   virtual void          disposeV() = 0;
+  
+  //  virtual OzVariable * copyForTrail() = 0;
+  //  virtual void restoreFromCopy(ExtVar*) = 0;
 
   virtual OZ_Return addSuspV(TaggedRef *, Suspendable * susp) {
     extVar2Var(this)->addSuspSVar(susp);
