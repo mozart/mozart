@@ -526,7 +526,7 @@ void Board::fail(void) {
 
 OZ_Return Board::installScript(Bool isMerging)
 {
-  //  cout<<"installScript"<<endl; fflush(stdout);
+  //cout<<"installScript"<<endl; fflush(stdout);
   TaggedRef xys = oz_deref(script);
 
   setScript(oz_nil());

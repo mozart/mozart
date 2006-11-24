@@ -128,8 +128,7 @@ OZ_BI_define(int_rel,4,0) {
     rel(gesp1,v1,(IntRelType)relType,v2,(IntConLevel)consistencyLevel);
   } catch (Exception e) {
     RAISE_GE_EXCEPTION(e);
-  }
-  
+  }  
   GZ_RETURN(gesp1);
 } OZ_BI_end
 

@@ -35,7 +35,7 @@ using namespace Gecode::Int;
 
 
 OZ_Return GeIntVar::unifyV(TaggedRef* lPtr, TaggedRef* rPtr) {
-  printf("GeIntVar::unifyV\n");fflush(stdout);
+  //printf("GeIntVar::unifyV\n");fflush(stdout);
   //  if (!OZ_isGeIntVar(*rPtr)) return OZ_suspendOnInternal(*rPtr);
 
   GeIntVar* lgeintvar = this;
@@ -94,7 +94,7 @@ OZ_Return GeIntVar::bindV(TaggedRef* vPtr, TaggedRef val) {
     if (oz_isLocalVar(extVar2Var(this))) {
       //if (true) {
       // first bind the variable in Mozart
-      printf("bindV var length=%d isVarOrRef=%d\n",extVar2Var(this)->getSuspListLengthS(),oz_isVarOrRef(val));fflush(stdout);
+      //printf("bindV var length=%d isVarOrRef=%d\n",extVar2Var(this)->getSuspListLengthS(),oz_isVarOrRef(val));fflush(stdout);
       oz_bindLocalVar(extVar2Var(this), vPtr, val);
 
       // then bind the IntVar in the GenericSpace

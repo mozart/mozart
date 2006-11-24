@@ -349,7 +349,9 @@ public:
 
   //
   void addSuspSVar(Suspendable * susp) {
-    Assert(getType() != OZ_VAR_OPT);
+    //if(getType()==8)
+    //  printf("var_base.hh addSuspVar\n");fflush(stdout);
+    Assert(getType() != OZ_VAR_OPT);    
     suspList = new SuspList(susp, suspList);
     if (!oz_onToplevel())
       getBoardInternal()->checkExtSuspension(susp);
