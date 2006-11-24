@@ -40,7 +40,7 @@ Bool Suspendable::_wakeup(Board * home, PropCaller calledBy) {
 
   if (isDead())
     return OK;
-
+  //printf("Suspendable::_wakeup\n");fflush(stdout);
   Board * sb = getBoardInternal()->derefBoard();
 
   oz_BFlag between = oz_isBetween(sb, home);
@@ -68,7 +68,7 @@ Bool Suspendable::_wakeup(Board * home, PropCaller calledBy) {
   } else {
 
     if (isThread()) {
-
+      //printf("Suspendable::_wakeup\n");fflush(stdout);
       Thread * t = SuspToThread(this);
 
       switch (between) {
