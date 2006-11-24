@@ -37,6 +37,12 @@ all:
 	$(CXX) $(OPTIMIZE) $(CFLAGS) -c $< -o $@
 
 
+depend:: Makefile $(GFDLIBSRC)
+	$(DEPEND) $(GFDLIBSRC:%=$(SRCDIR)/%) > Makefile.deps
+
+Makefile: Makefile.in
+	(cd ../..; ./config.status)
+
 -include Makefile.deps
 include ../../Makefile.rules
 
@@ -63,4 +69,4 @@ tags:	$(CREATEDFILES)
 	--regex='/OZ_DECLARE[A-Z0-9_]*([ 	]*\([^ 	,)]+\)/\1/' -l c++ \
 	-o $(SRCDIR)/TAGS \
 	$(addprefix $(BUILDDIR)/,$(CREATEDFILES)) \
-	$(SRCDIR)/*c $(SRCDIR)/*h $(SRCDIR)/../*c $(SRCDIR)/../*h  
+	$(SRCDIR)/*c $(SRCDIR)/*h $(SRCDIR)/../../*c $(SRCDIR)/../../*h  
