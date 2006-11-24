@@ -195,7 +195,7 @@ in
       %% end of the text widget;
       meth browse(TermIn ?TermObj)
 \ifdef DEBUG_MO
-	 {Show 'BrowserManagerClass::browse is applied'#TermIn}
+	 {System.show 'BrowserManagerClass::browse is applied'#TermIn}
 \endif 
 	 local SeqNum in
 	    %% check whether we still have to create it;
@@ -245,7 +245,7 @@ in
       %%
       meth checkTerm(Obj)
 \ifdef DEBUG_MO
-	 {Show 'BrowserManagerClass::checkTerm is applied'}
+	 {System.show 'BrowserManagerClass::checkTerm is applied'}
 \endif 
 	 BrowserManagerClass , CheckObj(Obj)
 	 {Obj CheckTerm}
@@ -259,7 +259,7 @@ in
       %%
       meth subtermSizeChanged(Obj ChildObj OldSize NewSize)
 \ifdef DEBUG_MO
-	 {Show 'BrowserManagerClass::subtermSizeChanged is applied'}
+	 {System.show 'BrowserManagerClass::subtermSizeChanged is applied'}
 \endif 
 	 BrowserManagerClass , CheckObj(Obj)
 	 {Obj SubtermSizeChanged(ChildObj OldSize NewSize)}

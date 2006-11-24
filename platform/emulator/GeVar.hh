@@ -31,6 +31,8 @@
 
 
 #include "var_ext.hh"
+#include "var_base.hh"
+#include "susplist.hh"
 #include "unify.hh"
 #include "GeSpace.hh"
 
@@ -179,38 +181,59 @@ void checkGlobalVar(OZ_Term v) {
 
 template <class View>
 class VarReflector :
-  public Gecode::UnaryPropagator<View, Gecode::PC_GEN_ASSIGNED>
+  public Gecode::UnaryPropagator<View, Gecode::Int::PC_INT_DOM>
 {
 protected:
   int index;
 
 public:
   VarReflector(GenericSpace* s, View v, int idx) :
-    Gecode::UnaryPropagator<View, Gecode::PC_GEN_ASSIGNED>(s, v), index(idx) {}
+    Gecode::UnaryPropagator<View, Gecode::Int::PC_INT_DOM>(s, v), index(idx) {}
 
   VarReflector(GenericSpace* s, bool share, VarReflector& p) :
-    Gecode::UnaryPropagator<View, Gecode::PC_GEN_ASSIGNED>(s, share, p), index(p.index) {}
+    Gecode::UnaryPropagator<View, Gecode::Int::PC_INT_DOM>(s, share, p), index(p.index) {}
 
   virtual Gecode::Actor* copy(Gecode::Space* s, bool share) = 0;
 
   virtual OZ_Term getVarRef(GenericSpace*) = 0;
   virtual OZ_Term getVal() = 0;
+  virtual bool IsDet() = 0;
 
   // this propagator should never fail
   Gecode::ExecStatus propagate(Gecode::Space* s) {
     //    printf("Variable determined by gecode....%d\n",index);fflush(stdout);
-    //    cout<<"SPACE::::: "<<s<<endl; fflush(stdout);
+    //    cout<<"SPACE::::: "<<s<<endl; fflush(stdout);    
     OZ_Term ref = getVarRef(static_cast<GenericSpace*>(s));
-    OZ_Term val = getVal();
-    GenericSpace *tmp = static_cast<GenericSpace*>(s);
-    OZ_Return ret = OZ_unify(ref, val);
-    //printf("GeVar.hh val:%d\n",OZ_intToC(val));fflush(stdout);
-    //    Assert(ret == PROCEED);
-    if (ret == FAILED) return Gecode::ES_FAILED;
-    tmp->incDetermined();
-    //printf("intsLength = %d -- setsLength = %d determined = %d",tmp->intsLength(),tmp->setsLength(),tmp->getDetermined());
-    printf("propagate\n");fflush(stdout);
-    return Gecode::ES_SUBSUMED;
+    //printf("GeVar.hh ExecStatus\n");fflush(stdout);
+    GenericSpace *tmp = static_cast<GenericSpace*>(s);        
+    if(IsDet())
+      {
+	OZ_Term val = getVal();
+	OZ_Return ret = OZ_unify(ref, val);
+	//printf("GeVar.hh val:%d\n",OZ_intToC(val));fflush(stdout);
+	//    Assert(ret == PROCEED);
+	if (ret == FAILED) return Gecode::ES_FAILED;
+	tmp->incDetermined();
+	//printf("intsLength = %d -- setsLength = %d determined = %d",tmp->intsLength(),tmp->setsLength(),tmp->getDetermined());
+	printf("propagate\n");fflush(stdout);
+	return Gecode::ES_SUBSUMED;
+      }
+    else
+      {	
+	Assert(oz_isVarOrRef(ref));	
+	Assert(oz_isVar(oz_deref(ref)));	
+	OzVariable *var=extVar2Var(oz_getExtVar(oz_deref(ref)));
+
+	SuspList *tmp[1];// = NULL;
+	tmp[0] = var->unlinkSuspList();
+	if (tmp[0]){
+	  oz_checkAnySuspensionList(tmp, var->getBoardInternal(), pc_all);
+	  var->setSuspList(tmp[0]);
+	}
+
+
+	return Gecode::ES_FIX;
+      }
   }
 };
 

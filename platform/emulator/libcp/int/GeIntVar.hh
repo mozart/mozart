@@ -157,6 +157,7 @@ public:
 
   OZ_Term getVarRef(GenericSpace* s) { return s->getVarRef(index); }
   OZ_Term getVal() { return OZ_int(x0.val()); }
+  bool IsDet(){return x0.assigned();}
 };
 
 inline void postIntVarReflector(GenericSpace* s, int index, OZ_Term ref) {
