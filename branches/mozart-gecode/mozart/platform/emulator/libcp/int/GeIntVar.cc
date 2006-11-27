@@ -40,7 +40,7 @@ OZ_Return GeIntVar::unifyV(TaggedRef* lPtr, TaggedRef* rPtr) {
 
   GeIntVar* lgeintvar = this;
   GeIntVar* rgeintvar = get_GeIntVar(*rPtr);
-
+  printf("indexl:%d -- indexr:%d queda el derecho\n",lgeintvar->getIndex(),rgeintvar->getIndex());fflush(stdout);
   // Unification of variables from different spaces is not implemented
   // yet. What does this means for us??
   if (extVar2Var(lgeintvar)->getBoardInternal()->getGenericSpace() != extVar2Var(rgeintvar)->getBoardInternal()->getGenericSpace()) {
@@ -74,7 +74,9 @@ OZ_Return GeIntVar::unifyV(TaggedRef* lPtr, TaggedRef* rPtr) {
       extVar2Var(this)->getBoardInternal()->setFailed();
       return FAILED;
     }
-    else return PROCEED;
+    else{
+      return PROCEED;
+    }
     //xspace->status(alt);
         
     //return PROCEED;
@@ -208,7 +210,7 @@ TaggedRef GeIntVar::clone(TaggedRef v) {
 #include <string>
 
 void GeIntVar::printStreamV(ostream &out,int depth) {
-  //printf("called print stream\n");fflush(stdout);
+  printf("called print stream --  index=%d\n",getIndex());fflush(stdout);
   std::stringstream oss;
   oss << getIntVarInfo();
   out << "<GeIntVar " << oss.str().c_str() << ">"; 

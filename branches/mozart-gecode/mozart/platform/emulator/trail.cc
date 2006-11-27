@@ -77,7 +77,6 @@ void Trail::pushGeVariable(TaggedRef * varPtr, TaggedRef varLocal) {
   
   Assert(oz_isVar(*varPtr));
   //  Assert(oz_isGeVar(*varPtr));
-
   Stack::push((StackEntry) varPtr,      NO);
   // inserta la variable global para seguir trabajando con la local.
   Stack::push((StackEntry) v,           NO);
@@ -90,13 +89,11 @@ void Trail::pushGeVariable(TaggedRef * varPtr, TaggedRef varLocal) {
 
   //Igual que en board.cc:554
   //  Assert(oz_isVar(*varPtr));
-  if(oz_isVar(*varPtr)) {
-
+  /*  if(oz_isVar(*varPtr)) {
     GeVar *vl = static_cast<GeVar*>(oz_getExtVar(varLocal));
-    GenericSpace *gs = oz_currentBoard()->getGenericSpace();
-    
+    GenericSpace *gs = oz_currentBoard()->getGenericSpace();    
     gs->setVarRef(vl->getIndex(),makeTaggedRef(varPtr));
-  }
+    }*/
 
 
 }
@@ -192,7 +189,7 @@ void Trail::popGeVariable(TaggedRef *&varPtr, OzVariable *&orig) {
   //if current space is failed isn't necessary to change the OZ_Term vector in GenericSpace
   //unwindFailed
   if(oz_currentBoard()->isFailed() == BoTag_Failed) return;
-
+  /*
   if(oz_isVar(*varPtr)) {
     //cout<<"Restoring the local reference in OZ_Term vector ..."<<endl; fflush(stdout);
     OzVariable *lvar = tagged2Var(*varPtr);
@@ -202,6 +199,7 @@ void Trail::popGeVariable(TaggedRef *&varPtr, OzVariable *&orig) {
     gs->setVarRef(v1->getIndex(),makeTaggedRef(newTaggedVar(lvar)));
     //cout<<"end Restoring the local reference in OZ_Term vector ..."<<endl; fflush(stdout);
   }
+  */
 }
 
 void Trail::popMark(void) {

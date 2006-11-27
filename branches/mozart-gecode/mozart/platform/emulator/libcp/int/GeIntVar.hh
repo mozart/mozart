@@ -55,8 +55,8 @@ public:
   // the returned reference should be constant
   Gecode::IntVar& getIntVarInfo() {
       GenericSpace* gs = extVar2Var(this)->getBoardInternal()->getGenericSpace(true);
+      //printf("getIntVarInfo %p\n",gs);fflush(stdout);
     Assert(gs);
-
     GeView<Gecode::Int::IntVarImp> iv(gs->getVarInfo(index));
     Gecode::Int::IntView *vv = reinterpret_cast<Gecode::Int::IntView*>(&iv);
     Gecode::IntVar *tmp = new Gecode::IntVar(*vv);
@@ -155,7 +155,7 @@ public:
     return new (s) IntVarReflector(static_cast<GenericSpace*>(s), share, *this);
   }
 
-  OZ_Term getVarRef(GenericSpace* s) { return s->getVarRef(index); }
+  OZ_Term getVarRef(GenericSpace* s) {return s->getVarRef(index); }
   OZ_Term getVal() { return OZ_int(x0.val()); }
   bool IsDet(){return x0.assigned();}
 };
