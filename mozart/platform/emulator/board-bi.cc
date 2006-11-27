@@ -201,7 +201,6 @@ OZ_BI_define(BIaskSpace, 1,1) {
   TaggedRef answer = space->getSpace()->getStatus();
   
   DEREF(answer, answer_ptr);
-
   Assert(!oz_isRef(answer));
   if (oz_isVarOrRef(answer))
     oz_suspendOn(makeTaggedRef(answer_ptr));

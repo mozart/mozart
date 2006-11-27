@@ -242,7 +242,7 @@ loop:
       if (term1 == term2 && heapNewer(termPtr1, termPtr2))
 	doBind(termPtr1, makeTaggedRef(termPtr2));
       else
-	doBind(termPtr2, makeTaggedRef(termPtr1));
+	doBind(termPtr2, makeTaggedRef(termPtr1));      
       goto next;
     }
   }

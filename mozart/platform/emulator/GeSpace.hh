@@ -230,7 +230,10 @@ public:
   // return current trigger
   TaggedRef getTrigger(void) { return trigger; }
 
-  bool solved(void) { return determined == (vars.getSize()); }
+  bool solved(void) { 
+    printf ("GeSpace solved: determined=%d vars=%d\n",determined,vars.getSize());fflush(stdout);
+
+    return determined == (vars.getSize()); }
   void incDetermined(void) { determined++; }
 
 

@@ -570,46 +570,46 @@ OZ_Return Board::installScript(Bool isMerging)
     if (oz_isGeVar(x)||oz_isGeVar(y))
       Board::ignoreWakeUp(NO);
 
-
+    //x is the global var,  y is the local one
     if (oz_isGeVar(x)) {
-	GeVar *tmpVar = static_cast<GeVar*>(oz_getExtVar(oz_deref(x)));
+      GeVar *tmpVar = static_cast<GeVar*>(oz_getExtVar(oz_deref(x)));
+      TaggedRef *xpt = tagged2Ref(x);
+      //DEREF(x,xpp);
+      //TaggedRef xpp = oz_deref(x);
+      TaggedRef xaux = x;
       if (oz_isGeVar(y)) {
-
 	GeVar *tmpVar2 = static_cast<GeVar*>(var2ExtVar(tagged2Var(oz_deref(y))));
-	tmpVar->printDomain(); fflush(stdout);
-	tmpVar2->printDomain();
 	bool NOempty = tmpVar->intersect(y);
-	tmpVar2->printDomain();
 	////	bool NOempty = true;
 	//	gespace->status();
 	//	tmpVar->printDomain();
+	printf("installScript local index=%d\n",tmpVar2->getIndex());fflush(stdout);
 	res = NOempty? PROCEED: FAILED;
-	//if (NOempty)
-	//  newRelink(tagged2Var(oz_deref(x)),  tagged2Var(oz_deref(y)), this);
+	trail.pushGeVariable(xpt,oz_deref(gespace->getVarRef(tmpVar2->getIndex())));
       }
       //Igual toca intersectar el valor local y con la variable global x
       else { 
 	//PAra que se hace esto si al final hay un if donde se pregunta 
 	//si y es entero y se llama a la unificacion
-	Assert(oz_isInt(y));
+	Assert(!oz_isVarOrRef(oz_deref(y)));
 	bool IS = tmpVar->In(y);
 	res = IS? PROCEED: FAILED;
-	//	res = oz_unify(x,y);
+	trail.pushGeVariable(xpt,oz_deref(y));
       }
-      TaggedRef *xpt = tagged2Ref(x);
-      //DEREF(x,xpp);
-      //TaggedRef xpp = oz_deref(x);
-      TaggedRef xaux = x;
-
+      
+	
       //No siempre es verdadero este invariante porque la variable local puede estar determinada
       //      Assert(oz_isVar(oz_deref(y)));
-
-      trail.pushGeVariable(xpt,oz_deref(y));
-      if(oz_isInt(y))  
-	  res = oz_unify(x,y);		      
+      //Esto no puede ser solo si es Int,  debe es mejor si esta determinado.
+      //if(oz_isInt(y))  
+      if(!oz_isVarOrRef(oz_deref(y)))  
+	res = oz_unify(x,y);		      
     } else {
-      //      Board::ignoreWakeUp(NO); //Asi funciona¡¡¡¡¡¡ el ejemplo del hilo Wait
-      res = oz_unify(x, y);
+      //Board::ignoreWakeUp(NO); //Asi funciona¡¡¡¡¡¡ el ejemplo del hilo Wait
+      //GeVar *tmpVar2 = static_cast<GeVar*>(var2ExtVar(tagged2Var(oz_deref(y))));
+      //printf("index de y=%d\n",tmpVar2->getIndex());fflush(stdout);
+	  res = oz_unify(x, y);
+
       //oz_var_dispose(tagged2Var(oz_deref(y)));
       //doBind(tagged2Ref(y),x);
     }

@@ -58,7 +58,7 @@ OZ_BI_define(BI_prop_gec, 0, 0) {
     oz_currentBoard()->deleteGenericSpace();
     return FAILED;
   } 
-  
+  //printf("lateThread %p\n",gs);fflush(stdout);
   if (!gs->solved()) {
   	TaggedRef t =  gs->getTrigger();
   	DEREF(t,t_ptr);
@@ -66,6 +66,7 @@ OZ_BI_define(BI_prop_gec, 0, 0) {
   }
   
   // no variable left in gs, delete it and vanish
+  printf("lateThread %p deleted gs->solved()=%d\n",gs,gs->solved());fflush(stdout);
   oz_currentBoard()->deleteGenericSpace();
   return PROCEED;
 } OZ_BI_end
