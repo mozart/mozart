@@ -107,8 +107,13 @@ void Trail::pushMark(void) {
     switch ((TeType) (int) *top) {
     case Te_Mark:
       goto exit;
-    case Te_GeVariable:
-      cout<<"pushMark Te_GeVariable"<<endl; fflush(stdout);
+    case Te_GeVariable: {
+      //      cout<<"pushMark Te_GeVariable"<<endl; fflush(stdout);
+      OzVariable *v = (OzVariable *) * (top-1);
+      Assert(v->isTrailed());
+      v->unsetTrailed();
+      break;
+    }
     case Te_Variable: {
       TaggedRef * varPtr = (TaggedRef *) *(top-2);
       Assert(oz_isVar(*varPtr));
@@ -212,8 +217,13 @@ void Trail::popMark(void) {
     switch ((TeType) (int) *top) {
     case Te_Mark:
       return;
-    case Te_GeVariable:
-      cout<<"popMark Te_GeVariable"<<endl; fflush(stdout);
+    case Te_GeVariable: {
+      //      cout<<"popMark Te_GeVariable"<<endl; fflush(stdout);
+      OzVariable *v = (OzVariable *) * (top-1);
+      Assert(!v->isTrailed());
+      v->setTrailed();
+      break;
+    }
     case Te_Variable: {
       TaggedRef * varPtr = (TaggedRef *) *(top-2);
       Assert(oz_isVar(*varPtr));
@@ -295,7 +305,7 @@ TaggedRef Trail::unwind(Board * b) {
 	TaggedRef *varPtr;
 	OzVariable *glb,*lvar;
 	popGeVariable(varPtr,glb);
-
+	cout<<"unwind"<<endl; fflush(stdout);
 	if(oz_isInt(*varPtr)) {
 	  s = oz_cons(oz_cons(makeTaggedRef(varPtr), *varPtr), s);
 	//printf("trail.cc Te_GeVariable else\n");fflush(stdout);
