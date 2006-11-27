@@ -204,18 +204,18 @@ public:
     //    printf("Variable determined by gecode....%d\n",index);fflush(stdout);
     //    cout<<"SPACE::::: "<<s<<endl; fflush(stdout);    
     OZ_Term ref = getVarRef(static_cast<GenericSpace*>(s));
-    //printf("GeVar.hh ExecStatus\n");fflush(stdout);
+    printf("GeVar.hh ExecStatus index=%d\n",index);fflush(stdout);
     GenericSpace *tmp = static_cast<GenericSpace*>(s);        
     if(IsDet())
       {
 	OZ_Term val = getVal();
+	printf("propagate %d\n",OZ_intToC(val));fflush(stdout);
 	OZ_Return ret = OZ_unify(ref, val);
 	//printf("GeVar.hh val:%d\n",OZ_intToC(val));fflush(stdout);
 	//    Assert(ret == PROCEED);
 	if (ret == FAILED) return Gecode::ES_FAILED;
 	tmp->incDetermined();
 	//printf("intsLength = %d -- setsLength = %d determined = %d",tmp->intsLength(),tmp->setsLength(),tmp->getDetermined());
-	printf("propagate\n");fflush(stdout);
 	return Gecode::ES_SUBSUMED;
       }
     else
