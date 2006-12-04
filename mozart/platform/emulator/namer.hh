@@ -58,7 +58,7 @@ private:
   GCMe * _object;
   GCMeManager(GCMe * o, GCMeManager * n) : _object(o), _next(n) {}
 public:
-  static void registerObject(GCMe * o) {
+  static void registerObject(GCMe * o) {        
     for (GCMeManager * tmp = _head; tmp; tmp = tmp->_next)
       if (tmp->_object == o) // already registered
 	return; 
@@ -124,10 +124,13 @@ public:
   Namer(void) { 
     GCMeManager::registerObject(this);
   }
-  static Namer<T_INDEX, T_NAME> * getHead(void) { return _head; }
+  static Namer<T_INDEX, T_NAME> * getHead(void) { 
+    return _head; }
   static T_NAME getName(T_INDEX index) {
+    //printf("namer.hh getName _head=%p\n",_head);fflush(stdout);
     for (Namer<T_INDEX, T_NAME> * tmp = _head; tmp; tmp = tmp->_next) {
       tmp->_index = derefIndexNamer(tmp->_index);
+      //printf("getName %d -- %d -- %s \n",tmp->_index,index,tmp->_name);fflush(stdout);
       if (tmp->_index == index) {
 	return tmp->_name;
       }
@@ -142,6 +145,7 @@ public:
 	return;
 
     _head = new Namer<T_INDEX, T_NAME>(index, name, _head);
+    //printf("addName namer.hh %d %s\n",index,name);fflush(stdout);
     
     NEW_NAMER_DEBUG_PRINT(("adding %s at index %x\n", toStringNamer(name), (int) index));
   }
@@ -154,6 +158,7 @@ public:
     addName(index_clone, name);
   }
   void gCollect(void) {
+    //printf("namer.cc gCollect\n");fflush(stdout);
     Namer<T_INDEX, T_NAME> * tmp = _head;
     _head = NULL;
 
@@ -180,6 +185,7 @@ public:
     }
   }
   void sClone(void) {
+    printf("namer.hh sClone\n");fflush(stdout);
     Namer<T_INDEX, T_NAME> * tmp = _head;
 
     while (tmp) {

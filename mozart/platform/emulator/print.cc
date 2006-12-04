@@ -185,7 +185,7 @@ void ozd_printStream(OZ_Term val, ostream &stream, int depth)
 void ozd_print(OZ_Term val) {
   ozd_printStream(val,cerr);
   cerr << endl;
-  flush(cerr);
+  flush(cerr);  
 }
 
 void ozd_printLongStream(OZ_Term val, ostream &stream, int depth, int offset)

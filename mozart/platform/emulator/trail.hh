@@ -75,7 +75,8 @@ public:
 
   void pushVariable(TaggedRef *);
 
-  void pushGeVariable(TaggedRef *, TaggedRef);
+  //void pushGeVariable(TaggedRef *, TaggedRef);
+  //void pushGeVariable(TaggedRef *);
 
 
   /*
