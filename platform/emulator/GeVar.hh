@@ -156,7 +156,7 @@ inline
 void checkGlobalVar(OZ_Term v) {
   //  cout<<"Inicio check: "<<oz_isInt(v)<<endl; fflush(stdout);
   Assert(oz_isGeVar(v));
-  DEREF(v,vp);
+  //DEREF(v,vp);
   ExtVar *ev = oz_getExtVar(v);
   if (!oz_isLocalVar(ev)) {
     TaggedRef nlv = static_cast<GeVar*>(ev)->clone(v);
@@ -164,13 +164,14 @@ void checkGlobalVar(OZ_Term v) {
     ExtVar *varTmp = var2ExtVar(tagged2Var(oz_deref(nlv)));
     GeVar *gvar = static_cast<GeVar*>(varTmp);
     //    cout<<"DOM"<<endl; fflush(stdout);
-    gvar->printDomain();
+    //gvar->printDomain();
 
     //meter al trail v [v]
-    TaggedRef nlvAux = oz_deref(nlv);
+    //TaggedRef nlvAux = oz_deref(nlv);
 
     Assert(oz_isVar(nlvAux));
-    trail.pushGeVariable(vp, nlvAux);
+    oz_unify(v,nlv);
+    //trail.pushGeVariable(vp, nlvAux);
     //    *vp = nlvAux;
   }
   //  cout<<"Termino check: "<<oz_isInt(v)<<endl; fflush(stdout);

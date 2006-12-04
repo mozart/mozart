@@ -66,7 +66,6 @@ OZ_BI_define(BI_prop_gec, 0, 0) {
   }
   
   // no variable left in gs, delete it and vanish
-  printf("lateThread %p deleted gs->solved()=%d\n",gs,gs->solved());fflush(stdout);
   oz_currentBoard()->deleteGenericSpace();
   return PROCEED;
 } OZ_BI_end
