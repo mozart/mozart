@@ -71,7 +71,8 @@ public:
   GeVarType type() { return getType(); }
 
   virtual ExtVar* gCollectV() { return new GeIntVar(*this); }
-  virtual ExtVar* sCloneV() { printf("virtual ExtVar sCloneV()\n");fflush(stdout);return new GeIntVar(*this); }
+  virtual ExtVar* sCloneV() { //printf("virtual ExtVar sCloneV()\n");fflush(stdout);
+  return new GeIntVar(*this); }
 
   virtual OZ_Return     unifyV(TaggedRef*, TaggedRef*);
   virtual OZ_Return     bindV(TaggedRef*, TaggedRef);

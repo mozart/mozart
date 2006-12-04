@@ -42,7 +42,7 @@
 #include "GeVar.hh"
 #include "os.hh"
 #include "trail.hh"
-
+#include "namer.hh"
 #ifdef OUTLINE
 #include "board.icc"
 #endif
@@ -539,7 +539,7 @@ OZ_Return Board::installScript(Bool isMerging)
     TaggedRef x = oz_head(xy);
     //local variable
     TaggedRef y = oz_tail(xy);
-
+    //printf(" inicio while end %s  this=%p \n",oz_varGetName(x),this);fflush(stdout);    
     xys = oz_deref(oz_tail(xys));
     Assert(!oz_isRef(xys));
     
@@ -555,67 +555,44 @@ OZ_Return Board::installScript(Bool isMerging)
        * script will be simplified!
        *
        */
-      if (!oz_isVarOrRef(oz_deref(x)) && !oz_isVarOrRef(oz_deref(y))) {
-	//cout<<"MALDITA SEAAAAAAAAAAAA"<<endl; fflush(stdout);
+      if (!oz_isVarOrRef(oz_deref(x)) && !oz_isVarOrRef(oz_deref(y))) 
 	Board::ignoreWakeUp(NO);
-      }
-      else {
-	//cout<<"RRRRRRRRRRRRRRRRR"<<endl; fflush(stdout);
-	Board::ignoreWakeUp(OK);
-      }
+      else 
+	Board::ignoreWakeUp(OK);      
     }
-
+    
     int res = PROCEED;
 
     if (oz_isGeVar(x)||oz_isGeVar(y))
       Board::ignoreWakeUp(NO);
-
+    
     //x is the global var,  y is the local one
     if (oz_isGeVar(x)) {
       GeVar *tmpVar = static_cast<GeVar*>(oz_getExtVar(oz_deref(x)));
       TaggedRef *xpt = tagged2Ref(x);
-      //DEREF(x,xpp);
-      //TaggedRef xpp = oz_deref(x);
       TaggedRef xaux = x;
       if (oz_isGeVar(y)) {
 	GeVar *tmpVar2 = static_cast<GeVar*>(var2ExtVar(tagged2Var(oz_deref(y))));
-	bool NOempty = tmpVar->intersect(y);
-	////	bool NOempty = true;
-	//	gespace->status();
-	//	tmpVar->printDomain();
-	printf("installScript local index=%d\n",tmpVar2->getIndex());fflush(stdout);
-	res = NOempty? PROCEED: FAILED;
-	trail.pushGeVariable(xpt,oz_deref(gespace->getVarRef(tmpVar2->getIndex())));
+	//printf(" install %s  \n",oz_varGetName(x));fflush(stdout);        
+	res = oz_unify(x,gespace->getVarRef(tmpVar2->getIndex()));	
+	//printf(" install end %s  \n",oz_varGetName(x));fflush(stdout);    
       }
       //Igual toca intersectar el valor local y con la variable global x
       else { 
 	//PAra que se hace esto si al final hay un if donde se pregunta 
 	//si y es entero y se llama a la unificacion
 	Assert(!oz_isVarOrRef(oz_deref(y)));
-	bool IS = tmpVar->In(y);
-	res = IS? PROCEED: FAILED;
-	trail.pushGeVariable(xpt,oz_deref(y));
-      }
-      
-	
+	res = oz_unify(x,y);}
+       
       //No siempre es verdadero este invariante porque la variable local puede estar determinada
-      //      Assert(oz_isVar(oz_deref(y)));
       //Esto no puede ser solo si es Int,  debe es mejor si esta determinado.
-      //if(oz_isInt(y))  
+      
       if(!oz_isVarOrRef(oz_deref(y)))  
 	res = oz_unify(x,y);		      
-    } else {
-      //Board::ignoreWakeUp(NO); //Asi funciona¡¡¡¡¡¡ el ejemplo del hilo Wait
-      //GeVar *tmpVar2 = static_cast<GeVar*>(var2ExtVar(tagged2Var(oz_deref(y))));
-      //printf("index de y=%d\n",tmpVar2->getIndex());fflush(stdout);
-	  res = oz_unify(x, y);
-
-      //oz_var_dispose(tagged2Var(oz_deref(y)));
-      //doBind(tagged2Ref(y),x);
-    }
-
+    } else 
+      res = oz_unify(x,y);
+    
     Board::ignoreWakeUp(NO);
-
     if (res != PROCEED) {
       // NOTE: in case of a failure the remaining constraints in the
       //       script are discarded

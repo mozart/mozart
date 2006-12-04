@@ -40,6 +40,7 @@ VarNamer varNamer;
 
 const char * oz_varGetName(OZ_Term v)
 {
+  //printf("namer.cc oz_varGetName %d\n",v);fflush(stdout);
   const char * name = varNamer.getName(derefIndexNamer(v));
   return (name == (const char *) NULL) ? "_" : name;
 }
@@ -47,7 +48,7 @@ const char * oz_varGetName(OZ_Term v)
 void oz_varAddName(OZ_Term v, const char *nm)
 {
   DEREF(v, vptr);
-    
+  //printf("namer.cc 222 oz_varAddName %d  %s\n",v,nm);fflush(stdout);
   Assert(!oz_isRef(v));
   if (!oz_isVarOrRef(v))
     return;
@@ -56,6 +57,7 @@ void oz_varAddName(OZ_Term v, const char *nm)
 
 Bool isCacMarkedNamer(OZ_Term t) 
 { 
+  printf("namer.cc isCacMarkedName\n");fflush(stdout);
   OZ_Term t_deref = oz_deref(t);
   Assert(!oz_isRef(t_deref));
   return oz_isRef(t) && (oz_isMark(t_deref) || 
@@ -65,11 +67,13 @@ Bool isCacMarkedNamer(OZ_Term t)
 
 void GCollectIndexNamer(OZ_Term &t)
 {
+  printf("namer.cc GCollectIndexNamer\n");fflush(stdout);
   oz_gCollectTerm(t, t);
 }
 
 OZ_Term getCacForward(OZ_Term t) 
 {
+  printf("namer.cc getCacForward\n");fflush(stdout);
   OZ_Term t_deref = oz_deref(t);
   Assert(!oz_isRef(t_deref));
   return (oz_isVar(t_deref) 
@@ -160,7 +164,7 @@ public:
   const char *name;
   VariableNamer *next;
   VariableNamer(TaggedRef var, const char *name, VariableNamer *next)
-    : var(var), name(name), next(next) {}
+    : var(var), name(name), next(next) {  printf("namer.cc variableNamer\n");fflush(stdout);}
 };
 
 static
@@ -168,6 +172,7 @@ VariableNamer *allnames = NULL;
 
 const char *oz_varGetName(TaggedRef v)
 {
+  printf("namer.cc 2222oz_varGetName\n");fflush(stdout);
   v = oz_safeDeref(v);
   for (VariableNamer *i = allnames; i!=NULL; i = i->next) {
     if (OZ_isVariable(i->var) && oz_eq(oz_safeDeref(i->var),v)) {
@@ -180,6 +185,7 @@ const char *oz_varGetName(TaggedRef v)
 void oz_varAddName(TaggedRef v, const char *nm)
 {
   // check if already in there 
+  printf("namer.cc 111 oz_varAddName %d    %s\n",v,nm);fflush(stdout);
   Assert(nm && *nm);
   VariableNamer *aux = allnames;
   while(aux) {
@@ -204,6 +210,7 @@ void oz_varAddName(TaggedRef v, const char *nm)
 /* remove all entries, that are not a variable */
 void oz_varCleanup()
 {
+  printf("namer.cc oz_varCleanup\n");fflush(stdout);
   VariableNamer *aux = allnames;
   allnames = NULL;
   while(aux) {

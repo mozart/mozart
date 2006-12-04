@@ -1074,7 +1074,7 @@ void oz_printStream(OZ_Term term, ostream &out, int depth, int width)
   if (depth<0) {
     depth = ozconf.printDepth;
   }
-
+  //printf("foreign.cc oz_printStream: %d\n",term);fflush(stdout);
   term2Buffer(out,term,depth);
   flush(out);
 
@@ -1099,7 +1099,6 @@ void term2Buffer(ostream &out, OZ_Term term, int depth)
     out << "<Null pointer>";
     return;
   }
-
   DEREF(term,termPtr);
   switch (tagged2ltag(term)) {
   case LTAG_VAR0:
@@ -1109,7 +1108,12 @@ void term2Buffer(ostream &out, OZ_Term term, int depth)
 	out << "<Oz_Dereferenced variable>";
 	break;
       }
+      if (oz_isVar(term))
+	{printf("term2Buffer = %d -- %d  termPtr=%d  %d\n",tagged2Var(term)->getType(),term,termPtr,makeTaggedRef(termPtr));fflush(stdout);}
+      else
+	{printf("i have no idea\n");fflush(stdout);}
       const char *s = oz_varGetName(makeTaggedRef(termPtr));
+      //const char *s = oz_varGetName(term);
       Assert(!oz_isRef(term));
       if (oz_isVarOrRef(term)) {
 	oz_var_printStream(out, s,tagged2Var(term),depth);
@@ -1151,6 +1155,7 @@ void term2Buffer(ostream &out, OZ_Term term, int depth)
 
 char *OZ__toC(OZ_Term term, int depth, int width,int* len)
 {
+  //printf("foreing.cc OZ__toC %d\n",term);fflush(stdout);
   static char *tmpString = 0;
   if (tmpString) {
     delete [] tmpString;

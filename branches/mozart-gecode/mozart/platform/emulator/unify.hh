@@ -137,6 +137,7 @@ void doBind(TaggedRef *p, TaggedRef t)
 
 void oz_bindLocalVar(OzVariable *ov, TaggedRef *varPtr, TaggedRef term);
 void oz_bindGlobalVar(OzVariable *ov, TaggedRef *varPtr, TaggedRef term);
+void oz_bindGlobalVar2(OzVariable *ov, TaggedRef *varPtr, TaggedRef term);
 
 inline
 void oz_bindVar(OzVariable *ov, TaggedRef *varPtr, TaggedRef term)

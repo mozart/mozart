@@ -66,7 +66,7 @@ void Trail::pushVariable(TaggedRef * varPtr) {
 
 }
 
-void Trail::pushGeVariable(TaggedRef * varPtr, TaggedRef varLocal) {
+/*void Trail::pushGeVariable(TaggedRef * varPtr) {
   //La variable debe ser global
   OzVariable *v = extVar2Var(oz_getExtVar(*varPtr));
 
@@ -85,19 +85,19 @@ void Trail::pushGeVariable(TaggedRef * varPtr, TaggedRef varLocal) {
 
   v->setTrailed();
 
-  *varPtr = varLocal;
+  //*varPtr = varLocal;
 
   //Igual que en board.cc:554
   //  Assert(oz_isVar(*varPtr));
-  /*  if(oz_isVar(*varPtr)) {
+    if(oz_isVar(*varPtr)) {
     GeVar *vl = static_cast<GeVar*>(oz_getExtVar(varLocal));
     GenericSpace *gs = oz_currentBoard()->getGenericSpace();    
     gs->setVarRef(vl->getIndex(),makeTaggedRef(varPtr));
-    }*/
+    }
 
 
 }
-
+*/
 void Trail::pushMark(void) {
   // All variables marked as trailed must be unmarked!
 
@@ -287,8 +287,11 @@ TaggedRef Trail::unwind(Board * b) {
 	  AssureThread;
 	  oz_var_addSusp(vvPtr,t);
 	}
-
+	//TaggedRef * tmp = newTaggedRef(refPtr);
+	//printf("unwind refPtr=%d *refPtr=%d\n",refPtr,&(*refPtr));fflush(stdout);
 	unBind(refPtr, value);
+	//printf("unwind desp refPtr=%d *refPtr=%d\n",refPtr,*refPtr );fflush(stdout);
+	//unBind(tmp, value);
 	
 	// value is always global variable, so add always a thread;
 	if (hasNoRunnable && !oz_var_hasSuspAt(*refPtr,b)) {
@@ -391,7 +394,7 @@ void Trail::unwindFailed(void) {
     }
 
     case Te_GeVariable: {
-      //cout<<"unwindFailed Te_GeVariable"<<endl; fflush(stdout);
+      cout<<"unwindFailed Te_GeVariable"<<endl; fflush(stdout);
       TaggedRef *varPtr;
       OzVariable *glb;
       popGeVariable(varPtr,glb);
@@ -474,7 +477,7 @@ void Trail::unwindEqEq(void) {
     }
 
     case Te_GeVariable: {
-      //cout<<"unwindEqEq Te_GeVariable"<<endl; fflush(stdout);
+      cout<<"unwindEqEq Te_GeVariable"<<endl; fflush(stdout);
       TaggedRef *varPtr;
       OzVariable *glb;
       popGeVariable(varPtr,glb);

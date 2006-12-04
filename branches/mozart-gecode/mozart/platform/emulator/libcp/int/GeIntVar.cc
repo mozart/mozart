@@ -35,17 +35,30 @@ using namespace Gecode::Int;
 
 
 OZ_Return GeIntVar::unifyV(TaggedRef* lPtr, TaggedRef* rPtr) {
-  //printf("GeIntVar::unifyV\n");fflush(stdout);
+
   //  if (!OZ_isGeIntVar(*rPtr)) return OZ_suspendOnInternal(*rPtr);
 
   GeIntVar* lgeintvar = this;
   GeIntVar* rgeintvar = get_GeIntVar(*rPtr);
-  printf("indexl:%d -- indexr:%d queda el derecho\n",lgeintvar->getIndex(),rgeintvar->getIndex());fflush(stdout);
+  //printf("GeIntVar::unifyV lge=%d rg=%d\n",oz_isLocalVar(extVar2Var(lgeintvar)),oz_isLocalVar(extVar2Var(rgeintvar)));fflush(stdout);
+  bool is_global = false;
   // Unification of variables from different spaces is not implemented
   // yet. What does this means for us??
-  if (extVar2Var(lgeintvar)->getBoardInternal()->getGenericSpace() != extVar2Var(rgeintvar)->getBoardInternal()->getGenericSpace()) {
-    printf("Operation not implemented\n");fflush(stdout);
-    return SUSPEND;
+  if (extVar2Var(lgeintvar)->getBoardInternal()->getGenericSpace() != extVar2Var(rgeintvar)->getBoardInternal()->getGenericSpace()) {    
+    if(oz_isLocalVar(extVar2Var(lgeintvar)))
+    {  
+      GeIntVar *tmp = rgeintvar;
+      TaggedRef *tmp_tagged = rPtr;
+      rgeintvar = lgeintvar;
+      rPtr = lPtr;
+      lgeintvar = tmp;
+      lPtr = tmp_tagged;
+      is_global = true;
+      //printf("Operation not implemented\n");fflush(stdout);
+    }
+    
+    
+    //return SUSPEND;
   }
   GenericSpace* space = extVar2Var(lgeintvar)->getBoardInternal()->getGenericSpace();
   //printf("GeIntVar::unifyV\n");fflush(stdout);
@@ -59,14 +72,26 @@ OZ_Return GeIntVar::unifyV(TaggedRef* lPtr, TaggedRef* rPtr) {
     irange(lrange, rrange);
   if (irange()) {
     //printf("GeIntVar::unifyV antes de bindLocal oz_isVar(lPtr)=%d -- oz_isVar(rPtr)=%d %d\n",oz_isVar(*lPtr),oz_isVar(*rPtr),*lPtr);fflush(stdout);
-    oz_bindLocalVar(extVar2Var(this), lPtr, makeTaggedRef(rPtr));
+    if (is_global)
+      {
+	//lgeintvar->intersect(makeTaggedVar(extVar2Var(rgeintvar)));
+	oz_bindGlobalVar2(extVar2Var(lgeintvar), lPtr, makeTaggedRef(rPtr));	
+	//true==true;
+      }
+    else
+      {
+	oz_bindLocalVar(extVar2Var(this), lPtr, makeTaggedRef(rPtr));
+	eq(space, lintvar, rintvar);
+      }
+
+	
     //printf("GeIntVar::unifyV despues de bindLocal oz_isVar(lPtr)=%d -- oz_isVar(rPtr)=%d %d\n",oz_isVar(*lPtr),oz_isVar(*rPtr),*lPtr);fflush(stdout);
     // intersect the domain of rvar with the domain of lvar
     ////    IntView(rintvar).inter(space, lrange);
     /* Unification is entailed by means of an eq propagator. After post this
        propagator the generic space must becomes unstable. The unstability is
        a result of posting the propagator */
-    eq(space, lintvar, rintvar);
+
     // wakeup space propagators to inmediatly update all related variables
     unsigned long alt = 0; //useless variable
     //    return (space->status(alt)== Gecode::SS_FAILED) ? FAILED: PROCEED ;
@@ -112,14 +137,14 @@ OZ_Return GeIntVar::bindV(TaggedRef* vPtr, TaggedRef val) {
 	extVar2Var(this)->getBoardInternal()->setFailed();
 	return FAILED;
       }
-      printf("end bindV\n");fflush(stdout);
+      //printf("end bindV\n");fflush(stdout);
       return PROCEED;
 
       // wakeup space propagators to inmediatly update all related variables
       //unsigned int alt = 0; //useless variable
       //s->status(alt);
     } else {
-      cout<<"NOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO global var"<<endl; fflush(stdout);
+      //cout<<"NOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO global var"<<endl; fflush(stdout);
       // global binding...
       oz_bindGlobalVar(extVar2Var(this), vPtr, val);
     }
@@ -210,7 +235,7 @@ TaggedRef GeIntVar::clone(TaggedRef v) {
 #include <string>
 
 void GeIntVar::printStreamV(ostream &out,int depth) {
-  printf("called print stream --  index=%d\n",getIndex());fflush(stdout);
+
   std::stringstream oss;
   oss << getIntVarInfo();
   out << "<GeIntVar " << oss.str().c_str() << ">"; 

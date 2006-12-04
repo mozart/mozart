@@ -68,6 +68,21 @@ void oz_bindGlobalVar(OzVariable *ov, TaggedRef *varPtr, TaggedRef term)
   doBind(varPtr,term);
 }
 
+void oz_bindGlobalVar2(OzVariable *ov, TaggedRef *varPtr, TaggedRef term)
+{
+  Assert(tagged2Var(*varPtr)==ov);
+  Assert(!oz_isLocalVar(ov));
+  Assert(am.inEqEq() || checkHome(varPtr));
+  //printf("oz_bindGlobalVar2 %d\n",varPtr);fflush(stdout);
+
+  oz_checkSuspensionList(ov, pc_std_unif);
+  
+  trail.pushBind(varPtr);
+  //printf("oz_bindGlobalVar  = %s -- varPtr=%d *varPtr=%d term=%d\n",oz_varGetName(makeTaggedRef(varPtr)),varPtr,*varPtr,term);fflush(stdout);
+  doBind(varPtr,term);
+  //printf("oz_bindGlobalVar22  = %s varPtr=%d %d end\n",oz_varGetName(makeTaggedRef(varPtr)),varPtr,(*varPtr));fflush(stdout);
+}
+
 void oz_bindLocalVar(OzVariable *ov, TaggedRef *varPtr, TaggedRef term)
 {
   Assert(tagged2Var(*varPtr)==ov);
