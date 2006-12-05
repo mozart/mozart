@@ -157,7 +157,7 @@ void checkGlobalVar(OZ_Term v) {
   //  cout<<"Inicio check: "<<oz_isInt(v)<<endl; fflush(stdout);
   Assert(oz_isGeVar(v));
   //DEREF(v,vp);
-  ExtVar *ev = oz_getExtVar(v);
+  ExtVar *ev = oz_getExtVar(oz_deref(v));
   if (!oz_isLocalVar(ev)) {
     TaggedRef nlv = static_cast<GeVar*>(ev)->clone(v);
 
