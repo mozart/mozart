@@ -1108,10 +1108,6 @@ void term2Buffer(ostream &out, OZ_Term term, int depth)
 	out << "<Oz_Dereferenced variable>";
 	break;
       }
-      if (oz_isVar(term))
-	{printf("term2Buffer = %d -- %d  termPtr=%d  %d\n",tagged2Var(term)->getType(),term,termPtr,makeTaggedRef(termPtr));fflush(stdout);}
-      else
-	{printf("i have no idea\n");fflush(stdout);}
       const char *s = oz_varGetName(makeTaggedRef(termPtr));
       //const char *s = oz_varGetName(term);
       Assert(!oz_isRef(term));
