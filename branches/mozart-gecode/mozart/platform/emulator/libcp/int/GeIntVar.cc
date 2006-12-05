@@ -40,74 +40,63 @@ OZ_Return GeIntVar::unifyV(TaggedRef* lPtr, TaggedRef* rPtr) {
 
   GeIntVar* lgeintvar = this;
   GeIntVar* rgeintvar = get_GeIntVar(*rPtr);
-  //printf("GeIntVar::unifyV lge=%d rg=%d\n",oz_isLocalVar(extVar2Var(lgeintvar)),oz_isLocalVar(extVar2Var(rgeintvar)));fflush(stdout);
-  bool is_global = false;
-  // Unification of variables from different spaces is not implemented
-  // yet. What does this means for us??
-  if (extVar2Var(lgeintvar)->getBoardInternal()->getGenericSpace() != extVar2Var(rgeintvar)->getBoardInternal()->getGenericSpace()) {    
-    if(oz_isLocalVar(extVar2Var(lgeintvar)))
-    {  
-      GeIntVar *tmp = rgeintvar;
-      TaggedRef *tmp_tagged = rPtr;
-      rgeintvar = lgeintvar;
-      rPtr = lPtr;
-      lgeintvar = tmp;
-      lPtr = tmp_tagged;
-      is_global = true;
-      //printf("Operation not implemented\n");fflush(stdout);
-    }
-    
-    
-    //return SUSPEND;
-  }
   GenericSpace* space = extVar2Var(lgeintvar)->getBoardInternal()->getGenericSpace();
-  //printf("GeIntVar::unifyV\n");fflush(stdout);
   IntVar& lintvar = lgeintvar->getIntVar();
   IntVar& rintvar = rgeintvar->getIntVar();
 
-  // compute the intersection of the domains
-  ViewRanges<IntView> lrange(lintvar);
-  ViewRanges<IntView> rrange(rintvar);
-  Iter::Ranges::Inter<ViewRanges<IntView>, ViewRanges<IntView> >
-    irange(lrange, rrange);
-  if (irange()) {
-    //printf("GeIntVar::unifyV antes de bindLocal oz_isVar(lPtr)=%d -- oz_isVar(rPtr)=%d %d\n",oz_isVar(*lPtr),oz_isVar(*rPtr),*lPtr);fflush(stdout);
-    if (is_global)
-      {
-	//lgeintvar->intersect(makeTaggedVar(extVar2Var(rgeintvar)));
+
+  Assert(space);
+  if(oz_isLocalVar(extVar2Var(lgeintvar))){
+    if(!oz_isLocalVar(extVar2Var(rgeintvar))){
+      if(!(rgeintvar->intersect(makeTaggedRef(lPtr))))
+	return FAILED;
+      oz_bindGlobalVar2(extVar2Var(rgeintvar), rPtr, makeTaggedRef(lPtr));	
+    }else{
+      // "this" is local.  The binding cannot go upwards, so...    
+      //Assert(oz_isLocalVar(extVar2Var(rgeintvar)));
+      //I don't think this assert is correct,  other can be a global var
+      if(!(rgeintvar->intersect(makeTaggedRef(lPtr))))
+	return FAILED;
+      oz_bindLocalVar(extVar2Var(this), lPtr, makeTaggedRef(rPtr));
+      eq(space, lintvar, rintvar);
+    }
+    }else{
+      // "this" is global.
+      if (oz_isLocalVar(extVar2Var(rgeintvar))) {
+	if(!(lgeintvar->intersect(makeTaggedRef(rPtr))))
+	  return FAILED;
 	oz_bindGlobalVar2(extVar2Var(lgeintvar), lPtr, makeTaggedRef(rPtr));	
-	//true==true;
-      }
-    else
-      {
-	oz_bindLocalVar(extVar2Var(this), lPtr, makeTaggedRef(rPtr));
-	eq(space, lintvar, rintvar);
-      }
 
-	
-    //printf("GeIntVar::unifyV despues de bindLocal oz_isVar(lPtr)=%d -- oz_isVar(rPtr)=%d %d\n",oz_isVar(*lPtr),oz_isVar(*rPtr),*lPtr);fflush(stdout);
-    // intersect the domain of rvar with the domain of lvar
-    ////    IntView(rintvar).inter(space, lrange);
-    /* Unification is entailed by means of an eq propagator. After post this
-       propagator the generic space must becomes unstable. The unstability is
+
+      } else {
+	OZ_Term lv = new_GeIntVar(Gecode::IntSet(Limits::Int::int_min,Gecode::Limits::Int::int_max));
+	if(!(lgeintvar->intersect(lv)))
+	  return FAILED;
+	if(!(rgeintvar->intersect(lv)))
+	  return FAILED;	
+	oz_bindGlobalVar2(extVar2Var(lgeintvar), rPtr, makeTaggedVar(extVar2Var(get_GeIntVar(lv))));	
+	oz_bindGlobalVar2(extVar2Var(rgeintvar), rPtr, makeTaggedVar(extVar2Var(get_GeIntVar(lv))));	
+      }
+    }
+  
+  /* Unification is entailed by means of an eq propagator. After post this
+     propagator the generic space must becomes unstable. The unstability is
        a result of posting the propagator */
-
-    // wakeup space propagators to inmediatly update all related variables
-    unsigned long alt = 0; //useless variable
-    //    return (space->status(alt)== Gecode::SS_FAILED) ? FAILED: PROCEED ;
-    if(space->status(alt) == Gecode::SS_FAILED) {
-      extVar2Var(this)->getBoardInternal()->setFailed();
-      return FAILED;
-    }
-    else{
-      return PROCEED;
-    }
-    //xspace->status(alt);
-        
-    //return PROCEED;
-  } else {
+  
+  // wakeup space propagators to inmediatly update all related variables
+  unsigned long alt = 0; //useless variable
+  //    return (space->status(alt)== Gecode::SS_FAILED) ? FAILED: PROCEED ;
+  if(space->status(alt) == Gecode::SS_FAILED) {
+    extVar2Var(this)->getBoardInternal()->setFailed();
     return FAILED;
   }
+  else{
+    return PROCEED;
+  }
+  //xspace->status(alt);
+  
+  //return PROCEED;
+  
 }
 
 
@@ -196,12 +185,12 @@ VarBase* GeIntVar::clone(void) {
 
 
 //(this) is the global variable
-//x is the local variable
+//x is the local variable,  the one that its domain is modified
 bool GeIntVar::intersect(TaggedRef x) {
   IntVar& gv = getIntVarInfo();
   ViewRanges<IntView> gvr(gv);
 
-  IntVar& liv = get_IntVar(x);
+  IntVar& liv = get_GeIntVar(x)->getIntVar();
   IntView vw(liv);
   return (vw.inter(oz_currentBoard()->getGenericSpace(),gvr)==Gecode::ME_GEN_FAILED ? false: true);
   //  return (vw.inter(oz_currentBoard()->getGenericSpace(),gvr) != Gecode::ME_GEN_FAILED)
