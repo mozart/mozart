@@ -188,6 +188,10 @@ namespace _dss_internal{ //Start namespace
     }
   }
 
+  ProtocolTransientRemoteManager::~ProtocolTransientRemoteManager() {
+    while (!a_requests.isEmpty()) a_requests.pop().dispose();
+  }
+
   void ProtocolTransientRemoteManager::makeGCpreps() {
     ProtocolManager::makeGCpreps();
     // mark all threads in buffered messages
