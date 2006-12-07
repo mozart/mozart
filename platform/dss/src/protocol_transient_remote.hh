@@ -59,7 +59,7 @@ namespace _dss_internal{ //Start namespace
 
   public:
     ProtocolTransientRemoteManager(DSite* const site);
-    ~ProtocolTransientRemoteManager() {}
+    ~ProtocolTransientRemoteManager();
 
     void sendMigrateInfo(MsgContainer*);
     ProtocolTransientRemoteManager(MsgContainer* const);
