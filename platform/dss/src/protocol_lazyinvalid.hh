@@ -32,92 +32,25 @@
 
 #include "dssBase.hh"
 #include "protocols.hh"
+#include "protocol_eagerinvalid.hh"
 #include "dss_templates.hh"
 
 namespace _dss_internal{ //Start namespace
 
-  class ProtocolLazyInvalidManager:public ProtocolManager {
-  private:
-    SimpleQueue<Pair<DSite*, bool> > a_requests;
-    SimpleList<DSite*> a_readers;
-    DSite* a_writer;
+  // manager and proxy for the eager protocol.  ProtocolInvalidManager
+  // and ProtocolInvalidProxy are defined in protocol_eagerinvalid.hh.
 
-    // a_requests contains pairs (site, b), where b is true for read
-    // requests, and false for write requests.
-    //
-    // a_readers contains all reader proxies that have not invalidated
-    // their state yet.  They are asked to invalidate once a write
-    // request must be served; the write token is given once a_readers
-    // becomes empty.
-    //
-    // a_writer is the proxy that currently has the write token.
-
-    ProtocolLazyInvalidManager(const ProtocolLazyInvalidManager&):
-      a_writer(NULL) {}
-    ProtocolLazyInvalidManager operator=(const ProtocolLazyInvalidManager&){
-      return *this; }
-
+  class ProtocolLazyInvalidManager : public ProtocolInvalidManager {
   public:
-    ProtocolLazyInvalidManager(DSite *mysite);
-    ProtocolLazyInvalidManager(MsgContainer*);
-    ~ProtocolLazyInvalidManager() {}
-    void makeGCpreps();
-    void msgReceived(MsgContainer*,DSite*);
-    void sendMigrateInfo(MsgContainer*); 
-
-    void m_siteStateChange(DSite*, const DSiteState&);
-
-  private: 
-    void m_sendWriteToken();
-    void m_updateOneReader(DSite *);
-    void m_handleNextRequest();
-    void m_failed();
+    ProtocolLazyInvalidManager(DSite* s) :
+      ProtocolInvalidManager(s, true) {}
+    ProtocolLazyInvalidManager(MsgContainer* msg) :
+      ProtocolInvalidManager(msg) {}
   };
 
-
-  enum LazyInvalidToken {
-    LIT_INVALID,     // proxy has no valid state
-    LIT_READER,      // proxy has read token
-    LIT_WRITER       // proxy has write token
-  };
-
-  class ProtocolLazyInvalidProxy:public ProtocolProxy{
-  private:
-    // The status of the proxy is a LazyInvalidToken.  The first
-    // a_reads elements of a_susps are read operations, and the
-    // remaining ones are write operations
-    int a_reads;
-
-    ProtocolLazyInvalidProxy(const ProtocolLazyInvalidProxy&):
-      ProtocolProxy(PN_EAGER_INVALID), a_reads(0) {}
-    ProtocolLazyInvalidProxy operator=(const ProtocolLazyInvalidProxy&){
-      return *this; }
-
+  class ProtocolLazyInvalidProxy : public ProtocolInvalidProxy {
   public:
-    ProtocolLazyInvalidProxy();
-    bool m_initRemoteProt(DssReadBuffer*);
-    ~ProtocolLazyInvalidProxy();
-
-    OpRetVal protocol_Read(GlobalThread* const th_id,
-			   PstOutContainerInterface**& msg);
-    OpRetVal protocol_Write(GlobalThread* const th_id,
-			    PstOutContainerInterface**& msg);
-
-    bool isWeakRoot() { return !isPermFail() && (getStatus() == LIT_WRITER
-						 || a_reads < a_susps.size());}
-
-    void msgReceived(MsgContainer*,DSite*);
-
-    virtual void
-    remoteInitatedOperationCompleted(DssOperationId* opId,
-				     PstOutContainerInterface* pstOut) {}
-    void localInitatedOperationCompleted() { Assert(0); }
-
-    virtual FaultState siteStateChanged(DSite*, const DSiteState&);
-
-  private: 
-    void m_requestReadToken();
-    void m_requestWriteToken();
+    ProtocolLazyInvalidProxy() : ProtocolInvalidProxy(true) {}
   };
 
 } //End namespace
