@@ -107,6 +107,7 @@ Board::Board()
   setGCStep(oz_getGCStep());
 #ifdef BUILD_GECODE
   gespace = NULL;
+  gespaceAux = NULL;
 #endif
 }
 
@@ -129,6 +130,7 @@ Board::Board(Board * p)
   } else {
     gespace = NULL;
   }
+  gespaceAux = NULL;
 #endif
 
 #ifdef CS_PROFILE
