@@ -202,6 +202,7 @@ public:
   //@{
   /// Default constructor
   GenericSpace(Board* b);
+
   /// Copy constructor
   explicit GenericSpace(GenericSpace& s, bool share = false);
   //@}

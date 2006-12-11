@@ -434,7 +434,20 @@ public:
   //GenericSpace declaration
 private:
   GenericSpace *gespace;
+  GenericSpace *gespaceAux;
+
 public:
+  GenericSpace* getGenericSpaceAux(void){
+    return gespaceAux;
+  }
+  void newGenericSpaceAux(void) {
+    Assert(!gespaceAux);
+    gespaceAux = new GenericSpace(this);
+  }
+  void deleteGenericSpaceAux(void) {
+    delete gespaceAux;
+    gespaceAux = NULL;
+  }
   /* Return the generic space corresponding to this board. This method will
      create it lazily if needed unless to is set to true (to stands for test
      only 

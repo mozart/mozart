@@ -1659,7 +1659,12 @@ OZ_Return oz_eqeq(TaggedRef Ain,TaggedRef Bin)
   // simulate a shallow guard
   trail.pushMark();
   am.setEqEqMode();
+  //  oz_currentBoard()->gespaceAux = new GenericSpace(oz_currentBoard());
+  oz_currentBoard()->newGenericSpaceAux();
   OZ_Return ret = oz_unify(Ain,Bin);
+  oz_currentBoard()->deleteGenericSpaceAux();
+  /*delete oz_currentBoard()->gespaceAux;
+    oz_currentBoard()->gespaceAux = NULL;*/
   am.unsetEqEqMode();
 
   if (ret == PROCEED) {
