@@ -39,6 +39,14 @@ OZ_Return GeIntVar::unifyV(TaggedRef* lPtr, TaggedRef* rPtr) {
   //  if (!OZ_isGeIntVar(*rPtr)) return OZ_suspendOnInternal(*rPtr);
 
   GeIntVar* lgeintvar = this;
+
+  if(!oz_isGeVar(*rPtr)){
+
+    oz_bindGlobalVar2(tagged2Var(*rPtr), rPtr, makeTaggedRef(lPtr));
+
+    return PROCEED;
+  }
+
   GeIntVar* rgeintvar = get_GeIntVar(*rPtr);
   GenericSpace* space = extVar2Var(lgeintvar)->getBoardInternal()->getGenericSpace();
   IntVar& lintvar = lgeintvar->getIntVar();
