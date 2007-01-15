@@ -39,14 +39,6 @@ OZ_Return GeIntVar::unifyV(TaggedRef* lPtr, TaggedRef* rPtr) {
   //  if (!OZ_isGeIntVar(*rPtr)) return OZ_suspendOnInternal(*rPtr);
 
   GeIntVar* lgeintvar = this;
-
-  if(!oz_isGeVar(*rPtr)){
-
-    oz_bindGlobalVar2(tagged2Var(*rPtr), rPtr, makeTaggedRef(lPtr));
-
-    return PROCEED;
-  }
-
   GeIntVar* rgeintvar = get_GeIntVar(*rPtr);
   GenericSpace* space = extVar2Var(lgeintvar)->getBoardInternal()->getGenericSpace();
   IntVar& lintvar = lgeintvar->getIntVar();
@@ -54,46 +46,12 @@ OZ_Return GeIntVar::unifyV(TaggedRef* lPtr, TaggedRef* rPtr) {
 
 
   Assert(space);
-
-
-  if(am.inEqEq()) {
-    //    GenericSpace *spaceTmp = oz_currentBoard()->gespaceAux;
-    GenericSpace *spaceTmp = oz_currentBoard()->getGenericSpaceAux();
-
-    TaggedRef tlvar = new_GeIntVar(IntSet(Limits::Int::int_min, Limits::Int::int_max), false);
-
-    DoBindAndTrail(lPtr,tlvar);
-    DoBindAndTrail(rPtr,tlvar);
-
-    ViewRanges<IntView> vrlvar(lintvar);
-    ViewRanges<IntView> vrrvar(rintvar);
-
-    IntVar& nlvar = get_GeIntVar(tlvar)->getIntVarInfo(false);
-
-    IntView vlvar(nlvar);
-    
-    //this intersection should never fail
-    vlvar.inter(spaceTmp,vrlvar);
-
-    if(vlvar.inter(spaceTmp,vrrvar) ==  Gecode::ME_GEN_FAILED)
-      return FAILED;
-    
-    /*    unsigned long alt = 0;
-    
-    if(spaceTmp->status(alt) == Gecode::SS_FAILED) {
-      cout<<"El espacio fallo..."<<endl; fflush(stdout);
-      return FAILED;
-    }
-    */
-    return PROCEED;
-  }
-
   if(oz_isLocalVar(extVar2Var(lgeintvar))){
     if(!oz_isLocalVar(extVar2Var(rgeintvar))){
       if(!(rgeintvar->intersect(makeTaggedRef(lPtr))))
 	return FAILED;
       //printf("local, no local \n");fflush(stdout);
-      oz_bindGlobalVar2(extVar2Var(rgeintvar), rPtr, makeTaggedRef(lPtr));
+      oz_bindGlobalVar2(extVar2Var(rgeintvar), rPtr, makeTaggedRef(lPtr));	
     }else{
       // "this" is local.  The binding cannot go upwards, so...    
       //Assert(oz_isLocalVar(extVar2Var(rgeintvar)));
@@ -112,7 +70,6 @@ OZ_Return GeIntVar::unifyV(TaggedRef* lPtr, TaggedRef* rPtr) {
 	//printf("global, local \n");fflush(stdout);
 	oz_bindGlobalVar2(extVar2Var(lgeintvar), lPtr, makeTaggedRef(rPtr));	
       } else {
-	cout<<"global - global"<<endl; fflush(stdout);
 	//printf("global, global \n");fflush(stdout);
 	OZ_Term lv = new_GeIntVar(Gecode::IntSet(Limits::Int::int_min,Gecode::Limits::Int::int_max));
 	//TaggedRef glv_tmp = oz_deref(makeTaggedVar(extVar2Var(get_GeIntVar(lv))));
@@ -147,16 +104,11 @@ OZ_Return GeIntVar::unifyV(TaggedRef* lPtr, TaggedRef* rPtr) {
 }
 
 
+/*
+  At this point vPtr must be a local variable (be careful)
+*/
 OZ_Return GeIntVar::bindV(TaggedRef* vPtr, TaggedRef val) {
   if (validV(val)) {
-
-    if(am.inEqEq()) {
-      if(In(val)) {
-	bindGlobalVarToValue(vPtr,val);
-	return PROCEED;
-      }
-      return FAILED;
-    }
     //Board *tmp = oz_currentBoard();
     //am.setCurrent(extVar2Var(this)->getBoardInternal(),extVar2Var(this)->getBoardInternal()->getOptVar());
     if (oz_isLocalVar(extVar2Var(this))) {
