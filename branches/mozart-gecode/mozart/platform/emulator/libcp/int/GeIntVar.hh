@@ -53,15 +53,9 @@ public:
   }
 
   // the returned reference should be constant
-  Gecode::IntVar& getIntVarInfo(bool current = true) {
-    GenericSpace* gs = NULL;
-    if (current) 
-      gs = extVar2Var(this)->getBoardInternal()->getGenericSpace(true);
-    else
-      //      gs = extVar2Var(this)->getBoardInternal()->gespaceAux;
-      gs = extVar2Var(this)->getBoardInternal()->getGenericSpaceAux();
-    ////GenericSpace* gs = extVar2Var(this)->getBoardInternal()->getGenericSpace(true);
-    //printf("getIntVarInfo %p\n",gs);fflush(stdout);
+  Gecode::IntVar& getIntVarInfo() {
+      GenericSpace* gs = extVar2Var(this)->getBoardInternal()->getGenericSpace(true);
+      //printf("getIntVarInfo %p\n",gs);fflush(stdout);
     Assert(gs);
     GeView<Gecode::Int::IntVarImp> iv(gs->getVarInfo(index));
     Gecode::Int::IntView *vv = reinterpret_cast<Gecode::Int::IntView*>(&iv);
@@ -112,13 +106,8 @@ public:
 
 void postIntVarReflector(GenericSpace* s, int index, OZ_Term ref);
 
-inline OZ_Term new_GeIntVar(const Gecode::IntSet& dom, bool current=true) {
-  GenericSpace* sp;
-  if (current)
-    sp = oz_currentBoard()->getGenericSpace();
-  else
-    //    sp = oz_currentBoard()->gespaceAux;
-    sp = oz_currentBoard()->getGenericSpaceAux();
+inline OZ_Term new_GeIntVar(const Gecode::IntSet& dom) {
+  GenericSpace* sp = oz_currentBoard()->getGenericSpace();
   Gecode::IntVar x(sp,dom);
   OzVariable* ov   = extVar2Var(new GeIntVar(sp->getVarsSize()));
   OZ_Term ref      = makeTaggedRef(newTaggedVar(ov));

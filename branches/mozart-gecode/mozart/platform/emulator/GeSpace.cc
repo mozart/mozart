@@ -68,12 +68,12 @@ GenericSpace::GenericSpace(Board* b)
 
 inline
 GenericSpace::GenericSpace(GenericSpace& s, bool share) 
-    : Space(share, s), vars(this, s.vars, share),
+    : Space(share, s), vars(this, s.vars, share),      
       board(s.board),
       determined(s.determined), trigger(s.trigger),
     gc_pred(NULL), gc_succ(GeSpaceCollectList), gc_marked(false)
 {
-  printf("GenericSpace::GenericSpace(GenericSpace s, bool share) \n"); fflush(stdout);
+  printf("GenericSpace::GenericSpace(GenericSpace s, bool share) \n");fflush(stdout);
   gscounter++;
   if(GeSpaceCollectList) GeSpaceCollectList->gc_pred = this;
   GeSpaceCollectList = this;
