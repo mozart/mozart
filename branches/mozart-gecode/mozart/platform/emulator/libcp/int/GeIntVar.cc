@@ -35,33 +35,47 @@ using namespace Gecode::Int;
 
 
 OZ_Return GeIntVar::unifyV(TaggedRef* lPtr, TaggedRef* rPtr) {
-
+  printf("unifyV GeIntVar\n");fflush(stdout);
   //  if (!OZ_isGeIntVar(*rPtr)) return OZ_suspendOnInternal(*rPtr);
-
+  
   GeIntVar* lgeintvar = this;
-  GeIntVar* rgeintvar = get_GeIntVar(*rPtr);
   GenericSpace* space = extVar2Var(lgeintvar)->getBoardInternal()->getGenericSpace();
-  IntVar& lintvar = lgeintvar->getIntVar();
-  IntVar& rintvar = rgeintvar->getIntVar();
 
+   
+  /* the real condition we need to check here is:
+     if (oz_isSimpleVar(*rPtr) || oz_isOptVar(*rPtr))
+  */
+  if (!OZ_isGeIntVar(*rPtr)) {
+    /* This is the case when right var is either a simple var or an
+       optimized var and this represents a global var.
+    */
+    oz_bindGlobalVar2(tagged2Var(*rPtr),rPtr,makeTaggedRef(lPtr));
+    goto PROP;
+  }
 
-  Assert(space);
-  if(oz_isLocalVar(extVar2Var(lgeintvar))){
-    if(!oz_isLocalVar(extVar2Var(rgeintvar))){
-      if(!(rgeintvar->intersect(makeTaggedRef(lPtr))))
-	return FAILED;
-      //printf("local, no local \n");fflush(stdout);
-      oz_bindGlobalVar2(extVar2Var(rgeintvar), rPtr, makeTaggedRef(lPtr));	
-    }else{
-      // "this" is local.  The binding cannot go upwards, so...    
-      //Assert(oz_isLocalVar(extVar2Var(rgeintvar)));
-      //I don't think this assert is correct,  other can be a global var
-      //printf("local, local \n");fflush(stdout);
-      if(!(rgeintvar->intersect(makeTaggedRef(lPtr))))
-	return FAILED;
-      oz_bindLocalVar(extVar2Var(this), lPtr, makeTaggedRef(rPtr));
-      eq(space, lintvar, rintvar);
-    }
+  { 
+    GeIntVar* rgeintvar = get_GeIntVar(*rPtr);
+    IntVar& lintvar = lgeintvar->getIntVar();
+    IntVar& rintvar = rgeintvar->getIntVar();
+    
+    Assert(space);
+    if(oz_isLocalVar(extVar2Var(lgeintvar))){
+      if(!oz_isLocalVar(extVar2Var(rgeintvar))){
+	if(!(rgeintvar->intersect(makeTaggedRef(lPtr))))
+	  return FAILED;
+	printf("local, no local \n");fflush(stdout);
+	oz_bindGlobalVar2(extVar2Var(rgeintvar), rPtr, makeTaggedRef(lPtr));	
+      }else{
+	printf("unifyV GeIntVar this is local\n");fflush(stdout);
+	// "this" is local.  The binding cannot go upwards, so...    
+	//Assert(oz_isLocalVar(extVar2Var(rgeintvar)));
+	//I don't think this assert is correct,  other can be a global var
+	//printf("local, local \n");fflush(stdout);
+	if(!(rgeintvar->intersect(makeTaggedRef(lPtr))))
+	  return FAILED;
+	oz_bindLocalVar(extVar2Var(this), lPtr, makeTaggedRef(rPtr));
+	eq(space, lintvar, rintvar);
+      }
     }else{
       // "this" is global.
       if (oz_isLocalVar(extVar2Var(rgeintvar))) {
@@ -83,10 +97,12 @@ OZ_Return GeIntVar::unifyV(TaggedRef* lPtr, TaggedRef* rPtr) {
       }
     }
   
+  }
   /* Unification is entailed by means of an eq propagator. After post this
      propagator the generic space must becomes unstable. The unstability is
-       a result of posting the propagator */
-  
+     a result of posting the propagator */
+    
+ PROP:
   // wakeup space propagators to inmediatly update all related variables
   unsigned long alt = 0; //useless variable
   //    return (space->status(alt)== Gecode::SS_FAILED) ? FAILED: PROCEED ;
@@ -94,13 +110,8 @@ OZ_Return GeIntVar::unifyV(TaggedRef* lPtr, TaggedRef* rPtr) {
     extVar2Var(this)->getBoardInternal()->setFailed();
     return FAILED;
   }
-  else{
+  else
     return PROCEED;
-  }
-  //xspace->status(alt);
-  
-  //return PROCEED;
-  
 }
 
 
