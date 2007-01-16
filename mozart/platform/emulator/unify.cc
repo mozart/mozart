@@ -218,7 +218,6 @@ loop:
 
  /*************/
  var_nonvar:
-
   if (oz_isOptVar(term1)) {
     doBind(termPtr1, term2);
     goto next;
@@ -387,6 +386,7 @@ loop:
  /*************/
 
 next:
+ 
   if (unifyStack.isMark()) {
     result = PROCEED;
     goto exit;
@@ -409,6 +409,7 @@ push:
   goto loop;
 
 fail:
+
   Assert(result!=PROCEED);
   while (!unifyStack.isMark()) {
     unifyStack.pop();

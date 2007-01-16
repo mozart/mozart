@@ -152,29 +152,26 @@ bool oz_isGeVar(OZ_Term t) {
   OZ_Term dt = OZ_deref(t);
   return oz_isExtVar(dt) && oz_getExtVar(dt)->getIdV() == OZ_EVAR_GEVAR;
 }
+
 inline
 void checkGlobalVar(OZ_Term v) {
-  //  cout<<"Inicio check: "<<oz_isInt(v)<<endl; fflush(stdout);
+  // Why this comparison is made with ints?
+  cout<<"Inicio check: "<<oz_isInt(v)<<endl; fflush(stdout);
   Assert(oz_isGeVar(v));
-  //DEREF(v,vp);
+
   ExtVar *ev = oz_getExtVar(oz_deref(v));
   if (!oz_isLocalVar(ev)) {
     TaggedRef nlv = static_cast<GeVar*>(ev)->clone(v);
 
     ExtVar *varTmp = var2ExtVar(tagged2Var(oz_deref(nlv)));
     GeVar *gvar = static_cast<GeVar*>(varTmp);
-    //    cout<<"DOM"<<endl; fflush(stdout);
-    //gvar->printDomain();
 
     //meter al trail v [v]
     TaggedRef nlvAux = oz_deref(nlv);
 
     Assert(oz_isVar(nlvAux));
     oz_unify(v,nlv);
-    //trail.pushGeVariable(vp, nlvAux);
-    //    *vp = nlvAux;
   }
-  //  cout<<"Termino check: "<<oz_isInt(v)<<endl; fflush(stdout);
 }
 
 // This Gecode propagator reflects a Gecode variable assignment inside
