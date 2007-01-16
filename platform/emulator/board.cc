@@ -526,7 +526,7 @@ void Board::fail(void) {
 
 OZ_Return Board::installScript(Bool isMerging)
 {
-  //cout<<"installScript"<<endl; fflush(stdout);
+  cout<<"installScript"<<endl; fflush(stdout);
   TaggedRef xys = oz_deref(script);
 
   setScript(oz_nil());
@@ -574,11 +574,17 @@ OZ_Return Board::installScript(Bool isMerging)
       if (oz_isGeVar(y)) {
 	GeVar *tmpVar2 = static_cast<GeVar*>(var2ExtVar(tagged2Var(oz_deref(y))));
 	//printf(" install %s  \n",oz_varGetName(x));fflush(stdout);        
-	res = oz_unify(x,gespace->getVarRef(tmpVar2->getIndex()));	
-	//printf(" install end %s  \n",oz_varGetName(x));fflush(stdout);    
+	if (oz_isLocalVar(tagged2Var(oz_deref(y)))) {
+	  res = oz_unify(x,gespace->getVarRef(tmpVar2->getIndex()));	
+	  //printf(" install end %s  %d\n",oz_varGetName(x),res);fflush(stdout);    
+	} else {
+	  res = oz_unify(x,y);	
+	  //printf(" install end-otro %s  %d\n",oz_varGetName(x),res);fflush(stdout); 
+	}
       }
       //Igual toca intersectar el valor local y con la variable global x
       else { 
+	printf("Su madre GeVar-Simple\n");fflush(stdout);
 	//PAra que se hace esto si al final hay un if donde se pregunta 
 	//si y es entero y se llama a la unificacion
 	Assert(!oz_isVarOrRef(oz_deref(y)));
