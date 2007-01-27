@@ -24,7 +24,7 @@
  */
 
 declare
-T = {GFD.int  0#9}
+
 fun{Queens N}
    proc{$ Root}
       C1 = {List.number 1 N 1}
@@ -38,4 +38,28 @@ fun{Queens N}
    end
 end
 
-{ExploreAll {Queens 6}}
+%X
+%X::2#3
+%proc {Search S}
+%S Y
+%S
+%S = {Space.new {Queens 10}}
+%{Space.inject S proc{$ _} X in  X = {Space.new {Queens 8}} end}
+
+%C
+%_ = {Space.clone C}
+
+%end
+
+%W
+%W::1#10
+
+%X = {Space.new Search}
+%Y = {Space.new Search}
+for X in 1..3 do
+   {Show {SearchAll {Queens 11}}}
+%{ExploreAll {Queens 6}}
+end
+
+
+%{System.gcDo}

@@ -207,10 +207,7 @@ bool GeIntVar::intersect(TaggedRef x) {
 
   IntVar& liv = get_GeIntVar(x)->getIntVar();
   IntView vw(liv);
-  return (vw.inter(oz_currentBoard()->getGenericSpace(),gvr)==Gecode::ME_GEN_FAILED ? false: true);
-  //  return (vw.inter(oz_currentBoard()->getGenericSpace(),gvr) != Gecode::ME_GEN_FAILED)
-  
-  //  return vw.size()>0;
+  return (vw.inter(oz_currentBoard()->getGenericSpace(),gvr)==ME_GEN_FAILED ? false: true);
 }
 
 //(this) is the global variable
@@ -223,13 +220,8 @@ bool GeIntVar::In(TaggedRef lx) {
 
 TaggedRef GeIntVar::clone(TaggedRef v) {
   Assert(OZ_isGeIntVar(v));
-  //  IntVar& gv = get_IntVar(v);
-  //  ViewRange<IntView> gvr(gv);
   
   OZ_Term lv = new_GeIntVar(IntSet(Limits::Int::int_min,Limits::Int::int_max));
-  //IntVar& liv = get_IntVar(lv);
-  //IntView(liv).inter(oz_currentBoard()->getGenericSpace(),gvr);
-  ////  get_GeIntVar(lv)->intersect(v);
   get_GeIntVar(v)->intersect(lv);
   return lv;
 }

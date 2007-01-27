@@ -58,12 +58,13 @@ int GenericSpace::gscounter = 0;
 
 GenericSpace::GenericSpace(Board* b) 
   : vars(), board(b), determined(0),
-  gc_pred(NULL), gc_succ(GeSpaceCollectList), gc_marked(false)
+  gc_pred(NULL), gc_succ(NULL), gc_marked(false)
 {
   trigger = oz_newReadOnly(board);  
   gscounter++;
-  if (GeSpaceCollectList) GeSpaceCollectList->gc_pred = this;
-  GeSpaceCollectList = this;
+  //if (GeSpaceCollectList) GeSpaceCollectList->gc_pred = this;
+  //GeSpaceCollectList = this;
+  registerGeSpace(this);
 }
 
 inline
@@ -71,12 +72,13 @@ GenericSpace::GenericSpace(GenericSpace& s, bool share)
     : Space(share, s), vars(this, s.vars, share),      
       board(s.board),
       determined(s.determined), trigger(s.trigger),
-    gc_pred(NULL), gc_succ(GeSpaceCollectList), gc_marked(false)
+    gc_pred(NULL), gc_succ(NULL), gc_marked(false)
 {
-  printf("GenericSpace::GenericSpace(GenericSpace s, bool share) \n");fflush(stdout);
+  //printf("GenericSpace::GenericSpace(GenericSpace s, bool share) \n");fflush(stdout);
   gscounter++;
-  if(GeSpaceCollectList) GeSpaceCollectList->gc_pred = this;
-  GeSpaceCollectList = this;
+  //if(GeSpaceCollectList) GeSpaceCollectList->gc_pred = this;
+  //GeSpaceCollectList = this;
+  registerGeSpace(this);
 }
 
 inline
@@ -146,6 +148,7 @@ void GenericSpace::setVarRef(int n, OZ_Term t) {
 
 // update the references to the Mozart heap
 void GenericSpace::gCollect() {
+  //printf("GeSpace gcollect\n");fflush(stdout);
   //GEOZ_DEBUG_PRINT(("Called collection on references\n"));
   board = board->gCollectBoard();
   for (int i=0; i<vars.getSize(); i++) OZ_gCollect(vars.getRef(i));
@@ -160,19 +163,57 @@ void GenericSpace::sClone() {
   OZ_sClone(&trigger);
 }
 
+void registerGeSpace(GenericSpace* gs) {
+  //printf("registerSpace\n");fflush(stdout);
+  if (!GeSpaceCollectList) {
+    //printf("registerSpace vacia\n");fflush(stdout);
+    GeSpaceCollectList = gs;
+    GeSpaceCollectLast = gs;
+  } else {
+    //printf("registerSpace otro\n");fflush(stdout);
+    //Assert(gs->gc_succ == NULL);
+    gs->gc_succ = NULL;
+    GenericSpace *tmp = GeSpaceCollectLast;
+    GeSpaceCollectLast->gc_succ = gs;
+    gs->gc_pred = tmp;
+    GeSpaceCollectLast = gs;
+  }
+  /*GenericSpace *tmp = GeSpaceCollectList;
+  for (int i = 0;tmp != NULL; tmp = tmp->gc_succ, i++) {
+    printf("uno mas %d\n",i);fflush(stdout);
+  }
+  */
+    //GeSpaceAllocateMem += sizeof(GenericSpace) + gs->
+}
+
 // delete unmarked objects
 void gCollectGeSpaces() {
+  //Compute the allocated memory
+  GenericSpace* ptr = GeSpaceCollectList;
+  size_t geAlloc = 0;
+  while (ptr != NULL) {
+    geAlloc = geAlloc + sizeof(*ptr) + ptr->allocated() + ptr->cached();
+    ptr = ptr->gc_succ;
+  }
+  printf("collecting memory: %d\n",geAlloc/1024);fflush(stdout);
+  
+  //  printf("collecting memory used by generic spaces\n");fflush(stdout);
   GenericSpace* cur = GeSpaceCollectList;
   unsigned int i = 0;
+  unsigned int j = 0;
   while (cur != NULL) {
+    j=j+1;
     if (cur->gc_marked) {
       cur->gc_marked = false;
       cur = cur->gc_succ;
     } else {
+      //printf("collecting memory used by generic spaces\n");fflush(stdout);
       GenericSpace* dead = cur;
       cur = cur->gc_succ;
       delete dead;
       i++;
     }
   }
+  printf("collected memory for %d of %d spaces\n",i,j);
+  fflush(stdout);
 }
