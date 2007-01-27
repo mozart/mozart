@@ -135,7 +135,19 @@ public:
   void setRef(int n, OZ_Term t) { refs[n] = t; }
 };
 
+// Garbage collection related stuff 
+// Pontier to the begining of the list of allocated Generic Spaces
 static GenericSpace* GeSpaceCollectList = NULL;
+// Pointer to the last element in the list of allocated Generic Spaces
+static GenericSpace* GeSpaceCollectLast = NULL;
+// Total memory allocated in generic spaces
+static size_t GeSpaceAllocatedMem = 0;
+/* This method adds the generic space gs to the list of allocated generic spaces.
+   It must be called for all created generic space in order to put it in the
+   control of the garbage collector.
+*/
+void registerGeSpace(GenericSpace* gs);
+/* Collects the memory allocated by unused generic spaces. */
 void gCollectGeSpaces(void);
 
 /** 
@@ -146,6 +158,8 @@ void gCollectGeSpaces(void);
  */
 class GenericSpace : public Gecode::Space {
   friend void gCollectGeSpaces(void);
+  friend void registerGeSpace(GenericSpace*);
+  friend class Board;
 private:
   Board *board;  // pointer to the mozart space 
 

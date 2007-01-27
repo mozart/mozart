@@ -156,7 +156,7 @@ bool oz_isGeVar(OZ_Term t) {
 inline
 void checkGlobalVar(OZ_Term v) {
   // Why this comparison is made with ints?
-  cout<<"Inicio check: "<<oz_isInt(v)<<endl; fflush(stdout);
+  //cout<<"Inicio check: "<<oz_isInt(v)<<endl; fflush(stdout);
   Assert(oz_isGeVar(v));
 
   ExtVar *ev = oz_getExtVar(oz_deref(v));
@@ -179,17 +179,17 @@ void checkGlobalVar(OZ_Term v) {
 
 template <class View>
 class VarReflector :
-  public Gecode::UnaryPropagator<View, Gecode::Int::PC_INT_DOM>
+  public Gecode::UnaryPropagator<View, Gecode::PC_GEN_ASSIGNED>
 {
 protected:
   int index;
 
 public:
   VarReflector(GenericSpace* s, View v, int idx) :
-    Gecode::UnaryPropagator<View, Gecode::Int::PC_INT_DOM>(s, v), index(idx) {}
+    Gecode::UnaryPropagator<View, Gecode::PC_GEN_ASSIGNED>(s, v), index(idx) {}
 
   VarReflector(GenericSpace* s, bool share, VarReflector& p) :
-    Gecode::UnaryPropagator<View, Gecode::Int::PC_INT_DOM>(s, share, p), index(p.index) {}
+    Gecode::UnaryPropagator<View, Gecode::PC_GEN_ASSIGNED>(s, share, p), index(p.index) {}
 
   virtual Gecode::Actor* copy(Gecode::Space* s, bool share) = 0;
 
@@ -204,8 +204,8 @@ public:
     OZ_Term ref = getVarRef(static_cast<GenericSpace*>(s));
     //printf("GeVar.hh ExecStatus index=%d\n",index);fflush(stdout);
     GenericSpace *tmp = static_cast<GenericSpace*>(s);        
-    if(IsDet())
-      {
+    //  if(IsDet())
+    // {
 	OZ_Term val = getVal();
 	//printf("propagate %d\n",OZ_intToC(val));fflush(stdout);
 	OZ_Return ret = OZ_unify(ref, val);
@@ -215,9 +215,9 @@ public:
 	tmp->incDetermined();
 	//printf("intsLength = %d -- setsLength = %d determined = %d",tmp->intsLength(),tmp->setsLength(),tmp->getDetermined());
 	return Gecode::ES_SUBSUMED;
-      }
-    else
-      {	
+	/*      }
+	 else
+	{	
 	Assert(oz_isVarOrRef(ref));	
 	Assert(oz_isVar(oz_deref(ref)));	
 	OzVariable *var=extVar2Var(oz_getExtVar(oz_deref(ref)));
@@ -231,7 +231,7 @@ public:
 
 
 	return Gecode::ES_FIX;
-      }
+	}*/
   }
 };
 

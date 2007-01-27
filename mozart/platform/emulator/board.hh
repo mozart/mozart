@@ -452,11 +452,19 @@ public:
   }
   
   void deleteGenericSpace(void) {
-    //printf("Deleting genericspace\n");fflush(stdout);
-    delete gespace;
-    //GenericSpace::gscounter--;
+    Assert(gespace);
+    //printf("deleting generic space is the first?? %d",GeSpaceCollectList);fflush(stdout);
+    if (GeSpaceCollectList) {
+      //printf("Deleting genericspace\n");fflush(stdout);
+      GenericSpace *prev = gespace->gc_pred;
+      GenericSpace *next = gespace->gc_succ;
+      prev->gc_succ = next;
+      next->gc_pred = prev;
+      delete gespace;
+    }
+    GenericSpace::gscounter--;
     gespace = NULL;
-    //printf("deleted new gspace %d\n",GenericSpace::gscounter);fflush(stdout);
+    //printf("deleted \n);fflush(stdout);
   }
 #endif
 
