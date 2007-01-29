@@ -84,6 +84,7 @@ GenericSpace::GenericSpace(GenericSpace& s, bool share)
 inline
 GenericSpace::~GenericSpace(void) {
   // Release the memory pointed by variables in vars.
+  printf("deleting generic space\n");fflush(stdout);
   if (gc_pred) {
     gc_pred->gc_succ = gc_succ;
   } else {
@@ -91,6 +92,8 @@ GenericSpace::~GenericSpace(void) {
   }
   if (gc_succ) {
     gc_succ->gc_pred = gc_pred;
+  } else {
+    GeSpaceCollectLast = gc_pred;
   }
   gscounter--;
 }
@@ -164,7 +167,7 @@ void GenericSpace::sClone() {
 }
 
 void registerGeSpace(GenericSpace* gs) {
-  //printf("registerSpace\n");fflush(stdout);
+  printf("registerSpace\n");fflush(stdout);
   if (!GeSpaceCollectList) {
     //printf("registerSpace vacia\n");fflush(stdout);
     GeSpaceCollectList = gs;
@@ -189,14 +192,14 @@ void registerGeSpace(GenericSpace* gs) {
 // delete unmarked objects
 void gCollectGeSpaces() {
   //Compute the allocated memory
-  GenericSpace* ptr = GeSpaceCollectList;
+  /*  GenericSpace* ptr = GeSpaceCollectList;
   size_t geAlloc = 0;
   while (ptr != NULL) {
     geAlloc = geAlloc + sizeof(*ptr) + ptr->allocated() + ptr->cached();
     ptr = ptr->gc_succ;
   }
   printf("collecting memory: %d\n",geAlloc/1024);fflush(stdout);
-  
+  */
   //  printf("collecting memory used by generic spaces\n");fflush(stdout);
   GenericSpace* cur = GeSpaceCollectList;
   unsigned int i = 0;
