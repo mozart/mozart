@@ -24,7 +24,9 @@
  */
 
 declare
-
+skip
+%X::2#5
+/*
 fun{Queens N}
    proc{$ Root}
       C1 = {List.number 1 N 1}
@@ -37,15 +39,18 @@ fun{Queens N}
       {GFD.distribute ff Root}
    end
 end
-
+*/
 %X
 %X::2#3
 %proc {Search S}
 %S Y
-%S
-%S = {Space.new {Queens 10}}
-%{Space.inject S proc{$ _} X in  X = {Space.new {Queens 8}} end}
+%local S in
+%S = {Space.new proc{$ Root} Root::1#5 end}
+%S = {Space.new proc{$ Root} R in R::1#5  Root::1#19 end}
+%end
 
+%{Space.inject S proc{$ R} R>:4 end}
+%{Show {Space.askVerbose S}}
 %C
 %_ = {Space.clone C}
 
@@ -53,13 +58,14 @@ end
 
 %W
 %W::1#10
-
-%X = {Space.new Search}
+%local X in  X = {Space.new {Queens 100}} end
+%local X in  X = {Space.new proc {$ _} skip end} end
 %Y = {Space.new Search}
-for X in 1..3 do
-   {Show {SearchAll {Queens 11}}}
-%{ExploreAll {Queens 6}}
-end
-
-
 %{System.gcDo}
+%for X in 1..15 do
+  %    {System.gcDo}
+ %  {Show {SearchAll {Queens 11}}}
+%{ExploreAll {Queens 6}}
+%end
+%{System.gcDo}
+
