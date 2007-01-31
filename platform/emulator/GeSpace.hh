@@ -194,6 +194,16 @@ private:
   //Garbage Collection
   bool gc_marked;
   
+  // Last amount of memory computed for this space and its structures.
+  size_t allocatedMemory;
+  
+  /**
+     \brief Computes the memory allocated by this space.
+  */
+  size_t usedMem(void) {
+    return allocated() + cached() + sizeof(*this);
+  }
+  
 
   void makeStable(void);     // assigns trigger into a read-only
   void makeUnstable(void);   // binds current trigger to unit
@@ -318,10 +328,11 @@ public:
   //@}
 
   /** 
-      \brief Wrap the status function of the Space class to add stability attribute support.
+      \brief Wraps the status function of the Space class to add stability attribute support.
   */
-  Gecode::SpaceStatus status(unsigned long int& pn=unused_uli);
+  Gecode::SpaceStatus mstatus(unsigned long int& pn=unused_uli);
   
+
   /// Garbage collection and space cloning for references
   //@{
   /** 
