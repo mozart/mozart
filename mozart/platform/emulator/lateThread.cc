@@ -54,7 +54,7 @@ OZ_BI_define(BI_prop_gec, 0, 0) {
   }
   
   
-  if (gs->status() == SS_FAILED) {
+  if (gs->mstatus() == SS_FAILED) {
     oz_currentBoard()->deleteGenericSpace();
     return FAILED;
   } 
