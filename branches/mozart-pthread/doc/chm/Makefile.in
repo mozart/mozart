@@ -1,0 +1,67 @@
+BUILDTOP	= @BUILDTOP@
+PREFIX		= @prefix@
+VPATH		= @srcdir@
+SRCTOP		= @SRCTOP@
+SRCDIR		= @SRCDIR@
+DOCDIR		= $(PREFIX)/doc
+
+INSTALL		= @INSTALL@
+INSTALL_FILE	= $(INSTALL) -m 444
+INSTALL_DIR	= @INSTALL_DIR@
+
+AWK		= @AWK@
+
+include ../Makefile.vars
+
+DOCFILES0=Mozart.hhp Mozart.hhc
+DOCFILES=$(DOCFILES0:%=$(DOCDIR)/%)
+
+.PHONY: bootstrap boot1st boot2nd all clean veryclean distclean 1st 2nd boot-1st boot-2nd install installps
+
+all: Mozart.hhp Mozart.hhc
+
+Mozart.hhp: Mozart.hhp.in
+	(cat $<; \
+	 for i in $(DOC_DIRS); do \
+	     if test -r ../$$i/$$i-html/page.gif; then echo $$i/page.gif; fi; \
+	 done) > $@
+
+Mozart.hhc: Mozart.hhc.in preprocess.awk
+	$(AWK) -f preprocess.awk < $< > $@ || \
+	rm -f $@
+
+1st:
+2nd:
+depend:
+
+bootstrap: boot-all
+boot1st: boot-all
+boot-1st: boot-all
+boot2nd:
+boot-2nd:
+
+# make it possible to configure and build just the doc
+-include $(BUILDTOP)/share/Makefile.boot
+
+bootstrap: boot-all
+
+Makefile: Makefile.in config.status
+	./config.status
+
+install: $(DOCDIR) $(DOCFILES)
+
+installps:
+
+$(DOCDIR):
+	$(INSTALL_DIR) $@
+
+$(DOCDIR)/%: %
+	$(INSTALL_FILE) $< $@
+
+clean:
+	rm -rf Mozart.hhp Mozart.hhc
+
+veryclean: clean
+
+distclean: veryclean
+	rm -f Makefile config.log config.status config.cache

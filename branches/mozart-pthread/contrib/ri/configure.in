@@ -1,0 +1,13 @@
+dnl -*-sh-*-
+AC_INIT(ri.cc)
+OZ_CONTRIB_INIT_CXX
+OZ_LIB_GMP
+OZ_PROG_PERL
+
+AC_OUTPUT(Makefile)
+
+errprint(ifdef([OZ_INIT],
+ [autoconf succeeded.
+],
+ [autoconf failed: use 'autoconf -l ../..' to include ../aclocal.m4.
+]))

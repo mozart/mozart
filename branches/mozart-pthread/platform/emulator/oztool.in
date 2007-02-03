@@ -1,0 +1,94 @@
+#! /bin/sh
+#
+#  Authors:
+#    Denys Duchier (duchier@ps.uni-sb.de)
+# 
+#  Contributors:
+#    Michael Mehl (mehl@dfki.de)
+#    Ralf Scheidhauer (scheidhr@ps.uni-sb.de)
+# 
+#  Copyright:
+#    Organization or Person (Year(s))
+# 
+#  Last change:
+#    $Date$ by $Author$
+#    $Revision$
+# 
+#  This file is part of Mozart, an implementation 
+#  of Oz 3:
+#     http://www.mozart-oz.org
+# 
+#  See the file "LICENSE" or
+#     http://www.mozart-oz.org/LICENSE.html
+#  for information on usage and redistribution 
+#  of this file, and for a DISCLAIMER OF ALL 
+#  WARRANTIES.
+#
+#
+
+#
+# oztool c++ ...        invokes the right c++ compiler with the right options
+# oztool cc  ...        same for the c compiler
+# oztool ld  ...        creates DLLs
+# oztool platform       echoes the oz platform
+# oztool version        echoes the oz version 
+
+# determine oztool includes
+if test "${OZTOOL_INCLUDES-NONE}" = NONE; then
+  if test -n "$OZHOME" && test -r "$OZHOME/include/mozart.h"; then
+    OZTOOL_INCLUDES="-I$OZHOME/include"
+  else
+    oz_tmp=`dirname $0`
+    oz_tmp=`cd $oz_tmp/.. & pwd`
+    if test -r "$oz_tmp/include/mozart.h"; then
+      OZTOOL_INCLUDES="-I$oz_tmp/include"
+    else
+      OZTOOL_INCLUDES="-I@prefix@/include";
+    fi
+  fi
+fi
+
+: ${oztool_cxx="@OZTOOL_CXX@ @OZTOOLDYNOPT@ $OZTOOL_INCLUDES"}
+: ${oztool_cc="@CC@ @OZTOOLDYNOPTCC@ $OZTOOL_INCLUDES"}
+: ${oztool_ld="@TOOLLDCMD@ @LDFLAGS@"}
+: ${oztool_platform="@platform@"}
+: ${oztool_version="@OZVERSION@"}
+
+if test $# -eq 0
+then
+  cat <<EOF
+Usage:
+	oztool c++ -c SourceFile
+	oztool cc  -c SourceFile
+	oztool ld  -o TargetLib FileList
+	oztool platform [-o file]
+	oztool version
+EOF
+  exit 2
+fi
+
+cmd=$1
+shift
+
+case "$cmd" in
+  c++) cmd=$oztool_cxx;;
+  cc ) cmd=$oztool_cc;;
+  ld ) cmd=$oztool_ld;;
+  platform )
+    case "$1" in
+    -o) echo "$oztool_platform" > "$2";;
+    * ) echo "$oztool_platform";;
+    esac
+    exit 0;;
+  version ) echo "$oztool_version";
+            exit 0;;
+  *  )
+  echo "oztool: unknown command $cmd" 1>&2
+  exit 1
+  ;;
+esac
+
+exec $cmd "$@"
+
+
+

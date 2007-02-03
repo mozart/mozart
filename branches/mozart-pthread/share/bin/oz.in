@@ -1,0 +1,124 @@
+#!/bin/sh
+
+# uncomment and adapt the following line if you want
+# to draw links from say /usr/local/bin to OZHOME/bin
+# see chapter "installation" in the users manual for more information
+
+# OZHOME=/usr/local/mozart
+
+
+
+
+######################################################################
+# you should not edit below this line
+
+# where Oz resides:
+
+howcalled="$0"
+cmd=`basename "$howcalled"`
+
+if test -z "${OZHOME}"
+then
+  dir=`dirname "$howcalled"`
+  OZHOME=`(cd "$dir"; cd ..; /bin/pwd)`
+fi
+export OZHOME
+
+: ${OZPLATFORM=`"$OZHOME/bin/ozplatform"`}
+: ${OZEMULATOR="$OZHOME/platform/$OZPLATFORM/emulator.exe"}
+: ${OZVERSION="@OZVERSION@"}
+: ${OZ_DOTOZ="$HOME/.oz/$OZVERSION"}
+: ${OZ_LD_LIBRARY_PATH="$OZ_DOTOZ/platform/$OZPLATFORM/lib:$OZHOME/platform/$OZPLATFORM/lib${LD_LIBRARY_PATH:+:}${LD_LIBRARY_PATH}"}
+: ${OZ_DYLD_LIBRARY_PATH="$OZ_DOTOZ/platform/$OZPLATFORM/lib:$OZHOME/platform/$OZPLATFORM/lib${DYLD_LIBRARY_PATH:+:}${DYLD_LIBRARY_PATH}"}
+
+LD_LIBRARY_PATH="$OZ_LD_LIBRARY_PATH"
+export LD_LIBRARY_PATH
+DYLD_LIBRARY_PATH="$OZ_DYLD_LIBRARY_PATH"
+export DYLD_LIBRARY_PATH
+
+# set OZPATH & PATH
+if test -z "${OZ_PI}"
+then
+  # where Oz searches for files:
+  if test -z "${OZPATH}"
+  then
+     OZPATH=.
+  fi
+  OZPATH="${OZPATH}:${OZHOME}/share"
+  export OZPATH
+  # increment path
+  PATH="${OZHOME}/bin:${PATH}"
+  export PATH
+  OZ_PI=1
+  export OZ_PI
+fi
+
+
+case "$cmd" in
+
+   oz)
+	if test -z "${OZEMACS}"
+	then
+	    IFS="${IFS=   }"; saveifs="$IFS"; IFS="$IFS:"
+	    for name in emacs xemacs lemacs; do
+		for dir in $PATH; do
+		    test -z "$dir" && dir=.
+		    if test -f $dir/$name; then
+			# Not all systems have dirname.
+			OZEMACS=$dir/$name
+			break 2
+		    fi
+		done
+	    done
+	    IFS="$saveifs"
+	    if test -z "${OZEMACS}"
+	    then
+		echo "Cannot find emacs" 1>&2
+		echo "Try setting environment variable OZEMACS" 1>&2
+		exit 1
+	    fi
+	fi
+	if ( "$OZEMACS" --version | grep XEmacs > /dev/null 2>&1 )
+	then
+	    exec "$OZEMACS" \
+		    --eval '(setq load-path (cons "'$OZHOME'/share/elisp" load-path))' \
+		    -l oz.elc -f run-oz "$@"
+	else
+	    exec "$OZEMACS" -L "$OZHOME/share/elisp" -l oz.elc -f run-oz "$@"
+	fi
+	;;
+
+   ozengine)  # that is the real thing
+	if test "$1" = '--gui'; then
+	    OZGUI=--gui
+	    shift
+	else
+	    OZGUI=
+	fi
+	if test $# -lt 1
+	then
+	    echo "usage: ozengine [--gui] <url> <args>" 1>&2;
+	    exit 1;
+	fi
+	url=$1
+	shift
+	exec "$OZEMULATOR" $OZGUI -u $url -- "$@"
+	;;
+
+   oztool)
+	exec sh "$OZHOME/platform/$OZPLATFORM/oztool.sh" "$@"
+	;;
+   text2pickle)
+	exec "$OZHOME/platform/$OZPLATFORM/text2pickle.exe" "$@"
+	;;
+
+   pickle2text|oldpickle2text)
+	exec "$OZEMULATOR" --pickle2text "$@" | 
+             "$OZHOME/platform/$OZPLATFORM/text2pickle.exe" --textmode
+	;;
+
+   *)
+	echo "Unknown invocation of Oz via '$cmd'" 1>&2
+	exit 1
+	;;
+esac

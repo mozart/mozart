@@ -1,0 +1,82 @@
+dnl -*-sh-*-
+AC_INIT(lp.cc)
+OZ_CONTRIB_INIT_CXX
+
+AC_MSG_CHECKING([for --with-lpk-inc])
+AC_ARG_WITH(lpk-inc,
+  [--with-lpk-inc=DIR	where to find lpkit.h],
+  [oz_cv_with_lpk_inc=$withval],
+  [: ${oz_cv_with_lpk_inc=$oz_with_lpk_inc}
+   : ${oz_cv_with_lpk_inc=NONE}])
+AC_MSG_RESULT($oz_cv_with_lpk_inc)
+
+AC_MSG_CHECKING([for --with-lpk-lib])
+AC_ARG_WITH(lpk-lib,
+  [--with-lpk-lib=DIR	where to find liblpk],
+  [oz_cv_with_lpk_lib=$withval],
+  [: ${oz_cv_with_lpk_lib=$oz_with_lpk_lib}
+   : ${oz_cv_with_lpk_lib=NONE}])
+AC_MSG_RESULT($oz_cv_with_lpk_lib)
+
+oz_lpk_found_inc=no
+oz_lpk_found_lib=no
+
+dnl ------------------------------------------------------------------
+dnl locate lpkit.h
+dnl ------------------------------------------------------------------
+
+oz_saved_inc_path=$oz_inc_path
+oz_inc_path=["$oz_inc_path /usr/local/include /usr/include"]
+if test "$oz_cv_with_lpk_inc" != NONE; then
+  oz_inc_path="$oz_cv_with_lpk_inc $oz_inc_path"
+fi
+OZ_CHECK_HEADER_PATH(lpkit.h,oz_lpk_found_inc=yes)
+oz_inc_path=$oz_saved_inc_path
+
+dnl ------------------------------------------------------------------
+dnl locate liblpk
+dnl ------------------------------------------------------------------
+
+if test "$oz_lpk_found_inc" = yes; then
+  oz_saved_lib_path=oz_lib_path
+  oz_lib_path=["$oz_lib_path /usr/lib /usr/local/lib"]
+  if test "$oz_cv_with_lpk_lib" != NONE; then
+    oz_lib_path="$oz_cv_with_lpk_lib $oz_lib_path"
+  fi
+  OZ_CHECK_LIB_PATH(lpk,make_lp,oz_lpk_found_lib=yes)
+  oz_lib_path=$oz_saved_lib_path
+fi
+
+dnl ------------------------------------------------------------------
+dnl report informative error if necessary
+dnl ------------------------------------------------------------------
+
+if test "$oz_lpk_found_inc" = no; then
+  AC_MSG_WARN([lpkit.h not found])
+elif test "$oz_lpk_found_lib" = no; then
+  AC_MSG_WARN([liblpk not found])
+fi
+
+if test "$oz_lpk_found_inc" = no || test "$oz_lpk_found_lib" = no; then
+  AC_MSG_ERROR([
+due to the above problem mozart/contrib/lp cannot be configured.
+You may consider using the following options:
+
+	--with-lpk-inc=DIR	where to find lpkit.h
+	--with-lpk-lib=DIR	where to find liblpk
+	--disable-contrib-lp	ignore lp contribution
+
+LP_SOLVE is a mixed integer programmingh solver.  It can be retrieved from
+
+	ftp://ftp.es.ele.tue.nl/pub/lp_solve/
+])
+fi
+
+
+AC_OUTPUT(Makefile)
+
+errprint(ifdef([OZ_INIT],
+ [autoconf succeeded.
+],
+ [autoconf failed: use 'autoconf -l ../..' to include ../aclocal.m4.
+]))
