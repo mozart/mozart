@@ -104,7 +104,37 @@ public:
 
 };
 
-void postIntVarReflector(GenericSpace* s, int index, OZ_Term ref);
+// This Gecode propagator reflects an IntVar assignment inside Mozart
+
+class IntVarReflector : public VarReflector<Gecode::Int::IntView> {
+public:
+  IntVarReflector(GenericSpace* s, Gecode::Int::IntView v, int idx) :
+    VarReflector<Gecode::Int::IntView>(s, v, idx) {}
+
+  IntVarReflector(GenericSpace* s, bool share, IntVarReflector& p) :
+    VarReflector<Gecode::Int::IntView>(s, share, p) {}
+
+  Gecode::Actor* copy(Gecode::Space* s, bool share) {
+    return new (s) IntVarReflector(static_cast<GenericSpace*>(s), share, *this);
+  }
+  
+  OZ_Term getVal() { return OZ_int(x0.val()); }
+  bool IsDet(){return x0.assigned();}
+};
+
+inline void postIntVarReflector(GenericSpace* s, int index, OZ_Term ref) {
+  s->setVarRef(index,ref);
+
+  Gecode::Int::IntVarImp *ivp = reinterpret_cast<Gecode::Int::IntVarImp*>(s->getVar(index));
+  GeView<Gecode::Int::IntVarImp> iv(ivp);
+  Gecode::Int::IntView *vv = reinterpret_cast<Gecode::Int::IntView*>(&iv);
+  new (s) IntVarReflector(s, *vv, index);
+   
+  printf("before post\n");fflush(stdout); 
+ 
+  //temporal:
+  new (s) VarInspector<Gecode::Int::IntView, Gecode::Int::PC_INT_DOM>(s,*vv,index);
+}
 
 inline OZ_Term new_GeIntVar(const Gecode::IntSet& dom) {
   GenericSpace* sp = oz_currentBoard()->getGenericSpace();
@@ -139,35 +169,6 @@ inline GeIntVar* get_GeIntVar(OZ_Term v) {
 // get the Gecode::IntVar from the OZ_Term v
 inline Gecode::IntVar& get_IntVar(OZ_Term v) {
   return get_GeIntVar(v)->getIntVar();
-}
-
-
-// This Gecode propagator reflects an IntVar assignment inside Mozart
-
-class IntVarReflector : public VarReflector<Gecode::Int::IntView> {
-public:
-  IntVarReflector(GenericSpace* s, Gecode::Int::IntView v, int idx) :
-    VarReflector<Gecode::Int::IntView>(s, v, idx) {}
-
-  IntVarReflector(GenericSpace* s, bool share, IntVarReflector& p) :
-    VarReflector<Gecode::Int::IntView>(s, share, p) {}
-
-  Gecode::Actor* copy(Gecode::Space* s, bool share) {
-    return new (s) IntVarReflector(static_cast<GenericSpace*>(s), share, *this);
-  }
-
-  OZ_Term getVarRef(GenericSpace* s) {return s->getVarRef(index); }
-  OZ_Term getVal() { return OZ_int(x0.val()); }
-  bool IsDet(){return x0.assigned();}
-};
-
-inline void postIntVarReflector(GenericSpace* s, int index, OZ_Term ref) {
-  s->setVarRef(index,ref);
-
-  Gecode::Int::IntVarImp *ivp = reinterpret_cast<Gecode::Int::IntVarImp*>(s->getVar(index));
-  GeView<Gecode::Int::IntVarImp> iv(ivp);
-  Gecode::Int::IntView *vv = reinterpret_cast<Gecode::Int::IntView*>(&iv);
-  new (s) IntVarReflector(s, *vv, index);
 }
 
 void module_init_geintvar(void);

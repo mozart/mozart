@@ -193,7 +193,8 @@ public:
 
   virtual Gecode::Actor* copy(Gecode::Space* s, bool share) = 0;
 
-  virtual OZ_Term getVarRef(GenericSpace*) = 0;
+  //virtual OZ_Term getVarRef(GenericSpace*) = 0;
+  virtual OZ_Term getVarRef(GenericSpace* s) {return s->getVarRef(index); }
   virtual OZ_Term getVal() = 0;
   virtual bool IsDet() = 0;
 
@@ -204,35 +205,59 @@ public:
     OZ_Term ref = getVarRef(static_cast<GenericSpace*>(s));
     //printf("GeVar.hh ExecStatus index=%d\n",index);fflush(stdout);
     GenericSpace *tmp = static_cast<GenericSpace*>(s);        
-    //  if(IsDet())
-    // {
-	OZ_Term val = getVal();
-	//printf("propagate %d\n",OZ_intToC(val));fflush(stdout);
-	OZ_Return ret = OZ_unify(ref, val);
-	//printf("GeVar.hh val:%d\n",OZ_intToC(val));fflush(stdout);
-	//    Assert(ret == PROCEED);
-	if (ret == FAILED) return Gecode::ES_FAILED;
-	tmp->incDetermined();
-	//printf("intsLength = %d -- setsLength = %d determined = %d",tmp->intsLength(),tmp->setsLength(),tmp->getDetermined());
-	return Gecode::ES_SUBSUMED;
-	/*      }
-	 else
-	{	
-	Assert(oz_isVarOrRef(ref));	
-	Assert(oz_isVar(oz_deref(ref)));	
-	OzVariable *var=extVar2Var(oz_getExtVar(oz_deref(ref)));
-
-	SuspList *tmp[1];// = NULL;
-	tmp[0] = var->unlinkSuspList();
-	if (tmp[0]){
-	  oz_checkAnySuspensionList(tmp, var->getBoardInternal(), pc_all);
-	  var->setSuspList(tmp[0]);
-	}
-
-
-	return Gecode::ES_FIX;
-	}*/
+    OZ_Term val = getVal();
+    OZ_Return ret = OZ_unify(ref, val);
+    if (ret == FAILED) return Gecode::ES_FAILED;
+    tmp->incDetermined();
+    return Gecode::ES_SUBSUMED;
   }
 };
+
+
+/*
+  This Gecode propagator reflects variable's domains changes to mozart.
+  PC_GEN_MAX is used as propagation condition in order to make it generic
+  for all variables.
+*/
+template <class View, Gecode::PropCond pc>
+class VarInspector :
+  public Gecode::UnaryPropagator<View, pc>
+{
+protected:
+  int index;
+  
+public:
+  VarInspector(GenericSpace* s, View v, int idx) :
+    Gecode::UnaryPropagator<View, pc>(s, v), index(idx) { }
+
+  VarInspector(GenericSpace* s, bool share, VarInspector& p) :
+    Gecode::UnaryPropagator<View, pc>(s, share, p), index(p.index) {}
+
+  virtual Gecode::Actor* copy(Gecode::Space* s, bool share) {
+    return new (s) VarInspector(static_cast<GenericSpace*>(s), share, *this);
+  }
+
+  virtual OZ_Term getVarRef(GenericSpace* s) {return s->getVarRef(index); }
+
+  // this propagator should never fail
+  Gecode::ExecStatus propagate(Gecode::Space* s) {
+    printf("Variable inspected from mozart ....%d\n",index);fflush(stdout);    
+    OZ_Term ref = getVarRef(static_cast<GenericSpace*>(s));
+   
+    Assert(oz_isVarOrRef(ref));	
+    Assert(oz_isVar(oz_deref(ref)));	
+    OzVariable *var=extVar2Var(oz_getExtVar(oz_deref(ref)));
+    
+    SuspList *tmp[1];
+    tmp[0] = var->unlinkSuspList();
+    if (tmp[0]){
+      oz_checkAnySuspensionList(tmp, var->getBoardInternal(), pc_all);
+      var->setSuspList(tmp[0]);
+    }
+
+    return Gecode::ES_FIX;
+  }
+};
+
 
 #endif
