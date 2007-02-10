@@ -85,77 +85,66 @@ public:
 
   TaggedRef *elem;
   ExtRefNode *next;
+  int count;
 
-  ExtRefNode(TaggedRef *el, ExtRefNode *n): elem(el), next(n){ 
+  ExtRefNode(TaggedRef *el, ExtRefNode *n): elem(el), next(n), count(1) { 
     Assert(elem); 
   }
 
-  void remove(void) { 
-    elem = NULL; 
-  }
-  ExtRefNode *add(TaggedRef *el) { 
-    return new ExtRefNode(el,this); 
-  }
-  
-  ExtRefNode *gCollect(void) {
-    ExtRefNode *aux = this;
-    ExtRefNode *ret = NULL;
-    while (aux) {
-      if (aux->elem) {
-	ret = new ExtRefNode(aux->elem,ret);
-	oz_gCollectTerm(*ret->elem,*ret->elem);
-      }
-      aux = aux->next;
+  ExtRefNode(ExtRefNode* ptr, ExtRefNode* lst)
+    : elem(ptr->elem), next(lst), count(ptr->count) {}
+
+  static void gCollect(void) {
+    ExtRefNode* ptr = extRefs;
+    ExtRefNode* lst = NULL;
+    while (ptr) {
+      lst = new ExtRefNode(ptr, lst);
+      oz_gCollectTerm(*lst->elem,*lst->elem);
+      ptr = ptr->next;
     }
-    return ret;
+    extRefs = lst;
   }
 
-  ExtRefNode *protect(TaggedRef *el) {
+  static void protect(TaggedRef *el) {
     Assert(oz_isRef(*el) || !oz_isVar(*el));
-    Assert(!find(el));
-    return add(el);
+    ExtRefNode* ptr = extRefs;
+    while (ptr) {
+      if (ptr->elem==el) {
+	++ptr->count;
+	return;
+      }
+      ptr = ptr->next;
+    }
+    extRefs = new ExtRefNode(el, extRefs);
   }
 
-  Bool unprotect(TaggedRef *el) {
+  static Bool unprotect(TaggedRef *el) {
     Assert(el);
-    ExtRefNode *aux = extRefs;
-    while (aux) {
-      if (aux->elem==el) {
-	aux->remove();
+    ExtRefNode* ptr = extRefs;
+    ExtRefNode** prev = &extRefs;
+    while (ptr) {
+      if (ptr->elem==el) {
+	if (--ptr->count == 0) {
+	  *prev = ptr->next;
+	}
 	return OK;
       }
-      aux = aux->next;
+      prev = &ptr->next;
+      ptr  =  ptr->next;
     }
     return NO;
-  }
-
-  ExtRefNode * find(TaggedRef *el) {
-    Assert(el);
-    ExtRefNode *aux = extRefs;
-    while (aux) {
-      if (aux->elem==el)
-	break;
-      aux = aux->next;
-    }
-    return aux;
   }
 
 };
 
 
 Bool oz_protect(TaggedRef *ref) {
-  extRefs = extRefs->protect(ref);
+  ExtRefNode::protect(ref);
   return OK;
 }
 
 Bool oz_unprotect(TaggedRef *ref) {
-  ExtRefNode *aux = extRefs->find(ref);
-
-  if (aux == NULL)
-    return NO;
-
-  aux->remove();
-  return OK;
+  return ExtRefNode::unprotect(ref);
 }
 
 void oz_unprotectAllOnExit() {
@@ -1102,7 +1091,7 @@ void AM::gCollect(int msgLevel)
   oz_gCollectTerm(debugPort, debugPort);
 
   PrTabEntry::gCollectPrTabEntries();
-  extRefs = extRefs->gCollect();
+  ExtRefNode::gCollect();
 
   cacStack.gCollectRecurse();
   gCollectDeferWatchers();
