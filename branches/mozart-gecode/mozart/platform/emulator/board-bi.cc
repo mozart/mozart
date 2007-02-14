@@ -534,10 +534,6 @@ OZ_BI_define(BIwaitStableSpace, 0, 0) {
 OZ_BI_define(BIwaitNeededSpace, 0, 0) {
   Board * bb = oz_currentBoard();
 
-  RefsArray * args = RefsArray::allocate(1,NO);
-  args->setArg(0,OZ_out(0));
-  
-
   TaggedRef status = bb->getStatus();
   DEREF(status,status_ptr);
 
