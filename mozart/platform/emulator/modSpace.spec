@@ -79,6 +79,10 @@ $module_init_fun_name = "space_init";
      'waitStable'       => { in  => [],
                              out => [],
                              BI  => BIwaitStableSpace},
+
+     'waitNeeded'       => { in  => [],
+                             out => [],
+                             BI  => BIwaitNeededSpace},
                  
      );
 1;;
