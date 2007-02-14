@@ -531,6 +531,23 @@ OZ_BI_define(BIwaitStableSpace, 0, 0) {
   return BI_REPLACEBICALL;
 } OZ_BI_end
 
+OZ_BI_define(BIwaitNeededSpace, 0, 0) {
+  Board * bb = oz_currentBoard();
+
+  RefsArray * args = RefsArray::allocate(1,NO);
+  args->setArg(0,OZ_out(0));
+  
+
+  TaggedRef status = bb->getStatus();
+  DEREF(status,status_ptr);
+
+  if (!oz_isNeeded(status)) 
+    return oz_var_addQuietSusp(status_ptr, oz_currentThread()); 
+
+  return PROCEED;
+
+} OZ_BI_end
+
 
 OZ_BI_define(BIkillSpace, 1, 0) {
   declareSpace;
