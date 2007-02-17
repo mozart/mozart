@@ -47,8 +47,8 @@ OZ_Return distPortSendImpl(OzPort *p, TaggedRef msg) {
   Assert(p->isDistributed());
   PortMediator *me = static_cast<PortMediator*>(p->getMediator());
 
-  // suspend if fault state not ok
-  if (me->getFaultState()) return me->suspendOnFault();
+  // A port never blocks.  In case of permanent failure, just skip.
+  if (me->getFaultState() > GLUE_FAULT_TEMP) return PROCEED;
 
   PstOutContainerInterface** pstout;
   OpRetVal cont = me->abstractOperation_Write(pstout);
