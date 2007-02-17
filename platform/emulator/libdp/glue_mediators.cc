@@ -222,26 +222,19 @@ Mediator::setFaultState(GlueFaultState fs) {
   // reached from the current fault state.  This simplifies cases like
   // the DSS reporting 'ok' while we are in state 'localFail'.
   if (faultState == fs) return;
+  if (!validFSTransition(faultState, fs)) return;
 
-  if (faultState < fs) {   // we are going to a worse state
-    do {
-      faultState = static_cast<GlueFaultState>(faultState + 1);
-      if (faultStream) addToTail(faultStream, fsToAtom(faultState));
-    } while (faultState < fs);
-    Assert(faultState == fs);
-
-    // the failure probably won't be noticed by the emulator if the
-    // mediator is detached, so try to attach it.
-    if (!attached) attach();
-
-  } else if (faultState == GLUE_FAULT_TEMP) {   // tempFail -> ok
-    Assert(fs == GLUE_FAULT_NONE);
-    faultState = fs;
-    if (faultStream) addToTail(faultStream, fsToAtom(faultState));
+  faultState = fs;
+  if (faultStream) addToTail(faultStream, fsToAtom(faultState));
+  if (faultState == GLUE_FAULT_NONE) {
     if (faultCtlVar) {   // wake up blocked threads
       ControlVarResume(faultCtlVar);
       faultCtlVar = makeTaggedNULL();
     }
+  } else {
+    // The entity failed.  The failure will not be noticed by the
+    // emulator if the mediator is detached, so try to attach it.
+    if (!attached) attach();
   }
 }
 
