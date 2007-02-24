@@ -55,8 +55,8 @@ OZ_Return GeIntVar::unifyV(TaggedRef* lPtr, TaggedRef* rPtr) {
 
   { 
     GeIntVar* rgeintvar = get_GeIntVar(*rPtr);
-    IntVar& lintvar = lgeintvar->getIntVar();
-    IntVar& rintvar = rgeintvar->getIntVar();
+    IntVar& lintvar = lgeintvar->getIntVarInfo();
+    IntVar& rintvar = rgeintvar->getIntVarInfo();
     
     Assert(space);
     if(oz_isLocalVar(extVar2Var(lgeintvar))){
@@ -132,7 +132,7 @@ OZ_Return GeIntVar::bindV(TaggedRef* vPtr, TaggedRef val) {
       GenericSpace* s =  extVar2Var(this)->getBoardInternal()->getGenericSpace();      
       int n = OZ_intToC(val);
       //printf("GeIntVar::bindV\n");fflush(stdout);
-      ModEvent me = IntView(getIntVar()).eq(s, n);
+      ModEvent me = IntView(getIntVarInfo()).eq(s, n);
       Assert(!me_failed(me));     // must succeed
 
       unsigned long alt = 0; //useless variable
@@ -173,7 +173,7 @@ Bool GeIntVar::validV(TaggedRef val) {
        n <= Gecode::Limits::Int::int_max)
       {
 	//printf("GeIntVar::validV\n");fflush(stdout);
-      return IntView(getIntVar()).in(n);
+      return IntView(getIntVarInfo()).in(n);
       }
     else {
       GEOZ_DEBUG_PRINT(("Invalid integer.\n All domain ranges must be between %d and %d",Gecode::Limits::Int::int_min, Gecode::Limits::Int::int_max));
@@ -205,7 +205,7 @@ bool GeIntVar::intersect(TaggedRef x) {
   IntVar& gv = getIntVarInfo();
   ViewRanges<IntView> gvr(gv);
 
-  IntVar& liv = get_GeIntVar(x)->getIntVar();
+  IntVar& liv = get_GeIntVar(x)->getIntVarInfo();
   IntView vw(liv);
   return (vw.inter(oz_currentBoard()->getGenericSpace(),gvr)==ME_GEN_FAILED ? false: true);
 }
