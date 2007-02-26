@@ -435,8 +435,8 @@ end>>>
       the subtree at feature&nbsp;<<1>> of the exception record.  This is
       usually a record further describing the exact condition that occurred.
     <Para class=apropos><Title/Debug Information/
-      If an exception is a record and has a feature <<debug>>, then
-      the implementation may replace the corresponding subtree by
+      If an exception is a record and has a feature <<debug>> with value <<unit>>, then
+      the implementation may replace (depending on the value of the property <<ozconf.errorDebug>>) the corresponding subtree by
       implementation-dependent debugging information.  This is to be
       printed out in the case of uncaught exceptions.
     <P>
@@ -479,9 +479,9 @@ end>>>
           <<{Exception.raiseError ?_{X}}>>
         <Item>
           wraps ?_{X} into an error exception and raises this.
-          This procedure can be defined as follows:
+          This procedure can be defined as follows, except that it always add debug informations:
 <<<proc {Exception.raiseError X}
-   {Exception.'raise' {Exception.error X}}
+   {Exception.'raise' {AdjoinAt {Exception.error X} debug unit}}
 end>>>
       </List>
 
