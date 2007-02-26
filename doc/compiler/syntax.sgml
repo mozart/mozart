@@ -125,7 +125,7 @@
       this procedure), and <<sited>> (cannot be pickled).  Other atoms are
       silently ignored.
       <Grammar.Rule>?={proc flag}
-        <Grammar.Alt/?={atom}/
+        <Grammar.Alt/?={atom literal}/
     <Para class=apropos><Title/Functors/
       <Grammar.Rule>?={functor descriptor}
         <Grammar.Alt/<<fRequire([?={import decl}] ?={coord})>>/
