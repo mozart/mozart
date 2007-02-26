@@ -46,23 +46,11 @@ to="ozdoc:op">.
 
 <section><title/Exceptions/
 <p>
-The methods of any of the <<Open>> module classes can raise three different
+The methods of any of the <<Open>> module classes can raise different
 exceptions.
 <p>
 <para><title/operating system/When an operating system exception
-occurs the Oz exception
-<<<
-system(os(?_{A} ?_{I} ?_{S}) debug:?_{X})
->>>
-is raised, where:
-<list enum>
-<item> The atom ?_{A} gives the category of the error (&eg; <<os>> for
-operating system or <<net>> for network layer).
-<item> The integer ?_{I} gives an operating system dependent error
-number.
-<item> The string ?_{S} describes the exception by some text.
-<item> The value ?_{X} might contain some additional debug information.
-</list>
+occurs the Oz exception defined in the module <<OS>> is raised.
 
 <para><title/already initialized/An exception of the format
 <<<
@@ -78,6 +66,31 @@ system(open(alreadyClosed ?_{O} ?_{M}) debug:?_{X})
 is raised if a method other than <<close>> of an already closed object
 ?_{O} is applied. ?_{M} is as above the message the object has been
 applied to.
+
+<para><title/illegal flags/An exception of the format
+<<<
+system(open(illegalFlags ?_{O} ?_{M}) debug:?_{X})
+>>>
+is raised if an object ?_{O} is initialized with an unknown flag. ?_{M} is the initialization message.
+
+<para><title/ilegal modes/An exception of the format
+<<<
+system(open(illegalModes ?_{O} ?_{M}) debug:?_{X})
+>>>
+is raised if an object ?_{O} is initialized with an unknown mode. ?_{M} is the initialization message.
+
+<para><title/name or URL/An exception of the format
+<<<
+system(open(nameOrUrl ?_{O} ?_{M}) debug:?_{X})
+>>>
+is raised if an object ?_{O} is initialized with both a name and an URL or with neither. ?_{M} is the initialization message.
+
+<para><title/URL is read-only/An exception of the format
+<<<
+system(open(urlIsReadOnly ?_{O} ?_{M}) debug:?_{X})
+>>>
+is raised if an object ?_{O} is initialized with an URL and the <<write>> flag. ?_{M} is the initialization message.
+
 </section>
 
 <section id=section.file.obj><title/The Class <<Open.file>>/
