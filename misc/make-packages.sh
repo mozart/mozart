@@ -29,18 +29,20 @@
 # 'make-packages.sh' is called):
 #
 # -r--r--r--    2 kost      14269432 Mar  1 00:44 binutils-2.14.tar.gz
-# -r--r--r--    3 kost        420341 Mar  4 11:04 bison-1.28.tar.gz
-# -r--r--r--    3 kost        380995 Mar  4 10:57 flex-2.5.4a.tar.gz
 # -r--r--r--    2 kost      31242089 Oct 20 15:21 gcc-3.3.2.tar.gz
-# -r--r--r--    3 kost        134080 Mar  4 10:57 gdbm-1.8.0.tar.gz
 # -r--r--r--    2 kost      18115189 Mar  1 00:47 glibc-2.3.2.tar.gz
-# -r--r--r--    2 kost       2159329 Mar  1 01:52 gmp-4.1.2.tar.gz
-# -r--r--r--    3 kost        317588 Mar  4 10:57 m4-1.4.tar.gz
-# -r--r--r--    2 kost      12002329 Mar  1 01:57 perl-5.8.3.tar.gz
-# -r--r--r--    3 kost        297790 Mar  4 10:57 regex-0.12.tar.gz
-# -r--r--r--    2 kost       2863381 Mar  1 02:06 tcl8.3.5-src.tar.gz
-# -r--r--r--    2 kost       2598030 Mar  1 02:07 tk8.3.5-src.tar.gz
-# -r--r--r--    2 kost        345833 Mar  1 02:17 zlib-1.2.1.tar.gz
+#These 3 packages should probably be updated (not tested while building on linux-i486)
+# -rw-r--r--  1 yjaradin stafinfo 16378360 2006-05-31 11:44 binutils-2.16.1.tar.gz
+# -rw-r--r--  1 yjaradin stafinfo  1384574 2006-05-31 11:48 bison-2.2.tar.gz
+# -rw-r--r--  1 yjaradin stafinfo   380995 2006-05-31 11:49 flex-2.5.4a.tar.gz
+# -rw-r--r--  1 yjaradin stafinfo   228695 2006-05-31 11:51 gdbm-1.8.3.tar.gz
+# -rw-r--r--  1 yjaradin stafinfo  2249464 2006-05-31 11:52 gmp-4.2.1.tar.gz
+# -rw-r--r--  1 yjaradin stafinfo   384582 2006-05-31 11:52 m4-1.4.4.tar.gz
+# -rw-r--r--  1 yjaradin stafinfo 12829188 2006-05-31 11:55 perl-5.8.8.tar.gz
+# -rw-r--r--  1 yjaradin stafinfo   297790 2006-05-31 11:55 regex-0.12.tar.gz
+# -rw-r--r--  1 yjaradin stafinfo  3513852 2006-05-31 11:57 tcl8.4.13-src.tar.gz
+# -rw-r--r--  1 yjaradin stafinfo  3253070 2006-05-31 11:57 tk8.4.13-src.tar.gz
+# -rw-r--r--  1 yjaradin stafinfo   496597 2006-05-31 12:09 zlib-1.2.3.tar.gz
 
 #PLAT=$1
 #BASE=$2
@@ -118,16 +120,16 @@ PATH=$PREFIX/bin:$PATH
 LD_LIBRARY_PATH=$PREFIX/lib:$LD_LIBRARY_PATH
 export CFLAGS CXXFLAGS PATH LD_LIBRARY_PATH
 
-BISON=bison-1.28
+BISON=bison-2.2
 FLEX=flex-2.5.4a
-GDBM=gdbm-1.8.0
-GMP=gmp-4.1.2
-M4=m4-1.4
-PERL=perl-5.8.3
+GDBM=gdbm-1.8.3
+GMP=gmp-4.2.1
+M4=m4-1.4.4
+PERL=perl-5.8.8
 REGEX=regex-0.12
-TCL=tcl8.3.5
-TK=tk8.3.5
-ZLIB=zlib-1.2.1
+TCL=tcl8.4.13
+TK=tk8.4.13
+ZLIB=zlib-1.2.3
 FLEXDIR=flex-2.5.4
 
 zcat $GDBM.tar.gz | tar xf -
@@ -159,13 +161,13 @@ zcat $REGEX.tar.gz | tar xf -
  make CFLAGS="$CFLAGS"; \
  make install )
 
-zcat $TCL.tar.gz | tar xf -
+zcat $TCL-src.tar.gz | tar xf -
 (cd $TCL/unix; \
  ./configure --prefix=$PREFIX --disable-shared --enable-gcc; \
  make CFLAGS="$CFLAGS"; \
  make install )
 
-zcat $TK.tar.gz | tar xf -
+zcat $TK-src.tar.gz | tar xf -
 (cd $TK/unix; \
  ./configure --prefix=$PREFIX --disable-shared --enable-gcc; \
  make CFLAGS="$CFLAGS"; \
